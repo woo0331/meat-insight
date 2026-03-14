@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>신청 | MEAT INSIGHT — 고기의 모든것</title>
+  <meta name="description" content="정육점·고깃집 창업자를 위한 고기 공급 연결 및 비대면 컨설팅 신청 페이지입니다."/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
+
+  <!-- ★ Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root{--navy:#0b1f3a;--gold:#b8945a;--gold2:#d4a96a;--white:#fff;--off:#f8f6f2;--muted:#6b7280;--line:#e8e2d8;--green:#166534;--green-bg:#f0fdf4;--shadow:0 8px 32px rgba(11,31,58,.10);--radius:20px}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Noto Sans KR',sans-serif;background:var(--off);color:var(--navy);overflow-x:hidden}
+    .nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 32px;background:rgba(248,246,242,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--line)}
+    .nav-brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+    .nav-logo{width:40px;height:40px;border-radius:10px;background:var(--navy);color:var(--gold);display:grid;place-items:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:900}
+    .nav-brand-text b{display:block;font-size:14px;font-weight:900;color:var(--navy)}
+    .nav-brand-text span{display:block;font-size:11px;color:var(--muted)}
+    .nav-right{display:flex;gap:8px}
+    .nav-btn{padding:9px 18px;border-radius:999px;font-size:13px;font-weight:700;text-decoration:none;border:1.5px solid var(--line);color:var(--navy);transition:background .15s}
+    .nav-btn:hover{background:var(--line)}
+    .nav-btn.primary{background:var(--navy);color:var(--gold);border-color:transparent}
+    @media(max-width:640px){.nav{padding:12px 16px}.nav-right{display:none}}
+    .tab-bar{background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:69px;z-index:90}
+    .tab-inner{max-width:860px;margin:0 auto;padding:0 24px;display:flex}
+    .tab-btn{padding:18px 28px;font-size:15px;font-weight:700;color:var(--muted);border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:3px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap}
+    .tab-btn:hover{color:var(--navy)}
+    .tab-btn.active{color:var(--navy);border-bottom-color:var(--gold)}
+    @media(max-width:640px){.tab-btn{padding:14px 16px;font-size:13px}}
+    .main{max-width:860px;margin:0 auto;padding:48px 24px 120px}
+    @media(max-width:640px){.main{padding:28px 16px 120px}}
+    .page{display:none;animation:fadeUp .35s ease both}
+    .page.active{display:block}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .page-header{margin-bottom:40px}
+    .page-label{font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.5px;margin-bottom:10px}
+    .page-title{font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,38px);font-weight:900;color:var(--navy);line-height:1.15;margin-bottom:12px}
+    .page-desc{font-size:16px;color:var(--muted);line-height:1.7;max-width:50ch}
+    .form-layout{display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:start}
+    @media(max-width:800px){.form-layout{grid-template-columns:1fr}}
+    .form-card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:32px;box-shadow:var(--shadow)}
+    .form-section-title{font-size:15px;font-weight:900;color:var(--navy);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+    .fields{display:flex;flex-direction:column;gap:16px;margin-bottom:24px}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field label{font-size:13px;font-weight:700;color:var(--navy)}
+    .field-hint{font-size:11px;color:var(--muted);line-height:1.5}
+    .field input,.field select,.field textarea{padding:13px 16px;border-radius:12px;border:2px solid var(--line);font-size:15px;font-family:inherit;color:var(--navy);background:var(--off);outline:none;transition:border-color .15s;-webkit-appearance:none;width:100%}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);background:var(--white)}
+    .field textarea{resize:vertical;min-height:100px;line-height:1.6}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:400px){.field-row{grid-template-columns:1fr}}
+    .check-group{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+    .check-item{display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--off);transition:border-color .15s}
+    .check-item:hover{border-color:var(--gold)}
+    .check-item.checked{border-color:var(--navy);background:#f0f4ff}
+    .check-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--navy);flex-shrink:0;cursor:pointer}
+    .check-item-text{font-size:14px;font-weight:700;color:var(--navy)}
+    .check-item-sub{font-size:12px;color:var(--muted)}
+    .plan-picker{display:flex;flex-direction:column;gap:12px;margin-top:4px}
+    .plan-opt{padding:18px 20px;border-radius:14px;border:2px solid var(--line);background:var(--off);cursor:pointer;transition:all .2s}
+    .plan-opt:hover{border-color:var(--gold)}
+    .plan-opt.selected{border-color:var(--navy);background:var(--white)}
+    .plan-opt-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .plan-opt-name{font-size:15px;font-weight:900;color:var(--navy)}
+    .plan-opt-price{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--gold)}
+    .plan-opt-desc{font-size:13px;color:var(--muted);line-height:1.6}
+    .plan-badge-rec{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:10px;font-weight:900;margin-left:6px}
+
+    /* 제출 버튼 + 로딩 */
+    .btn-submit{width:100%;padding:17px;border-radius:14px;background:var(--navy);color:var(--gold);font-size:16px;font-weight:900;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s,transform .15s;box-shadow:0 4px 20px rgba(11,31,58,.25);margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px}
+    .btn-submit:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
+    .btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .spinner{width:18px;height:18px;border:2.5px solid rgba(184,148,90,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;display:none}
+    .spinner.show{display:block}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .submit-note{text-align:center;font-size:12px;color:var(--muted);margin-top:10px}
+
+    /* 에러 메시지 */
+    .error-msg{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;font-size:13px;color:#991b1b;margin-top:10px;display:none}
+    .error-msg.show{display:block}
+
+    /* SUCCESS */
+    .success-box{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:60px 40px;text-align:center;box-shadow:var(--shadow);display:none}
+    .success-box.show{display:block;animation:fadeUp .4s ease both}
+    .success-icon{font-size:56px;margin-bottom:20px}
+    .success-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--navy);margin-bottom:12px}
+    .success-desc{font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:32px}
+    .success-info{background:var(--off);border-radius:14px;padding:20px;margin-bottom:32px;text-align:left}
+    .success-info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+    .success-info-row:last-child{border-bottom:none}
+    .success-info-label{color:var(--muted)}
+    .success-info-val{font-weight:700;color:var(--navy)}
+    .btn-back-main{padding:14px 32px;border-radius:999px;background:var(--navy);color:var(--gold);font-size:15px;font-weight:900;text-decoration:none;display:inline-block}
+
+    /* SIDEBAR */
+    .sidebar{display:flex;flex-direction:column;gap:16px}
+    .side-card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:var(--shadow)}
+    .side-card-title{font-size:15px;font-weight:900;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+    .side-items{display:flex;flex-direction:column;gap:10px}
+    .side-item{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--muted);line-height:1.6}
+    .side-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:7px}
+    .side-highlight{background:linear-gradient(135deg,var(--navy),#1a3560);border-radius:16px;padding:24px}
+    .side-highlight-title{font-size:16px;font-weight:900;color:var(--white);margin-bottom:8px}
+    .side-highlight-desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:16px}
+    .side-highlight-num{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:var(--gold);margin-bottom:4px}
+    .side-highlight-sub{font-size:12px;color:rgba(255,255,255,.4)}
+
+    /* STICKY */
+    .sticky-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;width:min(860px,calc(100% - 32px));padding:12px 20px;background:rgba(11,31,58,.95);backdrop-filter:blur(20px);border:1px solid rgba(184,148,90,.2);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .sticky-text{font-size:13px;font-weight:700;color:var(--white)}
+    .sticky-text small{display:block;font-size:11px;color:rgba(255,255,255,.4);font-weight:400}
+    .sticky-actions{display:flex;gap:8px}
+    .sticky-btn{padding:10px 18px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:13px;font-weight:900;text-decoration:none;white-space:nowrap}
+    .sticky-btn.outline{background:transparent;border:1.5px solid rgba(184,148,90,.4);color:var(--gold)}
+    @media(max-width:560px){.sticky-bar{flex-direction:column;gap:8px}.sticky-actions{justify-content:center}}
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-brand" href="meat_insight_main.html">
+    <div class="nav-logo">肉</div>
+    <div class="nav-brand-text"><b>MEAT INSIGHT</b><span>고기의 모든것</span></div>
+  </a>
+  <div class="nav-right">
+    <a class="nav-btn" href="meat_insight_main.html">← 메인</a>
+    <a class="nav-btn" href="meat_insight_calculator.html">계산기</a>
+    <a class="nav-btn primary" href="#" onclick="switchTab('consulting');return false">컨설팅 신청</a>
+  </div>
+</nav>
+
+<div class="tab-bar">
+  <div class="tab-inner">
+    <button class="tab-btn active" id="tab-supply" onclick="switchTab('supply')">🥩 고기 공급 연결 신청</button>
+    <button class="tab-btn" id="tab-consulting" onclick="switchTab('consulting')">📋 비대면 컨설팅 신청</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ① 공급 연결 -->
+  <div class="page active" id="page-supply">
+    <div class="page-header">
+      <div class="page-label">고기 공급 연결</div>
+      <div class="page-title">도매 거래선을<br/>직접 연결해드립니다</div>
+      <div class="page-desc">업종·규모·필요 품목을 알려주시면 도축장·육가공·도매업체를 매칭합니다.</div>
+    </div>
+    <div class="success-box" id="supply-success">
+      <div class="success-icon">✅</div>
+      <div class="success-title">공급 연결 신청 완료!</div>
+      <div class="success-desc">입력하신 정보를 확인 후<br/>1~2 영업일 내에 담당자가 연락드립니다.</div>
+      <div class="success-info" id="supply-success-info"></div>
+      <a class="btn-back-main" href="meat_insight_main.html">메인으로 돌아가기</a>
+    </div>
+    <div class="form-layout" id="supply-form-area">
+      <div class="form-card">
+        <div class="form-section-title">기본 정보</div>
+        <div class="fields">
+          <div class="field-row">
+            <div class="field"><label>이름 *</label><input type="text" id="sf-name" placeholder="홍길동"/></div>
+            <div class="field"><label>연락처 *</label><input type="tel" id="sf-phone" placeholder="010-0000-0000"/></div>
+          </div>
+          <div class="field"><label>업체명 (선택)</label><input type="text" id="sf-biz" placeholder="예: 홍길동 정육점"/></div>
+          <div class="field">
+            <label>업종 *</label>
+            <select id="sf-type">
+              <option value="">선택해주세요</option>
+              <option>정육점 창업 준비 중</option>
+              <option>고깃집 창업 준비 중</option>
+              <option>정육식당 창업 준비 중</option>
+              <option>현재 운영 중 (거래선 변경)</option>
+              <option>기타</option>
+            </select>
+          </div>
+          <div class="field"><label>창업·운영 지역 *</label><input type="text" id="sf-region" placeholder="예: 서울 마포구, 경기 수원시"/></div>
+        </div>
+        <div class="form-section-title">공급 요청 상세</div>
+        <div class="fields">
+          <div class="field">
+            <label>필요 품목 (중복 선택 가능)</label>
+            <div class="check-group" id="supply-items">
+              <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="한우·육우"/><div><div class="check-item-text">한우 / 육우</div><div class="check-item-sub">등심·안심·갈비·부분육</div></div></label>
+              <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="국내산 돼지"/><div><div class="check-item-text">국내산 돼지고기</div><div class="check-item-sub">삼겹·목살·항정·특수부위</div></div></label>
+              <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="수입육"/><div><div class="check-item-text">수입육</div><div class="check-item-sub">미국산·호주산·캐나다산</div></div></label>
+              <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="지육·부분육"/><div><div class="check-item-text">지육 / 부분육</div><div class="check-item-sub">규격별 맞춤 공급</div></div></label>
+              <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="닭·오리"/><div><div class="check-item-text">닭 / 오리</div><div class="check-item-sub">생닭·부분육·훈제</div></div></label>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>월 예상 구매량</label>
+              <select id="sf-volume">
+                <option value="">선택</option>
+                <option>100kg 미만</option><option>100~300kg</option>
+                <option>300~500kg</option><option>500kg~1톤</option><option>1톤 이상</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>납품 주기</label>
+              <select id="sf-cycle">
+                <option>주 1회</option><option>주 2~3회</option>
+                <option>매일</option><option>필요 시마다</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label>현재 거래 단가 (선택)</label><input type="text" id="sf-price" placeholder="예: 삼겹살 kg당 12,000원"/></div>
+          <div class="field"><label>추가 요청 사항</label><textarea id="sf-memo" placeholder="기타 요청 사항이나 상황을 자유롭게 적어주세요"></textarea></div>
+        </div>
+        <button class="btn-submit" id="supply-submit-btn" onclick="submitSupply()">
+          <div class="spinner" id="supply-spinner"></div>
+          공급 연결 신청하기
+        </button>
+        <div class="error-msg" id="supply-error"></div>
+        <div class="submit-note">신청 후 1~2 영업일 내 담당자가 연락드립니다 · 개인정보는 안전하게 보호됩니다</div>
+      </div>
+      <div class="sidebar">
+        <div class="side-highlight">
+          <div class="side-highlight-title">공급 연결 프로세스</div>
+          <div class="side-highlight-desc">신청 → 담당자 연락 → 조건 확인 → 거래선 매칭 → 첫 납품</div>
+          <div class="side-highlight-num">1~2일</div>
+          <div class="side-highlight-sub">평균 첫 연락까지 소요 시간</div>
+        </div>
+        <div class="side-card">
+          <div class="side-card-title"><span>🐄</span> 연결 가능 품목</div>
+          <div class="side-items">
+            <div class="side-item"><div class="side-dot"></div>한우·육우 전 부위 (도축장 직연결)</div>
+            <div class="side-item"><div class="side-dot"></div>국내산 돼지 (삼겹·목살·특수부위)</div>
+            <div class="side-item"><div class="side-dot"></div>수입육 (미국·호주·캐나다산)</div>
+            <div class="side-item"><div class="side-dot"></div>지육·부분육 규격 맞춤 공급</div>
+          </div>
+        </div>
+        <div class="side-card">
+          <div class="side-card-title"><span>✅</span> 연결 혜택</div>
+          <div class="side-items">
+            <div class="side-item"><div class="side-dot"></div>도매 단가 비교 견적 제공</div>
+            <div class="side-item"><div class="side-dot"></div>초기 창업자 소량 거래 가능</div>
+            <div class="side-item"><div class="side-dot"></div>납품 주기·규격 맞춤 조율</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 컨설팅 신청 -->
+  <div class="page" id="page-consulting">
+    <div class="page-header">
+      <div class="page-label">비대면 창업 컨설팅</div>
+      <div class="page-title">전문가 분석 자료를<br/>비대면으로 받아보세요</div>
+      <div class="page-desc">직접 방문 없이 맞춤 창업 전략 자료를 제공합니다.</div>
+    </div>
+    <div class="success-box" id="consult-success">
+      <div class="success-icon">🎉</div>
+      <div class="success-title">컨설팅 신청 완료!</div>
+      <div class="success-desc">선택하신 플랜 확인 후<br/>1~2 영업일 내에 담당자가 연락드립니다.</div>
+      <div class="success-info" id="consult-success-info"></div>
+      <a class="btn-back-main" href="meat_insight_main.html">메인으로 돌아가기</a>
+    </div>
+    <div class="form-layout" id="consult-form-area">
+      <div class="form-card">
+        <div class="form-section-title">플랜 선택 *</div>
+        <div class="plan-picker" style="margin-bottom:24px">
+          <div class="plan-opt" id="plan-basic" onclick="selectPlan('basic')">
+            <div class="plan-opt-top"><div class="plan-opt-name">BASIC</div><div class="plan-opt-price">150만원</div></div>
+            <div class="plan-opt-desc">창업 진단 결과 정리 · 기본 손익 분석표 · 핵심 체크포인트 · 이메일 Q&A 1회</div>
+          </div>
+          <div class="plan-opt selected" id="plan-premium" onclick="selectPlan('premium')">
+            <div class="plan-opt-top"><div class="plan-opt-name">PREMIUM <span class="plan-badge-rec">추천</span></div><div class="plan-opt-price">300만원</div></div>
+            <div class="plan-opt-desc">Basic 포함 · 심화 손익·원가 분석 · 창업 전략 자료 · 화상 미팅 1회(30분)</div>
+          </div>
+          <div class="plan-opt" id="plan-vip" onclick="selectPlan('vip')">
+            <div class="plan-opt-top"><div class="plan-opt-name">VIP</div><div class="plan-opt-price">500만원</div></div>
+            <div class="plan-opt-desc">Premium 포함 · 유통 연결 분석 · 운영 전략 · 화상 미팅 3회 · 6개월 Q&A</div>
+          </div>
+        </div>
+        <div class="form-section-title">신청자 정보</div>
+        <div class="fields">
+          <div class="field-row">
+            <div class="field"><label>이름 *</label><input type="text" id="cf-name" placeholder="홍길동"/></div>
+            <div class="field"><label>연락처 *</label><input type="tel" id="cf-phone" placeholder="010-0000-0000"/></div>
+          </div>
+          <div class="field">
+            <label>연락 방법 선호</label>
+            <select id="cf-contact">
+              <option>전화 통화 선호</option><option>카카오톡 선호</option>
+              <option>이메일 선호</option><option>상관없음</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>업종 *</label>
+            <select id="cf-type">
+              <option value="">선택해주세요</option>
+              <option>정육점 창업 준비 중</option><option>고깃집 창업 준비 중</option>
+              <option>정육식당 창업 준비 중</option><option>현재 운영 중 (전략 개선)</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>창업 예정 지역</label><input type="text" id="cf-region" placeholder="예: 서울 강남구"/></div>
+            <div class="field">
+              <label>목표 창업 시기</label>
+              <select id="cf-timeline">
+                <option>3개월 이내</option><option>3~6개월</option>
+                <option>6~12개월</option><option>1년 이상</option><option>아직 미정</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label>예상 창업 자본 (만원)</label><input type="number" id="cf-capital" placeholder="예: 8000"/></div>
+          <div class="field">
+            <label>가장 궁금한 점 / 컨설팅 목적</label>
+            <textarea id="cf-memo" placeholder="예: 20평 정육점 예상 수익이 궁금하고, 거래선 확보 방법을 알고 싶습니다."></textarea>
+            <div class="field-hint">구체적으로 적어주실수록 더 정밀한 자료를 준비할 수 있습니다</div>
+          </div>
+        </div>
+        <button class="btn-submit" id="consult-submit-btn" onclick="submitConsult()">
+          <div class="spinner" id="consult-spinner"></div>
+          컨설팅 신청 완료하기
+        </button>
+        <div class="error-msg" id="consult-error"></div>
+        <div class="submit-note">신청 후 1~2 영업일 내 담당자가 연락드립니다 · 결제는 상담 후 진행됩니다</div>
+      </div>
+      <div class="sidebar">
+        <div class="side-highlight">
+          <div class="side-highlight-title">결제는 상담 후</div>
+          <div class="side-highlight-desc">신청 → 담당자 연락 → 상담 → 플랜 확정 → 결제 → 자료 제공 순서로 진행됩니다.</div>
+        </div>
+        <div class="side-card">
+          <div class="side-card-title"><span>📋</span> 컨설팅 포함 내용</div>
+          <div class="side-items">
+            <div class="side-item"><div class="side-dot"></div>업종·규모별 맞춤 손익 분석</div>
+            <div class="side-item"><div class="side-dot"></div>원가 구조 및 수율 분석 자료</div>
+            <div class="side-item"><div class="side-dot"></div>창업 비용 항목별 가이드</div>
+            <div class="side-item"><div class="side-dot"></div>상권 분석 체크리스트</div>
+          </div>
+        </div>
+        <div class="side-card">
+          <div class="side-card-title"><span>💬</span> 자주 묻는 질문</div>
+          <div class="side-items">
+            <div class="side-item"><div class="side-dot"></div><b>직접 만나야 하나요?</b> — 전혀요. 이메일·카카오·화상으로 비대면 진행합니다.</div>
+            <div class="side-item"><div class="side-dot"></div><b>자료는 언제 받나요?</b> — 결제 완료 후 3~5 영업일 내 제공됩니다.</div>
+            <div class="side-item"><div class="side-dot"></div><b>환불 가능한가요?</b> — 자료 제공 전이라면 전액 환불 가능합니다.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="sticky-bar">
+  <div class="sticky-text">MEAT INSIGHT · 신청 센터<small>공급 연결 · 비대면 컨설팅</small></div>
+  <div class="sticky-actions">
+    <a class="sticky-btn outline" href="meat_insight_calculator.html">계산기</a>
+    <a class="sticky-btn" href="meat_insight_diagnosis.html">창업 진단</a>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   ★ SUPABASE 설정 — 아래 두 값만 교체하면 됩니다
+   1. https://supabase.com 가입 후 새 프로젝트 생성
+   2. Settings → API 에서 URL과 anon key 복사
+════════════════════════════════════════ */
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';      // 예: https://abcdef.supabase.co
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // 예: eyJhbGciOi...
+
+/* ★ 이메일 알림 설정 (EmailJS 사용)
+   1. https://www.emailjs.com 가입 (무월비 200건/월 무료)
+   2. Service ID, Template ID, Public Key 입력
+   알림 이메일 템플릿 변수: {{type}}, {{name}}, {{phone}}, {{detail}}
+*/
+const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
+const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
+const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
+const ADMIN_EMAIL         = 'YOUR_EMAIL@gmail.com'; // 알림받을 이메일
+
+// ── Supabase 초기화 ──
+let sb = null;
+try {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch(e) { console.warn('Supabase 미설정 — 데모 모드로 실행'); }
+
+// ── EmailJS 초기화 ──
+function initEmailJS() {
+  if (typeof emailjs === 'undefined') return;
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+}
+const ejsScript = document.createElement('script');
+ejsScript.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
+ejsScript.onload = initEmailJS;
+document.head.appendChild(ejsScript);
+
+// ── 탭 ──
+function switchTab(tab) {
+  ['supply','consulting'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('page-'+t).classList.toggle('active', t===tab);
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function toggleCheck(label) {
+  setTimeout(()=> label.classList.toggle('checked', label.querySelector('input').checked), 0);
+}
+
+let selectedPlan = 'premium';
+function selectPlan(plan) {
+  selectedPlan = plan;
+  ['basic','premium','vip'].forEach(p =>
+    document.getElementById('plan-'+p).classList.toggle('selected', p===plan)
+  );
+}
+
+// ── 이메일 알림 전송 ──
+async function sendEmailAlert(type, name, phone, detail) {
+  if (typeof emailjs === 'undefined' || EMAILJS_SERVICE_ID === 'YOUR_SERVICE_ID') return;
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email: ADMIN_EMAIL,
+      type, name, phone, detail,
+      time: new Date().toLocaleString('ko-KR')
+    });
+  } catch(e) { console.warn('이메일 알림 실패:', e); }
+}
+
+// ── 공급 연결 제출 ──
+async function submitSupply() {
+  const name   = document.getElementById('sf-name').value.trim();
+  const phone  = document.getElementById('sf-phone').value.trim();
+  const type   = document.getElementById('sf-type').value;
+  const region = document.getElementById('sf-region').value.trim();
+  const errEl  = document.getElementById('supply-error');
+  errEl.classList.remove('show');
+
+  if (!name || !phone || !type || !region) {
+    errEl.textContent = '이름, 연락처, 업종, 지역은 필수 항목입니다.';
+    errEl.classList.add('show'); return;
+  }
+
+  const btn = document.getElementById('supply-submit-btn');
+  const spinner = document.getElementById('supply-spinner');
+  btn.disabled = true;
+  spinner.classList.add('show');
+  btn.childNodes[btn.childNodes.length-1].textContent = ' 신청 중...';
+
+  const items   = [...document.querySelectorAll('#supply-items input:checked')].map(i=>i.value).join(', ') || '미선택';
+  const payload = {
+    name, phone,
+    biz_name: document.getElementById('sf-biz').value.trim(),
+    type, region, items,
+    volume:  document.getElementById('sf-volume').value,
+    cycle:   document.getElementById('sf-cycle').value,
+    price:   document.getElementById('sf-price').value.trim(),
+    memo:    document.getElementById('sf-memo').value.trim(),
+    status:  '신규',
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    // Supabase 저장
+    if (sb && SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+      const { error } = await sb.from('supply_requests').insert([payload]);
+      if (error) throw error;
+    }
+    // 이메일 알림
+    await sendEmailAlert('공급연결', name, phone,
+      `업종: ${type} / 지역: ${region} / 품목: ${items} / 구매량: ${payload.volume}`);
+
+    // 성공 화면
+    document.getElementById('supply-success-info').innerHTML = `
+      <div class="success-info-row"><div class="success-info-label">이름</div><div class="success-info-val">${name}</div></div>
+      <div class="success-info-row"><div class="success-info-label">연락처</div><div class="success-info-val">${phone}</div></div>
+      <div class="success-info-row"><div class="success-info-label">업종</div><div class="success-info-val">${type}</div></div>
+      <div class="success-info-row"><div class="success-info-label">지역</div><div class="success-info-val">${region}</div></div>
+      <div class="success-info-row"><div class="success-info-label">요청 품목</div><div class="success-info-val">${items}</div></div>`;
+    document.getElementById('supply-form-area').style.display = 'none';
+    document.getElementById('supply-success').classList.add('show');
+    window.scrollTo({top:0,behavior:'smooth'});
+
+  } catch(e) {
+    errEl.textContent = '저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    errEl.classList.add('show');
+    btn.disabled = false;
+    spinner.classList.remove('show');
+    btn.childNodes[btn.childNodes.length-1].textContent = ' 공급 연결 신청하기';
+  }
+}
+
+// ── 컨설팅 제출 ──
+async function submitConsult() {
+  const name  = document.getElementById('cf-name').value.trim();
+  const phone = document.getElementById('cf-phone').value.trim();
+  const type  = document.getElementById('cf-type').value;
+  const errEl = document.getElementById('consult-error');
+  errEl.classList.remove('show');
+
+  if (!name || !phone || !type) {
+    errEl.textContent = '이름, 연락처, 업종은 필수 항목입니다.';
+    errEl.classList.add('show'); return;
+  }
+
+  const btn = document.getElementById('consult-submit-btn');
+  const spinner = document.getElementById('consult-spinner');
+  btn.disabled = true;
+  spinner.classList.add('show');
+  btn.childNodes[btn.childNodes.length-1].textContent = ' 신청 중...';
+
+  const planNames = {basic:'BASIC — 150만원', premium:'PREMIUM — 300만원', vip:'VIP — 500만원'};
+  const payload = {
+    name, phone,
+    plan: selectedPlan,
+    type,
+    region:   document.getElementById('cf-region').value.trim(),
+    timeline: document.getElementById('cf-timeline').value,
+    capital:  document.getElementById('cf-capital').value,
+    contact:  document.getElementById('cf-contact').value,
+    memo:     document.getElementById('cf-memo').value.trim(),
+    status:   '신규',
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    if (sb && SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+      const { error } = await sb.from('consult_requests').insert([payload]);
+      if (error) throw error;
+    }
+    await sendEmailAlert('컨설팅', name, phone,
+      `플랜: ${planNames[selectedPlan]} / 업종: ${type} / 지역: ${payload.region} / 시기: ${payload.timeline}`);
+
+    document.getElementById('consult-success-info').innerHTML = `
+      <div class="success-info-row"><div class="success-info-label">이름</div><div class="success-info-val">${name}</div></div>
+      <div class="success-info-row"><div class="success-info-label">연락처</div><div class="success-info-val">${phone}</div></div>
+      <div class="success-info-row"><div class="success-info-label">선택 플랜</div><div class="success-info-val">${planNames[selectedPlan]}</div></div>
+      <div class="success-info-row"><div class="success-info-label">업종</div><div class="success-info-val">${type}</div></div>
+      <div class="success-info-row"><div class="success-info-label">연락 방법</div><div class="success-info-val">${payload.contact}</div></div>`;
+    document.getElementById('consult-form-area').style.display = 'none';
+    document.getElementById('consult-success').classList.add('show');
+    window.scrollTo({top:0,behavior:'smooth'});
+
+  } catch(e) {
+    errEl.textContent = '저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    errEl.classList.add('show');
+    btn.disabled = false;
+    spinner.classList.remove('show');
+    btn.childNodes[btn.childNodes.length-1].textContent = ' 컨설팅 신청 완료하기';
+  }
+}
+
+const params = new URLSearchParams(location.search);
+if (params.get('tab') === 'consulting') switchTab('consulting');
+</script>
+</body>
+</html>

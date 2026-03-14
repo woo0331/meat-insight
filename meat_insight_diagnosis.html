@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>창업 진단 | MEAT INSIGHT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --navy:#0b1f3a; --navy2:#132d50; --gold:#b8945a; --gold2:#d4a96a;
+      --gold-light:#f0e0c0; --white:#fff; --off:#f8f6f2; --muted:#6b7280;
+      --line:#e8e2d8; --green:#166534; --green-bg:#f0fdf4;
+      --red:#991b1b; --red-bg:#fef2f2;
+      --radius:20px; --shadow:0 8px 32px rgba(11,31,58,.10);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Noto Sans KR',sans-serif;background:var(--off);color:var(--navy);overflow-x:hidden}
+
+    /* NAV */
+    .nav{
+      position:sticky;top:0;z-index:100;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 32px;
+      background:rgba(248,246,242,.95);backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--line);
+    }
+    .nav-brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+    .nav-logo{
+      width:40px;height:40px;border-radius:10px;
+      background:var(--navy);color:var(--gold);
+      display:grid;place-items:center;
+      font-family:'Playfair Display',serif;font-size:18px;font-weight:900;
+    }
+    .nav-brand-text b{display:block;font-size:14px;font-weight:900;color:var(--navy)}
+    .nav-brand-text span{display:block;font-size:11px;color:var(--muted)}
+    .nav-right{display:flex;gap:8px}
+    .nav-btn{
+      padding:9px 18px;border-radius:999px;font-size:13px;font-weight:700;
+      text-decoration:none;border:1.5px solid var(--line);color:var(--navy);
+      transition:background .15s;
+    }
+    .nav-btn:hover{background:var(--line)}
+    .nav-btn.primary{background:var(--navy);color:var(--gold);border-color:transparent}
+    @media(max-width:640px){.nav{padding:12px 16px}.nav-right{display:none}}
+
+    /* HERO STRIP */
+    .hero-strip{
+      background:var(--navy);padding:40px 32px 50px;
+      text-align:center;position:relative;overflow:hidden;
+    }
+    .hero-strip::before{
+      content:'';position:absolute;inset:0;pointer-events:none;
+      background:radial-gradient(ellipse 600px 300px at 50% 120%,rgba(184,148,90,.15),transparent 60%);
+    }
+    .hero-strip-label{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:5px 12px;border-radius:999px;
+      border:1px solid rgba(184,148,90,.3);
+      color:var(--gold);font-size:12px;font-weight:700;
+      margin-bottom:16px;position:relative;
+    }
+    .hero-strip h1{
+      font-family:'Playfair Display',serif;
+      font-size:clamp(26px,4vw,42px);font-weight:900;
+      color:var(--white);line-height:1.15;margin-bottom:12px;position:relative;
+    }
+    .hero-strip h1 em{color:var(--gold);font-style:normal}
+    .hero-strip p{font-size:15px;color:rgba(255,255,255,.6);position:relative}
+
+    /* PROGRESS BAR */
+    .progress-wrap{
+      background:var(--white);border-bottom:1px solid var(--line);
+      padding:20px 32px;
+    }
+    .progress-inner{max-width:720px;margin:0 auto}
+    .progress-steps{display:flex;align-items:center;gap:0;margin-bottom:10px}
+    .progress-step{
+      display:flex;align-items:center;gap:8px;flex:1;
+    }
+    .progress-step:last-child{flex:0}
+    .step-dot{
+      width:32px;height:32px;border-radius:50%;flex-shrink:0;
+      display:grid;place-items:center;font-size:12px;font-weight:900;
+      border:2px solid var(--line);background:var(--white);color:var(--muted);
+      transition:all .3s;position:relative;z-index:1;
+    }
+    .step-dot.active{border-color:var(--gold);background:var(--gold);color:var(--navy)}
+    .step-dot.done{border-color:var(--navy);background:var(--navy);color:var(--gold)}
+    .step-line{flex:1;height:2px;background:var(--line);transition:background .3s}
+    .step-line.done{background:var(--navy)}
+    .progress-labels{display:flex;justify-content:space-between}
+    .progress-label{font-size:11px;font-weight:700;color:var(--muted);text-align:center;flex:1}
+    .progress-label:last-child{flex:0;min-width:60px;text-align:right}
+    .progress-label.active{color:var(--navy)}
+    @media(max-width:640px){
+      .progress-wrap{padding:16px}
+      .progress-label{display:none}
+      .progress-label.active{display:block}
+    }
+
+    /* MAIN AREA */
+    .main{max-width:720px;margin:0 auto;padding:40px 32px 120px}
+    @media(max-width:640px){.main{padding:24px 16px 120px}}
+
+    /* STEP PANELS */
+    .step-panel{display:none;animation:fadeUp .4s ease both}
+    .step-panel.active{display:block}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+    .step-header{margin-bottom:32px}
+    .step-num{
+      font-size:12px;font-weight:700;color:var(--gold);
+      letter-spacing:.5px;margin-bottom:8px;
+    }
+    .step-title{
+      font-family:'Playfair Display',serif;
+      font-size:clamp(22px,3vw,32px);font-weight:900;
+      color:var(--navy);line-height:1.2;margin-bottom:10px;
+    }
+    .step-desc{font-size:15px;color:var(--muted);line-height:1.7}
+
+    /* CHOICE CARDS */
+    .choice-grid{display:grid;gap:12px}
+    .choice-grid.col2{grid-template-columns:1fr 1fr}
+    .choice-card{
+      padding:20px 24px;border-radius:16px;
+      border:2px solid var(--line);background:var(--white);
+      cursor:pointer;transition:all .2s;
+      display:flex;align-items:center;gap:16px;
+    }
+    .choice-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:var(--shadow)}
+    .choice-card.selected{border-color:var(--navy);background:#f0f4ff}
+    .choice-icon{font-size:28px;flex-shrink:0}
+    .choice-text b{display:block;font-size:16px;font-weight:900;color:var(--navy);margin-bottom:4px}
+    .choice-text span{font-size:13px;color:var(--muted);line-height:1.5}
+    @media(max-width:500px){.choice-grid.col2{grid-template-columns:1fr}}
+
+    /* INPUT GROUP */
+    .input-group{display:flex;flex-direction:column;gap:16px;margin-bottom:8px}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field label{font-size:14px;font-weight:700;color:var(--navy)}
+    .field-hint{font-size:12px;color:var(--muted)}
+    .field input,.field select{
+      padding:14px 16px;border-radius:12px;
+      border:2px solid var(--line);font-size:16px;
+      font-family:inherit;color:var(--navy);background:var(--white);
+      outline:none;transition:border-color .15s;
+      -webkit-appearance:none;
+    }
+    .field input:focus,.field select:focus{border-color:var(--gold)}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:500px){.field-row{grid-template-columns:1fr}}
+
+    /* SLIDER */
+    .slider-wrap{margin-top:4px}
+    .slider-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px}
+    input[type=range]{
+      width:100%;accent-color:var(--gold);cursor:pointer;
+      height:4px;border-radius:2px;
+    }
+    .slider-value{
+      text-align:center;font-size:22px;font-weight:900;
+      color:var(--navy);margin-top:8px;font-family:'Playfair Display',serif;
+    }
+    .slider-value span{font-size:14px;font-weight:500;color:var(--muted)}
+
+    /* RANGE PILLS */
+    .range-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .range-pill{
+      padding:8px 16px;border-radius:999px;
+      border:1.5px solid var(--line);background:var(--white);
+      font-size:13px;font-weight:700;color:var(--navy);
+      cursor:pointer;transition:all .15s;
+    }
+    .range-pill:hover{border-color:var(--gold)}
+    .range-pill.selected{border-color:var(--navy);background:var(--navy);color:var(--gold)}
+
+    /* NAVIGATION BUTTONS */
+    .step-nav{
+      display:flex;justify-content:space-between;align-items:center;
+      margin-top:36px;gap:12px;
+    }
+    .btn-back{
+      padding:14px 24px;border-radius:999px;
+      border:1.5px solid var(--line);background:var(--white);
+      font-size:15px;font-weight:700;color:var(--muted);
+      cursor:pointer;font-family:inherit;transition:all .15s;
+    }
+    .btn-back:hover{border-color:var(--navy);color:var(--navy)}
+    .btn-next{
+      padding:14px 32px;border-radius:999px;
+      background:var(--navy);color:var(--gold);
+      font-size:15px;font-weight:900;border:none;
+      cursor:pointer;font-family:inherit;
+      transition:opacity .15s,transform .15s;
+      box-shadow:0 4px 16px rgba(11,31,58,.25);
+      flex:1;max-width:280px;
+    }
+    .btn-next:hover{opacity:.88;transform:translateY(-1px)}
+    .btn-next:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+    /* RESULT PANEL */
+    .result-hero{
+      background:var(--navy);border-radius:24px;padding:36px;
+      margin-bottom:20px;position:relative;overflow:hidden;
+      text-align:center;
+    }
+    .result-hero::before{
+      content:'';position:absolute;inset:0;pointer-events:none;
+      background:radial-gradient(ellipse at 50% 0%,rgba(184,148,90,.2),transparent 60%);
+    }
+    .result-score-label{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:8px;position:relative}
+    .result-score{
+      font-family:'Playfair Display',serif;
+      font-size:80px;font-weight:900;line-height:1;
+      color:var(--gold);position:relative;
+    }
+    .result-score-suffix{font-size:28px;color:rgba(255,255,255,.5)}
+    .result-grade{
+      display:inline-block;padding:6px 18px;border-radius:999px;
+      font-size:14px;font-weight:900;margin-top:12px;position:relative;
+    }
+    .result-grade.A{background:rgba(22,101,52,.3);color:#86efac}
+    .result-grade.B{background:rgba(184,148,90,.2);color:var(--gold2)}
+    .result-grade.C{background:rgba(153,27,27,.2);color:#fca5a5}
+    .result-summary{font-size:15px;color:rgba(255,255,255,.65);margin-top:16px;line-height:1.7;position:relative}
+
+    .result-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
+    .result-card{
+      background:var(--white);border:1px solid var(--line);
+      border-radius:16px;padding:20px;box-shadow:var(--shadow);
+    }
+    .result-card-label{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px}
+    .result-card-val{
+      font-family:'Playfair Display',serif;
+      font-size:22px;font-weight:900;color:var(--navy);
+    }
+    .result-card-sub{font-size:12px;color:var(--muted);margin-top:4px}
+    @media(max-width:600px){.result-cards{grid-template-columns:1fr 1fr}}
+    @media(max-width:400px){.result-cards{grid-template-columns:1fr}}
+
+    .result-section{background:var(--white);border:1px solid var(--line);border-radius:20px;padding:28px;margin-bottom:16px}
+    .result-section-title{font-size:17px;font-weight:900;color:var(--navy);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .result-section-title span{font-size:18px}
+    .result-items{display:flex;flex-direction:column;gap:10px}
+    .result-item{
+      display:flex;align-items:flex-start;gap:12px;
+      padding:12px 14px;border-radius:10px;
+      font-size:14px;line-height:1.6;
+    }
+    .result-item.good{background:var(--green-bg);color:var(--green)}
+    .result-item.warn{background:#fffbeb;color:#92400e}
+    .result-item.bad{background:var(--red-bg);color:var(--red)}
+    .result-item-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+
+    .result-cta{
+      background:linear-gradient(135deg,var(--navy),#1a3560);
+      border-radius:20px;padding:32px;text-align:center;
+    }
+    .result-cta h3{
+      font-family:'Playfair Display',serif;
+      font-size:22px;font-weight:900;color:var(--white);margin-bottom:8px;
+    }
+    .result-cta p{font-size:14px;color:rgba(255,255,255,.6);margin-bottom:24px;line-height:1.7}
+    .result-cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .btn-gold{
+      padding:14px 28px;border-radius:999px;
+      background:var(--gold);color:var(--navy);
+      font-size:15px;font-weight:900;text-decoration:none;border:none;
+      cursor:pointer;font-family:inherit;
+      transition:opacity .15s;
+      box-shadow:0 4px 16px rgba(184,148,90,.4);
+    }
+    .btn-gold:hover{opacity:.88}
+    .btn-ghost{
+      padding:14px 28px;border-radius:999px;
+      border:1.5px solid rgba(255,255,255,.2);color:var(--white);
+      font-size:15px;font-weight:700;text-decoration:none;
+      transition:border-color .15s;
+    }
+    .btn-ghost:hover{border-color:rgba(255,255,255,.5)}
+
+    /* STICKY */
+    .sticky-bar{
+      position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;
+      width:min(700px,calc(100% - 32px));
+      padding:12px 20px;
+      background:rgba(11,31,58,.95);backdrop-filter:blur(20px);
+      border:1px solid rgba(184,148,90,.2);border-radius:16px;
+      box-shadow:0 8px 32px rgba(0,0,0,.3);
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+    }
+    .sticky-bar-text{font-size:13px;font-weight:700;color:var(--white)}
+    .sticky-bar-text small{display:block;font-size:11px;color:rgba(255,255,255,.4);font-weight:400}
+    .sticky-btn{
+      padding:10px 20px;border-radius:999px;
+      background:var(--gold);color:var(--navy);
+      font-size:13px;font-weight:900;text-decoration:none;white-space:nowrap;
+    }
+    @media(max-width:500px){
+      .sticky-bar{flex-direction:column;align-items:stretch;gap:8px}
+      .sticky-btn{text-align:center}
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="nav-brand" href="meat_insight_main.html">
+    <div class="nav-logo">肉</div>
+    <div class="nav-brand-text">
+      <b>MEAT INSIGHT</b>
+      <span>고기의 모든것</span>
+    </div>
+  </a>
+  <div class="nav-right">
+    <a class="nav-btn" href="meat_insight_main.html">← 메인으로</a>
+    <a class="nav-btn primary" href="#" onclick="openConsult()">컨설팅 신청</a>
+  </div>
+</nav>
+
+<!-- HERO STRIP -->
+<div class="hero-strip">
+  <div class="hero-strip-label">무료 · 2분 완성</div>
+  <h1>내 창업, 지금 <em>진단</em>해보세요</h1>
+  <p>지역·업종·자본 정보를 입력하면 예상 매출과 리스크를 즉시 분석합니다</p>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-wrap">
+  <div class="progress-inner">
+    <div class="progress-steps" id="progress-steps">
+      <div class="progress-step">
+        <div class="step-dot active" id="dot-1">1</div>
+        <div class="step-line" id="line-1"></div>
+      </div>
+      <div class="progress-step">
+        <div class="step-dot" id="dot-2">2</div>
+        <div class="step-line" id="line-2"></div>
+      </div>
+      <div class="progress-step">
+        <div class="step-dot" id="dot-3">3</div>
+        <div class="step-line" id="line-3"></div>
+      </div>
+      <div class="progress-step">
+        <div class="step-dot" id="dot-4">4</div>
+        <div class="step-line" id="line-4"></div>
+      </div>
+      <div class="progress-step">
+        <div class="step-dot" id="dot-5">5</div>
+        <div class="step-line" id="line-5"></div>
+      </div>
+      <div class="progress-step">
+        <div class="step-dot" id="dot-6">✓</div>
+      </div>
+    </div>
+    <div class="progress-labels">
+      <div class="progress-label active" id="label-1">업종</div>
+      <div class="progress-label" id="label-2">지역</div>
+      <div class="progress-label" id="label-3">규모</div>
+      <div class="progress-label" id="label-4">자본</div>
+      <div class="progress-label" id="label-5">정보</div>
+      <div class="progress-label" id="label-6" style="min-width:60px">결과</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+  <!-- STEP 1: 업종 선택 -->
+  <div class="step-panel active" id="step-1">
+    <div class="step-header">
+      <div class="step-num">STEP 01 / 05</div>
+      <div class="step-title">어떤 업종으로<br/>창업하실 건가요?</div>
+      <div class="step-desc">업종에 따라 분석 방식이 달라집니다. 해당하는 것을 선택해주세요.</div>
+    </div>
+    <div class="choice-grid">
+      <div class="choice-card" onclick="selectChoice(this, 'type', '정육점')" data-val="정육점">
+        <div class="choice-icon">🥩</div>
+        <div class="choice-text">
+          <b>정육점 창업</b>
+          <span>소·돼지·닭 등 신선육 판매<br/>동네 상권 중심 소매업</span>
+        </div>
+      </div>
+      <div class="choice-card" onclick="selectChoice(this, 'type', '고깃집')" data-val="고깃집">
+        <div class="choice-icon">🍖</div>
+        <div class="choice-text">
+          <b>고깃집 창업</b>
+          <span>구이·수육 등 외식업<br/>좌석 기반 홀 운영</span>
+        </div>
+      </div>
+      <div class="choice-card" onclick="selectChoice(this, 'type', '정육+식당')" data-val="정육+식당">
+        <div class="choice-icon">🏪</div>
+        <div class="choice-text">
+          <b>정육 + 식당 병행</b>
+          <span>판매와 식사를 함께 운영<br/>정육식당 형태</span>
+        </div>
+      </div>
+      <div class="choice-card" onclick="selectChoice(this, 'type', '아직 미정')" data-val="아직 미정">
+        <div class="choice-icon">🤔</div>
+        <div class="choice-text">
+          <b>아직 결정 못 했어요</b>
+          <span>두 가지 모두 비교 분석<br/>후 결정하고 싶어요</span>
+        </div>
+      </div>
+    </div>
+    <div class="step-nav">
+      <div></div>
+      <button class="btn-next" id="next-1" onclick="goNext(2)" disabled>다음 단계 →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: 지역 -->
+  <div class="step-panel" id="step-2">
+    <div class="step-header">
+      <div class="step-num">STEP 02 / 05</div>
+      <div class="step-title">창업 예정 지역은<br/>어디인가요?</div>
+      <div class="step-desc">상권과 유동인구 분석에 활용됩니다.</div>
+    </div>
+    <div class="input-group">
+      <div class="field">
+        <label>광역시·도 선택</label>
+        <select id="region-sido" onchange="updateSigungu()">
+          <option value="">선택해주세요</option>
+          <option>서울특별시</option>
+          <option>경기도</option>
+          <option>인천광역시</option>
+          <option>부산광역시</option>
+          <option>대구광역시</option>
+          <option>광주광역시</option>
+          <option>대전광역시</option>
+          <option>울산광역시</option>
+          <option>세종특별자치시</option>
+          <option>강원도</option>
+          <option>충청북도</option>
+          <option>충청남도</option>
+          <option>전라북도</option>
+          <option>전라남도</option>
+          <option>경상북도</option>
+          <option>경상남도</option>
+          <option>제주특별자치도</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>시·군·구 입력</label>
+        <input type="text" id="region-sigungu" placeholder="예: 마포구, 수원시 영통구" oninput="checkStep2()"/>
+      </div>
+      <div class="field">
+        <label>상권 유형</label>
+        <div class="choice-grid col2" style="margin-top:4px">
+          <div class="choice-card" style="padding:14px 16px" onclick="selectChoice(this,'area-type','주택가·아파트 상권')">
+            <div class="choice-icon" style="font-size:20px">🏘️</div>
+            <div class="choice-text"><b style="font-size:14px">주택가·아파트</b></div>
+          </div>
+          <div class="choice-card" style="padding:14px 16px" onclick="selectChoice(this,'area-type','상업지·번화가')">
+            <div class="choice-icon" style="font-size:20px">🏙️</div>
+            <div class="choice-text"><b style="font-size:14px">상업지·번화가</b></div>
+          </div>
+          <div class="choice-card" style="padding:14px 16px" onclick="selectChoice(this,'area-type','역세권')">
+            <div class="choice-icon" style="font-size:20px">🚇</div>
+            <div class="choice-text"><b style="font-size:14px">역세권</b></div>
+          </div>
+          <div class="choice-card" style="padding:14px 16px" onclick="selectChoice(this,'area-type','외곽·로드샵')">
+            <div class="choice-icon" style="font-size:20px">🛣️</div>
+            <div class="choice-text"><b style="font-size:14px">외곽·로드샵</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="step-nav">
+      <button class="btn-back" onclick="goStep(1)">← 이전</button>
+      <button class="btn-next" id="next-2" onclick="goNext(3)" disabled>다음 단계 →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: 규모 -->
+  <div class="step-panel" id="step-3">
+    <div class="step-header">
+      <div class="step-num">STEP 03 / 05</div>
+      <div class="step-title">매장 규모를<br/>알려주세요</div>
+      <div class="step-desc">평수와 좌석 수가 매출 계산의 기준이 됩니다.</div>
+    </div>
+    <div class="input-group">
+      <div class="field">
+        <label>예상 매장 평수</label>
+        <div class="slider-wrap">
+          <div class="slider-labels"><span>5평</span><span>150평 이상</span></div>
+          <input type="range" id="area-slider" min="5" max="150" value="20" step="5" oninput="updateAreaSlider()"/>
+          <div class="slider-value" id="area-val">20 <span>평</span></div>
+        </div>
+        <div class="range-pills" style="margin-top:12px">
+          <div class="range-pill" onclick="setArea(10)">10평</div>
+          <div class="range-pill selected" onclick="setArea(20)">20평</div>
+          <div class="range-pill" onclick="setArea(30)">30평</div>
+          <div class="range-pill" onclick="setArea(50)">50평</div>
+          <div class="range-pill" onclick="setArea(80)">80평+</div>
+        </div>
+      </div>
+      <div class="field" id="seats-field" style="display:none">
+        <label>좌석 수 (고깃집·식당)</label>
+        <input type="number" id="seats-input" placeholder="예: 40" min="1" oninput="checkStep3()"/>
+        <div class="field-hint">4인 테이블 기준 입력을 권장합니다</div>
+      </div>
+      <div class="field">
+        <label>임대 형태</label>
+        <div class="choice-grid col2" style="margin-top:4px">
+          <div class="choice-card" style="padding:14px 16px" onclick="selectChoice(this,'rent-type','임차(월세)')">
+            <div class="choice-icon" style="font-size:20px">🏠</div>
+            <div class="choice-text"><b style="font-size:14px">임차 (월세)</b></div>
+          </div>
+          <div class="choice-card" style="padding:14px 16px" onclick="selectChoice(this,'rent-type','자가 소유')">
+            <div class="choice-icon" style="font-size:20px">🔑</div>
+            <div class="choice-text"><b style="font-size:14px">자가 소유</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="step-nav">
+      <button class="btn-back" onclick="goStep(2)">← 이전</button>
+      <button class="btn-next" onclick="goNext(4)">다음 단계 →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: 자본 -->
+  <div class="step-panel" id="step-4">
+    <div class="step-header">
+      <div class="step-num">STEP 04 / 05</div>
+      <div class="step-title">창업 자본금은<br/>얼마인가요?</div>
+      <div class="step-desc">보증금과 운영 준비금을 합친 총 금액을 입력해주세요.</div>
+    </div>
+    <div class="input-group">
+      <div class="field">
+        <label>총 창업 가용 자본 (만원)</label>
+        <div class="slider-wrap">
+          <div class="slider-labels"><span>1,000만원</span><span>3억+</span></div>
+          <input type="range" id="capital-slider" min="1000" max="30000" value="8000" step="500" oninput="updateCapitalSlider()"/>
+          <div class="slider-value" id="capital-val">8,000 <span>만원</span></div>
+        </div>
+        <div class="range-pills" style="margin-top:12px">
+          <div class="range-pill" onclick="setCapital(3000)">3천만</div>
+          <div class="range-pill" onclick="setCapital(5000)">5천만</div>
+          <div class="range-pill selected" onclick="setCapital(8000)">8천만</div>
+          <div class="range-pill" onclick="setCapital(10000)">1억</div>
+          <div class="range-pill" onclick="setCapital(15000)">1.5억+</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>자금 조달 방식</label>
+        <div class="choice-grid" style="margin-top:4px">
+          <div class="choice-card" style="padding:14px 16px" onclick="selectChoice(this,'fund-type','자기자금 100%')">
+            <div class="choice-icon" style="font-size:20px">💰</div>
+            <div class="choice-text"><b style="font-size:14px">자기자금 100%</b></div>
+          </div>
+          <div class="choice-card" style="padding:14px 16px" onclick="selectChoice(this,'fund-type','자기자금 + 대출')">
+            <div class="choice-icon" style="font-size:20px">🏦</div>
+            <div class="choice-text"><b style="font-size:14px">자기자금 + 대출</b></div>
+          </div>
+          <div class="choice-card" style="padding:14px 16px" onclick="selectChoice(this,'fund-type','정부 지원금 활용')">
+            <div class="choice-icon" style="font-size:20px">📋</div>
+            <div class="choice-text"><b style="font-size:14px">정부 지원금 활용</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="step-nav">
+      <button class="btn-back" onclick="goStep(3)">← 이전</button>
+      <button class="btn-next" onclick="goNext(5)">다음 단계 →</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: 연락처 -->
+  <div class="step-panel" id="step-5">
+    <div class="step-header">
+      <div class="step-num">STEP 05 / 05</div>
+      <div class="step-title">결과를 보내드릴<br/>정보를 입력해주세요</div>
+      <div class="step-desc">입력하신 정보는 진단 결과 전달 외에 사용되지 않습니다.</div>
+    </div>
+    <div class="input-group">
+      <div class="field-row">
+        <div class="field">
+          <label>이름</label>
+          <input type="text" id="user-name" placeholder="홍길동" oninput="checkStep5()"/>
+        </div>
+        <div class="field">
+          <label>연락처</label>
+          <input type="tel" id="user-phone" placeholder="010-0000-0000" oninput="checkStep5()"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>창업 경험</label>
+        <div class="choice-grid col2" style="margin-top:4px">
+          <div class="choice-card" style="padding:14px 16px" onclick="selectChoice(this,'exp','창업 처음')">
+            <div class="choice-icon" style="font-size:20px">🌱</div>
+            <div class="choice-text"><b style="font-size:14px">창업 처음</b></div>
+          </div>
+          <div class="choice-card" style="padding:14px 16px" onclick="selectChoice(this,'exp','창업 경험 있음')">
+            <div class="choice-icon" style="font-size:20px">💼</div>
+            <div class="choice-text"><b style="font-size:14px">창업 경험 있음</b></div>
+          </div>
+          <div class="choice-card" style="padding:14px 16px" onclick="selectChoice(this,'exp','업종 경력 있음')">
+            <div class="choice-icon" style="font-size:20px">🥩</div>
+            <div class="choice-text"><b style="font-size:14px">업종 경력 있음</b></div>
+          </div>
+          <div class="choice-card" style="padding:14px 16px" onclick="selectChoice(this,'exp','현재 운영 중')">
+            <div class="choice-icon" style="font-size:20px">🏪</div>
+            <div class="choice-text"><b style="font-size:14px">현재 운영 중</b></div>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>창업 목표 시기</label>
+        <div class="choice-grid col2" style="margin-top:4px">
+          <div class="choice-card" style="padding:12px 16px" onclick="selectChoice(this,'timeline','3개월 이내')">
+            <div class="choice-text"><b style="font-size:14px">3개월 이내</b></div>
+          </div>
+          <div class="choice-card" style="padding:12px 16px" onclick="selectChoice(this,'timeline','3~6개월')">
+            <div class="choice-text"><b style="font-size:14px">3~6개월</b></div>
+          </div>
+          <div class="choice-card" style="padding:12px 16px" onclick="selectChoice(this,'timeline','6~12개월')">
+            <div class="choice-text"><b style="font-size:14px">6~12개월</b></div>
+          </div>
+          <div class="choice-card" style="padding:12px 16px" onclick="selectChoice(this,'timeline','아직 미정')">
+            <div class="choice-text"><b style="font-size:14px">아직 미정</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="step-nav">
+      <button class="btn-back" onclick="goStep(4)">← 이전</button>
+      <button class="btn-next" id="next-5" onclick="showResult()" disabled>진단 결과 보기 →</button>
+    </div>
+  </div>
+
+  <!-- STEP 6: 결과 -->
+  <div class="step-panel" id="step-6">
+    <div class="result-hero">
+      <div class="result-score-label">창업 준비도 점수</div>
+      <div class="result-score" id="result-score">72<span class="result-score-suffix">점</span></div>
+      <div class="result-grade B" id="result-grade">B등급 · 준비 중</div>
+      <div class="result-summary" id="result-summary">입력하신 조건을 분석했습니다. 아래 상세 분석을 확인하세요.</div>
+    </div>
+
+    <div class="result-cards" id="result-cards">
+      <div class="result-card">
+        <div class="result-card-label">예상 월 매출</div>
+        <div class="result-card-val" id="res-revenue">-</div>
+        <div class="result-card-sub">기본 운영 시 추정치</div>
+      </div>
+      <div class="result-card">
+        <div class="result-card-label">예상 순이익</div>
+        <div class="result-card-val" id="res-profit">-</div>
+        <div class="result-card-sub">비용 공제 후 추정치</div>
+      </div>
+      <div class="result-card">
+        <div class="result-card-label">투자 회수 기간</div>
+        <div class="result-card-val" id="res-recovery">-</div>
+        <div class="result-card-sub">자본금 기준</div>
+      </div>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-title"><span>✅</span> 강점 분석</div>
+      <div class="result-items" id="res-good"></div>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-title"><span>⚠️</span> 주의 포인트</div>
+      <div class="result-items" id="res-warn"></div>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-title"><span>📋</span> 추천 다음 행동</div>
+      <div class="result-items" id="res-action"></div>
+    </div>
+
+    <div class="result-cta">
+      <h3>더 정확한 분석이 필요하신가요?</h3>
+      <p>지금 보신 결과는 기본 진단입니다. 전문가 비대면 컨설팅으로<br/>손익 구조, 원가 분석, 유통 연결까지 완성하세요.</p>
+      <div class="result-cta-btns">
+        <button class="btn-gold" onclick="openConsult()">비대면 컨설팅 신청</button>
+        <a class="btn-ghost" href="meat_insight_main.html#calculators">계산기 더 해보기</a>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- STICKY -->
+<div class="sticky-bar">
+  <div class="sticky-bar-text">
+    MEAT INSIGHT · 창업 진단
+    <small>무료 · 데이터 기반 분석</small>
+  </div>
+  <a class="sticky-btn" href="meat_insight_main.html">메인으로 돌아가기</a>
+</div>
+
+<script>
+  /* ── 상태 저장 ── */
+  const answers = {};
+  let currentStep = 1;
+
+  /* ── 선택 카드 ── */
+  function selectChoice(el, key, val) {
+    const grid = el.closest('.choice-grid, .input-group');
+    if (grid) {
+      grid.querySelectorAll(`.choice-card[onclick*="'${key}'"]`).forEach(c => c.classList.remove('selected'));
+    }
+    el.classList.add('selected');
+    answers[key] = val;
+    if (key === 'type') {
+      document.getElementById('next-1').disabled = false;
+      if (val === '고깃집' || val === '정육+식당') {
+        document.getElementById('seats-field').style.display = 'block';
+      } else {
+        document.getElementById('seats-field').style.display = 'none';
+      }
+    }
+    if (key === 'area-type') checkStep2();
+  }
+
+  /* ── 스텝 이동 ── */
+  function goStep(n) {
+    document.getElementById('step-' + currentStep).classList.remove('active');
+    document.getElementById('step-' + n).classList.add('active');
+    currentStep = n;
+    updateProgress(n);
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+
+  function goNext(n) {
+    goStep(n);
+  }
+
+  /* ── 프로그레스 업데이트 ── */
+  function updateProgress(step) {
+    for (let i = 1; i <= 6; i++) {
+      const dot = document.getElementById('dot-' + i);
+      const line = document.getElementById('line-' + i);
+      const label = document.getElementById('label-' + i);
+      if (!dot) continue;
+      dot.classList.remove('active', 'done');
+      if (line) line.classList.remove('done');
+      if (label) label.classList.remove('active');
+      if (i < step) {
+        dot.classList.add('done');
+        dot.textContent = '✓';
+        if (line) line.classList.add('done');
+      } else if (i === step) {
+        dot.classList.add('active');
+        dot.textContent = i < 6 ? i : '✓';
+        if (label) label.classList.add('active');
+      } else {
+        dot.textContent = i < 6 ? i : '✓';
+      }
+    }
+  }
+
+  /* ── 밸리데이션 ── */
+  function checkStep2() {
+    const sido = document.getElementById('region-sido').value;
+    const sigungu = document.getElementById('region-sigungu').value;
+    document.getElementById('next-2').disabled = !(sido && sigungu.trim() && answers['area-type']);
+  }
+  function checkStep3() {}
+  function checkStep5() {
+    const name = document.getElementById('user-name').value.trim();
+    const phone = document.getElementById('user-phone').value.trim();
+    document.getElementById('next-5').disabled = !(name && phone);
+  }
+
+  /* ── 슬라이더 ── */
+  function updateAreaSlider() {
+    const v = document.getElementById('area-slider').value;
+    document.getElementById('area-val').innerHTML = v + ' <span>평</span>';
+    answers['area'] = +v;
+    document.querySelectorAll('.range-pill').forEach(p => {
+      if (p.getAttribute('onclick') && p.getAttribute('onclick').includes('setArea')) p.classList.remove('selected');
+    });
+  }
+  function setArea(v) {
+    document.getElementById('area-slider').value = v;
+    document.getElementById('area-val').innerHTML = v + ' <span>평</span>';
+    answers['area'] = v;
+    document.querySelectorAll('[onclick*="setArea"]').forEach(p => {
+      p.classList.toggle('selected', p.getAttribute('onclick') === `setArea(${v})`);
+    });
+  }
+  function updateCapitalSlider() {
+    const v = +document.getElementById('capital-slider').value;
+    document.getElementById('capital-val').innerHTML = v.toLocaleString() + ' <span>만원</span>';
+    answers['capital'] = v;
+    document.querySelectorAll('[onclick*="setCapital"]').forEach(p => p.classList.remove('selected'));
+  }
+  function setCapital(v) {
+    document.getElementById('capital-slider').value = v;
+    document.getElementById('capital-val').innerHTML = v.toLocaleString() + ' <span>만원</span>';
+    answers['capital'] = v;
+    document.querySelectorAll('[onclick*="setCapital"]').forEach(p => {
+      p.classList.toggle('selected', p.getAttribute('onclick') === `setCapital(${v})`);
+    });
+  }
+
+  /* ── 결과 계산 ── */
+  function showResult() {
+    const type     = answers['type'] || '정육점';
+    const areaType = answers['area-type'] || '주택가·아파트 상권';
+    const area     = answers['area'] || 20;
+    const capital  = answers['capital'] || 8000;
+    const exp      = answers['exp'] || '창업 처음';
+    const fundType = answers['fund-type'] || '자기자금 100%';
+
+    // 점수 계산
+    let score = 50;
+    if (capital >= 10000) score += 15;
+    else if (capital >= 6000) score += 8;
+    else if (capital < 3000) score -= 10;
+    if (areaType === '역세권') score += 12;
+    else if (areaType === '상업지·번화가') score += 8;
+    else if (areaType === '주택가·아파트 상권') score += 5;
+    if (exp === '업종 경력 있음') score += 15;
+    else if (exp === '창업 경험 있음') score += 8;
+    else if (exp === '현재 운영 중') score += 12;
+    if (area >= 20 && area <= 50) score += 8;
+    if (fundType === '자기자금 100%') score += 5;
+    score = Math.min(98, Math.max(35, score));
+
+    // 매출 추정
+    let revenue, profit, costRate;
+    if (type === '정육점' || type === '아직 미정') {
+      const daily = area * 3.5;
+      const unitPrice = 30000;
+      revenue = Math.round(daily * unitPrice * 25 / 10000);
+      costRate = 0.58;
+      profit = Math.round(revenue * (1 - costRate) - (area * 8) - 200);
+    } else {
+      const seats = +document.getElementById('seats-input').value || Math.round(area * 1.8);
+      revenue = Math.round(seats * 28000 * 2.2 * 25 / 10000);
+      costRate = 0.38;
+      profit = Math.round(revenue * (1 - costRate) - (area * 12) - 350);
+    }
+    const recovery = profit > 0 ? Math.round(capital / profit) : 999;
+
+    // 등급
+    let grade, gradeClass, summary;
+    if (score >= 80) {
+      grade = 'A등급 · 창업 적합'; gradeClass = 'A';
+      summary = `입력하신 조건은 창업에 매우 유리합니다. ${type} 기준으로 월 예상 순이익 ${profit}만원, 투자 회수 ${recovery}개월이 예상됩니다.`;
+    } else if (score >= 60) {
+      grade = 'B등급 · 준비 중'; gradeClass = 'B';
+      summary = `창업 조건이 양호하지만 일부 보완이 필요합니다. 계획을 구체화하면 성공 가능성을 높일 수 있습니다.`;
+    } else {
+      grade = 'C등급 · 보완 필요'; gradeClass = 'C';
+      summary = `현재 조건에서 리스크가 있습니다. 자본 확보나 입지 재검토 후 진행을 권장합니다.`;
+    }
+
+    // 강점
+    const goods = [];
+    if (exp === '업종 경력 있음' || exp === '현재 운영 중') goods.push('업종 경험이 있어 초기 운영 리스크가 낮습니다.');
+    if (capital >= 10000) goods.push('충분한 자본금으로 초기 운영 안정성이 높습니다.');
+    if (areaType === '역세권' || areaType === '상업지·번화가') goods.push('유동인구가 많은 상권으로 초기 매출 확보에 유리합니다.');
+    if (area >= 15 && area <= 40) goods.push('적정 평수로 운영 효율과 투자비 균형이 좋습니다.');
+    if (goods.length === 0) goods.push('창업 의지와 준비 의향이 확인됩니다.');
+
+    // 주의
+    const warns = [];
+    if (capital < 5000) warns.push('자본금이 다소 부족할 수 있습니다. 정부 지원금이나 소액 대출을 검토해보세요.');
+    if (exp === '창업 처음') warns.push('창업 경험이 없다면 초기 6개월 운영 적자를 대비한 운전 자금이 필수입니다.');
+    if (areaType === '외곽·로드샵') warns.push('외곽 상권은 고정 고객 확보가 핵심입니다. 단골 마케팅 전략을 미리 준비하세요.');
+    if (fundType === '자기자금 + 대출') warns.push('대출 이자가 월 고정비로 잡힙니다. 손익분기점 계산에 반드시 포함하세요.');
+    if (warns.length === 0) warns.push('현재 조건에서 큰 리스크 요인은 없으나, 원가 관리에 집중하세요.');
+
+    // 추천 액션
+    const actions = [
+      { icon:'📊', text:'매출 계산기로 더 정밀한 수익 시뮬레이션을 해보세요.' },
+      { icon:'🥩', text:'고기 공급 연결 신청으로 도매 거래선을 먼저 확인하세요.' },
+      { icon:'📋', text:'비대면 컨설팅으로 맞춤 창업 전략 자료를 받아보세요.' },
+    ];
+
+    // DOM 업데이트
+    document.getElementById('result-score').innerHTML = score + '<span class="result-score-suffix">점</span>';
+    const gradeEl = document.getElementById('result-grade');
+    gradeEl.textContent = grade;
+    gradeEl.className = 'result-grade ' + gradeClass;
+    document.getElementById('result-summary').textContent = summary;
+    document.getElementById('res-revenue').textContent = revenue + '만원';
+    document.getElementById('res-profit').textContent = (profit > 0 ? '' : '-') + Math.abs(profit) + '만원';
+    document.getElementById('res-recovery').textContent = recovery < 100 ? recovery + '개월' : '재검토 필요';
+
+    const goodEl = document.getElementById('res-good');
+    goodEl.innerHTML = goods.map(g => `<div class="result-item good"><div class="result-item-icon">✅</div>${g}</div>`).join('');
+    const warnEl = document.getElementById('res-warn');
+    warnEl.innerHTML = warns.map(w => `<div class="result-item warn"><div class="result-item-icon">⚠️</div>${w}</div>`).join('');
+    const actEl = document.getElementById('res-action');
+    actEl.innerHTML = actions.map(a => `<div class="result-item" style="background:var(--off)"><div class="result-item-icon">${a.icon}</div>${a.text}</div>`).join('');
+
+    goStep(6);
+  }
+
+  function openConsult() {
+    alert('컨설팅 신청 페이지로 이동합니다.\n(메인 페이지 컨설팅 섹션으로 연결됩니다)');
+    window.location.href = 'meat_insight_main.html#consulting';
+  }
+
+  // 초기값
+  answers['area'] = 20;
+  answers['capital'] = 8000;
+</script>
+</body>
+</html>

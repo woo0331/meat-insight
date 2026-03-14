@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>관리자 | MEAT INSIGHT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--navy:#0b1f3a;--gold:#b8945a;--gold2:#d4a96a;--white:#fff;--off:#f8f6f2;--muted:#6b7280;--line:#e8e2d8;--green:#166534;--green-bg:#f0fdf4;--red:#991b1b;--red-bg:#fef2f2;--blue:#1d4ed8;--blue-bg:#eff6ff;--shadow:0 4px 16px rgba(11,31,58,.08)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Noto Sans KR',sans-serif;background:#f1f5f9;color:var(--navy);display:flex;min-height:100vh}
+
+    /* LOGIN */
+    .login-wrap{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:999}
+    .login-box{background:var(--white);border-radius:24px;padding:48px 40px;width:min(420px,calc(100% - 32px));text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+    .login-logo{width:56px;height:56px;border-radius:16px;background:var(--navy);color:var(--gold);display:grid;place-items:center;font-family:'Playfair Display',serif;font-size:24px;font-weight:900;margin:0 auto 20px}
+    .login-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--navy);margin-bottom:6px}
+    .login-sub{font-size:14px;color:var(--muted);margin-bottom:32px}
+    .login-field{display:flex;flex-direction:column;gap:6px;text-align:left;margin-bottom:14px}
+    .login-field label{font-size:13px;font-weight:700;color:var(--navy)}
+    .login-field input{padding:13px 16px;border-radius:12px;border:2px solid var(--line);font-size:15px;font-family:inherit;outline:none;transition:border-color .15s}
+    .login-field input:focus{border-color:var(--gold)}
+    .login-btn{width:100%;padding:15px;border-radius:12px;background:var(--navy);color:var(--gold);font-size:15px;font-weight:900;border:none;cursor:pointer;font-family:inherit;margin-top:8px;transition:opacity .15s}
+    .login-btn:hover{opacity:.88}
+    .login-hint{font-size:12px;color:var(--muted);margin-top:14px}
+
+    /* SIDEBAR */
+    .sidebar{width:220px;background:var(--navy);flex-shrink:0;display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .sb-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .sb-logo-mark{width:40px;height:40px;border-radius:10px;background:rgba(184,148,90,.2);color:var(--gold);display:grid;place-items:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:10px}
+    .sb-logo b{display:block;font-size:13px;font-weight:900;color:var(--white)}
+    .sb-logo span{display:block;font-size:11px;color:rgba(255,255,255,.4)}
+    .sb-nav{padding:16px 12px;flex:1}
+    .sb-section{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.8px;padding:12px 8px 6px;margin-top:8px}
+    .sb-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:background .15s;color:rgba(255,255,255,.6);font-size:13px;font-weight:700;margin-bottom:2px;text-decoration:none}
+    .sb-item:hover{background:rgba(255,255,255,.07);color:var(--white)}
+    .sb-item.active{background:rgba(184,148,90,.15);color:var(--gold)}
+    .sb-item span{font-size:16px}
+    .sb-badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:10px;font-weight:900;padding:2px 7px;border-radius:999px}
+    .sb-bottom{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08)}
+    .sb-logout{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.4);font-size:13px;cursor:pointer;padding:8px 12px;border-radius:8px;transition:color .15s}
+    .sb-logout:hover{color:var(--white)}
+    @media(max-width:768px){.sidebar{display:none}}
+
+    /* MAIN */
+    .admin-main{flex:1;overflow-x:hidden}
+    .topbar{background:var(--white);border-bottom:1px solid var(--line);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+    .topbar-title{font-size:18px;font-weight:900;color:var(--navy)}
+    .topbar-right{display:flex;align-items:center;gap:12px}
+    .topbar-date{font-size:13px;color:var(--muted)}
+    .btn-export{padding:9px 18px;border-radius:999px;border:1.5px solid var(--line);background:var(--white);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--navy);transition:background .15s}
+    .btn-export:hover{background:var(--off)}
+    .btn-refresh{padding:9px 18px;border-radius:999px;border:none;background:var(--navy);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s}
+    .btn-refresh:hover{opacity:.85}
+
+    .content{padding:28px}
+    @media(max-width:640px){.content{padding:16px}}
+
+    /* PANELS */
+    .panel{display:none}
+    .panel.active{display:block;animation:fadeUp .3s ease both}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+    /* STAT CARDS */
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+    @media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:500px){.stat-grid{grid-template-columns:1fr 1fr}}
+    .stat-card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
+    .stat-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px}
+    .stat-val{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:var(--navy);line-height:1;margin-bottom:4px}
+    .stat-sub{font-size:12px;color:var(--muted)}
+    .stat-card.highlight{background:var(--navy)}
+    .stat-card.highlight .stat-label{color:rgba(255,255,255,.5)}
+    .stat-card.highlight .stat-val{color:var(--gold)}
+    .stat-card.highlight .stat-sub{color:rgba(255,255,255,.4)}
+
+    /* TABLE */
+    .table-card{background:var(--white);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px}
+    .table-header{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+    .table-title{font-size:16px;font-weight:900;color:var(--navy)}
+    .table-controls{display:flex;gap:8px;align-items:center}
+    .filter-select{padding:8px 14px;border-radius:8px;border:1.5px solid var(--line);font-size:13px;font-family:inherit;outline:none;background:var(--off);color:var(--navy);cursor:pointer}
+    .search-input{padding:8px 14px;border-radius:8px;border:1.5px solid var(--line);font-size:13px;font-family:inherit;outline:none;background:var(--off);color:var(--navy);width:180px}
+    .search-input:focus,.filter-select:focus{border-color:var(--gold)}
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse}
+    th{padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--muted);background:#f8fafc;border-bottom:1px solid var(--line);white-space:nowrap}
+    td{padding:14px 16px;font-size:14px;border-bottom:1px solid var(--line);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:#fafafa}
+    .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+    .badge.new{background:var(--blue-bg);color:var(--blue)}
+    .badge.contact{background:#fef9c3;color:#854d0e}
+    .badge.done{background:var(--green-bg);color:var(--green)}
+    .badge.cancel{background:var(--red-bg);color:var(--red)}
+    .badge.basic{background:#f3f4f6;color:#374151}
+    .badge.premium{background:#fef3c7;color:#92400e}
+    .badge.vip{background:linear-gradient(135deg,#fef3c7,#fde68a);color:#78350f;border:1px solid #fcd34d}
+    .action-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--line);background:var(--white);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+    .action-btn:hover{border-color:var(--navy);color:var(--navy)}
+    .action-btn.primary{background:var(--navy);color:var(--gold);border-color:transparent}
+    .action-btn.primary:hover{opacity:.85}
+    .empty-row{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+
+    /* DETAIL MODAL */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:none;backdrop-filter:blur(4px)}
+    .modal-overlay.show{display:flex;align-items:center;justify-content:center}
+    .modal{background:var(--white);border-radius:20px;padding:36px;width:min(520px,calc(100% - 32px));max-height:90vh;overflow-y:auto}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+    .modal-title{font-size:20px;font-weight:900;color:var(--navy)}
+    .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
+    .modal-rows{display:flex;flex-direction:column;gap:0}
+    .modal-row{display:flex;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px;gap:16px}
+    .modal-row:last-child{border-bottom:none}
+    .modal-row-label{color:var(--muted);font-weight:700;width:120px;flex-shrink:0}
+    .modal-row-val{color:var(--navy);flex:1;line-height:1.6}
+    .modal-actions{display:flex;gap:10px;margin-top:24px}
+    .status-select{padding:10px 14px;border-radius:10px;border:2px solid var(--line);font-size:14px;font-family:inherit;outline:none;flex:1}
+    .status-select:focus{border-color:var(--gold)}
+
+    /* MINI CHART */
+    .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+    @media(max-width:700px){.chart-grid{grid-template-columns:1fr}}
+    .chart-card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
+    .chart-title{font-size:14px;font-weight:900;color:var(--navy);margin-bottom:16px}
+    .bar-chart{display:flex;flex-direction:column;gap:10px}
+    .bar-row{display:flex;align-items:center;gap:10px}
+    .bar-label{font-size:12px;color:var(--muted);width:80px;flex-shrink:0;text-align:right}
+    .bar-track{flex:1;height:20px;background:var(--off);border-radius:4px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:4px;background:var(--navy);transition:width .6s ease}
+    .bar-fill.gold{background:var(--gold)}
+    .bar-val{font-size:12px;font-weight:700;color:var(--navy);width:36px;text-align:right}
+    .donut-wrap{display:flex;align-items:center;gap:20px}
+    .donut-legend{display:flex;flex-direction:column;gap:8px;flex:1}
+    .donut-item{display:flex;align-items:center;gap:8px;font-size:13px}
+    .donut-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">肉</div>
+    <div class="login-title">관리자 로그인</div>
+    <div class="login-sub">MEAT INSIGHT 관리자 전용</div>
+    <div class="login-field">
+      <label>아이디</label>
+      <input type="text" id="login-id" placeholder="admin" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="login-field">
+      <label>비밀번호</label>
+      <input type="password" id="login-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">로그인</button>
+    <div class="login-hint">아이디: admin / 비밀번호: 1234 (데모)</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">肉</div>
+    <b>MEAT INSIGHT</b>
+    <span>관리자 패널</span>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-section">대시보드</div>
+    <div class="sb-item active" onclick="showPanel('dashboard')"><span>📊</span> 대시보드</div>
+    <div class="sb-section">신청 관리</div>
+    <div class="sb-item" onclick="showPanel('supply')"><span>🥩</span> 공급 연결 신청 <div class="sb-badge" id="supply-badge">3</div></div>
+    <div class="sb-item" onclick="showPanel('consult')"><span>📋</span> 컨설팅 신청 <div class="sb-badge" id="consult-badge">5</div></div>
+    <div class="sb-section">분석</div>
+    <div class="sb-item" onclick="showPanel('stats')"><span>📈</span> 신청 통계</div>
+  </div>
+  <div class="sb-bottom">
+    <div class="sb-logout" onclick="doLogout()"><span>🚪</span> 로그아웃</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="admin-main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">대시보드</div>
+    <div class="topbar-right">
+      <div class="topbar-date" id="today-date"></div>
+      <button class="btn-export" onclick="exportCSV()">엑셀 다운로드</button>
+      <button class="btn-refresh" onclick="renderAll()">새로고침</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="stat-grid">
+        <div class="stat-card highlight">
+          <div class="stat-label">총 신청 건수</div>
+          <div class="stat-val" id="stat-total">0</div>
+          <div class="stat-sub">전체 누적</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">공급 연결 신청</div>
+          <div class="stat-val" id="stat-supply">0</div>
+          <div class="stat-sub">건</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">컨설팅 신청</div>
+          <div class="stat-val" id="stat-consult">0</div>
+          <div class="stat-sub">건</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">처리 대기</div>
+          <div class="stat-val" id="stat-pending">0</div>
+          <div class="stat-sub">미처리 신청</div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">최근 신청 내역</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>번호</th><th>유형</th><th>이름</th><th>연락처</th><th>업종</th><th>상태</th><th>신청일</th><th>관리</th></tr></thead>
+            <tbody id="dash-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUPPLY -->
+    <div class="panel" id="panel-supply">
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">공급 연결 신청 목록</div>
+          <div class="table-controls">
+            <select class="filter-select" id="supply-filter" onchange="renderSupply()">
+              <option value="">전체 상태</option>
+              <option value="신규">신규</option>
+              <option value="연락중">연락중</option>
+              <option value="완료">완료</option>
+              <option value="취소">취소</option>
+            </select>
+            <input class="search-input" type="text" placeholder="이름·연락처 검색" id="supply-search" oninput="renderSupply()"/>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>번호</th><th>이름</th><th>연락처</th><th>업종</th><th>지역</th><th>요청 품목</th><th>구매량</th><th>상태</th><th>신청일</th><th>관리</th></tr></thead>
+            <tbody id="supply-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONSULT -->
+    <div class="panel" id="panel-consult">
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">컨설팅 신청 목록</div>
+          <div class="table-controls">
+            <select class="filter-select" id="consult-filter" onchange="renderConsult()">
+              <option value="">전체 상태</option>
+              <option value="신규">신규</option>
+              <option value="연락중">연락중</option>
+              <option value="완료">완료</option>
+              <option value="취소">취소</option>
+            </select>
+            <input class="search-input" type="text" placeholder="이름·연락처 검색" id="consult-search" oninput="renderConsult()"/>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>번호</th><th>이름</th><th>연락처</th><th>플랜</th><th>업종</th><th>지역</th><th>창업 시기</th><th>상태</th><th>신청일</th><th>관리</th></tr></thead>
+            <tbody id="consult-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="panel" id="panel-stats">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">이번 달 신청</div><div class="stat-val" id="stat-month">0</div><div class="stat-sub">건</div></div>
+        <div class="stat-card"><div class="stat-label">완료 처리율</div><div class="stat-val" id="stat-done-rate">0%</div><div class="stat-sub">전체 대비</div></div>
+        <div class="stat-card highlight"><div class="stat-label">컨설팅 예상 매출</div><div class="stat-val" id="stat-revenue">0만원</div><div class="stat-sub">신청 플랜 기준</div></div>
+        <div class="stat-card"><div class="stat-label">평균 처리 시간</div><div class="stat-val">1.4일</div><div class="stat-sub">목표: 2일 이내</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-title">업종별 신청 현황</div>
+          <div class="bar-chart" id="chart-type"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">컨설팅 플랜별 분포</div>
+          <div class="bar-chart" id="chart-plan"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">공급 요청 품목 순위</div>
+          <div class="bar-chart" id="chart-item"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">상태별 처리 현황</div>
+          <div class="bar-chart" id="chart-status"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">신청 상세</div>
+      <button class="modal-close" onclick="document.getElementById('modal').classList.remove('show')">×</button>
+    </div>
+    <div class="modal-rows" id="modal-body"></div>
+    <div class="modal-actions">
+      <select class="status-select" id="modal-status">
+        <option value="신규">신규</option>
+        <option value="연락중">연락중</option>
+        <option value="완료">완료</option>
+        <option value="취소">취소</option>
+      </select>
+      <button class="action-btn primary" onclick="saveStatus()">상태 저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ── 데모 데이터 ── */
+  const supplyData = [
+    {id:'S001',name:'김창업',phone:'010-1234-5678',type:'정육점 창업 준비 중',region:'서울 마포구',items:'한우·육우, 국내산 돼지',volume:'100~300kg',cycle:'주 2~3회',price:'삼겹 12,000원/kg',memo:'오픈 예정 3개월 후',status:'신규',date:'2025-01-15'},
+    {id:'S002',name:'박정육',phone:'010-2345-6789',type:'현재 운영 중 (거래선 변경)',region:'경기 수원시',items:'국내산 돼지, 수입육',volume:'500kg~1톤',cycle:'주 1회',price:'',memo:'기존 거래처 단가 비교 원함',status:'연락중',date:'2025-01-14'},
+    {id:'S003',name:'이고깃',phone:'010-3456-7890',type:'고깃집 창업 준비 중',region:'인천 부평구',items:'한우·육우',volume:'300~500kg',cycle:'주 2~3회',price:'',memo:'',status:'신규',date:'2025-01-13'},
+  ];
+
+  const consultData = [
+    {id:'C001',name:'최사장',phone:'010-4567-8901',plan:'premium',type:'고깃집 창업 준비 중',region:'서울 강남구',timeline:'3~6개월',capital:'15000',contact:'카카오톡 선호',memo:'40석 고깃집 예상 수익 분석이 필요합니다',status:'신규',date:'2025-01-15'},
+    {id:'C002',name:'정창업',phone:'010-5678-9012',plan:'vip',type:'정육점 창업 준비 중',region:'부산 해운대구',timeline:'3개월 이내',capital:'10000',contact:'전화 통화 선호',memo:'정육 + 식당 병행 가능한지 분석 원함',status:'연락중',date:'2025-01-14'},
+    {id:'C003',name:'한사업',phone:'010-6789-0123',plan:'basic',type:'현재 운영 중 (전략 개선)',region:'대구 수성구',timeline:'아직 미정',capital:'5000',contact:'이메일 선호',memo:'원가율 개선 방법을 알고 싶습니다',status:'완료',date:'2025-01-12'},
+    {id:'C004',name:'오고기',phone:'010-7890-1234',plan:'premium',type:'고깃집 창업 준비 중',region:'경기 성남시',timeline:'6~12개월',capital:'12000',contact:'상관없음',memo:'',status:'신규',date:'2025-01-11'},
+    {id:'C005',name:'유육사',phone:'010-8901-2345',plan:'basic',type:'정육점 창업 준비 중',region:'서울 송파구',timeline:'3~6개월',capital:'7000',contact:'카카오톡 선호',memo:'소자본 창업 가능 여부 확인',status:'신규',date:'2025-01-10'},
+  ];
+
+  const planPrice = {basic:150, premium:300, vip:500};
+  const statusClass = {신규:'new', 연락중:'contact', 완료:'done', 취소:'cancel'};
+  const planClass = {basic:'basic', premium:'premium', vip:'vip'};
+  let currentEdit = null;
+
+  /* ── LOGIN ── */
+  function doLogin() {
+    const id = document.getElementById('login-id').value;
+    const pw = document.getElementById('login-pw').value;
+    if (id === 'admin' && pw === '1234') {
+      document.getElementById('login-wrap').style.display = 'none';
+      renderAll();
+    } else {
+      alert('아이디 또는 비밀번호가 올바르지 않습니다.');
+    }
+  }
+  function doLogout() {
+    document.getElementById('login-wrap').style.display = 'flex';
+    document.getElementById('login-id').value = '';
+    document.getElementById('login-pw').value = '';
+  }
+
+  /* ── PANEL ── */
+  function showPanel(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    const titles = {dashboard:'대시보드', supply:'공급 연결 신청', consult:'컨설팅 신청', stats:'신청 통계'};
+    document.getElementById('topbar-title').textContent = titles[name] || name;
+    event.currentTarget.classList.add('active');
+    if (name === 'supply') renderSupply();
+    if (name === 'consult') renderConsult();
+    if (name === 'stats') renderStats();
+  }
+
+  /* ── RENDER ALL ── */
+  function renderAll() {
+    const now = new Date();
+    document.getElementById('today-date').textContent = now.getFullYear() + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + String(now.getDate()).padStart(2,'0');
+    const total = supplyData.length + consultData.length;
+    const pending = [...supplyData, ...consultData].filter(d => d.status === '신규').length;
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-supply').textContent = supplyData.length;
+    document.getElementById('stat-consult').textContent = consultData.length;
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('supply-badge').textContent = supplyData.filter(d=>d.status==='신규').length;
+    document.getElementById('consult-badge').textContent = consultData.filter(d=>d.status==='신규').length;
+    renderDash();
+  }
+
+  function renderDash() {
+    const all = [
+      ...supplyData.map(d=>({...d, kind:'공급연결'})),
+      ...consultData.map(d=>({...d, kind:'컨설팅'}))
+    ].sort((a,b) => b.date.localeCompare(a.date)).slice(0,8);
+    const tbody = document.getElementById('dash-tbody');
+    tbody.innerHTML = all.map((d,i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td><span class="badge ${d.kind==='공급연결'?'basic':'premium'}">${d.kind}</span></td>
+        <td>${d.name}</td><td>${d.phone}</td><td>${d.type}</td>
+        <td><span class="badge ${statusClass[d.status]}">${d.status}</span></td>
+        <td>${d.date}</td>
+        <td><button class="action-btn primary" onclick="openDetail('${d.id}','${d.kind==='공급연결'?'supply':'consult'}')">상세</button></td>
+      </tr>`).join('') || `<tr><td class="empty-row" colspan="8">신청 내역이 없습니다</td></tr>`;
+  }
+
+  function renderSupply() {
+    const filter = document.getElementById('supply-filter').value;
+    const search = document.getElementById('supply-search').value.toLowerCase();
+    const data = supplyData.filter(d =>
+      (!filter || d.status === filter) &&
+      (!search || d.name.includes(search) || d.phone.includes(search))
+    );
+    document.getElementById('supply-tbody').innerHTML = data.map((d,i) => `
+      <tr>
+        <td>${d.id}</td><td>${d.name}</td><td>${d.phone}</td><td>${d.type}</td>
+        <td>${d.region}</td><td>${d.items||'-'}</td><td>${d.volume||'-'}</td>
+        <td><span class="badge ${statusClass[d.status]}">${d.status}</span></td>
+        <td>${d.date}</td>
+        <td><button class="action-btn primary" onclick="openDetail('${d.id}','supply')">상세</button></td>
+      </tr>`).join('') || `<tr><td class="empty-row" colspan="10">해당 신청이 없습니다</td></tr>`;
+  }
+
+  function renderConsult() {
+    const filter = document.getElementById('consult-filter').value;
+    const search = document.getElementById('consult-search').value.toLowerCase();
+    const data = consultData.filter(d =>
+      (!filter || d.status === filter) &&
+      (!search || d.name.includes(search) || d.phone.includes(search))
+    );
+    document.getElementById('consult-tbody').innerHTML = data.map((d,i) => `
+      <tr>
+        <td>${d.id}</td><td>${d.name}</td><td>${d.phone}</td>
+        <td><span class="badge ${planClass[d.plan]}">${d.plan.toUpperCase()}</span></td>
+        <td>${d.type}</td><td>${d.region||'-'}</td><td>${d.timeline}</td>
+        <td><span class="badge ${statusClass[d.status]}">${d.status}</span></td>
+        <td>${d.date}</td>
+        <td><button class="action-btn primary" onclick="openDetail('${d.id}','consult')">상세</button></td>
+      </tr>`).join('') || `<tr><td class="empty-row" colspan="10">해당 신청이 없습니다</td></tr>`;
+  }
+
+  function renderStats() {
+    const allData = [...supplyData, ...consultData];
+    document.getElementById('stat-month').textContent = allData.length;
+    const done = allData.filter(d=>d.status==='완료').length;
+    document.getElementById('stat-done-rate').textContent = allData.length > 0 ? Math.round(done/allData.length*100)+'%' : '0%';
+    const revenue = consultData.reduce((s,d) => s + (planPrice[d.plan]||0), 0);
+    document.getElementById('stat-revenue').textContent = revenue + '만원';
+
+    const typeCount = {};
+    allData.forEach(d => { typeCount[d.type] = (typeCount[d.type]||0)+1; });
+    const maxType = Math.max(...Object.values(typeCount), 1);
+    document.getElementById('chart-type').innerHTML = Object.entries(typeCount)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([label,val]) => `<div class="bar-row"><div class="bar-label">${label.replace(' 준비 중','').replace(' 창업','')}</div><div class="bar-track"><div class="bar-fill gold" style="width:${val/maxType*100}%"></div></div><div class="bar-val">${val}</div></div>`).join('');
+
+    const planCount = {basic:0, premium:0, vip:0};
+    consultData.forEach(d => planCount[d.plan]++);
+    const maxPlan = Math.max(...Object.values(planCount), 1);
+    document.getElementById('chart-plan').innerHTML = Object.entries(planCount)
+      .map(([label,val]) => `<div class="bar-row"><div class="bar-label">${label.toUpperCase()}</div><div class="bar-track"><div class="bar-fill" style="width:${val/maxPlan*100}%"></div></div><div class="bar-val">${val}</div></div>`).join('');
+
+    const itemCount = {};
+    supplyData.forEach(d => (d.items||'').split(',').forEach(i => { const k=i.trim(); if(k) itemCount[k]=(itemCount[k]||0)+1; }));
+    const maxItem = Math.max(...Object.values(itemCount), 1);
+    document.getElementById('chart-item').innerHTML = Object.entries(itemCount)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([label,val]) => `<div class="bar-row"><div class="bar-label">${label}</div><div class="bar-track"><div class="bar-fill gold" style="width:${val/maxItem*100}%"></div></div><div class="bar-val">${val}</div></div>`).join('') || '<div style="color:var(--muted);font-size:13px">데이터 없음</div>';
+
+    const statusCount = {신규:0, 연락중:0, 완료:0, 취소:0};
+    allData.forEach(d => { if(statusCount[d.status]!==undefined) statusCount[d.status]++; });
+    const maxSt = Math.max(...Object.values(statusCount), 1);
+    document.getElementById('chart-status').innerHTML = Object.entries(statusCount)
+      .map(([label,val]) => `<div class="bar-row"><div class="bar-label">${label}</div><div class="bar-track"><div class="bar-fill" style="width:${val/maxSt*100}%"></div></div><div class="bar-val">${val}</div></div>`).join('');
+  }
+
+  /* ── MODAL ── */
+  let currentId = null, currentType = null;
+  function openDetail(id, type) {
+    currentId = id; currentType = type;
+    const d = type === 'supply' ? supplyData.find(x=>x.id===id) : consultData.find(x=>x.id===id);
+    if (!d) return;
+    document.getElementById('modal-title').textContent = (type==='supply'?'공급 연결':'컨설팅') + ' 신청 상세 · ' + d.id;
+    let rows = `
+      <div class="modal-row"><div class="modal-row-label">이름</div><div class="modal-row-val">${d.name}</div></div>
+      <div class="modal-row"><div class="modal-row-label">연락처</div><div class="modal-row-val">${d.phone}</div></div>
+      <div class="modal-row"><div class="modal-row-label">업종</div><div class="modal-row-val">${d.type}</div></div>
+      <div class="modal-row"><div class="modal-row-label">지역</div><div class="modal-row-val">${d.region||'-'}</div></div>`;
+    if (type === 'supply') {
+      rows += `
+        <div class="modal-row"><div class="modal-row-label">요청 품목</div><div class="modal-row-val">${d.items||'-'}</div></div>
+        <div class="modal-row"><div class="modal-row-label">월 구매량</div><div class="modal-row-val">${d.volume||'-'}</div></div>
+        <div class="modal-row"><div class="modal-row-label">납품 주기</div><div class="modal-row-val">${d.cycle||'-'}</div></div>
+        <div class="modal-row"><div class="modal-row-label">현재 단가</div><div class="modal-row-val">${d.price||'-'}</div></div>`;
+    } else {
+      rows += `
+        <div class="modal-row"><div class="modal-row-label">플랜</div><div class="modal-row-val"><span class="badge ${planClass[d.plan]}">${d.plan.toUpperCase()} — ${planPrice[d.plan]}만원</span></div></div>
+        <div class="modal-row"><div class="modal-row-label">창업 시기</div><div class="modal-row-val">${d.timeline}</div></div>
+        <div class="modal-row"><div class="modal-row-label">자본금</div><div class="modal-row-val">${d.capital?d.capital.toLocaleString()+'만원':'-'}</div></div>
+        <div class="modal-row"><div class="modal-row-label">연락 선호</div><div class="modal-row-val">${d.contact||'-'}</div></div>`;
+    }
+    rows += `
+      <div class="modal-row"><div class="modal-row-label">메모</div><div class="modal-row-val">${d.memo||'없음'}</div></div>
+      <div class="modal-row"><div class="modal-row-label">신청일</div><div class="modal-row-val">${d.date}</div></div>`;
+    document.getElementById('modal-body').innerHTML = rows;
+    document.getElementById('modal-status').value = d.status;
+    document.getElementById('modal').classList.add('show');
+  }
+
+  function saveStatus() {
+    const newStatus = document.getElementById('modal-status').value;
+    const arr = currentType === 'supply' ? supplyData : consultData;
+    const d = arr.find(x=>x.id===currentId);
+    if (d) { d.status = newStatus; renderAll(); renderSupply(); renderConsult(); }
+    document.getElementById('modal').classList.remove('show');
+  }
+
+  function closeModal(e) {
+    if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('show');
+  }
+
+  /* ── EXPORT CSV ── */
+  function exportCSV() {
+    const rows = [
+      ['유형','ID','이름','연락처','업종','지역','상태','신청일'],
+      ...supplyData.map(d=>['공급연결',d.id,d.name,d.phone,d.type,d.region,d.status,d.date]),
+      ...consultData.map(d=>['컨설팅',d.id,d.name,d.phone,d.type,d.region||'',d.status,d.date]),
+    ];
+    const csv = '\uFEFF' + rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'MEAT_INSIGHT_신청내역_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click(); URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>

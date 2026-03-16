@@ -131,12 +131,23 @@
     @media(max-width:600px){.cta-strip{flex-direction:column;align-items:flex-start}}
 
     /* STICKY */
+    
+    .pdf-btn-wrap{max-width:900px;margin:0 auto 32px;padding:0 24px;display:flex;justify-content:flex-end}
+    .btn-pdf{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:999px;background:var(--navy);color:var(--gold);font-size:15px;font-weight:900;border:none;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(11,31,58,.25);transition:opacity .15s}
+    .btn-pdf:hover{opacity:.88}
+
     .sticky-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;width:min(900px,calc(100% - 32px));padding:12px 20px;background:rgba(11,31,58,.95);backdrop-filter:blur(20px);border:1px solid rgba(184,148,90,.2);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:space-between;gap:12px}
     .sticky-text{font-size:13px;font-weight:700;color:var(--white)}
     .sticky-text small{display:block;font-size:11px;color:rgba(255,255,255,.4);font-weight:400}
     .sticky-btn{padding:10px 20px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:13px;font-weight:900;text-decoration:none;white-space:nowrap}
-    @media(max-width:500px){.sticky-bar{flex-direction:column;gap:8px}.sticky-btn{text-align:center}}
+    @media(max-width:500px){
+    .pdf-btn-wrap{max-width:900px;margin:0 auto 32px;padding:0 24px;display:flex;justify-content:flex-end}
+    .btn-pdf{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:999px;background:var(--navy);color:var(--gold);font-size:15px;font-weight:900;border:none;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(11,31,58,.25);transition:opacity .15s}
+    .btn-pdf:hover{opacity:.88}
+
+    .sticky-bar{flex-direction:column;gap:8px}.sticky-btn{text-align:center}}
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -171,6 +182,11 @@
   </div>
 </div>
 
+
+<div class="pdf-btn-wrap">
+  <button class="btn-pdf" onclick="downloadPDF()">📄 창업 리포트 PDF 다운로드</button>
+</div>
+
 <div class="main">
 
   <!-- ① 정육점 매출 계산기 -->
@@ -182,22 +198,23 @@
           <div class="field">
             <label>매장 평수</label>
             <input type="number" id="b-area" value="20" min="5" max="300" oninput="calcButchery()"/>
-            <div class="field-hint">실평수(영업 면적) 기준으로 입력하세요</div>
+            <div class="field-hint">실평수(영업 면적) 기준으로 입력하세요. 예: 20평 = 약 66㎡</div>
           </div>
           <div class="field-row">
             <div class="field">
-              <label>일 방문객 수</label>
+              <label>일 방문객 수 <span style="font-weight:400;color:var(--muted);font-size:11px">— 하루에 몇 명이 방문하나요?</span></label>
               <input type="number" id="b-vis" value="60" min="1" oninput="calcButchery()"/>
             </div>
             <div class="field">
-              <label>평균 구매금액 (원)</label>
+              <label>평균 구매금액 (원) <span style="font-weight:400;color:var(--muted);font-size:11px">— 손님 1명이 평균 얼마나 쓰나요?</span></label>
               <input type="number" id="b-price" value="35000" step="1000" oninput="calcButchery()"/>
+              <div class="field-hint">예: 삼겹살 500g + 반찬 = 약 35,000원</div>
             </div>
           </div>
           <div class="field">
             <label>원가율 (%)</label>
             <input type="number" id="b-cost" value="58" min="1" max="99" oninput="calcButchery()"/>
-            <div class="field-hint">일반 정육점 평균 원가율 55~62%</div>
+            <div class="field-hint">매입 원가 ÷ 판매 금액. 일반 정육점 평균 55~62%. 예: 10만원에 산 고기를 18만원에 팔면 원가율 56%</div>
           </div>
           <div class="field-row">
             <div class="field">
@@ -289,13 +306,14 @@
             <div class="field">
               <label>객단가 (원)</label>
               <input type="number" id="r-price" value="28000" step="1000" oninput="calcRestaurant()"/>
+            <div class="field-hint">예: 삼겹살 1인분 18,000원 + 음료 5,000원 + 공기밥 등 = 약 28,000원</div>
             </div>
           </div>
           <div class="field-row">
             <div class="field">
               <label>일 회전율</label>
               <input type="number" id="r-turn" value="2.5" step="0.5" min="0.5" oninput="calcRestaurant()"/>
-              <div class="field-hint">평균 2~3회전</div>
+              <div class="field-hint">하루에 같은 테이블에 손님이 몇 번 바뀌나요? 예: 점심 1번 + 저녁 2번 = 3회전</div>
             </div>
             <div class="field">
               <label>영업일 수 (월)</label>
@@ -305,7 +323,7 @@
           <div class="field">
             <label>원가율 (%)</label>
             <input type="number" id="r-cost" value="38" min="1" max="99" oninput="calcRestaurant()"/>
-            <div class="field-hint">고깃집 평균 35~42%</div>
+            <div class="field-hint">재료비 ÷ 매출. 고깃집 평균 35~42%. 예: 100만원 매출에 재료비 38만원이면 38%</div>
           </div>
           <div class="field-row">
             <div class="field">
@@ -686,6 +704,183 @@
     tabs.forEach((t,idx) => t.classList.toggle('active', idx===i));
     panels.forEach((p,idx) => p.classList.toggle('active', idx===i));
     window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+
+  /* ── PDF 리포트 생성 ── */
+  function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    const navy = [11, 31, 58];
+    const gold = [184, 148, 90];
+    const white = [255, 255, 255];
+    const gray = [107, 114, 128];
+    const offwhite = [248, 246, 242];
+
+    const W = 210, H = 297;
+    let y = 0;
+
+    // 표지 배경
+    doc.setFillColor(...navy);
+    doc.rect(0, 0, W, 60, 'F');
+
+    // 로고
+    doc.setFillColor(...gold);
+    doc.roundedRect(14, 10, 16, 16, 3, 3, 'F');
+    doc.setTextColor(...navy);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('M', 18, 21);
+
+    // 브랜드명
+    doc.setTextColor(...white);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('MEAT INSIGHT', 34, 20);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...gold);
+    doc.text('고기의 모든것 · 창업 분석 리포트', 34, 27);
+
+    // 날짜
+    const now = new Date();
+    const dateStr = now.getFullYear() + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + String(now.getDate()).padStart(2,'0');
+    doc.setTextColor(200, 200, 200);
+    doc.setFontSize(9);
+    doc.text('생성일: ' + dateStr, W - 14, 20, { align: 'right' });
+
+    // 리포트 제목
+    doc.setTextColor(...white);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Startup Analysis Report', 14, 46);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...gold);
+    doc.text('정육점 · 고깃집 창업 수익 분석', 14, 54);
+
+    y = 72;
+
+    // 섹션 그리기 함수
+    function drawSection(title, rows, startY) {
+      // 섹션 헤더
+      doc.setFillColor(...navy);
+      doc.rect(14, startY, W - 28, 10, 'F');
+      doc.setTextColor(...gold);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text(title, 18, startY + 7);
+      let sy = startY + 10;
+
+      rows.forEach((row, i) => {
+        const bg = i % 2 === 0 ? offwhite : white;
+        doc.setFillColor(...bg);
+        doc.rect(14, sy, W - 28, 9, 'F');
+        doc.setDrawColor(220, 214, 206);
+        doc.rect(14, sy, W - 28, 9, 'S');
+        doc.setTextColor(...gray);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(row[0], 18, sy + 6);
+        doc.setTextColor(...navy);
+        doc.setFont('helvetica', 'bold');
+        doc.text(row[1], W - 18, sy + 6, { align: 'right' });
+        sy += 9;
+      });
+      return sy + 6;
+    }
+
+    // ① 정육점 매출
+    const bVis = document.getElementById('b-vis').value;
+    const bPrice = document.getElementById('b-price').value;
+    const bCost = document.getElementById('b-cost').value;
+    const bRent = document.getElementById('b-rent').value;
+    const bLabor = document.getElementById('b-labor').value;
+    const bEtc = document.getElementById('b-etc').value;
+    const bRev = document.getElementById('b-rev').textContent;
+    const bProfit = document.getElementById('b-profit').textContent;
+    const bMargin = document.getElementById('b-margin').textContent;
+
+    y = drawSection('① 정육점 매출 계산기', [
+      ['일 방문객 수', bVis + '명'],
+      ['평균 구매금액', Number(bPrice).toLocaleString() + '원'],
+      ['원가율', bCost + '%'],
+      ['월 임대료', Number(bRent).toLocaleString() + '만원'],
+      ['월 인건비', Number(bLabor).toLocaleString() + '만원'],
+      ['월 기타비용', Number(bEtc).toLocaleString() + '만원'],
+      ['📊 예상 월 매출', bRev],
+      ['💰 예상 순이익', bProfit],
+      ['📈 순이익률', bMargin],
+    ], y);
+
+    // ② 고깃집 매출
+    const rSeats = document.getElementById('r-seats').value;
+    const rPrice = document.getElementById('r-price').value;
+    const rTurn = document.getElementById('r-turn').value;
+    const rCost = document.getElementById('r-cost').value;
+    const rRev = document.getElementById('r-rev').textContent;
+    const rProfit = document.getElementById('r-profit').textContent;
+
+    y = drawSection('② 고깃집 매출 계산기', [
+      ['좌석 수', rSeats + '석'],
+      ['객단가', Number(rPrice).toLocaleString() + '원'],
+      ['일 회전율', rTurn + '회'],
+      ['원가율', rCost + '%'],
+      ['📊 예상 월 매출', rRev],
+      ['💰 예상 순이익', rProfit],
+    ], y);
+
+    // ③ 메뉴 원가
+    const mName = document.getElementById('m-name').value;
+    const mRate = document.getElementById('m-rate').textContent;
+    const mMargin = document.getElementById('m-margin').textContent;
+    const mRecommend = document.getElementById('m-recommend').textContent;
+
+    y = drawSection('③ 메뉴 원가 계산기 (' + mName + ')', [
+      ['원가율', mRate],
+      ['1인분 마진', mMargin],
+      ['권장 판매가', mRecommend],
+    ], y);
+
+    // ④ 창업 비용
+    const sTotal = document.getElementById('s-total').textContent;
+    const sRecovery = document.getElementById('s-recovery').textContent;
+
+    y = drawSection('④ 창업 비용 계산기', [
+      ['총 창업 비용', sTotal],
+      ['투자 회수 기간', sRecovery],
+    ], y);
+
+    // ⑤ 수율
+    const yName = document.getElementById('y-name').value;
+    const yNetW = document.getElementById('y-net-w').textContent;
+    const yRevenue = document.getElementById('y-revenue').textContent;
+    const yMargin = document.getElementById('y-margin').textContent;
+    const yMarginPct = document.getElementById('y-margin-pct').textContent;
+
+    y = drawSection('⑤ 수율 계산기 (' + yName + ')', [
+      ['실 판매 가능 중량', yNetW],
+      ['총 판매 매출', yRevenue],
+      ['총 마진', yMargin],
+      ['마진율', yMarginPct],
+    ], y);
+
+    // 하단 CTA
+    y += 6;
+    doc.setFillColor(...navy);
+    doc.roundedRect(14, y, W - 28, 22, 4, 4, 'F');
+    doc.setTextColor(...white);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('더 정확한 분석이 필요하신가요?', W/2, y + 9, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...gold);
+    doc.text('MEAT INSIGHT 비대면 컨설팅 · www.aboutmeat.co.kr', W/2, y + 16, { align: 'center' });
+
+    // 저장
+    doc.save('MEAT_INSIGHT_창업분석리포트_' + dateStr + '.pdf');
   }
 
   /* ── 포맷 ── */

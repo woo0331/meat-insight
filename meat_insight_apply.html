@@ -507,7 +507,7 @@ async function submitConsult() {
   spinner.classList.add('show');
   btn.childNodes[btn.childNodes.length-1].textContent = ' 신청 중...';
 
-  const planNames = {basic:'BASIC — 50만원', premium:'PREMIUM — 300만원', vip:'VIP — 500만원'};
+  const planNames = {basic:'BASIC — 50만원', premium:'PREMIUM — 300만원', 
   const payload = {
     name, phone,
     plan: selectedPlan,

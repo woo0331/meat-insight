@@ -136,6 +136,39 @@
     .btn-pdf{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:999px;background:var(--navy);color:var(--gold);font-size:15px;font-weight:900;border:none;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(11,31,58,.25);transition:opacity .15s}
     .btn-pdf:hover{opacity:.88}
 
+
+    /* 인쇄용 스타일 */
+    .report-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;overflow-y:auto;padding:20px}
+    .report-overlay.show{display:block}
+    .report-box{max-width:800px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden}
+    .report-topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:#f8f6f2;border-bottom:1px solid #e8e2d8}
+    .report-topbar-btns{display:flex;gap:10px}
+    .btn-print{padding:10px 22px;border-radius:999px;background:#0b1f3a;color:#b8945a;font-size:14px;font-weight:900;border:none;cursor:pointer;font-family:inherit}
+    .btn-close-report{padding:10px 22px;border-radius:999px;background:#e8e2d8;color:#0b1f3a;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+    .report-content{padding:28px}
+    .r-cover{background:#0b1f3a;color:#fff;padding:24px 28px;border-radius:10px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-end}
+    .r-cover h1{font-size:22px;font-weight:900;color:#b8945a;margin-bottom:4px}
+    .r-cover p{font-size:12px;color:rgba(255,255,255,.6)}
+    .r-cover-date{text-align:right;font-size:11px;color:rgba(255,255,255,.5)}
+    .r-section{margin-bottom:14px}
+    .r-header{background:#0b1f3a;color:#b8945a;padding:9px 14px;border-radius:8px 8px 0 0;font-size:12px;font-weight:900}
+    .r-table{width:100%;border-collapse:collapse}
+    .r-table tr:nth-child(even){background:#f8f6f2}
+    .r-table td{padding:8px 14px;font-size:13px;border-bottom:1px solid #e8e2d8;color:#0b1f3a}
+    .r-table td:last-child{text-align:right;font-weight:700}
+    .r-table tr.hl{background:#0b1f3a!important}
+    .r-table tr.hl td{color:#fff!important;font-weight:900!important}
+    .r-table tr.hl td:last-child{color:#b8945a!important;font-size:15px!important}
+    .r-cta{background:#0b1f3a;color:#fff;padding:16px;border-radius:10px;text-align:center;margin-top:16px}
+    .r-cta h3{font-size:14px;font-weight:900;margin-bottom:4px}
+    .r-cta p{font-size:12px;color:rgba(255,255,255,.6)}
+    @media print{
+      .report-overlay{display:block!important;position:static!important;background:none!important;padding:0!important}
+      .report-topbar{display:none!important}
+      .report-box{border-radius:0!important}
+      body > *:not(.report-overlay){display:none!important}
+    }
+
     .sticky-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;width:min(900px,calc(100% - 32px));padding:12px 20px;background:rgba(11,31,58,.95);backdrop-filter:blur(20px);border:1px solid rgba(184,148,90,.2);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:space-between;gap:12px}
     .sticky-text{font-size:13px;font-weight:700;color:var(--white)}
     .sticky-text small{display:block;font-size:11px;color:rgba(255,255,255,.4);font-weight:400}
@@ -145,9 +178,41 @@
     .btn-pdf{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:999px;background:var(--navy);color:var(--gold);font-size:15px;font-weight:900;border:none;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(11,31,58,.25);transition:opacity .15s}
     .btn-pdf:hover{opacity:.88}
 
+
+    /* 인쇄용 스타일 */
+    .report-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;overflow-y:auto;padding:20px}
+    .report-overlay.show{display:block}
+    .report-box{max-width:800px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden}
+    .report-topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:#f8f6f2;border-bottom:1px solid #e8e2d8}
+    .report-topbar-btns{display:flex;gap:10px}
+    .btn-print{padding:10px 22px;border-radius:999px;background:#0b1f3a;color:#b8945a;font-size:14px;font-weight:900;border:none;cursor:pointer;font-family:inherit}
+    .btn-close-report{padding:10px 22px;border-radius:999px;background:#e8e2d8;color:#0b1f3a;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+    .report-content{padding:28px}
+    .r-cover{background:#0b1f3a;color:#fff;padding:24px 28px;border-radius:10px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-end}
+    .r-cover h1{font-size:22px;font-weight:900;color:#b8945a;margin-bottom:4px}
+    .r-cover p{font-size:12px;color:rgba(255,255,255,.6)}
+    .r-cover-date{text-align:right;font-size:11px;color:rgba(255,255,255,.5)}
+    .r-section{margin-bottom:14px}
+    .r-header{background:#0b1f3a;color:#b8945a;padding:9px 14px;border-radius:8px 8px 0 0;font-size:12px;font-weight:900}
+    .r-table{width:100%;border-collapse:collapse}
+    .r-table tr:nth-child(even){background:#f8f6f2}
+    .r-table td{padding:8px 14px;font-size:13px;border-bottom:1px solid #e8e2d8;color:#0b1f3a}
+    .r-table td:last-child{text-align:right;font-weight:700}
+    .r-table tr.hl{background:#0b1f3a!important}
+    .r-table tr.hl td{color:#fff!important;font-weight:900!important}
+    .r-table tr.hl td:last-child{color:#b8945a!important;font-size:15px!important}
+    .r-cta{background:#0b1f3a;color:#fff;padding:16px;border-radius:10px;text-align:center;margin-top:16px}
+    .r-cta h3{font-size:14px;font-weight:900;margin-bottom:4px}
+    .r-cta p{font-size:12px;color:rgba(255,255,255,.6)}
+    @media print{
+      .report-overlay{display:block!important;position:static!important;background:none!important;padding:0!important}
+      .report-topbar{display:none!important}
+      .report-box{border-radius:0!important}
+      body > *:not(.report-overlay){display:none!important}
+    }
+
     .sticky-bar{flex-direction:column;gap:8px}.sticky-btn{text-align:center}}
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -184,7 +249,7 @@
 
 
 <div class="pdf-btn-wrap">
-  <button class="btn-pdf" onclick="goToReport()">📄 내 창업 리포트 보기 →</button>
+  <button class="btn-pdf" onclick="goToReport()">📋 내 창업 리포트 보기 →</button>
 </div>
 
 <div class="main">
@@ -688,6 +753,7 @@
 </div><!-- /main -->
 
 <!-- STICKY -->
+
 <div class="sticky-bar">
   <div class="sticky-text">
     MEAT INSIGHT · 수익 계산기
@@ -708,180 +774,66 @@
 
 
   /* ── PDF 리포트 생성 ── */
+  /* ── 리포트 페이지 이동 ── */
   function goToReport() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const params = new URLSearchParams();
 
-    const navy = [11, 31, 58];
-    const gold = [184, 148, 90];
-    const white = [255, 255, 255];
-    const gray = [107, 114, 128];
-    const offwhite = [248, 246, 242];
+    // 정육점
+    params.set('bVis', document.getElementById('b-vis').value);
+    params.set('bPrice', document.getElementById('b-price').value);
+    params.set('bCost', document.getElementById('b-cost').value);
+    params.set('bRent', document.getElementById('b-rent').value);
+    params.set('bLabor', document.getElementById('b-labor').value);
+    params.set('bEtc', document.getElementById('b-etc').value);
+    params.set('bRev', document.getElementById('b-rev').textContent);
+    params.set('bProfit', document.getElementById('b-profit').textContent);
+    params.set('bMargin', document.getElementById('b-margin').textContent);
+    params.set('bBep', document.getElementById('b-bep').textContent);
 
-    const W = 210, H = 297;
-    let y = 0;
+    // 고깃집
+    params.set('rSeats', document.getElementById('r-seats').value);
+    params.set('rPrice', document.getElementById('r-price').value);
+    params.set('rTurn', document.getElementById('r-turn').value);
+    params.set('rCost', document.getElementById('r-cost').value);
+    params.set('rRev', document.getElementById('r-rev').textContent);
+    params.set('rProfit', document.getElementById('r-profit').textContent);
+    params.set('rMargin', document.getElementById('r-margin').textContent);
+    try { params.set('rBep', document.getElementById('r-bep').textContent); } catch(e){}
+    try { params.set('rMinVis', document.getElementById('r-min-vis').textContent); } catch(e){}
 
-    // 표지 배경
-    doc.setFillColor(...navy);
-    doc.rect(0, 0, W, 60, 'F');
+    // 메뉴 원가
+    params.set('mName', document.getElementById('m-name').value);
+    params.set('mRate', document.getElementById('m-rate').textContent);
+    params.set('mMargin', document.getElementById('m-margin').textContent);
+    params.set('mRecommend', document.getElementById('m-recommend').textContent);
+    try { params.set('mVs', document.getElementById('m-vs').textContent); } catch(e){}
+    try { params.set('mMonth100', document.getElementById('m-month100').textContent); } catch(e){}
+    try { params.set('mMonth300', document.getElementById('m-month300').textContent); } catch(e){}
 
-    // 로고
-    doc.setFillColor(...gold);
-    doc.roundedRect(14, 10, 16, 16, 3, 3, 'F');
-    doc.setTextColor(...navy);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('M', 18, 21);
+    // 창업 비용
+    params.set('sDep', document.getElementById('s-dep').value);
+    params.set('sPre', document.getElementById('s-pre').value);
+    params.set('sInt', document.getElementById('s-int').value);
+    params.set('sEqu', document.getElementById('s-equ').value);
+    params.set('sSign', document.getElementById('s-sign').value);
+    params.set('sStock', document.getElementById('s-stock').value);
+    params.set('sOp', document.getElementById('s-op').value);
+    params.set('sEtc', document.getElementById('s-etc').value);
+    params.set('sTotal', document.getElementById('s-total').textContent);
+    params.set('sRecovery', document.getElementById('s-recovery').textContent);
+    params.set('sProfit', document.getElementById('s-profit').value);
 
-    // 브랜드명
-    doc.setTextColor(...white);
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text('MEAT INSIGHT', 34, 20);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...gold);
-    doc.text('고기의 모든것 · 창업 분석 리포트', 34, 27);
+    // 수율
+    params.set('yName', document.getElementById('y-name').value);
+    params.set('yNetW', document.getElementById('y-net-w').textContent);
+    params.set('yRevenue', document.getElementById('y-revenue').textContent);
+    params.set('yMargin', document.getElementById('y-margin').textContent);
+    params.set('yMarginPct', document.getElementById('y-margin-pct').textContent);
+    try { params.set('yLoss', document.getElementById('y-loss').textContent); } catch(e){}
 
-    // 날짜
-    const now = new Date();
-    const dateStr = now.getFullYear() + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + String(now.getDate()).padStart(2,'0');
-    doc.setTextColor(200, 200, 200);
-    doc.setFontSize(9);
-    doc.text('생성일: ' + dateStr, W - 14, 20, { align: 'right' });
-
-    // 리포트 제목
-    doc.setTextColor(...white);
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Startup Analysis Report', 14, 46);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...gold);
-    doc.text('정육점 · 고깃집 창업 수익 분석', 14, 54);
-
-    y = 72;
-
-    // 섹션 그리기 함수
-    function drawSection(title, rows, startY) {
-      // 섹션 헤더
-      doc.setFillColor(...navy);
-      doc.rect(14, startY, W - 28, 10, 'F');
-      doc.setTextColor(...gold);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text(title, 18, startY + 7);
-      let sy = startY + 10;
-
-      rows.forEach((row, i) => {
-        const bg = i % 2 === 0 ? offwhite : white;
-        doc.setFillColor(...bg);
-        doc.rect(14, sy, W - 28, 9, 'F');
-        doc.setDrawColor(220, 214, 206);
-        doc.rect(14, sy, W - 28, 9, 'S');
-        doc.setTextColor(...gray);
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.text(row[0], 18, sy + 6);
-        doc.setTextColor(...navy);
-        doc.setFont('helvetica', 'bold');
-        doc.text(row[1], W - 18, sy + 6, { align: 'right' });
-        sy += 9;
-      });
-      return sy + 6;
-    }
-
-    // ① 정육점 매출
-    const bVis = document.getElementById('b-vis').value;
-    const bPrice = document.getElementById('b-price').value;
-    const bCost = document.getElementById('b-cost').value;
-    const bRent = document.getElementById('b-rent').value;
-    const bLabor = document.getElementById('b-labor').value;
-    const bEtc = document.getElementById('b-etc').value;
-    const bRev = document.getElementById('b-rev').textContent;
-    const bProfit = document.getElementById('b-profit').textContent;
-    const bMargin = document.getElementById('b-margin').textContent;
-
-    y = drawSection('① 정육점 매출 계산기', [
-      ['일 방문객 수', bVis + '명'],
-      ['평균 구매금액', Number(bPrice).toLocaleString() + '원'],
-      ['원가율', bCost + '%'],
-      ['월 임대료', Number(bRent).toLocaleString() + '만원'],
-      ['월 인건비', Number(bLabor).toLocaleString() + '만원'],
-      ['월 기타비용', Number(bEtc).toLocaleString() + '만원'],
-      ['📊 예상 월 매출', bRev],
-      ['💰 예상 순이익', bProfit],
-      ['📈 순이익률', bMargin],
-    ], y);
-
-    // ② 고깃집 매출
-    const rSeats = document.getElementById('r-seats').value;
-    const rPrice = document.getElementById('r-price').value;
-    const rTurn = document.getElementById('r-turn').value;
-    const rCost = document.getElementById('r-cost').value;
-    const rRev = document.getElementById('r-rev').textContent;
-    const rProfit = document.getElementById('r-profit').textContent;
-
-    y = drawSection('② 고깃집 매출 계산기', [
-      ['좌석 수', rSeats + '석'],
-      ['객단가', Number(rPrice).toLocaleString() + '원'],
-      ['일 회전율', rTurn + '회'],
-      ['원가율', rCost + '%'],
-      ['📊 예상 월 매출', rRev],
-      ['💰 예상 순이익', rProfit],
-    ], y);
-
-    // ③ 메뉴 원가
-    const mName = document.getElementById('m-name').value;
-    const mRate = document.getElementById('m-rate').textContent;
-    const mMargin = document.getElementById('m-margin').textContent;
-    const mRecommend = document.getElementById('m-recommend').textContent;
-
-    y = drawSection('③ 메뉴 원가 계산기 (' + mName + ')', [
-      ['원가율', mRate],
-      ['1인분 마진', mMargin],
-      ['권장 판매가', mRecommend],
-    ], y);
-
-    // ④ 창업 비용
-    const sTotal = document.getElementById('s-total').textContent;
-    const sRecovery = document.getElementById('s-recovery').textContent;
-
-    y = drawSection('④ 창업 비용 계산기', [
-      ['총 창업 비용', sTotal],
-      ['투자 회수 기간', sRecovery],
-    ], y);
-
-    // ⑤ 수율
-    const yName = document.getElementById('y-name').value;
-    const yNetW = document.getElementById('y-net-w').textContent;
-    const yRevenue = document.getElementById('y-revenue').textContent;
-    const yMargin = document.getElementById('y-margin').textContent;
-    const yMarginPct = document.getElementById('y-margin-pct').textContent;
-
-    y = drawSection('⑤ 수율 계산기 (' + yName + ')', [
-      ['실 판매 가능 중량', yNetW],
-      ['총 판매 매출', yRevenue],
-      ['총 마진', yMargin],
-      ['마진율', yMarginPct],
-    ], y);
-
-    // 하단 CTA
-    y += 6;
-    doc.setFillColor(...navy);
-    doc.roundedRect(14, y, W - 28, 22, 4, 4, 'F');
-    doc.setTextColor(...white);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('더 정확한 분석이 필요하신가요?', W/2, y + 9, { align: 'center' });
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...gold);
-    doc.text('MEAT INSIGHT 비대면 컨설팅 · www.aboutmeat.co.kr', W/2, y + 16, { align: 'center' });
-
-    // 저장
-    doc.save('MEAT_INSIGHT_창업분석리포트_' + dateStr + '.pdf');
+    location.href = 'meat_insight_report.html?' + params.toString();
   }
+
 
   /* ── 포맷 ── */
   function won(n) {

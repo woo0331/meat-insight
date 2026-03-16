@@ -264,15 +264,14 @@
         <div class="form-section-title">플랜 선택 *</div>
         <div class="plan-picker" style="margin-bottom:24px">
           <div class="plan-opt" id="plan-basic" onclick="selectPlan('basic')">
-            <div class="plan-opt-top"><div class="plan-opt-name">BASIC</div><div class="plan-opt-price">50만원</div></div>
-            <div class="plan-opt-desc">창업 진단 결과 정리 · 기본 손익 분석표 · 핵심 체크포인트 · 이메일 Q&A 1회</div>
+            <div class="plan-opt-top"><div class="plan-opt-name">STANDARD</div><div class="plan-opt-price">50만원</div></div>
+            <div class="plan-opt-desc">비대면 기본 창업 분석 자료 · 손익 분석표 · 원가 구조 분석 · 창업 체크리스트 · 이메일 Q창업 진단 결과 정리 · 기본 손익 분석표 · 핵심 체크포인트 · 이메일 Q&A 1회A 2회</div>
           </div>
           <div class="plan-opt selected" id="plan-premium" onclick="selectPlan('premium')">
             <div class="plan-opt-top"><div class="plan-opt-name">PREMIUM <span class="plan-badge-rec">추천</span></div><div class="plan-opt-price">100만원</div></div>
-            <div class="plan-opt-desc">STANDARD포함 · 심화 손익·원가 분석 · 창업 전략 자료 · 화상 미팅 1회(30분)</div>
+            <div class="plan-opt-desc">Standard 전체 포함 · 심화 손익·원가·수율 분석 · 맞춤 창업 전략 자료 · 화상 미팅 1회(30분) · 이메일 QBasic 포함 · 심화 손익·원가 분석 · 창업 전략 자료 · 화상 미팅 1회(30분)A 무제한</div>
           </div>
-          <div class="plan-opt" id="plan-vip" onclick="selectPlan('vip')">
-            <div class="plan-opt-top"><div class="plan-opt-name">VIP</div><div class="plan-opt-price">500만원</div></div>
+          
             <div class="plan-opt-desc">Premium 포함 · 유통 연결 분석 · 운영 전략 · 화상 미팅 3회 · 6개월 Q&A</div>
           </div>
         </div>
@@ -408,7 +407,7 @@ function toggleCheck(label) {
 let selectedPlan = 'premium';
 function selectPlan(plan) {
   selectedPlan = plan;
-  ['basic','premium','vip'].forEach(p =>
+  ['basic','premium'].forEach(p =>
     document.getElementById('plan-'+p).classList.toggle('selected', p===plan)
   );
 }
@@ -507,7 +506,7 @@ async function submitConsult() {
   spinner.classList.add('show');
   btn.childNodes[btn.childNodes.length-1].textContent = ' 신청 중...';
 
-  const planNames = {basic:'BASIC — 50만원', premium:'PREMIUM — 300만원', 
+  const planNames = {basic:'STANDARD — 50만원', premium:'PREMIUM — 100만원'};
   const payload = {
     name, phone,
     plan: selectedPlan,

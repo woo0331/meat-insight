@@ -264,7 +264,7 @@
         <div class="form-section-title">플랜 선택 *</div>
         <div class="plan-picker" style="margin-bottom:24px">
           <div class="plan-opt" id="plan-basic" onclick="selectPlan('basic')">
-            <div class="plan-opt-top"><div class="plan-opt-name">BASIC</div><div class="plan-opt-price">150만원</div></div>
+            <div class="plan-opt-top"><div class="plan-opt-name">BASIC</div><div class="plan-opt-price">50만원</div></div>
             <div class="plan-opt-desc">창업 진단 결과 정리 · 기본 손익 분석표 · 핵심 체크포인트 · 이메일 Q&A 1회</div>
           </div>
           <div class="plan-opt selected" id="plan-premium" onclick="selectPlan('premium')">
@@ -507,7 +507,7 @@ async function submitConsult() {
   spinner.classList.add('show');
   btn.childNodes[btn.childNodes.length-1].textContent = ' 신청 중...';
 
-  const planNames = {basic:'BASIC — 150만원', premium:'PREMIUM — 300만원', vip:'VIP — 500만원'};
+  const planNames = {basic:'BASIC — 50만원', premium:'PREMIUM — 300만원', vip:'VIP — 500만원'};
   const payload = {
     name, phone,
     plan: selectedPlan,

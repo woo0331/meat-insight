@@ -1,276 +1,123 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>내 창업 분석 리포트 | MEAT INSIGHT</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
-  <style>
-    :root{--navy:#0b1f3a;--gold:#b8945a;--gold2:#d4a96a;--white:#fff;--off:#f8f6f2;--muted:#6b7280;--line:#e8e2d8;--green:#166534;--green-bg:#f0fdf4;--red:#991b1b;--shadow:0 8px 32px rgba(11,31,58,.10);--radius:16px}
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Noto Sans KR',sans-serif;background:var(--off);color:var(--navy);overflow-x:hidden}
-
-    /* NAV */
-    .nav{background:var(--navy);padding:14px 28px;display:flex;align-items:center;justify-content:space-between}
-    .nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-    .nav-logo{width:36px;height:36px;border-radius:8px;background:var(--gold);display:grid;place-items:center;font-family:'Playfair Display',serif;font-size:16px;font-weight:900;color:var(--navy)}
-    .nav-brand b{font-size:14px;font-weight:900;color:#fff}
-    .nav-brand span{font-size:11px;color:rgba(255,255,255,.5);margin-left:4px}
-    .nav-btn{padding:9px 18px;border-radius:999px;font-size:13px;font-weight:700;text-decoration:none;background:var(--gold);color:var(--navy)}
-
-    /* HERO */
-    .hero{background:var(--navy);padding:40px 28px 48px;position:relative;overflow:hidden}
-    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 500px 300px at 80% 50%,rgba(184,148,90,.15),transparent 60%);pointer-events:none}
-    .hero-inner{max-width:860px;margin:0 auto;position:relative}
-    .hero-label{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;border:1px solid rgba(184,148,90,.3);color:var(--gold);font-size:12px;font-weight:700;margin-bottom:14px}
-    .hero h1{font-family:'Playfair Display',serif;font-size:clamp(24px,3.5vw,36px);font-weight:900;color:#fff;margin-bottom:8px}
-    .hero h1 em{color:var(--gold);font-style:normal}
-    .hero-date{font-size:13px;color:rgba(255,255,255,.45)}
-    .hero-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:28px}
-    .hero-stat{background:rgba(255,255,255,.08);border:1px solid rgba(184,148,90,.2);border-radius:12px;padding:16px 20px}
-    .hero-stat-label{font-size:11px;color:rgba(255,255,255,.5);font-weight:700;margin-bottom:6px}
-    .hero-stat-val{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--gold)}
-    .hero-stat-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px}
-    @media(max-width:600px){.hero-summary{grid-template-columns:1fr 1fr}}
-
-    /* MAIN */
-    .main{max-width:860px;margin:0 auto;padding:32px 24px 80px}
-    @media(max-width:640px){.main{padding:24px 16px 80px}}
-
-    /* SECTION */
-    .report-section{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow)}
-    .section-header{background:var(--navy);padding:14px 20px;display:flex;align-items:center;gap:10px}
-    .section-header-icon{font-size:18px}
-    .section-header-title{font-size:15px;font-weight:900;color:#fff}
-    .section-header-sub{font-size:12px;color:rgba(255,255,255,.5);margin-left:auto}
-
-    /* TABLE */
-    .report-table{width:100%;border-collapse:collapse}
-    .report-table tr:nth-child(even){background:var(--off)}
-    .report-table td{padding:12px 20px;font-size:14px;border-bottom:1px solid var(--line);color:var(--navy)}
-    .report-table td:last-child{text-align:right;font-weight:700}
-    .report-table tr:last-child td{border-bottom:none}
-    .report-table tr.highlight{background:linear-gradient(135deg,#f8f4ee,#f0e8d8)!important}
-    .report-table tr.highlight td{font-weight:900;color:var(--navy)}
-    .report-table tr.highlight td:last-child{color:var(--gold);font-size:17px;font-family:'Playfair Display',serif}
-    .report-table tr.good td:last-child{color:var(--green)}
-    .report-table tr.warn td:last-child{color:#d97706}
-    .report-table tr.bad td:last-child{color:var(--red)}
-
-    /* EMPTY STATE */
-    .empty-state{padding:32px;text-align:center;color:var(--muted);font-size:14px}
-    .empty-state span{font-size:28px;display:block;margin-bottom:8px}
-
-    /* CTA */
-    .cta-box{background:var(--navy);border-radius:var(--radius);padding:32px;text-align:center;margin-top:24px;position:relative;overflow:hidden}
-    .cta-box::before{content:'';position:absolute;right:-30px;top:-30px;width:150px;height:150px;background:rgba(184,148,90,.1);border-radius:50%;pointer-events:none}
-    .cta-box h3{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#fff;margin-bottom:8px}
-    .cta-box p{font-size:14px;color:rgba(255,255,255,.6);margin-bottom:20px;line-height:1.7}
-    .cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-    .btn-gold{display:inline-block;padding:13px 28px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:14px;font-weight:900;text-decoration:none;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s}
-    .btn-gold:hover{opacity:.88}
-    .btn-outline{display:inline-block;padding:13px 28px;border-radius:999px;border:1.5px solid rgba(255,255,255,.25);color:#fff;font-size:14px;font-weight:700;text-decoration:none;transition:border-color .15s}
-    .btn-outline:hover{border-color:rgba(255,255,255,.5)}
-
-    /* BACK BTN */
-    .back-bar{background:#fff;border-bottom:1px solid var(--line);padding:12px 28px;display:flex;align-items:center;justify-content:space-between}
-    .back-bar-inner{max-width:860px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between}
-    .btn-back{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:999px;border:1.5px solid var(--line);background:#fff;font-size:13px;font-weight:700;color:var(--navy);text-decoration:none;cursor:pointer}
-    .btn-back:hover{background:var(--off)}
-    .report-date{font-size:12px;color:var(--muted)}
-
-    /* NO DATA BANNER */
-    .no-data-banner{background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;padding:16px 20px;margin-bottom:20px;font-size:14px;color:#92400e;display:none}
-    .no-data-banner.show{display:block}
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>내 창업 분석 리포트 | MEAT INSIGHT</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:#f8f6f2;color:#0b1f3a}
+a{text-decoration:none}
+.nav{background:#0b1f3a;padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between}
+.nl{display:flex;align-items:center;gap:10px}
+.logo{width:32px;height:32px;border-radius:7px;background:#b8945a;display:grid;place-items:center;font-family:'Playfair Display',serif;font-size:14px;font-weight:900;color:#0b1f3a}
+.nt{font-size:13px;font-weight:900;color:#fff}
+.nb{padding:7px 14px;border-radius:999px;background:#b8945a;color:#0b1f3a;font-size:12px;font-weight:900}
+.hero{background:#0b1f3a;padding:32px 24px 24px}
+.hw{max-width:780px;margin:0 auto}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;border:1px solid rgba(184,148,90,.4);color:#b8945a;font-size:11px;font-weight:700;margin-bottom:10px}
+.hw h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:#fff;margin-bottom:3px}
+.hw h1 em{color:#b8945a;font-style:normal}
+.hd{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:18px}
+.hc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hci{background:rgba(255,255,255,.07);border:1px solid rgba(184,148,90,.2);border-radius:9px;padding:11px 13px}
+.hcl{font-size:10px;color:rgba(255,255,255,.5);font-weight:700;margin-bottom:4px}
+.hcv{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:#b8945a}
+.hcs{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px}
+@media(max-width:500px){.hc{grid-template-columns:1fr 1fr}}
+.main{max-width:780px;margin:0 auto;padding:20px 24px 60px}
+@media(max-width:600px){.main{padding:16px 14px 60px}}
+.sec{background:#fff;border:1px solid #e8e2d8;border-radius:13px;margin-bottom:12px;overflow:hidden;box-shadow:0 3px 15px rgba(11,31,58,.07)}
+.sh{background:#0b1f3a;padding:11px 16px;display:flex;align-items:center;gap:7px}
+.si{font-size:15px}
+.st{font-size:13px;font-weight:900;color:#fff}
+.ss{font-size:10px;color:#b8945a;margin-left:auto;font-weight:700}
+table{width:100%;border-collapse:collapse}
+tr:nth-child(even){background:#f8f6f2}
+td{padding:9px 14px;font-size:13px;border-bottom:1px solid #e8e2d8;color:#0b1f3a}
+td:last-child{text-align:right;font-weight:700}
+tr:last-child td{border-bottom:none}
+.hl td{background:linear-gradient(135deg,#f5efe4,#ede3d0)!important;font-weight:900!important}
+.hl td:last-child{color:#b8945a!important;font-size:15px!important;font-family:'Playfair Display',serif!important}
+.et{padding:18px!important;text-align:center!important;color:#6b7280!important;font-size:12px!important}
+.wb{background:#fef3c7;border:1px solid #fcd34d;border-radius:9px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#92400e;display:none}
+.wb.on{display:block}
+.cta{background:#0b1f3a;border-radius:13px;padding:22px;text-align:center;margin-top:18px}
+.cta h3{font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:#fff;margin-bottom:5px}
+.cta p{font-size:12px;color:rgba(255,255,255,.6);margin-bottom:14px;line-height:1.7}
+.cb{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.bg{display:inline-block;padding:10px 22px;border-radius:999px;background:#b8945a;color:#0b1f3a;font-size:12px;font-weight:900}
+.bl{display:inline-block;padding:10px 22px;border-radius:999px;border:1.5px solid rgba(255,255,255,.3);color:#fff;font-size:12px;font-weight:700}
+</style>
 </head>
 <body>
-
 <nav class="nav">
-  <a class="nav-brand" href="meat_insight_main.html">
-    <div class="nav-logo">肉</div>
-    <b>MEAT INSIGHT</b><span>고기의 모든것</span>
-  </a>
-  <a class="nav-btn" href="meat_insight_calculator.html">← 계산기로 돌아가기</a>
+<div class="nl"><div class="logo">肉</div><div class="nt">MEAT INSIGHT</div></div>
+<a class="nb" href="meat_insight_calculator.html">← 계산기로</a>
 </nav>
-
-<div class="back-bar">
-  <div class="back-bar-inner">
-    <a class="btn-back" href="meat_insight_calculator.html">← 계산기로 돌아가기</a>
-    <div class="report-date" id="report-date"></div>
-  </div>
-</div>
-
 <div class="hero">
-  <div class="hero-inner">
-    <div class="hero-label">내 창업 분석 결과</div>
-    <h1><em>내 창업 리포트</em>가<br/>준비됐습니다</h1>
-    <div class="hero-date" id="hero-date"></div>
-    <div class="hero-summary" id="hero-summary"></div>
-  </div>
+<div class="hw">
+<div class="badge">내 창업 분석 결과</div>
+<h1><em>내 창업 리포트</em>가<br/>준비됐습니다</h1>
+<div class="hd" id="hd"></div>
+<div class="hc" id="hc"></div>
 </div>
-
+</div>
 <div class="main">
-
-  <div class="no-data-banner" id="no-data-banner">
-    ⚠️ 계산기에서 데이터를 입력한 후 "내 창업 리포트 보기" 버튼을 눌러주세요.
-    <a href="meat_insight_calculator.html" style="color:#92400e;font-weight:700;margin-left:8px">계산기로 이동 →</a>
-  </div>
-
-  <!-- 정육점 매출 -->
-  <div class="report-section" id="sec-butchery">
-    <div class="section-header">
-      <div class="section-header-icon">🥩</div>
-      <div class="section-header-title">정육점 매출 분석</div>
-      <div class="section-header-sub" id="sub-butchery"></div>
-    </div>
-    <table class="report-table" id="table-butchery"></table>
-  </div>
-
-  <!-- 고깃집 매출 -->
-  <div class="report-section" id="sec-restaurant">
-    <div class="section-header">
-      <div class="section-header-icon">🍖</div>
-      <div class="section-header-title">고깃집 매출 분석</div>
-      <div class="section-header-sub" id="sub-restaurant"></div>
-    </div>
-    <table class="report-table" id="table-restaurant"></table>
-  </div>
-
-  <!-- 메뉴 원가 -->
-  <div class="report-section" id="sec-menu">
-    <div class="section-header">
-      <div class="section-header-icon">📊</div>
-      <div class="section-header-title">메뉴 원가 분석</div>
-      <div class="section-header-sub" id="sub-menu"></div>
-    </div>
-    <table class="report-table" id="table-menu"></table>
-  </div>
-
-  <!-- 창업 비용 -->
-  <div class="report-section" id="sec-startup">
-    <div class="section-header">
-      <div class="section-header-icon">💰</div>
-      <div class="section-header-title">창업 비용 분석</div>
-    </div>
-    <table class="report-table" id="table-startup"></table>
-  </div>
-
-  <!-- 수율 -->
-  <div class="report-section" id="sec-yield">
-    <div class="section-header">
-      <div class="section-header-icon">⚖️</div>
-      <div class="section-header-title">수율 분석</div>
-      <div class="section-header-sub" id="sub-yield"></div>
-    </div>
-    <table class="report-table" id="table-yield"></table>
-  </div>
-
-  <!-- CTA -->
-  <div class="cta-box">
-    <h3>더 정확한 분석이 필요하신가요?</h3>
-    <p>지금 보신 결과는 기본 분석입니다.<br/>전문가 비대면 컨설팅으로 맞춤 손익 구조·원가 분석·창업 전략 자료를 받아보세요.</p>
-    <div class="cta-btns">
-      <a href="meat_insight_apply.html?tab=consulting" class="btn-gold">비대면 컨설팅 신청</a>
-      <a href="meat_insight_calculator.html" class="btn-outline">계산기 다시 해보기</a>
-    </div>
-  </div>
-
+<div class="wb" id="wb">⚠️ 계산기에서 숫자를 입력한 후 버튼을 눌러주세요. <a href="meat_insight_calculator.html" style="color:#92400e;font-weight:700">계산기로 이동 →</a></div>
+<div class="sec"><div class="sh"><div class="si">🥩</div><div class="st">정육점 매출 분석</div><div class="ss" id="s1"></div></div><table id="t1"></table></div>
+<div class="sec"><div class="sh"><div class="si">🍖</div><div class="st">고깃집 매출 분석</div><div class="ss" id="s2"></div></div><table id="t2"></table></div>
+<div class="sec"><div class="sh"><div class="si">📊</div><div class="st">메뉴 원가 분석</div><div class="ss" id="s3"></div></div><table id="t3"></table></div>
+<div class="sec"><div class="sh"><div class="si">💰</div><div class="st">창업 비용 분석</div></div><table id="t4"></table></div>
+<div class="sec"><div class="sh"><div class="si">⚖️</div><div class="st">수율 분석</div><div class="ss" id="s5"></div></div><table id="t5"></table></div>
+<div class="cta">
+<h3>더 정확한 분석이 필요하신가요?</h3>
+<p>지금 보신 결과는 기본 분석입니다.<br/>전문가 비대면 컨설팅으로 맞춤 손익 구조·원가 분석·창업 전략 자료를 받아보세요.</p>
+<div class="cb">
+<a href="meat_insight_apply.html?tab=consulting" class="bg">비대면 컨설팅 신청</a>
+<a href="meat_insight_calculator.html" class="bl">계산기 다시 해보기</a>
 </div>
-
+</div>
+</div>
 <script>
-  // URL 파라미터에서 데이터 읽기
-  const params = new URLSearchParams(location.search);
-  const d = {};
-  for (const [k, v] of params.entries()) d[k] = decodeURIComponent(v);
-
-  const hasData = Object.keys(d).length > 0;
-
-  // 날짜
-  const now = new Date();
-  const dateStr = now.getFullYear() + '년 ' + (now.getMonth()+1) + '월 ' + now.getDate() + '일';
-  document.getElementById('hero-date').textContent = dateStr + ' 기준 분석 결과';
-  document.getElementById('report-date').textContent = dateStr;
-
-  if (!hasData) {
-    document.getElementById('no-data-banner').classList.add('show');
+var p={};
+var qs=window.location.search.substring(1);
+if(qs.length>0){
+  var pairs=qs.split('&');
+  for(var i=0;i<pairs.length;i++){
+    var kv=pairs[i].split('=');
+    if(kv.length>=2){
+      var key=decodeURIComponent(kv[0]);
+      var val=decodeURIComponent(kv.slice(1).join('=').replace(/\+/g,' '));
+      p[key]=val;
+    }
   }
-
-  function row(label, val, cls='') {
-    return '<tr class="' + cls + '"><td>' + label + '</td><td>' + val + '</td></tr>';
-  }
-  function emptySection(msg) {
-    return '<tr><td colspan="2" style="padding:24px;text-align:center;color:#6b7280;font-size:14px">' + msg + '</td></tr>';
-  }
-
-  // 히어로 요약
-  const summaryEl = document.getElementById('hero-summary');
-  summaryEl.innerHTML =
-    '<div class="hero-stat"><div class="hero-stat-label">정육점 예상 월 매출</div><div class="hero-stat-val">' + (d.bRev||'-') + '</div><div class="hero-stat-sub">순이익 ' + (d.bProfit||'-') + '</div></div>' +
-    '<div class="hero-stat"><div class="hero-stat-label">고깃집 예상 월 매출</div><div class="hero-stat-val">' + (d.rRev||'-') + '</div><div class="hero-stat-sub">순이익 ' + (d.rProfit||'-') + '</div></div>' +
-    '<div class="hero-stat"><div class="hero-stat-label">총 창업 비용</div><div class="hero-stat-val">' + (d.sTotal||'-') + '</div><div class="hero-stat-sub">회수 ' + (d.sRecovery||'-') + '</div></div>';
-
-  // ① 정육점
-  document.getElementById('sub-butchery').textContent = d.bRev ? '예상 월 매출 ' + d.bRev : '';
-  document.getElementById('table-butchery').innerHTML = d.bRev ?
-    row('일 방문객 수', (d.bVis||'-') + '명') +
-    row('평균 구매금액', Number(d.bPrice||0).toLocaleString() + '원') +
-    row('원가율', (d.bCost||'-') + '%') +
-    row('월 임대료', (d.bRent||'-') + '만원') +
-    row('월 인건비', (d.bLabor||'-') + '만원') +
-    row('월 기타비용', (d.bEtc||'-') + '만원') +
-    row('예상 월 매출', d.bRev||'-', 'highlight') +
-    row('예상 순이익', d.bProfit||'-', 'highlight') +
-    row('순이익률', d.bMargin||'-') +
-    row('손익분기점 (일 방문)', d.bBep||'-')
-    : emptySection('계산기에서 정육점 매출을 입력해주세요');
-
-  // ② 고깃집
-  document.getElementById('sub-restaurant').textContent = d.rRev ? '예상 월 매출 ' + d.rRev : '';
-  document.getElementById('table-restaurant').innerHTML = d.rRev ?
-    row('좌석 수', (d.rSeats||'-') + '석') +
-    row('객단가 (손님 1인당 평균)', Number(d.rPrice||0).toLocaleString() + '원') +
-    row('일 회전율 (테이블이 하루 몇 번)', (d.rTurn||'-') + '회') +
-    row('원가율', (d.rCost||'-') + '%') +
-    row('예상 월 매출', d.rRev||'-', 'highlight') +
-    row('예상 순이익', d.rProfit||'-', 'highlight') +
-    row('순이익률', d.rMargin||'-') +
-    row('손익분기 월 매출', d.rBep||'-') +
-    row('1일 최소 방문객', d.rMinVis||'-')
-    : emptySection('계산기에서 고깃집 매출을 입력해주세요');
-
-  // ③ 메뉴 원가
-  document.getElementById('sub-menu').textContent = d.mName || '';
-  document.getElementById('table-menu').innerHTML = d.mRate ?
-    row('메뉴명', d.mName||'-') +
-    row('원가율', d.mRate||'-') +
-    row('1인분 마진', d.mMargin||'-', 'highlight') +
-    row('권장 판매가', d.mRecommend||'-')
-    : emptySection('계산기에서 메뉴 원가를 입력해주세요');
-
-  // ④ 창업 비용
-  document.getElementById('table-startup').innerHTML = d.sTotal ?
-    row('보증금', (d.sDep||'-') + '만원') +
-    row('권리금', (d.sPre||'-') + '만원') +
-    row('인테리어', (d.sInt||'-') + '만원') +
-    row('장비·집기', (d.sEqu||'-') + '만원') +
-    row('간판·홍보', (d.sSign||'-') + '만원') +
-    row('초도 물량', (d.sStock||'-') + '만원') +
-    row('운전 자금', (d.sOp||'-') + '만원') +
-    row('기타', (d.sEtc||'-') + '만원') +
-    row('총 창업 비용', d.sTotal||'-', 'highlight') +
-    row('투자 회수 기간', d.sRecovery||'-')
-    : emptySection('계산기에서 창업 비용을 입력해주세요');
-
-  // ⑤ 수율
-  document.getElementById('sub-yield').textContent = d.yName || '';
-  document.getElementById('table-yield').innerHTML = d.yNetW ?
-    row('부위명', d.yName||'-') +
-    row('실 판매 가능 중량', d.yNetW||'-') +
-    row('총 판매 매출', d.yRevenue||'-') +
-    row('총 마진', d.yMargin||'-', 'highlight') +
-    row('마진율', d.yMarginPct||'-')
-    : emptySection('계산기에서 수율을 입력해주세요');
+}
+function g(k){return p[k]||'';}
+var now=new Date();
+document.getElementById('hd').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일 기준';
+if(Object.keys(p).length===0)document.getElementById('wb').classList.add('on');
+document.getElementById('hc').innerHTML=
+  '<div class="hci"><div class="hcl">정육점 예상 월 매출</div><div class="hcv">'+(g('bRev')||'-')+'</div><div class="hcs">순이익 '+(g('bProfit')||'-')+'</div></div>'+
+  '<div class="hci"><div class="hcl">고깃집 예상 월 매출</div><div class="hcv">'+(g('rRev')||'-')+'</div><div class="hcs">순이익 '+(g('rProfit')||'-')+'</div></div>'+
+  '<div class="hci"><div class="hcl">총 창업 비용</div><div class="hcv">'+(g('sTotal')||'-')+'</div><div class="hcs">회수 '+(g('sRecovery')||'-')+'</div></div>';
+function R(a,b,h){return '<tr'+(h?' class="hl"':'')+'><td>'+a+'</td><td>'+b+'</td></tr>';}
+function E(m){return '<tr><td colspan="2" class="et">'+m+'</td></tr>';}
+var bRev=g('bRev');
+document.getElementById('s1').textContent=bRev?'월 매출 '+bRev:'';
+document.getElementById('t1').innerHTML=bRev?R('일 방문객 수',g('bVis')+'명')+R('평균 구매금액',Number(g('bPrice')||0).toLocaleString()+'원')+R('원가율',g('bCost')+'%')+R('월 임대료',g('bRent')+'만원')+R('월 인건비',g('bLabor')+'만원')+R('월 기타비용',g('bEtc')+'만원')+R('예상 월 매출',bRev,1)+R('예상 순이익',g('bProfit'),1)+R('순이익률',g('bMargin'))+R('손익분기점',g('bBep')):E('계산기에서 정육점 매출을 입력해주세요');
+var rRev=g('rRev');
+document.getElementById('s2').textContent=rRev?'월 매출 '+rRev:'';
+document.getElementById('t2').innerHTML=rRev?R('좌석 수',g('rSeats')+'석')+R('객단가',Number(g('rPrice')||0).toLocaleString()+'원')+R('일 회전율',g('rTurn')+'회')+R('원가율',g('rCost')+'%')+R('예상 월 매출',rRev,1)+R('예상 순이익',g('rProfit'),1)+R('순이익률',g('rMargin')):E('계산기에서 고깃집 매출을 입력해주세요');
+var mRate=g('mRate');
+document.getElementById('s3').textContent=g('mName')||'';
+document.getElementById('t3').innerHTML=mRate?R('메뉴명',g('mName'))+R('원가율',mRate)+R('1인분 마진',g('mMargin'),1)+R('권장 판매가',g('mRecommend')):E('계산기에서 메뉴 원가를 입력해주세요');
+var sTotal=g('sTotal');
+document.getElementById('t4').innerHTML=sTotal?R('보증금',g('sDep')+'만원')+R('권리금',g('sPre')+'만원')+R('인테리어',g('sInt')+'만원')+R('장비·집기',g('sEqu')+'만원')+R('간판·홍보',g('sSign')+'만원')+R('초도 물량',g('sStock')+'만원')+R('운전 자금',g('sOp')+'만원')+R('기타',g('sEtc')+'만원')+R('총 창업 비용',sTotal,1)+R('투자 회수 기간',g('sRecovery')):E('계산기에서 창업 비용을 입력해주세요');
+var yNetW=g('yNetW');
+document.getElementById('s5').textContent=g('yName')||'';
+document.getElementById('t5').innerHTML=yNetW?R('부위명',g('yName'))+R('실 판매 가능 중량',yNetW)+R('총 판매 매출',g('yRevenue'))+R('총 마진',g('yMargin'),1)+R('마진율',g('yMarginPct')):E('계산기에서 수율을 입력해주세요');
 </script>
 </body>
 </html>

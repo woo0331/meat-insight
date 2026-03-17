@@ -179,13 +179,6 @@
 </div>
 
 <script>
-  function row(label, val, cls='') {
-    return `<tr class="${cls}"><td>${label}</td><td>${val}</td></tr>`;
-  }
-  function emptySection(msg) {
-    return `<tr><td colspan="2" class="empty-state"><span>📝</span>${msg}</td></tr>`;
-  }
-
   // URL 파라미터에서 데이터 읽기
   const params = new URLSearchParams(location.search);
   const d = {};
@@ -203,92 +196,81 @@
     document.getElementById('no-data-banner').classList.add('show');
   }
 
+  function row(label, val, cls='') {
+    return '<tr class="' + cls + '"><td>' + label + '</td><td>' + val + '</td></tr>';
+  }
+  function emptySection(msg) {
+    return '<tr><td colspan="2" style="padding:24px;text-align:center;color:#6b7280;font-size:14px">' + msg + '</td></tr>';
+  }
+
   // 히어로 요약
   const summaryEl = document.getElementById('hero-summary');
-  if (d.bRev || d.rRev) {
-    summaryEl.innerHTML = `
-      <div class="hero-stat">
-        <div class="hero-stat-label">정육점 예상 월 매출</div>
-        <div class="hero-stat-val">${d.bRev || '-'}</div>
-        <div class="hero-stat-sub">순이익 ${d.bProfit || '-'}</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-label">고깃집 예상 월 매출</div>
-        <div class="hero-stat-val">${d.rRev || '-'}</div>
-        <div class="hero-stat-sub">순이익 ${d.rProfit || '-'}</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-label">총 창업 비용</div>
-        <div class="hero-stat-val">${d.sTotal || '-'}</div>
-        <div class="hero-stat-sub">회수 ${d.sRecovery || '-'}</div>
-      </div>`;
-  }
+  summaryEl.innerHTML =
+    '<div class="hero-stat"><div class="hero-stat-label">정육점 예상 월 매출</div><div class="hero-stat-val">' + (d.bRev||'-') + '</div><div class="hero-stat-sub">순이익 ' + (d.bProfit||'-') + '</div></div>' +
+    '<div class="hero-stat"><div class="hero-stat-label">고깃집 예상 월 매출</div><div class="hero-stat-val">' + (d.rRev||'-') + '</div><div class="hero-stat-sub">순이익 ' + (d.rProfit||'-') + '</div></div>' +
+    '<div class="hero-stat"><div class="hero-stat-label">총 창업 비용</div><div class="hero-stat-val">' + (d.sTotal||'-') + '</div><div class="hero-stat-sub">회수 ' + (d.sRecovery||'-') + '</div></div>';
 
   // ① 정육점
   document.getElementById('sub-butchery').textContent = d.bRev ? '예상 월 매출 ' + d.bRev : '';
-  document.getElementById('table-butchery').innerHTML = d.bRev ? `
-    ${row('일 방문객 수', (d.bVis||'-') + '명')}
-    ${row('평균 구매금액', (d.bPrice||'-') + '원')}
-    ${row('원가율', (d.bCost||'-') + '%')}
-    ${row('월 임대료', (d.bRent||'-') + '만원')}
-    ${row('월 인건비', (d.bLabor||'-') + '만원')}
-    ${row('월 기타비용', (d.bEtc||'-') + '만원')}
-    ${row('예상 월 매출', d.bRev||'-', 'highlight')}
-    ${row('예상 순이익', d.bProfit||'-', 'highlight')}
-    ${row('순이익률', d.bMargin||'-')}
-    ${row('손익분기점 (일 방문)', d.bBep||'-')}
-  ` : emptySection('계산기에서 정육점 매출을 입력해주세요');
+  document.getElementById('table-butchery').innerHTML = d.bRev ?
+    row('일 방문객 수', (d.bVis||'-') + '명') +
+    row('평균 구매금액', Number(d.bPrice||0).toLocaleString() + '원') +
+    row('원가율', (d.bCost||'-') + '%') +
+    row('월 임대료', (d.bRent||'-') + '만원') +
+    row('월 인건비', (d.bLabor||'-') + '만원') +
+    row('월 기타비용', (d.bEtc||'-') + '만원') +
+    row('예상 월 매출', d.bRev||'-', 'highlight') +
+    row('예상 순이익', d.bProfit||'-', 'highlight') +
+    row('순이익률', d.bMargin||'-') +
+    row('손익분기점 (일 방문)', d.bBep||'-')
+    : emptySection('계산기에서 정육점 매출을 입력해주세요');
 
   // ② 고깃집
   document.getElementById('sub-restaurant').textContent = d.rRev ? '예상 월 매출 ' + d.rRev : '';
-  document.getElementById('table-restaurant').innerHTML = d.rRev ? `
-    ${row('좌석 수', (d.rSeats||'-') + '석')}
-    ${row('객단가 (손님 1인당 평균)', (d.rPrice||'-') + '원')}
-    ${row('일 회전율 (테이블이 하루 몇 번)', (d.rTurn||'-') + '회')}
-    ${row('원가율', (d.rCost||'-') + '%')}
-    ${row('예상 월 매출', d.rRev||'-', 'highlight')}
-    ${row('예상 순이익', d.rProfit||'-', 'highlight')}
-    ${row('순이익률', d.rMargin||'-')}
-    ${row('손익분기 월 매출', d.rBep||'-')}
-    ${row('1일 최소 방문객', d.rMinVis||'-')}
-  ` : emptySection('계산기에서 고깃집 매출을 입력해주세요');
+  document.getElementById('table-restaurant').innerHTML = d.rRev ?
+    row('좌석 수', (d.rSeats||'-') + '석') +
+    row('객단가 (손님 1인당 평균)', Number(d.rPrice||0).toLocaleString() + '원') +
+    row('일 회전율 (테이블이 하루 몇 번)', (d.rTurn||'-') + '회') +
+    row('원가율', (d.rCost||'-') + '%') +
+    row('예상 월 매출', d.rRev||'-', 'highlight') +
+    row('예상 순이익', d.rProfit||'-', 'highlight') +
+    row('순이익률', d.rMargin||'-') +
+    row('손익분기 월 매출', d.rBep||'-') +
+    row('1일 최소 방문객', d.rMinVis||'-')
+    : emptySection('계산기에서 고깃집 매출을 입력해주세요');
 
   // ③ 메뉴 원가
   document.getElementById('sub-menu').textContent = d.mName || '';
-  document.getElementById('table-menu').innerHTML = d.mRate ? `
-    ${row('메뉴명', d.mName||'-')}
-    ${row('원가율', d.mRate||'-')}
-    ${row('1인분 마진', d.mMargin||'-', 'highlight')}
-    ${row('권장 판매가', d.mRecommend||'-')}
-    ${row('현재가 대비', d.mVs||'-')}
-    ${row('월 100인분 마진', d.mMonth100||'-')}
-    ${row('월 300인분 마진', d.mMonth300||'-')}
-  ` : emptySection('계산기에서 메뉴 원가를 입력해주세요');
+  document.getElementById('table-menu').innerHTML = d.mRate ?
+    row('메뉴명', d.mName||'-') +
+    row('원가율', d.mRate||'-') +
+    row('1인분 마진', d.mMargin||'-', 'highlight') +
+    row('권장 판매가', d.mRecommend||'-')
+    : emptySection('계산기에서 메뉴 원가를 입력해주세요');
 
   // ④ 창업 비용
-  document.getElementById('table-startup').innerHTML = d.sTotal ? `
-    ${row('보증금', (d.sDep||'-') + '만원')}
-    ${row('권리금', (d.sPre||'-') + '만원')}
-    ${row('인테리어', (d.sInt||'-') + '만원')}
-    ${row('장비·집기', (d.sEqu||'-') + '만원')}
-    ${row('간판·홍보', (d.sSign||'-') + '만원')}
-    ${row('초도 물량', (d.sStock||'-') + '만원')}
-    ${row('운전 자금', (d.sOp||'-') + '만원')}
-    ${row('기타', (d.sEtc||'-') + '만원')}
-    ${row('총 창업 비용', d.sTotal||'-', 'highlight')}
-    ${row('투자 회수 기간', d.sRecovery||'-')}
-  ` : emptySection('계산기에서 창업 비용을 입력해주세요');
+  document.getElementById('table-startup').innerHTML = d.sTotal ?
+    row('보증금', (d.sDep||'-') + '만원') +
+    row('권리금', (d.sPre||'-') + '만원') +
+    row('인테리어', (d.sInt||'-') + '만원') +
+    row('장비·집기', (d.sEqu||'-') + '만원') +
+    row('간판·홍보', (d.sSign||'-') + '만원') +
+    row('초도 물량', (d.sStock||'-') + '만원') +
+    row('운전 자금', (d.sOp||'-') + '만원') +
+    row('기타', (d.sEtc||'-') + '만원') +
+    row('총 창업 비용', d.sTotal||'-', 'highlight') +
+    row('투자 회수 기간', d.sRecovery||'-')
+    : emptySection('계산기에서 창업 비용을 입력해주세요');
 
   // ⑤ 수율
   document.getElementById('sub-yield').textContent = d.yName || '';
-  document.getElementById('table-yield').innerHTML = d.yNetW ? `
-    ${row('부위명', d.yName||'-')}
-    ${row('실 판매 가능 중량', d.yNetW||'-')}
-    ${row('총 판매 매출', d.yRevenue||'-')}
-    ${row('총 마진', d.yMargin||'-', 'highlight')}
-    ${row('마진율', d.yMarginPct||'-')}
-    ${row('손질 손실 중량', d.yLoss||'-')}
-  ` : emptySection('계산기에서 수율을 입력해주세요');
+  document.getElementById('table-yield').innerHTML = d.yNetW ?
+    row('부위명', d.yName||'-') +
+    row('실 판매 가능 중량', d.yNetW||'-') +
+    row('총 판매 매출', d.yRevenue||'-') +
+    row('총 마진', d.yMargin||'-', 'highlight') +
+    row('마진율', d.yMarginPct||'-')
+    : emptySection('계산기에서 수율을 입력해주세요');
 </script>
 </body>
 </html>

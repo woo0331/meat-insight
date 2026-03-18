@@ -635,6 +635,14 @@ function submitSupply() {
   document.getElementById('s-items').value = '';
   document.getElementById('s-region').value = '';
 }
+</script><script>
+function getTime(){var n=new Date();return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0');}
+function addMsg(t,u){var m=document.getElementById('chat-messages');if(!m)return;var d=document.createElement('div');d.className='msg '+(u?'user':'bot');d.innerHTML='<div class="msg-bubble">'+t.replace(/\n/g,'<br/>')+'</div><div class="msg-time">'+getTime()+'</div>';m.appendChild(d);m.scrollTop=m.scrollHeight;}
+function showTyping(s){var t=document.getElementById('typing');if(t){if(s)t.classList.add('show');else t.classList.remove('show');}}
+function getSmartReply(text){var t=text.toLowerCase();if(t.includes('자본금')||t.includes('비용')||t.includes('얼마')){if(t.includes('정육점'))return '정육점 창업 비용입니다! 💰\n\n• 10평 소형: 약 4,000~5,500만원\n• 20평 중형: 약 6,000~8,000만원\n• 30평 대형: 약 9,000만원~1억 2천\n\n더 정확한 분석은 비대면 컨설팅(50만원~)으로 받아보세요!';if(t.includes('고깃집')||t.includes('고기집'))return '고깃집 창업 비용입니다! 💰\n\n• 20석 소형: 약 6,000~8,000만원\n• 40석 중형: 약 1억~1억 5천만원\n\n더 정확한 분석은 비대면 컨설팅으로 받아보세요!';return '창업 비용은 업종과 규모에 따라 다릅니다! 💰\n\n• 정육점 20평: 약 6,000~8,000만원\n• 고깃집 40석: 약 1억~1억 5천만원';}if(t.includes('수익')||t.includes('매출')||t.includes('이익'))return '수익은 규모에 따라 다릅니다! 📊\n\n• 정육점 20평: 월 순이익 800~1,800만원\n• 고깃집 40석: 월 순이익 2,000~4,000만원\n\n계산기로 직접 시뮬레이션해보세요!';if(t.includes('원가')||t.includes('마진')||t.includes('절감'))return '원가율 낮추는 방법이에요! ⚡\n\n1. 도매 직거래 — 10~15% 절감\n2. 부위별 수율 관리\n3. 재고 최적화';if(t.includes('비교')||t.includes('차이')||t.includes('어느'))return '정육점 vs 고깃집 비교! 🤔\n\n📌 정육점: 초기비용 낮음, 원가율 55~62%\n📌 고깃집: 초기비용 높음, 원가율 35~42%\n\n자본금 1억 미만이면 정육점을 추천해요!';if(t.includes('상권')||t.includes('입지')||t.includes('위치'))return '좋은 상권 기준이에요! 📍\n\n정육점: 아파트 단지, 재래시장 인근\n고깃집: 직장인 밀집, 유흥가 인근';return '좋은 질문이에요! 🥩\n\n더 구체적으로 알려주시면 정확한 답변을 드릴 수 있어요.\n예: 20평 정육점 창업 비용이 얼마인가요?\n\n비대면 컨설팅(50만원~)으로 전문 분석을 받아보세요!';}
+var isTyping=false;
+function sendQuick(text){document.getElementById('chat-input').value=text;sendMsg();}
+function sendMsg(){if(isTyping)return;var input=document.getElementById('chat-input');var text=input.value.trim();if(!text)return;input.value='';isTyping=true;var qb=document.getElementById('quick-btns');if(qb)qb.style.display='none';addMsg(text,true);showTyping(true);setTimeout(function(){var reply=getSmartReply(text);showTyping(false);addMsg(reply,false);isTyping=false;},1000);}
 </script>
 </body>
 </html>  /* ── AI 챗봇 ── */

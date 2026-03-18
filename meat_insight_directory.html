@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>파트너 업체 디렉토리 | MEAT INSIGHT — 고기의 모든것</title>
+  <meta name="description" content="정육점·고깃집 창업자를 위한 검증된 파트너 업체 디렉토리. 고기 공급업체, 정육 장비, 인테리어, 부동산, 세무·법무 업체를 찾아보세요."/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{--navy:#0b1f3a;--gold:#b8945a;--gold2:#d4a96a;--white:#fff;--off:#f8f6f2;--muted:#6b7280;--line:#e8e2d8;--shadow:0 8px 32px rgba(11,31,58,.10);--radius:16px}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Noto Sans KR',sans-serif;background:var(--off);color:var(--navy);overflow-x:hidden}
+
+    /* NAV */
+    .nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 32px;background:rgba(11,31,58,.97);backdrop-filter:blur(20px);border-bottom:1px solid rgba(184,148,90,.2)}
+    .nav-brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+    .nav-logo{width:40px;height:40px;border-radius:10px;background:var(--gold);display:grid;place-items:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--navy)}
+    .nav-brand b{font-size:14px;font-weight:900;color:#fff}
+    .nav-brand span{font-size:11px;color:rgba(255,255,255,.5);margin-left:4px}
+    .nav-right{display:flex;gap:8px}
+    .nav-btn{padding:9px 18px;border-radius:999px;font-size:13px;font-weight:700;text-decoration:none;color:rgba(255,255,255,.8);border:1.5px solid rgba(255,255,255,.15);transition:all .15s}
+    .nav-btn:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+    .nav-btn.primary{background:var(--gold);color:var(--navy);border-color:transparent}
+    @media(max-width:640px){.nav{padding:12px 16px}.nav-right{display:none}}
+
+    /* HERO */
+    .hero{background:var(--navy);padding:56px 28px 48px;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 600px 400px at 80% 50%,rgba(184,148,90,.12),transparent 60%);pointer-events:none}
+    .hero-inner{max-width:1100px;margin:0 auto;position:relative}
+    .hero-label{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;border:1px solid rgba(184,148,90,.3);color:var(--gold);font-size:12px;font-weight:700;margin-bottom:16px}
+    .hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,44px);font-weight:900;color:#fff;margin-bottom:12px}
+    .hero h1 em{color:var(--gold);font-style:normal}
+    .hero p{font-size:15px;color:rgba(255,255,255,.6);line-height:1.8;margin-bottom:28px;max-width:50ch}
+    .hero-stats{display:flex;gap:32px;flex-wrap:wrap}
+    .hero-stat-num{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--gold)}
+    .hero-stat-label{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px}
+
+    /* AD PLANS */
+    .plans-section{background:#fff;border-bottom:1px solid var(--line);padding:48px 28px}
+    .plans-inner{max-width:1100px;margin:0 auto}
+    .plans-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--navy);margin-bottom:8px;text-align:center}
+    .plans-sub{font-size:14px;color:var(--muted);text-align:center;margin-bottom:32px}
+    .plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:860px;margin:0 auto}
+    @media(max-width:700px){.plans-grid{grid-template-columns:1fr}}
+    .plan-card{border:2px solid var(--line);border-radius:var(--radius);padding:24px;transition:transform .2s;position:relative}
+    .plan-card:hover{transform:translateY(-4px)}
+    .plan-card.featured{background:var(--navy);border-color:var(--gold)}
+    .plan-card.top{background:linear-gradient(135deg,#1a0a00,#2d1500);border-color:var(--gold)}
+    .plan-badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:var(--off);color:var(--muted);margin-bottom:14px}
+    .plan-card.featured .plan-badge{background:rgba(184,148,90,.2);color:var(--gold)}
+    .plan-card.top .plan-badge{background:rgba(184,148,90,.2);color:var(--gold)}
+    .plan-name{font-size:17px;font-weight:900;color:var(--navy);margin-bottom:6px}
+    .plan-card.featured .plan-name,.plan-card.top .plan-name{color:#fff}
+    .plan-price{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:var(--navy);margin-bottom:4px}
+    .plan-card.featured .plan-price,.plan-card.top .plan-price{color:var(--gold)}
+    .plan-price-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+    .plan-card.featured .plan-price-sub,.plan-card.top .plan-price-sub{color:rgba(255,255,255,.4)}
+    .plan-features{list-style:none;padding:0;margin-bottom:20px}
+    .plan-features li{padding:7px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--navy);display:flex;gap:7px}
+    .plan-card.featured .plan-features li,.plan-card.top .plan-features li{border-color:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
+    .plan-features li::before{content:'✓';color:var(--gold);font-weight:900;flex-shrink:0}
+    .plan-cta{display:block;text-align:center;padding:12px;border-radius:10px;font-size:14px;font-weight:900;text-decoration:none;background:var(--off);color:var(--navy);border:2px solid var(--navy);transition:all .2s}
+    .plan-cta:hover{background:var(--navy);color:#fff}
+    .plan-card.featured .plan-cta,.plan-card.top .plan-cta{background:var(--gold);color:var(--navy);border-color:transparent}
+    .plan-rec{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--navy);font-size:11px;font-weight:900;padding:3px 12px;border-radius:999px;white-space:nowrap}
+
+    /* FILTER */
+    .filter-bar{background:#fff;border-bottom:1px solid var(--line);padding:16px 28px;position:sticky;top:68px;z-index:90}
+    .filter-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .filter-btn{padding:8px 16px;border-radius:999px;border:1.5px solid var(--line);background:#fff;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+    .filter-btn:hover{border-color:var(--navy);color:var(--navy)}
+    .filter-btn.active{background:var(--navy);color:var(--gold);border-color:var(--navy)}
+    .filter-count{font-size:12px;color:var(--muted);margin-left:auto}
+
+    /* DIRECTORY */
+    .directory{max-width:1100px;margin:0 auto;padding:32px 28px 80px}
+    @media(max-width:640px){.directory{padding:24px 16px 80px}}
+    .dir-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+    @media(max-width:900px){.dir-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){.dir-grid{grid-template-columns:1fr}}
+
+    /* PARTNER CARD */
+    .partner-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s;position:relative}
+    .partner-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(11,31,58,.15)}
+    .partner-card.premium{border-color:var(--gold);border-width:2px}
+    .partner-card.top-plan{border-color:var(--gold);border-width:2px;box-shadow:0 8px 32px rgba(184,148,90,.2)}
+    .partner-badge{position:absolute;top:12px;right:12px;padding:3px 10px;border-radius:999px;font-size:10px;font-weight:900}
+    .partner-badge.premium{background:var(--gold);color:var(--navy)}
+    .partner-badge.top{background:linear-gradient(135deg,var(--gold),#d4a96a);color:var(--navy)}
+    .partner-card-top{padding:20px 20px 14px}
+    .partner-cat-badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;margin-bottom:10px}
+    .cat-supply{background:#fef3c7;color:#92400e}
+    .cat-equipment{background:#dbeafe;color:#1e40af}
+    .cat-interior{background:#d1fae5;color:#065f46}
+    .cat-realestate{background:#fce7f3;color:#9d174d}
+    .cat-accounting{background:#ede9fe;color:#5b21b6}
+    .cat-ad{background:#fee2e2;color:#991b1b}
+    .partner-name{font-size:17px;font-weight:900;color:var(--navy);margin-bottom:6px}
+    .partner-region{font-size:12px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:4px}
+    .partner-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+    .partner-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+    .partner-tag{padding:3px 10px;border-radius:999px;background:var(--off);font-size:11px;font-weight:700;color:var(--navy)}
+    .partner-card-bottom{padding:14px 20px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+    .partner-contact{font-size:13px;font-weight:700;color:var(--navy)}
+    .partner-contact small{display:block;font-size:11px;color:var(--muted);font-weight:400}
+    .btn-contact{padding:8px 16px;border-radius:999px;background:var(--navy);color:var(--gold);font-size:12px;font-weight:900;text-decoration:none;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s}
+    .btn-contact:hover{opacity:.85}
+
+    /* EMPTY */
+    .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+    .empty-state-icon{font-size:48px;margin-bottom:16px}
+    .empty-state h3{font-size:18px;font-weight:900;color:var(--navy);margin-bottom:8px}
+    .empty-state p{font-size:14px;line-height:1.7;margin-bottom:20px}
+
+    /* LOADING */
+    .loading{text-align:center;padding:60px;color:var(--muted);font-size:14px}
+    .loading-spinner{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* CTA 배너 */
+    .cta-banner{background:var(--navy);border-radius:var(--radius);padding:32px;display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:32px}
+    .cta-banner h3{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#fff;margin-bottom:4px}
+    .cta-banner p{font-size:13px;color:rgba(255,255,255,.6)}
+    .btn-gold{display:inline-block;padding:12px 24px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:13px;font-weight:900;text-decoration:none;flex-shrink:0}
+    @media(max-width:640px){.cta-banner{flex-direction:column;align-items:flex-start}}
+
+    /* MODAL */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;overflow-y:auto;padding:20px}
+    .modal-overlay.show{display:flex;align-items:center;justify-content:center}
+    .modal{background:#fff;border-radius:var(--radius);padding:32px;max-width:480px;width:100%;position:relative}
+    .modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;border:none;background:var(--off);cursor:pointer;font-size:16px;display:grid;place-items:center}
+    .modal h3{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--navy);margin-bottom:6px}
+    .modal-cat{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;margin-bottom:16px}
+    .modal-info{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+    .modal-info-row{display:flex;gap:8px;font-size:14px}
+    .modal-info-label{color:var(--muted);min-width:70px;flex-shrink:0}
+    .modal-info-val{font-weight:700;color:var(--navy)}
+    .modal-desc{font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:20px;padding:16px;background:var(--off);border-radius:10px}
+    .modal-actions{display:flex;gap:10px}
+    .btn-modal-primary{flex:1;padding:13px;border-radius:12px;background:var(--navy);color:var(--gold);font-size:14px;font-weight:900;border:none;cursor:pointer;font-family:inherit;text-align:center}
+    .btn-modal-secondary{flex:1;padding:13px;border-radius:12px;background:var(--off);color:var(--navy);font-size:14px;font-weight:700;border:2px solid var(--line);cursor:pointer;font-family:inherit;text-decoration:none;text-align:center}
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-brand" href="meat_insight_main.html">
+    <div class="nav-logo">肉</div>
+    <b>MEAT INSIGHT</b><span>고기의 모든것</span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-btn" href="meat_insight_main.html">← 메인</a>
+    <a class="nav-btn" href="meat_insight_apply.html">공급 신청</a>
+    <a class="nav-btn primary" href="meat_insight_partner.html">파트너 입점 신청</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-label">파트너 업체 디렉토리</div>
+    <h1>검증된 파트너 업체를<br/><em>직접 찾아보세요</em></h1>
+    <p>고기 공급부터 인테리어·장비·부동산·세무까지 창업에 필요한 모든 파트너 업체를 한곳에서 확인하세요.</p>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-num" id="total-count">-</div>
+        <div class="hero-stat-label">등록 파트너 업체</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">6</div>
+        <div class="hero-stat-label">업종 카테고리</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">무료</div>
+        <div class="hero-stat-label">창업자 열람</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 광고 플랜 -->
+<div class="plans-section">
+  <div class="plans-inner">
+    <div class="plans-title">파트너 업체 광고 플랜</div>
+    <div class="plans-sub">창업자들에게 직접 노출되는 기회 · 결제 후 1~2 영업일 내 등록</div>
+    <div class="plans-grid">
+      <div class="plan-card">
+        <span class="plan-badge">BASIC</span>
+        <div class="plan-name">기본 노출</div>
+        <div class="plan-price">10만원<span style="font-size:14px;font-weight:400">/월</span></div>
+        <div class="plan-price-sub">부가세 별도</div>
+        <ul class="plan-features">
+          <li>디렉토리 기본 노출</li>
+          <li>업체명·지역·설명 표시</li>
+          <li>연락처 노출</li>
+          <li>카테고리 필터 노출</li>
+        </ul>
+        <a href="meat_insight_partner.html" class="plan-cta">입점 신청하기</a>
+      </div>
+      <div class="plan-card featured">
+        <div class="plan-rec">추천</div>
+        <span class="plan-badge">PREMIUM</span>
+        <div class="plan-name">프리미엄 노출</div>
+        <div class="plan-price">30만원<span style="font-size:14px;font-weight:400;color:rgba(255,255,255,.4)">/월</span></div>
+        <div class="plan-price-sub">부가세 별도</div>
+        <ul class="plan-features">
+          <li>BASIC 전체 포함</li>
+          <li>상단 우선 노출</li>
+          <li>PREMIUM 배지 표시</li>
+          <li>업체 상세 페이지</li>
+          <li>공급 연결 우선 매칭</li>
+        </ul>
+        <a href="meat_insight_partner.html" class="plan-cta">입점 신청하기</a>
+      </div>
+      <div class="plan-card top">
+        <span class="plan-badge">TOP</span>
+        <div class="plan-name">최상단 고정</div>
+        <div class="plan-price">50만원<span style="font-size:14px;font-weight:400;color:rgba(255,255,255,.4)">/월</span></div>
+        <div class="plan-price-sub">부가세 별도</div>
+        <ul class="plan-features">
+          <li>PREMIUM 전체 포함</li>
+          <li>최상단 고정 노출</li>
+          <li>TOP 배지 표시</li>
+          <li>메인페이지 배너 광고</li>
+          <li>공급 연결 최우선 매칭</li>
+          <li>월 노출 통계 리포트</li>
+        </ul>
+        <a href="meat_insight_partner.html" class="plan-cta">입점 신청하기</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 필터 바 -->
+<div class="filter-bar">
+  <div class="filter-inner">
+    <button class="filter-btn active" onclick="filterPartners('all', this)">전체</button>
+    <button class="filter-btn" onclick="filterPartners('고기 공급업체', this)">🥩 고기 공급</button>
+    <button class="filter-btn" onclick="filterPartners('정육 장비·설비', this)">⚙️ 장비·설비</button>
+    <button class="filter-btn" onclick="filterPartners('인테리어·간판', this)">🏪 인테리어</button>
+    <button class="filter-btn" onclick="filterPartners('부동산', this)">🏠 부동산</button>
+    <button class="filter-btn" onclick="filterPartners('세무·법무·보험', this)">📋 세무·법무</button>
+    <button class="filter-btn" onclick="filterPartners('광고 배너', this)">📢 광고</button>
+    <div class="filter-count" id="filter-count"></div>
+  </div>
+</div>
+
+<!-- 디렉토리 -->
+<div class="directory">
+
+  <div class="cta-banner">
+    <div>
+      <h3>내 업체를 창업자들에게 알리세요</h3>
+      <p>정육점·고깃집 창업자들이 직접 방문하는 플랫폼 · 월 10만원부터 시작</p>
+    </div>
+    <a href="meat_insight_partner.html" class="btn-gold">파트너 입점 신청 →</a>
+  </div>
+
+  <div id="partner-list">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      파트너 업체를 불러오는 중...
+    </div>
+  </div>
+</div>
+
+<!-- 상세 모달 -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3 id="modal-name"></h3>
+    <div class="modal-cat" id="modal-cat"></div>
+    <div class="modal-info" id="modal-info"></div>
+    <div class="modal-desc" id="modal-desc"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-primary" onclick="contactPartner()">📞 연락하기</button>
+      <a href="meat_insight_apply.html" class="btn-modal-secondary">공급 신청하기</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://igignylgzjphtnyxhhsd.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_lmqOzr1MdTPnOUdiCx2C_g_kcdSRuqD';
+let sb = null;
+try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e){}
+
+let allPartners = [];
+let currentFilter = 'all';
+let currentModal = null;
+
+// 카테고리 스타일
+const catStyles = {
+  '고기 공급업체': { cls: 'cat-supply', icon: '🥩' },
+  '정육 장비·설비': { cls: 'cat-equipment', icon: '⚙️' },
+  '인테리어·간판': { cls: 'cat-interior', icon: '🏪' },
+  '부동산': { cls: 'cat-realestate', icon: '🏠' },
+  '세무·법무·보험': { cls: 'cat-accounting', icon: '📋' },
+  '광고 배너': { cls: 'cat-ad', icon: '📢' },
+};
+
+// 샘플 데이터 (Supabase에 데이터 없을 때 표시)
+const samplePartners = [
+  { id:1, company:'미트코리아 도매', category:'고기 공급업체', region:'서울 마포구', phone:'010-0000-0001', items:'한우·육우 전 부위, 국내산 돼지', memo:'도축장 직거래 20년 경력. 소량 주문 가능. 수도권 당일 배송.', plan:'top', status:'승인' },
+  { id:2, company:'한돈플러스', category:'고기 공급업체', region:'경기 안양시', phone:'010-0000-0002', items:'국내산 돼지 전 부위, 특수부위', memo:'삼겹·목살·항정 전문. 신선도 보장. 정육점 전용 소분 서비스.', plan:'premium', status:'승인' },
+  { id:3, company:'정육기계나라', category:'정육 장비·설비', region:'서울 강서구', phone:'010-0000-0003', items:'정육 기계, 냉장 쇼케이스, 진공 포장기', memo:'전국 납품·설치·AS 가능. 중고 장비 매입 서비스.', plan:'premium', status:'승인' },
+  { id:4, company:'냉장세상', category:'정육 장비·설비', region:'경기 부천시', phone:'010-0000-0004', items:'냉장·냉동 쇼케이스, 저온 저장고', memo:'수입 브랜드 정식 대리점. 5년 AS 보증.', plan:'basic', status:'승인' },
+  { id:5, company:'정육인테리어', category:'인테리어·간판', region:'서울 전지역', phone:'010-0000-0005', items:'정육점 인테리어, 간판, 사인물', memo:'정육점 전문 인테리어 시공 업체. 시공 사례 100건+.', plan:'top', status:'승인' },
+  { id:6, company:'창업부동산', category:'부동산', region:'서울·경기 전지역', phone:'010-0000-0006', items:'상가 임대·매매, 상권 분석', memo:'소상공인 창업 상가 전문. 상권 분석 무료 제공.', plan:'premium', status:'승인' },
+  { id:7, company:'소상공인세무', category:'세무·법무·보험', region:'전국 (비대면)', phone:'010-0000-0007', items:'창업 세무·기장, 사업자 등록', memo:'음식점·정육점 특화 세무법인. 첫 달 무료.', plan:'basic', status:'승인' },
+];
+
+async function loadPartners() {
+  try {
+    if (sb) {
+      const { data, error } = await sb
+        .from('partner_requests')
+        .select('*')
+        .eq('status', '승인')
+        .order('created_at', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        allPartners = data;
+      } else {
+        allPartners = samplePartners;
+      }
+    } else {
+      allPartners = samplePartners;
+    }
+  } catch(e) {
+    allPartners = samplePartners;
+  }
+
+  renderPartners(allPartners);
+  document.getElementById('total-count').textContent = allPartners.length + '+';
+}
+
+function renderPartners(partners) {
+  const list = document.getElementById('partner-list');
+  document.getElementById('filter-count').textContent = partners.length + '개 업체';
+
+  if (partners.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🔍</div>
+        <h3>해당 카테고리 업체가 없습니다</h3>
+        <p>아직 등록된 업체가 없어요.<br/>첫 번째 파트너가 되어보세요!</p>
+        <a href="meat_insight_partner.html" style="display:inline-block;padding:12px 24px;border-radius:999px;background:var(--navy);color:var(--gold);font-size:14px;font-weight:900;text-decoration:none">파트너 입점 신청 →</a>
+      </div>`;
+    return;
+  }
+
+  // TOP → PREMIUM → BASIC 순서로 정렬
+  const sorted = [...partners].sort((a,b) => {
+    const order = { top: 0, premium: 1, basic: 2 };
+    return (order[a.plan]??2) - (order[b.plan]??2);
+  });
+
+  const catStyle = (cat) => catStyles[cat] || { cls: 'cat-supply', icon: '🏢' };
+
+  list.innerHTML = `<div class="dir-grid">${sorted.map(p => {
+    const cs = catStyle(p.category);
+    const planClass = p.plan === 'top' ? 'top-plan' : p.plan === 'premium' ? 'premium' : '';
+    const badge = p.plan === 'top' ? '<div class="partner-badge top">TOP</div>' : p.plan === 'premium' ? '<div class="partner-badge premium">PREMIUM</div>' : '';
+    const tags = (p.items || '').split(',').slice(0,3).map(t => `<span class="partner-tag">${t.trim()}</span>`).join('');
+
+    return `
+    <div class="partner-card ${planClass}" onclick="openModal(${p.id})">
+      ${badge}
+      <div class="partner-card-top">
+        <span class="partner-cat-badge ${cs.cls}">${cs.icon} ${p.category}</span>
+        <div class="partner-name">${p.company || p.name || '업체명 미입력'}</div>
+        <div class="partner-region">📍 ${p.region || '지역 미입력'}</div>
+        <div class="partner-desc">${(p.memo || '업체 소개가 없습니다.').substring(0,60)}...</div>
+        <div class="partner-tags">${tags}</div>
+      </div>
+      <div class="partner-card-bottom">
+        <div class="partner-contact">
+          ${p.phone || '연락처 문의'}
+          <small>클릭하여 자세히 보기</small>
+        </div>
+        <button class="btn-contact">자세히 보기</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function filterPartners(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered = cat === 'all' ? allPartners : allPartners.filter(p => p.category === cat);
+  renderPartners(filtered);
+}
+
+function openModal(id) {
+  const p = allPartners.find(x => x.id === id);
+  if (!p) return;
+  currentModal = p;
+
+  const cs = catStyles[p.category] || { cls: 'cat-supply', icon: '🏢' };
+  document.getElementById('modal-name').textContent = p.company || p.name || '업체명';
+  const catEl = document.getElementById('modal-cat');
+  catEl.className = 'modal-cat ' + cs.cls;
+  catEl.textContent = cs.icon + ' ' + p.category;
+
+  document.getElementById('modal-info').innerHTML = `
+    <div class="modal-info-row"><span class="modal-info-label">지역</span><span class="modal-info-val">📍 ${p.region || '-'}</span></div>
+    <div class="modal-info-row"><span class="modal-info-label">연락처</span><span class="modal-info-val">📞 ${p.phone || '-'}</span></div>
+    <div class="modal-info-row"><span class="modal-info-label">취급 품목</span><span class="modal-info-val">${p.items || '-'}</span></div>
+    ${p.website ? `<div class="modal-info-row"><span class="modal-info-label">홈페이지</span><span class="modal-info-val"><a href="${p.website}" target="_blank" style="color:var(--gold)">${p.website}</a></span></div>` : ''}
+  `;
+  document.getElementById('modal-desc').textContent = p.memo || '업체 소개가 없습니다.';
+  document.getElementById('modal-overlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function contactPartner() {
+  if (!currentModal) return;
+  if (currentModal.phone) {
+    alert('연락처: ' + currentModal.phone + '\n\nMEAT INSIGHT를 통해 연결된 파트너 업체입니다.');
+  }
+}
+
+loadPartners();
+</script>
+</body>
+</html>

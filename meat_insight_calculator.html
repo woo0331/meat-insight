@@ -37,7 +37,7 @@
     .hero p{font-size:15px;color:rgba(255,255,255,.55);position:relative;max-width:44ch;margin:0 auto}
 
     /* TAB BAR */
-    .tab-bar{background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:69px;z-index:1}
+    .tab-bar{background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:69px;z-index:90}
     .tab-inner{max-width:900px;margin:0 auto;padding:0 16px;display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
     .tab-inner::-webkit-scrollbar{display:none}
     .tab-btn{
@@ -199,7 +199,7 @@
             </div>
             <div class="field">
               <label>평균 구매금액 (원) <span style="font-weight:400;color:var(--muted);font-size:11px">— 손님 1명이 평균 얼마나 쓰나요?</span></label>
-              <input type="number" id="b-price" value="35,000" oninput="addComma(this);calcButchery()"/>
+              <input type="text" inputmode="numeric" id="b-price" value="35,000" oninput="addComma(this);calcButchery()"/>
               <div class="field-hint">예: 삼겹살 500g + 반찬 = 약 35,000원</div>
             </div>
           </div>
@@ -211,16 +211,16 @@
           <div class="field-row">
             <div class="field">
               <label>월 임대료 (만원)</label>
-              <input type="number" id="b-rent" value="150" oninput="calcButchery()"/>
+              <input type="text" inputmode="numeric" id="b-rent" value="150" oninput="addComma(this);calcButchery()"/>
             </div>
             <div class="field">
               <label>월 인건비 (만원)</label>
-              <input type="number" id="b-labor" value="250" oninput="calcButchery()"/>
+              <input type="text" inputmode="numeric" id="b-labor" value="250" oninput="addComma(this);calcButchery()"/>
             </div>
           </div>
           <div class="field">
             <label>월 기타비용 (만원)</label>
-            <input type="number" id="b-etc" value="80" oninput="calcButchery()"/>
+            <input type="text" inputmode="numeric" id="b-etc" value="80" oninput="addComma(this);calcButchery()"/>
             <div class="field-hint">공과금, 포장재, 소모품 등</div>
           </div>
         </div>
@@ -297,7 +297,7 @@
             </div>
             <div class="field">
               <label>객단가 (원)</label>
-              <input type="number" id="r-price" value="28,000" oninput="addComma(this);calcRestaurant()"/>
+              <input type="text" inputmode="numeric" id="r-price" value="28,000" oninput="addComma(this);calcRestaurant()"/>
             <div class="field-hint">예: 삼겹살 1인분 18,000원 + 음료 5,000원 + 공기밥 등 = 약 28,000원</div>
             </div>
           </div>
@@ -320,16 +320,16 @@
           <div class="field-row">
             <div class="field">
               <label>월 임대료 (만원)</label>
-              <input type="text" inputmode="numeric" id="r-rent" value="250" oninput="calcRestaurant()"/>
+              <input type="text" inputmode="numeric" id="r-rent" value="250" oninput="addComma(this);calcRestaurant()"/>
             </div>
             <div class="field">
               <label>월 인건비 (만원)</label>
-              <input type="number" id="r-labor" value="400" oninput="calcRestaurant()"/>
+              <input type="text" inputmode="numeric" id="r-labor" value="400" oninput="addComma(this);calcRestaurant()"/>
             </div>
           </div>
           <div class="field">
             <label>월 기타비용 (만원)</label>
-            <input type="number" id="r-etc" value="150" oninput="calcRestaurant()"/>
+            <input type="text" inputmode="numeric" id="r-etc" value="150" oninput="addComma(this);calcRestaurant()"/>
             <div class="field-hint">가스·전기·소모품·마케팅 등</div>
           </div>
         </div>
@@ -402,7 +402,7 @@
           <div class="field-row">
             <div class="field">
               <label>고기 매입 단가 (원/kg)</label>
-              <input type="number" id="m-buy" value="18000" step="500" oninput="calcMenu()"/>
+              <input type="text" inputmode="numeric" id="m-buy" value="18,000" oninput="addComma(this);calcMenu()"/>
             </div>
             <div class="field">
               <label>1인분 중량 (g)</label>
@@ -411,16 +411,16 @@
           </div>
           <div class="field">
             <label>현재 판매 가격 (원)</label>
-            <input type="number" id="m-sell" value="18000" step="500" oninput="calcMenu()"/>
+            <input type="text" inputmode="numeric" id="m-sell" value="18,000" oninput="addComma(this);calcMenu()"/>
           </div>
           <div class="field-row">
             <div class="field">
               <label>밑반찬·채소 비용 (원)</label>
-              <input type="number" id="m-side" value="800" step="100" oninput="calcMenu()"/>
+              <input type="text" inputmode="numeric" id="m-side" value="800" oninput="addComma(this);calcMenu()"/>
             </div>
             <div class="field">
               <label>포장재·소모품 (원)</label>
-              <input type="number" id="m-pack" value="300" step="100" oninput="calcMenu()"/>
+              <input type="text" inputmode="numeric" id="m-pack" value="300" oninput="addComma(this);calcMenu()"/>
             </div>
           </div>
           <div class="field">
@@ -499,47 +499,47 @@
           <div class="field-row">
             <div class="field">
               <label>보증금 (만원)</label>
-              <input type="number" id="s-dep" value="3000" step="100" oninput="calcStartup()"/>
+              <input type="text" inputmode="numeric" id="s-dep" value="3,000" oninput="addComma(this);calcStartup()"/>
             </div>
             <div class="field">
               <label>권리금 (만원)</label>
-              <input type="number" id="s-pre" value="1000" step="100" oninput="calcStartup()"/>
+              <input type="text" inputmode="numeric" id="s-pre" value="1,000" oninput="addComma(this);calcStartup()"/>
             </div>
           </div>
           <div class="field-row">
             <div class="field">
               <label>인테리어 (만원)</label>
-              <input type="number" id="s-int" value="2000" step="100" oninput="calcStartup()"/>
+              <input type="text" inputmode="numeric" id="s-int" value="2,000" oninput="addComma(this);calcStartup()"/>
             </div>
             <div class="field">
               <label>장비·집기 (만원)</label>
-              <input type="number" id="s-equ" value="1500" step="100" oninput="calcStartup()"/>
+              <input type="text" inputmode="numeric" id="s-equ" value="1,500" oninput="addComma(this);calcStartup()"/>
             </div>
           </div>
           <div class="field-row">
             <div class="field">
               <label>간판·홍보 (만원)</label>
-              <input type="number" id="s-sign" value="200" step="50" oninput="calcStartup()"/>
+              <input type="text" inputmode="numeric" id="s-sign" value="200" oninput="addComma(this);calcStartup()"/>
             </div>
             <div class="field">
               <label>초도 물량 (만원)</label>
-              <input type="number" id="s-stock" value="500" step="100" oninput="calcStartup()"/>
+              <input type="text" inputmode="numeric" id="s-stock" value="500" oninput="addComma(this);calcStartup()"/>
             </div>
           </div>
           <div class="field-row">
             <div class="field">
               <label>운전 자금 (만원)</label>
-              <input type="number" id="s-op" value="500" step="100" oninput="calcStartup()"/>
+              <input type="text" inputmode="numeric" id="s-op" value="500" oninput="addComma(this);calcStartup()"/>
               <div class="field-hint">초기 3개월 적자 대비</div>
             </div>
             <div class="field">
               <label>기타 (만원)</label>
-              <input type="number" id="s-etc" value="300" step="50" oninput="calcStartup()"/>
+              <input type="text" inputmode="numeric" id="s-etc" value="300" oninput="addComma(this);calcStartup()"/>
             </div>
           </div>
           <div class="field">
             <label>예상 월 순이익 (만원)</label>
-            <input type="number" id="s-profit" value="500" step="50" oninput="calcStartup()"/>
+            <input type="text" inputmode="numeric" id="s-profit" value="500" oninput="addComma(this);calcStartup()"/>
             <div class="field-hint">위 계산기에서 나온 순이익을 입력하세요</div>
           </div>
         </div>
@@ -589,7 +589,7 @@
           <div class="field-row">
             <div class="field">
               <label>도매 매입 단가 (원/kg)</label>
-              <input type="number" id="y-buy" value="12000" step="500" oninput="calcYield()"/>
+              <input type="text" inputmode="numeric" id="y-buy" value="12,000" oninput="addComma(this);calcYield()"/>
             </div>
             <div class="field">
               <label>매입 중량 (kg)</label>
@@ -604,11 +604,11 @@
           <div class="field-row">
             <div class="field">
               <label>판매 단가 (원/100g)</label>
-              <input type="number" id="y-sell" value="3500" step="100" oninput="calcYield()"/>
+              <input type="text" inputmode="numeric" id="y-sell" value="3,500" oninput="addComma(this);calcYield()"/>
             </div>
             <div class="field">
               <label>포장·손질 비용 (원/kg)</label>
-              <input type="number" id="y-pack" value="500" step="100" oninput="calcYield()"/>
+              <input type="text" inputmode="numeric" id="y-pack" value="500" oninput="addComma(this);calcYield()"/>
             </div>
           </div>
           <div class="field">
@@ -707,11 +707,11 @@
 
     // 정육점
     params.set('bVis', document.getElementById('b-vis').value);
-    params.set('bPrice', document.getElementById('b-price').value);
+    params.set('bPrice', getVal('b-price'));
     params.set('bCost', document.getElementById('b-cost').value);
-    params.set('bRent', document.getElementById('b-rent').value);
-    params.set('bLabor', document.getElementById('b-labor').value);
-    params.set('bEtc', document.getElementById('b-etc').value);
+    params.set('bRent', getVal('b-rent'));
+    params.set('bLabor', getVal('b-labor'));
+    params.set('bEtc', getVal('b-etc'));
     params.set('bRev', document.getElementById('b-rev').textContent);
     params.set('bProfit', document.getElementById('b-profit').textContent);
     params.set('bMargin', document.getElementById('b-margin').textContent);
@@ -719,7 +719,7 @@
 
     // 고깃집
     params.set('rSeats', document.getElementById('r-seats').value);
-    params.set('rPrice', document.getElementById('r-price').value);
+    params.set('rPrice', getVal('r-price'));
     params.set('rTurn', document.getElementById('r-turn').value);
     params.set('rCost', document.getElementById('r-cost').value);
     params.set('rRev', document.getElementById('r-rev').textContent);
@@ -738,17 +738,17 @@
     try { params.set('mMonth300', document.getElementById('m-month300').textContent); } catch(e){}
 
     // 창업 비용
-    params.set('sDep', document.getElementById('s-dep').value);
-    params.set('sPre', document.getElementById('s-pre').value);
-    params.set('sInt', document.getElementById('s-int').value);
-    params.set('sEqu', document.getElementById('s-equ').value);
-    params.set('sSign', document.getElementById('s-sign').value);
-    params.set('sStock', document.getElementById('s-stock').value);
-    params.set('sOp', document.getElementById('s-op').value);
-    params.set('sEtc', document.getElementById('s-etc').value);
+    params.set('sDep', getVal('s-dep'));
+    params.set('sPre', getVal('s-pre'));
+    params.set('sInt', getVal('s-int'));
+    params.set('sEqu', getVal('s-equ'));
+    params.set('sSign', getVal('s-sign'));
+    params.set('sStock', getVal('s-stock'));
+    params.set('sOp', getVal('s-op'));
+    params.set('sEtc', getVal('s-etc'));
     params.set('sTotal', document.getElementById('s-total').textContent);
     params.set('sRecovery', document.getElementById('s-recovery').textContent);
-    params.set('sProfit', document.getElementById('s-profit').value);
+    params.set('sProfit', getVal('s-profit'));
 
     // 수율
     params.set('yName', document.getElementById('y-name').value);
@@ -780,11 +780,11 @@
   /* ── ① 정육점 ── */
   function calcButchery(){
     const vis=+document.getElementById('b-vis').value||0;
-    const price=+document.getElementById('b-price').value||0;
+    const price=+getVal('b-price')||0;
     const cost=+document.getElementById('b-cost').value||0;
-    const rent=+document.getElementById('b-rent').value||0;
-    const labor=+document.getElementById('b-labor').value||0;
-    const etc=+document.getElementById('b-etc').value||0;
+    const rent=+getVal('b-rent')||0;
+    const labor=+getVal('b-labor')||0;
+    const etc=+getVal('b-etc')||0;
     const rev=Math.round(vis*price*25/10000);
     const gross=Math.round(rev*(100-cost)/100);
     const fixed=rent+labor+etc;
@@ -810,13 +810,13 @@
   /* ── ② 고깃집 ── */
   function calcRestaurant(){
     const seats=+document.getElementById('r-seats').value||0;
-    const price=+document.getElementById('r-price').value||0;
+    const price=+getVal('r-price')||0;
     const turn=+document.getElementById('r-turn').value||0;
     const days=+document.getElementById('r-days').value||25;
     const cost=+document.getElementById('r-cost').value||0;
-    const rent=+document.getElementById('r-rent').value||0;
-    const labor=+document.getElementById('r-labor').value||0;
-    const etc=+document.getElementById('r-etc').value||0;
+    const rent=+getVal('r-rent')||0;
+    const labor=+getVal('r-labor')||0;
+    const etc=+getVal('r-etc')||0;
     const rev=Math.round(seats*price*turn*days/10000);
     const gross=Math.round(rev*(100-cost)/100);
     const fixed=rent+labor+etc;
@@ -842,11 +842,11 @@
   /* ── ③ 메뉴 원가 ── */
   function calcMenu(){
     const name=document.getElementById('m-name').value||'메뉴';
-    const buy=+document.getElementById('m-buy').value||0;
+    const buy=+getVal('m-buy')||0;
     const gram=+document.getElementById('m-gram').value||0;
-    const sell=+document.getElementById('m-sell').value||0;
-    const side=+document.getElementById('m-side').value||0;
-    const pack=+document.getElementById('m-pack').value||0;
+    const sell=+getVal('m-sell')||0;
+    const side=+getVal('m-side')||0;
+    const pack=+getVal('m-pack')||0;
     const target=+document.getElementById('m-target').value||35;
     const meatCost=Math.round(buy*gram/1000);
     const otherCost=side+pack;
@@ -889,7 +889,7 @@
       total+=v;
       return v>0?`<div class="sum-row"><div class="sum-row-label">${item.label}</div><div>${v.toLocaleString()}만원</div></div>`:'';
     }).join('');
-    const profit=+document.getElementById('s-profit').value||1;
+    const profit=+getVal('s-profit')||1;
     const recovery=profit>0?Math.round(total/profit):999;
     document.getElementById('s-total').textContent=total.toLocaleString()+'만원';
     document.getElementById('s-breakdown').innerHTML=rows+`<div class="sum-row total"><div class="sum-row-label">합계</div><div>${total.toLocaleString()}만원</div></div>`;
@@ -902,11 +902,11 @@
   /* ── ⑤ 수율 ── */
   function calcYield(){
     const name=document.getElementById('y-name').value||'부위';
-    const buy=+document.getElementById('y-buy').value||0;
+    const buy=+getVal('y-buy')||0;
     const weight=+document.getElementById('y-weight').value||0;
     const yld=+document.getElementById('y-yield').value||0;
-    const sell=+document.getElementById('y-sell').value||0;
-    const pack=+document.getElementById('y-pack').value||0;
+    const sell=+getVal('y-sell')||0;
+    const pack=+getVal('y-pack')||0;
     const buyCost=buy*weight;
     const packCost=pack*weight;
     const netWeight=+(weight*yld/100).toFixed(2);
@@ -931,11 +931,33 @@
   }
 
   /* 초기 계산 */
+
+  /* ── 콤마 포맷 ── */
+  function addComma(el) {
+    var val = el.value.replace(/,/g, '');
+    if (val === '' || isNaN(val)) return;
+    el.value = Number(val).toLocaleString('ko-KR');
+  }
+  function getVal(id) {
+    var el = document.getElementById(id);
+    if (!el) return 0;
+    return Number(el.value.replace(/,/g, '')) || 0;
+  }
+
   calcButchery(); calcRestaurant(); calcMenu(); calcStartup(); calcYield();
-  var commaFields=['b-price','b-rent','b-labor','b-etc','r-price','r-rent','r-labor','r-etc','m-buy','m-sell','m-side','m-pack','s-dep','s-pre','s-int','s-equ','s-sign','s-stock','s-op','s-etc','s-profit','y-buy','y-sell','y-pack'];
-commaFields.forEach(function(id){var el=document.getElementById(id);if(el&&el.value){var n=Number(el.value.replace(/,/g,''));if(!isNaN(n))el.value=n.toLocaleString('ko-KR');}});
-function addComma(el){var v=el.value.replace(/,/g,'');if(v===''||isNaN(v))return;var c=el.selectionStart;el.value=Number(v).toLocaleString('ko-KR');}
-function getVal(id){var el=document.getElementById(id);if(!el)return 0;return Number(el.value.replace(/,/g,''))||0;}
+
+  // 초기값 콤마 적용
+  var commaFields = ['b-price','b-rent','b-labor','b-etc','r-price','r-rent','r-labor','r-etc',
+    'm-buy','m-sell','m-side','m-pack','s-dep','s-pre','s-int','s-equ','s-sign','s-stock','s-op','s-etc','s-profit',
+    'y-buy','y-sell','y-pack'];
+  commaFields.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && el.value) {
+      var num = Number(el.value.replace(/,/g,''));
+      if (!isNaN(num)) el.value = num.toLocaleString('ko-KR');
+    }
+  });
+
 </script>
 </body>
 </html>

@@ -932,6 +932,10 @@
 
   /* 초기 계산 */
   calcButchery(); calcRestaurant(); calcMenu(); calcStartup(); calcYield();
+  var commaFields=['b-price','b-rent','b-labor','b-etc','r-price','r-rent','r-labor','r-etc','m-buy','m-sell','m-side','m-pack','s-dep','s-pre','s-int','s-equ','s-sign','s-stock','s-op','s-etc','s-profit','y-buy','y-sell','y-pack'];
+commaFields.forEach(function(id){var el=document.getElementById(id);if(el&&el.value){var n=Number(el.value.replace(/,/g,''));if(!isNaN(n))el.value=n.toLocaleString('ko-KR');}});
+function addComma(el){var v=el.value.replace(/,/g,'');if(v===''||isNaN(v))return;var c=el.selectionStart;el.value=Number(v).toLocaleString('ko-KR');}
+function getVal(id){var el=document.getElementById(id);if(!el)return 0;return Number(el.value.replace(/,/g,''))||0;}
 </script>
 </body>
 </html>

@@ -135,6 +135,7 @@
     .donut-item{display:flex;align-items:center;gap:8px;font-size:13px}
     .donut-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -331,21 +332,75 @@
 
 <script>
   /* ── 데모 데이터 ── */
-  const supplyData = [
-    {id:'S001',name:'김창업',phone:'010-1234-5678',type:'정육점 창업 준비 중',region:'서울 마포구',items:'한우·육우, 국내산 돼지',volume:'100~300kg',cycle:'주 2~3회',price:'삼겹 12,000원/kg',memo:'오픈 예정 3개월 후',status:'신규',date:'2025-01-15'},
-    {id:'S002',name:'박정육',phone:'010-2345-6789',type:'현재 운영 중 (거래선 변경)',region:'경기 수원시',items:'국내산 돼지, 수입육',volume:'500kg~1톤',cycle:'주 1회',price:'',memo:'기존 거래처 단가 비교 원함',status:'연락중',date:'2025-01-14'},
-    {id:'S003',name:'이고깃',phone:'010-3456-7890',type:'고깃집 창업 준비 중',region:'인천 부평구',items:'한우·육우',volume:'300~500kg',cycle:'주 2~3회',price:'',memo:'',status:'신규',date:'2025-01-13'},
-  ];
+  // ── Supabase 연동 ──
+  const SUPABASE_URL = 'https://igignylgzjphtnyxhhsd.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_lmqOzr1MdTPnOUdiCx2C_g_kcdSRuqD';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const consultData = [
-    {id:'C001',name:'최사장',phone:'010-4567-8901',plan:'premium',type:'고깃집 창업 준비 중',region:'서울 강남구',timeline:'3~6개월',capital:'15000',contact:'카카오톡 선호',memo:'40석 고깃집 예상 수익 분석이 필요합니다',status:'신규',date:'2025-01-15'},
-    {id:'C002',name:'정창업',phone:'010-5678-9012',plan:'vip',type:'정육점 창업 준비 중',region:'부산 해운대구',timeline:'3개월 이내',capital:'10000',contact:'전화 통화 선호',memo:'정육 + 식당 병행 가능한지 분석 원함',status:'연락중',date:'2025-01-14'},
-    {id:'C003',name:'한사업',phone:'010-6789-0123',plan:'basic',type:'현재 운영 중 (전략 개선)',region:'대구 수성구',timeline:'아직 미정',capital:'5000',contact:'이메일 선호',memo:'원가율 개선 방법을 알고 싶습니다',status:'완료',date:'2025-01-12'},
-    {id:'C004',name:'오고기',phone:'010-7890-1234',plan:'premium',type:'고깃집 창업 준비 중',region:'경기 성남시',timeline:'6~12개월',capital:'12000',contact:'상관없음',memo:'',status:'신규',date:'2025-01-11'},
-    {id:'C005',name:'유육사',phone:'010-8901-2345',plan:'basic',type:'정육점 창업 준비 중',region:'서울 송파구',timeline:'3~6개월',capital:'7000',contact:'카카오톡 선호',memo:'소자본 창업 가능 여부 확인',status:'신규',date:'2025-01-10'},
-  ];
+  let supplyData = [];
+  let consultData = [];
+  let partnerData = [];
 
-  const planPrice = {basic:150, premium:300, vip:500};
+  async function loadData() {
+    try {
+      // 공급 연결 신청
+      const { data: supply } = await sb.from('supply_requests').select('*').order('created_at', {ascending: false});
+      supplyData = (supply || []).map(d => ({
+        id: d.id ? d.id.toString().slice(0,8).toUpperCase() : '-',
+        name: d.name || '-',
+        phone: d.phone || '-',
+        type: d.type || '-',
+        region: d.region || '-',
+        items: d.items || '-',
+        volume: d.volume || '-',
+        cycle: d.cycle || '-',
+        price: d.price || '-',
+        memo: d.memo || '',
+        status: d.status || '신규',
+        date: d.created_at ? d.created_at.slice(0,10) : '-',
+        raw_id: d.id
+      }));
+
+      // 컨설팅 신청
+      const { data: consult } = await sb.from('consult_requests').select('*').order('created_at', {ascending: false});
+      consultData = (consult || []).map(d => ({
+        id: d.id ? d.id.toString().slice(0,8).toUpperCase() : '-',
+        name: d.name || '-',
+        phone: d.phone || '-',
+        plan: d.plan || 'basic',
+        type: d.type || '-',
+        region: d.region || '-',
+        timeline: d.timeline || '-',
+        capital: d.capital || '-',
+        contact: d.contact || '-',
+        memo: d.memo || '',
+        status: d.status || '신규',
+        date: d.created_at ? d.created_at.slice(0,10) : '-',
+        raw_id: d.id
+      }));
+
+      // 파트너 신청
+      const { data: partner } = await sb.from('partner_requests').select('*').order('created_at', {ascending: false});
+      partnerData = (partner || []).map(d => ({
+        id: d.id ? d.id.toString().slice(0,8).toUpperCase() : '-',
+        name: d.name || '-',
+        phone: d.phone || '-',
+        company: d.company || '-',
+        category: d.category || '-',
+        region: d.region || '-',
+        memo: d.memo || '',
+        status: d.status || '신규',
+        date: d.created_at ? d.created_at.slice(0,10) : '-',
+        raw_id: d.id
+      }));
+
+      renderAll();
+    } catch(e) {
+      console.error('데이터 로딩 오류:', e);
+    }
+  }
+
+  const planPrice = {basic:50, standard:50, premium:100, vip:500};
   const statusClass = {신규:'new', 연락중:'contact', 완료:'done', 취소:'cancel'};
   const planClass = {basic:'basic', premium:'premium', vip:'vip'};
   let currentEdit = null;
@@ -356,7 +411,7 @@
     const pw = document.getElementById('login-pw').value;
     if (id === 'admin' && pw === '1234') {
       document.getElementById('login-wrap').style.display = 'none';
-      renderAll();
+      loadData();
     } else {
       alert('아이디 또는 비밀번호가 올바르지 않습니다.');
     }
@@ -515,11 +570,19 @@
     document.getElementById('modal').classList.add('show');
   }
 
-  function saveStatus() {
+  async function saveStatus() {
     const newStatus = document.getElementById('modal-status').value;
     const arr = currentType === 'supply' ? supplyData : consultData;
     const d = arr.find(x=>x.id===currentId);
-    if (d) { d.status = newStatus; renderAll(); renderSupply(); renderConsult(); }
+    if (d) {
+      // Supabase 업데이트
+      try {
+        const table = currentType === 'supply' ? 'supply_requests' : 'consult_requests';
+        await sb.from(table).update({status: newStatus}).eq('id', d.raw_id);
+      } catch(e) { console.error('상태 업데이트 오류:', e); }
+      d.status = newStatus;
+      renderAll(); renderSupply(); renderConsult();
+    }
     document.getElementById('modal').classList.remove('show');
   }
 

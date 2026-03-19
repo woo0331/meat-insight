@@ -199,7 +199,7 @@
             </div>
             <div class="field">
               <label>평균 구매금액 (원) <span style="font-weight:400;color:var(--muted);font-size:11px">— 손님 1명이 평균 얼마나 쓰나요?</span></label>
-              <input type="number" id="b-price" value="35000" step="1000" oninput="calcButchery()"/>
+              <input type="number" id="b-price" value="35,000" oninput="addComma(this);calcButchery()"/>
               <div class="field-hint">예: 삼겹살 500g + 반찬 = 약 35,000원</div>
             </div>
           </div>

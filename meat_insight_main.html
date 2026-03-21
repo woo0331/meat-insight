@@ -8,6 +8,8 @@
   <title>MEAT INSIGHT | 고기의 모든것 — 정육점·고깃집 창업 플랫폼</title>
   <meta name="description" content="대한민국 정육점·고깃집 창업자를 위한 데이터 기반 창업 서비스. 창업 진단, 매출 계산기, 원가 분석, 고기 공급 연결, 비대면 컨설팅까지 한 번에."/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root{
       --navy:#0b1f3a;--gold:#b8945a;--gold2:#d4a96a;
@@ -31,6 +33,22 @@
     .nav-links a:hover{color:#fff}
     .nav-cta{background:var(--gold)!important;color:var(--navy)!important;border-radius:999px!important;padding:9px 18px!important}
     @media(max-width:768px){.nav-links{display:none}}
+
+    /* 로그인 버튼 영역 */
+    .nav-login-area{display:flex;align-items:center;gap:10px;margin-left:8px}
+    .nav-login-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:999px;background:#FEE500;color:#191919;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s;text-decoration:none;white-space:nowrap}
+    .nav-login-btn:hover{opacity:.88}
+    .nav-login-btn svg{width:16px;height:16px;flex-shrink:0}
+    .nav-user-area{display:flex;align-items:center;gap:8px;cursor:pointer;position:relative}
+    .nav-user-avatar{width:32px;height:32px;border-radius:50%;border:2px solid var(--gold);object-fit:cover}
+    .nav-user-avatar-placeholder{width:32px;height:32px;border-radius:50%;background:rgba(184,148,90,.2);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--gold)}
+    .nav-user-name{font-size:13px;font-weight:700;color:rgba(255,255,255,.85);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .nav-user-dropdown{position:absolute;top:calc(100% + 12px);right:0;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.15);min-width:160px;overflow:hidden;display:none;z-index:200}
+    .nav-user-area:hover .nav-user-dropdown{display:block}
+    .nav-user-dropdown a,.nav-user-dropdown button{display:block;width:100%;padding:12px 16px;font-size:13px;font-weight:700;color:var(--navy);text-decoration:none;background:none;border:none;text-align:left;cursor:pointer;font-family:inherit;transition:background .15s}
+    .nav-user-dropdown a:hover,.nav-user-dropdown button:hover{background:var(--off)}
+    .nav-user-dropdown .divider{height:1px;background:var(--line)}
+    @media(max-width:768px){.nav-user-name{display:none}}
 
     /* HERO */
     .hero{background:var(--navy);padding:70px 28px 80px;position:relative;overflow:hidden}
@@ -81,7 +99,6 @@
     .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
     @media(max-width:900px){.features-grid{grid-template-columns:1fr 1fr}}
     @media(max-width:560px){.features-grid{grid-template-columns:1fr}}
-
     .feature-link{display:block;text-decoration:none;background:#fff;border-radius:var(--radius);padding:28px;border:2px solid transparent;box-shadow:var(--shadow);transition:border-color .2s,transform .2s,box-shadow .2s;cursor:pointer}
     .feature-link:hover{border-color:var(--gold);transform:translateY(-4px);box-shadow:var(--shadow-lg)}
     .feature-link.dark{background:var(--navy);border-color:var(--gold)}
@@ -92,9 +109,6 @@
     .feature-link.dark p{color:rgba(255,255,255,.6)}
     .ftag{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;background:var(--off);color:var(--muted)}
     .feature-link.dark .ftag{background:rgba(184,148,90,.2);color:var(--gold2)}
-    .no-link{background:#fff;border-radius:var(--radius);padding:28px;border:2px solid var(--line);box-shadow:var(--shadow);opacity:.7}
-    .no-link h3{font-size:17px;font-weight:900;color:var(--navy);margin-bottom:8px}
-    .no-link p{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:14px}
 
     /* DATA */
     .data-section{background:var(--navy);padding:64px 28px}
@@ -199,6 +213,10 @@
     .sbtn-gold{padding:10px 20px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:13px;font-weight:900;text-decoration:none}
     .sbtn-ghost{padding:10px 20px;border-radius:999px;border:1.5px solid rgba(184,148,90,.4);color:var(--gold);font-size:13px;font-weight:700;text-decoration:none}
     @media(max-width:640px){.sticky-bar{flex-direction:column;gap:10px;padding:12px 20px}.sticky-btns{width:100%;justify-content:center}.sticky-info{text-align:center}}
+
+    /* 토스트 */
+    .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--navy);border:1px solid rgba(184,148,90,.4);border-radius:10px;padding:12px 24px;font-size:13px;color:#fff;opacity:0;transition:all .3s;z-index:999;white-space:nowrap;pointer-events:none}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   </style>
 </head>
 <body>
@@ -213,12 +231,33 @@
         <span>고기의 모든것</span>
       </div>
     </a>
-    <div class="nav-links">
-      <a href="meat_insight_diagnosis.html">창업 진단</a>
-      <a href="meat_insight_calculator.html">계산기</a>
-      <a href="meat_insight_cases.html">창업 사례</a>
-      <a href="meat_insight_apply.html">공급 연결</a>
-      <a href="meat_insight_apply.html?tab=consulting" class="nav-cta">비대면 컨설팅</a>
+    <div style="display:flex;align-items:center;gap:0">
+      <div class="nav-links">
+        <a href="meat_insight_diagnosis.html">창업 진단</a>
+        <a href="meat_insight_calculator.html">계산기</a>
+        <a href="meat_insight_cases.html">창업 사례</a>
+        <a href="meat_insight_apply.html">공급 연결</a>
+        <a href="meat_insight_apply.html?tab=consulting" class="nav-cta">비대면 컨설팅</a>
+      </div>
+      <!-- 로그인 영역 -->
+      <div class="nav-login-area">
+        <!-- 비로그인 상태 -->
+        <button class="nav-login-btn" id="nav-login-btn" onclick="loginWithKakao()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.477 3 2 6.477 2 10.8c0 2.7 1.62 5.076 4.08 6.516L5.04 21l4.56-2.82c.78.12 1.584.18 2.4.18 5.523 0 10-3.477 10-7.8C22 6.477 17.523 3 12 3z"/></svg>
+          로그인
+        </button>
+        <!-- 로그인 상태 -->
+        <div class="nav-user-area" id="nav-user-area" style="display:none">
+          <div class="nav-user-avatar-placeholder" id="nav-avatar-placeholder"></div>
+          <img id="nav-avatar-img" class="nav-user-avatar" src="" style="display:none" onerror="this.style.display='none';document.getElementById('nav-avatar-placeholder').style.display='flex'"/>
+          <span class="nav-user-name" id="nav-user-name"></span>
+          <div class="nav-user-dropdown">
+            <a href="meat_insight_login.html">내 계정</a>
+            <div class="divider"></div>
+            <button onclick="logout()">로그아웃</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
@@ -238,18 +277,9 @@
         <a href="meat_insight_calculator.html" class="btn-ghost">매출 계산기 체험</a>
       </div>
       <div class="hero-stats">
-        <div>
-          <div class="hero-stat-num">5종</div>
-          <div class="hero-stat-label">무료 계산기</div>
-        </div>
-        <div>
-          <div class="hero-stat-num">100%</div>
-          <div class="hero-stat-label">데이터 기반</div>
-        </div>
-        <div>
-          <div class="hero-stat-num">비대면</div>
-          <div class="hero-stat-label">컨설팅 가능</div>
-        </div>
+        <div><div class="hero-stat-num">5종</div><div class="hero-stat-label">무료 계산기</div></div>
+        <div><div class="hero-stat-num">100%</div><div class="hero-stat-label">데이터 기반</div></div>
+        <div><div class="hero-stat-num">비대면</div><div class="hero-stat-label">컨설팅 가능</div></div>
       </div>
     </div>
     <div class="hero-cards">
@@ -294,42 +324,12 @@
     <div class="sec-title">단순 정보가 아닌<br/>실제로 쓰는 서비스</div>
     <div class="sec-sub">계산기를 직접 돌려보고, 진단을 받고, 공급까지 연결하세요.</div>
     <div class="features-grid">
-      <a href="meat_insight_diagnosis.html" class="feature-link">
-        <div class="ficon">🎯</div>
-        <h3>창업 진단 시스템</h3>
-        <p>정육점·고깃집 선택 후 지역·평수·자본금을 입력하면 예상 매출, 리스크 점수, 추천 전략을 즉시 보여줍니다.</p>
-        <span class="ftag">무료 · 즉시 결과</span>
-      </a>
-      <a href="meat_insight_calculator.html" class="feature-link dark">
-        <div class="ficon">📊</div>
-        <h3>5종 매출 계산기</h3>
-        <p>정육점 매출 / 고깃집 매출 / 메뉴 원가 / 창업 비용 / 수율 — 숫자를 입력하면 즉시 결과가 바뀌는 실시간 계산기.</p>
-        <span class="ftag">실시간 계산</span>
-      </a>
-      <a href="meat_insight_apply.html" class="feature-link">
-        <div class="ficon">🥩</div>
-        <h3>고기 공급 직연결</h3>
-        <p>한우·육우·돼지·수입육·부분육까지 업종과 규모에 맞게 도매 거래선을 연결합니다.</p>
-        <span class="ftag">빠른 연결</span>
-      </a>
-      <a href="meat_insight_apply.html?tab=consulting" class="feature-link">
-        <div class="ficon">📋</div>
-        <h3>비대면 컨설팅</h3>
-        <p>손익 분석 자료, 창업 전략, 원가 구조 보고서를 비대면으로 제공. 직접 방문 없이 전문 자료를 받아보세요.</p>
-        <span class="ftag">자료형 컨설팅</span>
-      </a>
-      <a href="meat_insight_cases.html" class="feature-link">
-        <div class="ficon">📈</div>
-        <h3>실제 창업 사례</h3>
-        <p>매출, 순이익, 실패 원인까지 실제 데이터를 공개합니다. 숫자로 확인하고 판단하세요.</p>
-        <span class="ftag">실제 수치 공개</span>
-      </a>
-      <a href="meat_insight_partner.html" class="feature-link">
-        <div class="ficon">🤝</div>
-        <h3>파트너 입점 신청</h3>
-        <p>공급업체·장비·인테리어·부동산·광고 배너 — 창업자들에게 직접 노출되는 파트너 입점 기회.</p>
-        <span class="ftag">파트너 모집 중</span>
-      </a>
+      <a href="meat_insight_diagnosis.html" class="feature-link"><div class="ficon">🎯</div><h3>창업 진단 시스템</h3><p>정육점·고깃집 선택 후 지역·평수·자본금을 입력하면 예상 매출, 리스크 점수, 추천 전략을 즉시 보여줍니다.</p><span class="ftag">무료 · 즉시 결과</span></a>
+      <a href="meat_insight_calculator.html" class="feature-link dark"><div class="ficon">📊</div><h3>5종 매출 계산기</h3><p>정육점 매출 / 고깃집 매출 / 메뉴 원가 / 창업 비용 / 수율 — 숫자를 입력하면 즉시 결과가 바뀌는 실시간 계산기.</p><span class="ftag">실시간 계산</span></a>
+      <a href="meat_insight_apply.html" class="feature-link"><div class="ficon">🥩</div><h3>고기 공급 직연결</h3><p>한우·육우·돼지·수입육·부분육까지 업종과 규모에 맞게 도매 거래선을 연결합니다.</p><span class="ftag">빠른 연결</span></a>
+      <a href="meat_insight_apply.html?tab=consulting" class="feature-link"><div class="ficon">📋</div><h3>비대면 컨설팅</h3><p>손익 분석 자료, 창업 전략, 원가 구조 보고서를 비대면으로 제공. 직접 방문 없이 전문 자료를 받아보세요.</p><span class="ftag">자료형 컨설팅</span></a>
+      <a href="meat_insight_cases.html" class="feature-link"><div class="ficon">📈</div><h3>실제 창업 사례</h3><p>매출, 순이익, 실패 원인까지 실제 데이터를 공개합니다. 숫자로 확인하고 판단하세요.</p><span class="ftag">실제 수치 공개</span></a>
+      <a href="meat_insight_partner.html" class="feature-link"><div class="ficon">🤝</div><h3>파트너 입점 신청</h3><p>공급업체·장비·인테리어·부동산·광고 배너 — 창업자들에게 직접 노출되는 파트너 입점 기회.</p><span class="ftag">파트너 모집 중</span></a>
     </div>
   </div>
 </section>
@@ -356,30 +356,9 @@
     <div class="sec-title">실제로 이런 분들이 창업했습니다</div>
     <div class="sec-sub">숫자는 실제 운영 데이터를 기반으로 정리했습니다.</div>
     <div class="cases-grid">
-      <div class="case-card">
-        <div class="case-top"><div class="case-badge">성공 사례 01</div><h3>경기 수원 20평 고깃집</h3></div>
-        <div class="case-body">
-          <div class="case-detail">좌석 48석 / 객단가 28,000원 / 하루 방문 120명 / 창업 비용 약 1.2억</div>
-          <div class="case-result"><div class="case-result-label">월 매출 · 순이익</div><div class="case-result-val">1억 80만원 · 순이익 2,000만원</div></div>
-          <a href="meat_insight_cases.html" style="font-size:13px;font-weight:700;color:var(--gold);text-decoration:none">자세히 보기 →</a>
-        </div>
-      </div>
-      <div class="case-card">
-        <div class="case-top"><div class="case-badge">성공 사례 02</div><h3>서울 마포 12평 정육점</h3></div>
-        <div class="case-body">
-          <div class="case-detail">하루 방문 90명 / 평균 구매 35,000원 / 원가율 60% / 창업 비용 6,500만원</div>
-          <div class="case-result"><div class="case-result-label">월 매출 · 순이익</div><div class="case-result-val">9,400만원 · 순이익 900만원</div></div>
-          <a href="meat_insight_cases.html" style="font-size:13px;font-weight:700;color:var(--gold);text-decoration:none">자세히 보기 →</a>
-        </div>
-      </div>
-      <div class="case-card">
-        <div class="case-top"><div class="case-badge">무료 혜택</div><h3>내 창업 리포트 무료 생성</h3></div>
-        <div class="case-body">
-          <div class="case-detail">계산기 결과를 모아 PDF 리포트로 자동 생성합니다. 카카오톡·블로그 공유로 바이럴 효과.</div>
-          <div class="case-result"><div class="case-result-label">포함 내용</div><div class="case-result-val">매출 · 원가 · 비용 · 수율 분석</div></div>
-          <a href="meat_insight_calculator.html" style="font-size:13px;font-weight:700;color:var(--gold);text-decoration:none">계산기 먼저 해보기 →</a>
-        </div>
-      </div>
+      <div class="case-card"><div class="case-top"><div class="case-badge">성공 사례 01</div><h3>경기 수원 20평 고깃집</h3></div><div class="case-body"><div class="case-detail">좌석 48석 / 객단가 28,000원 / 하루 방문 120명 / 창업 비용 약 1.2억</div><div class="case-result"><div class="case-result-label">월 매출 · 순이익</div><div class="case-result-val">1억 80만원 · 순이익 2,000만원</div></div><a href="meat_insight_cases.html" style="font-size:13px;font-weight:700;color:var(--gold);text-decoration:none">자세히 보기 →</a></div></div>
+      <div class="case-card"><div class="case-top"><div class="case-badge">성공 사례 02</div><h3>서울 마포 12평 정육점</h3></div><div class="case-body"><div class="case-detail">하루 방문 90명 / 평균 구매 35,000원 / 원가율 60% / 창업 비용 6,500만원</div><div class="case-result"><div class="case-result-label">월 매출 · 순이익</div><div class="case-result-val">9,400만원 · 순이익 900만원</div></div><a href="meat_insight_cases.html" style="font-size:13px;font-weight:700;color:var(--gold);text-decoration:none">자세히 보기 →</a></div></div>
+      <div class="case-card"><div class="case-top"><div class="case-badge">무료 혜택</div><h3>내 창업 리포트 무료 생성</h3></div><div class="case-body"><div class="case-detail">계산기 결과를 모아 PDF 리포트로 자동 생성합니다.</div><div class="case-result"><div class="case-result-label">포함 내용</div><div class="case-result-val">매출 · 원가 · 비용 · 수율 분석</div></div><a href="meat_insight_calculator.html" style="font-size:13px;font-weight:700;color:var(--gold);text-decoration:none">계산기 먼저 해보기 →</a></div></div>
     </div>
   </div>
 </section>
@@ -404,15 +383,7 @@
           <div class="field"><label>이름</label><input type="text" id="s-name" placeholder="홍길동"/></div>
           <div class="field"><label>연락처</label><input type="tel" id="s-phone" placeholder="010-0000-0000"/></div>
         </div>
-        <div class="field">
-          <label>업종</label>
-          <select id="s-type">
-            <option value="">선택해주세요</option>
-            <option>정육점 창업 준비 중</option>
-            <option>고깃집 창업 준비 중</option>
-            <option>현재 운영 중 (거래선 변경)</option>
-          </select>
-        </div>
+        <div class="field"><label>업종</label><select id="s-type"><option value="">선택해주세요</option><option>정육점 창업 준비 중</option><option>고깃집 창업 준비 중</option><option>현재 운영 중 (거래선 변경)</option></select></div>
         <div class="field"><label>필요 품목</label><input type="text" id="s-items" placeholder="예: 한우 등심, 국내산 삼겹살"/></div>
         <div class="field"><label>지역</label><input type="text" id="s-region" placeholder="예: 서울 마포구"/></div>
         <button class="btn-submit" onclick="submitSupply()">공급 연결 신청하기</button>
@@ -425,44 +396,12 @@
 <!-- CONSULTING -->
 <section class="consulting-section">
   <div class="consulting-inner">
-    <div style="text-align:center;margin-bottom:8px">
-      <div class="sec-label" style="display:inline-flex">비대면 컨설팅</div>
-    </div>
+    <div style="text-align:center;margin-bottom:8px"><div class="sec-label" style="display:inline-flex">비대면 컨설팅</div></div>
     <div class="sec-title" style="text-align:center">전문 자료, 비대면으로</div>
     <div class="sec-sub" style="text-align:center;max-width:44ch;margin:0 auto 0">직접 방문 없이 손익 분석·창업 전략·원가 구조 자료를 카카오톡·이메일로 제공합니다.</div>
     <div class="plans-grid">
-      <div class="plan-card">
-        <span class="plan-badge">STANDARD</span>
-        <div class="plan-name">기본 비대면 자료</div>
-        <div class="plan-price">50<span style="font-size:20px">만원</span></div>
-        <div class="plan-price-sub">부가세 별도</div>
-        <div class="plan-divider"></div>
-        <ul class="plan-features">
-          <li>비대면 기본 창업 분석 자료</li>
-          <li>손익 분석표</li>
-          <li>원가 구조 분석</li>
-          <li>창업 체크리스트</li>
-          
-          <li>카카오톡 문의</li>
-        </ul>
-        <a href="meat_insight_apply.html?tab=consulting" class="btn-plan">신청하기</a>
-      </div>
-      <div class="plan-card featured">
-        <span class="plan-badge">PREMIUM · 추천</span>
-        <div class="plan-name">심화 비대면 자료</div>
-        <div class="plan-price">100<span style="font-size:20px">만원</span></div>
-        <div class="plan-price-sub">부가세 별도</div>
-        <div class="plan-divider"></div>
-        <ul class="plan-features">
-          <li>Standard 전체 포함</li>
-          <li>심화 손익·원가·수율 분석</li>
-          <li>맞춤 창업 전략 자료</li>
-          <li>카카오톡 1:1 상담</li>
-          <li>전화 상담 1회</li>
-          
-        </ul>
-        <a href="meat_insight_apply.html?tab=consulting" class="btn-plan">신청하기</a>
-      </div>
+      <div class="plan-card"><span class="plan-badge">STANDARD</span><div class="plan-name">기본 비대면 자료</div><div class="plan-price">50<span style="font-size:20px">만원</span></div><div class="plan-price-sub">부가세 별도</div><div class="plan-divider"></div><ul class="plan-features"><li>비대면 기본 창업 분석 자료</li><li>손익 분석표</li><li>원가 구조 분석</li><li>창업 체크리스트</li><li>카카오톡 문의</li></ul><a href="meat_insight_apply.html?tab=consulting" class="btn-plan">신청하기</a></div>
+      <div class="plan-card featured"><span class="plan-badge">PREMIUM · 추천</span><div class="plan-name">심화 비대면 자료</div><div class="plan-price">100<span style="font-size:20px">만원</span></div><div class="plan-price-sub">부가세 별도</div><div class="plan-divider"></div><ul class="plan-features"><li>Standard 전체 포함</li><li>심화 손익·원가·수율 분석</li><li>맞춤 창업 전략 자료</li><li>카카오톡 1:1 상담</li><li>전화 상담 1회</li></ul><a href="meat_insight_apply.html?tab=consulting" class="btn-plan">신청하기</a></div>
     </div>
   </div>
 </section>
@@ -523,19 +462,130 @@
   </div>
 </div>
 
+<!-- 토스트 -->
+<div class="toast" id="toast"></div>
+
 <script>
-function submitSupply() {
-  const name = document.getElementById('s-name').value.trim();
-  const phone = document.getElementById('s-phone').value.trim();
-  const type = document.getElementById('s-type').value;
-  if (!name || !phone || !type) { alert('이름, 연락처, 업종은 필수입니다.'); return; }
-  alert('공급 연결 신청이 완료됐습니다!\n1~2 영업일 내 담당자가 연락드립니다.');
-  document.getElementById('s-name').value = '';
-  document.getElementById('s-phone').value = '';
-  document.getElementById('s-type').value = '';
-  document.getElementById('s-items').value = '';
-  document.getElementById('s-region').value = '';
-}
+  // ── 초기화 ──────────────────────────────────────────
+  const KAKAO_JS_KEY = 'fd0d8660bda351b1dbf7f95bfe79c96e';
+  const SUPABASE_URL = 'https://igignylgzjphtnyxhhsd.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnaWdueWxnempwaHRueXhoaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDUyMDAsImV4cCI6MjA4OTA4MTIwMH0.3u5gCw1dnG1YSmrzhN3PGVOMoQ1LBtGw0ToNhSeL42A';
+
+  Kakao.init(KAKAO_JS_KEY);
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── 토스트 ──────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // ── 로그인 상태 체크 ────────────────────────────────
+  const savedUser = localStorage.getItem('meat_user');
+  if (savedUser) {
+    renderUserNav(JSON.parse(savedUser));
+  }
+
+  function renderUserNav(user) {
+    document.getElementById('nav-login-btn').style.display = 'none';
+    const area = document.getElementById('nav-user-area');
+    area.style.display = 'flex';
+    document.getElementById('nav-user-name').textContent = user.nickname;
+    document.getElementById('nav-avatar-placeholder').textContent = user.nickname.charAt(0);
+    if (user.profile_image) {
+      const img = document.getElementById('nav-avatar-img');
+      img.src = user.profile_image;
+      img.style.display = 'block';
+      document.getElementById('nav-avatar-placeholder').style.display = 'none';
+    }
+  }
+
+  // ── 카카오 로그인 ────────────────────────────────────
+  function loginWithKakao() {
+    Kakao.Auth.login({
+      success: function(authObj) {
+        Kakao.API.request({
+          url: '/v2/user/me',
+          success: async function(res) {
+            const user = {
+              kakao_id: String(res.id),
+              nickname: res.kakao_account?.profile?.nickname || '사용자',
+              email: res.kakao_account?.email || '',
+              profile_image: res.kakao_account?.profile?.profile_image_url || '',
+            };
+            // Supabase 저장
+            await sb.from('members').upsert({
+              kakao_id: user.kakao_id,
+              nickname: user.nickname,
+              email: user.email,
+              profile_image: user.profile_image,
+              last_login_at: new Date().toISOString(),
+            }, { onConflict: 'kakao_id' });
+
+            localStorage.setItem('meat_user', JSON.stringify(user));
+            renderUserNav(user);
+            showToast('✅ ' + user.nickname + ' 님 로그인됐어요!');
+          },
+          fail: function() { showToast('로그인에 실패했어요.'); }
+        });
+      },
+      fail: function() { showToast('로그인을 취소했어요.'); }
+    });
+  }
+
+  function logout() {
+    if (Kakao.Auth.getAccessToken()) Kakao.Auth.logout();
+    localStorage.removeItem('meat_user');
+    document.getElementById('nav-login-btn').style.display = 'flex';
+    document.getElementById('nav-user-area').style.display = 'none';
+    showToast('로그아웃됐어요.');
+  }
+
+  // ── 공급 연결 신청 + 카카오 나에게 알림 ─────────────
+  async function submitSupply() {
+    const name = document.getElementById('s-name').value.trim();
+    const phone = document.getElementById('s-phone').value.trim();
+    const type = document.getElementById('s-type').value;
+    const items = document.getElementById('s-items').value.trim();
+    const region = document.getElementById('s-region').value.trim();
+
+    if (!name || !phone || !type) {
+      showToast('⚠️ 이름, 연락처, 업종은 필수입니다.');
+      return;
+    }
+
+    try {
+      // Supabase 저장
+      await sb.from('supply_requests').insert({
+        name, phone, type, items, region, status: '신규'
+      });
+
+      // 카카오 나에게 메시지 (로그인된 경우)
+      if (Kakao.Auth.getAccessToken()) {
+        try {
+          await Kakao.API.request({
+            url: '/v2/api/talk/memo/default/send',
+            data: {
+              template_object: {
+                object_type: 'text',
+                text: `🥩 [MEAT INSIGHT] 새 공급 연결 신청\n\n이름: ${name}\n연락처: ${phone}\n업종: ${type}\n품목: ${items || '-'}\n지역: ${region || '-'}\n\n관리자 페이지에서 확인하세요.`,
+                link: { web_url: 'https://www.aboutmeat.co.kr/meat_insight_admin.html', mobile_web_url: 'https://www.aboutmeat.co.kr/meat_insight_admin.html' }
+              }
+            }
+          });
+        } catch(e) { console.log('카카오 메시지 전송 실패 (권한 없음):', e); }
+      }
+
+      showToast('✅ 신청 완료! 1~2 영업일 내 연락드립니다.');
+      ['s-name','s-phone','s-items','s-region'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('s-type').value = '';
+    } catch(e) {
+      console.error(e);
+      showToast('신청 중 오류가 발생했어요. 다시 시도해주세요.');
+    }
+  }
 </script>
 </body>
 </html>

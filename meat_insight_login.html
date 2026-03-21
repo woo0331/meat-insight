@@ -4,11 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>로그인 | MEAT INSIGHT</title>
-  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
-    integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4"
-    crossorigin="anonymous"></script>
-
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -476,16 +471,13 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    // ─── 초기화 ───────────────────────────────────────────
-    const KAKAO_JS_KEY = 'fd0d8660bda351b1dbf7f95bfe79c96e';
+    // ─── 설정 ─────────────────────────────────────────────
+    const KAKAO_REST_KEY = 'fd0d8660bda351b1dbf7f95bfe79c96e';
+    const REDIRECT_URI = 'https://www.aboutmeat.co.kr/meat_insight_login.html';
     const SUPABASE_URL = 'https://igignylgzjphtnyxhhsd.supabase.co';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // ← 여기 채워야 함
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnaWdueWxnempwaHRueXhoaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDUyMDAsImV4cCI6MjA4OTA4MTIwMH0.3u5gCw1dnG1YSmrzhN3PGVOMoQ1LBtGw0ToNhSeL42A';
 
-    Kakao.init(KAKAO_JS_KEY);
-
-    const supabase = window.supabase
-      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-      : null;
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // ─── 토스트 ───────────────────────────────────────────
     function showToast(msg, type = '') {
@@ -496,72 +488,87 @@
       setTimeout(() => t.classList.remove('show'), 3000);
     }
 
+    // ─── 카카오 OAuth 리다이렉트 로그인 ──────────────────
+    function loginWithKakao() {
+      const btn = document.getElementById('kakaoLoginBtn');
+      btn.classList.add('loading');
+      btn.innerHTML = '<div class="spinner"></div> 이동 중...';
+      // 카카오 OAuth 인증 페이지로 리다이렉트
+      const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_KEY}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code`;
+      window.location.href = kakaoAuthUrl;
+    }
+
+    // ─── 콜백 처리 (인증 코드 받은 후) ──────────────────
+    async function handleCallback() {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      if (!code) return;
+
+      // URL에서 코드 파라미터 제거
+      window.history.replaceState({}, '', window.location.pathname);
+
+      showToast('⏳ 로그인 처리 중...', '');
+
+      try {
+        // Supabase Edge Function 또는 직접 토큰 교환
+        // REST API 키로 토큰 교환
+        const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            grant_type: 'authorization_code',
+            client_id: KAKAO_REST_KEY,
+            redirect_uri: REDIRECT_URI,
+            code: code
+          })
+        });
+        const tokenData = await tokenRes.json();
+
+        if (!tokenData.access_token) {
+          showToast('❌ 토큰 발급 실패. 다시 시도해주세요.', 'error');
+          return;
+        }
+
+        // 사용자 정보 가져오기
+        const userRes = await fetch('https://kapi.kakao.com/v2/user/me', {
+          headers: { 'Authorization': 'Bearer ' + tokenData.access_token }
+        });
+        const userData = await userRes.json();
+
+        const user = {
+          kakao_id: String(userData.id),
+          nickname: userData.kakao_account?.profile?.nickname || '사용자',
+          email: userData.kakao_account?.email || '',
+          profile_image: userData.kakao_account?.profile?.profile_image_url || '',
+        };
+
+        // Supabase 저장
+        await sb.from('members').upsert({
+          kakao_id: user.kakao_id,
+          nickname: user.nickname,
+          email: user.email,
+          profile_image: user.profile_image,
+          last_login_at: new Date().toISOString(),
+        }, { onConflict: 'kakao_id' });
+
+        // 로컬 저장
+        localStorage.setItem('meat_user', JSON.stringify(user));
+        showToast('✅ 로그인 성공!', 'success');
+        setTimeout(() => showLoggedIn(user), 500);
+
+      } catch(e) {
+        console.error(e);
+        showToast('❌ 로그인 오류. 다시 시도해주세요.', 'error');
+      }
+    }
+
     // ─── 이미 로그인 체크 ─────────────────────────────────
     const savedUser = localStorage.getItem('meat_user');
     if (savedUser) {
       showLoggedIn(JSON.parse(savedUser));
-    }
-
-    // ─── 카카오 로그인 ────────────────────────────────────
-    function loginWithKakao() {
-      const btn = document.getElementById('kakaoLoginBtn');
-      btn.classList.add('loading');
-      btn.innerHTML = '<div class="spinner"></div> 로그인 중...';
-
-      Kakao.Auth.login({
-        success: function(authObj) {
-          Kakao.API.request({
-            url: '/v2/user/me',
-            success: async function(res) {
-              const user = {
-                kakao_id: String(res.id),
-                nickname: res.kakao_account?.profile?.nickname || '사용자',
-                email: res.kakao_account?.email || '',
-                profile_image: res.kakao_account?.profile?.profile_image_url || '',
-              };
-
-              // Supabase에 저장
-              await saveMember(user);
-
-              // 로컬 저장
-              localStorage.setItem('meat_user', JSON.stringify(user));
-
-              showToast('✅ 로그인 성공!', 'success');
-              setTimeout(() => showLoggedIn(user), 500);
-            },
-            fail: function(err) {
-              console.error(err);
-              resetBtn();
-              showToast('사용자 정보를 가져오지 못했어요.', 'error');
-            }
-          });
-        },
-        fail: function(err) {
-          console.error(err);
-          resetBtn();
-          showToast('로그인에 실패했어요. 다시 시도해주세요.', 'error');
-        }
-      });
-    }
-
-    // ─── Supabase members 저장 ────────────────────────────
-    async function saveMember(user) {
-      if (!supabase || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') return;
-      try {
-        const { error } = await supabase
-          .from('members')
-          .upsert({
-            kakao_id: user.kakao_id,
-            nickname: user.nickname,
-            email: user.email,
-            profile_image: user.profile_image,
-            last_login_at: new Date().toISOString(),
-          }, { onConflict: 'kakao_id' });
-
-        if (error) console.error('Supabase 저장 오류:', error);
-      } catch (e) {
-        console.error('Supabase 연결 오류:', e);
-      }
+    } else {
+      // 콜백 코드 있으면 처리
+      handleCallback();
     }
 
     // ─── 로그인 완료 UI ───────────────────────────────────
@@ -580,25 +587,8 @@
     }
 
     function logout() {
-      if (Kakao.Auth.getAccessToken()) {
-        Kakao.Auth.logout(() => {
-          localStorage.removeItem('meat_user');
-          location.reload();
-        });
-      } else {
-        localStorage.removeItem('meat_user');
-        location.reload();
-      }
-    }
-
-    function resetBtn() {
-      const btn = document.getElementById('kakaoLoginBtn');
-      btn.classList.remove('loading');
-      btn.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;">
-          <path d="M12 3C6.477 3 2 6.477 2 10.8c0 2.7 1.62 5.076 4.08 6.516L5.04 21l4.56-2.82c.78.12 1.584.18 2.4.18 5.523 0 10-3.477 10-7.8C22 6.477 17.523 3 12 3z"/>
-        </svg>
-        카카오로 시작하기`;
+      localStorage.removeItem('meat_user');
+      location.reload();
     }
   </script>
 </body>

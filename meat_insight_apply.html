@@ -6,10 +6,8 @@
   <title>신청 | MEAT INSIGHT — 고기의 모든것</title>
   <meta name="description" content="정육점·고깃집 창업자를 위한 고기 공급 연결 및 비대면 컨설팅 신청 페이지입니다."/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
-
-  <!-- ★ Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+  <script src="https://js.tosspayments.com/v1/payment"></script>
   <style>
     :root{--navy:#0b1f3a;--gold:#b8945a;--gold2:#d4a96a;--white:#fff;--off:#f8f6f2;--muted:#6b7280;--line:#e8e2d8;--green:#166534;--green-bg:#f0fdf4;--shadow:0 8px 32px rgba(11,31,58,.10);--radius:20px}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -69,8 +67,6 @@
     .plan-opt-price{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--gold)}
     .plan-opt-desc{font-size:13px;color:var(--muted);line-height:1.6}
     .plan-badge-rec{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:10px;font-weight:900;margin-left:6px}
-
-    /* 제출 버튼 + 로딩 */
     .btn-submit{width:100%;padding:17px;border-radius:14px;background:var(--navy);color:var(--gold);font-size:16px;font-weight:900;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s,transform .15s;box-shadow:0 4px 20px rgba(11,31,58,.25);margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px}
     .btn-submit:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
     .btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
@@ -78,10 +74,29 @@
     .spinner.show{display:block}
     @keyframes spin{to{transform:rotate(360deg)}}
     .submit-note{text-align:center;font-size:12px;color:var(--muted);margin-top:10px}
-
-    /* 에러 메시지 */
     .error-msg{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;font-size:13px;color:#991b1b;margin-top:10px;display:none}
     .error-msg.show{display:block}
+
+    /* 결제 방법 선택 */
+    .payment-methods{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+    .pay-opt{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:12px;border:2px solid var(--line);background:var(--off);cursor:pointer;transition:all .2s}
+    .pay-opt:hover{border-color:var(--gold)}
+    .pay-opt.selected{border-color:var(--navy);background:var(--white)}
+    .pay-opt input[type=radio]{width:18px;height:18px;accent-color:var(--navy);flex-shrink:0}
+    .pay-opt-icon{font-size:24px}
+    .pay-opt-name{font-size:15px;font-weight:700;color:var(--navy)}
+    .pay-opt-desc{font-size:12px;color:var(--muted)}
+
+    /* 무통장 안내 */
+    .bank-info{background:linear-gradient(135deg,#f8f4ee,#f0e8d8);border:1px solid rgba(184,148,90,.3);border-radius:14px;padding:24px;margin-top:16px;display:none}
+    .bank-info.show{display:block}
+    .bank-info-title{font-size:14px;font-weight:900;color:var(--navy);margin-bottom:14px}
+    .bank-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(184,148,90,.2);font-size:14px}
+    .bank-row:last-child{border-bottom:none}
+    .bank-label{color:var(--muted)}
+    .bank-val{font-weight:900;color:var(--navy)}
+    .bank-amount{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--gold)}
+    .bank-notice{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.7;background:rgba(11,31,58,.04);border-radius:8px;padding:10px 12px}
 
     /* SUCCESS */
     .success-box{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:60px 40px;text-align:center;box-shadow:var(--shadow);display:none}
@@ -108,6 +123,12 @@
     .side-highlight-desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:16px}
     .side-highlight-num{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:var(--gold);margin-bottom:4px}
     .side-highlight-sub{font-size:12px;color:rgba(255,255,255,.4)}
+
+    /* 금액 요약 카드 */
+    .price-summary{background:var(--navy);border-radius:14px;padding:20px;margin-bottom:16px}
+    .price-summary-label{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:6px}
+    .price-summary-amount{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;color:var(--gold)}
+    .price-summary-plan{font-size:13px;color:rgba(255,255,255,.6);margin-top:4px}
 
     /* STICKY */
     .sticky-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;width:min(860px,calc(100% - 32px));padding:12px 20px;background:rgba(11,31,58,.95);backdrop-filter:blur(20px);border:1px solid rgba(184,148,90,.2);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -233,54 +254,50 @@
             <div class="side-item"><div class="side-dot"></div>지육·부분육 규격 맞춤 공급</div>
           </div>
         </div>
-        <div class="side-card">
-          <div class="side-card-title"><span>✅</span> 연결 혜택</div>
-          <div class="side-items">
-            <div class="side-item"><div class="side-dot"></div>도매 단가 비교 견적 제공</div>
-            <div class="side-item"><div class="side-dot"></div>초기 창업자 소량 거래 가능</div>
-            <div class="side-item"><div class="side-dot"></div>납품 주기·규격 맞춤 조율</div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
 
-  <!-- ② 컨설팅 신청 -->
+  <!-- ② 컨설팅 신청 + 결제 -->
   <div class="page" id="page-consulting">
     <div class="page-header">
       <div class="page-label">비대면 창업 컨설팅</div>
       <div class="page-title">전문가 분석 자료를<br/>비대면으로 받아보세요</div>
       <div class="page-desc">직접 방문 없이 맞춤 창업 전략 자료를 제공합니다.</div>
     </div>
+
+    <!-- 결제 성공 화면 -->
     <div class="success-box" id="consult-success">
       <div class="success-icon">🎉</div>
-      <div class="success-title">컨설팅 신청 완료!</div>
-      <div class="success-desc">선택하신 플랜 확인 후<br/>1~2 영업일 내에 담당자가 연락드립니다.</div>
+      <div class="success-title">신청 및 결제 완료!</div>
+      <div class="success-desc">결제가 확인되면<br/>3~5 영업일 내에 자료를 제공해드립니다.</div>
       <div class="success-info" id="consult-success-info"></div>
       <a class="btn-back-main" href="meat_insight_main.html">메인으로 돌아가기</a>
     </div>
+
     <div class="form-layout" id="consult-form-area">
       <div class="form-card">
+        <!-- 플랜 선택 -->
         <div class="form-section-title">플랜 선택 *</div>
         <div class="plan-picker" style="margin-bottom:24px">
           <div class="plan-opt" id="plan-basic" onclick="selectPlan('basic')">
             <div class="plan-opt-top"><div class="plan-opt-name">STANDARD</div><div class="plan-opt-price">50만원</div></div>
-            <div class="plan-opt-desc">비대면 기본 창업 분석 자료 · 손익 분석표 · 원가 구조 분석 · 창업 체크리스트 · 이메일 Q창업 진단 결과 정리 · 기본 손익 분석표 · 핵심 체크포인트 · 이메일 Q&A 1회A 2회</div>
+            <div class="plan-opt-desc">기본 창업 분석 자료 · 손익 분석표 · 원가 구조 분석 · 창업 체크리스트 · 이메일 Q&A 2회</div>
           </div>
           <div class="plan-opt selected" id="plan-premium" onclick="selectPlan('premium')">
             <div class="plan-opt-top"><div class="plan-opt-name">PREMIUM <span class="plan-badge-rec">추천</span></div><div class="plan-opt-price">100만원</div></div>
-            <div class="plan-opt-desc">Standard 전체 포함 · 심화 손익·원가·수율 분석 · 맞춤 창업 전략 자료 · 화상 미팅 1회(30분) · 이메일 QBasic 포함 · 심화 손익·원가 분석 · 창업 전략 자료 · 화상 미팅 1회(30분)A 무제한</div>
-          </div>
-          
-            <div class="plan-opt-desc">Premium 포함 · 유통 연결 분석 · 운영 전략 · 화상 미팅 3회 · 6개월 Q&A</div>
+            <div class="plan-opt-desc">Standard 전체 포함 · 심화 손익·원가·수율 분석 · 맞춤 창업 전략 자료 · 화상 미팅 1회(30분) · 이메일 Q&A 무제한</div>
           </div>
         </div>
+
+        <!-- 신청자 정보 -->
         <div class="form-section-title">신청자 정보</div>
         <div class="fields">
           <div class="field-row">
             <div class="field"><label>이름 *</label><input type="text" id="cf-name" placeholder="홍길동"/></div>
             <div class="field"><label>연락처 *</label><input type="tel" id="cf-phone" placeholder="010-0000-0000"/></div>
           </div>
+          <div class="field"><label>이메일 *</label><input type="email" id="cf-email" placeholder="example@email.com"/></div>
           <div class="field">
             <label>연락 방법 선호</label>
             <select id="cf-contact">
@@ -310,20 +327,61 @@
           <div class="field">
             <label>가장 궁금한 점 / 컨설팅 목적</label>
             <textarea id="cf-memo" placeholder="예: 20평 정육점 예상 수익이 궁금하고, 거래선 확보 방법을 알고 싶습니다."></textarea>
-            <div class="field-hint">구체적으로 적어주실수록 더 정밀한 자료를 준비할 수 있습니다</div>
           </div>
         </div>
+
+        <!-- 결제 방법 선택 -->
+        <div class="form-section-title">결제 방법 선택 *</div>
+        <div class="price-summary">
+          <div class="price-summary-label">결제 금액</div>
+          <div class="price-summary-amount" id="price-display">100만원</div>
+          <div class="price-summary-plan" id="plan-display">PREMIUM 플랜 (부가세 별도)</div>
+        </div>
+        <div class="payment-methods" style="margin-bottom:20px">
+          <label class="pay-opt selected" onclick="selectPayment(this,'kakaopay')">
+            <input type="radio" name="payment" value="kakaopay" checked/>
+            <div class="pay-opt-icon">💛</div>
+            <div><div class="pay-opt-name">카카오페이</div><div class="pay-opt-desc">카카오페이로 간편 결제</div></div>
+          </label>
+          <label class="pay-opt" onclick="selectPayment(this,'naverpay')">
+            <input type="radio" name="payment" value="naverpay"/>
+            <div class="pay-opt-icon">🟢</div>
+            <div><div class="pay-opt-name">네이버페이</div><div class="pay-opt-desc">네이버페이로 간편 결제</div></div>
+          </label>
+          <label class="pay-opt" onclick="selectPayment(this,'bank')">
+            <input type="radio" name="payment" value="bank"/>
+            <div class="pay-opt-icon">🏦</div>
+            <div><div class="pay-opt-name">무통장입금</div><div class="pay-opt-desc">계좌이체 후 확인</div></div>
+          </label>
+        </div>
+
+        <!-- 무통장 계좌 안내 -->
+        <div class="bank-info" id="bank-info">
+          <div class="bank-info-title">💳 입금 계좌 안내</div>
+          <div class="bank-row"><div class="bank-label">은행</div><div class="bank-val">농협은행</div></div>
+          <div class="bank-row"><div class="bank-label">계좌번호</div><div class="bank-val">301-0000-0000-00</div></div>
+          <div class="bank-row"><div class="bank-label">예금주</div><div class="bank-val">농업회사법인 주식회사 잽신유통</div></div>
+          <div class="bank-row"><div class="bank-label">입금액</div><div class="bank-val bank-amount" id="bank-amount">1,000,000원</div></div>
+          <div class="bank-notice">
+            ⚠️ 입금자명을 <strong>신청자 이름</strong>으로 입력해주세요.<br/>
+            입금 확인 후 1영업일 내 담당자가 연락드립니다.<br/>
+            세금계산서 발행 필요 시 담당자에게 요청해주세요.
+          </div>
+        </div>
+
         <button class="btn-submit" id="consult-submit-btn" onclick="submitConsult()">
           <div class="spinner" id="consult-spinner"></div>
-          컨설팅 신청 완료하기
+          <span id="submit-btn-text">결제하고 신청 완료하기</span>
         </button>
         <div class="error-msg" id="consult-error"></div>
-        <div class="submit-note">신청 후 1~2 영업일 내 담당자가 연락드립니다 · 결제는 상담 후 진행됩니다</div>
+        <div class="submit-note">결제 완료 후 3~5 영업일 내 자료 제공 · 자료 제공 전 환불 가능</div>
       </div>
       <div class="sidebar">
         <div class="side-highlight">
-          <div class="side-highlight-title">결제는 상담 후</div>
-          <div class="side-highlight-desc">신청 → 담당자 연락 → 상담 → 플랜 확정 → 결제 → 자료 제공 순서로 진행됩니다.</div>
+          <div class="side-highlight-title">결제 후 진행 순서</div>
+          <div class="side-highlight-desc">결제 완료 → 담당자 연락 → 자료 제작 → 이메일/카카오톡 전달</div>
+          <div class="side-highlight-num">3~5일</div>
+          <div class="side-highlight-sub">자료 제공까지 소요 시간</div>
         </div>
         <div class="side-card">
           <div class="side-card-title"><span>📋</span> 컨설팅 포함 내용</div>
@@ -357,41 +415,18 @@
 </div>
 
 <script>
-/* ════════════════════════════════════════
-   ★ SUPABASE 설정 — 아래 두 값만 교체하면 됩니다
-   1. https://supabase.com 가입 후 새 프로젝트 생성
-   2. Settings → API 에서 URL과 anon key 복사
-════════════════════════════════════════ */
-const SUPABASE_URL = 'https://igignylgzjphtnyxhhsd.supabase.co';      // 예: https://abcdef.supabase.co
-const SUPABASE_ANON_KEY = 'sb_publishable_lmqOzr1MdTPnOUdiCx2C_g_kcdSRuqD'; // 예: eyJhbGciOi...
+const SUPABASE_URL = 'https://igignylgzjphtnyxhhsd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnaWdueWxnempwaHRueXhoaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDUyMDAsImV4cCI6MjA4OTA4MTIwMH0.3u5gCw1dnG1YSmrzhN3PGVOMoQ1LBtGw0ToNhSeL42A';
+const TOSS_CLIENT_KEY = 'test_ck_Z1aOwX7K8mXm9ekAmxPmryQxzvNP';
 
-/* ★ 이메일 알림 설정 (EmailJS 사용)
-   1. https://www.emailjs.com 가입 (무월비 200건/월 무료)
-   2. Service ID, Template ID, Public Key 입력
-   알림 이메일 템플릿 변수: {{type}}, {{name}}, {{phone}}, {{detail}}
-*/
-const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
-const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
-const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
-const ADMIN_EMAIL         = 'YOUR_EMAIL@gmail.com'; // 알림받을 이메일
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ── Supabase 초기화 ──
-let sb = null;
-try {
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} catch(e) { console.warn('Supabase 미설정 — 데모 모드로 실행'); }
+let selectedPlan = 'premium';
+let selectedPayment = 'kakaopay';
+const planPrices = { basic: 500000, premium: 1000000 };
+const planNames = { basic: 'STANDARD', premium: 'PREMIUM' };
 
-// ── EmailJS 초기화 ──
-function initEmailJS() {
-  if (typeof emailjs === 'undefined') return;
-  emailjs.init(EMAILJS_PUBLIC_KEY);
-}
-const ejsScript = document.createElement('script');
-ejsScript.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
-ejsScript.onload = initEmailJS;
-document.head.appendChild(ejsScript);
-
-// ── 탭 ──
+// ── 탭 전환 ──
 function switchTab(tab) {
   ['supply','consulting'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===tab);
@@ -404,24 +439,38 @@ function toggleCheck(label) {
   setTimeout(()=> label.classList.toggle('checked', label.querySelector('input').checked), 0);
 }
 
-let selectedPlan = 'premium';
+// ── 플랜 선택 ──
 function selectPlan(plan) {
   selectedPlan = plan;
   ['basic','premium'].forEach(p =>
     document.getElementById('plan-'+p).classList.toggle('selected', p===plan)
   );
+  updatePriceDisplay();
 }
 
-// ── 이메일 알림 전송 ──
-async function sendEmailAlert(type, name, phone, detail) {
-  if (typeof emailjs === 'undefined' || EMAILJS_SERVICE_ID === 'YOUR_SERVICE_ID') return;
-  try {
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      to_email: ADMIN_EMAIL,
-      type, name, phone, detail,
-      time: new Date().toLocaleString('ko-KR')
-    });
-  } catch(e) { console.warn('이메일 알림 실패:', e); }
+function updatePriceDisplay() {
+  const price = planPrices[selectedPlan];
+  const priceStr = (price/10000).toLocaleString() + '만원';
+  document.getElementById('price-display').textContent = priceStr;
+  document.getElementById('plan-display').textContent = planNames[selectedPlan] + ' 플랜 (부가세 별도)';
+  document.getElementById('bank-amount').textContent = price.toLocaleString() + '원';
+  const btnText = selectedPayment === 'bank' ? '신청 완료하기 (무통장입금)' : '결제하고 신청 완료하기';
+  document.getElementById('submit-btn-text').textContent = btnText;
+}
+
+// ── 결제 방법 선택 ──
+function selectPayment(el, method) {
+  selectedPayment = method;
+  document.querySelectorAll('.pay-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  const bankInfo = document.getElementById('bank-info');
+  if (method === 'bank') {
+    bankInfo.classList.add('show');
+    document.getElementById('submit-btn-text').textContent = '신청 완료하기 (무통장입금)';
+  } else {
+    bankInfo.classList.remove('show');
+    document.getElementById('submit-btn-text').textContent = '결제하고 신청 완료하기';
+  }
 }
 
 // ── 공급 연결 제출 ──
@@ -442,32 +491,23 @@ async function submitSupply() {
   const spinner = document.getElementById('supply-spinner');
   btn.disabled = true;
   spinner.classList.add('show');
-  btn.childNodes[btn.childNodes.length-1].textContent = ' 신청 중...';
 
-  const items   = [...document.querySelectorAll('#supply-items input:checked')].map(i=>i.value).join(', ') || '미선택';
+  const items = [...document.querySelectorAll('#supply-items input:checked')].map(i=>i.value).join(', ') || '미선택';
   const payload = {
     name, phone,
     biz_name: document.getElementById('sf-biz').value.trim(),
     type, region, items,
-    volume:  document.getElementById('sf-volume').value,
-    cycle:   document.getElementById('sf-cycle').value,
-    price:   document.getElementById('sf-price').value.trim(),
-    memo:    document.getElementById('sf-memo').value.trim(),
-    status:  '신규',
-    created_at: new Date().toISOString()
+    volume: document.getElementById('sf-volume').value,
+    cycle:  document.getElementById('sf-cycle').value,
+    price:  document.getElementById('sf-price').value.trim(),
+    memo:   document.getElementById('sf-memo').value.trim(),
+    status: '신규',
   };
 
   try {
-    // Supabase 저장
-    if (sb) {
-      const { error } = await sb.from('supply_requests').insert([payload]);
-      if (error) throw error;
-    }
-    // 이메일 알림
-    await sendEmailAlert('공급연결', name, phone,
-      `업종: ${type} / 지역: ${region} / 품목: ${items} / 구매량: ${payload.volume}`);
+    const { error } = await sb.from('supply_requests').insert([payload]);
+    if (error) throw error;
 
-    // 성공 화면
     document.getElementById('supply-success-info').innerHTML = `
       <div class="success-info-row"><div class="success-info-label">이름</div><div class="success-info-val">${name}</div></div>
       <div class="success-info-row"><div class="success-info-label">연락처</div><div class="success-info-val">${phone}</div></div>
@@ -477,26 +517,25 @@ async function submitSupply() {
     document.getElementById('supply-form-area').style.display = 'none';
     document.getElementById('supply-success').classList.add('show');
     window.scrollTo({top:0,behavior:'smooth'});
-
   } catch(e) {
     errEl.textContent = '저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
     errEl.classList.add('show');
     btn.disabled = false;
     spinner.classList.remove('show');
-    btn.childNodes[btn.childNodes.length-1].textContent = ' 공급 연결 신청하기';
   }
 }
 
-// ── 컨설팅 제출 ──
+// ── 컨설팅 제출 + 결제 ──
 async function submitConsult() {
   const name  = document.getElementById('cf-name').value.trim();
   const phone = document.getElementById('cf-phone').value.trim();
+  const email = document.getElementById('cf-email').value.trim();
   const type  = document.getElementById('cf-type').value;
   const errEl = document.getElementById('consult-error');
   errEl.classList.remove('show');
 
-  if (!name || !phone || !type) {
-    errEl.textContent = '이름, 연락처, 업종은 필수 항목입니다.';
+  if (!name || !phone || !email || !type) {
+    errEl.textContent = '이름, 연락처, 이메일, 업종은 필수 항목입니다.';
     errEl.classList.add('show'); return;
   }
 
@@ -504,11 +543,9 @@ async function submitConsult() {
   const spinner = document.getElementById('consult-spinner');
   btn.disabled = true;
   spinner.classList.add('show');
-  btn.childNodes[btn.childNodes.length-1].textContent = ' 신청 중...';
 
-  const planNames = {basic:'STANDARD — 50만원', premium:'PREMIUM — 100만원'};
   const payload = {
-    name, phone,
+    name, phone, email,
     plan: selectedPlan,
     type,
     region:   document.getElementById('cf-region').value.trim(),
@@ -516,39 +553,83 @@ async function submitConsult() {
     capital:  document.getElementById('cf-capital').value,
     contact:  document.getElementById('cf-contact').value,
     memo:     document.getElementById('cf-memo').value.trim(),
-    status:   '신규',
-    created_at: new Date().toISOString()
+    payment_method: selectedPayment,
+    payment_status: selectedPayment === 'bank' ? '입금대기' : '결제대기',
+    status: '신규',
   };
 
   try {
-    if (sb) {
-      const { error } = await sb.from('consult_requests').insert([payload]);
-      if (error) throw error;
-    }
-    await sendEmailAlert('컨설팅', name, phone,
-      `플랜: ${planNames[selectedPlan]} / 업종: ${type} / 지역: ${payload.region} / 시기: ${payload.timeline}`);
+    // Supabase 저장
+    const { data, error } = await sb.from('consult_requests').insert([payload]).select();
+    if (error) throw error;
 
-    document.getElementById('consult-success-info').innerHTML = `
-      <div class="success-info-row"><div class="success-info-label">이름</div><div class="success-info-val">${name}</div></div>
-      <div class="success-info-row"><div class="success-info-label">연락처</div><div class="success-info-val">${phone}</div></div>
-      <div class="success-info-row"><div class="success-info-label">선택 플랜</div><div class="success-info-val">${planNames[selectedPlan]}</div></div>
-      <div class="success-info-row"><div class="success-info-label">업종</div><div class="success-info-val">${type}</div></div>
-      <div class="success-info-row"><div class="success-info-label">연락 방법</div><div class="success-info-val">${payload.contact}</div></div>`;
-    document.getElementById('consult-form-area').style.display = 'none';
-    document.getElementById('consult-success').classList.add('show');
-    window.scrollTo({top:0,behavior:'smooth'});
+    const orderId = 'MEAT-' + Date.now();
+    const amount = planPrices[selectedPlan];
+
+    // 무통장입금인 경우
+    if (selectedPayment === 'bank') {
+      await sb.from('consult_requests').update({
+        payment_status: '입금대기',
+        order_id: orderId
+      }).eq('id', data[0].id);
+
+      showConsultSuccess(name, phone, type, orderId, '무통장입금 (입금 확인 후 진행)');
+      return;
+    }
+
+    // 토스페이먼츠 결제
+    const tossPayments = TossPayments(TOSS_CLIENT_KEY);
+    const methodMap = { kakaopay: '카카오페이', naverpay: '네이버페이' };
+
+    await tossPayments.requestPayment(methodMap[selectedPayment], {
+      amount,
+      orderId,
+      orderName: `MEAT INSIGHT ${planNames[selectedPlan]} 컨설팅`,
+      customerName: name,
+      customerEmail: email,
+      successUrl: window.location.origin + '/meat_insight_apply.html?tab=consulting&payment=success&orderId=' + orderId,
+      failUrl: window.location.origin + '/meat_insight_apply.html?tab=consulting&payment=fail',
+    });
 
   } catch(e) {
-    errEl.textContent = '저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    if (e.code === 'USER_CANCEL') {
+      errEl.textContent = '결제를 취소했어요.';
+    } else {
+      errEl.textContent = '오류가 발생했습니다: ' + (e.message || '다시 시도해주세요.');
+    }
     errEl.classList.add('show');
     btn.disabled = false;
     spinner.classList.remove('show');
-    btn.childNodes[btn.childNodes.length-1].textContent = ' 컨설팅 신청 완료하기';
   }
 }
 
+function showConsultSuccess(name, phone, type, orderId, payMethod) {
+  document.getElementById('consult-success-info').innerHTML = `
+    <div class="success-info-row"><div class="success-info-label">이름</div><div class="success-info-val">${name}</div></div>
+    <div class="success-info-row"><div class="success-info-label">연락처</div><div class="success-info-val">${phone}</div></div>
+    <div class="success-info-row"><div class="success-info-label">선택 플랜</div><div class="success-info-val">${planNames[selectedPlan]} — ${(planPrices[selectedPlan]/10000).toLocaleString()}만원</div></div>
+    <div class="success-info-row"><div class="success-info-label">업종</div><div class="success-info-val">${type}</div></div>
+    <div class="success-info-row"><div class="success-info-label">결제 방법</div><div class="success-info-val">${payMethod}</div></div>
+    <div class="success-info-row"><div class="success-info-label">주문번호</div><div class="success-info-val">${orderId}</div></div>`;
+  document.getElementById('consult-form-area').style.display = 'none';
+  document.getElementById('consult-success').classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── URL 파라미터 처리 (결제 성공/실패) ──
 const params = new URLSearchParams(location.search);
 if (params.get('tab') === 'consulting') switchTab('consulting');
+if (params.get('payment') === 'success') {
+  switchTab('consulting');
+  showConsultSuccess('고객', '-', '-', params.get('orderId') || '-', '카드/간편결제');
+}
+if (params.get('payment') === 'fail') {
+  switchTab('consulting');
+  setTimeout(() => {
+    document.getElementById('consult-error').textContent = '결제에 실패했어요. 다시 시도해주세요.';
+    document.getElementById('consult-error').classList.add('show');
+  }, 500);
+}
 </script>
 </body>
 </html>

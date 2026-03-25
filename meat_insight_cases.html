@@ -10,7 +10,6 @@
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth}
     body{font-family:'Noto Sans KR',sans-serif;background:var(--off);color:var(--navy);overflow-x:hidden}
-
     .nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 32px;background:rgba(248,246,242,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--line)}
     .nav-brand{display:flex;align-items:center;gap:12px;text-decoration:none}
     .nav-logo{width:40px;height:40px;border-radius:10px;background:var(--navy);color:var(--gold);display:grid;place-items:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:900}
@@ -21,34 +20,32 @@
     .nav-btn:hover{background:var(--line)}
     .nav-btn.primary{background:var(--navy);color:var(--gold);border-color:transparent}
     @media(max-width:640px){.nav{padding:12px 16px}.nav-right{display:none}}
-
     .hero{background:var(--navy);padding:56px 32px 68px;text-align:center;position:relative;overflow:hidden}
     .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 700px 300px at 50% 140%,rgba(184,148,90,.15),transparent 60%);pointer-events:none}
     .hero-label{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;border:1px solid rgba(184,148,90,.3);color:var(--gold);font-size:12px;font-weight:700;margin-bottom:16px;position:relative}
     .hero h1{font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,44px);font-weight:900;color:var(--white);margin-bottom:14px;position:relative}
     .hero h1 em{color:var(--gold);font-style:normal}
     .hero p{font-size:15px;color:rgba(255,255,255,.55);max-width:44ch;margin:0 auto;position:relative}
-
-    /* FILTER BAR */
+    .hero-stats{display:flex;justify-content:center;gap:40px;margin-top:32px;flex-wrap:wrap}
+    .hero-stat-num{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:var(--gold)}
+    .hero-stat-label{font-size:12px;color:rgba(255,255,255,.45);margin-top:4px}
     .filter-bar{background:var(--white);border-bottom:1px solid var(--line);padding:16px 32px}
     .filter-inner{max-width:1100px;margin:0 auto;display:flex;gap:8px;flex-wrap:wrap}
     .filter-btn{padding:9px 18px;border-radius:999px;border:1.5px solid var(--line);background:var(--white);font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s;font-family:inherit}
     .filter-btn:hover{border-color:var(--navy);color:var(--navy)}
     .filter-btn.active{border-color:var(--navy);background:var(--navy);color:var(--gold)}
-
     .main{max-width:1100px;margin:0 auto;padding:48px 24px 120px}
     @media(max-width:640px){.main{padding:28px 16px 120px}}
-
-    /* CASES GRID */
     .cases-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
     @media(max-width:900px){.cases-grid{grid-template-columns:1fr 1fr}}
     @media(max-width:580px){.cases-grid{grid-template-columns:1fr}}
-
     .case-card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s;cursor:pointer}
     .case-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(11,31,58,.14)}
+    .case-card.fail .case-card-top{background:#3d1515}
     .case-card-top{background:var(--navy);padding:24px;position:relative;overflow:hidden}
     .case-card-top::before{content:'';position:absolute;right:-20px;top:-20px;width:120px;height:120px;background:rgba(184,148,90,.1);border-radius:50%}
     .case-badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(184,148,90,.2);color:var(--gold);margin-bottom:12px}
+    .case-card.fail .case-badge{background:rgba(200,50,50,.2);color:#ff9090}
     .case-type{font-size:12px;color:rgba(255,255,255,.5);font-weight:700;margin-bottom:8px}
     .case-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--white);line-height:1.2;margin-bottom:4px}
     .case-location{font-size:13px;color:rgba(255,255,255,.45)}
@@ -59,21 +56,21 @@
     .case-spec-label{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px}
     .case-spec-val{font-size:14px;font-weight:900;color:var(--navy)}
     .case-result-wrap{background:linear-gradient(135deg,#f8f4ee,#f0e8d8);border-radius:12px;padding:16px;margin-bottom:16px}
+    .case-card.fail .case-result-wrap{background:linear-gradient(135deg,#fff2f2,#ffe0e0)}
     .case-result-label{font-size:11px;font-weight:700;color:var(--gold);margin-bottom:6px}
+    .case-card.fail .case-result-label{color:var(--red)}
     .case-result-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
     .case-result-row:last-child{margin-bottom:0}
     .case-result-key{font-size:13px;color:var(--muted)}
     .case-result-val{font-size:15px;font-weight:900;color:var(--navy)}
     .case-result-val.highlight{color:var(--gold)}
+    .case-result-val.red{color:var(--red)}
     .case-tags{display:flex;gap:6px;flex-wrap:wrap}
     .case-tag{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;background:var(--off);color:var(--muted);border:1px solid var(--line)}
-
-    /* DATA CARDS */
     .data-section{margin-top:56px}
     .section-label{font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.5px;margin-bottom:10px}
     .section-title{font-family:'Playfair Display',serif;font-size:clamp(24px,3.5vw,36px);font-weight:900;color:var(--navy);margin-bottom:12px}
     .section-desc{font-size:15px;color:var(--muted);line-height:1.7;max-width:50ch;margin-bottom:36px}
-
     .data-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
     @media(max-width:700px){.data-grid{grid-template-columns:1fr}}
     .data-card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow)}
@@ -85,20 +82,17 @@
     .data-row-val{font-weight:900;color:var(--navy)}
     .data-row-val.gold{color:var(--gold)}
     .data-row-val.red{color:var(--red)}
-
-    /* FAIL SECTION */
     .fail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:36px}
     @media(max-width:700px){.fail-grid{grid-template-columns:1fr}}
     .fail-card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
     .fail-pct{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;color:var(--red);margin-bottom:8px}
     .fail-reason{font-size:16px;font-weight:900;color:var(--navy);margin-bottom:8px}
     .fail-desc{font-size:13px;color:var(--muted);line-height:1.7}
-
-    /* MODAL */
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;display:none;backdrop-filter:blur(4px);align-items:center;justify-content:center}
     .modal-overlay.show{display:flex}
     .modal{background:var(--white);border-radius:24px;width:min(640px,calc(100% - 32px));max-height:90vh;overflow-y:auto}
     .modal-hero{background:var(--navy);padding:32px;position:relative;overflow:hidden}
+    .modal-hero.fail{background:#3d1515}
     .modal-hero::before{content:'';position:absolute;right:-20px;top:-20px;width:150px;height:150px;background:rgba(184,148,90,.1);border-radius:50%}
     .modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.1);border:none;color:var(--white);width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;display:grid;place-items:center}
     .modal-body{padding:32px}
@@ -110,7 +104,9 @@
     .modal-section-title{font-size:15px;font-weight:900;color:var(--navy);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
     .modal-result-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .modal-result-item{background:linear-gradient(135deg,#f8f4ee,#f0e8d8);border-radius:12px;padding:16px}
+    .modal-result-item.fail{background:linear-gradient(135deg,#fff2f2,#ffe0e0)}
     .modal-result-label{font-size:11px;color:var(--gold);font-weight:700;margin-bottom:4px}
+    .modal-result-item.fail .modal-result-label{color:var(--red)}
     .modal-result-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--navy)}
     .point-list{display:flex;flex-direction:column;gap:10px}
     .point-item{display:flex;gap:10px;font-size:14px;color:var(--muted);line-height:1.6}
@@ -119,8 +115,6 @@
     .modal-cta p{font-size:14px;color:rgba(255,255,255,.6);margin-bottom:16px}
     .btn-gold{padding:13px 28px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:14px;font-weight:900;text-decoration:none;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s}
     .btn-gold:hover{opacity:.88}
-
-    /* CTA BANNER */
     .cta-wrap{background:var(--navy);border-radius:24px;padding:48px;margin-top:56px;display:flex;align-items:center;justify-content:space-between;gap:24px;position:relative;overflow:hidden}
     .cta-wrap::before{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:rgba(184,148,90,.1);border-radius:50%}
     .cta-text h2{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,32px);font-weight:900;color:var(--white);margin-bottom:8px}
@@ -129,8 +123,6 @@
     .btn-outline{padding:13px 24px;border-radius:999px;border:1.5px solid rgba(255,255,255,.25);color:var(--white);font-size:14px;font-weight:700;text-decoration:none;transition:border-color .15s}
     .btn-outline:hover{border-color:rgba(255,255,255,.5)}
     @media(max-width:700px){.cta-wrap{flex-direction:column;align-items:flex-start;padding:32px 24px}.cta-btns{flex-direction:column;width:100%}}
-
-    /* STICKY */
     .sticky-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;width:min(1100px,calc(100% - 32px));padding:12px 20px;background:rgba(11,31,58,.95);backdrop-filter:blur(20px);border:1px solid rgba(184,148,90,.2);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:space-between;gap:12px}
     .sticky-text{font-size:13px;font-weight:700;color:var(--white)}
     .sticky-text small{display:block;font-size:11px;color:rgba(255,255,255,.4);font-weight:400}
@@ -156,6 +148,12 @@
   <div class="hero-label">실제 데이터 기반</div>
   <h1>실제 창업자들의<br/><em>숫자</em>를 공개합니다</h1>
   <p>성공 사례만이 아닙니다. 실패 데이터와 리스크 요인도 솔직하게 공개합니다.</p>
+  <div class="hero-stats">
+    <div><div class="hero-stat-num">12</div><div class="hero-stat-label">공개 사례</div></div>
+    <div><div class="hero-stat-num">7</div><div class="hero-stat-label">성공 사례</div></div>
+    <div><div class="hero-stat-num">5</div><div class="hero-stat-label">실패 사례</div></div>
+    <div><div class="hero-stat-num">3개</div><div class="hero-stat-label">업종 분류</div></div>
+  </div>
 </div>
 
 <div class="filter-bar">
@@ -170,14 +168,12 @@
 </div>
 
 <div class="main">
-
   <div class="cases-grid" id="cases-grid"></div>
 
-  <!-- 평균 데이터 -->
   <div class="data-section">
     <div class="section-label">창업 평균 데이터</div>
     <div class="section-title">업종별 실제 수치</div>
-    <div class="section-desc">전국 정육점·고깃집 운영 데이터를 기반으로 정리한 평균값입니다. 내 계획과 비교해보세요.</div>
+    <div class="section-desc">전국 정육점·고깃집 운영 데이터를 기반으로 정리한 평균값입니다.</div>
     <div class="data-grid">
       <div class="data-card">
         <div class="data-card-title">🥩 정육점 평균 지표</div>
@@ -208,41 +204,19 @@
     </div>
   </div>
 
-  <!-- 실패 원인 -->
   <div class="data-section">
     <div class="section-label">실패 분석 데이터</div>
     <div class="section-title">왜 실패하는가</div>
     <div class="section-desc">정육점·고깃집 폐업 사례를 분석한 주요 실패 원인입니다. 미리 알고 대비하세요.</div>
     <div class="fail-grid">
-      <div class="fail-card">
-        <div class="fail-pct">41%</div>
-        <div class="fail-reason">상권 분석 미흡</div>
-        <div class="fail-desc">유동인구, 경쟁 매장, 주변 아파트 세대 수를 제대로 확인하지 않고 입점. 개업 후 3개월 내 이탈.</div>
-      </div>
-      <div class="fail-card">
-        <div class="fail-pct">28%</div>
-        <div class="fail-reason">원가 구조 오류</div>
-        <div class="fail-desc">손질율, 부산물 처리, 포장재 비용을 원가에 미포함. 실제 마진이 계획의 60% 수준에 그침.</div>
-      </div>
-      <div class="fail-card">
-        <div class="fail-pct">21%</div>
-        <div class="fail-reason">초기 자본 부족</div>
-        <div class="fail-desc">창업 비용 이후 운전 자금 부족. 개업 첫 2~3개월 적자를 버티지 못하고 폐업으로 이어짐.</div>
-      </div>
-      <div class="fail-card">
-        <div class="fail-pct">7%</div>
-        <div class="fail-reason">거래선 불안정</div>
-        <div class="fail-desc">단일 공급처에 의존하다 납품 중단 시 대응 불가. 복수 거래선 확보가 필수.</div>
-      </div>
-      <div class="fail-card">
-        <div class="fail-pct">3%</div>
-        <div class="fail-reason">인건비 과다</div>
-        <div class="fail-desc">매출 대비 인건비 비중 35% 초과. 초기 직원 수를 줄이고 매출에 따라 조정해야 함.</div>
-      </div>
+      <div class="fail-card"><div class="fail-pct">41%</div><div class="fail-reason">상권 분석 미흡</div><div class="fail-desc">유동인구, 경쟁 매장, 주변 아파트 세대 수를 제대로 확인하지 않고 입점. 개업 후 3개월 내 이탈.</div></div>
+      <div class="fail-card"><div class="fail-pct">28%</div><div class="fail-reason">원가 구조 오류</div><div class="fail-desc">손질율, 부산물 처리, 포장재 비용을 원가에 미포함. 실제 마진이 계획의 60% 수준에 그침.</div></div>
+      <div class="fail-card"><div class="fail-pct">21%</div><div class="fail-reason">초기 자본 부족</div><div class="fail-desc">창업 비용 이후 운전 자금 부족. 개업 첫 2~3개월 적자를 버티지 못하고 폐업으로 이어짐.</div></div>
+      <div class="fail-card"><div class="fail-pct">7%</div><div class="fail-reason">거래선 불안정</div><div class="fail-desc">단일 공급처에 의존하다 납품 중단 시 대응 불가. 복수 거래선 확보가 필수.</div></div>
+      <div class="fail-card"><div class="fail-pct">3%</div><div class="fail-reason">인건비 과다</div><div class="fail-desc">매출 대비 인건비 비중 35% 초과. 초기 직원 수를 줄이고 매출에 따라 조정해야 함.</div></div>
     </div>
   </div>
 
-  <!-- CTA -->
   <div class="cta-wrap">
     <div class="cta-text">
       <h2>내 창업 조건으로 분석해보세요</h2>
@@ -253,29 +227,21 @@
       <a class="btn-outline" href="meat_insight_calculator.html">매출 계산기</a>
     </div>
   </div>
-
 </div>
 
-<!-- MODAL -->
 <div class="modal-overlay" id="modal" onclick="closeModal(event)">
   <div class="modal">
     <div class="modal-hero" id="modal-hero">
       <button class="modal-close" onclick="document.getElementById('modal').classList.remove('show')">×</button>
       <div class="case-badge" id="m-badge"></div>
       <div class="case-type" id="m-type"></div>
-      <div class="case-title" id="m-title" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:white;margin-bottom:4px"></div>
+      <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:white;margin-bottom:4px" id="m-title"></div>
       <div class="case-location" id="m-location"></div>
     </div>
     <div class="modal-body">
       <div class="modal-specs" id="m-specs"></div>
-      <div class="modal-section">
-        <div class="modal-section-title">수익 분석</div>
-        <div class="modal-result-grid" id="m-results"></div>
-      </div>
-      <div class="modal-section">
-        <div class="modal-section-title">성공·실패 포인트</div>
-        <div class="point-list" id="m-points"></div>
-      </div>
+      <div class="modal-section"><div class="modal-section-title">수익 분석</div><div class="modal-result-grid" id="m-results"></div></div>
+      <div class="modal-section"><div class="modal-section-title">성공·실패 포인트</div><div class="point-list" id="m-points"></div></div>
       <div class="modal-cta">
         <p>비슷한 조건으로 창업을 계획하고 계신가요?</p>
         <a class="btn-gold" href="meat_insight_calculator.html">매출 계산기로 시뮬레이션 →</a>
@@ -284,79 +250,87 @@
   </div>
 </div>
 
-<!-- STICKY -->
 <div class="sticky-bar">
   <div class="sticky-text">MEAT INSIGHT · 창업 사례<small>실제 데이터 기반 분석</small></div>
   <a class="sticky-btn" href="meat_insight_apply.html?tab=consulting">컨설팅 신청</a>
 </div>
 
 <script>
-  const cases = [
-    {id:1,badge:'성공 사례 01',type:'고깃집',title:'경기 수원 20평 고깃집',location:'경기도 수원시 영통구',result:'성공',specs:[{label:'좌석 수',val:'48석'},{label:'객단가',val:'28,000원'},{label:'일 방문',val:'120명'},{label:'회전율',val:'2.5회'},{label:'원가율',val:'38%'},{label:'창업 비용',val:'1.2억'}],results:[{label:'월 매출',val:'1억 80만원'},{label:'월 순이익',val:'약 2,000만원'},{label:'순이익률',val:'19.8%'},{label:'투자 회수',val:'6개월'}],points:[{icon:'✅',text:'역세권 인근 오피스텔 밀집 지역으로 저녁 수요 안정적 확보'},{ icon:'✅',text:'삼겹·목살 외 특수 부위 메뉴 구성으로 객단가 상승'},{ icon:'✅',text:'도매 직거래로 원가율을 기존 42%에서 38%로 낮춤'},{ icon:'⚠️',text:'주말 웨이팅 대비 예약 시스템 도입 후 회전율 개선 필요'}]},
-    {id:2,badge:'성공 사례 02',type:'정육점',title:'서울 마포 12평 정육점',location:'서울특별시 마포구 합정동',result:'성공',specs:[{label:'매장 평수',val:'12평'},{label:'일 방문',val:'90명'},{label:'객단가',val:'35,000원'},{label:'원가율',val:'60%'},{label:'창업 비용',val:'6,500만원'}],results:[{label:'월 매출',val:'약 9,400만원'},{label:'월 순이익',val:'약 900만원'},{label:'순이익률',val:'9.6%'},{label:'투자 회수',val:'7개월'}],points:[{icon:'✅',text:'아파트 단지 배후 수요 + 재래시장 인접으로 주부 고객층 탄탄'},{ icon:'✅',text:'한우 특수부위 전문 코너 운영으로 경쟁 정육점과 차별화'},{ icon:'✅',text:'새벽 시장 직거래로 신선도 유지, SNS 입소문 효과'},{ icon:'⚠️',text:'인건비 비중 28% — 직원 1명 추가 시 수익성 하락 주의'}]},
-    {id:3,badge:'성공 사례 03',type:'정육식당',title:'경남 창원 30평 정육식당',location:'경상남도 창원시 성산구',result:'성공',specs:[{label:'매장 평수',val:'30평'},{label:'좌석 수',val:'36석'},{label:'객단가',val:'32,000원'},{label:'원가율',val:'45%'},{label:'창업 비용',val:'1.5억'}],results:[{label:'월 매출',val:'약 8,600만원'},{label:'월 순이익',val:'약 1,800만원'},{label:'순이익률',val:'20.9%'},{label:'투자 회수',val:'8개월'}],points:[{icon:'✅',text:'정육+식사 병행으로 재료 회전율 극대화, 부산물 zero'},{ icon:'✅',text:'직장인 점심 정식 메뉴 추가로 낮 시간대 매출 확보'},{ icon:'✅',text:'도매 직거래 + 현지 한우 농가 연결로 원가 경쟁력 확보'},{ icon:'⚠️',text:'초기 위생 허가 지연으로 오픈 2주 늦어짐 — 준비 기간 여유 필요'}]},
-    {id:4,badge:'실패 사례 01',type:'고깃집',title:'서울 강남 15평 고깃집',location:'서울특별시 강남구 역삼동',result:'실패',specs:[{label:'좌석 수',val:'20석'},{label:'객단가',val:'45,000원'},{label:'원가율',val:'47%'},{label:'월 임대료',val:'550만원'},{label:'창업 비용',val:'1.8억'}],results:[{label:'월 매출',val:'약 4,500만원'},{label:'월 순이익',val:'-350만원 (적자)'},{label:'폐업 시기',val:'창업 8개월 후'},{label:'손실 금액',val:'약 6,000만원'}],points:[{icon:'⚠️',text:'강남 이면도로 입점으로 유동인구 예상치의 40% 수준에 그침'},{ icon:'⚠️',text:'임대료 550만원 — 매출 대비 임대료 비중 12.2%로 과다'},{ icon:'⚠️',text:'원가율 47%에서 개선 못함 — 손익분기점 도달 불가'},{ icon:'⚠️',text:'좌석 20석 소규모로 회전율 최대화해도 매출 한계 명확'}]},
-    {id:5,badge:'실패 사례 02',type:'정육점',title:'경기 외곽 8평 정육점',location:'경기도 이천시 외곽 단독주택지',result:'실패',specs:[{label:'매장 평수',val:'8평'},{label:'일 방문',val:'25명 (목표 60명)'},{label:'객단가',val:'28,000원'},{label:'창업 비용',val:'4,200만원'}],results:[{label:'월 매출',val:'약 1,800만원'},{label:'월 순이익',val:'-200만원 (적자)'},{label:'폐업 시기',val:'창업 5개월 후'},{label:'손실 금액',val:'약 3,000만원'}],points:[{icon:'⚠️',text:'상권 배후 세대 수 분석 없이 입점 — 반경 500m 내 300세대로 수요 한계'},{ icon:'⚠️',text:'인근 대형마트 정육 코너와 직접 경쟁 — 가격 경쟁력 부족'},{ icon:'⚠️',text:'운전 자금 500만원만 확보 — 2개월 적자 후 자금 소진'},{ icon:'✅',text:'교훈: 상권 분석과 운전 자금 최소 6개월분 확보가 필수'}]},
-    {id:6,badge:'성공 사례 04',type:'정육점',title:'부산 해운대 25평 프리미엄 정육점',location:'부산광역시 해운대구 중동',result:'성공',specs:[{label:'매장 평수',val:'25평'},{label:'일 방문',val:'110명'},{label:'객단가',val:'52,000원'},{label:'원가율',val:'58%'},{label:'창업 비용',val:'9,000만원'}],results:[{label:'월 매출',val:'약 1.43억원'},{label:'월 순이익',val:'약 2,200만원'},{label:'순이익률',val:'15.4%'},{label:'투자 회수',val:'4개월'}],points:[{icon:'✅',text:'해운대 관광 + 고급 아파트 단지 배후로 프리미엄 수요 타깃'},{ icon:'✅',text:'한우 1++ 등급 전문점 포지셔닝으로 단가 높음'},{ icon:'✅',text:'온라인 새벽 배송 병행으로 오프라인 한계 극복'},{ icon:'⚠️',text:'여름 성수기-비수기 편차 30% — 재고 관리 전략 필수'}]},
-  ];
+const cases = [
+  {id:1,badge:'성공 사례 01',type:'고깃집',title:'경기 수원 20평 고깃집',location:'경기도 수원시 영통구',result:'성공',specs:[{label:'좌석 수',val:'48석'},{label:'객단가',val:'28,000원'},{label:'일 방문',val:'120명'},{label:'회전율',val:'2.5회'},{label:'원가율',val:'38%'},{label:'창업 비용',val:'1.2억'}],results:[{label:'월 매출',val:'1억 80만원'},{label:'월 순이익',val:'약 2,000만원'},{label:'순이익률',val:'19.8%'},{label:'투자 회수',val:'6개월'}],points:[{icon:'✅',text:'역세권 인근 오피스텔 밀집 지역으로 저녁 수요 안정적 확보'},{icon:'✅',text:'삼겹·목살 외 특수 부위 메뉴 구성으로 객단가 상승'},{icon:'✅',text:'도매 직거래로 원가율을 기존 42%에서 38%로 낮춤'},{icon:'⚠️',text:'주말 웨이팅 대비 예약 시스템 도입 후 회전율 개선 필요'}]},
+  {id:2,badge:'성공 사례 02',type:'정육점',title:'서울 마포 12평 정육점',location:'서울특별시 마포구 합정동',result:'성공',specs:[{label:'매장 평수',val:'12평'},{label:'일 방문',val:'90명'},{label:'객단가',val:'35,000원'},{label:'원가율',val:'60%'},{label:'창업 비용',val:'6,500만원'}],results:[{label:'월 매출',val:'약 9,400만원'},{label:'월 순이익',val:'약 900만원'},{label:'순이익률',val:'9.6%'},{label:'투자 회수',val:'7개월'}],points:[{icon:'✅',text:'아파트 단지 배후 수요 + 재래시장 인접으로 주부 고객층 탄탄'},{icon:'✅',text:'한우 특수부위 전문 코너 운영으로 경쟁 정육점과 차별화'},{icon:'✅',text:'새벽 시장 직거래로 신선도 유지, SNS 입소문 효과'},{icon:'⚠️',text:'인건비 비중 28% — 직원 1명 추가 시 수익성 하락 주의'}]},
+  {id:3,badge:'성공 사례 03',type:'정육식당',title:'경남 창원 30평 정육식당',location:'경상남도 창원시 성산구',result:'성공',specs:[{label:'매장 평수',val:'30평'},{label:'좌석 수',val:'36석'},{label:'객단가',val:'32,000원'},{label:'원가율',val:'45%'},{label:'창업 비용',val:'1.5억'}],results:[{label:'월 매출',val:'약 8,600만원'},{label:'월 순이익',val:'약 1,800만원'},{label:'순이익률',val:'20.9%'},{label:'투자 회수',val:'8개월'}],points:[{icon:'✅',text:'정육+식사 병행으로 재료 회전율 극대화, 부산물 zero'},{icon:'✅',text:'직장인 점심 정식 메뉴 추가로 낮 시간대 매출 확보'},{icon:'✅',text:'도매 직거래 + 현지 한우 농가 연결로 원가 경쟁력 확보'},{icon:'⚠️',text:'초기 위생 허가 지연으로 오픈 2주 늦어짐 — 준비 기간 여유 필요'}]},
+  {id:4,badge:'실패 사례 01',type:'고깃집',title:'서울 강남 15평 고깃집',location:'서울특별시 강남구 역삼동',result:'실패',specs:[{label:'좌석 수',val:'20석'},{label:'객단가',val:'45,000원'},{label:'원가율',val:'47%'},{label:'월 임대료',val:'550만원'},{label:'창업 비용',val:'1.8억'}],results:[{label:'월 매출',val:'약 4,500만원'},{label:'월 순이익',val:'-350만원 (적자)'},{label:'폐업 시기',val:'창업 8개월 후'},{label:'손실 금액',val:'약 6,000만원'}],points:[{icon:'⚠️',text:'강남 이면도로 입점으로 유동인구 예상치의 40% 수준에 그침'},{icon:'⚠️',text:'임대료 550만원 — 매출 대비 임대료 비중 12.2%로 과다'},{icon:'⚠️',text:'원가율 47%에서 개선 못함 — 손익분기점 도달 불가'},{icon:'⚠️',text:'좌석 20석 소규모로 회전율 최대화해도 매출 한계 명확'}]},
+  {id:5,badge:'실패 사례 02',type:'정육점',title:'경기 외곽 8평 정육점',location:'경기도 이천시 외곽 단독주택지',result:'실패',specs:[{label:'매장 평수',val:'8평'},{label:'일 방문',val:'25명 (목표 60명)'},{label:'객단가',val:'28,000원'},{label:'창업 비용',val:'4,200만원'}],results:[{label:'월 매출',val:'약 1,800만원'},{label:'월 순이익',val:'-200만원 (적자)'},{label:'폐업 시기',val:'창업 5개월 후'},{label:'손실 금액',val:'약 3,000만원'}],points:[{icon:'⚠️',text:'상권 배후 세대 수 분석 없이 입점 — 반경 500m 내 300세대로 수요 한계'},{icon:'⚠️',text:'인근 대형마트 정육 코너와 직접 경쟁 — 가격 경쟁력 부족'},{icon:'⚠️',text:'운전 자금 500만원만 확보 — 2개월 적자 후 자금 소진'},{icon:'✅',text:'교훈: 상권 분석과 운전 자금 최소 6개월분 확보가 필수'}]},
+  {id:6,badge:'성공 사례 04',type:'정육점',title:'부산 해운대 25평 프리미엄 정육점',location:'부산광역시 해운대구 중동',result:'성공',specs:[{label:'매장 평수',val:'25평'},{label:'일 방문',val:'110명'},{label:'객단가',val:'52,000원'},{label:'원가율',val:'58%'},{label:'창업 비용',val:'9,000만원'}],results:[{label:'월 매출',val:'약 1.43억원'},{label:'월 순이익',val:'약 2,200만원'},{label:'순이익률',val:'15.4%'},{label:'투자 회수',val:'4개월'}],points:[{icon:'✅',text:'해운대 관광 + 고급 아파트 단지 배후로 프리미엄 수요 타깃'},{icon:'✅',text:'한우 1++ 등급 전문점 포지셔닝으로 단가 높음'},{icon:'✅',text:'온라인 새벽 배송 병행으로 오프라인 한계 극복'},{icon:'⚠️',text:'여름 성수기-비수기 편차 30% — 재고 관리 전략 필수'}]},
+  {id:7,badge:'성공 사례 05',type:'고깃집',title:'대전 유성 40평 고깃집',location:'대전광역시 유성구 봉명동',result:'성공',specs:[{label:'좌석 수',val:'64석'},{label:'객단가',val:'31,000원'},{label:'일 방문',val:'160명'},{label:'회전율',val:'2.5회'},{label:'원가율',val:'36%'},{label:'창업 비용',val:'1.4억'}],results:[{label:'월 매출',val:'약 1.24억원'},{label:'월 순이익',val:'약 2,800만원'},{label:'순이익률',val:'22.6%'},{label:'투자 회수',val:'5개월'}],points:[{icon:'✅',text:'충남대·KAIST 인근 직장인+대학생 수요로 평일 저녁 안정적'},{icon:'✅',text:'점심 도시락·정식 메뉴 추가로 낮 시간대 공실 제로'},{icon:'✅',text:'도매 직공급으로 경쟁 매장 대비 원가 6% 절감'},{icon:'⚠️',text:'주차 공간 부족 — 인근 주차 제휴 후 단체 손님 대폭 증가'}]},
+  {id:8,badge:'성공 사례 06',type:'정육식당',title:'경기 판교 20평 정육식당',location:'경기도 성남시 분당구 판교동',result:'성공',specs:[{label:'매장 평수',val:'20평'},{label:'좌석 수',val:'24석'},{label:'객단가',val:'42,000원'},{label:'원가율',val:'43%'},{label:'창업 비용',val:'1.1억'}],results:[{label:'월 매출',val:'약 9,200만원'},{label:'월 순이익',val:'약 2,100만원'},{label:'순이익률',val:'22.8%'},{label:'투자 회수',val:'5.5개월'}],points:[{icon:'✅',text:'판교 테크노밸리 직장인 점심·회식 수요 — 예약제 운영으로 회전율 극대화'},{icon:'✅',text:'정육점+식당 겸업으로 원재료 100% 활용, 폐기율 제로'},{icon:'✅',text:'네이버 플레이스 관리로 검색 유입 월 300명 이상'},{icon:'⚠️',text:'임대료 월 380만원 — 입지 프리미엄 감안해도 부담, 계약 시 상한 협상 필수'}]},
+  {id:9,badge:'실패 사례 03',type:'정육식당',title:'서울 홍대 18평 정육식당',location:'서울특별시 마포구 서교동',result:'실패',specs:[{label:'매장 평수',val:'18평'},{label:'좌석 수',val:'22석'},{label:'객단가',val:'38,000원'},{label:'월 임대료',val:'480만원'},{label:'창업 비용',val:'1.3억'}],results:[{label:'월 매출',val:'약 5,200만원'},{label:'월 순이익',val:'-520만원 (적자)'},{label:'폐업 시기',val:'창업 11개월 후'},{label:'손실 금액',val:'약 8,000만원'}],points:[{icon:'⚠️',text:'홍대 특성상 10~20대 유동인구 많지만 3만원대 객단가 부담 — 연령대 미스매치'},{icon:'⚠️',text:'임대료 480만원 — 손익분기 매출 7,000만원이나 실제 달성 불가'},{icon:'⚠️',text:'주말에만 매출 집중, 평일 공실률 60% 이상 — 고정비 감당 불가'},{icon:'✅',text:'교훈: 유동인구 수보다 소비 수준과 연령대 분석이 더 중요'}]},
+  {id:10,badge:'실패 사례 04',type:'고깃집',title:'인천 구도심 35평 고깃집',location:'인천광역시 미추홀구 주안동',result:'실패',specs:[{label:'좌석 수',val:'50석'},{label:'객단가',val:'22,000원'},{label:'원가율',val:'46%'},{label:'월 임대료',val:'200만원'},{label:'창업 비용',val:'1.6억'}],results:[{label:'월 매출',val:'약 4,800만원'},{label:'월 순이익',val:'-280만원 (적자)'},{label:'폐업 시기',val:'창업 14개월 후'},{label:'손실 금액',val:'약 5,500만원'}],points:[{icon:'⚠️',text:'22,000원 저단가 전략 — 원가율 46% 감안하면 순이익 구조상 흑자 불가'},{icon:'⚠️',text:'구도심 인구 감소 지역 — 배후 세대 수가 5년 전 대비 30% 감소'},{icon:'⚠️',text:'경쟁 고깃집 3곳과 동일 메뉴·가격대로 차별화 전략 부재'},{icon:'✅',text:'교훈: 저단가 전략은 원가율 35% 이하일 때만 유효. 객단가 최소 28,000원 이상 필요'}]},
+  {id:11,badge:'실패 사례 05',type:'정육점',title:'경기 신도시 10평 정육점',location:'경기도 화성시 동탄2신도시',result:'실패',specs:[{label:'매장 평수',val:'10평'},{label:'일 방문',val:'20명 (목표 70명)'},{label:'객단가',val:'35,000원'},{label:'창업 비용',val:'5,500만원'}],results:[{label:'월 매출',val:'약 2,100만원'},{label:'월 순이익',val:'-400만원 (적자)'},{label:'폐업 시기',val:'창업 4개월 후'},{label:'손실 금액',val:'약 3,800만원'}],points:[{icon:'⚠️',text:'신도시 입주 초기 — 배후 아파트 입주율 40%에 불과, 실 거주 인구 부족'},{icon:'⚠️',text:'상가 1층이 아닌 2층 입점 — 정육점은 반드시 1층 필수'},{icon:'⚠️',text:'인근 대형 SSM 정육 코너와 경쟁 — 가격 차별화 불가'},{icon:'✅',text:'교훈: 신도시는 입주율 70% 이상 확인 후 진입. 상가 층수는 1층만 고려'}]},
+  {id:12,badge:'성공 사례 07',type:'정육점',title:'충북 청주 15평 한우 전문 정육점',location:'충청북도 청주시 흥덕구 복대동',result:'성공',specs:[{label:'매장 평수',val:'15평'},{label:'일 방문',val:'75명'},{label:'객단가',val:'62,000원'},{label:'원가율',val:'56%'},{label:'창업 비용',val:'7,500만원'}],results:[{label:'월 매출',val:'약 1.39억원'},{label:'월 순이익',val:'약 1,900만원'},{label:'순이익률',val:'13.7%'},{label:'투자 회수',val:'4개월'}],points:[{icon:'✅',text:'한우 전문점 포지셔닝 — 지역 내 한우 맛집으로 입소문, 원거리 고객 유입'},{icon:'✅',text:'농가 직거래로 원가율 56% 유지 — 일반 정육점 대비 마진 구조 우위'},{icon:'✅',text:'명절 선물세트 사전 예약으로 비수기 매출 보완'},{icon:'⚠️',text:'한우 가격 변동성 리스크 — 선도거래 계약으로 일부 헤지 필요'}]},
+];
 
-  let currentFilter = 'all';
+let currentFilter = 'all';
 
-  function filterCases(filter, btn) {
-    currentFilter = filter;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    renderCases();
-  }
-
-  function renderCases() {
-    const filtered = cases.filter(c => {
-      if (currentFilter === 'all') return true;
-      if (currentFilter === '성공') return c.result === '성공';
-      if (currentFilter === '실패') return c.result === '실패';
-      return c.type === currentFilter;
-    });
-    const grid = document.getElementById('cases-grid');
-    grid.innerHTML = filtered.map(c => `
-      <div class="case-card" onclick="openModal(${c.id})">
-        <div class="case-card-top">
-          <div class="case-badge">${c.badge}</div>
-          <div class="case-type">${c.type} · ${c.result === '성공' ? '✅ 성공' : '⚠️ 실패'}</div>
-          <div class="case-title">${c.title}</div>
-          <div class="case-location">📍 ${c.location}</div>
-        </div>
-        <div class="case-body">
-          <div class="case-specs">
-            ${c.specs.slice(0,3).map(s=>`<div class="case-spec"><div class="case-spec-label">${s.label}</div><div class="case-spec-val">${s.val}</div></div>`).join('')}
-          </div>
-          <div class="case-result-wrap">
-            <div class="case-result-label">핵심 수치</div>
-            ${c.results.slice(0,2).map(r=>`<div class="case-result-row"><div class="case-result-key">${r.label}</div><div class="case-result-val${r.label.includes('순이익')?' highlight':''}">${r.val}</div></div>`).join('')}
-          </div>
-          <div class="case-tags">
-            ${c.points.filter(p=>p.icon==='✅').slice(0,2).map(p=>`<div class="case-tag">✅ ${p.text.slice(0,14)}...</div>`).join('')}
-          </div>
-        </div>
-      </div>`).join('') || '<div style="text-align:center;padding:60px;color:var(--muted);font-size:15px;grid-column:1/-1">해당 사례가 없습니다</div>';
-  }
-
-  function openModal(id) {
-    const c = cases.find(x=>x.id===id);
-    document.getElementById('m-badge').textContent = c.badge;
-    document.getElementById('m-type').textContent = c.type + ' · ' + (c.result==='성공'?'✅ 성공':'⚠️ 실패');
-    document.getElementById('m-title').textContent = c.title;
-    document.getElementById('m-location').textContent = '📍 ' + c.location;
-    document.getElementById('m-specs').innerHTML = c.specs.map(s=>`<div class="modal-spec"><div class="modal-spec-label">${s.label}</div><div class="modal-spec-val">${s.val}</div></div>`).join('');
-    document.getElementById('m-results').innerHTML = c.results.map(r=>`<div class="modal-result-item"><div class="modal-result-label">${r.label}</div><div class="modal-result-val">${r.val}</div></div>`).join('');
-    document.getElementById('m-points').innerHTML = c.points.map(p=>`<div class="point-item"><div class="point-icon">${p.icon}</div><div>${p.text}</div></div>`).join('');
-    document.getElementById('modal').classList.add('show');
-  }
-
-  function closeModal(e) {
-    if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('show');
-  }
-
+function filterCases(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
   renderCases();
+}
+
+function renderCases() {
+  const filtered = cases.filter(c => {
+    if (currentFilter === 'all') return true;
+    if (currentFilter === '성공') return c.result === '성공';
+    if (currentFilter === '실패') return c.result === '실패';
+    return c.type === currentFilter;
+  });
+  const grid = document.getElementById('cases-grid');
+  grid.innerHTML = filtered.map(c => `
+    <div class="case-card${c.result==='실패'?' fail':''}" onclick="openModal(${c.id})">
+      <div class="case-card-top">
+        <div class="case-badge">${c.badge}</div>
+        <div class="case-type">${c.type} · ${c.result==='성공'?'✅ 성공':'⚠️ 실패'}</div>
+        <div class="case-title">${c.title}</div>
+        <div class="case-location">📍 ${c.location}</div>
+      </div>
+      <div class="case-body">
+        <div class="case-specs">
+          ${c.specs.slice(0,3).map(s=>`<div class="case-spec"><div class="case-spec-label">${s.label}</div><div class="case-spec-val">${s.val}</div></div>`).join('')}
+        </div>
+        <div class="case-result-wrap">
+          <div class="case-result-label">${c.result==='성공'?'핵심 수치':'손실 현황'}</div>
+          ${c.results.slice(0,2).map(r=>`<div class="case-result-row"><div class="case-result-key">${r.label}</div><div class="case-result-val${r.val.includes('-')||r.val.includes('적자')?' red':r.label.includes('순이익')?' highlight':''}">${r.val}</div></div>`).join('')}
+        </div>
+        <div class="case-tags">
+          ${c.points.slice(0,2).map(p=>`<div class="case-tag">${p.icon} ${p.text.slice(0,16)}...</div>`).join('')}
+        </div>
+      </div>
+    </div>`).join('') || '<div style="text-align:center;padding:60px;color:var(--muted);font-size:15px;grid-column:1/-1">해당 사례가 없습니다</div>';
+}
+
+function openModal(id) {
+  const c = cases.find(x=>x.id===id);
+  const isFail = c.result === '실패';
+  document.getElementById('m-badge').textContent = c.badge;
+  document.getElementById('m-type').textContent = c.type + ' · ' + (isFail ? '⚠️ 실패' : '✅ 성공');
+  document.getElementById('m-title').textContent = c.title;
+  document.getElementById('m-location').textContent = '📍 ' + c.location;
+  const hero = document.getElementById('modal-hero');
+  isFail ? hero.classList.add('fail') : hero.classList.remove('fail');
+  document.getElementById('m-specs').innerHTML = c.specs.map(s=>`<div class="modal-spec"><div class="modal-spec-label">${s.label}</div><div class="modal-spec-val">${s.val}</div></div>`).join('');
+  document.getElementById('m-results').innerHTML = c.results.map(r=>`<div class="modal-result-item${isFail?' fail':''}"><div class="modal-result-label">${r.label}</div><div class="modal-result-val">${r.val}</div></div>`).join('');
+  document.getElementById('m-points').innerHTML = c.points.map(p=>`<div class="point-item"><div class="point-icon">${p.icon}</div><div>${p.text}</div></div>`).join('');
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('show');
+}
+
+renderCases();
 </script>
 </body>
 </html>

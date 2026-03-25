@@ -302,24 +302,69 @@
   </div>
 </nav>
 
-<!-- HERO + 계산기 -->
-<section class="hero">
-  <div class="hero-inner">
-    <div>
-      <div class="hero-badge">1972년 설립 · 도축부터 납품까지</div>
-      <h1 class="hero-h1">내 매장<br/><em>수익 구조</em><br/>지금 확인하세요</h1>
-      <p class="hero-sub">지역·업종·평수 3가지만 입력하면<br/>예상 매출·마진·순이익을 즉시 계산합니다.</p>
-      <div class="hero-trust">
-        <div><div class="trust-num">52년+</div><div class="trust-label">업력</div></div>
-        <div><div class="trust-num">직영</div><div class="trust-label">도축장 운영</div></div>
-        <div><div class="trust-num">월 80톤+</div><div class="trust-label">처리 물량</div></div>
-        <div><div class="trust-num">150+</div><div class="trust-label">납품 거래처</div></div>
+<!-- HERO — 옵션 B -->
+<section class="hero" style="min-height:auto;padding:60px 28px 0;align-items:flex-start">
+  <div style="max-width:1240px;margin:0 auto;width:100%;position:relative;z-index:1">
+
+    <!-- 중앙 소개 -->
+    <div style="text-align:center;margin-bottom:40px">
+      <div class="hero-badge" style="justify-content:center;margin-bottom:16px">1972년 설립 · (주식회사) 협신식품 운영</div>
+      <h1 style="font-family:'Playfair Display',serif;font-size:clamp(30px,4.5vw,54px);font-weight:900;color:#fff;line-height:1.1;margin-bottom:16px">
+        정육점·고깃집 창업,<br/><em style="color:var(--gold);font-style:normal">데이터로 끝내세요</em>
+      </h1>
+      <p style="font-size:16px;color:rgba(255,255,255,.55);line-height:1.8;max-width:52ch;margin:0 auto 36px">
+        도축 → 경매 → 가공 → 유통까지 직접 운영하는 협신식품이<br/>
+        창업 진단부터 공급 연결·비대면 컨설팅까지 한 번에 해결합니다.
+      </p>
+
+      <!-- 서비스 6종 카드 -->
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:36px">
+        <a href="meat_insight_diagnosis.html" style="text-decoration:none;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,90,.2);border-radius:14px;padding:20px 8px;display:block">
+          <div style="font-size:26px;margin-bottom:8px">🎯</div>
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">창업 진단</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35)">무료 · 즉시</div>
+        </a>
+        <a href="meat_insight_calculator.html" style="text-decoration:none;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,90,.2);border-radius:14px;padding:20px 8px;display:block">
+          <div style="font-size:26px;margin-bottom:8px">📊</div>
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">매출 계산기</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35)">5종 무료</div>
+        </a>
+        <a href="meat_insight_apply.html" style="text-decoration:none;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,90,.2);border-radius:14px;padding:20px 8px;display:block">
+          <div style="font-size:26px;margin-bottom:8px">🥩</div>
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">공급 연결</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35)">도매 직연결</div>
+        </a>
+        <a href="meat_insight_apply.html?tab=consulting" style="text-decoration:none;background:rgba(184,148,90,.15);border:1px solid rgba(184,148,90,.4);border-radius:14px;padding:20px 8px;display:block">
+          <div style="font-size:26px;margin-bottom:8px">📋</div>
+          <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:4px">비대면 컨설팅</div>
+          <div style="font-size:11px;color:rgba(184,148,90,.6)">50~100만원</div>
+        </a>
+        <a href="meat_insight_cases.html" style="text-decoration:none;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,90,.2);border-radius:14px;padding:20px 8px;display:block">
+          <div style="font-size:26px;margin-bottom:8px">📈</div>
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">창업 사례</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35)">12개 공개</div>
+        </a>
+        <a href="meat_insight_partner.html" style="text-decoration:none;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,90,.2);border-radius:14px;padding:20px 8px;display:block">
+          <div style="font-size:26px;margin-bottom:8px">🤝</div>
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">파트너 입점</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35)">모집 중</div>
+        </a>
+      </div>
+
+      <!-- CTA 버튼 -->
+      <div style="display:flex;gap:14px;justify-content:center;margin-bottom:48px;flex-wrap:wrap">
+        <a href="meat_insight_calculator.html" style="display:inline-flex;align-items:center;gap:8px;padding:16px 32px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:16px;font-weight:900;text-decoration:none">📊 내 매출 계산하기</a>
+        <a href="meat_insight_apply.html?tab=consulting" style="display:inline-flex;align-items:center;gap:8px;padding:16px 32px;border-radius:999px;border:1.5px solid rgba(255,255,255,.25);color:#fff;font-size:16px;font-weight:700;text-decoration:none">📋 컨설팅 신청하기</a>
       </div>
     </div>
-    <div class="calc-card">
-      <div class="calc-title">🥩 매장 수익 즉시 계산</div>
-      <div class="calc-sub">입력 3초 · 결과 즉시 · 완전 무료</div>
-      <div class="calc-fields">
+
+    <!-- 하단 가로형 계산기 -->
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(184,148,90,.2);border-top:3px solid var(--gold);border-radius:20px 20px 0 0;padding:28px 32px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
+        <span style="font-size:15px;font-weight:900;color:#fff">🥩 내 매장 수익 즉시 계산</span>
+        <span style="font-size:12px;color:rgba(255,255,255,.35);margin-left:4px">입력 3초 · 완전 무료</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end">
         <div class="calc-field">
           <label>지역 선택</label>
           <select id="c-region">
@@ -345,9 +390,9 @@
           <label>매장 평수</label>
           <input type="number" id="c-size" placeholder="예: 20" min="5" max="200"/>
         </div>
+        <button class="calc-btn" onclick="calcResult()" style="white-space:nowrap;padding:14px 24px;border-radius:12px">📊 확인하기</button>
       </div>
-      <button class="calc-btn" onclick="calcResult()">📊 예상 매출 확인하기</button>
-      <div class="result-area" id="result-area">
+      <div class="result-area" id="result-area" style="margin-top:20px">
         <div class="result-grid">
           <div class="result-card"><div class="result-label">월 예상 매출</div><div class="result-val" id="r-sales">-</div><div class="result-sub">만원/월</div></div>
           <div class="result-card"><div class="result-label">평균 마진율</div><div class="result-val" id="r-margin">-</div><div class="result-sub">%</div></div>

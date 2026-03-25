@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>관리자 | MEAT INSIGHT</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root{--navy:#0b1f3a;--gold:#b8945a;--gold2:#d4a96a;--white:#fff;--off:#f8f6f2;--muted:#6b7280;--line:#e8e2d8;--green:#166534;--green-bg:#f0fdf4;--red:#991b1b;--red-bg:#fef2f2;--blue:#1d4ed8;--blue-bg:#eff6ff;--shadow:0 4px 16px rgba(11,31,58,.08)}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Noto Sans KR',sans-serif;background:#f1f5f9;color:var(--navy);display:flex;min-height:100vh}
-
-    /* LOGIN */
     .login-wrap{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:999}
     .login-box{background:var(--white);border-radius:24px;padding:48px 40px;width:min(420px,calc(100% - 32px));text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
     .login-logo{width:56px;height:56px;border-radius:16px;background:var(--navy);color:var(--gold);display:grid;place-items:center;font-family:'Playfair Display',serif;font-size:24px;font-weight:900;margin:0 auto 20px}
@@ -23,8 +23,6 @@
     .login-btn{width:100%;padding:15px;border-radius:12px;background:var(--navy);color:var(--gold);font-size:15px;font-weight:900;border:none;cursor:pointer;font-family:inherit;margin-top:8px;transition:opacity .15s}
     .login-btn:hover{opacity:.88}
     .login-hint{font-size:12px;color:var(--muted);margin-top:14px}
-
-    /* SIDEBAR */
     .sidebar{width:220px;background:var(--navy);flex-shrink:0;display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh;overflow-y:auto}
     .sb-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
     .sb-logo-mark{width:40px;height:40px;border-radius:10px;background:rgba(184,148,90,.2);color:var(--gold);display:grid;place-items:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:10px}
@@ -37,31 +35,26 @@
     .sb-item.active{background:rgba(184,148,90,.15);color:var(--gold)}
     .sb-item span{font-size:16px}
     .sb-badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:10px;font-weight:900;padding:2px 7px;border-radius:999px}
+    .sb-badge.urgent{background:#ef4444;color:#fff}
     .sb-bottom{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08)}
     .sb-logout{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.4);font-size:13px;cursor:pointer;padding:8px 12px;border-radius:8px;transition:color .15s}
     .sb-logout:hover{color:var(--white)}
     @media(max-width:768px){.sidebar{display:none}}
-
-    /* MAIN */
     .admin-main{flex:1;overflow-x:hidden}
-    .topbar{background:var(--white);border-bottom:1px solid var(--line);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+    .topbar{background:var(--white);border-bottom:1px solid var(--line);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;gap:12px}
+    .topbar-left{display:flex;align-items:center;gap:12px}
     .topbar-title{font-size:18px;font-weight:900;color:var(--navy)}
-    .topbar-right{display:flex;align-items:center;gap:12px}
+    .topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     .topbar-date{font-size:13px;color:var(--muted)}
     .btn-export{padding:9px 18px;border-radius:999px;border:1.5px solid var(--line);background:var(--white);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--navy);transition:background .15s}
     .btn-export:hover{background:var(--off)}
     .btn-refresh{padding:9px 18px;border-radius:999px;border:none;background:var(--navy);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s}
     .btn-refresh:hover{opacity:.85}
-
     .content{padding:28px}
     @media(max-width:640px){.content{padding:16px}}
-
-    /* PANELS */
     .panel{display:none}
     .panel.active{display:block;animation:fadeUp .3s ease both}
     @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-
-    /* STAT CARDS */
     .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
     @media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:500px){.stat-grid{grid-template-columns:1fr 1fr}}
@@ -73,12 +66,13 @@
     .stat-card.highlight .stat-label{color:rgba(255,255,255,.5)}
     .stat-card.highlight .stat-val{color:var(--gold)}
     .stat-card.highlight .stat-sub{color:rgba(255,255,255,.4)}
-
-    /* TABLE */
+    .stat-card .stat-trend{font-size:11px;margin-top:6px;font-weight:700}
+    .stat-card .stat-trend.up{color:#16a34a}
+    .stat-card .stat-trend.down{color:#dc2626}
     .table-card{background:var(--white);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px}
     .table-header{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
     .table-title{font-size:16px;font-weight:900;color:var(--navy)}
-    .table-controls{display:flex;gap:8px;align-items:center}
+    .table-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .filter-select{padding:8px 14px;border-radius:8px;border:1.5px solid var(--line);font-size:13px;font-family:inherit;outline:none;background:var(--off);color:var(--navy);cursor:pointer}
     .search-input{padding:8px 14px;border-radius:8px;border:1.5px solid var(--line);font-size:13px;font-family:inherit;outline:none;background:var(--off);color:var(--navy);width:180px}
     .search-input:focus,.filter-select:focus{border-color:var(--gold)}
@@ -98,23 +92,21 @@
     .badge.vip{background:linear-gradient(135deg,#fef3c7,#fde68a);color:#78350f;border:1px solid #fcd34d}
     .badge.member{background:#eff6ff;color:#1d4ed8}
     .badge.admin-role{background:linear-gradient(135deg,#fef3c7,#fde68a);color:#78350f;border:1px solid #fcd34d}
+    .badge.pay-wait{background:#fef9c3;color:#854d0e}
+    .badge.pay-done{background:var(--green-bg);color:var(--green)}
     .action-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--line);background:var(--white);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
     .action-btn:hover{border-color:var(--navy);color:var(--navy)}
     .action-btn.primary{background:var(--navy);color:var(--gold);border-color:transparent}
     .action-btn.primary:hover{opacity:.85}
     .action-btn.danger{background:var(--red-bg);color:var(--red);border-color:transparent}
-    .action-btn.danger:hover{opacity:.85}
+    .action-btn.success{background:var(--green-bg);color:var(--green);border-color:transparent}
     .empty-row{text-align:center;padding:40px;color:var(--muted);font-size:14px}
-
-    /* 회원 프로필 이미지 */
     .member-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--line);vertical-align:middle;margin-right:8px}
     .member-avatar-placeholder{width:32px;height:32px;border-radius:50%;background:var(--navy);color:var(--gold);display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;vertical-align:middle;margin-right:8px;flex-shrink:0}
     .member-name-cell{display:flex;align-items:center}
-
-    /* DETAIL MODAL */
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:none;backdrop-filter:blur(4px)}
     .modal-overlay.show{display:flex;align-items:center;justify-content:center}
-    .modal{background:var(--white);border-radius:20px;padding:36px;width:min(520px,calc(100% - 32px));max-height:90vh;overflow-y:auto}
+    .modal{background:var(--white);border-radius:20px;padding:36px;width:min(560px,calc(100% - 32px));max-height:90vh;overflow-y:auto}
     .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
     .modal-title{font-size:20px;font-weight:900;color:var(--navy)}
     .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
@@ -123,51 +115,60 @@
     .modal-row:last-child{border-bottom:none}
     .modal-row-label{color:var(--muted);font-weight:700;width:120px;flex-shrink:0}
     .modal-row-val{color:var(--navy);flex:1;line-height:1.6}
-    .modal-actions{display:flex;gap:10px;margin-top:24px}
-    .status-select{padding:10px 14px;border-radius:10px;border:2px solid var(--line);font-size:14px;font-family:inherit;outline:none;flex:1}
+    .modal-actions{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap}
+    .status-select{padding:10px 14px;border-radius:10px;border:2px solid var(--line);font-size:14px;font-family:inherit;outline:none;flex:1;min-width:120px}
     .status-select:focus{border-color:var(--gold)}
-
-    /* MINI CHART */
+    /* 메모 영역 */
+    .memo-area{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}
+    .memo-area textarea{width:100%;padding:12px;border-radius:10px;border:2px solid var(--line);font-size:13px;font-family:inherit;resize:vertical;min-height:80px;outline:none}
+    .memo-area textarea:focus{border-color:var(--gold)}
+    .memo-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}
+    /* 차트 */
     .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
     @media(max-width:700px){.chart-grid{grid-template-columns:1fr}}
     .chart-card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
     .chart-title{font-size:14px;font-weight:900;color:var(--navy);margin-bottom:16px}
+    .chart-wrap{position:relative;height:200px}
     .bar-chart{display:flex;flex-direction:column;gap:10px}
     .bar-row{display:flex;align-items:center;gap:10px}
     .bar-label{font-size:12px;color:var(--muted);width:80px;flex-shrink:0;text-align:right}
     .bar-track{flex:1;height:20px;background:var(--off);border-radius:4px;overflow:hidden}
     .bar-fill{height:100%;border-radius:4px;background:var(--navy);transition:width .6s ease}
     .bar-fill.gold{background:var(--gold)}
+    .bar-fill.green{background:#4ade80}
     .bar-val{font-size:12px;font-weight:700;color:var(--navy);width:36px;text-align:right}
-
-    /* 회원 통계 카드 */
+    /* 매출 요약 */
+    .revenue-card{background:linear-gradient(135deg,var(--navy),#1a3560);border-radius:16px;padding:24px;margin-bottom:24px;color:#fff}
+    .revenue-title{font-size:14px;color:rgba(255,255,255,.5);margin-bottom:8px}
+    .revenue-val{font-family:'Playfair Display',serif;font-size:48px;font-weight:900;color:var(--gold);margin-bottom:4px}
+    .revenue-sub{font-size:13px;color:rgba(255,255,255,.45)}
+    .revenue-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}
+    .revenue-item{background:rgba(255,255,255,.07);border-radius:12px;padding:14px;text-align:center}
+    .revenue-item-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--gold)}
+    .revenue-item-label{font-size:11px;color:rgba(255,255,255,.45);margin-top:4px}
+    /* 결제 현황 */
+    .pay-status-row{display:flex;align-items:center;gap:8px}
     .member-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
     @media(max-width:900px){.member-stat-grid{grid-template-columns:repeat(2,1fr)}}
+    /* 알림 */
+    .notif-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block;margin-left:4px;animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div class="login-wrap" id="login-wrap">
   <div class="login-box">
     <div class="login-logo">肉</div>
     <div class="login-title">관리자 로그인</div>
     <div class="login-sub">MEAT INSIGHT 관리자 전용</div>
-    <div class="login-field">
-      <label>아이디</label>
-      <input type="text" id="login-id" placeholder="admin" onkeydown="if(event.key==='Enter')doLogin()"/>
-    </div>
-    <div class="login-field">
-      <label>비밀번호</label>
-      <input type="password" id="login-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
-    </div>
+    <div class="login-field"><label>아이디</label><input type="text" id="login-id" placeholder="admin" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div class="login-field"><label>비밀번호</label><input type="password" id="login-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
     <button class="login-btn" onclick="doLogin()">로그인</button>
     <div class="login-hint">아이디: admin / 비밀번호: 1234 (데모)</div>
   </div>
 </div>
 
-<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
   <div class="sb-logo">
     <div class="sb-logo-mark">肉</div>
@@ -180,24 +181,27 @@
     <div class="sb-section">신청 관리</div>
     <div class="sb-item" onclick="showPanel('supply',this)"><span>🥩</span> 공급 연결 신청 <div class="sb-badge" id="supply-badge">0</div></div>
     <div class="sb-item" onclick="showPanel('consult',this)"><span>📋</span> 컨설팅 신청 <div class="sb-badge" id="consult-badge">0</div></div>
+    <div class="sb-item" onclick="showPanel('payment',this)"><span>💳</span> 결제 현황 <div class="sb-badge urgent" id="payment-badge">0</div></div>
     <div class="sb-section">회원 관리</div>
     <div class="sb-item" onclick="showPanel('members',this)"><span>👥</span> 회원 목록 <div class="sb-badge" id="members-badge">0</div></div>
     <div class="sb-section">분석</div>
     <div class="sb-item" onclick="showPanel('stats',this)"><span>📈</span> 신청 통계</div>
+    <div class="sb-item" onclick="showPanel('revenue',this)"><span>💰</span> 매출 분석</div>
   </div>
   <div class="sb-bottom">
     <div class="sb-logout" onclick="doLogout()"><span>🚪</span> 로그아웃</div>
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="admin-main">
   <div class="topbar">
-    <div class="topbar-title" id="topbar-title">대시보드</div>
+    <div class="topbar-left">
+      <div class="topbar-title" id="topbar-title">대시보드</div>
+    </div>
     <div class="topbar-right">
       <div class="topbar-date" id="today-date"></div>
-      <button class="btn-export" onclick="exportCSV()">엑셀 다운로드</button>
-      <button class="btn-refresh" onclick="loadData()">새로고침</button>
+      <button class="btn-export" onclick="exportCSV()">📥 CSV 다운로드</button>
+      <button class="btn-refresh" onclick="loadData()">🔄 새로고침</button>
     </div>
   </div>
 
@@ -215,48 +219,61 @@
           <div class="stat-label">공급 연결 신청</div>
           <div class="stat-val" id="stat-supply">0</div>
           <div class="stat-sub">건</div>
+          <div class="stat-trend up" id="stat-supply-trend"></div>
         </div>
         <div class="stat-card">
           <div class="stat-label">컨설팅 신청</div>
           <div class="stat-val" id="stat-consult">0</div>
           <div class="stat-sub">건</div>
+          <div class="stat-trend up" id="stat-consult-trend"></div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">처리 대기</div>
+          <div class="stat-label">처리 대기 🔴</div>
           <div class="stat-val" id="stat-pending">0</div>
           <div class="stat-sub">미처리 신청</div>
         </div>
       </div>
-      <!-- 회원 현황 요약 -->
-      <div class="stat-grid" style="margin-bottom:24px">
+      <div class="stat-grid">
+        <div class="stat-card highlight">
+          <div class="stat-label">💰 예상 총 매출</div>
+          <div class="stat-val" id="dash-revenue">0만</div>
+          <div class="stat-sub">컨설팅 신청 기준</div>
+        </div>
         <div class="stat-card">
           <div class="stat-label">👥 전체 회원</div>
           <div class="stat-val" id="dash-total-members">0</div>
           <div class="stat-sub">명</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">🆕 오늘 가입</div>
-          <div class="stat-val" id="dash-today-members">0</div>
-          <div class="stat-sub">명</div>
+          <div class="stat-label">💳 입금 대기</div>
+          <div class="stat-val" id="dash-pay-wait">0</div>
+          <div class="stat-sub">건 확인 필요</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">📅 이번 달 가입</div>
-          <div class="stat-val" id="dash-month-members">0</div>
-          <div class="stat-sub">명</div>
-        </div>
-        <div class="stat-card highlight">
-          <div class="stat-label">🔥 최근 로그인</div>
-          <div class="stat-val" id="dash-active-members">0</div>
-          <div class="stat-sub">최근 7일 활성</div>
+          <div class="stat-label">✅ 이번 달 완료</div>
+          <div class="stat-val" id="dash-done-month">0</div>
+          <div class="stat-sub">건</div>
         </div>
       </div>
+
+      <!-- 월별 추이 차트 -->
+      <div class="chart-grid">
+        <div class="chart-card" style="grid-column:1/-1">
+          <div class="chart-title">📈 월별 신청 추이</div>
+          <div class="chart-wrap" style="height:220px"><canvas id="monthly-chart"></canvas></div>
+        </div>
+      </div>
+
       <div class="table-card">
         <div class="table-header">
           <div class="table-title">최근 신청 내역</div>
+          <div class="table-controls">
+            <span id="new-notif" style="font-size:12px;color:#ef4444;font-weight:700;display:none">● 새 신청 있음</span>
+          </div>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>번호</th><th>유형</th><th>이름</th><th>연락처</th><th>업종</th><th>상태</th><th>신청일</th><th>관리</th></tr></thead>
+            <thead><tr><th>유형</th><th>이름</th><th>연락처</th><th>업종</th><th>상태</th><th>신청일</th><th>관리</th></tr></thead>
             <tbody id="dash-tbody"></tbody>
           </table>
         </div>
@@ -265,23 +282,26 @@
 
     <!-- SUPPLY -->
     <div class="panel" id="panel-supply">
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card highlight"><div class="stat-label">전체</div><div class="stat-val" id="supply-stat-total">0</div><div class="stat-sub">건</div></div>
+        <div class="stat-card"><div class="stat-label">신규</div><div class="stat-val" id="supply-stat-new">0</div><div class="stat-sub">처리 대기</div></div>
+        <div class="stat-card"><div class="stat-label">완료</div><div class="stat-val" id="supply-stat-done">0</div><div class="stat-sub">건</div></div>
+      </div>
       <div class="table-card">
         <div class="table-header">
           <div class="table-title">공급 연결 신청 목록</div>
           <div class="table-controls">
             <select class="filter-select" id="supply-filter" onchange="renderSupply()">
               <option value="">전체 상태</option>
-              <option value="신규">신규</option>
-              <option value="연락중">연락중</option>
-              <option value="완료">완료</option>
-              <option value="취소">취소</option>
+              <option value="신규">신규</option><option value="연락중">연락중</option>
+              <option value="완료">완료</option><option value="취소">취소</option>
             </select>
             <input class="search-input" type="text" placeholder="이름·연락처 검색" id="supply-search" oninput="renderSupply()"/>
           </div>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>번호</th><th>이름</th><th>연락처</th><th>업종</th><th>지역</th><th>요청 품목</th><th>구매량</th><th>상태</th><th>신청일</th><th>관리</th></tr></thead>
+            <thead><tr><th>이름</th><th>연락처</th><th>업종</th><th>지역</th><th>요청 품목</th><th>구매량</th><th>상태</th><th>신청일</th><th>관리</th></tr></thead>
             <tbody id="supply-tbody"></tbody>
           </table>
         </div>
@@ -290,52 +310,72 @@
 
     <!-- CONSULT -->
     <div class="panel" id="panel-consult">
+      <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat-card highlight"><div class="stat-label">전체</div><div class="stat-val" id="consult-stat-total">0</div><div class="stat-sub">건</div></div>
+        <div class="stat-card"><div class="stat-label">신규</div><div class="stat-val" id="consult-stat-new">0</div><div class="stat-sub">처리 대기</div></div>
+        <div class="stat-card"><div class="stat-label">STANDARD</div><div class="stat-val" id="consult-stat-basic">0</div><div class="stat-sub">건</div></div>
+        <div class="stat-card"><div class="stat-label">PREMIUM</div><div class="stat-val" id="consult-stat-premium">0</div><div class="stat-sub">건</div></div>
+      </div>
       <div class="table-card">
         <div class="table-header">
           <div class="table-title">컨설팅 신청 목록</div>
           <div class="table-controls">
             <select class="filter-select" id="consult-filter" onchange="renderConsult()">
               <option value="">전체 상태</option>
-              <option value="신규">신규</option>
-              <option value="연락중">연락중</option>
-              <option value="완료">완료</option>
-              <option value="취소">취소</option>
+              <option value="신규">신규</option><option value="연락중">연락중</option>
+              <option value="완료">완료</option><option value="취소">취소</option>
+            </select>
+            <select class="filter-select" id="consult-plan-filter" onchange="renderConsult()">
+              <option value="">전체 플랜</option>
+              <option value="basic">STANDARD</option><option value="premium">PREMIUM</option>
             </select>
             <input class="search-input" type="text" placeholder="이름·연락처 검색" id="consult-search" oninput="renderConsult()"/>
           </div>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>번호</th><th>이름</th><th>연락처</th><th>플랜</th><th>업종</th><th>지역</th><th>창업 시기</th><th>상태</th><th>신청일</th><th>관리</th></tr></thead>
+            <thead><tr><th>이름</th><th>연락처</th><th>플랜</th><th>업종</th><th>지역</th><th>결제</th><th>상태</th><th>신청일</th><th>관리</th></tr></thead>
             <tbody id="consult-tbody"></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- MEMBERS (신규) -->
+    <!-- PAYMENT -->
+    <div class="panel" id="panel-payment">
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card highlight"><div class="stat-label">💰 총 예상 매출</div><div class="stat-val" id="pay-total-revenue">0만원</div><div class="stat-sub">컨설팅 신청 합산</div></div>
+        <div class="stat-card"><div class="stat-label">⏳ 입금 대기</div><div class="stat-val" id="pay-wait-count">0</div><div class="stat-sub">건 확인 필요</div></div>
+        <div class="stat-card"><div class="stat-label">✅ 결제 완료</div><div class="stat-val" id="pay-done-count">0</div><div class="stat-sub">건</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">결제 현황</div>
+          <div class="table-controls">
+            <select class="filter-select" id="pay-filter" onchange="renderPayment()">
+              <option value="">전체</option>
+              <option value="입금대기">입금 대기</option>
+              <option value="결제완료">결제 완료</option>
+              <option value="결제대기">결제 대기</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>이름</th><th>연락처</th><th>플랜</th><th>금액</th><th>결제 방법</th><th>결제 상태</th><th>신청일</th><th>관리</th></tr></thead>
+            <tbody id="payment-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEMBERS -->
     <div class="panel" id="panel-members">
       <div class="member-stat-grid">
-        <div class="stat-card highlight">
-          <div class="stat-label">전체 회원</div>
-          <div class="stat-val" id="mem-stat-total">0</div>
-          <div class="stat-sub">명</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">오늘 가입</div>
-          <div class="stat-val" id="mem-stat-today">0</div>
-          <div class="stat-sub">명</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">이번 달 가입</div>
-          <div class="stat-val" id="mem-stat-month">0</div>
-          <div class="stat-sub">명</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">최근 7일 활성</div>
-          <div class="stat-val" id="mem-stat-active">0</div>
-          <div class="stat-sub">명</div>
-        </div>
+        <div class="stat-card highlight"><div class="stat-label">전체 회원</div><div class="stat-val" id="mem-stat-total">0</div><div class="stat-sub">명</div></div>
+        <div class="stat-card"><div class="stat-label">오늘 가입</div><div class="stat-val" id="mem-stat-today">0</div><div class="stat-sub">명</div></div>
+        <div class="stat-card"><div class="stat-label">이번 달 가입</div><div class="stat-val" id="mem-stat-month">0</div><div class="stat-sub">명</div></div>
+        <div class="stat-card"><div class="stat-label">최근 7일 활성</div><div class="stat-val" id="mem-stat-active">0</div><div class="stat-sub">명</div></div>
       </div>
       <div class="table-card">
         <div class="table-header">
@@ -343,27 +383,14 @@
           <div class="table-controls">
             <select class="filter-select" id="members-role-filter" onchange="renderMembers()">
               <option value="">전체 등급</option>
-              <option value="member">일반 회원</option>
-              <option value="admin">관리자</option>
+              <option value="member">일반 회원</option><option value="admin">관리자</option>
             </select>
             <input class="search-input" type="text" placeholder="닉네임·이메일 검색" id="members-search" oninput="renderMembers()"/>
           </div>
         </div>
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr>
-                <th>번호</th>
-                <th>프로필</th>
-                <th>닉네임</th>
-                <th>이메일</th>
-                <th>등급</th>
-                <th>가입일</th>
-                <th>최근 로그인</th>
-                <th>상태</th>
-                <th>관리</th>
-              </tr>
-            </thead>
+            <thead><tr><th>프로필</th><th>닉네임</th><th>이메일</th><th>등급</th><th>가입일</th><th>최근 로그인</th><th>상태</th><th>관리</th></tr></thead>
             <tbody id="members-tbody"></tbody>
           </table>
         </div>
@@ -379,21 +406,42 @@
         <div class="stat-card"><div class="stat-label">평균 처리 시간</div><div class="stat-val">1.4일</div><div class="stat-sub">목표: 2일 이내</div></div>
       </div>
       <div class="chart-grid">
+        <div class="chart-card"><div class="chart-title">업종별 신청 현황</div><div class="bar-chart" id="chart-type"></div></div>
+        <div class="chart-card"><div class="chart-title">컨설팅 플랜별 분포</div><div class="bar-chart" id="chart-plan"></div></div>
+        <div class="chart-card"><div class="chart-title">공급 요청 품목 순위</div><div class="bar-chart" id="chart-item"></div></div>
+        <div class="chart-card"><div class="chart-title">상태별 처리 현황</div><div class="bar-chart" id="chart-status"></div></div>
+      </div>
+    </div>
+
+    <!-- REVENUE -->
+    <div class="panel" id="panel-revenue">
+      <div class="revenue-card">
+        <div class="revenue-title">총 예상 매출</div>
+        <div class="revenue-val" id="rev-total">0만원</div>
+        <div class="revenue-sub">컨설팅 신청 플랜 기준 합산</div>
+        <div class="revenue-grid">
+          <div class="revenue-item"><div class="revenue-item-val" id="rev-basic">0만</div><div class="revenue-item-label">STANDARD 매출</div></div>
+          <div class="revenue-item"><div class="revenue-item-val" id="rev-premium">0만</div><div class="revenue-item-label">PREMIUM 매출</div></div>
+          <div class="revenue-item"><div class="revenue-item-val" id="rev-done">0만</div><div class="revenue-item-label">완료 확정 매출</div></div>
+        </div>
+      </div>
+      <div class="chart-grid">
         <div class="chart-card">
-          <div class="chart-title">업종별 신청 현황</div>
-          <div class="bar-chart" id="chart-type"></div>
+          <div class="chart-title">플랜별 매출 비중</div>
+          <div class="chart-wrap"><canvas id="revenue-pie-chart"></canvas></div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">컨설팅 플랜별 분포</div>
-          <div class="bar-chart" id="chart-plan"></div>
+          <div class="chart-title">월별 예상 매출 추이</div>
+          <div class="chart-wrap"><canvas id="revenue-bar-chart"></canvas></div>
         </div>
-        <div class="chart-card">
-          <div class="chart-title">공급 요청 품목 순위</div>
-          <div class="bar-chart" id="chart-item"></div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title">상태별 처리 현황</div>
-          <div class="bar-chart" id="chart-status"></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><div class="table-title">컨설팅 매출 상세</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>이름</th><th>플랜</th><th>금액</th><th>결제 상태</th><th>신청일</th></tr></thead>
+            <tbody id="revenue-tbody"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -401,7 +449,7 @@
   </div>
 </div>
 
-<!-- DETAIL MODAL -->
+<!-- MODAL -->
 <div class="modal-overlay" id="modal" onclick="closeModal(event)">
   <div class="modal">
     <div class="modal-header">
@@ -409,389 +457,397 @@
       <button class="modal-close" onclick="document.getElementById('modal').classList.remove('show')">×</button>
     </div>
     <div class="modal-rows" id="modal-body"></div>
-    <div class="modal-actions" id="modal-actions">
-      <select class="status-select" id="modal-status">
-        <option value="신규">신규</option>
-        <option value="연락중">연락중</option>
-        <option value="완료">완료</option>
-        <option value="취소">취소</option>
-      </select>
-      <button class="action-btn primary" onclick="saveStatus()">상태 저장</button>
+    <div class="memo-area">
+      <div class="memo-label">📝 담당자 메모</div>
+      <textarea id="modal-memo" placeholder="내부 메모를 입력하세요 (고객에게 노출되지 않음)"></textarea>
     </div>
+    <div class="modal-actions" id="modal-actions"></div>
   </div>
 </div>
 
 <script>
-  const SUPABASE_URL = 'https://igignylgzjphtnyxhhsd.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnaWdueWxnempwaHRueXhoaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDUyMDAsImV4cCI6MjA4OTA4MTIwMH0.3u5gCw1dnG1YSmrzhN3PGVOMoQ1LBtGw0ToNhSeL42A';
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL='https://igignylgzjphtnyxhhsd.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnaWdueWxnempwaHRueXhoaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDUyMDAsImV4cCI6MjA4OTA4MTIwMH0.3u5gCw1dnG1YSmrzhN3PGVOMoQ1LBtGw0ToNhSeL42A';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let supplyData=[],consultData=[],membersData=[];
+let monthlyChart=null,revPieChart=null,revBarChart=null;
+const planPrice={basic:50,standard:50,premium:100,vip:500};
+const statusClass={신규:'new',연락중:'contact',완료:'done',취소:'cancel'};
+const planClass={basic:'basic',premium:'premium',vip:'vip'};
+let currentId=null,currentType=null;
 
-  let supplyData = [];
-  let consultData = [];
-  let membersData = [];
+function doLogin(){
+  const id=document.getElementById('login-id').value;
+  const pw=document.getElementById('login-pw').value;
+  if(id==='admin'&&pw==='1234'){document.getElementById('login-wrap').style.display='none';loadData();}
+  else alert('아이디 또는 비밀번호가 올바르지 않습니다.');
+}
+function doLogout(){
+  document.getElementById('login-wrap').style.display='flex';
+  document.getElementById('login-id').value='';
+  document.getElementById('login-pw').value='';
+}
 
-  async function loadData() {
-    try {
-      const { data: supply } = await sb.from('supply_requests').select('*').order('created_at', {ascending: false});
-      supplyData = (supply || []).map(d => ({
-        id: d.id ? d.id.toString().slice(0,8).toUpperCase() : '-',
-        name: d.name || '-', phone: d.phone || '-', type: d.type || '-',
-        region: d.region || '-', items: d.items || '-', volume: d.volume || '-',
-        cycle: d.cycle || '-', price: d.price || '-', memo: d.memo || '',
-        status: d.status || '신규', date: d.created_at ? d.created_at.slice(0,10) : '-', raw_id: d.id
-      }));
+async function loadData(){
+  try{
+    const[{data:supply},{data:consult},{data:members}]=await Promise.all([
+      sb.from('supply_requests').select('*').order('created_at',{ascending:false}),
+      sb.from('consult_requests').select('*').order('created_at',{ascending:false}),
+      sb.from('members').select('*').order('created_at',{ascending:false}),
+    ]);
+    supplyData=(supply||[]).map(d=>({id:d.id,name:d.name||'-',phone:d.phone||'-',type:d.type||'-',region:d.region||'-',items:d.items||'-',volume:d.volume||'-',cycle:d.cycle||'-',price:d.price||'-',memo:d.memo||'',admin_memo:d.admin_memo||'',status:d.status||'신규',date:d.created_at?d.created_at.slice(0,10):'-',raw_id:d.id}));
+    consultData=(consult||[]).map(d=>({id:d.id,name:d.name||'-',phone:d.phone||'-',plan:d.plan||'basic',type:d.type||'-',region:d.region||'-',timeline:d.timeline||'-',capital:d.capital||'-',contact:d.contact||'-',memo:d.memo||'',admin_memo:d.admin_memo||'',email:d.email||'-',payment_method:d.payment_method||'-',payment_status:d.payment_status||'-',order_id:d.order_id||'-',status:d.status||'신규',date:d.created_at?d.created_at.slice(0,10):'-',raw_id:d.id}));
+    membersData=(members||[]).map(d=>({id:d.id,kakao_id:d.kakao_id||'-',nickname:d.nickname||'이름없음',email:d.email||'',profile_image:d.profile_image||'',role:d.role||'member',is_active:d.is_active!==false,created_at:d.created_at||'',last_login_at:d.last_login_at||'',date:d.created_at?d.created_at.slice(0,10):'-',last_login:d.last_login_at?d.last_login_at.slice(0,10):'-'}));
+    renderAll();
+  }catch(e){console.error('데이터 로딩 오류:',e);}
+}
 
-      const { data: consult } = await sb.from('consult_requests').select('*').order('created_at', {ascending: false});
-      consultData = (consult || []).map(d => ({
-        id: d.id ? d.id.toString().slice(0,8).toUpperCase() : '-',
-        name: d.name || '-', phone: d.phone || '-', plan: d.plan || 'basic',
-        type: d.type || '-', region: d.region || '-', timeline: d.timeline || '-',
-        capital: d.capital || '-', contact: d.contact || '-', memo: d.memo || '',
-        status: d.status || '신규', date: d.created_at ? d.created_at.slice(0,10) : '-', raw_id: d.id
-      }));
+function showPanel(name,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  const titles={dashboard:'대시보드',supply:'공급 연결 신청',consult:'컨설팅 신청',payment:'결제 현황',members:'회원 목록',stats:'신청 통계',revenue:'매출 분석'};
+  document.getElementById('topbar-title').textContent=titles[name]||name;
+  if(el)el.classList.add('active');
+  if(name==='supply')renderSupply();
+  if(name==='consult')renderConsult();
+  if(name==='payment')renderPayment();
+  if(name==='members')renderMembers();
+  if(name==='stats')renderStats();
+  if(name==='revenue')renderRevenue();
+}
 
-      // 회원 데이터 로드
-      const { data: members } = await sb.from('members').select('*').order('created_at', {ascending: false});
-      membersData = (members || []).map(d => ({
-        id: d.id || '-',
-        kakao_id: d.kakao_id || '-',
-        nickname: d.nickname || '이름없음',
-        email: d.email || '',
-        profile_image: d.profile_image || '',
-        role: d.role || 'member',
-        is_active: d.is_active !== false,
-        created_at: d.created_at || '',
-        last_login_at: d.last_login_at || '',
-        date: d.created_at ? d.created_at.slice(0,10) : '-',
-        last_login: d.last_login_at ? d.last_login_at.slice(0,10) : '-',
-      }));
+function renderAll(){
+  const now=new Date();
+  document.getElementById('today-date').textContent=now.toISOString().slice(0,10);
+  const total=supplyData.length+consultData.length;
+  const pending=[...supplyData,...consultData].filter(d=>d.status==='신규').length;
+  const revenue=consultData.reduce((s,d)=>s+(planPrice[d.plan]||0),0);
+  const payWait=consultData.filter(d=>d.payment_status==='입금대기').length;
+  const monthStr=now.toISOString().slice(0,7);
+  const doneMonth=[...supplyData,...consultData].filter(d=>d.status==='완료'&&d.date.startsWith(monthStr)).length;
 
-      renderAll();
-    } catch(e) {
-      console.error('데이터 로딩 오류:', e);
-    }
+  document.getElementById('stat-total').textContent=total;
+  document.getElementById('stat-supply').textContent=supplyData.length;
+  document.getElementById('stat-consult').textContent=consultData.length;
+  document.getElementById('stat-pending').textContent=pending;
+  document.getElementById('supply-badge').textContent=supplyData.filter(d=>d.status==='신규').length;
+  document.getElementById('consult-badge').textContent=consultData.filter(d=>d.status==='신규').length;
+  document.getElementById('payment-badge').textContent=payWait;
+  document.getElementById('members-badge').textContent=membersData.length;
+  document.getElementById('dash-revenue').textContent=revenue+'만';
+  document.getElementById('dash-total-members').textContent=membersData.length;
+  document.getElementById('dash-pay-wait').textContent=payWait;
+  document.getElementById('dash-done-month').textContent=doneMonth;
+
+  if(pending>0)document.getElementById('new-notif').style.display='inline';
+
+  renderDash();
+  renderMonthlyChart();
+}
+
+function renderDash(){
+  const all=[...supplyData.map(d=>({...d,kind:'공급연결'})),...consultData.map(d=>({...d,kind:'컨설팅'}))].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
+  document.getElementById('dash-tbody').innerHTML=all.map(d=>`
+    <tr>
+      <td><span class="badge ${d.kind==='공급연결'?'basic':'premium'}">${d.kind}</span></td>
+      <td>${d.name}</td><td>${d.phone}</td><td>${d.type}</td>
+      <td><span class="badge ${statusClass[d.status]||'new'}">${d.status}</span></td>
+      <td>${d.date}</td>
+      <td><button class="action-btn primary" onclick="openDetail('${d.id}','${d.kind==='공급연결'?'supply':'consult'}')">상세</button></td>
+    </tr>`).join('')||`<tr><td class="empty-row" colspan="7">신청 내역이 없습니다</td></tr>`;
+}
+
+function renderMonthlyChart(){
+  const now=new Date();
+  const labels=[],supplyArr=[],consultArr=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const m=d.toISOString().slice(0,7);
+    labels.push(m.slice(5)+'월');
+    supplyArr.push(supplyData.filter(x=>x.date.startsWith(m)).length);
+    consultArr.push(consultData.filter(x=>x.date.startsWith(m)).length);
   }
+  if(monthlyChart)monthlyChart.destroy();
+  const ctx=document.getElementById('monthly-chart').getContext('2d');
+  monthlyChart=new Chart(ctx,{type:'line',data:{labels,datasets:[
+    {label:'공급 연결',data:supplyArr,borderColor:'rgba(184,148,90,1)',backgroundColor:'rgba(184,148,90,.1)',fill:true,tension:.4,pointRadius:4},
+    {label:'컨설팅',data:consultArr,borderColor:'rgba(11,31,58,.8)',backgroundColor:'rgba(11,31,58,.05)',fill:true,tension:.4,pointRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:12},boxWidth:14}}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}}},x:{ticks:{font:{size:11}}}}}});
+}
 
-  const planPrice = {basic:50, standard:50, premium:100, vip:500};
-  const statusClass = {신규:'new', 연락중:'contact', 완료:'done', 취소:'cancel'};
-  const planClass = {basic:'basic', premium:'premium', vip:'vip'};
-  let currentId = null, currentType = null;
+function renderSupply(){
+  const filter=document.getElementById('supply-filter').value;
+  const search=document.getElementById('supply-search').value.toLowerCase();
+  const data=supplyData.filter(d=>(!filter||d.status===filter)&&(!search||d.name.includes(search)||d.phone.includes(search)));
+  document.getElementById('supply-stat-total').textContent=supplyData.length;
+  document.getElementById('supply-stat-new').textContent=supplyData.filter(d=>d.status==='신규').length;
+  document.getElementById('supply-stat-done').textContent=supplyData.filter(d=>d.status==='완료').length;
+  document.getElementById('supply-tbody').innerHTML=data.map(d=>`
+    <tr>
+      <td><strong>${d.name}</strong></td><td>${d.phone}</td><td>${d.type}</td>
+      <td>${d.region}</td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.items||'-'}</td><td>${d.volume||'-'}</td>
+      <td><span class="badge ${statusClass[d.status]||'new'}">${d.status}</span></td>
+      <td>${d.date}</td>
+      <td><button class="action-btn primary" onclick="openDetail('${d.id}','supply')">상세</button></td>
+    </tr>`).join('')||`<tr><td class="empty-row" colspan="9">해당 신청이 없습니다</td></tr>`;
+}
 
-  /* ── LOGIN ── */
-  function doLogin() {
-    const id = document.getElementById('login-id').value;
-    const pw = document.getElementById('login-pw').value;
-    if (id === 'admin' && pw === '1234') {
-      document.getElementById('login-wrap').style.display = 'none';
-      loadData();
-    } else {
-      alert('아이디 또는 비밀번호가 올바르지 않습니다.');
-    }
+function renderConsult(){
+  const filter=document.getElementById('consult-filter').value;
+  const planFilter=document.getElementById('consult-plan-filter').value;
+  const search=document.getElementById('consult-search').value.toLowerCase();
+  const data=consultData.filter(d=>(!filter||d.status===filter)&&(!planFilter||d.plan===planFilter)&&(!search||d.name.includes(search)||d.phone.includes(search)));
+  document.getElementById('consult-stat-total').textContent=consultData.length;
+  document.getElementById('consult-stat-new').textContent=consultData.filter(d=>d.status==='신규').length;
+  document.getElementById('consult-stat-basic').textContent=consultData.filter(d=>d.plan==='basic').length;
+  document.getElementById('consult-stat-premium').textContent=consultData.filter(d=>d.plan==='premium').length;
+  const payClass={입금대기:'pay-wait',결제완료:'pay-done',결제대기:'contact'};
+  document.getElementById('consult-tbody').innerHTML=data.map(d=>`
+    <tr>
+      <td><strong>${d.name}</strong></td><td>${d.phone}</td>
+      <td><span class="badge ${planClass[d.plan]||'basic'}">${(d.plan||'').toUpperCase()}</span></td>
+      <td>${d.type}</td><td>${d.region||'-'}</td>
+      <td><span class="badge ${payClass[d.payment_status]||'new'}">${d.payment_status||'-'}</span></td>
+      <td><span class="badge ${statusClass[d.status]||'new'}">${d.status}</span></td>
+      <td>${d.date}</td>
+      <td><button class="action-btn primary" onclick="openDetail('${d.id}','consult')">상세</button></td>
+    </tr>`).join('')||`<tr><td class="empty-row" colspan="9">해당 신청이 없습니다</td></tr>`;
+}
+
+function renderPayment(){
+  const filter=document.getElementById('pay-filter').value;
+  const data=consultData.filter(d=>!filter||d.payment_status===filter);
+  const waitCount=consultData.filter(d=>d.payment_status==='입금대기').length;
+  const doneCount=consultData.filter(d=>d.payment_status==='결제완료').length;
+  const totalRev=consultData.reduce((s,d)=>s+(planPrice[d.plan]||0),0);
+  document.getElementById('pay-total-revenue').textContent=totalRev+'만원';
+  document.getElementById('pay-wait-count').textContent=waitCount;
+  document.getElementById('pay-done-count').textContent=doneCount;
+  const payClass={입금대기:'pay-wait',결제완료:'pay-done',결제대기:'contact'};
+  document.getElementById('payment-tbody').innerHTML=data.map(d=>`
+    <tr>
+      <td><strong>${d.name}</strong></td><td>${d.phone}</td>
+      <td><span class="badge ${planClass[d.plan]||'basic'}">${(d.plan||'').toUpperCase()}</span></td>
+      <td><strong>${planPrice[d.plan]||0}만원</strong></td>
+      <td>${d.payment_method||'-'}</td>
+      <td><span class="badge ${payClass[d.payment_status]||'new'}">${d.payment_status||'-'}</span></td>
+      <td>${d.date}</td>
+      <td>
+        ${d.payment_status==='입금대기'?`<button class="action-btn success" onclick="confirmPayment('${d.id}')">✅ 입금 확인</button>`:''}
+        <button class="action-btn primary" onclick="openDetail('${d.id}','consult')">상세</button>
+      </td>
+    </tr>`).join('')||`<tr><td class="empty-row" colspan="8">결제 내역이 없습니다</td></tr>`;
+}
+
+async function confirmPayment(id){
+  const d=consultData.find(x=>x.id===id);
+  if(!d)return;
+  if(!confirm(`${d.name}님 입금 확인 처리할까요?`))return;
+  try{
+    await sb.from('consult_requests').update({payment_status:'결제완료'}).eq('id',d.raw_id);
+    d.payment_status='결제완료';
+    renderPayment();
+  }catch(e){console.error(e);}
+}
+
+function renderMembers(){
+  const roleFilter=document.getElementById('members-role-filter').value;
+  const search=document.getElementById('members-search').value.toLowerCase();
+  const now=new Date();
+  const todayStr=now.toISOString().slice(0,10);
+  const monthStr=now.toISOString().slice(0,7);
+  const weekAgo=new Date(now-7*24*60*60*1000).toISOString();
+  document.getElementById('mem-stat-total').textContent=membersData.length;
+  document.getElementById('mem-stat-today').textContent=membersData.filter(m=>m.date===todayStr).length;
+  document.getElementById('mem-stat-month').textContent=membersData.filter(m=>m.date.startsWith(monthStr)).length;
+  document.getElementById('mem-stat-active').textContent=membersData.filter(m=>m.last_login_at>=weekAgo).length;
+  const data=membersData.filter(m=>(!roleFilter||m.role===roleFilter)&&(!search||m.nickname.toLowerCase().includes(search)||m.email.toLowerCase().includes(search)));
+  document.getElementById('members-tbody').innerHTML=data.length?data.map(m=>{
+    const av=m.profile_image?`<img src="${m.profile_image}" class="member-avatar" onerror="this.style.display='none';this.nextSibling.style.display='inline-flex'">`:'';
+    const ph=`<span class="member-avatar-placeholder" style="${m.profile_image?'display:none':''}">${m.nickname.charAt(0)}</span>`;
+    return`<tr>
+      <td><div class="member-name-cell">${av}${ph}</div></td>
+      <td><strong>${m.nickname}</strong></td>
+      <td style="color:var(--muted);font-size:13px">${m.email||'-'}</td>
+      <td><span class="badge ${m.role==='admin'?'admin-role':'member'}">${m.role==='admin'?'관리자':'일반회원'}</span></td>
+      <td style="font-size:13px">${m.date}</td>
+      <td style="font-size:13px">${m.last_login}</td>
+      <td><span class="badge ${m.is_active?'done':'cancel'}">${m.is_active?'활성':'비활성'}</span></td>
+      <td><button class="action-btn primary" onclick="openMemberDetail('${m.id}')">상세</button></td>
+    </tr>`;}).join(''):`<tr><td class="empty-row" colspan="8">회원이 없습니다</td></tr>`;
+}
+
+function renderStats(){
+  const allData=[...supplyData,...consultData];
+  document.getElementById('stat-month').textContent=allData.length;
+  const done=allData.filter(d=>d.status==='완료').length;
+  document.getElementById('stat-done-rate').textContent=allData.length>0?Math.round(done/allData.length*100)+'%':'0%';
+  const revenue=consultData.reduce((s,d)=>s+(planPrice[d.plan]||0),0);
+  document.getElementById('stat-revenue').textContent=revenue+'만원';
+  const typeCount={};allData.forEach(d=>{typeCount[d.type]=(typeCount[d.type]||0)+1;});
+  const maxType=Math.max(...Object.values(typeCount),1);
+  document.getElementById('chart-type').innerHTML=Object.entries(typeCount).sort((a,b)=>b[1]-a[1]).map(([l,v])=>`<div class="bar-row"><div class="bar-label">${l.replace(' 준비 중','').replace(' 창업','').slice(0,6)}</div><div class="bar-track"><div class="bar-fill gold" style="width:${v/maxType*100}%"></div></div><div class="bar-val">${v}</div></div>`).join('');
+  const planCount={basic:0,premium:0};consultData.forEach(d=>planCount[d.plan]=(planCount[d.plan]||0)+1);
+  const maxPlan=Math.max(...Object.values(planCount),1);
+  document.getElementById('chart-plan').innerHTML=Object.entries(planCount).map(([l,v])=>`<div class="bar-row"><div class="bar-label">${l.toUpperCase()}</div><div class="bar-track"><div class="bar-fill" style="width:${v/maxPlan*100}%"></div></div><div class="bar-val">${v}</div></div>`).join('');
+  const itemCount={};supplyData.forEach(d=>(d.items||'').split(',').forEach(i=>{const k=i.trim();if(k)itemCount[k]=(itemCount[k]||0)+1;}));
+  const maxItem=Math.max(...Object.values(itemCount),1);
+  document.getElementById('chart-item').innerHTML=Object.entries(itemCount).sort((a,b)=>b[1]-a[1]).map(([l,v])=>`<div class="bar-row"><div class="bar-label">${l.slice(0,6)}</div><div class="bar-track"><div class="bar-fill gold" style="width:${v/maxItem*100}%"></div></div><div class="bar-val">${v}</div></div>`).join('')||'<div style="color:var(--muted);font-size:13px">데이터 없음</div>';
+  const statusCount={신규:0,연락중:0,완료:0,취소:0};allData.forEach(d=>{if(statusCount[d.status]!==undefined)statusCount[d.status]++;});
+  const maxSt=Math.max(...Object.values(statusCount),1);
+  document.getElementById('chart-status').innerHTML=Object.entries(statusCount).map(([l,v])=>`<div class="bar-row"><div class="bar-label">${l}</div><div class="bar-track"><div class="bar-fill" style="width:${v/maxSt*100}%"></div></div><div class="bar-val">${v}</div></div>`).join('');
+}
+
+function renderRevenue(){
+  const basicRev=consultData.filter(d=>d.plan==='basic').length*50;
+  const premiumRev=consultData.filter(d=>d.plan==='premium').length*100;
+  const totalRev=basicRev+premiumRev;
+  const doneRev=consultData.filter(d=>d.status==='완료').reduce((s,d)=>s+(planPrice[d.plan]||0),0);
+  document.getElementById('rev-total').textContent=totalRev+'만원';
+  document.getElementById('rev-basic').textContent=basicRev+'만';
+  document.getElementById('rev-premium').textContent=premiumRev+'만';
+  document.getElementById('rev-done').textContent=doneRev+'만';
+
+  // 파이 차트
+  if(revPieChart)revPieChart.destroy();
+  const pie=document.getElementById('revenue-pie-chart').getContext('2d');
+  revPieChart=new Chart(pie,{type:'doughnut',data:{labels:['STANDARD','PREMIUM'],datasets:[{data:[basicRev,premiumRev],backgroundColor:['rgba(107,114,128,.6)','rgba(184,148,90,.8)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:12},boxWidth:14}}}}});
+
+  // 월별 매출 바 차트
+  const now=new Date();
+  const labels=[],revArr=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const m=d.toISOString().slice(0,7);
+    labels.push(m.slice(5)+'월');
+    const monthRev=consultData.filter(x=>x.date.startsWith(m)).reduce((s,d)=>s+(planPrice[d.plan]||0),0);
+    revArr.push(monthRev);
   }
-  function doLogout() {
-    document.getElementById('login-wrap').style.display = 'flex';
-    document.getElementById('login-id').value = '';
-    document.getElementById('login-pw').value = '';
+  if(revBarChart)revBarChart.destroy();
+  const bar=document.getElementById('revenue-bar-chart').getContext('2d');
+  revBarChart=new Chart(bar,{type:'bar',data:{labels,datasets:[{label:'매출(만원)',data:revArr,backgroundColor:'rgba(184,148,90,.7)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}}}});
+
+  // 테이블
+  document.getElementById('revenue-tbody').innerHTML=consultData.map(d=>`
+    <tr>
+      <td><strong>${d.name}</strong></td>
+      <td><span class="badge ${planClass[d.plan]||'basic'}">${(d.plan||'').toUpperCase()}</span></td>
+      <td><strong>${planPrice[d.plan]||0}만원</strong></td>
+      <td><span class="badge ${d.payment_status==='결제완료'?'pay-done':d.payment_status==='입금대기'?'pay-wait':'contact'}">${d.payment_status||'-'}</span></td>
+      <td>${d.date}</td>
+    </tr>`).join('')||`<tr><td class="empty-row" colspan="5">데이터 없음</td></tr>`;
+}
+
+function openDetail(id,type){
+  currentId=id;currentType=type;
+  const d=type==='supply'?supplyData.find(x=>x.id===id):consultData.find(x=>x.id===id);
+  if(!d)return;
+  document.getElementById('modal-title').textContent=(type==='supply'?'🥩 공급 연결':'📋 컨설팅')+' 신청 상세';
+  let rows=`
+    <div class="modal-row"><div class="modal-row-label">이름</div><div class="modal-row-val"><strong>${d.name}</strong></div></div>
+    <div class="modal-row"><div class="modal-row-label">연락처</div><div class="modal-row-val">${d.phone}</div></div>
+    <div class="modal-row"><div class="modal-row-label">업종</div><div class="modal-row-val">${d.type}</div></div>
+    <div class="modal-row"><div class="modal-row-label">지역</div><div class="modal-row-val">${d.region||'-'}</div></div>`;
+  if(type==='supply'){
+    rows+=`
+      <div class="modal-row"><div class="modal-row-label">요청 품목</div><div class="modal-row-val">${d.items||'-'}</div></div>
+      <div class="modal-row"><div class="modal-row-label">월 구매량</div><div class="modal-row-val">${d.volume||'-'}</div></div>
+      <div class="modal-row"><div class="modal-row-label">납품 주기</div><div class="modal-row-val">${d.cycle||'-'}</div></div>
+      <div class="modal-row"><div class="modal-row-label">현재 단가</div><div class="modal-row-val">${d.price||'-'}</div></div>`;
+  }else{
+    rows+=`
+      <div class="modal-row"><div class="modal-row-label">플랜</div><div class="modal-row-val"><span class="badge ${planClass[d.plan]}">${d.plan.toUpperCase()} — ${planPrice[d.plan]}만원</span></div></div>
+      <div class="modal-row"><div class="modal-row-label">이메일</div><div class="modal-row-val">${d.email||'-'}</div></div>
+      <div class="modal-row"><div class="modal-row-label">창업 시기</div><div class="modal-row-val">${d.timeline||'-'}</div></div>
+      <div class="modal-row"><div class="modal-row-label">자본금</div><div class="modal-row-val">${d.capital?d.capital+'만원':'-'}</div></div>
+      <div class="modal-row"><div class="modal-row-label">결제 방법</div><div class="modal-row-val">${d.payment_method||'-'}</div></div>
+      <div class="modal-row"><div class="modal-row-label">결제 상태</div><div class="modal-row-val">${d.payment_status||'-'}</div></div>
+      <div class="modal-row"><div class="modal-row-label">주문번호</div><div class="modal-row-val" style="font-size:12px">${d.order_id||'-'}</div></div>`;
   }
+  rows+=`<div class="modal-row"><div class="modal-row-label">고객 메모</div><div class="modal-row-val" style="color:var(--muted)">${d.memo||'없음'}</div></div>
+    <div class="modal-row"><div class="modal-row-label">신청일</div><div class="modal-row-val">${d.date}</div></div>`;
+  document.getElementById('modal-body').innerHTML=rows;
+  document.getElementById('modal-memo').value=d.admin_memo||'';
+  document.getElementById('modal-actions').innerHTML=`
+    <select class="status-select" id="modal-status">
+      <option value="신규" ${d.status==='신규'?'selected':''}>신규</option>
+      <option value="연락중" ${d.status==='연락중'?'selected':''}>연락중</option>
+      <option value="완료" ${d.status==='완료'?'selected':''}>완료</option>
+      <option value="취소" ${d.status==='취소'?'selected':''}>취소</option>
+    </select>
+    <button class="action-btn primary" onclick="saveStatus()">저장</button>
+  `;
+  document.getElementById('modal').classList.add('show');
+}
 
-  /* ── PANEL ── */
-  function showPanel(name, el) {
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
-    document.getElementById('panel-' + name).classList.add('active');
-    const titles = {dashboard:'대시보드', supply:'공급 연결 신청', consult:'컨설팅 신청', members:'회원 목록', stats:'신청 통계'};
-    document.getElementById('topbar-title').textContent = titles[name] || name;
-    if (el) el.classList.add('active');
-    if (name === 'supply') renderSupply();
-    if (name === 'consult') renderConsult();
-    if (name === 'members') renderMembers();
-    if (name === 'stats') renderStats();
+async function saveStatus(){
+  const newStatus=document.getElementById('modal-status').value;
+  const memo=document.getElementById('modal-memo').value.trim();
+  const arr=currentType==='supply'?supplyData:consultData;
+  const d=arr.find(x=>x.id===currentId);
+  if(d){
+    try{
+      const table=currentType==='supply'?'supply_requests':'consult_requests';
+      await sb.from(table).update({status:newStatus,admin_memo:memo}).eq('id',d.raw_id);
+    }catch(e){console.error('저장 오류:',e);}
+    d.status=newStatus;d.admin_memo=memo;
+    renderAll();renderSupply();renderConsult();renderPayment();
   }
+  document.getElementById('modal').classList.remove('show');
+}
 
-  /* ── RENDER ALL ── */
-  function renderAll() {
-    const now = new Date();
-    document.getElementById('today-date').textContent = now.getFullYear() + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + String(now.getDate()).padStart(2,'0');
-    const total = supplyData.length + consultData.length;
-    const pending = [...supplyData, ...consultData].filter(d => d.status === '신규').length;
-    document.getElementById('stat-total').textContent = total;
-    document.getElementById('stat-supply').textContent = supplyData.length;
-    document.getElementById('stat-consult').textContent = consultData.length;
-    document.getElementById('stat-pending').textContent = pending;
-    document.getElementById('supply-badge').textContent = supplyData.filter(d=>d.status==='신규').length;
-    document.getElementById('consult-badge').textContent = consultData.filter(d=>d.status==='신규').length;
-    document.getElementById('members-badge').textContent = membersData.length;
+function openMemberDetail(id){
+  const m=membersData.find(x=>x.id===id);
+  if(!m)return;
+  currentId=id;currentType='member';
+  document.getElementById('modal-title').textContent='👤 회원 상세 · '+m.nickname;
+  const av=m.profile_image?`<img src="${m.profile_image}" style="width:56px;height:56px;border-radius:50%;border:2px solid var(--line);object-fit:cover">`:`<div style="width:56px;height:56px;border-radius:50%;background:var(--navy);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900">${m.nickname.charAt(0)}</div>`;
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-row" style="justify-content:center;padding:16px 0 20px;border-bottom:1px solid var(--line)">${av}</div>
+    <div class="modal-row"><div class="modal-row-label">닉네임</div><div class="modal-row-val"><strong>${m.nickname}</strong></div></div>
+    <div class="modal-row"><div class="modal-row-label">이메일</div><div class="modal-row-val">${m.email||'-'}</div></div>
+    <div class="modal-row"><div class="modal-row-label">카카오 ID</div><div class="modal-row-val" style="font-size:12px;color:var(--muted)">${m.kakao_id}</div></div>
+    <div class="modal-row"><div class="modal-row-label">등급</div><div class="modal-row-val"><span class="badge ${m.role==='admin'?'admin-role':'member'}">${m.role==='admin'?'관리자':'일반회원'}</span></div></div>
+    <div class="modal-row"><div class="modal-row-label">상태</div><div class="modal-row-val"><span class="badge ${m.is_active?'done':'cancel'}">${m.is_active?'활성':'비활성'}</span></div></div>
+    <div class="modal-row"><div class="modal-row-label">가입일</div><div class="modal-row-val">${m.date}</div></div>
+    <div class="modal-row"><div class="modal-row-label">최근 로그인</div><div class="modal-row-val">${m.last_login}</div></div>`;
+  document.getElementById('modal-memo').value='';
+  document.getElementById('modal-actions').innerHTML=`
+    <button class="action-btn" onclick="toggleMemberRole('${m.id}')">${m.role==='admin'?'👤 일반회원으로 변경':'⭐ 관리자로 승격'}</button>
+    <button class="action-btn ${m.is_active?'danger':'success'}" onclick="toggleMemberActive('${m.id}')">${m.is_active?'🚫 비활성화':'✅ 활성화'}</button>
+  `;
+  document.getElementById('modal').classList.add('show');
+}
 
-    // 회원 통계 (대시보드)
-    const todayStr = now.toISOString().slice(0,10);
-    const monthStr = now.toISOString().slice(0,7);
-    const weekAgo = new Date(now - 7*24*60*60*1000).toISOString();
-    const todayMembers = membersData.filter(m => m.date === todayStr).length;
-    const monthMembers = membersData.filter(m => m.date.startsWith(monthStr)).length;
-    const activeMembers = membersData.filter(m => m.last_login_at >= weekAgo).length;
-    document.getElementById('dash-total-members').textContent = membersData.length;
-    document.getElementById('dash-today-members').textContent = todayMembers;
-    document.getElementById('dash-month-members').textContent = monthMembers;
-    document.getElementById('dash-active-members').textContent = activeMembers;
+async function toggleMemberRole(id){
+  const m=membersData.find(x=>x.id===id);if(!m)return;
+  const newRole=m.role==='admin'?'member':'admin';
+  try{await sb.from('members').update({role:newRole}).eq('id',id);m.role=newRole;renderMembers();document.getElementById('modal').classList.remove('show');}
+  catch(e){console.error(e);}
+}
+async function toggleMemberActive(id){
+  const m=membersData.find(x=>x.id===id);if(!m)return;
+  const newActive=!m.is_active;
+  try{await sb.from('members').update({is_active:newActive}).eq('id',id);m.is_active=newActive;renderMembers();document.getElementById('modal').classList.remove('show');}
+  catch(e){console.error(e);}
+}
 
-    renderDash();
-  }
+function closeModal(e){if(e.target===document.getElementById('modal'))document.getElementById('modal').classList.remove('show');}
 
-  function renderDash() {
-    const all = [
-      ...supplyData.map(d=>({...d, kind:'공급연결'})),
-      ...consultData.map(d=>({...d, kind:'컨설팅'}))
-    ].sort((a,b) => b.date.localeCompare(a.date)).slice(0,8);
-    const tbody = document.getElementById('dash-tbody');
-    tbody.innerHTML = all.map((d,i) => `
-      <tr>
-        <td>${i+1}</td>
-        <td><span class="badge ${d.kind==='공급연결'?'basic':'premium'}">${d.kind}</span></td>
-        <td>${d.name}</td><td>${d.phone}</td><td>${d.type}</td>
-        <td><span class="badge ${statusClass[d.status]}">${d.status}</span></td>
-        <td>${d.date}</td>
-        <td><button class="action-btn primary" onclick="openDetail('${d.id}','${d.kind==='공급연결'?'supply':'consult'}')">상세</button></td>
-      </tr>`).join('') || `<tr><td class="empty-row" colspan="8">신청 내역이 없습니다</td></tr>`;
-  }
-
-  function renderSupply() {
-    const filter = document.getElementById('supply-filter').value;
-    const search = document.getElementById('supply-search').value.toLowerCase();
-    const data = supplyData.filter(d =>
-      (!filter || d.status === filter) &&
-      (!search || d.name.includes(search) || d.phone.includes(search))
-    );
-    document.getElementById('supply-tbody').innerHTML = data.map((d,i) => `
-      <tr>
-        <td>${d.id}</td><td>${d.name}</td><td>${d.phone}</td><td>${d.type}</td>
-        <td>${d.region}</td><td>${d.items||'-'}</td><td>${d.volume||'-'}</td>
-        <td><span class="badge ${statusClass[d.status]}">${d.status}</span></td>
-        <td>${d.date}</td>
-        <td><button class="action-btn primary" onclick="openDetail('${d.id}','supply')">상세</button></td>
-      </tr>`).join('') || `<tr><td class="empty-row" colspan="10">해당 신청이 없습니다</td></tr>`;
-  }
-
-  function renderConsult() {
-    const filter = document.getElementById('consult-filter').value;
-    const search = document.getElementById('consult-search').value.toLowerCase();
-    const data = consultData.filter(d =>
-      (!filter || d.status === filter) &&
-      (!search || d.name.includes(search) || d.phone.includes(search))
-    );
-    document.getElementById('consult-tbody').innerHTML = data.map((d,i) => `
-      <tr>
-        <td>${d.id}</td><td>${d.name}</td><td>${d.phone}</td>
-        <td><span class="badge ${planClass[d.plan]}">${d.plan.toUpperCase()}</span></td>
-        <td>${d.type}</td><td>${d.region||'-'}</td><td>${d.timeline}</td>
-        <td><span class="badge ${statusClass[d.status]}">${d.status}</span></td>
-        <td>${d.date}</td>
-        <td><button class="action-btn primary" onclick="openDetail('${d.id}','consult')">상세</button></td>
-      </tr>`).join('') || `<tr><td class="empty-row" colspan="10">해당 신청이 없습니다</td></tr>`;
-  }
-
-  /* ── MEMBERS ── */
-  function renderMembers() {
-    const roleFilter = document.getElementById('members-role-filter').value;
-    const search = document.getElementById('members-search').value.toLowerCase();
-    const now = new Date();
-    const todayStr = now.toISOString().slice(0,10);
-    const monthStr = now.toISOString().slice(0,7);
-    const weekAgo = new Date(now - 7*24*60*60*1000).toISOString();
-
-    // 통계 업데이트
-    document.getElementById('mem-stat-total').textContent = membersData.length;
-    document.getElementById('mem-stat-today').textContent = membersData.filter(m => m.date === todayStr).length;
-    document.getElementById('mem-stat-month').textContent = membersData.filter(m => m.date.startsWith(monthStr)).length;
-    document.getElementById('mem-stat-active').textContent = membersData.filter(m => m.last_login_at >= weekAgo).length;
-
-    const data = membersData.filter(m =>
-      (!roleFilter || m.role === roleFilter) &&
-      (!search || m.nickname.toLowerCase().includes(search) || m.email.toLowerCase().includes(search))
-    );
-
-    document.getElementById('members-tbody').innerHTML = data.length ? data.map((m, i) => {
-      const avatarHtml = m.profile_image
-        ? `<img src="${m.profile_image}" class="member-avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex'">`
-        : '';
-      const placeholderHtml = `<span class="member-avatar-placeholder" style="${m.profile_image?'display:none':''}">${m.nickname.charAt(0)}</span>`;
-      return `<tr>
-        <td>${i+1}</td>
-        <td>
-          <div class="member-name-cell">
-            ${avatarHtml}${placeholderHtml}
-          </div>
-        </td>
-        <td><strong>${m.nickname}</strong></td>
-        <td style="color:var(--muted);font-size:13px">${m.email || '-'}</td>
-        <td><span class="badge ${m.role === 'admin' ? 'admin-role' : 'member'}">${m.role === 'admin' ? '관리자' : '일반회원'}</span></td>
-        <td style="font-size:13px">${m.date}</td>
-        <td style="font-size:13px">${m.last_login}</td>
-        <td><span class="badge ${m.is_active ? 'done' : 'cancel'}">${m.is_active ? '활성' : '비활성'}</span></td>
-        <td>
-          <button class="action-btn primary" onclick="openMemberDetail('${m.id}')">상세</button>
-        </td>
-      </tr>`;
-    }).join('') : `<tr><td class="empty-row" colspan="9">회원이 없습니다</td></tr>`;
-  }
-
-  function openMemberDetail(id) {
-    const m = membersData.find(x => x.id === id);
-    if (!m) return;
-    currentId = id; currentType = 'member';
-    document.getElementById('modal-title').textContent = '회원 상세 · ' + m.nickname;
-    const avatarHtml = m.profile_image
-      ? `<img src="${m.profile_image}" style="width:56px;height:56px;border-radius:50%;border:2px solid var(--line);object-fit:cover">`
-      : `<div style="width:56px;height:56px;border-radius:50%;background:var(--navy);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900">${m.nickname.charAt(0)}</div>`;
-    document.getElementById('modal-body').innerHTML = `
-      <div class="modal-row" style="justify-content:center;padding:16px 0 20px;border-bottom:1px solid var(--line)">${avatarHtml}</div>
-      <div class="modal-row"><div class="modal-row-label">닉네임</div><div class="modal-row-val"><strong>${m.nickname}</strong></div></div>
-      <div class="modal-row"><div class="modal-row-label">이메일</div><div class="modal-row-val">${m.email || '-'}</div></div>
-      <div class="modal-row"><div class="modal-row-label">카카오 ID</div><div class="modal-row-val" style="font-size:12px;color:var(--muted)">${m.kakao_id}</div></div>
-      <div class="modal-row"><div class="modal-row-label">등급</div><div class="modal-row-val"><span class="badge ${m.role === 'admin' ? 'admin-role' : 'member'}">${m.role === 'admin' ? '관리자' : '일반회원'}</span></div></div>
-      <div class="modal-row"><div class="modal-row-label">상태</div><div class="modal-row-val"><span class="badge ${m.is_active ? 'done' : 'cancel'}">${m.is_active ? '활성' : '비활성'}</span></div></div>
-      <div class="modal-row"><div class="modal-row-label">가입일</div><div class="modal-row-val">${m.date}</div></div>
-      <div class="modal-row"><div class="modal-row-label">최근 로그인</div><div class="modal-row-val">${m.last_login}</div></div>
-    `;
-    // 회원 모달은 상태 변경 대신 역할 변경 버튼
-    document.getElementById('modal-actions').innerHTML = `
-      <button class="action-btn" onclick="toggleMemberRole('${m.id}')">
-        ${m.role === 'admin' ? '👤 일반회원으로 변경' : '⭐ 관리자로 승격'}
-      </button>
-      <button class="action-btn ${m.is_active ? 'danger' : 'primary'}" onclick="toggleMemberActive('${m.id}')">
-        ${m.is_active ? '🚫 비활성화' : '✅ 활성화'}
-      </button>
-    `;
-    document.getElementById('modal').classList.add('show');
-  }
-
-  async function toggleMemberRole(id) {
-    const m = membersData.find(x => x.id === id);
-    if (!m) return;
-    const newRole = m.role === 'admin' ? 'member' : 'admin';
-    try {
-      await sb.from('members').update({role: newRole}).eq('id', id);
-      m.role = newRole;
-      renderMembers();
-      document.getElementById('modal').classList.remove('show');
-    } catch(e) { console.error(e); }
-  }
-
-  async function toggleMemberActive(id) {
-    const m = membersData.find(x => x.id === id);
-    if (!m) return;
-    const newActive = !m.is_active;
-    try {
-      await sb.from('members').update({is_active: newActive}).eq('id', id);
-      m.is_active = newActive;
-      renderMembers();
-      document.getElementById('modal').classList.remove('show');
-    } catch(e) { console.error(e); }
-  }
-
-  function renderStats() {
-    const allData = [...supplyData, ...consultData];
-    document.getElementById('stat-month').textContent = allData.length;
-    const done = allData.filter(d=>d.status==='완료').length;
-    document.getElementById('stat-done-rate').textContent = allData.length > 0 ? Math.round(done/allData.length*100)+'%' : '0%';
-    const revenue = consultData.reduce((s,d) => s + (planPrice[d.plan]||0), 0);
-    document.getElementById('stat-revenue').textContent = revenue + '만원';
-
-    const typeCount = {};
-    allData.forEach(d => { typeCount[d.type] = (typeCount[d.type]||0)+1; });
-    const maxType = Math.max(...Object.values(typeCount), 1);
-    document.getElementById('chart-type').innerHTML = Object.entries(typeCount)
-      .sort((a,b)=>b[1]-a[1])
-      .map(([label,val]) => `<div class="bar-row"><div class="bar-label">${label.replace(' 준비 중','').replace(' 창업','')}</div><div class="bar-track"><div class="bar-fill gold" style="width:${val/maxType*100}%"></div></div><div class="bar-val">${val}</div></div>`).join('');
-
-    const planCount = {basic:0, premium:0, vip:0};
-    consultData.forEach(d => planCount[d.plan]++);
-    const maxPlan = Math.max(...Object.values(planCount), 1);
-    document.getElementById('chart-plan').innerHTML = Object.entries(planCount)
-      .map(([label,val]) => `<div class="bar-row"><div class="bar-label">${label.toUpperCase()}</div><div class="bar-track"><div class="bar-fill" style="width:${val/maxPlan*100}%"></div></div><div class="bar-val">${val}</div></div>`).join('');
-
-    const itemCount = {};
-    supplyData.forEach(d => (d.items||'').split(',').forEach(i => { const k=i.trim(); if(k) itemCount[k]=(itemCount[k]||0)+1; }));
-    const maxItem = Math.max(...Object.values(itemCount), 1);
-    document.getElementById('chart-item').innerHTML = Object.entries(itemCount)
-      .sort((a,b)=>b[1]-a[1])
-      .map(([label,val]) => `<div class="bar-row"><div class="bar-label">${label}</div><div class="bar-track"><div class="bar-fill gold" style="width:${val/maxItem*100}%"></div></div><div class="bar-val">${val}</div></div>`).join('') || '<div style="color:var(--muted);font-size:13px">데이터 없음</div>';
-
-    const statusCount = {신규:0, 연락중:0, 완료:0, 취소:0};
-    allData.forEach(d => { if(statusCount[d.status]!==undefined) statusCount[d.status]++; });
-    const maxSt = Math.max(...Object.values(statusCount), 1);
-    document.getElementById('chart-status').innerHTML = Object.entries(statusCount)
-      .map(([label,val]) => `<div class="bar-row"><div class="bar-label">${label}</div><div class="bar-track"><div class="bar-fill" style="width:${val/maxSt*100}%"></div></div><div class="bar-val">${val}</div></div>`).join('');
-  }
-
-  /* ── MODAL (신청) ── */
-  function openDetail(id, type) {
-    currentId = id; currentType = type;
-    const d = type === 'supply' ? supplyData.find(x=>x.id===id) : consultData.find(x=>x.id===id);
-    if (!d) return;
-    document.getElementById('modal-title').textContent = (type==='supply'?'공급 연결':'컨설팅') + ' 신청 상세 · ' + d.id;
-    let rows = `
-      <div class="modal-row"><div class="modal-row-label">이름</div><div class="modal-row-val">${d.name}</div></div>
-      <div class="modal-row"><div class="modal-row-label">연락처</div><div class="modal-row-val">${d.phone}</div></div>
-      <div class="modal-row"><div class="modal-row-label">업종</div><div class="modal-row-val">${d.type}</div></div>
-      <div class="modal-row"><div class="modal-row-label">지역</div><div class="modal-row-val">${d.region||'-'}</div></div>`;
-    if (type === 'supply') {
-      rows += `
-        <div class="modal-row"><div class="modal-row-label">요청 품목</div><div class="modal-row-val">${d.items||'-'}</div></div>
-        <div class="modal-row"><div class="modal-row-label">월 구매량</div><div class="modal-row-val">${d.volume||'-'}</div></div>`;
-    } else {
-      rows += `
-        <div class="modal-row"><div class="modal-row-label">플랜</div><div class="modal-row-val"><span class="badge ${planClass[d.plan]}">${d.plan.toUpperCase()} — ${planPrice[d.plan]}만원</span></div></div>
-        <div class="modal-row"><div class="modal-row-label">창업 시기</div><div class="modal-row-val">${d.timeline}</div></div>`;
-    }
-    rows += `
-      <div class="modal-row"><div class="modal-row-label">메모</div><div class="modal-row-val">${d.memo||'없음'}</div></div>
-      <div class="modal-row"><div class="modal-row-label">신청일</div><div class="modal-row-val">${d.date}</div></div>`;
-    document.getElementById('modal-body').innerHTML = rows;
-    document.getElementById('modal-actions').innerHTML = `
-      <select class="status-select" id="modal-status">
-        <option value="신규" ${d.status==='신규'?'selected':''}>신규</option>
-        <option value="연락중" ${d.status==='연락중'?'selected':''}>연락중</option>
-        <option value="완료" ${d.status==='완료'?'selected':''}>완료</option>
-        <option value="취소" ${d.status==='취소'?'selected':''}>취소</option>
-      </select>
-      <button class="action-btn primary" onclick="saveStatus()">상태 저장</button>
-    `;
-    document.getElementById('modal').classList.add('show');
-  }
-
-  async function saveStatus() {
-    const newStatus = document.getElementById('modal-status').value;
-    const arr = currentType === 'supply' ? supplyData : consultData;
-    const d = arr.find(x=>x.id===currentId);
-    if (d) {
-      try {
-        const table = currentType === 'supply' ? 'supply_requests' : 'consult_requests';
-        await sb.from(table).update({status: newStatus}).eq('id', d.raw_id);
-      } catch(e) { console.error('상태 업데이트 오류:', e); }
-      d.status = newStatus;
-      renderAll(); renderSupply(); renderConsult();
-    }
-    document.getElementById('modal').classList.remove('show');
-  }
-
-  function closeModal(e) {
-    if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('show');
-  }
-
-  /* ── EXPORT CSV ── */
-  function exportCSV() {
-    const rows = [
-      ['유형','ID','이름','연락처','업종','지역','상태','신청일'],
-      ...supplyData.map(d=>['공급연결',d.id,d.name,d.phone,d.type,d.region,d.status,d.date]),
-      ...consultData.map(d=>['컨설팅',d.id,d.name,d.phone,d.type,d.region||'',d.status,d.date]),
-    ];
-    const csv = '\uFEFF' + rows.map(r => r.join(',')).join('\n');
-    const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'MEAT_INSIGHT_신청내역_' + new Date().toISOString().slice(0,10) + '.csv';
-    a.click(); URL.revokeObjectURL(url);
-  }
+function exportCSV(){
+  const rows=[
+    ['유형','이름','연락처','업종','지역','플랜','결제상태','상태','신청일'],
+    ...supplyData.map(d=>['공급연결',d.name,d.phone,d.type,d.region,'-','-',d.status,d.date]),
+    ...consultData.map(d=>['컨설팅',d.name,d.phone,d.type,d.region||'',d.plan,d.payment_status||'-',d.status,d.date]),
+  ];
+  const csv='\uFEFF'+rows.map(r=>r.join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='MEAT_INSIGHT_신청내역_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(url);
+}
 </script>
 </body>
 </html>

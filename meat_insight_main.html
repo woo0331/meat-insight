@@ -6,8 +6,9 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>MEAT INSIGHT | 고기의 모든것 — 정육점·고깃집 창업 플랫폼</title>
-  <meta name="description" content="내 매장 수익 구조를 지금 바로 확인하세요. 지역·업종·평수 입력 3초, 예상 매출·마진·순이익 즉시 계산."/>
+  <meta name="description" content="내 매장 수익 구조를 지금 바로 확인하세요. 1972년 설립 협신식품 — 도축부터 납품까지 풀밸류체인."/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root{
       --navy:#0b1f3a;--gold:#b8945a;--gold2:#d4a96a;
@@ -32,14 +33,12 @@
     .nav-cta{background:var(--gold)!important;color:var(--navy)!important;border-radius:999px!important;padding:8px 16px!important}
     @media(max-width:768px){.nav-links{display:none}}
 
-    /* HERO — 계산기 중심 */
+    /* HERO */
     .hero{background:var(--navy);min-height:calc(100vh - 64px);display:flex;align-items:center;padding:40px 28px;position:relative;overflow:hidden}
     .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 700px 500px at 70% 40%,rgba(184,148,90,.1),transparent 65%);pointer-events:none}
     .hero::after{content:'肉';position:absolute;right:-2%;bottom:-5%;font-family:'Playfair Display',serif;font-size:clamp(200px,25vw,360px);font-weight:900;color:rgba(184,148,90,.04);line-height:1;pointer-events:none;user-select:none}
     .hero-inner{max-width:1240px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 480px;gap:60px;align-items:center;position:relative;z-index:1}
     @media(max-width:960px){.hero-inner{grid-template-columns:1fr;gap:40px}}
-
-    .hero-left{}
     .hero-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;border:1px solid rgba(184,148,90,.35);color:var(--gold);font-size:11px;font-weight:700;letter-spacing:.5px;margin-bottom:22px}
     .hero-badge::before{content:'●';font-size:7px;animation:pulse 2s infinite}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
@@ -47,7 +46,6 @@
     .hero-h1 em{color:var(--gold);font-style:normal;display:block}
     .hero-sub{font-size:15px;color:rgba(255,255,255,.55);line-height:1.8;margin-bottom:32px;max-width:42ch}
     .hero-trust{display:flex;gap:28px;flex-wrap:wrap}
-    .trust-item{}
     .trust-num{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--gold);line-height:1}
     .trust-label{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px}
 
@@ -60,12 +58,8 @@
     .calc-field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:.3px}
     .calc-field select,.calc-field input{width:100%;padding:14px 16px;border-radius:12px;border:2px solid var(--line);font-size:15px;font-family:inherit;color:var(--navy);background:#fff;outline:none;transition:border-color .15s;-webkit-appearance:none}
     .calc-field select:focus,.calc-field input:focus{border-color:var(--gold)}
-    .calc-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .calc-btn{width:100%;padding:17px;border-radius:14px;background:var(--navy);color:var(--gold);font-size:16px;font-weight:900;border:none;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
     .calc-btn:hover{background:#0f2d52;transform:translateY(-1px);box-shadow:0 6px 24px rgba(11,31,58,.3)}
-    .calc-btn:active{transform:translateY(0)}
-
-    /* 결과 카드 */
     .result-area{display:none;margin-top:20px;border-top:1px solid var(--line);padding-top:20px}
     .result-area.show{display:block;animation:fadeUp .4s ease both}
     @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -82,47 +76,59 @@
     .result-cta:hover{opacity:.88}
     .result-note{text-align:center;font-size:11px;color:var(--muted);margin-top:8px}
 
-    /* TRUST SECTION */
+    /* PROCESS */
+    .process-section{background:#fff;border-bottom:1px solid var(--line);padding:40px 28px}
+    .process-inner{max-width:1240px;margin:0 auto}
+    .process-label{font-size:12px;font-weight:700;color:var(--gold);margin-bottom:16px}
+    .process-steps{display:grid;grid-template-columns:repeat(6,1fr);gap:0}
+    .process-step{padding:16px 12px;text-align:center;border-right:1px solid var(--line)}
+    .process-step:last-child{border-right:none}
+    .step-num{width:36px;height:36px;border-radius:10px;background:var(--navy);color:var(--gold);display:grid;place-items:center;font-size:14px;font-weight:900;margin:0 auto 10px}
+    .step-label{font-size:13px;font-weight:900;color:var(--navy);margin-bottom:4px}
+    .step-sub{font-size:11px;color:var(--muted)}
+    @media(max-width:768px){.process-steps{grid-template-columns:repeat(3,1fr)}.process-step{border-bottom:1px solid var(--line)}}
+
+    /* 공통 섹션 */
+    .wrap{max-width:1240px;margin:0 auto;padding:0 28px}
+    .sec-label{font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+    .sec-title{font-family:'Playfair Display',serif;font-size:clamp(26px,3.5vw,38px);font-weight:900;color:var(--navy);margin-bottom:12px}
+    .sec-sub{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:40px}
+
+    /* TRUST */
     .trust-section{background:var(--navy);padding:56px 28px}
-    .trust-inner{max-width:1240px;margin:0 auto}
     .trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:32px}
     @media(max-width:768px){.trust-grid{grid-template-columns:repeat(2,1fr)}}
-    .trust-item-big{padding:28px 24px;border-right:1px solid rgba(255,255,255,.08);text-align:center}
-    .trust-item-big:last-child{border-right:none}
-    @media(max-width:768px){.trust-item-big:nth-child(2){border-right:none}.trust-item-big{border-bottom:1px solid rgba(255,255,255,.08)}}
+    .trust-item{padding:28px 24px;border-right:1px solid rgba(255,255,255,.08);text-align:center}
+    .trust-item:last-child{border-right:none}
+    @media(max-width:768px){.trust-item:nth-child(2){border-right:none}.trust-item{border-bottom:1px solid rgba(255,255,255,.08)}}
     .trust-icon{font-size:28px;margin-bottom:12px}
     .trust-big-num{font-family:'Playfair Display',serif;font-size:40px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:6px}
     .trust-big-label{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px}
     .trust-big-sub{font-size:12px;color:rgba(255,255,255,.4)}
 
-    /* SERVICES */
-    .services-section{padding:64px 28px;background:var(--off)}
-    .services-inner{max-width:1240px;margin:0 auto}
-    .sec-label{font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
-    .sec-title{font-family:'Playfair Display',serif;font-size:clamp(26px,3.5vw,38px);font-weight:900;color:var(--navy);margin-bottom:12px}
-    .sec-sub{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:40px}
-    .services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-    @media(max-width:900px){.services-grid{grid-template-columns:1fr 1fr}}
-    @media(max-width:560px){.services-grid{grid-template-columns:1fr}}
-    .service-link{display:block;text-decoration:none;background:#fff;border-radius:var(--radius);padding:28px;border:2px solid transparent;box-shadow:var(--shadow);transition:all .2s}
-    .service-link:hover{border-color:var(--gold);transform:translateY(-4px);box-shadow:var(--shadow-lg)}
-    .service-link.dark{background:var(--navy)}
-    .sicon{font-size:30px;margin-bottom:14px}
-    .service-link h3{font-size:16px;font-weight:900;color:var(--navy);margin-bottom:8px}
-    .service-link.dark h3{color:#fff}
-    .service-link p{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px}
-    .service-link.dark p{color:rgba(255,255,255,.55)}
-    .stag{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:var(--off);color:var(--muted)}
-    .service-link.dark .stag{background:rgba(184,148,90,.2);color:var(--gold2)}
+    /* FEATURES */
+    .features-section{padding:64px 28px;background:var(--off)}
+    .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+    @media(max-width:900px){.features-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){.features-grid{grid-template-columns:1fr}}
+    .feature-link{display:block;text-decoration:none;background:#fff;border-radius:var(--radius);padding:28px;border:2px solid transparent;box-shadow:var(--shadow);transition:all .2s}
+    .feature-link:hover{border-color:var(--gold);transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+    .feature-link.dark{background:var(--navy)}
+    .ficon{font-size:30px;margin-bottom:14px}
+    .feature-link h3{font-size:16px;font-weight:900;color:var(--navy);margin-bottom:8px}
+    .feature-link.dark h3{color:#fff}
+    .feature-link p{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+    .feature-link.dark p{color:rgba(255,255,255,.55)}
+    .ftag{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:var(--off);color:var(--muted)}
+    .feature-link.dark .ftag{background:rgba(184,148,90,.2);color:var(--gold2)}
 
-    /* DATA SECTION */
+    /* DATA */
     .data-section{background:#fff;padding:64px 28px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-    .data-inner{max-width:1240px;margin:0 auto}
     .data-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:40px}
     @media(max-width:768px){.data-grid{grid-template-columns:1fr}}
     .data-card{background:var(--off);border-radius:16px;padding:28px;border:1px solid var(--line)}
     .data-card-title{font-size:14px;font-weight:900;color:var(--navy);margin-bottom:16px;display:flex;align-items:center;gap:8px}
-    .data-rows{display:flex;flex-direction:column;gap:10px}
+    .data-rows{display:flex;flex-direction:column;gap:0}
     .data-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
     .data-row:last-child{border-bottom:none}
     .data-row-label{color:var(--muted)}
@@ -131,13 +137,12 @@
 
     /* CASES */
     .cases-section{padding:64px 28px;background:var(--off)}
-    .cases-inner{max-width:1240px;margin:0 auto}
     .cases-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:32px}
     @media(max-width:900px){.cases-grid{grid-template-columns:1fr}}
     .case-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--line)}
-    .case-top{background:var(--navy);padding:20px 24px;display:flex;align-items:center;justify-content:space-between}
-    .case-badge{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(184,148,90,.2);color:var(--gold);font-size:10px;font-weight:700}
-    .case-top-title{font-size:15px;font-weight:900;color:#fff;margin-top:6px}
+    .case-top{background:var(--navy);padding:20px 24px}
+    .case-badge{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(184,148,90,.2);color:var(--gold);font-size:10px;font-weight:700;margin-bottom:8px}
+    .case-top-title{font-size:15px;font-weight:900;color:#fff}
     .case-body{padding:24px}
     .case-flow{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
     .case-flow-item{text-align:center;flex:1;min-width:70px}
@@ -168,23 +173,102 @@
     .btn-submit{width:100%;padding:16px;border-radius:12px;background:var(--gold);color:var(--navy);font-size:15px;font-weight:900;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s}
     .btn-submit:hover{opacity:.88}
 
+    /* CONSULTING */
+    .consulting-section{padding:64px 28px;background:var(--off)}
+    .plans-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:760px;margin:32px auto 0}
+    @media(max-width:640px){.plans-grid{grid-template-columns:1fr}}
+    .plan-card{background:#fff;border:2px solid var(--line);border-radius:var(--radius);padding:32px;box-shadow:var(--shadow);transition:transform .2s}
+    .plan-card:hover{transform:translateY(-4px)}
+    .plan-card.featured{background:var(--navy);border-color:var(--gold)}
+    .plan-badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700;background:var(--off);color:var(--muted);margin-bottom:16px}
+    .plan-card.featured .plan-badge{background:rgba(184,148,90,.2);color:var(--gold)}
+    .plan-name{font-size:18px;font-weight:900;color:var(--navy);margin-bottom:8px}
+    .plan-card.featured .plan-name{color:#fff}
+    .plan-price{font-family:'Playfair Display',serif;font-size:40px;font-weight:900;color:var(--navy);line-height:1;margin-bottom:4px}
+    .plan-card.featured .plan-price{color:var(--gold)}
+    .plan-price-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+    .plan-card.featured .plan-price-sub{color:rgba(255,255,255,.4)}
+    .plan-divider{height:1px;background:var(--line);margin-bottom:18px}
+    .plan-card.featured .plan-divider{background:rgba(255,255,255,.1)}
+    .plan-features{list-style:none;padding:0;margin-bottom:24px}
+    .plan-features li{padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;color:var(--navy);display:flex;gap:8px}
+    .plan-card.featured .plan-features li{border-color:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
+    .plan-features li::before{content:'✓';color:var(--gold);font-weight:900;flex-shrink:0}
+    .btn-plan{display:block;text-align:center;padding:14px;border-radius:12px;font-size:15px;font-weight:900;text-decoration:none;background:var(--off);color:var(--navy);border:2px solid var(--navy);transition:all .2s}
+    .btn-plan:hover{background:var(--navy);color:#fff}
+    .plan-card.featured .btn-plan{background:var(--gold);color:var(--navy);border-color:transparent}
+    .plan-card.featured .btn-plan:hover{opacity:.88}
+
+    /* PARTNER */
+    .partner-section{background:var(--navy);padding:56px 28px}
+    .partner-inner{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+    @media(max-width:900px){.partner-inner{grid-template-columns:1fr}}
+    .partner-cats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .partner-cat{background:rgba(255,255,255,.07);border:1px solid rgba(184,148,90,.2);border-radius:12px;padding:14px;text-align:center}
+    .partner-cat-icon{font-size:24px;margin-bottom:6px}
+    .partner-cat-name{font-size:12px;font-weight:700;color:#fff}
+
+    /* FAQ */
+    .faq-section{padding:64px 28px;background:#fff;border-top:1px solid var(--line)}
+    .faq-inner{max-width:800px;margin:0 auto}
+    .faq-list{display:flex;flex-direction:column;gap:12px;margin-top:40px}
+    .faq-item{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+    .faq-q{width:100%;padding:20px 24px;background:#fff;border:none;font-size:15px;font-weight:700;color:var(--navy);text-align:left;cursor:pointer;font-family:inherit;display:flex;justify-content:space-between;align-items:center;transition:background .15s}
+    .faq-q:hover{background:var(--off)}
+    .faq-q.open{background:var(--navy);color:var(--gold)}
+    .faq-arrow{font-size:18px;transition:transform .3s;flex-shrink:0}
+    .faq-q.open .faq-arrow{transform:rotate(180deg)}
+    .faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s ease;font-size:14px;color:var(--muted);line-height:1.8;padding:0 24px;background:#fafafa}
+    .faq-a.open{max-height:200px;padding:16px 24px 20px}
+
+    /* ABOUT */
+    .about-section{background:var(--navy);padding:64px 28px;position:relative;overflow:hidden}
+    .about-section::before{content:'協信';position:absolute;right:-2%;bottom:-10%;font-family:'Playfair Display',serif;font-size:clamp(150px,20vw,280px);font-weight:900;color:rgba(184,148,90,.04);line-height:1;pointer-events:none}
+    .about-inner{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;position:relative;z-index:1}
+    @media(max-width:900px){.about-inner{grid-template-columns:1fr}}
+    .about-year{font-family:'Playfair Display',serif;font-size:clamp(60px,10vw,120px);font-weight:900;color:rgba(184,148,90,.15);line-height:1;margin-bottom:-20px}
+    .about-title{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,44px);font-weight:900;color:#fff;margin-bottom:16px}
+    .about-title em{color:var(--gold);font-style:normal}
+    .about-desc{font-size:15px;color:rgba(255,255,255,.6);line-height:1.9;margin-bottom:32px}
+    .chain-flow{display:flex;flex-direction:column;gap:0}
+    .chain-item{display:flex;align-items:center;gap:16px;padding:16px 20px;background:rgba(255,255,255,.05);border:1px solid rgba(184,148,90,.15);border-radius:0;position:relative}
+    .chain-item:first-child{border-radius:14px 14px 0 0}
+    .chain-item:last-child{border-radius:0 0 14px 14px;border-top:none}
+    .chain-item:not(:first-child):not(:last-child){border-top:none}
+    .chain-item.active{background:rgba(184,148,90,.12);border-color:rgba(184,148,90,.4)}
+    .chain-num{width:32px;height:32px;border-radius:50%;background:rgba(184,148,90,.2);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0}
+    .chain-item.active .chain-num{background:var(--gold);color:var(--navy)}
+    .chain-name{font-size:14px;font-weight:700;color:#fff}
+    .chain-desc{font-size:12px;color:rgba(255,255,255,.45);margin-top:2px}
+    .chain-badge{margin-left:auto;padding:3px 8px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:10px;font-weight:900}
+    .about-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:24px}
+    .about-stat{background:rgba(255,255,255,.06);border:1px solid rgba(184,148,90,.15);border-radius:12px;padding:16px}
+    .about-stat-num{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px}
+    .about-stat-label{font-size:12px;color:rgba(255,255,255,.5)}
+
     /* CTA */
     .cta-section{padding:64px 28px;background:var(--off)}
-    .cta-inner{max-width:1240px;margin:0 auto}
-    .cta-box{background:var(--navy);border-radius:24px;padding:52px 48px;display:flex;align-items:center;justify-content:space-between;gap:32px;position:relative;overflow:hidden}
+    .cta-box{max-width:1240px;margin:0 auto;background:var(--navy);border-radius:24px;padding:52px 48px;display:flex;align-items:center;justify-content:space-between;gap:32px;position:relative;overflow:hidden}
     .cta-box::before{content:'';position:absolute;right:-40px;top:-40px;width:240px;height:240px;background:rgba(184,148,90,.08);border-radius:50%}
     .cta-box h2{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,32px);font-weight:900;color:#fff;margin-bottom:8px}
     .cta-box p{font-size:14px;color:rgba(255,255,255,.55)}
-    .cta-btns{display:flex;gap:12px;flex-shrink:0;position:relative}
+    .cta-btns{display:flex;gap:12px;flex-shrink:0;position:relative;flex-wrap:wrap}
     .btn-gold{display:inline-block;padding:14px 26px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:14px;font-weight:900;text-decoration:none;transition:opacity .15s}
     .btn-gold:hover{opacity:.88}
     .btn-outline-w{display:inline-block;padding:14px 26px;border-radius:999px;border:1.5px solid rgba(255,255,255,.25);color:#fff;font-size:14px;font-weight:700;text-decoration:none;transition:border-color .15s}
     .btn-outline-w:hover{border-color:rgba(255,255,255,.5)}
-    @media(max-width:768px){.cta-box{flex-direction:column;align-items:flex-start;padding:36px 24px}.cta-btns{flex-wrap:wrap}}
+    @media(max-width:768px){.cta-box{flex-direction:column;align-items:flex-start;padding:36px 24px}}
 
     /* FOOTER */
-    footer{background:var(--navy);color:rgba(255,255,255,.4);padding:36px 28px;text-align:center;font-size:13px;line-height:1.8}
-    footer strong{display:block;color:var(--gold);font-size:14px;font-weight:900;margin-bottom:8px}
+    footer{background:#060f1e;color:rgba(255,255,255,.35);padding:40px 28px;font-size:13px;line-height:1.8}
+    .footer-inner{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:40px}
+    @media(max-width:640px){.footer-inner{grid-template-columns:1fr}}
+    footer strong{display:block;color:var(--gold);font-size:15px;font-weight:900;margin-bottom:12px}
+    .footer-info{display:flex;flex-direction:column;gap:4px}
+    .footer-links{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+    .footer-links a{color:rgba(255,255,255,.4);text-decoration:none;font-size:13px;transition:color .15s}
+    .footer-links a:hover{color:var(--gold)}
+    .footer-bottom{max-width:1240px;margin:24px auto 0;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);font-size:12px;color:rgba(255,255,255,.2)}
 
     /* STICKY */
     .sticky-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(11,31,58,.97);backdrop-filter:blur(20px);border-top:1px solid rgba(184,148,90,.2);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
@@ -195,7 +279,6 @@
     .sbtn-ghost{padding:10px 20px;border-radius:999px;border:1.5px solid rgba(184,148,90,.4);color:var(--gold);font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap}
     @media(max-width:640px){.sticky-bar{flex-direction:column;gap:8px;padding:10px 20px}.sticky-btns{width:100%;justify-content:center}.sticky-info{text-align:center}}
 
-    /* 토스트 */
     .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--navy);border:1px solid rgba(184,148,90,.4);border-radius:10px;padding:12px 24px;font-size:13px;color:#fff;opacity:0;transition:all .3s;z-index:999;white-space:nowrap;pointer-events:none}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   </style>
@@ -219,34 +302,20 @@
   </div>
 </nav>
 
-<!-- HERO — 계산기 바로 노출 -->
+<!-- HERO + 계산기 -->
 <section class="hero">
   <div class="hero-inner">
-    <div class="hero-left">
-      <div class="hero-badge">대한민국 정육점·고깃집 창업 데이터</div>
+    <div>
+      <div class="hero-badge">1972년 설립 · 도축부터 납품까지</div>
       <h1 class="hero-h1">내 매장<br/><em>수익 구조</em><br/>지금 확인하세요</h1>
       <p class="hero-sub">지역·업종·평수 3가지만 입력하면<br/>예상 매출·마진·순이익을 즉시 계산합니다.</p>
       <div class="hero-trust">
-        <div class="trust-item">
-          <div class="trust-num">직영</div>
-          <div class="trust-label">도축장 운영</div>
-        </div>
-        <div class="trust-item">
-          <div class="trust-num">월 80톤+</div>
-          <div class="trust-label">처리 물량</div>
-        </div>
-        <div class="trust-item">
-          <div class="trust-num">150+</div>
-          <div class="trust-label">납품 거래처</div>
-        </div>
-        <div class="trust-item">
-          <div class="trust-num">10년+</div>
-          <div class="trust-label">업력</div>
-        </div>
+        <div><div class="trust-num">52년+</div><div class="trust-label">업력</div></div>
+        <div><div class="trust-num">직영</div><div class="trust-label">도축장 운영</div></div>
+        <div><div class="trust-num">월 80톤+</div><div class="trust-label">처리 물량</div></div>
+        <div><div class="trust-num">150+</div><div class="trust-label">납품 거래처</div></div>
       </div>
     </div>
-
-    <!-- 계산기 카드 -->
     <div class="calc-card">
       <div class="calc-title">🥩 매장 수익 즉시 계산</div>
       <div class="calc-sub">입력 3초 · 결과 즉시 · 완전 무료</div>
@@ -277,122 +346,69 @@
           <input type="number" id="c-size" placeholder="예: 20" min="5" max="200"/>
         </div>
       </div>
-      <button class="calc-btn" onclick="calcResult()">
-        📊 예상 매출 확인하기
-      </button>
-
-      <!-- 결과 영역 -->
+      <button class="calc-btn" onclick="calcResult()">📊 예상 매출 확인하기</button>
       <div class="result-area" id="result-area">
         <div class="result-grid">
-          <div class="result-card">
-            <div class="result-label">월 예상 매출</div>
-            <div class="result-val" id="r-sales">-</div>
-            <div class="result-sub">만원/월</div>
-          </div>
-          <div class="result-card">
-            <div class="result-label">평균 마진율</div>
-            <div class="result-val" id="r-margin">-</div>
-            <div class="result-sub">%</div>
-          </div>
-          <div class="result-card highlight">
-            <div class="result-label">예상 순이익</div>
-            <div class="result-val" id="r-profit">-</div>
-            <div class="result-sub">만원/월</div>
-          </div>
+          <div class="result-card"><div class="result-label">월 예상 매출</div><div class="result-val" id="r-sales">-</div><div class="result-sub">만원/월</div></div>
+          <div class="result-card"><div class="result-label">평균 마진율</div><div class="result-val" id="r-margin">-</div><div class="result-sub">%</div></div>
+          <div class="result-card highlight"><div class="result-label">예상 순이익</div><div class="result-val" id="r-profit">-</div><div class="result-sub">만원/월</div></div>
         </div>
-        <button class="result-cta" onclick="window.location.href='meat_insight_apply.html?tab=consulting'">
-          내 매장 수익 구조 정밀 분석받기 →
-        </button>
+        <button class="result-cta" onclick="window.location.href='meat_insight_apply.html?tab=consulting'">내 매장 수익 구조 정밀 분석받기 →</button>
         <div class="result-note">* 업계 평균 데이터 기반 추정치입니다</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- 신뢰 지표 -->
-<div class="trust-section">
-  <div class="trust-inner">
-    <div class="sec-label" style="color:var(--gold2)">왜 MEAT INSIGHT인가</div>
-    <div class="sec-title" style="color:#fff;font-family:'Playfair Display',serif;font-size:clamp(24px,3vw,36px);font-weight:900">숫자가 말합니다</div>
-    <div class="trust-grid">
-      <div class="trust-item-big">
-        <div class="trust-icon">🏭</div>
-        <div class="trust-big-num">직영</div>
-        <div class="trust-big-label">도축장 운영</div>
-        <div class="trust-big-sub">중간 유통 없는 직공급</div>
-      </div>
-      <div class="trust-item-big">
-        <div class="trust-icon">🥩</div>
-        <div class="trust-big-num">80톤+</div>
-        <div class="trust-big-label">월 처리 물량</div>
-        <div class="trust-big-sub">안정적인 공급 규모</div>
-      </div>
-      <div class="trust-item-big">
-        <div class="trust-icon">🤝</div>
-        <div class="trust-big-num">150+</div>
-        <div class="trust-big-label">납품 거래처</div>
-        <div class="trust-big-sub">정육점·고깃집·식당</div>
-      </div>
-      <div class="trust-item-big">
-        <div class="trust-icon">📅</div>
-        <div class="trust-big-num">10년+</div>
-        <div class="trust-big-label">업력</div>
-        <div class="trust-big-sub">검증된 공급 파트너</div>
-      </div>
+<!-- 창업 프로세스 -->
+<div class="process-section">
+  <div class="process-inner">
+    <div class="process-label">창업 프로세스</div>
+    <div class="process-steps">
+      <div class="process-step"><div class="step-num">1</div><div class="step-label">창업 진단</div><div class="step-sub">무료·즉시 결과</div></div>
+      <div class="process-step"><div class="step-num">2</div><div class="step-label">매출 계산</div><div class="step-sub">실시간 시뮬레이션</div></div>
+      <div class="process-step"><div class="step-num">3</div><div class="step-label">원가 분석</div><div class="step-sub">수율·마진 계산</div></div>
+      <div class="process-step"><div class="step-num">4</div><div class="step-label">공급 연결</div><div class="step-sub">도매 직접 연결</div></div>
+      <div class="process-step"><div class="step-num">5</div><div class="step-label">컨설팅</div><div class="step-sub">비대면 자료</div></div>
+      <div class="process-step"><div class="step-num">6</div><div class="step-label">오픈</div><div class="step-sub">체크리스트 완료</div></div>
     </div>
   </div>
 </div>
 
-<!-- 서비스 -->
-<section class="services-section">
-  <div class="services-inner">
+<!-- 신뢰 지표 -->
+<div class="trust-section">
+  <div class="wrap">
+    <div class="sec-label" style="color:var(--gold2)">왜 MEAT INSIGHT인가</div>
+    <div class="sec-title" style="color:#fff">숫자가 말합니다</div>
+    <div class="trust-grid">
+      <div class="trust-item"><div class="trust-icon">🏭</div><div class="trust-big-num">직영</div><div class="trust-big-label">도축장 운영</div><div class="trust-big-sub">중간 유통 없는 직공급</div></div>
+      <div class="trust-item"><div class="trust-icon">🥩</div><div class="trust-big-num">월 80톤+</div><div class="trust-big-label">처리 물량</div><div class="trust-big-sub">안정적인 공급 규모</div></div>
+      <div class="trust-item"><div class="trust-icon">🤝</div><div class="trust-big-num">150+</div><div class="trust-big-label">납품 거래처</div><div class="trust-big-sub">정육점·고깃집·식당</div></div>
+      <div class="trust-item"><div class="trust-icon">📅</div><div class="trust-big-num">52년+</div><div class="trust-big-label">업력</div><div class="trust-big-sub">1972년 설립</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 핵심 서비스 -->
+<section class="features-section">
+  <div class="wrap">
     <div class="sec-label">핵심 서비스</div>
-    <div class="sec-title">결과 중심 서비스만<br/>제공합니다</div>
-    <div class="sec-sub">설명이 아닌 실제 수치. 느낌이 아닌 데이터로 창업을 결정하세요.</div>
-    <div class="services-grid">
-      <a href="meat_insight_diagnosis.html" class="service-link">
-        <div class="sicon">🎯</div>
-        <h3>창업 진단</h3>
-        <p>지역·평수·자본금 입력 → 예상 매출·리스크·전략 즉시 출력</p>
-        <span class="stag">무료 · 2분</span>
-      </a>
-      <a href="meat_insight_calculator.html" class="service-link dark">
-        <div class="sicon">📊</div>
-        <h3>5종 매출 계산기</h3>
-        <p>정육점·고깃집·원가·창업비용·수율 — 숫자 입력 즉시 결과</p>
-        <span class="stag">실시간 계산</span>
-      </a>
-      <a href="meat_insight_apply.html" class="service-link">
-        <div class="sicon">🥩</div>
-        <h3>고기 공급 직연결</h3>
-        <p>도축장 직공급으로 마진 확보. 업종·규모별 도매 거래선 매칭</p>
-        <span class="stag">빠른 연결</span>
-      </a>
-      <a href="meat_insight_apply.html?tab=consulting" class="service-link">
-        <div class="sicon">📋</div>
-        <h3>비대면 컨설팅</h3>
-        <p>손익·원가·수율 분석 자료를 비대면으로. 방문 없이 전문 자료 수령</p>
-        <span class="stag">50만~100만원</span>
-      </a>
-      <a href="meat_insight_cases.html" class="service-link">
-        <div class="sicon">📈</div>
-        <h3>실제 창업 사례</h3>
-        <p>투자금 → 매출 → 순이익 실제 수치 공개. 숫자로 판단하세요</p>
-        <span class="stag">수치 공개</span>
-      </a>
-      <a href="meat_insight_partner.html" class="service-link">
-        <div class="sicon">🤝</div>
-        <h3>파트너 입점</h3>
-        <p>공급업체·장비·인테리어·광고 — 창업자에게 직접 노출</p>
-        <span class="stag">파트너 모집 중</span>
-      </a>
+    <div class="sec-title">단순 정보가 아닌<br/>실제로 쓰는 서비스</div>
+    <div class="sec-sub">계산기를 직접 돌려보고, 진단을 받고, 공급까지 연결하세요.</div>
+    <div class="features-grid">
+      <a href="meat_insight_diagnosis.html" class="feature-link"><div class="ficon">🎯</div><h3>창업 진단 시스템</h3><p>지역·평수·자본금 입력 → 예상 매출·리스크·전략 즉시 출력</p><span class="ftag">무료 · 2분</span></a>
+      <a href="meat_insight_calculator.html" class="feature-link dark"><div class="ficon">📊</div><h3>5종 매출 계산기</h3><p>정육점·고깃집·원가·창업비용·수율 — 숫자 입력 즉시 결과</p><span class="ftag">실시간 계산</span></a>
+      <a href="meat_insight_apply.html" class="feature-link"><div class="ficon">🥩</div><h3>고기 공급 직연결</h3><p>도축장 직공급으로 마진 확보. 업종·규모별 도매 거래선 매칭</p><span class="ftag">빠른 연결</span></a>
+      <a href="meat_insight_apply.html?tab=consulting" class="feature-link"><div class="ficon">📋</div><h3>비대면 컨설팅</h3><p>손익·원가·수율 분석 자료를 비대면으로. 방문 없이 전문 자료 수령</p><span class="ftag">50만~100만원</span></a>
+      <a href="meat_insight_cases.html" class="feature-link"><div class="ficon">📈</div><h3>실제 창업 사례</h3><p>투자금 → 매출 → 순이익 실제 수치 공개. 12개 사례 수록</p><span class="ftag">수치 공개</span></a>
+      <a href="meat_insight_partner.html" class="feature-link"><div class="ficon">🤝</div><h3>파트너 입점</h3><p>공급업체·장비·인테리어·광고 — 창업자에게 직접 노출</p><span class="ftag">파트너 모집 중</span></a>
     </div>
   </div>
 </section>
 
 <!-- 데이터 공개 -->
 <div class="data-section">
-  <div class="data-inner">
+  <div class="wrap">
     <div class="sec-label">핵심 데이터 공개</div>
     <div class="sec-title">평균 수익 구조<br/>숫자로 공개합니다</div>
     <div class="sec-sub">업계 실제 데이터를 기반으로 정리했습니다.</div>
@@ -411,7 +427,7 @@
         <div class="data-rows">
           <div class="data-row"><div class="data-row-label">10평 이하</div><div class="data-row-val">2,000~3,500만</div></div>
           <div class="data-row"><div class="data-row-label">10~20평</div><div class="data-row-val">3,500~6,000만</div></div>
-          <div class="data-row"><div class="data-row-label">20~30평</div><div class="data-row-val">6,000~1억</div></div>
+          <div class="data-row"><div class="data-row-label">20~30평</div><div class="data-row-val">6,000만~1억</div></div>
           <div class="data-row"><div class="data-row-label">30평 이상</div><div class="data-row-val">1억+</div></div>
         </div>
       </div>
@@ -428,66 +444,21 @@
   </div>
 </div>
 
-<!-- 실제 사례 (숫자 중심) -->
+<!-- 실제 사례 -->
 <section class="cases-section">
-  <div class="cases-inner">
+  <div class="wrap">
     <div class="sec-label">실제 창업 사례</div>
     <div class="sec-title">투자금 → 매출 → 순이익<br/>실제 수치 공개</div>
-    <div class="sec-sub">경험담이 아닌 실제 운영 데이터입니다.</div>
     <div class="cases-grid">
-      <div class="case-card">
-        <div class="case-top">
-          <div><div class="case-badge">성공 사례 01</div><div class="case-top-title">경기 수원 20평 고깃집</div></div>
-        </div>
-        <div class="case-body">
-          <div class="case-flow">
-            <div class="case-flow-item"><div class="case-flow-label">투자금</div><div class="case-flow-val">1.2억</div></div>
-            <div class="case-flow-arrow">→</div>
-            <div class="case-flow-item"><div class="case-flow-label">월 매출</div><div class="case-flow-val">1억80만</div></div>
-            <div class="case-flow-arrow">→</div>
-            <div class="case-flow-item profit"><div class="case-flow-label">순이익</div><div class="case-flow-val">2,000만</div></div>
-          </div>
-          <div class="case-detail">좌석 48석 · 객단가 28,000원 · 일 120명 · 회수기간 6개월</div>
-          <a href="meat_insight_cases.html" class="case-link">자세히 보기 →</a>
-        </div>
-      </div>
-      <div class="case-card">
-        <div class="case-top">
-          <div><div class="case-badge">성공 사례 02</div><div class="case-top-title">서울 마포 12평 정육점</div></div>
-        </div>
-        <div class="case-body">
-          <div class="case-flow">
-            <div class="case-flow-item"><div class="case-flow-label">투자금</div><div class="case-flow-val">6,500만</div></div>
-            <div class="case-flow-arrow">→</div>
-            <div class="case-flow-item"><div class="case-flow-label">월 매출</div><div class="case-flow-val">9,400만</div></div>
-            <div class="case-flow-arrow">→</div>
-            <div class="case-flow-item profit"><div class="case-flow-label">순이익</div><div class="case-flow-val">900만</div></div>
-          </div>
-          <div class="case-detail">일 방문 90명 · 평균 구매 35,000원 · 원가율 60% · 1인 운영</div>
-          <a href="meat_insight_cases.html" class="case-link">자세히 보기 →</a>
-        </div>
-      </div>
-      <div class="case-card">
-        <div class="case-top">
-          <div><div class="case-badge">성공 사례 03</div><div class="case-top-title">인천 15평 정육식당</div></div>
-        </div>
-        <div class="case-body">
-          <div class="case-flow">
-            <div class="case-flow-item"><div class="case-flow-label">투자금</div><div class="case-flow-val">8,000만</div></div>
-            <div class="case-flow-arrow">→</div>
-            <div class="case-flow-item"><div class="case-flow-label">월 매출</div><div class="case-flow-val">7,200만</div></div>
-            <div class="case-flow-arrow">→</div>
-            <div class="case-flow-item profit"><div class="case-flow-label">순이익</div><div class="case-flow-val">1,100만</div></div>
-          </div>
-          <div class="case-detail">정육+식당 겸업 · 객단가 35,000원 · 일 70명 · 회수기간 7개월</div>
-          <a href="meat_insight_cases.html" class="case-link">자세히 보기 →</a>
-        </div>
-      </div>
+      <div class="case-card"><div class="case-top"><div class="case-badge">성공 사례 01</div><div class="case-top-title">경기 수원 20평 고깃집</div></div><div class="case-body"><div class="case-flow"><div class="case-flow-item"><div class="case-flow-label">투자금</div><div class="case-flow-val">1.2억</div></div><div class="case-flow-arrow">→</div><div class="case-flow-item"><div class="case-flow-label">월 매출</div><div class="case-flow-val">1억80만</div></div><div class="case-flow-arrow">→</div><div class="case-flow-item profit"><div class="case-flow-label">순이익</div><div class="case-flow-val">2,000만</div></div></div><div class="case-detail">좌석 48석 · 객단가 28,000원 · 일 120명</div><a href="meat_insight_cases.html" class="case-link">자세히 보기 →</a></div></div>
+      <div class="case-card"><div class="case-top"><div class="case-badge">성공 사례 02</div><div class="case-top-title">서울 마포 12평 정육점</div></div><div class="case-body"><div class="case-flow"><div class="case-flow-item"><div class="case-flow-label">투자금</div><div class="case-flow-val">6,500만</div></div><div class="case-flow-arrow">→</div><div class="case-flow-item"><div class="case-flow-label">월 매출</div><div class="case-flow-val">9,400만</div></div><div class="case-flow-arrow">→</div><div class="case-flow-item profit"><div class="case-flow-label">순이익</div><div class="case-flow-val">900만</div></div></div><div class="case-detail">일 방문 90명 · 평균 구매 35,000원</div><a href="meat_insight_cases.html" class="case-link">자세히 보기 →</a></div></div>
+      <div class="case-card"><div class="case-top"><div class="case-badge">성공 사례 03</div><div class="case-top-title">인천 15평 정육식당</div></div><div class="case-body"><div class="case-flow"><div class="case-flow-item"><div class="case-flow-label">투자금</div><div class="case-flow-val">8,000만</div></div><div class="case-flow-arrow">→</div><div class="case-flow-item"><div class="case-flow-label">월 매출</div><div class="case-flow-val">7,200만</div></div><div class="case-flow-arrow">→</div><div class="case-flow-item profit"><div class="case-flow-label">순이익</div><div class="case-flow-val">1,100만</div></div></div><div class="case-detail">객단가 35,000원 · 일 70명 · 회수 7개월</div><a href="meat_insight_cases.html" class="case-link">자세히 보기 →</a></div></div>
     </div>
+    <div style="text-align:center;margin-top:28px"><a href="meat_insight_cases.html" class="btn-gold" style="display:inline-block">실패 사례 포함 12개 전체 보기 →</a></div>
   </div>
 </section>
 
-<!-- 공급 연결 폼 -->
+<!-- 공급 연결 -->
 <div class="supply-section">
   <div class="supply-inner">
     <div>
@@ -498,6 +469,7 @@
         <div class="supply-item"><div class="supply-item-icon">🐄</div><div><div class="supply-item-name">한우 / 육우</div><div class="supply-item-sub">등심·안심·갈비·부분육 전 부위</div></div></div>
         <div class="supply-item"><div class="supply-item-icon">🐷</div><div><div class="supply-item-name">국내산 돼지고기</div><div class="supply-item-sub">삼겹·목살·항정·특수부위</div></div></div>
         <div class="supply-item"><div class="supply-item-icon">🌏</div><div><div class="supply-item-name">수입육</div><div class="supply-item-sub">미국산·호주산·캐나다산</div></div></div>
+        <div class="supply-item"><div class="supply-item-icon">📦</div><div><div class="supply-item-name">지육 / 부분육</div><div class="supply-item-sub">규격별 맞춤 공급 가능</div></div></div>
       </div>
     </div>
     <div>
@@ -506,19 +478,109 @@
           <div class="field"><label>이름</label><input type="text" id="s-name" placeholder="홍길동"/></div>
           <div class="field"><label>연락처</label><input type="tel" id="s-phone" placeholder="010-0000-0000"/></div>
         </div>
-        <div class="field">
-          <label>업종</label>
-          <select id="s-type">
-            <option value="">선택해주세요</option>
-            <option>정육점 창업 준비 중</option>
-            <option>고깃집 창업 준비 중</option>
-            <option>현재 운영 중 (거래선 변경)</option>
-          </select>
-        </div>
+        <div class="field"><label>업종</label><select id="s-type"><option value="">선택해주세요</option><option>정육점 창업 준비 중</option><option>고깃집 창업 준비 중</option><option>현재 운영 중 (거래선 변경)</option></select></div>
         <div class="field"><label>필요 품목</label><input type="text" id="s-items" placeholder="예: 한우 등심, 국내산 삼겹살"/></div>
         <div class="field"><label>지역</label><input type="text" id="s-region" placeholder="예: 서울 마포구"/></div>
         <button class="btn-submit" onclick="submitSupply()">공급 연결 신청하기</button>
-        <div style="font-size:12px;color:rgba(255,255,255,.35);text-align:center">신청 후 1~2 영업일 내 담당자 연락</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.35);text-align:center;margin-top:8px">신청 후 1~2 영업일 내 담당자 연락</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 컨설팅 플랜 -->
+<section class="consulting-section">
+  <div class="wrap">
+    <div style="text-align:center">
+      <div class="sec-label" style="display:inline-block">비대면 컨설팅</div>
+      <div class="sec-title">전문 자료, 비대면으로</div>
+      <p style="font-size:15px;color:var(--muted);max-width:44ch;margin:0 auto">직접 방문 없이 손익 분석·창업 전략·원가 구조 자료를 카카오톡·이메일로 제공합니다.</p>
+    </div>
+    <div class="plans-grid">
+      <div class="plan-card">
+        <span class="plan-badge">STANDARD</span>
+        <div class="plan-name">기본 비대면 자료</div>
+        <div class="plan-price">50<span style="font-size:20px">만원</span></div>
+        <div class="plan-price-sub">부가세 별도</div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features"><li>비대면 기본 창업 분석 자료</li><li>손익 분석표</li><li>원가 구조 분석</li><li>창업 체크리스트</li><li>이메일 Q&A 2회</li></ul>
+        <a href="meat_insight_apply.html?tab=consulting" class="btn-plan">신청하기</a>
+      </div>
+      <div class="plan-card featured">
+        <span class="plan-badge">PREMIUM · 추천</span>
+        <div class="plan-name">심화 비대면 자료</div>
+        <div class="plan-price">100<span style="font-size:20px">만원</span></div>
+        <div class="plan-price-sub">부가세 별도</div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features"><li>Standard 전체 포함</li><li>심화 손익·원가·수율 분석</li><li>맞춤 창업 전략 자료</li><li>카카오톡 1:1 상담</li><li>전화 상담 1회</li></ul>
+        <a href="meat_insight_apply.html?tab=consulting" class="btn-plan">신청하기</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 파트너 모집 -->
+<div class="partner-section">
+  <div class="partner-inner">
+    <div>
+      <div class="sec-label" style="color:var(--gold2)">파트너 모집</div>
+      <div class="sec-title" style="color:#fff;font-family:'Playfair Display',serif;font-size:clamp(24px,3vw,36px);font-weight:900">함께 성장할<br/><span style="color:var(--gold)">파트너를 모집합니다</span></div>
+      <p style="font-size:15px;color:rgba(255,255,255,.6);line-height:1.8;margin-bottom:28px">고기 공급업체 · 정육 장비 · 인테리어 · 부동산 · 세무·법무 · 광고 배너</p>
+      <a href="meat_insight_partner.html" class="btn-gold">파트너 입점 신청하기 →</a>
+    </div>
+    <div class="partner-cats">
+      <div class="partner-cat"><div class="partner-cat-icon">🥩</div><div class="partner-cat-name">고기 공급업체</div></div>
+      <div class="partner-cat"><div class="partner-cat-icon">⚙️</div><div class="partner-cat-name">정육 장비·설비</div></div>
+      <div class="partner-cat"><div class="partner-cat-icon">🏪</div><div class="partner-cat-name">인테리어·간판</div></div>
+      <div class="partner-cat"><div class="partner-cat-icon">🏠</div><div class="partner-cat-name">부동산</div></div>
+      <div class="partner-cat"><div class="partner-cat-icon">📋</div><div class="partner-cat-name">세무·법무·보험</div></div>
+      <div class="partner-cat"><div class="partner-cat-icon">📢</div><div class="partner-cat-name">광고 배너</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="faq-inner">
+    <div style="text-align:center">
+      <div class="sec-label" style="display:inline-block">자주 묻는 질문</div>
+      <div class="sec-title">창업 전 꼭 확인하세요</div>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">자본금이 얼마나 있어야 창업이 가능한가요?<span class="faq-arrow">▾</span></button><div class="faq-a">정육점 기준 10평 소규모는 4,000~6,000만원, 20평은 7,000만~1억원이 필요합니다. 고깃집은 좌석 40석 기준 1억~1.5억원 수준입니다. 운전 자금 최소 6개월분(월 고정비×6)을 별도로 확보하는 것이 중요합니다.</div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">도매 가격으로 공급받으면 실제로 마진이 얼마나 늘어나나요?<span class="faq-arrow">▾</span></button><div class="faq-a">일반 중간 유통 대비 kg당 1,500~3,000원 절감이 가능합니다. 월 300kg 구매 기준 약 45~90만원, 연간 500~1,000만원 이상 차이가 납니다. 협신식품은 도축 직공급으로 중간 유통 마진이 없어 경쟁력이 높습니다.</div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">위생 허가와 영업 신고는 얼마나 걸리나요?<span class="faq-arrow">▾</span></button><div class="faq-a">정육점(식육판매업)은 관할 구청에 영업신고 후 즉시 가능합니다. 고깃집(일반음식점)은 위생교육 이수 후 영업신고로 보통 1~2주 소요됩니다. 단, 시설 기준 미달 시 보완 지시가 있을 수 있으니 인테리어 전 관할 위생과에 사전 확인을 추천합니다.</div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">비대면 컨설팅은 어떤 방식으로 진행되나요?<span class="faq-arrow">▾</span></button><div class="faq-a">신청 → 담당자 전화/카카오톡 상담 → 맞춤 자료 제작 (3~5 영업일) → 이메일·카카오톡 전달 순서로 진행됩니다. 직접 방문이 전혀 필요 없으며, PREMIUM 플랜의 경우 화상 미팅 1회가 포함됩니다.</div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">공급 연결 신청 후 얼마나 걸리나요?<span class="faq-arrow">▾</span></button><div class="faq-a">신청 후 1~2 영업일 내 담당자가 연락드립니다. 업종·규모·필요 품목 확인 후 적합한 거래선을 매칭하며, 첫 납품까지 보통 3~7일 소요됩니다. 소량 거래도 가능하니 창업 준비 중이라도 신청 가능합니다.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 회사 소개 (ABOUT) -->
+<div class="about-section">
+  <div class="about-inner">
+    <div>
+      <div class="about-year">1972</div>
+      <div class="about-title">대한민국 축산의<br/>원천에서 시작한<br/><em>협신식품</em></div>
+      <p class="about-desc">1972년 설립 이후 52년간 도축·경매·가공·유통을 직접 운영해온 풀밸류체인 축산 기업입니다. 일반 정육점이나 중간 유통이 아닌, 원천(도축)에서 시작하기 때문에 가격·수율·데이터 전부를 컨트롤할 수 있습니다.</p>
+      <div class="about-stats">
+        <div class="about-stat"><div class="about-stat-num">1만9천㎡+</div><div class="about-stat-label">시설 부지 규모</div></div>
+        <div class="about-stat"><div class="about-stat-num">52년</div><div class="about-stat-label">업력 (1972년~)</div></div>
+        <div class="about-stat"><div class="about-stat-num">월 80톤+</div><div class="about-stat-label">처리 물량</div></div>
+        <div class="about-stat"><div class="about-stat-num">150+</div><div class="about-stat-label">납품 거래처</div></div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.8px;margin-bottom:16px">풀밸류체인 구조</div>
+      <div class="chain-flow">
+        <div class="chain-item"><div class="chain-num">1</div><div><div class="chain-name">도축</div><div class="chain-desc">직영 도축장 운영 · 1만9천㎡+ 규모</div></div></div>
+        <div class="chain-item"><div class="chain-num">2</div><div><div class="chain-name">경매 (도매시장)</div><div class="chain-desc">축산물도매시장 직접 운영 · 중도매인 다수</div></div></div>
+        <div class="chain-item"><div class="chain-num">3</div><div><div class="chain-name">가공</div><div class="chain-desc">부분육 가공 · 진공 포장 · 규격화</div></div></div>
+        <div class="chain-item active"><div class="chain-num">4</div><div><div class="chain-name">유통 · 납품</div><div class="chain-desc">정육점·고깃집·식당 직납품·배송</div></div><div class="chain-badge">핵심</div></div>
+      </div>
+      <div style="margin-top:20px;background:rgba(184,148,90,.08);border:1px solid rgba(184,148,90,.2);border-radius:12px;padding:16px">
+        <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">✓ 이것이 강점입니다</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.8">중간 유통 마진 제거 → 창업자에게 더 낮은 원가<br/>도축 데이터 보유 → 수율·마진 정확한 계산 가능<br/>공급 안정성 보장 → 단일 공급처 의존 리스크 없음</div>
       </div>
     </div>
   </div>
@@ -526,33 +588,50 @@
 
 <!-- CTA -->
 <section class="cta-section">
-  <div class="cta-inner">
-    <div class="cta-box">
-      <div>
-        <h2>내 매장 수익 구조<br/>지금 확인하세요</h2>
-        <p>계산기로 먼저 확인하고, 정밀 분석은 컨설팅으로.</p>
-      </div>
-      <div class="cta-btns">
-        <a href="meat_insight_diagnosis.html" class="btn-gold">내 매장 수익 구조 확인하기</a>
-        <a href="meat_insight_apply.html?tab=consulting" class="btn-outline-w">컨설팅 신청</a>
-      </div>
+  <div class="cta-box">
+    <div>
+      <h2>내 매장 수익 구조<br/>지금 확인하세요</h2>
+      <p>계산기로 먼저 확인하고, 정밀 분석은 컨설팅으로.</p>
+    </div>
+    <div class="cta-btns">
+      <a href="meat_insight_diagnosis.html" class="btn-gold">내 매장 수익 구조 확인하기</a>
+      <a href="meat_insight_apply.html?tab=consulting" class="btn-outline-w">컨설팅 신청</a>
     </div>
   </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
-  <strong>MEAT INSIGHT · 고기의 모든것</strong>
-  대한민국 정육점 · 고깃집 창업 플랫폼<br/>
-  창업 진단 · 매출 계산 · 원가 분석 · 고기 공급 연결 · 비대면 컨설팅<br/><br/>
-  ⓒ 2025 MEAT INSIGHT. All rights reserved.
+  <div class="footer-inner">
+    <div>
+      <strong>MEAT INSIGHT · 고기의 모든것</strong>
+      <div class="footer-info">
+        <div>운영사 · (주식회사) 협신식품</div>
+        <div>설립 · 1972년</div>
+        <div>사업 · 도축장 운영 · 축산물도매시장 · 육가공 · 유통</div>
+        <div>시설 · 부지 1만9천㎡+ · 도축 및 육가공 시설 보유</div>
+      </div>
+    </div>
+    <div>
+      <strong>서비스 바로가기</strong>
+      <div class="footer-links">
+        <a href="meat_insight_diagnosis.html">창업 진단</a>
+        <a href="meat_insight_calculator.html">매출 계산기</a>
+        <a href="meat_insight_cases.html">창업 사례</a>
+        <a href="meat_insight_apply.html">공급 연결 신청</a>
+        <a href="meat_insight_apply.html?tab=consulting">비대면 컨설팅</a>
+        <a href="meat_insight_partner.html">파트너 입점</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">ⓒ 2025 MEAT INSIGHT · (주식회사) 협신식품. All rights reserved.</div>
 </footer>
 
 <!-- STICKY -->
 <div class="sticky-bar">
   <div class="sticky-info">
     <b>MEAT INSIGHT · 고기의 모든것</b>
-    <small>창업 진단부터 공급 연결까지</small>
+    <small>1972년 설립 협신식품 · 도축부터 납품까지</small>
   </div>
   <div class="sticky-btns">
     <a href="#" onclick="scrollToCalc()" class="sbtn-gold">수익 계산하기</a>
@@ -563,95 +642,62 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// 스크롤 to 계산기
-function scrollToCalc() {
-  document.getElementById('c-region').focus();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
+function scrollToCalc(){document.getElementById('c-region').focus();window.scrollTo({top:0,behavior:'smooth'})}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
 
-// 토스트
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-// ── 즉시 계산 ──
-function calcResult() {
-  const region = document.getElementById('c-region').value;
-  const type = document.getElementById('c-type').value;
-  const size = parseInt(document.getElementById('c-size').value);
-
-  if (!region || !type || !size || size < 5) {
-    showToast('⚠️ 지역, 업종, 평수를 모두 입력해주세요');
-    return;
+function calcResult(){
+  const region=document.getElementById('c-region').value;
+  const type=document.getElementById('c-type').value;
+  const size=parseInt(document.getElementById('c-size').value);
+  if(!region||!type||!size||size<5){showToast('⚠️ 지역, 업종, 평수를 모두 입력해주세요');return}
+  const rm={seoul:1.3,gyeonggi:1.1,busan:1.05,daegu:1.0,gwangju:0.95,daejeon:1.0,etc:0.9}[region]||1.0;
+  let sales,margin,profit;
+  if(type==='butcher'){
+    sales=Math.round(size*280*rm/100)*100;
+    margin=28;
+    const labor=size<=10?230:size<=20?480:size<=30?750:1000;
+    const rent=Math.round(size*15*rm/10)*10;
+    profit=Math.round((sales*margin/100-labor-rent)/10)*10;
+  }else{
+    const seats=Math.round(size*2.2);
+    const daily=Math.round(seats*2.5);
+    sales=Math.round(daily*28000*25/10000/10)*10;
+    margin=35;
+    const labor=size<=15?350:size<=25?700:1100;
+    const rent=Math.round(size*20*rm/10)*10;
+    profit=Math.round((sales*margin/100-labor-rent)/10)*10;
   }
-
-  // 지역 계수
-  const regionMult = {seoul:1.3, gyeonggi:1.1, busan:1.05, daegu:1.0, gwangju:0.95, daejeon:1.0, etc:0.9};
-  const rm = regionMult[region] || 1.0;
-
-  let sales, margin, profit;
-
-  if (type === 'butcher') {
-    // 정육점: 평당 매출 약 280만원
-    sales = Math.round(size * 280 * rm / 100) * 100;
-    margin = 28;
-    const laborCost = size <= 10 ? 230 : size <= 20 ? 480 : size <= 30 ? 750 : 1000;
-    const rent = Math.round(size * 15 * rm / 10) * 10;
-    profit = Math.round((sales * margin / 100 - laborCost - rent) / 10) * 10;
-  } else {
-    // 고깃집: 좌석수 기반 (평당 2.2석)
-    const seats = Math.round(size * 2.2);
-    const dailyCustomers = Math.round(seats * 2.5);
-    sales = Math.round(dailyCustomers * 28000 * 25 / 10000 / 10) * 10;
-    margin = 35;
-    const laborCost = size <= 15 ? 350 : size <= 25 ? 700 : 1100;
-    const rent = Math.round(size * 20 * rm / 10) * 10;
-    profit = Math.round((sales * margin / 100 - laborCost - rent) / 10) * 10;
-  }
-
-  profit = Math.max(profit, 100);
-
-  document.getElementById('r-sales').textContent = sales.toLocaleString();
-  document.getElementById('r-margin').textContent = margin;
-  document.getElementById('r-profit').textContent = profit.toLocaleString();
-
-  const resultArea = document.getElementById('result-area');
-  resultArea.classList.add('show');
-  resultArea.scrollIntoView({behavior:'smooth', block:'nearest'});
+  profit=Math.max(profit,100);
+  document.getElementById('r-sales').textContent=sales.toLocaleString();
+  document.getElementById('r-margin').textContent=margin;
+  document.getElementById('r-profit').textContent=profit.toLocaleString();
+  const ra=document.getElementById('result-area');
+  ra.classList.add('show');
+  ra.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-// ── 공급 연결 신청 ──
-async function submitSupply() {
-  const name = document.getElementById('s-name').value.trim();
-  const phone = document.getElementById('s-phone').value.trim();
-  const type = document.getElementById('s-type').value;
-  if (!name || !phone || !type) {
-    showToast('⚠️ 이름, 연락처, 업종은 필수입니다.');
-    return;
-  }
-  try {
-    const SUPABASE_URL = 'https://igignylgzjphtnyxhhsd.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnaWdueWxnempwaHRueXhoaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDUyMDAsImV4cCI6MjA4OTA4MTIwMH0.3u5gCw1dnG1YSmrzhN3PGVOMoQ1LBtGw0ToNhSeL42A';
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    await sb.from('supply_requests').insert([{
-      name, phone, type,
-      items: document.getElementById('s-items').value.trim(),
-      region: document.getElementById('s-region').value.trim(),
-      status: '신규'
-    }]);
-  } catch(e) { console.error(e); }
-  showToast('✅ 공급 연결 신청 완료! 1~2 영업일 내 연락드립니다.');
-  ['s-name','s-phone','s-items','s-region'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('s-type').value = '';
+async function submitSupply(){
+  const name=document.getElementById('s-name').value.trim();
+  const phone=document.getElementById('s-phone').value.trim();
+  const type=document.getElementById('s-type').value;
+  if(!name||!phone||!type){showToast('⚠️ 이름, 연락처, 업종은 필수입니다.');return}
+  try{
+    const sb=window.supabase.createClient('https://igignylgzjphtnyxhhsd.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnaWdueWxnempwaHRueXhoaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDUyMDAsImV4cCI6MjA4OTA4MTIwMH0.3u5gCw1dnG1YSmrzhN3PGVOMoQ1LBtGw0ToNhSeL42A');
+    await sb.from('supply_requests').insert([{name,phone,type,items:document.getElementById('s-items').value.trim(),region:document.getElementById('s-region').value.trim(),status:'신규'}]);
+  }catch(e){console.error(e)}
+  showToast('✅ 신청 완료! 1~2 영업일 내 연락드립니다.');
+  ['s-name','s-phone','s-items','s-region'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('s-type').value='';
 }
 
-// 엔터키로 계산
-document.getElementById('c-size').addEventListener('keydown', e => {
-  if (e.key === 'Enter') calcResult();
-});
+function toggleFaq(btn){
+  const ans=btn.nextElementSibling;
+  const isOpen=btn.classList.contains('open');
+  document.querySelectorAll('.faq-q').forEach(b=>{b.classList.remove('open');b.nextElementSibling.classList.remove('open')});
+  if(!isOpen){btn.classList.add('open');ans.classList.add('open')}
+}
+
+document.getElementById('c-size').addEventListener('keydown',e=>{if(e.key==='Enter')calcResult()});
 </script>
 </body>
 </html>

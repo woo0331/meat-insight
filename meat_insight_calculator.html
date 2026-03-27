@@ -187,7 +187,7 @@
 </div>
 
 <div class="pdf-btn-wrap">
-  <button class="btn-pdf" onclick="goToReport()">📋 내 창업 리포트 보기 →</button>
+  <button class="btn-pdf" onclick="goToReport()">📋 창업 리포트 신청하기 →</button>
 </div>
 
 <div class="main">
@@ -313,8 +313,11 @@
       </div>
     </div>
     <div class="cta-strip">
-      <div class="cta-strip-text"><b>더 정밀한 분석이 필요하다면?</b><span>전문가 비대면 컨설팅으로 맞춤 손익 분석 자료를 받아보세요</span></div>
-      <a class="btn-gold" href="meat_insight_apply.html?tab=consulting">컨설팅 신청 →</a>
+      <div class="cta-strip-text"><b>이 수치로 창업 리포트를 만들어드립니다</b><span>계산 결과 기반 맞춤 PDF · 1영업일 내 전달 · 20만원</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-gold" onclick="goToReport()">📋 창업 리포트 신청 (20만원) →</button>
+        <a style="padding:13px 20px;border-radius:999px;border:1.5px solid rgba(255,255,255,.3);color:#fff;font-size:13px;font-weight:700;text-decoration:none" href="meat_insight_apply.html?tab=consulting">비대면 컨설팅 (150만원)</a>
+      </div>
     </div>
   </div>
 
@@ -435,8 +438,11 @@
       </div>
     </div>
     <div class="cta-strip">
-      <div class="cta-strip-text"><b>손익 구조 자료가 필요하신가요?</b><span>비대면 컨설팅으로 상세 분석 자료를 받아보세요</span></div>
-      <a class="btn-gold" href="meat_insight_apply.html?tab=consulting">컨설팅 신청 →</a>
+      <div class="cta-strip-text"><b>이 수치로 창업 리포트를 만들어드립니다</b><span>계산 결과 기반 맞춤 PDF · 1영업일 내 전달 · 20만원</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-gold" onclick="goToReport()">📋 창업 리포트 신청 (20만원) →</button>
+        <a style="padding:13px 20px;border-radius:999px;border:1.5px solid rgba(255,255,255,.3);color:#fff;font-size:13px;font-weight:700;text-decoration:none" href="meat_insight_apply.html?tab=consulting">비대면 컨설팅 (150만원)</a>
+      </div>
     </div>
   </div>
 
@@ -624,7 +630,10 @@
 
 <div class="sticky-bar">
   <div class="sticky-text">MEAT INSIGHT · 수익 계산기<small>5종 무료 · 실시간 계산 · 업계 비교</small></div>
-  <a class="sticky-btn" href="meat_insight_diagnosis.html">창업 진단 받기</a>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <a class="sticky-btn" style="background:transparent;border:1.5px solid rgba(184,148,90,.4);color:var(--gold)" href="meat_insight_diagnosis.html">창업 진단</a>
+    <button class="sticky-btn" onclick="goToReport()" style="border:none;cursor:pointer">📋 창업 리포트 신청</button>
+  </div>
 </div>
 
 <script>
@@ -893,12 +902,36 @@ function calcYield(){
 /* ── 리포트 ── */
 function goToReport(){
   const params=new URLSearchParams();
-  params.set('bVis',document.getElementById('b-vis').value);params.set('bPrice',getVal('b-price'));params.set('bCost',document.getElementById('b-cost').value);params.set('bRev',document.getElementById('b-rev').textContent);params.set('bProfit',document.getElementById('b-profit').textContent);params.set('bMargin',document.getElementById('b-margin').textContent);params.set('bBep',document.getElementById('b-bep').textContent);
-  params.set('rSeats',document.getElementById('r-seats').value);params.set('rPrice',getVal('r-price'));params.set('rTurn',document.getElementById('r-turn').value);params.set('rCost',document.getElementById('r-cost').value);params.set('rRev',document.getElementById('r-rev').textContent);params.set('rProfit',document.getElementById('r-profit').textContent);params.set('rMargin',document.getElementById('r-margin').textContent);
-  params.set('mName',document.getElementById('m-name').value);params.set('mRate',document.getElementById('m-rate').textContent);params.set('mMargin',document.getElementById('m-margin').textContent);
-  params.set('sDep',Math.round(getVal('s-dep')/10000));params.set('sInt',Math.round(getVal('s-int')/10000));params.set('sEqu',Math.round(getVal('s-equ')/10000));params.set('sTotal',document.getElementById('s-total').textContent);params.set('sRecovery',document.getElementById('s-recovery').textContent);
-  params.set('yName',document.getElementById('y-name').value);params.set('yNetW',document.getElementById('y-net-w').textContent);params.set('yMarginPct',document.getElementById('y-margin-pct').textContent);
-  location.href='meat_insight_report.html?'+params.toString();
+  params.set('from','report');
+  params.set('tab','consulting');
+  // 현재 활성 탭 기준으로 결과값 수집
+  const activePanel=document.querySelector('.calc-panel.active');
+  const panelId=activePanel?activePanel.id:'panel-0';
+  if(panelId==='panel-0'){
+    params.set('sales',extractNum(document.getElementById('b-rev').textContent));
+    params.set('profit',extractNum(document.getElementById('b-profit').textContent));
+    params.set('margin',parseFloat(document.getElementById('b-margin').textContent)||0);
+    params.set('type','butcher');
+  } else if(panelId==='panel-1'){
+    params.set('sales',extractNum(document.getElementById('r-rev').textContent));
+    params.set('profit',extractNum(document.getElementById('r-profit').textContent));
+    params.set('margin',parseFloat(document.getElementById('r-margin').textContent)||0);
+    params.set('type','restaurant');
+  } else {
+    // 기타 탭: 정육점 결과 기본값 사용
+    params.set('sales',extractNum(document.getElementById('b-rev').textContent));
+    params.set('profit',extractNum(document.getElementById('b-profit').textContent));
+    params.set('margin',parseFloat(document.getElementById('b-margin').textContent)||0);
+  }
+  location.href='meat_insight_apply.html?'+params.toString();
+}
+
+function extractNum(text){
+  text=(text||'').replace(/,/g,'').replace(/[+\-]/g,'').trim();
+  if(text.includes('억')){return Math.round(parseFloat(text)*10000);}
+  if(text.includes('천만')){return Math.round(parseFloat(text)*1000);}
+  if(text.includes('만')){return Math.round(parseFloat(text)*100);}
+  return parseInt(text)||0;
 }
 
 /* ── 초기화 ── */

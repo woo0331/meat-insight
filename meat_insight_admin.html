@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>관리자 | MEAT INSIGHT</title>
+  <title>🔐 관리자 패널 | MEAT INSIGHT</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -22,7 +22,6 @@
     .login-field input:focus{border-color:var(--gold)}
     .login-btn{width:100%;padding:15px;border-radius:12px;background:var(--navy);color:var(--gold);font-size:15px;font-weight:900;border:none;cursor:pointer;font-family:inherit;margin-top:8px;transition:opacity .15s}
     .login-btn:hover{opacity:.88}
-    .login-hint{font-size:12px;color:var(--muted);margin-top:14px}
     .sidebar{width:220px;background:var(--navy);flex-shrink:0;display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh;overflow-y:auto}
     .sb-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
     .sb-logo-mark{width:40px;height:40px;border-radius:10px;background:rgba(184,148,90,.2);color:var(--gold);display:grid;place-items:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:10px}
@@ -82,17 +81,17 @@
     td{padding:14px 16px;font-size:14px;border-bottom:1px solid var(--line);vertical-align:middle}
     tr:last-child td{border-bottom:none}
     tr:hover td{background:#fafafa}
+    tr.urgent-row td{background:#fff9f0}
     .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
     .badge.new{background:var(--blue-bg);color:var(--blue)}
     .badge.contact{background:#fef9c3;color:#854d0e}
     .badge.done{background:var(--green-bg);color:var(--green)}
     .badge.cancel{background:var(--red-bg);color:var(--red)}
-    .badge.basic{background:#f3f4f6;color:#374151}
+    .badge.basic{background:#e0f2fe;color:#0369a1}
     .badge.premium{background:#fef3c7;color:#92400e}
-    .badge.vip{background:linear-gradient(135deg,#fef3c7,#fde68a);color:#78350f;border:1px solid #fcd34d}
     .badge.member{background:#eff6ff;color:#1d4ed8}
     .badge.admin-role{background:linear-gradient(135deg,#fef3c7,#fde68a);color:#78350f;border:1px solid #fcd34d}
-    .badge.pay-wait{background:#fef9c3;color:#854d0e}
+    .badge.pay-wait{background:#fef9c3;color:#854d0e;border:1px solid #fcd34d;animation:pulse 2s infinite}
     .badge.pay-done{background:var(--green-bg);color:var(--green)}
     .action-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--line);background:var(--white);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
     .action-btn:hover{border-color:var(--navy);color:var(--navy)}
@@ -118,12 +117,10 @@
     .modal-actions{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap}
     .status-select{padding:10px 14px;border-radius:10px;border:2px solid var(--line);font-size:14px;font-family:inherit;outline:none;flex:1;min-width:120px}
     .status-select:focus{border-color:var(--gold)}
-    /* 메모 영역 */
     .memo-area{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}
     .memo-area textarea{width:100%;padding:12px;border-radius:10px;border:2px solid var(--line);font-size:13px;font-family:inherit;resize:vertical;min-height:80px;outline:none}
     .memo-area textarea:focus{border-color:var(--gold)}
     .memo-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}
-    /* 차트 */
     .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
     @media(max-width:700px){.chart-grid{grid-template-columns:1fr}}
     .chart-card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
@@ -131,13 +128,12 @@
     .chart-wrap{position:relative;height:200px}
     .bar-chart{display:flex;flex-direction:column;gap:10px}
     .bar-row{display:flex;align-items:center;gap:10px}
-    .bar-label{font-size:12px;color:var(--muted);width:80px;flex-shrink:0;text-align:right}
+    .bar-label{font-size:12px;color:var(--muted);width:90px;flex-shrink:0;text-align:right}
     .bar-track{flex:1;height:20px;background:var(--off);border-radius:4px;overflow:hidden}
     .bar-fill{height:100%;border-radius:4px;background:var(--navy);transition:width .6s ease}
     .bar-fill.gold{background:var(--gold)}
     .bar-fill.green{background:#4ade80}
     .bar-val{font-size:12px;font-weight:700;color:var(--navy);width:36px;text-align:right}
-    /* 매출 요약 */
     .revenue-card{background:linear-gradient(135deg,var(--navy),#1a3560);border-radius:16px;padding:24px;margin-bottom:24px;color:#fff}
     .revenue-title{font-size:14px;color:rgba(255,255,255,.5);margin-bottom:8px}
     .revenue-val{font-family:'Playfair Display',serif;font-size:48px;font-weight:900;color:var(--gold);margin-bottom:4px}
@@ -146,13 +142,14 @@
     .revenue-item{background:rgba(255,255,255,.07);border-radius:12px;padding:14px;text-align:center}
     .revenue-item-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--gold)}
     .revenue-item-label{font-size:11px;color:rgba(255,255,255,.45);margin-top:4px}
-    /* 결제 현황 */
-    .pay-status-row{display:flex;align-items:center;gap:8px}
     .member-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
     @media(max-width:900px){.member-stat-grid{grid-template-columns:repeat(2,1fr)}}
-    /* 알림 */
-    .notif-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block;margin-left:4px;animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    /* 입금대기 강조 */
+    .pay-alert-banner{background:#fef9c3;border:1px solid #fcd34d;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:#854d0e}
+    /* 플랜 색상 구분 */
+    .plan-basic-tag{background:#e0f2fe;color:#0369a1;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .plan-premium-tag{background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
   </style>
 </head>
 <body>
@@ -161,11 +158,11 @@
   <div class="login-box">
     <div class="login-logo">肉</div>
     <div class="login-title">관리자 로그인</div>
-    <div class="login-sub">MEAT INSIGHT 관리자 전용</div>
+    <div class="login-sub">MEAT INSIGHT 관리자 전용 시스템</div>
     <div class="login-field"><label>아이디</label><input type="text" id="login-id" placeholder="admin" onkeydown="if(event.key==='Enter')doLogin()"/></div>
     <div class="login-field"><label>비밀번호</label><input type="password" id="login-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
     <button class="login-btn" onclick="doLogin()">로그인</button>
-    <div class="login-hint">아이디: admin / 비밀번호: 1234 (데모)</div>
+    <div style="font-size:12px;color:var(--line);margin-top:14px">관리자 전용 시스템</div>
   </div>
 </div>
 
@@ -189,6 +186,8 @@
     <div class="sb-item" onclick="showPanel('revenue',this)"><span>💰</span> 매출 분석</div>
   </div>
   <div class="sb-bottom">
+    <a class="sb-item" href="https://www.aboutmeat.co.kr/meat_insight_main.html" target="_blank" style="color:rgba(255,255,255,.4);font-size:12px;margin-bottom:4px"><span>🌐</span> 사이트 보기</a>
+    <a class="sb-item" href="https://www.aboutmeat.co.kr/meat_insight_apply.html?tab=consulting" target="_blank" style="color:rgba(255,255,255,.4);font-size:12px;margin-bottom:8px"><span>📋</span> 신청 페이지</a>
     <div class="sb-logout" onclick="doLogout()"><span>🚪</span> 로그아웃</div>
   </div>
 </div>
@@ -200,6 +199,7 @@
     </div>
     <div class="topbar-right">
       <div class="topbar-date" id="today-date"></div>
+      <a href="https://www.aboutmeat.co.kr" target="_blank" class="btn-export">🌐 사이트 열기</a>
       <button class="btn-export" onclick="exportCSV()">📥 CSV 다운로드</button>
       <button class="btn-refresh" onclick="loadData()">🔄 새로고침</button>
     </div>
@@ -219,13 +219,11 @@
           <div class="stat-label">공급 연결 신청</div>
           <div class="stat-val" id="stat-supply">0</div>
           <div class="stat-sub">건</div>
-          <div class="stat-trend up" id="stat-supply-trend"></div>
         </div>
         <div class="stat-card">
           <div class="stat-label">컨설팅 신청</div>
           <div class="stat-val" id="stat-consult">0</div>
           <div class="stat-sub">건</div>
-          <div class="stat-trend up" id="stat-consult-trend"></div>
         </div>
         <div class="stat-card">
           <div class="stat-label">처리 대기 🔴</div>
@@ -244,9 +242,9 @@
           <div class="stat-val" id="dash-total-members">0</div>
           <div class="stat-sub">명</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">💳 입금 대기</div>
-          <div class="stat-val" id="dash-pay-wait">0</div>
+        <div class="stat-card" style="border:2px solid #fcd34d">
+          <div class="stat-label">💳 입금 대기 ⚠️</div>
+          <div class="stat-val" id="dash-pay-wait" style="color:#854d0e">0</div>
           <div class="stat-sub">건 확인 필요</div>
         </div>
         <div class="stat-card">
@@ -256,7 +254,6 @@
         </div>
       </div>
 
-      <!-- 월별 추이 차트 -->
       <div class="chart-grid">
         <div class="chart-card" style="grid-column:1/-1">
           <div class="chart-title">📈 월별 신청 추이</div>
@@ -284,8 +281,8 @@
     <div class="panel" id="panel-supply">
       <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
         <div class="stat-card highlight"><div class="stat-label">전체</div><div class="stat-val" id="supply-stat-total">0</div><div class="stat-sub">건</div></div>
-        <div class="stat-card"><div class="stat-label">신규</div><div class="stat-val" id="supply-stat-new">0</div><div class="stat-sub">처리 대기</div></div>
-        <div class="stat-card"><div class="stat-label">완료</div><div class="stat-val" id="supply-stat-done">0</div><div class="stat-sub">건</div></div>
+        <div class="stat-card"><div class="stat-label">신규 (처리 대기)</div><div class="stat-val" id="supply-stat-new" style="color:#dc2626">0</div><div class="stat-sub">빠른 연락 필요</div></div>
+        <div class="stat-card"><div class="stat-label">완료</div><div class="stat-val" id="supply-stat-done" style="color:#16a34a">0</div><div class="stat-sub">건</div></div>
       </div>
       <div class="table-card">
         <div class="table-header">
@@ -293,8 +290,10 @@
           <div class="table-controls">
             <select class="filter-select" id="supply-filter" onchange="renderSupply()">
               <option value="">전체 상태</option>
-              <option value="신규">신규</option><option value="연락중">연락중</option>
-              <option value="완료">완료</option><option value="취소">취소</option>
+              <option value="신규">🔴 신규</option>
+              <option value="연락중">🟡 연락중</option>
+              <option value="완료">✅ 완료</option>
+              <option value="취소">❌ 취소</option>
             </select>
             <input class="search-input" type="text" placeholder="이름·연락처 검색" id="supply-search" oninput="renderSupply()"/>
           </div>
@@ -312,9 +311,9 @@
     <div class="panel" id="panel-consult">
       <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
         <div class="stat-card highlight"><div class="stat-label">전체</div><div class="stat-val" id="consult-stat-total">0</div><div class="stat-sub">건</div></div>
-        <div class="stat-card"><div class="stat-label">신규</div><div class="stat-val" id="consult-stat-new">0</div><div class="stat-sub">처리 대기</div></div>
-        <div class="stat-card"><div class="stat-label">STANDARD</div><div class="stat-val" id="consult-stat-basic">0</div><div class="stat-sub">건</div></div>
-        <div class="stat-card"><div class="stat-label">PREMIUM</div><div class="stat-val" id="consult-stat-premium">0</div><div class="stat-sub">건</div></div>
+        <div class="stat-card"><div class="stat-label">신규 (처리 대기)</div><div class="stat-val" id="consult-stat-new" style="color:#dc2626">0</div><div class="stat-sub">빠른 처리 필요</div></div>
+        <div class="stat-card"><div class="stat-label">📄 창업 리포트 (20만)</div><div class="stat-val" id="consult-stat-basic">0</div><div class="stat-sub">건</div></div>
+        <div class="stat-card"><div class="stat-label">💼 비대면 컨설팅 (150만)</div><div class="stat-val" id="consult-stat-premium">0</div><div class="stat-sub">건</div></div>
       </div>
       <div class="table-card">
         <div class="table-header">
@@ -322,19 +321,22 @@
           <div class="table-controls">
             <select class="filter-select" id="consult-filter" onchange="renderConsult()">
               <option value="">전체 상태</option>
-              <option value="신규">신규</option><option value="연락중">연락중</option>
-              <option value="완료">완료</option><option value="취소">취소</option>
+              <option value="신규">🔴 신규</option>
+              <option value="연락중">🟡 연락중</option>
+              <option value="완료">✅ 완료</option>
+              <option value="취소">❌ 취소</option>
             </select>
             <select class="filter-select" id="consult-plan-filter" onchange="renderConsult()">
               <option value="">전체 플랜</option>
-              <option value="basic">STANDARD</option><option value="premium">PREMIUM</option>
+              <option value="basic">📄 창업 리포트 (20만)</option>
+              <option value="premium">💼 비대면 컨설팅 (150만)</option>
             </select>
             <input class="search-input" type="text" placeholder="이름·연락처 검색" id="consult-search" oninput="renderConsult()"/>
           </div>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>이름</th><th>연락처</th><th>플랜</th><th>업종</th><th>지역</th><th>결제</th><th>상태</th><th>신청일</th><th>관리</th></tr></thead>
+            <thead><tr><th>이름</th><th>연락처</th><th>플랜</th><th>금액</th><th>업종</th><th>지역</th><th>결제상태</th><th>처리상태</th><th>신청일</th><th>관리</th></tr></thead>
             <tbody id="consult-tbody"></tbody>
           </table>
         </div>
@@ -343,20 +345,21 @@
 
     <!-- PAYMENT -->
     <div class="panel" id="panel-payment">
+      <div id="pay-alert-area"></div>
       <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
         <div class="stat-card highlight"><div class="stat-label">💰 총 예상 매출</div><div class="stat-val" id="pay-total-revenue">0만원</div><div class="stat-sub">컨설팅 신청 합산</div></div>
-        <div class="stat-card"><div class="stat-label">⏳ 입금 대기</div><div class="stat-val" id="pay-wait-count">0</div><div class="stat-sub">건 확인 필요</div></div>
-        <div class="stat-card"><div class="stat-label">✅ 결제 완료</div><div class="stat-val" id="pay-done-count">0</div><div class="stat-sub">건</div></div>
+        <div class="stat-card" style="border:2px solid #fcd34d"><div class="stat-label">⏳ 입금 대기 — 확인 필요!</div><div class="stat-val" id="pay-wait-count" style="color:#854d0e">0</div><div class="stat-sub">NH농협 301-0343-6070-61</div></div>
+        <div class="stat-card"><div class="stat-label">✅ 결제 완료</div><div class="stat-val" id="pay-done-count" style="color:#16a34a">0</div><div class="stat-sub">건</div></div>
       </div>
       <div class="table-card">
         <div class="table-header">
-          <div class="table-title">결제 현황</div>
+          <div class="table-title">결제 현황 <span style="font-size:12px;color:var(--muted);font-weight:400">· 현재 무통장입금 운영 중 (NH농협 301-0343-6070-61)</span></div>
           <div class="table-controls">
             <select class="filter-select" id="pay-filter" onchange="renderPayment()">
               <option value="">전체</option>
-              <option value="입금대기">입금 대기</option>
-              <option value="결제완료">결제 완료</option>
-              <option value="결제대기">결제 대기</option>
+              <option value="입금대기">⏳ 입금 대기</option>
+              <option value="결제완료">✅ 결제 완료</option>
+              <option value="결제대기">🔵 결제 대기</option>
             </select>
           </div>
         </div>
@@ -383,7 +386,8 @@
           <div class="table-controls">
             <select class="filter-select" id="members-role-filter" onchange="renderMembers()">
               <option value="">전체 등급</option>
-              <option value="member">일반 회원</option><option value="admin">관리자</option>
+              <option value="member">일반 회원</option>
+              <option value="admin">관리자</option>
             </select>
             <input class="search-input" type="text" placeholder="닉네임·이메일 검색" id="members-search" oninput="renderMembers()"/>
           </div>
@@ -400,14 +404,14 @@
     <!-- STATS -->
     <div class="panel" id="panel-stats">
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-label">이번 달 신청</div><div class="stat-val" id="stat-month">0</div><div class="stat-sub">건</div></div>
+        <div class="stat-card"><div class="stat-label">전체 신청 건수</div><div class="stat-val" id="stat-month">0</div><div class="stat-sub">건</div></div>
         <div class="stat-card"><div class="stat-label">완료 처리율</div><div class="stat-val" id="stat-done-rate">0%</div><div class="stat-sub">전체 대비</div></div>
         <div class="stat-card highlight"><div class="stat-label">컨설팅 예상 매출</div><div class="stat-val" id="stat-revenue">0만원</div><div class="stat-sub">신청 플랜 기준</div></div>
         <div class="stat-card"><div class="stat-label">평균 처리 시간</div><div class="stat-val">1.4일</div><div class="stat-sub">목표: 2일 이내</div></div>
       </div>
       <div class="chart-grid">
         <div class="chart-card"><div class="chart-title">업종별 신청 현황</div><div class="bar-chart" id="chart-type"></div></div>
-        <div class="chart-card"><div class="chart-title">컨설팅 플랜별 분포</div><div class="bar-chart" id="chart-plan"></div></div>
+        <div class="chart-card"><div class="chart-title">플랜별 분포</div><div class="bar-chart" id="chart-plan"></div></div>
         <div class="chart-card"><div class="chart-title">공급 요청 품목 순위</div><div class="bar-chart" id="chart-item"></div></div>
         <div class="chart-card"><div class="chart-title">상태별 처리 현황</div><div class="bar-chart" id="chart-status"></div></div>
       </div>
@@ -418,11 +422,11 @@
       <div class="revenue-card">
         <div class="revenue-title">총 예상 매출</div>
         <div class="revenue-val" id="rev-total">0만원</div>
-        <div class="revenue-sub">컨설팅 신청 플랜 기준 합산</div>
+        <div class="revenue-sub">컨설팅 신청 플랜 기준 합산 (창업 리포트 20만 / 비대면 컨설팅 150만)</div>
         <div class="revenue-grid">
-          <div class="revenue-item"><div class="revenue-item-val" id="rev-basic">0만</div><div class="revenue-item-label">STANDARD 매출</div></div>
-          <div class="revenue-item"><div class="revenue-item-val" id="rev-premium">0만</div><div class="revenue-item-label">PREMIUM 매출</div></div>
-          <div class="revenue-item"><div class="revenue-item-val" id="rev-done">0만</div><div class="revenue-item-label">완료 확정 매출</div></div>
+          <div class="revenue-item"><div class="revenue-item-val" id="rev-basic">0만</div><div class="revenue-item-label">📄 창업 리포트 매출</div></div>
+          <div class="revenue-item"><div class="revenue-item-val" id="rev-premium">0만</div><div class="revenue-item-label">💼 비대면 컨설팅 매출</div></div>
+          <div class="revenue-item"><div class="revenue-item-val" id="rev-done">0만</div><div class="revenue-item-label">✅ 완료 확정 매출</div></div>
         </div>
       </div>
       <div class="chart-grid">
@@ -458,8 +462,8 @@
     </div>
     <div class="modal-rows" id="modal-body"></div>
     <div class="memo-area">
-      <div class="memo-label">📝 담당자 메모</div>
-      <textarea id="modal-memo" placeholder="내부 메모를 입력하세요 (고객에게 노출되지 않음)"></textarea>
+      <div class="memo-label">📝 담당자 메모 (고객에게 노출 안됨)</div>
+      <textarea id="modal-memo" placeholder="내부 메모를 입력하세요"></textarea>
     </div>
     <div class="modal-actions" id="modal-actions"></div>
   </div>
@@ -471,9 +475,12 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let supplyData=[],consultData=[],membersData=[];
 let monthlyChart=null,revPieChart=null,revBarChart=null;
-const planPrice={basic:50,standard:50,premium:100,vip:500};
+
+// ★ 핵심 수정: 가격 업데이트 (창업 리포트 20만 / 비대면 컨설팅 150만)
+const planPrice={basic:20,standard:20,premium:150,vip:500};
+const planName={basic:'📄 창업 리포트',standard:'📄 창업 리포트',premium:'💼 비대면 컨설팅',vip:'VIP'};
 const statusClass={신규:'new',연락중:'contact',완료:'done',취소:'cancel'};
-const planClass={basic:'basic',premium:'premium',vip:'vip'};
+const planClass={basic:'basic',premium:'premium'};
 let currentId=null,currentType=null;
 
 function doLogin(){
@@ -519,14 +526,13 @@ function showPanel(name,el){
 
 function renderAll(){
   const now=new Date();
-  document.getElementById('today-date').textContent=now.toISOString().slice(0,10);
+  document.getElementById('today-date').textContent=now.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
   const total=supplyData.length+consultData.length;
   const pending=[...supplyData,...consultData].filter(d=>d.status==='신규').length;
   const revenue=consultData.reduce((s,d)=>s+(planPrice[d.plan]||0),0);
   const payWait=consultData.filter(d=>d.payment_status==='입금대기').length;
   const monthStr=now.toISOString().slice(0,7);
   const doneMonth=[...supplyData,...consultData].filter(d=>d.status==='완료'&&d.date.startsWith(monthStr)).length;
-
   document.getElementById('stat-total').textContent=total;
   document.getElementById('stat-supply').textContent=supplyData.length;
   document.getElementById('stat-consult').textContent=consultData.length;
@@ -535,13 +541,11 @@ function renderAll(){
   document.getElementById('consult-badge').textContent=consultData.filter(d=>d.status==='신규').length;
   document.getElementById('payment-badge').textContent=payWait;
   document.getElementById('members-badge').textContent=membersData.length;
-  document.getElementById('dash-revenue').textContent=revenue+'만';
+  document.getElementById('dash-revenue').textContent=revenue.toLocaleString()+'만';
   document.getElementById('dash-total-members').textContent=membersData.length;
   document.getElementById('dash-pay-wait').textContent=payWait;
   document.getElementById('dash-done-month').textContent=doneMonth;
-
   if(pending>0)document.getElementById('new-notif').style.display='inline';
-
   renderDash();
   renderMonthlyChart();
 }
@@ -549,11 +553,11 @@ function renderAll(){
 function renderDash(){
   const all=[...supplyData.map(d=>({...d,kind:'공급연결'})),...consultData.map(d=>({...d,kind:'컨설팅'}))].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
   document.getElementById('dash-tbody').innerHTML=all.map(d=>`
-    <tr>
+    <tr class="${d.status==='신규'?'urgent-row':''}">
       <td><span class="badge ${d.kind==='공급연결'?'basic':'premium'}">${d.kind}</span></td>
-      <td>${d.name}</td><td>${d.phone}</td><td>${d.type}</td>
+      <td><strong>${d.name}</strong></td><td>${d.phone}</td><td style="font-size:13px">${d.type}</td>
       <td><span class="badge ${statusClass[d.status]||'new'}">${d.status}</span></td>
-      <td>${d.date}</td>
+      <td style="font-size:13px">${d.date}</td>
       <td><button class="action-btn primary" onclick="openDetail('${d.id}','${d.kind==='공급연결'?'supply':'consult'}')">상세</button></td>
     </tr>`).join('')||`<tr><td class="empty-row" colspan="7">신청 내역이 없습니다</td></tr>`;
 }
@@ -570,9 +574,9 @@ function renderMonthlyChart(){
   }
   if(monthlyChart)monthlyChart.destroy();
   const ctx=document.getElementById('monthly-chart').getContext('2d');
-  monthlyChart=new Chart(ctx,{type:'line',data:{labels,datasets:[
-    {label:'공급 연결',data:supplyArr,borderColor:'rgba(184,148,90,1)',backgroundColor:'rgba(184,148,90,.1)',fill:true,tension:.4,pointRadius:4},
-    {label:'컨설팅',data:consultArr,borderColor:'rgba(11,31,58,.8)',backgroundColor:'rgba(11,31,58,.05)',fill:true,tension:.4,pointRadius:4}
+  monthlyChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[
+    {label:'공급 연결',data:supplyArr,backgroundColor:'rgba(184,148,90,.7)',borderRadius:4},
+    {label:'컨설팅',data:consultArr,backgroundColor:'rgba(11,31,58,.8)',borderRadius:4}
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:12},boxWidth:14}}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}}},x:{ticks:{font:{size:11}}}}}});
 }
 
@@ -584,11 +588,14 @@ function renderSupply(){
   document.getElementById('supply-stat-new').textContent=supplyData.filter(d=>d.status==='신규').length;
   document.getElementById('supply-stat-done').textContent=supplyData.filter(d=>d.status==='완료').length;
   document.getElementById('supply-tbody').innerHTML=data.map(d=>`
-    <tr>
-      <td><strong>${d.name}</strong></td><td>${d.phone}</td><td>${d.type}</td>
-      <td>${d.region}</td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.items||'-'}</td><td>${d.volume||'-'}</td>
+    <tr class="${d.status==='신규'?'urgent-row':''}">
+      <td><strong>${d.name}</strong></td><td>${d.phone}</td>
+      <td style="font-size:13px">${d.type}</td>
+      <td style="font-size:13px">${d.region}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px">${d.items||'-'}</td>
+      <td style="font-size:13px">${d.volume||'-'}</td>
       <td><span class="badge ${statusClass[d.status]||'new'}">${d.status}</span></td>
-      <td>${d.date}</td>
+      <td style="font-size:13px">${d.date}</td>
       <td><button class="action-btn primary" onclick="openDetail('${d.id}','supply')">상세</button></td>
     </tr>`).join('')||`<tr><td class="empty-row" colspan="9">해당 신청이 없습니다</td></tr>`;
 }
@@ -604,15 +611,17 @@ function renderConsult(){
   document.getElementById('consult-stat-premium').textContent=consultData.filter(d=>d.plan==='premium').length;
   const payClass={입금대기:'pay-wait',결제완료:'pay-done',결제대기:'contact'};
   document.getElementById('consult-tbody').innerHTML=data.map(d=>`
-    <tr>
+    <tr class="${d.payment_status==='입금대기'||d.status==='신규'?'urgent-row':''}">
       <td><strong>${d.name}</strong></td><td>${d.phone}</td>
-      <td><span class="badge ${planClass[d.plan]||'basic'}">${(d.plan||'').toUpperCase()}</span></td>
-      <td>${d.type}</td><td>${d.region||'-'}</td>
+      <td><span class="badge ${planClass[d.plan]||'basic'}">${planName[d.plan]||d.plan}</span></td>
+      <td><strong style="color:var(--gold)">${planPrice[d.plan]||0}만원</strong></td>
+      <td style="font-size:13px">${d.type}</td>
+      <td style="font-size:13px">${d.region||'-'}</td>
       <td><span class="badge ${payClass[d.payment_status]||'new'}">${d.payment_status||'-'}</span></td>
       <td><span class="badge ${statusClass[d.status]||'new'}">${d.status}</span></td>
-      <td>${d.date}</td>
+      <td style="font-size:13px">${d.date}</td>
       <td><button class="action-btn primary" onclick="openDetail('${d.id}','consult')">상세</button></td>
-    </tr>`).join('')||`<tr><td class="empty-row" colspan="9">해당 신청이 없습니다</td></tr>`;
+    </tr>`).join('')||`<tr><td class="empty-row" colspan="10">해당 신청이 없습니다</td></tr>`;
 }
 
 function renderPayment(){
@@ -621,19 +630,26 @@ function renderPayment(){
   const waitCount=consultData.filter(d=>d.payment_status==='입금대기').length;
   const doneCount=consultData.filter(d=>d.payment_status==='결제완료').length;
   const totalRev=consultData.reduce((s,d)=>s+(planPrice[d.plan]||0),0);
-  document.getElementById('pay-total-revenue').textContent=totalRev+'만원';
+  document.getElementById('pay-total-revenue').textContent=totalRev.toLocaleString()+'만원';
   document.getElementById('pay-wait-count').textContent=waitCount;
   document.getElementById('pay-done-count').textContent=doneCount;
+  // 입금 대기 건이 있으면 알림 배너 표시
+  const alertArea=document.getElementById('pay-alert-area');
+  if(waitCount>0){
+    alertArea.innerHTML=`<div class="pay-alert-banner">⚠️ 입금 대기 ${waitCount}건 확인 필요! NH농협 301-0343-6070-61 입금 확인 후 아래에서 처리해주세요.</div>`;
+  } else {
+    alertArea.innerHTML='';
+  }
   const payClass={입금대기:'pay-wait',결제완료:'pay-done',결제대기:'contact'};
   document.getElementById('payment-tbody').innerHTML=data.map(d=>`
-    <tr>
+    <tr class="${d.payment_status==='입금대기'?'urgent-row':''}">
       <td><strong>${d.name}</strong></td><td>${d.phone}</td>
-      <td><span class="badge ${planClass[d.plan]||'basic'}">${(d.plan||'').toUpperCase()}</span></td>
-      <td><strong>${planPrice[d.plan]||0}만원</strong></td>
-      <td>${d.payment_method||'-'}</td>
+      <td><span class="badge ${planClass[d.plan]||'basic'}">${planName[d.plan]||d.plan}</span></td>
+      <td><strong style="color:var(--gold);font-size:16px">${planPrice[d.plan]||0}만원</strong></td>
+      <td style="font-size:13px">${d.payment_method||'-'}</td>
       <td><span class="badge ${payClass[d.payment_status]||'new'}">${d.payment_status||'-'}</span></td>
-      <td>${d.date}</td>
-      <td>
+      <td style="font-size:13px">${d.date}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
         ${d.payment_status==='입금대기'?`<button class="action-btn success" onclick="confirmPayment('${d.id}')">✅ 입금 확인</button>`:''}
         <button class="action-btn primary" onclick="openDetail('${d.id}','consult')">상세</button>
       </td>
@@ -643,12 +659,13 @@ function renderPayment(){
 async function confirmPayment(id){
   const d=consultData.find(x=>x.id===id);
   if(!d)return;
-  if(!confirm(`${d.name}님 입금 확인 처리할까요?`))return;
+  if(!confirm(`${d.name}님 (${planPrice[d.plan]||0}만원) 입금 확인 처리할까요?`))return;
   try{
     await sb.from('consult_requests').update({payment_status:'결제완료'}).eq('id',d.raw_id);
     d.payment_status='결제완료';
     renderPayment();
-  }catch(e){console.error(e);}
+    alert('✅ 입금 확인 완료!');
+  }catch(e){console.error(e);alert('오류가 발생했습니다.');}
 }
 
 function renderMembers(){
@@ -684,13 +701,15 @@ function renderStats(){
   const done=allData.filter(d=>d.status==='완료').length;
   document.getElementById('stat-done-rate').textContent=allData.length>0?Math.round(done/allData.length*100)+'%':'0%';
   const revenue=consultData.reduce((s,d)=>s+(planPrice[d.plan]||0),0);
-  document.getElementById('stat-revenue').textContent=revenue+'만원';
+  document.getElementById('stat-revenue').textContent=revenue.toLocaleString()+'만원';
   const typeCount={};allData.forEach(d=>{typeCount[d.type]=(typeCount[d.type]||0)+1;});
   const maxType=Math.max(...Object.values(typeCount),1);
   document.getElementById('chart-type').innerHTML=Object.entries(typeCount).sort((a,b)=>b[1]-a[1]).map(([l,v])=>`<div class="bar-row"><div class="bar-label">${l.replace(' 준비 중','').replace(' 창업','').slice(0,6)}</div><div class="bar-track"><div class="bar-fill gold" style="width:${v/maxType*100}%"></div></div><div class="bar-val">${v}</div></div>`).join('');
   const planCount={basic:0,premium:0};consultData.forEach(d=>planCount[d.plan]=(planCount[d.plan]||0)+1);
   const maxPlan=Math.max(...Object.values(planCount),1);
-  document.getElementById('chart-plan').innerHTML=Object.entries(planCount).map(([l,v])=>`<div class="bar-row"><div class="bar-label">${l.toUpperCase()}</div><div class="bar-track"><div class="bar-fill" style="width:${v/maxPlan*100}%"></div></div><div class="bar-val">${v}</div></div>`).join('');
+  document.getElementById('chart-plan').innerHTML=`
+    <div class="bar-row"><div class="bar-label">창업 리포트</div><div class="bar-track"><div class="bar-fill" style="width:${(planCount.basic||0)/maxPlan*100}%"></div></div><div class="bar-val">${planCount.basic||0}</div></div>
+    <div class="bar-row"><div class="bar-label">비대면컨설팅</div><div class="bar-track"><div class="bar-fill gold" style="width:${(planCount.premium||0)/maxPlan*100}%"></div></div><div class="bar-val">${planCount.premium||0}</div></div>`;
   const itemCount={};supplyData.forEach(d=>(d.items||'').split(',').forEach(i=>{const k=i.trim();if(k)itemCount[k]=(itemCount[k]||0)+1;}));
   const maxItem=Math.max(...Object.values(itemCount),1);
   document.getElementById('chart-item').innerHTML=Object.entries(itemCount).sort((a,b)=>b[1]-a[1]).map(([l,v])=>`<div class="bar-row"><div class="bar-label">${l.slice(0,6)}</div><div class="bar-track"><div class="bar-fill gold" style="width:${v/maxItem*100}%"></div></div><div class="bar-val">${v}</div></div>`).join('')||'<div style="color:var(--muted);font-size:13px">데이터 없음</div>';
@@ -700,21 +719,17 @@ function renderStats(){
 }
 
 function renderRevenue(){
-  const basicRev=consultData.filter(d=>d.plan==='basic').length*50;
-  const premiumRev=consultData.filter(d=>d.plan==='premium').length*100;
+  const basicRev=consultData.filter(d=>d.plan==='basic').length*20;
+  const premiumRev=consultData.filter(d=>d.plan==='premium').length*150;
   const totalRev=basicRev+premiumRev;
   const doneRev=consultData.filter(d=>d.status==='완료').reduce((s,d)=>s+(planPrice[d.plan]||0),0);
-  document.getElementById('rev-total').textContent=totalRev+'만원';
-  document.getElementById('rev-basic').textContent=basicRev+'만';
-  document.getElementById('rev-premium').textContent=premiumRev+'만';
-  document.getElementById('rev-done').textContent=doneRev+'만';
-
-  // 파이 차트
+  document.getElementById('rev-total').textContent=totalRev.toLocaleString()+'만원';
+  document.getElementById('rev-basic').textContent=basicRev.toLocaleString()+'만';
+  document.getElementById('rev-premium').textContent=premiumRev.toLocaleString()+'만';
+  document.getElementById('rev-done').textContent=doneRev.toLocaleString()+'만';
   if(revPieChart)revPieChart.destroy();
   const pie=document.getElementById('revenue-pie-chart').getContext('2d');
-  revPieChart=new Chart(pie,{type:'doughnut',data:{labels:['STANDARD','PREMIUM'],datasets:[{data:[basicRev,premiumRev],backgroundColor:['rgba(107,114,128,.6)','rgba(184,148,90,.8)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:12},boxWidth:14}}}}});
-
-  // 월별 매출 바 차트
+  revPieChart=new Chart(pie,{type:'doughnut',data:{labels:['창업 리포트 (20만)','비대면 컨설팅 (150만)'],datasets:[{data:[basicRev,premiumRev],backgroundColor:['rgba(96,165,250,.7)','rgba(184,148,90,.8)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:12},boxWidth:14}}}}});
   const now=new Date();
   const labels=[],revArr=[];
   for(let i=5;i>=0;i--){
@@ -727,13 +742,11 @@ function renderRevenue(){
   if(revBarChart)revBarChart.destroy();
   const bar=document.getElementById('revenue-bar-chart').getContext('2d');
   revBarChart=new Chart(bar,{type:'bar',data:{labels,datasets:[{label:'매출(만원)',data:revArr,backgroundColor:'rgba(184,148,90,.7)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}}}});
-
-  // 테이블
   document.getElementById('revenue-tbody').innerHTML=consultData.map(d=>`
     <tr>
       <td><strong>${d.name}</strong></td>
-      <td><span class="badge ${planClass[d.plan]||'basic'}">${(d.plan||'').toUpperCase()}</span></td>
-      <td><strong>${planPrice[d.plan]||0}만원</strong></td>
+      <td><span class="badge ${planClass[d.plan]||'basic'}">${planName[d.plan]||d.plan}</span></td>
+      <td><strong style="color:var(--gold)">${planPrice[d.plan]||0}만원</strong></td>
       <td><span class="badge ${d.payment_status==='결제완료'?'pay-done':d.payment_status==='입금대기'?'pay-wait':'contact'}">${d.payment_status||'-'}</span></td>
       <td>${d.date}</td>
     </tr>`).join('')||`<tr><td class="empty-row" colspan="5">데이터 없음</td></tr>`;
@@ -746,7 +759,7 @@ function openDetail(id,type){
   document.getElementById('modal-title').textContent=(type==='supply'?'🥩 공급 연결':'📋 컨설팅')+' 신청 상세';
   let rows=`
     <div class="modal-row"><div class="modal-row-label">이름</div><div class="modal-row-val"><strong>${d.name}</strong></div></div>
-    <div class="modal-row"><div class="modal-row-label">연락처</div><div class="modal-row-val">${d.phone}</div></div>
+    <div class="modal-row"><div class="modal-row-label">연락처</div><div class="modal-row-val"><a href="tel:${d.phone}" style="color:var(--gold);font-weight:700">${d.phone}</a></div></div>
     <div class="modal-row"><div class="modal-row-label">업종</div><div class="modal-row-val">${d.type}</div></div>
     <div class="modal-row"><div class="modal-row-label">지역</div><div class="modal-row-val">${d.region||'-'}</div></div>`;
   if(type==='supply'){
@@ -757,27 +770,31 @@ function openDetail(id,type){
       <div class="modal-row"><div class="modal-row-label">현재 단가</div><div class="modal-row-val">${d.price||'-'}</div></div>`;
   }else{
     rows+=`
-      <div class="modal-row"><div class="modal-row-label">플랜</div><div class="modal-row-val"><span class="badge ${planClass[d.plan]}">${d.plan.toUpperCase()} — ${planPrice[d.plan]}만원</span></div></div>
+      <div class="modal-row"><div class="modal-row-label">플랜</div><div class="modal-row-val"><span class="badge ${planClass[d.plan]}">${planName[d.plan]||d.plan} — ${planPrice[d.plan]}만원</span></div></div>
       <div class="modal-row"><div class="modal-row-label">이메일</div><div class="modal-row-val">${d.email||'-'}</div></div>
       <div class="modal-row"><div class="modal-row-label">창업 시기</div><div class="modal-row-val">${d.timeline||'-'}</div></div>
       <div class="modal-row"><div class="modal-row-label">자본금</div><div class="modal-row-val">${d.capital?d.capital+'만원':'-'}</div></div>
       <div class="modal-row"><div class="modal-row-label">결제 방법</div><div class="modal-row-val">${d.payment_method||'-'}</div></div>
-      <div class="modal-row"><div class="modal-row-label">결제 상태</div><div class="modal-row-val">${d.payment_status||'-'}</div></div>
-      <div class="modal-row"><div class="modal-row-label">주문번호</div><div class="modal-row-val" style="font-size:12px">${d.order_id||'-'}</div></div>`;
+      <div class="modal-row"><div class="modal-row-label">결제 상태</div><div class="modal-row-val"><strong style="color:${d.payment_status==='결제완료'?'#16a34a':'#854d0e'}">${d.payment_status||'-'}</strong></div></div>
+      <div class="modal-row"><div class="modal-row-label">주문번호</div><div class="modal-row-val" style="font-size:12px;color:var(--muted)">${d.order_id||'-'}</div></div>`;
   }
-  rows+=`<div class="modal-row"><div class="modal-row-label">고객 메모</div><div class="modal-row-val" style="color:var(--muted)">${d.memo||'없음'}</div></div>
+  rows+=`
+    <div class="modal-row"><div class="modal-row-label">고객 메모</div><div class="modal-row-val" style="color:var(--muted)">${d.memo||'없음'}</div></div>
     <div class="modal-row"><div class="modal-row-label">신청일</div><div class="modal-row-val">${d.date}</div></div>`;
   document.getElementById('modal-body').innerHTML=rows;
   document.getElementById('modal-memo').value=d.admin_memo||'';
-  document.getElementById('modal-actions').innerHTML=`
+  let actions=`
     <select class="status-select" id="modal-status">
-      <option value="신규" ${d.status==='신규'?'selected':''}>신규</option>
-      <option value="연락중" ${d.status==='연락중'?'selected':''}>연락중</option>
-      <option value="완료" ${d.status==='완료'?'selected':''}>완료</option>
-      <option value="취소" ${d.status==='취소'?'selected':''}>취소</option>
+      <option value="신규" ${d.status==='신규'?'selected':''}>🔴 신규</option>
+      <option value="연락중" ${d.status==='연락중'?'selected':''}>🟡 연락중</option>
+      <option value="완료" ${d.status==='완료'?'selected':''}>✅ 완료</option>
+      <option value="취소" ${d.status==='취소'?'selected':''}>❌ 취소</option>
     </select>
-    <button class="action-btn primary" onclick="saveStatus()">저장</button>
-  `;
+    <button class="action-btn primary" onclick="saveStatus()">저장</button>`;
+  if(type==='consult'&&d.payment_status==='입금대기'){
+    actions+=`<button class="action-btn success" onclick="confirmPayment('${d.id}');document.getElementById('modal').classList.remove('show')">✅ 입금 확인</button>`;
+  }
+  document.getElementById('modal-actions').innerHTML=actions;
   document.getElementById('modal').classList.add('show');
 }
 
@@ -807,7 +824,6 @@ function openMemberDetail(id){
     <div class="modal-row" style="justify-content:center;padding:16px 0 20px;border-bottom:1px solid var(--line)">${av}</div>
     <div class="modal-row"><div class="modal-row-label">닉네임</div><div class="modal-row-val"><strong>${m.nickname}</strong></div></div>
     <div class="modal-row"><div class="modal-row-label">이메일</div><div class="modal-row-val">${m.email||'-'}</div></div>
-    <div class="modal-row"><div class="modal-row-label">카카오 ID</div><div class="modal-row-val" style="font-size:12px;color:var(--muted)">${m.kakao_id}</div></div>
     <div class="modal-row"><div class="modal-row-label">등급</div><div class="modal-row-val"><span class="badge ${m.role==='admin'?'admin-role':'member'}">${m.role==='admin'?'관리자':'일반회원'}</span></div></div>
     <div class="modal-row"><div class="modal-row-label">상태</div><div class="modal-row-val"><span class="badge ${m.is_active?'done':'cancel'}">${m.is_active?'활성':'비활성'}</span></div></div>
     <div class="modal-row"><div class="modal-row-label">가입일</div><div class="modal-row-val">${m.date}</div></div>
@@ -815,8 +831,7 @@ function openMemberDetail(id){
   document.getElementById('modal-memo').value='';
   document.getElementById('modal-actions').innerHTML=`
     <button class="action-btn" onclick="toggleMemberRole('${m.id}')">${m.role==='admin'?'👤 일반회원으로 변경':'⭐ 관리자로 승격'}</button>
-    <button class="action-btn ${m.is_active?'danger':'success'}" onclick="toggleMemberActive('${m.id}')">${m.is_active?'🚫 비활성화':'✅ 활성화'}</button>
-  `;
+    <button class="action-btn ${m.is_active?'danger':'success'}" onclick="toggleMemberActive('${m.id}')">${m.is_active?'🚫 비활성화':'✅ 활성화'}</button>`;
   document.getElementById('modal').classList.add('show');
 }
 
@@ -837,9 +852,9 @@ function closeModal(e){if(e.target===document.getElementById('modal'))document.g
 
 function exportCSV(){
   const rows=[
-    ['유형','이름','연락처','업종','지역','플랜','결제상태','상태','신청일'],
-    ...supplyData.map(d=>['공급연결',d.name,d.phone,d.type,d.region,'-','-',d.status,d.date]),
-    ...consultData.map(d=>['컨설팅',d.name,d.phone,d.type,d.region||'',d.plan,d.payment_status||'-',d.status,d.date]),
+    ['유형','이름','연락처','업종','지역','플랜','금액','결제상태','처리상태','신청일'],
+    ...supplyData.map(d=>['공급연결',d.name,d.phone,d.type,d.region,'-','-','-',d.status,d.date]),
+    ...consultData.map(d=>['컨설팅',d.name,d.phone,d.type,d.region||'',(planName[d.plan]||d.plan),(planPrice[d.plan]||0)+'만원',d.payment_status||'-',d.status,d.date]),
   ];
   const csv='\uFEFF'+rows.map(r=>r.join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});

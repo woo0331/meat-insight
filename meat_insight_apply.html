@@ -45,19 +45,11 @@
     .fields{display:flex;flex-direction:column;gap:16px;margin-bottom:24px}
     .field{display:flex;flex-direction:column;gap:6px}
     .field label{font-size:13px;font-weight:700;color:var(--navy)}
-    .field-hint{font-size:11px;color:var(--muted);line-height:1.5}
     .field input,.field select,.field textarea{padding:13px 16px;border-radius:12px;border:2px solid var(--line);font-size:15px;font-family:inherit;color:var(--navy);background:var(--off);outline:none;transition:border-color .15s;-webkit-appearance:none;width:100%}
     .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);background:var(--white)}
     .field textarea{resize:vertical;min-height:100px;line-height:1.6}
     .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media(max-width:400px){.field-row{grid-template-columns:1fr}}
-    .check-group{display:flex;flex-direction:column;gap:10px;margin-top:4px}
-    .check-item{display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--off);transition:border-color .15s}
-    .check-item:hover{border-color:var(--gold)}
-    .check-item.checked{border-color:var(--navy);background:#f0f4ff}
-    .check-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--navy);flex-shrink:0;cursor:pointer}
-    .check-item-text{font-size:14px;font-weight:700;color:var(--navy)}
-    .check-item-sub{font-size:12px;color:var(--muted)}
     .plan-picker{display:flex;flex-direction:column;gap:12px;margin-top:4px}
     .plan-opt{padding:18px 20px;border-radius:14px;border:2px solid var(--line);background:var(--off);cursor:pointer;transition:all .2s}
     .plan-opt:hover{border-color:var(--gold)}
@@ -125,59 +117,39 @@
     .sticky-actions{display:flex;gap:8px}
     .sticky-btn{padding:10px 18px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:13px;font-weight:900;text-decoration:none;white-space:nowrap}
     .sticky-btn.outline{background:transparent;border:1.5px solid rgba(184,148,90,.4);color:var(--gold)}
-    @media(max-width:560px){.sticky-bar{flex-direction:column;gap:8px}.sticky-actions{justify-content:center}}
 
-    /* ── 고급화 추가 스타일 ── */
+    /* 계산기 유도 배너 */
+    .calc-guide-banner{background:linear-gradient(135deg,var(--navy),#1a3560);border-radius:16px;padding:28px 32px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+    .calc-guide-text{color:#fff}
+    .calc-guide-text h3{font-size:18px;font-weight:900;margin-bottom:6px}
+    .calc-guide-text p{font-size:13px;color:rgba(255,255,255,.6);line-height:1.6}
+    .calc-guide-steps{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+    .calc-guide-step{background:rgba(255,255,255,.08);border:1px solid rgba(184,148,90,.25);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:rgba(255,255,255,.8)}
+    .calc-guide-arrow{color:var(--gold);font-size:16px}
+    .calc-guide-btn{padding:14px 28px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:15px;font-weight:900;text-decoration:none;white-space:nowrap;flex-shrink:0;transition:opacity .15s}
+    .calc-guide-btn:hover{opacity:.88}
 
-    /* 진행 상황 트래커 */
+    /* 계산기 결과 불러오기 */
+    .calc-result-preview{background:var(--off);border:2px solid var(--gold);border-radius:14px;padding:20px;margin-bottom:20px;display:none}
+    .calc-result-preview.show{display:block}
+    .calc-result-preview-title{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+    .calc-result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .calc-result-item{text-align:center;background:#fff;border-radius:10px;padding:12px 8px}
+    .calc-result-label{font-size:10px;color:var(--muted);margin-bottom:4px}
+    .calc-result-val{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--navy)}
+    .calc-result-val.gold{color:var(--gold)}
+
+    /* 공급 연결 스타일 */
     .tracker-section{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:28px;box-shadow:var(--shadow)}
     .tracker-title{font-size:14px;font-weight:900;color:var(--navy);margin-bottom:18px}
-    .tracker-steps{display:flex;align-items:center;gap:0}
-    .tracker-step{flex:1;text-align:center;position:relative}
-    .tracker-dot{width:36px;height:36px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;border:2px solid var(--line);background:#fff;color:var(--muted);transition:all .3s}
-    .tracker-dot.done{background:var(--navy);border-color:var(--navy);color:var(--gold)}
+    .tracker-steps{display:flex;align-items:center}
+    .tracker-step{flex:1;text-align:center;position:relative;z-index:1}
+    .tracker-dot{width:36px;height:36px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;border:2px solid var(--line);background:#fff;color:var(--muted)}
     .tracker-dot.active{background:var(--gold);border-color:var(--gold);color:var(--navy);box-shadow:0 0 0 4px rgba(184,148,90,.2)}
     .tracker-label{font-size:11px;font-weight:700;color:var(--muted)}
-    .tracker-label.done,.tracker-label.active{color:var(--navy)}
-    .tracker-line{flex:1;height:2px;background:var(--line);margin-top:-22px;position:relative;z-index:0}
-    .tracker-line.done{background:var(--navy)}
-    .tracker-step{z-index:1}
-
-    /* 단가 절감 계산기 */
-    .saving-calc{background:linear-gradient(135deg,#f8f4ee,#f0e8d8);border:1px solid rgba(184,148,90,.25);border-radius:16px;padding:22px;margin-bottom:20px}
-    .saving-title{font-size:14px;font-weight:900;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:6px}
-    .saving-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
-    .saving-row label{font-size:12px;font-weight:700;color:var(--muted);min-width:80px}
-    .saving-input{flex:1;min-width:100px;padding:9px 12px;border-radius:8px;border:1.5px solid rgba(184,148,90,.3);font-size:14px;font-weight:700;font-family:inherit;color:var(--navy);background:#fff;outline:none}
-    .saving-input:focus{border-color:var(--gold)}
-    .saving-result{background:var(--navy);border-radius:12px;padding:16px;margin-top:14px}
-    .saving-result-label{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px}
-    .saving-result-val{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--gold)}
-    .saving-result-sub{font-size:12px;color:rgba(255,255,255,.45);margin-top:4px}
-
-    /* 자가진단 */
-    .diag-card{background:var(--navy);border-radius:16px;padding:24px;margin-bottom:28px}
-    .diag-title{font-size:16px;font-weight:900;color:#fff;margin-bottom:6px}
-    .diag-sub{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px}
-    .diag-steps{display:flex;flex-direction:column;gap:12px}
-    .diag-step{display:none}
-    .diag-step.active{display:block;animation:fadeUp .3s ease both}
-    .diag-q{font-size:15px;font-weight:700;color:#fff;margin-bottom:12px}
-    .diag-opts{display:flex;flex-direction:column;gap:8px}
-    .diag-opt{padding:12px 16px;border-radius:10px;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);font-size:14px;font-family:inherit;cursor:pointer;text-align:left;transition:all .15s}
-    .diag-opt:hover,.diag-opt.selected{border-color:var(--gold);background:rgba(184,148,90,.15);color:#fff}
-    .diag-result{background:rgba(184,148,90,.15);border:1px solid rgba(184,148,90,.3);border-radius:12px;padding:16px;display:none;margin-top:12px}
-    .diag-result.show{display:block;animation:fadeUp .3s ease}
-    .diag-result-title{font-size:14px;font-weight:900;color:var(--gold);margin-bottom:8px}
-    .diag-result-text{font-size:13px;color:rgba(255,255,255,.7);line-height:1.7}
-    .diag-btn{padding:10px 20px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:13px;font-weight:900;border:none;cursor:pointer;font-family:inherit;margin-top:12px;transition:opacity .15s}
-    .diag-btn:hover{opacity:.88}
-    .diag-progress{display:flex;gap:4px;margin-bottom:16px}
-    .diag-prog-dot{height:3px;flex:1;border-radius:2px;background:rgba(255,255,255,.15)}
-    .diag-prog-dot.done{background:var(--gold)}
-
-    /* 품목 카드 시각화 */
-    .supply-visual{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
+    .tracker-label.active{color:var(--navy)}
+    .tracker-line{flex:1;height:2px;background:var(--line);margin-top:-22px}
+    .supply-visual{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
     .supply-vis-card{background:var(--off);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
     .supply-vis-card:hover{border-color:var(--gold);background:#fff}
     .supply-vis-card.active{border-color:var(--navy);background:#fff}
@@ -186,6 +158,16 @@
     .supply-vis-sub{font-size:11px;color:var(--muted)}
     .supply-vis-check{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--gold);display:none;align-items:center;justify-content:center;font-size:10px;font-weight:900}
     .supply-vis-card.active .supply-vis-check{display:flex}
+    .saving-calc{background:linear-gradient(135deg,#f8f4ee,#f0e8d8);border:1px solid rgba(184,148,90,.25);border-radius:16px;padding:22px;margin-bottom:20px}
+    .saving-title{font-size:14px;font-weight:900;color:var(--navy);margin-bottom:14px}
+    .saving-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+    .saving-row label{font-size:12px;font-weight:700;color:var(--muted);min-width:80px}
+    .saving-input{flex:1;min-width:100px;padding:9px 12px;border-radius:8px;border:1.5px solid rgba(184,148,90,.3);font-size:14px;font-weight:700;font-family:inherit;color:var(--navy);background:#fff;outline:none}
+    .saving-input:focus{border-color:var(--gold)}
+    .saving-result{background:var(--navy);border-radius:12px;padding:16px;margin-top:14px}
+    .saving-result-label{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px}
+    .saving-result-val{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--gold)}
+    .saving-result-sub{font-size:12px;color:rgba(255,255,255,.45);margin-top:4px}
   </style>
 </head>
 <body>
@@ -219,38 +201,21 @@
       <div class="page-desc">업종·규모·필요 품목을 알려주시면 도축장·육가공·도매업체를 매칭합니다.</div>
     </div>
 
-    <!-- 진행 상황 트래커 -->
     <div class="tracker-section">
       <div class="tracker-title">📋 공급 연결 진행 과정</div>
       <div class="tracker-steps">
-        <div class="tracker-step">
-          <div class="tracker-dot active">1</div>
-          <div class="tracker-label active">신청 완료</div>
-        </div>
+        <div class="tracker-step"><div class="tracker-dot active">1</div><div class="tracker-label active">신청 완료</div></div>
         <div class="tracker-line"></div>
-        <div class="tracker-step">
-          <div class="tracker-dot">2</div>
-          <div class="tracker-label">담당자 연락</div>
-        </div>
+        <div class="tracker-step"><div class="tracker-dot">2</div><div class="tracker-label">담당자 연락</div></div>
         <div class="tracker-line"></div>
-        <div class="tracker-step">
-          <div class="tracker-dot">3</div>
-          <div class="tracker-label">조건 확인</div>
-        </div>
+        <div class="tracker-step"><div class="tracker-dot">3</div><div class="tracker-label">조건 확인</div></div>
         <div class="tracker-line"></div>
-        <div class="tracker-step">
-          <div class="tracker-dot">4</div>
-          <div class="tracker-label">거래선 매칭</div>
-        </div>
+        <div class="tracker-step"><div class="tracker-dot">4</div><div class="tracker-label">거래선 매칭</div></div>
         <div class="tracker-line"></div>
-        <div class="tracker-step">
-          <div class="tracker-dot">5</div>
-          <div class="tracker-label">첫 납품</div>
-        </div>
+        <div class="tracker-step"><div class="tracker-dot">5</div><div class="tracker-label">첫 납품</div></div>
       </div>
     </div>
 
-    <!-- 단가 절감 계산기 -->
     <div class="saving-calc">
       <div class="saving-title">💰 도매 직연결 절감액 미리 계산</div>
       <div class="saving-row">
@@ -287,8 +252,7 @@
             <div class="field"><label>연락처 *</label><input type="tel" id="sf-phone" placeholder="010-0000-0000"/></div>
           </div>
           <div class="field"><label>업체명 (선택)</label><input type="text" id="sf-biz" placeholder="예: 홍길동 정육점"/></div>
-          <div class="field">
-            <label>업종 *</label>
+          <div class="field"><label>업종 *</label>
             <select id="sf-type">
               <option value="">선택해주세요</option>
               <option>정육점 창업 준비 중</option>
@@ -345,16 +309,14 @@
         <div class="form-section-title">공급 요청 상세</div>
         <div class="fields">
           <div class="field-row">
-            <div class="field">
-              <label>월 예상 구매량</label>
+            <div class="field"><label>월 예상 구매량</label>
               <select id="sf-volume">
                 <option value="">선택</option>
                 <option>100kg 미만</option><option>100~300kg</option>
                 <option>300~500kg</option><option>500kg~1톤</option><option>1톤 이상</option>
               </select>
             </div>
-            <div class="field">
-              <label>납품 주기</label>
+            <div class="field"><label>납품 주기</label>
               <select id="sf-cycle">
                 <option>주 1회</option><option>주 2~3회</option>
                 <option>매일</option><option>필요 시마다</option>
@@ -369,15 +331,15 @@
           공급 연결 신청하기
         </button>
         <div class="error-msg" id="supply-error"></div>
-        <div class="submit-note">신청 후 1~2 영업일 내 담당자가 연락드립니다 · 개인정보는 안전하게 보호됩니다</div>
+        <div class="submit-note">신청 후 1~2 영업일 내 담당자가 연락드립니다</div>
       </div>
 
       <div class="sidebar">
         <div class="side-highlight">
           <div class="side-highlight-title">왜 직연결이 유리한가요?</div>
-          <div class="side-highlight-desc">중간 유통 없이 도축장에서 직접 납품하기 때문에 kg당 1,500~3,000원 절감이 가능합니다.</div>
-          <div class="side-highlight-num">월 최대</div>
-          <div class="side-highlight-sub" id="sidebar-saving">300kg 기준 약 90만원 절감</div>
+          <div class="side-highlight-desc">중간 유통 없이 도축장에서 직접 납품 — kg당 1,500~3,000원 절감 가능합니다.</div>
+          <div class="side-highlight-num">연간 최대</div>
+          <div class="side-highlight-sub">1,000만원+ 절감 (월 300kg 기준)</div>
         </div>
         <div class="side-card">
           <div class="side-card-title"><span>🏭</span> 협신식품 공급 강점</div>
@@ -408,76 +370,42 @@
       <div class="page-desc">직접 방문 없이 맞춤 창업 전략 자료를 제공합니다.</div>
     </div>
 
-    <!-- 자가진단 -->
-    <div class="diag-card" id="diag-card">
-      <div class="diag-title">🎯 3가지 질문으로 맞춤 플랜 추천</div>
-      <div class="diag-sub">답변하면 내 상황에 맞는 플랜을 추천해드려요</div>
-      <div class="diag-progress">
-        <div class="diag-prog-dot done" id="dp-0"></div>
-        <div class="diag-prog-dot" id="dp-1"></div>
-        <div class="diag-prog-dot" id="dp-2"></div>
-      </div>
-      <div class="diag-steps">
-        <div class="diag-step active" id="diag-0">
-          <div class="diag-q">Q1. 현재 상황이 어떻게 되시나요?</div>
-          <div class="diag-opts">
-            <button class="diag-opt" onclick="diagNext(0,'창업 준비 중')">창업 준비 중 (아직 개업 전)</button>
-            <button class="diag-opt" onclick="diagNext(0,'운영 중 개선')">현재 운영 중 (수익 개선 필요)</button>
-            <button class="diag-opt" onclick="diagNext(0,'거래선 변경')">현재 운영 중 (거래선 변경 검토)</button>
-          </div>
-        </div>
-        <div class="diag-step" id="diag-1">
-          <div class="diag-q">Q2. 예상 창업 자본금은 얼마인가요?</div>
-          <div class="diag-opts">
-            <button class="diag-opt" onclick="diagNext(1,'5천만원 이하')">5천만원 이하</button>
-            <button class="diag-opt" onclick="diagNext(1,'5천~1억')">5천만원 ~ 1억원</button>
-            <button class="diag-opt" onclick="diagNext(1,'1억 이상')">1억원 이상</button>
-          </div>
-        </div>
-        <div class="diag-step" id="diag-2">
-          <div class="diag-q">Q3. 가장 궁금한 것은 무엇인가요?</div>
-          <div class="diag-opts">
-            <button class="diag-opt" onclick="diagFinish('손익·원가 분석')">예상 수익·원가 구조</button>
-            <button class="diag-opt" onclick="diagFinish('상권·입지 전략')">상권 분석·입지 전략</button>
-            <button class="diag-opt" onclick="diagFinish('거래선·공급 전략')">거래선 확보·공급 전략</button>
-            <button class="diag-opt" onclick="diagFinish('전체 창업 전략')">전체적인 창업 전략</button>
-          </div>
+    <!-- ★ 계산기 유도 배너 — 창업 리포트 신청 시 핵심 -->
+    <div class="calc-guide-banner" id="calc-guide-banner">
+      <div class="calc-guide-text">
+        <h3>📊 계산기 먼저 써보셨나요?</h3>
+        <p>창업 리포트는 계산기 수치를 기반으로 제작됩니다.<br/>아래 순서로 진행하면 더 정확한 리포트를 받으실 수 있어요.</p>
+        <div class="calc-guide-steps">
+          <div class="calc-guide-step">① 계산기 입력</div>
+          <div class="calc-guide-arrow">→</div>
+          <div class="calc-guide-step">② 수치 확인</div>
+          <div class="calc-guide-arrow">→</div>
+          <div class="calc-guide-step">③ 리포트 신청</div>
+          <div class="calc-guide-arrow">→</div>
+          <div class="calc-guide-step">④ 1영업일 내 PDF</div>
         </div>
       </div>
-      <div class="diag-result" id="diag-result">
-        <div class="diag-result-title" id="diag-result-title"></div>
-        <div class="diag-result-text" id="diag-result-text"></div>
-        <button class="diag-btn" onclick="applyDiagResult()">이 플랜으로 신청하기 →</button>
-      </div>
+      <a href="meat_insight_calculator.html?from=report" class="calc-guide-btn">계산기 바로가기 →</a>
     </div>
 
-    <!-- 컨설팅 진행 트래커 -->
-    <div class="tracker-section">
-      <div class="tracker-title">📋 컨설팅 진행 과정</div>
-      <div class="tracker-steps">
-        <div class="tracker-step">
-          <div class="tracker-dot active">1</div>
-          <div class="tracker-label active">결제 완료</div>
+    <!-- 계산기 결과 미리보기 (계산기에서 넘어온 경우) -->
+    <div class="calc-result-preview" id="calc-result-preview">
+      <div class="calc-result-preview-title">📊 계산기 입력 결과 — 이 수치를 기반으로 리포트를 제작합니다</div>
+      <div class="calc-result-grid">
+        <div class="calc-result-item">
+          <div class="calc-result-label">월 예상 매출</div>
+          <div class="calc-result-val" id="preview-sales">-</div>
+          <div style="font-size:10px;color:var(--muted)">만원/월</div>
         </div>
-        <div class="tracker-line"></div>
-        <div class="tracker-step">
-          <div class="tracker-dot">2</div>
-          <div class="tracker-label">담당자 연락</div>
+        <div class="calc-result-item">
+          <div class="calc-result-label">평균 마진율</div>
+          <div class="calc-result-val" id="preview-margin">-</div>
+          <div style="font-size:10px;color:var(--muted)">%</div>
         </div>
-        <div class="tracker-line"></div>
-        <div class="tracker-step">
-          <div class="tracker-dot">3</div>
-          <div class="tracker-label">자료 제작</div>
-        </div>
-        <div class="tracker-line"></div>
-        <div class="tracker-step">
-          <div class="tracker-dot">4</div>
-          <div class="tracker-label">자료 전달</div>
-        </div>
-        <div class="tracker-line"></div>
-        <div class="tracker-step">
-          <div class="tracker-dot">5</div>
-          <div class="tracker-label">Q&A</div>
+        <div class="calc-result-item">
+          <div class="calc-result-label">예상 순이익</div>
+          <div class="calc-result-val gold" id="preview-profit">-</div>
+          <div style="font-size:10px;color:var(--muted)">만원/월</div>
         </div>
       </div>
     </div>
@@ -510,7 +438,10 @@
               <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 투자 회수 기간 계산</div>
               <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 담당자 핵심 조언 1건 포함</div>
             </div>
-            <div style="margin-top:12px;background:var(--off);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--muted)">📌 결제 후 1영업일 내 PDF 전달 · 부가세 별도</div>
+            <div style="margin-top:12px;background:rgba(184,148,90,.1);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--gold);font-weight:700">
+              📌 계산기 수치 입력 후 신청 시 더 정확한 리포트 제공
+            </div>
+            <div style="margin-top:8px;background:var(--off);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--muted)">결제 후 1영업일 내 PDF 전달 · 부가세 별도</div>
           </div>
 
           <!-- 비대면 컨설팅 -->
@@ -545,15 +476,13 @@
             <div class="field"><label>연락처 *</label><input type="tel" id="cf-phone" placeholder="010-0000-0000"/></div>
           </div>
           <div class="field"><label>이메일 *</label><input type="email" id="cf-email" placeholder="example@email.com"/></div>
-          <div class="field">
-            <label>연락 방법 선호</label>
+          <div class="field"><label>연락 방법 선호</label>
             <select id="cf-contact">
               <option>전화 통화 선호</option><option>카카오톡 선호</option>
               <option>이메일 선호</option><option>상관없음</option>
             </select>
           </div>
-          <div class="field">
-            <label>업종 *</label>
+          <div class="field"><label>업종 *</label>
             <select id="cf-type">
               <option value="">선택해주세요</option>
               <option>정육점 창업 준비 중</option><option>고깃집 창업 준비 중</option>
@@ -562,8 +491,7 @@
           </div>
           <div class="field-row">
             <div class="field"><label>창업 예정 지역</label><input type="text" id="cf-region" placeholder="예: 서울 강남구"/></div>
-            <div class="field">
-              <label>목표 창업 시기</label>
+            <div class="field"><label>목표 창업 시기</label>
               <select id="cf-timeline">
                 <option>3개월 이내</option><option>3~6개월</option>
                 <option>6~12개월</option><option>1년 이상</option><option>아직 미정</option>
@@ -571,8 +499,7 @@
             </div>
           </div>
           <div class="field"><label>예상 창업 자본 (만원)</label><input type="number" id="cf-capital" placeholder="예: 8000"/></div>
-          <div class="field">
-            <label>가장 궁금한 점 / 컨설팅 목적</label>
+          <div class="field"><label>가장 궁금한 점 / 컨설팅 목적</label>
             <textarea id="cf-memo" placeholder="예: 20평 정육점 예상 수익이 궁금하고, 거래선 확보 방법을 알고 싶습니다."></textarea>
           </div>
         </div>
@@ -630,31 +557,13 @@
           <div class="side-highlight-sub">자료 제공까지 소요 시간</div>
         </div>
         <div class="side-card">
-          <div class="side-card-title"><span>📄</span> 창업 리포트 20만원</div>
+          <div class="side-card-title"><span>📊</span> 계산기 먼저 써보세요</div>
           <div class="side-items">
-            <div class="side-item"><div class="side-dot"></div>예상 매출·순이익 분석</div>
-            <div class="side-item"><div class="side-dot"></div>손익분기점 계산</div>
-            <div class="side-item"><div class="side-dot"></div>원가율·마진율 구조</div>
-            <div class="side-item"><div class="side-dot"></div>업계 평균 비교표</div>
-            <div class="side-item"><div class="side-dot"></div>담당자 핵심 조언 1건</div>
+            <div class="side-item"><div class="side-dot"></div>창업 리포트는 계산기 수치 기반 제작</div>
+            <div class="side-item"><div class="side-dot"></div>지역·업종·평수 입력 → 즉시 예상 수익 확인</div>
+            <div class="side-item"><div class="side-dot"></div>5종 계산기 모두 무료</div>
           </div>
-        </div>
-        <div class="side-card">
-          <div class="side-card-title"><span>💼</span> 비대면 컨설팅 150만원</div>
-          <div class="side-items">
-            <div class="side-item"><div class="side-dot"></div>상권·입지 분석 자료</div>
-            <div class="side-item"><div class="side-dot"></div>창업 비용 견적 가이드</div>
-            <div class="side-item"><div class="side-dot"></div>인허가·행정 절차 가이드</div>
-            <div class="side-item"><div class="side-dot"></div>원가·수율 분석표</div>
-            <div class="side-item"><div class="side-dot"></div>메뉴 구성 가이드</div>
-            <div class="side-item"><div class="side-dot"></div>초도 물량 구성 추천</div>
-            <div class="side-item"><div class="side-dot"></div>월별 손익 관리표 (엑셀)</div>
-            <div class="side-item"><div class="side-dot"></div>재고 관리 가이드</div>
-            <div class="side-item"><div class="side-dot"></div>인건비 구조 가이드</div>
-            <div class="side-item"><div class="side-dot"></div>네이버 플레이스 최적화</div>
-            <div class="side-item"><div class="side-dot"></div>단골 고객 만들기 전략</div>
-            <div class="side-item"><div class="side-dot"></div>거래선 우선 연결 매칭</div>
-          </div>
+          <a href="meat_insight_calculator.html?from=report" style="display:block;margin-top:14px;padding:11px;border-radius:10px;background:var(--navy);color:var(--gold);font-size:13px;font-weight:900;text-align:center;text-decoration:none">📊 계산기 바로가기</a>
         </div>
         <div class="side-card">
           <div class="side-card-title"><span>💬</span> 자주 묻는 질문</div>
@@ -673,7 +582,7 @@
 <div class="sticky-bar">
   <div class="sticky-text">MEAT INSIGHT · 신청 센터<small>공급 연결 · 비대면 컨설팅</small></div>
   <div class="sticky-actions">
-    <a class="sticky-btn outline" href="meat_insight_calculator.html">계산기</a>
+    <a class="sticky-btn outline" href="meat_insight_calculator.html">📊 계산기</a>
     <a class="sticky-btn" href="meat_insight_diagnosis.html">창업 진단</a>
   </div>
 </div>
@@ -687,7 +596,6 @@ let selectedPlan='premium',selectedPayment='kakaopay';
 const planPrices={basic:200000,premium:1500000};
 const planNames={basic:'창업 리포트',premium:'비대면 컨설팅'};
 let visItems={};
-let diagAnswers=[],diagRecommend='premium';
 
 /* ── 탭 ── */
 function switchTab(tab){
@@ -696,6 +604,26 @@ function switchTab(tab){
     document.getElementById('page-'+t).classList.toggle('active',t===tab);
   });
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ── 계산기 결과 불러오기 ── */
+function loadCalcResult(){
+  const params=new URLSearchParams(location.search);
+  // 계산기에서 from=report로 넘어온 경우 계산기 유도 배너 숨기고 결과 표시
+  if(params.get('from')==='report'){
+    const sales=params.get('sales');
+    const margin=params.get('margin');
+    const profit=params.get('profit');
+    if(sales&&profit){
+      document.getElementById('calc-guide-banner').style.display='none';
+      document.getElementById('preview-sales').textContent=parseInt(sales).toLocaleString();
+      document.getElementById('preview-margin').textContent=margin||'-';
+      document.getElementById('preview-profit').textContent=parseInt(profit).toLocaleString();
+      document.getElementById('calc-result-preview').classList.add('show');
+      // 창업 리포트 자동 선택
+      selectPlan('basic');
+    }
+  }
 }
 
 /* ── 품목 시각 선택 ── */
@@ -719,54 +647,24 @@ function calcSaving(){
   document.getElementById('saving-result').style.display='block';
 }
 
-/* ── 자가진단 ── */
-function diagNext(step,answer){
-  diagAnswers[step]=answer;
-  document.getElementById('diag-'+step).classList.remove('active');
-  const next=step+1;
-  document.getElementById('dp-'+step).classList.add('done');
-  if(document.getElementById('dp-'+next))document.getElementById('dp-'+next).classList.add('done');
-  if(document.getElementById('diag-'+next)){
-    document.getElementById('diag-'+next).classList.add('active');
-  }
-}
-function diagFinish(answer){
-  diagAnswers[2]=answer;
-  document.getElementById('diag-2').classList.remove('active');
-  // 플랜 추천 로직
-  const capital=diagAnswers[1];
-  const need=diagAnswers[2];
-  let plan='premium',title='',text='';
-  if(capital==='5천만원 이하'&&!need.includes('전략')){
-    plan='basic';
-    title='✅ STANDARD 플랜을 추천합니다';
-    text='자본금 규모와 필요 내용을 고려했을 때 기본 손익·원가 분석 자료로 충분합니다. STANDARD 플랜(50만원)으로 시작해보세요.';
-  } else {
-    plan='premium';
-    title='🚀 PREMIUM 플랜을 추천합니다';
-    text='맞춤 창업 전략·심화 분석·화상 미팅이 포함된 PREMIUM 플랜이 현재 상황에 최적입니다. 투자금 대비 가장 높은 효과를 얻을 수 있습니다.';
-  }
-  diagRecommend=plan;
-  document.getElementById('diag-result-title').textContent=title;
-  document.getElementById('diag-result-text').textContent=text;
-  document.getElementById('diag-result').classList.add('show');
-}
-function applyDiagResult(){
-  selectPlan(diagRecommend);
-  document.getElementById('diag-card').style.display='none';
-  document.getElementById('consult-form-area').scrollIntoView({behavior:'smooth'});
-}
-
 /* ── 플랜 선택 ── */
 function selectPlan(plan){
   selectedPlan=plan;
   ['basic','premium'].forEach(p=>document.getElementById('plan-'+p).classList.toggle('selected',p===plan));
+  // 창업 리포트 선택 시 계산기 배너 강조
+  if(plan==='basic'){
+    const banner=document.getElementById('calc-guide-banner');
+    if(banner.style.display!=='none'){
+      banner.style.border='2px solid var(--gold)';
+      banner.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+  }
   updatePriceDisplay();
 }
 function updatePriceDisplay(){
   const price=planPrices[selectedPlan];
   document.getElementById('price-display').textContent=(price/10000).toLocaleString()+'만원';
-  document.getElementById('plan-display').textContent=planNames[selectedPlan]+' 플랜 (부가세 별도)';
+  document.getElementById('plan-display').textContent=planNames[selectedPlan]+' (부가세 별도)';
   document.getElementById('bank-amount').textContent=price.toLocaleString()+'원';
   document.getElementById('submit-btn-text').textContent=selectedPayment==='bank'?'신청 완료하기 (무통장입금)':'결제하고 신청 완료하기';
 }
@@ -793,7 +691,7 @@ async function submitSupply(){
   const btn=document.getElementById('supply-submit-btn');
   const spinner=document.getElementById('supply-spinner');
   btn.disabled=true;spinner.classList.add('show');
-  const items=Object.values(visItems).join(', ')||document.getElementById('sf-items-hidden').value||'미선택';
+  const items=Object.values(visItems).join(', ')||'미선택';
   const payload={name,phone,biz_name:document.getElementById('sf-biz').value.trim(),type,region,items,volume:document.getElementById('sf-volume').value,cycle:document.getElementById('sf-cycle').value,price:document.getElementById('sf-price').value.trim(),memo:document.getElementById('sf-memo').value.trim(),status:'신규'};
   try{
     const{error}=await sb.from('supply_requests').insert([payload]);
@@ -832,7 +730,6 @@ async function submitConsult(){
     const orderId='MEAT-'+Date.now();
     const amount=planPrices[selectedPlan];
     if(selectedPayment==='bank'){
-      await sb.from('consult_requests').update({payment_status:'입금대기',order_id:orderId}).eq('id',data[0].id);
       showConsultSuccess(name,phone,type,orderId,'무통장입금 (입금 확인 후 진행)');
       return;
     }
@@ -840,7 +737,7 @@ async function submitConsult(){
     const methodMap={kakaopay:'카카오페이',naverpay:'네이버페이'};
     await tossPayments.requestPayment(methodMap[selectedPayment],{
       amount,orderId,
-      orderName:`MEAT INSIGHT ${planNames[selectedPlan]} 컨설팅`,
+      orderName:`MEAT INSIGHT ${planNames[selectedPlan]}`,
       customerName:name,customerEmail:email,
       successUrl:window.location.origin+'/meat_insight_apply.html?tab=consulting&payment=success&orderId='+orderId,
       failUrl:window.location.origin+'/meat_insight_apply.html?tab=consulting&payment=fail',
@@ -865,11 +762,14 @@ function showConsultSuccess(name,phone,type,orderId,payMethod){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-/* ── URL 파라미터 ── */
+/* ── URL 파라미터 처리 ── */
 const params=new URLSearchParams(location.search);
 if(params.get('tab')==='consulting')switchTab('consulting');
 if(params.get('payment')==='success'){switchTab('consulting');showConsultSuccess('고객','-','-',params.get('orderId')||'-','카드/간편결제');}
 if(params.get('payment')==='fail'){switchTab('consulting');setTimeout(()=>{document.getElementById('consult-error').textContent='결제에 실패했어요. 다시 시도해주세요.';document.getElementById('consult-error').classList.add('show');},500);}
+
+// 계산기 결과 불러오기
+loadCalcResult();
 </script>
 </body>
 </html>

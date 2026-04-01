@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:auto;overflow-y:auto;}
 :root{
   --ink:#16120E;--ink2:#57534E;--ink3:#A8A29E;
   --cream:#FDFAF5;--c2:#F5EFE6;--c3:#EDE4D8;
@@ -19,8 +20,8 @@
   --sans:'Noto Sans KR',sans-serif;
   --serif:'Noto Serif KR',serif;
 }
-body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:14px;line-height:1.6;}
-.pg{display:none;}.pg.on{display:block;}
+body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:14px;line-height:1.6;overflow-y:auto !important;height:auto !important;}
+.pg{display:none;}.pg.on{display:block;height:auto;overflow:visible;}
 
 /* NAV */
 .nav{background:var(--dk2);height:56px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid #3a3330;}
@@ -307,12 +308,14 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .mnb.on .mnb-txt{color:#F5EFE6;}
 @media(max-width:640px){
   .mobile-nav{display:grid;}
-  body{padding-bottom:60px;}
+  body{padding-bottom:60px;overflow-y:auto !important;}
   .nav-links{display:none;}
   .lgrid{grid-template-columns:repeat(2,minmax(0,1fr));}
   .svcs{grid-template-columns:repeat(2,minmax(0,1fr));}
   .statbar{grid-template-columns:repeat(2,1fr);}
 }
+/* iframe 내 스크롤 강제 허용 */
+html{overflow-y:auto !important;height:auto !important;}
 </style>
 </head>
 <body>

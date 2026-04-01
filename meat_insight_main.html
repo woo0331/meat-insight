@@ -11,7 +11,7 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:auto;overflow-y:auto;}
 :root{
-  --ink:#16120E;--ink2:#57534E;--ink3:#A8A29E;
+  --ink:#0A0A0A;--ink2:#1A1A1A;--ink3:#555555;
   --cream:#F7F5EE;--c2:#F0EDE0;--c3:#E5DFD0;
   --rm:#C9A84C;--rl:#F0E8C8;--rd:#5A4A00;
   --gm:#C9A84C;--gl:#F0E8C8;--gb:#C9A84C;
@@ -69,20 +69,20 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .svc-n{font-size:9px;color:var(--ink3);letter-spacing:2px;margin-bottom:7px;}
 .svc-ico{width:38px;height:38px;border-radius:10px;margin:0 auto 9px;display:flex;align-items:center;justify-content:center;}
 .ir{background:var(--rl);}.ig{background:var(--gl);}.ik{background:#F5F5F4;}.ib{background:#EFF6FF;}
-.svc-t{font-size:12px;font-weight:500;color:var(--ink);margin-bottom:2px;}
+.svc-t{font-size:13px;font-weight:700;color:#0F1E3D;margin-bottom:2px;}
 .svc-d{font-size:14px;color:var(--ink3);line-height:1.4;}
 
 /* 스탯바 */
 .statbar{display:grid;grid-template-columns:repeat(4,1fr);background:var(--dk2);gap:1px;}
 .stc{background:var(--dk2);padding:14px;text-align:center;}
-.stn{font-family:var(--serif);font-size:19px;color:#F5EFE6;}
-.stl{font-size:9px;color:#4A3F35;margin-top:2px;letter-spacing:.8px;}
+.stn{font-family:var(--serif);font-size:22px;color:#ffffff;font-weight:700;}
+.stl{font-size:11px;color:#C9A84C;margin-top:3px;letter-spacing:.8px;font-weight:500;}
 
 /* 섹션 */
 .sec{padding:20px;}
 .sech{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;}
 .sect{font-family:var(--serif);font-size:15px;color:var(--ink);}
-.secm{font-size:11px;color:var(--rm);cursor:pointer;}
+.secm{font-size:13px;color:#C9A84C;cursor:pointer;font-weight:500;}
 .div0{height:1px;background:var(--bd);margin:0 20px;}
 
 /* 매물 그리드 */
@@ -97,13 +97,13 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .ltr{background:var(--rl);color:var(--rd);}
 .ltg{background:var(--gl);color:#78350F;}
 .ltnw{background:var(--rm);color:#fff;}
-.ltit{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.ltit{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;color:#0F1E3D;}
 .lsub{font-size:14px;color:var(--ink3);margin-bottom:7px;}
-.lprice{font-size:13px;font-weight:700;}
+.lprice{font-size:15px;font-weight:700;color:#0F1E3D;}
 .lprice small{font-size:14px;color:var(--ink3);font-weight:400;}
 .lfoot{display:flex;justify-content:space-between;margin-top:7px;padding-top:7px;border-top:1px solid var(--bd);}
 .lloc{font-size:14px;color:var(--ink3);}
-.lago{font-size:10px;color:var(--rm);}
+.lago{font-size:12px;color:#C9A84C;font-weight:500;}
 
 /* 컨설팅 카드 */
 .cgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
@@ -122,12 +122,12 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .sbanner-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
 .sbanner-ey{font-size:9px;color:#4A3F35;letter-spacing:2px;margin-bottom:5px;}
 .sbanner-t{font-family:var(--serif);font-size:15px;color:#F5EFE6;margin-bottom:3px;}
-.sbanner-s{font-size:11px;color:#6B5E55;}
+.sbanner-s{font-size:14px;color:#D4C9A0;}
 .sbtn{background:var(--gb);color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--sans);white-space:nowrap;}
 .sspec-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#3a3330;border-radius:8px;overflow:hidden;}
 .sspec{background:#242120;padding:10px 12px;text-align:center;}
 .sspec-n{font-family:var(--serif);font-size:13px;color:#EF9F27;margin-bottom:3px;}
-.sspec-l{font-size:9px;color:#6B5E55;}
+.sspec-l{font-size:12px;color:#C9A84C;}
 
 /* 페이지 헤더 */
 .phdr{background:var(--dk2);padding:13px 20px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid #3a3330;}
@@ -237,7 +237,7 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .badge-ft{font-size:8px;background:#EF9F27;color:var(--dk);padding:2px 6px;border-radius:3px;font-weight:700;}
 .badge-vf{font-size:8px;background:#DCFCE7;color:#166534;padding:2px 6px;border-radius:3px;font-weight:500;}
 .badge-ad{font-size:8px;background:var(--rl);color:var(--rd);padding:2px 6px;border-radius:3px;font-weight:500;}
-.sc-name{font-size:12px;font-weight:500;margin-bottom:2px;}
+.sc-name{font-size:14px;font-weight:700;margin-bottom:2px;color:#0F1E3D;}
 .sc-region{font-size:14px;color:var(--ink3);}
 .sc-body{padding:11px;}
 .sc-cats{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px;}
@@ -396,14 +396,14 @@ html{overflow-y:auto !important;height:auto !important;}
   </div>
 
   <div class="sec">
-    <div class="sech"><div class="sect" style="color:#0F1E3D;border-bottom:2px solid #C9A84C;padding-bottom:4px;">최근 등록 매물</div><div class="secm">전체보기 →</div></div>
+    <div class="sech"><div class="sect" style="color:#0F1E3D;font-size:18px;">최근 등록 매물</div><div class="secm">전체보기 →</div></div>
     <div class="lgrid" id="lg"></div>
   </div>
 
   <div class="div0"></div>
 
   <div class="sec">
-    <div class="sech"><div class="sect" style="color:#0F1E3D;border-bottom:2px solid #C9A84C;padding-bottom:4px;">컨설팅 서비스</div><div class="secm" onclick="go('c')">신청하기 →</div></div>
+    <div class="sech"><div class="sect" style="color:#0F1E3D;font-size:18px;">컨설팅 서비스</div><div class="secm" onclick="go('c')">신청하기 →</div></div>
     <div class="cgrid">
       <div class="cc" onclick="go('c')">
         <span class="ccb ccbr">창업 리포트</span>
@@ -438,7 +438,7 @@ html{overflow-y:auto !important;height:auto !important;}
 
   <!-- 홈 공급사 미리보기 -->
   <div class="sec">
-    <div class="sech"><div class="sect" style="color:#0F1E3D;border-bottom:2px solid #C9A84C;padding-bottom:4px;">입점 공급사</div><div class="secm" onclick="go('sup')">전체보기 →</div></div>
+    <div class="sech"><div class="sect" style="color:#0F1E3D;font-size:18px;">입점 공급사</div><div class="secm" onclick="go('sup')">전체보기 →</div></div>
     <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
 
       <div class="sc featured" onclick="go('sup')" style="cursor:pointer;">

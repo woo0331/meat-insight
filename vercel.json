@@ -1,8 +1,5 @@
 {
-  "routes": [
-    {
-      "src": "/",
-      "dest": "/meat_insight_main.html"
-    }
+  "rewrites": [
+    { "source": "/", "destination": "/meat_insight_main.html" }
   ]
 }

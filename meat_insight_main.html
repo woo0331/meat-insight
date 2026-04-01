@@ -427,7 +427,7 @@ html{overflow-y:auto !important;height:auto !important;}
         <div class="sbanner-t">정육·고기 공급사 직거래</div>
         <div class="sbanner-s">전국 검증된 공급사와 정육점·고깃집을 직접 연결합니다</div>
       </div>
-      <button class="sbtn" onclick="go('sup')">공급사 보기</button>
+      <button class="sbtn" onclick="go('sup')">공급사 전체보기</button>
     </div>
     <div class="sspec-row">
       <div class="sspec"><div class="sspec-n">38개</div><div class="sspec-l">입점 공급사</div></div>
@@ -435,7 +435,115 @@ html{overflow-y:auto !important;height:auto !important;}
       <div class="sspec"><div class="sspec-n">직거래</div><div class="sspec-l">중간 마진 없음</div></div>
     </div>
   </div>
-</div>
+
+  <!-- 홈 공급사 미리보기 -->
+  <div class="sec">
+    <div class="sech"><div class="sect">입점 공급사</div><div class="secm" onclick="go('sup')">전체보기 →</div></div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+
+      <div class="sc featured" onclick="go('sup')" style="cursor:pointer;">
+        <div class="sc-head">
+          <div class="sc-logo"><div class="sc-logo-txt">협신<br>식품</div></div>
+          <div>
+            <div class="sc-badges"><span class="badge-ft">추천</span><span class="badge-vf">검증완료</span></div>
+            <div class="sc-name">협신식품 (주)</div>
+            <div class="sc-region">경기도 · 전국 배송</div>
+          </div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-cats"><span class="scat">한우</span><span class="scat">돼지</span><span class="scat">부분육</span></div>
+          <div class="sc-desc">수도권 유일 도축장. 부분육 경매 최초 도입.</div>
+          <div class="sc-specs">
+            <div class="ssp"><div class="sspn">Top 5</div><div class="sspl">도축 규모</div></div>
+            <div class="ssp"><div class="sspn">52년</div><div class="sspl">업력</div></div>
+            <div class="ssp"><div class="sspn">당일</div><div class="sspl">수도권 배송</div></div>
+          </div>
+          <div class="sc-foot">
+            <button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button>
+            <button class="btn-more" onclick="go('sup')">상세보기</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sc" onclick="go('sup')" style="cursor:pointer;">
+        <div class="sc-head">
+          <div class="sc-logo"><div class="sc-logo-txt">한우<br>직판</div></div>
+          <div>
+            <div class="sc-badges"><span class="badge-vf">검증완료</span><span class="badge-ad">광고</span></div>
+            <div class="sc-name">강원한우 직판장</div>
+            <div class="sc-region">강원도 · 전국 배송</div>
+          </div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-cats"><span class="scat">한우</span><span class="scat">1++등급</span></div>
+          <div class="sc-desc">강원도 횡성 한우 산지 직송.</div>
+          <div class="sc-specs">
+            <div class="ssp"><div class="sspn">1++</div><div class="sspl">등급 전문</div></div>
+            <div class="ssp"><div class="sspn">산지</div><div class="sspl">직송</div></div>
+            <div class="ssp"><div class="sspn">15년</div><div class="sspl">업력</div></div>
+          </div>
+          <div class="sc-foot">
+            <button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button>
+            <button class="btn-more" onclick="go('sup')">상세보기</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sc" onclick="go('sup')" style="cursor:pointer;">
+        <div class="sc-head">
+          <div class="sc-logo"><div class="sc-logo-txt">제주<br>흑돼지</div></div>
+          <div>
+            <div class="sc-badges"><span class="badge-vf">검증완료</span></div>
+            <div class="sc-name">제주 흑돼지 영농조합</div>
+            <div class="sc-region">제주도 · 전국 배송</div>
+          </div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-cats"><span class="scat">흑돼지</span><span class="scat">삼겹</span></div>
+          <div class="sc-desc">제주 인증 흑돼지. 고깃집 B2B 특화.</div>
+          <div class="sc-specs">
+            <div class="ssp"><div class="sspn">제주</div><div class="sspl">인증</div></div>
+            <div class="ssp"><div class="sspn">B2B</div><div class="sspl">전문</div></div>
+            <div class="ssp"><div class="sspn">익일</div><div class="sspl">전국 배송</div></div>
+          </div>
+          <div class="sc-foot">
+            <button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button>
+            <button class="btn-more" onclick="go('sup')">상세보기</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sc" onclick="go('sup')" style="cursor:pointer;">
+        <div class="sc-head">
+          <div class="sc-logo"><div class="sc-logo-txt">수입<br>육류</div></div>
+          <div>
+            <div class="sc-badges"><span class="badge-vf">검증완료</span><span class="badge-ad">광고</span></div>
+            <div class="sc-name">미국산 냉동육 직수입</div>
+            <div class="sc-region">인천 · 전국 배송</div>
+          </div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-cats"><span class="scat">미국산</span><span class="scat">호주산</span></div>
+          <div class="sc-desc">미국·호주 직수입. 소량 발주 가능.</div>
+          <div class="sc-specs">
+            <div class="ssp"><div class="sspn">직수입</div><div class="sspl">마진 없음</div></div>
+            <div class="ssp"><div class="sspn">소량</div><div class="sspl">발주 가능</div></div>
+            <div class="ssp"><div class="sspn">20년</div><div class="sspl">업력</div></div>
+          </div>
+          <div class="sc-foot">
+            <button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button>
+            <button class="btn-more" onclick="go('sup')">상세보기</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div style="margin-top:12px;">
+      <button onclick="go('sup')" style="width:100%;padding:12px;background:var(--dk2);color:#F5EFE6;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans);">공급사 전체보기 →</button>
+    </div>
+  </div>
+
+  <div style="height:20px;"></div>
 
 <!-- ═══ 창업·계산기 ═══ -->
 <div class="pg" id="pg-c">

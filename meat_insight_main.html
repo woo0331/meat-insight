@@ -12,15 +12,15 @@
 html,body{height:auto;overflow-y:auto;}
 :root{
   --ink:#16120E;--ink2:#57534E;--ink3:#A8A29E;
-  --cream:#FDFAF5;--c2:#F5EFE6;--c3:#EDE4D8;
-  --rm:#B91C1C;--rl:#FEF2F2;--rd:#7F1D1D;
-  --gm:#B45309;--gl:#FFFBEB;--gb:#D97706;
-  --dk:#1C1917;--dk2:#292524;
-  --bd:#DDD5C8;--bd2:#C9BFB3;
+  --cream:#F7F5EE;--c2:#F0EDE0;--c3:#E5DFD0;
+  --rm:#C9A84C;--rl:#F0E8C8;--rd:#5A4A00;
+  --gm:#C9A84C;--gl:#F0E8C8;--gb:#C9A84C;
+  --dk:#0F1E3D;--dk2:#0F1E3D;
+  --bd:#D8D4C0;--bd2:#D0CABC;
   --sans:'Noto Sans KR',sans-serif;
   --serif:'Noto Serif KR',serif;
 }
-body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:14px;line-height:1.6;overflow-y:auto !important;height:auto !important;}
+body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:18px;line-height:1.8;overflow-y:auto !important;height:auto !important;}
 .pg{display:none;}.pg.on{display:block;height:auto;overflow:visible;}
 
 /* NAV */
@@ -70,7 +70,7 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .svc-ico{width:38px;height:38px;border-radius:10px;margin:0 auto 9px;display:flex;align-items:center;justify-content:center;}
 .ir{background:var(--rl);}.ig{background:var(--gl);}.ik{background:#F5F5F4;}.ib{background:#EFF6FF;}
 .svc-t{font-size:12px;font-weight:500;color:var(--ink);margin-bottom:2px;}
-.svc-d{font-size:10px;color:var(--ink3);line-height:1.4;}
+.svc-d{font-size:14px;color:var(--ink3);line-height:1.4;}
 
 /* 스탯바 */
 .statbar{display:grid;grid-template-columns:repeat(4,1fr);background:var(--dk2);gap:1px;}
@@ -98,11 +98,11 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .ltg{background:var(--gl);color:#78350F;}
 .ltnw{background:var(--rm);color:#fff;}
 .ltit{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
-.lsub{font-size:10px;color:var(--ink3);margin-bottom:7px;}
+.lsub{font-size:14px;color:var(--ink3);margin-bottom:7px;}
 .lprice{font-size:13px;font-weight:700;}
-.lprice small{font-size:10px;color:var(--ink3);font-weight:400;}
+.lprice small{font-size:14px;color:var(--ink3);font-weight:400;}
 .lfoot{display:flex;justify-content:space-between;margin-top:7px;padding-top:7px;border-top:1px solid var(--bd);}
-.lloc{font-size:10px;color:var(--ink3);}
+.lloc{font-size:14px;color:var(--ink3);}
 .lago{font-size:10px;color:var(--rm);}
 
 /* 컨설팅 카드 */
@@ -113,9 +113,9 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .ccbr{background:var(--rl);color:var(--rd);}
 .ccbg{background:var(--gl);color:#78350F;}
 .cct{font-size:13px;font-weight:500;margin-bottom:4px;}
-.ccd{font-size:11px;color:var(--ink2);line-height:1.6;margin-bottom:10px;}
+.ccd{font-size:15px;color:var(--ink2);line-height:1.6;margin-bottom:10px;}
 .ccp{font-family:var(--serif);font-size:15px;color:var(--rm);}
-.ccp small{font-size:10px;color:var(--ink3);font-family:var(--sans);font-weight:400;}
+.ccp small{font-size:14px;color:var(--ink3);font-family:var(--sans);font-weight:400;}
 
 /* 협신식품 배너 */
 .sbanner{background:var(--dk);border-radius:14px;margin:0 20px 20px;padding:18px;}
@@ -136,7 +136,7 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 
 /* 탭 */
 .tabs{display:flex;background:var(--c2);border-bottom:1px solid var(--bd);}
-.tab{flex:1;padding:12px;text-align:center;font-size:12px;color:var(--ink3);cursor:pointer;border:none;background:none;font-family:var(--sans);border-bottom:2px solid transparent;transition:all .15s;}
+.tab{flex:1;padding:12px;text-align:center;font-size:15px;color:var(--ink3);cursor:pointer;border:none;background:none;font-family:var(--sans);border-bottom:2px solid transparent;transition:all .15s;}
 .tab.on{color:var(--rm);border-bottom-color:var(--rm);font-weight:500;background:var(--cream);}
 
 /* 컨설팅 상품 */
@@ -146,19 +146,19 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .pcbr{background:var(--rl);color:var(--rd);}
 .pcbg{background:var(--gl);color:#78350F;}
 .pct{font-family:var(--serif);font-size:15px;color:var(--ink);margin-bottom:7px;}
-.pcd{font-size:12px;color:var(--ink2);line-height:1.7;margin-bottom:12px;}
+.pcd{font-size:16px;color:var(--ink2);line-height:1.7;margin-bottom:12px;}
 .pci{margin-bottom:12px;}
-.inc{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink2);padding:5px 0;border-bottom:1px solid var(--c3);}
+.inc{display:flex;align-items:center;gap:7px;font-size:15px;color:var(--ink2);padding:5px 0;border-bottom:1px solid var(--c3);}
 .inc:last-child{border:none;}
 .incb{width:4px;height:4px;border-radius:50%;background:var(--rm);flex-shrink:0;}
 .pcp{font-family:var(--serif);font-size:18px;color:var(--rm);margin-bottom:12px;}
-.pcp small{font-size:11px;color:var(--ink3);font-family:var(--sans);font-weight:400;}
+.pcp small{font-size:14px;color:var(--ink3);font-family:var(--sans);font-weight:400;}
 .bfull{width:100%;padding:12px;background:var(--rd);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans);}
 .bfull:hover{background:var(--rm);}
 
 /* 계산기 */
 .ctabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
-.ct{padding:6px 14px;border:1px solid var(--bd2);border-radius:20px;font-size:11px;color:var(--ink2);cursor:pointer;background:#fff;font-family:var(--sans);transition:all .15s;}
+.ct{padding:6px 14px;border:1px solid var(--bd2);border-radius:20px;font-size:15px;color:var(--ink2);cursor:pointer;background:#fff;font-family:var(--sans);transition:all .15s;}
 .ct.on{background:var(--rd);border-color:var(--rd);color:#fff;font-weight:500;}
 .calccard{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:16px;}
 .cl{font-size:10px;color:var(--ink2);font-weight:500;margin-bottom:4px;display:block;letter-spacing:.2px;}
@@ -178,11 +178,11 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .step{display:flex;gap:14px;margin-bottom:16px;}
 .sbub{width:32px;height:32px;border-radius:50%;background:var(--rd);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--serif);}
 .st{font-size:13px;font-weight:500;margin-bottom:3px;}
-.sd{font-size:11px;color:var(--ink2);line-height:1.6;}
+.sd{font-size:15px;color:var(--ink2);line-height:1.6;}
 .sl{display:inline-block;font-size:11px;color:var(--rm);margin-top:5px;cursor:pointer;border-bottom:1px solid var(--rl);}
 .ptrow{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:14px 16px;margin:0 20px 20px;}
 .ptname{font-size:13px;font-weight:500;margin-bottom:2px;}
-.ptdesc{font-size:10px;color:var(--ink3);}
+.ptdesc{font-size:14px;color:var(--ink3);}
 .ptbtn{background:var(--dk2);color:#F5EFE6;border:none;border-radius:7px;padding:8px 14px;font-size:12px;cursor:pointer;font-family:var(--sans);}
 
 /* 지원금 */
@@ -198,7 +198,7 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .si{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:15px;margin-top:10px;}
 .sibadge{display:inline-block;font-size:9px;padding:2px 8px;border-radius:3px;margin-bottom:8px;font-weight:500;letter-spacing:.5px;background:#EFF6FF;color:#1E40AF;}
 .sit{font-size:13px;font-weight:500;margin-bottom:4px;}
-.sid{font-size:11px;color:var(--ink2);line-height:1.6;margin-bottom:8px;}
+.sid{font-size:15px;color:var(--ink2);line-height:1.6;margin-bottom:8px;}
 .sia{font-family:var(--serif);font-size:16px;color:#1E40AF;margin-bottom:12px;}
 .ssbtn{width:100%;padding:11px;background:#1E3A5F;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--sans);}
 
@@ -224,7 +224,7 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .ad-btn{background:var(--gb);color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--sans);white-space:nowrap;}
 .fbar{background:var(--cream);border-bottom:1px solid var(--bd);padding:10px 16px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
 .flbl{font-size:9px;color:var(--ink3);letter-spacing:1px;text-transform:uppercase;margin-right:2px;}
-.fchip{padding:5px 12px;border:1px solid var(--bd2);border-radius:20px;font-size:11px;color:var(--ink2);cursor:pointer;background:#fff;font-family:var(--sans);transition:all .15s;}
+.fchip{padding:5px 12px;border:1px solid var(--bd2);border-radius:20px;font-size:15px;color:var(--ink2);cursor:pointer;background:#fff;font-family:var(--sans);transition:all .15s;}
 .fchip.on{background:var(--rd);border-color:var(--rd);color:#fff;font-weight:500;}
 .sgrid{padding:14px 16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
 .sc{background:#fff;border:1px solid var(--bd);border-radius:14px;overflow:hidden;cursor:pointer;transition:border-color .15s;}
@@ -238,18 +238,18 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .badge-vf{font-size:8px;background:#DCFCE7;color:#166534;padding:2px 6px;border-radius:3px;font-weight:500;}
 .badge-ad{font-size:8px;background:var(--rl);color:var(--rd);padding:2px 6px;border-radius:3px;font-weight:500;}
 .sc-name{font-size:12px;font-weight:500;margin-bottom:2px;}
-.sc-region{font-size:10px;color:var(--ink3);}
+.sc-region{font-size:14px;color:var(--ink3);}
 .sc-body{padding:11px;}
 .sc-cats{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px;}
 .scat{font-size:10px;padding:2px 7px;border-radius:4px;background:var(--c2);color:var(--ink2);}
-.sc-desc{font-size:11px;color:var(--ink2);line-height:1.5;margin-bottom:9px;}
+.sc-desc{font-size:15px;color:var(--ink2);line-height:1.5;margin-bottom:9px;}
 .sc-specs{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bd);border-radius:8px;overflow:hidden;margin-bottom:9px;}
 .ssp{background:var(--cream);padding:7px 5px;text-align:center;}
 .sspn{font-family:var(--serif);font-size:12px;color:var(--rm);margin-bottom:1px;}
 .sspl{font-size:9px;color:var(--ink3);}
 .sc-foot{display:flex;gap:6px;}
 .btn-contact{flex:1;padding:9px;background:var(--rd);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--sans);}
-.btn-more{padding:9px 12px;background:#fff;border:1px solid var(--bd2);border-radius:7px;font-size:11px;color:var(--ink2);cursor:pointer;font-family:var(--sans);}
+.btn-more{padding:9px 12px;background:#fff;border:1px solid var(--bd2);border-radius:7px;font-size:15px;color:var(--ink2);cursor:pointer;font-family:var(--sans);}
 .join-cta{margin:4px 16px 20px;background:var(--dk2);border-radius:14px;padding:18px;}
 .join-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
 .join-t{font-family:var(--serif);font-size:15px;color:#F5EFE6;margin-bottom:4px;}
@@ -278,7 +278,7 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .pdrop{border:2px dashed var(--bd2);border-radius:9px;padding:20px;text-align:center;cursor:pointer;transition:all .15s;}
 .pdrop:hover{border-color:var(--rm);background:var(--rl);}
 .pdrop-i{font-size:24px;color:var(--bd2);margin-bottom:6px;}
-.pdrop-t{font-size:11px;color:var(--ink3);}
+.pdrop-t{font-size:14px;color:var(--ink3);}
 .breg{width:100%;padding:13px;background:var(--rd);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);margin-top:4px;}
 .breg:hover{background:var(--rm);}
 
@@ -295,7 +295,7 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:
 .myimg{width:52px;height:52px;background:var(--c2);border-radius:8px;flex-shrink:0;}
 .myinfo{flex:1;min-width:0;}
 .myt{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;}
-.mys{font-size:10px;color:var(--ink3);}
+.mys{font-size:14px;color:var(--ink3);}
 .bon{display:inline-block;font-size:9px;background:#DCFCE7;color:#166534;padding:2px 7px;border-radius:3px;margin-top:3px;font-weight:500;}
 .bsm{padding:5px 10px;border-radius:6px;font-size:11px;border:1px solid var(--bd2);background:#fff;cursor:pointer;font-family:var(--sans);}
 .bsmd{color:var(--rm);border-color:var(--rl);}
@@ -326,7 +326,7 @@ html{overflow-y:auto !important;height:auto !important;}
     <div class="logo-by">
       <span class="logo-by-text">by</span>
       <span class="logo-by-sep"></span>
-      <span class="logo-by-badge">협신식품 · 1972</span>
+      <span class="logo-by-badge" style="color:#C9A84C;border-color:#C9A84C;background:rgba(201,168,76,.15);">협신식품 · 1972</span>
     </div>
   </div>
   <div class="nav-links">
@@ -342,15 +342,15 @@ html{overflow-y:auto !important;height:auto !important;}
 
 <!-- ═══ 홈 ═══ -->
 <div class="pg on" id="pg-h">
-  <div class="hero">
+  <div class="hero" style="background:#0F1E3D;">
     <div class="hero-eye"><div class="eye-line"></div><div class="eye-txt">고기업종 전문 플랫폼</div></div>
     <div class="trust-badges">
-      <div class="trust-badge"><div class="trust-dot"></div><span class="trust-txt">국내 Top 5 도축장</span></div>
-      <div class="trust-badge"><div class="trust-dot"></div><span class="trust-txt">부분육 경매 최초 도입</span></div>
-      <div class="trust-badge"><div class="trust-dot"></div><span class="trust-txt">전국 공급사 38개 입점</span></div>
-      <div class="trust-badge"><div class="trust-dot"></div><span class="trust-txt">컨설팅 고객 3,800+</span></div>
+      <div class="trust-badge"><div class="trust-dot" style="background:#C9A84C;"></div><span class="trust-txt">국내 Top 5 도축장</span></div>
+      <div class="trust-badge"><div class="trust-dot" style="background:#C9A84C;"></div><span class="trust-txt">부분육 경매 최초 도입</span></div>
+      <div class="trust-badge"><div class="trust-dot" style="background:#C9A84C;"></div><span class="trust-txt">전국 공급사 38개 입점</span></div>
+      <div class="trust-badge"><div class="trust-dot" style="background:#C9A84C;"></div><span class="trust-txt">컨설팅 고객 3,800+</span></div>
     </div>
-    <h1>정육·고깃집 사장님<br>처음부터 끝까지<br><em>함께합니다</em></h1>
+    <h1>정육·고깃집 사장님<br>처음부터 끝까지<br><em style="color:#C9A84C;">함께합니다</em></h1>
     <div class="hero-sub">정육점·고깃집 창업 컨설팅 · 원가 계산 · 상가·집기 매물<br>폐업 철거 · 지원금 신청까지 — 고기업종 전문 플랫폼</div>
     <div class="hero-search"><input placeholder="지역, 업종, 품목으로 검색..."/><button>검색</button></div>
     <div class="hchips">
@@ -363,47 +363,47 @@ html{overflow-y:auto !important;height:auto !important;}
 
   <div class="svcs">
     <div class="svc r" onclick="go('c')">
-      <div class="svc-n">01</div>
+      <div class="svc-n" style="color:#C9A84C;">01</div>
       <div class="svc-ico ir"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="9" width="3" height="8" rx="1" fill="#B91C1C"/><rect x="6" y="5" width="3" height="12" rx="1" fill="#B91C1C" opacity=".7"/><rect x="11" y="2" width="3" height="15" rx="1" fill="#B91C1C" opacity=".45"/></svg></div>
       <div class="svc-t">창업 컨설팅</div>
       <div class="svc-d">상권분석·원가계산기<br>전문가 상담</div>
     </div>
     <div class="svc g" onclick="go('r')">
-      <div class="svc-n">02</div>
+      <div class="svc-n" style="color:#C9A84C;">02</div>
       <div class="svc-ico ig"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="7" width="16" height="9" rx="2" fill="#B45309" opacity=".25"/><rect x="3" y="4" width="12" height="7" rx="1.5" fill="#B45309" opacity=".45"/><rect x="6" y="1" width="6" height="6" rx="1" fill="#B45309"/></svg></div>
       <div class="svc-t">매물 등록</div>
       <div class="svc-d">상가·집기·식자재<br>무료 등록</div>
     </div>
     <div class="svc k" onclick="go('x')">
-      <div class="svc-n">03</div>
+      <div class="svc-n" style="color:#C9A84C;">03</div>
       <div class="svc-ico ik"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 15L5 7h8l2 8H3z" fill="#292524" opacity=".35"/><rect x="2" y="5" width="14" height="2.5" rx="1" fill="#292524" opacity=".55"/><path d="M7 5V3.5C7 2.7 7.7 2 8.5 2h1C10.3 2 11 2.7 11 3.5V5" stroke="#292524" stroke-width="1.2" fill="none"/></svg></div>
       <div class="svc-t">폐업 철거</div>
       <div class="svc-d">검증업체 연결<br>에스크로 결제</div>
     </div>
     <div class="svc b" onclick="go('s')">
-      <div class="svc-n">04</div>
+      <div class="svc-n" style="color:#C9A84C;">04</div>
       <div class="svc-ico ib"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" fill="#1D4ED8" opacity=".15"/><text x="9" y="12" text-anchor="middle" font-size="9" font-weight="700" fill="#1D4ED8" font-family="sans-serif">₩</text></svg></div>
       <div class="svc-t">폐업 지원금</div>
       <div class="svc-d">평균 180만원<br>무료 신청 대행</div>
     </div>
   </div>
 
-  <div class="statbar">
-    <div class="stc"><div class="stn">1,247</div><div class="stl">등록 매물</div></div>
-    <div class="stc"><div class="stn">52년</div><div class="stl">협신식품 업력</div></div>
-    <div class="stc"><div class="stn">Top 5</div><div class="stl">국내 도축장 규모</div></div>
-    <div class="stc"><div class="stn">3,800+</div><div class="stl">컨설팅 고객</div></div>
+  <div class="statbar" style="background:#0A1830;">
+    <div class="stc" style="background:#0A1830;"><div class="stn">1,247</div><div class="stl">등록 매물</div></div>
+    <div class="stc" style="background:#0A1830;"><div class="stn">52년</div><div class="stl">협신식품 업력</div></div>
+    <div class="stc" style="background:#0A1830;"><div class="stn">Top 5</div><div class="stl">국내 도축장 규모</div></div>
+    <div class="stc" style="background:#0A1830;"><div class="stn">3,800+</div><div class="stl">컨설팅 고객</div></div>
   </div>
 
   <div class="sec">
-    <div class="sech"><div class="sect">최근 등록 매물</div><div class="secm">전체보기 →</div></div>
+    <div class="sech"><div class="sect" style="color:#0F1E3D;border-bottom:2px solid #C9A84C;padding-bottom:4px;">최근 등록 매물</div><div class="secm">전체보기 →</div></div>
     <div class="lgrid" id="lg"></div>
   </div>
 
   <div class="div0"></div>
 
   <div class="sec">
-    <div class="sech"><div class="sect">컨설팅 서비스</div><div class="secm" onclick="go('c')">신청하기 →</div></div>
+    <div class="sech"><div class="sect" style="color:#0F1E3D;border-bottom:2px solid #C9A84C;padding-bottom:4px;">컨설팅 서비스</div><div class="secm" onclick="go('c')">신청하기 →</div></div>
     <div class="cgrid">
       <div class="cc" onclick="go('c')">
         <span class="ccb ccbr">창업 리포트</span>
@@ -438,7 +438,7 @@ html{overflow-y:auto !important;height:auto !important;}
 
   <!-- 홈 공급사 미리보기 -->
   <div class="sec">
-    <div class="sech"><div class="sect">입점 공급사</div><div class="secm" onclick="go('sup')">전체보기 →</div></div>
+    <div class="sech"><div class="sect" style="color:#0F1E3D;border-bottom:2px solid #C9A84C;padding-bottom:4px;">입점 공급사</div><div class="secm" onclick="go('sup')">전체보기 →</div></div>
     <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
 
       <div class="sc featured" onclick="go('sup')" style="cursor:pointer;">
@@ -711,7 +711,7 @@ html{overflow-y:auto !important;height:auto !important;}
 <div class="pg" id="pg-r">
   <div class="phdr" onclick="go('h')"><span class="phdr-back">←</span><span class="phdr-t">매물 등록하기</span></div>
   <div class="regbody">
-    <div style="font-size:11px;color:var(--ink3);margin-bottom:14px;">고기 업종 매물을 무료로 등록하세요</div>
+    <div style="font-size:14px;color:var(--ink3);margin-bottom:14px;">고기 업종 매물을 무료로 등록하세요</div>
     <div class="fblk">
       <div class="fbt">매물 종류 선택</div>
       <div class="tsel">

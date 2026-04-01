@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MEAT INSIGHT — 고기업종 전문 플랫폼</title>
+<meta name="description" content="정육점·고깃집 창업부터 폐업까지. 협신식품 52년이 만든 고기업종 전문 플랫폼."/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --n:#0B1628;--n2:#0F1E3D;--n3:#162444;--n4:#1D3060;
+  --g:#C9A84C;--g2:#E2C06A;--g3:#F0E8C8;--g4:rgba(201,168,76,.15);
+  --cr:#F7F4ED;--cr2:#F0EDE0;
+  --ink:#0A0A0A;--ink2:#2D2D2D;--ink3:#666;
+  --w:#fff;
+  --sans:'Noto Sans KR',sans-serif;
+  --serif:'Noto Serif KR',serif;
+}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);color:var(--ink);overflow-x:hidden;background:var(--n);}
+
+/* ── CURSOR ── */
+*{cursor:none;}
+.cursor{position:fixed;width:12px;height:12px;background:var(--g);border-radius:50%;pointer-events:none;z-index:9999;transition:transform .15s,opacity .2s;mix-blend-mode:difference;}
+.cursor-ring{position:fixed;width:36px;height:36px;border:1px solid rgba(201,168,76,.5);border-radius:50%;pointer-events:none;z-index:9998;transition:transform .08s;}
+
+/* ── NAV ── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:0 60px;height:64px;display:flex;align-items:center;justify-content:space-between;transition:background .3s,backdrop-filter .3s;}
+.nav.scrolled{background:rgba(11,22,40,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(201,168,76,.12);}
+.nav-logo{display:flex;flex-direction:column;gap:2px;}
+.nav-logo-main{font-family:var(--serif);font-size:19px;color:var(--w);letter-spacing:2px;}
+.nav-logo-sub{font-size:9px;color:var(--g);letter-spacing:4px;text-transform:uppercase;}
+.nav-links{display:flex;align-items:center;gap:32px;}
+.nav-link{font-size:13px;color:rgba(255,255,255,.55);text-decoration:none;letter-spacing:.3px;transition:color .2s;position:relative;}
+.nav-link::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:1px;background:var(--g);transition:width .25s;}
+.nav-link:hover{color:var(--g);}
+.nav-link:hover::after{width:100%;}
+.nav-cta{background:var(--g);color:var(--n);padding:10px 24px;border-radius:6px;font-size:13px;font-weight:700;border:none;font-family:var(--sans);letter-spacing:.3px;transition:all .2s;position:relative;overflow:hidden;}
+.nav-cta::before{content:'';position:absolute;inset:0;background:var(--g2);transform:translateX(-100%);transition:transform .25s;}
+.nav-cta:hover::before{transform:translateX(0);}
+.nav-cta span{position:relative;z-index:1;}
+
+/* ── HERO ── */
+.hero{min-height:100vh;position:relative;display:flex;align-items:center;overflow:hidden;padding:80px 60px 60px;}
+.hero-bg{position:absolute;inset:0;background:var(--n);}
+.hero-noise{position:absolute;inset:0;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;}
+.hero-glow1{position:absolute;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.12) 0%,transparent 70%);top:-200px;right:-100px;animation:pulse1 8s ease-in-out infinite;}
+.hero-glow2{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.07) 0%,transparent 70%);bottom:-100px;left:200px;animation:pulse2 10s ease-in-out infinite;}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.04) 1px,transparent 1px);background-size:80px 80px;}
+.hero-line{position:absolute;top:0;left:60px;width:1px;height:100%;background:linear-gradient(to bottom,transparent,rgba(201,168,76,.3) 30%,rgba(201,168,76,.3) 70%,transparent);}
+@keyframes pulse1{0%,100%{transform:scale(1) translate(0,0);}50%{transform:scale(1.1) translate(20px,-20px);}}
+@keyframes pulse2{0%,100%{transform:scale(1) translate(0,0);}50%{transform:scale(1.08) translate(-15px,15px);}}
+.hero-content{position:relative;z-index:1;max-width:640px;}
+.hero-eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:28px;opacity:0;animation:fadeUp .8s .2s forwards;}
+.eyebrow-bar{width:36px;height:1px;background:var(--g);}
+.eyebrow-text{font-size:11px;color:var(--g);letter-spacing:5px;text-transform:uppercase;}
+.hero h1{font-family:var(--serif);font-size:58px;line-height:1.15;margin-bottom:24px;opacity:0;animation:fadeUp .8s .35s forwards;}
+.hero h1 .line1{color:var(--w);}
+.hero h1 .line2{color:var(--w);}
+.hero h1 .line3{color:var(--g);display:block;}
+.hero-desc{font-size:17px;color:rgba(255,255,255,.6);line-height:1.9;margin-bottom:44px;max-width:500px;opacity:0;animation:fadeUp .8s .5s forwards;}
+.hero-desc strong{color:rgba(255,255,255,.9);}
+.hero-actions{display:flex;gap:16px;margin-bottom:64px;opacity:0;animation:fadeUp .8s .65s forwards;}
+.btn-hero-main{background:var(--g);color:var(--n);padding:16px 36px;border-radius:7px;font-size:16px;font-weight:700;border:none;font-family:var(--sans);letter-spacing:.3px;transition:all .25s;box-shadow:0 0 0 0 rgba(201,168,76,0);}
+.btn-hero-main:hover{background:var(--g2);box-shadow:0 0 40px rgba(201,168,76,.35);transform:translateY(-2px);}
+.btn-hero-sub{background:transparent;color:var(--w);padding:16px 36px;border-radius:7px;font-size:16px;font-weight:400;border:1px solid rgba(255,255,255,.2);font-family:var(--sans);transition:all .25s;}
+.btn-hero-sub:hover{border-color:var(--g);color:var(--g);}
+.hero-trust{display:flex;gap:48px;opacity:0;animation:fadeUp .8s .8s forwards;}
+.ht-item{}
+.ht-n{font-family:var(--serif);font-size:34px;color:var(--w);line-height:1;}
+.ht-l{font-size:11px;color:var(--g);margin-top:5px;letter-spacing:1.5px;text-transform:uppercase;}
+.hero-divider{position:absolute;left:640px;top:50%;transform:translateY(-50%);width:1px;height:50%;background:linear-gradient(to bottom,transparent,rgba(201,168,76,.2),transparent);z-index:1;}
+.hero-right{position:absolute;right:60px;top:50%;transform:translateY(-50%);width:480px;z-index:1;opacity:0;animation:fadeLeft .9s .6s forwards;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeLeft{from{opacity:0;transform:translateX(32px);}to{opacity:1;transform:translateX(0);}}
+
+/* Hero floating cards */
+.hcards{position:relative;height:440px;}
+.hcard{position:absolute;background:rgba(255,255,255,.04);border:1px solid rgba(201,168,76,.18);border-radius:18px;backdrop-filter:blur(16px);padding:20px 22px;}
+.hc1{width:300px;top:0;right:0;animation:float1 6s ease-in-out infinite;}
+.hc2{width:260px;top:140px;left:0;animation:float2 7s ease-in-out infinite;}
+.hc3{width:220px;bottom:40px;right:30px;animation:float3 5s ease-in-out infinite;}
+@keyframes float1{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+@keyframes float2{0%,100%{transform:translateY(0);}50%{transform:translateY(10px);}}
+@keyframes float3{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.hc-label{font-size:9px;color:var(--g);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:12px;}
+.hc-tag{display:inline-block;background:rgba(201,168,76,.18);color:var(--g);font-size:10px;padding:3px 10px;border-radius:20px;margin-bottom:8px;letter-spacing:.5px;}
+.hc-title{font-size:15px;font-weight:500;color:var(--w);margin-bottom:5px;line-height:1.4;}
+.hc-value{font-family:var(--serif);font-size:20px;color:var(--g);font-weight:700;}
+.hc-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:5px;}
+.hc-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.hc-row:last-child{border:none;}
+.hc-row-l{font-size:12px;color:rgba(255,255,255,.5);}
+.hc-row-v{font-size:13px;font-weight:500;color:var(--w);}
+.hc-row-v.gold{color:var(--g);}
+
+/* ── MARQUEE ── */
+.marquee-wrap{background:rgba(201,168,76,.1);border-top:1px solid rgba(201,168,76,.15);border-bottom:1px solid rgba(201,168,76,.15);padding:14px 0;overflow:hidden;}
+.marquee{display:flex;gap:0;animation:marquee 25s linear infinite;width:max-content;}
+.marquee-item{display:flex;align-items:center;gap:10px;padding:0 36px;white-space:nowrap;}
+.mi-dot{width:5px;height:5px;border-radius:50%;background:var(--g);flex-shrink:0;}
+.mi-text{font-size:13px;color:rgba(255,255,255,.75);letter-spacing:.5px;}
+@keyframes marquee{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+/* ── SECTIONS ── */
+.sec{padding:120px 60px;}
+.sec.dark{background:var(--n);}
+.sec.mid{background:var(--n3);}
+.sec.light{background:var(--cr);}
+.sec.cream{background:var(--cr2);}
+.sec.gold-bg{background:var(--g);}
+.sec-ey{font-size:10px;color:var(--g);letter-spacing:5px;text-transform:uppercase;margin-bottom:14px;}
+.sec.light .sec-ey,.sec.cream .sec-ey{color:var(--n2);}
+.sec-title{font-family:var(--serif);font-size:42px;line-height:1.25;margin-bottom:18px;color:var(--w);}
+.sec.light .sec-title,.sec.cream .sec-title{color:var(--n);}
+.sec-sub{font-size:17px;color:rgba(255,255,255,.55);line-height:1.9;max-width:560px;}
+.sec.light .sec-sub,.sec.cream .sec-sub{color:var(--ink3);}
+.sec-head{margin-bottom:72px;}
+
+/* ── SERVICES ── */
+.svc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.svc-card{background:rgba(255,255,255,.03);border:1px solid rgba(201,168,76,.12);border-radius:20px;padding:32px 26px;transition:all .3s;position:relative;overflow:hidden;}
+.svc-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(201,168,76,.08),transparent);opacity:0;transition:opacity .3s;}
+.svc-card:hover{border-color:rgba(201,168,76,.45);transform:translateY(-6px);}
+.svc-card:hover::before{opacity:1;}
+.svc-num{font-size:10px;color:rgba(201,168,76,.5);letter-spacing:3px;margin-bottom:20px;}
+.svc-ico{width:54px;height:54px;background:rgba(201,168,76,.1);border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
+.svc-name{font-size:20px;font-weight:700;color:var(--w);margin-bottom:10px;font-family:var(--serif);}
+.svc-desc{font-size:14px;color:rgba(255,255,255,.5);line-height:1.75;}
+.svc-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--g);margin-top:24px;letter-spacing:.3px;transition:gap .2s;}
+.svc-card:hover .svc-link{gap:10px;}
+
+/* ── IMPACT ── */
+.impact-row{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(201,168,76,.15);border-bottom:1px solid rgba(201,168,76,.15);}
+.impact-cell{padding:60px 40px;border-right:1px solid rgba(201,168,76,.1);text-align:center;transition:background .3s;}
+.impact-cell:last-child{border:none;}
+.impact-cell:hover{background:rgba(201,168,76,.05);}
+.impact-n{font-family:var(--serif);font-size:52px;color:var(--g);font-weight:700;line-height:1;margin-bottom:10px;}
+.impact-l{font-size:13px;color:rgba(255,255,255,.5);letter-spacing:1px;}
+
+/* ── FEATURE ROWS ── */
+.feat-row{display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center;}
+.feat-row+.feat-row{margin-top:120px;}
+.feat-tag{display:inline-block;background:var(--g4);color:var(--g);font-size:10px;font-weight:700;padding:5px 14px;border-radius:20px;letter-spacing:2px;text-transform:uppercase;margin-bottom:18px;}
+.feat-title{font-family:var(--serif);font-size:36px;color:var(--n);line-height:1.3;margin-bottom:16px;}
+.feat-desc{font-size:16px;color:var(--ink3);line-height:1.9;margin-bottom:32px;}
+.feat-list{list-style:none;}
+.feat-list li{display:flex;align-items:flex-start;gap:12px;font-size:15px;color:var(--ink2);padding:12px 0;border-bottom:1px solid rgba(0,0,0,.06);}
+.feat-list li:last-child{border:none;}
+.fl-check{width:22px;height:22px;background:var(--n2);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.fl-check::after{content:'✓';font-size:10px;color:var(--g);}
+.feat-visual-dark{background:var(--n2);border-radius:24px;padding:32px;border:1px solid rgba(201,168,76,.15);overflow:hidden;position:relative;}
+.feat-visual-dark::after{content:'';position:absolute;top:-50px;right:-50px;width:200px;height:200px;background:radial-gradient(circle,rgba(201,168,76,.08),transparent);border-radius:50%;}
+.fv-hdr{display:flex;align-items:center;gap:8px;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.06);}
+.fv-dots{display:flex;gap:5px;}
+.fv-dot{width:9px;height:9px;border-radius:50%;}
+.fv-label{font-size:11px;color:rgba(255,255,255,.3);letter-spacing:1.5px;margin-left:8px;}
+.fv-item{background:rgba(255,255,255,.04);border:1px solid rgba(201,168,76,.1);border-radius:12px;padding:16px;margin-bottom:10px;transition:border-color .2s;}
+.fv-item:hover{border-color:rgba(201,168,76,.3);}
+.fv-item-tag{font-size:9px;color:var(--g);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+.fv-item-name{font-size:15px;font-weight:500;color:var(--w);margin-bottom:4px;}
+.fv-item-price{font-family:var(--serif);font-size:17px;color:var(--g);}
+.fv-item-meta{font-size:11px;color:rgba(255,255,255,.35);margin-top:4px;}
+.fv-new{display:inline-block;background:var(--g);color:var(--n);font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;margin-left:6px;vertical-align:middle;}
+.calc-box{background:var(--n2);border-radius:24px;padding:32px;border:1px solid rgba(201,168,76,.15);}
+.calc-title{font-size:11px;color:var(--g);letter-spacing:3px;text-transform:uppercase;margin-bottom:24px;}
+.calc-input-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.ci-label{font-size:13px;color:rgba(255,255,255,.45);}
+.ci-val{font-size:15px;font-weight:500;color:var(--w);}
+.calc-result{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:20px;margin-top:20px;}
+.cr-label{font-size:11px;color:var(--g);letter-spacing:1px;margin-bottom:8px;}
+.cr-value{font-family:var(--serif);font-size:30px;color:var(--g);font-weight:700;}
+.cr-sub{font-size:12px;color:rgba(255,255,255,.4);margin-top:6px;}
+.feat-cta{display:inline-flex;align-items:center;gap:8px;background:var(--n2);color:var(--g);border:1px solid rgba(201,168,76,.3);padding:13px 26px;border-radius:8px;font-size:14px;font-weight:500;transition:all .2s;margin-top:28px;font-family:var(--sans);}
+.feat-cta:hover{background:var(--g);color:var(--n);}
+
+/* ── HOW IT WORKS ── */
+.steps-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(201,168,76,.1);}
+.step-cell{background:var(--n);padding:52px 44px;position:relative;transition:background .3s;}
+.step-cell:hover{background:var(--n3);}
+.step-cell::after{content:'→';position:absolute;right:-16px;top:50%;transform:translateY(-50%);font-size:22px;color:rgba(201,168,76,.3);z-index:1;}
+.step-cell:last-child::after{display:none;}
+.step-num{font-family:var(--serif);font-size:64px;color:rgba(201,168,76,.12);font-weight:700;line-height:1;margin-bottom:20px;}
+.step-title{font-size:20px;font-weight:700;color:var(--w);margin-bottom:10px;}
+.step-desc{font-size:14px;color:rgba(255,255,255,.5);line-height:1.75;}
+
+/* ── SUPPLIERS ── */
+.sup-featured{background:var(--n3);border:2px solid var(--g);border-radius:24px;padding:40px;margin-bottom:24px;display:grid;grid-template-columns:auto 1fr auto;gap:32px;align-items:center;transition:all .3s;}
+.sup-featured:hover{background:var(--n4);box-shadow:0 0 60px rgba(201,168,76,.08);}
+.sup-logo-big{width:80px;height:80px;background:var(--n2);border-radius:18px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,168,76,.2);}
+.sup-logo-txt{font-family:var(--serif);font-size:12px;color:var(--g);text-align:center;line-height:1.4;font-weight:700;}
+.sup-info{}
+.sup-badges{display:flex;gap:6px;margin-bottom:8px;}
+.badge-premium{background:var(--g);color:var(--n);font-size:9px;font-weight:700;padding:3px 10px;border-radius:4px;letter-spacing:1px;}
+.badge-verified{background:#DCFCE7;color:#166534;font-size:9px;font-weight:500;padding:3px 10px;border-radius:4px;}
+.sup-name{font-family:var(--serif);font-size:24px;color:var(--w);margin-bottom:5px;}
+.sup-region{font-size:13px;color:rgba(255,255,255,.45);}
+.sup-cats{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.scat3{font-size:12px;padding:4px 14px;border-radius:20px;background:rgba(201,168,76,.12);color:var(--g);border:1px solid rgba(201,168,76,.2);}
+.sup-specs{display:flex;flex-direction:column;gap:12px;min-width:160px;}
+.sup-spec-item{text-align:center;background:rgba(255,255,255,.04);border-radius:10px;padding:12px 16px;border:1px solid rgba(255,255,255,.05);}
+.sup-spec-n{font-family:var(--serif);font-size:18px;color:var(--g);}
+.sup-spec-l{font-size:10px;color:rgba(255,255,255,.4);margin-top:3px;letter-spacing:.5px;}
+.sup-grid2{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.sup-card2{background:var(--n3);border:1px solid rgba(255,255,255,.07);border-radius:18px;overflow:hidden;transition:all .3s;}
+.sup-card2:hover{border-color:rgba(201,168,76,.35);transform:translateY(-4px);}
+.sup-card2-head{background:var(--n4);padding:18px;display:flex;gap:12px;align-items:center;border-bottom:1px solid rgba(255,255,255,.05);}
+.sup-logo-sm{width:42px;height:42px;background:var(--n2);border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.sup-logo-sm-txt{font-family:var(--serif);font-size:8px;color:var(--g);text-align:center;line-height:1.3;font-weight:700;}
+.sup-card2-name{font-size:15px;font-weight:700;color:var(--w);}
+.sup-card2-region{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
+.sup-card2-body{padding:16px 18px;}
+.sup-card2-desc{font-size:13px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:14px;}
+.sup-card2-cats{display:flex;gap:6px;flex-wrap:wrap;}
+.scat4{font-size:11px;padding:3px 10px;border-radius:14px;background:rgba(201,168,76,.1);color:rgba(201,168,76,.8);}
+.sup-join{background:linear-gradient(135deg,rgba(201,168,76,.12),rgba(201,168,76,.04));border:1px solid rgba(201,168,76,.25);border-radius:18px;padding:32px 40px;display:flex;align-items:center;justify-content:space-between;margin-top:24px;}
+.sup-join-txt h3{font-family:var(--serif);font-size:22px;color:var(--w);margin-bottom:6px;}
+.sup-join-txt p{font-size:14px;color:rgba(255,255,255,.5);}
+.btn-join2{background:var(--g);color:var(--n);padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;border:none;font-family:var(--sans);transition:all .2s;}
+.btn-join2:hover{background:var(--g2);transform:translateY(-2px);}
+
+/* ── CLOSURE ── */
+.closure-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+.cl-card{background:rgba(255,255,255,.03);border:1px solid rgba(201,168,76,.1);border-radius:20px;padding:36px;transition:all .3s;position:relative;overflow:hidden;}
+.cl-card:hover{border-color:rgba(201,168,76,.4);background:rgba(201,168,76,.05);}
+.cl-card::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;background:radial-gradient(circle,rgba(201,168,76,.06),transparent);border-radius:50%;}
+.cl-ico{width:56px;height:56px;background:rgba(201,168,76,.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:22px;}
+.cl-title{font-family:var(--serif);font-size:22px;color:var(--w);margin-bottom:10px;}
+.cl-desc{font-size:14px;color:rgba(255,255,255,.5);line-height:1.75;margin-bottom:20px;}
+.cl-amount{font-family:var(--serif);font-size:28px;color:var(--g);font-weight:700;}
+.cl-amount-l{font-size:12px;color:rgba(255,255,255,.35);margin-top:4px;letter-spacing:.5px;}
+
+/* ── CTA ── */
+.cta-inner{text-align:center;max-width:700px;margin:0 auto;}
+.cta-title{font-family:var(--serif);font-size:50px;color:var(--n);line-height:1.2;margin-bottom:18px;}
+.cta-sub{font-size:18px;color:rgba(15,30,61,.65);line-height:1.8;margin-bottom:50px;}
+.btn-cta-main{background:var(--n);color:var(--g);padding:20px 52px;border-radius:8px;font-size:18px;font-weight:700;border:none;font-family:var(--sans);transition:all .25s;box-shadow:0 0 0 0 rgba(15,30,61,0);}
+.btn-cta-main:hover{background:var(--n2);transform:translateY(-3px);box-shadow:0 12px 40px rgba(15,30,61,.25);}
+.cta-note{font-size:13px;color:rgba(15,30,61,.45);margin-top:18px;}
+
+/* ── FOOTER ── */
+.footer{background:#060E1C;padding:80px 60px 48px;border-top:1px solid rgba(201,168,76,.1);}
+.footer-grid{display:grid;grid-template-columns:2.5fr 1fr 1fr 1fr;gap:48px;margin-bottom:64px;}
+.footer-logo{font-family:var(--serif);font-size:22px;color:var(--w);letter-spacing:2px;margin-bottom:10px;}
+.footer-desc{font-size:13px;color:rgba(255,255,255,.35);line-height:1.8;margin-bottom:16px;}
+.footer-by{font-size:12px;color:rgba(201,168,76,.6);}
+.footer-col-t{font-size:12px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px;}
+.footer-links{list-style:none;}
+.footer-links li{font-size:13px;color:rgba(255,255,255,.35);padding:6px 0;transition:color .2s;}
+.footer-links li:hover{color:var(--g);}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.06);padding-top:28px;display:flex;justify-content:space-between;align-items:center;}
+.footer-copy{font-size:12px;color:rgba(255,255,255,.2);}
+.footer-legal{display:flex;gap:24px;}
+.footer-legal span{font-size:12px;color:rgba(255,255,255,.2);transition:color .2s;}
+.footer-legal span:hover{color:var(--g);}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s,transform .7s;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+.reveal-delay-1{transition-delay:.1s;}
+.reveal-delay-2{transition-delay:.2s;}
+.reveal-delay-3{transition-delay:.3s;}
+.reveal-delay-4{transition-delay:.4s;}
+
+@media(max-width:1024px){
+  .nav{padding:0 24px;}
+  .hero{padding:100px 24px 60px;}
+  .hero h1{font-size:40px;}
+  .hero-right{display:none;}
+  .sec{padding:80px 24px;}
+  .svc-grid{grid-template-columns:repeat(2,1fr);}
+  .feat-row{grid-template-columns:1fr;gap:40px;}
+  .impact-row{grid-template-columns:repeat(2,1fr);}
+  .closure-grid{grid-template-columns:1fr;}
+  .steps-row{grid-template-columns:1fr;}
+  .step-cell::after{display:none;}
+  .sup-featured{grid-template-columns:auto 1fr;grid-template-rows:auto auto;}
+  .sup-specs{flex-direction:row;grid-column:1/-1;}
+  .sup-grid2{grid-template-columns:1fr 1fr;}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+  .footer{padding:60px 24px 40px;}
+  .cta-title{font-size:36px;}
+  .nav-links{display:none;}
+  .hero-trust{gap:28px;}
+  .ht-n{font-size:26px;}
+}
+</style>
+</head>
+<body>
+
+<!-- 커스텀 커서 -->
+<div class="cursor" id="cur"></div>
+<div class="cursor-ring" id="cur-ring"></div>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="nav-logo">
+    <div class="nav-logo-main">MEAT INSIGHT</div>
+    <div class="nav-logo-sub">고기업종 전문 플랫폼</div>
+  </div>
+  <div class="nav-links">
+    <a class="nav-link" href="#services">서비스</a>
+    <a class="nav-link" href="#market">매물 마켓</a>
+    <a class="nav-link" href="#suppliers">공급사</a>
+    <a class="nav-link" href="#closure">폐업·지원금</a>
+    <a class="nav-link" href="#how">이용 방법</a>
+  </div>
+  <button class="nav-cta" onclick="location.href='meat_insight_main.html'"><span>플랫폼 시작하기 →</span></button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-noise"></div>
+  <div class="hero-glow1"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-line"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow-text">협신식품 1972 · 52년 업력</div>
+    </div>
+    <h1>
+      <span class="line1">정육·고깃집</span><br>
+      <span class="line2">사장님을 위한</span><br>
+      <span class="line3">원스톱 플랫폼</span>
+    </h1>
+    <p class="hero-desc">
+      창업 컨설팅부터 매물 거래, 공급사 직거래,<br>
+      폐업 철거, 지원금 신청까지<br>
+      <strong>고기만 아는 플랫폼이 직접 만들었습니다</strong>
+    </p>
+    <div class="hero-actions">
+      <button class="btn-hero-main" onclick="location.href='meat_insight_main.html'">무료로 시작하기</button>
+      <button class="btn-hero-sub" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">서비스 둘러보기</button>
+    </div>
+    <div class="hero-trust">
+      <div class="ht-item"><div class="ht-n">52년</div><div class="ht-l">협신식품 업력</div></div>
+      <div class="ht-item"><div class="ht-n">Top 5</div><div class="ht-l">국내 도축장 규모</div></div>
+      <div class="ht-item"><div class="ht-n">무료</div><div class="ht-l">매물 기본 등록</div></div>
+    </div>
+  </div>
+  <div class="hero-divider"></div>
+  <div class="hero-right">
+    <div class="hcards">
+      <div class="hcard hc1">
+        <div class="hc-label">최근 등록 매물</div>
+        <div class="hc-tag">상가·권리금 · NEW</div>
+        <div class="hc-title">정육점 양도 — 경기 안양시</div>
+        <div class="hc-value">권리금 2,500만원</div>
+        <div class="hc-sub">49㎡ · 잔여 2년 · 장비 포함</div>
+      </div>
+      <div class="hcard hc2">
+        <div class="hc-label">원가율 계산기</div>
+        <div class="hc-row"><span class="hc-row-l">원가율</span><span class="hc-row-v gold">60.0%</span></div>
+        <div class="hc-row"><span class="hc-row-l">순마진율</span><span class="hc-row-v gold">35.0%</span></div>
+        <div class="hc-row"><span class="hc-row-l">월 순이익</span><span class="hc-row-v gold">2,450,000원</span></div>
+      </div>
+      <div class="hcard hc3">
+        <div class="hc-label">공급사</div>
+        <div class="hc-title">협신식품 (주)</div>
+        <div class="hc-sub">수도권 유일 도축장 · 당일 배송</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee">
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">국내 Top 5 도축장</span></div>
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">수도권 유일 도축장</span></div>
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">부분육 경매 최초 도입</span></div>
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">무료 매물 등록</span></div>
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">전국 공급사 직거래</span></div>
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">폐업 지원금 무료 대행</span></div>
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">에스크로 안전결제</span></div>
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">고기업종 전문 컨설팅</span></div>
+    <!-- 반복 -->
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">국내 Top 5 도축장</span></div>
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">수도권 유일 도축장</span></div>
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">부분육 경매 최초 도입</span></div>
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">무료 매물 등록</span></div>
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">전국 공급사 직거래</span></div>
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">폐업 지원금 무료 대행</span></div>
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">에스크로 안전결제</span></div>
+    <div class="marquee-item"><div class="mi-dot"></div><span class="mi-text">고기업종 전문 컨설팅</span></div>
+  </div>
+</div>
+
+<!-- 서비스 4개 -->
+<section class="sec dark" id="services">
+  <div class="sec-head reveal">
+    <div class="sec-ey">Our Services</div>
+    <div class="sec-title">고기업종 사장님에게<br>필요한 모든 것</div>
+    <div class="sec-sub">창업부터 폐업까지 생애주기 전체를 한 플랫폼에서</div>
+  </div>
+  <div class="svc-grid">
+    <div class="svc-card reveal reveal-delay-1" onclick="location.href='meat_insight_main.html'">
+      <div class="svc-num">01</div>
+      <div class="svc-ico"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="2" y="13" width="4" height="11" rx="1" fill="#C9A84C"/><rect x="9" y="8" width="4" height="16" rx="1" fill="#C9A84C" opacity=".7"/><rect x="16" y="3" width="4" height="21" rx="1" fill="#C9A84C" opacity=".45"/><rect x="23" y="10" width="2" height="14" rx="1" fill="#C9A84C" opacity=".25"/></svg></div>
+      <div class="svc-name">창업 컨설팅</div>
+      <div class="svc-desc">상권 분석, 원가율·손익분기점 계산기, 전문가 1:1 비대면 상담까지</div>
+      <span class="svc-link">자세히 보기 →</span>
+    </div>
+    <div class="svc-card reveal reveal-delay-2" onclick="location.href='meat_insight_main.html'">
+      <div class="svc-num">02</div>
+      <div class="svc-ico"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="2" y="10" width="22" height="14" rx="2.5" fill="#C9A84C" opacity=".25"/><rect x="4" y="7" width="18" height="11" rx="2" fill="#C9A84C" opacity=".45"/><rect x="9" y="2" width="8" height="9" rx="1.5" fill="#C9A84C"/></svg></div>
+      <div class="svc-name">매물 마켓</div>
+      <div class="svc-desc">상가·권리금, 집기·장비, 식자재·재고를 고기 업종 사장님들에게 직접</div>
+      <span class="svc-link">자세히 보기 →</span>
+    </div>
+    <div class="svc-card reveal reveal-delay-3" onclick="location.href='meat_insight_main.html'">
+      <div class="svc-num">03</div>
+      <div class="svc-ico"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M4 22L6.5 11h13L22 22H4z" fill="#C9A84C" opacity=".3"/><rect x="3" y="7" width="20" height="4.5" rx="1.5" fill="#C9A84C" opacity=".6"/><path d="M10 7V5.5A2.5 2.5 0 0112.5 3h1A2.5 2.5 0 0116 5.5V7" stroke="#C9A84C" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="svc-name">폐업 철거</div>
+      <div class="svc-desc">검증된 파트너사 비교 견적, 에스크로 결제로 추가 비용 없이 안전하게</div>
+      <span class="svc-link">자세히 보기 →</span>
+    </div>
+    <div class="svc-card reveal reveal-delay-4" onclick="location.href='meat_insight_main.html'">
+      <div class="svc-num">04</div>
+      <div class="svc-ico"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="10" fill="#C9A84C" opacity=".12"/><circle cx="13" cy="13" r="6.5" fill="#C9A84C" opacity=".18"/><text x="13" y="17" text-anchor="middle" font-size="12" font-weight="700" fill="#C9A84C" font-family="sans-serif">₩</text></svg></div>
+      <div class="svc-name">폐업 지원금</div>
+      <div class="svc-desc">평균 180만원 수령. 희망리턴패키지부터 재기지원까지 무료로 대행</div>
+      <span class="svc-link">자세히 보기 →</span>
+    </div>
+  </div>
+</section>
+
+<!-- 임팩트 숫자 -->
+<div class="impact-row">
+  <div class="impact-cell reveal"><div class="impact-n">52년</div><div class="impact-l">협신식품 업력</div></div>
+  <div class="impact-cell reveal reveal-delay-1"><div class="impact-n">Top 5</div><div class="impact-l">국내 도축장 규모</div></div>
+  <div class="impact-cell reveal reveal-delay-2"><div class="impact-n">무료</div><div class="impact-l">매물 기본 등록</div></div>
+  <div class="impact-cell reveal reveal-delay-3"><div class="impact-n">180만원</div><div class="impact-l">폐업지원금 평균 수령</div></div>
+</div>
+
+<!-- 매물 마켓 상세 -->
+<section class="sec light" id="market">
+  <div class="feat-row reveal">
+    <div class="feature-content">
+      <span class="feat-tag">매물 마켓</span>
+      <div class="feat-title">상가부터 냉장고까지<br>한 번에 처분하세요</div>
+      <div class="feat-desc">폐업할 때 상가 권리금, 집기·장비, 식자재 재고를 따로따로 올릴 필요 없어요. MEAT INSIGHT에서 한 번에 등록하고 고기 업종 사장님들에게 직접 노출됩니다.</div>
+      <ul class="feat-list">
+        <li><div class="fl-check"></div>상가·권리금 + 집기 동시 등록</li>
+        <li><div class="fl-check"></div>정육점·고깃집 특화 필터</li>
+        <li><div class="fl-check"></div>카카오 바로 문의 연결</li>
+        <li><div class="fl-check"></div>무료 등록 · 프리미엄 상단 노출</li>
+      </ul>
+      <button class="feat-cta" onclick="location.href='meat_insight_main.html'">매물 등록하기 →</button>
+    </div>
+    <div class="feat-visual-dark">
+      <div class="fv-hdr">
+        <div class="fv-dots"><div class="fv-dot" style="background:#FF5F57;"></div><div class="fv-dot" style="background:#FFBD2E;"></div><div class="fv-dot" style="background:#28C840;"></div></div>
+        <span class="fv-label">최근 등록 매물</span>
+      </div>
+      <div class="fv-item">
+        <div class="fv-item-tag">상가·권리금 <span class="fv-new">NEW</span></div>
+        <div class="fv-item-name">정육점 양도 — 경기 안양시</div>
+        <div class="fv-item-price">권리금 2,500만원</div>
+        <div class="fv-item-meta">49㎡ · 잔여 2년 · 장비 포함 · 오늘</div>
+      </div>
+      <div class="fv-item">
+        <div class="fv-item-tag">집기·장비</div>
+        <div class="fv-item-name">정육 냉장 쇼케이스 2m</div>
+        <div class="fv-item-price">180만원</div>
+        <div class="fv-item-meta">2년 사용 · 직거래 가능 · 1일 전</div>
+      </div>
+      <div class="fv-item">
+        <div class="fv-item-tag">상가·권리금</div>
+        <div class="fv-item-name">삼겹살 전문점 양도 — 마포구</div>
+        <div class="fv-item-price">권리금 3,500만원</div>
+        <div class="fv-item-meta">66㎡ · 월세 150만 · 2일 전</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 창업 컨설팅 + 계산기 -->
+<section class="sec dark">
+  <div class="feat-row reveal" style="direction:rtl;">
+    <div style="direction:ltr;">
+      <span class="feat-tag" style="background:rgba(201,168,76,.15);color:var(--g);">창업 컨설팅</span>
+      <div class="feat-title" style="color:var(--w);">숫자로 증명하는<br>창업 전략</div>
+      <div class="feat-desc" style="color:rgba(255,255,255,.55);">막연한 감으로 창업하지 마세요. 원가율·손익분기점·메뉴 가격 계산기로 시작 전에 수익을 미리 검증하세요.</div>
+      <ul class="feat-list">
+        <li style="border-color:rgba(255,255,255,.05);color:rgba(255,255,255,.75);"><div class="fl-check"></div>원가율 · 순마진율 실시간 계산</li>
+        <li style="border-color:rgba(255,255,255,.05);color:rgba(255,255,255,.75);"><div class="fl-check"></div>월 손익분기점 · 하루 필요 매출</li>
+        <li style="border-color:rgba(255,255,255,.05);color:rgba(255,255,255,.75);"><div class="fl-check"></div>메뉴 적정 가격 자동 산출</li>
+        <li style="border-color:rgba(255,255,255,.05);color:rgba(255,255,255,.75);"><div class="fl-check"></div>전문가 1:1 비대면 상담</li>
+      </ul>
+      <button class="feat-cta" onclick="location.href='meat_insight_main.html'" style="background:rgba(201,168,76,.1);color:var(--g);border-color:rgba(201,168,76,.25);">계산기 사용하기 →</button>
+    </div>
+    <div style="direction:ltr;">
+      <div class="calc-box">
+        <div class="calc-title">원가율 계산기</div>
+        <div class="calc-input-row"><span class="ci-label">판매가</span><span class="ci-val">35,000원</span></div>
+        <div class="calc-input-row"><span class="ci-label">매입원가</span><span class="ci-val">21,000원</span></div>
+        <div class="calc-input-row"><span class="ci-label">월 판매량</span><span class="ci-val">200건</span></div>
+        <div class="calc-input-row"><span class="ci-label">원가율</span><span class="ci-val" style="color:var(--g);">60.0%</span></div>
+        <div class="calc-input-row"><span class="ci-label">순마진율</span><span class="ci-val" style="color:var(--g);">35.0%</span></div>
+        <div class="calc-result">
+          <div class="cr-label">월 순이익 예상</div>
+          <div class="cr-value">2,450,000원</div>
+          <div class="cr-sub">건당 순이익 12,250원 × 200건</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 이용 방법 -->
+<section class="sec dark" id="how" style="padding-top:0;">
+  <div class="sec-head reveal">
+    <div class="sec-ey">How It Works</div>
+    <div class="sec-title">3단계로 시작하세요</div>
+  </div>
+  <div class="steps-row reveal">
+    <div class="step-cell">
+      <div class="step-num">01</div>
+      <div class="step-title">무료 회원가입</div>
+      <div class="step-desc">카카오 로그인 한 번으로 시작. 매물 등록, 계산기, 공급사 문의까지 모두 무료로 이용하세요.</div>
+    </div>
+    <div class="step-cell">
+      <div class="step-num">02</div>
+      <div class="step-title">원하는 서비스 선택</div>
+      <div class="step-desc">창업을 준비 중이라면 계산기와 컨설팅, 폐업 중이라면 매물 등록과 지원금 신청을 바로 시작하세요.</div>
+    </div>
+    <div class="step-cell">
+      <div class="step-num">03</div>
+      <div class="step-title">전문가가 연결됩니다</div>
+      <div class="step-desc">카카오채널로 즉시 연결. 컨설팅, 철거 견적, 지원금 대행까지 전담 담당자가 처음부터 끝까지 함께합니다.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 공급사 -->
+<section class="sec dark" id="suppliers" style="border-top:1px solid rgba(201,168,76,.1);">
+  <div class="sec-head reveal">
+    <div class="sec-ey">Supplier Network</div>
+    <div class="sec-title">검증된 공급사와<br>직접 거래하세요</div>
+    <div class="sec-sub">중간 마진 없는 직거래. 협신식품이 첫 번째 입점사입니다.</div>
+  </div>
+  <div class="sup-featured reveal">
+    <div class="sup-logo-big"><div class="sup-logo-txt">협신<br>식품</div></div>
+    <div class="sup-info">
+      <div class="sup-badges"><span class="badge-premium">PREMIUM</span><span class="badge-verified">검증완료</span></div>
+      <div class="sup-name">협신식품 (주)</div>
+      <div class="sup-region">경기도 · 전국 배송 · 1972년 설립</div>
+      <div class="sup-cats">
+        <span class="scat3">한우</span><span class="scat3">돼지</span><span class="scat3">부분육</span><span class="scat3">경매</span><span class="scat3">수도권 당일</span>
+      </div>
+    </div>
+    <div class="sup-specs">
+      <div class="sup-spec-item"><div class="sup-spec-n">Top 5</div><div class="sup-spec-l">국내 도축 규모</div></div>
+      <div class="sup-spec-item"><div class="sup-spec-n">52년</div><div class="sup-spec-l">업력</div></div>
+      <div class="sup-spec-item"><div class="sup-spec-n">당일</div><div class="sup-spec-l">수도권 배송</div></div>
+    </div>
+  </div>
+  <div class="sup-grid2 reveal">
+    <div class="sup-card2">
+      <div class="sup-card2-head">
+        <div class="sup-logo-sm"><div class="sup-logo-sm-txt">한우<br>직판</div></div>
+        <div><div class="sup-card2-name">강원한우 직판장</div><div class="sup-card2-region">강원도 · 전국 배송</div></div>
+      </div>
+      <div class="sup-card2-body">
+        <div class="sup-card2-desc">강원도 횡성 한우 산지 직송. 1++등급 특수부위 전문.</div>
+        <div class="sup-card2-cats"><span class="scat4">한우</span><span class="scat4">1++등급</span><span class="scat4">산지직송</span></div>
+      </div>
+    </div>
+    <div class="sup-card2">
+      <div class="sup-card2-head">
+        <div class="sup-logo-sm"><div class="sup-logo-sm-txt">제주<br>흑돼지</div></div>
+        <div><div class="sup-card2-name">제주 흑돼지 영농조합</div><div class="sup-card2-region">제주도 · 전국 배송</div></div>
+      </div>
+      <div class="sup-card2-body">
+        <div class="sup-card2-desc">제주 인증 흑돼지 전문. 고깃집·정육점 B2B 공급 특화.</div>
+        <div class="sup-card2-cats"><span class="scat4">흑돼지</span><span class="scat4">B2B전문</span><span class="scat4">제주인증</span></div>
+      </div>
+    </div>
+    <div class="sup-card2">
+      <div class="sup-card2-head">
+        <div class="sup-logo-sm"><div class="sup-logo-sm-txt">수입<br>육류</div></div>
+        <div><div class="sup-card2-name">미국산 냉동육 직수입</div><div class="sup-card2-region">인천 · 전국 배송</div></div>
+      </div>
+      <div class="sup-card2-body">
+        <div class="sup-card2-desc">미국·호주 직수입. 소량 발주 가능. 냉동삼겹·갈비 전문.</div>
+        <div class="sup-card2-cats"><span class="scat4">미국산</span><span class="scat4">호주산</span><span class="scat4">소량발주</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="sup-join reveal">
+    <div class="sup-join-txt">
+      <h3>공급사로 입점하세요</h3>
+      <p>전국 정육점·고깃집 사장님들에게 직접 노출 · 기본 등록 무료</p>
+    </div>
+    <button class="btn-join2" onclick="location.href='meat_insight_main.html'">입점 신청하기 →</button>
+  </div>
+</section>
+
+<!-- 폐업 서비스 -->
+<section class="sec dark" id="closure" style="border-top:1px solid rgba(201,168,76,.1);">
+  <div class="sec-head reveal">
+    <div class="sec-ey">Closure Service</div>
+    <div class="sec-title">폐업도 현명하게<br>마무리하세요</div>
+    <div class="sec-sub">철거 연결부터 지원금 신청까지. 손해 없이 폐업하는 방법.</div>
+  </div>
+  <div class="closure-grid">
+    <div class="cl-card reveal reveal-delay-1">
+      <div class="cl-ico"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M5 23L7.5 10h13L23 23H5z" fill="#C9A84C" opacity=".3"/><rect x="3" y="7" width="22" height="4" rx="1.5" fill="#C9A84C" opacity=".6"/><path d="M11 7V5.5A1.5 1.5 0 0112.5 4h3A1.5 1.5 0 0117 5.5V7" stroke="#C9A84C" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="cl-title">폐업 철거 연결</div>
+      <div class="cl-desc">검증된 파트너사 견적 비교. 에스크로 결제로 추가 비용 없이 안전하게 진행.</div>
+      <div class="cl-amount">무료 견적</div>
+      <div class="cl-amount-l">전국 파트너사 즉시 연결</div>
+    </div>
+    <div class="cl-card reveal reveal-delay-2">
+      <div class="cl-ico"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="10" fill="#C9A84C" opacity=".12"/><text x="14" y="18.5" text-anchor="middle" font-size="14" font-weight="700" fill="#C9A84C" font-family="sans-serif">₩</text></svg></div>
+      <div class="cl-title">희망리턴패키지</div>
+      <div class="cl-desc">임차 사업자 원상복구 비용 지원. 철거 시작 전 신청 필수. 무료로 대행.</div>
+      <div class="cl-amount">최대 250만원</div>
+      <div class="cl-amount-l">소상공인진흥공단 지원</div>
+    </div>
+    <div class="cl-card reveal reveal-delay-3">
+      <div class="cl-ico"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="9" width="20" height="16" rx="3" fill="#C9A84C" opacity=".18"/><path d="M10 9V7a4 4 0 018 0v2" stroke="#C9A84C" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="14" cy="17" r="2.5" fill="#C9A84C"/></svg></div>
+      <div class="cl-title">재창업 지원금</div>
+      <div class="cl-desc">폐업 후 재창업·재취업을 준비하는 소상공인 대상 교육비·사업화 자금.</div>
+      <div class="cl-amount">최대 1,000만원</div>
+      <div class="cl-amount-l">재기 지원 프로그램</div>
+    </div>
+    <div class="cl-card reveal reveal-delay-4">
+      <div class="cl-ico"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 4L5 9.5V16c0 4.8 3.8 9.3 9 10.5 5.2-1.2 9-5.7 9-10.5V9.5L14 4z" fill="#C9A84C" opacity=".18" stroke="#C9A84C" stroke-width="1.5"/><path d="M10 14l3.5 3.5 5.5-6" stroke="#C9A84C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="cl-title">집기·상가 매물 등록</div>
+      <div class="cl-desc">철거 전에 집기와 상가를 마켓에 올려 비용 일부를 회수하세요.</div>
+      <div class="cl-amount">무료 등록</div>
+      <div class="cl-amount-l">철거 비용 회수 가능</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="sec gold-bg">
+  <div class="cta-inner reveal">
+    <div class="cta-title">지금 바로 시작하세요</div>
+    <div class="cta-sub">매물 등록은 무료 · 계산기는 무료 · 지원금 확인도 무료<br>고기 업종 사장님만을 위한 플랫폼</div>
+    <button class="btn-cta-main" onclick="location.href='meat_insight_main.html'">플랫폼 무료로 시작하기 →</button>
+    <div class="cta-note">회원가입 1분 · 카카오 로그인 지원</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div>
+      <div class="footer-logo">MEAT INSIGHT</div>
+      <div class="footer-desc">정육점·고깃집 사장님을 위한<br>창업·운영·폐업 원스톱 플랫폼</div>
+      <div class="footer-by">by 협신식품 (주) · 1972년 설립</div>
+    </div>
+    <div>
+      <div class="footer-col-t">서비스</div>
+      <ul class="footer-links">
+        <li onclick="location.href='meat_insight_main.html'">창업 컨설팅</li>
+        <li onclick="location.href='meat_insight_main.html'">매물 마켓</li>
+        <li onclick="location.href='meat_insight_main.html'">공급사 디렉토리</li>
+        <li onclick="location.href='meat_insight_main.html'">폐업 철거</li>
+        <li onclick="location.href='meat_insight_main.html'">지원금 신청</li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-t">정보</div>
+      <ul class="footer-links">
+        <li>회사 소개</li>
+        <li>공급사 입점 안내</li>
+        <li>광고 문의</li>
+        <li>카카오 채널</li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-t">고객지원</div>
+      <ul class="footer-links">
+        <li>자주 묻는 질문</li>
+        <li>이용약관</li>
+        <li>개인정보처리방침</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2025 MEAT INSIGHT · 협신식품 (주) · 고기업종 전문 플랫폼</div>
+    <div class="footer-legal"><span>이용약관</span><span>개인정보처리방침</span></div>
+  </div>
+</footer>
+
+<script>
+// 커서
+const cur=document.getElementById('cur'),ring=document.getElementById('cur-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.transform=`translate(${mx-6}px,${my-6}px)`;});
+function animRing(){rx+=(mx-rx-18)*.12;ry+=(my-ry-18)*.12;ring.style.transform=`translate(${rx}px,${ry}px)`;requestAnimationFrame(animRing);}
+animRing();
+document.querySelectorAll('button,a,.svc-card,.cl-card,.sup-card2,.sup-featured').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.transform+=' scale(1.8)';ring.style.transform+=' scale(1.5)';});
+  el.addEventListener('mouseleave',()=>{});
+});
+
+// 네비 스크롤
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>60);
+});
+
+// 스크롤 리빌
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
+},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+</script>
+</body>
+</html>

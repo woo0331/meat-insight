@@ -9,225 +9,244 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
-body{font-family:'Noto Sans KR',sans-serif;color:#1a1a1a;background:#fff;overflow-x:hidden;}
+body{font-family:'Noto Sans KR',sans-serif;color:#1A0E00;background:#FDF8F0;overflow-x:hidden;}
 :root{
-  --n:#0B1628;--n2:#0F1E3D;
-  --g:#C9A84C;--g2:#E2C06A;--g3:#FDF5E0;
-  --cr:#FAF8F3;
+  --cr:#FDF8F0;
+  --cr2:#F5EDD8;
+  --cr3:#EDE0C4;
+  --g:#C9A84C;
+  --g2:#E8C96A;
+  --g3:#FFF4D6;
+  --brown:#3D2008;
+  --brown2:#6B3A1A;
   --serif:'Noto Serif KR',serif;
+  --sans:'Noto Sans KR',sans-serif;
 }
 
-/* NAV */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 60px;background:rgba(255,255,255,0);transition:all .3s;}
-.nav.solid{background:rgba(255,255,255,.97);border-bottom:1px solid #f0ece4;box-shadow:0 2px 20px rgba(0,0,0,.06);}
-.nav-logo-main{font-family:var(--serif);font-size:18px;color:#fff;letter-spacing:2px;transition:color .3s;}
-.nav-logo-sub{font-size:9px;color:var(--g);letter-spacing:3px;margin-top:2px;}
-.nav.solid .nav-logo-main{color:var(--n);}
+/* ── 커서 ── */
+*{cursor:none;}
+.cur{position:fixed;width:12px;height:12px;background:var(--g);border-radius:50%;pointer-events:none;z-index:9999;mix-blend-mode:multiply;transition:transform .1s;}
+.cur-r{position:fixed;width:36px;height:36px;border:1.5px solid var(--g);border-radius:50%;pointer-events:none;z-index:9998;opacity:.5;}
+
+/* ── NAV ── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 60px;background:rgba(253,248,240,0);transition:all .4s;}
+.nav.solid{background:rgba(253,248,240,.97);border-bottom:1px solid var(--cr3);box-shadow:0 4px 24px rgba(61,32,8,.06);}
+.nav-logo-main{font-family:var(--serif);font-size:19px;color:var(--brown);letter-spacing:2px;}
+.nav-logo-sub{font-size:9px;color:var(--g);letter-spacing:4px;margin-top:2px;}
 .nav-links{display:flex;gap:36px;}
-.nav-link{font-size:14px;color:rgba(255,255,255,.75);text-decoration:none;transition:color .2s;letter-spacing:.2px;}
-.nav.solid .nav-link{color:#555;}
+.nav-link{font-size:14px;color:var(--brown2);text-decoration:none;transition:color .2s;letter-spacing:.2px;}
 .nav-link:hover{color:var(--g);}
-.nav-cta{background:var(--g);color:var(--n);padding:10px 26px;border-radius:6px;font-size:14px;font-weight:700;border:none;font-family:'Noto Sans KR',sans-serif;transition:all .2s;letter-spacing:.3px;}
-.nav-cta:hover{background:var(--g2);transform:translateY(-1px);}
+.nav-cta{background:var(--g);color:#fff;padding:11px 28px;border-radius:7px;font-size:14px;font-weight:700;border:none;font-family:var(--sans);transition:all .25s;}
+.nav-cta:hover{background:var(--g2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(201,168,76,.35);}
 
-/* HERO — 밝은 배경 + 큰 이미지 느낌 */
-.hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;background:#fff;padding-top:64px;overflow:hidden;}
-.hero-left{display:flex;flex-direction:column;justify-content:center;padding:80px 60px 80px;background:var(--cr);}
-.hero-eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:24px;opacity:0;animation:up .8s .1s forwards;}
-.hero-ey-line{width:28px;height:2px;background:var(--g);}
-.hero-ey-txt{font-size:11px;color:var(--g);letter-spacing:4px;font-weight:700;}
-.hero h1{font-family:var(--serif);font-size:56px;line-height:1.15;color:var(--n);margin-bottom:20px;opacity:0;animation:up .8s .25s forwards;}
-.hero h1 em{color:var(--g);font-style:normal;display:block;}
-.hero-desc{font-size:17px;color:#555;line-height:1.9;margin-bottom:40px;max-width:440px;opacity:0;animation:up .8s .4s forwards;}
-.hero-btns{display:flex;gap:14px;opacity:0;animation:up .8s .55s forwards;}
-.btn-gold{background:var(--g);color:var(--n);padding:16px 40px;border-radius:8px;font-size:16px;font-weight:700;border:none;font-family:'Noto Sans KR',sans-serif;transition:all .2s;letter-spacing:.3px;}
-.btn-gold:hover{background:var(--g2);transform:translateY(-2px);box-shadow:0 8px 28px rgba(201,168,76,.3);}
-.btn-outline{background:transparent;color:var(--n);padding:16px 36px;border-radius:8px;font-size:16px;border:1.5px solid #ddd;font-family:'Noto Sans KR',sans-serif;transition:all .2s;}
-.btn-outline:hover{border-color:var(--g);color:var(--g);}
-.hero-stats{display:flex;gap:44px;margin-top:56px;padding-top:40px;border-top:1px solid #e8e4da;opacity:0;animation:up .8s .7s forwards;}
-.hstat-n{font-family:var(--serif);font-size:34px;color:var(--n);font-weight:700;line-height:1;}
-.hstat-l{font-size:12px;color:var(--g);margin-top:5px;letter-spacing:1px;font-weight:500;}
+/* ── HERO ── */
+.hero{min-height:100vh;background:var(--cr);display:flex;align-items:center;padding:100px 60px 80px;position:relative;overflow:hidden;}
 
-/* 히어로 오른쪽 — 그래픽 패널 */
-.hero-right{background:var(--n);display:flex;flex-direction:column;justify-content:center;padding:80px 60px;position:relative;overflow:hidden;opacity:0;animation:fadeIn .9s .3s forwards;}
-.hero-right::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1),transparent 70%);top:-150px;right:-150px;}
-.hero-right::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.07),transparent 70%);bottom:-80px;left:-50px;}
-.hr-label{font-size:10px;color:var(--g);letter-spacing:4px;font-weight:700;margin-bottom:32px;position:relative;z-index:1;}
-.sise-cards{display:flex;flex-direction:column;gap:10px;position:relative;z-index:1;}
-.sc{background:rgba(255,255,255,.05);border:1px solid rgba(201,168,76,.15);border-radius:14px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;transition:all .25s;}
-.sc:hover{background:rgba(201,168,76,.08);border-color:rgba(201,168,76,.35);}
-.sc-name{font-size:15px;color:#fff;font-weight:500;}
-.sc-grade{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
-.sc-price{font-family:var(--serif);font-size:17px;color:#fff;font-weight:700;text-align:right;}
-.sc-chg{font-size:12px;margin-top:2px;text-align:right;}
-.up{color:#F87171;}.dn{color:#4ADE80;}
-.hr-cta{margin-top:28px;position:relative;z-index:1;}
-.hr-cta-txt{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:12px;}
-.btn-white{background:#fff;color:var(--n);padding:13px 28px;border-radius:8px;font-size:14px;font-weight:700;border:none;font-family:'Noto Sans KR',sans-serif;transition:all .2s;}
-.btn-white:hover{background:var(--g3);}
+/* 배경 장식들 */
+.hero-bg-circle1{position:absolute;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.12),transparent 70%);top:-200px;right:-150px;pointer-events:none;}
+.hero-bg-circle2{position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.08),transparent 70%);bottom:-100px;left:200px;pointer-events:none;animation:breathe 8s ease-in-out infinite;}
+.hero-pattern{position:absolute;inset:0;opacity:.025;background-image:repeating-linear-gradient(45deg,var(--g) 0,var(--g) 1px,transparent 0,transparent 50%);background-size:20px 20px;pointer-events:none;}
+@keyframes breathe{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
+
+.hero-content{position:relative;z-index:1;max-width:600px;}
+.hero-eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:28px;opacity:0;animation:up .8s .1s forwards;}
+.ey-pill{background:var(--g3);border:1px solid rgba(201,168,76,.3);border-radius:20px;padding:6px 16px;display:flex;align-items:center;gap:8px;}
+.ey-dot{width:6px;height:6px;border-radius:50%;background:var(--g);}
+.ey-txt{font-size:12px;color:var(--brown2);letter-spacing:2px;font-weight:600;}
+.hero h1{font-family:var(--serif);font-size:66px;line-height:1.1;color:var(--brown);margin-bottom:22px;opacity:0;animation:up .8s .2s forwards;}
+.hero h1 .accent{color:var(--g);position:relative;display:inline-block;}
+.hero h1 .accent::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:3px;background:var(--g);border-radius:2px;}
+.hero-desc{font-size:18px;color:var(--brown2);line-height:1.9;margin-bottom:44px;opacity:0;animation:up .8s .35s forwards;}
+.hero-btns{display:flex;gap:14px;margin-bottom:60px;opacity:0;animation:up .8s .5s forwards;}
+.btn-primary{background:var(--g);color:#fff;padding:17px 44px;border-radius:8px;font-size:17px;font-weight:700;border:none;font-family:var(--sans);transition:all .25s;box-shadow:0 4px 20px rgba(201,168,76,.3);}
+.btn-primary:hover{background:var(--g2);transform:translateY(-2px);box-shadow:0 10px 32px rgba(201,168,76,.4);}
+.btn-secondary{background:transparent;color:var(--brown);padding:17px 40px;border-radius:8px;font-size:17px;border:1.5px solid var(--cr3);font-family:var(--sans);transition:all .25s;}
+.btn-secondary:hover{border-color:var(--g);color:var(--g);}
+.hero-stats{display:flex;gap:48px;padding-top:44px;border-top:1px solid var(--cr3);opacity:0;animation:up .8s .65s forwards;}
+.hstat-n{font-family:var(--serif);font-size:38px;color:var(--brown);font-weight:700;line-height:1;}
+.hstat-l{font-size:12px;color:var(--g);margin-top:6px;letter-spacing:1.5px;font-weight:600;}
+
+/* 히어로 일러스트 */
+.hero-illo{position:absolute;right:60px;top:50%;transform:translateY(-50%);width:480px;height:480px;z-index:1;opacity:0;animation:fadeIn .9s .4s forwards;}
 @keyframes up{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
-@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-50%) scale(.96);}to{opacity:1;transform:translateY(-50%) scale(1);}}
 
-/* 마키 */
-.marquee-wrap{background:var(--n);padding:14px 0;overflow:hidden;border-top:1px solid rgba(201,168,76,.12);}
-.marquee{display:flex;animation:marquee 30s linear infinite;width:max-content;}
-.mi{display:flex;align-items:center;gap:10px;padding:0 36px;white-space:nowrap;}
-.mi-dot{width:4px;height:4px;border-radius:50%;background:var(--g);}
-.mi-txt{font-size:13px;color:rgba(255,255,255,.6);letter-spacing:.3px;}
+/* 플로팅 카드들 */
+.float-card{position:absolute;background:rgba(253,248,240,.95);border:1px solid rgba(201,168,76,.25);border-radius:16px;padding:14px 18px;backdrop-filter:blur(8px);box-shadow:0 8px 32px rgba(61,32,8,.1);}
+.fc1{top:40px;right:20px;animation:float1 6s ease-in-out infinite;}
+.fc2{bottom:60px;left:20px;animation:float2 7s ease-in-out infinite;}
+.fc3{top:50%;right:-20px;animation:float3 5s ease-in-out infinite;}
+@keyframes float1{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+@keyframes float2{0%,100%{transform:translateY(0);}50%{transform:translateY(10px);}}
+@keyframes float3{0%,100%{transform:translateY(-50%);}50%{transform:translateY(calc(-50% - 8px));}}
+.fc-label{font-size:9px;color:var(--g);letter-spacing:2px;font-weight:700;margin-bottom:8px;text-transform:uppercase;}
+.fc-name{font-size:13px;font-weight:700;color:var(--brown);margin-bottom:3px;}
+.fc-value{font-family:var(--serif);font-size:16px;color:var(--g);font-weight:700;}
+.fc-sub{font-size:11px;color:#999;margin-top:2px;}
+.fc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--cr3);}
+.fc-row:last-child{border:none;}
+.fc-row-l{font-size:12px;color:var(--brown2);}
+.fc-row-v{font-size:12px;font-weight:700;}
+.up{color:#C84C4C;}.dn{color:#4CA84C;}
+
+/* ── 마키 ── */
+.marquee-wrap{background:var(--g);padding:14px 0;overflow:hidden;}
+.marquee{display:flex;animation:marquee 28s linear infinite;width:max-content;}
+.mi{display:flex;align-items:center;gap:10px;padding:0 32px;white-space:nowrap;}
+.mi-dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.6);}
+.mi-txt{font-size:13px;color:rgba(255,255,255,.9);letter-spacing:.5px;font-weight:500;}
 @keyframes marquee{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
 
-/* 신뢰 바 */
-.trust-bar{background:#fff;display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #f0ece4;}
-.tb{padding:48px 32px;text-align:center;border-right:1px solid #f0ece4;transition:background .2s;}
+/* ── 신뢰 바 ── */
+.trust-bar{background:var(--cr2);display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--cr3);border-bottom:1px solid var(--cr3);}
+.tb{padding:52px 32px;text-align:center;border-right:1px solid var(--cr3);transition:background .25s;}
 .tb:last-child{border:none;}
 .tb:hover{background:var(--cr);}
-.tb-n{font-family:var(--serif);font-size:44px;color:var(--n);font-weight:700;line-height:1;margin-bottom:8px;}
-.tb-l{font-size:13px;color:var(--g);font-weight:500;letter-spacing:.5px;}
+.tb-n{font-family:var(--serif);font-size:48px;color:var(--brown);font-weight:700;line-height:1;margin-bottom:8px;}
+.tb-l{font-size:13px;color:var(--g);font-weight:600;letter-spacing:.5px;}
 
-/* 서비스 */
-.sec{padding:100px 60px;}
-.sec-ey{font-size:10px;color:var(--g);letter-spacing:5px;font-weight:700;margin-bottom:12px;text-transform:uppercase;}
-.sec-title{font-family:var(--serif);font-size:44px;line-height:1.25;margin-bottom:16px;}
-.sec-sub{font-size:17px;color:#666;line-height:1.9;max-width:520px;}
-.sec-head{margin-bottom:60px;}
+/* ── 공통 섹션 ── */
+.sec{padding:110px 60px;}
+.sec-ey{font-size:10px;color:var(--g);letter-spacing:5px;font-weight:700;margin-bottom:14px;text-transform:uppercase;}
+.sec-title{font-family:var(--serif);font-size:46px;line-height:1.22;color:var(--brown);margin-bottom:18px;}
+.sec-sub{font-size:17px;color:var(--brown2);line-height:1.9;max-width:540px;opacity:.8;}
+.sec-head{margin-bottom:68px;}
 
-.svc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
-.svc{background:var(--cr);border-radius:20px;padding:32px 26px;border:1px solid #ede9e0;transition:all .3s;position:relative;overflow:hidden;}
-.svc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--g);transform:scaleX(0);transition:transform .3s;transform-origin:left;}
-.svc:hover{background:#fff;box-shadow:0 12px 40px rgba(0,0,0,.08);transform:translateY(-4px);}
-.svc:hover::after{transform:scaleX(1);}
-.svc-num{font-size:11px;color:var(--g);letter-spacing:2px;font-weight:700;margin-bottom:20px;}
-.svc-ico{width:52px;height:52px;background:#fff;border-radius:14px;border:1px solid #ede9e0;display:flex;align-items:center;justify-content:center;margin-bottom:18px;font-size:24px;}
-.svc-name{font-family:var(--serif);font-size:20px;color:var(--n);margin-bottom:10px;}
-.svc-desc{font-size:14px;color:#777;line-height:1.7;}
-.svc-link{font-size:13px;color:var(--g);margin-top:20px;display:block;font-weight:500;transition:letter-spacing .2s;}
+/* ── 서비스 ── */
+.svc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+.svc{background:var(--cr);border-radius:22px;padding:34px 26px;border:1.5px solid var(--cr3);transition:all .3s;position:relative;overflow:hidden;}
+.svc::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(201,168,76,.1),transparent 60%);opacity:0;transition:opacity .3s;}
+.svc:hover{background:#fff;border-color:var(--g);transform:translateY(-6px);box-shadow:0 16px 48px rgba(201,168,76,.15);}
+.svc:hover::before{opacity:1;}
+.svc-num{font-size:11px;color:var(--g);letter-spacing:3px;font-weight:700;margin-bottom:20px;}
+.svc-illo{height:80px;display:flex;align-items:center;margin-bottom:18px;}
+.svc-name{font-family:var(--serif);font-size:20px;color:var(--brown);margin-bottom:10px;}
+.svc-desc{font-size:14px;color:var(--brown2);line-height:1.75;opacity:.75;}
+.svc-link{font-size:13px;color:var(--g);margin-top:22px;display:block;font-weight:600;transition:letter-spacing .3s;}
 .svc:hover .svc-link{letter-spacing:2px;}
 
-/* 시세 섹션 */
-.sise-sec{background:var(--n);padding:100px 60px;}
-.sise-wrap{display:grid;grid-template-columns:1fr 1.2fr;gap:80px;align-items:center;}
-.sise-title{font-family:var(--serif);font-size:44px;color:#fff;line-height:1.25;margin-bottom:16px;}
-.sise-sub{font-size:16px;color:rgba(255,255,255,.45);line-height:1.9;margin-bottom:36px;}
-.sise-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(201,168,76,.12);color:var(--g);border:1px solid rgba(201,168,76,.25);padding:13px 26px;border-radius:8px;font-size:14px;font-weight:500;transition:all .2s;font-family:'Noto Sans KR',sans-serif;}
-.sise-btn:hover{background:rgba(201,168,76,.2);}
-.sise-list{display:flex;flex-direction:column;gap:10px;}
-.sise-item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;transition:all .2s;}
-.sise-item:hover{background:rgba(201,168,76,.08);border-color:rgba(201,168,76,.25);}
-.si-name{font-size:15px;color:#fff;font-weight:500;margin-bottom:3px;}
-.si-grade{font-size:12px;color:rgba(255,255,255,.35);}
-.si-price{font-family:var(--serif);font-size:18px;color:#fff;font-weight:700;text-align:right;}
-.si-chg{font-size:12px;margin-top:3px;text-align:right;}
+/* ── 시세 섹션 ── */
+.sise-sec{background:var(--cr2);padding:110px 60px;}
+.sise-wrap{display:grid;grid-template-columns:1fr 1.1fr;gap:80px;align-items:center;}
+.sise-illo{display:flex;justify-content:center;}
+.sise-items{display:flex;flex-direction:column;gap:10px;}
+.si{background:#fff;border:1.5px solid var(--cr3);border-radius:14px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;transition:all .25s;}
+.si:hover{border-color:var(--g);box-shadow:0 4px 20px rgba(201,168,76,.12);}
+.si-name{font-size:15px;font-weight:600;color:var(--brown);}
+.si-grade{font-size:11px;color:#999;margin-top:2px;}
+.si-price{font-family:var(--serif);font-size:18px;color:var(--brown);font-weight:700;text-align:right;}
+.si-chg{font-size:12px;margin-top:2px;text-align:right;font-weight:600;}
+.sise-btn{display:inline-flex;align-items:center;gap:8px;background:var(--g);color:#fff;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:700;margin-top:28px;border:none;font-family:var(--sans);transition:all .2s;}
+.sise-btn:hover{background:var(--g2);transform:translateY(-1px);}
 
-/* 매물 */
+/* ── 매물 ── */
 .listing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
-.lc{background:#fff;border-radius:20px;overflow:hidden;border:1px solid #ede9e0;transition:all .25s;}
-.lc:hover{transform:translateY(-6px);box-shadow:0 20px 60px rgba(0,0,0,.1);border-color:var(--g);}
-.lc-img{height:180px;background:var(--cr);display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid #ede9e0;}
-.lc-img-graphic{width:60px;height:60px;background:#fff;border-radius:16px;border:1px solid #ede9e0;display:flex;align-items:center;justify-content:center;font-size:28px;}
-.lc-badge{position:absolute;top:14px;left:14px;background:var(--g);color:var(--n);font-size:10px;font-weight:700;padding:4px 10px;border-radius:5px;letter-spacing:.5px;}
+.lc{background:#fff;border-radius:22px;overflow:hidden;border:1.5px solid var(--cr3);transition:all .3s;}
+.lc:hover{transform:translateY(-6px);box-shadow:0 20px 56px rgba(61,32,8,.1);border-color:var(--g);}
+.lc-img{height:160px;background:var(--cr2);display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid var(--cr3);}
+.lc-badge{position:absolute;top:12px;left:12px;background:var(--g);color:#fff;font-size:10px;font-weight:700;padding:4px 10px;border-radius:5px;}
 .lc-body{padding:22px;}
-.lc-tag{display:inline-block;font-size:11px;background:var(--g3);color:#5A4A00;padding:4px 10px;border-radius:5px;font-weight:600;margin-bottom:12px;}
-.lc-title{font-size:16px;font-weight:700;color:var(--n);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.lc-price{font-family:var(--serif);font-size:20px;color:var(--n);font-weight:700;margin-bottom:14px;}
-.lc-foot{display:flex;justify-content:space-between;padding-top:14px;border-top:1px solid #f0ece4;}
-.lc-loc{font-size:13px;color:#999;}
+.lc-tag{display:inline-block;font-size:11px;background:var(--g3);color:var(--brown2);padding:4px 10px;border-radius:5px;font-weight:600;margin-bottom:12px;border:1px solid rgba(201,168,76,.2);}
+.lc-title{font-size:16px;font-weight:700;color:var(--brown);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lc-price{font-family:var(--serif);font-size:20px;color:var(--brown);font-weight:700;margin-bottom:14px;}
+.lc-foot{display:flex;justify-content:space-between;padding-top:14px;border-top:1px solid var(--cr3);}
+.lc-loc{font-size:13px;color:#aaa;}
 .lc-ago{font-size:13px;color:var(--g);font-weight:600;}
 
-/* 컨설팅 */
-.consult-wrap{display:grid;grid-template-columns:1fr 1fr;gap:28px;}
-.cc{background:#fff;border-radius:24px;overflow:hidden;border:1px solid #ede9e0;transition:all .3s;}
-.cc:hover{box-shadow:0 16px 48px rgba(0,0,0,.1);transform:translateY(-4px);}
-.cc.featured{border:2px solid var(--g);}
-.cc-top{padding:32px 34px;background:var(--cr);}
-.cc.featured .cc-top{background:var(--n);}
+/* ── 컨설팅 ── */
+.cc-wrap{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.cc{background:#fff;border-radius:24px;overflow:hidden;border:1.5px solid var(--cr3);transition:all .3s;}
+.cc:hover{box-shadow:0 16px 48px rgba(61,32,8,.1);transform:translateY(-4px);}
+.cc.hot{border:2px solid var(--g);}
+.cc-top{padding:32px 34px;background:var(--cr2);}
+.cc.hot .cc-top{background:linear-gradient(135deg,var(--brown),var(--brown2));}
 .cc-badge{font-size:10px;color:var(--g);letter-spacing:3px;font-weight:700;display:block;margin-bottom:12px;}
-.cc-title{font-family:var(--serif);font-size:24px;color:var(--n);margin-bottom:8px;}
-.cc.featured .cc-title{color:#fff;}
-.cc-sub{font-size:14px;color:#777;line-height:1.7;}
-.cc.featured .cc-sub{color:rgba(255,255,255,.5);}
+.cc.hot .cc-badge{color:rgba(255,255,255,.6);}
+.cc-title{font-family:var(--serif);font-size:24px;color:var(--brown);margin-bottom:8px;}
+.cc.hot .cc-title{color:#fff;}
+.cc-sub{font-size:14px;color:var(--brown2);line-height:1.7;opacity:.7;}
+.cc.hot .cc-sub{color:rgba(255,255,255,.55);opacity:1;}
 .cc-body{padding:32px 34px;}
 .cc-list{list-style:none;margin-bottom:28px;}
-.cc-list li{display:flex;align-items:center;gap:12px;font-size:15px;color:#333;padding:9px 0;border-bottom:1px solid #f5f5f5;}
+.cc-list li{display:flex;align-items:center;gap:12px;font-size:15px;color:#333;padding:9px 0;border-bottom:1px solid var(--cr3);}
 .cc-list li:last-child{border:none;}
-.cc-dot{width:20px;height:20px;background:var(--n);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.cc-dot::after{content:'✓';font-size:9px;color:var(--g);}
-.cc-footer{display:flex;align-items:center;justify-content:space-between;padding-top:20px;border-top:1px solid #f0ece4;}
-.cc-price{font-family:var(--serif);font-size:28px;color:var(--n);font-weight:700;}
-.cc-price small{font-size:14px;color:#999;font-family:'Noto Sans KR',sans-serif;font-weight:400;}
-.cc-btn{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:700;border:none;font-family:'Noto Sans KR',sans-serif;transition:all .2s;}
-.cc-btn-dark{background:var(--n);color:var(--g);}
-.cc-btn-gold{background:var(--g);color:var(--n);}
-.cc-btn-dark:hover,.cc-btn-gold:hover{transform:translateY(-1px);}
+.cc-check{width:20px;height:20px;background:var(--g3);border:1px solid rgba(201,168,76,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cc-check::after{content:'✓';font-size:10px;color:var(--g);font-weight:700;}
+.cc-footer{display:flex;align-items:center;justify-content:space-between;padding-top:20px;border-top:1px solid var(--cr3);}
+.cc-price{font-family:var(--serif);font-size:28px;color:var(--brown);font-weight:700;}
+.cc-price small{font-size:13px;color:#aaa;font-family:var(--sans);font-weight:400;}
+.cc-btn{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:700;border:none;font-family:var(--sans);transition:all .2s;}
+.btn-gold{background:var(--g);color:#fff;}
+.btn-gold:hover{background:var(--g2);}
+.btn-outline-brown{background:transparent;color:var(--brown);border:1.5px solid var(--cr3);}
+.btn-outline-brown:hover{border-color:var(--g);color:var(--g);}
 
-/* 후기 */
-.review-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
-.rv{background:#fff;border-radius:20px;padding:32px;border:1px solid #ede9e0;transition:all .25s;}
-.rv:hover{box-shadow:0 12px 40px rgba(0,0,0,.08);transform:translateY(-3px);}
+/* ── 후기 ── */
+.rv-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+.rv{background:#fff;border-radius:22px;padding:32px;border:1.5px solid var(--cr3);transition:all .3s;}
+.rv:hover{box-shadow:0 12px 40px rgba(61,32,8,.08);transform:translateY(-3px);}
 .rv-stars{color:var(--g);font-size:18px;margin-bottom:16px;letter-spacing:2px;}
-.rv-text{font-size:16px;color:#333;line-height:1.85;margin-bottom:24px;}
-.rv-line{display:flex;align-items:center;gap:14px;padding-top:18px;border-top:1px solid #f0ece4;}
-.rv-avatar{width:44px;height:44px;border-radius:50%;background:var(--n);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:16px;color:var(--g);flex-shrink:0;}
-.rv-name{font-size:15px;font-weight:700;color:var(--n);}
-.rv-info{font-size:13px;color:#999;margin-top:2px;}
+.rv-text{font-size:16px;color:#444;line-height:1.85;margin-bottom:24px;}
+.rv-author{display:flex;align-items:center;gap:14px;padding-top:18px;border-top:1px solid var(--cr3);}
+.rv-avatar{width:44px;height:44px;border-radius:50%;background:var(--g3);border:2px solid var(--g);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:16px;color:var(--g);flex-shrink:0;}
+.rv-name{font-size:15px;font-weight:700;color:var(--brown);}
+.rv-info{font-size:13px;color:#aaa;margin-top:2px;}
 
-/* CTA */
-.cta-sec{background:var(--cr);padding:100px 60px;text-align:center;border-top:1px solid #ede9e0;}
-.cta-title{font-family:var(--serif);font-size:52px;color:var(--n);line-height:1.2;margin-bottom:18px;}
-.cta-sub{font-size:18px;color:#666;line-height:1.8;margin-bottom:50px;}
-.cta-btn{background:var(--n);color:var(--g);padding:20px 56px;border-radius:8px;font-size:18px;font-weight:700;border:none;font-family:'Noto Sans KR',sans-serif;transition:all .25s;}
-.cta-btn:hover{background:var(--n2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(11,22,40,.2);}
-.cta-note{font-size:14px;color:#aaa;margin-top:18px;}
+/* ── CTA ── */
+.cta-sec{background:var(--g);padding:110px 60px;text-align:center;position:relative;overflow:hidden;}
+.cta-sec::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:rgba(255,255,255,.08);top:-200px;right:-150px;}
+.cta-sec::after{content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(255,255,255,.05);bottom:-100px;left:-80px;}
+.cta-title{font-family:var(--serif);font-size:52px;color:#fff;line-height:1.2;margin-bottom:18px;position:relative;z-index:1;}
+.cta-sub{font-size:18px;color:rgba(255,255,255,.8);line-height:1.8;margin-bottom:50px;position:relative;z-index:1;}
+.cta-btn{background:#fff;color:var(--brown);padding:20px 56px;border-radius:8px;font-size:18px;font-weight:700;border:none;font-family:var(--sans);transition:all .25s;position:relative;z-index:1;}
+.cta-btn:hover{background:var(--cr);transform:translateY(-2px);box-shadow:0 12px 40px rgba(61,32,8,.2);}
+.cta-note{font-size:14px;color:rgba(255,255,255,.6);margin-top:18px;position:relative;z-index:1;}
 
-/* FAQ */
-.faq-wrap{max-width:760px;margin:0 auto;}
-.faq-item{border-bottom:1px solid #ede9e0;padding:24px 0;}
-.faq-q{display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
-.faq-q-txt{font-size:17px;font-weight:600;color:var(--n);}
-.faq-icon{font-size:22px;color:var(--g);font-weight:300;transition:transform .2s;}
-.faq-a{font-size:15px;color:#666;line-height:1.8;margin-top:14px;display:none;padding-right:32px;}
-
-/* FOOTER */
-.footer{background:var(--n);padding:72px 60px 44px;}
+/* ── FOOTER ── */
+.footer{background:var(--brown);padding:72px 60px 44px;}
 .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:52px;}
 .footer-logo{font-family:var(--serif);font-size:20px;color:#fff;letter-spacing:2px;margin-bottom:10px;}
 .footer-desc{font-size:13px;color:rgba(255,255,255,.35);line-height:1.8;margin-bottom:14px;}
-.footer-by{font-size:12px;color:rgba(201,168,76,.55);}
+.footer-by{font-size:12px;color:rgba(201,168,76,.6);}
 .footer-col-t{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;}
 .footer-links{list-style:none;}
-.footer-links li{font-size:13px;color:rgba(255,255,255,.3);padding:5px 0;transition:color .2s;}
+.footer-links li{font-size:13px;color:rgba(255,255,255,.35);padding:5px 0;transition:color .2s;}
 .footer-links li:hover{color:var(--g);}
-.footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:24px;display:flex;justify-content:space-between;}
-.footer-copy{font-size:12px;color:rgba(255,255,255,.2);}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:24px;display:flex;justify-content:space-between;}
+.footer-copy{font-size:12px;color:rgba(255,255,255,.25);}
 
-/* 스크롤 리빌 */
-.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s,transform .7s;}
+/* ── 리빌 ── */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s,transform .7s;}
 .reveal.on{opacity:1;transform:translateY(0);}
 .d1{transition-delay:.1s;}.d2{transition-delay:.2s;}.d3{transition-delay:.3s;}.d4{transition-delay:.4s;}
 
-/* 반응형 */
+/* ── 반응형 ── */
 @media(max-width:1024px){
   .nav{padding:0 24px;}
   .nav-links{display:none;}
-  .hero{grid-template-columns:1fr;}
-  .hero-right{display:none;}
-  .hero-left{padding:80px 24px;}
-  .hero h1{font-size:38px;}
+  .hero{padding:100px 24px 80px;}
+  .hero h1{font-size:42px;}
+  .hero-illo{display:none;}
   .sec{padding:72px 24px;}
   .svc-grid{grid-template-columns:repeat(2,1fr);}
-  .sise-wrap{grid-template-columns:1fr;}
   .sise-sec{padding:72px 24px;}
-  .listing-grid{grid-template-columns:1fr;}
-  .consult-wrap{grid-template-columns:1fr;}
-  .review-wrap{grid-template-columns:1fr;}
+  .sise-wrap{grid-template-columns:1fr;}
+  .sise-illo{display:none;}
+  .listing-grid,.rv-wrap{grid-template-columns:1fr;}
+  .cc-wrap{grid-template-columns:1fr;}
   .trust-bar{grid-template-columns:repeat(2,1fr);}
   .footer{padding:48px 24px 36px;}
   .footer-grid{grid-template-columns:1fr 1fr;}
   .cta-title{font-size:36px;}
   .cta-sec{padding:72px 24px;}
+  .hero-stats{gap:28px;}
 }
 </style>
 </head>
 <body>
+
+<div class="cur" id="cur"></div>
+<div class="cur-r" id="cur-r"></div>
 
 <!-- NAV -->
 <nav class="nav" id="nav">
@@ -239,23 +258,26 @@ body{font-family:'Noto Sans KR',sans-serif;color:#1a1a1a;background:#fff;overflo
     <a class="nav-link" href="#sise">시세</a>
     <a class="nav-link" href="#listing">매물</a>
     <a class="nav-link" href="#consult">컨설팅</a>
-    <a class="nav-link" href="#faq">FAQ</a>
+    <a class="nav-link" href="#reviews">후기</a>
   </div>
   <button class="nav-cta" onclick="location.href='meat_insight_main.html'">플랫폼 시작하기</button>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-left">
+  <div class="hero-bg-circle1"></div>
+  <div class="hero-bg-circle2"></div>
+  <div class="hero-pattern"></div>
+
+  <div class="hero-content">
     <div class="hero-eyebrow">
-      <div class="hero-ey-line"></div>
-      <div class="hero-ey-txt">협신식품 1972 · 52년 업력</div>
+      <div class="ey-pill"><div class="ey-dot"></div><div class="ey-txt">협신식품 1972 · 52년 업력</div></div>
     </div>
-    <h1>정육·고깃집<br>사장님을 위한<br><em>원스톱 플랫폼</em></h1>
-    <p class="hero-desc">오늘 시세 확인부터 매물 거래, 공급사 직거래,<br>창업 컨설팅, 폐업 지원금까지<br>고기만 아는 플랫폼이 만들었습니다</p>
+    <h1>정육·고깃집<br>사장님을 위한<br><span class="accent">원스톱 플랫폼</span></h1>
+    <p class="hero-desc">오늘 시세 확인부터 매물 거래, 공급사 직거래,<br>창업 컨설팅, 폐업 지원금까지<br>고기만 아는 플랫폼이 직접 만들었습니다</p>
     <div class="hero-btns">
-      <button class="btn-gold" onclick="location.href='meat_insight_main.html'">무료로 시작하기</button>
-      <button class="btn-outline" onclick="document.getElementById('sise').scrollIntoView({behavior:'smooth'})">오늘 시세 보기</button>
+      <button class="btn-primary" onclick="location.href='meat_insight_main.html'">무료로 시작하기</button>
+      <button class="btn-secondary" onclick="document.getElementById('sise').scrollIntoView({behavior:'smooth'})">오늘 시세 보기</button>
     </div>
     <div class="hero-stats">
       <div><div class="hstat-n">52년</div><div class="hstat-l">협신식품 업력</div></div>
@@ -263,18 +285,108 @@ body{font-family:'Noto Sans KR',sans-serif;color:#1a1a1a;background:#fff;overflo
       <div><div class="hstat-n">무료</div><div class="hstat-l">매물 등록</div></div>
     </div>
   </div>
-  <div class="hero-right">
-    <div class="hr-label">오늘의 시세 · 실시간</div>
-    <div class="sise-cards">
-      <div class="sc"><div><div class="sc-name">한우 등심 1++</div><div class="sc-grade">도매가 기준</div></div><div><div class="sc-price">78,000원/kg</div><div class="sc-chg up">▲ 2.3%</div></div></div>
-      <div class="sc"><div><div class="sc-name">돼지 삼겹살 A등급</div><div class="sc-grade">도매가 기준</div></div><div><div class="sc-price">22,000원/kg</div><div class="sc-chg dn">▼ 0.8%</div></div></div>
-      <div class="sc"><div><div class="sc-name">한우 채끝 1++</div><div class="sc-grade">도매가 기준</div></div><div><div class="sc-price">71,000원/kg</div><div class="sc-chg up">▲ 3.1%</div></div></div>
-      <div class="sc"><div><div class="sc-name">미국산 갈비 Choice</div><div class="sc-grade">도매가 기준</div></div><div><div class="sc-price">32,000원/kg</div><div class="sc-chg dn">▼ 1.5%</div></div></div>
-      <div class="sc"><div><div class="sc-name">닭 전체 A급</div><div class="sc-grade">도매가 기준</div></div><div><div class="sc-price">2,800원/kg</div><div class="sc-chg up">▲ 0.7%</div></div></div>
+
+  <!-- 히어로 일러스트 + 플로팅 카드 -->
+  <div class="hero-illo">
+    <!-- 축산 SVG 일러스트 -->
+    <svg viewBox="0 0 480 480" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+      <!-- 배경 원 -->
+      <circle cx="240" cy="240" r="200" fill="#F5EDD8" stroke="#EDE0C4" stroke-width="1"/>
+      <circle cx="240" cy="240" r="170" fill="#FDF8F0" stroke="#EDE0C4" stroke-width="0.5" stroke-dasharray="4 4"/>
+
+      <!-- 소 몸통 -->
+      <ellipse cx="230" cy="270" rx="100" ry="70" fill="#F0E6D0" stroke="#C9A84C" stroke-width="2"/>
+      <!-- 소 머리 -->
+      <ellipse cx="330" cy="230" rx="52" ry="44" fill="#F0E6D0" stroke="#C9A84C" stroke-width="2"/>
+      <!-- 귀 -->
+      <ellipse cx="358" cy="200" rx="14" ry="10" fill="#E8D4B0" stroke="#C9A84C" stroke-width="1.5" transform="rotate(-20 358 200)"/>
+      <ellipse cx="308" cy="192" rx="14" ry="10" fill="#E8D4B0" stroke="#C9A84C" stroke-width="1.5" transform="rotate(20 308 192)"/>
+      <!-- 눈 -->
+      <circle cx="342" cy="225" r="5" fill="#3D2008"/>
+      <circle cx="344" cy="223" r="1.5" fill="#fff"/>
+      <!-- 코 -->
+      <ellipse cx="348" cy="244" rx="14" ry="10" fill="#E8C4A0" stroke="#C9A84C" stroke-width="1.5"/>
+      <circle cx="344" cy="244" r="3" fill="#C9A84C" opacity=".5"/>
+      <circle cx="352" cy="244" r="3" fill="#C9A84C" opacity=".5"/>
+      <!-- 뿔 -->
+      <path d="M318 194 Q305 165 315 150" stroke="#C9A84C" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M348 190 Q362 162 355 148" stroke="#C9A84C" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <!-- 다리 -->
+      <rect x="160" y="318" width="22" height="55" rx="11" fill="#E8D4B0" stroke="#C9A84C" stroke-width="1.5"/>
+      <rect x="195" y="322" width="22" height="52" rx="11" fill="#E8D4B0" stroke="#C9A84C" stroke-width="1.5"/>
+      <rect x="254" y="322" width="22" height="52" rx="11" fill="#E8D4B0" stroke="#C9A84C" stroke-width="1.5"/>
+      <rect x="289" y="318" width="22" height="55" rx="11" fill="#E8D4B0" stroke="#C9A84C" stroke-width="1.5"/>
+      <!-- 꼬리 -->
+      <path d="M130 255 Q100 240 105 210 Q110 185 125 195" stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <!-- 소 무늬 -->
+      <ellipse cx="195" cy="255" rx="28" ry="20" fill="#C9A84C" opacity=".15"/>
+      <ellipse cx="255" cy="275" rx="20" ry="15" fill="#C9A84C" opacity=".12"/>
+      <!-- 1++ 등급 뱃지 -->
+      <rect x="165" y="240" width="52" height="22" rx="11" fill="#C9A84C"/>
+      <text x="191" y="255" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="sans-serif">1++</text>
+
+      <!-- 정육칼 일러스트 -->
+      <g transform="translate(60,80) rotate(-20)">
+        <rect x="0" y="8" width="90" height="22" rx="4" fill="#C9A84C"/>
+        <rect x="90" y="0" width="16" height="38" rx="3" fill="#E8D4B0" stroke="#C9A84C" stroke-width="1.5"/>
+        <line x1="10" y1="19" x2="80" y2="19" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>
+      </g>
+
+      <!-- 불꽃/그릴 일러스트 -->
+      <g transform="translate(350,340)">
+        <ellipse cx="0" cy="25" rx="35" ry="8" fill="#C9A84C" opacity=".2"/>
+        <rect x="-30" y="15" width="60" height="10" rx="3" fill="#C9A84C" opacity=".4"/>
+        <line x1="-20" y1="15" x2="-20" y2="-5" stroke="#C9A84C" stroke-width="2" opacity=".5"/>
+        <line x1="-6" y1="15" x2="-6" y2="-5" stroke="#C9A84C" stroke-width="2" opacity=".5"/>
+        <line x1="8" y1="15" x2="8" y2="-5" stroke="#C9A84C" stroke-width="2" opacity=".5"/>
+        <line x1="22" y1="15" x2="22" y2="-5" stroke="#C9A84C" stroke-width="2" opacity=".5"/>
+        <!-- 불꽃 -->
+        <path d="M-8 -5 Q-4 -25 0 -10 Q4 -30 8 -5" fill="#C9A84C" opacity=".6"/>
+        <path d="M-4 -8 Q0 -20 4 -8" fill="#E8C96A" opacity=".8"/>
+      </g>
+
+      <!-- 작은 아이콘들 -->
+      <!-- 시세 차트 -->
+      <g transform="translate(60,330)">
+        <rect x="0" y="0" width="60" height="50" rx="10" fill="var(--cr2)" stroke="var(--cr3)" stroke-width="1.5"/>
+        <polyline points="8,38 18,28 28,32 38,18 48,22" stroke="#C9A84C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="48" cy="22" r="3" fill="#C9A84C"/>
+        <text x="30" y="10" text-anchor="middle" font-size="7" fill="#C9A84C" font-family="sans-serif" font-weight="700">시세</text>
+      </g>
+
+      <!-- 매물 태그 -->
+      <g transform="translate(360,100)">
+        <rect x="0" y="0" width="70" height="36" rx="18" fill="var(--cr2)" stroke="var(--cr3)" stroke-width="1.5"/>
+        <text x="35" y="23" text-anchor="middle" font-size="11" fill="#C9A84C" font-family="sans-serif" font-weight="700">매물 마켓</text>
+      </g>
+
+      <!-- 반짝이 효과 -->
+      <circle cx="100" cy="150" r="3" fill="#C9A84C" opacity=".4"/>
+      <circle cx="380" cy="280" r="2" fill="#C9A84C" opacity=".3"/>
+      <circle cx="150" cy="380" r="4" fill="#C9A84C" opacity=".25"/>
+      <circle cx="420" cy="160" r="3" fill="#C9A84C" opacity=".35"/>
+    </svg>
+
+    <!-- 플로팅 카드 1 — 오늘 시세 -->
+    <div class="float-card fc1">
+      <div class="fc-label">오늘의 시세</div>
+      <div class="fc-row"><span class="fc-row-l">한우 등심 1++</span><span class="fc-row-v up">78,000원 ▲</span></div>
+      <div class="fc-row"><span class="fc-row-l">돼지 삼겹 A</span><span class="fc-row-v dn">22,000원 ▼</span></div>
     </div>
-    <div class="hr-cta">
-      <div class="hr-cta-txt">협신식품 — 수도권 유일 도축장 · Top 5</div>
-      <button class="btn-white" onclick="location.href='meat_insight_main.html'">공급사 직거래 →</button>
+
+    <!-- 플로팅 카드 2 — 최근 매물 -->
+    <div class="float-card fc2">
+      <div class="fc-label">최근 매물</div>
+      <div class="fc-name">정육점 양도 — 경기 안양시</div>
+      <div class="fc-value">권리금 2,500만원</div>
+      <div class="fc-sub">오늘 등록</div>
+    </div>
+
+    <!-- 플로팅 카드 3 — 지원금 -->
+    <div class="float-card fc3">
+      <div class="fc-label">폐업 지원금</div>
+      <div class="fc-value">평균 180만원</div>
+      <div class="fc-sub">무료 신청 대행</div>
     </div>
   </div>
 </section>
@@ -308,7 +420,7 @@ body{font-family:'Noto Sans KR',sans-serif;color:#1a1a1a;background:#fff;overflo
 </div>
 
 <!-- 서비스 -->
-<section class="sec" style="background:var(--cr);">
+<section class="sec" style="background:#fff;">
   <div class="sec-head reveal">
     <div class="sec-ey">Services</div>
     <div class="sec-title">고기업종 사장님께<br>필요한 모든 것</div>
@@ -317,28 +429,36 @@ body{font-family:'Noto Sans KR',sans-serif;color:#1a1a1a;background:#fff;overflo
   <div class="svc-grid">
     <div class="svc reveal" onclick="location.href='meat_insight_main.html'">
       <div class="svc-num">01</div>
-      <div class="svc-ico">📈</div>
+      <div class="svc-illo">
+        <svg width="60" height="60" viewBox="0 0 60 60"><circle cx="30" cy="30" r="28" fill="#FFF4D6" stroke="#C9A84C" stroke-width="1.5"/><polyline points="12,42 22,28 32,34 42,18 52,22" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="52" cy="22" r="4" fill="#C9A84C"/></svg>
+      </div>
       <div class="svc-name">오늘의 시세</div>
       <div class="svc-desc">한우·돼지·닭·수입육 부위별 도매가를 매일 확인하세요</div>
       <span class="svc-link">자세히 보기 →</span>
     </div>
     <div class="svc reveal d1" onclick="location.href='meat_insight_main.html'">
       <div class="svc-num">02</div>
-      <div class="svc-ico">🏪</div>
+      <div class="svc-illo">
+        <svg width="60" height="60" viewBox="0 0 60 60"><circle cx="30" cy="30" r="28" fill="#FFF4D6" stroke="#C9A84C" stroke-width="1.5"/><rect x="14" y="22" width="32" height="22" rx="4" fill="#C9A84C" opacity=".2" stroke="#C9A84C" stroke-width="1.5"/><rect x="14" y="16" width="32" height="10" rx="3" fill="#C9A84C" opacity=".4" stroke="#C9A84C" stroke-width="1"/><rect x="22" y="10" width="16" height="10" rx="2" fill="#C9A84C" opacity=".6"/></svg>
+      </div>
       <div class="svc-name">매물 마켓</div>
       <div class="svc-desc">상가·집기·식자재를 고기 업종 사장님들에게 직접 거래</div>
       <span class="svc-link">자세히 보기 →</span>
     </div>
     <div class="svc reveal d2" onclick="location.href='meat_insight_main.html'">
       <div class="svc-num">03</div>
-      <div class="svc-ico">💬</div>
+      <div class="svc-illo">
+        <svg width="60" height="60" viewBox="0 0 60 60"><circle cx="30" cy="30" r="28" fill="#FFF4D6" stroke="#C9A84C" stroke-width="1.5"/><circle cx="30" cy="26" r="10" fill="#C9A84C" opacity=".25" stroke="#C9A84C" stroke-width="1.5"/><path d="M16 44 Q16 34 30 34 Q44 34 44 44" fill="#C9A84C" opacity=".2" stroke="#C9A84C" stroke-width="1.5"/></svg>
+      </div>
       <div class="svc-name">커뮤니티</div>
       <div class="svc-desc">질문·후기·실패사례를 사장님들과 솔직하게 공유</div>
       <span class="svc-link">자세히 보기 →</span>
     </div>
     <div class="svc reveal d3" onclick="location.href='meat_insight_main.html'">
       <div class="svc-num">04</div>
-      <div class="svc-ico">📋</div>
+      <div class="svc-illo">
+        <svg width="60" height="60" viewBox="0 0 60 60"><circle cx="30" cy="30" r="28" fill="#FFF4D6" stroke="#C9A84C" stroke-width="1.5"/><rect x="16" y="20" width="28" height="26" rx="3" fill="none" stroke="#C9A84C" stroke-width="1.5"/><line x1="16" y1="28" x2="44" y2="28" stroke="#C9A84C" stroke-width="1.5"/><line x1="24" y1="14" x2="24" y2="24" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/><line x1="36" y1="14" x2="36" y2="24" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/><circle cx="26" cy="36" r="2.5" fill="#C9A84C"/><circle cx="34" cy="36" r="2.5" fill="#C9A84C" opacity=".5"/></svg>
+      </div>
       <div class="svc-name">창업 컨설팅</div>
       <div class="svc-desc">상권분석·원가계산기·전문가 1:1 비대면 상담까지</div>
       <span class="svc-link">자세히 보기 →</span>
@@ -351,22 +471,22 @@ body{font-family:'Noto Sans KR',sans-serif;color:#1a1a1a;background:#fff;overflo
   <div class="sise-wrap">
     <div class="reveal">
       <div class="sec-ey">Daily Price</div>
-      <div class="sise-title">오늘의<br>축산물 시세</div>
-      <div class="sise-sub">매일 오전 9시 갱신<br>축산물품질평가원 공공 데이터 기반</div>
+      <div class="sec-title">오늘의<br>축산물 시세</div>
+      <div class="sec-sub">매일 오전 9시 갱신<br>축산물품질평가원 공공 데이터 기반</div>
       <button class="sise-btn" onclick="location.href='meat_insight_main.html'">전체 시세 보기 →</button>
     </div>
-    <div class="sise-list reveal d1">
-      <div class="sise-item"><div><div class="si-name">한우 등심 1++</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">78,000원/kg</div><div class="si-chg up">▲ 2.3%</div></div></div>
-      <div class="sise-item"><div><div class="si-name">돼지 삼겹살 A등급</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">22,000원/kg</div><div class="si-chg dn">▼ 0.8%</div></div></div>
-      <div class="sise-item"><div><div class="si-name">한우 채끝 1++</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">71,000원/kg</div><div class="si-chg up">▲ 3.1%</div></div></div>
-      <div class="sise-item"><div><div class="si-name">미국산 갈비 Choice</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">32,000원/kg</div><div class="si-chg dn">▼ 1.5%</div></div></div>
-      <div class="sise-item"><div><div class="si-name">닭 전체 A급</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">2,800원/kg</div><div class="si-chg up">▲ 0.7%</div></div></div>
+    <div class="sise-items reveal d1">
+      <div class="si"><div><div class="si-name">한우 등심 1++</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">78,000원/kg</div><div class="si-chg up">▲ 2.3%</div></div></div>
+      <div class="si"><div><div class="si-name">돼지 삼겹살 A등급</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">22,000원/kg</div><div class="si-chg dn">▼ 0.8%</div></div></div>
+      <div class="si"><div><div class="si-name">한우 채끝 1++</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">71,000원/kg</div><div class="si-chg up">▲ 3.1%</div></div></div>
+      <div class="si"><div><div class="si-name">미국산 갈비 Choice</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">32,000원/kg</div><div class="si-chg dn">▼ 1.5%</div></div></div>
+      <div class="si"><div><div class="si-name">닭 전체 A급</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">2,800원/kg</div><div class="si-chg up">▲ 0.7%</div></div></div>
     </div>
   </div>
 </section>
 
 <!-- 매물 -->
-<section class="sec" id="listing" style="background:#fff;">
+<section class="sec" id="listing" style="background:var(--cr);">
   <div class="sec-head reveal">
     <div class="sec-ey">Market</div>
     <div class="sec-title">최근 등록 매물</div>
@@ -374,66 +494,73 @@ body{font-family:'Noto Sans KR',sans-serif;color:#1a1a1a;background:#fff;overflo
   </div>
   <div class="listing-grid">
     <div class="lc reveal" onclick="location.href='meat_insight_main.html'">
-      <div class="lc-img"><div class="lc-img-graphic">🏪</div><div class="lc-badge">NEW</div></div>
+      <div class="lc-img">
+        <svg width="56" height="56" viewBox="0 0 56 56"><rect x="4" y="16" width="48" height="32" rx="6" fill="#EDE0C4" stroke="#C9A84C" stroke-width="1.5"/><rect x="4" y="10" width="48" height="12" rx="4" fill="#C9A84C" opacity=".3" stroke="#C9A84C" stroke-width="1"/><rect x="16" y="4" width="24" height="12" rx="3" fill="#C9A84C" opacity=".5"/><line x1="14" y1="30" x2="42" y2="30" stroke="#C9A84C" stroke-width="1" opacity=".4"/><line x1="14" y1="38" x2="34" y2="38" stroke="#C9A84C" stroke-width="1" opacity=".3"/></svg>
+        <div class="lc-badge">NEW</div>
+      </div>
       <div class="lc-body"><div class="lc-tag">상가·권리금</div><div class="lc-title">정육점 양도 — 단골 다수</div><div class="lc-price">권리금 2,500만원</div><div class="lc-foot"><span class="lc-loc">경기 안양시</span><span class="lc-ago">오늘</span></div></div>
     </div>
     <div class="lc reveal d1" onclick="location.href='meat_insight_main.html'">
-      <div class="lc-img"><div class="lc-img-graphic">🧊</div></div>
+      <div class="lc-img">
+        <svg width="56" height="56" viewBox="0 0 56 56"><rect x="8" y="18" width="40" height="28" rx="5" fill="#EDE0C4" stroke="#C9A84C" stroke-width="1.5"/><rect x="12" y="10" width="32" height="12" rx="3" fill="#C9A84C" opacity=".2" stroke="#C9A84C" stroke-width="1"/><circle cx="28" cy="32" r="6" fill="none" stroke="#C9A84C" stroke-width="1.5"/><line x1="18" y1="32" x2="22" y2="32" stroke="#C9A84C" stroke-width="1.5"/><line x1="34" y1="32" x2="38" y2="32" stroke="#C9A84C" stroke-width="1.5"/></svg>
+      </div>
       <div class="lc-body"><div class="lc-tag">집기·장비</div><div class="lc-title">정육 냉장 쇼케이스 2m</div><div class="lc-price">180만원</div><div class="lc-foot"><span class="lc-loc">서울 은평구</span><span class="lc-ago">1일 전</span></div></div>
     </div>
     <div class="lc reveal d2" onclick="location.href='meat_insight_main.html'">
-      <div class="lc-img"><div class="lc-img-graphic">🥩</div></div>
+      <div class="lc-img">
+        <svg width="56" height="56" viewBox="0 0 56 56"><ellipse cx="28" cy="32" rx="20" ry="14" fill="#EDE0C4" stroke="#C9A84C" stroke-width="1.5"/><path d="M14 28 Q20 18 28 22 Q36 18 42 28" fill="#C9A84C" opacity=".2" stroke="#C9A84C" stroke-width="1.5"/><circle cx="22" cy="30" r="3" fill="#C9A84C" opacity=".3"/><circle cx="34" cy="32" r="4" fill="#C9A84C" opacity=".25"/></svg>
+      </div>
       <div class="lc-body"><div class="lc-tag">상가·권리금</div><div class="lc-title">삼겹살 전문점 양도</div><div class="lc-price">권리금 3,500만원</div><div class="lc-foot"><span class="lc-loc">서울 마포구</span><span class="lc-ago">2일 전</span></div></div>
     </div>
   </div>
-  <div style="text-align:center;margin-top:40px;">
-    <button style="background:var(--cr);color:var(--n);padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;border:1.5px solid #ddd;font-family:'Noto Sans KR',sans-serif;transition:all .2s;" onmouseover="this.style.borderColor='#C9A84C';this.style.color='#C9A84C'" onmouseout="this.style.borderColor='#ddd';this.style.color='#0B1628'" onclick="location.href='meat_insight_main.html'">전체 매물 보기 →</button>
+  <div style="text-align:center;margin-top:44px;">
+    <button style="background:transparent;color:var(--brown);padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;border:1.5px solid var(--cr3);font-family:var(--sans);transition:all .2s;cursor:none;" onmouseover="this.style.borderColor='#C9A84C';this.style.color='#C9A84C';" onmouseout="this.style.borderColor='var(--cr3)';this.style.color='var(--brown)';" onclick="location.href='meat_insight_main.html'">전체 매물 보기 →</button>
   </div>
 </section>
 
 <!-- 컨설팅 -->
-<section class="sec" id="consult" style="background:var(--cr);">
+<section class="sec" id="consult" style="background:#fff;">
   <div class="sec-head reveal">
     <div class="sec-ey">Consulting</div>
     <div class="sec-title">전문가가<br>직접 분석합니다</div>
     <div class="sec-sub">52년 업력의 협신식품이 만든 고기업종 전문 컨설팅</div>
   </div>
-  <div class="consult-wrap">
+  <div class="cc-wrap">
     <div class="cc reveal">
       <div class="cc-top">
         <span class="cc-badge">REPORT</span>
         <div class="cc-title">창업 리포트</div>
-        <div class="cc-sub">상권 분석부터 손익분기점까지 PDF로 제공</div>
+        <div class="cc-sub">상권 분석부터 손익분기점까지 PDF로</div>
       </div>
       <div class="cc-body">
         <ul class="cc-list">
-          <li><div class="cc-dot"></div>반경 500m 상권 분석 (유동인구·경쟁점)</li>
-          <li><div class="cc-dot"></div>업종별 예상 월매출 · 원가율 데이터</li>
-          <li><div class="cc-dot"></div>초기 투자비용 · 손익분기점 산정</li>
-          <li><div class="cc-dot"></div>지역 맞춤 입지 추천 · PDF 제공</li>
+          <li><div class="cc-check"></div>반경 500m 상권 분석 (유동인구·경쟁점)</li>
+          <li><div class="cc-check"></div>업종별 예상 월매출 · 원가율 데이터</li>
+          <li><div class="cc-check"></div>초기 투자비용 · 손익분기점 산정</li>
+          <li><div class="cc-check"></div>지역 맞춤 입지 추천 · PDF 제공</li>
         </ul>
         <div class="cc-footer">
           <div class="cc-price">200,000원 <small>/ 건</small></div>
-          <button class="cc-btn cc-btn-dark" onclick="location.href='meat_insight_main.html'">신청하기</button>
+          <button class="cc-btn btn-outline-brown" onclick="location.href='meat_insight_main.html'">신청하기</button>
         </div>
       </div>
     </div>
-    <div class="cc featured reveal d1">
+    <div class="cc hot reveal d1">
       <div class="cc-top">
         <span class="cc-badge">1:1 CONSULTING</span>
         <div class="cc-title">비대면 전문가 상담</div>
-        <div class="cc-sub">60분 화상 심층 상담 · 맞춤 전략 제시</div>
+        <div class="cc-sub">60분 화상 심층 상담 · 맞춤 전략</div>
       </div>
       <div class="cc-body">
         <ul class="cc-list">
-          <li><div class="cc-dot"></div>60분 화상 심층 상담</li>
-          <li><div class="cc-dot"></div>원가율 · 수익 구조 맞춤 분석</li>
-          <li><div class="cc-dot"></div>메뉴 · 운영 개선 전략 제시</li>
-          <li><div class="cc-dot"></div>상담 후 요약 리포트 제공</li>
+          <li><div class="cc-check"></div>60분 화상 심층 상담</li>
+          <li><div class="cc-check"></div>원가율 · 수익 구조 맞춤 분석</li>
+          <li><div class="cc-check"></div>메뉴 · 운영 개선 전략 제시</li>
+          <li><div class="cc-check"></div>상담 후 요약 리포트 제공</li>
         </ul>
         <div class="cc-footer">
           <div class="cc-price">1,500,000원 <small>/ 회</small></div>
-          <button class="cc-btn cc-btn-gold" onclick="location.href='meat_insight_main.html'">신청하기</button>
+          <button class="cc-btn btn-gold" onclick="location.href='meat_insight_main.html'">신청하기</button>
         </div>
       </div>
     </div>
@@ -441,64 +568,22 @@ body{font-family:'Noto Sans KR',sans-serif;color:#1a1a1a;background:#fff;overflo
 </section>
 
 <!-- 후기 -->
-<section class="sec" style="background:#fff;">
+<section class="sec" id="reviews" style="background:var(--cr);">
   <div class="sec-head reveal">
     <div class="sec-ey">Reviews</div>
     <div class="sec-title">실제 사장님들의<br>이야기입니다</div>
   </div>
-  <div class="review-wrap">
-    <div class="rv reveal">
-      <div class="rv-stars">★★★★★</div>
-      <div class="rv-text">"창업 리포트 보고 나서 입지를 바꿨어요. 지금 월매출이 예상보다 30% 높게 나오고 있습니다."</div>
-      <div class="rv-line"><div class="rv-avatar">김</div><div><div class="rv-name">김○○ 사장님</div><div class="rv-info">경기도 수원 · 정육점 창업</div></div></div>
-    </div>
-    <div class="rv reveal d1">
-      <div class="rv-stars">★★★★★</div>
-      <div class="rv-text">"폐업할 때 집기를 3일 만에 다 팔았어요. 철거 비용을 거의 다 뽑았습니다."</div>
-      <div class="rv-line"><div class="rv-avatar">박</div><div><div class="rv-name">박○○ 사장님</div><div class="rv-info">서울 마포구 · 고깃집 폐업</div></div></div>
-    </div>
-    <div class="rv reveal d2">
-      <div class="rv-stars">★★★★★</div>
-      <div class="rv-text">"희망리턴패키지 몰랐는데 대신 신청해줬어요. 220만원 받았습니다."</div>
-      <div class="rv-line"><div class="rv-avatar">이</div><div><div class="rv-name">이○○ 사장님</div><div class="rv-info">인천 남동구 · 정육점 폐업</div></div></div>
-    </div>
-  </div>
-</section>
-
-<!-- FAQ -->
-<section class="sec" id="faq" style="background:var(--cr);">
-  <div class="sec-head reveal">
-    <div class="sec-ey">FAQ</div>
-    <div class="sec-title">자주 묻는 질문</div>
-  </div>
-  <div class="faq-wrap">
-    <div class="faq-item reveal" onclick="toggleFaq(this)">
-      <div class="faq-q"><span class="faq-q-txt">매물 등록은 정말 무료인가요?</span><span class="faq-icon">+</span></div>
-      <div class="faq-a">네, 기본 등록은 완전 무료예요. 상가·집기·식자재 모두 무료로 올릴 수 있어요. 더 많은 노출을 원하시면 프리미엄 상단 노출(월 3~5만원)을 선택하실 수 있어요.</div>
-    </div>
-    <div class="faq-item reveal" onclick="toggleFaq(this)">
-      <div class="faq-q"><span class="faq-q-txt">창업 리포트는 어느 지역이든 가능한가요?</span><span class="faq-icon">+</span></div>
-      <div class="faq-a">전국 어디든 가능해요. 원하는 지역과 업종을 알려주시면 해당 상권을 분석해서 3~5일 내 PDF 리포트를 보내드려요.</div>
-    </div>
-    <div class="faq-item reveal" onclick="toggleFaq(this)">
-      <div class="faq-q"><span class="faq-q-txt">폐업 지원금은 누구나 받을 수 있나요?</span><span class="faq-icon">+</span></div>
-      <div class="faq-a">임차 사업자라면 희망리턴패키지(최대 250만원)를 받을 수 있어요. 자가 소유는 해당이 안 되고, 폐업 신고 전에 신청해야 해요. 수령 가능 여부를 무료로 먼저 확인해드립니다.</div>
-    </div>
-    <div class="faq-item reveal" onclick="toggleFaq(this)">
-      <div class="faq-q"><span class="faq-q-txt">공급사 직거래는 최소 주문량이 있나요?</span><span class="faq-icon">+</span></div>
-      <div class="faq-a">공급사마다 달라요. 협신식품은 수도권 50kg 이상이고, 수입육 업체는 소량 발주도 가능해요. 각 공급사 상세 페이지에서 확인하고 직접 문의하시면 돼요.</div>
-    </div>
-    <div class="faq-item reveal" onclick="toggleFaq(this)">
-      <div class="faq-q"><span class="faq-q-txt">철거 견적은 얼마나 걸리나요?</span><span class="faq-icon">+</span></div>
-      <div class="faq-a">가게 위치와 면적을 입력하면 당일 내로 전국 파트너사 2~3곳의 견적을 받아볼 수 있어요. 에스크로 결제로 안전하게 진행됩니다.</div>
-    </div>
+  <div class="rv-wrap">
+    <div class="rv reveal"><div class="rv-stars">★★★★★</div><div class="rv-text">"창업 리포트 보고 나서 입지를 바꿨어요. 지금 월매출이 예상보다 30% 높게 나오고 있습니다."</div><div class="rv-author"><div class="rv-avatar">김</div><div><div class="rv-name">김○○ 사장님</div><div class="rv-info">경기도 수원 · 정육점 창업</div></div></div></div>
+    <div class="rv reveal d1"><div class="rv-stars">★★★★★</div><div class="rv-text">"폐업할 때 집기를 3일 만에 다 팔았어요. 철거 비용을 거의 다 뽑았습니다."</div><div class="rv-author"><div class="rv-avatar">박</div><div><div class="rv-name">박○○ 사장님</div><div class="rv-info">서울 마포구 · 고깃집 폐업</div></div></div></div>
+    <div class="rv reveal d2"><div class="rv-stars">★★★★★</div><div class="rv-text">"희망리턴패키지 몰랐는데 대신 신청해줬어요. 220만원 받았습니다. 정말 감사해요."</div><div class="rv-author"><div class="rv-avatar">이</div><div><div class="rv-name">이○○ 사장님</div><div class="rv-info">인천 남동구 · 정육점 폐업</div></div></div></div>
   </div>
 </section>
 
 <!-- CTA -->
 <section class="cta-sec">
   <div class="cta-title reveal">지금 바로 시작하세요</div>
-  <div class="cta-sub reveal">매물 등록 무료 · 계산기 무료 · 지원금 확인 무료</div>
+  <div class="cta-sub reveal">매물 등록 무료 · 계산기 무료 · 지원금 확인 무료<br>고기 업종 사장님만을 위한 플랫폼</div>
   <button class="cta-btn reveal" onclick="location.href='meat_insight_main.html'">플랫폼 무료로 시작하기 →</button>
   <div class="cta-note reveal">회원가입 1분 · 카카오 로그인 지원</div>
 </section>
@@ -545,26 +630,27 @@ body{font-family:'Noto Sans KR',sans-serif;color:#1a1a1a;background:#fff;overflo
 </footer>
 
 <script>
-// 네비 스크롤
+const cur=document.getElementById('cur'),curR=document.getElementById('cur-r');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX;my=e.clientY;
+  cur.style.transform=`translate(${mx-6}px,${my-6}px)`;
+});
+function animCur(){
+  rx+=(mx-rx-18)*.1;ry+=(my-ry-18)*.1;
+  curR.style.transform=`translate(${rx}px,${ry}px)`;
+  requestAnimationFrame(animCur);
+}
+animCur();
+
 window.addEventListener('scroll',()=>{
   document.getElementById('nav').classList.toggle('solid',window.scrollY>60);
 });
 
-// 스크롤 리빌
 const obs=new IntersectionObserver(entries=>{
   entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('on');});
 },{threshold:.1});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
-
-// FAQ
-function toggleFaq(el){
-  const a=el.querySelector('.faq-a');
-  const ic=el.querySelector('.faq-icon');
-  const open=a.style.display==='block';
-  document.querySelectorAll('.faq-a').forEach(x=>x.style.display='none');
-  document.querySelectorAll('.faq-icon').forEach(x=>x.textContent='+');
-  if(!open){a.style.display='block';ic.textContent='−';}
-}
 </script>
 </body>
 </html>

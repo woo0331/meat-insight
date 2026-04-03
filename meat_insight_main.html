@@ -3,334 +3,355 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>MEAT INSIGHT — 플랫폼</title>
-<meta name="description" content="정육점·고깃집 창업·운영·폐업 원스톱 플랫폼. 매물 마켓, 공급사 직거래, 컨설팅, 지원금 신청."/>
+<title>MEAT INSIGHT — 고기업종 전문 플랫폼</title>
+<meta name="description" content="정육점·고깃집 사장님을 위한 창업 컨설팅, 매물 거래, 폐업 철거, 지원금 신청까지. 협신식품(1972)이 만든 고기업종 전문 플랫폼."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{overflow-x:hidden;}
+html,body{height:auto;overflow-y:auto;}
 :root{
-  --n:#0B1628;--n2:#0F1E3D;--n3:#162444;
-  --g:#C9A84C;--g2:#E2C06A;--g3:#F0E8C8;--g4:rgba(201,168,76,.12);
-  --cr:#F7F4ED;--cr2:#EDE9DC;--cr3:#E5DFD0;
-  --ink:#0A0A0A;--i2:#2D2D2D;--i3:#666;
-  --bd:#D8D4C0;--bd2:#C9C0AC;
-  --w:#fff;
+  --ink:#0A0A0A;--ink2:#1A1A1A;--ink3:#555555;
+  --cream:#F7F5EE;--c2:#F0EDE0;--c3:#E5DFD0;
+  --rm:#C9A84C;--rl:#F0E8C8;--rd:#5A4A00;
+  --gm:#C9A84C;--gl:#F0E8C8;--gb:#C9A84C;
+  --dk:#0F1E3D;--dk2:#0F1E3D;
+  --bd:#D8D4C0;--bd2:#D0CABC;
   --sans:'Noto Sans KR',sans-serif;
   --serif:'Noto Serif KR',serif;
-  --r:12px;--rl:18px;--rxl:24px;
 }
-body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:16px;line-height:1.7;padding-top:60px;}
-.pg{display:none;}.pg.on{display:block;min-height:calc(100vh - 60px);padding-bottom:80px;}
+body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:18px;line-height:1.8;overflow-y:auto !important;height:auto !important;padding-top:56px;}
+.pg{display:none;}.pg.on{display:block;min-height:calc(100vh - 56px);overflow:visible;padding-bottom:60px;}
 
-/* ── NAV ── */
-.nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:60px;background:var(--n);border-bottom:1px solid rgba(201,168,76,.15);display:flex;align-items:center;justify-content:space-between;padding:0 24px;}
-.nav-logo{display:flex;flex-direction:column;gap:1px;cursor:pointer;}
-.nav-logo-main{font-family:var(--serif);font-size:16px;color:var(--w);letter-spacing:1.5px;}
-.nav-logo-sub{font-size:9px;color:var(--g);letter-spacing:3px;text-transform:uppercase;}
+/* NAV */
+.nav{background:var(--dk2);height:56px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:1000;border-bottom:1px solid rgba(201,168,76,.2);}
+.logo{cursor:pointer;}
+.logo-main{font-family:var(--serif);font-size:16px;color:#F5EFE6;letter-spacing:1.5px;}
+.logo-by{display:flex;align-items:center;gap:5px;margin-top:2px;}
+.logo-by-text{font-size:9px;color:#6B5E55;letter-spacing:1.5px;}
+.logo-by-sep{width:1px;height:9px;background:#3a3330;}
+.logo-by-badge{font-size:9px;color:#9C8E84;background:rgba(255,255,255,.06);border:1px solid #3a3330;border-radius:3px;padding:1px 6px;}
 .nav-links{display:flex;gap:2px;}
-.nb{padding:7px 12px;font-size:13px;border-radius:8px;border:none;background:none;color:rgba(255,255,255,.5);cursor:pointer;font-family:var(--sans);transition:all .2s;letter-spacing:.2px;}
-.nb:hover,.nb.on{background:rgba(201,168,76,.15);color:var(--g);}
-.nav-cta{background:var(--g);color:var(--n);padding:8px 18px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;letter-spacing:.3px;}
-.nav-cta:hover{background:var(--g2);}
+.nb{padding:6px 12px;font-size:13px;border-radius:6px;border:none;background:none;color:#A0B4CC;cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.nb:hover,.nb.on{background:rgba(201,168,76,.15);color:#C9A84C;}
+.nav-cta{background:var(--rm);color:#fff;padding:7px 14px;border-radius:7px;border:none;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--sans);}
+.nav-cta:hover{background:var(--rd);}
 
-/* ── 홈 히어로 ── */
-.hero{background:var(--n);padding:40px 24px 36px;position:relative;overflow:hidden;}
-.hero-glow{position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1),transparent 70%);top:-100px;right:-80px;pointer-events:none;}
-.hero-eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
-.hero-ey-line{width:24px;height:1px;background:var(--g);}
-.hero-ey-txt{font-size:10px;color:var(--g);letter-spacing:4px;text-transform:uppercase;}
-.trust-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
-.trust-chip{display:flex;align-items:center;gap:6px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);border-radius:20px;padding:5px 12px;}
-.trust-dot{width:5px;height:5px;border-radius:50%;background:var(--g);flex-shrink:0;}
-.trust-txt{font-size:12px;color:rgba(255,255,255,.8);font-weight:500;}
-.hero h1{font-family:var(--serif);font-size:30px;color:var(--w);line-height:1.35;margin-bottom:12px;}
-.hero h1 em{color:var(--g);font-style:normal;}
-.hero-sub{font-size:15px;color:rgba(255,255,255,.6);line-height:1.8;margin-bottom:24px;}
-.hero-search{display:flex;background:rgba(255,255,255,.08);border:1px solid rgba(201,168,76,.3);border-radius:12px;overflow:hidden;margin-bottom:14px;}
-.hero-search input{flex:1;padding:13px 18px;background:none;border:none;font-size:15px;color:var(--w);font-family:var(--sans);outline:none;}
-.hero-search input::placeholder{color:rgba(255,255,255,.3);}
-.hero-search button{padding:13px 20px;background:var(--g);color:var(--n);border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);}
-.filter-chips{display:flex;gap:8px;flex-wrap:wrap;}
-.fchip{padding:7px 16px;border:1px solid rgba(201,168,76,.3);border-radius:20px;font-size:13px;color:rgba(255,255,255,.6);cursor:pointer;background:none;font-family:var(--sans);transition:all .2s;}
-.fchip.on,.fchip:hover{border-color:var(--g);color:var(--g);background:rgba(201,168,76,.08);}
+/* HERO */
+.hero{background:var(--dk);padding:32px 20px 28px;}
+.hero-eye{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.eye-line{width:20px;height:1px;background:#C9A84C;}
+.eye-txt{font-size:11px;color:#C9A84C;letter-spacing:3px;}
+.trust-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.trust-badge{display:flex;align-items:center;gap:5px;background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.4);border-radius:5px;padding:5px 12px;}
+.trust-dot{width:5px;height:5px;border-radius:50%;background:#D97706;flex-shrink:0;}
+.trust-txt{font-size:12px;color:#F0EAD6;font-weight:500;}
+.hero h1{font-family:var(--serif);font-size:26px;color:#FFFFFF;line-height:1.4;margin-bottom:10px;}
+.hero h1 em{color:#C9A84C;font-style:normal;}
+.hero-sub{font-size:16px;color:#D4C9A0;line-height:1.8;margin-bottom:20px;}
+.hero-sub strong{color:#9C8E84;font-weight:500;}
+.hero-search{display:flex;background:rgba(255,255,255,.1);border:1px solid rgba(201,168,76,.4);border-radius:9px;overflow:hidden;margin-bottom:12px;}
+.hero-search input{flex:1;padding:12px 16px;background:none;border:none;font-size:16px;color:#ffffff;font-family:var(--sans);outline:none;}
+.hero-search input::placeholder{color:#8A9DB5;}
+.hero-search button{padding:12px 20px;background:#C9A84C;color:#0F1E3D;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);}
+.hchips{display:flex;gap:6px;flex-wrap:wrap;}
+.hchip{padding:6px 14px;border:1px solid rgba(201,168,76,.4);border-radius:20px;font-size:13px;color:#C9A84C;cursor:pointer;background:none;transition:all .15s;font-family:var(--sans);}
+.hchip.on,.hchip:hover{border-color:#C9A84C;color:#ffffff;background:rgba(201,168,76,.2);}
 
-/* ── 서비스 스트립 ── */
-.svc-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--bd);}
-.svc-item{background:var(--cr);padding:20px 12px 18px;text-align:center;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;}
-.svc-item:hover{background:var(--w);border-bottom-color:var(--g);}
-.svc-num{font-size:10px;color:var(--g);letter-spacing:2px;margin-bottom:8px;font-weight:500;}
-.svc-ico{width:44px;height:44px;border-radius:12px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;}
-.svc-t{font-size:14px;font-weight:700;color:var(--n2);margin-bottom:3px;}
-.svc-d{font-size:12px;color:var(--i3);line-height:1.5;}
+/* 서비스 4칸 */
+.svcs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--bd);}
+.svc{background:var(--cream);padding:16px 10px 14px;text-align:center;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;}
+.svc:hover{background:#fff;}
+.svc.r:hover{border-bottom-color:var(--rm);}
+.svc.g:hover{border-bottom-color:var(--gb);}
+.svc.k:hover{border-bottom-color:var(--dk2);}
+.svc.b:hover{border-bottom-color:#1D4ED8;}
+.svc-n{font-size:9px;color:var(--ink3);letter-spacing:2px;margin-bottom:7px;}
+.svc-ico{width:38px;height:38px;border-radius:10px;margin:0 auto 9px;display:flex;align-items:center;justify-content:center;}
+.ir{background:var(--rl);}.ig{background:var(--gl);}.ik{background:#F5F5F4;}.ib{background:#EFF6FF;}
+.svc-t{font-size:13px;font-weight:700;color:#0F1E3D;margin-bottom:2px;}
+.svc-d{font-size:14px;color:var(--ink3);line-height:1.4;}
 
-/* ── 스탯 바 ── */
-.stat-bar{display:grid;grid-template-columns:repeat(4,1fr);background:var(--n2);gap:1px;}
-.stat-cell{background:var(--n2);padding:18px 12px;text-align:center;}
-.stat-n{font-family:var(--serif);font-size:22px;color:var(--w);font-weight:700;}
-.stat-l{font-size:11px;color:var(--g);margin-top:3px;letter-spacing:.8px;font-weight:500;}
+/* 스탯바 */
+.statbar{display:grid;grid-template-columns:repeat(4,1fr);background:var(--dk2);gap:1px;}
+.stc{background:var(--dk2);padding:14px;text-align:center;}
+.stn{font-family:var(--serif);font-size:22px;color:#ffffff;font-weight:700;}
+.stl{font-size:11px;color:#C9A84C;margin-top:3px;letter-spacing:.8px;font-weight:500;}
 
-/* ── 섹션 ── */
-.sec{padding:24px 20px;}
-.sec-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;}
-.sec-title{font-family:var(--serif);font-size:18px;color:var(--ink);}
-.sec-more{font-size:13px;color:var(--g);cursor:pointer;font-weight:500;}
-.divider{height:1px;background:var(--bd);margin:0 20px;}
+/* 섹션 */
+.sec{padding:20px;}
+.sech{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;}
+.sect{font-family:var(--serif);font-size:15px;color:var(--ink);}
+.secm{font-size:13px;color:#C9A84C;cursor:pointer;font-weight:500;}
+.div0{height:1px;background:var(--bd);margin:0 20px;}
 
-/* ── 매물 그리드 ── */
-.listing-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
-.lc{background:var(--w);border:1px solid var(--bd);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:all .2s;}
-.lc:hover{border-color:var(--g);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08);}
-.lc-thumb{height:96px;background:var(--cr2);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--bd);position:relative;}
-.lc-thumb-inner{width:40px;height:40px;background:var(--cr3);border-radius:10px;}
-.lc-premium{position:absolute;top:8px;left:8px;background:var(--g);color:var(--n);font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:.5px;}
-.lc-body{padding:13px;}
-.lc-tags{display:flex;gap:5px;margin-bottom:7px;flex-wrap:wrap;}
-.lc-tag{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:500;}
-.tag-store{background:rgba(201,168,76,.15);color:#5A4A00;}
-.tag-item{background:rgba(15,30,61,.08);color:var(--n2);}
-.tag-food{background:#E8F5E9;color:#1B5E20;}
-.tag-new{background:var(--g);color:var(--n);}
-.lc-title{font-size:14px;font-weight:700;color:var(--n2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
-.lc-sub{font-size:12px;color:var(--i3);margin-bottom:8px;}
-.lc-price{font-size:15px;font-weight:700;color:var(--ink);}
-.lc-price small{font-size:11px;color:var(--i3);font-weight:400;}
-.lc-foot{display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--bd);}
-.lc-loc{font-size:11px;color:var(--i3);}
-.lc-ago{font-size:11px;color:var(--g);font-weight:500;}
+/* 매물 그리드 */
+.lgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.lc{background:#fff;border:1px solid var(--bd);border-radius:14px;overflow:hidden;cursor:pointer;transition:border-color .15s;}
+.lc:hover{border-color:var(--rm);}
+.lthumb{height:88px;background:var(--c2);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--bd);}
+.lthi{width:36px;height:36px;background:var(--c3);border-radius:8px;}
+.lbody{padding:11px;}
+.ltags{display:flex;align-items:center;gap:4px;margin-bottom:6px;}
+.ltag{font-size:9px;padding:2px 7px;border-radius:3px;font-weight:500;}
+.ltr{background:var(--rl);color:var(--rd);}
+.ltg{background:var(--gl);color:#78350F;}
+.ltnw{background:var(--rm);color:#fff;}
+.ltit{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;color:#0F1E3D;}
+.lsub{font-size:14px;color:var(--ink3);margin-bottom:7px;}
+.lprice{font-size:15px;font-weight:700;color:#0F1E3D;}
+.lprice small{font-size:14px;color:var(--ink3);font-weight:400;}
+.lfoot{display:flex;justify-content:space-between;margin-top:7px;padding-top:7px;border-top:1px solid var(--bd);}
+.lloc{font-size:14px;color:var(--ink3);}
+.lago{font-size:12px;color:#C9A84C;font-weight:500;}
 
-/* ── 컨설팅 카드 ── */
-.consult-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
-.cc{background:var(--w);border:1px solid var(--bd);border-radius:var(--rl);padding:18px;cursor:pointer;transition:all .2s;}
-.cc:hover{border-color:var(--g);box-shadow:0 4px 16px rgba(201,168,76,.12);}
-.cc-badge{display:inline-block;font-size:10px;padding:3px 10px;border-radius:4px;margin-bottom:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
-.badge-report{background:var(--g3);color:#5A4A00;}
-.badge-consult{background:rgba(15,30,61,.08);color:var(--n2);}
-.cc-title{font-size:15px;font-weight:700;color:var(--n2);margin-bottom:5px;}
-.cc-desc{font-size:13px;color:var(--i3);line-height:1.6;margin-bottom:12px;}
-.cc-price{font-family:var(--serif);font-size:18px;color:var(--n2);}
-.cc-price small{font-size:12px;color:var(--i3);font-weight:400;font-family:var(--sans);}
+/* 컨설팅 카드 */
+.cgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.cc{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .15s;}
+.cc:hover{border-color:var(--rm);}
+.ccb{display:inline-block;font-size:9px;padding:2px 8px;border-radius:3px;margin-bottom:8px;font-weight:500;letter-spacing:.5px;}
+.ccbr{background:var(--rl);color:var(--rd);}
+.ccbg{background:var(--gl);color:#78350F;}
+.cct{font-size:13px;font-weight:500;margin-bottom:4px;}
+.ccd{font-size:15px;color:var(--ink2);line-height:1.6;margin-bottom:10px;}
+.ccp{font-family:var(--serif);font-size:15px;color:var(--rm);}
+.ccp small{font-size:14px;color:var(--ink3);font-family:var(--sans);font-weight:400;}
 
-/* ── 공급사 배너 ── */
-.supply-banner{background:var(--n);border-radius:var(--rl);margin:0 20px 24px;padding:22px;}
-.sb-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;}
-.sb-ey{font-size:10px;color:var(--g);letter-spacing:3px;margin-bottom:6px;font-weight:500;}
-.sb-title{font-family:var(--serif);font-size:17px;color:var(--w);margin-bottom:4px;}
-.sb-sub{font-size:13px;color:rgba(255,255,255,.5);}
-.sb-btn{background:var(--g);color:var(--n);border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);white-space:nowrap;transition:all .2s;}
-.sb-btn:hover{background:var(--g2);}
-.sb-specs{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(201,168,76,.2);border-radius:10px;overflow:hidden;}
-.sb-spec{background:rgba(255,255,255,.04);padding:12px;text-align:center;}
-.sb-spec-n{font-family:var(--serif);font-size:15px;color:var(--g);margin-bottom:2px;}
-.sb-spec-l{font-size:11px;color:rgba(255,255,255,.4);}
+/* 협신식품 배너 */
+.sbanner{background:var(--dk);border-radius:14px;margin:0 20px 20px;padding:18px;}
+.sbanner-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.sbanner-ey{font-size:12px;color:#C9A84C;letter-spacing:2px;margin-bottom:5px;font-weight:500;}
+.sbanner-t{font-family:var(--serif);font-size:18px;color:#FFFFFF;margin-bottom:5px;}
+.sbanner-s{font-size:14px;color:#D4C9A0;}
+.sbtn{background:var(--gb);color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--sans);white-space:nowrap;}
+.sspec-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#3a3330;border-radius:8px;overflow:hidden;}
+.sspec{background:#242120;padding:10px 12px;text-align:center;}
+.sspec-n{font-family:var(--serif);font-size:13px;color:#EF9F27;margin-bottom:3px;}
+.sspec-l{font-size:12px;color:#C9A84C;}
 
-/* ── 페이지 헤더 ── */
-.page-hdr{background:var(--n);padding:14px 20px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid rgba(201,168,76,.15);}
-.page-hdr-back{color:var(--g);font-size:18px;font-weight:700;line-height:1;}
-.page-hdr-title{font-family:var(--serif);font-size:15px;color:var(--w);}
+/* 페이지 헤더 */
+.phdr{background:var(--dk2);padding:13px 20px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid #3a3330;}
+.phdr-back{color:#C9A84C;font-size:18px;font-weight:700;}
+.phdr-t{font-family:var(--serif);font-size:14px;color:#F5EFE6;}
 
-/* ── 탭 ── */
-.tab-bar{display:flex;background:var(--cr2);border-bottom:1px solid var(--bd);}
-.tab-btn{flex:1;padding:14px;text-align:center;font-size:14px;color:var(--i3);cursor:pointer;border:none;background:none;font-family:var(--sans);border-bottom:2px solid transparent;transition:all .2s;font-weight:500;}
-.tab-btn.on{color:var(--g);border-bottom-color:var(--g);background:var(--cr);}
+/* 탭 */
+.tabs{display:flex;background:var(--c2);border-bottom:1px solid var(--bd);}
+.tab{flex:1;padding:12px;text-align:center;font-size:15px;color:var(--ink3);cursor:pointer;border:none;background:none;font-family:var(--sans);border-bottom:2px solid transparent;transition:all .15s;}
+.tab.on{color:var(--rm);border-bottom-color:var(--rm);font-weight:500;background:var(--cream);}
 
-/* ── 상품 카드 ── */
-.p-body{padding:20px;}
-.p-card{background:var(--w);border:1px solid var(--bd);border-radius:var(--rl);padding:22px;margin-bottom:16px;transition:all .2s;}
-.p-card:hover{border-color:var(--g);box-shadow:0 4px 20px rgba(0,0,0,.06);}
-.p-badge{display:inline-block;font-size:10px;padding:3px 10px;border-radius:4px;margin-bottom:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
-.p-title{font-family:var(--serif);font-size:18px;color:var(--ink);margin-bottom:8px;}
-.p-desc{font-size:14px;color:var(--i2);line-height:1.8;margin-bottom:16px;}
-.p-includes{margin-bottom:16px;}
-.p-inc{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--i2);padding:6px 0;border-bottom:1px solid var(--cr3);}
-.p-inc:last-child{border:none;}
-.p-inc-dot{width:18px;height:18px;background:var(--n2);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.p-inc-dot::after{content:'✓';font-size:9px;color:var(--g);}
-.p-price{font-family:var(--serif);font-size:22px;color:var(--n2);margin-bottom:14px;}
-.p-price small{font-size:13px;color:var(--i3);font-family:var(--sans);font-weight:400;}
-.btn-apply{width:100%;padding:14px;background:var(--n2);color:var(--g);border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;letter-spacing:.3px;}
-.btn-apply:hover{background:var(--n3);}
+/* 컨설팅 상품 */
+.pbody{padding:16px 20px;}
+.pcard{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:12px;}
+.pcb{display:inline-block;font-size:9px;padding:2px 9px;border-radius:3px;margin-bottom:10px;font-weight:500;letter-spacing:.5px;}
+.pcbr{background:var(--rl);color:var(--rd);}
+.pcbg{background:var(--gl);color:#78350F;}
+.pct{font-family:var(--serif);font-size:15px;color:var(--ink);margin-bottom:7px;}
+.pcd{font-size:16px;color:var(--ink2);line-height:1.7;margin-bottom:12px;}
+.pci{margin-bottom:12px;}
+.inc{display:flex;align-items:center;gap:7px;font-size:15px;color:var(--ink2);padding:5px 0;border-bottom:1px solid var(--c3);}
+.inc:last-child{border:none;}
+.incb{width:4px;height:4px;border-radius:50%;background:var(--rm);flex-shrink:0;}
+.pcp{font-family:var(--serif);font-size:18px;color:var(--rm);margin-bottom:12px;}
+.pcp small{font-size:14px;color:var(--ink3);font-family:var(--sans);font-weight:400;}
+.bfull{width:100%;padding:14px;background:#0F1E3D;color:#C9A84C;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans);}
+.bfull:hover{background:var(--rm);}
 
-/* ── 계산기 ── */
-.calc-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
-.ct{padding:8px 16px;border:1px solid var(--bd2);border-radius:20px;font-size:13px;color:var(--i2);cursor:pointer;background:var(--w);font-family:var(--sans);transition:all .2s;font-weight:500;}
-.ct.on{background:var(--n2);border-color:var(--n2);color:var(--g);font-weight:700;}
-.calc-card{background:var(--w);border:1px solid var(--bd);border-radius:var(--rl);padding:20px;}
-.calc-label{font-size:13px;color:var(--i2);font-weight:600;margin-bottom:6px;display:block;letter-spacing:.2px;}
-.calc-input{width:100%;padding:11px 14px;border:1.5px solid var(--bd2);border-radius:10px;font-size:15px;font-family:var(--sans);background:var(--cr);color:var(--ink);margin-bottom:14px;transition:border-color .2s;}
-.calc-input:focus{outline:none;border-color:var(--g);}
-.r2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
-.result-card{background:var(--cr);border-radius:10px;padding:14px;border-left:3px solid var(--g);}
-.result-label{font-size:11px;color:var(--i3);margin-bottom:4px;letter-spacing:.5px;text-transform:uppercase;font-weight:500;}
-.result-value{font-family:var(--serif);font-size:18px;color:var(--n2);font-weight:700;}
+/* 계산기 */
+.ctabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.ct{padding:6px 14px;border:1px solid var(--bd2);border-radius:20px;font-size:15px;color:var(--ink2);cursor:pointer;background:#fff;font-family:var(--sans);transition:all .15s;}
+.ct.on{background:var(--rd);border-color:var(--rd);color:#fff;font-weight:500;}
+.calccard{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:16px;}
+.cl{font-size:14px;color:var(--ink2);font-weight:500;margin-bottom:6px;display:block;}
+.ci{width:100%;padding:9px 11px;border:1px solid var(--bd2);border-radius:7px;font-size:13px;font-family:var(--sans);background:var(--cream);color:var(--ink);margin-bottom:10px;}
+.ci:focus{outline:none;border-color:var(--rm);}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.rrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.rc{background:var(--c2);border-radius:8px;padding:12px;border-left:3px solid var(--rm);}
+.rcl{font-size:12px;color:var(--ink3);margin-bottom:4px;letter-spacing:.5px;text-transform:uppercase;}
+.rcv{font-family:var(--serif);font-size:18px;color:#0F1E3D;font-weight:700;}
 
-/* ── 공급사 디렉토리 ── */
-.dir-hero{background:var(--n);padding:24px 20px 22px;}
+/* 폐업 철거 */
+.chero{background:var(--dk2);padding:22px 20px;}
+.cht{font-family:var(--serif);font-size:18px;color:#F5EFE6;margin-bottom:5px;}
+.chs{font-size:15px;color:#D4C9A0;}
+.steps{padding:16px 20px;}
+.step{display:flex;gap:14px;margin-bottom:16px;}
+.sbub{width:32px;height:32px;border-radius:50%;background:var(--rd);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--serif);}
+.st{font-size:16px;font-weight:700;margin-bottom:5px;color:#0F1E3D;}
+.sd{font-size:15px;color:var(--ink2);line-height:1.6;}
+.sl{display:inline-block;font-size:14px;color:#C9A84C;margin-top:6px;cursor:pointer;border-bottom:1px solid rgba(201,168,76,.4);}
+.ptrow{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:14px 16px;margin:0 20px 20px;}
+.ptname{font-size:16px;font-weight:700;margin-bottom:3px;color:#0F1E3D;}
+.ptdesc{font-size:14px;color:var(--ink3);}
+.ptbtn{background:var(--dk2);color:#F5EFE6;border:none;border-radius:7px;padding:8px 14px;font-size:12px;cursor:pointer;font-family:var(--sans);}
+
+/* 지원금 */
+.shero{background:linear-gradient(135deg,#1E3A5F,#1E40AF);padding:22px 20px;}
+.shey{font-size:12px;color:#C9A84C;letter-spacing:3px;margin-bottom:8px;}
+.sht{font-family:var(--serif);font-size:18px;color:#fff;margin-bottom:5px;}
+.shs{font-size:15px;color:rgba(255,255,255,.8);}
+.ahero{background:#fff;border-radius:14px;margin:14px 20px 8px;padding:16px;}
+.albl{font-size:9px;color:#1E40AF;letter-spacing:2px;margin-bottom:3px;}
+.aval{font-family:var(--serif);font-size:28px;color:#1E3A5F;margin-bottom:3px;}
+.adesc{font-size:15px;color:#555555;}
+.subbody{padding:0 20px 20px;}
+.si{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:15px;margin-top:10px;}
+.sibadge{display:inline-block;font-size:9px;padding:2px 8px;border-radius:3px;margin-bottom:8px;font-weight:500;letter-spacing:.5px;background:#EFF6FF;color:#1E40AF;}
+.sit{font-size:13px;font-weight:500;margin-bottom:4px;}
+.sid{font-size:15px;color:var(--ink2);line-height:1.6;margin-bottom:8px;}
+.sia{font-family:var(--serif);font-size:16px;color:#1E40AF;margin-bottom:12px;}
+.ssbtn{width:100%;padding:13px;background:#0F1E3D;color:#C9A84C;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans);}
+
+/* 공급사 */
+.dir-hero{background:var(--dk);padding:22px 20px 20px;}
 .dir-ey{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
-.dir-ey-line{width:18px;height:1px;background:var(--g);}
-.dir-ey-txt{font-size:10px;color:var(--g);letter-spacing:3px;text-transform:uppercase;}
-.dir-title{font-family:var(--serif);font-size:22px;color:var(--w);margin-bottom:6px;}
-.dir-sub{font-size:14px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:18px;}
-.dir-stats{display:flex;gap:24px;}
-.dir-stat-n{font-family:var(--serif);font-size:20px;color:var(--g);}
-.dir-stat-l{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
-.ad-banner{margin:16px 16px 0;background:linear-gradient(135deg,var(--n2),var(--n3));border:1px solid rgba(201,168,76,.25);border-radius:14px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .2s;}
-.ad-banner:hover{border-color:rgba(201,168,76,.5);}
-.ad-left{display:flex;align-items:center;gap:14px;}
-.ad-logo{width:48px;height:48px;background:rgba(255,255,255,.08);border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,168,76,.2);}
-.ad-logo-txt{font-family:var(--serif);font-size:9px;color:var(--g);text-align:center;line-height:1.4;font-weight:700;}
-.ad-badge{display:inline-block;font-size:9px;background:var(--g);color:var(--n);padding:2px 8px;border-radius:3px;font-weight:700;letter-spacing:.5px;margin-bottom:5px;}
-.ad-name{font-size:14px;font-weight:700;color:var(--w);margin-bottom:2px;}
-.ad-desc{font-size:12px;color:rgba(255,255,255,.45);}
-.ad-tags{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;}
-.ad-tag{font-size:10px;padding:2px 8px;border-radius:3px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.08);}
-.ad-btn{background:var(--g);color:var(--n);border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);white-space:nowrap;transition:all .2s;}
-.filter-bar{background:var(--cr);border-bottom:1px solid var(--bd);padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-.filter-lbl{font-size:10px;color:var(--i3);letter-spacing:1px;text-transform:uppercase;margin-right:2px;font-weight:600;}
-.sup-grid{padding:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
-.sc{background:var(--w);border:1px solid var(--bd);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:all .2s;}
-.sc:hover{border-color:var(--g);box-shadow:0 4px 16px rgba(0,0,0,.08);}
-.sc.featured{border:2px solid var(--g);}
-.sc-head{background:var(--cr2);padding:14px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--bd);}
-.sc-logo{width:42px;height:42px;border-radius:8px;background:var(--w);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.sc-logo-txt{font-family:var(--serif);font-size:8px;color:var(--n2);text-align:center;line-height:1.3;font-weight:700;}
-.sc-badges{display:flex;gap:4px;margin-bottom:5px;flex-wrap:wrap;}
-.badge-ft{font-size:9px;background:var(--g);color:var(--n);padding:2px 7px;border-radius:3px;font-weight:700;}
-.badge-vf{font-size:9px;background:#DCFCE7;color:#166534;padding:2px 7px;border-radius:3px;font-weight:500;}
-.badge-ad{font-size:9px;background:var(--g3);color:#5A4A00;padding:2px 7px;border-radius:3px;font-weight:500;}
-.sc-name{font-size:14px;font-weight:700;color:var(--n2);margin-bottom:2px;}
-.sc-region{font-size:11px;color:var(--i3);}
-.sc-body{padding:13px;}
-.sc-cats{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
-.scat{font-size:11px;padding:3px 9px;border-radius:4px;background:var(--cr2);color:var(--i2);font-weight:500;}
-.sc-desc{font-size:12px;color:var(--i2);line-height:1.6;margin-bottom:10px;}
-.sc-specs{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bd);border-radius:8px;overflow:hidden;margin-bottom:10px;}
-.sc-spec{background:var(--cr);padding:8px 6px;text-align:center;}
-.sc-spec-n{font-family:var(--serif);font-size:13px;color:var(--n2);margin-bottom:1px;font-weight:700;}
-.sc-spec-l{font-size:10px;color:var(--i3);}
-.sc-foot{display:flex;gap:7px;}
-.btn-contact{flex:1;padding:10px;background:var(--n2);color:var(--g);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;}
-.btn-contact:hover{background:var(--n3);}
-.btn-detail{padding:10px 13px;background:var(--w);border:1.5px solid var(--bd2);border-radius:8px;font-size:12px;color:var(--i2);cursor:pointer;font-family:var(--sans);transition:all .2s;}
-.btn-detail:hover{border-color:var(--g);color:var(--g);}
-.join-cta{margin:4px 16px 24px;background:var(--n);border-radius:var(--rl);padding:22px;}
-.join-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;}
-.join-title{font-family:var(--serif);font-size:17px;color:var(--w);margin-bottom:5px;}
-.join-sub{font-size:13px;color:rgba(255,255,255,.45);line-height:1.6;}
-.btn-join{background:var(--g);color:var(--n);border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);white-space:nowrap;transition:all .2s;}
-.btn-join:hover{background:var(--g2);}
-.join-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(201,168,76,.2);border-radius:10px;overflow:hidden;}
-.join-stat{background:rgba(255,255,255,.04);padding:12px 8px;text-align:center;}
-.join-stat-n{font-family:var(--serif);font-size:15px;color:var(--g);}
-.join-stat-l{font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;}
+.dir-ey-line{width:18px;height:1px;background:#C9A84C;}
+.dir-ey-txt{font-size:12px;color:#C9A84C;letter-spacing:3px;}
+.dir-title{font-family:var(--serif);font-size:20px;color:#F5EFE6;margin-bottom:6px;}
+.dir-sub{font-size:15px;color:#D4C9A0;line-height:1.6;margin-bottom:16px;}
+.dir-stats{display:flex;gap:20px;}
+.dsn{font-family:var(--serif);font-size:18px;color:#C9A84C;font-weight:700;}
+.dsl{font-size:12px;color:#D4C9A0;margin-top:2px;letter-spacing:.5px;}
+.ad-banner{margin:14px 16px 0;background:linear-gradient(135deg,var(--dk2),#3a3330);border:1px solid #4a4340;border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.ad-left{display:flex;align-items:center;gap:12px;}
+.ad-logo{width:44px;height:44px;background:#F5EFE6;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.ad-logo-txt{font-family:var(--serif);font-size:9px;color:var(--dk);text-align:center;line-height:1.3;font-weight:700;}
+.ad-badge{display:inline-block;font-size:8px;background:#EF9F27;color:var(--dk);padding:2px 6px;border-radius:3px;font-weight:700;letter-spacing:.5px;margin-bottom:4px;}
+.ad-name{font-size:13px;font-weight:500;color:#F5EFE6;margin-bottom:2px;}
+.ad-desc{font-size:10px;color:#9C8E84;}
+.ad-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;}
+.ad-tag{font-size:9px;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,.08);color:#9C8E84;border:1px solid #3a3330;}
+.ad-btn{background:var(--gb);color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--sans);white-space:nowrap;}
+.fbar{background:var(--cream);border-bottom:1px solid var(--bd);padding:10px 16px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.flbl{font-size:9px;color:var(--ink3);letter-spacing:1px;text-transform:uppercase;margin-right:2px;}
+.fchip{padding:5px 12px;border:1px solid var(--bd2);border-radius:20px;font-size:15px;color:var(--ink2);cursor:pointer;background:#fff;font-family:var(--sans);transition:all .15s;}
+.fchip.on{background:var(--rd);border-color:var(--rd);color:#fff;font-weight:500;}
+.sgrid{padding:14px 16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.sc{background:#fff;border:1px solid var(--bd);border-radius:14px;overflow:hidden;cursor:pointer;transition:border-color .15s;}
+.sc:hover{border-color:var(--rm);}
+.sc.featured{border:2px solid var(--gb);}
+.sc-head{background:var(--c2);padding:13px;display:flex;align-items:flex-start;gap:10px;border-bottom:1px solid var(--bd);}
+.sc-logo{width:38px;height:38px;border-radius:7px;background:#fff;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sc-logo-txt{font-family:var(--serif);font-size:8px;color:var(--ink);text-align:center;line-height:1.3;font-weight:700;}
+.sc-badges{display:flex;gap:3px;margin-bottom:4px;flex-wrap:wrap;}
+.badge-ft{font-size:8px;background:#EF9F27;color:var(--dk);padding:2px 6px;border-radius:3px;font-weight:700;}
+.badge-vf{font-size:8px;background:#DCFCE7;color:#166534;padding:2px 6px;border-radius:3px;font-weight:500;}
+.badge-ad{font-size:8px;background:var(--rl);color:var(--rd);padding:2px 6px;border-radius:3px;font-weight:500;}
+.sc-name{font-size:14px;font-weight:700;margin-bottom:2px;color:#0F1E3D;}
+.sc-region{font-size:14px;color:var(--ink3);}
+.sc-body{padding:11px;}
+.sc-cats{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px;}
+.scat{font-size:10px;padding:2px 7px;border-radius:4px;background:var(--c2);color:var(--ink2);}
+.sc-desc{font-size:15px;color:var(--ink2);line-height:1.5;margin-bottom:9px;}
+.sc-specs{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bd);border-radius:8px;overflow:hidden;margin-bottom:9px;}
+.ssp{background:var(--cream);padding:7px 5px;text-align:center;}
+.sspn{font-family:var(--serif);font-size:12px;color:var(--rm);margin-bottom:1px;}
+.sspl{font-size:9px;color:var(--ink3);}
+.sc-foot{display:flex;gap:6px;}
+.btn-contact{flex:1;padding:10px;background:#0F1E3D;color:#C9A84C;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);}
+.btn-more{padding:9px 12px;background:#fff;border:1px solid var(--bd2);border-radius:7px;font-size:15px;color:var(--ink2);cursor:pointer;font-family:var(--sans);}
+.join-cta{margin:4px 16px 20px;background:var(--dk2);border-radius:14px;padding:18px;}
+.join-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.join-t{font-family:var(--serif);font-size:15px;color:#F5EFE6;margin-bottom:4px;}
+.join-s{font-size:14px;color:#D4C9A0;line-height:1.6;}
+.btn-join{background:var(--gb);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--sans);white-space:nowrap;}
+.join-bens{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#3a3330;border-radius:8px;overflow:hidden;}
+.jb{background:#242120;padding:10px 8px;text-align:center;}
+.jbn{font-family:var(--serif);font-size:13px;color:#EF9F27;margin-bottom:3px;}
+.jbl{font-size:12px;color:#C9A84C;line-height:1.4;}
 
-/* ── 폐업 철거 ── */
-.closure-hero{background:var(--n);padding:24px 20px;}
-.cl-hero-title{font-family:var(--serif);font-size:22px;color:var(--w);margin-bottom:6px;}
-.cl-hero-sub{font-size:14px;color:rgba(255,255,255,.5);}
-.steps{padding:20px;}
-.step{display:flex;gap:16px;margin-bottom:20px;}
-.step-bubble{width:36px;height:36px;border-radius:50%;background:var(--n2);border:2px solid var(--g);color:var(--g);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--serif);}
-.step-content{}
-.step-title{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:5px;}
-.step-desc{font-size:14px;color:var(--i3);line-height:1.7;}
-.step-link{display:inline-block;font-size:13px;color:var(--g);margin-top:7px;cursor:pointer;border-bottom:1px solid rgba(201,168,76,.3);font-weight:500;}
-.partner-card{display:flex;align-items:center;justify-content:space-between;background:var(--w);border:1.5px solid var(--bd);border-radius:var(--r);padding:16px 20px;margin:0 20px 24px;}
-.partner-name{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:3px;}
-.partner-desc{font-size:12px;color:var(--i3);}
-.btn-partner{background:var(--n2);color:var(--g);border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;}
+/* 매물 등록 */
+.regbody{padding:14px 20px;}
+.tsel{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.ts{padding:11px 6px;border:1px solid var(--bd2);border-radius:9px;text-align:center;cursor:pointer;background:#fff;transition:all .15s;}
+.ts.on{border:2px solid var(--rm);background:var(--rl);}
+.tst{font-size:15px;font-weight:500;}
+.ts.on .tst{color:var(--rd);}
+.tss{font-size:13px;color:var(--ink3);margin-top:3px;}
+.fblk{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:10px;}
+.fbt{font-size:16px;font-weight:700;color:var(--ink);border-bottom:1px solid var(--bd);padding-bottom:10px;margin-bottom:14px;}
+.fl{font-size:14px;color:var(--ink2);font-weight:500;margin-bottom:6px;display:block;}
+.fl em{color:var(--rm);font-style:normal;}
+.fi{width:100%;padding:12px 14px;border:1px solid var(--bd2);border-radius:7px;font-size:16px;font-family:var(--sans);background:var(--cream);color:var(--ink);margin-bottom:12px;}
+.fi:focus{outline:none;border-color:var(--rm);}
+.r2f{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.pdrop{border:2px dashed var(--bd2);border-radius:9px;padding:20px;text-align:center;cursor:pointer;transition:all .15s;}
+.pdrop:hover{border-color:var(--rm);background:var(--rl);}
+.pdrop-i{font-size:24px;color:var(--bd2);margin-bottom:6px;}
+.pdrop-t{font-size:14px;color:var(--ink3);}
+.breg{width:100%;padding:13px;background:var(--rd);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);margin-top:4px;}
+.breg:hover{background:var(--rm);}
 
-/* ── 지원금 ── */
-.subsidy-hero{background:linear-gradient(135deg,#0D1F3C,#1A3A6B);padding:24px 20px;}
-.sub-hero-ey{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:3px;margin-bottom:8px;}
-.sub-hero-title{font-family:var(--serif);font-size:22px;color:var(--w);margin-bottom:5px;}
-.sub-hero-sub{font-size:14px;color:rgba(255,255,255,.55);}
-.amount-card{background:var(--w);border-radius:var(--rl);margin:18px 20px 8px;padding:18px 20px;}
-.amount-label{font-size:10px;color:#1E40AF;letter-spacing:2px;margin-bottom:4px;font-weight:600;}
-.amount-value{font-family:var(--serif);font-size:32px;color:#0F1E3D;margin-bottom:4px;font-weight:700;}
-.amount-desc{font-size:13px;color:var(--i3);}
-.sub-body{padding:0 20px 24px;}
-.sub-card{background:var(--w);border:1.5px solid var(--bd);border-radius:var(--rl);padding:18px;margin-top:12px;transition:all .2s;}
-.sub-card:hover{border-color:#1E40AF;box-shadow:0 4px 16px rgba(30,64,175,.08);}
-.sub-badge{display:inline-block;font-size:10px;padding:3px 10px;border-radius:4px;margin-bottom:8px;font-weight:700;letter-spacing:.5px;background:#EFF6FF;color:#1E40AF;}
-.sub-title{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:5px;}
-.sub-desc{font-size:13px;color:var(--i3);line-height:1.7;margin-bottom:10px;}
-.sub-amount{font-family:var(--serif);font-size:18px;color:#1E40AF;margin-bottom:14px;font-weight:700;}
-.btn-sub{width:100%;padding:13px;background:#0F1E3D;color:var(--g);border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;}
-.btn-sub:hover{background:#162444;}
+/* 마이페이지 */
+.myhero{background:var(--dk2);padding:22px 20px;}
+.myh{font-family:var(--serif);font-size:18px;color:#F5EFE6;margin-bottom:3px;}
+.myp{font-size:15px;color:#D4C9A0;}
+.mystats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bd);}
+.myst{background:var(--cream);padding:14px;text-align:center;}
+.mystn{font-family:var(--serif);font-size:20px;color:var(--rm);}
+.mystl{font-size:13px;color:var(--ink3);margin-top:3px;letter-spacing:.5px;}
+.mylist{padding:10px 20px;}
+.myitem{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:13px;margin-bottom:8px;display:flex;gap:12px;align-items:center;}
+.myimg{width:52px;height:52px;background:var(--c2);border-radius:8px;flex-shrink:0;}
+.myinfo{flex:1;min-width:0;}
+.myt{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.mys{font-size:14px;color:var(--ink3);}
+.bon{display:inline-block;font-size:9px;background:#DCFCE7;color:#166534;padding:2px 7px;border-radius:3px;margin-top:3px;font-weight:500;}
+.bsm{padding:5px 10px;border-radius:6px;font-size:11px;border:1px solid var(--bd2);background:#fff;cursor:pointer;font-family:var(--sans);}
+.bsmd{color:var(--rm);border-color:var(--rl);}
 
-/* ── 매물 등록 ── */
-.reg-body{padding:20px;}
-.type-selector{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
-.type-btn{padding:14px 8px;border:1.5px solid var(--bd2);border-radius:12px;text-align:center;cursor:pointer;background:var(--w);transition:all .2s;}
-.type-btn.on{border:2px solid var(--g);background:var(--g3);}
-.type-btn-title{font-size:13px;font-weight:700;color:var(--ink);}
-.type-btn.on .type-btn-title{color:#5A4A00;}
-.type-btn-sub{font-size:11px;color:var(--i3);margin-top:3px;}
-.form-block{background:var(--w);border:1px solid var(--bd);border-radius:var(--rl);padding:18px;margin-bottom:12px;}
-.form-block-title{font-size:14px;font-weight:700;color:var(--ink);border-bottom:1px solid var(--bd);padding-bottom:12px;margin-bottom:16px;}
-.form-label{font-size:13px;color:var(--i2);font-weight:600;margin-bottom:6px;display:block;}
-.form-label em{color:var(--g);font-style:normal;}
-.form-input{width:100%;padding:12px 14px;border:1.5px solid var(--bd2);border-radius:10px;font-size:14px;font-family:var(--sans);background:var(--cr);color:var(--ink);margin-bottom:12px;transition:border-color .2s;}
-.form-input:focus{outline:none;border-color:var(--g);}
-.r2-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.photo-drop{border:2px dashed var(--bd2);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;}
-.photo-drop:hover{border-color:var(--g);background:var(--g3);}
-.photo-drop-icon{font-size:28px;color:var(--bd2);margin-bottom:7px;}
-.photo-drop-text{font-size:13px;color:var(--i3);}
-.btn-submit{width:100%;padding:15px;background:var(--n2);color:var(--g);border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:var(--sans);margin-top:4px;transition:all .2s;letter-spacing:.3px;}
-.btn-submit:hover{background:var(--n3);}
-
-/* ── 마이페이지 ── */
-.my-hero{background:var(--n);padding:24px 20px;}
-.my-hero-title{font-family:var(--serif);font-size:22px;color:var(--w);margin-bottom:4px;}
-.my-hero-sub{font-size:13px;color:rgba(255,255,255,.4);}
-.my-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bd);}
-.my-stat{background:var(--cr);padding:16px;text-align:center;}
-.my-stat-n{font-family:var(--serif);font-size:24px;color:var(--g);font-weight:700;}
-.my-stat-l{font-size:11px;color:var(--i3);margin-top:3px;letter-spacing:.5px;}
-.my-list{padding:14px 20px;}
-.my-item{background:var(--w);border:1px solid var(--bd);border-radius:12px;padding:15px;margin-bottom:10px;display:flex;gap:14px;align-items:center;transition:all .2s;}
-.my-item:hover{border-color:var(--g);box-shadow:0 2px 12px rgba(0,0,0,.06);}
-.my-thumb{width:56px;height:56px;background:var(--cr2);border-radius:10px;flex-shrink:0;}
-.my-info{flex:1;min-width:0;}
-.my-title{font-size:14px;font-weight:700;color:var(--n2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
-.my-sub{font-size:12px;color:var(--i3);}
-.my-badge{display:inline-block;font-size:10px;background:#DCFCE7;color:#166534;padding:2px 8px;border-radius:4px;margin-top:4px;font-weight:600;}
-.my-btns{display:flex;gap:7px;}
-.btn-edit{padding:6px 12px;border-radius:7px;font-size:12px;border:1.5px solid var(--bd2);background:var(--w);cursor:pointer;font-family:var(--sans);font-weight:500;transition:all .2s;}
-.btn-edit:hover{border-color:var(--g);color:var(--g);}
-.btn-del{color:var(--g);border-color:var(--g3);}
-
-/* ── 모바일 탭 ── */
-.mobile-tab{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--n);border-top:1px solid rgba(201,168,76,.15);grid-template-columns:repeat(5,1fr);z-index:999;}
-.mtab{padding:10px 4px 8px;text-align:center;cursor:pointer;border:none;background:none;font-family:var(--sans);}
-.mtab-ico{font-size:20px;display:block;margin-bottom:3px;}
-.mtab-txt{font-size:10px;color:rgba(255,255,255,.4);display:block;font-weight:500;}
-.mtab.on .mtab-txt{color:var(--g);}
-
-@media(max-width:768px){
-  .mobile-tab{display:grid;}
+/* 모바일 하단 탭 */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--dk2);border-top:1px solid #3a3330;grid-template-columns:repeat(5,1fr);z-index:100;}
+.mnb{padding:10px 4px 8px;text-align:center;cursor:pointer;border:none;background:none;font-family:var(--sans);}
+.mnb-ico{font-size:18px;display:block;margin-bottom:3px;}
+.mnb-txt{font-size:9px;color:#6B5E55;display:block;}
+.mnb.on .mnb-txt{color:#F5EFE6;}
+@media(max-width:640px){
+  .mobile-nav{display:grid;}
   body{padding-bottom:70px;}
   .nav-links{display:none;}
-  .listing-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-  .svc-strip{grid-template-columns:repeat(2,minmax(0,1fr));}
-  .stat-bar{grid-template-columns:repeat(2,1fr);}
-  .consult-grid{grid-template-columns:1fr;}
-  .hero h1{font-size:26px;}
+  .lgrid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .svcs{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .statbar{grid-template-columns:repeat(2,1fr);}
 }
+
+/* 시세 칩 */
+.sichip{padding:6px 14px;border:1px solid rgba(201,168,76,.3);border-radius:20px;font-size:13px;color:rgba(255,255,255,.6);cursor:pointer;background:none;font-family:var(--sans);transition:all .2s;font-weight:500;}
+.sichip.on{border-color:var(--rm);color:var(--rm);background:rgba(201,168,76,.1);}
+/* 시세 카드 */
+.si-card{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:10px;}
+.si-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.si-card-cat{font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:1px;text-transform:uppercase;}
+.si-card-badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;}
+.badge-up{background:#FEF2F2;color:#B91C1C;}
+.badge-dn{background:#F0FDF4;color:#15803D;}
+.badge-eq{background:var(--c2);color:var(--ink3);}
+.si-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--c3);}
+.si-row:last-child{border:none;}
+.si-name{font-size:14px;color:var(--ink2);font-weight:500;}
+.si-grade{font-size:11px;color:var(--ink3);margin-top:1px;}
+.si-price{text-align:right;}
+.si-val{font-family:var(--serif);font-size:16px;color:var(--ink);font-weight:700;}
+.si-chg{font-size:11px;margin-top:2px;}
+.si-chg.up{color:#B91C1C;}
+.si-chg.dn{color:#15803D;}
+.si-chg.eq{color:var(--ink3);}
+html{overflow-y:auto !important;height:auto !important;}
 </style>
 </head>
 <body>
 
+<!-- NAV -->
 <div class="nav">
-  <div class="nav-logo" onclick="go('h')">
-    <div class="nav-logo-main">MEAT INSIGHT</div>
-    <div class="nav-logo-sub">고기업종 전문 플랫폼</div>
+  <div class="logo" onclick="go('h')">
+    <div class="logo-main">MEAT INSIGHT</div>
+    <div class="logo-by">
+      <span class="logo-by-text" style="color:#C9A84C;font-size:10px;letter-spacing:2px;">고기업종 전문 플랫폼</span>
+    </div>
   </div>
   <div class="nav-links">
     <button class="nb on" id="nb-h" onclick="go('h')">홈</button>
+    <button class="nb" id="nb-si" onclick="go('si')">📈 시세</button>
     <button class="nb" id="nb-c" onclick="go('c')">창업·계산기</button>
     <button class="nb" id="nb-sup" onclick="go('sup')">공급사</button>
     <button class="nb" id="nb-x" onclick="go('x')">폐업·철거</button>
@@ -342,201 +363,281 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:16p
 
 <!-- ═══ 홈 ═══ -->
 <div class="pg on" id="pg-h">
-  <div class="hero">
-    <div class="hero-glow"></div>
-    <div class="hero-eyebrow"><div class="hero-ey-line"></div><div class="hero-ey-txt">고기업종 전문 플랫폼</div></div>
-    <div class="trust-row">
-      <div class="trust-chip"><div class="trust-dot"></div><span class="trust-txt">국내 Top 5 도축장</span></div>
-      <div class="trust-chip"><div class="trust-dot"></div><span class="trust-txt">부분육 경매 최초 도입</span></div>
-      <div class="trust-chip"><div class="trust-dot"></div><span class="trust-txt">공급사 38개 입점</span></div>
-      <div class="trust-chip"><div class="trust-dot"></div><span class="trust-txt">컨설팅 고객 3,800+</span></div>
+  <div class="hero" style="background:#0F1E3D;">
+    <div class="hero-eye"><div class="eye-line"></div><div class="eye-txt">고기업종 전문 플랫폼</div></div>
+    <div class="trust-badges">
+      <div class="trust-badge"><div class="trust-dot" style="background:#C9A84C;"></div><span class="trust-txt">국내 Top 5 도축장</span></div>
+      <div class="trust-badge"><div class="trust-dot" style="background:#C9A84C;"></div><span class="trust-txt">부분육 경매 최초 도입</span></div>
+      <div class="trust-badge"><div class="trust-dot" style="background:#C9A84C;"></div><span class="trust-txt">전국 공급사 38개 입점</span></div>
+      <div class="trust-badge"><div class="trust-dot" style="background:#C9A84C;"></div><span class="trust-txt">컨설팅 고객 3,800+</span></div>
     </div>
-    <h1>정육·고깃집 사장님<br>처음부터 끝까지<br><em>함께합니다</em></h1>
-    <p class="hero-sub">창업 컨설팅 · 원가 계산 · 상가·집기 매물<br>폐업 철거 · 지원금 신청까지</p>
-    <div class="hero-search">
-      <input placeholder="지역, 업종, 품목으로 검색..."/>
-      <button>검색</button>
-    </div>
-    <div class="filter-chips">
-      <span class="fchip on" onclick="filterL(this,'a')">전체 매물</span>
-      <span class="fchip" onclick="filterL(this,'s')">상가·권리금</span>
-      <span class="fchip" onclick="filterL(this,'i')">집기·장비</span>
-      <span class="fchip" onclick="filterL(this,'f')">식자재·재고</span>
+    <h1>정육·고깃집 사장님<br>처음부터 끝까지<br><em style="color:#C9A84C;">함께합니다</em></h1>
+    <div class="hero-sub">정육점·고깃집 창업 컨설팅 · 원가 계산 · 상가·집기 매물<br>폐업 철거 · 지원금 신청까지 — 고기업종 전문 플랫폼</div>
+    <div class="hero-search"><input placeholder="지역, 업종, 품목으로 검색..."/><button>검색</button></div>
+    <div class="hchips">
+      <span class="hchip on" onclick="fL(this,'a')">전체 매물</span>
+      <span class="hchip" onclick="fL(this,'s')">상가·권리금</span>
+      <span class="hchip" onclick="fL(this,'i')">집기·장비</span>
+      <span class="hchip" onclick="fL(this,'f')">식자재·재고</span>
     </div>
   </div>
 
-  <div class="svc-strip">
-    <div class="svc-item" onclick="go('c')">
-      <div class="svc-num">01</div>
-      <div class="svc-ico" style="background:var(--g3);">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="1" y="11" width="4" height="10" rx="1" fill="#5A4A00"/><rect x="7" y="6" width="4" height="15" rx="1" fill="#5A4A00" opacity=".7"/><rect x="13" y="2" width="4" height="19" rx="1" fill="#5A4A00" opacity=".45"/></svg>
-      </div>
+  <div class="svcs">
+    <div class="svc r" onclick="go('c')">
+      <div class="svc-n" style="color:#C9A84C;">01</div>
+      <div class="svc-ico ir"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="9" width="3" height="8" rx="1" fill="#B91C1C"/><rect x="6" y="5" width="3" height="12" rx="1" fill="#B91C1C" opacity=".7"/><rect x="11" y="2" width="3" height="15" rx="1" fill="#B91C1C" opacity=".45"/></svg></div>
       <div class="svc-t">창업 컨설팅</div>
       <div class="svc-d">상권분석·원가계산기<br>전문가 상담</div>
     </div>
-    <div class="svc-item" onclick="go('r')">
-      <div class="svc-num">02</div>
-      <div class="svc-ico" style="background:rgba(15,30,61,.08);">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="1" y="9" width="20" height="12" rx="2" fill="#0F1E3D" opacity=".25"/><rect x="3" y="6" width="16" height="9" rx="1.5" fill="#0F1E3D" opacity=".45"/><rect x="7" y="2" width="8" height="8" rx="1.2" fill="#0F1E3D"/></svg>
-      </div>
+    <div class="svc g" onclick="go('r')">
+      <div class="svc-n" style="color:#C9A84C;">02</div>
+      <div class="svc-ico ig"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="7" width="16" height="9" rx="2" fill="#B45309" opacity=".25"/><rect x="3" y="4" width="12" height="7" rx="1.5" fill="#B45309" opacity=".45"/><rect x="6" y="1" width="6" height="6" rx="1" fill="#B45309"/></svg></div>
       <div class="svc-t">매물 등록</div>
       <div class="svc-d">상가·집기·식자재<br>무료 등록</div>
     </div>
-    <div class="svc-item" onclick="go('x')">
-      <div class="svc-num">03</div>
-      <div class="svc-ico" style="background:#F5F5F5;">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 19L5.5 9h11L19 19H3z" fill="#333" opacity=".3"/><rect x="2" y="6" width="18" height="3.5" rx="1" fill="#333" opacity=".55"/><path d="M8.5 6V4.5A1.5 1.5 0 0110 3h2a1.5 1.5 0 011.5 1.5V6" stroke="#333" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>
-      </div>
+    <div class="svc k" onclick="go('x')">
+      <div class="svc-n" style="color:#C9A84C;">03</div>
+      <div class="svc-ico ik"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 15L5 7h8l2 8H3z" fill="#292524" opacity=".35"/><rect x="2" y="5" width="14" height="2.5" rx="1" fill="#292524" opacity=".55"/><path d="M7 5V3.5C7 2.7 7.7 2 8.5 2h1C10.3 2 11 2.7 11 3.5V5" stroke="#292524" stroke-width="1.2" fill="none"/></svg></div>
       <div class="svc-t">폐업 철거</div>
       <div class="svc-d">검증업체 연결<br>에스크로 결제</div>
     </div>
-    <div class="svc-item" onclick="go('s')">
-      <div class="svc-num">04</div>
-      <div class="svc-ico" style="background:#EFF6FF;">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="9" fill="#1E40AF" opacity=".12"/><circle cx="11" cy="11" r="5.5" fill="#1E40AF" opacity=".18"/><text x="11" y="14.5" text-anchor="middle" font-size="10" font-weight="700" fill="#1E40AF" font-family="sans-serif">₩</text></svg>
-      </div>
+    <div class="svc b" onclick="go('s')">
+      <div class="svc-n" style="color:#C9A84C;">04</div>
+      <div class="svc-ico ib"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" fill="#1D4ED8" opacity=".15"/><text x="9" y="12" text-anchor="middle" font-size="9" font-weight="700" fill="#1D4ED8" font-family="sans-serif">₩</text></svg></div>
       <div class="svc-t">폐업 지원금</div>
       <div class="svc-d">평균 180만원<br>무료 신청 대행</div>
     </div>
   </div>
 
-  <div class="stat-bar">
-    <div class="stat-cell"><div class="stat-n">1,247</div><div class="stat-l">등록 매물</div></div>
-    <div class="stat-cell"><div class="stat-n">52년</div><div class="stat-l">협신식품 업력</div></div>
-    <div class="stat-cell"><div class="stat-n">Top 5</div><div class="stat-l">국내 도축장</div></div>
-    <div class="stat-cell"><div class="stat-n">3,800+</div><div class="stat-l">컨설팅 고객</div></div>
+  <div class="statbar" style="background:#060E1C;">
+    <div class="stc" style="background:#060E1C;"><div class="stn">1,247</div><div class="stl">등록 매물</div></div>
+    <div class="stc" style="background:#060E1C;"><div class="stn">52년</div><div class="stl">협신식품 업력</div></div>
+    <div class="stc" style="background:#060E1C;"><div class="stn">Top 5</div><div class="stl">국내 도축장 규모</div></div>
+    <div class="stc" style="background:#060E1C;"><div class="stn">3,800+</div><div class="stl">컨설팅 고객</div></div>
   </div>
 
   <div class="sec">
-    <div class="sec-hd"><div class="sec-title">최근 등록 매물</div><div class="sec-more">전체보기 →</div></div>
-    <div class="listing-grid" id="listing-grid"></div>
+    <div class="sech"><div class="sect" style="color:#0F1E3D;font-size:18px;">최근 등록 매물</div><div class="secm">전체보기 →</div></div>
+    <div class="lgrid" id="lg"></div>
   </div>
 
-  <div class="divider"></div>
+  <div class="div0"></div>
 
   <div class="sec">
-    <div class="sec-hd"><div class="sec-title">컨설팅 서비스</div><div class="sec-more" onclick="go('c')">신청하기 →</div></div>
-    <div class="consult-grid">
+    <div class="sech"><div class="sect" style="color:#0F1E3D;font-size:18px;">컨설팅 서비스</div><div class="secm" onclick="go('c')">신청하기 →</div></div>
+    <div class="cgrid">
       <div class="cc" onclick="go('c')">
-        <span class="cc-badge badge-report">창업 리포트</span>
-        <div class="cc-title">정육점·고깃집 창업 리포트</div>
-        <div class="cc-desc">상권 분석 · 예상 매출 · 손익분기점 PDF</div>
-        <div class="cc-price">200,000원 <small>/ 건</small></div>
+        <span class="ccb ccbr">창업 리포트</span>
+        <div class="cct">정육점·고깃집 창업 리포트</div>
+        <div class="ccd">상권 분석 · 예상 매출 · 손익분기점 PDF 제공</div>
+        <div class="ccp">200,000원 <small>/ 건</small></div>
       </div>
       <div class="cc" onclick="go('c')">
-        <span class="cc-badge badge-consult">비대면 컨설팅</span>
-        <div class="cc-title">전문가 1:1 비대면 상담</div>
-        <div class="cc-desc">운영 · 원가 · 메뉴 · 폐업 전략까지</div>
-        <div class="cc-price">1,500,000원 <small>/ 회</small></div>
+        <span class="ccb ccbg">비대면 컨설팅</span>
+        <div class="cct">전문가 1:1 비대면 상담</div>
+        <div class="ccd">운영 · 원가 · 메뉴 · 폐업 전략까지</div>
+        <div class="ccp">1,500,000원 <small>/ 회</small></div>
       </div>
     </div>
   </div>
 
-  <div class="supply-banner">
-    <div class="sb-top">
+  <div class="sbanner">
+    <div class="sbanner-top">
       <div>
-        <div class="sb-ey">공급사 네트워크</div>
-        <div class="sb-title">정육·고기 공급사 직거래</div>
-        <div class="sb-sub">전국 검증된 공급사와 수수료 없이 직거래</div>
+        <div class="sbanner-ey">공급사 네트워크</div>
+        <div class="sbanner-t">정육·고기 공급사 직거래</div>
+        <div class="sbanner-s">전국 검증된 공급사와 정육점·고깃집을 직접 연결합니다</div>
       </div>
-      <button class="sb-btn" onclick="go('sup')">공급사 보기</button>
+      <button class="sbtn" onclick="go('sup')">공급사 전체보기</button>
     </div>
-    <div class="sb-specs">
-      <div class="sb-spec"><div class="sb-spec-n">38개</div><div class="sb-spec-l">입점 공급사</div></div>
-      <div class="sb-spec"><div class="sb-spec-n">전국</div><div class="sb-spec-l">배송 가능</div></div>
-      <div class="sb-spec"><div class="sb-spec-n">직거래</div><div class="sb-spec-l">중간 마진 없음</div></div>
+    <div class="sspec-row">
+      <div class="sspec"><div class="sspec-n">38개</div><div class="sspec-l">입점 공급사</div></div>
+      <div class="sspec"><div class="sspec-n">전국</div><div class="sspec-l">배송 가능</div></div>
+      <div class="sspec"><div class="sspec-n">직거래</div><div class="sspec-l">중간 마진 없음</div></div>
     </div>
   </div>
 
   <!-- 홈 공급사 미리보기 -->
   <div class="sec">
-    <div class="sec-hd"><div class="sec-title">입점 공급사</div><div class="sec-more" onclick="go('sup')">전체보기 →</div></div>
-    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">
-      <div class="sc featured" onclick="go('sup')">
-        <div class="sc-head"><div class="sc-logo"><div class="sc-logo-txt">협신<br>식품</div></div><div><div class="sc-badges"><span class="badge-ft">추천</span><span class="badge-vf">검증완료</span></div><div class="sc-name">협신식품 (주)</div><div class="sc-region">경기도 · 전국 배송</div></div></div>
-        <div class="sc-body"><div class="sc-cats"><span class="scat">한우</span><span class="scat">돼지</span><span class="scat">부분육</span></div><div class="sc-desc">수도권 유일 도축장. 부분육 경매 최초 도입.</div><div class="sc-specs"><div class="sc-spec"><div class="sc-spec-n">Top 5</div><div class="sc-spec-l">도축 규모</div></div><div class="sc-spec"><div class="sc-spec-n">52년</div><div class="sc-spec-l">업력</div></div><div class="sc-spec"><div class="sc-spec-n">당일</div><div class="sc-spec-l">수도권</div></div></div><div class="sc-foot"><button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button><button class="btn-detail" onclick="go('sup')">상세보기</button></div></div>
+    <div class="sech"><div class="sect" style="color:#0F1E3D;font-size:18px;">입점 공급사</div><div class="secm" onclick="go('sup')">전체보기 →</div></div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+
+      <div class="sc featured" onclick="go('sup')" style="cursor:pointer;">
+        <div class="sc-head">
+          <div class="sc-logo"><div class="sc-logo-txt">협신<br>식품</div></div>
+          <div>
+            <div class="sc-badges"><span class="badge-ft">추천</span><span class="badge-vf">검증완료</span></div>
+            <div class="sc-name">협신식품 (주)</div>
+            <div class="sc-region">경기도 · 전국 배송</div>
+          </div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-cats"><span class="scat">한우</span><span class="scat">돼지</span><span class="scat">부분육</span></div>
+          <div class="sc-desc">수도권 유일 도축장. 부분육 경매 최초 도입.</div>
+          <div class="sc-specs">
+            <div class="ssp"><div class="sspn">Top 5</div><div class="sspl">도축 규모</div></div>
+            <div class="ssp"><div class="sspn">52년</div><div class="sspl">업력</div></div>
+            <div class="ssp"><div class="sspn">당일</div><div class="sspl">수도권 배송</div></div>
+          </div>
+          <div class="sc-foot">
+            <button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button>
+            <button class="btn-more" onclick="go('sup')">상세보기</button>
+          </div>
+        </div>
       </div>
-      <div class="sc" onclick="go('sup')">
-        <div class="sc-head"><div class="sc-logo"><div class="sc-logo-txt">강원<br>한우</div></div><div><div class="sc-badges"><span class="badge-vf">검증완료</span><span class="badge-ad">광고</span></div><div class="sc-name">강원한우 직판장</div><div class="sc-region">강원도 · 전국 배송</div></div></div>
-        <div class="sc-body"><div class="sc-cats"><span class="scat">한우</span><span class="scat">1++등급</span></div><div class="sc-desc">횡성 한우 산지 직송.</div><div class="sc-specs"><div class="sc-spec"><div class="sc-spec-n">1++</div><div class="sc-spec-l">등급</div></div><div class="sc-spec"><div class="sc-spec-n">산지</div><div class="sc-spec-l">직송</div></div><div class="sc-spec"><div class="sc-spec-n">15년</div><div class="sc-spec-l">업력</div></div></div><div class="sc-foot"><button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button><button class="btn-detail" onclick="go('sup')">상세보기</button></div></div>
+
+      <div class="sc" onclick="go('sup')" style="cursor:pointer;">
+        <div class="sc-head">
+          <div class="sc-logo"><div class="sc-logo-txt">한우<br>직판</div></div>
+          <div>
+            <div class="sc-badges"><span class="badge-vf">검증완료</span><span class="badge-ad">광고</span></div>
+            <div class="sc-name">강원한우 직판장</div>
+            <div class="sc-region">강원도 · 전국 배송</div>
+          </div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-cats"><span class="scat">한우</span><span class="scat">1++등급</span></div>
+          <div class="sc-desc">강원도 횡성 한우 산지 직송.</div>
+          <div class="sc-specs">
+            <div class="ssp"><div class="sspn">1++</div><div class="sspl">등급 전문</div></div>
+            <div class="ssp"><div class="sspn">산지</div><div class="sspl">직송</div></div>
+            <div class="ssp"><div class="sspn">15년</div><div class="sspl">업력</div></div>
+          </div>
+          <div class="sc-foot">
+            <button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button>
+            <button class="btn-more" onclick="go('sup')">상세보기</button>
+          </div>
+        </div>
       </div>
+
+      <div class="sc" onclick="go('sup')" style="cursor:pointer;">
+        <div class="sc-head">
+          <div class="sc-logo"><div class="sc-logo-txt">제주<br>흑돼지</div></div>
+          <div>
+            <div class="sc-badges"><span class="badge-vf">검증완료</span></div>
+            <div class="sc-name">제주 흑돼지 영농조합</div>
+            <div class="sc-region">제주도 · 전국 배송</div>
+          </div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-cats"><span class="scat">흑돼지</span><span class="scat">삼겹</span></div>
+          <div class="sc-desc">제주 인증 흑돼지. 고깃집 B2B 특화.</div>
+          <div class="sc-specs">
+            <div class="ssp"><div class="sspn">제주</div><div class="sspl">인증</div></div>
+            <div class="ssp"><div class="sspn">B2B</div><div class="sspl">전문</div></div>
+            <div class="ssp"><div class="sspn">익일</div><div class="sspl">전국 배송</div></div>
+          </div>
+          <div class="sc-foot">
+            <button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button>
+            <button class="btn-more" onclick="go('sup')">상세보기</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sc" onclick="go('sup')" style="cursor:pointer;">
+        <div class="sc-head">
+          <div class="sc-logo"><div class="sc-logo-txt">수입<br>육류</div></div>
+          <div>
+            <div class="sc-badges"><span class="badge-vf">검증완료</span><span class="badge-ad">광고</span></div>
+            <div class="sc-name">미국산 냉동육 직수입</div>
+            <div class="sc-region">인천 · 전국 배송</div>
+          </div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-cats"><span class="scat">미국산</span><span class="scat">호주산</span></div>
+          <div class="sc-desc">미국·호주 직수입. 소량 발주 가능.</div>
+          <div class="sc-specs">
+            <div class="ssp"><div class="sspn">직수입</div><div class="sspl">마진 없음</div></div>
+            <div class="ssp"><div class="sspn">소량</div><div class="sspl">발주 가능</div></div>
+            <div class="ssp"><div class="sspn">20년</div><div class="sspl">업력</div></div>
+          </div>
+          <div class="sc-foot">
+            <button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button>
+            <button class="btn-more" onclick="go('sup')">상세보기</button>
+          </div>
+        </div>
+      </div>
+
     </div>
-    <button onclick="go('sup')" style="width:100%;margin-top:12px;padding:13px;background:var(--n2);color:var(--g);border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;">공급사 전체보기 →</button>
+    <div style="margin-top:12px;">
+      <button onclick="go('sup')" style="width:100%;padding:12px;background:var(--dk2);color:#F5EFE6;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans);">공급사 전체보기 →</button>
+    </div>
   </div>
-</div>
+
+  <div style="height:20px;"></div>
 
 <!-- ═══ 창업·계산기 ═══ -->
 <div class="pg" id="pg-c">
-  <div class="page-hdr" onclick="go('h')"><span class="page-hdr-back">←</span><span class="page-hdr-title">창업 컨설팅 · 원가 계산기</span></div>
-  <div class="tab-bar">
-    <button class="tab-btn on" onclick="setTab(this,0)">컨설팅 신청</button>
-    <button class="tab-btn" onclick="setTab(this,1)">원가 계산기</button>
+  <div class="phdr" onclick="go('h')"><span class="phdr-back">←</span><span class="phdr-t">창업 컨설팅 · 원가 계산기</span></div>
+  <div class="tabs">
+    <button class="tab on" onclick="sCT(this,0)">컨설팅 신청</button>
+    <button class="tab" onclick="sCT(this,1)">원가 계산기</button>
   </div>
-  <div id="tab-0">
-    <div class="p-body">
-      <div class="p-card">
-        <span class="p-badge badge-report">Report</span>
-        <div class="p-title">정육점 · 고깃집 창업 리포트</div>
-        <div class="p-desc">원하는 지역·업종의 상권을 심층 분석하고 예상 매출·초기비용·손익분기점까지 담긴 PDF 리포트를 받아보세요.</div>
-        <div class="p-includes">
-          <div class="p-inc"><div class="p-inc-dot"></div>반경 500m 상권 분석 (유동인구·경쟁점)</div>
-          <div class="p-inc"><div class="p-inc-dot"></div>업종별 예상 월매출 · 원가율 데이터</div>
-          <div class="p-inc"><div class="p-inc-dot"></div>초기 투자비용 산정표 · 손익분기점</div>
-          <div class="p-inc"><div class="p-inc-dot"></div>지역 맞춤 입지 추천</div>
+  <div id="cv0">
+    <div class="pbody">
+      <div class="pcard">
+        <span class="pcb pcbr">Report</span>
+        <div class="pct">정육점 · 고깃집 창업 리포트</div>
+        <div class="pcd">원하는 지역·업종의 상권을 심층 분석하고 예상 매출·초기비용·손익분기점까지 담긴 PDF 리포트를 받아보세요.</div>
+        <div class="pci">
+          <div class="inc"><div class="incb"></div>반경 500m 상권 분석 (유동인구·경쟁점)</div>
+          <div class="inc"><div class="incb"></div>업종별 예상 월매출 · 원가율 데이터</div>
+          <div class="inc"><div class="incb"></div>초기 투자비용 산정표 · 손익분기점</div>
+          <div class="inc"><div class="incb"></div>지역 맞춤 입지 추천</div>
         </div>
-        <div class="p-price">200,000원 <small>/ 건 · 3~5일 소요</small></div>
-        <button class="btn-apply" onclick="alert('카카오채널로 신청해주세요.')">리포트 신청하기</button>
+        <div class="pcp">200,000원 <small>/ 건 · 3~5일 소요</small></div>
+        <button class="bfull" onclick="alert('신청 페이지로 연결됩니다.\n\n카카오채널로 문의해주세요.')">리포트 신청하기</button>
       </div>
-      <div class="p-card">
-        <span class="p-badge badge-consult">Consulting</span>
-        <div class="p-title">1:1 비대면 전문가 컨설팅</div>
-        <div class="p-desc">고기 업종 전담 컨설턴트와 60분 화상 상담. 원가 구조부터 폐업 절차까지 맞춤 전략을 드립니다.</div>
-        <div class="p-includes">
-          <div class="p-inc"><div class="p-inc-dot"></div>60분 화상 심층 상담</div>
-          <div class="p-inc"><div class="p-inc-dot"></div>원가율 · 수익 구조 분석</div>
-          <div class="p-inc"><div class="p-inc-dot"></div>메뉴 · 운영 개선 전략</div>
-          <div class="p-inc"><div class="p-inc-dot"></div>상담 후 요약 리포트 제공</div>
+      <div class="pcard">
+        <span class="pcb pcbg">Consulting</span>
+        <div class="pct">1:1 비대면 전문가 컨설팅</div>
+        <div class="pcd">고기 업종 전담 컨설턴트와 60분 화상 상담. 원가 구조부터 폐업 절차까지 맞춤 전략을 드립니다.</div>
+        <div class="pci">
+          <div class="inc"><div class="incb"></div>60분 화상 심층 상담</div>
+          <div class="inc"><div class="incb"></div>원가율 · 수익 구조 분석</div>
+          <div class="inc"><div class="incb"></div>메뉴 · 운영 개선 전략</div>
+          <div class="inc"><div class="incb"></div>상담 후 요약 리포트 제공</div>
         </div>
-        <div class="p-price">1,500,000원 <small>/ 회</small></div>
-        <button class="btn-apply" onclick="alert('카카오채널로 신청해주세요.')">컨설팅 신청하기</button>
+        <div class="pcp">1,500,000원 <small>/ 회</small></div>
+        <button class="bfull" onclick="alert('신청 페이지로 연결됩니다.\n\n카카오채널로 문의해주세요.')">컨설팅 신청하기</button>
       </div>
     </div>
   </div>
-  <div id="tab-1" style="display:none;">
-    <div class="p-body">
-      <div class="calc-tabs">
-        <button class="ct on" onclick="setCalc(this,0)">원가율 계산</button>
-        <button class="ct" onclick="setCalc(this,1)">손익분기점</button>
-        <button class="ct" onclick="setCalc(this,2)">메뉴 가격</button>
+  <div id="cv1" style="display:none;">
+    <div class="pbody">
+      <div class="ctabs">
+        <button class="ct on" onclick="sCC(this,0)">원가율 계산</button>
+        <button class="ct" onclick="sCC(this,1)">손익분기점</button>
+        <button class="ct" onclick="sCC(this,2)">메뉴 가격</button>
       </div>
-      <div class="calc-card" id="calc-0">
-        <div class="r2"><div><label class="calc-label">판매가 (원)</label><input class="calc-input" type="number" id="s" value="35000" step="500" oninput="cC()"/></div><div><label class="calc-label">매입원가 (원)</label><input class="calc-input" type="number" id="c" value="21000" step="500" oninput="cC()"/></div></div>
-        <div class="r2"><div><label class="calc-label">월 판매량</label><input class="calc-input" type="number" id="q" value="200" oninput="cC()"/></div><div><label class="calc-label">부대비용 (%)</label><input class="calc-input" type="number" id="e" value="5" oninput="cC()"/></div></div>
-        <div class="result-grid">
-          <div class="result-card"><div class="result-label">원가율</div><div class="result-value" id="r1">60.0%</div></div>
-          <div class="result-card"><div class="result-label">순마진율</div><div class="result-value" id="r2">35.0%</div></div>
-          <div class="result-card"><div class="result-label">건당 순이익</div><div class="result-value" id="r3">12,250원</div></div>
-          <div class="result-card"><div class="result-label">월 순이익</div><div class="result-value" id="r4">2,450,000원</div></div>
+      <div class="calccard" id="cp0">
+        <div class="r2"><div><label class="cl">판매가 (원)</label><input class="ci" type="number" id="s" value="35000" step="500" oninput="cC()"/></div><div><label class="cl">매입원가 (원)</label><input class="ci" type="number" id="c" value="21000" step="500" oninput="cC()"/></div></div>
+        <div class="r2"><div><label class="cl">월 판매량</label><input class="ci" type="number" id="q" value="200" oninput="cC()"/></div><div><label class="cl">부대비용 (%)</label><input class="ci" type="number" id="e" value="5" oninput="cC()"/></div></div>
+        <div class="rrow">
+          <div class="rc"><div class="rcl">원가율</div><div class="rcv" id="r1">60.0%</div></div>
+          <div class="rc"><div class="rcl">순마진율</div><div class="rcv" id="r2">35.0%</div></div>
+          <div class="rc"><div class="rcl">건당 순이익</div><div class="rcv" id="r3">12,250원</div></div>
+          <div class="rc"><div class="rcl">월 순이익</div><div class="rcv" id="r4">2,450,000원</div></div>
         </div>
       </div>
-      <div class="calc-card" id="calc-1" style="display:none;">
-        <div><label class="calc-label">월 고정비 (임대+인건비, 원)</label><input class="calc-input" type="number" id="bf" value="3000000" oninput="cB()"/></div>
-        <div class="r2"><div><label class="calc-label">평균 객단가 (원)</label><input class="calc-input" type="number" id="ba" value="35000" oninput="cB()"/></div><div><label class="calc-label">원가율 (%)</label><input class="calc-input" type="number" id="br" value="60" oninput="cB()"/></div></div>
-        <div class="result-grid">
-          <div class="result-card"><div class="result-label">월 손익분기 매출</div><div class="result-value" id="b1">7,500,000원</div></div>
-          <div class="result-card"><div class="result-label">하루 필요 매출</div><div class="result-value" id="b2">250,000원</div></div>
-          <div class="result-card"><div class="result-label">하루 테이블 수</div><div class="result-value" id="b3">7.1팀</div></div>
-          <div class="result-card"><div class="result-label">공헌이익률</div><div class="result-value" id="b4">40.0%</div></div>
+      <div class="calccard" id="cp1" style="display:none;">
+        <div><label class="cl">월 고정비 (임대+인건비, 원)</label><input class="ci" type="number" id="bf" value="3000000" oninput="cB()"/></div>
+        <div class="r2"><div><label class="cl">평균 객단가 (원)</label><input class="ci" type="number" id="ba" value="35000" oninput="cB()"/></div><div><label class="cl">원가율 (%)</label><input class="ci" type="number" id="br" value="60" oninput="cB()"/></div></div>
+        <div class="rrow">
+          <div class="rc"><div class="rcl">월 손익분기 매출</div><div class="rcv" id="b1">7,500,000원</div></div>
+          <div class="rc"><div class="rcl">하루 필요 매출</div><div class="rcv" id="b2">250,000원</div></div>
+          <div class="rc"><div class="rcl">하루 테이블 수</div><div class="rcv" id="b3">7.1팀</div></div>
+          <div class="rc"><div class="rcl">공헌이익률</div><div class="rcv" id="b4">40.0%</div></div>
         </div>
       </div>
-      <div class="calc-card" id="calc-2" style="display:none;">
-        <div class="r2"><div><label class="calc-label">식재료 원가 (원)</label><input class="calc-input" type="number" id="mi" value="12000" oninput="cM()"/></div><div><label class="calc-label">목표 원가율 (%)</label><input class="calc-input" type="number" id="mt" value="35" oninput="cM()"/></div></div>
-        <div><label class="calc-label">경쟁사 평균가 (원)</label><input class="calc-input" type="number" id="mc" value="32000" oninput="cM()"/></div>
-        <div class="result-grid">
-          <div class="result-card"><div class="result-label">적정 판매가</div><div class="result-value" id="m1">34,286원</div></div>
-          <div class="result-card"><div class="result-label">경쟁사 대비</div><div class="result-value" id="m2">+7.1%</div></div>
-          <div class="result-card"><div class="result-label">건당 마진</div><div class="result-value" id="m3">22,286원</div></div>
-          <div class="result-card"><div class="result-label">권장 가격대</div><div class="result-value" id="m4">32~36,000원</div></div>
+      <div class="calccard" id="cp2" style="display:none;">
+        <div class="r2"><div><label class="cl">식재료 원가 (원)</label><input class="ci" type="number" id="mi" value="12000" oninput="cM()"/></div><div><label class="cl">목표 원가율 (%)</label><input class="ci" type="number" id="mt" value="35" oninput="cM()"/></div></div>
+        <div><label class="cl">경쟁사 평균가 (원)</label><input class="ci" type="number" id="mc" value="32000" oninput="cM()"/></div>
+        <div class="rrow">
+          <div class="rc"><div class="rcl">적정 판매가</div><div class="rcv" id="m1">34,286원</div></div>
+          <div class="rc"><div class="rcl">경쟁사 대비</div><div class="rcv" id="m2">+7.1%</div></div>
+          <div class="rc"><div class="rcl">건당 마진</div><div class="rcv" id="m3">22,286원</div></div>
+          <div class="rc"><div class="rcl">권장 가격대</div><div class="rcv" id="m4">32~36,000원</div></div>
         </div>
       </div>
     </div>
@@ -545,14 +646,15 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:16p
 
 <!-- ═══ 공급사 ═══ -->
 <div class="pg" id="pg-sup">
-  <div class="page-hdr" onclick="go('h')"><span class="page-hdr-back">←</span><span class="page-hdr-title">공급사 디렉토리</span></div>
+  <div class="phdr" onclick="go('h')"><span class="phdr-back">←</span><span class="phdr-t">공급사 디렉토리</span></div>
   <div class="dir-hero">
     <div class="dir-ey"><div class="dir-ey-line"></div><div class="dir-ey-txt">공급사 네트워크</div></div>
     <div class="dir-title">정육·고기 전문<br>공급사를 직접 만나세요</div>
     <div class="dir-sub">도축장 · 정육 도매 · 수입육 · 부재료까지<br>검증된 공급사와 수수료 없이 직거래</div>
     <div class="dir-stats">
-      <div><div class="dir-stat-n">38</div><div class="dir-stat-l">입점 공급사</div></div>
-      <div style="margin-left:24px;"><div class="dir-stat-n">전국</div><div class="dir-stat-l">배송 가능</div></div>
+      <div><div class="dsn">38</div><div class="dsl">입점 공급사</div></div>
+      <div><div class="dsn">전국</div><div class="dsl">배송 가능</div></div>
+      <div><div class="dsn">직거래</div><div class="dsl">중간 마진 없음</div></div>
     </div>
   </div>
   <div class="ad-banner">
@@ -565,193 +667,269 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:16p
         <div class="ad-tags"><span class="ad-tag">한우</span><span class="ad-tag">돼지</span><span class="ad-tag">부분육</span><span class="ad-tag">경매</span></div>
       </div>
     </div>
-    <button class="ad-btn" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button>
+    <button class="ad-btn">문의하기</button>
   </div>
-  <div class="filter-bar">
-    <span class="filter-lbl">품목</span>
-    <button class="fchip on" onclick="setFilter(this)">전체</button>
-    <button class="fchip" onclick="setFilter(this)">한우·소</button>
-    <button class="fchip" onclick="setFilter(this)">돼지</button>
-    <button class="fchip" onclick="setFilter(this)">수입육</button>
-    <button class="fchip" onclick="setFilter(this)">부재료</button>
+  <div class="fbar">
+    <span class="flbl">품목</span>
+    <button class="fchip on" onclick="setF(this)">전체</button>
+    <button class="fchip" onclick="setF(this)">한우·소</button>
+    <button class="fchip" onclick="setF(this)">돼지</button>
+    <button class="fchip" onclick="setF(this)">수입육</button>
+    <button class="fchip" onclick="setF(this)">부재료</button>
   </div>
-  <div class="sup-grid">
-    <div class="sc featured"><div class="sc-head"><div class="sc-logo"><div class="sc-logo-txt">협신<br>식품</div></div><div><div class="sc-badges"><span class="badge-ft">추천</span><span class="badge-vf">검증완료</span></div><div class="sc-name">협신식품 (주)</div><div class="sc-region">경기도 · 전국 배송</div></div></div><div class="sc-body"><div class="sc-cats"><span class="scat">한우</span><span class="scat">돼지</span><span class="scat">부분육</span></div><div class="sc-desc">수도권 유일 도축장. 부분육 경매 최초 도입.</div><div class="sc-specs"><div class="sc-spec"><div class="sc-spec-n">Top 5</div><div class="sc-spec-l">도축 규모</div></div><div class="sc-spec"><div class="sc-spec-n">52년</div><div class="sc-spec-l">업력</div></div><div class="sc-spec"><div class="sc-spec-n">당일</div><div class="sc-spec-l">수도권</div></div></div><div class="sc-foot"><button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button><button class="btn-detail">상세보기</button></div></div></div>
-    <div class="sc"><div class="sc-head"><div class="sc-logo"><div class="sc-logo-txt">강원<br>한우</div></div><div><div class="sc-badges"><span class="badge-vf">검증완료</span><span class="badge-ad">광고</span></div><div class="sc-name">강원한우 직판장</div><div class="sc-region">강원도 · 전국 배송</div></div></div><div class="sc-body"><div class="sc-cats"><span class="scat">한우</span><span class="scat">1++등급</span></div><div class="sc-desc">횡성 한우 산지 직송.</div><div class="sc-specs"><div class="sc-spec"><div class="sc-spec-n">1++</div><div class="sc-spec-l">등급</div></div><div class="sc-spec"><div class="sc-spec-n">산지</div><div class="sc-spec-l">직송</div></div><div class="sc-spec"><div class="sc-spec-n">15년</div><div class="sc-spec-l">업력</div></div></div><div class="sc-foot"><button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button><button class="btn-detail">상세보기</button></div></div></div>
-    <div class="sc"><div class="sc-head"><div class="sc-logo"><div class="sc-logo-txt">제주<br>흑돼지</div></div><div><div class="sc-badges"><span class="badge-vf">검증완료</span></div><div class="sc-name">제주 흑돼지 영농조합</div><div class="sc-region">제주도 · 전국 배송</div></div></div><div class="sc-body"><div class="sc-cats"><span class="scat">흑돼지</span><span class="scat">삼겹</span></div><div class="sc-desc">제주 인증 흑돼지. 고깃집 B2B 특화.</div><div class="sc-specs"><div class="sc-spec"><div class="sc-spec-n">제주</div><div class="sc-spec-l">인증</div></div><div class="sc-spec"><div class="sc-spec-n">B2B</div><div class="sc-spec-l">전문</div></div><div class="sc-spec"><div class="sc-spec-n">익일</div><div class="sc-spec-l">전국</div></div></div><div class="sc-foot"><button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button><button class="btn-detail">상세보기</button></div></div></div>
-    <div class="sc"><div class="sc-head"><div class="sc-logo"><div class="sc-logo-txt">수입<br>육류</div></div><div><div class="sc-badges"><span class="badge-vf">검증완료</span><span class="badge-ad">광고</span></div><div class="sc-name">미국산 냉동육 직수입</div><div class="sc-region">인천 · 전국 배송</div></div></div><div class="sc-body"><div class="sc-cats"><span class="scat">미국산</span><span class="scat">호주산</span></div><div class="sc-desc">미국·호주 직수입. 소량 발주 가능.</div><div class="sc-specs"><div class="sc-spec"><div class="sc-spec-n">직수입</div><div class="sc-spec-l">마진 없음</div></div><div class="sc-spec"><div class="sc-spec-n">소량</div><div class="sc-spec-l">발주 가능</div></div><div class="sc-spec"><div class="sc-spec-n">20년</div><div class="sc-spec-l">업력</div></div></div><div class="sc-foot"><button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button><button class="btn-detail">상세보기</button></div></div></div>
+  <div class="sgrid">
+    <div class="sc featured">
+      <div class="sc-head"><div class="sc-logo"><div class="sc-logo-txt">협신<br>식품</div></div><div><div class="sc-badges"><span class="badge-ft">추천</span><span class="badge-vf">검증완료</span></div><div class="sc-name">협신식품 (주)</div><div class="sc-region">경기도 · 전국 배송</div></div></div>
+      <div class="sc-body"><div class="sc-cats"><span class="scat">한우</span><span class="scat">돼지</span><span class="scat">부분육</span></div><div class="sc-desc">수도권 유일 도축장. 부분육 경매 최초 도입.</div><div class="sc-specs"><div class="ssp"><div class="sspn">Top 5</div><div class="sspl">도축 규모</div></div><div class="ssp"><div class="sspn">52년</div><div class="sspl">업력</div></div><div class="ssp"><div class="sspn">당일</div><div class="sspl">수도권 배송</div></div></div><div class="sc-foot"><button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button><button class="btn-more">상세보기</button></div></div>
+    </div>
+    <div class="sc">
+      <div class="sc-head"><div class="sc-logo"><div class="sc-logo-txt">한우<br>직판</div></div><div><div class="sc-badges"><span class="badge-vf">검증완료</span><span class="badge-ad">광고</span></div><div class="sc-name">강원한우 직판장</div><div class="sc-region">강원도 · 전국 배송</div></div></div>
+      <div class="sc-body"><div class="sc-cats"><span class="scat">한우</span><span class="scat">1++등급</span></div><div class="sc-desc">강원도 횡성 한우 산지 직송.</div><div class="sc-specs"><div class="ssp"><div class="sspn">1++</div><div class="sspl">등급 전문</div></div><div class="ssp"><div class="sspn">산지</div><div class="sspl">직송</div></div><div class="ssp"><div class="sspn">15년</div><div class="sspl">업력</div></div></div><div class="sc-foot"><button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button><button class="btn-more">상세보기</button></div></div>
+    </div>
+    <div class="sc">
+      <div class="sc-head"><div class="sc-logo"><div class="sc-logo-txt">제주<br>흑돼지</div></div><div><div class="sc-badges"><span class="badge-vf">검증완료</span></div><div class="sc-name">제주 흑돼지 영농조합</div><div class="sc-region">제주도 · 전국 배송</div></div></div>
+      <div class="sc-body"><div class="sc-cats"><span class="scat">흑돼지</span><span class="scat">삼겹</span></div><div class="sc-desc">제주 인증 흑돼지. 고깃집 B2B 특화.</div><div class="sc-specs"><div class="ssp"><div class="sspn">제주</div><div class="sspl">인증</div></div><div class="ssp"><div class="sspn">B2B</div><div class="sspl">전문</div></div><div class="ssp"><div class="sspn">익일</div><div class="sspl">전국 배송</div></div></div><div class="sc-foot"><button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button><button class="btn-more">상세보기</button></div></div>
+    </div>
+    <div class="sc">
+      <div class="sc-head"><div class="sc-logo"><div class="sc-logo-txt">수입<br>육류</div></div><div><div class="sc-badges"><span class="badge-vf">검증완료</span><span class="badge-ad">광고</span></div><div class="sc-name">미국산 냉동육 직수입</div><div class="sc-region">인천 · 전국 배송</div></div></div>
+      <div class="sc-body"><div class="sc-cats"><span class="scat">미국산</span><span class="scat">호주산</span></div><div class="sc-desc">미국·호주 직수입. 소량 발주 가능.</div><div class="sc-specs"><div class="ssp"><div class="sspn">직수입</div><div class="sspl">마진 없음</div></div><div class="ssp"><div class="sspn">소량</div><div class="sspl">발주 가능</div></div><div class="ssp"><div class="sspn">20년</div><div class="sspl">업력</div></div></div><div class="sc-foot"><button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">문의하기</button><button class="btn-more">상세보기</button></div></div>
+    </div>
   </div>
   <div class="join-cta">
-    <div class="join-top"><div><div class="join-title">공급사로 입점하세요</div><div class="join-sub">전국 정육점·고깃집 사장님들에게 직접 노출</div></div><button class="btn-join" onclick="alert('카카오채널로 문의해주세요.')">입점 신청 →</button></div>
-    <div class="join-stats"><div class="join-stat"><div class="join-stat-n">무료</div><div class="join-stat-l">기본 등록</div></div><div class="join-stat"><div class="join-stat-n">3,800+</div><div class="join-stat-l">사장님 노출</div></div><div class="join-stat"><div class="join-stat-n">상단 노출</div><div class="join-stat-l">광고 상품</div></div></div>
+    <div class="join-top"><div><div class="join-t">공급사로 입점하세요</div><div class="join-s">전국 정육점·고깃집 사장님들에게<br>직접 노출되는 가장 빠른 방법</div></div><button class="btn-join" onclick="alert('입점 신청 안내\n\n카카오채널로 문의해주세요.')">입점 신청 →</button></div>
+    <div class="join-bens"><div class="jb"><div class="jbn">무료</div><div class="jbl">기본 등록</div></div><div class="jb"><div class="jbn">3,800+</div><div class="jbl">사장님 노출</div></div><div class="jb"><div class="jbn">상단 노출</div><div class="jbl">광고 상품</div></div></div>
   </div>
 </div>
 
 <!-- ═══ 폐업·철거 ═══ -->
 <div class="pg" id="pg-x">
-  <div class="page-hdr" onclick="go('h')"><span class="page-hdr-back">←</span><span class="page-hdr-title">폐업 철거 연결 서비스</span></div>
-  <div class="closure-hero"><div class="cl-hero-title">안전하고 합리적인<br>폐업 철거를 도와드립니다</div><div class="cl-hero-sub">검증된 파트너사 · 에스크로 결제 · 추가비용 없음</div></div>
+  <div class="phdr" onclick="go('h')"><span class="phdr-back">←</span><span class="phdr-t">폐업 철거 연결 서비스</span></div>
+  <div class="chero"><div class="cht">안전하고 합리적인<br>폐업 철거를 도와드립니다</div><div class="chs">검증된 파트너사 · 에스크로 결제 · 추가비용 없음</div></div>
   <div class="steps">
-    <div class="step"><div class="step-bubble">1</div><div class="step-content"><div class="step-title">무료 견적 신청</div><div class="step-desc">가게 위치·면적 입력 시 전국 파트너 2~3곳의 견적을 실시간으로 받아볼 수 있어요.</div><span class="step-link" onclick="alert('카카오채널로 견적 신청해주세요.')">무료 견적 신청 →</span></div></div>
-    <div class="step"><div class="step-bubble">2</div><div class="step-content"><div class="step-title">업체 비교 · 선택</div><div class="step-desc">검증된 업체 견적을 비교 후 선택하세요. 확정 후 추가비용은 절대 없습니다.</div></div></div>
-    <div class="step"><div class="step-bubble">3</div><div class="step-content"><div class="step-title">에스크로 안전결제</div><div class="step-desc">공사 완료 후 결제. 업체 먹튀·중간 추가 청구 걱정 없이 진행됩니다.</div></div></div>
-    <div class="step"><div class="step-bubble">4</div><div class="step-content"><div class="step-title">집기·상가 매물로 비용 회수</div><div class="step-desc">철거 전 집기와 상가를 마켓에 올리면 철거 비용 일부를 회수할 수 있어요.</div><span class="step-link" onclick="go('r')">지금 매물 등록하기 →</span></div></div>
+    <div class="step"><div class="sbub">1</div><div><div class="st">무료 견적 신청</div><div class="sd">가게 위치·면적 입력 시 전국 파트너 2~3곳의 견적을 실시간으로 받아볼 수 있어요.</div><span class="sl" onclick="alert('카카오채널로 견적 신청해주세요.')">무료 견적 신청 →</span></div></div>
+    <div class="step"><div class="sbub">2</div><div><div class="st">업체 비교 · 선택</div><div class="sd">검증된 업체 견적을 비교 후 선택하세요. 확정 후 추가비용은 절대 없습니다.</div></div></div>
+    <div class="step"><div class="sbub">3</div><div><div class="st">에스크로 안전결제</div><div class="sd">공사 완료 후 결제. 업체 먹튀·중간 추가 청구 걱정 없이 진행됩니다.</div></div></div>
+    <div class="step"><div class="sbub">4</div><div><div class="st">집기·상가 매물로 비용 회수</div><div class="sd">철거 전 집기와 상가를 마켓에 올리면 철거 비용 일부를 회수할 수 있어요.</div><span class="sl" onclick="go('r')">지금 매물 등록하기 →</span></div></div>
   </div>
-  <div style="padding:0 20px 6px;font-size:11px;color:var(--i3);letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">제휴 파트너</div>
-  <div class="partner-card"><div><div class="partner-name">무촌철거</div><div class="partner-desc">전국 300개 대리점 · 에스크로 결제 · 소상공인 특화</div></div><button class="btn-partner" onclick="alert('카카오채널로 문의해주세요.')">견적 받기</button></div>
+  <div style="padding:0 20px 8px;font-size:9px;color:var(--ink3);letter-spacing:1.5px;text-transform:uppercase;">제휴 파트너</div>
+  <div class="ptrow"><div><div class="ptname">무촌철거</div><div class="ptdesc">전국 300개 대리점 · 에스크로 결제 · 소상공인 특화</div></div><button class="ptbtn" onclick="alert('카카오채널로 문의해주세요.')">견적 받기</button></div>
+  <div style="height:20px;"></div>
 </div>
 
 <!-- ═══ 지원금 ═══ -->
 <div class="pg" id="pg-s">
-  <div class="page-hdr" onclick="go('h')"><span class="page-hdr-back">←</span><span class="page-hdr-title">폐업 지원금 신청 서비스</span></div>
-  <div class="subsidy-hero"><div class="sub-hero-ey">Government Support</div><div class="sub-hero-title">신청 안 하면<br>그냥 못 받습니다</div><div class="sub-hero-sub">복잡한 절차, 저희가 대신 해드립니다</div></div>
-  <div class="amount-card"><div class="amount-label">평균 수령액</div><div class="amount-value">180만원</div><div class="amount-desc">폐업 사장님 10명 중 4명은 몰라서 못 받아요</div></div>
-  <div class="sub-body">
-    <div class="sub-card"><span class="sub-badge">희망리턴패키지</span><div class="sub-title">점포 철거비 지원</div><div class="sub-desc">임차 사업자 대상 원상복구 비용 지원. 철거 시작 전 반드시 신청해야 합니다.</div><div class="sub-amount">최대 250만원</div><button class="btn-sub" onclick="alert('카카오채널로 문의해주세요.')">수령 가능 여부 무료 확인</button></div>
-    <div class="sub-card"><span class="sub-badge">재기 지원</span><div class="sub-title">재창업 · 재취업 지원금</div><div class="sub-desc">폐업 후 재창업·재취업을 준비하는 소상공인 대상. 교육비·사업화 자금 지원.</div><div class="sub-amount">최대 1,000만원</div><button class="btn-sub" onclick="alert('카카오채널로 문의해주세요.')">신청 대행 문의하기</button></div>
-    <div class="sub-card"><span class="sub-badge">채무조정</span><div class="sub-title">신용회복 · 채무조정 연계</div><div class="sub-desc">폐업 후 과도한 부채가 있는 경우 원금 감면·상환 기간 연장을 지원합니다.</div><div class="sub-amount">개별 협의</div><button class="btn-sub" onclick="alert('카카오채널로 문의해주세요.')">전문가 연결하기</button></div>
+  <div class="phdr" onclick="go('h')"><span class="phdr-back">←</span><span class="phdr-t">폐업 지원금 신청 서비스</span></div>
+  <div class="shero"><div class="shey">Government Support</div><div class="sht">신청 안 하면<br>그냥 못 받습니다</div><div class="shs">복잡한 절차, 저희가 대신 해드립니다</div></div>
+  <div class="ahero"><div class="albl">평균 수령액</div><div class="aval">180만원</div><div class="adesc">폐업 사장님 10명 중 4명은 몰라서 못 받아요</div></div>
+  <div class="subbody">
+    <div class="si"><span class="sibadge">희망리턴패키지</span><div class="sit">점포 철거비 지원</div><div class="sid">임차 사업자 대상 원상복구 비용 지원. 철거 시작 전 반드시 신청해야 합니다.</div><div class="sia">최대 250만원</div><button class="ssbtn" onclick="alert('카카오채널로 문의하시면\n수령 가능 여부를 무료로 확인해드립니다.')">수령 가능 여부 무료 확인</button></div>
+    <div class="si"><span class="sibadge">재기 지원</span><div class="sit">재창업 · 재취업 지원금</div><div class="sid">폐업 후 재창업·재취업을 준비하는 소상공인 대상. 교육비·사업화 자금 지원.</div><div class="sia">최대 1,000만원</div><button class="ssbtn" onclick="alert('카카오채널로 신청 대행 문의해주세요.')">신청 대행 문의하기</button></div>
+    <div class="si"><span class="sibadge">채무조정</span><div class="sit">신용회복 · 채무조정 연계</div><div class="sid">폐업 후 과도한 부채가 있는 경우 원금 감면·상환 기간 연장을 지원합니다.</div><div class="sia">개별 협의</div><button class="ssbtn" onclick="alert('카카오채널로 전문가 연결 문의해주세요.')">전문가 연결하기</button></div>
   </div>
 </div>
 
 <!-- ═══ 매물 등록 ═══ -->
 <div class="pg" id="pg-r">
-  <div class="page-hdr" onclick="go('h')"><span class="page-hdr-back">←</span><span class="page-hdr-title">매물 등록하기</span></div>
-  <div class="reg-body">
-    <div style="font-size:13px;color:var(--i3);margin-bottom:16px;">고기 업종 매물을 무료로 등록하세요</div>
-    <div class="form-block">
-      <div class="form-block-title">매물 종류 선택</div>
-      <div class="type-selector">
-        <div class="type-btn on" id="t0" onclick="selType(0)"><div class="type-btn-title">상가·권리금</div><div class="type-btn-sub">가게 전체 양도</div></div>
-        <div class="type-btn" id="t1" onclick="selType(1)"><div class="type-btn-title">집기·장비</div><div class="type-btn-sub">냉장고·절단기</div></div>
-        <div class="type-btn" id="t2" onclick="selType(2)"><div class="type-btn-title">식자재·재고</div><div class="type-btn-sub">육류·부재료</div></div>
+  <div class="phdr" onclick="go('h')"><span class="phdr-back">←</span><span class="phdr-t">매물 등록하기</span></div>
+  <div class="regbody">
+    <div style="font-size:14px;color:var(--ink3);margin-bottom:14px;">고기 업종 매물을 무료로 등록하세요</div>
+    <div class="fblk">
+      <div class="fbt">매물 종류 선택</div>
+      <div class="tsel">
+        <div class="ts on" id="ts0" onclick="sT(0)"><div class="tst">상가·권리금</div><div class="tss">가게 전체 양도</div></div>
+        <div class="ts" id="ts1" onclick="sT(1)"><div class="tst">집기·장비</div><div class="tss">냉장고·절단기</div></div>
+        <div class="ts" id="ts2" onclick="sT(2)"><div class="tst">식자재·재고</div><div class="tss">육류·부재료</div></div>
       </div>
     </div>
-    <div class="form-block">
-      <div class="form-block-title">업종 · 위치</div>
-      <label class="form-label">업종 <em>*</em></label>
-      <select class="form-input" style="appearance:auto;cursor:pointer;"><option>정육점</option><option>고깃집 (소고기)</option><option>고깃집 (돼지고기)</option><option>육가공업체</option><option>카페</option><option>음식점</option><option>기타</option></select>
-      <label class="form-label">주소 <em>*</em></label>
-      <input class="form-input" placeholder="도로명 주소 입력"/>
+    <div class="fblk">
+      <div class="fbt">업종 · 위치</div>
+      <label class="fl">업종 <em>*</em></label>
+      <select class="fi" style="appearance:auto;cursor:pointer;"><option>정육점</option><option>고깃집 (소고기)</option><option>고깃집 (돼지고기)</option><option>육가공업체</option><option>카페</option><option>음식점</option><option>기타</option></select>
+      <label class="fl">주소 <em>*</em></label>
+      <input class="fi" placeholder="도로명 주소 입력"/>
     </div>
-    <div class="form-block">
-      <div class="form-block-title">가격 정보</div>
-      <div class="r2-form"><div><label class="form-label">권리금 (만원)</label><input class="form-input" placeholder="없으면 0"/></div><div><label class="form-label">보증금 (만원)</label><input class="form-input" placeholder="만원 단위"/></div></div>
-      <div class="r2-form"><div><label class="form-label">월세 (만원)</label><input class="form-input" placeholder="만원 단위"/></div><div><label class="form-label">면적 (㎡)</label><input class="form-input" placeholder="예: 66"/></div></div>
+    <div class="fblk">
+      <div class="fbt">가격 정보</div>
+      <div class="r2f"><div><label class="fl">권리금 (만원)</label><input class="fi" placeholder="없으면 0"/></div><div><label class="fl">보증금 (만원)</label><input class="fi" placeholder="만원 단위"/></div></div>
+      <div class="r2f"><div><label class="fl">월세 (만원)</label><input class="fi" placeholder="만원 단위"/></div><div><label class="fl">면적 (㎡)</label><input class="fi" placeholder="예: 66"/></div></div>
     </div>
-    <div class="form-block">
-      <div class="form-block-title">사진 · 설명</div>
-      <div class="photo-drop"><div class="photo-drop-icon">+</div><div class="photo-drop-text">사진 추가 (최대 10장 · JPG, PNG)</div></div>
-      <div style="height:12px;"></div>
-      <label class="form-label">매물 설명</label>
-      <textarea class="form-input" rows="3" placeholder="단골 현황, 장비 상태, 양도 이유 등"></textarea>
-      <label class="form-label">연락처 <em>*</em></label>
-      <input class="form-input" placeholder="010-0000-0000"/>
+    <div class="fblk">
+      <div class="fbt">사진 · 설명</div>
+      <div class="pdrop"><div class="pdrop-i">+</div><div class="pdrop-t">사진 추가 (최대 10장 · JPG, PNG)</div></div>
+      <div style="height:10px;"></div>
+      <label class="fl">매물 설명</label>
+      <textarea class="fi" rows="3" placeholder="단골 현황, 장비 상태, 양도 이유 등"></textarea>
+      <label class="fl">연락처 <em>*</em></label>
+      <input class="fi" placeholder="010-0000-0000"/>
     </div>
-    <button class="btn-submit" onclick="alert('등록이 완료되었습니다!\n\n담당자가 확인 후 1일 내 연락드립니다.')">무료로 등록하기</button>
+    <button class="breg" onclick="alert('등록이 완료되었습니다!\n\n담당자가 확인 후 1일 내 연락드립니다.')">무료로 등록하기</button>
+  </div>
+</div>
+
+
+<!-- ═══ 시세/데이터 ═══ -->
+<div class="pg" id="pg-si">
+  <div class="phdr" onclick="go('h')"><span class="phdr-back">←</span><span class="phdr-t">📈 오늘의 축산물 시세</span></div>
+
+  <!-- 날짜 및 업데이트 시간 -->
+  <div style="background:var(--dk);padding:16px 20px 14px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div style="font-family:var(--serif);font-size:20px;color:var(--w);">축산물 도매 시세</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.4);" id="si-update">매일 오전 갱신</div>
+    </div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5);" id="si-date-full"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+      <button class="sichip on" id="sic-all" onclick="setSiCat(this,'all')">전체</button>
+      <button class="sichip" id="sic-han" onclick="setSiCat(this,'han')">한우</button>
+      <button class="sichip" id="sic-pig" onclick="setSiCat(this,'pig')">돼지</button>
+      <button class="sichip" id="sic-chk" onclick="setSiCat(this,'chk')">닭</button>
+      <button class="sichip" id="sic-imp" onclick="setSiCat(this,'imp')">수입육</button>
+    </div>
+  </div>
+
+  <!-- 광고 배너 -->
+  <div style="background:rgba(201,168,76,.08);border-top:1px solid rgba(201,168,76,.15);border-bottom:1px solid rgba(201,168,76,.15);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;background:var(--dk2);border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,168,76,.3);">
+        <span style="font-family:var(--serif);font-size:8px;color:var(--rm);text-align:center;line-height:1.2;font-weight:700;">협신<br>식품</span>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--rm);font-weight:700;margin-bottom:1px;">협신식품 (주) · 오늘 시세로 공급</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.5);">수도권 당일 배송 · Top 5 도축장</div>
+      </div>
+    </div>
+    <button onclick="alert('카카오채널로 문의해주세요.')" style="background:var(--rm);color:var(--dk);border:none;border-radius:7px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);">시세 문의</button>
+  </div>
+
+  <!-- 시세 카드 목록 -->
+  <div style="padding:16px 20px;" id="si-list"></div>
+
+  <!-- 트렌드 차트 섹션 -->
+  <div style="padding:0 20px 20px;">
+    <div style="background:#fff;border:1px solid var(--bd);border-radius:14px;padding:18px;">
+      <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px;">📊 주간 가격 트렌드</div>
+      <div style="font-size:12px;color:var(--ink3);margin-bottom:16px);">최근 7일 한우 1++ 등심 도매가 추이</div>
+      <div style="position:relative;height:160px;margin-top:14px;">
+        <canvas id="si-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 시세 정보 출처 -->
+  <div style="padding:0 20px 24px;">
+    <div style="background:var(--c2);border-radius:10px;padding:14px;font-size:12px;color:var(--ink3);line-height:1.7;">
+      📌 시세 정보는 <strong style="color:var(--ink2);">축산물품질평가원</strong> 공공 데이터를 기반으로 매일 오전 9시 갱신됩니다.<br>
+      실제 거래가와 차이가 있을 수 있으니 참고용으로만 활용해주세요.
+    </div>
+  </div>
+
+  <!-- 하단 CTA -->
+  <div style="margin:0 20px 24px;background:var(--dk);border-radius:14px;padding:18px;">
+    <div style="font-size:13px;color:var(--rm);font-weight:700;margin-bottom:4px;">📦 오늘 시세로 바로 주문하고 싶으세요?</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.55);margin-bottom:14px;">검증된 공급사와 직접 연결해드립니다</div>
+    <button onclick="go('sup')" style="width:100%;padding:12px;background:var(--rm);color:var(--dk);border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);">공급사 직거래 →</button>
   </div>
 </div>
 
 <!-- ═══ 마이페이지 ═══ -->
 <div class="pg" id="pg-m">
-  <div class="page-hdr" onclick="go('h')"><span class="page-hdr-back">←</span><span class="page-hdr-title">마이페이지</span></div>
-  <div class="my-hero"><div class="my-hero-title">내 매물 관리</div><div class="my-hero-sub">등록한 매물과 문의 현황을 확인하세요</div></div>
-  <div class="my-stats"><div class="my-stat"><div class="my-stat-n">2</div><div class="my-stat-l">등록 매물</div></div><div class="my-stat"><div class="my-stat-n">28</div><div class="my-stat-l">오늘 조회</div></div><div class="my-stat"><div class="my-stat-n">5</div><div class="my-stat-l">문의 수</div></div></div>
-  <div class="my-list">
-    <div style="font-size:11px;color:var(--i3);letter-spacing:1.5px;margin-bottom:12px;text-transform:uppercase;font-weight:600;">등록한 매물</div>
-    <div class="my-item"><div class="my-thumb"></div><div class="my-info"><div class="my-title">정육점 양도 — 경기 안양시</div><div class="my-sub">권리금 2,500만원 · 3일 전 등록</div><span class="my-badge">노출 중</span></div><div class="my-btns"><button class="btn-edit">수정</button><button class="btn-edit btn-del">삭제</button></div></div>
-    <div class="my-item"><div class="my-thumb"></div><div class="my-info"><div class="my-title">정육 냉장 쇼케이스 2m</div><div class="my-sub">180만원 · 오늘 등록</div><span class="my-badge">노출 중</span></div><div class="my-btns"><button class="btn-edit">수정</button><button class="btn-edit btn-del">삭제</button></div></div>
+  <div class="phdr" onclick="go('h')"><span class="phdr-back">←</span><span class="phdr-t">마이페이지</span></div>
+  <div class="myhero"><div class="myh">내 매물 관리</div><div class="myp">등록한 매물과 문의 현황을 확인하세요</div></div>
+  <div class="mystats">
+    <div class="myst"><div class="mystn">2</div><div class="mystl">등록 매물</div></div>
+    <div class="myst"><div class="mystn">28</div><div class="mystl">오늘 조회</div></div>
+    <div class="myst"><div class="mystn">5</div><div class="mystl">문의 수</div></div>
+  </div>
+  <div class="mylist">
+    <div style="font-size:9px;color:var(--ink3);letter-spacing:1.5px;margin-bottom:10px;text-transform:uppercase;">등록한 매물</div>
+    <div class="myitem"><div class="myimg"></div><div class="myinfo"><div class="myt">정육점 양도 — 경기 안양시</div><div class="mys">권리금 2,500만원 · 3일 전 등록</div><span class="bon">노출 중</span></div><div style="display:flex;gap:6px;"><button class="bsm">수정</button><button class="bsm bsmd">삭제</button></div></div>
+    <div class="myitem"><div class="myimg"></div><div class="myinfo"><div class="myt">정육 냉장 쇼케이스 2m</div><div class="mys">180만원 · 오늘 등록</div><span class="bon">노출 중</span></div><div style="display:flex;gap:6px;"><button class="bsm">수정</button><button class="bsm bsmd">삭제</button></div></div>
   </div>
 </div>
 
-<!-- 모바일 탭 -->
-<div class="mobile-tab">
-  <button class="mtab on" id="mt-h" onclick="go('h')"><span class="mtab-ico">🏠</span><span class="mtab-txt">홈</span></button>
-  <button class="mtab" id="mt-c" onclick="go('c')"><span class="mtab-ico">📊</span><span class="mtab-txt">컨설팅</span></button>
-  <button class="mtab" id="mt-r" onclick="go('r')"><span class="mtab-ico">✚</span><span class="mtab-txt">등록</span></button>
-  <button class="mtab" id="mt-sup" onclick="go('sup')"><span class="mtab-ico">🏭</span><span class="mtab-txt">공급사</span></button>
-  <button class="mtab" id="mt-m" onclick="go('m')"><span class="mtab-ico">👤</span><span class="mtab-txt">마이</span></button>
+<!-- 모바일 하단 탭 -->
+<div class="mobile-nav">
+  <button class="mnb on" id="mnb-h" onclick="go('h')"><span class="mnb-ico">🏠</span><span class="mnb-txt">홈</span></button>
+  <button class="mnb" id="mnb-si" onclick="go('si')"><span class="mnb-ico">📈</span><span class="mnb-txt">시세</span></button>
+  <button class="mnb" id="mnb-c" onclick="go('c')"><span class="mnb-ico">📊</span><span class="mnb-txt">컨설팅</span></button>
+  <button class="mnb" id="mnb-r" onclick="go('r')"><span class="mnb-ico">✚</span><span class="mnb-txt">등록</span></button>
+  <button class="mnb" id="mnb-sup" onclick="go('sup')"><span class="mnb-ico">🏭</span><span class="mnb-txt">공급사</span></button>
+  <button class="mnb" id="mnb-m" onclick="go('m')"><span class="mnb-ico">👤</span><span class="mnb-txt">마이</span></button>
 </div>
 
 <script>
 const D=[
-  {t:'s',tag:'상가·권리금',tc:'tag-store',ti:'정육점 양도 — 단골 다수',su:'49㎡ · 잔여 2년 · 장비 포함',pr:'권리금 2,500만원',p2:'보증금 1,500',lo:'경기 안양시',ag:'오늘',nw:true,pm:true},
-  {t:'i',tag:'집기·장비',tc:'tag-item',ti:'정육 냉장 쇼케이스 2m',su:'2년 사용 · 직거래 가능',pr:'180만원',p2:'',lo:'서울 은평구',ag:'1일 전',nw:false,pm:false},
-  {t:'s',tag:'상가·권리금',tc:'tag-store',ti:'삼겹살 전문점 양도',su:'66㎡ · 월세 150만',pr:'권리금 3,500만원',p2:'보증금 2,000',lo:'서울 마포구',ag:'2일 전',nw:false,pm:false},
-  {t:'i',tag:'집기·장비',tc:'tag-item',ti:'고기절단기 반자동',su:'업소용 · 상태 양호',pr:'95만원',p2:'',lo:'경기 수원시',ag:'3일 전',nw:false,pm:false},
-  {t:'s',tag:'상가·권리금',tc:'tag-store',ti:'한우 전문점 양도',su:'82㎡ · 프리미엄 인테리어',pr:'권리금 8,000만원',p2:'보증금 5,000',lo:'서울 강남구',ag:'4일 전',nw:false,pm:false},
-  {t:'f',tag:'식자재·재고',tc:'tag-food',ti:'냉동 삼겹살 재고 처분',su:'200kg · 유통기한 2개월',pr:'시세 60%',p2:'',lo:'인천 남동구',ag:'오늘',nw:true,pm:false},
+  {t:'s',tc:'ltr',tag:'상가·권리금',ti:'정육점 양도 — 단골 다수',su:'49㎡ · 잔여 2년 · 장비 포함',pr:'권리금 2,500만원',p2:'보증금 1,500',lo:'경기 안양시',ag:'오늘',nw:true},
+  {t:'i',tc:'ltg',tag:'집기·장비',ti:'정육 냉장 쇼케이스 2m',su:'2년 사용 · 직거래 가능',pr:'180만원',p2:'',lo:'서울 은평구',ag:'1일 전',nw:false},
+  {t:'s',tc:'ltr',tag:'상가·권리금',ti:'삼겹살 전문점 양도',su:'66㎡ · 월세 150만',pr:'권리금 3,500만원',p2:'보증금 2,000',lo:'서울 마포구',ag:'2일 전',nw:false},
+  {t:'i',tc:'ltg',tag:'집기·장비',ti:'고기절단기 반자동',su:'업소용 · 상태 양호',pr:'95만원',p2:'',lo:'경기 수원시',ag:'3일 전',nw:false},
+  {t:'s',tc:'ltr',tag:'상가·권리금',ti:'한우 전문점 양도',su:'82㎡ · 프리미엄 인테리어',pr:'권리금 8,000만원',p2:'보증금 5,000',lo:'서울 강남구',ag:'4일 전',nw:false},
+  {t:'f',tc:'ltg',tag:'식자재·재고',ti:'냉동 삼겹살 재고 처분',su:'200kg · 유통기한 2개월',pr:'시세 60%',p2:'',lo:'인천 남동구',ag:'오늘',nw:true},
 ];
-
-function renderListings(items){
-  const g=document.getElementById('listing-grid');
-  if(!g)return;
+function rdr(items){
+  const g=document.getElementById('lg');if(!g)return;
   g.innerHTML=items.map(d=>`
     <div class="lc">
-      <div class="lc-thumb">
-        <div class="lc-thumb-inner"></div>
-        ${d.pm?'<div class="lc-premium">상단노출</div>':''}
-      </div>
-      <div class="lc-body">
-        <div class="lc-tags">
-          <span class="lc-tag ${d.tc}">${d.tag}</span>
-          ${d.nw?'<span class="lc-tag tag-new">NEW</span>':''}
-        </div>
-        <div class="lc-title">${d.ti}</div>
-        <div class="lc-sub">${d.su}</div>
-        <div class="lc-price">${d.pr} <small>${d.p2}</small></div>
-        <div class="lc-foot"><span class="lc-loc">${d.lo}</span><span class="lc-ago">${d.ag}</span></div>
+      <div class="lthumb"><div class="lthi"></div></div>
+      <div class="lbody">
+        <div class="ltags"><span class="ltag ${d.tc}">${d.tag}</span>${d.nw?'<span class="ltag ltnew">NEW</span>':''}</div>
+        <div class="ltit">${d.ti}</div>
+        <div class="lsub">${d.su}</div>
+        <div class="lprice">${d.pr} <small>${d.p2}</small></div>
+        <div class="lfoot"><span class="lloc">${d.lo}</span><span class="lago">${d.ag}</span></div>
       </div>
     </div>`).join('');
 }
-renderListings(D);
+rdr(D);
 
-function filterL(el,t){
-  document.querySelectorAll('.filter-chips .fchip').forEach(e=>e.classList.remove('on'));
+function fL(el,t){
+  document.querySelectorAll('.hchip').forEach(e=>e.classList.remove('on'));
   el.classList.add('on');
-  renderListings(t==='a'?D:D.filter(d=>d.t===t));
+  rdr(t==='a'?D:D.filter(d=>d.t===t));
 }
 
 function go(p){
   document.querySelectorAll('.pg').forEach(e=>e.classList.remove('on'));
-  const el=document.getElementById('pg-'+p);
-  if(el)el.classList.add('on');
-  ['h','c','sup','x','s','m'].forEach(id=>{
-    const nb=document.getElementById('nb-'+id);
-    if(nb)nb.classList.toggle('on',id===p);
+  const target=document.getElementById('pg-'+p);
+  if(target)target.classList.add('on');
+  ['h','si','c','sup','x','s','m'].forEach(id=>{
+    const el=document.getElementById('nb-'+id);
+    if(el)el.classList.toggle('on',id===p);
   });
-  ['h','c','r','sup','m'].forEach(id=>{
-    const mt=document.getElementById('mt-'+id);
-    if(mt)mt.classList.toggle('on',id===p);
+  ['h','si','c','r','sup','m'].forEach(id=>{
+    const el=document.getElementById('mnb-'+id);
+    if(el)el.classList.toggle('on',id===p);
   });
   document.documentElement.scrollTop=0;
   document.body.scrollTop=0;
+  if(p==='si'){setTimeout(renderSiChart,100);}
 }
 
-function setTab(el,i){
-  document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('on'));
+function sCT(el,i){
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('on'));
   el.classList.add('on');
-  document.getElementById('tab-0').style.display=i===0?'block':'none';
-  document.getElementById('tab-1').style.display=i===1?'block':'none';
+  document.getElementById('cv0').style.display=i===0?'block':'none';
+  document.getElementById('cv1').style.display=i===1?'block':'none';
 }
 
-function setCalc(el,i){
+function sCC(el,i){
   document.querySelectorAll('.ct').forEach(e=>e.classList.remove('on'));
   el.classList.add('on');
-  ['calc-0','calc-1','calc-2'].forEach((id,j)=>{
-    const c=document.getElementById(id);
-    if(c)c.style.display=j===i?'block':'none';
+  ['cp0','cp1','cp2'].forEach((id,j)=>{
+    const p=document.getElementById(id);
+    if(p)p.style.display=j===i?'block':'none';
   });
 }
 
-function selType(i){
+function sT(i){
   [0,1,2].forEach(j=>{
-    const el=document.getElementById('t'+j);
+    const el=document.getElementById('ts'+j);
     if(el)el.classList.toggle('on',j===i);
   });
 }
 
-function setFilter(el){
-  document.querySelectorAll('.filter-bar .fchip').forEach(e=>e.classList.remove('on'));
+function setF(el){
+  document.querySelectorAll('.fchip').forEach(e=>e.classList.remove('on'));
   el.classList.add('on');
 }
 
@@ -781,6 +959,154 @@ function cM(){
   document.getElementById('m4').textContent=Math.round(p*.93).toLocaleString()+'~'+Math.round(p*1.07).toLocaleString()+'원';
 }
 cC();cB();cM();
+
+// ── 시세 데이터 (실제 서비스시 공공 API로 교체) ──
+const SISE = {
+  han: {
+    name: '한우',
+    items: [
+      {name:'등심', grade:'1++', price:78000, chg:+2.3, unit:'kg'},
+      {name:'등심', grade:'1+', price:65000, chg:+1.8, unit:'kg'},
+      {name:'안심', grade:'1++', price:92000, chg:-0.5, unit:'kg'},
+      {name:'채끝', grade:'1++', price:71000, chg:+3.1, unit:'kg'},
+      {name:'갈비', grade:'1+', price:55000, chg:0, unit:'kg'},
+      {name:'앞다리', grade:'1', price:28000, chg:-1.2, unit:'kg'},
+    ]
+  },
+  pig: {
+    name: '돼지',
+    items: [
+      {name:'삼겹살', grade:'A등급', price:22000, chg:-0.8, unit:'kg'},
+      {name:'목살', grade:'A등급', price:18500, chg:+0.4, unit:'kg'},
+      {name:'앞다리', grade:'A등급', price:12000, chg:+1.1, unit:'kg'},
+      {name:'뒷다리', grade:'A등급', price:10500, chg:-0.3, unit:'kg'},
+      {name:'갈비', grade:'A등급', price:15000, chg:0, unit:'kg'},
+    ]
+  },
+  chk: {
+    name: '닭',
+    items: [
+      {name:'닭 전체', grade:'A급', price:2800, chg:+0.7, unit:'kg'},
+      {name:'닭가슴살', grade:'A급', price:4200, chg:-0.2, unit:'kg'},
+      {name:'닭다리', grade:'A급', price:3500, chg:+1.4, unit:'kg'},
+      {name:'닭날개', grade:'A급', price:3100, chg:+0.9, unit:'kg'},
+    ]
+  },
+  imp: {
+    name: '수입육',
+    items: [
+      {name:'미국산 갈비', grade:'USDA Choice', price:32000, chg:-1.5, unit:'kg'},
+      {name:'미국산 삼겹', grade:'냉동', price:14000, chg:-0.6, unit:'kg'},
+      {name:'호주산 등심', grade:'Grain-fed', price:45000, chg:+2.0, unit:'kg'},
+      {name:'호주산 안심', grade:'Grain-fed', price:58000, chg:+1.3, unit:'kg'},
+    ]
+  }
+};
+
+function renderSise(cat) {
+  const list = document.getElementById('si-list');
+  if(!list) return;
+  const cats = cat === 'all' ? ['han','pig','chk','imp'] : [cat];
+  list.innerHTML = cats.map(c => {
+    const d = SISE[c];
+    const avgChg = (d.items.reduce((s,i)=>s+i.chg,0)/d.items.length).toFixed(1);
+    const badgeClass = avgChg > 0 ? 'badge-up' : avgChg < 0 ? 'badge-dn' : 'badge-eq';
+    const badgeTxt = avgChg > 0 ? '▲ '+avgChg+'%' : avgChg < 0 ? '▼ '+Math.abs(avgChg)+'%' : '변동없음';
+    return `<div class="si-card">
+      <div class="si-card-head">
+        <span class="si-card-cat">${d.name}</span>
+        <span class="si-card-badge ${badgeClass}">${badgeTxt}</span>
+      </div>
+      ${d.items.map(item => {
+        const chgClass = item.chg > 0 ? 'up' : item.chg < 0 ? 'dn' : 'eq';
+        const chgTxt = item.chg > 0 ? '▲ '+item.chg+'%' : item.chg < 0 ? '▼ '+Math.abs(item.chg)+'%' : '변동없음';
+        return `<div class="si-row">
+          <div><div class="si-name">${item.name}</div><div class="si-grade">${item.grade}</div></div>
+          <div class="si-price">
+            <div class="si-val">${item.price.toLocaleString()}원/${item.unit}</div>
+            <div class="si-chg ${chgClass}">${chgTxt}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+function renderSisePreview() {
+  const el = document.getElementById('sise-preview');
+  if(!el) return;
+  const items = [
+    {name:'한우 등심 1++', price:78000, chg:+2.3},
+    {name:'돼지 삼겹 A', price:22000, chg:-0.8},
+    {name:'미국산 갈비', price:32000, chg:-1.5},
+  ];
+  el.innerHTML = items.map(i => {
+    const chgClass = i.chg > 0 ? '#B91C1C' : '#15803D';
+    const chgTxt = i.chg > 0 ? '▲'+i.chg+'%' : '▼'+Math.abs(i.chg)+'%';
+    return `<div style="background:rgba(255,255,255,.06);border:1px solid rgba(201,168,76,.15);border-radius:9px;padding:10px;">
+      <div style="font-size:10px;color:rgba(255,255,255,.5);margin-bottom:4px;">${i.name}</div>
+      <div style="font-family:var(--serif);font-size:15px;color:#fff;font-weight:700;">${i.price.toLocaleString()}원</div>
+      <div style="font-size:11px;color:${chgClass};margin-top:2px;">${chgTxt}</div>
+    </div>`;
+  }).join('');
+}
+
+function setSiCat(el, cat) {
+  document.querySelectorAll('.sichip').forEach(e=>e.classList.remove('on'));
+  el.classList.add('on');
+  renderSise(cat);
+}
+
+function renderSiChart() {
+  const canvas = document.getElementById('si-chart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const labels = ['월','화','수','목','금','토','일'];
+  const data = [75000,76200,77500,76800,77200,78000,78000];
+  const W = canvas.offsetWidth, H = 160;
+  canvas.width = W; canvas.height = H;
+  const minV = Math.min(...data)*0.998, maxV = Math.max(...data)*1.002;
+  const px = (i) => (i/(labels.length-1))*W;
+  const py = (v) => H - ((v-minV)/(maxV-minV))*(H-20) - 10;
+  ctx.clearRect(0,0,W,H);
+  // 그리드
+  ctx.strokeStyle = '#eee'; ctx.lineWidth = 0.5;
+  [0.25,0.5,0.75,1].forEach(t=>{
+    const y = H - t*(H-20) - 10;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  });
+  // 라인
+  ctx.strokeStyle = '#C9A84C'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  data.forEach((v,i)=>{ i===0?ctx.moveTo(px(i),py(v)):ctx.lineTo(px(i),py(v)); });
+  ctx.stroke();
+  // 점
+  data.forEach((v,i)=>{
+    ctx.beginPath(); ctx.arc(px(i),py(v),4,0,Math.PI*2);
+    ctx.fillStyle='#C9A84C'; ctx.fill();
+  });
+  // 레이블
+  ctx.fillStyle='#888'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  labels.forEach((l,i)=>ctx.fillText(l,px(i),H));
+}
+
+// 날짜 표시
+function setSiseDate() {
+  const now = new Date();
+  const str = now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일';
+  const el1 = document.getElementById('sise-date');
+  const el2 = document.getElementById('si-date-full');
+  const el3 = document.getElementById('si-update');
+  if(el1) el1.textContent = str;
+  if(el2) el2.textContent = str + ' 기준 도매 시세';
+  if(el3) el3.textContent = '오전 9:00 갱신';
+}
+
+setSiseDate();
+renderSisePreview();
+renderSise('all');
+setTimeout(renderSiChart, 100);
+
 </script>
 </body>
 </html>

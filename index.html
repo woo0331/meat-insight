@@ -9,263 +9,229 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
-body{font-family:'Noto Sans KR',sans-serif;color:#0A0A0A;overflow-x:hidden;background:#fff;}
+body{font-family:'Noto Sans KR',sans-serif;color:#1a1a1a;background:#fff;overflow-x:hidden;}
 :root{
   --n:#0B1628;--n2:#0F1E3D;
-  --g:#C9A84C;--g2:#E2C06A;--g3:#F0E8C8;
-  --cr:#F7F4ED;--cr2:#EDE9DC;
+  --g:#C9A84C;--g2:#E2C06A;--g3:#FDF5E0;
+  --cr:#FAF8F3;
   --serif:'Noto Serif KR',serif;
-  --sans:'Noto Sans KR',sans-serif;
 }
 
-/* ── 커서 ── */
-*{cursor:none;}
-#cur{position:fixed;width:10px;height:10px;background:var(--g);border-radius:50%;pointer-events:none;z-index:9999;mix-blend-mode:difference;transition:transform .1s;}
-#cur-r{position:fixed;width:32px;height:32px;border:1px solid rgba(201,168,76,.4);border-radius:50%;pointer-events:none;z-index:9998;}
-
-/* ── NAV ── */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;transition:all .3s;}
-.nav.solid{background:rgba(11,22,40,.96);backdrop-filter:blur(20px);border-bottom:1px solid rgba(201,168,76,.1);}
-.nav-logo{display:flex;flex-direction:column;gap:2px;}
-.nav-logo-main{font-family:var(--serif);font-size:18px;color:#fff;letter-spacing:2px;}
-.nav-logo-sub{font-size:9px;color:var(--g);letter-spacing:4px;text-transform:uppercase;}
-.nav-links{display:flex;align-items:center;gap:36px;}
-.nav-link{font-size:13px;color:rgba(255,255,255,.5);text-decoration:none;letter-spacing:.3px;transition:color .2s;position:relative;}
-.nav-link::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:1px;background:var(--g);transition:width .3s;}
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 60px;background:rgba(255,255,255,0);transition:all .3s;}
+.nav.solid{background:rgba(255,255,255,.97);border-bottom:1px solid #f0ece4;box-shadow:0 2px 20px rgba(0,0,0,.06);}
+.nav-logo-main{font-family:var(--serif);font-size:18px;color:#fff;letter-spacing:2px;transition:color .3s;}
+.nav-logo-sub{font-size:9px;color:var(--g);letter-spacing:3px;margin-top:2px;}
+.nav.solid .nav-logo-main{color:var(--n);}
+.nav-links{display:flex;gap:36px;}
+.nav-link{font-size:14px;color:rgba(255,255,255,.75);text-decoration:none;transition:color .2s;letter-spacing:.2px;}
+.nav.solid .nav-link{color:#555;}
 .nav-link:hover{color:var(--g);}
-.nav-link:hover::after{width:100%;}
-.nav-cta{background:var(--g);color:var(--n);padding:10px 24px;border-radius:6px;font-size:13px;font-weight:700;border:none;font-family:var(--sans);transition:all .25s;letter-spacing:.3px;}
+.nav-cta{background:var(--g);color:var(--n);padding:10px 26px;border-radius:6px;font-size:14px;font-weight:700;border:none;font-family:'Noto Sans KR',sans-serif;transition:all .2s;letter-spacing:.3px;}
 .nav-cta:hover{background:var(--g2);transform:translateY(-1px);}
 
-/* ── HERO ── */
-.hero{min-height:100vh;background:var(--n);display:flex;flex-direction:column;justify-content:center;padding:120px 48px 80px;position:relative;overflow:hidden;}
-.hero-glow1{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1) 0%,transparent 70%);top:-150px;right:-100px;animation:pulse 8s ease-in-out infinite;}
-.hero-glow2{position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.06) 0%,transparent 70%);bottom:-80px;left:100px;animation:pulse 10s ease-in-out infinite reverse;}
-.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.03) 1px,transparent 1px);background-size:72px 72px;}
-@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
-.hero-content{position:relative;z-index:1;max-width:680px;}
-.hero-eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:28px;opacity:0;animation:fadeUp .8s .1s forwards;}
-.hero-line{width:32px;height:1px;background:var(--g);}
-.hero-eyebrow-txt{font-size:11px;color:var(--g);letter-spacing:5px;text-transform:uppercase;}
-.hero h1{font-family:var(--serif);font-size:62px;line-height:1.15;margin-bottom:22px;opacity:0;animation:fadeUp .8s .25s forwards;color:#fff;}
+/* HERO — 밝은 배경 + 큰 이미지 느낌 */
+.hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;background:#fff;padding-top:64px;overflow:hidden;}
+.hero-left{display:flex;flex-direction:column;justify-content:center;padding:80px 60px 80px;background:var(--cr);}
+.hero-eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:24px;opacity:0;animation:up .8s .1s forwards;}
+.hero-ey-line{width:28px;height:2px;background:var(--g);}
+.hero-ey-txt{font-size:11px;color:var(--g);letter-spacing:4px;font-weight:700;}
+.hero h1{font-family:var(--serif);font-size:56px;line-height:1.15;color:var(--n);margin-bottom:20px;opacity:0;animation:up .8s .25s forwards;}
 .hero h1 em{color:var(--g);font-style:normal;display:block;}
-.hero-desc{font-size:18px;color:rgba(255,255,255,.55);line-height:1.9;margin-bottom:44px;max-width:520px;opacity:0;animation:fadeUp .8s .4s forwards;}
-.hero-desc strong{color:rgba(255,255,255,.85);}
-.hero-cta{opacity:0;animation:fadeUp .8s .55s forwards;}
-.btn-main{background:var(--g);color:var(--n);padding:18px 42px;border-radius:8px;font-size:17px;font-weight:700;border:none;font-family:var(--sans);letter-spacing:.3px;transition:all .25s;margin-right:14px;}
-.btn-main:hover{background:var(--g2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(201,168,76,.3);}
-.btn-sub{background:transparent;color:#fff;padding:18px 36px;border-radius:8px;font-size:17px;border:1px solid rgba(255,255,255,.2);font-family:var(--sans);transition:all .25s;}
-.btn-sub:hover{border-color:var(--g);color:var(--g);}
-.hero-stats{display:flex;gap:56px;margin-top:64px;opacity:0;animation:fadeUp .8s .7s forwards;}
-.hstat-n{font-family:var(--serif);font-size:36px;color:#fff;font-weight:700;line-height:1;}
-.hstat-l{font-size:12px;color:var(--g);margin-top:6px;letter-spacing:1.5px;text-transform:uppercase;}
-/* 오른쪽 카드 */
-.hero-cards{position:absolute;right:80px;top:50%;transform:translateY(-50%);width:340px;z-index:1;opacity:0;animation:fadeLeft .9s .5s forwards;}
-@keyframes fadeLeft{from{opacity:0;transform:translateY(-50%) translateX(30px);}to{opacity:1;transform:translateY(-50%) translateX(0);}}
-.hcard{background:rgba(255,255,255,.04);border:1px solid rgba(201,168,76,.15);border-radius:16px;padding:18px 20px;margin-bottom:12px;backdrop-filter:blur(12px);}
-.hcard:nth-child(1){animation:float1 6s ease-in-out infinite;}
-.hcard:nth-child(2){animation:float2 7s ease-in-out infinite;}
-.hcard:nth-child(3){animation:float3 5s ease-in-out infinite;}
-@keyframes float1{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
-@keyframes float2{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
-@keyframes float3{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
-.hcard-label{font-size:9px;color:var(--g);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:10px;}
-.hcard-title{font-size:14px;font-weight:500;color:#fff;margin-bottom:5px;}
-.hcard-value{font-family:var(--serif);font-size:18px;color:var(--g);font-weight:700;}
-.hcard-sub{font-size:11px;color:rgba(255,255,255,.35);margin-top:4px;}
-.hcard-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);}
-.hcard-row:last-child{border:none;}
-.hcr-l{font-size:12px;color:rgba(255,255,255,.45);}
-.hcr-v{font-size:12px;font-weight:500;color:var(--g);}
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.hero-desc{font-size:17px;color:#555;line-height:1.9;margin-bottom:40px;max-width:440px;opacity:0;animation:up .8s .4s forwards;}
+.hero-btns{display:flex;gap:14px;opacity:0;animation:up .8s .55s forwards;}
+.btn-gold{background:var(--g);color:var(--n);padding:16px 40px;border-radius:8px;font-size:16px;font-weight:700;border:none;font-family:'Noto Sans KR',sans-serif;transition:all .2s;letter-spacing:.3px;}
+.btn-gold:hover{background:var(--g2);transform:translateY(-2px);box-shadow:0 8px 28px rgba(201,168,76,.3);}
+.btn-outline{background:transparent;color:var(--n);padding:16px 36px;border-radius:8px;font-size:16px;border:1.5px solid #ddd;font-family:'Noto Sans KR',sans-serif;transition:all .2s;}
+.btn-outline:hover{border-color:var(--g);color:var(--g);}
+.hero-stats{display:flex;gap:44px;margin-top:56px;padding-top:40px;border-top:1px solid #e8e4da;opacity:0;animation:up .8s .7s forwards;}
+.hstat-n{font-family:var(--serif);font-size:34px;color:var(--n);font-weight:700;line-height:1;}
+.hstat-l{font-size:12px;color:var(--g);margin-top:5px;letter-spacing:1px;font-weight:500;}
 
-/* ── 마키 ── */
-.marquee-wrap{background:rgba(201,168,76,.08);border-top:1px solid rgba(201,168,76,.12);border-bottom:1px solid rgba(201,168,76,.12);padding:13px 0;overflow:hidden;}
-.marquee{display:flex;animation:marquee 28s linear infinite;width:max-content;}
-.mi{display:flex;align-items:center;gap:10px;padding:0 32px;white-space:nowrap;}
+/* 히어로 오른쪽 — 그래픽 패널 */
+.hero-right{background:var(--n);display:flex;flex-direction:column;justify-content:center;padding:80px 60px;position:relative;overflow:hidden;opacity:0;animation:fadeIn .9s .3s forwards;}
+.hero-right::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1),transparent 70%);top:-150px;right:-150px;}
+.hero-right::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.07),transparent 70%);bottom:-80px;left:-50px;}
+.hr-label{font-size:10px;color:var(--g);letter-spacing:4px;font-weight:700;margin-bottom:32px;position:relative;z-index:1;}
+.sise-cards{display:flex;flex-direction:column;gap:10px;position:relative;z-index:1;}
+.sc{background:rgba(255,255,255,.05);border:1px solid rgba(201,168,76,.15);border-radius:14px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;transition:all .25s;}
+.sc:hover{background:rgba(201,168,76,.08);border-color:rgba(201,168,76,.35);}
+.sc-name{font-size:15px;color:#fff;font-weight:500;}
+.sc-grade{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
+.sc-price{font-family:var(--serif);font-size:17px;color:#fff;font-weight:700;text-align:right;}
+.sc-chg{font-size:12px;margin-top:2px;text-align:right;}
+.up{color:#F87171;}.dn{color:#4ADE80;}
+.hr-cta{margin-top:28px;position:relative;z-index:1;}
+.hr-cta-txt{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:12px;}
+.btn-white{background:#fff;color:var(--n);padding:13px 28px;border-radius:8px;font-size:14px;font-weight:700;border:none;font-family:'Noto Sans KR',sans-serif;transition:all .2s;}
+.btn-white:hover{background:var(--g3);}
+@keyframes up{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+/* 마키 */
+.marquee-wrap{background:var(--n);padding:14px 0;overflow:hidden;border-top:1px solid rgba(201,168,76,.12);}
+.marquee{display:flex;animation:marquee 30s linear infinite;width:max-content;}
+.mi{display:flex;align-items:center;gap:10px;padding:0 36px;white-space:nowrap;}
 .mi-dot{width:4px;height:4px;border-radius:50%;background:var(--g);}
-.mi-txt{font-size:13px;color:rgba(255,255,255,.65);letter-spacing:.5px;}
+.mi-txt{font-size:13px;color:rgba(255,255,255,.6);letter-spacing:.3px;}
 @keyframes marquee{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
 
-/* ── 섹션 공통 ── */
-.sec{padding:110px 48px;}
-.sec.dark{background:var(--n);}
-.sec.light{background:var(--cr);}
-.sec.white{background:#fff;}
-.sec.gold{background:var(--g);}
-.sec-ey{font-size:10px;color:var(--g);letter-spacing:5px;text-transform:uppercase;margin-bottom:12px;}
-.sec.light .sec-ey,.sec.white .sec-ey{color:var(--n2);opacity:.6;}
-.sec-title{font-family:var(--serif);font-size:44px;line-height:1.25;margin-bottom:16px;color:#fff;}
-.sec.light .sec-title,.sec.white .sec-title{color:var(--n);}
-.sec-sub{font-size:17px;color:rgba(255,255,255,.5);line-height:1.9;max-width:540px;}
-.sec.light .sec-sub,.sec.white .sec-sub{color:#666;}
-.sec-head{margin-bottom:64px;}
+/* 신뢰 바 */
+.trust-bar{background:#fff;display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #f0ece4;}
+.tb{padding:48px 32px;text-align:center;border-right:1px solid #f0ece4;transition:background .2s;}
+.tb:last-child{border:none;}
+.tb:hover{background:var(--cr);}
+.tb-n{font-family:var(--serif);font-size:44px;color:var(--n);font-weight:700;line-height:1;margin-bottom:8px;}
+.tb-l{font-size:13px;color:var(--g);font-weight:500;letter-spacing:.5px;}
 
-/* ── 신뢰 바 ── */
-.trust-bar{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(201,168,76,.12);border-bottom:1px solid rgba(201,168,76,.12);}
-.tb-cell{padding:52px 32px;text-align:center;border-right:1px solid rgba(201,168,76,.1);transition:background .3s;}
-.tb-cell:last-child{border:none;}
-.tb-cell:hover{background:rgba(201,168,76,.04);}
-.tb-n{font-family:var(--serif);font-size:48px;color:var(--g);font-weight:700;line-height:1;margin-bottom:8px;}
-.tb-l{font-size:13px;color:rgba(255,255,255,.45);letter-spacing:1px;}
+/* 서비스 */
+.sec{padding:100px 60px;}
+.sec-ey{font-size:10px;color:var(--g);letter-spacing:5px;font-weight:700;margin-bottom:12px;text-transform:uppercase;}
+.sec-title{font-family:var(--serif);font-size:44px;line-height:1.25;margin-bottom:16px;}
+.sec-sub{font-size:17px;color:#666;line-height:1.9;max-width:520px;}
+.sec-head{margin-bottom:60px;}
 
-/* ── 서비스 4개 ── */
-.svc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
-.svc-card{background:rgba(255,255,255,.03);border:1px solid rgba(201,168,76,.1);border-radius:20px;padding:32px 24px;transition:all .3s;position:relative;overflow:hidden;}
-.svc-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(201,168,76,.07),transparent);opacity:0;transition:opacity .3s;}
-.svc-card:hover{border-color:rgba(201,168,76,.4);transform:translateY(-5px);}
-.svc-card:hover::before{opacity:1;}
-.svc-num{font-size:10px;color:rgba(201,168,76,.4);letter-spacing:3px;margin-bottom:18px;}
-.svc-ico{width:52px;height:52px;background:rgba(201,168,76,.1);border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;}
-.svc-name{font-family:var(--serif);font-size:20px;color:#fff;margin-bottom:10px;}
-.svc-desc{font-size:14px;color:rgba(255,255,255,.45);line-height:1.75;}
-.svc-arrow{font-size:13px;color:var(--g);margin-top:22px;display:block;transition:letter-spacing .2s;}
-.svc-card:hover .svc-arrow{letter-spacing:2px;}
+.svc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+.svc{background:var(--cr);border-radius:20px;padding:32px 26px;border:1px solid #ede9e0;transition:all .3s;position:relative;overflow:hidden;}
+.svc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--g);transform:scaleX(0);transition:transform .3s;transform-origin:left;}
+.svc:hover{background:#fff;box-shadow:0 12px 40px rgba(0,0,0,.08);transform:translateY(-4px);}
+.svc:hover::after{transform:scaleX(1);}
+.svc-num{font-size:11px;color:var(--g);letter-spacing:2px;font-weight:700;margin-bottom:20px;}
+.svc-ico{width:52px;height:52px;background:#fff;border-radius:14px;border:1px solid #ede9e0;display:flex;align-items:center;justify-content:center;margin-bottom:18px;font-size:24px;}
+.svc-name{font-family:var(--serif);font-size:20px;color:var(--n);margin-bottom:10px;}
+.svc-desc{font-size:14px;color:#777;line-height:1.7;}
+.svc-link{font-size:13px;color:var(--g);margin-top:20px;display:block;font-weight:500;transition:letter-spacing .2s;}
+.svc:hover .svc-link{letter-spacing:2px;}
 
-/* ── 시세 섹션 ── */
-.sise-section{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;}
-.sise-items{display:flex;flex-direction:column;gap:12px;}
-.sise-item{background:rgba(255,255,255,.04);border:1px solid rgba(201,168,76,.1);border-radius:14px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;transition:all .25s;}
-.sise-item:hover{border-color:rgba(201,168,76,.35);background:rgba(201,168,76,.06);}
-.sise-item-left{}
-.sise-item-name{font-size:15px;font-weight:500;color:#fff;margin-bottom:3px;}
-.sise-item-grade{font-size:12px;color:rgba(255,255,255,.35);}
-.sise-item-right{text-align:right;}
-.sise-item-price{font-family:var(--serif);font-size:18px;color:#fff;font-weight:700;}
-.sise-item-chg{font-size:12px;margin-top:3px;}
-.chg-up{color:#F87171;}
-.chg-dn{color:#4ADE80;}
-.sise-more-btn{display:inline-flex;align-items:center;gap:8px;margin-top:20px;font-size:14px;color:var(--g);border:1px solid rgba(201,168,76,.3);padding:12px 24px;border-radius:8px;transition:all .2s;background:none;font-family:var(--sans);}
-.sise-more-btn:hover{background:rgba(201,168,76,.1);}
+/* 시세 섹션 */
+.sise-sec{background:var(--n);padding:100px 60px;}
+.sise-wrap{display:grid;grid-template-columns:1fr 1.2fr;gap:80px;align-items:center;}
+.sise-title{font-family:var(--serif);font-size:44px;color:#fff;line-height:1.25;margin-bottom:16px;}
+.sise-sub{font-size:16px;color:rgba(255,255,255,.45);line-height:1.9;margin-bottom:36px;}
+.sise-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(201,168,76,.12);color:var(--g);border:1px solid rgba(201,168,76,.25);padding:13px 26px;border-radius:8px;font-size:14px;font-weight:500;transition:all .2s;font-family:'Noto Sans KR',sans-serif;}
+.sise-btn:hover{background:rgba(201,168,76,.2);}
+.sise-list{display:flex;flex-direction:column;gap:10px;}
+.sise-item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;transition:all .2s;}
+.sise-item:hover{background:rgba(201,168,76,.08);border-color:rgba(201,168,76,.25);}
+.si-name{font-size:15px;color:#fff;font-weight:500;margin-bottom:3px;}
+.si-grade{font-size:12px;color:rgba(255,255,255,.35);}
+.si-price{font-family:var(--serif);font-size:18px;color:#fff;font-weight:700;text-align:right;}
+.si-chg{font-size:12px;margin-top:3px;text-align:right;}
 
-/* ── 매물 섹션 ── */
-.listing-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
-.lcard{background:#fff;border:1px solid #E8E4DA;border-radius:18px;overflow:hidden;transition:all .25s;}
-.lcard:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.1);border-color:var(--g);}
-.lcard-thumb{height:120px;background:var(--cr2);border-bottom:1px solid #E8E4DA;display:flex;align-items:center;justify-content:center;position:relative;}
-.lcard-inner{width:40px;height:40px;background:var(--cr);border-radius:10px;}
-.lcard-new{position:absolute;top:10px;left:10px;background:var(--g);color:var(--n);font-size:10px;font-weight:700;padding:3px 9px;border-radius:4px;letter-spacing:.5px;}
-.lcard-body{padding:18px;}
-.lcard-tag{display:inline-block;font-size:10px;padding:3px 9px;border-radius:4px;font-weight:700;margin-bottom:10px;background:rgba(201,168,76,.12);color:#5A4A00;}
-.lcard-title{font-size:15px;font-weight:700;color:var(--n2);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.lcard-price{font-family:var(--serif);font-size:17px;color:var(--n);font-weight:700;margin-bottom:12px;}
-.lcard-foot{display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid #E8E4DA;}
-.lcard-loc{font-size:12px;color:#888;}
-.lcard-ago{font-size:12px;color:var(--g);font-weight:500;}
-.sec-more-link{display:inline-flex;align-items:center;gap:8px;margin-top:36px;font-size:14px;color:var(--n2);border:1px solid rgba(11,22,40,.15);padding:12px 24px;border-radius:8px;transition:all .2s;background:none;font-family:var(--sans);}
-.sec-more-link:hover{background:var(--n2);color:#fff;border-color:var(--n2);}
+/* 매물 */
+.listing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+.lc{background:#fff;border-radius:20px;overflow:hidden;border:1px solid #ede9e0;transition:all .25s;}
+.lc:hover{transform:translateY(-6px);box-shadow:0 20px 60px rgba(0,0,0,.1);border-color:var(--g);}
+.lc-img{height:180px;background:var(--cr);display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid #ede9e0;}
+.lc-img-graphic{width:60px;height:60px;background:#fff;border-radius:16px;border:1px solid #ede9e0;display:flex;align-items:center;justify-content:center;font-size:28px;}
+.lc-badge{position:absolute;top:14px;left:14px;background:var(--g);color:var(--n);font-size:10px;font-weight:700;padding:4px 10px;border-radius:5px;letter-spacing:.5px;}
+.lc-body{padding:22px;}
+.lc-tag{display:inline-block;font-size:11px;background:var(--g3);color:#5A4A00;padding:4px 10px;border-radius:5px;font-weight:600;margin-bottom:12px;}
+.lc-title{font-size:16px;font-weight:700;color:var(--n);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lc-price{font-family:var(--serif);font-size:20px;color:var(--n);font-weight:700;margin-bottom:14px;}
+.lc-foot{display:flex;justify-content:space-between;padding-top:14px;border-top:1px solid #f0ece4;}
+.lc-loc{font-size:13px;color:#999;}
+.lc-ago{font-size:13px;color:var(--g);font-weight:600;}
 
-/* ── 컨설팅 ── */
-.consult-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
-.cc{border-radius:20px;overflow:hidden;border:1px solid rgba(201,168,76,.15);transition:all .3s;}
-.cc:hover{transform:translateY(-4px);border-color:rgba(201,168,76,.5);}
+/* 컨설팅 */
+.consult-wrap{display:grid;grid-template-columns:1fr 1fr;gap:28px;}
+.cc{background:#fff;border-radius:24px;overflow:hidden;border:1px solid #ede9e0;transition:all .3s;}
+.cc:hover{box-shadow:0 16px 48px rgba(0,0,0,.1);transform:translateY(-4px);}
 .cc.featured{border:2px solid var(--g);}
-.cc-top{background:var(--n2);padding:28px 30px;}
+.cc-top{padding:32px 34px;background:var(--cr);}
 .cc.featured .cc-top{background:var(--n);}
-.cc-badge{font-size:9px;color:var(--g);letter-spacing:3px;font-weight:700;display:block;margin-bottom:10px;}
-.cc-title{font-family:var(--serif);font-size:22px;color:#fff;margin-bottom:6px;}
-.cc-sub{font-size:13px;color:rgba(255,255,255,.45);line-height:1.7;}
-.cc-body{background:#fff;padding:28px 30px;}
-.cc-includes{list-style:none;margin-bottom:22px;}
-.cc-includes li{display:flex;align-items:center;gap:10px;font-size:14px;color:#333;padding:7px 0;border-bottom:1px solid #f0f0f0;}
-.cc-includes li:last-child{border:none;}
-.cc-check{width:18px;height:18px;background:var(--n2);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.cc-check::after{content:'✓';font-size:9px;color:var(--g);}
-.cc-price-row{display:flex;align-items:center;justify-content:space-between;padding-top:18px;border-top:1px solid #f0f0f0;}
-.cc-price{font-family:var(--serif);font-size:26px;color:var(--n2);font-weight:700;}
-.cc-price small{font-size:13px;color:#888;font-family:var(--sans);font-weight:400;}
-.cc-btn{background:var(--n2);color:var(--g);padding:12px 22px;border-radius:8px;font-size:14px;font-weight:700;border:none;font-family:var(--sans);transition:all .2s;}
-.cc-btn:hover{background:var(--n);}
-.cc.featured .cc-btn{background:var(--g);color:var(--n);}
-.cc.featured .cc-btn:hover{background:var(--g2);}
+.cc-badge{font-size:10px;color:var(--g);letter-spacing:3px;font-weight:700;display:block;margin-bottom:12px;}
+.cc-title{font-family:var(--serif);font-size:24px;color:var(--n);margin-bottom:8px;}
+.cc.featured .cc-title{color:#fff;}
+.cc-sub{font-size:14px;color:#777;line-height:1.7;}
+.cc.featured .cc-sub{color:rgba(255,255,255,.5);}
+.cc-body{padding:32px 34px;}
+.cc-list{list-style:none;margin-bottom:28px;}
+.cc-list li{display:flex;align-items:center;gap:12px;font-size:15px;color:#333;padding:9px 0;border-bottom:1px solid #f5f5f5;}
+.cc-list li:last-child{border:none;}
+.cc-dot{width:20px;height:20px;background:var(--n);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cc-dot::after{content:'✓';font-size:9px;color:var(--g);}
+.cc-footer{display:flex;align-items:center;justify-content:space-between;padding-top:20px;border-top:1px solid #f0ece4;}
+.cc-price{font-family:var(--serif);font-size:28px;color:var(--n);font-weight:700;}
+.cc-price small{font-size:14px;color:#999;font-family:'Noto Sans KR',sans-serif;font-weight:400;}
+.cc-btn{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:700;border:none;font-family:'Noto Sans KR',sans-serif;transition:all .2s;}
+.cc-btn-dark{background:var(--n);color:var(--g);}
+.cc-btn-gold{background:var(--g);color:var(--n);}
+.cc-btn-dark:hover,.cc-btn-gold:hover{transform:translateY(-1px);}
 
-/* ── 커뮤니티 미리보기 ── */
-.cm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-.cm-card{background:rgba(255,255,255,.04);border:1px solid rgba(201,168,76,.1);border-radius:16px;padding:24px;transition:all .25s;}
-.cm-card:hover{border-color:rgba(201,168,76,.35);background:rgba(201,168,76,.05);}
-.cm-badge{display:inline-block;font-size:10px;padding:3px 10px;border-radius:4px;font-weight:700;margin-bottom:12px;}
-.cb-q{background:rgba(30,64,175,.3);color:#93C5FD;}
-.cb-r{background:rgba(133,77,14,.3);color:#FCD34D;}
-.cb-f{background:rgba(185,28,28,.3);color:#FCA5A5;}
-.cb-i{background:rgba(21,128,61,.3);color:#86EFAC;}
-.cm-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;line-height:1.4;}
-.cm-preview{font-size:13px;color:rgba(255,255,255,.4);line-height:1.7;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.cm-meta{display:flex;align-items:center;justify-content:space-between;}
-.cm-author{font-size:12px;color:rgba(255,255,255,.3);}
-.cm-stats{display:flex;gap:10px;}
-.cm-stat{font-size:12px;color:rgba(255,255,255,.3);}
-.cm-hot{display:inline-block;font-size:9px;background:rgba(185,28,28,.4);color:#FCA5A5;padding:2px 7px;border-radius:3px;font-weight:700;margin-left:6px;}
+/* 후기 */
+.review-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+.rv{background:#fff;border-radius:20px;padding:32px;border:1px solid #ede9e0;transition:all .25s;}
+.rv:hover{box-shadow:0 12px 40px rgba(0,0,0,.08);transform:translateY(-3px);}
+.rv-stars{color:var(--g);font-size:18px;margin-bottom:16px;letter-spacing:2px;}
+.rv-text{font-size:16px;color:#333;line-height:1.85;margin-bottom:24px;}
+.rv-line{display:flex;align-items:center;gap:14px;padding-top:18px;border-top:1px solid #f0ece4;}
+.rv-avatar{width:44px;height:44px;border-radius:50%;background:var(--n);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:16px;color:var(--g);flex-shrink:0;}
+.rv-name{font-size:15px;font-weight:700;color:var(--n);}
+.rv-info{font-size:13px;color:#999;margin-top:2px;}
 
-/* ── 후기 ── */
-.review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
-.rv-card{background:#fff;border-radius:18px;padding:28px;border:1px solid #E8E4DA;transition:all .25s;}
-.rv-card:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(0,0,0,.08);}
-.rv-stars{color:var(--g);font-size:15px;margin-bottom:14px;}
-.rv-text{font-size:15px;color:#333;line-height:1.8;margin-bottom:20px;}
-.rv-author{display:flex;align-items:center;gap:12px;padding-top:16px;border-top:1px solid #f0f0f0;}
-.rv-avatar{width:40px;height:40px;background:var(--n2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:15px;color:var(--g);}
-.rv-name{font-size:14px;font-weight:500;color:var(--n2);}
-.rv-info{font-size:12px;color:#888;margin-top:2px;}
+/* CTA */
+.cta-sec{background:var(--cr);padding:100px 60px;text-align:center;border-top:1px solid #ede9e0;}
+.cta-title{font-family:var(--serif);font-size:52px;color:var(--n);line-height:1.2;margin-bottom:18px;}
+.cta-sub{font-size:18px;color:#666;line-height:1.8;margin-bottom:50px;}
+.cta-btn{background:var(--n);color:var(--g);padding:20px 56px;border-radius:8px;font-size:18px;font-weight:700;border:none;font-family:'Noto Sans KR',sans-serif;transition:all .25s;}
+.cta-btn:hover{background:var(--n2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(11,22,40,.2);}
+.cta-note{font-size:14px;color:#aaa;margin-top:18px;}
 
-/* ── CTA ── */
-.cta-inner{text-align:center;max-width:660px;margin:0 auto;}
-.cta-title{font-family:var(--serif);font-size:48px;color:var(--n);line-height:1.2;margin-bottom:16px;}
-.cta-sub{font-size:18px;color:rgba(15,30,61,.6);line-height:1.8;margin-bottom:48px;}
-.cta-btn{background:var(--n);color:var(--g);padding:20px 56px;border-radius:8px;font-size:18px;font-weight:700;border:none;font-family:var(--sans);transition:all .25s;}
-.cta-btn:hover{background:var(--n2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(15,30,61,.2);}
-.cta-note{font-size:13px;color:rgba(15,30,61,.4);margin-top:16px;}
+/* FAQ */
+.faq-wrap{max-width:760px;margin:0 auto;}
+.faq-item{border-bottom:1px solid #ede9e0;padding:24px 0;}
+.faq-q{display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.faq-q-txt{font-size:17px;font-weight:600;color:var(--n);}
+.faq-icon{font-size:22px;color:var(--g);font-weight:300;transition:transform .2s;}
+.faq-a{font-size:15px;color:#666;line-height:1.8;margin-top:14px;display:none;padding-right:32px;}
 
-/* ── FOOTER ── */
-.footer{background:#060E1C;padding:72px 48px 44px;border-top:1px solid rgba(201,168,76,.08);}
-.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:56px;}
+/* FOOTER */
+.footer{background:var(--n);padding:72px 60px 44px;}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:52px;}
 .footer-logo{font-family:var(--serif);font-size:20px;color:#fff;letter-spacing:2px;margin-bottom:10px;}
-.footer-desc{font-size:13px;color:rgba(255,255,255,.3);line-height:1.8;margin-bottom:14px;}
+.footer-desc{font-size:13px;color:rgba(255,255,255,.35);line-height:1.8;margin-bottom:14px;}
 .footer-by{font-size:12px;color:rgba(201,168,76,.55);}
-.footer-col-title{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;}
+.footer-col-t{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;}
 .footer-links{list-style:none;}
 .footer-links li{font-size:13px;color:rgba(255,255,255,.3);padding:5px 0;transition:color .2s;}
 .footer-links li:hover{color:var(--g);}
-.footer-bottom{border-top:1px solid rgba(255,255,255,.06);padding-top:24px;display:flex;justify-content:space-between;align-items:center;}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:24px;display:flex;justify-content:space-between;}
 .footer-copy{font-size:12px;color:rgba(255,255,255,.2);}
-.footer-legal{display:flex;gap:20px;}
-.footer-legal span{font-size:12px;color:rgba(255,255,255,.2);}
 
-/* ── 스크롤 리빌 ── */
-.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s,transform .7s;}
+/* 스크롤 리빌 */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s,transform .7s;}
 .reveal.on{opacity:1;transform:translateY(0);}
-.rd1{transition-delay:.1s;}.rd2{transition-delay:.2s;}.rd3{transition-delay:.3s;}.rd4{transition-delay:.4s;}
+.d1{transition-delay:.1s;}.d2{transition-delay:.2s;}.d3{transition-delay:.3s;}.d4{transition-delay:.4s;}
 
-/* ── 반응형 ── */
+/* 반응형 */
 @media(max-width:1024px){
   .nav{padding:0 24px;}
   .nav-links{display:none;}
-  .hero{padding:100px 24px 64px;}
-  .hero h1{font-size:40px;}
-  .hero-cards{display:none;}
+  .hero{grid-template-columns:1fr;}
+  .hero-right{display:none;}
+  .hero-left{padding:80px 24px;}
+  .hero h1{font-size:38px;}
   .sec{padding:72px 24px;}
   .svc-grid{grid-template-columns:repeat(2,1fr);}
-  .sise-section{grid-template-columns:1fr;}
-  .listing-row{grid-template-columns:repeat(2,1fr);}
-  .consult-grid{grid-template-columns:1fr;}
-  .cm-grid{grid-template-columns:1fr;}
-  .review-grid{grid-template-columns:1fr;}
+  .sise-wrap{grid-template-columns:1fr;}
+  .sise-sec{padding:72px 24px;}
+  .listing-grid{grid-template-columns:1fr;}
+  .consult-wrap{grid-template-columns:1fr;}
+  .review-wrap{grid-template-columns:1fr;}
   .trust-bar{grid-template-columns:repeat(2,1fr);}
-  .footer-top{grid-template-columns:1fr 1fr;}
   .footer{padding:48px 24px 36px;}
-  .cta-title{font-size:34px;}
-  .hero-stats{gap:28px;}
-  .hstat-n{font-size:28px;}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+  .cta-title{font-size:36px;}
+  .cta-sec{padding:72px 24px;}
 }
 </style>
 </head>
 <body>
 
-<div id="cur"></div>
-<div id="cur-r"></div>
-
 <!-- NAV -->
 <nav class="nav" id="nav">
-  <div class="nav-logo">
+  <div>
     <div class="nav-logo-main">MEAT INSIGHT</div>
     <div class="nav-logo-sub">축산 사업자 플랫폼</div>
   </div>
@@ -273,30 +239,23 @@ body{font-family:'Noto Sans KR',sans-serif;color:#0A0A0A;overflow-x:hidden;backg
     <a class="nav-link" href="#sise">시세</a>
     <a class="nav-link" href="#listing">매물</a>
     <a class="nav-link" href="#consult">컨설팅</a>
-    <a class="nav-link" href="#community">커뮤니티</a>
+    <a class="nav-link" href="#faq">FAQ</a>
   </div>
   <button class="nav-cta" onclick="location.href='meat_insight_main.html'">플랫폼 시작하기</button>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-glow1"></div>
-  <div class="hero-glow2"></div>
-  <div class="hero-grid"></div>
-  <div class="hero-content">
+  <div class="hero-left">
     <div class="hero-eyebrow">
-      <div class="hero-line"></div>
-      <div class="hero-eyebrow-txt">협신식품 1972 · 52년 업력</div>
+      <div class="hero-ey-line"></div>
+      <div class="hero-ey-txt">협신식품 1972 · 52년 업력</div>
     </div>
     <h1>정육·고깃집<br>사장님을 위한<br><em>원스톱 플랫폼</em></h1>
-    <p class="hero-desc">
-      오늘 시세 확인부터 매물 거래, 공급사 직거래,<br>
-      창업 컨설팅, 폐업 지원금까지<br>
-      <strong>고기만 아는 플랫폼이 만들었습니다</strong>
-    </p>
-    <div class="hero-cta">
-      <button class="btn-main" onclick="location.href='meat_insight_main.html'">무료로 시작하기</button>
-      <button class="btn-sub" onclick="document.getElementById('sise').scrollIntoView({behavior:'smooth'})">오늘 시세 보기</button>
+    <p class="hero-desc">오늘 시세 확인부터 매물 거래, 공급사 직거래,<br>창업 컨설팅, 폐업 지원금까지<br>고기만 아는 플랫폼이 만들었습니다</p>
+    <div class="hero-btns">
+      <button class="btn-gold" onclick="location.href='meat_insight_main.html'">무료로 시작하기</button>
+      <button class="btn-outline" onclick="document.getElementById('sise').scrollIntoView({behavior:'smooth'})">오늘 시세 보기</button>
     </div>
     <div class="hero-stats">
       <div><div class="hstat-n">52년</div><div class="hstat-l">협신식품 업력</div></div>
@@ -304,29 +263,24 @@ body{font-family:'Noto Sans KR',sans-serif;color:#0A0A0A;overflow-x:hidden;backg
       <div><div class="hstat-n">무료</div><div class="hstat-l">매물 등록</div></div>
     </div>
   </div>
-  <div class="hero-cards">
-    <div class="hcard">
-      <div class="hcard-label">오늘의 시세</div>
-      <div class="hcard-row"><span class="hcr-l">한우 등심 1++</span><span class="hcr-v">78,000원 ▲</span></div>
-      <div class="hcard-row"><span class="hcr-l">돼지 삼겹 A</span><span class="hcr-v">22,000원 ▼</span></div>
-      <div class="hcard-row"><span class="hcr-l">미국산 갈비</span><span class="hcr-v">32,000원 ▼</span></div>
+  <div class="hero-right">
+    <div class="hr-label">오늘의 시세 · 실시간</div>
+    <div class="sise-cards">
+      <div class="sc"><div><div class="sc-name">한우 등심 1++</div><div class="sc-grade">도매가 기준</div></div><div><div class="sc-price">78,000원/kg</div><div class="sc-chg up">▲ 2.3%</div></div></div>
+      <div class="sc"><div><div class="sc-name">돼지 삼겹살 A등급</div><div class="sc-grade">도매가 기준</div></div><div><div class="sc-price">22,000원/kg</div><div class="sc-chg dn">▼ 0.8%</div></div></div>
+      <div class="sc"><div><div class="sc-name">한우 채끝 1++</div><div class="sc-grade">도매가 기준</div></div><div><div class="sc-price">71,000원/kg</div><div class="sc-chg up">▲ 3.1%</div></div></div>
+      <div class="sc"><div><div class="sc-name">미국산 갈비 Choice</div><div class="sc-grade">도매가 기준</div></div><div><div class="sc-price">32,000원/kg</div><div class="sc-chg dn">▼ 1.5%</div></div></div>
+      <div class="sc"><div><div class="sc-name">닭 전체 A급</div><div class="sc-grade">도매가 기준</div></div><div><div class="sc-price">2,800원/kg</div><div class="sc-chg up">▲ 0.7%</div></div></div>
     </div>
-    <div class="hcard">
-      <div class="hcard-label">최근 등록 매물</div>
-      <div class="hcard-title">정육점 양도 — 경기 안양시</div>
-      <div class="hcard-value">권리금 2,500만원</div>
-      <div class="hcard-sub">49㎡ · 장비 포함 · 오늘 등록</div>
-    </div>
-    <div class="hcard">
-      <div class="hcard-label">원가율 계산기</div>
-      <div class="hcard-row"><span class="hcr-l">원가율</span><span class="hcr-v">60.0%</span></div>
-      <div class="hcard-row"><span class="hcr-l">월 순이익 예상</span><span class="hcr-v">2,450,000원</span></div>
+    <div class="hr-cta">
+      <div class="hr-cta-txt">협신식품 — 수도권 유일 도축장 · Top 5</div>
+      <button class="btn-white" onclick="location.href='meat_insight_main.html'">공급사 직거래 →</button>
     </div>
   </div>
 </section>
 
 <!-- 마키 -->
-<div class="marquee-wrap" style="background:rgba(201,168,76,.08);">
+<div class="marquee-wrap">
   <div class="marquee">
     <div class="mi"><div class="mi-dot"></div><span class="mi-txt">국내 Top 5 도축장</span></div>
     <div class="mi"><div class="mi-dot"></div><span class="mi-txt">수도권 유일 도축장</span></div>
@@ -335,7 +289,6 @@ body{font-family:'Noto Sans KR',sans-serif;color:#0A0A0A;overflow-x:hidden;backg
     <div class="mi"><div class="mi-dot"></div><span class="mi-txt">전국 공급사 직거래</span></div>
     <div class="mi"><div class="mi-dot"></div><span class="mi-txt">폐업 지원금 무료 대행</span></div>
     <div class="mi"><div class="mi-dot"></div><span class="mi-txt">에스크로 안전결제</span></div>
-    <div class="mi"><div class="mi-dot"></div><span class="mi-txt">고기업종 전문 컨설팅</span></div>
     <div class="mi"><div class="mi-dot"></div><span class="mi-txt">국내 Top 5 도축장</span></div>
     <div class="mi"><div class="mi-dot"></div><span class="mi-txt">수도권 유일 도축장</span></div>
     <div class="mi"><div class="mi-dot"></div><span class="mi-txt">부분육 경매 최초 도입</span></div>
@@ -343,110 +296,109 @@ body{font-family:'Noto Sans KR',sans-serif;color:#0A0A0A;overflow-x:hidden;backg
     <div class="mi"><div class="mi-dot"></div><span class="mi-txt">전국 공급사 직거래</span></div>
     <div class="mi"><div class="mi-dot"></div><span class="mi-txt">폐업 지원금 무료 대행</span></div>
     <div class="mi"><div class="mi-dot"></div><span class="mi-txt">에스크로 안전결제</span></div>
-    <div class="mi"><div class="mi-dot"></div><span class="mi-txt">고기업종 전문 컨설팅</span></div>
   </div>
 </div>
 
 <!-- 신뢰 바 -->
-<div class="trust-bar" style="background:var(--n);">
-  <div class="tb-cell reveal"><div class="tb-n">52년</div><div class="tb-l">협신식품 업력</div></div>
-  <div class="tb-cell reveal rd1"><div class="tb-n">Top 5</div><div class="tb-l">국내 도축장 규모</div></div>
-  <div class="tb-cell reveal rd2"><div class="tb-n">무료</div><div class="tb-l">매물 기본 등록</div></div>
-  <div class="tb-cell reveal rd3"><div class="tb-n">180만원</div><div class="tb-l">폐업지원금 평균 수령</div></div>
+<div class="trust-bar">
+  <div class="tb reveal"><div class="tb-n">52년</div><div class="tb-l">협신식품 업력</div></div>
+  <div class="tb reveal d1"><div class="tb-n">Top 5</div><div class="tb-l">국내 도축장 규모</div></div>
+  <div class="tb reveal d2"><div class="tb-n">무료</div><div class="tb-l">매물 기본 등록</div></div>
+  <div class="tb reveal d3"><div class="tb-n">180만원</div><div class="tb-l">지원금 평균 수령</div></div>
 </div>
 
 <!-- 서비스 -->
-<section class="sec dark">
+<section class="sec" style="background:var(--cr);">
   <div class="sec-head reveal">
     <div class="sec-ey">Services</div>
     <div class="sec-title">고기업종 사장님께<br>필요한 모든 것</div>
     <div class="sec-sub">창업부터 폐업까지 한 플랫폼에서 해결하세요</div>
   </div>
   <div class="svc-grid">
-    <div class="svc-card reveal" onclick="location.href='meat_insight_main.html'">
+    <div class="svc reveal" onclick="location.href='meat_insight_main.html'">
       <div class="svc-num">01</div>
-      <div class="svc-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="12" width="4" height="10" rx="1" fill="#C9A84C"/><rect x="9" y="7" width="4" height="15" rx="1" fill="#C9A84C" opacity=".7"/><rect x="16" y="3" width="4" height="19" rx="1" fill="#C9A84C" opacity=".45"/></svg></div>
+      <div class="svc-ico">📈</div>
       <div class="svc-name">오늘의 시세</div>
       <div class="svc-desc">한우·돼지·닭·수입육 부위별 도매가를 매일 확인하세요</div>
-      <span class="svc-arrow">자세히 보기 →</span>
+      <span class="svc-link">자세히 보기 →</span>
     </div>
-    <div class="svc-card reveal rd1" onclick="location.href='meat_insight_main.html'">
+    <div class="svc reveal d1" onclick="location.href='meat_insight_main.html'">
       <div class="svc-num">02</div>
-      <div class="svc-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="9" width="20" height="13" rx="2" fill="#C9A84C" opacity=".25"/><rect x="4" y="6" width="16" height="9" rx="1.5" fill="#C9A84C" opacity=".45"/><rect x="8" y="2" width="8" height="8" rx="1" fill="#C9A84C"/></svg></div>
+      <div class="svc-ico">🏪</div>
       <div class="svc-name">매물 마켓</div>
-      <div class="svc-desc">상가·집기·식자재를 고기 업종 사장님들에게 직접 거래하세요</div>
-      <span class="svc-arrow">자세히 보기 →</span>
+      <div class="svc-desc">상가·집기·식자재를 고기 업종 사장님들에게 직접 거래</div>
+      <span class="svc-link">자세히 보기 →</span>
     </div>
-    <div class="svc-card reveal rd2" onclick="location.href='meat_insight_main.html'">
+    <div class="svc reveal d2" onclick="location.href='meat_insight_main.html'">
       <div class="svc-num">03</div>
-      <div class="svc-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 20L6 9h12l2 11H4z" fill="#C9A84C" opacity=".3"/><rect x="3" y="6" width="18" height="3.5" rx="1" fill="#C9A84C" opacity=".6"/></svg></div>
-      <div class="svc-name">폐업 지원</div>
-      <div class="svc-desc">철거 연결·에스크로 결제·지원금 신청까지 한 번에 처리</div>
-      <span class="svc-arrow">자세히 보기 →</span>
+      <div class="svc-ico">💬</div>
+      <div class="svc-name">커뮤니티</div>
+      <div class="svc-desc">질문·후기·실패사례를 사장님들과 솔직하게 공유</div>
+      <span class="svc-link">자세히 보기 →</span>
     </div>
-    <div class="svc-card reveal rd3" onclick="location.href='meat_insight_main.html'">
+    <div class="svc reveal d3" onclick="location.href='meat_insight_main.html'">
       <div class="svc-num">04</div>
-      <div class="svc-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#C9A84C" opacity=".12"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#C9A84C" font-family="sans-serif">₩</text></svg></div>
+      <div class="svc-ico">📋</div>
       <div class="svc-name">창업 컨설팅</div>
       <div class="svc-desc">상권분석·원가계산기·전문가 1:1 비대면 상담까지</div>
-      <span class="svc-arrow">자세히 보기 →</span>
+      <span class="svc-link">자세히 보기 →</span>
     </div>
   </div>
 </section>
 
 <!-- 시세 -->
-<section class="sec dark" id="sise" style="padding-top:0;border-top:1px solid rgba(201,168,76,.08);">
-  <div class="sise-section">
+<section class="sise-sec" id="sise">
+  <div class="sise-wrap">
     <div class="reveal">
       <div class="sec-ey">Daily Price</div>
-      <div class="sec-title">오늘의<br>축산물 시세</div>
-      <div class="sec-sub" style="margin-bottom:28px;">매일 오전 9시 갱신 · 축산물품질평가원 데이터</div>
-      <button class="sise-more-btn" onclick="location.href='meat_insight_main.html'">전체 시세 보기 →</button>
+      <div class="sise-title">오늘의<br>축산물 시세</div>
+      <div class="sise-sub">매일 오전 9시 갱신<br>축산물품질평가원 공공 데이터 기반</div>
+      <button class="sise-btn" onclick="location.href='meat_insight_main.html'">전체 시세 보기 →</button>
     </div>
-    <div class="sise-items reveal rd1">
-      <div class="sise-item"><div class="sise-item-left"><div class="sise-item-name">한우 등심 1++</div><div class="sise-item-grade">도매가 기준</div></div><div class="sise-item-right"><div class="sise-item-price">78,000원/kg</div><div class="sise-item-chg chg-up">▲ 2.3%</div></div></div>
-      <div class="sise-item"><div class="sise-item-left"><div class="sise-item-name">돼지 삼겹살 A등급</div><div class="sise-item-grade">도매가 기준</div></div><div class="sise-item-right"><div class="sise-item-price">22,000원/kg</div><div class="sise-item-chg chg-dn">▼ 0.8%</div></div></div>
-      <div class="sise-item"><div class="sise-item-left"><div class="sise-item-name">미국산 갈비 Choice</div><div class="sise-item-grade">도매가 기준</div></div><div class="sise-item-right"><div class="sise-item-price">32,000원/kg</div><div class="sise-item-chg chg-dn">▼ 1.5%</div></div></div>
-      <div class="sise-item"><div class="sise-item-left"><div class="sise-item-name">한우 채끝 1++</div><div class="sise-item-grade">도매가 기준</div></div><div class="sise-item-right"><div class="sise-item-price">71,000원/kg</div><div class="sise-item-chg chg-up">▲ 3.1%</div></div></div>
-      <div class="sise-item"><div class="sise-item-left"><div class="sise-item-name">닭 전체 A급</div><div class="sise-item-grade">도매가 기준</div></div><div class="sise-item-right"><div class="sise-item-price">2,800원/kg</div><div class="sise-item-chg chg-up">▲ 0.7%</div></div></div>
+    <div class="sise-list reveal d1">
+      <div class="sise-item"><div><div class="si-name">한우 등심 1++</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">78,000원/kg</div><div class="si-chg up">▲ 2.3%</div></div></div>
+      <div class="sise-item"><div><div class="si-name">돼지 삼겹살 A등급</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">22,000원/kg</div><div class="si-chg dn">▼ 0.8%</div></div></div>
+      <div class="sise-item"><div><div class="si-name">한우 채끝 1++</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">71,000원/kg</div><div class="si-chg up">▲ 3.1%</div></div></div>
+      <div class="sise-item"><div><div class="si-name">미국산 갈비 Choice</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">32,000원/kg</div><div class="si-chg dn">▼ 1.5%</div></div></div>
+      <div class="sise-item"><div><div class="si-name">닭 전체 A급</div><div class="si-grade">도매가 기준</div></div><div><div class="si-price">2,800원/kg</div><div class="si-chg up">▲ 0.7%</div></div></div>
     </div>
   </div>
 </section>
 
 <!-- 매물 -->
-<section class="sec white" id="listing">
+<section class="sec" id="listing" style="background:#fff;">
   <div class="sec-head reveal">
     <div class="sec-ey">Market</div>
     <div class="sec-title">최근 등록 매물</div>
     <div class="sec-sub">고기 업종 특화 매물을 직접 찾고 거래하세요</div>
   </div>
-  <div class="listing-row">
-    <div class="lcard reveal" onclick="location.href='meat_insight_main.html'">
-      <div class="lcard-thumb"><div class="lcard-inner"></div><div class="lcard-new">NEW</div></div>
-      <div class="lcard-body"><div class="lcard-tag">상가·권리금</div><div class="lcard-title">정육점 양도 — 단골 다수</div><div class="lcard-price">권리금 2,500만원</div><div class="lcard-foot"><span class="lcard-loc">경기 안양시</span><span class="lcard-ago">오늘</span></div></div>
+  <div class="listing-grid">
+    <div class="lc reveal" onclick="location.href='meat_insight_main.html'">
+      <div class="lc-img"><div class="lc-img-graphic">🏪</div><div class="lc-badge">NEW</div></div>
+      <div class="lc-body"><div class="lc-tag">상가·권리금</div><div class="lc-title">정육점 양도 — 단골 다수</div><div class="lc-price">권리금 2,500만원</div><div class="lc-foot"><span class="lc-loc">경기 안양시</span><span class="lc-ago">오늘</span></div></div>
     </div>
-    <div class="lcard reveal rd1" onclick="location.href='meat_insight_main.html'">
-      <div class="lcard-thumb"><div class="lcard-inner"></div></div>
-      <div class="lcard-body"><div class="lcard-tag">집기·장비</div><div class="lcard-title">정육 냉장 쇼케이스 2m</div><div class="lcard-price">180만원</div><div class="lcard-foot"><span class="lcard-loc">서울 은평구</span><span class="lcard-ago">1일 전</span></div></div>
+    <div class="lc reveal d1" onclick="location.href='meat_insight_main.html'">
+      <div class="lc-img"><div class="lc-img-graphic">🧊</div></div>
+      <div class="lc-body"><div class="lc-tag">집기·장비</div><div class="lc-title">정육 냉장 쇼케이스 2m</div><div class="lc-price">180만원</div><div class="lc-foot"><span class="lc-loc">서울 은평구</span><span class="lc-ago">1일 전</span></div></div>
     </div>
-    <div class="lcard reveal rd2" onclick="location.href='meat_insight_main.html'">
-      <div class="lcard-thumb"><div class="lcard-inner"></div></div>
-      <div class="lcard-body"><div class="lcard-tag">상가·권리금</div><div class="lcard-title">삼겹살 전문점 양도</div><div class="lcard-price">권리금 3,500만원</div><div class="lcard-foot"><span class="lcard-loc">서울 마포구</span><span class="lcard-ago">2일 전</span></div></div>
+    <div class="lc reveal d2" onclick="location.href='meat_insight_main.html'">
+      <div class="lc-img"><div class="lc-img-graphic">🥩</div></div>
+      <div class="lc-body"><div class="lc-tag">상가·권리금</div><div class="lc-title">삼겹살 전문점 양도</div><div class="lc-price">권리금 3,500만원</div><div class="lc-foot"><span class="lc-loc">서울 마포구</span><span class="lc-ago">2일 전</span></div></div>
     </div>
   </div>
-  <div style="text-align:center;">
-    <button class="sec-more-link" onclick="location.href='meat_insight_main.html'">전체 매물 보기 →</button>
+  <div style="text-align:center;margin-top:40px;">
+    <button style="background:var(--cr);color:var(--n);padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;border:1.5px solid #ddd;font-family:'Noto Sans KR',sans-serif;transition:all .2s;" onmouseover="this.style.borderColor='#C9A84C';this.style.color='#C9A84C'" onmouseout="this.style.borderColor='#ddd';this.style.color='#0B1628'" onclick="location.href='meat_insight_main.html'">전체 매물 보기 →</button>
   </div>
 </section>
 
 <!-- 컨설팅 -->
-<section class="sec dark" id="consult">
+<section class="sec" id="consult" style="background:var(--cr);">
   <div class="sec-head reveal">
     <div class="sec-ey">Consulting</div>
     <div class="sec-title">전문가가<br>직접 분석합니다</div>
     <div class="sec-sub">52년 업력의 협신식품이 만든 고기업종 전문 컨설팅</div>
   </div>
-  <div class="consult-grid">
+  <div class="consult-wrap">
     <div class="cc reveal">
       <div class="cc-top">
         <span class="cc-badge">REPORT</span>
@@ -454,117 +406,113 @@ body{font-family:'Noto Sans KR',sans-serif;color:#0A0A0A;overflow-x:hidden;backg
         <div class="cc-sub">상권 분석부터 손익분기점까지 PDF로 제공</div>
       </div>
       <div class="cc-body">
-        <ul class="cc-includes">
-          <li><div class="cc-check"></div>반경 500m 상권 분석 (유동인구·경쟁점)</li>
-          <li><div class="cc-check"></div>업종별 예상 월매출 · 원가율 데이터</li>
-          <li><div class="cc-check"></div>초기 투자비용 · 손익분기점 산정</li>
-          <li><div class="cc-check"></div>지역 맞춤 입지 추천 · PDF 제공</li>
+        <ul class="cc-list">
+          <li><div class="cc-dot"></div>반경 500m 상권 분석 (유동인구·경쟁점)</li>
+          <li><div class="cc-dot"></div>업종별 예상 월매출 · 원가율 데이터</li>
+          <li><div class="cc-dot"></div>초기 투자비용 · 손익분기점 산정</li>
+          <li><div class="cc-dot"></div>지역 맞춤 입지 추천 · PDF 제공</li>
         </ul>
-        <div class="cc-price-row">
-          <div class="cc-price">200,000원 <small>/ 건 · 3~5일</small></div>
-          <button class="cc-btn" onclick="location.href='meat_insight_main.html'">신청하기</button>
+        <div class="cc-footer">
+          <div class="cc-price">200,000원 <small>/ 건</small></div>
+          <button class="cc-btn cc-btn-dark" onclick="location.href='meat_insight_main.html'">신청하기</button>
         </div>
       </div>
     </div>
-    <div class="cc featured reveal rd1">
+    <div class="cc featured reveal d1">
       <div class="cc-top">
         <span class="cc-badge">1:1 CONSULTING</span>
         <div class="cc-title">비대면 전문가 상담</div>
         <div class="cc-sub">60분 화상 심층 상담 · 맞춤 전략 제시</div>
       </div>
       <div class="cc-body">
-        <ul class="cc-includes">
-          <li><div class="cc-check"></div>60분 화상 심층 상담</li>
-          <li><div class="cc-check"></div>원가율 · 수익 구조 맞춤 분석</li>
-          <li><div class="cc-check"></div>메뉴 · 운영 개선 전략 제시</li>
-          <li><div class="cc-check"></div>상담 후 요약 리포트 제공</li>
+        <ul class="cc-list">
+          <li><div class="cc-dot"></div>60분 화상 심층 상담</li>
+          <li><div class="cc-dot"></div>원가율 · 수익 구조 맞춤 분석</li>
+          <li><div class="cc-dot"></div>메뉴 · 운영 개선 전략 제시</li>
+          <li><div class="cc-dot"></div>상담 후 요약 리포트 제공</li>
         </ul>
-        <div class="cc-price-row">
+        <div class="cc-footer">
           <div class="cc-price">1,500,000원 <small>/ 회</small></div>
-          <button class="cc-btn" onclick="location.href='meat_insight_main.html'">신청하기</button>
+          <button class="cc-btn cc-btn-gold" onclick="location.href='meat_insight_main.html'">신청하기</button>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- 커뮤니티 -->
-<section class="sec dark" id="community" style="border-top:1px solid rgba(201,168,76,.08);">
-  <div class="sec-head reveal">
-    <div class="sec-ey">Community</div>
-    <div class="sec-title">사장님들의<br>이야기</div>
-    <div class="sec-sub">질문·후기·실패사례를 솔직하게 공유하세요</div>
-  </div>
-  <div class="cm-grid">
-    <div class="cm-card reveal" onclick="location.href='meat_insight_main.html'">
-      <span class="cm-badge cb-r">후기</span><span class="cm-hot">🔥 인기</span>
-      <div class="cm-title">창업 리포트 후기 — 결과적으로 잘됐어요</div>
-      <div class="cm-preview">처음에 반신반의했는데 상권분석이 정말 정확했어요. 덕분에 자리를 바꿨고 월매출이 30% 높게 나오고 있습니다.</div>
-      <div class="cm-meta"><span class="cm-author">성공한삼겹집</span><div class="cm-stats"><span class="cm-stat">👁 342</span><span class="cm-stat">💬 24</span><span class="cm-stat">❤️ 47</span></div></div>
-    </div>
-    <div class="cm-card reveal rd1" onclick="location.href='meat_insight_main.html'">
-      <span class="cm-badge cb-f">실패사례</span><span class="cm-hot">🔥 인기</span>
-      <div class="cm-title">고깃집 3년 하다 폐업한 이야기 — 원가 관리 실패</div>
-      <div class="cm-preview">매출은 됐는데 원가율이 70%가 넘어가니 남는 게 없더라고요. 처음부터 제대로 계산했어야 했는데...</div>
-      <div class="cm-meta"><span class="cm-author">쓴경험공유</span><div class="cm-stats"><span class="cm-stat">👁 891</span><span class="cm-stat">💬 56</span><span class="cm-stat">❤️ 103</span></div></div>
-    </div>
-    <div class="cm-card reveal rd2" onclick="location.href='meat_insight_main.html'">
-      <span class="cm-badge cb-i">정보</span>
-      <div class="cm-title">한우 부위별 마진율 정리 — 도매가 기준</div>
-      <div class="cm-preview">등심은 마진이 좋지만 회전이 느리고, 앞다리는 박리다매로 좋습니다. 제 경험 기준으로 정리해봤어요.</div>
-      <div class="cm-meta"><span class="cm-author">정육달인</span><div class="cm-stats"><span class="cm-stat">👁 567</span><span class="cm-stat">💬 31</span><span class="cm-stat">❤️ 78</span></div></div>
-    </div>
-  </div>
-  <div style="text-align:center;margin-top:36px;">
-    <button class="sise-more-btn" onclick="location.href='meat_insight_main.html'">커뮤니티 전체보기 →</button>
-  </div>
-</section>
-
 <!-- 후기 -->
-<section class="sec white">
+<section class="sec" style="background:#fff;">
   <div class="sec-head reveal">
     <div class="sec-ey">Reviews</div>
     <div class="sec-title">실제 사장님들의<br>이야기입니다</div>
   </div>
-  <div class="review-grid">
-    <div class="rv-card reveal">
+  <div class="review-wrap">
+    <div class="rv reveal">
       <div class="rv-stars">★★★★★</div>
       <div class="rv-text">"창업 리포트 보고 나서 입지를 바꿨어요. 지금 월매출이 예상보다 30% 높게 나오고 있습니다."</div>
-      <div class="rv-author"><div class="rv-avatar">김</div><div><div class="rv-name">김○○ 사장님</div><div class="rv-info">경기도 수원 · 정육점 창업</div></div></div>
+      <div class="rv-line"><div class="rv-avatar">김</div><div><div class="rv-name">김○○ 사장님</div><div class="rv-info">경기도 수원 · 정육점 창업</div></div></div>
     </div>
-    <div class="rv-card reveal rd1">
+    <div class="rv reveal d1">
       <div class="rv-stars">★★★★★</div>
       <div class="rv-text">"폐업할 때 집기를 3일 만에 다 팔았어요. 철거 비용을 거의 다 뽑았습니다."</div>
-      <div class="rv-author"><div class="rv-avatar">박</div><div><div class="rv-name">박○○ 사장님</div><div class="rv-info">서울 마포구 · 고깃집 폐업</div></div></div>
+      <div class="rv-line"><div class="rv-avatar">박</div><div><div class="rv-name">박○○ 사장님</div><div class="rv-info">서울 마포구 · 고깃집 폐업</div></div></div>
     </div>
-    <div class="rv-card reveal rd2">
+    <div class="rv reveal d2">
       <div class="rv-stars">★★★★★</div>
-      <div class="rv-text">"희망리턴패키지 몰랐는데 대신 신청해줬어요. 220만원 받았습니다. 정말 감사해요."</div>
-      <div class="rv-author"><div class="rv-avatar">이</div><div><div class="rv-name">이○○ 사장님</div><div class="rv-info">인천 남동구 · 정육점 폐업</div></div></div>
+      <div class="rv-text">"희망리턴패키지 몰랐는데 대신 신청해줬어요. 220만원 받았습니다."</div>
+      <div class="rv-line"><div class="rv-avatar">이</div><div><div class="rv-name">이○○ 사장님</div><div class="rv-info">인천 남동구 · 정육점 폐업</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="sec" id="faq" style="background:var(--cr);">
+  <div class="sec-head reveal">
+    <div class="sec-ey">FAQ</div>
+    <div class="sec-title">자주 묻는 질문</div>
+  </div>
+  <div class="faq-wrap">
+    <div class="faq-item reveal" onclick="toggleFaq(this)">
+      <div class="faq-q"><span class="faq-q-txt">매물 등록은 정말 무료인가요?</span><span class="faq-icon">+</span></div>
+      <div class="faq-a">네, 기본 등록은 완전 무료예요. 상가·집기·식자재 모두 무료로 올릴 수 있어요. 더 많은 노출을 원하시면 프리미엄 상단 노출(월 3~5만원)을 선택하실 수 있어요.</div>
+    </div>
+    <div class="faq-item reveal" onclick="toggleFaq(this)">
+      <div class="faq-q"><span class="faq-q-txt">창업 리포트는 어느 지역이든 가능한가요?</span><span class="faq-icon">+</span></div>
+      <div class="faq-a">전국 어디든 가능해요. 원하는 지역과 업종을 알려주시면 해당 상권을 분석해서 3~5일 내 PDF 리포트를 보내드려요.</div>
+    </div>
+    <div class="faq-item reveal" onclick="toggleFaq(this)">
+      <div class="faq-q"><span class="faq-q-txt">폐업 지원금은 누구나 받을 수 있나요?</span><span class="faq-icon">+</span></div>
+      <div class="faq-a">임차 사업자라면 희망리턴패키지(최대 250만원)를 받을 수 있어요. 자가 소유는 해당이 안 되고, 폐업 신고 전에 신청해야 해요. 수령 가능 여부를 무료로 먼저 확인해드립니다.</div>
+    </div>
+    <div class="faq-item reveal" onclick="toggleFaq(this)">
+      <div class="faq-q"><span class="faq-q-txt">공급사 직거래는 최소 주문량이 있나요?</span><span class="faq-icon">+</span></div>
+      <div class="faq-a">공급사마다 달라요. 협신식품은 수도권 50kg 이상이고, 수입육 업체는 소량 발주도 가능해요. 각 공급사 상세 페이지에서 확인하고 직접 문의하시면 돼요.</div>
+    </div>
+    <div class="faq-item reveal" onclick="toggleFaq(this)">
+      <div class="faq-q"><span class="faq-q-txt">철거 견적은 얼마나 걸리나요?</span><span class="faq-icon">+</span></div>
+      <div class="faq-a">가게 위치와 면적을 입력하면 당일 내로 전국 파트너사 2~3곳의 견적을 받아볼 수 있어요. 에스크로 결제로 안전하게 진행됩니다.</div>
     </div>
   </div>
 </section>
 
 <!-- CTA -->
-<section class="sec gold">
-  <div class="cta-inner reveal">
-    <div class="cta-title">지금 바로 시작하세요</div>
-    <div class="cta-sub">매물 등록 무료 · 계산기 무료 · 지원금 확인 무료<br>고기 업종 사장님만을 위한 플랫폼</div>
-    <button class="cta-btn" onclick="location.href='meat_insight_main.html'">플랫폼 무료로 시작하기 →</button>
-    <div class="cta-note">회원가입 1분 · 카카오 로그인</div>
-  </div>
+<section class="cta-sec">
+  <div class="cta-title reveal">지금 바로 시작하세요</div>
+  <div class="cta-sub reveal">매물 등록 무료 · 계산기 무료 · 지원금 확인 무료</div>
+  <button class="cta-btn reveal" onclick="location.href='meat_insight_main.html'">플랫폼 무료로 시작하기 →</button>
+  <div class="cta-note reveal">회원가입 1분 · 카카오 로그인 지원</div>
 </section>
 
 <!-- FOOTER -->
 <footer class="footer">
-  <div class="footer-top">
+  <div class="footer-grid">
     <div>
       <div class="footer-logo">MEAT INSIGHT</div>
       <div class="footer-desc">정육점·고깃집 사장님을 위한<br>축산 사업자 통합 플랫폼</div>
       <div class="footer-by">by 협신식품 (주) · 1972년 설립</div>
     </div>
     <div>
-      <div class="footer-col-title">서비스</div>
+      <div class="footer-col-t">서비스</div>
       <ul class="footer-links">
         <li onclick="location.href='meat_insight_main.html'">오늘의 시세</li>
         <li onclick="location.href='meat_insight_main.html'">매물 마켓</li>
@@ -574,7 +522,7 @@ body{font-family:'Noto Sans KR',sans-serif;color:#0A0A0A;overflow-x:hidden;backg
       </ul>
     </div>
     <div>
-      <div class="footer-col-title">정보</div>
+      <div class="footer-col-t">정보</div>
       <ul class="footer-links">
         <li>회사 소개</li>
         <li>공급사 입점</li>
@@ -583,7 +531,7 @@ body{font-family:'Noto Sans KR',sans-serif;color:#0A0A0A;overflow-x:hidden;backg
       </ul>
     </div>
     <div>
-      <div class="footer-col-title">고객지원</div>
+      <div class="footer-col-t">고객지원</div>
       <ul class="footer-links">
         <li>자주 묻는 질문</li>
         <li>이용약관</li>
@@ -592,19 +540,11 @@ body{font-family:'Noto Sans KR',sans-serif;color:#0A0A0A;overflow-x:hidden;backg
     </div>
   </div>
   <div class="footer-bottom">
-    <div class="footer-copy">© 2025 MEAT INSIGHT · 협신식품 (주) · 사업자등록번호 000-00-00000</div>
-    <div class="footer-legal"><span>이용약관</span><span>개인정보처리방침</span></div>
+    <div class="footer-copy">© 2025 MEAT INSIGHT · 협신식품 (주) · 고기업종 전문 플랫폼</div>
   </div>
 </footer>
 
 <script>
-// 커서
-const cur=document.getElementById('cur'),curR=document.getElementById('cur-r');
-let mx=0,my=0,rx=0,ry=0;
-document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.transform=`translate(${mx-5}px,${my-5}px)`;});
-function animCur(){rx+=(mx-rx-16)*.1;ry+=(my-ry-16)*.1;curR.style.transform=`translate(${rx}px,${ry}px)`;requestAnimationFrame(animCur);}
-animCur();
-
 // 네비 스크롤
 window.addEventListener('scroll',()=>{
   document.getElementById('nav').classList.toggle('solid',window.scrollY>60);
@@ -615,6 +555,16 @@ const obs=new IntersectionObserver(entries=>{
   entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('on');});
 },{threshold:.1});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// FAQ
+function toggleFaq(el){
+  const a=el.querySelector('.faq-a');
+  const ic=el.querySelector('.faq-icon');
+  const open=a.style.display==='block';
+  document.querySelectorAll('.faq-a').forEach(x=>x.style.display='none');
+  document.querySelectorAll('.faq-icon').forEach(x=>x.textContent='+');
+  if(!open){a.style.display='block';ic.textContent='−';}
+}
 </script>
 </body>
 </html>

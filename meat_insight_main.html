@@ -1265,14 +1265,7 @@ function sCT(el,i){
   document.getElementById('cv1').style.display=i===1?'block':'none';
 }
 
-function sCC(el,i){
-  document.querySelectorAll('.ct').forEach(e=>e.classList.remove('on'));
-  el.classList.add('on');
-  ['cp0','cp1','cp2'].forEach((id,j)=>{
-    const p=document.getElementById(id);
-    if(p)p.style.display=j===i?'block':'none';
-  });
-}
+
 
 function sT(i){
   [0,1,2].forEach(j=>{
@@ -1405,7 +1398,7 @@ function mpCalc(){
   document.getElementById('mp-r3').textContent=recPrice.toLocaleString()+'원';
   document.getElementById('mp-r4').textContent=realCostRate+'%';
   document.getElementById('mp-r5').textContent=margin.toLocaleString()+'원';
-  document.getElementById('mp-r6').textContent=comp?(recPrice>comp?'경쟁사보다 '+Math.abs(recPrice-comp).toLocaleString()+'원 높음':'경\�사보다 '+Math.abs(comp-recPrice).toLocaleString()+'원 낮음'):'-';
+  document.getElementById('mp-r6').textContent=comp?(recPrice>comp?'경쟁사보다 '+Math.abs(recPrice-comp).toLocaleString()+'원 높음':'경쟁사보다 '+Math.abs(comp-recPrice).toLocaleString()+'원 낮음'):'-';
 
   const advice=document.getElementById('mp-advice');
   if(comp&&recPrice>comp*1.15) advice.textContent='⚠️ 권장가가 경쟁사보다 15% 이상 높습니다. 원가율을 높이거나 프리미엄 포지셔닝 전략이 필요합니다.';

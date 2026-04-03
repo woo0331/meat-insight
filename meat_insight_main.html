@@ -384,19 +384,19 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
         <option value="3">고깃집 — 삼겹살</option>
       </select>
       <div class="r2">
-        <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="number" id="c1-buy" value="65000" oninput="calc1()"/></div>
+        <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="number" id="c1-buy" oninput="formatNum(this);calc1()" value="65000" oninput="calc1()"/></div>
         <div><label class="fl">손질 후 수율 (%)</label><input class="fi" type="number" id="c1-yield" value="85" oninput="calc1()"/></div>
       </div>
       <div class="r2">
-        <div><label class="fl">판매가 (원/100g)</label><input class="fi" type="number" id="c1-sell" value="18000" oninput="calc1()"/></div>
-        <div><label class="fl">월 판매량 (kg)</label><input class="fi" type="number" id="c1-qty" value="100" oninput="calc1()"/></div>
+        <div><label class="fl">판매가 (원/100g)</label><input class="fi" type="number" id="c1-sell" oninput="formatNum(this);calc1()" value="18000" oninput="calc1()"/></div>
+        <div><label class="fl">월 판매량 (kg)</label><input class="fi" type="number" id="c1-qty" oninput="formatNum(this);calc1()" value="100" oninput="calc1()"/></div>
       </div>
       <div class="r2">
-        <div><label class="fl">인건비 (원/월)</label><input class="fi" type="number" id="c1-labor" value="2500000" oninput="calc1()"/></div>
-        <div><label class="fl">임대료 (원/월)</label><input class="fi" type="number" id="c1-rent" value="1500000" oninput="calc1()"/></div>
+        <div><label class="fl">인건비 (원/월)</label><input class="fi" type="number" id="c1-labor" oninput="formatNum(this);calc1()" value="2500000" oninput="calc1()"/></div>
+        <div><label class="fl">임대료 (원/월)</label><input class="fi" type="number" id="c1-rent" oninput="formatNum(this);calc1()" value="1500000" oninput="calc1()"/></div>
       </div>
       <label class="fl">기타 고정비 (원/월)</label>
-      <input class="fi" type="number" id="c1-etc" value="500000" oninput="calc1()"/>
+      <input class="fi" type="number" id="c1-etc" oninput="formatNum(this);calc1()" value="500000" oninput="calc1()"/>
       <div class="result-box">
         <div class="result-title">📊 계산 결과</div>
         <div class="result-grid">
@@ -418,15 +418,15 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
     <div class="card" id="calc-1" style="display:none;">
       <div class="card-title">📈 손익분기점 계산기</div>
       <label class="fl">월 임대료 (원)</label>
-      <input class="fi" type="number" id="c2-rent" value="1500000" oninput="calc2()"/>
+      <input class="fi" type="number" id="c2-rent" oninput="formatNum(this);calc2()" value="1500000" oninput="calc2()"/>
       <label class="fl">월 인건비 (원) — 사장님 포함</label>
-      <input class="fi" type="number" id="c2-labor" value="3000000" oninput="calc2()"/>
+      <input class="fi" type="number" id="c2-labor" oninput="formatNum(this);calc2()" value="3000000" oninput="calc2()"/>
       <div class="r2">
-        <div><label class="fl">월 관리비 (원)</label><input class="fi" type="number" id="c2-mgmt" value="300000" oninput="calc2()"/></div>
-        <div><label class="fl">기타 고정비 (원)</label><input class="fi" type="number" id="c2-etc" value="500000" oninput="calc2()"/></div>
+        <div><label class="fl">월 관리비 (원)</label><input class="fi" type="number" id="c2-mgmt" oninput="formatNum(this);calc2()" value="300000" oninput="calc2()"/></div>
+        <div><label class="fl">기타 고정비 (원)</label><input class="fi" type="number" id="c2-etc" oninput="formatNum(this);calc2()" value="500000" oninput="calc2()"/></div>
       </div>
       <div class="r2">
-        <div><label class="fl">평균 객단가 (원)</label><input class="fi" type="number" id="c2-price" value="35000" oninput="calc2()"/></div>
+        <div><label class="fl">평균 객단가 (원)</label><input class="fi" type="number" id="c2-price" oninput="formatNum(this);calc2()" value="35000" oninput="calc2()"/></div>
         <div><label class="fl">재료 원가율 (%)</label><input class="fi" type="number" id="c2-cost" value="55" oninput="calc2()"/></div>
       </div>
       <label class="fl">월 영업일</label>
@@ -461,7 +461,7 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
         <option value="9000:85:200">항정살</option>
       </select>
       <div class="r2">
-        <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="number" id="c3-buy" value="65000" oninput="calc3()"/></div>
+        <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="number" id="c3-buy" oninput="formatNum(this);calc3()" value="65000" oninput="calc3()"/></div>
         <div><label class="fl">수율 (%)</label><input class="fi" type="number" id="c3-yield" value="88" oninput="calc3()"/></div>
       </div>
       <div class="r2">
@@ -469,8 +469,8 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
         <div><label class="fl">목표 원가율 (%)</label><input class="fi" type="number" id="c3-target" value="55" oninput="calc3()"/></div>
       </div>
       <div class="r2">
-        <div><label class="fl">밑반찬·쌈 원가 (원)</label><input class="fi" type="number" id="c3-side" value="1500" oninput="calc3()"/></div>
-        <div><label class="fl">주변 경쟁 평균가 (원)</label><input class="fi" type="number" id="c3-comp" value="18000" oninput="calc3()"/></div>
+        <div><label class="fl">밑반찬·쌈 원가 (원)</label><input class="fi" type="number" id="c3-side" oninput="formatNum(this);calc3()" value="1500" oninput="calc3()"/></div>
+        <div><label class="fl">주변 경쟁 평균가 (원)</label><input class="fi" type="number" id="c3-comp" oninput="formatNum(this);calc3()" value="18000" oninput="calc3()"/></div>
       </div>
       <div class="result-box">
         <div class="result-title">📊 계산 결과</div>
@@ -504,7 +504,7 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
       </select>
       <div class="r2">
         <div><label class="fl">구입 중량 (kg)</label><input class="fi" type="number" id="c4-weight" value="10" oninput="calc4()"/></div>
-        <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="number" id="c4-price" value="65000" oninput="calc4()"/></div>
+        <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="number" id="c4-price" oninput="formatNum(this);calc4()" value="65000" oninput="calc4()"/></div>
       </div>
       <div class="r2">
         <div><label class="fl">뼈 비율 (%)</label><input class="fi" type="number" id="c4-bone" value="0" oninput="calc4()"/></div>
@@ -529,15 +529,15 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
       <div class="card-title">📦 월 발주량 계산기</div>
       <div class="card-note">📌 목표 매출을 역산해 필요한 발주량을 계산합니다</div>
       <div class="r2">
-        <div><label class="fl">목표 월 매출 (원)</label><input class="fi" type="number" id="c5-sales" value="30000000" oninput="calc5()"/></div>
+        <div><label class="fl">목표 월 매출 (원)</label><input class="fi" type="number" id="c5-sales" oninput="formatNum(this);calc5()" value="30000000" oninput="calc5()"/></div>
         <div><label class="fl">재료 원가율 (%)</label><input class="fi" type="number" id="c5-cost" value="55" oninput="calc5()"/></div>
       </div>
       <div class="r2">
-        <div><label class="fl">평균 판매가 (원/100g)</label><input class="fi" type="number" id="c5-sell" value="18000" oninput="calc5()"/></div>
+        <div><label class="fl">평균 판매가 (원/100g)</label><input class="fi" type="number" id="c5-sell" oninput="formatNum(this);calc5()" value="18000" oninput="calc5()"/></div>
         <div><label class="fl">평균 수율 (%)</label><input class="fi" type="number" id="c5-yield" value="85" oninput="calc5()"/></div>
       </div>
       <div class="r2">
-        <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="number" id="c5-buy" value="65000" oninput="calc5()"/></div>
+        <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="number" id="c5-buy" oninput="formatNum(this);calc5()" value="65000" oninput="calc5()"/></div>
         <div><label class="fl">월 영업일</label><input class="fi" type="number" id="c5-days" value="26" oninput="calc5()"/></div>
       </div>
       <div class="result-box">
@@ -931,7 +931,18 @@ function setCalc(el, i) {
 }
 
 // ── 계산기 함수 ──
-function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
+// ── 콤마 포맷 입력 ──
+function formatNum(input) {
+  var raw = input.value.replace(/[^0-9]/g, '');
+  if (raw === '') { input.value = ''; return; }
+  input.value = parseInt(raw, 10).toLocaleString();
+}
+
+function v(id) {
+  var el = document.getElementById(id);
+  if (!el) return 0;
+  return parseFloat(el.value.replace(/,/g, '')) || 0;
+}
 function sv(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
 
 function calc1() {
@@ -1054,6 +1065,18 @@ function calc5() {
 renderHomeSise();
 renderListings(LISTINGS.slice(0, 4), 'home-listing');
 renderCm('all', 'home-cm');
+// 초기값 콤마 포맷 적용
+var commaFields = ['c1-buy','c1-qty','c1-sell','c1-labor','c1-rent','c1-etc',
+  'c2-rent','c2-labor','c2-mgmt','c2-etc','c2-price',
+  'c3-buy','c3-side','c3-comp','c4-price',
+  'c5-sales','c5-sell','c5-buy'];
+commaFields.forEach(function(id) {
+  var el = document.getElementById(id);
+  if (el) {
+    var raw = el.value.replace(/[^0-9]/g, '');
+    if (raw) el.value = parseInt(raw, 10).toLocaleString();
+  }
+});
 calc1(); calc2(); c3Preset(); c4Preset(); calc5();
 </script>
 </body>

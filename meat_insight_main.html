@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>MEAT INSIGHT — 축산 사업자 플랫폼</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -591,7 +592,7 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
     <textarea class="fi" rows="3" placeholder="단골 현황, 장비 상태 등"></textarea>
     <label class="fl">연락처</label>
     <input class="fi" placeholder="010-0000-0000"/>
-    <button class="bfull" onclick="alert('등록 완료!\n담당자가 1일 내 연락드립니다.')">무료 등록하기</button>
+    <button class="bfull" onclick="go('reg')">무료 등록 페이지로 →</button>
   </div>
   <div id="mkt-2" style="display:none;" id="mkt-sup"></div>
 </div>
@@ -616,11 +617,80 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
   <div id="cm-list" style="padding:0 16px 20px;"></div>
 </div>
 
+
+<!-- ═══ 업체 찾기 ═══ -->
+<div class="pg" id="pg-biz">
+  <div style="background:var(--n);padding:18px 16px;">
+    <div style="font-family:var(--serif);font-size:20px;color:#fff;margin-bottom:4px;">업체 찾기</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5);">검증된 업체를 찾아보세요</div>
+    <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;" id="biz-cat-wrap">
+      <button class="sichip on" onclick="setBizCat(this,'all')">전체</button>
+      <button class="sichip" onclick="setBizCat(this,'supply')">고기 납품</button>
+      <button class="sichip" onclick="setBizCat(this,'equipment')">정육 장비</button>
+      <button class="sichip" onclick="setBizCat(this,'interior')">인테리어</button>
+      <button class="sichip" onclick="setBizCat(this,'food')">식자재</button>
+    </div>
+  </div>
+  <!-- 광고 배너 -->
+  <div style="background:rgba(201,168,76,.08);border-bottom:1px solid rgba(201,168,76,.15);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-size:11px;color:var(--g);font-weight:700;">📢 광고 문의 · 월 15만원부터 상단 노출</div>
+    <button onclick="alert('카카오채널로 문의해주세요.')" style="background:var(--g);color:#fff;border:none;border-radius:6px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);">문의</button>
+  </div>
+  <div id="biz-list" style="padding:10px 16px 20px;">
+    <div style="text-align:center;padding:40px;color:var(--ink3);">불러오는 중...</div>
+  </div>
+  <!-- 업체 등록 CTA -->
+  <div style="margin:0 16px 24px;background:var(--n2);border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:space-between;">
+    <div><div style="font-size:13px;color:var(--g);font-weight:700;margin-bottom:2px;">업체 등록 문의</div><div style="font-size:12px;color:rgba(255,255,255,.45);">기본 등록 무료</div></div>
+    <button onclick="go('biz-reg')" style="background:var(--g);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);">등록 신청 →</button>
+  </div>
+</div>
+
+<!-- ═══ 업체 등록 ═══ -->
+<div class="pg" id="pg-biz-reg">
+  <div class="phdr" onclick="go('biz')"><span class="phdr-back">←</span><span class="phdr-t">업체 등록 신청</span></div>
+  <div style="padding:12px 16px 20px;">
+    <div class="card-note">업체를 무료로 등록하고 고기 업종 사장님들께 홍보하세요</div>
+    <label class="fl">업체명 *</label>
+    <input class="fi" id="biz-name" placeholder="상호명"/>
+    <label class="fl">카테고리 *</label>
+    <select class="fi" id="biz-cat">
+      <option value="supply">고기 납품</option>
+      <option value="equipment">정육 장비</option>
+      <option value="interior">인테리어</option>
+      <option value="food">식자재</option>
+    </select>
+    <label class="fl">지역 *</label>
+    <select class="fi" id="biz-region">
+      <option value="서울">서울</option>
+      <option value="경기">경기</option>
+      <option value="인천">인천</option>
+      <option value="부산">부산</option>
+      <option value="대구">대구</option>
+      <option value="전국">전국 배송</option>
+    </select>
+    <label class="fl">업체 소개</label>
+    <textarea class="fi" id="biz-desc" rows="3" placeholder="주요 취급 품목, 특징 등"></textarea>
+    <label class="fl">연락처 *</label>
+    <input class="fi" id="biz-contact" placeholder="010-0000-0000"/>
+    <label class="fl">주소</label>
+    <input class="fi" id="biz-addr" placeholder="도로명 주소"/>
+    <button class="bfull" onclick="submitBiz()">무료 등록 신청</button>
+    <div id="biz-reg-msg" style="margin-top:10px;font-size:13px;text-align:center;"></div>
+  </div>
+</div>
+
 <!-- ═══ 더보기 ═══ -->
 <div class="pg" id="pg-more">
   <div style="background:var(--n);padding:18px 16px;">
     <div style="font-family:var(--serif);font-size:20px;color:#fff;margin-bottom:4px;">더보기</div>
     <div style="font-size:13px;color:rgba(255,255,255,.5);">모든 서비스</div>
+  </div>
+  <div class="more-section-title">업체 · 공급사</div>
+  <div class="more-grid">
+    <div class="more-item" onclick="go('biz')"><span class="more-ico">🔍</span><div class="more-name">업체 찾기</div><div class="more-desc">납품·장비·인테리어</div></div>
+    <div class="more-item" onclick="go('biz-reg')"><span class="more-ico">📝</span><div class="more-name">업체 등록</div><div class="more-desc">무료 등록</div></div>
+    <div class="more-item" onclick="setMktTab(document.getElementById('mt2'),2);go('mkt')"><span class="more-ico">🏭</span><div class="more-name">공급사</div><div class="more-desc">직거래</div></div>
   </div>
   <div class="more-section-title">창업 도구</div>
   <div class="more-grid">
@@ -665,7 +735,8 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
     <textarea class="fi" rows="3" placeholder="단골 현황, 장비 상태 등"></textarea>
     <label class="fl">연락처</label>
     <input class="fi" placeholder="010-0000-0000"/>
-    <button class="bfull" onclick="alert('등록 완료!\n담당자가 1일 내 연락드립니다.')">무료 등록하기</button>
+    <button class="bfull" id="reg-submit" onclick="submitListing()">무료 등록하기</button>
+  <div id="reg-msg" style="margin-top:10px;font-size:13px;text-align:center;"></div>
   </div>
 </div>
 
@@ -721,6 +792,219 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 </div>
 
 <script>
+// ── Supabase 초기화 ──
+var SUPA_URL = 'https://igignylgzjphtnyxhhsd.supabase.co';
+var SUPA_KEY = 'sb_publishable_lmqOzr1MdTPnOUdiCx2C_g_kcdSRuqD';
+var sb = window.supabase ? window.supabase.createClient(SUPA_URL, SUPA_KEY) : null;
+
+// ── 매물 등록 ──
+async function submitListing() {
+  if (!sb) { alert('연결 오류'); return; }
+  var typeEl = document.querySelector('#pg-reg select');
+  var bizEl = document.querySelectorAll('#pg-reg select')[1];
+  var addrEl = document.querySelectorAll('#pg-reg input')[0];
+  var priceEl = document.querySelectorAll('#pg-reg input')[1];
+  var depositEl = document.querySelectorAll('#pg-reg input')[2];
+  var descEl = document.querySelector('#pg-reg textarea');
+  var contactEl = document.querySelectorAll('#pg-reg input')[3];
+  var msg = document.getElementById('reg-msg');
+
+  var type = typeEl ? typeEl.value : '';
+  var contact = contactEl ? contactEl.value : '';
+  if (!contact) { msg.textContent = '연락처를 입력해주세요.'; msg.style.color='red'; return; }
+
+  msg.textContent = '등록 중...'; msg.style.color = 'var(--g)';
+  var btn = document.getElementById('reg-submit');
+  btn.disabled = true;
+
+  try {
+    var { error } = await sb.from('listings').insert({
+      type: type,
+      business_type: bizEl ? bizEl.value : '',
+      address: addrEl ? addrEl.value : '',
+      price: priceEl ? parseInt((priceEl.value||'0').replace(/,/g,'')) * 10000 : 0,
+      deposit: depositEl ? parseInt((depositEl.value||'0').replace(/,/g,'')) * 10000 : 0,
+      description: descEl ? descEl.value : '',
+      contact: contact,
+      title: (bizEl ? bizEl.value : '') + ' 매물',
+      region: addrEl ? (addrEl.value||'').split(' ')[0] : ''
+    });
+    if (error) throw error;
+    msg.textContent = '✅ 등록 완료! 담당자가 1일 내 연락드립니다.';
+    msg.style.color = 'green';
+  } catch(e) {
+    msg.textContent = '오류: ' + e.message;
+    msg.style.color = 'red';
+    btn.disabled = false;
+  }
+}
+
+// ── 매물 불러오기 ──
+async function loadListings() {
+  if (!sb) { renderListings(LISTINGS, 'mkt-listing'); return; }
+  try {
+    var { data, error } = await sb.from('listings').select('*').eq('status','노출중').order('created_at', {ascending:false}).limit(20);
+    if (error || !data || data.length === 0) { renderListings(LISTINGS, 'mkt-listing'); return; }
+    var mapped = data.map(function(d) {
+      return {
+        t: d.type === '상가·권리금' ? 's' : d.type === '집기·장비' ? 'i' : 'f',
+        tag: d.type || '매물',
+        ico: d.type === '상가·권리금' ? '🏪' : d.type === '집기·장비' ? '🧊' : '📦',
+        ti: d.title || '매물',
+        pr: d.price ? Math.round(d.price/10000).toLocaleString() + '만원' : '가격 문의',
+        lo: d.region || '',
+        ag: new Date(d.created_at).toLocaleDateString('ko-KR'),
+        nw: (Date.now() - new Date(d.created_at)) < 86400000
+      };
+    });
+    renderListings(mapped, 'mkt-listing');
+  } catch(e) {
+    renderListings(LISTINGS, 'mkt-listing');
+  }
+}
+
+// ── 업체 찾기 불러오기 ──
+var BIZ_CAT = 'all';
+async function loadBiz(cat) {
+  BIZ_CAT = cat;
+  var el = document.getElementById('biz-list');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:#777;">불러오는 중...</div>';
+
+  var bizData = [];
+  if (sb) {
+    try {
+      var query = sb.from('businesses').select('*').order('is_premium', {ascending:false}).order('created_at', {ascending:false});
+      if (cat !== 'all') query = query.eq('category', cat);
+      var res = await query;
+      if (!res.error && res.data && res.data.length > 0) bizData = res.data;
+    } catch(e) {}
+  }
+
+  if (bizData.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:30px;color:#777;">' +
+      '<div style="font-size:32px;margin-bottom:12px;">🔍</div>' +
+      '<div style="font-size:14px;font-weight:700;color:#333;margin-bottom:6px;">아직 등록된 업체가 없어요</div>' +
+      '<div style="font-size:13px;margin-bottom:16px;">첫 번째로 업체를 등록해보세요!</div>' +
+      '<button onclick="go(String.fromCharCode(98,105,122,45,114,101,103))" style="background:#C9A84C;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;">업체 무료 등록</button>' +
+      '</div>';
+    return;
+  }
+
+  var html = '';
+  for (var i = 0; i < bizData.length; i++) {
+    var b = bizData[i];
+    var border = b.is_premium ? '2px solid #C9A84C' : '1px solid #EDE9DC';
+    var ico = getCatIco(b.category);
+    var catName = getCatName(b.category);
+    var contact = b.contact || '';
+    html += '<div style="background:#fff;border:' + border + ';border-radius:14px;padding:16px;margin-bottom:10px;">';
+    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">';
+    html += '<div style="width:44px;height:44px;background:#F5EDD8;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">' + ico + '</div>';
+    html += '<div style="flex:1;">';
+    if (b.is_premium) html += '<span style="font-size:9px;background:#C9A84C;color:#fff;padding:2px 7px;border-radius:3px;font-weight:700;margin-right:4px;">광고</span>';
+    if (b.is_verified) html += '<span style="font-size:9px;background:#DCFCE7;color:#166534;padding:2px 7px;border-radius:3px;">검증완료</span>';
+    html += '<div style="font-size:15px;font-weight:700;color:#0F1E3D;margin-top:3px;">' + b.name + '</div>';
+    html += '<div style="font-size:12px;color:#777;">' + (b.region||'') + ' · ' + catName + '</div>';
+    html += '</div></div>';
+    if (b.description) html += '<div style="font-size:13px;color:#333;line-height:1.6;margin-bottom:10px;">' + b.description + '</div>';
+    html += '<button data-c="' + contact + '" onclick="callBiz(this)" style="width:100%;padding:9px;background:#0F1E3D;color:#C9A84C;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">📞 문의하기</button>';
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function callBiz(btn) {
+  var c = btn.getAttribute('data-c');
+  if (c) location.href = 'tel:' + c;
+  else alert('연락처 준비중');
+}
+function getCatIco(cat) {
+  if (cat==='supply') return '🥩';
+  if (cat==='equipment') return '🔧';
+  if (cat==='interior') return '🏗️';
+  if (cat==='food') return '🧅';
+  return '🏢';
+}
+function getCatName(cat) {
+  return cat==='supply'?'고기 납품':cat==='equipment'?'정육 장비':cat==='interior'?'인테리어':cat==='food'?'식자재':'기타';
+}
+
+function setBizCat(el, cat) {
+  document.querySelectorAll('#biz-cat-wrap .sichip').forEach(function(e) { e.className='sichip'; });
+  el.className = 'sichip on';
+  loadBiz(cat);
+}
+
+// ── 업체 등록 ──
+async function submitBiz() {
+  if (!sb) { alert('연결 오류'); return; }
+  var name = document.getElementById('biz-name').value;
+  var cat = document.getElementById('biz-cat').value;
+  var region = document.getElementById('biz-region').value;
+  var desc = document.getElementById('biz-desc').value;
+  var contact = document.getElementById('biz-contact').value;
+  var addr = document.getElementById('biz-addr').value;
+  var msg = document.getElementById('biz-reg-msg');
+
+  if (!name || !contact) { msg.textContent = '업체명과 연락처는 필수입니다.'; msg.style.color='red'; return; }
+  msg.textContent = '등록 중...'; msg.style.color = 'var(--g)';
+
+  try {
+    var { error } = await sb.from('businesses').insert({
+      name: name, category: cat, region: region,
+      description: desc, contact: contact, address: addr
+    });
+    if (error) throw error;
+    msg.textContent = '✅ 등록 신청 완료! 검토 후 게시됩니다.';
+    msg.style.color = 'green';
+    document.getElementById('biz-name').value = '';
+    document.getElementById('biz-contact').value = '';
+    document.getElementById('biz-desc').value = '';
+    document.getElementById('biz-addr').value = '';
+  } catch(e) {
+    msg.textContent = '오류: ' + e.message;
+    msg.style.color = 'red';
+  }
+}
+
+// ── 커뮤니티 DB 불러오기 ──
+async function loadCmPosts() {
+  if (!sb) return;
+  try {
+    var { data, error } = await sb.from('community_posts').select('*').order('created_at', {ascending:false}).limit(20);
+    if (error || !data || data.length === 0) return;
+    var mapped = data.map(function(p) {
+      var catMap = {question:'q', review:'r', failure:'f', info:'i'};
+      var badgeMap = {q:'cb-q',r:'cb-r',f:'cb-f',i:'cb-i'};
+      var labelMap = {q:'질문',r:'후기',f:'실패사례',i:'정보'};
+      var cat = catMap[p.category] || 'q';
+      return {
+        cat:cat, badge:badgeMap[cat]||'cb-q', label:labelMap[cat]||'질문',
+        time: new Date(p.created_at).toLocaleDateString('ko-KR'),
+        title: p.title, preview: (p.content||'').substring(0,60)+'...',
+        views: p.views||0, comments:0, likes: p.likes||0, hot: (p.views||0)>100
+      };
+    });
+    var el = document.getElementById('cm-list');
+    if (el && mapped.length > 0) {
+      el.innerHTML = '';
+      mapped.forEach(function(p) {
+        var div = document.createElement('div');
+        div.className = 'cm-post';
+        div.onclick = function() { alert('로그인 후 전체 내용을 볼 수 있어요.'); };
+        div.innerHTML = '<div class="cm-post-top"><span class="cm-badge ' + p.badge + '">' + p.label + '</span>' +
+          (p.hot ? '<span class="cm-hot">🔥</span>' : '') +
+          '<span class="cm-time">' + p.time + '</span></div>' +
+          '<div class="cm-title">' + p.title + '</div>' +
+          '<div class="cm-preview">' + p.preview + '</div>' +
+          '<div class="cm-stats"><span class="cm-stat">👁 ' + p.views + '</span><span class="cm-stat">❤️ ' + p.likes + '</span></div>';
+        el.appendChild(div);
+      });
+    }
+  } catch(e) {}
+}
+
 // ── 데이터 ──
 var LISTINGS = [
   {t:'s',tag:'상가·권리금',ico:'🏪',ti:'정육점 양도 — 단골 다수',pr:'권리금 2,500만원',lo:'경기 안양시',ag:'오늘',nw:true},
@@ -847,8 +1131,8 @@ function renderSup() {
 }
 
 // ── 네비게이션 ──
-var ALL_PAGES = ['h','si','c','mkt','cm','more','reg','closure','subsidy','my'];
-var TAB_MAP = {h:'h',si:'si',c:'c',mkt:'mkt',cm:'cm',more:'more',reg:'mkt',closure:'more',subsidy:'more',my:'more'};
+var ALL_PAGES = ['h','si','c','mkt','cm','more','reg','closure','subsidy','my','biz','biz-reg'];
+var TAB_MAP = {h:'h',si:'si',c:'c',mkt:'mkt',cm:'cm',more:'more',reg:'mkt',closure:'more',subsidy:'more',my:'more','biz':'more','biz-reg':'more'};
 
 function go(p) {
   ALL_PAGES.forEach(function(id) {
@@ -876,8 +1160,9 @@ function go(p) {
   document.body.scrollTop = 0;
 
   if (p === 'si') renderSise('all');
-  if (p === 'cm') renderCm('all', 'cm-list');
-  if (p === 'mkt') { renderListings(LISTINGS, 'mkt-listing'); renderSup(); }
+  if (p === 'cm') { renderCm('all', 'cm-list'); loadCmPosts(); }
+  if (p === 'mkt') { loadListings(); renderSup(); }
+  if (p === 'biz') loadBiz('all');
 }
 
 function setSiCat(el, cat) {

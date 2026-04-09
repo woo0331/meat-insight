@@ -728,13 +728,13 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
     <label class="fl">주소</label>
     <input class="fi" placeholder="도로명 주소"/>
     <div class="r2">
-      <div><label class="fl">권리금 (만원)</label><input class="fi" placeholder="없으면 0"/></div>
-      <div><label class="fl">보증금 (만원)</label><input class="fi"/></div>
+      <div><label class="fl">권리금 (만원)</label><input class="fi" id="reg-price" type="text" inputmode="numeric" placeholder="없으면 0" oninput="formatNum(this)"/></div>
+      <div><label class="fl">보증금 (만원)</label><input class="fi" id="reg-deposit" type="text" inputmode="numeric" placeholder="없으면 0" oninput="formatNum(this)"/></div>
     </div>
     <label class="fl">설명</label>
-    <textarea class="fi" rows="3" placeholder="단골 현황, 장비 상태 등"></textarea>
+    <textarea class="fi" id="reg-desc" rows="3" placeholder="단골 현황, 장비 상태 등"></textarea>
     <label class="fl">연락처</label>
-    <input class="fi" placeholder="010-0000-0000"/>
+    <input class="fi" id="reg-contact" placeholder="010-0000-0000"/>
     <button class="bfull" id="reg-submit" onclick="submitListing()">무료 등록하기</button>
   <div id="reg-msg" style="margin-top:10px;font-size:13px;text-align:center;"></div>
   </div>
@@ -800,38 +800,41 @@ var sb = window.supabase ? window.supabase.createClient(SUPA_URL, SUPA_KEY) : nu
 // ── 매물 등록 ──
 async function submitListing() {
   if (!sb) { alert('연결 오류'); return; }
-  var typeEl = document.querySelector('#pg-reg select');
-  var bizEl = document.querySelectorAll('#pg-reg select')[1];
-  var addrEl = document.querySelectorAll('#pg-reg input')[0];
-  var priceEl = document.querySelectorAll('#pg-reg input')[1];
-  var depositEl = document.querySelectorAll('#pg-reg input')[2];
-  var descEl = document.querySelector('#pg-reg textarea');
-  var contactEl = document.querySelectorAll('#pg-reg input')[3];
+  var selects = document.querySelectorAll('#pg-reg select');
+  var type = selects[0] ? selects[0].value : '';
+  var bizType = selects[1] ? selects[1].value : '';
+  var addr = document.querySelectorAll('#pg-reg input')[0];
+  var addrVal = addr ? addr.value : '';
+  var price = parseInt((document.getElementById('reg-price')||{value:'0'}).value.replace(/,/g,''))||0;
+  var deposit = parseInt((document.getElementById('reg-deposit')||{value:'0'}).value.replace(/,/g,''))||0;
+  var desc = (document.getElementById('reg-desc')||{value:''}).value;
+  var contact = (document.getElementById('reg-contact')||{value:''}).value;
   var msg = document.getElementById('reg-msg');
 
-  var type = typeEl ? typeEl.value : '';
-  var contact = contactEl ? contactEl.value : '';
   if (!contact) { msg.textContent = '연락처를 입력해주세요.'; msg.style.color='red'; return; }
-
   msg.textContent = '등록 중...'; msg.style.color = 'var(--g)';
   var btn = document.getElementById('reg-submit');
   btn.disabled = true;
 
   try {
-    var { error } = await sb.from('listings').insert({
+    var res = await sb.from('listings').insert({
       type: type,
-      business_type: bizEl ? bizEl.value : '',
-      address: addrEl ? addrEl.value : '',
-      price: priceEl ? parseInt((priceEl.value||'0').replace(/,/g,'')) * 10000 : 0,
-      deposit: depositEl ? parseInt((depositEl.value||'0').replace(/,/g,'')) * 10000 : 0,
-      description: descEl ? descEl.value : '',
+      business_type: bizType,
+      address: addrVal,
+      price: price,
+      deposit: deposit,
+      description: desc,
       contact: contact,
-      title: (bizEl ? bizEl.value : '') + ' 매물',
-      region: addrEl ? (addrEl.value||'').split(' ')[0] : ''
+      title: bizType + ' 매물',
+      region: addrVal.split(' ')[0] || ''
     });
-    if (error) throw error;
+    if (res.error) throw res.error;
     msg.textContent = '✅ 등록 완료! 담당자가 1일 내 연락드립니다.';
     msg.style.color = 'green';
+    document.getElementById('reg-contact').value = '';
+    if(document.getElementById('reg-desc')) document.getElementById('reg-desc').value = '';
+    if(document.getElementById('reg-price')) document.getElementById('reg-price').value = '';
+    if(document.getElementById('reg-deposit')) document.getElementById('reg-deposit').value = '';
   } catch(e) {
     msg.textContent = '오류: ' + e.message;
     msg.style.color = 'red';

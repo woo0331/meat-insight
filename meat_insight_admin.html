@@ -149,6 +149,8 @@ tbody tr:hover{background:#fafafa;}
     <div class="nav-item" onclick="goPage('consults')" id="nav-consults"><span class="nav-item-ico">📋</span>컨설팅 신청</div>
     <div class="nav-item" onclick="goPage('partners')" id="nav-partners"><span class="nav-item-ico">🤝</span>파트너 신청</div>
     <div class="nav-item" onclick="goPage('supplies')" id="nav-supplies"><span class="nav-item-ico">📦</span>공급 신청</div>
+    <div class="nav-item" onclick="goPage('closures')" id="nav-closures"><span class="nav-item-ico">🏗️</span>철거 신청</div>
+    <div class="nav-item" onclick="goPage('subsidies')" id="nav-subsidies"><span class="nav-item-ico">💰</span>지원금 신청</div>
     <div class="nav-section">커뮤니티</div>
     <div class="nav-item" onclick="goPage('community')" id="nav-community"><span class="nav-item-ico">💬</span>게시글 관리</div>
     <div class="nav-section">회원</div>
@@ -170,6 +172,10 @@ tbody tr:hover{background:#fafafa;}
         <div class="stat-card"><div class="stat-label">🏢 등록 업체</div><div class="stat-value" id="stat-biz">-</div><div class="stat-change">업체 찾기 등록 수</div></div>
         <div class="stat-card"><div class="stat-label">📝 컨설팅 신청</div><div class="stat-value" id="stat-consult">-</div><div class="stat-change">총 신청 건수</div></div>
         <div class="stat-card"><div class="stat-label">👥 회원 수</div><div class="stat-value" id="stat-members">-</div><div class="stat-change">가입 회원 수</div></div>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(2,1fr);">
+        <div class="stat-card"><div class="stat-label">🏗️ 철거 신청</div><div class="stat-value" id="stat-closures">-</div><div class="stat-change">총 신청 건수</div></div>
+        <div class="stat-card"><div class="stat-label">💰 지원금 신청</div><div class="stat-value" id="stat-subsidies">-</div><div class="stat-change">총 신청 건수</div></div>
       </div>
       <!-- 최근 매물 -->
       <div class="table-card">
@@ -280,6 +286,34 @@ tbody tr:hover{background:#fafafa;}
       </div>
     </div>
 
+    <!-- 철거 신청 -->
+    <div class="pg" id="pg-closures">
+      <div class="page-header">
+        <div><div class="page-title">폐업 철거 신청 관리</div><div class="page-sub">철거 신청 내역을 확인합니다</div></div>
+        <button class="btn btn-outline" onclick="loadClosures()">🔄 새로고침</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>이름</th><th>연락처</th><th>주소</th><th>면적</th><th>메모</th><th>신청일</th><th>상태</th><th>관리</th></tr></thead>
+          <tbody id="closures-tbody"><tr><td colspan="8" class="loading">불러오는 중...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 지원금 신청 -->
+    <div class="pg" id="pg-subsidies">
+      <div class="page-header">
+        <div><div class="page-title">폐업 지원금 신청 관리</div><div class="page-sub">지원금 신청 내역을 확인합니다</div></div>
+        <button class="btn btn-outline" onclick="loadSubsidies()">🔄 새로고침</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>이름</th><th>연락처</th><th>신청 종류</th><th>지역</th><th>신청일</th><th>상태</th><th>관리</th></tr></thead>
+          <tbody id="subsidies-tbody"><tr><td colspan="7" class="loading">불러오는 중...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- 커뮤니티 -->
     <div class="pg" id="pg-community">
       <div class="page-header">
@@ -349,6 +383,8 @@ function goPage(p) {
   if (p === 'consults') loadConsults();
   if (p === 'partners') loadPartners();
   if (p === 'supplies') loadSupplies();
+  if (p === 'closures') loadClosures();
+  if (p === 'subsidies') loadSubsidies();
   if (p === 'community') loadCommunity();
   if (p === 'members') loadMembers();
 }
@@ -377,16 +413,20 @@ async function loadAll() {
 
 async function loadDashStats() {
   try {
-    var [l, b, c, m] = await Promise.all([
+    var results = await Promise.all([
       sb.from('listings').select('id', {count:'exact', head:true}),
       sb.from('businesses').select('id', {count:'exact', head:true}),
       sb.from('consult_requests').select('id', {count:'exact', head:true}),
       sb.from('members').select('id', {count:'exact', head:true}),
+      sb.from('closure_requests').select('id', {count:'exact', head:true}),
+      sb.from('subsidy_requests').select('id', {count:'exact', head:true}),
     ]);
-    document.getElementById('stat-listings').textContent = l.count || 0;
-    document.getElementById('stat-biz').textContent = b.count || 0;
-    document.getElementById('stat-consult').textContent = c.count || 0;
-    document.getElementById('stat-members').textContent = m.count || 0;
+    document.getElementById('stat-listings').textContent = results[0].count || 0;
+    document.getElementById('stat-biz').textContent = results[1].count || 0;
+    document.getElementById('stat-consult').textContent = results[2].count || 0;
+    document.getElementById('stat-members').textContent = results[3].count || 0;
+    document.getElementById('stat-closures').textContent = results[4].count || 0;
+    document.getElementById('stat-subsidies').textContent = results[5].count || 0;
   } catch(e) {}
 }
 
@@ -600,6 +640,44 @@ async function loadMembers() {
       return '<tr><td>' + (d.name||'-') + '</td><td>' + (d.email||'-') + '</td><td>' + fmtDate(d.created_at) + '</td></tr>';
     }).join('');
   } catch(e) { tbody.innerHTML = '<tr><td colspan="3">오류</td></tr>'; }
+}
+
+// ── 철거 신청 ──
+async function loadClosures() {
+  var tbody = document.getElementById('closures-tbody');
+  tbody.innerHTML = '<tr><td colspan="8" class="loading">불러오는 중...</td></tr>';
+  try {
+    var {data} = await sb.from('closure_requests').select('*').order('created_at',{ascending:false});
+    if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="empty-ico">🏗️</div><div class="empty-txt">신청 내역이 없습니다</div></div></td></tr>'; return; }
+    tbody.innerHTML = data.map(function(d) {
+      return '<tr><td>' + (d.name||'-') + '</td><td>' + (d.phone||'-') + '</td><td>' + (d.address||'-') + '</td><td>' + (d.area||'-') + '</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (d.memo||'-') + '</td><td>' + fmtDate(d.created_at) + '</td>' +
+        '<td><span class="badge ' + (d.status==='완료'?'badge-green':d.status==='진행중'?'badge-blue':'badge-yellow') + '">' + (d.status||'접수') + '</span></td>' +
+        '<td class="btn-actions"><button class="btn btn-success btn-sm" onclick="updateStatus(&quot;closure_requests&quot;,&quot;' + d.id + '&quot;,&quot;진행중&quot;,loadClosures)">진행중</button><button class="btn btn-primary btn-sm" onclick="updateStatus(&quot;closure_requests&quot;,&quot;' + d.id + '&quot;,&quot;완료&quot;,loadClosures)">완료</button></td></tr>';
+    }).join('');
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="8">오류</td></tr>'; }
+}
+
+// ── 지원금 신청 ──
+async function loadSubsidies() {
+  var tbody = document.getElementById('subsidies-tbody');
+  tbody.innerHTML = '<tr><td colspan="7" class="loading">불러오는 중...</td></tr>';
+  try {
+    var {data} = await sb.from('subsidy_requests').select('*').order('created_at',{ascending:false});
+    if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-ico">💰</div><div class="empty-txt">신청 내역이 없습니다</div></div></td></tr>'; return; }
+    tbody.innerHTML = data.map(function(d) {
+      return '<tr><td>' + (d.name||'-') + '</td><td>' + (d.phone||'-') + '</td><td><span class="badge badge-blue">' + (d.business_type||'-') + '</span></td><td>' + (d.region||'-') + '</td><td>' + fmtDate(d.created_at) + '</td>' +
+        '<td><span class="badge ' + (d.status==='완료'?'badge-green':d.status==='진행중'?'badge-blue':'badge-yellow') + '">' + (d.status||'접수') + '</span></td>' +
+        '<td class="btn-actions"><button class="btn btn-success btn-sm" onclick="updateStatus(&quot;subsidy_requests&quot;,&quot;' + d.id + '&quot;,&quot;진행중&quot;,loadSubsidies)">진행중</button><button class="btn btn-primary btn-sm" onclick="updateStatus(&quot;subsidy_requests&quot;,&quot;' + d.id + '&quot;,&quot;완료&quot;,loadSubsidies)">완료</button></td></tr>';
+    }).join('');
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="7">오류</td></tr>'; }
+}
+
+// ── 상태 업데이트 공통 ──
+async function updateStatus(table, id, status, reload) {
+  var {error} = await sb.from(table).update({status:status}).eq('id',id);
+  if (error) { toast('오류: '+error.message, true); return; }
+  toast('상태 변경 완료');
+  reload();
 }
 
 // ── 유틸 ──

@@ -715,6 +715,31 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 </div>
 
 <!-- 하단 탭 -->
+<!-- 커뮤니티 글 상세 모달 -->
+<div id="post-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;overflow-y:auto;" onclick="if(event.target===this)closePost()">
+  <div style="background:var(--cr);border-radius:14px 14px 0 0;margin-top:60px;min-height:calc(100vh - 60px);padding:0 0 80px;">
+    <div style="background:var(--n);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-radius:14px 14px 0 0;position:sticky;top:0;z-index:10;">
+      <button onclick="closePost()" style="background:none;border:none;color:var(--g);font-size:22px;cursor:pointer;line-height:1;">←</button>
+      <div style="font-family:var(--serif);font-size:15px;color:#fff;" id="post-modal-cat">커뮤니티</div>
+      <div style="width:32px;"></div>
+    </div>
+    <div style="padding:18px 16px;">
+      <div id="post-modal-badge" style="display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;margin-bottom:10px;"></div>
+      <div id="post-modal-title" style="font-family:var(--serif);font-size:20px;color:var(--n2);font-weight:700;line-height:1.4;margin-bottom:8px;"></div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--cr3);">
+        <div id="post-modal-author" style="font-size:13px;font-weight:700;color:var(--ink2);"></div>
+        <div id="post-modal-time" style="font-size:12px;color:var(--ink3);"></div>
+        <div id="post-modal-views" style="font-size:12px;color:var(--ink3);margin-left:auto;"></div>
+      </div>
+      <div id="post-modal-content" style="font-size:15px;color:var(--ink);line-height:1.85;white-space:pre-wrap;"></div>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:24px;padding-top:16px;border-top:1px solid var(--cr3);">
+        <button onclick="likePost()" style="display:flex;align-items:center;gap:6px;background:none;border:1.5px solid var(--cr3);border-radius:20px;padding:8px 16px;font-size:13px;color:var(--ink2);cursor:pointer;font-family:var(--sans);">❤️ <span id="post-modal-likes">0</span></button>
+        <button onclick="location.href='meat_insight_apply.html?tab=consulting'" style="margin-left:auto;background:var(--g);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">컨설팅 신청 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="bottom-nav">
   <button class="bnb on" id="bn-h" onclick="go('h')"><span class="bnb-ico">🏠</span><span class="bnb-txt">홈</span></button>
   <button class="bnb" id="bn-si" onclick="go('si')"><span class="bnb-ico">📈</span><span class="bnb-txt">시세</span></button>
@@ -984,7 +1009,7 @@ async function loadCmPosts(){
   if(!sb)return;
   try{var res=await sb.from('community_posts').select('*').order('created_at',{ascending:false}).limit(20);if(res.error||!res.data||res.data.length===0)return;
   var mapped=res.data.map(function(p){var catMap={question:'q',review:'r',failure:'f',info:'i'};var badgeMap={q:'cb-q',r:'cb-r',f:'cb-f',i:'cb-i'};var labelMap={q:'질문',r:'후기',f:'실패사례',i:'정보'};var cat=catMap[p.category]||'q';return{cat:cat,badge:badgeMap[cat]||'cb-q',label:labelMap[cat]||'질문',time:new Date(p.created_at).toLocaleDateString('ko-KR'),title:p.title,preview:(p.content||'').substring(0,60)+'...',views:p.views||0,comments:0,likes:p.likes||0,hot:(p.views||0)>100};});
-  var el=document.getElementById('cm-list');if(el&&mapped.length>0){el.innerHTML='';mapped.forEach(function(p){var div=document.createElement('div');div.className='cm-post';div.onclick=function(){alert('로그인 후 전체 내용을 볼 수 있어요.');};div.innerHTML='<div class="cm-post-top"><span class="cm-badge '+p.badge+'">'+p.label+'</span>'+(p.hot?'<span class="cm-hot">🔥</span>':'')+'<span class="cm-time">'+p.time+'</span></div><div class="cm-title">'+p.title+'</div><div class="cm-preview">'+p.preview+'</div><div class="cm-stats"><span class="cm-stat">👁 '+p.views+'</span><span class="cm-stat">❤️ '+p.likes+'</span></div>';el.appendChild(div);});}}
+  var el=document.getElementById('cm-list');if(el&&mapped.length>0){el.innerHTML='';mapped.forEach(function(p){var div=document.createElement('div');div.className='cm-post';div.onclick=function(){openPost(p);};div.innerHTML='<div class="cm-post-top"><span class="cm-badge '+p.badge+'">'+p.label+'</span>'+(p.hot?'<span class="cm-hot">🔥</span>':'')+'<span class="cm-time">'+p.time+'</span></div><div class="cm-title">'+p.title+'</div><div class="cm-preview">'+p.preview+'</div><div class="cm-stats"><span class="cm-stat">👁 '+p.views+'</span><span class="cm-stat">❤️ '+p.likes+'</span></div>';el.appendChild(div);});}}
   catch(e){}
 }
 
@@ -1016,6 +1041,37 @@ async function submitSubsidy(bizType,nameId,phoneId,regionId){
   msg.textContent='신청 중...';msg.style.color='var(--g)';
   try{var res=await sb.from('subsidy_requests').insert({name:name,phone:phone,business_type:bizType,region:document.getElementById(regionId).value});if(res.error)throw res.error;msg.textContent='신청 완료! 1일 내 연락드립니다.';msg.style.color='green';document.getElementById(nameId).value='';document.getElementById(phoneId).value='';}
   catch(e){msg.textContent='오류: '+e.message;msg.style.color='red';}
+}
+
+
+function openPost(p) {
+  if (!p) return;
+  var badgeMap = {question:'cb-q',review:'cb-r',failure:'cb-f',info:'cb-i'};
+  var labelMap = {question:'질문',review:'후기',failure:'실패사례',info:'정보'};
+  var cat = p.cat || p.category || 'question';
+  var badge = badgeMap[cat] || 'cb-q';
+  var label = labelMap[cat] || '질문';
+  var el = document.getElementById('post-modal');
+  document.getElementById('post-modal-cat').textContent = label;
+  var badgeEl = document.getElementById('post-modal-badge');
+  badgeEl.textContent = label;
+  badgeEl.className = 'cm-badge ' + badge;
+  document.getElementById('post-modal-title').textContent = p.title || '';
+  document.getElementById('post-modal-author').textContent = p.author || '익명';
+  document.getElementById('post-modal-time').textContent = p.time || '';
+  document.getElementById('post-modal-views').textContent = '👁 ' + (p.views || 0);
+  document.getElementById('post-modal-content').textContent = p.content || p.preview || '';
+  document.getElementById('post-modal-likes').textContent = p.likes || 0;
+  el.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closePost() {
+  document.getElementById('post-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function likePost() {
+  var el = document.getElementById('post-modal-likes');
+  el.textContent = parseInt(el.textContent) + 1;
 }
 
 // 초기화

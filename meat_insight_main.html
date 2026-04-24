@@ -637,16 +637,75 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 <div class="pg" id="pg-reg">
   <div class="phdr" onclick="go('mkt')"><span class="phdr-back">←</span><span class="phdr-t">매물 등록</span></div>
   <div style="padding:12px 16px 20px;">
-    <div class="card-note">고기 업종 매물을 무료로 등록하세요</div>
-    <label class="fl">매물 종류</label><select class="fi"><option>상가·권리금</option><option>집기·장비</option><option>식자재·재고</option></select>
-    <label class="fl">업종</label><select class="fi"><option>정육점</option><option>고깃집 (소)</option><option>고깃집 (돼지)</option><option>기타</option></select>
-    <label class="fl">주소</label><input class="fi" placeholder="도로명 주소"/>
+    <div class="card-note">고기 업종 매물을 무료로 등록하세요. 담당자 확인 후 게시됩니다.</div>
+
+    <label class="fl">매물 종류</label>
+    <select class="fi" id="reg-type">
+      <option>상가·권리금</option>
+      <option>집기·장비</option>
+      <option>식자재·재고</option>
+    </select>
+
+    <label class="fl">업종</label>
+    <select class="fi" id="reg-biztype">
+      <option>정육점</option>
+      <option>고깃집 (소)</option>
+      <option>고깃집 (돼지)</option>
+      <option>정육식당</option>
+      <option>기타</option>
+    </select>
+
+    <label class="fl">주소</label>
+    <input class="fi" id="reg-addr" placeholder="도로명 주소 (예: 서울 마포구 합정동 123)"/>
+
     <div class="r2">
-      <div><label class="fl">권리금 (만원)</label><input class="fi" id="reg-price" type="text" inputmode="numeric" placeholder="없으면 0" oninput="formatNum(this)"/></div>
-      <div><label class="fl">보증금 (만원)</label><input class="fi" id="reg-deposit" type="text" inputmode="numeric" placeholder="없으면 0" oninput="formatNum(this)"/></div>
+      <div>
+        <label class="fl">권리금 (만원)</label>
+        <input class="fi" id="reg-price" type="text" inputmode="numeric" placeholder="없으면 0" oninput="formatNum(this)"/>
+      </div>
+      <div>
+        <label class="fl">보증금 (만원)</label>
+        <input class="fi" id="reg-deposit" type="text" inputmode="numeric" placeholder="없으면 0" oninput="formatNum(this)"/>
+      </div>
     </div>
-    <label class="fl">설명</label><textarea class="fi" id="reg-desc" rows="3" placeholder="단골 현황, 장비 상태 등"></textarea>
-    <label class="fl">연락처</label><input class="fi" id="reg-contact" placeholder="010-0000-0000"/>
+
+    <label class="fl">월세 (만원)</label>
+    <input class="fi" id="reg-monthly" type="text" inputmode="numeric" placeholder="없으면 0" oninput="formatNum(this)"/>
+
+    <div class="r2">
+      <div>
+        <label class="fl">매장 평수</label>
+        <input class="fi" id="reg-area" type="text" inputmode="numeric" placeholder="예: 20"/>
+      </div>
+      <div>
+        <label class="fl">영업 기간</label>
+        <select class="fi" id="reg-period">
+          <option>6개월 미만</option>
+          <option>6개월~1년</option>
+          <option>1~3년</option>
+          <option>3~5년</option>
+          <option>5년 이상</option>
+        </select>
+      </div>
+    </div>
+
+    <label class="fl">매물 설명</label>
+    <textarea class="fi" id="reg-desc" rows="4" placeholder="단골 현황, 장비 상태, 양도 이유 등 자세히 적어주세요"></textarea>
+
+    <!-- 사진 첨부 -->
+    <label class="fl">사진 첨부 <span style="font-weight:400;color:var(--ink3)">(최대 5장, jpg·png)</span></label>
+    <div id="photo-upload-area" onclick="document.getElementById('reg-photos').click()" style="border:2px dashed var(--cr3);border-radius:10px;padding:20px;text-align:center;cursor:pointer;background:var(--cr);margin-bottom:10px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--g)'" onmouseout="this.style.borderColor='var(--cr3)'">
+      <div style="font-size:28px;margin-bottom:6px;">📷</div>
+      <div style="font-size:13px;font-weight:700;color:var(--ink2);margin-bottom:3px;">사진을 눌러서 선택하세요</div>
+      <div style="font-size:11px;color:var(--ink3);">최대 5장 · jpg, png 파일</div>
+    </div>
+    <input type="file" id="reg-photos" accept="image/*" multiple style="display:none" onchange="previewPhotos(this)"/>
+    <div id="photo-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>
+    <div id="photo-count" style="font-size:12px;color:var(--g);margin-bottom:10px;"></div>
+
+    <label class="fl">연락처</label>
+    <input class="fi" id="reg-contact" placeholder="010-0000-0000"/>
+
     <button class="bfull" id="reg-submit" onclick="submitListing()">무료 등록하기</button>
     <div id="reg-msg" style="margin-top:10px;font-size:13px;text-align:center;"></div>
   </div>
@@ -961,27 +1020,87 @@ function calc5(){
   sv('c5-advice','목표 매출 달성을 위해 월 '+orderKg+'kg, 주 '+(orderKg/4).toFixed(1)+'kg 발주가 필요합니다.');
 }
 
+
+var selectedPhotos = [];
+
+function previewPhotos(input) {
+  var files = Array.from(input.files);
+  if (files.length > 5) {
+    alert('사진은 최대 5장까지 첨부 가능합니다.');
+    files = files.slice(0, 5);
+  }
+  selectedPhotos = files;
+  var preview = document.getElementById('photo-preview');
+  var count = document.getElementById('photo-count');
+  preview.innerHTML = '';
+  files.forEach(function(file, i) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;width:80px;height:80px;flex-shrink:0;';
+      var img = document.createElement('img');
+      img.src = e.target.result;
+      img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--cr3);';
+      var del = document.createElement('button');
+      del.textContent = '×';
+      del.style.cssText = 'position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#B91C1C;color:#fff;border:none;font-size:12px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;';
+      del.onclick = function() {
+        selectedPhotos.splice(i, 1);
+        wrap.remove();
+        count.textContent = selectedPhotos.length > 0 ? '사진 ' + selectedPhotos.length + '장 선택됨' : '';
+      };
+      wrap.appendChild(img);
+      wrap.appendChild(del);
+      preview.appendChild(wrap);
+    };
+    reader.readAsDataURL(file);
+  });
+  count.textContent = files.length > 0 ? '사진 ' + files.length + '장 선택됨' : '';
+}
+
 async function submitListing(){
   if(!sb){alert('연결 오류');return;}
-  var selects=document.querySelectorAll('#pg-reg select');
-  var type=selects[0]?selects[0].value:'';var bizType=selects[1]?selects[1].value:'';
-  var addr=document.querySelectorAll('#pg-reg input')[0];var addrVal=addr?addr.value:'';
+  var type=(document.getElementById('reg-type')||{value:''}).value;
+  var bizType=(document.getElementById('reg-biztype')||{value:''}).value;
+  var addrVal=(document.getElementById('reg-addr')||{value:''}).value;
   var price=parseInt((document.getElementById('reg-price')||{value:'0'}).value.replace(/,/g,''))||0;
   var deposit=parseInt((document.getElementById('reg-deposit')||{value:'0'}).value.replace(/,/g,''))||0;
+  var monthly=parseInt((document.getElementById('reg-monthly')||{value:'0'}).value.replace(/,/g,''))||0;
+  var area=(document.getElementById('reg-area')||{value:''}).value;
+  var period=(document.getElementById('reg-period')||{value:''}).value;
   var desc=(document.getElementById('reg-desc')||{value:''}).value;
   var contact=(document.getElementById('reg-contact')||{value:''}).value;
   var msg=document.getElementById('reg-msg');
   if(!contact){msg.textContent='연락처를 입력해주세요.';msg.style.color='red';return;}
+  if(!addrVal){msg.textContent='주소를 입력해주세요.';msg.style.color='red';return;}
   msg.textContent='등록 중...';msg.style.color='var(--g)';
   var btn=document.getElementById('reg-submit');btn.disabled=true;
   try{
-    var res=await sb.from('listings').insert({type:type,business_type:bizType,address:addrVal,price:price,deposit:deposit,description:desc,contact:contact,title:bizType+' 매물',region:addrVal.split(' ')[0]||''});
+    var fullDesc = desc;
+    if(area) fullDesc += '
+
+📐 평수: ' + area + '평';
+    if(period) fullDesc += '
+⏱ 영업기간: ' + period;
+    if(monthly) fullDesc += '
+💰 월세: ' + monthly + '만원';
+    if(selectedPhotos.length > 0) fullDesc += '
+📷 사진 ' + selectedPhotos.length + '장 첨부됨 (담당자 전달 예정)';
+    var res=await sb.from('listings').insert({
+      type:type, business_type:bizType, address:addrVal,
+      price:price, deposit:deposit,
+      description:fullDesc, contact:contact,
+      title:bizType+' '+type+' 매물',
+      region:addrVal.split(' ')[0]||''
+    });
     if(res.error)throw res.error;
     msg.textContent='✅ 등록 완료! 담당자가 1일 내 연락드립니다.';msg.style.color='green';
-    document.getElementById('reg-contact').value='';
-    if(document.getElementById('reg-desc'))document.getElementById('reg-desc').value='';
-    if(document.getElementById('reg-price'))document.getElementById('reg-price').value='';
-    if(document.getElementById('reg-deposit'))document.getElementById('reg-deposit').value='';
+    ['reg-contact','reg-desc','reg-price','reg-deposit','reg-monthly','reg-area','reg-addr'].forEach(function(id){
+      var el=document.getElementById(id);if(el)el.value='';
+    });
+    document.getElementById('photo-preview').innerHTML='';
+    document.getElementById('photo-count').textContent='';
+    selectedPhotos=[];
   }catch(e){msg.textContent='오류: '+e.message;msg.style.color='red';btn.disabled=false;}
 }
 

@@ -1077,15 +1077,10 @@ async function submitListing(){
   var btn=document.getElementById('reg-submit');btn.disabled=true;
   try{
     var fullDesc = desc;
-    if(area) fullDesc += '
-
-📐 평수: ' + area + '평';
-    if(period) fullDesc += '
-⏱ 영업기간: ' + period;
-    if(monthly) fullDesc += '
-💰 월세: ' + monthly + '만원';
-    if(selectedPhotos.length > 0) fullDesc += '
-📷 사진 ' + selectedPhotos.length + '장 첨부됨 (담당자 전달 예정)';
+    if(area) fullDesc += '\n\n📐 평수: ' + area + '평';
+    if(period) fullDesc += '\n⏱ 영업기간: ' + period;
+    if(monthly) fullDesc += '\n💰 월세: ' + monthly + '만원';
+    if(selectedPhotos.length > 0) fullDesc += '\n📷 사진 ' + selectedPhotos.length + '장 첨부됨 (담당자 전달 예정)';
     var res=await sb.from('listings').insert({
       type:type, business_type:bizType, address:addrVal,
       price:price, deposit:deposit,

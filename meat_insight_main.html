@@ -19,8 +19,6 @@
 }
 html,body{margin:0;padding:0;height:auto;overflow-x:hidden;}
 body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15px;line-height:1.7;padding-top:56px;padding-bottom:64px;}
-
-/* NAV */
 .nav{position:fixed;top:0;left:0;right:0;height:56px;background:var(--n);border-bottom:1px solid rgba(201,168,76,.2);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:999;}
 .logo{cursor:pointer;}
 .logo-main{font-family:var(--serif);font-size:15px;color:#fff;letter-spacing:1.5px;}
@@ -29,36 +27,21 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 .nb{padding:5px 10px;font-size:12px;border-radius:5px;border:none;background:none;color:rgba(255,255,255,.55);cursor:pointer;font-family:var(--sans);transition:all .15s;}
 .nb:hover,.nb.on{background:rgba(201,168,76,.15);color:var(--g);}
 .nav-cta{background:var(--g);color:#fff;padding:6px 14px;border-radius:6px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);}
-
-/* PAGES */
 .pg{display:none;}
 .pg.on{display:block;min-height:calc(100vh - 120px);}
-
-/* 페이지 헤더 */
 .phdr{background:var(--n);padding:14px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;}
 .phdr-back{font-size:18px;color:var(--g);font-weight:700;}
 .phdr-t{font-family:var(--serif);font-size:15px;color:#fff;}
-
-/* 탭 */
-.tabs{display:flex;background:var(--cr2);border-bottom:1px solid var(--cr3);}
-.tab{flex:1;padding:12px;text-align:center;font-size:13px;color:var(--ink3);cursor:pointer;border:none;background:none;font-family:var(--sans);border-bottom:2px solid transparent;transition:all .2s;font-weight:500;}
-.tab.on{color:var(--g);border-bottom-color:var(--g);background:var(--cr);}
 .ctabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px;}
 .ct{padding:7px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;color:var(--ink3);cursor:pointer;background:var(--w);font-family:var(--sans);transition:all .2s;font-weight:500;}
 .ct.on{background:var(--n2);border-color:var(--n2);color:var(--g);}
-
-/* 카드 */
 .card{background:var(--w);border:1px solid var(--cr3);border-radius:14px;padding:18px;margin:0 16px 12px;}
 .card-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--cr3);}
 .card-note{font-size:12px;color:var(--g);background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:7px;padding:9px 12px;margin-bottom:14px;line-height:1.6;}
-
-/* 폼 */
 .fl{font-size:12px;color:var(--ink2);font-weight:600;margin-bottom:4px;display:block;}
 .fi{width:100%;padding:10px 12px;border:1.5px solid var(--cr3);border-radius:8px;font-size:14px;font-family:var(--sans);background:var(--cr);color:var(--ink);margin-bottom:10px;transition:border-color .2s;}
 .fi:focus{outline:none;border-color:var(--g);}
 .r2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-
-/* 결과 */
 .result-box{background:var(--g3);border-radius:10px;padding:14px;margin-top:8px;}
 .result-title{font-size:11px;font-weight:700;color:var(--g);margin-bottom:10px;letter-spacing:.5px;}
 .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
@@ -68,8 +51,6 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 .rc.highlight .rcv{color:var(--g);font-size:18px;}
 .advice{font-size:12px;color:#5A4A00;margin-top:10px;line-height:1.7;padding:9px 12px;background:rgba(201,168,76,.12);border-radius:7px;}
 .warn{font-size:12px;color:#B91C1C;margin-top:8px;padding:9px 12px;background:#FEF2F2;border-radius:7px;line-height:1.6;display:none;}
-
-/* 시세 */
 .sise-hero{background:var(--n);padding:18px 16px;}
 .sise-hero-title{font-family:var(--serif);font-size:20px;color:#fff;margin-bottom:4px;}
 .sise-hero-sub{font-size:13px;color:rgba(255,255,255,.45);}
@@ -90,8 +71,6 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 .si-price{font-family:var(--serif);font-size:16px;color:var(--ink);font-weight:700;text-align:right;}
 .si-chg{font-size:11px;margin-top:2px;text-align:right;font-weight:600;}
 .chg-up{color:#B91C1C;}.chg-dn{color:#15803D;}
-
-/* 매물 */
 .listing-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 16px;}
 .lc{background:var(--w);border:1px solid var(--cr3);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s;}
 .lc:hover{border-color:var(--g);}
@@ -104,8 +83,6 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 .lc-foot{display:flex;justify-content:space-between;margin-top:6px;padding-top:6px;border-top:1px solid var(--cr2);}
 .lc-loc{font-size:11px;color:var(--ink3);}
 .lc-ago{font-size:11px;color:var(--g);font-weight:500;}
-
-/* 커뮤니티 */
 .cm-header{background:var(--n);padding:18px 16px;}
 .cm-chips{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;}
 .cmchip{padding:6px 12px;border:1px solid rgba(255,255,255,.15);border-radius:20px;font-size:12px;color:rgba(255,255,255,.6);cursor:pointer;background:none;font-family:var(--sans);transition:all .2s;}
@@ -124,8 +101,6 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 .cm-preview{font-size:12px;color:var(--ink3);line-height:1.6;margin-bottom:8px;}
 .cm-stats{display:flex;gap:10px;}
 .cm-stat{font-size:11px;color:var(--ink3);}
-
-/* 공급사 */
 .sup-card{background:var(--w);border:1px solid var(--cr3);border-radius:14px;overflow:hidden;margin:8px 16px 0;cursor:pointer;transition:all .2s;}
 .sup-card:hover{border-color:var(--g);}
 .sup-card.featured{border:2px solid var(--g);}
@@ -141,8 +116,6 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 .sup-foot{display:flex;gap:7px;}
 .btn-contact{flex:1;padding:9px;background:var(--n2);color:var(--g);border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);}
 .btn-detail{padding:9px 13px;background:var(--w);border:1.5px solid var(--cr3);border-radius:7px;font-size:12px;color:var(--ink2);cursor:pointer;font-family:var(--sans);}
-
-/* 더보기 */
 .more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px;}
 .more-item{background:var(--w);border:1px solid var(--cr3);border-radius:12px;padding:16px 8px;text-align:center;cursor:pointer;transition:all .2s;}
 .more-item:hover{border-color:var(--g);background:var(--g3);}
@@ -150,34 +123,16 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 .more-name{font-size:12px;font-weight:700;color:var(--n2);}
 .more-desc{font-size:11px;color:var(--ink3);margin-top:2px;}
 .more-section-title{font-size:11px;color:var(--ink3);letter-spacing:1.5px;font-weight:700;text-transform:uppercase;padding:14px 16px 6px;}
-
-/* 컨설팅 카드 */
-.pcard{background:var(--w);border:1px solid var(--cr3);border-radius:14px;overflow:hidden;margin:0 16px 12px;}
-.pcard.hot{border:2px solid var(--g);}
-.pcard-top{padding:20px;background:var(--cr2);}
-.pcard.hot .pcard-top{background:var(--n);}
-.pcard-badge{font-size:9px;color:var(--g);letter-spacing:2px;font-weight:700;display:block;margin-bottom:8px;}
-.pcard-title{font-family:var(--serif);font-size:18px;color:var(--n2);}
-.pcard.hot .pcard-title{color:#fff;}
-.pcard-sub{font-size:13px;color:var(--ink3);margin-top:4px;}
-.pcard.hot .pcard-sub{color:rgba(255,255,255,.5);}
-.pcard-body{padding:18px;}
-.inc{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink2);padding:6px 0;border-bottom:1px solid var(--cr2);}
-.inc:last-of-type{border:none;}
-.incb{width:16px;height:16px;background:var(--g3);border:1px solid rgba(201,168,76,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
-.incb::after{content:'✓';font-size:8px;color:var(--g);font-weight:700;}
-.pcard-price{font-family:var(--serif);font-size:22px;color:var(--n2);font-weight:700;margin:14px 0;}
+.tabs{display:flex;background:var(--cr2);border-bottom:1px solid var(--cr3);}
+.tab{flex:1;padding:12px;text-align:center;font-size:13px;color:var(--ink3);cursor:pointer;border:none;background:none;font-family:var(--sans);border-bottom:2px solid transparent;transition:all .2s;font-weight:500;}
+.tab.on{color:var(--g);border-bottom-color:var(--g);background:var(--cr);}
 .bfull{width:100%;padding:12px;background:var(--g);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);}
 .bfull:hover{background:var(--g2);}
-
-/* 하단 탭 */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--n);border-top:1px solid rgba(201,168,76,.15);display:grid;grid-template-columns:repeat(5,1fr);z-index:999;height:60px;}
 .bnb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:none;font-family:var(--sans);padding:6px 4px;transition:all .2s;}
 .bnb-ico{font-size:20px;line-height:1;}
 .bnb-txt{font-size:10px;color:rgba(255,255,255,.4);font-weight:500;transition:color .2s;}
 .bnb.on .bnb-txt{color:var(--g);}
-
-/* 폐업/지원금 */
 .step{display:flex;gap:14px;margin-bottom:18px;}
 .step-num{width:32px;height:32px;border-radius:50%;background:var(--n2);border:2px solid var(--g);color:var(--g);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--serif);}
 .step-title{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px;}
@@ -187,8 +142,6 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 .sub-title{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px;}
 .sub-desc{font-size:13px;color:var(--ink3);line-height:1.7;margin-bottom:8px;}
 .btn-sub{width:100%;padding:11px;background:var(--n2);color:var(--g);border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);}
-
-/* 마이페이지 */
 .my-hero{background:var(--n2);padding:20px 16px;}
 .my-title{font-family:var(--serif);font-size:20px;color:#fff;margin-bottom:3px;}
 .my-sub{font-size:13px;color:rgba(255,255,255,.45);}
@@ -204,8 +157,6 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 .my-badge{display:inline-block;font-size:10px;background:#DCFCE7;color:#166534;padding:2px 7px;border-radius:4px;margin-top:3px;font-weight:600;}
 .my-btns{display:flex;gap:6px;}
 .bsm{padding:6px 11px;border-radius:7px;font-size:12px;border:1.5px solid var(--cr3);background:var(--w);cursor:pointer;font-family:var(--sans);}
-
-/* 홈 */
 .home-hero{background:var(--n);padding:20px 16px 18px;}
 .home-hero-title{font-family:var(--serif);font-size:22px;color:#fff;line-height:1.3;margin-bottom:8px;}
 .home-hero-sub{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:16px;}
@@ -241,7 +192,6 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 </head>
 <body>
 
-<!-- NAV -->
 <div class="nav">
   <div class="logo" onclick="go('h')">
     <div class="logo-main">MEAT INSIGHT</div>
@@ -258,7 +208,7 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
   <button class="nav-cta" onclick="go('reg')">+ 매물 등록</button>
 </div>
 
-<!-- ═══ 홈 ═══ -->
+<!-- 홈 -->
 <div class="pg on" id="pg-h">
   <div class="home-hero">
     <div class="home-hero-title">정육·고깃집 사장님<br>처음부터 끝까지 함께합니다</div>
@@ -287,14 +237,14 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
       <div class="cb-title">전문가 컨설팅</div>
       <div class="cb-sub">52년 업력 협신식품이 만든 고기업종 컨설팅</div>
       <div class="cb-cards">
-        <div class="cbc" onclick="go('c')"><span class="cbc-badge">REPORT</span><div class="cbc-name">창업 리포트</div><div class="cbc-price">200,000원</div></div>
-        <div class="cbc" onclick="go('c')"><span class="cbc-badge">1:1 CONSULT</span><div class="cbc-name">비대면 상담</div><div class="cbc-price">1,500,000원</div></div>
+        <div class="cbc" onclick="location.href='meat_insight_apply.html?tab=consulting&plan=basic'"><span class="cbc-badge">REPORT</span><div class="cbc-name">창업 리포트</div><div class="cbc-price">200,000원</div></div>
+        <div class="cbc" onclick="location.href='meat_insight_apply.html?tab=consulting&plan=premium'"><span class="cbc-badge">1:1 CONSULT</span><div class="cbc-name">비대면 상담</div><div class="cbc-price">1,500,000원</div></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ 시세 ═══ -->
+<!-- 시세 -->
 <div class="pg" id="pg-si">
   <div class="sise-hero">
     <div class="sise-hero-title">축산물 도매 시세</div>
@@ -308,272 +258,229 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
     </div>
   </div>
   <div style="background:rgba(201,168,76,.08);border-bottom:1px solid rgba(201,168,76,.15);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;">
-    <div>
-      <div style="font-size:12px;color:var(--g);font-weight:700;">협신식품 · 오늘 시세로 당일 공급</div>
-      <div style="font-size:11px;color:var(--ink3);">수도권 · 전국 한우·한돈 전문</div>
-    </div>
+    <div><div style="font-size:12px;color:var(--g);font-weight:700;">협신식품 · 오늘 시세로 당일 공급</div><div style="font-size:11px;color:var(--ink3);">수도권 · 전국 한우·한돈 전문</div></div>
     <button onclick="alert('카카오채널로 문의해주세요.')" style="background:var(--g);color:#fff;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);">문의</button>
   </div>
   <div id="si-list" style="padding:10px 16px 20px;"></div>
   <div style="padding:0 16px 20px;">
-    <div style="background:var(--cr2);border-radius:10px;padding:12px;font-size:12px;color:var(--ink3);line-height:1.7;">
-      📌 축산물품질평가원 공공 데이터 기반 · 매일 오전 9시 갱신 · 참고용
-    </div>
+    <div style="background:var(--cr2);border-radius:10px;padding:12px;font-size:12px;color:var(--ink3);line-height:1.7;">📌 축산물품질평가원 공공 데이터 기반 · 매일 오전 9시 갱신 · 참고용</div>
     <button onclick="go('mkt')" style="width:100%;margin-top:10px;padding:12px;background:var(--n2);color:var(--g);border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);">📦 오늘 시세로 공급사 직거래 →</button>
   </div>
 </div>
 
-<!-- ═══ 계산기+컨설팅 ═══ -->
+<!-- 계산기 — 계산기만 바로 표시 -->
 <div class="pg" id="pg-c">
-  <div class="tabs">
-    <button class="tab on" id="tab-consult" onclick="setTab(this,'cv0')">컨설팅 신청</button>
-    <button class="tab" id="tab-calc" onclick="setTab(this,'cv1')">전문 계산기</button>
+  <div style="background:var(--n);padding:16px;display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <div style="font-family:var(--serif);font-size:18px;color:#fff;margin-bottom:2px;">전문 계산기</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.45);">5종 무료 · 실시간 계산</div>
+    </div>
+    <button onclick="location.href='meat_insight_apply.html?tab=consulting'" style="background:var(--g);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);">컨설팅 신청 →</button>
+  </div>
+  <div class="ctabs">
+    <button class="ct on" onclick="setCalc(this,0)">원가율</button>
+    <button class="ct" onclick="setCalc(this,1)">손익분기점</button>
+    <button class="ct" onclick="setCalc(this,2)">메뉴 가격</button>
+    <button class="ct" onclick="setCalc(this,3)">부위 수율</button>
+    <button class="ct" onclick="setCalc(this,4)">월 발주량</button>
   </div>
 
-  <!-- 컨설팅 -->
-  <div id="cv0" style="padding:12px 0;">
-    <div class="pcard hot">
-      <div class="pcard-top">
-        <span class="pcard-badge">1:1 CONSULTING</span>
-        <div class="pcard-title">비대면 전문가 상담</div>
-        <div class="pcard-sub">60분 화상 심층 상담 · 맞춤 전략</div>
-      </div>
-      <div class="pcard-body">
-        <div class="inc"><div class="incb"></div>60분 화상 심층 상담</div>
-        <div class="inc"><div class="incb"></div>원가율 · 수익 구조 맞춤 분석</div>
-        <div class="inc"><div class="incb"></div>메뉴 · 운영 개선 전략 제시</div>
-        <div class="inc"><div class="incb"></div>상담 후 요약 리포트 제공</div>
-        <div class="pcard-price">1,500,000원 <small style="font-size:13px;color:var(--ink3);font-family:var(--sans);font-weight:400;">/ 회</small></div>
-        <div style="margin-top:10px;border-top:1px solid var(--cr3);padding-top:10px;">
-          <input class="fi" id="ct-name1" placeholder="이름"/>
-          <input class="fi" id="ct-phone1" placeholder="연락처"/>
-          <input class="fi" id="ct-email1" placeholder="이메일 (선택)"/>
-          <select class="fi" id="ct-region1"><option>서울</option><option>경기</option><option>인천</option><option>부산</option><option>기타</option></select>
-          <textarea class="fi" id="ct-memo1" rows="2" placeholder="메모 (선택)"></textarea>
-          <div id="ct-msg1" style="font-size:12px;text-align:center;margin-bottom:6px;"></div>
-        </div>
-        <button class="bfull" onclick="submitConsult('비대면상담','ct-name1','ct-phone1','ct-email1','ct-region1','ct-memo1','ct-msg1')">신청하기 →</button>
-      </div>
+  <!-- 계산기 1: 원가율 -->
+  <div class="card" id="calc-0">
+    <div class="card-title">🥩 고기 원가율 계산기</div>
+    <div class="card-note">📌 도매 매입가와 손질 수율을 반영한 고기업종 전용 계산기입니다</div>
+    <label class="fl">업종</label>
+    <select class="fi" id="c1-type" onchange="calc1()"><option value="1">정육점 (소매)</option><option value="2">고깃집 — 한우</option><option value="3">고깃집 — 삼겹살</option></select>
+    <div class="r2">
+      <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="text" inputmode="numeric" id="c1-buy" oninput="formatNum(this);calc1()" value="65,000"/></div>
+      <div><label class="fl">손질 후 수율 (%)</label><input class="fi" type="number" id="c1-yield" value="85" oninput="calc1()"/></div>
     </div>
-    <div class="pcard">
-      <div class="pcard-top">
-        <span class="pcard-badge">REPORT</span>
-        <div class="pcard-title">창업 리포트</div>
-        <div class="pcard-sub">상권 분석부터 손익분기점까지 PDF</div>
+    <div class="r2">
+      <div><label class="fl">판매가 (원/100g)</label><input class="fi" type="text" inputmode="numeric" id="c1-sell" oninput="formatNum(this);calc1()" value="18,000"/></div>
+      <div><label class="fl">월 판매량 (kg)</label><input class="fi" type="text" inputmode="numeric" id="c1-qty" oninput="formatNum(this);calc1()" value="100"/></div>
+    </div>
+    <div class="r2">
+      <div><label class="fl">인건비 (원/월)</label><input class="fi" type="text" inputmode="numeric" id="c1-labor" oninput="formatNum(this);calc1()" value="2,500,000"/></div>
+      <div><label class="fl">임대료 (원/월)</label><input class="fi" type="text" inputmode="numeric" id="c1-rent" oninput="formatNum(this);calc1()" value="1,500,000"/></div>
+    </div>
+    <label class="fl">기타 고정비 (원/월)</label>
+    <input class="fi" type="text" inputmode="numeric" id="c1-etc" oninput="formatNum(this);calc1()" value="500,000"/>
+    <div class="result-box">
+      <div class="result-title">📊 계산 결과</div>
+      <div class="result-grid">
+        <div class="rc"><div class="rcl">실 매입원가/100g</div><div class="rcv" id="c1-r1">—</div></div>
+        <div class="rc"><div class="rcl">재료 원가율</div><div class="rcv" id="c1-r2">—</div></div>
+        <div class="rc"><div class="rcl">월 매출</div><div class="rcv" id="c1-r3">—</div></div>
+        <div class="rc"><div class="rcl">월 재료비</div><div class="rcv" id="c1-r4">—</div></div>
+        <div class="rc"><div class="rcl">월 고정비</div><div class="rcv" id="c1-r5">—</div></div>
+        <div class="rc highlight"><div class="rcl">월 순이익</div><div class="rcv" id="c1-r6">—</div></div>
+        <div class="rc"><div class="rcl">총 원가율</div><div class="rcv" id="c1-r7">—</div></div>
+        <div class="rc"><div class="rcl">순마진율</div><div class="rcv" id="c1-r8">—</div></div>
       </div>
-      <div class="pcard-body">
-        <div class="inc"><div class="incb"></div>반경 500m 상권 분석 (유동인구·경쟁점)</div>
-        <div class="inc"><div class="incb"></div>업종별 예상 월매출 · 원가율 데이터</div>
-        <div class="inc"><div class="incb"></div>초기 투자비용 · 손익분기점 산정</div>
-        <div class="inc"><div class="incb"></div>지역 맞춤 입지 추천 · PDF 제공</div>
-        <div class="pcard-price">200,000원 <small style="font-size:13px;color:var(--ink3);font-family:var(--sans);font-weight:400;">/ 건 · 3~5일</small></div>
-        <div style="margin-top:10px;border-top:1px solid var(--cr3);padding-top:10px;">
-          <input class="fi" id="ct-name2" placeholder="이름"/>
-          <input class="fi" id="ct-phone2" placeholder="연락처"/>
-          <input class="fi" id="ct-email2" placeholder="이메일 (선택)"/>
-          <select class="fi" id="ct-region2"><option>서울</option><option>경기</option><option>인천</option><option>부산</option><option>기타</option></select>
-          <textarea class="fi" id="ct-memo2" rows="2" placeholder="메모 (선택)"></textarea>
-          <div id="ct-msg2" style="font-size:12px;text-align:center;margin-bottom:6px;"></div>
-        </div>
-        <button class="bfull" onclick="submitConsult('창업리포트','ct-name2','ct-phone2','ct-email2','ct-region2','ct-memo2','ct-msg2')">신청하기 →</button>
-      </div>
+      <div class="warn" id="c1-warn"></div>
+      <div class="advice" id="c1-advice"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+      <button onclick="location.href='meat_insight_apply.html?tab=consulting&plan=basic'" style="flex:1;padding:11px;background:var(--n2);color:var(--g);border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">📋 창업 리포트 (20만원)</button>
+      <button onclick="location.href='meat_insight_apply.html?tab=consulting&plan=premium'" style="flex:1;padding:11px;background:var(--g);color:var(--n);border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">💼 비대면 컨설팅 (150만원)</button>
     </div>
   </div>
 
-  <!-- 계산기 -->
-  <div id="cv1" style="display:none;">
-    <div class="ctabs">
-      <button class="ct on" onclick="setCalc(this,0)">원가율</button>
-      <button class="ct" onclick="setCalc(this,1)">손익분기점</button>
-      <button class="ct" onclick="setCalc(this,2)">메뉴 가격</button>
-      <button class="ct" onclick="setCalc(this,3)">부위 수율</button>
-      <button class="ct" onclick="setCalc(this,4)">월 발주량</button>
+  <!-- 계산기 2: 손익분기점 -->
+  <div class="card" id="calc-1" style="display:none;">
+    <div class="card-title">📈 손익분기점 계산기</div>
+    <label class="fl">월 임대료 (원)</label><input class="fi" type="text" inputmode="numeric" id="c2-rent" oninput="formatNum(this);calc2()" value="1,500,000"/>
+    <label class="fl">월 인건비 (원) — 사장님 포함</label><input class="fi" type="text" inputmode="numeric" id="c2-labor" oninput="formatNum(this);calc2()" value="3,000,000"/>
+    <div class="r2">
+      <div><label class="fl">월 관리비 (원)</label><input class="fi" type="text" inputmode="numeric" id="c2-mgmt" oninput="formatNum(this);calc2()" value="300,000"/></div>
+      <div><label class="fl">기타 고정비 (원)</label><input class="fi" type="text" inputmode="numeric" id="c2-etc" oninput="formatNum(this);calc2()" value="500,000"/></div>
     </div>
-
-    <!-- 계산기 1: 원가율 -->
-    <div class="card" id="calc-0">
-      <div class="card-title">🥩 고기 원가율 계산기</div>
-      <div class="card-note">📌 도매 매입가와 손질 수율을 반영한 고기업종 전용 계산기입니다</div>
-      <label class="fl">업종</label>
-      <select class="fi" id="c1-type" onchange="calc1()">
-        <option value="1">정육점 (소매)</option>
-        <option value="2">고깃집 — 한우</option>
-        <option value="3">고깃집 — 삼겹살</option>
-      </select>
-      <div class="r2">
-        <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c1-buy" oninput="formatNum(this);calc1()" value="65000" oninput="calc1()"/></div>
-        <div><label class="fl">손질 후 수율 (%)</label><input class="fi" type="number" id="c1-yield" value="85" oninput="calc1()"/></div>
-      </div>
-      <div class="r2">
-        <div><label class="fl">판매가 (원/100g)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c1-sell" oninput="formatNum(this);calc1()" value="18000" oninput="calc1()"/></div>
-        <div><label class="fl">월 판매량 (kg)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c1-qty" oninput="formatNum(this);calc1()" value="100" oninput="calc1()"/></div>
-      </div>
-      <div class="r2">
-        <div><label class="fl">인건비 (원/월)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c1-labor" oninput="formatNum(this);calc1()" value="2500000" oninput="calc1()"/></div>
-        <div><label class="fl">임대료 (원/월)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c1-rent" oninput="formatNum(this);calc1()" value="1500000" oninput="calc1()"/></div>
-      </div>
-      <label class="fl">기타 고정비 (원/월)</label>
-      <input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c1-etc" oninput="formatNum(this);calc1()" value="500000" oninput="calc1()"/>
-      <div class="result-box">
-        <div class="result-title">📊 계산 결과</div>
-        <div class="result-grid">
-          <div class="rc"><div class="rcl">실 매입원가/100g</div><div class="rcv" id="c1-r1">—</div></div>
-          <div class="rc"><div class="rcl">재료 원가율</div><div class="rcv" id="c1-r2">—</div></div>
-          <div class="rc"><div class="rcl">월 매출</div><div class="rcv" id="c1-r3">—</div></div>
-          <div class="rc"><div class="rcl">월 재료비</div><div class="rcv" id="c1-r4">—</div></div>
-          <div class="rc"><div class="rcl">월 고정비</div><div class="rcv" id="c1-r5">—</div></div>
-          <div class="rc highlight"><div class="rcl">월 순이익</div><div class="rcv" id="c1-r6">—</div></div>
-          <div class="rc"><div class="rcl">총 원가율</div><div class="rcv" id="c1-r7">—</div></div>
-          <div class="rc"><div class="rcl">순마진율</div><div class="rcv" id="c1-r8">—</div></div>
-        </div>
-        <div class="warn" id="c1-warn"></div>
-        <div class="advice" id="c1-advice"></div>
-      </div>
+    <div class="r2">
+      <div><label class="fl">평균 객단가 (원)</label><input class="fi" type="text" inputmode="numeric" id="c2-price" oninput="formatNum(this);calc2()" value="35,000"/></div>
+      <div><label class="fl">재료 원가율 (%)</label><input class="fi" type="number" id="c2-cost" value="55" oninput="calc2()"/></div>
     </div>
-
-    <!-- 계산기 2: 손익분기점 -->
-    <div class="card" id="calc-1" style="display:none;">
-      <div class="card-title">📈 손익분기점 계산기</div>
-      <label class="fl">월 임대료 (원)</label>
-      <input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c2-rent" oninput="formatNum(this);calc2()" value="1500000" oninput="calc2()"/>
-      <label class="fl">월 인건비 (원) — 사장님 포함</label>
-      <input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c2-labor" oninput="formatNum(this);calc2()" value="3000000" oninput="calc2()"/>
-      <div class="r2">
-        <div><label class="fl">월 관리비 (원)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c2-mgmt" oninput="formatNum(this);calc2()" value="300000" oninput="calc2()"/></div>
-        <div><label class="fl">기타 고정비 (원)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c2-etc" oninput="formatNum(this);calc2()" value="500000" oninput="calc2()"/></div>
+    <label class="fl">월 영업일</label><input class="fi" type="number" id="c2-days" value="26" oninput="calc2()"/>
+    <div class="result-box">
+      <div class="result-title">📊 계산 결과</div>
+      <div class="result-grid">
+        <div class="rc"><div class="rcl">월 고정비 합계</div><div class="rcv" id="c2-r1">—</div></div>
+        <div class="rc"><div class="rcl">공헌이익률</div><div class="rcv" id="c2-r2">—</div></div>
+        <div class="rc highlight"><div class="rcl">월 손익분기 매출</div><div class="rcv" id="c2-r3">—</div></div>
+        <div class="rc"><div class="rcl">하루 필요 매출</div><div class="rcv" id="c2-r4">—</div></div>
+        <div class="rc"><div class="rcl">하루 필요 테이블</div><div class="rcv" id="c2-r5">—</div></div>
+        <div class="rc"><div class="rcl">월 필요 테이블</div><div class="rcv" id="c2-r6">—</div></div>
       </div>
-      <div class="r2">
-        <div><label class="fl">평균 객단가 (원)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c2-price" oninput="formatNum(this);calc2()" value="35000" oninput="calc2()"/></div>
-        <div><label class="fl">재료 원가율 (%)</label><input class="fi" type="number" id="c2-cost" value="55" oninput="calc2()"/></div>
-      </div>
-      <label class="fl">월 영업일</label>
-      <input class="fi" type="number" id="c2-days" value="26" oninput="calc2()"/>
-      <div class="result-box">
-        <div class="result-title">📊 계산 결과</div>
-        <div class="result-grid">
-          <div class="rc"><div class="rcl">월 고정비 합계</div><div class="rcv" id="c2-r1">—</div></div>
-          <div class="rc"><div class="rcl">공헌이익률</div><div class="rcv" id="c2-r2">—</div></div>
-          <div class="rc highlight"><div class="rcl">월 손익분기 매출</div><div class="rcv" id="c2-r3">—</div></div>
-          <div class="rc"><div class="rcl">하루 필요 매출</div><div class="rcv" id="c2-r4">—</div></div>
-          <div class="rc"><div class="rcl">하루 필요 테이블</div><div class="rcv" id="c2-r5">—</div></div>
-          <div class="rc"><div class="rcl">월 필요 테이블</div><div class="rcv" id="c2-r6">—</div></div>
-        </div>
-        <div class="advice" id="c2-advice"></div>
-      </div>
+      <div class="advice" id="c2-advice"></div>
     </div>
-
-    <!-- 계산기 3: 메뉴 가격 -->
-    <div class="card" id="calc-2" style="display:none;">
-      <div class="card-title">🍽️ 메뉴 가격 책정</div>
-      <label class="fl">부위 선택</label>
-      <select class="fi" id="c3-part" onchange="c3Preset()">
-        <option value="0">직접 입력</option>
-        <option value="65000:88:200">한우 등심 1+</option>
-        <option value="78000:88:200">한우 등심 1++</option>
-        <option value="92000:90:150">한우 안심 1++</option>
-        <option value="71000:87:200">한우 채끝 1++</option>
-        <option value="55000:80:250">한우 갈비 1+</option>
-        <option value="22000:92:200">삼겹살 A등급</option>
-        <option value="18500:90:200">목살 A등급</option>
-        <option value="9000:85:200">항정살</option>
-      </select>
-      <div class="r2">
-        <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c3-buy" oninput="formatNum(this);calc3()" value="65000" oninput="calc3()"/></div>
-        <div><label class="fl">수율 (%)</label><input class="fi" type="number" id="c3-yield" value="88" oninput="calc3()"/></div>
-      </div>
-      <div class="r2">
-        <div><label class="fl">1인분 제공량 (g)</label><input class="fi" type="number" id="c3-gram" value="200" oninput="calc3()"/></div>
-        <div><label class="fl">목표 원가율 (%)</label><input class="fi" type="number" id="c3-target" value="55" oninput="calc3()"/></div>
-      </div>
-      <div class="r2">
-        <div><label class="fl">밑반찬·쌈 원가 (원)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c3-side" oninput="formatNum(this);calc3()" value="1500" oninput="calc3()"/></div>
-        <div><label class="fl">주변 경쟁 평균가 (원)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c3-comp" oninput="formatNum(this);calc3()" value="18000" oninput="calc3()"/></div>
-      </div>
-      <div class="result-box">
-        <div class="result-title">📊 계산 결과</div>
-        <div class="result-grid">
-          <div class="rc"><div class="rcl">고기 원가/인분</div><div class="rcv" id="c3-r1">—</div></div>
-          <div class="rc"><div class="rcl">총 원가 (고기+반찬)</div><div class="rcv" id="c3-r2">—</div></div>
-          <div class="rc highlight"><div class="rcl">권장 판매가</div><div class="rcv" id="c3-r3">—</div></div>
-          <div class="rc"><div class="rcl">실현 원가율</div><div class="rcv" id="c3-r4">—</div></div>
-          <div class="rc"><div class="rcl">인분당 마진</div><div class="rcv" id="c3-r5">—</div></div>
-          <div class="rc"><div class="rcl">경쟁사 대비</div><div class="rcv" id="c3-r6">—</div></div>
-        </div>
-        <div class="advice" id="c3-advice"></div>
-      </div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+      <button onclick="location.href='meat_insight_apply.html?tab=consulting&plan=basic'" style="flex:1;padding:11px;background:var(--n2);color:var(--g);border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">📋 창업 리포트 (20만원)</button>
+      <button onclick="location.href='meat_insight_apply.html?tab=consulting&plan=premium'" style="flex:1;padding:11px;background:var(--g);color:var(--n);border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">💼 비대면 컨설팅 (150만원)</button>
     </div>
+  </div>
 
-    <!-- 계산기 4: 부위 수율 -->
-    <div class="card" id="calc-3" style="display:none;">
-      <div class="card-title">⚖️ 부위 수율 계산기</div>
-      <div class="card-note">📌 도매 구입 중량 대비 실판매 가능 중량과 손실을 계산합니다</div>
-      <label class="fl">부위 선택 (수율 자동 적용)</label>
-      <select class="fi" id="c4-part" onchange="c4Preset()">
-        <option value="88:8:0">한우 등심 (지방 제거)</option>
-        <option value="90:5:0">한우 안심</option>
-        <option value="87:9:0">한우 채끝</option>
-        <option value="68:10:22">한우 갈비 (뼈 포함)</option>
-        <option value="85:10:5">한우 앞다리</option>
-        <option value="92:5:3">삼겹살</option>
-        <option value="90:7:3">목살</option>
-        <option value="65:8:27">돼지 갈비 (뼈 포함)</option>
-        <option value="0:0:0">직접 입력</option>
-      </select>
-      <div class="r2">
-        <div><label class="fl">구입 중량 (kg)</label><input class="fi" type="number" id="c4-weight" value="10" oninput="calc4()"/></div>
-        <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c4-price" oninput="formatNum(this);calc4()" value="65000" oninput="calc4()"/></div>
-      </div>
-      <div class="r2">
-        <div><label class="fl">뼈 비율 (%)</label><input class="fi" type="number" id="c4-bone" value="0" oninput="calc4()"/></div>
-        <div><label class="fl">지방·손질 손실 (%)</label><input class="fi" type="number" id="c4-fat" value="8" oninput="calc4()"/></div>
-      </div>
-      <div class="result-box">
-        <div class="result-title">📊 계산 결과</div>
-        <div class="result-grid">
-          <div class="rc highlight"><div class="rcl">실 판매 가능 중량</div><div class="rcv" id="c4-r1">—</div></div>
-          <div class="rc"><div class="rcl">손실 중량</div><div class="rcv" id="c4-r2">—</div></div>
-          <div class="rc"><div class="rcl">실 원가 (100g당)</div><div class="rcv" id="c4-r3">—</div></div>
-          <div class="rc"><div class="rcl">1인분(200g) 원가</div><div class="rcv" id="c4-r4">—</div></div>
-          <div class="rc"><div class="rcl">손질 손실 비용</div><div class="rcv" id="c4-r5">—</div></div>
-          <div class="rc"><div class="rcl">수율</div><div class="rcv" id="c4-r6">—</div></div>
-        </div>
-        <div class="advice" id="c4-advice"></div>
-      </div>
+  <!-- 계산기 3: 메뉴 가격 -->
+  <div class="card" id="calc-2" style="display:none;">
+    <div class="card-title">🍽️ 메뉴 가격 책정</div>
+    <label class="fl">부위 선택</label>
+    <select class="fi" id="c3-part" onchange="c3Preset()">
+      <option value="0">직접 입력</option>
+      <option value="65000:88:200">한우 등심 1+</option>
+      <option value="78000:88:200">한우 등심 1++</option>
+      <option value="92000:90:150">한우 안심 1++</option>
+      <option value="71000:87:200">한우 채끝 1++</option>
+      <option value="55000:80:250">한우 갈비 1+</option>
+      <option value="22000:92:200">삼겹살 A등급</option>
+      <option value="18500:90:200">목살 A등급</option>
+      <option value="9000:85:200">항정살</option>
+    </select>
+    <div class="r2">
+      <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="text" inputmode="numeric" id="c3-buy" oninput="formatNum(this);calc3()" value="65,000"/></div>
+      <div><label class="fl">수율 (%)</label><input class="fi" type="number" id="c3-yield" value="88" oninput="calc3()"/></div>
     </div>
+    <div class="r2">
+      <div><label class="fl">1인분 제공량 (g)</label><input class="fi" type="number" id="c3-gram" value="200" oninput="calc3()"/></div>
+      <div><label class="fl">목표 원가율 (%)</label><input class="fi" type="number" id="c3-target" value="55" oninput="calc3()"/></div>
+    </div>
+    <div class="r2">
+      <div><label class="fl">밑반찬·쌈 원가 (원)</label><input class="fi" type="text" inputmode="numeric" id="c3-side" oninput="formatNum(this);calc3()" value="1,500"/></div>
+      <div><label class="fl">주변 경쟁 평균가 (원)</label><input class="fi" type="text" inputmode="numeric" id="c3-comp" oninput="formatNum(this);calc3()" value="18,000"/></div>
+    </div>
+    <div class="result-box">
+      <div class="result-title">📊 계산 결과</div>
+      <div class="result-grid">
+        <div class="rc"><div class="rcl">고기 원가/인분</div><div class="rcv" id="c3-r1">—</div></div>
+        <div class="rc"><div class="rcl">총 원가 (고기+반찬)</div><div class="rcv" id="c3-r2">—</div></div>
+        <div class="rc highlight"><div class="rcl">권장 판매가</div><div class="rcv" id="c3-r3">—</div></div>
+        <div class="rc"><div class="rcl">실현 원가율</div><div class="rcv" id="c3-r4">—</div></div>
+        <div class="rc"><div class="rcl">인분당 마진</div><div class="rcv" id="c3-r5">—</div></div>
+        <div class="rc"><div class="rcl">경쟁사 대비</div><div class="rcv" id="c3-r6">—</div></div>
+      </div>
+      <div class="advice" id="c3-advice"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+      <button onclick="location.href='meat_insight_apply.html?tab=consulting&plan=basic'" style="flex:1;padding:11px;background:var(--n2);color:var(--g);border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">📋 창업 리포트 (20만원)</button>
+      <button onclick="location.href='meat_insight_apply.html?tab=consulting&plan=premium'" style="flex:1;padding:11px;background:var(--g);color:var(--n);border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">💼 비대면 컨설팅 (150만원)</button>
+    </div>
+  </div>
 
-    <!-- 계산기 5: 월 발주량 -->
-    <div class="card" id="calc-4" style="display:none;">
-      <div class="card-title">📦 월 발주량 계산기</div>
-      <div class="card-note">📌 목표 매출을 역산해 필요한 발주량을 계산합니다</div>
-      <div class="r2">
-        <div><label class="fl">목표 월 매출 (원)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c5-sales" oninput="formatNum(this);calc5()" value="30000000" oninput="calc5()"/></div>
-        <div><label class="fl">재료 원가율 (%)</label><input class="fi" type="number" id="c5-cost" value="55" oninput="calc5()"/></div>
+  <!-- 계산기 4: 부위 수율 -->
+  <div class="card" id="calc-3" style="display:none;">
+    <div class="card-title">⚖️ 부위 수율 계산기</div>
+    <div class="card-note">📌 도매 구입 중량 대비 실판매 가능 중량과 손실을 계산합니다</div>
+    <label class="fl">부위 선택 (수율 자동 적용)</label>
+    <select class="fi" id="c4-part" onchange="c4Preset()">
+      <option value="88:8:0">한우 등심 (지방 제거)</option>
+      <option value="90:5:0">한우 안심</option>
+      <option value="87:9:0">한우 채끝</option>
+      <option value="68:10:22">한우 갈비 (뼈 포함)</option>
+      <option value="85:10:5">한우 앞다리</option>
+      <option value="92:5:3">삼겹살</option>
+      <option value="90:7:3">목살</option>
+      <option value="65:8:27">돼지 갈비 (뼈 포함)</option>
+      <option value="0:0:0">직접 입력</option>
+    </select>
+    <div class="r2">
+      <div><label class="fl">구입 중량 (kg)</label><input class="fi" type="number" id="c4-weight" value="10" oninput="calc4()"/></div>
+      <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="text" inputmode="numeric" id="c4-price" oninput="formatNum(this);calc4()" value="65,000"/></div>
+    </div>
+    <div class="r2">
+      <div><label class="fl">뼈 비율 (%)</label><input class="fi" type="number" id="c4-bone" value="0" oninput="calc4()"/></div>
+      <div><label class="fl">지방·손질 손실 (%)</label><input class="fi" type="number" id="c4-fat" value="8" oninput="calc4()"/></div>
+    </div>
+    <div class="result-box">
+      <div class="result-title">📊 계산 결과</div>
+      <div class="result-grid">
+        <div class="rc highlight"><div class="rcl">실 판매 가능 중량</div><div class="rcv" id="c4-r1">—</div></div>
+        <div class="rc"><div class="rcl">손실 중량</div><div class="rcv" id="c4-r2">—</div></div>
+        <div class="rc"><div class="rcl">실 원가 (100g당)</div><div class="rcv" id="c4-r3">—</div></div>
+        <div class="rc"><div class="rcl">1인분(200g) 원가</div><div class="rcv" id="c4-r4">—</div></div>
+        <div class="rc"><div class="rcl">손질 손실 비용</div><div class="rcv" id="c4-r5">—</div></div>
+        <div class="rc"><div class="rcl">수율</div><div class="rcv" id="c4-r6">—</div></div>
       </div>
-      <div class="r2">
-        <div><label class="fl">평균 판매가 (원/100g)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c5-sell" oninput="formatNum(this);calc5()" value="18000" oninput="calc5()"/></div>
-        <div><label class="fl">평균 수율 (%)</label><input class="fi" type="number" id="c5-yield" value="85" oninput="calc5()"/></div>
+      <div class="advice" id="c4-advice"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+      <button onclick="location.href='meat_insight_apply.html?tab=consulting&plan=basic'" style="flex:1;padding:11px;background:var(--n2);color:var(--g);border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">📋 창업 리포트 (20만원)</button>
+      <button onclick="location.href='meat_insight_apply.html?tab=consulting&plan=premium'" style="flex:1;padding:11px;background:var(--g);color:var(--n);border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">💼 비대면 컨설팅 (150만원)</button>
+    </div>
+  </div>
+
+  <!-- 계산기 5: 월 발주량 -->
+  <div class="card" id="calc-4" style="display:none;">
+    <div class="card-title">📦 월 발주량 계산기</div>
+    <div class="card-note">📌 목표 매출을 역산해 필요한 발주량을 계산합니다</div>
+    <div class="r2">
+      <div><label class="fl">목표 월 매출 (원)</label><input class="fi" type="text" inputmode="numeric" id="c5-sales" oninput="formatNum(this);calc5()" value="30,000,000"/></div>
+      <div><label class="fl">재료 원가율 (%)</label><input class="fi" type="number" id="c5-cost" value="55" oninput="calc5()"/></div>
+    </div>
+    <div class="r2">
+      <div><label class="fl">평균 판매가 (원/100g)</label><input class="fi" type="text" inputmode="numeric" id="c5-sell" oninput="formatNum(this);calc5()" value="18,000"/></div>
+      <div><label class="fl">평균 수율 (%)</label><input class="fi" type="number" id="c5-yield" value="85" oninput="calc5()"/></div>
+    </div>
+    <div class="r2">
+      <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="text" inputmode="numeric" id="c5-buy" oninput="formatNum(this);calc5()" value="65,000"/></div>
+      <div><label class="fl">월 영업일</label><input class="fi" type="number" id="c5-days" value="26" oninput="calc5()"/></div>
+    </div>
+    <div class="result-box">
+      <div class="result-title">📊 계산 결과</div>
+      <div class="result-grid">
+        <div class="rc"><div class="rcl">월 재료비 예산</div><div class="rcv" id="c5-r1">—</div></div>
+        <div class="rc highlight"><div class="rcl">월 필요 발주량</div><div class="rcv" id="c5-r2">—</div></div>
+        <div class="rc"><div class="rcl">하루 발주량</div><div class="rcv" id="c5-r3">—</div></div>
+        <div class="rc"><div class="rcl">하루 판매량(인분)</div><div class="rcv" id="c5-r4">—</div></div>
+        <div class="rc"><div class="rcl">월 발주 비용</div><div class="rcv" id="c5-r5">—</div></div>
+        <div class="rc"><div class="rcl">주 1회 발주량</div><div class="rcv" id="c5-r6">—</div></div>
       </div>
-      <div class="r2">
-        <div><label class="fl">도매 매입가 (원/kg)</label><input class="fi" type="text" inputmode="numeric" pattern="[0-9,]*" id="c5-buy" oninput="formatNum(this);calc5()" value="65000" oninput="calc5()"/></div>
-        <div><label class="fl">월 영업일</label><input class="fi" type="number" id="c5-days" value="26" oninput="calc5()"/></div>
-      </div>
-      <div class="result-box">
-        <div class="result-title">📊 계산 결과</div>
-        <div class="result-grid">
-          <div class="rc"><div class="rcl">월 재료비 예산</div><div class="rcv" id="c5-r1">—</div></div>
-          <div class="rc highlight"><div class="rcl">월 필요 발주량</div><div class="rcv" id="c5-r2">—</div></div>
-          <div class="rc"><div class="rcl">하루 발주량</div><div class="rcv" id="c5-r3">—</div></div>
-          <div class="rc"><div class="rcl">하루 판매량(인분)</div><div class="rcv" id="c5-r4">—</div></div>
-          <div class="rc"><div class="rcl">월 발주 비용</div><div class="rcv" id="c5-r5">—</div></div>
-          <div class="rc"><div class="rcl">주 1회 발주량</div><div class="rcv" id="c5-r6">—</div></div>
-        </div>
-        <div class="advice" id="c5-advice"></div>
-      </div>
+      <div class="advice" id="c5-advice"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+      <button onclick="location.href='meat_insight_apply.html?tab=consulting&plan=basic'" style="flex:1;padding:11px;background:var(--n2);color:var(--g);border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">📋 창업 리포트 (20만원)</button>
+      <button onclick="location.href='meat_insight_apply.html?tab=consulting&plan=premium'" style="flex:1;padding:11px;background:var(--g);color:var(--n);border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">💼 비대면 컨설팅 (150만원)</button>
     </div>
   </div>
 </div>
 
-<!-- ═══ 마켓 ═══ -->
+<!-- 마켓 -->
 <div class="pg" id="pg-mkt">
   <div class="tabs">
     <button class="tab on" id="mt0" onclick="setMktTab(this,0)">매물</button>
@@ -594,26 +501,21 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
   </div>
   <div id="mkt-1" style="display:none;padding:12px 16px 20px;">
     <div class="card-note" style="margin:0 0 12px;">고기 업종 매물을 무료로 등록하세요</div>
-    <label class="fl">매물 종류</label>
-    <select class="fi"><option>상가·권리금</option><option>집기·장비</option><option>식자재·재고</option></select>
-    <label class="fl">업종</label>
-    <select class="fi"><option>정육점</option><option>고깃집 (소)</option><option>고깃집 (돼지)</option><option>기타</option></select>
-    <label class="fl">주소</label>
-    <input class="fi" placeholder="도로명 주소"/>
+    <label class="fl">매물 종류</label><select class="fi"><option>상가·권리금</option><option>집기·장비</option><option>식자재·재고</option></select>
+    <label class="fl">업종</label><select class="fi"><option>정육점</option><option>고깃집 (소)</option><option>고깃집 (돼지)</option><option>기타</option></select>
+    <label class="fl">주소</label><input class="fi" placeholder="도로명 주소"/>
     <div class="r2">
       <div><label class="fl">권리금 (만원)</label><input class="fi" placeholder="없으면 0"/></div>
       <div><label class="fl">보증금 (만원)</label><input class="fi"/></div>
     </div>
-    <label class="fl">설명</label>
-    <textarea class="fi" rows="3" placeholder="단골 현황, 장비 상태 등"></textarea>
-    <label class="fl">연락처</label>
-    <input class="fi" placeholder="010-0000-0000"/>
+    <label class="fl">설명</label><textarea class="fi" rows="3" placeholder="단골 현황, 장비 상태 등"></textarea>
+    <label class="fl">연락처</label><input class="fi" placeholder="010-0000-0000"/>
     <button class="bfull" onclick="go('reg')">무료 등록 페이지로 →</button>
   </div>
-  <div id="mkt-2" style="display:none;" id="mkt-sup"></div>
+  <div id="mkt-2" style="display:none;"></div>
 </div>
 
-<!-- ═══ 커뮤니티 ═══ -->
+<!-- 커뮤니티 -->
 <div class="pg" id="pg-cm">
   <div class="cm-header">
     <div style="font-family:var(--serif);font-size:20px;color:#fff;margin-bottom:4px;">커뮤니티</div>
@@ -644,8 +546,7 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
   <div id="cm-list" style="padding:0 16px 20px;"></div>
 </div>
 
-
-<!-- ═══ 업체 찾기 ═══ -->
+<!-- 업체 찾기 -->
 <div class="pg" id="pg-biz">
   <div style="background:var(--n);padding:18px 16px;">
     <div style="font-family:var(--serif);font-size:20px;color:#fff;margin-bottom:4px;">업체 찾기</div>
@@ -658,56 +559,32 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
       <button class="sichip" onclick="setBizCat(this,'food')">식자재</button>
     </div>
   </div>
-  <!-- 광고 배너 -->
-  <div style="background:rgba(201,168,76,.08);border-bottom:1px solid rgba(201,168,76,.15);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;">
-    <div style="font-size:11px;color:var(--g);font-weight:700;">📢 광고 문의 · 월 15만원부터 상단 노출</div>
-    <button onclick="alert('카카오채널로 문의해주세요.')" style="background:var(--g);color:#fff;border:none;border-radius:6px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);">문의</button>
-  </div>
-  <div id="biz-list" style="padding:10px 16px 20px;">
-    <div style="text-align:center;padding:40px;color:var(--ink3);">불러오는 중...</div>
-  </div>
-  <!-- 업체 등록 CTA -->
+  <div id="biz-list" style="padding:10px 16px 20px;"><div style="text-align:center;padding:40px;color:var(--ink3);">불러오는 중...</div></div>
   <div style="margin:0 16px 24px;background:var(--n2);border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:space-between;">
     <div><div style="font-size:13px;color:var(--g);font-weight:700;margin-bottom:2px;">업체 등록 문의</div><div style="font-size:12px;color:rgba(255,255,255,.45);">기본 등록 무료</div></div>
     <button onclick="go('biz-reg')" style="background:var(--g);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);">등록 신청 →</button>
   </div>
 </div>
 
-<!-- ═══ 업체 등록 ═══ -->
+<!-- 업체 등록 -->
 <div class="pg" id="pg-biz-reg">
   <div class="phdr" onclick="go('biz')"><span class="phdr-back">←</span><span class="phdr-t">업체 등록 신청</span></div>
   <div style="padding:12px 16px 20px;">
     <div class="card-note">업체를 무료로 등록하고 고기 업종 사장님들께 홍보하세요</div>
-    <label class="fl">업체명 *</label>
-    <input class="fi" id="biz-name" placeholder="상호명"/>
+    <label class="fl">업체명 *</label><input class="fi" id="biz-name" placeholder="상호명"/>
     <label class="fl">카테고리 *</label>
-    <select class="fi" id="biz-cat">
-      <option value="supply">고기 납품</option>
-      <option value="equipment">정육 장비</option>
-      <option value="interior">인테리어</option>
-      <option value="food">식자재</option>
-    </select>
+    <select class="fi" id="biz-cat"><option value="supply">고기 납품</option><option value="equipment">정육 장비</option><option value="interior">인테리어</option><option value="food">식자재</option></select>
     <label class="fl">지역 *</label>
-    <select class="fi" id="biz-region">
-      <option value="서울">서울</option>
-      <option value="경기">경기</option>
-      <option value="인천">인천</option>
-      <option value="부산">부산</option>
-      <option value="대구">대구</option>
-      <option value="전국">전국 배송</option>
-    </select>
-    <label class="fl">업체 소개</label>
-    <textarea class="fi" id="biz-desc" rows="3" placeholder="주요 취급 품목, 특징 등"></textarea>
-    <label class="fl">연락처 *</label>
-    <input class="fi" id="biz-contact" placeholder="010-0000-0000"/>
-    <label class="fl">주소</label>
-    <input class="fi" id="biz-addr" placeholder="도로명 주소"/>
+    <select class="fi" id="biz-region"><option value="서울">서울</option><option value="경기">경기</option><option value="인천">인천</option><option value="부산">부산</option><option value="대구">대구</option><option value="전국">전국 배송</option></select>
+    <label class="fl">업체 소개</label><textarea class="fi" id="biz-desc" rows="3" placeholder="주요 취급 품목, 특징 등"></textarea>
+    <label class="fl">연락처 *</label><input class="fi" id="biz-contact" placeholder="010-0000-0000"/>
+    <label class="fl">주소</label><input class="fi" id="biz-addr" placeholder="도로명 주소"/>
     <button class="bfull" onclick="submitBiz()">무료 등록 신청</button>
     <div id="biz-reg-msg" style="margin-top:10px;font-size:13px;text-align:center;"></div>
   </div>
 </div>
 
-<!-- ═══ 더보기 ═══ -->
+<!-- 더보기 -->
 <div class="pg" id="pg-more">
   <div style="background:var(--n);padding:18px 16px;">
     <div style="font-family:var(--serif);font-size:20px;color:#fff;margin-bottom:4px;">더보기</div>
@@ -721,15 +598,15 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
   </div>
   <div class="more-section-title">창업 도구</div>
   <div class="more-grid">
-    <div class="more-item" onclick="go('c')"><span class="more-ico">📋</span><div class="more-name">창업 리포트</div><div class="more-desc">200,000원</div></div>
-    <div class="more-item" onclick="go('c')"><span class="more-ico">🎥</span><div class="more-name">비대면 상담</div><div class="more-desc">1,500,000원</div></div>
-    <div class="more-item" onclick="setTab2()"><span class="more-ico">🧮</span><div class="more-name">원가 계산기</div><div class="more-desc">무료</div></div>
+    <div class="more-item" onclick="location.href='meat_insight_apply.html?tab=consulting&plan=basic'"><span class="more-ico">📋</span><div class="more-name">창업 리포트</div><div class="more-desc">200,000원</div></div>
+    <div class="more-item" onclick="location.href='meat_insight_apply.html?tab=consulting&plan=premium'"><span class="more-ico">🎥</span><div class="more-name">비대면 상담</div><div class="more-desc">1,500,000원</div></div>
+    <div class="more-item" onclick="go('c')"><span class="more-ico">🧮</span><div class="more-name">원가 계산기</div><div class="more-desc">무료</div></div>
   </div>
   <div class="more-section-title">폐업 지원</div>
   <div class="more-grid">
     <div class="more-item" onclick="go('closure')"><span class="more-ico">🏗️</span><div class="more-name">폐업 철거</div><div class="more-desc">무료 견적</div></div>
     <div class="more-item" onclick="go('subsidy')"><span class="more-ico">💰</span><div class="more-name">폐업 지원금</div><div class="more-desc">신청 대행</div></div>
-    <div class="more-item" onclick="setMktTab2()"><span class="more-ico">🏪</span><div class="more-name">매물 마켓</div><div class="more-desc">무료 등록</div></div>
+    <div class="more-item" onclick="setMktTab(document.getElementById('mt1'),1);go('mkt')"><span class="more-ico">🏪</span><div class="more-name">매물 마켓</div><div class="more-desc">무료 등록</div></div>
   </div>
   <div class="more-section-title">내 계정</div>
   <div class="more-grid">
@@ -743,31 +620,26 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
   </div>
 </div>
 
-<!-- ═══ 매물 등록 ═══ -->
+<!-- 매물 등록 -->
 <div class="pg" id="pg-reg">
   <div class="phdr" onclick="go('mkt')"><span class="phdr-back">←</span><span class="phdr-t">매물 등록</span></div>
   <div style="padding:12px 16px 20px;">
     <div class="card-note">고기 업종 매물을 무료로 등록하세요</div>
-    <label class="fl">매물 종류</label>
-    <select class="fi"><option>상가·권리금</option><option>집기·장비</option><option>식자재·재고</option></select>
-    <label class="fl">업종</label>
-    <select class="fi"><option>정육점</option><option>고깃집 (소)</option><option>고깃집 (돼지)</option><option>기타</option></select>
-    <label class="fl">주소</label>
-    <input class="fi" placeholder="도로명 주소"/>
+    <label class="fl">매물 종류</label><select class="fi"><option>상가·권리금</option><option>집기·장비</option><option>식자재·재고</option></select>
+    <label class="fl">업종</label><select class="fi"><option>정육점</option><option>고깃집 (소)</option><option>고깃집 (돼지)</option><option>기타</option></select>
+    <label class="fl">주소</label><input class="fi" placeholder="도로명 주소"/>
     <div class="r2">
       <div><label class="fl">권리금 (만원)</label><input class="fi" id="reg-price" type="text" inputmode="numeric" placeholder="없으면 0" oninput="formatNum(this)"/></div>
       <div><label class="fl">보증금 (만원)</label><input class="fi" id="reg-deposit" type="text" inputmode="numeric" placeholder="없으면 0" oninput="formatNum(this)"/></div>
     </div>
-    <label class="fl">설명</label>
-    <textarea class="fi" id="reg-desc" rows="3" placeholder="단골 현황, 장비 상태 등"></textarea>
-    <label class="fl">연락처</label>
-    <input class="fi" id="reg-contact" placeholder="010-0000-0000"/>
+    <label class="fl">설명</label><textarea class="fi" id="reg-desc" rows="3" placeholder="단골 현황, 장비 상태 등"></textarea>
+    <label class="fl">연락처</label><input class="fi" id="reg-contact" placeholder="010-0000-0000"/>
     <button class="bfull" id="reg-submit" onclick="submitListing()">무료 등록하기</button>
-  <div id="reg-msg" style="margin-top:10px;font-size:13px;text-align:center;"></div>
+    <div id="reg-msg" style="margin-top:10px;font-size:13px;text-align:center;"></div>
   </div>
 </div>
 
-<!-- ═══ 폐업 철거 ═══ -->
+<!-- 폐업 철거 -->
 <div class="pg" id="pg-closure">
   <div class="phdr" onclick="go('more')"><span class="phdr-back">←</span><span class="phdr-t">폐업 철거</span></div>
   <div style="background:var(--n);padding:20px 16px;">
@@ -783,15 +655,14 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
       <label class="fl">연락처</label><input class="fi" id="cl-phone" placeholder="010-0000-0000"/>
       <label class="fl">가게 주소</label><input class="fi" id="cl-addr" placeholder="도로명 주소"/>
       <label class="fl">면적 (평)</label><input class="fi" id="cl-area" placeholder="예: 25평"/>
-      <label class="fl">추가 메모</label>
-      <textarea class="fi" id="cl-memo" rows="2" placeholder="특이사항 등"></textarea>
+      <label class="fl">추가 메모</label><textarea class="fi" id="cl-memo" rows="2" placeholder="특이사항 등"></textarea>
     </div>
     <div id="cl-msg" style="font-size:13px;text-align:center;margin-bottom:8px;"></div>
     <button onclick="submitClosure()" style="width:100%;padding:13px;background:var(--g);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans);">무료 견적 신청하기</button>
   </div>
 </div>
 
-<!-- ═══ 지원금 ═══ -->
+<!-- 지원금 -->
 <div class="pg" id="pg-subsidy">
   <div class="phdr" onclick="go('more')"><span class="phdr-back">←</span><span class="phdr-t">폐업 지원금</span></div>
   <div style="background:linear-gradient(135deg,#0D1F3C,#1A3A6B);padding:22px 16px;">
@@ -799,24 +670,24 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
     <div style="font-size:13px;color:rgba(255,255,255,.55);">복잡한 절차, 저희가 대신 해드립니다</div>
   </div>
   <div style="padding:12px 0 20px;">
-    <div class="sub-card"><span class="sub-badge">희망리턴패키지</span><div class="sub-title">점포 철거비 지원</div><div class="sub-desc">임차 사업자 원상복구 비용 지원. 철거 전 신청 필수.</div><div style="font-family:var(--serif);font-size:17px;color:#1E40AF;font-weight:700;margin-bottom:12px;">최대 250만원</div><button class="btn-sub" onclick="submitSubsidy('희망리턴패키지','sub-name1','sub-phone1','sub-region1')">수령 가능 여부 무료 확인</button>
-      <div style="margin-top:10px;">
-        <input class="fi" id="sub-name1" placeholder="이름"/>
-        <input class="fi" id="sub-phone1" placeholder="연락처"/>
-        <select class="fi" id="sub-region1"><option>서울</option><option>경기</option><option>인천</option><option>부산</option><option>기타</option></select>
-        <div id="sub-msg1" style="font-size:12px;text-align:center;margin-top:4px;"></div>
-      </div></div>
-    <div class="sub-card"><span class="sub-badge">재기 지원</span><div class="sub-title">재창업·재취업 지원금</div><div class="sub-desc">교육비·사업화 자금 지원. 폐업 후 재기 준비 소상공인.</div><div style="font-family:var(--serif);font-size:17px;color:#1E40AF;font-weight:700;margin-bottom:12px;">최대 1,000만원</div><button class="btn-sub" onclick="submitSubsidy('재기지원','sub-name2','sub-phone2','sub-region2')">신청 대행 문의</button>
-      <div style="margin-top:10px;">
-        <input class="fi" id="sub-name2" placeholder="이름"/>
-        <input class="fi" id="sub-phone2" placeholder="연락처"/>
-        <select class="fi" id="sub-region2"><option>서울</option><option>경기</option><option>인천</option><option>부산</option><option>기타</option></select>
-        <div id="sub-msg2" style="font-size:12px;text-align:center;margin-top:4px;"></div>
-      </div></div>
+    <div class="sub-card"><span class="sub-badge">희망리턴패키지</span><div class="sub-title">점포 철거비 지원</div><div class="sub-desc">임차 사업자 원상복구 비용 지원. 철거 전 신청 필수.</div><div style="font-family:var(--serif);font-size:17px;color:#1E40AF;font-weight:700;margin-bottom:12px;">최대 250만원</div>
+      <input class="fi" id="sub-name1" placeholder="이름"/>
+      <input class="fi" id="sub-phone1" placeholder="연락처"/>
+      <select class="fi" id="sub-region1"><option>서울</option><option>경기</option><option>인천</option><option>부산</option><option>기타</option></select>
+      <div id="sub-msg1" style="font-size:12px;text-align:center;margin-top:4px;"></div>
+      <button class="btn-sub" onclick="submitSubsidy('희망리턴패키지','sub-name1','sub-phone1','sub-region1')">수령 가능 여부 무료 확인</button>
+    </div>
+    <div class="sub-card"><span class="sub-badge">재기 지원</span><div class="sub-title">재창업·재취업 지원금</div><div class="sub-desc">교육비·사업화 자금 지원. 폐업 후 재기 준비 소상공인.</div><div style="font-family:var(--serif);font-size:17px;color:#1E40AF;font-weight:700;margin-bottom:12px;">최대 1,000만원</div>
+      <input class="fi" id="sub-name2" placeholder="이름"/>
+      <input class="fi" id="sub-phone2" placeholder="연락처"/>
+      <select class="fi" id="sub-region2"><option>서울</option><option>경기</option><option>인천</option><option>부산</option><option>기타</option></select>
+      <div id="sub-msg2" style="font-size:12px;text-align:center;margin-top:4px;"></div>
+      <button class="btn-sub" onclick="submitSubsidy('재기지원','sub-name2','sub-phone2','sub-region2')">신청 대행 문의</button>
+    </div>
   </div>
 </div>
 
-<!-- ═══ 마이페이지 ═══ -->
+<!-- 마이페이지 -->
 <div class="pg" id="pg-my">
   <div class="my-hero"><div class="my-title">내 매물 관리</div><div class="my-sub">등록한 매물과 문의 현황</div></div>
   <div class="my-stats">
@@ -840,224 +711,11 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 </div>
 
 <script>
-// ── Supabase 초기화 ──
-var SUPA_URL = 'https://igignylgzjphtnyxhhsd.supabase.co';
-var SUPA_KEY = 'sb_publishable_lmqOzr1MdTPnOUdiCx2C_g_kcdSRuqD';
-var sb = window.supabase ? window.supabase.createClient(SUPA_URL, SUPA_KEY) : null;
+var SUPA_URL='https://igignylgzjphtnyxhhsd.supabase.co';
+var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnaWdueWxnempwaHRueXhoaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDUyMDAsImV4cCI6MjA4OTA4MTIwMH0.3u5gCw1dnG1YSmrzhN3PGVOMoQ1LBtGw0ToNhSeL42A';
+var sb=window.supabase?window.supabase.createClient(SUPA_URL,SUPA_KEY):null;
 
-// ── 매물 등록 ──
-async function submitListing() {
-  if (!sb) { alert('연결 오류'); return; }
-  var selects = document.querySelectorAll('#pg-reg select');
-  var type = selects[0] ? selects[0].value : '';
-  var bizType = selects[1] ? selects[1].value : '';
-  var addr = document.querySelectorAll('#pg-reg input')[0];
-  var addrVal = addr ? addr.value : '';
-  var price = parseInt((document.getElementById('reg-price')||{value:'0'}).value.replace(/,/g,''))||0;
-  var deposit = parseInt((document.getElementById('reg-deposit')||{value:'0'}).value.replace(/,/g,''))||0;
-  var desc = (document.getElementById('reg-desc')||{value:''}).value;
-  var contact = (document.getElementById('reg-contact')||{value:''}).value;
-  var msg = document.getElementById('reg-msg');
-
-  if (!contact) { msg.textContent = '연락처를 입력해주세요.'; msg.style.color='red'; return; }
-  msg.textContent = '등록 중...'; msg.style.color = 'var(--g)';
-  var btn = document.getElementById('reg-submit');
-  btn.disabled = true;
-
-  try {
-    var res = await sb.from('listings').insert({
-      type: type,
-      business_type: bizType,
-      address: addrVal,
-      price: price,
-      deposit: deposit,
-      description: desc,
-      contact: contact,
-      title: bizType + ' 매물',
-      region: addrVal.split(' ')[0] || ''
-    });
-    if (res.error) throw res.error;
-    msg.textContent = '✅ 등록 완료! 담당자가 1일 내 연락드립니다.';
-    msg.style.color = 'green';
-    document.getElementById('reg-contact').value = '';
-    if(document.getElementById('reg-desc')) document.getElementById('reg-desc').value = '';
-    if(document.getElementById('reg-price')) document.getElementById('reg-price').value = '';
-    if(document.getElementById('reg-deposit')) document.getElementById('reg-deposit').value = '';
-  } catch(e) {
-    msg.textContent = '오류: ' + e.message;
-    msg.style.color = 'red';
-    btn.disabled = false;
-  }
-}
-
-// ── 매물 불러오기 ──
-async function loadListings() {
-  if (!sb) { renderListings(LISTINGS, 'mkt-listing'); return; }
-  try {
-    var { data, error } = await sb.from('listings').select('*').eq('status','노출중').order('created_at', {ascending:false}).limit(20);
-    if (error || !data || data.length === 0) { renderListings(LISTINGS, 'mkt-listing'); return; }
-    var mapped = data.map(function(d) {
-      return {
-        t: d.type === '상가·권리금' ? 's' : d.type === '집기·장비' ? 'i' : 'f',
-        tag: d.type || '매물',
-        ico: d.type === '상가·권리금' ? '🏪' : d.type === '집기·장비' ? '🧊' : '📦',
-        ti: d.title || '매물',
-        pr: d.price ? Math.round(d.price/10000).toLocaleString() + '만원' : '가격 문의',
-        lo: d.region || '',
-        ag: new Date(d.created_at).toLocaleDateString('ko-KR'),
-        nw: (Date.now() - new Date(d.created_at)) < 86400000
-      };
-    });
-    renderListings(mapped, 'mkt-listing');
-  } catch(e) {
-    renderListings(LISTINGS, 'mkt-listing');
-  }
-}
-
-// ── 업체 찾기 불러오기 ──
-var BIZ_CAT = 'all';
-async function loadBiz(cat) {
-  BIZ_CAT = cat;
-  var el = document.getElementById('biz-list');
-  if (!el) return;
-  el.innerHTML = '<div style="text-align:center;padding:40px;color:#777;">불러오는 중...</div>';
-
-  var bizData = [];
-  if (sb) {
-    try {
-      var query = sb.from('businesses').select('*').order('is_premium', {ascending:false}).order('created_at', {ascending:false});
-      if (cat !== 'all') query = query.eq('category', cat);
-      var res = await query;
-      if (!res.error && res.data && res.data.length > 0) bizData = res.data;
-    } catch(e) {}
-  }
-
-  if (bizData.length === 0) {
-    el.innerHTML = '<div style="text-align:center;padding:30px;color:#777;">' +
-      '<div style="font-size:32px;margin-bottom:12px;">🔍</div>' +
-      '<div style="font-size:14px;font-weight:700;color:#333;margin-bottom:6px;">아직 등록된 업체가 없어요</div>' +
-      '<div style="font-size:13px;margin-bottom:16px;">첫 번째로 업체를 등록해보세요!</div>' +
-      '<button onclick="go(String.fromCharCode(98,105,122,45,114,101,103))" style="background:#C9A84C;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;">업체 무료 등록</button>' +
-      '</div>';
-    return;
-  }
-
-  var html = '';
-  for (var i = 0; i < bizData.length; i++) {
-    var b = bizData[i];
-    var border = b.is_premium ? '2px solid #C9A84C' : '1px solid #EDE9DC';
-    var ico = getCatIco(b.category);
-    var catName = getCatName(b.category);
-    var contact = b.contact || '';
-    html += '<div style="background:#fff;border:' + border + ';border-radius:14px;padding:16px;margin-bottom:10px;">';
-    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">';
-    html += '<div style="width:44px;height:44px;background:#F5EDD8;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">' + ico + '</div>';
-    html += '<div style="flex:1;">';
-    if (b.is_premium) html += '<span style="font-size:9px;background:#C9A84C;color:#fff;padding:2px 7px;border-radius:3px;font-weight:700;margin-right:4px;">광고</span>';
-    if (b.is_verified) html += '<span style="font-size:9px;background:#DCFCE7;color:#166534;padding:2px 7px;border-radius:3px;">검증완료</span>';
-    html += '<div style="font-size:15px;font-weight:700;color:#0F1E3D;margin-top:3px;">' + b.name + '</div>';
-    html += '<div style="font-size:12px;color:#777;">' + (b.region||'') + ' · ' + catName + '</div>';
-    html += '</div></div>';
-    if (b.description) html += '<div style="font-size:13px;color:#333;line-height:1.6;margin-bottom:10px;">' + b.description + '</div>';
-    html += '<button data-c="' + contact + '" onclick="callBiz(this)" style="width:100%;padding:9px;background:#0F1E3D;color:#C9A84C;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">📞 문의하기</button>';
-    html += '</div>';
-  }
-  el.innerHTML = html;
-}
-
-function callBiz(btn) {
-  var c = btn.getAttribute('data-c');
-  if (c) location.href = 'tel:' + c;
-  else alert('연락처 준비중');
-}
-function getCatIco(cat) {
-  if (cat==='supply') return '🥩';
-  if (cat==='equipment') return '🔧';
-  if (cat==='interior') return '🏗️';
-  if (cat==='food') return '🧅';
-  return '🏢';
-}
-function getCatName(cat) {
-  return cat==='supply'?'고기 납품':cat==='equipment'?'정육 장비':cat==='interior'?'인테리어':cat==='food'?'식자재':'기타';
-}
-
-function setBizCat(el, cat) {
-  document.querySelectorAll('#biz-cat-wrap .sichip').forEach(function(e) { e.className='sichip'; });
-  el.className = 'sichip on';
-  loadBiz(cat);
-}
-
-// ── 업체 등록 ──
-async function submitBiz() {
-  if (!sb) { alert('연결 오류'); return; }
-  var name = document.getElementById('biz-name').value;
-  var cat = document.getElementById('biz-cat').value;
-  var region = document.getElementById('biz-region').value;
-  var desc = document.getElementById('biz-desc').value;
-  var contact = document.getElementById('biz-contact').value;
-  var addr = document.getElementById('biz-addr').value;
-  var msg = document.getElementById('biz-reg-msg');
-
-  if (!name || !contact) { msg.textContent = '업체명과 연락처는 필수입니다.'; msg.style.color='red'; return; }
-  msg.textContent = '등록 중...'; msg.style.color = 'var(--g)';
-
-  try {
-    var { error } = await sb.from('businesses').insert({
-      name: name, category: cat, region: region,
-      description: desc, contact: contact, address: addr
-    });
-    if (error) throw error;
-    msg.textContent = '✅ 등록 신청 완료! 검토 후 게시됩니다.';
-    msg.style.color = 'green';
-    document.getElementById('biz-name').value = '';
-    document.getElementById('biz-contact').value = '';
-    document.getElementById('biz-desc').value = '';
-    document.getElementById('biz-addr').value = '';
-  } catch(e) {
-    msg.textContent = '오류: ' + e.message;
-    msg.style.color = 'red';
-  }
-}
-
-// ── 커뮤니티 DB 불러오기 ──
-async function loadCmPosts() {
-  if (!sb) return;
-  try {
-    var { data, error } = await sb.from('community_posts').select('*').order('created_at', {ascending:false}).limit(20);
-    if (error || !data || data.length === 0) return;
-    var mapped = data.map(function(p) {
-      var catMap = {question:'q', review:'r', failure:'f', info:'i'};
-      var badgeMap = {q:'cb-q',r:'cb-r',f:'cb-f',i:'cb-i'};
-      var labelMap = {q:'질문',r:'후기',f:'실패사례',i:'정보'};
-      var cat = catMap[p.category] || 'q';
-      return {
-        cat:cat, badge:badgeMap[cat]||'cb-q', label:labelMap[cat]||'질문',
-        time: new Date(p.created_at).toLocaleDateString('ko-KR'),
-        title: p.title, preview: (p.content||'').substring(0,60)+'...',
-        views: p.views||0, comments:0, likes: p.likes||0, hot: (p.views||0)>100
-      };
-    });
-    var el = document.getElementById('cm-list');
-    if (el && mapped.length > 0) {
-      el.innerHTML = '';
-      mapped.forEach(function(p) {
-        var div = document.createElement('div');
-        div.className = 'cm-post';
-        div.onclick = function() { alert('로그인 후 전체 내용을 볼 수 있어요.'); };
-        div.innerHTML = '<div class="cm-post-top"><span class="cm-badge ' + p.badge + '">' + p.label + '</span>' +
-          (p.hot ? '<span class="cm-hot">🔥</span>' : '') +
-          '<span class="cm-time">' + p.time + '</span></div>' +
-          '<div class="cm-title">' + p.title + '</div>' +
-          '<div class="cm-preview">' + p.preview + '</div>' +
-          '<div class="cm-stats"><span class="cm-stat">👁 ' + p.views + '</span><span class="cm-stat">❤️ ' + p.likes + '</span></div>';
-        el.appendChild(div);
-      });
-    }
-  } catch(e) {}
-}
-
-// ── 데이터 ──
-var LISTINGS = [
+var LISTINGS=[
   {t:'s',tag:'상가·권리금',ico:'🏪',ti:'정육점 양도 — 단골 다수',pr:'권리금 2,500만원',lo:'경기 안양시',ag:'오늘',nw:true},
   {t:'i',tag:'집기·장비',ico:'🧊',ti:'정육 냉장 쇼케이스 2m',pr:'180만원',lo:'서울 은평구',ag:'1일 전',nw:false},
   {t:'s',tag:'상가·권리금',ico:'🥩',ti:'삼겹살 전문점 양도',pr:'권리금 3,500만원',lo:'서울 마포구',ag:'2일 전',nw:false},
@@ -1066,7 +724,7 @@ var LISTINGS = [
   {t:'f',tag:'식자재·재고',ico:'🧊',ti:'냉동 삼겹살 재고 처분',pr:'시세 60%',lo:'인천 남동구',ag:'오늘',nw:true},
 ];
 
-var SISE = {
+var SISE={
   han:{name:'한우',items:[
     {name:'등심',grade:'1++',price:78000,chg:2.3},{name:'등심',grade:'1+',price:65000,chg:1.8},
     {name:'안심',grade:'1++',price:92000,chg:-0.5},{name:'채끝',grade:'1++',price:71000,chg:3.1},
@@ -1087,7 +745,7 @@ var SISE = {
   ]},
 };
 
-var CM_POSTS = [
+var CM_POSTS=[
   {cat:'q',badge:'cb-q',label:'질문',time:'10분 전',title:'정육점 창업 냉장고 몇 대가 적당할까요?',preview:'내년 봄 오픈 예정인데 쇼케이스 2m짜리 2대면 충분할지 고민입니다.',views:128,comments:12,likes:8,hot:true},
   {cat:'r',badge:'cb-r',label:'후기',time:'2시간 전',title:'창업 리포트 후기 — 결과적으로 잘됐어요',preview:'상권분석이 정말 정확했어요. 입지를 바꿨고 월매출이 30% 높게 나옵니다.',views:342,comments:24,likes:47,hot:true},
   {cat:'f',badge:'cb-f',label:'실패사례',time:'1일 전',title:'고깃집 3년 하다 폐업한 이야기 — 원가 관리 실패',preview:'매출은 됐는데 원가율이 70%가 넘어가니 남는 게 없더라고요.',views:891,comments:56,likes:103,hot:true},
@@ -1095,428 +753,263 @@ var CM_POSTS = [
   {cat:'q',badge:'cb-q',label:'질문',time:'5일 전',title:'돼지고기 납품업체 어디서 찾으세요?',preview:'기존 거래처 단가가 너무 높아서 새로운 납품업체를 찾고 있습니다.',views:234,comments:18,likes:15,hot:false},
 ];
 
-var SUPPLIERS = [
+var SUPPLIERS=[
   {name:'협신식품 (주)',logo:'협신\n식품',region:'경기도 · 전국 배송',desc:'수도권 유일 도축장. 전국 최초 부분육 경매 도입. 한우·한돈 전문.',featured:true},
   {name:'강원한우 직판장',logo:'강원\n한우',region:'강원도 · 전국 배송',desc:'횡성 한우 산지 직송. 1++ 등급 특화.',featured:false},
   {name:'제주 흑돼지 영농조합',logo:'제주\n흑돼지',region:'제주도 · 전국 배송',desc:'제주 인증 흑돼지. B2B 특화.',featured:false},
 ];
 
-// ── 렌더 함수 ──
-function renderListings(items, elId) {
-  var el = document.getElementById(elId);
-  if (!el) return;
-  el.innerHTML = items.map(function(d) {
-    return '<div class="lc" onclick="alert(\'매물 상세 페이지 준비중\')">' +
-      '<div class="lc-thumb">' + d.ico + (d.nw ? '<div class="lc-new">NEW</div>' : '') + '</div>' +
-      '<div class="lc-body">' +
-      '<span class="lc-tag">' + d.tag + '</span>' +
-      '<div class="lc-title">' + d.ti + '</div>' +
-      '<div class="lc-price">' + d.pr + '</div>' +
-      '<div class="lc-foot"><span class="lc-loc">' + d.lo + '</span><span class="lc-ago">' + d.ag + '</span></div>' +
-      '</div></div>';
+function renderListings(items,elId){
+  var el=document.getElementById(elId);if(!el)return;
+  el.innerHTML=items.map(function(d){return'<div class="lc" onclick="alert(\'매물 상세 페이지 준비중\')"><div class="lc-thumb">'+d.ico+(d.nw?'<div class="lc-new">NEW</div>':'')+'</div><div class="lc-body"><span class="lc-tag">'+d.tag+'</span><div class="lc-title">'+d.ti+'</div><div class="lc-price">'+d.pr+'</div><div class="lc-foot"><span class="lc-loc">'+d.lo+'</span><span class="lc-ago">'+d.ag+'</span></div></div></div>';}).join('');
+}
+
+function renderSise(cat){
+  var el=document.getElementById('si-list');if(!el)return;
+  var cats=cat==='all'?['han','pig','chk','imp']:[cat];
+  el.innerHTML=cats.map(function(c){
+    var d=SISE[c];var avg=0;d.items.forEach(function(i){avg+=i.chg;});avg=(avg/d.items.length).toFixed(1);
+    var bc=avg>0?'badge-up':avg<0?'badge-dn':'badge-eq';
+    var bt=avg>0?'▲ '+avg+'%':avg<0?'▼ '+Math.abs(avg)+'%':'변동없음';
+    return'<div class="si-card"><div class="si-card-head"><span class="si-cat">'+d.name+'</span><span class="si-badge '+bc+'">'+bt+'</span></div>'+
+    d.items.map(function(item){var cc=item.chg>0?'chg-up':item.chg<0?'chg-dn':'';var ct=item.chg>0?'▲ '+item.chg+'%':item.chg<0?'▼ '+Math.abs(item.chg)+'%':'변동없음';
+    return'<div class="si-row"><div><div class="si-name">'+item.name+'</div><div class="si-grade">'+item.grade+'</div></div><div><div class="si-price">'+item.price.toLocaleString()+'원/kg</div><div class="si-chg '+cc+'">'+ct+'</div></div></div>';}).join('')+'</div>';
   }).join('');
 }
 
-function renderSise(cat) {
-  var el = document.getElementById('si-list');
-  if (!el) return;
-  var cats = cat === 'all' ? ['han','pig','chk','imp'] : [cat];
-  el.innerHTML = cats.map(function(c) {
-    var d = SISE[c];
-    var avg = 0;
-    d.items.forEach(function(i) { avg += i.chg; });
-    avg = (avg / d.items.length).toFixed(1);
-    var bc = avg > 0 ? 'badge-up' : avg < 0 ? 'badge-dn' : 'badge-eq';
-    var bt = avg > 0 ? '▲ ' + avg + '%' : avg < 0 ? '▼ ' + Math.abs(avg) + '%' : '변동없음';
-    return '<div class="si-card">' +
-      '<div class="si-card-head"><span class="si-cat">' + d.name + '</span><span class="si-badge ' + bc + '">' + bt + '</span></div>' +
-      d.items.map(function(item) {
-        var cc = item.chg > 0 ? 'chg-up' : item.chg < 0 ? 'chg-dn' : '';
-        var ct = item.chg > 0 ? '▲ ' + item.chg + '%' : item.chg < 0 ? '▼ ' + Math.abs(item.chg) + '%' : '변동없음';
-        return '<div class="si-row">' +
-          '<div><div class="si-name">' + item.name + '</div><div class="si-grade">' + item.grade + '</div></div>' +
-          '<div><div class="si-price">' + item.price.toLocaleString() + '원/kg</div><div class="si-chg ' + cc + '">' + ct + '</div></div>' +
-          '</div>';
-      }).join('') + '</div>';
-  }).join('');
+function renderHomeSise(){
+  var el=document.getElementById('home-sise');if(!el)return;
+  var items=[{name:'한우 등심 1++',price:78000,chg:2.3},{name:'돼지 삼겹 A',price:22000,chg:-0.8},{name:'미국산 갈비',price:32000,chg:-1.5}];
+  el.innerHTML=items.map(function(i){var cc=i.chg>0?'chg-up':'chg-dn';var ct=i.chg>0?'▲'+i.chg+'%':'▼'+Math.abs(i.chg)+'%';return'<div class="smi"><div class="smi-name">'+i.name+'</div><div class="smi-price">'+i.price.toLocaleString()+'원</div><div class="smi-chg '+cc+'">'+ct+'</div></div>';}).join('');
 }
 
-function renderHomeSise() {
-  var el = document.getElementById('home-sise');
-  if (!el) return;
-  var items = [{name:'한우 등심 1++',price:78000,chg:2.3},{name:'돼지 삼겹 A',price:22000,chg:-0.8},{name:'미국산 갈비',price:32000,chg:-1.5}];
-  el.innerHTML = items.map(function(i) {
-    var cc = i.chg > 0 ? 'chg-up' : 'chg-dn';
-    var ct = i.chg > 0 ? '▲' + i.chg + '%' : '▼' + Math.abs(i.chg) + '%';
-    return '<div class="smi"><div class="smi-name">' + i.name + '</div><div class="smi-price">' + i.price.toLocaleString() + '원</div><div class="smi-chg ' + cc + '">' + ct + '</div></div>';
-  }).join('');
+function renderCm(cat,elId){
+  var el=document.getElementById(elId);if(!el)return;
+  var filtered=cat==='all'?CM_POSTS:CM_POSTS.filter(function(p){return p.cat===cat;});
+  el.innerHTML=filtered.map(function(p){return'<div class="cm-post" onclick="alert(\'로그인 후 전체 내용을 볼 수 있어요.\')"><div class="cm-post-top"><span class="cm-badge '+p.badge+'">'+p.label+'</span>'+(p.hot?'<span class="cm-hot">🔥</span>':'')+'<span class="cm-time">'+p.time+'</span></div><div class="cm-title">'+p.title+'</div><div class="cm-preview">'+p.preview+'</div><div class="cm-stats"><span class="cm-stat">👁 '+p.views+'</span><span class="cm-stat">💬 '+p.comments+'</span><span class="cm-stat">❤️ '+p.likes+'</span></div></div>';}).join('');
 }
 
-function renderCm(cat, elId) {
-  var el = document.getElementById(elId);
-  if (!el) return;
-  var filtered = cat === 'all' ? CM_POSTS : CM_POSTS.filter(function(p) { return p.cat === cat; });
-  el.innerHTML = filtered.map(function(p) {
-    return '<div class="cm-post" onclick="alert(\'로그인 후 전체 내용을 볼 수 있어요.\')">' +
-      '<div class="cm-post-top"><span class="cm-badge ' + p.badge + '">' + p.label + '</span>' +
-      (p.hot ? '<span class="cm-hot">🔥</span>' : '') +
-      '<span class="cm-time">' + p.time + '</span></div>' +
-      '<div class="cm-title">' + p.title + '</div>' +
-      '<div class="cm-preview">' + p.preview + '</div>' +
-      '<div class="cm-stats"><span class="cm-stat">👁 ' + p.views + '</span><span class="cm-stat">💬 ' + p.comments + '</span><span class="cm-stat">❤️ ' + p.likes + '</span></div>' +
-      '</div>';
-  }).join('');
+function renderSup(){
+  var el=document.getElementById('mkt-2');if(!el)return;
+  el.innerHTML='<div style="padding:10px 16px 20px;">'+SUPPLIERS.map(function(s){return'<div class="sup-card '+(s.featured?'featured':'')+'" onclick="alert(\'업체 상세 준비중\')" style="margin:0 0 10px;"><div class="sup-head"><div class="sup-logo" style="white-space:pre-line;">'+s.logo+'</div><div><div class="sup-badges">'+(s.featured?'<span class="sb-ft">추천</span>':'')+'<span class="sb-vf">검증완료</span></div><div class="sup-name">'+s.name+'</div><div class="sup-region">'+s.region+'</div></div></div><div class="sup-body"><div class="sup-desc">'+s.desc+'</div><div class="sup-foot"><button class="btn-contact" onclick="event.stopPropagation();alert(\'카카오채널로 문의해주세요.\')">문의하기</button><button class="btn-detail">상세보기</button></div></div></div>';}).join('')+'<button onclick="alert(\'카카오채널로 입점 문의해주세요.\')" style="width:100%;padding:12px;background:var(--g);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);">공급사 입점 신청</button></div>';
 }
 
-function renderSup() {
-  var el = document.getElementById('mkt-2');
-  if (!el) return;
-  el.innerHTML = '<div style="padding:10px 16px 20px;">' + SUPPLIERS.map(function(s) {
-    return '<div class="sup-card ' + (s.featured ? 'featured' : '') + '" onclick="alert(\'업체 상세 준비중\')" style="margin:0 0 10px;">' +
-      '<div class="sup-head"><div class="sup-logo" style="white-space:pre-line;">' + s.logo + '</div><div>' +
-      '<div class="sup-badges">' + (s.featured ? '<span class="sb-ft">추천</span>' : '') + '<span class="sb-vf">검증완료</span></div>' +
-      '<div class="sup-name">' + s.name + '</div><div class="sup-region">' + s.region + '</div></div></div>' +
-      '<div class="sup-body"><div class="sup-desc">' + s.desc + '</div>' +
-      '<div class="sup-foot"><button class="btn-contact" onclick="event.stopPropagation();alert(\'카카오채널로 문의해주세요.\')">문의하기</button><button class="btn-detail">상세보기</button></div></div></div>';
-  }).join('') + '<button onclick="alert(\'카카오채널로 입점 문의해주세요.\')" style="width:100%;padding:12px;background:var(--g);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);">공급사 입점 신청</button></div>';
-}
+var ALL_PAGES=['h','si','c','mkt','cm','more','reg','closure','subsidy','my','biz','biz-reg'];
+var TAB_MAP={h:'h',si:'si',c:'c',mkt:'mkt',cm:'cm',more:'more',reg:'mkt',closure:'more',subsidy:'more',my:'more','biz':'more','biz-reg':'more'};
 
-// ── 네비게이션 ──
-var ALL_PAGES = ['h','si','c','mkt','cm','more','reg','closure','subsidy','my','biz','biz-reg'];
-var TAB_MAP = {h:'h',si:'si',c:'c',mkt:'mkt',cm:'cm',more:'more',reg:'mkt',closure:'more',subsidy:'more',my:'more','biz':'more','biz-reg':'more'};
-
-function go(p) {
-  ALL_PAGES.forEach(function(id) {
-    var el = document.getElementById('pg-' + id);
-    if (el) el.className = 'pg';
+function go(p){
+  ALL_PAGES.forEach(function(id){var el=document.getElementById('pg-'+id);if(el)el.className='pg';});
+  var target=document.getElementById('pg-'+p);if(target)target.className='pg on';
+  var active=TAB_MAP[p]||'more';
+  ['h','si','mkt','cm','more'].forEach(function(id){
+    var nb=document.getElementById('nb-'+id);var bn=document.getElementById('bn-'+id);
+    if(nb)nb.className='nb'+(id===active?' on':'');
+    if(bn)bn.className='bnb'+(id===active?' on':'');
   });
-  var target = document.getElementById('pg-' + p);
-  if (target) target.className = 'pg on';
-
-  var active = TAB_MAP[p] || 'more';
-  ['h','si','mkt','cm','more'].forEach(function(id) {
-    var nb = document.getElementById('nb-' + id);
-    var bn = document.getElementById('bn-' + id);
-    if (nb) nb.className = 'nb' + (id === active ? ' on' : '');
-    if (bn) bn.className = 'bnb' + (id === active ? ' on' : '');
-    if (id === 'c') {
-      var nbc = document.getElementById('nb-c');
-      if (nbc) nbc.className = 'nb' + (p === 'c' ? ' on' : '');
-    }
-  });
-  var nbc = document.getElementById('nb-c');
-  if (nbc) nbc.className = 'nb' + (p === 'c' ? ' on' : '');
-
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
-
-  if (p === 'si') renderSise('all');
-  if (p === 'cm') { renderCm('all', 'cm-list'); loadCmPosts(); }
-  if (p === 'mkt') { loadListings(); renderSup(); }
-  if (p === 'biz') loadBiz('all');
+  var nbc=document.getElementById('nb-c');if(nbc)nbc.className='nb'+(p==='c'?' on':'');
+  document.documentElement.scrollTop=0;document.body.scrollTop=0;
+  if(p==='si')renderSise('all');
+  if(p==='cm'){renderCm('all','cm-list');loadCmPosts();}
+  if(p==='mkt'){loadListings();renderSup();}
+  if(p==='biz')loadBiz('all');
 }
 
-function setSiCat(el, cat) {
-  document.querySelectorAll('.sichip').forEach(function(e) { e.className = 'sichip'; });
-  el.className = 'sichip on';
-  renderSise(cat);
+function setSiCat(el,cat){document.querySelectorAll('.sichip').forEach(function(e){e.className='sichip';});el.className='sichip on';renderSise(cat);}
+function setCmCat(el,cat){document.querySelectorAll('.cmchip').forEach(function(e){e.className='cmchip';});el.className='cmchip on';renderCm(cat,'cm-list');}
+function filterL(el,t){document.querySelectorAll('#mkt-0 .ct').forEach(function(e){e.className='ct';});el.className='ct on';renderListings(t==='a'?LISTINGS:LISTINGS.filter(function(d){return d.t===t;}),'mkt-listing');}
+
+function setMktTab(el,i){
+  ['mt0','mt1','mt2'].forEach(function(id,j){var e=document.getElementById(id);if(e)e.className='tab'+(j===i?' on':'');});
+  ['mkt-0','mkt-1','mkt-2'].forEach(function(id,j){var e=document.getElementById(id);if(e)e.style.display=j===i?'block':'none';});
+  if(i===2)renderSup();
 }
 
-function setCmCat(el, cat) {
-  document.querySelectorAll('.cmchip').forEach(function(e) { e.className = 'cmchip'; });
-  el.className = 'cmchip on';
-  renderCm(cat, 'cm-list');
+function setCalc(el,i){
+  document.querySelectorAll('#pg-c .ct').forEach(function(e){e.className='ct';});
+  el.className='ct on';
+  for(var j=0;j<5;j++){var c=document.getElementById('calc-'+j);if(c)c.style.display=j===i?'block':'none';}
 }
 
-function filterL(el, t) {
-  document.querySelectorAll('#mkt-0 .ct').forEach(function(e) { e.className = 'ct'; });
-  el.className = 'ct on';
-  renderListings(t === 'a' ? LISTINGS : LISTINGS.filter(function(d) { return d.t === t; }), 'mkt-listing');
+function formatNum(input){
+  var pos=input.selectionStart;var oldLen=input.value.length;
+  var raw=input.value.replace(/[^0-9]/g,'');if(raw===''){input.value='';return;}
+  var formatted=parseInt(raw,10).toLocaleString('ko-KR');input.value=formatted;
+  var newLen=formatted.length;var newPos=pos+(newLen-oldLen);
+  try{input.setSelectionRange(newPos,newPos);}catch(e){}
 }
 
-function setMktTab(el, i) {
-  ['mt0','mt1','mt2'].forEach(function(id, j) {
-    var e = document.getElementById(id);
-    if (e) e.className = 'tab' + (j === i ? ' on' : '');
-  });
-  ['mkt-0','mkt-1','mkt-2'].forEach(function(id, j) {
-    var e = document.getElementById(id);
-    if (e) e.style.display = j === i ? 'block' : 'none';
-  });
-  if (i === 2) renderSup();
+function v(id){var el=document.getElementById(id);if(!el)return 0;return parseFloat(el.value.replace(/[^0-9.-]/g,''))||0;}
+function sv(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
+
+function calc1(){
+  var buy=v('c1-buy'),yld=v('c1-yield'),sell=v('c1-sell'),qty=v('c1-qty'),labor=v('c1-labor'),rent=v('c1-rent'),etc=v('c1-etc');
+  if(!buy||!sell||!qty)return;
+  var realPer100=Math.round(buy/(yld/100)*100/10);
+  var sales=Math.round(qty*10*sell);var mat=Math.round(qty*buy);var fixed=labor+rent+etc;var profit=sales-mat-fixed;
+  var matRate=(mat/sales*100).toFixed(1);var totalRate=((mat+fixed)/sales*100).toFixed(1);var netRate=(profit/sales*100).toFixed(1);
+  sv('c1-r1',realPer100.toLocaleString()+'원');sv('c1-r2',matRate+'%');sv('c1-r3',sales.toLocaleString()+'원');
+  sv('c1-r4',mat.toLocaleString()+'원');sv('c1-r5',fixed.toLocaleString()+'원');sv('c1-r6',profit.toLocaleString()+'원');
+  sv('c1-r7',totalRate+'%');sv('c1-r8',netRate+'%');
+  var warn=document.getElementById('c1-warn');
+  if(parseFloat(matRate)>65){warn.style.display='block';warn.textContent='⚠️ 재료 원가율 '+matRate+'%는 고기업종 적정 범위(50~65%)를 초과합니다.';}
+  else warn.style.display='none';
+  sv('c1-advice',profit<0?'💡 현재 구조에서는 적자입니다. 판매량 증가 또는 판매가 인상이 필요합니다.':parseFloat(netRate)<10?'💡 순마진이 낮습니다. 고정비 절감 방법을 검토해보세요.':'✅ 건강한 수익 구조입니다. 판매량 유지·확대에 집중하세요.');
 }
 
-function setMktTab2() { go('mkt'); setMktTab(document.getElementById('mt1'), 1); }
-
-function setTab(el, targetId) {
-  document.querySelectorAll('#pg-c .tab').forEach(function(e) { e.className = 'tab'; });
-  el.className = 'tab on';
-  document.getElementById('cv0').style.display = targetId === 'cv0' ? 'block' : 'none';
-  document.getElementById('cv1').style.display = targetId === 'cv1' ? 'block' : 'none';
+function calc2(){
+  var rent=v('c2-rent'),labor=v('c2-labor'),mgmt=v('c2-mgmt'),etc=v('c2-etc'),price=v('c2-price'),cost=v('c2-cost'),days=v('c2-days');
+  if(!price||!cost)return;
+  var fixed=rent+labor+mgmt+etc;var contrib=(100-cost)/100;var be=Math.round(fixed/contrib);var beDay=Math.round(be/days);
+  sv('c2-r1',fixed.toLocaleString()+'원');sv('c2-r2',(contrib*100).toFixed(1)+'%');sv('c2-r3',be.toLocaleString()+'원');
+  sv('c2-r4',beDay.toLocaleString()+'원');sv('c2-r5',Math.ceil(beDay/price)+'팀');sv('c2-r6',Math.ceil(be/price)+'팀');
+  sv('c2-advice',Math.ceil(beDay/price)<=15?'✅ 하루 '+Math.ceil(beDay/price)+'팀이면 손익분기 달성 가능합니다.':'💡 하루 '+Math.ceil(beDay/price)+'팀은 다소 높은 목표입니다. 고정비 절감 또는 객단가 향상을 검토해보세요.');
 }
 
-function setTab2() { go('c'); setTimeout(function() { setTab(document.getElementById('tab-calc'), 'cv1'); }, 50); }
-
-function setCalc(el, i) {
-  document.querySelectorAll('#cv1 .ct').forEach(function(e) { e.className = 'ct'; });
-  el.className = 'ct on';
-  for (var j = 0; j < 5; j++) {
-    var c = document.getElementById('calc-' + j);
-    if (c) c.style.display = j === i ? 'block' : 'none';
-  }
+function c3Preset(){
+  var sel=document.getElementById('c3-part');var val=sel.value;if(val==='0')return;
+  var parts=val.split(':');
+  document.getElementById('c3-buy').value=parseInt(parts[0]).toLocaleString();
+  document.getElementById('c3-yield').value=parts[1];document.getElementById('c3-gram').value=parts[2];calc3();
 }
 
-// ── 계산기 함수 ──
-// ── 콤마 포맷 입력 ──
-function formatNum(input) {
-  var pos = input.selectionStart;
-  var oldLen = input.value.length;
-  var raw = input.value.replace(/[^0-9]/g, '');
-  if (raw === '') { input.value = ''; return; }
-  var formatted = parseInt(raw, 10).toLocaleString('ko-KR');
-  input.value = formatted;
-  // 커서 위치 보정
-  var newLen = formatted.length;
-  var newPos = pos + (newLen - oldLen);
-  try { input.setSelectionRange(newPos, newPos); } catch(e) {}
+function calc3(){
+  var buy=v('c3-buy'),yld=v('c3-yield'),gram=v('c3-gram'),target=v('c3-target'),side=v('c3-side'),comp=v('c3-comp');
+  if(!buy||!gram)return;
+  var meatCost=Math.round(buy/(yld/100)*(gram/1000));var total=meatCost+side;var rec=Math.round(total/(target/100)/100)*100;var realRate=(total/rec*100).toFixed(1);
+  sv('c3-r1',meatCost.toLocaleString()+'원');sv('c3-r2',total.toLocaleString()+'원');sv('c3-r3',rec.toLocaleString()+'원');
+  sv('c3-r4',realRate+'%');sv('c3-r5',(rec-total).toLocaleString()+'원');
+  sv('c3-r6',comp?(rec>comp?'경쟁사보다 '+(rec-comp).toLocaleString()+'원 높음':'경쟁사보다 '+(comp-rec).toLocaleString()+'원 낮음'):'-');
+  sv('c3-advice',parseFloat(realRate)>65?'⚠️ 원가율이 높습니다. 1인분 제공량 조정 또는 매입처 재검토를 권장합니다.':'✅ 적정 가격 범위입니다. 인분당 '+(rec-total).toLocaleString()+'원의 마진이 발생합니다.');
 }
 
-function v(id) {
-  var el = document.getElementById(id);
-  if (!el) return 0;
-  return parseFloat(el.value.replace(/[^0-9.-]/g, '')) || 0;
-}
-function sv(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
-
-function calc1() {
-  var buy = v('c1-buy'), yld = v('c1-yield'), sell = v('c1-sell');
-  var qty = v('c1-qty'), labor = v('c1-labor'), rent = v('c1-rent'), etc = v('c1-etc');
-  if (!buy || !sell || !qty) return;
-  var realPer100 = Math.round(buy / (yld / 100) * 100 / 10);
-  var sales = Math.round(qty * 10 * sell);
-  var mat = Math.round(qty * buy);
-  var fixed = labor + rent + etc;
-  var profit = sales - mat - fixed;
-  var matRate = (mat / sales * 100).toFixed(1);
-  var totalRate = ((mat + fixed) / sales * 100).toFixed(1);
-  var netRate = (profit / sales * 100).toFixed(1);
-  sv('c1-r1', realPer100.toLocaleString() + '원');
-  sv('c1-r2', matRate + '%');
-  sv('c1-r3', sales.toLocaleString() + '원');
-  sv('c1-r4', mat.toLocaleString() + '원');
-  sv('c1-r5', fixed.toLocaleString() + '원');
-  sv('c1-r6', profit.toLocaleString() + '원');
-  sv('c1-r7', totalRate + '%');
-  sv('c1-r8', netRate + '%');
-  var warn = document.getElementById('c1-warn');
-  if (parseFloat(matRate) > 65) { warn.style.display = 'block'; warn.textContent = '⚠️ 재료 원가율 ' + matRate + '%는 고기업종 적정 범위(50~65%)를 초과합니다.'; }
-  else warn.style.display = 'none';
-  sv('c1-advice', profit < 0 ? '💡 현재 구조에서는 적자입니다. 판매량 증가 또는 판매가 인상이 필요합니다.' : parseFloat(netRate) < 10 ? '💡 순마진이 낮습니다. 고정비 절감 방법을 검토해보세요.' : '✅ 건강한 수익 구조입니다. 판매량 유지·확대에 집중하세요.');
-}
-
-function calc2() {
-  var rent = v('c2-rent'), labor = v('c2-labor'), mgmt = v('c2-mgmt'), etc = v('c2-etc');
-  var price = v('c2-price'), cost = v('c2-cost'), days = v('c2-days');
-  if (!price || !cost) return;
-  var fixed = rent + labor + mgmt + etc;
-  var contrib = (100 - cost) / 100;
-  var be = Math.round(fixed / contrib);
-  var beDay = Math.round(be / days);
-  sv('c2-r1', fixed.toLocaleString() + '원');
-  sv('c2-r2', (contrib * 100).toFixed(1) + '%');
-  sv('c2-r3', be.toLocaleString() + '원');
-  sv('c2-r4', beDay.toLocaleString() + '원');
-  sv('c2-r5', Math.ceil(beDay / price) + '팀');
-  sv('c2-r6', Math.ceil(be / price) + '팀');
-  sv('c2-advice', Math.ceil(beDay / price) <= 15 ? '✅ 하루 ' + Math.ceil(beDay/price) + '팀이면 손익분기 달성 가능합니다.' : '💡 하루 ' + Math.ceil(beDay/price) + '팀은 다소 높은 목표입니다. 고정비 절감 또는 객단가 향상을 검토해보세요.');
-}
-
-function c3Preset() {
-  var sel = document.getElementById('c3-part');
-  var val = sel.value;
-  if (val === '0') return;
-  var parts = val.split(':');
-  document.getElementById('c3-buy').value = parts[0];
-  document.getElementById('c3-yield').value = parts[1];
-  document.getElementById('c3-gram').value = parts[2];
-  calc3();
-}
-
-function calc3() {
-  var buy = v('c3-buy'), yld = v('c3-yield'), gram = v('c3-gram');
-  var target = v('c3-target'), side = v('c3-side'), comp = v('c3-comp');
-  if (!buy || !gram) return;
-  var meatCost = Math.round(buy / (yld / 100) * (gram / 1000));
-  var total = meatCost + side;
-  var rec = Math.round(total / (target / 100) / 100) * 100;
-  var realRate = (total / rec * 100).toFixed(1);
-  sv('c3-r1', meatCost.toLocaleString() + '원');
-  sv('c3-r2', total.toLocaleString() + '원');
-  sv('c3-r3', rec.toLocaleString() + '원');
-  sv('c3-r4', realRate + '%');
-  sv('c3-r5', (rec - total).toLocaleString() + '원');
-  sv('c3-r6', comp ? (rec > comp ? '경쟁사보다 ' + (rec-comp).toLocaleString() + '원 높음' : '경쟁사보다 ' + (comp-rec).toLocaleString() + '원 낮음') : '-');
-  sv('c3-advice', parseFloat(realRate) > 65 ? '⚠️ 원가율이 높습니다. 1인분 제공량 조정 또는 매입처 재검토를 권장합니다.' : '✅ 적정 가격 범위입니다. 인분당 ' + (rec-total).toLocaleString() + '원의 마진이 발생합니다.');
-}
-
-function c4Preset() {
-  var sel = document.getElementById('c4-part');
-  var val = sel.value;
-  var parts = val.split(':');
-  if (parts[0] !== '0') {
-    document.getElementById('c4-fat').value = parts[1];
-    document.getElementById('c4-bone').value = parts[2];
-  }
+function c4Preset(){
+  var sel=document.getElementById('c4-part');var val=sel.value;var parts=val.split(':');
+  if(parts[0]!=='0'){document.getElementById('c4-fat').value=parts[1];document.getElementById('c4-bone').value=parts[2];}
   calc4();
 }
 
-function calc4() {
-  var weight = v('c4-weight'), price = v('c4-price');
-  var bone = v('c4-bone'), fat = v('c4-fat');
-  if (!weight || !price) return;
-  var loss = (bone + fat) / 100;
-  var yld = weight * (1 - loss);
-  var lossW = weight * loss;
-  var total = weight * price;
-  var per100 = Math.round(total / (yld * 10));
-  sv('c4-r1', yld.toFixed(2) + 'kg');
-  sv('c4-r2', lossW.toFixed(2) + 'kg');
-  sv('c4-r3', per100.toLocaleString() + '원');
-  sv('c4-r4', (per100 * 2).toLocaleString() + '원');
-  sv('c4-r5', Math.round(lossW * price).toLocaleString() + '원');
-  sv('c4-r6', ((yld / weight) * 100).toFixed(1) + '%');
-  sv('c4-advice', weight + 'kg 구입 시 실판매 가능 중량 ' + yld.toFixed(2) + 'kg. 100g당 실제 원가는 ' + per100.toLocaleString() + '원입니다.');
+function calc4(){
+  var weight=v('c4-weight'),price=v('c4-price'),bone=v('c4-bone'),fat=v('c4-fat');if(!weight||!price)return;
+  var loss=(bone+fat)/100;var yld=weight*(1-loss);var lossW=weight*loss;var total=weight*price;var per100=Math.round(total/(yld*10));
+  sv('c4-r1',yld.toFixed(2)+'kg');sv('c4-r2',lossW.toFixed(2)+'kg');sv('c4-r3',per100.toLocaleString()+'원');
+  sv('c4-r4',(per100*2).toLocaleString()+'원');sv('c4-r5',Math.round(lossW*price).toLocaleString()+'원');
+  sv('c4-r6',((yld/weight)*100).toFixed(1)+'%');
+  sv('c4-advice',weight+'kg 구입 시 실판매 가능 중량 '+yld.toFixed(2)+'kg. 100g당 실제 원가는 '+per100.toLocaleString()+'원입니다.');
 }
 
-function calc5() {
-  var sales = v('c5-sales'), cost = v('c5-cost'), sell = v('c5-sell');
-  var yld = v('c5-yield'), buy = v('c5-buy'), days = v('c5-days');
-  if (!sales || !sell || !buy) return;
-  var mat = Math.round(sales * cost / 100);
-  var sellKg = Math.round(sales / (sell * 10));
-  var orderKg = Math.round(sellKg / (yld / 100));
-  sv('c5-r1', mat.toLocaleString() + '원');
-  sv('c5-r2', orderKg.toLocaleString() + 'kg');
-  sv('c5-r3', (orderKg / days).toFixed(1) + 'kg');
-  sv('c5-r4', Math.round(sellKg / days * 1000 / 200) + '인분');
-  sv('c5-r5', Math.round(orderKg * buy).toLocaleString() + '원');
-  sv('c5-r6', (orderKg / 4).toFixed(1) + 'kg');
-  sv('c5-advice', '목표 매출 달성을 위해 월 ' + orderKg + 'kg, 주 ' + (orderKg/4).toFixed(1) + 'kg 발주가 필요합니다.');
+function calc5(){
+  var sales=v('c5-sales'),cost=v('c5-cost'),sell=v('c5-sell'),yld=v('c5-yield'),buy=v('c5-buy'),days=v('c5-days');if(!sales||!sell||!buy)return;
+  var mat=Math.round(sales*cost/100);var sellKg=Math.round(sales/(sell*10));var orderKg=Math.round(sellKg/(yld/100));
+  sv('c5-r1',mat.toLocaleString()+'원');sv('c5-r2',orderKg.toLocaleString()+'kg');sv('c5-r3',(orderKg/days).toFixed(1)+'kg');
+  sv('c5-r4',Math.round(sellKg/days*1000/200)+'인분');sv('c5-r5',Math.round(orderKg*buy).toLocaleString()+'원');sv('c5-r6',(orderKg/4).toFixed(1)+'kg');
+  sv('c5-advice','목표 매출 달성을 위해 월 '+orderKg+'kg, 주 '+(orderKg/4).toFixed(1)+'kg 발주가 필요합니다.');
 }
 
-
-// ── 컨설팅 신청 ──
-async function submitConsult(category, nameId, phoneId, emailId, regionId, memoId, msgId) {
-  if (!sb) return;
-  var name = document.getElementById(nameId).value;
-  var phone = document.getElementById(phoneId).value;
-  var msg = document.getElementById(msgId);
-  if (!name || !phone) { msg.textContent='이름과 연락처를 입력해주세요.';msg.style.color='red'; return; }
-  msg.textContent='신청 중...';msg.style.color='var(--g)';
-  try {
-    var res = await sb.from('consult_requests').insert({
-      name:name, phone:phone,
-      email:document.getElementById(emailId).value,
-      category:category,
-      region:document.getElementById(regionId).value,
-      memo:document.getElementById(memoId).value,
-      payment_status:'입금대기'
-    });
-    if (res.error) throw res.error;
-    msg.textContent='신청 완료! 1일 내 연락드립니다.';msg.style.color='green';
-    [nameId,phoneId,emailId,memoId].forEach(function(id){document.getElementById(id).value='';});
-  } catch(e) { msg.textContent='오류: '+e.message;msg.style.color='red'; }
-}
-
-// ── 폐업 철거 신청 ──
-async function submitClosure() {
-  if (!sb) return;
-  var name=(document.getElementById('cl-name')||{value:''}).value;
-  var phone=(document.getElementById('cl-phone')||{value:''}).value;
-  var msg=document.getElementById('cl-msg');
-  if (!name||!phone){if(msg){msg.textContent='이름과 연락처를 입력해주세요.';msg.style.color='red';}return;}
-  if(msg){msg.textContent='신청 중...';msg.style.color='var(--g)';}
-  try {
-    var res=await sb.from('closure_requests').insert({
-      name:name,phone:phone,
-      address:(document.getElementById('cl-addr')||{value:''}).value,
-      area:(document.getElementById('cl-area')||{value:''}).value,
-      memo:(document.getElementById('cl-memo')||{value:''}).value
-    });
+async function submitListing(){
+  if(!sb){alert('연결 오류');return;}
+  var selects=document.querySelectorAll('#pg-reg select');
+  var type=selects[0]?selects[0].value:'';var bizType=selects[1]?selects[1].value:'';
+  var addr=document.querySelectorAll('#pg-reg input')[0];var addrVal=addr?addr.value:'';
+  var price=parseInt((document.getElementById('reg-price')||{value:'0'}).value.replace(/,/g,''))||0;
+  var deposit=parseInt((document.getElementById('reg-deposit')||{value:'0'}).value.replace(/,/g,''))||0;
+  var desc=(document.getElementById('reg-desc')||{value:''}).value;
+  var contact=(document.getElementById('reg-contact')||{value:''}).value;
+  var msg=document.getElementById('reg-msg');
+  if(!contact){msg.textContent='연락처를 입력해주세요.';msg.style.color='red';return;}
+  msg.textContent='등록 중...';msg.style.color='var(--g)';
+  var btn=document.getElementById('reg-submit');btn.disabled=true;
+  try{
+    var res=await sb.from('listings').insert({type:type,business_type:bizType,address:addrVal,price:price,deposit:deposit,description:desc,contact:contact,title:bizType+' 매물',region:addrVal.split(' ')[0]||''});
     if(res.error)throw res.error;
-    if(msg){msg.textContent='견적 신청 완료! 당일 내 연락드립니다.';msg.style.color='green';}
-    ['cl-name','cl-phone','cl-addr','cl-area','cl-memo'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-  } catch(e){if(msg){msg.textContent='오류: '+e.message;msg.style.color='red';}}
+    msg.textContent='✅ 등록 완료! 담당자가 1일 내 연락드립니다.';msg.style.color='green';
+    document.getElementById('reg-contact').value='';
+    if(document.getElementById('reg-desc'))document.getElementById('reg-desc').value='';
+    if(document.getElementById('reg-price'))document.getElementById('reg-price').value='';
+    if(document.getElementById('reg-deposit'))document.getElementById('reg-deposit').value='';
+  }catch(e){msg.textContent='오류: '+e.message;msg.style.color='red';btn.disabled=false;}
 }
 
-// ── 폐업 지원금 신청 ──
-async function submitSubsidy(bizType, nameId, phoneId, regionId) {
-  if (!sb) return;
-  var name=document.getElementById(nameId).value;
-  var phone=document.getElementById(phoneId).value;
-  var msgId=nameId==='sub-name1'?'sub-msg1':'sub-msg2';
-  var msg=document.getElementById(msgId);
-  if(!name||!phone){msg.textContent='이름과 연락처를 입력해주세요.';msg.style.color='red';return;}
-  msg.textContent='신청 중...';msg.style.color='var(--g)';
-  try {
-    var res=await sb.from('subsidy_requests').insert({
-      name:name,phone:phone,
-      business_type:bizType,
-      region:document.getElementById(regionId).value
-    });
-    if(res.error)throw res.error;
-    msg.textContent='신청 완료! 1일 내 연락드립니다.';msg.style.color='green';
-    document.getElementById(nameId).value='';
-    document.getElementById(phoneId).value='';
-  } catch(e){msg.textContent='오류: '+e.message;msg.style.color='red';}
+async function loadListings(){
+  if(!sb){renderListings(LISTINGS,'mkt-listing');return;}
+  try{
+    var res=await sb.from('listings').select('*').eq('status','노출중').order('created_at',{ascending:false}).limit(20);
+    if(res.error||!res.data||res.data.length===0){renderListings(LISTINGS,'mkt-listing');return;}
+    var mapped=res.data.map(function(d){return{t:d.type==='상가·권리금'?'s':d.type==='집기·장비'?'i':'f',tag:d.type||'매물',ico:d.type==='상가·권리금'?'🏪':d.type==='집기·장비'?'🧊':'📦',ti:d.title||'매물',pr:d.price?Math.round(d.price/10000).toLocaleString()+'만원':'가격 문의',lo:d.region||'',ag:new Date(d.created_at).toLocaleDateString('ko-KR'),nw:(Date.now()-new Date(d.created_at))<86400000};});
+    renderListings(mapped,'mkt-listing');
+  }catch(e){renderListings(LISTINGS,'mkt-listing');}
 }
 
-// ── 커뮤니티 글쓰기 ──
-function openCmWrite() {
-  var form=document.getElementById('cm-write-form');
-  form.style.display=form.style.display==='none'?'block':'none';
+var BIZ_CAT='all';
+async function loadBiz(cat){
+  BIZ_CAT=cat;var el=document.getElementById('biz-list');if(!el)return;
+  el.innerHTML='<div style="text-align:center;padding:40px;color:#777;">불러오는 중...</div>';
+  var bizData=[];
+  if(sb){try{var query=sb.from('businesses').select('*').order('is_premium',{ascending:false}).order('created_at',{ascending:false});if(cat!=='all')query=query.eq('category',cat);var res=await query;if(!res.error&&res.data&&res.data.length>0)bizData=res.data;}catch(e){}}
+  if(bizData.length===0){el.innerHTML='<div style="text-align:center;padding:30px;color:#777;"><div style="font-size:32px;margin-bottom:12px;">🔍</div><div style="font-size:14px;font-weight:700;color:#333;margin-bottom:6px;">아직 등록된 업체가 없어요</div><div style="font-size:13px;margin-bottom:16px;">첫 번째로 업체를 등록해보세요!</div><button onclick="go(\'biz-reg\')" style="background:#C9A84C;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;">업체 무료 등록</button></div>';return;}
+  var html='';
+  for(var i=0;i<bizData.length;i++){var b=bizData[i];var border=b.is_premium?'2px solid #C9A84C':'1px solid #EDE9DC';var ico=getCatIco(b.category);var catName=getCatName(b.category);var contact=b.contact||'';html+='<div style="background:#fff;border:'+border+';border-radius:14px;padding:16px;margin-bottom:10px;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><div style="width:44px;height:44px;background:#F5EDD8;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">'+ico+'</div><div style="flex:1;">'+(b.is_premium?'<span style="font-size:9px;background:#C9A84C;color:#fff;padding:2px 7px;border-radius:3px;font-weight:700;margin-right:4px;">광고</span>':'')+(b.is_verified?'<span style="font-size:9px;background:#DCFCE7;color:#166534;padding:2px 7px;border-radius:3px;">검증완료</span>':'')+'<div style="font-size:15px;font-weight:700;color:#0F1E3D;margin-top:3px;">'+b.name+'</div><div style="font-size:12px;color:#777;">'+(b.region||'')+' · '+catName+'</div></div></div>'+(b.description?'<div style="font-size:13px;color:#333;line-height:1.6;margin-bottom:10px;">'+b.description+'</div>':'')+'<button data-c="'+contact+'" onclick="callBiz(this)" style="width:100%;padding:9px;background:#0F1E3D;color:#C9A84C;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">📞 문의하기</button></div>';}
+  el.innerHTML=html;
 }
 
-async function submitCmPost() {
-  if (!sb) return;
-  var title=document.getElementById('cm-title').value;
-  var content=document.getElementById('cm-content').value;
-  var msg=document.getElementById('cm-post-msg');
+function callBiz(btn){var c=btn.getAttribute('data-c');if(c)location.href='tel:'+c;else alert('연락처 준비중');}
+function getCatIco(cat){if(cat==='supply')return'🥩';if(cat==='equipment')return'🔧';if(cat==='interior')return'🏗️';if(cat==='food')return'🧅';return'🏢';}
+function getCatName(cat){return cat==='supply'?'고기 납품':cat==='equipment'?'정육 장비':cat==='interior'?'인테리어':cat==='food'?'식자재':'기타';}
+function setBizCat(el,cat){document.querySelectorAll('#biz-cat-wrap .sichip').forEach(function(e){e.className='sichip';});el.className='sichip on';loadBiz(cat);}
+
+async function submitBiz(){
+  if(!sb){alert('연결 오류');return;}
+  var name=document.getElementById('biz-name').value;var cat=document.getElementById('biz-cat').value;var region=document.getElementById('biz-region').value;
+  var desc=document.getElementById('biz-desc').value;var contact=document.getElementById('biz-contact').value;var addr=document.getElementById('biz-addr').value;
+  var msg=document.getElementById('biz-reg-msg');
+  if(!name||!contact){msg.textContent='업체명과 연락처는 필수입니다.';msg.style.color='red';return;}
+  msg.textContent='등록 중...';msg.style.color='var(--g)';
+  try{var res=await sb.from('businesses').insert({name:name,category:cat,region:region,description:desc,contact:contact,address:addr});if(res.error)throw res.error;msg.textContent='✅ 등록 신청 완료! 검토 후 게시됩니다.';msg.style.color='green';document.getElementById('biz-name').value='';document.getElementById('biz-contact').value='';document.getElementById('biz-desc').value='';document.getElementById('biz-addr').value='';}
+  catch(e){msg.textContent='오류: '+e.message;msg.style.color='red';}
+}
+
+async function loadCmPosts(){
+  if(!sb)return;
+  try{var res=await sb.from('community_posts').select('*').order('created_at',{ascending:false}).limit(20);if(res.error||!res.data||res.data.length===0)return;
+  var mapped=res.data.map(function(p){var catMap={question:'q',review:'r',failure:'f',info:'i'};var badgeMap={q:'cb-q',r:'cb-r',f:'cb-f',i:'cb-i'};var labelMap={q:'질문',r:'후기',f:'실패사례',i:'정보'};var cat=catMap[p.category]||'q';return{cat:cat,badge:badgeMap[cat]||'cb-q',label:labelMap[cat]||'질문',time:new Date(p.created_at).toLocaleDateString('ko-KR'),title:p.title,preview:(p.content||'').substring(0,60)+'...',views:p.views||0,comments:0,likes:p.likes||0,hot:(p.views||0)>100};});
+  var el=document.getElementById('cm-list');if(el&&mapped.length>0){el.innerHTML='';mapped.forEach(function(p){var div=document.createElement('div');div.className='cm-post';div.onclick=function(){alert('로그인 후 전체 내용을 볼 수 있어요.');};div.innerHTML='<div class="cm-post-top"><span class="cm-badge '+p.badge+'">'+p.label+'</span>'+(p.hot?'<span class="cm-hot">🔥</span>':'')+'<span class="cm-time">'+p.time+'</span></div><div class="cm-title">'+p.title+'</div><div class="cm-preview">'+p.preview+'</div><div class="cm-stats"><span class="cm-stat">👁 '+p.views+'</span><span class="cm-stat">❤️ '+p.likes+'</span></div>';el.appendChild(div);});}}
+  catch(e){}
+}
+
+function openCmWrite(){var form=document.getElementById('cm-write-form');form.style.display=form.style.display==='none'?'block':'none';}
+
+async function submitCmPost(){
+  if(!sb)return;
+  var title=document.getElementById('cm-title').value;var content=document.getElementById('cm-content').value;var msg=document.getElementById('cm-post-msg');
   if(!title||!content){msg.textContent='제목과 내용을 입력해주세요.';msg.style.color='red';return;}
   msg.textContent='등록 중...';msg.style.color='var(--g)';
-  try {
-    var res=await sb.from('community_posts').insert({
-      category:document.getElementById('cm-cat').value,
-      title:title,content:content,
-      author:document.getElementById('cm-author').value||'익명'
-    });
-    if(res.error)throw res.error;
-    msg.textContent='게시글이 등록되었습니다!';msg.style.color='green';
-    document.getElementById('cm-title').value='';
-    document.getElementById('cm-content').value='';
-    document.getElementById('cm-author').value='';
-    document.getElementById('cm-write-form').style.display='none';
-    loadCmPosts();
-  } catch(e){msg.textContent='오류: '+e.message;msg.style.color='red';}
+  try{var res=await sb.from('community_posts').insert({category:document.getElementById('cm-cat').value,title:title,content:content,author:document.getElementById('cm-author').value||'익명'});if(res.error)throw res.error;msg.textContent='게시글이 등록되었습니다!';msg.style.color='green';document.getElementById('cm-title').value='';document.getElementById('cm-content').value='';document.getElementById('cm-author').value='';document.getElementById('cm-write-form').style.display='none';loadCmPosts();}
+  catch(e){msg.textContent='오류: '+e.message;msg.style.color='red';}
 }
 
-// ── 초기화 ──
+async function submitClosure(){
+  if(!sb)return;
+  var name=(document.getElementById('cl-name')||{value:''}).value;var phone=(document.getElementById('cl-phone')||{value:''}).value;var msg=document.getElementById('cl-msg');
+  if(!name||!phone){if(msg){msg.textContent='이름과 연락처를 입력해주세요.';msg.style.color='red';}return;}
+  if(msg){msg.textContent='신청 중...';msg.style.color='var(--g)';}
+  try{var res=await sb.from('closure_requests').insert({name:name,phone:phone,address:(document.getElementById('cl-addr')||{value:''}).value,area:(document.getElementById('cl-area')||{value:''}).value,memo:(document.getElementById('cl-memo')||{value:''}).value});if(res.error)throw res.error;if(msg){msg.textContent='견적 신청 완료! 당일 내 연락드립니다.';msg.style.color='green';}['cl-name','cl-phone','cl-addr','cl-area','cl-memo'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});}
+  catch(e){if(msg){msg.textContent='오류: '+e.message;msg.style.color='red';}}
+}
+
+async function submitSubsidy(bizType,nameId,phoneId,regionId){
+  if(!sb)return;
+  var name=document.getElementById(nameId).value;var phone=document.getElementById(phoneId).value;
+  var msgId=nameId==='sub-name1'?'sub-msg1':'sub-msg2';var msg=document.getElementById(msgId);
+  if(!name||!phone){msg.textContent='이름과 연락처를 입력해주세요.';msg.style.color='red';return;}
+  msg.textContent='신청 중...';msg.style.color='var(--g)';
+  try{var res=await sb.from('subsidy_requests').insert({name:name,phone:phone,business_type:bizType,region:document.getElementById(regionId).value});if(res.error)throw res.error;msg.textContent='신청 완료! 1일 내 연락드립니다.';msg.style.color='green';document.getElementById(nameId).value='';document.getElementById(phoneId).value='';}
+  catch(e){msg.textContent='오류: '+e.message;msg.style.color='red';}
+}
+
+// 초기화
 renderHomeSise();
-renderListings(LISTINGS.slice(0, 4), 'home-listing');
-renderCm('all', 'home-cm');
-// 초기값 콤마 포맷 적용
-var commaFields = ['c1-buy','c1-qty','c1-sell','c1-labor','c1-rent','c1-etc',
-  'c2-rent','c2-labor','c2-mgmt','c2-etc','c2-price',
-  'c3-buy','c3-side','c3-comp','c4-price',
-  'c5-sales','c5-sell','c5-buy'];
-commaFields.forEach(function(id) {
-  var el = document.getElementById(id);
-  if (el) {
-    var raw = el.value.replace(/[^0-9]/g, '');
-    if (raw) el.value = parseInt(raw, 10).toLocaleString();
-  }
-});
-calc1(); calc2(); c3Preset(); c4Preset(); calc5();
+renderListings(LISTINGS.slice(0,4),'home-listing');
+renderCm('all','home-cm');
+calc1();calc2();c3Preset();c4Preset();calc5();
 </script>
 </body>
 </html>

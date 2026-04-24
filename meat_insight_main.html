@@ -736,6 +736,24 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
         <button onclick="likePost()" style="display:flex;align-items:center;gap:6px;background:none;border:1.5px solid var(--cr3);border-radius:20px;padding:8px 16px;font-size:13px;color:var(--ink2);cursor:pointer;font-family:var(--sans);">❤️ <span id="post-modal-likes">0</span></button>
         <button onclick="location.href='meat_insight_apply.html?tab=consulting'" style="margin-left:auto;background:var(--g);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">컨설팅 신청 →</button>
       </div>
+
+      <!-- 댓글 섹션 -->
+      <div style="margin-top:28px;padding-top:20px;border-top:2px solid var(--cr3);">
+        <div style="font-size:14px;font-weight:700;color:var(--n2);margin-bottom:14px;">💬 댓글 <span id="comment-count">0</span>개</div>
+        
+        <!-- 댓글 목록 -->
+        <div id="comment-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+
+        <!-- 댓글 입력 -->
+        <div style="background:var(--cr2);border-radius:12px;padding:14px;">
+          <input id="comment-author" placeholder="닉네임 (선택)" style="width:100%;padding:9px 12px;border:1.5px solid var(--cr3);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--w);color:var(--ink);margin-bottom:8px;outline:none;"/>
+          <textarea id="comment-content" placeholder="댓글을 입력하세요..." rows="3" style="width:100%;padding:9px 12px;border:1.5px solid var(--cr3);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--w);color:var(--ink);resize:none;outline:none;margin-bottom:8px;"></textarea>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div id="comment-msg" style="font-size:12px;color:var(--g);"></div>
+            <button onclick="submitComment()" style="background:var(--n2);color:var(--g);border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">등록</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1044,6 +1062,61 @@ async function submitSubsidy(bizType,nameId,phoneId,regionId){
 }
 
 
+
+var currentPostId = null;
+
+async function loadComments(postId) {
+  if (!sb || !postId) return;
+  try {
+    var res = await sb.from('community_comments').select('*')
+      .eq('post_id', postId).order('created_at', {ascending:true});
+    var list = document.getElementById('comment-list');
+    var count = document.getElementById('comment-count');
+    if (!list) return;
+    var data = res.data || [];
+    count.textContent = data.length;
+    if (data.length === 0) {
+      list.innerHTML = '<div style="font-size:13px;color:var(--ink3);text-align:center;padding:16px;">첫 번째 댓글을 남겨보세요!</div>';
+      return;
+    }
+    list.innerHTML = data.map(function(c) {
+      var time = new Date(c.created_at).toLocaleDateString('ko-KR');
+      return '<div style="background:var(--w);border:1px solid var(--cr3);border-radius:10px;padding:12px 14px;">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' +
+        '<div style="width:26px;height:26px;border-radius:50%;background:var(--n2);color:var(--g);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">' + (c.author||'익').charAt(0) + '</div>' +
+        '<div style="font-size:13px;font-weight:700;color:var(--n2);">' + (c.author||'익명') + '</div>' +
+        '<div style="font-size:11px;color:var(--ink3);margin-left:auto;">' + time + '</div>' +
+        '</div>' +
+        '<div style="font-size:14px;color:var(--ink);line-height:1.7;">' + c.content + '</div>' +
+        '</div>';
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function submitComment() {
+  if (!sb || !currentPostId) return;
+  var content = (document.getElementById('comment-content')||{value:''}).value.trim();
+  var author = (document.getElementById('comment-author')||{value:''}).value.trim() || '익명';
+  var msg = document.getElementById('comment-msg');
+  if (!content) { msg.textContent = '댓글 내용을 입력해주세요.'; return; }
+  msg.textContent = '등록 중...';
+  try {
+    var res = await sb.from('community_comments').insert({
+      post_id: currentPostId,
+      content: content,
+      author: author
+    });
+    if (res.error) throw res.error;
+    document.getElementById('comment-content').value = '';
+    document.getElementById('comment-author').value = '';
+    msg.textContent = '✅ 댓글이 등록되었습니다!';
+    setTimeout(function() { msg.textContent = ''; }, 2000);
+    loadComments(currentPostId);
+  } catch(e) {
+    msg.textContent = '오류: ' + e.message;
+  }
+}
+
 function openPost(p) {
   if (!p) return;
   var badgeMap = {question:'cb-q',review:'cb-r',failure:'cb-f',info:'cb-i'};
@@ -1064,6 +1137,14 @@ function openPost(p) {
   document.getElementById('post-modal-likes').textContent = p.likes || 0;
   el.style.display = 'block';
   document.body.style.overflow = 'hidden';
+  // 댓글 로드
+  currentPostId = p.id || null;
+  var commentList = document.getElementById('comment-list');
+  var commentCount = document.getElementById('comment-count');
+  if (commentList) commentList.innerHTML = '<div style="font-size:13px;color:var(--ink3);text-align:center;padding:16px;">불러오는 중...</div>';
+  if (commentCount) commentCount.textContent = '0';
+  if (currentPostId) loadComments(currentPostId);
+  else if (commentList) commentList.innerHTML = '<div style="font-size:13px;color:var(--ink3);text-align:center;padding:16px;">첫 번째 댓글을 남겨보세요!</div>';
 }
 function closePost() {
   document.getElementById('post-modal').style.display = 'none';

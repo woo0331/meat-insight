@@ -268,8 +268,6 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
       <button class="sichip on" onclick="setSiCat(this,'all')">전체</button>
       <button class="sichip" onclick="setSiCat(this,'han')">한우</button>
       <button class="sichip" onclick="setSiCat(this,'pig')">돼지</button>
-      <button class="sichip" onclick="setSiCat(this,'chk')">닭</button>
-      <button class="sichip" onclick="setSiCat(this,'imp')">수입육</button>
     </div>
   </div>
   <div style="background:rgba(201,168,76,.08);border-bottom:1px solid rgba(201,168,76,.15);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;">
@@ -781,7 +779,7 @@ function renderListings(items,elId){
 
 function renderSise(cat){
   var el=document.getElementById('si-list');if(!el)return;
-  var cats=cat==='all'?['han','pig','chk','imp']:[cat];
+  var cats=cat==='all'?['han','pig']:[cat];
   el.innerHTML=cats.map(function(c){
     var d=SISE[c];var avg=0;d.items.forEach(function(i){avg+=i.chg;});avg=(avg/d.items.length).toFixed(1);
     var bc=avg>0?'badge-up':avg<0?'badge-dn':'badge-eq';

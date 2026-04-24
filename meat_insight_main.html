@@ -842,7 +842,7 @@ function renderHomeSise(){
 function renderCm(cat,elId){
   var el=document.getElementById(elId);if(!el)return;
   var filtered=cat==='all'?CM_POSTS:CM_POSTS.filter(function(p){return p.cat===cat;});
-  el.innerHTML=filtered.map(function(p){return'<div class="cm-post" onclick="alert(\'로그인 후 전체 내용을 볼 수 있어요.\')"><div class="cm-post-top"><span class="cm-badge '+p.badge+'">'+p.label+'</span>'+(p.hot?'<span class="cm-hot">🔥</span>':'')+'<span class="cm-time">'+p.time+'</span></div><div class="cm-title">'+p.title+'</div><div class="cm-preview">'+p.preview+'</div><div class="cm-stats"><span class="cm-stat">👁 '+p.views+'</span><span class="cm-stat">💬 '+p.comments+'</span><span class="cm-stat">❤️ '+p.likes+'</span></div></div>';}).join('');
+  el.innerHTML=filtered.map(function(p){return'<div class="cm-post" onclick="openPost(p)"><div class="cm-post-top"><span class="cm-badge '+p.badge+'">'+p.label+'</span>'+(p.hot?'<span class="cm-hot">🔥</span>':'')+'<span class="cm-time">'+p.time+'</span></div><div class="cm-title">'+p.title+'</div><div class="cm-preview">'+p.preview+'</div><div class="cm-stats"><span class="cm-stat">👁 '+p.views+'</span><span class="cm-stat">💬 '+p.comments+'</span><span class="cm-stat">❤️ '+p.likes+'</span></div></div>';}).join('');
 }
 
 function renderSup(){

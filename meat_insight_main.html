@@ -1105,39 +1105,57 @@ function renderCm(cat,elId){
 }
 
 function renderSup(cat){
-  var el=document.getElementById('mkt-2');if(!el)return;
-  var filtered = cat && cat!=='all' ? SUPPLIERS.filter(function(s){return s.cat===cat;}) : SUPPLIERS;
-  el.innerHTML='<div style="padding:10px 16px 20px;">' +
-    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">' +
-    '<button onclick="renderSup('all')" style="padding:6px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;background:var(--w);cursor:pointer;font-family:var(--sans);">전체</button>' +
-    '<button onclick="renderSup('equipment')" style="padding:6px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;background:var(--w);cursor:pointer;font-family:var(--sans);">🔪 정육 장비</button>' +
-    '<button onclick="renderSup('refrigerator')" style="padding:6px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;background:var(--w);cursor:pointer;font-family:var(--sans);">🧊 냉장·냉동</button>' +
-    '<button onclick="renderSup('packaging')" style="padding:6px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;background:var(--w);cursor:pointer;font-family:var(--sans);">📦 포장재</button>' +
-    '<button onclick="renderSup('interior')" style="padding:6px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;background:var(--w);cursor:pointer;font-family:var(--sans);">🏗️ 인테리어</button>' +
-    '<button onclick="renderSup('pos')" style="padding:6px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;background:var(--w);cursor:pointer;font-family:var(--sans);">💻 POS·IT</button>' +
-    '<button onclick="renderSup('consumable')" style="padding:6px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;background:var(--w);cursor:pointer;font-family:var(--sans);">🧴 소모품</button>' +
-    '</div>' +
-    filtered.map(function(s){
-      var ico = getCatIco(s.cat);
-      var catName = getCatName(s.cat);
-      return '<div class="sup-card '+(s.featured?'featured':'')+'" style="margin:0 0 10px;">' +
-        '<div class="sup-head"><div class="sup-logo" style="white-space:pre-line;">'+s.logo+'</div>' +
-        '<div><div class="sup-badges">'+(s.featured?'<span class="sb-ft">추천</span>':'')+
-        '<span style="font-size:9px;background:var(--g3);color:#5A4A00;padding:2px 6px;border-radius:3px;">'+ico+' '+catName+'</span></div>' +
-        '<div class="sup-name">'+s.name+'</div><div class="sup-region">'+s.region+'</div></div></div>' +
-        '<div class="sup-body"><div class="sup-desc">'+s.desc+'</div>' +
-        '<div class="sup-foot"><button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">📞 문의하기</button>' +
-        '<button class="btn-detail">상세보기</button></div></div></div>';
-    }).join('') +
-    '<div style="margin-top:16px;background:var(--n2);border-radius:12px;padding:16px;text-align:center;">' +
+  var el=document.getElementById('mkt-2');
+  if(!el)return;
+  var filtered=(cat&&cat!=='all')?SUPPLIERS.filter(function(s){return s.cat===cat;}):SUPPLIERS;
+  var catList=[
+    {k:'all',v:'전체'},
+    {k:'equipment',v:'🔪 정육 장비'},
+    {k:'refrigerator',v:'🧊 냉장·냉동'},
+    {k:'packaging',v:'📦 포장재'},
+    {k:'interior',v:'🏗️ 인테리어'},
+    {k:'pos',v:'💻 POS·IT'},
+    {k:'consumable',v:'🧴 소모품'}
+  ];
+  var btnHtml=catList.map(function(c){
+    var isOn=(cat||'all')===c.k;
+    var border=isOn?'var(--n2)':'var(--cr3)';
+    var bg=isOn?'var(--n2)':'var(--w)';
+    var color=isOn?'var(--g)':'var(--ink3)';
+    return '<button onclick="renderSup(\'' + c.k + '\')" style="padding:6px 12px;border:1px solid '+border+';border-radius:20px;font-size:12px;background:'+bg+';color:'+color+';cursor:pointer;font-family:var(--sans);">'+c.v+'</button>';
+  }).join('');
+
+  var supHtml=filtered.map(function(s){
+    var ico=getCatIco(s.cat);
+    var catName=getCatName(s.cat);
+    var featuredBorder=s.featured?'2px solid var(--g)':'1px solid var(--cr3)';
+    return '<div style="background:var(--w);border:'+featuredBorder+';border-radius:14px;padding:16px;margin-bottom:10px;">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
+      '<div style="width:44px;height:44px;background:var(--cr2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:8px;font-family:var(--serif);color:var(--n2);text-align:center;line-height:1.3;font-weight:700;flex-shrink:0;white-space:pre-line;">'+s.logo+'</div>' +
+      '<div style="flex:1;">' +
+      '<div style="display:flex;gap:4px;margin-bottom:3px;">' +
+      (s.featured?'<span style="font-size:9px;background:var(--g);color:#fff;padding:2px 6px;border-radius:3px;font-weight:700;">추천</span>':'')+
+      '<span style="font-size:9px;background:var(--g3);color:#5A4A00;padding:2px 6px;border-radius:3px;">'+ico+' '+catName+'</span>' +
+      '</div>' +
+      '<div style="font-size:14px;font-weight:700;color:var(--n2);">'+s.name+'</div>' +
+      '<div style="font-size:11px;color:var(--ink3);">'+s.region+'</div>' +
+      '</div></div>' +
+      '<div style="font-size:13px;color:var(--ink2);line-height:1.6;margin-bottom:10px;">'+s.desc+'</div>' +
+      '<button onclick="alert(\"카카오채널로 문의해주세요.\")" style="width:100%;padding:9px;background:var(--n2);color:var(--g);border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);">📞 문의하기</button>' +
+      '</div>';
+  }).join('');
+
+  var regHtml='<div style="margin-top:16px;background:var(--n2);border-radius:12px;padding:16px;text-align:center;">' +
     '<div style="font-size:13px;color:var(--g);font-weight:700;margin-bottom:4px;">업체 입점 문의</div>' +
     '<div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:10px;">정육·고깃집 사장님 대상 업체 무료 등록</div>' +
-    '<button onclick="go('biz-reg')" style="background:var(--g);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">입점 신청하기 →</button>' +
-    '</div></div>';
-}
+    '<button onclick="go(\"biz-reg\")" style="background:var(--g);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">입점 신청하기 →</button>' +
+    '</div>';
 
-var ALL_PAGES=['h','si','c','mkt','cm','more','reg','closure','subsidy','my','biz','biz-reg','supply','consult-home'];
-var TAB_MAP={h:'h',si:'si',c:'c',mkt:'mkt',cm:'cm',more:'more',reg:'mkt',closure:'more',subsidy:'more',my:'more','biz':'more','biz-reg':'more',supply:'h',consult_home:'h'};
+  el.innerHTML='<div style="padding:10px 16px 20px;">' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">'+btnHtml+'</div>' +
+    supHtml + regHtml +
+    '</div>';
+}
 
 function go(p){
   ALL_PAGES.forEach(function(id){var el=document.getElementById('pg-'+id);if(el)el.className='pg';});

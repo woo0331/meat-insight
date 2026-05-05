@@ -1157,6 +1157,9 @@ function renderSup(cat){
     '</div>';
 }
 
+var ALL_PAGES=['h','si','c','mkt','cm','more','reg','closure','subsidy','my','biz','biz-reg','supply','order-form','consult-home'];
+var TAB_MAP={h:'h',si:'si',c:'c',mkt:'mkt',cm:'cm',more:'more',reg:'mkt',closure:'more',subsidy:'more',my:'more','biz':'more','biz-reg':'more',supply:'h','order-form':'h','consult-home':'h'};
+
 function go(p){
   ALL_PAGES.forEach(function(id){var el=document.getElementById('pg-'+id);if(el)el.className='pg';});
   var target=document.getElementById('pg-'+p);if(target)target.className='pg on';

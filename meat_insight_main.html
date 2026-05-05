@@ -561,7 +561,7 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
   <div class="tabs">
     <button class="tab on" id="mt0" onclick="setMktTab(this,0)">매물</button>
     <button class="tab" id="mt1" onclick="setMktTab(this,1)">매물 등록</button>
-    <button class="tab" id="mt2" onclick="setMktTab(this,2)">공급사</button>
+    <button class="tab" id="mt2" onclick="setMktTab(this,2)">집기·부자재</button>
   </div>
   <div id="mkt-0">
     <div style="padding:10px 16px;display:flex;gap:7px;flex-wrap:wrap;">
@@ -625,19 +625,21 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 <!-- 업체 찾기 -->
 <div class="pg" id="pg-biz">
   <div style="background:var(--n);padding:18px 16px;">
-    <div style="font-family:var(--serif);font-size:20px;color:#fff;margin-bottom:4px;">업체 찾기</div>
-    <div style="font-size:13px;color:rgba(255,255,255,.5);">검증된 업체를 찾아보세요</div>
+    <div style="font-family:var(--serif);font-size:20px;color:#fff;margin-bottom:4px;">집기·부자재</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5);">정육·고깃집 필요한 모든 장비·용품</div>
     <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;" id="biz-cat-wrap">
       <button class="sichip on" onclick="setBizCat(this,'all')">전체</button>
-      <button class="sichip" onclick="setBizCat(this,'supply')">고기 납품</button>
-      <button class="sichip" onclick="setBizCat(this,'equipment')">정육 장비</button>
-      <button class="sichip" onclick="setBizCat(this,'interior')">인테리어</button>
-      <button class="sichip" onclick="setBizCat(this,'food')">식자재</button>
+      <button class="sichip" onclick="setBizCat(this,'equipment')">🔪 정육 장비</button>
+      <button class="sichip" onclick="setBizCat(this,'refrigerator')">🧊 냉장·냉동</button>
+      <button class="sichip" onclick="setBizCat(this,'packaging')">📦 포장재</button>
+      <button class="sichip" onclick="setBizCat(this,'interior')">🏗️ 인테리어</button>
+      <button class="sichip" onclick="setBizCat(this,'pos')">💻 POS·IT</button>
+      <button class="sichip" onclick="setBizCat(this,'consumable')">🧴 소모품</button>
     </div>
   </div>
   <div id="biz-list" style="padding:10px 16px 20px;"><div style="text-align:center;padding:40px;color:var(--ink3);">불러오는 중...</div></div>
   <div style="margin:0 16px 24px;background:var(--n2);border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:space-between;">
-    <div><div style="font-size:13px;color:var(--g);font-weight:700;margin-bottom:2px;">업체 등록 문의</div><div style="font-size:12px;color:rgba(255,255,255,.45);">기본 등록 무료</div></div>
+    <div><div style="font-size:13px;color:var(--g);font-weight:700;margin-bottom:2px;">입점 문의</div><div style="font-size:12px;color:rgba(255,255,255,.45);">기본 등록 무료</div></div>
     <button onclick="go('biz-reg')" style="background:var(--g);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);">등록 신청 →</button>
   </div>
 </div>
@@ -670,7 +672,7 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
   <div class="more-grid">
     <div class="more-item" onclick="go('biz')"><span class="more-ico">🔍</span><div class="more-name">업체 찾기</div><div class="more-desc">납품·장비·인테리어</div></div>
     <div class="more-item" onclick="go('biz-reg')"><span class="more-ico">📝</span><div class="more-name">업체 등록</div><div class="more-desc">무료 등록</div></div>
-    <div class="more-item" onclick="setMktTab(document.getElementById('mt2'),2);go('mkt')"><span class="more-ico">🏭</span><div class="more-name">공급사</div><div class="more-desc">직거래</div></div>
+    <div class="more-item" onclick="setMktTab(document.getElementById('mt2'),2);go('mkt')"><span class="more-ico">🔧</span><div class="more-name">집기·부자재</div><div class="more-desc">장비·포장재</div></div>
   </div>
   <div class="more-section-title">창업 도구</div>
   <div class="more-grid">
@@ -1064,9 +1066,12 @@ var CM_POSTS=[
 ];
 
 var SUPPLIERS=[
-  {name:'협신식품 (주)',logo:'협신\n식품',region:'경기도 · 전국 배송',desc:'수도권 유일 도축장. 전국 최초 부분육 경매 도입. 한우·한돈 전문.',featured:true},
-  {name:'강원한우 직판장',logo:'강원\n한우',region:'강원도 · 전국 배송',desc:'횡성 한우 산지 직송. 1++ 등급 특화.',featured:false},
-  {name:'제주 흑돼지 영농조합',logo:'제주\n흑돼지',region:'제주도 · 전국 배송',desc:'제주 인증 흑돼지. B2B 특화.',featured:false},
+  {name:'우성냉열 (주)',logo:'우성\n냉열',region:'전국 배송·설치',cat:'refrigerator',desc:'정육 쇼케이스·냉동고 전문. 인버터 에너지절감형. A/S 전국 당일.',featured:true},
+  {name:'미트솔루션',logo:'미트\nSol',region:'전국',cat:'equipment',desc:'정육 전용 POS·라벨 프린터·진공포장기 전문. 정육점 특화 패키지.',featured:false},
+  {name:'그린팩 포장재',logo:'그린\n팩',region:'전국 택배',cat:'packaging',desc:'정육용 트레이·랩·진공팩·쇼핑백. 소량 주문 가능. 당일 출고.',featured:false},
+  {name:'한성인테리어',logo:'한성\n인테',region:'수도권',cat:'interior',desc:'정육점·고깃집 인테리어 전문. 평당 80만원부터. 시공 후 A/S 보장.',featured:false},
+  {name:'케어POS',logo:'케어\nPOS',region:'전국 원격지원',cat:'pos',desc:'정육점 특화 POS. 라벨 연동·재고 관리·매출 분석. 월 구독 없음.',featured:false},
+  {name:'위생나라',logo:'위생\n나라',region:'전국 택배',cat:'consumable',desc:'도마·칼·장갑·앞치마·소독용품. 정육 전문 위생용품 전문몰.',featured:false},
 ];
 
 function renderListings(items,elId){
@@ -1099,9 +1104,36 @@ function renderCm(cat,elId){
   el.innerHTML=filtered.map(function(p){return'<div class="cm-post" onclick="openPost(p)"><div class="cm-post-top"><span class="cm-badge '+p.badge+'">'+p.label+'</span>'+(p.hot?'<span class="cm-hot">🔥</span>':'')+'<span class="cm-time">'+p.time+'</span></div><div class="cm-title">'+p.title+'</div><div class="cm-preview">'+p.preview+'</div><div class="cm-stats"><span class="cm-stat">👁 '+p.views+'</span><span class="cm-stat">💬 '+p.comments+'</span><span class="cm-stat">❤️ '+p.likes+'</span></div></div>';}).join('');
 }
 
-function renderSup(){
+function renderSup(cat){
   var el=document.getElementById('mkt-2');if(!el)return;
-  el.innerHTML='<div style="padding:10px 16px 20px;">'+SUPPLIERS.map(function(s){return'<div class="sup-card '+(s.featured?'featured':'')+'" onclick="alert(\'업체 상세 준비중\')" style="margin:0 0 10px;"><div class="sup-head"><div class="sup-logo" style="white-space:pre-line;">'+s.logo+'</div><div><div class="sup-badges">'+(s.featured?'<span class="sb-ft">추천</span>':'')+'<span class="sb-vf">검증완료</span></div><div class="sup-name">'+s.name+'</div><div class="sup-region">'+s.region+'</div></div></div><div class="sup-body"><div class="sup-desc">'+s.desc+'</div><div class="sup-foot"><button class="btn-contact" onclick="event.stopPropagation();alert(\'카카오채널로 문의해주세요.\')">문의하기</button><button class="btn-detail">상세보기</button></div></div></div>';}).join('')+'<button onclick="alert(\'카카오채널로 입점 문의해주세요.\')" style="width:100%;padding:12px;background:var(--g);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);">공급사 입점 신청</button></div>';
+  var filtered = cat && cat!=='all' ? SUPPLIERS.filter(function(s){return s.cat===cat;}) : SUPPLIERS;
+  el.innerHTML='<div style="padding:10px 16px 20px;">' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">' +
+    '<button onclick="renderSup('all')" style="padding:6px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;background:var(--w);cursor:pointer;font-family:var(--sans);">전체</button>' +
+    '<button onclick="renderSup('equipment')" style="padding:6px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;background:var(--w);cursor:pointer;font-family:var(--sans);">🔪 정육 장비</button>' +
+    '<button onclick="renderSup('refrigerator')" style="padding:6px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;background:var(--w);cursor:pointer;font-family:var(--sans);">🧊 냉장·냉동</button>' +
+    '<button onclick="renderSup('packaging')" style="padding:6px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;background:var(--w);cursor:pointer;font-family:var(--sans);">📦 포장재</button>' +
+    '<button onclick="renderSup('interior')" style="padding:6px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;background:var(--w);cursor:pointer;font-family:var(--sans);">🏗️ 인테리어</button>' +
+    '<button onclick="renderSup('pos')" style="padding:6px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;background:var(--w);cursor:pointer;font-family:var(--sans);">💻 POS·IT</button>' +
+    '<button onclick="renderSup('consumable')" style="padding:6px 12px;border:1px solid var(--cr3);border-radius:20px;font-size:12px;background:var(--w);cursor:pointer;font-family:var(--sans);">🧴 소모품</button>' +
+    '</div>' +
+    filtered.map(function(s){
+      var ico = getCatIco(s.cat);
+      var catName = getCatName(s.cat);
+      return '<div class="sup-card '+(s.featured?'featured':'')+'" style="margin:0 0 10px;">' +
+        '<div class="sup-head"><div class="sup-logo" style="white-space:pre-line;">'+s.logo+'</div>' +
+        '<div><div class="sup-badges">'+(s.featured?'<span class="sb-ft">추천</span>':'')+
+        '<span style="font-size:9px;background:var(--g3);color:#5A4A00;padding:2px 6px;border-radius:3px;">'+ico+' '+catName+'</span></div>' +
+        '<div class="sup-name">'+s.name+'</div><div class="sup-region">'+s.region+'</div></div></div>' +
+        '<div class="sup-body"><div class="sup-desc">'+s.desc+'</div>' +
+        '<div class="sup-foot"><button class="btn-contact" onclick="alert('카카오채널로 문의해주세요.')">📞 문의하기</button>' +
+        '<button class="btn-detail">상세보기</button></div></div></div>';
+    }).join('') +
+    '<div style="margin-top:16px;background:var(--n2);border-radius:12px;padding:16px;text-align:center;">' +
+    '<div style="font-size:13px;color:var(--g);font-weight:700;margin-bottom:4px;">업체 입점 문의</div>' +
+    '<div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:10px;">정육·고깃집 사장님 대상 업체 무료 등록</div>' +
+    '<button onclick="go('biz-reg')" style="background:var(--g);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">입점 신청하기 →</button>' +
+    '</div></div>';
 }
 
 var ALL_PAGES=['h','si','c','mkt','cm','more','reg','closure','subsidy','my','biz','biz-reg','supply','consult-home'];
@@ -1133,7 +1165,7 @@ function filterL(el,t){document.querySelectorAll('#mkt-0 .ct').forEach(function(
 function setMktTab(el,i){
   ['mt0','mt1','mt2'].forEach(function(id,j){var e=document.getElementById(id);if(e)e.className='tab'+(j===i?' on':'');});
   ['mkt-0','mkt-1','mkt-2'].forEach(function(id,j){var e=document.getElementById(id);if(e)e.style.display=j===i?'block':'none';});
-  if(i===2)renderSup();
+  if(i===2)renderSup('all');
 }
 
 function setCalc(el,i){
@@ -1319,8 +1351,26 @@ async function loadBiz(cat){
 }
 
 function callBiz(btn){var c=btn.getAttribute('data-c');if(c)location.href='tel:'+c;else alert('연락처 준비중');}
-function getCatIco(cat){if(cat==='supply')return'🥩';if(cat==='equipment')return'🔧';if(cat==='interior')return'🏗️';if(cat==='food')return'🧅';return'🏢';}
-function getCatName(cat){return cat==='supply'?'고기 납품':cat==='equipment'?'정육 장비':cat==='interior'?'인테리어':cat==='food'?'식자재':'기타';}
+function getCatIco(cat){
+  if(cat==='equipment')return'🔪';
+  if(cat==='refrigerator')return'🧊';
+  if(cat==='packaging')return'📦';
+  if(cat==='interior')return'🏗️';
+  if(cat==='pos')return'💻';
+  if(cat==='consumable')return'🧴';
+  if(cat==='supply')return'🥩';
+  return'🏢';
+}
+function getCatName(cat){
+  if(cat==='equipment')return'정육 장비';
+  if(cat==='refrigerator')return'냉장·냉동';
+  if(cat==='packaging')return'포장재';
+  if(cat==='interior')return'인테리어';
+  if(cat==='pos')return'POS·IT';
+  if(cat==='consumable')return'소모품';
+  if(cat==='supply')return'고기 납품';
+  return'기타';
+}
 function setBizCat(el,cat){document.querySelectorAll('#biz-cat-wrap .sichip').forEach(function(e){e.className='sichip';});el.className='sichip on';loadBiz(cat);}
 
 async function submitBiz(){

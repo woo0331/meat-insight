@@ -225,36 +225,99 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 
 <!-- 홈 -->
 <div class="pg on" id="pg-h">
-  <div class="home-hero">
-    <div class="home-hero-title">정육·고깃집 사장님<br>처음부터 끝까지 함께합니다</div>
-    <div class="home-hero-sub">시세 · 매물 · 컨설팅 · 폐업 지원 한 곳에서</div>
-    <div class="hero-search"><input placeholder="시세, 매물, 업체 검색..."/><button>검색</button></div>
-    <div class="quick-btns">
-      <div class="qbtn" onclick="go('si')"><span class="qbtn-ico">📈</span><span class="qbtn-txt">오늘 시세</span></div>
-      <div class="qbtn" onclick="go('mkt')"><span class="qbtn-ico">🏪</span><span class="qbtn-txt">매물</span></div>
-      <div class="qbtn" onclick="go('c')"><span class="qbtn-ico">🧮</span><span class="qbtn-txt">계산기</span></div>
-      <div class="qbtn" onclick="go('more')"><span class="qbtn-ico">☰</span><span class="qbtn-txt">더보기</span></div>
+  <!-- 브랜드 헤더 -->
+  <div style="background:var(--n);padding:32px 20px 28px;text-align:center;position:relative;overflow:hidden;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 600px 300px at 50% 120%,rgba(201,168,76,.12),transparent 60%);pointer-events:none;"></div>
+    <div style="font-size:11px;color:rgba(201,168,76,.6);letter-spacing:3px;font-weight:700;margin-bottom:10px;position:relative;">HYUPSHIN FOOD × MEAT INSIGHT</div>
+    <div style="font-family:var(--serif);font-size:26px;color:#fff;line-height:1.3;margin-bottom:8px;position:relative;">52년 도축장이 직접 운영하는<br><span style="color:var(--g);">고기 공급 플랫폼</span></div>
+    <div style="font-size:13px;color:rgba(255,255,255,.45);position:relative;">오늘 도축 · 당일 공급 · 창업 컨설팅</div>
+  </div>
+
+  <!-- 2분할 선택 화면 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;min-height:320px;">
+    
+    <!-- 좌측: 고기 공급 -->
+    <div onclick="go('supply')" style="background:linear-gradient(160deg,#0d2137,#0b1628);padding:32px 20px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;border-right:1px solid rgba(201,168,76,.15);transition:background .2s;position:relative;overflow:hidden;" onmouseover="this.style.background='linear-gradient(160deg,#12293f,#0d1e33)'" onmouseout="this.style.background='linear-gradient(160deg,#0d2137,#0b1628)'">
+      <div style="position:absolute;bottom:-20px;right:-20px;font-size:100px;opacity:.05;">🥩</div>
+      <div>
+        <div style="display:inline-block;background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.3);color:var(--g);font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 10px;border-radius:4px;margin-bottom:14px;">B2B 공급</div>
+        <div style="font-family:var(--serif);font-size:20px;color:#fff;line-height:1.4;margin-bottom:8px;">오늘 도축된<br>고기를 바로<br>공급받으세요</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.7;">정육점 · 고깃집 · 식당<br>사업자 전용 도매 공급</div>
+      </div>
+      <div style="margin-top:24px;">
+        <div style="background:var(--g);color:var(--n);padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;text-align:center;">🥩 고기 주문하러 가기 →</div>
+      </div>
+    </div>
+
+    <!-- 우측: 창업 컨설팅 -->
+    <div onclick="go('consult-home')" style="background:linear-gradient(160deg,var(--cr),var(--cr2));padding:32px 20px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;transition:background .2s;position:relative;overflow:hidden;" onmouseover="this.style.background='linear-gradient(160deg,#ede9dc,#ddd8c8)'" onmouseout="this.style.background='linear-gradient(160deg,var(--cr),var(--cr2))'">
+      <div style="position:absolute;bottom:-20px;right:-20px;font-size:100px;opacity:.05;">📋</div>
+      <div>
+        <div style="display:inline-block;background:rgba(11,22,40,.08);border:1px solid rgba(11,22,40,.15);color:var(--n2);font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 10px;border-radius:4px;margin-bottom:14px;">창업 컨설팅</div>
+        <div style="font-family:var(--serif);font-size:20px;color:var(--n2);line-height:1.4;margin-bottom:8px;">도축장 기반<br>실전 창업<br>컨설팅</div>
+        <div style="font-size:12px;color:var(--ink3);line-height:1.7;">예비 창업자 대상<br>상권분석 · 수익계산 · 공급 연결</div>
+      </div>
+      <div style="margin-top:24px;">
+        <div style="background:var(--n2);color:var(--g);padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;text-align:center;">📋 컨설팅 상담 받기 →</div>
+      </div>
     </div>
   </div>
-  <div class="sise-mini" id="home-sise"></div>
-  <div class="sec">
-    <div class="sec-hd"><div class="sec-title">최근 매물</div><div class="sec-more" onclick="go('mkt')">전체보기 →</div></div>
-    <div class="listing-grid" id="home-listing"></div>
+
+  <!-- 오늘 시세 미니 -->
+  <div style="background:var(--n2);padding:16px 20px;border-bottom:1px solid rgba(201,168,76,.1);">
+    <div style="font-size:11px;color:rgba(201,168,76,.6);letter-spacing:2px;font-weight:700;margin-bottom:10px;">TODAY PRICE</div>
+    <div class="sise-mini" id="home-sise" style="background:transparent;padding:0;border:none;"></div>
   </div>
-  <div class="divider"></div>
-  <div class="sec">
-    <div class="sec-hd"><div class="sec-title">💬 커뮤니티 최신글</div><div class="sec-more" onclick="go('cm')">전체보기 →</div></div>
-    <div id="home-cm"></div>
-  </div>
-  <div class="divider"></div>
-  <div class="sec">
-    <div class="consult-banner">
-      <div class="cb-title">전문가 컨설팅</div>
-      <div class="cb-sub">52년 업력 협신식품이 만든 고기업종 컨설팅</div>
-      <div class="cb-cards">
-        <div class="cbc" onclick="location.href='meat_insight_apply.html?tab=consulting&plan=basic'"><span class="cbc-badge">REPORT</span><div class="cbc-name">창업 리포트</div><div class="cbc-price">200,000원</div></div>
-        <div class="cbc" onclick="location.href='meat_insight_apply.html?tab=consulting&plan=premium'"><span class="cbc-badge">1:1 CONSULT</span><div class="cbc-name">비대면 상담</div><div class="cbc-price">1,500,000원</div></div>
+
+  <!-- 빠른 메뉴 -->
+  <div style="padding:20px 16px;">
+    <div style="font-size:11px;color:var(--ink3);letter-spacing:1.5px;font-weight:700;margin-bottom:12px;">빠른 메뉴</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+      <div onclick="go('supply')" style="background:var(--w);border:1px solid var(--cr3);border-radius:12px;padding:14px 6px;text-align:center;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--g)'" onmouseout="this.style.borderColor='var(--cr3)'">
+        <div style="font-size:22px;margin-bottom:5px;">🥩</div>
+        <div style="font-size:11px;font-weight:700;color:var(--n2);">고기 주문</div>
       </div>
+      <div onclick="go('si')" style="background:var(--w);border:1px solid var(--cr3);border-radius:12px;padding:14px 6px;text-align:center;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--g)'" onmouseout="this.style.borderColor='var(--cr3)'">
+        <div style="font-size:22px;margin-bottom:5px;">📈</div>
+        <div style="font-size:11px;font-weight:700;color:var(--n2);">오늘 시세</div>
+      </div>
+      <div onclick="go('c')" style="background:var(--w);border:1px solid var(--cr3);border-radius:12px;padding:14px 6px;text-align:center;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--g)'" onmouseout="this.style.borderColor='var(--cr3)'">
+        <div style="font-size:22px;margin-bottom:5px;">🧮</div>
+        <div style="font-size:11px;font-weight:700;color:var(--n2);">수익 계산기</div>
+      </div>
+      <div onclick="go('cm')" style="background:var(--w);border:1px solid var(--cr3);border-radius:12px;padding:14px 6px;text-align:center;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--g)'" onmouseout="this.style.borderColor='var(--cr3)'">
+        <div style="font-size:22px;margin-bottom:5px;">💬</div>
+        <div style="font-size:11px;font-weight:700;color:var(--n2);">커뮤니티</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 협신식품 신뢰 배지 -->
+  <div style="margin:0 16px 20px;background:var(--n);border-radius:14px;padding:18px;">
+    <div style="display:flex;gap:16px;align-items:center;margin-bottom:14px;">
+      <div style="width:48px;height:48px;background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:16px;color:var(--g);font-weight:700;flex-shrink:0;">협신</div>
+      <div>
+        <div style="font-family:var(--serif);font-size:15px;color:#fff;margin-bottom:2px;">협신식품 (주)</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);">1972년 설립 · 52년 업력 · 경기 안양</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+      <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-family:var(--serif);font-size:18px;color:var(--g);font-weight:700;">52년</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">업력</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-family:var(--serif);font-size:18px;color:var(--g);font-weight:700;">300명</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">임직원</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-family:var(--serif);font-size:18px;color:var(--g);font-weight:700;">직도축</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">당일 공급</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="go('supply')" style="flex:1;padding:10px;background:var(--g);color:var(--n);border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">고기 주문하기</button>
+      <button onclick="alert('카카오채널로 문의해주세요.')" style="flex:1;padding:10px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.1);border-radius:8px;font-size:13px;cursor:pointer;font-family:var(--sans);">📞 바로 문의</button>
     </div>
   </div>
 </div>
@@ -774,6 +837,138 @@ body{font-family:var(--sans);background:var(--cr);color:var(--ink);font-size:15p
 </div>
 
 <!-- 하단 탭 -->
+<!-- 고기 공급 페이지 -->
+<div class="pg" id="pg-supply">
+  <div style="background:var(--n);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:56px;z-index:90;border-bottom:1px solid rgba(201,168,76,.15);">
+    <button onclick="go('h')" style="background:none;border:none;color:var(--g);font-size:18px;cursor:pointer;">←</button>
+    <div style="font-family:var(--serif);font-size:15px;color:#fff;">오늘의 고기 리스트</div>
+    <button onclick="go('order-cart')" style="background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.3);color:var(--g);font-size:12px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--sans);">🛒 장바구니 <span id="cart-count" style="background:var(--g);color:var(--n);border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;margin-left:4px;">0</span></button>
+  </div>
+
+  <!-- 카테고리 탭 -->
+  <div style="background:var(--w);border-bottom:1px solid var(--cr3);padding:0 16px;display:flex;gap:0;overflow-x:auto;scrollbar-width:none;">
+    <button class="supply-cat-btn on" onclick="filterSupply(this,'all')" style="padding:14px 16px;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;font-family:var(--sans);color:var(--n2);border-bottom:3px solid var(--g);white-space:nowrap;">전체</button>
+    <button class="supply-cat-btn" onclick="filterSupply(this,'한우')" style="padding:14px 16px;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;font-family:var(--sans);color:var(--ink3);border-bottom:3px solid transparent;white-space:nowrap;">🐄 한우</button>
+    <button class="supply-cat-btn" onclick="filterSupply(this,'돼지')" style="padding:14px 16px;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;font-family:var(--sans);color:var(--ink3);border-bottom:3px solid transparent;white-space:nowrap;">🐷 돼지</button>
+    <button class="supply-cat-btn" onclick="filterSupply(this,'특수부위')" style="padding:14px 16px;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;font-family:var(--sans);color:var(--ink3);border-bottom:3px solid transparent;white-space:nowrap;">⭐ 특수부위</button>
+  </div>
+
+  <!-- 오늘 공급 안내 -->
+  <div style="background:rgba(201,168,76,.08);border-bottom:1px solid rgba(201,168,76,.15);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-size:12px;color:var(--g);font-weight:700;" id="supply-date">오늘 도축 · 당일 출고 가능</div>
+    <button onclick="alert('카카오채널로 문의해주세요.')" style="background:var(--g);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);">📞 긴급 문의</button>
+  </div>
+
+  <!-- 상품 리스트 -->
+  <div id="supply-list" style="padding:12px 16px 100px;display:flex;flex-direction:column;gap:10px;">
+    <div style="text-align:center;padding:40px;color:var(--ink3);">불러오는 중...</div>
+  </div>
+
+  <!-- 주문하기 sticky 버튼 -->
+  <div style="position:fixed;bottom:60px;left:0;right:0;padding:12px 16px;background:rgba(248,246,242,.95);backdrop-filter:blur(10px);border-top:1px solid var(--cr3);z-index:100;">
+    <button onclick="go('order-form')" style="width:100%;padding:14px;background:var(--n2);color:var(--g);border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans);">🛒 장바구니 담기 · 주문하기</button>
+  </div>
+</div>
+
+<!-- 주문서 작성 페이지 -->
+<div class="pg" id="pg-order-form">
+  <div class="phdr" onclick="go('supply')"><span class="phdr-back">←</span><span class="phdr-t">주문서 작성</span></div>
+  <div style="padding:16px 16px 100px;">
+    <div class="card-note">주문 접수 후 담당자가 확인하여 연락드립니다. 사업자 고객 전용입니다.</div>
+
+    <!-- 주문 상품 요약 -->
+    <div style="background:var(--w);border:1px solid var(--cr3);border-radius:14px;padding:16px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;color:var(--n2);margin-bottom:12px;">🛒 주문 상품</div>
+      <div id="order-items-summary" style="font-size:13px;color:var(--ink3);">장바구니가 비어있습니다.</div>
+      <div style="border-top:1px solid var(--cr3);margin-top:12px;padding-top:12px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:14px;font-weight:700;color:var(--n2);">합계</div>
+        <div style="font-family:var(--serif);font-size:20px;color:var(--g);font-weight:700;" id="order-total">0원</div>
+      </div>
+    </div>
+
+    <label class="fl">상호명 *</label>
+    <input class="fi" id="ord-biz" placeholder="정육점/식당 상호명"/>
+    <label class="fl">사업자번호 *</label>
+    <input class="fi" id="ord-biznum" placeholder="000-00-00000"/>
+    <label class="fl">담당자명 *</label>
+    <input class="fi" id="ord-name" placeholder="홍길동"/>
+    <label class="fl">연락처 *</label>
+    <input class="fi" id="ord-phone" placeholder="010-0000-0000"/>
+    <label class="fl">납품 주소 *</label>
+    <input class="fi" id="ord-addr" placeholder="도로명 주소"/>
+    <label class="fl">희망 납품일</label>
+    <input class="fi" id="ord-date" type="date"/>
+    <label class="fl">정기 납품 신청</label>
+    <select class="fi" id="ord-regular">
+      <option value="">일반 주문 (1회)</option>
+      <option value="주1회">정기 납품 — 주 1회</option>
+      <option value="주2회">정기 납품 — 주 2회</option>
+    </select>
+    <label class="fl">요청사항</label>
+    <textarea class="fi" id="ord-memo" rows="3" placeholder="손질 방법, 포장 방법, 특이사항 등"></textarea>
+
+    <button onclick="submitOrder()" style="width:100%;padding:14px;background:var(--g);color:var(--n);border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans);">주문 접수하기</button>
+    <div id="ord-msg" style="margin-top:10px;font-size:13px;text-align:center;"></div>
+  </div>
+</div>
+
+<!-- 컨설팅 홈 페이지 -->
+<div class="pg" id="pg-consult-home">
+  <div style="background:var(--n);padding:14px 16px;display:flex;align-items:center;gap:10px;">
+    <button onclick="go('h')" style="background:none;border:none;color:var(--g);font-size:18px;cursor:pointer;">←</button>
+    <div style="font-family:var(--serif);font-size:15px;color:#fff;">창업 컨설팅</div>
+  </div>
+  <div style="background:var(--n);padding:24px 16px 32px;text-align:center;position:relative;overflow:hidden;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 500px 200px at 50% 130%,rgba(201,168,76,.15),transparent);pointer-events:none;"></div>
+    <div style="font-size:11px;color:rgba(201,168,76,.6);letter-spacing:2px;font-weight:700;margin-bottom:10px;position:relative;">STARTUP CONSULTING</div>
+    <div style="font-family:var(--serif);font-size:24px;color:#fff;line-height:1.3;margin-bottom:8px;position:relative;">도축장 기반<br><span style="color:var(--g);">실전 창업 컨설팅</span></div>
+    <div style="font-size:13px;color:rgba(255,255,255,.45);position:relative;">52년 협신식품 노하우 · 실제 도매가 기반 분석</div>
+  </div>
+
+  <!-- 컨설팅 메뉴 -->
+  <div style="padding:16px;">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div onclick="location.href='meat_insight_apply.html?tab=consulting&plan=basic'" style="background:var(--w);border:1px solid var(--cr3);border-radius:14px;padding:20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--g)'" onmouseout="this.style.borderColor='var(--cr3)'">
+        <div>
+          <div style="font-size:10px;color:var(--g);font-weight:700;letter-spacing:1px;margin-bottom:6px;">REPORT</div>
+          <div style="font-size:17px;font-weight:700;color:var(--n2);margin-bottom:4px;">창업 리포트</div>
+          <div style="font-size:12px;color:var(--ink3);">상권분석 · 손익분기 · PDF 제공</div>
+          <div style="font-family:var(--serif);font-size:18px;color:var(--n2);font-weight:700;margin-top:8px;">200,000원</div>
+        </div>
+        <div style="font-size:24px;">📋</div>
+      </div>
+
+      <div onclick="location.href='meat_insight_apply.html?tab=consulting&plan=premium'" style="background:var(--n);border:2px solid rgba(201,168,76,.3);border-radius:14px;padding:20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--g)'" onmouseout="this.style.borderColor='rgba(201,168,76,.3)'">
+        <div>
+          <div style="font-size:10px;color:var(--g);font-weight:700;letter-spacing:1px;margin-bottom:6px;">1:1 CONSULT</div>
+          <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:4px;">비대면 전문가 상담</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.45);">60분 화상 · 맞춤 전략 · 요약 리포트</div>
+          <div style="font-family:var(--serif);font-size:18px;color:var(--g);font-weight:700;margin-top:8px;">1,500,000원</div>
+        </div>
+        <div style="font-size:24px;">🎥</div>
+      </div>
+
+      <div onclick="go('c')" style="background:var(--w);border:1px solid var(--cr3);border-radius:14px;padding:20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--g)'" onmouseout="this.style.borderColor='var(--cr3)'">
+        <div>
+          <div style="font-size:10px;color:var(--g);font-weight:700;letter-spacing:1px;margin-bottom:6px;">FREE</div>
+          <div style="font-size:17px;font-weight:700;color:var(--n2);margin-bottom:4px;">수익 계산기</div>
+          <div style="font-size:12px;color:var(--ink3);">원가율 · 손익분기 · 메뉴가격 무료 계산</div>
+        </div>
+        <div style="font-size:24px;">🧮</div>
+      </div>
+
+      <div onclick="go('cm')" style="background:var(--w);border:1px solid var(--cr3);border-radius:14px;padding:20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--g)'" onmouseout="this.style.borderColor='var(--cr3)'">
+        <div>
+          <div style="font-size:10px;color:var(--g);font-weight:700;letter-spacing:1px;margin-bottom:6px;">COMMUNITY</div>
+          <div style="font-size:17px;font-weight:700;color:var(--n2);margin-bottom:4px;">사장님 커뮤니티</div>
+          <div style="font-size:12px;color:var(--ink3);">질문 · 후기 · 실패사례 · 정보 공유</div>
+        </div>
+        <div style="font-size:24px;">💬</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 커뮤니티 글 상세 모달 -->
 <div id="post-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;overflow-y:auto;" onclick="if(event.target===this)closePost()">
   <div style="background:var(--cr);border-radius:14px 14px 0 0;margin-top:60px;min-height:calc(100vh - 60px);padding:0 0 80px;">
@@ -909,8 +1104,8 @@ function renderSup(){
   el.innerHTML='<div style="padding:10px 16px 20px;">'+SUPPLIERS.map(function(s){return'<div class="sup-card '+(s.featured?'featured':'')+'" onclick="alert(\'업체 상세 준비중\')" style="margin:0 0 10px;"><div class="sup-head"><div class="sup-logo" style="white-space:pre-line;">'+s.logo+'</div><div><div class="sup-badges">'+(s.featured?'<span class="sb-ft">추천</span>':'')+'<span class="sb-vf">검증완료</span></div><div class="sup-name">'+s.name+'</div><div class="sup-region">'+s.region+'</div></div></div><div class="sup-body"><div class="sup-desc">'+s.desc+'</div><div class="sup-foot"><button class="btn-contact" onclick="event.stopPropagation();alert(\'카카오채널로 문의해주세요.\')">문의하기</button><button class="btn-detail">상세보기</button></div></div></div>';}).join('')+'<button onclick="alert(\'카카오채널로 입점 문의해주세요.\')" style="width:100%;padding:12px;background:var(--g);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);">공급사 입점 신청</button></div>';
 }
 
-var ALL_PAGES=['h','si','c','mkt','cm','more','reg','closure','subsidy','my','biz','biz-reg'];
-var TAB_MAP={h:'h',si:'si',c:'c',mkt:'mkt',cm:'cm',more:'more',reg:'mkt',closure:'more',subsidy:'more',my:'more','biz':'more','biz-reg':'more'};
+var ALL_PAGES=['h','si','c','mkt','cm','more','reg','closure','subsidy','my','biz','biz-reg','supply','consult-home'];
+var TAB_MAP={h:'h',si:'si',c:'c',mkt:'mkt',cm:'cm',more:'more',reg:'mkt',closure:'more',subsidy:'more',my:'more','biz':'more','biz-reg':'more',supply:'h',consult_home:'h'};
 
 function go(p){
   ALL_PAGES.forEach(function(id){var el=document.getElementById('pg-'+id);if(el)el.className='pg';});
@@ -924,6 +1119,8 @@ function go(p){
   var nbc=document.getElementById('nb-c');if(nbc)nbc.className='nb'+(p==='c'?' on':'');
   document.documentElement.scrollTop=0;document.body.scrollTop=0;
   if(p==='si')renderSise('all');
+  if(p==='supply'){loadProducts();updateCartCount();}
+  if(p==='order-form'){renderOrderSummary();}
   if(p==='cm'){renderCm('all','cm-list');loadCmPosts();}
   if(p==='mkt'){loadListings();renderSup();}
   if(p==='biz')loadBiz('all');
@@ -1267,6 +1464,179 @@ function closePost() {
 function likePost() {
   var el = document.getElementById('post-modal-likes');
   el.textContent = parseInt(el.textContent) + 1;
+}
+
+
+// ── 장바구니 ──
+var cart = [];
+
+function updateCartCount() {
+  var el = document.getElementById('cart-count');
+  if (el) el.textContent = cart.length;
+}
+
+function addToCart(product, kg) {
+  var existing = cart.find(function(i) { return i.id === product.id; });
+  if (existing) {
+    existing.kg = kg;
+  } else {
+    cart.push({ id: product.id, name: product.name, grade: product.grade, category: product.category, price_per_kg: product.price_per_kg, kg: kg });
+  }
+  updateCartCount();
+  alert(product.name + ' ' + kg + 'kg 담겼습니다!');
+}
+
+// ── 상품 불러오기 ──
+var allProducts = [];
+var currentSupplyCat = 'all';
+
+async function loadProducts() {
+  var el = document.getElementById('supply-list');
+  if (!el) return;
+  if (!sb) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink3);">연결 오류</div>'; return; }
+  try {
+    var res = await sb.from('products').select('*').eq('is_available', true).order('category').order('name');
+    if (res.error) throw res.error;
+    allProducts = res.data || [];
+    renderProducts(allProducts);
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink3);">상품을 불러오지 못했습니다.</div>';
+  }
+}
+
+function filterSupply(btn, cat) {
+  document.querySelectorAll('.supply-cat-btn').forEach(function(b) {
+    b.style.color = 'var(--ink3)';
+    b.style.borderBottomColor = 'transparent';
+    b.classList.remove('on');
+  });
+  btn.style.color = 'var(--n2)';
+  btn.style.borderBottomColor = 'var(--g)';
+  btn.classList.add('on');
+  currentSupplyCat = cat;
+  var filtered = cat === 'all' ? allProducts : allProducts.filter(function(p) { return p.category === cat; });
+  renderProducts(filtered);
+}
+
+function renderProducts(products) {
+  var el = document.getElementById('supply-list');
+  if (!el) return;
+  if (products.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink3);">상품이 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = products.map(function(p) {
+    var stockColor = p.stock_kg > 20 ? '#166534' : p.stock_kg > 5 ? '#854D0E' : '#991B1B';
+    var stockBg = p.stock_kg > 20 ? '#F0FDF4' : p.stock_kg > 5 ? '#FEF9C3' : '#FEF2F2';
+    var stockText = p.stock_kg > 20 ? '재고 충분' : p.stock_kg > 5 ? '재고 ' + p.stock_kg + 'kg' : '품절 임박';
+    return '<div style="background:var(--w);border:1px solid var(--cr3);border-radius:14px;padding:16px;">' +
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">' +
+      '<div>' +
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">' +
+      '<span style="font-size:10px;background:var(--g3);color:#5A4A00;padding:2px 8px;border-radius:4px;font-weight:700;">' + p.category + '</span>' +
+      (p.grade ? '<span style="font-size:10px;background:#EFF6FF;color:#1E40AF;padding:2px 8px;border-radius:4px;font-weight:700;">' + p.grade + '</span>' : '') +
+      '<span style="font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;background:' + stockBg + ';color:' + stockColor + ';">' + stockText + '</span>' +
+      '</div>' +
+      '<div style="font-size:17px;font-weight:700;color:var(--n2);">' + p.name + '</div>' +
+      (p.description ? '<div style="font-size:12px;color:var(--ink3);margin-top:2px;">' + p.description + '</div>' : '') +
+      '</div>' +
+      '<div style="text-align:right;">' +
+      '<div style="font-family:var(--serif);font-size:18px;color:var(--n2);font-weight:700;">' + p.price_per_kg.toLocaleString() + '원</div>' +
+      '<div style="font-size:11px;color:var(--ink3);">/kg</div>' +
+      '</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;">' +
+      '<div style="flex:1;display:flex;align-items:center;gap:6px;background:var(--cr);border:1.5px solid var(--cr3);border-radius:8px;padding:6px 10px;">' +
+      '<span style="font-size:12px;color:var(--ink3);">주문량</span>' +
+      '<input type="number" id="qty-' + p.id + '" value="' + p.min_order_kg + '" min="' + p.min_order_kg + '" step="' + p.min_order_kg + '" style="flex:1;border:none;background:none;font-size:14px;font-weight:700;color:var(--n2);width:50px;outline:none;"/>' +
+      '<span style="font-size:12px;color:var(--ink3);">kg</span>' +
+      '</div>' +
+      '<button onclick="addToCart(' + JSON.stringify(p).replace(/"/g,"'") + ', parseFloat(document.getElementById('qty-' + p.id + '').value)||' + p.min_order_kg + ')" style="background:var(--n2);color:var(--g);border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);white-space:nowrap;">담기</button>' +
+      '</div>' +
+      '</div>';
+  }).join('');
+}
+
+// ── 주문서 렌더 ──
+function renderOrderSummary() {
+  var el = document.getElementById('order-items-summary');
+  var totalEl = document.getElementById('order-total');
+  if (!el) return;
+  if (cart.length === 0) {
+    el.innerHTML = '<div style="color:var(--ink3);font-size:13px;">장바구니가 비어있습니다.</div>';
+    if (totalEl) totalEl.textContent = '0원';
+    return;
+  }
+  var total = 0;
+  el.innerHTML = cart.map(function(item) {
+    var amt = Math.round(item.price_per_kg * item.kg);
+    total += amt;
+    return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--cr2);">' +
+      '<div><div style="font-size:13px;font-weight:700;color:var(--n2);">' + item.name + (item.grade ? ' ' + item.grade : '') + '</div>' +
+      '<div style="font-size:12px;color:var(--ink3);">' + item.kg + 'kg × ' + item.price_per_kg.toLocaleString() + '원</div></div>' +
+      '<div style="font-size:14px;font-weight:700;color:var(--n2);">' + amt.toLocaleString() + '원</div></div>';
+  }).join('');
+  if (totalEl) totalEl.textContent = total.toLocaleString() + '원';
+}
+
+// ── 주문 제출 ──
+async function submitOrder() {
+  if (!sb) return;
+  var bizName = (document.getElementById('ord-biz')||{value:''}).value;
+  var bizNum = (document.getElementById('ord-biznum')||{value:''}).value;
+  var name = (document.getElementById('ord-name')||{value:''}).value;
+  var phone = (document.getElementById('ord-phone')||{value:''}).value;
+  var addr = (document.getElementById('ord-addr')||{value:''}).value;
+  var date = (document.getElementById('ord-date')||{value:''}).value;
+  var regular = (document.getElementById('ord-regular')||{value:''}).value;
+  var memo = (document.getElementById('ord-memo')||{value:''}).value;
+  var msg = document.getElementById('ord-msg');
+
+  if (!bizName || !name || !phone || !addr) {
+    msg.textContent = '필수 항목을 모두 입력해주세요.';
+    msg.style.color = 'red';
+    return;
+  }
+  if (cart.length === 0) {
+    msg.textContent = '장바구니에 상품을 담아주세요.';
+    msg.style.color = 'red';
+    return;
+  }
+
+  var total = cart.reduce(function(s, i) { return s + Math.round(i.price_per_kg * i.kg); }, 0);
+  var orderNum = 'ORD-' + Date.now();
+
+  msg.textContent = '주문 접수 중...';
+  msg.style.color = 'var(--g)';
+
+  try {
+    var res = await sb.from('orders').insert({
+      order_number: orderNum,
+      buyer_name: name,
+      buyer_phone: phone,
+      business_name: bizName,
+      business_number: bizNum,
+      delivery_address: addr,
+      delivery_date: date || null,
+      items: cart,
+      total_amount: total,
+      memo: memo,
+      is_regular: regular !== '',
+      regular_cycle: regular || null,
+      status: '주문접수'
+    });
+    if (res.error) throw res.error;
+    msg.textContent = '✅ 주문 접수 완료! 주문번호: ' + orderNum + ' · 담당자가 곧 연락드립니다.';
+    msg.style.color = 'green';
+    cart = [];
+    updateCartCount();
+    ['ord-biz','ord-biznum','ord-name','ord-phone','ord-addr','ord-memo'].forEach(function(id) {
+      var e = document.getElementById(id); if(e) e.value = '';
+    });
+  } catch(e) {
+    msg.textContent = '오류: ' + e.message;
+    msg.style.color = 'red';
+  }
 }
 
 // 초기화

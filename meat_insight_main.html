@@ -1525,10 +1525,15 @@ function renderProducts(products) {
     el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink3);">상품이 없습니다.</div>';
     return;
   }
+  // 상품 데이터를 전역 맵에 저장
+  window._productMap = {};
+  products.forEach(function(p) { window._productMap[p.id] = p; });
+
   el.innerHTML = products.map(function(p) {
     var stockColor = p.stock_kg > 20 ? '#166534' : p.stock_kg > 5 ? '#854D0E' : '#991B1B';
     var stockBg = p.stock_kg > 20 ? '#F0FDF4' : p.stock_kg > 5 ? '#FEF9C3' : '#FEF2F2';
     var stockText = p.stock_kg > 20 ? '재고 충분' : p.stock_kg > 5 ? '재고 ' + p.stock_kg + 'kg' : '품절 임박';
+    var qtyId = 'qty-' + p.id;
     return '<div style="background:var(--w);border:1px solid var(--cr3);border-radius:14px;padding:16px;">' +
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">' +
       '<div>' +
@@ -1548,13 +1553,22 @@ function renderProducts(products) {
       '<div style="display:flex;align-items:center;gap:8px;">' +
       '<div style="flex:1;display:flex;align-items:center;gap:6px;background:var(--cr);border:1.5px solid var(--cr3);border-radius:8px;padding:6px 10px;">' +
       '<span style="font-size:12px;color:var(--ink3);">주문량</span>' +
-      '<input type="number" id="qty-' + p.id + '" value="' + p.min_order_kg + '" min="' + p.min_order_kg + '" step="' + p.min_order_kg + '" style="flex:1;border:none;background:none;font-size:14px;font-weight:700;color:var(--n2);width:50px;outline:none;"/>' +
+      '<input type="number" id="' + qtyId + '" value="' + p.min_order_kg + '" min="' + p.min_order_kg + '" step="' + p.min_order_kg + '" style="flex:1;border:none;background:none;font-size:14px;font-weight:700;color:var(--n2);width:50px;outline:none;"/>' +
       '<span style="font-size:12px;color:var(--ink3);">kg</span>' +
       '</div>' +
-      '<button onclick="addToCart(' + JSON.stringify(p).replace(/"/g,"'") + ', parseFloat(document.getElementById('qty-' + p.id + '').value)||' + p.min_order_kg + ')" style="background:var(--n2);color:var(--g);border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);white-space:nowrap;">담기</button>' +
+      '<button data-pid="' + p.id + '" data-min="' + p.min_order_kg + '" onclick="addToCartById(this)" style="background:var(--n2);color:var(--g);border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);white-space:nowrap;">담기</button>' +
       '</div>' +
       '</div>';
   }).join('');
+}
+
+function addToCartById(btn) {
+  var pid = btn.getAttribute('data-pid');
+  var minKg = parseFloat(btn.getAttribute('data-min')) || 1;
+  var qtyEl = document.getElementById('qty-' + pid);
+  var kg = qtyEl ? (parseFloat(qtyEl.value) || minKg) : minKg;
+  var product = window._productMap ? window._productMap[pid] : null;
+  if (product) addToCart(product, kg);
 }
 
 // ── 주문서 렌더 ──

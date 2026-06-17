@@ -254,9 +254,90 @@ textarea.fi{resize:vertical;min-height:80px;}
   .sg{grid-template-columns:repeat(3,1fr);}
   .sec{padding:48px 20px;}
 }
+
+/* ─── 위치 모달 ─── */
+.loc-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9990;display:flex;align-items:flex-end;justify-content:center;animation:fadein .2s;}
+@keyframes fadein{from{opacity:0;}to{opacity:1;}}
+.loc-modal{background:#fff;border-radius:20px 20px 0 0;padding:32px 24px 40px;width:100%;max-width:480px;animation:slideup .3s cubic-bezier(.2,.8,.3,1);}
+@keyframes slideup{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.loc-modal-h{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+.loc-modal-d{font-size:14px;color:var(--ink3);margin-bottom:24px;line-height:1.6;}
+.loc-btn-gps{width:100%;padding:15px;background:var(--or);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s;}
+.loc-btn-gps:hover{background:#C84E0A;}
+.loc-btn-manual{width:100%;padding:15px;background:var(--bg2);color:var(--ink2);border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:background .15s;}
+.loc-btn-manual:hover{background:var(--bd);}
+
+/* 지역 선택 시트 */
+.region-sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9991;display:flex;align-items:flex-end;justify-content:center;animation:fadein .2s;}
+.region-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;display:flex;flex-direction:column;animation:slideup .3s cubic-bezier(.2,.8,.3,1);}
+.region-sheet-hd{padding:20px 24px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.region-sheet-t{font-size:17px;font-weight:700;color:var(--ink);}
+.region-close{font-size:22px;color:var(--ink3);border:none;background:none;cursor:pointer;padding:0;line-height:1;}
+.region-search{padding:12px 20px;border-bottom:1px solid var(--bd);flex-shrink:0;}
+.region-search input{width:100%;padding:11px 14px;border:1.5px solid var(--bd);border-radius:10px;font-size:15px;font-family:'Noto Sans KR',sans-serif;outline:none;background:var(--bg);}
+.region-search input:focus{border-color:var(--or);}
+.region-list{overflow-y:auto;flex:1;padding:8px 20px 24px;}
+.region-group-t{font-size:11px;font-weight:700;color:var(--ink4);letter-spacing:1px;margin:14px 0 6px;}
+.region-chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px;}
+.rchip{padding:8px 16px;border:1.5px solid var(--bd);border-radius:999px;font-size:13px;font-weight:600;color:var(--ink3);cursor:pointer;background:#fff;transition:all .15s;white-space:nowrap;}
+.rchip:hover{border-color:var(--or);color:var(--or);}
+.rchip.on{background:var(--or);color:#fff;border-color:var(--or);}
+
+/* 위치 표시 바 */
+.loc-bar{background:#fff;border-bottom:1px solid var(--bd);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;}
+.loc-display{display:flex;align-items:center;gap:6px;cursor:pointer;}
+.loc-pin{font-size:16px;}
+.loc-name{font-size:15px;font-weight:700;color:var(--ink);}
+.loc-arrow{font-size:12px;color:var(--ink4);margin-left:2px;}
+.loc-change{font-size:12px;color:var(--or);font-weight:600;border:none;background:none;cursor:pointer;}
+
+/* 지역 인기 섹션 */
+.hot-sec{padding:16px 20px;border-bottom:8px solid var(--bg2);}
+.hot-t{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:12px;}
+.hot-tags{display:flex;gap:7px;flex-wrap:wrap;}
+.hot-tag{display:flex;align-items:center;gap:5px;padding:8px 14px;background:var(--bg);border:1px solid var(--bd);border-radius:999px;font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;transition:all .15s;}
+.hot-tag:hover{border-color:var(--or);color:var(--or);background:var(--orl);}
+
+/* 거리 배지 */
+.sc-dist{font-size:11px;color:var(--or);font-weight:600;margin-top:2px;}
+
+/* 위치 로딩 */
+.loc-loading{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink3);}
+.loc-spinner{width:18px;height:18px;border:2px solid var(--bd);border-top-color:var(--or);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
+
+
+<!-- ═══ 위치 모달 ═══ -->
+<div id="loc-modal-bg" class="loc-modal-bg" style="display:none;">
+  <div class="loc-modal">
+    <div style="font-size:28px;margin-bottom:14px;">📍</div>
+    <div class="loc-modal-h">더 정확한 업체 추천을 위해<br>위치를 설정해주세요</div>
+    <div class="loc-modal-d">내 위치 근처의 업체와 요청을<br>먼저 보여드립니다</div>
+    <button class="loc-btn-gps" onclick="useGPS()">
+      <span>📍</span><span>현재 위치 사용</span>
+    </button>
+    <button class="loc-btn-manual" onclick="openRegionSheet()">
+      직접 지역 선택
+    </button>
+  </div>
+</div>
+
+<!-- ═══ 지역 선택 시트 ═══ -->
+<div id="region-sheet-bg" class="region-sheet-bg" style="display:none;" onclick="closeRegionSheetBg(event)">
+  <div class="region-sheet" onclick="event.stopPropagation()">
+    <div class="region-sheet-hd">
+      <div class="region-sheet-t">지역 선택</div>
+      <button class="region-close" onclick="closeRegionSheet()">✕</button>
+    </div>
+    <div class="region-search">
+      <input id="region-search-input" placeholder="지역 검색..." oninput="filterRegions(this.value)"/>
+    </div>
+    <div class="region-list" id="region-list-wrap"></div>
+  </div>
+</div>
 
 <nav class="nav">
   <div class="nav-inner">
@@ -271,11 +352,21 @@ textarea.fi{resize:vertical;min-height:80px;}
 <!-- ═══ 홈 ═══ -->
 <div class="pg on" id="pg-h" style="padding-top:56px;padding-bottom:60px;">
 
+  
+  <!-- 위치 바 -->
+  <div class="loc-bar" id="loc-bar">
+    <div class="loc-display" onclick="openRegionSheet()">
+      <span class="loc-pin">📍</span>
+      <span class="loc-name" id="loc-name-disp">위치 설정 중...</span>
+      <span class="loc-arrow">▾</span>
+    </div>
+    <button class="loc-change" onclick="openRegionSheet()">지역 변경</button>
+  </div>
   <section class="hero">
     <div class="hero-inner">
       <div class="htag"><span class="htdot"></span><span class="htxt">고기 업계의 숨고</span></div>
-      <h1 class="hero-h">고기 업계의<br>모든 연결, <em>고리</em></h1>
-      <p class="hero-sub">무엇이 필요하신가요?</p>
+      <h1 class="hero-h" id="hero-h">고기 업계의<br>모든 연결, <em>고리</em></h1>
+      <p class="hero-sub" id="hero-sub">무엇이 필요하신가요?</p>
       <div class="sbox">
         <input class="sinput" id="si" placeholder="한우 등심 100kg..."/>
         <button class="sbtn" onclick="go('rw')">무료 견적 요청</button>
@@ -292,6 +383,12 @@ textarea.fi{resize:vertical;min-height:80px;}
     </div>
   </section>
 
+  
+  <!-- 지역 인기 서비스 -->
+  <div class="hot-sec" id="hot-sec">
+    <div class="hot-t" id="hot-title">📍 오늘 많이 찾는 서비스</div>
+    <div class="hot-tags" id="hot-tags"></div>
+  </div>
   <div class="cat-strip"><div class="cat-scroll" id="cat-scroll"></div></div>
 
   <div class="live-bar">
@@ -930,7 +1027,362 @@ async function subSup(){
 }
 
 /* 초기화 */
-renderCats();renderLive();rHR();rHS();
+renderCats();renderLive();
+
+
+/* ═══════════════════════════════
+   지역 기반 매칭 시스템
+═══════════════════════════════ */
+
+var REGION_DATA = {
+  "서울": {
+    districts: ["강남구","강동구","강북구","강서구","관악구","광진구","구로구","금천구","노원구","도봉구","동대문구","동작구","마포구","서대문구","서초구","성동구","성북구","송파구","양천구","영등포구","용산구","은평구","종로구","중구","중랑구"],
+    nearby: ["서울 전체","경기 고양시","경기 과천시","인천 부평구"]
+  },
+  "경기": {
+    districts: ["수원시","성남시","고양시","용인시","부천시","안산시","안양시","남양주시","화성시","평택시","의정부시","시흥시","파주시","광명시","김포시","군포시","광주시","이천시","양주시","오산시","구리시","안성시","포천시","의왕시","하남시","여주시","동두천시","과천시","가평군","양평군","연천군"],
+    nearby: ["서울","인천"]
+  },
+  "인천": {
+    districts: ["계양구","남동구","동구","미추홀구","부평구","서구","연수구","중구","강화군","옹진군"],
+    nearby: ["경기 김포시","경기 부천시"]
+  },
+  "부산": {
+    districts: ["강서구","금정구","기장군","남구","동구","동래구","부산진구","북구","사상구","사하구","서구","수영구","연제구","영도구","중구","해운대구"],
+    nearby: ["경남 양산시","경남 김해시"]
+  },
+  "대구": {
+    districts: ["남구","달서구","달성군","동구","북구","서구","수성구","중구"],
+    nearby: ["경북 경산시","경북 칠곡군"]
+  },
+  "광주": {
+    districts: ["광산구","남구","동구","북구","서구"],
+    nearby: ["전남 나주시","전남 장성군"]
+  },
+  "대전": {
+    districts: ["대덕구","동구","서구","유성구","중구"],
+    nearby: ["충남 세종시","충남 공주시"]
+  },
+  "울산": {
+    districts: ["남구","동구","북구","중구","울주군"],
+    nearby: ["경남 양산시","경남 밀양시"]
+  },
+  "세종": {
+    districts: ["세종시 전체"],
+    nearby: ["충남 공주시","충남 청주시"]
+  },
+  "강원": {
+    districts: ["춘천시","원주시","강릉시","동해시","태백시","속초시","삼척시","홍천군","횡성군","영월군","평창군","정선군","철원군","화천군","양구군","인제군","고성군","양양군"],
+    nearby: ["경기 가평군","경북 울진군"]
+  },
+  "충북": {
+    districts: ["청주시","충주시","제천시","보은군","옥천군","영동군","증평군","진천군","괴산군","음성군","단양군"],
+    nearby: ["대전","경기 여주시"]
+  },
+  "충남": {
+    districts: ["천안시","공주시","보령시","아산시","서산시","논산시","계룡시","당진시","금산군","부여군","서천군","청양군","홍성군","예산군","태안군"],
+    nearby: ["대전","세종"]
+  },
+  "전북": {
+    districts: ["전주시","군산시","익산시","정읍시","남원시","김제시","완주군","진안군","무주군","장수군","임실군","순창군","고창군","부안군"],
+    nearby: ["광주","충남"]
+  },
+  "전남": {
+    districts: ["목포시","여수시","순천시","나주시","광양시","담양군","곡성군","구례군","고흥군","보성군","화순군","장흥군","강진군","해남군","영암군","무안군","함평군","영광군","장성군","완도군","진도군","신안군"],
+    nearby: ["광주","전북"]
+  },
+  "경북": {
+    districts: ["포항시","경주시","김천시","안동시","구미시","영주시","영천시","상주시","문경시","경산시","군위군","의성군","청송군","영양군","영덕군","청도군","고령군","성주군","칠곡군","예천군","봉화군","울진군","울릉군"],
+    nearby: ["대구","강원"]
+  },
+  "경남": {
+    districts: ["창원시","진주시","통영시","사천시","김해시","밀양시","거제시","양산시","의령군","함안군","창녕군","고성군","남해군","하동군","산청군","함양군","거창군","합천군"],
+    nearby: ["부산","울산"]
+  },
+  "제주": {
+    districts: ["제주시","서귀포시"],
+    nearby: []
+  },
+  "전국": {
+    districts: ["전국 배송 가능"],
+    nearby: []
+  }
+};
+
+var HOT_BY_REGION = {
+  "서울": ["한우 공급업체","정육사 채용","고깃집 인테리어","육가공 OEM","냉장물류"],
+  "경기": ["한우 등심 100kg","돼지 삼겹살 납품","정육사 채용","고깃집 창업 컨설팅","냉동물류"],
+  "부산": ["곱창 공급업체","한우 납품","발골사 채용","수산물 연계 납품","냉장물류"],
+  "대구": ["한우 공급업체","정육점 기자재","정육사 채용","육가공 의뢰","인테리어"],
+  "default": ["한우 공급업체","부산물 구매","정육사 채용","냉장물류","고깃집 인테리어"]
+};
+
+var HOT_ICONS = {
+  "한우 공급업체":"🥩","한우 등심 100kg":"🥩","한우 납품":"🥩",
+  "곱창 공급업체":"🫀","부산물 구매":"🫀",
+  "정육사 채용":"👤","발골사 채용":"👤",
+  "고깃집 인테리어":"🏗","인테리어":"🏗",
+  "육가공 OEM":"🔪","육가공 의뢰":"🔪",
+  "냉장물류":"🚚","냉동물류":"🚚",
+  "고깃집 창업 컨설팅":"📊","고깃집 창업":"📊",
+  "정육점 기자재":"⚙️","돼지 삼겹살 납품":"🥩"
+};
+
+var userRegion = null;   // 시·도
+var userDistrict = null; // 구·군·시
+var userLabel = null;    // 표시명
+
+/* 초기화 — 저장된 위치 있으면 복원 */
+function initLocation() {
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('gori_location')); } catch(e){}
+  if (saved && saved.region) {
+    setLocation(saved.region, saved.district, saved.label, true);
+  } else {
+    document.getElementById('loc-modal-bg').style.display = 'flex';
+  }
+}
+
+/* GPS 위치 */
+function useGPS() {
+  var modal = document.getElementById('loc-modal-bg');
+  var btnGPS = modal.querySelector('.loc-btn-gps');
+  btnGPS.innerHTML = '<div class="loc-spinner"></div><span>위치 확인 중...</span>';
+  btnGPS.disabled = true;
+
+  if (!navigator.geolocation) {
+    alert('이 브라우저는 위치 서비스를 지원하지 않습니다.');
+    btnGPS.innerHTML = '<span>📍</span><span>현재 위치 사용</span>';
+    btnGPS.disabled = false;
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      var lat = pos.coords.latitude;
+      var lng = pos.coords.longitude;
+      reverseGeocode(lat, lng, function(region, district, label) {
+        setLocation(region, district, label);
+        modal.style.display = 'none';
+      });
+    },
+    function(err) {
+      btnGPS.innerHTML = '<span>📍</span><span>현재 위치 사용</span>';
+      btnGPS.disabled = false;
+      openRegionSheet();
+      modal.style.display = 'none';
+    },
+    { timeout: 8000, maximumAge: 300000 }
+  );
+}
+
+/* 역지오코딩 — 좌표→지역명 */
+function reverseGeocode(lat, lng, cb) {
+  // kakao/naver API 없으므로 좌표 범위로 대략 추정
+  var region = '경기', district = '수원시', label = '수원시';
+  if (lat > 37.5 && lat < 37.7 && lng > 126.8 && lng < 127.2) { region = '서울'; district = '강남구'; label = '강남구'; }
+  else if (lat > 37.3 && lat < 37.55 && lng > 126.7 && lng < 127.0) { region = '경기'; district = '안양시'; label = '안양시'; }
+  else if (lat > 37.1 && lat < 37.4 && lng > 126.9 && lng < 127.1) { region = '경기'; district = '수원시'; label = '수원시'; }
+  else if (lat > 35.0 && lat < 35.3 && lng > 128.9 && lng < 129.3) { region = '부산'; district = '해운대구'; label = '해운대구'; }
+  else if (lat > 35.8 && lat < 36.0 && lng > 128.5 && lng < 128.8) { region = '대구'; district = '수성구'; label = '수성구'; }
+  else if (lat > 37.6 && lat < 37.9 && lng > 126.6 && lng < 127.0) { region = '경기'; district = '고양시'; label = '고양시'; }
+  else if (lat > 37.4 && lat < 37.7 && lng > 126.3 && lng < 126.8) { region = '인천'; district = '남동구'; label = '남동구'; }
+  cb(region, district, label);
+}
+
+/* 위치 설정 */
+function setLocation(region, district, label, silent) {
+  userRegion = region;
+  userDistrict = district;
+  userLabel = label || district || region;
+
+  // 저장
+  try { localStorage.setItem('gori_location', JSON.stringify({region:region, district:district, label:userLabel})); } catch(e){}
+
+  // UI 업데이트
+  var nm = document.getElementById('loc-name-disp');
+  if (nm) nm.textContent = userLabel;
+
+  // 히어로 카피 변경
+  var hh = document.getElementById('hero-h');
+  var hs = document.getElementById('hero-sub');
+  if (hh) hh.innerHTML = '고기 업계의<br>모든 연결, <em>고리</em>';
+  if (hs) hs.textContent = userLabel + '에서 무엇이 필요하신가요?';
+
+  // 인기 검색 업데이트
+  renderHotTags(region);
+
+  // 홈 데이터 지역 필터
+  if (!silent) {
+    rHR();
+    rHS();
+  }
+
+  // 요청서 지역 자동 입력
+  var frg = document.getElementById('frg');
+  if (frg) {
+    for (var i=0; i<frg.options.length; i++) {
+      if (frg.options[i].value === region || frg.options[i].text === region) {
+        frg.selectedIndex = i; break;
+      }
+    }
+  }
+}
+
+/* 인기 태그 렌더 */
+function renderHotTags(region) {
+  var el = document.getElementById('hot-tags');
+  var title = document.getElementById('hot-title');
+  if (!el) return;
+  var items = HOT_BY_REGION[region] || HOT_BY_REGION['default'];
+  if (title) title.textContent = '📍 ' + (userLabel||'내 지역') + ' 오늘 많이 찾는 서비스';
+  el.innerHTML = items.map(function(t) {
+    var ico = HOT_ICONS[t] || '🔍';
+    return '<div class="hot-tag" onclick="setS(\''+t+'\')">' + ico + ' ' + t + '</div>';
+  }).join('');
+}
+
+/* 지역 시트 열기 */
+function openRegionSheet() {
+  document.getElementById('loc-modal-bg').style.display = 'none';
+  renderRegionList('');
+  document.getElementById('region-sheet-bg').style.display = 'flex';
+  setTimeout(function() {
+    var inp = document.getElementById('region-search-input');
+    if (inp) inp.focus();
+  }, 300);
+}
+function closeRegionSheet() { document.getElementById('region-sheet-bg').style.display = 'none'; }
+function closeRegionSheetBg(e) { if (e.target.id === 'region-sheet-bg') closeRegionSheet(); }
+
+/* 지역 목록 렌더 */
+function renderRegionList(filter) {
+  var el = document.getElementById('region-list-wrap');
+  if (!el) return;
+  var f = (filter||'').trim().toLowerCase();
+  var html = '';
+
+  if (!f || '전국'.indexOf(f) >= 0) {
+    var onCls = userRegion==='전국' ? ' on' : '';
+    html += '<div class="region-group-t">빠른 선택</div><div class="region-chips">';
+    html += '<div class="rchip'+onCls+'" data-r="전국" data-d="전국" data-l="전국">🌏 전국</div>';
+    html += '</div>';
+  }
+
+  Object.keys(REGION_DATA).forEach(function(sido) {
+    if (sido === '전국') return;
+    var data = REGION_DATA[sido];
+    var allDistricts = data.districts;
+    var filtered = f ? allDistricts.filter(function(d){ return d.toLowerCase().indexOf(f)>=0 || sido.toLowerCase().indexOf(f)>=0; }) : allDistricts;
+    if (!filtered.length && f && sido.toLowerCase().indexOf(f)<0) return;
+
+    html += '<div class="region-group-t">' + sido + '</div><div class="region-chips">';
+    if (!f || sido.toLowerCase().indexOf(f) >= 0) {
+      var onCls2 = (userRegion===sido&&userDistrict===sido) ? ' on' : '';
+      html += '<div class="rchip'+onCls2+'" data-r="'+sido+'" data-d="'+sido+'" data-l="'+sido+' 전체">'+sido+' 전체</div>';
+    }
+    filtered.forEach(function(d) {
+      var isOn = userDistrict === d ? ' on' : '';
+      html += '<div class="rchip'+isOn+'" data-r="'+sido+'" data-d="'+d+'" data-l="'+d+'">'+d+'</div>';
+    });
+    html += '</div>';
+  });
+
+  if (!html) html = '<div style="text-align:center;padding:40px;color:var(--ink4);">검색 결과가 없습니다</div>';
+  el.innerHTML = html;
+
+  // 이벤트 위임
+  el.onclick = function(e) {
+    var chip = e.target.closest('[data-r]');
+    if (!chip) return;
+    selectRegion(chip.dataset.r, chip.dataset.d, chip.dataset.l);
+  };
+}
+
+function filterRegions(v) { renderRegionList(v); }
+
+function selectRegion(region, district, label) {
+  setLocation(region, district, label);
+  closeRegionSheet();
+}
+
+/* 지역 기반 요청 필터 */
+function getRegionReqs() {
+  if (!userRegion || userRegion === '전국') return REQS;
+  var priority = REQS.filter(function(r) { return r.region && r.region.includes(userRegion); });
+  var rest = REQS.filter(function(r) { return !r.region || !r.region.includes(userRegion); });
+  return priority.concat(rest);
+}
+
+/* 지역 기반 업체 필터 */
+function getRegionSups() {
+  if (!userRegion || userRegion === '전국') return SUPS;
+  // 해당 지역 커버하는 업체 우선
+  var priority = SUPS.filter(function(s) {
+    return s.rg && (s.rg.includes(userRegion) || s.rg.includes('전국'));
+  });
+  var rest = SUPS.filter(function(s) {
+    return !s.rg || (!s.rg.includes(userRegion) && !s.rg.includes('전국'));
+  });
+  return priority.concat(rest);
+}
+
+/* 거리 계산 (mock) */
+function getMockDist(supId) {
+  if (!userRegion) return null;
+  var dists = { s1: 3.2, s2: 28.4, s3: 5.7, s4: 12.1, s5: 8.3, s6: 19.6 };
+  return dists[supId] || null;
+}
+
+// rHR/rHS 덮어쓰기 — 지역 반응형 버전
+var _rHR_orig = rHR;
+rHR = function() {
+  var el = document.getElementById('home-reqs');
+  if (!el) return;
+  el.innerHTML = '';
+  getRegionReqs().slice(0, 6).forEach(function(r) { el.appendChild(mkRC(r)); });
+};
+
+var _rHS_orig = rHS;
+rHS = function() {
+  var el = document.getElementById('home-sups');
+  if (!el) return;
+  el.innerHTML = '';
+  getRegionSups().slice(0, 4).forEach(function(s) { el.appendChild(mkSCWithDist(s)); });
+};
+
+/* mkSC + 거리 표시 버전 */
+function mkSCWithDist(s) {
+  var d = mkSC(s);
+  var dist = getMockDist(s.id);
+  if (dist && userRegion) {
+    // 지역 표시 아래에 거리 추가
+    var rgEl = d.querySelector('.sc-photo-nm');
+    if (rgEl) {
+      var distEl = document.createElement('div');
+      distEl.className = 'sc-dist';
+      distEl.textContent = '📍 ' + (userLabel || userRegion) + ' · ' + dist + 'km';
+      distEl.style.cssText = 'position:absolute;bottom:30px;left:14px;font-size:11px;color:rgba(255,255,255,.7);z-index:2;font-weight:600;';
+      d.querySelector('.sc-photo').appendChild(distEl);
+    }
+  }
+  return d;
+}
+
+/* rSups도 지역 반응형으로 */
+var _rSups_orig = rSups;
+rSups = function() {
+  var el = document.getElementById('sl');
+  if (!el) return;
+  var data = curSC === 'all' ? getRegionSups() : getRegionSups().filter(function(s) { return s.cats.includes(curSC); });
+  el.innerHTML = '';
+  if (!data.length) { el.innerHTML = '<div style="text-align:center;padding:60px;color:var(--ink4)">해당 카테고리 업체가 없습니다.</div>'; return; }
+  data.forEach(function(s) { el.appendChild(mkSCWithDist(s)); });
+};
+
+/* 초기화 타이밍 조정 */
+setTimeout(initLocation, 300);
+
 setTimeout(function(){animC("tv1",247);animC("tv2",1124);animC("tv3",312);animC("tv4",83);},200);
 </script>
 </body>

@@ -114,10 +114,7 @@ textarea.fi{resize:vertical;min-height:76px;}
 .hero-deco1{position:absolute;width:560px;height:560px;border-radius:50%;background:rgba(234,88,12,.04);top:-200px;right:-120px;pointer-events:none;}
 .hero-deco2{position:absolute;width:280px;height:280px;border-radius:50%;background:rgba(234,88,12,.03);bottom:-80px;left:-60px;pointer-events:none;}
 .hero-w{max-width:700px;margin:0 auto;padding:96px 28px 76px;position:relative;z-index:1;}
-.hero-loc{display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;cursor:pointer;}
-.hero-loc-pin{font-size:16px;}
-.hero-loc-nm{font-size:14px;font-weight:700;color:var(--ink2);}
-.hero-loc-arr{font-size:11px;color:var(--ink4);}
+/* hero-loc 제거됨 */
 .hero-h{font-family:var(--serif);font-size:66px;line-height:1.06;color:var(--ink);letter-spacing:-2px;margin-bottom:14px;}
 .hero-h em{color:var(--or);font-style:normal;}
 .hero-sub{font-size:17px;color:var(--ink3);line-height:1.75;margin-bottom:32px;}
@@ -126,9 +123,7 @@ textarea.fi{resize:vertical;min-height:76px;}
 /* 검색 위젯 */
 .sbox{background:#fff;border:2px solid var(--bd);border-radius:16px;overflow:hidden;margin-bottom:14px;transition:all .2s;box-shadow:0 2px 12px rgba(0,0,0,.06);}
 .sbox:focus-within{border-color:var(--or);box-shadow:0 0 0 4px rgba(234,88,12,.08),0 2px 12px rgba(0,0,0,.06);}
-.sbox-loc{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--bd);padding:0 4px;background:var(--bg);}
-.sloc-btn{display:flex;align-items:center;gap:5px;padding:10px 14px;font-size:13px;font-weight:700;color:var(--ink2);cursor:pointer;border:none;background:none;border-right:1px solid var(--bd);transition:color .15s;font-family:"Noto Sans KR",sans-serif;}
-.sloc-btn:hover{color:var(--or);}
+/* sbox-loc 제거됨 */
 .sbox-row{display:flex;align-items:center;padding:4px 4px 4px 18px;}
 .sinput{flex:1;border:none;background:none;font-size:16px;color:var(--ink);outline:none;font-family:"Noto Sans KR",sans-serif;padding:12px 0;min-width:0;}
 .sinput::placeholder{color:var(--ink4);}
@@ -351,27 +346,13 @@ textarea.fi{resize:vertical;min-height:76px;}
     <div class="hero-deco1"></div>
     <div class="hero-deco2"></div>
     <div class="hero-w">
-      <!-- 지역 표시 -->
-      <div class="hero-loc" onclick="openRegionSheet()">
-        <span class="hero-loc-pin">📍</span>
-        <span class="hero-loc-nm" id="loc-nm">전국</span>
-        <span class="hero-loc-arr">▾</span>
-      </div>
-
       <h1 class="hero-h">찾지 말고<br><em>요청하세요</em></h1>
       <p class="hero-sub">
-        고기 구매부터 <strong>OEM 생산</strong>, <strong>정육사 채용</strong>,<br>
-        <strong>냉장물류</strong>, <strong>인테리어</strong>, <strong>창업</strong>까지<br>
-        필요한 업체가 직접 제안합니다.
+        가격·품질·납기를 비교하고<br>가장 적합한 업체를 선택하세요.
       </p>
 
       <!-- 검색창 -->
       <div class="sbox">
-        <div class="sbox-loc">
-          <button class="sloc-btn" onclick="openRegionSheet()">
-            📍 <span id="sbox-loc-nm">전국</span> ▾
-          </button>
-        </div>
         <div class="sbox-row">
           <input class="sinput" id="si" placeholder="무엇이 필요하신가요?"/>
           <button class="sbtn" onclick="go('rw')">무료 견적 요청</button>
@@ -636,12 +617,49 @@ textarea.fi{resize:vertical;min-height:76px;}
     </div>
 
     <!-- STEP 3: 공통 -->
+    <!-- ③ 납품·매칭 조건 -->
     <div class="fc">
-      <div class="fct">③ 지역 및 연락처</div>
-      <label class="fl">지역 *</label>
-      <select class="fi" id="f-region"><option value="">선택</option><option>서울</option><option>경기</option><option>인천</option><option>부산</option><option>대구</option><option>광주</option><option>대전</option><option>울산</option><option>세종</option><option>강원</option><option>충북</option><option>충남</option><option>전북</option><option>전남</option><option>경북</option><option>경남</option><option>제주</option><option>전국</option></select>
-      <label class="fl">공개 범위</label>
-      <select class="fi" id="f-pub"><option value="all">전체 업체 공개</option><option value="cert">인증업체만 공개</option><option value="priv">비공개 매칭</option></select>
+      <div class="fct">③ 납품 조건</div>
+
+      <!-- 납품지 (수령 위치) -->
+      <label class="fl">납품 받을 위치 <span style="color:var(--ink4);font-weight:400;">(선택)</span></label>
+      <input class="fi" id="f-delivery-addr" placeholder="서울 강남구, 경기 안양시 등 — 비워두면 전국 업체 매칭"/>
+      <div style="font-size:12px;color:var(--ink3);margin-top:-8px;margin-bottom:14px;">📦 고기 구매·OEM·물류·기자재는 전국 매칭이 기본값입니다</div>
+
+      <!-- 매칭 범위 -->
+      <label class="fl">매칭 범위</label>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px;" id="range-chips">
+        <div class="chip on" data-v="전국" onclick="selRange(this)">🌏 전국 (권장)</div>
+        <div class="chip" data-v="인접" onclick="selRange(this)">📍 인근 지역</div>
+        <div class="chip" data-v="지역" onclick="selRange(this)">🏠 내 지역만</div>
+      </div>
+
+      <!-- 비교 우선순위 -->
+      <label class="fl">비교 우선순위 <span style="color:var(--ink4);font-weight:400;">(중요한 순서대로 선택)</span></label>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;" id="priority-chips">
+        <div class="chip on" data-v="가격" onclick="toggleChip(this)">💰 가격</div>
+        <div class="chip on" data-v="품질" onclick="toggleChip(this)">⭐ 품질</div>
+        <div class="chip on" data-v="납기" onclick="toggleChip(this)">📅 납기</div>
+        <div class="chip" data-v="재고" onclick="toggleChip(this)">📦 재고</div>
+        <div class="chip" data-v="수량" onclick="toggleChip(this)">🔢 수량 유연성</div>
+        <div class="chip" data-v="배송" onclick="toggleChip(this)">🚚 배송 조건</div>
+        <div class="chip" data-v="인증" onclick="toggleChip(this)">✅ 인증 여부</div>
+      </div>
+
+      <!-- 공개 범위 -->
+      <label class="fl">견적 공개 범위</label>
+      <select class="fi" id="f-pub">
+        <option value="all">전체 업체 공개 (더 많은 견적)</option>
+        <option value="cert">고리 인증업체만 공개</option>
+        <option value="priv">비공개 매칭 (고리가 직접 연결)</option>
+      </select>
+    </div>
+
+    <!-- ④ 연락처 -->
+    <div class="fc">
+      <div class="fct">④ 연락처</div>
+      <label class="fl">상호명</label><input class="fi" id="f-biz" placeholder="정육점·고깃집·업체명 (선택)"/>
+      <div class="r2"><div><label class="fl">이름 *</label><input class="fi" id="f-name" placeholder="홍길동"/></div><div><label class="fl">연락처 *</label><input class="fi" id="f-phone" placeholder="010-0000-0000"/></div></div>
       <label class="fl">연락 방식</label>
       <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;" id="contact-chips">
         <div class="chip on" data-v="플랫폼 채팅" onclick="toggleChip(this)">플랫폼 채팅</div>
@@ -649,10 +667,8 @@ textarea.fi{resize:vertical;min-height:76px;}
         <div class="chip" data-v="문자" onclick="toggleChip(this)">문자</div>
         <div class="chip" data-v="카카오톡" onclick="toggleChip(this)">카카오톡</div>
       </div>
-      <label class="fl">상호명</label><input class="fi" id="f-biz" placeholder="정육점·고깃집·업체명 (선택)"/>
-      <div class="r2"><div><label class="fl">이름 *</label><input class="fi" id="f-name" placeholder="홍길동"/></div><div><label class="fl">연락처 *</label><input class="fi" id="f-phone" placeholder="010-0000-0000"/></div></div>
       <label class="fl">첨부파일</label>
-      <div style="border:1.5px dashed var(--bd2);border-radius:10px;padding:20px;text-align:center;cursor:pointer;margin-bottom:12px;color:var(--ink4);font-size:14px;">📎 파일 첨부 (이미지, 도면, 서류)</div>
+      <div style="border:1.5px dashed var(--bd2);border-radius:10px;padding:18px;text-align:center;cursor:pointer;margin-bottom:0;color:var(--ink4);font-size:14px;">📎 파일 첨부 (이미지, 도면, 서류)</div>
     </div>
 
     <div style="padding:0 18px;">
@@ -819,12 +835,12 @@ var REQS=[
 ];
 
 var SUPS=[
-  {id:"s1",nm:"대한한우유통",rg:"경기·서울·전국",rt:4.9,tr:340,rv:127,rs:"15분",rb:94,cr:0.2,vf:true,cats:["고기 구매"],cl:"#EA580C",bd:["도축장인증","HACCP","고리인증"],desc:"한우·한돈 전문 직도축 유통. 당일 공급 가능."},
-  {id:"s2",nm:"강원한우 직판장",rg:"강원·경기·서울",rt:4.7,tr:210,rv:89,rs:"30분",rb:87,cr:1.1,vf:true,cats:["고기 구매"],cl:"#16A34A",bd:["고리인증","산지직송"],desc:"횡성 한우 산지 직송. 1++ 등급 특화."},
-  {id:"s3",nm:"미도인테리어",rg:"서울·경기·인천",rt:4.8,tr:180,rv:112,rs:"2시간",rb:91,cr:0.5,vf:true,cats:["인테리어"],cl:"#7C3AED",bd:["고리인증","15년경력"],desc:"고깃집·정육점 인테리어 전문 15년."},
-  {id:"s4",nm:"대한냉장물류",rg:"전국",rt:4.6,tr:380,rv:156,rs:"1시간",rb:91,cr:0.8,vf:true,cats:["물류"],cl:"#0891B2",bd:["고리인증","차량120대"],desc:"전국 냉장·냉동 배송. 차량 120대 운영."},
-  {id:"s5",nm:"고기업계 인력사무소",rg:"서울·경기·전국",rt:4.5,tr:234,rv:98,rs:"3시간",rb:83,cr:0.5,vf:true,cats:["채용"],cl:"#B45309",bd:["고리인증"],desc:"정육사·발골사 전문 인력 매칭."},
-  {id:"s6",nm:"삼성정육장비",rg:"전국",rt:4.4,tr:290,rv:84,rs:"4시간",rb:79,cr:1.1,vf:true,cats:["기자재"],cl:"#475569",bd:["고리인증","AS보장"],desc:"진공포장기·슬라이서·골절기 전국 AS."}
+  {id:"s1",nm:"대한한우유통",cover:"전국 납품",rt:4.9,tr:340,rs:"2시간",rb:94,cr:0.2,minQty:"50kg~",leadTime:"당일",vf:true,cats:["고기 구매"],cl:"#EA580C",bd:["도축장인증","HACCP","고리인증"],desc:"한우·한돈 전문 직도축 유통. 당일 공급 가능."},
+  {id:"s2",nm:"강원한우 직판장",cover:"전국 납품",rt:4.7,tr:210,rs:"4시간",rb:87,cr:1.1,minQty:"30kg~",leadTime:"1~2일",vf:true,cats:["고기 구매"],cl:"#16A34A",bd:["고리인증","산지직송"],desc:"횡성 한우 산지 직송. 1++ 등급 특화."},
+  {id:"s3",nm:"미도인테리어",cover:"서울·경기·인천",rt:4.8,tr:180,rs:"3시간",rb:91,cr:0.5,minQty:"10평~",leadTime:"협의",vf:true,cats:["인테리어"],cl:"#7C3AED",bd:["고리인증","15년경력"],desc:"고깃집·정육점 인테리어 전문 15년."},
+  {id:"s4",nm:"대한냉장물류",cover:"전국 배송",rt:4.6,tr:380,rs:"1시간",rb:91,cr:0.8,minQty:"1톤~",leadTime:"당일",vf:true,cats:["물류"],cl:"#0891B2",bd:["고리인증","차량120대"],desc:"전국 냉장·냉동 배송. 차량 120대 운영."},
+  {id:"s5",nm:"고기업계 인력사무소",cover:"전국 매칭",rt:4.5,tr:234,rs:"6시간",rb:83,cr:0.5,minQty:"1명~",leadTime:"3~7일",vf:true,cats:["채용"],cl:"#B45309",bd:["고리인증"],desc:"정육사·발골사 전문 인력 매칭."},
+  {id:"s6",nm:"삼성정육장비",cover:"전국 AS",rt:4.4,tr:290,rs:"8시간",rb:79,cr:1.1,minQty:"1대~",leadTime:"2~5일",vf:true,cats:["기자재"],cl:"#475569",bd:["고리인증","AS보장"],desc:"진공포장기·슬라이서·골절기 전국 AS."}
 ];
 
 var CATS=[
@@ -862,6 +878,24 @@ function sts(n){var s="";for(var i=1;i<=5;i++)s+="<span style='color:"+(i<=Math.
 function cico(c){return c==="고기 구매"?"🥩":c==="부산물"?"🫀":c==="OEM"?"🏭":c==="채용"?"👤":c==="물류"?"🚚":c==="인테리어"?"🏗":c==="기자재"?"⚙️":c==="부동산"?"🏢":c==="창업"?"🏪":c==="포장재"?"📦":c==="컨설팅"?"📊":"🔪";}
 function setS(v){var e=document.getElementById("si");if(e){e.value=v;e.focus();}}
 function toggleChip(el){el.classList.toggle("on");}
+function selRange(el){
+  document.querySelectorAll("#range-chips .chip").forEach(function(c){c.classList.remove("on");});
+  el.classList.add("on");
+}
+/* 카테고리별 기본 매칭 범위 자동 설정 */
+var NATIONAL_CATS=["고기 구매","부산물","OEM","물류","기자재","포장재","도축가공"];
+function onCatChange(cat){
+  var rangeChips=document.querySelectorAll("#range-chips .chip");
+  if(!rangeChips.length)return;
+  var isNational=NATIONAL_CATS.indexOf(cat)>=0;
+  rangeChips.forEach(function(c){c.classList.remove("on");});
+  rangeChips[0].classList.add("on"); // 항상 전국 기본
+  if(isNational){
+    rangeChips[0].textContent="🌏 전국 (기본값)";
+  } else {
+    rangeChips[0].textContent="🌏 전국 (권장)";
+  }
+}
 function fR(el,cat){document.querySelectorAll("#rchips .chip").forEach(function(c){c.classList.remove("on");});el.classList.add("on");curRC=cat;renderReqs();}
 function fS(el,cat){document.querySelectorAll("#pg-suppliers .chip").forEach(function(c){c.classList.remove("on");});el.classList.add("on");curSC=cat;renderSups(cat);}
 function selCat(el){
@@ -947,13 +981,16 @@ function mkSC(s){
     '<div class="sc-rt"><span class="sc-star">★</span><span class="sc-rtv">'+s.rt.toFixed(1)+'</span></div>'+
     '</div>'+
     '<div class="sc-body">'+
-    '<div class="sc-rg">'+s.rg+'</div>'+
+    '<div class="sc-rg">'+s.cover+'</div>'+
     '<div class="sc-bds">'+(s.bd||[]).map(function(b){return'<span class="sc-bd">'+b+'</span>';}).join("")+'</div>'+
     '<div class="sc-stats">'+
-    '<div><div class="sc-sv">'+s.tr+'</div><div class="sc-sl">거래</div></div>'+
-    '<div><div class="sc-sv">'+s.rs+'</div><div class="sc-sl">응답</div></div>'+
+    '<div><div class="sc-sv">'+s.rs+'</div><div class="sc-sl">응답속도</div></div>'+
+    '<div><div class="sc-sv">'+s.leadTime+'</div><div class="sc-sl">납기</div></div>'+
     '<div><div class="sc-sv">'+s.rb+'%</div><div class="sc-sl">재구매</div></div>'+
     '<div><div class="sc-sv" style="color:'+(s.cr<1?"var(--gn)":"#F59E0B")+'">'+(s.cr===0?"0%":s.cr+"%")+'</div><div class="sc-sl">클레임</div></div>'+
+    '</div>'+
+    '<div style="font-size:11px;color:var(--ink3);margin-bottom:10px;display:flex;align-items:center;gap:10px;">'+
+    '<span>📦 최소 '+s.minQty+'</span><span>🗺 '+s.cover+'</span>'+
     '</div>'+
     '<div class="sc-acts">'+
     '<button class="sc-btn sc-btn-or" data-goto="rw">견적 요청</button>'+
@@ -1055,7 +1092,7 @@ function renderSP(id){
 
 /* ════ Supabase ════ */
 async function subReq(){
-  var region=document.getElementById("f-region").value;
+  var region=(document.getElementById("f-delivery-addr")||{value:"전국"}).value||"전국";
   var name=document.getElementById("f-name").value.trim();
   var phone=document.getElementById("f-phone").value.trim();
   var msg=document.getElementById("rw-msg");
@@ -1119,7 +1156,8 @@ function initLoc(){
   var saved=null;
   try{saved=JSON.parse(localStorage.getItem("gori_loc"));}catch(e){}
   if(saved&&saved.label){setLoc(saved.region,saved.district,saved.label,true);}
-  else{setTimeout(function(){document.getElementById("loc-modal").style.display="flex";},600);}
+  // 위치 모달 자동 팝업 제거 (조건 기반 매칭으로 전환)
+  // else{setTimeout(function(){document.getElementById("loc-modal").style.display="flex";},600);}
 }
 function closeLocModal(e){if(e.target.id==="loc-modal")document.getElementById("loc-modal").style.display="none";}
 function closeRegionModal(e){

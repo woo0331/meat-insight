@@ -357,6 +357,34 @@ textarea.fi{resize:vertical;min-height:76px;}
   .cmp-table{overflow-x:auto;}
   .cmp-header,.cmp-row{min-width:560px;}
 }
+
+/* ── 로그인/회원가입 모달 ── */
+.modal-dim{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:9900;display:flex;align-items:center;justify-content:center;animation:fi .2s;padding:18px;}
+@keyframes fi{from{opacity:0;}to{opacity:1;}}
+.modal-box{background:#fff;border-radius:20px;width:100%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,.2);animation:mup .25s cubic-bezier(.2,.8,.3,1);}
+@keyframes mup{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:22px 24px 0;}
+.modal-x{font-size:22px;color:var(--ink3);border:none;background:none;cursor:pointer;line-height:1;padding:0;}
+.modal-x:hover{color:var(--ink);}
+.modal-body{padding:10px 28px 28px;}
+.modal-logo{display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:20px;}
+.modal-logo-nm{font-size:20px;font-weight:800;font-family:var(--serif);color:var(--ink);}
+.modal-tab{display:flex;background:var(--bg2);border-radius:10px;padding:4px;margin-bottom:22px;gap:4px;}
+.mtab-btn{flex:1;padding:9px;border-radius:7px;font-size:14px;font-weight:600;cursor:pointer;border:none;background:none;font-family:"Noto Sans KR",sans-serif;color:var(--ink3);transition:all .15s;}
+.mtab-btn.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08);font-weight:700;}
+.modal-title{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);text-align:center;margin-bottom:5px;}
+.modal-sub{font-size:13px;color:var(--ink3);text-align:center;margin-bottom:20px;}
+.kakao-btn{width:100%;padding:13px;background:#FEE500;color:#191919;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;transition:all .15s;}
+.kakao-btn:hover{background:#F0D900;}
+.modal-divider{display:flex;align-items:center;gap:10px;margin:14px 0;}
+.modal-div-line{flex:1;height:1px;background:var(--bd);}
+.modal-div-txt{font-size:12px;color:var(--ink4);}
+.auth-msg{font-size:13px;text-align:center;margin-top:8px;padding:10px;border-radius:8px;}
+.auth-msg.ok{background:var(--gnbg);color:var(--gn);}
+.auth-msg.err{background:#FEF2F2;color:#DC2626;}
+.modal-links{text-align:center;font-size:12px;color:var(--ink3);margin-top:14px;}
+.modal-links a{color:var(--or);font-weight:600;cursor:pointer;}
+
 </style>
 </head>
 <body>
@@ -376,7 +404,7 @@ textarea.fi{resize:vertical;min-height:76px;}
       </nav>
     </div>
     <div class="hdr-r">
-      <button class="hb hb-g">로그인</button>
+      <button class="hb hb-g" onclick="openModal('login')">로그인</button>
       <button class="hb hb-or" onclick="go('rw')">무료 견적 요청</button>
     </div>
   </div>
@@ -1235,8 +1263,137 @@ setInterval(function(){
   if(e&&document.activeElement!==e){phI=(phI+1)%PH.length;e.placeholder=PH[phI];}
 },2200);
 
+
+/* ── 로그인/회원가입 모달 ── */
+function openModal(tab){
+  document.getElementById('auth-modal').style.display='flex';
+  document.body.style.overflow='hidden';
+  switchAuthTab(tab||'login');
+}
+function closeModal(){
+  document.getElementById('auth-modal').style.display='none';
+  document.body.style.overflow='';
+}
+function closeModalBg(e){
+  if(e.target.id==='auth-modal')closeModal();
+}
+function switchAuthTab(tab){
+  document.getElementById('atab-login').classList.toggle('on',tab==='login');
+  document.getElementById('atab-signup').classList.toggle('on',tab==='signup');
+  document.getElementById('auth-login').style.display=tab==='login'?'block':'none';
+  document.getElementById('auth-signup').style.display=tab==='signup'?'block':'none';
+}
+function authKakao(){alert('카카오 로그인은 준비 중입니다.');}
+function showAuthMsg(id,txt,ok){
+  var el=document.getElementById(id);
+  el.textContent=txt;
+  el.className='auth-msg '+(ok?'ok':'err');
+  el.style.display='block';
+}
+async function doLogin(){
+  var email=(document.getElementById('l-email')||{value:''}).value.trim();
+  var pw=(document.getElementById('l-pw')||{value:''}).value;
+  if(!email||!pw){showAuthMsg('login-msg','이메일과 비밀번호를 입력해주세요.',false);return;}
+  showAuthMsg('login-msg','로그인 중...','');
+  if(!sb){showAuthMsg('login-msg','로그인 성공! (데모)',true);return;}
+  try{
+    var r=await sb.auth.signInWithPassword({email:email,password:pw});
+    if(r.error)throw r.error;
+    showAuthMsg('login-msg','로그인 성공!',true);
+    setTimeout(closeModal,1000);
+  }catch(e){showAuthMsg('login-msg',e.message||'로그인에 실패했습니다.',false);}
+}
+async function doSignup(){
+  var name=(document.getElementById('s-name')||{value:''}).value.trim();
+  var email=(document.getElementById('s-email')||{value:''}).value.trim();
+  var pw=(document.getElementById('s-pw')||{value:''}).value;
+  var phone=(document.getElementById('s-phone')||{value:''}).value.trim();
+  if(!name||!email||!pw){showAuthMsg('signup-msg','이름, 이메일, 비밀번호는 필수입니다.',false);return;}
+  if(pw.length<8){showAuthMsg('signup-msg','비밀번호는 8자 이상이어야 합니다.',false);return;}
+  showAuthMsg('signup-msg','가입 중...','');
+  if(!sb){showAuthMsg('signup-msg','가입 완료! (데모)',true);return;}
+  try{
+    var r=await sb.auth.signUp({email:email,password:pw,options:{data:{name:name,phone:phone}}});
+    if(r.error)throw r.error;
+    showAuthMsg('signup-msg','가입 완료! 이메일을 확인해주세요.',true);
+  }catch(e){showAuthMsg('signup-msg',e.message||'가입에 실패했습니다.',false);}
+}
+/* ESC키로 닫기 */
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
+
 /* ─ 초기화 ─ */
 renderHome();
 </script>
+
+<!-- ════ 로그인/회원가입 모달 ════ -->
+<div id="auth-modal" class="modal-dim" style="display:none;" onclick="closeModalBg(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-hd">
+      <div></div>
+      <button class="modal-x" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-logo"><svg width="28" height="28" viewBox="0 0 52 52" fill="none"><circle cx="26" cy="26" r="26" fill="#EA580C"/><path d="M14 28 C14 20 19 14 27 14 C35 14 40 20 40 28 C40 35 35 40 27 40 L18 40" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/><circle cx="16" cy="40" r="3.5" fill="white"/></svg><div class="modal-logo-nm">고리</div></div>
+
+      <!-- 탭 -->
+      <div class="modal-tab">
+        <button class="mtab-btn on" id="atab-login" onclick="switchAuthTab('login')">로그인</button>
+        <button class="mtab-btn" id="atab-signup" onclick="switchAuthTab('signup')">회원가입</button>
+      </div>
+
+      <!-- 로그인 -->
+      <div id="auth-login">
+        <div class="modal-title">다시 만나서 반가워요</div>
+        <div class="modal-sub">고리에서 거래를 이어가세요</div>
+        <button class="kakao-btn" onclick="authKakao()">
+          <svg width="17" height="17" viewBox="0 0 18 18" fill="none"><path d="M9 0.5C4.3 0.5 0.5 3.6 0.5 7.4c0 2.4 1.6 4.5 4 5.7L3.3 17l4.6-3c.35.05.7.07 1.1.07 4.7 0 8.5-3.1 8.5-6.9S13.7.5 9 .5z" fill="#191919"/></svg>
+          카카오로 로그인
+        </button>
+        <div class="modal-divider"><div class="modal-div-line"></div><div class="modal-div-txt">또는</div><div class="modal-div-line"></div></div>
+        <label class="fl">이메일</label>
+        <input class="fi" id="l-email" type="email" placeholder="example@email.com" style="margin-bottom:10px;"/>
+        <label class="fl">비밀번호</label>
+        <input class="fi" id="l-pw" type="password" placeholder="비밀번호 입력" style="margin-bottom:12px;"/>
+        <button class="btn btn-or" onclick="doLogin()" style="font-size:15px;padding:13px;">로그인</button>
+        <div class="auth-msg" id="login-msg" style="display:none;"></div>
+        <div class="modal-links" style="margin-top:12px;">
+          <a onclick="switchAuthTab('signup')">회원가입</a> · <a onclick="alert('이메일로 문의해주세요.')">비밀번호 찾기</a>
+        </div>
+      </div>
+
+      <!-- 회원가입 -->
+      <div id="auth-signup" style="display:none;">
+        <div class="modal-title">고리에 오신 걸 환영해요</div>
+        <div class="modal-sub">축산업계 문제를 함께 해결해요</div>
+        <button class="kakao-btn" onclick="authKakao()">
+          <svg width="17" height="17" viewBox="0 0 18 18" fill="none"><path d="M9 0.5C4.3 0.5 0.5 3.6 0.5 7.4c0 2.4 1.6 4.5 4 5.7L3.3 17l4.6-3c.35.05.7.07 1.1.07 4.7 0 8.5-3.1 8.5-6.9S13.7.5 9 .5z" fill="#191919"/></svg>
+          카카오로 가입하기
+        </button>
+        <div class="modal-divider"><div class="modal-div-line"></div><div class="modal-div-txt">또는 이메일로 가입</div><div class="modal-div-line"></div></div>
+        <label class="fl">이름 *</label>
+        <input class="fi" id="s-name" placeholder="홍길동" style="margin-bottom:10px;"/>
+        <label class="fl">이메일 *</label>
+        <input class="fi" id="s-email" type="email" placeholder="example@email.com" style="margin-bottom:10px;"/>
+        <label class="fl">연락처</label>
+        <input class="fi" id="s-phone" placeholder="010-0000-0000" style="margin-bottom:10px;"/>
+        <label class="fl">비밀번호 * (8자 이상)</label>
+        <input class="fi" id="s-pw" type="password" placeholder="비밀번호 입력" style="margin-bottom:10px;"/>
+        <label class="fl">회원 유형</label>
+        <select class="fi" id="s-type" style="margin-bottom:12px;">
+          <option>구매자 (정육점·고깃집·식품업체)</option>
+          <option>공급업체 (납품·가공·물류)</option>
+          <option>구직자 (정육사·발골사)</option>
+        </select>
+        <button class="btn btn-or" onclick="doSignup()" style="font-size:15px;padding:13px;">회원가입</button>
+        <div class="auth-msg" id="signup-msg" style="display:none;"></div>
+        <div class="modal-links" style="margin-top:10px;font-size:12px;color:var(--ink4);">
+          <a onclick="switchAuthTab('login')">이미 계정이 있으신가요?</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

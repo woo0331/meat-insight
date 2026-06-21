@@ -384,6 +384,46 @@ textarea.fi{resize:vertical;min-height:80px;}
   .hero-overlay{background:linear-gradient(90deg,rgba(26,35,50,.95) 100%,transparent 100%);}
 }
 
+
+/* ══ 구인구직 전용 ══ */
+.job-page-wrap{max-width:var(--max);margin:0 auto;padding:0 24px;}
+.job-filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.job-filter-btn{padding:7px 14px;border:1.5px solid var(--bd);border-radius:999px;font-size:12px;font-weight:700;color:var(--ink3);background:#fff;cursor:pointer;transition:all .15s;font-family:"Noto Sans KR",sans-serif;}
+.job-filter-btn:hover{border-color:var(--gn);color:var(--gn);}
+.job-filter-btn.on{background:var(--gn);color:#fff;border-color:var(--gn);}
+.job-filter-btn.urgent-btn{background:var(--redbg);color:var(--red);border-color:var(--red);}
+.job-filter-btn.urgent-btn.on{background:var(--red);color:#fff;}
+.job-card{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:0;cursor:pointer;transition:all .18s;overflow:hidden;display:flex;align-items:stretch;}
+.job-card:hover{border-color:var(--gn);box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-1px);}
+.job-card-accent{width:4px;flex-shrink:0;}
+.jca-full{background:var(--gn);}
+.jca-contract{background:var(--navy);}
+.jca-part{background:#8A9AAA;}
+.job-card-body{flex:1;padding:15px 16px;display:flex;align-items:center;gap:14px;}
+.job-card-main{flex:1;min-width:0;}
+.job-card-top{display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+.job-emp-badge{font-size:10px;font-weight:800;padding:3px 8px;border-radius:4px;flex-shrink:0;}
+.jeb-full{background:var(--gnl);color:var(--gn2);}
+.jeb-contract{background:#E8EAF0;color:var(--navy);}
+.jeb-part{background:#F0F2F4;color:#5A6A7A;}
+.job-urgent{font-size:10px;font-weight:800;padding:3px 8px;border-radius:4px;background:var(--redbg);color:var(--red);flex-shrink:0;animation:urgentPulse 2s infinite;}
+@keyframes urgentPulse{0%,100%{opacity:1;}50%{opacity:.7;}}
+.job-role{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.job-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.job-biz{font-size:12px;color:var(--ink2);font-weight:600;}
+.job-loc{font-size:12px;color:var(--ink3);}
+.job-loc::before{content:"📍 ";}
+.job-benefit{font-size:11px;color:var(--gn);font-weight:600;}
+.job-card-right{text-align:right;flex-shrink:0;}
+.job-pay{font-size:15px;font-weight:800;color:var(--gn);margin-bottom:4px;white-space:nowrap;}
+.job-date{font-size:11px;color:var(--ink4);}
+.job-apply-btn{display:block;margin-top:8px;padding:6px 14px;background:var(--gn);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;white-space:nowrap;transition:all .15s;}
+.job-apply-btn:hover{background:var(--gn2);}
+.job-stats-bar{display:flex;gap:20px;padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--bd);border-radius:var(--r) var(--r) 0 0;}
+.jsb-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink3);}
+.jsb-dot{width:8px;height:8px;border-radius:50%;}
+.jsb-count{font-weight:700;color:var(--ink);}
+
 </style>
 </head>
 <body>
@@ -882,9 +922,14 @@ textarea.fi{resize:vertical;min-height:80px;}
 
 <div class="pg" id="pg-jobs" style="padding-top:164px;padding-bottom:56px;">
   <div class="w" style="padding-top:18px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><div style="font-size:18px;font-weight:800;">구인구직 공고</div><button onclick="goUX('prof')" class="ha-btn ha-reg" style="font-size:12px;padding:7px 14px;">구인 공고 올리기</button></div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"><div class="chip on">전체</div><div class="chip">정육사</div><div class="chip">발골사</div><div class="chip">홀직원</div><div class="chip">주방직원</div></div>
-    <div id="job-full" style="display:flex;flex-direction:column;gap:9px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div>
+        <div style="font-size:18px;font-weight:800;color:var(--ink);">구인구직 공고</div>
+        <div style="font-size:13px;color:var(--ink3);margin-top:3px;">축산업계 정육사·발골사·가공직·물류직 채용 공고</div>
+      </div>
+      <button onclick="goUX('prof')" class="ha-btn ha-reg" style="font-size:12px;padding:9px 18px;">+ 구인 공고 올리기</button>
+    </div>
+    <div id="job-full"></div>
   </div>
 </div>
 
@@ -993,11 +1038,19 @@ var SUPS=[
   {id:"s5",nm:"대동축산물 도매",cat:"대구 북구 · 도매·유통",rt:4.6,rs:"25분",rb:88,cr:0.5,vf:true,cats:["소고기"],cl:"#37474F"}
 ];
 var JOBS=[
-  {cat:"정규직",nm:"서울 목동",role:"정육사 모집 / 정규직",pay:"월 380만원~",d:"2일 전"},
-  {cat:"정규직",nm:"경기 안산",role:"도축장 위생관리팀 모집",pay:"월 300만원~",d:"3일 전"},
-  {cat:"계약직",nm:"경기 안성",role:"정육육가공 생산직 모집",pay:"협의",d:"1주 전"},
-  {cat:"정규직",nm:"전국",role:"좋은 OEM 업체 찾는 법",pay:"협의",d:"1주 전"},
-  {cat:"계약직",nm:"배송기사",role:"배송기사 모집",pay:"협의",d:"2주 전"}
+  /* 급구 우선 */
+  {type:"full",urgent:true, role:"정육사 (경력 3년 이상)",biz:"강남 한우 전문점",loc:"서울 강남구",pay:"월 380만원~",emp:"정규직",d:"오늘",benefit:"4대보험 · 숙소 제공"},
+  {type:"full",urgent:true, role:"발골사 경력직 채용",biz:"안양 정육공장",loc:"경기 안양시",pay:"월 340만원~",emp:"정규직",d:"오늘",benefit:"4대보험 · 식사 제공"},
+  {type:"full",urgent:false,role:"도축장 위생관리팀 모집",biz:"경기도축장",loc:"경기 안성시",pay:"월 300만원~",emp:"정규직",d:"1일 전",benefit:"4대보험 · 퇴직금"},
+  {type:"full",urgent:false,role:"세절기사 채용",biz:"부산 육가공업체",loc:"부산 사상구",pay:"월 320만원~",emp:"정규직",d:"2일 전",benefit:"4대보험"},
+  {type:"full",urgent:false,role:"냉장물류 기사 모집",biz:"전국냉장물류",loc:"경기 화성시",pay:"월 280만원~",emp:"정규직",d:"3일 전",benefit:"4대보험 · 차량 지원"},
+  {type:"contract",urgent:false,role:"정육 가공직 계약직 모집",biz:"대전 육가공공장",loc:"대전 대덕구",pay:"월 250만원~",emp:"계약직",d:"4일 전",benefit:"식사 제공"},
+  {type:"contract",urgent:false,role:"OEM 생산 파트타임",biz:"충남 가공업체",loc:"충남 천안시",pay:"시급 13,000원",emp:"계약직",d:"5일 전",benefit:""},
+  {type:"part",urgent:false,role:"홀직원 (주말 가능)",biz:"강남 고깃집",loc:"서울 강남구",pay:"시급 12,000원",emp:"알바",d:"6일 전",benefit:"식사 제공"},
+  {type:"part",urgent:false,role:"주방 보조 파트타임",biz:"수원 정육식당",loc:"경기 수원시",pay:"시급 11,500원",emp:"알바",d:"1주 전",benefit:""},
+  {type:"full",urgent:false,role:"HACCP 관리자 채용",biz:"강원 육가공공장",loc:"강원 원주시",pay:"월 350만원~",emp:"정규직",d:"1주 전",benefit:"4대보험 · 퇴직금"},
+  {type:"full",urgent:false,role:"냉동창고 관리직",biz:"인천 물류센터",loc:"인천 남동구",pay:"월 260만원~",emp:"정규직",d:"1주 전",benefit:"4대보험"},
+  {type:"contract",urgent:false,role:"도축 보조 일용직",biz:"경북 도축장",loc:"경북 안동시",pay:"일 150,000원",emp:"계약직",d:"2주 전",benefit:"식사 제공"}
 ];
 var NEWS=[
   {cat:"시세 동향",title:"정육점 창업, 어렵진 않아요 꼭 알아야 할 것들",date:"05.14",cl:"#1B5E20"},
@@ -1377,8 +1430,19 @@ function renderInsightWidget(){
 }
 function renderJobWidget(){
   var el=document.getElementById("job-widget");if(!el)return;
-  el.innerHTML=JOBS.map(function(j){
-    return '<div class="job-row"><div class="jr-title">'+j.role+'</div><div class="jr-meta"><div class="jr-loc">'+j.nm+'</div><div class="jr-pay">'+j.pay+'</div></div></div>';
+  el.innerHTML=JOBS.filter(function(j){return j.type==="full";}).slice(0,5).map(function(j){
+    return '<div class="job-row" onclick="go(&quot;jobs&quot;)">'+
+      '<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">'+
+        '<span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;background:var(--gnl);color:var(--gn2);">'+
+          (j.urgent?"🔴 급구":"정규직")+
+        '</span>'+
+      '</div>'+
+      '<div class="jr-title">'+j.role+'</div>'+
+      '<div class="jr-meta">'+
+        '<div class="jr-loc">'+j.loc+'</div>'+
+        '<div class="jr-pay">'+j.pay+'</div>'+
+      '</div>'+
+    '</div>';
   }).join('');
 }
 function renderCommWidget(){
@@ -1485,13 +1549,96 @@ function renderComm(){
 /* ═ 렌더: 구인구직 ═ */
 function renderJobsFull(){
   var el=document.getElementById("job-full");if(!el)return;el.innerHTML="";
-  JOBS.forEach(function(j){
-    var d=document.createElement("div");
-    d.style.cssText="background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;";
-    d.innerHTML='<div><div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px;">'+j.role+'</div><div style="font-size:12px;color:var(--ink3);">'+j.nm+'</div></div><div style="font-size:13px;font-weight:700;color:var(--gn);">'+j.pay+'</div>';
-    d.onclick=function(){go("rw");};
-    el.appendChild(d);
-  });
+
+  /* 통계 바 */
+  var fullCnt=JOBS.filter(function(j){return j.type==="full";}).length;
+  var contractCnt=JOBS.filter(function(j){return j.type==="contract";}).length;
+  var partCnt=JOBS.filter(function(j){return j.type==="part";}).length;
+  var urgentCnt=JOBS.filter(function(j){return j.urgent;}).length;
+
+  var statsBar=document.createElement("div");
+  statsBar.className="job-stats-bar";
+  statsBar.innerHTML=
+    '<div class="jsb-item"><span class="jsb-dot" style="background:var(--gn)"></span>정규직 <span class="jsb-count">'+fullCnt+'건</span></div>'+
+    '<div class="jsb-item"><span class="jsb-dot" style="background:var(--navy)"></span>계약직 <span class="jsb-count">'+contractCnt+'건</span></div>'+
+    '<div class="jsb-item"><span class="jsb-dot" style="background:#8A9AAA"></span>알바 <span class="jsb-count">'+partCnt+'건</span></div>'+
+    '<div class="jsb-item" style="margin-left:auto;"><span style="color:var(--red);font-weight:700;">🔴 급구 '+urgentCnt+'건</span></div>';
+
+  /* 필터 바 */
+  var filterBar=document.createElement("div");
+  filterBar.className="job-filter-bar";
+  filterBar.style.cssText="padding:12px 0 0;";
+  var curFilter="all";
+  function makeFilterBtn(label,val,extraCls){
+    var btn=document.createElement("button");
+    btn.className="job-filter-btn"+(val==="all"?" on":"")+(extraCls?" "+extraCls:"");
+    btn.textContent=label;
+    btn.onclick=function(){
+      curFilter=val;
+      filterBar.querySelectorAll(".job-filter-btn").forEach(function(b){b.classList.remove("on");});
+      btn.classList.add("on");
+      renderList();
+    };
+    return btn;
+  }
+  filterBar.appendChild(makeFilterBtn("전체","all"));
+  filterBar.appendChild(makeFilterBtn("🔴 급구","urgent","urgent-btn"));
+  filterBar.appendChild(makeFilterBtn("정규직","full"));
+  filterBar.appendChild(makeFilterBtn("계약직","contract"));
+  filterBar.appendChild(makeFilterBtn("알바","part"));
+
+  /* 리스트 컨테이너 */
+  var listWrap=document.createElement("div");
+  listWrap.style.cssText="display:flex;flex-direction:column;gap:8px;";
+
+  function renderList(){
+    listWrap.innerHTML="";
+    var data=JOBS;
+    if(curFilter==="urgent") data=JOBS.filter(function(j){return j.urgent;});
+    else if(curFilter!=="all") data=JOBS.filter(function(j){return j.type===curFilter;});
+
+    data.forEach(function(j){
+      var card=document.createElement("div");
+      card.className="job-card";
+      card.onclick=function(){go("rw");};
+
+      var accentCls=j.type==="full"?"jca-full":j.type==="contract"?"jca-contract":"jca-part";
+      var badgeCls=j.type==="full"?"jeb-full":j.type==="contract"?"jeb-contract":"jeb-part";
+      var badgeTxt=j.type==="full"?"정규직":j.type==="contract"?"계약직":"알바";
+
+      card.innerHTML=
+        '<div class="job-card-accent '+accentCls+'"></div>'+
+        '<div class="job-card-body">'+
+          '<div class="job-card-main">'+
+            '<div class="job-card-top">'+
+              '<span class="job-emp-badge '+badgeCls+'">'+badgeTxt+'</span>'+
+              (j.urgent?'<span class="job-urgent">급구</span>':'')+
+            '</div>'+
+            '<div class="job-role">'+j.role+'</div>'+
+            '<div class="job-meta">'+
+              '<span class="job-biz">'+j.biz+'</span>'+
+              '<span class="job-loc">'+j.loc+'</span>'+
+              (j.benefit?'<span class="job-benefit">· '+j.benefit+'</span>':'')+
+            '</div>'+
+          '</div>'+
+          '<div class="job-card-right">'+
+            '<div class="job-pay">'+j.pay+'</div>'+
+            '<div class="job-date">'+j.d+'</div>'+
+            '<button class="job-apply-btn" onclick="event.stopPropagation();go(&quot;rw&quot;)">지원하기</button>'+
+          '</div>'+
+        '</div>';
+      listWrap.appendChild(card);
+    });
+
+    if(!data.length){
+      listWrap.innerHTML='<div style="text-align:center;padding:48px;color:var(--ink4);font-size:14px;">해당 공고가 없습니다</div>';
+    }
+  }
+
+  el.appendChild(statsBar);
+  el.appendChild(filterBar);
+  el.appendChild(listWrap);
+  renderList();
 }
 
 /* ═ 렌더: 카테고리 대분류 ═ */

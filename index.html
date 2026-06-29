@@ -1,0 +1,2342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>고리 — 대한민국 축산업 통합 플랫폼</title>
+<meta name="description" content="축산업에 필요한 거래처, 인력, 물류, 가공, 창업 정보를 한 곳에서."/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'><circle cx='13' cy='13' r='13' fill='%232E7D32'/><path d='M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20' stroke='white' stroke-width='2.5' stroke-linecap='round' fill='none'/><circle cx='8' cy='20' r='2' fill='white'/></svg>"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&family=Noto+Serif+KR:wght@700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:"Noto Sans KR",sans-serif;background:#F5F2EC;color:#1A1A1A;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+:root{
+  --gn:#2E7D32;--gn2:#165E20;--gnl:#E8F5E9;--gnb:#C8E6C9;
+  --br:#8D6E63;--brl:#EFEBE9;
+  --bg:#F5F2EC;--bg2:#FAF8F4;--bd:#E0DAD0;--bd2:#C8BFB2;
+  --ink:#1A1A1A;--ink2:#3D3D3D;--ink3:#6B6B6B;--ink4:#9E9E9E;
+  --red:#C62828;--redbg:#FFEBEE;
+  --blue:#1565C0;--bluebg:#E3F2FD;
+  --or:#E65100;--orl:#FFF3E0;
+  --navy:#1A2332;--navy2:#243040;
+  --gold:#795548;--goldbg:#FBF0E8;
+  --serif:"Noto Serif KR",serif;
+  --max:1280px;--r:8px;
+  --sh:0 2px 10px rgba(0,0,0,.07);
+  --sh2:0 4px 18px rgba(0,0,0,.11);
+}
+.pg{display:none;}.pg.on{display:block;}
+
+/* ══ HEADER ══ */
+.hdr{position:fixed;top:0;left:0;right:0;z-index:900;background:#fff;box-shadow:0 1px 0 var(--bd);}
+.hdr-top{background:var(--navy);height:32px;display:flex;align-items:center;}
+.hdr-top-w{max-width:var(--max);margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;justify-content:space-between;}
+.hdt-l{display:flex;gap:16px;}
+.hdt-item{font-size:11px;color:rgba(255,255,255,.45);cursor:pointer;transition:color .15s;}
+.hdt-item:hover{color:rgba(255,255,255,.8);}
+.hdt-item.hot{color:rgba(255,160,0,.85);font-weight:700;}
+.hdt-r{display:flex;gap:12px;align-items:center;}
+.hdt-btn{font-size:11px;color:rgba(255,255,255,.4);cursor:pointer;border:none;background:none;font-family:"Noto Sans KR",sans-serif;transition:color .15s;}
+.hdt-btn:hover{color:rgba(255,255,255,.8);}
+.hdr-main{height:58px;display:flex;align-items:center;background:#fff;}
+.hdr-main-w{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:24px;width:100%;}
+.logo{display:flex;align-items:center;gap:9px;cursor:pointer;flex-shrink:0;}
+.logo-circle{width:34px;height:34px;border-radius:50%;background:var(--gn);display:flex;align-items:center;justify-content:center;}
+.logo-nm{font-size:20px;font-weight:800;color:var(--ink);font-family:var(--serif);letter-spacing:-.3px;}
+.logo-nm em{color:var(--gn);font-style:normal;}
+.hdr-nav{display:flex;gap:0;}
+.hdr-nav a{font-size:14px;font-weight:600;color:var(--ink2);padding:0 15px;height:58px;display:flex;align-items:center;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none;}
+.hdr-nav a:hover,.hdr-nav a.on{color:var(--gn);border-color:var(--gn);}
+.hdr-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.ha-btn{padding:8px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:"Noto Sans KR",sans-serif;transition:all .15s;}
+.ha-login{color:var(--ink2);background:#fff;border:1.5px solid var(--bd2);}
+.ha-login:hover{border-color:var(--gn);color:var(--gn);}
+.ha-reg{background:var(--gn);color:#fff;box-shadow:0 2px 8px rgba(46,125,50,.3);}
+.ha-reg:hover{background:var(--gn2);}
+.hdr-nav2{background:#fff;border-top:1px solid var(--bd);height:38px;display:flex;align-items:center;}
+.hdr-nav2-w{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;align-items:center;width:100%;height:100%;}
+.hn2-item{font-size:13px;font-weight:600;color:var(--ink3);padding:0 13px;height:100%;display:flex;align-items:center;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+.hn2-item:hover,.hn2-item.on{color:var(--gn);border-color:var(--gn);}
+.hn2-item.bold{color:var(--ink);font-weight:800;}
+.hn2-sep{width:1px;height:14px;background:var(--bd);margin:0 3px;}
+.hn2-badge{font-size:9px;font-weight:800;padding:2px 5px;border-radius:3px;background:var(--red);color:#fff;margin-left:4px;}
+
+/* ══ BOTTOM NAV (모바일) ══ */
+.bnav{position:fixed;bottom:0;left:0;right:0;height:54px;background:#fff;border-top:1px solid var(--bd);display:none;grid-template-columns:repeat(5,1fr);z-index:900;}
+.bni{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:none;cursor:pointer;}
+.bni-i{font-size:19px;}.bni-t{font-size:9px;color:var(--ink4);font-weight:600;}
+.bni.on .bni-t{color:var(--gn);}
+.bplus{width:40px;height:40px;background:var(--gn);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;border:none;cursor:pointer;box-shadow:0 3px 12px rgba(46,125,50,.4);}
+
+/* ══ COMMON ══ */
+.w{max-width:var(--max);margin:0 auto;padding:0 24px;}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sec-h{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.2px;}
+.more-btn{font-size:12px;color:var(--ink3);font-weight:600;border:none;background:none;cursor:pointer;display:flex;align-items:center;gap:3px;}
+.more-btn:hover{color:var(--gn);}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;}
+.b-gn{background:var(--gnl);color:var(--gn2);}
+.b-br{background:var(--brl);color:var(--br);}
+.b-red{background:var(--redbg);color:var(--red);}
+.b-blue{background:var(--bluebg);color:var(--blue);}
+.b-or{background:var(--orl);color:var(--or);}
+.b-gray{background:#F0EDE8;color:var(--ink3);}
+.card{background:#fff;border:1px solid var(--bd);border-radius:var(--r);transition:all .18s;cursor:pointer;}
+.card:hover{border-color:var(--gn);box-shadow:var(--sh2);}
+.fl{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:4px;display:block;}
+.fi{width:100%;padding:11px 13px;border:1.5px solid var(--bd);border-radius:7px;font-size:14px;font-family:"Noto Sans KR",sans-serif;color:var(--ink);outline:none;transition:border-color .15s;margin-bottom:10px;background:#fff;}
+.fi:focus{border-color:var(--gn);}
+textarea.fi{resize:vertical;min-height:80px;}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn{width:100%;padding:12px;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;transition:all .15s;}
+.btn-gn{background:var(--gn);color:#fff;}.btn-gn:hover{background:var(--gn2);}
+.btn-wh{background:#fff;color:var(--ink);border:1.5px solid var(--bd);}
+.btn-navy{background:var(--navy);color:#fff;}
+.chip{display:inline-block;padding:6px 12px;border:1.5px solid var(--bd);border-radius:999px;font-size:12px;font-weight:600;color:var(--ink3);background:#fff;cursor:pointer;transition:all .15s;}
+.chip.on{background:var(--gn);color:#fff;border-color:var(--gn);}
+.msg{font-size:13px;margin-top:8px;padding:10px;border-radius:7px;text-align:center;}
+.msg.ok{background:var(--gnl);color:var(--gn2);}.msg.err{background:var(--redbg);color:var(--red);}
+.fc{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:18px;margin-bottom:12px;}
+.fct{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--bd);}
+.tab-bar{display:flex;border-bottom:2px solid var(--bd);margin-bottom:14px;}
+.tab{padding:9px 15px;font-size:13px;font-weight:600;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.tab.on{color:var(--gn);border-color:var(--gn);}
+
+/* ══ HERO ══ */
+.hero{position:relative;background:var(--navy);overflow:hidden;min-height:340px;display:flex;align-items:center;}
+.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35;pointer-events:none;}
+.hero-bg-svg{position:absolute;inset:0;width:100%;height:100%;}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(26,35,50,.92) 45%,rgba(26,35,50,.4) 100%);}
+.hero-w{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:52px 24px;width:100%;}
+.hero-eyebrow{font-size:13px;font-weight:700;color:rgba(255,255,255,.55);margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:var(--gn);}
+.hero-h1{font-family:var(--serif);font-size:44px;line-height:1.18;color:#fff;letter-spacing:-.8px;margin-bottom:8px;max-width:520px;}
+.hero-h1 em{color:rgba(255,255,255,.45);font-style:normal;}
+.hero-sub{font-size:15px;color:rgba(255,255,255,.52);line-height:1.7;margin-bottom:28px;max-width:480px;}
+.hero-btns{display:flex;gap:10px;}
+.hero-btn-gn{padding:13px 28px;background:var(--gn);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;box-shadow:0 4px 14px rgba(46,125,50,.4);transition:all .15s;}
+.hero-btn-gn:hover{background:var(--gn2);}
+.hero-btn-wh{padding:13px 24px;background:rgba(255,255,255,.1);color:#fff;border:1.5px solid rgba(255,255,255,.22);border-radius:var(--r);font-size:15px;font-weight:600;cursor:pointer;font-family:"Noto Sans KR",sans-serif;transition:all .15s;}
+.hero-btn-wh:hover{background:rgba(255,255,255,.18);}
+/* 우측 사진 영역 */
+.hero-photo{position:absolute;right:0;top:0;bottom:0;width:52%;background:var(--navy2);}
+
+/* ══ LIVE BAR ══ */
+.live-bar{background:var(--navy2);height:36px;display:flex;align-items:center;overflow:hidden;position:fixed;z-index:88;}
+.live-pill{flex-shrink:0;display:flex;align-items:center;gap:5px;padding:0 14px;height:100%;background:rgba(46,125,50,.2);border-right:1px solid rgba(46,125,50,.25);}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--gn);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+.ltxt{font-size:10px;font-weight:700;color:rgba(46,125,50,.9);}
+.live-slide{display:flex;animation:lslide 28s linear infinite;width:max-content;}
+@keyframes lslide{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.li{display:flex;align-items:center;gap:8px;padding:0 18px;white-space:nowrap;cursor:pointer;}
+.li-txt{font-size:12px;color:rgba(255,255,255,.72);}
+.li-cnt{font-size:11px;color:var(--gn);font-weight:700;}
+.li-time{font-size:10px;color:rgba(255,255,255,.28);}
+.li-sep{width:1px;height:12px;background:rgba(255,255,255,.1);margin:0 4px;}
+
+/* ══ 카테고리 바 ══ */
+.cat-bar{background:#fff;border-bottom:2px solid var(--bd);}
+.cat-bar-w{max-width:var(--max);margin:0 auto;padding:0 24px;}
+.cat-scroll{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;}
+.cat-scroll::-webkit-scrollbar{display:none;}
+.cat-item{display:flex;flex-direction:column;align-items:center;padding:12px 18px;cursor:pointer;border-bottom:3px solid transparent;transition:all .18s;flex-shrink:0;white-space:nowrap;min-width:80px;}
+.cat-item:hover{background:transparent;border-color:transparent;}
+.cat-item:hover .cat-nm{color:var(--gn);}
+.cat-item.on{border-color:transparent;border-bottom:2px solid var(--gn);}
+.cat-item.on .cat-nm{color:var(--gn);font-weight:800;}
+.cat-ico-box{width:40px;height:40px;border-radius:10px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;font-size:18px;position:relative;overflow:hidden;}
+.cat-nm{font-size:11px;font-weight:700;color:var(--ink2);line-height:1.3;text-align:center;transition:color .18s;}
+.cat-badge-s{position:absolute;top:-2px;right:-2px;font-size:8px;font-weight:800;padding:1px 4px;border-radius:3px;background:var(--red);color:#fff;}
+
+/* ══ 카테고리 이미지 카드 (큰 카드) ══ */
+.cat-img-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;}
+.cig-card{background:#fff;border:1px solid var(--bd);border-radius:10px;overflow:hidden;cursor:pointer;transition:all .22s;}
+.cig-card:hover{border-color:var(--gn);box-shadow:0 6px 20px rgba(0,0,0,.13);transform:translateY(-3px);}
+.cig-img{height:90px;position:relative;overflow:hidden;}
+.cig-ov{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,.55) 100%);}
+.cig-nm-ov{position:absolute;bottom:8px;left:10px;right:8px;font-size:12px;font-weight:800;color:#fff;line-height:1.3;text-shadow:0 1px 4px rgba(0,0,0,.7);}
+.cig-footer{padding:8px 10px;display:flex;align-items:center;justify-content:space-between;}
+.cig-cnt{font-size:11px;color:var(--ink3);}
+.cig-arr{font-size:12px;color:var(--gn);font-weight:700;}
+
+/* ══ 메인 콘텐츠 ══ */
+.main-body{max-width:var(--max);margin:0 auto;padding:20px 24px 60px;}
+
+/* 4단 그리드 */
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+.w-box{background:#fff;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;}
+.wb-hd{padding:12px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;}
+.wb-title{font-size:14px;font-weight:700;color:var(--ink);}
+.wb-live{display:flex;align-items:center;gap:4px;}
+.wb-ldot{width:5px;height:5px;border-radius:50%;background:var(--red);animation:blink 1.5s infinite;}
+.wb-ltxt{font-size:10px;color:var(--red);font-weight:700;}
+.wb-body{padding:10px 14px;}
+
+/* 실시간 견적 요청 리스트 */
+.rq-row{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--bg);cursor:pointer;}
+.rq-row:last-child{border:none;}
+.rq-row:hover .rq-title{color:var(--gn);}
+.rq-ico{width:32px;height:32px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.rq-body{flex:1;min-width:0;}
+.rq-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s;}
+.rq-meta{font-size:11px;color:var(--ink4);}
+.rq-cnt{font-size:12px;font-weight:700;color:var(--gn);flex-shrink:0;}
+
+/* 실시간 매물 */
+.prop-row{display:flex;gap:9px;padding:9px 0;border-bottom:1px solid var(--bg);cursor:pointer;}
+.prop-row:last-child{border:none;}
+.prop-thumb{width:52px;height:40px;border-radius:6px;flex-shrink:0;overflow:hidden;position:relative;}
+.prop-body{flex:1;min-width:0;}
+.prop-nm{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.prop-info{font-size:11px;color:var(--ink4);}
+
+/* 시세 */
+.price-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bg);}
+.price-row:last-child{border:none;}
+.price-item{font-size:13px;font-weight:600;color:var(--ink);}
+.price-val{font-size:14px;font-weight:800;color:var(--ink);}
+.price-chg{font-size:11px;font-weight:700;}
+.p-up{color:var(--red);}.p-dn{color:var(--blue);}
+
+/* 베타 박스 */
+.beta-box{background:linear-gradient(135deg,#1B5E20,#2E7D32);padding:18px;color:#fff;}
+.bb-badge{font-size:10px;font-weight:800;padding:3px 8px;background:rgba(255,255,255,.2);border-radius:4px;display:inline-block;margin-bottom:10px;}
+.bb-h{font-size:16px;font-weight:700;margin-bottom:6px;}
+.bb-d{font-size:12px;color:rgba(255,255,255,.65);line-height:1.65;margin-bottom:14px;}
+.bb-btn{padding:9px 18px;background:#fff;color:var(--gn2);border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;}
+
+/* ══ 6단 위젯 그리드 ══ */
+.grid-6{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:18px;}
+.w6-box{background:#fff;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;}
+.w6-hd{padding:11px 13px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;}
+.w6-title{font-size:13px;font-weight:700;color:var(--ink);}
+.w6-more{font-size:11px;color:var(--ink3);cursor:pointer;border:none;background:none;font-weight:600;}
+.w6-more:hover{color:var(--gn);}
+.w6-body{padding:9px 13px;}
+
+/* 업체 랭킹 */
+.rank-row{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--bg);cursor:pointer;}
+.rank-row:last-child{border:none;}
+.rank-num{font-size:14px;font-weight:900;color:var(--gn);width:18px;flex-shrink:0;}
+.rank-nm{font-size:12px;font-weight:700;color:var(--ink);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rank-cat{font-size:10px;color:var(--ink4);}
+.rank-rt{font-size:12px;font-weight:700;color:var(--gn);flex-shrink:0;}
+
+/* 신규 등록 업체 */
+.new-sup-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bg);cursor:pointer;}
+.new-sup-row:last-child{border:none;}
+.ns-avatar{width:30px;height:30px;border-radius:8px;background:var(--gnl);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.ns-nm{font-size:12px;font-weight:700;color:var(--ink);flex:1;}
+.ns-sub{font-size:10px;color:var(--ink4);}
+.ns-new{font-size:9px;font-weight:800;padding:2px 5px;background:var(--redbg);color:var(--red);border-radius:3px;flex-shrink:0;}
+
+/* 뉴스/인사이트 */
+.news-row{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--bg);cursor:pointer;}
+.news-row:last-child{border:none;}
+.news-row:hover .nr-title{color:var(--gn);}
+.nr-thumb{width:44px;height:34px;border-radius:5px;flex-shrink:0;overflow:hidden;position:relative;}
+.nr-title{font-size:12px;font-weight:700;color:var(--ink);line-height:1.4;flex:1;transition:color .15s;}
+.nr-date{font-size:10px;color:var(--ink4);margin-top:3px;}
+
+/* 구인구직 */
+.job-row{padding:8px 0;border-bottom:1px solid var(--bg);cursor:pointer;}
+.job-row:last-child{border:none;}
+.jr-title{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:3px;}
+.jr-meta{display:flex;align-items:center;justify-content:space-between;}
+.jr-loc{font-size:10px;color:var(--ink4);}
+.jr-pay{font-size:11px;font-weight:700;color:var(--gn);}
+
+/* 커뮤니티 */
+.comm-row{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--bg);cursor:pointer;}
+.comm-row:last-child{border:none;}
+.cr-rank{font-size:13px;font-weight:900;color:var(--gn);width:16px;flex-shrink:0;}
+.cr-title{font-size:12px;font-weight:600;color:var(--ink);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cr-cnt{font-size:10px;color:var(--ink4);flex-shrink:0;}
+
+/* ══ 공급업체 배너 ══ */
+.recruit-banner{background:linear-gradient(90deg,var(--navy) 0%,var(--navy2) 100%);padding:28px 0;margin-bottom:18px;}
+.recruit-inner{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:24px;}
+.rb-left h2{font-size:26px;font-weight:900;color:#fff;letter-spacing:-.3px;margin-bottom:5px;}
+.rb-left h2 em{color:var(--gn);font-style:normal;}
+.rb-left p{font-size:13px;color:rgba(255,255,255,.5);}
+.rb-icons{display:flex;gap:28px;}
+.rb-icon{text-align:center;}
+.rb-icon-circle{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 7px;font-size:18px;}
+.rb-icon-t{font-size:11px;color:rgba(255,255,255,.5);white-space:nowrap;}
+.rb-cta{background:var(--gn);color:#fff;padding:14px 28px;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;white-space:nowrap;box-shadow:0 4px 14px rgba(46,125,50,.4);}
+.rb-cta:hover{background:var(--gn2);}
+
+/* ══ 신뢰 4개 아이콘 ══ */
+.trust-bar{background:#fff;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);}
+.trust-inner{max-width:var(--max);margin:0 auto;padding:0 24px;display:grid;grid-template-columns:repeat(4,1fr);}
+.trust-item{padding:22px 20px;text-align:center;border-right:1px solid var(--bd);}
+.trust-item:last-child{border:none;}
+.trust-ico{font-size:26px;margin-bottom:8px;}
+.trust-t{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px;}
+.trust-d{font-size:12px;color:var(--ink3);}
+
+/* ══ 인증 공급업체 그리드 ══ */
+.sup-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+.sc{background:#fff;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .18s;}
+.sc:hover{border-color:var(--gn);box-shadow:var(--sh2);transform:translateY(-2px);}
+.sc.vf{border-left:3px solid var(--gn);}
+.sc-img{height:100px;position:relative;}
+.sc-img-ov{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(0,0,0,.58) 100%);}
+.sc-cert{position:absolute;top:7px;left:8px;background:var(--gn);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;z-index:2;}
+.sc-nm{position:absolute;bottom:8px;left:9px;font-size:12px;font-weight:800;color:#fff;z-index:2;}
+.sc-rt{position:absolute;bottom:8px;right:9px;display:flex;align-items:center;gap:2px;z-index:2;}
+.sc-star{color:#F59E0B;font-size:11px;}.sc-rtv{font-size:12px;font-weight:800;color:#fff;}
+.sc-body{padding:10px 11px;}
+.sc-cat{font-size:11px;color:var(--ink3);margin-bottom:5px;}
+.sc-bds{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:7px;}
+.sc-bd{font-size:9px;padding:2px 5px;border-radius:3px;font-weight:700;background:var(--gnl);color:var(--gn2);}
+.sc-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--bg);padding-top:7px;margin-bottom:7px;}
+.sc-sv{font-size:11px;font-weight:800;color:var(--ink);text-align:center;}
+.sc-sl{font-size:9px;color:var(--ink4);text-align:center;margin-top:1px;}
+.sc-btn-area{display:flex;gap:5px;}
+.sc-btn{flex:1;padding:7px;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;border:none;font-family:"Noto Sans KR",sans-serif;transition:all .15s;}
+.sc-btn-gn{background:var(--gn);color:#fff;}.sc-btn-gn:hover{background:var(--gn2);}
+.sc-btn-wh{background:var(--bg);color:var(--ink2);}.sc-btn-wh:hover{background:var(--bd);}
+
+/* ══ 모달 ══ */
+.modal-dim{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:9900;display:flex;align-items:center;justify-content:center;animation:fi .2s;padding:16px;}
+@keyframes fi{from{opacity:0;}to{opacity:1;}}
+.modal-box{background:#fff;border-radius:12px;width:100%;max-width:390px;box-shadow:0 24px 60px rgba(0,0,0,.2);animation:mup .25s cubic-bezier(.2,.8,.3,1);}
+@keyframes mup{from{transform:translateY(14px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0;}
+.modal-x{font-size:20px;color:var(--ink4);border:none;background:none;cursor:pointer;padding:0;}
+.modal-body{padding:8px 22px 22px;}
+.modal-logo-nm{font-size:17px;font-weight:800;font-family:var(--serif);color:var(--ink);text-align:center;margin-bottom:16px;}
+.modal-tab{display:flex;background:var(--bg);border-radius:7px;padding:3px;margin-bottom:16px;gap:3px;}
+.mtab-btn{flex:1;padding:8px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;font-family:"Noto Sans KR",sans-serif;color:var(--ink3);transition:all .15s;}
+.mtab-btn.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08);font-weight:700;}
+.modal-title{font-size:17px;font-weight:700;color:var(--ink);text-align:center;margin-bottom:4px;}
+.modal-sub{font-size:12px;color:var(--ink3);text-align:center;margin-bottom:14px;}
+.kakao-btn{width:100%;padding:11px;background:#FEE500;color:#191919;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:7px;}
+.modal-div{display:flex;align-items:center;gap:8px;margin:10px 0;}
+.mdl{flex:1;height:1px;background:var(--bd);}
+.mdt{font-size:11px;color:var(--ink4);}
+.auth-msg{font-size:12px;margin-top:7px;padding:9px;border-radius:7px;text-align:center;display:none;}
+.auth-msg.ok{background:var(--gnl);color:var(--gn2);}.auth-msg.err{background:var(--redbg);color:var(--red);}
+.modal-links{text-align:center;font-size:12px;color:var(--ink3);margin-top:10px;}
+.modal-links a{color:var(--gn);font-weight:600;cursor:pointer;}
+
+/* ══ FOOTER ══ */
+.footer{background:var(--navy);padding:40px 0 22px;}
+.ft-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:30px;margin-bottom:30px;}
+.ft-nm{font-size:15px;font-weight:800;color:#fff;font-family:var(--serif);margin-bottom:7px;display:flex;align-items:center;gap:7px;}
+.ft-desc{font-size:12px;color:rgba(255,255,255,.2);line-height:1.8;margin-bottom:10px;}
+.ft-col-t{font-size:10px;font-weight:800;color:rgba(255,255,255,.22);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.ft-ul{list-style:none;}
+.ft-ul li{font-size:12px;color:rgba(255,255,255,.18);padding:3px 0;cursor:pointer;transition:color .15s;}
+.ft-ul li:hover{color:var(--gn);}
+.ft-bot{border-top:1px solid rgba(255,255,255,.06);padding-top:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+.ft-copy{font-size:11px;color:rgba(255,255,255,.12);}
+
+/* ══ RW (요청서) ══ */
+.rw-header{padding:14px;border-radius:var(--r);margin-bottom:12px;}
+.rw-hcat{font-size:10px;font-weight:800;opacity:.7;letter-spacing:1px;margin-bottom:3px;}
+.rw-htitle{font-size:15px;font-weight:700;margin-bottom:2px;}
+.rw-hdesc{font-size:12px;opacity:.65;}
+.rw-timer{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);border-radius:999px;padding:3px 9px;margin-top:6px;}
+.rw-tdot{width:5px;height:5px;border-radius:50%;background:#4ADE80;animation:blink 1.5s infinite;}
+.rw-ttxt{font-size:11px;font-weight:700;color:#fff;}
+.back-btn{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--ink3);border:none;background:none;cursor:pointer;padding:8px 0;margin-bottom:6px;font-family:"Noto Sans KR",sans-serif;}
+.back-btn:hover{color:var(--gn);}
+.ux-sel-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.ux-sel{background:#fff;border:1.5px solid var(--bd);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .18s;text-align:left;font-family:"Noto Sans KR",sans-serif;}
+.ux-sel:hover{border-color:var(--gn);background:var(--gnl);}
+.ux-sel-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:2px;}
+.ux-sel-desc{font-size:11px;color:var(--ink3);margin-bottom:5px;}
+.ux-sel-resp{font-size:11px;font-weight:700;color:var(--gn);}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:1060px){
+  .hdr-top{display:none;}
+  .grid-4{grid-template-columns:1fr 1fr;}
+  .grid-6{grid-template-columns:1fr 1fr 1fr;}
+  .cat-img-grid{grid-template-columns:repeat(4,1fr);}
+  .sup-grid{grid-template-columns:1fr 1fr 1fr;}
+  .ft-grid{grid-template-columns:1fr 1fr;gap:22px;}
+  .trust-inner{grid-template-columns:1fr 1fr;}
+  .recruit-inner{flex-wrap:wrap;}
+  .rb-icons{display:none;}
+  .hdr-nav{display:none;}
+}
+@media(max-width:680px){
+  .bnav{display:grid;}
+  .hdr-main-w{padding:0 12px;}
+  .hdr-actions{display:none;}
+  .hero-h1{font-size:28px;}
+  .main-body{padding:14px 12px 80px;}
+  .grid-4{grid-template-columns:1fr;}
+  .grid-6{grid-template-columns:1fr 1fr;}
+  .cat-img-grid{grid-template-columns:repeat(3,1fr);}
+  .sup-grid{grid-template-columns:1fr 1fr;}
+  .ft-grid{grid-template-columns:1fr 1fr;gap:18px;}
+  .trust-inner{grid-template-columns:1fr 1fr;}
+  .w{padding:0 12px;}
+  .hero-photo{display:none;}
+  .hero-overlay{background:linear-gradient(90deg,rgba(26,35,50,.95) 100%,transparent 100%);}
+}
+
+
+/* ══ 구인구직 전용 ══ */
+.job-page-wrap{max-width:var(--max);margin:0 auto;padding:0 24px;}
+.job-filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.job-filter-btn{padding:7px 14px;border:1.5px solid var(--bd);border-radius:999px;font-size:12px;font-weight:700;color:var(--ink3);background:#fff;cursor:pointer;transition:all .15s;font-family:"Noto Sans KR",sans-serif;}
+.job-filter-btn:hover{border-color:var(--gn);color:var(--gn);}
+.job-filter-btn.on{background:var(--gn);color:#fff;border-color:var(--gn);}
+.job-filter-btn.urgent-btn{background:var(--redbg);color:var(--red);border-color:var(--red);}
+.job-filter-btn.urgent-btn.on{background:var(--red);color:#fff;}
+.job-card{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:0;cursor:pointer;transition:all .18s;overflow:hidden;display:flex;align-items:stretch;}
+.job-card:hover{border-color:var(--gn);box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-1px);}
+.job-card-accent{width:4px;flex-shrink:0;}
+.jca-full{background:var(--gn);}
+.jca-contract{background:var(--navy);}
+.jca-part{background:#8A9AAA;}
+.job-card-body{flex:1;padding:15px 16px;display:flex;align-items:center;gap:14px;}
+.job-card-main{flex:1;min-width:0;}
+.job-card-top{display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+.job-emp-badge{font-size:10px;font-weight:800;padding:3px 8px;border-radius:4px;flex-shrink:0;}
+.jeb-full{background:var(--gnl);color:var(--gn2);}
+.jeb-contract{background:#E8EAF0;color:var(--navy);}
+.jeb-part{background:#F0F2F4;color:#5A6A7A;}
+.job-urgent{font-size:10px;font-weight:800;padding:3px 8px;border-radius:4px;background:var(--redbg);color:var(--red);flex-shrink:0;animation:urgentPulse 2s infinite;}
+@keyframes urgentPulse{0%,100%{opacity:1;}50%{opacity:.7;}}
+.job-role{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.job-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.job-biz{font-size:12px;color:var(--ink2);font-weight:600;}
+.job-loc{font-size:12px;color:var(--ink3);}
+.job-loc::before{content:"📍 ";}
+.job-benefit{font-size:11px;color:var(--gn);font-weight:600;}
+.job-card-right{text-align:right;flex-shrink:0;}
+.job-pay{font-size:15px;font-weight:800;color:var(--gn);margin-bottom:4px;white-space:nowrap;}
+.job-date{font-size:11px;color:var(--ink4);}
+.job-apply-btn{display:block;margin-top:8px;padding:6px 14px;background:var(--gn);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;white-space:nowrap;transition:all .15s;}
+.job-apply-btn:hover{background:var(--gn2);}
+.job-stats-bar{display:flex;gap:20px;padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--bd);border-radius:var(--r) var(--r) 0 0;}
+.jsb-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink3);}
+.jsb-dot{width:8px;height:8px;border-radius:50%;}
+.jsb-count{font-weight:700;color:var(--ink);}
+
+</style>
+</head>
+<body>
+
+<!-- ════ HEADER ════ -->
+<header class="hdr">
+  <div class="hdr-top">
+    <div class="hdr-top-w">
+      <div class="hdt-l">
+        <span class="hdt-item hot">🔥 베타 오픈 — 공급업체 무료 등록 중</span>
+        <span class="hdt-item" onclick="go(&quot;rw&quot;)">견적 요청</span>
+        <span class="hdt-item" onclick="go(&quot;suppliers&quot;)">업체 찾기</span>
+        <span class="hdt-item" onclick="go(&quot;market&quot;)">오늘 시세</span>
+        <span class="hdt-item" onclick="go(&quot;jobs&quot;)">구인공고</span>
+      </div>
+      <div class="hdt-r">
+        <button class="hdt-btn" onclick="openModal('login')">로그인</button>
+        <button class="hdt-btn" onclick="openModal('signup')">회원가입</button>
+        <button class="hdt-btn" onclick="go(&quot;sj&quot;)">업체 등록</button>
+      </div>
+    </div>
+  </div>
+  <div class="hdr-main">
+    <div class="hdr-main-w">
+      <div class="logo" onclick="go(&quot;h&quot;)"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#2E7D32"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg><div class="logo-nm">고<em>리</em></div></div>
+      <nav class="hdr-nav">
+        <a onclick="setNav(this,'h')" class="on">서비스</a>
+        <a onclick="setNav(this,'suppliers')">업체 찾기</a>
+        <a onclick="setNav(this,'rw')">견적 요청</a>
+        <a onclick="setNav(this,'market')">시세·인사이트</a>
+        <a onclick="setNav(this,'community')">커뮤니티</a>
+        <a href="meat_insight_apply.html">고객센터</a>
+      </nav>
+      <div class="hdr-actions">
+        <button class="ha-btn ha-login" onclick="openModal('login')">로그인</button>
+        <button class="ha-btn ha-reg" onclick="openModal('signup')">회원가입</button>
+        <button style="margin-left:8px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink3);">☰</button>
+      </div>
+    </div>
+  </div>
+  <div class="hdr-nav2">
+    <div class="hdr-nav2-w">
+      <div class="hn2-item bold on" onclick="setNav2(this,'h')">홈</div>
+      <div class="hn2-sep"></div>
+      <div class="hn2-item" onclick="setNav2(this,'cat-trade')">거래</div>
+      <div class="hn2-item" onclick="setNav2(this,'cat-prod')">생산</div>
+      <div class="hn2-item" onclick="setNav2(this,'cat-ops')">운영</div>
+      <div class="hn2-item" onclick="setNav2(this,'cat-biz')">사업</div>
+      <div class="hn2-sep"></div>
+      <div class="hn2-item" onclick="setNav2(this,'reqs')">견적요청 목록</div>
+      <div class="hn2-item" onclick="setNav2(this,'suppliers')">업체 찾기</div>
+      <div class="hn2-sep"></div>
+      <div class="hn2-item" onclick="setNav2(this,'market')">시세 정보</div>
+      <div class="hn2-item" onclick="setNav2(this,'news')">업계 뉴스</div>
+      <div class="hn2-item" onclick="setNav2(this,'community')">커뮤니티</div>
+      <div class="hn2-item" onclick="setNav2(this,'jobs')">구인구직<span class="hn2-badge">급구</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- 실시간 라이브 바 -->
+<div class="live-bar" id="live-bar" style="top:128px;left:0;right:0;">
+  <div class="live-pill"><span class="ldot"></span><span class="ltxt">실시간</span></div>
+  <div style="flex:1;overflow:hidden;"><div class="live-slide" id="live-slide"></div></div>
+</div>
+
+<!-- ════════ 홈 ════════ -->
+<div class="pg on" id="pg-h" style="padding-top:164px;padding-bottom:56px;">
+
+  <!-- HERO -->
+  <section class="hero">
+    <!-- 우측 이미지 영역 (SVG 현장 씬) -->
+    <div class="hero-photo">
+      <svg viewBox="0 0 640 340" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
+        <rect width="640" height="340" fill="#1A2332"/>
+        <!-- 도축장 씬: 고기 걸린 선반 -->
+        <rect x="0" y="0" width="640" height="340" fill="url(#hbg)"/>
+        <defs>
+          <linearGradient id="hbg" x1="0" y1="0" x2="640" y2="340" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#243040"/>
+            <stop offset="100%" stop-color="#0F1820"/>
+          </linearGradient>
+        </defs>
+        <!-- 천장 레일 -->
+        <rect x="40" y="30" width="560" height="6" rx="3" fill="rgba(255,255,255,.1)"/>
+        <rect x="60" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
+        <rect x="120" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
+        <rect x="180" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
+        <rect x="240" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
+        <rect x="300" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
+        <rect x="360" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
+        <rect x="420" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
+        <rect x="480" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
+        <rect x="540" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
+        <!-- 고기 형상들 -->
+        <ellipse cx="61" cy="120" rx="14" ry="50" fill="rgba(180,80,60,.55)" transform="rotate(-5 61 120)"/>
+        <ellipse cx="121" cy="115" rx="16" ry="55" fill="rgba(160,70,50,.6)" transform="rotate(3 121 115)"/>
+        <ellipse cx="181" cy="122" rx="15" ry="48" fill="rgba(175,75,55,.5)" transform="rotate(-8 181 122)"/>
+        <ellipse cx="241" cy="118" rx="14" ry="52" fill="rgba(165,72,52,.58)" transform="rotate(5 241 118)"/>
+        <ellipse cx="301" cy="120" rx="16" ry="50" fill="rgba(175,78,58,.52)" transform="rotate(-3 301 120)"/>
+        <ellipse cx="361" cy="117" rx="15" ry="54" fill="rgba(160,70,50,.55)" transform="rotate(7 361 117)"/>
+        <ellipse cx="421" cy="121" rx="14" ry="49" fill="rgba(178,80,60,.5)" transform="rotate(-4 421 121)"/>
+        <ellipse cx="481" cy="119" rx="15" ry="51" fill="rgba(168,74,54,.54)" transform="rotate(6 481 119)"/>
+        <ellipse cx="541" cy="120" rx="13" ry="48" fill="rgba(170,76,56,.5)" transform="rotate(-6 541 120)"/>
+        <!-- 바닥 반사 -->
+        <rect x="0" y="260" width="640" height="80" fill="rgba(0,0,0,.3)"/>
+        <rect x="0" y="260" width="640" height="3" fill="rgba(255,255,255,.06)"/>
+        <!-- 사람 실루엣 -->
+        <ellipse cx="340" cy="240" rx="18" ry="50" fill="rgba(30,50,70,.9)"/>
+        <circle cx="340" cy="182" r="14" fill="rgba(30,50,70,.9)"/>
+        <rect x="300" y="200" width="22" height="4" rx="2" fill="rgba(30,50,70,.9)"/>
+        <!-- 조명 -->
+        <ellipse cx="320" cy="0" rx="200" ry="120" fill="rgba(255,240,200,.04)"/>
+        <!-- 그레이딩 오버레이 -->
+        <rect width="640" height="340" fill="rgba(26,35,50,.25)"/>
+      </svg>
+    </div>
+    <div class="hero-overlay"></div>
+    <div class="hero-w">
+      <div style="max-width:500px;">
+        <div class="hero-eyebrow"><span class="hero-dot"></span>축산업 종사자를 위한</div>
+        <h1 class="hero-h1">가장 가까운<br>파트너, <em style="color:var(--gn);font-style:normal;">고리</em></h1>
+        <p class="hero-sub">고기 구매부터 도축, 가공, 물류, 인력, 창업까지<br>축산에 필요한 모든 것을 한 곳에서</p>
+        <div class="hero-btns">
+          <button class="hero-btn-gn" onclick="go(&quot;suppliers&quot;)">업체 찾기</button>
+          <button class="hero-btn-wh" onclick="go(&quot;rw&quot;)">견적 요청하기</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 카테고리 아이콘 바 -->
+  <div class="cat-bar">
+    <div class="cat-bar-w">
+      <div class="cat-scroll" id="cat-icon-bar"></div>
+    </div>
+  </div>
+
+  <!-- 카테고리 이미지 카드 그리드 -->
+  <div style="background:var(--bg2);padding:20px 0;border-bottom:1px solid var(--bd);">
+    <div class="w">
+      <div class="cat-img-grid" id="cat-img-grid"></div>
+    </div>
+  </div>
+
+  <!-- 4단 그리드 -->
+  <div style="background:var(--bg);padding:18px 0;">
+    <div class="w">
+      <div class="grid-4">
+
+        <!-- 실시간 견적 요청 -->
+        <div class="w-box">
+          <div class="wb-hd">
+            <div class="wb-title">실시간 견적 요청</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="wb-live"><span class="wb-ldot"></span><span class="wb-ltxt">LIVE</span></div>
+              <button class="more-btn" onclick="go(&quot;reqs&quot;)">더보기 ›</button>
+            </div>
+          </div>
+          <div class="wb-body" id="rq-widget"></div>
+        </div>
+
+        <!-- 실시간 매물 -->
+        <div class="w-box">
+          <div class="wb-hd">
+            <div class="wb-title">실시간 매물</div>
+            <button class="more-btn" onclick="goReq(&quot;부동산&quot;)">더보기 ›</button>
+          </div>
+          <div class="wb-body" id="prop-widget"></div>
+        </div>
+
+        <!-- 오늘의 축산 시세 -->
+        <div class="w-box">
+          <div class="wb-hd">
+            <div class="wb-title">오늘의 축산 시세</div>
+            <button class="more-btn" onclick="go(&quot;market&quot;)">시세 더보기 ›</button>
+          </div>
+          <div class="wb-body">
+            <div class="tab-bar" style="margin-bottom:10px;" id="price-tabs-h">
+              <div class="tab on" onclick="swPriceH(this,'beef')">한우</div>
+              <div class="tab" onclick="swPriceH(this,'pork')">돼지</div>
+              <div class="tab" onclick="swPriceH(this,'import')">국산 곱창</div>
+            </div>
+            <div id="price-widget"></div>
+            <div style="font-size:10px;color:var(--ink4);margin-top:8px;">05.14 기준 · 참고용</div>
+          </div>
+        </div>
+
+        <!-- 베타 박스 -->
+        <div class="w-box" style="overflow:hidden;">
+          <div class="beta-box">
+            <div class="bb-badge">베타 운영 중</div>
+            <div class="bb-h">더 나은 서비스 제공을<br>위해 개선하고 있습니다</div>
+            <div class="bb-d">의견을 보내주시면 빠르게 반영하겠습니다. 지금 공급업체로 등록하면 우선 노출 혜택을 드립니다.</div>
+            <button class="bb-btn" onclick="go(&quot;sj&quot;)">서비스 소개 보기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6단 위젯 -->
+      <div class="grid-6">
+
+        <!-- 업체 랭킹 -->
+        <div class="w6-box">
+          <div class="w6-hd"><div class="w6-title">업체 랭킹</div><button class="w6-more" onclick="go(&quot;suppliers&quot;)">더보기 ›</button></div>
+          <div class="w6-body" id="rank-widget"></div>
+        </div>
+
+        <!-- 신규 등록 업체 -->
+        <div class="w6-box">
+          <div class="w6-hd"><div class="w6-title">신규 등록 업체</div><button class="w6-more" onclick="go(&quot;suppliers&quot;)">더보기 ›</button></div>
+          <div class="w6-body" id="new-sup-widget"></div>
+        </div>
+
+        <!-- 축산 뉴스 -->
+        <div class="w6-box">
+          <div class="w6-hd"><div class="w6-title">축산 뉴스</div><button class="w6-more" onclick="go(&quot;news&quot;)">더보기 ›</button></div>
+          <div class="w6-body" id="news-widget"></div>
+        </div>
+
+        <!-- 창업 인사이트 -->
+        <div class="w6-box">
+          <div class="w6-hd"><div class="w6-title">창업 인사이트</div><button class="w6-more" onclick="go(&quot;news&quot;)">더보기 ›</button></div>
+          <div class="w6-body" id="insight-widget"></div>
+        </div>
+
+        <!-- 구인구직 -->
+        <div class="w6-box">
+          <div class="w6-hd"><div class="w6-title">구인구직</div><button class="w6-more" onclick="go(&quot;jobs&quot;)">더보기 ›</button></div>
+          <div class="w6-body" id="job-widget"></div>
+        </div>
+
+        <!-- 커뮤니티 인기글 -->
+        <div class="w6-box">
+          <div class="w6-hd"><div class="w6-title">커뮤니티 인기글</div><button class="w6-more" onclick="go(&quot;community&quot;)">더보기 ›</button></div>
+          <div class="w6-body" id="comm-widget"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 인증 공급업체 -->
+  <div style="background:#fff;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:20px 0;">
+    <div class="w">
+      <div class="sec-hd">
+        <div class="sec-h">인증 공급업체 <span style="font-size:12px;font-weight:500;color:var(--ink4);">사업자·허가·거래이력 검증 완료</span></div>
+        <button class="more-btn" onclick="go(&quot;suppliers&quot;)">전체 보기 ›</button>
+      </div>
+      <div class="tab-bar" id="sup-tabs-h">
+        <div class="tab on" onclick="swSupTab(this,'all')">전체</div>
+        <div class="tab" onclick="swSupTab(this,'소고기')">소고기</div>
+        <div class="tab" onclick="swSupTab(this,'도축장')">도축장</div>
+        <div class="tab" onclick="swSupTab(this,'물류')">물류</div>
+        <div class="tab" onclick="swSupTab(this,'OEM')">OEM</div>
+        <div class="tab" onclick="swSupTab(this,'채용')">채용</div>
+      </div>
+      <div class="sup-grid" id="sup-home"></div>
+    </div>
+  </div>
+
+  <!-- 공급업체 모집 배너 -->
+  <div class="recruit-banner">
+    <div class="recruit-inner">
+      <div class="rb-left">
+        <h2>전국 구매 요청을 받고 싶은 업체라면<br><em>지금 등록하세요!</em></h2>
+        <p>베타 기간 무료 · 초기 등록 우선 노출 · 빠른 거래 기회</p>
+      </div>
+      <div class="rb-icons">
+        <div class="rb-icon"><div class="rb-icon-circle">💰</div><div class="rb-icon-t">초기 등록 무료</div></div>
+        <div class="rb-icon"><div class="rb-icon-circle">📢</div><div class="rb-icon-t">우선 노출 혜택</div></div>
+        <div class="rb-icon"><div class="rb-icon-circle">🔗</div><div class="rb-icon-t">전국 바이어 연결</div></div>
+        <div class="rb-icon"><div class="rb-icon-circle">⚡</div><div class="rb-icon-t">빠른 거래 기회</div></div>
+      </div>
+      <button class="rb-cta" onclick="go(&quot;sj&quot;)">업체 등록하기<br><small style="font-size:11px;font-weight:500;opacity:.7;">베타 기간 등록 무료</small></button>
+    </div>
+  </div>
+
+  <!-- 신뢰 지표 -->
+  <div class="trust-bar">
+    <div class="trust-inner">
+      <div class="trust-item"><div class="trust-ico">🤝</div><div class="trust-t">안전한 거래 환경</div><div class="trust-d">검증된 업체와 안전한 거래</div></div>
+      <div class="trust-item"><div class="trust-ico">✅</div><div class="trust-t">신뢰할 수 있는 플랫폼</div><div class="trust-d">실사 및 인증된 업체만 노출</div></div>
+      <div class="trust-item"><div class="trust-ico">👨‍💼</div><div class="trust-t">전문 상담 지원</div><div class="trust-d">축산 전문가가 맞춤 상담</div></div>
+      <div class="trust-item"><div class="trust-ico">🎁</div><div class="trust-t">다양한 혜택 제공</div><div class="trust-d">회원 전용 혜택과 이벤트</div></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="w">
+      <div class="ft-grid">
+        <div>
+          <div class="ft-nm"><svg width="20" height="20" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#2E7D32"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg> 고리</div>
+          <div class="ft-desc">대한민국 축산업 통합 플랫폼<br>고기 구매·출하·도축·OEM·물류·구인·창업<br>거래처, 인력, 정보를 한 곳에서</div>
+        </div>
+        <div><div class="ft-col-t">거래·생산</div><ul class="ft-ul"><li onclick="goReq(&quot;소고기&quot;)">소고기 구매</li><li onclick="goReq(&quot;돼지고기&quot;)">돼지고기 구매</li><li onclick="goReq(&quot;도축장&quot;)">도축장 연결</li><li onclick="goReq(&quot;OEM&quot;)">OEM</li><li onclick="goReq(&quot;출하&quot;)">출하 의뢰</li></ul></div>
+        <div><div class="ft-col-t">운영·사업</div><ul class="ft-ul"><li onclick="goReq(&quot;물류&quot;)">냉장물류</li><li onclick="goReq(&quot;HACCP&quot;)">HACCP</li><li onclick="goUX('prof')">구인구직</li><li onclick="goReq(&quot;창업&quot;)">창업</li><li onclick="goReq(&quot;인테리어&quot;)">인테리어</li></ul></div>
+        <div><div class="ft-col-t">정보</div><ul class="ft-ul"><li onclick="go(&quot;market&quot;)">시세 정보</li><li onclick="go(&quot;news&quot;)">업계 뉴스</li><li onclick="go(&quot;community&quot;)">커뮤니티</li><li onclick="go(&quot;jobs&quot;)">구인공고</li></ul></div>
+        <div><div class="ft-col-t">고리</div><ul class="ft-ul"><li onclick="location.href='meat_insight_admin.html'">관리자</li><li onclick="location.href='meat_insight_apply.html'">컨설팅</li><li>이용약관</li><li>개인정보처리방침</li><li>고객센터</li></ul></div>
+      </div>
+      <div class="ft-bot"><div class="ft-copy">© 2025 고리 · 대한민국 축산업 통합 플랫폼 · 베타 서비스 운영 중</div></div>
+    </div>
+  </footer>
+</div>
+
+<!-- ════ 서브 페이지들 ════ -->
+<div class="pg" id="pg-reqs" style="padding-top:164px;padding-bottom:56px;">
+  <div class="w" style="padding-top:18px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><div style="font-size:18px;font-weight:800;">견적 요청 목록</div><button onclick="go(&quot;rw&quot;)" class="ha-btn ha-reg" style="font-size:12px;padding:7px 14px;">+ 요청 등록</button></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="rq-filter-chips">
+      <div class="chip on" onclick="fR(this,'all')">전체</div>
+      <div class="chip" onclick="fR(this,'소고기')">소고기</div>
+      <div class="chip" onclick="fR(this,'돼지고기')">돼지고기</div>
+      <div class="chip" onclick="fR(this,'도축장')">도축장</div>
+      <div class="chip" onclick="fR(this,'OEM')">OEM</div>
+      <div class="chip" onclick="fR(this,'물류')">물류</div>
+      <div class="chip" onclick="fR(this,'채용')">구인구직</div>
+    </div>
+    <div id="rq-list-full" style="display:flex;flex-direction:column;gap:9px;"></div>
+  </div>
+</div>
+
+<div class="pg" id="pg-rw" style="padding-top:164px;padding-bottom:56px;">
+  <div style="max-width:640px;margin:0 auto;padding:18px 16px 80px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+      <button class="back-btn" style="padding:0;margin:0;" onclick="rwBack()">← 뒤로</button>
+      <div id="rw-page-title" style="font-size:16px;font-weight:700;">서비스 선택</div>
+    </div>
+    <div id="rw-s0">
+      <div style="font-size:12px;font-weight:800;color:var(--gn);letter-spacing:1.5px;margin-bottom:10px;">⚡ 실시간 요청형</div>
+      <div class="ux-sel-grid" id="ux-req-grid"></div>
+      <div style="font-size:12px;font-weight:800;color:var(--blue);letter-spacing:1.5px;margin:10px 0 10px;">📋 프로필·검색형</div>
+      <div class="ux-sel-grid">
+        <button class="ux-sel" onclick="goUX('prof')" style="border-color:#BFDBFE;"><div class="ux-sel-title">구인구직</div><div class="ux-sel-desc">정육사·발골사·홀직원</div><div class="ux-sel-resp" style="color:var(--blue);">📋 사람인 방식</div></button>
+      </div>
+    </div>
+    <div id="rw-s-req" style="display:none;">
+      <div class="rw-header" id="rw-fh" style="background:var(--gn);color:#fff;">
+        <div class="rw-hcat" id="rw-fh-cat">소고기 구매</div>
+        <div class="rw-htitle">견적 요청서 작성</div>
+        <div class="rw-hdesc">등록 즉시 관련 업체에 알림이 전송됩니다</div>
+        <div class="rw-timer"><span class="rw-tdot"></span><span class="rw-ttxt" id="rw-timer-txt">⚡ 목표 응답: 20분 이내</span></div>
+      </div>
+      <div class="fc">
+        <div class="fct" id="rw-form-title">상세 입력</div>
+        <div id="rw-dynamic-fields"></div>
+      </div>
+      <div class="fc">
+        <div class="fct">매칭 조건</div>
+        <div style="background:var(--gnl);border-radius:7px;padding:10px 13px;margin-bottom:10px;font-size:12px;color:var(--gn2);"><strong>🔄 전국 자동 확장 매칭</strong> — 요청 지역 → 인근 지역 → 전국 순 자동 확장</div>
+        <label class="fl">비교 우선순위</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+          <div class="chip on" onclick="this.classList.toggle('on')">가격</div>
+          <div class="chip on" onclick="this.classList.toggle('on')">품질</div>
+          <div class="chip on" onclick="this.classList.toggle('on')">납기</div>
+          <div class="chip" onclick="this.classList.toggle('on')">재고</div>
+          <div class="chip" onclick="this.classList.toggle('on')">인증</div>
+        </div>
+        <label class="fl">공개 범위</label>
+        <select class="fi" id="f-pub"><option value="all">전체 업체 공개</option><option value="cert">인증업체만</option><option value="priv">비공개 매칭</option></select>
+      </div>
+      <div class="fc">
+        <div class="fct">연락처</div>
+        <label class="fl">상호명</label><input class="fi" id="f-biz" placeholder="업체명 (선택)"/>
+        <div class="r2"><div><label class="fl">이름 *</label><input class="fi" id="f-name" placeholder="홍길동"/></div><div><label class="fl">연락처 *</label><input class="fi" id="f-phone" placeholder="010-0000-0000"/></div></div>
+      </div>
+      <button class="btn btn-gn" onclick="subReq()" style="font-size:15px;padding:14px;">⚡ 견적 요청하기 (즉시 알림 발송)</button>
+      <div id="rw-msg" class="msg" style="display:none;"></div>
+    </div>
+    <div id="rw-s-prof" style="display:none;">
+      <div class="rw-header" style="background:#4C1D95;color:#fff;">
+        <div class="rw-hcat">구인구직</div>
+        <div class="rw-htitle">구인구직 — 사람인 방식</div>
+        <div class="rw-hdesc">구인 공고 또는 구직 프로필을 등록하세요</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:13px;">
+        <button id="ph-hire-btn" onclick="switchHireTab('hire')" style="flex:1;padding:11px;border:none;border-radius:7px;font-size:14px;font-weight:700;background:#7C3AED;color:#fff;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">구인 (업체)</button>
+        <button id="ph-seek-btn" onclick="switchHireTab('seek')" style="flex:1;padding:11px;border:1.5px solid var(--bd);border-radius:7px;font-size:14px;font-weight:700;background:#fff;color:var(--ink2);cursor:pointer;font-family:'Noto Sans KR',sans-serif;">구직 (개인)</button>
+      </div>
+      <div id="ph-hire-form">
+        <div class="fc">
+          <div class="fct">구인 공고</div>
+          <label class="fl">직무 *</label><select class="fi" id="ph-job"><option>정육사</option><option>발골사</option><option>세절기사</option><option>홀직원</option><option>주방직원</option><option>점장</option><option>가공기사</option><option>기타</option></select>
+          <div class="r2"><div><label class="fl">경력</label><select class="fi" id="ph-exp"><option>신입 가능</option><option>1년 이상</option><option>3년 이상</option><option>5년 이상</option></select></div><div><label class="fl">고용형태</label><select class="fi" id="ph-emp"><option>정규직</option><option>계약직</option><option>아르바이트</option></select></div></div>
+          <div class="r2"><div><label class="fl">급여 (만원/월)</label><input class="fi" id="ph-pay" type="number" placeholder="300"/></div><div><label class="fl">근무지 *</label><input class="fi" id="ph-loc" placeholder="서울 강남구"/></div></div>
+          <div class="r2"><div><label class="fl">업체명 *</label><input class="fi" id="ph-biz" placeholder="정육점·고깃집명"/></div><div><label class="fl">연락처 *</label><input class="fi" id="ph-tel" placeholder="010-0000-0000"/></div></div>
+          <label class="fl">추가 조건</label><textarea class="fi" id="ph-cond" placeholder="4대보험, 숙소, 식사, 우대사항 등"></textarea>
+        </div>
+        <button class="btn" style="background:#7C3AED;color:#fff;padding:13px;" onclick="subProf('hire')">구인 공고 등록하기</button>
+        <div id="hire-msg" class="msg" style="display:none;"></div>
+      </div>
+      <div id="ph-seek-form" style="display:none;">
+        <div class="fc">
+          <div class="fct">구직 프로필</div>
+          <label class="fl">직무 *</label><select class="fi" id="ps-job"><option>정육사</option><option>발골사</option><option>세절기사</option><option>홀직원</option><option>주방직원</option><option>기타</option></select>
+          <div class="r2"><div><label class="fl">경력 (년)</label><input class="fi" id="ps-exp" type="number" placeholder="3"/></div><div><label class="fl">희망 급여</label><input class="fi" id="ps-pay" type="text" placeholder="협의 가능"/></div></div>
+          <div class="r2"><div><label class="fl">이름 *</label><input class="fi" id="ps-name" placeholder="홍길동"/></div><div><label class="fl">연락처 *</label><input class="fi" id="ps-tel" placeholder="010-0000-0000"/></div></div>
+          <label class="fl">자기소개</label><textarea class="fi" id="ps-intro" placeholder="경력, 특기 등"></textarea>
+        </div>
+        <button class="btn" style="background:#7C3AED;color:#fff;padding:13px;" onclick="subProf('seek')">구직 프로필 등록하기</button>
+        <div id="seek-msg" class="msg" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pg" id="pg-suppliers" style="padding-top:164px;padding-bottom:56px;">
+  <div class="w" style="padding-top:18px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><div style="font-size:18px;font-weight:800;">인증 공급업체</div><button onclick="go(&quot;sj&quot;)" class="ha-btn ha-reg" style="font-size:12px;padding:7px 14px;">업체 등록</button></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="sup-filter-chips">
+      <div class="chip on" onclick="fS(this,'all')">전체</div>
+      <div class="chip" onclick="fS(this,'소고기')">소고기</div>
+      <div class="chip" onclick="fS(this,'도축장')">도축장</div>
+      <div class="chip" onclick="fS(this,'OEM')">OEM</div>
+      <div class="chip" onclick="fS(this,'물류')">물류</div>
+      <div class="chip" onclick="fS(this,'채용')">채용</div>
+    </div>
+    <div class="sup-grid" id="sup-full"></div>
+  </div>
+</div>
+
+<div class="pg" id="pg-sp" style="padding-top:164px;padding-bottom:56px;"><div style="max-width:680px;margin:0 auto;" id="sp-body"></div></div>
+
+<div class="pg" id="pg-sj" style="padding-top:164px;padding-bottom:56px;">
+  <div style="max-width:640px;margin:0 auto;padding:18px 16px 80px;">
+    <div style="background:linear-gradient(135deg,#1B5E20,#2E7D32);padding:20px;border-radius:var(--r);margin-bottom:13px;">
+      <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:800;letter-spacing:2px;margin-bottom:6px;">SUPPLIER REGISTRATION</div>
+      <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:4px;">업체를 등록하고 전국 구매 요청을 받아보세요</div>
+      <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;">
+        <span style="font-size:11px;font-weight:700;padding:3px 8px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);border-radius:3px;">베타 기간 무료</span>
+        <span style="font-size:11px;font-weight:700;padding:3px 8px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);border-radius:3px;">우선 노출 혜택</span>
+        <span style="font-size:11px;font-weight:700;padding:3px 8px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);border-radius:3px;">1~2일 내 승인</span>
+      </div>
+    </div>
+    <div class="fc">
+      <div class="fct">업체 기본 정보</div>
+      <label class="fl">업체명 *</label><input class="fi" id="sj-nm" placeholder="상호명"/>
+      <label class="fl">사업자등록번호 *</label><input class="fi" id="sj-brn" placeholder="000-00-00000"/>
+      <div class="r2"><div><label class="fl">대표자명 *</label><input class="fi" id="sj-rep" placeholder="홍길동"/></div><div><label class="fl">연락처 *</label><input class="fi" id="sj-tel" placeholder="010-0000-0000"/></div></div>
+      <label class="fl">납품 가능 지역</label>
+      <select class="fi" id="sj-region"><option>전국 가능</option><option>서울·경기·인천</option><option>부산·경남</option><option>대구·경북</option><option>광주·전남·전북</option><option>대전·충남·충북</option><option>강원</option><option>제주</option></select>
+    </div>
+    <div class="fc">
+      <div class="fct">취급 카테고리 (복수 선택)</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;" id="sj-cats">
+        <div class="chip" onclick="this.classList.toggle('on')">소고기</div>
+        <div class="chip" onclick="this.classList.toggle('on')">돼지고기</div>
+        <div class="chip" onclick="this.classList.toggle('on')">부산물</div>
+        <div class="chip" onclick="this.classList.toggle('on')">도축장</div>
+        <div class="chip" onclick="this.classList.toggle('on')">OEM·육가공</div>
+        <div class="chip" onclick="this.classList.toggle('on')">냉장물류</div>
+        <div class="chip" onclick="this.classList.toggle('on')">포장재</div>
+        <div class="chip" onclick="this.classList.toggle('on')">기자재·장비</div>
+        <div class="chip" onclick="this.classList.toggle('on')">HACCP·위생</div>
+        <div class="chip" onclick="this.classList.toggle('on')">인테리어</div>
+        <div class="chip" onclick="this.classList.toggle('on')">창업·컨설팅</div>
+        <div class="chip" onclick="this.classList.toggle('on')">세무·노무</div>
+        <div class="chip" onclick="this.classList.toggle('on')">마케팅</div>
+      </div>
+    </div>
+    <div class="fc">
+      <div class="fct">업체 소개</div>
+      <label class="fl">업체 소개 *</label><textarea class="fi" id="sj-desc" placeholder="업력, 주요 서비스, 보유 인증, 강점 등"></textarea>
+      <div class="r2"><div><label class="fl">최소 수량</label><input class="fi" id="sj-minqty" placeholder="50kg~, 1두~"/></div><div><label class="fl">평균 납기</label><input class="fi" id="sj-lead" placeholder="당일, 2~3일"/></div></div>
+    </div>
+    <button class="btn btn-gn" onclick="subSup()" style="font-size:15px;padding:14px;">무료로 업체 등록 신청하기</button>
+    <div id="sj-msg" class="msg" style="display:none;"></div>
+  </div>
+</div>
+
+<div class="pg" id="pg-market" style="padding-top:164px;padding-bottom:56px;">
+  <div class="w" style="padding-top:18px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><div style="font-size:18px;font-weight:800;">축산 시세 정보</div><span style="font-size:12px;color:var(--ink4);">품질평가원 기준 · 참고용</span></div>
+    <div style="background:var(--goldbg);border:1px solid #E8D98A;border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:13px;color:#7A5C00;">⚠️ 시세는 참고용입니다. 정확한 견적은 <a onclick="go(&quot;rw&quot;)" style="color:var(--gn);font-weight:700;cursor:pointer;">고리에서 무료로 요청 →</a></div>
+    <div style="background:#fff;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;" id="market-full"></div>
+  </div>
+</div>
+
+<div class="pg" id="pg-news" style="padding-top:164px;padding-bottom:56px;">
+  <div class="w" style="padding-top:18px;">
+    <div style="font-size:18px;font-weight:800;margin-bottom:18px;">업계 뉴스 & 인사이트</div>
+    <div id="news-full" style="display:flex;flex-direction:column;gap:12px;"></div>
+  </div>
+</div>
+
+<div class="pg" id="pg-community" style="padding-top:164px;padding-bottom:56px;">
+  <div class="w" style="padding-top:18px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><div style="font-size:18px;font-weight:800;">커뮤니티</div><button onclick="openModal('login')" class="ha-btn ha-login" style="font-size:12px;padding:7px 14px;">글쓰기 (로그인 필요)</button></div>
+    <div style="display:grid;grid-template-columns:1fr 240px;gap:16px;align-items:start;">
+      <div id="comm-list-full"></div>
+      <div style="background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:14px;"><div style="font-size:13px;font-weight:700;margin-bottom:10px;">카테고리</div><div id="comm-cats"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="pg" id="pg-jobs" style="padding-top:164px;padding-bottom:56px;">
+  <div class="w" style="padding-top:18px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div>
+        <div style="font-size:18px;font-weight:800;color:var(--ink);">구인구직 공고</div>
+        <div style="font-size:13px;color:var(--ink3);margin-top:3px;">축산업계 정육사·발골사·가공직·물류직 채용 공고</div>
+      </div>
+      <button onclick="goUX('prof')" class="ha-btn ha-reg" style="font-size:12px;padding:9px 18px;">+ 구인 공고 올리기</button>
+    </div>
+    <div id="job-full"></div>
+  </div>
+</div>
+
+<div class="pg" id="pg-cat-trade" style="padding-top:164px;padding-bottom:56px;"><div class="w" style="padding-top:18px;" id="cat-trade-body"></div></div>
+<div class="pg" id="pg-cat-prod" style="padding-top:164px;padding-bottom:56px;"><div class="w" style="padding-top:18px;" id="cat-prod-body"></div></div>
+<div class="pg" id="pg-cat-ops" style="padding-top:164px;padding-bottom:56px;"><div class="w" style="padding-top:18px;" id="cat-ops-body"></div></div>
+<div class="pg" id="pg-cat-biz" style="padding-top:164px;padding-bottom:56px;"><div class="w" style="padding-top:18px;" id="cat-biz-body"></div></div>
+
+<div class="pg" id="pg-my" style="padding-top:164px;padding-bottom:56px;">
+  <div class="w" style="padding-top:18px;max-width:580px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div onclick="go(&quot;reqs&quot;)" class="card" style="padding:20px;text-align:center;"><div style="font-size:26px;margin-bottom:6px;">📋</div><div style="font-size:14px;font-weight:700;">내 요청서</div></div>
+      <div onclick="go(&quot;suppliers&quot;)" class="card" style="padding:20px;text-align:center;"><div style="font-size:26px;margin-bottom:6px;">🏭</div><div style="font-size:14px;font-weight:700;">공급업체</div></div>
+    </div>
+    <button class="btn btn-gn" onclick="go(&quot;sj&quot;)" style="margin-bottom:8px;">업체 등록하기</button>
+    <button class="btn btn-wh" onclick="location.href='meat_insight_admin.html'" style="margin-bottom:8px;">관리자 페이지</button>
+    <button class="btn btn-wh" onclick="location.href='meat_insight_apply.html'">컨설팅 신청</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <button class="bni on" id="bn-h" onclick="go(&quot;h&quot;)"><span class="bni-i">🏠</span><span class="bni-t">홈</span></button>
+  <button class="bni" id="bn-reqs" onclick="go(&quot;reqs&quot;)"><span class="bni-i">📋</span><span class="bni-t">요청</span></button>
+  <div style="display:flex;align-items:center;justify-content:center;"><button class="bplus" onclick="go(&quot;rw&quot;)">+</button></div>
+  <button class="bni" id="bn-suppliers" onclick="go(&quot;suppliers&quot;)"><span class="bni-i">🏭</span><span class="bni-t">업체</span></button>
+  <button class="bni" id="bn-my" onclick="go(&quot;my&quot;)"><span class="bni-i">👤</span><span class="bni-t">내활동</span></button>
+</div>
+
+<!-- 로그인 모달 -->
+<div id="auth-modal" class="modal-dim" style="display:none;" onclick="if(event.target.id==='auth-modal')closeModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-hd"><div></div><button class="modal-x" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="modal-logo-nm">고리</div>
+      <div class="modal-tab"><button class="mtab-btn on" id="atab-login" onclick="switchAuthTab('login')">로그인</button><button class="mtab-btn" id="atab-signup" onclick="switchAuthTab('signup')">회원가입</button></div>
+      <div id="auth-login">
+        <div class="modal-title">다시 만나서 반가워요</div>
+        <div class="modal-sub">고리에서 거래를 이어가세요</div>
+        <button class="kakao-btn" onclick="authKakao()"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 .5C4.3.5.5 3.6.5 7.4c0 2.4 1.6 4.5 4 5.7L3.3 17l4.6-3c.35.05.7.07 1.1.07 4.7 0 8.5-3.1 8.5-6.9S13.7.5 9 .5z" fill="#191919"/></svg>카카오로 로그인</button>
+        <div class="modal-div"><div class="mdl"></div><div class="mdt">또는</div><div class="mdl"></div></div>
+        <label class="fl">이메일</label><input class="fi" id="l-email" type="email" placeholder="example@email.com" style="margin-bottom:8px;"/>
+        <label class="fl">비밀번호</label><input class="fi" id="l-pw" type="password" placeholder="비밀번호" style="margin-bottom:10px;"/>
+        <button class="btn btn-gn" onclick="doLogin()" style="padding:12px;">로그인</button>
+        <div class="auth-msg" id="login-msg"></div>
+        <div class="modal-links" style="margin-top:10px;"><a onclick="switchAuthTab('signup')">회원가입</a> · <a>비밀번호 찾기</a></div>
+      </div>
+      <div id="auth-signup" style="display:none;">
+        <div class="modal-title">고리에 오신 걸 환영해요</div>
+        <div class="modal-sub">축산업 통합 플랫폼에 합류하세요</div>
+        <button class="kakao-btn" onclick="authKakao()"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 .5C4.3.5.5 3.6.5 7.4c0 2.4 1.6 4.5 4 5.7L3.3 17l4.6-3c.35.05.7.07 1.1.07 4.7 0 8.5-3.1 8.5-6.9S13.7.5 9 .5z" fill="#191919"/></svg>카카오로 가입하기</button>
+        <div class="modal-div"><div class="mdl"></div><div class="mdt">또는 이메일로</div><div class="mdl"></div></div>
+        <label class="fl">이름 *</label><input class="fi" id="s-name" placeholder="홍길동" style="margin-bottom:8px;"/>
+        <label class="fl">이메일 *</label><input class="fi" id="s-email" type="email" placeholder="example@email.com" style="margin-bottom:8px;"/>
+        <label class="fl">비밀번호 * (8자 이상)</label><input class="fi" id="s-pw" type="password" placeholder="비밀번호" style="margin-bottom:8px;"/>
+        <label class="fl">회원 유형</label><select class="fi" id="s-type" style="margin-bottom:10px;"><option>구매자 (정육점·고깃집·식품업체)</option><option>공급업체</option><option>구직자 (정육사·발골사)</option></select>
+        <button class="btn btn-gn" onclick="doSignup()" style="padding:12px;">회원가입</button>
+        <div class="auth-msg" id="signup-msg"></div>
+        <div class="modal-links" style="margin-top:8px;font-size:11px;"><a onclick="switchAuthTab('login')">이미 계정이 있으신가요?</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var SU="https://igignylgzjphtnyxhhsd.supabase.co";
+var SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnaWdueWxnempwaHRueXhoaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDUyMDAsImV4cCI6MjA4OTA4MTIwMH0.3u5gCw1dnG1YSmrzhN3PGVOMoQ1LBtGw0ToNhSeL42A";
+/* 관리자 페이지(연결 설정)에서 저장한 프로젝트를 공유해서 사용 */
+(function(){try{var s=localStorage.getItem("gori_sb_cfg");if(s){var o=JSON.parse(s);if(o&&o.url&&o.key){SU=o.url;SK=o.key;}}}catch(e){}})();
+var sb=window.supabase?window.supabase.createClient(SU,SK):null;
+var PGS=["h","reqs","rw","suppliers","sp","sj","market","news","community","jobs","my","cat-trade","cat-prod","cat-ops","cat-biz"];
+var TM={h:"h",reqs:"reqs",rw:"reqs",suppliers:"suppliers",sp:"suppliers",sj:"my",market:"h",news:"h",community:"h",jobs:"jobs",my:"my"};
+var curRC="all",curSC="all",curSID=null,curRWStep=null,curReqCat=null;
+
+/* ═ 데이터 ═ */
+var CATS_ALL=[
+  {nm:"고기 구매",ico:"🥩",clr:"#4E342E",cat:"소고기",badge:"",sub:"소·돼지·수입"},
+  {nm:"부산물·내장 특수부위",ico:"🫀",clr:"#5D1F1F",cat:"부산물",badge:"",sub:"곱창·대창·우설"},
+  {nm:"출하·도축장",ico:"🔪",clr:"#263238",cat:"도축장",badge:"",sub:"도축·발골·정형"},
+  {nm:"육가공·OEM",ico:"🏭",clr:"#1B5E20",cat:"OEM",badge:"",sub:"육포·소시지·HMR"},
+  {nm:"냉장·냉동 물류",ico:"🚚",clr:"#0D47A1",cat:"물류",badge:"",sub:"전국·정기배송"},
+  {nm:"구인구직",ico:"👤",clr:"#4A148C",cat:"채용",badge:"급구",sub:"정육사·발골사"},
+  {nm:"창업 컨설팅",ico:"🏪",clr:"#BF360C",cat:"창업",badge:"",sub:"상권·원가·HACCP"},
+  {nm:"인테리어",ico:"🏗",clr:"#37474F",cat:"인테리어",badge:"",sub:"고깃집·정육점"},
+  {nm:"기자재·장비",ico:"⚙",clr:"#1A237E",cat:"장비",badge:"신규",sub:"골절기·슬라이서"},
+  {nm:"포장재",ico:"📦",clr:"#33691E",cat:"포장재",badge:"",sub:"트레이·진공·박스"},
+  {nm:"세무·노무",ico:"📊",clr:"#4E342E",cat:"세무",badge:"",sub:"절세·노무관리"},
+  {nm:"HACCP·위생관리",ico:"✅",clr:"#006064",cat:"HACCP",badge:"",sub:"인증·컨설팅"},
+  {nm:"전체 보기",ico:"⋯",clr:"#37474F",cat:"all",badge:"",sub:"모든 카테고리"}
+];
+var REQS=[
+  {id:"r1",cat:"소고기",cc:"#FFF8E1",ct:"#E65100",ico:"🥩",title:"곱창 500kg 구매 요청",meta:"경기 안성 / 5분 전",cnt:"5건"},
+  {id:"r2",cat:"도축장",cc:"#FCE4EC",ct:"#C62828",ico:"🔪",title:"대창 300kg 구매 요청",meta:"충남 천안 / 1분 전",cnt:"3건"},
+  {id:"r3",cat:"OEM",cc:"#E8F5E9",ct:"#1B5E20",ico:"🏭",title:"OEM 가공 업체 찾습니다",meta:"전국 / 20건 전",cnt:"12건"},
+  {id:"r4",cat:"소고기",cc:"#FFF8E1",ct:"#E65100",ico:"🥩",title:"한우 지육 10두 분할 요청",meta:"경북 영천 / 30분 전",cnt:"7건"}
+];
+var PROPS=[
+  {nm:"한우 유망 100kg",info:"경기 안성 / 5분 전",cl:"#2E7D32"},
+  {nm:"돼지 뒷심 1,000kg",info:"충남 천안 / 5분 전",cl:"#1565C0"},
+  {nm:"곱창 300kg",info:"경남 진주 / 15분 전",cl:"#4A148C"},
+  {nm:"한우 지육 200kg",info:"대구 달성 / 15분 전",cl:"#BF360C"}
+];
+var SUPS=[
+  {id:"s1",nm:"합신식 도축장",cat:"경기 포천시 · 도축·가공",rt:4.9,rs:"15분",rb:94,cr:0.2,vf:true,cats:["도축장"],cl:"#1A2332"},
+  {id:"s2",nm:"미트파트너스 가공공장",cat:"경기 화성시 · 육가공·OEM",rt:4.8,rs:"45분",rb:89,cr:0.4,vf:true,cats:["OEM"],cl:"#1B5E20"},
+  {id:"s3",nm:"강원축산 도축장",cat:"강원 횡성군 · 도축·가공",rt:4.7,rs:"30분",rb:87,cr:0.6,vf:true,cats:["도축장"],cl:"#263238"},
+  {id:"s4",nm:"한우명가 정육",cat:"경북 청주시 · 도매·유통",rt:4.6,rs:"20분",rb:91,cr:0.8,vf:true,cats:["소고기"],cl:"#4E342E"},
+  {id:"s5",nm:"대동축산물 도매",cat:"대구 북구 · 도매·유통",rt:4.6,rs:"25분",rb:88,cr:0.5,vf:true,cats:["소고기"],cl:"#37474F"}
+];
+var JOBS=[
+  /* 급구 우선 */
+  {type:"full",urgent:true, role:"정육사 (경력 3년 이상)",biz:"강남 한우 전문점",loc:"서울 강남구",pay:"월 380만원~",emp:"정규직",d:"오늘",benefit:"4대보험 · 숙소 제공"},
+  {type:"full",urgent:true, role:"발골사 경력직 채용",biz:"안양 정육공장",loc:"경기 안양시",pay:"월 340만원~",emp:"정규직",d:"오늘",benefit:"4대보험 · 식사 제공"},
+  {type:"full",urgent:false,role:"도축장 위생관리팀 모집",biz:"경기도축장",loc:"경기 안성시",pay:"월 300만원~",emp:"정규직",d:"1일 전",benefit:"4대보험 · 퇴직금"},
+  {type:"full",urgent:false,role:"세절기사 채용",biz:"부산 육가공업체",loc:"부산 사상구",pay:"월 320만원~",emp:"정규직",d:"2일 전",benefit:"4대보험"},
+  {type:"full",urgent:false,role:"냉장물류 기사 모집",biz:"전국냉장물류",loc:"경기 화성시",pay:"월 280만원~",emp:"정규직",d:"3일 전",benefit:"4대보험 · 차량 지원"},
+  {type:"contract",urgent:false,role:"정육 가공직 계약직 모집",biz:"대전 육가공공장",loc:"대전 대덕구",pay:"월 250만원~",emp:"계약직",d:"4일 전",benefit:"식사 제공"},
+  {type:"contract",urgent:false,role:"OEM 생산 파트타임",biz:"충남 가공업체",loc:"충남 천안시",pay:"시급 13,000원",emp:"계약직",d:"5일 전",benefit:""},
+  {type:"part",urgent:false,role:"홀직원 (주말 가능)",biz:"강남 고깃집",loc:"서울 강남구",pay:"시급 12,000원",emp:"알바",d:"6일 전",benefit:"식사 제공"},
+  {type:"part",urgent:false,role:"주방 보조 파트타임",biz:"수원 정육식당",loc:"경기 수원시",pay:"시급 11,500원",emp:"알바",d:"1주 전",benefit:""},
+  {type:"full",urgent:false,role:"HACCP 관리자 채용",biz:"강원 육가공공장",loc:"강원 원주시",pay:"월 350만원~",emp:"정규직",d:"1주 전",benefit:"4대보험 · 퇴직금"},
+  {type:"full",urgent:false,role:"냉동창고 관리직",biz:"인천 물류센터",loc:"인천 남동구",pay:"월 260만원~",emp:"정규직",d:"1주 전",benefit:"4대보험"},
+  {type:"contract",urgent:false,role:"도축 보조 일용직",biz:"경북 도축장",loc:"경북 안동시",pay:"일 150,000원",emp:"계약직",d:"2주 전",benefit:"식사 제공"}
+];
+var NEWS=[
+  {cat:"시세 동향",title:"정육점 창업, 어렵진 않아요 꼭 알아야 할 것들",date:"05.14",cl:"#1B5E20"},
+  {cat:"규제·정책",title:"한우 도투두수 역대 최저 기록",date:"05.14",cl:"#263238"},
+  {cat:"정책",title:"농식품부, 축산 수급 안정 대책 발표",date:"05.13",cl:"#0D47A1"},
+  {cat:"시세",title:"ASF 방역 강화...전국 일제 점검",date:"05.12",cl:"#BF360C"},
+  {cat:"뉴스",title:"수입육 관세 인하 검토...업계 반응은?",date:"05.11",cl:"#4A148C"}
+];
+var INSIGHTS=[
+  {cat:"창업 인사이트",title:"정육점 창업이 어렵진 않아요, 꼭 알아야 할 것들",date:"05.14",cl:"#1B5E20"},
+  {cat:"원가 분석",title:"소규모 육가공 공장 창업 완벽 가이드",date:"05.13",cl:"#4E342E"},
+  {cat:"HACCP",title:"도축장 위생 체크 포인트 7가지",date:"05.12",cl:"#006064"},
+  {cat:"성공사례",title:"성공하는 고깃집 창업 전략",date:"05.11",cl:"#BF360C"}
+];
+var COMM_HOT=[
+  {rank:1,cat:"질문",title:"곱창 생산 업체는 어떻게 보나요?",cnt:"12"},
+  {rank:2,cat:"정보",title:"도축장 위생관리 팀 구합니다",cnt:"8"},
+  {rank:3,cat:"정보",title:"정육육가공 찾는 법 바법",cnt:"15"},
+  {rank:4,cat:"뉴스",title:"좋은 OEM 업체 찾는 법",cnt:"6"},
+  {rank:5,cat:"질문",title:"요즘 찾는 특수부위는?",cnt:"11"}
+];
+var RANKS=[
+  {nm:"합신식 도축장",cat:"경기 포천시 · 도축·가공",rt:"★ 4.9"},
+  {nm:"미트파트너스 가공공장",cat:"경기 화성시 · 육가공·OEM",rt:"★ 4.8"},
+  {nm:"강원축산 도축장",cat:"강원 횡성군 · 도축·가공",rt:"★ 4.7"},
+  {nm:"한우명가 정육",cat:"경북 청주시 · 도매·유통",rt:"★ 4.6"},
+  {nm:"대동축산물 도매",cat:"대구 북구 · 도매·유통",rt:"★ 4.6"}
+];
+var NEW_SUPS=[
+  {ico:"🥩",nm:"정단 도축장",sub:"경기 파주 · 도축·가공",isnew:true},
+  {ico:"🏭",nm:"프리미엄 물류센터",sub:"서울 강남 · 냉장·냉동 물류",isnew:true},
+  {ico:"🥩",nm:"청정축산 유통",sub:"서울 강남 · 소고기 납품",isnew:false}
+];
+var PRICE_DATA={
+  beef:[{item:"한우(지육) 1등급",price:"20,500",unit:"원/kg",chg:"▲500",up:true},{item:"한우(부분육) 1+",price:"12,000",unit:"원/kg",chg:"▲300",up:true},{item:"돼지(지육)",price:"5,180",unit:"원/kg",chg:"▲120",up:true},{item:"수입육(냉동) 냉동",price:"9,850",unit:"원/kg",chg:"▼50",up:false}],
+  pork:[{item:"삼겹살 (한돈)",price:"22,000",unit:"원/kg",chg:"▲400",up:true},{item:"목살 (한돈)",price:"18,500",unit:"원/kg",chg:"▼200",up:false},{item:"삼겹살 (수입·미국)",price:"12,500",unit:"원/kg",chg:"▲300",up:true}],
+  import:[{item:"국산 곱창",price:"15,000",unit:"원/kg",chg:"▲200",up:true},{item:"대창",price:"18,000",unit:"원/kg",chg:"▲100",up:true},{item:"우설",price:"22,000",unit:"원/kg",chg:"▼300",up:false}]
+};
+var FIELD_MAP={
+  "소고기":[{l:"품목 *",id:"f-item",ph:"한우 등심, 소 삼겹살, 우설..."},{l:"수량 (kg) *",id:"f-qty",ph:"100",tp:"number"},{l:"희망 단가 (원/kg)",id:"f-price",ph:"65,000",fmt:true},{l:"원산지",id:"f-ori",sel:["상관없음","국내산","미국산","호주산"]},{l:"납품 주기",id:"f-cycle",sel:["일회성","주 1회","주 2회","월 정기"]},{l:"추가 조건",id:"f-cond",ta:"등급, 냉장/냉동, HACCP 요구 등"}],
+  "돼지고기":[{l:"품목 *",id:"f-item",ph:"삼겹살, 목살, 항정살..."},{l:"수량 (kg) *",id:"f-qty",ph:"100",tp:"number"},{l:"희망 단가",id:"f-price",ph:"22,000",fmt:true},{l:"납품 주기",id:"f-cycle",sel:["일회성","주 1회","주 2회","월 정기"]},{l:"추가 조건",id:"f-cond",ta:"한돈/수입, 냉장/냉동 등"}],
+  "부산물":[{l:"품목 *",id:"f-item",ph:"곱창, 대창, 우설, 스지..."},{l:"수량 (kg) *",id:"f-qty",ph:"50",tp:"number"},{l:"손질 여부",id:"f-clean",sel:["손질 완료","비손질","상관없음"]},{l:"추가 조건",id:"f-cond",ta:"냉장/냉동, 포장 형태 등"}],
+  "도축장":[{l:"축종 *",id:"f-type",sel:["한우","한돈","육우","젖소","기타"]},{l:"두수 *",id:"f-cnt",ph:"10",tp:"number"},{l:"작업 종류",id:"f-work",sel:["도축","발골","세절","도축+발골","전체"]},{l:"출하 예정일 *",id:"f-date",tp:"date"},{l:"출하 위치",id:"f-loc",ph:"경기 안양시 (비워두면 전국 매칭)"},{l:"요청사항",id:"f-cond",ta:"가공 방식, 인증 요구 등"}],
+  "OEM":[{l:"제품 종류 *",id:"f-item",ph:"육포, 소시지, 양념육..."},{l:"월 생산량 (kg)",id:"f-qty",ph:"500",tp:"number"},{l:"HACCP 필요",id:"f-haccp",sel:["필수","선호","상관없음"]},{l:"레시피",id:"f-recipe",sel:["보유","미보유"]},{l:"추가 조건",id:"f-cond",ta:"MOQ, 패키지, 출시일 등"}],
+  "물류":[{l:"유형",id:"f-type",sel:["냉장","냉동","혼합"]},{l:"배송 주기",id:"f-cycle",sel:["정기","단건"]},{l:"출발지",id:"f-from",ph:"서울 마포구"},{l:"도착지",id:"f-to",ph:"경기 안양시"},{l:"물량 (톤/회)",id:"f-vol",ph:"5",tp:"number"},{l:"추가 조건",id:"f-cond",ta:"온도, 차량 조건 등"}]
+};
+var GOALS={"소고기":"20분","돼지고기":"20분","부산물":"20분","내장":"20분","특수부위":"20분","도축장":"1시간","OEM":"24시간","물류":"30분","HACCP":"4시간","포장재":"2시간","장비":"2시간","창업":"4시간","인테리어":"4시간","세무":"24시간"};
+var UX_SELS=[
+  {cat:"소고기",desc:"한우·육우·수입육",t:"소고기 구매"},
+  {cat:"돼지고기",desc:"삼겹살·목살·특수부위",t:"돼지고기 구매"},
+  {cat:"부산물",desc:"곱창·대창·우설·스지",t:"부산물·내장·특수부위"},
+  {cat:"도축장",desc:"도축·발골·정형·세절",t:"출하·도축장 연결"},
+  {cat:"OEM",desc:"육포·소시지·HMR",t:"육가공·OEM"},
+  {cat:"물류",desc:"전국 배송·정기배송",t:"냉장·냉동 물류"},
+  {cat:"HACCP",desc:"인증·컨설팅·점검",t:"HACCP·위생관리"},
+  {cat:"포장재",desc:"트레이·진공·박스",t:"포장재"},
+  {cat:"장비",desc:"골절기·슬라이서·포장기",t:"기자재·장비"},
+  {cat:"인테리어",desc:"고깃집·정육점",t:"인테리어"},
+  {cat:"창업",desc:"상권분석·원가·HACCP",t:"창업·컨설팅"},
+  {cat:"세무",desc:"절세·노무·브랜딩",t:"세무·노무·마케팅"}
+];
+
+/* ═ 페이지 이동 ═ */
+function go(p){
+  PGS.forEach(function(id){var e=document.getElementById("pg-"+id);if(e)e.className="pg";});
+  var t=document.getElementById("pg-"+p);if(t)t.className="pg on";
+  ["h","reqs","suppliers","my","jobs"].forEach(function(id){var b=document.getElementById("bn-"+id);if(b)b.className="bni";});
+  var ab=document.getElementById("bn-"+(TM[p]||"h"));if(ab)ab.className="bni on";
+  document.documentElement.scrollTop=0;document.body.scrollTop=0;
+  if(p==="h")renderHome();
+  else if(p==="reqs")renderReqs();
+  else if(p==="suppliers")renderSups(curSC);
+  else if(p==="sp"&&curSID)renderSP(curSID);
+  else if(p==="market")renderMarket();
+  else if(p==="news")renderNewsPage();
+  else if(p==="community")renderComm();
+  else if(p==="jobs")renderJobsFull();
+  else if(p==="rw")initRW();
+  else if(p.startsWith("cat-"))renderCatPage(p);
+}
+function setNav(el,p){document.querySelectorAll(".hdr-nav a").forEach(function(a){a.classList.remove("on");});el.classList.add("on");go(p);}
+function setNav2(el,p){document.querySelectorAll(".hn2-item").forEach(function(a){a.classList.remove("on");});el.classList.add("on");go(p);}
+function goReq(cat){curReqCat=cat;go("rw");setTimeout(function(){startReq(cat);},50);}
+function goUX(t){go("rw");setTimeout(function(){initRW();showStep("rw-s-prof");},50);}
+function fR(el,cat){document.querySelectorAll("#rq-filter-chips .chip").forEach(function(c){c.classList.remove("on");});el.classList.add("on");curRC=cat;renderReqs();}
+function fS(el,cat){document.querySelectorAll("#sup-filter-chips .chip").forEach(function(c){c.classList.remove("on");});el.classList.add("on");curSC=cat;renderSups(cat);}
+function swSupTab(el,cat){document.querySelectorAll("#sup-tabs-h .tab").forEach(function(t){t.classList.remove("on");});el.classList.add("on");renderSupHome(cat);}
+function swPriceH(el,cat){document.querySelectorAll("#price-tabs-h .tab").forEach(function(t){t.classList.remove("on");});el.classList.add("on");renderPriceWidget("price-widget",cat);}
+function switchHireTab(t){
+  var hb=document.getElementById("ph-hire-btn"),sb=document.getElementById("ph-seek-btn");
+  var hf=document.getElementById("ph-hire-form"),sf=document.getElementById("ph-seek-form");
+  hb.style.background=t==="hire"?"#7C3AED":"#fff";hb.style.color=t==="hire"?"#fff":"var(--ink2)";hb.style.border=t==="hire"?"none":"1.5px solid var(--bd)";
+  sb.style.background=t==="seek"?"#7C3AED":"#fff";sb.style.color=t==="seek"?"#fff":"var(--ink2)";sb.style.border=t==="seek"?"none":"1.5px solid var(--bd)";
+  hf.style.display=t==="hire"?"block":"none";sf.style.display=t==="seek"?"block":"none";
+}
+
+/* ═ 요청서 ═ */
+function initRW(){
+  ["rw-s0","rw-s-req","rw-s-prof"].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display="none";});
+  var s0=document.getElementById("rw-s0");if(s0)s0.style.display="block";
+  document.getElementById("rw-page-title").textContent="서비스 선택";
+  curRWStep="s0";curReqCat=null;
+  var g=document.getElementById("ux-req-grid");if(!g)return;g.innerHTML="";
+  UX_SELS.forEach(function(u){
+    var btn=document.createElement("button");btn.className="ux-sel";
+    btn.innerHTML='<div class="ux-sel-title">'+u.t+'</div><div class="ux-sel-desc">'+u.desc+'</div><div class="ux-sel-resp">⚡ 목표 '+(GOALS[u.cat]||"4시간")+'</div>';
+    btn.onclick=function(){startReq(u.cat);};
+    g.appendChild(btn);
+  });
+}
+function showStep(id){
+  ["rw-s0","rw-s-req","rw-s-prof"].forEach(function(sid){var e=document.getElementById(sid);if(e)e.style.display="none";});
+  var t=document.getElementById(id);if(t)t.style.display="block";
+}
+function startReq(cat){
+  curReqCat=cat;
+  var goal=GOALS[cat]||"4시간";
+  var ux=UX_SELS.find(function(u){return u.cat===cat;});
+  document.getElementById("rw-fh-cat").textContent=cat;
+  document.getElementById("rw-timer-txt").textContent="⚡ 목표 응답: "+goal+" 이내";
+  document.getElementById("rw-form-title").textContent=(ux?ux.t:cat)+" 상세";
+  document.getElementById("rw-page-title").textContent=(ux?ux.t:cat)+" 요청서";
+  var fields=FIELD_MAP[cat]||[{l:"요청 내용 *",id:"f-cond",ta:"자세히 작성할수록 정확한 견적을 받을 수 있습니다"},{l:"예산 (만원)",id:"f-budget",ph:"1,000"},{l:"희망 완료일",id:"f-date",tp:"date"}];
+  document.getElementById("rw-dynamic-fields").innerHTML=fields.map(function(f){
+    var id2="rw-"+f.id;
+    var h='<label class="fl">'+f.l+'</label>';
+    if(f.sel)h+='<select class="fi" id="'+id2+'">'+f.sel.map(function(s){return'<option>'+s+'</option>';}).join('')+'</select>';
+    else if(f.ta)h+='<textarea class="fi" id="'+id2+'" placeholder="'+f.ta+'"></textarea>';
+    else h+='<input class="fi" id="'+id2+'" type="'+(f.tp||"text")+'" placeholder="'+(f.ph||"")+'"'+(f.fmt?' oninput="fmtN(this)"':'')+'/>';
+    return h;
+  }).join('');
+  showStep("rw-s-req");curRWStep="req";
+}
+function rwBack(){
+  if(!curRWStep||curRWStep==="s0"){go("h");return;}
+  initRW();document.getElementById("rw-page-title").textContent="서비스 선택";
+}
+function fmtN(el){var r=el.value.replace(/[^0-9]/g,"");if(!r){el.value="";return;}el.value=parseInt(r,10).toLocaleString("ko-KR");}
+
+/* ═ 렌더: 라이브 바 ═ */
+function renderLive(){
+  var data=[
+    {txt:"곱창 500kg 구매 요청 · 경기 안성",cnt:"5건",time:"5분 전"},
+    {txt:"한우 30두 출하 예정 · 충남",cnt:"도축장 4곳",time:"8분 전"},
+    {txt:"정육사 경력직 채용 · 서울",cnt:"지원자 5명",time:"12분 전"},
+    {txt:"육포 OEM 공장 찾습니다 · 전국",cnt:"업체 3곳",time:"21분 전"},
+    {txt:"냉동물류 정기배송 · 부산→서울",cnt:"견적 6개",time:"35분 전"},
+    {txt:"고깃집 40평 인테리어 · 수원",cnt:"업체 4곳",time:"1시간 전"},
+    {txt:"HACCP 컨설팅 요청 · 경기 안양",cnt:"업체 2곳",time:"3시간 전"}
+  ];
+  var el=document.getElementById("live-slide");if(!el)return;
+  var all=data.concat(data);
+  el.innerHTML=all.map(function(d){
+    return '<div class="li"><span class="li-txt">'+d.txt+'</span><span class="li-cnt">'+d.cnt+'</span><span class="li-time">'+d.time+'</span></div><div class="li"><span class="li-sep"></span></div>';
+  }).join('');
+}
+
+/* ═ 렌더: 카테고리 아이콘 바 ═ */
+function renderCatIconBar(){
+  var el=document.getElementById("cat-icon-bar");if(!el)return;el.innerHTML="";
+
+  /* 카테고리별 SVG 아이콘 (단색 라인 + 포인트 컬러, 숨고 스타일) */
+  var ICONS={
+    "고기 구매":
+      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
+      +'<ellipse cx="20" cy="26" rx="13" ry="9" fill="#C84040" opacity=".15" transform="rotate(-30 20 26)"/>'
+      +'<path d="M10 34 Q16 22 26 18 Q34 15 38 22" stroke="#C84040" stroke-width="3.5" stroke-linecap="round" fill="none"/>'
+      +'<path d="M8 36 Q14 24 24 20 Q32 17 36 24" stroke="#E55050" stroke-width="2" stroke-linecap="round" fill="none" opacity=".5"/>'
+      +'<circle cx="38" cy="14" r="5" fill="none" stroke="#C84040" stroke-width="2.5"/>'
+      +'<path d="M36 10 L40 10 M38 8 L38 12" stroke="#C84040" stroke-width="2" stroke-linecap="round"/>'
+      +'<path d="M10 36 Q10 40 14 40 Q18 40 18 36" stroke="#C84040" stroke-width="2.5" stroke-linecap="round" fill="none"/>'
+      +'</svg>',
+    "부산물·내장 특수부위":
+      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
+      +'<path d="M8 28 Q14 16 24 20 Q34 24 38 16" stroke="#D04040" stroke-width="3.5" stroke-linecap="round" fill="none"/>'
+      +'<path d="M8 32 Q14 20 24 24 Q34 28 38 20" stroke="#D04040" stroke-width="2" stroke-linecap="round" fill="none" opacity=".45"/>'
+      +'<ellipse cx="20" cy="36" rx="9" ry="4" fill="#D04040" opacity=".2"/>'
+      +'<ellipse cx="20" cy="36" rx="9" ry="4" stroke="#D04040" stroke-width="2"/>'
+      +'<path d="M12 36 Q12 41 20 41 Q28 41 28 36" stroke="#D04040" stroke-width="2" fill="none"/>'
+      +'</svg>',
+    "출하·도축장":
+      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
+      +'<rect x="8" y="22" width="32" height="18" rx="2" stroke="#5C8A5C" stroke-width="2.5" fill="#5C8A5C" fill-opacity=".1"/>'
+      +'<path d="M6 22 L24 10 L42 22" stroke="#5C8A5C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      +'<rect x="20" y="30" width="8" height="10" rx="1" fill="#5C8A5C" opacity=".5"/>'
+      +'<rect x="11" y="26" width="7" height="7" rx="1" stroke="#5C8A5C" stroke-width="1.5" fill="none"/>'
+      +'<rect x="30" y="26" width="7" height="7" rx="1" stroke="#5C8A5C" stroke-width="1.5" fill="none"/>'
+      +'<path d="M28 12 L28 8" stroke="#5C8A5C" stroke-width="2.5" stroke-linecap="round"/>'
+      +'<rect x="26" y="5" width="4" height="6" rx="1" fill="#5C8A5C" opacity=".7"/>'
+      +'</svg>',
+    "육가공·OEM":
+      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
+      +'<rect x="6" y="24" width="36" height="16" rx="3" stroke="#4A7A8A" stroke-width="2.5" fill="#4A7A8A" fill-opacity=".1"/>'
+      +'<rect x="6" y="24" width="36" height="6" rx="2" fill="#4A7A8A" opacity=".25"/>'
+      +'<rect x="30" y="14" width="6" height="14" rx="2" fill="#4A7A8A" opacity=".6"/>'
+      +'<rect x="21" y="18" width="6" height="10" rx="2" fill="#4A7A8A" opacity=".5"/>'
+      +'<rect x="12" y="16" width="6" height="12" rx="2" fill="#4A7A8A" opacity=".55"/>'
+      +'<ellipse cx="31" cy="13" rx="3" ry="4" fill="#4A7A8A" opacity=".3"/>'
+      +'<ellipse cx="22" cy="17" rx="3" ry="4" fill="#4A7A8A" opacity=".25"/>'
+      +'<ellipse cx="13" cy="15" rx="3" ry="4" fill="#4A7A8A" opacity=".28"/>'
+      +'<rect x="12" y="32" width="6" height="5" rx="1" stroke="#4A7A8A" stroke-width="1.5" fill="none"/>'
+      +'<rect x="21" y="32" width="6" height="5" rx="1" stroke="#4A7A8A" stroke-width="1.5" fill="none"/>'
+      +'<rect x="30" y="32" width="6" height="5" rx="1" stroke="#4A7A8A" stroke-width="1.5" fill="none"/>'
+      +'</svg>',
+    "냉장·냉동 물류":
+      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
+      +'<rect x="4" y="24" width="30" height="14" rx="3" stroke="#4A90D9" stroke-width="2.5" fill="#4A90D9" fill-opacity=".1"/>'
+      +'<rect x="34" y="18" width="11" height="20" rx="3" stroke="#4A90D9" stroke-width="2.5" fill="#4A90D9" fill-opacity=".15"/>'
+      +'<rect x="36" y="21" width="7" height="8" rx="1" fill="#4A90D9" opacity=".3"/>'
+      +'<circle cx="13" cy="40" r="4.5" stroke="#4A90D9" stroke-width="2.5" fill="none"/>'
+      +'<circle cx="13" cy="40" r="2" fill="#4A90D9" opacity=".5"/>'
+      +'<circle cx="28" cy="40" r="4.5" stroke="#4A90D9" stroke-width="2.5" fill="none"/>'
+      +'<circle cx="28" cy="40" r="2" fill="#4A90D9" opacity=".5"/>'
+      +'<circle cx="39" cy="40" r="4" stroke="#4A90D9" stroke-width="2" fill="none"/>'
+      +'<circle cx="39" cy="40" r="1.5" fill="#4A90D9" opacity=".5"/>'
+      /* 냉기 아이콘 */
+      +'<path d="M10 29 L10 34 M8 31 L12 31" stroke="#4A90D9" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>'
+      +'</svg>',
+    "구인구직":
+      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
+      +'<circle cx="16" cy="16" r="7" stroke="#7C6EAA" stroke-width="2.5" fill="#7C6EAA" fill-opacity=".12"/>'
+      +'<path d="M6 38 C6 30 26 30 26 38" stroke="#7C6EAA" stroke-width="2.5" stroke-linecap="round" fill="none"/>'
+      +'<circle cx="34" cy="18" r="5.5" stroke="#7C6EAA" stroke-width="2" fill="#7C6EAA" fill-opacity=".1" opacity=".7"/>'
+      +'<path d="M27 38 C27 33 43 33 43 38" stroke="#7C6EAA" stroke-width="2" stroke-linecap="round" fill="none" opacity=".7"/>'
+      +'<path d="M28 22 L32 26 L42 16" stroke="#2E7D32" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      +'</svg>',
+    "창업 컨설팅":
+      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
+      +'<path d="M8 38 L8 22 L14 16 L34 16 L40 22 L40 38 Z" stroke="#E07840" stroke-width="2.5" stroke-linejoin="round" fill="#E07840" fill-opacity=".1"/>'
+      +'<path d="M6 22 L24 10 L42 22" stroke="#E07840" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      +'<rect x="19" y="28" width="10" height="10" rx="1" fill="#E07840" opacity=".5"/>'
+      +'<rect x="11" y="25" width="7" height="7" rx="1" stroke="#E07840" stroke-width="1.5" fill="none"/>'
+      +'<rect x="30" y="25" width="7" height="7" rx="1" stroke="#E07840" stroke-width="1.5" fill="none"/>'
+      +'<path d="M22 16 L22 12" stroke="#E07840" stroke-width="2" stroke-linecap="round" opacity=".6"/>'
+      +'<path d="M26 16 L26 12" stroke="#E07840" stroke-width="2" stroke-linecap="round" opacity=".6"/>'
+      +'</svg>',
+    "인테리어":
+      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
+      +'<rect x="8" y="14" width="32" height="22" rx="2" stroke="#C07040" stroke-width="2.5" fill="#C07040" fill-opacity=".1"/>'
+      +'<path d="M8 20 L40 20" stroke="#C07040" stroke-width="1.5" opacity=".4"/>'
+      +'<path d="M8 30 L40 30" stroke="#C07040" stroke-width="1.5" opacity=".3"/>'
+      +'<rect x="12" y="36" width="24" height="4" rx="1" fill="#C07040" opacity=".35"/>'
+      +'<circle cx="18" cy="25" r="3.5" stroke="#C07040" stroke-width="2" fill="none"/>'
+      +'<path d="M22 22 L34 14" stroke="#C07040" stroke-width="2" stroke-linecap="round" opacity=".6"/>'
+      +'<path d="M22 28 L34 36" stroke="#C07040" stroke-width="2" stroke-linecap="round" opacity=".4"/>'
+      +'</svg>',
+    "기자재·장비":
+      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
+      +'<circle cx="24" cy="24" r="10" stroke="#607080" stroke-width="2.5" fill="none"/>'
+      +'<circle cx="24" cy="24" r="4" fill="#607080" opacity=".4"/>'
+      +'<path d="M24 10 L24 6 M24 42 L24 38 M10 24 L6 24 M42 24 L38 24" stroke="#607080" stroke-width="2.5" stroke-linecap="round"/>'
+      +'<path d="M14.1 14.1 L11.3 11.3 M36.7 36.7 L33.9 33.9 M14.1 33.9 L11.3 36.7 M36.7 11.3 L33.9 14.1" stroke="#607080" stroke-width="2" stroke-linecap="round" opacity=".7"/>'
+      +'</svg>',
+    "포장재":
+      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
+      +'<rect x="10" y="20" width="28" height="20" rx="2" stroke="#5A8A6A" stroke-width="2.5" fill="#5A8A6A" fill-opacity=".1"/>'
+      +'<path d="M10 24 L24 30 L38 24" stroke="#5A8A6A" stroke-width="2" stroke-linecap="round" fill="none"/>'
+      +'<path d="M24 30 L24 40" stroke="#5A8A6A" stroke-width="2" stroke-linecap="round"/>'
+      +'<path d="M10 20 L24 14 L38 20" stroke="#5A8A6A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      +'<path d="M17 17 L17 27" stroke="#5A8A6A" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>'
+      +'<path d="M31 17 L31 27" stroke="#5A8A6A" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>'
+      +'</svg>',
+    "세무·노무":
+      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
+      +'<rect x="12" y="8" width="24" height="32" rx="3" stroke="#7A6A5A" stroke-width="2.5" fill="#7A6A5A" fill-opacity=".1"/>'
+      +'<rect x="16" y="14" width="16" height="2.5" rx="1" fill="#7A6A5A" opacity=".6"/>'
+      +'<rect x="16" y="20" width="12" height="2.5" rx="1" fill="#7A6A5A" opacity=".5"/>'
+      +'<rect x="16" y="26" width="14" height="2.5" rx="1" fill="#7A6A5A" opacity=".4"/>'
+      +'<rect x="16" y="32" width="10" height="2.5" rx="1" fill="#7A6A5A" opacity=".35"/>'
+      +'<circle cx="35" cy="36" r="7" fill="#2E7D32" opacity=".9"/>'
+      +'<path d="M32 36 L34 38 L38 34" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      +'</svg>',
+    "HACCP·위생관리":
+      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
+      +'<path d="M24 6 L38 12 L38 26 C38 34 31 40 24 43 C17 40 10 34 10 26 L10 12 Z" stroke="#2E8A6A" stroke-width="2.5" stroke-linejoin="round" fill="#2E8A6A" fill-opacity=".1"/>'
+      +'<path d="M18 24 L22 28 L30 20" stroke="#2E8A6A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      +'</svg>',
+    "전체 보기":
+      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
+      +'<rect x="8" y="8" width="13" height="13" rx="3" stroke="#888" stroke-width="2.5" fill="none"/>'
+      +'<rect x="27" y="8" width="13" height="13" rx="3" stroke="#888" stroke-width="2.5" fill="none"/>'
+      +'<rect x="8" y="27" width="13" height="13" rx="3" stroke="#888" stroke-width="2.5" fill="none"/>'
+      +'<rect x="27" y="27" width="13" height="13" rx="3" stroke="#888" stroke-width="2.5" fill="none"/>'
+      +'</svg>'
+  };
+
+  CATS_ALL.forEach(function(cat,i){
+    var d=document.createElement("div");d.className="cat-item"+(i===0?" on":"");
+    var icon=ICONS[cat.nm]||ICONS["전체 보기"];
+    d.innerHTML='<div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;">'+icon+'</div>'
+      +'<div class="cat-nm">'+cat.nm+'</div>';
+    d.onclick=function(){
+      document.querySelectorAll(".cat-item").forEach(function(x){x.classList.remove("on");});
+      d.classList.add("on");
+      if(cat.cat==="all")go("rw");
+      else goReq(cat.cat);
+    };
+    el.appendChild(d);
+  });
+}
+
+/* ═ 렌더: 카테고리 이미지 카드 ═ */
+function renderCatImgGrid(){
+  var el=document.getElementById("cat-img-grid");if(!el)return;el.innerHTML="";
+  var svgEls=document.querySelectorAll('script[type="text/x-svg-data"]');
+  CATS_ALL.slice(0,7).forEach(function(cat,i){
+    var scEl=svgEls[i];
+    var svgContent=scEl?scEl.innerHTML:"";
+    var bg=scEl?scEl.dataset.bg:"#111";
+    var d=document.createElement("div");d.className="cig-card";
+    d.innerHTML=
+      '<div class="cig-img" style="position:relative;overflow:hidden;">'
+      +'<svg viewBox="0 0 280 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;display:block;">'
+      +svgContent
+      +'</svg>'
+      +'<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.0) 30%,rgba(0,0,0,.62) 100%);"></div>'
+      +'<div class="cig-nm-ov">'+cat.nm+'</div>'
+      +'</div>'
+      +'<div class="cig-footer"><div class="cig-cnt">'+cat.sub+'</div><div class="cig-arr">›</div></div>';
+    d.onclick=function(){goReq(cat.cat);};
+    el.appendChild(d);
+  });
+}
+
+/* ═ 렌더: 4단 위젯 ═ */
+function renderRQWidget(){
+  var el=document.getElementById("rq-widget");if(!el)return;
+  el.innerHTML=REQS.map(function(r){
+    return '<div class="rq-row" onclick="go(&quot;rw&quot;)">'+
+      '<div class="rq-ico" style="background:'+r.cc+';">'+r.ico+'</div>'+
+      '<div class="rq-body"><div class="rq-title">'+r.title+'</div><div class="rq-meta">'+r.meta+'</div></div>'+
+      '<div class="rq-cnt">'+r.cnt+'</div></div>';
+  }).join('');
+}
+function renderPropWidget(){
+  var el=document.getElementById("prop-widget");if(!el)return;
+  el.innerHTML=PROPS.map(function(p){
+    return '<div class="prop-row" onclick="goReq(&quot;부동산&quot;)">'+
+      '<div class="prop-thumb" style="background:'+p.cl+';"><svg viewBox="0 0 52 40" fill="none" style="width:100%;height:100%;"><rect width="52" height="40" fill="'+p.cl+'"/><ellipse cx="26" cy="22" rx="18" ry="12" fill="rgba(255,255,255,.1)"/></svg></div>'+
+      '<div class="prop-body"><div class="prop-nm">'+p.nm+'</div><div class="prop-info">'+p.info+'</div></div></div>';
+  }).join('');
+}
+function renderPriceWidget(eid,cat){
+  var el=document.getElementById(eid);if(!el)return;
+  var data=PRICE_DATA[cat]||PRICE_DATA.beef;
+  el.innerHTML=data.map(function(p){
+    return '<div class="price-row"><div class="price-item">'+p.item+'</div><div style="text-align:right;"><div class="price-val">'+p.price+'<span style="font-size:11px;color:var(--ink4);font-weight:400;"> '+p.unit+'</span></div><div class="price-chg '+(p.up?"p-up":"p-dn")+'">'+p.chg+'</div></div></div>';
+  }).join('');
+}
+
+/* ═ 렌더: 6단 위젯 ═ */
+function renderRankWidget(){
+  var el=document.getElementById("rank-widget");if(!el)return;
+  el.innerHTML=RANKS.map(function(r,i){
+    return '<div class="rank-row"><div class="rank-num">'+(i+1)+'</div><div style="flex:1;min-width:0;"><div class="rank-nm">'+r.nm+'</div><div class="rank-cat">'+r.cat+'</div></div><div class="rank-rt">'+r.rt+'</div></div>';
+  }).join('');
+}
+function renderNewSupWidget(){
+  var el=document.getElementById("new-sup-widget");if(!el)return;
+  el.innerHTML=NEW_SUPS.map(function(s){
+    return '<div class="new-sup-row"><div class="ns-avatar">'+s.ico+'</div><div style="flex:1;min-width:0;"><div class="ns-nm">'+s.nm+'</div><div class="ns-sub">'+s.sub+'</div></div>'+(s.isnew?'<div class="ns-new">NEW</div>':'')+'</div>';
+  }).join('');
+}
+function mkNewsThumb(cl){
+  return '<svg viewBox="0 0 44 34" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;"><rect width="44" height="34" fill="'+cl+'"/><rect x="5" y="8" width="34" height="5" rx="2" fill="rgba(255,255,255,.1)"/><rect x="5" y="17" width="24" height="3" rx="1" fill="rgba(255,255,255,.07)"/><rect x="5" y="24" width="28" height="3" rx="1" fill="rgba(255,255,255,.07)"/></svg>';
+}
+function renderNewsWidget(){
+  var el=document.getElementById("news-widget");if(!el)return;
+  el.innerHTML=NEWS.map(function(n){
+    return '<div class="news-row"><div class="nr-thumb" style="background:'+n.cl+';">'+mkNewsThumb(n.cl)+'</div><div><div class="nr-title">'+n.title+'</div><div class="nr-date">'+n.date+'</div></div></div>';
+  }).join('');
+}
+function renderInsightWidget(){
+  var el=document.getElementById("insight-widget");if(!el)return;
+  el.innerHTML=INSIGHTS.map(function(n){
+    return '<div class="news-row"><div class="nr-thumb" style="background:'+n.cl+';">'+mkNewsThumb(n.cl)+'</div><div><div class="nr-title">'+n.title+'</div><div class="nr-date">'+n.date+'</div></div></div>';
+  }).join('');
+}
+function renderJobWidget(){
+  var el=document.getElementById("job-widget");if(!el)return;
+  el.innerHTML=JOBS.filter(function(j){return j.type==="full";}).slice(0,5).map(function(j){
+    return '<div class="job-row" onclick="go(&quot;jobs&quot;)">'+
+      '<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">'+
+        '<span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;background:var(--gnl);color:var(--gn2);">'+
+          (j.urgent?"🔴 급구":"정규직")+
+        '</span>'+
+      '</div>'+
+      '<div class="jr-title">'+j.role+'</div>'+
+      '<div class="jr-meta">'+
+        '<div class="jr-loc">'+j.loc+'</div>'+
+        '<div class="jr-pay">'+j.pay+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+function renderCommWidget(){
+  var el=document.getElementById("comm-widget");if(!el)return;
+  el.innerHTML=COMM_HOT.map(function(c){
+    return '<div class="comm-row"><div class="cr-rank">'+c.rank+'</div><div style="flex:1;min-width:0;"><div class="cr-title">'+c.title+'</div><div style="font-size:10px;color:var(--ink4);">댓글 '+c.cnt+'</div></div></div>';
+  }).join('');
+}
+
+/* ═ 렌더: 공급업체 ═ */
+function mkSC(s){
+  var d=document.createElement("div");d.className="sc"+(s.vf?" vf":"");
+  d.innerHTML=
+    '<div class="sc-img" style="background:'+s.cl+';">'+
+    '<svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;display:block;"><rect width="200" height="100" fill="'+s.cl+'"/><ellipse cx="100" cy="60" rx="70" ry="40" fill="rgba(255,255,255,.06)"/></svg>'+
+    '<div class="sc-img-ov"></div>'+(s.vf?'<div class="sc-cert">고리인증</div>':'')+
+    '<div class="sc-nm">'+s.nm+'</div>'+
+    '<div class="sc-rt"><span class="sc-star">★</span><span class="sc-rtv">'+s.rt.toFixed(1)+'</span></div></div>'+
+    '<div class="sc-body"><div class="sc-cat">'+s.cat+'</div>'+
+    '<div class="sc-stats">'+
+    '<div><div class="sc-sv">'+s.rs+'</div><div class="sc-sl">응답</div></div>'+
+    '<div><div class="sc-sv">'+s.rb+'%</div><div class="sc-sl">재구매</div></div>'+
+    '<div><div class="sc-sv" style="color:'+(s.cr<1?"var(--gn)":"#F59E0B")+'">'+(s.cr===0?"0%":s.cr+'%')+'</div><div class="sc-sl">클레임</div></div>'+
+    '</div>'+
+    '<div class="sc-btn-area">'+
+    '<button class="sc-btn sc-btn-gn" onclick="event.stopPropagation();go(&quot;rw&quot;)">견적 요청</button>'+
+    '<button class="sc-btn sc-btn-wh" onclick="event.stopPropagation();curSID=&quot;'+s.id+'&quot;;go(&quot;sp&quot;)">프로필</button>'+
+    '</div></div>';
+  return d;
+}
+function renderSupHome(cat){
+  var el=document.getElementById("sup-home");if(!el)return;el.innerHTML="";
+  var data=(!cat||cat==="all")?SUPS:SUPS.filter(function(s){return s.cats.some(function(c){return c===cat;});});
+  data.slice(0,5).forEach(function(s){el.appendChild(mkSC(s));});
+}
+function renderSups(cat){
+  var el=document.getElementById("sup-full");if(!el)return;el.innerHTML="";
+  var data=(!cat||cat==="all")?SUPS:SUPS.filter(function(s){return s.cats.some(function(c){return c===cat;});});
+  data.forEach(function(s){el.appendChild(mkSC(s));});
+}
+function renderSP(id){
+  var el=document.getElementById("sp-body");if(!el)return;
+  var s=SUPS.find(function(x){return x.id===id;})||SUPS[0];
+  el.innerHTML='<div style="padding:14px;"><button class="back-btn" style="padding:0;" onclick="go(&quot;suppliers&quot;)">← 업체 목록</button></div>'+
+    '<div style="height:160px;background:'+s.cl+';position:relative;"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(0,0,0,.7) 100%);"></div>'+
+    '<div style="position:absolute;bottom:14px;left:16px;"><div style="font-size:20px;font-weight:800;color:#fff;">'+s.nm+'</div><div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:2px;">'+s.cat+'</div></div></div>'+
+    '<div style="background:var(--navy);display:grid;grid-template-columns:repeat(3,1fr);text-align:center;">'+
+    '<div style="padding:12px;"><div style="font-size:14px;font-weight:800;color:#fff;">'+s.rs+'</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;">응답속도</div></div>'+
+    '<div style="padding:12px;border:0 solid rgba(255,255,255,.06);border-left-width:1px;border-right-width:1px;"><div style="font-size:14px;font-weight:800;color:#fff;">'+s.rb+'%</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;">재구매</div></div>'+
+    '<div style="padding:12px;"><div style="font-size:14px;font-weight:800;color:'+(s.cr<1?"#4ADE80":"#F59E0B")+'">'+(s.cr===0?"0%":s.cr+'%')+'</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;">클레임</div></div>'+
+    '</div>'+
+    '<div style="padding:14px;"><div class="fc"><div class="fct">업체 소개</div><p style="font-size:14px;color:var(--ink2);line-height:1.7;">'+s.cat+' 전문 업체입니다.</p></div>'+
+    '<div style="display:flex;gap:9px;margin-top:12px;"><button class="btn btn-gn" onclick="go(&quot;rw&quot;)" style="flex:2;padding:12px;">이 업체에 견적 요청</button><button class="btn btn-wh" onclick="alert(&quot;카카오채널로 문의해주세요.&quot;)" style="flex:1;padding:12px;">문의</button></div></div>';
+}
+
+/* ═ 렌더: 요청 목록 ═ */
+function renderReqs(){
+  var el=document.getElementById("rq-list-full");if(!el)return;el.innerHTML="";
+  var data=curRC==="all"?REQS:REQS.filter(function(r){return r.cat===curRC;});
+  data.forEach(function(r){
+    var d=document.createElement("div");d.className="card";
+    d.style.cssText="padding:14px;display:flex;gap:10px;align-items:flex-start;";
+    d.innerHTML='<div style="width:36px;height:36px;border-radius:9px;background:'+r.cc+';display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">'+r.ico+'</div>'+
+      '<div style="flex:1;"><div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:3px;">'+r.title+'</div><div style="font-size:12px;color:var(--ink3);">'+r.meta+'</div></div>'+
+      '<div style="font-size:13px;font-weight:800;color:var(--gn);">'+r.cnt+'</div>';
+    d.onclick=function(){go("rw");};
+    el.appendChild(d);
+  });
+}
+
+/* ═ 렌더: 시세 ═ */
+function renderMarket(){
+  var el=document.getElementById("market-full");if(!el)return;
+  el.innerHTML='<div class="tab-bar" style="padding:0 14px;margin-bottom:0;border-bottom:1px solid var(--bd);" id="mkt-tabs">'+
+    '<div class="tab on" onclick="swMkt(this,&quot;beef&quot;)">한우</div>'+
+    '<div class="tab" onclick="swMkt(this,&quot;pork&quot;)">돼지</div>'+
+    '<div class="tab" onclick="swMkt(this,&quot;import&quot;)">국산 곱창</div></div>'+
+    '<div id="mkt-table" style="padding:4px 0;"></div>';
+  renderPriceWidget("mkt-table","beef");
+}
+function swMkt(el,cat){document.querySelectorAll("#mkt-tabs .tab").forEach(function(t){t.classList.remove("on");});el.classList.add("on");renderPriceWidget("mkt-table",cat);}
+
+/* ═ 렌더: 뉴스 ═ */
+function renderNewsPage(){
+  var el=document.getElementById("news-full");if(!el)return;el.innerHTML="";
+  NEWS.concat(INSIGHTS).forEach(function(n){
+    var d=document.createElement("div");
+    d.style.cssText="display:flex;gap:13px;padding:14px;background:#fff;border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;";
+    d.innerHTML='<div style="width:80px;height:60px;border-radius:8px;background:'+n.cl+';flex-shrink:0;overflow:hidden;position:relative;">'+mkNewsThumb(n.cl)+'</div>'+
+      '<div><div style="font-size:10px;font-weight:700;color:var(--gn);margin-bottom:5px;">'+n.cat+'</div><div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px;">'+n.title+'</div><div style="font-size:12px;color:var(--ink4);">'+n.date+'</div></div>';
+    el.appendChild(d);
+  });
+}
+
+/* ═ 렌더: 커뮤니티 ═ */
+function renderComm(){
+  var cats=[["고기 구매 팁"],["창업 경험"],["정육사 이야기"],["OEM·가공"],["뉴스·정책"]];
+  var ec=document.getElementById("comm-cats");
+  if(ec)ec.innerHTML=cats.map(function(c){return'<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bg);cursor:pointer;font-size:13px;color:var(--ink2);font-weight:600;">'+c[0]+'<span style="font-size:11px;color:var(--ink4);">→</span></div>';}).join('');
+  var el=document.getElementById("comm-list-full");
+  if(el)el.innerHTML=COMM_HOT.map(function(c){return'<div style="background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:9px;cursor:pointer;"><div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:5px;">'+c.title+'</div><div style="font-size:12px;color:var(--ink4);">댓글 '+c.cnt+'</div></div>';}).join('');
+}
+
+/* ═ 렌더: 구인구직 ═ */
+function renderJobsFull(){
+  var el=document.getElementById("job-full");if(!el)return;el.innerHTML="";
+
+  /* 통계 바 */
+  var fullCnt=JOBS.filter(function(j){return j.type==="full";}).length;
+  var contractCnt=JOBS.filter(function(j){return j.type==="contract";}).length;
+  var partCnt=JOBS.filter(function(j){return j.type==="part";}).length;
+  var urgentCnt=JOBS.filter(function(j){return j.urgent;}).length;
+
+  var statsBar=document.createElement("div");
+  statsBar.className="job-stats-bar";
+  statsBar.innerHTML=
+    '<div class="jsb-item"><span class="jsb-dot" style="background:var(--gn)"></span>정규직 <span class="jsb-count">'+fullCnt+'건</span></div>'+
+    '<div class="jsb-item"><span class="jsb-dot" style="background:var(--navy)"></span>계약직 <span class="jsb-count">'+contractCnt+'건</span></div>'+
+    '<div class="jsb-item"><span class="jsb-dot" style="background:#8A9AAA"></span>알바 <span class="jsb-count">'+partCnt+'건</span></div>'+
+    '<div class="jsb-item" style="margin-left:auto;"><span style="color:var(--red);font-weight:700;">🔴 급구 '+urgentCnt+'건</span></div>';
+
+  /* 필터 바 */
+  var filterBar=document.createElement("div");
+  filterBar.className="job-filter-bar";
+  filterBar.style.cssText="padding:12px 0 0;";
+  var curFilter="all";
+  function makeFilterBtn(label,val,extraCls){
+    var btn=document.createElement("button");
+    btn.className="job-filter-btn"+(val==="all"?" on":"")+(extraCls?" "+extraCls:"");
+    btn.textContent=label;
+    btn.onclick=function(){
+      curFilter=val;
+      filterBar.querySelectorAll(".job-filter-btn").forEach(function(b){b.classList.remove("on");});
+      btn.classList.add("on");
+      renderList();
+    };
+    return btn;
+  }
+  filterBar.appendChild(makeFilterBtn("전체","all"));
+  filterBar.appendChild(makeFilterBtn("🔴 급구","urgent","urgent-btn"));
+  filterBar.appendChild(makeFilterBtn("정규직","full"));
+  filterBar.appendChild(makeFilterBtn("계약직","contract"));
+  filterBar.appendChild(makeFilterBtn("알바","part"));
+
+  /* 리스트 컨테이너 */
+  var listWrap=document.createElement("div");
+  listWrap.style.cssText="display:flex;flex-direction:column;gap:8px;";
+
+  function renderList(){
+    listWrap.innerHTML="";
+    var data=JOBS;
+    if(curFilter==="urgent") data=JOBS.filter(function(j){return j.urgent;});
+    else if(curFilter!=="all") data=JOBS.filter(function(j){return j.type===curFilter;});
+
+    data.forEach(function(j){
+      var card=document.createElement("div");
+      card.className="job-card";
+      card.onclick=function(){go("rw");};
+
+      var accentCls=j.type==="full"?"jca-full":j.type==="contract"?"jca-contract":"jca-part";
+      var badgeCls=j.type==="full"?"jeb-full":j.type==="contract"?"jeb-contract":"jeb-part";
+      var badgeTxt=j.type==="full"?"정규직":j.type==="contract"?"계약직":"알바";
+
+      card.innerHTML=
+        '<div class="job-card-accent '+accentCls+'"></div>'+
+        '<div class="job-card-body">'+
+          '<div class="job-card-main">'+
+            '<div class="job-card-top">'+
+              '<span class="job-emp-badge '+badgeCls+'">'+badgeTxt+'</span>'+
+              (j.urgent?'<span class="job-urgent">급구</span>':'')+
+            '</div>'+
+            '<div class="job-role">'+j.role+'</div>'+
+            '<div class="job-meta">'+
+              '<span class="job-biz">'+j.biz+'</span>'+
+              '<span class="job-loc">'+j.loc+'</span>'+
+              (j.benefit?'<span class="job-benefit">· '+j.benefit+'</span>':'')+
+            '</div>'+
+          '</div>'+
+          '<div class="job-card-right">'+
+            '<div class="job-pay">'+j.pay+'</div>'+
+            '<div class="job-date">'+j.d+'</div>'+
+            '<button class="job-apply-btn" onclick="event.stopPropagation();go(&quot;rw&quot;)">지원하기</button>'+
+          '</div>'+
+        '</div>';
+      listWrap.appendChild(card);
+    });
+
+    if(!data.length){
+      listWrap.innerHTML='<div style="text-align:center;padding:48px;color:var(--ink4);font-size:14px;">해당 공고가 없습니다</div>';
+    }
+  }
+
+  el.appendChild(statsBar);
+  el.appendChild(filterBar);
+  el.appendChild(listWrap);
+  renderList();
+}
+
+/* ═ 렌더: 카테고리 대분류 ═ */
+function renderCatPage(p){
+  var info={
+    "cat-trade":{nm:"거래",d:"소고기·돼지고기·부산물·내장·특수부위·수입육",cats:["소고기","돼지고기","부산물·내장","내장","특수부위","수입육"]},
+    "cat-prod":{nm:"생산",d:"도축장·출하·경매·육가공·OEM",cats:["도축장","출하 의뢰","경매","육가공","OEM"]},
+    "cat-ops":{nm:"운영",d:"물류·포장재·장비·HACCP·위생관리",cats:["물류","포장재","장비","HACCP","위생관리"]},
+    "cat-biz":{nm:"사업",d:"구인구직·창업·인테리어·세무·노무·마케팅",cats:["구인구직","창업","인테리어","세무·노무","마케팅"]}
+  };
+  var cat=info[p];if(!cat)return;
+  var el=document.getElementById(p+"-body");if(!el)return;
+  var btns=cat.cats.map(function(ct){
+    var b=document.createElement("button");
+    b.style.cssText="padding:10px 17px;border:1.5px solid var(--bd);border-radius:var(--r);font-size:13px;font-weight:700;color:var(--ink2);background:#fff;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s;";
+    b.textContent=ct;
+    b.onmouseenter=function(){this.style.borderColor="var(--gn)";this.style.color="var(--gn)";this.style.background="var(--gnl)";};
+    b.onmouseleave=function(){this.style.borderColor="var(--bd)";this.style.color="var(--ink2)";this.style.background="#fff";};
+    b.onclick=function(){goReq(ct);};
+    return b.outerHTML;
+  }).join("");
+  el.innerHTML='<button class="back-btn" style="padding:0;margin-bottom:14px;" onclick="go(&quot;h&quot;)">← 홈으로</button>'+
+    '<div style="margin-bottom:20px;"><div style="font-size:11px;font-weight:800;color:var(--gn);letter-spacing:2px;margin-bottom:6px;">'+cat.nm.toUpperCase()+'</div>'+
+    '<div style="font-size:26px;font-weight:800;color:var(--ink);margin-bottom:4px;">'+cat.nm+'</div>'+
+    '<div style="font-size:14px;color:var(--ink3);">'+cat.d+'</div></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">'+btns+'</div>'+
+    '<div style="background:var(--gnl);border:1px solid var(--gnb);border-radius:var(--r);padding:18px;text-align:center;">'+
+    '<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:5px;">'+cat.nm+' 관련 견적을 무료로 요청하세요</div>'+
+    '<div style="font-size:13px;color:var(--ink3);margin-bottom:13px;">요청서를 작성하면 관련 업체들이 직접 제안합니다</div>'+
+    '<button onclick="go(&quot;rw&quot;)" class="btn btn-gn" style="max-width:260px;margin:0 auto;">무료 견적 요청하기</button></div>';
+}
+
+/* ═ Supabase ═ */
+async function subReq(){
+  var name=(document.getElementById("f-name")||{value:""}).value.trim();
+  var phone=(document.getElementById("f-phone")||{value:""}).value.trim();
+  var biz=(document.getElementById("f-biz")||{value:""}).value.trim();
+  var msg=document.getElementById("rw-msg");
+  if(!name||!phone){msg.textContent="이름과 연락처를 입력해주세요.";msg.className="msg err";msg.style.display="block";return;}
+  msg.textContent="등록 중...";msg.className="msg";msg.style.display="block";
+  /* 동적 입력 필드(품목·수량 등)를 요청 내용으로 합침 */
+  var parts=[];
+  document.querySelectorAll("#rw-dynamic-fields .fl").forEach(function(lb){
+    var inp=lb.nextElementSibling;
+    if(inp&&inp.value&&String(inp.value).trim())parts.push(lb.textContent.replace("*","").trim()+": "+String(inp.value).trim());
+  });
+  var desc=parts.join(" / ");
+  if(!sb){setTimeout(function(){msg.textContent="✅ 등록 완료! 업체들이 즉시 알림을 받습니다.";msg.className="msg ok";},700);return;}
+  try{
+    var r=await sb.from("purchase_requests").insert({request_number:"REQ-"+Date.now(),category:curReqCat,region:"전국",buyer_name:name,buyer_phone:phone,buyer_company:biz||null,description:desc||null,status:"견적대기",quote_count:0});
+    if(r.error)throw r.error;
+    msg.textContent="✅ 등록 완료!";msg.className="msg ok";
+  }catch(e){msg.textContent="오류: "+e.message;msg.className="msg err";}
+}
+async function subProf(t){
+  var msgEl=document.getElementById(t==="hire"?"hire-msg":"seek-msg");
+  msgEl.textContent="등록 중...";msgEl.className="msg";msgEl.style.display="block";
+  setTimeout(function(){msgEl.textContent=t==="hire"?"✅ 구인 공고 등록 완료!":"✅ 구직 프로필 등록 완료!";msgEl.className="msg ok";},700);
+}
+async function subSup(){
+  var nm=document.getElementById("sj-nm").value.trim(),tel=document.getElementById("sj-tel").value.trim();
+  var msg=document.getElementById("sj-msg");
+  if(!nm||!tel){msg.textContent="업체명과 연락처는 필수입니다.";msg.className="msg err";msg.style.display="block";return;}
+  msg.textContent="등록 중...";msg.className="msg";msg.style.display="block";
+  if(!sb){setTimeout(function(){msg.textContent="✅ 등록 신청 완료!";msg.className="msg ok";},600);return;}
+  try{
+    var cats=[];document.querySelectorAll("#sj-cats .chip.on").forEach(function(c){cats.push(c.textContent.trim());});
+    var r=await sb.from("suppliers").insert({name:nm,contact:tel,region:document.getElementById("sj-region").value,categories:cats,description:document.getElementById("sj-desc").value,rating:0,is_verified:false});
+    if(r.error)throw r.error;
+    msg.textContent="✅ 등록 신청 완료!";msg.className="msg ok";
+  }catch(e){msg.textContent="오류: "+e.message;msg.className="msg err";}
+}
+
+/* ═ 모달 ═ */
+function openModal(tab){document.getElementById('auth-modal').style.display='flex';document.body.style.overflow='hidden';switchAuthTab(tab||'login');}
+function closeModal(){document.getElementById('auth-modal').style.display='none';document.body.style.overflow='';}
+function switchAuthTab(tab){document.getElementById('atab-login').classList.toggle('on',tab==='login');document.getElementById('atab-signup').classList.toggle('on',tab==='signup');document.getElementById('auth-login').style.display=tab==='login'?'block':'none';document.getElementById('auth-signup').style.display=tab==='signup'?'block':'none';}
+function authKakao(){alert('카카오 로그인은 준비 중입니다.');}
+function showAM(id,txt,ok){var el=document.getElementById(id);el.textContent=txt;el.className='auth-msg '+(ok?'ok':'err');el.style.display='block';}
+async function doLogin(){
+  var email=document.getElementById('l-email').value.trim(),pw=document.getElementById('l-pw').value;
+  if(!email||!pw){showAM('login-msg','이메일과 비밀번호를 입력해주세요.',false);return;}
+  if(!sb){showAM('login-msg','로그인 성공! (데모)',true);return;}
+  try{var r=await sb.auth.signInWithPassword({email:email,password:pw});if(r.error)throw r.error;showAM('login-msg','로그인 성공!',true);setTimeout(closeModal,1000);}
+  catch(e){showAM('login-msg',e.message,false);}
+}
+async function doSignup(){
+  var name=document.getElementById('s-name').value.trim(),email=document.getElementById('s-email').value.trim(),pw=document.getElementById('s-pw').value;
+  if(!name||!email||!pw){showAM('signup-msg','이름, 이메일, 비밀번호는 필수입니다.',false);return;}
+  if(pw.length<8){showAM('signup-msg','비밀번호는 8자 이상이어야 합니다.',false);return;}
+  if(!sb){showAM('signup-msg','가입 완료! (데모)',true);return;}
+  try{var r=await sb.auth.signUp({email:email,password:pw,options:{data:{name:name}}});if(r.error)throw r.error;showAM('signup-msg','가입 완료! 이메일을 확인해주세요.',true);}
+  catch(e){showAM('signup-msg',e.message,false);}
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
+
+/* ═ 초기화 ═ */
+function renderHome(){
+  renderLive();
+  renderCatIconBar();
+  renderCatImgGrid();
+  renderRQWidget();
+  renderPropWidget();
+  renderPriceWidget("price-widget","beef");
+  renderRankWidget();
+  renderNewSupWidget();
+  renderNewsWidget();
+  renderInsightWidget();
+  renderJobWidget();
+  renderCommWidget();
+  renderSupHome("all");
+}
+renderHome();
+</script>
+<script type="text/x-svg-data" id="svg______" data-bg="#1A0A0A">
+<defs>
+  <linearGradient id="b0" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#2A0F0F"/>
+    <stop offset="70%" stop-color="#1A0808"/>
+    <stop offset="100%" stop-color="#0A0404"/>
+  </linearGradient>
+  <radialGradient id="light0" cx="50%" cy="0%" r="70%">
+    <stop offset="0%" stop-color="rgba(255,220,160,.18)"/>
+    <stop offset="100%" stop-color="transparent"/>
+  </radialGradient>
+  <radialGradient id="m1" cx="50%" cy="40%" r="55%">
+    <stop offset="0%" stop-color="#C44040"/>
+    <stop offset="60%" stop-color="#8B2020"/>
+    <stop offset="100%" stop-color="#5A1010"/>
+  </radialGradient>
+  <radialGradient id="m2" cx="50%" cy="35%" r="55%">
+    <stop offset="0%" stop-color="#CC4848"/>
+    <stop offset="60%" stop-color="#962828"/>
+    <stop offset="100%" stop-color="#601818"/>
+  </radialGradient>
+</defs>
+<rect width="280" height="120" fill="url(#b0)"/>
+<rect width="280" height="120" fill="url(#light0)"/>
+<!-- 천장 레일 시스템 -->
+<rect x="0" y="12" width="280" height="3.5" rx="1.5" fill="rgba(255,255,255,.22)"/>
+<rect x="0" y="13.5" width="280" height="1" fill="rgba(255,255,255,.1)"/>
+<!-- 레일 지지대 -->
+<rect x="34" y="8" width="2" height="9" rx="1" fill="rgba(255,255,255,.35)"/>
+<rect x="74" y="8" width="2" height="9" rx="1" fill="rgba(255,255,255,.3)"/>
+<rect x="114" y="8" width="2" height="9" rx="1" fill="rgba(255,255,255,.35)"/>
+<rect x="154" y="8" width="2" height="9" rx="1" fill="rgba(255,255,255,.3)"/>
+<rect x="194" y="8" width="2" height="9" rx="1" fill="rgba(255,255,255,.32)"/>
+<rect x="234" y="8" width="2" height="9" rx="1" fill="rgba(255,255,255,.28)"/>
+<!-- 훅 (S자 갈고리) -->
+<path d="M35 12 Q35 8 38 7 Q41 6 41 9 Q41 12 38 12" stroke="rgba(255,255,255,.5)" stroke-width="1.2" fill="none"/>
+<path d="M75 12 Q75 8 78 7 Q81 6 81 9 Q81 12 78 12" stroke="rgba(255,255,255,.45)" stroke-width="1.2" fill="none"/>
+<path d="M115 12 Q115 8 118 7 Q121 6 121 9 Q121 12 118 12" stroke="rgba(255,255,255,.5)" stroke-width="1.2" fill="none"/>
+<path d="M155 12 Q155 8 158 7 Q161 6 161 9 Q161 12 158 12" stroke="rgba(255,255,255,.48)" stroke-width="1.2" fill="none"/>
+<path d="M195 12 Q195 8 198 7 Q201 6 201 9 Q201 12 198 12" stroke="rgba(255,255,255,.45)" stroke-width="1.2" fill="none"/>
+<path d="M235 12 Q235 8 238 7 Q241 6 241 9 Q241 12 238 12" stroke="rgba(255,255,255,.4)" stroke-width="1.2" fill="none"/>
+<!-- 지육 1 -->
+<path d="M30 12 Q26 30 24 52 Q22 74 28 92 Q34 106 40 92 Q46 74 44 52 Q42 30 38 12 Z" fill="url(#m1)" opacity=".88"/>
+<path d="M32 12 Q29 30 28 52 Q27 72 31 88" stroke="rgba(0,0,0,.3)" stroke-width="1.5" fill="none"/>
+<path d="M38 12 Q41 30 42 52 Q43 72 39 88" stroke="rgba(255,255,255,.08)" stroke-width="1" fill="none"/>
+<!-- 지육 2 (조금 다른 형태) -->
+<path d="M70 12 Q65 28 62 50 Q60 72 66 90 Q72 105 80 90 Q86 72 84 50 Q81 28 76 12 Z" fill="url(#m2)" opacity=".9"/>
+<path d="M73 12 Q69 28 68 50 Q67 70 70 86" stroke="rgba(0,0,0,.25)" stroke-width="1.5" fill="none"/>
+<!-- 지육 3 -->
+<path d="M110 12 Q106 30 104 53 Q102 76 108 94 Q114 108 122 94 Q128 76 126 53 Q123 30 118 12 Z" fill="url(#m1)" opacity=".85"/>
+<path d="M113 12 Q110 30 109 53 Q108 72 111 88" stroke="rgba(0,0,0,.3)" stroke-width="1.5" fill="none"/>
+<!-- 지육 4 -->
+<path d="M150 12 Q146 28 144 50 Q142 72 148 90 Q154 104 162 90 Q168 72 166 50 Q163 28 158 12 Z" fill="url(#m2)" opacity=".87"/>
+<!-- 지육 5 -->
+<path d="M190 12 Q186 30 184 52 Q182 74 188 92 Q194 106 202 92 Q208 74 206 52 Q203 30 198 12 Z" fill="url(#m1)" opacity=".82"/>
+<!-- 지육 6 -->
+<path d="M230 12 Q226 28 224 50 Q222 70 228 88 Q234 102 242 88 Q248 70 246 50 Q243 28 238 12 Z" fill="url(#m2)" opacity=".78"/>
+<!-- 고기 사이 그림자/음영 -->
+<rect x="46" y="14" width="16" height="96" fill="rgba(0,0,0,.3)"/>
+<rect x="86" y="14" width="16" height="96" fill="rgba(0,0,0,.28)"/>
+<rect x="128" y="14" width="14" height="96" fill="rgba(0,0,0,.3)"/>
+<rect x="168" y="14" width="14" height="96" fill="rgba(0,0,0,.28)"/>
+<rect x="208" y="14" width="14" height="96" fill="rgba(0,0,0,.3)"/>
+<!-- 바닥 -->
+<rect x="0" y="108" width="280" height="12" fill="rgba(0,0,0,.55)"/>
+<!-- 조명 반사 (천장) -->
+<ellipse cx="140" cy="2" rx="200" ry="40" fill="rgba(255,200,150,.06)"/>
+</script>
+<script type="text/x-svg-data" id="svg____________" data-bg="#2A0808">
+<defs>
+  <linearGradient id="b1" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#380E0E"/>
+    <stop offset="100%" stop-color="#180606"/>
+  </linearGradient>
+  <radialGradient id="rl1" cx="50%" cy="0%" r="80%">
+    <stop offset="0%" stop-color="rgba(255,180,100,.1)"/>
+    <stop offset="100%" stop-color="transparent"/>
+  </radialGradient>
+</defs>
+<rect width="280" height="120" fill="url(#b1)"/>
+<rect width="280" height="120" fill="url(#rl1)"/>
+<!-- 스테인리스 진열대 -->
+<rect x="8" y="56" width="264" height="7" rx="2" fill="rgba(200,200,200,.18)"/>
+<rect x="8" y="57" width="264" height="2" fill="rgba(255,255,255,.12)"/>
+<rect x="8" y="84" width="264" height="6" rx="2" fill="rgba(200,200,200,.14)"/>
+<!-- 선반 다리 -->
+<rect x="14" y="63" width="3" height="45" rx="1" fill="rgba(200,200,200,.15)"/>
+<rect x="263" y="63" width="3" height="45" rx="1" fill="rgba(200,200,200,.15)"/>
+<rect x="135" y="63" width="3" height="25" rx="1" fill="rgba(200,200,200,.1)"/>
+<!-- 곱창 (풍성하게 쌓인) -->
+<path d="M18 50 Q30 36 44 50 Q58 64 72 50 Q86 36 100 50 Q114 64 128 50 Q142 36 156 50 Q170 64 184 50 Q198 36 212 50 Q226 64 240 50 Q254 36 265 50" stroke="#CC3030" stroke-width="8" stroke-linecap="round" fill="none" opacity=".8"/>
+<path d="M18 54 Q30 40 44 54 Q58 68 72 54 Q86 40 100 54 Q114 68 128 54 Q142 40 156 54 Q170 68 184 54 Q198 40 212 54 Q226 68 240 54 Q254 40 265 54" stroke="#A82020" stroke-width="5" stroke-linecap="round" fill="none" opacity=".6"/>
+<path d="M18 47 Q30 33 44 47 Q58 61 72 47 Q86 33 100 47 Q114 61 128 47" stroke="#E04040" stroke-width="3" stroke-linecap="round" fill="none" opacity=".4"/>
+<!-- 대창 (둥글고 두꺼운) -->
+<ellipse cx="46" cy="75" rx="32" ry="11" fill="#9A2020" opacity=".7"/>
+<ellipse cx="46" cy="73" rx="30" ry="8" fill="#B82828" opacity=".5"/>
+<ellipse cx="46" cy="72" rx="24" ry="5" fill="rgba(255,100,100,.15)"/>
+<ellipse cx="140" cy="77" rx="38" ry="12" fill="#9A2020" opacity=".65"/>
+<ellipse cx="140" cy="75" rx="36" ry="9" fill="#B82828" opacity=".5"/>
+<ellipse cx="140" cy="74" rx="28" ry="5" fill="rgba(255,100,100,.12)"/>
+<ellipse cx="234" cy="75" rx="32" ry="11" fill="#9A2020" opacity=".6"/>
+<ellipse cx="234" cy="73" rx="30" ry="8" fill="#B82828" opacity=".45"/>
+<!-- 우설/스지 형태 -->
+<path d="M20 94 Q46 88 72 94 Q72 102 46 105 Q20 102 20 94 Z" fill="#8B1A1A" opacity=".55"/>
+<path d="M22 95 Q46 90 70 95" stroke="rgba(255,100,100,.2)" stroke-width="1" fill="none"/>
+<path d="M100 93 Q136 87 172 93 Q172 101 136 104 Q100 101 100 93 Z" fill="#8B1A1A" opacity=".5"/>
+<path d="M198 94 Q224 88 250 94 Q250 101 224 104 Q198 101 198 94 Z" fill="#8B1A1A" opacity=".52"/>
+<!-- 가격표 카드 -->
+<rect x="20" y="107" width="38" height="11" rx="2" fill="rgba(255,255,255,.12)"/>
+<rect x="22" y="109" width="22" height="3" rx="1" fill="rgba(255,255,255,.3)"/>
+<rect x="22" y="113" width="14" height="2" rx="1" fill="rgba(255,255,255,.2)"/>
+<rect x="120" y="107" width="40" height="11" rx="2" fill="rgba(255,255,255,.12)"/>
+<rect x="122" y="109" width="24" height="3" rx="1" fill="rgba(255,255,255,.3)"/>
+<rect x="216" y="107" width="38" height="11" rx="2" fill="rgba(255,255,255,.12)"/>
+<rect x="0" y="116" width="280" height="4" fill="rgba(0,0,0,.6)"/>
+</script>
+<script type="text/x-svg-data" id="svg_______" data-bg="#0E1A14">
+<defs>
+  <linearGradient id="b2" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#1A3020"/>
+    <stop offset="50%" stop-color="#0E1A14"/>
+    <stop offset="100%" stop-color="#060E0A"/>
+  </linearGradient>
+  <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#1C3040"/>
+    <stop offset="100%" stop-color="#0E1A14"/>
+  </linearGradient>
+  <radialGradient id="moon2" cx="80%" cy="15%" r="15%">
+    <stop offset="0%" stop-color="rgba(255,240,200,.6)"/>
+    <stop offset="100%" stop-color="transparent"/>
+  </radialGradient>
+</defs>
+<rect width="280" height="120" fill="url(#sky2)"/>
+<rect width="280" height="120" fill="url(#moon2)"/>
+<!-- 별 -->
+<circle cx="20" cy="8" r="1" fill="rgba(255,255,255,.6)"/>
+<circle cx="55" cy="14" r="0.8" fill="rgba(255,255,255,.5)"/>
+<circle cx="90" cy="6" r="1" fill="rgba(255,255,255,.55)"/>
+<circle cx="130" cy="10" r="0.7" fill="rgba(255,255,255,.45)"/>
+<circle cx="160" cy="5" r="1" fill="rgba(255,255,255,.5)"/>
+<!-- 달 -->
+<circle cx="242" cy="14" r="10" fill="rgba(255,240,200,.25)"/>
+<circle cx="238" cy="12" r="8" fill="rgba(20,40,60,.8)"/>
+<!-- 원거리 배경 건물 (실루엣) -->
+<rect x="220" y="55" width="22" height="55" fill="rgba(255,255,255,.04)"/>
+<rect x="246" y="62" width="18" height="48" fill="rgba(255,255,255,.035)"/>
+<rect x="264" y="58" width="16" height="52" fill="rgba(255,255,255,.03)"/>
+<!-- 원거리 굴뚝 -->
+<rect x="230" y="38" width="5" height="20" rx="1" fill="rgba(255,255,255,.07)"/>
+<rect x="250" y="44" width="5" height="18" rx="1" fill="rgba(255,255,255,.06)"/>
+<!-- 주 건물 (도축장) -->
+<rect x="10" y="42" width="200" height="68" rx="2" fill="rgba(255,255,255,.07)"/>
+<!-- 지붕 경사 -->
+<polygon points="8,42 110,22 214,42" fill="rgba(255,255,255,.05)"/>
+<polygon points="10,42 110,24 212,42" stroke="rgba(255,255,255,.12)" stroke-width="1" fill="none"/>
+<!-- 건물 창문 - 2층 -->
+<rect x="22" y="50" width="20" height="14" rx="1.5" fill="rgba(255,220,120,.22)"/>
+<rect x="22" y="50" width="20" height="14" rx="1.5" stroke="rgba(255,255,255,.1)" stroke-width="0.5" fill="none"/>
+<rect x="50" y="50" width="20" height="14" rx="1.5" fill="rgba(255,220,120,.18)"/>
+<rect x="78" y="50" width="20" height="14" rx="1.5" fill="rgba(255,220,120,.24)"/>
+<rect x="106" y="50" width="20" height="14" rx="1.5" fill="rgba(255,220,120,.16)"/>
+<rect x="134" y="50" width="20" height="14" rx="1.5" fill="rgba(255,220,120,.2)"/>
+<rect x="162" y="50" width="20" height="14" rx="1.5" fill="rgba(255,220,120,.18)"/>
+<!-- 창문 반사 효과 -->
+<rect x="24" y="51" width="6" height="4" rx="1" fill="rgba(255,255,255,.15)"/>
+<rect x="52" y="51" width="6" height="4" rx="1" fill="rgba(255,255,255,.12)"/>
+<rect x="80" y="51" width="6" height="4" rx="1" fill="rgba(255,255,255,.15)"/>
+<!-- 1층 -->
+<rect x="22" y="74" width="20" height="16" rx="1.5" fill="rgba(100,180,255,.15)"/>
+<rect x="50" y="74" width="20" height="16" rx="1.5" fill="rgba(100,180,255,.12)"/>
+<rect x="78" y="74" width="20" height="16" rx="1.5" fill="rgba(100,180,255,.15)"/>
+<rect x="106" y="74" width="20" height="16" rx="1.5" fill="rgba(100,180,255,.1)"/>
+<rect x="134" y="74" width="20" height="16" rx="1.5" fill="rgba(100,180,255,.13)"/>
+<rect x="162" y="74" width="20" height="16" rx="1.5" fill="rgba(100,180,255,.1)"/>
+<!-- 대문/입구 -->
+<rect x="86" y="82" width="38" height="28" rx="2" fill="rgba(255,255,255,.05)"/>
+<rect x="88" y="84" width="16" height="26" rx="1" fill="rgba(100,180,255,.12)"/>
+<rect x="108" y="84" width="16" height="26" rx="1" fill="rgba(100,180,255,.12)"/>
+<!-- 굴뚝 3개 -->
+<rect x="150" y="10" width="11" height="36" rx="2" fill="rgba(255,255,255,.12)"/>
+<rect x="150" y="10" width="11" height="36" rx="2" stroke="rgba(255,255,255,.06)" stroke-width="0.5" fill="none"/>
+<rect x="168" y="18" width="10" height="28" rx="2" fill="rgba(255,255,255,.1)"/>
+<rect x="184" y="14" width="11" height="32" rx="2" fill="rgba(255,255,255,.11)"/>
+<!-- 연기 (여러 레이어) -->
+<ellipse cx="155" cy="7" rx="12" ry="8" fill="rgba(200,200,200,.1)"/>
+<ellipse cx="160" cy="1" rx="16" ry="10" fill="rgba(200,200,200,.07)"/>
+<ellipse cx="173" cy="14" rx="10" ry="7" fill="rgba(200,200,200,.09)"/>
+<ellipse cx="178" cy="8" rx="13" ry="8" fill="rgba(200,200,200,.06)"/>
+<ellipse cx="189" cy="10" rx="11" ry="7" fill="rgba(200,200,200,.09)"/>
+<!-- 지면 -->
+<rect x="0" y="107" width="280" height="13" fill="rgba(0,0,0,.45)"/>
+<rect x="0" y="107" width="280" height="2" fill="rgba(255,255,255,.06)"/>
+<!-- 울타리 -->
+<rect x="10" y="100" width="2" height="8" rx="1" fill="rgba(255,255,255,.15)"/>
+<rect x="22" y="100" width="2" height="8" rx="1" fill="rgba(255,255,255,.12)"/>
+<rect x="34" y="100" width="2" height="8" rx="1" fill="rgba(255,255,255,.15)"/>
+<rect x="10" y="103" width="26" height="1.5" fill="rgba(255,255,255,.12)"/>
+</script>
+<script type="text/x-svg-data" id="svg_____OEM" data-bg="#0A1A0E">
+<defs>
+  <linearGradient id="b3" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#122018"/>
+    <stop offset="100%" stop-color="#060E08"/>
+  </linearGradient>
+  <linearGradient id="sky3" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#1A3048"/>
+    <stop offset="100%" stop-color="#0A1820"/>
+  </linearGradient>
+</defs>
+<rect width="280" height="120" fill="url(#sky3)"/>
+<!-- 구름 -->
+<ellipse cx="50" cy="16" rx="34" ry="12" fill="rgba(255,255,255,.06)"/>
+<ellipse cx="36" cy="18" rx="22" ry="9" fill="rgba(255,255,255,.05)"/>
+<ellipse cx="180" cy="10" rx="44" ry="14" fill="rgba(255,255,255,.055)"/>
+<ellipse cx="164" cy="13" rx="28" ry="10" fill="rgba(255,255,255,.045)"/>
+<!-- 메인 공장동 (넓고 낮은) -->
+<rect x="0" y="46" width="210" height="74" fill="rgba(255,255,255,.07)"/>
+<!-- 지붕 -->
+<rect x="0" y="40" width="210" height="8" fill="rgba(255,255,255,.1)"/>
+<rect x="0" y="39" width="210" height="2" fill="rgba(255,255,255,.2)"/>
+<!-- 부속 건물 -->
+<rect x="210" y="54" width="70" height="66" fill="rgba(255,255,255,.055)"/>
+<rect x="210" y="48" width="70" height="8" fill="rgba(255,255,255,.08)"/>
+<!-- 공장 창문 (3줄) -->
+<rect x="10" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.25)"/>
+<rect x="32" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.22)"/>
+<rect x="54" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.26)"/>
+<rect x="76" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.2)"/>
+<rect x="98" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.24)"/>
+<rect x="120" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.22)"/>
+<rect x="142" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.2)"/>
+<rect x="164" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.25)"/>
+<rect x="186" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.18)"/>
+<rect x="10" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.16)"/>
+<rect x="32" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.14)"/>
+<rect x="54" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.17)"/>
+<rect x="76" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.13)"/>
+<rect x="98" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.16)"/>
+<rect x="120" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.14)"/>
+<rect x="142" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.15)"/>
+<rect x="164" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.13)"/>
+<rect x="10" y="88" width="16" height="11" rx="1" fill="rgba(100,180,255,.12)"/>
+<rect x="32" y="88" width="16" height="11" rx="1" fill="rgba(100,180,255,.1)"/>
+<rect x="54" y="88" width="16" height="11" rx="1" fill="rgba(100,180,255,.13)"/>
+<rect x="76" y="88" width="16" height="11" rx="1" fill="rgba(100,180,255,.1)"/>
+<rect x="98" y="88" width="16" height="11" rx="1" fill="rgba(100,180,255,.12)"/>
+<!-- 부속동 창문 -->
+<rect x="218" y="58" width="14" height="10" rx="1" fill="rgba(255,220,100,.2)"/>
+<rect x="238" y="58" width="14" height="10" rx="1" fill="rgba(255,220,100,.18)"/>
+<rect x="258" y="58" width="14" height="10" rx="1" fill="rgba(255,220,100,.2)"/>
+<rect x="218" y="74" width="14" height="10" rx="1" fill="rgba(100,180,255,.13)"/>
+<rect x="238" y="74" width="14" height="10" rx="1" fill="rgba(100,180,255,.11)"/>
+<rect x="258" y="74" width="14" height="10" rx="1" fill="rgba(100,180,255,.13)"/>
+<!-- 굴뚝 4개 (다양한 높이) -->
+<rect x="186" y="6" width="10" height="38" rx="2" fill="rgba(255,255,255,.13)"/>
+<rect x="200" y="14" width="10" height="30" rx="2" fill="rgba(255,255,255,.11)"/>
+<rect x="214" y="8" width="10" height="36" rx="2" fill="rgba(255,255,255,.12)"/>
+<rect x="228" y="18" width="10" height="26" rx="2" fill="rgba(255,255,255,.1)"/>
+<!-- 연기 레이어드 -->
+<ellipse cx="191" cy="3" rx="14" ry="9" fill="rgba(180,180,180,.1)"/>
+<ellipse cx="196" cy="-2" rx="18" ry="11" fill="rgba(180,180,180,.07)"/>
+<ellipse cx="205" cy="11" rx="12" ry="8" fill="rgba(180,180,180,.09)"/>
+<ellipse cx="210" cy="5" rx="16" ry="10" fill="rgba(180,180,180,.06)"/>
+<ellipse cx="219" cy="5" rx="13" ry="8" fill="rgba(180,180,180,.1)"/>
+<ellipse cx="224" cy="0" rx="17" ry="10" fill="rgba(180,180,180,.07)"/>
+<ellipse cx="233" cy="15" rx="11" ry="7" fill="rgba(180,180,180,.08)"/>
+<!-- HACCP 인증 사인 -->
+<rect x="218" y="90" width="52" height="22" rx="3" fill="rgba(46,125,50,.25)"/>
+<rect x="218" y="90" width="52" height="22" rx="3" stroke="rgba(100,200,100,.2)" stroke-width="0.8" fill="none"/>
+<rect x="222" y="94" width="44" height="4" rx="2" fill="rgba(255,255,255,.25)"/>
+<rect x="222" y="101" width="32" height="3" rx="1" fill="rgba(255,255,255,.18)"/>
+<rect x="222" y="106" width="38" height="3" rx="1" fill="rgba(255,255,255,.14)"/>
+<!-- 지면 -->
+<rect x="0" y="108" width="280" height="12" fill="rgba(0,0,0,.5)"/>
+<rect x="0" y="107" width="280" height="2" fill="rgba(255,255,255,.06)"/>
+</script>
+<script type="text/x-svg-data" id="svg_________" data-bg="#08101C">
+<defs>
+  <linearGradient id="b4" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#0E1E36"/>
+    <stop offset="60%" stop-color="#080E18"/>
+    <stop offset="100%" stop-color="#040810"/>
+  </linearGradient>
+  <linearGradient id="road4" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#1A1A1A"/>
+    <stop offset="100%" stop-color="#0A0A0A"/>
+  </linearGradient>
+  <radialGradient id="hl4a" cx="85%" cy="85%" r="25%">
+    <stop offset="0%" stop-color="rgba(255,220,120,.4)"/>
+    <stop offset="100%" stop-color="transparent"/>
+  </radialGradient>
+  <radialGradient id="hl4b" cx="15%" cy="85%" r="15%">
+    <stop offset="0%" stop-color="rgba(180,200,255,.2)"/>
+    <stop offset="100%" stop-color="transparent"/>
+  </radialGradient>
+</defs>
+<rect width="280" height="120" fill="url(#b4)"/>
+<!-- 야간 하늘 별 -->
+<circle cx="14" cy="8" r="0.8" fill="rgba(255,255,255,.55)"/>
+<circle cx="44" cy="4" r="1" fill="rgba(255,255,255,.5)"/>
+<circle cx="72" cy="10" r="0.7" fill="rgba(255,255,255,.45)"/>
+<circle cx="110" cy="6" r="0.9" fill="rgba(255,255,255,.5)"/>
+<circle cx="148" cy="12" r="0.6" fill="rgba(255,255,255,.4)"/>
+<circle cx="178" cy="5" r="1" fill="rgba(255,255,255,.55)"/>
+<!-- 도로 (원근감) -->
+<rect x="0" y="86" width="280" height="34" fill="url(#road4)"/>
+<!-- 아스팔트 텍스처 -->
+<rect x="0" y="86" width="280" height="2" fill="rgba(255,255,255,.1)"/>
+<!-- 차선 중앙선 (황색) -->
+<rect x="0" y="101" width="38" height="3.5" rx="1" fill="rgba(255,220,60,.3)"/>
+<rect x="50" y="101" width="38" height="3.5" rx="1" fill="rgba(255,220,60,.3)"/>
+<rect x="100" y="101" width="38" height="3.5" rx="1" fill="rgba(255,220,60,.3)"/>
+<rect x="150" y="101" width="38" height="3.5" rx="1" fill="rgba(255,220,60,.3)"/>
+<rect x="200" y="101" width="38" height="3.5" rx="1" fill="rgba(255,220,60,.3)"/>
+<rect x="250" y="101" width="30" height="3.5" rx="1" fill="rgba(255,220,60,.3)"/>
+<!-- 헤드라이트 빛 효과 -->
+<rect width="280" height="120" fill="url(#hl4a)" opacity=".6"/>
+<rect width="280" height="120" fill="url(#hl4b)" opacity=".5"/>
+<!-- 원거리 소형 트럭 (작게, 흐릿) -->
+<rect x="4" y="68" width="20" height="14" rx="2" fill="rgba(255,255,255,.06)"/>
+<rect x="24" y="62" width="16" height="20" rx="2" fill="rgba(255,255,255,.07)"/>
+<circle cx="11" cy="84" r="4" fill="rgba(30,30,30,.95)"/>
+<circle cx="11" cy="84" r="2" fill="rgba(255,255,255,.1)"/>
+<circle cx="30" cy="84" r="4" fill="rgba(30,30,30,.95)"/>
+<circle cx="30" cy="84" r="2" fill="rgba(255,255,255,.1)"/>
+<!-- 전조등 -->
+<ellipse cx="40" cy="74" rx="6" ry="4" fill="rgba(255,240,180,.2)"/>
+<!-- 메인 냉동 트럭 (크게, 디테일) -->
+<!-- 컨테이너 박스 -->
+<rect x="46" y="38" width="158" height="52" rx="4" fill="rgba(220,235,255,.12)"/>
+<rect x="46" y="38" width="158" height="52" rx="4" stroke="rgba(255,255,255,.1)" stroke-width="0.8" fill="none"/>
+<!-- 컨테이너 리벳/보강재 -->
+<rect x="68" y="40" width="1.5" height="48" fill="rgba(255,255,255,.08)"/>
+<rect x="96" y="40" width="1.5" height="48" fill="rgba(255,255,255,.08)"/>
+<rect x="124" y="40" width="1.5" height="48" fill="rgba(255,255,255,.08)"/>
+<rect x="152" y="40" width="1.5" height="48" fill="rgba(255,255,255,.08)"/>
+<rect x="176" y="40" width="1.5" height="48" fill="rgba(255,255,255,.08)"/>
+<rect x="47" y="58" width="156" height="1.5" fill="rgba(255,255,255,.06)"/>
+<rect x="47" y="70" width="156" height="1.5" fill="rgba(255,255,255,.05)"/>
+<!-- 컨테이너 텍스트/로고 영역 -->
+<rect x="56" y="44" width="130" height="26" rx="2" fill="rgba(255,255,255,.05)"/>
+<rect x="62" y="50" width="70" height="5" rx="2" fill="rgba(255,255,255,.22)"/>
+<rect x="62" y="58" width="52" height="4" rx="2" fill="rgba(255,255,255,.16)"/>
+<!-- 냉동기 (앞쪽 상단) -->
+<rect x="46" y="30" width="30" height="12" rx="2" fill="rgba(150,170,200,.15)"/>
+<rect x="50" y="32" width="22" height="4" rx="1" fill="rgba(255,255,255,.12)"/>
+<!-- 캡 (운전석) -->
+<rect x="204" y="26" width="72" height="64" rx="5" fill="rgba(200,220,240,.15)"/>
+<rect x="204" y="26" width="72" height="64" rx="5" stroke="rgba(255,255,255,.1)" stroke-width="1" fill="none"/>
+<!-- 앞유리 -->
+<rect x="210" y="32" width="42" height="28" rx="3" fill="rgba(100,180,255,.2)"/>
+<rect x="212" y="34" width="38" height="24" rx="2" fill="rgba(100,180,255,.15)"/>
+<!-- 유리 반사 -->
+<path d="M214 35 L224 35 L218 50 L210 50 Z" fill="rgba(255,255,255,.08)"/>
+<!-- 측면 거울 -->
+<rect x="200" y="40" width="6" height="8" rx="1" fill="rgba(150,170,200,.25)"/>
+<!-- 사이드 창문 -->
+<rect x="256" y="34" width="16" height="14" rx="2" fill="rgba(100,180,255,.15)"/>
+<!-- 라디에이터 그릴 -->
+<rect x="272" y="44" width="4" height="30" rx="1" fill="rgba(255,255,255,.06)"/>
+<rect x="272" y="46" width="4" height="4" rx="1" fill="rgba(255,255,255,.12)"/>
+<rect x="272" y="52" width="4" height="4" rx="1" fill="rgba(255,255,255,.1)"/>
+<rect x="272" y="58" width="4" height="4" rx="1" fill="rgba(255,255,255,.12)"/>
+<!-- 헤드라이트 -->
+<rect x="270" y="68" width="8" height="6" rx="2" fill="rgba(255,240,180,.5)"/>
+<ellipse cx="274" cy="71" rx="4" ry="3" fill="rgba(255,240,180,.7)"/>
+<!-- 로고/번호판 -->
+<rect x="256" y="82" width="18" height="6" rx="1" fill="rgba(255,255,255,.18)"/>
+<!-- 바퀴들 (디테일) -->
+<circle cx="82" cy="92" r="14" fill="rgba(15,15,15,.98)"/>
+<circle cx="82" cy="92" r="10" fill="rgba(30,30,30,.9)"/>
+<circle cx="82" cy="92" r="6" fill="rgba(255,255,255,.1)"/>
+<circle cx="82" cy="92" r="3" fill="rgba(200,200,200,.15)"/>
+<circle cx="138" cy="92" r="14" fill="rgba(15,15,15,.98)"/>
+<circle cx="138" cy="92" r="10" fill="rgba(30,30,30,.9)"/>
+<circle cx="138" cy="92" r="6" fill="rgba(255,255,255,.1)"/>
+<circle cx="138" cy="92" r="3" fill="rgba(200,200,200,.15)"/>
+<circle cx="218" cy="92" r="12" fill="rgba(15,15,15,.98)"/>
+<circle cx="218" cy="92" r="8" fill="rgba(30,30,30,.9)"/>
+<circle cx="218" cy="92" r="5" fill="rgba(255,255,255,.1)"/>
+<circle cx="248" cy="92" r="12" fill="rgba(15,15,15,.98)"/>
+<circle cx="248" cy="92" r="8" fill="rgba(30,30,30,.9)"/>
+<circle cx="248" cy="92" r="5" fill="rgba(255,255,255,.1)"/>
+<!-- 바퀴 하단 차체 연결 -->
+<rect x="46" y="86" width="158" height="8" rx="2" fill="rgba(180,200,220,.1)"/>
+<!-- 눈꽃 아이콘 (냉동 표시) -->
+<g opacity=".55">
+<line x1="192" y1="48" x2="192" y2="62" stroke="rgba(150,220,255,.7)" stroke-width="1.5" stroke-linecap="round"/>
+<line x1="186" y1="51" x2="198" y2="59" stroke="rgba(150,220,255,.7)" stroke-width="1.5" stroke-linecap="round"/>
+<line x1="186" y1="59" x2="198" y2="51" stroke="rgba(150,220,255,.7)" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="192" cy="55" r="3" fill="rgba(150,220,255,.3)"/>
+</g>
+</script>
+<script type="text/x-svg-data" id="svg_____" data-bg="#140E28">
+<defs>
+  <linearGradient id="b5" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#1E1440"/>
+    <stop offset="100%" stop-color="#0C0820"/>
+  </linearGradient>
+  <radialGradient id="hl5" cx="50%" cy="50%" r="60%">
+    <stop offset="0%" stop-color="rgba(100,80,200,.15)"/>
+    <stop offset="100%" stop-color="transparent"/>
+  </radialGradient>
+</defs>
+<rect width="280" height="120" fill="url(#b5)"/>
+<rect width="280" height="120" fill="url(#hl5)"/>
+<!-- 배경 점 패턴 -->
+<circle cx="30" cy="20" r="1" fill="rgba(255,255,255,.08)"/>
+<circle cx="90" cy="10" r="1" fill="rgba(255,255,255,.06)"/>
+<circle cx="140" cy="22" r="1.2" fill="rgba(255,255,255,.07)"/>
+<circle cx="200" cy="8" r="1" fill="rgba(255,255,255,.08)"/>
+<circle cx="250" cy="18" r="1" fill="rgba(255,255,255,.06)"/>
+<!-- 연결선 (네트워크) -->
+<line x1="50" y1="60" x2="140" y2="60" stroke="rgba(100,80,200,.2)" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="140" y1="60" x2="230" y2="60" stroke="rgba(100,80,200,.2)" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="50" y1="60" x2="140" y2="30" stroke="rgba(100,80,200,.12)" stroke-width="1" stroke-dasharray="3,4"/>
+<line x1="230" y1="60" x2="140" y2="30" stroke="rgba(100,80,200,.12)" stroke-width="1" stroke-dasharray="3,4"/>
+<!-- 왼쪽 카드 -->
+<rect x="10" y="22" width="80" height="90" rx="8" fill="rgba(255,255,255,.07)"/>
+<rect x="10" y="22" width="80" height="90" rx="8" stroke="rgba(255,255,255,.08)" stroke-width="0.8" fill="none"/>
+<!-- 아바타 -->
+<circle cx="50" cy="44" r="18" fill="rgba(255,255,255,.12)"/>
+<circle cx="50" cy="42" r="12" fill="rgba(255,255,255,.16)"/>
+<circle cx="50" cy="40" r="8" fill="rgba(255,255,255,.18)"/>
+<!-- 머리카락 표현 -->
+<ellipse cx="50" cy="34" rx="8" ry="4" fill="rgba(100,60,20,.5)"/>
+<ellipse cx="50" cy="56" rx="16" ry="6" fill="rgba(255,255,255,.1)"/>
+<!-- 카드 내용 -->
+<rect x="18" y="70" width="64" height="5" rx="2" fill="rgba(255,255,255,.22)"/>
+<rect x="22" y="79" width="46" height="4" rx="2" fill="rgba(255,255,255,.14)"/>
+<rect x="18" y="87" width="56" height="3" rx="1" fill="rgba(255,255,255,.1)"/>
+<rect x="18" y="94" width="48" height="3" rx="1" fill="rgba(255,255,255,.08)"/>
+<!-- 태그 -->
+<rect x="18" y="101" width="22" height="8" rx="3" fill="rgba(46,125,50,.4)"/>
+<rect x="42" y="101" width="22" height="8" rx="3" fill="rgba(100,80,200,.3)"/>
+<!-- 중앙 카드 (강조 - 취업 성공) -->
+<rect x="99" y="10" width="82" height="100" rx="8" fill="rgba(255,255,255,.11)"/>
+<rect x="99" y="10" width="82" height="100" rx="8" stroke="rgba(124,110,200,.35)" stroke-width="1.5" fill="none"/>
+<!-- 글로우 효과 -->
+<rect x="99" y="10" width="82" height="100" rx="8" stroke="rgba(100,80,200,.15)" stroke-width="4" fill="none"/>
+<!-- 아바타 (더 크게) -->
+<circle cx="140" cy="36" r="20" fill="rgba(255,255,255,.15)"/>
+<circle cx="140" cy="34" r="14" fill="rgba(255,255,255,.18)"/>
+<circle cx="140" cy="32" r="9" fill="rgba(255,255,255,.2)"/>
+<ellipse cx="140" cy="28" rx="9" ry="4.5" fill="rgba(80,40,10,.5)"/>
+<ellipse cx="140" cy="52" rx="18" ry="7" fill="rgba(255,255,255,.12)"/>
+<!-- 중앙 카드 내용 -->
+<rect x="108" y="66" width="64" height="6" rx="2" fill="rgba(255,255,255,.28)"/>
+<rect x="112" y="76" width="56" height="4" rx="2" fill="rgba(255,255,255,.2)"/>
+<rect x="108" y="84" width="64" height="4" rx="2" fill="rgba(255,255,255,.15)"/>
+<rect x="108" y="92" width="50" height="3" rx="1" fill="rgba(255,255,255,.12)"/>
+<!-- 채용 뱃지 (초록) -->
+<rect x="108" y="100" width="64" height="14" rx="4" fill="rgba(46,125,50,.7)"/>
+<rect x="108" y="100" width="64" height="14" rx="4" stroke="rgba(100,200,100,.3)" stroke-width="0.8" fill="none"/>
+<rect x="116" y="104" width="48" height="4" rx="2" fill="rgba(255,255,255,.6)"/>
+<!-- 체크 아이콘 -->
+<circle cx="127" cy="106" r="4" fill="rgba(255,255,255,.3)"/>
+<path d="M125 106 L127 108 L131 104" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".8"/>
+<!-- 오른쪽 카드 -->
+<rect x="190" y="22" width="80" height="90" rx="8" fill="rgba(255,255,255,.07)"/>
+<rect x="190" y="22" width="80" height="90" rx="8" stroke="rgba(255,255,255,.08)" stroke-width="0.8" fill="none"/>
+<circle cx="230" cy="44" r="18" fill="rgba(255,255,255,.1)"/>
+<circle cx="230" cy="42" r="12" fill="rgba(255,255,255,.14)"/>
+<circle cx="230" cy="40" r="8" fill="rgba(255,255,255,.16)"/>
+<ellipse cx="230" cy="34" rx="8" ry="4" fill="rgba(60,30,80,.5)"/>
+<ellipse cx="230" cy="56" rx="16" ry="6" fill="rgba(255,255,255,.09)"/>
+<rect x="198" y="70" width="64" height="5" rx="2" fill="rgba(255,255,255,.2)"/>
+<rect x="202" y="79" width="46" height="4" rx="2" fill="rgba(255,255,255,.12)"/>
+<rect x="198" y="87" width="56" height="3" rx="1" fill="rgba(255,255,255,.09)"/>
+<rect x="198" y="101" width="24" height="8" rx="3" fill="rgba(100,80,200,.3)"/>
+<rect x="225" y="101" width="22" height="8" rx="3" fill="rgba(200,100,30,.3)"/>
+</script>
+<script type="text/x-svg-data" id="svg_______" data-bg="#1A0C00">
+<defs>
+  <linearGradient id="b6" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#241000"/>
+    <stop offset="100%" stop-color="#100800"/>
+  </linearGradient>
+  <linearGradient id="sky6" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#1C2840"/>
+    <stop offset="100%" stop-color="#181008"/>
+  </linearGradient>
+  <radialGradient id="sun6" cx="70%" cy="40%" r="30%">
+    <stop offset="0%" stop-color="rgba(255,160,60,.2)"/>
+    <stop offset="100%" stop-color="transparent"/>
+  </radialGradient>
+</defs>
+<rect width="280" height="120" fill="url(#sky6)"/>
+<rect width="280" height="120" fill="url(#sun6)"/>
+<!-- 노을 -->
+<ellipse cx="196" cy="45" rx="80" ry="50" fill="rgba(255,120,30,.06)"/>
+<!-- 구름 -->
+<ellipse cx="50" cy="28" rx="36" ry="12" fill="rgba(255,160,80,.08)"/>
+<ellipse cx="35" cy="30" rx="22" ry="9" fill="rgba(255,160,80,.06)"/>
+<!-- 도로 (원근감 있게) -->
+<rect x="0" y="96" width="280" height="24" fill="rgba(0,0,0,.6)"/>
+<rect x="0" y="94" width="280" height="4" fill="rgba(50,50,50,.8)"/>
+<!-- 보도 -->
+<rect x="0" y="88" width="280" height="8" fill="rgba(120,100,80,.25)"/>
+<rect x="0" y="87" width="280" height="1.5" fill="rgba(255,255,255,.06)"/>
+<!-- 보도 타일 라인 -->
+<line x1="28" y1="88" x2="28" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
+<line x1="56" y1="88" x2="56" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
+<line x1="84" y1="88" x2="84" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
+<line x1="112" y1="88" x2="112" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
+<line x1="140" y1="88" x2="140" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
+<line x1="168" y1="88" x2="168" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
+<line x1="196" y1="88" x2="196" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
+<line x1="224" y1="88" x2="224" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
+<line x1="252" y1="88" x2="252" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
+<!-- 차선 -->
+<rect x="0" y="106" width="36" height="2.5" rx="1" fill="rgba(255,255,255,.18)"/>
+<rect x="50" y="106" width="36" height="2.5" rx="1" fill="rgba(255,255,255,.18)"/>
+<rect x="100" y="106" width="36" height="2.5" rx="1" fill="rgba(255,255,255,.18)"/>
+<rect x="150" y="106" width="36" height="2.5" rx="1" fill="rgba(255,255,255,.18)"/>
+<rect x="200" y="106" width="36" height="2.5" rx="1" fill="rgba(255,255,255,.18)"/>
+<rect x="250" y="106" width="30" height="2.5" rx="1" fill="rgba(255,255,255,.18)"/>
+<!-- 정육점 (왼쪽) -->
+<rect x="4" y="46" width="80" height="44" rx="3" fill="rgba(255,255,255,.08)"/>
+<!-- 간판 -->
+<rect x="4" y="40" width="80" height="10" rx="3" fill="rgba(200,50,50,.45)"/>
+<rect x="4" y="40" width="80" height="10" rx="3" stroke="rgba(255,255,255,.08)" stroke-width="0.5" fill="none"/>
+<rect x="8" y="43" width="72" height="4" rx="2" fill="rgba(255,255,255,.4)"/>
+<!-- 조명 -->
+<circle cx="12" cy="40" r="3.5" fill="rgba(255,220,100,.5)"/>
+<circle cx="76" cy="40" r="3.5" fill="rgba(255,220,100,.45)"/>
+<ellipse cx="44" cy="46" rx="40" ry="8" fill="rgba(255,220,100,.04)"/>
+<!-- 쇼윈도 (2칸) -->
+<rect x="8" y="56" width="30" height="32" rx="2" fill="rgba(120,180,255,.16)"/>
+<rect x="10" y="58" width="26" height="28" rx="1" fill="rgba(120,180,255,.1)"/>
+<!-- 윈도 반사 -->
+<path d="M11 59 L20 59 L15 74 L8 74 Z" fill="rgba(255,255,255,.07)"/>
+<rect x="44" y="56" width="30" height="32" rx="2" fill="rgba(120,180,255,.16)"/>
+<rect x="46" y="58" width="26" height="28" rx="1" fill="rgba(120,180,255,.1)"/>
+<path d="M47 59 L56 59 L51 74 L44 74 Z" fill="rgba(255,255,255,.07)"/>
+<!-- 윈도 텍스트 -->
+<rect x="12" y="74" width="22" height="3" rx="1" fill="rgba(255,255,255,.2)"/>
+<rect x="48" y="74" width="22" height="3" rx="1" fill="rgba(255,255,255,.2)"/>
+<!-- 고깃집 (중앙, 가장 크게) -->
+<rect x="92" y="32" width="96" height="58" rx="3" fill="rgba(255,255,255,.1)"/>
+<rect x="92" y="32" width="96" height="58" rx="3" stroke="rgba(255,255,255,.06)" stroke-width="0.5" fill="none"/>
+<!-- 간판 -->
+<rect x="92" y="24" width="96" height="12" rx="3" fill="rgba(180,60,20,.5)"/>
+<rect x="92" y="24" width="96" height="12" rx="3" stroke="rgba(255,255,255,.1)" stroke-width="0.5" fill="none"/>
+<rect x="98" y="27" width="84" height="6" rx="2" fill="rgba(255,255,255,.45)"/>
+<!-- 간판 불빛 -->
+<circle cx="98" cy="24" r="4" fill="rgba(255,200,80,.5)"/>
+<circle cx="182" cy="24" r="4" fill="rgba(255,200,80,.5)"/>
+<ellipse cx="140" cy="32" rx="50" ry="10" fill="rgba(255,200,80,.03)"/>
+<!-- 고깃집 쇼윈도 (3칸) -->
+<rect x="96" y="44" width="34" height="44" rx="2" fill="rgba(120,180,255,.15)"/>
+<rect x="98" y="46" width="30" height="40" rx="1" fill="rgba(120,180,255,.1)"/>
+<path d="M99 47 L112 47 L106 65 L96 65 Z" fill="rgba(255,255,255,.06)"/>
+<rect x="133" y="44" width="34" height="44" rx="2" fill="rgba(120,180,255,.15)"/>
+<rect x="135" y="46" width="30" height="40" rx="1" fill="rgba(120,180,255,.1)"/>
+<path d="M136 47 L149 47 L143 65 L133 65 Z" fill="rgba(255,255,255,.06)"/>
+<rect x="150" y="44" width="34" height="44" rx="2" fill="rgba(120,180,255,.15)"/>
+<rect x="152" y="46" width="30" height="40" rx="1" fill="rgba(120,180,255,.1)"/>
+<!-- 메뉴 보드 -->
+<rect x="100" y="78" width="80" height="8" rx="1" fill="rgba(0,0,0,.2)"/>
+<rect x="104" y="80" width="30" height="3" rx="1" fill="rgba(255,255,255,.2)"/>
+<rect x="140" y="80" width="36" height="3" rx="1" fill="rgba(255,255,255,.16)"/>
+<!-- 축산마트 (오른쪽) -->
+<rect x="196" y="44" width="80" height="46" rx="3" fill="rgba(255,255,255,.07)"/>
+<!-- 간판 -->
+<rect x="196" y="36" width="80" height="12" rx="3" fill="rgba(40,100,40,.5)"/>
+<rect x="196" y="36" width="80" height="12" rx="3" stroke="rgba(255,255,255,.07)" stroke-width="0.5" fill="none"/>
+<rect x="200" y="39" width="72" height="6" rx="2" fill="rgba(255,255,255,.38)"/>
+<circle cx="202" cy="36" r="3.5" fill="rgba(255,220,80,.45)"/>
+<circle cx="270" cy="36" r="3.5" fill="rgba(255,220,80,.4)"/>
+<!-- 마트 윈도 -->
+<rect x="200" y="56" width="28" height="32" rx="2" fill="rgba(120,180,255,.13)"/>
+<rect x="202" y="58" width="24" height="28" rx="1" fill="rgba(120,180,255,.09)"/>
+<path d="M203 59 L214 59 L209 74 L200 74 Z" fill="rgba(255,255,255,.05)"/>
+<rect x="234" y="56" width="28" height="32" rx="2" fill="rgba(120,180,255,.13)"/>
+<rect x="236" y="58" width="24" height="28" rx="1" fill="rgba(120,180,255,.09)"/>
+<path d="M237 59 L248 59 L243 74 L234 74 Z" fill="rgba(255,255,255,.05)"/>
+<!-- 건물 사이 골목 그림자 -->
+<rect x="84" y="32" width="10" height="60" fill="rgba(0,0,0,.25)"/>
+<rect x="188" y="36" width="10" height="56" fill="rgba(0,0,0,.22)"/>
+</script>
+
+</body>
+</html>

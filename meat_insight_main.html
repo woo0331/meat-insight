@@ -997,6 +997,8 @@ textarea.fi{resize:vertical;min-height:80px;}
 <script>
 var SU="https://igignylgzjphtnyxhhsd.supabase.co";
 var SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnaWdueWxnempwaHRueXhoaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDUyMDAsImV4cCI6MjA4OTA4MTIwMH0.3u5gCw1dnG1YSmrzhN3PGVOMoQ1LBtGw0ToNhSeL42A";
+/* 관리자 페이지(연결 설정)에서 저장한 프로젝트를 공유해서 사용 */
+(function(){try{var s=localStorage.getItem("gori_sb_cfg");if(s){var o=JSON.parse(s);if(o&&o.url&&o.key){SU=o.url;SK=o.key;}}}catch(e){}})();
 var sb=window.supabase?window.supabase.createClient(SU,SK):null;
 var PGS=["h","reqs","rw","suppliers","sp","sj","market","news","community","jobs","my","cat-trade","cat-prod","cat-ops","cat-biz"];
 var TM={h:"h",reqs:"reqs",rw:"reqs",suppliers:"suppliers",sp:"suppliers",sj:"my",market:"h",news:"h",community:"h",jobs:"jobs",my:"my"};
@@ -1355,8 +1357,9 @@ function renderCatIconBar(){
 /* ═ 렌더: 카테고리 이미지 카드 ═ */
 function renderCatImgGrid(){
   var el=document.getElementById("cat-img-grid");if(!el)return;el.innerHTML="";
-  CATS_ALL.slice(0,7).forEach(function(cat){
-    var scEl=document.getElementById("svg_"+cat.nm.replace(/[^a-zA-Z0-9]/g,"_"));
+  var svgEls=document.querySelectorAll('script[type="text/x-svg-data"]');
+  CATS_ALL.slice(0,7).forEach(function(cat,i){
+    var scEl=svgEls[i];
     var svgContent=scEl?scEl.innerHTML:"";
     var bg=scEl?scEl.dataset.bg:"#111";
     var d=document.createElement("div");d.className="cig-card";
@@ -1675,12 +1678,20 @@ function renderCatPage(p){
 async function subReq(){
   var name=(document.getElementById("f-name")||{value:""}).value.trim();
   var phone=(document.getElementById("f-phone")||{value:""}).value.trim();
+  var biz=(document.getElementById("f-biz")||{value:""}).value.trim();
   var msg=document.getElementById("rw-msg");
   if(!name||!phone){msg.textContent="이름과 연락처를 입력해주세요.";msg.className="msg err";msg.style.display="block";return;}
   msg.textContent="등록 중...";msg.className="msg";msg.style.display="block";
+  /* 동적 입력 필드(품목·수량 등)를 요청 내용으로 합침 */
+  var parts=[];
+  document.querySelectorAll("#rw-dynamic-fields .fl").forEach(function(lb){
+    var inp=lb.nextElementSibling;
+    if(inp&&inp.value&&String(inp.value).trim())parts.push(lb.textContent.replace("*","").trim()+": "+String(inp.value).trim());
+  });
+  var desc=parts.join(" / ");
   if(!sb){setTimeout(function(){msg.textContent="✅ 등록 완료! 업체들이 즉시 알림을 받습니다.";msg.className="msg ok";},700);return;}
   try{
-    var r=await sb.from("purchase_requests").insert({request_number:"REQ-"+Date.now(),category:curReqCat,region:"전국",buyer_name:name,buyer_phone:phone,status:"견적대기",quote_count:0});
+    var r=await sb.from("purchase_requests").insert({request_number:"REQ-"+Date.now(),category:curReqCat,region:"전국",buyer_name:name,buyer_phone:phone,buyer_company:biz||null,description:desc||null,status:"견적대기",quote_count:0});
     if(r.error)throw r.error;
     msg.textContent="✅ 등록 완료!";msg.className="msg ok";
   }catch(e){msg.textContent="오류: "+e.message;msg.className="msg err";}

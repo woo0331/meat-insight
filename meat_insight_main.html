@@ -562,13 +562,6 @@ textarea.fi{resize:vertical;min-height:80px;}
     </div>
   </div>
 
-  <!-- 카테고리 이미지 카드 그리드 -->
-  <div style="background:var(--bg2);padding:20px 0;border-bottom:1px solid var(--bd);">
-    <div class="w">
-      <div class="cat-img-grid" id="cat-img-grid"></div>
-    </div>
-  </div>
-
   <!-- 4단 그리드 -->
   <div style="background:var(--bg);padding:18px 0;">
     <div class="w">
@@ -1357,6 +1350,16 @@ function renderCatIconBar(){
 /* ═ 렌더: 카테고리 이미지 카드 ═ */
 function renderCatImgGrid(){
   var el=document.getElementById("cat-img-grid");if(!el)return;el.innerHTML="";
+  var CIG_ICONS=[
+    '<path d="M4 12c0-4 4-7 8-7s7 2 7 6-3 7-7 7-8-2-8-6z"/><circle cx="8.5" cy="12" r="1.6"/>',
+    '<path d="M4 11h16"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M9 7c-.5-1 .5-2 0-3M13 7c-.5-1 .5-2 0-3"/>',
+    '<path d="M4 20V9l8-4 8 4v11"/><path d="M3 20h18"/><path d="M9 20v-6h6v6"/>',
+    '<path d="M3 21V10l6 4V10l6 4V6l6 3v12z"/><path d="M2 21h20"/>',
+    '<path d="M2 6h11v10H2z"/><path d="M13 9h4l3 3v4h-7z"/><circle cx="6.5" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/>',
+    '<circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><circle cx="17.5" cy="9" r="2.2"/><path d="M15.5 15.2c2 .2 3.8 1.8 3.8 4.3"/>',
+    '<path d="M9.5 18h5"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.8 10.6c.8.7 1.3 1.4 1.3 2.4h5c0-1 .5-1.7 1.3-2.4A6 6 0 0 0 12 3z"/>'
+  ];
+  var CIG_COLORS=["#FF6B5C","#FFA94D","#63D471","#4DD0E1","#5BA9F4","#B39DFF","#FFD54F"];
   var svgEls=document.querySelectorAll('script[type="text/x-svg-data"]');
   CATS_ALL.slice(0,7).forEach(function(cat,i){
     var scEl=svgEls[i];
@@ -1369,6 +1372,7 @@ function renderCatImgGrid(){
       +svgContent
       +'</svg>'
       +'<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.0) 30%,rgba(0,0,0,.62) 100%);"></div>'
+      +'<div style="position:absolute;top:22px;left:0;right:0;display:flex;justify-content:center;pointer-events:none;"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="'+CIG_COLORS[i]+'" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 1px 4px rgba(0,0,0,.55));">'+CIG_ICONS[i]+'</svg></div>'
       +'<div class="cig-nm-ov">'+cat.nm+'</div>'
       +'</div>'
       +'<div class="cig-footer"><div class="cig-cnt">'+cat.sub+'</div><div class="cig-arr">›</div></div>';
@@ -1466,9 +1470,9 @@ function mkSC(s){
     '<div class="sc-rt"><span class="sc-star">★</span><span class="sc-rtv">'+s.rt.toFixed(1)+'</span></div></div>'+
     '<div class="sc-body"><div class="sc-cat">'+s.cat+'</div>'+
     '<div class="sc-stats">'+
-    '<div><div class="sc-sv">'+s.rs+'</div><div class="sc-sl">응답</div></div>'+
-    '<div><div class="sc-sv">'+s.rb+'%</div><div class="sc-sl">재구매</div></div>'+
-    '<div><div class="sc-sv" style="color:'+(s.cr<1?"var(--gn)":"#F59E0B")+'">'+(s.cr===0?"0%":s.cr+'%')+'</div><div class="sc-sl">클레임</div></div>'+
+    '<div><div class="sc-sv">'+(s.rs||"—")+'</div><div class="sc-sl">평균납기</div></div>'+
+    '<div><div class="sc-sv">'+(s.minq||"—")+'</div><div class="sc-sl">최소수량</div></div>'+
+    '<div><div class="sc-sv">'+(s.catcnt||0)+'</div><div class="sc-sl">취급분야</div></div>'+
     '</div>'+
     '<div class="sc-btn-area">'+
     '<button class="sc-btn sc-btn-gn" onclick="event.stopPropagation();go(&quot;rw&quot;)">견적 요청</button>'+
@@ -1493,11 +1497,11 @@ function renderSP(id){
     '<div style="height:160px;background:'+s.cl+';position:relative;"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(0,0,0,.7) 100%);"></div>'+
     '<div style="position:absolute;bottom:14px;left:16px;"><div style="font-size:20px;font-weight:800;color:#fff;">'+s.nm+'</div><div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:2px;">'+s.cat+'</div></div></div>'+
     '<div style="background:var(--navy);display:grid;grid-template-columns:repeat(3,1fr);text-align:center;">'+
-    '<div style="padding:12px;"><div style="font-size:14px;font-weight:800;color:#fff;">'+s.rs+'</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;">응답속도</div></div>'+
-    '<div style="padding:12px;border:0 solid rgba(255,255,255,.06);border-left-width:1px;border-right-width:1px;"><div style="font-size:14px;font-weight:800;color:#fff;">'+s.rb+'%</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;">재구매</div></div>'+
-    '<div style="padding:12px;"><div style="font-size:14px;font-weight:800;color:'+(s.cr<1?"#4ADE80":"#F59E0B")+'">'+(s.cr===0?"0%":s.cr+'%')+'</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;">클레임</div></div>'+
+    '<div style="padding:12px;"><div style="font-size:14px;font-weight:800;color:#fff;">'+(s.rs||"—")+'</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;">평균납기</div></div>'+
+    '<div style="padding:12px;border:0 solid rgba(255,255,255,.06);border-left-width:1px;border-right-width:1px;"><div style="font-size:14px;font-weight:800;color:#fff;">'+(s.minq||"—")+'</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;">최소수량</div></div>'+
+    '<div style="padding:12px;"><div style="font-size:14px;font-weight:800;color:#F59E0B;">★ '+((Math.round((s.rt||0)*10)/10))+'</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;">평점</div></div>'+
     '</div>'+
-    '<div style="padding:14px;"><div class="fc"><div class="fct">업체 소개</div><p style="font-size:14px;color:var(--ink2);line-height:1.7;">'+s.cat+' 전문 업체입니다.</p></div>'+
+    '<div style="padding:14px;"><div class="fc"><div class="fct">업체 소개</div><p style="font-size:14px;color:var(--ink2);line-height:1.7;">'+((s.desc&&s.desc.trim())?s.desc:(s.cat+" 전문 업체입니다."))+'</p></div>'+
     '<div style="display:flex;gap:9px;margin-top:12px;"><button class="btn btn-gn" onclick="go(&quot;rw&quot;)" style="flex:2;padding:12px;">이 업체에 견적 요청</button><button class="btn btn-wh" onclick="alert(&quot;카카오채널로 문의해주세요.&quot;)" style="flex:1;padding:12px;">문의</button></div></div>';
 }
 
@@ -1754,7 +1758,58 @@ function renderHome(){
   renderCommWidget();
   renderSupHome("all");
 }
+/* ═══════════ 실제 DB 데이터 로딩 (더미 → Supabase) ═══════════ */
+var CAT_STYLE={
+  "소고기":{cc:"#FFF8E1",ct:"#E65100",ico:"🥩"},"돼지고기":{cc:"#FCE4EC",ct:"#C62828",ico:"🐷"},
+  "부산물":{cc:"#FFF3E0",ct:"#E65100",ico:"🍢"},"도축장":{cc:"#FCE4EC",ct:"#C62828",ico:"🔪"},
+  "OEM":{cc:"#E8F5E9",ct:"#1B5E20",ico:"🏭"},"물류":{cc:"#E3F2FD",ct:"#1565C0",ico:"🚚"},
+  "HACCP":{cc:"#E0F7FA",ct:"#006064",ico:"🧪"},"포장재":{cc:"#F3E5F5",ct:"#6A1B9A",ico:"📦"},
+  "장비":{cc:"#ECEFF1",ct:"#37474F",ico:"⚙️"},"인테리어":{cc:"#FFF3E0",ct:"#E65100",ico:"🏗️"},
+  "창업":{cc:"#E8F5E9",ct:"#1B5E20",ico:"🚀"},"세무":{cc:"#E3F2FD",ct:"#1565C0",ico:"📊"}
+};
+function catStyle(c){return CAT_STYLE[c]||{cc:"#EEEAE2",ct:"#6B6B6B",ico:"📦"};}
+var SUP_COLORS=["#1A2332","#1B5E20","#263238","#4E342E","#37474F","#3E2723","#1A3A4A"];
+function supColor(id){var s=String(id||""),n=0;for(var i=0;i<s.length;i++)n+=s.charCodeAt(i);return SUP_COLORS[n%SUP_COLORS.length];}
+function relTime(iso){if(!iso)return "";var d=new Date(iso);if(isNaN(d))return "";var s=Math.floor((Date.now()-d.getTime())/1000);if(s<60)return "방금 전";if(s<3600)return Math.floor(s/60)+"분 전";if(s<86400)return Math.floor(s/3600)+"시간 전";if(s<2592000)return Math.floor(s/86400)+"일 전";return (d.getMonth()+1)+"."+d.getDate();}
+function truncate(s,n){s=String(s||"");return s.length>n?s.slice(0,n)+"…":s;}
+function dbCatOf(r){return r.category||r.item_category||"기타";}
+function mapReq(r){var c=dbCatOf(r),st=catStyle(c);return {id:r.id,cat:c,cc:st.cc,ct:st.ct,ico:st.ico,title:(r.description&&r.description.trim())?truncate(r.description,26):(c+" 구매 요청"),meta:(r.region||"전국")+" / "+relTime(r.created_at),cnt:(r.quote_count!=null?r.quote_count:0)+"건"};}
+function mapSup(s){var cats=Array.isArray(s.categories)?s.categories:[];return {id:s.id,nm:s.name||"업체",cat:(s.region||"지역미정")+(cats.length?" · "+cats.slice(0,2).join("·"):""),rt:Number(s.rating)||0,rs:s.lead_time||"—",minq:s.min_qty||"—",catcnt:cats.length,vf:!!s.is_verified,cats:cats,cl:supColor(s.id),desc:s.description||""};}
+function mapJob(j){var emp=j.employment||"",type=emp.indexOf("계약")>=0?"contract":(emp.indexOf("알바")>=0||emp.indexOf("아르바이트")>=0)?"part":"full";return {id:j.id,type:type,urgent:!!j.is_urgent,role:j.job_role||"채용",biz:(j.kind==="seek"?((j.applicant_name||"구직자")+" (구직)"):(j.company||"업체")),loc:j.location||"-",pay:j.pay||"협의",emp:emp||"정규직",d:relTime(j.created_at),benefit:j.detail||""};}
+function emptyBox(msg){return '<div style="text-align:center;padding:30px 12px;color:var(--ink4);font-size:13px;line-height:1.6;">'+msg+'</div>';}
+
+async function loadFromDB(){
+  if(!sb)return;
+  try{
+    var rq=await sb.from("purchase_requests").select("*").order("created_at",{ascending:false}).limit(50);
+    if(!rq.error&&rq.data){
+      REQS=rq.data.map(mapReq);
+      renderRQWidget();renderReqs();
+      if(!REQS.length){var e1=document.getElementById("rq-widget");if(e1)e1.innerHTML=emptyBox("실시간 견적 요청이 아직 없습니다");}
+    }
+  }catch(e){}
+  try{
+    var sp=await sb.from("suppliers").select("*").order("created_at",{ascending:false}).limit(100);
+    if(!sp.error&&sp.data){
+      SUPS=sp.data.map(mapSup);
+      RANKS=SUPS.slice().sort(function(a,b){return b.rt-a.rt;}).slice(0,5).map(function(s){return {nm:s.nm,cat:s.cat,rt:"★ "+(Math.round(s.rt*10)/10)};});
+      NEW_SUPS=SUPS.slice(0,3).map(function(s){return {ico:"🏭",nm:s.nm,sub:s.cat,isnew:true};});
+      renderSupHome(typeof curSC!=="undefined"?curSC:"all");renderSups(typeof curSC!=="undefined"?curSC:"all");renderRankWidget();renderNewSupWidget();
+      if(!SUPS.length){var e2=document.getElementById("sup-home");if(e2)e2.innerHTML=emptyBox("등록된 공급업체가 아직 없습니다");var e2b=document.getElementById("sup-full");if(e2b)e2b.innerHTML=emptyBox("등록된 공급업체가 아직 없습니다");}
+    }
+  }catch(e){}
+  try{
+    var jb=await sb.from("jobs").select("*").order("created_at",{ascending:false}).limit(100);
+    if(!jb.error&&jb.data){
+      JOBS=jb.data.map(mapJob);
+      renderJobWidget();renderJobsFull();
+      if(!JOBS.length){var e3=document.getElementById("job-widget");if(e3)e3.innerHTML=emptyBox("구인 공고가 아직 없습니다");}
+    }
+  }catch(e){}
+}
+
 renderHome();
+loadFromDB();
 </script>
 <script type="text/x-svg-data" id="svg______" data-bg="#1A0A0A">
 <defs>

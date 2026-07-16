@@ -1433,13 +1433,13 @@ function mkNewsThumb(cl){
 function renderNewsWidget(){
   var el=document.getElementById("news-widget");if(!el)return;
   el.innerHTML=NEWS.map(function(n){
-    return '<div class="news-row"><div class="nr-thumb" style="background:'+n.cl+';">'+mkNewsThumb(n.cl)+'</div><div><div class="nr-title">'+n.title+'</div><div class="nr-date">'+n.date+'</div></div></div>';
+    return '<div class="news-row"><div class="nr-thumb" style="background:#E8F5E9;display:flex;align-items:center;justify-content:center;font-size:16px;">📰</div><div><div class="nr-title">'+n.title+'</div><div class="nr-date">'+n.date+'</div></div></div>';
   }).join('');
 }
 function renderInsightWidget(){
   var el=document.getElementById("insight-widget");if(!el)return;
   el.innerHTML=INSIGHTS.map(function(n){
-    return '<div class="news-row"><div class="nr-thumb" style="background:'+n.cl+';">'+mkNewsThumb(n.cl)+'</div><div><div class="nr-title">'+n.title+'</div><div class="nr-date">'+n.date+'</div></div></div>';
+    return '<div class="news-row"><div class="nr-thumb" style="background:#FFF3E0;display:flex;align-items:center;justify-content:center;font-size:16px;">💡</div><div><div class="nr-title">'+n.title+'</div><div class="nr-date">'+n.date+'</div></div></div>';
   }).join('');
 }
 function renderJobWidget(){

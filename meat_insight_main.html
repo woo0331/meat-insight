@@ -1393,10 +1393,17 @@ function renderRQWidget(){
 }
 function renderPropWidget(){
   var el=document.getElementById("prop-widget");if(!el)return;
+  function propStyle(nm){
+    if(/곱창|대창|막창|양깃|천엽|내장|부산물|우설|처녑|양지머리/.test(nm))return {cc:"#FFF3E0",ico:"🍢"};
+    if(/돼지|삼겹|목살|뒷심|앞다리|항정|갈매기/.test(nm))return {cc:"#FCE4EC",ico:"🐷"};
+    if(/OEM|가공|소시지|햄|HMR|육포|밀키트/.test(nm))return {cc:"#E8F5E9",ico:"🏭"};
+    return {cc:"#FFF8E1",ico:"🥩"};
+  }
   el.innerHTML=PROPS.map(function(p){
-    return '<div class="prop-row" onclick="goReq(&quot;부동산&quot;)">'+
-      '<div class="prop-thumb" style="background:'+p.cl+';"><svg viewBox="0 0 52 40" fill="none" style="width:100%;height:100%;"><rect width="52" height="40" fill="'+p.cl+'"/><ellipse cx="26" cy="22" rx="18" ry="12" fill="rgba(255,255,255,.1)"/></svg></div>'+
-      '<div class="prop-body"><div class="prop-nm">'+p.nm+'</div><div class="prop-info">'+p.info+'</div></div></div>';
+    var s=propStyle(p.nm||"");
+    return '<div class="rq-row" onclick="go(&quot;suppliers&quot;)">'+
+      '<div class="rq-ico" style="background:'+s.cc+';">'+s.ico+'</div>'+
+      '<div class="rq-body"><div class="rq-title">'+p.nm+'</div><div class="rq-meta">'+p.info+'</div></div></div>';
   }).join('');
 }
 function renderPriceWidget(eid,cat){

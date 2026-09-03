@@ -230,3 +230,46 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
   .gcat-grid{grid-template-columns:repeat(3,1fr);}
   .qbar{grid-template-columns:repeat(2,1fr);}
 }
+
+/* ════════════════════════════════════════════════════════════
+   PHASE 3 — 채팅 / 거래 진행 / 매칭
+   ════════════════════════════════════════════════════════════ */
+
+/* ── 채팅 ── */
+.gp-chat{display:flex;flex-direction:column;height:calc(100vh - var(--top-pad) - 20px);max-width:720px;}
+.chat-wrap{flex:1;overflow-y:auto;background:var(--bg2);border:1px solid var(--bd);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;min-height:260px;}
+.chat-row{display:flex;flex-direction:column;align-items:flex-start;max-width:76%;}
+.chat-row.me{align-self:flex-end;align-items:flex-end;}
+.chat-who{font-size:11.5px;font-weight:700;color:var(--ink3);margin-bottom:4px;padding:0 3px;}
+.chat-bub{background:#fff;border:1px solid var(--bd);border-radius:14px 14px 14px 4px;padding:11px 14px;font-size:14px;line-height:1.6;color:var(--ink);word-break:break-word;}
+.chat-row.me .chat-bub{background:var(--gn);border-color:var(--gn);color:#fff;border-radius:14px 14px 4px 14px;}
+.chat-time{font-size:10.5px;color:var(--ink4);margin-top:4px;padding:0 3px;}
+.chat-sys{align-self:center;font-size:12px;color:var(--ink4);background:#fff;border:1px solid var(--bd);border-radius:999px;padding:6px 14px;}
+.chat-bar{display:flex;gap:8px;align-items:flex-end;margin-top:10px;background:#fff;border:1.5px solid var(--bd);border-radius:14px;padding:8px 8px 8px 14px;}
+.chat-bar:focus-within{border-color:var(--gn);}
+.chat-in{flex:1;border:none;outline:none;resize:none;font-size:14.5px;line-height:1.5;font-family:"Noto Sans KR",sans-serif;color:var(--ink);background:none;padding:8px 0;max-height:120px;}
+.chat-send{flex-shrink:0;width:40px;height:40px;border:none;border-radius:10px;background:var(--gn);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.chat-send:hover{background:var(--gn2);}
+
+/* ── 거래 진행 단계 ── */
+.ord-flow{display:flex;align-items:flex-start;}
+.ord-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;position:relative;}
+.ord-step::before{content:"";position:absolute;top:15px;left:-50%;width:100%;height:2px;background:var(--bd);}
+.ord-step:first-child::before{display:none;}
+.ord-step.done::before,.ord-step.on::before{background:var(--gn);}
+.ord-dot{width:30px;height:30px;border-radius:50%;background:#fff;border:2px solid var(--bd);color:var(--ink4);font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;}
+.ord-step.on .ord-dot,.ord-step.done .ord-dot{background:var(--gn);border-color:var(--gn);color:#fff;}
+.ord-lb{font-size:12px;font-weight:700;color:var(--ink4);white-space:nowrap;}
+.ord-step.on .ord-lb,.ord-step.done .ord-lb{color:var(--gn);}
+
+/* ── 견적 카드 보강 ── */
+.qc-chat{flex:0 0 auto!important;}
+.sd-permit{white-space:nowrap;}
+
+@media(max-width:768px){
+  .gp-chat{height:calc(100vh - var(--top-pad) - 76px);}
+  .chat-row{max-width:86%;}
+  .ord-lb{font-size:11px;}
+  .qc-act{flex-wrap:wrap;}
+  .qc-act .gbtn{flex:1 1 46%;}
+}

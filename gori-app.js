@@ -784,10 +784,9 @@ function renderQuotes(){
   el.innerHTML='<div class="qcmp">'+qs.map(function(q){
     var m=meta(q), s=m.sup, isLow=(num(q.price)!=null && num(q.price)===lo);
     var sel=q.status==="선택됨";
-    var certs=[];
-    if(m.verified) certs.push('<span class="gbadge gb-or">고리인증</span>');
-    if(m.brn)      certs.push('<span class="gbadge gb-gy">사업자</span>');
-    if(m.haccp)    certs.push('<span class="gbadge gb-ok">HACCP</span>');
+    /* 인증 배지 — 고리인증 / 사업자 / HACCP / 축산물 영업허가 */
+    var certHtml = (typeof trustBadges==="function") ? trustBadges(s) : "";
+    var certs = certHtml ? [certHtml] : [];
     return '<div class="qc'+(sel?" sel":(isLow?" best":""))+'">'+
       (sel?'<span class="gbadge gb-ok qc-tag">✓ 선택한 견적</span>'
           :(isLow?'<span class="gbadge gb-or qc-tag">최저가</span>'
@@ -1598,6 +1597,929 @@ window.gReviewFromRequest=async function(reqId){
   var q=MY.quotesIn.find(function(x){ return String(x.request_id)===String(reqId) && x.status==="선택됨"; });
   window.gOpenReview("supplier", q?(q.supplier_id||""):"", q?q.supplier_name:(r?r.title:""), reqId);
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   PHASE 3 — 매칭 알림 · 바로견적 · 신뢰 지표 · 시세 연동
+   숨고에서 가장 중요한 축: "요청이 올라오면 업체가 그 사실을 안다"
+   ════════════════════════════════════════════════════════════════════ */
+
+var P3_TABLES=["chat_rooms","chat_messages","supplier_prefs","verifications","orders","market_prices"];
+var MARKET={ rows:[], byItem:{} };
+G.MARKET=MARKET;
+
+/* ── 시세 ── */
+async function loadMarket(){
+  var r=await selectSafe("market_prices", function(q){ return q.order("price_date",{ascending:false}).limit(200); });
+  if(r.unavailable){ MARKET.rows=[]; return; }
+  var seen={}, rows=[];
+  (r.data||[]).forEach(function(m){
+    var k=(m.item||"")+"|"+(m.grade||"");
+    if(seen[k]) return; seen[k]=1; rows.push(m);
+  });
+  MARKET.rows=rows;
+  var by={}; rows.forEach(function(m){ by[normCat(m.item)]=m; });
+  MARKET.byItem=by;
+}
+/* 요청 내용과 가장 가까운 시세 항목을 찾습니다 */
+function marketFor(req){
+  if(!MARKET.rows.length) return null;
+  var d=(req&&req.detail)||{}, hay=normCat([d.part,d.item,(d.species||[]).join(""),req&&req.title].join(""));
+  if(!hay) return null;
+  var best=null, bestLen=0;
+  MARKET.rows.forEach(function(m){
+    var key=normCat(m.item);
+    if(key.length>=2 && hay.indexOf(key)>=0 && key.length>bestLen){ best=m; bestLen=key.length; }
+  });
+  if(best) return best;
+  /* 부분 일치가 없으면 축종 단위로 */
+  MARKET.rows.forEach(function(m){
+    ["한우","한돈","돼지","수입"].forEach(function(t){
+      if(!best && hay.indexOf(t)>=0 && normCat(m.item).indexOf(t)>=0) best=m;
+    });
+  });
+  return best;
+}
+G.marketFor=marketFor;
+
+function marketDiff(unitPrice, ref){
+  if(unitPrice==null||!ref||!ref.price) return null;
+  var pct=Math.round(((unitPrice-Number(ref.price))/Number(ref.price))*1000)/10;
+  return { pct:pct, ref:ref };
+}
+G.marketDiff=marketDiff;
+
+/* ── 매칭 알림 (DB 트리거가 없을 때의 클라이언트 대체 경로) ── */
+function supplierMatches(sup, prefs, req){
+  if(sup.notify_on===false) return false;
+  if(prefs && prefs.notify_on===false) return false;
+  var cats=(prefs&&prefs.category_mains&&prefs.category_mains.length) ? prefs.category_mains
+         : (sup.category_mains&&sup.category_mains.length ? sup.category_mains : null);
+  if(req.category_main && cats && cats.indexOf(req.category_main)<0){
+    /* 등록 카테고리 문자열로도 한 번 더 확인 */
+    if(!matchCat8(sup.categories||[], req.category_main)) return false;
+  }
+  var regions=(prefs&&prefs.regions&&prefs.regions.length) ? prefs.regions
+            : (sup.regions&&sup.regions.length ? sup.regions : null);
+  var rg=String(req.region||"");
+  if(regions && rg && rg!=="전국" && regions.indexOf("전국")<0){
+    var hit=regions.some(function(r){ return rg.indexOf(r)>=0 || r.indexOf(rg)>=0; });
+    if(!hit) return false;
+  }
+  return true;
+}
+G.supplierMatches=supplierMatches;
+
+/* 요청 등록 직후 호출 — 트리거가 이미 처리했으면 중복 발송하지 않습니다 */
+async function fanoutRequest(req){
+  if(!req || SCHEMA.notifications===false) return 0;
+  if(req.notified_at) return 0;                       /* DB 트리거가 처리함 */
+  var sup=await selectSafe("suppliers", function(q){ return q.limit(500); });
+  var pf =await selectSafe("supplier_prefs", function(q){ return q.limit(500); });
+  var pmap={}; (pf.data||[]).forEach(function(p){ pmap[String(p.supplier_id)]=p; });
+  var targets=(sup.data||[]).filter(function(s){
+    return s.user_id && supplierMatches(s, pmap[String(s.id)], req);
+  });
+  for(var i=0;i<targets.length;i++){
+    await insertSafe("notifications",{
+      user_id:targets[i].user_id, type:"request",
+      title:"새 요청이 등록되었습니다",
+      body:(req.title||req.description||req.category)+" · "+(req.region||"전국"),
+      link:"req:"+req.id
+    });
+  }
+  if(targets.length) await updateSafe("purchase_requests",{notified_at:new Date().toISOString(), notified_cnt:targets.length},"id",req.id);
+  return targets.length;
+}
+G.fanoutRequest=fanoutRequest;
+
+/* ── 바로견적: 조건이 맞는 업체를 즉시 추천 ── */
+async function instantMatches(req, limit){
+  var sup=await selectSafe("suppliers", function(q){ return q.limit(500); });
+  var pf =await selectSafe("supplier_prefs", function(q){ return q.limit(500); });
+  var pmap={}; (pf.data||[]).forEach(function(p){ pmap[String(p.supplier_id)]=p; });
+  var list=(sup.data||[]).filter(function(s){ return supplierMatches(s, pmap[String(s.id)], req); });
+  list.sort(function(a,b){
+    var sa=score(a), sb=score(b);
+    return sb-sa;
+  });
+  return list.slice(0, limit||6);
+  function score(s){
+    var v=0;
+    if(s.instant_quote) v+=40;
+    if(s.is_verified) v+=15;
+    if(s.haccp) v+=10;
+    if(s.livestock_permit) v+=10;
+    if(s.brn_verified) v+=5;
+    v += Math.min(Number(s.rating)||0,5)*4;
+    v += Math.min(Number(s.deal_count)||0,50)*0.4;
+    if(s.response_rate!=null) v += Number(s.response_rate)*0.1;
+    if(s.avg_response_min!=null && s.avg_response_min>0) v += Math.max(0, 20 - s.avg_response_min/30);
+    return v;
+  }
+}
+G.instantMatches=instantMatches;
+
+/* ── 신뢰 지표 표시 ── */
+function trustBadges(s){
+  if(!s) return "";
+  var b=[];
+  if(s.is_verified)       b.push('<span class="gbadge gb-or">고리인증</span>');
+  if(s.brn_verified||s.brn) b.push('<span class="gbadge gb-gy">사업자</span>');
+  if(s.haccp)             b.push('<span class="gbadge gb-ok">HACCP</span>');
+  if(s.livestock_permit)  b.push('<span class="gbadge gb-bl">축산물 허가</span>');
+  return b.join("");
+}
+function respText(s){
+  if(!s) return "";
+  var out=[];
+  if(s.response_rate!=null) out.push(s.response_rate+"%");
+  if(s.avg_response_min!=null && s.avg_response_min>0){
+    var m=Number(s.avg_response_min);
+    out.push("평균 "+(m<60?(m+"분"):(m<1440?Math.round(m/60)+"시간":Math.round(m/1440)+"일")));
+  }
+  return out.join(" · ");
+}
+G.trustBadges=trustBadges; G.respText=respText;
+
+/* ── 업체 매칭 설정 화면 ── */
+window.gOpenPrefs=async function(supplierId){
+  if(typeof go==="function") go("prefs");
+  var body=$("prefs-body"); if(!body) return;
+  if(!ME.user){
+    body.innerHTML='<div class="gempty"><div class="gempty-t">로그인이 필요합니다</div>'+
+      '<div class="gempty-d">업체 계정으로 로그인하면 관심 분야에 맞는 요청 알림을 받을 수 있습니다.</div>'+
+      '<button class="gbtn gbtn-p gbtn-sm" onclick="openModal(\'login\')">로그인</button></div>';
+    return;
+  }
+  var mine=(await selectSafe("suppliers", function(q){ return q.eq("user_id",ME.user.id); })).data||[];
+  if(!mine.length){
+    body.innerHTML='<div class="gp-hd"><div><div class="gp-title">요청 알림 설정</div></div></div>'+
+      '<div class="gempty"><div class="gempty-t">등록된 업체가 없습니다</div>'+
+      '<div class="gempty-d">업체를 먼저 등록하면 조건에 맞는 요청이 올라올 때 알림을 받습니다.</div>'+
+      '<button class="gbtn gbtn-p gbtn-sm" onclick="go(&quot;sj&quot;)">업체 등록하기</button></div>';
+    return;
+  }
+  var sup=mine.find(function(s){ return String(s.id)===String(supplierId); })||mine[0];
+  var pf=(await selectSafe("supplier_prefs", function(q){ return q.eq("supplier_id",String(sup.id)).limit(1); })).data||[];
+  var p=pf[0]||{};
+  var cats=(p.category_mains&&p.category_mains.length)?p.category_mains:(sup.category_mains||[]);
+  var regs=(p.regions&&p.regions.length)?p.regions:(sup.regions||["전국"]);
+
+  body.innerHTML=
+    '<div class="gp-hd"><button class="back-btn" style="padding:0;" onclick="go(&quot;my&quot;)">← 거래관리</button>'+
+      '<div><div class="gp-title">요청 알림 설정</div><div class="gp-sub">'+esc(sup.name)+' — 조건에 맞는 요청이 올라오면 바로 알려드립니다</div></div></div>'+
+    (mine.length>1?'<div class="gcard"><label class="glabel">업체 선택</label><select class="gin" onchange="gOpenPrefs(this.value)">'+
+      mine.map(function(s){ return '<option value="'+esc(s.id)+'"'+(String(s.id)===String(sup.id)?" selected":"")+'>'+esc(s.name)+'</option>'; }).join("")+'</select></div>':'')+
+    '<div class="gcard"><div class="gcard-t">받고 싶은 분야</div>'+
+      '<div class="gpick" id="pf-cats">'+CATS8.map(function(c){
+        return '<button type="button" class="gpick-i'+(cats.indexOf(c.k)>=0?" on":"")+'" data-k="'+c.k+'" onclick="this.classList.toggle(\'on\')">'+esc(c.nm)+'</button>';
+      }).join("")+'</div>'+
+      '<div class="ghint">선택하지 않으면 업체 등록 분야를 기준으로 알림을 받습니다.</div>'+
+    '</div>'+
+    '<div class="gcard"><div class="gcard-t">영업 가능 지역</div>'+
+      '<div class="gpick" id="pf-regs">'+REGIONS.map(function(r){
+        return '<button type="button" class="gpick-i'+(regs.indexOf(r)>=0?" on":"")+'" onclick="this.classList.toggle(\'on\')">'+esc(r)+'</button>';
+      }).join("")+'</div>'+
+      '<label class="glabel">최소 거래 규모</label>'+
+      '<input class="gin" id="pf-min" inputmode="numeric" placeholder="1,000,000 (비우면 전체)" oninput="gNumFmt(this)" value="'+(p.min_amount?Number(p.min_amount).toLocaleString("ko-KR"):"")+'">'+
+      '<div class="ghint">이 금액 미만으로 예상되는 요청은 알림에서 제외합니다.</div>'+
+    '</div>'+
+    '<div class="gcard"><div class="gcard-t">바로견적</div>'+
+      '<label class="glabel">바로견적 참여</label>'+
+      '<div class="gpick" id="pf-instant">'+
+        '<button type="button" class="gpick-i'+(sup.instant_quote?" on":"")+'" onclick="gPickOne(this)">참여</button>'+
+        '<button type="button" class="gpick-i'+(sup.instant_quote?"":" on")+'" onclick="gPickOne(this)">미참여</button></div>'+
+      '<div class="ghint">참여하면 요청자가 요청을 올린 직후 추천 업체로 먼저 노출됩니다.</div>'+
+      '<label class="glabel">기본 조건 한 줄</label>'+
+      '<input class="gin" id="pf-note" placeholder="한우 지육 kg당 협의 · 당일 출고 · 경기 무료배송" value="'+esc(sup.instant_note||"")+'">'+
+    '</div>'+
+    '<div class="gcard"><div class="gcard-t">알림 수신</div>'+
+      '<div class="gpick" id="pf-notify">'+
+        '<button type="button" class="gpick-i'+(sup.notify_on!==false?" on":"")+'" onclick="gPickOne(this)">받기</button>'+
+        '<button type="button" class="gpick-i'+(sup.notify_on===false?" on":"")+'" onclick="gPickOne(this)">받지 않기</button></div>'+
+      '<div class="gmsg" id="pf-msg"></div>'+
+    '</div>'+
+    '<button class="gbtn gbtn-p gbtn-full" onclick="gSavePrefs(\''+esc(sup.id)+'\')">설정 저장</button>';
+  window.scrollTo(0,0);
+};
+window.gPickOne=function(el){
+  el.parentNode.querySelectorAll(".gpick-i").forEach(function(b){ b.classList.toggle("on", b===el); });
+};
+window.gSavePrefs=async function(supId){
+  var cats=[]; document.querySelectorAll("#pf-cats .gpick-i.on").forEach(function(b){ cats.push(b.getAttribute("data-k")); });
+  var regs=[]; document.querySelectorAll("#pf-regs .gpick-i.on").forEach(function(b){ regs.push(b.textContent.trim()); });
+  var instant=(document.querySelector("#pf-instant .gpick-i.on")||{}).textContent==="참여";
+  var notify =(document.querySelector("#pf-notify .gpick-i.on")||{}).textContent==="받기";
+  var minAmt=num((($("pf-min")||{}).value)||"");
+  var payload={ supplier_id:String(supId), user_id:ME.user?ME.user.id:null,
+    category_mains:cats, regions:regs, min_amount:minAmt, notify_on:notify };
+  var c=client();
+  var existing=(await selectSafe("supplier_prefs", function(q){ return q.eq("supplier_id",String(supId)).limit(1); })).data||[];
+  var r = existing.length ? await updateSafe("supplier_prefs", payload, "supplier_id", String(supId))
+                          : await insertSafe("supplier_prefs", payload);
+  if(r.error){ setMsg("pf-msg", r.missingTable?"db/phase3_schema.sql 을 먼저 실행해주세요.":("저장 실패: "+(r.error.message||"")),"err"); return; }
+  await updateSafe("suppliers",{ instant_quote:instant, instant_note:(($("pf-note")||{}).value||"").trim()||null,
+    notify_on:notify, category_mains:cats.length?cats:null, regions:regs.length?regs:null }, "id", supId);
+  toast("알림 설정을 저장했습니다.","ok");
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   1:1 채팅 — 요청자 ↔ 업체
+   숨고의 핵심 접점. 견적을 받은 뒤 실제 조율이 일어나는 곳입니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+var CHAT = { rooms:[], cur:null, msgs:[], sub:null, timer:null };
+G.CHAT = CHAT;
+
+function chatUnread(){
+  return CHAT.rooms.reduce(function(a,r){ return a+(r._unread||0); },0);
+}
+G.chatUnread=chatUnread;
+
+async function loadRooms(){
+  if(!ME.user || SCHEMA.chat_rooms===false){ CHAT.rooms=[]; return; }
+  var c=client(); if(!c) return;
+  var r=await c.from("chat_rooms").select("*").order("last_at",{ascending:false}).limit(100);
+  if(r.error){ if(isMissingTable(r.error)) SCHEMA.chat_rooms=false; CHAT.rooms=[]; return; }
+  var rooms=(r.data||[]).filter(function(x){
+    return String(x.buyer_user_id||"")===String(ME.user.id) || String(x.supplier_user_id||"")===String(ME.user.id);
+  });
+  /* 안 읽은 메시지 수 */
+  for(var i=0;i<rooms.length;i++){
+    var m=await c.from("chat_messages").select("id,is_read,sender_id").eq("room_id",rooms[i].id);
+    rooms[i]._unread=((m.data)||[]).filter(function(x){ return !x.is_read && String(x.sender_id||"")!==String(ME.user.id); }).length;
+  }
+  CHAT.rooms=rooms;
+}
+G.loadRooms=loadRooms;
+
+/* 견적 카드 / 업체 상세에서 채팅 시작 */
+window.gStartChat=async function(opts){
+  if(!ME.user){ toast("로그인 후 이용할 수 있습니다.","err"); if(typeof openModal==="function") openModal("login"); return; }
+  if(SCHEMA.chat_rooms===false){ toast("db/phase3_schema.sql 을 먼저 실행해주세요.","err"); return; }
+  var c=client(); if(!c) return;
+  var q=await c.from("chat_rooms").select("*")
+    .eq("request_id", String(opts.requestId||""))
+    .eq("supplier_id", String(opts.supplierId||""));
+  var room=(q.data&&q.data[0])||null;
+  if(!room){
+    var r=await insertSafe("chat_rooms",{
+      request_id:String(opts.requestId||""), quote_id:opts.quoteId?String(opts.quoteId):null,
+      buyer_user_id:opts.buyerUserId||ME.user.id, buyer_name:opts.buyerName||ME.name,
+      supplier_id:opts.supplierId?String(opts.supplierId):null,
+      supplier_user_id:opts.supplierUserId||null, supplier_name:opts.supplierName||"업체",
+      last_message:"대화를 시작했습니다", last_at:new Date().toISOString()
+    });
+    if(r.error){ toast(r.missingTable?"db/phase3_schema.sql 을 먼저 실행해주세요.":"채팅을 열지 못했습니다.","err"); return; }
+    room=r.data&&r.data[0];
+    if(room && opts.firstMessage){
+      await insertSafe("chat_messages",{ room_id:room.id, sender_id:ME.user.id, sender_name:ME.name,
+        body:opts.firstMessage, kind:"system" });
+    }
+  }
+  window.gOpenChat(room.id);
+};
+
+window.gOpenChatList=async function(){
+  if(typeof go==="function") go("chats");
+  var body=$("chats-body"); if(!body) return;
+  if(!ME.user){
+    body.innerHTML='<div class="gempty"><div class="gempty-t">로그인이 필요합니다</div>'+
+      '<div class="gempty-d">견적을 주고받은 상대와의 대화는 계정에 보관됩니다.</div>'+
+      '<button class="gbtn gbtn-p gbtn-sm" onclick="openModal(\'login\')">로그인</button></div>'; return;
+  }
+  body.innerHTML='<div style="padding:50px 0;text-align:center;color:var(--ink4);">불러오는 중…</div>';
+  await loadRooms();
+  if(SCHEMA.chat_rooms===false){ body.innerHTML='<div class="gp-hd"><div class="gp-title">채팅</div></div>'+setupNote("채팅"); return; }
+  body.innerHTML='<div class="gp-hd"><div><div class="gp-title">채팅</div>'+
+      '<div class="gp-sub">견적을 주고받은 상대와 바로 조율하세요</div></div></div>'+
+    (CHAT.rooms.length ? '<div class="rlist">'+CHAT.rooms.map(function(r){
+        var iAmBuyer=String(r.buyer_user_id||"")===String(ME.user.id);
+        var other=iAmBuyer?(r.supplier_name||"업체"):(r.buyer_name||"요청자");
+        return '<div class="ritem" onclick="gOpenChat(\''+r.id+'\')">'+
+          '<div class="ritem-top"><span class="gbadge '+(iAmBuyer?"gb-or":"gb-bl")+'">'+(iAmBuyer?"내 요청":"받은 요청")+'</span>'+
+            (r._unread?'<span class="gbadge gb-rd">'+r._unread+'</span>':'')+
+            '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(r.last_at)+'</span></div>'+
+          '<div class="ritem-t">'+esc(other)+'</div>'+
+          '<div class="ritem-m"><span>'+esc(truncate(r.last_message||"",40))+'</span></div></div>';
+      }).join("")+'</div>'
+      : empty("아직 대화가 없습니다","견적을 받으면 업체와 바로 대화할 수 있습니다.",
+              '<button class="gbtn gbtn-p gbtn-sm" onclick="go(&quot;reqs&quot;)">실시간 요청 보기</button>'));
+  window.scrollTo(0,0);
+};
+
+window.gOpenChat=async function(roomId){
+  if(typeof go==="function") go("chat");
+  var body=$("chat-body"); if(!body) return;
+  var c=client(); if(!c) return;
+  var rr=await c.from("chat_rooms").select("*").eq("id",roomId).limit(1);
+  var room=(rr.data&&rr.data[0])||null;
+  if(!room){ body.innerHTML='<div class="gempty"><div class="gempty-t">대화를 찾을 수 없습니다</div></div>'; return; }
+  CHAT.cur=room;
+  var iAmBuyer=String(room.buyer_user_id||"")===String(ME.user&&ME.user.id);
+  var other=iAmBuyer?(room.supplier_name||"업체"):(room.buyer_name||"요청자");
+
+  body.innerHTML=
+    '<div class="gp-hd" style="justify-content:space-between;">'+
+      '<div style="display:flex;align-items:center;gap:10px;">'+
+        '<button class="back-btn" style="padding:0;" onclick="gCloseChat();gOpenChatList()">←</button>'+
+        '<div><div class="gp-title">'+esc(other)+'</div>'+
+        '<div class="gp-sub">'+(room.request_id?'<span onclick="gOpenRequest(\''+esc(room.request_id)+'\')" style="cursor:pointer;color:var(--gn);font-weight:700;">연결된 요청 보기 ›</span>':'')+'</div></div>'+
+      '</div>'+
+      (room.supplier_id?'<button class="gbtn gbtn-w gbtn-sm" onclick="curSID=\''+esc(room.supplier_id)+'\';gCloseChat();go(&quot;sp&quot;)">업체 정보</button>':'')+
+    '</div>'+
+    '<div class="chat-wrap" id="chat-scroll"></div>'+
+    '<div class="chat-bar">'+
+      '<textarea class="chat-in" id="chat-input" rows="1" placeholder="메시지를 입력하세요" '+
+        'oninput="gChatGrow(this)" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();gSendChat();}"></textarea>'+
+      '<button class="chat-send" onclick="gSendChat()" aria-label="보내기">'+
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button>'+
+    '</div>';
+  await refreshMsgs(true);
+  startChatPoll();
+  window.scrollTo(0,0);
+};
+
+async function refreshMsgs(scroll){
+  var c=client(); if(!c||!CHAT.cur) return;
+  var m=await c.from("chat_messages").select("*").eq("room_id",CHAT.cur.id).order("created_at",{ascending:true});
+  if(m.error) return;
+  CHAT.msgs=m.data||[];
+  var el=$("chat-scroll"); if(!el) return;
+  var myId=String((ME.user&&ME.user.id)||"");
+  el.innerHTML=CHAT.msgs.map(function(x){
+    if(x.kind==="system") return '<div class="chat-sys">'+esc(x.body)+'</div>';
+    var mine=String(x.sender_id||"")===myId;
+    return '<div class="chat-row'+(mine?" me":"")+'">'+
+      (mine?"":'<div class="chat-who">'+esc(x.sender_name||"")+'</div>')+
+      '<div class="chat-bub">'+esc(x.body).replace(/\n/g,"<br>")+'</div>'+
+      '<div class="chat-time">'+ago(x.created_at)+'</div></div>';
+  }).join("")||'<div class="chat-sys">대화를 시작해보세요</div>';
+  if(scroll) el.scrollTop=el.scrollHeight;
+  /* 상대가 보낸 메시지 읽음 처리 */
+  var unread=CHAT.msgs.filter(function(x){ return !x.is_read && String(x.sender_id||"")!==myId; });
+  for(var i=0;i<unread.length;i++){ await updateSafe("chat_messages",{is_read:true},"id",unread[i].id); }
+}
+window.gChatGrow=function(el){ el.style.height="auto"; el.style.height=Math.min(el.scrollHeight,120)+"px"; };
+
+window.gSendChat=async function(){
+  var el=$("chat-input"); if(!el||!CHAT.cur) return;
+  var body=String(el.value||"").trim(); if(!body) return;
+  el.value=""; el.style.height="auto";
+  var r=await insertSafe("chat_messages",{ room_id:CHAT.cur.id, sender_id:ME.user?ME.user.id:null,
+    sender_name:ME.name||"", body:body, kind:"text" });
+  if(r.error){ toast("전송에 실패했습니다.","err"); return; }
+  await updateSafe("chat_rooms",{ last_message:body, last_at:new Date().toISOString() },"id",CHAT.cur.id);
+  var other = String(CHAT.cur.buyer_user_id||"")===String(ME.user.id) ? CHAT.cur.supplier_user_id : CHAT.cur.buyer_user_id;
+  if(other) pushNotif(other,"chat","새 메시지",(ME.name||"상대방")+": "+truncate(body,40),"chat:"+CHAT.cur.id);
+  await refreshMsgs(true);
+};
+
+function startChatPoll(){
+  stopChatPoll();
+  CHAT.timer=setInterval(function(){ if(document.getElementById("pg-chat")&&document.getElementById("pg-chat").classList.contains("on")) refreshMsgs(false); else stopChatPoll(); }, 6000);
+}
+function stopChatPoll(){ if(CHAT.timer){ clearInterval(CHAT.timer); CHAT.timer=null; } }
+window.gCloseChat=function(){ stopChatPoll(); CHAT.cur=null; };
+
+/* ════════════════════════════════════════════════════════════════════
+   인증 센터 · 거래(주문) 관리 · 구조화 견적
+   축산 B2B 전용: 사업자등록 / HACCP / 축산물 영업허가
+   ════════════════════════════════════════════════════════════════════ */
+
+var VERIF_KINDS=[
+  {k:"brn",              nm:"사업자등록",   d:"사업자등록번호 10자리", ph:"000-00-00000", need:true},
+  {k:"livestock_permit", nm:"축산물 영업허가", d:"축산물위생관리법상 영업허가번호", ph:"허가번호"},
+  {k:"haccp",            nm:"HACCP 인증",   d:"HACCP 인증번호", ph:"인증번호"}
+];
+
+/* 사업자등록번호 검증 (국세청 체크섬) */
+function validBRN(v){
+  var n=String(v||"").replace(/[^0-9]/g,"");
+  if(n.length!==10) return false;
+  if(/^(\d)\1{9}$/.test(n)) return false;      /* 000-00-00000 같은 값 차단 */
+  var key=[1,3,7,1,3,7,1,3,5], sum=0;
+  for(var i=0;i<9;i++) sum += parseInt(n[i],10)*key[i];
+  sum += Math.floor((parseInt(n[8],10)*5)/10);
+  return ((10-(sum%10))%10) === parseInt(n[9],10);
+}
+G.validBRN=validBRN;
+function fmtBRN(v){
+  var n=String(v||"").replace(/[^0-9]/g,"").slice(0,10);
+  if(n.length>5) return n.slice(0,3)+"-"+n.slice(3,5)+"-"+n.slice(5);
+  if(n.length>3) return n.slice(0,3)+"-"+n.slice(3);
+  return n;
+}
+window.gBRNFmt=function(el){ el.value=fmtBRN(el.value); };
+
+window.gOpenVerify=async function(supplierId){
+  if(typeof go==="function") go("verify");
+  var body=$("verify-body"); if(!body) return;
+  if(!ME.user){
+    body.innerHTML='<div class="gempty"><div class="gempty-t">로그인이 필요합니다</div>'+
+      '<div class="gempty-d">인증은 업체 계정에 연결되어 관리됩니다.</div>'+
+      '<button class="gbtn gbtn-p gbtn-sm" onclick="openModal(\'login\')">로그인</button></div>'; return;
+  }
+  var mine=(await selectSafe("suppliers", function(q){ return q.eq("user_id",ME.user.id); })).data||[];
+  if(!mine.length){
+    body.innerHTML='<div class="gp-hd"><div class="gp-title">업체 인증</div></div>'+
+      '<div class="gempty"><div class="gempty-t">등록된 업체가 없습니다</div>'+
+      '<div class="gempty-d">업체를 등록한 뒤 인증을 진행하세요. 인증 업체는 요청자에게 먼저 노출됩니다.</div>'+
+      '<button class="gbtn gbtn-p gbtn-sm" onclick="go(&quot;sj&quot;)">업체 등록하기</button></div>'; return;
+  }
+  var sup=mine.find(function(s){ return String(s.id)===String(supplierId); })||mine[0];
+  var vs=(await selectSafe("verifications", function(q){ return q.eq("target_id",String(sup.id)).order("created_at",{ascending:false}); })).data||[];
+  function latest(kind){ return vs.find(function(v){ return v.kind===kind; })||null; }
+
+  body.innerHTML=
+    '<div class="gp-hd"><button class="back-btn" style="padding:0;" onclick="go(&quot;my&quot;)">← 거래관리</button>'+
+      '<div><div class="gp-title">업체 인증</div><div class="gp-sub">'+esc(sup.name)+' — 인증할수록 요청자에게 먼저 노출됩니다</div></div></div>'+
+    (mine.length>1?'<div class="gcard"><label class="glabel">업체 선택</label><select class="gin" onchange="gOpenVerify(this.value)">'+
+      mine.map(function(s){ return '<option value="'+esc(s.id)+'"'+(String(s.id)===String(sup.id)?" selected":"")+'>'+esc(s.name)+'</option>'; }).join("")+'</select></div>':'')+
+    VERIF_KINDS.map(function(k){
+      var v=latest(k.k);
+      var done=(k.k==="brn"?sup.brn_verified:(k.k==="haccp"?sup.haccp:sup.livestock_permit));
+      var st = done ? '<span class="gbadge gb-ok">승인</span>'
+             : (v ? '<span class="gbadge gb-or">'+esc(v.status||"심사중")+'</span>' : '<span class="gbadge gb-gy">미인증</span>');
+      return '<div class="gcard"><div class="gcard-t" style="display:flex;align-items:center;gap:8px;">'+esc(k.nm)+
+          (k.need?'<span class="gbadge gb-rd">필수</span>':'')+'<span style="margin-left:auto;">'+st+'</span></div>'+
+        '<div class="ghint" style="margin:-6px 0 12px;">'+esc(k.d)+'</div>'+
+        (done ? '<div class="gsum"><div class="gsum-r"><div class="gsum-k">번호</div><div class="gsum-v">'+esc((v&&v.number)||sup.brn||"등록됨")+'</div></div></div>'
+        : '<label class="glabel">번호</label>'+
+          '<input class="gin" id="vf-'+k.k+'" placeholder="'+esc(k.ph)+'"'+
+            (k.k==="brn"?' inputmode="numeric" oninput="gBRNFmt(this)" value="'+esc(sup.brn||"")+'"':'')+'>'+
+          '<label class="glabel">상호 · 대표자</label>'+
+          '<input class="gin" id="vh-'+k.k+'" placeholder="'+esc(sup.name)+' · 홍길동" value="'+esc(sup.rep_name?sup.name+" · "+sup.rep_name:"")+'">'+
+          '<div class="grow keep" style="margin-top:14px;">'+
+          '<button class="gbtn gbtn-p" onclick="gSubmitVerify(\''+esc(sup.id)+'\',\''+k.k+'\')">인증 신청</button></div>')+
+        '</div>';
+    }).join("")+
+    '<div class="gcard"><div class="gcard-t">인증하면 달라지는 것</div>'+
+      '<div class="gsum">'+
+        '<div class="gsum-r"><div class="gsum-k">노출</div><div class="gsum-v">인증 업체 필터·바로견적 추천에 포함됩니다</div></div>'+
+        '<div class="gsum-r"><div class="gsum-k">견적</div><div class="gsum-v">견적 카드에 인증 배지가 함께 표시됩니다</div></div>'+
+        '<div class="gsum-r"><div class="gsum-k">요청</div><div class="gsum-v">"인증 업체에만 공개" 요청을 받을 수 있습니다</div></div>'+
+      '</div></div>'+
+    '<div class="gmsg" id="vf-msg"></div>';
+  window.scrollTo(0,0);
+};
+
+window.gSubmitVerify=async function(supId, kind){
+  var numEl=$("vf-"+kind), num2=numEl?String(numEl.value||"").trim():"";
+  if(!num2){ setMsg("vf-msg","번호를 입력해주세요.","err"); return; }
+  if(kind==="brn" && !validBRN(num2)){ setMsg("vf-msg","사업자등록번호 형식이 올바르지 않습니다. 10자리를 확인해주세요.","err"); return; }
+  var r=await insertSafe("verifications",{
+    target_type:"supplier", target_id:String(supId), user_id:ME.user?ME.user.id:null,
+    kind:kind, number:num2, holder:(($("vh-"+kind)||{}).value||"").trim()||null, status:"심사중"
+  });
+  if(r.error){ setMsg("vf-msg", r.missingTable?"db/phase3_schema.sql 을 먼저 실행해주세요.":("신청 실패: "+(r.error.message||"")),"err"); return; }
+  if(kind==="brn") await updateSafe("suppliers",{brn:num2},"id",supId);
+  toast("인증을 신청했습니다. 검토 후 배지가 표시됩니다.","ok");
+  window.gOpenVerify(supId);
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   거래(주문) 관리 — 견적 선택 이후의 진행 상태
+   ════════════════════════════════════════════════════════════════════ */
+var ORDER_FLOW=["거래확정","준비중","배송중","완료"];
+
+window.gOpenOrder=async function(orderId){
+  if(typeof go==="function") go("order");
+  var body=$("order-body"); if(!body) return;
+  var c=client(); if(!c) return;
+  var r=await c.from("orders").select("*").eq("id",orderId).limit(1);
+  var o=(r.data&&r.data[0])||null;
+  if(!o){ body.innerHTML='<div class="gempty"><div class="gempty-t">거래를 찾을 수 없습니다</div></div>'; return; }
+  var idx=ORDER_FLOW.indexOf(o.status); if(idx<0) idx=0;
+  var tl=Array.isArray(o.timeline)?o.timeline:[];
+  var mine = ME.user && (String(o.buyer_user_id||"")===String(ME.user.id));
+
+  body.innerHTML=
+    '<div class="gp-hd"><button class="back-btn" style="padding:0;" onclick="go(&quot;my&quot;)">← 거래관리</button>'+
+      '<div><div class="gp-title">거래 진행</div><div class="gp-sub">'+esc(o.title||"")+'</div></div></div>'+
+    '<div class="gcard">'+
+      '<div class="ord-flow">'+ORDER_FLOW.map(function(s,i){
+        return '<div class="ord-step'+(i<idx?" done":(i===idx?" on":""))+'">'+
+          '<div class="ord-dot">'+(i<idx?"✓":(i+1))+'</div><div class="ord-lb">'+s+'</div></div>';
+      }).join("")+'</div>'+
+      '<div class="gsum" style="margin-top:18px;">'+
+        '<div class="gsum-r"><div class="gsum-k">업체</div><div class="gsum-v">'+esc(o.supplier_name||"")+'</div></div>'+
+        '<div class="gsum-r"><div class="gsum-k">금액</div><div class="gsum-v">'+won(num(o.amount))+'원</div></div>'+
+        '<div class="gsum-r"><div class="gsum-k">요청자</div><div class="gsum-v">'+esc(o.buyer_name||"")+(o.buyer_phone?" · "+esc(o.buyer_phone):"")+'</div></div>'+
+        '<div class="gsum-r"><div class="gsum-k">상태</div><div class="gsum-v">'+esc(o.status)+'</div></div>'+
+      '</div>'+
+    '</div>'+
+    (tl.length?'<div class="gcard"><div class="gcard-t">진행 기록</div>'+tl.slice().reverse().map(function(t){
+        return '<div class="rv"><div class="rv-top"><div class="rv-a">'+esc(t.status||"")+'</div>'+
+          '<div class="rv-d">'+ago(t.at)+'</div></div>'+(t.memo?'<div class="rv-c">'+esc(t.memo)+'</div>':'')+'</div>';
+      }).join("")+'</div>':'')+
+    (o.status!=="완료"&&o.status!=="취소" ?
+      '<div class="gcard"><div class="gcard-t">상태 변경</div>'+
+        '<label class="glabel">메모</label><input class="gin" id="ord-memo" placeholder="출고 완료, 차량 배차됨 등 (선택)">'+
+        '<div class="grow keep" style="margin-top:14px;">'+
+          (idx<ORDER_FLOW.length-1?'<button class="gbtn gbtn-p" onclick="gAdvanceOrder(\''+o.id+'\')">'+ORDER_FLOW[idx+1]+'(으)로 변경</button>':'')+
+          '<button class="gbtn gbtn-w" onclick="gCancelOrder(\''+o.id+'\')">거래 취소</button>'+
+        '</div><div class="gmsg" id="ord-msg"></div></div>' : '')+
+    (o.status==="완료"&&mine ? '<button class="gbtn gbtn-p gbtn-full" onclick="gOpenReview(\'supplier\',\''+esc(o.supplier_id||"")+'\',\''+esc(o.supplier_name||"")+'\',\''+esc(o.request_id||"")+'\')">후기 남기기</button>' : '')+
+    (o.request_id?'<button class="gbtn gbtn-w gbtn-full" style="margin-top:8px;" onclick="gOpenRequest(\''+esc(o.request_id)+'\')">연결된 요청 보기</button>':'');
+  window.scrollTo(0,0);
+};
+
+window.gAdvanceOrder=async function(orderId){
+  var c=client(); if(!c) return;
+  var r=await c.from("orders").select("*").eq("id",orderId).limit(1);
+  var o=(r.data&&r.data[0])||null; if(!o) return;
+  var idx=ORDER_FLOW.indexOf(o.status); if(idx<0) idx=0;
+  var next=ORDER_FLOW[Math.min(idx+1, ORDER_FLOW.length-1)];
+  var tl=Array.isArray(o.timeline)?o.timeline.slice():[];
+  tl.push({ status:next, at:new Date().toISOString(), memo:(($("ord-memo")||{}).value||"").trim()||null });
+  var patch={ status:next, timeline:tl };
+  if(next==="완료") patch.completed_at=new Date().toISOString();
+  var u=await updateSafe("orders",patch,"id",orderId);
+  if(u.error){ setMsg("ord-msg","변경 실패: "+(u.error.message||""),"err"); return; }
+  if(next==="완료"){
+    await updateSafe("purchase_requests",{status:"완료", closed_at:new Date().toISOString()},"id",o.request_id);
+    if(o.supplier_id){
+      var s=(await selectSafe("suppliers", function(q){ return q.eq("id",o.supplier_id).limit(1); })).data||[];
+      if(s[0]) await updateSafe("suppliers",{deal_count:(Number(s[0].deal_count)||0)+1},"id",o.supplier_id);
+    }
+  }
+  toast(next+"(으)로 변경했습니다.","ok");
+  window.gOpenOrder(orderId);
+};
+window.gCancelOrder=async function(orderId){
+  if(!confirm("이 거래를 취소할까요?")) return;
+  await updateSafe("orders",{status:"취소"},"id",orderId);
+  toast("거래를 취소했습니다.");
+  window.gOpenOrder(orderId);
+};
+
+/* 견적 선택 시 거래 생성 */
+async function createOrder(req, q){
+  if(SCHEMA.orders===false) return null;
+  var r=await insertSafe("orders",{
+    request_id:String(req.id), quote_id:String(q.id),
+    buyer_user_id:req.user_id||null, buyer_name:req.buyer_name||"", buyer_phone:req.buyer_phone||"",
+    supplier_id:q.supplier_id?String(q.supplier_id):null, supplier_name:q.supplier_name||"",
+    amount:num(q.total_amount)!=null?num(q.total_amount):num(q.price),
+    title:req.title||req.description||req.category,
+    status:"거래확정",
+    timeline:[{status:"거래확정", at:new Date().toISOString(), memo:"견적이 선택되었습니다"}]
+  });
+  return (r.data&&r.data[0])||null;
+}
+G.createOrder=createOrder;
+
+/* ════════════════════════════════════════════════════════════════════
+   PHASE 3 — 기존 화면 연결
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 신규 페이지 */
+var P3_PAGES=["chats","chat","prefs","verify","order","instant"];
+function injectPages3(){
+  var nav=document.querySelector(".bnav");
+  P3_PAGES.forEach(function(id){
+    if($("pg-"+id)) return;
+    var d=document.createElement("div");
+    d.className="pg"; d.id="pg-"+id;
+    d.style.cssText="padding-top:var(--top-pad);padding-bottom:56px;";
+    d.innerHTML='<div class="gp'+(id==="chat"?" gp-chat":"")+'" id="'+id+'-body"></div>';
+    if(nav) document.body.insertBefore(d, nav); else document.body.appendChild(d);
+  });
+  if(typeof PGS!=="undefined") P3_PAGES.forEach(function(id){ if(PGS.indexOf(id)<0) PGS.push(id); });
+  if(typeof TM!=="undefined"){ TM.chats="my"; TM.chat="my"; TM.prefs="my"; TM.verify="my"; TM.order="my"; TM.instant="reqs"; }
+}
+
+/* ── 견적 카드에 채팅·시세 비교·신뢰지표 추가 ── */
+function patchQuoteCards(){
+  var origRender=window.renderQuotes;
+  /* renderQuotes 는 내부 함수라 직접 못 바꾸므로, 요청 상세 렌더 후 DOM 을 보강합니다 */
+  var origOpen=window.gOpenRequest;
+  window.gOpenRequest=async function(id){
+    await origOpen(id);
+    enhanceQuotes();
+  };
+  var origSort=window.gSortQuotes;
+  window.gSortQuotes=function(){ origSort(); setTimeout(enhanceQuotes,0); };
+}
+function enhanceQuotes(){
+  var wrap=$("q-list"); if(!wrap || !CUR.req) return;
+  var ref=marketFor(CUR.req);
+  var cards=wrap.querySelectorAll(".qc");
+  var qs=(CUR.quotes||[]);
+  cards.forEach(function(card){
+    var nm=(card.querySelector(".qc-nm")||{}).textContent||"";
+    var q=qs.find(function(x){ return (x.supplier_name||"")===nm.trim(); });
+    if(!q || card.querySelector(".qc-x")) return;
+    var s=CUR.supMap[String(q.supplier_id)]||null;
+
+    /* 신뢰 지표 */
+    var rt=respText(s);
+    if(rt){
+      var spec=card.querySelector(".qc-spec");
+      if(spec){ var d=document.createElement("div"); d.className="qc-sr qc-x";
+        d.innerHTML='<span class="qc-sk">응답률</span><span class="qc-sv">'+esc(rt)+'</span>'; spec.appendChild(d); }
+    }
+    /* 시세 대비 */
+    var up=num(q.unit_price)!=null?num(q.unit_price):null;
+    if(up!=null && ref){
+      var diff=marketDiff(up, ref);
+      if(diff){
+        var cls=diff.pct<0?"gb-ok":(diff.pct>0?"gb-rd":"gb-gy");
+        var txt=(diff.pct>0?"+":"")+diff.pct+"% (시세 "+won(Number(ref.price))+esc(ref.unit||"")+")";
+        var price=card.querySelector(".qc-price");
+        if(price){ var m=document.createElement("div"); m.className="qc-x";
+          m.style.cssText="margin-top:4px;"; m.innerHTML='<span class="gbadge '+cls+'">시세 대비 '+txt+'</span>';
+          price.parentNode.insertBefore(m, price.nextSibling); }
+      }
+    }
+    /* 채팅 버튼 */
+    var act=card.querySelector(".qc-act");
+    if(act && !act.querySelector(".qc-chat")){
+      var b=document.createElement("button");
+      b.className="gbtn gbtn-w gbtn-sm qc-chat qc-x";
+      b.textContent="채팅";
+      b.onclick=function(ev){
+        ev.stopPropagation();
+        window.gStartChat({ requestId:CUR.req.id, quoteId:q.id, supplierId:q.supplier_id,
+          supplierUserId:q.user_id, supplierName:q.supplier_name,
+          buyerUserId:CUR.req.user_id, buyerName:CUR.req.buyer_name,
+          firstMessage:"'"+(CUR.req.title||CUR.req.category)+"' 건으로 대화를 시작했습니다." });
+      };
+      act.insertBefore(b, act.firstChild);
+    }
+  });
+}
+
+/* ── 견적 폼에 단가 × 수량 구조화 입력 추가 ── */
+function patchQuoteForm(){
+  var orig=window.gOpenQuoteForm;
+  window.gOpenQuoteForm=function(){
+    orig();
+    var priceLabel=document.querySelector('#quote-body .gcard-t');
+    var unitSel=$("q-unit"); if(!unitSel) return;
+    var box=unitSel.closest(".gcard"); if(!box || $("q-unitprice")) return;
+    var ref=marketFor(CUR.req);
+    var block=document.createElement("div");
+    block.innerHTML=
+      '<div class="grow keep">'+
+        '<div><label class="glabel">단가</label><input class="gin" id="q-unitprice" inputmode="numeric" placeholder="'+(ref?won(Number(ref.price)):"65,000")+'" oninput="gNumFmt(this);gCalcTotal()"></div>'+
+        '<div><label class="glabel">수량</label><input class="gin" id="q-qty" inputmode="numeric" placeholder="300" oninput="gCalcTotal()"></div>'+
+        '<div><label class="glabel">단위</label><select class="gin" id="q-qtyunit" onchange="gCalcTotal()"><option>kg</option><option>두</option><option>톤</option><option>회</option><option>건</option></select></div>'+
+      '</div>'+
+      (ref?'<div class="ghint">참고 시세: '+esc(ref.item)+' '+won(Number(ref.price))+esc(ref.unit||"")+' ('+esc(String(ref.price_date||""))+')</div>':'')+
+      '<div class="ghint" id="q-calc" style="margin-top:8px;"></div>';
+    box.insertBefore(block, unitSel.closest("div").parentNode);
+    window.gCalcTotal();
+  };
+  var origSubmit=window.gSubmitQuote;
+  window.gSubmitQuote=async function(){
+    /* 구조화 값이 있으면 총액을 자동으로 채웁니다 */
+    var up=num((($("q-unitprice")||{}).value)||""), qty=num((($("q-qty")||{}).value)||"");
+    if(up!=null && qty!=null && $("q-price") && !num($("q-price").value)){
+      $("q-price").value=Math.round(up*qty).toLocaleString("ko-KR");
+    }
+    G._quoteExtra={ unit_price:up, qty:qty, qty_unit:(($("q-qtyunit")||{}).value)||null,
+      total_amount:(up!=null&&qty!=null)?Math.round(up*qty):num((($("q-price")||{}).value)||""),
+      market_ref: (function(){ var r=marketFor(CUR.req); return r?Number(r.price):null; })() };
+    await origSubmit();
+  };
+}
+window.gCalcTotal=function(){
+  var up=num((($("q-unitprice")||{}).value)||""), qty=num((($("q-qty")||{}).value)||"");
+  var el=$("q-calc"); if(!el) return;
+  if(up==null||qty==null){ el.textContent=""; return; }
+  var total=Math.round(up*qty);
+  el.innerHTML='총액 <b style="color:var(--gn);">'+won(total)+'원</b> = '+won(up)+' × '+won(qty);
+  var p=$("q-price"); if(p) p.value=total.toLocaleString("ko-KR");
+};
+
+/* insertSafe 로 견적을 넣을 때 구조화 필드를 함께 저장 */
+function patchQuoteInsert(){
+  var orig=G.insertSafe;
+  G.insertSafe=async function(table, payload){
+    if(table==="quotes" && G._quoteExtra){
+      payload=Object.assign({}, payload, G._quoteExtra);
+      G._quoteExtra=null;
+    }
+    return orig(table, payload);
+  };
+  insertSafe=G.insertSafe;
+}
+
+/* ── 요청 등록 후 매칭 알림 + 바로견적 추천 ── */
+function patchSubmitRequest(){
+  var orig=window.gSubmitRequest;
+  window.gSubmitRequest=async function(){
+    var before=(await selectSafe("purchase_requests", function(q){ return q.order("created_at",{ascending:false}).limit(1); })).data||[];
+    await orig();
+    var after=(await selectSafe("purchase_requests", function(q){ return q.order("created_at",{ascending:false}).limit(1); })).data||[];
+    var req=after[0];
+    if(!req || (before[0] && String(before[0].id)===String(req.id))) return;
+    var n=await fanoutRequest(req);
+    if(n) toast("조건에 맞는 업체 "+n+"곳에 요청이 전달되었습니다.","ok");
+    var picks=await instantMatches(req, 6);
+    if(picks.length) showInstant(req, picks, n);
+  };
+}
+function showInstant(req, picks, notified){
+  if(typeof go==="function") go("instant");
+  var body=$("instant-body"); if(!body) return;
+  body.innerHTML=
+    '<div class="gp-hd"><div><div class="gp-title">요청이 등록되었습니다</div>'+
+      '<div class="gp-sub">'+esc(req.title||req.category)+(notified?(' · 업체 '+notified+'곳에 알림 발송'):'')+'</div></div></div>'+
+    '<div class="gcard" style="background:var(--gnl);border-color:var(--gnb);">'+
+      '<div style="font-size:15px;font-weight:800;color:var(--ink);margin-bottom:6px;">바로견적 — 조건이 맞는 업체</div>'+
+      '<div style="font-size:13px;color:var(--ink3);line-height:1.6;">아래 업체에 먼저 요청이 전달되었습니다. 급하시면 바로 채팅으로 문의하세요.</div></div>'+
+    '<div class="rlist">'+picks.map(function(s){
+      return '<div class="ritem">'+
+        '<div class="ritem-top">'+trustBadges(s)+(s.instant_quote?'<span class="gbadge gb-bl">바로견적</span>':'')+
+          '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+esc(respText(s)||"")+'</span></div>'+
+        '<div class="ritem-t">'+esc(s.name)+'</div>'+
+        '<div class="ritem-m"><span>📍 '+esc(s.region||"")+'</span>'+
+          (s.rating?'<span class="qstar">★ '+Number(s.rating).toFixed(1)+'</span>':'<span>신규</span>')+
+          '<span>거래 '+(s.deal_count||0)+'건</span></div>'+
+        (s.instant_note?'<div style="font-size:12.5px;color:var(--ink3);margin-top:8px;">'+esc(s.instant_note)+'</div>':'')+
+        '<div class="ritem-f"><button class="gbtn gbtn-w gbtn-sm" onclick="curSID=\''+esc(s.id)+'\';go(&quot;sp&quot;)">업체 보기</button>'+
+        '<button class="gbtn gbtn-p gbtn-sm" onclick="gStartChat({requestId:\''+esc(req.id)+'\',supplierId:\''+esc(s.id)+'\',supplierUserId:'+(s.user_id?"'"+esc(s.user_id)+"'":"null")+',supplierName:\''+esc(s.name)+'\',buyerUserId:'+(req.user_id?"'"+esc(req.user_id)+"'":"null")+',buyerName:\''+esc(req.buyer_name||"")+'\',firstMessage:\'요청 건으로 문의드립니다.\'})">바로 문의</button></div>'+
+        '</div>';
+    }).join("")+'</div>'+
+    '<div class="grow keep" style="margin-top:16px;">'+
+      '<button class="gbtn gbtn-w" onclick="go(&quot;my&quot;)">거래관리로</button>'+
+      '<button class="gbtn gbtn-p" onclick="gOpenRequest(\''+esc(req.id)+'\')">내 요청 보기</button></div>';
+  window.scrollTo(0,0);
+}
+
+/* ── 견적 선택 시 거래 생성 ── */
+function patchSelectQuote(){
+  var orig=window.gSelectQuote;
+  window.gSelectQuote=async function(id){
+    var q=(CUR.quotes||[]).find(function(x){ return String(x.id)===String(id); });
+    await orig(id);
+    if(q && CUR.req) {
+      var o=await createOrder(CUR.req, q);
+      if(o) toast("거래가 시작되었습니다. 거래관리에서 진행 상태를 관리하세요.","ok");
+    }
+  };
+}
+
+/* ── 업체 상세에 채팅·신뢰지표 ── */
+function patchSupplierDetail(){
+  var orig=window.renderSP;
+  window.renderSP=async function(id){
+    await orig(id);
+    var s=SD.sup; if(!s) return;
+    var cta=document.querySelector("#sp-body .sd-cta");
+    if(cta && !cta.querySelector(".sd-chat")){
+      var b=document.createElement("button");
+      b.className="gbtn gbtn-w sd-chat"; b.style.flex="1"; b.textContent="채팅 문의";
+      b.onclick=function(){ window.gStartChat({ requestId:"", supplierId:s.id, supplierUserId:s.user_id,
+        supplierName:s.name, buyerUserId:ME.user?ME.user.id:null, buyerName:ME.name,
+        firstMessage:s.name+"에 문의드립니다." }); };
+      cta.insertBefore(b, cta.children[1]||null);
+    }
+    var certs=document.querySelector("#sp-body .sd-certs");
+    if(certs && !certs.querySelector(".sd-permit")){
+      var d=document.createElement("div");
+      d.className="sd-cert sd-permit"+(s.livestock_permit?"":" off");
+      d.textContent=(s.livestock_permit?"✓":"·")+" 축산물 영업허가";
+      certs.appendChild(d);
+    }
+    var rt=respText(s);
+    if(rt){
+      var stats=document.querySelector("#sp-body .sd-stats");
+      if(stats && stats.children.length<5){
+        var e=document.createElement("div"); e.className="sd-si";
+        e.innerHTML='<div class="sd-sv">'+esc((s.response_rate!=null?s.response_rate+"%":"—"))+'</div><div class="sd-sl">응답률</div>';
+        stats.appendChild(e);
+      }
+    }
+  };
+}
+
+/* ── 거래관리 탭 확장: 채팅 · 거래 · 알림설정 · 인증 ── */
+function patchMyTabs(){
+  if(typeof MY_TABS==="undefined") return;
+  var extra=[["chat","채팅"],["order","거래 진행"]];
+  extra.forEach(function(t,i){ if(!MY_TABS.some(function(x){ return x[0]===t[0]; })) MY_TABS.splice(5+i,0,t); });
+  var origPanel=renderMyPanel;
+  renderMyPanel=function(){
+    var t=MY.tab, el=$("my-panel");
+    if(t==="chat"){
+      if(!el) return;
+      el.innerHTML = SCHEMA.chat_rooms===false ? setupNote("채팅")
+        : (CHAT.rooms.length ? '<div class="rlist">'+CHAT.rooms.map(function(r){
+            var iAmBuyer=String(r.buyer_user_id||"")===String(ME.user.id);
+            return '<div class="ritem" onclick="gOpenChat(\''+r.id+'\')">'+
+              '<div class="ritem-top"><span class="gbadge '+(iAmBuyer?"gb-or":"gb-bl")+'">'+(iAmBuyer?"내 요청":"받은 요청")+'</span>'+
+              (r._unread?'<span class="gbadge gb-rd">'+r._unread+'</span>':'')+
+              '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(r.last_at)+'</span></div>'+
+              '<div class="ritem-t">'+esc(iAmBuyer?(r.supplier_name||"업체"):(r.buyer_name||"요청자"))+'</div>'+
+              '<div class="ritem-m"><span>'+esc(truncate(r.last_message||"",44))+'</span></div></div>';
+          }).join("")+'</div>'
+          : empty("아직 대화가 없습니다","견적을 받으면 업체와 바로 대화할 수 있습니다.",
+                  '<button class="gbtn gbtn-p gbtn-sm" onclick="go(&quot;reqs&quot;)">실시간 요청 보기</button>'));
+      return;
+    }
+    if(t==="order"){
+      if(!el) return;
+      el.innerHTML = SCHEMA.orders===false ? setupNote("거래 관리")
+        : (MY.orders && MY.orders.length ? '<div class="rlist">'+MY.orders.map(function(o){
+            return '<div class="ritem" onclick="gOpenOrder(\''+o.id+'\')">'+
+              '<div class="ritem-top"><span class="gbadge '+(o.status==="완료"?"gb-ok":(o.status==="취소"?"gb-gy":"gb-bl"))+'">'+esc(o.status)+'</span>'+
+                '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(o.created_at)+'</span></div>'+
+              '<div class="ritem-t">'+esc(o.title||"")+'</div>'+
+              '<div class="ritem-m"><span>'+esc(o.supplier_name||"")+'</span><span>'+won(num(o.amount))+'원</span></div>'+
+              '<div class="ritem-f"><span style="font-size:13px;color:var(--ink3);">진행 상태 관리</span>'+
+              '<span style="font-size:13px;font-weight:700;color:var(--gn);">열기 ›</span></div></div>';
+          }).join("")+'</div>'
+          : empty("진행 중인 거래가 없습니다","견적을 선택하면 거래가 시작됩니다."));
+      return;
+    }
+    origPanel();
+    /* 회원정보 탭에 알림설정·인증 진입 추가 */
+    if(t==="me" && el && !$("my-p3")){
+      var d=document.createElement("div");
+      d.className="gcard"; d.id="my-p3";
+      d.innerHTML='<div class="gcard-t">업체 운영</div>'+
+        '<div class="grow keep"><button class="gbtn gbtn-w gbtn-sm" onclick="gOpenPrefs()">요청 알림 설정</button>'+
+        '<button class="gbtn gbtn-w gbtn-sm" onclick="gOpenVerify()">업체 인증</button>'+
+        '<button class="gbtn gbtn-w gbtn-sm" onclick="gOpenChatList()">채팅 전체보기</button></div>'+
+        '<div class="ghint" style="margin-top:10px;">관심 분야·지역을 설정하면 조건에 맞는 요청이 올라올 때 알림을 받습니다.</div>';
+      el.appendChild(d);
+    }
+  };
+  window.renderMyPanel=renderMyPanel;
+
+  /* 거래·채팅 데이터도 함께 로딩 */
+  var origLoad=loadMy;
+  loadMy=async function(){
+    await origLoad();
+    var uid=ME.user.id;
+    MY.orders=(await selectSafe("orders", function(q){ return q.order("created_at",{ascending:false}).limit(100); })).data||[];
+    MY.orders=MY.orders.filter(function(o){
+      return String(o.buyer_user_id||"")===String(uid) || MY.sups.some(function(s){ return String(s.id)===String(o.supplier_id); });
+    });
+    await loadRooms();
+    await loadMarket();
+  };
+  window.loadMy=loadMy;
+}
+
+/* ── 헤더·하단 네비에 채팅 진입 ── */
+function patchNav3(){
+  var origHdr=window.renderHeaderUser;
+  window.renderHeaderUser=function(){
+    origHdr();
+    if(!ME.user) return;
+    var box=document.querySelector(".hdr-user"); if(!box || box.querySelector(".hu-chat")) return;
+    var unread=chatUnread();
+    var b=document.createElement("button");
+    b.className="hu-bell hu-chat";
+    b.setAttribute("aria-label","채팅");
+    b.innerHTML='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12z"/></svg>'+
+      (unread?'<span class="hu-dot">'+(unread>9?"9+":unread)+'</span>':'');
+    b.onclick=function(ev){ ev.stopPropagation(); window.gOpenChatList(); };
+    box.insertBefore(b, box.firstChild);
+  };
+}
+
+/* ── 알림 링크(chat:) 처리 ── */
+function patchNotifLink(){
+  var orig=window.gOpenNotif;
+  window.gOpenNotif=async function(id){
+    var n=NOTIFS.find(function(x){ return String(x.id)===String(id); });
+    if(n && n.link && n.link.indexOf("chat:")===0){
+      if(!n.is_read){ n.is_read=true; await updateSafe("notifications",{is_read:true},"id",id); renderHeaderUser(); }
+      var p=$("notif-panel"); if(p) p.classList.remove("on");
+      window.gOpenChat(n.link.slice(5)); return;
+    }
+    await orig(id);
+  };
+}
+
+/* ── 초기화 ── */
+async function init3(){
+  injectPages3();
+  patchQuoteCards();
+  patchQuoteForm();
+  patchQuoteInsert();
+  patchSubmitRequest();
+  patchSelectQuote();
+  patchSupplierDetail();
+  patchMyTabs();
+  patchNav3();
+  patchNotifLink();
+
+  var c=client(); if(!c){ P3_TABLES.forEach(function(t){ SCHEMA[t]=false; }); return; }
+  await Promise.all(P3_TABLES.map(async function(t){
+    try{ var r=await c.from(t).select("id").limit(1); SCHEMA[t]=!(r.error&&isMissingTable(r.error)); }
+    catch(e){ SCHEMA[t]=false; }
+  }));
+  await loadMarket();
+  if(ME.user){ await loadRooms(); renderHeaderUser(); }
+}
+setTimeout(init3, 300);
 
 /* ════════════════════════════════════════════════════════════════════
    기존 화면과의 연결 · 초기화

@@ -5,28 +5,34 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>고리 — 대한민국 축산업 통합 플랫폼</title>
 <meta name="description" content="축산업에 필요한 거래처, 인력, 물류, 가공, 창업 정보를 한 곳에서."/>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'><circle cx='13' cy='13' r='13' fill='%232E7D32'/><path d='M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20' stroke='white' stroke-width='2.5' stroke-linecap='round' fill='none'/><circle cx='8' cy='20' r='2' fill='white'/></svg>"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'><circle cx='13' cy='13' r='13' fill='%23D9480F'/><path d='M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20' stroke='white' stroke-width='2.5' stroke-linecap='round' fill='none'/><circle cx='8' cy='20' r='2' fill='white'/></svg>"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&family=Noto+Serif+KR:wght@700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
-body{font-family:"Noto Sans KR",sans-serif;background:#F5F2EC;color:#1A1A1A;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+body{font-family:"Noto Sans KR",sans-serif;background:#FFFFFF;color:#111315;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
 :root{
-  --gn:#2E7D32;--gn2:#165E20;--gnl:#E8F5E9;--gnb:#C8E6C9;
+  /* ── 브랜드 포인트 컬러: 오렌지 (기존 --gn 변수명 유지 → 전체 UI 일괄 반영) ── */
+  --gn:#D9480F;--gn2:#A93A08;--gnl:#FFF4EC;--gnb:#FFD9C2;
+  --or:#D9480F;--orl:#FFF4EC;
+  /* 성공·완료 상태용 그린 (기존 브랜드 그린 보존) */
+  --ok:#2E7D32;--okl:#E8F5E9;--okb:#C8E6C9;
   --br:#8D6E63;--brl:#EFEBE9;
-  --bg:#F5F2EC;--bg2:#FAF8F4;--bd:#E0DAD0;--bd2:#C8BFB2;
-  --ink:#1A1A1A;--ink2:#3D3D3D;--ink3:#6B6B6B;--ink4:#9E9E9E;
+  /* ── 화이트 기반 중립 팔레트 ── */
+  --bg:#FFFFFF;--bg2:#F7F6F4;--bd:#E8E6E2;--bd2:#D2CFC9;
+  --ink:#111315;--ink2:#3A3D42;--ink3:#6C7075;--ink4:#9AA0A6;
   --red:#C62828;--redbg:#FFEBEE;
   --blue:#1565C0;--bluebg:#E3F2FD;
-  --or:#E65100;--orl:#FFF3E0;
   --navy:#1A2332;--navy2:#243040;
   --gold:#795548;--goldbg:#FBF0E8;
   --serif:"Noto Serif KR",serif;
-  --max:1280px;--r:8px;
-  --sh:0 2px 10px rgba(0,0,0,.07);
-  --sh2:0 4px 18px rgba(0,0,0,.11);
+  --max:1280px;--r:10px;
+  /* 헤더 높이 (하드코딩 164px 제거용) */
+  --hdr-h:106px;--top-pad:144px;
+  --sh:0 1px 3px rgba(16,20,24,.06);
+  --sh2:0 6px 20px rgba(16,20,24,.10);
 }
 .pg{display:none;}.pg.on{display:block;}
 
@@ -54,7 +60,7 @@ body{font-family:"Noto Sans KR",sans-serif;background:#F5F2EC;color:#1A1A1A;-web
 .ha-btn{padding:8px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:"Noto Sans KR",sans-serif;transition:all .15s;}
 .ha-login{color:var(--ink2);background:#fff;border:1.5px solid var(--bd2);}
 .ha-login:hover{border-color:var(--gn);color:var(--gn);}
-.ha-reg{background:var(--gn);color:#fff;box-shadow:0 2px 8px rgba(46,125,50,.3);}
+.ha-reg{background:var(--gn);color:#fff;}
 .ha-reg:hover{background:var(--gn2);}
 .hdr-nav2{background:#fff;border-top:1px solid var(--bd);height:38px;display:flex;align-items:center;}
 .hdr-nav2-w{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;align-items:center;width:100%;height:100%;}
@@ -65,11 +71,11 @@ body{font-family:"Noto Sans KR",sans-serif;background:#F5F2EC;color:#1A1A1A;-web
 .hn2-badge{font-size:9px;font-weight:800;padding:2px 5px;border-radius:3px;background:var(--red);color:#fff;margin-left:4px;}
 
 /* ══ BOTTOM NAV (모바일) ══ */
-.bnav{position:fixed;bottom:0;left:0;right:0;height:54px;background:#fff;border-top:1px solid var(--bd);display:none;grid-template-columns:repeat(5,1fr);z-index:900;}
+.bnav{position:fixed;bottom:0;left:0;right:0;min-height:58px;padding-bottom:env(safe-area-inset-bottom,0px);background:#fff;border-top:1px solid var(--bd);display:none;grid-template-columns:repeat(5,1fr);z-index:900;}
 .bni{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:none;cursor:pointer;}
 .bni-i{font-size:19px;}.bni-t{font-size:9px;color:var(--ink4);font-weight:600;}
 .bni.on .bni-t{color:var(--gn);}
-.bplus{width:40px;height:40px;background:var(--gn);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;border:none;cursor:pointer;box-shadow:0 3px 12px rgba(46,125,50,.4);}
+.bplus{width:40px;height:40px;background:var(--gn);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;border:none;cursor:pointer;box-shadow:0 3px 12px rgba(217,72,15,.35);}
 
 /* ══ COMMON ══ */
 .w{max-width:var(--max);margin:0 auto;padding:0 24px;}
@@ -101,8 +107,9 @@ textarea.fi{resize:vertical;min-height:80px;}
 .msg.ok{background:var(--gnl);color:var(--gn2);}.msg.err{background:var(--redbg);color:var(--red);}
 .fc{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:18px;margin-bottom:12px;}
 .fct{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--bd);}
-.tab-bar{display:flex;border-bottom:2px solid var(--bd);margin-bottom:14px;}
-.tab{padding:9px 15px;font-size:13px;font-weight:600;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.tab-bar{display:flex;border-bottom:2px solid var(--bd);margin-bottom:14px;overflow-x:auto;scrollbar-width:none;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab{padding:9px 15px;font-size:13px;font-weight:600;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;flex-shrink:0;}
 .tab.on{color:var(--gn);border-color:var(--gn);}
 
 /* ══ HERO ══ */
@@ -117,7 +124,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 .hero-h1 em{color:rgba(255,255,255,.45);font-style:normal;}
 .hero-sub{font-size:15px;color:rgba(255,255,255,.52);line-height:1.7;margin-bottom:28px;max-width:480px;}
 .hero-btns{display:flex;gap:10px;}
-.hero-btn-gn{padding:13px 28px;background:var(--gn);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;box-shadow:0 4px 14px rgba(46,125,50,.4);transition:all .15s;}
+.hero-btn-gn{padding:13px 28px;background:var(--gn);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;box-shadow:0 4px 14px rgba(217,72,15,.32);transition:all .15s;}
 .hero-btn-gn:hover{background:var(--gn2);}
 .hero-btn-wh{padding:13px 24px;background:rgba(255,255,255,.1);color:#fff;border:1.5px solid rgba(255,255,255,.22);border-radius:var(--r);font-size:15px;font-weight:600;cursor:pointer;font-family:"Noto Sans KR",sans-serif;transition:all .15s;}
 .hero-btn-wh:hover{background:rgba(255,255,255,.18);}
@@ -126,10 +133,10 @@ textarea.fi{resize:vertical;min-height:80px;}
 
 /* ══ LIVE BAR ══ */
 .live-bar{background:var(--navy2);height:36px;display:flex;align-items:center;overflow:hidden;position:fixed;z-index:88;}
-.live-pill{flex-shrink:0;display:flex;align-items:center;gap:5px;padding:0 14px;height:100%;background:rgba(46,125,50,.2);border-right:1px solid rgba(46,125,50,.25);}
+.live-pill{flex-shrink:0;display:flex;align-items:center;gap:5px;padding:0 14px;height:100%;background:rgba(217,72,15,.22);border-right:1px solid rgba(217,72,15,.3);}
 .ldot{width:5px;height:5px;border-radius:50%;background:var(--gn);animation:blink 1.5s infinite;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
-.ltxt{font-size:10px;font-weight:700;color:rgba(46,125,50,.9);}
+.ltxt{font-size:10px;font-weight:700;color:rgba(255,196,160,.95);}
 .live-slide{display:flex;animation:lslide 28s linear infinite;width:max-content;}
 @keyframes lslide{from{transform:translateX(0);}to{transform:translateX(-50%);}}
 .li{display:flex;align-items:center;gap:8px;padding:0 18px;white-space:nowrap;cursor:pointer;}
@@ -203,7 +210,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 .p-up{color:var(--red);}.p-dn{color:var(--blue);}
 
 /* 베타 박스 */
-.beta-box{background:linear-gradient(135deg,#1B5E20,#2E7D32);padding:18px;color:#fff;}
+.beta-box{background:linear-gradient(135deg,#A93A08,#D9480F);padding:18px;color:#fff;}
 .bb-badge{font-size:10px;font-weight:800;padding:3px 8px;background:rgba(255,255,255,.2);border-radius:4px;display:inline-block;margin-bottom:10px;}
 .bb-h{font-size:16px;font-weight:700;margin-bottom:6px;}
 .bb-d{font-size:12px;color:rgba(255,255,255,.65);line-height:1.65;margin-bottom:14px;}
@@ -267,7 +274,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 .rb-icon{text-align:center;}
 .rb-icon-circle{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 7px;font-size:18px;}
 .rb-icon-t{font-size:11px;color:rgba(255,255,255,.5);white-space:nowrap;}
-.rb-cta{background:var(--gn);color:#fff;padding:14px 28px;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;white-space:nowrap;box-shadow:0 4px 14px rgba(46,125,50,.4);}
+.rb-cta{background:var(--gn);color:#fff;padding:14px 28px;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;white-space:nowrap;box-shadow:0 4px 14px rgba(217,72,15,.32);}
 .rb-cta:hover{background:var(--gn2);}
 
 /* ══ 신뢰 4개 아이콘 ══ */
@@ -354,36 +361,108 @@ textarea.fi{resize:vertical;min-height:80px;}
 .ux-sel-desc{font-size:11px;color:var(--ink3);margin-bottom:5px;}
 .ux-sel-resp{font-size:11px;font-weight:700;color:var(--gn);}
 
-/* ══ RESPONSIVE ══ */
-@media(max-width:1060px){
-  .hdr-top{display:none;}
-  .grid-4{grid-template-columns:1fr 1fr;}
-  .grid-6{grid-template-columns:1fr 1fr 1fr;}
-  .cat-img-grid{grid-template-columns:repeat(4,1fr);}
-  .sup-grid{grid-template-columns:1fr 1fr 1fr;}
-  .ft-grid{grid-template-columns:1fr 1fr;gap:22px;}
-  .trust-inner{grid-template-columns:1fr 1fr;}
-  .recruit-inner{flex-wrap:wrap;}
-  .rb-icons{display:none;}
-  .hdr-nav{display:none;}
-}
-@media(max-width:680px){
-  .bnav{display:grid;}
-  .hdr-main-w{padding:0 12px;}
-  .hdr-actions{display:none;}
-  .hero-h1{font-size:28px;}
-  .main-body{padding:14px 12px 80px;}
-  .grid-4{grid-template-columns:1fr;}
-  .grid-6{grid-template-columns:1fr 1fr;}
-  .cat-img-grid{grid-template-columns:repeat(3,1fr);}
-  .sup-grid{grid-template-columns:1fr 1fr;}
-  .ft-grid{grid-template-columns:1fr 1fr;gap:18px;}
-  .trust-inner{grid-template-columns:1fr 1fr;}
-  .w{padding:0 12px;}
-  .hero-photo{display:none;}
-  .hero-overlay{background:linear-gradient(90deg,rgba(26,35,50,.95) 100%,transparent 100%);}
-}
 
+
+/* ═══════════════════════════════════════════════
+   리뉴얼 컴포넌트 (2026 · 축산업 연결 플랫폼)
+   화이트 기반 / 오렌지 포인트 / 카드형 / 저자극
+   ═══════════════════════════════════════════════ */
+
+/* ── 헤더 ── */
+.hdr-main{height:64px;border-bottom:1px solid var(--bd);}
+.hdr-nav a{font-size:14.5px;height:64px;}
+.ha-ghost{background:#fff;color:var(--ink2);border:1.5px solid var(--bd2);}
+.ha-ghost:hover{border-color:var(--gn);color:var(--gn);}
+.ha-reg{box-shadow:none;}
+.hdr-burger{display:none;margin-left:auto;width:40px;height:40px;align-items:center;justify-content:center;background:none;border:none;font-size:20px;color:var(--ink2);cursor:pointer;}
+.hdr-cats{background:#fff;border-bottom:1px solid var(--bd);height:42px;}
+.hdr-cats-w{max-width:var(--max);margin:0 auto;padding:0 24px;height:100%;display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;}
+.hdr-cats-w::-webkit-scrollbar{display:none;}
+.hc-item{flex-shrink:0;padding:6px 13px;border-radius:999px;font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;white-space:nowrap;border:1px solid transparent;transition:background .15s,color .15s,border-color .15s;background:none;font-family:"Noto Sans KR",sans-serif;}
+.hc-item:hover{background:var(--gnl);color:var(--gn);}
+.hc-item.on{background:var(--gnl);color:var(--gn);border-color:var(--gnb);font-weight:700;}
+
+/* 모바일 메뉴 */
+.mobile-menu{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border-bottom:1px solid var(--bd);box-shadow:var(--sh2);padding:10px 14px 16px;}
+.mobile-menu.on{display:block;}
+.mm-row{display:flex;flex-direction:column;}
+.mm-row a{padding:13px 4px;font-size:15px;font-weight:600;color:var(--ink);border-bottom:1px solid var(--bd);cursor:pointer;}
+.mm-act{display:flex;gap:8px;margin-top:14px;}
+.mm-act button{flex:1;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;}
+
+/* ── 히어로 (요청 시작형) ── */
+.hero2{background:linear-gradient(180deg,var(--gnl) 0%,#fff 100%);border-bottom:1px solid var(--bd);padding:52px 0 42px;}
+.hero2-w{max-width:820px;margin:0 auto;padding:0 24px;text-align:center;}
+.h2-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--gn);background:#fff;border:1px solid var(--gnb);padding:5px 12px;border-radius:999px;margin-bottom:16px;}
+.h2-h1{font-size:38px;font-weight:800;color:var(--ink);letter-spacing:-.8px;line-height:1.28;margin-bottom:12px;}
+.h2-h1 em{font-style:normal;color:var(--gn);}
+.h2-sub{font-size:16px;color:var(--ink3);line-height:1.65;margin-bottom:26px;}
+.hsearch{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--gn);border-radius:14px;padding:8px 8px 8px 18px;box-shadow:var(--sh2);}
+.hs-ico{flex-shrink:0;display:flex;color:var(--ink4);}
+.hs-input{flex:1;border:none;outline:none;font-size:17px;font-weight:500;color:var(--ink);font-family:"Noto Sans KR",sans-serif;background:none;min-width:0;padding:10px 0;}
+.hs-input::placeholder{color:var(--ink4);font-weight:500;}
+.hs-btn{flex-shrink:0;display:flex;align-items:center;gap:6px;background:var(--gn);color:#fff;border:none;border-radius:9px;padding:14px 24px;font-size:15px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;transition:background .15s;}
+.hs-btn:hover{background:var(--gn2);}
+.hchips{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:16px;}
+.hchip{background:#fff;border:1px solid var(--bd2);border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:"Noto Sans KR",sans-serif;transition:all .15s;}
+.hchip:hover{border-color:var(--gn);color:var(--gn);background:var(--gnl);}
+.hnote{font-size:12.5px;color:var(--ink4);margin-top:16px;}
+
+/* ── 섹션 공통 ── */
+.sec{padding:44px 0;background:#fff;}
+.sec-alt{background:var(--bg2);}
+.sec-hd2{margin-bottom:20px;}
+.sec-hd2.row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;}
+.sec-h2{font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.4px;display:flex;align-items:center;gap:8px;}
+.sec-d2{font-size:13.5px;color:var(--ink3);margin-top:5px;}
+.sample-tag{display:inline-block;font-size:10px;font-weight:700;color:var(--ink4);background:var(--bg2);border:1px solid var(--bd);border-radius:4px;padding:2px 6px;margin-left:6px;vertical-align:middle;letter-spacing:.2px;}
+
+/* ── 8개 대분류 ── */
+.cat8-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;}
+.cat8-card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:18px 10px 15px;text-align:center;cursor:pointer;transition:border-color .15s,box-shadow .15s;font-family:"Noto Sans KR",sans-serif;}
+.cat8-card:hover{border-color:var(--gn);box-shadow:var(--sh);}
+.cat8-ico{width:44px;height:44px;margin:0 auto 9px;border-radius:11px;background:var(--gnl);display:flex;align-items:center;justify-content:center;color:var(--gn);}
+.cat8-nm{font-size:13px;font-weight:700;color:var(--ink);line-height:1.35;margin-bottom:4px;}
+.cat8-sub{font-size:11px;color:var(--ink4);line-height:1.45;}
+
+/* ── 실시간 요청 카드 ── */
+.rqc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.rqc{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:9px;transition:border-color .15s,box-shadow .15s;}
+.rqc:hover{border-color:var(--gn);box-shadow:var(--sh);}
+.rqc-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.rqc-cat{font-size:11px;font-weight:700;color:var(--gn);background:var(--gnl);border-radius:5px;padding:3px 8px;}
+.rqc-time{font-size:11.5px;color:var(--ink4);}
+.rqc-title{font-size:15px;font-weight:700;color:var(--ink);line-height:1.45;}
+.rqc-meta{font-size:12.5px;color:var(--ink3);}
+.rqc-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--bd);padding-top:9px;margin-top:auto;}
+.rqc-cnt{font-size:12.5px;font-weight:700;color:var(--ink2);}
+.rqc-cta{font-size:12.5px;font-weight:700;color:var(--gn);}
+.ldot2{width:7px;height:7px;border-radius:50%;background:var(--gn);display:inline-block;}
+
+/* ── 빈 상태 ── */
+.es{grid-column:1/-1;background:var(--bg2);border:1px dashed var(--bd2);border-radius:12px;padding:36px 20px;text-align:center;}
+.es-t{font-size:15px;font-weight:700;color:var(--ink2);margin-bottom:6px;}
+.es-d{font-size:13px;color:var(--ink3);line-height:1.6;margin-bottom:16px;}
+.es-btn{background:var(--gn);color:#fff;border:none;border-radius:8px;padding:11px 22px;font-size:14px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;}
+.es-btn:hover{background:var(--gn2);}
+
+/* ── 이용 프로세스 ── */
+.proc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;}
+.proc-step{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:16px 12px;text-align:center;position:relative;}
+.proc-n{width:26px;height:26px;border-radius:50%;background:var(--gn);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 9px;}
+.proc-t{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:5px;line-height:1.35;}
+.proc-d{font-size:11.5px;color:var(--ink3);line-height:1.5;}
+
+/* ── 하단 정보 영역 ── */
+.info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.info-box{background:#fff;border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;}
+.info-hd{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-bottom:1px solid var(--bd);}
+.info-t{font-size:13.5px;font-weight:700;color:var(--ink);}
+.info-body{padding:10px 14px 14px;flex:1;}
+
+/* ── 모바일 하단 네비 (터치 타깃 확대) ── */
+.bnav .bni{min-height:56px;}
+.bni-i svg{display:block;margin:0 auto;}
 
 /* ══ 구인구직 전용 ══ */
 .job-page-wrap{max-width:var(--max);margin:0 auto;padding:0 24px;}
@@ -424,256 +503,197 @@ textarea.fi{resize:vertical;min-height:80px;}
 .jsb-dot{width:8px;height:8px;border-radius:50%;}
 .jsb-count{font-weight:700;color:var(--ink);}
 
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:1060px){
+  .hdr-top{display:none;}
+  .grid-4{grid-template-columns:1fr 1fr;}
+  .grid-6{grid-template-columns:1fr 1fr 1fr;}
+  .cat-img-grid{grid-template-columns:repeat(4,1fr);}
+  .sup-grid{grid-template-columns:1fr 1fr 1fr;}
+  .ft-grid{grid-template-columns:1fr 1fr;gap:22px;}
+  .trust-inner{grid-template-columns:1fr 1fr;}
+  .recruit-inner{flex-wrap:wrap;}
+  .rb-icons{display:none;}
+  .hdr-nav{display:none;}
+  .hdr-burger{display:flex;}
+  .cat8-grid{grid-template-columns:repeat(4,1fr);}
+  .rqc-grid{grid-template-columns:repeat(2,1fr);}
+  .proc-grid{grid-template-columns:repeat(4,1fr);}
+  .info-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:768px){
+  :root{--hdr-h:98px;--top-pad:132px;}
+  .bnav{display:grid;}
+  .hdr-main{height:56px;}
+  .hdr-main-w{padding:0 14px;}
+  .hdr-actions .ha-login,.hdr-actions .ha-ghost{display:none;}
+  .hero2{padding:26px 0 22px;}
+  .h2-h1{font-size:26px;}
+  .h2-sub{font-size:14px;}
+  .hsearch{flex-direction:column;padding:10px;gap:8px;}
+  .hs-input{width:100%;}
+  .hs-btn{width:100%;justify-content:center;}
+  .cat8-grid{grid-template-columns:repeat(4,1fr);gap:8px;}
+  .cat8-card{padding:14px 6px;}
+  .cat8-sub{display:none;}
+  .rqc-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:6px;}
+  .rqc-grid::-webkit-scrollbar{display:none;}
+  .rqc{min-width:78%;scroll-snap-align:start;}
+  .proc-grid{grid-template-columns:repeat(2,1fr);}
+  .info-grid{grid-template-columns:repeat(2,1fr);}
+  .grid-4{grid-template-columns:1fr;}
+  .grid-6{grid-template-columns:1fr 1fr;}
+  .cat-img-grid{grid-template-columns:repeat(3,1fr);}
+  .sup-grid{grid-template-columns:1fr 1fr;}
+  .ft-grid{grid-template-columns:1fr 1fr;gap:18px;}
+  .trust-inner{grid-template-columns:1fr 1fr;}
+  .w{padding:0 14px;}
+  .hero-photo{display:none;}
+}
+@media(max-width:480px){
+  :root{--hdr-h:94px;--top-pad:128px;}
+  .h2-h1{font-size:23px;line-height:1.32;}
+  .cat8-grid{grid-template-columns:repeat(4,1fr);}
+  .cat8-nm{font-size:11px;}
+  .proc-grid{grid-template-columns:repeat(2,1fr);}
+  .info-grid{grid-template-columns:1fr;}
+  .sup-grid{grid-template-columns:1fr;}
+  .ft-grid{grid-template-columns:1fr;}
+  .trust-inner{grid-template-columns:1fr 1fr;}
+  .rqc{min-width:86%;}
+}
+
+/* 모바일 헤더 여백 보정 */
+@media(max-width:768px){
+  .pg{padding-bottom:78px!important;}
+  #sup-filter-chips,#rq-filter-chips{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;}
+  #sup-filter-chips .chip,#rq-filter-chips .chip{flex-shrink:0;}
+  .hdr-cats-w{padding:0 14px;}
+  .hdr-cats{height:40px;}
+  .sec{padding:30px 0;}
+  .sec-h2{font-size:19px;}
+  .info-hd{padding:11px 12px;}
+  .info-body{padding:9px 12px 12px;}
+}
 </style>
 </head>
 <body>
 
 <!-- ════ HEADER ════ -->
 <header class="hdr">
-  <div class="hdr-top">
-    <div class="hdr-top-w">
-      <div class="hdt-l">
-        <span class="hdt-item hot">🔥 베타 오픈 — 공급업체 무료 등록 중</span>
-        <span class="hdt-item" onclick="go(&quot;rw&quot;)">견적 요청</span>
-        <span class="hdt-item" onclick="go(&quot;suppliers&quot;)">업체 찾기</span>
-        <span class="hdt-item" onclick="go(&quot;market&quot;)">오늘 시세</span>
-        <span class="hdt-item" onclick="go(&quot;jobs&quot;)">구인공고</span>
-      </div>
-      <div class="hdt-r">
-        <button class="hdt-btn" onclick="openModal('login')">로그인</button>
-        <button class="hdt-btn" onclick="openModal('signup')">회원가입</button>
-        <button class="hdt-btn" onclick="go(&quot;sj&quot;)">업체 등록</button>
-      </div>
-    </div>
-  </div>
   <div class="hdr-main">
     <div class="hdr-main-w">
-      <div class="logo" onclick="go(&quot;h&quot;)"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#2E7D32"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg><div class="logo-nm">고<em>리</em></div></div>
+      <div class="logo" onclick="go(&quot;h&quot;)"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#D9480F"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg><div class="logo-nm">고<em>리</em></div></div>
       <nav class="hdr-nav">
-        <a onclick="setNav(this,'h')" class="on">서비스</a>
+        <a class="on" onclick="setNav(this,'h')">홈</a>
+        <a onclick="setNav(this,'rw')">요청하기</a>
+        <a onclick="setNav(this,'reqs')">실시간 요청</a>
         <a onclick="setNav(this,'suppliers')">업체 찾기</a>
-        <a onclick="setNav(this,'rw')">견적 요청</a>
-        <a onclick="setNav(this,'market')">시세·인사이트</a>
-        <a onclick="setNav(this,'community')">커뮤니티</a>
-        <a href="meat_insight_apply.html">고객센터</a>
+        <a onclick="setNav(this,'jobs')">인력·구인구직</a>
+        <a onclick="setNav(this,'market')">고리소식</a>
       </nav>
       <div class="hdr-actions">
         <button class="ha-btn ha-login" onclick="openModal('login')">로그인</button>
-        <button class="ha-btn ha-reg" onclick="openModal('signup')">회원가입</button>
-        <button style="margin-left:8px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink3);">☰</button>
+        <button class="ha-btn ha-ghost" onclick="go(&quot;sj&quot;)">업체 등록</button>
+        <button class="ha-btn ha-reg" onclick="go(&quot;rw&quot;)">+ 요청 올리기</button>
       </div>
+      <button class="hdr-burger" onclick="toggleMM()" aria-label="메뉴 열기">☰</button>
     </div>
   </div>
-  <div class="hdr-nav2">
-    <div class="hdr-nav2-w">
-      <div class="hn2-item bold on" onclick="setNav2(this,'h')">홈</div>
-      <div class="hn2-sep"></div>
-      <div class="hn2-item" onclick="setNav2(this,'cat-trade')">거래</div>
-      <div class="hn2-item" onclick="setNav2(this,'cat-prod')">생산</div>
-      <div class="hn2-item" onclick="setNav2(this,'cat-ops')">운영</div>
-      <div class="hn2-item" onclick="setNav2(this,'cat-biz')">사업</div>
-      <div class="hn2-sep"></div>
-      <div class="hn2-item" onclick="setNav2(this,'reqs')">견적요청 목록</div>
-      <div class="hn2-item" onclick="setNav2(this,'suppliers')">업체 찾기</div>
-      <div class="hn2-sep"></div>
-      <div class="hn2-item" onclick="setNav2(this,'market')">시세 정보</div>
-      <div class="hn2-item" onclick="setNav2(this,'news')">업계 뉴스</div>
-      <div class="hn2-item" onclick="setNav2(this,'community')">커뮤니티</div>
-      <div class="hn2-item" onclick="setNav2(this,'jobs')">구인구직<span class="hn2-badge">급구</span></div>
+
+  <!-- 8개 대분류 (JS 렌더: CATS8) -->
+  <div class="hdr-cats"><div class="hdr-cats-w" id="hdr-cats"></div></div>
+
+  <!-- 모바일 메뉴 -->
+  <div class="mobile-menu" id="mobile-menu">
+    <div class="mm-row">
+      <a onclick="mmGo('rw')">요청하기</a>
+      <a onclick="mmGo('reqs')">실시간 요청</a>
+      <a onclick="mmGo('suppliers')">업체 찾기</a>
+      <a onclick="mmGo('jobs')">인력·구인구직</a>
+      <a onclick="mmGo('market')">시세 정보</a>
+      <a onclick="mmGo('news')">업계 뉴스</a>
+      <a onclick="mmGo('community')">커뮤니티</a>
+      <a onclick="mmGo('sj')">업체 등록</a>
+    </div>
+    <div class="mm-act">
+      <button class="ha-login" style="border:1.5px solid var(--bd2);background:#fff;color:var(--ink2);" onclick="toggleMM();openModal('login')">로그인</button>
+      <button style="border:none;background:var(--gn);color:#fff;" onclick="toggleMM();openModal('signup')">회원가입</button>
     </div>
   </div>
 </header>
 
 <!-- 실시간 라이브 바 -->
-<div class="live-bar" id="live-bar" style="top:128px;left:0;right:0;">
+<div class="live-bar" id="live-bar" style="top:var(--hdr-h);left:0;right:0;display:none;">
   <div class="live-pill"><span class="ldot"></span><span class="ltxt">실시간</span></div>
   <div style="flex:1;overflow:hidden;"><div class="live-slide" id="live-slide"></div></div>
 </div>
 
 <!-- ════════ 홈 ════════ -->
-<div class="pg on" id="pg-h" style="padding-top:164px;padding-bottom:56px;">
+<div class="pg on" id="pg-h" style="padding-top:var(--top-pad);padding-bottom:56px;">
 
-  <!-- HERO -->
-  <section class="hero">
-    <!-- 우측 이미지 영역 (SVG 현장 씬) -->
-    <div class="hero-photo">
-      <svg viewBox="0 0 640 340" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
-        <rect width="640" height="340" fill="#1A2332"/>
-        <!-- 도축장 씬: 고기 걸린 선반 -->
-        <rect x="0" y="0" width="640" height="340" fill="url(#hbg)"/>
-        <defs>
-          <linearGradient id="hbg" x1="0" y1="0" x2="640" y2="340" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#243040"/>
-            <stop offset="100%" stop-color="#0F1820"/>
-          </linearGradient>
-        </defs>
-        <!-- 천장 레일 -->
-        <rect x="40" y="30" width="560" height="6" rx="3" fill="rgba(255,255,255,.1)"/>
-        <rect x="60" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
-        <rect x="120" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
-        <rect x="180" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
-        <rect x="240" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
-        <rect x="300" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
-        <rect x="360" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
-        <rect x="420" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
-        <rect x="480" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
-        <rect x="540" y="36" width="2" height="40" fill="rgba(255,255,255,.08)"/>
-        <!-- 고기 형상들 -->
-        <ellipse cx="61" cy="120" rx="14" ry="50" fill="rgba(180,80,60,.55)" transform="rotate(-5 61 120)"/>
-        <ellipse cx="121" cy="115" rx="16" ry="55" fill="rgba(160,70,50,.6)" transform="rotate(3 121 115)"/>
-        <ellipse cx="181" cy="122" rx="15" ry="48" fill="rgba(175,75,55,.5)" transform="rotate(-8 181 122)"/>
-        <ellipse cx="241" cy="118" rx="14" ry="52" fill="rgba(165,72,52,.58)" transform="rotate(5 241 118)"/>
-        <ellipse cx="301" cy="120" rx="16" ry="50" fill="rgba(175,78,58,.52)" transform="rotate(-3 301 120)"/>
-        <ellipse cx="361" cy="117" rx="15" ry="54" fill="rgba(160,70,50,.55)" transform="rotate(7 361 117)"/>
-        <ellipse cx="421" cy="121" rx="14" ry="49" fill="rgba(178,80,60,.5)" transform="rotate(-4 421 121)"/>
-        <ellipse cx="481" cy="119" rx="15" ry="51" fill="rgba(168,74,54,.54)" transform="rotate(6 481 119)"/>
-        <ellipse cx="541" cy="120" rx="13" ry="48" fill="rgba(170,76,56,.5)" transform="rotate(-6 541 120)"/>
-        <!-- 바닥 반사 -->
-        <rect x="0" y="260" width="640" height="80" fill="rgba(0,0,0,.3)"/>
-        <rect x="0" y="260" width="640" height="3" fill="rgba(255,255,255,.06)"/>
-        <!-- 사람 실루엣 -->
-        <ellipse cx="340" cy="240" rx="18" ry="50" fill="rgba(30,50,70,.9)"/>
-        <circle cx="340" cy="182" r="14" fill="rgba(30,50,70,.9)"/>
-        <rect x="300" y="200" width="22" height="4" rx="2" fill="rgba(30,50,70,.9)"/>
-        <!-- 조명 -->
-        <ellipse cx="320" cy="0" rx="200" ry="120" fill="rgba(255,240,200,.04)"/>
-        <!-- 그레이딩 오버레이 -->
-        <rect width="640" height="340" fill="rgba(26,35,50,.25)"/>
-      </svg>
-    </div>
-    <div class="hero-overlay"></div>
-    <div class="hero-w">
-      <div style="max-width:500px;">
-        <div class="hero-eyebrow"><span class="hero-dot"></span>축산업 종사자를 위한</div>
-        <h1 class="hero-h1">가장 가까운<br>파트너, <em style="color:var(--gn);font-style:normal;">고리</em></h1>
-        <p class="hero-sub">고기 구매부터 도축, 가공, 물류, 인력, 창업까지<br>축산에 필요한 모든 것을 한 곳에서</p>
-        <div class="hero-btns">
-          <button class="hero-btn-gn" onclick="go(&quot;suppliers&quot;)">업체 찾기</button>
-          <button class="hero-btn-wh" onclick="go(&quot;rw&quot;)">견적 요청하기</button>
-        </div>
+  <!-- ══ HERO — 요청 시작형 ══ -->
+  <section class="hero2">
+    <div class="hero2-w">
+      <div class="h2-eyebrow"><span class="ldot2"></span>축산업 종사자를 위한 연결 플랫폼</div>
+      <h1 class="h2-h1">축산업에 필요한 모든 연결, <em>고리</em></h1>
+      <p class="h2-sub">원육부터 가공, 물류, 인력, 장비, 창업까지<br>필요한 업체와 사람을 빠르게 연결합니다.</p>
+      <div class="hsearch">
+        <span class="hs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>
+        <input class="hs-input" id="hs-input" placeholder="무엇이 필요하세요?" autocomplete="off" onkeydown="if(event.key==='Enter')heroGo()"/>
+        <button class="hs-btn" onclick="heroGo()">요청 올리기</button>
       </div>
+      <div class="hchips" id="hero-chips"></div>
+      <div class="hnote">요청을 올리면 조건에 맞는 업체가 견적·제안을 보냅니다 · 요청은 무료입니다</div>
     </div>
   </section>
 
-  <!-- 카테고리 아이콘 바 -->
-  <div class="cat-bar">
-    <div class="cat-bar-w">
-      <div class="cat-scroll" id="cat-icon-bar"></div>
-    </div>
-  </div>
-
-  <!-- 4단 그리드 -->
-  <div style="background:var(--bg);padding:18px 0;">
+  <!-- ══ 8개 대분류 ══ -->
+  <section class="sec">
     <div class="w">
-      <div class="grid-4">
-
-        <!-- 실시간 견적 요청 -->
-        <div class="w-box">
-          <div class="wb-hd">
-            <div class="wb-title">실시간 견적 요청</div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div class="wb-live"><span class="wb-ldot"></span><span class="wb-ltxt">LIVE</span></div>
-              <button class="more-btn" onclick="go(&quot;reqs&quot;)">더보기 ›</button>
-            </div>
-          </div>
-          <div class="wb-body" id="rq-widget"></div>
-        </div>
-
-        <!-- 실시간 매물 -->
-        <div class="w-box">
-          <div class="wb-hd">
-            <div class="wb-title">실시간 매물</div>
-            <button class="more-btn" onclick="goReq(&quot;부동산&quot;)">더보기 ›</button>
-          </div>
-          <div class="wb-body" id="prop-widget"></div>
-        </div>
-
-        <!-- 오늘의 축산 시세 -->
-        <div class="w-box">
-          <div class="wb-hd">
-            <div class="wb-title">오늘의 축산 시세</div>
-            <button class="more-btn" onclick="go(&quot;market&quot;)">시세 더보기 ›</button>
-          </div>
-          <div class="wb-body">
-            <div class="tab-bar" style="margin-bottom:10px;" id="price-tabs-h">
-              <div class="tab on" onclick="swPriceH(this,'beef')">한우</div>
-              <div class="tab" onclick="swPriceH(this,'pork')">돼지</div>
-              <div class="tab" onclick="swPriceH(this,'import')">국산 곱창</div>
-            </div>
-            <div id="price-widget"></div>
-            <div style="font-size:10px;color:var(--ink4);margin-top:8px;">05.14 기준 · 참고용</div>
-          </div>
-        </div>
-
-        <!-- 베타 박스 -->
-        <div class="w-box" style="overflow:hidden;">
-          <div class="beta-box">
-            <div class="bb-badge">베타 운영 중</div>
-            <div class="bb-h">더 나은 서비스 제공을<br>위해 개선하고 있습니다</div>
-            <div class="bb-d">의견을 보내주시면 빠르게 반영하겠습니다. 지금 공급업체로 등록하면 우선 노출 혜택을 드립니다.</div>
-            <button class="bb-btn" onclick="go(&quot;sj&quot;)">서비스 소개 보기</button>
-          </div>
-        </div>
+      <div class="sec-hd2">
+        <h2 class="sec-h2">무엇이 필요하세요?</h2>
+        <p class="sec-d2">분야를 선택하면 바로 요청서를 작성할 수 있습니다</p>
       </div>
-
-      <!-- 6단 위젯 -->
-      <div class="grid-6">
-
-        <!-- 업체 랭킹 -->
-        <div class="w6-box">
-          <div class="w6-hd"><div class="w6-title">업체 랭킹</div><button class="w6-more" onclick="go(&quot;suppliers&quot;)">더보기 ›</button></div>
-          <div class="w6-body" id="rank-widget"></div>
-        </div>
-
-        <!-- 신규 등록 업체 -->
-        <div class="w6-box">
-          <div class="w6-hd"><div class="w6-title">신규 등록 업체</div><button class="w6-more" onclick="go(&quot;suppliers&quot;)">더보기 ›</button></div>
-          <div class="w6-body" id="new-sup-widget"></div>
-        </div>
-
-        <!-- 축산 뉴스 -->
-        <div class="w6-box">
-          <div class="w6-hd"><div class="w6-title">축산 뉴스</div><button class="w6-more" onclick="go(&quot;news&quot;)">더보기 ›</button></div>
-          <div class="w6-body" id="news-widget"></div>
-        </div>
-
-        <!-- 창업 인사이트 -->
-        <div class="w6-box">
-          <div class="w6-hd"><div class="w6-title">창업 인사이트</div><button class="w6-more" onclick="go(&quot;news&quot;)">더보기 ›</button></div>
-          <div class="w6-body" id="insight-widget"></div>
-        </div>
-
-        <!-- 구인구직 -->
-        <div class="w6-box">
-          <div class="w6-hd"><div class="w6-title">구인구직</div><button class="w6-more" onclick="go(&quot;jobs&quot;)">더보기 ›</button></div>
-          <div class="w6-body" id="job-widget"></div>
-        </div>
-
-        <!-- 커뮤니티 인기글 -->
-        <div class="w6-box">
-          <div class="w6-hd"><div class="w6-title">커뮤니티 인기글</div><button class="w6-more" onclick="go(&quot;community&quot;)">더보기 ›</button></div>
-          <div class="w6-body" id="comm-widget"></div>
-        </div>
-
-      </div>
+      <div class="cat8-grid" id="cat8-grid"></div>
     </div>
-  </div>
+  </section>
+
+  <!-- ══ 실시간 요청 ══ -->
+  <section class="sec sec-alt">
+    <div class="w">
+      <div class="sec-hd2 row">
+        <div>
+          <h2 class="sec-h2"><span class="ldot2"></span>실시간 요청</h2>
+          <p class="sec-d2">지금 고리에 올라온 요청입니다</p>
+        </div>
+        <button class="more-btn" onclick="go(&quot;reqs&quot;)">전체 보기 ›</button>
+      </div>
+      <div class="rqc-grid" id="rq-widget"></div>
+    </div>
+  </section>
+
+  <!-- ══ 고리 이용 프로세스 ══ -->
+  <section class="sec">
+    <div class="w">
+      <div class="sec-hd2">
+        <h2 class="sec-h2">고리 이용 프로세스</h2>
+        <p class="sec-d2">요청 등록부터 거래 완료·후기까지 하나의 흐름으로 이어집니다</p>
+      </div>
+      <div class="proc-grid" id="proc-grid"></div>
+    </div>
+  </section>
+
 
   <!-- 인증 공급업체 -->
   <div style="background:#fff;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:20px 0;">
     <div class="w">
       <div class="sec-hd">
-        <div class="sec-h">인증 공급업체 <span style="font-size:12px;font-weight:500;color:var(--ink4);">사업자·허가·거래이력 검증 완료</span></div>
+        <div class="sec-h">등록 업체 <span style="font-size:12px;font-weight:500;color:var(--ink4);">사업자·인증 정보를 확인하고 견적을 요청하세요</span></div>
         <button class="more-btn" onclick="go(&quot;suppliers&quot;)">전체 보기 ›</button>
       </div>
-      <div class="tab-bar" id="sup-tabs-h">
-        <div class="tab on" onclick="swSupTab(this,'all')">전체</div>
-        <div class="tab" onclick="swSupTab(this,'소고기')">소고기</div>
-        <div class="tab" onclick="swSupTab(this,'도축장')">도축장</div>
-        <div class="tab" onclick="swSupTab(this,'물류')">물류</div>
-        <div class="tab" onclick="swSupTab(this,'OEM')">OEM</div>
-        <div class="tab" onclick="swSupTab(this,'채용')">채용</div>
-      </div>
+      <div class="tab-bar" id="sup-tabs-h"></div>
       <div class="sup-grid" id="sup-home"></div>
     </div>
   </div>
@@ -695,6 +715,95 @@ textarea.fi{resize:vertical;min-height:80px;}
     </div>
   </div>
 
+
+  <!-- ══ 베타 안내 ══ -->
+  <div style="background:var(--gnl);border-top:1px solid var(--gnb);border-bottom:1px solid var(--gnb);padding:16px 0;">
+    <div class="w" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--ink);">베타 운영 중 — 더 나은 서비스를 위해 개선하고 있습니다</div>
+        <div style="font-size:12.5px;color:var(--ink3);margin-top:3px;">의견을 보내주시면 빠르게 반영합니다. 지금 업체로 등록하면 우선 노출 혜택을 드립니다.</div>
+      </div>
+      <button class="ha-btn ha-reg" onclick="go(&quot;sj&quot;)" style="flex-shrink:0;">업체 등록하기</button>
+    </div>
+  </div>
+
+  <!-- ══ 고리 소식 · 정보 (시세·뉴스·커뮤니티 — 하단 배치, 기존 위젯 보존) ══ -->
+  <section class="sec sec-alt" id="sec-info">
+    <div class="w">
+      <div class="sec-hd2 row">
+        <div>
+          <h2 class="sec-h2">고리 소식 · 정보</h2>
+          <p class="sec-d2">시세 · 매물 · 업계 뉴스 · 커뮤니티</p>
+        </div>
+      </div>
+      <div class="info-grid">
+
+        <!-- 오늘의 축산 시세 -->
+        <div class="info-box">
+          <div class="info-hd">
+            <div class="info-t">오늘의 축산 시세<span class="sample-tag">샘플</span></div>
+            <button class="more-btn" onclick="go(&quot;market&quot;)">더보기 ›</button>
+          </div>
+          <div class="info-body">
+            <div class="tab-bar" style="margin-bottom:10px;" id="price-tabs-h">
+              <div class="tab on" onclick="swPriceH(this,'beef')">한우</div>
+              <div class="tab" onclick="swPriceH(this,'pork')">돼지</div>
+              <div class="tab" onclick="swPriceH(this,'import')">부산물</div>
+            </div>
+            <div id="price-widget"></div>
+            <div style="font-size:10.5px;color:var(--ink4);margin-top:8px;">실시간 시세 연동 준비 중 · 참고용 샘플 데이터</div>
+          </div>
+        </div>
+
+        <!-- 실시간 매물 -->
+        <div class="info-box">
+          <div class="info-hd">
+            <div class="info-t">매물 정보<span class="sample-tag">샘플</span></div>
+            <button class="more-btn" onclick="goReq(&quot;소고기&quot;)">요청하기 ›</button>
+          </div>
+          <div class="info-body" id="prop-widget"></div>
+        </div>
+
+        <!-- 업체 랭킹 -->
+        <div class="info-box">
+          <div class="info-hd"><div class="info-t">업체 랭킹</div><button class="more-btn" onclick="go(&quot;suppliers&quot;)">더보기 ›</button></div>
+          <div class="info-body" id="rank-widget"></div>
+        </div>
+
+        <!-- 신규 등록 업체 -->
+        <div class="info-box">
+          <div class="info-hd"><div class="info-t">신규 등록 업체</div><button class="more-btn" onclick="go(&quot;suppliers&quot;)">더보기 ›</button></div>
+          <div class="info-body" id="new-sup-widget"></div>
+        </div>
+
+        <!-- 축산 뉴스 -->
+        <div class="info-box">
+          <div class="info-hd"><div class="info-t">축산 뉴스<span class="sample-tag">샘플</span></div><button class="more-btn" onclick="go(&quot;news&quot;)">더보기 ›</button></div>
+          <div class="info-body" id="news-widget"></div>
+        </div>
+
+        <!-- 창업 인사이트 -->
+        <div class="info-box">
+          <div class="info-hd"><div class="info-t">창업 인사이트<span class="sample-tag">샘플</span></div><button class="more-btn" onclick="go(&quot;news&quot;)">더보기 ›</button></div>
+          <div class="info-body" id="insight-widget"></div>
+        </div>
+
+        <!-- 구인구직 -->
+        <div class="info-box">
+          <div class="info-hd"><div class="info-t">구인구직</div><button class="more-btn" onclick="go(&quot;jobs&quot;)">더보기 ›</button></div>
+          <div class="info-body" id="job-widget"></div>
+        </div>
+
+        <!-- 커뮤니티 -->
+        <div class="info-box">
+          <div class="info-hd"><div class="info-t">커뮤니티 인기글<span class="sample-tag">샘플</span></div><button class="more-btn" onclick="go(&quot;community&quot;)">더보기 ›</button></div>
+          <div class="info-body" id="comm-widget"></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- 신뢰 지표 -->
   <div class="trust-bar">
     <div class="trust-inner">
@@ -710,11 +819,11 @@ textarea.fi{resize:vertical;min-height:80px;}
     <div class="w">
       <div class="ft-grid">
         <div>
-          <div class="ft-nm"><svg width="20" height="20" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#2E7D32"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg> 고리</div>
-          <div class="ft-desc">대한민국 축산업 통합 플랫폼<br>고기 구매·출하·도축·OEM·물류·구인·창업<br>거래처, 인력, 정보를 한 곳에서</div>
+          <div class="ft-nm"><svg width="20" height="20" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#D9480F"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg> 고리</div>
+          <div class="ft-desc">축산업에 필요한 모든 연결, 고리<br>원육·가공·물류·인력·장비·창업까지<br>필요한 업체와 사람을 빠르게 연결합니다</div>
         </div>
-        <div><div class="ft-col-t">거래·생산</div><ul class="ft-ul"><li onclick="goReq(&quot;소고기&quot;)">소고기 구매</li><li onclick="goReq(&quot;돼지고기&quot;)">돼지고기 구매</li><li onclick="goReq(&quot;도축장&quot;)">도축장 연결</li><li onclick="goReq(&quot;OEM&quot;)">OEM</li><li onclick="goReq(&quot;출하&quot;)">출하 의뢰</li></ul></div>
-        <div><div class="ft-col-t">운영·사업</div><ul class="ft-ul"><li onclick="goReq(&quot;물류&quot;)">냉장물류</li><li onclick="goReq(&quot;HACCP&quot;)">HACCP</li><li onclick="goUX('prof')">구인구직</li><li onclick="goReq(&quot;창업&quot;)">창업</li><li onclick="goReq(&quot;인테리어&quot;)">인테리어</li></ul></div>
+        <div><div class="ft-col-t">거래·생산</div><ul class="ft-ul"><li onclick="goCat8(&quot;meat&quot;)">원육 구매</li><li onclick="goCat8(&quot;process&quot;)">가공·OEM</li><li onclick="goCat8(&quot;logi&quot;)">물류·운송</li></ul></div>
+        <div><div class="ft-col-t">사람·운영</div><ul class="ft-ul"><li onclick="goCat8(&quot;labor&quot;)">인력·알바</li><li onclick="goCat8(&quot;job&quot;)">구인구직</li><li onclick="goCat8(&quot;equip&quot;)">장비·부자재</li><li onclick="goCat8(&quot;startup&quot;)">창업·인테리어</li><li onclick="goCat8(&quot;haccp&quot;)">HACCP·컨설팅</li></ul></div>
         <div><div class="ft-col-t">정보</div><ul class="ft-ul"><li onclick="go(&quot;market&quot;)">시세 정보</li><li onclick="go(&quot;news&quot;)">업계 뉴스</li><li onclick="go(&quot;community&quot;)">커뮤니티</li><li onclick="go(&quot;jobs&quot;)">구인공고</li></ul></div>
         <div><div class="ft-col-t">고리</div><ul class="ft-ul"><li onclick="location.href='meat_insight_admin.html'">관리자</li><li onclick="location.href='meat_insight_apply.html'">컨설팅</li><li>이용약관</li><li>개인정보처리방침</li><li>고객센터</li></ul></div>
       </div>
@@ -724,7 +833,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 </div>
 
 <!-- ════ 서브 페이지들 ════ -->
-<div class="pg" id="pg-reqs" style="padding-top:164px;padding-bottom:56px;">
+<div class="pg" id="pg-reqs" style="padding-top:var(--top-pad);padding-bottom:56px;">
   <div class="w" style="padding-top:18px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><div style="font-size:18px;font-weight:800;">견적 요청 목록</div><button onclick="go(&quot;rw&quot;)" class="ha-btn ha-reg" style="font-size:12px;padding:7px 14px;">+ 요청 등록</button></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="rq-filter-chips">
@@ -740,7 +849,7 @@ textarea.fi{resize:vertical;min-height:80px;}
   </div>
 </div>
 
-<div class="pg" id="pg-rw" style="padding-top:164px;padding-bottom:56px;">
+<div class="pg" id="pg-rw" style="padding-top:var(--top-pad);padding-bottom:56px;">
   <div style="max-width:640px;margin:0 auto;padding:18px 16px 80px;">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
       <button class="back-btn" style="padding:0;margin:0;" onclick="rwBack()">← 뒤로</button>
@@ -824,26 +933,19 @@ textarea.fi{resize:vertical;min-height:80px;}
   </div>
 </div>
 
-<div class="pg" id="pg-suppliers" style="padding-top:164px;padding-bottom:56px;">
+<div class="pg" id="pg-suppliers" style="padding-top:var(--top-pad);padding-bottom:56px;">
   <div class="w" style="padding-top:18px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><div style="font-size:18px;font-weight:800;">인증 공급업체</div><button onclick="go(&quot;sj&quot;)" class="ha-btn ha-reg" style="font-size:12px;padding:7px 14px;">업체 등록</button></div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="sup-filter-chips">
-      <div class="chip on" onclick="fS(this,'all')">전체</div>
-      <div class="chip" onclick="fS(this,'소고기')">소고기</div>
-      <div class="chip" onclick="fS(this,'도축장')">도축장</div>
-      <div class="chip" onclick="fS(this,'OEM')">OEM</div>
-      <div class="chip" onclick="fS(this,'물류')">물류</div>
-      <div class="chip" onclick="fS(this,'채용')">채용</div>
-    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><div style="font-size:18px;font-weight:800;">업체 찾기</div><button onclick="go(&quot;sj&quot;)" class="ha-btn ha-reg" style="font-size:12px;padding:7px 14px;">업체 등록</button></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="sup-filter-chips"></div>
     <div class="sup-grid" id="sup-full"></div>
   </div>
 </div>
 
-<div class="pg" id="pg-sp" style="padding-top:164px;padding-bottom:56px;"><div style="max-width:680px;margin:0 auto;" id="sp-body"></div></div>
+<div class="pg" id="pg-sp" style="padding-top:var(--top-pad);padding-bottom:56px;"><div style="max-width:680px;margin:0 auto;" id="sp-body"></div></div>
 
-<div class="pg" id="pg-sj" style="padding-top:164px;padding-bottom:56px;">
+<div class="pg" id="pg-sj" style="padding-top:var(--top-pad);padding-bottom:56px;">
   <div style="max-width:640px;margin:0 auto;padding:18px 16px 80px;">
-    <div style="background:linear-gradient(135deg,#1B5E20,#2E7D32);padding:20px;border-radius:var(--r);margin-bottom:13px;">
+    <div style="background:linear-gradient(135deg,#A93A08,#D9480F);padding:20px;border-radius:var(--r);margin-bottom:13px;">
       <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:800;letter-spacing:2px;margin-bottom:6px;">SUPPLIER REGISTRATION</div>
       <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:4px;">업체를 등록하고 전국 구매 요청을 받아보세요</div>
       <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;">
@@ -888,7 +990,7 @@ textarea.fi{resize:vertical;min-height:80px;}
   </div>
 </div>
 
-<div class="pg" id="pg-market" style="padding-top:164px;padding-bottom:56px;">
+<div class="pg" id="pg-market" style="padding-top:var(--top-pad);padding-bottom:56px;">
   <div class="w" style="padding-top:18px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><div style="font-size:18px;font-weight:800;">축산 시세 정보</div><span style="font-size:12px;color:var(--ink4);">품질평가원 기준 · 참고용</span></div>
     <div style="background:var(--goldbg);border:1px solid #E8D98A;border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:13px;color:#7A5C00;">⚠️ 시세는 참고용입니다. 정확한 견적은 <a onclick="go(&quot;rw&quot;)" style="color:var(--gn);font-weight:700;cursor:pointer;">고리에서 무료로 요청 →</a></div>
@@ -896,14 +998,14 @@ textarea.fi{resize:vertical;min-height:80px;}
   </div>
 </div>
 
-<div class="pg" id="pg-news" style="padding-top:164px;padding-bottom:56px;">
+<div class="pg" id="pg-news" style="padding-top:var(--top-pad);padding-bottom:56px;">
   <div class="w" style="padding-top:18px;">
     <div style="font-size:18px;font-weight:800;margin-bottom:18px;">업계 뉴스 & 인사이트</div>
     <div id="news-full" style="display:flex;flex-direction:column;gap:12px;"></div>
   </div>
 </div>
 
-<div class="pg" id="pg-community" style="padding-top:164px;padding-bottom:56px;">
+<div class="pg" id="pg-community" style="padding-top:var(--top-pad);padding-bottom:56px;">
   <div class="w" style="padding-top:18px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><div style="font-size:18px;font-weight:800;">커뮤니티</div><button onclick="openModal('login')" class="ha-btn ha-login" style="font-size:12px;padding:7px 14px;">글쓰기 (로그인 필요)</button></div>
     <div style="display:grid;grid-template-columns:1fr 240px;gap:16px;align-items:start;">
@@ -913,7 +1015,7 @@ textarea.fi{resize:vertical;min-height:80px;}
   </div>
 </div>
 
-<div class="pg" id="pg-jobs" style="padding-top:164px;padding-bottom:56px;">
+<div class="pg" id="pg-jobs" style="padding-top:var(--top-pad);padding-bottom:56px;">
   <div class="w" style="padding-top:18px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
       <div>
@@ -926,12 +1028,15 @@ textarea.fi{resize:vertical;min-height:80px;}
   </div>
 </div>
 
-<div class="pg" id="pg-cat-trade" style="padding-top:164px;padding-bottom:56px;"><div class="w" style="padding-top:18px;" id="cat-trade-body"></div></div>
-<div class="pg" id="pg-cat-prod" style="padding-top:164px;padding-bottom:56px;"><div class="w" style="padding-top:18px;" id="cat-prod-body"></div></div>
-<div class="pg" id="pg-cat-ops" style="padding-top:164px;padding-bottom:56px;"><div class="w" style="padding-top:18px;" id="cat-ops-body"></div></div>
-<div class="pg" id="pg-cat-biz" style="padding-top:164px;padding-bottom:56px;"><div class="w" style="padding-top:18px;" id="cat-biz-body"></div></div>
+<div class="pg" id="pg-cat-trade" style="padding-top:var(--top-pad);padding-bottom:56px;"><div class="w" style="padding-top:18px;" id="cat-trade-body"></div></div>
+<div class="pg" id="pg-cat-prod" style="padding-top:var(--top-pad);padding-bottom:56px;"><div class="w" style="padding-top:18px;" id="cat-prod-body"></div></div>
+<div class="pg" id="pg-cat-ops" style="padding-top:var(--top-pad);padding-bottom:56px;"><div class="w" style="padding-top:18px;" id="cat-ops-body"></div></div>
+<div class="pg" id="pg-cat-biz" style="padding-top:var(--top-pad);padding-bottom:56px;"><div class="w" style="padding-top:18px;" id="cat-biz-body"></div></div>
 
-<div class="pg" id="pg-my" style="padding-top:164px;padding-bottom:56px;">
+<!-- 8개 대분류 랜딩 -->
+<div class="pg" id="pg-cat8" style="padding-top:var(--top-pad);padding-bottom:56px;"><div class="w" style="padding-top:18px;" id="cat8-body"></div></div>
+
+<div class="pg" id="pg-my" style="padding-top:var(--top-pad);padding-bottom:56px;">
   <div class="w" style="padding-top:18px;max-width:580px;">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
       <div onclick="go(&quot;reqs&quot;)" class="card" style="padding:20px;text-align:center;"><div style="font-size:26px;margin-bottom:6px;">📋</div><div style="font-size:14px;font-weight:700;">내 요청서</div></div>
@@ -945,11 +1050,11 @@ textarea.fi{resize:vertical;min-height:80px;}
 
 <!-- BOTTOM NAV -->
 <div class="bnav">
-  <button class="bni on" id="bn-h" onclick="go(&quot;h&quot;)"><span class="bni-i">🏠</span><span class="bni-t">홈</span></button>
-  <button class="bni" id="bn-reqs" onclick="go(&quot;reqs&quot;)"><span class="bni-i">📋</span><span class="bni-t">요청</span></button>
-  <div style="display:flex;align-items:center;justify-content:center;"><button class="bplus" onclick="go(&quot;rw&quot;)">+</button></div>
-  <button class="bni" id="bn-suppliers" onclick="go(&quot;suppliers&quot;)"><span class="bni-i">🏭</span><span class="bni-t">업체</span></button>
-  <button class="bni" id="bn-my" onclick="go(&quot;my&quot;)"><span class="bni-i">👤</span><span class="bni-t">내활동</span></button>
+  <button class="bni on" id="bn-h" onclick="go(&quot;h&quot;)"><span class="bni-i"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/></svg></span><span class="bni-t">홈</span></button>
+  <button class="bni" id="bn-reqs" onclick="go(&quot;reqs&quot;)"><span class="bni-i"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="bni-t">요청</span></button>
+  <div style="display:flex;align-items:center;justify-content:center;"><button class="bplus" onclick="go(&quot;rw&quot;)" aria-label="새 요청 등록">+</button></div>
+  <button class="bni" id="bn-suppliers" onclick="go(&quot;suppliers&quot;)"><span class="bni-i"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l6 3.5V10l6 3.5V6.5L21 10v11z"/><path d="M2 21h20"/></svg></span><span class="bni-t">업체</span></button>
+  <button class="bni" id="bn-my" onclick="go(&quot;my&quot;)"><span class="bni-i"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2"/></svg></span><span class="bni-t">내활동</span></button>
 </div>
 
 <!-- 로그인 모달 -->
@@ -993,8 +1098,9 @@ var SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml
 /* 관리자 페이지(연결 설정)에서 저장한 프로젝트를 공유해서 사용 */
 (function(){try{var s=localStorage.getItem("gori_sb_cfg");if(s){var o=JSON.parse(s);if(o&&o.url&&o.key){SU=o.url;SK=o.key;}}}catch(e){}})();
 var sb=window.supabase?window.supabase.createClient(SU,SK):null;
-var PGS=["h","reqs","rw","suppliers","sp","sj","market","news","community","jobs","my","cat-trade","cat-prod","cat-ops","cat-biz"];
-var TM={h:"h",reqs:"reqs",rw:"reqs",suppliers:"suppliers",sp:"suppliers",sj:"my",market:"h",news:"h",community:"h",jobs:"jobs",my:"my"};
+var PGS=["h","reqs","rw","suppliers","sp","sj","market","news","community","jobs","my","cat-trade","cat-prod","cat-ops","cat-biz","cat8"];
+var TM={h:"h",reqs:"reqs",rw:"reqs",suppliers:"suppliers",sp:"suppliers",sj:"my",market:"h",news:"h",community:"h",jobs:"jobs",my:"my",cat8:"h"};
+var curCat8=null,HERO_Q="";
 var curRC="all",curSC="all",curSID=null,curRWStep=null,curReqCat=null;
 
 /* ═ 데이터 ═ */
@@ -1013,40 +1119,105 @@ var CATS_ALL=[
   {nm:"HACCP·위생관리",ico:"✅",clr:"#006064",cat:"HACCP",badge:"",sub:"인증·컨설팅"},
   {nm:"전체 보기",ico:"⋯",clr:"#37474F",cat:"all",badge:"",sub:"모든 카테고리"}
 ];
-var REQS=[
-  {id:"r1",cat:"소고기",cc:"#FFF8E1",ct:"#E65100",ico:"🥩",title:"곱창 500kg 구매 요청",meta:"경기 안성 / 5분 전",cnt:"5건"},
-  {id:"r2",cat:"도축장",cc:"#FCE4EC",ct:"#C62828",ico:"🔪",title:"대창 300kg 구매 요청",meta:"충남 천안 / 1분 전",cnt:"3건"},
-  {id:"r3",cat:"OEM",cc:"#E8F5E9",ct:"#1B5E20",ico:"🏭",title:"OEM 가공 업체 찾습니다",meta:"전국 / 20건 전",cnt:"12건"},
-  {id:"r4",cat:"소고기",cc:"#FFF8E1",ct:"#E65100",ico:"🥩",title:"한우 지육 10두 분할 요청",meta:"경북 영천 / 30분 전",cnt:"7건"}
+
+/* ═══════════════════════════════════════════════════════════════
+   8개 대분류 (2026 리뉴얼)
+   · legacy = 기존 DB에 저장돼 있는 카테고리 문자열들
+   · DB 값을 바꾸지 않고 코드에서 매핑만 흡수합니다 (DB 무변경)
+   · suppliers.html("냉장물류")과 index("물류")의 표기 불일치도 여기서 해결
+   ═══════════════════════════════════════════════════════════════ */
+var CATS8=[
+  {k:"meat",nm:"원육 구매",d:"소·돼지·부산물·수입육",
+   sub:["소고기","돼지고기","부산물","수입육"],
+   legacy:["소고기","돼지고기","부산물","내장","특수부위","수입육"],
+   ico:'<path d="M4 12c0-4 4-7 8-7s7 2 7 6-3 7-7 7-8-2-8-6z"/><circle cx="8.5" cy="12" r="1.6"/>'},
+  {k:"process",nm:"가공·OEM",d:"발골·정형·세절·도축",
+   sub:["발골","정형","세절","포장","OEM","도축","출하"],
+   legacy:["OEM","OEM·육가공","육가공","도축장","출하","출하 의뢰","경매"],
+   ico:'<path d="M3 21V10l6 4V10l6 4V6l6 3v12z"/><path d="M2 21h20"/>'},
+  {k:"logi",nm:"물류·운송",d:"냉장·냉동·지육운송",
+   sub:["냉장운송","냉동운송","지육운송","센터배송","전국운송"],
+   legacy:["물류","냉장물류"],
+   ico:'<path d="M2 6h11v10H2z"/><path d="M13 9h4l3 3v4h-7z"/><circle cx="6.5" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/>'},
+  {k:"labor",nm:"인력·알바",d:"당일알바·발골·정형기사",
+   sub:["당일알바","발골기사","정형기사","생산인력","포장인력","단기인력"],
+   legacy:["채용","인력"],
+   ico:'<circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><circle cx="17.5" cy="9" r="2.2"/><path d="M15.5 15.2c2 .2 3.8 1.8 3.8 4.3"/>'},
+  {k:"job",nm:"구인구직",d:"정규직·생산직·경력직",
+   sub:["정규직","생산직","영업직","사무직","배송직","경력직"],
+   legacy:["구인구직","채용"],
+   ico:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2"/><path d="M3 12h18"/>'},
+  {k:"equip",nm:"장비·부자재",d:"육절기·진공기·포장재",
+   sub:["육절기","골절기","진공기","냉장·냉동설비","포장재","소모품","중고장비"],
+   legacy:["장비","기자재·장비","포장재"],
+   ico:'<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4"/><path d="M12 12v8"/>'},
+  {k:"startup",nm:"창업·인테리어",d:"정육점·고깃집 창업",
+   sub:["정육점 창업","고깃집 창업","인테리어","설비","간판","매장 컨설팅"],
+   legacy:["창업","창업·컨설팅","인테리어"],
+   ico:'<path d="M4 20V9l8-4 8 4v11"/><path d="M3 20h18"/><path d="M9 20v-6h6v6"/>'},
+  {k:"haccp",nm:"HACCP·컨설팅",d:"위생·세무·노무·경영",
+   sub:["HACCP","위생","세무","노무","경영","마케팅"],
+   legacy:["HACCP","HACCP·위생","위생관리","세무","세무·노무","마케팅"],
+   ico:'<path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>'}
 ];
+function cat8Of(k){for(var i=0;i<CATS8.length;i++)if(CATS8[i].k===k)return CATS8[i];return null;}
+function cat8Icon(c,sz){return '<svg width="'+(sz||24)+'" height="'+(sz||24)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+c.ico+'</svg>';}
+function normCat(v){return String(v||"").replace(/[\s·\-\/]/g,"");}
+/* 업체/요청의 카테고리 값이 특정 대분류에 속하는지 (표기 흔들림 흡수) */
+function matchCat8(list,k){
+  if(!k||k==="all")return true;
+  var c=cat8Of(k);
+  var arr=(list&&list.length!==undefined&&typeof list!=="string")?list:[list];
+  if(!c)return arr.some(function(v){return String(v||"")===k;});
+  var pool=c.legacy.concat(c.sub).concat([c.nm]).map(normCat).filter(function(p){return p.length>=2;});
+  return arr.some(function(v){
+    var q=normCat(v);if(!q)return false;
+    return pool.some(function(p){return p===q||q.indexOf(p)>=0||p.indexOf(q)>=0;});
+  });
+}
+/* 기존 카테고리 문자열 → 8대분류 key */
+function key8Of(v){
+  for(var i=0;i<CATS8.length;i++)if(matchCat8([v],CATS8[i].k))return CATS8[i].k;
+  return null;
+}
+function cat8Label(v){var k=key8Of(v),c=k?cat8Of(k):null;return c?c.nm:(v||"기타");}
+function primaryLegacy(c){return (c&&c.legacy&&c.legacy[0])||(c?c.nm:"");}
+
+/* ═ 고리 이용 프로세스 ═ */
+var PROCESS=[
+  {t:"요청 등록",d:"필요한 것을 올립니다"},
+  {t:"조건 매칭",d:"지역·품목·조건으로 업체 매칭"},
+  {t:"견적·지원 도착",d:"업체가 직접 제안합니다"},
+  {t:"비교",d:"가격·납기·평점을 한눈에"},
+  {t:"선택",d:"조건이 맞는 곳을 선택"},
+  {t:"거래 진행",d:"납품·작업 진행"},
+  {t:"완료·후기",d:"평점과 후기로 신뢰 축적"}
+];
+
+/* 자유 입력 검색용 키워드 — 현장에서 쓰는 표현을 대분류로 연결 */
+var CAT_KW={
+  meat:["소고기","한우","육우","돼지","한돈","삼겹","목살","등심","안심","갈비","항정","부산물","곱창","대창","막창","우설","스지","내장","수입육","지육","부분육","정육","원육","고기"],
+  process:["가공","발골","정형","세절","슬라이스","소분","포장작업","OEM","오이엠","도축","출하","육가공","진공포장","염지","양념육"],
+  logi:["물류","운송","배송","납품","냉장","냉동","퀵","차량","센터","배차","콜드체인"],
+  labor:["인력","알바","아르바이트","일용","단기","일당","기사","작업자","당일","용역","파견"],
+  job:["채용","구인","구직","정규직","취업","경력직","이력서","공고","면접","일자리"],
+  equip:["장비","기계","육절기","골절기","슬라이서","진공기","포장기","설비","포장재","트레이","박스","소모품","중고장비","쇼케이스"],
+  startup:["창업","인테리어","매장","간판","점포","오픈","정육점","고깃집","시공","리모델링"],
+  haccp:["HACCP","해썹","위생","컨설팅","세무","노무","경영","마케팅","인증","방역"]
+};
+/* 사람·인력 의도가 담긴 표현은 가중치를 더 줍니다 */
+var KW_PERSON=["인력","알바","아르바이트","일용","단기","일당","기사","작업자","당일","채용","구인","구직","정규직","경력직"];
+var HERO_CHIPS=["한우 지육","돼지 삼겹 100kg","곱창 손질","발골 인력","냉장 배송","육절기","HACCP 컨설팅","정육점 창업"];
+
+var REQS=[];   /* 실데이터(Supabase)로만 채웁니다 — 더미 수치 노출 금지 */
 var PROPS=[
   {nm:"한우 유망 100kg",info:"경기 안성 / 5분 전",cl:"#2E7D32"},
   {nm:"돼지 뒷심 1,000kg",info:"충남 천안 / 5분 전",cl:"#1565C0"},
   {nm:"곱창 300kg",info:"경남 진주 / 15분 전",cl:"#4A148C"},
   {nm:"한우 지육 200kg",info:"대구 달성 / 15분 전",cl:"#BF360C"}
 ];
-var SUPS=[
-  {id:"s1",nm:"합신식 도축장",cat:"경기 포천시 · 도축·가공",rt:4.9,rs:"15분",rb:94,cr:0.2,vf:true,cats:["도축장"],cl:"#1A2332"},
-  {id:"s2",nm:"미트파트너스 가공공장",cat:"경기 화성시 · 육가공·OEM",rt:4.8,rs:"45분",rb:89,cr:0.4,vf:true,cats:["OEM"],cl:"#1B5E20"},
-  {id:"s3",nm:"강원축산 도축장",cat:"강원 횡성군 · 도축·가공",rt:4.7,rs:"30분",rb:87,cr:0.6,vf:true,cats:["도축장"],cl:"#263238"},
-  {id:"s4",nm:"한우명가 정육",cat:"경북 청주시 · 도매·유통",rt:4.6,rs:"20분",rb:91,cr:0.8,vf:true,cats:["소고기"],cl:"#4E342E"},
-  {id:"s5",nm:"대동축산물 도매",cat:"대구 북구 · 도매·유통",rt:4.6,rs:"25분",rb:88,cr:0.5,vf:true,cats:["소고기"],cl:"#37474F"}
-];
-var JOBS=[
-  /* 급구 우선 */
-  {type:"full",urgent:true, role:"정육사 (경력 3년 이상)",biz:"강남 한우 전문점",loc:"서울 강남구",pay:"월 380만원~",emp:"정규직",d:"오늘",benefit:"4대보험 · 숙소 제공"},
-  {type:"full",urgent:true, role:"발골사 경력직 채용",biz:"안양 정육공장",loc:"경기 안양시",pay:"월 340만원~",emp:"정규직",d:"오늘",benefit:"4대보험 · 식사 제공"},
-  {type:"full",urgent:false,role:"도축장 위생관리팀 모집",biz:"경기도축장",loc:"경기 안성시",pay:"월 300만원~",emp:"정규직",d:"1일 전",benefit:"4대보험 · 퇴직금"},
-  {type:"full",urgent:false,role:"세절기사 채용",biz:"부산 육가공업체",loc:"부산 사상구",pay:"월 320만원~",emp:"정규직",d:"2일 전",benefit:"4대보험"},
-  {type:"full",urgent:false,role:"냉장물류 기사 모집",biz:"전국냉장물류",loc:"경기 화성시",pay:"월 280만원~",emp:"정규직",d:"3일 전",benefit:"4대보험 · 차량 지원"},
-  {type:"contract",urgent:false,role:"정육 가공직 계약직 모집",biz:"대전 육가공공장",loc:"대전 대덕구",pay:"월 250만원~",emp:"계약직",d:"4일 전",benefit:"식사 제공"},
-  {type:"contract",urgent:false,role:"OEM 생산 파트타임",biz:"충남 가공업체",loc:"충남 천안시",pay:"시급 13,000원",emp:"계약직",d:"5일 전",benefit:""},
-  {type:"part",urgent:false,role:"홀직원 (주말 가능)",biz:"강남 고깃집",loc:"서울 강남구",pay:"시급 12,000원",emp:"알바",d:"6일 전",benefit:"식사 제공"},
-  {type:"part",urgent:false,role:"주방 보조 파트타임",biz:"수원 정육식당",loc:"경기 수원시",pay:"시급 11,500원",emp:"알바",d:"1주 전",benefit:""},
-  {type:"full",urgent:false,role:"HACCP 관리자 채용",biz:"강원 육가공공장",loc:"강원 원주시",pay:"월 350만원~",emp:"정규직",d:"1주 전",benefit:"4대보험 · 퇴직금"},
-  {type:"full",urgent:false,role:"냉동창고 관리직",biz:"인천 물류센터",loc:"인천 남동구",pay:"월 260만원~",emp:"정규직",d:"1주 전",benefit:"4대보험"},
-  {type:"contract",urgent:false,role:"도축 보조 일용직",biz:"경북 도축장",loc:"경북 안동시",pay:"일 150,000원",emp:"계약직",d:"2주 전",benefit:"식사 제공"}
-];
+var SUPS=[];   /* 실데이터(Supabase)로만 채웁니다 — 더미 수치 노출 금지 */
+var JOBS=[];   /* 실데이터(Supabase)로만 채웁니다 — 더미 수치 노출 금지 */
 var NEWS=[
   {cat:"시세 동향",title:"정육점 창업, 어렵진 않아요 꼭 알아야 할 것들",date:"05.14",cl:"#1B5E20"},
   {cat:"규제·정책",title:"한우 도투두수 역대 최저 기록",date:"05.14",cl:"#263238"},
@@ -1067,18 +1238,8 @@ var COMM_HOT=[
   {rank:4,cat:"뉴스",title:"좋은 OEM 업체 찾는 법",cnt:"6"},
   {rank:5,cat:"질문",title:"요즘 찾는 특수부위는?",cnt:"11"}
 ];
-var RANKS=[
-  {nm:"합신식 도축장",cat:"경기 포천시 · 도축·가공",rt:"★ 4.9"},
-  {nm:"미트파트너스 가공공장",cat:"경기 화성시 · 육가공·OEM",rt:"★ 4.8"},
-  {nm:"강원축산 도축장",cat:"강원 횡성군 · 도축·가공",rt:"★ 4.7"},
-  {nm:"한우명가 정육",cat:"경북 청주시 · 도매·유통",rt:"★ 4.6"},
-  {nm:"대동축산물 도매",cat:"대구 북구 · 도매·유통",rt:"★ 4.6"}
-];
-var NEW_SUPS=[
-  {ico:"🥩",nm:"정단 도축장",sub:"경기 파주 · 도축·가공",isnew:true},
-  {ico:"🏭",nm:"프리미엄 물류센터",sub:"서울 강남 · 냉장·냉동 물류",isnew:true},
-  {ico:"🥩",nm:"청정축산 유통",sub:"서울 강남 · 소고기 납품",isnew:false}
-];
+var RANKS=[];   /* 실데이터(Supabase)로만 채웁니다 — 더미 수치 노출 금지 */
+var NEW_SUPS=[];   /* 실데이터(Supabase)로만 채웁니다 — 더미 수치 노출 금지 */
 var PRICE_DATA={
   beef:[{item:"한우(지육) 1등급",price:"20,500",unit:"원/kg",chg:"▲500",up:true},{item:"한우(부분육) 1+",price:"12,000",unit:"원/kg",chg:"▲300",up:true},{item:"돼지(지육)",price:"5,180",unit:"원/kg",chg:"▲120",up:true},{item:"수입육(냉동) 냉동",price:"9,850",unit:"원/kg",chg:"▼50",up:false}],
   pork:[{item:"삼겹살 (한돈)",price:"22,000",unit:"원/kg",chg:"▲400",up:true},{item:"목살 (한돈)",price:"18,500",unit:"원/kg",chg:"▼200",up:false},{item:"삼겹살 (수입·미국)",price:"12,500",unit:"원/kg",chg:"▲300",up:true}],
@@ -1124,15 +1285,16 @@ function go(p){
   else if(p==="community")renderComm();
   else if(p==="jobs")renderJobsFull();
   else if(p==="rw")initRW();
+  else if(p==="cat8")renderCat8();
   else if(p.startsWith("cat-"))renderCatPage(p);
 }
 function setNav(el,p){document.querySelectorAll(".hdr-nav a").forEach(function(a){a.classList.remove("on");});el.classList.add("on");go(p);}
 function setNav2(el,p){document.querySelectorAll(".hn2-item").forEach(function(a){a.classList.remove("on");});el.classList.add("on");go(p);}
 function goReq(cat){curReqCat=cat;go("rw");setTimeout(function(){startReq(cat);},50);}
 function goUX(t){go("rw");setTimeout(function(){initRW();showStep("rw-s-prof");},50);}
-function fR(el,cat){document.querySelectorAll("#rq-filter-chips .chip").forEach(function(c){c.classList.remove("on");});el.classList.add("on");curRC=cat;renderReqs();}
-function fS(el,cat){document.querySelectorAll("#sup-filter-chips .chip").forEach(function(c){c.classList.remove("on");});el.classList.add("on");curSC=cat;renderSups(cat);}
-function swSupTab(el,cat){document.querySelectorAll("#sup-tabs-h .tab").forEach(function(t){t.classList.remove("on");});el.classList.add("on");renderSupHome(cat);}
+function fR(cat){curRC=cat;renderReqs();}
+function fS(cat){curSC=cat;renderSups(cat);renderSupTabs();}
+function swSupTab(cat){curSC=cat;renderSupTabs();renderSupHome(cat);}
 function swPriceH(el,cat){document.querySelectorAll("#price-tabs-h .tab").forEach(function(t){t.classList.remove("on");});el.classList.add("on");renderPriceWidget("price-widget",cat);}
 function switchHireTab(t){
   var hb=document.getElementById("ph-hire-btn"),sb=document.getElementById("ph-seek-btn");
@@ -1185,18 +1347,173 @@ function rwBack(){
 }
 function fmtN(el){var r=el.value.replace(/[^0-9]/g,"");if(!r){el.value="";return;}el.value=parseInt(r,10).toLocaleString("ko-KR");}
 
+/* ═══════════ 리뉴얼: 8대분류 · 히어로 · 프로세스 · 모바일 메뉴 ═══════════ */
+
+/* 헤더 카테고리 바 */
+function renderHdrCats(){
+  var el=document.getElementById("hdr-cats");if(!el)return;
+  el.innerHTML='<button class="hc-item'+(curCat8?"":" on")+'" onclick="go(&quot;h&quot;)">전체</button>'+
+    CATS8.map(function(c){
+      return '<button class="hc-item'+(curCat8===c.k?" on":"")+'" onclick="goCat8(&quot;'+c.k+'&quot;)">'+c.nm+'</button>';
+    }).join('');
+}
+
+/* 홈 · 8개 대분류 그리드 */
+function renderCat8Grid(){
+  var el=document.getElementById("cat8-grid");if(!el)return;
+  el.innerHTML=CATS8.map(function(c){
+    return '<button class="cat8-card" onclick="goCat8(&quot;'+c.k+'&quot;)">'+
+      '<div class="cat8-ico">'+cat8Icon(c,24)+'</div>'+
+      '<div class="cat8-nm">'+c.nm+'</div>'+
+      '<div class="cat8-sub">'+c.d+'</div></button>';
+  }).join('');
+}
+
+/* 홈 · 이용 프로세스 */
+function renderProcess(){
+  var el=document.getElementById("proc-grid");if(!el)return;
+  el.innerHTML=PROCESS.map(function(p,i){
+    return '<div class="proc-step"><div class="proc-n">'+(i+1)+'</div>'+
+      '<div class="proc-t">'+p.t+'</div><div class="proc-d">'+p.d+'</div></div>';
+  }).join('');
+}
+
+/* 홈 · 히어로 추천 키워드 */
+function renderHeroChips(){
+  var el=document.getElementById("hero-chips");if(!el)return;
+  el.innerHTML=HERO_CHIPS.map(function(t){
+    return '<button class="hchip" onclick="heroPick(&quot;'+t+'&quot;)">'+t+'</button>';
+  }).join('');
+}
+function heroPick(t){
+  var i=document.getElementById("hs-input");if(i)i.value=t;
+  heroGo();
+}
+
+/* 히어로 검색 → 카테고리 추정 후 요청서로 연결 */
+function guessCat8(v){
+  if(!v)return null;
+  /* 1) 카테고리명·소분류·기존 카테고리와 완전 일치할 때만 즉시 확정
+        (부분 일치는 2)의 점수 계산에 맡깁니다 — "발골 인력"이 가공으로 새는 것 방지) */
+  var qe=normCat(v).toUpperCase();
+  for(var i=0;i<CATS8.length;i++){
+    var c0=CATS8[i],pool0=[c0.nm].concat(c0.sub).concat(c0.legacy);
+    for(var j=0;j<pool0.length;j++)if(normCat(pool0[j]).toUpperCase()===qe)return c0;
+  }
+  /* 2) 현장 키워드 스코어링 (길이 가중 + 인력 의도 보정) */
+  var q=normCat(v).toUpperCase(),best=null,bestScore=0;
+  for(var a=0;a<CATS8.length;a++){
+    var c=CATS8[a],kws=(CAT_KW[c.k]||[]).concat(c.sub),score=0;
+    for(var b=0;b<kws.length;b++){
+      var w=normCat(kws[b]).toUpperCase();
+      if(w.length>=2&&q.indexOf(w)>=0){
+        score+=w.length;
+        if(KW_PERSON.indexOf(kws[b])>=0)score+=5;
+      }
+    }
+    if(score>bestScore){bestScore=score;best=c;}
+  }
+  return best;
+}
+function heroGo(){
+  var v=((document.getElementById("hs-input")||{}).value||"").trim();
+  if(!v){go("rw");return;}
+  HERO_Q=v;
+  var hit=guessCat8(v);
+  if(hit&&hit.k==="job"){goUX("prof");return;}
+  if(hit)goReq(primaryLegacy(hit)); else go("rw");
+  setTimeout(applyHeroQuery,150);
+}
+/* 입력한 검색어를 요청서 '요청 내용'에 그대로 옮겨 담습니다 */
+function applyHeroQuery(){
+  if(!HERO_Q)return;
+  var f=document.getElementById("rw-f-cond")||document.getElementById("rw-f-item");
+  if(f&&!f.value)f.value=HERO_Q;
+  HERO_Q="";
+}
+
+/* 대분류 랜딩 */
+function goCat8(k){curCat8=k;go("cat8");renderHdrCats();}
+function renderCat8(){
+  var c=cat8Of(curCat8);if(!c){go("h");return;}
+  var el=document.getElementById("cat8-body");if(!el)return;
+  var subs=c.sub.map(function(t){
+    return '<button class="hchip" style="padding:9px 15px;font-size:13px;" onclick="pickSub(&quot;'+c.k+'&quot;,&quot;'+t+'&quot;)">'+t+'</button>';
+  }).join('');
+  var reqs=REQS.filter(function(r){return matchCat8([r.cat],c.k);});
+  var sups=SUPS.filter(function(x){return matchCat8(x.cats,c.k);});
+  el.innerHTML=
+    '<button class="back-btn" style="padding:0;margin-bottom:16px;" onclick="curCat8=null;renderHdrCats();go(&quot;h&quot;)">← 홈으로</button>'+
+    '<div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">'+
+      '<div class="cat8-ico" style="margin:0;width:52px;height:52px;">'+cat8Icon(c,28)+'</div>'+
+      '<div><div style="font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.5px;">'+c.nm+'</div>'+
+      '<div style="font-size:14px;color:var(--ink3);margin-top:3px;">'+c.d+'</div></div></div>'+
+    '<div style="font-size:13px;font-weight:700;color:var(--ink2);margin:22px 0 10px;">필요한 항목을 선택하세요</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">'+subs+'</div>'+
+    '<div style="background:var(--gnl);border:1px solid var(--gnb);border-radius:var(--r);padding:20px;text-align:center;margin-bottom:26px;">'+
+      '<div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:5px;">'+c.nm+' 요청을 올려보세요</div>'+
+      '<div style="font-size:13px;color:var(--ink3);margin-bottom:14px;">요청을 등록하면 조건에 맞는 업체가 견적·제안을 보냅니다</div>'+
+      '<button class="es-btn" onclick="pickSub(&quot;'+c.k+'&quot;,&quot;&quot;)">요청 올리기</button></div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">'+
+      '<div style="font-size:16px;font-weight:800;">이 분야 업체</div>'+
+      '<button class="more-btn" onclick="fS(&quot;'+c.k+'&quot;);go(&quot;suppliers&quot;)">전체 보기 ›</button></div>'+
+    '<div class="sup-grid" id="cat8-sups"></div>'+
+    '<div style="font-size:16px;font-weight:800;margin:28px 0 12px;">이 분야 요청</div>'+
+    '<div id="cat8-reqs"></div>';
+  var se=document.getElementById("cat8-sups");
+  if(!sups.length)se.innerHTML='<div class="es"><div class="es-t">이 분야에 등록된 업체가 아직 없습니다</div><div class="es-d">업체로 등록하면 이 분야 요청을 받아볼 수 있습니다.</div><button class="es-btn" onclick="go(&quot;sj&quot;)">업체 등록하기</button></div>';
+  else sups.slice(0,6).forEach(function(x){se.appendChild(mkSC(x));});
+  var re=document.getElementById("cat8-reqs");
+  if(!reqs.length)re.innerHTML='<div class="es"><div class="es-t">이 분야에 등록된 요청이 없습니다</div><div class="es-d">첫 요청을 올려보세요.</div><button class="es-btn" onclick="pickSub(&quot;'+c.k+'&quot;,&quot;&quot;)">요청 올리기</button></div>';
+  else re.innerHTML='<div class="rqc-grid">'+reqs.slice(0,8).map(function(r){
+    return '<article class="rqc" onclick="go(&quot;reqs&quot;)"><div class="rqc-top"><span class="rqc-cat">'+cat8Label(r.cat)+'</span><span class="rqc-time">'+(r.time||"")+'</span></div>'+
+      '<h3 class="rqc-title">'+r.title+'</h3><div class="rqc-meta">'+(r.region||"지역 미지정")+'</div>'+
+      '<div class="rqc-foot"><span class="rqc-cnt">받은 견적 '+(r.qcnt||0)+'건</span><span class="rqc-cta">자세히 보기 ›</span></div></article>';
+  }).join('')+'</div>';
+}
+/* 소분류 선택 → 기존 요청서 흐름으로 연결 (기존 카테고리 값 유지) */
+function pickSub(k,sub){
+  var c=cat8Of(k);if(!c)return;
+  if(c.k==="job"){goUX("prof");return;}
+  if(sub&&c.legacy.indexOf(sub)>=0){goReq(sub);return;}
+  HERO_Q=sub||"";
+  goReq(primaryLegacy(c));
+  setTimeout(applyHeroQuery,150);
+}
+
+/* 업체·요청 필터 칩 (8대분류) */
+function renderSupChips(){
+  var el=document.getElementById("sup-filter-chips");if(!el)return;
+  el.innerHTML='<div class="chip'+(curSC==="all"?" on":"")+'" onclick="fS(&quot;all&quot;)">전체</div>'+
+    CATS8.map(function(c){return '<div class="chip'+(curSC===c.k?" on":"")+'" onclick="fS(&quot;'+c.k+'&quot;)">'+c.nm+'</div>';}).join('');
+}
+function renderSupTabs(){
+  var el=document.getElementById("sup-tabs-h");if(!el)return;
+  el.innerHTML='<div class="tab'+(curSC==="all"?" on":"")+'" onclick="swSupTab(&quot;all&quot;)">전체</div>'+
+    CATS8.map(function(c){return '<div class="tab'+(curSC===c.k?" on":"")+'" onclick="swSupTab(&quot;'+c.k+'&quot;)">'+c.nm+'</div>';}).join('');
+}
+function renderReqChips(){
+  var el=document.getElementById("rq-filter-chips");if(!el)return;
+  el.innerHTML='<div class="chip'+(curRC==="all"?" on":"")+'" onclick="fR(&quot;all&quot;)">전체</div>'+
+    CATS8.map(function(c){return '<div class="chip'+(curRC===c.k?" on":"")+'" onclick="fR(&quot;'+c.k+'&quot;)">'+c.nm+'</div>';}).join('');
+}
+
+/* 모바일 메뉴 */
+function toggleMM(){
+  var m=document.getElementById("mobile-menu");if(!m)return;
+  m.classList.toggle("on");
+}
+function mmGo(p){toggleMM();go(p);}
+
 /* ═ 렌더: 라이브 바 ═ */
 function renderLive(){
-  var data=[
-    {txt:"곱창 500kg 구매 요청 · 경기 안성",cnt:"5건",time:"5분 전"},
-    {txt:"한우 30두 출하 예정 · 충남",cnt:"도축장 4곳",time:"8분 전"},
-    {txt:"정육사 경력직 채용 · 서울",cnt:"지원자 5명",time:"12분 전"},
-    {txt:"육포 OEM 공장 찾습니다 · 전국",cnt:"업체 3곳",time:"21분 전"},
-    {txt:"냉동물류 정기배송 · 부산→서울",cnt:"견적 6개",time:"35분 전"},
-    {txt:"고깃집 40평 인테리어 · 수원",cnt:"업체 4곳",time:"1시간 전"},
-    {txt:"HACCP 컨설팅 요청 · 경기 안양",cnt:"업체 2곳",time:"3시간 전"}
-  ];
-  var el=document.getElementById("live-slide");if(!el)return;
+  var bar=document.getElementById("live-bar"),el=document.getElementById("live-slide");
+  if(!bar||!el)return;
+  if(!REQS.length){bar.style.display="none";el.innerHTML="";return;}
+  bar.style.display="flex";
+  var data=REQS.slice(0,10).map(function(r){
+    return {txt:r.title+" · "+(r.region||"전국"),cnt:"견적 "+(r.qcnt||0)+"건",time:r.time||""};
+  });
   var all=data.concat(data);
   el.innerHTML=all.map(function(d){
     return '<div class="li"><span class="li-txt">'+d.txt+'</span><span class="li-cnt">'+d.cnt+'</span><span class="li-time">'+d.time+'</span></div><div class="li"><span class="li-sep"></span></div>';
@@ -1315,7 +1632,7 @@ function renderCatIconBar(){
       +'<rect x="16" y="20" width="12" height="2.5" rx="1" fill="#7A6A5A" opacity=".5"/>'
       +'<rect x="16" y="26" width="14" height="2.5" rx="1" fill="#7A6A5A" opacity=".4"/>'
       +'<rect x="16" y="32" width="10" height="2.5" rx="1" fill="#7A6A5A" opacity=".35"/>'
-      +'<circle cx="35" cy="36" r="7" fill="#2E7D32" opacity=".9"/>'
+      +'<circle cx="35" cy="36" r="7" fill="#D9480F" opacity=".9"/>'
       +'<path d="M32 36 L34 38 L38 34" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
       +'</svg>',
     "HACCP·위생관리":
@@ -1384,11 +1701,19 @@ function renderCatImgGrid(){
 /* ═ 렌더: 4단 위젯 ═ */
 function renderRQWidget(){
   var el=document.getElementById("rq-widget");if(!el)return;
-  el.innerHTML=REQS.map(function(r){
-    return '<div class="rq-row" onclick="go(&quot;rw&quot;)">'+
-      '<div class="rq-ico" style="background:'+r.cc+';">'+r.ico+'</div>'+
-      '<div class="rq-body"><div class="rq-title">'+r.title+'</div><div class="rq-meta">'+r.meta+'</div></div>'+
-      '<div class="rq-cnt">'+r.cnt+'</div></div>';
+  if(!REQS.length){
+    el.innerHTML='<div class="es"><div class="es-t">아직 등록된 요청이 없습니다</div>'+
+      '<div class="es-d">필요한 것을 올리면 조건에 맞는 업체가 견적과 제안을 보냅니다.</div>'+
+      '<button class="es-btn" onclick="go(&quot;rw&quot;)">첫 요청 올리기</button></div>';
+    return;
+  }
+  el.innerHTML=REQS.slice(0,8).map(function(r){
+    return '<article class="rqc" onclick="go(&quot;reqs&quot;)">'+
+      '<div class="rqc-top"><span class="rqc-cat">'+cat8Label(r.cat)+'</span><span class="rqc-time">'+(r.time||"")+'</span></div>'+
+      '<h3 class="rqc-title">'+r.title+'</h3>'+
+      '<div class="rqc-meta">'+(r.region||"지역 미지정")+'</div>'+
+      '<div class="rqc-foot"><span class="rqc-cnt">받은 견적 '+(r.qcnt||0)+'건</span><span class="rqc-cta">자세히 보기 ›</span></div>'+
+      '</article>';
   }).join('');
 }
 function renderPropWidget(){
@@ -1417,12 +1742,14 @@ function renderPriceWidget(eid,cat){
 /* ═ 렌더: 6단 위젯 ═ */
 function renderRankWidget(){
   var el=document.getElementById("rank-widget");if(!el)return;
+  if(!RANKS.length){el.innerHTML=emptyBox("등록된 업체가 아직 없습니다");return;}
   el.innerHTML=RANKS.map(function(r,i){
     return '<div class="rank-row"><div class="rank-num">'+(i+1)+'</div><div style="flex:1;min-width:0;"><div class="rank-nm">'+r.nm+'</div><div class="rank-cat">'+r.cat+'</div></div><div class="rank-rt">'+r.rt+'</div></div>';
   }).join('');
 }
 function renderNewSupWidget(){
   var el=document.getElementById("new-sup-widget");if(!el)return;
+  if(!NEW_SUPS.length){el.innerHTML=emptyBox("신규 등록 업체가 아직 없습니다");return;}
   el.innerHTML=NEW_SUPS.map(function(s){
     return '<div class="new-sup-row"><div class="ns-avatar">'+s.ico+'</div><div style="flex:1;min-width:0;"><div class="ns-nm">'+s.nm+'</div><div class="ns-sub">'+s.sub+'</div></div>'+(s.isnew?'<div class="ns-new">NEW</div>':'')+'</div>';
   }).join('');
@@ -1444,7 +1771,9 @@ function renderInsightWidget(){
 }
 function renderJobWidget(){
   var el=document.getElementById("job-widget");if(!el)return;
-  el.innerHTML=JOBS.filter(function(j){return j.type==="full";}).slice(0,5).map(function(j){
+  var jl=JOBS.filter(function(j){return j.type==="full";}).slice(0,5);
+  if(!jl.length){el.innerHTML=emptyBox("등록된 구인 공고가 아직 없습니다");return;}
+  el.innerHTML=jl.map(function(j){
     return '<div class="job-row" onclick="go(&quot;jobs&quot;)">'+
       '<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">'+
         '<span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;background:var(--gnl);color:var(--gn2);">'+
@@ -1489,12 +1818,25 @@ function mkSC(s){
 }
 function renderSupHome(cat){
   var el=document.getElementById("sup-home");if(!el)return;el.innerHTML="";
-  var data=(!cat||cat==="all")?SUPS:SUPS.filter(function(s){return s.cats.some(function(c){return c===cat;});});
+  var data=SUPS.filter(function(s){return matchCat8(s.cats,cat);});
+  if(!data.length){
+    el.innerHTML='<div class="es"><div class="es-t">'+(cat&&cat!=="all"?"이 분야에 등록된 업체가 아직 없습니다":"등록된 업체가 아직 없습니다")+'</div>'+
+      '<div class="es-d">업체로 등록하면 전국에서 올라오는 요청을 받아볼 수 있습니다.</div>'+
+      '<button class="es-btn" onclick="go(&quot;sj&quot;)">업체 등록하기</button></div>';
+    return;
+  }
   data.slice(0,5).forEach(function(s){el.appendChild(mkSC(s));});
 }
 function renderSups(cat){
   var el=document.getElementById("sup-full");if(!el)return;el.innerHTML="";
-  var data=(!cat||cat==="all")?SUPS:SUPS.filter(function(s){return s.cats.some(function(c){return c===cat;});});
+  renderSupChips();
+  var data=SUPS.filter(function(s){return matchCat8(s.cats,cat);});
+  if(!data.length){
+    el.innerHTML='<div class="es"><div class="es-t">'+(cat&&cat!=="all"?"이 분야에 등록된 업체가 아직 없습니다":"등록된 업체가 아직 없습니다")+'</div>'+
+      '<div class="es-d">업체로 등록하면 전국에서 올라오는 요청을 받아볼 수 있습니다.</div>'+
+      '<button class="es-btn" onclick="go(&quot;sj&quot;)">업체 등록하기</button></div>';
+    return;
+  }
   data.forEach(function(s){el.appendChild(mkSC(s));});
 }
 function renderSP(id){
@@ -1515,14 +1857,20 @@ function renderSP(id){
 /* ═ 렌더: 요청 목록 ═ */
 function renderReqs(){
   var el=document.getElementById("rq-list-full");if(!el)return;el.innerHTML="";
-  var data=curRC==="all"?REQS:REQS.filter(function(r){return r.cat===curRC;});
+  renderReqChips();
+  var data=REQS.filter(function(r){return matchCat8([r.cat],curRC);});
+  if(!data.length){
+    el.innerHTML='<div class="es"><div class="es-t">'+(curRC&&curRC!=="all"?"이 분야에 등록된 요청이 없습니다":"아직 등록된 요청이 없습니다")+'</div>'+
+      '<div class="es-d">필요한 것을 올리면 조건에 맞는 업체가 견적과 제안을 보냅니다.</div>'+
+      '<button class="es-btn" onclick="go(&quot;rw&quot;)">요청 올리기</button></div>';
+    return;
+  }
   data.forEach(function(r){
-    var d=document.createElement("div");d.className="card";
-    d.style.cssText="padding:14px;display:flex;gap:10px;align-items:flex-start;";
-    d.innerHTML='<div style="width:36px;height:36px;border-radius:9px;background:'+r.cc+';display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">'+r.ico+'</div>'+
-      '<div style="flex:1;"><div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:3px;">'+r.title+'</div><div style="font-size:12px;color:var(--ink3);">'+r.meta+'</div></div>'+
-      '<div style="font-size:13px;font-weight:800;color:var(--gn);">'+r.cnt+'</div>';
-    d.onclick=function(){go("rw");};
+    var d=document.createElement("article");d.className="rqc";d.style.cssText="margin-bottom:10px;";
+    d.innerHTML='<div class="rqc-top"><span class="rqc-cat">'+cat8Label(r.cat)+'</span><span class="rqc-time">'+(r.time||"")+'</span></div>'+
+      '<h3 class="rqc-title">'+r.title+'</h3>'+
+      '<div class="rqc-meta">'+(r.region||"지역 미지정")+'</div>'+
+      '<div class="rqc-foot"><span class="rqc-cnt">받은 견적 '+(r.qcnt||0)+'건</span><span class="rqc-cta">견적 보내기는 준비 중 ›</span></div>';
     el.appendChild(d);
   });
 }
@@ -1709,8 +2057,32 @@ async function subReq(){
 }
 async function subProf(t){
   var msgEl=document.getElementById(t==="hire"?"hire-msg":"seek-msg");
+  function v(id){var e=document.getElementById(id);return e?String(e.value||"").trim():"";}
+  var payload,need;
+  if(t==="hire"){
+    payload={kind:"hire",job_role:v("ph-job"),experience:v("ph-exp"),employment:v("ph-emp"),
+      pay:v("ph-pay")?(v("ph-pay")+"만원"):null,location:v("ph-loc"),company:v("ph-biz"),
+      applicant_name:null,contact:v("ph-tel"),detail:v("ph-cond")||null,status:"모집중",is_urgent:false};
+    need=payload.company&&payload.location&&payload.contact;
+  }else{
+    payload={kind:"seek",job_role:v("ps-job"),experience:v("ps-exp")?(v("ps-exp")+"년"):null,employment:null,
+      pay:v("ps-pay")||null,location:v("ps-loc")||"협의",company:null,
+      applicant_name:v("ps-name"),contact:v("ps-tel"),detail:v("ps-intro")||null,status:"모집중",is_urgent:false};
+    need=payload.applicant_name&&payload.contact;
+  }
+  if(!need){
+    msgEl.textContent=(t==="hire"?"업체명·근무지·연락처는 필수입니다.":"이름과 연락처는 필수입니다.");
+    msgEl.className="msg err";msgEl.style.display="block";return;
+  }
   msgEl.textContent="등록 중...";msgEl.className="msg";msgEl.style.display="block";
-  setTimeout(function(){msgEl.textContent=t==="hire"?"✅ 구인 공고 등록 완료!":"✅ 구직 프로필 등록 완료!";msgEl.className="msg ok";},700);
+  if(!sb){msgEl.textContent="서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.";msgEl.className="msg err";return;}
+  try{
+    var r=await sb.from("jobs").insert(payload);
+    if(r.error)throw r.error;
+    msgEl.textContent=t==="hire"?"✅ 구인 공고 등록 완료!":"✅ 구직 프로필 등록 완료!";
+    msgEl.className="msg ok";
+    loadFromDB();
+  }catch(e){msgEl.textContent="오류: "+e.message;msgEl.className="msg err";}
 }
 async function subSup(){
   var nm=document.getElementById("sj-nm").value.trim(),tel=document.getElementById("sj-tel").value.trim();
@@ -1751,9 +2123,12 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()
 
 /* ═ 초기화 ═ */
 function renderHome(){
+  renderHdrCats();
+  renderHeroChips();
+  renderCat8Grid();
+  renderProcess();
+  renderSupTabs();
   renderLive();
-  renderCatIconBar();
-  renderCatImgGrid();
   renderRQWidget();
   renderPropWidget();
   renderPriceWidget("price-widget","beef");
@@ -1763,7 +2138,7 @@ function renderHome(){
   renderInsightWidget();
   renderJobWidget();
   renderCommWidget();
-  renderSupHome("all");
+  renderSupHome(curSC||"all");
 }
 /* ═══════════ 실제 DB 데이터 로딩 (더미 → Supabase) ═══════════ */
 var CAT_STYLE={
@@ -1780,7 +2155,14 @@ function supColor(id){var s=String(id||""),n=0;for(var i=0;i<s.length;i++)n+=s.c
 function relTime(iso){if(!iso)return "";var d=new Date(iso);if(isNaN(d))return "";var s=Math.floor((Date.now()-d.getTime())/1000);if(s<60)return "방금 전";if(s<3600)return Math.floor(s/60)+"분 전";if(s<86400)return Math.floor(s/3600)+"시간 전";if(s<2592000)return Math.floor(s/86400)+"일 전";return (d.getMonth()+1)+"."+d.getDate();}
 function truncate(s,n){s=String(s||"");return s.length>n?s.slice(0,n)+"…":s;}
 function dbCatOf(r){return r.category||r.item_category||"기타";}
-function mapReq(r){var c=dbCatOf(r),st=catStyle(c);return {id:r.id,cat:c,cc:st.cc,ct:st.ct,ico:st.ico,title:(r.description&&r.description.trim())?truncate(r.description,26):(c+" 구매 요청"),meta:(r.region||"전국")+" / "+relTime(r.created_at),cnt:(r.quote_count!=null?r.quote_count:0)+"건"};}
+function mapReq(r){
+  var c=dbCatOf(r),st=catStyle(c);
+  var region=r.region||"", when=relTime(r.created_at), q=(r.quote_count!=null?r.quote_count:0);
+  return {id:r.id,cat:c,cc:st.cc,ct:st.ct,ico:st.ico,
+    title:(r.description&&r.description.trim())?truncate(r.description,34):(c+" 요청"),
+    region:region,time:when,qcnt:q,
+    meta:(region||"전국")+" / "+when,cnt:q+"건"};
+}
 function mapSup(s){var cats=Array.isArray(s.categories)?s.categories:[];return {id:s.id,nm:s.name||"업체",cat:(s.region||"지역미정")+(cats.length?" · "+cats.slice(0,2).join("·"):""),rt:Number(s.rating)||0,rs:s.lead_time||"—",minq:s.min_qty||"—",catcnt:cats.length,vf:!!s.is_verified,cats:cats,cl:supColor(s.id),desc:s.description||""};}
 function mapJob(j){var emp=j.employment||"",type=emp.indexOf("계약")>=0?"contract":(emp.indexOf("알바")>=0||emp.indexOf("아르바이트")>=0)?"part":"full";return {id:j.id,type:type,urgent:!!j.is_urgent,role:j.job_role||"채용",biz:(j.kind==="seek"?((j.applicant_name||"구직자")+" (구직)"):(j.company||"업체")),loc:j.location||"-",pay:j.pay||"협의",emp:emp||"정규직",d:relTime(j.created_at),benefit:j.detail||""};}
 function emptyBox(msg){return '<div style="text-align:center;padding:30px 12px;color:var(--ink4);font-size:13px;line-height:1.6;">'+msg+'</div>';}

@@ -8,6 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'><circle cx='13' cy='13' r='13' fill='%23D9480F'/><path d='M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20' stroke='white' stroke-width='2.5' stroke-linecap='round' fill='none'/><circle cx='8' cy='20' r='2' fill='white'/></svg>"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&family=Noto+Serif+KR:wght@700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="gori-app.css">
 <style>
 
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -835,7 +836,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 <!-- ════ 서브 페이지들 ════ -->
 <div class="pg" id="pg-reqs" style="padding-top:var(--top-pad);padding-bottom:56px;">
   <div class="w" style="padding-top:18px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><div style="font-size:18px;font-weight:800;">견적 요청 목록</div><button onclick="go(&quot;rw&quot;)" class="ha-btn ha-reg" style="font-size:12px;padding:7px 14px;">+ 요청 등록</button></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><div style="font-size:18px;font-weight:800;">실시간 요청</div><button onclick="go(&quot;rw&quot;)" class="ha-btn ha-reg" style="font-size:12px;padding:7px 14px;">+ 요청 등록</button></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="rq-filter-chips">
       <div class="chip on" onclick="fR(this,'all')">전체</div>
       <div class="chip" onclick="fR(this,'소고기')">소고기</div>
@@ -2200,6 +2201,9 @@ async function loadFromDB(){
 renderHome();
 loadFromDB();
 </script>
+
+<!-- PHASE 2: 요청 3단계 · 견적 비교 · 당일알바 · 거래관리 -->
+<script src="gori-app.js"></script>
 <script type="text/x-svg-data" id="svg______" data-bg="#1A0A0A">
 <defs>
   <linearGradient id="b0" x1="0" y1="0" x2="0" y2="1">

@@ -20,7 +20,7 @@
 <meta name="twitter:description" content="요청을 올리면 검증된 축산 업체가 견적을 보냅니다."/>
 <meta name="twitter:image" content="https://aboutmeat.co.kr/og.png"/>
 <meta name="theme-color" content="#12161B"/>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'><circle cx='13' cy='13' r='13' fill='%230C4A37'/><path d='M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20' stroke='white' stroke-width='2.5' stroke-linecap='round' fill='none'/><circle cx='8' cy='20' r='2' fill='white'/></svg>"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'><circle cx='13' cy='13' r='13' fill='%23D91F3A'/><path d='M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20' stroke='white' stroke-width='2.5' stroke-linecap='round' fill='none'/><circle cx='8' cy='20' r='2' fill='white'/></svg>"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&family=Noto+Serif+KR:wght@700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -243,7 +243,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 .p-up{color:var(--red);}.p-dn{color:var(--blue);}
 
 /* 베타 박스 */
-.beta-box{background:linear-gradient(135deg,#0C4A37,#14664A);padding:18px;color:#fff;}
+.beta-box{background:linear-gradient(135deg,#D91F3A,#A8142A);padding:18px;color:#fff;}
 .bb-badge{font-size:10px;font-weight:700;padding:3px 8px;background:rgba(255,255,255,.2);border-radius:4px;display:inline-block;margin-bottom:10px;}
 .bb-h{font-size:16px;font-weight:700;margin-bottom:6px;}
 .bb-d{font-size:12px;color:rgba(255,255,255,.65);line-height:1.65;margin-bottom:14px;}
@@ -564,7 +564,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 
 /* ── 모바일 터치 타깃 44px 확보 (현장 사용 고려) ── */
 @media(max-width:768px){
-  .gh-region,.gh-bell,.gh-s-btn,.gh-chips .hchip,.more-btn,.ha-btn,.rgn-i{
+  .gh-region,.gh-bell,.gh-s-btn,.gh-chips .hchip,.more-btn,.ha-btn,.rgn-i,.hu-bell,.hdr-burger{
     min-height:44px;display:inline-flex;align-items:center;justify-content:center;}
   .gh-region{padding:0 14px;gap:6px;}
   .gh-bell{padding:0 11px;}
@@ -615,8 +615,8 @@ textarea.fi{resize:vertical;min-height:80px;}
 
 /* ── 업체 카드 (이미지 슬롯) ── */
 .sc2{padding:0;overflow:hidden;border-radius:18px;align-items:stretch;gap:0;}
-.sc2-ic{flex:0 0 92px;width:auto;height:auto;border-radius:0;
-  background:linear-gradient(150deg,var(--gn) 0%,var(--gn2) 100%);color:#fff;background-size:cover;background-position:center;}
+.sc2-ic{flex:0 0 88px;width:auto;height:auto;border-radius:0;
+  background:var(--gnl);color:var(--gn);background-size:cover;background-position:center;}
 .sc2-b{padding:14px 15px;}
 .sc2-nm{font-size:16px;font-weight:700;letter-spacing:-.03em;margin-bottom:7px;}
 .sc2-rate{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;margin-bottom:5px;color:var(--ink);}
@@ -705,10 +705,17 @@ textarea.fi{resize:vertical;min-height:80px;}
   .info-grid{grid-template-columns:repeat(2,1fr);}
 }
 @media(max-width:768px){
-  :root{--hdr-h:98px;--top-pad:132px;}
-  .hdr{display:none;}
-  #pg-h{padding-top:0!important;}
+  :root{--hdr-h:94px;--top-pad:100px;}
+  /* 홈은 히어로가 헤더 역할 → 헤더 숨김. 내부 페이지에서는 헤더가 보여야 합니다 */
+  body.on-home .hdr{display:none;}
+  body.on-home #pg-h{padding-top:0!important;}
+  /* 내부 페이지에는 페이지별 필터가 있으므로 헤더 카테고리 바는 숨깁니다 */
+  body:not(.on-home) .hdr-cats{display:none;}
+  body:not(.on-home) .pg{padding-top:62px!important;}
   .live-bar{display:none!important;}
+  .hdr-main{height:54px;}
+  .hdr-cats{height:40px;}
+  .hdr-burger{margin-left:8px;}
   .gh{padding:14px 0 26px;border-radius:0 0 22px 22px;}
   .gh-w{padding:0 16px;}
   .gh-h1{font-size:25px;}
@@ -753,7 +760,7 @@ textarea.fi{resize:vertical;min-height:80px;}
   .hero-photo{display:none;}
 }
 @media(max-width:480px){
-  :root{--hdr-h:94px;--top-pad:128px;}
+  :root{--hdr-h:94px;--top-pad:100px;}
   .h2-h1{font-size:23px;line-height:1.32;}
   .cat8-grid{grid-template-columns:repeat(4,1fr);}
   .cat8-nm{font-size:11px;}
@@ -785,7 +792,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 <header class="hdr">
   <div class="hdr-main">
     <div class="hdr-main-w">
-      <div class="logo" onclick="go(&quot;h&quot;)"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#0C4A37"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg><div class="logo-nm">고<em>리</em></div></div>
+      <div class="logo" onclick="go(&quot;h&quot;)"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#D91F3A"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg><div class="logo-nm">고<em>리</em></div></div>
       <nav class="hdr-nav">
         <a class="on" onclick="setNav(this,'h')">홈</a>
         <a onclick="setNav(this,'rw')">요청하기</a>
@@ -954,17 +961,6 @@ textarea.fi{resize:vertical;min-height:80px;}
   </div>
 
 
-  <!-- ══ 베타 안내 ══ -->
-  <div style="background:var(--gnl);border-top:1px solid var(--gnb);border-bottom:1px solid var(--gnb);padding:16px 0;">
-    <div class="w" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
-      <div>
-        <div style="font-size:14px;font-weight:700;color:var(--ink);">베타 운영 중 — 더 나은 서비스를 위해 개선하고 있습니다</div>
-        <div style="font-size:12.5px;color:var(--ink3);margin-top:3px;">의견을 보내주시면 빠르게 반영합니다. 지금 업체로 등록하면 우선 노출 혜택을 드립니다.</div>
-      </div>
-      <button class="ha-btn ha-reg" onclick="go(&quot;sj&quot;)" style="flex-shrink:0;">업체 등록하기</button>
-    </div>
-  </div>
-
   <!-- ══ 고리 소식 · 정보 (시세·뉴스·커뮤니티 — 하단 배치, 기존 위젯 보존) ══ -->
   <section class="sec sec-alt" id="sec-info">
     <div class="w">
@@ -975,23 +971,6 @@ textarea.fi{resize:vertical;min-height:80px;}
         </div>
       </div>
       <div class="info-grid">
-
-        <!-- 오늘의 축산 시세 -->
-        <div class="info-box">
-          <div class="info-hd">
-            <div class="info-t">오늘의 축산 시세<span class="sample-tag">샘플</span></div>
-            <button class="more-btn" onclick="go(&quot;market&quot;)">더보기 ›</button>
-          </div>
-          <div class="info-body">
-            <div class="tab-bar" style="margin-bottom:10px;" id="price-tabs-h">
-              <div class="tab on" onclick="swPriceH(this,'beef')">한우</div>
-              <div class="tab" onclick="swPriceH(this,'pork')">돼지</div>
-              <div class="tab" onclick="swPriceH(this,'import')">부산물</div>
-            </div>
-            <div id="price-widget"></div>
-            <div style="font-size:10.5px;color:var(--ink4);margin-top:8px;">실시간 시세 연동 준비 중 · 참고용 샘플 데이터</div>
-          </div>
-        </div>
 
         <!-- 실시간 매물 -->
         <div class="info-box">
@@ -1057,7 +1036,7 @@ textarea.fi{resize:vertical;min-height:80px;}
     <div class="w">
       <div class="ft-grid">
         <div>
-          <div class="ft-nm"><svg width="20" height="20" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#0C4A37"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg> 고리</div>
+          <div class="ft-nm"><svg width="20" height="20" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#D91F3A"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg> 고리</div>
           <div class="ft-desc">축산업에 필요한 모든 연결, 고리<br>원육·가공·물류·인력·장비·창업까지<br>필요한 업체와 사람을 빠르게 연결합니다</div>
         </div>
         <div><div class="ft-col-t">거래·생산</div><ul class="ft-ul"><li onclick="goCat8(&quot;meat&quot;)">원육 구매</li><li onclick="goCat8(&quot;process&quot;)">가공·OEM</li><li onclick="goCat8(&quot;logi&quot;)">물류·운송</li></ul></div>
@@ -1183,7 +1162,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 
 <div class="pg" id="pg-sj" style="padding-top:var(--top-pad);padding-bottom:56px;">
   <div style="max-width:640px;margin:0 auto;padding:18px 16px 80px;">
-    <div style="background:linear-gradient(135deg,#0C4A37,#14664A);padding:20px;border-radius:var(--r);margin-bottom:13px;">
+    <div style="background:linear-gradient(135deg,#D91F3A,#A8142A);padding:20px;border-radius:var(--r);margin-bottom:13px;">
       <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:700;letter-spacing:2px;margin-bottom:6px;">SUPPLIER REGISTRATION</div>
       <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:4px;">업체를 등록하고 전국 구매 요청을 받아보세요</div>
       <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;">
@@ -1758,183 +1737,7 @@ function renderLive(){
   }).join('');
 }
 
-/* ═ 렌더: 카테고리 아이콘 바 ═ */
-function renderCatIconBar(){
-  var el=document.getElementById("cat-icon-bar");if(!el)return;el.innerHTML="";
 
-  /* 카테고리별 SVG 아이콘 (단색 라인 + 포인트 컬러, 숨고 스타일) */
-  var ICONS={
-    "고기 구매":
-      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
-      +'<ellipse cx="20" cy="26" rx="13" ry="9" fill="#C84040" opacity=".15" transform="rotate(-30 20 26)"/>'
-      +'<path d="M10 34 Q16 22 26 18 Q34 15 38 22" stroke="#C84040" stroke-width="3.5" stroke-linecap="round" fill="none"/>'
-      +'<path d="M8 36 Q14 24 24 20 Q32 17 36 24" stroke="#E55050" stroke-width="2" stroke-linecap="round" fill="none" opacity=".5"/>'
-      +'<circle cx="38" cy="14" r="5" fill="none" stroke="#C84040" stroke-width="2.5"/>'
-      +'<path d="M36 10 L40 10 M38 8 L38 12" stroke="#C84040" stroke-width="2" stroke-linecap="round"/>'
-      +'<path d="M10 36 Q10 40 14 40 Q18 40 18 36" stroke="#C84040" stroke-width="2.5" stroke-linecap="round" fill="none"/>'
-      +'</svg>',
-    "부산물·내장 특수부위":
-      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
-      +'<path d="M8 28 Q14 16 24 20 Q34 24 38 16" stroke="#D04040" stroke-width="3.5" stroke-linecap="round" fill="none"/>'
-      +'<path d="M8 32 Q14 20 24 24 Q34 28 38 20" stroke="#D04040" stroke-width="2" stroke-linecap="round" fill="none" opacity=".45"/>'
-      +'<ellipse cx="20" cy="36" rx="9" ry="4" fill="#D04040" opacity=".2"/>'
-      +'<ellipse cx="20" cy="36" rx="9" ry="4" stroke="#D04040" stroke-width="2"/>'
-      +'<path d="M12 36 Q12 41 20 41 Q28 41 28 36" stroke="#D04040" stroke-width="2" fill="none"/>'
-      +'</svg>',
-    "출하·도축장":
-      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
-      +'<rect x="8" y="22" width="32" height="18" rx="2" stroke="#5C8A5C" stroke-width="2.5" fill="#5C8A5C" fill-opacity=".1"/>'
-      +'<path d="M6 22 L24 10 L42 22" stroke="#5C8A5C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
-      +'<rect x="20" y="30" width="8" height="10" rx="1" fill="#5C8A5C" opacity=".5"/>'
-      +'<rect x="11" y="26" width="7" height="7" rx="1" stroke="#5C8A5C" stroke-width="1.5" fill="none"/>'
-      +'<rect x="30" y="26" width="7" height="7" rx="1" stroke="#5C8A5C" stroke-width="1.5" fill="none"/>'
-      +'<path d="M28 12 L28 8" stroke="#5C8A5C" stroke-width="2.5" stroke-linecap="round"/>'
-      +'<rect x="26" y="5" width="4" height="6" rx="1" fill="#5C8A5C" opacity=".7"/>'
-      +'</svg>',
-    "육가공·OEM":
-      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
-      +'<rect x="6" y="24" width="36" height="16" rx="3" stroke="#4A7A8A" stroke-width="2.5" fill="#4A7A8A" fill-opacity=".1"/>'
-      +'<rect x="6" y="24" width="36" height="6" rx="2" fill="#4A7A8A" opacity=".25"/>'
-      +'<rect x="30" y="14" width="6" height="14" rx="2" fill="#4A7A8A" opacity=".6"/>'
-      +'<rect x="21" y="18" width="6" height="10" rx="2" fill="#4A7A8A" opacity=".5"/>'
-      +'<rect x="12" y="16" width="6" height="12" rx="2" fill="#4A7A8A" opacity=".55"/>'
-      +'<ellipse cx="31" cy="13" rx="3" ry="4" fill="#4A7A8A" opacity=".3"/>'
-      +'<ellipse cx="22" cy="17" rx="3" ry="4" fill="#4A7A8A" opacity=".25"/>'
-      +'<ellipse cx="13" cy="15" rx="3" ry="4" fill="#4A7A8A" opacity=".28"/>'
-      +'<rect x="12" y="32" width="6" height="5" rx="1" stroke="#4A7A8A" stroke-width="1.5" fill="none"/>'
-      +'<rect x="21" y="32" width="6" height="5" rx="1" stroke="#4A7A8A" stroke-width="1.5" fill="none"/>'
-      +'<rect x="30" y="32" width="6" height="5" rx="1" stroke="#4A7A8A" stroke-width="1.5" fill="none"/>'
-      +'</svg>',
-    "냉장·냉동 물류":
-      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
-      +'<rect x="4" y="24" width="30" height="14" rx="3" stroke="#4A90D9" stroke-width="2.5" fill="#4A90D9" fill-opacity=".1"/>'
-      +'<rect x="34" y="18" width="11" height="20" rx="3" stroke="#4A90D9" stroke-width="2.5" fill="#4A90D9" fill-opacity=".15"/>'
-      +'<rect x="36" y="21" width="7" height="8" rx="1" fill="#4A90D9" opacity=".3"/>'
-      +'<circle cx="13" cy="40" r="4.5" stroke="#4A90D9" stroke-width="2.5" fill="none"/>'
-      +'<circle cx="13" cy="40" r="2" fill="#4A90D9" opacity=".5"/>'
-      +'<circle cx="28" cy="40" r="4.5" stroke="#4A90D9" stroke-width="2.5" fill="none"/>'
-      +'<circle cx="28" cy="40" r="2" fill="#4A90D9" opacity=".5"/>'
-      +'<circle cx="39" cy="40" r="4" stroke="#4A90D9" stroke-width="2" fill="none"/>'
-      +'<circle cx="39" cy="40" r="1.5" fill="#4A90D9" opacity=".5"/>'
-      /* 냉기 아이콘 */
-      +'<path d="M10 29 L10 34 M8 31 L12 31" stroke="#4A90D9" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>'
-      +'</svg>',
-    "구인구직":
-      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
-      +'<circle cx="16" cy="16" r="7" stroke="#7C6EAA" stroke-width="2.5" fill="#7C6EAA" fill-opacity=".12"/>'
-      +'<path d="M6 38 C6 30 26 30 26 38" stroke="#7C6EAA" stroke-width="2.5" stroke-linecap="round" fill="none"/>'
-      +'<circle cx="34" cy="18" r="5.5" stroke="#7C6EAA" stroke-width="2" fill="#7C6EAA" fill-opacity=".1" opacity=".7"/>'
-      +'<path d="M27 38 C27 33 43 33 43 38" stroke="#7C6EAA" stroke-width="2" stroke-linecap="round" fill="none" opacity=".7"/>'
-      +'<path d="M28 22 L32 26 L42 16" stroke="#2E7D32" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
-      +'</svg>',
-    "창업 컨설팅":
-      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
-      +'<path d="M8 38 L8 22 L14 16 L34 16 L40 22 L40 38 Z" stroke="#E07840" stroke-width="2.5" stroke-linejoin="round" fill="#E07840" fill-opacity=".1"/>'
-      +'<path d="M6 22 L24 10 L42 22" stroke="#E07840" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
-      +'<rect x="19" y="28" width="10" height="10" rx="1" fill="#E07840" opacity=".5"/>'
-      +'<rect x="11" y="25" width="7" height="7" rx="1" stroke="#E07840" stroke-width="1.5" fill="none"/>'
-      +'<rect x="30" y="25" width="7" height="7" rx="1" stroke="#E07840" stroke-width="1.5" fill="none"/>'
-      +'<path d="M22 16 L22 12" stroke="#E07840" stroke-width="2" stroke-linecap="round" opacity=".6"/>'
-      +'<path d="M26 16 L26 12" stroke="#E07840" stroke-width="2" stroke-linecap="round" opacity=".6"/>'
-      +'</svg>',
-    "인테리어":
-      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
-      +'<rect x="8" y="14" width="32" height="22" rx="2" stroke="#C07040" stroke-width="2.5" fill="#C07040" fill-opacity=".1"/>'
-      +'<path d="M8 20 L40 20" stroke="#C07040" stroke-width="1.5" opacity=".4"/>'
-      +'<path d="M8 30 L40 30" stroke="#C07040" stroke-width="1.5" opacity=".3"/>'
-      +'<rect x="12" y="36" width="24" height="4" rx="1" fill="#C07040" opacity=".35"/>'
-      +'<circle cx="18" cy="25" r="3.5" stroke="#C07040" stroke-width="2" fill="none"/>'
-      +'<path d="M22 22 L34 14" stroke="#C07040" stroke-width="2" stroke-linecap="round" opacity=".6"/>'
-      +'<path d="M22 28 L34 36" stroke="#C07040" stroke-width="2" stroke-linecap="round" opacity=".4"/>'
-      +'</svg>',
-    "기자재·장비":
-      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
-      +'<circle cx="24" cy="24" r="10" stroke="#607080" stroke-width="2.5" fill="none"/>'
-      +'<circle cx="24" cy="24" r="4" fill="#607080" opacity=".4"/>'
-      +'<path d="M24 10 L24 6 M24 42 L24 38 M10 24 L6 24 M42 24 L38 24" stroke="#607080" stroke-width="2.5" stroke-linecap="round"/>'
-      +'<path d="M14.1 14.1 L11.3 11.3 M36.7 36.7 L33.9 33.9 M14.1 33.9 L11.3 36.7 M36.7 11.3 L33.9 14.1" stroke="#607080" stroke-width="2" stroke-linecap="round" opacity=".7"/>'
-      +'</svg>',
-    "포장재":
-      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
-      +'<rect x="10" y="20" width="28" height="20" rx="2" stroke="#5A8A6A" stroke-width="2.5" fill="#5A8A6A" fill-opacity=".1"/>'
-      +'<path d="M10 24 L24 30 L38 24" stroke="#5A8A6A" stroke-width="2" stroke-linecap="round" fill="none"/>'
-      +'<path d="M24 30 L24 40" stroke="#5A8A6A" stroke-width="2" stroke-linecap="round"/>'
-      +'<path d="M10 20 L24 14 L38 20" stroke="#5A8A6A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
-      +'<path d="M17 17 L17 27" stroke="#5A8A6A" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>'
-      +'<path d="M31 17 L31 27" stroke="#5A8A6A" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>'
-      +'</svg>',
-    "세무·노무":
-      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
-      +'<rect x="12" y="8" width="24" height="32" rx="3" stroke="#7A6A5A" stroke-width="2.5" fill="#7A6A5A" fill-opacity=".1"/>'
-      +'<rect x="16" y="14" width="16" height="2.5" rx="1" fill="#7A6A5A" opacity=".6"/>'
-      +'<rect x="16" y="20" width="12" height="2.5" rx="1" fill="#7A6A5A" opacity=".5"/>'
-      +'<rect x="16" y="26" width="14" height="2.5" rx="1" fill="#7A6A5A" opacity=".4"/>'
-      +'<rect x="16" y="32" width="10" height="2.5" rx="1" fill="#7A6A5A" opacity=".35"/>'
-      +'<circle cx="35" cy="36" r="7" fill="#0C4A37" opacity=".9"/>'
-      +'<path d="M32 36 L34 38 L38 34" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
-      +'</svg>',
-    "HACCP·위생관리":
-      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
-      +'<path d="M24 6 L38 12 L38 26 C38 34 31 40 24 43 C17 40 10 34 10 26 L10 12 Z" stroke="#2E8A6A" stroke-width="2.5" stroke-linejoin="round" fill="#2E8A6A" fill-opacity=".1"/>'
-      +'<path d="M18 24 L22 28 L30 20" stroke="#2E8A6A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
-      +'</svg>',
-    "전체 보기":
-      '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
-      +'<rect x="8" y="8" width="13" height="13" rx="3" stroke="#888" stroke-width="2.5" fill="none"/>'
-      +'<rect x="27" y="8" width="13" height="13" rx="3" stroke="#888" stroke-width="2.5" fill="none"/>'
-      +'<rect x="8" y="27" width="13" height="13" rx="3" stroke="#888" stroke-width="2.5" fill="none"/>'
-      +'<rect x="27" y="27" width="13" height="13" rx="3" stroke="#888" stroke-width="2.5" fill="none"/>'
-      +'</svg>'
-  };
-
-  CATS_ALL.forEach(function(cat,i){
-    var d=document.createElement("div");d.className="cat-item"+(i===0?" on":"");
-    var icon=ICONS[cat.nm]||ICONS["전체 보기"];
-    d.innerHTML='<div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;">'+icon+'</div>'
-      +'<div class="cat-nm">'+cat.nm+'</div>';
-    d.onclick=function(){
-      document.querySelectorAll(".cat-item").forEach(function(x){x.classList.remove("on");});
-      d.classList.add("on");
-      if(cat.cat==="all")go("rw");
-      else goReq(cat.cat);
-    };
-    el.appendChild(d);
-  });
-}
-
-/* ═ 렌더: 카테고리 이미지 카드 ═ */
-function renderCatImgGrid(){
-  var el=document.getElementById("cat-img-grid");if(!el)return;el.innerHTML="";
-  var CIG_ICONS=[
-    '<path d="M4 12c0-4 4-7 8-7s7 2 7 6-3 7-7 7-8-2-8-6z"/><circle cx="8.5" cy="12" r="1.6"/>',
-    '<path d="M4 11h16"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M9 7c-.5-1 .5-2 0-3M13 7c-.5-1 .5-2 0-3"/>',
-    '<path d="M4 20V9l8-4 8 4v11"/><path d="M3 20h18"/><path d="M9 20v-6h6v6"/>',
-    '<path d="M3 21V10l6 4V10l6 4V6l6 3v12z"/><path d="M2 21h20"/>',
-    '<path d="M2 6h11v10H2z"/><path d="M13 9h4l3 3v4h-7z"/><circle cx="6.5" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/>',
-    '<circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><circle cx="17.5" cy="9" r="2.2"/><path d="M15.5 15.2c2 .2 3.8 1.8 3.8 4.3"/>',
-    '<path d="M9.5 18h5"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.8 10.6c.8.7 1.3 1.4 1.3 2.4h5c0-1 .5-1.7 1.3-2.4A6 6 0 0 0 12 3z"/>'
-  ];
-  var CIG_COLORS=["#FF6B5C","#FFA94D","#63D471","#4DD0E1","#5BA9F4","#B39DFF","#FFD54F"];
-  var svgEls=document.querySelectorAll('script[type="text/x-svg-data"]');
-  CATS_ALL.slice(0,7).forEach(function(cat,i){
-    var scEl=svgEls[i];
-    var svgContent=scEl?scEl.innerHTML:"";
-    var bg=scEl?scEl.dataset.bg:"#111";
-    var d=document.createElement("div");d.className="cig-card";
-    d.innerHTML=
-      '<div class="cig-img" style="position:relative;overflow:hidden;">'
-      +'<svg viewBox="0 0 280 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;display:block;">'
-      +svgContent
-      +'</svg>'
-      +'<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.0) 30%,rgba(0,0,0,.62) 100%);"></div>'
-      +'<div style="position:absolute;top:22px;left:0;right:0;display:flex;justify-content:center;pointer-events:none;"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="'+CIG_COLORS[i]+'" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 1px 4px rgba(0,0,0,.55));">'+CIG_ICONS[i]+'</svg></div>'
-      +'<div class="cig-nm-ov">'+cat.nm+'</div>'
-      +'</div>'
-      +'<div class="cig-footer"><div class="cig-cnt">'+cat.sub+'</div><div class="cig-arr">›</div></div>';
-    d.onclick=function(){goReq(cat.cat);};
-    el.appendChild(d);
-  });
-}
 
 /* ═ 렌더: 4단 위젯 ═ */
 function renderRQWidget(){
@@ -2442,587 +2245,6 @@ loadFromDB();
 
 <!-- PHASE 2: 요청 3단계 · 견적 비교 · 당일알바 · 거래관리 -->
 <script src="gori-app.js"></script>
-<script type="text/x-svg-data" id="svg______" data-bg="#1A0A0A">
-<defs>
-  <linearGradient id="b0" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#2A0F0F"/>
-    <stop offset="70%" stop-color="#1A0808"/>
-    <stop offset="100%" stop-color="#0A0404"/>
-  </linearGradient>
-  <radialGradient id="light0" cx="50%" cy="0%" r="70%">
-    <stop offset="0%" stop-color="rgba(255,220,160,.18)"/>
-    <stop offset="100%" stop-color="transparent"/>
-  </radialGradient>
-  <radialGradient id="m1" cx="50%" cy="40%" r="55%">
-    <stop offset="0%" stop-color="#C44040"/>
-    <stop offset="60%" stop-color="#8B2020"/>
-    <stop offset="100%" stop-color="#5A1010"/>
-  </radialGradient>
-  <radialGradient id="m2" cx="50%" cy="35%" r="55%">
-    <stop offset="0%" stop-color="#CC4848"/>
-    <stop offset="60%" stop-color="#962828"/>
-    <stop offset="100%" stop-color="#601818"/>
-  </radialGradient>
-</defs>
-<rect width="280" height="120" fill="url(#b0)"/>
-<rect width="280" height="120" fill="url(#light0)"/>
-<!-- 천장 레일 시스템 -->
-<rect x="0" y="12" width="280" height="3.5" rx="1.5" fill="rgba(255,255,255,.22)"/>
-<rect x="0" y="13.5" width="280" height="1" fill="rgba(255,255,255,.1)"/>
-<!-- 레일 지지대 -->
-<rect x="34" y="8" width="2" height="9" rx="1" fill="rgba(255,255,255,.35)"/>
-<rect x="74" y="8" width="2" height="9" rx="1" fill="rgba(255,255,255,.3)"/>
-<rect x="114" y="8" width="2" height="9" rx="1" fill="rgba(255,255,255,.35)"/>
-<rect x="154" y="8" width="2" height="9" rx="1" fill="rgba(255,255,255,.3)"/>
-<rect x="194" y="8" width="2" height="9" rx="1" fill="rgba(255,255,255,.32)"/>
-<rect x="234" y="8" width="2" height="9" rx="1" fill="rgba(255,255,255,.28)"/>
-<!-- 훅 (S자 갈고리) -->
-<path d="M35 12 Q35 8 38 7 Q41 6 41 9 Q41 12 38 12" stroke="rgba(255,255,255,.5)" stroke-width="1.2" fill="none"/>
-<path d="M75 12 Q75 8 78 7 Q81 6 81 9 Q81 12 78 12" stroke="rgba(255,255,255,.45)" stroke-width="1.2" fill="none"/>
-<path d="M115 12 Q115 8 118 7 Q121 6 121 9 Q121 12 118 12" stroke="rgba(255,255,255,.5)" stroke-width="1.2" fill="none"/>
-<path d="M155 12 Q155 8 158 7 Q161 6 161 9 Q161 12 158 12" stroke="rgba(255,255,255,.48)" stroke-width="1.2" fill="none"/>
-<path d="M195 12 Q195 8 198 7 Q201 6 201 9 Q201 12 198 12" stroke="rgba(255,255,255,.45)" stroke-width="1.2" fill="none"/>
-<path d="M235 12 Q235 8 238 7 Q241 6 241 9 Q241 12 238 12" stroke="rgba(255,255,255,.4)" stroke-width="1.2" fill="none"/>
-<!-- 지육 1 -->
-<path d="M30 12 Q26 30 24 52 Q22 74 28 92 Q34 106 40 92 Q46 74 44 52 Q42 30 38 12 Z" fill="url(#m1)" opacity=".88"/>
-<path d="M32 12 Q29 30 28 52 Q27 72 31 88" stroke="rgba(0,0,0,.3)" stroke-width="1.5" fill="none"/>
-<path d="M38 12 Q41 30 42 52 Q43 72 39 88" stroke="rgba(255,255,255,.08)" stroke-width="1" fill="none"/>
-<!-- 지육 2 (조금 다른 형태) -->
-<path d="M70 12 Q65 28 62 50 Q60 72 66 90 Q72 105 80 90 Q86 72 84 50 Q81 28 76 12 Z" fill="url(#m2)" opacity=".9"/>
-<path d="M73 12 Q69 28 68 50 Q67 70 70 86" stroke="rgba(0,0,0,.25)" stroke-width="1.5" fill="none"/>
-<!-- 지육 3 -->
-<path d="M110 12 Q106 30 104 53 Q102 76 108 94 Q114 108 122 94 Q128 76 126 53 Q123 30 118 12 Z" fill="url(#m1)" opacity=".85"/>
-<path d="M113 12 Q110 30 109 53 Q108 72 111 88" stroke="rgba(0,0,0,.3)" stroke-width="1.5" fill="none"/>
-<!-- 지육 4 -->
-<path d="M150 12 Q146 28 144 50 Q142 72 148 90 Q154 104 162 90 Q168 72 166 50 Q163 28 158 12 Z" fill="url(#m2)" opacity=".87"/>
-<!-- 지육 5 -->
-<path d="M190 12 Q186 30 184 52 Q182 74 188 92 Q194 106 202 92 Q208 74 206 52 Q203 30 198 12 Z" fill="url(#m1)" opacity=".82"/>
-<!-- 지육 6 -->
-<path d="M230 12 Q226 28 224 50 Q222 70 228 88 Q234 102 242 88 Q248 70 246 50 Q243 28 238 12 Z" fill="url(#m2)" opacity=".78"/>
-<!-- 고기 사이 그림자/음영 -->
-<rect x="46" y="14" width="16" height="96" fill="rgba(0,0,0,.3)"/>
-<rect x="86" y="14" width="16" height="96" fill="rgba(0,0,0,.28)"/>
-<rect x="128" y="14" width="14" height="96" fill="rgba(0,0,0,.3)"/>
-<rect x="168" y="14" width="14" height="96" fill="rgba(0,0,0,.28)"/>
-<rect x="208" y="14" width="14" height="96" fill="rgba(0,0,0,.3)"/>
-<!-- 바닥 -->
-<rect x="0" y="108" width="280" height="12" fill="rgba(0,0,0,.55)"/>
-<!-- 조명 반사 (천장) -->
-<ellipse cx="140" cy="2" rx="200" ry="40" fill="rgba(255,200,150,.06)"/>
-</script>
-<script type="text/x-svg-data" id="svg____________" data-bg="#2A0808">
-<defs>
-  <linearGradient id="b1" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#380E0E"/>
-    <stop offset="100%" stop-color="#180606"/>
-  </linearGradient>
-  <radialGradient id="rl1" cx="50%" cy="0%" r="80%">
-    <stop offset="0%" stop-color="rgba(255,180,100,.1)"/>
-    <stop offset="100%" stop-color="transparent"/>
-  </radialGradient>
-</defs>
-<rect width="280" height="120" fill="url(#b1)"/>
-<rect width="280" height="120" fill="url(#rl1)"/>
-<!-- 스테인리스 진열대 -->
-<rect x="8" y="56" width="264" height="7" rx="2" fill="rgba(200,200,200,.18)"/>
-<rect x="8" y="57" width="264" height="2" fill="rgba(255,255,255,.12)"/>
-<rect x="8" y="84" width="264" height="6" rx="2" fill="rgba(200,200,200,.14)"/>
-<!-- 선반 다리 -->
-<rect x="14" y="63" width="3" height="45" rx="1" fill="rgba(200,200,200,.15)"/>
-<rect x="263" y="63" width="3" height="45" rx="1" fill="rgba(200,200,200,.15)"/>
-<rect x="135" y="63" width="3" height="25" rx="1" fill="rgba(200,200,200,.1)"/>
-<!-- 곱창 (풍성하게 쌓인) -->
-<path d="M18 50 Q30 36 44 50 Q58 64 72 50 Q86 36 100 50 Q114 64 128 50 Q142 36 156 50 Q170 64 184 50 Q198 36 212 50 Q226 64 240 50 Q254 36 265 50" stroke="#CC3030" stroke-width="8" stroke-linecap="round" fill="none" opacity=".8"/>
-<path d="M18 54 Q30 40 44 54 Q58 68 72 54 Q86 40 100 54 Q114 68 128 54 Q142 40 156 54 Q170 68 184 54 Q198 40 212 54 Q226 68 240 54 Q254 40 265 54" stroke="#A82020" stroke-width="5" stroke-linecap="round" fill="none" opacity=".6"/>
-<path d="M18 47 Q30 33 44 47 Q58 61 72 47 Q86 33 100 47 Q114 61 128 47" stroke="#E04040" stroke-width="3" stroke-linecap="round" fill="none" opacity=".4"/>
-<!-- 대창 (둥글고 두꺼운) -->
-<ellipse cx="46" cy="75" rx="32" ry="11" fill="#9A2020" opacity=".7"/>
-<ellipse cx="46" cy="73" rx="30" ry="8" fill="#B82828" opacity=".5"/>
-<ellipse cx="46" cy="72" rx="24" ry="5" fill="rgba(255,100,100,.15)"/>
-<ellipse cx="140" cy="77" rx="38" ry="12" fill="#9A2020" opacity=".65"/>
-<ellipse cx="140" cy="75" rx="36" ry="9" fill="#B82828" opacity=".5"/>
-<ellipse cx="140" cy="74" rx="28" ry="5" fill="rgba(255,100,100,.12)"/>
-<ellipse cx="234" cy="75" rx="32" ry="11" fill="#9A2020" opacity=".6"/>
-<ellipse cx="234" cy="73" rx="30" ry="8" fill="#B82828" opacity=".45"/>
-<!-- 우설/스지 형태 -->
-<path d="M20 94 Q46 88 72 94 Q72 102 46 105 Q20 102 20 94 Z" fill="#8B1A1A" opacity=".55"/>
-<path d="M22 95 Q46 90 70 95" stroke="rgba(255,100,100,.2)" stroke-width="1" fill="none"/>
-<path d="M100 93 Q136 87 172 93 Q172 101 136 104 Q100 101 100 93 Z" fill="#8B1A1A" opacity=".5"/>
-<path d="M198 94 Q224 88 250 94 Q250 101 224 104 Q198 101 198 94 Z" fill="#8B1A1A" opacity=".52"/>
-<!-- 가격표 카드 -->
-<rect x="20" y="107" width="38" height="11" rx="2" fill="rgba(255,255,255,.12)"/>
-<rect x="22" y="109" width="22" height="3" rx="1" fill="rgba(255,255,255,.3)"/>
-<rect x="22" y="113" width="14" height="2" rx="1" fill="rgba(255,255,255,.2)"/>
-<rect x="120" y="107" width="40" height="11" rx="2" fill="rgba(255,255,255,.12)"/>
-<rect x="122" y="109" width="24" height="3" rx="1" fill="rgba(255,255,255,.3)"/>
-<rect x="216" y="107" width="38" height="11" rx="2" fill="rgba(255,255,255,.12)"/>
-<rect x="0" y="116" width="280" height="4" fill="rgba(0,0,0,.6)"/>
-</script>
-<script type="text/x-svg-data" id="svg_______" data-bg="#0E1A14">
-<defs>
-  <linearGradient id="b2" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#1A3020"/>
-    <stop offset="50%" stop-color="#0E1A14"/>
-    <stop offset="100%" stop-color="#060E0A"/>
-  </linearGradient>
-  <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#1C3040"/>
-    <stop offset="100%" stop-color="#0E1A14"/>
-  </linearGradient>
-  <radialGradient id="moon2" cx="80%" cy="15%" r="15%">
-    <stop offset="0%" stop-color="rgba(255,240,200,.6)"/>
-    <stop offset="100%" stop-color="transparent"/>
-  </radialGradient>
-</defs>
-<rect width="280" height="120" fill="url(#sky2)"/>
-<rect width="280" height="120" fill="url(#moon2)"/>
-<!-- 별 -->
-<circle cx="20" cy="8" r="1" fill="rgba(255,255,255,.6)"/>
-<circle cx="55" cy="14" r="0.8" fill="rgba(255,255,255,.5)"/>
-<circle cx="90" cy="6" r="1" fill="rgba(255,255,255,.55)"/>
-<circle cx="130" cy="10" r="0.7" fill="rgba(255,255,255,.45)"/>
-<circle cx="160" cy="5" r="1" fill="rgba(255,255,255,.5)"/>
-<!-- 달 -->
-<circle cx="242" cy="14" r="10" fill="rgba(255,240,200,.25)"/>
-<circle cx="238" cy="12" r="8" fill="rgba(20,40,60,.8)"/>
-<!-- 원거리 배경 건물 (실루엣) -->
-<rect x="220" y="55" width="22" height="55" fill="rgba(255,255,255,.04)"/>
-<rect x="246" y="62" width="18" height="48" fill="rgba(255,255,255,.035)"/>
-<rect x="264" y="58" width="16" height="52" fill="rgba(255,255,255,.03)"/>
-<!-- 원거리 굴뚝 -->
-<rect x="230" y="38" width="5" height="20" rx="1" fill="rgba(255,255,255,.07)"/>
-<rect x="250" y="44" width="5" height="18" rx="1" fill="rgba(255,255,255,.06)"/>
-<!-- 주 건물 (도축장) -->
-<rect x="10" y="42" width="200" height="68" rx="2" fill="rgba(255,255,255,.07)"/>
-<!-- 지붕 경사 -->
-<polygon points="8,42 110,22 214,42" fill="rgba(255,255,255,.05)"/>
-<polygon points="10,42 110,24 212,42" stroke="rgba(255,255,255,.12)" stroke-width="1" fill="none"/>
-<!-- 건물 창문 - 2층 -->
-<rect x="22" y="50" width="20" height="14" rx="1.5" fill="rgba(255,220,120,.22)"/>
-<rect x="22" y="50" width="20" height="14" rx="1.5" stroke="rgba(255,255,255,.1)" stroke-width="0.5" fill="none"/>
-<rect x="50" y="50" width="20" height="14" rx="1.5" fill="rgba(255,220,120,.18)"/>
-<rect x="78" y="50" width="20" height="14" rx="1.5" fill="rgba(255,220,120,.24)"/>
-<rect x="106" y="50" width="20" height="14" rx="1.5" fill="rgba(255,220,120,.16)"/>
-<rect x="134" y="50" width="20" height="14" rx="1.5" fill="rgba(255,220,120,.2)"/>
-<rect x="162" y="50" width="20" height="14" rx="1.5" fill="rgba(255,220,120,.18)"/>
-<!-- 창문 반사 효과 -->
-<rect x="24" y="51" width="6" height="4" rx="1" fill="rgba(255,255,255,.15)"/>
-<rect x="52" y="51" width="6" height="4" rx="1" fill="rgba(255,255,255,.12)"/>
-<rect x="80" y="51" width="6" height="4" rx="1" fill="rgba(255,255,255,.15)"/>
-<!-- 1층 -->
-<rect x="22" y="74" width="20" height="16" rx="1.5" fill="rgba(100,180,255,.15)"/>
-<rect x="50" y="74" width="20" height="16" rx="1.5" fill="rgba(100,180,255,.12)"/>
-<rect x="78" y="74" width="20" height="16" rx="1.5" fill="rgba(100,180,255,.15)"/>
-<rect x="106" y="74" width="20" height="16" rx="1.5" fill="rgba(100,180,255,.1)"/>
-<rect x="134" y="74" width="20" height="16" rx="1.5" fill="rgba(100,180,255,.13)"/>
-<rect x="162" y="74" width="20" height="16" rx="1.5" fill="rgba(100,180,255,.1)"/>
-<!-- 대문/입구 -->
-<rect x="86" y="82" width="38" height="28" rx="2" fill="rgba(255,255,255,.05)"/>
-<rect x="88" y="84" width="16" height="26" rx="1" fill="rgba(100,180,255,.12)"/>
-<rect x="108" y="84" width="16" height="26" rx="1" fill="rgba(100,180,255,.12)"/>
-<!-- 굴뚝 3개 -->
-<rect x="150" y="10" width="11" height="36" rx="2" fill="rgba(255,255,255,.12)"/>
-<rect x="150" y="10" width="11" height="36" rx="2" stroke="rgba(255,255,255,.06)" stroke-width="0.5" fill="none"/>
-<rect x="168" y="18" width="10" height="28" rx="2" fill="rgba(255,255,255,.1)"/>
-<rect x="184" y="14" width="11" height="32" rx="2" fill="rgba(255,255,255,.11)"/>
-<!-- 연기 (여러 레이어) -->
-<ellipse cx="155" cy="7" rx="12" ry="8" fill="rgba(200,200,200,.1)"/>
-<ellipse cx="160" cy="1" rx="16" ry="10" fill="rgba(200,200,200,.07)"/>
-<ellipse cx="173" cy="14" rx="10" ry="7" fill="rgba(200,200,200,.09)"/>
-<ellipse cx="178" cy="8" rx="13" ry="8" fill="rgba(200,200,200,.06)"/>
-<ellipse cx="189" cy="10" rx="11" ry="7" fill="rgba(200,200,200,.09)"/>
-<!-- 지면 -->
-<rect x="0" y="107" width="280" height="13" fill="rgba(0,0,0,.45)"/>
-<rect x="0" y="107" width="280" height="2" fill="rgba(255,255,255,.06)"/>
-<!-- 울타리 -->
-<rect x="10" y="100" width="2" height="8" rx="1" fill="rgba(255,255,255,.15)"/>
-<rect x="22" y="100" width="2" height="8" rx="1" fill="rgba(255,255,255,.12)"/>
-<rect x="34" y="100" width="2" height="8" rx="1" fill="rgba(255,255,255,.15)"/>
-<rect x="10" y="103" width="26" height="1.5" fill="rgba(255,255,255,.12)"/>
-</script>
-<script type="text/x-svg-data" id="svg_____OEM" data-bg="#0A1A0E">
-<defs>
-  <linearGradient id="b3" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#122018"/>
-    <stop offset="100%" stop-color="#060E08"/>
-  </linearGradient>
-  <linearGradient id="sky3" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#1A3048"/>
-    <stop offset="100%" stop-color="#0A1820"/>
-  </linearGradient>
-</defs>
-<rect width="280" height="120" fill="url(#sky3)"/>
-<!-- 구름 -->
-<ellipse cx="50" cy="16" rx="34" ry="12" fill="rgba(255,255,255,.06)"/>
-<ellipse cx="36" cy="18" rx="22" ry="9" fill="rgba(255,255,255,.05)"/>
-<ellipse cx="180" cy="10" rx="44" ry="14" fill="rgba(255,255,255,.055)"/>
-<ellipse cx="164" cy="13" rx="28" ry="10" fill="rgba(255,255,255,.045)"/>
-<!-- 메인 공장동 (넓고 낮은) -->
-<rect x="0" y="46" width="210" height="74" fill="rgba(255,255,255,.07)"/>
-<!-- 지붕 -->
-<rect x="0" y="40" width="210" height="8" fill="rgba(255,255,255,.1)"/>
-<rect x="0" y="39" width="210" height="2" fill="rgba(255,255,255,.2)"/>
-<!-- 부속 건물 -->
-<rect x="210" y="54" width="70" height="66" fill="rgba(255,255,255,.055)"/>
-<rect x="210" y="48" width="70" height="8" fill="rgba(255,255,255,.08)"/>
-<!-- 공장 창문 (3줄) -->
-<rect x="10" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.25)"/>
-<rect x="32" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.22)"/>
-<rect x="54" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.26)"/>
-<rect x="76" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.2)"/>
-<rect x="98" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.24)"/>
-<rect x="120" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.22)"/>
-<rect x="142" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.2)"/>
-<rect x="164" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.25)"/>
-<rect x="186" y="52" width="16" height="11" rx="1" fill="rgba(255,220,100,.18)"/>
-<rect x="10" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.16)"/>
-<rect x="32" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.14)"/>
-<rect x="54" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.17)"/>
-<rect x="76" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.13)"/>
-<rect x="98" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.16)"/>
-<rect x="120" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.14)"/>
-<rect x="142" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.15)"/>
-<rect x="164" y="70" width="16" height="11" rx="1" fill="rgba(100,180,255,.13)"/>
-<rect x="10" y="88" width="16" height="11" rx="1" fill="rgba(100,180,255,.12)"/>
-<rect x="32" y="88" width="16" height="11" rx="1" fill="rgba(100,180,255,.1)"/>
-<rect x="54" y="88" width="16" height="11" rx="1" fill="rgba(100,180,255,.13)"/>
-<rect x="76" y="88" width="16" height="11" rx="1" fill="rgba(100,180,255,.1)"/>
-<rect x="98" y="88" width="16" height="11" rx="1" fill="rgba(100,180,255,.12)"/>
-<!-- 부속동 창문 -->
-<rect x="218" y="58" width="14" height="10" rx="1" fill="rgba(255,220,100,.2)"/>
-<rect x="238" y="58" width="14" height="10" rx="1" fill="rgba(255,220,100,.18)"/>
-<rect x="258" y="58" width="14" height="10" rx="1" fill="rgba(255,220,100,.2)"/>
-<rect x="218" y="74" width="14" height="10" rx="1" fill="rgba(100,180,255,.13)"/>
-<rect x="238" y="74" width="14" height="10" rx="1" fill="rgba(100,180,255,.11)"/>
-<rect x="258" y="74" width="14" height="10" rx="1" fill="rgba(100,180,255,.13)"/>
-<!-- 굴뚝 4개 (다양한 높이) -->
-<rect x="186" y="6" width="10" height="38" rx="2" fill="rgba(255,255,255,.13)"/>
-<rect x="200" y="14" width="10" height="30" rx="2" fill="rgba(255,255,255,.11)"/>
-<rect x="214" y="8" width="10" height="36" rx="2" fill="rgba(255,255,255,.12)"/>
-<rect x="228" y="18" width="10" height="26" rx="2" fill="rgba(255,255,255,.1)"/>
-<!-- 연기 레이어드 -->
-<ellipse cx="191" cy="3" rx="14" ry="9" fill="rgba(180,180,180,.1)"/>
-<ellipse cx="196" cy="-2" rx="18" ry="11" fill="rgba(180,180,180,.07)"/>
-<ellipse cx="205" cy="11" rx="12" ry="8" fill="rgba(180,180,180,.09)"/>
-<ellipse cx="210" cy="5" rx="16" ry="10" fill="rgba(180,180,180,.06)"/>
-<ellipse cx="219" cy="5" rx="13" ry="8" fill="rgba(180,180,180,.1)"/>
-<ellipse cx="224" cy="0" rx="17" ry="10" fill="rgba(180,180,180,.07)"/>
-<ellipse cx="233" cy="15" rx="11" ry="7" fill="rgba(180,180,180,.08)"/>
-<!-- HACCP 인증 사인 -->
-<rect x="218" y="90" width="52" height="22" rx="3" fill="rgba(46,125,50,.25)"/>
-<rect x="218" y="90" width="52" height="22" rx="3" stroke="rgba(100,200,100,.2)" stroke-width="0.8" fill="none"/>
-<rect x="222" y="94" width="44" height="4" rx="2" fill="rgba(255,255,255,.25)"/>
-<rect x="222" y="101" width="32" height="3" rx="1" fill="rgba(255,255,255,.18)"/>
-<rect x="222" y="106" width="38" height="3" rx="1" fill="rgba(255,255,255,.14)"/>
-<!-- 지면 -->
-<rect x="0" y="108" width="280" height="12" fill="rgba(0,0,0,.5)"/>
-<rect x="0" y="107" width="280" height="2" fill="rgba(255,255,255,.06)"/>
-</script>
-<script type="text/x-svg-data" id="svg_________" data-bg="#08101C">
-<defs>
-  <linearGradient id="b4" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#0E1E36"/>
-    <stop offset="60%" stop-color="#080E18"/>
-    <stop offset="100%" stop-color="#040810"/>
-  </linearGradient>
-  <linearGradient id="road4" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#1A1A1A"/>
-    <stop offset="100%" stop-color="#0A0A0A"/>
-  </linearGradient>
-  <radialGradient id="hl4a" cx="85%" cy="85%" r="25%">
-    <stop offset="0%" stop-color="rgba(255,220,120,.4)"/>
-    <stop offset="100%" stop-color="transparent"/>
-  </radialGradient>
-  <radialGradient id="hl4b" cx="15%" cy="85%" r="15%">
-    <stop offset="0%" stop-color="rgba(180,200,255,.2)"/>
-    <stop offset="100%" stop-color="transparent"/>
-  </radialGradient>
-</defs>
-<rect width="280" height="120" fill="url(#b4)"/>
-<!-- 야간 하늘 별 -->
-<circle cx="14" cy="8" r="0.8" fill="rgba(255,255,255,.55)"/>
-<circle cx="44" cy="4" r="1" fill="rgba(255,255,255,.5)"/>
-<circle cx="72" cy="10" r="0.7" fill="rgba(255,255,255,.45)"/>
-<circle cx="110" cy="6" r="0.9" fill="rgba(255,255,255,.5)"/>
-<circle cx="148" cy="12" r="0.6" fill="rgba(255,255,255,.4)"/>
-<circle cx="178" cy="5" r="1" fill="rgba(255,255,255,.55)"/>
-<!-- 도로 (원근감) -->
-<rect x="0" y="86" width="280" height="34" fill="url(#road4)"/>
-<!-- 아스팔트 텍스처 -->
-<rect x="0" y="86" width="280" height="2" fill="rgba(255,255,255,.1)"/>
-<!-- 차선 중앙선 (황색) -->
-<rect x="0" y="101" width="38" height="3.5" rx="1" fill="rgba(255,220,60,.3)"/>
-<rect x="50" y="101" width="38" height="3.5" rx="1" fill="rgba(255,220,60,.3)"/>
-<rect x="100" y="101" width="38" height="3.5" rx="1" fill="rgba(255,220,60,.3)"/>
-<rect x="150" y="101" width="38" height="3.5" rx="1" fill="rgba(255,220,60,.3)"/>
-<rect x="200" y="101" width="38" height="3.5" rx="1" fill="rgba(255,220,60,.3)"/>
-<rect x="250" y="101" width="30" height="3.5" rx="1" fill="rgba(255,220,60,.3)"/>
-<!-- 헤드라이트 빛 효과 -->
-<rect width="280" height="120" fill="url(#hl4a)" opacity=".6"/>
-<rect width="280" height="120" fill="url(#hl4b)" opacity=".5"/>
-<!-- 원거리 소형 트럭 (작게, 흐릿) -->
-<rect x="4" y="68" width="20" height="14" rx="2" fill="rgba(255,255,255,.06)"/>
-<rect x="24" y="62" width="16" height="20" rx="2" fill="rgba(255,255,255,.07)"/>
-<circle cx="11" cy="84" r="4" fill="rgba(30,30,30,.95)"/>
-<circle cx="11" cy="84" r="2" fill="rgba(255,255,255,.1)"/>
-<circle cx="30" cy="84" r="4" fill="rgba(30,30,30,.95)"/>
-<circle cx="30" cy="84" r="2" fill="rgba(255,255,255,.1)"/>
-<!-- 전조등 -->
-<ellipse cx="40" cy="74" rx="6" ry="4" fill="rgba(255,240,180,.2)"/>
-<!-- 메인 냉동 트럭 (크게, 디테일) -->
-<!-- 컨테이너 박스 -->
-<rect x="46" y="38" width="158" height="52" rx="4" fill="rgba(220,235,255,.12)"/>
-<rect x="46" y="38" width="158" height="52" rx="4" stroke="rgba(255,255,255,.1)" stroke-width="0.8" fill="none"/>
-<!-- 컨테이너 리벳/보강재 -->
-<rect x="68" y="40" width="1.5" height="48" fill="rgba(255,255,255,.08)"/>
-<rect x="96" y="40" width="1.5" height="48" fill="rgba(255,255,255,.08)"/>
-<rect x="124" y="40" width="1.5" height="48" fill="rgba(255,255,255,.08)"/>
-<rect x="152" y="40" width="1.5" height="48" fill="rgba(255,255,255,.08)"/>
-<rect x="176" y="40" width="1.5" height="48" fill="rgba(255,255,255,.08)"/>
-<rect x="47" y="58" width="156" height="1.5" fill="rgba(255,255,255,.06)"/>
-<rect x="47" y="70" width="156" height="1.5" fill="rgba(255,255,255,.05)"/>
-<!-- 컨테이너 텍스트/로고 영역 -->
-<rect x="56" y="44" width="130" height="26" rx="2" fill="rgba(255,255,255,.05)"/>
-<rect x="62" y="50" width="70" height="5" rx="2" fill="rgba(255,255,255,.22)"/>
-<rect x="62" y="58" width="52" height="4" rx="2" fill="rgba(255,255,255,.16)"/>
-<!-- 냉동기 (앞쪽 상단) -->
-<rect x="46" y="30" width="30" height="12" rx="2" fill="rgba(150,170,200,.15)"/>
-<rect x="50" y="32" width="22" height="4" rx="1" fill="rgba(255,255,255,.12)"/>
-<!-- 캡 (운전석) -->
-<rect x="204" y="26" width="72" height="64" rx="5" fill="rgba(200,220,240,.15)"/>
-<rect x="204" y="26" width="72" height="64" rx="5" stroke="rgba(255,255,255,.1)" stroke-width="1" fill="none"/>
-<!-- 앞유리 -->
-<rect x="210" y="32" width="42" height="28" rx="3" fill="rgba(100,180,255,.2)"/>
-<rect x="212" y="34" width="38" height="24" rx="2" fill="rgba(100,180,255,.15)"/>
-<!-- 유리 반사 -->
-<path d="M214 35 L224 35 L218 50 L210 50 Z" fill="rgba(255,255,255,.08)"/>
-<!-- 측면 거울 -->
-<rect x="200" y="40" width="6" height="8" rx="1" fill="rgba(150,170,200,.25)"/>
-<!-- 사이드 창문 -->
-<rect x="256" y="34" width="16" height="14" rx="2" fill="rgba(100,180,255,.15)"/>
-<!-- 라디에이터 그릴 -->
-<rect x="272" y="44" width="4" height="30" rx="1" fill="rgba(255,255,255,.06)"/>
-<rect x="272" y="46" width="4" height="4" rx="1" fill="rgba(255,255,255,.12)"/>
-<rect x="272" y="52" width="4" height="4" rx="1" fill="rgba(255,255,255,.1)"/>
-<rect x="272" y="58" width="4" height="4" rx="1" fill="rgba(255,255,255,.12)"/>
-<!-- 헤드라이트 -->
-<rect x="270" y="68" width="8" height="6" rx="2" fill="rgba(255,240,180,.5)"/>
-<ellipse cx="274" cy="71" rx="4" ry="3" fill="rgba(255,240,180,.7)"/>
-<!-- 로고/번호판 -->
-<rect x="256" y="82" width="18" height="6" rx="1" fill="rgba(255,255,255,.18)"/>
-<!-- 바퀴들 (디테일) -->
-<circle cx="82" cy="92" r="14" fill="rgba(15,15,15,.98)"/>
-<circle cx="82" cy="92" r="10" fill="rgba(30,30,30,.9)"/>
-<circle cx="82" cy="92" r="6" fill="rgba(255,255,255,.1)"/>
-<circle cx="82" cy="92" r="3" fill="rgba(200,200,200,.15)"/>
-<circle cx="138" cy="92" r="14" fill="rgba(15,15,15,.98)"/>
-<circle cx="138" cy="92" r="10" fill="rgba(30,30,30,.9)"/>
-<circle cx="138" cy="92" r="6" fill="rgba(255,255,255,.1)"/>
-<circle cx="138" cy="92" r="3" fill="rgba(200,200,200,.15)"/>
-<circle cx="218" cy="92" r="12" fill="rgba(15,15,15,.98)"/>
-<circle cx="218" cy="92" r="8" fill="rgba(30,30,30,.9)"/>
-<circle cx="218" cy="92" r="5" fill="rgba(255,255,255,.1)"/>
-<circle cx="248" cy="92" r="12" fill="rgba(15,15,15,.98)"/>
-<circle cx="248" cy="92" r="8" fill="rgba(30,30,30,.9)"/>
-<circle cx="248" cy="92" r="5" fill="rgba(255,255,255,.1)"/>
-<!-- 바퀴 하단 차체 연결 -->
-<rect x="46" y="86" width="158" height="8" rx="2" fill="rgba(180,200,220,.1)"/>
-<!-- 눈꽃 아이콘 (냉동 표시) -->
-<g opacity=".55">
-<line x1="192" y1="48" x2="192" y2="62" stroke="rgba(150,220,255,.7)" stroke-width="1.5" stroke-linecap="round"/>
-<line x1="186" y1="51" x2="198" y2="59" stroke="rgba(150,220,255,.7)" stroke-width="1.5" stroke-linecap="round"/>
-<line x1="186" y1="59" x2="198" y2="51" stroke="rgba(150,220,255,.7)" stroke-width="1.5" stroke-linecap="round"/>
-<circle cx="192" cy="55" r="3" fill="rgba(150,220,255,.3)"/>
-</g>
-</script>
-<script type="text/x-svg-data" id="svg_____" data-bg="#140E28">
-<defs>
-  <linearGradient id="b5" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0%" stop-color="#1E1440"/>
-    <stop offset="100%" stop-color="#0C0820"/>
-  </linearGradient>
-  <radialGradient id="hl5" cx="50%" cy="50%" r="60%">
-    <stop offset="0%" stop-color="rgba(100,80,200,.15)"/>
-    <stop offset="100%" stop-color="transparent"/>
-  </radialGradient>
-</defs>
-<rect width="280" height="120" fill="url(#b5)"/>
-<rect width="280" height="120" fill="url(#hl5)"/>
-<!-- 배경 점 패턴 -->
-<circle cx="30" cy="20" r="1" fill="rgba(255,255,255,.08)"/>
-<circle cx="90" cy="10" r="1" fill="rgba(255,255,255,.06)"/>
-<circle cx="140" cy="22" r="1.2" fill="rgba(255,255,255,.07)"/>
-<circle cx="200" cy="8" r="1" fill="rgba(255,255,255,.08)"/>
-<circle cx="250" cy="18" r="1" fill="rgba(255,255,255,.06)"/>
-<!-- 연결선 (네트워크) -->
-<line x1="50" y1="60" x2="140" y2="60" stroke="rgba(100,80,200,.2)" stroke-width="1" stroke-dasharray="4,3"/>
-<line x1="140" y1="60" x2="230" y2="60" stroke="rgba(100,80,200,.2)" stroke-width="1" stroke-dasharray="4,3"/>
-<line x1="50" y1="60" x2="140" y2="30" stroke="rgba(100,80,200,.12)" stroke-width="1" stroke-dasharray="3,4"/>
-<line x1="230" y1="60" x2="140" y2="30" stroke="rgba(100,80,200,.12)" stroke-width="1" stroke-dasharray="3,4"/>
-<!-- 왼쪽 카드 -->
-<rect x="10" y="22" width="80" height="90" rx="8" fill="rgba(255,255,255,.07)"/>
-<rect x="10" y="22" width="80" height="90" rx="8" stroke="rgba(255,255,255,.08)" stroke-width="0.8" fill="none"/>
-<!-- 아바타 -->
-<circle cx="50" cy="44" r="18" fill="rgba(255,255,255,.12)"/>
-<circle cx="50" cy="42" r="12" fill="rgba(255,255,255,.16)"/>
-<circle cx="50" cy="40" r="8" fill="rgba(255,255,255,.18)"/>
-<!-- 머리카락 표현 -->
-<ellipse cx="50" cy="34" rx="8" ry="4" fill="rgba(100,60,20,.5)"/>
-<ellipse cx="50" cy="56" rx="16" ry="6" fill="rgba(255,255,255,.1)"/>
-<!-- 카드 내용 -->
-<rect x="18" y="70" width="64" height="5" rx="2" fill="rgba(255,255,255,.22)"/>
-<rect x="22" y="79" width="46" height="4" rx="2" fill="rgba(255,255,255,.14)"/>
-<rect x="18" y="87" width="56" height="3" rx="1" fill="rgba(255,255,255,.1)"/>
-<rect x="18" y="94" width="48" height="3" rx="1" fill="rgba(255,255,255,.08)"/>
-<!-- 태그 -->
-<rect x="18" y="101" width="22" height="8" rx="3" fill="rgba(46,125,50,.4)"/>
-<rect x="42" y="101" width="22" height="8" rx="3" fill="rgba(100,80,200,.3)"/>
-<!-- 중앙 카드 (강조 - 취업 성공) -->
-<rect x="99" y="10" width="82" height="100" rx="8" fill="rgba(255,255,255,.11)"/>
-<rect x="99" y="10" width="82" height="100" rx="8" stroke="rgba(124,110,200,.35)" stroke-width="1.5" fill="none"/>
-<!-- 글로우 효과 -->
-<rect x="99" y="10" width="82" height="100" rx="8" stroke="rgba(100,80,200,.15)" stroke-width="4" fill="none"/>
-<!-- 아바타 (더 크게) -->
-<circle cx="140" cy="36" r="20" fill="rgba(255,255,255,.15)"/>
-<circle cx="140" cy="34" r="14" fill="rgba(255,255,255,.18)"/>
-<circle cx="140" cy="32" r="9" fill="rgba(255,255,255,.2)"/>
-<ellipse cx="140" cy="28" rx="9" ry="4.5" fill="rgba(80,40,10,.5)"/>
-<ellipse cx="140" cy="52" rx="18" ry="7" fill="rgba(255,255,255,.12)"/>
-<!-- 중앙 카드 내용 -->
-<rect x="108" y="66" width="64" height="6" rx="2" fill="rgba(255,255,255,.28)"/>
-<rect x="112" y="76" width="56" height="4" rx="2" fill="rgba(255,255,255,.2)"/>
-<rect x="108" y="84" width="64" height="4" rx="2" fill="rgba(255,255,255,.15)"/>
-<rect x="108" y="92" width="50" height="3" rx="1" fill="rgba(255,255,255,.12)"/>
-<!-- 채용 뱃지 (초록) -->
-<rect x="108" y="100" width="64" height="14" rx="4" fill="rgba(46,125,50,.7)"/>
-<rect x="108" y="100" width="64" height="14" rx="4" stroke="rgba(100,200,100,.3)" stroke-width="0.8" fill="none"/>
-<rect x="116" y="104" width="48" height="4" rx="2" fill="rgba(255,255,255,.6)"/>
-<!-- 체크 아이콘 -->
-<circle cx="127" cy="106" r="4" fill="rgba(255,255,255,.3)"/>
-<path d="M125 106 L127 108 L131 104" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".8"/>
-<!-- 오른쪽 카드 -->
-<rect x="190" y="22" width="80" height="90" rx="8" fill="rgba(255,255,255,.07)"/>
-<rect x="190" y="22" width="80" height="90" rx="8" stroke="rgba(255,255,255,.08)" stroke-width="0.8" fill="none"/>
-<circle cx="230" cy="44" r="18" fill="rgba(255,255,255,.1)"/>
-<circle cx="230" cy="42" r="12" fill="rgba(255,255,255,.14)"/>
-<circle cx="230" cy="40" r="8" fill="rgba(255,255,255,.16)"/>
-<ellipse cx="230" cy="34" rx="8" ry="4" fill="rgba(60,30,80,.5)"/>
-<ellipse cx="230" cy="56" rx="16" ry="6" fill="rgba(255,255,255,.09)"/>
-<rect x="198" y="70" width="64" height="5" rx="2" fill="rgba(255,255,255,.2)"/>
-<rect x="202" y="79" width="46" height="4" rx="2" fill="rgba(255,255,255,.12)"/>
-<rect x="198" y="87" width="56" height="3" rx="1" fill="rgba(255,255,255,.09)"/>
-<rect x="198" y="101" width="24" height="8" rx="3" fill="rgba(100,80,200,.3)"/>
-<rect x="225" y="101" width="22" height="8" rx="3" fill="rgba(200,100,30,.3)"/>
-</script>
-<script type="text/x-svg-data" id="svg_______" data-bg="#1A0C00">
-<defs>
-  <linearGradient id="b6" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#241000"/>
-    <stop offset="100%" stop-color="#100800"/>
-  </linearGradient>
-  <linearGradient id="sky6" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#1C2840"/>
-    <stop offset="100%" stop-color="#181008"/>
-  </linearGradient>
-  <radialGradient id="sun6" cx="70%" cy="40%" r="30%">
-    <stop offset="0%" stop-color="rgba(255,160,60,.2)"/>
-    <stop offset="100%" stop-color="transparent"/>
-  </radialGradient>
-</defs>
-<rect width="280" height="120" fill="url(#sky6)"/>
-<rect width="280" height="120" fill="url(#sun6)"/>
-<!-- 노을 -->
-<ellipse cx="196" cy="45" rx="80" ry="50" fill="rgba(255,120,30,.06)"/>
-<!-- 구름 -->
-<ellipse cx="50" cy="28" rx="36" ry="12" fill="rgba(255,160,80,.08)"/>
-<ellipse cx="35" cy="30" rx="22" ry="9" fill="rgba(255,160,80,.06)"/>
-<!-- 도로 (원근감 있게) -->
-<rect x="0" y="96" width="280" height="24" fill="rgba(0,0,0,.6)"/>
-<rect x="0" y="94" width="280" height="4" fill="rgba(50,50,50,.8)"/>
-<!-- 보도 -->
-<rect x="0" y="88" width="280" height="8" fill="rgba(120,100,80,.25)"/>
-<rect x="0" y="87" width="280" height="1.5" fill="rgba(255,255,255,.06)"/>
-<!-- 보도 타일 라인 -->
-<line x1="28" y1="88" x2="28" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
-<line x1="56" y1="88" x2="56" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
-<line x1="84" y1="88" x2="84" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
-<line x1="112" y1="88" x2="112" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
-<line x1="140" y1="88" x2="140" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
-<line x1="168" y1="88" x2="168" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
-<line x1="196" y1="88" x2="196" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
-<line x1="224" y1="88" x2="224" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
-<line x1="252" y1="88" x2="252" y2="96" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
-<!-- 차선 -->
-<rect x="0" y="106" width="36" height="2.5" rx="1" fill="rgba(255,255,255,.18)"/>
-<rect x="50" y="106" width="36" height="2.5" rx="1" fill="rgba(255,255,255,.18)"/>
-<rect x="100" y="106" width="36" height="2.5" rx="1" fill="rgba(255,255,255,.18)"/>
-<rect x="150" y="106" width="36" height="2.5" rx="1" fill="rgba(255,255,255,.18)"/>
-<rect x="200" y="106" width="36" height="2.5" rx="1" fill="rgba(255,255,255,.18)"/>
-<rect x="250" y="106" width="30" height="2.5" rx="1" fill="rgba(255,255,255,.18)"/>
-<!-- 정육점 (왼쪽) -->
-<rect x="4" y="46" width="80" height="44" rx="3" fill="rgba(255,255,255,.08)"/>
-<!-- 간판 -->
-<rect x="4" y="40" width="80" height="10" rx="3" fill="rgba(200,50,50,.45)"/>
-<rect x="4" y="40" width="80" height="10" rx="3" stroke="rgba(255,255,255,.08)" stroke-width="0.5" fill="none"/>
-<rect x="8" y="43" width="72" height="4" rx="2" fill="rgba(255,255,255,.4)"/>
-<!-- 조명 -->
-<circle cx="12" cy="40" r="3.5" fill="rgba(255,220,100,.5)"/>
-<circle cx="76" cy="40" r="3.5" fill="rgba(255,220,100,.45)"/>
-<ellipse cx="44" cy="46" rx="40" ry="8" fill="rgba(255,220,100,.04)"/>
-<!-- 쇼윈도 (2칸) -->
-<rect x="8" y="56" width="30" height="32" rx="2" fill="rgba(120,180,255,.16)"/>
-<rect x="10" y="58" width="26" height="28" rx="1" fill="rgba(120,180,255,.1)"/>
-<!-- 윈도 반사 -->
-<path d="M11 59 L20 59 L15 74 L8 74 Z" fill="rgba(255,255,255,.07)"/>
-<rect x="44" y="56" width="30" height="32" rx="2" fill="rgba(120,180,255,.16)"/>
-<rect x="46" y="58" width="26" height="28" rx="1" fill="rgba(120,180,255,.1)"/>
-<path d="M47 59 L56 59 L51 74 L44 74 Z" fill="rgba(255,255,255,.07)"/>
-<!-- 윈도 텍스트 -->
-<rect x="12" y="74" width="22" height="3" rx="1" fill="rgba(255,255,255,.2)"/>
-<rect x="48" y="74" width="22" height="3" rx="1" fill="rgba(255,255,255,.2)"/>
-<!-- 고깃집 (중앙, 가장 크게) -->
-<rect x="92" y="32" width="96" height="58" rx="3" fill="rgba(255,255,255,.1)"/>
-<rect x="92" y="32" width="96" height="58" rx="3" stroke="rgba(255,255,255,.06)" stroke-width="0.5" fill="none"/>
-<!-- 간판 -->
-<rect x="92" y="24" width="96" height="12" rx="3" fill="rgba(180,60,20,.5)"/>
-<rect x="92" y="24" width="96" height="12" rx="3" stroke="rgba(255,255,255,.1)" stroke-width="0.5" fill="none"/>
-<rect x="98" y="27" width="84" height="6" rx="2" fill="rgba(255,255,255,.45)"/>
-<!-- 간판 불빛 -->
-<circle cx="98" cy="24" r="4" fill="rgba(255,200,80,.5)"/>
-<circle cx="182" cy="24" r="4" fill="rgba(255,200,80,.5)"/>
-<ellipse cx="140" cy="32" rx="50" ry="10" fill="rgba(255,200,80,.03)"/>
-<!-- 고깃집 쇼윈도 (3칸) -->
-<rect x="96" y="44" width="34" height="44" rx="2" fill="rgba(120,180,255,.15)"/>
-<rect x="98" y="46" width="30" height="40" rx="1" fill="rgba(120,180,255,.1)"/>
-<path d="M99 47 L112 47 L106 65 L96 65 Z" fill="rgba(255,255,255,.06)"/>
-<rect x="133" y="44" width="34" height="44" rx="2" fill="rgba(120,180,255,.15)"/>
-<rect x="135" y="46" width="30" height="40" rx="1" fill="rgba(120,180,255,.1)"/>
-<path d="M136 47 L149 47 L143 65 L133 65 Z" fill="rgba(255,255,255,.06)"/>
-<rect x="150" y="44" width="34" height="44" rx="2" fill="rgba(120,180,255,.15)"/>
-<rect x="152" y="46" width="30" height="40" rx="1" fill="rgba(120,180,255,.1)"/>
-<!-- 메뉴 보드 -->
-<rect x="100" y="78" width="80" height="8" rx="1" fill="rgba(0,0,0,.2)"/>
-<rect x="104" y="80" width="30" height="3" rx="1" fill="rgba(255,255,255,.2)"/>
-<rect x="140" y="80" width="36" height="3" rx="1" fill="rgba(255,255,255,.16)"/>
-<!-- 축산마트 (오른쪽) -->
-<rect x="196" y="44" width="80" height="46" rx="3" fill="rgba(255,255,255,.07)"/>
-<!-- 간판 -->
-<rect x="196" y="36" width="80" height="12" rx="3" fill="rgba(40,100,40,.5)"/>
-<rect x="196" y="36" width="80" height="12" rx="3" stroke="rgba(255,255,255,.07)" stroke-width="0.5" fill="none"/>
-<rect x="200" y="39" width="72" height="6" rx="2" fill="rgba(255,255,255,.38)"/>
-<circle cx="202" cy="36" r="3.5" fill="rgba(255,220,80,.45)"/>
-<circle cx="270" cy="36" r="3.5" fill="rgba(255,220,80,.4)"/>
-<!-- 마트 윈도 -->
-<rect x="200" y="56" width="28" height="32" rx="2" fill="rgba(120,180,255,.13)"/>
-<rect x="202" y="58" width="24" height="28" rx="1" fill="rgba(120,180,255,.09)"/>
-<path d="M203 59 L214 59 L209 74 L200 74 Z" fill="rgba(255,255,255,.05)"/>
-<rect x="234" y="56" width="28" height="32" rx="2" fill="rgba(120,180,255,.13)"/>
-<rect x="236" y="58" width="24" height="28" rx="1" fill="rgba(120,180,255,.09)"/>
-<path d="M237 59 L248 59 L243 74 L234 74 Z" fill="rgba(255,255,255,.05)"/>
-<!-- 건물 사이 골목 그림자 -->
-<rect x="84" y="32" width="10" height="60" fill="rgba(0,0,0,.25)"/>
-<rect x="188" y="36" width="10" height="56" fill="rgba(0,0,0,.22)"/>
-</script>
 
 </body>
 </html>

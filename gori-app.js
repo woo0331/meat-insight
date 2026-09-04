@@ -3096,11 +3096,22 @@ async function renderMktStrip(){
 }
 G.renderMktStrip=renderMktStrip;
 
+/* ── 홈/내부 구분: 모바일에서 홈만 헤더를 숨깁니다 ── */
+function markHome(p){
+  document.body.classList.toggle("on-home", (p||"h")==="h");
+}
+function patchHomeFlag(){
+  var orig=window.go;
+  window.go=function(p){ orig(p); markHome(p); };
+  markHome((document.querySelector(".pg.on")||{}).id==="pg-h"?"h":"x");
+}
+
 /* ── 초기화 ── */
 function initRedesign(){
   patchReqCards();
   patchSupCards();
   patchCatTiles();
+  patchHomeFlag();
   if(typeof patchOnboard==="function") patchOnboard();
   patchRegionDefault();
   patchFab();

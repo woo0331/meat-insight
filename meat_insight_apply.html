@@ -8,15 +8,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://js.tosspayments.com/v1/payment"></script>
-  <style>
-    :root{--navy:#0b1f3a;--gold:#b8945a;--gold2:#d4a96a;--white:#fff;--off:#f8f6f2;--muted:#6b7280;--line:#e8e2d8;--green:#166534;--green-bg:#f0fdf4;--shadow:0 8px 32px rgba(11,31,58,.10);--radius:20px}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+    :root{--navy:#12161B;--gold:#D91F3A;--gold2:#E5455C;--white:#fff;--off:#FAFAF8;--muted:#6E7480;--line:#EAE8E4;--green:#1B7A46;--green-bg:#f0fdf4;--shadow:0 8px 32px rgba(18,22,27,.10);--radius:20px}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth}
     body{font-family:'Noto Sans KR',sans-serif;background:var(--off);color:var(--navy);overflow-x:hidden}
     .nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 32px;background:rgba(248,246,242,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--line)}
     .nav-brand{display:flex;align-items:center;gap:12px;text-decoration:none}
-    .nav-logo{width:40px;height:40px;border-radius:10px;background:var(--navy);color:var(--gold);display:grid;place-items:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:900}
-    .nav-brand-text b{display:block;font-size:14px;font-weight:900;color:var(--navy)}
+    .nav-logo{width:40px;height:40px;border-radius:10px;background:var(--navy);color:var(--gold);display:grid;place-items:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:700}
+    .nav-brand-text b{display:block;font-size:14px;font-weight:700;color:var(--navy)}
     .nav-brand-text span{display:block;font-size:11px;color:var(--muted)}
     .nav-right{display:flex;gap:8px}
     .nav-btn{padding:9px 18px;border-radius:999px;font-size:13px;font-weight:700;text-decoration:none;border:1.5px solid var(--line);color:var(--navy);transition:background .15s}
@@ -36,12 +37,12 @@
     @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
     .page-header{margin-bottom:40px}
     .page-label{font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.5px;margin-bottom:10px}
-    .page-title{font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,38px);font-weight:900;color:var(--navy);line-height:1.15;margin-bottom:12px}
+    .page-title{font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,38px);font-weight:700;color:var(--navy);line-height:1.15;margin-bottom:12px}
     .page-desc{font-size:16px;color:var(--muted);line-height:1.7;max-width:50ch}
     .form-layout{display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start}
     @media(max-width:800px){.form-layout{grid-template-columns:1fr}}
     .form-card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:32px;box-shadow:var(--shadow)}
-    .form-section-title{font-size:15px;font-weight:900;color:var(--navy);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+    .form-section-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
     .fields{display:flex;flex-direction:column;gap:16px;margin-bottom:24px}
     .field{display:flex;flex-direction:column;gap:6px}
     .field label{font-size:13px;font-weight:700;color:var(--navy)}
@@ -55,14 +56,14 @@
     .plan-opt:hover{border-color:var(--gold)}
     .plan-opt.selected{border-color:var(--navy);background:var(--white)}
     .plan-opt-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-    .plan-opt-name{font-size:15px;font-weight:900;color:var(--navy)}
-    .plan-opt-price{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--gold)}
+    .plan-opt-name{font-size:15px;font-weight:700;color:var(--navy)}
+    .plan-opt-price{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--gold)}
     .plan-opt-desc{font-size:13px;color:var(--muted);line-height:1.6}
-    .plan-badge-rec{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:10px;font-weight:900;margin-left:6px}
-    .btn-submit{width:100%;padding:17px;border-radius:14px;background:var(--navy);color:var(--gold);font-size:16px;font-weight:900;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s,transform .15s;box-shadow:0 4px 20px rgba(11,31,58,.25);margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px}
+    .plan-badge-rec{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:10px;font-weight:700;margin-left:6px}
+    .btn-submit{width:100%;padding:17px;border-radius:14px;background:var(--navy);color:var(--gold);font-size:16px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s,transform .15s;box-shadow:0 4px 20px rgba(18,22,27,.25);margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px}
     .btn-submit:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
     .btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
-    .spinner{width:18px;height:18px;border:2.5px solid rgba(184,148,90,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;display:none}
+    .spinner{width:18px;height:18px;border:2.5px solid rgba(217,31,58,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;display:none}
     .spinner.show{display:block}
     @keyframes spin{to{transform:rotate(360deg)}}
     .submit-note{text-align:center;font-size:12px;color:var(--muted);margin-top:10px}
@@ -76,57 +77,57 @@
     .pay-opt-icon{font-size:24px}
     .pay-opt-name{font-size:15px;font-weight:700;color:var(--navy)}
     .pay-opt-desc{font-size:12px;color:var(--muted)}
-    .bank-info{background:linear-gradient(135deg,#f8f4ee,#f0e8d8);border:1px solid rgba(184,148,90,.3);border-radius:14px;padding:24px;margin-top:16px;display:none}
+    .bank-info{background:linear-gradient(135deg,#f8f4ee,#f0e8d8);border:1px solid rgba(217,31,58,.3);border-radius:14px;padding:24px;margin-top:16px;display:none}
     .bank-info.show{display:block}
-    .bank-info-title{font-size:14px;font-weight:900;color:var(--navy);margin-bottom:14px}
-    .bank-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(184,148,90,.2);font-size:14px}
+    .bank-info-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:14px}
+    .bank-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(217,31,58,.2);font-size:14px}
     .bank-row:last-child{border-bottom:none}
     .bank-label{color:var(--muted)}
-    .bank-val{font-weight:900;color:var(--navy)}
-    .bank-amount{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--gold)}
-    .bank-notice{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.7;background:rgba(11,31,58,.04);border-radius:8px;padding:10px 12px}
+    .bank-val{font-weight:700;color:var(--navy)}
+    .bank-amount{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--gold)}
+    .bank-notice{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.7;background:rgba(18,22,27,.04);border-radius:8px;padding:10px 12px}
     .success-box{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:60px 40px;text-align:center;box-shadow:var(--shadow);display:none}
     .success-box.show{display:block;animation:fadeUp .4s ease both}
     .success-icon{font-size:56px;margin-bottom:20px}
-    .success-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--navy);margin-bottom:12px}
+    .success-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--navy);margin-bottom:12px}
     .success-desc{font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:32px}
     .success-info{background:var(--off);border-radius:14px;padding:20px;margin-bottom:32px;text-align:left}
     .success-info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
     .success-info-row:last-child{border-bottom:none}
     .success-info-label{color:var(--muted)}
     .success-info-val{font-weight:700;color:var(--navy)}
-    .btn-back-main{padding:14px 32px;border-radius:999px;background:var(--navy);color:var(--gold);font-size:15px;font-weight:900;text-decoration:none;display:inline-block}
+    .btn-back-main{padding:14px 32px;border-radius:999px;background:var(--navy);color:var(--gold);font-size:15px;font-weight:700;text-decoration:none;display:inline-block}
     .sidebar{display:flex;flex-direction:column;gap:16px}
     .side-card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:var(--shadow)}
-    .side-card-title{font-size:15px;font-weight:900;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+    .side-card-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px}
     .side-items{display:flex;flex-direction:column;gap:10px}
     .side-item{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--muted);line-height:1.6}
     .side-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:7px}
     .side-highlight{background:linear-gradient(135deg,var(--navy),#1a3560);border-radius:16px;padding:24px}
-    .side-highlight-title{font-size:16px;font-weight:900;color:#fff;margin-bottom:8px}
+    .side-highlight-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:8px}
     .side-highlight-desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:16px}
-    .side-highlight-num{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:var(--gold);margin-bottom:4px}
+    .side-highlight-num{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:var(--gold);margin-bottom:4px}
     .side-highlight-sub{font-size:12px;color:rgba(255,255,255,.4)}
     .price-summary{background:var(--navy);border-radius:14px;padding:20px;margin-bottom:16px}
     .price-summary-label{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:6px}
-    .price-summary-amount{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;color:var(--gold)}
+    .price-summary-amount{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--gold)}
     .price-summary-plan{font-size:13px;color:rgba(255,255,255,.6);margin-top:4px}
-    .sticky-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;width:min(900px,calc(100% - 32px));padding:12px 20px;background:rgba(11,31,58,.95);backdrop-filter:blur(20px);border:1px solid rgba(184,148,90,.2);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .sticky-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;width:min(900px,calc(100% - 32px));padding:12px 20px;background:rgba(18,22,27,.95);backdrop-filter:blur(20px);border:1px solid rgba(217,31,58,.2);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:space-between;gap:12px}
     .sticky-text{font-size:13px;font-weight:700;color:#fff}
     .sticky-text small{display:block;font-size:11px;color:rgba(255,255,255,.4);font-weight:400}
     .sticky-actions{display:flex;gap:8px}
-    .sticky-btn{padding:10px 18px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:13px;font-weight:900;text-decoration:none;white-space:nowrap}
-    .sticky-btn.outline{background:transparent;border:1.5px solid rgba(184,148,90,.4);color:var(--gold)}
+    .sticky-btn{padding:10px 18px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap}
+    .sticky-btn.outline{background:transparent;border:1.5px solid rgba(217,31,58,.4);color:var(--gold)}
 
     /* 계산기 유도 배너 */
     .calc-guide-banner{background:linear-gradient(135deg,var(--navy),#1a3560);border-radius:16px;padding:28px 32px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
     .calc-guide-text{color:#fff}
-    .calc-guide-text h3{font-size:18px;font-weight:900;margin-bottom:6px}
+    .calc-guide-text h3{font-size:18px;font-weight:700;margin-bottom:6px}
     .calc-guide-text p{font-size:13px;color:rgba(255,255,255,.6);line-height:1.6}
     .calc-guide-steps{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
-    .calc-guide-step{background:rgba(255,255,255,.08);border:1px solid rgba(184,148,90,.25);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:rgba(255,255,255,.8)}
+    .calc-guide-step{background:rgba(255,255,255,.08);border:1px solid rgba(217,31,58,.25);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:rgba(255,255,255,.8)}
     .calc-guide-arrow{color:var(--gold);font-size:16px}
-    .calc-guide-btn{padding:14px 28px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:15px;font-weight:900;text-decoration:none;white-space:nowrap;flex-shrink:0;transition:opacity .15s}
+    .calc-guide-btn{padding:14px 28px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:15px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;transition:opacity .15s}
     .calc-guide-btn:hover{opacity:.88}
 
     /* 계산기 결과 불러오기 */
@@ -136,16 +137,16 @@
     .calc-result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
     .calc-result-item{text-align:center;background:#fff;border-radius:10px;padding:12px 8px}
     .calc-result-label{font-size:10px;color:var(--muted);margin-bottom:4px}
-    .calc-result-val{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--navy)}
+    .calc-result-val{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--navy)}
     .calc-result-val.gold{color:var(--gold)}
 
     /* 공급 연결 스타일 */
     .tracker-section{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:28px;box-shadow:var(--shadow)}
-    .tracker-title{font-size:14px;font-weight:900;color:var(--navy);margin-bottom:18px}
+    .tracker-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:18px}
     .tracker-steps{display:flex;align-items:center}
     .tracker-step{flex:1;text-align:center;position:relative;z-index:1}
-    .tracker-dot{width:36px;height:36px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;border:2px solid var(--line);background:#fff;color:var(--muted)}
-    .tracker-dot.active{background:var(--gold);border-color:var(--gold);color:var(--navy);box-shadow:0 0 0 4px rgba(184,148,90,.2)}
+    .tracker-dot{width:36px;height:36px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:2px solid var(--line);background:#fff;color:var(--muted)}
+    .tracker-dot.active{background:var(--gold);border-color:var(--gold);color:var(--navy);box-shadow:0 0 0 4px rgba(217,31,58,.2)}
     .tracker-label{font-size:11px;font-weight:700;color:var(--muted)}
     .tracker-label.active{color:var(--navy)}
     .tracker-line{flex:1;height:2px;background:var(--line);margin-top:-22px}
@@ -156,17 +157,17 @@
     .supply-vis-icon{font-size:28px;margin-bottom:6px}
     .supply-vis-name{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:2px}
     .supply-vis-sub{font-size:11px;color:var(--muted)}
-    .supply-vis-check{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--gold);display:none;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+    .supply-vis-check{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--gold);display:none;align-items:center;justify-content:center;font-size:10px;font-weight:700}
     .supply-vis-card.active .supply-vis-check{display:flex}
-    .saving-calc{background:linear-gradient(135deg,#f8f4ee,#f0e8d8);border:1px solid rgba(184,148,90,.25);border-radius:16px;padding:22px;margin-bottom:20px}
-    .saving-title{font-size:14px;font-weight:900;color:var(--navy);margin-bottom:14px}
+    .saving-calc{background:linear-gradient(135deg,#f8f4ee,#f0e8d8);border:1px solid rgba(217,31,58,.25);border-radius:16px;padding:22px;margin-bottom:20px}
+    .saving-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:14px}
     .saving-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
     .saving-row label{font-size:12px;font-weight:700;color:var(--muted);min-width:80px}
-    .saving-input{flex:1;min-width:100px;padding:9px 12px;border-radius:8px;border:1.5px solid rgba(184,148,90,.3);font-size:14px;font-weight:700;font-family:inherit;color:var(--navy);background:#fff;outline:none}
+    .saving-input{flex:1;min-width:100px;padding:9px 12px;border-radius:8px;border:1.5px solid rgba(217,31,58,.3);font-size:14px;font-weight:700;font-family:inherit;color:var(--navy);background:#fff;outline:none}
     .saving-input:focus{border-color:var(--gold)}
     .saving-result{background:var(--navy);border-radius:12px;padding:16px;margin-top:14px}
     .saving-result-label{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px}
-    .saving-result-val{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--gold)}
+    .saving-result-val{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--gold)}
     .saving-result-sub{font-size:12px;color:rgba(255,255,255,.45);margin-top:4px}
   </style>
 </head>
@@ -431,14 +432,14 @@
             </div>
             <div class="plan-opt-desc" style="margin-bottom:12px">계산기 수치 기반 맞춤 PDF 리포트 · 1영업일 내 이메일·카카오톡 전달</div>
             <div style="display:flex;flex-direction:column;gap:6px">
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 업종·지역·평수 기반 예상 매출·순이익 분석</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 손익분기점 계산 (일 최소 방문객)</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 원가율·마진율 구조 분석</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 업계 평균 대비 비교표</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 투자 회수 기간 계산</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 담당자 핵심 조언 1건 포함</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 업종·지역·평수 기반 예상 매출·순이익 분석</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 손익분기점 계산 (일 최소 방문객)</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 원가율·마진율 구조 분석</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 업계 평균 대비 비교표</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 투자 회수 기간 계산</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 담당자 핵심 조언 1건 포함</div>
             </div>
-            <div style="margin-top:12px;background:rgba(184,148,90,.1);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--gold);font-weight:700">
+            <div style="margin-top:12px;background:rgba(217,31,58,.1);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--gold);font-weight:700">
               📌 계산기 수치 입력 후 신청 시 더 정확한 리포트 제공
             </div>
             <div style="margin-top:8px;background:var(--off);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--muted)">결제 후 1영업일 내 PDF 전달 · 부가세 별도</div>
@@ -452,20 +453,20 @@
             </div>
             <div class="plan-opt-desc" style="margin-bottom:12px">실제 운영에 필요한 12가지 데이터 자료 · 이메일·카카오톡으로 전달</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 상권·입지 분석 자료</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 창업 비용 견적 가이드</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 인허가·행정 절차 가이드</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 원가·수율 분석표</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 메뉴 구성 가이드</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 초도 물량 구성 추천</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 월별 손익 관리표 (엑셀)</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 재고 관리 가이드</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 인건비 구조 가이드</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 네이버 플레이스 최적화</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 단골 고객 만들기 전략</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:900">✓</span> 거래선 우선 연결 매칭</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 상권·입지 분석 자료</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 창업 비용 견적 가이드</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 인허가·행정 절차 가이드</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 원가·수율 분석표</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 메뉴 구성 가이드</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 초도 물량 구성 추천</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 월별 손익 관리표 (엑셀)</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 재고 관리 가이드</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 인건비 구조 가이드</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 네이버 플레이스 최적화</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 단골 고객 만들기 전략</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 거래선 우선 연결 매칭</div>
             </div>
-            <div style="margin-top:12px;background:rgba(184,148,90,.1);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--gold);font-weight:700">📌 결제 후 3~5영업일 내 자료 전달 · 부가세 별도 · 자료 제공 전 전액 환불 가능</div>
+            <div style="margin-top:12px;background:rgba(217,31,58,.1);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--gold);font-weight:700">📌 결제 후 3~5영업일 내 자료 전달 · 부가세 별도 · 자료 제공 전 전액 환불 가능</div>
           </div>
         </div>
 
@@ -563,7 +564,7 @@
             <div class="side-item"><div class="side-dot"></div>지역·업종·평수 입력 → 즉시 예상 수익 확인</div>
             <div class="side-item"><div class="side-dot"></div>5종 계산기 모두 무료</div>
           </div>
-          <a href="meat_insight_calculator.html?from=report" style="display:block;margin-top:14px;padding:11px;border-radius:10px;background:var(--navy);color:var(--gold);font-size:13px;font-weight:900;text-align:center;text-decoration:none">📊 계산기 바로가기</a>
+          <a href="meat_insight_calculator.html?from=report" style="display:block;margin-top:14px;padding:11px;border-radius:10px;background:var(--navy);color:var(--gold);font-size:13px;font-weight:700;text-align:center;text-decoration:none">📊 계산기 바로가기</a>
         </div>
         <div class="side-card">
           <div class="side-card-title"><span>💬</span> 자주 묻는 질문</div>
@@ -591,7 +592,7 @@
 const SUPABASE_URL='https://igignylgzjphtnyxhhsd.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnaWdueWxnempwaHRueXhoaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDUyMDAsImV4cCI6MjA4OTA4MTIwMH0.3u5gCw1dnG1YSmrzhN3PGVOMoQ1LBtGw0ToNhSeL42A';
 const TOSS_CLIENT_KEY='test_ck_Z1aOwX7K8mXm9ekAmxPmryQxzvNP';
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
 let selectedPlan='premium',selectedPayment='kakaopay';
 const planPrices={basic:200000,premium:1500000};
 const planNames={basic:'창업 리포트',premium:'비대면 컨설팅'};

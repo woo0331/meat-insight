@@ -50,6 +50,9 @@ values ('beef', '한우 등심', '1+', 64000, '원/kg', current_date);
 | `gori-app.js` | 위 기능의 애플리케이션 로직 |
 | `db/phase2_schema.sql` | DB 확장 — 견적·후기·당일알바·알림 (추가 전용) |
 | `db/phase3_schema.sql` | DB 확장 — 채팅·매칭 알림·인증·거래·시세 (추가 전용) |
+| `db/phase4_admin.sql` | DB 확장 — 관리자 권한 + 기존 테이블 RLS (추가 전용) |
+| `admin.html` | **관리자 콘솔** — 인증 심사·요청·견적·거래·시세 운영 |
+| `og.png` | 카톡·SNS 공유 썸네일 (1200×630) |
 | `dashboard.html` | 운영 허브 |
 | `purchase_request.html` / `suppliers.html` / `jobs.html` | 관리자 CRUD |
 | `meat_insight_*.html` | 창업 컨설팅 브랜드 페이지 (신청·진단·계산기·사례·파트너·리포트·관리자) |
@@ -86,6 +89,22 @@ values ('beef', '한우 등심', '1+', 64000, '원/kg', current_date);
 1. Supabase 대시보드 → **SQL Editor**
 2. `db/phase2_schema.sql` 내용을 붙여넣고 **Run**
 3. 이어서 `db/phase3_schema.sql` 도 **Run** (채팅·매칭 알림·인증·거래·시세)
+4. 마지막으로 `db/phase4_admin.sql` **Run** — 그 안의 **3번 블록**에서 본인 이메일을
+   관리자로 등록하세요. 등록해야 `admin.html` 에 로그인할 수 있습니다.
+
+### 관리자 콘솔 (`/admin.html`)
+
+Supabase Auth 로그인 + `admins` 표 대조로 접근을 통제합니다.
+프론트엔드 비밀번호가 아니라 실제 계정 인증입니다.
+
+| 탭 | 기능 |
+|---|---|
+| 대시보드 | 요청·견적·거래·업체 현황, 인증 대기·시세 미입력 알림 |
+| 인증 심사 | 사업자·HACCP·축산물허가 승인/반려 → 업체 배지 자동 반영 |
+| 업체 | 목록·수동 인증·삭제 |
+| 요청 / 견적 / 거래 | 조회, 거래 상태 변경 |
+| 당일알바 / 후기 | 조회·삭제 |
+| 시세 | **입력·수정·삭제** — 여기 입력한 값이 홈 상단과 견적 「시세 대비 %」에 사용됩니다 |
 
 스크립트는 **추가 전용**입니다. `DROP` / `DELETE` / `TRUNCATE` 가 없고, 기존 컬럼을
 변경하지 않으며, 여러 번 실행해도 안전합니다.

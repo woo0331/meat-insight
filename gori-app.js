@@ -1588,7 +1588,7 @@ function renderMyPanel(){
           : '<div class="ghint" style="margin-bottom:12px;">등록한 업체가 없습니다. 업체를 등록하면 요청에 견적을 보낼 수 있습니다.</div>')+
         '<button class="gbtn gbtn-p gbtn-sm" onclick="go(&quot;sj&quot;)">업체 등록하기</button></div>'+
       '<div class="gcard"><div class="gcard-t">운영</div>'+
-        '<div class="grow keep"><button class="gbtn gbtn-w gbtn-sm" onclick="location.href=\'meat_insight_admin.html\'">관리자</button>'+
+        '<div class="grow keep"><button class="gbtn gbtn-w gbtn-sm" onclick="location.href=\'admin.html\'">관리자 콘솔</button>'+
         '<button class="gbtn gbtn-w gbtn-sm" onclick="location.href=\'meat_insight_apply.html\'">컨설팅 신청</button></div></div>';
   }
 }

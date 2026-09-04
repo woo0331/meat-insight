@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>고리 관리자 콘솔</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'><rect width='26' height='26' rx='7' fill='%23D91F3A'/><circle cx='13' cy='13' r='6' fill='white'/></svg>">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gn:#D91F3A;--gn2:#A8142A;--gnl:#FDECEE;--gn-on-tint:#A8142A;
+  --amber:#F5A524;--amber-tint:#FFF4DF;
+  --ink900:#12161B;--ink800:#1B2129;
+  --ink:#14181C;--ink2:#3A4149;--ink3:#6E7480;--ink4:#71767F;
+  --line:#EAE8E4;--page:#F5F4F1;--card:#fff;
+  --ok:#1B7A46;--okl:#E3F5EA;--blue:#2F6FE0;--bluebg:#EAF1FD;
+  --font:"Pretendard Variable",Pretendard,"Noto Sans KR",system-ui,sans-serif;
+  --r:12px;
+}
+body{font-family:var(--font);background:var(--page);color:var(--ink);letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:var(--font)}
+
+/* 로그인 */
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:linear-gradient(155deg,#12161B 0%,#1A1418 45%,#3E1119 100%)}
+.gate-box{background:#fff;border-radius:18px;padding:32px 28px;width:100%;max-width:380px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.gate-lg{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.gate-lg i{width:32px;height:32px;border-radius:10px;background:var(--gn);display:flex;align-items:center;justify-content:center;font-style:normal}
+.gate-t{font-size:19px;font-weight:700;letter-spacing:-.03em}
+.gate-d{font-size:13px;color:var(--ink3);margin-bottom:22px}
+
+/* 레이아웃 */
+.top{position:sticky;top:0;z-index:50;background:var(--ink900);color:#fff;padding:0 20px;height:56px;display:flex;align-items:center;gap:14px}
+.top-lg{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;letter-spacing:-.03em}
+.top-lg i{width:26px;height:26px;border-radius:8px;background:var(--gn);display:flex;align-items:center;justify-content:center;font-style:normal;font-size:13px}
+.top-r{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12.5px;color:rgba(255,255,255,.6)}
+.tabs{background:#fff;border-bottom:1px solid var(--line);padding:0 20px;display:flex;gap:2px;overflow-x:auto;position:sticky;top:56px;z-index:49;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:14px 14px;font-size:13.5px;font-weight:600;color:var(--ink3);cursor:pointer;
+  border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab.on{color:var(--gn);border-bottom-color:var(--gn)}
+.tab .n{display:inline-block;margin-left:5px;background:var(--gnl);color:var(--gn-on-tint);border-radius:999px;padding:1px 7px;font-size:11px}
+.wrap{max-width:1240px;margin:0 auto;padding:22px 20px 80px}
+
+/* 공통 */
+.h{font-size:19px;font-weight:700;letter-spacing:-.03em;margin-bottom:4px}
+.hd{font-size:13px;color:var(--ink3);margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+.card-h{padding:14px 16px;border-bottom:1px solid var(--line);font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card-b{padding:16px}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:15px 14px}
+.kpi-v{font-size:24px;font-weight:700;letter-spacing:-.04em}
+.kpi-l{font-size:12px;color:var(--ink3);margin-top:3px}
+.kpi.hot{border-color:var(--gn);background:var(--gnl)}
+.kpi.hot .kpi-v{color:var(--gn)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:11px 14px;background:#FAFAF8;border-bottom:1px solid var(--line);
+  font-size:11.5px;font-weight:700;color:var(--ink3);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FCFCFB}
+.tw{overflow-x:auto}
+.bd{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.bd-w{background:var(--amber-tint);color:#8A5B00}
+.bd-o{background:var(--okl);color:var(--ok)}
+.bd-g{background:#F1F0EC;color:var(--ink3)}
+.bd-r{background:var(--gnl);color:var(--gn-on-tint)}
+.bd-b{background:var(--bluebg);color:var(--blue)}
+.b{border:none;border-radius:8px;font-size:12.5px;font-weight:700;padding:8px 13px;cursor:pointer;white-space:nowrap}
+.b-p{background:var(--gn);color:#fff}.b-p:hover{background:var(--gn2)}
+.b-o{background:var(--ok);color:#fff}
+.b-w{background:#fff;color:var(--ink2);border:1px solid #D8D5CE}.b-w:hover{border-color:var(--gn);color:var(--gn)}
+.b-d{background:#fff;color:#B3261E;border:1px solid #F0CFC9}
+.b:disabled{opacity:.45;cursor:not-allowed}
+.acts{display:flex;gap:6px}
+label{display:block;font-size:12.5px;font-weight:700;color:var(--ink2);margin:14px 0 6px}
+label:first-child{margin-top:0}
+.in{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;color:var(--ink);outline:none;background:#fff}
+.in:focus{border-color:var(--gn)}
+.row{display:grid;gap:10px}
+.r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:1fr 1fr 1fr}.r4{grid-template-columns:repeat(4,1fr)}
+.msg{margin-top:12px;padding:11px 13px;border-radius:9px;font-size:13px;font-weight:600;display:none}
+.msg.on{display:block}
+.msg.ok{background:var(--okl);color:var(--ok)}
+.msg.err{background:var(--gnl);color:var(--gn-on-tint)}
+.empty{padding:44px 20px;text-align:center;color:var(--ink4);font-size:13.5px}
+.note{background:var(--amber-tint);border:1px solid #F3DFB4;border-radius:var(--r);padding:14px 16px;font-size:13px;
+  color:#7A5200;line-height:1.6;margin-bottom:14px}
+.note code{background:#fff;border:1px solid #F0DDB2;border-radius:4px;padding:1px 6px;font-size:12px}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ink4)}
+.tr{color:var(--ink3);font-size:12px}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}.r4,.r3{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}.r2,.r3,.r4{grid-template-columns:1fr}.wrap{padding:16px 14px 80px}}
+</style>
+</head>
+<body>
+
+<!-- ══ 로그인 ══ -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <div class="gate-lg"><i>🔴</i><span class="gate-t">고리 관리자</span></div>
+    <div class="gate-d">등록된 관리자 계정만 접근할 수 있습니다.</div>
+    <label>이메일</label><input class="in" id="lg-email" type="email" placeholder="admin@example.com" autocomplete="username">
+    <label>비밀번호</label><input class="in" id="lg-pw" type="password" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="b b-p" style="width:100%;margin-top:18px;padding:13px" id="lg-btn" onclick="doLogin()">로그인</button>
+    <div class="msg" id="lg-msg"></div>
+    <div style="font-size:11.5px;color:var(--ink4);margin-top:16px;line-height:1.6">
+      계정이 없으면 고리 사이트에서 회원가입 후,<br>Supabase 에서 <code style="font-size:11px">db/phase4_admin.sql</code> 의 3번을 실행해 관리자로 등록하세요.
+    </div>
+  </div>
+</div>
+
+<!-- ══ 콘솔 ══ -->
+<div id="app" style="display:none">
+  <div class="top">
+    <div class="top-lg"><i>🔴</i>고리 관리자</div>
+    <div class="top-r">
+      <span id="me"></span>
+      <button class="b b-w" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2)" onclick="doLogout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div class="wrap" id="view"></div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   고리 관리자 콘솔
+   · Supabase Auth 로그인 + admins 표 기반 권한 확인
+   · 신규 테이블(quotes/orders/verifications/market_prices…) 운영
+   · 기존 관리자 페이지(meat_insight_admin.html 등)는 그대로 둡니다
+   ════════════════════════════════════════════════════════════ */
+var SUPA_URL="https://igignylgzjphtnyxhhsd.supabase.co";
+var SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnaWdueWxnempwaHRueXhoaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDUyMDAsImV4cCI6MjA4OTA4MTIwMH0.3u5gCw1dnG1YSmrzhN3PGVOMoQ1LBtGw0ToNhSeL42A";
+var sb = window.supabase ? window.supabase.createClient(SUPA_URL, SUPA_KEY) : null;
+
+var ME={email:"",name:""}, TAB="dash", D={}, SCHEMA={};
+var TABS=[["dash","대시보드"],["verify","인증 심사"],["sup","업체"],["req","요청"],
+          ["quote","견적"],["order","거래"],["daily","당일알바"],["review","후기"],["market","시세"]];
+
+function $(i){return document.getElementById(i)}
+function esc(v){return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function won(n){return (n==null||isNaN(n))?"—":Number(n).toLocaleString("ko-KR")}
+function num(v){var n=parseFloat(String(v==null?"":v).replace(/[^0-9.\-]/g,""));return isNaN(n)?null:n}
+function dt(s){if(!s)return "—";var d=new Date(s);if(isNaN(d))return "—";
+  return d.getFullYear()+"."+String(d.getMonth()+1).padStart(2,"0")+"."+String(d.getDate()).padStart(2,"0")+" "+
+    String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+function day(s){if(!s)return "—";var d=new Date(s);if(isNaN(d))return String(s);
+  return (d.getMonth()+1)+"."+d.getDate()}
+function msg(id,t,k){var e=$(id);if(!e)return;e.textContent=t;e.className="msg on "+(k||"ok")}
+function missingTable(err){
+  if(!err)return false;var m=(err.message||"")+" "+(err.code||"");
+  if(/'[A-Za-z0-9_]+'\s+column/.test(m))return false;
+  return /42P01|PGRST205|Could not find the table|relation .* does not exist/i.test(m)}
+
+async function q(table, build){
+  if(!sb) return {data:[],err:"no-client"};
+  try{
+    var b=sb.from(table).select("*"); if(build) b=build(b);
+    var r=await b;
+    if(r.error){ if(missingTable(r.error)){SCHEMA[table]=false;return {data:[],missing:true};} return {data:[],err:r.error.message}; }
+    SCHEMA[table]=true; return {data:r.data||[]};
+  }catch(e){ return {data:[],err:String(e)} }
+}
+async function upd(table,patch,id){
+  var r=await sb.from(table).update(patch).eq("id",id);
+  return r.error?r.error.message:null;
+}
+async function del(table,id){
+  var r=await sb.from(table).delete().eq("id",id);
+  return r.error?r.error.message:null;
+}
+
+/* ── 로그인 ── */
+async function doLogin(){
+  var email=($("lg-email").value||"").trim(), pw=$("lg-pw").value;
+  if(!email||!pw){ msg("lg-msg","이메일과 비밀번호를 입력하세요.","err"); return; }
+  if(!sb){ msg("lg-msg","서버에 연결할 수 없습니다.","err"); return; }
+  var btn=$("lg-btn"); btn.disabled=true; btn.textContent="확인 중…";
+  try{
+    var r=await sb.auth.signInWithPassword({email:email,password:pw});
+    if(r.error) throw r.error;
+    var ok=await checkAdmin(r.data.user);
+    if(!ok){ await sb.auth.signOut();
+      msg("lg-msg","관리자 권한이 없는 계정입니다. db/phase4_admin.sql 3번으로 등록하세요.","err"); return; }
+    enter(r.data.user);
+  }catch(e){ msg("lg-msg", e.message||"로그인에 실패했습니다.","err"); }
+  finally{ btn.disabled=false; btn.textContent="로그인"; }
+}
+async function checkAdmin(user){
+  if(!user) return false;
+  var r=await sb.from("admins").select("email,name").eq("email",user.email).limit(1);
+  if(r.error){
+    if(missingTable(r.error)){ msg("lg-msg","admins 표가 없습니다. db/phase4_admin.sql 을 먼저 실행하세요.","err"); }
+    return false;
+  }
+  if(r.data && r.data.length){ ME.name=r.data[0].name||""; return true; }
+  return false;
+}
+async function doLogout(){ try{ await sb.auth.signOut(); }catch(e){} location.reload(); }
+
+function enter(user){
+  ME.email=user.email;
+  $("gate").style.display="none"; $("app").style.display="block";
+  $("me").textContent=(ME.name?ME.name+" · ":"")+ME.email;
+  $("tabs").innerHTML=TABS.map(function(t){
+    return '<button class="tab'+(TAB===t[0]?" on":"")+'" id="tb-'+t[0]+'" onclick="go(\''+t[0]+'\')">'+t[1]+'</button>';
+  }).join("");
+  go("dash");
+}
+async function boot(){
+  if(!sb) return;
+  try{
+    var s=await sb.auth.getSession();
+    var u=s&&s.data&&s.data.session?s.data.session.user:null;
+    if(u && await checkAdmin(u)) enter(u);
+  }catch(e){}
+}
+boot();
+
+/* ── 라우팅 ── */
+function go(t){
+  TAB=t;
+  document.querySelectorAll(".tab").forEach(function(b){ b.classList.toggle("on", b.id==="tb-"+t); });
+  $("view").innerHTML='<div class="empty">불러오는 중…</div>';
+  ({dash:vDash,verify:vVerify,sup:vSup,req:vReq,quote:vQuote,order:vOrder,
+    daily:vDaily,review:vReview,market:vMarket}[t]||vDash)();
+  window.scrollTo(0,0);
+}
+function setup(name){
+  return '<div class="note"><b>'+esc(name)+' 표가 아직 없습니다.</b><br>'+
+    'Supabase → SQL Editor 에서 <code>db/phase2_schema.sql</code> → <code>db/phase3_schema.sql</code> → '+
+    '<code>db/phase4_admin.sql</code> 순서로 실행하세요.</div>'}
+function tbl(head, rows, emptyTxt){
+  if(!rows.length) return '<div class="card"><div class="empty">'+esc(emptyTxt||"내역이 없습니다")+'</div></div>';
+  return '<div class="card"><div class="tw"><table><thead><tr>'+
+    head.map(function(h){return '<th>'+esc(h)+'</th>'}).join("")+'</tr></thead><tbody>'+rows.join("")+'</tbody></table></div></div>';
+}
+
+/* ── 대시보드 ── */
+async function vDash(){
+  var [rq,sp,qt,od,vf,dj,rv,mp]=await Promise.all([
+    q("purchase_requests"),q("suppliers"),q("quotes"),q("orders"),
+    q("verifications"),q("day_jobs"),q("reviews"),q("market_prices")]);
+  D={rq:rq.data,sp:sp.data,qt:qt.data,od:od.data,vf:vf.data,dj:dj.data,rv:rv.data,mp:mp.data};
+  var pend=D.vf.filter(function(v){return (v.status||"심사중")==="심사중"}).length;
+  var ing=D.od.filter(function(o){return o.status!=="완료"&&o.status!=="취소"}).length;
+  var noQuote=D.rq.filter(function(r){return (Number(r.quote_count)||0)===0 && r.status!=="완료" && r.status!=="마감"}).length;
+  var todayMp=D.mp.filter(function(m){return String(m.price_date||"")===new Date().toISOString().slice(0,10)}).length;
+
+  $("view").innerHTML=
+    '<div class="h">대시보드</div><div class="hd">오늘 확인해야 할 것</div>'+
+    (pend?'<div class="note"><b>인증 심사 대기 '+pend+'건</b>이 있습니다. 승인해야 업체에 인증 배지가 표시됩니다. '+
+      '<button class="b b-p" style="margin-left:8px" onclick="go(\'verify\')">심사하러 가기</button></div>':'')+
+    (!todayMp?'<div class="note"><b>오늘 시세가 입력되지 않았습니다.</b> 시세는 홈 상단에 노출되며, 입력 전까지 샘플로 표시됩니다. '+
+      '<button class="b b-p" style="margin-left:8px" onclick="go(\'market\')">시세 입력</button></div>':'')+
+    '<div class="kpis">'+
+      k(D.rq.length,"전체 요청")+
+      k(noQuote,"견적 0건 요청",noQuote>0)+
+      k(D.qt.length,"받은 견적")+
+      k(ing,"진행 중 거래")+
+      k(D.sp.length,"등록 업체")+
+      k(pend,"인증 대기",pend>0)+
+    '</div>'+
+    '<div class="row r2">'+
+      '<div class="card"><div class="card-h">최근 요청</div>'+recent(D.rq,function(r){
+        return '<tr><td>'+esc(r.title||r.description||r.category||"—")+'</td>'+
+          '<td class="tr">'+esc(r.region||"—")+'</td>'+
+          '<td><span class="bd '+(r.status==="완료"?"bd-o":(r.status==="진행중"?"bd-b":"bd-g"))+'">'+esc(r.status||"견적대기")+'</span></td>'+
+          '<td class="tr">견적 '+(r.quote_count||0)+'</td><td class="tr">'+dt(r.created_at)+'</td></tr>';
+      },["요청","지역","상태","견적","등록"])+'</div>'+
+      '<div class="card"><div class="card-h">최근 업체</div>'+recent(D.sp,function(s){
+        return '<tr><td><b>'+esc(s.name||"—")+'</b></td><td class="tr">'+esc(s.region||"—")+'</td>'+
+          '<td>'+(s.is_verified?'<span class="bd bd-o">인증</span>':'<span class="bd bd-g">대기</span>')+'</td>'+
+          '<td class="tr">거래 '+(s.deal_count||0)+'</td><td class="tr">'+dt(s.created_at)+'</td></tr>';
+      },["업체","지역","인증","거래","등록"])+'</div>'+
+    '</div>';
+  function k(v,l,hot){return '<div class="kpi'+(hot?" hot":"")+'"><div class="kpi-v">'+v+'</div><div class="kpi-l">'+l+'</div></div>'}
+  function recent(arr,fn,head){
+    var rows=arr.slice().sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at)}).slice(0,6).map(fn);
+    if(!rows.length) return '<div class="empty">없습니다</div>';
+    return '<div class="tw"><table><thead><tr>'+head.map(function(h){return '<th>'+h+'</th>'}).join("")+
+      '</tr></thead><tbody>'+rows.join("")+'</tbody></table></div>';
+  }
+}
+
+/* ── 인증 심사 ── */
+var VK={brn:"사업자등록",haccp:"HACCP 인증",livestock_permit:"축산물 영업허가"};
+async function vVerify(){
+  var r=await q("verifications",function(b){return b.order("created_at",{ascending:false})});
+  if(r.missing){ $("view").innerHTML='<div class="h">인증 심사</div>'+setup("verifications"); return; }
+  var sp=await q("suppliers"); var smap={}; sp.data.forEach(function(s){smap[String(s.id)]=s});
+  var rows=r.data.map(function(v){
+    var s=smap[String(v.target_id)]||{};
+    var st=v.status||"심사중";
+    return '<tr><td><b>'+esc(s.name||v.target_id)+'</b><div class="mono">'+esc(v.target_id)+'</div></td>'+
+      '<td>'+esc(VK[v.kind]||v.kind)+'</td>'+
+      '<td class="mono" style="font-size:13px;color:var(--ink)">'+esc(v.number||"—")+'</td>'+
+      '<td class="tr">'+esc(v.holder||"—")+'</td>'+
+      '<td><span class="bd '+(st==="승인"?"bd-o":(st==="반려"?"bd-r":"bd-w"))+'">'+esc(st)+'</span></td>'+
+      '<td class="tr">'+dt(v.created_at)+'</td>'+
+      '<td><div class="acts">'+
+        (st==="심사중"
+          ? '<button class="b b-o" onclick="approve(\''+v.id+'\',\''+esc(v.kind)+'\',\''+esc(v.target_id)+'\')">승인</button>'+
+            '<button class="b b-d" onclick="reject(\''+v.id+'\')">반려</button>'
+          : '<button class="b b-w" onclick="reopen(\''+v.id+'\')">심사중으로</button>')+
+      '</div></td></tr>';
+  });
+  $("view").innerHTML='<div class="h">인증 심사</div>'+
+    '<div class="hd">승인하면 업체 프로필과 견적 카드에 인증 배지가 즉시 표시됩니다.</div>'+
+    '<div class="msg" id="vf-msg"></div>'+
+    tbl(["업체","종류","번호","상호·대표","상태","신청일","처리"],rows,"인증 신청이 없습니다");
+}
+async function approve(id,kind,supId){
+  if(!confirm("이 인증을 승인할까요?\n업체 프로필에 배지가 표시됩니다.")) return;
+  var e1=await upd("verifications",{status:"승인",reviewed_at:new Date().toISOString()},id);
+  if(e1){ msg("vf-msg","승인 실패: "+e1,"err"); return; }
+  var patch={};
+  if(kind==="brn") { patch.brn_verified=true; patch.is_verified=true; }
+  else if(kind==="haccp") patch.haccp=true;
+  else if(kind==="livestock_permit") patch.livestock_permit=true;
+  if(supId) await upd("suppliers",patch,supId);
+  msg("vf-msg","승인했습니다. 업체 배지가 반영되었습니다.","ok");
+  setTimeout(vVerify,600);
+}
+async function reject(id){
+  var memo=prompt("반려 사유를 입력하세요 (선택)");
+  var e=await upd("verifications",{status:"반려",memo:memo||null,reviewed_at:new Date().toISOString()},id);
+  if(e){ msg("vf-msg","반려 실패: "+e,"err"); return; }
+  msg("vf-msg","반려 처리했습니다.","ok"); setTimeout(vVerify,600);
+}
+async function reopen(id){
+  await upd("verifications",{status:"심사중",reviewed_at:null},id); vVerify();
+}
+
+/* ── 업체 ── */
+async function vSup(){
+  var r=await q("suppliers",function(b){return b.order("created_at",{ascending:false})});
+  var rows=r.data.map(function(s){
+    var bd="";
+    if(s.is_verified) bd+='<span class="bd bd-o">인증</span> ';
+    if(s.haccp) bd+='<span class="bd bd-r">HACCP</span> ';
+    if(s.livestock_permit) bd+='<span class="bd bd-b">허가</span> ';
+    return '<tr><td><b>'+esc(s.name||"—")+'</b><div class="mono">'+esc(s.contact||"")+'</div></td>'+
+      '<td class="tr">'+esc(s.region||"—")+'</td>'+
+      '<td class="tr">'+esc((s.categories||[]).slice(0,3).join(", ")||"—")+'</td>'+
+      '<td>'+(bd||'<span class="bd bd-g">미인증</span>')+'</td>'+
+      '<td class="tr">★ '+(Number(s.rating)||0).toFixed(1)+' · 거래 '+(s.deal_count||0)+'</td>'+
+      '<td class="tr">'+dt(s.created_at)+'</td>'+
+      '<td><div class="acts">'+
+        '<button class="b b-w" onclick="togVerify(\''+s.id+'\','+(s.is_verified?"true":"false")+')">'+(s.is_verified?"인증 해제":"인증")+'</button>'+
+        '<button class="b b-d" onclick="rm(\'suppliers\',\''+s.id+'\',\''+esc(s.name)+'\')">삭제</button>'+
+      '</div></td></tr>';
+  });
+  $("view").innerHTML='<div class="h">업체 <span class="tr">'+r.data.length+'곳</span></div>'+
+    '<div class="hd">인증 버튼은 수동 인증입니다. 서류 심사는 「인증 심사」 탭에서 처리하세요.</div>'+
+    '<div class="msg" id="sp-msg"></div>'+
+    tbl(["업체","지역","취급","인증","실적","등록","관리"],rows,"등록된 업체가 없습니다");
+}
+async function togVerify(id,cur){
+  var e=await upd("suppliers",{is_verified:!cur},id);
+  if(e){ msg("sp-msg","변경 실패: "+e,"err"); return; }
+  vSup();
+}
+async function rm(table,id,name){
+  if(!confirm("'"+(name||id)+"' 을(를) 삭제할까요?\n되돌릴 수 없습니다.")) return;
+  var e=await del(table,id);
+  if(e){ alert("삭제 실패: "+e); return; }
+  go(TAB);
+}
+
+/* ── 요청 ── */
+async function vReq(){
+  var r=await q("purchase_requests",function(b){return b.order("created_at",{ascending:false})});
+  var rows=r.data.map(function(x){
+    return '<tr><td><b>'+esc(x.title||x.description||"—")+'</b><div class="mono">'+esc(x.request_number||"")+'</div></td>'+
+      '<td class="tr">'+esc(x.category||"—")+'</td>'+
+      '<td class="tr">'+esc(x.region||"—")+'</td>'+
+      '<td class="tr">'+esc(x.buyer_name||"—")+'<br><span class="mono">'+esc(x.buyer_phone||"")+'</span></td>'+
+      '<td><span class="bd '+(x.status==="완료"?"bd-o":(x.status==="진행중"?"bd-b":"bd-g"))+'">'+esc(x.status||"견적대기")+'</span></td>'+
+      '<td class="tr">'+(x.quote_count||0)+'</td>'+
+      '<td class="tr">'+(x.notified_cnt!=null?x.notified_cnt+"곳":"—")+'</td>'+
+      '<td class="tr">'+dt(x.created_at)+'</td>'+
+      '<td><button class="b b-d" onclick="rm(\'purchase_requests\',\''+x.id+'\',\''+esc(x.title||"요청")+'\')">삭제</button></td></tr>';
+  });
+  $("view").innerHTML='<div class="h">요청 <span class="tr">'+r.data.length+'건</span></div>'+
+    '<div class="hd">「알림」은 등록 시 조건이 맞아 알림을 받은 업체 수입니다. 0곳이면 매칭 조건을 점검하세요.</div>'+
+    tbl(["요청","분야","지역","요청자","상태","견적","알림","등록","관리"],rows,"요청이 없습니다");
+}
+
+/* ── 견적 ── */
+async function vQuote(){
+  var r=await q("quotes",function(b){return b.order("created_at",{ascending:false})});
+  if(r.missing){ $("view").innerHTML='<div class="h">견적</div>'+setup("quotes"); return; }
+  var rows=r.data.map(function(x){
+    return '<tr><td><b>'+esc(x.supplier_name||"—")+'</b><div class="mono">'+esc(x.contact||"")+'</div></td>'+
+      '<td><b>'+won(num(x.total_amount!=null?x.total_amount:x.price))+'</b> <span class="tr">'+esc(x.price_unit||"")+'</span>'+
+        (x.unit_price?'<div class="tr">단가 '+won(num(x.unit_price))+' × '+won(num(x.qty))+esc(x.qty_unit||"")+'</div>':'')+'</td>'+
+      '<td class="tr">'+esc(x.lead_time||"—")+'</td>'+
+      '<td class="tr">'+esc(x.region||"—")+'</td>'+
+      '<td><span class="bd '+(x.status==="선택됨"?"bd-o":(x.status==="미선택"?"bd-g":"bd-w"))+'">'+esc(x.status||"대기")+'</span></td>'+
+      '<td class="mono">'+esc(x.request_id||"")+'</td>'+
+      '<td class="tr">'+dt(x.created_at)+'</td>'+
+      '<td><button class="b b-d" onclick="rm(\'quotes\',\''+x.id+'\',\''+esc(x.supplier_name)+' 견적\')">삭제</button></td></tr>';
+  });
+  $("view").innerHTML='<div class="h">견적 <span class="tr">'+r.data.length+'건</span></div><div class="hd">업체가 요청에 보낸 견적입니다.</div>'+
+    tbl(["업체","금액","납기","지역","상태","요청 ID","등록","관리"],rows,"견적이 없습니다");
+}
+
+/* ── 거래 ── */
+var OF=["거래확정","준비중","배송중","완료"];
+async function vOrder(){
+  var r=await q("orders",function(b){return b.order("created_at",{ascending:false})});
+  if(r.missing){ $("view").innerHTML='<div class="h">거래</div>'+setup("orders"); return; }
+  var rows=r.data.map(function(o){
+    var opts=OF.concat(["취소"]).map(function(s){
+      return '<option'+(o.status===s?" selected":"")+'>'+s+'</option>'}).join("");
+    return '<tr><td><b>'+esc(o.title||"—")+'</b></td>'+
+      '<td class="tr">'+esc(o.supplier_name||"—")+'</td>'+
+      '<td class="tr">'+esc(o.buyer_name||"—")+'<br><span class="mono">'+esc(o.buyer_phone||"")+'</span></td>'+
+      '<td><b>'+won(num(o.amount))+'</b></td>'+
+      '<td><select class="in" style="padding:7px 9px;font-size:12.5px;width:auto" onchange="setOrder(\''+o.id+'\',this.value)">'+opts+'</select></td>'+
+      '<td class="tr">'+dt(o.created_at)+'</td></tr>';
+  });
+  $("view").innerHTML='<div class="h">거래 <span class="tr">'+r.data.length+'건</span></div>'+
+    '<div class="hd">상태를 바꾸면 요청자·업체의 거래관리 화면에 즉시 반영됩니다.</div>'+
+    '<div class="msg" id="od-msg"></div>'+
+    tbl(["거래","업체","요청자","금액","상태","등록"],rows,"거래가 없습니다");
+}
+async function setOrder(id,st){
+  var e=await upd("orders",{status:st, completed_at: st==="완료"?new Date().toISOString():null},id);
+  msg("od-msg", e?("변경 실패: "+e):"상태를 "+st+"(으)로 변경했습니다.", e?"err":"ok");
+}
+
+/* ── 당일알바 ── */
+async function vDaily(){
+  var r=await q("day_jobs",function(b){return b.order("work_date",{ascending:false})});
+  if(r.missing){ $("view").innerHTML='<div class="h">당일알바</div>'+setup("day_jobs"); return; }
+  var ap=await q("day_job_applications");
+  var cnt={}; (ap.data||[]).forEach(function(a){ cnt[String(a.day_job_id)]=(cnt[String(a.day_job_id)]||0)+1 });
+  var rows=r.data.map(function(j){
+    return '<tr><td><b>'+esc(j.company||"—")+'</b><div class="mono">'+esc(j.contact||"")+'</div></td>'+
+      '<td>'+esc(j.work_type||"—")+'</td>'+
+      '<td class="tr">'+day(j.work_date)+' '+esc(j.start_time||"")+'</td>'+
+      '<td class="tr">'+(j.headcount||1)+'명</td>'+
+      '<td><b>'+won(j.pay)+'</b> <span class="tr">'+esc(j.pay_type||"일당")+'</span></td>'+
+      '<td class="tr">'+esc(j.region||"—")+'</td>'+
+      '<td><span class="bd '+(j.status==="모집중"?"bd-w":"bd-g")+'">'+esc(j.status||"모집중")+'</span></td>'+
+      '<td class="tr">지원 '+(cnt[String(j.id)]||0)+'</td>'+
+      '<td><button class="b b-d" onclick="rm(\'day_jobs\',\''+j.id+'\',\''+esc(j.company)+' 일감\')">삭제</button></td></tr>';
+  });
+  $("view").innerHTML='<div class="h">당일알바 <span class="tr">'+r.data.length+'건</span></div><div class="hd">현장 단기인력 일감입니다.</div>'+
+    tbl(["업체","업무","일시","인원","금액","지역","상태","지원","관리"],rows,"등록된 일감이 없습니다");
+}
+
+/* ── 후기 ── */
+async function vReview(){
+  var r=await q("reviews",function(b){return b.order("created_at",{ascending:false})});
+  if(r.missing){ $("view").innerHTML='<div class="h">후기</div>'+setup("reviews"); return; }
+  var rows=r.data.map(function(v){
+    return '<tr><td>'+"★".repeat(Math.round(Number(v.rating)||0))+' <span class="tr">'+(Number(v.rating)||0).toFixed(1)+'</span></td>'+
+      '<td>'+esc(v.content||"—")+'</td>'+
+      '<td class="tr">'+esc(v.author_name||"익명")+'</td>'+
+      '<td class="mono">'+esc(v.target_type)+" / "+esc(v.target_id)+'</td>'+
+      '<td class="tr">'+dt(v.created_at)+'</td>'+
+      '<td><button class="b b-d" onclick="rm(\'reviews\',\''+v.id+'\',\'후기\')">삭제</button></td></tr>';
+  });
+  $("view").innerHTML='<div class="h">후기 <span class="tr">'+r.data.length+'건</span></div>'+
+    '<div class="hd">허위·비방 후기는 삭제할 수 있습니다. 삭제해도 업체 평점은 다음 후기 등록 시 재계산됩니다.</div>'+
+    tbl(["평점","내용","작성자","대상","작성일","관리"],rows,"후기가 없습니다");
+}
+
+/* ── 시세 ── */
+var MCAT=[["beef","한우·소"],["pork","돼지"],["byproduct","부산물"],["import","수입육"]];
+async function vMarket(){
+  var r=await q("market_prices",function(b){return b.order("price_date",{ascending:false}).limit(300)});
+  if(r.missing){ $("view").innerHTML='<div class="h">시세</div>'+setup("market_prices"); return; }
+  var today=new Date().toISOString().slice(0,10);
+  var rows=r.data.map(function(m){
+    var c=Number(m.change)||0;
+    return '<tr><td>'+esc(m.price_date||"—")+'</td>'+
+      '<td class="tr">'+esc((MCAT.find(function(x){return x[0]===m.category})||["","—"])[1])+'</td>'+
+      '<td><b>'+esc(m.item||"—")+'</b> <span class="tr">'+esc(m.grade||"")+'</span></td>'+
+      '<td><b>'+won(m.price)+'</b> <span class="tr">'+esc(m.unit||"원/kg")+'</span></td>'+
+      '<td style="color:'+(c>0?"#CC2F35":(c<0?"#2F6FE0":"var(--ink4)"))+';font-weight:700">'+
+        (c>0?"▲ ":(c<0?"▼ ":"— "))+(c?won(Math.abs(c)):"보합")+'</td>'+
+      '<td><button class="b b-d" onclick="rm(\'market_prices\',\''+m.id+'\',\''+esc(m.item)+'\')">삭제</button></td></tr>';
+  });
+  $("view").innerHTML='<div class="h">시세</div>'+
+    '<div class="hd">여기에 입력한 시세가 홈 상단과 견적 비교 화면(시세 대비 %)에 사용됩니다.</div>'+
+    '<div class="card"><div class="card-h">시세 입력</div><div class="card-b">'+
+      '<div class="row r4">'+
+        '<div><label>날짜</label><input class="in" id="m-date" type="date" value="'+today+'"></div>'+
+        '<div><label>분류</label><select class="in" id="m-cat">'+MCAT.map(function(c){return '<option value="'+c[0]+'">'+c[1]+'</option>'}).join("")+'</select></div>'+
+        '<div><label>품목</label><input class="in" id="m-item" placeholder="한우 지육"></div>'+
+        '<div><label>등급</label><input class="in" id="m-grade" placeholder="1등급 (선택)"></div>'+
+      '</div>'+
+      '<div class="row r4" style="margin-top:12px">'+
+        '<div><label>가격</label><input class="in" id="m-price" inputmode="numeric" placeholder="20500"></div>'+
+        '<div><label>단위</label><input class="in" id="m-unit" value="원/kg"></div>'+
+        '<div><label>전일 대비</label><input class="in" id="m-chg" inputmode="numeric" placeholder="500 또는 -500"></div>'+
+        '<div><label>출처</label><input class="in" id="m-src" placeholder="축산물품질평가원 (선택)"></div>'+
+      '</div>'+
+      '<button class="b b-p" style="margin-top:16px;padding:12px 20px" onclick="addPrice()">시세 추가</button>'+
+      '<div class="msg" id="m-msg"></div>'+
+    '</div></div>'+
+    tbl(["날짜","분류","품목","가격","등락","관리"],rows,"입력된 시세가 없습니다");
+}
+async function addPrice(){
+  var item=($("m-item").value||"").trim(), price=num($("m-price").value);
+  if(!item||price==null){ msg("m-msg","품목과 가격은 필수입니다.","err"); return; }
+  var r=await sb.from("market_prices").insert({
+    price_date:$("m-date").value||null, category:$("m-cat").value,
+    item:item, grade:($("m-grade").value||"").trim()||null,
+    price:price, unit:($("m-unit").value||"원/kg").trim(),
+    change:num($("m-chg").value), source:($("m-src").value||"").trim()||null});
+  if(r.error){ msg("m-msg","저장 실패: "+r.error.message,"err"); return; }
+  msg("m-msg","시세를 추가했습니다. 홈 상단에 즉시 반영됩니다.","ok");
+  $("m-item").value=""; $("m-price").value=""; $("m-grade").value=""; $("m-chg").value="";
+  setTimeout(vMarket,700);
+}
+</script>
+</body>
+</html>

@@ -2522,6 +2522,187 @@ async function init3(){
 setTimeout(init3, 300);
 
 /* ════════════════════════════════════════════════════════════════════
+   2026 리디자인 — 히어로 지역선택 / 알림 / 카드 렌더 교체
+   기능·데이터·함수는 그대로 두고 마크업만 새 디자인으로 바꿉니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+var RGN_KEY="gori.region";
+function myRegion(){ try{ return localStorage.getItem(RGN_KEY)||""; }catch(e){ return ""; } }
+G.myRegion=myRegion;
+
+function paintRegion(){
+  var el=$("gh-region-tx"); if(!el) return;
+  el.textContent = myRegion() || "지역 선택";
+}
+window.gPickRegion=function(){
+  var cur=myRegion();
+  var box=document.createElement("div");
+  box.className="rgn-dim"; box.id="rgn-dim";
+  box.innerHTML='<div class="rgn-box" onclick="event.stopPropagation()">'+
+    '<div class="rgn-t">주로 활동하는 지역</div>'+
+    '<div class="rgn-grid">'+REGIONS.map(function(r){
+      return '<button class="rgn-i'+(cur===r?" on":"")+'" onclick="gSetRegion(\''+esc(r)+'\')">'+esc(r)+'</button>';
+    }).join("")+'</div>'+
+    '<div class="ghint" style="margin-top:14px;">선택한 지역은 요청서와 업체 찾기의 기본값으로 사용됩니다.</div>'+
+    '</div>';
+  box.onclick=function(){ window.gCloseRegion(); };
+  document.body.appendChild(box);
+  document.body.style.overflow="hidden";
+};
+window.gCloseRegion=function(){ var m=$("rgn-dim"); if(m) m.remove(); document.body.style.overflow=""; };
+window.gSetRegion=function(r){
+  try{ localStorage.setItem(RGN_KEY, r); }catch(e){}
+  paintRegion(); window.gCloseRegion();
+  toast(r+" 지역으로 설정했습니다.","ok");
+};
+
+/* 히어로 알림 버튼 — 기존 알림 패널로 연결 */
+window.gHeroBell=function(ev){
+  if(ev) ev.stopPropagation();
+  if(!ME.user){ if(typeof openModal==="function") openModal("login"); return; }
+  if(typeof go==="function") go("my");
+  setTimeout(function(){ if(typeof gMyTab==="function") gMyTab("noti"); }, 300);
+};
+function paintBell(){
+  var d=$("gh-bell-dot"); if(!d) return;
+  var n=NOTIFS.filter(function(x){ return !x.is_read; }).length + (typeof chatUnread==="function"?chatUnread():0);
+  d.hidden = !n;
+}
+
+/* 요청서 기본 지역을 사용자 설정값으로 */
+function patchRegionDefault(){
+  var orig=window.gStep2;
+  window.gStep2=function(){
+    orig();
+    var r=myRegion(), sel=$("w-region");
+    if(r && sel && sel.tagName==="SELECT"){
+      for(var i=0;i<sel.options.length;i++) if(sel.options[i].text===r){ sel.selectedIndex=i; break; }
+    }
+  };
+}
+
+/* ── 실시간 요청 카드 (신규 디자인) ── */
+function isUrgent(r){
+  var k=(typeof key8Of==="function")?key8Of(r.cat):null;
+  if(k==="labor") return true;
+  var d=r.deadline||(r.detail&&(r.detail.work_date||r.detail.deadline));
+  if(!d) return false;
+  var t=new Date(String(d)+"T00:00:00"), n=new Date(); n.setHours(0,0,0,0);
+  var diff=(t-n)/86400000;
+  return diff>=0 && diff<=1;
+}
+function reqCardHtml(r){
+  var urgent=isUrgent(r);
+  return '<article class="rc" onclick="gOpenRequest(\''+esc(r.id)+'\')">'+
+    '<div class="rc-top">'+
+      '<span class="rc-tag'+(urgent?" rc-tag-hot":"")+'">'+esc(urgent?"급구 · "+cat8Label(r.cat):cat8Label(r.cat))+'</span>'+
+      '<span class="rc-ago">'+esc(r.time||"")+'</span>'+
+    '</div>'+
+    '<h3 class="rc-t">'+esc(r.title)+'</h3>'+
+    '<div class="rc-bot">'+
+      '<span class="rc-loc">'+esc(r.region||"지역 미지정")+'</span>'+
+      '<span class="rc-pill">견적 '+(r.qcnt||0)+'개 도착</span>'+
+    '</div></article>';
+}
+function patchReqCards(){
+  window.renderRQWidget=function(){
+    var el=$("rq-widget"); if(!el) return;
+    if(!REQS.length){
+      el.innerHTML='<div class="es"><div class="es-t">아직 요청이 없어요</div>'+
+        '<div class="es-d">필요한 것을 올리면 조건에 맞는 업체가 견적과 제안을 보냅니다.</div>'+
+        '<button class="es-btn" onclick="go(&quot;rw&quot;)">첫 요청 올리기</button></div>';
+      return;
+    }
+    el.innerHTML=REQS.slice(0,8).map(reqCardHtml).join("");
+  };
+  window.renderReqs=function(){
+    var el=$("rq-list-full"); if(!el) return;
+    renderReqChips();
+    var data=REQS.filter(function(r){ return matchCat8([r.cat],curRC); });
+    if(!data.length){
+      el.innerHTML='<div class="es"><div class="es-t">'+(curRC&&curRC!=="all"?"이 분야에 등록된 요청이 없어요":"아직 요청이 없어요")+'</div>'+
+        '<div class="es-d">필요한 것을 올리면 조건에 맞는 업체가 견적과 제안을 보냅니다.</div>'+
+        '<button class="es-btn" onclick="go(&quot;rw&quot;)">요청 올리기</button></div>';
+      return;
+    }
+    el.innerHTML='<div class="rc-list">'+data.map(reqCardHtml).join("")+'</div>';
+  };
+}
+
+/* ── 업체 카드 (신규 디자인) ── */
+function supIconFor(s){
+  var k=(s.category_mains&&s.category_mains[0]) ||
+        ((s.cats&&s.cats.length&&typeof key8Of==="function")?key8Of(s.cats[0]):null) ||
+        ((s.categories&&s.categories.length&&typeof key8Of==="function")?key8Of(s.categories[0]):null);
+  var c=(typeof cat8Of==="function"&&k)?cat8Of(k):null;
+  return c ? c.ico : '<path d="M3 21V10l6 4V10l6 4V6l6 3v12z"/><path d="M2 21h20"/>';
+}
+function patchSupCards(){
+  window.mkSC=function(s){
+    var d=document.createElement("div");
+    d.className="sc2";
+    d.onclick=function(){ if(typeof curSID!=="undefined") curSID=s.id; go("sp"); };
+    var badges="";
+    if(s.vf||s.is_verified) badges+='<span class="sc2-bd sc2-bd-blue">인증업체</span>';
+    if(s.haccp)             badges+='<span class="sc2-bd sc2-bd-mint">HACCP</span>';
+    if(s.livestock_permit)  badges+='<span class="sc2-bd sc2-bd-mint">축산물 허가</span>';
+    var items=(s.items&&s.items.length)?s.items.slice(0,2).join(" · ")
+             :((s.cats&&s.cats.length)?s.cats.slice(0,2).join(" · ")
+             :((s.categories&&s.categories.length)?s.categories.slice(0,2).join(" · "):"취급 품목 미등록"));
+    var region=s.region || String(s.cat||"").split(" · ")[0] || "";
+    var rating=Number(s.rt!=null?s.rt:s.rating)||0;
+    d.innerHTML=
+      '<div class="sc2-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
+        'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+supIconFor(s)+'</svg></div>'+
+      '<div class="sc2-b">'+
+        '<div class="sc2-nm">'+esc(s.nm||s.name||"업체")+badges+'</div>'+
+        '<div class="sc2-meta">'+
+          (rating?'<span class="sc2-star">★ '+rating.toFixed(1)+'</span>':'<span class="sc2-new">신규</span>')+
+          '<span class="sc2-dot">·</span><span>'+esc(items)+'</span>'+
+          (region?'<span class="sc2-dot">·</span><span>'+esc(region)+'</span>':'')+
+        '</div></div>'+
+      '<svg class="sc2-ch" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
+        'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+    return d;
+  };
+}
+
+/* ── 하단 네비 + 버튼 ── */
+function patchFab(){
+  var plus=document.querySelector(".bplus"); if(!plus) return;
+  plus.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+}
+
+/* ── 섹션 순서 조정: 인력 블록 위로, 프로세스 아래로 ── */
+function reorderSections(){
+  var home=$("pg-h"); if(!home) return;
+  var labor=$("sec-labor");
+  var supSec=document.querySelector("#sup-home") ? document.querySelector("#sup-home").closest("div[style*='border-top']") : null;
+  var proc=$("proc-grid") ? $("proc-grid").closest("section") : null;
+  if(labor && supSec && labor.compareDocumentPosition(supSec) & Node.DOCUMENT_POSITION_PRECEDING){
+    supSec.parentNode.insertBefore(labor, supSec);   /* 인력 → 업체 위 */
+  }
+  if(proc && supSec){
+    supSec.parentNode.insertBefore(proc, supSec.nextSibling);  /* 프로세스 → 업체 아래 */
+  }
+}
+
+/* ── 초기화 ── */
+function initRedesign(){
+  patchReqCards();
+  patchSupCards();
+  patchRegionDefault();
+  patchFab();
+  paintRegion();
+  reorderSections();
+  var origHdr=window.renderHeaderUser;
+  window.renderHeaderUser=function(){ origHdr(); paintBell(); };
+  paintBell();
+  if(typeof renderHome==="function") renderHome();
+}
+setTimeout(initRedesign, 420);
+
+/* ════════════════════════════════════════════════════════════════════
    기존 화면과의 연결 · 초기화
    ════════════════════════════════════════════════════════════════════ */
 

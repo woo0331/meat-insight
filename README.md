@@ -51,6 +51,7 @@ values ('beef', '한우 등심', '1+', 64000, '원/kg', current_date);
 | `db/phase2_schema.sql` | DB 확장 — 견적·후기·당일알바·알림 (추가 전용) |
 | `db/phase3_schema.sql` | DB 확장 — 채팅·매칭 알림·인증·거래·시세 (추가 전용) |
 | `db/phase4_admin.sql` | DB 확장 — 관리자 권한 + 기존 테이블 RLS (추가 전용) |
+| `db/phase5_storage.sql` | 업체 사진 저장소(Supabase Storage) 버킷·정책 |
 | `admin.html` | **관리자 콘솔** — 인증 심사·요청·견적·거래·시세 운영 |
 | `og.png` | 카톡·SNS 공유 썸네일 (1200×630) |
 | `dashboard.html` | 운영 허브 |
@@ -89,8 +90,26 @@ values ('beef', '한우 등심', '1+', 64000, '원/kg', current_date);
 1. Supabase 대시보드 → **SQL Editor**
 2. `db/phase2_schema.sql` 내용을 붙여넣고 **Run**
 3. 이어서 `db/phase3_schema.sql` 도 **Run** (채팅·매칭 알림·인증·거래·시세)
-4. 마지막으로 `db/phase4_admin.sql` **Run** — 그 안의 **3번 블록**에서 본인 이메일을
+4. `db/phase4_admin.sql` **Run** — 그 안의 **3번 블록**에서 본인 이메일을
    관리자로 등록하세요. 등록해야 `admin.html` 에 로그인할 수 있습니다.
+5. `db/phase5_storage.sql` **Run** — 업체 사진 저장소.
+   SQL 이 막히면 대시보드에서 만들어도 됩니다:
+   Storage → New bucket → 이름 `supplier-photos` → **Public bucket** 체크
+
+### 업체 온보딩 (`업체 등록`)
+
+4단계 마법사로 통합돼 있습니다. 이전에는 등록·인증·관심분야·바로견적이 네 화면에
+흩어져 있었습니다.
+
+| 단계 | 내용 |
+|---|---|
+| 1 기본 정보 | 업체명·대표자·연락처·영업 지역·주소 |
+| 2 취급 분야 | 8대분류 다중 선택 → **여기서 고른 분야의 요청 알림을 받습니다** · 품목·서비스·최소량·납기 |
+| 3 인증 서류 | 사업자등록(체크섬 검증)·축산물 영업허가·HACCP → **입력하면 인증 심사가 자동 접수됩니다** |
+| 4 사진·알림 | 사진 최대 6장(업로드 전 1600px·JPEG 82%로 자동 축소) · 소개 · 바로견적 참여 |
+
+등록을 마치면 `suppliers` 저장 + `verifications` 자동 신청 + `supplier_prefs` 알림 설정이
+한 번에 처리됩니다. 저장소 버킷이 없으면 사진만 건너뛰고 나머지는 정상 등록됩니다.
 
 ### 관리자 콘솔 (`/admin.html`)
 

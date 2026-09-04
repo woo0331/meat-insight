@@ -2591,17 +2591,31 @@ function isUrgent(r){
   var diff=(t-n)/86400000;
   return diff>=0 && diff<=1;
 }
+function reqMetaBits(r){
+  var d=r.detail||{}, out=[];
+  out.push("📍 "+(r.region||"지역 미지정"));
+  var price=d.price||d.pay||d.budget;
+  if(price) out.push((d.pay?"일당 ":"희망 ")+price+(d.pay_type==="시급"?"원/시":"원"));
+  var qty=d.qty||d.volume||d.headcount;
+  if(qty) out.push(qty+(d.headcount?"명":(d.volume?"톤":"kg")));
+  var when=r.deadline||d.work_date||d.deadline;
+  if(when) out.push(fmtDate(when)+"까지");
+  return out.slice(0,3);
+}
 function reqCardHtml(r){
-  var urgent=isUrgent(r);
-  return '<article class="rc" onclick="gOpenRequest(\''+esc(r.id)+'\')">'+
+  var urgent=isUrgent(r), n=Number(r.qcnt)||0;
+  var isLabor=(typeof key8Of==="function")&&key8Of(r.cat)==="labor";
+  return '<article class="rc'+(urgent?" hot":"")+'" onclick="gOpenRequest(\''+esc(r.id)+'\')">'+
     '<div class="rc-top">'+
       '<span class="rc-tag'+(urgent?" rc-tag-hot":"")+'">'+esc(urgent?"급구 · "+cat8Label(r.cat):cat8Label(r.cat))+'</span>'+
       '<span class="rc-ago">'+esc(r.time||"")+'</span>'+
     '</div>'+
     '<h3 class="rc-t">'+esc(r.title)+'</h3>'+
+    '<div class="rc-m">'+reqMetaBits(r).map(function(t){ return '<span>'+esc(t)+'</span>'; }).join("")+'</div>'+
     '<div class="rc-bot">'+
-      '<span class="rc-loc">'+esc(r.region||"지역 미지정")+'</span>'+
-      '<span class="rc-pill">견적 '+(r.qcnt||0)+'개 도착</span>'+
+      '<span class="rc-qn">'+(isLabor?"지원":"견적")+' <b>'+n+'</b>'+(isLabor?"명":"개")+'</span>'+
+      '<button class="rc-cta" onclick="event.stopPropagation();gOpenRequest(\''+esc(r.id)+'\')">'+
+        (isLabor?"지원하기":(n?"견적 비교":"견적 보내기"))+'</button>'+
     '</div></article>';
 }
 function patchReqCards(){
@@ -2651,16 +2665,23 @@ function patchSupCards(){
              :((s.categories&&s.categories.length)?s.categories.slice(0,2).join(" · "):"취급 품목 미등록"));
     var region=s.region || String(s.cat||"").split(" · ")[0] || "";
     var rating=Number(s.rt!=null?s.rt:s.rating)||0;
+    var photo=(s.images&&s.images.length)?s.images[0]:null;
+    var rv=Number(s.review_count)||0, deal=Number(s.deal_count)||0;
+    var stats=[];
+    if(rv) stats.push("후기 "+rv);
+    if(deal) stats.push("거래 "+deal+"건");
     d.innerHTML=
-      '<div class="sc2-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
-        'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+supIconFor(s)+'</svg></div>'+
+      '<div class="sc2-ic"'+(photo?' style="background-image:url('+esc(photo)+');"':'')+'>'+
+        (photo?'':'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
+        'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+supIconFor(s)+'</svg>')+'</div>'+
       '<div class="sc2-b">'+
         '<div class="sc2-nm">'+esc(s.nm||s.name||"업체")+badges+'</div>'+
-        '<div class="sc2-meta">'+
-          (rating?'<span class="sc2-star">★ '+rating.toFixed(1)+'</span>':'<span class="sc2-new">신규</span>')+
-          '<span class="sc2-dot">·</span><span>'+esc(items)+'</span>'+
-          (region?'<span class="sc2-dot">·</span><span>'+esc(region)+'</span>':'')+
-        '</div></div>'+
+        '<div class="sc2-rate">'+
+          (rating?'<em>★ '+rating.toFixed(1)+'</em>':'<span style="color:var(--ink4);">신규 업체</span>')+
+          (stats.length?'<span>'+esc(stats.join(" · "))+'</span>':'')+
+        '</div>'+
+        '<div class="sc2-meta">'+esc(items)+(region?' · '+esc(region):'')+'</div>'+
+      '</div>'+
       '<svg class="sc2-ch" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
         'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
     return d;
@@ -2687,10 +2708,84 @@ function reorderSections(){
   }
 }
 
+/* ── 카테고리 타일에 분야별 컬러 ── */
+function patchCatTiles(){
+  var orig=window.renderCat8Grid;
+  window.renderCat8Grid=function(){
+    orig();
+    var el=$("cat8-grid"); if(!el) return;
+    el.querySelectorAll(".cat8-card").forEach(function(card,i){
+      var c=CATS8[i]; if(!c) return;
+      var ic=card.querySelector(".cat8-ico");
+      if(ic) ic.classList.add("ct-"+c.k);
+    });
+  };
+}
+
+/* ── 히어로 실시간 지표 (실데이터가 있을 때만) ── */
+function renderHeroStat(){
+  var el=$("gh-stat"); if(!el) return;
+  var today0=new Date(); today0.setHours(0,0,0,0);
+  var todayReq=REQS.filter(function(r){
+    var raw=r.created_at||r.time; return false;
+  }).length;
+  /* REQS 는 매핑된 형태라 원본 시각이 없어 '전체 요청 수'로 대체 */
+  var stats=[];
+  if(REQS.length) stats.push({v:REQS.length,u:"건",l:"올라온 요청"});
+  if(SUPS.length) stats.push({v:SUPS.length,u:"곳",l:"등록 업체"});
+  var withQ=REQS.filter(function(r){ return (Number(r.qcnt)||0)>0; }).length;
+  if(withQ) stats.push({v:withQ,u:"건",l:"견적 도착"});
+  if(stats.length<2){ el.hidden=true; el.innerHTML=""; return; }
+  el.hidden=false;
+  el.innerHTML=stats.map(function(s){
+    return '<div class="gh-st"><div class="gh-sv">'+s.v+'<small>'+s.u+'</small></div>'+
+      '<div class="gh-sl">'+s.l+'</div></div>';
+  }).join("");
+}
+
+/* ── 오늘 시세 스트립 (market_prices 우선, 없으면 샘플 표기) ── */
+async function renderMktStrip(){
+  var sec=$("sec-mkt"), row=$("mkt-strip"), src=$("mkt-src");
+  if(!sec||!row) return;
+  var rows=[], sample=false, when="";
+  if(G.MARKET && G.MARKET.rows && G.MARKET.rows.length){
+    rows=G.MARKET.rows.slice(0,8).map(function(m){
+      var nm=m.item||"";
+      if(m.grade && nm.indexOf(m.grade)<0) nm+=" "+m.grade;   /* 등급 중복 표기 방지 */
+      return {n:nm,v:Number(m.price),u:m.unit||"원/kg",c:Number(m.change)||0};
+    });
+    when=(G.MARKET.rows[0].price_date||"");
+  } else if(typeof PRICE_DATA!=="undefined"){
+    sample=true;
+    ["beef","pork","import"].forEach(function(k){
+      (PRICE_DATA[k]||[]).forEach(function(x){
+        var c=parseInt(String(x.chg||"").replace(/[^0-9]/g,""),10)||0;
+        rows.push({n:x.item,v:num(x.price),u:x.unit||"원/kg",c:(x.up?c:-c)});
+      });
+    });
+    rows=rows.slice(0,8);
+  }
+  if(!rows.length){ sec.hidden=true; return; }
+  sec.hidden=false;
+  src.innerHTML = sample ? '<span class="sample-tag">샘플</span> 실시세 연동 준비 중'
+                         : esc(when)+' 기준';
+  row.innerHTML=rows.map(function(r){
+    var cls=r.c>0?"up":(r.c<0?"dn":"flat");
+    var arrow=r.c>0?"▲":(r.c<0?"▼":"—");
+    var pct=(r.v&&r.c)?(" ("+Math.abs(Math.round(r.c/r.v*1000)/10)+"%)"):"";
+    return '<div class="mkt-c" onclick="go(&quot;market&quot;)" style="cursor:pointer;">'+
+      '<div class="mkt-n">'+esc(r.n)+'</div>'+
+      '<div class="mkt-v">'+won(r.v)+'<small>'+esc(r.u)+'</small></div>'+
+      '<div class="mkt-d '+cls+'">'+arrow+' '+(r.c?won(Math.abs(r.c)):"보합")+pct+'</div></div>';
+  }).join("");
+}
+G.renderMktStrip=renderMktStrip;
+
 /* ── 초기화 ── */
 function initRedesign(){
   patchReqCards();
   patchSupCards();
+  patchCatTiles();
   patchRegionDefault();
   patchFab();
   paintRegion();
@@ -2699,6 +2794,10 @@ function initRedesign(){
   window.renderHeaderUser=function(){ origHdr(); paintBell(); };
   paintBell();
   if(typeof renderHome==="function") renderHome();
+  renderHeroStat();
+  renderMktStrip();
+  /* DB 로딩이 끝난 뒤에도 한 번 더 */
+  setTimeout(function(){ renderHeroStat(); renderMktStrip(); }, 1400);
 }
 setTimeout(initRedesign, 420);
 

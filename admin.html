@@ -95,6 +95,10 @@ label:first-child{margin-top:0}
 .tr{color:var(--ink3);font-size:12px}
 @media(max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}.r4,.r3{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}.r2,.r3,.r4{grid-template-columns:1fr}.wrap{padding:16px 14px 80px}}
+.tsearch{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.tsearch .tfind{flex:1;min-width:0;margin:0}
+.tsearch .tcount{flex:0 0 auto;font-size:12.5px;color:var(--ink3);font-weight:700;white-space:nowrap}
+.tnone{padding:26px 14px}
 </style>
 </head>
 <body>
@@ -238,8 +242,35 @@ function setup(name){
     '<code>db/phase4_admin.sql</code> 순서로 실행하세요.</div>'}
 function tbl(head, rows, emptyTxt){
   if(!rows.length) return '<div class="card"><div class="empty">'+esc(emptyTxt||"내역이 없습니다")+'</div></div>';
-  return '<div class="card"><div class="tw"><table><thead><tr>'+
+  /* 표가 길어지면 찾기 어려워서 표마다 검색칸을 답니다 (화면에 있는 행만 걸러냅니다) */
+  return '<div class="card">'+
+    '<div class="tsearch"><input type="search" class="in tfind" placeholder="이 표에서 검색 (업체명·품목·지역·연락처 …)" '+
+      'oninput="tblFind(this)" aria-label="표 검색"><span class="tcount"></span></div>'+
+    '<div class="tw"><table><thead><tr>'+
     head.map(function(h){return '<th>'+esc(h)+'</th>'}).join("")+'</tr></thead><tbody>'+rows.join("")+'</tbody></table></div></div>';
+}
+function tblFind(el){
+  var card=el.closest(".card"); if(!card) return;
+  var terms=String(el.value||"").trim().toLowerCase().split(/\s+/).filter(Boolean);
+  var rows=card.querySelectorAll("tbody tr"), shown=0;
+  for(var i=0;i<rows.length;i++){
+    var hay=(rows[i].textContent||"").toLowerCase();
+    var hit=true;
+    for(var j=0;j<terms.length;j++){ if(hay.indexOf(terms[j])<0){ hit=false; break; } }
+    rows[i].style.display=hit?"":"none";
+    if(hit) shown++;
+  }
+  var c=card.querySelector(".tcount");
+  if(c) c.textContent = terms.length ? (shown+" / "+rows.length+"건") : (rows.length+"건");
+  var none=card.querySelector(".tnone");
+  if(!shown && terms.length){
+    if(!none){
+      none=document.createElement("div");
+      none.className="empty tnone";
+      none.textContent="검색 결과가 없습니다";
+      card.appendChild(none);
+    }
+  } else if(none && none.parentNode) none.parentNode.removeChild(none);
 }
 
 /* ── 대시보드 ── */

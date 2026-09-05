@@ -2908,11 +2908,39 @@ function isUrgent(r){
   var diff=(t-n)/86400000;
   return diff>=0 && diff<=1;
 }
+/* 금액 단위는 분야마다 다릅니다 (원/kg · 원/회 · 만원/월 · 일당 원).
+   REQ_FORMS 의 unit 을 그대로 읽어서, 구인구직 월급을 "일당 320원" 으로
+   찍던 문제를 없앱니다. */
+/* 카테고리 이름만으로는 구인구직(월급)과 당일알바(일당)를 구분하지 못합니다
+   ('채용' 이 인력·알바로 매핑됩니다). 입력된 항목으로 판별합니다. */
+function reqFormKey(r, d){
+  if(d.employment || d.exp) return "job";
+  if(d.pay_type || d.work_date || d.work) return "labor";
+  if(typeof key8Of==="function"){ var k=key8Of(r.cat); if(k) return k; }
+  return null;
+}
+function reqPriceBit(r, d){
+  var id=null;
+  ["price","pay","budget"].forEach(function(k){ if(!id && d[k]) id=k; });
+  if(!id) return null;
+  var key=reqFormKey(r, d);
+  var fields=(typeof REQ_FORMS!=="undefined" && REQ_FORMS[key])?REQ_FORMS[key]:null;
+  var unit="원";
+  if(fields){
+    for(var i=0;i<fields.length;i++){ if(fields[i].id===id){ unit=fields[i].unit||"원"; break; } }
+  }
+  var label="희망 ";
+  if(id==="pay"){
+    if(d.pay_type){ label=d.pay_type+" "; unit=(d.pay_type==="시급")?"원/시":"원"; }
+    else label="급여 ";
+  }
+  return label+d[id]+unit;
+}
 function reqMetaBits(r){
   var d=r.detail||{}, out=[];
   out.push("📍 "+(r.region||"지역 미지정"));
-  var price=d.price||d.pay||d.budget;
-  if(price) out.push((d.pay?"일당 ":"희망 ")+price+(d.pay_type==="시급"?"원/시":"원"));
+  var price=reqPriceBit(r, d);
+  if(price) out.push(price);
   var qty=d.qty||d.volume||d.headcount;
   if(qty) out.push(qty+(d.headcount?"명":(d.volume?"톤":"kg")));
   var when=r.deadline||d.work_date||d.deadline;
@@ -2921,7 +2949,10 @@ function reqMetaBits(r){
 }
 function reqCardHtml(r){
   var urgent=isUrgent(r), n=Number(r.qcnt)||0;
-  var isLabor=(typeof key8Of==="function")&&key8Of(r.cat)==="labor";
+  /* 사람을 구하는 요청(당일알바·구인구직)에는 "견적" 이 아니라 "지원" 입니다.
+     구인구직도 사람을 뽑는 것이라 지원으로 표시합니다. */
+  var fk=reqFormKey(r, r.detail||{});
+  var isLabor=(fk==="labor"||fk==="job");
   return '<article class="rc'+(urgent?" hot":"")+'" onclick="gOpenRequest(\''+esc(r.id)+'\')">'+
     '<div class="rc-top">'+
       '<span class="rc-tag'+(urgent?" rc-tag-hot":"")+'">'+esc(urgent?"급구 · "+cat8Label(r.cat):cat8Label(r.cat))+'</span>'+
@@ -5226,6 +5257,438 @@ function patchA11y(){
   });
   mo.observe(document.body, { childList:true, subtree:true });
 }
+/* ════════════════════════════════════════════════════════════════════
+   카카오 로그인 (Supabase OAuth)
+
+   지금까지 "카카오로 로그인" 버튼은 alert("준비 중입니다") 만 띄웠습니다.
+   Supabase 의 Kakao 공급자를 쓰면 사이트에 카카오 키를 넣지 않아도 됩니다.
+   키는 Supabase 대시보드에만 넣고, 여기서는 로그인 요청만 보냅니다.
+
+   운영자가 해야 할 일 (README 참고)
+     1) 카카오 개발자센터에서 앱을 만들고 REST API 키·시크릿 발급
+     2) 카카오 앱의 Redirect URI 에 아래 주소 등록
+        https://<프로젝트>.supabase.co/auth/v1/callback
+     3) Supabase → Authentication → Providers → Kakao 를 켜고 키 입력
+     4) Supabase → Authentication → URL Configuration 에
+        https://aboutmeat.co.kr 을 Site URL 로 등록
+
+   설정 전에는 카카오 서버가 오류를 돌려주므로, 그 경우 무엇을 해야 하는지
+   화면에 그대로 알려줍니다. (예전처럼 "준비 중" 만 뜨지 않습니다)
+   ════════════════════════════════════════════════════════════════════ */
+
+var KK = {};
+
+function kkRedirect(){
+  /* 로그인 후 보고 있던 화면으로 돌아옵니다 */
+  var base=location.origin+location.pathname;
+  var h=location.hash||"";
+  if(h==="#"||h==="#/") h="";
+  return base+h;
+}
+
+window.authKakao=async function(){
+  var c=client();
+  if(!c || !c.auth || typeof c.auth.signInWithOAuth!=="function"){
+    toast("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.","err");
+    return;
+  }
+  var msgId = ($("auth-signup") && $("auth-signup").style.display!=="none") ? "signup-msg" : "login-msg";
+  setMsg(msgId,"카카오로 이동 중…","");
+  try{
+    var r=await c.auth.signInWithOAuth({
+      provider:"kakao",
+      options:{ redirectTo:kkRedirect() }
+    });
+    if(r && r.error) throw r.error;
+    /* 성공하면 카카오 로그인 화면으로 이동합니다 (아래 코드는 실행되지 않습니다) */
+  }catch(e){
+    var m=String((e&&e.message)||"");
+    if(/provider is not enabled|Unsupported provider|not enabled/i.test(m)){
+      setMsg(msgId,"카카오 로그인이 아직 켜져 있지 않습니다. 이메일로 로그인해주세요.","err");
+    }else{
+      setMsg(msgId,"카카오 로그인에 실패했습니다: "+(m||"알 수 없는 오류"),"err");
+    }
+  }
+};
+
+/* 카카오에서 돌아왔을 때 — 오류 파라미터가 붙어 오면 그대로 알려줍니다 */
+async function kkHandleReturn(){
+  var q=new URLSearchParams(location.search);
+  var hp=new URLSearchParams(String(location.hash||"").replace(/^#\/?/,""));
+  var err=q.get("error")||hp.get("error");
+  var desc=q.get("error_description")||hp.get("error_description")||"";
+  if(err){
+    var d=decodeURIComponent(desc).replace(/\+/g," ");
+    if(/provider is not enabled|Unsupported provider/i.test(d)){
+      toast("카카오 로그인이 아직 켜져 있지 않습니다. 이메일로 로그인해주세요.","err");
+    }else{
+      toast("카카오 로그인이 취소되었거나 실패했습니다."+(d?" ("+d+")":""),"err");
+    }
+    try{ history.replaceState(null,"",location.pathname); }catch(e){}
+    return;
+  }
+  /* 로그인 성공 후 프로필 이름 채우기 */
+  var c=client(); if(!c||!c.auth) return;
+  try{
+    var s=await c.auth.getSession();
+    var u=s&&s.data&&s.data.session?s.data.session.user:null;
+    if(!u) return;
+    var meta=u.user_metadata||{};
+    if(!meta.name){
+      var nm=meta.full_name||meta.preferred_username||meta.user_name||
+             (meta.kakao_account&&meta.kakao_account.profile&&meta.kakao_account.profile.nickname)||"";
+      if(nm && typeof c.auth.updateUser==="function"){
+        try{ await c.auth.updateUser({ data:{ name:nm } }); }catch(e){}
+      }
+    }
+  }catch(e){}
+}
+
+function patchKakao(){
+  if(KK._patched) return; KK._patched=true;
+
+  /* 로그인 상태가 바뀌면 화면을 갱신합니다 (카카오에서 돌아온 직후 포함) */
+  var c=client();
+  if(c && c.auth && typeof c.auth.onAuthStateChange==="function"){
+    try{
+      c.auth.onAuthStateChange(function(evt){
+        if(evt==="SIGNED_IN"||evt==="SIGNED_OUT"||evt==="TOKEN_REFRESHED"){
+          if(typeof loadSession==="function") loadSession();
+          if(evt==="SIGNED_IN" && typeof closeModal==="function") closeModal();
+        }
+      });
+    }catch(e){}
+  }
+  kkHandleReturn();
+}
+/* ════════════════════════════════════════════════════════════════════
+   연결 실패 상태
+
+   서버에 못 붙었을 때 화면이 "아직 요청이 없어요" · "등록된 업체가 아직
+   없습니다" 로 보였습니다. 처음 온 사람은 플랫폼이 텅 비었다고 생각하고
+   그냥 나갑니다. 실제로는 연결이 안 된 것뿐입니다.
+
+   연결이 끊긴 것을 감지해서 빈 목록 대신 "불러오지 못했습니다 · 다시 시도"
+   를 보여주고, 상단에 안내 띠를 띄웁니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+var NET = { ok:null, tried:false, retrying:false };
+G.NET = NET;
+
+function netDown(){
+  if(navigator && navigator.onLine===false) return true;
+  if(!client()) return true;
+  return NET.ok===false;
+}
+
+/* ── 상단 안내 띠 ── */
+function netBar(){
+  var down=netDown();
+  var el=$("net-bar");
+  if(!down){ if(el && el.parentNode) el.parentNode.removeChild(el); return; }
+  if(el) return;
+  el=document.createElement("div");
+  el.id="net-bar"; el.className="net-bar"; el.setAttribute("role","status");
+  el.innerHTML='<span>'+
+    (navigator.onLine===false
+      ? "인터넷이 끊겼습니다. 연결을 확인해주세요."
+      : "서버에 연결할 수 없습니다. 목록이 비어 보일 수 있습니다.")+
+    '</span><button type="button" class="net-retry" onclick="gNetRetry()">다시 시도</button>';
+  document.body.appendChild(el);
+  netPlace(el);
+}
+/* 하단 네비 높이는 화면 크기에 따라 달라지므로 실제 값을 재서 띄웁니다 */
+function netPlace(el){
+  el=el||$("net-bar"); if(!el) return;
+  var nav=document.querySelector(".bnav");
+  var h=0;
+  if(nav){
+    var r=nav.getBoundingClientRect();
+    if(r.height>0 && getComputedStyle(nav).display!=="none") h=r.height;
+  }
+  el.style.bottom=h?(Math.round(h)+"px"):"0";
+}
+
+window.gNetRetry=async function(){
+  if(NET.retrying) return;
+  NET.retrying=true;
+  var btn=document.querySelector(".net-retry");
+  if(btn){ btn.disabled=true; btn.textContent="확인 중…"; }
+  NET.ok=null;
+  try{
+    if(typeof loadFromDB==="function") await loadFromDB();
+    if(typeof loadMarket==="function") await loadMarket();
+    if(typeof loadSession==="function") await loadSession();
+  }catch(e){}
+  NET.retrying=false;
+  if(btn){ btn.disabled=false; btn.textContent="다시 시도"; }
+  netBar();
+  netPaint();
+  if(!netDown()) toast("다시 연결했습니다.","ok");
+};
+
+/* ── 빈 목록을 "불러오지 못했습니다" 로 바꿔치기 ── */
+function netFail(host, what){
+  var el=(typeof host==="string")?$(host):host;
+  if(!el) return;
+  el.innerHTML='<div class="gempty"><div class="gempty-t">'+esc(what)+'을(를) 불러오지 못했습니다</div>'+
+    '<div class="gempty-d">서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.<br>'+
+    '계속 안 되면 인터넷 연결을 확인해주세요.</div>'+
+    '<button class="gbtn gbtn-p gbtn-sm" onclick="gNetRetry()">다시 시도</button></div>';
+}
+function netPaint(){
+  if(!netDown()) return;
+  var pg=(document.querySelector(".pg.on")||{}).id||"";
+  if(pg==="pg-reqs"  && !(typeof REQS!=="undefined" && REQS.length)) netFail("rq-list-full","요청 목록");
+  if(pg==="pg-suppliers" && !(typeof SUPS!=="undefined" && SUPS.length)) netFail("sup-full","업체 목록");
+  if(pg==="pg-jobs"  && !(typeof JB!=="undefined" && JB.rows && JB.rows.length)) netFail("job-full","구인구직 공고");
+  if(pg==="pg-h"){
+    if(!(typeof REQS!=="undefined" && REQS.length)) netFail("rq-widget","요청");
+    if(!(typeof SUPS!=="undefined" && SUPS.length)) netFail("sup-home","업체");
+  }
+}
+
+function patchOffline(){
+  if(NET._patched) return; NET._patched=true;
+
+  /* 조회가 성공했는지 실패했는지 기록합니다 */
+  if(typeof selectSafe==="function"){
+    var origSel=selectSafe;
+    selectSafe=async function(){
+      var r=await origSel.apply(this, arguments);
+      if(r && r.error && !r.unavailable) NET.ok=false;
+      else if(r && !r.error) NET.ok=true;
+      NET.tried=true;
+      return r;
+    };
+  }
+  if(typeof loadFromDB==="function"){
+    var origLoad=loadFromDB;
+    loadFromDB=async function(){
+      if(!client()){ NET.ok=false; NET.tried=true; netBar(); netPaint(); return; }
+      var r;
+      try{ r=await origLoad.apply(this, arguments); }
+      catch(e){ NET.ok=false; }
+      NET.tried=true;
+      /* 실제로 한 건이라도 받았으면 연결된 것으로 봅니다 */
+      if((typeof REQS!=="undefined" && REQS.length) ||
+         (typeof SUPS!=="undefined" && SUPS.length) ||
+         (typeof JOBS!=="undefined" && JOBS.length)) NET.ok=true;
+      netBar(); netPaint();
+      return r;
+    };
+  }
+
+  var origGo=window.go;
+  if(typeof origGo==="function"){
+    window.go=function(p){
+      var r=origGo.apply(this, arguments);
+      setTimeout(function(){ try{ netBar(); netPaint(); }catch(e){} }, 120);
+      return r;
+    };
+  }
+
+  window.addEventListener("resize", function(){ netPlace(); });
+  window.addEventListener("online", function(){ netBar(); window.gNetRetry(); });
+  window.addEventListener("offline", function(){ netBar(); netPaint(); });
+
+  /* 첫 판단은 데이터 로딩이 끝날 때쯤 */
+  setTimeout(function(){ try{ netBar(); netPaint(); }catch(e){} }, 2200);
+  setTimeout(function(){ try{ netBar(); netPaint(); }catch(e){} }, 5000);
+}
+/* ════════════════════════════════════════════════════════════════════
+   오래된 요청
+
+   요청은 등록되면 계속 "견적대기" 로 남습니다. 구매자가 오프라인에서 이미
+   해결했어도 목록에 그대로 있어서, 업체는 몇 달 전 요청에 견적을 보내고
+   연락이 안 되는 일이 반복됩니다.
+
+   자동으로 지우거나 상태를 바꾸지는 않습니다(구매자 데이터입니다).
+   대신 지난 기간을 눈에 보이게 하고, 아주 오래된 것은 목록에서 접어둡니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+var STL = { showOld:false, map:{}, loaded:false };
+G.STL = STL;
+var STL_WARN = 30;    /* 이 날짜가 지나면 "오래된 요청" 표시 */
+var STL_HIDE = 90;    /* 이 날짜가 지나면 목록에서 기본으로 접음 */
+
+function stlDays(v){
+  if(!v) return null;
+  var t=new Date(v).getTime();
+  if(isNaN(t)) return null;
+  return Math.floor((Date.now()-t)/86400000);
+}
+/* 목록에 쓰이는 REQS 는 created_at·status 를 버린 형태라,
+   등록 시각과 상태만 따로 한 번 받아 둡니다. */
+async function stlLoad(){
+  var r=await selectSafe("purchase_requests", function(q){
+    return q.order("created_at",{ascending:false}).limit(300);
+  });
+  if(r.unavailable || r.error) return;
+  var m={};
+  (r.data||[]).forEach(function(x){ m[String(x.id)]={ at:x.created_at, status:x.status }; });
+  STL.map=m; STL.loaded=true;
+}
+function stlInfo(idOrRow){
+  if(idOrRow && typeof idOrRow==="object"){
+    var byId=STL.map[String(idOrRow.id)];
+    if(byId) return byId;
+    return { at:idOrRow.rawCreatedAt||idOrRow.created_at, status:idOrRow.status };
+  }
+  return STL.map[String(idOrRow)]||null;
+}
+/* 아직 진행 중인(견적을 더 받는) 요청만 대상입니다 */
+function stlOpen(info){
+  return String((info&&info.status)||"견적대기")==="견적대기";
+}
+function stlAge(r){
+  var info=stlInfo(r);
+  if(!info || !stlOpen(info)) return null;
+  return stlDays(info.at);
+}
+
+/* ── 요청 상세 안내 ── */
+function stlDetailNote(){
+  var body=$("reqd-body"), req=CUR.req;
+  if(!body || !req || body.querySelector(".stl-note")) return;
+  var d=stlAge({ id:req.id, created_at:req.created_at, status:req.status });
+  if(d===null || d<STL_WARN) return;
+
+  var mine = ME.user && req.user_id && String(req.user_id)===String(ME.user.id);
+  var el=document.createElement("div");
+  el.className="gnote stl-note";
+  el.innerHTML = mine
+    ? '올린 지 <b>'+d+'일</b> 지났습니다. 아직 필요하시면 그대로 두셔도 되고, '+
+      '해결되었다면 아래에서 마감해 주세요. 마감하면 업체에 더 이상 노출되지 않습니다.'
+    : '<b>'+d+'일 전</b>에 올라온 요청입니다. 이미 해결되었을 수 있으니 '+
+      '견적을 보내기 전에 요청자에게 아직 필요한지 확인해 보세요.';
+  var card=body.querySelector(".gcard");
+  if(card && card.parentNode) card.parentNode.insertBefore(el, card);
+}
+
+/* ── 목록 카드에 경과 표시 ── */
+function stlPaintCards(){
+  if(typeof REQS==="undefined") return;
+  var byId={};
+  REQS.forEach(function(r){ byId[String(r.id)]=r; });
+  document.querySelectorAll('#rq-list-full [onclick*="gOpenRequest"], #rq-widget [onclick*="gOpenRequest"]').forEach(function(card){
+    if(card.querySelector(".stl-tag")) return;
+    var m=/gOpenRequest\('([^']+)'\)/.exec(card.getAttribute("onclick")||"");
+    if(!m) return;
+    var info=stlInfo(m[1]);
+    if(!info || !stlOpen(info)) return;
+    var d=stlDays(info.at);
+    if(d===null || d<STL_WARN) return;
+    var top=card.querySelector(".rqc-top,.ritem-top,.rc-top") || card.firstElementChild;
+    if(!top) return;
+    var s=document.createElement("span");
+    s.className="stl-tag";
+    s.textContent=d+"일 지남";
+    top.appendChild(s);
+  });
+}
+
+/* ── 아주 오래된 요청은 기본으로 접기 ── */
+function stlFilter(list){
+  if(STL.showOld) return list;
+  return (list||[]).filter(function(r){
+    var info=stlInfo(r);
+    if(!info || !stlOpen(info)) return true;
+    var d=stlDays(info.at);
+    return !(d!==null && d>=STL_HIDE);
+  });
+}
+function stlHiddenCount(list){
+  return (list||[]).length - stlFilter(list).length;
+}
+window.gStlToggle=function(){
+  STL.showOld=!STL.showOld;
+  if(typeof renderReqs==="function") renderReqs();
+};
+function stlNotice(total, shown){
+  var host=$("rq-list-full"); if(!host) return;
+  var old=$("stl-more"); if(old && old.parentNode) old.parentNode.removeChild(old);
+  var n=total-shown;
+  if(!n && !STL.showOld) return;
+  var d=document.createElement("div");
+  d.id="stl-more"; d.className="stl-more";
+  d.innerHTML = STL.showOld
+    ? '<span>'+STL_HIDE+'일이 지난 요청도 함께 보고 있습니다.</span>'+
+      '<button type="button" onclick="gStlToggle()">최근 것만 보기</button>'
+    : '<span>'+STL_HIDE+'일이 지난 요청 '+n+'건은 접어두었습니다.</span>'+
+      '<button type="button" onclick="gStlToggle()">모두 보기</button>';
+  host.parentNode.insertBefore(d, host.nextSibling);
+}
+
+function patchStale(){
+  if(STL._patched) return; STL._patched=true;
+
+  /* mapReq 가 created_at 을 버리므로 원본을 하나 붙여둡니다 */
+  var origMap=window.mapReq;
+  if(typeof origMap==="function"){
+    window.mapReq=function(r){
+      var o=origMap(r);
+      if(o && r) o.rawCreatedAt=r.created_at;
+      return o;
+    };
+  }
+
+  /* 목록에서 아주 오래된 것 접기 */
+  var origReqs=window.renderReqs;
+  if(typeof origReqs==="function"){
+    window.renderReqs=function(){
+      if(typeof REQS==="undefined") return origReqs.apply(this, arguments);
+      var all=REQS, kept=stlFilter(all);
+      var total=all.length, shown=kept.length;
+      REQS=kept;
+      var out;
+      try{ out=origReqs.apply(this, arguments); }
+      finally{ REQS=all; }
+      try{ stlNotice(total, shown); stlPaintCards(); }catch(e){}
+      return out;
+    };
+  }
+
+  if(typeof renderRequestDetail==="function"){
+    var origRRD=renderRequestDetail;
+    renderRequestDetail=function(){
+      var r=origRRD.apply(this, arguments);
+      try{ stlDetailNote(); }catch(e){}
+      return r;
+    };
+  }
+  /* 등록 시각·상태를 받아온 뒤 목록을 다시 그립니다 */
+  stlLoad().then(function(){
+    if(!STL.loaded) return;
+    try{
+      if(typeof renderReqs==="function") renderReqs();
+      if(typeof renderRQWidget==="function") renderRQWidget();
+    }catch(e){}
+  });
+  if(typeof loadFromDB==="function"){
+    var origLoad=loadFromDB;
+    loadFromDB=async function(){
+      var r=await origLoad.apply(this, arguments);
+      try{ await stlLoad(); if(typeof renderReqs==="function") renderReqs(); }catch(e){}
+      return r;
+    };
+  }
+
+  /* 홈 위젯도 같은 기준으로 접습니다 (목록과 다르면 혼란스럽습니다) */
+  var origWidget=window.renderRQWidget;
+  if(typeof origWidget==="function"){
+    window.renderRQWidget=function(){
+      if(typeof REQS==="undefined") return origWidget.apply(this, arguments);
+      var all=REQS;
+      REQS=stlFilter(all);
+      var r;
+      try{ r=origWidget.apply(this, arguments); }
+      finally{ REQS=all; }
+      try{ stlPaintCards(); }catch(e){}
+      return r;
+    };
+  }
+}
 
 /* ════════════════════════════════════════════════════════════════════
    기존 화면과의 연결 · 초기화
@@ -5450,6 +5913,9 @@ function applyExtras(){
   try{ patchNotif(); }catch(e){}
   try{ patchContent(); }catch(e){}
   try{ patchA11y(); }catch(e){}
+  try{ patchKakao(); }catch(e){}
+  try{ patchOffline(); }catch(e){}
+  try{ patchStale(); }catch(e){}
   try{ patchRouter(); armRouter(); }catch(e){}
 }
 /* 리디자인 패치(420ms) 뒤에 얹혀야 하므로 그보다 늦게 실행합니다.

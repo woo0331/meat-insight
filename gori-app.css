@@ -482,3 +482,28 @@ html .hero input:focus-visible,html .gh input:focus-visible,
 html .hero textarea:focus-visible,html .gh textarea:focus-visible,
 html .hero select:focus-visible,html .gh select:focus-visible{outline-color:var(--gn);}
 .pg:focus{outline:none;}
+
+/* ════════════════════════════════════════════════════════════════════
+   연결 실패 안내 띠
+   ════════════════════════════════════════════════════════════════════ */
+.net-bar{position:fixed;left:0;right:0;bottom:0;z-index:1000;
+  display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;
+  background:var(--ink);color:#fff;font-family:var(--font);
+  font-size:13.5px;font-weight:600;padding:11px 16px;line-height:1.5;
+  box-shadow:0 -4px 18px rgba(0,0,0,.2);}
+.net-retry{border:1.5px solid rgba(255,255,255,.4);background:none;color:#fff;
+  font-family:var(--font);font-size:13px;font-weight:800;
+  padding:6px 14px;border-radius:9px;cursor:pointer;white-space:nowrap;}
+.net-retry:hover{background:rgba(255,255,255,.12);}
+.net-retry:disabled{opacity:.5;cursor:not-allowed;}
+/* bottom 값은 JS 가 하단 네비 실제 높이를 재서 넣습니다 */
+
+/* 오래된 요청 표시 */
+.stl-tag{margin-left:auto;font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:5px;
+  background:var(--bg2);color:var(--ink4);border:1px solid var(--bd);white-space:nowrap;}
+.stl-more{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  margin-top:12px;padding:12px 14px;border:1px dashed var(--bd2);border-radius:12px;
+  font-size:13px;color:var(--ink3);font-weight:600;}
+.stl-more button{border:none;background:none;color:var(--gn);font-family:var(--font);
+  font-size:13px;font-weight:800;cursor:pointer;padding:4px 8px;border-radius:8px;white-space:nowrap;}
+.stl-more button:hover{background:var(--gnl);}

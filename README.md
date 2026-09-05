@@ -52,6 +52,7 @@ values ('beef', '한우 등심', '1+', 64000, '원/kg', current_date);
 | `db/phase3_schema.sql` | DB 확장 — 채팅·매칭 알림·인증·거래·시세 (추가 전용) |
 | `db/phase4_admin.sql` | DB 확장 — 관리자 권한 + 기존 테이블 RLS (추가 전용) |
 | `db/phase5_storage.sql` | 업체 사진 저장소(Supabase Storage) 버킷·정책 |
+| `db/phase6_realtime.sql` | 실시간 갱신 — 알림·채팅·견적을 발행 목록에 추가 (선택) |
 | `admin.html` | **관리자 콘솔** — 인증 심사·요청·견적·거래·시세 운영 |
 | `og.png` | 카톡·SNS 공유 썸네일 (1200×630) |
 | `dashboard.html` | 운영 허브 |
@@ -95,6 +96,10 @@ values ('beef', '한우 등심', '1+', 64000, '원/kg', current_date);
 5. `db/phase5_storage.sql` **Run** — 업체 사진 저장소.
    SQL 이 막히면 대시보드에서 만들어도 됩니다:
    Storage → New bucket → 이름 `supplier-photos` → **Public bucket** 체크
+6. (선택) `db/phase6_realtime.sql` **Run** — 새 견적·새 메시지·새 알림이
+   화면을 다시 열지 않아도 바로 나타납니다. 테이블·데이터는 건드리지 않고
+   기존 테이블 3개를 실시간 발행 목록에 추가만 합니다. 실행하지 않아도
+   지금까지처럼(폴링·수동 새로고침) 동작합니다.
 
 ### 업체 온보딩 (`업체 등록`)
 

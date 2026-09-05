@@ -16,7 +16,7 @@
 
     var st=document.createElement("style");
     st.textContent=
-      "#lc-foot{background:#12161B;color:rgba(255,255,255,.45);padding:30px 20px 26px;"+
+      "#lc-foot{background:#12161B;color:rgba(255,255,255,.66);padding:30px 20px 26px;"+
         "font-family:'Pretendard Variable',Pretendard,'Noto Sans KR',system-ui,sans-serif;"+
         "font-size:12.5px;line-height:1.9;}"+
       "#lc-foot .in{max-width:1100px;margin:0 auto;}"+
@@ -27,7 +27,7 @@
       "#lc-foot a{color:rgba(255,255,255,.62);text-decoration:none;font-weight:700;}"+
       "#lc-foot a:hover{color:#fff;}"+
       "#lc-foot .rows span{margin-right:16px;white-space:nowrap;}"+
-      "#lc-foot .note{margin-top:10px;color:rgba(255,255,255,.32);max-width:760px;}"+
+      "#lc-foot .note{margin-top:10px;color:rgba(255,255,255,.62);max-width:760px;}"+
       "#lc-foot .lc-none{color:#F5A524;font-weight:800;}"+
       "#lc-foot :focus-visible{outline:3px solid #fff;outline-offset:2px;}"+
       "@media(max-width:600px){#lc-foot .rows span{display:block;margin:0;}}";
@@ -38,7 +38,7 @@
     f.innerHTML='<div class="in">'+
       '<div class="top">'+
         '<a class="bd" href="index.html">'+
-          '<svg width="20" height="20" viewBox="0 0 26 26" fill="none" aria-hidden="true"><circle cx="13" cy="13" r="13" fill="#D91F3A"/>'+
+          '<svg width="20" height="20" viewBox="0 0 26 26" fill="none" aria-hidden="true"><circle cx="13" cy="13" r="13" fill="#8A2846"/>'+
           '<path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>'+
           '<circle cx="8" cy="20" r="2" fill="white"/></svg> 고리</a>'+
         '<a href="index.html">고리 홈</a>'+

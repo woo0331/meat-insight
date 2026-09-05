@@ -62,11 +62,11 @@ async function open(b,vp){const p=await b.newPage({viewport:vp||{width:1280,heig
    if(!e) return '(없음)';
    e.focus(); const s=getComputedStyle(e);
    return s.outlineStyle+' '+s.outlineWidth+' '+s.outlineColor;}, sel);
- chk('  히어로 검색창 링', await ringOf(q,'.gh-s-in, .hs-input'), 'solid 3px rgb(217, 31, 58)');
- chk('  카테고리 버튼 링', await ringOf(q,'.hc-item'), 'solid 3px rgb(217, 31, 58)');
+ chk('  히어로 검색창 링', await ringOf(q,'.gh-s-in, .hs-input'), 'solid 3px rgb(138, 40, 70)');
+ chk('  카테고리 버튼 링', await ringOf(q,'.hc-item'), 'solid 3px rgb(138, 40, 70)');
  await q.evaluate(()=>go('reqs')); await q.waitForTimeout(1100);
- chk('  목록 검색창 링', await ringOf(q,'#flt-req-q'), 'solid 3px rgb(217, 31, 58)');
- chk('  정렬 선택 링', await ringOf(q,'#flt-req-sort'), 'solid 3px rgb(217, 31, 58)');
+ chk('  목록 검색창 링', await ringOf(q,'#flt-req-q'), 'solid 3px rgb(138, 40, 70)');
+ chk('  정렬 선택 링', await ringOf(q,'#flt-req-sort'), 'solid 3px rgb(138, 40, 70)');
  await q.evaluate(()=>go('h')); await q.waitForTimeout(600);
  log.push('  포커스 대상: '+ring.el);
  await q.screenshot({path:'ay-focus.png'});

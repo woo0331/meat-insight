@@ -29,12 +29,12 @@
 .gin{width:100%;padding:12px 13px;border:1.5px solid var(--bd);border-radius:8px;font-size:14.5px;color:var(--ink);font-family:"Noto Sans KR",sans-serif;background:#fff;outline:none;transition:border-color .15s;}
 .gin:focus{border-color:var(--gn);}
 textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
-.gin.err{border-color:var(--red);background:#FFF7F7;}
+.gin.err{border-color:var(--red);background:#FEF6F3;}
 .ghint{font-size:11.5px;color:var(--ink4);margin-top:5px;}
 .gmsg{margin-top:12px;padding:12px 14px;border-radius:8px;font-size:13.5px;font-weight:600;display:none;}
 .gmsg.on{display:block;}
 .gmsg.ok{background:var(--okl);color:#1B5E20;border:1px solid var(--okb);}
-.gmsg.err{background:var(--redbg);color:var(--red);border:1px solid #FFCDD2;}
+.gmsg.err{background:var(--redbg);color:var(--red);border:1px solid var(--redb);}
 .gmsg.info{background:var(--gnl);color:var(--gn2);border:1px solid var(--gnb);}
 .gpick{display:flex;gap:7px;flex-wrap:wrap;}
 .gpick-i{padding:9px 15px;border:1.5px solid var(--bd);border-radius:999px;font-size:13px;font-weight:600;color:var(--ink2);background:#fff;cursor:pointer;font-family:"Noto Sans KR",sans-serif;transition:all .15s;}
@@ -97,7 +97,7 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
 .qc-note{font-size:12.5px;color:var(--ink2);line-height:1.6;background:var(--bg2);border-radius:8px;padding:10px 11px;}
 .qc-act{display:flex;gap:7px;margin-top:auto;}
 .qc-act button{flex:1;}
-.qstar{color:#F59E0B;font-weight:800;}
+.qstar{color:var(--amber-ink);font-weight:800;}
 
 /* ── 견적 요약 바 ── */
 .qbar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:16px;}
@@ -165,11 +165,11 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
 .rv-deal{font-size:11.5px;color:var(--ink4);margin-top:6px;}
 .stars{display:inline-flex;gap:2px;}
 .stars span{font-size:16px;color:var(--bd2);cursor:pointer;line-height:1;}
-.stars span.on{color:#F59E0B;}
+.stars span.on{color:var(--amber-ink);}
 .stars.ro span{cursor:default;font-size:13px;}
 
 /* ── 거래관리(마이페이지) ── */
-.my-hd{background:linear-gradient(135deg,var(--gn),#B03C0A);border-radius:14px;padding:20px;color:#fff;margin-bottom:14px;}
+.my-hd{background:linear-gradient(135deg,var(--gn),var(--gn2));border-radius:14px;padding:20px;color:#fff;margin-bottom:14px;}
 .my-nm{font-size:19px;font-weight:800;}
 .my-em{font-size:12.5px;color:rgba(255,255,255,.75);margin-top:3px;}
 .my-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.22);border-radius:10px;overflow:hidden;margin-top:16px;}
@@ -197,9 +197,9 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
 .nt-d{font-size:11px;color:var(--ink4);margin-top:4px;}
 
 /* ── DB 준비 안내 ── */
-.setup-note{background:#FFF8E1;border:1px solid #FFE082;border-radius:12px;padding:16px 18px;margin-bottom:14px;}
-.setup-note b{color:#E65100;}
-.setup-note code{background:#fff;border:1px solid #FFE082;border-radius:4px;padding:1px 6px;font-size:12px;}
+.setup-note{background:var(--amber-tint);border:1px solid var(--amber-br);border-radius:12px;padding:16px 18px;margin-bottom:14px;}
+.setup-note b{color:#9A3412;}
+.setup-note code{background:#fff;border:1px solid var(--amber-br);border-radius:4px;padding:1px 6px;font-size:12px;}
 
 /* ── 반응형 ── */
 @media(max-width:900px){
@@ -310,7 +310,7 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
 .sc2-bd-mint{background:var(--gnl);color:var(--gn-on-tint);}
 .sc2-bd-blue{background:var(--bluebg);color:var(--blue);}
 .sc2-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px;color:var(--ink3);font-weight:400;}
-.sc2-star{color:#B8860B;font-weight:600;}
+.sc2-star{color:var(--amber-ink);font-weight:600;}
 .sc2-new{color:var(--ink4);}
 .sc2-dot{color:var(--bd2);}
 .sc2-ch{flex-shrink:0;color:var(--ink4);}
@@ -385,7 +385,7 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
 }
 
 /* 요청 수정 화면 안내 */
-.gnote{background:var(--amber-tint);border:1px solid var(--amber);border-radius:12px;
+.gnote{background:var(--amber-tint);border:1px solid var(--amber-br);border-radius:12px;
   padding:12px 14px;margin-bottom:13px;font-size:13px;font-weight:600;color:var(--ink2);line-height:1.6;}
 
 /* 시세 출처 표기 */

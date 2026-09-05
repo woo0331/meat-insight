@@ -88,6 +88,17 @@ node build.js --check   # 빌드 결과가 현재 파일과 같은지 확인
 `index.html` 과 `meat_insight_main.html` 은 같은 내용이어야 합니다. `index.html`
 을 고쳤으면 `cp index.html meat_insight_main.html` 을 잊지 마세요.
 
+## 테스트
+
+```bash
+npm i -D playwright && npx playwright install chromium   # 최초 1회
+node test/run.js
+```
+
+실제 Chromium 으로 사이트를 띄우고 Supabase 대신 가짜 클라이언트를 넣어
+확인합니다. **실제 DB 에는 아무 것도 쓰지 않습니다.** 자세한 내용은
+`test/README.md` 를 보세요.
+
 ## 기술 스택
 
 - 프레임워크·빌드 도구 없는 정적 HTML / CSS / JavaScript
@@ -114,6 +125,8 @@ node build.js --check   # 빌드 결과가 현재 파일과 같은지 확인
 | `robots.txt` · `sitemap.xml` | 검색엔진 색인 안내 |
 | `admin-gate.js` | 관리 화면 접근 제한 — 레거시 관리 페이지 4개에 적용 |
 | `src/` · `build.js` | **`gori-app.js` 의 원본 조각들 — 여기를 고치고 빌드하세요** |
+| `test/` | 회귀 테스트 21종 (`node test/run.js`) |
+| `CLAUDE.md` | 이 저장소를 고칠 때의 규칙 |
 | `legacy-chrome.js` | 레거시 콘텐츠 페이지 공통 꼬리말 (홈·약관·방침·사업자 정보) |
 | `admin.html` | **관리자 콘솔** — 인증 심사·요청·견적·거래·시세 운영 |
 | `og.jpg` | 카톡·SNS 공유 썸네일 (1200×630) |

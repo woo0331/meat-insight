@@ -1,0 +1,225 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'><circle cx='13' cy='13' r='13' fill='%23D91F3A'/><path d='M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20' stroke='white' stroke-width='2.5' stroke-linecap='round' fill='none'/><circle cx='8' cy='20' r='2' fill='white'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --gn:#D91F3A;--gn2:#A8142A;--gnl:#FDECEE;--gnb:#FAD4DA;--gn-on-tint:#A8142A;
+  --amber:#F5A524;--amber-tint:#FFF4DF;
+  --bg:#FFFFFF;--bg2:#F2F1ED;--bd:#EAE8E4;--bd2:#D9D6D0;
+  --ink:#14181C;--ink2:#3A4149;--ink3:#6E7480;--ink4:#71767F;
+  --navy:#12161B;
+  --font:"Pretendard Variable",Pretendard,"Noto Sans KR",system-ui,-apple-system,sans-serif;
+  --max:860px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg2);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.75;
+  -webkit-text-size-adjust:100%;}
+.top{background:var(--bg);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:10}
+.top-in{max-width:var(--max);margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:11px}
+.logo{display:flex;align-items:center;gap:8px;font-size:19px;font-weight:800;color:var(--ink);
+  text-decoration:none;letter-spacing:-.6px}
+.top-nav{margin-left:auto;display:flex;gap:6px}
+.top-nav a{font-size:13.5px;font-weight:700;color:var(--ink3);text-decoration:none;
+  padding:7px 12px;border-radius:9px}
+.top-nav a:hover{background:var(--bg2);color:var(--ink)}
+.top-nav a.on{background:var(--gnl);color:var(--gn-on-tint)}
+.wrap{max-width:var(--max);margin:0 auto;padding:30px 20px 70px}
+.doc{background:var(--bg);border:1px solid var(--bd);border-radius:16px;padding:36px 38px 44px}
+h1{font-size:29px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.lead{font-size:15px;color:var(--ink3);line-height:1.8;margin-bottom:10px}
+.meta{font-size:13px;color:var(--ink4);font-weight:600;padding-bottom:22px;border-bottom:1px solid var(--bd);margin-bottom:26px}
+h2{font-size:19px;font-weight:800;letter-spacing:-.5px;margin:34px 0 12px;padding-top:4px}
+h2:first-of-type{margin-top:0}
+h3{font-size:15.5px;font-weight:800;color:var(--ink);margin:20px 0 8px}
+p{color:var(--ink2);margin-bottom:11px}
+ul,ol{margin:0 0 13px 20px;color:var(--ink2)}
+li{margin-bottom:6px}
+b,strong{color:var(--ink);font-weight:800}
+.tbl{width:100%;border-collapse:collapse;margin:12px 0 16px;font-size:14px;display:block;overflow-x:auto}
+.tbl table{width:100%;border-collapse:collapse;min-width:520px}
+.tbl th,.tbl td{border:1px solid var(--bd);padding:10px 12px;text-align:left;vertical-align:top}
+.tbl th{background:var(--bg2);font-weight:800;color:var(--ink);white-space:nowrap}
+.tbl td{color:var(--ink2)}
+.note{background:var(--amber-tint);border:1px solid var(--amber);border-radius:12px;
+  padding:14px 16px;margin:16px 0;font-size:14px;color:var(--ink2);line-height:1.7}
+.note b{color:var(--ink)}
+.callout{background:var(--gnl);border:1px solid var(--gnb);border-radius:12px;
+  padding:14px 16px;margin:16px 0;font-size:14.5px;color:var(--gn2);font-weight:600;line-height:1.7}
+.biz{background:var(--bg2);border:1px solid var(--bd);border-radius:12px;padding:16px 18px;margin-top:8px;font-size:14px}
+.biz div{color:var(--ink2);line-height:2}
+.biz .k{display:inline-block;min-width:130px;color:var(--ink4);font-weight:700}
+.biz-none{color:#B3261E;font-weight:800}
+.foot{max-width:var(--max);margin:0 auto;padding:0 20px 40px;font-size:12.5px;color:var(--ink4);line-height:1.9}
+.foot a{color:var(--ink3);font-weight:700;text-decoration:none}
+.foot a:hover{color:var(--gn)}
+@media(max-width:640px){
+  .doc{padding:24px 20px 32px;border-radius:14px}
+  h1{font-size:24px}h2{font-size:17.5px}
+  .wrap{padding:18px 12px 50px}
+  .biz .k{display:block;min-width:0;margin-top:6px}
+}
+</style>
+<title>이용약관 — 고리</title>
+<meta name="description" content="고리(aboutmeat.co.kr) 이용약관. 축산업 요청·견적 중개 플랫폼의 이용 조건과 당사자 간 책임 범위를 안내합니다."/>
+</head><body>
+<div class="top"><div class="top-in">
+  <a class="logo" href="index.html">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#D91F3A"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg>
+    고리</a>
+  <nav class="top-nav">
+    <a href="index.html">홈</a>
+    <a href="terms.html" id="nav-terms">이용약관</a>
+    <a href="privacy.html" id="nav-privacy">개인정보처리방침</a>
+  </nav>
+</div></div>
+<div class="wrap"><div class="doc">
+<h1>이용약관</h1>
+<p class="lead">고리는 축산업에 필요한 요청과 업체를 연결하는 중개 플랫폼입니다. 이 약관은 서비스를 이용하는 모든 분에게 적용됩니다.</p>
+<div class="meta">시행일 <span id="eff">—</span></div>
+
+<div class="callout">먼저 알아두실 것 — <b>고리는 거래의 당사자가 아닙니다.</b> 요청자와 업체가 직접 계약하고, 대금·품질·납기·이행 책임은 두 당사자에게 있습니다. 고리는 서로를 찾고 조건을 비교할 수 있게 돕습니다.</div>
+
+<h2>제1조 (목적)</h2>
+<p>이 약관은 <span class="co">고리</span>(이하 "회사")가 운영하는 고리 서비스(<b>aboutmeat.co.kr</b>, 이하 "서비스")의 이용 조건과 절차, 회사와 이용자의 권리·의무 및 책임 사항을 정하는 것을 목적으로 합니다.</p>
+
+<h2>제2조 (용어의 정의)</h2>
+<ul>
+  <li><b>이용자</b> — 서비스에 접속하여 이 약관에 따라 서비스를 이용하는 모든 사람을 말합니다. 회원과 비회원을 모두 포함합니다.</li>
+  <li><b>회원</b> — 이메일로 계정을 만들어 로그인해 이용하는 이용자를 말합니다.</li>
+  <li><b>요청자</b> — 원육 구매, 가공·OEM, 물류, 인력, 장비, 창업, HACCP 등에 관한 요청서를 등록하는 이용자를 말합니다.</li>
+  <li><b>업체</b> — 업체 정보를 등록하고 요청에 견적을 보내는 이용자를 말합니다.</li>
+  <li><b>요청</b> — 요청자가 등록한 조건·수량·지역·희망가 등의 내용을 말합니다.</li>
+  <li><b>견적</b> — 업체가 특정 요청에 대해 제시한 가격·납기·조건을 말합니다.</li>
+  <li><b>게시물</b> — 이용자가 서비스에 올린 요청·견적·업체 정보·구인구직 공고·후기·대화 내용 등 모든 자료를 말합니다.</li>
+</ul>
+
+<h2>제3조 (약관의 게시와 개정)</h2>
+<ol>
+  <li>회사는 이 약관을 서비스 초기 화면에서 확인할 수 있도록 게시합니다.</li>
+  <li>회사는 관련 법령을 위배하지 않는 범위에서 이 약관을 개정할 수 있습니다.</li>
+  <li>약관을 개정할 때는 적용일자와 개정 사유를 밝혀 적용일 <b>7일 전</b>부터 서비스 안에 공지합니다. 이용자에게 불리한 변경일 때는 <b>30일 전</b>부터 공지하고, 회원에게는 등록된 이메일로도 알립니다.</li>
+  <li>개정 약관 공지 후 이용자가 적용일까지 거부 의사를 밝히지 않고 서비스를 계속 이용하면 개정 약관에 동의한 것으로 봅니다. 동의하지 않는 이용자는 이용계약을 해지할 수 있습니다.</li>
+</ol>
+
+<h2>제4조 (서비스의 내용)</h2>
+<p>회사는 다음 서비스를 제공합니다.</p>
+<ul>
+  <li>요청 등록과 조건에 맞는 업체 매칭, 매칭 알림 발송</li>
+  <li>견적 접수·비교·선택, 거래 진행 상태 관리</li>
+  <li>업체 정보 등록·검색, 사업자등록·HACCP·축산물 영업허가 인증 표시</li>
+  <li>요청자와 업체 사이의 채팅</li>
+  <li>당일알바·구인구직 공고 등록과 지원</li>
+  <li>거래 후 후기·평점 등록</li>
+  <li>축산물 시세 정보 제공</li>
+</ul>
+<p>회사는 서비스의 내용을 변경할 수 있으며, 변경 시 그 내용과 적용일을 사전에 공지합니다.</p>
+
+<h2>제5조 (회사의 지위 — 중개자)</h2>
+<ol>
+  <li>회사는 이용자 사이의 거래를 <b>중개</b>하는 플랫폼을 제공할 뿐, 거래의 당사자가 아닙니다.</li>
+  <li>요청과 견적의 내용, 거래 조건, 대금 지급, 물품·용역의 품질과 하자, 납기 이행에 관한 책임은 <b>거래 당사자</b>에게 있습니다.</li>
+  <li>회사는 이용자가 등록한 정보의 진실성·정확성을 보증하지 않습니다. 다만 인증 신청이 접수된 사업자등록번호·HACCP·축산물 영업허가에 대해서는 확인 절차를 거쳐 배지를 표시합니다.</li>
+  <li>회사는 거래 대금을 대신 받거나 보관하지 않습니다. 대금은 당사자끼리 직접 주고받습니다.</li>
+</ol>
+
+<h2>제6조 (이용계약의 성립)</h2>
+<ol>
+  <li>이용계약은 이용자가 이 약관에 동의하고 회사가 이를 승낙함으로써 성립합니다.</li>
+  <li>요청 등록·업체 등록·구인구직 공고 등록은 회원가입 없이도 가능합니다. 이 경우에도 이 약관이 적용됩니다.</li>
+  <li>회사는 다음 신청에 대해 승낙을 거부하거나 사후에 이용계약을 해지할 수 있습니다.
+    <ul>
+      <li>다른 사람의 명의·연락처를 도용한 경우</li>
+      <li>허위 정보를 기재하거나 필수 정보를 기재하지 않은 경우</li>
+      <li>이전에 이 약관 위반으로 이용이 제한된 이력이 있는 경우</li>
+      <li>서비스의 정상 운영을 방해할 목적이 명백한 경우</li>
+    </ul>
+  </li>
+</ol>
+
+<h2>제7조 (이용자의 의무)</h2>
+<p>이용자는 다음 행위를 해서는 안 됩니다.</p>
+<ul>
+  <li>허위·과장 정보를 등록하거나, 실제로 거래할 의사 없이 요청·견적을 등록하는 행위</li>
+  <li>다른 사람의 상호·사업자등록번호·인증 정보를 도용하는 행위</li>
+  <li>같은 내용의 요청·공고를 반복 등록하거나 광고·홍보 목적으로 서비스를 이용하는 행위</li>
+  <li>다른 이용자의 개인정보를 수집·저장·공개하거나 서비스 밖의 목적으로 사용하는 행위</li>
+  <li>축산물 위생·유통 관련 법령을 위반하는 물품이나 용역을 거래하려는 행위</li>
+  <li>서비스를 자동화된 수단으로 대량 조회·수집(크롤링)하거나 정상 운영을 방해하는 행위</li>
+  <li>회사·다른 이용자의 명예를 훼손하거나 지식재산권을 침해하는 행위</li>
+</ul>
+
+<h2>제8조 (게시물의 관리)</h2>
+<ol>
+  <li>게시물에 대한 권리와 책임은 게시한 이용자에게 있습니다.</li>
+  <li>회사는 게시물이 제7조를 위반하거나 법령에 어긋난다고 판단되면 사전 통지 없이 삭제·비공개 처리할 수 있습니다. 처리 후 해당 이용자에게 사유를 알립니다.</li>
+  <li>회사는 서비스 운영·홍보 목적으로 게시물을 서비스 안에서 노출·인용할 수 있습니다. 업체명·요청 내용 등 공개를 전제로 등록된 정보에 한합니다.</li>
+  <li>이용자는 자신이 등록한 요청을 언제든 수정하거나 마감할 수 있고, 견적이 하나도 도착하지 않은 요청은 삭제할 수 있습니다. 업체는 요청자가 선택하기 전까지 보낸 견적을 철회할 수 있습니다.</li>
+</ol>
+
+<h2>제9조 (연락처 제공)</h2>
+<p>요청자가 요청을 등록하면, 조건이 맞는 업체가 견적을 보낼 수 있도록 <b>요청 내용과 연락처</b>가 해당 업체에 제공됩니다. 업체가 견적을 보내면 <b>업체명과 연락처</b>가 요청자에게 제공됩니다. 이는 서비스의 본질적 기능이며, 자세한 내용은 <a href="privacy.html">개인정보처리방침</a>에서 확인할 수 있습니다.</p>
+
+<h2>제10조 (서비스의 중단)</h2>
+<ol>
+  <li>회사는 설비 점검·교체, 통신 장애, 천재지변 등의 사유가 있으면 서비스 제공을 일시 중단할 수 있습니다.</li>
+  <li>정기 점검 등 사전에 알 수 있는 중단은 미리 공지합니다. 예측할 수 없는 사유로 중단된 경우에는 사후에 공지합니다.</li>
+</ol>
+
+<h2>제11조 (책임의 제한)</h2>
+<ol>
+  <li>회사는 천재지변, 이에 준하는 불가항력, 이용자의 귀책사유로 인한 서비스 장애에 대해 책임지지 않습니다.</li>
+  <li>회사는 이용자 사이에 이루어진 거래에서 발생한 손해에 대해 책임지지 않습니다. 다만 회사의 고의 또는 중대한 과실이 있는 경우에는 그러하지 않습니다.</li>
+  <li>회사는 이용자가 서비스에 게시한 정보의 신뢰도·정확성에 대해 책임지지 않습니다.</li>
+  <li>서비스에 표시되는 시세 정보는 참고용입니다. 회사는 그 정확성을 보증하지 않으며, 이를 근거로 한 거래 판단의 결과에 대해 책임지지 않습니다.</li>
+</ol>
+
+<h2>제12조 (이용계약의 해지)</h2>
+<ol>
+  <li>회원은 언제든 서비스 내 문의 또는 이메일로 탈퇴를 요청할 수 있고, 회사는 지체 없이 처리합니다.</li>
+  <li>회사는 이용자가 이 약관을 반복해서 위반하는 경우 사전 통지 후 이용을 제한하거나 계약을 해지할 수 있습니다. 위반 정도가 중대하면 즉시 제한할 수 있습니다.</li>
+  <li>계약이 해지되어도 이미 성립한 거래에 관한 당사자 사이의 권리·의무는 그대로 유지됩니다.</li>
+</ol>
+
+<h2>제13조 (분쟁의 해결)</h2>
+<ol>
+  <li>회사와 이용자 사이에 분쟁이 생기면 성실히 협의하여 해결합니다.</li>
+  <li>협의로 해결되지 않는 경우 관할 법원은 민사소송법에 따라 정합니다.</li>
+  <li>이 약관과 서비스 이용에는 대한민국 법을 적용합니다.</li>
+</ol>
+
+<h2>사업자 정보</h2>
+<div class="biz" id="biz-box"></div>
+
+</div></div>
+<div class="foot">
+  <a href="index.html">고리 홈</a> · <a href="privacy.html">개인정보처리방침</a><br>
+  이 약관은 서비스 화면에서 언제든 다시 확인할 수 있습니다.
+</div>
+<script src="site-info.js"></script>
+<script>
+(function(){
+  var B=window.GORI_BIZ||{};
+  function v(x){ return (x&&String(x).trim())?String(x).trim():'<span class="biz-none">(미기재)</span>'; }
+  var e=document.getElementById("eff"); if(e) e.textContent=B.effective||"—";
+  document.querySelectorAll(".co").forEach(function(el){
+    if(B.company&&String(B.company).trim()) el.textContent=String(B.company).trim();
+  });
+  var box=document.getElementById("biz-box");
+  if(box) box.innerHTML=
+    '<div><span class="k">상호</span>'+v(B.company)+'</div>'+
+    '<div><span class="k">대표자</span>'+v(B.ceo)+'</div>'+
+    '<div><span class="k">사업자등록번호</span>'+v(B.brn)+'</div>'+
+    '<div><span class="k">통신판매업 신고번호</span>'+v(B.mailOrder)+'</div>'+
+    '<div><span class="k">주소</span>'+v(B.address)+'</div>'+
+    '<div><span class="k">고객센터</span>'+v(B.phone)+'</div>'+
+    '<div><span class="k">이메일</span>'+v(B.email)+'</div>';
+  var n=document.getElementById("nav-terms"); if(n) n.className="on";
+})();
+</script>
+</body></html>

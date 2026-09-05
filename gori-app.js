@@ -2468,8 +2468,10 @@ function patchMyTabs(){
 
 /* ── 헤더·하단 네비에 채팅 진입 ── */
 function patchNav3(){
-  var origHdr=window.renderHeaderUser;
-  window.renderHeaderUser=function(){
+  /* renderHeaderUser 는 이 파일 스코프의 함수 선언입니다.
+     window.renderHeaderUser 를 감싸면 아무 효과가 없어서 직접 바꿉니다. */
+  var origHdr=renderHeaderUser;
+  renderHeaderUser=function(){
     origHdr();
     if(!ME.user) return;
     var box=document.querySelector(".hdr-user"); if(!box || box.querySelector(".hu-chat")) return;
@@ -3117,8 +3119,8 @@ function initRedesign(){
   patchFab();
   paintRegion();
   reorderSections();
-  var origHdr=window.renderHeaderUser;
-  window.renderHeaderUser=function(){ origHdr(); paintBell(); };
+  var origHdr=renderHeaderUser;          /* window 에는 없는 이름입니다 */
+  renderHeaderUser=function(){ origHdr(); paintBell(); };
   paintBell();
   if(typeof renderHome==="function") renderHome();
   renderHeroStat();
@@ -4501,6 +4503,386 @@ function patchLive(){
   }
   try{ liveNotifs(); }catch(e){}
 }
+/* ════════════════════════════════════════════════════════════════════
+   거래 무결성 · 연락처 검증
+   확인된 구멍:
+     · 마감·진행중·완료된 요청에도 견적을 계속 보낼 수 있었습니다.
+     · 같은 업체가 같은 요청에 견적을 몇 번이든 중복으로 보낼 수 있었습니다.
+     · 견적 선택 / 거래 완료 / 요청 마감에 소유자 확인이 없어, 버튼만
+       숨겨져 있을 뿐 직접 호출하면 남의 요청도 처리됐습니다.
+     · "거래 완료 처리" 버튼이 요청자가 아닌 사람에게도 보였습니다.
+     · 전화번호를 아무 값이나 넣어도 요청·견적이 등록됐습니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+var GD = {};
+var GD_CLOSED = ["마감","진행중","완료"];
+
+/* 국내 전화번호로 볼 수 있는 최소 조건.
+   휴대폰(01x)·지역번호(02, 03x~06x)·인터넷전화(070)·안심번호(050x)·
+   대표번호(15xx, 16xx, 18xx)·수신자부담(080) 을 모두 통과시키고,
+   자릿수·시작자리만으로 명백한 오입력을 걸러냅니다. */
+function validPhone(v){
+  var d=String(v||"").replace(/[^0-9]/g,"");
+  if(/^(1[5688]\d{2})\d{4}$/.test(d)) return true;   /* 1588-0000 같은 대표번호 */
+  if(d.length<9 || d.length>11) return false;
+  if(d.charAt(0)!=="0") return false;
+  if(!/^0[1-8]/.test(d)) return false;                /* 00x, 09x 는 없는 번호 */
+  if(/^(\d)\1+$/.test(d)) return false;              /* 00000000000 같은 값 */
+  return true;
+}
+G.validPhone=validPhone;
+
+function gdOwner(req){
+  return !!(ME.user && req && req.user_id && String(req.user_id)===String(ME.user.id));
+}
+function gdClosedReason(req){
+  var st=String((req&&req.status)||"견적대기");
+  if(GD_CLOSED.indexOf(st)<0) return null;
+  if(st==="마감")   return "이 요청은 마감되어 더 이상 견적을 받지 않습니다.";
+  if(st==="진행중") return "이미 견적이 선택되어 거래가 진행 중인 요청입니다.";
+  return "이미 완료된 거래입니다.";
+}
+/* 내가(또는 내 업체가) 이 요청에 이미 보낸 견적 */
+function gdMyQuote(){
+  if(!ME.user) return null;
+  return (CUR.quotes||[]).find(function(q){
+    return String(q.user_id||"")===String(ME.user.id) && q.status!=="철회";
+  })||null;
+}
+
+/* ── 요청 상세: 마감 안내 · 견적 보내기 버튼 정리 · 권한 없는 버튼 교체 ── */
+function gdPaintDetail(){
+  var body=$("reqd-body"), req=CUR.req;
+  if(!body || !req) return;
+  var reason=gdClosedReason(req);
+  var mine=gdOwner(req);
+
+  /* 1) 상단 안내 */
+  if(reason && !body.querySelector(".gd-closed")){
+    var note=document.createElement("div");
+    note.className="gnote gd-closed";
+    note.textContent=reason;
+    var card=body.querySelector(".gcard");
+    if(card && card.parentNode) card.parentNode.insertBefore(note, card);
+  }
+
+  /* 2) 견적 보내기 버튼 */
+  var send=null;
+  body.querySelectorAll("button").forEach(function(b){
+    if(b.textContent.trim()==="견적 보내기") send=b;
+  });
+  if(send){
+    var mq=gdMyQuote();
+    if(reason){
+      send.disabled=true; send.classList.add("gbtn-off");
+      send.textContent = req.status==="마감" ? "마감된 요청" : "견적 마감";
+      send.removeAttribute("onclick");
+    } else if(mq){
+      send.classList.remove("gbtn-p"); send.classList.add("gbtn-w");
+      send.textContent="내 견적 보냄";
+      send.setAttribute("onclick","gShowMyQuote()");
+    }
+  }
+
+  /* 3) 요청자가 아닌 사람에게 "거래 완료 처리"가 보이던 문제 */
+  if(!mine){
+    body.querySelectorAll(".qc-act button").forEach(function(b){
+      if(b.textContent.trim()!=="거래 완료 처리") return;
+      b.textContent="연락처 보기";
+      b.className="gbtn gbtn-w gbtn-sm";
+      var q=(CUR.quotes||[]).find(function(x){ return x.status==="선택됨"; });
+      b.setAttribute("onclick", q ? ("gContactQuote('"+String(q.id).replace(/'/g,"")+"')") : "");
+    });
+  }
+}
+
+window.gShowMyQuote=function(){
+  var q=gdMyQuote();
+  if(!q){ toast("보낸 견적을 찾을 수 없습니다.","err"); return; }
+  toast("이미 이 요청에 견적을 보냈습니다. 내용을 바꾸려면 거래관리 → 보낸 견적에서 철회 후 다시 보내주세요.");
+};
+
+function patchGuard(){
+  if(GD._patched) return; GD._patched=true;
+
+  /* ── 요청 상세를 그린 뒤 상태를 반영 ── */
+  if(typeof renderRequestDetail==="function"){
+    var origRRD=renderRequestDetail;
+    renderRequestDetail=function(){
+      var r=origRRD.apply(this, arguments);
+      try{ gdPaintDetail(); }catch(e){}
+      return r;
+    };
+  }
+  if(typeof renderQuotes==="function"){
+    var origRQ=renderQuotes;
+    renderQuotes=function(){
+      var r=origRQ.apply(this, arguments);
+      try{ gdPaintDetail(); }catch(e){}
+      return r;
+    };
+  }
+
+  /* ── 견적 보내기 진입 차단 ── */
+  var origForm=window.gOpenQuoteForm;
+  if(typeof origForm==="function"){
+    window.gOpenQuoteForm=function(){
+      var reason=gdClosedReason(CUR.req);
+      if(reason){ toast(reason,"err"); return; }
+      if(gdOwner(CUR.req)){ toast("본인이 올린 요청에는 견적을 보낼 수 없습니다.","err"); return; }
+      var mq=gdMyQuote();
+      if(mq){ window.gShowMyQuote(); return; }
+      return origForm.apply(this, arguments);
+    };
+  }
+
+  /* ── 견적 전송 최종 확인 (폼을 우회해도 막힙니다) ── */
+  var origSubmitQ=window.gSubmitQuote;
+  if(typeof origSubmitQ==="function"){
+    window.gSubmitQuote=async function(){
+      var reason=gdClosedReason(CUR.req);
+      if(reason){ setMsg("q-msg", reason, "err"); return; }
+      if(gdOwner(CUR.req)){ setMsg("q-msg","본인이 올린 요청에는 견적을 보낼 수 없습니다.","err"); return; }
+      if(gdMyQuote()){ setMsg("q-msg","이미 이 요청에 견적을 보냈습니다. 기존 견적을 철회한 뒤 다시 보내주세요.","err"); return; }
+      var ct=(($("q-contact")||{}).value||"").trim();
+      if(ct && !validPhone(ct)){ setMsg("q-msg","연락처를 다시 확인해주세요. 요청자가 전화할 수 있는 번호여야 합니다.","err"); return; }
+      return origSubmitQ.apply(this, arguments);
+    };
+  }
+
+  /* ── 견적 선택 · 거래 완료 · 요청 마감: 소유자 확인 ── */
+  [["gSelectQuote","견적을 선택"],["gCompleteDeal","거래를 완료 처리"],["gCloseRequest","요청을 마감"]].forEach(function(pair){
+    var name=pair[0], what=pair[1];
+    var orig=window[name];
+    if(typeof orig!=="function") return;
+    window[name]=async function(){
+      if(!ME.user){ toast("로그인이 필요합니다.","err"); return; }
+      if(!gdOwner(CUR.req)){ toast("본인이 등록한 요청만 "+what+"할 수 있습니다.","err"); return; }
+      if(name==="gCompleteDeal" && String((CUR.req||{}).status||"")==="완료"){
+        toast("이미 완료된 거래입니다.","err"); return;
+      }
+      if(name==="gSelectQuote" && (CUR.quotes||[]).some(function(q){ return q.status==="선택됨"; })){
+        toast("이미 선택한 견적이 있습니다.","err"); return;
+      }
+      return orig.apply(this, arguments);
+    };
+  });
+
+  /* ── 요청 등록: 연락처 형식 확인 ── */
+  var origStep3=window.gStep3;
+  if(typeof origStep3==="function"){
+    window.gStep3=function(){
+      var ph=(($("w-phone")||{}).value||"").trim();
+      if(ph && !validPhone(ph)){
+        toast("연락처를 다시 확인해주세요. 업체가 전화할 수 있는 번호여야 합니다.","err");
+        var el=$("w-phone"); if(el){ el.focus(); el.select&&el.select(); }
+        return;
+      }
+      return origStep3.apply(this, arguments);
+    };
+  }
+}
+/* ════════════════════════════════════════════════════════════════════
+   홈 화면에 추가 (PWA)
+   카카오 알림이 없는 동안, 현장에서 고리를 다시 열게 만드는 가장
+   현실적인 통로입니다. 홈 화면 아이콘 → 한 번 눌러 바로 진입.
+   서비스 워커는 네트워크 우선이라 배포한 새 파일이 캐시에 막히지 않습니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+var PWA = { prompt:null, shown:false };
+var PWA_KEY = "gori.a2hs";
+
+function pwaSecure(){
+  return location.protocol==="https:" || location.hostname==="localhost" || location.hostname==="127.0.0.1";
+}
+function pwaStandalone(){
+  return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
+      || window.navigator.standalone === true;
+}
+function pwaIOS(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+function pwaSnoozed(){
+  try{
+    var t=parseInt(localStorage.getItem(PWA_KEY)||"0",10);
+    return t && (Date.now()-t) < 30*24*3600*1000;     /* 닫으면 30일 동안 안 보임 */
+  }catch(e){ return false; }
+}
+function pwaSnooze(){
+  try{ localStorage.setItem(PWA_KEY, String(Date.now())); }catch(e){}
+}
+
+function pwaBar(html){
+  if($("a2hs")) return;
+  var el=document.createElement("div");
+  el.id="a2hs"; el.className="a2hs";
+  el.innerHTML=html;
+  document.body.appendChild(el);
+  requestAnimationFrame(function(){ el.classList.add("on"); });
+}
+window.gA2HSClose=function(){
+  pwaSnooze();
+  var el=$("a2hs"); if(!el) return;
+  el.classList.remove("on");
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 260);
+};
+window.gA2HSInstall=async function(){
+  var p=PWA.prompt;
+  if(!p){ window.gA2HSClose(); return; }
+  PWA.prompt=null;
+  try{
+    p.prompt();
+    var r=await p.userChoice;
+    if(r && r.outcome==="accepted") toast("홈 화면에 추가했습니다.","ok");
+  }catch(e){}
+  window.gA2HSClose();
+};
+
+function pwaShow(){
+  if(PWA.shown || pwaStandalone() || pwaSnoozed()) return;
+  var onHome=((document.querySelector(".pg.on")||{}).id==="pg-h");
+  if(!onHome) return;
+
+  if(PWA.prompt){
+    PWA.shown=true;
+    pwaBar(
+      '<div class="a2hs-ic"><img src="icon-192.png" alt=""></div>'+
+      '<div class="a2hs-tx"><b>고리를 홈 화면에 추가하세요</b>'+
+      '<span>앱처럼 한 번에 열리고, 새 견적을 놓치지 않습니다.</span></div>'+
+      '<div class="a2hs-bt">'+
+        '<button class="gbtn gbtn-p gbtn-sm" onclick="gA2HSInstall()">추가하기</button>'+
+        '<button class="a2hs-x" onclick="gA2HSClose()" aria-label="닫기">✕</button></div>');
+  } else if(pwaIOS()){
+    PWA.shown=true;
+    pwaBar(
+      '<div class="a2hs-ic"><img src="icon-192.png" alt=""></div>'+
+      '<div class="a2hs-tx"><b>고리를 홈 화면에 추가하세요</b>'+
+      '<span>아래 <b>공유</b> 버튼 → <b>홈 화면에 추가</b>를 누르면 앱처럼 열립니다.</span></div>'+
+      '<div class="a2hs-bt"><button class="a2hs-x" onclick="gA2HSClose()" aria-label="닫기">✕</button></div>');
+  }
+}
+
+function patchPWA(){
+  if(PWA._patched) return; PWA._patched=true;
+  if(!pwaSecure()) return;                       /* file:// · http 에서는 아무 것도 하지 않습니다 */
+
+  window.addEventListener("beforeinstallprompt", function(e){
+    e.preventDefault();
+    PWA.prompt=e;
+    setTimeout(pwaShow, 1200);
+  });
+  window.addEventListener("appinstalled", function(){
+    PWA.prompt=null; pwaSnooze();
+    var el=$("a2hs"); if(el && el.parentNode) el.parentNode.removeChild(el);
+  });
+
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("sw.js").catch(function(){ /* 실패해도 사이트는 그대로 동작 */ });
+  }
+
+  /* iOS 는 beforeinstallprompt 가 없어서 잠시 뒤 직접 안내합니다 */
+  if(pwaIOS()) setTimeout(pwaShow, 20000);
+}
+
+/* 문제가 생겼을 때 콘솔에서 gSWOff() 로 서비스 워커를 완전히 해제할 수 있습니다 */
+window.gSWOff=function(){
+  if(!("serviceWorker" in navigator)) return;
+  navigator.serviceWorker.getRegistrations().then(function(rs){
+    rs.forEach(function(r){ if(r.active) r.active.postMessage("gori-sw-off"); r.unregister(); });
+    if(window.caches) caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); });
+    alert("서비스 워커를 해제했습니다. 새로고침해 주세요.");
+  });
+};
+/* ════════════════════════════════════════════════════════════════════
+   알림 — 전체 읽음 · 하단 네비 미읽음 표시
+   알림이 쌓이면 하나씩 눌러야 지워졌고, 모바일에서 주로 쓰는 하단
+   네비에는 새 알림이 왔다는 표시가 전혀 없었습니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+var NT = {};
+
+function ntUnread(){
+  if(typeof NOTIFS==="undefined") return 0;
+  return NOTIFS.filter(function(n){ return !n.is_read; }).length;
+}
+
+/* 하단 네비 '내활동'에 빨간 점 */
+function ntPaintNav(){
+  var btn=document.getElementById("bn-my"); if(!btn) return;
+  var n=ntUnread();
+  var dot=btn.querySelector(".bni-dot");
+  if(!n){ if(dot && dot.parentNode) dot.parentNode.removeChild(dot); return; }
+  if(!dot){
+    var ic=btn.querySelector(".bni-i") || btn;
+    ic.style.position="relative";
+    dot=document.createElement("span");
+    dot.className="bni-dot";
+    ic.appendChild(dot);
+  }
+  dot.textContent = n>9 ? "9+" : String(n);
+}
+
+window.gReadAllNotifs=async function(ev){
+  if(ev && ev.stopPropagation) ev.stopPropagation();
+  if(typeof NOTIFS==="undefined") return;
+  var un=NOTIFS.filter(function(n){ return !n.is_read; });
+  if(!un.length){ toast("읽지 않은 알림이 없습니다."); return; }
+  un.forEach(function(n){ n.is_read=true; });
+  if(typeof renderHeaderUser==="function") renderHeaderUser();
+  ntPaintNav();
+  var p=$("notif-panel"); if(p && p.classList.contains("on")) window.gToggleNotif(null, true);
+  for(var i=0;i<un.length;i++){
+    try{ await updateSafe("notifications",{is_read:true},"id",un[i].id); }catch(e){}
+  }
+  toast(un.length+"건을 읽음으로 표시했습니다.","ok");
+};
+
+function patchNotif(){
+  if(NT._patched) return; NT._patched=true;
+
+  /* 알림 목록 위에 "전체 읽음" 줄 추가 */
+  var origToggle=window.gToggleNotif;
+  if(typeof origToggle==="function"){
+    window.gToggleNotif=function(ev, keepOpen){
+      var p=$("notif-panel");
+      var wasOpen = p && p.classList.contains("on");
+      origToggle.call(this, ev);
+      p=$("notif-panel");
+      if(!p) return;
+      if(keepOpen && !p.classList.contains("on")) p.classList.add("on");
+      if(!p.classList.contains("on")) return;
+      if(!p.querySelector(".nt-hd") && p.querySelector(".nt")){
+        var hd=document.createElement("div");
+        hd.className="nt-hd";
+        hd.innerHTML='<span>알림</span>'+
+          '<button type="button" class="nt-all" onclick="gReadAllNotifs(event)">전체 읽음</button>';
+        p.insertBefore(hd, p.firstChild);
+      }
+      ntPaintNav();
+    };
+  }
+
+  /* 알림 수가 바뀌는 지점마다 하단 네비 갱신
+     (renderHeaderUser · paintBell 은 window 가 아니라 이 스코프의 이름입니다) */
+  if(typeof renderHeaderUser==="function"){
+    var origHdr=renderHeaderUser;
+    renderHeaderUser=function(){ var r=origHdr.apply(this, arguments); try{ ntPaintNav(); }catch(e){} return r; };
+  }
+  if(typeof paintBell==="function"){
+    var origBell=paintBell;
+    paintBell=function(){ var r=origBell.apply(this, arguments); try{ ntPaintNav(); }catch(e){} return r; };
+  }
+  if(typeof loadNotifs==="function"){
+    var origLoad=loadNotifs;
+    loadNotifs=async function(){ var r=await origLoad.apply(this, arguments); try{ ntPaintNav(); }catch(e){} return r; };
+  }
+  var origOpen=window.gOpenNotif;
+  if(typeof origOpen==="function"){
+    window.gOpenNotif=async function(){ var r=await origOpen.apply(this, arguments); try{ ntPaintNav(); }catch(e){} return r; };
+  }
+  ntPaintNav();
+  setInterval(ntPaintNav, 5000);
+}
 
 /* ════════════════════════════════════════════════════════════════════
    기존 화면과의 연결 · 초기화
@@ -4720,6 +5102,9 @@ function applyExtras(){
   try{ patchJobs(); }catch(e){}
   try{ patchFind(); }catch(e){}
   try{ patchLive(); }catch(e){}
+  try{ patchGuard(); }catch(e){}
+  try{ patchPWA(); }catch(e){}
+  try{ patchNotif(); }catch(e){}
   try{ patchRouter(); armRouter(); }catch(e){}
 }
 /* 리디자인 패치(420ms) 뒤에 얹혀야 하므로 그보다 늦게 실행합니다.

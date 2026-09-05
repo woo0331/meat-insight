@@ -1,0 +1,226 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'><circle cx='13' cy='13' r='13' fill='%23D91F3A'/><path d='M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20' stroke='white' stroke-width='2.5' stroke-linecap='round' fill='none'/><circle cx='8' cy='20' r='2' fill='white'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --gn:#D91F3A;--gn2:#A8142A;--gnl:#FDECEE;--gnb:#FAD4DA;--gn-on-tint:#A8142A;
+  --amber:#F5A524;--amber-tint:#FFF4DF;
+  --bg:#FFFFFF;--bg2:#F2F1ED;--bd:#EAE8E4;--bd2:#D9D6D0;
+  --ink:#14181C;--ink2:#3A4149;--ink3:#6E7480;--ink4:#71767F;
+  --navy:#12161B;
+  --font:"Pretendard Variable",Pretendard,"Noto Sans KR",system-ui,-apple-system,sans-serif;
+  --max:860px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg2);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.75;
+  -webkit-text-size-adjust:100%;}
+.top{background:var(--bg);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:10}
+.top-in{max-width:var(--max);margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:11px}
+.logo{display:flex;align-items:center;gap:8px;font-size:19px;font-weight:800;color:var(--ink);
+  text-decoration:none;letter-spacing:-.6px}
+.top-nav{margin-left:auto;display:flex;gap:6px}
+.top-nav a{font-size:13.5px;font-weight:700;color:var(--ink3);text-decoration:none;
+  padding:7px 12px;border-radius:9px}
+.top-nav a:hover{background:var(--bg2);color:var(--ink)}
+.top-nav a.on{background:var(--gnl);color:var(--gn-on-tint)}
+.wrap{max-width:var(--max);margin:0 auto;padding:30px 20px 70px}
+.doc{background:var(--bg);border:1px solid var(--bd);border-radius:16px;padding:36px 38px 44px}
+h1{font-size:29px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.lead{font-size:15px;color:var(--ink3);line-height:1.8;margin-bottom:10px}
+.meta{font-size:13px;color:var(--ink4);font-weight:600;padding-bottom:22px;border-bottom:1px solid var(--bd);margin-bottom:26px}
+h2{font-size:19px;font-weight:800;letter-spacing:-.5px;margin:34px 0 12px;padding-top:4px}
+h2:first-of-type{margin-top:0}
+h3{font-size:15.5px;font-weight:800;color:var(--ink);margin:20px 0 8px}
+p{color:var(--ink2);margin-bottom:11px}
+ul,ol{margin:0 0 13px 20px;color:var(--ink2)}
+li{margin-bottom:6px}
+b,strong{color:var(--ink);font-weight:800}
+.tbl{width:100%;border-collapse:collapse;margin:12px 0 16px;font-size:14px;display:block;overflow-x:auto}
+.tbl table{width:100%;border-collapse:collapse;min-width:520px}
+.tbl th,.tbl td{border:1px solid var(--bd);padding:10px 12px;text-align:left;vertical-align:top}
+.tbl th{background:var(--bg2);font-weight:800;color:var(--ink);white-space:nowrap}
+.tbl td{color:var(--ink2)}
+.note{background:var(--amber-tint);border:1px solid var(--amber);border-radius:12px;
+  padding:14px 16px;margin:16px 0;font-size:14px;color:var(--ink2);line-height:1.7}
+.note b{color:var(--ink)}
+.callout{background:var(--gnl);border:1px solid var(--gnb);border-radius:12px;
+  padding:14px 16px;margin:16px 0;font-size:14.5px;color:var(--gn2);font-weight:600;line-height:1.7}
+.biz{background:var(--bg2);border:1px solid var(--bd);border-radius:12px;padding:16px 18px;margin-top:8px;font-size:14px}
+.biz div{color:var(--ink2);line-height:2}
+.biz .k{display:inline-block;min-width:130px;color:var(--ink4);font-weight:700}
+.biz-none{color:#B3261E;font-weight:800}
+.foot{max-width:var(--max);margin:0 auto;padding:0 20px 40px;font-size:12.5px;color:var(--ink4);line-height:1.9}
+.foot a{color:var(--ink3);font-weight:700;text-decoration:none}
+.foot a:hover{color:var(--gn)}
+@media(max-width:640px){
+  .doc{padding:24px 20px 32px;border-radius:14px}
+  h1{font-size:24px}h2{font-size:17.5px}
+  .wrap{padding:18px 12px 50px}
+  .biz .k{display:block;min-width:0;margin-top:6px}
+}
+</style>
+<title>개인정보처리방침 — 고리</title>
+<meta name="description" content="고리(aboutmeat.co.kr)가 수집하는 개인정보 항목, 이용 목적, 보유 기간, 제3자 제공과 처리 위탁, 정보주체의 권리를 안내합니다."/>
+</head><body>
+<div class="top"><div class="top-in">
+  <a class="logo" href="index.html">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#D91F3A"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg>
+    고리</a>
+  <nav class="top-nav">
+    <a href="index.html">홈</a>
+    <a href="terms.html" id="nav-terms">이용약관</a>
+    <a href="privacy.html" id="nav-privacy">개인정보처리방침</a>
+  </nav>
+</div></div>
+<div class="wrap"><div class="doc">
+<h1>개인정보처리방침</h1>
+<p class="lead"><span class="co">고리</span>(이하 "회사")는 고리 서비스(aboutmeat.co.kr)를 운영하면서 이용자의 개인정보를 소중히 다루며, 개인정보 보호법 등 관련 법령을 지킵니다. 이 방침은 회사가 어떤 정보를 왜 수집하고, 얼마나 보관하며, 누구에게 제공하는지를 있는 그대로 밝힙니다.</p>
+<div class="meta">시행일 <span id="eff">—</span></div>
+
+<div class="callout">이 서비스의 핵심은 <b>요청자와 업체를 연결하는 것</b>입니다. 그래서 요청과 견적을 주고받는 과정에서 <b>이름과 연락처가 상대방에게 전달됩니다.</b> 아래 4항에서 언제, 누구에게, 무엇이 전달되는지 정확히 설명합니다.</div>
+
+<h2>1. 수집하는 개인정보 항목</h2>
+<p>회사는 서비스 이용 과정에서 아래 정보를 수집합니다. <b>주민등록번호는 어떤 경우에도 수집하지 않습니다.</b></p>
+<div class="tbl"><table>
+<tr><th>구분</th><th>수집 항목</th><th>필수 / 선택</th></tr>
+<tr><td>회원가입</td><td>이메일, 비밀번호(암호화 저장), 이름, 회원 유형(구매·업체·인력)</td><td>필수</td></tr>
+<tr><td>요청 등록</td><td>이름, 연락처, 상호<br>요청 내용(품목·수량·희망 단가·지역·희망일·추가 조건)</td><td>이름·연락처 필수<br>상호 선택</td></tr>
+<tr><td>업체 등록</td><td>업체명, 대표자명, 연락처, 사업자등록번호, 지역·주소, 취급 품목·서비스, 업체 소개, 업체 사진</td><td>업체명·연락처 필수<br>나머지 선택</td></tr>
+<tr><td>견적 발송</td><td>업체명, 연락처, 가격·납기·배송 조건·비고</td><td>필수</td></tr>
+<tr><td>인증 신청</td><td>사업자등록번호, 축산물 영업허가번호, HACCP 인증번호, 상호·대표자명</td><td>신청한 항목만</td></tr>
+<tr><td>채팅</td><td>대화 내용, 발신자 이름</td><td>이용 시</td></tr>
+<tr><td>구인구직 공고</td><td>업체명, 근무지, 연락처, 직무·경력·급여 조건</td><td>필수</td></tr>
+<tr><td>구직 프로필</td><td>이름, 연락처, 직무, 경력, 희망 급여, 자기소개</td><td>이름·연락처 필수</td></tr>
+<tr><td>당일알바 등록·지원</td><td>업체명·연락처·작업 조건 / 지원자 이름·연락처·경력·가능 업무</td><td>필수</td></tr>
+<tr><td>후기</td><td>작성자 이름, 평점, 후기 내용, 거래 요약</td><td>작성 시</td></tr>
+<tr><td>자동 수집</td><td>접속 일시, 서비스 이용 기록, 접속 IP, 브라우저·기기 정보</td><td>자동 생성</td></tr>
+</table></div>
+
+<h2>2. 개인정보의 이용 목적</h2>
+<ul>
+  <li><b>매칭과 중개</b> — 요청 조건에 맞는 업체를 찾아 알리고, 견적을 요청자에게 전달합니다.</li>
+  <li><b>거래 진행</b> — 견적 선택 이후 당사자 간 연락, 거래 상태 관리, 거래 완료 처리에 사용합니다.</li>
+  <li><b>본인 확인과 신뢰 표시</b> — 사업자등록·축산물 영업허가·HACCP 인증 여부를 확인해 업체 프로필에 배지로 표시합니다.</li>
+  <li><b>알림 발송</b> — 새 견적 도착, 견적 선택, 거래 상태 변경, 새 메시지 등을 알립니다.</li>
+  <li><b>문의 대응과 분쟁 처리</b> — 이용자 문의에 답변하고 거래 분쟁이 생겼을 때 사실관계를 확인합니다.</li>
+  <li><b>서비스 개선과 부정 이용 방지</b> — 이용 통계를 확인하고 허위·중복 등록, 도용을 막습니다.</li>
+</ul>
+
+<h2>3. 보유 및 이용 기간</h2>
+<p>원칙적으로 수집·이용 목적이 달성되면 지체 없이 파기합니다. 다만 아래 기간은 예외로 보관합니다.</p>
+<div class="tbl"><table>
+<tr><th>정보</th><th>보유 기간</th><th>근거</th></tr>
+<tr><td>회원 정보</td><td>회원 탈퇴 시까지</td><td>이용자 동의</td></tr>
+<tr><td>비회원이 등록한 요청·공고</td><td>등록일로부터 1년<br>(삭제 요청 시 즉시 파기)</td><td>이용자 동의</td></tr>
+<tr><td>요청·견적·거래 기록</td><td>거래 완료 후 3년</td><td>거래 분쟁 대응 (전자상거래법 제6조 준용)</td></tr>
+<tr><td>채팅 대화 내용</td><td>마지막 메시지로부터 1년</td><td>거래 분쟁 대응</td></tr>
+<tr><td>후기·평점</td><td>삭제 요청 시까지</td><td>이용자 동의</td></tr>
+<tr><td>접속 기록(로그)</td><td>3개월</td><td>통신비밀보호법 제15조의2</td></tr>
+</table></div>
+<p>보유 기간이 지난 정보는 복구할 수 없는 방법으로 지웁니다. 전자 파일은 삭제하고, 출력물이 있다면 분쇄하거나 소각합니다.</p>
+
+<h2>4. 개인정보의 제3자 제공</h2>
+<p>회사는 이용자의 개인정보를 제3자에게 판매하거나 광고 목적으로 제공하지 않습니다. 다만 <b>서비스의 본질적 기능을 위해</b> 아래와 같이 거래 상대방에게 전달됩니다.</p>
+<div class="tbl"><table>
+<tr><th>제공 시점</th><th>제공받는 자</th><th>제공 항목</th><th>목적</th></tr>
+<tr><td>요청 등록 직후</td><td>조건이 맞는 업체</td><td>요청 내용, 지역, 등록 시각<br><b>(연락처는 이 단계에서 제공되지 않습니다)</b></td><td>견적 발송 여부 판단</td></tr>
+<tr><td>업체가 견적을 보낸 때</td><td>요청자</td><td>업체명, 업체 연락처, 견적 조건</td><td>견적 비교와 업체 연락</td></tr>
+<tr><td>요청자가 견적을 선택한 때</td><td>선택된 업체</td><td>요청자 이름, 연락처, 상호</td><td>거래 진행·납품 협의</td></tr>
+<tr><td>채팅을 시작한 때</td><td>대화 상대방</td><td>이름, 대화 내용</td><td>거래 조건 협의</td></tr>
+<tr><td>구인구직·당일알바 지원</td><td>공고 등록자</td><td>지원자 이름, 연락처, 경력</td><td>채용 검토와 연락</td></tr>
+</table></div>
+<p>이 밖에 법령에 특별한 규정이 있거나 수사기관이 법령에 정해진 절차와 방법에 따라 요구하는 경우에는 제공할 수 있습니다.</p>
+
+<h2>5. 개인정보 처리의 위탁</h2>
+<p>회사는 서비스 운영을 위해 아래 업체에 개인정보 처리를 위탁하고 있습니다.</p>
+<div class="tbl"><table>
+<tr><th>수탁자</th><th>위탁 업무</th><th>보유·이용 기간</th></tr>
+<tr><td>Supabase, Inc.</td><td>데이터베이스 운영, 회원 인증, 파일(업체 사진) 저장</td><td>위탁 계약 종료 시까지</td></tr>
+<tr><td>Vercel, Inc.</td><td>웹사이트 호스팅 및 전송</td><td>위탁 계약 종료 시까지</td></tr>
+</table></div>
+
+<h2>6. 개인정보의 국외 이전</h2>
+<p>위 수탁자는 해외에 서버를 두고 있어, 개인정보가 국외에서 보관·처리됩니다.</p>
+<div class="tbl"><table>
+<tr><th>이전받는 자</th><th>이전 국가</th><th>이전 항목</th><th>이전 방법</th></tr>
+<tr><td>Supabase, Inc.</td><td><span id="region">—</span></td><td>1항의 수집 항목 전체</td><td>서비스 이용 시 네트워크를 통한 전송</td></tr>
+<tr><td>Vercel, Inc.</td><td>미국</td><td>접속 기록, 접속 IP</td><td>서비스 접속 시 자동 전송</td></tr>
+</table></div>
+<p>이전받는 자의 개인정보 보호책임자 연락처는 각 사업자의 개인정보처리방침에서 확인할 수 있습니다. 이용자는 국외 이전을 거부할 수 있으나, 거부하면 서비스를 이용할 수 없습니다.</p>
+
+<h2>7. 브라우저 저장소(쿠키 등)의 사용</h2>
+<p>회사는 광고 목적의 추적 쿠키를 사용하지 않습니다. 아래 용도로만 브라우저 저장소를 사용합니다.</p>
+<ul>
+  <li><b>로그인 유지</b> — 로그인한 회원의 인증 토큰을 브라우저에 저장합니다.</li>
+  <li><b>내 요청 찾기</b> — 로그인 없이 요청을 등록하면, 다음에 다시 찾을 수 있도록 <b>이름과 전화번호를 이 기기의 브라우저에만</b> 저장합니다. 이 값은 서버로 따로 전송되지 않으며, "내 요청 찾기" 화면의 <b>저장된 번호 지우기</b> 버튼이나 브라우저 설정에서 언제든 지울 수 있습니다.</li>
+  <li><b>화면 설정</b> — 지역 선택 등 마지막에 본 설정을 기억합니다.</li>
+</ul>
+
+<h2>8. 정보주체의 권리와 행사 방법</h2>
+<ol>
+  <li>이용자는 언제든 자신의 개인정보에 대해 <b>열람·정정·삭제·처리정지</b>를 요구할 수 있습니다.</li>
+  <li>회원은 로그인 후 <b>거래관리 → 회원·업체정보</b>에서 직접 확인·수정할 수 있고, 등록한 요청은 <b>요청 수정</b>으로 고치거나 마감·삭제할 수 있습니다. 업체는 보낸 견적을 철회할 수 있습니다.</li>
+  <li>비회원은 <b>거래관리 → 내 요청 찾기</b>에서 등록할 때 적은 이름·전화번호로 자신의 요청을 확인할 수 있습니다.</li>
+  <li>그 밖의 요구는 아래 개인정보 보호책임자에게 이메일·전화·서면으로 하실 수 있으며, 회사는 지체 없이(요청일로부터 <b>10일 이내</b>) 조치합니다.</li>
+  <li>대리인을 통해 요구할 때는 위임장을 제출해야 합니다.</li>
+</ol>
+
+<h2>9. 만 14세 미만 아동</h2>
+<p>이 서비스는 축산업 사업자 간 거래를 위한 서비스로, 만 14세 미만 아동의 회원가입과 개인정보 수집을 받지 않습니다.</p>
+
+<h2>10. 개인정보의 안전성 확보 조치</h2>
+<ul>
+  <li><b>접근 권한 관리</b> — 데이터베이스 행 단위 접근 제어(RLS)로 본인의 정보만 조회·수정할 수 있게 제한하고, 관리자 권한은 지정된 계정에만 부여합니다.</li>
+  <li><b>비밀번호 보호</b> — 비밀번호는 복호화할 수 없는 방식으로 암호화해 저장하며, 회사도 원래 값을 알 수 없습니다.</li>
+  <li><b>전송 구간 암호화</b> — 모든 통신은 HTTPS로 암호화됩니다.</li>
+  <li><b>접속 기록 보관</b> — 개인정보 처리 시스템의 접속 기록을 보관하고 위·변조를 방지합니다.</li>
+  <li><b>최소 수집</b> — 서비스 제공에 꼭 필요한 항목만 수집하며, 주민등록번호는 수집하지 않습니다.</li>
+</ul>
+
+<h2>11. 개인정보 보호책임자</h2>
+<p>개인정보 처리에 관한 문의·불만·피해 구제는 아래로 연락해 주세요.</p>
+<div class="biz" id="biz-box"></div>
+
+<h2>12. 권익 침해 구제 방법</h2>
+<p>개인정보 침해로 상담·구제가 필요하면 아래 기관에 문의할 수 있습니다.</p>
+<ul>
+  <li>개인정보분쟁조정위원회 — 1833-6972 (www.kopico.go.kr)</li>
+  <li>개인정보침해신고센터 — 118 (privacy.kisa.or.kr)</li>
+  <li>대검찰청 사이버수사과 — 1301 (www.spo.go.kr)</li>
+  <li>경찰청 사이버수사국 — 182 (ecrm.police.go.kr)</li>
+</ul>
+
+<h2>13. 방침의 변경</h2>
+<p>이 방침을 변경할 때는 변경 사항과 시행일을 <b>시행 7일 전</b>부터 서비스 안에 공지합니다. 이용자의 권리에 중대한 영향을 주는 변경은 <b>30일 전</b>에 공지하고 회원에게는 이메일로도 알립니다.</p>
+
+</div></div>
+<div class="foot">
+  <a href="index.html">고리 홈</a> · <a href="terms.html">이용약관</a><br>
+  이 방침은 서비스 화면 하단에서 언제든 다시 확인할 수 있습니다.
+</div>
+<script src="site-info.js"></script>
+<script>
+(function(){
+  var B=window.GORI_BIZ||{};
+  function v(x){ return (x&&String(x).trim())?String(x).trim():'<span class="biz-none">(미기재)</span>'; }
+  var e=document.getElementById("eff"); if(e) e.textContent=B.effective||"—";
+  var r=document.getElementById("region"); if(r) r.innerHTML=v(B.hostRegion);
+  document.querySelectorAll(".co").forEach(function(el){
+    if(B.company&&String(B.company).trim()) el.textContent=String(B.company).trim();
+  });
+  var box=document.getElementById("biz-box");
+  if(box) box.innerHTML=
+    '<div><span class="k">개인정보 보호책임자</span>'+v(B.privacyOfficer)+'</div>'+
+    '<div><span class="k">이메일</span>'+v(B.privacyEmail||B.email)+'</div>'+
+    '<div><span class="k">전화</span>'+v(B.phone)+'</div>'+
+    '<div><span class="k">주소</span>'+v(B.address)+'</div>';
+  var n=document.getElementById("nav-privacy"); if(n) n.className="on";
+})();
+</script>
+</body></html>

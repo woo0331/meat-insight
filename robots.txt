@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# 관리자 화면은 색인하지 않습니다
+Disallow: /admin.html
+Disallow: /meat_insight_admin.html
+
+Sitemap: https://aboutmeat.co.kr/sitemap.xml

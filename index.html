@@ -4,12 +4,12 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>고리 — 대한민국 축산업 통합 플랫폼</title>
-<meta name="description" content="원육·가공·물류·인력·장비·창업까지. 요청을 올리면 검증된 축산 업체가 견적을 보냅니다. 축산업 요청·견적 매칭 플랫폼 고리."/>
+<meta name="description" content="원육·가공·물류·인력·장비·창업까지. 요청을 올리면 조건이 맞는 축산 업체가 견적을 보냅니다. 축산업 요청·견적 매칭 플랫폼 고리."/>
 <link rel="canonical" href="https://aboutmeat.co.kr/"/>
 <meta property="og:type" content="website"/>
 <meta property="og:site_name" content="고리"/>
 <meta property="og:title" content="축산에 필요한 모든 연결, 한 곳에서 고리"/>
-<meta property="og:description" content="원육·가공·물류·인력·장비·창업까지. 요청을 올리면 검증된 축산 업체가 견적을 보냅니다."/>
+<meta property="og:description" content="원육·가공·물류·인력·장비·창업까지. 요청을 올리면 조건이 맞는 축산 업체가 견적을 보냅니다."/>
 <meta property="og:url" content="https://aboutmeat.co.kr/"/>
 <meta property="og:image" content="https://aboutmeat.co.kr/og.png"/>
 <meta property="og:image:width" content="1200"/>
@@ -17,13 +17,18 @@
 <meta property="og:locale" content="ko_KR"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="축산에 필요한 모든 연결, 한 곳에서 고리"/>
-<meta name="twitter:description" content="요청을 올리면 검증된 축산 업체가 견적을 보냅니다."/>
+<meta name="twitter:description" content="요청을 올리면 조건이 맞는 축산 업체가 견적을 보냅니다."/>
 <meta name="twitter:image" content="https://aboutmeat.co.kr/og.png"/>
-<meta name="theme-color" content="#12161B"/>
+<meta name="theme-color" content="#FFFFFF"/>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'><circle cx='13' cy='13' r='13' fill='%23D91F3A'/><path d='M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20' stroke='white' stroke-width='2.5' stroke-linecap='round' fill='none'/><circle cx='8' cy='20' r='2' fill='white'/></svg>"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&family=Noto+Serif+KR:wght@700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="고리">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="gori-app.css">
 <style>
 
@@ -317,7 +322,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 .trust-item:last-child{border:none;}
 .trust-ico{color:var(--gn);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:8px;}
 .trust-t{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px;}
-.trust-d{font-size:12px;color:var(--ink3);}
+.trust-d{font-size:12px;color:var(--ink3);line-height:1.65;}
 
 /* ══ 인증 공급업체 그리드 ══ */
 .sup-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
@@ -367,6 +372,10 @@ textarea.fi{resize:vertical;min-height:80px;}
 
 /* ══ FOOTER ══ */
 .footer{background:var(--navy);padding:40px 0 22px;}
+.ft-biz{border-top:1px solid rgba(255,255,255,.08);padding:16px 0 4px;margin-top:6px;}
+.ft-biz .biz-row{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:11.5px;line-height:1.9;color:rgba(255,255,255,.42);}
+.ft-biz .biz-note{margin-top:8px;color:rgba(255,255,255,.3);display:block;max-width:760px;line-height:1.75;}
+.ft-biz .biz-none{color:#F5A524;font-weight:700;}
 .ft-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:30px;margin-bottom:30px;}
 .ft-nm{font-size:15px;font-weight:700;color:#fff;font-family:var(--serif);margin-bottom:7px;display:flex;align-items:center;gap:7px;}
 .ft-desc{font-size:12px;color:rgba(255,255,255,.2);line-height:1.8;margin-bottom:10px;}
@@ -860,7 +869,7 @@ textarea.fi{resize:vertical;min-height:80px;}
       </div>
 
       <h1 class="gh-h1">축산에 필요한 모든 연결,<br><em>한 곳에서 고리</em></h1>
-      <p class="gh-sub">원육·가공·물류·인력·장비·창업까지 <br class="gh-br">검증된 업체와 사람을 빠르게 매칭합니다.</p>
+      <p class="gh-sub">원육·가공·물류·인력·장비·창업까지 <br class="gh-br">필요한 업체와 사람을 조건에 맞춰 연결합니다.</p>
 
       <div class="gh-search">
         <span class="gh-s-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>
@@ -1024,10 +1033,10 @@ textarea.fi{resize:vertical;min-height:80px;}
   <!-- 신뢰 지표 -->
   <div class="trust-bar">
     <div class="trust-inner">
-      <div class="trust-item"><div class="trust-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div><div class="trust-t">안전한 거래 환경</div><div class="trust-d">검증된 업체와 안전한 거래</div></div>
-      <div class="trust-item"><div class="trust-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.4 2.4 4.6-5"/></svg></div><div class="trust-t">신뢰할 수 있는 플랫폼</div><div class="trust-d">실사 및 인증된 업체만 노출</div></div>
-      <div class="trust-item"><div class="trust-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2"/></svg></div><div class="trust-t">전문 상담 지원</div><div class="trust-d">축산 전문가가 맞춤 상담</div></div>
-      <div class="trust-item"><div class="trust-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 12h18M12 8v12"/></svg></div><div class="trust-t">다양한 혜택 제공</div><div class="trust-d">회원 전용 혜택과 이벤트</div></div>
+      <div class="trust-item"><div class="trust-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div><div class="trust-t">사업자 인증 표시</div><div class="trust-d">사업자등록·축산물 영업허가·HACCP를<br>확인해 배지로 표시합니다</div></div>
+      <div class="trust-item"><div class="trust-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.4 2.4 4.6-5"/></svg></div><div class="trust-t">조건 매칭</div><div class="trust-d">요청을 올리면 조건이 맞는 업체에<br>바로 알림이 갑니다</div></div>
+      <div class="trust-item"><div class="trust-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2"/></svg></div><div class="trust-t">견적 비교</div><div class="trust-d">가격·납기·평점·거래실적을<br>한 화면에서 비교합니다</div></div>
+      <div class="trust-item"><div class="trust-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 12h18M12 8v12"/></svg></div><div class="trust-t">수수료 없음</div><div class="trust-d">요청 등록과 견적 비교는<br>수수료 없이 이용합니다</div></div>
     </div>
   </div>
 
@@ -1042,8 +1051,9 @@ textarea.fi{resize:vertical;min-height:80px;}
         <div><div class="ft-col-t">거래·생산</div><ul class="ft-ul"><li onclick="goCat8(&quot;meat&quot;)">원육 구매</li><li onclick="goCat8(&quot;process&quot;)">가공·OEM</li><li onclick="goCat8(&quot;logi&quot;)">물류·운송</li></ul></div>
         <div><div class="ft-col-t">사람·운영</div><ul class="ft-ul"><li onclick="goCat8(&quot;labor&quot;)">인력·알바</li><li onclick="goCat8(&quot;job&quot;)">구인구직</li><li onclick="goCat8(&quot;equip&quot;)">장비·부자재</li><li onclick="goCat8(&quot;startup&quot;)">창업·인테리어</li><li onclick="goCat8(&quot;haccp&quot;)">HACCP·컨설팅</li></ul></div>
         <div><div class="ft-col-t">정보</div><ul class="ft-ul"><li onclick="go(&quot;market&quot;)">시세 정보</li><li onclick="go(&quot;news&quot;)">업계 뉴스</li><li onclick="go(&quot;community&quot;)">커뮤니티</li><li onclick="go(&quot;jobs&quot;)">구인공고</li></ul></div>
-        <div><div class="ft-col-t">고리</div><ul class="ft-ul"><li onclick="location.href='admin.html'">관리자 콘솔</li><li onclick="location.href='meat_insight_admin.html'">구 관리자</li><li onclick="location.href='meat_insight_apply.html'">컨설팅</li><li>이용약관</li><li>개인정보처리방침</li><li>고객센터</li></ul></div>
+        <div><div class="ft-col-t">고리</div><ul class="ft-ul"><li onclick="location.href='meat_insight_apply.html'">컨설팅</li><li onclick="location.href='terms.html'">이용약관</li><li onclick="location.href='privacy.html'"><b>개인정보처리방침</b></li><li onclick="gOpenFindReq&&gOpenFindReq()">내 요청 찾기</li></ul></div>
       </div>
+      <div class="ft-biz" id="ft-biz"></div>
       <div class="ft-bot"><div class="ft-copy">© 2025 고리 · 대한민국 축산업 통합 플랫폼 · 베타 서비스 운영 중</div></div>
     </div>
   </footer>
@@ -2242,6 +2252,9 @@ async function loadFromDB(){
 renderHome();
 loadFromDB();
 </script>
+
+<!-- 사업자 정보 (푸터·약관·방침 공용) -->
+<script src="site-info.js"></script>
 
 <!-- PHASE 2: 요청 3단계 · 견적 비교 · 당일알바 · 거래관리 -->
 <script src="gori-app.js"></script>

@@ -943,5 +943,7 @@ const commaFields=['b-price','b-rent','b-labor','b-etc','r-price','r-rent','r-la
 commaFields.forEach(id=>{const el=document.getElementById(id);if(el&&el.value){const num=Number(el.value.replace(/,/g,''));if(!isNaN(num))el.value=num.toLocaleString('ko-KR');}});
 calcButchery();calcRestaurant();calcMenu();calcStartup();calcYield();
 </script>
+<script src="site-info.js"></script>
+<script src="legacy-chrome.js"></script>
 </body>
 </html>

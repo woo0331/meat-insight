@@ -772,5 +772,42 @@ if(params.get('payment')==='fail'){switchTab('consulting');setTimeout(()=>{docum
 // 계산기 결과 불러오기
 loadCalcResult();
 </script>
+<script>
+/* ── 온라인 결제 설정 확인 ──────────────────────────────────────────
+   TOSS_CLIENT_KEY 가 test_ 로 시작하면 실제 결제가 이루어지지 않습니다.
+   그 상태에서 카드·간편결제로 신청하면 손님은 결제한 줄 알고 기다립니다.
+   실제 키를 넣으면 이 안내는 저절로 사라집니다. */
+(function(){
+  var k="";
+  try{ k=String(TOSS_CLIENT_KEY||""); }catch(e){ return; }
+  if(k.indexOf("test_")!==0) return;
+  function paint(){
+    if(document.getElementById("pay-test-note")) return;
+    var host=document.querySelector(".form-section-title, form, main, body");
+    if(!host) return;
+    var box=document.createElement("div");
+    box.id="pay-test-note";
+    box.style.cssText="max-width:1100px;margin:16px auto;padding:14px 16px;border-radius:12px;"+
+      "background:#FFF4DF;border:1px solid #F5A524;color:#3A4149;font-size:13.5px;line-height:1.7;"+
+      "font-family:'Pretendard Variable',Pretendard,'Noto Sans KR',system-ui,sans-serif;font-weight:600;";
+    box.innerHTML="온라인 카드·간편결제는 현재 <b>준비 중</b>입니다. "+
+      "<b>무통장입금</b>으로 신청하시거나, 아래 고객센터로 연락 주시면 안내해 드리겠습니다.";
+    var anchor=document.querySelector(".form-section-title");
+    if(anchor && anchor.parentNode) anchor.parentNode.insertBefore(box, anchor);
+    else document.body.insertBefore(box, document.body.firstChild);
+    /* 카드·간편결제 선택지는 잠급니다 */
+    document.querySelectorAll(".pay-opt").forEach(function(el){
+      var t=el.textContent||"";
+      if(/무통장/.test(t)) return;
+      el.style.opacity="0.45"; el.style.pointerEvents="none";
+      el.setAttribute("aria-disabled","true");
+    });
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", paint);
+  else paint();
+})();
+</script>
+<script src="site-info.js"></script>
+<script src="legacy-chrome.js"></script>
 </body>
 </html>

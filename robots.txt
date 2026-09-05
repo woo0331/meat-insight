@@ -1,8 +1,13 @@
 User-agent: *
 Allow: /
 
-# 관리자 화면은 색인하지 않습니다
+# 관리 화면은 색인하지 않습니다 (로그인으로도 막혀 있습니다)
 Disallow: /admin.html
+Disallow: /admin-gate.js
 Disallow: /meat_insight_admin.html
+Disallow: /dashboard.html
+Disallow: /suppliers.html
+Disallow: /purchase_request.html
+Disallow: /jobs.html
 
 Sitemap: https://aboutmeat.co.kr/sitemap.xml

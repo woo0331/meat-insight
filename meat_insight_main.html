@@ -1437,41 +1437,20 @@ var KW_PERSON=["인력","알바","아르바이트","일용","단기","일당","�
 var HERO_CHIPS=["한우 지육","돼지 삼겹 100kg","곱창 손질","발골 인력","냉장 배송","육절기","HACCP 컨설팅","정육점 창업"];
 
 var REQS=[];   /* 실데이터(Supabase)로만 채웁니다 — 더미 수치 노출 금지 */
-var PROPS=[
-  {nm:"한우 유망 100kg",info:"경기 안성 / 5분 전",cl:"#2E7D32"},
-  {nm:"돼지 뒷심 1,000kg",info:"충남 천안 / 5분 전",cl:"#1565C0"},
-  {nm:"곱창 300kg",info:"경남 진주 / 15분 전",cl:"#4A148C"},
-  {nm:"한우 지육 200kg",info:"대구 달성 / 15분 전",cl:"#BF360C"}
-];
+/* 아래 4개는 site-info.js 의 GORI_CONTENT 에서 채웁니다.
+   예시로 넣어둔 매물·기사·게시글이 실제 정보처럼 읽혀 전부 비웠습니다.
+   확인되지 않은 내용을 여기에 다시 넣지 마세요. */
+var PROPS=[];
 var SUPS=[];   /* 실데이터(Supabase)로만 채웁니다 — 더미 수치 노출 금지 */
 var JOBS=[];   /* 실데이터(Supabase)로만 채웁니다 — 더미 수치 노출 금지 */
-var NEWS=[
-  {cat:"시세 동향",title:"정육점 창업, 어렵진 않아요 꼭 알아야 할 것들",date:"05.14",cl:"#1B5E20"},
-  {cat:"규제·정책",title:"한우 도투두수 역대 최저 기록",date:"05.14",cl:"#263238"},
-  {cat:"정책",title:"농식품부, 축산 수급 안정 대책 발표",date:"05.13",cl:"#0D47A1"},
-  {cat:"시세",title:"ASF 방역 강화...전국 일제 점검",date:"05.12",cl:"#BF360C"},
-  {cat:"뉴스",title:"수입육 관세 인하 검토...업계 반응은?",date:"05.11",cl:"#4A148C"}
-];
-var INSIGHTS=[
-  {cat:"창업 인사이트",title:"정육점 창업이 어렵진 않아요, 꼭 알아야 할 것들",date:"05.14",cl:"#1B5E20"},
-  {cat:"원가 분석",title:"소규모 육가공 공장 창업 완벽 가이드",date:"05.13",cl:"#4E342E"},
-  {cat:"HACCP",title:"도축장 위생 체크 포인트 7가지",date:"05.12",cl:"#006064"},
-  {cat:"성공사례",title:"성공하는 고깃집 창업 전략",date:"05.11",cl:"#BF360C"}
-];
-var COMM_HOT=[
-  {rank:1,cat:"질문",title:"곱창 생산 업체는 어떻게 보나요?",cnt:"12"},
-  {rank:2,cat:"정보",title:"도축장 위생관리 팀 구합니다",cnt:"8"},
-  {rank:3,cat:"정보",title:"정육육가공 찾는 법 바법",cnt:"15"},
-  {rank:4,cat:"뉴스",title:"좋은 OEM 업체 찾는 법",cnt:"6"},
-  {rank:5,cat:"질문",title:"요즘 찾는 특수부위는?",cnt:"11"}
-];
+var NEWS=[];
+var INSIGHTS=[];
+var COMM_HOT=[];
 var RANKS=[];   /* 실데이터(Supabase)로만 채웁니다 — 더미 수치 노출 금지 */
 var NEW_SUPS=[];   /* 실데이터(Supabase)로만 채웁니다 — 더미 수치 노출 금지 */
-var PRICE_DATA={
-  beef:[{item:"한우(지육) 1등급",price:"20,500",unit:"원/kg",chg:"▲500",up:true},{item:"한우(부분육) 1+",price:"12,000",unit:"원/kg",chg:"▲300",up:true},{item:"돼지(지육)",price:"5,180",unit:"원/kg",chg:"▲120",up:true},{item:"수입육(냉동) 냉동",price:"9,850",unit:"원/kg",chg:"▼50",up:false}],
-  pork:[{item:"삼겹살 (한돈)",price:"22,000",unit:"원/kg",chg:"▲400",up:true},{item:"목살 (한돈)",price:"18,500",unit:"원/kg",chg:"▼200",up:false},{item:"삼겹살 (수입·미국)",price:"12,500",unit:"원/kg",chg:"▲300",up:true}],
-  import:[{item:"국산 곱창",price:"15,000",unit:"원/kg",chg:"▲200",up:true},{item:"대창",price:"18,000",unit:"원/kg",chg:"▲100",up:true},{item:"우설",price:"22,000",unit:"원/kg",chg:"▼300",up:false}]
-};
+/* 시세는 market_prices(관리자 입력)에서만 가져옵니다.
+   예전에 넣어둔 예시 가격이 실제 시세처럼 보여 비웠습니다. */
+var PRICE_DATA={beef:[],pork:[],import:[]};
 var FIELD_MAP={
   "소고기":[{l:"품목 *",id:"f-item",ph:"한우 등심, 소 삼겹살, 우설..."},{l:"수량 (kg) *",id:"f-qty",ph:"100",tp:"number"},{l:"희망 단가 (원/kg)",id:"f-price",ph:"65,000",fmt:true},{l:"원산지",id:"f-ori",sel:["상관없음","국내산","미국산","호주산"]},{l:"납품 주기",id:"f-cycle",sel:["일회성","주 1회","주 2회","월 정기"]},{l:"추가 조건",id:"f-cond",ta:"등급, 냉장/냉동, HACCP 요구 등"}],
   "돼지고기":[{l:"품목 *",id:"f-item",ph:"삼겹살, 목살, 항정살..."},{l:"수량 (kg) *",id:"f-qty",ph:"100",tp:"number"},{l:"희망 단가",id:"f-price",ph:"22,000",fmt:true},{l:"납품 주기",id:"f-cycle",sel:["일회성","주 1회","주 2회","월 정기"]},{l:"추가 조건",id:"f-cond",ta:"한돈/수입, 냉장/냉동 등"}],

@@ -456,3 +456,7 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
 .nt-all{border:none;background:none;color:var(--gn);font-family:var(--font);
   font-size:12.5px;font-weight:800;cursor:pointer;padding:4px 6px;border-radius:7px;}
 .nt-all:hover{background:var(--gnl);}
+
+/* 아직 채워지지 않은 콘텐츠 칸 */
+.ct-soon{padding:22px 14px;text-align:center;font-size:12.5px;color:var(--ink4);
+  line-height:1.7;font-weight:500;}

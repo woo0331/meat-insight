@@ -383,3 +383,7 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
   .gflt-sel{flex:1 1 auto;min-width:0;}
   .gflt-chk{flex:0 0 auto;}
 }
+
+/* 요청 수정 화면 안내 */
+.gnote{background:var(--amber-tint);border:1px solid var(--amber);border-radius:12px;
+  padding:12px 14px;margin-bottom:13px;font-size:13px;font-weight:600;color:var(--ink2);line-height:1.6;}

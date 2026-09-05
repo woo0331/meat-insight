@@ -1,0 +1,10 @@
+# 테스트가 만드는 스크린샷 — 실행할 때마다 새로 생기므로 저장소에 넣지 않습니다
+test/*.png
+test/*.jpg
+test/*.log
+test/rt.log
+
+# 로컬 도구
+node_modules/
+package-lock.json
+.DS_Store

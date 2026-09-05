@@ -32,6 +32,9 @@ node test/run.js router edit  # 이름으로 골라서
 | `stale-e2e.js` | 오래된 요청 표시·접기 |
 | `admin-e2e.js` · `admin-find-e2e.js` | 관리자 콘솔, 표 검색 |
 
+테스트를 실행하면 `test/` 에 확인용 스크린샷(`*.png`)이 생깁니다. 실행할 때마다
+새로 만들어지는 것이라 `.gitignore` 로 제외해 두었습니다.
+
 ## 주의
 
 - `fake-sb.js` 는 Supabase 를 흉내 낸 것이라 **실제 서버 동작과 다를 수 있습니다.**

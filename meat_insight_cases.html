@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-    :root{--navy:#12161B;--gold:#8A2846; --gold-dark:#E0819B;--gold2:#B04C67;--white:#fff;--off:#FAFAF8;--muted:#5E636A;--line:#EAE8E4;--green:#1B7A46;--green-bg:#f0fdf4;--red:#991b1b;--red-bg:#fef2f2;--shadow:0 8px 32px rgba(18,22,27,.10);--radius:20px}
+    :root{--navy:#12161B;--gold:#B3164C; --gold-dark:#EE7FA3;--gold2:#D14C7C;--white:#fff;--off:#FAFAF8;--muted:#5E636A;--line:#EAE8E4;--green:#1B7A46;--green-bg:#f0fdf4;--red:#991b1b;--red-bg:#fef2f2;--shadow:0 8px 32px rgba(18,22,27,.10);--radius:20px}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth}
     body{font-family:'Noto Sans KR',sans-serif;background:var(--off);color:var(--navy);overflow-x:hidden}
@@ -24,8 +24,8 @@
     @media(max-width:640px){.nav{padding:12px 16px}.nav-right{display:none}}
 
     .hero{background:var(--navy);padding:56px 32px 68px;text-align:center;position:relative;overflow:hidden}
-    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 700px 300px at 50% 140%,rgba(138,40,70,.15),transparent 60%);pointer-events:none}
-    .hero-label{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;border:1px solid rgba(224,129,155,.4);color:var(--gold-dark);font-size:12px;font-weight:700;margin-bottom:16px}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 700px 300px at 50% 140%,rgba(179,22,76,.15),transparent 60%);pointer-events:none}
+    .hero-label{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;border:1px solid rgba(238,127,163,.4);color:var(--gold-dark);font-size:12px;font-weight:700;margin-bottom:16px}
     .hero h1{font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,44px);font-weight:700;color:#fff;margin-bottom:14px}
     .hero h1 em{color:var(--gold-dark);font-style:normal}
     .hero p{font-size:15px;color:rgba(255,255,255,.55);max-width:44ch;margin:0 auto 28px}
@@ -99,8 +99,8 @@
     .case-card.selected{border-color:var(--gold)}
     .case-card.fail .case-card-top{background:#3d1515}
     .case-card-top{background:var(--navy);padding:24px;position:relative;overflow:hidden}
-    .case-card-top::before{content:'';position:absolute;right:-20px;top:-20px;width:120px;height:120px;background:rgba(138,40,70,.1);border-radius:50%}
-    .case-badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(224,129,155,.22);color:var(--gold-dark);margin-bottom:12px}
+    .case-card-top::before{content:'';position:absolute;right:-20px;top:-20px;width:120px;height:120px;background:rgba(179,22,76,.1);border-radius:50%}
+    .case-badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(238,127,163,.22);color:var(--gold-dark);margin-bottom:12px}
     .case-card.fail .case-badge{background:rgba(200,50,50,.2);color:#ff9090}
     .case-compare-btn{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;z-index:2}
     .case-compare-btn:hover,.case-card.selected .case-compare-btn{background:var(--gold);color:var(--white);border-color:var(--gold)}
@@ -199,14 +199,14 @@
 
     /* CTA */
     .cta-wrap{background:var(--navy);border-radius:24px;padding:48px;margin-top:56px;display:flex;align-items:center;justify-content:space-between;gap:24px;position:relative;overflow:hidden}
-    .cta-wrap::before{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:rgba(138,40,70,.1);border-radius:50%}
+    .cta-wrap::before{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:rgba(179,22,76,.1);border-radius:50%}
     .cta-text h2{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,32px);font-weight:700;color:#fff;margin-bottom:8px}
     .cta-text p{font-size:15px;color:rgba(255,255,255,.55)}
     .cta-btns{display:flex;gap:12px;flex-shrink:0;position:relative}
     .btn-outline{padding:13px 24px;border-radius:999px;border:1.5px solid rgba(255,255,255,.25);color:#fff;font-size:14px;font-weight:700;text-decoration:none}
     @media(max-width:700px){.cta-wrap{flex-direction:column;align-items:flex-start;padding:32px 24px}.cta-btns{flex-direction:column;width:100%}}
 
-    .sticky-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;width:min(1100px,calc(100% - 32px));padding:12px 20px;background:rgba(18,22,27,.95);backdrop-filter:blur(20px);border:1px solid rgba(224,129,155,.22);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .sticky-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;width:min(1100px,calc(100% - 32px));padding:12px 20px;background:rgba(18,22,27,.95);backdrop-filter:blur(20px);border:1px solid rgba(238,127,163,.22);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:space-between;gap:12px}
     .sticky-text{font-size:13px;font-weight:700;color:#fff}
     .sticky-text small{display:block;font-size:11px;color:rgba(255,255,255,.62)}
     .sticky-btn{padding:10px 20px;border-radius:999px;background:var(--gold-dark);color:var(--navy);font-size:13px;font-weight:700;text-decoration:none}
@@ -554,7 +554,7 @@ function openCompare(){
   setTimeout(()=>{
     const ctx=document.getElementById('compare-chart').getContext('2d');
     (typeof Chart!=='undefined') && new Chart(ctx,{type:'bar',data:{labels:['투자금(백만)','순이익(만)','회수기간(개월)'],datasets:[
-      {label:a.title.slice(0,10),data:[a.invest/100,Math.max(a.profit,0),a.recovery>=999?0:a.recovery],backgroundColor:'rgba(138,40,70,.7)',borderRadius:4},
+      {label:a.title.slice(0,10),data:[a.invest/100,Math.max(a.profit,0),a.recovery>=999?0:a.recovery],backgroundColor:'rgba(179,22,76,.7)',borderRadius:4},
       {label:b.title.slice(0,10),data:[b.invest/100,Math.max(b.profit,0),b.recovery>=999?0:b.recovery],backgroundColor:'rgba(18,22,27,.7)',borderRadius:4}
     ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:12}}},scales:{y:{ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}}});
   },100);

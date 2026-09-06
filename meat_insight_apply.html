@@ -10,7 +10,7 @@
   <script src="https://js.tosspayments.com/v1/payment"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-    :root{--navy:#12161B;--gold:#8A2846; --gold-dark:#E0819B;--gold2:#B04C67;--white:#fff;--off:#FAFAF8;--muted:#5E636A;--line:#EAE8E4;--green:#1B7A46;--green-bg:#f0fdf4;--shadow:0 8px 32px rgba(18,22,27,.10);--radius:20px}
+    :root{--navy:#12161B;--gold:#B3164C; --gold-dark:#EE7FA3;--gold2:#D14C7C;--white:#fff;--off:#FAFAF8;--muted:#5E636A;--line:#EAE8E4;--green:#1B7A46;--green-bg:#f0fdf4;--shadow:0 8px 32px rgba(18,22,27,.10);--radius:20px}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth}
     body{font-family:'Noto Sans KR',sans-serif;background:var(--off);color:var(--navy);overflow-x:hidden}
@@ -63,7 +63,7 @@
     .btn-submit{width:100%;padding:17px;border-radius:14px;background:var(--navy);color:var(--gold-dark);font-size:16px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s,transform .15s;box-shadow:0 4px 20px rgba(18,22,27,.25);margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px}
     .btn-submit:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
     .btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
-    .spinner{width:18px;height:18px;border:2.5px solid rgba(138,40,70,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;display:none}
+    .spinner{width:18px;height:18px;border:2.5px solid rgba(179,22,76,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;display:none}
     .spinner.show{display:block}
     @keyframes spin{to{transform:rotate(360deg)}}
     .submit-note{text-align:center;font-size:12px;color:var(--muted);margin-top:10px}
@@ -77,10 +77,10 @@
     .pay-opt-icon{font-size:24px}
     .pay-opt-name{font-size:15px;font-weight:700;color:var(--navy)}
     .pay-opt-desc{font-size:12px;color:var(--muted)}
-    .bank-info{background:linear-gradient(135deg,#f8f4ee,#f0e8d8);border:1px solid rgba(138,40,70,.3);border-radius:14px;padding:24px;margin-top:16px;display:none}
+    .bank-info{background:linear-gradient(135deg,#f8f4ee,#f0e8d8);border:1px solid rgba(179,22,76,.3);border-radius:14px;padding:24px;margin-top:16px;display:none}
     .bank-info.show{display:block}
     .bank-info-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:14px}
-    .bank-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(224,129,155,.22);font-size:14px}
+    .bank-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(238,127,163,.22);font-size:14px}
     .bank-row:last-child{border-bottom:none}
     .bank-label{color:var(--muted)}
     .bank-val{font-weight:700;color:var(--navy)}
@@ -112,12 +112,12 @@
     .price-summary-label{font-size:12px;color:rgba(255,255,255,.62);margin-bottom:6px}
     .price-summary-amount{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--gold)}
     .price-summary-plan{font-size:13px;color:rgba(255,255,255,.6);margin-top:4px}
-    .sticky-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;width:min(900px,calc(100% - 32px));padding:12px 20px;background:rgba(18,22,27,.95);backdrop-filter:blur(20px);border:1px solid rgba(224,129,155,.22);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .sticky-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;width:min(900px,calc(100% - 32px));padding:12px 20px;background:rgba(18,22,27,.95);backdrop-filter:blur(20px);border:1px solid rgba(238,127,163,.22);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:space-between;gap:12px}
     .sticky-text{font-size:13px;font-weight:700;color:#fff}
     .sticky-text small{display:block;font-size:11px;color:rgba(255,255,255,.62);font-weight:400}
     .sticky-actions{display:flex;gap:8px}
     .sticky-btn{padding:10px 18px;border-radius:999px;background:var(--gold-dark);color:var(--navy);font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap}
-    .sticky-btn.outline{background:transparent;border:1.5px solid rgba(224,129,155,.45);color:var(--gold-dark)}
+    .sticky-btn.outline{background:transparent;border:1.5px solid rgba(238,127,163,.45);color:var(--gold-dark)}
 
     /* 계산기 유도 배너 */
     .calc-guide-banner{background:linear-gradient(135deg,var(--navy),#1a3560);border-radius:16px;padding:28px 32px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
@@ -125,7 +125,7 @@
     .calc-guide-text h3{font-size:18px;font-weight:700;margin-bottom:6px}
     .calc-guide-text p{font-size:13px;color:rgba(255,255,255,.6);line-height:1.6}
     .calc-guide-steps{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
-    .calc-guide-step{background:rgba(255,255,255,.08);border:1px solid rgba(138,40,70,.25);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:rgba(255,255,255,.8)}
+    .calc-guide-step{background:rgba(255,255,255,.08);border:1px solid rgba(179,22,76,.25);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:rgba(255,255,255,.8)}
     .calc-guide-arrow{color:var(--gold);font-size:16px}
     .calc-guide-btn{padding:14px 28px;border-radius:999px;background:var(--gold);color:var(--white);font-size:15px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;transition:opacity .15s}
     .calc-guide-btn:hover{opacity:.88}
@@ -146,7 +146,7 @@
     .tracker-steps{display:flex;align-items:center}
     .tracker-step{flex:1;text-align:center;position:relative;z-index:1}
     .tracker-dot{width:36px;height:36px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:2px solid var(--line);background:#fff;color:var(--muted)}
-    .tracker-dot.active{background:var(--gold);border-color:var(--gold);color:var(--white);box-shadow:0 0 0 4px rgba(224,129,155,.22)}
+    .tracker-dot.active{background:var(--gold);border-color:var(--gold);color:var(--white);box-shadow:0 0 0 4px rgba(238,127,163,.22)}
     .tracker-label{font-size:11px;font-weight:700;color:var(--muted)}
     .tracker-label.active{color:var(--navy)}
     .tracker-line{flex:1;height:2px;background:var(--line);margin-top:-22px}
@@ -159,11 +159,11 @@
     .supply-vis-sub{font-size:11px;color:var(--muted)}
     .supply-vis-check{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--gold-dark);display:none;align-items:center;justify-content:center;font-size:10px;font-weight:700}
     .supply-vis-card.active .supply-vis-check{display:flex}
-    .saving-calc{background:linear-gradient(135deg,#f8f4ee,#f0e8d8);border:1px solid rgba(138,40,70,.25);border-radius:16px;padding:22px;margin-bottom:20px}
+    .saving-calc{background:linear-gradient(135deg,#f8f4ee,#f0e8d8);border:1px solid rgba(179,22,76,.25);border-radius:16px;padding:22px;margin-bottom:20px}
     .saving-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:14px}
     .saving-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
     .saving-row label{font-size:12px;font-weight:700;color:var(--muted);min-width:80px}
-    .saving-input{flex:1;min-width:100px;padding:9px 12px;border-radius:8px;border:1.5px solid rgba(138,40,70,.3);font-size:14px;font-weight:700;font-family:inherit;color:var(--navy);background:#fff;outline:none}
+    .saving-input{flex:1;min-width:100px;padding:9px 12px;border-radius:8px;border:1.5px solid rgba(179,22,76,.3);font-size:14px;font-weight:700;font-family:inherit;color:var(--navy);background:#fff;outline:none}
     .saving-input:focus{border-color:var(--gold)}
     .saving-result{background:var(--navy);border-radius:12px;padding:16px;margin-top:14px}
     .saving-result-label{font-size:11px;color:rgba(255,255,255,.62);margin-bottom:4px}
@@ -439,7 +439,7 @@
               <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 투자 회수 기간 계산</div>
               <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 담당자 핵심 조언 1건 포함</div>
             </div>
-            <div style="margin-top:12px;background:rgba(138,40,70,.1);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--gold);font-weight:700">
+            <div style="margin-top:12px;background:rgba(179,22,76,.1);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--gold);font-weight:700">
               📌 계산기 수치 입력 후 신청 시 더 정확한 리포트 제공
             </div>
             <div style="margin-top:8px;background:var(--off);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--muted)">결제 후 1영업일 내 PDF 전달 · 부가세 별도</div>
@@ -466,7 +466,7 @@
               <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 단골 고객 만들기 전략</div>
               <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="color:var(--gold);font-weight:700">✓</span> 거래선 우선 연결 매칭</div>
             </div>
-            <div style="margin-top:12px;background:rgba(138,40,70,.1);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--gold);font-weight:700">📌 결제 후 3~5영업일 내 자료 전달 · 부가세 별도 · 자료 제공 전 전액 환불 가능</div>
+            <div style="margin-top:12px;background:rgba(179,22,76,.1);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--gold);font-weight:700">📌 결제 후 3~5영업일 내 자료 전달 · 부가세 별도 · 자료 제공 전 전액 환불 가능</div>
           </div>
         </div>
 

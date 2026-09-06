@@ -38,7 +38,7 @@
     f.innerHTML='<div class="in">'+
       '<div class="top">'+
         '<a class="bd" href="index.html">'+
-          '<svg width="20" height="20" viewBox="0 0 26 26" fill="none" aria-hidden="true"><circle cx="13" cy="13" r="13" fill="#8A2846"/>'+
+          '<svg width="20" height="20" viewBox="0 0 26 26" fill="none" aria-hidden="true"><circle cx="13" cy="13" r="13" fill="#B3164C"/>'+
           '<path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>'+
           '<circle cx="8" cy="20" r="2" fill="white"/></svg> 고리</a>'+
         '<a href="index.html">고리 홈</a>'+

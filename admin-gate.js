@@ -32,12 +32,12 @@
     "#ag-gate label{display:block;font-size:12.5px;font-weight:700;color:#3A4149;margin:0 0 6px}"+
     "#ag-gate input{width:100%;height:44px;padding:0 13px;border:1.5px solid #EAE8E4;border-radius:11px;"+
       "font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;box-sizing:border-box}"+
-    "#ag-gate input:focus{border-color:#8A2846}"+
-    "#ag-gate button{width:100%;height:46px;border:none;border-radius:11px;background:#8A2846;color:#fff;"+
+    "#ag-gate input:focus{border-color:#B3164C}"+
+    "#ag-gate button{width:100%;height:46px;border:none;border-radius:11px;background:#B3164C;color:#fff;"+
       "font-size:15px;font-weight:800;font-family:inherit;cursor:pointer}"+
     "#ag-gate button:disabled{background:#D9D6D0;color:#71767F;cursor:not-allowed}"+
     "#ag-gate .m{font-size:12.5px;margin-top:11px;min-height:17px;line-height:1.6}"+
-    "#ag-gate .m.e{color:#C0332A;font-weight:700}"+
+    "#ag-gate .m.e{color:#B93A15;font-weight:700}"+
     "#ag-gate .f{margin-top:16px;font-size:12px;color:#71767F;text-align:center}"+
     "#ag-gate .f a{color:#6E7480;font-weight:700;text-decoration:none}";
   (document.head||document.documentElement).appendChild(st);

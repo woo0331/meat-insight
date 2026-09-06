@@ -62,11 +62,16 @@ async function open(b,vp){const p=await b.newPage({viewport:vp||{width:1280,heig
    if(!e) return '(없음)';
    e.focus(); const s=getComputedStyle(e);
    return s.outlineStyle+' '+s.outlineWidth+' '+s.outlineColor;}, sel);
- chk('  히어로 검색창 링', await ringOf(q,'.gh-s-in, .hs-input'), 'solid 3px rgb(138, 40, 70)');
- chk('  카테고리 버튼 링', await ringOf(q,'.hc-item'), 'solid 3px rgb(138, 40, 70)');
+ // 링 색은 --gn 토큰을 따라갑니다. 팔레트를 바꿔도 테스트가 깨지지 않도록 값을 읽어서 씁니다.
+ const WANT='solid 3px '+await q.evaluate(()=>{
+   const d=document.createElement('span');
+   d.style.color='var(--gn)'; document.body.appendChild(d);
+   const c=getComputedStyle(d).color; d.remove(); return c;});
+ chk('  히어로 검색창 링', await ringOf(q,'.gh-s-in, .hs-input'), WANT);
+ chk('  카테고리 버튼 링', await ringOf(q,'.hc-item'), WANT);
  await q.evaluate(()=>go('reqs')); await q.waitForTimeout(1100);
- chk('  목록 검색창 링', await ringOf(q,'#flt-req-q'), 'solid 3px rgb(138, 40, 70)');
- chk('  정렬 선택 링', await ringOf(q,'#flt-req-sort'), 'solid 3px rgb(138, 40, 70)');
+ chk('  목록 검색창 링', await ringOf(q,'#flt-req-q'), WANT);
+ chk('  정렬 선택 링', await ringOf(q,'#flt-req-sort'), WANT);
  await q.evaluate(()=>go('h')); await q.waitForTimeout(600);
  log.push('  포커스 대상: '+ring.el);
  await q.screenshot({path:'ay-focus.png'});

@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>고리 관리자 콘솔</title>
 <meta name="robots" content="noindex,nofollow">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'><rect width='26' height='26' rx='7' fill='%238A2846'/><circle cx='13' cy='13' r='6' fill='white'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'><rect width='26' height='26' rx='7' fill='%23B3164C'/><circle cx='13' cy='13' r='6' fill='white'/></svg>">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --gn:#8A2846;--gn2:#631A32;--gnl:#FAEBEF;--gn-on-tint:#631A32;
+  --gn:#B3164C;--gn2:#8A0F3A;--gnl:#FDE8EF;--gn-on-tint:#8A0F3A;
   --amber:#F5A524;--amber-tint:#FCF4E2;
   --ink900:#12161B;--ink800:#1B2129;
   --ink:#14181C;--ink2:#3A4149;--ink3:#5E636A;--ink4:#676C75;
@@ -74,7 +74,7 @@ tr:hover td{background:#FCFCFB}
 .b-p{background:var(--gn);color:#fff}.b-p:hover{background:var(--gn2)}
 .b-o{background:var(--ok);color:#fff}
 .b-w{background:#fff;color:var(--ink2);border:1px solid #D8D5CE}.b-w:hover{border-color:var(--gn);color:var(--gn)}
-.b-d{background:#fff;color:#C0332A;border:1px solid #F2C9BC}
+.b-d{background:#fff;color:#B93A15;border:1px solid #F0C9B4}
 .b:disabled{opacity:.45;cursor:not-allowed}
 .acts{display:flex;gap:6px}
 label{display:block;font-size:12.5px;font-weight:700;color:var(--ink2);margin:14px 0 6px}
@@ -518,7 +518,7 @@ async function vMarket(){
       '<td class="tr">'+esc((MCAT.find(function(x){return x[0]===m.category})||["","—"])[1])+'</td>'+
       '<td><b>'+esc(m.item||"—")+'</b> <span class="tr">'+esc(m.grade||"")+'</span></td>'+
       '<td><b>'+won(m.price)+'</b> <span class="tr">'+esc(m.unit||"원/kg")+'</span></td>'+
-      '<td style="color:'+(c>0?"#CE3A24":(c<0?"#245FCB":"var(--ink4)"))+';font-weight:700">'+
+      '<td style="color:'+(c>0?"#D14312":(c<0?"#245FCB":"var(--ink4)"))+';font-weight:700">'+
         (c>0?"▲ ":(c<0?"▼ ":"— "))+(c?won(Math.abs(c)):"보합")+'</td>'+
       '<td><button class="b b-d" onclick="rm(\'market_prices\',\''+m.id+'\',\''+esc(m.item)+'\')">삭제</button></td></tr>';
   });

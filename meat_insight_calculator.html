@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
     :root{
-      --navy:#12161B;--gold:#8A2846; --gold-dark:#E0819B;--gold2:#B04C67;--gold-light:#f0e0c0;
+      --navy:#12161B;--gold:#B3164C; --gold-dark:#EE7FA3;--gold2:#D14C7C;--gold-light:#f0e0c0;
       --white:#fff;--off:#FAFAF8;--muted:#5E636A;--line:#EAE8E4;
       --green:#1B7A46;--green-bg:#f0fdf4;--red:#991b1b;--red-bg:#fef2f2;
       --shadow:0 8px 32px rgba(18,22,27,.10);--radius:20px;
@@ -28,8 +28,8 @@
     .nav-btn.primary{background:var(--navy);color:var(--gold-dark);border-color:transparent}
     @media(max-width:640px){.nav{padding:12px 16px}.nav-right{display:none}}
     .hero{background:var(--navy);padding:44px 32px 56px;text-align:center;position:relative;overflow:hidden}
-    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 700px 300px at 50% 130%,rgba(138,40,70,.15),transparent 60%);pointer-events:none}
-    .hero-label{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;border:1px solid rgba(224,129,155,.4);color:var(--gold-dark);font-size:12px;font-weight:700;margin-bottom:16px;position:relative}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 700px 300px at 50% 130%,rgba(179,22,76,.15),transparent 60%);pointer-events:none}
+    .hero-label{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;border:1px solid rgba(238,127,163,.4);color:var(--gold-dark);font-size:12px;font-weight:700;margin-bottom:16px;position:relative}
     .hero h1{font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,42px);font-weight:700;color:var(--white);margin-bottom:12px;position:relative}
     .hero h1 em{color:var(--gold-dark);font-style:normal}
     .hero p{font-size:15px;color:rgba(255,255,255,.55);position:relative;max-width:44ch;margin:0 auto}
@@ -96,7 +96,7 @@
 
     /* ── 고급화 추가 스타일 ── */
     /* AI 진단 카드 */
-    .ai-card{background:linear-gradient(135deg,#12161B,#1a3560);border-radius:16px;padding:20px;margin-bottom:16px;border:1px solid rgba(224,129,155,.22)}
+    .ai-card{background:linear-gradient(135deg,#12161B,#1a3560);border-radius:16px;padding:20px;margin-bottom:16px;border:1px solid rgba(238,127,163,.22)}
     .ai-card-title{font-size:12px;font-weight:700;color:var(--gold-dark);letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
     .ai-items{display:flex;flex-direction:column;gap:8px}
     .ai-item{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.6}
@@ -140,14 +140,14 @@
     .timeline-item{flex-shrink:0;text-align:center;min-width:52px}
     .timeline-dot{width:28px;height:28px;border-radius:50%;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid var(--line)}
     .timeline-dot.done{background:var(--navy);color:var(--gold-dark);border-color:var(--navy)}
-    .timeline-dot.current{background:var(--gold);color:var(--white);border-color:var(--gold);box-shadow:0 0 0 3px rgba(224,129,155,.22)}
+    .timeline-dot.current{background:var(--gold);color:var(--white);border-color:var(--gold);box-shadow:0 0 0 3px rgba(238,127,163,.22)}
     .timeline-dot.future{background:var(--white);color:var(--muted)}
     .timeline-label{font-size:9px;color:var(--muted)}
     .timeline-line{flex:1;height:2px;background:var(--line);margin-top:13px;min-width:10px}
     .timeline-line.done{background:var(--navy)}
 
     /* sticky */
-    .sticky-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(18,22,27,.97);backdrop-filter:blur(20px);border-top:1px solid rgba(224,129,155,.22);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .sticky-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(18,22,27,.97);backdrop-filter:blur(20px);border-top:1px solid rgba(238,127,163,.22);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
     .sticky-text{font-size:13px;font-weight:700;color:var(--white)}
     .sticky-text small{display:block;font-size:11px;color:rgba(255,255,255,.62);font-weight:400}
     .sticky-btn{padding:10px 20px;border-radius:999px;background:var(--gold-dark);color:var(--navy);font-size:13px;font-weight:700;text-decoration:none}
@@ -634,9 +634,9 @@
 <div class="sticky-bar">
   <div class="sticky-text">MEAT INSIGHT · 수익 계산기<small>5종 무료 · 실시간 계산 · 업계 비교</small></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <a class="sticky-btn" style="background:transparent;border:1.5px solid rgba(224,129,155,.45);color:var(--gold-dark);font-size:12px;padding:9px 14px" href="meat_insight_diagnosis.html">창업 진단</a>
+    <a class="sticky-btn" style="background:transparent;border:1.5px solid rgba(238,127,163,.45);color:var(--gold-dark);font-size:12px;padding:9px 14px" href="meat_insight_diagnosis.html">창업 진단</a>
     <button class="sticky-btn" onclick="goToReport()" style="border:none;cursor:pointer;font-size:12px;padding:9px 14px">📋 창업 리포트 (20만)</button>
-    <a class="sticky-btn" href="meat_insight_apply.html?tab=consulting" style="background:rgba(224,129,155,.15);border:1.5px solid rgba(224,129,155,.45);color:var(--gold-dark);font-size:12px;padding:9px 14px">💼 컨설팅 (150만)</a>
+    <a class="sticky-btn" href="meat_insight_apply.html?tab=consulting" style="background:rgba(238,127,163,.15);border:1.5px solid rgba(238,127,163,.45);color:var(--gold-dark);font-size:12px;padding:9px 14px">💼 컨설팅 (150만)</a>
   </div>
 </div>
 
@@ -741,14 +741,14 @@ function calcButchery(){
   if(bChartType==='cashflow'){
     const months=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
     const profits=months.map((_,i)=>{const seasonal=[0.8,0.85,0.95,1.0,1.0,0.9,0.85,1.1,1.05,1.0,1.2,1.3];return Math.round(profit*seasonal[i]);});
-    bChart=drawChart('b-chart',bChart,'bar',{type:'bar',data:{labels:months,datasets:[{label:'월 순이익(만원)',data:profits,backgroundColor:profits.map(v=>v>=0?'rgba(138,40,70,.7)':'rgba(239,68,68,.7)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+'만',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},x:{ticks:{font:{size:10}}}}}});
+    bChart=drawChart('b-chart',bChart,'bar',{type:'bar',data:{labels:months,datasets:[{label:'월 순이익(만원)',data:profits,backgroundColor:profits.map(v=>v>=0?'rgba(179,22,76,.7)':'rgba(239,68,68,.7)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+'만',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},x:{ticks:{font:{size:10}}}}}});
   } else if(bChartType==='breakdown'){
     const costAmt=Math.round(rev*cost/100);
-    bChart=drawChart('b-chart',bChart,'doughnut',{type:'doughnut',data:{labels:['원가','임대료','인건비','기타','순이익'],datasets:[{data:[costAmt,rent,labor,etc,Math.max(profit,0)],backgroundColor:['#fca5a5','#fcd34d','#93c5fd','#d1d5db','rgba(138,40,70,.8)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12}}}}});
+    bChart=drawChart('b-chart',bChart,'doughnut',{type:'doughnut',data:{labels:['원가','임대료','인건비','기타','순이익'],datasets:[{data:[costAmt,rent,labor,etc,Math.max(profit,0)],backgroundColor:['#fca5a5','#fcd34d','#93c5fd','#d1d5db','rgba(179,22,76,.8)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12}}}}});
   } else {
     const visRange=Array.from({length:10},(_,i)=>Math.round(bep*0.5+i*(vis*1.5-bep*0.5)/9));
     const profitLine=visRange.map(v=>Math.round(v*price*(100-cost)/100/10000-fixed));
-    bChart=drawChart('b-chart',bChart,'line',{type:'line',data:{labels:visRange.map(v=>v+'명'),datasets:[{label:'순이익(만원)',data:profitLine,borderColor:'rgba(138,40,70,1)',backgroundColor:'rgba(138,40,70,.1)',fill:true,tension:.4,pointRadius:3},{label:'손익분기',data:visRange.map(()=>0),borderColor:'rgba(239,68,68,.5)',borderDash:[5,5],pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{y:{ticks:{callback:v=>v+'만',font:{size:10}}},x:{ticks:{font:{size:10}}}}}});
+    bChart=drawChart('b-chart',bChart,'line',{type:'line',data:{labels:visRange.map(v=>v+'명'),datasets:[{label:'순이익(만원)',data:profitLine,borderColor:'rgba(179,22,76,1)',backgroundColor:'rgba(179,22,76,.1)',fill:true,tension:.4,pointRadius:3},{label:'손익분기',data:visRange.map(()=>0),borderColor:'rgba(239,68,68,.5)',borderDash:[5,5],pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{y:{ticks:{callback:v=>v+'만',font:{size:10}}},x:{ticks:{font:{size:10}}}}}});
   }
 }
 
@@ -812,10 +812,10 @@ function calcRestaurant(){
   if(rChartType==='cashflow'){
     const months=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
     const profits=months.map((_,i)=>{const s=[0.85,0.88,0.95,1.0,1.0,0.9,0.85,1.05,1.1,1.0,1.2,1.3];return Math.round(profit*s[i]);});
-    rChart=drawChart('r-chart',rChart,'bar',{type:'bar',data:{labels:months,datasets:[{label:'월 순이익(만원)',data:profits,backgroundColor:profits.map(v=>v>=0?'rgba(138,40,70,.7)':'rgba(239,68,68,.7)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+'만',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},x:{ticks:{font:{size:10}}}}}});
+    rChart=drawChart('r-chart',rChart,'bar',{type:'bar',data:{labels:months,datasets:[{label:'월 순이익(만원)',data:profits,backgroundColor:profits.map(v=>v>=0?'rgba(179,22,76,.7)':'rgba(239,68,68,.7)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+'만',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},x:{ticks:{font:{size:10}}}}}});
   } else {
     const costAmt=Math.round(rev*cost/100);
-    rChart=drawChart('r-chart',rChart,'doughnut',{type:'doughnut',data:{labels:['원가','임대료','인건비','기타','순이익'],datasets:[{data:[costAmt,rent,labor,etc,Math.max(profit,0)],backgroundColor:['#fca5a5','#fcd34d','#93c5fd','#d1d5db','rgba(138,40,70,.8)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12}}}}});
+    rChart=drawChart('r-chart',rChart,'doughnut',{type:'doughnut',data:{labels:['원가','임대료','인건비','기타','순이익'],datasets:[{data:[costAmt,rent,labor,etc,Math.max(profit,0)],backgroundColor:['#fca5a5','#fcd34d','#93c5fd','#d1d5db','rgba(179,22,76,.8)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12}}}}});
   }
 }
 

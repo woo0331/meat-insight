@@ -9,7 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-    :root{--navy:#12161B;--gold:#8A2846; --gold-dark:#E0819B;--gold2:#B04C67;--gold-light:#f0e0c0;--white:#fff;--off:#FAFAF8;--muted:#5E636A;--line:#EAE8E4;--green:#1B7A46;--green-bg:#f0fdf4;--shadow:0 8px 32px rgba(18,22,27,.10);--radius:20px}
+    :root{--navy:#12161B;--gold:#B3164C; --gold-dark:#EE7FA3;--gold2:#D14C7C;--gold-light:#f0e0c0;--white:#fff;--off:#FAFAF8;--muted:#5E636A;--line:#EAE8E4;--green:#1B7A46;--green-bg:#f0fdf4;--shadow:0 8px 32px rgba(18,22,27,.10);--radius:20px}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth}
     body{font-family:'Noto Sans KR',sans-serif;background:var(--off);color:var(--navy);overflow-x:hidden}
@@ -28,8 +28,8 @@
 
     /* HERO */
     .hero{background:var(--navy);padding:56px 32px 68px;text-align:center;position:relative;overflow:hidden}
-    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 700px 300px at 50% 140%,rgba(138,40,70,.15),transparent 60%);pointer-events:none}
-    .hero-label{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;border:1px solid rgba(224,129,155,.4);color:var(--gold-dark);font-size:12px;font-weight:700;margin-bottom:16px;position:relative}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 700px 300px at 50% 140%,rgba(179,22,76,.15),transparent 60%);pointer-events:none}
+    .hero-label{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;border:1px solid rgba(238,127,163,.4);color:var(--gold-dark);font-size:12px;font-weight:700;margin-bottom:16px;position:relative}
     .hero h1{font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,44px);font-weight:700;color:var(--white);margin-bottom:14px;position:relative}
     .hero h1 em{color:var(--gold-dark);font-style:normal}
     .hero p{font-size:15px;color:rgba(255,255,255,.55);max-width:48ch;margin:0 auto;position:relative;line-height:1.8}
@@ -86,7 +86,7 @@
     .btn-submit{width:100%;padding:17px;border-radius:14px;background:var(--navy);color:var(--gold-dark);font-size:16px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s,transform .15s;box-shadow:0 4px 20px rgba(18,22,27,.25);margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px}
     .btn-submit:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
     .btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
-    .spinner{width:18px;height:18px;border:2.5px solid rgba(138,40,70,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;display:none}
+    .spinner{width:18px;height:18px;border:2.5px solid rgba(179,22,76,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;display:none}
     .spinner.show{display:block}
     @keyframes spin{to{transform:rotate(360deg)}}
     .submit-note{text-align:center;font-size:12px;color:var(--muted);margin-top:10px}
@@ -119,7 +119,7 @@
     .side-highlight-desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.7}
 
     /* STICKY */
-    .sticky-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;width:min(1100px,calc(100% - 32px));padding:12px 20px;background:rgba(18,22,27,.95);backdrop-filter:blur(20px);border:1px solid rgba(224,129,155,.22);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .sticky-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;width:min(1100px,calc(100% - 32px));padding:12px 20px;background:rgba(18,22,27,.95);backdrop-filter:blur(20px);border:1px solid rgba(238,127,163,.22);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:space-between;gap:12px}
     .sticky-text{font-size:13px;font-weight:700;color:var(--white)}
     .sticky-text small{display:block;font-size:11px;color:rgba(255,255,255,.62);font-weight:400}
     .sticky-btn{padding:10px 18px;border-radius:999px;background:var(--gold-dark);color:var(--navy);font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap}

@@ -54,11 +54,15 @@ const AUDIT = `(()=>{
 
 const SPA = [["홈", "go('h')"], ["요청 목록", "go('reqs')"], ["업체 찾기", "go('suppliers')"],
              ["구인구직", "go('jobs')"], ["시세", "go('market')"], ["내 활동", "go('my')"],
-             ["요청 상세", "gOpenRequest('r1')"], ["요청서 작성", "go('rw')"]];
+             ["요청 상세", "gOpenRequest('r1')"], ["요청서 작성", "go('rw')"],
+             ["업체 등록", "go('sj')"], ["이용 가이드", "gOpenGuide()"],
+             ["가이드(업체)", "gGuideTab('sup')"], ["신고", "gOpenReport('supplier','s1','합신식 도축장')"],
+             ["문의", "gOpenContact()"]];
 const PAGES = ["terms.html", "privacy.html", "admin.html",
                "meat_insight_apply.html", "meat_insight_calculator.html", "meat_insight_cases.html",
                "meat_insight_diagnosis.html", "meat_insight_partner.html", "meat_insight_report.html",
-               "dashboard.html", "suppliers.html", "jobs.html", "purchase_request.html"];
+               "dashboard.html", "suppliers.html", "jobs.html", "purchase_request.html",
+               "404.html"];
 
 function report(name, rows) {
   if (!rows.length) return 0;

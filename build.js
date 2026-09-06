@@ -18,7 +18,7 @@ const ORDER=[
   "08_match.js","09_chat.js","10_trust.js","11_wire3.js","13_onboard.js","12_redesign.js",
   "14_router.js","15_filter.js","16_edit.js","17_market.js","18_jobs.js","19_find.js",
   "20_live.js","21_guard.js","22_pwa.js","23_notif.js","24_content.js","25_a11y.js",
-  "26_kakao.js","27_offline.js","28_stale.js",
+  "26_kakao.js","27_offline.js","28_stale.js","29_supedit.js","30_suphome.js","31_guide.js","32_report.js",
   "07_init.js"
 ];
 

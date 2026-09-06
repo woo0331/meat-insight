@@ -5689,6 +5689,887 @@ function patchStale(){
     };
   }
 }
+/* ════════════════════════════════════════════════════════════════════
+   업체 정보 수정
+   등록(온보딩 4단계)은 있는데 등록하고 나면 고칠 방법이 없었습니다.
+   연락처가 바뀌거나 취급 품목이 늘어도 손댈 수가 없어 실사용에서 막힙니다.
+
+   새 화면을 만들지 않고 온보딩 폼(OB)을 그대로 재사용합니다.
+   OB.edit 에 업체 id 가 들어 있으면 저장이 insert 대신 update 로 갑니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 저장된 행 → 온보딩 폼이 쓰는 모양으로 */
+function seToForm(s){
+  return {
+    name:s.name||"", rep_name:s.rep_name||"", contact:s.contact||"",
+    region:s.region||(REGIONS&&REGIONS[0])||"", address:s.address||"",
+    category_mains:(s.category_mains||[]).slice(),
+    categories:(s.categories||[]).slice(),
+    items:(s.items||[]).slice(), services:(s.services||[]).slice(),
+    min_qty:s.min_qty||"", lead_time:s.lead_time||"",
+    brn:s.brn||"", permit_no:s.permit_no||"", haccp_no:s.haccp_no||"",
+    intro:s.intro||s.description||"", instant_note:s.instant_note||""
+  };
+}
+
+/* 내가 이 업체의 주인인가 */
+function seMine(s){
+  if(!s) return false;
+  if(!ME.user) return false;
+  if(s.user_id && String(s.user_id)===String(ME.user.id)) return true;
+  return (MY.sups||[]).some(function(x){ return String(x.id)===String(s.id); });
+}
+
+window.gEditSupplier=async function(id){
+  if(!id) return;
+  var s=null;
+  if(SD.sup && String(SD.sup.id)===String(id)) s=SD.sup;
+  if(!s) s=(MY.sups||[]).find(function(x){ return String(x.id)===String(id); });
+  if(!s){
+    var r=await selectSafe("suppliers", function(q){ return q.eq("id", id).limit(1); });
+    s=(r.data||[])[0]||null;
+  }
+  if(!s){ toast("업체 정보를 불러올 수 없습니다.","err"); return; }
+
+  OB.edit=String(id);
+  OB.step=1;
+  OB.data=seToForm(s);
+  OB.photos=(s.images||[]).filter(Boolean).map(function(u){ return { url:u, busy:false }; });
+
+  var host=$("pg-sj");
+  if(host) host.innerHTML="";           /* 헤더를 다시 그리게 비워둡니다 */
+  if(typeof go==="function") go("sj");
+  setTimeout(seRender, 30);
+};
+
+/* 등록 / 수정에 따라 화면 문구를 맞춥니다.
+   obHost() 는 껍데기가 이미 있으면 다시 그리지 않아서, 수정 뒤 등록으로
+   돌아오면 제목이 "업체 정보 수정" 인 채로 남습니다. 그래서 매번 맞춰줍니다. */
+function seChrome(edit){
+  var t=document.querySelector("#pg-sj .gp-title");
+  var sub=document.querySelector("#pg-sj .gp-sub");
+  var btn=$("ob-submit");
+  if(t)   t.textContent   = edit ? "업체 정보 수정" : "업체 등록";
+  if(sub) sub.textContent = edit ? "바꾼 내용은 저장하는 즉시 업체 상세에 반영됩니다"
+                                 : "등록하면 조건에 맞는 요청이 올라올 때 바로 알림을 받습니다";
+  if(btn) btn.textContent = edit ? "수정 저장" : "업체 등록 완료";
+  if(edit) seFixRegion();
+}
+
+/* 저장된 지역이 "경기 포천시" 처럼 목록에 없는 값일 수 있습니다.
+   목록에 없으면 그 값을 그대로 항목으로 넣어 둡니다 — 저장할 때 잃지 않도록. */
+function seFixRegion(){
+  var sel=$("ob-region"); if(!sel) return;
+  var want=OB.data && OB.data.region; if(!want) return;
+  var has=Array.prototype.some.call(sel.options, function(o){ return o.value===want; });
+  if(!has){
+    var op=document.createElement("option");
+    op.value=want; op.textContent=want;
+    sel.insertBefore(op, sel.firstChild);
+  }
+  sel.value=want;
+}
+
+function seRender(){
+  obRender();
+  seChrome(!!OB.edit);
+}
+
+/* 단계 이동·페이지 진입 때도 문구를 유지합니다 */
+function seArmSteps(){
+  var origNext=window.gObNext;
+  if(typeof origNext==="function"){
+    window.gObNext=function(){
+      var r=origNext.apply(this, arguments);
+      setTimeout(function(){ seChrome(!!OB.edit); }, 0);
+      return r;
+    };
+  }
+  var origBack=window.gObBack;
+  if(typeof origBack==="function"){
+    window.gObBack=function(){
+      if(OB.edit && OB.step===1) OB.edit=null;   /* 수정을 취소하고 나감 */
+      var r=origBack.apply(this, arguments);
+      setTimeout(function(){ seChrome(!!OB.edit); }, 0);
+      return r;
+    };
+  }
+  var origGo=window.go;
+  if(typeof origGo==="function"){
+    window.go=function(p){
+      var r=origGo.apply(this, arguments);
+      if(p==="sj") setTimeout(function(){ seChrome(!!OB.edit); }, 0);
+      return r;
+    };
+  }
+}
+
+/* ── 저장 ── */
+function seArmSubmit(){
+  var orig=window.gObSubmit;
+  if(typeof orig!=="function") return;
+  window.gObSubmit=async function(){
+    if(!OB.edit) return orig.apply(this, arguments);
+
+    var v=function(id){ var e=$(id); return e?String(e.value||"").trim():""; };
+    var instant=(document.querySelector("#ob-instant .gpick-i.on")||{}).textContent==="참여";
+    Object.assign(OB.data,{ intro:v("ob-intro")||null, instant_note:v("ob-note")||null });
+
+    var btn=$("ob-submit");
+    if(btn){ btn.disabled=true; btn.textContent="저장 중…"; }
+
+    var d=OB.data, id=OB.edit;
+    var patch={
+      name:d.name, rep_name:d.rep_name, contact:d.contact, region:d.region, address:d.address,
+      categories:d.categories||[], category_mains:d.category_mains||[],
+      items:d.items||[], services:d.services||[],
+      min_qty:d.min_qty||null, lead_time:d.lead_time||null,
+      description:d.intro, intro:d.intro,
+      images:OB.photos.map(function(p){ return p.url; }).filter(Boolean),
+      regions:[d.region], instant_quote:instant, instant_note:d.instant_note
+    };
+    /* 인증 번호는 심사 대상이라 여기서 바꾸지 않습니다 (인증 화면에서 다시 신청) */
+    var r=await updateSafe("suppliers", patch, "id", id);
+    if(r.error){
+      if(btn){ btn.disabled=false; btn.textContent="수정 저장"; }
+      setMsg("ob-msg4","저장 실패: "+((r.error&&r.error.message)||""),"err");
+      return;
+    }
+    /* 알림 설정도 같이 맞춰 둡니다 (없으면 조용히 넘어갑니다) */
+    await updateSafe("supplier_prefs",
+      { category_mains:d.category_mains||[], regions:[d.region] }, "supplier_id", id);
+
+    OB.edit=null;
+    if(typeof loadFromDB==="function") loadFromDB();
+    seDone(id, d.name);
+  };
+}
+
+function seDone(id, name){
+  var el=obHost(); if(!el) return;
+  el.innerHTML=
+    '<div class="gcard" style="text-align:center;padding:34px 22px;">'+
+      '<div class="ob-ok">✓</div>'+
+      '<div style="font-size:20px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+esc(name||"업체")+' 정보를 저장했습니다</div>'+
+      '<div style="font-size:13.5px;color:var(--ink3);line-height:1.65;">'+
+        '업체 상세와 검색 결과에 바로 반영됩니다.</div>'+
+    '</div>'+
+    '<div class="grow keep">'+
+      '<button class="gbtn gbtn-w" onclick="go(&quot;my&quot;)">거래관리</button>'+
+      '<button class="gbtn gbtn-p" onclick="curSID=\''+esc(id)+'\';go(&quot;sp&quot;)">내 업체 보기</button>'+
+    '</div>';
+  OB.step=1; OB.data={}; OB.photos=[];
+  window.scrollTo(0,0);
+}
+
+/* ── 진입점 1. 업체 상세 (내 업체일 때만) ──
+   renderSupplierDetail 은 IIFE 안의 지역 함수라 window 로는 감쌀 수 없습니다. */
+function seArmDetail(){
+  if(typeof renderSupplierDetail!=="function") return;
+  var orig=renderSupplierDetail;
+  renderSupplierDetail=function(){
+    orig.apply(this, arguments);
+    try{
+      var s=SD.sup; if(!s || !seMine(s)) return;
+      var cta=document.querySelector("#sp-body .sd-cta"); if(!cta) return;
+      if(cta.querySelector(".se-edit")) return;
+      cta.innerHTML='<button class="gbtn gbtn-w se-edit" style="flex:1;" onclick="gEditSupplier(\''+esc(s.id)+'\')">정보 수정</button>'+
+        '<button class="gbtn gbtn-w" style="flex:1;" onclick="gOpenVerify(\''+esc(s.id)+'\')">인증 관리</button>'+
+        '<button class="gbtn gbtn-p" style="flex:1;" onclick="gOpenPrefs(\''+esc(s.id)+'\')">알림 설정</button>';
+    }catch(e){}
+  };
+}
+
+/* ── 진입점 2. 거래관리 → 회원·업체정보 → 내 업체 ── */
+function seArmMy(){
+  if(typeof renderMyPanel!=="function") return;
+  var orig=renderMyPanel;
+  renderMyPanel=function(){
+    orig.apply(this, arguments);
+    try{
+      if(MY.tab!=="me") return;
+      var el=$("my-panel")||document.querySelector("#pg-my .gp"); if(!el) return;
+      var rows=el.querySelectorAll(".ritem");
+      (MY.sups||[]).forEach(function(s,i){
+        var row=rows[i]; if(!row || row.querySelector(".se-edit-sm")) return;
+        var b=document.createElement("button");
+        b.className="gbtn gbtn-w gbtn-sm se-edit-sm";
+        b.style.cssText="margin-top:8px;";
+        b.textContent="정보 수정";
+        b.setAttribute("onclick","event.stopPropagation();gEditSupplier('"+String(s.id)+"')");
+        row.appendChild(b);
+      });
+    }catch(e){}
+  };
+}
+
+function patchSupEdit(){
+  if(G._supEdit) return; G._supEdit=true;
+  seArmSubmit();
+  seArmSteps();
+  seArmDetail();
+  seArmMy();
+}
+/* ════════════════════════════════════════════════════════════════════
+   업체(공급자) 쪽 두 가지
+
+   1) 업체 등록 화면(#/sj)에 설득 구간
+      지금은 설명 한 줄 없이 입력 폼부터 나옵니다. 왜 등록해야 하는지가
+      없으니 카톡·문자로 주소를 뿌려도 그대로 나갑니다.
+      실제로 올라와 있는 요청을 보여줍니다 — 숫자를 지어내지 않습니다.
+
+   2) 로그인한 업체에게 "내 업체에 맞는 요청" 피드
+      지금은 DB 트리거 알림에만 의존합니다. 알림을 못 보면 요청이
+      올라온 줄도 모릅니다. 홈과 거래관리에서 바로 보이게 합니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+var SH = { reqs:null, sups:null, quoted:null, busy:false, painted:false };
+G.SH=SH;
+
+/* 마감된 요청은 견적을 받지 않습니다 */
+var SH_OPEN=["견적대기","견적중",""];
+function shOpen(r){
+  var st=String(r.status||"");
+  return SH_OPEN.indexOf(st)>=0 || /대기|모집|접수/.test(st);
+}
+
+/* ── 내 업체가 커버하는 분야·지역 ── */
+function shCover(sups){
+  var mains={}, regions={}, all=false;
+  (sups||[]).forEach(function(s){
+    (s.category_mains||[]).forEach(function(k){ mains[k]=1; });
+    if(!(s.category_mains||[]).length){
+      (s.categories||[]).forEach(function(v){
+        var k=(typeof key8Of==="function")?key8Of(v):null; if(k) mains[k]=1;
+      });
+    }
+    var rs=(s.regions&&s.regions.length)?s.regions:(s.region?[s.region]:[]);
+    rs.forEach(function(r){
+      var v=String(r||"").trim(); if(!v) return;
+      if(v==="전국"){ all=true; return; }
+      regions[v.split(/[\s·]/)[0]]=1;   /* "경기 포천시" → "경기" */
+    });
+  });
+  return { mains:Object.keys(mains), regions:Object.keys(regions), all:all };
+}
+
+function shRegionHit(cover, region){
+  if(cover.all || !cover.regions.length) return true;
+  var r=String(region||"").trim(); if(!r) return true;
+  return cover.regions.some(function(c){ return r.indexOf(c)>=0 || c.indexOf(r)>=0; });
+}
+
+function shMatch(r, cover){
+  if(!shOpen(r)) return false;
+  if(ME.user && String(r.user_id||"")===String(ME.user.id)) return false;
+  if((SH.quoted||{})[String(r.id)]) return false;
+  var main=r.category_main || ((typeof key8Of==="function") ? key8Of(r.category||"") : null);
+  if(cover.mains.length && main && cover.mains.indexOf(main)<0) return false;
+  return shRegionHit(cover, r.region);
+}
+
+/* ── 불러오기 (mapReq 는 category_main·status 를 버려서 원본을 직접 씁니다) ── */
+async function shLoad(){
+  if(SH.busy) return; SH.busy=true;
+  try{
+    var rq=await selectSafe("purchase_requests", function(q){
+      return q.order("created_at",{ascending:false}).limit(60); });
+    SH.reqs=rq.unavailable ? null : (rq.data||[]);
+
+    if(ME.user){
+      var sp=await selectSafe("suppliers", function(q){ return q.eq("user_id", ME.user.id); });
+      SH.sups=sp.unavailable ? [] : (sp.data||[]);
+      var qt=await selectSafe("quotes", function(q){ return q.eq("user_id", ME.user.id); });
+      var m={}; (qt.data||[]).forEach(function(x){ if(x.status!=="철회") m[String(x.request_id)]=1; });
+      SH.quoted=m;
+    } else { SH.sups=[]; SH.quoted={}; }
+  }catch(e){ SH.reqs=SH.reqs||null; }
+  SH.busy=false;
+  try{ shPaintHome(); }catch(e){}
+  try{ if((document.querySelector(".pg.on")||{}).id==="pg-sj") sjPitch(); }catch(e){}
+}
+
+function shCatName(r){
+  var k=r.category_main||((typeof key8Of==="function")?key8Of(r.category||""):null);
+  var c=(k && typeof cat8Of==="function")?cat8Of(k):null;
+  return c?c.nm:(r.category||"요청");
+}
+function shReqRow(r, cta){
+  return '<div class="ritem" style="margin-bottom:8px;" onclick="gOpenRequest(\''+esc(String(r.id))+'\')">'+
+    '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">'+
+      '<span class="gbadge gb-or">'+esc(shCatName(r))+'</span>'+
+      (r.region?'<span class="gbadge gb-gy">'+esc(r.region)+'</span>':'')+
+      '<span style="margin-left:auto;font-size:12px;color:var(--ink4);">'+esc(ago(r.created_at))+'</span>'+
+    '</div>'+
+    '<div class="ritem-t">'+esc(r.title||r.description||shCatName(r)+" 요청")+'</div>'+
+    '<div class="ritem-m"><span>견적 '+(Number(r.quote_count)||0)+'건</span>'+
+      (r.deadline?'<span>희망일 '+esc(String(r.deadline).slice(0,10))+'</span>':'')+
+      (cta?'<span style="margin-left:auto;color:var(--gn);font-weight:700;">'+esc(cta)+' ›</span>':'')+
+    '</div></div>';
+}
+
+/* ══ 1. 업체 등록 화면의 설득 구간 ══════════════════════════════════ */
+function sjPitch(){
+  var body=$("ob-body"); if(!body) return;
+  if(OB.edit || OB.step!==1){ var g=$("sj-pitch"); if(g) g.remove(); return; }
+  if(SH.reqs===null && !SH.busy){ shLoad(); }
+
+  var open=(SH.reqs||[]).filter(shOpen);
+  var recent=open.slice(0,4);
+
+  var live = (SH.reqs===null)
+    ? '<div class="ghint">요청 현황을 불러오지 못했습니다. 연결이 되면 여기에 표시됩니다.</div>'
+    : (open.length
+        ? '<div style="font-size:13.5px;color:var(--ink2);font-weight:600;margin-bottom:10px;">'+
+            '지금 답을 기다리는 요청 <b style="color:var(--gn);">'+open.length+'건</b></div>'+
+          recent.map(function(r){ return shReqRow(r); }).join("")
+        : '<div class="gempty" style="padding:22px 16px;">'+
+            '<div class="gempty-t">아직 올라온 요청이 없습니다</div>'+
+            '<div class="gempty-d">먼저 등록해 두면 첫 요청이 올라올 때 가장 먼저 알림을 받습니다.</div></div>');
+
+  var html=
+    '<div id="sj-pitch">'+
+      '<div class="gcard" style="border-color:var(--gnb);background:var(--gnl);">'+
+        '<div style="font-size:21px;font-weight:800;letter-spacing:-.04em;color:var(--gn-on-tint);line-height:1.35;margin-bottom:8px;">'+
+          '요청은 이미 올라오고 있습니다</div>'+
+        '<div style="font-size:14px;color:var(--ink2);line-height:1.7;">'+
+          '원육·가공·물류·인력·장비·창업까지, 축산 현장에서 필요한 것을 올리는 곳입니다.<br>'+
+          '업체로 등록하면 <b>내 분야·내 지역</b> 요청만 골라서 받습니다.</div>'+
+      '</div>'+
+      '<div class="gcard"><div class="gcard-t">등록하면 이런 일이 생깁니다</div>'+
+        '<div class="gsum">'+
+          '<div class="gsum-r"><div class="gsum-k">요청 알림</div><div class="gsum-v">고른 분야·지역의 요청이 올라오면 바로 알림이 갑니다</div></div>'+
+          '<div class="gsum-r"><div class="gsum-k">견적 발송</div><div class="gsum-v">단가 × 수량으로 견적을 보내면 요청자가 다른 견적과 나란히 비교합니다</div></div>'+
+          '<div class="gsum-r"><div class="gsum-k">채팅·거래</div><div class="gsum-v">선택되면 1:1 채팅으로 조건을 맞추고 거래 상태를 함께 봅니다</div></div>'+
+          '<div class="gsum-r"><div class="gsum-k">인증 배지</div><div class="gsum-v">사업자·축산물 허가·HACCP 을 등록하면 목록에서 먼저 보입니다</div></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="gcard"><div class="gcard-t">지금 올라온 요청</div>'+live+'</div>'+
+      '<div class="gnote">베타 기간에는 등록도 견적 발송도 무료입니다. '+
+        '유료로 바뀌게 되면 미리 공지하고, 그 전에 보낸 견적에는 수수료를 받지 않습니다.</div>'+
+      '<div style="font-size:13px;color:var(--ink3);font-weight:600;margin:18px 0 10px;">아래에서 3분이면 등록됩니다</div>'+
+    '</div>';
+
+  var old=$("sj-pitch");
+  if(old){ old.outerHTML=html; return; }
+  body.insertAdjacentHTML("afterbegin", html);
+}
+
+/* ══ 2. 홈 — 내 업체에 맞는 요청 ═══════════════════════════════════ */
+function shHost(){
+  var el=$("sec-supreq");
+  if(el) return el;
+  var cat=document.querySelector(".sec-cat8"); if(!cat) return null;
+  el=document.createElement("section");
+  el.className="sec"; el.id="sec-supreq"; el.hidden=true;
+  el.innerHTML='<div class="w"><div class="sec-hd2 row">'+
+      '<div><h2 class="sec-h2">내 업체에 맞는 요청</h2>'+
+      '<p class="sec-d2" id="supreq-sub"></p></div>'+
+      '<button class="more-btn" onclick="go(&quot;reqs&quot;)">전체 요청 ›</button></div>'+
+    '<div id="supreq-list"></div></div>';
+  cat.parentNode.insertBefore(el, cat.nextSibling);
+  return el;
+}
+
+function shPaintHome(){
+  var host=shHost(); if(!host) return;
+  var sups=SH.sups||[];
+  if(!ME.user || !sups.length){ host.hidden=true; return; }
+
+  var cover=shCover(sups);
+  var hits=(SH.reqs||[]).filter(function(r){ return shMatch(r, cover); });
+  var list=$("supreq-list"), sub=$("supreq-sub");
+  if(!list) return;
+
+  host.hidden=false;
+  var names=sups.map(function(s){ return s.name; }).slice(0,2).join(" · ")+
+            (sups.length>2?(" 외 "+(sups.length-2)+"곳"):"");
+  if(sub) sub.textContent = names + "의 분야·지역에 맞는 요청만 골랐습니다";
+
+  if(!hits.length){
+    list.innerHTML='<div class="gempty" style="padding:26px 16px;">'+
+      '<div class="gempty-t">지금은 맞는 요청이 없습니다</div>'+
+      '<div class="gempty-d">분야나 지역을 넓히면 더 많은 요청을 받을 수 있습니다.</div>'+
+      '<button class="gbtn gbtn-w gbtn-sm" style="margin-top:12px;" onclick="gEditSupplier(\''+esc(String(sups[0].id))+'\')">업체 정보 수정</button>'+
+      '</div>';
+    return;
+  }
+  list.innerHTML=hits.slice(0,5).map(function(r){ return shReqRow(r,"견적 보내기"); }).join("")+
+    (hits.length>5?'<button class="gbtn gbtn-w gbtn-sm" style="width:100%;margin-top:4px;" onclick="go(&quot;reqs&quot;)">맞는 요청 '+hits.length+'건 전체 보기</button>':"");
+}
+
+/* 거래관리 → 회원·업체정보 에도 같은 요약을 얹습니다 */
+function shPaintMy(){
+  if(MY.tab!=="me") return;
+  var el=$("my-panel"); if(!el || $("my-supreq")) return;
+  var sups=(MY.sups&&MY.sups.length)?MY.sups:(SH.sups||[]);
+  if(!sups.length) return;
+  var cover=shCover(sups);
+  var hits=(SH.reqs||[]).filter(function(r){ return shMatch(r, cover); });
+  var d=document.createElement("div");
+  d.className="gcard"; d.id="my-supreq";
+  d.innerHTML='<div class="gcard-t">내 업체에 맞는 요청 ('+hits.length+')</div>'+
+    (hits.length ? hits.slice(0,5).map(function(r){ return shReqRow(r,"견적 보내기"); }).join("")
+     : '<div class="ghint">지금은 맞는 요청이 없습니다. 분야·지역을 넓히면 더 받습니다.</div>');
+  el.insertBefore(d, el.firstChild);
+}
+
+/* ── 연결 ── */
+function patchSupHome(){
+  if(G._supHome) return; G._supHome=true;
+
+  /* 등록 화면을 그릴 때마다 설득 구간을 다시 얹습니다 */
+  if(typeof obRender==="function"){
+    var origRender=obRender;
+    obRender=function(){
+      origRender.apply(this, arguments);
+      try{ sjPitch(); }catch(e){}
+    };
+  }
+  /* 거래관리 패널 */
+  if(typeof renderMyPanel==="function"){
+    var origPanel=renderMyPanel;
+    renderMyPanel=function(){
+      origPanel.apply(this, arguments);
+      try{ shPaintMy(); }catch(e){}
+    };
+  }
+  /* 로그인 상태가 바뀌면 내 업체가 달라지므로 다시 읽습니다.
+     loadSession 은 IIFE 안의 지역 함수라 지역 바인딩을 다시 씁니다. */
+  if(typeof loadSession==="function"){
+    var origSess=loadSession;
+    loadSession=async function(){
+      var r=await origSess.apply(this, arguments);
+      SH.reqs=null; SH.sups=null; SH.quoted=null;
+      shLoad();
+      return r;
+    };
+  }
+
+  /* 비로그인 방문자에게는 홈에서 이 목록이 아예 안 보이므로 미리 읽지 않습니다.
+     업체 등록 화면에 들어가면 sjPitch() 가 그때 불러옵니다. */
+  if(ME.user) shLoad();
+}
+/* ════════════════════════════════════════════════════════════════════
+   이용 가이드 · 자주 묻는 질문
+
+   홈의 "고리 이용 프로세스" 는 7단계 이름만 늘어놓을 뿐이라, 처음 온
+   사람이 "그래서 내가 뭘 하면 되나" 를 알 수 없었습니다. 요청하는 쪽과
+   업체 쪽의 할 일을 나눠서 적고, 실제로 자주 나올 질문에 답합니다.
+
+   여기 적는 내용은 전부 지금 만들어져 있는 기능만 말합니다.
+   (결제·정산은 고리를 거치지 않습니다 — GORI_FEATURES.pay 가 꺼져 있습니다)
+   ════════════════════════════════════════════════════════════════════ */
+
+var GU = { tab:"buyer" };
+G.GU=GU;
+
+var GU_BUYER=[
+  { n:"1", t:"필요한 것을 올립니다",
+    d:"분야를 고르고 3단계만 채우면 됩니다. 원육이면 축종·부위·수량·냉장/냉동, 물류면 구간과 물량처럼 분야마다 물어보는 항목이 다릅니다.",
+    m:"로그인 없이도 올릴 수 있습니다. 이름과 연락처만 남기면 됩니다." },
+  { n:"2", t:"조건이 맞는 업체에 전달됩니다",
+    d:"고른 분야와 지역이 맞는 업체에게 알림이 갑니다. 요청을 올린 직후에는 조건이 맞는 업체를 바로 추천해 드립니다.",
+    m:"업체를 직접 찾아 다닐 필요가 없습니다." },
+  { n:"3", t:"견적을 나란히 비교합니다",
+    d:"단가 × 수량으로 계산된 총액, 시세 대비 ±%, 인증 배지, 지역, 납기, 평점, 거래실적, 응답률을 한 화면에서 봅니다.",
+    m:"가격 낮은순·납기 빠른순 등 5가지로 정렬할 수 있습니다." },
+  { n:"4", t:"고르고, 거래하고, 후기를 남깁니다",
+    d:"고른 업체와 1:1 채팅으로 조건을 맞춥니다. 거래확정 → 준비중 → 배송중 → 완료까지 상태를 같이 보고, 끝나면 평점과 후기를 남깁니다.",
+    m:"후기가 쌓이면 다음 사람이 업체를 고르기 쉬워집니다." }
+];
+
+var GU_SUP=[
+  { n:"1", t:"업체를 등록합니다",
+    d:"업체명·연락처·영업 지역, 취급 분야와 품목, 작업장 사진까지 4단계입니다. 사업자등록번호·축산물 영업허가·HACCP 번호를 넣으면 인증 심사가 같이 접수됩니다.",
+    m:"3분이면 끝납니다. 지금은 등록비가 없습니다." },
+  { n:"2", t:"내 분야 요청만 받습니다",
+    d:"고른 분야와 지역의 요청이 올라오면 알림이 갑니다. 홈에서도 \"내 업체에 맞는 요청\" 으로 모아서 보여 드립니다.",
+    m:"관심 없는 분야의 요청은 오지 않습니다." },
+  { n:"3", t:"견적을 보냅니다",
+    d:"단가와 수량, 납기, 조건을 적으면 총액이 자동으로 계산됩니다. 보낸 뒤에도 선택되기 전이라면 철회할 수 있습니다.",
+    m:"같은 요청에 견적은 한 번만 보낼 수 있습니다." },
+  { n:"4", t:"선택되면 거래로 이어집니다",
+    d:"요청자가 고르면 1:1 채팅이 열립니다. 거래 상태를 함께 갱신하고, 완료되면 후기와 평점이 업체 프로필에 쌓입니다.",
+    m:"인증 배지와 후기가 다음 요청에서 유리하게 작용합니다." }
+];
+
+var GU_FAQ=[
+  { q:"돈이 드나요?",
+    a:"베타 기간에는 요청 등록도, 업체 등록도, 견적 발송도 모두 무료입니다. 유료로 바뀌게 되면 미리 공지하고, 그 전에 진행된 건에는 수수료를 받지 않습니다." },
+  { q:"대금은 고리를 거쳐서 오가나요?",
+    a:"아닙니다. 고리는 요청과 업체를 연결하는 곳이고, 대금은 요청자와 업체가 직접 주고받습니다. 안전결제(고리페이)는 아직 만들어지지 않았습니다 — 준비되면 안내드립니다." },
+  { q:"로그인 없이 요청할 수 있나요?",
+    a:"됩니다. 이름과 연락처만 남기면 요청이 올라갑니다. 나중에 거래관리 → 내 요청 찾기 에서 이름과 전화번호로 다시 조회할 수 있고, 같은 기기에서는 번호를 기억해 두었다가 바로 보여 드립니다." },
+  { q:"견적이 하나도 안 오면 어떻게 하나요?",
+    a:"수량이나 지역 조건을 넓혀서 요청을 수정해 보세요. 요청 상세에서 바로 고칠 수 있습니다. 시간이 오래 지난 요청은 목록에서 \"오래된 요청\" 으로 표시되고, 업체에게도 그렇게 보입니다." },
+  { q:"올린 요청을 지울 수 있나요?",
+    a:"견적이 아직 하나도 없으면 삭제할 수 있습니다. 견적이 도착한 뒤에는 삭제 대신 마감을 눌러 주세요 — 견적을 보낸 업체가 있는데 기록이 사라지면 곤란하기 때문입니다." },
+  { q:"인증 배지는 무엇을 확인한 건가요?",
+    a:"사업자등록번호는 국세청 체크섬으로 형식을 검증하고, 축산물 영업허가와 HACCP 은 번호를 받아 관리자가 확인합니다. 확인 전에는 \"심사중\" 으로 표시되며, 배지가 없다고 해서 문제가 있는 업체라는 뜻은 아닙니다." },
+  { q:"시세는 어디서 온 숫자인가요?",
+    a:"관리자가 입력한 값만 보여 줍니다. 데이터가 없으면 빈 화면으로 두고, 임의로 만들어 내지 않습니다. 참고용이며 실제 거래가는 견적으로 확인하세요." },
+  { q:"당일알바와 구인구직은 뭐가 다른가요?",
+    a:"당일알바는 오늘·내일 바로 필요한 현장 인력이고, 구인구직은 정규직·계약직처럼 오래 함께 갈 사람을 찾는 곳입니다. 지원자를 경력·평점·작업 횟수로 골라 확정합니다." },
+  { q:"개인정보는 어떻게 다루나요?",
+    a:"수집 항목과 보관 기간은 개인정보처리방침에 적어 두었습니다. 요청에 남긴 연락처는 견적을 보낸 업체에게만 보입니다." }
+];
+
+function guCard(s){
+  return '<div class="gu-step">'+
+    '<div class="gu-n">'+s.n+'</div>'+
+    '<div class="gu-b"><div class="gu-t">'+esc(s.t)+'</div>'+
+      '<div class="gu-d">'+esc(s.d)+'</div>'+
+      '<div class="gu-m">'+esc(s.m)+'</div></div></div>';
+}
+
+function guRender(){
+  var el=$("guide-body"); if(!el) return;
+  var buyer=GU.tab==="buyer";
+  var steps=(buyer?GU_BUYER:GU_SUP).map(guCard).join("");
+  el.innerHTML=
+    '<div class="gp-hd"><button class="back-btn" style="padding:0;" onclick="go(&quot;h&quot;)">← 홈</button>'+
+      '<div><div class="gp-title">이용 가이드</div>'+
+      '<div class="gp-sub">요청을 올리는 쪽과 견적을 보내는 쪽이 각각 무엇을 하는지 정리했습니다</div></div></div>'+
+
+    '<div class="gu-tabs">'+
+      '<button class="gu-tab'+(buyer?" on":"")+'" onclick="gGuideTab(\'buyer\')">요청하는 분</button>'+
+      '<button class="gu-tab'+(buyer?"":" on")+'" onclick="gGuideTab(\'sup\')">업체로 참여하는 분</button>'+
+    '</div>'+
+
+    '<div class="gu-steps">'+steps+'</div>'+
+
+    '<div class="grow keep" style="margin:4px 0 8px;">'+
+      (buyer
+        ? '<button class="gbtn gbtn-w" onclick="go(&quot;reqs&quot;)">올라온 요청 보기</button>'+
+          '<button class="gbtn gbtn-p" onclick="go(&quot;rw&quot;)">요청 올리기</button>'
+        : '<button class="gbtn gbtn-w" onclick="go(&quot;reqs&quot;)">올라온 요청 보기</button>'+
+          '<button class="gbtn gbtn-p" onclick="go(&quot;sj&quot;)">업체 등록하기</button>')+
+    '</div>'+
+
+    '<div class="gcard"><div class="gcard-t">자주 묻는 질문</div>'+
+      GU_FAQ.map(function(f,i){
+        return '<details class="gu-faq"'+(i===0?" open":"")+'>'+
+          '<summary>'+esc(f.q)+'</summary>'+
+          '<p>'+esc(f.a)+'</p></details>';
+      }).join("")+
+    '</div>'+
+
+    '<div class="gnote">더 궁금한 점은 아래 고객센터로 문의해 주세요. '+
+      '이용약관과 개인정보처리방침은 화면 맨 아래에서 언제든 볼 수 있습니다.</div>'+
+    '<div class="grow keep">'+
+      '<button class="gbtn gbtn-p" onclick="gOpenContact()">문의하기</button>'+
+      '<button class="gbtn gbtn-w" onclick="location.href=\'terms.html\'">이용약관</button>'+
+      '<button class="gbtn gbtn-w" onclick="location.href=\'privacy.html\'">개인정보처리방침</button>'+
+    '</div>';
+  window.scrollTo(0,0);
+}
+
+window.gGuideTab=function(t){ GU.tab=t; guRender(); };
+window.gOpenGuide=function(t){ if(t) GU.tab=t; if(typeof go==="function") go("guide"); guRender(); };
+
+function guInjectPage(){
+  if($("pg-guide")) return;
+  var nav=document.querySelector(".bnav");
+  var d=document.createElement("div");
+  d.className="pg"; d.id="pg-guide";
+  d.style.cssText="padding-top:var(--top-pad);padding-bottom:56px;";
+  d.innerHTML='<div class="gp" id="guide-body"></div>';
+  if(nav) document.body.insertBefore(d, nav); else document.body.appendChild(d);
+  if(typeof PGS!=="undefined" && PGS.indexOf("guide")<0) PGS.push("guide");
+  if(typeof TM!=="undefined") TM.guide="h";
+}
+
+/* 홈 프로세스 섹션에서 가이드로 들어갈 수 있게 합니다 */
+function guInjectHomeLink(){
+  var sec=document.querySelector("#proc-grid"); if(!sec) return;
+  var hd=sec.parentNode.querySelector(".sec-hd2"); if(!hd || hd.querySelector(".gu-more")) return;
+  hd.classList.add("row");
+  var b=document.createElement("button");
+  b.className="more-btn gu-more";
+  b.textContent="이용 가이드 ›";
+  b.setAttribute("onclick","gOpenGuide()");
+  hd.appendChild(b);
+}
+
+function patchGuide(){
+  if(G._guide) return; G._guide=true;
+  guInjectPage();
+  guInjectHomeLink();
+  var origGo=window.go;
+  if(typeof origGo==="function"){
+    window.go=function(p){
+      var r=origGo.apply(this, arguments);
+      if(p==="guide") guRender();
+      return r;
+    };
+  }
+}
+/* ════════════════════════════════════════════════════════════════════
+   신고 · 문의 창구
+
+   고리는 요청자와 업체를 연결하는 중개 서비스인데, 문제가 생겼을 때
+   알릴 곳이 없었습니다. 허위 요청·연락 두절·부적절한 게시물이 있어도
+   이용자가 할 수 있는 게 없고, 운영하는 쪽도 그런 일이 있었는지
+   알 방법이 없었습니다. 문의도 푸터의 전화·이메일이 전부였습니다.
+
+   db/phase7_report.sql 을 실행하지 않아도 화면은 깨지지 않습니다.
+   테이블이 없으면 "아직 준비되지 않았습니다" 안내와 고객센터 연락처를
+   보여 줍니다 (insertSafe 가 PGRST205 를 알려 줍니다).
+   ════════════════════════════════════════════════════════════════════ */
+
+var RP = { type:"request", id:"", name:"", reason:"", sending:false, from:"h" };
+G.RP=RP;
+
+var RP_REASONS=["허위·과장된 내용","연락이 되지 않음","부적절한 내용","사기가 의심됨","중복 게시","기타"];
+var IQ_KINDS=["일반","요청·견적","업체 등록","결제·환불","개인정보","신고"];
+
+var RP_LABEL={ request:"요청", supplier:"업체", quote:"견적", job:"구인구직" };
+
+function rpInjectPages(){
+  var nav=document.querySelector(".bnav");
+  ["report","contact"].forEach(function(id){
+    if($("pg-"+id)) return;
+    var d=document.createElement("div");
+    d.className="pg"; d.id="pg-"+id;
+    d.style.cssText="padding-top:var(--top-pad);padding-bottom:56px;";
+    d.innerHTML='<div class="gp" id="'+id+'-body"></div>';
+    if(nav) document.body.insertBefore(d, nav); else document.body.appendChild(d);
+    if(typeof PGS!=="undefined" && PGS.indexOf(id)<0) PGS.push(id);
+    if(typeof TM!=="undefined") TM[id]="my";
+  });
+}
+
+/* 사업자 정보가 비어 있으면 (미기재) 로 두고 지어내지 않습니다 */
+function rpDesk(){
+  var B=window.GORI_BIZ||{};
+  var bits=[];
+  if(String(B.phone||"").trim()) bits.push("고객센터 "+B.phone);
+  if(String(B.email||"").trim()) bits.push(B.email);
+  return bits.length ? bits.join(" · ") : "고객센터 연락처가 아직 등록되지 않았습니다";
+}
+
+/* ══ 신고 ══════════════════════════════════════════════════════════ */
+window.gOpenReport=function(type, id, name){
+  RP.type=type||"request"; RP.id=String(id||""); RP.name=String(name||"");
+  RP.reason=""; RP.sending=false;
+  /* 어디서 눌렀는지 기억해 둡니다 — history.back() 은 주소를 직접 열고 들어온
+     사람을 사이트 밖으로 내보냅니다 */
+  var cur=document.querySelector(".pg.on");
+  RP.from=(cur && cur.id.indexOf("pg-")===0) ? cur.id.slice(3) : "h";
+  if(typeof go==="function") go("report");
+  rpRender();
+};
+
+function rpRender(){
+  var el=$("report-body"); if(!el) return;
+  var label=RP_LABEL[RP.type]||"게시물";
+  el.innerHTML=
+    '<div class="gp-hd"><button class="back-btn" style="padding:0;" onclick="gReportBack()">← 뒤로</button>'+
+      '<div><div class="gp-title">'+esc(label)+' 신고</div>'+
+      '<div class="gp-sub">'+(RP.name?esc(RP.name):esc(label))+'</div></div></div>'+
+
+    '<div class="gnote">신고 내용은 운영자만 봅니다. 신고했다는 사실은 상대에게 알리지 않습니다. '+
+      '긴급하거나 범죄가 의심되는 상황은 경찰(112)에 먼저 알려 주세요.</div>'+
+
+    '<div class="gcard"><div class="gcard-t">어떤 문제인가요? <span class="greq">*</span></div>'+
+      '<div class="gpick" id="rp-reason">'+RP_REASONS.map(function(r){
+        return '<button type="button" class="gpick-i" onclick="gPickOne(this)">'+esc(r)+'</button>'; }).join("")+'</div>'+
+      '<label class="glabel">자세한 내용</label>'+
+      '<textarea class="gin" id="rp-detail" placeholder="언제, 무슨 일이 있었는지 적어 주세요. 통화·문자 내용이 있으면 도움이 됩니다."></textarea>'+
+      (ME.user?'':'<div class="grow keep">'+
+        '<div><label class="glabel">이름</label><input class="gin" id="rp-name" placeholder="홍길동"></div>'+
+        '<div><label class="glabel">연락처</label><input class="gin" id="rp-phone" placeholder="010-0000-0000"></div></div>'+
+        '<div class="ghint">확인이 필요할 때 연락드립니다. 비워 두셔도 접수됩니다.</div>')+
+      '<div class="gmsg" id="rp-msg"></div>'+
+    '</div>'+
+    '<div class="grow keep">'+
+      '<button class="gbtn gbtn-w" onclick="gReportBack()">취소</button>'+
+      '<button class="gbtn gbtn-p" id="rp-send" onclick="gSendReport()">신고 접수</button>'+
+    '</div>';
+  window.scrollTo(0,0);
+}
+
+window.gReportBack=function(){
+  if(typeof go==="function") go(RP.from||"h");
+};
+
+window.gSendReport=async function(){
+  if(RP.sending) return;
+  var pick=document.querySelector("#rp-reason .gpick-i.on");
+  if(!pick){ setMsg("rp-msg","어떤 문제인지 골라 주세요.","err"); return; }
+  var btn=$("rp-send");
+  RP.sending=true; if(btn){ btn.disabled=true; btn.textContent="접수 중…"; }
+
+  var v=function(id){ var e=$(id); return e?String(e.value||"").trim():""; };
+  var r=await insertSafe("reports",{
+    target_type:RP.type, target_id:RP.id, target_name:RP.name||null,
+    reason:pick.textContent, detail:v("rp-detail")||null,
+    reporter_id: ME.user?ME.user.id:null,
+    reporter_name: ME.user?ME.name:(v("rp-name")||null),
+    reporter_phone: v("rp-phone")||null,
+    status:"접수"
+  });
+  RP.sending=false;
+  if(r.error){
+    if(btn){ btn.disabled=false; btn.textContent="신고 접수"; }
+    setMsg("rp-msg", r.missingTable
+      ? "신고 접수 기능이 아직 준비되지 않았습니다 (db/phase7_report.sql 실행 필요). "+rpDesk()+" 로 알려 주세요."
+      : "접수 실패: "+((r.error&&r.error.message)||""), "err");
+    return;
+  }
+  rpDone("report");
+};
+
+/* ══ 문의 ══════════════════════════════════════════════════════════ */
+window.gOpenContact=function(kind){
+  if(typeof go==="function") go("contact");
+  iqRender(kind);
+};
+
+function iqRender(kind){
+  var el=$("contact-body"); if(!el) return;
+  el.innerHTML=
+    '<div class="gp-hd"><button class="back-btn" style="padding:0;" onclick="go(&quot;h&quot;)">← 홈</button>'+
+      '<div><div class="gp-title">문의하기</div>'+
+      '<div class="gp-sub">남겨 주시면 확인하고 연락드립니다</div></div></div>'+
+
+    '<div class="gcard"><div class="gcard-t">무엇에 대한 문의인가요?</div>'+
+      '<div class="gpick" id="iq-kind">'+IQ_KINDS.map(function(k,i){
+        var on=(kind?k===kind:i===0);
+        return '<button type="button" class="gpick-i'+(on?" on":"")+'" onclick="gPickOne(this)">'+esc(k)+'</button>';
+      }).join("")+'</div>'+
+      '<div class="grow keep">'+
+        '<div><label class="glabel">이름 <span class="greq">*</span></label>'+
+          '<input class="gin" id="iq-name" placeholder="홍길동" value="'+esc(ME.user?(ME.name||""):"")+'"></div>'+
+        '<div><label class="glabel">연락처</label><input class="gin" id="iq-phone" placeholder="010-0000-0000"></div>'+
+      '</div>'+
+      '<label class="glabel">이메일</label>'+
+      '<input class="gin" id="iq-email" placeholder="answer@example.com" value="'+esc(ME.user?(ME.email||""):"")+'">'+
+      '<label class="glabel">내용 <span class="greq">*</span></label>'+
+      '<textarea class="gin" id="iq-content" placeholder="어떤 점이 궁금하신가요?"></textarea>'+
+      '<div class="gmsg" id="iq-msg"></div>'+
+    '</div>'+
+    '<div class="grow keep">'+
+      '<button class="gbtn gbtn-w" onclick="gOpenGuide()">이용 가이드</button>'+
+      '<button class="gbtn gbtn-p" id="iq-send" onclick="gSendInquiry()">문의 보내기</button>'+
+    '</div>'+
+    '<div class="ghint" style="margin-top:12px;">'+esc(rpDesk())+'</div>';
+  window.scrollTo(0,0);
+}
+
+window.gSendInquiry=async function(){
+  var v=function(id){ var e=$(id); return e?String(e.value||"").trim():""; };
+  var name=v("iq-name"), content=v("iq-content");
+  if(!name || !content){ setMsg("iq-msg","이름과 내용을 채워 주세요.","err"); return; }
+  var kind=(document.querySelector("#iq-kind .gpick-i.on")||{}).textContent||"일반";
+  var btn=$("iq-send"); if(btn){ btn.disabled=true; btn.textContent="보내는 중…"; }
+
+  var r=await insertSafe("inquiries",{
+    kind:kind, name:name, phone:v("iq-phone")||null, email:v("iq-email")||null,
+    content:content, user_id: ME.user?ME.user.id:null, status:"접수"
+  });
+  if(r.error){
+    if(btn){ btn.disabled=false; btn.textContent="문의 보내기"; }
+    setMsg("iq-msg", r.missingTable
+      ? "문의 접수 기능이 아직 준비되지 않았습니다 (db/phase7_report.sql 실행 필요). "+rpDesk()+" 로 연락 주세요."
+      : "전송 실패: "+((r.error&&r.error.message)||""), "err");
+    return;
+  }
+  rpDone("contact");
+};
+
+function rpDone(which){
+  var el=$(which+"-body"); if(!el) return;
+  var isReport=(which==="report");
+  el.innerHTML=
+    '<div class="gcard" style="text-align:center;padding:34px 22px;">'+
+      '<div class="ob-ok">✓</div>'+
+      '<div style="font-size:20px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+
+        (isReport?"신고가 접수되었습니다":"문의가 접수되었습니다")+'</div>'+
+      '<div style="font-size:13.5px;color:var(--ink3);line-height:1.65;">'+
+        (isReport
+          ? '운영자가 확인한 뒤 필요한 조치를 합니다.<br>확인이 필요하면 남겨 주신 연락처로 연락드립니다.'
+          : '확인하고 남겨 주신 연락처로 답변드립니다.')+
+      '</div>'+
+    '</div>'+
+    '<div class="grow keep">'+
+      '<button class="gbtn gbtn-w" onclick="go(&quot;h&quot;)">홈으로</button>'+
+      '<button class="gbtn gbtn-p" onclick="go(&quot;reqs&quot;)">실시간 요청</button>'+
+    '</div>';
+  window.scrollTo(0,0);
+}
+
+/* ── 진입점 ─────────────────────────────────────────────────────── */
+
+/* 요청 상세 — 내 요청이 아닐 때만 */
+function rpArmRequest(){
+  if(typeof renderRequestDetail!=="function") return;
+  var orig=renderRequestDetail;
+  renderRequestDetail=function(){
+    orig.apply(this, arguments);
+    try{ rpPaintRequest(); }catch(e){}
+  };
+}
+function rpPaintRequest(){
+  var body=$("reqd-body"), req=CUR.req;
+  if(!body || !req || $("rp-req-link")) return;
+  if(ME.user && String(req.user_id||"")===String(ME.user.id)) return;
+  var d=document.createElement("div");
+  d.id="rp-req-link";
+  d.style.cssText="text-align:right;margin:4px 0 10px;";
+  d.innerHTML='<button class="rp-flag" onclick="gOpenReport(\'request\',\''+esc(String(req.id))+'\',\''+
+    esc(String(req.title||"요청").replace(/'/g,"")) +'\')">🚩 이 요청 신고</button>';
+  body.appendChild(d);
+}
+
+/* 업체 상세 — 내 업체가 아닐 때만 */
+function rpArmSupplier(){
+  if(typeof renderSupplierDetail!=="function") return;
+  var orig=renderSupplierDetail;
+  renderSupplierDetail=function(){
+    orig.apply(this, arguments);
+    try{
+      var s=SD.sup, body=$("sp-body");
+      if(!s || !body || body.querySelector("#rp-sup-link")) return;
+      if(typeof seMine==="function" && seMine(s)) return;
+      var d=document.createElement("div");
+      d.id="rp-sup-link";
+      d.style.cssText="text-align:right;margin:4px 0 10px;";
+      d.innerHTML='<button class="rp-flag" onclick="gOpenReport(\'supplier\',\''+esc(String(s.id))+'\',\''+
+        esc(String(s.name||"업체").replace(/'/g,""))+'\')">🚩 이 업체 신고</button>';
+      var gp=body.querySelector(".gp")||body;
+      gp.appendChild(d);
+    }catch(e){}
+  };
+}
+
+/* 푸터·가이드에서 문의로 */
+function rpInjectFooterLink(){
+  var ul=document.querySelectorAll(".ft-ul");
+  var last=ul[ul.length-1]; if(!last || last.querySelector(".rp-contact")) return;
+  var li=document.createElement("li");
+  li.className="rp-contact";
+  li.textContent="문의하기";
+  li.setAttribute("onclick","gOpenContact()");
+  last.insertBefore(li, last.firstChild);
+}
+
+function patchReport(){
+  if(G._report) return; G._report=true;
+  rpInjectPages();
+  rpArmRequest();
+  rpArmSupplier();
+  rpInjectFooterLink();
+  var origGo=window.go;
+  if(typeof origGo==="function"){
+    window.go=function(p){
+      var r=origGo.apply(this, arguments);
+      if(p==="contact" && !$("iq-content")) iqRender();
+      return r;
+    };
+  }
+}
 
 /* ════════════════════════════════════════════════════════════════════
    기존 화면과의 연결 · 초기화
@@ -5916,6 +6797,10 @@ function applyExtras(){
   try{ patchKakao(); }catch(e){}
   try{ patchOffline(); }catch(e){}
   try{ patchStale(); }catch(e){}
+  try{ patchSupEdit(); }catch(e){}
+  try{ patchSupHome(); }catch(e){}
+  try{ patchGuide(); }catch(e){}
+  try{ patchReport(); }catch(e){}
   try{ patchRouter(); armRouter(); }catch(e){}
 }
 /* 리디자인 패치(420ms) 뒤에 얹혀야 하므로 그보다 늦게 실행합니다.

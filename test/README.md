@@ -31,7 +31,13 @@ node test/run.js router edit  # 이름으로 골라서
 | `offline-e2e.js` | 연결 실패 안내, 카카오 로그인 |
 | `stale-e2e.js` | 오래된 요청 표시·접기 |
 | `admin-e2e.js` · `admin-find-e2e.js` | 관리자 콘솔, 표 검색 |
-| `contrast-e2e.js` | 색 대비 (WCAG AA) — 화면 21종의 모든 글자 |
+| `contrast-e2e.js` | 색 대비 (WCAG AA) — 화면 27종의 모든 글자 |
+| `supedit-e2e.js` | 업체 정보 수정 (주인만, insert 가 아닌 update) |
+| `suphome-e2e.js` | 업체 유치 구간 · 내 업체에 맞는 요청 피드 |
+| `guide-e2e.js` | 이용 가이드·FAQ, 상단 메뉴 줄바꿈 |
+| `report-e2e.js` | 신고·문의 (표가 없을 때의 물러남 포함) |
+| `adminreport-e2e.js` | 관리자 콘솔의 신고·문의 탭 |
+| `notfound-e2e.js` | 404 페이지 |
 
 테스트를 실행하면 `test/` 에 확인용 스크린샷(`*.png`)이 생깁니다. 실행할 때마다
 새로 만들어지는 것이라 `.gitignore` 로 제외해 두었습니다.

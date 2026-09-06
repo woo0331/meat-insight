@@ -507,3 +507,45 @@ html .hero select:focus-visible,html .gh select:focus-visible{outline-color:var(
 .stl-more button{border:none;background:none;color:var(--gn);font-family:var(--font);
   font-size:13px;font-weight:800;cursor:pointer;padding:4px 8px;border-radius:8px;white-space:nowrap;}
 .stl-more button:hover{background:var(--gnl);}
+
+/* ════════════════════════════════════════════════════════════════════
+   이용 가이드 · FAQ
+   ════════════════════════════════════════════════════════════════════ */
+.gu-tabs{display:flex;gap:8px;margin-bottom:16px;}
+.gu-tab{flex:1;min-height:46px;border:1.5px solid var(--bd2);background:#fff;color:var(--ink2);
+  border-radius:12px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:var(--font);
+  letter-spacing:-.02em;transition:all .15s;}
+.gu-tab:hover{border-color:var(--gn);color:var(--gn);}
+.gu-tab.on{background:var(--gn);border-color:var(--gn);color:#fff;}
+
+.gu-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.gu-step{display:flex;gap:14px;background:#fff;border:1px solid var(--bd);border-radius:14px;padding:18px;}
+.gu-n{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:var(--gn);color:#fff;
+  font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.gu-b{min-width:0;}
+.gu-t{font-size:16.5px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:6px;}
+.gu-d{font-size:14px;color:var(--ink2);line-height:1.7;}
+.gu-m{font-size:13px;color:var(--gn-on-tint);background:var(--gnl);border-radius:8px;
+  padding:8px 11px;margin-top:10px;line-height:1.6;font-weight:600;}
+
+.gu-faq{border-top:1px solid var(--bd);}
+.gu-faq:first-of-type{border-top:none;}
+.gu-faq>summary{list-style:none;cursor:pointer;padding:14px 26px 14px 0;position:relative;
+  font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em;line-height:1.5;}
+.gu-faq>summary::-webkit-details-marker{display:none;}
+.gu-faq>summary::after{content:"+";position:absolute;right:2px;top:12px;font-size:20px;
+  font-weight:400;color:var(--ink3);line-height:1;}
+.gu-faq[open]>summary::after{content:"−";}
+.gu-faq>summary:hover{color:var(--gn);}
+.gu-faq>p{font-size:14px;color:var(--ink2);line-height:1.75;padding:0 0 16px;margin:0;}
+
+@media(max-width:768px){
+  .gu-step{padding:15px;gap:12px;}
+  .gu-t{font-size:15.5px;}
+  .gu-d{font-size:13.5px;}
+}
+
+/* 신고 링크 — 눈에 띄되 주 동선을 방해하지 않게 */
+.rp-flag{background:none;border:none;font-size:12.5px;font-weight:600;color:var(--ink4);
+  cursor:pointer;font-family:var(--font);padding:8px 4px;border-radius:8px;min-height:36px;}
+.rp-flag:hover{color:var(--red);text-decoration:underline;}

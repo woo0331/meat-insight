@@ -98,9 +98,10 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
 .logo-nm{font-size:20px;font-weight:700;color:var(--ink);font-family:var(--serif);letter-spacing:-.3px;}
 .logo-nm em{color:var(--gn);font-style:normal;}
 .hdr-nav{display:flex;gap:0;}
-.hdr-nav a{font-size:14px;font-weight:600;color:var(--ink2);padding:0 15px;height:58px;display:flex;align-items:center;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none;}
+.hdr-nav a{font-size:14px;font-weight:600;color:var(--ink2);padding:0 13px;white-space:nowrap;height:58px;display:flex;align-items:center;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none;}
 .hdr-nav a:hover,.hdr-nav a.on{color:var(--gn);border-color:var(--gn);}
 .hdr-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.hdr-actions>*{white-space:nowrap;flex-shrink:0;}
 .ha-btn{padding:8px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:var(--font);transition:all .15s;}
 .ha-login{color:var(--ink2);background:#fff;border:1.5px solid var(--bd2);}
 .ha-login:hover{border-color:var(--gn);color:var(--gn);}
@@ -125,7 +126,7 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
 .w{max-width:var(--max);margin:0 auto;padding:0 24px;}
 .sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .sec-h{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.4px;}
-.more-btn{font-size:13.5px;color:var(--ink2);font-weight:700;border:none;background:none;cursor:pointer;display:flex;align-items:center;gap:3px;}
+.more-btn{font-size:13.5px;color:var(--ink2);font-weight:700;border:none;background:none;cursor:pointer;display:flex;align-items:center;gap:3px;white-space:nowrap;flex-shrink:0;}
 .more-btn:hover{color:var(--gn);}
 .badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;}
 .b-gn{background:var(--gnl);color:var(--gn2);}
@@ -709,6 +710,12 @@ textarea.fi{resize:vertical;min-height:80px;}
   .gh-h1{font-size:36px;}
   .gh{padding:24px 0 40px;}
 }
+/* 상단 메뉴 6개 + 로그인 정보 + 버튼 3개가 1200px 아래에서는 줄바꿈됩니다.
+   글자가 세로로 쪼개지느니 햄버거 메뉴로 넘기는 편이 낫습니다. */
+@media(max-width:1200px){
+  .hdr-nav{display:none;}
+  .hdr-burger{display:flex;}
+}
 @media(max-width:1060px){
   .hdr-top{display:none;}
   .grid-4{grid-template-columns:1fr 1fr;}
@@ -822,6 +829,7 @@ textarea.fi{resize:vertical;min-height:80px;}
         <a onclick="setNav(this,'suppliers')">업체 찾기</a>
         <a onclick="setNav(this,'jobs')">인력·구인구직</a>
         <a onclick="setNav(this,'market')">고리소식</a>
+        <a onclick="setNav(this,'guide')">이용 가이드</a>
       </nav>
       <div class="hdr-actions">
         <button class="ha-btn ha-login" onclick="openModal('login')">로그인</button>
@@ -846,6 +854,7 @@ textarea.fi{resize:vertical;min-height:80px;}
       <a onclick="mmGo('news')">업계 뉴스</a>
       <a onclick="mmGo('community')">커뮤니티</a>
       <a onclick="mmGo('sj')">업체 등록</a>
+      <a onclick="mmGo('guide')">이용 가이드</a>
     </div>
     <div class="mm-act">
       <button class="ha-login" style="border:1.5px solid var(--bd2);background:#fff;color:var(--ink2);" onclick="toggleMM();openModal('login')">로그인</button>
@@ -1064,7 +1073,7 @@ textarea.fi{resize:vertical;min-height:80px;}
         <div><div class="ft-col-t">거래·생산</div><ul class="ft-ul"><li onclick="goCat8(&quot;meat&quot;)">원육 구매</li><li onclick="goCat8(&quot;process&quot;)">가공·OEM</li><li onclick="goCat8(&quot;logi&quot;)">물류·운송</li></ul></div>
         <div><div class="ft-col-t">사람·운영</div><ul class="ft-ul"><li onclick="goCat8(&quot;labor&quot;)">인력·알바</li><li onclick="goCat8(&quot;job&quot;)">구인구직</li><li onclick="goCat8(&quot;equip&quot;)">장비·부자재</li><li onclick="goCat8(&quot;startup&quot;)">창업·인테리어</li><li onclick="goCat8(&quot;haccp&quot;)">HACCP·컨설팅</li></ul></div>
         <div><div class="ft-col-t">정보</div><ul class="ft-ul"><li onclick="go(&quot;market&quot;)">시세 정보</li><li onclick="go(&quot;news&quot;)">업계 뉴스</li><li onclick="go(&quot;community&quot;)">커뮤니티</li><li onclick="go(&quot;jobs&quot;)">구인공고</li></ul></div>
-        <div><div class="ft-col-t">고리</div><ul class="ft-ul"><li onclick="location.href='meat_insight_apply.html'">컨설팅</li><li onclick="location.href='terms.html'">이용약관</li><li onclick="location.href='privacy.html'"><b>개인정보처리방침</b></li><li onclick="gOpenFindReq&&gOpenFindReq()">내 요청 찾기</li></ul></div>
+        <div><div class="ft-col-t">고리</div><ul class="ft-ul"><li onclick="go(&quot;guide&quot;)">이용 가이드</li><li onclick="location.href='meat_insight_apply.html'">컨설팅</li><li onclick="location.href='terms.html'">이용약관</li><li onclick="location.href='privacy.html'"><b>개인정보처리방침</b></li><li onclick="gOpenFindReq&&gOpenFindReq()">내 요청 찾기</li></ul></div>
       </div>
       <div class="ft-biz" id="ft-biz"></div>
       <div class="ft-bot"><div class="ft-copy">© 2025 고리 · 대한민국 축산업 통합 플랫폼 · 베타 서비스 운영 중</div></div>

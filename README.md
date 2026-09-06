@@ -24,6 +24,11 @@
 | 인증 | 사업자등록(체크섬 검증) · 축산물 영업허가 · HACCP |
 | 당일알바 | 구인구직과 분리, 지원자를 경력·평점·작업횟수로 선택 |
 | 거래관리 | 12개 탭 — 요청/견적/채팅/거래/당일알바/관심업체/후기/알림/정보 |
+| 업체 정보 수정 | 등록 후 언제든 연락처·분야·품목·사진을 고칩니다 (온보딩 폼 재사용) |
+| 업체 유치 | `#/sj` 에 지금 올라온 요청을 실제 데이터로 보여 줍니다 |
+| 맞춤 요청 피드 | 업체로 로그인하면 홈·거래관리에 내 분야·지역 요청만 모아 줍니다 |
+| 이용 가이드 | `#/guide` — 요청하는 분 / 업체 탭, 자주 묻는 질문 9개 |
+| 신고·문의 | 요청·업체 신고, 고객센터 문의 (관리자 콘솔에서 처리) |
 
 ### 시세 데이터 입력
 
@@ -43,6 +48,7 @@ values ('beef', '한우 등심', '1+', 64000, '원/kg', current_date);
 | 🟡 | DB 스키마 실행 (phase2→3→4→5, 6은 선택) | Supabase SQL Editor |
 | 🟡 | 컨설팅 결제를 실제로 할지 결정 (지금 테스트 키) | `meat_insight_apply.html` |
 | 🟡 | 카카오 로그인 켜기 (코드는 완료, 설정만) | Supabase Providers |
+| 🟡 | 신고·문의를 받으려면 표 만들기 | `db/phase7_report.sql` |
 | ⚪ | 홈 뉴스·인사이트 내용 채우기 | `site-info.js` → `GORI_CONTENT` |
 | ⚪ | 약관·방침 한 번 읽어보기 | `terms.html` · `privacy.html` |
 
@@ -78,6 +84,10 @@ node build.js --check   # 빌드 결과가 현재 파일과 같은지 확인
 | `26_kakao` | 카카오 로그인 |
 | `27_offline` | 연결 실패 처리 |
 | `28_stale` | 오래된 요청 |
+| `29_supedit` | 업체 정보 수정 |
+| `30_suphome` | 업체 유치 구간 · 맞춤 요청 피드 |
+| `31_guide` | 이용 가이드 · FAQ |
+| `32_report` | 신고 · 문의 |
 | `07_init` | **초기화 — 반드시 마지막** (IIFE 닫는 괄호가 여기 있습니다) |
 
 **순서가 중요합니다.** 기존 함수를 지우지 않고 바깥에서 감싸는 방식이라, 나중에
@@ -118,14 +128,17 @@ node test/run.js
 | `db/phase4_admin.sql` | DB 확장 — 관리자 권한 + 기존 테이블 RLS (추가 전용) |
 | `db/phase5_storage.sql` | 업체 사진 저장소(Supabase Storage) 버킷·정책 |
 | `db/phase6_realtime.sql` | 실시간 갱신 — 알림·채팅·견적을 발행 목록에 추가 (선택) |
+| `db/phase7_report.sql` | 신고·문의 표 두 개 추가 (선택 — 실행 전에는 안내로 물러납니다) |
 | `site-info.js` | **사업자 정보 — 여기 한 곳만 채우면 푸터·약관·방침에 모두 반영됩니다** |
 | `terms.html` | 이용약관 |
 | `privacy.html` | 개인정보처리방침 |
 | `manifest.json` · `sw.js` · `icon-*.png` | 홈 화면에 추가(PWA) — 앱처럼 실행 |
 | `robots.txt` · `sitemap.xml` | 검색엔진 색인 안내 |
+| `404.html` | 없는 주소로 들어왔을 때 (많이 찾는 화면으로 안내) |
+| `vercel.json` | 라우팅 + 보안 헤더 (nosniff · Referrer-Policy · X-Frame-Options) |
 | `admin-gate.js` | 관리 화면 접근 제한 — 레거시 관리 페이지 4개에 적용 |
 | `src/` · `build.js` | **`gori-app.js` 의 원본 조각들 — 여기를 고치고 빌드하세요** |
-| `test/` | 회귀 테스트 21종 (`node test/run.js`) |
+| `test/` | 회귀 테스트 27종 (`node test/run.js`) |
 | `CLAUDE.md` | 이 저장소를 고칠 때의 규칙 |
 | `legacy-chrome.js` | 레거시 콘텐츠 페이지 공통 꼬리말 (홈·약관·방침·사업자 정보) |
 | `admin.html` | **관리자 콘솔** — 인증 심사·요청·견적·거래·시세 운영 |

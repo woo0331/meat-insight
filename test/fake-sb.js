@@ -109,6 +109,8 @@ window.__FAKE_INIT = function(opts){
     ]
   };
   (opts.emptyTables||[]).forEach(function(t){ DB[t]=[]; });
+  /* seed: 기본 데이터에 없는 표를 테스트에서 채워 넣을 때 씁니다 */
+  Object.keys(opts.seed||{}).forEach(function(t){ DB[t]=opts.seed[t]; });
   window.__DB = DB;
   var uid = 0;
   var RT = [];                       // 가짜 Realtime 구독 목록

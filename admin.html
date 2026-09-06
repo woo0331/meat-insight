@@ -144,7 +144,8 @@ var SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 var sb = window.supabase ? window.supabase.createClient(SUPA_URL, SUPA_KEY) : null;
 
 var ME={email:"",name:""}, TAB="dash", D={}, SCHEMA={};
-var TABS=[["dash","대시보드"],["verify","인증 심사"],["sup","업체"],["req","요청"],
+var TABS=[["dash","대시보드"],["verify","인증 심사"],["report","신고"],["inquiry","문의"],
+          ["sup","업체"],["req","요청"],
           ["quote","견적"],["order","거래"],["daily","당일알바"],["review","후기"],["market","시세"]];
 
 function $(i){return document.getElementById(i)}
@@ -232,7 +233,7 @@ function go(t){
   TAB=t;
   document.querySelectorAll(".tab").forEach(function(b){ b.classList.toggle("on", b.id==="tb-"+t); });
   $("view").innerHTML='<div class="empty">불러오는 중…</div>';
-  ({dash:vDash,verify:vVerify,sup:vSup,req:vReq,quote:vQuote,order:vOrder,
+  ({dash:vDash,verify:vVerify,report:vReport,inquiry:vInquiry,sup:vSup,req:vReq,quote:vQuote,order:vOrder,
     daily:vDaily,review:vReview,market:vMarket}[t]||vDash)();
   window.scrollTo(0,0);
 }
@@ -504,6 +505,68 @@ async function vReview(){
   $("view").innerHTML='<div class="h">후기 <span class="tr">'+r.data.length+'건</span></div>'+
     '<div class="hd">허위·비방 후기는 삭제할 수 있습니다. 삭제해도 업체 평점은 다음 후기 등록 시 재계산됩니다.</div>'+
     tbl(["평점","내용","작성자","대상","작성일","관리"],rows,"후기가 없습니다");
+}
+
+/* ── 신고 ──
+   db/phase7_report.sql 을 실행하지 않았으면 표가 없다고 안내합니다. */
+var RP_ST=["접수","확인중","처리완료","반려"];
+async function vReport(){
+  var r=await q("reports",function(b){return b.order("created_at",{ascending:false}).limit(300)});
+  if(r.missing){ $("view").innerHTML='<div class="h">신고</div>'+
+    '<div class="note"><b>reports 표가 아직 없습니다.</b><br>'+
+    'Supabase → SQL Editor 에서 <code>db/phase7_report.sql</code> 을 실행하면 '+
+    '이용자가 남긴 신고가 여기에 쌓입니다.</div>'; return; }
+  var open=r.data.filter(function(x){return (x.status||"접수")==="접수"}).length;
+  var rows=r.data.map(function(v){
+    var st=v.status||"접수";
+    return '<tr><td>'+esc(v.reason||"—")+'</td>'+
+      '<td>'+esc(v.detail||"—")+'</td>'+
+      '<td class="mono">'+esc(v.target_type||"")+" / "+esc(v.target_name||v.target_id||"")+'</td>'+
+      '<td class="tr">'+esc(v.reporter_name||"익명")+(v.reporter_phone?'<br><span class="mono">'+esc(v.reporter_phone)+'</span>':'')+'</td>'+
+      '<td class="tr">'+dt(v.created_at)+'</td>'+
+      '<td><select class="in" style="min-width:96px" onchange="setReport(\''+v.id+'\',this.value)">'+
+        RP_ST.map(function(o){return '<option'+(st===o?" selected":"")+'>'+o+'</option>'}).join("")+
+      '</select></td></tr>';
+  });
+  $("view").innerHTML='<div class="h">신고 <span class="tr">'+r.data.length+'건</span></div>'+
+    '<div class="hd">이용자가 남긴 신고입니다. 확인한 뒤 상태를 바꿔 주세요. 신고 사실은 상대에게 알려지지 않습니다.</div>'+
+    (open?'<div class="note"><b>확인하지 않은 신고 '+open+'건</b>이 있습니다.</div>':'')+
+    tbl(["사유","내용","대상","신고자","접수일","상태"],rows,"신고가 없습니다");
+}
+async function setReport(id,st){
+  var r=await upd("reports",{status:st},id);
+  if(r&&r.error){ alert("변경 실패: "+r.error.message); return; }
+  vReport();
+}
+
+/* ── 문의 ── */
+async function vInquiry(){
+  var r=await q("inquiries",function(b){return b.order("created_at",{ascending:false}).limit(300)});
+  if(r.missing){ $("view").innerHTML='<div class="h">문의</div>'+
+    '<div class="note"><b>inquiries 표가 아직 없습니다.</b><br>'+
+    'Supabase → SQL Editor 에서 <code>db/phase7_report.sql</code> 을 실행하면 '+
+    '고객센터 문의가 여기에 쌓입니다.</div>'; return; }
+  var open=r.data.filter(function(x){return (x.status||"접수")==="접수"}).length;
+  var rows=r.data.map(function(v){
+    var st=v.status||"접수";
+    return '<tr><td>'+esc(v.kind||"일반")+'</td>'+
+      '<td>'+esc(v.content||"—")+'</td>'+
+      '<td class="tr">'+esc(v.name||"—")+
+        (v.phone?'<br><span class="mono">'+esc(v.phone)+'</span>':'')+
+        (v.email?'<br><span class="mono">'+esc(v.email)+'</span>':'')+'</td>'+
+      '<td class="tr">'+dt(v.created_at)+'</td>'+
+      '<td><button class="b '+(st==="답변완료"?"b-d":"b-p")+'" onclick="setInquiry(\''+v.id+'\',\''+
+        (st==="답변완료"?"접수":"답변완료")+'\')">'+(st==="답변완료"?"접수로":"답변완료")+'</button></td></tr>';
+  });
+  $("view").innerHTML='<div class="h">문의 <span class="tr">'+r.data.length+'건</span></div>'+
+    '<div class="hd">남겨 주신 연락처로 답변한 뒤 답변완료로 바꿔 주세요.</div>'+
+    (open?'<div class="note"><b>답변하지 않은 문의 '+open+'건</b>이 있습니다.</div>':'')+
+    tbl(["분류","내용","연락처","접수일","관리"],rows,"문의가 없습니다");
+}
+async function setInquiry(id,st){
+  var r=await upd("inquiries",{status:st},id);
+  if(r&&r.error){ alert("변경 실패: "+r.error.message); return; }
+  vInquiry();
 }
 
 /* ── 시세 ── */

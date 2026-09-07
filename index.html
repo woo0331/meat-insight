@@ -42,15 +42,16 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
      기존 변수명(--gn 등)을 유지해 전 사이트에 한 번에 반영됩니다.
      ════════════════════════════════════════════════════════════ */
   --gori-ink-900:#12161B;  --gori-ink-800:#1B2129;
-  --gori-wine:#B3164C;     --gori-wine-2:#8A0F3A;   --gori-rose:#EE7FA3;
-  --gori-crimson:#B3164C;  --gori-crimson-2:#8A0F3A;  /* 하위호환 별칭 */
+  --gori-wine:#C24A0C;     --gori-wine-2:#953609;   --gori-rose:#FFA06A;
+  --gori-crimson:#C24A0C;  --gori-crimson-2:#953609;  /* 하위호환 별칭 */
   --gori-amber:#F5A524;
   --gori-page:#FAFAF8;     --gori-line:#EAE8E4;    --gori-section:#F2F1ED;
 
-  /* 브랜드 = 와인 (흰 배경 대비 8.49:1 / 위험·상승색과 뚜렷이 구분) */
-  --gn:#B3164C;--gn2:#8A0F3A;--gnl:#FDE8EF;--gnb:#F6C6D6;--gn-on-tint:#8A0F3A;
-  --gn-dark:#EE7FA3;                        /* 어두운 배경 위 브랜드 */
-  --or:#B3164C;--orl:#FDE8EF;
+  /* 브랜드 = 번트 오렌지 (흰 배경 대비 4.91:1 — 흰 글씨를 얹어도, 흰 위에
+     글씨로 써도 AA 를 넘는 구간입니다. 오류·상승색은 순수 빨강으로 갈라 놨습니다) */
+  --gn:#C24A0C;--gn2:#953609;--gnl:#FDF0E7;--gnb:#F7D4BC;--gn-on-tint:#953609;
+  --gn-dark:#FFA06A;                        /* 어두운 배경 위 브랜드 */
+  --or:#C24A0C;--orl:#FDF0E7;
   /* 보조 액센트 = 앰버. --amber 는 어두운 배경 전용,
      흰 배경 위 글씨·아이콘은 --amber-ink, 틴트 위 글씨는 --amber-on */
   --amber:#F5A524;--amber-ink:#9C6B0B;--amber-on:#6E4A08;
@@ -59,9 +60,9 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
 
   /* 상태 */
   --ok:#1B7A46;--okl:#E3F5EA;--okb:#BFE3CD;
-  --red:#B93A15;--redbg:#FBE6DC;--redb:#F0C9B4;
+  --red:#C62828;--redbg:#FCE9E9;--redb:#F1C9C9;
   --blue:#245FCB;--bluebg:#E9F0FC;
-  --up:#D14312;--dn:#245FCB;
+  --up:#C62828;--dn:#245FCB;
   --br:#8D6E63;--brl:#EFEBE9;
 
   /* 중립 */
@@ -76,7 +77,7 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
   --hdr-h:106px;--top-pad:144px;
   --sh:0 1px 2px rgba(18,22,27,.05);
   --sh2:0 8px 24px rgba(18,22,27,.10);
-  --sh-fab:0 8px 20px rgba(179,22,76,.38);
+  --sh-fab:0 8px 20px rgba(194,74,12,.38);
 }
 .pg{display:none;}.pg.on{display:block;}
 
@@ -186,7 +187,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 @keyframes lslide{from{transform:translateX(0);}to{transform:translateX(-50%);}}
 .li{display:flex;align-items:center;gap:8px;padding:0 18px;white-space:nowrap;cursor:pointer;}
 .li-txt{font-size:12.5px;color:var(--ink2);font-weight:500;}
-.li-cnt{font-size:11.5px;color:var(--gn);font-weight:800;}
+.li-cnt{font-size:11.5px;color:var(--gn-on-tint);font-weight:800;}
 .li-time{font-size:10.5px;color:var(--ink4);}
 .li-sep{width:1px;height:12px;background:var(--bd2);margin:0 4px;}
 
@@ -255,7 +256,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 .p-up{color:var(--red);}.p-dn{color:var(--blue);}
 
 /* 베타 박스 */
-.beta-box{background:linear-gradient(135deg,#B3164C,#8A0F3A);padding:18px;color:#fff;}
+.beta-box{background:linear-gradient(135deg,#C24A0C,#953609);padding:18px;color:#fff;}
 .bb-badge{font-size:10px;font-weight:700;padding:3px 8px;background:rgba(255,255,255,.2);border-radius:4px;display:inline-block;margin-bottom:10px;}
 .bb-h{font-size:16px;font-weight:700;margin-bottom:6px;}
 .bb-d{font-size:12px;color:rgba(255,255,255,.65);line-height:1.65;margin-bottom:14px;}
@@ -428,8 +429,8 @@ textarea.fi{resize:vertical;min-height:80px;}
 .hdr-cats-w{max-width:var(--max);margin:0 auto;padding:0 24px;height:100%;display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;}
 .hdr-cats-w::-webkit-scrollbar{display:none;}
 .hc-item{flex-shrink:0;padding:6px 13px;border-radius:999px;font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;white-space:nowrap;border:1px solid transparent;transition:background .15s,color .15s,border-color .15s;background:none;font-family:var(--font);}
-.hc-item:hover{background:var(--gnl);color:var(--gn);}
-.hc-item.on{background:var(--gnl);color:var(--gn);border-color:var(--gnb);font-weight:700;}
+.hc-item:hover{background:var(--gnl);color:var(--gn-on-tint);}
+.hc-item.on{background:var(--gnl);color:var(--gn-on-tint);border-color:var(--gnb);font-weight:700;}
 
 /* 모바일 메뉴 */
 .mobile-menu{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border-bottom:1px solid var(--bd);box-shadow:var(--sh2);padding:10px 14px 16px;}
@@ -821,7 +822,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 <header class="hdr">
   <div class="hdr-main">
     <div class="hdr-main-w">
-      <div class="logo" onclick="go(&quot;h&quot;)"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#B3164C"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg><div class="logo-nm">고<em>리</em></div></div>
+      <div class="logo" onclick="go(&quot;h&quot;)"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#C24A0C"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg><div class="logo-nm">고<em>리</em></div></div>
       <nav class="hdr-nav">
         <a class="on" onclick="setNav(this,'h')">홈</a>
         <a onclick="setNav(this,'rw')">요청하기</a>
@@ -876,7 +877,7 @@ textarea.fi{resize:vertical;min-height:80px;}
   <section class="gh">
     <div class="gh-w">
       <div class="gh-top">
-        <div class="gh-logo" onclick="go(&quot;h&quot;)"><span class="gh-logo-badge"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.3c4.9 0 8.9 3.5 8.9 8.4 0 5.3-3.8 10-8.9 10S3.1 17 3.1 11.7C3.1 6.8 7.1 3.3 12 3.3z" fill="#fff"/><path d="M18.4 13.2c.2 3.3-2.1 6.1-5.1 6.6" stroke="#B3164C" stroke-width="2.1" stroke-linecap="round" fill="none"/><circle cx="10.3" cy="11.6" r="1.9" fill="#B3164C"/><circle cx="14.6" cy="15.6" r="1.1" fill="#B3164C" opacity=".75"/></svg></span><span class="gh-logo-tx">고리</span></div>
+        <div class="gh-logo" onclick="go(&quot;h&quot;)"><span class="gh-logo-badge"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.3c4.9 0 8.9 3.5 8.9 8.4 0 5.3-3.8 10-8.9 10S3.1 17 3.1 11.7C3.1 6.8 7.1 3.3 12 3.3z" fill="#fff"/><path d="M18.4 13.2c.2 3.3-2.1 6.1-5.1 6.6" stroke="#C24A0C" stroke-width="2.1" stroke-linecap="round" fill="none"/><circle cx="10.3" cy="11.6" r="1.9" fill="#C24A0C"/><circle cx="14.6" cy="15.6" r="1.1" fill="#C24A0C" opacity=".75"/></svg></span><span class="gh-logo-tx">고리</span></div>
         <div class="gh-tools">
           <button class="gh-region" id="gh-region" onclick="gPickRegion()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="2.6"/></svg>
@@ -1067,7 +1068,7 @@ textarea.fi{resize:vertical;min-height:80px;}
     <div class="w">
       <div class="ft-grid">
         <div>
-          <div class="ft-nm"><svg width="20" height="20" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#B3164C"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg> 고리</div>
+          <div class="ft-nm"><svg width="20" height="20" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#C24A0C"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg> 고리</div>
           <div class="ft-desc">축산업에 필요한 모든 연결, 고리<br>원육·가공·물류·인력·장비·창업까지<br>필요한 업체와 사람을 빠르게 연결합니다</div>
         </div>
         <div><div class="ft-col-t">거래·생산</div><ul class="ft-ul"><li onclick="goCat8(&quot;meat&quot;)">원육 구매</li><li onclick="goCat8(&quot;process&quot;)">가공·OEM</li><li onclick="goCat8(&quot;logi&quot;)">물류·운송</li></ul></div>
@@ -1194,7 +1195,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 
 <div class="pg" id="pg-sj" style="padding-top:var(--top-pad);padding-bottom:56px;">
   <div style="max-width:640px;margin:0 auto;padding:18px 16px 80px;">
-    <div style="background:linear-gradient(135deg,#B3164C,#8A0F3A);padding:20px;border-radius:var(--r);margin-bottom:13px;">
+    <div style="background:linear-gradient(135deg,#C24A0C,#953609);padding:20px;border-radius:var(--r);margin-bottom:13px;">
       <div style="font-size:10px;color:rgba(255,255,255,.62);font-weight:700;letter-spacing:2px;margin-bottom:6px;">SUPPLIER REGISTRATION</div>
       <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:4px;">업체를 등록하고 전국 구매 요청을 받아보세요</div>
       <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;">
@@ -1242,7 +1243,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 <div class="pg" id="pg-market" style="padding-top:var(--top-pad);padding-bottom:56px;">
   <div class="w" style="padding-top:18px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><div style="font-size:18px;font-weight:700;">축산 시세 정보</div><span style="font-size:12px;color:var(--ink4);" id="mkt-src-label">참고용</span></div>
-    <div style="background:var(--goldbg);border:1px solid var(--amber-br);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:13px;color:var(--amber-on);">⚠️ 시세는 참고용입니다. 정확한 견적은 <a onclick="go(&quot;rw&quot;)" style="color:var(--gn);font-weight:700;cursor:pointer;">고리에서 무료로 요청 →</a></div>
+    <div style="background:var(--goldbg);border:1px solid var(--amber-br);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:13px;color:var(--amber-on);">⚠️ 시세는 참고용입니다. 정확한 견적은 <a onclick="go(&quot;rw&quot;)" style="color:var(--gn-on-tint);font-weight:700;cursor:pointer;">고리에서 무료로 요청 →</a></div>
     <div style="background:#fff;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;" id="market-full"></div>
   </div>
 </div>

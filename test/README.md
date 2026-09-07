@@ -38,6 +38,21 @@ node test/run.js router edit  # 이름으로 골라서
 | `report-e2e.js` | 신고·문의 (표가 없을 때의 물러남 포함) |
 | `adminreport-e2e.js` | 관리자 콘솔의 신고·문의 탭 |
 | `notfound-e2e.js` | 404 페이지 |
+| `livecheck-e2e.js` | `live-check.js` 자체 검증 (PostgREST 흉내 서버로 4가지 상황) |
+
+## 실제 Supabase 점검 — live-check.js
+
+여기 있는 테스트는 전부 `fake-sb.js`(가짜)로 돕니다. 실제 DB 가 코드와 맞는지는
+확인되지 않으므로 `live-check.js` 로 따로 봅니다.
+
+```bash
+node test/live-check.js            # 읽기만
+node test/live-check.js --write    # anon 키로 쓰기·삭제까지 시도
+```
+
+표 18개의 존재 여부, 컬럼 200여 개, anon 키의 읽기·쓰기·삭제 권한, 저장소 버킷을
+확인하고, 빠진 것마다 어느 `db/phase*.sql` 을 실행해야 하는지 알려줍니다.
+`mock-postgrest.js` 는 이 점검 도구를 시험하기 위한 가짜 서버입니다.
 
 테스트를 실행하면 `test/` 에 확인용 스크린샷(`*.png`)이 생깁니다. 실행할 때마다
 새로 만들어지는 것이라 `.gitignore` 로 제외해 두었습니다.

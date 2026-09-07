@@ -109,6 +109,26 @@ node test/run.js
 확인합니다. **실제 DB 에는 아무 것도 쓰지 않습니다.** 자세한 내용은
 `test/README.md` 를 보세요.
 
+### 실제 Supabase 점검
+
+위 테스트는 가짜 클라이언트로 돌기 때문에, **실제 DB 의 표·컬럼·RLS 가 코드와
+맞는지는 확인되지 않습니다.** 그건 이걸로 봅니다.
+
+```bash
+node test/live-check.js            # 읽기만 — 표·컬럼·RLS·저장소 점검
+node test/live-check.js --write    # anon 키로 쓰기·삭제까지 실제로 시도
+```
+
+주소·키는 `index.html` 에 있는 값을 기본으로 씁니다
+(`--url` · `--key` 나 `SUPABASE_URL` · `SUPABASE_ANON_KEY` 로 바꿀 수 있습니다).
+
+- 표가 없으면 **어느 phase SQL 을 실행해야 하는지** 이름으로 알려줍니다
+- 컬럼이 빠져 있으면 **빠진 컬럼 이름**을 찍습니다
+- `--write` 는 표시용 행을 하나 넣고 바로 지웁니다. **anon 키로 삭제가 되면
+  남의 데이터도 지울 수 있다는 뜻**이라 문제로 잡습니다 (🔴 RLS 항목)
+- 표를 만들지는 않습니다. `db/phase*.sql` 은 Supabase SQL Editor 에서 사람이
+  직접 실행해야 합니다 (anon 키로는 DDL 이 불가능합니다)
+
 ## 기술 스택
 
 - 프레임워크·빌드 도구 없는 정적 HTML / CSS / JavaScript
@@ -138,7 +158,7 @@ node test/run.js
 | `vercel.json` | 라우팅 + 보안 헤더 (nosniff · Referrer-Policy · X-Frame-Options) |
 | `admin-gate.js` | 관리 화면 접근 제한 — 레거시 관리 페이지 4개에 적용 |
 | `src/` · `build.js` | **`gori-app.js` 의 원본 조각들 — 여기를 고치고 빌드하세요** |
-| `test/` | 회귀 테스트 27종 (`node test/run.js`) |
+| `test/` | 회귀 테스트 28종 (`node test/run.js`) + 실제 DB 점검 (`live-check.js`) |
 | `CLAUDE.md` | 이 저장소를 고칠 때의 규칙 |
 | `legacy-chrome.js` | 레거시 콘텐츠 페이지 공통 꼬리말 (홈·약관·방침·사업자 정보) |
 | `admin.html` | **관리자 콘솔** — 인증 심사·요청·견적·거래·시세 운영 |

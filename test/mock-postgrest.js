@@ -54,8 +54,20 @@ if (SCENARIO === "no-phase7") {
   READABLE.delete("reports"); READABLE.delete("inquiries");
 }
 
+/* 프록시·방화벽이 가로채고 403 을 주는 상황.
+   PostgREST 가 아닌 평문을 돌려주므로 점검 도구가 속으면 안 됩니다. */
+const INTERCEPT = SCENARIO === "intercepted";
+
+/* 실제 Supabase 처럼 CORS 를 허용합니다 (브라우저에서 db-check.html 이 부릅니다) */
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "apikey,authorization,content-type,prefer,x-client-info",
+  "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
+  "Access-Control-Expose-Headers": "content-range",
+};
+
 function send(res, code, body, extra) {
-  res.writeHead(code, Object.assign({ "Content-Type": "application/json" }, extra || {}));
+  res.writeHead(code, Object.assign({ "Content-Type": "application/json" }, CORS, extra || {}));
   res.end(body == null ? "" : JSON.stringify(body));
 }
 
@@ -63,7 +75,14 @@ http.createServer((req, res) => {
   const u = new URL(req.url, "http://x");
   const p = u.pathname;
 
-  if (p === "/rest/v1/" ) return send(res, 200, {});
+  if (req.method === "OPTIONS") { res.writeHead(204, CORS); return res.end(); }
+
+  if (INTERCEPT) {
+    res.writeHead(403, Object.assign({ "Content-Type": "text/plain" }, CORS));
+    return res.end("Host not in allowlist: example.supabase.co. Add this host to your network egress settings to allow access.");
+  }
+
+  if (p === "/rest/v1/" ) return send(res, 200, { swagger:"2.0", info:{title:"standard public schema"}, paths:{} });
   if (p.startsWith("/storage/v1/object/list/")) {
     const bucket = p.split("/").pop();
     return bucket === "supplier-photos" ? send(res, 200, []) : send(res, 400, { message: "Bucket not found" });

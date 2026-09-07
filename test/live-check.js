@@ -53,76 +53,9 @@ if (!URL_ || !KEY) {
   process.exit(2);
 }
 
-/* ── 코드가 기대하는 표와 컬럼 ──
-   phase2~7 SQL 과 src/ 의 insert 페이로드에서 뽑았습니다.
-   "필수" 는 없으면 화면이 실제로 깨지는 것, "선택" 은 없어도
-   insertSafe 가 그 컬럼만 빼고 넘어가는 것입니다. */
-const EXPECT = [
-  { t: "purchase_requests", phase: "기존 + phase2",
-    must: ["id", "created_at", "status", "region", "description"],
-    want: ["user_id", "title", "category", "category_main", "subcategory", "detail",
-           "deadline", "priority", "visibility", "quote_count", "selected_quote_id",
-           "closed_at", "buyer_name", "buyer_phone", "request_number"] },
-  { t: "suppliers", phase: "기존 + phase2",
-    must: ["id", "created_at", "name", "region"],
-    want: ["user_id", "categories", "category_mains", "services", "items", "haccp",
-           "brn", "brn_verified", "is_verified", "images", "intro", "description",
-           "deal_count", "review_count", "address", "contact", "rep_name",
-           "min_qty", "lead_time", "rating", "regions", "instant_quote",
-           "instant_note", "notify_on", "response_rate", "avg_response_min"] },
-  { t: "jobs", phase: "기존 + phase2",
-    must: ["id", "created_at", "status"],
-    want: ["user_id", "kind", "job_role", "employment", "pay", "location",
-           "company", "contact", "detail", "is_urgent", "benefits",
-           "applicant_name", "experience"] },
-  { t: "quotes", phase: "phase2",
-    must: ["id", "created_at", "request_id", "status"],
-    want: ["supplier_id", "supplier_name", "user_id", "unit_price", "qty", "total",
-           "lead_time", "note", "valid_until"] },
-  { t: "reviews", phase: "phase2",
-    must: ["id", "created_at", "target_type", "target_id", "rating"],
-    want: ["author_name", "user_id", "content", "request_id", "deal_summary"] },
-  { t: "day_jobs", phase: "phase2",
-    must: ["id", "created_at", "status"],
-    want: ["user_id", "work", "work_date", "pay_type", "pay", "region", "headcount", "contact"] },
-  { t: "day_job_applications", phase: "phase2",
-    must: ["id", "created_at", "day_job_id", "status"],
-    want: ["user_id", "applicant_name", "contact", "experience"] },
-  { t: "worker_profiles", phase: "phase2",
-    must: ["id", "created_at"],
-    want: ["user_id", "name", "contact", "region", "skills", "experience", "rating", "job_count"] },
-  { t: "favorites", phase: "phase2",
-    must: ["id", "created_at", "user_id", "target_type", "target_id"], want: [] },
-  { t: "notifications", phase: "phase2",
-    must: ["id", "created_at", "user_id", "type", "title", "is_read"],
-    want: ["body", "link"] },
-  { t: "supplier_prefs", phase: "phase3",
-    must: ["id", "supplier_id"],
-    want: ["user_id", "category_mains", "regions", "notify_on", "min_amount"] },
-  { t: "verifications", phase: "phase3",
-    must: ["id", "created_at", "target_type", "target_id", "kind", "status"],
-    want: ["user_id", "number", "holder", "reviewed_at", "admin_memo"] },
-  { t: "chat_rooms", phase: "phase3",
-    must: ["id", "created_at"],
-    want: ["request_id", "quote_id", "buyer_id", "supplier_id", "supplier_name", "last_message_at"] },
-  { t: "chat_messages", phase: "phase3",
-    must: ["id", "created_at", "room_id", "sender_id", "body"],
-    want: ["is_read", "sender_name"] },
-  { t: "orders", phase: "phase3",
-    must: ["id", "created_at", "status"],
-    want: ["request_id", "quote_id", "buyer_id", "supplier_id", "supplier_name", "total", "memo"] },
-  { t: "market_prices", phase: "phase3",
-    must: ["id", "category", "item", "price", "price_date"],
-    want: ["grade", "unit", "source", "change"] },
-  { t: "admins", phase: "phase4", adminOnly: true,
-    must: ["user_id"], want: ["email", "created_at"] },
-  { t: "reports", phase: "phase7 (선택)", optional: true,
-    must: ["id", "created_at", "target_type", "target_id", "reason", "status"],
-    want: ["target_name", "detail", "reporter_id", "reporter_name", "reporter_phone", "admin_memo"] },
-  { t: "inquiries", phase: "phase7 (선택)", optional: true,
-    must: ["id", "created_at", "kind", "name", "content", "status"],
-    want: ["phone", "email", "user_id", "answer"] },
-];
+/* 코드가 기대하는 표와 컬럼 — db-expect.js 한 곳에서 관리합니다
+   (브라우저용 db-check.html 도 같은 파일을 씁니다) */
+const EXPECT = require(path.join(__dirname, "..", "db-expect.js"));
 
 /* ── HTTP ── */
 async function rest(pathname, opt) {
@@ -139,7 +72,12 @@ async function rest(pathname, opt) {
   });
   let json = null, text = "";
   try { text = await res.text(); json = text ? JSON.parse(text) : null; } catch (e) {}
-  return { status: res.status, ok: res.ok, json, text, headers: res.headers };
+  /* 프록시·방화벽이 가로채고 403 을 주면 표가 있는 것처럼 보입니다.
+     PostgREST 가 낸 응답인지(=JSON 본문에 message/code/hint 가 있는지) 봅니다. */
+  const fromPostgrest = !!(json && typeof json === "object" &&
+    ("message" in json || "code" in json || "hint" in json || "details" in json ||
+     Array.isArray(json) || "swagger" in json || "openapi" in json || "paths" in json));
+  return { status: res.status, ok: res.ok, json, text, headers: res.headers, fromPostgrest };
 }
 
 const C = { ok: "✅", no: "❌", warn: "⚠️ ", dot: "·" };
@@ -153,6 +91,18 @@ async function checkConnect() {
   try {
     const r = await rest("/rest/v1/");
     if (r.status === 0) throw new Error("응답 없음");
+    /* PostgREST 루트는 200 + OpenAPI JSON 입니다.
+       그 밖의 응답은 중간에 뭔가가 가로챘다는 뜻이라, 여기서 멈춥니다.
+       (안 그러면 프록시의 403 을 "RLS 가 막았다" 로 잘못 읽어
+        표가 다 있는 것처럼 초록불이 뜹니다) */
+    if (!r.ok || !r.fromPostgrest) {
+      problems++;
+      line(`   ${C.no} Supabase 가 아닌 응답 (HTTP ${r.status})`);
+      line("      중간에서 프록시·방화벽·VPN 이 가로챘거나, 주소가 잘못됐습니다.");
+      if (r.text) line("      받은 내용: " + JSON.stringify(String(r.text).slice(0, 120)));
+      line("      이 상태로는 표·컬럼·RLS 를 판단할 수 없어 여기서 멈춥니다.");
+      return false;
+    }
     line(`   ${C.ok} REST 응답 (HTTP ${r.status})`);
     return true;
   } catch (e) {
@@ -192,13 +142,20 @@ async function checkTables() {
     const head = await rest(`/rest/v1/${e.t}?select=*&limit=1`);
     const msg = (head.json && (head.json.message || head.json.hint)) || "";
 
-    if (head.status === 404 || /PGRST205|Could not find the table|does not exist/i.test(msg + (head.json && head.json.code || ""))) {
+    if (head.fromPostgrest &&
+        (head.status === 404 || /PGRST205|Could not find the table|does not exist/i.test(msg + (head.json && head.json.code || "")))) {
       state[e.t] = "missing";
       if (e.optional) { warns++; line(`   ${C.warn}${e.t.padEnd(22)} 없음 — ${e.phase}`); }
       else { problems++; line(`   ${C.no} ${e.t.padEnd(22)} 없음 — ${e.phase} 를 실행하세요`); }
       continue;
     }
     if (head.status === 401 || head.status === 403) {
+      if (!head.fromPostgrest) {
+        state[e.t] = "intercepted";
+        problems++;
+        line(`   ${C.no} ${e.t.padEnd(22)} 판단 불가 — Supabase 가 아닌 곳에서 HTTP ${head.status} 를 돌려줬습니다`);
+        continue;
+      }
       state[e.t] = "blocked";
       line(`   ${C.ok} ${e.t.padEnd(22)} 있음 (anon 읽기 차단 — RLS 적용됨)`);
       continue;

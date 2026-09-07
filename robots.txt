@@ -9,5 +9,6 @@ Disallow: /dashboard.html
 Disallow: /suppliers.html
 Disallow: /purchase_request.html
 Disallow: /jobs.html
+Disallow: /db-check.html
 
 Sitemap: https://aboutmeat.co.kr/sitemap.xml

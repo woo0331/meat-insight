@@ -70,7 +70,17 @@ async function withMock(scenario, fn){
     chk('종료 코드 1', w.code, '1');
   });
 
-  log.push('5. 연결 자체가 막혔을 때');
+  log.push('5. 프록시·방화벽이 가로채고 403 을 줄 때 — 초록불이 뜨면 안 됩니다');
+  await withMock("intercepted", async()=>{
+    const r=await runCheck();
+    chk('종료 코드 1', r.code, '1');
+    chk('Supabase 응답이 아니라고 말함', /Supabase 가 아닌 응답 \(HTTP 403\)/.test(r.out), 'true');
+    chk('받은 내용을 그대로 보여줌', /Host not in allowlist/.test(r.out), 'true');
+    chk('표를 있다고 하지 않음', /있음 \(anon 읽기 차단/.test(r.out), 'false');
+    chk('여기서 멈춤', /여기서 멈춥니다/.test(r.out), 'true');
+  });
+
+  log.push('6. 연결 자체가 막혔을 때');
   {
     const p=spawn("node",[CHECK,"--url","http://127.0.0.1:1","--key","k"],{stdio:["ignore","pipe","pipe"]});
     let out=""; p.stdout.on("data",d=>out+=d); p.stderr.on("data",d=>out+=d);

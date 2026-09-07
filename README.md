@@ -114,10 +114,15 @@ node test/run.js
 위 테스트는 가짜 클라이언트로 돌기 때문에, **실제 DB 의 표·컬럼·RLS 가 코드와
 맞는지는 확인되지 않습니다.** 그건 이걸로 봅니다.
 
+**터미널 없이** 하시려면 `db-check.html` 을 브라우저로 열고 버튼만 누르면 됩니다.
+(배포된 사이트라면 `https://aboutmeat.co.kr/db-check.html`)
+
 ```bash
 node test/live-check.js            # 읽기만 — 표·컬럼·RLS·저장소 점검
 node test/live-check.js --write    # anon 키로 쓰기·삭제까지 실제로 시도
 ```
+
+둘은 같은 기대 스키마(`db-expect.js`, 표 19개·컬럼 208개)를 읽으므로 결과가 같습니다.
 
 주소·키는 `index.html` 에 있는 값을 기본으로 씁니다
 (`--url` · `--key` 나 `SUPABASE_URL` · `SUPABASE_ANON_KEY` 로 바꿀 수 있습니다).
@@ -128,6 +133,8 @@ node test/live-check.js --write    # anon 키로 쓰기·삭제까지 실제로 
   남의 데이터도 지울 수 있다는 뜻**이라 문제로 잡습니다 (🔴 RLS 항목)
 - 표를 만들지는 않습니다. `db/phase*.sql` 은 Supabase SQL Editor 에서 사람이
   직접 실행해야 합니다 (anon 키로는 DDL 이 불가능합니다)
+- 중간에서 프록시·방화벽이 가로채고 403 을 주면 **표가 다 있는 것처럼 보입니다.**
+  PostgREST 가 낸 응답인지 본문으로 가려내고, 아니면 거기서 멈춥니다
 
 ## 기술 스택
 
@@ -155,10 +162,11 @@ node test/live-check.js --write    # anon 키로 쓰기·삭제까지 실제로 
 | `manifest.json` · `sw.js` · `icon-*.png` | 홈 화면에 추가(PWA) — 앱처럼 실행 |
 | `robots.txt` · `sitemap.xml` | 검색엔진 색인 안내 |
 | `404.html` | 없는 주소로 들어왔을 때 (많이 찾는 화면으로 안내) |
+| `db-check.html` · `db-expect.js` | **브라우저로 여는 DB 점검** — 버튼 하나로 표·컬럼·RLS 확인 |
 | `vercel.json` | 라우팅 + 보안 헤더 (nosniff · Referrer-Policy · X-Frame-Options) |
 | `admin-gate.js` | 관리 화면 접근 제한 — 레거시 관리 페이지 4개에 적용 |
 | `src/` · `build.js` | **`gori-app.js` 의 원본 조각들 — 여기를 고치고 빌드하세요** |
-| `test/` | 회귀 테스트 28종 (`node test/run.js`) + 실제 DB 점검 (`live-check.js`) |
+| `test/` | 회귀 테스트 29종 (`node test/run.js`) + 실제 DB 점검 (`live-check.js`) |
 | `CLAUDE.md` | 이 저장소를 고칠 때의 규칙 |
 | `legacy-chrome.js` | 레거시 콘텐츠 페이지 공통 꼬리말 (홈·약관·방침·사업자 정보) |
 | `admin.html` | **관리자 콘솔** — 인증 심사·요청·견적·거래·시세 운영 |

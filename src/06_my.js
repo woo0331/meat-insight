@@ -32,7 +32,7 @@ window.gOpenMy=async function(){
       '<button class="gbtn gbtn-w" onclick="gOpenDaily()">당일알바</button></div></div>';
     return;
   }
-  body.innerHTML='<div style="padding:50px 0;text-align:center;color:var(--ink4);">불러오는 중…</div>';
+  body.innerHTML=skelPanel(3);
   await loadMy();
   renderMy();
 };

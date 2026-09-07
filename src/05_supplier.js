@@ -32,7 +32,7 @@ window.gToggleFav=async function(type,id,name){
 /* 기존 renderSP 를 확장 상세 페이지로 교체 */
 window.renderSP=async function(id){
   var el=$("sp-body"); if(!el) return;
-  el.innerHTML='<div style="padding:50px 0;text-align:center;color:var(--ink4);">불러오는 중…</div>';
+  el.innerHTML=skelPanel(2);
   var c=client(), sup=null;
   if(c){
     var r=await c.from("suppliers").select("*").eq("id", id).limit(1);

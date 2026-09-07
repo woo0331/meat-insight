@@ -64,7 +64,7 @@ window.gOpenChatList=async function(){
       '<div class="gempty-d">견적을 주고받은 상대와의 대화는 계정에 보관됩니다.</div>'+
       '<button class="gbtn gbtn-p gbtn-sm" onclick="openModal(\'login\')">로그인</button></div>'; return;
   }
-  body.innerHTML='<div style="padding:50px 0;text-align:center;color:var(--ink4);">불러오는 중…</div>';
+  body.innerHTML=skelPanel(3);
   await loadRooms();
   if(SCHEMA.chat_rooms===false){ body.innerHTML='<div class="gp-hd"><div class="gp-title">채팅</div></div>'+setupNote("채팅","phase3_schema.sql"); return; }
   body.innerHTML='<div class="gp-hd"><div><div class="gp-title">채팅</div>'+

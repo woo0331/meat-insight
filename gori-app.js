@@ -657,7 +657,7 @@ async function fetchSupplierMap(){
 window.gOpenRequest=async function(id){
   if(typeof go==="function") go("reqd");
   var body=$("reqd-body"); if(!body) return;
-  body.innerHTML='<div style="padding:50px 0;text-align:center;color:var(--ink4);font-size:14px;">불러오는 중…</div>';
+  body.innerHTML=skelPanel(3);
   var c=client();
   if(!c){ body.innerHTML='<div class="gempty"><div class="gempty-t">서버에 연결할 수 없습니다</div></div>'; return; }
   var rr=await c.from("purchase_requests").select("*").eq("id", id).limit(1);
@@ -730,7 +730,7 @@ function renderRequestDetail(){
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:20px 0 12px;flex-wrap:wrap;">'+
         '<div class="gp-title">견적 비교</div>'+
         '<div style="display:flex;gap:7px;align-items:center;">'+
-          '<select class="gin" style="width:auto;padding:8px 11px;font-size:13px;" id="q-sort" onchange="gSortQuotes()">'+
+          '<select class="gin gsel" id="q-sort" onchange="gSortQuotes()">'+
             '<option value="price">가격 낮은순</option><option value="rating">평점 높은순</option>'+
             '<option value="lead">납기 빠른순</option><option value="deal">거래실적 많은순</option><option value="new">최신순</option>'+
           '</select>'+
@@ -951,7 +951,7 @@ window.gOpenDaily=async function(){
 async function openDaily(){
   if(typeof go==="function") go("daily");
   var body=$("daily-body"); if(!body) return;
-  body.innerHTML='<div style="padding:50px 0;text-align:center;color:var(--ink4);">불러오는 중…</div>';
+  body.innerHTML=skelPanel(3);
   var r=await selectSafe("day_jobs", function(q){ return q.order("work_date",{ascending:true}).limit(200); });
   if(r.unavailable){
     body.innerHTML='<div class="gp-hd"><div><div class="gp-title">당일알바</div><div class="gp-sub">오늘·내일 바로 일할 사람을 찾습니다</div></div></div>'+setupNote("당일알바");
@@ -1222,7 +1222,7 @@ window.gToggleFav=async function(type,id,name){
 /* 기존 renderSP 를 확장 상세 페이지로 교체 */
 window.renderSP=async function(id){
   var el=$("sp-body"); if(!el) return;
-  el.innerHTML='<div style="padding:50px 0;text-align:center;color:var(--ink4);">불러오는 중…</div>';
+  el.innerHTML=skelPanel(2);
   var c=client(), sup=null;
   if(c){
     var r=await c.from("suppliers").select("*").eq("id", id).limit(1);
@@ -1401,7 +1401,7 @@ window.gOpenMy=async function(){
       '<button class="gbtn gbtn-w" onclick="gOpenDaily()">당일알바</button></div></div>';
     return;
   }
-  body.innerHTML='<div style="padding:50px 0;text-align:center;color:var(--ink4);">불러오는 중…</div>';
+  body.innerHTML=skelPanel(3);
   await loadMy();
   renderMy();
 };
@@ -1888,7 +1888,7 @@ window.gOpenChatList=async function(){
       '<div class="gempty-d">견적을 주고받은 상대와의 대화는 계정에 보관됩니다.</div>'+
       '<button class="gbtn gbtn-p gbtn-sm" onclick="openModal(\'login\')">로그인</button></div>'; return;
   }
-  body.innerHTML='<div style="padding:50px 0;text-align:center;color:var(--ink4);">불러오는 중…</div>';
+  body.innerHTML=skelPanel(3);
   await loadRooms();
   if(SCHEMA.chat_rooms===false){ body.innerHTML='<div class="gp-hd"><div class="gp-title">채팅</div></div>'+setupNote("채팅","phase3_schema.sql"); return; }
   body.innerHTML='<div class="gp-hd"><div><div class="gp-title">채팅</div>'+
@@ -4597,14 +4597,29 @@ function gdPaintDetail(){
     if(card && card.parentNode) card.parentNode.insertBefore(note, card);
   }
 
-  /* 2) 견적 보내기 버튼 */
-  var send=null;
+  /* 2) 견적 보내기 버튼
+     같은 문구의 버튼이 두 군데 있습니다 — 비교 헤더의 CTA 와,
+     견적이 하나도 없을 때 빈 화면 안내 안의 버튼. 둘 다 손봅니다. */
+  var mq=gdMyQuote();
+  var sends=[];
   body.querySelectorAll("button").forEach(function(b){
-    if(b.textContent.trim()==="견적 보내기") send=b;
+    if(b.textContent.trim()==="견적 보내기") sends.push(b);
   });
-  if(send){
-    var mq=gdMyQuote();
-    if(reason){
+  sends.forEach(function(send){
+    if(mine){
+      /* 내가 올린 요청에는 내가 견적을 보낼 수 없습니다.
+         눌러도 안내만 뜨는 버튼이라 감춥니다.
+         버튼만 감춥니다 — 같은 줄에 있는 정렬 선택은 그대로 둡니다. */
+      send.hidden=true;
+      var em=send.closest ? send.closest(".gempty") : null;
+      if(em && !em.querySelector(".gd-own-hint")){
+        var h=document.createElement("div");
+        h.className="gempty-d gd-own-hint";
+        h.style.marginTop="2px";
+        h.textContent="조건을 넓히면 견적이 더 잘 붙습니다. 아래에서 요청을 수정할 수 있습니다.";
+        em.appendChild(h);
+      }
+    } else if(reason){
       send.disabled=true; send.classList.add("gbtn-off");
       send.textContent = req.status==="마감" ? "마감된 요청" : "견적 마감";
       send.removeAttribute("onclick");
@@ -4613,7 +4628,7 @@ function gdPaintDetail(){
       send.textContent="내 견적 보냄";
       send.setAttribute("onclick","gShowMyQuote()");
     }
-  }
+  });
 
   /* 3) 요청자가 아닌 사람에게 "거래 완료 처리"가 보이던 문제 */
   if(!mine){
@@ -6570,6 +6585,245 @@ function patchReport(){
     };
   }
 }
+/* ════════════════════════════════════════════════════════════════════
+   마감 — 로딩 뼈대 · 내 요청 액션 정리
+
+   두 가지를 손봅니다.
+
+   1) 불러오는 동안 화면이 "불러오는 중…" 한 줄로 비어 있었습니다.
+      들어올 내용의 모양을 미리 그려 두면 기다리는 시간이 짧게 느껴지고,
+      들어온 순간 화면이 덜컹 뛰지 않습니다.
+
+   2) 내 요청 상세에 "요청 수정" · "요청 삭제" · "이 요청 마감하기" 가
+      전부 폭을 꽉 채운 버튼으로 따로따로 쌓여 있어, 정작 봐야 할
+      견적보다 눈에 먼저 들어왔습니다. 한 칸에 모아 작게 둡니다.
+
+   순서 주의: applyExtras 에서 patchLayout **앞**에 부릅니다.
+   여기서 액션을 한 칸으로 모은 뒤라야 레이아웃이 그 칸째로 담습니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── 로딩 뼈대 ──
+   n 장의 카드 모양을 그립니다. 실제 카드와 높이가 비슷해야 의미가
+   있으므로 제목 한 줄 + 본문 두 줄로 맞췄습니다. */
+function skelCard(){
+  return '<div class="gcard skel-card">'+
+      '<div class="skel skel-chip"></div>'+
+      '<div class="skel skel-h"></div>'+
+      '<div class="skel skel-l"></div>'+
+      '<div class="skel skel-l s2"></div>'+
+    '</div>';
+}
+function skelPanel(n){
+  var out=""; var k=n||3;
+  for(var i=0;i<k;i++) out+=skelCard();
+  return '<div class="skel-wrap" aria-busy="true" aria-live="polite">'+
+    '<span class="sr-only">불러오는 중…</span>'+out+'</div>';
+}
+G.skelPanel=skelPanel;
+
+/* ── 내 요청 액션 한 칸으로 ── */
+var POL_OWN=["요청 수정","요청 삭제","이 요청 마감하기"];
+function polIsOwn(t){ return POL_OWN.indexOf(String(t||"").trim())>=0; }
+
+/* 소유자 액션만 들어 있는 줄을 찾아 담습니다.
+
+   두 군데를 훑습니다. 33_layout 이 이미 두 칸으로 담은 뒤라면 버튼 줄은
+   .lay-side 안에 들어가 있고, 아직이면 #reqd-body 바로 밑에 있습니다.
+   "버튼만 들어 있는 줄" 인지는 직계 자식으로 판단합니다 — 안쪽까지
+   훑으면 버튼을 품은 칸(.lay-side) 자체를 통째로 집어 날려 버립니다. */
+function polOwnAct(){
+  var body=$("reqd-body"); if(!body) return;
+  var box=body.querySelector(".own-acts");
+  var wraps=[], btns=[];
+
+  function scan(root){
+    if(!root) return;
+    [].slice.call(root.children).forEach(function(w){
+      if(w.classList.contains("own-acts")) return;
+      var cs=[].slice.call(w.children);
+      if(!cs.length) return;
+      var only=true;
+      cs.forEach(function(c){
+        if(c.tagName!=="BUTTON" || !polIsOwn(c.textContent)) only=false;
+      });
+      if(!only) return;
+      wraps.push(w);
+      cs.forEach(function(c){ btns.push(c); });
+    });
+  }
+  scan(body);
+  scan(body.querySelector(":scope > .lay-side"));
+  scan(body.querySelector(":scope > .lay-main"));
+  if(!btns.length) return;
+
+  if(!box){
+    box=document.createElement("div");
+    box.className="own-acts";
+    var t=document.createElement("div");
+    t.className="own-acts-t"; t.textContent="내가 올린 요청";
+    var r=document.createElement("div"); r.className="own-acts-r";
+    box.appendChild(t); box.appendChild(r);
+    wraps[0].parentNode.insertBefore(box, wraps[0]);
+  }
+  var row=box.querySelector(".own-acts-r");
+
+  btns.forEach(function(b){
+    b.classList.remove("gbtn-full","gbtn-p");
+    b.classList.add("gbtn-w","gbtn-sm");
+    if(/삭제|마감/.test(b.textContent)) b.classList.add("gbtn-q");
+    row.appendChild(b);
+  });
+  wraps.forEach(function(w){ if(w.parentNode) w.parentNode.removeChild(w); });
+
+  /* 수정 → 삭제 → 마감 순으로 맞춥니다 (담긴 순서는 렌더 순서라 뒤죽박죽입니다) */
+  [].slice.call(row.children)
+    .sort(function(a,b){ return POL_OWN.indexOf(a.textContent.trim())-POL_OWN.indexOf(b.textContent.trim()); })
+    .forEach(function(b){ row.appendChild(b); });
+}
+
+function patchPolish(){
+  if(G._polish) return; G._polish=true;
+
+  /* renderQuotes 에는 걸지 않습니다 — edOwnerBar 는 renderRequestDetail
+     에서만 붙으므로, 정렬을 바꿀 때마다 다시 훑을 이유가 없습니다. */
+  if(typeof renderRequestDetail==="function"){
+    var origRD=renderRequestDetail;
+    renderRequestDetail=function(){
+      var r=origRD.apply(this, arguments);
+      try{ polOwnAct(); }catch(e){}
+      return r;
+    };
+  }
+}
+/* ════════════════════════════════════════════════════════════════════
+   넓은 화면 레이아웃 — 모바일 한 줄짜리를 데스크톱에 늘려 놓은 상태였습니다
+
+   요청 상세·업체 상세·거래관리가 전부 한 칸짜리 세로 목록이라,
+   1440px 로 열면 가운데 좁은 띠만 쓰고 좌우가 텅 빕니다. 정작 제일 중요한
+   견적 비교는 카드 두 장이 좁게 눌려 있고요.
+
+   화면을 다시 만들지 않고, 이미 그려진 조각을 두 칸으로 나눠 담습니다.
+   렌더 함수는 그대로 두고 결과만 감쌉니다 — 1100px 미만에서는 감싸기만 하고
+   CSS 가 한 줄로 되돌리므로 모바일은 지금과 똑같습니다.
+
+   순서 주의: applyExtras 의 맨 끝에서 부릅니다. 다른 패치들이 상세 화면에
+   버튼·안내를 덧붙인 뒤라야 그것들까지 같이 담깁니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 이미 담았으면 다시 담지 않습니다 */
+function layDone(host){ return !!(host && host.querySelector(":scope > .lay-main")); }
+
+/* host 의 자식들을 side / main 두 칸으로 나눠 담습니다.
+   pick(el) 이 "full" 이면 제자리(전체 폭), "side" 면 왼쪽, 그 외는 오른쪽. */
+function layWrap(host, pick, sideFirst){
+  if(!host || layDone(host)) return;
+  var kids=[].slice.call(host.children);
+  if(kids.length<2) return;
+
+  var side=document.createElement("div"); side.className="lay-side";
+  var main=document.createElement("div"); main.className="lay-main";
+  var fulls=[];
+
+  kids.forEach(function(k){
+    var slot;
+    try{ slot=pick(k); }catch(e){ slot="main"; }
+    if(slot==="full"){ fulls.push(k); return; }
+    (slot==="side" ? side : main).appendChild(k);
+  });
+  if(!main.children.length || !side.children.length){
+    /* 한쪽이 비면 두 칸으로 나눌 이유가 없습니다 — 원래대로 되돌립니다 */
+    [].slice.call(side.children).concat([].slice.call(main.children))
+      .forEach(function(n){ host.appendChild(n); });
+    return;
+  }
+  host.classList.add("lay2");
+  fulls.forEach(function(f){ f.classList.add("lay-full"); host.appendChild(f); });
+  if(sideFirst){ host.appendChild(side); host.appendChild(main); }
+  else { host.appendChild(main); host.appendChild(side); }
+}
+
+/* ── 요청 상세 — 왼쪽: 요청 요약·통계·내 요청 액션 / 오른쪽: 견적 비교 ── */
+function layReq(){
+  var host=$("reqd-body"); if(!host) return;
+  host.classList.add("lay-req");
+  layWrap(host, function(el){
+    if(el.classList.contains("gp-hd")) return "full";
+    if(el.id==="q-list" || (el.querySelector && el.querySelector("#q-list"))) return "main";
+    if(el.querySelector && el.querySelector(".gp-title") && /견적 비교/.test(el.textContent||"")) return "main";
+    return "side";
+  }, true);
+}
+
+/* ── 업체 상세 — 오른쪽에 붙는 행동 버튼 ── */
+function laySup(){
+  var host=document.querySelector("#sp-body .gp"); if(!host) return;
+  host.classList.add("gp-wide","lay-sp");
+  /* #sp-body 는 680px 로 묶여 있습니다 — 두 칸으로 담을 때만 풀어 줍니다 */
+  var sb=$("sp-body"); if(sb) sb.classList.add("sp-host");
+  layWrap(host, function(el){
+    if(el.classList.contains("gp-hd")) return "full";
+    if(el.classList.contains("sd-cta")) return "side";
+    if(el.id==="rp-sup-link") return "side";
+    return "main";
+  }, false);
+}
+
+/* ── 거래관리 — 탭 12개가 두 줄로 접히던 것을 왼쪽 세로 목록으로 ── */
+function layMy(){
+  var host=$("my-body"); if(!host) return;
+  host.classList.add("lay-my");
+  layWrap(host, function(el){
+    if(el.classList.contains("my-hd")) return "full";
+    if(el.classList.contains("my-tabs")) return "side";
+    return "main";
+  }, true);
+}
+
+function patchLayout(){
+  if(G._layout) return; G._layout=true;
+
+  if(typeof renderRequestDetail==="function"){
+    var origRD=renderRequestDetail;
+    renderRequestDetail=function(){
+      var r=origRD.apply(this, arguments);
+      try{ layReq(); }catch(e){}
+      return r;
+    };
+  }
+  /* 견적 목록만 다시 그릴 때는 이미 담겨 있으므로 layWrap 이 알아서 넘어갑니다 */
+  if(typeof renderQuotes==="function"){
+    var origRQ=renderQuotes;
+    renderQuotes=function(){
+      var r=origRQ.apply(this, arguments);
+      try{ layReq(); }catch(e){}
+      return r;
+    };
+  }
+  if(typeof renderSupplierDetail==="function"){
+    var origSD=renderSupplierDetail;
+    renderSupplierDetail=function(){
+      var r=origSD.apply(this, arguments);
+      try{ laySup(); }catch(e){}
+      return r;
+    };
+  }
+  if(typeof renderMy==="function"){
+    var origMy=renderMy;
+    renderMy=function(){
+      var r=origMy.apply(this, arguments);
+      try{ layMy(); }catch(e){}
+      return r;
+    };
+  }
+  if(typeof renderMyPanel==="function"){
+    var origMP=renderMyPanel;
+    renderMyPanel=function(){
+      var r=origMP.apply(this, arguments);
+      try{ layMy(); }catch(e){}
+      return r;
+    };
+  }
+}
 
 /* ════════════════════════════════════════════════════════════════════
    기존 화면과의 연결 · 초기화
@@ -6801,6 +7055,8 @@ function applyExtras(){
   try{ patchSupHome(); }catch(e){}
   try{ patchGuide(); }catch(e){}
   try{ patchReport(); }catch(e){}
+  try{ patchPolish(); }catch(e){}
+  try{ patchLayout(); }catch(e){}   /* 다른 패치가 붙인 뒤에 담아야 합니다 */
   try{ patchRouter(); armRouter(); }catch(e){}
 }
 /* 리디자인 패치(420ms) 뒤에 얹혀야 하므로 그보다 늦게 실행합니다.

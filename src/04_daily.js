@@ -17,7 +17,7 @@ window.gOpenDaily=async function(){
 async function openDaily(){
   if(typeof go==="function") go("daily");
   var body=$("daily-body"); if(!body) return;
-  body.innerHTML='<div style="padding:50px 0;text-align:center;color:var(--ink4);">불러오는 중…</div>';
+  body.innerHTML=skelPanel(3);
   var r=await selectSafe("day_jobs", function(q){ return q.order("work_date",{ascending:true}).limit(200); });
   if(r.unavailable){
     body.innerHTML='<div class="gp-hd"><div><div class="gp-title">당일알바</div><div class="gp-sub">오늘·내일 바로 일할 사람을 찾습니다</div></div></div>'+setupNote("당일알바");

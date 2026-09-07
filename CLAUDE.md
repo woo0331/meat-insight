@@ -37,6 +37,11 @@
 - 확장 패치는 `07_init.js` 의 `applyExtras()` 에서 **타이머로** 부른다.
   `init()` 안에서 부르면 DOMContentLoaded 가 리디자인(420ms)보다 먼저 오는
   환경에서 감싸는 순서가 뒤집힌다. (실제로 겪은 버그다)
+- `33_layout.js` 는 **`ORDER` 와 `applyExtras()` 둘 다에서 맨 마지막**
+  (`07_init` 바로 앞). 그려진 조각을 두 칸으로 담는 일이라, 다른 패치가
+  버튼·안내를 다 붙인 뒤여야 그것들까지 같이 담긴다.
+- 화면을 옮겨 담는 코드는 **직계 자식만** 보고 판단할 것. `querySelectorAll`
+  로 안쪽까지 훑으면 이미 담아 둔 칸(`.lay-side`)을 통째로 집어 날린다.
 
 주의: `renderHeaderUser` · `paintBell` · `renderRequestDetail` · `renderQuotes` ·
 `quoteRow` 같은 이름은 IIFE 안의 지역 함수라 **`window.` 에 없다.** 감쌀 때는
@@ -49,7 +54,7 @@
 node build.js --check                    # 빌드 최신인지
 node --check gori-app.js                 # 문법
 cmp index.html meat_insight_main.html    # 미러 일치
-node test/run.js                         # 회귀 21종 (playwright 필요)
+node test/run.js                         # 회귀 30종 (playwright 필요)
 ```
 
 바꾼 화면은 **데스크톱과 모바일(390px) 둘 다** 실제로 띄워 보고, 가로 스크롤이

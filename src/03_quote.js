@@ -18,7 +18,7 @@ async function fetchSupplierMap(){
 window.gOpenRequest=async function(id){
   if(typeof go==="function") go("reqd");
   var body=$("reqd-body"); if(!body) return;
-  body.innerHTML='<div style="padding:50px 0;text-align:center;color:var(--ink4);font-size:14px;">불러오는 중…</div>';
+  body.innerHTML=skelPanel(3);
   var c=client();
   if(!c){ body.innerHTML='<div class="gempty"><div class="gempty-t">서버에 연결할 수 없습니다</div></div>'; return; }
   var rr=await c.from("purchase_requests").select("*").eq("id", id).limit(1);
@@ -91,7 +91,7 @@ function renderRequestDetail(){
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:20px 0 12px;flex-wrap:wrap;">'+
         '<div class="gp-title">견적 비교</div>'+
         '<div style="display:flex;gap:7px;align-items:center;">'+
-          '<select class="gin" style="width:auto;padding:8px 11px;font-size:13px;" id="q-sort" onchange="gSortQuotes()">'+
+          '<select class="gin gsel" id="q-sort" onchange="gSortQuotes()">'+
             '<option value="price">가격 낮은순</option><option value="rating">평점 높은순</option>'+
             '<option value="lead">납기 빠른순</option><option value="deal">거래실적 많은순</option><option value="new">최신순</option>'+
           '</select>'+

@@ -61,14 +61,29 @@ function gdPaintDetail(){
     if(card && card.parentNode) card.parentNode.insertBefore(note, card);
   }
 
-  /* 2) 견적 보내기 버튼 */
-  var send=null;
+  /* 2) 견적 보내기 버튼
+     같은 문구의 버튼이 두 군데 있습니다 — 비교 헤더의 CTA 와,
+     견적이 하나도 없을 때 빈 화면 안내 안의 버튼. 둘 다 손봅니다. */
+  var mq=gdMyQuote();
+  var sends=[];
   body.querySelectorAll("button").forEach(function(b){
-    if(b.textContent.trim()==="견적 보내기") send=b;
+    if(b.textContent.trim()==="견적 보내기") sends.push(b);
   });
-  if(send){
-    var mq=gdMyQuote();
-    if(reason){
+  sends.forEach(function(send){
+    if(mine){
+      /* 내가 올린 요청에는 내가 견적을 보낼 수 없습니다.
+         눌러도 안내만 뜨는 버튼이라 감춥니다.
+         버튼만 감춥니다 — 같은 줄에 있는 정렬 선택은 그대로 둡니다. */
+      send.hidden=true;
+      var em=send.closest ? send.closest(".gempty") : null;
+      if(em && !em.querySelector(".gd-own-hint")){
+        var h=document.createElement("div");
+        h.className="gempty-d gd-own-hint";
+        h.style.marginTop="2px";
+        h.textContent="조건을 넓히면 견적이 더 잘 붙습니다. 아래에서 요청을 수정할 수 있습니다.";
+        em.appendChild(h);
+      }
+    } else if(reason){
       send.disabled=true; send.classList.add("gbtn-off");
       send.textContent = req.status==="마감" ? "마감된 요청" : "견적 마감";
       send.removeAttribute("onclick");
@@ -77,7 +92,7 @@ function gdPaintDetail(){
       send.textContent="내 견적 보냄";
       send.setAttribute("onclick","gShowMyQuote()");
     }
-  }
+  });
 
   /* 3) 요청자가 아닌 사람에게 "거래 완료 처리"가 보이던 문제 */
   if(!mine){

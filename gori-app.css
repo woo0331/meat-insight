@@ -657,3 +657,66 @@ select.gin::-ms-expand{display:none;}
 .own-acts-r .gbtn{flex:1 1 auto;background:#fff;}
 .own-acts-r .gbtn-q{color:var(--ink3);}
 .own-acts-r .gbtn-q:hover{border-color:var(--red);color:var(--red);}
+
+/* ════════════════════════════════════════════════════════════════════
+   거래관리 — 한눈에 보기 (src/35_hub.js)
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── 지금 할 일 ── */
+.hub-todo{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.hub-td{display:flex;align-items:center;gap:9px;background:var(--gnl);border:1px solid var(--gnb);
+  border-radius:12px;padding:11px 15px 11px 13px;cursor:pointer;font-family:var(--font);
+  transition:border-color .15s,background .15s;}
+.hub-td:hover{border-color:var(--gn);background:#fff;}
+.hub-td-n{font-size:19px;font-weight:800;color:var(--gn-on-tint);letter-spacing:-.5px;line-height:1;}
+.hub-td-l{font-size:13px;font-weight:700;color:var(--ink2);}
+.hub-td.am{background:var(--amber-tint);border-color:var(--amber-br);}
+.hub-td.am .hub-td-n{color:var(--amber-on);}
+
+.hub-clear{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;padding:16px 17px;
+  font-size:13.5px;color:var(--ink3);line-height:1.7;margin-bottom:16px;}
+.hub-clear-b{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+
+/* ── 영역별 최근 몇 줄 ── */
+.hub-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.hub-card{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:14px 15px 10px;}
+.hub-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.hub-t{font-size:13.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:7px;}
+.hub-t b{font-size:15px;font-weight:800;color:var(--gn);letter-spacing:-.3px;}
+.hub-t b.z{color:var(--ink4);font-weight:700;}
+.hub-all{background:none;border:none;font-family:var(--font);font-size:12px;font-weight:700;
+  color:var(--ink3);cursor:pointer;padding:4px 2px;border-radius:6px;white-space:nowrap;}
+.hub-all:hover{color:var(--gn);}
+.hub-rows{display:flex;flex-direction:column;}
+.hub-row{display:flex;align-items:center;gap:9px;width:100%;background:none;border:none;
+  border-top:1px solid var(--bd);padding:10px 2px;cursor:pointer;text-align:left;
+  font-family:var(--font);min-height:40px;}
+.hub-row:hover .hub-row-t{color:var(--gn);}
+.hub-row-t{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hub-row-m{flex-shrink:0;font-size:12px;color:var(--ink3);font-weight:500;}
+.hub-row-c{flex-shrink:0;color:var(--bd2);font-size:14px;}
+.hub-none{border-top:1px solid var(--bd);padding:14px 2px;font-size:12.5px;color:var(--ink4);}
+
+/* ── 나머지는 칩으로 ── */
+.hub-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+.hub-chip{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--bd);
+  border-radius:999px;padding:9px 15px;font-family:var(--font);font-size:13px;font-weight:600;
+  color:var(--ink2);cursor:pointer;transition:border-color .15s;}
+.hub-chip:hover{border-color:var(--gn);color:var(--gn);}
+.hub-chip b{font-weight:800;color:var(--gn);font-size:12.5px;}
+
+/* ── 탭 묶음 소제목 ── */
+.my-grp{display:none;}
+
+@media(max-width:640px){
+  .hub-grid{grid-template-columns:1fr;}
+  .hub-td{flex:1 1 calc(50% - 4px);}
+}
+
+@media(min-width:1100px){
+  /* 세로 목록일 때만 소제목이 의미가 있습니다 (가로 띠에서는 자리만 먹습니다) */
+  .lay-my.lay2 .my-grp{display:block;font-size:10.5px;font-weight:700;color:var(--ink4);
+    letter-spacing:.4px;padding:12px 13px 5px;}
+  .lay-my.lay2 .my-tabs > .my-grp:first-child{padding-top:4px;}
+}

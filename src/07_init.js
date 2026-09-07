@@ -230,6 +230,7 @@ function applyExtras(){
   try{ patchGuide(); }catch(e){}
   try{ patchReport(); }catch(e){}
   try{ patchPolish(); }catch(e){}
+  try{ patchHub(); }catch(e){}
   try{ patchLayout(); }catch(e){}   /* 다른 패치가 붙인 뒤에 담아야 합니다 */
   try{ patchRouter(); armRouter(); }catch(e){}
 }

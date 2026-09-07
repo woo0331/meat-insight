@@ -54,7 +54,7 @@
 node build.js --check                    # 빌드 최신인지
 node --check gori-app.js                 # 문법
 cmp index.html meat_insight_main.html    # 미러 일치
-node test/run.js                         # 회귀 30종 (playwright 필요)
+node test/run.js                         # 회귀 31종 (playwright 필요)
 ```
 
 바꾼 화면은 **데스크톱과 모바일(390px) 둘 다** 실제로 띄워 보고, 가로 스크롤이

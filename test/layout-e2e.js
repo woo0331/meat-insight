@@ -85,7 +85,7 @@ const cols = (p,sel)=>p.evaluate(s=>{
     const l=bs[0].getBoundingClientRect().left;
     return bs.every(e=>Math.abs(e.getBoundingClientRect().left-l)<2);
   }), 'true');
-  chk('탭 12개 그대로', await d.evaluate(()=>document.querySelectorAll('#my-body .my-tab').length), 12);
+  chk('탭 13개 그대로', await d.evaluate(()=>document.querySelectorAll('#my-body .my-tab').length), 13);
 
   log.push('5. 업체 상세 — 행동 버튼이 오른쪽');
   await d.evaluate(()=>{ curSID='s1'; go('sp'); }); await d.waitForTimeout(1500);

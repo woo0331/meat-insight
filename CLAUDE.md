@@ -55,6 +55,7 @@ node build.js --check                    # 빌드 최신인지
 node --check gori-app.js                 # 문법
 cmp index.html meat_insight_main.html    # 미러 일치
 node test/run.js                         # 회귀 31종 (playwright 필요)
+cd test && node contrast-e2e.js          # 색 대비 전수 (팔레트를 바꾸면 필수)
 ```
 
 바꾼 화면은 **데스크톱과 모바일(390px) 둘 다** 실제로 띄워 보고, 가로 스크롤이

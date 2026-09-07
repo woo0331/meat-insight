@@ -720,3 +720,52 @@ select.gin::-ms-expand{display:none;}
     letter-spacing:.4px;padding:12px 13px 5px;}
   .lay-my.lay2 .my-tabs > .my-grp:first-child{padding-top:4px;}
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   그림 — 두 톤 아이콘 · 빈 자리 · 그림 자리 (src/36_art.js)
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── 두 톤 아이콘 ──
+   바깥 <svg fill="none"> 보다 이 규칙이 우선합니다 (상속 < 선택자). */
+.du .du-f{fill:currentColor;stroke:none;opacity:.17;}
+.du .du-s{fill:none;stroke:currentColor;}
+/* 업체 카드 안 아이콘은 <svg> 를 12_redesign 이 직접 씁니다 */
+.sc2-ic .du-f,.gcat-ic .du-f,.cat8-ico .du-f{fill:currentColor;stroke:none;opacity:.17;}
+.sc2-ic .du-s,.gcat-ic .du-s,.cat8-ico .du-s{fill:none;stroke:currentColor;}
+
+/* 진한 바탕 위(선택된 칩 등)에서는 면이 묻히므로 조금 더 진하게 */
+.gcat-c.on .gcat-ic .du-f{opacity:.24;}
+
+/* 아이콘 그릇에 아주 옅은 결을 줍니다 — 납작한 색 덩어리로 보이지 않게 */
+.gcat-ic{background:linear-gradient(150deg,var(--gnl) 0%,#FFF8F3 100%);}
+.cat8-ico{position:relative;overflow:hidden;}
+.cat8-ico::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(150deg,rgba(255,255,255,.55),rgba(255,255,255,0) 62%);}
+.cat8-ico > *{position:relative;z-index:1;}
+
+/* ── 업체 카드의 그림 자리 ──
+   사진이 없으면 옅은 색 덩어리였습니다. 결이 있는 바탕에 아이콘을
+   큼직하게 놓아, 빈 자리가 아니라 만든 자리로 보이게 합니다. */
+.sc2-ic[data-k]{
+  background:linear-gradient(148deg,var(--gnl) 0%,#FFF6F0 55%,#FFFDFC 100%);
+  position:relative;overflow:hidden;}
+.sc2-ic[data-k]::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(-45deg,rgba(194,74,12,.045) 0 1px,transparent 1px 9px);}
+.sc2-ic[data-k] svg{width:34px;height:34px;position:relative;}
+
+/* ── 빈 화면 ──
+   글씨만 있어 허전했습니다. 브랜드 톤의 작은 표시를 얹습니다. */
+.gempty::before,.es::before{content:"";display:block;width:50px;height:50px;margin:0 auto 13px;
+  background:var(--gnb);
+  -webkit-mask:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 17.5 24 9.5l16 8v13L24 38.5 8 30.5z'/%3E%3Cpath d='M8 17.5 24 25.5l16-8'/%3E%3Cpath d='M24 25.5v13'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 17.5 24 9.5l16 8v13L24 38.5 8 30.5z'/%3E%3Cpath d='M8 17.5 24 25.5l16-8'/%3E%3Cpath d='M24 25.5v13'/%3E%3C/svg%3E") center/contain no-repeat;}
+/* 카드 안에 들어가는 작은 빈 자리에는 표시를 빼서 답답하지 않게 */
+.hub-card .gempty::before,.gcard .gempty::before{width:38px;height:38px;margin-bottom:10px;}
+
+/* ── 업체 상세 표지 ──
+   사진이 없으면 그냥 검은 판이었습니다. 브랜드 색을 아주 옅게 섞고
+   결을 넣어 사진이 없어도 비어 보이지 않게 합니다. */
+.sd-cover:not([style*="url"]){
+  background-image:
+    radial-gradient(ellipse 420px 200px at 18% 0%,rgba(194,74,12,.34),transparent 62%),
+    repeating-linear-gradient(-38deg,rgba(255,255,255,.035) 0 1px,transparent 1px 11px);}

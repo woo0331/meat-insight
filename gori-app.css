@@ -970,3 +970,25 @@ html .job-apply-btn{min-height:40px;padding:9px 16px;}
 
 /* 4) 당일알바 — 고르는 칩 38px */
 html .gpick-i{min-height:42px;display:inline-flex;align-items:center;}
+
+/* ════════════════════════════════════════════════════════════════════
+   예시 데이터 표시 (src/39_demo.js)
+   진짜처럼 보이면 안 됩니다 — 눈에 띄게 답니다.
+   ════════════════════════════════════════════════════════════════════ */
+.dm-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--amber-tint);border:1.5px solid var(--amber-br);border-radius:14px;
+  padding:13px 16px;margin-bottom:16px;}
+.dm-bar-t{flex:1;min-width:200px;font-size:14px;color:var(--amber-on);line-height:1.55;font-weight:500;}
+.dm-bar-t b{font-weight:800;}
+.dm-bar-x{flex-shrink:0;min-height:42px;padding:9px 16px;border-radius:999px;
+  border:1.5px solid var(--amber-br);background:#fff;color:var(--amber-on);
+  font-family:var(--font);font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.dm-bar-x:hover{border-color:var(--amber-ink);}
+
+.dm-tag{display:inline-block;vertical-align:middle;margin-right:6px;
+  background:var(--amber-tint);border:1px solid var(--amber-br);color:var(--amber-on);
+  border-radius:5px;padding:2px 7px;font-size:12px;font-weight:800;letter-spacing:.2px;}
+/* 카드가 세로 flex 라 배지가 폭을 꽉 채웠습니다 — 글자 크기만큼만 */
+.rc > .dm-tag,.ritem > .dm-tag{margin-bottom:8px;align-self:flex-start;width:-moz-fit-content;width:fit-content;}
+.sc2 > .dm-tag{position:absolute;top:8px;left:8px;z-index:2;}
+.sc2{position:relative;}

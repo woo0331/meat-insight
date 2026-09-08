@@ -140,6 +140,7 @@ Vercel 에 이 저장소를 연결하면 끝입니다. 빌드 도구가 없는 �
 
 | 무엇 | 어디서 |
 |---|---|
+| **예시 데이터 끄기** — 진짜 요청이 올라오면 자동으로 사라지지만, 확실히 끄려면 | `site-info.js` → `GORI_FEATURES.demo` |
 | 홈 뉴스·인사이트 채우기 (비워 두면 "준비 중"으로 보입니다) | `site-info.js` → `GORI_CONTENT` |
 | 오늘 시세 값 넣기 (없으면 시세 칸이 숨겨집니다) | Supabase `market_prices` 표 |
 | 관리자 계정 지정 | `db/phase4_admin.sql` 안내 참고 |
@@ -173,4 +174,4 @@ Vercel 에 이 저장소를 연결하면 끝입니다. 빌드 도구가 없는 �
 
 1. `gori-app.js` 를 직접 고치지 말 것 — `src/` 를 고치고 `node build.js`
 2. `index.html` 을 고치면 반드시 `cp index.html meat_insight_main.html`
-3. 고친 뒤 `node test/run.js` (회귀 34종) 와 `test/contrast-e2e.js` 실행
+3. 고친 뒤 `node test/run.js` (회귀 35종) 와 `test/contrast-e2e.js` 실행

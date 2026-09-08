@@ -32,7 +32,12 @@ const U={id:'u1',user_metadata:{name:'김철수',role:'buyer'}};
  log.push('2. 정상 연결이면 안내가 안 떠야');
  const q=await b.newPage({viewport:{width:390,height:844}});
  q.on('pageerror',e=>errs.push('ok: '+e.message.slice(0,60)));
- await q.addInitScript(FAKE+"\nwindow.__FAKE_INIT("+JSON.stringify({user:U,realtime:true})+");");
+ await q.addInitScript(FAKE+"\nwindow.__FAKE_INIT("+JSON.stringify({user:U,realtime:true})+");"
+   /* 이 검사는 "비었다"와 "못 불러왔다"를 구분합니다 —
+      예시 데이터(39_demo)가 빈 자리를 채우면 구분이 안 되므로 끕니다.
+      예시 데이터는 test/demo-e2e.js 가 따로 검사합니다. */
+   +"\nwindow.GORI_FEATURES=Object.assign({},window.GORI_FEATURES,{demo:false});"
+   +"\nwindow.addEventListener('DOMContentLoaded',function(){window.GORI_FEATURES.demo=false;});");
  await q.goto('file:///home/user/meat-insight/index.html',{waitUntil:'load'});
  await q.waitForTimeout(3200);
  chk('안내 띠 없음', await q.evaluate(()=>!document.getElementById('net-bar')), 'true');
@@ -42,7 +47,12 @@ const U={id:'u1',user_metadata:{name:'김철수',role:'buyer'}};
  log.push('3. 데이터가 진짜 0건이면 "비었다"가 맞아야');
  const e0=await b.newPage({viewport:{width:390,height:844}});
  e0.on('pageerror',e=>errs.push('empty: '+e.message.slice(0,60)));
- await e0.addInitScript(FAKE+"\nwindow.__FAKE_INIT("+JSON.stringify({user:null,realtime:true,emptyTables:['purchase_requests','suppliers','jobs']})+");");
+ await e0.addInitScript(FAKE+"\nwindow.__FAKE_INIT("+JSON.stringify({user:null,realtime:true,emptyTables:['purchase_requests','suppliers','jobs']})+");"
+   /* 이 검사는 "비었다"와 "못 불러왔다"를 구분합니다 —
+      예시 데이터(39_demo)가 빈 자리를 채우면 구분이 안 되므로 끕니다.
+      예시 데이터는 test/demo-e2e.js 가 따로 검사합니다. */
+   +"\nwindow.GORI_FEATURES=Object.assign({},window.GORI_FEATURES,{demo:false});"
+   +"\nwindow.addEventListener('DOMContentLoaded',function(){window.GORI_FEATURES.demo=false;});");
  await e0.goto('file:///home/user/meat-insight/index.html',{waitUntil:'load'});
  await e0.waitForTimeout(3200);
  chk('안내 띠 없음', await e0.evaluate(()=>!document.getElementById('net-bar')), 'true');

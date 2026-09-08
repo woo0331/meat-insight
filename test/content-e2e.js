@@ -3,7 +3,12 @@ const fs=require('fs'); const FAKE=fs.readFileSync('./fake-sb.js','utf8');
 const ALL=['purchase_requests','suppliers','jobs','quotes','reviews','day_jobs','market_prices','notifications'];
 const FAKES=['ASF 방역','관세 인하','농식품부','도투두수','한우 유망','곱창 생산 업체는','정육점 창업이 어렵진','20,500','5,180'];
 async function open(b,opts,vp){const p=await b.newPage({viewport:vp||{width:1280,height:900},deviceScaleFactor:2});
- await p.addInitScript(FAKE+"\nwindow.__FAKE_INIT("+JSON.stringify(Object.assign({user:null,realtime:true},opts||{}))+");");
+ /* 이 검사는 "빈 DB 에서 지어낸 내용이 안 보이는가" 를 봅니다 —
+    예시 데이터(39_demo)를 켜 두면 그 자체가 화면을 채워 버리므로 끕니다.
+    예시 데이터는 test/demo-e2e.js 가 따로 검사합니다. */
+ await p.addInitScript(FAKE+"\nwindow.__FAKE_INIT("+JSON.stringify(Object.assign({user:null,realtime:true},opts||{}))+");"
+   +"\nwindow.GORI_FEATURES=Object.assign({},window.GORI_FEATURES,{demo:false});"
+   +"\nwindow.addEventListener('DOMContentLoaded',function(){window.GORI_FEATURES.demo=false;});");
  p._errs=[];p.on('pageerror',e=>p._errs.push(e.message));
  await p.goto('file:///home/user/meat-insight/index.html',{waitUntil:'load'});await p.waitForTimeout(2700);return p;}
 (async()=>{const b=await chromium.launch();const log=[],errs=[];

@@ -52,6 +52,7 @@ values ('beef', '한우 등심', '1+', 64000, '원/kg', current_date);
 | 🟡 | 컨설팅 결제를 실제로 할지 결정 (지금 테스트 키) | `meat_insight_apply.html` |
 | 🟡 | 카카오 로그인 켜기 (코드는 완료, 설정만) | Supabase Providers |
 | 🟡 | 신고·문의를 받으려면 표 만들기 | `db/phase7_report.sql` |
+| 🟡 | **예시 데이터 끄기** — 진짜 손님을 받기 시작하면 | `site-info.js` → `GORI_FEATURES.demo` |
 | ⚪ | 홈 뉴스·인사이트 내용 채우기 | `site-info.js` → `GORI_CONTENT` |
 | ⚪ | 약관·방침 한 번 읽어보기 | `terms.html` · `privacy.html` |
 
@@ -96,6 +97,7 @@ node build.js --check   # 빌드 결과가 현재 파일과 같은지 확인
 | `36_art` | 두 톤 아이콘 · 빈 자리 · 그림 자리 |
 | `37_ease` | 글자 크게 (연세 있는 이용자) |
 | `38_home` | 홈 부차 구간 접기 |
+| `39_demo` | 예시 데이터 (문 열기 전 빈 화면 채우기) |
 | `33_layout` | 넓은 화면 두 칸 배치 (다른 패치가 붙인 뒤라야 하므로 맨 뒤) |
 | `07_init` | **초기화 — 반드시 마지막** (IIFE 닫는 괄호가 여기 있습니다) |
 

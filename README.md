@@ -46,7 +46,7 @@ values ('beef', '한우 등심', '1+', 64000, '원/kg', current_date);
 
 | | 무엇 | 어디서 |
 |---|---|---|
-| 🔴 | **RLS 켜기** — 지금 데이터가 무방비입니다 | `db/phase4_admin.sql` 5번 블록 |
+| 🔴 | **RLS 켜기** — 지금 데이터가 무방비입니다 | `db/RLS_ON.sql` 통째로 붙여넣기 |
 | 🔴 | 사업자 정보 채우기 (푸터에 (미기재) 표시 중) | `site-info.js` |
 | 🟡 | DB 스키마 실행 (phase2→3→4→5, 6은 선택) | Supabase SQL Editor |
 | 🟡 | 컨설팅 결제를 실제로 할지 결정 (지금 테스트 키) | `meat_insight_apply.html` |

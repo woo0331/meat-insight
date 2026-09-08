@@ -99,15 +99,15 @@ begin
       drop policy if exists reports_admin_all on public.reports;
       create policy reports_admin_all on public.reports
         for all to authenticated
-        using (exists (select 1 from public.admins a where a.user_id = auth.uid()))
-        with check (exists (select 1 from public.admins a where a.user_id = auth.uid()));
+        using (public.is_gori_admin())
+        with check (public.is_gori_admin());
     $p$;
     execute $p$
       drop policy if exists inquiries_admin_all on public.inquiries;
       create policy inquiries_admin_all on public.inquiries
         for all to authenticated
-        using (exists (select 1 from public.admins a where a.user_id = auth.uid()))
-        with check (exists (select 1 from public.admins a where a.user_id = auth.uid()));
+        using (public.is_gori_admin())
+        with check (public.is_gori_admin());
     $p$;
   else
     raise notice 'admins 테이블이 없어 관리자 정책은 건너뜁니다. db/phase4_admin.sql 을 먼저 실행하세요.';

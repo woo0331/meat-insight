@@ -69,7 +69,9 @@
     must: ["id", "category", "item", "price", "price_date"],
     want: ["grade", "unit", "source", "change"] },
   { t: "admins", phase: "phase4", adminOnly: true,
-    must: ["user_id"], want: ["email", "created_at"] },
+    /* phase4 는 email 을 기본키로 만듭니다 — user_id 컬럼은 없습니다.
+       예전에 user_id 를 기대해 두어, 정상인 DB 를 빨간불로 보고했습니다. */
+    must: ["email"], want: ["name", "memo", "created_at"] },
   { t: "reports", phase: "phase7 (선택)", optional: true,
     must: ["id", "created_at", "target_type", "target_id", "reason", "status"],
     want: ["target_name", "detail", "reporter_id", "reporter_name", "reporter_phone", "admin_memo"] },

@@ -46,6 +46,16 @@ function ayClickable(root){
     var tag=el.tagName;
     if(tag==="BUTTON"||tag==="A"||tag==="INPUT"||tag==="SELECT"||tag==="TEXTAREA"||tag==="LABEL") continue;
     if(el.closest("button,a[href]")) continue;          /* 이미 눌리는 것 안에 있음 */
+    /* 창의 어둠막은 버튼이 아닙니다 — 낭독기가 "버튼" 이라고 읽고
+       Tab 순서에도 쓸데없이 끼어듭니다.
+       "바깥을 누르면 닫힘"(onclick 이 event.target 을 확인하는 것)과
+       대화상자만 걸러냅니다.
+
+       ⚠️ "안에 버튼이 있으면 건너뛴다" 로 넓게 잡으면 안 됩니다 —
+       요청 카드에도 버튼(견적 비교)이 들어 있어서, 카드 전체가
+       키보드로 안 열리게 됩니다. 실제로 그렇게 망가뜨렸었습니다. */
+    if(el.matches("[role=dialog],[aria-modal],.modal-dim")) continue;
+    if(/event\.target/.test(el.getAttribute("onclick")||"")) continue;
     el.dataset.ayKbd="1";
     if(!el.hasAttribute("tabindex")) el.setAttribute("tabindex","0");
     if(!el.hasAttribute("role")) el.setAttribute("role","button");

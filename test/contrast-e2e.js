@@ -60,7 +60,10 @@ const SPA = [["홈", "go('h')"], ["요청 목록", "go('reqs')"], ["업체 찾�
              ["문의", "gOpenContact()"]];
 const PAGES = ["terms.html", "privacy.html", "admin.html",
                "meat_insight_apply.html", "meat_insight_calculator.html", "meat_insight_cases.html",
-               "meat_insight_diagnosis.html", "meat_insight_partner.html", "meat_insight_report.html",
+               "meat_insight_diagnosis.html",
+               /* meat_insight_partner / meat_insight_report 는 지웠습니다 —
+                  아무데서도 링크되지 않는데다 지금 없는 표(partner_requests)를
+                  쓰던 옛 사이트의 잔재였습니다. */
                "dashboard.html", "suppliers.html", "jobs.html", "purchase_request.html",
                "404.html"];
 

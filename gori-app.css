@@ -872,3 +872,44 @@ html .live-bar:focus-within .live-slide{animation-play-state:paused;}
 /* 아직 작던 두 개 — 홈 지역 선택, 요청 카드의 행동 버튼 */
 html .gh-region{min-height:42px;}
 html .rc-cta{min-height:42px;}
+
+/* ════════════════════════════════════════════════════════════════════
+   분야 아이콘을 선명하게
+
+   큰 파스텔 원 안에 가는 선 아이콘이 작게 떠 있어 흐려 보였습니다.
+   재 보니 60px 타일에 27px 아이콘(45%), 선 굵기 1.9px, 면 투명도 0.17 —
+   멀리서 보면 무슨 그림인지 알아보기 어려운 조합입니다.
+
+   그림을 바꾸지 않고 무게만 올립니다: 아이콘을 키우고, 선을 굵게,
+   면을 진하게. (index.html 안쪽 규칙을 이겨야 해서 html 을 붙입니다)
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 타일은 조금 키우고 아이콘은 많이 키웁니다 — 45% → 55% */
+html .cat8-ico{width:64px;height:64px;border-radius:20px;}
+html .cat8-ico svg{width:35px;height:35px;}
+html .cat8-nm{font-size:14.5px;}
+
+/* 선을 굵게, 면을 진하게 — 이게 "선명하다"의 대부분입니다 */
+html .cat8-ico .du-s{stroke-width:2.4;}
+html .cat8-ico .du-f{opacity:.3;}
+
+/* 흰 덧칠을 줄입니다 — 진하게 만든 바탕을 다시 흐리게 만들던 규칙입니다 */
+html .cat8-ico::after{background:linear-gradient(150deg,rgba(255,255,255,.3),rgba(255,255,255,0) 55%);}
+
+/* 요청서의 분야 고르기 · 업체 카드도 같은 무게로 */
+html .gcat-ic{width:48px;height:48px;border-radius:13px;}
+html .gcat-ic svg{width:27px;height:27px;}
+html .gcat-ic .du-s{stroke-width:2.3;}
+html .gcat-ic .du-f{opacity:.26;}
+html .sc2-ic[data-k] svg{width:38px;height:38px;}
+html .sc2-ic .du-s{stroke-width:2.2;}
+html .sc2-ic .du-f{opacity:.26;}
+html .trust-ico .du-s{stroke-width:2.1;}
+html .trust-ico .du-f{opacity:.24;}
+
+@media(max-width:768px){
+  /* 모바일에서 타일이 54px 로 줄면서 제일 흐렸습니다 */
+  html .cat8-ico{width:60px;height:60px;}
+  html .cat8-ico svg{width:33px;height:33px;}
+  html .cat8-nm{font-size:13.5px;}
+}

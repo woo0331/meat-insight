@@ -87,7 +87,7 @@ function shReqRow(r, cta){
     '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">'+
       '<span class="gbadge gb-or">'+esc(shCatName(r))+'</span>'+
       (r.region?'<span class="gbadge gb-gy">'+esc(r.region)+'</span>':'')+
-      '<span style="margin-left:auto;font-size:12px;color:var(--ink4);">'+esc(ago(r.created_at))+'</span>'+
+      '<span style="margin-left:auto;font-size:13px;color:var(--ink4);">'+esc(ago(r.created_at))+'</span>'+
     '</div>'+
     '<div class="ritem-t">'+esc(r.title||r.description||shCatName(r)+" 요청")+'</div>'+
     '<div class="ritem-m"><span>견적 '+(Number(r.quote_count)||0)+'건</span>'+
@@ -108,7 +108,7 @@ function sjPitch(){
   var live = (SH.reqs===null)
     ? '<div class="ghint">요청 현황을 불러오지 못했습니다. 연결이 되면 여기에 표시됩니다.</div>'
     : (open.length
-        ? '<div style="font-size:13.5px;color:var(--ink2);font-weight:600;margin-bottom:10px;">'+
+        ? '<div style="font-size:14.5px;color:var(--ink2);font-weight:600;margin-bottom:10px;">'+
             '지금 답을 기다리는 요청 <b style="color:var(--gn);">'+open.length+'건</b></div>'+
           recent.map(function(r){ return shReqRow(r); }).join("")
         : '<div class="gempty" style="padding:22px 16px;">'+
@@ -118,9 +118,9 @@ function sjPitch(){
   var html=
     '<div id="sj-pitch">'+
       '<div class="gcard" style="border-color:var(--gnb);background:var(--gnl);">'+
-        '<div style="font-size:21px;font-weight:800;letter-spacing:-.04em;color:var(--gn-on-tint);line-height:1.35;margin-bottom:8px;">'+
+        '<div style="font-size:22px;font-weight:800;letter-spacing:-.04em;color:var(--gn-on-tint);line-height:1.35;margin-bottom:8px;">'+
           '요청은 이미 올라오고 있습니다</div>'+
-        '<div style="font-size:14px;color:var(--ink2);line-height:1.7;">'+
+        '<div style="font-size:15px;color:var(--ink2);line-height:1.7;">'+
           '원육·가공·물류·인력·장비·창업까지, 축산 현장에서 필요한 것을 올리는 곳입니다.<br>'+
           '업체로 등록하면 <b>내 분야·내 지역</b> 요청만 골라서 받습니다.</div>'+
       '</div>'+
@@ -135,7 +135,7 @@ function sjPitch(){
       '<div class="gcard"><div class="gcard-t">지금 올라온 요청</div>'+live+'</div>'+
       '<div class="gnote">베타 기간에는 등록도 견적 발송도 무료입니다. '+
         '유료로 바뀌게 되면 미리 공지하고, 그 전에 보낸 견적에는 수수료를 받지 않습니다.</div>'+
-      '<div style="font-size:13px;color:var(--ink3);font-weight:600;margin:18px 0 10px;">아래에서 3분이면 등록됩니다</div>'+
+      '<div style="font-size:14px;color:var(--ink3);font-weight:600;margin:18px 0 10px;">아래에서 3분이면 등록됩니다</div>'+
     '</div>';
 
   var old=$("sj-pitch");

@@ -34,7 +34,7 @@ function ago(iso){ return (typeof relTime==="function") ? relTime(iso) : ""; }
 function toast(msg, kind){
   var el=$("g-toast");
   if(!el){ el=document.createElement("div"); el.id="g-toast";
-    el.style.cssText="position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:1200;padding:13px 20px;border-radius:10px;font-size:14px;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.18);display:none;max-width:88vw;text-align:center;line-height:1.5;";
+    el.style.cssText="position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:1200;padding:13px 20px;border-radius:10px;font-size:15px;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.18);display:none;max-width:88vw;text-align:center;line-height:1.5;";
     document.body.appendChild(el); }
   el.textContent=msg;
   el.style.background = kind==="err" ? "#C62828" : (kind==="ok" ? "#1B5E20" : "#111315");
@@ -211,7 +211,7 @@ window.gToggleNotif=function(ev){
   p.classList.toggle("on", open);
   if(!open) return;
   if(SCHEMA.notifications===false){ p.innerHTML='<div style="padding:16px;">'+setupNote("알림")+'</div>'; return; }
-  if(!NOTIFS.length){ p.innerHTML='<div style="padding:26px 16px;text-align:center;font-size:13px;color:var(--ink4);">새 알림이 없습니다</div>'; return; }
+  if(!NOTIFS.length){ p.innerHTML='<div style="padding:26px 16px;text-align:center;font-size:14px;color:var(--ink4);">새 알림이 없습니다</div>'; return; }
   p.innerHTML=NOTIFS.map(function(n){
     return '<div class="nt'+(n.is_read?"":" unread")+'" onclick="gOpenNotif(\''+n.id+'\')">'+
       '<div class="nt-t">'+esc(n.title)+'</div>'+
@@ -444,9 +444,9 @@ function fieldHtml(f){
       return '<button type="button" class="gpick-i" onclick="gChip(this)">'+esc(o)+'</button>'; }).join("")+'</div>';
   else if(f.t==="textarea") h+='<textarea class="gin" id="'+id+'" placeholder="'+esc(f.ph||"")+'"></textarea>';
   else if(f.t==="money") h+='<div style="position:relative;"><input class="gin" id="'+id+'" inputmode="numeric" placeholder="'+esc(f.ph||"")+'" oninput="gNumFmt(this)">'+
-      (f.unit?'<span style="position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--ink4);font-weight:600;">'+esc(f.unit)+'</span>':'')+'</div>';
+      (f.unit?'<span style="position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--ink4);font-weight:600;">'+esc(f.unit)+'</span>':'')+'</div>';
   else if(f.t==="number") h+='<div style="position:relative;"><input class="gin" id="'+id+'" inputmode="numeric" placeholder="'+esc(f.ph||"")+'">'+
-      (f.unit?'<span style="position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--ink4);font-weight:600;">'+esc(f.unit)+'</span>':'')+'</div>';
+      (f.unit?'<span style="position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--ink4);font-weight:600;">'+esc(f.unit)+'</span>':'')+'</div>';
   else h+='<input class="gin" id="'+id+'" type="'+(f.t==="date"?"date":(f.t==="time"?"time":"text"))+'" placeholder="'+esc(f.ph||"")+'">';
   return h;
 }
@@ -709,8 +709,8 @@ function renderRequestDetail(){
       '<div class="ritem-top"><span class="gbadge gb-or">'+esc(label)+'</span>'+
         (req.subcategory?'<span class="gbadge gb-gy">'+esc(req.subcategory)+'</span>':'')+
         '<span class="gbadge '+(req.status==="완료"?"gb-ok":(req.status==="진행중"?"gb-bl":"gb-gy"))+'">'+esc(req.status||"견적대기")+'</span>'+
-        '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(req.created_at)+'</span></div>'+
-      '<div style="font-size:21px;font-weight:800;color:var(--ink);margin:6px 0 10px;letter-spacing:-.4px;">'+esc(req.title||req.description||label+" 요청")+'</div>'+
+        '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(req.created_at)+'</span></div>'+
+      '<div style="font-size:22px;font-weight:800;color:var(--ink);margin:6px 0 10px;letter-spacing:-.4px;">'+esc(req.title||req.description||label+" 요청")+'</div>'+
       '<div class="ritem-m"><span>📍 '+esc(req.region||"전국")+'</span>'+
         (req.deadline?'<span>🗓 희망일 '+fmtDate(req.deadline)+' ('+dday(req.deadline)+')</span>':'')+
         (req.request_number?'<span>'+esc(req.request_number)+'</span>':'')+'</div>'+
@@ -1019,7 +1019,7 @@ function renderDaily(){
           (j.start_time?'<span>🕐 '+esc(j.start_time)+(j.end_time?"~"+esc(j.end_time):"")+'</span>':'')+
           (j.experience?'<span>경력 '+esc(j.experience)+'</span>':'')+
         '</div>'+
-        (j.detail?'<div style="font-size:12.5px;color:var(--ink3);line-height:1.55;">'+esc(j.detail)+'</div>':'')+
+        (j.detail?'<div style="font-size:13.5px;color:var(--ink3);line-height:1.55;">'+esc(j.detail)+'</div>':'')+
       '</div>'+
       '<div class="dj-r">'+
         '<div class="dj-pay">'+won(j.pay)+'원</div><div class="dj-pt">'+esc(j.pay_type||"일당")+'</div>'+
@@ -1110,8 +1110,8 @@ window.gApplyDJ=function(id){
   box.id="dj-apply-modal";
   box.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;display:flex;align-items:flex-end;justify-content:center;padding:0;";
   box.innerHTML='<div style="background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:20px 18px 26px;" onclick="event.stopPropagation()">'+
-    '<div style="font-size:17px;font-weight:800;margin-bottom:4px;">'+esc(j.company)+' · '+esc(j.work_type)+'</div>'+
-    '<div style="font-size:13px;color:var(--ink3);margin-bottom:16px;">'+fmtDate(j.work_date)+' · '+won(j.pay)+'원 '+esc(j.pay_type||"일당")+' · '+esc(j.region||"")+'</div>'+
+    '<div style="font-size:18px;font-weight:800;margin-bottom:4px;">'+esc(j.company)+' · '+esc(j.work_type)+'</div>'+
+    '<div style="font-size:14px;color:var(--ink3);margin-bottom:16px;">'+fmtDate(j.work_date)+' · '+won(j.pay)+'원 '+esc(j.pay_type||"일당")+' · '+esc(j.region||"")+'</div>'+
     '<div class="grow keep">'+
       '<div><label class="glabel">이름 <span class="greq">*</span></label><input class="gin" id="ap-name" value="'+esc((w&&w.name)||ME.name||"")+'"></div>'+
       '<div><label class="glabel">연락처 <span class="greq">*</span></label><input class="gin" id="ap-contact" placeholder="010-0000-0000" value="'+esc((w&&w.contact)||"")+'"></div>'+
@@ -1173,7 +1173,7 @@ window.gViewApps=async function(jobId){
               '<div class="wk-st"><span>경력 <b>'+(a.experience_years||0)+'년</b></span>'+
                 '<span>평점 <b>'+(rating?rating.toFixed(1):"신규")+'</b></span>'+
                 '<span>작업 <b>'+cnt+'회</b></span></div>'+
-              (a.message?'<div style="font-size:12.5px;color:var(--ink3);margin-top:8px;line-height:1.55;">'+esc(a.message)+'</div>':'')+
+              (a.message?'<div style="font-size:13.5px;color:var(--ink3);margin-top:8px;line-height:1.55;">'+esc(a.message)+'</div>':'')+
             '</div>'+
             '<div style="flex-shrink:0;display:flex;flex-direction:column;gap:6px;">'+
               '<button class="gbtn gbtn-p gbtn-sm" onclick="gChooseWorker(\''+a.id+'\',\''+esc(jobId)+'\')"'+(a.status==="선택됨"?" disabled":"")+'>선택</button>'+
@@ -1285,7 +1285,7 @@ function renderSupplierDetail(){
       s.images.slice(0,6).map(function(u){ return '<div class="sd-img" style="background-image:url('+esc(u)+');"></div>'; }).join("")+'</div></div>':'')+
 
     '<div class="gcard"><div class="gcard-t">업체 소개</div>'+
-      '<p style="font-size:14px;color:var(--ink2);line-height:1.75;white-space:pre-wrap;">'+
+      '<p style="font-size:15px;color:var(--ink2);line-height:1.75;white-space:pre-wrap;">'+
         esc(s.intro||s.description||((s.region||"")+" 지역의 "+((cats[0]||"축산"))+" 전문 업체입니다."))+'</p></div>'+
 
     '<div class="gcard"><div class="gcard-t">후기 '+(SD.reviews===null?"":"("+rvs.length+")")+'</div>'+
@@ -1474,18 +1474,18 @@ function reqRow(r){
   return '<div class="ritem" onclick="gOpenRequest(\''+esc(r.id)+'\')">'+
     '<div class="ritem-top"><span class="gbadge gb-or">'+esc(label)+'</span>'+
       '<span class="gbadge '+(r.status==="완료"?"gb-ok":(r.status==="진행중"?"gb-bl":"gb-gy"))+'">'+esc(r.status||"견적대기")+'</span>'+
-      '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(r.created_at)+'</span></div>'+
+      '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(r.created_at)+'</span></div>'+
     '<div class="ritem-t">'+esc(r.title||r.description||label+" 요청")+'</div>'+
     '<div class="ritem-m"><span>📍 '+esc(r.region||"전국")+'</span>'+
       (r.deadline?'<span>🗓 '+fmtDate(r.deadline)+'</span>':'')+'</div>'+
-    '<div class="ritem-f"><span style="font-size:13px;font-weight:700;color:var(--ink2);">받은 견적 '+(r.quote_count||0)+'건</span>'+
-      '<span style="font-size:13px;font-weight:700;color:var(--gn);">견적 비교 ›</span></div></div>';
+    '<div class="ritem-f"><span style="font-size:14px;font-weight:700;color:var(--ink2);">받은 견적 '+(r.quote_count||0)+'건</span>'+
+      '<span style="font-size:14px;font-weight:700;color:var(--gn);">견적 비교 ›</span></div></div>';
 }
 function quoteRow(q, showReq){
   var r=MY.reqs.find(function(x){ return String(x.id)===String(q.request_id); });
   return '<div class="ritem" onclick="gOpenRequest(\''+esc(q.request_id)+'\')">'+
     '<div class="ritem-top"><span class="gbadge '+(q.status==="선택됨"?"gb-ok":(q.status==="미선택"?"gb-gy":"gb-or"))+'">'+esc(q.status||"대기")+'</span>'+
-      '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(q.created_at)+'</span></div>'+
+      '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(q.created_at)+'</span></div>'+
     '<div class="ritem-t">'+esc(q.supplier_name)+' · '+won(num(q.price))+' '+esc(q.price_unit||"")+'</div>'+
     '<div class="ritem-m">'+(q.lead_time?'<span>납기 '+esc(q.lead_time)+'</span>':'')+
       (q.delivery?'<span>'+esc(q.delivery)+'</span>':'')+
@@ -1536,7 +1536,7 @@ function renderMyPanel(){
       '<div class="gcard-t" style="border:none;padding:0;margin:20px 0 10px;">내 지원 ('+MY.apps.length+')</div>'+
       (MY.apps.length ? '<div class="rlist">'+MY.apps.map(function(a){
         return '<div class="ritem"><div class="ritem-top"><span class="gbadge '+(a.status==="선택됨"?"gb-ok":"gb-gy")+'">'+esc(a.status)+'</span>'+
-          '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(a.created_at)+'</span></div>'+
+          '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(a.created_at)+'</span></div>'+
           '<div class="ritem-t">'+esc((a.skills||[]).join(", ")||"당일알바 지원")+'</div>'+
           '<div class="ritem-m"><span>경력 '+(a.experience_years||0)+'년</span></div></div>';
       }).join("")+'</div>' : '<div class="ghint">지원한 일감이 없습니다.</div>');
@@ -1549,8 +1549,8 @@ function renderMyPanel(){
             '<div class="ritem-m"><span>📍 '+esc(s.region||"")+'</span>'+
               (s.rating?'<span class="qstar">★ '+Number(s.rating).toFixed(1)+'</span>':'')+
               '<span>거래 '+(s.deal_count||0)+'건</span></div>'+
-            '<div class="ritem-f"><span style="font-size:13px;color:var(--ink3);">'+esc((s.categories||[]).slice(0,3).join(" · "))+'</span>'+
-            '<span style="font-size:13px;font-weight:700;color:var(--gn);">업체 보기 ›</span></div></div>';
+            '<div class="ritem-f"><span style="font-size:14px;color:var(--ink3);">'+esc((s.categories||[]).slice(0,3).join(" · "))+'</span>'+
+            '<span style="font-size:14px;font-weight:700;color:var(--gn);">업체 보기 ›</span></div></div>';
         }).join("")+'</div>'
         : empty("관심업체가 없습니다","업체 상세에서 ♡ 를 누르면 여기에 모입니다.",'<button class="gbtn gbtn-p gbtn-sm" onclick="go(&quot;suppliers&quot;)">업체 찾기</button>'));
   }
@@ -1899,7 +1899,7 @@ window.gOpenChatList=async function(){
         return '<div class="ritem" onclick="gOpenChat(\''+r.id+'\')">'+
           '<div class="ritem-top"><span class="gbadge '+(iAmBuyer?"gb-or":"gb-bl")+'">'+(iAmBuyer?"내 요청":"받은 요청")+'</span>'+
             (r._unread?'<span class="gbadge gb-rd">'+r._unread+'</span>':'')+
-            '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(r.last_at)+'</span></div>'+
+            '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(r.last_at)+'</span></div>'+
           '<div class="ritem-t">'+esc(other)+'</div>'+
           '<div class="ritem-m"><span>'+esc(truncate(r.last_message||"",40))+'</span></div></div>';
       }).join("")+'</div>'
@@ -2329,17 +2329,17 @@ function showInstant(req, picks, notified){
     '<div class="gp-hd"><div><div class="gp-title">요청이 등록되었습니다</div>'+
       '<div class="gp-sub">'+esc(req.title||req.category)+(notified?(' · 업체 '+notified+'곳에 알림 발송'):'')+'</div></div></div>'+
     '<div class="gcard" style="background:var(--gnl);border-color:var(--gnb);">'+
-      '<div style="font-size:15px;font-weight:800;color:var(--ink);margin-bottom:6px;">바로견적 — 조건이 맞는 업체</div>'+
-      '<div style="font-size:13px;color:var(--ink3);line-height:1.6;">아래 업체에 먼저 요청이 전달되었습니다. 급하시면 바로 채팅으로 문의하세요.</div></div>'+
+      '<div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:6px;">바로견적 — 조건이 맞는 업체</div>'+
+      '<div style="font-size:14px;color:var(--ink3);line-height:1.6;">아래 업체에 먼저 요청이 전달되었습니다. 급하시면 바로 채팅으로 문의하세요.</div></div>'+
     '<div class="rlist">'+picks.map(function(s){
       return '<div class="ritem">'+
         '<div class="ritem-top">'+trustBadges(s)+(s.instant_quote?'<span class="gbadge gb-bl">바로견적</span>':'')+
-          '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+esc(respText(s)||"")+'</span></div>'+
+          '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+esc(respText(s)||"")+'</span></div>'+
         '<div class="ritem-t">'+esc(s.name)+'</div>'+
         '<div class="ritem-m"><span>📍 '+esc(s.region||"")+'</span>'+
           (s.rating?'<span class="qstar">★ '+Number(s.rating).toFixed(1)+'</span>':'<span>신규</span>')+
           '<span>거래 '+(s.deal_count||0)+'건</span></div>'+
-        (s.instant_note?'<div style="font-size:12.5px;color:var(--ink3);margin-top:8px;">'+esc(s.instant_note)+'</div>':'')+
+        (s.instant_note?'<div style="font-size:13.5px;color:var(--ink3);margin-top:8px;">'+esc(s.instant_note)+'</div>':'')+
         '<div class="ritem-f"><button class="gbtn gbtn-w gbtn-sm" onclick="curSID=\''+esc(s.id)+'\';go(&quot;sp&quot;)">업체 보기</button>'+
         '<button class="gbtn gbtn-p gbtn-sm" onclick="gStartChat({requestId:\''+esc(req.id)+'\',supplierId:\''+esc(s.id)+'\',supplierUserId:'+(s.user_id?"'"+esc(s.user_id)+"'":"null")+',supplierName:\''+esc(s.name)+'\',buyerUserId:'+(req.user_id?"'"+esc(req.user_id)+"'":"null")+',buyerName:\''+esc(req.buyer_name||"")+'\',firstMessage:\'요청 건으로 문의드립니다.\'})">바로 문의</button></div>'+
         '</div>';
@@ -2413,7 +2413,7 @@ function patchMyTabs(){
             return '<div class="ritem" onclick="gOpenChat(\''+r.id+'\')">'+
               '<div class="ritem-top"><span class="gbadge '+(iAmBuyer?"gb-or":"gb-bl")+'">'+(iAmBuyer?"내 요청":"받은 요청")+'</span>'+
               (r._unread?'<span class="gbadge gb-rd">'+r._unread+'</span>':'')+
-              '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(r.last_at)+'</span></div>'+
+              '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(r.last_at)+'</span></div>'+
               '<div class="ritem-t">'+esc(iAmBuyer?(r.supplier_name||"업체"):(r.buyer_name||"요청자"))+'</div>'+
               '<div class="ritem-m"><span>'+esc(truncate(r.last_message||"",44))+'</span></div></div>';
           }).join("")+'</div>'
@@ -2427,11 +2427,11 @@ function patchMyTabs(){
         : (MY.orders && MY.orders.length ? '<div class="rlist">'+MY.orders.map(function(o){
             return '<div class="ritem" onclick="gOpenOrder(\''+o.id+'\')">'+
               '<div class="ritem-top"><span class="gbadge '+(o.status==="완료"?"gb-ok":(o.status==="취소"?"gb-gy":"gb-bl"))+'">'+esc(o.status)+'</span>'+
-                '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(o.created_at)+'</span></div>'+
+                '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(o.created_at)+'</span></div>'+
               '<div class="ritem-t">'+esc(o.title||"")+'</div>'+
               '<div class="ritem-m"><span>'+esc(o.supplier_name||"")+'</span><span>'+won(num(o.amount))+'원</span></div>'+
-              '<div class="ritem-f"><span style="font-size:13px;color:var(--ink3);">진행 상태 관리</span>'+
-              '<span style="font-size:13px;font-weight:700;color:var(--gn);">열기 ›</span></div></div>';
+              '<div class="ritem-f"><span style="font-size:14px;color:var(--ink3);">진행 상태 관리</span>'+
+              '<span style="font-size:14px;font-weight:700;color:var(--gn);">열기 ›</span></div></div>';
           }).join("")+'</div>'
           : empty("진행 중인 거래가 없습니다","견적을 선택하면 거래가 시작됩니다."));
       return;
@@ -2618,7 +2618,7 @@ function obStep3(){
       '<div class="gmsg" id="ob-msg3"></div>'+
     '</div>'+
     '<div class="gcard" style="background:var(--gnl);border-color:var(--gnb);">'+
-      '<div style="font-size:13.5px;color:var(--ink2);line-height:1.65;">'+
+      '<div style="font-size:14.5px;color:var(--ink2);line-height:1.65;">'+
       '<b>지금 없어도 됩니다.</b> 건너뛰고 등록한 뒤 「거래관리 → 업체 인증」에서 언제든 신청할 수 있습니다.</div></div>'+
     '<div class="grow keep"><button class="gbtn gbtn-w" onclick="gObBack()">← 이전</button>'+
     '<button class="gbtn gbtn-p" onclick="gObNext(3)">다음 →</button></div>';
@@ -2805,8 +2805,8 @@ function obDone(vOk, vTotal, photos){
   el.innerHTML=
     '<div class="gcard" style="text-align:center;padding:34px 22px;">'+
       '<div class="ob-ok">✓</div>'+
-      '<div style="font-size:20px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+esc(d.name)+' 등록 완료</div>'+
-      '<div style="font-size:13.5px;color:var(--ink3);line-height:1.65;">'+
+      '<div style="font-size:21px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+esc(d.name)+' 등록 완료</div>'+
+      '<div style="font-size:14.5px;color:var(--ink3);line-height:1.65;">'+
         '선택하신 분야의 요청이 올라오면 알림을 받습니다.<br>'+
         (vTotal? (vOk?('인증 '+vOk+'건은 심사 중입니다. 승인되면 배지가 표시됩니다.'):'인증 신청은 나중에 다시 시도해주세요.') : '인증을 등록하면 요청자에게 먼저 노출됩니다.')+
       '</div>'+
@@ -3655,7 +3655,7 @@ function edFieldHtml(f){
   else if(f.t==="textarea") h+='<textarea class="gin" id="'+id+'" placeholder="'+esc(f.ph||"")+'"></textarea>';
   else if(f.t==="money"||f.t==="number") h+='<div style="position:relative;"><input class="gin" id="'+id+'" inputmode="numeric" placeholder="'+esc(f.ph||"")+'"'+
       (f.t==="money"?' oninput="gNumFmt(this)"':'')+'>'+
-      (f.unit?'<span style="position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--ink4);font-weight:600;">'+esc(f.unit)+'</span>':'')+'</div>';
+      (f.unit?'<span style="position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--ink4);font-weight:600;">'+esc(f.unit)+'</span>':'')+'</div>';
   else h+='<input class="gin" id="'+id+'" type="'+(f.t==="date"?"date":(f.t==="time"?"time":"text"))+'" placeholder="'+esc(f.ph||"")+'">';
   return h;
 }
@@ -3932,7 +3932,7 @@ function mkPriceRow(m){
   return '<div class="price-row"><div class="price-item">'+esc(mkItemName(m))+'</div>'+
     '<div style="text-align:right;">'+
       '<div class="price-val">'+Number(m.price).toLocaleString("ko-KR")+
-        '<span style="font-size:11px;color:var(--ink4);font-weight:400;"> '+esc(m.unit||"원/kg")+'</span></div>'+
+        '<span style="font-size:12.5px;color:var(--ink4);font-weight:400;"> '+esc(m.unit||"원/kg")+'</span></div>'+
       '<div class="price-chg '+cls+'">'+chg+'</div></div></div>';
 }
 function mkFoot(rows){
@@ -4315,7 +4315,7 @@ function fdRow(r){
   return '<div class="ritem" onclick="gOpenRequest(\''+esc(r.id)+'\')">'+
     '<div class="ritem-top"><span class="gbadge gb-or">'+esc(label)+'</span>'+
       '<span class="gbadge '+(st==="완료"?"gb-ok":(st==="진행중"?"gb-bl":"gb-gy"))+'">'+esc(st)+'</span>'+
-      '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(r.created_at)+'</span></div>'+
+      '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(r.created_at)+'</span></div>'+
     '<div class="ritem-t">'+esc(r.title||r.description||label+" 요청")+'</div>'+
     '<div class="ritem-m"><span>📍 '+esc(r.region||"전국")+'</span>'+
       '<span>'+(qn?('견적 '+qn+'건 도착'):'견적 대기 중')+'</span>'+
@@ -4966,7 +4966,7 @@ function ctRow(icon, bg, title, meta, url){
   var u=ctLink(url);
   var open = u ? ' onclick="gCtOpen(\''+esc(u).replace(/'/g,"&#39;")+'\')" style="cursor:pointer;"' : '';
   return '<div class="news-row"'+open+'>'+
-    '<div class="nr-thumb" style="background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:16px;">'+icon+'</div>'+
+    '<div class="nr-thumb" style="background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:17px;">'+icon+'</div>'+
     '<div><div class="nr-title">'+esc(title)+'</div>'+
     (meta?'<div class="nr-date">'+esc(meta)+'</div>':'')+'</div></div>';
 }
@@ -5015,7 +5015,7 @@ function ctComm(){
     return '<div class="comm-row"'+(ctLink(c.url)?' onclick="gCtOpen(\''+esc(c.url)+'\')" style="cursor:pointer;"':'')+'>'+
       '<div class="cr-rank">'+(i+1)+'</div><div style="flex:1;min-width:0;">'+
       '<div class="cr-title">'+esc(c.title)+'</div>'+
-      (c.count?'<div style="font-size:10px;color:var(--ink4);">댓글 '+esc(c.count)+'</div>':'')+
+      (c.count?'<div style="font-size:12px;color:var(--ink4);">댓글 '+esc(c.count)+'</div>':'')+
       '</div></div>';
   }).join("");
 }
@@ -5035,9 +5035,9 @@ function ctNewsPage(){
     var u=ctLink(n.url);
     return '<div style="display:flex;gap:13px;padding:14px;background:#fff;border:1px solid var(--bd);border-radius:var(--r);'+
       (u?'cursor:pointer;':'')+'"'+(u?' onclick="gCtOpen(\''+esc(u)+'\')"':'')+'>'+
-      '<div style="width:80px;height:60px;border-radius:8px;background:var(--bg2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;">📰</div>'+
-      '<div><div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px;">'+esc(n.title)+'</div>'+
-      '<div style="font-size:12px;color:var(--ink4);">'+esc([n.source,n.date].filter(Boolean).join(" · "))+'</div></div></div>';
+      '<div style="width:80px;height:60px;border-radius:8px;background:var(--bg2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:23px;">📰</div>'+
+      '<div><div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:3px;">'+esc(n.title)+'</div>'+
+      '<div style="font-size:13px;color:var(--ink4);">'+esc([n.source,n.date].filter(Boolean).join(" · "))+'</div></div></div>';
   }).join("");
 }
 function ctCommPage(){
@@ -5055,8 +5055,8 @@ function ctCommPage(){
     var u=ctLink(c.url);
     return '<div style="background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:9px;'+
       (u?'cursor:pointer;':'')+'"'+(u?' onclick="gCtOpen(\''+esc(u)+'\')"':'')+'>'+
-      '<div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:5px;">'+esc(c.title)+'</div>'+
-      (c.count?'<div style="font-size:12px;color:var(--ink4);">댓글 '+esc(c.count)+'</div>':'')+'</div>';
+      '<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:5px;">'+esc(c.title)+'</div>'+
+      (c.count?'<div style="font-size:13px;color:var(--ink4);">댓글 '+esc(c.count)+'</div>':'')+'</div>';
   }).join("");
 }
 
@@ -5865,8 +5865,8 @@ function seDone(id, name){
   el.innerHTML=
     '<div class="gcard" style="text-align:center;padding:34px 22px;">'+
       '<div class="ob-ok">✓</div>'+
-      '<div style="font-size:20px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+esc(name||"업체")+' 정보를 저장했습니다</div>'+
-      '<div style="font-size:13.5px;color:var(--ink3);line-height:1.65;">'+
+      '<div style="font-size:21px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+esc(name||"업체")+' 정보를 저장했습니다</div>'+
+      '<div style="font-size:14.5px;color:var(--ink3);line-height:1.65;">'+
         '업체 상세와 검색 결과에 바로 반영됩니다.</div>'+
     '</div>'+
     '<div class="grow keep">'+
@@ -6014,7 +6014,7 @@ function shReqRow(r, cta){
     '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">'+
       '<span class="gbadge gb-or">'+esc(shCatName(r))+'</span>'+
       (r.region?'<span class="gbadge gb-gy">'+esc(r.region)+'</span>':'')+
-      '<span style="margin-left:auto;font-size:12px;color:var(--ink4);">'+esc(ago(r.created_at))+'</span>'+
+      '<span style="margin-left:auto;font-size:13px;color:var(--ink4);">'+esc(ago(r.created_at))+'</span>'+
     '</div>'+
     '<div class="ritem-t">'+esc(r.title||r.description||shCatName(r)+" 요청")+'</div>'+
     '<div class="ritem-m"><span>견적 '+(Number(r.quote_count)||0)+'건</span>'+
@@ -6035,7 +6035,7 @@ function sjPitch(){
   var live = (SH.reqs===null)
     ? '<div class="ghint">요청 현황을 불러오지 못했습니다. 연결이 되면 여기에 표시됩니다.</div>'
     : (open.length
-        ? '<div style="font-size:13.5px;color:var(--ink2);font-weight:600;margin-bottom:10px;">'+
+        ? '<div style="font-size:14.5px;color:var(--ink2);font-weight:600;margin-bottom:10px;">'+
             '지금 답을 기다리는 요청 <b style="color:var(--gn);">'+open.length+'건</b></div>'+
           recent.map(function(r){ return shReqRow(r); }).join("")
         : '<div class="gempty" style="padding:22px 16px;">'+
@@ -6045,9 +6045,9 @@ function sjPitch(){
   var html=
     '<div id="sj-pitch">'+
       '<div class="gcard" style="border-color:var(--gnb);background:var(--gnl);">'+
-        '<div style="font-size:21px;font-weight:800;letter-spacing:-.04em;color:var(--gn-on-tint);line-height:1.35;margin-bottom:8px;">'+
+        '<div style="font-size:22px;font-weight:800;letter-spacing:-.04em;color:var(--gn-on-tint);line-height:1.35;margin-bottom:8px;">'+
           '요청은 이미 올라오고 있습니다</div>'+
-        '<div style="font-size:14px;color:var(--ink2);line-height:1.7;">'+
+        '<div style="font-size:15px;color:var(--ink2);line-height:1.7;">'+
           '원육·가공·물류·인력·장비·창업까지, 축산 현장에서 필요한 것을 올리는 곳입니다.<br>'+
           '업체로 등록하면 <b>내 분야·내 지역</b> 요청만 골라서 받습니다.</div>'+
       '</div>'+
@@ -6062,7 +6062,7 @@ function sjPitch(){
       '<div class="gcard"><div class="gcard-t">지금 올라온 요청</div>'+live+'</div>'+
       '<div class="gnote">베타 기간에는 등록도 견적 발송도 무료입니다. '+
         '유료로 바뀌게 되면 미리 공지하고, 그 전에 보낸 견적에는 수수료를 받지 않습니다.</div>'+
-      '<div style="font-size:13px;color:var(--ink3);font-weight:600;margin:18px 0 10px;">아래에서 3분이면 등록됩니다</div>'+
+      '<div style="font-size:14px;color:var(--ink3);font-weight:600;margin:18px 0 10px;">아래에서 3분이면 등록됩니다</div>'+
     '</div>';
 
   var old=$("sj-pitch");
@@ -6500,9 +6500,9 @@ function rpDone(which){
   el.innerHTML=
     '<div class="gcard" style="text-align:center;padding:34px 22px;">'+
       '<div class="ob-ok">✓</div>'+
-      '<div style="font-size:20px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+
+      '<div style="font-size:21px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+
         (isReport?"신고가 접수되었습니다":"문의가 접수되었습니다")+'</div>'+
-      '<div style="font-size:13.5px;color:var(--ink3);line-height:1.65;">'+
+      '<div style="font-size:14.5px;color:var(--ink3);line-height:1.65;">'+
         (isReport
           ? '운영자가 확인한 뒤 필요한 조치를 합니다.<br>확인이 필요하면 남겨 주신 연락처로 연락드립니다.'
           : '확인하고 남겨 주신 연락처로 답변드립니다.')+
@@ -6993,6 +6993,86 @@ function artPaintSlots(){
   });
 }
 /* ════════════════════════════════════════════════════════════════════
+   글자 크게
+
+   축산업 쪽은 연세 있는 분들이 많이 씁니다. 글씨 크기를 전체적으로 한
+   단계 올렸지만, 그래도 작다는 분이 있습니다. 브라우저 확대(Ctrl +)를
+   모르는 분이 대부분이라, 화면 안에 버튼으로 둡니다.
+
+   px 로 짜인 사이트라 rem 을 키워도 안 듣습니다. html 에 .txl 을 걸면
+   CSS 가 zoom 으로 화면을 통째로 키웁니다 — transform 과 달리 zoom 은
+   레이아웃을 다시 흘려 주므로 가로 스크롤이 생기지 않습니다.
+
+   고른 값은 이 기기에 기억해 둡니다. 저장이 막힌 환경(사생활 보호 창
+   등)에서도 조용히 넘어가고 기능은 그대로 씁니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+var EZ_KEY="gori.textLarge";
+
+function ezOn(){
+  try{ return localStorage.getItem(EZ_KEY)==="1"; }catch(e){ return false; }
+}
+function ezApply(on){
+  document.documentElement.classList.toggle("txl", !!on);
+  [].slice.call(document.querySelectorAll(".ez-btn")).forEach(function(b){
+    b.setAttribute("aria-pressed", on?"true":"false");
+    var t=b.querySelector(".ez-l");
+    if(t) t.textContent = on ? "글자 작게" : "글자 크게";
+  });
+}
+window.gToggleTextSize=function(){
+  var on=!ezOn();
+  try{ localStorage.setItem(EZ_KEY, on?"1":"0"); }catch(e){}
+  ezApply(on);
+  if(typeof toast==="function") toast(on?"글자를 크게 키웠습니다.":"글자 크기를 원래대로 되돌렸습니다.");
+};
+
+function ezBtn(cls){
+  return '<button class="ez-btn '+(cls||"")+'" type="button" aria-pressed="false" '+
+    'onclick="gToggleTextSize()">'+
+    '<span class="ez-a" aria-hidden="true">가</span>'+
+    '<span class="ez-l">글자 크게</span></button>';
+}
+
+function ezCats(){
+  /* 데스크톱 — 분야 줄 오른쪽 끝, "⚡ 당일알바" 옆 */
+  var el=$("hdr-cats");
+  if(!el || el.querySelector(".ez-btn")) return;
+  var d=document.createElement("div");
+  d.innerHTML=ezBtn("ez-top");
+  var b=d.firstChild;
+  if(!el.querySelector(".hc-daily")) b.style.marginLeft="auto";
+  el.appendChild(b);
+  ezApply(ezOn());
+}
+
+function ezInject(){
+  ezCats();
+  /* 분야 줄은 분야를 고를 때마다 다시 그려지므로 그때도 다시 붙입니다 */
+  var origCats=window.renderHdrCats;
+  if(typeof origCats==="function"){
+    window.renderHdrCats=function(){
+      var r=origCats.apply(this, arguments);
+      try{ ezCats(); }catch(e){}
+      return r;
+    };
+  }
+  /* 모바일 — 메뉴 서랍 맨 위 (버튼이 커서 누르기 쉽습니다) */
+  var mm=document.querySelector("#mobile-menu .mm-row");
+  if(mm && !mm.parentNode.querySelector(".ez-mm")){
+    var w=document.createElement("div");
+    w.className="ez-mm-wrap";
+    w.innerHTML=ezBtn("ez-mm");
+    mm.parentNode.insertBefore(w, mm);
+  }
+}
+
+function patchEase(){
+  if(G._ease) return; G._ease=true;
+  ezInject();
+  ezApply(ezOn());
+}
+/* ════════════════════════════════════════════════════════════════════
    넓은 화면 레이아웃 — 모바일 한 줄짜리를 데스크톱에 늘려 놓은 상태였습니다
 
    요청 상세·업체 상세·거래관리가 전부 한 칸짜리 세로 목록이라,
@@ -7179,17 +7259,17 @@ function injectLaborSection(){
       '<div class="gcard" style="margin:0;cursor:pointer;" onclick="gOpenDaily()">'+
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'+
           '<span class="gbadge gb-or">실시간 매칭</span><span class="gbadge gb-gy">단기</span></div>'+
-        '<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px;">당일알바</div>'+
-        '<div style="font-size:13px;color:var(--ink3);line-height:1.6;">발골·정형·포장·상하차 등 오늘·내일 바로 일할 인력을 찾습니다. '+
+        '<div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:6px;">당일알바</div>'+
+        '<div style="font-size:14px;color:var(--ink3);line-height:1.6;">발골·정형·포장·상하차 등 오늘·내일 바로 일할 인력을 찾습니다. '+
           '지원자의 경력·가능업무·평점·작업횟수를 보고 선택하세요.</div>'+
-        '<div style="margin-top:14px;font-size:13.5px;font-weight:700;color:var(--gn);">일감 보기 · 등록하기 ›</div></div>'+
+        '<div style="margin-top:14px;font-size:14.5px;font-weight:700;color:var(--gn);">일감 보기 · 등록하기 ›</div></div>'+
       '<div class="gcard" style="margin:0;cursor:pointer;" onclick="go(&quot;jobs&quot;)">'+
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'+
           '<span class="gbadge gb-bl">채용</span><span class="gbadge gb-gy">장기</span></div>'+
-        '<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px;">구인구직</div>'+
-        '<div style="font-size:13px;color:var(--ink3);line-height:1.6;">정규직·생산직·영업직·사무직·배송직·경력직 채용. '+
+        '<div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:6px;">구인구직</div>'+
+        '<div style="font-size:14px;color:var(--ink3);line-height:1.6;">정규직·생산직·영업직·사무직·배송직·경력직 채용. '+
           '공고를 올리거나 구직 프로필을 등록하세요.</div>'+
-        '<div style="margin-top:14px;font-size:13.5px;font-weight:700;color:var(--gn);">공고 보기 · 등록하기 ›</div></div>'+
+        '<div style="margin-top:14px;font-size:14.5px;font-weight:700;color:var(--gn);">공고 보기 · 등록하기 ›</div></div>'+
     '</div></div>';
   sec.parentNode.insertBefore(el, sec.nextSibling);
 }
@@ -7207,7 +7287,7 @@ function patchJobsPage(){
     var box=document.createElement("div");
     box.id="jobs-split";
     box.style.cssText="display:flex;gap:8px;align-items:center;justify-content:space-between;background:var(--gnl);border:1px solid var(--gnb);border-radius:12px;padding:13px 16px;margin-bottom:16px;flex-wrap:wrap;";
-    box.innerHTML='<div style="font-size:13.5px;color:var(--gn2);font-weight:600;">'+
+    box.innerHTML='<div style="font-size:14.5px;color:var(--gn2);font-weight:600;">'+
       '<b>여기는 정규직·장기 채용입니다.</b> 오늘·내일 바로 필요한 현장 인력은 당일알바에서 찾으세요.</div>'+
       '<button class="gbtn gbtn-p gbtn-sm" onclick="gOpenDaily()">당일알바 보기</button>';
     wrap.insertBefore(box, wrap.firstChild);
@@ -7355,6 +7435,7 @@ function applyExtras(){
   try{ patchPolish(); }catch(e){}
   try{ patchHub(); }catch(e){}
   try{ patchArt(); }catch(e){}
+  try{ patchEase(); }catch(e){}
   try{ patchLayout(); }catch(e){}   /* 다른 패치가 붙인 뒤에 담아야 합니다 */
   try{ patchRouter(); armRouter(); }catch(e){}
 }

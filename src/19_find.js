@@ -111,7 +111,7 @@ function fdRow(r){
   return '<div class="ritem" onclick="gOpenRequest(\''+esc(r.id)+'\')">'+
     '<div class="ritem-top"><span class="gbadge gb-or">'+esc(label)+'</span>'+
       '<span class="gbadge '+(st==="완료"?"gb-ok":(st==="진행중"?"gb-bl":"gb-gy"))+'">'+esc(st)+'</span>'+
-      '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(r.created_at)+'</span></div>'+
+      '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(r.created_at)+'</span></div>'+
     '<div class="ritem-t">'+esc(r.title||r.description||label+" 요청")+'</div>'+
     '<div class="ritem-m"><span>📍 '+esc(r.region||"전국")+'</span>'+
       '<span>'+(qn?('견적 '+qn+'건 도착'):'견적 대기 중')+'</span>'+

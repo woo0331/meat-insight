@@ -178,9 +178,9 @@ function rpDone(which){
   el.innerHTML=
     '<div class="gcard" style="text-align:center;padding:34px 22px;">'+
       '<div class="ob-ok">✓</div>'+
-      '<div style="font-size:20px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+
+      '<div style="font-size:21px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+
         (isReport?"신고가 접수되었습니다":"문의가 접수되었습니다")+'</div>'+
-      '<div style="font-size:13.5px;color:var(--ink3);line-height:1.65;">'+
+      '<div style="font-size:14.5px;color:var(--ink3);line-height:1.65;">'+
         (isReport
           ? '운영자가 확인한 뒤 필요한 조치를 합니다.<br>확인이 필요하면 남겨 주신 연락처로 연락드립니다.'
           : '확인하고 남겨 주신 연락처로 답변드립니다.')+

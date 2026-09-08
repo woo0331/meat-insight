@@ -70,8 +70,8 @@ function renderRequestDetail(){
       '<div class="ritem-top"><span class="gbadge gb-or">'+esc(label)+'</span>'+
         (req.subcategory?'<span class="gbadge gb-gy">'+esc(req.subcategory)+'</span>':'')+
         '<span class="gbadge '+(req.status==="완료"?"gb-ok":(req.status==="진행중"?"gb-bl":"gb-gy"))+'">'+esc(req.status||"견적대기")+'</span>'+
-        '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(req.created_at)+'</span></div>'+
-      '<div style="font-size:21px;font-weight:800;color:var(--ink);margin:6px 0 10px;letter-spacing:-.4px;">'+esc(req.title||req.description||label+" 요청")+'</div>'+
+        '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(req.created_at)+'</span></div>'+
+      '<div style="font-size:22px;font-weight:800;color:var(--ink);margin:6px 0 10px;letter-spacing:-.4px;">'+esc(req.title||req.description||label+" 요청")+'</div>'+
       '<div class="ritem-m"><span>📍 '+esc(req.region||"전국")+'</span>'+
         (req.deadline?'<span>🗓 희망일 '+fmtDate(req.deadline)+' ('+dday(req.deadline)+')</span>':'')+
         (req.request_number?'<span>'+esc(req.request_number)+'</span>':'')+'</div>'+

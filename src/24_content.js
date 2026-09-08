@@ -35,7 +35,7 @@ function ctRow(icon, bg, title, meta, url){
   var u=ctLink(url);
   var open = u ? ' onclick="gCtOpen(\''+esc(u).replace(/'/g,"&#39;")+'\')" style="cursor:pointer;"' : '';
   return '<div class="news-row"'+open+'>'+
-    '<div class="nr-thumb" style="background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:16px;">'+icon+'</div>'+
+    '<div class="nr-thumb" style="background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:17px;">'+icon+'</div>'+
     '<div><div class="nr-title">'+esc(title)+'</div>'+
     (meta?'<div class="nr-date">'+esc(meta)+'</div>':'')+'</div></div>';
 }
@@ -84,7 +84,7 @@ function ctComm(){
     return '<div class="comm-row"'+(ctLink(c.url)?' onclick="gCtOpen(\''+esc(c.url)+'\')" style="cursor:pointer;"':'')+'>'+
       '<div class="cr-rank">'+(i+1)+'</div><div style="flex:1;min-width:0;">'+
       '<div class="cr-title">'+esc(c.title)+'</div>'+
-      (c.count?'<div style="font-size:10px;color:var(--ink4);">댓글 '+esc(c.count)+'</div>':'')+
+      (c.count?'<div style="font-size:12px;color:var(--ink4);">댓글 '+esc(c.count)+'</div>':'')+
       '</div></div>';
   }).join("");
 }
@@ -104,9 +104,9 @@ function ctNewsPage(){
     var u=ctLink(n.url);
     return '<div style="display:flex;gap:13px;padding:14px;background:#fff;border:1px solid var(--bd);border-radius:var(--r);'+
       (u?'cursor:pointer;':'')+'"'+(u?' onclick="gCtOpen(\''+esc(u)+'\')"':'')+'>'+
-      '<div style="width:80px;height:60px;border-radius:8px;background:var(--bg2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;">📰</div>'+
-      '<div><div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px;">'+esc(n.title)+'</div>'+
-      '<div style="font-size:12px;color:var(--ink4);">'+esc([n.source,n.date].filter(Boolean).join(" · "))+'</div></div></div>';
+      '<div style="width:80px;height:60px;border-radius:8px;background:var(--bg2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:23px;">📰</div>'+
+      '<div><div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:3px;">'+esc(n.title)+'</div>'+
+      '<div style="font-size:13px;color:var(--ink4);">'+esc([n.source,n.date].filter(Boolean).join(" · "))+'</div></div></div>';
   }).join("");
 }
 function ctCommPage(){
@@ -124,8 +124,8 @@ function ctCommPage(){
     var u=ctLink(c.url);
     return '<div style="background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:9px;'+
       (u?'cursor:pointer;':'')+'"'+(u?' onclick="gCtOpen(\''+esc(u)+'\')"':'')+'>'+
-      '<div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:5px;">'+esc(c.title)+'</div>'+
-      (c.count?'<div style="font-size:12px;color:var(--ink4);">댓글 '+esc(c.count)+'</div>':'')+'</div>';
+      '<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:5px;">'+esc(c.title)+'</div>'+
+      (c.count?'<div style="font-size:13px;color:var(--ink4);">댓글 '+esc(c.count)+'</div>':'')+'</div>';
   }).join("");
 }
 

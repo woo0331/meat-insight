@@ -34,7 +34,7 @@ function ago(iso){ return (typeof relTime==="function") ? relTime(iso) : ""; }
 function toast(msg, kind){
   var el=$("g-toast");
   if(!el){ el=document.createElement("div"); el.id="g-toast";
-    el.style.cssText="position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:1200;padding:13px 20px;border-radius:10px;font-size:14px;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.18);display:none;max-width:88vw;text-align:center;line-height:1.5;";
+    el.style.cssText="position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:1200;padding:13px 20px;border-radius:10px;font-size:15px;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.18);display:none;max-width:88vw;text-align:center;line-height:1.5;";
     document.body.appendChild(el); }
   el.textContent=msg;
   el.style.background = kind==="err" ? "#C62828" : (kind==="ok" ? "#1B5E20" : "#111315");
@@ -211,7 +211,7 @@ window.gToggleNotif=function(ev){
   p.classList.toggle("on", open);
   if(!open) return;
   if(SCHEMA.notifications===false){ p.innerHTML='<div style="padding:16px;">'+setupNote("알림")+'</div>'; return; }
-  if(!NOTIFS.length){ p.innerHTML='<div style="padding:26px 16px;text-align:center;font-size:13px;color:var(--ink4);">새 알림이 없습니다</div>'; return; }
+  if(!NOTIFS.length){ p.innerHTML='<div style="padding:26px 16px;text-align:center;font-size:14px;color:var(--ink4);">새 알림이 없습니다</div>'; return; }
   p.innerHTML=NOTIFS.map(function(n){
     return '<div class="nt'+(n.is_read?"":" unread")+'" onclick="gOpenNotif(\''+n.id+'\')">'+
       '<div class="nt-t">'+esc(n.title)+'</div>'+

@@ -54,12 +54,23 @@
 node build.js --check                    # 빌드 최신인지
 node --check gori-app.js                 # 문법
 cmp index.html meat_insight_main.html    # 미러 일치
-node test/run.js                         # 회귀 31종 (playwright 필요)
+node test/run.js                         # 회귀 32종 (playwright 필요)
 cd test && node contrast-e2e.js          # 색 대비 전수 (팔레트를 바꾸면 필수)
 ```
 
 바꾼 화면은 **데스크톱과 모바일(390px) 둘 다** 실제로 띄워 보고, 가로 스크롤이
 생기지 않는지 확인한다.
+
+## CSS 를 어디에 쓸지
+
+`gori-app.css` 는 `index.html` 의 `<style>` **보다 먼저** 실린다. 같은 굵기면
+뒤에 오는 `index.html` 이 이기므로, index.html 에 이미 있는 선택자를
+`gori-app.css` 에서 다시 잡으면 **조용히 무시된다.** 이길 때는 `html` 을 하나
+붙여 굵기를 올린다 (`html .ha-btn{...}`). 실제로 겪은 버그다 — 실시간 띠의
+애니메이션을 늦추는 규칙이 통째로 먹히지 않았다.
+
+쓰는 사람 중에 연세 있는 분이 많다. 새로 넣는 글씨는 **12px 미만 금지**,
+누르는 것은 **40px 이상**. `test/ease-e2e.js` 가 화면마다 전수로 잡는다.
 
 ## 운영자가 해야 할 설정
 

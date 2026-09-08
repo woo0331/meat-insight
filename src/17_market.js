@@ -30,7 +30,7 @@ function mkPriceRow(m){
   return '<div class="price-row"><div class="price-item">'+esc(mkItemName(m))+'</div>'+
     '<div style="text-align:right;">'+
       '<div class="price-val">'+Number(m.price).toLocaleString("ko-KR")+
-        '<span style="font-size:11px;color:var(--ink4);font-weight:400;"> '+esc(m.unit||"원/kg")+'</span></div>'+
+        '<span style="font-size:12.5px;color:var(--ink4);font-weight:400;"> '+esc(m.unit||"원/kg")+'</span></div>'+
       '<div class="price-chg '+cls+'">'+chg+'</div></div></div>';
 }
 function mkFoot(rows){

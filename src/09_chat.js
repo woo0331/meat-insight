@@ -75,7 +75,7 @@ window.gOpenChatList=async function(){
         return '<div class="ritem" onclick="gOpenChat(\''+r.id+'\')">'+
           '<div class="ritem-top"><span class="gbadge '+(iAmBuyer?"gb-or":"gb-bl")+'">'+(iAmBuyer?"내 요청":"받은 요청")+'</span>'+
             (r._unread?'<span class="gbadge gb-rd">'+r._unread+'</span>':'')+
-            '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(r.last_at)+'</span></div>'+
+            '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(r.last_at)+'</span></div>'+
           '<div class="ritem-t">'+esc(other)+'</div>'+
           '<div class="ritem-m"><span>'+esc(truncate(r.last_message||"",40))+'</span></div></div>';
       }).join("")+'</div>'

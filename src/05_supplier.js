@@ -95,7 +95,7 @@ function renderSupplierDetail(){
       s.images.slice(0,6).map(function(u){ return '<div class="sd-img" style="background-image:url('+esc(u)+');"></div>'; }).join("")+'</div></div>':'')+
 
     '<div class="gcard"><div class="gcard-t">업체 소개</div>'+
-      '<p style="font-size:14px;color:var(--ink2);line-height:1.75;white-space:pre-wrap;">'+
+      '<p style="font-size:15px;color:var(--ink2);line-height:1.75;white-space:pre-wrap;">'+
         esc(s.intro||s.description||((s.region||"")+" 지역의 "+((cats[0]||"축산"))+" 전문 업체입니다."))+'</p></div>'+
 
     '<div class="gcard"><div class="gcard-t">후기 '+(SD.reviews===null?"":"("+rvs.length+")")+'</div>'+

@@ -85,7 +85,7 @@ function renderDaily(){
           (j.start_time?'<span>🕐 '+esc(j.start_time)+(j.end_time?"~"+esc(j.end_time):"")+'</span>':'')+
           (j.experience?'<span>경력 '+esc(j.experience)+'</span>':'')+
         '</div>'+
-        (j.detail?'<div style="font-size:12.5px;color:var(--ink3);line-height:1.55;">'+esc(j.detail)+'</div>':'')+
+        (j.detail?'<div style="font-size:13.5px;color:var(--ink3);line-height:1.55;">'+esc(j.detail)+'</div>':'')+
       '</div>'+
       '<div class="dj-r">'+
         '<div class="dj-pay">'+won(j.pay)+'원</div><div class="dj-pt">'+esc(j.pay_type||"일당")+'</div>'+
@@ -176,8 +176,8 @@ window.gApplyDJ=function(id){
   box.id="dj-apply-modal";
   box.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;display:flex;align-items:flex-end;justify-content:center;padding:0;";
   box.innerHTML='<div style="background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:20px 18px 26px;" onclick="event.stopPropagation()">'+
-    '<div style="font-size:17px;font-weight:800;margin-bottom:4px;">'+esc(j.company)+' · '+esc(j.work_type)+'</div>'+
-    '<div style="font-size:13px;color:var(--ink3);margin-bottom:16px;">'+fmtDate(j.work_date)+' · '+won(j.pay)+'원 '+esc(j.pay_type||"일당")+' · '+esc(j.region||"")+'</div>'+
+    '<div style="font-size:18px;font-weight:800;margin-bottom:4px;">'+esc(j.company)+' · '+esc(j.work_type)+'</div>'+
+    '<div style="font-size:14px;color:var(--ink3);margin-bottom:16px;">'+fmtDate(j.work_date)+' · '+won(j.pay)+'원 '+esc(j.pay_type||"일당")+' · '+esc(j.region||"")+'</div>'+
     '<div class="grow keep">'+
       '<div><label class="glabel">이름 <span class="greq">*</span></label><input class="gin" id="ap-name" value="'+esc((w&&w.name)||ME.name||"")+'"></div>'+
       '<div><label class="glabel">연락처 <span class="greq">*</span></label><input class="gin" id="ap-contact" placeholder="010-0000-0000" value="'+esc((w&&w.contact)||"")+'"></div>'+
@@ -239,7 +239,7 @@ window.gViewApps=async function(jobId){
               '<div class="wk-st"><span>경력 <b>'+(a.experience_years||0)+'년</b></span>'+
                 '<span>평점 <b>'+(rating?rating.toFixed(1):"신규")+'</b></span>'+
                 '<span>작업 <b>'+cnt+'회</b></span></div>'+
-              (a.message?'<div style="font-size:12.5px;color:var(--ink3);margin-top:8px;line-height:1.55;">'+esc(a.message)+'</div>':'')+
+              (a.message?'<div style="font-size:13.5px;color:var(--ink3);margin-top:8px;line-height:1.55;">'+esc(a.message)+'</div>':'')+
             '</div>'+
             '<div style="flex-shrink:0;display:flex;flex-direction:column;gap:6px;">'+
               '<button class="gbtn gbtn-p gbtn-sm" onclick="gChooseWorker(\''+a.id+'\',\''+esc(jobId)+'\')"'+(a.status==="선택됨"?" disabled":"")+'>선택</button>'+

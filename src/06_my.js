@@ -105,18 +105,18 @@ function reqRow(r){
   return '<div class="ritem" onclick="gOpenRequest(\''+esc(r.id)+'\')">'+
     '<div class="ritem-top"><span class="gbadge gb-or">'+esc(label)+'</span>'+
       '<span class="gbadge '+(r.status==="완료"?"gb-ok":(r.status==="진행중"?"gb-bl":"gb-gy"))+'">'+esc(r.status||"견적대기")+'</span>'+
-      '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(r.created_at)+'</span></div>'+
+      '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(r.created_at)+'</span></div>'+
     '<div class="ritem-t">'+esc(r.title||r.description||label+" 요청")+'</div>'+
     '<div class="ritem-m"><span>📍 '+esc(r.region||"전국")+'</span>'+
       (r.deadline?'<span>🗓 '+fmtDate(r.deadline)+'</span>':'')+'</div>'+
-    '<div class="ritem-f"><span style="font-size:13px;font-weight:700;color:var(--ink2);">받은 견적 '+(r.quote_count||0)+'건</span>'+
-      '<span style="font-size:13px;font-weight:700;color:var(--gn);">견적 비교 ›</span></div></div>';
+    '<div class="ritem-f"><span style="font-size:14px;font-weight:700;color:var(--ink2);">받은 견적 '+(r.quote_count||0)+'건</span>'+
+      '<span style="font-size:14px;font-weight:700;color:var(--gn);">견적 비교 ›</span></div></div>';
 }
 function quoteRow(q, showReq){
   var r=MY.reqs.find(function(x){ return String(x.id)===String(q.request_id); });
   return '<div class="ritem" onclick="gOpenRequest(\''+esc(q.request_id)+'\')">'+
     '<div class="ritem-top"><span class="gbadge '+(q.status==="선택됨"?"gb-ok":(q.status==="미선택"?"gb-gy":"gb-or"))+'">'+esc(q.status||"대기")+'</span>'+
-      '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(q.created_at)+'</span></div>'+
+      '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(q.created_at)+'</span></div>'+
     '<div class="ritem-t">'+esc(q.supplier_name)+' · '+won(num(q.price))+' '+esc(q.price_unit||"")+'</div>'+
     '<div class="ritem-m">'+(q.lead_time?'<span>납기 '+esc(q.lead_time)+'</span>':'')+
       (q.delivery?'<span>'+esc(q.delivery)+'</span>':'')+
@@ -167,7 +167,7 @@ function renderMyPanel(){
       '<div class="gcard-t" style="border:none;padding:0;margin:20px 0 10px;">내 지원 ('+MY.apps.length+')</div>'+
       (MY.apps.length ? '<div class="rlist">'+MY.apps.map(function(a){
         return '<div class="ritem"><div class="ritem-top"><span class="gbadge '+(a.status==="선택됨"?"gb-ok":"gb-gy")+'">'+esc(a.status)+'</span>'+
-          '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(a.created_at)+'</span></div>'+
+          '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(a.created_at)+'</span></div>'+
           '<div class="ritem-t">'+esc((a.skills||[]).join(", ")||"당일알바 지원")+'</div>'+
           '<div class="ritem-m"><span>경력 '+(a.experience_years||0)+'년</span></div></div>';
       }).join("")+'</div>' : '<div class="ghint">지원한 일감이 없습니다.</div>');
@@ -180,8 +180,8 @@ function renderMyPanel(){
             '<div class="ritem-m"><span>📍 '+esc(s.region||"")+'</span>'+
               (s.rating?'<span class="qstar">★ '+Number(s.rating).toFixed(1)+'</span>':'')+
               '<span>거래 '+(s.deal_count||0)+'건</span></div>'+
-            '<div class="ritem-f"><span style="font-size:13px;color:var(--ink3);">'+esc((s.categories||[]).slice(0,3).join(" · "))+'</span>'+
-            '<span style="font-size:13px;font-weight:700;color:var(--gn);">업체 보기 ›</span></div></div>';
+            '<div class="ritem-f"><span style="font-size:14px;color:var(--ink3);">'+esc((s.categories||[]).slice(0,3).join(" · "))+'</span>'+
+            '<span style="font-size:14px;font-weight:700;color:var(--gn);">업체 보기 ›</span></div></div>';
         }).join("")+'</div>'
         : empty("관심업체가 없습니다","업체 상세에서 ♡ 를 누르면 여기에 모입니다.",'<button class="gbtn gbtn-p gbtn-sm" onclick="go(&quot;suppliers&quot;)">업체 찾기</button>'));
   }

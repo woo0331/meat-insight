@@ -32,7 +32,7 @@ function edFieldHtml(f){
   else if(f.t==="textarea") h+='<textarea class="gin" id="'+id+'" placeholder="'+esc(f.ph||"")+'"></textarea>';
   else if(f.t==="money"||f.t==="number") h+='<div style="position:relative;"><input class="gin" id="'+id+'" inputmode="numeric" placeholder="'+esc(f.ph||"")+'"'+
       (f.t==="money"?' oninput="gNumFmt(this)"':'')+'>'+
-      (f.unit?'<span style="position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--ink4);font-weight:600;">'+esc(f.unit)+'</span>':'')+'</div>';
+      (f.unit?'<span style="position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--ink4);font-weight:600;">'+esc(f.unit)+'</span>':'')+'</div>';
   else h+='<input class="gin" id="'+id+'" type="'+(f.t==="date"?"date":(f.t==="time"?"time":"text"))+'" placeholder="'+esc(f.ph||"")+'">';
   return h;
 }

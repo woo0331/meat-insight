@@ -158,17 +158,17 @@ function showInstant(req, picks, notified){
     '<div class="gp-hd"><div><div class="gp-title">요청이 등록되었습니다</div>'+
       '<div class="gp-sub">'+esc(req.title||req.category)+(notified?(' · 업체 '+notified+'곳에 알림 발송'):'')+'</div></div></div>'+
     '<div class="gcard" style="background:var(--gnl);border-color:var(--gnb);">'+
-      '<div style="font-size:15px;font-weight:800;color:var(--ink);margin-bottom:6px;">바로견적 — 조건이 맞는 업체</div>'+
-      '<div style="font-size:13px;color:var(--ink3);line-height:1.6;">아래 업체에 먼저 요청이 전달되었습니다. 급하시면 바로 채팅으로 문의하세요.</div></div>'+
+      '<div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:6px;">바로견적 — 조건이 맞는 업체</div>'+
+      '<div style="font-size:14px;color:var(--ink3);line-height:1.6;">아래 업체에 먼저 요청이 전달되었습니다. 급하시면 바로 채팅으로 문의하세요.</div></div>'+
     '<div class="rlist">'+picks.map(function(s){
       return '<div class="ritem">'+
         '<div class="ritem-top">'+trustBadges(s)+(s.instant_quote?'<span class="gbadge gb-bl">바로견적</span>':'')+
-          '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+esc(respText(s)||"")+'</span></div>'+
+          '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+esc(respText(s)||"")+'</span></div>'+
         '<div class="ritem-t">'+esc(s.name)+'</div>'+
         '<div class="ritem-m"><span>📍 '+esc(s.region||"")+'</span>'+
           (s.rating?'<span class="qstar">★ '+Number(s.rating).toFixed(1)+'</span>':'<span>신규</span>')+
           '<span>거래 '+(s.deal_count||0)+'건</span></div>'+
-        (s.instant_note?'<div style="font-size:12.5px;color:var(--ink3);margin-top:8px;">'+esc(s.instant_note)+'</div>':'')+
+        (s.instant_note?'<div style="font-size:13.5px;color:var(--ink3);margin-top:8px;">'+esc(s.instant_note)+'</div>':'')+
         '<div class="ritem-f"><button class="gbtn gbtn-w gbtn-sm" onclick="curSID=\''+esc(s.id)+'\';go(&quot;sp&quot;)">업체 보기</button>'+
         '<button class="gbtn gbtn-p gbtn-sm" onclick="gStartChat({requestId:\''+esc(req.id)+'\',supplierId:\''+esc(s.id)+'\',supplierUserId:'+(s.user_id?"'"+esc(s.user_id)+"'":"null")+',supplierName:\''+esc(s.name)+'\',buyerUserId:'+(req.user_id?"'"+esc(req.user_id)+"'":"null")+',buyerName:\''+esc(req.buyer_name||"")+'\',firstMessage:\'요청 건으로 문의드립니다.\'})">바로 문의</button></div>'+
         '</div>';
@@ -242,7 +242,7 @@ function patchMyTabs(){
             return '<div class="ritem" onclick="gOpenChat(\''+r.id+'\')">'+
               '<div class="ritem-top"><span class="gbadge '+(iAmBuyer?"gb-or":"gb-bl")+'">'+(iAmBuyer?"내 요청":"받은 요청")+'</span>'+
               (r._unread?'<span class="gbadge gb-rd">'+r._unread+'</span>':'')+
-              '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(r.last_at)+'</span></div>'+
+              '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(r.last_at)+'</span></div>'+
               '<div class="ritem-t">'+esc(iAmBuyer?(r.supplier_name||"업체"):(r.buyer_name||"요청자"))+'</div>'+
               '<div class="ritem-m"><span>'+esc(truncate(r.last_message||"",44))+'</span></div></div>';
           }).join("")+'</div>'
@@ -256,11 +256,11 @@ function patchMyTabs(){
         : (MY.orders && MY.orders.length ? '<div class="rlist">'+MY.orders.map(function(o){
             return '<div class="ritem" onclick="gOpenOrder(\''+o.id+'\')">'+
               '<div class="ritem-top"><span class="gbadge '+(o.status==="완료"?"gb-ok":(o.status==="취소"?"gb-gy":"gb-bl"))+'">'+esc(o.status)+'</span>'+
-                '<span style="font-size:12px;color:var(--ink4);margin-left:auto;">'+ago(o.created_at)+'</span></div>'+
+                '<span style="font-size:13px;color:var(--ink4);margin-left:auto;">'+ago(o.created_at)+'</span></div>'+
               '<div class="ritem-t">'+esc(o.title||"")+'</div>'+
               '<div class="ritem-m"><span>'+esc(o.supplier_name||"")+'</span><span>'+won(num(o.amount))+'원</span></div>'+
-              '<div class="ritem-f"><span style="font-size:13px;color:var(--ink3);">진행 상태 관리</span>'+
-              '<span style="font-size:13px;font-weight:700;color:var(--gn);">열기 ›</span></div></div>';
+              '<div class="ritem-f"><span style="font-size:14px;color:var(--ink3);">진행 상태 관리</span>'+
+              '<span style="font-size:14px;font-weight:700;color:var(--gn);">열기 ›</span></div></div>';
           }).join("")+'</div>'
           : empty("진행 중인 거래가 없습니다","견적을 선택하면 거래가 시작됩니다."));
       return;

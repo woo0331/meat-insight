@@ -54,7 +54,7 @@
 node build.js --check                    # 빌드 최신인지
 node --check gori-app.js                 # 문법
 cmp index.html meat_insight_main.html    # 미러 일치
-node test/run.js                         # 회귀 35종 (playwright 필요)
+node test/run.js                         # 회귀 37종 (playwright 필요)
 cd test && node contrast-e2e.js          # 색 대비 전수 (팔레트를 바꾸면 필수)
 bash test/rls-test.sh                    # RLS SQL 을 진짜 Postgres 에 실행 (db/ 를 고치면 필수)
 ```
@@ -69,6 +69,12 @@ bash test/rls-test.sh                    # RLS SQL 을 진짜 Postgres 에 실�
 `gori-app.css` 에서 다시 잡으면 **조용히 무시된다.** 이길 때는 `html` 을 하나
 붙여 굵기를 올린다 (`html .ha-btn{...}`). 실제로 겪은 버그다 — 실시간 띠의
 애니메이션을 늦추는 규칙이 통째로 먹히지 않았다.
+
+**사용자가 쓴 글을 화면에 찍을 때는 반드시 `esc()` 를 통과시킨다.**
+`gori-app.js` 의 `esc()` 는 IIFE 안에 갇혀 있어 `index.html` 에서 쓸 수 없다 —
+그래서 index.html 에 **따로 하나 더** 두었다. 이 파일에서 렌더러를 새로 쓸 때는
+그 `esc()` 를 쓸 것. 안 쓰면 업체명에 넣은 `<img onerror=...>` 가 남의
+브라우저에서 실행된다. 실제로 16곳이 뚫려 있었다. `test/xss-e2e.js` 가 잡는다.
 
 쓰는 사람 중에 연세 있는 분이 많다. 새로 넣는 글씨는 **12px 미만 금지**,
 누르는 것은 **40px 이상**. `test/ease-e2e.js` 가 화면마다 전수로 잡는다.

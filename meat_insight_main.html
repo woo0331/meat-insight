@@ -1706,7 +1706,7 @@ function renderCat8(){
   if(!reqs.length)re.innerHTML='<div class="es"><div class="es-t">이 분야에 등록된 요청이 없습니다</div><div class="es-d">첫 요청을 올려보세요.</div><button class="es-btn" onclick="pickSub(&quot;'+c.k+'&quot;,&quot;&quot;)">요청 올리기</button></div>';
   else re.innerHTML='<div class="rqc-grid">'+reqs.slice(0,8).map(function(r){
     return '<article class="rqc" onclick="go(&quot;reqs&quot;)"><div class="rqc-top"><span class="rqc-cat">'+cat8Label(r.cat)+'</span><span class="rqc-time">'+(r.time||"")+'</span></div>'+
-      '<h3 class="rqc-title">'+r.title+'</h3><div class="rqc-meta">'+(r.region||"지역 미지정")+'</div>'+
+      '<h3 class="rqc-title">'+esc(r.title)+'</h3><div class="rqc-meta">'+esc(r.region||"지역 미지정")+'</div>'+
       '<div class="rqc-foot"><span class="rqc-cnt">받은 견적 '+(r.qcnt||0)+'건</span><span class="rqc-cta">자세히 보기 ›</span></div></article>';
   }).join('')+'</div>';
 }
@@ -1751,7 +1751,7 @@ function renderLive(){
   if(!REQS.length){bar.style.display="none";el.innerHTML="";return;}
   bar.style.display="flex";
   var data=REQS.slice(0,10).map(function(r){
-    return {txt:r.title+" · "+(r.region||"전국"),cnt:"견적 "+(r.qcnt||0)+"건",time:r.time||""};
+    return {txt:esc(r.title)+" · "+esc(r.region||"전국"),cnt:"견적 "+(r.qcnt||0)+"건",time:esc(r.time||"")};
   });
   var all=data.concat(data);
   el.innerHTML=all.map(function(d){
@@ -1773,8 +1773,8 @@ function renderRQWidget(){
   el.innerHTML=REQS.slice(0,8).map(function(r){
     return '<article class="rqc" onclick="go(&quot;reqs&quot;)">'+
       '<div class="rqc-top"><span class="rqc-cat">'+cat8Label(r.cat)+'</span><span class="rqc-time">'+(r.time||"")+'</span></div>'+
-      '<h3 class="rqc-title">'+r.title+'</h3>'+
-      '<div class="rqc-meta">'+(r.region||"지역 미지정")+'</div>'+
+      '<h3 class="rqc-title">'+esc(r.title)+'</h3>'+
+      '<div class="rqc-meta">'+esc(r.region||"지역 미지정")+'</div>'+
       '<div class="rqc-foot"><span class="rqc-cnt">받은 견적 '+(r.qcnt||0)+'건</span><span class="rqc-cta">자세히 보기 ›</span></div>'+
       '</article>';
   }).join('');
@@ -1807,14 +1807,14 @@ function renderRankWidget(){
   var el=document.getElementById("rank-widget");if(!el)return;
   if(!RANKS.length){el.innerHTML=emptyBox("등록된 업체가 아직 없습니다");return;}
   el.innerHTML=RANKS.map(function(r,i){
-    return '<div class="rank-row"><div class="rank-num">'+(i+1)+'</div><div style="flex:1;min-width:0;"><div class="rank-nm">'+r.nm+'</div><div class="rank-cat">'+r.cat+'</div></div><div class="rank-rt">'+r.rt+'</div></div>';
+    return '<div class="rank-row"><div class="rank-num">'+(i+1)+'</div><div style="flex:1;min-width:0;"><div class="rank-nm">'+esc(r.nm)+'</div><div class="rank-cat">'+esc(r.cat)+'</div></div><div class="rank-rt">'+esc(r.rt)+'</div></div>';
   }).join('');
 }
 function renderNewSupWidget(){
   var el=document.getElementById("new-sup-widget");if(!el)return;
   if(!NEW_SUPS.length){el.innerHTML=emptyBox("신규 등록 업체가 아직 없습니다");return;}
   el.innerHTML=NEW_SUPS.map(function(s){
-    return '<div class="new-sup-row"><div class="ns-avatar">'+s.ico+'</div><div style="flex:1;min-width:0;"><div class="ns-nm">'+s.nm+'</div><div class="ns-sub">'+s.sub+'</div></div>'+(s.isnew?'<div class="ns-new">NEW</div>':'')+'</div>';
+    return '<div class="new-sup-row"><div class="ns-avatar">'+s.ico+'</div><div style="flex:1;min-width:0;"><div class="ns-nm">'+esc(s.nm)+'</div><div class="ns-sub">'+esc(s.sub)+'</div></div>'+(s.isnew?'<div class="ns-new">NEW</div>':'')+'</div>';
   }).join('');
 }
 function mkNewsThumb(cl){
@@ -1843,9 +1843,9 @@ function renderJobWidget(){
           (j.urgent?"🔴 급구":"정규직")+
         '</span>'+
       '</div>'+
-      '<div class="jr-title">'+j.role+'</div>'+
+      '<div class="jr-title">'+esc(j.role)+'</div>'+
       '<div class="jr-meta">'+
-        '<div class="jr-loc">'+j.loc+'</div>'+
+        '<div class="jr-loc">'+esc(j.loc)+'</div>'+
         '<div class="jr-pay">'+j.pay+'</div>'+
       '</div>'+
     '</div>';
@@ -1865,9 +1865,9 @@ function mkSC(s){
     '<div class="sc-img" style="background:'+s.cl+';">'+
     '<svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;display:block;"><rect width="200" height="100" fill="'+s.cl+'"/><ellipse cx="100" cy="60" rx="70" ry="40" fill="rgba(255,255,255,.06)"/></svg>'+
     '<div class="sc-img-ov"></div>'+(s.vf?'<div class="sc-cert">고리인증</div>':'')+
-    '<div class="sc-nm">'+s.nm+'</div>'+
+    '<div class="sc-nm">'+esc(s.nm)+'</div>'+
     '<div class="sc-rt"><span class="sc-star">★</span><span class="sc-rtv">'+s.rt.toFixed(1)+'</span></div></div>'+
-    '<div class="sc-body"><div class="sc-cat">'+s.cat+'</div>'+
+    '<div class="sc-body"><div class="sc-cat">'+esc(s.cat)+'</div>'+
     '<div class="sc-stats">'+
     '<div><div class="sc-sv">'+(s.rs||"—")+'</div><div class="sc-sl">평균납기</div></div>'+
     '<div><div class="sc-sv">'+(s.minq||"—")+'</div><div class="sc-sl">최소수량</div></div>'+
@@ -1907,13 +1907,13 @@ function renderSP(id){
   var s=SUPS.find(function(x){return x.id===id;})||SUPS[0];
   el.innerHTML='<div style="padding:14px;"><button class="back-btn" style="padding:0;" onclick="go(&quot;suppliers&quot;)">← 업체 목록</button></div>'+
     '<div style="height:160px;background:'+s.cl+';position:relative;"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(0,0,0,.7) 100%);"></div>'+
-    '<div style="position:absolute;bottom:14px;left:16px;"><div style="font-size:21px;font-weight:700;color:#fff;">'+s.nm+'</div><div style="font-size:13px;color:rgba(255,255,255,.55);margin-top:2px;">'+s.cat+'</div></div></div>'+
+    '<div style="position:absolute;bottom:14px;left:16px;"><div style="font-size:21px;font-weight:700;color:#fff;">'+esc(s.nm)+'</div><div style="font-size:13px;color:rgba(255,255,255,.55);margin-top:2px;">'+esc(s.cat)+'</div></div></div>'+
     '<div style="background:var(--navy);display:grid;grid-template-columns:repeat(3,1fr);text-align:center;">'+
     '<div style="padding:12px;"><div style="font-size:15px;font-weight:700;color:#fff;">'+(s.rs||"—")+'</div><div style="font-size:12px;color:rgba(255,255,255,.62);margin-top:2px;">평균납기</div></div>'+
     '<div style="padding:12px;border:0 solid rgba(255,255,255,.06);border-left-width:1px;border-right-width:1px;"><div style="font-size:15px;font-weight:700;color:#fff;">'+(s.minq||"—")+'</div><div style="font-size:12px;color:rgba(255,255,255,.62);margin-top:2px;">최소수량</div></div>'+
     '<div style="padding:12px;"><div style="font-size:15px;font-weight:700;color:#F59E0B;">★ '+((Math.round((s.rt||0)*10)/10))+'</div><div style="font-size:12px;color:rgba(255,255,255,.62);margin-top:2px;">평점</div></div>'+
     '</div>'+
-    '<div style="padding:14px;"><div class="fc"><div class="fct">업체 소개</div><p style="font-size:15px;color:var(--ink2);line-height:1.7;">'+((s.desc&&s.desc.trim())?s.desc:(s.cat+" 전문 업체입니다."))+'</p></div>'+
+    '<div style="padding:14px;"><div class="fc"><div class="fct">업체 소개</div><p style="font-size:15px;color:var(--ink2);line-height:1.7;">'+esc((s.desc&&s.desc.trim())?s.desc:(s.cat+" 전문 업체입니다."))+'</p></div>'+
     '<div style="display:flex;gap:9px;margin-top:12px;"><button class="btn btn-gn" onclick="go(&quot;rw&quot;)" style="flex:2;padding:12px;">이 업체에 견적 요청</button><button class="btn btn-wh" onclick="alert(&quot;카카오채널로 문의해주세요.&quot;)" style="flex:1;padding:12px;">문의</button></div></div>';
 }
 
@@ -1931,8 +1931,8 @@ function renderReqs(){
   data.forEach(function(r){
     var d=document.createElement("article");d.className="rqc";d.style.cssText="margin-bottom:10px;";
     d.innerHTML='<div class="rqc-top"><span class="rqc-cat">'+cat8Label(r.cat)+'</span><span class="rqc-time">'+(r.time||"")+'</span></div>'+
-      '<h3 class="rqc-title">'+r.title+'</h3>'+
-      '<div class="rqc-meta">'+(r.region||"지역 미지정")+'</div>'+
+      '<h3 class="rqc-title">'+esc(r.title)+'</h3>'+
+      '<div class="rqc-meta">'+esc(r.region||"지역 미지정")+'</div>'+
       '<div class="rqc-foot"><span class="rqc-cnt">받은 견적 '+(r.qcnt||0)+'건</span><span class="rqc-cta">견적 보내기는 준비 중 ›</span></div>';
     el.appendChild(d);
   });
@@ -2039,11 +2039,11 @@ function renderJobsFull(){
               '<span class="job-emp-badge '+badgeCls+'">'+badgeTxt+'</span>'+
               (j.urgent?'<span class="job-urgent">급구</span>':'')+
             '</div>'+
-            '<div class="job-role">'+j.role+'</div>'+
+            '<div class="job-role">'+esc(j.role)+'</div>'+
             '<div class="job-meta">'+
-              '<span class="job-biz">'+j.biz+'</span>'+
-              '<span class="job-loc">'+j.loc+'</span>'+
-              (j.benefit?'<span class="job-benefit">· '+j.benefit+'</span>':'')+
+              '<span class="job-biz">'+esc(j.biz)+'</span>'+
+              '<span class="job-loc">'+esc(j.loc)+'</span>'+
+              (j.benefit?'<span class="job-benefit">· '+esc(j.benefit)+'</span>':'')+
             '</div>'+
           '</div>'+
           '<div class="job-card-right">'+
@@ -2218,6 +2218,14 @@ function supColor(id){var s=String(id||""),n=0;for(var i=0;i<s.length;i++)n+=s.c
 function relTime(iso){if(!iso)return "";var d=new Date(iso);if(isNaN(d))return "";var s=Math.floor((Date.now()-d.getTime())/1000);if(s<60)return "방금 전";if(s<3600)return Math.floor(s/60)+"분 전";if(s<86400)return Math.floor(s/3600)+"시간 전";if(s<2592000)return Math.floor(s/86400)+"일 전";return (d.getMonth()+1)+"."+d.getDate();}
 function truncate(s,n){s=String(s||"");return s.length>n?s.slice(0,n)+"…":s;}
 function dbCatOf(r){return r.category||r.item_category||"기타";}
+/* 화면에 찍는 사용자 입력은 반드시 통과시킵니다.
+   gori-app.js 의 esc 는 IIFE 안에 갇혀 있어 여기서 못 씁니다 —
+   그래서 이 파일의 렌더러들이 원문을 그대로 붙이고 있었습니다.
+   업체명·요청 제목에 <img onerror=...> 를 넣으면 남의 브라우저에서
+   실행됐습니다. */
+function esc(v){ return String(v==null?"":v)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
 function mapReq(r){
   var c=dbCatOf(r),st=catStyle(c);
   var region=r.region||"", when=relTime(r.created_at), q=(r.quote_count!=null?r.quote_count:0);

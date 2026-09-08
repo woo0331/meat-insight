@@ -162,4 +162,4 @@ Vercel 에 이 저장소를 연결하면 끝입니다. 빌드 도구가 없는 �
 
 1. `gori-app.js` 를 직접 고치지 말 것 — `src/` 를 고치고 `node build.js`
 2. `index.html` 을 고치면 반드시 `cp index.html meat_insight_main.html`
-3. 고친 뒤 `node test/run.js` (회귀 33종) 와 `test/contrast-e2e.js` 실행
+3. 고친 뒤 `node test/run.js` (회귀 34종) 와 `test/contrast-e2e.js` 실행

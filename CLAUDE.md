@@ -54,7 +54,7 @@
 node build.js --check                    # 빌드 최신인지
 node --check gori-app.js                 # 문법
 cmp index.html meat_insight_main.html    # 미러 일치
-node test/run.js                         # 회귀 33종 (playwright 필요)
+node test/run.js                         # 회귀 34종 (playwright 필요)
 cd test && node contrast-e2e.js          # 색 대비 전수 (팔레트를 바꾸면 필수)
 ```
 

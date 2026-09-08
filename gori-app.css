@@ -913,3 +913,32 @@ html .trust-ico .du-f{opacity:.24;}
   html .cat8-ico svg{width:33px;height:33px;}
   html .cat8-nm{font-size:13.5px;}
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   홈 접기 (src/38_home.js)
+   ════════════════════════════════════════════════════════════════════ */
+.hm-fold .hm-fold-body{display:none;}
+.hm-fold.open .hm-fold-body{display:block;}
+
+html .hm-fold{padding:22px 0;}
+html .hm-fold.open{padding:44px 0;}
+
+html .hm-fold-hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:0;}
+html .hm-fold.open .hm-fold-hd{margin-bottom:20px;}
+html .hm-fold-hd .sec-h2{font-size:20px;}
+html .hm-fold-hd .sec-d2{margin:0;font-size:14px;color:var(--ink3);}
+
+.hm-fold-btn{margin-left:auto;display:inline-flex;align-items:center;gap:7px;
+  min-height:44px;padding:9px 16px;border:1.5px solid var(--bd2);border-radius:999px;
+  background:#fff;color:var(--ink2);font-family:var(--font);font-size:14px;font-weight:700;
+  cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s;}
+.hm-fold-btn:hover{border-color:var(--gn);color:var(--gn);}
+.hm-fold-c{display:flex;transition:transform .18s;}
+.hm-fold.open .hm-fold-c{transform:rotate(180deg);}
+@media (prefers-reduced-motion:reduce){ .hm-fold-c{transition:none;} }
+
+@media(max-width:768px){
+  html .hm-fold-hd{gap:8px;}
+  html .hm-fold-hd .sec-h2{font-size:18px;}
+  .hm-fold-btn{padding:9px 14px;font-size:13.5px;}
+}

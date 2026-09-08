@@ -39,6 +39,9 @@ insert into market_prices (category, item, grade, price, unit, price_date)
 values ('beef', '한우 등심', '1+', 64000, '원/kg', current_date);
 ```
 
+> **처음 여는 분은 [START.md](START.md) 를 보세요.** 순서대로 따라 하면
+> 서비스가 열립니다. 아래 표는 그 요약입니다.
+
 ### 남은 것 · 켜야 할 것 (한눈에)
 
 | | 무엇 | 어디서 |
@@ -92,6 +95,7 @@ node build.js --check   # 빌드 결과가 현재 파일과 같은지 확인
 | `35_hub` | 거래관리 "한눈에 보기" 요약 · 탭 묶기 |
 | `36_art` | 두 톤 아이콘 · 빈 자리 · 그림 자리 |
 | `37_ease` | 글자 크게 (연세 있는 이용자) |
+| `38_home` | 홈 부차 구간 접기 |
 | `33_layout` | 넓은 화면 두 칸 배치 (다른 패치가 붙인 뒤라야 하므로 맨 뒤) |
 | `07_init` | **초기화 — 반드시 마지막** (IIFE 닫는 괄호가 여기 있습니다) |
 

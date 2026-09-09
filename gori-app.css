@@ -1007,3 +1007,87 @@ html a,html button,html input,html select,html textarea,html summary,
 html [tabindex]:not([tabindex="-1"]){
   transition-property:background-color,border-color,color,box-shadow,transform,opacity !important;
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   왜 고리인가 (홈) · 고리 소개 (#/about)          — src/43_about.js
+   여기 선택자는 index.html 에 없는 새 이름이라 굵기 다툼이 없습니다.
+   ════════════════════════════════════════════════════════════════════ */
+/* index.html 의 .sec{background:#fff} 가 뒤에 실려서 같은 굵기로는 집니다 —
+   html 을 하나 붙여 굵기를 올립니다 (CLAUDE.md 참고) */
+html .why{background:var(--gnl);border-top:1px solid var(--gnb);
+  border-bottom:1px solid var(--gnb);padding:34px 0 36px;}
+.why-hd{margin-bottom:18px;}
+.why-lead{font-size:15px;line-height:1.65;color:var(--ink2);margin-top:8px;max-width:760px;font-weight:500;}
+
+/* 지금까지 → 고리에서는 */
+.why-flow{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:stretch;margin-bottom:16px;}
+.why-side{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:14px 16px;}
+.why-side-t{font-size:13px;font-weight:800;letter-spacing:-.2px;margin-bottom:8px;}
+.why-old .why-side-t{color:var(--ink4);}
+.why-new .why-side-t{color:var(--gn2);}
+.why-side ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.why-side li{font-size:14px;line-height:1.5;color:var(--ink2);padding-left:15px;position:relative;}
+.why-side li::before{content:"";position:absolute;left:0;top:8px;width:6px;height:6px;border-radius:50%;
+  background:var(--bd2);}
+.why-old li{color:var(--ink3);}
+.why-new li::before{background:var(--gn);}
+.why-new{border-color:var(--gnb);}
+.why-arw{display:flex;align-items:center;justify-content:center;color:var(--gn);}
+
+.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.why-c{background:#fff;border:1px solid var(--bd);border-radius:16px;padding:18px 16px;}
+.why-ico{width:42px;height:42px;border-radius:12px;background:var(--gnl);color:var(--gn2);
+  display:flex;align-items:center;justify-content:center;margin-bottom:11px;}
+.why-t{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.3px;margin-bottom:6px;line-height:1.35;}
+.why-d{font-size:13.5px;line-height:1.62;color:var(--ink3);}
+.why-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+.why-act .gbtn{flex:0 1 auto;min-width:180px;}
+
+@media(max-width:900px){
+  .why-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:640px){
+  .why-flow{grid-template-columns:1fr;}
+  .why-arw{transform:rotate(90deg);height:24px;}
+  .why-grid{grid-template-columns:1fr;gap:10px;}
+  .why-c{padding:15px 14px;}
+  .why-act .gbtn{flex:1 1 100%;min-width:0;}
+}
+
+/* ── 소개 페이지 ── */
+.ab-hero{background:var(--gnl);border:1px solid var(--gnb);border-radius:18px;
+  padding:24px 22px;margin-bottom:14px;}
+.ab-h1{font-size:24px;font-weight:800;line-height:1.35;letter-spacing:-.5px;color:var(--ink);margin-bottom:10px;}
+.ab-lead{font-size:15px;line-height:1.72;color:var(--ink2);font-weight:500;}
+.ab-lead b{color:var(--gn2);font-weight:800;}
+.ab-sec{margin-bottom:12px;}
+.ab-p{font-size:14.5px;line-height:1.75;color:var(--ink2);margin:0 0 10px;}
+.ab-p:last-child{margin-bottom:0;}
+.ab-p b{color:var(--ink);font-weight:800;}
+.ab-p-sm{font-size:13.5px;color:var(--ink3);}
+.ab-it{padding:12px 0;border-top:1px solid var(--bd);}
+.ab-it:first-of-type{border-top:0;padding-top:2px;}
+.ab-it-t{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.25px;margin-bottom:4px;}
+.ab-it-d{font-size:13.5px;line-height:1.68;color:var(--ink3);}
+.ab-warn{border-color:var(--amber-br);background:var(--amber-tint);}
+.ab-warn .ab-it{border-top-color:var(--amber-br);}
+.ab-warn .ab-it-d{color:var(--amber-on);}
+.ab-warn .ab-p-sm{color:var(--amber-on);}
+
+.ab-biz{margin:0;display:flex;flex-direction:column;gap:0;}
+.ab-biz-r{display:flex;gap:12px;padding:9px 0;border-top:1px solid var(--bd);font-size:13.5px;}
+.ab-biz-r:first-child{border-top:0;}
+.ab-biz dt{flex:0 0 130px;color:var(--ink4);font-weight:700;margin:0;}
+.ab-biz dd{margin:0;color:var(--ink2);font-weight:600;word-break:break-all;}
+/* .biz-none 은 푸터 안에서만 색이 정해져 있어서 여기서 한 번 더 잡습니다 */
+.ab-biz .biz-none{color:var(--amber-ink);font-weight:700;}
+.ab-note{margin-top:12px;font-size:12.5px;line-height:1.6;color:var(--ink4);
+  background:var(--bg2);border-radius:10px;padding:10px 12px;}
+
+@media(max-width:640px){
+  .ab-hero{padding:19px 16px;}
+  .ab-h1{font-size:20px;}
+  .ab-lead{font-size:14.5px;}
+  .ab-biz-r{flex-direction:column;gap:2px;}
+  .ab-biz dt{flex:none;}
+}

@@ -89,9 +89,11 @@ function guRender(){
 
     '<div class="grow keep" style="margin:4px 0 8px;">'+
       (buyer
-        ? '<button class="gbtn gbtn-w" onclick="go(&quot;reqs&quot;)">올라온 요청 보기</button>'+
+        ? '<button class="gbtn gbtn-w" onclick="gOpenAbout&&gOpenAbout()">고리 소개</button>'+
+          '<button class="gbtn gbtn-w" onclick="go(&quot;reqs&quot;)">올라온 요청 보기</button>'+
           '<button class="gbtn gbtn-p" onclick="go(&quot;rw&quot;)">요청 올리기</button>'
-        : '<button class="gbtn gbtn-w" onclick="go(&quot;reqs&quot;)">올라온 요청 보기</button>'+
+        : '<button class="gbtn gbtn-w" onclick="gOpenAbout&&gOpenAbout()">고리 소개</button>'+
+          '<button class="gbtn gbtn-w" onclick="go(&quot;reqs&quot;)">올라온 요청 보기</button>'+
           '<button class="gbtn gbtn-p" onclick="go(&quot;sj&quot;)">업체 등록하기</button>')+
     '</div>'+
 

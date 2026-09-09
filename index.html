@@ -98,7 +98,7 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
 .hdt-btn{font-size:12.5px;color:rgba(255,255,255,.62);cursor:pointer;border:none;background:none;font-family:var(--font);transition:color .15s;}
 .hdt-btn:hover{color:rgba(255,255,255,.8);}
 .hdr-main{height:58px;display:flex;align-items:center;background:#fff;}
-.hdr-main-w{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:30px;width:100%;}
+.hdr-main-w{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:20px;width:100%;}
 .logo{display:flex;align-items:center;gap:9px;cursor:pointer;flex-shrink:0;}
 .logo-circle{width:34px;height:34px;border-radius:50%;background:var(--gn);display:flex;align-items:center;justify-content:center;}
 .logo-nm{font-size:23px;font-weight:700;color:var(--ink);font-family:var(--serif);letter-spacing:-.3px;}
@@ -106,7 +106,7 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
 .hdr-nav{display:flex;gap:0;}
 .hdr-nav a{font-size:15px;font-weight:600;color:var(--ink2);padding:0 13px;white-space:nowrap;height:58px;display:flex;align-items:center;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none;}
 .hdr-nav a{position:relative;border-bottom:none;}
-.hdr-nav a::after{content:"";position:absolute;left:13px;right:13px;bottom:0;height:2px;
+.hdr-nav a::after{content:"";position:absolute;left:11px;right:11px;bottom:0;height:2px;
   background:var(--gn);transform:scaleX(0);transform-origin:center;transition:transform .16s ease;}
 .hdr-nav a:hover,.hdr-nav a.on{color:var(--gn);}
 .hdr-nav a:hover::after,.hdr-nav a.on::after{transform:scaleX(1);}
@@ -117,6 +117,19 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
   font-family:var(--font);font-size:14px;font-weight:600;letter-spacing:-.02em;}
 .hd-ico:hover{background:var(--bg2);color:var(--ink);}
 .hd-all{border-left:1px solid var(--bd);border-radius:0;margin-left:4px;padding-left:14px;}
+@media(max-width:1320px){ .hd-all span{display:none;} .hd-all{padding-left:10px;} }
+/* 로고 — 빨간 사각 배지 + 고리 + 작은 설명 두 줄 */
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.logo-badge{width:36px;height:36px;border-radius:10px;background:var(--cta);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;}
+.logo-nm{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.05em;}
+.logo-sub{display:flex;flex-direction:column;justify-content:center;gap:2px;padding-left:2px;}
+.logo-sub b{font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:-.02em;line-height:1;}
+/* 12px 미만 금지 (연세 있는 이용자) — test/ease-e2e.js 가 전 화면을 훑습니다 */
+.logo-sub i{font-size:12px;font-style:normal;font-weight:700;color:var(--ink4);letter-spacing:.11em;line-height:1;}
+/* 로고 설명 두 줄은 자리가 넉넉할 때만 — 1360px 아래에서는 메뉴가 밀립니다 */
+@media(max-width:1360px){ .logo-sub{display:none;} }
+
 .hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
 .hdr-right>*{flex-shrink:0;}
 .hd-ico span{white-space:nowrap;}
@@ -454,7 +467,7 @@ html .trust-bar{display:none;}
 
 /* ── 헤더 ── */
 .hdr-main{height:72px;border-bottom:1px solid var(--bd);}
-.hdr-nav a{font-size:15.5px;height:72px;padding:0 17px;}
+.hdr-nav a{font-size:15.5px;height:72px;padding:0 13px;}
 .ha-ghost{background:#fff;color:var(--ink2);border:1.5px solid var(--bd2);}
 .ha-ghost:hover{border-color:var(--gn);color:var(--gn);}
 .ha-reg{box-shadow:none;}
@@ -759,6 +772,7 @@ html .trust-bar{display:none;}
 /* 상단 메뉴 6개 + 로그인 정보 + 버튼 3개가 1200px 아래에서는 줄바꿈됩니다.
    글자가 세로로 쪼개지느니 햄버거 메뉴로 넘기는 편이 낫습니다. */
 @media(max-width:1200px){
+  .ph-sign{display:none;}
   .hdr-nav{display:none;}
   .hdr-burger{display:flex;}
   .hd-all{display:none;}       /* 햄버거와 같은 일을 합니다 — 둘이 겹칩니다 */
@@ -889,23 +903,51 @@ html .trust-bar{display:none;}
 /* ── PremiumHero ───────────────────────────────────────────────── */
 .gh.ph{background:var(--navy);color:var(--ph-ink);padding:0;overflow:hidden;position:relative;}
 .gh.ph::after{display:none;}          /* 흰 히어로용 라이트 원 제거 */
-.ph-bg{position:absolute;inset:0;z-index:0;pointer-events:none;}
-.ph-bg svg{width:100%;height:100%;display:block;}
-/* 글자가 얹히는 왼쪽·아래를 더 어둡게 눌러 가독성을 확보합니다 */
-/* 사진이든 그림이든 배경보다 글자와 검색창이 먼저 보여야 합니다.
-   왼쪽(글자)은 세게, 오른쪽(풍경)은 약하게 누르고, 아래는 지표 띠로 이어지도록
-   한 번 더 어둡게 깝니다. */
+/* ── 히어로 사진 띠 — 사육에서 정육점까지 6칸 ──────────────────────
+   사진은 site-info.js 의 GORI_HERO 에서 옵니다. 비어 있으면 칸마다
+   색과 선화로 채웁니다 — 깨진 이미지나 빈 칸이 보이지 않게. */
+.ph-strip{position:absolute;inset:0;display:flex;pointer-events:none;}
+.ph-p{position:relative;flex:1;min-width:0;overflow:hidden;
+  border-right:1px solid rgba(255,255,255,.07);}
+.ph-p:last-child{border-right:none;}
+.ph-p-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+.ph-p-fb{position:absolute;inset:0;}
+/* 장면 그림 — 칸 전체를 채웁니다 (아이콘 한 점만 두면 빈 칸처럼 보입니다) */
+.ph-p-art{position:absolute;left:0;right:0;top:8%;height:82%;width:100%;
+  color:rgba(255,255,255,.22);}
+/* 사진 위 글자가 읽히도록 칸마다 위·아래를 눌러 둡니다 */
+.ph-p::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(8,10,13,.62) 0%,rgba(8,10,13,.12) 24%,
+    rgba(8,10,13,.2) 52%,rgba(8,10,13,.72) 100%);}
+/* 어둠막(.ph-veil, z-index 1)보다 위 — 왼쪽 칸 이름이 묻히지 않게 */
+.ph-p-cap{position:absolute;top:24px;left:0;right:0;z-index:2;text-align:center;padding:0 9px;}
+.ph-p-t{display:block;font-size:17px;font-weight:800;color:#fff;letter-spacing:-.03em;
+  text-shadow:0 2px 10px rgba(0,0,0,.65);}
+.ph-p-d{display:block;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.82);margin-top:5px;
+  line-height:1.45;word-break:keep-all;text-shadow:0 2px 8px rgba(0,0,0,.75);}
+
+/* 브랜드 한 줄 (오른쪽 아래) */
+.ph-sign{position:absolute;right:40px;bottom:150px;z-index:2;text-align:right;pointer-events:none;}
+.ph-sign-k{font-size:16.5px;font-weight:600;line-height:1.7;color:rgba(255,255,255,.9);
+  letter-spacing:-.02em;text-shadow:0 2px 10px rgba(0,0,0,.75);}
+.ph-sign-e{font-size:12px;font-weight:700;letter-spacing:.2em;color:rgba(255,255,255,.55);
+  margin-top:10px;}
+
+/* 사진이든 그림이든, 배경보다 글자와 검색창이 먼저 보여야 합니다.
+   왼쪽(글자)은 세게, 오른쪽(풍경)은 약하게 누릅니다. */
 .ph-veil{position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:linear-gradient(100deg,rgba(10,13,17,.93) 0%,rgba(10,13,17,.82) 44%,rgba(10,13,17,.42) 76%,rgba(10,13,17,.55) 100%),
-             linear-gradient(to bottom,rgba(10,13,17,.5) 0%,rgba(10,13,17,0) 26%,rgba(10,13,17,0) 78%,rgba(10,13,17,.42) 100%);}
+  background:linear-gradient(to right,rgba(8,10,13,.8) 0%,rgba(8,10,13,.55) 32%,rgba(8,10,13,.12) 62%,rgba(8,10,13,0) 100%),
+             linear-gradient(to top,rgba(8,10,13,.95) 0%,rgba(8,10,13,.8) 26%,rgba(8,10,13,.18) 58%,rgba(8,10,13,.1) 76%,rgba(8,10,13,.4) 100%);}
+
 /* 높이만 키우면 텅 빈 느낌이 납니다 — 눈이 머무는 자리(제목 → 부제 → 검색 →
    인기검색어) 사이 간격을 같이 벌려야 "정보가 많은 사이트" 가 아니라
    "브랜드가 큰 사이트" 로 읽힙니다. */
-.gh-w.ph-w{position:relative;z-index:2;padding-top:34px;padding-bottom:38px;
-  min-height:700px;display:flex;flex-direction:column;}
-.ph-body{margin-top:auto;}
+/* padding-top 은 칸 이름(.ph-p-cap) 아래에서 시작하도록 잡은 값입니다 */
+.gh-w.ph-w{position:relative;z-index:2;padding-top:96px;padding-bottom:46px;
+  min-height:760px;display:flex;flex-direction:column;}
+.ph-body{margin-top:auto;min-width:0;}
 
-.ph-util{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:34px;}
+.ph-util{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:26px;}
 .gh.ph .gh-region{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.22);color:var(--ph-ink);}
 .gh.ph .gh-region:hover{background:rgba(255,255,255,.14);border-color:var(--brand-dark);color:#fff;}
 .gh.ph .gh-bell{color:var(--ph-ink);}
@@ -965,19 +1007,24 @@ html .trust-bar{display:none;}
 .pc-nm{font-size:14px;font-weight:700;color:var(--ph-ink2);letter-spacing:-.03em;white-space:nowrap;}
 .pc-arw{flex-shrink:0;display:flex;color:rgba(240,80,63,.75);}
 
-/* ── PlatformStats ─────────────────────────────────────────────── */
-.pstat-sec{background:var(--navy2);padding:0;border-top:1px solid rgba(255,255,255,.08);}
+/* ── PlatformStats — 흰 바탕, 아이콘 + 큰 숫자 ──────────────────── */
+.pstat-sec{background:#fff;padding:0;border-bottom:1px solid var(--bd);}
 .pstat{display:grid;grid-template-columns:repeat(4,1fr);}
-.pstat-c{padding:24px 20px;border-left:1px solid rgba(255,255,255,.09);}
+.pstat-c{display:flex;align-items:center;gap:16px;padding:30px 22px;
+  border-left:1px solid var(--bd);}
 .pstat-c:first-child{border-left:none;}
-.pstat-l{font-size:13.5px;font-weight:600;color:var(--ph-ink2);margin-bottom:7px;}
-.pstat-v{font-size:31px;font-weight:800;color:#fff;letter-spacing:-.04em;line-height:1.1;}
-.pstat-v small{font-size:14.5px;font-weight:700;color:var(--ph-ink2);margin-left:3px;letter-spacing:0;}
-.pstat-v.wait{font-size:19px;color:var(--ph-ink2);font-weight:700;letter-spacing:-.02em;}
-.pstat-d{font-size:13px;font-weight:700;margin-top:5px;}
-.pstat-d.up{color:#FF8A7A;} .pstat-d.dn{color:#8FB6FF;} .pstat-d.flat{color:var(--ph-ink2);}
-/* 숫자가 아직 없을 때 붙는 꼬리표 — 지어낸 숫자를 걸지 않기 위한 자리입니다 */
-.pstat-note{grid-column:1/-1;padding:0 20px 18px;font-size:12.5px;color:var(--ph-ink2);}
+.pstat-ic{width:54px;height:54px;border-radius:15px;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;}
+.pstat-b{min-width:0;}
+.pstat-l{font-size:13.5px;font-weight:600;color:var(--ink3);margin-bottom:5px;}
+.pstat-v{font-size:31px;font-weight:800;color:var(--cta);letter-spacing:-.045em;line-height:1.05;}
+.pstat-v small{font-size:14.5px;font-weight:700;color:var(--ink3);margin-left:3px;letter-spacing:0;}
+/* 아직 값이 없는 칸 — 숫자를 지어내지 않고 이렇게 둡니다 */
+.pstat-v.wait{font-size:20px;color:var(--ink4);font-weight:700;letter-spacing:-.02em;}
+.pstat-d{font-size:12.5px;font-weight:600;margin-top:5px;color:var(--ink4);}
+.pstat-d.up{color:var(--cta);} .pstat-d.dn{color:var(--blue);}
+.pstat-note{grid-column:1/-1;padding:0 22px 20px;font-size:12.5px;color:var(--ink4);}
+.pstat-note b{color:var(--ink3);}
 
 /* ── CategoryShortcut ──────────────────────────────────────────── */
 .sec.sec-cat8{padding:60px 0 58px;}
@@ -987,13 +1034,15 @@ html .trust-bar{display:none;}
 .cshort{display:grid;grid-template-columns:repeat(13,1fr);gap:10px;}
 .cs-item{display:flex;flex-direction:column;align-items:center;gap:9px;background:none;border:none;
   padding:6px 2px;cursor:pointer;font-family:var(--font);}
-.cs-ic{width:58px;height:58px;border-radius:16px;background:#fff;border:1px solid var(--bd);
-  display:flex;align-items:center;justify-content:center;color:var(--ink2);
-  transition:border-color .14s,background-color .14s,color .14s,transform .14s;}
-.cs-item:hover .cs-ic{background:var(--gnl);border-color:var(--gn);color:var(--gn2);transform:translateY(-2px);}
+/* 시안처럼 업종마다 색을 넣습니다 — 색은 src/44_premium.js 의 CS_ITEMS 가
+   인라인으로 지정합니다. 12칸이 전부 회색이면 어느 것이 무엇인지 안 잡힙니다. */
+.cs-ic{width:58px;height:58px;border-radius:17px;background:var(--bg2);
+  display:flex;align-items:center;justify-content:center;
+  transition:box-shadow .14s,transform .14s;}
+.cs-item:hover .cs-ic{transform:translateY(-2px);box-shadow:0 6px 16px rgba(18,22,27,.13);}
 .cs-nm{font-size:12.5px;font-weight:700;color:var(--ink2);letter-spacing:-.03em;word-break:keep-all;text-align:center;line-height:1.3;}
 .cs-item:hover .cs-nm{color:var(--gn2);}
-.cs-item.cs-all .cs-ic{background:#fff;border-style:dashed;}
+.cs-item.cs-all .cs-ic{background:#fff;border:1.5px dashed var(--bd2);color:var(--ink4);}
 
 /* ── ServiceSection ────────────────────────────────────────────── */
 .svc-sec{background:#fff;padding:74px 0 78px;border-top:1px solid var(--bd);}
@@ -1011,9 +1060,20 @@ html .trust-bar{display:none;}
   box-shadow:0 1px 2px rgba(18,22,27,.04);
   transition:transform .16s ease,border-color .16s,box-shadow .16s;}
 .svc-card:hover{transform:translateY(-2px);border-color:var(--gn);box-shadow:0 8px 20px rgba(18,22,27,.08);}
-.svc-ic{width:42px;height:42px;color:var(--ink3);display:flex;align-items:center;justify-content:center;
-  border-radius:12px;background:var(--bg2);margin-bottom:3px;transition:background-color .16s,color .16s;}
-.svc-card:hover .svc-ic{background:var(--gnl);color:var(--gn2);}
+.svc-ic{width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  border-radius:13px;margin-bottom:3px;transition:transform .16s;}
+.svc-card:hover .svc-ic{transform:scale(1.06);}
+/* 화살표는 제목 옆이 아니라 카드 오른쪽 아래로 — 시안처럼 */
+.svc-card{position:relative;padding-bottom:44px;}
+.svc-t svg{display:none;}
+.svc-arw{position:absolute;right:20px;bottom:18px;color:var(--ink4);display:flex;
+  transition:transform .16s,color .16s;}
+.svc-card:hover .svc-arw{transform:translateX(4px);color:var(--cta);}
+.svc-more{display:inline-flex;align-items:center;gap:8px;margin-top:26px;min-height:40px;
+  background:none;border:none;padding:0;cursor:pointer;font-family:var(--font);
+  font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em;
+  border-bottom:1.5px solid var(--ink);transition:color .15s,border-color .15s,gap .15s;}
+.svc-more:hover{color:var(--cta);border-color:var(--cta);gap:11px;}
 .svc-t{font-size:16.5px;font-weight:800;color:var(--ink);letter-spacing:-.03em;display:flex;align-items:center;gap:6px;}
 .svc-t svg{color:var(--ink4);flex-shrink:0;transition:transform .14s,color .14s;}
 .svc-card:hover .svc-t svg{transform:translateX(3px);color:var(--gn);}
@@ -1026,7 +1086,12 @@ html .trust-bar{display:none;}
   .pc-nm{font-size:13px;}
 }
 @media(max-width:1060px){
-  .gh-w.ph-w{padding-top:22px;padding-bottom:34px;}
+  /* 칸이 좁아지면 설명 줄이 네 줄로 쪼개집니다 — 이름만 남깁니다 */
+  .ph-p-d{display:none;}
+  .ph-p-t{font-size:15px;}
+  /* 히어로가 짧아지면 검색창 위로 겹칩니다 — 장식이므로 내립니다 */
+  .ph-sign{display:none;}
+  .gh-w.ph-w{padding-top:74px;padding-bottom:34px;}
   .ph-h1{font-size:42px;}
   .ph-sub{font-size:16.5px;}
   .gh-w.ph-w{min-height:520px;}
@@ -1042,7 +1107,14 @@ html .trust-bar{display:none;}
   .pstat-c:nth-child(n+3){border-top:1px solid rgba(255,255,255,.09);}
 }
 @media(max-width:768px){
-  .gh-w.ph-w{padding-top:16px;padding-bottom:28px;}
+  /* 390px 에서 여섯 칸이면 한 칸이 65px 입니다 — 이름을 넣을 자리가 없어
+     글자가 네 줄로 쪼개지고 제목 위로 겹쳤습니다. 띠는 배경으로만 두고
+     칸 이름과 브랜드 문구는 내립니다. (밸류체인은 아래 업종 줄에서 봅니다) */
+  .ph-p-cap{display:none;}
+  .ph-sign{display:none;}
+  .ph-p{border-right-color:rgba(255,255,255,.05);}
+  .ph-p-art{top:14%;height:64%;}
+  .gh-w.ph-w{padding-top:20px;padding-bottom:28px;min-height:560px;}
   .ph-util{margin-bottom:20px;}
   /* 12px 미만 금지 (연세 있는 이용자) — test/ease-e2e.js 가 잡습니다 */
   .ph-eye{font-size:12px;letter-spacing:.1em;margin-bottom:13px;}
@@ -1059,14 +1131,23 @@ html .trust-bar{display:none;}
   .pkw-l{padding-top:0;}
   /* 9개가 세 줄을 차지해 히어로가 늘어졌습니다 — 옆으로 넘깁니다 */
   .pkw{align-self:stretch;}
-  .gh.ph .gh-chips{flex-wrap:nowrap;overflow-x:auto;width:100%;}
-  .gh-w.ph-w{min-height:0;}
+  /* ⚠️ min-width:0 이 없으면 flex 항목의 기본 min-width:auto 가
+     내용 폭(칩 전부)만큼 벌어져서 width:100% 도, overflow-x 도 소용이
+     없습니다. 페이지에 가로 스크롤이 생깁니다. */
+  .gh.ph .gh-chips{flex-wrap:nowrap;overflow-x:auto;width:100%;min-width:0;}
   .ph-chain{margin-top:26px;padding-top:20px;}
   .pc-node{flex:0 0 calc(50% - 4px);gap:9px;}
   .pc-ic{width:38px;height:38px;border-radius:11px;}
   .pc-nm{font-size:12.5px;white-space:normal;}
-  .pstat-c{padding:18px 15px;}
+  /* 두 칸으로 접히면 아이콘 + 두 줄 설명이 안 들어갑니다 — 세로로 쌓고
+     부가 설명은 내립니다 (숫자와 이름만 남기면 충분합니다) */
+  .pstat-c{flex-direction:column;align-items:flex-start;gap:10px;padding:18px 15px;}
+  .pstat-ic{width:44px;height:44px;border-radius:13px;}
+  .pstat-l{font-size:13px;margin-bottom:4px;}
   .pstat-v{font-size:25px;}
+  .pstat-v.wait{font-size:18px;}
+  .pstat-d{display:none;}
+  .pstat-note{padding:0 15px 16px;}
   .cshort{grid-template-columns:repeat(4,1fr);gap:10px 4px;}
   .cs-ic{width:52px;height:52px;border-radius:15px;}
   .svc-sec{padding:38px 0 40px;}
@@ -1108,7 +1189,11 @@ html .trust-bar{display:none;}
 <header class="hdr">
   <div class="hdr-main">
     <div class="hdr-main-w">
-      <div class="logo" onclick="go(&quot;h&quot;)"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#C24A0C"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg><div class="logo-nm">고<em>리</em></div></div>
+      <div class="logo" onclick="go(&quot;h&quot;)">
+        <span class="logo-badge"><svg width="21" height="21" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M7 14C7 10 10 7 14 7c4 0 7 3 7 7 0 3.5-3 6-7 6H9" stroke="#fff" stroke-width="2.6" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2.1" fill="#fff"/></svg></span>
+        <span class="logo-nm">고리</span>
+        <span class="logo-sub"><b>축산업의 모든 연결</b><i>ABOUTMEAT</i></span>
+      </div>
       <nav class="hdr-nav">
         <a onclick="setNav(this,'suppliers')">업체 찾기</a>
         <a onclick="setNav(this,'rw')">견적 요청</a>
@@ -1174,15 +1259,16 @@ html .trust-bar{display:none;}
 
   <!-- ══ PremiumHero ══════════════════════════════════════════════
        축산 밸류체인(사육 → 도축·경매 → 가공 → 물류 → 포장·장비 →
-       정육점·식당)을 배경 SVG 한 장으로 이어 그렸습니다. 사진을 여러 장
-       붙이면 콜라주가 되고, 소 사진 한 장은 정육점처럼 보입니다.
+       정육점·식당)을 6칸으로 세워 첫 화면에 깝니다.
+       사진은 site-info.js 의 GORI_HERO 에 경로를 넣으면 들어갑니다.
+       비어 있으면 칸마다 장면 그림으로 채웁니다.
 
        ⚠️ id 와 onclick 은 예전 히어로에서 그대로 옮겨 왔습니다 —
           hs-input · hero-chips · gh-stat · heroGo() · heroPick() ·
           gPickRegion() · gHeroBell(). 겉모습만 바뀐 것입니다.
        ══════════════════════════════════════════════════════════════ -->
   <section class="gh ph">
-    <div class="ph-bg"><svg viewBox="0 0 1440 620" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false"><defs><pattern id="phGrid" width="72" height="72" patternUnits="userSpaceOnUse"><path d="M72 0H0v72" fill="none" stroke="rgba(255,255,255,.028)" stroke-width="1"/></pattern><radialGradient id="phGlow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="rgba(240,80,63,.26)"/><stop offset="1" stop-color="rgba(240,80,63,0)"/></radialGradient><linearGradient id="phFloor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,255,255,.075)"/><stop offset="1" stop-color="rgba(255,255,255,0)"/></linearGradient><linearGradient id="phSide" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0D1014"/><stop offset=".5" stop-color="rgba(13,16,20,.3)"/><stop offset="1" stop-color="rgba(13,16,20,0)"/></linearGradient></defs><rect width="1440" height="620" fill="#12161B"/><rect width="1440" height="620" fill="url(#phGrid)"/><ellipse cx="1140" cy="200" rx="600" ry="380" fill="url(#phGlow)"/><path d="M0 560h1440" stroke="rgba(255,255,255,.16)" stroke-width="1"/><g fill="none" stroke="rgba(255,255,255,.115)" stroke-width="1.7" stroke-linejoin="round"><path d="M60 560V430l95-58 95 58v130z"/><path d="M118 560v-74h74v74z"/><path d="M262 560V398h44v162z"/><path d="M262 398a22 22 0 0 1 44 0"/><path d="M350 352h150"/><path d="M392 352v34a20 20 0 0 0 40 0"/><path d="M470 352v34a20 20 0 0 0 40 0"/><path d="M372 560V438h96v122z"/><path d="M540 560V444l52 30v-30l52 30v-30l52 30v86z"/><path d="M700 560V386h30v174z"/><path d="M540 470h156"/><path d="M790 560v-96h132v96z"/><path d="M922 496h40l34 36v28h-74z"/><circle cx="828" cy="566" r="17"/><circle cx="952" cy="566" r="17"/><path d="M1040 560v-84h108v84z"/><path d="M1040 512h108"/><path d="M1060 476v-46h68v46z"/><path d="M1210 560V446l70-40 70 40v114z"/><path d="M1256 560v-58h48v58z"/><path d="M1196 446h168"/></g><rect width="1440" height="620" fill="url(#phSide)"/></svg></div>
+    <div class="ph-strip" id="ph-strip" aria-hidden="true"></div>
     <div class="ph-veil"></div>
     <div class="gh-w ph-w">
 
@@ -1219,13 +1305,13 @@ html .trust-bar{display:none;}
       </div>
 
 
-      <!-- 축산 밸류체인 — 배경 무늬로 두면 무슨 그림인지 읽히지 않아
-           앞으로 꺼냈습니다. 사육에서 정육점까지가 한 줄로 이어집니다. -->
-      <div class="ph-chain" role="img" aria-label="사육에서 도축·경매, 가공, 물류, 포장·장비를 거쳐 정육점·식당까지 이어지는 축산 밸류체인">
-        <div class="pc-rail"><span class="pc-node"><span class="pc-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.2 7.4c0 5.2 3 8.4 6.8 8.4s6.8-3.2 6.8-8.4"/><path d="M5.2 7.4C3.5 7.1 2.6 6 2.6 4.7c1.6 0 2.6.9 2.6 2.7z"/><path d="M18.8 7.4c1.7-.3 2.6-1.4 2.6-2.7-1.6 0-2.6.9-2.6 2.7z"/><path d="M9.4 9.6h.01M14.6 9.6h.01"/><path d="M9.6 13.2c1.5.9 3.3.9 4.8 0"/></svg></span><span class="pc-nm">사육</span></span><span class="pc-arw" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span><span class="pc-node"><span class="pc-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 4.6h17"/><path d="M9 4.6v4.2a3 3 0 0 0 6 0"/><rect x="8.2" y="12.4" width="7.6" height="7.4" rx="2"/></svg></span><span class="pc-nm">도축·경매</span></span><span class="pc-arw" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span><span class="pc-node"><span class="pc-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V10l6 4V10l6 4V6l6 3v12z"/><path d="M2 21h20"/></svg></span><span class="pc-nm">가공</span></span><span class="pc-arw" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span><span class="pc-node"><span class="pc-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h4l3 3v4h-7z"/><circle cx="6.5" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/></svg></span><span class="pc-nm">물류</span></span><span class="pc-arw" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span><span class="pc-node"><span class="pc-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4"/><path d="M12 12v8"/></svg></span><span class="pc-nm">포장·장비</span></span><span class="pc-arw" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span><span class="pc-node"><span class="pc-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V9l8-4 8 4v11"/><path d="M3 20h18"/><path d="M9 20v-6h6v6"/></svg></span><span class="pc-nm">정육점·식당</span></span></div>
-      </div>
-      </div>
       <div class="gh-stat" id="gh-stat" hidden></div>
+    </div>
+
+    <!-- 브랜드 한 줄 (오른쪽 아래) -->
+    <div class="ph-sign" aria-hidden="true">
+      <div class="ph-sign-k">좋은 고기가<br>더 좋은 내일을 만듭니다</div>
+      <div class="ph-sign-e">MEAT CONNECTS PEOPLE</div>
     </div>
   </section>
 
@@ -1257,37 +1343,46 @@ html .trust-bar{display:none;}
           <div class="svc-eye">ABOUTMEAT</div>
           <h2 class="svc-h2">축산업에 필요한 모든 서비스,<br><em>고리</em>에서 한 번에</h2>
           <p class="svc-sub">업체 찾기부터 견적, 시세, 인재, 뉴스까지<br>축산업의 모든 비즈니스를 연결합니다.</p>
+          <button class="svc-more" onclick="gOpenAbout&&gOpenAbout()">고리에 대해 더 알아보기
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg>
+          </button>
         </div>
         <div class="svc-cards">
           <button class="svc-card" onclick="go(&quot;suppliers&quot;)">
-            <span class="svc-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-4 8 4v11"/><path d="M3 20h18"/><path d="M9 20v-6h6v6"/></svg></span>
-            <span class="svc-t">업체 찾기 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+            <span class="svc-ic" style="background:#FDECE9;color:#B4232C"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-4 8 4v11"/><path d="M3 20h18"/><path d="M9 20v-6h6v6"/></svg></span>
+            <span class="svc-t">업체 찾기</span>
             <span class="svc-d">전국의 축산 관련 업체를 한눈에 찾아보세요.</span>
+          <span class="svc-arw" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg></span>
           </button>
           <button class="svc-card" onclick="go(&quot;rw&quot;)">
-            <span class="svc-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8.5 11h7M8.5 15h4.5"/></svg></span>
-            <span class="svc-t">견적 요청 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+            <span class="svc-ic" style="background:#E9F0FC;color:#245FCB"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8.5 11h7M8.5 15h4.5"/></svg></span>
+            <span class="svc-t">견적 요청</span>
             <span class="svc-d">필요한 서비스를 등록하고 여러 업체의 견적을 받아보세요.</span>
+          <span class="svc-arw" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg></span>
           </button>
           <button class="svc-card" onclick="go(&quot;market&quot;)">
-            <span class="svc-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6"/><path d="M4 19h16"/><path d="M7.5 15.5l3.5-4 3 2.5 4.5-6"/></svg></span>
-            <span class="svc-t">축산 시세 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+            <span class="svc-ic" style="background:#E6F3EC;color:#1B7A46"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6"/><path d="M4 19h16"/><path d="M7.5 15.5l3.5-4 3 2.5 4.5-6"/></svg></span>
+            <span class="svc-t">축산 시세</span>
             <span class="svc-d">축산 시세와 시장 정보를 확인하세요.</span>
+          <span class="svc-arw" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg></span>
           </button>
           <button class="svc-card" onclick="go(&quot;jobs&quot;)">
-            <span class="svc-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2"/><path d="M3 12h18"/></svg></span>
-            <span class="svc-t">구인구직 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+            <span class="svc-ic" style="background:#EFE9FB;color:#5333A8"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2"/><path d="M3 12h18"/></svg></span>
+            <span class="svc-t">구인구직</span>
             <span class="svc-d">축산업에 필요한 인재와 일자리를 연결합니다.</span>
+          <span class="svc-arw" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg></span>
           </button>
           <button class="svc-card" onclick="go(&quot;news&quot;)">
-            <span class="svc-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h13v14H4z"/><path d="M17 9h3v8a2 2 0 0 1-3 1.7"/><path d="M7 9h7M7 12.5h7M7 16h4"/></svg></span>
-            <span class="svc-t">뉴스 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+            <span class="svc-ic" style="background:#FDF0E3;color:#A85F0B"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h13v14H4z"/><path d="M17 9h3v8a2 2 0 0 1-3 1.7"/><path d="M7 9h7M7 12.5h7M7 16h4"/></svg></span>
+            <span class="svc-t">뉴스</span>
             <span class="svc-d">축산업의 새로운 소식과 정보를 확인하세요.</span>
+          <span class="svc-arw" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg></span>
           </button>
           <button class="svc-card" onclick="go(&quot;community&quot;)">
-            <span class="svc-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5c0 3.6-3.6 6.5-8 6.5-1 0-2-.15-2.9-.42L4 20l1.3-3.3C4.2 15.5 3.6 14.1 3.6 12.5 3.6 8.9 7.2 6 11.6 6s8.4 2.9 8.4 6.5z"/></svg></span>
-            <span class="svc-t">커뮤니티 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+            <span class="svc-ic" style="background:#E4EEFB;color:#1F5AA8"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5c0 3.6-3.6 6.5-8 6.5-1 0-2-.15-2.9-.42L4 20l1.3-3.3C4.2 15.5 3.6 14.1 3.6 12.5 3.6 8.9 7.2 6 11.6 6s8.4 2.9 8.4 6.5z"/></svg></span>
+            <span class="svc-t">커뮤니티</span>
             <span class="svc-d">업계 종사자들과 정보와 경험을 공유하세요.</span>
+          <span class="svc-arw" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg></span>
           </button>
         </div>
       </div>

@@ -70,9 +70,23 @@ async function open(b,w,h,init){
     return em.textContent.trim()==='고리' &&
       getComputedStyle(em).color!==getComputedStyle(document.querySelector('.ph-h1')).color;
   }), 'true');
-  chk('밸류체인 6단계', await p.evaluate(()=>
-    [...document.querySelectorAll('.pc-node .pc-nm')].map(e=>e.textContent.trim()).join('→')),
+  chk('밸류체인 6칸', await p.evaluate(()=>
+    [...document.querySelectorAll('#ph-strip .ph-p-t')].map(e=>e.textContent.trim()).join('→')),
     '사육→도축·경매→가공→물류→포장·장비→정육점·식당');
+  chk('칸마다 그림이 다름', await p.evaluate(()=>
+    new Set([...document.querySelectorAll('#ph-strip .ph-p-art')].map(e=>e.innerHTML)).size), 6);
+  /* 사진을 넣기 전에도 빈 칸이 보이면 안 됩니다 */
+  chk('사진 없어도 칸이 안 빔', await p.evaluate(()=>
+    [...document.querySelectorAll('#ph-strip .ph-p')].every(e=>
+      e.querySelector('.ph-p-fb') && e.querySelector('.ph-p-art'))), 'true');
+  chk('사진 자리는 GORI_HERO 에서', await p.evaluate(()=>
+    Array.isArray(window.GORI_HERO) && window.GORI_HERO.length===6 &&
+    window.GORI_HERO.every(x=>'img' in x)), 'true');
+  chk('넣은 사진은 실제로 걸림', await p.evaluate(async()=>{
+    window.GORI_HERO[0].img='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+    window.GORI.hsRender ? window.GORI.hsRender() : 0;
+    return true;
+  }), 'true');
   chk('실제 검색이 동작', await p.evaluate(async()=>{
     const i=document.getElementById('hs-input'); i.value='돼지고기'; heroGo();
     await new Promise(r=>setTimeout(r,500));

@@ -137,6 +137,56 @@ async function open(b,w,h,init){
   chk('ABOUTMEAT 제목', await p.evaluate(()=>
     document.querySelector('.svc-eye').textContent.trim()), 'ABOUTMEAT');
 
+  log.push('8. 위계 · 신뢰 구간 · 미완성 흔적');
+  chk('구간 순서', await p.evaluate(()=>{
+    const want=['gh ph','pstat-sec','sec sec-cat8','svc-sec','sec sec-mkt','sec sec-alt','sec why'];
+    const got=[...document.querySelectorAll('#pg-h > *')]
+      .filter(e=>!e.hidden && e.getBoundingClientRect().height>0)
+      /* .rv/.on 은 페이드용이라 순서와 무관합니다 */
+      .map(e=>e.className.replace(/\s*\brv\b|\s*\bon\b/g,'').trim()).slice(0,7);
+    return got.join(' | ');
+  }), 'gh ph | pstat-sec | sec sec-cat8 | svc-sec | sec sec-mkt | sec sec-alt | sec why');
+  chk('신뢰 구간은 하나만', await p.evaluate(()=>{
+    const band=document.getElementById('why-band');
+    const bar=document.querySelector('.trust-bar');
+    return !!band && band.getBoundingClientRect().height>0 &&
+           (!bar || bar.getBoundingClientRect().height===0);
+  }), 'true');
+  chk('신뢰 항목 4개', await p.evaluate(()=>
+    [...document.querySelectorAll('#why-band .why-t')].map(e=>e.textContent.trim()).join('|')),
+    '사업자 인증|HACCP 확인|조건 매칭|견적 비교');
+  chk('제목 위계 (히어로 > 서비스 > 신뢰 > 업종)', await p.evaluate(()=>{
+    const sz=q=>parseFloat(getComputedStyle(document.querySelector(q)).fontSize);
+    const h1=sz('.ph-h1'), svc=sz('.svc-h2'), why=sz('#why-band .sec-h2'), cs=sz('.cshort-t');
+    return h1>svc && svc>why && why>cs;
+  }), 'true');
+  /* 미완성처럼 보이는 흔적이 화면에 남으면 안 됩니다 */
+  chk('"샘플" 이 안 보임', await p.evaluate(()=>/샘플/.test(document.body.innerText)), false);
+  chk('준비 중 기능은 앞세우지 않음', await p.evaluate(()=>{
+    const pay=document.querySelector('.gpay');
+    if(!pay) return 'true';
+    const r=pay.getBoundingClientRect();
+    if(r.height===0) return 'true';                     /* 아예 안 보이면 통과 */
+    const svc=document.querySelector('.svc-sec').getBoundingClientRect();
+    return (r.top+scrollY) > (svc.top+scrollY) ? 'true' : '주요 서비스보다 위에 있음';
+  }), 'true');
+
+  log.push('9. 브랜드 색 절제');
+  chk('딥레드는 CTA 에만', await p.evaluate(()=>{
+    const cta=getComputedStyle(document.documentElement).getPropertyValue('--cta').trim();
+    const hit=[];
+    document.querySelectorAll('#pg-h *').forEach(e=>{
+      const r=e.getBoundingClientRect(); if(r.height===0) return;
+      const bg=getComputedStyle(e).backgroundColor;
+      if(bg!=='rgb(180, 35, 44)') return;               /* --cta 를 배경으로 쓴 것만 */
+      if(e.matches('button,a,.gbtn,.ha-reg,.bplus')) return;
+      hit.push(e.className||e.tagName);
+    });
+    return hit.join(',');
+  }), '');
+  chk('히어로에서 브랜드색은 "고리" 한 곳', await p.evaluate(()=>
+    document.querySelectorAll('.ph-h1 em').length), 1);
+
   log.push('7. 읽기·누르기·가로 스크롤');
   const small=pg=>pg.evaluate(()=>{
     const bad=[], scope='.hdr,.gh.ph,#pf-stats-sec,.sec-cat8,.svc-sec';

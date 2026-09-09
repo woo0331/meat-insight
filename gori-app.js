@@ -7616,18 +7616,26 @@ function patchAdmin(){
    GORI_BIZ 에서 그대로 가져옵니다 (비어 있으면 "(미기재)").
    ════════════════════════════════════════════════════════════════════ */
 
-/* 홈 "왜 고리인가" 띠 ─ 네 가지 모두 실제로 구현된 것입니다.
-   (인증 배지 = 10_trust, 조건 매칭 = 08_match, 견적 비교 = 03_quote,
-    수수료 없음 = 아직 결제를 붙이지 않았다는 사실) */
+/* ── TrustSection ─────────────────────────────────────────────────
+   예전에는 "왜 고리를 쓰나요" 띠가 홈 위쪽(분야 바로 아래)에 있었고,
+   푸터 위에 거의 같은 말을 하는 신뢰 지표 줄이 또 있었습니다. 둘을 하나로
+   합쳐 페이지 중간(실시간 요청 뒤)에 둡니다.
+
+   위쪽은 사람이 "찾아보러" 온 자리입니다 — 설득은 한 번 둘러본 뒤에
+   와야 합니다. 첫 화면부터 설득 문단이 600px 깔려 있으면 오히려
+   광고처럼 읽힙니다.
+
+   네 가지는 전부 실제로 만들어져 있는 것만 적습니다.
+   (인증 = 10_trust, 조건 매칭 = 08_match, 견적 비교 = 03_quote) */
 var AB_WHY=[
-  { k:"call", t:"전화를 돌리지 않아도 됩니다",
-    d:"필요한 것을 한 번만 올리면, 조건이 맞는 업체에 알림이 갑니다. 업체를 찾아 다니는 일은 고리가 합니다." },
-  { k:"cmp", t:"가격을 나란히 놓고 봅니다",
-    d:"단가·총액·납기·평점·거래실적이 한 화면에 정리됩니다. 등록된 시세가 있으면 몇 % 높고 낮은지도 같이 보여 드립니다." },
-  { k:"vf", t:"어떤 업체인지 확인하고 고릅니다",
-    d:"사업자등록번호·축산물 영업허가·HACCP 번호를 받아 확인하고 배지로 표시합니다. 확인 전이면 \"심사중\" 으로 둡니다." },
-  { k:"free", t:"요청도, 견적도 무료입니다",
-    d:"베타 기간에는 등록비와 수수료가 없습니다. 대금은 고리를 거치지 않고 두 당사자가 직접 주고받습니다." }
+  { k:"vf", t:"사업자 인증",
+    d:"사업자등록번호를 국세청 체크섬으로 검증하고, 확인된 업체에만 배지를 답니다." },
+  { k:"hc", t:"HACCP 확인",
+    d:"축산물 영업허가와 HACCP 번호를 받아 관리자가 확인합니다. 확인 전이면 \"심사중\" 으로 둡니다." },
+  { k:"call", t:"조건 매칭",
+    d:"요청을 한 번 올리면 분야와 지역이 맞는 업체에 알림이 갑니다." },
+  { k:"cmp", t:"견적 비교",
+    d:"단가·총액·납기·평점·거래실적을 한 화면에 세워 놓고 고릅니다." }
 ];
 
 var AB_FLOW_OLD=["아는 업체에 한 곳씩 전화","단가는 물어봐야 알고","처음 거래하는 곳은 확인할 길이 없음"];
@@ -7636,15 +7644,16 @@ var AB_FLOW_NEW=["요청 한 번 등록","견적이 모여서 도착","나란히
 function abIco(k){
   var s='<svg class="du" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
         'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
-  if(k==="call") return s+'<g class="du-f"><rect x="3.5" y="5" width="17" height="12" rx="2.5"/></g>'+
-    '<g class="du-s"><rect x="3.5" y="5" width="17" height="12" rx="2.5"/><path d="M7.5 9.5h9M7.5 13h5.5"/><path d="M9 17l-1 3 4-3"/></g></svg>';
+  if(k==="call") return s+'<g class="du-f"><circle cx="5.6" cy="12" r="2.6"/></g>'+
+    '<g class="du-s"><circle cx="5.6" cy="12" r="2.6"/><circle cx="18.4" cy="6.4" r="2.6"/>'+
+    '<circle cx="18.4" cy="17.6" r="2.6"/><path d="M8 10.8l7.9-3.4M8 13.2l7.9 3.4"/></g></svg>';
   if(k==="cmp")  return s+'<g class="du-f"><rect x="3.5" y="10" width="5" height="10" rx="1.4"/></g>'+
     '<g class="du-s"><rect x="3.5" y="10" width="5" height="10" rx="1.4"/><rect x="10" y="6" width="5" height="14" rx="1.4"/>'+
     '<rect x="16.5" y="13" width="4" height="7" rx="1.4"/></g></svg>';
-  if(k==="vf")   return s+'<g class="du-f"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/></g>'+
+  if(k==="hc")   return s+'<g class="du-f"><circle cx="12" cy="12" r="8.6"/></g>'+
+    '<g class="du-s"><circle cx="12" cy="12" r="8.6"/><path d="M8.2 12.3l2.6 2.6 5-5.4"/></g></svg>';
+  return s+'<g class="du-f"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/></g>'+
     '<g class="du-s"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></g></svg>';
-  return s+'<g class="du-f"><circle cx="12" cy="12" r="8.5"/></g>'+
-    '<g class="du-s"><circle cx="12" cy="12" r="8.5"/><path d="M14.6 9.4c-.7-.7-1.7-1-2.6-1-1.6 0-2.6.8-2.6 2s1 1.7 2.6 2 2.6.8 2.6 2-1 2-2.6 2c-1 0-1.9-.3-2.6-1"/><path d="M12 6.6v10.8"/></g></svg>';
 }
 
 function abWhyCard(w){
@@ -7654,18 +7663,26 @@ function abWhyCard(w){
     '<div class="why-d">'+esc(w.d)+'</div></div>';
 }
 
-/* ── 홈: 카테고리 바로 아래에 끼워 넣습니다 ── */
+/* 실시간 요청 구간을 찾습니다 (없으면 분야 줄 뒤 — 예전 자리로 물러섭니다) */
+function abTrustAnchor(){
+  var w=document.querySelector("#pg-h #rq-widget");
+  if(w){ var sec=w.closest("section"); if(sec) return sec; }
+  return document.querySelector("#pg-h .svc-sec") || document.querySelector("#pg-h .sec-cat8");
+}
+
 function abInjectWhy(){
   if($("why-band")) return;
-  var cat=document.querySelector("#pg-h .sec-cat8"); if(!cat) return;
+  var host=abTrustAnchor(); if(!host) return;
   var sec=document.createElement("section");
   sec.className="sec why"; sec.id="why-band";
   sec.innerHTML=
     '<div class="w">'+
       '<div class="why-hd">'+
-        '<h2 class="sec-h2">왜 고리를 쓰나요</h2>'+
-        '<p class="why-lead">원육 한 번 사려면 아는 업체에 전화를 돌리고, 단가는 물어봐야 알고, '+
-          '처음 거래하는 곳은 어떤 곳인지 확인할 방법이 없었습니다. 그 세 가지를 한 화면에서 끝내려고 만들었습니다.</p>'+
+        '<div class="why-eye">TRUST</div>'+
+        '<h2 class="sec-h2">믿고 연결할 수 있도록</h2>'+
+        '<p class="why-lead">처음 거래하는 업체가 어떤 곳인지 확인할 방법이 없어서 '+
+          '결국 아는 곳에만 전화하게 됩니다. 그 확인을 고리가 대신합니다. '+
+          '요청 등록과 견적 비교에는 수수료가 없습니다.</p>'+
       '</div>'+
       '<div class="why-flow">'+
         '<div class="why-side why-old"><div class="why-side-t">지금까지</div><ul>'+
@@ -7682,7 +7699,7 @@ function abInjectWhy(){
         '<button class="gbtn gbtn-w" onclick="gOpenAbout()">고리는 어떤 곳인가요 ›</button>'+
       '</div>'+
     '</div>';
-  cat.parentNode.insertBefore(sec, cat.nextSibling);
+  host.parentNode.insertBefore(sec, host.nextSibling);
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -8027,25 +8044,54 @@ function csRender(){
       같은 IIFE 안이니 지역 이름을 직접 다시 묶습니다. (CLAUDE.md 참고) */
 function hdSignup(){
   var box=document.querySelector(".hdr-actions"); if(!box) return;
-  if(box.querySelector(".ha-signup")) return;
   var login=box.querySelector(".ha-login");
-  /* 로그인한 뒤에는 .ha-login 이 "거래관리" 로 바뀝니다 — 그때는 붙이지 않습니다 */
+  /* 로그인한 뒤에는 .ha-login 이 "거래관리" 로 바뀝니다 */
   if(!login || login.textContent.trim()!=="로그인") return;
-  var b=document.createElement("button");
-  b.className="ha-btn ha-ghost ha-signup"; b.textContent="회원가입";
-  b.setAttribute("onclick","openModal('signup')");
-  login.parentNode.insertBefore(b, login.nextSibling);
+  /* 회원가입은 로그인 창 안에 탭으로 있고 전체메뉴에도 있습니다. 헤더에 다섯
+     개를 늘어놓으면 무엇을 눌러야 할지 안 보여서, 위계 셋만 남깁니다:
+     로그인(글자) · 업체 등록(테두리) · 요청 올리기(딥레드). */
+  var old=box.querySelector(".ha-signup");
+  if(old && old.parentNode) old.parentNode.removeChild(old);
+}
 
-  /* 헤더 폭이 모자랍니다 — "업체 등록" 만 표시에서 내립니다.
-     지우지 않습니다. 전체메뉴에도 같은 항목이 있습니다. */
-  for(var i=0;i<box.children.length;i++){
-    if(box.children[i].textContent.trim()==="업체 등록") box.children[i].classList.add("hd-off");
-  }
+/* ── 구간 페이드 (아주 짧게) ───────────────────────────────────────
+   화면 아래에 있는 구간만 대상으로 삼습니다. 첫 화면에 이미 보이는 것을
+   숨겼다 켜면 로딩이 늦어 보입니다.
+
+   ⚠️ IntersectionObserver 가 없거나 뭔가 어긋나도 1.2초 뒤에는 전부
+      켭니다. 화면이 비어 있는 채로 남는 것이 가장 나쁜 결과입니다.
+   ⚠️ 회귀 검사(색 대비·훑기)는 opacity 0 인 요소를 건너뜁니다. 늦어도
+      1.2초면 다 켜지므로 검사에 걸리지 않습니다. */
+function pfReveal(){
+  var reduce=false;
+  try{ reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+  if(reduce || !window.IntersectionObserver) return;
+
+  var sels=["#pg-h .sec-cat8",".svc-sec","#pg-h .sec-mkt","#pg-h .why"];
+  var els=[];
+  sels.forEach(function(q){
+    var el=document.querySelector(q); if(!el) return;
+    var r=el.getBoundingClientRect();
+    if(r.top < window.innerHeight - 40) return;      /* 이미 보이는 것은 그대로 */
+    el.classList.add("rv"); els.push(el);
+  });
+  if(!els.length) return;
+
+  var io=new IntersectionObserver(function(rows){
+    rows.forEach(function(x){ if(x.isIntersecting){ x.target.classList.add("on"); io.unobserve(x.target); } });
+  }, {rootMargin:"0px 0px -8% 0px", threshold:0.02});
+  els.forEach(function(el){ io.observe(el); });
+
+  /* 안전망 — 무슨 일이 있어도 다 보이게 */
+  setTimeout(function(){
+    els.forEach(function(el){ el.classList.add("on"); });
+    try{ io.disconnect(); }catch(e){}
+  }, 1200);
 }
 
 function patchPremium(){
   if(G._premium) return; G._premium=true;
-  /* 헤더 회원가입 — 기존 함수는 그대로 두고 뒤에 덧붙이기만 합니다 */
+  /* 헤더 버튼 정리 — 기존 함수는 그대로 두고 뒤에서 손봅니다 */
   try{
     if(typeof renderHeaderUser==="function"){
       var origHU=renderHeaderUser;
@@ -8073,6 +8119,8 @@ function patchPremium(){
 
   /* 지표 — 데이터가 들어오는 시점을 알 수 없어 몇 번 더 그려 봅니다 */
   try{ pfRender(); }catch(e){}
+  try{ pfReveal(); }catch(e){}
+
   [700, 1800, 3500].forEach(function(ms){
     setTimeout(function(){ try{ pfRender(); }catch(e){} }, ms);
   });

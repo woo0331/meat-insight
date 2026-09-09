@@ -183,25 +183,54 @@ function csRender(){
       같은 IIFE 안이니 지역 이름을 직접 다시 묶습니다. (CLAUDE.md 참고) */
 function hdSignup(){
   var box=document.querySelector(".hdr-actions"); if(!box) return;
-  if(box.querySelector(".ha-signup")) return;
   var login=box.querySelector(".ha-login");
-  /* 로그인한 뒤에는 .ha-login 이 "거래관리" 로 바뀝니다 — 그때는 붙이지 않습니다 */
+  /* 로그인한 뒤에는 .ha-login 이 "거래관리" 로 바뀝니다 */
   if(!login || login.textContent.trim()!=="로그인") return;
-  var b=document.createElement("button");
-  b.className="ha-btn ha-ghost ha-signup"; b.textContent="회원가입";
-  b.setAttribute("onclick","openModal('signup')");
-  login.parentNode.insertBefore(b, login.nextSibling);
+  /* 회원가입은 로그인 창 안에 탭으로 있고 전체메뉴에도 있습니다. 헤더에 다섯
+     개를 늘어놓으면 무엇을 눌러야 할지 안 보여서, 위계 셋만 남깁니다:
+     로그인(글자) · 업체 등록(테두리) · 요청 올리기(딥레드). */
+  var old=box.querySelector(".ha-signup");
+  if(old && old.parentNode) old.parentNode.removeChild(old);
+}
 
-  /* 헤더 폭이 모자랍니다 — "업체 등록" 만 표시에서 내립니다.
-     지우지 않습니다. 전체메뉴에도 같은 항목이 있습니다. */
-  for(var i=0;i<box.children.length;i++){
-    if(box.children[i].textContent.trim()==="업체 등록") box.children[i].classList.add("hd-off");
-  }
+/* ── 구간 페이드 (아주 짧게) ───────────────────────────────────────
+   화면 아래에 있는 구간만 대상으로 삼습니다. 첫 화면에 이미 보이는 것을
+   숨겼다 켜면 로딩이 늦어 보입니다.
+
+   ⚠️ IntersectionObserver 가 없거나 뭔가 어긋나도 1.2초 뒤에는 전부
+      켭니다. 화면이 비어 있는 채로 남는 것이 가장 나쁜 결과입니다.
+   ⚠️ 회귀 검사(색 대비·훑기)는 opacity 0 인 요소를 건너뜁니다. 늦어도
+      1.2초면 다 켜지므로 검사에 걸리지 않습니다. */
+function pfReveal(){
+  var reduce=false;
+  try{ reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+  if(reduce || !window.IntersectionObserver) return;
+
+  var sels=["#pg-h .sec-cat8",".svc-sec","#pg-h .sec-mkt","#pg-h .why"];
+  var els=[];
+  sels.forEach(function(q){
+    var el=document.querySelector(q); if(!el) return;
+    var r=el.getBoundingClientRect();
+    if(r.top < window.innerHeight - 40) return;      /* 이미 보이는 것은 그대로 */
+    el.classList.add("rv"); els.push(el);
+  });
+  if(!els.length) return;
+
+  var io=new IntersectionObserver(function(rows){
+    rows.forEach(function(x){ if(x.isIntersecting){ x.target.classList.add("on"); io.unobserve(x.target); } });
+  }, {rootMargin:"0px 0px -8% 0px", threshold:0.02});
+  els.forEach(function(el){ io.observe(el); });
+
+  /* 안전망 — 무슨 일이 있어도 다 보이게 */
+  setTimeout(function(){
+    els.forEach(function(el){ el.classList.add("on"); });
+    try{ io.disconnect(); }catch(e){}
+  }, 1200);
 }
 
 function patchPremium(){
   if(G._premium) return; G._premium=true;
-  /* 헤더 회원가입 — 기존 함수는 그대로 두고 뒤에 덧붙이기만 합니다 */
+  /* 헤더 버튼 정리 — 기존 함수는 그대로 두고 뒤에서 손봅니다 */
   try{
     if(typeof renderHeaderUser==="function"){
       var origHU=renderHeaderUser;
@@ -229,6 +258,8 @@ function patchPremium(){
 
   /* 지표 — 데이터가 들어오는 시점을 알 수 없어 몇 번 더 그려 봅니다 */
   try{ pfRender(); }catch(e){}
+  try{ pfReveal(); }catch(e){}
+
   [700, 1800, 3500].forEach(function(ms){
     setTimeout(function(){ try{ pfRender(); }catch(e){} }, ms);
   });

@@ -32,9 +32,16 @@ async function open(b,w,h,hash){
   log.push('1. 홈 — 왜 고리를 쓰나요');
   const p=await open(b,1440,1000);
   chk('띠가 있다', await p.evaluate(()=>!!document.getElementById('why-band')), 'true');
-  chk('분야 바로 아래', await p.evaluate(()=>{
-    const c=document.querySelector('#pg-h .sec-cat8');
-    return c && c.nextElementSibling && c.nextElementSibling.id==='why-band';
+  /* 2026 위계 정리: 위쪽은 "찾아보는" 자리, 설득은 한 번 둘러본 뒤에.
+     실시간 요청 뒤로 내리고, 푸터 위에 있던 신뢰 지표 줄과 하나로 합쳤습니다. */
+  chk('실시간 요청 바로 뒤', await p.evaluate(()=>{
+    const rq=document.querySelector('#pg-h #rq-widget');
+    const sec=rq && rq.closest('section');
+    return !!sec && sec.nextElementSibling && sec.nextElementSibling.id==='why-band';
+  }), 'true');
+  chk('신뢰 지표 줄과 중복 없음', await p.evaluate(()=>{
+    const bar=document.querySelector('.trust-bar');
+    return !bar || bar.getBoundingClientRect().height===0;
   }), 'true');
   chk('이유 카드 4장', await p.evaluate(()=>document.querySelectorAll('#why-band .why-c').length), 4);
   chk('지금까지 → 고리에서는', await p.evaluate(()=>
@@ -42,9 +49,11 @@ async function open(b,w,h,hash){
   /* 접히는 구간(38_home)에 딸려 들어가면 안 됩니다 */
   chk('접히지 않는다', await p.evaluate(()=>
     !!document.getElementById('why-band').closest('.hm-fold')), 'false');
-  chk('첫 화면 근처에 있다', await p.evaluate(()=>{
+  /* 페이지 중간 — 너무 위(광고처럼 보임)도, 푸터 바로 위(아무도 안 봄)도 아니게 */
+  chk('페이지 중간에 있다', await p.evaluate(()=>{
     const y=document.getElementById('why-band').getBoundingClientRect().top+window.scrollY;
-    return y < document.body.scrollHeight*0.4;
+    const r=y/document.body.scrollHeight;
+    return r>0.25 && r<0.75;
   }), 'true');
 
   log.push('2. 소개 페이지');

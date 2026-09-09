@@ -50,8 +50,13 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
   /* 브랜드 = 번트 오렌지 (흰 배경 대비 4.91:1 — 흰 글씨를 얹어도, 흰 위에
      글씨로 써도 AA 를 넘는 구간입니다. 오류·상승색은 순수 빨강으로 갈라 놨습니다) */
   --gn:#C24A0C;--gn2:#953609;--gnl:#FDF0E7;--gnb:#F7D4BC;--gn-on-tint:#953609;
-  --gn-dark:#FFA06A;                        /* 어두운 배경 위 브랜드 */
+  --gn-dark:#FFA06A;--brand-dark:#F0503F;                        /* 어두운 배경 위 브랜드 */
   --or:#C24A0C;--orl:#FDF0E7;
+/* CTA 전용 딥레드. 브랜드색(--gn, 번트 오렌지)은 그대로 두고, 누르는 것에만
+   씁니다 — 검색하기 · 요청 올리기처럼 "지금 눌러야 할 하나". 흰 배경 대비
+   6.4:1 이라 흰 글씨를 얹어도 AA 를 넉넉히 넘습니다. 링크·아이콘·구간 강조에는
+   쓰지 마세요. 빨강이 늘어나는 순간 쇼핑몰처럼 보입니다. */
+--cta:#B4232C;--cta-h:#94151E;
   /* 보조 액센트 = 앰버. --amber 는 어두운 배경 전용,
      흰 배경 위 글씨·아이콘은 --amber-ink, 틴트 위 글씨는 --amber-on */
   --amber:#F5A524;--amber-ink:#9C6B0B;--amber-on:#6E4A08;
@@ -66,7 +71,7 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
   --br:#8D6E63;--brl:#EFEBE9;
 
   /* 중립 */
-  --bg:#FFFFFF;--bg2:#F2F1ED;--bd:#EAE8E4;--bd2:#D9D6D0;
+  --bg:#FFFFFF;--bg2:#F6F5F2;--bd:#EAE8E4;--bd2:#D9D6D0;
   --ink:#14181C;--ink2:#3A4149;--ink3:#5E636A;--ink4:#676C75;
   --navy:#12161B;--navy2:#1B2129;
   --gold:#6E4A08;--goldbg:#FCF4E2;
@@ -93,14 +98,18 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
 .hdt-btn{font-size:12.5px;color:rgba(255,255,255,.62);cursor:pointer;border:none;background:none;font-family:var(--font);transition:color .15s;}
 .hdt-btn:hover{color:rgba(255,255,255,.8);}
 .hdr-main{height:58px;display:flex;align-items:center;background:#fff;}
-.hdr-main-w{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:24px;width:100%;}
+.hdr-main-w{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:30px;width:100%;}
 .logo{display:flex;align-items:center;gap:9px;cursor:pointer;flex-shrink:0;}
 .logo-circle{width:34px;height:34px;border-radius:50%;background:var(--gn);display:flex;align-items:center;justify-content:center;}
-.logo-nm{font-size:21px;font-weight:700;color:var(--ink);font-family:var(--serif);letter-spacing:-.3px;}
+.logo-nm{font-size:23px;font-weight:700;color:var(--ink);font-family:var(--serif);letter-spacing:-.3px;}
 .logo-nm em{color:var(--gn);font-style:normal;}
 .hdr-nav{display:flex;gap:0;}
 .hdr-nav a{font-size:15px;font-weight:600;color:var(--ink2);padding:0 13px;white-space:nowrap;height:58px;display:flex;align-items:center;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none;}
-.hdr-nav a:hover,.hdr-nav a.on{color:var(--gn);border-color:var(--gn);}
+.hdr-nav a{position:relative;border-bottom:none;}
+.hdr-nav a::after{content:"";position:absolute;left:13px;right:13px;bottom:0;height:2px;
+  background:var(--gn);transform:scaleX(0);transform-origin:center;transition:transform .16s ease;}
+.hdr-nav a:hover,.hdr-nav a.on{color:var(--gn);}
+.hdr-nav a:hover::after,.hdr-nav a.on::after{transform:scaleX(1);}
 .hdr-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
 /* 헤더 우측 아이콘 버튼 (검색 · 전체메뉴) — 40px 이상으로 둡니다 */
 .hd-ico{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;min-width:40px;
@@ -116,13 +125,18 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
    전체메뉴·푸터·이용 가이드·업체 유치 화면(#/sj)에도 있으므로 헤더에서만
    내립니다. 버튼과 onclick 은 그대로 두고 화면에서만 감춥니다 —
    이 한 줄을 지우면 다시 나옵니다. */
-.hdr-actions .hd-off{display:none;}
+/* 예전에 폭이 모자라 "업체 등록" 을 감춰 뒀습니다. 헤더에서 회원가입을 빼고
+   (로그인 창 탭·전체메뉴에 있습니다) 자리를 되찾아 다시 보입니다. */
 .hdr-actions>*{white-space:nowrap;flex-shrink:0;}
-.ha-btn{padding:8px 18px;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:var(--font);transition:all .15s;}
-.ha-login{color:var(--ink2);background:#fff;border:1.5px solid var(--bd2);}
-.ha-login:hover{border-color:var(--gn);color:var(--gn);}
-.ha-reg{background:var(--gn);color:#fff;}
-.ha-reg:hover{background:var(--gn2);}
+/* 버튼 위계 — 셋이 다 테두리를 두르고 있으면 어디를 눌러야 할지 안 보입니다.
+     로그인      글자만
+     업체 등록   테두리
+     요청 올리기 딥레드 (이 화면에서 눌러야 할 하나) */
+.ha-btn{padding:9px 18px;border-radius:8px;font-size:14.5px;font-weight:700;cursor:pointer;border:none;font-family:var(--font);transition:background-color .15s,border-color .15s,color .15s;}
+.ha-login{color:var(--ink2);background:none;border:none;padding:9px 12px;}
+.ha-login:hover{color:var(--ink);background:var(--bg2);}
+.ha-reg{background:var(--cta);color:#fff;}
+.ha-reg:hover{background:var(--cta-h);}
 .hdr-nav2{background:#fff;border-top:1px solid var(--bd);height:38px;display:flex;align-items:center;}
 .hdr-nav2-w{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;align-items:center;width:100%;height:100%;}
 .hn2-item{font-size:14px;font-weight:600;color:var(--ink3);padding:0 13px;height:100%;display:flex;align-items:center;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
@@ -141,7 +155,7 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
 /* ══ COMMON ══ */
 .w{max-width:var(--max);margin:0 auto;padding:0 24px;}
 .sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.sec-h{font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-.4px;}
+.sec-h{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.4px;}
 .more-btn{font-size:14.5px;color:var(--ink2);font-weight:700;border:none;background:none;cursor:pointer;display:flex;align-items:center;gap:3px;white-space:nowrap;flex-shrink:0;}
 .more-btn:hover{color:var(--gn);}
 .badge{display:inline-block;font-size:12px;font-weight:700;padding:2px 7px;border-radius:4px;}
@@ -335,10 +349,13 @@ textarea.fi{resize:vertical;min-height:80px;}
 .rb-icon{text-align:center;}
 .rb-icon-circle{color:var(--lime);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 7px;font-size:19px;}
 .rb-icon-t{font-size:12.5px;color:rgba(255,255,255,.62);white-space:nowrap;}
-.rb-cta{background:var(--gn);color:#fff;padding:14px 28px;border:none;border-radius:var(--r);font-size:16px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;box-shadow:0 4px 14px rgba(12,74,55,.22);}
-.rb-cta:hover{background:var(--gn2);}
+/* 홈의 주요 CTA 라 헤더·히어로와 같은 딥레드로 맞춥니다.
+   (그림자 색이 예전 딥그린 시절의 값이라 같이 고쳤습니다) */
+.rb-cta{background:var(--cta);color:#fff;padding:14px 28px;border:none;border-radius:var(--r);font-size:16px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.28);}
+.rb-cta:hover{background:var(--cta-h);}
 
 /* ══ 신뢰 4개 아이콘 ══ */
+html .trust-bar{display:none;}
 .trust-bar{background:#fff;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);}
 .trust-inner{max-width:var(--max);margin:0 auto;padding:0 24px;display:grid;grid-template-columns:repeat(4,1fr);}
 .trust-item{padding:22px 20px;text-align:center;border-right:1px solid var(--bd);}
@@ -436,8 +453,8 @@ textarea.fi{resize:vertical;min-height:80px;}
    ═══════════════════════════════════════════════ */
 
 /* ── 헤더 ── */
-.hdr-main{height:64px;border-bottom:1px solid var(--bd);}
-.hdr-nav a{font-size:15.5px;height:64px;}
+.hdr-main{height:72px;border-bottom:1px solid var(--bd);}
+.hdr-nav a{font-size:15.5px;height:72px;padding:0 17px;}
 .ha-ghost{background:#fff;color:var(--ink2);border:1.5px solid var(--bd2);}
 .ha-ghost:hover{border-color:var(--gn);color:var(--gn);}
 .ha-reg{box-shadow:none;}
@@ -476,11 +493,19 @@ textarea.fi{resize:vertical;min-height:80px;}
 .hnote{font-size:13.5px;color:var(--ink4);margin-top:16px;}
 
 /* ── 섹션 공통 ── */
-.sec{padding:44px 0;background:#fff;}
+/* 여백이 곧 위계입니다. 구간을 촘촘히 붙이면 "정보가 많은 사이트",
+   띄우면 "브랜드가 큰 사이트" 로 읽힙니다. */
+.sec{padding:66px 0;background:#fff;}
 .sec-alt{background:var(--bg2);}
 .sec-hd2{margin-bottom:20px;}
 .sec-hd2.row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;}
-.sec-h2{font-size:25px;font-weight:800;color:var(--ink);letter-spacing:-.6px;display:flex;align-items:center;gap:8px;}
+/* 모든 구간 제목이 똑같이 굵으면 어디가 중요한지 안 보입니다.
+     히어로 71  >  주요 서비스 34  >  신뢰 30  >  업종 24 · 시세/요청 24
+     >  접어 둔 하위 구간 20
+   아래 세 줄이 그 위계입니다. */
+.sec-h2{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.5px;display:flex;align-items:center;gap:8px;}
+.why .sec-h2{font-size:30px;letter-spacing:-.04em;}
+.hm-fold .sec-h2{font-size:20px;}
 .sec-d2{font-size:15px;color:var(--ink2);margin-top:6px;font-weight:500;}
 .sample-tag{display:inline-block;font-size:12px;font-weight:700;color:var(--ink4);background:var(--bg2);border:1px solid var(--bd);border-radius:4px;padding:2px 6px;margin-left:6px;vertical-align:middle;letter-spacing:.2px;}
 
@@ -629,7 +654,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 .gh-sl{font-size:13px;color:var(--ink3);margin-top:2px;font-weight:600;}
 
 /* ── 오늘 시세 스트립 ── */
-.sec-mkt{padding:24px 0 6px;}
+.sec-mkt{padding:58px 0 54px;}
 .mkt-src{font-size:13px;color:var(--ink3);font-weight:500;}
 .mkt-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
 .mkt-row::-webkit-scrollbar{display:none;}
@@ -787,7 +812,10 @@ textarea.fi{resize:vertical;min-height:80px;}
   .bnav{display:grid;}
   .hdr-main{height:56px;}
   .hdr-main-w{padding:0 14px;}
+  /* 모바일 헤더는 로고 · 요청 올리기 · 햄버거 셋으로 줄입니다.
+     나머지(로그인 · 업체 등록 · 전체메뉴)는 전부 햄버거 안에 있습니다. */
   .hdr-actions .ha-login,.hdr-actions .ha-ghost{display:none;}
+  .hd-search{display:none;}
   .hero2{padding:26px 0 22px;}
   .h2-h1{font-size:26px;}
   .h2-sub{font-size:15px;}
@@ -856,7 +884,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 
 /* 어두운 히어로 위에서 브랜드색은 4.9:1 이 안 나옵니다(3.79:1).
    큰 글씨는 3:1 이면 되지만 여유를 두려고 한 단계 밝힌 값을 씁니다 — 5.9:1 */
-:root{--brand-dark:#F2661C;--ph-ink:#F4F1EE;--ph-ink2:#B9BEC6;}
+:root{--ph-ink:#F4F1EE;--ph-ink2:#B9BEC6;}
 
 /* ── PremiumHero ───────────────────────────────────────────────── */
 .gh.ph{background:var(--navy);color:var(--ph-ink);padding:0;overflow:hidden;position:relative;}
@@ -864,57 +892,78 @@ textarea.fi{resize:vertical;min-height:80px;}
 .ph-bg{position:absolute;inset:0;z-index:0;pointer-events:none;}
 .ph-bg svg{width:100%;height:100%;display:block;}
 /* 글자가 얹히는 왼쪽·아래를 더 어둡게 눌러 가독성을 확보합니다 */
+/* 사진이든 그림이든 배경보다 글자와 검색창이 먼저 보여야 합니다.
+   왼쪽(글자)은 세게, 오른쪽(풍경)은 약하게 누르고, 아래는 지표 띠로 이어지도록
+   한 번 더 어둡게 깝니다. */
 .ph-veil{position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:linear-gradient(100deg,rgba(10,13,17,.94) 0%,rgba(10,13,17,.86) 42%,rgba(10,13,17,.58) 72%,rgba(10,13,17,.72) 100%);}
-.gh-w.ph-w{position:relative;z-index:2;padding-top:30px;padding-bottom:34px;
-  min-height:600px;display:flex;flex-direction:column;}
+  background:linear-gradient(100deg,rgba(10,13,17,.93) 0%,rgba(10,13,17,.82) 44%,rgba(10,13,17,.42) 76%,rgba(10,13,17,.55) 100%),
+             linear-gradient(to bottom,rgba(10,13,17,.5) 0%,rgba(10,13,17,0) 26%,rgba(10,13,17,0) 78%,rgba(10,13,17,.42) 100%);}
+/* 높이만 키우면 텅 빈 느낌이 납니다 — 눈이 머무는 자리(제목 → 부제 → 검색 →
+   인기검색어) 사이 간격을 같이 벌려야 "정보가 많은 사이트" 가 아니라
+   "브랜드가 큰 사이트" 로 읽힙니다. */
+.gh-w.ph-w{position:relative;z-index:2;padding-top:34px;padding-bottom:38px;
+  min-height:700px;display:flex;flex-direction:column;}
 .ph-body{margin-top:auto;}
 
-.ph-util{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:30px;}
+.ph-util{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:34px;}
 .gh.ph .gh-region{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.22);color:var(--ph-ink);}
 .gh.ph .gh-region:hover{background:rgba(255,255,255,.14);border-color:var(--brand-dark);color:#fff;}
 .gh.ph .gh-bell{color:var(--ph-ink);}
 .gh.ph .gh-bell:hover{background:rgba(255,255,255,.1);}
 .gh.ph .gh-bell-dot{background:var(--brand-dark);}
 
-.ph-eye{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;
-  letter-spacing:.16em;color:var(--ph-ink2);margin-bottom:18px;text-transform:uppercase;}
-.ph-eye::before{content:"";width:26px;height:2px;background:var(--brand-dark);}
-.ph-h1{font-size:58px;font-weight:800;line-height:1.14;letter-spacing:-.045em;color:#fff;margin:0 0 18px;}
+.ph-eye{display:inline-flex;align-items:center;gap:10px;font-size:12.5px;font-weight:700;
+  letter-spacing:.15em;color:var(--ph-ink2);margin-bottom:24px;text-transform:uppercase;}
+.ph-eye::before{content:"";width:28px;height:2px;background:var(--brand-dark);}
+/* clamp 로 320px~1440px 사이를 이어서 줄입니다 — 구간마다 값을 따로 적으면
+   그 사이 폭에서 제목이 어색하게 튑니다 */
+.ph-h1{font-size:clamp(30px,5.1vw,71px);font-weight:800;line-height:1.1;letter-spacing:-.05em;
+  color:#fff;margin:0 0 22px;word-break:keep-all;}
 .ph-h1 em{font-style:normal;color:var(--brand-dark);}
-.ph-sub{font-size:18px;line-height:1.62;color:var(--ph-ink2);font-weight:500;margin:0 0 30px;max-width:640px;}
+.ph-sub{font-size:18.5px;line-height:1.6;color:var(--ph-ink2);font-weight:500;margin:0 0 38px;
+  max-width:620px;word-break:keep-all;}
 
 /* ── GlobalSearch ──────────────────────────────────────────────── */
-.gsx{display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;
-  padding:8px 8px 8px 22px;max-width:760px;box-shadow:0 18px 44px rgba(0,0,0,.34);}
+.gsx{display:flex;align-items:center;gap:12px;background:#fff;border-radius:16px;
+  padding:0 8px 0 24px;height:70px;max-width:780px;
+  border:1.5px solid transparent;box-shadow:0 14px 34px rgba(0,0,0,.28);
+  transition:border-color .16s,box-shadow .16s;}
+/* 검색창 안 어디를 눌러도 테두리가 브랜드색으로 아주 살짝 들어옵니다.
+   (:focus-within 이라 입력칸 초점 링과 따로 놉니다 — 링은 접근성용입니다) */
+.gsx:focus-within{border-color:var(--cta);box-shadow:0 14px 34px rgba(0,0,0,.28),0 0 0 3px rgba(180,35,44,.16);}
 .gsx-ico{flex-shrink:0;display:flex;color:var(--ink3);}
 /* ⚠️ 여기에 outline:none 을 쓰면 안 됩니다. gori-app.css 의
    html :focus-visible (0,1,1) 보다 이 규칙(0,3,0)이 굵어서, 검색창의
    초점 테두리가 통째로 사라집니다. 실제로 그렇게 지웠다가 되살렸습니다. */
 .gh.ph .gh-s-in{flex:1;min-width:0;border:none;background:none;font-family:var(--font);
-  font-size:19px;font-weight:500;color:var(--ink);padding:19px 0;}
+  font-size:19px;font-weight:500;color:var(--ink);padding:0;height:100%;}
 .gh.ph .gh-s-in::placeholder{color:var(--ink4);font-weight:500;}
-.gh.ph .gh-s-btn{flex-shrink:0;background:var(--gn);color:#fff;border:none;border-radius:10px;
-  padding:0 30px;height:56px;font-size:17px;font-weight:800;letter-spacing:-.02em;}
-.gh.ph .gh-s-btn:hover{background:var(--gn2);}
+.gh.ph .gh-s-btn{flex-shrink:0;background:var(--cta);color:#fff;border:none;border-radius:11px;
+  padding:0 32px;height:54px;font-size:17px;font-weight:800;letter-spacing:-.02em;
+  transition:background-color .15s;}
+.gh.ph .gh-s-btn:hover{background:var(--cta-h);}
 
 /* ── PopularKeywords ───────────────────────────────────────────── */
-.pkw{display:flex;align-items:center;gap:12px;margin-top:18px;}
-.pkw-l{flex-shrink:0;font-size:13.5px;font-weight:700;color:var(--ph-ink2);white-space:nowrap;}
-.gh.ph .gh-chips{margin-top:0;flex-wrap:wrap;overflow:visible;}
-.gh.ph .gh-chips .hchip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);
-  color:var(--ph-ink);font-weight:600;}
-.gh.ph .gh-chips .hchip:hover{background:rgba(242,102,28,.2);border-color:var(--brand-dark);color:#fff;}
+/* 칩이 두 줄로 넘어가면 가운데 정렬한 라벨이 허공에 뜹니다 — 첫 줄에 맞춥니다 */
+.pkw{display:flex;align-items:flex-start;gap:16px;margin-top:24px;}
+.pkw-l{flex-shrink:0;font-size:13.5px;font-weight:700;color:var(--ph-ink2);white-space:nowrap;padding-top:11px;}
+.gh.ph .gh-chips{margin-top:0;flex-wrap:wrap;overflow:visible;gap:9px;}
+/* 기본은 배경 없이 테두리만 — 태그를 잔뜩 뿌린 느낌이 나지 않게 합니다.
+   브랜드색은 손을 올렸을 때만 들어옵니다. */
+.gh.ph .gh-chips .hchip{background:transparent;border:1px solid rgba(255,255,255,.22);
+  color:var(--ph-ink2);font-weight:600;padding:9px 16px;
+  transition:border-color .15s,color .15s,background-color .15s;}
+.gh.ph .gh-chips .hchip:hover{background:rgba(240,80,63,.12);border-color:var(--brand-dark);color:#fff;}
 
 /* ── 밸류체인 레일 ─────────────────────────────────────────────── */
-.ph-chain{margin-top:38px;padding-top:26px;border-top:1px solid rgba(255,255,255,.1);}
+.ph-chain{margin-top:44px;padding-top:28px;border-top:1px solid rgba(255,255,255,.1);}
 .pc-rail{display:flex;align-items:center;gap:10px;}
 .pc-node{flex:1;min-width:0;display:flex;align-items:center;gap:11px;}
 .pc-ic{flex-shrink:0;width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,.055);
   border:1px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;
   color:rgba(255,255,255,.72);}
 .pc-nm{font-size:14px;font-weight:700;color:var(--ph-ink2);letter-spacing:-.03em;white-space:nowrap;}
-.pc-arw{flex-shrink:0;display:flex;color:rgba(242,102,28,.8);}
+.pc-arw{flex-shrink:0;display:flex;color:rgba(240,80,63,.75);}
 
 /* ── PlatformStats ─────────────────────────────────────────────── */
 .pstat-sec{background:var(--navy2);padding:0;border-top:1px solid rgba(255,255,255,.08);}
@@ -931,37 +980,40 @@ textarea.fi{resize:vertical;min-height:80px;}
 .pstat-note{grid-column:1/-1;padding:0 20px 18px;font-size:12.5px;color:var(--ph-ink2);}
 
 /* ── CategoryShortcut ──────────────────────────────────────────── */
-.sec.sec-cat8{padding:34px 0 30px;}
-.cshort-hd{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:18px;}
-.cshort-t{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.04em;}
+.sec.sec-cat8{padding:60px 0 58px;}
+.cshort-hd{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:26px;}
+.cshort-t{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.045em;}
 .cshort-s{font-size:14px;color:var(--ink3);font-weight:500;}
-.cshort{display:grid;grid-template-columns:repeat(13,1fr);gap:8px;}
+.cshort{display:grid;grid-template-columns:repeat(13,1fr);gap:10px;}
 .cs-item{display:flex;flex-direction:column;align-items:center;gap:9px;background:none;border:none;
   padding:6px 2px;cursor:pointer;font-family:var(--font);}
-.cs-ic{width:56px;height:56px;border-radius:16px;background:var(--bg2);border:1px solid var(--bd);
-  display:flex;align-items:center;justify-content:center;color:var(--ink2);transition:border-color .14s,background .14s,color .14s;}
-.cs-item:hover .cs-ic{background:var(--gnl);border-color:var(--gn);color:var(--gn2);}
+.cs-ic{width:58px;height:58px;border-radius:16px;background:#fff;border:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:center;color:var(--ink2);
+  transition:border-color .14s,background-color .14s,color .14s,transform .14s;}
+.cs-item:hover .cs-ic{background:var(--gnl);border-color:var(--gn);color:var(--gn2);transform:translateY(-2px);}
 .cs-nm{font-size:12.5px;font-weight:700;color:var(--ink2);letter-spacing:-.03em;word-break:keep-all;text-align:center;line-height:1.3;}
 .cs-item:hover .cs-nm{color:var(--gn2);}
 .cs-item.cs-all .cs-ic{background:#fff;border-style:dashed;}
 
 /* ── ServiceSection ────────────────────────────────────────────── */
-.svc-sec{background:#fff;padding:60px 0 62px;border-top:1px solid var(--bd);}
+.svc-sec{background:#fff;padding:74px 0 78px;border-top:1px solid var(--bd);}
 .svc-grid2{display:grid;grid-template-columns:minmax(340px,450px) 1fr;gap:44px;align-items:start;}
 .svc-eye{font-size:12.5px;font-weight:800;letter-spacing:.2em;color:var(--gn);margin-bottom:16px;}
 /* word-break 를 안 걸면 "모든 서/비스" 처럼 낱말이 잘립니다 */
-.svc-h2{font-size:34px;font-weight:800;line-height:1.3;letter-spacing:-.045em;color:var(--ink);
-  margin:0 0 16px;word-break:keep-all;}
+.svc-h2{font-size:37px;font-weight:800;line-height:1.28;letter-spacing:-.05em;color:var(--ink);
+  margin:0 0 18px;word-break:keep-all;}
 .svc-h2 em{font-style:normal;color:var(--gn);}
 .svc-sub{font-size:15.5px;line-height:1.68;color:var(--ink3);font-weight:500;margin:0;word-break:keep-all;}
-.svc-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bd);
-  border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;}
-.svc-card{background:#fff;border:none;padding:26px 22px 24px;text-align:left;cursor:pointer;
-  font-family:var(--font);display:flex;flex-direction:column;gap:9px;transition:background .14s;}
-.svc-card:hover{background:var(--gnl);}
-.svc-ic{width:40px;height:40px;color:var(--gn2);display:flex;align-items:center;justify-content:center;
-  border-radius:11px;background:var(--gnl);margin-bottom:3px;}
-.svc-card:hover .svc-ic{background:#fff;}
+.svc-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+/* 테두리 + 아주 약한 그림자까지. 카드마다 색을 넣으면 대시보드처럼 보입니다. */
+.svc-card{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:24px 22px 22px;
+  text-align:left;cursor:pointer;font-family:var(--font);display:flex;flex-direction:column;gap:9px;
+  box-shadow:0 1px 2px rgba(18,22,27,.04);
+  transition:transform .16s ease,border-color .16s,box-shadow .16s;}
+.svc-card:hover{transform:translateY(-2px);border-color:var(--gn);box-shadow:0 8px 20px rgba(18,22,27,.08);}
+.svc-ic{width:42px;height:42px;color:var(--ink3);display:flex;align-items:center;justify-content:center;
+  border-radius:12px;background:var(--bg2);margin-bottom:3px;transition:background-color .16s,color .16s;}
+.svc-card:hover .svc-ic{background:var(--gnl);color:var(--gn2);}
 .svc-t{font-size:16.5px;font-weight:800;color:var(--ink);letter-spacing:-.03em;display:flex;align-items:center;gap:6px;}
 .svc-t svg{color:var(--ink4);flex-shrink:0;transition:transform .14s,color .14s;}
 .svc-card:hover .svc-t svg{transform:translateX(3px);color:var(--gn);}
@@ -994,14 +1046,17 @@ textarea.fi{resize:vertical;min-height:80px;}
   .ph-util{margin-bottom:20px;}
   /* 12px 미만 금지 (연세 있는 이용자) — test/ease-e2e.js 가 잡습니다 */
   .ph-eye{font-size:12px;letter-spacing:.1em;margin-bottom:13px;}
-  .ph-h1{font-size:32px;letter-spacing:-.04em;margin-bottom:13px;}
-  .ph-sub{font-size:15px;margin-bottom:22px;}
-  /* 모바일에서는 버튼을 검색창 아래로 내려 입력 폭을 지킵니다 */
-  .gsx{flex-wrap:wrap;padding:12px;gap:8px;border-radius:13px;}
+  /* 제목 크기는 clamp() 가 폭을 따라 줄여 줍니다 — 여기서는 여백만 잡습니다 */
+  .ph-h1{margin-bottom:14px;}
+  .ph-sub{font-size:15px;margin-bottom:24px;}
+  /* 모바일에서는 버튼을 검색창 아래로 내려 입력 폭을 지킵니다.
+     한 줄에 밀어 넣으면 입력칸이 손가락만 해집니다. */
+  .gsx{flex-wrap:wrap;padding:12px;gap:10px;border-radius:14px;height:auto;max-width:none;}
   .gsx-ico{display:none;}
-  .gh.ph .gh-s-in{flex:1 1 100%;font-size:16.5px;padding:10px 4px;}
-  .gh.ph .gh-s-btn{flex:1 1 100%;height:50px;padding:0;}
+  .gh.ph .gh-s-in{flex:1 1 100%;font-size:16.5px;padding:11px 4px;height:auto;}
+  .gh.ph .gh-s-btn{flex:1 1 100%;height:54px;padding:0;font-size:16.5px;}
   .pkw{flex-direction:column;align-items:flex-start;gap:8px;}
+  .pkw-l{padding-top:0;}
   /* 9개가 세 줄을 차지해 히어로가 늘어졌습니다 — 옆으로 넘깁니다 */
   .pkw{align-self:stretch;}
   .gh.ph .gh-chips{flex-wrap:nowrap;overflow-x:auto;width:100%;}
@@ -1022,6 +1077,22 @@ textarea.fi{resize:vertical;min-height:80px;}
 @media(max-width:420px){
   .ph-h1{font-size:28px;}
   .cshort{grid-template-columns:repeat(3,1fr);}
+}
+
+/* ── 마이크로 인터랙션 ─────────────────────────────────────────────
+   버튼·카드·검색 초점·메뉴 밑줄, 그리고 아래 구간이 올라올 때의 아주 짧은
+   페이드까지만 씁니다. 패럴랙스·3D·커서·파티클은 넣지 않습니다 —
+   B2B 화면에서는 가만히 있는 편이 믿음직합니다.
+
+   ⚠️ 페이드는 자바스크립트(src/44_premium.js)가 켜 줍니다. 스크립트가 죽으면
+      .rv 가 안 붙으므로 전부 그냥 보입니다 — 안 보이는 사고가 나지 않습니다. */
+.rv{opacity:0;transform:translateY(14px);
+  transition:opacity .5s ease,transform .5s cubic-bezier(.22,.7,.3,1);}
+.rv.on{opacity:1;transform:none;}
+@media(prefers-reduced-motion:reduce){
+  .rv,.rv.on{opacity:1;transform:none;transition:none;}
+  .cs-item:hover .cs-ic,.svc-card:hover{transform:none;}
+  .hdr-nav a::after{transition:none;}
 }
 
 /* 히어로 안의 옛 지표 줄은 아래 PlatformStats 로 옮겼습니다.
@@ -1111,7 +1182,7 @@ textarea.fi{resize:vertical;min-height:80px;}
           gPickRegion() · gHeroBell(). 겉모습만 바뀐 것입니다.
        ══════════════════════════════════════════════════════════════ -->
   <section class="gh ph">
-    <div class="ph-bg"><svg viewBox="0 0 1440 620" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><defs><pattern id="phGrid" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M64 0H0v64" fill="none" stroke="rgba(255,255,255,.032)" stroke-width="1"/></pattern><radialGradient id="phGlow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="rgba(242,102,28,.22)"/><stop offset="1" stop-color="rgba(242,102,28,0)"/></radialGradient></defs><rect width="1440" height="620" fill="#12161B"/><rect width="1440" height="620" fill="url(#phGrid)"/><ellipse cx="1180" cy="250" rx="560" ry="360" fill="url(#phGlow)"/></svg></div>
+    <div class="ph-bg"><svg viewBox="0 0 1440 620" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false"><defs><pattern id="phGrid" width="72" height="72" patternUnits="userSpaceOnUse"><path d="M72 0H0v72" fill="none" stroke="rgba(255,255,255,.028)" stroke-width="1"/></pattern><radialGradient id="phGlow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="rgba(240,80,63,.26)"/><stop offset="1" stop-color="rgba(240,80,63,0)"/></radialGradient><linearGradient id="phFloor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,255,255,.075)"/><stop offset="1" stop-color="rgba(255,255,255,0)"/></linearGradient><linearGradient id="phSide" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0D1014"/><stop offset=".5" stop-color="rgba(13,16,20,.3)"/><stop offset="1" stop-color="rgba(13,16,20,0)"/></linearGradient></defs><rect width="1440" height="620" fill="#12161B"/><rect width="1440" height="620" fill="url(#phGrid)"/><ellipse cx="1140" cy="200" rx="600" ry="380" fill="url(#phGlow)"/><path d="M0 560h1440" stroke="rgba(255,255,255,.16)" stroke-width="1"/><g fill="none" stroke="rgba(255,255,255,.115)" stroke-width="1.7" stroke-linejoin="round"><path d="M60 560V430l95-58 95 58v130z"/><path d="M118 560v-74h74v74z"/><path d="M262 560V398h44v162z"/><path d="M262 398a22 22 0 0 1 44 0"/><path d="M350 352h150"/><path d="M392 352v34a20 20 0 0 0 40 0"/><path d="M470 352v34a20 20 0 0 0 40 0"/><path d="M372 560V438h96v122z"/><path d="M540 560V444l52 30v-30l52 30v-30l52 30v86z"/><path d="M700 560V386h30v174z"/><path d="M540 470h156"/><path d="M790 560v-96h132v96z"/><path d="M922 496h40l34 36v28h-74z"/><circle cx="828" cy="566" r="17"/><circle cx="952" cy="566" r="17"/><path d="M1040 560v-84h108v84z"/><path d="M1040 512h108"/><path d="M1060 476v-46h68v46z"/><path d="M1210 560V446l70-40 70 40v114z"/><path d="M1256 560v-58h48v58z"/><path d="M1196 446h168"/></g><rect width="1440" height="620" fill="url(#phSide)"/></svg></div>
     <div class="ph-veil"></div>
     <div class="gh-w ph-w">
 
@@ -1365,7 +1436,9 @@ textarea.fi{resize:vertical;min-height:80px;}
     </div>
   </section>
 
-  <!-- 신뢰 지표 -->
+  <!-- 신뢰 지표 — 같은 내용을 페이지 중간의 Trust Section(#why-band)으로
+       합쳤습니다. 마크업은 그대로 두고 화면에서만 내립니다.
+       .trust-bar{display:none} 한 줄을 지우면 다시 나옵니다. -->
   <div class="trust-bar">
     <div class="trust-inner">
       <div class="trust-item"><div class="trust-ico"><svg class="du" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g class="du-f"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/></g><g class="du-s"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></g></svg></div><div class="trust-t">사업자 인증 표시</div><div class="trust-d">사업자등록·축산물 영업허가·HACCP를<br>확인해 배지로 표시합니다</div></div>

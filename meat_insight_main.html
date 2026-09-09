@@ -102,6 +102,21 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
 .hdr-nav a{font-size:15px;font-weight:600;color:var(--ink2);padding:0 13px;white-space:nowrap;height:58px;display:flex;align-items:center;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none;}
 .hdr-nav a:hover,.hdr-nav a.on{color:var(--gn);border-color:var(--gn);}
 .hdr-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
+/* 헤더 우측 아이콘 버튼 (검색 · 전체메뉴) — 40px 이상으로 둡니다 */
+.hd-ico{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;min-width:40px;
+  padding:0 10px;background:none;border:none;border-radius:9px;color:var(--ink2);cursor:pointer;
+  font-family:var(--font);font-size:14px;font-weight:600;letter-spacing:-.02em;}
+.hd-ico:hover{background:var(--bg2);color:var(--ink);}
+.hd-all{border-left:1px solid var(--bd);border-radius:0;margin-left:4px;padding-left:14px;}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.hdr-right>*{flex-shrink:0;}
+.hd-ico span{white-space:nowrap;}
+.hdr-right .hdr-actions{margin-left:0;}
+/* 헤더에 버튼이 여섯이면 1200px 안에 안 들어갑니다. "업체 등록" 은
+   전체메뉴·푸터·이용 가이드·업체 유치 화면(#/sj)에도 있으므로 헤더에서만
+   내립니다. 버튼과 onclick 은 그대로 두고 화면에서만 감춥니다 —
+   이 한 줄을 지우면 다시 나옵니다. */
+.hdr-actions .hd-off{display:none;}
 .hdr-actions>*{white-space:nowrap;flex-shrink:0;}
 .ha-btn{padding:8px 18px;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:var(--font);transition:all .15s;}
 .ha-login{color:var(--ink2);background:#fff;border:1.5px solid var(--bd2);}
@@ -721,6 +736,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 @media(max-width:1200px){
   .hdr-nav{display:none;}
   .hdr-burger{display:flex;}
+  .hd-all{display:none;}       /* 햄버거와 같은 일을 합니다 — 둘이 겹칩니다 */
 }
 @media(max-width:1060px){
   .hdr-top{display:none;}
@@ -741,9 +757,10 @@ textarea.fi{resize:vertical;min-height:80px;}
 }
 @media(max-width:768px){
   :root{--hdr-h:102px;--top-pad:108px;}
-  /* 홈은 히어로가 헤더 역할 → 헤더 숨김. 내부 페이지에서는 헤더가 보여야 합니다 */
-  body.on-home .hdr{display:none;}
-  body.on-home #pg-h{padding-top:0!important;}
+  /* 예전에는 홈에서 히어로가 헤더 역할을 해서 헤더를 숨기고 홈의 위쪽
+     여백도 0 으로 눌렀습니다. 새 히어로에는 로고·메뉴가 없어 홈에서도
+     헤더를 띄우므로, 홈도 헤더 높이만큼 자리를 비워야 합니다.
+     (여기를 0 으로 두면 히어로 맨 윗줄이 헤더 밑에 깔립니다) */
   /* 내부 페이지에는 페이지별 필터가 있으므로 헤더 카테고리 바는 숨깁니다 */
   body:not(.on-home) .hdr-cats{display:none;}
   body:not(.on-home) .pg{padding-top:62px!important;}
@@ -819,6 +836,199 @@ textarea.fi{resize:vertical;min-height:80px;}
   .info-hd{padding:11px 12px;}
   .info-body{padding:9px 12px 12px;}
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   2026 프리미엄 메인 — 산업 플랫폼 인상
+
+   컴포넌트 단위로 나눠 두었습니다. 클래스 접두어가 곧 컴포넌트입니다.
+     .ph      PremiumHero        (기존 .gh 를 그대로 덧입힙니다)
+     .gsx     GlobalSearch       (#hs-input · heroGo() 그대로 씁니다)
+     .pkw     PopularKeywords    (#hero-chips · renderHeroChips() 그대로)
+     .pstat   PlatformStats      (src/44_premium.js 가 실데이터로 채움)
+     .cshort  CategoryShortcut   (renderCat8Grid 를 감싸서 채움)
+     .svc     ServiceSection · ServiceCard
+
+   ⚠️ 겉모습만 바꿉니다. id(hs-input · hero-chips · gh-stat · cat8-grid)와
+      onclick(heroGo · heroPick · gPickRegion · gHeroBell · go · goCat8)은
+      한 글자도 건드리지 않았습니다. 이 블록을 통째로 지우면 예전 히어로가
+      그대로 돌아옵니다.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* 어두운 히어로 위에서 브랜드색은 4.9:1 이 안 나옵니다(3.79:1).
+   큰 글씨는 3:1 이면 되지만 여유를 두려고 한 단계 밝힌 값을 씁니다 — 5.9:1 */
+:root{--brand-dark:#F2661C;--ph-ink:#F4F1EE;--ph-ink2:#B9BEC6;}
+
+/* ── PremiumHero ───────────────────────────────────────────────── */
+.gh.ph{background:var(--navy);color:var(--ph-ink);padding:0;overflow:hidden;position:relative;}
+.gh.ph::after{display:none;}          /* 흰 히어로용 라이트 원 제거 */
+.ph-bg{position:absolute;inset:0;z-index:0;pointer-events:none;}
+.ph-bg svg{width:100%;height:100%;display:block;}
+/* 글자가 얹히는 왼쪽·아래를 더 어둡게 눌러 가독성을 확보합니다 */
+.ph-veil{position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(100deg,rgba(10,13,17,.94) 0%,rgba(10,13,17,.86) 42%,rgba(10,13,17,.58) 72%,rgba(10,13,17,.72) 100%);}
+.gh-w.ph-w{position:relative;z-index:2;padding-top:30px;padding-bottom:34px;
+  min-height:600px;display:flex;flex-direction:column;}
+.ph-body{margin-top:auto;}
+
+.ph-util{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:30px;}
+.gh.ph .gh-region{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.22);color:var(--ph-ink);}
+.gh.ph .gh-region:hover{background:rgba(255,255,255,.14);border-color:var(--brand-dark);color:#fff;}
+.gh.ph .gh-bell{color:var(--ph-ink);}
+.gh.ph .gh-bell:hover{background:rgba(255,255,255,.1);}
+.gh.ph .gh-bell-dot{background:var(--brand-dark);}
+
+.ph-eye{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;
+  letter-spacing:.16em;color:var(--ph-ink2);margin-bottom:18px;text-transform:uppercase;}
+.ph-eye::before{content:"";width:26px;height:2px;background:var(--brand-dark);}
+.ph-h1{font-size:58px;font-weight:800;line-height:1.14;letter-spacing:-.045em;color:#fff;margin:0 0 18px;}
+.ph-h1 em{font-style:normal;color:var(--brand-dark);}
+.ph-sub{font-size:18px;line-height:1.62;color:var(--ph-ink2);font-weight:500;margin:0 0 30px;max-width:640px;}
+
+/* ── GlobalSearch ──────────────────────────────────────────────── */
+.gsx{display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;
+  padding:8px 8px 8px 22px;max-width:760px;box-shadow:0 18px 44px rgba(0,0,0,.34);}
+.gsx-ico{flex-shrink:0;display:flex;color:var(--ink3);}
+/* ⚠️ 여기에 outline:none 을 쓰면 안 됩니다. gori-app.css 의
+   html :focus-visible (0,1,1) 보다 이 규칙(0,3,0)이 굵어서, 검색창의
+   초점 테두리가 통째로 사라집니다. 실제로 그렇게 지웠다가 되살렸습니다. */
+.gh.ph .gh-s-in{flex:1;min-width:0;border:none;background:none;font-family:var(--font);
+  font-size:19px;font-weight:500;color:var(--ink);padding:19px 0;}
+.gh.ph .gh-s-in::placeholder{color:var(--ink4);font-weight:500;}
+.gh.ph .gh-s-btn{flex-shrink:0;background:var(--gn);color:#fff;border:none;border-radius:10px;
+  padding:0 30px;height:56px;font-size:17px;font-weight:800;letter-spacing:-.02em;}
+.gh.ph .gh-s-btn:hover{background:var(--gn2);}
+
+/* ── PopularKeywords ───────────────────────────────────────────── */
+.pkw{display:flex;align-items:center;gap:12px;margin-top:18px;}
+.pkw-l{flex-shrink:0;font-size:13.5px;font-weight:700;color:var(--ph-ink2);white-space:nowrap;}
+.gh.ph .gh-chips{margin-top:0;flex-wrap:wrap;overflow:visible;}
+.gh.ph .gh-chips .hchip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);
+  color:var(--ph-ink);font-weight:600;}
+.gh.ph .gh-chips .hchip:hover{background:rgba(242,102,28,.2);border-color:var(--brand-dark);color:#fff;}
+
+/* ── 밸류체인 레일 ─────────────────────────────────────────────── */
+.ph-chain{margin-top:38px;padding-top:26px;border-top:1px solid rgba(255,255,255,.1);}
+.pc-rail{display:flex;align-items:center;gap:10px;}
+.pc-node{flex:1;min-width:0;display:flex;align-items:center;gap:11px;}
+.pc-ic{flex-shrink:0;width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.72);}
+.pc-nm{font-size:14px;font-weight:700;color:var(--ph-ink2);letter-spacing:-.03em;white-space:nowrap;}
+.pc-arw{flex-shrink:0;display:flex;color:rgba(242,102,28,.8);}
+
+/* ── PlatformStats ─────────────────────────────────────────────── */
+.pstat-sec{background:var(--navy2);padding:0;border-top:1px solid rgba(255,255,255,.08);}
+.pstat{display:grid;grid-template-columns:repeat(4,1fr);}
+.pstat-c{padding:24px 20px;border-left:1px solid rgba(255,255,255,.09);}
+.pstat-c:first-child{border-left:none;}
+.pstat-l{font-size:13.5px;font-weight:600;color:var(--ph-ink2);margin-bottom:7px;}
+.pstat-v{font-size:31px;font-weight:800;color:#fff;letter-spacing:-.04em;line-height:1.1;}
+.pstat-v small{font-size:14.5px;font-weight:700;color:var(--ph-ink2);margin-left:3px;letter-spacing:0;}
+.pstat-v.wait{font-size:19px;color:var(--ph-ink2);font-weight:700;letter-spacing:-.02em;}
+.pstat-d{font-size:13px;font-weight:700;margin-top:5px;}
+.pstat-d.up{color:#FF8A7A;} .pstat-d.dn{color:#8FB6FF;} .pstat-d.flat{color:var(--ph-ink2);}
+/* 숫자가 아직 없을 때 붙는 꼬리표 — 지어낸 숫자를 걸지 않기 위한 자리입니다 */
+.pstat-note{grid-column:1/-1;padding:0 20px 18px;font-size:12.5px;color:var(--ph-ink2);}
+
+/* ── CategoryShortcut ──────────────────────────────────────────── */
+.sec.sec-cat8{padding:34px 0 30px;}
+.cshort-hd{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:18px;}
+.cshort-t{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.04em;}
+.cshort-s{font-size:14px;color:var(--ink3);font-weight:500;}
+.cshort{display:grid;grid-template-columns:repeat(13,1fr);gap:8px;}
+.cs-item{display:flex;flex-direction:column;align-items:center;gap:9px;background:none;border:none;
+  padding:6px 2px;cursor:pointer;font-family:var(--font);}
+.cs-ic{width:56px;height:56px;border-radius:16px;background:var(--bg2);border:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:center;color:var(--ink2);transition:border-color .14s,background .14s,color .14s;}
+.cs-item:hover .cs-ic{background:var(--gnl);border-color:var(--gn);color:var(--gn2);}
+.cs-nm{font-size:12.5px;font-weight:700;color:var(--ink2);letter-spacing:-.03em;word-break:keep-all;text-align:center;line-height:1.3;}
+.cs-item:hover .cs-nm{color:var(--gn2);}
+.cs-item.cs-all .cs-ic{background:#fff;border-style:dashed;}
+
+/* ── ServiceSection ────────────────────────────────────────────── */
+.svc-sec{background:#fff;padding:60px 0 62px;border-top:1px solid var(--bd);}
+.svc-grid2{display:grid;grid-template-columns:minmax(340px,450px) 1fr;gap:44px;align-items:start;}
+.svc-eye{font-size:12.5px;font-weight:800;letter-spacing:.2em;color:var(--gn);margin-bottom:16px;}
+/* word-break 를 안 걸면 "모든 서/비스" 처럼 낱말이 잘립니다 */
+.svc-h2{font-size:34px;font-weight:800;line-height:1.3;letter-spacing:-.045em;color:var(--ink);
+  margin:0 0 16px;word-break:keep-all;}
+.svc-h2 em{font-style:normal;color:var(--gn);}
+.svc-sub{font-size:15.5px;line-height:1.68;color:var(--ink3);font-weight:500;margin:0;word-break:keep-all;}
+.svc-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bd);
+  border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;}
+.svc-card{background:#fff;border:none;padding:26px 22px 24px;text-align:left;cursor:pointer;
+  font-family:var(--font);display:flex;flex-direction:column;gap:9px;transition:background .14s;}
+.svc-card:hover{background:var(--gnl);}
+.svc-ic{width:40px;height:40px;color:var(--gn2);display:flex;align-items:center;justify-content:center;
+  border-radius:11px;background:var(--gnl);margin-bottom:3px;}
+.svc-card:hover .svc-ic{background:#fff;}
+.svc-t{font-size:16.5px;font-weight:800;color:var(--ink);letter-spacing:-.03em;display:flex;align-items:center;gap:6px;}
+.svc-t svg{color:var(--ink4);flex-shrink:0;transition:transform .14s,color .14s;}
+.svc-card:hover .svc-t svg{transform:translateX(3px);color:var(--gn);}
+.svc-d{font-size:13.5px;line-height:1.62;color:var(--ink3);word-break:keep-all;}
+
+/* ── 반응형 ───────────────────────────────────────────────────── */
+@media(max-width:1240px){
+  .ph-h1{font-size:50px;}
+  .cshort{grid-template-columns:repeat(7,1fr);}
+  .pc-nm{font-size:13px;}
+}
+@media(max-width:1060px){
+  .gh-w.ph-w{padding-top:22px;padding-bottom:34px;}
+  .ph-h1{font-size:42px;}
+  .ph-sub{font-size:16.5px;}
+  .gh-w.ph-w{min-height:520px;}
+  /* 6칸이 한 줄에 안 들어갑니다 — 화살표를 빼고 3칸씩 두 줄로 접습니다 */
+  .pc-rail{flex-wrap:wrap;gap:14px 8px;}
+  .pc-arw{display:none;}
+  .pc-node{flex:0 0 calc(33.333% - 6px);}
+  .svc-grid2{grid-template-columns:1fr;gap:30px;}
+  .svc-h2{font-size:30px;}
+  .svc-cards{grid-template-columns:repeat(2,1fr);}
+  .pstat{grid-template-columns:repeat(2,1fr);}
+  .pstat-c:nth-child(3){border-left:none;}
+  .pstat-c:nth-child(n+3){border-top:1px solid rgba(255,255,255,.09);}
+}
+@media(max-width:768px){
+  .gh-w.ph-w{padding-top:16px;padding-bottom:28px;}
+  .ph-util{margin-bottom:20px;}
+  /* 12px 미만 금지 (연세 있는 이용자) — test/ease-e2e.js 가 잡습니다 */
+  .ph-eye{font-size:12px;letter-spacing:.1em;margin-bottom:13px;}
+  .ph-h1{font-size:32px;letter-spacing:-.04em;margin-bottom:13px;}
+  .ph-sub{font-size:15px;margin-bottom:22px;}
+  /* 모바일에서는 버튼을 검색창 아래로 내려 입력 폭을 지킵니다 */
+  .gsx{flex-wrap:wrap;padding:12px;gap:8px;border-radius:13px;}
+  .gsx-ico{display:none;}
+  .gh.ph .gh-s-in{flex:1 1 100%;font-size:16.5px;padding:10px 4px;}
+  .gh.ph .gh-s-btn{flex:1 1 100%;height:50px;padding:0;}
+  .pkw{flex-direction:column;align-items:flex-start;gap:8px;}
+  /* 9개가 세 줄을 차지해 히어로가 늘어졌습니다 — 옆으로 넘깁니다 */
+  .pkw{align-self:stretch;}
+  .gh.ph .gh-chips{flex-wrap:nowrap;overflow-x:auto;width:100%;}
+  .gh-w.ph-w{min-height:0;}
+  .ph-chain{margin-top:26px;padding-top:20px;}
+  .pc-node{flex:0 0 calc(50% - 4px);gap:9px;}
+  .pc-ic{width:38px;height:38px;border-radius:11px;}
+  .pc-nm{font-size:12.5px;white-space:normal;}
+  .pstat-c{padding:18px 15px;}
+  .pstat-v{font-size:25px;}
+  .cshort{grid-template-columns:repeat(4,1fr);gap:10px 4px;}
+  .cs-ic{width:52px;height:52px;border-radius:15px;}
+  .svc-sec{padding:38px 0 40px;}
+  .svc-h2{font-size:25px;}
+  .svc-cards{grid-template-columns:1fr;}
+  .svc-card{padding:20px 18px;}
+}
+@media(max-width:420px){
+  .ph-h1{font-size:28px;}
+  .cshort{grid-template-columns:repeat(3,1fr);}
+}
+
+/* 히어로 안의 옛 지표 줄은 아래 PlatformStats 로 옮겼습니다.
+   renderHeroStat() 과 #gh-stat 은 그대로 두었습니다 — 이 한 줄만 지우면
+   예전 지표 줄이 다시 나옵니다. */
+.gh.ph .gh-stat{display:none;}
+
 </style>
 </head>
 <body>
@@ -829,20 +1039,32 @@ textarea.fi{resize:vertical;min-height:80px;}
     <div class="hdr-main-w">
       <div class="logo" onclick="go(&quot;h&quot;)"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#C24A0C"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg><div class="logo-nm">고<em>리</em></div></div>
       <nav class="hdr-nav">
-        <a class="on" onclick="setNav(this,'h')">홈</a>
-        <a onclick="setNav(this,'rw')">요청하기</a>
-        <a onclick="setNav(this,'reqs')">실시간 요청</a>
         <a onclick="setNav(this,'suppliers')">업체 찾기</a>
-        <a onclick="setNav(this,'jobs')">인력·구인구직</a>
-        <a onclick="setNav(this,'market')">고리소식</a>
-        <a onclick="setNav(this,'guide')">이용 가이드</a>
+        <a onclick="setNav(this,'rw')">견적 요청</a>
+        <a onclick="setNav(this,'market')">축산 시세</a>
+        <a onclick="setNav(this,'jobs')">구인구직</a>
+        <a onclick="setNav(this,'news')">뉴스</a>
+        <a onclick="setNav(this,'community')">커뮤니티</a>
       </nav>
-      <div class="hdr-actions">
-        <button class="ha-btn ha-login" onclick="openModal('login')">로그인</button>
-        <button class="ha-btn ha-ghost" onclick="go(&quot;sj&quot;)">업체 등록</button>
-        <button class="ha-btn ha-reg" onclick="go(&quot;rw&quot;)">+ 요청 올리기</button>
+      <!-- ⚠️ .hdr-actions 안은 renderHeaderUser() 가 로그인 상태에 따라 통째로
+           다시 씁니다. 검색·전체메뉴를 그 안에 두면 로그인/로그아웃 때마다
+           사라집니다 — 실제로 그렇게 만들었다가 지웠습니다. 그래서 바깥에
+           둡니다. 회원가입 버튼만 src/44_premium.js 에서 덧붙입니다. -->
+      <div class="hdr-right">
+        <button class="hd-ico hd-search" onclick="gFocusSearch()" aria-label="검색">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        </button>
+        <div class="hdr-actions">
+          <button class="ha-btn ha-login" onclick="openModal('login')">로그인</button>
+          <button class="ha-btn ha-ghost" onclick="go(&quot;sj&quot;)">업체 등록</button>
+          <button class="ha-btn ha-reg" onclick="go(&quot;rw&quot;)">+ 요청 올리기</button>
+        </div>
+        <button class="hd-ico hd-all" onclick="toggleMM()" aria-label="전체메뉴">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          <span>전체메뉴</span>
+        </button>
+        <button class="hdr-burger" onclick="toggleMM()" aria-label="메뉴 열기">☰</button>
       </div>
-      <button class="hdr-burger" onclick="toggleMM()" aria-label="메뉴 열기">☰</button>
     </div>
   </div>
 
@@ -852,7 +1074,8 @@ textarea.fi{resize:vertical;min-height:80px;}
   <!-- 모바일 메뉴 -->
   <div class="mobile-menu" id="mobile-menu">
     <div class="mm-row">
-      <a onclick="mmGo('rw')">요청하기</a>
+      <a onclick="mmGo('h')">홈</a>
+      <a onclick="mmGo('rw')">견적 요청</a>
       <a onclick="mmGo('reqs')">실시간 요청</a>
       <a onclick="mmGo('suppliers')">업체 찾기</a>
       <a onclick="mmGo('jobs')">인력·구인구직</a>
@@ -878,41 +1101,125 @@ textarea.fi{resize:vertical;min-height:80px;}
 <!-- ════════ 홈 ════════ -->
 <div class="pg on" id="pg-h" style="padding-top:var(--top-pad);padding-bottom:56px;">
 
-  <!-- ══ HERO — 딥그린 블록 ══ -->
-  <section class="gh">
-    <div class="gh-w">
-      <div class="gh-top">
-        <div class="gh-logo" onclick="go(&quot;h&quot;)"><span class="gh-logo-badge"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.3c4.9 0 8.9 3.5 8.9 8.4 0 5.3-3.8 10-8.9 10S3.1 17 3.1 11.7C3.1 6.8 7.1 3.3 12 3.3z" fill="#fff"/><path d="M18.4 13.2c.2 3.3-2.1 6.1-5.1 6.6" stroke="#C24A0C" stroke-width="2.1" stroke-linecap="round" fill="none"/><circle cx="10.3" cy="11.6" r="1.9" fill="#C24A0C"/><circle cx="14.6" cy="15.6" r="1.1" fill="#C24A0C" opacity=".75"/></svg></span><span class="gh-logo-tx">고리</span></div>
-        <div class="gh-tools">
-          <button class="gh-region" id="gh-region" onclick="gPickRegion()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="2.6"/></svg>
-            <span id="gh-region-tx">지역 선택</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-          </button>
-          <button class="gh-bell" onclick="gHeroBell(event)" aria-label="알림">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></svg>
-            <span class="gh-bell-dot" id="gh-bell-dot" hidden></span>
-          </button>
-        </div>
+  <!-- ══ PremiumHero ══════════════════════════════════════════════
+       축산 밸류체인(사육 → 도축·경매 → 가공 → 물류 → 포장·장비 →
+       정육점·식당)을 배경 SVG 한 장으로 이어 그렸습니다. 사진을 여러 장
+       붙이면 콜라주가 되고, 소 사진 한 장은 정육점처럼 보입니다.
+
+       ⚠️ id 와 onclick 은 예전 히어로에서 그대로 옮겨 왔습니다 —
+          hs-input · hero-chips · gh-stat · heroGo() · heroPick() ·
+          gPickRegion() · gHeroBell(). 겉모습만 바뀐 것입니다.
+       ══════════════════════════════════════════════════════════════ -->
+  <section class="gh ph">
+    <div class="ph-bg"><svg viewBox="0 0 1440 620" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><defs><pattern id="phGrid" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M64 0H0v64" fill="none" stroke="rgba(255,255,255,.032)" stroke-width="1"/></pattern><radialGradient id="phGlow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="rgba(242,102,28,.22)"/><stop offset="1" stop-color="rgba(242,102,28,0)"/></radialGradient></defs><rect width="1440" height="620" fill="#12161B"/><rect width="1440" height="620" fill="url(#phGrid)"/><ellipse cx="1180" cy="250" rx="560" ry="360" fill="url(#phGlow)"/></svg></div>
+    <div class="ph-veil"></div>
+    <div class="gh-w ph-w">
+
+      <!-- 지역·알림 (예전 히어로 상단 도구) -->
+      <div class="ph-util">
+        <button class="gh-region" id="gh-region" onclick="gPickRegion()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="2.6"/></svg>
+          <span id="gh-region-tx">지역 선택</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <button class="gh-bell" onclick="gHeroBell(event)" aria-label="알림">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></svg>
+          <span class="gh-bell-dot" id="gh-bell-dot" hidden></span>
+        </button>
       </div>
 
-      <h1 class="gh-h1">축산에 필요한 모든 연결,<br><em>한 곳에서 고리</em></h1>
-      <p class="gh-sub">원육·가공·물류·인력·장비·창업까지 <br class="gh-br">필요한 업체와 사람을 조건에 맞춰 연결합니다.</p>
+      <div class="ph-body">
+      <div class="ph-eye">ABOUTMEAT · 대한민국 축산업 연결 플랫폼</div>
+      <h1 class="ph-h1">축산업의 모든 연결, <em>고리</em></h1>
+      <p class="ph-sub">원육부터 가공, 물류, 포장, 장비, 인력까지<br class="gh-br">
+        축산업에 필요한 모든 업체와 정보를 한곳에서 만나보세요.</p>
 
-      <div class="gh-search">
-        <span class="gh-s-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>
-        <input class="gh-s-in" id="hs-input" placeholder="무엇이 필요하세요?" autocomplete="off" onkeydown="if(event.key==='Enter')heroGo()"/>
-        <button class="gh-s-btn" onclick="heroGo()">자동 분류</button>
+      <!-- GlobalSearch — 기존 heroGo() 에 그대로 연결되어 있습니다 -->
+      <div class="gh-search gsx">
+        <span class="gh-s-ico gsx-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>
+        <input class="gh-s-in" id="hs-input" placeholder="업체, 품목, 서비스명을 검색해보세요" autocomplete="off" onkeydown="if(event.key==='Enter')heroGo()"/>
+        <button class="gh-s-btn" onclick="heroGo()">검색하기</button>
       </div>
-      <div class="gh-chips" id="hero-chips"></div>
+
+      <!-- PopularKeywords — renderHeroChips() 가 채웁니다 -->
+      <div class="pkw">
+        <span class="pkw-l">🔥 인기검색어</span>
+        <div class="gh-chips" id="hero-chips"></div>
+      </div>
+
+
+      <!-- 축산 밸류체인 — 배경 무늬로 두면 무슨 그림인지 읽히지 않아
+           앞으로 꺼냈습니다. 사육에서 정육점까지가 한 줄로 이어집니다. -->
+      <div class="ph-chain" role="img" aria-label="사육에서 도축·경매, 가공, 물류, 포장·장비를 거쳐 정육점·식당까지 이어지는 축산 밸류체인">
+        <div class="pc-rail"><span class="pc-node"><span class="pc-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.2 7.4c0 5.2 3 8.4 6.8 8.4s6.8-3.2 6.8-8.4"/><path d="M5.2 7.4C3.5 7.1 2.6 6 2.6 4.7c1.6 0 2.6.9 2.6 2.7z"/><path d="M18.8 7.4c1.7-.3 2.6-1.4 2.6-2.7-1.6 0-2.6.9-2.6 2.7z"/><path d="M9.4 9.6h.01M14.6 9.6h.01"/><path d="M9.6 13.2c1.5.9 3.3.9 4.8 0"/></svg></span><span class="pc-nm">사육</span></span><span class="pc-arw" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span><span class="pc-node"><span class="pc-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 4.6h17"/><path d="M9 4.6v4.2a3 3 0 0 0 6 0"/><rect x="8.2" y="12.4" width="7.6" height="7.4" rx="2"/></svg></span><span class="pc-nm">도축·경매</span></span><span class="pc-arw" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span><span class="pc-node"><span class="pc-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V10l6 4V10l6 4V6l6 3v12z"/><path d="M2 21h20"/></svg></span><span class="pc-nm">가공</span></span><span class="pc-arw" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span><span class="pc-node"><span class="pc-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h4l3 3v4h-7z"/><circle cx="6.5" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/></svg></span><span class="pc-nm">물류</span></span><span class="pc-arw" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span><span class="pc-node"><span class="pc-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4"/><path d="M12 12v8"/></svg></span><span class="pc-nm">포장·장비</span></span><span class="pc-arw" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span><span class="pc-node"><span class="pc-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V9l8-4 8 4v11"/><path d="M3 20h18"/><path d="M9 20v-6h6v6"/></svg></span><span class="pc-nm">정육점·식당</span></span></div>
+      </div>
+      </div>
       <div class="gh-stat" id="gh-stat" hidden></div>
     </div>
   </section>
 
-  <!-- ══ 8개 카테고리 ══ -->
+  <!-- ══ PlatformStats — src/44_premium.js 가 실데이터로 채웁니다 ══ -->
+  <section class="pstat-sec" id="pf-stats-sec" hidden>
+    <div class="w"><div class="pstat" id="pf-stats"></div></div>
+  </section>
+
+  <!-- ══ CategoryShortcut ══
+       renderCat8Grid() 를 src/44_premium.js 에서 감싸 12개 업종 + 전체보기로
+       그립니다. 감싸는 코드가 죽으면 원래의 8칸 그리드가 그대로 나옵니다. -->
   <section class="sec sec-cat8">
     <div class="w">
+      <div class="cshort-hd">
+        <div class="cshort-t">업종별로 바로 찾기</div>
+        <div class="cshort-s">원육부터 창업까지 — 필요한 분야를 고르면 바로 연결됩니다</div>
+      </div>
       <div class="cat8-grid" id="cat8-grid"></div>
+    </div>
+  </section>
+
+  <!-- ══ ServiceSection · ServiceCard ══
+       고리가 실제로 제공하는 6가지입니다. 각 카드는 이미 있는 화면으로만
+       연결합니다 (go 대상: suppliers · rw · market · jobs · news · community) -->
+  <section class="svc-sec" id="svc-sec">
+    <div class="w">
+      <div class="svc-grid2">
+        <div>
+          <div class="svc-eye">ABOUTMEAT</div>
+          <h2 class="svc-h2">축산업에 필요한 모든 서비스,<br><em>고리</em>에서 한 번에</h2>
+          <p class="svc-sub">업체 찾기부터 견적, 시세, 인재, 뉴스까지<br>축산업의 모든 비즈니스를 연결합니다.</p>
+        </div>
+        <div class="svc-cards">
+          <button class="svc-card" onclick="go(&quot;suppliers&quot;)">
+            <span class="svc-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-4 8 4v11"/><path d="M3 20h18"/><path d="M9 20v-6h6v6"/></svg></span>
+            <span class="svc-t">업체 찾기 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+            <span class="svc-d">전국의 축산 관련 업체를 한눈에 찾아보세요.</span>
+          </button>
+          <button class="svc-card" onclick="go(&quot;rw&quot;)">
+            <span class="svc-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8.5 11h7M8.5 15h4.5"/></svg></span>
+            <span class="svc-t">견적 요청 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+            <span class="svc-d">필요한 서비스를 등록하고 여러 업체의 견적을 받아보세요.</span>
+          </button>
+          <button class="svc-card" onclick="go(&quot;market&quot;)">
+            <span class="svc-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6"/><path d="M4 19h16"/><path d="M7.5 15.5l3.5-4 3 2.5 4.5-6"/></svg></span>
+            <span class="svc-t">축산 시세 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+            <span class="svc-d">축산 시세와 시장 정보를 확인하세요.</span>
+          </button>
+          <button class="svc-card" onclick="go(&quot;jobs&quot;)">
+            <span class="svc-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2"/><path d="M3 12h18"/></svg></span>
+            <span class="svc-t">구인구직 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+            <span class="svc-d">축산업에 필요한 인재와 일자리를 연결합니다.</span>
+          </button>
+          <button class="svc-card" onclick="go(&quot;news&quot;)">
+            <span class="svc-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h13v14H4z"/><path d="M17 9h3v8a2 2 0 0 1-3 1.7"/><path d="M7 9h7M7 12.5h7M7 16h4"/></svg></span>
+            <span class="svc-t">뉴스 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+            <span class="svc-d">축산업의 새로운 소식과 정보를 확인하세요.</span>
+          </button>
+          <button class="svc-card" onclick="go(&quot;community&quot;)">
+            <span class="svc-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5c0 3.6-3.6 6.5-8 6.5-1 0-2-.15-2.9-.42L4 20l1.3-3.3C4.2 15.5 3.6 14.1 3.6 12.5 3.6 8.9 7.2 6 11.6 6s8.4 2.9 8.4 6.5z"/></svg></span>
+            <span class="svc-t">커뮤니티 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+            <span class="svc-d">업계 종사자들과 정보와 경험을 공유하세요.</span>
+          </button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1467,7 +1774,11 @@ var CAT_KW={
 };
 /* 사람·인력 의도가 담긴 표현은 가중치를 더 줍니다 */
 var KW_PERSON=["인력","알바","아르바이트","일용","단기","일당","기사","작업자","당일","채용","구인","구직","정규직","경력직"];
-var HERO_CHIPS=["한우 지육","돼지 삼겹 100kg","곱창 손질","발골 인력","냉장 배송","육절기","HACCP 컨설팅","정육점 창업"];
+var HERO_CHIPS=["한우","돼지고기","도축장","가공업체","OEM","포장재",
+               "냉장·냉동물류","HACCP","정육점 인테리어"];
+/* ⚠️ 여기 넣는 말은 전부 guessCat8() 이 분야를 찾아낼 수 있어야 합니다.
+   못 찾으면 눌렀을 때 빈 요청서로 떨어집니다. test/premium-e2e.js 가
+   9개 전부 분야로 떨어지는지 매번 확인합니다. */
 
 var REQS=[];   /* 실데이터(Supabase)로만 채웁니다 — 더미 수치 노출 금지 */
 /* 아래 4개는 site-info.js 의 GORI_CONTENT 에서 채웁니다.
@@ -1669,6 +1980,19 @@ function applyHeroQuery(){
   var f=document.getElementById("rw-f-cond")||document.getElementById("rw-f-item");
   if(f&&!f.value)f.value=HERO_Q;
   HERO_Q="";
+}
+
+/* 헤더 검색 아이콘 → 홈의 통합 검색창으로 데려다 놓습니다.
+   나중에 전용 통합검색 화면이 생기면 이 함수 하나만 바꾸면 됩니다. */
+function gFocusSearch(){
+  var m=document.getElementById("mobile-menu");
+  if(m&&m.classList.contains("on"))m.classList.remove("on");
+  if(typeof go==="function")go("h");
+  setTimeout(function(){
+    var i=document.getElementById("hs-input");if(!i)return;
+    try{i.scrollIntoView({block:"center",behavior:"smooth"});}catch(e){}
+    i.focus();
+  },120);
 }
 
 /* 대분류 랜딩 */

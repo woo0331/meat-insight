@@ -60,7 +60,7 @@ async function open(b,w,h){
   chk('되접기', await p.evaluate(()=>document.querySelector('.hm-fold[data-k="proc"]').classList.contains('open')), 'false');
 
   log.push('4. 주요 구간은 그대로');
-  for(const [nm,sel] of [['검색','.gh-search'],['8분야','#cat8-grid .cat8-card'],
+  for(const [nm,sel] of [['검색','.gh-search'],['업종 바로가기','#cat8-grid .cs-item'],
                          ['실시간 요청','#rq-widget'],['오늘 시세','#mkt-strip'],['등록 업체','#sup-home']]){
     chk('  '+nm, await p.evaluate(s=>{
       const e=document.querySelector(s); return !!(e && e.offsetHeight>0);

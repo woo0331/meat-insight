@@ -37,6 +37,13 @@
 - 확장 패치는 `07_init.js` 의 `applyExtras()` 에서 **타이머로** 부른다.
   `init()` 안에서 부르면 DOMContentLoaded 가 리디자인(420ms)보다 먼저 오는
   환경에서 감싸는 순서가 뒤집힌다. (실제로 겪은 버그다)
+- 홈 히어로·헤더는 `index.html` 마크업이다. **id 와 onclick 을 그대로 두는 한**
+  겉모습은 바꿔도 된다 (`hs-input` · `hero-chips` · `gh-stat` · `cat8-grid` ·
+  `heroGo` · `heroPick` · `gPickRegion` · `gHeroBell`). 하나라도 이름이 바뀌면
+  검색·지역·알림이 조용히 죽는다.
+- **`.hdr-actions` 안에는 아무것도 직접 넣지 마라.** `renderHeaderUser()` 가
+  로그인 상태가 바뀔 때마다 통째로 다시 쓴다. 헤더에 뭘 붙이려면 `.hdr-right`
+  안, `.hdr-actions` **바깥**에 두거나 `44_premium.js` 처럼 그릴 때마다 다시 붙여라.
 - `33_layout.js` 는 **`ORDER` 와 `applyExtras()` 둘 다에서 맨 마지막**
   (`07_init` 바로 앞). 그려진 조각을 두 칸으로 담는 일이라, 다른 패치가
   버튼·안내를 다 붙인 뒤여야 그것들까지 같이 담긴다.
@@ -63,6 +70,11 @@ bash test/rls-test.sh                    # RLS SQL 을 진짜 Postgres 에 실�
 생기지 않는지 확인한다.
 
 ## CSS 를 어디에 쓸지
+
+반대 방향도 있다: `index.html` 에서 `outline:none` 같은 것을 클래스 두 개 이상으로
+잡으면 `gori-app.css` 의 `html :focus-visible`(0,1,1)을 이겨서 **초점 테두리가
+통째로 사라진다.** 실제로 새 검색창에서 그렇게 지웠다 — `test/a11y-e2e.js` 와
+`test/keyboard-e2e.js` 가 잡는다.
 
 `gori-app.css` 는 `index.html` 의 `<style>` **보다 먼저** 실린다. 같은 굵기면
 뒤에 오는 `index.html` 이 이기므로, index.html 에 이미 있는 선택자를

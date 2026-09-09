@@ -34,7 +34,13 @@ async function open(b,vp){const p=await b.newPage({viewport:vp||{width:1440,heig
  log.push('4. 진입 경로');
  await p.evaluate(()=>go('h')); await p.waitForTimeout(700);
  chk('홈 프로세스에 링크', await p.evaluate(()=>!!document.querySelector('.gu-more')), 'true');
- chk('상단 메뉴', await p.evaluate(()=>[...document.querySelectorAll('.hdr-nav a')].some(e=>e.textContent==='이용 가이드')), 'true');
+ /* 상단 메뉴는 2026 리뉴얼에서 B2B 6종(업체 찾기·견적 요청·축산 시세·
+    구인구직·뉴스·커뮤니티)으로 정리했습니다. 이용 가이드는 전체메뉴 서랍과
+    푸터, 고리 소개에서 들어갑니다 — 진입로가 사라진 게 아니라 옮겼습니다. */
+ chk('전체메뉴 서랍', await p.evaluate(()=>{
+   const all=document.querySelector('.hd-all')||document.querySelector('.hdr-burger');
+   return !!all && [...document.querySelectorAll('.mm-row a')].some(e=>e.textContent==='이용 가이드');
+ }), 'true');
  chk('푸터', await p.evaluate(()=>[...document.querySelectorAll('.ft-ul li')].some(e=>e.textContent==='이용 가이드')), 'true');
  chk('모바일 메뉴', await p.evaluate(()=>[...document.querySelectorAll('.mm-row a')].some(e=>e.textContent==='이용 가이드')), 'true');
 

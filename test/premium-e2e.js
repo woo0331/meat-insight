@@ -122,7 +122,14 @@ async function open(b,w,h,init){
   await p.evaluate(()=>go('h')); await p.waitForTimeout(400);
 
   log.push('5. 지표 — 지어내지 않는다');
-  chk('숫자칸 4개', await p.evaluate(()=>document.querySelectorAll('#pf-stats .pstat-c').length), 4);
+  /* 2026: "준비 중" 칸은 화면에서 내리고, 진짜 값이 두 칸도 안 되면 줄째로
+     숨깁니다 — 빈 칸이 늘어선 지표는 규모가 아니라 미완성으로 읽힙니다. */
+  chk('보이는 칸은 전부 실제 값', await p.evaluate(()=>{
+    const sec=document.getElementById('pf-stats-sec');
+    if(sec.hidden) return 'hidden';
+    const cells=[...document.querySelectorAll('#pf-stats .pstat-c')];
+    return cells.length>=2 && cells.every(c=>!c.querySelector('.pstat-v.wait')) ? 'hidden' : '남은 준비중 칸 있음';
+  }), 'hidden');
   chk('없는 값은 준비 중', await p.evaluate(()=>{
     /* 실데이터가 없는 칸에 0 이나 임의의 수가 걸리면 안 됩니다 */
     const cells=[...document.querySelectorAll('#pf-stats .pstat-c')];
@@ -153,13 +160,12 @@ async function open(b,w,h,init){
 
   log.push('8. 위계 · 신뢰 구간 · 미완성 흔적');
   chk('구간 순서', await p.evaluate(()=>{
-    const want=['gh ph','pstat-sec','sec sec-cat8','svc-sec','sec sec-mkt','sec sec-alt','sec why'];
     const got=[...document.querySelectorAll('#pg-h > *')]
       .filter(e=>!e.hidden && e.getBoundingClientRect().height>0)
       /* .rv/.on 은 페이드용이라 순서와 무관합니다 */
-      .map(e=>e.className.replace(/\s*\brv\b|\s*\bon\b/g,'').trim()).slice(0,7);
+      .map(e=>e.id||e.className.replace(/\s*\brv\b|\s*\bon\b/g,'').trim()).slice(0,6);
     return got.join(' | ');
-  }), 'gh ph | pstat-sec | sec sec-cat8 | svc-sec | sec sec-mkt | sec sec-alt | sec why');
+  }), 'gh ph | pf-stats-sec | sec sec-cat8 | sec-mkt | case-sec | svc-sec');
   chk('신뢰 구간은 하나만', await p.evaluate(()=>{
     const band=document.getElementById('why-band');
     const bar=document.querySelector('.trust-bar');

@@ -74,16 +74,21 @@ async function open(b,w,h,hash){
 
   log.push('3. 지어내지 않는다');
   const txt=await p.evaluate(()=>document.getElementById('pg-about').textContent);
-  chk('사업자 정보는 GORI_BIZ 에서', await p.evaluate(()=>{
-    const B=window.GORI_BIZ, dds=[...document.querySelectorAll('#pg-about .ab-biz dd')];
-    /* 비어 있는 항목은 반드시 (미기재) 로 나와야 합니다 */
-    const keys=['service','company','ceo','brn','mailOrder','address','phone','email','privacyOfficer'];
-    return keys.every((k,i)=>{
-      const want=(k==='service'?(B.service||'고리'):(B[k]||'')).trim();
-      const got=dds[i].textContent.trim();
-      return want ? got===want : got==='(미기재)';
-    });
+  /* 2026: 비어 있는 항목은 "(미기재)" 를 찍지 않고 줄째로 숨깁니다.
+     손님 눈에 (미기재)·샘플·TEST 가 보이면 미완성 사이트로 읽힙니다.
+     무엇이 비었는지는 site-info.js 가 콘솔에 남깁니다. */
+  chk('사업자 정보는 GORI_BIZ 값만', await p.evaluate(()=>{
+    const B=window.GORI_BIZ;
+    const rows=[...document.querySelectorAll('#pg-about .ab-biz-r')].map(r=>[
+      r.querySelector('dt').textContent.trim(), r.querySelector('dd').textContent.trim()]);
+    const map={"서비스명":B.service||"고리","상호":B.company,"대표자":B.ceo,
+      "사업자등록번호":B.brn,"통신판매업 신고":B.mailOrder,"주소":B.address,
+      "고객센터":B.phone,"이메일":B.email,"개인정보 보호책임자":B.privacyOfficer};
+    /* 그려진 줄은 전부 실제 값과 같아야 하고, 빈 값은 아예 없어야 합니다 */
+    return rows.every(([k,v])=>v && v===String(map[k]||"").trim());
   }), 'true');
+  chk('(미기재) 가 안 보임', await p.evaluate(()=>
+    /미기재|샘플|TEST/i.test(document.getElementById('pg-about').innerText)), false);
   chk('누적 거래액·설립연도 없음', /누적|설립|창립|년 만에|고객사 [0-9]/.test(txt), false);
   chk('고리페이는 준비 중이라고만', await p.evaluate(()=>
     /아직 만들어지지 않았/.test(document.getElementById('pg-about').textContent)), 'true');

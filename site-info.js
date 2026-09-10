@@ -91,26 +91,36 @@ window.GORI_CONTENT = {
   community: []
 };
 
-/* 푸터에 사업자 정보를 그립니다 (index.html / meat_insight_main.html 공용) */
+/* 푸터에 사업자 정보를 그립니다 (index.html / meat_insight_main.html 공용)
+
+   ⚠️ 값이 없는 항목은 화면에서 숨깁니다. 예전에는 "(미기재)" 로 찍었는데,
+      손님 눈에는 그게 미완성한 사이트로 읽힙니다. 대신 개발자 콘솔에
+      무엇이 비었는지 남겨 두어 운영자가 알 수 있게 합니다.
+      (전자상거래법상 표시 의무는 그대로입니다 — 값을 채워야 합니다) */
 (function(){
   var B=window.GORI_BIZ;
-  function v(x){ return (x&&String(x).trim()) ? String(x).trim() : '<span class="biz-none">(미기재)</span>'; }
+  function has(x){ return !!(x && String(x).trim()); }
+  function cell(label, v){ return has(v) ? '<span>'+label+' '+String(v).trim()+'</span>' : ''; }
   function paint(){
     var host=document.getElementById("ft-biz"); if(!host) return;
+    var r1=[cell("상호",B.company),cell("대표",B.ceo),
+            cell("사업자등록번호",B.brn),cell("통신판매업 신고",B.mailOrder)].join("");
+    var r2=[cell("주소",B.address),cell("고객센터",B.phone),cell("이메일",B.email)].join("");
     host.innerHTML=
-      '<div class="biz-row">'+
-        '<span>상호 '+v(B.company)+'</span>'+
-        '<span>대표 '+v(B.ceo)+'</span>'+
-        '<span>사업자등록번호 '+v(B.brn)+'</span>'+
-        '<span>통신판매업 신고 '+v(B.mailOrder)+'</span>'+
-      '</div>'+
-      '<div class="biz-row">'+
-        '<span>주소 '+v(B.address)+'</span>'+
-        '<span>고객센터 '+v(B.phone)+'</span>'+
-        '<span>이메일 '+v(B.email)+'</span>'+
-      '</div>'+
+      (r1?'<div class="biz-row">'+r1+'</div>':'')+
+      (r2?'<div class="biz-row">'+r2+'</div>':'')+
       '<div class="biz-row biz-note">고리는 축산업 관련 거래를 중개하는 플랫폼입니다. '+
         '거래의 조건·품질·이행에 대한 책임은 거래 당사자에게 있으며, 고리는 통신판매의 당사자가 아닙니다.</div>';
+
+    /* 운영자에게만 보이는 안내 */
+    var need=[["company","상호"],["ceo","대표자"],["brn","사업자등록번호"],
+              ["mailOrder","통신판매업 신고번호"],["address","주소"],["phone","고객센터"],
+              ["email","이메일"],["privacyOfficer","개인정보 보호책임자"]]
+      .filter(function(x){ return !has(B[x[0]]); }).map(function(x){ return x[1]; });
+    if(need.length && window.console && console.warn){
+      console.warn("[고리] 사업자 정보가 비어 있어 푸터에서 숨겼습니다: "+need.join(", ")+
+        "\n  site-info.js 의 GORI_BIZ 를 채우면 자동으로 표시됩니다. (전자상거래법 제10조 표시 의무)");
+    }
   }
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", paint);
   else paint();

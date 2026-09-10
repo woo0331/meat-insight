@@ -46,21 +46,35 @@ window.gCtOpen=function(u){
 };
 
 /* ── 홈 위젯 ── */
+
+/* GORI INSIGHT 카드 — 분류 · 제목 · 한 줄 요약 · 날짜.
+   ⚠️ 없는 값은 안 그립니다. 요약이 없으면 요약 줄이 통째로 빠집니다.
+      "요약 없음" 같은 자리표시자를 넣으면 미완성으로 읽힙니다. */
+function ctCard(n, fallbackCat){
+  var u=n.url?String(n.url):"";
+  var cat=(n.cat||n.category||fallbackCat||"").trim();
+  var meta=[n.source,n.date].filter(Boolean).join(" · ");
+  var body=
+    (cat?'<span class="gi-cat">'+esc(cat)+'</span>':'')+
+    '<span class="gi-t">'+esc(n.title||"")+'</span>'+
+    (n.summary?'<span class="gi-s">'+esc(n.summary)+'</span>':'')+
+    (meta?'<span class="gi-m">'+esc(meta)+'</span>':'');
+  return u
+    ? '<a class="gi-card" href="'+esc(u)+'" target="_blank" rel="noopener">'+body+'</a>'
+    : '<div class="gi-card">'+body+'</div>';
+}
+
 function ctNews(){
   var el=$("news-widget"); if(!el) return;
   var rows=ctList("news");
   if(!rows.length){ el.innerHTML=ctSoon("등록된 뉴스가 없습니다. 운영자가 기사 링크를 넣으면 여기에 표시됩니다."); return; }
-  el.innerHTML=rows.slice(0,5).map(function(n){
-    return ctRow("📰","#E8F5E9", n.title, [n.source,n.date].filter(Boolean).join(" · "), n.url);
-  }).join("");
+  el.innerHTML=rows.slice(0,4).map(function(n){ return ctCard(n,"시장"); }).join("");
 }
 function ctInsight(){
   var el=$("insight-widget"); if(!el) return;
   var rows=ctList("insights");
   if(!rows.length){ el.innerHTML=ctSoon("준비 중입니다. 창업·운영에 도움이 되는 글을 모아 올릴 예정입니다."); return; }
-  el.innerHTML=rows.slice(0,5).map(function(n){
-    return ctRow("💡","#FFF3E0", n.title, n.date||"", n.url);
-  }).join("");
+  el.innerHTML=rows.slice(0,4).map(function(n){ return ctCard(n,"창업"); }).join("");
 }
 function ctProps(){
   var el=$("prop-widget"); if(!el) return;

@@ -320,6 +320,9 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
 .sc2-bd-mint{background:var(--gnl);color:var(--gn-on-tint);}
 .sc2-bd-blue{background:var(--bluebg);color:var(--blue);}
 .sc2-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13.5px;color:var(--ink3);font-weight:400;}
+/* 배송 가능 지역 — 값이 있을 때만 그려집니다 (12_redesign) */
+.sc2-ship{font-size:12.5px;color:var(--ink4);margin-top:3px;}
+.sc2-bd-gy{background:var(--bg2);color:var(--ink3);}
 .sc2-star{color:var(--amber-ink);font-weight:600;}
 .sc2-new{color:var(--ink4);}
 .sc2-dot{color:var(--bd2);}

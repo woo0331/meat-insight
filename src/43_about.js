@@ -76,7 +76,7 @@ function abInjectWhy(){
     '<div class="w">'+
       '<div class="why-hd">'+
         '<div class="why-eye">TRUST</div>'+
-        '<h2 class="sec-h2">믿고 연결할 수 있도록</h2>'+
+        '<h2 class="sec-h2">믿고 연결할 수 있는 축산업 네트워크</h2>'+
         '<p class="why-lead">처음 거래하는 업체가 어떤 곳인지 확인할 방법이 없어서 '+
           '결국 아는 곳에만 전화하게 됩니다. 그 확인을 고리가 대신합니다. '+
           '요청 등록과 견적 비교에는 수수료가 없습니다.</p>'+
@@ -129,12 +129,17 @@ function abPair(a){
 
 function abBizRows(){
   var B=window.GORI_BIZ||{};
-  function v(x){ return (x&&String(x).trim()) ? esc(String(x).trim()) : '<span class="biz-none">(미기재)</span>'; }
+  function has(x){ return !!(x && String(x).trim()); }
   var rows=[["서비스명",B.service||"고리"],["상호",B.company],["대표자",B.ceo],
             ["사업자등록번호",B.brn],["통신판매업 신고",B.mailOrder],["주소",B.address],
-            ["고객센터",B.phone],["이메일",B.email],["개인정보 보호책임자",B.privacyOfficer]];
+            ["고객센터",B.phone],["이메일",B.email],["개인정보 보호책임자",B.privacyOfficer]]
+    .filter(function(r){ return has(r[1]); });
+  /* ⚠️ 값이 없는 줄은 아예 안 그립니다. "(미기재)" 를 손님에게 보이면
+     사이트가 미완성으로 읽힙니다. 무엇이 비었는지는 콘솔에 남습니다
+     (site-info.js). 채워야 할 의무 자체는 그대로입니다. */
+  if(!rows.length) return '';
   return '<dl class="ab-biz">'+rows.map(function(r){
-    return '<div class="ab-biz-r"><dt>'+esc(r[0])+'</dt><dd>'+v(r[1])+'</dd></div>';
+    return '<div class="ab-biz-r"><dt>'+esc(r[0])+'</dt><dd>'+esc(String(r[1]).trim())+'</dd></div>';
   }).join("")+'</dl>';
 }
 

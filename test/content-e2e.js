@@ -22,7 +22,18 @@ async function open(b,opts,vp){const p=await b.newPage({viewport:vp||{width:1280
  chk('소식·정보 섹션 접힘', await e0.evaluate(()=>{const h=document.getElementById('prop-widget');return h.closest('section').hidden;}), 'true');
  chk('샘플 딱지 0개', await e0.evaluate(()=>document.querySelectorAll('.sample-tag').length), 0);
  chk('시세 스트립 숨김', await e0.evaluate(()=>{const s=document.getElementById('sec-mkt');return !s||s.hidden;}), 'true');
- chk('요청 CTA 살아있음', await e0.evaluate(()=>/첫 요청 올리기/.test(document.body.innerText)), 'true');
+ /* 2026: 데이터가 없는 구간은 메인에서 내립니다(요청 3건 미만 → 실시간 요청 숨김).
+    그 안에 있던 "첫 요청 올리기" 빈 상태 버튼도 같이 내려가므로, 요청 CTA 가
+    헤더에 살아 있는지로 확인합니다 — 기능이 사라진 게 아니라 자리가 옮겨졌습니다. */
+ chk('요청 CTA 살아있음', await e0.evaluate(()=>
+   [...document.querySelectorAll('.hdr .ha-reg,.bnav [onclick*=\"rw\"],.bplus')]
+     .some(b=>b.getBoundingClientRect().height>0)), 'true');
+ chk('요청 화면은 그대로 열림', await e0.evaluate(async()=>{
+   go('rw'); await new Promise(r=>setTimeout(r,600));
+   const ok=document.getElementById('pg-rw').classList.contains('on');
+   go('h'); await new Promise(r=>setTimeout(r,400));
+   return ok;
+ }), 'true');
  chk('업체 CTA 살아있음', await e0.evaluate(()=>/업체 등록하기/.test(document.body.innerText)), 'true');
  await e0.screenshot({path:'ct2-cold.png',fullPage:true});
 

@@ -161,24 +161,49 @@ function supIconFor(s){
   return c ? c.ico : '<path d="M3 21V10l6 4V10l6 4V6l6 3v12z"/><path d="M2 21h20"/>';
 }
 function patchSupCards(){
+  /* 업체 카드 — 카드 하나만 봐도 "어디서 무엇을 하는 회사인지" 가 보여야 합니다.
+
+     ⚠️ 없는 값은 아예 안 그립니다. 예전에는 "취급 품목 미등록" 을 찍고
+        지역이 없으면 s.cat 에서 잘라 "지역미정" 이 나왔습니다 — 카드마다
+        그런 자리표시자가 늘어서면 사이트가 미완성으로 읽힙니다.
+     ⚠️ 배지는 DB 에 실제 값이 있을 때만. 확인 안 된 업체에 인증 배지를
+        붙이면 그 자체가 거짓입니다. (is_verified · haccp ·
+        livestock_permit · brn_verified 전부 실제 컬럼입니다) */
   window.mkSC=function(s){
     var d=document.createElement("div");
     d.className="sc2";
     d.onclick=function(){ if(typeof curSID!=="undefined") curSID=s.id; go("sp"); };
+
     var badges="";
-    if(s.vf||s.is_verified) badges+='<span class="sc2-bd sc2-bd-blue">인증업체</span>';
-    if(s.haccp)             badges+='<span class="sc2-bd sc2-bd-mint">HACCP</span>';
-    if(s.livestock_permit)  badges+='<span class="sc2-bd sc2-bd-mint">축산물 허가</span>';
-    var items=(s.items&&s.items.length)?s.items.slice(0,2).join(" · ")
-             :((s.cats&&s.cats.length)?s.cats.slice(0,2).join(" · ")
-             :((s.categories&&s.categories.length)?s.categories.slice(0,2).join(" · "):"취급 품목 미등록"));
-    var region=s.region || String(s.cat||"").split(" · ")[0] || "";
+    if(s.vf||s.is_verified)          badges+='<span class="sc2-bd sc2-bd-blue">인증업체</span>';
+    if(s.brnv||s.brn_verified)       badges+='<span class="sc2-bd sc2-bd-gy">사업자 확인</span>';
+    if(s.haccp)                      badges+='<span class="sc2-bd sc2-bd-mint">HACCP</span>';
+    if(s.permit||s.livestock_permit) badges+='<span class="sc2-bd sc2-bd-mint">축산물 허가</span>';
+
+    /* 무엇을 하는 회사인지 — 품목이 있으면 품목, 없으면 분야. 둘 다 없으면 생략 */
+    var arr=(s.items&&s.items.length)?s.items
+           :((s.cats&&s.cats.length)?s.cats
+           :((s.categories&&s.categories.length)?s.categories:[]));
+    var what=arr.length?arr.slice(0,2).join(" · "):"";
+
+    /* 어디인지 — 진짜 지역값만. s.cat 문자열에서 잘라 쓰면 "지역미정" 이 나옵니다 */
+    var region=(s.region||"").trim();
+
     var rating=Number(s.rt!=null?s.rt:s.rating)||0;
     var photo=(s.images&&s.images.length)?s.images[0]:null;
-    var rv=Number(s.review_count)||0, deal=Number(s.deal_count)||0;
+    var rv=Number(s.review_count!=null?s.review_count:s.rev)||0;
+    var deal=Number(s.deal_count!=null?s.deal_count:s.deal)||0;
+    var lead=String(s.lead||s.lead_time||"").trim();
+    var ships=(s.regions&&s.regions.length)?s.regions:[];
+
     var stats=[];
-    if(rv) stats.push("후기 "+rv);
+    if(rv)   stats.push("후기 "+rv);
     if(deal) stats.push("거래 "+deal+"건");
+    if(lead && lead!=="—") stats.push("납기 "+lead);
+
+    var meta=[what, region].filter(Boolean).join(" · ");
+    var ship=ships.length ? ("배송 "+ships.slice(0,3).join("·")+(ships.length>3?" 외":"")) : "";
+
     d.innerHTML=
       '<div class="sc2-ic"'+(photo?' style="background-image:url('+esc(photo)+');"':'')+'>'+
         (photo?'':'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
@@ -186,10 +211,11 @@ function patchSupCards(){
       '<div class="sc2-b">'+
         '<div class="sc2-nm">'+esc(s.nm||s.name||"업체")+badges+'</div>'+
         '<div class="sc2-rate">'+
-          (rating?'<em>★ '+rating.toFixed(1)+'</em>':'<span style="color:var(--ink4);">신규 업체</span>')+
+          (rating?'<em>★ '+rating.toFixed(1)+'</em>':'<span class="sc2-new">신규 업체</span>')+
           (stats.length?'<span>'+esc(stats.join(" · "))+'</span>':'')+
         '</div>'+
-        '<div class="sc2-meta">'+esc(items)+(region?' · '+esc(region):'')+'</div>'+
+        (meta?'<div class="sc2-meta">'+esc(meta)+'</div>':'')+
+        (ship?'<div class="sc2-ship">'+esc(ship)+'</div>':'')+
       '</div>'+
       '<svg class="sc2-ch" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
         'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';

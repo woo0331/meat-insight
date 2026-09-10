@@ -21,7 +21,7 @@ var HM_KEY="gori.homeOpen";
 /* 접을 구간 — [찾을 제목, 저장 키, 접었을 때 보여줄 한 줄] */
 var HM_FOLD=[
   ["고리 이용 프로세스","proc","요청 등록부터 거래 완료·후기까지 7단계"],
-  ["고리 소식 · 정보","info","시세 · 매물 · 업계 뉴스 · 커뮤니티"]
+  ["GORI INSIGHT","info","시세 · 매물 · 업계 뉴스 · 커뮤니티"]
 ];
 
 function hmOpen(key){

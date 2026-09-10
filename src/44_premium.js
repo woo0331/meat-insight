@@ -194,6 +194,12 @@ function pfRender(){
          ? '<div class="pstat-note">아직 등록 전인 항목은 숫자를 지어내지 않고 '+
            '"준비 중" 으로 둡니다.</div>'
          : ''));
+
+  /* 진짜 값이 두 칸도 안 되면 이 줄은 통째로 내립니다 — 45_main 이 판단합니다.
+     ⚠️ 타이머로 따로 돌리면 pfRender 가 다시 그린 직후를 놓쳐 "준비 중" 칸이
+        잠깐 보였다 사라집니다. 그려낸 자리에서 바로 부릅니다.
+     (같은 IIFE 안이라 뒤에 선언된 함수도 호출 시점엔 이미 있습니다) */
+  try{ if(typeof mnTrimStats==="function") mnTrimStats(); }catch(e){}
 }
 
 /* ── CategoryShortcut ─────────────────────────────────────────────── */
@@ -269,7 +275,9 @@ function csRender(){
       ? 'pickSub(&quot;'+it.k+'&quot;,&quot;'+it.t+'&quot;)'
       : 'goCat8(&quot;'+it.k+'&quot;)';
     return '<button class="cs-item" onclick="'+act+'">'+
-      '<span class="cs-ic" style="background:'+it.bg+';color:'+it.c+'">'+csIcon(it.i)+'</span>'+
+      /* 색은 CSS 한 곳(.cs-ic)에서만 정합니다 — it.bg/it.c 는 남겨 두었으니
+         업종별 색을 다시 쓰고 싶으면 여기서 style 을 붙이면 됩니다 */
+      '<span class="cs-ic">'+csIcon(it.i)+'</span>'+
       '<span class="cs-nm">'+esc(it.nm)+'</span></button>';
   }).join("");
   /* go("cat8") 은 curCat8 이 정해져 있지 않으면 홈으로 되튕깁니다 —

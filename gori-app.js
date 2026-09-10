@@ -1914,7 +1914,13 @@ window.gOpenChat=async function(roomId){
   var c=client(); if(!c) return;
   var rr=await c.from("chat_rooms").select("*").eq("id",roomId).limit(1);
   var room=(rr.data&&rr.data[0])||null;
-  if(!room){ body.innerHTML='<div class="gempty"><div class="gempty-t">대화를 찾을 수 없습니다</div></div>'; return; }
+  if(!room){
+    /* 오래된 링크로 들어오면 여기서 막힙니다 — 돌아갈 길을 둡니다 */
+    body.innerHTML='<div class="gempty"><div class="gempty-t">대화를 찾을 수 없습니다</div>'+
+      '<div class="gempty-d">이미 끝났거나 삭제된 대화일 수 있습니다.</div>'+
+      '<button class="gbtn gbtn-w" onclick="go(&quot;chats&quot;)">대화 목록으로</button></div>';
+    return;
+  }
   CHAT.cur=room;
   var iAmBuyer=String(room.buyer_user_id||"")===String(ME.user&&ME.user.id);
   var other=iAmBuyer?(room.supplier_name||"업체"):(room.buyer_name||"요청자");
@@ -2089,7 +2095,12 @@ window.gOpenOrder=async function(orderId){
   var c=client(); if(!c) return;
   var r=await c.from("orders").select("*").eq("id",orderId).limit(1);
   var o=(r.data&&r.data[0])||null;
-  if(!o){ body.innerHTML='<div class="gempty"><div class="gempty-t">거래를 찾을 수 없습니다</div></div>'; return; }
+  if(!o){
+    body.innerHTML='<div class="gempty"><div class="gempty-t">거래를 찾을 수 없습니다</div>'+
+      '<div class="gempty-d">이미 끝났거나 삭제된 거래일 수 있습니다.</div>'+
+      '<button class="gbtn gbtn-w" onclick="go(&quot;my&quot;)">거래관리로</button></div>';
+    return;
+  }
   var idx=ORDER_FLOW.indexOf(o.status); if(idx<0) idx=0;
   var tl=Array.isArray(o.timeline)?o.timeline:[];
   var mine = ME.user && (String(o.buyer_user_id||"")===String(ME.user.id));
@@ -8654,11 +8665,14 @@ function patchMain(){
     }
   }catch(e){}
 
+  /* 브랜드 선언과 마지막 행동은 홈의 마지막 두 구간입니다.
+     ⚠️ 푸터는 이제 #pg-h 밖(모든 화면 공통)이라 기준으로 쓸 수 없습니다 —
+        홈의 맨 끝에 붙입니다. */
   try{
-    var ft=document.querySelector("#pg-h .footer");
+    var home=$("pg-h");
     var fin=mnFinal(), brd=mnBrand();
-    if(ft && fin) ft.parentNode.insertBefore(fin, ft);
-    if(ft && brd) ft.parentNode.insertBefore(brd, fin || ft);
+    if(home && brd) home.appendChild(brd);
+    if(home && fin) home.appendChild(fin);
   }catch(e){}
 
   /* 데이터가 들어오는 시점을 알 수 없어 몇 번 더 확인합니다 */

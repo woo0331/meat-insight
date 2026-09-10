@@ -90,7 +90,13 @@ window.gOpenChat=async function(roomId){
   var c=client(); if(!c) return;
   var rr=await c.from("chat_rooms").select("*").eq("id",roomId).limit(1);
   var room=(rr.data&&rr.data[0])||null;
-  if(!room){ body.innerHTML='<div class="gempty"><div class="gempty-t">대화를 찾을 수 없습니다</div></div>'; return; }
+  if(!room){
+    /* 오래된 링크로 들어오면 여기서 막힙니다 — 돌아갈 길을 둡니다 */
+    body.innerHTML='<div class="gempty"><div class="gempty-t">대화를 찾을 수 없습니다</div>'+
+      '<div class="gempty-d">이미 끝났거나 삭제된 대화일 수 있습니다.</div>'+
+      '<button class="gbtn gbtn-w" onclick="go(&quot;chats&quot;)">대화 목록으로</button></div>';
+    return;
+  }
   CHAT.cur=room;
   var iAmBuyer=String(room.buyer_user_id||"")===String(ME.user&&ME.user.id);
   var other=iAmBuyer?(room.supplier_name||"업체"):(room.buyer_name||"요청자");

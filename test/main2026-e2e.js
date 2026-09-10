@@ -36,7 +36,7 @@ async function open(b,w,h,opt){
     'gh ph | sec sec-cat8 | sec-mkt | svc-sec');
   chk('브랜드 선언 → 마지막 행동 → 푸터', await p.evaluate(()=>{
     const y=s=>{const e=document.querySelector(s); return e?e.getBoundingClientRect().top+scrollY:-1;};
-    return y('#brand-sec')>0 && y('#brand-sec')<y('#final-sec') && y('#final-sec')<y('#pg-h .footer');
+    return y('#brand-sec')>0 && y('#brand-sec')<y('#final-sec') && y('#final-sec')<y('.footer');
   }), 'true');
 
   log.push('2. 지역으로 업체 찾기 (홈이 아니라 업체 찾기 화면)');
@@ -92,6 +92,28 @@ async function open(b,w,h,opt){
     [...document.querySelectorAll('#final-sec button')].map(x=>{
       const m=(x.getAttribute('onclick')||'').match(/go\(&?q?u?o?t?;?"?([a-z]+)/); return m?m[1]:'?';
     }).filter(k=>PGS.indexOf(k)<0).join(',')), '');
+
+  log.push('5-1. 푸터는 모든 화면에');
+  /* 예전에는 #pg-h 안에 있어서 홈에서만 보였습니다. 나머지 서른세 화면에는
+     이용약관·개인정보처리방침·사업자 정보로 가는 길이 아예 없었습니다. */
+  chk('#pg-h 밖에 있다', await p.evaluate(()=>{
+    const f=document.querySelector('.footer');
+    return !!f && !f.closest('#pg-h');
+  }), 'true');
+  chk('전 화면에서 보인다', await p.evaluate(async()=>{
+    const bad=[];
+    for(const k of PGS){
+      if(k==='cat8') goCat8('meat'); else go(k);
+      await new Promise(r=>setTimeout(r,60));
+      const f=document.querySelector('.footer');
+      if(!f || f.getBoundingClientRect().height===0) bad.push(k);
+    }
+    go('h'); return bad.join(',');
+  }), '');
+  chk('약관·방침 링크가 산다', await p.evaluate(()=>
+    ['terms.html','privacy.html'].every(h=>
+      [...document.querySelectorAll('.footer [onclick]')].some(e=>
+        (e.getAttribute('onclick')||'').indexOf(h)>=0))), 'true');
 
   log.push('6. 미완성 흔적이 손님에게 안 보인다');
   const body=await p.evaluate(()=>document.body.innerText);

@@ -35,13 +35,23 @@ const tiny = p => p.evaluate(()=>{
   });
   return out;
 });
+/* ⚠️ 예전에는 button·select·.chip·.my-tab·.hc-item 만 봤습니다.
+   그래서 onclick 을 단 li·a·div 가 통째로 규칙 밖에 있었고, 푸터 링크
+   스물아홉 개가 24px, 분야 탭이 38px, 시세 안내 링크가 16px 로 남아
+   있었습니다. 실제로 눌리는 것은 전부 봅니다. */
 const small = p => p.evaluate(()=>{
   const out=[];
-  document.querySelectorAll('button:not([hidden]),select,.chip,.my-tab,.hc-item').forEach(e=>{
+  const sel='button:not([hidden]),select,a[href],a[onclick],[onclick],[role=button],'+
+            '.chip,.my-tab,.hc-item,.tab,summary,label[for]';
+  document.querySelectorAll(sel).forEach(e=>{
+    /* 눌리는 것 안에 든 조각은 제외 — 부모가 이미 크면 됩니다 */
+    if(e.parentElement && e.parentElement.closest('button,a[href],a[onclick],[onclick],[role=button]')) return;
     const r=e.getBoundingClientRect();
-    if(r.width>0 && r.height>0 && r.height<40) out.push((e.className||e.tagName)+':'+Math.round(r.height));
+    if(r.width>0 && r.height>0 && r.height<40)
+      out.push((e.className||e.tagName).toString().split(' ')[0]+
+        '("'+(e.textContent||'').trim().slice(0,10)+'"):'+Math.round(r.height));
   });
-  return out;
+  return [...new Set(out)];
 });
 
 (async()=>{
@@ -60,7 +70,9 @@ const small = p => p.evaluate(()=>{
   chk('  요청 상세', (await tiny(p)).length, 0);
 
   log.push('2. 누르는 것이 40px 이상');
-  for(const [nm,go] of [['홈','h'],['요청 목록','reqs'],['거래관리','my']]){
+  for(const [nm,go] of [['홈','h'],['요청 목록','reqs'],['업체 찾기','suppliers'],
+                        ['시세','market'],['뉴스','news'],['커뮤니티','community'],
+                        ['구인구직','jobs'],['거래관리','my'],['이용 가이드','guide'],['고리 소개','about']]){
     await p.evaluate(x=>window.go(x), go); await p.waitForTimeout(1300);
     const s=await small(p);
     chk('  '+nm, s.length ? s.slice(0,3).join(' / ') : 0, 0);

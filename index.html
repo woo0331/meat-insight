@@ -8,7 +8,7 @@
 <link rel="canonical" href="https://aboutmeat.co.kr/"/>
 <meta property="og:type" content="website"/>
 <meta property="og:site_name" content="고리"/>
-<meta property="og:title" content="축산에 필요한 모든 연결, 한 곳에서 고리"/>
+<meta property="og:title" content="축산업의 모든 연결, 고리"/>
 <meta property="og:description" content="원육·가공·물류·인력·장비·창업까지. 요청을 올리면 조건이 맞는 축산 업체가 견적을 보냅니다."/>
 <meta property="og:url" content="https://aboutmeat.co.kr/"/>
 <meta property="og:image" content="https://aboutmeat.co.kr/og.jpg"/>
@@ -16,7 +16,7 @@
 <meta property="og:image:height" content="630"/>
 <meta property="og:locale" content="ko_KR"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="축산에 필요한 모든 연결, 한 곳에서 고리"/>
+<meta name="twitter:title" content="축산업의 모든 연결, 고리"/>
 <meta name="twitter:description" content="요청을 올리면 조건이 맞는 축산 업체가 견적을 보냅니다."/>
 <meta name="twitter:image" content="https://aboutmeat.co.kr/og.jpg"/>
 <meta name="theme-color" content="#FFFFFF"/>
@@ -119,7 +119,7 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
 .hd-all{border-left:1px solid var(--bd);border-radius:0;margin-left:4px;padding-left:14px;}
 @media(max-width:1320px){ .hd-all span{display:none;} .hd-all{padding-left:10px;} }
 /* 로고 — 빨간 사각 배지 + 고리 + 작은 설명 두 줄 */
-.logo{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;min-height:40px;}
 .logo-badge{width:36px;height:36px;border-radius:10px;background:var(--cta);flex-shrink:0;
   display:flex;align-items:center;justify-content:center;}
 .logo-nm{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.05em;}
@@ -208,7 +208,9 @@ textarea.fi{resize:vertical;min-height:80px;}
 .fct{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--bd);}
 .tab-bar{display:flex;border-bottom:2px solid var(--bd);margin-bottom:14px;overflow-x:auto;scrollbar-width:none;}
 .tab-bar::-webkit-scrollbar{display:none;}
-.tab{padding:9px 15px;font-size:14px;font-weight:600;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.tab{padding:0 15px;min-height:40px;display:inline-flex;align-items:center;font-size:14px;font-weight:600;
+  color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;
+  transition:all .15s;white-space:nowrap;flex-shrink:0;}
 .tab.on{color:var(--gn);border-color:var(--gn);}
 
 /* ══ HERO ══ */
@@ -460,7 +462,9 @@ html .trust-bar{display:none;}
 .modal-links a{color:var(--gn);font-weight:600;cursor:pointer;}
 
 /* ══ FOOTER ══ */
+/* 모든 화면 아래에 깔립니다. 모바일 하단 네비(.bnav)에 가리지 않게 여백을 둡니다 */
 .footer{background:var(--navy);padding:40px 0 22px;}
+@media(max-width:1060px){ .footer{padding-bottom:calc(22px + 62px + env(safe-area-inset-bottom,0px));} }
 .ft-biz{border-top:1px solid rgba(255,255,255,.08);padding:16px 0 4px;margin-top:6px;}
 .ft-biz .biz-row{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;line-height:1.9;color:rgba(255,255,255,.62);}
 .ft-biz .biz-note{margin-top:8px;color:rgba(255,255,255,.62);display:block;max-width:760px;line-height:1.75;}
@@ -470,7 +474,11 @@ html .trust-bar{display:none;}
 .ft-desc{font-size:13px;color:rgba(255,255,255,.62);line-height:1.8;margin-bottom:10px;}
 .ft-col-t{font-size:12px;font-weight:700;color:rgba(255,255,255,.62);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
 .ft-ul{list-style:none;}
-.ft-ul li{font-size:13px;color:rgba(255,255,255,.72);padding:3px 0;cursor:pointer;transition:color .15s;}
+/* 푸터 링크가 24px 이었습니다 — 스물아홉 개 전부. 이 사이트의 규칙은
+   누르는 것 40px 이상입니다(연세 있는 이용자). 회귀가 button/select/.chip 만
+   보고 있어서 li[onclick] 이 통째로 빠져 있었습니다. */
+.ft-ul li{font-size:13.5px;color:rgba(255,255,255,.72);cursor:pointer;transition:color .15s;
+  min-height:40px;display:flex;align-items:center;}
 .ft-ul li:hover{color:var(--gn-dark);}
 .ft-bot{border-top:1px solid rgba(255,255,255,.14);padding-top:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;}
 .ft-copy{font-size:12.5px;color:rgba(255,255,255,.58);}
@@ -1105,11 +1113,13 @@ html .trust-bar{display:none;}
   box-shadow:0 1px 2px rgba(18,22,27,.04);
   transition:transform .16s ease,border-color .16s,box-shadow .16s;}
 .svc-card:hover{transform:translateY(-2px);border-color:var(--gn);box-shadow:0 8px 20px rgba(18,22,27,.08);}
-/* 업종 줄과 같은 디자인 언어 — 중립 타일, 손을 올렸을 때만 브랜드색 */
+/* 업종 줄이 꽉 찬 주황이므로 여기는 옅은 브랜드 틴트로 — 같은 색 계열이되
+   한 단계 낮춰서 업종 줄이 계속 주인공이 되게 합니다.
+   (회색이면 위아래가 따로 놉니다) */
 .svc-ic{width:44px;height:44px;display:flex;align-items:center;justify-content:center;
-  border-radius:12px;margin-bottom:3px;background:var(--bg2)!important;color:var(--ink2)!important;
+  border-radius:12px;margin-bottom:3px;background:var(--gnl)!important;color:var(--gn2)!important;
   transition:background-color .16s,color .16s;}
-.svc-card:hover .svc-ic{background:var(--gnl)!important;color:var(--gn2)!important;}
+.svc-card:hover .svc-ic{background:var(--gn)!important;color:#fff!important;}
 /* 화살표는 제목 옆이 아니라 카드 오른쪽 아래로 — 시안처럼 */
 .svc-card{position:relative;padding-bottom:44px;}
 .svc-t svg{display:none;}
@@ -1211,6 +1221,18 @@ html .trust-bar{display:none;}
 @media(max-width:420px){
   .ph-h1{font-size:28px;}
   .cshort{grid-template-columns:repeat(3,1fr);}
+}
+
+/* ── 누르는 것은 40px 이상 (연세 있는 이용자) ────────────────────
+   button 이 아닌 것들이 규칙 밖에 있었습니다 — onclick 을 단 li·a·div 는
+   회귀도 못 보고 있었고, 그래서 푸터·시세·탭이 24~38px 로 남아 있었습니다. */
+.mkt-ask{display:inline-flex;align-items:center;min-height:40px;padding:0 2px;
+  color:var(--gn-on-tint);font-weight:700;cursor:pointer;}
+.mkt-ask:hover{text-decoration:underline;}
+
+/* 커뮤니티 — 오른쪽 240px 칸이 모바일에서 화면 밖으로 나갔습니다 */
+@media(max-width:768px){
+  html #pg-community .w > div[style*="grid-template-columns"]{grid-template-columns:1fr!important;}
 }
 
 /* ── 마이크로 인터랙션 ─────────────────────────────────────────────
@@ -1706,23 +1728,7 @@ a.gi-card:hover .gi-t{color:var(--gn2);}
     </div>
   </div>
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="w">
-      <div class="ft-grid">
-        <div>
-          <div class="ft-nm"><svg width="20" height="20" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#C24A0C"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg> 고리</div>
-          <div class="ft-desc">축산업에 필요한 모든 연결, 고리<br>원육·가공·물류·인력·장비·창업까지<br>필요한 업체와 사람을 빠르게 연결합니다</div>
-        </div>
-        <div><div class="ft-col-t">거래·생산</div><ul class="ft-ul"><li onclick="goCat8(&quot;meat&quot;)">원육 구매</li><li onclick="goCat8(&quot;process&quot;)">가공·OEM</li><li onclick="goCat8(&quot;logi&quot;)">물류·운송</li></ul></div>
-        <div><div class="ft-col-t">사람·운영</div><ul class="ft-ul"><li onclick="goCat8(&quot;labor&quot;)">인력·알바</li><li onclick="goCat8(&quot;job&quot;)">구인구직</li><li onclick="goCat8(&quot;equip&quot;)">장비·부자재</li><li onclick="goCat8(&quot;startup&quot;)">창업·인테리어</li><li onclick="goCat8(&quot;haccp&quot;)">HACCP·컨설팅</li></ul></div>
-        <div><div class="ft-col-t">정보</div><ul class="ft-ul"><li onclick="go(&quot;market&quot;)">시세 정보</li><li onclick="go(&quot;news&quot;)">업계 뉴스</li><li onclick="go(&quot;community&quot;)">커뮤니티</li><li onclick="go(&quot;jobs&quot;)">구인공고</li></ul></div>
-        <div><div class="ft-col-t">고리</div><ul class="ft-ul"><li onclick="go(&quot;guide&quot;)">이용 가이드</li><li onclick="location.href='meat_insight_apply.html'">컨설팅</li><li onclick="location.href='terms.html'">이용약관</li><li onclick="location.href='privacy.html'"><b>개인정보처리방침</b></li><li onclick="gOpenFindReq&&gOpenFindReq()">내 요청 찾기</li></ul></div>
-      </div>
-      <div class="ft-biz" id="ft-biz"></div>
-      <div class="ft-bot"><div class="ft-copy">© 2025 고리 · 대한민국 축산업 통합 플랫폼 · 베타 서비스 운영 중</div></div>
-    </div>
-  </footer>
+
 </div>
 
 <!-- ════ 서브 페이지들 ════ -->
@@ -1886,7 +1892,7 @@ a.gi-card:hover .gi-t{color:var(--gn2);}
 <div class="pg" id="pg-market" style="padding-top:var(--top-pad);padding-bottom:56px;">
   <div class="w" style="padding-top:18px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><div style="font-size:19px;font-weight:700;">축산 시세 정보</div><span style="font-size:13px;color:var(--ink4);" id="mkt-src-label">참고용</span></div>
-    <div style="background:var(--goldbg);border:1px solid var(--amber-br);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:14px;color:var(--amber-on);">⚠️ 시세는 참고용입니다. 정확한 견적은 <a onclick="go(&quot;rw&quot;)" style="color:var(--gn-on-tint);font-weight:700;cursor:pointer;">고리에서 무료로 요청 →</a></div>
+    <div style="background:var(--goldbg);border:1px solid var(--amber-br);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:14px;color:var(--amber-on);">⚠️ 시세는 참고용입니다. 정확한 견적은 <a onclick="go(&quot;rw&quot;)" class="mkt-ask">고리에서 무료로 요청 →</a></div>
     <div style="background:#fff;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;" id="market-full"></div>
   </div>
 </div>
@@ -1942,6 +1948,29 @@ a.gi-card:hover .gi-t{color:var(--gn2);}
 </div>
 
 <!-- BOTTOM NAV -->
+
+<!-- ══ FOOTER — 모든 화면 공통 ══════════════════════════════════
+     예전에는 #pg-h 안에 있어서 홈에서만 보였습니다. 나머지 서른세 화면에는
+     이용약관·개인정보처리방침·사업자 정보로 가는 길이 아예 없었습니다.
+     (전자상거래법 제10조 표시 의무는 사이트 전체에 걸립니다)
+     ══════════════════════════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="w">
+      <div class="ft-grid">
+        <div>
+          <div class="ft-nm"><svg width="20" height="20" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#C24A0C"/><path d="M7 14 C7 10 10 7 14 7 C18 7 21 10 21 14 C21 17.5 18 20 14 20 L9 20" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="8" cy="20" r="2" fill="white"/></svg> 고리</div>
+          <div class="ft-desc">축산업에 필요한 모든 연결, 고리<br>원육·가공·물류·인력·장비·창업까지<br>필요한 업체와 사람을 빠르게 연결합니다</div>
+        </div>
+        <div><div class="ft-col-t">거래·생산</div><ul class="ft-ul"><li onclick="goCat8(&quot;meat&quot;)">원육 구매</li><li onclick="goCat8(&quot;process&quot;)">가공·OEM</li><li onclick="goCat8(&quot;logi&quot;)">물류·운송</li></ul></div>
+        <div><div class="ft-col-t">사람·운영</div><ul class="ft-ul"><li onclick="goCat8(&quot;labor&quot;)">인력·알바</li><li onclick="goCat8(&quot;job&quot;)">구인구직</li><li onclick="goCat8(&quot;equip&quot;)">장비·부자재</li><li onclick="goCat8(&quot;startup&quot;)">창업·인테리어</li><li onclick="goCat8(&quot;haccp&quot;)">HACCP·컨설팅</li></ul></div>
+        <div><div class="ft-col-t">정보</div><ul class="ft-ul"><li onclick="go(&quot;market&quot;)">시세 정보</li><li onclick="go(&quot;news&quot;)">업계 뉴스</li><li onclick="go(&quot;community&quot;)">커뮤니티</li><li onclick="go(&quot;jobs&quot;)">구인공고</li></ul></div>
+        <div><div class="ft-col-t">고리</div><ul class="ft-ul"><li onclick="go(&quot;guide&quot;)">이용 가이드</li><li onclick="location.href='meat_insight_apply.html'">컨설팅</li><li onclick="location.href='terms.html'">이용약관</li><li onclick="location.href='privacy.html'"><b>개인정보처리방침</b></li><li onclick="gOpenFindReq&&gOpenFindReq()">내 요청 찾기</li></ul></div>
+      </div>
+      <div class="ft-biz" id="ft-biz"></div>
+      <div class="ft-bot"><div class="ft-copy">© 2025 고리 · 대한민국 축산업 통합 플랫폼 · 베타 서비스 운영 중</div></div>
+    </div>
+  </footer>
+
 <div class="bnav">
   <button class="bni on" id="bn-h" onclick="go(&quot;h&quot;)"><span class="bni-i"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/></svg></span><span class="bni-t">홈</span></button>
   <button class="bni" id="bn-reqs" onclick="go(&quot;reqs&quot;)"><span class="bni-i"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="bni-t">요청</span></button>
@@ -2753,7 +2782,8 @@ function renderCatPage(p){
   var el=document.getElementById(p+"-body");if(!el)return;
   var btns=cat.cats.map(function(ct){
     var b=document.createElement("button");
-    b.style.cssText="padding:10px 17px;border:1.5px solid var(--bd);border-radius:var(--r);font-size:14px;font-weight:700;color:var(--ink2);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s;";
+    /* 누르는 것은 40px 이상 — padding 만으로는 글자가 짧은 "OEM" 에서 38px 이 됩니다 */
+    b.style.cssText="min-height:40px;display:inline-flex;align-items:center;padding:0 17px;border:1.5px solid var(--bd);border-radius:var(--r);font-size:14px;font-weight:700;color:var(--ink2);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s;";
     b.textContent=ct;
     b.onmouseenter=function(){this.style.borderColor="var(--gn)";this.style.color="var(--gn)";this.style.background="var(--gnl)";};
     b.onmouseleave=function(){this.style.borderColor="var(--bd)";this.style.color="var(--ink2)";this.style.background="#fff";};

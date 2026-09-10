@@ -106,7 +106,12 @@ window.gOpenOrder=async function(orderId){
   var c=client(); if(!c) return;
   var r=await c.from("orders").select("*").eq("id",orderId).limit(1);
   var o=(r.data&&r.data[0])||null;
-  if(!o){ body.innerHTML='<div class="gempty"><div class="gempty-t">거래를 찾을 수 없습니다</div></div>'; return; }
+  if(!o){
+    body.innerHTML='<div class="gempty"><div class="gempty-t">거래를 찾을 수 없습니다</div>'+
+      '<div class="gempty-d">이미 끝났거나 삭제된 거래일 수 있습니다.</div>'+
+      '<button class="gbtn gbtn-w" onclick="go(&quot;my&quot;)">거래관리로</button></div>';
+    return;
+  }
   var idx=ORDER_FLOW.indexOf(o.status); if(idx<0) idx=0;
   var tl=Array.isArray(o.timeline)?o.timeline:[];
   var mine = ME.user && (String(o.buyer_user_id||"")===String(ME.user.id));

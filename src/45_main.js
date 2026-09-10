@@ -364,11 +364,14 @@ function patchMain(){
     }
   }catch(e){}
 
+  /* 브랜드 선언과 마지막 행동은 홈의 마지막 두 구간입니다.
+     ⚠️ 푸터는 이제 #pg-h 밖(모든 화면 공통)이라 기준으로 쓸 수 없습니다 —
+        홈의 맨 끝에 붙입니다. */
   try{
-    var ft=document.querySelector("#pg-h .footer");
+    var home=$("pg-h");
     var fin=mnFinal(), brd=mnBrand();
-    if(ft && fin) ft.parentNode.insertBefore(fin, ft);
-    if(ft && brd) ft.parentNode.insertBefore(brd, fin || ft);
+    if(home && brd) home.appendChild(brd);
+    if(home && fin) home.appendChild(fin);
   }catch(e){}
 
   /* 데이터가 들어오는 시점을 알 수 없어 몇 번 더 확인합니다 */

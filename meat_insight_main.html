@@ -67,6 +67,13 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
   --ok:#1B7A46;--okl:#E3F5EA;--okb:#BFE3CD;
   --red:#C62828;--redbg:#FCE9E9;--redb:#F1C9C9;
   --blue:#245FCB;--bluebg:#E9F0FC;
+  /* 업종 네 묶음 — 원육 / 생산 / 물류·장비 / 사업.
+     흰 아이콘 기준 대비 4.9~6.7:1 로 서로 무게를 맞췄습니다.
+     빨강 계열은 하나도 넣지 않았습니다 — 딥레드(--cta)는 누르는 것 전용입니다. */
+  --cs-meat:#C24A0C;--cs-meat-h:#953609;
+  --cs-make:#4A5E73;--cs-make-h:#33424F;
+  --cs-move:#2A5CAE;--cs-move-h:#1E4785;
+  --cs-biz :#22754D;--cs-biz-h :#155234;
   --up:#C62828;--dn:#245FCB;
   --br:#8D6E63;--brl:#EFEBE9;
 
@@ -1078,19 +1085,39 @@ html .trust-bar{display:none;}
 .cshort{display:grid;grid-template-columns:repeat(13,1fr);gap:12px;}
 .cs-item{display:flex;flex-direction:column;align-items:center;gap:9px;background:none;border:none;
   padding:6px 2px;cursor:pointer;font-family:var(--font);}
-/* 업종 아이콘 — 한 가지 디자인 언어로 통일합니다. 같은 선 굵기, 같은 크기,
-   색 없이. 칸마다 색을 넣으면 열두 칸이 알록달록해져서 B2B 플랫폼보다
-   앱 서랍처럼 보입니다. 손을 올렸을 때만 테두리와 글자에 색이 들어옵니다. */
-/* 흰 바탕에 흰 타일 + 가는 회색 선이라 와이어프레임처럼 보였습니다.
-   브랜드 주황으로 채우고 아이콘은 흰 선화로. 색을 열두 개 쓰지 않고
-   한 가지 색으로 통일합니다 — 칸마다 색이 다르면 앱 서랍처럼 보입니다.
-   (--gn 은 원래 아이콘에 쓰는 색입니다. 누르는 것에 쓰는 딥레드 --cta 와
-    구분해야 합니다 — 여기까지 빨강을 넓히면 CTA 가 안 보입니다) */
+/* 업종 아이콘 — 채워진 타일에 흰 선화. 흰 바탕에 흰 타일 + 가는 회색 선은
+   와이어프레임처럼 보였습니다.
+
+   색은 **칸마다가 아니라 묶음마다** 넣습니다. 열두 칸에 열두 색을 쓰면
+   앱 서랍처럼 보이고, 한 색으로만 채우면 무엇이 같은 갈래인지 안 보입니다.
+   CATS8 의 대분류를 따라 넷으로 묶었습니다 — 셋씩 넷.
+
+     g1 원육      소고기 · 돼지고기 · 부산물        주황  (브랜드색)
+     g2 생산      도축장 · 가공업체 · OEM           슬레이트
+     g3 물류·장비 물류 · 포장재 · 장비              블루
+     g4 사업      HACCP · 인테리어 · 창업·컨설팅    그린
+
+   ⚠️ 빨강 계열은 넣지 않습니다. 딥레드(--cta)는 누르는 것 전용이라,
+      여기까지 빨강을 넓히면 "요청 올리기" 가 안 보입니다.
+      test/premium-e2e.js 의 "딥레드는 CTA 에만" 이 감시합니다. */
 .cs-ic{width:62px;height:62px;border-radius:16px;background:var(--gn);
   border:1px solid var(--gn);color:#fff;
   display:flex;align-items:center;justify-content:center;
   transition:background-color .16s,border-color .16s,transform .16s;}
-.cs-item:hover .cs-ic{background:var(--gn2);border-color:var(--gn2);transform:translateY(-3px);}
+.cs-item:hover .cs-ic{transform:translateY(-3px);}
+.cs-g1 .cs-ic{background:var(--cs-meat);border-color:var(--cs-meat);}
+.cs-g2 .cs-ic{background:var(--cs-make);border-color:var(--cs-make);}
+.cs-g3 .cs-ic{background:var(--cs-move);border-color:var(--cs-move);}
+.cs-g4 .cs-ic{background:var(--cs-biz); border-color:var(--cs-biz);}
+.cs-g1:hover .cs-ic{background:var(--cs-meat-h);border-color:var(--cs-meat-h);}
+.cs-g2:hover .cs-ic{background:var(--cs-make-h);border-color:var(--cs-make-h);}
+.cs-g3:hover .cs-ic{background:var(--cs-move-h);border-color:var(--cs-move-h);}
+.cs-g4:hover .cs-ic{background:var(--cs-biz-h); border-color:var(--cs-biz-h);}
+/* 글자는 묶음 색을 따라갑니다 — 손을 올렸을 때만 */
+.cs-g1:hover .cs-nm{color:var(--cs-meat-h);}
+.cs-g2:hover .cs-nm{color:var(--cs-make-h);}
+.cs-g3:hover .cs-nm{color:var(--cs-move-h);}
+.cs-g4:hover .cs-nm{color:var(--cs-biz-h);}
 /* 전체보기는 "더 있다" 는 뜻이라 채우지 않습니다 */
 .cs-item.cs-all .cs-ic{background:#fff;border:1.5px dashed var(--bd2);color:var(--ink3);}
 .cs-item.cs-all:hover .cs-ic{background:var(--gnl);border-color:var(--gn);color:var(--gn2);}

@@ -118,13 +118,58 @@ async function open(b,w,h,opt){
   log.push('6. 미완성 흔적이 손님에게 안 보인다');
   const body=await p.evaluate(()=>document.body.innerText);
   chk('샘플/미기재/TEST 없음', /샘플|미기재|TEST|정보없음|미등록/.test(body), false);
-  chk('업종 아이콘은 한 가지 언어', await p.evaluate(()=>{
-    const st=[...document.querySelectorAll('#cat8-grid .cs-ic')].map(e=>{
-      const c=getComputedStyle(e); return c.backgroundColor+'|'+c.color;
+  /* 색은 칸마다가 아니라 묶음마다입니다 — 열두 칸에 열두 색이면 앱 서랍처럼
+     보이고, 한 색이면 무엇이 같은 갈래인지 안 보입니다. CATS8 의 대분류를
+     따라 셋씩 넷 (원육 · 생산 · 물류·장비 · 사업). */
+  chk('업종 색은 네 묶음', await p.evaluate(()=>{
+    const st=[...document.querySelectorAll('#cat8-grid .cs-item:not(.cs-all)')]
+      .map(e=>getComputedStyle(e.querySelector('.cs-ic')).backgroundColor);
+    return new Set(st).size;
+  }), 4);
+  chk('묶음 안에서는 한 색', await p.evaluate(()=>{
+    const bad=[];
+    for(const g of [1,2,3,4]){
+      const st=[...document.querySelectorAll('#cat8-grid .cs-g'+g)]
+        .map(e=>getComputedStyle(e.querySelector('.cs-ic')).backgroundColor);
+      if(!st.length) bad.push('g'+g+' 없음');
+      else if(new Set(st).size!==1) bad.push('g'+g+' '+new Set(st).size+'색');
+      else if(st.length!==3) bad.push('g'+g+' '+st.length+'칸');
+    }
+    return bad.join(', ');
+  }), '');
+  /* 딥레드(--cta)는 누르는 것 전용입니다 — 업종 타일까지 빨강을 넓히면
+     "요청 올리기" 가 안 보입니다. 붉은 계열이 하나도 없어야 합니다. */
+  chk('업종 타일에 빨강 없음', await p.evaluate(()=>{
+    /* 색상환으로 봅니다. 브랜드 주황 #C24A0C 는 20°, 딥레드 #B4232C 는 356° —
+       "빨갛다" 로 뭉뚱그리면 주황까지 걸립니다. 15° 아래만 빨강으로 봅니다. */
+    const hue=(r,g,b)=>{
+      const mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn;
+      if(!d) return 0;
+      let h = mx===r ? ((g-b)/d)%6 : mx===g ? (b-r)/d+2 : (r-g)/d+4;
+      h*=60; return h<0 ? h+360 : h;
+    };
+    const red=[];
+    document.querySelectorAll('#cat8-grid .cs-item:not(.cs-all) .cs-ic').forEach(e=>{
+      const bg=getComputedStyle(e).backgroundColor;
+      const m=bg.match(/\d+/g); if(!m) return;
+      const [r,g,b]=m.map(Number);
+      const h=hue(r,g,b);
+      if(r>120 && (h<15 || h>345)) red.push(bg+' ('+Math.round(h)+'°)');
     });
-    /* 전체보기 한 칸만 다르고 나머지 12칸은 같아야 합니다 */
-    return new Set(st.slice(0,12)).size;
-  }), 1);
+    return [...new Set(red)].join(',');
+  }), '');
+  /* 흰 선화가 타일 위에서 읽혀야 합니다 (WCAG 그래픽 3:1, 여유를 두고 4.5) */
+  chk('흰 아이콘 대비 4.5:1 이상', await p.evaluate(()=>{
+    const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);};
+      return .2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2]);};
+    const bad=[];
+    document.querySelectorAll('#cat8-grid .cs-item:not(.cs-all) .cs-ic').forEach(e=>{
+      const m=getComputedStyle(e).backgroundColor.match(/\d+/g); if(!m) return;
+      const r=(1.05)/(L(m.map(Number))+.05);
+      if(r<4.5) bad.push(getComputedStyle(e).backgroundColor+':'+r.toFixed(2));
+    });
+    return [...new Set(bad)].join(', ');
+  }), '');
 
   /* 운영자에게 할 말이 손님 화면에 찍혀 있었습니다 — 문의 화면에
      "고객센터 연락처가 아직 등록되지 않았습니다", 접수 실패 때

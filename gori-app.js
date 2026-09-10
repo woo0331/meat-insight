@@ -8158,19 +8158,23 @@ function pfRender(){
 /* 12개 업종 + 전체보기. 새 화면을 만들지 않고 이미 있는 곳으로만 보냅니다.
      go   : goCat8(k)  — 대분류 랜딩
      pick : pickSub(k,t) — 대분류 안의 소분류 (이미 있는 함수입니다) */
+/* g = 색 묶음. 칸마다 색을 주면 앱 서랍처럼 보이고, 한 색으로만 채우면
+   무엇이 같은 갈래인지 안 보입니다. CATS8 의 대분류를 따라 셋씩 넷으로
+   묶었습니다 — 색값은 index.html 의 --cs-* 토큰 한 곳에 있습니다.
+     g1 원육 · g2 생산 · g3 물류·장비 · g4 사업 */
 var CS_ITEMS=[
-  {nm:"소고기",      k:"meat",    t:"소고기",      i:"meat_beef",  bg:"#F3E7DD", c:"#7A4A2B"},
-  {nm:"돼지고기",    k:"meat",    t:"돼지고기",    i:"meat_pork",  bg:"#FBE6EA", c:"#A83B55"},
-  {nm:"부산물",      k:"meat",    t:"부산물",      i:"meat_offal", bg:"#FBE3E0", c:"#A83028"},
-  {nm:"도축장",      k:"process", t:"도축장",      i:"kill",       bg:"#E4E7EC", c:"#3C4756"},
-  {nm:"가공업체",    k:"process", t:"육가공",      i:"butcher",    bg:"#E7E9EE", c:"#404A5C"},
-  {nm:"OEM",         k:"process", t:"OEM",         i:"oem",        bg:"#E8EAEF", c:"#3A4454"},
-  {nm:"물류",        k:"logi",    t:"물류",        i:"logi",       bg:"#E4EDFB", c:"#1F55B8"},
-  {nm:"포장재",      k:"equip",   t:"포장재",      i:"pack",       bg:"#FDEEDD", c:"#A85F0B"},
-  {nm:"장비",        k:"equip",   t:"장비",        i:"equip",      bg:"#E9EAEC", c:"#4A5058"},
-  {nm:"HACCP",       k:"haccp",   t:"HACCP",       i:"haccp",      bg:"#E2F1E7", c:"#186B3E"},
-  {nm:"인테리어",    k:"startup", t:"인테리어",    i:"interior",   bg:"#FDEBDF", c:"#A55418"},
-  {nm:"창업·컨설팅", k:"startup", t:"창업·컨설팅", i:"startup",    bg:"#EDE7FA", c:"#5333A8"}
+  {nm:"소고기",      k:"meat",    t:"소고기",      i:"meat_beef",  g:1, bg:"#F3E7DD", c:"#7A4A2B"},
+  {nm:"돼지고기",    k:"meat",    t:"돼지고기",    i:"meat_pork",  g:1, bg:"#FBE6EA", c:"#A83B55"},
+  {nm:"부산물",      k:"meat",    t:"부산물",      i:"meat_offal", g:1, bg:"#FBE3E0", c:"#A83028"},
+  {nm:"도축장",      k:"process", t:"도축장",      i:"kill",       g:2, bg:"#E4E7EC", c:"#3C4756"},
+  {nm:"가공업체",    k:"process", t:"육가공",      i:"butcher",    g:2, bg:"#E7E9EE", c:"#404A5C"},
+  {nm:"OEM",         k:"process", t:"OEM",         i:"oem",        g:2, bg:"#E8EAEF", c:"#3A4454"},
+  {nm:"물류",        k:"logi",    t:"물류",        i:"logi",       g:3, bg:"#E4EDFB", c:"#1F55B8"},
+  {nm:"포장재",      k:"equip",   t:"포장재",      i:"pack",       g:3, bg:"#FDEEDD", c:"#A85F0B"},
+  {nm:"장비",        k:"equip",   t:"장비",        i:"equip",      g:3, bg:"#E9EAEC", c:"#4A5058"},
+  {nm:"HACCP",       k:"haccp",   t:"HACCP",       i:"haccp",      g:4, bg:"#E2F1E7", c:"#186B3E"},
+  {nm:"인테리어",    k:"startup", t:"인테리어",    i:"interior",   g:4, bg:"#FDEBDF", c:"#A55418"},
+  {nm:"창업·컨설팅", k:"startup", t:"창업·컨설팅", i:"startup",    g:4, bg:"#EDE7FA", c:"#5333A8"}
 ];
 G.CS_ITEMS=CS_ITEMS;   /* 회귀 테스트가 목적지를 전수로 봅니다 */
 /* t 는 반드시 그 분야의 legacy 목록에 있는 말이어야 합니다 — 그래야
@@ -8225,9 +8229,9 @@ function csRender(){
     var act = it.t
       ? 'pickSub(&quot;'+it.k+'&quot;,&quot;'+it.t+'&quot;)'
       : 'goCat8(&quot;'+it.k+'&quot;)';
-    return '<button class="cs-item" onclick="'+act+'">'+
-      /* 색은 CSS 한 곳(.cs-ic)에서만 정합니다 — it.bg/it.c 는 남겨 두었으니
-         업종별 색을 다시 쓰고 싶으면 여기서 style 을 붙이면 됩니다 */
+    return '<button class="cs-item cs-g'+(it.g||1)+'" onclick="'+act+'">'+
+      /* 색값은 index.html 의 --cs-* 토큰과 .cs-g1~4 한 곳에서만 정합니다.
+         여기서는 어느 묶음인지만 붙입니다 (it.bg/it.c 는 예전 값이라 안 씁니다) */
       '<span class="cs-ic">'+csIcon(it.i)+'</span>'+
       '<span class="cs-nm">'+esc(it.nm)+'</span></button>';
   }).join("");

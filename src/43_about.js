@@ -72,29 +72,17 @@ function abInjectWhy(){
   var host=abTrustAnchor(); if(!host) return;
   var sec=document.createElement("section");
   sec.className="sec why"; sec.id="why-band";
+  /* ⚠️ 카드를 여러 장 쌓지 않습니다 — 아이콘 + 제목 + 한두 줄이면 충분합니다.
+     예전에는 "지금까지 → 고리에서는" 비교 띠와 버튼 두 개가 더 있었는데,
+     같은 이야기를 히어로·소개 페이지에서도 하고 있어 여기서는 뺐습니다. */
   sec.innerHTML=
     '<div class="w">'+
       '<div class="why-hd">'+
-        '<div class="why-eye">TRUST</div>'+
         '<h2 class="sec-h2">믿고 연결할 수 있는 축산업 네트워크</h2>'+
-        '<p class="why-lead">처음 거래하는 업체가 어떤 곳인지 확인할 방법이 없어서 '+
-          '결국 아는 곳에만 전화하게 됩니다. 그 확인을 고리가 대신합니다. '+
+        '<p class="sec-d2">사업자등록·축산물 영업허가·HACCP 를 확인해 표시합니다. '+
           '요청 등록과 견적 비교에는 수수료가 없습니다.</p>'+
       '</div>'+
-      '<div class="why-flow">'+
-        '<div class="why-side why-old"><div class="why-side-t">지금까지</div><ul>'+
-          AB_FLOW_OLD.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ul></div>'+
-        '<div class="why-arw" aria-hidden="true">'+
-          '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" '+
-          'stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg></div>'+
-        '<div class="why-side why-new"><div class="why-side-t">고리에서는</div><ul>'+
-          AB_FLOW_NEW.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ul></div>'+
-      '</div>'+
       '<div class="why-grid">'+AB_WHY.map(abWhyCard).join("")+'</div>'+
-      '<div class="why-act">'+
-        '<button class="gbtn gbtn-p" onclick="go(&quot;rw&quot;)">무료로 요청 올리기</button>'+
-        '<button class="gbtn gbtn-w" onclick="gOpenAbout()">고리는 어떤 곳인가요 ›</button>'+
-      '</div>'+
     '</div>';
   host.parentNode.insertBefore(sec, host.nextSibling);
 }

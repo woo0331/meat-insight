@@ -68,7 +68,16 @@ async function open(b,opts,vp){const p=await b.newPage({viewport:vp||{width:1280
  log.push('4. 데이터가 있으면 섹션 정상 노출');
  let d=await open(b,{});
  chk('업체 랭킹 있음', await d.evaluate(()=>document.getElementById('rank-widget').children.length>0), 'true');
- chk('섹션 보임', await d.evaluate(()=>document.getElementById('prop-widget').closest('section').hidden), 'false');
+ /* 2026 정리: GORI INSIGHT 는 콘텐츠 구간입니다. 업체에서 파생된 위젯(랭킹·
+    신규 업체)이 채워졌다고 열지 않고, 실제 읽을 거리(GORI_CONTENT 의 뉴스·
+    인사이트·매물·커뮤니티)가 있을 때만 엽니다. */
+ chk('콘텐츠 없으면 안 열림', await d.evaluate(()=>document.getElementById('prop-widget').closest('section').hidden), 'true');
+ chk('콘텐츠가 들어오면 열림', await d.evaluate(async()=>{
+   window.GORI_CONTENT.news=[{title:"테스트 기사",url:"https://example.com/x",date:"2026-01-01"}];
+   window.GORI.ctApply ? window.GORI.ctApply() : 0;
+   await new Promise(r=>setTimeout(r,600));
+   return document.getElementById('prop-widget').closest('section').hidden;
+ }), 'false');
  await d.screenshot({path:'ct2-data.png',fullPage:true});
 
  log.push('5. 기능 스위치');

@@ -32,15 +32,17 @@ async function open(b,w,h,opt){
   chk('앞 다섯 구간', await p.evaluate(()=>
     [...document.querySelectorAll('#pg-h > *')]
       .filter(e=>!e.hidden && e.getBoundingClientRect().height>0)
-      .map(e=>e.id||e.className.replace(/\s*\b(rv|on)\b/g,'').trim()).slice(0,6).join(' | ')),
-    'gh ph | pf-stats-sec | sec sec-cat8 | sec-mkt | case-sec | svc-sec');
+      .map(e=>e.id||e.className.replace(/\s*\b(rv|on)\b/g,'').trim()).slice(0,4).join(' | ')),
+    'gh ph | sec sec-cat8 | sec-mkt | svc-sec');
   chk('브랜드 선언 → 마지막 행동 → 푸터', await p.evaluate(()=>{
     const y=s=>{const e=document.querySelector(s); return e?e.getBoundingClientRect().top+scrollY:-1;};
     return y('#brand-sec')>0 && y('#brand-sec')<y('#final-sec') && y('#final-sec')<y('#pg-h .footer');
   }), 'true');
 
-  log.push('2. 지역으로 업체 찾기');
-  chk('16개 시·도 + 전국', await p.evaluate(()=>document.querySelectorAll('.rgx-chip').length), 17);
+  log.push('2. 지역으로 업체 찾기 (홈이 아니라 업체 찾기 화면)');
+  chk('홈에는 없음', await p.evaluate(()=>!document.querySelector('#pg-h .rgx')), 'true');
+  await p.evaluate(()=>go('suppliers')); await p.waitForTimeout(700);
+  chk('16개 시·도 + 전국', await p.evaluate(()=>document.querySelectorAll('#pg-suppliers .rgx-chip').length), 17);
   chk('진짜 필터로 붙음', await p.evaluate(async()=>{
     gPickSupRegion('경기'); await new Promise(r=>setTimeout(r,700));
     return document.getElementById('pg-suppliers').classList.contains('on');
@@ -55,10 +57,10 @@ async function open(b,w,h,opt){
   }), 'true');
   await p.evaluate(()=>go('h')); await p.waitForTimeout(500);
 
-  log.push('3. 오늘의 축산 브리핑 — 지어내지 않는다');
+  log.push('3. 오늘의 축산 정보 — 지어내지 않는다');
   chk('제목', await p.evaluate(()=>{
     const h=document.querySelector('#sec-mkt .sec-h2'); return h?h.textContent.trim():'(없음)';
-  }), '오늘의 축산 브리핑');
+  }), '오늘의 축산 정보');
   chk('시세는 등록된 것만', await p.evaluate(()=>{
     const rows=(window.GORI&&window.GORI.MARKET&&window.GORI.MARKET.rows)||[];
     const shown=document.querySelectorAll('#mkt-strip .mkt-c,#mkt-strip > *').length;
@@ -70,20 +72,16 @@ async function open(b,w,h,opt){
     return news.length ? !!side : !side;
   }), 'true');
 
-  log.push('4. 찾아보세요 — 예시임을 밝힌다');
-  chk('카드 4장', await p.evaluate(()=>document.querySelectorAll('#case-sec .cse-c').length), 4);
-  chk('카드마다 예시 딱지', await p.evaluate(()=>
-    [...document.querySelectorAll('#case-sec .cse-c')].every(c=>
-      /예시/.test((c.querySelector('.cse-tag')||{}).textContent||''))), 'true');
-  chk('구간 설명에도 예시라고 적음', await p.evaluate(()=>
-    /예시/.test(document.querySelector('#case-sec .sec-d2').textContent)), 'true');
-  chk('목적지가 유효', await p.evaluate(async()=>{
-    document.querySelectorAll('#case-sec .cse-c')[0].click();
-    await new Promise(r=>setTimeout(r,600));
-    const ok=!document.getElementById('pg-h').classList.contains('on');
-    go('h'); await new Promise(r=>setTimeout(r,400));
-    return ok;
-  }), 'true');
+  log.push('4. 최종 구조에 없는 구간은 메인에서 내린다');
+  /* 코드와 라우트는 남기고 노출만 끕니다 — 되살릴 때 한 줄이면 됩니다 */
+  chk('찾아보세요 · 지표 줄 · 사람이 필요할 때 · 업체 유치 배너', await p.evaluate(()=>
+    ['#case-sec','#pf-stats-sec','#sec-labor','.recruit-banner']
+      .map(q=>{const e=document.querySelector(q); return e? (e.hidden?'':q+' 보임') : q+' 없음';})
+      .filter(Boolean).join(',')), '');
+  chk('이용 방법은 네 걸음', await p.evaluate(()=>
+    document.querySelectorAll('#proc-grid .proc-step').length), 4);
+  chk('이용 방법은 접혀 있지 않음', await p.evaluate(()=>
+    !document.querySelector('#proc-grid').closest('.hm-fold')), 'true');
 
   log.push('5. 브랜드 선언 · 마지막 행동');
   chk('원육에서 식탁까지', await p.evaluate(()=>

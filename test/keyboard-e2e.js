@@ -81,9 +81,15 @@ async function open(b,{storage=true,slow=0}={}){
   chk('글자 크게 동작', await s.evaluate(async()=>{ gToggleTextSize();
     await new Promise(r=>setTimeout(r,300));
     return document.documentElement.classList.contains('txl'); }), 'true');
+  /* 저장공간이 막혀도 접기가 에러 없이 동작하는지 (기억만 못 할 뿐).
+     접는 구간은 이제 GORI INSIGHT 하나뿐이고, 읽을 거리가 있을 때만 열립니다. */
   chk('홈 접기 동작', await s.evaluate(async()=>{ go('h'); await new Promise(r=>setTimeout(r,500));
-    gHomeFold('proc'); await new Promise(r=>setTimeout(r,300));
-    return document.querySelector('.hm-fold[data-k="proc"]').classList.contains('open'); }), 'true');
+    window.GORI_CONTENT.news=[{title:"테스트",url:"https://example.com/x"}];
+    if(window.GORI.ctApply) window.GORI.ctApply();
+    await new Promise(r=>setTimeout(r,500));
+    gHomeFold('info'); await new Promise(r=>setTimeout(r,300));
+    const f=document.querySelector('.hm-fold[data-k="info"]');
+    return !!f && f.classList.contains('open'); }), 'true');
   chk('그래도 에러 없음', s._errs.length ? [...new Set(s._errs)].slice(0,2).join(' | ') : 0, 0);
 
   log.push('4. 느린 통신 (2.5초 지연)');

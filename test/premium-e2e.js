@@ -58,10 +58,11 @@ async function open(b,w,h,init){
     (document.querySelector('.gh.ph .gh-s-btn').getAttribute('onclick')||'').indexOf('heroGo')>=0), 'true');
   chk('엔터도 heroGo', await p.evaluate(()=>
     (document.getElementById('hs-input').getAttribute('onkeydown')||'').indexOf('heroGo')>=0), 'true');
+  /* 히어로에서 헤더·전체메뉴로 옮겼습니다. onclick 은 그대로 따라가야 합니다. */
   chk('지역 선택 살아 있음', await p.evaluate(()=>
     (document.getElementById('gh-region').getAttribute('onclick')||'').indexOf('gPickRegion')>=0), 'true');
   chk('알림 살아 있음', await p.evaluate(()=>
-    !!document.querySelector('.gh.ph [onclick*="gHeroBell"]') && !!document.getElementById('gh-bell-dot')), 'true');
+    !!document.querySelector('[onclick*="gHeroBell"]') && !!document.getElementById('gh-bell-dot')), 'true');
   chk('gh-stat 자리 유지', await p.evaluate(()=>!!document.getElementById('gh-stat')), 'true');
   chk('메인 카피', await p.evaluate(()=>document.querySelector('.ph-h1').textContent.replace(/\s+/g,' ').trim()),
     '축산업의 모든 연결, 고리');
@@ -146,26 +147,33 @@ async function open(b,w,h,init){
   }), 'demo-off');
 
   log.push('6. 서비스 카드');
-  chk('6장', await p.evaluate(()=>document.querySelectorAll('.svc-cards .svc-card').length), 6);
+  /* 2026 정리: 메인 핵심 서비스는 넷. 뉴스·커뮤니티는 아래 콘텐츠 구간에서
+     이어집니다 — 모든 기능을 같은 크기로 늘어놓지 않습니다. */
+  chk('4장', await p.evaluate(()=>document.querySelectorAll('.svc-cards .svc-card').length), 4);
   chk('제목', await p.evaluate(()=>
     [...document.querySelectorAll('.svc-cards .svc-t')].map(e=>e.textContent.trim()).join('|')),
-    '업체 찾기|견적 요청|축산 시세|구인구직|뉴스|커뮤니티');
+    '업체 찾기|견적 요청|축산 시세|구인구직');
+  chk('뉴스·커뮤니티는 헤더에 그대로', await p.evaluate(()=>
+    ['news','community'].every(k=>
+      [...document.querySelectorAll('.hdr-nav a')].some(a=>(a.getAttribute('onclick')||'').indexOf(k)>=0))), 'true');
   chk('전부 있는 화면으로', await p.evaluate(()=>
     [...document.querySelectorAll('.svc-cards .svc-card')].map(c=>{
       const m=(c.getAttribute('onclick')||'').match(/go\(&?q?u?o?t?;?"?([a-z]+)/);
       return m?m[1]:'?';
     }).filter(k=>PGS.indexOf(k)<0).join(',')), '');
-  chk('ABOUTMEAT 제목', await p.evaluate(()=>
-    document.querySelector('.svc-eye').textContent.trim()), 'ABOUTMEAT');
+  /* 히어로가 이미 "고리가 무엇인지" 를 말합니다 — 큰 브랜드 카피를 한 번 더
+     반복하지 않습니다. 구간 제목 하나면 충분합니다. */
+  chk('큰 브랜드 카피 중복 없음', await p.evaluate(()=>
+    !document.querySelector('.svc-h2') && !document.querySelector('.svc-eye')), 'true');
 
   log.push('8. 위계 · 신뢰 구간 · 미완성 흔적');
   chk('구간 순서', await p.evaluate(()=>{
     const got=[...document.querySelectorAll('#pg-h > *')]
       .filter(e=>!e.hidden && e.getBoundingClientRect().height>0)
       /* .rv/.on 은 페이드용이라 순서와 무관합니다 */
-      .map(e=>e.id||e.className.replace(/\s*\brv\b|\s*\bon\b/g,'').trim()).slice(0,6);
+      .map(e=>e.id||e.className.replace(/\s*\brv\b|\s*\bon\b/g,'').trim()).slice(0,4);
     return got.join(' | ');
-  }), 'gh ph | pf-stats-sec | sec sec-cat8 | sec-mkt | case-sec | svc-sec');
+  }), 'gh ph | sec sec-cat8 | sec-mkt | svc-sec');
   chk('신뢰 구간은 하나만', await p.evaluate(()=>{
     const band=document.getElementById('why-band');
     const bar=document.querySelector('.trust-bar');
@@ -175,10 +183,17 @@ async function open(b,w,h,init){
   chk('신뢰 항목 4개', await p.evaluate(()=>
     [...document.querySelectorAll('#why-band .why-t')].map(e=>e.textContent.trim()).join('|')),
     '사업자 인증|HACCP 확인|조건 매칭|견적 비교');
-  chk('제목 위계 (히어로 > 서비스 > 신뢰 > 업종)', await p.evaluate(()=>{
+  /* 카드가 아니라 아이콘 줄 — 페이지가 카드의 연속처럼 보이지 않게 */
+  chk('신뢰는 카드가 아님', await p.evaluate(()=>{
+    const c=document.querySelector('#why-band .why-c'), st=getComputedStyle(c);
+    return st.borderTopWidth==='0px' && st.backgroundColor==='rgba(0, 0, 0, 0)';
+  }), 'true');
+  /* 히어로가 압도적으로 가장 크고, 구간 제목은 한 크기로 통일 */
+  chk('제목 위계', await p.evaluate(()=>{
     const sz=q=>parseFloat(getComputedStyle(document.querySelector(q)).fontSize);
-    const h1=sz('.ph-h1'), svc=sz('.svc-h2'), why=sz('#why-band .sec-h2'), cs=sz('.cshort-t');
-    return h1>svc && svc>why && why>cs;
+    const h1=sz('.ph-h1'), sec=[...document.querySelectorAll('#pg-h .sec-h2,#pg-h .cshort-t')]
+      .filter(e=>e.offsetParent && !e.closest('.hm-fold')).map(e=>parseFloat(getComputedStyle(e).fontSize));
+    return h1 >= Math.max(...sec)*1.8 && new Set(sec).size===1;
   }), 'true');
   /* 미완성처럼 보이는 흔적이 화면에 남으면 안 됩니다 */
   chk('"샘플" 이 안 보임', await p.evaluate(()=>/샘플/.test(document.body.innerText)), false);
@@ -241,10 +256,16 @@ async function open(b,w,h,init){
   chk('모바일 40px 미만 없음', await tap(m), '');
   chk('모바일에서도 헤더가 보임', await m.evaluate(()=>
     getComputedStyle(document.querySelector('.hdr')).display!=='none'), 'true');
+  /* .ph-util(지역·알림)은 헤더/전체메뉴로 옮겼습니다 — 히어로 첫 줄은 이제
+     ABOUTMEAT 눈썹글입니다. 그것이 헤더 밑에서 시작하는지 봅니다. */
   chk('히어로 첫줄이 헤더에 안 가림', await m.evaluate(()=>{
     const h=document.querySelector('.hdr').getBoundingClientRect().bottom;
-    return document.querySelector('.ph-util').getBoundingClientRect().top >= h-1;
+    return document.querySelector('.ph-eye').getBoundingClientRect().top >= h-1;
   }), 'true');
+  chk('지역·알림은 옮겨졌다', await m.evaluate(()=>
+    !document.querySelector('#pg-h .ph-util') &&
+    !!document.querySelector('.hdr-tools .gh-bell') &&
+    !!document.querySelector('#mobile-menu .gh-region')), 'true');
   chk('모바일 검색창이 화면 안에', await m.evaluate(()=>{
     const r=document.querySelector('.gsx').getBoundingClientRect();
     return r.left>=-1 && r.right<=window.innerWidth+1;

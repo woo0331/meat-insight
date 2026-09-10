@@ -172,12 +172,16 @@ var CT_BOXES=["prop-widget","rank-widget","new-sup-widget","news-widget",
 function ctInfoSection(){
   var host=$("prop-widget"); if(!host) return;
   var sec=host.closest("section"); if(!sec) return;
-  var hasReal=CT_BOXES.some(function(id){
-    var el=$(id); if(!el) return false;
-    if(el.querySelector(".ct-soon")) return false;
-    if(!el.children.length) return false;
-    return !/없습니다|준비 중|아직 없어요/.test(el.textContent);
+  /* ⚠️ 화면에 뭐가 그려졌는지가 아니라 실제 콘텐츠가 있는지로 판단합니다.
+     예시 데이터가 채운 것을 "있다" 로 세면 빈 구간이 메인에 남습니다. */
+  var C=(window.GORI_CONTENT||{});
+  var hasContent=["news","insights","props","community"].some(function(k){
+    return Array.isArray(C[k]) && C[k].length;
   });
+  /* GORI INSIGHT 는 콘텐츠 구간입니다 — 업체 랭킹·신규 업체처럼 업체에서
+     파생된 위젯이 채워졌다고 해서 "읽을 거리가 있다" 는 뜻은 아닙니다.
+     실제 콘텐츠(뉴스·인사이트·매물·커뮤니티)가 있을 때만 엽니다. */
+  var hasReal=hasContent;
   sec.hidden=!hasReal;
 }
 
@@ -206,6 +210,10 @@ function patchContent(){
   });
 
   ctNews(); ctInsight(); ctProps(); ctComm(); ctTidy(); ctInfoSection();
+  /* 콘텐츠를 나중에 넣었을 때 다시 그릴 수 있게 (회귀 테스트도 씁니다) */
+  G.ctApply=function(){
+    try{ ctNews(); ctInsight(); ctProps(); ctComm(); ctTidy(); ctInfoSection(); }catch(e){}
+  };
   setTimeout(ctInfoSection, 1500);
   setTimeout(ctInfoSection, 4000);
 

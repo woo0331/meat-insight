@@ -130,6 +130,17 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
 /* 로고 설명 두 줄은 자리가 넉넉할 때만 — 1360px 아래에서는 메뉴가 밀립니다 */
 @media(max-width:1360px){ .logo-sub{display:none;} }
 
+/* 히어로에서 옮겨 온 알림 (src/45_main.js 가 옮깁니다).
+   지역 선택은 전체메뉴 안으로 갑니다 — 헤더 폭이 모자랍니다. */
+.hdr-tools{display:flex;align-items:center;margin-right:2px;}
+.hdr-tools .gh-bell{color:var(--ink3);}
+.hdr-tools .gh-bell:hover{background:var(--bg2);color:var(--ink);}
+.hdr-tools .gh-bell-dot{background:var(--cta);}
+.mm-region{padding:12px 4px 2px;}
+.mm-region .gh-region{width:100%;justify-content:flex-start;min-height:44px;
+  background:#fff;border:1px solid var(--bd2);color:var(--ink2);}
+.mm-region .gh-region:hover{border-color:var(--gn);color:var(--gn2);}
+
 .hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
 .hdr-right>*{flex-shrink:0;}
 .hd-ico span{white-space:nowrap;}
@@ -531,9 +542,9 @@ html .trust-bar{display:none;}
 /* ── 섹션 공통 ── */
 /* 여백이 곧 위계입니다. 구간을 촘촘히 붙이면 "정보가 많은 사이트",
    띄우면 "브랜드가 큰 사이트" 로 읽힙니다. */
-.sec{padding:66px 0;background:#fff;}
+.sec{padding:108px 0;background:#fff;}
 .sec-alt{background:var(--bg2);}
-.sec-hd2{margin-bottom:20px;}
+.sec-hd2{margin-bottom:34px;}
 .sec-hd2.row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;}
 /* 모든 구간 제목이 똑같이 굵으면 어디가 중요한지 안 보입니다.
      히어로 71  >  주요 서비스 34  >  신뢰 30  >  업종 24 · 시세/요청 24
@@ -542,9 +553,8 @@ html .trust-bar{display:none;}
 .gi-h{letter-spacing:.02em;}
 /* --gn(#C24A0C)은 밝은 회색 위에서 4.34:1 이라 모자랍니다 — 한 단계 어둡게 */
 .gi-h em{font-style:normal;color:var(--gn2);}
-.sec-h2{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.5px;display:flex;align-items:center;gap:8px;}
-.why .sec-h2{font-size:30px;letter-spacing:-.04em;}
-.hm-fold .sec-h2{font-size:20px;}
+.sec-h2{font-size:28px;font-weight:800;color:var(--ink);letter-spacing:-.045em;display:flex;align-items:center;gap:8px;}
+.hm-fold .sec-h2{font-size:21px;}
 .sec-d2{font-size:15px;color:var(--ink2);margin-top:6px;font-weight:500;}
 .sample-tag{display:inline-block;font-size:12px;font-weight:700;color:var(--ink4);background:var(--bg2);border:1px solid var(--bd);border-radius:4px;padding:2px 6px;margin-left:6px;vertical-align:middle;letter-spacing:.2px;}
 
@@ -578,11 +588,16 @@ html .trust-bar{display:none;}
 .es-btn:hover{background:var(--gn2);}
 
 /* ── 이용 프로세스 ── */
-.proc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;}
-.proc-step{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:16px 12px;text-align:center;position:relative;}
-.proc-n{width:26px;height:26px;border-radius:50%;background:var(--gn);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 9px;}
-.proc-t{font-size:14.5px;font-weight:700;color:var(--ink);margin-bottom:5px;line-height:1.35;}
-.proc-d{font-size:13px;color:var(--ink3);line-height:1.5;}
+.proc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
+/* 카드 네 장이 아니라 가로로 이어지는 네 걸음 (item 18 — Process = Horizontal Steps) */
+.proc-step{background:none;border:none;border-radius:0;padding:0 26px 0 0;text-align:left;position:relative;}
+.proc-step::after{content:"";position:absolute;left:0;right:0;top:13px;height:1px;background:var(--bd);z-index:0;}
+.proc-step:last-child::after{display:none;}
+.proc-n{width:27px;height:27px;border-radius:50%;background:var(--ink);color:#fff;font-size:13px;
+  font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 0 15px;
+  position:relative;z-index:1;box-shadow:0 0 0 6px #fff;}
+.proc-t{font-size:16.5px;font-weight:800;color:var(--ink);margin-bottom:6px;line-height:1.35;letter-spacing:-.03em;}
+.proc-d{font-size:13.5px;color:var(--ink3);line-height:1.6;word-break:keep-all;padding-right:12px;}
 
 /* ── 하단 정보 영역 ── */
 .info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
@@ -693,7 +708,10 @@ html .trust-bar{display:none;}
 .gh-sl{font-size:13px;color:var(--ink3);margin-top:2px;font-weight:600;}
 
 /* ── 오늘 시세 스트립 ── */
-.sec-mkt{padding:58px 0 54px;}
+/* 흰 구간이 넷 연달아 오면 페이지가 밋밋해집니다 — 정보 구간은 바닥색을 바꿔
+   "여기는 읽는 자리" 라고 알려 줍니다 (item 18 — 구간마다 표현을 다르게) */
+.sec-mkt{padding:104px 0;background:var(--bg2);border-top:1px solid var(--bd);
+  border-bottom:1px solid var(--bd);}
 .mkt-src{font-size:13px;color:var(--ink3);font-weight:500;}
 .mkt-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
 .mkt-row::-webkit-scrollbar{display:none;}
@@ -798,7 +816,7 @@ html .trust-bar{display:none;}
 /* 상단 메뉴 6개 + 로그인 정보 + 버튼 3개가 1200px 아래에서는 줄바꿈됩니다.
    글자가 세로로 쪼개지느니 햄버거 메뉴로 넘기는 편이 낫습니다. */
 @media(max-width:1200px){
-  .ph-sign{display:none;}
+  
   .hdr-nav{display:none;}
   .hdr-burger{display:flex;}
   .hd-all{display:none;}       /* 햄버거와 같은 일을 합니다 — 둘이 겹칩니다 */
@@ -868,7 +886,7 @@ html .trust-bar{display:none;}
   .rqc-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:6px;}
   .rqc-grid::-webkit-scrollbar{display:none;}
   .rqc{min-width:78%;scroll-snap-align:start;}
-  .proc-grid{grid-template-columns:repeat(2,1fr);}
+  .proc-grid{grid-template-columns:repeat(2,1fr);gap:26px 0;}
   .info-grid{grid-template-columns:repeat(2,1fr);}
   .grid-4{grid-template-columns:1fr;}
   .grid-6{grid-template-columns:1fr 1fr;}
@@ -884,7 +902,7 @@ html .trust-bar{display:none;}
   .h2-h1{font-size:24px;line-height:1.32;}
   .cat8-grid{grid-template-columns:repeat(4,1fr);}
   .cat8-nm{font-size:12.5px;}
-  .proc-grid{grid-template-columns:repeat(2,1fr);}
+  .proc-grid{grid-template-columns:repeat(2,1fr);gap:26px 0;}
   .info-grid{grid-template-columns:1fr;}
   .sup-grid{grid-template-columns:1fr;}
   .ft-grid{grid-template-columns:1fr;}
@@ -951,14 +969,6 @@ html .trust-bar{display:none;}
   text-shadow:0 2px 10px rgba(0,0,0,.65);}
 .ph-p-d{display:block;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.82);margin-top:5px;
   line-height:1.45;word-break:keep-all;text-shadow:0 2px 8px rgba(0,0,0,.75);}
-
-/* 브랜드 한 줄 (오른쪽 아래) */
-.ph-sign{position:absolute;right:40px;bottom:150px;z-index:2;text-align:right;pointer-events:none;}
-.ph-sign-k{font-size:16.5px;font-weight:600;line-height:1.7;color:rgba(255,255,255,.9);
-  letter-spacing:-.02em;text-shadow:0 2px 10px rgba(0,0,0,.75);}
-.ph-sign-e{font-size:12px;font-weight:700;letter-spacing:.2em;color:rgba(255,255,255,.55);
-  margin-top:10px;}
-
 /* 사진이든 그림이든, 배경보다 글자와 검색창이 먼저 보여야 합니다.
    왼쪽(글자)은 세게, 오른쪽(풍경)은 약하게 누릅니다. */
 .ph-veil{position:absolute;inset:0;z-index:1;pointer-events:none;
@@ -1053,9 +1063,9 @@ html .trust-bar{display:none;}
 .pstat-note b{color:var(--ink3);}
 
 /* ── CategoryShortcut ──────────────────────────────────────────── */
-.sec.sec-cat8{padding:60px 0 58px;}
-.cshort-hd{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:26px;}
-.cshort-t{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.045em;}
+.sec.sec-cat8{padding:104px 0;}
+.cshort-hd{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:34px;}
+.cshort-t{font-size:28px;font-weight:800;color:var(--ink);letter-spacing:-.045em;}
 .cshort-s{font-size:14px;color:var(--ink3);font-weight:500;}
 .cshort{display:grid;grid-template-columns:repeat(13,1fr);gap:10px;}
 .cs-item{display:flex;flex-direction:column;align-items:center;gap:9px;background:none;border:none;
@@ -1075,15 +1085,15 @@ html .trust-bar{display:none;}
 .cs-item.cs-all .cs-ic{background:#fff;border:1.5px dashed var(--bd2);color:var(--ink4);}
 
 /* ── ServiceSection ────────────────────────────────────────────── */
-.svc-sec{background:#fff;padding:74px 0 78px;border-top:1px solid var(--bd);}
-.svc-grid2{display:grid;grid-template-columns:minmax(340px,450px) 1fr;gap:44px;align-items:start;}
+.svc-sec{background:#fff;padding:104px 0;border-top:1px solid var(--bd);}
+/* 왼쪽 대형 브랜드 카피를 뺐습니다 — 히어로가 이미 같은 말을 합니다 */
 .svc-eye{font-size:12.5px;font-weight:800;letter-spacing:.2em;color:var(--gn);margin-bottom:16px;}
 /* word-break 를 안 걸면 "모든 서/비스" 처럼 낱말이 잘립니다 */
 .svc-h2{font-size:37px;font-weight:800;line-height:1.28;letter-spacing:-.05em;color:var(--ink);
   margin:0 0 18px;word-break:keep-all;}
 .svc-h2 em{font-style:normal;color:var(--gn);}
 .svc-sub{font-size:15.5px;line-height:1.68;color:var(--ink3);font-weight:500;margin:0;word-break:keep-all;}
-.svc-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.svc-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
 /* 테두리 + 아주 약한 그림자까지. 카드마다 색을 넣으면 대시보드처럼 보입니다. */
 .svc-card{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:24px 22px 22px;
   text-align:left;cursor:pointer;font-family:var(--font);display:flex;flex-direction:column;gap:9px;
@@ -1122,7 +1132,6 @@ html .trust-bar{display:none;}
   .ph-p-d{display:none;}
   .ph-p-t{font-size:15px;}
   /* 히어로가 짧아지면 검색창 위로 겹칩니다 — 장식이므로 내립니다 */
-  .ph-sign{display:none;}
   .gh-w.ph-w{padding-top:74px;padding-bottom:34px;}
   .ph-h1{font-size:42px;}
   .ph-sub{font-size:16.5px;}
@@ -1143,7 +1152,6 @@ html .trust-bar{display:none;}
      글자가 네 줄로 쪼개지고 제목 위로 겹쳤습니다. 띠는 배경으로만 두고
      칸 이름과 브랜드 문구는 내립니다. (밸류체인은 아래 업종 줄에서 봅니다) */
   .ph-p-cap{display:none;}
-  .ph-sign{display:none;}
   .ph-p{border-right-color:rgba(255,255,255,.05);}
   .ph-p-art{top:14%;height:64%;}
   .gh-w.ph-w{padding-top:20px;padding-bottom:28px;min-height:560px;}
@@ -1330,6 +1338,11 @@ a.gi-card:hover .gi-t{color:var(--gn2);}
   .brand-sec{padding:70px 0 74px;}
 }
 @media(max-width:768px){
+  /* 데스크톱 여백을 그대로 쓰면 스크롤만 길어집니다 */
+  .sec,.sec.sec-cat8,.sec-mkt,.svc-sec{padding:56px 0;}
+  html .why{padding:56px 0;}
+  .sec-h2,.cshort-t{font-size:22px;}
+  .sec-hd2,.cshort-hd{margin-bottom:22px;}
   .rgx{margin-top:26px;padding-top:22px;}
   /* 16개가 네 줄을 차지합니다 — 옆으로 넘깁니다 */
   .rgx-row{flex-wrap:nowrap;overflow-x:auto;min-width:0;padding-bottom:4px;
@@ -1473,11 +1486,6 @@ a.gi-card:hover .gi-t{color:var(--gn2);}
       <div class="gh-stat" id="gh-stat" hidden></div>
     </div>
 
-    <!-- 브랜드 한 줄 (오른쪽 아래) -->
-    <div class="ph-sign" aria-hidden="true">
-      <div class="ph-sign-k">좋은 고기가<br>더 좋은 내일을 만듭니다</div>
-      <div class="ph-sign-e">MEAT CONNECTS PEOPLE</div>
-    </div>
   </section>
 
   <!-- ══ PlatformStats — src/44_premium.js 가 실데이터로 채웁니다 ══ -->
@@ -1503,16 +1511,11 @@ a.gi-card:hover .gi-t{color:var(--gn2);}
        연결합니다 (go 대상: suppliers · rw · market · jobs · news · community) -->
   <section class="svc-sec" id="svc-sec">
     <div class="w">
-      <div class="svc-grid2">
-        <div>
-          <div class="svc-eye">ABOUTMEAT</div>
-          <h2 class="svc-h2">축산업에 필요한 모든 서비스,<br><em>고리</em>에서 한 번에</h2>
-          <p class="svc-sub">업체 찾기부터 견적, 시세, 인재, 뉴스까지<br>축산업의 모든 비즈니스를 연결합니다.</p>
-          <button class="svc-more" onclick="gOpenAbout&&gOpenAbout()">고리에 대해 더 알아보기
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg>
-          </button>
-        </div>
-        <div class="svc-cards">
+      <div class="sec-hd2">
+        <h2 class="sec-h2">핵심 서비스</h2>
+        <p class="sec-d2">업체를 찾고, 견적을 받고, 시세를 보고, 사람을 구합니다</p>
+      </div>
+      <div class="svc-cards">
           <button class="svc-card" onclick="go(&quot;suppliers&quot;)">
             <span class="svc-ic" style="background:#FDECE9;color:#B4232C"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-4 8 4v11"/><path d="M3 20h18"/><path d="M9 20v-6h6v6"/></svg></span>
             <span class="svc-t">업체 찾기</span>
@@ -1537,20 +1540,7 @@ a.gi-card:hover .gi-t{color:var(--gn2);}
             <span class="svc-d">축산업에 필요한 인재와 일자리를 연결합니다.</span>
           <span class="svc-arw" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg></span>
           </button>
-          <button class="svc-card" onclick="go(&quot;news&quot;)">
-            <span class="svc-ic" style="background:#FDF0E3;color:#A85F0B"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h13v14H4z"/><path d="M17 9h3v8a2 2 0 0 1-3 1.7"/><path d="M7 9h7M7 12.5h7M7 16h4"/></svg></span>
-            <span class="svc-t">뉴스</span>
-            <span class="svc-d">축산업의 새로운 소식과 정보를 확인하세요.</span>
-          <span class="svc-arw" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg></span>
-          </button>
-          <button class="svc-card" onclick="go(&quot;community&quot;)">
-            <span class="svc-ic" style="background:#E4EEFB;color:#1F5AA8"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5c0 3.6-3.6 6.5-8 6.5-1 0-2-.15-2.9-.42L4 20l1.3-3.3C4.2 15.5 3.6 14.1 3.6 12.5 3.6 8.9 7.2 6 11.6 6s8.4 2.9 8.4 6.5z"/></svg></span>
-            <span class="svc-t">커뮤니티</span>
-            <span class="svc-d">업계 종사자들과 정보와 경험을 공유하세요.</span>
-          <span class="svc-arw" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg></span>
-          </button>
-        </div>
-      </div>
+                </div>
     </div>
   </section>
 
@@ -1598,8 +1588,8 @@ a.gi-card:hover .gi-t{color:var(--gn2);}
   <section class="sec">
     <div class="w">
       <div class="sec-hd2">
-        <h2 class="sec-h2">고리 이용 프로세스</h2>
-        <p class="sec-d2">요청 등록부터 거래 완료·후기까지 하나의 흐름으로 이어집니다</p>
+        <h2 class="sec-h2">이용 방법</h2>
+        <p class="sec-d2">요청부터 연결까지 네 걸음입니다</p>
       </div>
       <div class="proc-grid" id="proc-grid"></div>
     </div>
@@ -2084,14 +2074,13 @@ function cat8Label(v){var k=key8Of(v),c=k?cat8Of(k):null;return c?c.nm:(v||"기�
 function primaryLegacy(c){return (c&&c.legacy&&c.legacy[0])||(c?c.nm:"");}
 
 /* ═ 고리 이용 프로세스 ═ */
+/* 홈에서는 네 단계면 충분합니다. 일곱 단계를 늘어놓으면 한눈에 안 들어옵니다 —
+   자세한 흐름(선택 · 거래 진행 · 완료·후기까지)은 이용 가이드에 그대로 있습니다. */
 var PROCESS=[
-  {t:"요청 등록",d:"필요한 것을 올립니다"},
-  {t:"조건 매칭",d:"지역·품목·조건으로 업체 매칭"},
-  {t:"견적·지원 도착",d:"업체가 직접 제안합니다"},
-  {t:"비교",d:"가격·납기·평점을 한눈에"},
-  {t:"선택",d:"조건이 맞는 곳을 선택"},
-  {t:"거래 진행",d:"납품·작업 진행"},
-  {t:"완료·후기",d:"평점과 후기로 신뢰 축적"}
+  {t:"요청",d:"필요한 업체나 서비스를 올립니다"},
+  {t:"매칭",d:"조건이 맞는 업체에 전달됩니다"},
+  {t:"비교",d:"가격·납기·평점을 나란히 봅니다"},
+  {t:"연결",d:"원하는 업체와 바로 이어집니다"}
 ];
 
 /* 자유 입력 검색용 키워드 — 현장에서 쓰는 표현을 대분류로 연결 */

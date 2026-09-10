@@ -28,40 +28,54 @@ async function open(b,w,h){
   const chk=(n,g,w)=>{const ok=String(g)===String(w);
     log.push((ok?'  ✅ ':'  ❌ ')+n+': '+g+(ok?'':'  ← 기대 '+w)); if(!ok)errs.push(n);};
 
-  log.push('1. 접힌 채로 시작');
+  /* 2026 정리: 접는 구간은 GORI INSIGHT 하나뿐입니다.
+     이용 프로세스는 일곱 단계를 네 걸음으로 줄여서 접을 이유가 없어졌고,
+     INSIGHT 는 읽을 거리가 실제로 있을 때만 열립니다. */
+  log.push('1. 이용 방법은 접지 않는다');
   const p=await open(b,1440,1000);
-  chk('접는 구간 2개', await p.evaluate(()=>[...document.querySelectorAll('.hm-fold')].map(e=>e.dataset.k).join(',')), 'proc,info');
-  chk('처음엔 다 접힘', await p.evaluate(()=>document.querySelectorAll('.hm-fold.open').length), 0);
-  chk('제목은 보임', await p.evaluate(()=>{
-    const t=[...document.querySelectorAll('.hm-fold .sec-h2')].map(e=>e.textContent.trim());
-    return t.length===2 && t.every(x=>x.length>0);
+  chk('네 걸음', await p.evaluate(()=>document.querySelectorAll('#proc-grid .proc-step').length), 4);
+  chk('바로 보임', await p.evaluate(()=>document.getElementById('proc-grid').offsetHeight>0), 'true');
+  chk('접는 상자 안에 없음', await p.evaluate(()=>
+    !document.getElementById('proc-grid').closest('.hm-fold')), 'true');
+
+  log.push('2. GORI INSIGHT — 읽을 거리가 있을 때만');
+  chk('콘텐츠 없으면 안 보임', await p.evaluate(()=>{
+    const el=document.getElementById('news-widget'); const sec=el&&el.closest('section');
+    return sec ? sec.hidden : '(없음)';
   }), 'true');
+  chk('위젯은 그대로 있음', await p.evaluate(()=>!!document.getElementById('news-widget')), 'true');
   const shortH=await p.evaluate(()=>document.body.scrollHeight);
 
-  log.push('2. 접어도 내용은 남아 있다');
-  chk('프로세스 7단계 그대로', await p.evaluate(()=>document.querySelectorAll('#proc-grid .proc-step').length>=7), 'true');
-  chk('소식 위젯 그대로', await p.evaluate(()=>!!document.getElementById('sup-rank-widget') || !!document.getElementById('news-widget')), 'true');
-  chk('화면에선 숨겨짐', await p.evaluate(()=>{
-    const g=document.getElementById('proc-grid');
-    return g ? g.offsetHeight : '(없음)';
-  }), 0);
-
-  log.push('3. 펼치기 · 기억');
-  await p.evaluate(()=>gHomeFold('proc')); await p.waitForTimeout(400);
-  chk('펼쳐짐', await p.evaluate(()=>document.querySelector('.hm-fold[data-k="proc"]').classList.contains('open')), 'true');
-  chk('내용 보임', await p.evaluate(()=>document.getElementById('proc-grid').offsetHeight>0), 'true');
-  chk('버튼 문구', await p.evaluate(()=>document.querySelector('.hm-fold[data-k="proc"] .hm-fold-l').textContent.trim()), '접기');
-  chk('aria-expanded', await p.evaluate(()=>document.querySelector('.hm-fold[data-k="proc"] .hm-fold-btn').getAttribute('aria-expanded')), 'true');
+  log.push('3. 콘텐츠가 들어오면 열리고, 접힌 채로 시작한다');
+  await p.evaluate(async()=>{
+    window.GORI_CONTENT.news=[{title:"테스트 기사",url:"https://example.com/x",date:"2026-01-01"}];
+    if(window.GORI.ctApply) window.GORI.ctApply();
+    await new Promise(r=>setTimeout(r,500));
+  });
+  await p.waitForTimeout(600);
+  chk('구간이 열림', await p.evaluate(()=>{
+    const sec=document.getElementById('news-widget').closest('section'); return sec.hidden;
+  }), 'false');
+  chk('접힌 채 시작', await p.evaluate(()=>{
+    const f=document.querySelector('.hm-fold[data-k="info"]');
+    return f ? f.classList.contains('open') : '(접기 없음)';
+  }), 'false');
+  chk('펼치면 내용 보임', await p.evaluate(async()=>{
+    gHomeFold('info'); await new Promise(r=>setTimeout(r,400));
+    return document.getElementById('news-widget').offsetHeight>0;
+  }), 'true');
   chk('페이지가 길어짐', await p.evaluate(()=>document.body.scrollHeight) > shortH, 'true');
-  await p.reload({waitUntil:'load'}); await p.waitForTimeout(2200);
-  chk('다시 열어도 펼친 채', await p.evaluate(()=>document.querySelector('.hm-fold[data-k="proc"]').classList.contains('open')), 'true');
-  chk('안 건드린 건 접힌 채', await p.evaluate(()=>document.querySelector('.hm-fold[data-k="info"]').classList.contains('open')), 'false');
-  await p.evaluate(()=>gHomeFold('proc')); await p.waitForTimeout(300);
-  chk('되접기', await p.evaluate(()=>document.querySelector('.hm-fold[data-k="proc"]').classList.contains('open')), 'false');
+  chk('aria-expanded', await p.evaluate(()=>
+    document.querySelector('.hm-fold[data-k="info"] .hm-fold-btn').getAttribute('aria-expanded')), 'true');
+  chk('되접기', await p.evaluate(async()=>{
+    gHomeFold('info'); await new Promise(r=>setTimeout(r,300));
+    return document.querySelector('.hm-fold[data-k="info"]').classList.contains('open');
+  }), 'false');
 
   log.push('4. 주요 구간은 그대로');
   for(const [nm,sel] of [['검색','.gh-search'],['업종 바로가기','#cat8-grid .cs-item'],
-                         ['실시간 요청','#rq-widget'],['오늘 시세','#mkt-strip'],['등록 업체','#sup-home']]){
+                         ['오늘의 축산 정보','#mkt-strip'],['핵심 서비스','.svc-cards .svc-card'],
+                         ['이용 방법','#proc-grid .proc-step'],['신뢰','#why-band .why-c']]){
     chk('  '+nm, await p.evaluate(s=>{
       const e=document.querySelector(s); return !!(e && e.offsetHeight>0);
     }, sel), 'true');
@@ -71,13 +85,15 @@ async function open(b,w,h){
 
   log.push('5. 손가락에 맞는 버튼 · 가로 스크롤');
   chk('버튼 44px 이상', await p.evaluate(()=>
-    [...document.querySelectorAll('.hm-fold-btn')].every(e=>e.getBoundingClientRect().height>=44)), 'true');
+    [...document.querySelectorAll('.hm-fold-btn')].filter(e=>e.offsetParent)
+      .every(e=>e.getBoundingClientRect().height>=44)), 'true');
   chk('데스크톱 가로 스크롤 없음', await p.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1), 'true');
   const m=await open(b,390,844);
-  chk('모바일도 접힘', await m.evaluate(()=>document.querySelectorAll('.hm-fold.open').length), 0);
+  chk('모바일도 접힌 채', await m.evaluate(()=>document.querySelectorAll('.hm-fold.open').length), 0);
   chk('모바일 가로 스크롤 없음', await m.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1), 'true');
   chk('모바일 버튼 44px 이상', await m.evaluate(()=>
-    [...document.querySelectorAll('.hm-fold-btn')].every(e=>e.getBoundingClientRect().height>=44)), 'true');
+    [...document.querySelectorAll('.hm-fold-btn')].filter(e=>e.offsetParent)
+      .every(e=>e.getBoundingClientRect().height>=44)), 'true');
 
   const allErrs=[].concat(p._errs,m._errs);
   console.log(log.join('\n'));

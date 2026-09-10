@@ -72,12 +72,16 @@ function mnRegionRow(){
     '</div></div>';
 }
 
+/* 홈이 아니라 업체 찾기 화면에 답니다.
+   홈의 "업종별 바로 찾기" 바로 밑에 시·도 16개를 더 깔면 첫 화면에서
+   고를 것이 스물여덟 개가 됩니다 — 고르라는 화면이 아니라 헤매는 화면이
+   됩니다. 기능은 그대로, 자리만 옮겼습니다. */
 function mnInjectRegion(){
   if($("rgx-sec")) return;
-  var cat=document.querySelector("#pg-h .sec-cat8"); if(!cat) return;
-  var box=cat.querySelector(".w"); if(!box) return;
+  var host=$("sup-full"); if(!host) return;
   var d=document.createElement("div"); d.id="rgx-sec"; d.innerHTML=mnRegionRow();
-  box.appendChild(d);
+  d.querySelector(".rgx").classList.add("rgx-page");
+  host.parentNode.insertBefore(d, host);
 }
 
 /* 업체 목록에 지역 필터를 물립니다 (원래 함수는 그대로 두고 감쌉니다) */
@@ -97,6 +101,44 @@ function mnWrapSups(){
     }
     return r;
   };
+}
+
+/* ══ 히어로 정리 ══════════════════════════════════════════════════
+   지역 선택·알림을 헤더로 옮깁니다. 히어로는 기능 대시보드가 아니라
+   메시지 하나와 검색창이 있는 자리입니다.
+
+   ⚠️ 버튼을 다시 만들지 않고 통째로 옮깁니다 — id 와 onclick
+      (gPickRegion · gHeroBell · gh-region-tx · gh-bell-dot)이 그대로
+      따라가야 지역·알림이 계속 동작합니다.
+   ⚠️ .hdr-actions 안에 넣으면 renderHeaderUser() 가 지웁니다. 바깥입니다. */
+function mnMoveHeroTools(){
+  var util=document.querySelector("#pg-h .ph-util"); if(!util) return;
+  var right=document.querySelector(".hdr .hdr-right");
+  var drawer=document.querySelector("#mobile-menu .mm-row");
+  if(!right) return;
+
+  /* 알림은 헤더에 — 새 소식은 어디서나 보여야 합니다 */
+  var bell=util.querySelector(".gh-bell");
+  if(bell){
+    var slot=$("hdr-tools");
+    if(!slot){
+      slot=document.createElement("div"); slot.id="hdr-tools"; slot.className="hdr-tools";
+      right.insertBefore(slot, right.firstChild);
+    }
+    slot.appendChild(bell);
+  }
+
+  /* 지역 선택은 전체메뉴 안으로.
+     헤더에 버튼을 하나 더 얹으면 1200px 안에 안 들어가고, 히어로에 두면
+     메인 카피·검색과 경쟁합니다. 업체를 지역으로 좁히는 일은 업체 찾기
+     화면의 시·도 줄(.rgx)이 맡습니다. 기능은 그대로입니다. */
+  var region=util.querySelector(".gh-region");
+  if(region && drawer && !drawer.querySelector(".gh-region")){
+    var row=document.createElement("div"); row.className="mm-region";
+    row.appendChild(region);
+    drawer.appendChild(row);
+  }
+  util.remove();
 }
 
 /* ══ 오늘의 축산 브리핑 ══════════════════════════════════════════════
@@ -123,9 +165,9 @@ function mnBrief(){
   var hd=w.querySelector(".sec-hd2");
   if(hd && !hd.querySelector(".brf-t")){
     var h=hd.querySelector(".sec-h2");
-    if(h){ h.classList.add("brf-t"); h.textContent="오늘의 축산 브리핑"; }
+    if(h){ h.classList.add("brf-t"); h.textContent="오늘의 축산 정보"; }
     var d=document.createElement("p"); d.className="sec-d2 brf-d";
-    d.textContent="관리자가 등록한 시세와 업계 소식입니다. 5초면 오늘 시장이 보입니다.";
+    d.textContent="등록된 시세와 업계 소식입니다";
     if(h && h.parentNode) h.parentNode.appendChild(d);
   }
 
@@ -222,11 +264,43 @@ function mnFinal(){
       그때는 화면에 "예시" 라고 적혀 있습니다. */
 function mnCount(sel){ return document.querySelectorAll(sel).length; }
 
+/* 최종 구조(히어로 · 업종 · 오늘의 정보 · 핵심 서비스 · 이용방법 · 신뢰 ·
+   인사이트 · 브랜드 · 마지막 행동)에 없는 구간은 메인에서 내립니다.
+
+   ⚠️ 화면과 라우트는 그대로입니다. 메인 노출만 끕니다 —
+      한 줄씩 지우면 바로 되돌아옵니다. */
+var MN_OFF=[
+  ["#pf-stats-sec",  "지표 줄 — 최종 구조에 없음"],
+  ["#case-sec",      "찾아보세요 — 최종 구조에 없음"],
+  ["#sec-labor",     "사람이 필요할 때 — 핵심 서비스의 구인구직 카드로 갑니다"],
+  [".recruit-banner","업체 유치 배너 — 마지막 행동의 \"업체 등록하기\" 와 중복"]
+];
+/* GORI INSIGHT 안에서 콘텐츠가 아닌 위젯 — 업체 이야기는 등록 업체 구간이
+   맡습니다. 카드가 일곱 장 늘어서면 무엇을 읽으라는 건지 알 수 없습니다. */
+var MN_OFF_W=["rank-widget","new-sup-widget","job-widget"];
+function mnHideExtra(){
+  MN_OFF.forEach(function(r){
+    var el=document.querySelector("#pg-h "+r[0]) || document.querySelector(r[0]);
+    if(el) el.hidden=true;
+  });
+  MN_OFF_W.forEach(function(id){
+    var el=$(id); if(!el) return;
+    var card=el.closest(".info-card") || el.parentNode;
+    if(card) card.hidden=true;
+  });
+}
+
+/* ⚠️ 예시 데이터(GORI_FEATURES.demo)가 켜져 있어도 이 판단은 진짜 데이터로
+   합니다. 예시로 채운 구간을 메인에 크게 걸어 두면, 손님에게는 "요청이
+   활발한 사이트" 로 읽히고 운영자에게는 실제 유입이 안 보입니다.
+   예시는 각 화면(#/reqs · #/suppliers) 안에서 계속 보여 줍니다. */
 function mnHideEmpty(){
-  if(mnDemo()) return;
   var rules=[
     /* 실시간 요청 — 한두 건이면 오히려 휑해 보입니다 */
     {host:"#pg-h #rq-widget", need:3, count:function(){ return (typeof REQS!=="undefined"?REQS.length:0); }},
+    /* 상단 실시간 띠도 같은 기준 — 요청 두어 건으로 띠를 돌리면 오히려 한산해 보입니다 */
+    {host:"#live-slide", box:"#live-bar", need:3,
+     count:function(){ return (typeof REQS!=="undefined"?REQS.length:0); }},
     /* 등록 업체 */
     /* 등록 업체 — 감싸는 상자가 <section> 이 아니라 그냥 <div> 라 .sec-sups 를 봅니다 */
     {host:"#pg-h #sup-home", box:".sec-sups", need:1,
@@ -246,6 +320,12 @@ function mnHideEmpty(){
 /* 지표 줄 — 진짜 값이 두 칸 이상일 때만 (준비 중 칸만 남으면 휑합니다) */
 function mnTrimStats(){
   var sec=$("pf-stats-sec"), el=$("pf-stats"); if(!sec||!el) return;
+  /* ⚠️ pfRender() 는 다시 그릴 때마다 이 줄을 켭니다. 지표 줄은 최종 구조에
+     없으므로 그려낸 직후인 여기서 다시 끕니다 — 타이머로 따로 돌리면
+     한 번 켜졌다 꺼지는 깜빡임이 보입니다. */
+  for(var i=0;i<MN_OFF.length;i++){
+    if(MN_OFF[i][0]==="#pf-stats-sec"){ sec.hidden=true; return; }
+  }
   var cells=[].slice.call(el.querySelectorAll(".pstat-c"));
   if(!cells.length) return;
   var wait=cells.filter(function(c){ return !!c.querySelector(".pstat-v.wait"); });
@@ -258,6 +338,7 @@ function mnTrimStats(){
 function patchMain(){
   if(G._main) return; G._main=true;
 
+  try{ mnMoveHeroTools(); }catch(e){}
   try{ mnInjectRegion(); }catch(e){}
   try{ mnWrapSups(); }catch(e){}
 
@@ -273,7 +354,10 @@ function patchMain(){
     var cse=mnCases();
     /* 브리핑(시세)을 서비스 앞으로 */
     if(mkt && svc && !mkt.hidden) svc.parentNode.insertBefore(mkt, svc);
-    /* 찾아보세요를 브리핑 뒤 · 서비스 앞으로 */
+    /* 이용 방법(4단계)을 핵심 서비스 바로 뒤로 */
+    var proc=$("proc-grid"), procSec=proc && proc.closest("section");
+    if(svc && procSec) mnAfter(svc, procSec);
+    /* 찾아보세요는 메인에서 내렸지만 자리는 지켜 둡니다 (되살릴 때를 위해) */
     if(cse){
       if(svc) svc.parentNode.insertBefore(cse, svc);
       else if(mkt) mnAfter(mkt, cse);
@@ -289,6 +373,7 @@ function patchMain(){
 
   /* 데이터가 들어오는 시점을 알 수 없어 몇 번 더 확인합니다 */
   function pass(){
+    try{ mnHideExtra(); }catch(e){}
     try{ mnBrief(); }catch(e){}
     try{ mnHideEmpty(); }catch(e){}
     try{ mnTrimStats(); }catch(e){}

@@ -44,8 +44,15 @@ async function open(b,w,h,hash){
     return !bar || bar.getBoundingClientRect().height===0;
   }), 'true');
   chk('이유 카드 4장', await p.evaluate(()=>document.querySelectorAll('#why-band .why-c').length), 4);
-  chk('지금까지 → 고리에서는', await p.evaluate(()=>
-    document.querySelectorAll('#why-band .why-side').length), 2);
+  /* 2026 정리: 비교 띠("지금까지 → 고리에서는")와 버튼 두 개를 뺐습니다.
+     같은 이야기를 히어로와 소개 페이지에서도 하고 있어 중복이었고,
+     item 13 은 "아이콘 + 제목 + 짧은 설명" 하나면 충분하다고 봅니다.
+     내용 자체는 #/about 의 "왜 만들었나" 에 그대로 있습니다. */
+  chk('카드가 아니라 아이콘 줄', await p.evaluate(()=>{
+    const c=document.querySelector('#why-band .why-c');
+    return getComputedStyle(c).borderTopWidth==='0px';
+  }), 'true');
+  /* (소개 페이지 본문은 아래 2번에서 열고 확인합니다) */
   /* 접히는 구간(38_home)에 딸려 들어가면 안 됩니다 */
   chk('접히지 않는다', await p.evaluate(()=>
     !!document.getElementById('why-band').closest('.hm-fold')), 'false');
@@ -68,6 +75,8 @@ async function open(b,w,h,hash){
   }), 4);
   chk('하지 않는 일 칸이 있다', await p.evaluate(()=>
     !!document.querySelector('#pg-about .ab-warn')), 'true');
+  chk('왜 만들었나가 남아 있다', await p.evaluate(()=>
+    /단가는 통화를 해봐야 알고/.test(document.getElementById('pg-about').textContent)), 'true');
   chk('중개자임을 밝힌다', await p.evaluate(()=>
     /통신판매의 당사자가 아닙니다/.test(document.getElementById('pg-about').textContent)), 'true');
   chk('푸터에 소개 링크', await p.evaluate(()=>!!document.querySelector('.footer .ab-ft')), 'true');

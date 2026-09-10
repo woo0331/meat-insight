@@ -1022,9 +1022,9 @@ html [tabindex]:not([tabindex="-1"]){
 /* index.html 의 .sec{background:#fff} 가 뒤에 실려서 같은 굵기로는 집니다 —
    html 을 하나 붙여 굵기를 올립니다 (CLAUDE.md 참고) */
 /* 밝은 웜그레이 위에 흰 카드 — 브랜드 틴트로 깔면 이 구간만 광고처럼 뜹니다 */
-html .why{background:var(--bg2);border-top:1px solid var(--bd);
-  border-bottom:1px solid var(--bd);padding:64px 0 66px;}
-.why-hd{margin-bottom:26px;max-width:760px;}
+html .why{background:#fff;border-top:1px solid var(--bd);
+  border-bottom:1px solid var(--bd);padding:104px 0 108px;}
+.why-hd{margin-bottom:44px;max-width:720px;}
 .why-eye{font-size:12px;font-weight:800;letter-spacing:.2em;color:var(--gn);margin-bottom:12px;}
 .why-lead{font-size:15.5px;line-height:1.7;color:var(--ink2);margin-top:10px;font-weight:500;word-break:keep-all;}
 
@@ -1043,10 +1043,11 @@ html .why{background:var(--bg2);border-top:1px solid var(--bd);
 .why-new{border-color:var(--gnb);background:var(--gnl);}
 .why-arw{display:flex;align-items:center;justify-content:center;color:var(--gn);}
 
-.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-.why-c{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:20px 18px;}
-.why-ico{width:42px;height:42px;border-radius:12px;background:var(--gnl);color:var(--gn2);
-  display:flex;align-items:center;justify-content:center;margin-bottom:11px;}
+.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:34px;}
+/* 카드가 아니라 아이콘 줄 — 페이지가 카드의 연속처럼 보이지 않게 (item 18) */
+.why-c{background:none;border:none;border-radius:0;padding:0;}
+.why-ico{width:40px;height:40px;color:var(--gn2);display:flex;align-items:center;
+  justify-content:flex-start;margin-bottom:13px;}
 .why-t{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.3px;margin-bottom:6px;line-height:1.35;}
 .why-d{font-size:13.5px;line-height:1.62;color:var(--ink3);}
 .why-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px;}

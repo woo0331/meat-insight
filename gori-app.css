@@ -1109,3 +1109,39 @@ html .why{background:#fff;border-top:1px solid var(--bd);
   .ab-biz-r{flex-direction:column;gap:2px;}
   .ab-biz dt{flex:none;}
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   요청서 2단계 — 필수 먼저, 선택은 접기 (src/47_rwease.js)
+
+   "한우" 를 눌러 들어가면 한 화면에 열다섯 칸이 쏟아졌습니다. 그중 정말
+   필요한 건 일곱뿐인데, 별표 유무 말고는 구분이 없어서 전부 채워야 할
+   것처럼 보였습니다. 선택 칸은 접고, 라벨에 "선택" 이라고 적습니다.
+   ════════════════════════════════════════════════════════════════════ */
+.rw-lead{font-size:13.5px;line-height:1.6;color:var(--ink3);
+  background:var(--bg2);border-radius:9px;padding:10px 12px;margin:-4px 0 14px;}
+.rw-lead .greq{font-weight:800;}
+
+.rwf-opt-tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;
+  background:var(--bg2);border:1px solid var(--bd);
+  font-size:12px;font-weight:700;color:var(--ink4);letter-spacing:-.02em;
+  vertical-align:1px;}
+
+/* 첫 칸 위 여백은 카드가 이미 갖고 있습니다 — 겉옷이 한 겹 늘었을 뿐입니다 */
+.rwf:first-child > .glabel{margin-top:0;}
+
+html .rw-more{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;
+  margin-top:16px;padding:0 14px;
+  background:#fff;border:1.5px dashed var(--bd2);border-radius:10px;
+  font-family:var(--font);font-size:14.5px;font-weight:700;color:var(--ink2);
+  cursor:pointer;transition:border-color .15s,background-color .15s,color .15s;}
+html .rw-more:hover{border-color:var(--gn);background:var(--gnl);color:var(--gn2);}
+html .rw-more.on{border-style:solid;background:var(--bg2);}
+.rw-more-n{font-size:13px;font-weight:600;color:var(--ink4);}
+.rw-more-i{margin-left:auto;flex-shrink:0;transition:transform .18s;}
+.rw-more.on .rw-more-i{transform:rotate(180deg);}
+.rw-opt{padding-top:4px;}
+
+@media(max-width:520px){
+  .rw-more-n{margin-left:auto;}
+  .rw-more-i{margin-left:0;}
+}

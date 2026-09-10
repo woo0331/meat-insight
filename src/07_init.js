@@ -242,6 +242,7 @@ function applyExtras(){
   try{ patchPremium(); }catch(e){}
   try{ patchMain(); }catch(e){}
   try{ patchRestore(); }catch(e){}
+  try{ patchRwEase(); }catch(e){}
   try{ patchLayout(); }catch(e){}   /* 다른 패치가 붙인 뒤에 담아야 합니다 */
   try{ patchRouter(); armRouter(); }catch(e){}
 }

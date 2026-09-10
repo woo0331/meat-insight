@@ -67,30 +67,60 @@ async function open(b,w,h,init){
   chk('알림 살아 있음', await p.evaluate(()=>
     !!document.querySelector('[onclick*="gHeroBell"]') && !!document.getElementById('gh-bell-dot')), 'true');
   chk('gh-stat 자리 유지', await p.evaluate(()=>!!document.getElementById('gh-stat')), 'true');
-  chk('메인 카피', await p.evaluate(()=>document.querySelector('.ph-h1').textContent.replace(/\s+/g,' ').trim()),
-    '축산업의 모든 연결, 고리');
-  chk('"고리"만 브랜드색', await p.evaluate(()=>{
+  /* ── 히어로는 밝은 것이 기본입니다 ────────────────────────────────
+     예전에는 첫 화면이 통째로 검정이었습니다. 사진 여섯 장을 깔 자리였는데
+     GORI_HERO 가 비어 있어 가느다란 선화만 떠 있었고, 손님 눈에는 축산업
+     사이트가 아니라 미완성 화면으로 읽혔습니다.
+     이제 제목은 우리 소개가 아니라 손님에게 거는 말입니다. */
+  chk('질문형 제목', await p.evaluate(()=>document.querySelector('.ph-h1').textContent.replace(/\s+/g,' ').trim()),
+    '전국에서 어떤 축산 업체를 찾으세요?');
+  chk('브랜드 한 줄은 눈썹글에', await p.evaluate(()=>
+    (document.querySelector('.ph-eye').textContent||'').replace(/\s+/g,' ').trim()),
+    '고리 · 축산업의 모든 연결');
+  chk('강조는 한 곳', await p.evaluate(()=>{
     const em=document.querySelector('.ph-h1 em');
-    return em.textContent.trim()==='고리' &&
+    return em.textContent.trim()==='축산 업체' &&
       getComputedStyle(em).color!==getComputedStyle(document.querySelector('.ph-h1')).color;
   }), 'true');
-  chk('밸류체인 6칸', await p.evaluate(()=>
-    [...document.querySelectorAll('#ph-strip .ph-p-t')].map(e=>e.textContent.trim()).join('→')),
-    '사육→도축·경매→가공→물류→포장·장비→정육점·식당');
-  chk('칸마다 그림이 다름', await p.evaluate(()=>
-    new Set([...document.querySelectorAll('#ph-strip .ph-p-art')].map(e=>e.innerHTML)).size), 6);
-  /* 사진을 넣기 전에도 빈 칸이 보이면 안 됩니다 */
-  chk('사진 없어도 칸이 안 빔', await p.evaluate(()=>
-    [...document.querySelectorAll('#ph-strip .ph-p')].every(e=>
-      e.querySelector('.ph-p-fb') && e.querySelector('.ph-p-art'))), 'true');
+  chk('지역이 제목 안에', await p.evaluate(()=>{
+    const rg=document.querySelector('.ph-h1 #gh-region');
+    return !!rg && (rg.getAttribute('onclick')||'').indexOf('gPickRegion')>=0;
+  }), 'true');
+  /* 밝은 히어로는 배경이 흰색이어야 합니다 (검정이면 예전 것이 살아난 것) */
+  chk('히어로가 밝다', await p.evaluate(()=>{
+    const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);};
+      return .2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2]);};
+    const m=getComputedStyle(document.querySelector('.gh.ph')).backgroundColor.match(/\d+/g);
+    return L(m.map(Number))>0.7;
+  }), 'true');
+  /* 사진이 없으면 빈 칸을 두지 않습니다 — 선화만 뜬 여섯 칸이 문제였습니다 */
+  chk('사진 없으면 띠도 없다', await p.evaluate(()=>
+    !document.querySelector('.gh.ph').classList.contains('has-photo') &&
+    document.querySelectorAll('#ph-strip .ph-p').length===0), 'true');
   chk('사진 자리는 GORI_HERO 에서', await p.evaluate(()=>
     Array.isArray(window.GORI_HERO) && window.GORI_HERO.length===6 &&
     window.GORI_HERO.every(x=>'img' in x)), 'true');
-  chk('넣은 사진은 실제로 걸림', await p.evaluate(async()=>{
-    window.GORI_HERO[0].img='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
-    window.GORI.hsRender ? window.GORI.hsRender() : 0;
-    return true;
-  }), 'true');
+  /* 사진을 채우면 예전의 어두운 사진 히어로가 그대로 돌아와야 합니다.
+     두 벌이 다 살아 있어야지, 한쪽이 죽은 코드가 되면 안 됩니다. */
+  chk('사진을 넣으면 사진 히어로로', await p.evaluate(async()=>{
+    const px='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+    window.GORI_HERO.forEach(x=>{x.img=px;});
+    window.GORI.hsRender();
+    await new Promise(r=>setTimeout(r,120));
+    const hero=document.querySelector('.gh.ph');
+    const caps=[...document.querySelectorAll('#ph-strip .ph-p-t')].map(e=>e.textContent.trim());
+    const arts=new Set([...document.querySelectorAll('#ph-strip .ph-p-art')].map(e=>e.innerHTML)).size;
+    const imgs=document.querySelectorAll('#ph-strip .ph-p-img').length;
+    const out=[];
+    if(!hero.classList.contains('has-photo')) out.push('어두운 판으로 안 바뀜');
+    if(caps.join('→')!=='사육→도축·경매→가공→물류→포장·장비→정육점·식당') out.push('칸 이름 '+caps.join('→'));
+    if(arts!==6) out.push('그림이 '+arts+'가지');
+    if(imgs!==6) out.push('사진 '+imgs+'장');
+    /* 되돌려 놓습니다 — 뒤 검사가 밝은 히어로를 봅니다 */
+    window.GORI_HERO.forEach(x=>{x.img='';});
+    window.GORI.hsRender();
+    return out.join(', ');
+  }), '');
   chk('실제 검색이 동작', await p.evaluate(async()=>{
     const i=document.getElementById('hs-input'); i.value='돼지고기'; heroGo();
     await new Promise(r=>setTimeout(r,500));
@@ -193,12 +223,14 @@ async function open(b,w,h,init){
     const c=document.querySelector('#why-band .why-c'), st=getComputedStyle(c);
     return st.borderTopWidth==='0px' && st.backgroundColor==='rgba(0, 0, 0, 0)';
   }), 'true');
-  /* 히어로가 압도적으로 가장 크고, 구간 제목은 한 크기로 통일 */
+  /* 히어로 제목이 홈에서 가장 크고, 구간 제목은 한 크기로 통일.
+     예전에는 1.8배를 요구했습니다 — 브랜드 카피가 71px 이던 시절입니다.
+     질문형으로 바뀌면서 제목이 작아졌지만, 여전히 가장 커야 합니다. */
   chk('제목 위계', await p.evaluate(()=>{
     const sz=q=>parseFloat(getComputedStyle(document.querySelector(q)).fontSize);
     const h1=sz('.ph-h1'), sec=[...document.querySelectorAll('#pg-h .sec-h2,#pg-h .cshort-t')]
       .filter(e=>e.offsetParent && !e.closest('.hm-fold')).map(e=>parseFloat(getComputedStyle(e).fontSize));
-    return h1 >= Math.max(...sec)*1.8 && new Set(sec).size===1;
+    return h1 > Math.max(...sec) && new Set(sec).size===1;
   }), 'true');
   /* 미완성처럼 보이는 흔적이 화면에 남으면 안 됩니다 */
   chk('"샘플" 이 안 보임', await p.evaluate(()=>/샘플/.test(document.body.innerText)), false);
@@ -249,7 +281,16 @@ async function open(b,w,h,init){
   chk('데스크톱 12px 미만 없음', await small(p), '');
   chk('데스크톱 40px 미만 없음', await tap(p), '');
   chk('데스크톱 가로 스크롤 없음', await p.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1), 'true');
-  chk('히어로가 충분히 큼', await p.evaluate(()=>document.querySelector('.gh.ph').getBoundingClientRect().height>=560), 'true');
+  /* ⚠️ 예전에는 "히어로가 560px 이상" 을 요구했습니다. 사진 여섯 장을 세워
+     두려던 높이인데, 사진이 없으니 그만큼이 전부 빈 검정이었고 정작 손님이
+     눌러야 할 업종 칸은 스크롤 뒤로 밀렸습니다.
+     이제 반대로 잽니다 — **업종 첫 줄이 첫 화면 안에 보여야 합니다.** */
+  chk('업종 칸이 첫 화면에', await p.evaluate(()=>{
+    const t=document.querySelector('#cat8-grid .cs-item');
+    if(!t) return '업종 칸 없음';
+    const r=t.getBoundingClientRect();
+    return r.top < window.innerHeight ? '' : '접힘선 아래 '+Math.round(r.top-window.innerHeight)+'px';
+  }), '');
 
   const t=await open(b,820,1000);
   chk('태블릿 가로 스크롤 없음', await t.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1), 'true');
@@ -261,16 +302,23 @@ async function open(b,w,h,init){
   chk('모바일 40px 미만 없음', await tap(m), '');
   chk('모바일에서도 헤더가 보임', await m.evaluate(()=>
     getComputedStyle(document.querySelector('.hdr')).display!=='none'), 'true');
-  /* .ph-util(지역·알림)은 헤더/전체메뉴로 옮겼습니다 — 히어로 첫 줄은 이제
-     ABOUTMEAT 눈썹글입니다. 그것이 헤더 밑에서 시작하는지 봅니다. */
+  /* 히어로 첫 줄은 브랜드 눈썹글입니다. 그것이 헤더 밑에서 시작하는지 봅니다. */
   chk('히어로 첫줄이 헤더에 안 가림', await m.evaluate(()=>{
     const h=document.querySelector('.hdr').getBoundingClientRect().bottom;
     return document.querySelector('.ph-eye').getBoundingClientRect().top >= h-1;
   }), 'true');
-  chk('지역·알림은 옮겨졌다', await m.evaluate(()=>
-    !document.querySelector('#pg-h .ph-util') &&
-    !!document.querySelector('.hdr-tools .gh-bell') &&
-    !!document.querySelector('#mobile-menu .gh-region')), 'true');
+  /* 알림은 헤더로, 지역은 제목 안으로. 히어로에 떠 있던 도구 줄은 없습니다. */
+  chk('알림은 헤더로', await m.evaluate(()=>
+    !document.querySelector('#pg-h .ph-util .gh-bell') &&
+    !!document.querySelector('.hdr-tools .gh-bell')), 'true');
+  chk('지역은 제목 안에서 눌린다', await m.evaluate(()=>{
+    const rg=document.querySelector('.ph-h1 #gh-region');
+    if(!rg) return '제목 안에 없음';
+    const r=rg.getBoundingClientRect();
+    if(r.height<40) return '높이 '+Math.round(r.height);
+    if(r.left<-1 || r.right>window.innerWidth+1) return '화면 밖';
+    return '';
+  }), '');
   chk('모바일 검색창이 화면 안에', await m.evaluate(()=>{
     const r=document.querySelector('.gsx').getBoundingClientRect();
     return r.left>=-1 && r.right<=window.innerWidth+1;

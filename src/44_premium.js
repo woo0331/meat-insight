@@ -85,8 +85,30 @@ var HS_DEF=[
 ];
 
 G.hsRender=hsRender;   /* 회귀 테스트가 다시 그려 봅니다 */
+/* 히어로는 **사진이 실제로 있을 때만** 어두운 사진판이 됩니다.
+   예전에는 사진이 없어도 검정 배경에 가느다란 선화만 떠 있어서, 첫 화면이
+   통째로 검고 미완성처럼 읽혔습니다 — 없는 것을 보여주지 않는다는 규칙이
+   히어로에도 걸립니다. site-info.js 의 GORI_HERO 에 img 를 채우면
+   .has-photo 가 붙고 예전 히어로가 그대로 돌아옵니다. */
+function hsHasPhoto(){
+  var cfg=window.GORI_HERO;
+  if(!cfg || !cfg.length) return false;
+  for(var i=0;i<Math.min(cfg.length,6);i++){
+    if(cfg[i] && cfg[i].img && String(cfg[i].img).trim()) return true;
+  }
+  return false;
+}
+
 function hsRender(){
   var host=$("ph-strip"); if(!host) return;
+  var hero=document.querySelector(".gh.ph");
+  var photo=hsHasPhoto();
+  if(hero) hero.classList.toggle("has-photo", photo);
+  if(!photo){
+    host.innerHTML="";                 /* 선화만 뜬 빈 칸을 두지 않습니다 */
+    try{ console.warn("[고리] 히어로 사진이 없어 밝은 히어로로 그립니다 — site-info.js 의 GORI_HERO 에 img 를 채우면 사진 히어로가 돌아옵니다."); }catch(e){}
+    return;
+  }
   var cfg=(window.GORI_HERO && window.GORI_HERO.length) ? window.GORI_HERO : HS_DEF;
   host.innerHTML=cfg.slice(0,6).map(function(c,i){
     var k=c.k||HS_DEF[i].k, art=HS_ART[k]||HS_ART.proc;

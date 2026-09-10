@@ -10,7 +10,9 @@ G.myRegion=myRegion;
 
 function paintRegion(){
   var el=$("gh-region-tx"); if(!el) return;
-  el.textContent = myRegion() || "지역 선택";
+  /* 지역이 히어로 제목 안 문장이 됐습니다 — "지역 선택에서 어떤 축산 업체를"
+     은 말이 안 되고, 네 글자라 제목을 다 잡아먹습니다. 안 고른 상태는 "전국". */
+  el.textContent = myRegion() || "전국";
 }
 window.gPickRegion=function(){
   var cur=myRegion();

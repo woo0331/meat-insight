@@ -132,10 +132,11 @@ function mnMoveHeroTools(){
     try{ if(typeof G.hdTrim==="function") G.hdTrim(); }catch(e){}
   }
 
-  /* 지역 선택은 전체메뉴 안으로.
-     헤더에 버튼을 하나 더 얹으면 1200px 안에 안 들어가고, 히어로에 두면
-     메인 카피·검색과 경쟁합니다. 업체를 지역으로 좁히는 일은 업체 찾기
-     화면의 시·도 줄(.rgx)이 맡습니다. 기능은 그대로입니다. */
+  /* 지역 고르기는 이제 히어로 제목 **안**에 있습니다 ("전국에서 어떤 축산
+     업체를 찾으세요?"). 예전에는 히어로 오른쪽 위에 떠 있는 버튼이라 메인
+     카피·검색과 경쟁해서 전체메뉴로 치웠는데, 문장의 일부가 되면 자리를
+     먹지 않으면서 첫 줄에서 지역을 고를 수 있습니다.
+     .ph-util 안에 남아 있으면(예전 마크업) 전처럼 전체메뉴로 옮깁니다. */
   var region=util.querySelector(".gh-region");
   if(region && drawer && !drawer.querySelector(".gh-region")){
     var row=document.createElement("div"); row.className="mm-region";

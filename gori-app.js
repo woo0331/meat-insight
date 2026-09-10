@@ -2860,7 +2860,9 @@ G.myRegion=myRegion;
 
 function paintRegion(){
   var el=$("gh-region-tx"); if(!el) return;
-  el.textContent = myRegion() || "지역 선택";
+  /* 지역이 히어로 제목 안 문장이 됐습니다 — "지역 선택에서 어떤 축산 업체를"
+     은 말이 안 되고, 네 글자라 제목을 다 잡아먹습니다. 안 고른 상태는 "전국". */
+  el.textContent = myRegion() || "전국";
 }
 window.gPickRegion=function(){
   var cur=myRegion();
@@ -8036,8 +8038,30 @@ var HS_DEF=[
 ];
 
 G.hsRender=hsRender;   /* 회귀 테스트가 다시 그려 봅니다 */
+/* 히어로는 **사진이 실제로 있을 때만** 어두운 사진판이 됩니다.
+   예전에는 사진이 없어도 검정 배경에 가느다란 선화만 떠 있어서, 첫 화면이
+   통째로 검고 미완성처럼 읽혔습니다 — 없는 것을 보여주지 않는다는 규칙이
+   히어로에도 걸립니다. site-info.js 의 GORI_HERO 에 img 를 채우면
+   .has-photo 가 붙고 예전 히어로가 그대로 돌아옵니다. */
+function hsHasPhoto(){
+  var cfg=window.GORI_HERO;
+  if(!cfg || !cfg.length) return false;
+  for(var i=0;i<Math.min(cfg.length,6);i++){
+    if(cfg[i] && cfg[i].img && String(cfg[i].img).trim()) return true;
+  }
+  return false;
+}
+
 function hsRender(){
   var host=$("ph-strip"); if(!host) return;
+  var hero=document.querySelector(".gh.ph");
+  var photo=hsHasPhoto();
+  if(hero) hero.classList.toggle("has-photo", photo);
+  if(!photo){
+    host.innerHTML="";                 /* 선화만 뜬 빈 칸을 두지 않습니다 */
+    try{ console.warn("[고리] 히어로 사진이 없어 밝은 히어로로 그립니다 — site-info.js 의 GORI_HERO 에 img 를 채우면 사진 히어로가 돌아옵니다."); }catch(e){}
+    return;
+  }
   var cfg=(window.GORI_HERO && window.GORI_HERO.length) ? window.GORI_HERO : HS_DEF;
   host.innerHTML=cfg.slice(0,6).map(function(c,i){
     var k=c.k||HS_DEF[i].k, art=HS_ART[k]||HS_ART.proc;
@@ -8512,10 +8536,11 @@ function mnMoveHeroTools(){
     try{ if(typeof G.hdTrim==="function") G.hdTrim(); }catch(e){}
   }
 
-  /* 지역 선택은 전체메뉴 안으로.
-     헤더에 버튼을 하나 더 얹으면 1200px 안에 안 들어가고, 히어로에 두면
-     메인 카피·검색과 경쟁합니다. 업체를 지역으로 좁히는 일은 업체 찾기
-     화면의 시·도 줄(.rgx)이 맡습니다. 기능은 그대로입니다. */
+  /* 지역 고르기는 이제 히어로 제목 **안**에 있습니다 ("전국에서 어떤 축산
+     업체를 찾으세요?"). 예전에는 히어로 오른쪽 위에 떠 있는 버튼이라 메인
+     카피·검색과 경쟁해서 전체메뉴로 치웠는데, 문장의 일부가 되면 자리를
+     먹지 않으면서 첫 줄에서 지역을 고를 수 있습니다.
+     .ph-util 안에 남아 있으면(예전 마크업) 전처럼 전체메뉴로 옮깁니다. */
   var region=util.querySelector(".gh-region");
   if(region && drawer && !drawer.querySelector(".gh-region")){
     var row=document.createElement("div"); row.className="mm-region";

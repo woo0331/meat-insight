@@ -105,7 +105,10 @@ function guRender(){
       }).join("")+
     '</div>'+
 
-    '<div class="gnote">더 궁금한 점은 아래 고객센터로 문의해 주세요. '+
+    /* "아래 고객센터로" 라고 썼지만 GORI_BIZ 가 비어 있으면 푸터에 고객센터가
+       아예 없습니다 — 있지도 않은 곳을 가리키게 됩니다. 바로 아래에 있는
+       문의하기 버튼을 가리킵니다. */
+    '<div class="gnote">더 궁금한 점은 아래 <b>문의하기</b> 로 남겨 주세요. 확인하고 연락드립니다. '+
       '이용약관과 개인정보처리방침은 화면 맨 아래에서 언제든 볼 수 있습니다.</div>'+
     '<div class="grow keep">'+
       '<button class="gbtn gbtn-p" onclick="gOpenContact()">문의하기</button>'+

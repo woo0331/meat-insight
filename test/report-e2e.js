@@ -6,6 +6,7 @@ const OWNER={id:'u9',email:'sup@test.com',user_metadata:{name:'합신식',role:'
 async function open(b,opt){const p=await b.newPage({viewport:{width:1440,height:1000}});
  await p.addInitScript(FAKE+"\nwindow.__FAKE_INIT("+JSON.stringify(opt)+");");
  p._errs=[];p.on('pageerror',e=>p._errs.push(e.message));
+ p._warns=[];p.on('console',m=>{if(m.type()==='warning')p._warns.push(m.text());});
  p.on('dialog',d=>d.accept());
  await p.goto('file:///home/user/meat-insight/index.html',{waitUntil:'load'});await p.waitForTimeout(1900);return p;}
 
@@ -65,8 +66,13 @@ async function open(b,opt){const p=await b.newPage({viewport:{width:1440,height:
  await m.evaluate(()=>gOpenReport('request','r2','한우 안심')); await m.waitForTimeout(600);
  await m.evaluate(()=>{document.querySelectorAll('#rp-reason .gpick-i')[0].click();gSendReport();});
  await m.waitForTimeout(900);
- chk('준비 안 됐다고 안내', await m.evaluate(()=>/아직 준비되지 않았습니다/.test(document.getElementById('rp-msg').textContent)), 'true');
- chk('SQL 파일 이름 안내', await m.evaluate(()=>/phase7_report\.sql/.test(document.getElementById('rp-msg').textContent)), 'true');
+ /* 예전에는 손님 화면에 "db/phase7_report.sql 실행 필요" 라고 찍었습니다.
+    운영자에게 할 말이라 콘솔로 내렸습니다 — 손님에게는 받지 못한다는 사실과
+    (등록돼 있으면) 연락처까지만 말합니다. */
+ chk('못 받는다고만 안내', await m.evaluate(()=>/아직 이곳에서 받지 못합니다/.test(document.getElementById('rp-msg').textContent)), 'true');
+ chk('운영자용 안내는 안 보임', await m.evaluate(()=>
+   /phase\d|\.sql|등록되지 않았/i.test(document.getElementById('rp-msg').textContent)), 'false');
+ chk('운영자에게는 콘솔로', m._warns.some(t=>/phase7_report\.sql/.test(t)), 'true');
  chk('버튼 되살아남', await m.evaluate(()=>document.getElementById('rp-send').disabled), 'false');
  chk('화면 안 깨짐', await m.evaluate(()=>!!document.getElementById('rp-reason')), 'true');
 

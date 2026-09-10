@@ -312,6 +312,42 @@ function hdSignup(){
   if(old && old.parentNode) old.parentNode.removeChild(old);
 }
 
+/* ── 헤더 폭 맞추기 ────────────────────────────────────────────────
+   1200px 컨테이너 안에 로고 · 메뉴 여섯 · 오른쪽 덩이가 다 들어가야
+   합니다. 로그인하면 오른쪽만 453px 이 되어 "전체메뉴" 와 "요청 올리기"
+   가 화면 밖으로 밀려났습니다 (1440px 에서 260px 넘침). 실제로 잘려
+   있었습니다.
+
+   그래서 헤더에서만 뺍니다 — 지우지 않고 숨기고, 갈 길을 남깁니다.
+     · 업체 등록 → 전체메뉴 · 푸터 · 이용 가이드 · 업체 유치 화면(#/sj)
+     · 로그아웃  → 전체메뉴 · 거래관리 화면
+     · 알림 종 하나 → 로그인하면 .hu-bell 이 같은 일을 합니다 (종이 둘이었습니다)
+   ── 함수는 그대로 살아 있고 onclick 도 붙어 있습니다. ── */
+function hdTrim(){
+  var box=document.querySelector(".hdr-actions");
+  if(box){
+    box.querySelectorAll(".ha-ghost").forEach(function(b){ b.style.display="none"; });
+  }
+  var tools=$("hdr-tools");
+  if(tools) tools.style.display = ME.user ? "none" : "";
+  hdDrawer();
+}
+G.hdTrim=hdTrim;
+
+/* 전체메뉴 아래쪽 버튼이 로그인 상태를 따라가지 않았습니다 —
+   로그인한 뒤에도 "로그인 · 회원가입" 이 그대로 보였습니다. */
+function hdDrawer(){
+  var act=document.querySelector("#mobile-menu .mm-act"); if(!act) return;
+  var want = ME.user ? "in" : "out";
+  if(act.getAttribute("data-st")===want) return;
+  act.setAttribute("data-st", want);
+  act.innerHTML = ME.user
+    ? '<button class="ha-login" style="border:1.5px solid var(--bd2);background:#fff;color:var(--ink2);" onclick="toggleMM();go(&quot;my&quot;)">거래관리</button>'+
+      '<button style="border:none;background:var(--gn);color:#fff;" onclick="toggleMM();gLogout()">로그아웃</button>'
+    : '<button class="ha-login" style="border:1.5px solid var(--bd2);background:#fff;color:var(--ink2);" onclick="toggleMM();openModal(\'login\')">로그인</button>'+
+      '<button style="border:none;background:var(--gn);color:#fff;" onclick="toggleMM();openModal(\'signup\')">회원가입</button>';
+}
+
 /* ── 구간 페이드 (아주 짧게) ───────────────────────────────────────
    화면 아래에 있는 구간만 대상으로 삼습니다. 첫 화면에 이미 보이는 것을
    숨겼다 켜면 로딩이 늦어 보입니다.
@@ -356,12 +392,14 @@ function patchPremium(){
       renderHeaderUser=function(){
         var r=origHU.apply(this, arguments);
         try{ hdSignup(); }catch(e){}
+        try{ hdTrim();  }catch(e){}
         return r;
       };
       G.renderHeaderUser=renderHeaderUser;
       renderHeaderUser();
     }else{ hdSignup(); }
   }catch(e){ try{ hdSignup(); }catch(e2){} }
+  try{ hdTrim(); }catch(e){}
 
 
   /* 카테고리 줄 — 원래 함수는 그대로 두고 바깥에서 다시 그립니다 */

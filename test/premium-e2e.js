@@ -35,9 +35,12 @@ async function open(b,w,h,init){
   const p=await open(b,1440,950);
 
   log.push('1. 헤더');
-  chk('메뉴 6개', await p.evaluate(()=>
+  /* 여섯이면 1200px 컨테이너 안에 안 들어갑니다 — 로그인하면 오른쪽 덩이만
+     453px 이 되어 "전체메뉴" 와 "요청 올리기" 가 잘려 나갔습니다.
+     뉴스·커뮤니티는 전체메뉴 · 푸터(모든 화면) · 홈 INSIGHT 에 있습니다. */
+  chk('메뉴 4개', await p.evaluate(()=>
     [...document.querySelectorAll('.hdr-nav a')].map(a=>a.textContent.trim()).join('|')),
-    '업체 찾기|견적 요청|축산 시세|구인구직|뉴스|커뮤니티');
+    '업체 찾기|견적 요청|축산 시세|구인구직');
   chk('전부 있는 화면으로', await p.evaluate(()=>{
     const want=['suppliers','rw','market','jobs','news','community'];
     return want.every(k=>PGS.indexOf(k)>=0 && !!document.getElementById('pg-'+k));
@@ -153,9 +156,11 @@ async function open(b,w,h,init){
   chk('제목', await p.evaluate(()=>
     [...document.querySelectorAll('.svc-cards .svc-t')].map(e=>e.textContent.trim()).join('|')),
     '업체 찾기|견적 요청|축산 시세|구인구직');
-  chk('뉴스·커뮤니티는 헤더에 그대로', await p.evaluate(()=>
+  /* 헤더에서 뺐으니 전체메뉴와 푸터에는 반드시 남아 있어야 합니다 */
+  chk('뉴스·커뮤니티로 갈 길이 있다', await p.evaluate(()=>
     ['news','community'].every(k=>
-      [...document.querySelectorAll('.hdr-nav a')].some(a=>(a.getAttribute('onclick')||'').indexOf(k)>=0))), 'true');
+      !!document.querySelector('#mobile-menu [onclick*="'+k+'"]') &&
+      !!document.querySelector('.footer [onclick*="'+k+'"]'))), 'true');
   chk('전부 있는 화면으로', await p.evaluate(()=>
     [...document.querySelectorAll('.svc-cards .svc-card')].map(c=>{
       const m=(c.getAttribute('onclick')||'').match(/go\(&?q?u?o?t?;?"?([a-z]+)/);
@@ -270,6 +275,55 @@ async function open(b,w,h,init){
     const r=document.querySelector('.gsx').getBoundingClientRect();
     return r.left>=-1 && r.right<=window.innerWidth+1;
   }), 'true');
+
+  /* ── 헤더가 1200px 컨테이너를 넘지 않는가 ──────────────────────────
+     실제로 잘려 있었습니다: 1440px 로그인 상태에서 "전체메뉴" 가 화면
+     오른쪽 밖(R1580)에 있었습니다. document.scrollWidth 로는 안 잡혀서
+     지금까지 회귀를 통과했습니다 — 헤더 안쪽을 직접 잽니다. */
+  log.push('10. 헤더 폭 (로그인·비로그인)');
+  const hdrFit=async(w,init)=>{
+    const q=await b.newPage({viewport:{width:w,height:900}});
+    await q.addInitScript(FAKE+"\nwindow.__FAKE_INIT("+init+")");
+    await q.goto(URL,{waitUntil:'load'}); await q.waitForTimeout(2600);
+    const r=await q.evaluate(()=>{
+      const row=document.querySelector('.hdr-main .hdr-main-w')||document.querySelector('.hdr-main').firstElementChild;
+      const rb=row.getBoundingClientRect(); const out=[];
+      [...row.children].forEach(e=>{
+        const b=e.getBoundingClientRect();
+        if(b.width>0 && (b.right>rb.right+1 || b.left<rb.left-1))
+          out.push((e.className||e.tagName).split(' ')[0]+' R'+Math.round(b.right)+'>'+Math.round(rb.right));
+      });
+      if(row.scrollWidth>Math.ceil(rb.width)+1) out.push('넘침 '+row.scrollWidth+'>'+Math.round(rb.width));
+      return out.join(', ');
+    });
+    await q.close(); return r;
+  };
+  chk('1440 비로그인', await hdrFit(1440,'{}'), '');
+  chk('1440 로그인',   await hdrFit(1440,"{user:{id:'u1',email:'a@b.c'}}"), '');
+  chk('1280 로그인',   await hdrFit(1280,"{user:{id:'u1',email:'a@b.c'}}"), '');
+  chk('1200 로그인',   await hdrFit(1200,"{user:{id:'u1',email:'a@b.c'}}"), '');
+
+  /* 알림 종이 둘이었습니다 — 히어로에서 옮긴 것과 renderHeaderUser 의 것 */
+  const bells=async(init)=>{
+    const q=await b.newPage({viewport:{width:1440,height:900}});
+    await q.addInitScript(FAKE+"\nwindow.__FAKE_INIT("+init+")");
+    await q.goto(URL,{waitUntil:'load'}); await q.waitForTimeout(2600);
+    const n=await q.evaluate(()=>[...document.querySelectorAll('.hdr .gh-bell,.hdr .hu-bell')]
+      .filter(e=>e.offsetParent && !e.classList.contains('hu-chat')).length);
+    await q.close(); return n;
+  };
+  chk('로그인하면 알림 종 하나', await bells("{user:{id:'u1',email:'a@b.c'}}"), 1);
+  chk('비로그인도 알림 종 하나', await bells('{}'), 1);
+
+  /* 헤더에서 뺀 것은 갈 길이 남아 있어야 합니다 */
+  const away=await b.newPage({viewport:{width:1440,height:900}});
+  await away.addInitScript(FAKE+"\nwindow.__FAKE_INIT({user:{id:'u1',email:'a@b.c'}})");
+  await away.goto(URL,{waitUntil:'load'}); await away.waitForTimeout(2600);
+  chk('로그아웃은 전체메뉴에', await away.evaluate(()=>
+    !!document.querySelector('#mobile-menu [onclick*="gLogout"]')), 'true');
+  chk('업체 등록은 전체메뉴에', await away.evaluate(()=>
+    !!document.querySelector('#mobile-menu [onclick*="sj"]')), 'true');
+  await away.close();
 
   const allErrs=[].concat(p._errs,t._errs,m._errs);
   console.log(log.join('\n'));

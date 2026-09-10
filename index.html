@@ -1402,13 +1402,15 @@ a.gi-card:hover .gi-t{color:var(--gn2);}
         <span class="logo-nm">고리</span>
         <span class="logo-sub"><b>축산업의 모든 연결</b><i>ABOUTMEAT</i></span>
       </div>
+      <!-- ⚠️ 여섯이면 1200px 안에 안 들어갑니다. 로그인하면 오른쪽 덩이만
+           453px 이 되어 "전체메뉴" 와 "요청 올리기" 가 잘려 나갔습니다.
+           뉴스·커뮤니티는 전체메뉴 · 푸터(모든 화면) · 홈 GORI INSIGHT 에
+           그대로 있습니다. onclick 은 하나도 바꾸지 않았습니다. -->
       <nav class="hdr-nav">
         <a onclick="setNav(this,'suppliers')">업체 찾기</a>
         <a onclick="setNav(this,'rw')">견적 요청</a>
         <a onclick="setNav(this,'market')">축산 시세</a>
         <a onclick="setNav(this,'jobs')">구인구직</a>
-        <a onclick="setNav(this,'news')">뉴스</a>
-        <a onclick="setNav(this,'community')">커뮤니티</a>
       </nav>
       <!-- ⚠️ .hdr-actions 안은 renderHeaderUser() 가 로그인 상태에 따라 통째로
            다시 씁니다. 검색·전체메뉴를 그 안에 두면 로그인/로그아웃 때마다

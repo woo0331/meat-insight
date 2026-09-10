@@ -7,8 +7,10 @@
    알 방법이 없었습니다. 문의도 푸터의 전화·이메일이 전부였습니다.
 
    db/phase7_report.sql 을 실행하지 않아도 화면은 깨지지 않습니다.
-   테이블이 없으면 "아직 준비되지 않았습니다" 안내와 고객센터 연락처를
-   보여 줍니다 (insertSafe 가 PGRST205 를 알려 줍니다).
+   표가 없으면 손님에게는 "아직 이곳에서 받지 못합니다" 와 (등록돼 있으면)
+   연락처를 보여 주고, SQL 을 실행하라는 말은 콘솔로만 남깁니다 — 운영자에게
+   할 말을 손님 화면에 찍으면 그 순간 미완성 사이트로 읽힙니다.
+   (insertSafe 가 PGRST205 를 알려 줍니다)
    ════════════════════════════════════════════════════════════════════ */
 
 var RP = { type:"request", id:"", name:"", reason:"", sending:false, from:"h" };
@@ -33,13 +35,29 @@ function rpInjectPages(){
   });
 }
 
-/* 사업자 정보가 비어 있으면 (미기재) 로 두고 지어내지 않습니다 */
+/* 사업자 정보가 비어 있으면 지어내지 않습니다.
+   ⚠️ 비어 있다는 사실을 손님에게 보여 주면 안 됩니다 — "고객센터 연락처가
+      아직 등록되지 않았습니다" 는 운영자에게 할 말이지 손님에게 할 말이
+      아닙니다. 빈 문자열을 돌려주고, 무엇이 비었는지는 콘솔에만 남깁니다.
+      (site-info.js 의 푸터와 같은 규칙입니다) */
+var RP_WARNED=false;
 function rpDesk(){
   var B=window.GORI_BIZ||{};
   var bits=[];
   if(String(B.phone||"").trim()) bits.push("고객센터 "+B.phone);
   if(String(B.email||"").trim()) bits.push(B.email);
-  return bits.length ? bits.join(" · ") : "고객센터 연락처가 아직 등록되지 않았습니다";
+  if(!bits.length && !RP_WARNED){
+    RP_WARNED=true;
+    try{ console.warn("[고리] 문의·신고 안내에 쓸 연락처가 없습니다 — site-info.js 의 GORI_BIZ.phone / GORI_BIZ.email 을 채워 주세요."); }catch(e){}
+  }
+  return bits.join(" · ");
+}
+/* 접수 기능이 아직 없을 때 손님에게 할 말 — 운영자용 SQL 안내는 콘솔로 */
+function rpFallback(what){
+  var d=rpDesk();
+  try{ console.warn("[고리] "+what+" 접수 표를 만들지 않았습니다 — db/phase7_report.sql 을 실행해 주세요."); }catch(e){}
+  return d ? (what+"를 아직 이곳에서 받지 못합니다. "+d+" 로 연락 주시면 확인하겠습니다.")
+           : (what+"를 아직 이곳에서 받지 못합니다. 잠시 뒤 다시 시도해 주세요.");
 }
 
 /* ══ 신고 ══════════════════════════════════════════════════════════ */
@@ -107,7 +125,7 @@ window.gSendReport=async function(){
   if(r.error){
     if(btn){ btn.disabled=false; btn.textContent="신고 접수"; }
     setMsg("rp-msg", r.missingTable
-      ? "신고 접수 기능이 아직 준비되지 않았습니다 (db/phase7_report.sql 실행 필요). "+rpDesk()+" 로 알려 주세요."
+      ? rpFallback("신고")
       : "접수 실패: "+((r.error&&r.error.message)||""), "err");
     return;
   }
@@ -147,7 +165,7 @@ function iqRender(kind){
       '<button class="gbtn gbtn-w" onclick="gOpenGuide()">이용 가이드</button>'+
       '<button class="gbtn gbtn-p" id="iq-send" onclick="gSendInquiry()">문의 보내기</button>'+
     '</div>'+
-    '<div class="ghint" style="margin-top:12px;">'+esc(rpDesk())+'</div>';
+    (rpDesk() ? '<div class="ghint" style="margin-top:12px;">'+esc(rpDesk())+'</div>' : "");
   window.scrollTo(0,0);
 }
 
@@ -165,7 +183,7 @@ window.gSendInquiry=async function(){
   if(r.error){
     if(btn){ btn.disabled=false; btn.textContent="문의 보내기"; }
     setMsg("iq-msg", r.missingTable
-      ? "문의 접수 기능이 아직 준비되지 않았습니다 (db/phase7_report.sql 실행 필요). "+rpDesk()+" 로 연락 주세요."
+      ? rpFallback("문의")
       : "전송 실패: "+((r.error&&r.error.message)||""), "err");
     return;
   }

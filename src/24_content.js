@@ -125,6 +125,17 @@ function ctNewsPage(){
 }
 function ctCommPage(){
   var ec=$("comm-cats"); if(ec) ec.innerHTML="";
+  /* 옆칸은 "카테고리" 제목만 남은 빈 상자였습니다 — 채울 것이 없으면
+     상자째 내리고, 본문이 폭을 다 씁니다. (없는 것을 보여주지 않는다) */
+  var side=ec && ec.parentNode;
+  if(side){
+    var empty=!(ec.children.length || (ec.textContent||"").trim());
+    side.style.display = empty ? "none" : "";
+    var grid=side.parentNode;
+    if(grid && grid.style && /grid-template-columns/.test(grid.getAttribute("style")||"")){
+      grid.style.gridTemplateColumns = empty ? "1fr" : "1fr 240px";
+    }
+  }
   var el=$("comm-list-full"); if(!el) return;
   var rows=ctList("community");
   if(!rows.length){

@@ -146,6 +146,28 @@ const small = p => p.evaluate(()=>{
     return e ? getComputedStyle(e).animationName : '(없음)';
   }), 'none');
 
+  log.push('7. 단계 표시가 좁은 화면에서 어긋나지 않는가');
+  /* 라벨에 줄바꿈을 허용했더니 칸마다 높이가 달라졌고, align-items:center 가
+     각 칸을 세로 가운데로 맞추는 바람에 동그라미 셋이 계단처럼 어긋나
+     글자가 서로 붙어 읽혔습니다. 390px 에서 실제로 그랬습니다. */
+  const steps=async(pg,hash)=>{
+    await pg.evaluate(h=>{location.hash=h;},hash); await pg.waitForTimeout(1600);
+    return await pg.evaluate(()=>{
+      const items=[...document.querySelectorAll('.pg.on .gstep-i')];
+      if(!items.length) return '(단계 없음)';
+      const tops=items.map(e=>Math.round(e.querySelector('.gstep-n').getBoundingClientRect().top));
+      const spread=Math.max(...tops)-Math.min(...tops);
+      /* 글자끼리 겹치지도 않아야 합니다 */
+      const boxes=items.map(e=>e.querySelector('.gstep-l').getBoundingClientRect());
+      let hit='';
+      for(let i=1;i<boxes.length;i++) if(boxes[i].left < boxes[i-1].right-1) hit='글자 겹침';
+      return spread>2 ? ('동그라미 '+spread+'px 어긋남') : hit;
+    });
+  };
+  chk('요청 등록 3단계 (390px)', await steps(m,'#/rw'), '');
+  chk('업체 등록 4단계 (390px)', await steps(m,'#/sj'), '');
+  chk('요청 등록 3단계 (데스크톱)', await steps(p,'#/rw'), '');
+
   const allErrs=[].concat(p._errs,m._errs,r._errs);
   console.log(log.join('\n'));
   if(allErrs.length){ console.log('  ❌ 페이지 에러: '+allErrs.join(' / ')); errs.push('pageerror'); }

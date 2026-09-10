@@ -126,6 +126,10 @@ function mnMoveHeroTools(){
       right.insertBefore(slot, right.firstChild);
     }
     slot.appendChild(bell);
+    /* 로그인하면 renderHeaderUser 가 그리는 .hu-bell 이 같은 일을 합니다 —
+       종이 둘이 되지 않게 44_premium 의 헤더 정리를 다시 한 번 부릅니다.
+       (이 함수는 patchPremium 뒤에 도니, 그때 만든 슬롯을 아직 못 봤습니다) */
+    try{ if(typeof G.hdTrim==="function") G.hdTrim(); }catch(e){}
   }
 
   /* 지역 선택은 전체메뉴 안으로.

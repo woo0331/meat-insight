@@ -110,7 +110,12 @@ function sjPitch(){
     : (open.length
         ? '<div style="font-size:14.5px;color:var(--ink2);font-weight:600;margin-bottom:10px;">'+
             '지금 답을 기다리는 요청 <b style="color:var(--gn);">'+open.length+'건</b></div>'+
-          recent.map(function(r){ return shReqRow(r); }).join("")
+          recent.map(function(r){ return shReqRow(r); }).join("")+
+          /* 넷만 보여주면서 "5건" 이라고 쓰면 세어 본 사람에게는 틀린 숫자입니다 */
+          (open.length>recent.length
+            ? '<button class="gbtn gbtn-w gbtn-sm" style="margin-top:10px;" onclick="go(&quot;reqs&quot;)">'+
+                '나머지 '+(open.length-recent.length)+'건 보기</button>'
+            : "")
         : '<div class="gempty" style="padding:22px 16px;">'+
             '<div class="gempty-t">아직 올라온 요청이 없습니다</div>'+
             '<div class="gempty-d">먼저 등록해 두면 첫 요청이 올라올 때 가장 먼저 알림을 받습니다.</div></div>');

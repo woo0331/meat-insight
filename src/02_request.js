@@ -117,7 +117,7 @@ function stepBar(n){
   var labels=["무엇이 필요한지","필요 조건 입력","확인 후 등록"];
   return '<div class="gstep">'+labels.map(function(l,i){
     var s=i+1, cls = s<n ? "done" : (s===n ? "on" : "");
-    return '<div class="gstep-i '+cls+'"><div class="gstep-n">'+(s<n?"✓":s)+'</div><div class="gstep-l">STEP'+s+'. '+l+'</div></div>';
+    return '<div class="gstep-i '+cls+'"><div class="gstep-n">'+(s<n?"✓":s)+'</div><div class="gstep-l"><span class="gstep-p">STEP'+s+'. </span>'+l+'</div></div>';
   }).join("")+'</div>';
 }
 

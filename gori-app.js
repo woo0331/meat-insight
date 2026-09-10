@@ -366,7 +366,7 @@ function stepBar(n){
   var labels=["무엇이 필요한지","필요 조건 입력","확인 후 등록"];
   return '<div class="gstep">'+labels.map(function(l,i){
     var s=i+1, cls = s<n ? "done" : (s===n ? "on" : "");
-    return '<div class="gstep-i '+cls+'"><div class="gstep-n">'+(s<n?"✓":s)+'</div><div class="gstep-l">STEP'+s+'. '+l+'</div></div>';
+    return '<div class="gstep-i '+cls+'"><div class="gstep-n">'+(s<n?"✓":s)+'</div><div class="gstep-l"><span class="gstep-p">STEP'+s+'. </span>'+l+'</div></div>';
   }).join("")+'</div>';
 }
 
@@ -4200,7 +4200,7 @@ window.renderJobsFull=function(){
       '<div><b>정규직·장기 채용입니다.</b> 오늘·내일 바로 필요한 현장 인력은 당일알바에서 찾으세요.</div>'+
       '<div class="grow keep" style="flex:0 0 auto;">'+
         '<button class="gbtn gbtn-w gbtn-sm" onclick="gOpenDaily()">당일알바</button>'+
-        '<button class="gbtn gbtn-w gbtn-sm" onclick="go(&quot;wprof&quot;)">구직 프로필 등록</button></div>'+
+        '<button class="gbtn gbtn-w gbtn-sm" onclick="gOpenWProf()">구직 프로필 등록</button></div>'+
     '</div>'+
     '<div class="job-stats-bar">'+
       '<div class="jsb-item"><span class="jsb-dot" style="background:var(--gn)"></span>정규직 <span class="jsb-count">'+cnt("full")+'건</span></div>'+
@@ -5093,6 +5093,17 @@ function ctNewsPage(){
 }
 function ctCommPage(){
   var ec=$("comm-cats"); if(ec) ec.innerHTML="";
+  /* 옆칸은 "카테고리" 제목만 남은 빈 상자였습니다 — 채울 것이 없으면
+     상자째 내리고, 본문이 폭을 다 씁니다. (없는 것을 보여주지 않는다) */
+  var side=ec && ec.parentNode;
+  if(side){
+    var empty=!(ec.children.length || (ec.textContent||"").trim());
+    side.style.display = empty ? "none" : "";
+    var grid=side.parentNode;
+    if(grid && grid.style && /grid-template-columns/.test(grid.getAttribute("style")||"")){
+      grid.style.gridTemplateColumns = empty ? "1fr" : "1fr 240px";
+    }
+  }
   var el=$("comm-list-full"); if(!el) return;
   var rows=ctList("community");
   if(!rows.length){
@@ -6106,7 +6117,12 @@ function sjPitch(){
     : (open.length
         ? '<div style="font-size:14.5px;color:var(--ink2);font-weight:600;margin-bottom:10px;">'+
             '지금 답을 기다리는 요청 <b style="color:var(--gn);">'+open.length+'건</b></div>'+
-          recent.map(function(r){ return shReqRow(r); }).join("")
+          recent.map(function(r){ return shReqRow(r); }).join("")+
+          /* 넷만 보여주면서 "5건" 이라고 쓰면 세어 본 사람에게는 틀린 숫자입니다 */
+          (open.length>recent.length
+            ? '<button class="gbtn gbtn-w gbtn-sm" style="margin-top:10px;" onclick="go(&quot;reqs&quot;)">'+
+                '나머지 '+(open.length-recent.length)+'건 보기</button>'
+            : "")
         : '<div class="gempty" style="padding:22px 16px;">'+
             '<div class="gempty-t">아직 올라온 요청이 없습니다</div>'+
             '<div class="gempty-d">먼저 등록해 두면 첫 요청이 올라올 때 가장 먼저 알림을 받습니다.</div></div>');
@@ -6341,7 +6357,10 @@ function guRender(){
       }).join("")+
     '</div>'+
 
-    '<div class="gnote">더 궁금한 점은 아래 고객센터로 문의해 주세요. '+
+    /* "아래 고객센터로" 라고 썼지만 GORI_BIZ 가 비어 있으면 푸터에 고객센터가
+       아예 없습니다 — 있지도 않은 곳을 가리키게 됩니다. 바로 아래에 있는
+       문의하기 버튼을 가리킵니다. */
+    '<div class="gnote">더 궁금한 점은 아래 <b>문의하기</b> 로 남겨 주세요. 확인하고 연락드립니다. '+
       '이용약관과 개인정보처리방침은 화면 맨 아래에서 언제든 볼 수 있습니다.</div>'+
     '<div class="grow keep">'+
       '<button class="gbtn gbtn-p" onclick="gOpenContact()">문의하기</button>'+
@@ -6400,8 +6419,10 @@ function patchGuide(){
    알 방법이 없었습니다. 문의도 푸터의 전화·이메일이 전부였습니다.
 
    db/phase7_report.sql 을 실행하지 않아도 화면은 깨지지 않습니다.
-   테이블이 없으면 "아직 준비되지 않았습니다" 안내와 고객센터 연락처를
-   보여 줍니다 (insertSafe 가 PGRST205 를 알려 줍니다).
+   표가 없으면 손님에게는 "아직 이곳에서 받지 못합니다" 와 (등록돼 있으면)
+   연락처를 보여 주고, SQL 을 실행하라는 말은 콘솔로만 남깁니다 — 운영자에게
+   할 말을 손님 화면에 찍으면 그 순간 미완성 사이트로 읽힙니다.
+   (insertSafe 가 PGRST205 를 알려 줍니다)
    ════════════════════════════════════════════════════════════════════ */
 
 var RP = { type:"request", id:"", name:"", reason:"", sending:false, from:"h" };
@@ -6426,13 +6447,29 @@ function rpInjectPages(){
   });
 }
 
-/* 사업자 정보가 비어 있으면 (미기재) 로 두고 지어내지 않습니다 */
+/* 사업자 정보가 비어 있으면 지어내지 않습니다.
+   ⚠️ 비어 있다는 사실을 손님에게 보여 주면 안 됩니다 — "고객센터 연락처가
+      아직 등록되지 않았습니다" 는 운영자에게 할 말이지 손님에게 할 말이
+      아닙니다. 빈 문자열을 돌려주고, 무엇이 비었는지는 콘솔에만 남깁니다.
+      (site-info.js 의 푸터와 같은 규칙입니다) */
+var RP_WARNED=false;
 function rpDesk(){
   var B=window.GORI_BIZ||{};
   var bits=[];
   if(String(B.phone||"").trim()) bits.push("고객센터 "+B.phone);
   if(String(B.email||"").trim()) bits.push(B.email);
-  return bits.length ? bits.join(" · ") : "고객센터 연락처가 아직 등록되지 않았습니다";
+  if(!bits.length && !RP_WARNED){
+    RP_WARNED=true;
+    try{ console.warn("[고리] 문의·신고 안내에 쓸 연락처가 없습니다 — site-info.js 의 GORI_BIZ.phone / GORI_BIZ.email 을 채워 주세요."); }catch(e){}
+  }
+  return bits.join(" · ");
+}
+/* 접수 기능이 아직 없을 때 손님에게 할 말 — 운영자용 SQL 안내는 콘솔로 */
+function rpFallback(what){
+  var d=rpDesk();
+  try{ console.warn("[고리] "+what+" 접수 표를 만들지 않았습니다 — db/phase7_report.sql 을 실행해 주세요."); }catch(e){}
+  return d ? (what+"를 아직 이곳에서 받지 못합니다. "+d+" 로 연락 주시면 확인하겠습니다.")
+           : (what+"를 아직 이곳에서 받지 못합니다. 잠시 뒤 다시 시도해 주세요.");
 }
 
 /* ══ 신고 ══════════════════════════════════════════════════════════ */
@@ -6500,7 +6537,7 @@ window.gSendReport=async function(){
   if(r.error){
     if(btn){ btn.disabled=false; btn.textContent="신고 접수"; }
     setMsg("rp-msg", r.missingTable
-      ? "신고 접수 기능이 아직 준비되지 않았습니다 (db/phase7_report.sql 실행 필요). "+rpDesk()+" 로 알려 주세요."
+      ? rpFallback("신고")
       : "접수 실패: "+((r.error&&r.error.message)||""), "err");
     return;
   }
@@ -6540,7 +6577,7 @@ function iqRender(kind){
       '<button class="gbtn gbtn-w" onclick="gOpenGuide()">이용 가이드</button>'+
       '<button class="gbtn gbtn-p" id="iq-send" onclick="gSendInquiry()">문의 보내기</button>'+
     '</div>'+
-    '<div class="ghint" style="margin-top:12px;">'+esc(rpDesk())+'</div>';
+    (rpDesk() ? '<div class="ghint" style="margin-top:12px;">'+esc(rpDesk())+'</div>' : "");
   window.scrollTo(0,0);
 }
 
@@ -6558,7 +6595,7 @@ window.gSendInquiry=async function(){
   if(r.error){
     if(btn){ btn.disabled=false; btn.textContent="문의 보내기"; }
     setMsg("iq-msg", r.missingTable
-      ? "문의 접수 기능이 아직 준비되지 않았습니다 (db/phase7_report.sql 실행 필요). "+rpDesk()+" 로 연락 주세요."
+      ? rpFallback("문의")
       : "전송 실패: "+((r.error&&r.error.message)||""), "err");
     return;
   }
@@ -8226,6 +8263,42 @@ function hdSignup(){
   if(old && old.parentNode) old.parentNode.removeChild(old);
 }
 
+/* ── 헤더 폭 맞추기 ────────────────────────────────────────────────
+   1200px 컨테이너 안에 로고 · 메뉴 여섯 · 오른쪽 덩이가 다 들어가야
+   합니다. 로그인하면 오른쪽만 453px 이 되어 "전체메뉴" 와 "요청 올리기"
+   가 화면 밖으로 밀려났습니다 (1440px 에서 260px 넘침). 실제로 잘려
+   있었습니다.
+
+   그래서 헤더에서만 뺍니다 — 지우지 않고 숨기고, 갈 길을 남깁니다.
+     · 업체 등록 → 전체메뉴 · 푸터 · 이용 가이드 · 업체 유치 화면(#/sj)
+     · 로그아웃  → 전체메뉴 · 거래관리 화면
+     · 알림 종 하나 → 로그인하면 .hu-bell 이 같은 일을 합니다 (종이 둘이었습니다)
+   ── 함수는 그대로 살아 있고 onclick 도 붙어 있습니다. ── */
+function hdTrim(){
+  var box=document.querySelector(".hdr-actions");
+  if(box){
+    box.querySelectorAll(".ha-ghost").forEach(function(b){ b.style.display="none"; });
+  }
+  var tools=$("hdr-tools");
+  if(tools) tools.style.display = ME.user ? "none" : "";
+  hdDrawer();
+}
+G.hdTrim=hdTrim;
+
+/* 전체메뉴 아래쪽 버튼이 로그인 상태를 따라가지 않았습니다 —
+   로그인한 뒤에도 "로그인 · 회원가입" 이 그대로 보였습니다. */
+function hdDrawer(){
+  var act=document.querySelector("#mobile-menu .mm-act"); if(!act) return;
+  var want = ME.user ? "in" : "out";
+  if(act.getAttribute("data-st")===want) return;
+  act.setAttribute("data-st", want);
+  act.innerHTML = ME.user
+    ? '<button class="ha-login" style="border:1.5px solid var(--bd2);background:#fff;color:var(--ink2);" onclick="toggleMM();go(&quot;my&quot;)">거래관리</button>'+
+      '<button style="border:none;background:var(--gn);color:#fff;" onclick="toggleMM();gLogout()">로그아웃</button>'
+    : '<button class="ha-login" style="border:1.5px solid var(--bd2);background:#fff;color:var(--ink2);" onclick="toggleMM();openModal(\'login\')">로그인</button>'+
+      '<button style="border:none;background:var(--gn);color:#fff;" onclick="toggleMM();openModal(\'signup\')">회원가입</button>';
+}
+
 /* ── 구간 페이드 (아주 짧게) ───────────────────────────────────────
    화면 아래에 있는 구간만 대상으로 삼습니다. 첫 화면에 이미 보이는 것을
    숨겼다 켜면 로딩이 늦어 보입니다.
@@ -8270,12 +8343,14 @@ function patchPremium(){
       renderHeaderUser=function(){
         var r=origHU.apply(this, arguments);
         try{ hdSignup(); }catch(e){}
+        try{ hdTrim();  }catch(e){}
         return r;
       };
       G.renderHeaderUser=renderHeaderUser;
       renderHeaderUser();
     }else{ hdSignup(); }
   }catch(e){ try{ hdSignup(); }catch(e2){} }
+  try{ hdTrim(); }catch(e){}
 
 
   /* 카테고리 줄 — 원래 함수는 그대로 두고 바깥에서 다시 그립니다 */
@@ -8427,6 +8502,10 @@ function mnMoveHeroTools(){
       right.insertBefore(slot, right.firstChild);
     }
     slot.appendChild(bell);
+    /* 로그인하면 renderHeaderUser 가 그리는 .hu-bell 이 같은 일을 합니다 —
+       종이 둘이 되지 않게 44_premium 의 헤더 정리를 다시 한 번 부릅니다.
+       (이 함수는 patchPremium 뒤에 도니, 그때 만든 슬롯을 아직 못 봤습니다) */
+    try{ if(typeof G.hdTrim==="function") G.hdTrim(); }catch(e){}
   }
 
   /* 지역 선택은 전체메뉴 안으로.
@@ -8685,6 +8764,209 @@ function patchMain(){
   pass();
   [800, 2000, 3800].forEach(function(ms){ setTimeout(pass, ms); });
 }
+/* ════════════════════════════════════════════════════════════════════
+   46_restore — 새로고침·뒤로가기로 들어와도 빈 화면이 나오지 않게
+
+   상세·폼 화면은 gOpenX() 안에서 go() 를 부른 다음 본문을 그립니다.
+   그래서 주소창에 #/chats 를 직접 치거나 뒤로가기로 돌아오면
+   go() 만 불리고 본문은 빈 칸으로 남습니다 (라우터가 go() 만 부릅니다).
+
+   여기서는 go() 를 바깥에서 감싸, 화면이 켜졌는데 본문이 비어 있으면
+   ① 인자가 필요 없는 화면은 원래 여는 함수를 다시 부르고
+   ② 상세 id 가 있어야 하는 화면은 돌아갈 길이 있는 빈 상태를 그립니다.
+   기존 함수는 하나도 건드리지 않습니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+var RS={ busy:false, timer:null };
+
+/* 화면 이름 — 빠져 있던 다섯 곳 (문서 제목·스크린리더 안내가 "고리" 로만 나왔습니다) */
+try{
+  if(typeof RT_TITLE!=="undefined"){
+    if(!RT_TITLE.sj)      RT_TITLE.sj="업체 등록";
+    if(!RT_TITLE.guide)   RT_TITLE.guide="이용 가이드";
+    if(!RT_TITLE.report)  RT_TITLE.report="신고하기";
+    if(!RT_TITLE.contact) RT_TITLE.contact="문의하기";
+    if(!RT_TITLE.about)   RT_TITLE.about="고리 소개";
+  }
+}catch(e){}
+
+/* ① 인자 없이 다시 열 수 있는 화면 */
+var RS_OPEN={
+  chats:   function(){ return window.gOpenChatList; },
+  findreq: function(){ return window.gOpenFindReq; },
+  prefs:   function(){ return window.gOpenPrefs; },
+  verify:  function(){ return window.gOpenVerify; },
+  djnew:   function(){ return window.gOpenDJNew; },
+  wprof:   function(){ return window.gOpenWProf; }
+};
+
+/* ② id 가 있어야 열리는 화면 — 제목 · 설명 · 돌아갈 곳 · 버튼 글자 */
+var RS_LOST={
+  sp:      ["업체를 찾을 수 없습니다","주소가 잘못되었거나 삭제된 업체일 수 있습니다.","suppliers","업체 목록으로"],
+  reqd:    ["요청을 찾을 수 없습니다","주소가 잘못되었거나 이미 마감된 요청일 수 있습니다.","reqs","요청 목록으로"],
+  quote:   ["견적을 보낼 요청이 없습니다","요청 목록에서 요청을 고른 뒤 견적을 보내주세요.","reqs","요청 목록으로"],
+  review:  ["후기를 남길 거래가 없습니다","거래관리에서 완료된 거래를 고르면 후기를 쓸 수 있습니다.","my","거래관리로"],
+  order:   ["거래를 찾을 수 없습니다","이미 끝났거나 삭제된 거래일 수 있습니다.","my","거래관리로"],
+  reqedit: ["수정할 요청이 없습니다","거래관리의 내 요청에서 고칠 요청을 골라주세요.","my","거래관리로"],
+  chat:    ["대화를 찾을 수 없습니다","이미 끝났거나 삭제된 대화일 수 있습니다.","chats","대화 목록으로"],
+  instant: ["바로 연결할 요청이 없습니다","요청을 올리면 조건에 맞는 업체를 곧바로 찾아드립니다.","rw","요청 올리기"],
+  report:  ["신고할 대상이 없습니다","신고는 업체·요청 화면의 신고 버튼에서 시작합니다.","h","홈으로"]
+};
+
+function rsBody(p){ return $(p+"-body"); }
+
+function rsEmpty(p){
+  var b=rsBody(p); if(!b) return false;
+  return !b.children.length && !(b.textContent||"").trim();
+}
+
+function rsPaintLost(p){
+  var b=rsBody(p), d=RS_LOST[p]; if(!b||!d) return;
+  /* 뼈대를 걷어내고 그립니다 */
+  b.innerHTML='<div class="gempty"><div class="gempty-t">'+esc(d[0])+'</div>'+
+    '<div class="gempty-d">'+esc(d[1])+'</div>'+
+    '<button class="gbtn gbtn-p gbtn-sm" onclick="go(&quot;'+d[2]+'&quot;)">'+esc(d[3])+'</button></div>';
+}
+
+/* 화면이 켜진 뒤 잠깐 기다렸다 확인합니다 — 원래 여는 함수가
+   비동기로 본문을 채우는 중일 수 있어서, 성급히 덮어쓰면 안 됩니다.
+   기다리는 동안은 빈 칸 대신 뼈대를 깔아 둡니다 (흰 화면이 제일 나쁩니다).
+   뼈대는 "아직 비어 있다" 는 표시이기도 해서, 시간이 지난 뒤 그대로면
+   아무도 안 그렸다는 뜻입니다. */
+var RS_SKEL="rs-skel";
+function rsStillMine(p){
+  var b=rsBody(p); if(!b) return false;
+  return rsEmpty(p) || (b.children.length===1 && b.firstElementChild.classList.contains(RS_SKEL));
+}
+function rsCheck(p){
+  if(RS.busy) return;
+  if(!RS_OPEN[p] && !RS_LOST[p]) return;
+  if(!rsEmpty(p)) return;
+  var b=rsBody(p);
+  if(b && typeof skelPanel==="function"){
+    b.innerHTML='<div class="'+RS_SKEL+'">'+skelPanel(2)+'</div>';
+  }
+  clearTimeout(RS.timer);
+  RS.timer=setTimeout(function(){
+    var el=$("pg-"+p);
+    if(!el || el.hidden || !rsStillMine(p)) return;  /* 그 사이 채워졌거나 다른 화면 */
+    var get=RS_OPEN[p], fn=get&&get();
+    if(typeof fn==="function"){
+      var bd=rsBody(p); if(bd) bd.innerHTML="";
+      RS.busy=true;
+      try{ fn(); }catch(e){}
+      setTimeout(function(){
+        RS.busy=false;
+        if(rsStillMine(p) && RS_LOST[p]) rsPaintLost(p);
+      }, 900);
+      return;
+    }
+    rsPaintLost(p);
+  }, 260);
+}
+
+/* ── 구직 프로필 등록 — 구인구직의 "구직 프로필 등록" 이 가리키던 화면 ──
+   지금까지 이 버튼은 빈 화면으로 갔습니다. jobs 테이블은 이미 kind="seek"
+   행을 읽고 있으므로(jbFromJob), 같은 칸에 쓰기만 더합니다. 스키마는
+   그대로입니다 — insertSafe 가 없는 칸은 알아서 빼고 다시 시도합니다. */
+var WP_ROLES=["발골","정형","세절","포장","도축","품질관리","생산관리","배송·물류","영업","사무·경리","기타"];
+var WP_EMP=["정규직","계약직","알바·단기","무관"];
+
+window.gOpenWProf=function(){
+  if(typeof go==="function") go("wprof");
+  var body=$("wprof-body"); if(!body) return;
+  body.innerHTML=
+    '<div class="gp-hd"><button class="back-btn" style="padding:0;" onclick="go(&quot;jobs&quot;)">← 구인구직</button>'+
+      '<div><div class="gp-title">구직 프로필 등록</div>'+
+      '<div class="gp-sub">등록하면 구인구직 목록의 <b>구직</b> 칸에 올라가고, 사람을 찾는 업체가 바로 연락합니다</div></div></div>'+
+    '<div class="gcard"><div class="gcard-t">할 수 있는 일</div>'+
+      '<label class="glabel">직무 <span class="greq">*</span></label>'+
+      '<div class="gpick" id="wp-role">'+WP_ROLES.map(function(r){
+        return '<button type="button" class="gpick-i" onclick="gChip(this)">'+r+'</button>'; }).join("")+'</div>'+
+      '<div class="grow keep">'+
+        '<div><label class="glabel">희망 고용형태</label>'+
+          '<select class="gin" id="wp-emp">'+WP_EMP.map(function(e){ return '<option>'+e+'</option>'; }).join("")+'</select></div>'+
+        '<div><label class="glabel">경력</label>'+
+          '<select class="gin" id="wp-exp"><option>신입</option><option>1년 이상</option><option>3년 이상</option>'+
+          '<option>5년 이상</option><option>10년 이상</option></select></div>'+
+      '</div>'+
+      '<label class="glabel">희망 급여</label>'+
+      '<input class="gin" id="wp-pay" placeholder="월 300만원 · 일당 15만원 · 협의 가능">'+
+    '</div>'+
+    '<div class="gcard"><div class="gcard-t">내 정보</div>'+
+      '<div class="grow keep">'+
+        '<div><label class="glabel">이름 <span class="greq">*</span></label>'+
+          '<input class="gin" id="wp-name" placeholder="홍길동" value="'+esc(ME.name||"")+'"></div>'+
+        '<div><label class="glabel">연락처 <span class="greq">*</span></label>'+
+          '<input class="gin" id="wp-contact" inputmode="numeric" placeholder="010-0000-0000" oninput="gPhoneFmt(this)"></div>'+
+      '</div>'+
+      '<label class="glabel">희망 근무지 <span class="greq">*</span></label>'+
+      '<select class="gin" id="wp-region">'+REGIONS.map(function(r){ return '<option>'+r+'</option>'; }).join("")+'</select>'+
+      '<label class="glabel">소개</label>'+
+      '<textarea class="gin" id="wp-detail" placeholder="해온 일, 다룰 수 있는 부위·장비, 가능한 요일과 시간 등"></textarea>'+
+      '<div class="ghint">연락처는 구인구직 목록에서 업체에게 보입니다. 공개를 원하지 않으면 등록하지 마세요.</div>'+
+      '<div class="gmsg" id="wp-msg"></div>'+
+    '</div>'+
+    '<div class="grow keep"><button class="gbtn gbtn-w" onclick="go(&quot;jobs&quot;)">취소</button>'+
+    '<button class="gbtn gbtn-p" id="wp-submit" onclick="gSubmitWProf()">구직 프로필 등록</button></div>';
+  window.scrollTo(0,0);
+};
+
+window.gSubmitWProf=async function(){
+  var roles=[];
+  document.querySelectorAll("#wp-role .gpick-i.on").forEach(function(b){ roles.push(b.textContent.trim()); });
+  var v=function(id){ return (($(id)||{}).value||"").trim(); };
+  if(!roles.length || !v("wp-name") || !v("wp-contact")){
+    setMsg("wp-msg","직무·이름·연락처는 필수입니다.","err"); return; }
+  var btn=$("wp-submit"); if(btn){ btn.disabled=true; btn.textContent="등록 중…"; }
+  var r=await insertSafe("jobs",{
+    kind:"seek",
+    user_id: ME.user?ME.user.id:null,
+    applicant_name:v("wp-name"), contact:v("wp-contact"),
+    job_role:roles.join("·"), employment:v("wp-emp")||"무관",
+    experience:v("wp-exp")||"신입", pay:v("wp-pay")||"협의",
+    location:v("wp-region"), region:v("wp-region"),
+    detail:v("wp-detail")||null, is_urgent:false
+  });
+  if(btn){ btn.disabled=false; btn.textContent="구직 프로필 등록"; }
+  if(r.error){
+    setMsg("wp-msg", r.missingTable ? "구인구직 기능이 아직 켜져 있지 않습니다. 운영자에게 알려주세요."
+                                    : ("등록 실패: "+(r.error.message||"")), "err");
+    return;
+  }
+  toast("구직 프로필을 등록했습니다.","ok");
+  go("jobs");
+};
+
+/* ── 푸터가 화면 위로 올라간 것 ─────────────────────────────────────
+   푸터를 홈 안에서 꺼내 .bnav 앞에 두었습니다 (모든 화면에 있어야 하니까).
+   그런데 01_core 의 injectPages() 도 새 화면을 .bnav 앞에 끼워 넣습니다 —
+   그래서 나중에 만들어진 여섯 화면(요청 상세·견적·당일알바·일감 등록·
+   후기·구직 프로필)이 푸터 뒤에 놓였고, 그 화면들만 푸터가 맨 위에
+   찍혔습니다. 푸터를 .bnav 바로 앞으로 한 번 옮겨 놓으면 끝납니다. */
+function rsFooterLast(){
+  var ft=document.querySelector(".footer"); if(!ft) return;
+  var nav=document.querySelector(".bnav");
+  var parent=ft.parentNode; if(!parent) return;
+  if(nav && nav.parentNode===parent){ if(ft.nextElementSibling!==nav) parent.insertBefore(ft, nav); }
+  else if(parent.lastElementChild!==ft) parent.appendChild(ft);
+}
+
+function patchRestore(){
+  if(RS._patched) return; RS._patched=true;
+  try{ rsFooterLast(); }catch(e){}
+  if(typeof window.go!=="function") return;
+  var orig=window.go;
+  window.go=function(p){
+    var r=orig.apply(this, arguments);
+    try{ rsCheck(p); }catch(e){}
+    return r;
+  };
+  /* 구직 프로필은 구인구직에서 들어오는 화면입니다 — 하단 네비도 구인구직이 켜져야
+     합니다 (01_core 의 injectPages 는 "my" 로 두고 있었습니다). */
+  try{ if(typeof TM!=="undefined") TM.wprof="jobs"; }catch(e){}
+}
+G.patchRestore=patchRestore;
 /* ════════════════════════════════════════════════════════════════════
    넓은 화면 레이아웃 — 모바일 한 줄짜리를 데스크톱에 늘려 놓은 상태였습니다
 
@@ -9057,6 +9339,7 @@ function applyExtras(){
   try{ patchAbout(); }catch(e){}
   try{ patchPremium(); }catch(e){}
   try{ patchMain(); }catch(e){}
+  try{ patchRestore(); }catch(e){}
   try{ patchLayout(); }catch(e){}   /* 다른 패치가 붙인 뒤에 담아야 합니다 */
   try{ patchRouter(); armRouter(); }catch(e){}
 }

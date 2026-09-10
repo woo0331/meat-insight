@@ -126,6 +126,39 @@ async function open(b,w,h,opt){
     return new Set(st.slice(0,12)).size;
   }), 1);
 
+  /* 운영자에게 할 말이 손님 화면에 찍혀 있었습니다 — 문의 화면에
+     "고객센터 연락처가 아직 등록되지 않았습니다", 접수 실패 때
+     "db/phase7_report.sql 실행 필요". 둘 다 콘솔로 내렸습니다. */
+  const seen=async(key)=>{ await p.evaluate(k=>{location.hash='#/'+k;},key);
+    await p.waitForTimeout(1300);
+    return await p.evaluate(k=>(document.getElementById('pg-'+k).innerText||''),key); };
+  const ct=await seen('contact');
+  chk('문의에 운영자용 안내 없음', /등록되지 않았|phase\d|\.sql|미기재/i.test(ct), false);
+  const rp=await seen('report');
+  chk('신고에 운영자용 안내 없음', /등록되지 않았|phase\d|\.sql|미기재/i.test(rp), false);
+
+  /* 옆칸에 "카테고리" 제목만 남은 빈 상자가 있었습니다 */
+  await p.evaluate(()=>{location.hash='#/community';}); await p.waitForTimeout(1300);
+  chk('커뮤니티 빈 옆칸 안 보임', await p.evaluate(()=>{
+    const ec=document.getElementById('comm-cats');
+    if(!ec) return '칸없음';
+    const empty=!(ec.children.length||(ec.textContent||'').trim());
+    const side=ec.parentNode;
+    return (empty && side && side.offsetParent) ? '빈 상자가 보임' : '';
+  }), '');
+
+  /* "5건" 이라고 쓰고 넷만 보여 주면 세어 본 사람에게는 틀린 숫자입니다 */
+  await p.evaluate(()=>{location.hash='#/sj';}); await p.waitForTimeout(1800);
+  chk('업체 등록 요청 수가 목록과 맞는다', await p.evaluate(()=>{
+    const t=document.getElementById('pg-sj').innerText||'';
+    const m=t.match(/기다리는 요청 (\d+)건/); if(!m) return '';
+    const n=parseInt(m[1],10);
+    const rows=document.querySelectorAll('#pg-sj .ritem').length;
+    if(n<=rows) return '';
+    return /나머지 \d+건 보기/.test(t) ? '' : n+'건이라 쓰고 '+rows+'장만 보임';
+  }), '');
+  await p.evaluate(()=>{location.hash='#/';}); await p.waitForTimeout(900);
+
   log.push('7. 데이터가 없으면 메인에서 내린다 (예시 데이터 끔)');
   const c=await open(b,1440,950,{noDemo:true, fake:{emptyTables:["purchase_requests","suppliers","market_prices","jobs"]}});
   chk('실시간 요청 숨김', await c.evaluate(()=>{

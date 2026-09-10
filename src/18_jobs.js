@@ -133,7 +133,7 @@ window.renderJobsFull=function(){
       '<div><b>정규직·장기 채용입니다.</b> 오늘·내일 바로 필요한 현장 인력은 당일알바에서 찾으세요.</div>'+
       '<div class="grow keep" style="flex:0 0 auto;">'+
         '<button class="gbtn gbtn-w gbtn-sm" onclick="gOpenDaily()">당일알바</button>'+
-        '<button class="gbtn gbtn-w gbtn-sm" onclick="go(&quot;wprof&quot;)">구직 프로필 등록</button></div>'+
+        '<button class="gbtn gbtn-w gbtn-sm" onclick="gOpenWProf()">구직 프로필 등록</button></div>'+
     '</div>'+
     '<div class="job-stats-bar">'+
       '<div class="jsb-item"><span class="jsb-dot" style="background:var(--gn)"></span>정규직 <span class="jsb-count">'+cnt("full")+'건</span></div>'+

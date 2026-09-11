@@ -2,6 +2,13 @@
 window.__FAKE_INIT = function(opts){
   opts = opts || {};
   var missing = opts.missingTables || [];
+  /* 표가 없는 것 말고 **다른** 오류도 흉내 낼 수 있어야 합니다 —
+     RLS 가 anon 의 select 를 막는 경우(42501)와 그냥 연결이 안 되는 경우를
+     구분해서 안내해야 하는데, 지금까지는 그걸 테스트할 방법이 없었습니다.
+       errorAll    : 모든 표에 이 오류 (예: {code:'42501', message:'permission denied…'})
+       errorTables : {표이름: 오류} 로 표마다 따로 */
+  var errAll = opts.errorAll || null;
+  var errTbl = opts.errorTables || {};
   var now = Date.now();
   var DB = {
     purchase_requests: [
@@ -154,7 +161,9 @@ window.__FAKE_INIT = function(opts){
     self.limit=function(n){ self._limit=n; return self; };
     self.then=function(res,rej){
       var out;
+      var forced = errTbl[table] || errAll;
       if(missing.indexOf(table)>=0){ out={ data:null, error:err("Could not find the table 'public."+table+"' in the schema cache",'PGRST205') }; }
+      else if(forced){ out={ data:null, error:Object.assign({message:'',code:'',details:'',hint:''}, forced) }; }
       else if(kind==='select'){ out={ data:apply(DB[table]||[]), error:null }; }
       else if(kind==='insert'){
         var cols = Object.keys((DB[table]&&DB[table][0])||{});

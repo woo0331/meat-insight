@@ -100,6 +100,71 @@ const U={id:'u1',user_metadata:{name:'김철수',role:'buyer'}};
    return opts && opts.provider+'|'+/index\.html/.test(opts.options.redirectTo);
  }), 'kakao|true');
 
+ /* ── 서버에 붙긴 했는데 읽을 권한이 없을 때 ──────────────────────────
+    RLS 가 anon 의 select 를 막거나 anon 키가 틀리면 42501 · PGRST301 ·
+    401 이 옵니다. 예전에는 이걸 "서버에 연결할 수 없습니다" 로 뭉뚱그려서
+    두 가지가 잘못됐습니다 — 서버는 멀쩡한데 못 붙었다고 거짓말을 했고,
+    "다시 시도" 를 눌러도 영영 안 되는데 버튼을 줬습니다.
+    무엇을 고쳐야 하는지는 운영자에게만 콘솔로 말합니다. */
+ log.push('5. 권한·키 문제는 "연결 실패" 와 다르게 말한다');
+ const openErr=async(inject)=>{
+   const z=await b.newPage({viewport:{width:1440,height:900}});
+   z._warns=[]; z.on('console',m=>{ if(m.type()==='warning') z._warns.push(m.text()); });
+   await z.addInitScript(FAKE+"\nwindow.__FAKE_INIT("+inject+")");
+   await z.goto('file:///home/user/meat-insight/index.html',{waitUntil:'load'});
+   await z.waitForTimeout(4200);
+   return z;
+ };
+ for(const [nm,inject] of [
+   ['RLS 차단',  "{errorAll:{code:'42501',message:'permission denied for table purchase_requests'}}"],
+   ['키 오류',   "{errorAll:{message:'Invalid API key'}}"],
+ ]){
+   const z=await openErr(inject);
+   chk(nm+' — 띠는 뜬다', await z.evaluate(()=>!!document.getElementById('net-bar')), 'true');
+   chk(nm+' — "연결할 수 없다"고 안 한다', await z.evaluate(()=>
+     /연결할 수 없습니다/.test((document.querySelector('#net-bar span')||{}).textContent||'')), 'false');
+   chk(nm+' — 소용없는 "다시 시도" 없음', await z.evaluate(()=>
+     !!document.querySelector('.net-retry')), 'false');
+   chk(nm+' — 운영자에게는 콘솔로', z._warns.some(t=>/권한이 없습니다/.test(t)), 'true');
+   chk(nm+' — 손님에게 SQL·RLS 안 보임', await z.evaluate(()=>
+     /RLS|\.sql|anon|42501/i.test(document.body.innerText)), 'false');
+   await z.close();
+ }
+ /* 진짜 연결 실패는 예전 그대로 — 다시 시도 버튼이 있어야 합니다 */
+ const z2=await openErr("{errorAll:{message:'Failed to fetch'}}");
+ chk('연결 실패는 예전대로', await z2.evaluate(()=>{
+   const bar=document.getElementById('net-bar');
+   return !!bar && /연결할 수 없습니다/.test(bar.textContent) && !!bar.querySelector('.net-retry');
+ }), 'true');
+ await z2.close();
+
+ /* ── 검색칸이 아이디 칸으로 안 보이는가 ──────────────────────────────
+    이 페이지에는 로그인 창(type=password)이 DOM 에 함께 있어서, 크롬
+    비밀번호 관리자가 그 앞의 첫 글자칸을 아이디 칸으로 보고 저장해 둔 값을
+    넣었습니다 — 실제로 히어로 검색창에 "admin" 이 채워져 있었습니다.
+    autocomplete="off" 만으로는 안 막힙니다. */
+ log.push('6. 검색칸에 저장된 아이디가 안 들어가게');
+ const s1=await b.newPage({viewport:{width:1440,height:900}});
+ await s1.addInitScript(FAKE+"\nwindow.__FAKE_INIT({})");
+ await s1.goto('file:///home/user/meat-insight/index.html',{waitUntil:'load'});
+ await s1.waitForTimeout(3200);
+ chk('히어로 검색칸', await s1.evaluate(()=>{
+   const i=document.getElementById('hs-input');
+   return i.type+'|'+(i.name?'name있음':'name없음')+'|'+i.getAttribute('autocomplete');
+ }), 'search|name있음|off');
+ chk('목록 거르기 칸도', await s1.evaluate(async()=>{
+   go('suppliers'); await new Promise(r=>setTimeout(r,900));
+   const i=document.querySelector('.gflt-in');
+   return i ? (i.type+'|'+(i.name?'name있음':'name없음')) : '(칸 없음)';
+ }), 'search|name있음');
+ chk('검색은 그대로 동작', await s1.evaluate(async()=>{
+   go('h'); await new Promise(r=>setTimeout(r,400));
+   const i=document.getElementById('hs-input'); i.value='돼지고기'; heroGo();
+   await new Promise(r=>setTimeout(r,600));
+   return !document.getElementById('pg-h').classList.contains('on');
+ }), 'true');
+ await s1.close();
+
  console.log(log.join('\n'));
  console.log('\n오류: '+(errs.length?'\n  '+errs.join('\n  '):'없음'));
  console.log(errs.length?'\n❌ 실패 '+errs.length+'건':'\n✅ 전체 통과');

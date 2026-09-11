@@ -77,6 +77,19 @@ function isMissingTable(err){
   return /42P01|PGRST205|Could not find the table|relation .* does not exist/i.test(m);
 }
 
+/* 서버에 **붙긴 했는데** 읽을 권한이 없는 경우입니다.
+     · RLS 정책이 anon 에게 select 를 안 열어 줌  → 42501 · PGRST301
+     · anon 키가 틀렸거나 만료                    → 401 · Invalid API key · JWT
+   이건 "연결 실패" 가 아니라 **설정 문제**라서, 손님이 "다시 시도" 를 눌러도
+   영영 안 됩니다. 그래서 따로 가려냅니다. */
+function isDeniedError(err){
+  if(!err) return false;
+  var m=(err.message||"")+" "+(err.code||"")+" "+(err.details||"")+" "+(err.hint||"");
+  if(String(err.status||"")==="401" || String(err.status||"")==="403") return true;
+  return /42501|PGRST301|permission denied|not authorized|Invalid API key|JWT|row-level security/i.test(m);
+}
+G.isDeniedError=isDeniedError;
+
 /* 신규 컬럼이 아직 없으면 그 컬럼만 빼고 다시 시도합니다.
    → 마이그레이션 전에도 요청 등록이 실패하지 않습니다. */
 async function insertSafe(table, payload){

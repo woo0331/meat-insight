@@ -1073,6 +1073,11 @@ html .trust-bar{display:none;}
    (:focus-within 이라 입력칸 초점 링과 따로 놉니다 — 링은 접근성용입니다) */
 .gsx:focus-within{border-color:var(--cta);box-shadow:0 14px 34px rgba(0,0,0,.28),0 0 0 3px rgba(180,35,44,.16);}
 .gsx-ico{flex-shrink:0;display:flex;color:var(--ink3);}
+/* type="search" 로 바꾸면 웹킷이 자기 지우기 버튼과 여백을 붙입니다 —
+   우리 검색창 모양이 흐트러지지 않게 걷어냅니다. */
+.gh-s-in::-webkit-search-decoration,
+.gh-s-in::-webkit-search-cancel-button,
+.gh-s-in::-webkit-search-results-button{-webkit-appearance:none;appearance:none;}
 /* ⚠️ 여기에 outline:none 을 쓰면 안 됩니다. gori-app.css 의
    html :focus-visible (0,1,1) 보다 이 규칙(0,3,0)이 굵어서, 검색창의
    초점 테두리가 통째로 사라집니다. 실제로 그렇게 지웠다가 되살렸습니다. */
@@ -1581,7 +1586,13 @@ a.gi-card:hover .gi-t{color:var(--gn2);}
       <!-- GlobalSearch — 기존 heroGo() 에 그대로 연결되어 있습니다 -->
       <div class="gh-search gsx">
         <span class="gh-s-ico gsx-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>
-        <input class="gh-s-in" id="hs-input" placeholder="업체, 품목, 서비스명을 검색해보세요" autocomplete="off" onkeydown="if(event.key==='Enter')heroGo()"/>
+        <!-- ⚠️ type="search" + name 을 반드시 둘 다 둡니다. 이 페이지에는
+             로그인 창(#l-pw, type=password)이 DOM 에 함께 있어서, 크롬 비밀번호
+             관리자가 그 앞의 맨 첫 글자칸을 아이디 칸으로 보고 저장해 둔 값을
+             넣습니다 — 실제로 검색창에 "admin" 이 채워져 있었습니다.
+             autocomplete="off" 만으로는 막히지 않습니다 (크롬이 무시합니다).
+             id 와 onclick 은 그대로입니다. -->
+        <input class="gh-s-in" id="hs-input" type="search" name="gori-search" placeholder="업체, 품목, 서비스명을 검색해보세요" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')heroGo()"/>
         <button class="gh-s-btn" onclick="heroGo()">검색하기</button>
       </div>
 

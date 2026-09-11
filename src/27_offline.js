@@ -9,8 +9,23 @@
    를 보여주고, 상단에 안내 띠를 띄웁니다.
    ════════════════════════════════════════════════════════════════════ */
 
-var NET = { ok:null, tried:false, retrying:false };
+/* reason — "net" 연결 실패 · "denied" 권한/키 문제(설정) */
+var NET = { ok:null, tried:false, retrying:false, reason:"net", warned:false };
 G.NET = NET;
+
+/* 권한·키 문제는 손님이 "다시 시도" 를 눌러도 영영 안 됩니다.
+   무엇을 고쳐야 하는지는 **운영자에게만** 콘솔로 말합니다 (CLAUDE.md). */
+function netNoteDenied(err){
+  NET.reason="denied";
+  if(NET.warned) return; NET.warned=true;
+  try{
+    console.warn("[고리] 서버에는 붙었는데 데이터를 읽을 권한이 없습니다. "+
+      "anon 키로 select 가 막혀 있거나 키가 틀렸습니다.\n"+
+      " · RLS 를 켰다면 anon 에게 select 를 여는 정책이 있는지 확인하세요 (db/RLS_ON.sql)\n"+
+      " · index.html 의 SU · SK 가 지금 쓰는 프로젝트의 값인지 확인하세요\n"+
+      " 응답: ", err);
+  }catch(e){}
+}
 
 function netDown(){
   if(navigator && navigator.onLine===false) return true;
@@ -26,11 +41,17 @@ function netBar(){
   if(el) return;
   el=document.createElement("div");
   el.id="net-bar"; el.className="net-bar"; el.setAttribute("role","status");
+  /* 권한·키 문제일 때는 "연결할 수 없습니다" 가 거짓말이고, 다시 시도해도
+     영영 안 됩니다 — 버튼을 빼고 기다려 달라고만 합니다. */
+  var denied = (NET.reason==="denied" && navigator.onLine!==false);
   el.innerHTML='<span>'+
     (navigator.onLine===false
       ? "인터넷이 끊겼습니다. 연결을 확인해주세요."
-      : "서버에 연결할 수 없습니다. 목록이 비어 보일 수 있습니다.")+
-    '</span><button type="button" class="net-retry" onclick="gNetRetry()">다시 시도</button>';
+      : denied
+        ? "지금은 목록을 불러올 수 없습니다. 잠시 뒤 다시 확인해 주세요."
+        : "서버에 연결할 수 없습니다. 목록이 비어 보일 수 있습니다.")+
+    '</span>'+
+    (denied?"":'<button type="button" class="net-retry" onclick="gNetRetry()">다시 시도</button>');
   document.body.appendChild(el);
   netPlace(el);
 }
@@ -93,8 +114,12 @@ function patchOffline(){
     var origSel=selectSafe;
     selectSafe=async function(){
       var r=await origSel.apply(this, arguments);
-      if(r && r.error && !r.unavailable) NET.ok=false;
-      else if(r && !r.error) NET.ok=true;
+      if(r && r.error && !r.unavailable){
+        NET.ok=false;
+        if(typeof isDeniedError==="function" && isDeniedError(r.error)) netNoteDenied(r.error);
+        else NET.reason="net";
+      }
+      else if(r && !r.error){ NET.ok=true; NET.reason="net"; NET.warned=false; }
       NET.tried=true;
       return r;
     };

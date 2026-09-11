@@ -106,7 +106,9 @@ function fltBuild(kind){
     '<div class="gflt-row">'+
       '<div class="gflt-search">'+
         '<span class="gflt-ico" aria-hidden="true">🔎</span>'+
-        '<input class="gflt-in" id="'+id+'-q" type="text" autocomplete="off" spellcheck="false" '+
+        /* 목록 거르기 칸도 같은 이유로 type="search" 입니다 — 크롬이
+           아이디 칸으로 보고 저장된 값을 넣지 않게 합니다 */
+        '<input class="gflt-in" id="'+id+'-q" type="search" name="gori-filter-'+id+'" autocomplete="off" spellcheck="false" '+
           'aria-label="'+(isReq?"요청 검색":"업체 검색")+'" placeholder="'+
           (isReq?"품목·지역·내용으로 검색 (예: 삼겹살, 경기)":"업체명·품목·지역으로 검색 (예: 도축, 부산)")+'">'+
         '<button type="button" class="gflt-x" id="'+id+'-x" aria-label="검색어 지우기" hidden>✕</button>'+

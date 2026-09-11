@@ -59,6 +59,23 @@ async function withMock(scenario, fn){
    errs.push(...p._errs.map(e=>'ok: '+e)); await p.close();
  });
 
+ /* ⚠️ 표가 "있음" 이어도 사이트가 실제로 쓰는 질의는 실패할 수 있습니다.
+    오래 전에 만든 표에 created_at 이 없으면 .order("created_at") 이 400 을
+    내고, 화면에는 목록이 텅 빈 채 "서버에 연결할 수 없습니다" 가 뜹니다.
+    맨몸 select 만 보던 예전 점검은 이걸 "정상" 이라고 했습니다. */
+ log.push('2-1. 표는 있는데 정렬 칸이 없을 때');
+ await withMock('no-sort-column', async()=>{
+   const p=await open(); const t=await runAndRead(p,false);
+   chk('표 자체는 있다고 함', /purchase_requests/.test(t), 'true');
+   chk('실제 질의 구간이 있다', /사이트가 실제로 쓰는 질의/.test(t), 'true');
+   chk('400 을 지목', /purchase_requests.*HTTP 400/.test(t), 'true');
+   chk('원인을 말해줌', /정렬용 칸이 없습니다/.test(t), 'true');
+   chk('고칠 SQL 을 준다', /add column if not exists created_at/.test(t), 'true');
+   chk('정상인 표는 통과', /market_prices\s*정상/.test(t), 'true');
+   chk('문제로 표시', await p.evaluate(()=>!!document.querySelector('#sum .pill.r')), 'true');
+   errs.push(...p._errs.map(e=>'nosort: '+e)); await p.close();
+ });
+
  log.push('3. phase2·3 미실행');
  await withMock('phase2-missing', async()=>{
    const p=await open(); const t=await runAndRead(p,false);

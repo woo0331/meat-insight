@@ -33,6 +33,14 @@ let READABLE = new Set(["purchase_requests","suppliers","jobs","market_prices"])
 let ANON_INSERT = new Set(["purchase_requests"]);
 let ANON_DELETE = new Set();
 
+if (SCENARIO === "no-sort-column") {
+  /* 오래 전에 만든 표 — 내용은 있는데 created_at 이 없습니다.
+     맨몸 select 는 되고, .order("created_at") 만 400 이 납니다. */
+  ["purchase_requests","suppliers","jobs"].forEach(t => {
+    SCHEMA[t] = SCHEMA[t].filter(c => c !== "created_at");
+  });
+}
+
 if (SCENARIO === "phase2-missing") {
   /* phase2·3 미실행 — 새 표가 없고 기존 표에 컬럼도 없음 */
   ["quotes","reviews","day_jobs","day_job_applications","worker_profiles","favorites",
@@ -95,6 +103,18 @@ http.createServer((req, res) => {
   if (!SCHEMA[table]) {
     return send(res, 404, { code: "PGRST205",
       message: `Could not find the table 'public.${table}' in the schema cache` });
+  }
+
+  /* 있는 표인데 **정렬용 칸이 없으면** PostgREST 는 400 을 돌려줍니다.
+     표는 "있음" 으로 나오는데 사이트 화면에서는 목록이 텅 비고
+     "서버에 연결할 수 없습니다" 가 뜨던 경우입니다. */
+  const ord = u.searchParams.get("order");
+  if (ord) {
+    const col = String(ord).split(".")[0];
+    if (col && SCHEMA[table].indexOf(col) < 0) {
+      return send(res, 400, { code: "42703",
+        message: `column ${table}.${col} does not exist` });
+    }
   }
 
   if (req.method === "POST") {

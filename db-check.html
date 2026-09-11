@@ -254,6 +254,41 @@ pre:empty{display:none}
     }).then(function(st){
       if (!st) return;
       L("");
+      /* ⚠️ 위 2번은 맨몸 select 만 봅니다. 그런데 사이트는 목록을
+         .order("created_at") 로 가져옵니다 — 표에 그 칸이 없으면 표는
+         "있음" 으로 나오는데 실제 화면에서는 400 이 나고 목록이 텅 빕니다.
+         "서버에 연결할 수 없습니다" 가 그래서 떴습니다. 실제 질의로 한 번 더 봅니다. */
+      L("2-1. 사이트가 실제로 쓰는 질의");
+      var REAL = [
+        { t:"purchase_requests", q:"?select=*&order=created_at.desc&limit=1", why:"홈 실시간 요청 · 요청 목록" },
+        { t:"suppliers",         q:"?select=*&order=created_at.desc&limit=1", why:"홈 등록 업체 · 업체 찾기" },
+        { t:"jobs",              q:"?select=*&order=created_at.desc&limit=1", why:"구인구직" },
+        { t:"market_prices",     q:"?select=*&order=price_date.desc&limit=1", why:"축산 시세" }
+      ];
+      return REAL.reduce(function(chain, e){
+        return chain.then(function(){
+          if (st[e.t] === "missing") { L("   — " + e.t + " 없음 (위 참고)"); return; }
+          return rest("/rest/v1/" + e.t + e.q).then(function(h){
+            var pad = (e.t + "                      ").slice(0, 22);
+            var msg = (h.json && (h.json.message || h.json.hint)) || "";
+            if (h.ok){ L("   ✅ " + pad + "정상 — " + e.why); return; }
+            if (h.status === 401 || h.status === 403){
+              L("   ✅ " + pad + "읽기 차단(RLS) — " + e.why); return;
+            }
+            problems++;
+            L("   ❌ " + pad + "HTTP " + h.status + " — " + e.why);
+            L("      " + String(msg).slice(0, 110));
+            if (/column|42703|does not exist/i.test(msg + ((h.json && h.json.code)||""))){
+              L("      → 이 표에 정렬용 칸이 없습니다. 사이트는 정렬 없이 다시 불러오도록");
+              L("        고쳐 두었으니 목록은 보입니다(순서만 최신순이 아닙니다).");
+              L("        칸을 추가하려면: alter table public." + e.t + " add column if not exists created_at timestamptz default now();");
+            }
+          });
+        });
+      }, Promise.resolve()).then(function(){ return st; });
+    }).then(function(st){
+      if (!st) return;
+      L("");
       L("3. RLS — 공개 키로 무엇까지 되는가");
       var readable = EXPECT.filter(function(e){ return st[e.t] === "open"; }).map(function(e){ return e.t; });
       var blocked  = EXPECT.filter(function(e){ return st[e.t] === "blocked"; }).map(function(e){ return e.t; });

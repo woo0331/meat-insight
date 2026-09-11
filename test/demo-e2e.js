@@ -79,6 +79,26 @@ async function open(b, empty, w, h){
   chk('배지 0개', await r.evaluate(()=>document.querySelectorAll('.dm-tag').length), 0);
   chk('진짜 요청이 보임', await r.evaluate(()=>document.querySelectorAll('#rq-widget .rc').length>0), 'true');
 
+  /* ── 진짜에는 절대 "예시" 를 붙이지 않는다 ─────────────────────────
+     예전에는 예시 기능이 켜져 있기만 하면 그려진 카드를 전부 훑어
+     배지를 달았습니다. 요청만 비고 업체·공고는 진짜인 사이트에서
+     **진짜 업체와 진짜 공고에 "예시" 가 붙었습니다.**
+     첫 손님이 올린 진짜 요청에 붙으면 더 나쁩니다. */
+  log.push('6-1. 한쪽만 비었을 때 — 그쪽만 예시');
+  const mix=await b.newPage({viewport:{width:1440,height:1000}});
+  await mix.addInitScript(FAKE+"\nwindow.__FAKE_INIT({});"+
+    "\n(function(){var d=window.__DB;if(d){d.purchase_requests=[];}})();");
+  mix._errs=[]; mix.on('pageerror',e=>mix._errs.push(e.message)); mix.on('dialog',d=>d.accept());
+  await mix.goto('file:///home/user/meat-insight/index.html',{waitUntil:'load'});
+  await mix.waitForTimeout(3200);
+  const zone=async(key,sel)=>{ await mix.evaluate(k=>go(k),key); await mix.waitForTimeout(1100);
+    return await mix.evaluate(s=>{const c=[...document.querySelectorAll(s)];
+      return c.length+'/'+c.filter(x=>x.querySelector('.dm-tag')).length;}, sel); };
+  chk('요청은 예시(전부 배지)', await zone('reqs','#rq-list-full .rc'), '6/6');
+  chk('업체는 진짜(배지 0)',   await zone('suppliers','#sup-full .sc2'), '3/0');
+  chk('공고는 진짜(배지 0)',   await zone('jobs','#job-full .job-card'), '2/0');  /* 요청 표를 비웠으니 구인 요청 한 건은 빠집니다 */
+  errs.push(...mix._errs.map(e=>'mix: '+e));
+
   log.push('7. 끄면 정직한 빈 상태');
   await e.evaluate(()=>{ try{ localStorage.setItem('gori.demoOff','1'); }catch(x){} });
   await e.reload({waitUntil:'load'}); await e.waitForTimeout(3200);

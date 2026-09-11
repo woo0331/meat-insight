@@ -74,7 +74,10 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
 .gcat-c.on{border-color:var(--gn);background:var(--gnl);}
 .gcat-ic{width:40px;height:40px;margin:0 auto 8px;border-radius:10px;background:var(--gnl);display:flex;align-items:center;justify-content:center;color:var(--gn);}
 .gcat-c.on .gcat-ic{background:#fff;}
-.gcat-n{font-size:13px;font-weight:700;color:var(--ink);line-height:1.35;}
+.gcat-n{font-size:13px;font-weight:700;color:var(--ink);line-height:1.35;
+  /* 낱말 가운데를 자르지 않습니다 — "창업·인테리 / 어" 처럼 한 글자가
+     혼자 내려가면 읽는 데 걸립니다. 좁은 화면 규칙은 아래 미디어쿼리에. */
+  word-break:keep-all;letter-spacing:-.03em;}
 
 /* ── STEP3 확인 ── */
 .gsum{background:var(--bg2);border:1px solid var(--bd);border-radius:12px;overflow:hidden;}
@@ -225,7 +228,11 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
   .qcmp{grid-template-columns:1fr;}
   .qbar{grid-template-columns:repeat(2,1fr);}
   .gcat-grid{grid-template-columns:repeat(3,1fr);gap:8px;}
-  .gcat-n{font-size:13px;}
+  /* 3열이면 칸이 100px 남짓입니다. 좌우 여백을 줄이고 글자를 한 단계
+     내려 "창업·인테리어"(7자) 가 한 줄에 들어가게 합니다. 12.5px 은
+     디자인 시스템의 제일 작은 단계이고, 12px 미만 금지에 걸리지 않습니다. */
+  .gcat-c{padding:16px 5px;}
+  .gcat-n{font-size:12.5px;}
   .grow{flex-direction:column;gap:0;}
   .grow.keep{flex-direction:row;gap:10px;}
   .my-kpi{grid-template-columns:repeat(2,1fr);}
@@ -404,6 +411,10 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
 
 /* 시세 출처 표기 */
 .mk-foot{padding:12px 16px 4px;font-size:13px;color:var(--ink4);font-weight:500;}
+/* 수집이 멈추면 옛날 값이 오늘 값처럼 읽힙니다 — 며칠 지난 자료인지 적습니다.
+   경고가 아니라 사실 표시라 --red 가 아니라 브랜드 주황을 씁니다. */
+.mk-old{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;
+  background:var(--gnl);color:var(--gn2);font-size:12.5px;font-weight:700;}
 
 /* ════════════════════════════════════════════════════════════════════
    구인구직 — 출처 배지 · 상세 펼침 · 안내 바
@@ -1128,6 +1139,16 @@ html .why{background:#fff;border-top:1px solid var(--bd);
 
 /* 첫 칸 위 여백은 카드가 이미 갖고 있습니다 — 겉옷이 한 겹 늘었을 뿐입니다 */
 .rwf:first-child > .glabel{margin-top:0;}
+
+/* 못 채운 첫 칸 — 안내만 띄우고 말면 긴 화면에서 어디인지 찾아야 합니다.
+   47_rwease 의 rwGotoMissing() 이 여기까지 굴려다 놓고 이 겉옷을 입힙니다.
+   --red 는 이미 입력 오류(.gin.err)에 쓰는 색이라 CTA 딥레드와 다릅니다. */
+.rwf-miss{border-radius:10px;padding:10px 12px;margin:0 -12px;
+  background:var(--redbg);box-shadow:inset 0 0 0 1.5px var(--redb);}
+.rwf-miss > .glabel{margin-top:0;color:var(--red);}
+@media (prefers-reduced-motion:no-preference){
+  .rwf-miss{transition:background-color .2s,box-shadow .2s;}
+}
 
 html .rw-more{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;
   margin-top:16px;padding:0 14px;

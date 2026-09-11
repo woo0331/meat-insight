@@ -181,9 +181,14 @@ function pfPriceCell(){
     '<div class="pstat-v wait">등록 전</div>'+
     '<div class="pstat-d">관리자가 시세를 넣으면 표시됩니다</div></div></div>';
   var m=rows[0], nm=(m.item||"")+(m.grade && String(m.item||"").indexOf(m.grade)<0 ? " "+m.grade : "");
-  var c=Number(m.change)||0;
-  var k = c>0?"up":(c<0?"dn":"");
-  var t = c>0 ? "전일 대비 ▲ "+pfNum(c) : (c<0 ? "전일 대비 ▼ "+pfNum(Math.abs(c)) : "전일과 같음");
+  /* 어제 값이 없으면 market-sync 가 change 를 null 로 둡니다.
+     그걸 0 으로 읽으면 "전일과 같음" — 확인되지 않은 사실이 됩니다.
+     수집 첫날에는 모든 줄이 그렇게 보입니다 (CLAUDE.md 3번). */
+  var raw=(m.change==null||m.change==="")?null:(Number(m.change)||0);
+  var c=raw||0;
+  var k = (raw==null)?"":(c>0?"up":(c<0?"dn":""));
+  var t = (raw==null) ? "전일 대비는 아직 알 수 없습니다"
+        : (c>0 ? "전일 대비 ▲ "+pfNum(c) : (c<0 ? "전일 대비 ▼ "+pfNum(Math.abs(c)) : "전일과 같음"));
   return '<div class="pstat-c">'+pfIcon("mkt")+'<div class="pstat-b">'+
     '<div class="pstat-l">'+esc(nm||"오늘의 축산 시세")+'</div>'+
     '<div class="pstat-v">'+esc(pfNum(Number(m.price)||0))+'<small>'+esc(m.unit||"원/kg")+'</small></div>'+
@@ -303,6 +308,17 @@ function csIcon(k){
     'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>';
 }
 
+
+/* 이름이 칸보다 길면 word-break:keep-all 이 무색합니다 — 브라우저가
+   결국 낱말 가운데를 자릅니다. 실제로 1200px 에서 "창업·인테리 / 어" 로
+   한 글자가 혼자 내려갔습니다 (칸이 74px, 일곱 글자는 88px).
+   가운뎃점 뒤에 폭 없는 공백을 하나 넣어 **끊을 자리를 알려 줍니다** —
+   "창업· / 인테리어" 로 깔끔하게 두 줄이 됩니다. 짧은 이름은 어차피
+   한 줄이라 아무 일도 일어나지 않습니다. */
+function csName(nm){
+  return esc(String(nm||"")).replace(/·/g, "·\u200B");
+}
+
 function csRender(){
   var el=$("cat8-grid"); if(!el) return;
   var html=CS_ITEMS.map(function(it){
@@ -313,7 +329,7 @@ function csRender(){
       /* 색값은 index.html 의 --cs-* 토큰과 .cs-g1~4 한 곳에서만 정합니다.
          여기서는 어느 묶음인지만 붙입니다 (it.bg/it.c 는 예전 값이라 안 씁니다) */
       '<span class="cs-ic">'+csIcon(it.i)+'</span>'+
-      '<span class="cs-nm">'+esc(it.nm)+'</span></button>';
+      '<span class="cs-nm">'+csName(it.nm)+'</span></button>';
   }).join("");
   /* go("cat8") 은 curCat8 이 정해져 있지 않으면 홈으로 되튕깁니다 —
      전체보기는 모든 분야가 한 화면에 있는 서비스 선택으로 보냅니다 */

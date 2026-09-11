@@ -22,24 +22,45 @@ function mkRows(cat){
   if(!cat || cat==="all") return rows;
   return rows.filter(function(m){ return String(m.category||"etc")===cat; });
 }
+/* 전일 대비는 **모르는 것(null)과 변동 없음(0)이 다릅니다.**
+   어제 값이 없으면 market-sync 가 null 을 넣습니다 — 그걸 0 으로
+   읽으면 "변동 없음" 이라는, 확인되지 않은 사실을 적게 됩니다.
+   (12_redesign 의 홈 시세 띠도 같은 이유로 고쳤습니다) */
 function mkPriceRow(m){
-  var c=Number(m.change)||0;
+  var raw=(m.change==null||m.change==="")?null:(Number(m.change)||0);
+  var c=raw||0;
   var arrow=c>0?"▲":(c<0?"▼":"—");
   var cls=c>0?"p-up":(c<0?"p-dn":"");
-  var chg=c?(arrow+" "+Math.abs(c).toLocaleString("ko-KR")):"—";
+  var chg=(raw==null)?"—":(c?(arrow+" "+Math.abs(c).toLocaleString("ko-KR")):"보합");
   return '<div class="price-row"><div class="price-item">'+esc(mkItemName(m))+'</div>'+
     '<div style="text-align:right;">'+
       '<div class="price-val">'+Number(m.price).toLocaleString("ko-KR")+
         '<span style="font-size:12.5px;color:var(--ink4);font-weight:400;"> '+esc(m.unit||"원/kg")+'</span></div>'+
       '<div class="price-chg '+cls+'">'+chg+'</div></div></div>';
 }
+/* 며칠 지난 자료인지 — 날짜만 적어 두면 손님이 오늘 날짜와 빼 봐야
+   압니다. 시세는 돈을 걸고 판단하는 숫자라, 수집이 멈췄을 때 옛날 값을
+   오늘 값처럼 읽게 두면 안 됩니다 (수집이 멈추는 일은 실제로 있습니다 —
+   기관이 엔드포인트를 바꾸면 tools/market-sync.js 가 0건으로 실패합니다).
+   사흘까지는 주말·공휴일로 늘 비므로 조용히 두고, 그 뒤부터 적습니다. */
+function mkDaysOld(when){
+  if(!when) return null;
+  var d=new Date(String(when)+"T00:00:00");
+  if(isNaN(d.getTime())) return null;
+  var n=new Date(); n.setHours(0,0,0,0);
+  var diff=Math.round((n-d)/86400000);
+  return (diff>0 && diff<3650) ? diff : null;
+}
 function mkFoot(rows){
   if(!rows.length) return "";
   var when=rows[0].price_date||"";
   var srcs={}; rows.forEach(function(m){ if(m.source) srcs[m.source]=1; });
   var list=Object.keys(srcs);
+  var old=mkDaysOld(when);
   return '<div class="mk-foot">'+(when?esc(String(when))+' 기준':'')+
-    (list.length?' · 출처 '+esc(list.join(", ")):'')+'</div>';
+    (list.length?' · 출처 '+esc(list.join(", ")):'')+
+    ((old!==null && old>3)?' <span class="mk-old">'+old+'일 전 자료입니다</span>':'')+
+    '</div>';
 }
 function mkEmptyPage(){
   return '<div class="gempty" style="margin:18px 14px;">'+

@@ -62,12 +62,27 @@ async function open(b,opts,vp){const p=await b.newPage({viewport:vp||{width:1440
  await p.waitForTimeout(700);
  chk('구직 프로필 화면', await p.evaluate(()=>(document.querySelector('.pg.on')||{}).id), 'pg-wprof');
 
- log.push('6. 공고가 하나도 없을 때');
+ log.push('6. 공고가 하나도 없을 때 — 예시로 채우고, 배지를 단다');
  let e0=await open(b,{emptyTables:['jobs']});
  await e0.evaluate(()=>{window.__DB.purchase_requests=window.__DB.purchase_requests.filter(r=>r.category_main!=='job');});
- await e0.evaluate(()=>go('jobs')); await e0.waitForTimeout(1100);
+ await e0.evaluate(()=>go('jobs')); await e0.waitForTimeout(1400);
+ /* 요청·업체와 같은 대접입니다 — 비어 있으면 예시를 깔되 카드마다 "예시" 를 답니다.
+    예전에는 예시를 옛 JOBS 배열에만 넣어서 이 화면만 늘 텅 비어 있었습니다. */
+ const dn=await e0.evaluate(()=>[...document.querySelectorAll('#job-full .job-card')].length);
+ chk('예시 공고가 보임', dn>0, 'true');
+ chk('전부 예시 배지', await e0.evaluate(()=>{
+   const c=[...document.querySelectorAll('#job-full .job-card')];
+   return c.length>0 && c.every(x=>x.querySelector('.dm-tag'));}), 'true');
+
+ log.push('6-1. 예시를 끄면 정직한 빈 상태');
+ await e0.evaluate(()=>{ try{ localStorage.setItem('gori.demoOff','1'); }catch(x){} });
+ await e0.reload({waitUntil:'load'}); await e0.waitForTimeout(2200);
+ await e0.evaluate(()=>{window.__DB.purchase_requests=window.__DB.purchase_requests.filter(r=>r.category_main!=='job');});
+ await e0.evaluate(()=>go('jobs')); await e0.waitForTimeout(1400);
  chk('빈 상태 안내', await e0.evaluate(()=>/등록된 공고가 아직 없습니다/.test(document.getElementById('job-full').textContent)), 'true');
  chk('올리기 버튼', await e0.evaluate(()=>/구인 공고 올리기/.test(document.getElementById('job-full').textContent)), 'true');
+ chk('예시 배지 없음', await e0.evaluate(()=>document.querySelectorAll('#job-full .dm-tag').length), 0);
+ await e0.evaluate(()=>{ try{ localStorage.removeItem('gori.demoOff'); }catch(x){} });
 
  await p.evaluate(()=>go('jobs')); await p.waitForTimeout(900);
  await p.screenshot({path:'jb-page.png',fullPage:false});

@@ -4005,24 +4005,45 @@ function mkRows(cat){
   if(!cat || cat==="all") return rows;
   return rows.filter(function(m){ return String(m.category||"etc")===cat; });
 }
+/* 전일 대비는 **모르는 것(null)과 변동 없음(0)이 다릅니다.**
+   어제 값이 없으면 market-sync 가 null 을 넣습니다 — 그걸 0 으로
+   읽으면 "변동 없음" 이라는, 확인되지 않은 사실을 적게 됩니다.
+   (12_redesign 의 홈 시세 띠도 같은 이유로 고쳤습니다) */
 function mkPriceRow(m){
-  var c=Number(m.change)||0;
+  var raw=(m.change==null||m.change==="")?null:(Number(m.change)||0);
+  var c=raw||0;
   var arrow=c>0?"▲":(c<0?"▼":"—");
   var cls=c>0?"p-up":(c<0?"p-dn":"");
-  var chg=c?(arrow+" "+Math.abs(c).toLocaleString("ko-KR")):"—";
+  var chg=(raw==null)?"—":(c?(arrow+" "+Math.abs(c).toLocaleString("ko-KR")):"보합");
   return '<div class="price-row"><div class="price-item">'+esc(mkItemName(m))+'</div>'+
     '<div style="text-align:right;">'+
       '<div class="price-val">'+Number(m.price).toLocaleString("ko-KR")+
         '<span style="font-size:12.5px;color:var(--ink4);font-weight:400;"> '+esc(m.unit||"원/kg")+'</span></div>'+
       '<div class="price-chg '+cls+'">'+chg+'</div></div></div>';
 }
+/* 며칠 지난 자료인지 — 날짜만 적어 두면 손님이 오늘 날짜와 빼 봐야
+   압니다. 시세는 돈을 걸고 판단하는 숫자라, 수집이 멈췄을 때 옛날 값을
+   오늘 값처럼 읽게 두면 안 됩니다 (수집이 멈추는 일은 실제로 있습니다 —
+   기관이 엔드포인트를 바꾸면 tools/market-sync.js 가 0건으로 실패합니다).
+   사흘까지는 주말·공휴일로 늘 비므로 조용히 두고, 그 뒤부터 적습니다. */
+function mkDaysOld(when){
+  if(!when) return null;
+  var d=new Date(String(when)+"T00:00:00");
+  if(isNaN(d.getTime())) return null;
+  var n=new Date(); n.setHours(0,0,0,0);
+  var diff=Math.round((n-d)/86400000);
+  return (diff>0 && diff<3650) ? diff : null;
+}
 function mkFoot(rows){
   if(!rows.length) return "";
   var when=rows[0].price_date||"";
   var srcs={}; rows.forEach(function(m){ if(m.source) srcs[m.source]=1; });
   var list=Object.keys(srcs);
+  var old=mkDaysOld(when);
   return '<div class="mk-foot">'+(when?esc(String(when))+' 기준':'')+
-    (list.length?' · 출처 '+esc(list.join(", ")):'')+'</div>';
+    (list.length?' · 출처 '+esc(list.join(", ")):'')+
+    ((old!==null && old>3)?' <span class="mk-old">'+old+'일 전 자료입니다</span>':'')+
+    '</div>';
 }
 function mkEmptyPage(){
   return '<div class="gempty" style="margin:18px 14px;">'+
@@ -7525,17 +7546,50 @@ var DM_JOBS=[
   {role:"포장 인력",   company:"○○냉장",   loc:"경기 화성", pay:"일 13만원",  emp:"단기"}
 ];
 
+/* ── "예시" 배지는 진짜 예시에만 ────────────────────────────────────
+   예전에는 화면에 그려진 카드를 전부 훑어 배지를 달았습니다. 그런데
+   배지를 다는 조건이 "예시 기능이 켜져 있는가" 뿐이라, **진짜 요청·
+   진짜 업체·진짜 공고에도 "예시" 가 붙었습니다.** 없는 것을 있다고
+   말하는 것만 거짓말이 아닙니다 — 있는 것을 예시라고 말하는 것도
+   똑같이 거짓말이고, 첫 손님의 진짜 요청에 붙으면 더 나쁩니다.
+   지금은 그 칸을 채우고 있는 배열이 실제로 예시(id 가 demo-)인지
+   보고 답니다. 진짜가 들어오면 배지를 떼고 안내 띠도 내립니다. */
+function dmIsDemoRow(x){
+  var id=String((x&&(x.id||x.key))||"").replace(/^[a-z]+:/,"");
+  return id.indexOf("demo-")===0;
+}
+function dmIsDemoList(arr){
+  return !!(arr && arr.length && arr.every(dmIsDemoRow));
+}
+var DM_ZONES=[
+  { ids:["rq-widget","rq-list-full"], sel:".rc,.ritem",
+    live:function(){ return (typeof REQS!=="undefined")?REQS:null; } },
+  { ids:["sup-home","sup-full"],      sel:".sc2",
+    live:function(){ return (typeof SUPS!=="undefined")?SUPS:null; } },
+  { ids:["job-full","job-widget"],    sel:".job-card",
+    live:function(){ return (typeof JB!=="undefined")?JB.rows:((typeof JOBS!=="undefined")?JOBS:null); } }
+];
 function dmMarkAll(){
-  /* 그려진 카드마다 "예시" 배지를 답니다 */
-  [".rc",".sc2",".job-card",".ritem"].forEach(function(sel){
-    [].slice.call(document.querySelectorAll("#pg-h "+sel+", #pg-reqs "+sel+", #pg-suppliers "+sel+", #pg-jobs "+sel))
-      .forEach(function(c){
-        if(c.querySelector(".dm-tag")) return;
-        var b=document.createElement("span");
-        b.className="dm-tag"; b.textContent="예시";
-        c.insertBefore(b, c.firstChild);
+  var any=false;
+  DM_ZONES.forEach(function(z){
+    var on=dmEnabled() && dmIsDemoList(z.live());
+    if(on) any=true;
+    z.ids.forEach(function(id){
+      var host=$(id); if(!host) return;
+      [].slice.call(host.querySelectorAll(z.sel)).forEach(function(c){
+        var tag=c.querySelector(".dm-tag");
+        if(on && !tag){
+          var b=document.createElement("span");
+          b.className="dm-tag"; b.textContent="예시";
+          c.insertBefore(b, c.firstChild);
+        } else if(!on && tag && tag.parentNode){
+          tag.parentNode.removeChild(tag);
+        }
       });
+    });
   });
+  var bar=$("dm-bar");
+  if(bar) bar.style.display = any ? "" : "none";
 }
 
 /* 목록은 여러 곳에서 다시 그려집니다 (분야 거르기·리디자인 패치 등).
@@ -7574,6 +7628,47 @@ window.gDemoOff=function(){
   try{ localStorage.setItem(DM_KEY,"1"); }catch(e){}
   location.reload();
 };
+
+/* ── 구인구직 화면은 JOBS 가 아니라 JB.rows 를 봅니다 ──────────────
+   18_jobs 가 구인구직을 다시 만들면서, 화면은 jobs 표와 요청(구인)을
+   합친 JB.rows 로 그리게 되었습니다. 그런데 예시는 옛 JOBS 배열에만
+   넣고 있어서 **한 장도 안 보였습니다** — 홈의 구인 칸도 45_main 의
+   MN_OFF_W 로 내려가 있으니, 예시 구인 셋은 아무 데도 안 나왔습니다.
+   구인구직은 헤더 메뉴 넷 중 하나라, 문 열기 전에는 그 화면만 텅 빕니다.
+   같은 자리(JB.rows)에 넣고 "예시" 배지도 그대로 답니다. */
+function dmJobRow(j,i){
+  return { id:"demo-j"+i, job_role:j.role, company:j.company, location:j.loc,
+           pay:j.pay, employment:j.emp, kind:"hire",
+           created_at:new Date(Date.now()-(i+1)*7200000).toISOString() };
+}
+function dmSeedJB(){
+  if(!dmEnabled()) return false;
+  if(typeof JB==="undefined" || typeof jbFromJob!=="function") return false;
+  if(JB.rows && JB.rows.length) return false;
+  JB.rows=DM_JOBS.map(function(j,i){ return jbFromJob(dmJobRow(j,i)); });
+  try{ if(typeof renderJobsFull==="function") renderJobsFull(); }catch(e){}
+  return true;
+}
+
+/* 구인구직 화면을 열 때마다 jbLoad() 가 JB.rows 를 다시 채웁니다.
+   진짜가 없을 때만 예시로 되메웁니다 — 있으면 손대지 않습니다.
+   ⚠️ dmFill() 안에서 부르면 안 됩니다. 거기서는 JB.rows 가 "공고가
+   없다" 가 아니라 "구인구직 화면을 아직 안 열었다" 라서 비어 있고,
+   진짜 공고가 있는 사이트에도 예시 띠가 떴습니다. 한 번이라도
+   불러온 뒤에 비어 있을 때만 채웁니다. */
+function dmWrapJbLoad(){
+  if(typeof jbLoad!=="function" || jbLoad._dm) return;
+  var orig=jbLoad;
+  jbLoad=function(){
+    return Promise.resolve(orig.apply(this, arguments)).then(function(rows){
+      if(rows && rows.length) return rows;
+      if(typeof netDown==="function"){ try{ if(netDown()) return rows; }catch(e){} }
+      if(dmSeedJB()){ setTimeout(function(){ try{ dmMarkAll(); }catch(e){} }, 80); return JB.rows; }
+      return rows;
+    });
+  };
+  jbLoad._dm=true;
+}
 
 function dmFill(){
   if(!dmEnabled()) return;
@@ -7616,13 +7711,8 @@ function dmFill(){
   }
 
   if(typeof JOBS!=="undefined" && !JOBS.length && typeof mapJob==="function"){
-    JOBS=DM_JOBS.map(function(j,i){
-      return mapJob({ id:"demo-j"+i, job_role:j.role, company:j.company, location:j.loc,
-        pay:j.pay, employment:j.emp, kind:"hire",
-        created_at:new Date(Date.now()-(i+1)*7200000).toISOString() });
-    });
-    try{ if(typeof renderJobWidget==="function") renderJobWidget();
-         if(typeof renderJobsFull==="function") renderJobsFull(); }catch(e){}
+    JOBS=DM_JOBS.map(function(j,i){ return mapJob(dmJobRow(j,i)); });
+    try{ if(typeof renderJobWidget==="function") renderJobWidget(); }catch(e){}
     did=true;
   }
 
@@ -7631,6 +7721,7 @@ function dmFill(){
 
 function patchDemo(){
   if(G._demo) return; G._demo=true;
+  try{ dmWrapJbLoad(); }catch(e){}
   dmFill();
   /* DB 응답이 늦게 올 수 있어 한 번 더 봅니다. 그때 실데이터가 있으면
      위 조건(!REQS.length)에서 걸러져 예시는 들어가지 않습니다. */
@@ -8299,9 +8390,14 @@ function pfPriceCell(){
     '<div class="pstat-v wait">등록 전</div>'+
     '<div class="pstat-d">관리자가 시세를 넣으면 표시됩니다</div></div></div>';
   var m=rows[0], nm=(m.item||"")+(m.grade && String(m.item||"").indexOf(m.grade)<0 ? " "+m.grade : "");
-  var c=Number(m.change)||0;
-  var k = c>0?"up":(c<0?"dn":"");
-  var t = c>0 ? "전일 대비 ▲ "+pfNum(c) : (c<0 ? "전일 대비 ▼ "+pfNum(Math.abs(c)) : "전일과 같음");
+  /* 어제 값이 없으면 market-sync 가 change 를 null 로 둡니다.
+     그걸 0 으로 읽으면 "전일과 같음" — 확인되지 않은 사실이 됩니다.
+     수집 첫날에는 모든 줄이 그렇게 보입니다 (CLAUDE.md 3번). */
+  var raw=(m.change==null||m.change==="")?null:(Number(m.change)||0);
+  var c=raw||0;
+  var k = (raw==null)?"":(c>0?"up":(c<0?"dn":""));
+  var t = (raw==null) ? "전일 대비는 아직 알 수 없습니다"
+        : (c>0 ? "전일 대비 ▲ "+pfNum(c) : (c<0 ? "전일 대비 ▼ "+pfNum(Math.abs(c)) : "전일과 같음"));
   return '<div class="pstat-c">'+pfIcon("mkt")+'<div class="pstat-b">'+
     '<div class="pstat-l">'+esc(nm||"오늘의 축산 시세")+'</div>'+
     '<div class="pstat-v">'+esc(pfNum(Number(m.price)||0))+'<small>'+esc(m.unit||"원/kg")+'</small></div>'+
@@ -8421,6 +8517,17 @@ function csIcon(k){
     'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>';
 }
 
+
+/* 이름이 칸보다 길면 word-break:keep-all 이 무색합니다 — 브라우저가
+   결국 낱말 가운데를 자릅니다. 실제로 1200px 에서 "창업·인테리 / 어" 로
+   한 글자가 혼자 내려갔습니다 (칸이 74px, 일곱 글자는 88px).
+   가운뎃점 뒤에 폭 없는 공백을 하나 넣어 **끊을 자리를 알려 줍니다** —
+   "창업· / 인테리어" 로 깔끔하게 두 줄이 됩니다. 짧은 이름은 어차피
+   한 줄이라 아무 일도 일어나지 않습니다. */
+function csName(nm){
+  return esc(String(nm||"")).replace(/·/g, "·\u200B");
+}
+
 function csRender(){
   var el=$("cat8-grid"); if(!el) return;
   var html=CS_ITEMS.map(function(it){
@@ -8431,7 +8538,7 @@ function csRender(){
       /* 색값은 index.html 의 --cs-* 토큰과 .cs-g1~4 한 곳에서만 정합니다.
          여기서는 어느 묶음인지만 붙입니다 (it.bg/it.c 는 예전 값이라 안 씁니다) */
       '<span class="cs-ic">'+csIcon(it.i)+'</span>'+
-      '<span class="cs-nm">'+esc(it.nm)+'</span></button>';
+      '<span class="cs-nm">'+csName(it.nm)+'</span></button>';
   }).join("");
   /* go("cat8") 은 curCat8 이 정해져 있지 않으면 홈으로 되튕깁니다 —
      전체보기는 모든 분야가 한 화면에 있는 서비스 선택으로 보냅니다 */
@@ -9078,8 +9185,12 @@ function rsStillMine(p){
   var b=rsBody(p); if(!b) return false;
   return rsEmpty(p) || (b.children.length===1 && b.firstElementChild.classList.contains(RS_SKEL));
 }
+/* RS.busy 는 **어느 화면을 여는 중인지** 담습니다. 되풀이를 막으려고 둔
+   것인데(gOpenChatList 가 go("chats") 를 다시 부릅니다), 예전에는 참/거짓
+   하나뿐이라 **다른 화면의 검사까지 막았습니다.** 뒤로가기를 빠르게
+   연달아 누르면 그 사이에 낀 화면이 빈 칸으로 남았습니다. */
 function rsCheck(p){
-  if(RS.busy) return;
+  if(RS.busy===p) return;
   if(!RS_OPEN[p] && !RS_LOST[p]) return;
   if(!rsEmpty(p)) return;
   var b=rsBody(p);
@@ -9093,10 +9204,10 @@ function rsCheck(p){
     var get=RS_OPEN[p], fn=get&&get();
     if(typeof fn==="function"){
       var bd=rsBody(p); if(bd) bd.innerHTML="";
-      RS.busy=true;
+      RS.busy=p;
       try{ fn(); }catch(e){}
       setTimeout(function(){
-        RS.busy=false;
+        if(RS.busy===p) RS.busy=false;
         if(rsStillMine(p) && RS_LOST[p]) rsPaintLost(p);
       }, 900);
       return;
@@ -9192,6 +9303,47 @@ function rsFooterLast(){
   else if(parent.lastElementChild!==ft) parent.appendChild(ft);
 }
 
+/* ── 주소로 바로 열 수 있는 화면 ─────────────────────────────────────
+   14_router 의 RT_RESTORE 는 "새로고침·공유 링크로 곧바로 열어도 되는
+   화면" 목록입니다. 여기에 없으면 초기 진입 때 홈으로 보냅니다.
+   그런데 인자 없이도 완전히 열리는 화면 여섯이 빠져 있었습니다 —
+   업체 등록(#/sj) · 문의(#/contact) · 매칭 설정 · 사업자 인증 ·
+   일감 등록 · 구직 프로필. 공유하거나 새로고침하면 주소는 #/sj 인데
+   화면은 홈이라, 주소가 거짓말을 했습니다.
+   patchRestore() 는 applyExtras() 에서 armRouter() 보다 먼저 불리므로
+   여기서 더해도 초기 진입에 늦지 않습니다 (43_about 이 같은 방식입니다). */
+var RS_MORE=["sj","contact","prefs","verify","djnew","wprof"];
+function rsAllowRestore(){
+  if(typeof RT_RESTORE==="undefined") return;
+  RS_MORE.forEach(function(p){
+    if(typeof PGS!=="undefined" && PGS.indexOf(p)<0) return;   /* 화면이 없으면 넣지 않는다 */
+    if(RT_RESTORE.indexOf(p)<0) RT_RESTORE.push(p);
+  });
+}
+
+/* 열 수 없는 주소로 들어오면 홈을 보여주는데, 주소창은 그대로 남습니다.
+   #/reqd (id 없음) 를 북마크해 두면 홈이 뜨는데 주소는 #/reqd 라,
+   새로고침해도 영영 안 열리고 링크 복사도 그 주소를 퍼뜨립니다.
+   홈으로 물러났으면 주소도 홈으로 되돌립니다 (히스토리는 늘리지 않습니다). */
+function rsStaleHash(){
+  var path=String(location.hash||"").replace(/^#/,"").replace(/^\//,"");
+  if(!path) return false;
+  var parts=path.split("/"), a=parts[0], id=parts[1]||"";
+  try{ a=decodeURIComponent(a); }catch(e){}
+  if(typeof RT_SEG2PG!=="undefined" && RT_SEG2PG[a]) return !id;   /* 상세는 id 가 있으면 열린다 */
+  if(typeof RT_RESTORE!=="undefined" && RT_RESTORE.indexOf(a)>=0) return false;
+  return true;
+}
+function rsClearHash(){
+  if(!rsStaleHash()) return;
+  var h=location.hash;
+  try{ history.replaceState(null,"", location.href.split("#")[0]+"#/"); }
+  catch(e){ try{ location.replace(location.href.split("#")[0]+"#/"); }catch(e2){ return; } }
+  try{ if(typeof RT!=="undefined") RT.last="#/"; }catch(e){}
+  console.warn("[고리] 주소 "+h+" 는 바로 열 수 없어 홈을 보여줍니다. "+
+               "상세 화면은 id 가 있어야 하고, 나머지는 RT_RESTORE 에 있어야 합니다.");
+}
+
 function patchRestore(){
   if(RS._patched) return; RS._patched=true;
   try{ rsFooterLast(); }catch(e){}
@@ -9205,6 +9357,9 @@ function patchRestore(){
   /* 구직 프로필은 구인구직에서 들어오는 화면입니다 — 하단 네비도 구인구직이 켜져야
      합니다 (01_core 의 injectPages 는 "my" 로 두고 있었습니다). */
   try{ if(typeof TM!=="undefined") TM.wprof="jobs"; }catch(e){}
+  try{ rsAllowRestore(); }catch(e){}
+  /* armRouter() 는 applyExtras() 의 맨 끝입니다 — 그 뒤에 한 번 봅니다 */
+  setTimeout(function(){ try{ rsClearHash(); }catch(e){} }, 60);
 }
 G.patchRestore=patchRestore;
 /* ════════════════════════════════════════════════════════════════════
@@ -9341,6 +9496,7 @@ function rwPickChip(q){
 function patchRwEase(){
   if(RW._patched) return; RW._patched=true;
   rwWrapFieldHtml();
+  rwWrapStep3();
 
   if(typeof window.gStep2==="function"){
     var orig2=window.gStep2;
@@ -9367,6 +9523,65 @@ function patchRwEase(){
   }
 }
 G.patchRwEase=patchRwEase;
+
+/* ── 못 채운 칸으로 데려다 줍니다 ────────────────────────────────────
+   "필수 항목을 입력해주세요: 축종, 부위 / 품목, 수량 외 2개" 만 띄우고
+   말면, 손님은 그 다섯이 어디 있는지 화면을 훑어 찾아야 합니다.
+   화면이 길고 쓰는 분 중에 연세 있는 분이 많습니다.
+   안내는 그대로 두고, **첫 빈 칸으로 굴러가 테두리를 칠하고 커서를
+   놓아 줍니다.** 값을 채우면 테두리는 스스로 사라집니다.
+   gStep3 은 window 에 있어서 바깥에서 감쌀 수 있습니다 — 원래 동작
+   (읽기·검사·안내)은 하나도 건드리지 않습니다. */
+function rwFirstMissing(){
+  if(typeof REQ_FORMS==="undefined" || typeof W==="undefined") return null;
+  var fields=REQ_FORMS[W.cat]||REQ_FORMS.meat||[];
+  var data=(typeof readFields==="function")?readFields(fields):{};
+  for(var i=0;i<fields.length;i++){
+    var f=fields[i]; if(!f.req) continue;
+    var v=data[f.id];
+    var empty=(f.t==="chips") ? !(v && v.length) : !v;
+    if(empty) return $("w-"+f.id);
+  }
+  if(!((($("w-name")||{}).value)||"").trim())  return $("w-name");
+  if(!((($("w-phone")||{}).value)||"").trim()) return $("w-phone");
+  return null;
+}
+function rwClearMiss(){
+  var w=$("rw-wizard"); if(!w) return;
+  [].slice.call(w.querySelectorAll(".rwf-miss")).forEach(function(e){ e.classList.remove("rwf-miss"); });
+  /* 연락처 칸은 .rwf 겉옷이 없어 입력칸에 직접 표시합니다 (.gin.err 는 원래 있던 규칙) */
+  [].slice.call(w.querySelectorAll(".gin.err")).forEach(function(e){ e.classList.remove("err"); });
+}
+function rwGotoMissing(){
+  rwClearMiss();
+  var el=rwFirstMissing(); if(!el) return;
+  /* 접힌 칸 안에 있으면 먼저 펼칩니다 — 안 보이는 칸으로 보내면 안 됩니다 */
+  var box=el.closest(".rw-opt");
+  if(box && box.hidden){
+    var btn=box.previousElementSibling;
+    if(btn && btn.classList.contains("rw-more")) btn.click();
+  }
+  /* 조건 칸은 겉옷(.rwf)에 칠하고, 겉옷이 없는 연락처 칸은 입력칸에
+     원래 쓰던 .gin.err 로 칠합니다 — 칸 모양이 망가지지 않습니다. */
+  var wrap=el.closest(".rwf"), mark=wrap||el;
+  if(wrap) wrap.classList.add("rwf-miss");
+  else if(el.classList.contains("gin")) el.classList.add("err");
+  else mark.classList.add("rwf-miss");
+  try{ mark.scrollIntoView({block:"center", behavior:"smooth"}); }catch(e){ mark.scrollIntoView(); }
+  var focusable = (el.tagName==="INPUT"||el.tagName==="SELECT"||el.tagName==="TEXTAREA")
+    ? el : el.querySelector("input,select,textarea,button");
+  if(focusable){ try{ focusable.focus({preventScroll:true}); }catch(e){} }
+}
+function rwWrapStep3(){
+  if(typeof window.gStep3!=="function" || window.gStep3._rw) return;
+  var orig=window.gStep3;
+  window.gStep3=function(){
+    var r=orig.apply(this, arguments);
+    try{ if(W && W.step!==3) rwGotoMissing(); else rwClearMiss(); }catch(e){}
+    return r;
+  };
+  window.gStep3._rw=true;
+}
 /* ════════════════════════════════════════════════════════════════════
    넓은 화면 레이아웃 — 모바일 한 줄짜리를 데스크톱에 늘려 놓은 상태였습니다
 

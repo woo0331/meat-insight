@@ -132,6 +132,7 @@ function rwPickChip(q){
 function patchRwEase(){
   if(RW._patched) return; RW._patched=true;
   rwWrapFieldHtml();
+  rwWrapStep3();
 
   if(typeof window.gStep2==="function"){
     var orig2=window.gStep2;
@@ -158,3 +159,62 @@ function patchRwEase(){
   }
 }
 G.patchRwEase=patchRwEase;
+
+/* ── 못 채운 칸으로 데려다 줍니다 ────────────────────────────────────
+   "필수 항목을 입력해주세요: 축종, 부위 / 품목, 수량 외 2개" 만 띄우고
+   말면, 손님은 그 다섯이 어디 있는지 화면을 훑어 찾아야 합니다.
+   화면이 길고 쓰는 분 중에 연세 있는 분이 많습니다.
+   안내는 그대로 두고, **첫 빈 칸으로 굴러가 테두리를 칠하고 커서를
+   놓아 줍니다.** 값을 채우면 테두리는 스스로 사라집니다.
+   gStep3 은 window 에 있어서 바깥에서 감쌀 수 있습니다 — 원래 동작
+   (읽기·검사·안내)은 하나도 건드리지 않습니다. */
+function rwFirstMissing(){
+  if(typeof REQ_FORMS==="undefined" || typeof W==="undefined") return null;
+  var fields=REQ_FORMS[W.cat]||REQ_FORMS.meat||[];
+  var data=(typeof readFields==="function")?readFields(fields):{};
+  for(var i=0;i<fields.length;i++){
+    var f=fields[i]; if(!f.req) continue;
+    var v=data[f.id];
+    var empty=(f.t==="chips") ? !(v && v.length) : !v;
+    if(empty) return $("w-"+f.id);
+  }
+  if(!((($("w-name")||{}).value)||"").trim())  return $("w-name");
+  if(!((($("w-phone")||{}).value)||"").trim()) return $("w-phone");
+  return null;
+}
+function rwClearMiss(){
+  var w=$("rw-wizard"); if(!w) return;
+  [].slice.call(w.querySelectorAll(".rwf-miss")).forEach(function(e){ e.classList.remove("rwf-miss"); });
+  /* 연락처 칸은 .rwf 겉옷이 없어 입력칸에 직접 표시합니다 (.gin.err 는 원래 있던 규칙) */
+  [].slice.call(w.querySelectorAll(".gin.err")).forEach(function(e){ e.classList.remove("err"); });
+}
+function rwGotoMissing(){
+  rwClearMiss();
+  var el=rwFirstMissing(); if(!el) return;
+  /* 접힌 칸 안에 있으면 먼저 펼칩니다 — 안 보이는 칸으로 보내면 안 됩니다 */
+  var box=el.closest(".rw-opt");
+  if(box && box.hidden){
+    var btn=box.previousElementSibling;
+    if(btn && btn.classList.contains("rw-more")) btn.click();
+  }
+  /* 조건 칸은 겉옷(.rwf)에 칠하고, 겉옷이 없는 연락처 칸은 입력칸에
+     원래 쓰던 .gin.err 로 칠합니다 — 칸 모양이 망가지지 않습니다. */
+  var wrap=el.closest(".rwf"), mark=wrap||el;
+  if(wrap) wrap.classList.add("rwf-miss");
+  else if(el.classList.contains("gin")) el.classList.add("err");
+  else mark.classList.add("rwf-miss");
+  try{ mark.scrollIntoView({block:"center", behavior:"smooth"}); }catch(e){ mark.scrollIntoView(); }
+  var focusable = (el.tagName==="INPUT"||el.tagName==="SELECT"||el.tagName==="TEXTAREA")
+    ? el : el.querySelector("input,select,textarea,button");
+  if(focusable){ try{ focusable.focus({preventScroll:true}); }catch(e){} }
+}
+function rwWrapStep3(){
+  if(typeof window.gStep3!=="function" || window.gStep3._rw) return;
+  var orig=window.gStep3;
+  window.gStep3=function(){
+    var r=orig.apply(this, arguments);
+    try{ if(W && W.step!==3) rwGotoMissing(); else rwClearMiss(); }catch(e){}
+    return r;
+  };
+  window.gStep3._rw=true;
+}

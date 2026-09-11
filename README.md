@@ -59,7 +59,7 @@ values ('beef', '한우 등심', '1+', 64000, '원/kg', current_date);
 | 🟡 | 컨설팅 결제를 실제로 할지 결정 (지금 테스트 키) | `meat_insight_apply.html` |
 | 🟡 | 카카오 로그인 켜기 (코드는 완료, 설정만) | Supabase Providers |
 | 🟡 | 신고·문의를 받으려면 표 만들기 | `db/phase7_report.sql` |
-| 🟡 | **예시 데이터 끄기** — 진짜 손님을 받기 시작하면 | `site-info.js` → `GORI_FEATURES.demo` |
+| ⚪ | **예시 데이터 끄기** — 목록에 진짜가 들어오면 그 목록의 예시는 저절로 빠지므로 급하진 않습니다 | `site-info.js` → `GORI_FEATURES.demo` |
 | 🟡 | **축산 시세 자동 수집 켜기** — 매일 들어올 이유가 생깁니다 | 아래 "축산 시세" 참고 |
 | ⚪ | 홈 뉴스·인사이트 내용 채우기 | `site-info.js` → `GORI_CONTENT` |
 | ⚪ | 약관·방침 한 번 읽어보기 | `terms.html` · `privacy.html` |

@@ -17,7 +17,39 @@ async function open(b,opts,vp){const p=await b.newPage({viewport:vp||{width:1440
  log.push('  전체: '+rows.join(' | '));
  chk('행 개수 = DB 건수', rows.length, 3);
  chk('등급 중복 없음', await p.evaluate(()=>!/1등급 1등급/.test(document.getElementById('mkt-table').textContent)), 'true');
- chk('기준일 표기', await p.evaluate(()=>document.querySelector('.mk-foot')?.textContent.trim()), '2026-09-02 기준');
+ chk('기준일 표기', await p.evaluate(()=>
+   (document.querySelector('.mk-foot')?.textContent||'').split(' 기준')[0]), '2026-09-02');
+
+ /* ── 며칠 지난 자료인지 ────────────────────────────────────────────
+    수집이 멈추면 옛 값이 오늘 값처럼 읽힙니다. 시세는 돈을 걸고
+    판단하는 숫자라, 날짜만 적어 두고 손님이 빼 보게 두면 안 됩니다.
+    주말·공휴일로 늘 이틀쯤 비므로 사흘까지는 조용히 둡니다. */
+ const dayStr=(n)=>{const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-n);
+   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+ const foot=async(n)=>{
+   const q=await open(b);
+   await q.evaluate(d=>{ window.__DB.market_prices.forEach(m=>m.price_date=d); }, dayStr(n));
+   await q.evaluate(()=>{ go('market'); renderMarket(); }); await q.waitForTimeout(700);
+   const t=await q.evaluate(()=>(document.querySelector('.mk-old')?.textContent||'(없음)'));
+   errs.push(...q._errs.map(e=>'stale'+n+': '+e));
+   await q.close(); return t;
+ };
+ chk('어제 자료는 조용히', await foot(1), '(없음)');
+ chk('사흘까지는 조용히', await foot(3), '(없음)');
+ chk('나흘 지나면 적는다', await foot(4), '4일 전 자료입니다');
+ chk('한 달 지나면 적는다', await foot(30), '30일 전 자료입니다');
+
+ /* 전일 대비는 "모름(null)" 과 "변동 없음(0)" 이 다릅니다 */
+ const chgText=async(v)=>{
+   const q=await open(b);
+   await q.evaluate(x=>{ window.__DB.market_prices.forEach(m=>m.change=x); }, v);
+   await q.evaluate(()=>{ go('market'); renderMarket(); }); await q.waitForTimeout(700);
+   const t=await q.evaluate(()=>document.querySelector('#mkt-table .price-chg')?.textContent.trim());
+   errs.push(...q._errs.map(e=>'chg: '+e));
+   await q.close(); return t;
+ };
+ chk('어제 값이 없으면 —', await chgText(null), '—');
+ chk('진짜 변동 없음은 보합', await chgText(0), '보합');
  chk('코드 예시가격 없음', await p.evaluate(()=>!/5,180|9,850|18,500/.test(document.getElementById('market-full').textContent)), 'true');
 
  log.push('2. 분류 탭 전환');

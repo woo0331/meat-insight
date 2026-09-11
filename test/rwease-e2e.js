@@ -138,6 +138,35 @@ async function viaHero(p,word){
   chk('데스크톱 규칙 위반 없음', await audit(p), '');
   chk('데스크톱 가로 스크롤 없음', await p.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1), 'true');
 
+  /* ── 못 채운 칸으로 데려다 주는가 ─────────────────────────────────
+     안내만 띄우고 말면 긴 화면에서 그 칸이 어디인지 손님이 찾아야 합니다. */
+  log.push('6. 빈 채로 다음 → 첫 빈 칸을 짚어 준다');
+  const v=await open(b,390,844);
+  await viaHero(v,'한우');
+  /* 히어로 칩이 축종을 켜 두므로, 검사에 걸리도록 도로 끕니다 */
+  await v.evaluate(()=>{ document.querySelectorAll('#rw-wizard .gpick-i.on').forEach(x=>x.classList.remove('on')); });
+  await v.evaluate(()=>{ const b=[...document.querySelectorAll('#pg-rw button')].find(e=>/다음 단계/.test(e.textContent)); b.click(); });
+  await v.waitForTimeout(700);
+  chk('2단계에 머묾', await v.evaluate(()=>(document.querySelector('.pg.on')||{}).id+'|'+GORI.W.step), 'pg-rw|2');
+  chk('짚어 준 칸 하나', await v.evaluate(()=>document.querySelectorAll('#rw-wizard .rwf-miss').length), 1);
+  chk('첫 필수 칸이다', await v.evaluate(()=>{
+    const m=document.querySelector('#rw-wizard .rwf-miss');
+    return m ? m.getAttribute('data-f') : '(없음)';}), 'species');
+  chk('화면 안에 보임', await v.evaluate(()=>{
+    const m=document.querySelector('#rw-wizard .rwf-miss'); if(!m) return false;
+    const r=m.getBoundingClientRect();
+    return r.top>-1 && r.bottom<=innerHeight+1;}), 'true');
+  chk('커서도 그 칸에', await v.evaluate(()=>{
+    const m=document.querySelector('#rw-wizard .rwf-miss');
+    return !!(m && document.activeElement && m.contains(document.activeElement));}), 'true');
+  /* 채우면 표시가 사라진다 */
+  await v.evaluate(()=>{ const c=document.querySelector('#w-species .gpick-i'); gChip(c); });
+  await v.evaluate(()=>{ const b=[...document.querySelectorAll('#pg-rw button')].find(e=>/다음 단계/.test(e.textContent)); b.click(); });
+  await v.waitForTimeout(700);
+  chk('다음 빈 칸으로 옮겨감', await v.evaluate(()=>{
+    const m=document.querySelector('#rw-wizard .rwf-miss');
+    return m ? m.getAttribute('data-f') : '(없음)';}), 'part');
+
   const m=await open(b,390,844);
   await viaHero(m,'한우');
   chk('모바일도 필수만', await m.evaluate(()=>
@@ -148,7 +177,7 @@ async function viaHero(p,word){
   chk('모바일 규칙 위반 없음', await audit(m), '');
   chk('모바일 가로 스크롤 없음', await m.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1), 'true');
 
-  const allErrs=[].concat(p._errs,q._errs,m._errs);
+  const allErrs=[].concat(p._errs,q._errs,v._errs,m._errs);
   console.log(log.join('\n'));
   if(allErrs.length){ console.log('  ❌ 페이지 에러: '+allErrs.join(' / ')); errs.push('pageerror'); }
   else console.log('  ✅ 페이지 에러 없음');

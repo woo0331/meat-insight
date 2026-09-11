@@ -57,17 +57,50 @@ var DM_JOBS=[
   {role:"포장 인력",   company:"○○냉장",   loc:"경기 화성", pay:"일 13만원",  emp:"단기"}
 ];
 
+/* ── "예시" 배지는 진짜 예시에만 ────────────────────────────────────
+   예전에는 화면에 그려진 카드를 전부 훑어 배지를 달았습니다. 그런데
+   배지를 다는 조건이 "예시 기능이 켜져 있는가" 뿐이라, **진짜 요청·
+   진짜 업체·진짜 공고에도 "예시" 가 붙었습니다.** 없는 것을 있다고
+   말하는 것만 거짓말이 아닙니다 — 있는 것을 예시라고 말하는 것도
+   똑같이 거짓말이고, 첫 손님의 진짜 요청에 붙으면 더 나쁩니다.
+   지금은 그 칸을 채우고 있는 배열이 실제로 예시(id 가 demo-)인지
+   보고 답니다. 진짜가 들어오면 배지를 떼고 안내 띠도 내립니다. */
+function dmIsDemoRow(x){
+  var id=String((x&&(x.id||x.key))||"").replace(/^[a-z]+:/,"");
+  return id.indexOf("demo-")===0;
+}
+function dmIsDemoList(arr){
+  return !!(arr && arr.length && arr.every(dmIsDemoRow));
+}
+var DM_ZONES=[
+  { ids:["rq-widget","rq-list-full"], sel:".rc,.ritem",
+    live:function(){ return (typeof REQS!=="undefined")?REQS:null; } },
+  { ids:["sup-home","sup-full"],      sel:".sc2",
+    live:function(){ return (typeof SUPS!=="undefined")?SUPS:null; } },
+  { ids:["job-full","job-widget"],    sel:".job-card",
+    live:function(){ return (typeof JB!=="undefined")?JB.rows:((typeof JOBS!=="undefined")?JOBS:null); } }
+];
 function dmMarkAll(){
-  /* 그려진 카드마다 "예시" 배지를 답니다 */
-  [".rc",".sc2",".job-card",".ritem"].forEach(function(sel){
-    [].slice.call(document.querySelectorAll("#pg-h "+sel+", #pg-reqs "+sel+", #pg-suppliers "+sel+", #pg-jobs "+sel))
-      .forEach(function(c){
-        if(c.querySelector(".dm-tag")) return;
-        var b=document.createElement("span");
-        b.className="dm-tag"; b.textContent="예시";
-        c.insertBefore(b, c.firstChild);
+  var any=false;
+  DM_ZONES.forEach(function(z){
+    var on=dmEnabled() && dmIsDemoList(z.live());
+    if(on) any=true;
+    z.ids.forEach(function(id){
+      var host=$(id); if(!host) return;
+      [].slice.call(host.querySelectorAll(z.sel)).forEach(function(c){
+        var tag=c.querySelector(".dm-tag");
+        if(on && !tag){
+          var b=document.createElement("span");
+          b.className="dm-tag"; b.textContent="예시";
+          c.insertBefore(b, c.firstChild);
+        } else if(!on && tag && tag.parentNode){
+          tag.parentNode.removeChild(tag);
+        }
       });
+    });
   });
+  var bar=$("dm-bar");
+  if(bar) bar.style.display = any ? "" : "none";
 }
 
 /* 목록은 여러 곳에서 다시 그려집니다 (분야 거르기·리디자인 패치 등).
@@ -106,6 +139,47 @@ window.gDemoOff=function(){
   try{ localStorage.setItem(DM_KEY,"1"); }catch(e){}
   location.reload();
 };
+
+/* ── 구인구직 화면은 JOBS 가 아니라 JB.rows 를 봅니다 ──────────────
+   18_jobs 가 구인구직을 다시 만들면서, 화면은 jobs 표와 요청(구인)을
+   합친 JB.rows 로 그리게 되었습니다. 그런데 예시는 옛 JOBS 배열에만
+   넣고 있어서 **한 장도 안 보였습니다** — 홈의 구인 칸도 45_main 의
+   MN_OFF_W 로 내려가 있으니, 예시 구인 셋은 아무 데도 안 나왔습니다.
+   구인구직은 헤더 메뉴 넷 중 하나라, 문 열기 전에는 그 화면만 텅 빕니다.
+   같은 자리(JB.rows)에 넣고 "예시" 배지도 그대로 답니다. */
+function dmJobRow(j,i){
+  return { id:"demo-j"+i, job_role:j.role, company:j.company, location:j.loc,
+           pay:j.pay, employment:j.emp, kind:"hire",
+           created_at:new Date(Date.now()-(i+1)*7200000).toISOString() };
+}
+function dmSeedJB(){
+  if(!dmEnabled()) return false;
+  if(typeof JB==="undefined" || typeof jbFromJob!=="function") return false;
+  if(JB.rows && JB.rows.length) return false;
+  JB.rows=DM_JOBS.map(function(j,i){ return jbFromJob(dmJobRow(j,i)); });
+  try{ if(typeof renderJobsFull==="function") renderJobsFull(); }catch(e){}
+  return true;
+}
+
+/* 구인구직 화면을 열 때마다 jbLoad() 가 JB.rows 를 다시 채웁니다.
+   진짜가 없을 때만 예시로 되메웁니다 — 있으면 손대지 않습니다.
+   ⚠️ dmFill() 안에서 부르면 안 됩니다. 거기서는 JB.rows 가 "공고가
+   없다" 가 아니라 "구인구직 화면을 아직 안 열었다" 라서 비어 있고,
+   진짜 공고가 있는 사이트에도 예시 띠가 떴습니다. 한 번이라도
+   불러온 뒤에 비어 있을 때만 채웁니다. */
+function dmWrapJbLoad(){
+  if(typeof jbLoad!=="function" || jbLoad._dm) return;
+  var orig=jbLoad;
+  jbLoad=function(){
+    return Promise.resolve(orig.apply(this, arguments)).then(function(rows){
+      if(rows && rows.length) return rows;
+      if(typeof netDown==="function"){ try{ if(netDown()) return rows; }catch(e){} }
+      if(dmSeedJB()){ setTimeout(function(){ try{ dmMarkAll(); }catch(e){} }, 80); return JB.rows; }
+      return rows;
+    });
+  };
+  jbLoad._dm=true;
+}
 
 function dmFill(){
   if(!dmEnabled()) return;
@@ -148,13 +222,8 @@ function dmFill(){
   }
 
   if(typeof JOBS!=="undefined" && !JOBS.length && typeof mapJob==="function"){
-    JOBS=DM_JOBS.map(function(j,i){
-      return mapJob({ id:"demo-j"+i, job_role:j.role, company:j.company, location:j.loc,
-        pay:j.pay, employment:j.emp, kind:"hire",
-        created_at:new Date(Date.now()-(i+1)*7200000).toISOString() });
-    });
-    try{ if(typeof renderJobWidget==="function") renderJobWidget();
-         if(typeof renderJobsFull==="function") renderJobsFull(); }catch(e){}
+    JOBS=DM_JOBS.map(function(j,i){ return mapJob(dmJobRow(j,i)); });
+    try{ if(typeof renderJobWidget==="function") renderJobWidget(); }catch(e){}
     did=true;
   }
 
@@ -163,6 +232,7 @@ function dmFill(){
 
 function patchDemo(){
   if(G._demo) return; G._demo=true;
+  try{ dmWrapJbLoad(); }catch(e){}
   dmFill();
   /* DB 응답이 늦게 올 수 있어 한 번 더 봅니다. 그때 실데이터가 있으면
      위 조건(!REQS.length)에서 걸러져 예시는 들어가지 않습니다. */

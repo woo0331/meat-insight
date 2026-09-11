@@ -72,8 +72,12 @@ function rsStillMine(p){
   var b=rsBody(p); if(!b) return false;
   return rsEmpty(p) || (b.children.length===1 && b.firstElementChild.classList.contains(RS_SKEL));
 }
+/* RS.busy 는 **어느 화면을 여는 중인지** 담습니다. 되풀이를 막으려고 둔
+   것인데(gOpenChatList 가 go("chats") 를 다시 부릅니다), 예전에는 참/거짓
+   하나뿐이라 **다른 화면의 검사까지 막았습니다.** 뒤로가기를 빠르게
+   연달아 누르면 그 사이에 낀 화면이 빈 칸으로 남았습니다. */
 function rsCheck(p){
-  if(RS.busy) return;
+  if(RS.busy===p) return;
   if(!RS_OPEN[p] && !RS_LOST[p]) return;
   if(!rsEmpty(p)) return;
   var b=rsBody(p);
@@ -87,10 +91,10 @@ function rsCheck(p){
     var get=RS_OPEN[p], fn=get&&get();
     if(typeof fn==="function"){
       var bd=rsBody(p); if(bd) bd.innerHTML="";
-      RS.busy=true;
+      RS.busy=p;
       try{ fn(); }catch(e){}
       setTimeout(function(){
-        RS.busy=false;
+        if(RS.busy===p) RS.busy=false;
         if(rsStillMine(p) && RS_LOST[p]) rsPaintLost(p);
       }, 900);
       return;
@@ -186,6 +190,47 @@ function rsFooterLast(){
   else if(parent.lastElementChild!==ft) parent.appendChild(ft);
 }
 
+/* ── 주소로 바로 열 수 있는 화면 ─────────────────────────────────────
+   14_router 의 RT_RESTORE 는 "새로고침·공유 링크로 곧바로 열어도 되는
+   화면" 목록입니다. 여기에 없으면 초기 진입 때 홈으로 보냅니다.
+   그런데 인자 없이도 완전히 열리는 화면 여섯이 빠져 있었습니다 —
+   업체 등록(#/sj) · 문의(#/contact) · 매칭 설정 · 사업자 인증 ·
+   일감 등록 · 구직 프로필. 공유하거나 새로고침하면 주소는 #/sj 인데
+   화면은 홈이라, 주소가 거짓말을 했습니다.
+   patchRestore() 는 applyExtras() 에서 armRouter() 보다 먼저 불리므로
+   여기서 더해도 초기 진입에 늦지 않습니다 (43_about 이 같은 방식입니다). */
+var RS_MORE=["sj","contact","prefs","verify","djnew","wprof"];
+function rsAllowRestore(){
+  if(typeof RT_RESTORE==="undefined") return;
+  RS_MORE.forEach(function(p){
+    if(typeof PGS!=="undefined" && PGS.indexOf(p)<0) return;   /* 화면이 없으면 넣지 않는다 */
+    if(RT_RESTORE.indexOf(p)<0) RT_RESTORE.push(p);
+  });
+}
+
+/* 열 수 없는 주소로 들어오면 홈을 보여주는데, 주소창은 그대로 남습니다.
+   #/reqd (id 없음) 를 북마크해 두면 홈이 뜨는데 주소는 #/reqd 라,
+   새로고침해도 영영 안 열리고 링크 복사도 그 주소를 퍼뜨립니다.
+   홈으로 물러났으면 주소도 홈으로 되돌립니다 (히스토리는 늘리지 않습니다). */
+function rsStaleHash(){
+  var path=String(location.hash||"").replace(/^#/,"").replace(/^\//,"");
+  if(!path) return false;
+  var parts=path.split("/"), a=parts[0], id=parts[1]||"";
+  try{ a=decodeURIComponent(a); }catch(e){}
+  if(typeof RT_SEG2PG!=="undefined" && RT_SEG2PG[a]) return !id;   /* 상세는 id 가 있으면 열린다 */
+  if(typeof RT_RESTORE!=="undefined" && RT_RESTORE.indexOf(a)>=0) return false;
+  return true;
+}
+function rsClearHash(){
+  if(!rsStaleHash()) return;
+  var h=location.hash;
+  try{ history.replaceState(null,"", location.href.split("#")[0]+"#/"); }
+  catch(e){ try{ location.replace(location.href.split("#")[0]+"#/"); }catch(e2){ return; } }
+  try{ if(typeof RT!=="undefined") RT.last="#/"; }catch(e){}
+  console.warn("[고리] 주소 "+h+" 는 바로 열 수 없어 홈을 보여줍니다. "+
+               "상세 화면은 id 가 있어야 하고, 나머지는 RT_RESTORE 에 있어야 합니다.");
+}
+
 function patchRestore(){
   if(RS._patched) return; RS._patched=true;
   try{ rsFooterLast(); }catch(e){}
@@ -199,5 +244,8 @@ function patchRestore(){
   /* 구직 프로필은 구인구직에서 들어오는 화면입니다 — 하단 네비도 구인구직이 켜져야
      합니다 (01_core 의 injectPages 는 "my" 로 두고 있었습니다). */
   try{ if(typeof TM!=="undefined") TM.wprof="jobs"; }catch(e){}
+  try{ rsAllowRestore(); }catch(e){}
+  /* armRouter() 는 applyExtras() 의 맨 끝입니다 — 그 뒤에 한 번 봅니다 */
+  setTimeout(function(){ try{ rsClearHash(); }catch(e){} }, 60);
 }
 G.patchRestore=patchRestore;

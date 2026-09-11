@@ -140,6 +140,60 @@ const nav=async(p,k)=>{ await p.evaluate(key=>{location.hash='#/'+key;},k); awai
     });
     return bad.join(',');
   }), '');
+  /* ── 주소로 곧바로 들어왔을 때 ────────────────────────────────────
+     라우터는 초기 진입에서 RT_RESTORE 에 없는 화면을 홈으로 보냅니다.
+     그런데 인자 없이도 다 열리는 화면 여섯이 목록에서 빠져 있어서,
+     #/sj 를 공유하면 주소는 #/sj 인데 화면은 홈이었습니다.
+     열 수 없는 주소는 홈으로 보내되 주소도 같이 되돌려야 합니다 —
+     안 그러면 새로고침해도 영영 안 열리고 링크 복사가 그 주소를 퍼뜨립니다. */
+  log.push('7. 주소로 곧바로 들어오기');
+  const enter=async(hash)=>{
+    const q=await b.newPage({viewport:{width:1280,height:900}});
+    await q.addInitScript(FAKE+"\nwindow.__FAKE_INIT({})");
+    q.on('dialog',d=>d.accept());
+    await q.goto(URL+hash,{waitUntil:'load'});
+    await q.waitForTimeout(4200);
+    const r=await q.evaluate(()=>{
+      const v=[...document.querySelectorAll('.pg')].filter(e=>!e.hidden&&e.offsetParent!==null);
+      return {pg:v[0]?v[0].id:'없음', hash:location.hash,
+              len:v[0]?(v[0].innerText||'').trim().length:0};
+    });
+    await q.close(); return r;
+  };
+  for(const k of ['sj','contact','prefs','verify','djnew','wprof']){
+    const r=await enter('#/'+k);
+    chk('#/'+k+' 그대로 열림', r.pg+'|'+r.hash+'|'+(r.len>40), 'pg-'+k+'|#/'+k+'|true');
+  }
+  for(const k of ['reqd','sp','chat','order','quote','review','reqedit','report']){
+    const r=await enter('#/'+k);
+    chk('#/'+k+' 홈 + 주소 정리', r.pg+'|'+r.hash, 'pg-h|#/');
+  }
+  const sup=await enter('#/sup/s1');
+  chk('#/sup/s1 업체 상세', sup.pg+'|'+sup.hash, 'pg-sp|#/sup/s1');
+  const rq=await enter('#/req/r1');
+  chk('#/req/r1 요청 상세', rq.pg+'|'+rq.hash, 'pg-reqd|#/req/r1');
+  const nf=await enter('#/zzzz');
+  chk('모르는 주소는 홈 + 주소 정리', nf.pg+'|'+nf.hash, 'pg-h|#/');
+
+  /* ── 빠르게 연달아 옮겨 다녀도 ──────────────────────────────────
+     RS.busy 가 참/거짓 하나뿐일 때는 **다른 화면의 검사까지** 막았습니다.
+     뒤로가기를 연달아 누르면 그 사이에 낀 화면이 빈 칸으로 남았습니다. */
+  log.push('8. 빠르게 연달아 옮겨 다녀도 빈 화면이 없다');
+  const fresh=await open(b,1280,900);          /* 앞 절에서 이미 채워 둔 화면으로는 못 잡습니다 */
+  const rapid=await fresh.evaluate(async(keys)=>{
+    const bad=[];
+    for(const k of keys){
+      go(k);
+      await new Promise(r=>setTimeout(r,450));   /* 사람이 뒤로가기를 누르는 속도 */
+      const el=document.getElementById('pg-'+k);
+      const t=el?(el.innerText||'').trim():'';
+      if(t.length<30) bad.push(k+'('+t.length+'자)');
+    }
+    return bad.join(', ');
+  }, ['review','wprof','chat','prefs','order','instant','report','verify','chats']);
+  chk('아홉 화면 모두 글이 있다', rapid, '');
+  errs.push(...fresh._errs.map(e=>'rapid: '+e));
+
   const order=async(pg,k)=>{ await nav(pg,k);
     return await pg.evaluate(key=>{
       const el=document.getElementById(key+'-body'), ft=document.querySelector('.footer');

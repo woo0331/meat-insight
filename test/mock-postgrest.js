@@ -33,6 +33,21 @@ let READABLE = new Set(["purchase_requests","suppliers","jobs","market_prices"])
 let ANON_INSERT = new Set(["purchase_requests"]);
 let ANON_DELETE = new Set();
 
+/* service_role 처럼 굴게 합니다 — tools/market-sync.js 는 이 키로 돌기
+   때문에 RLS 를 지나갑니다. 넣은 내용을 기억해 두었다가 /__posted 로
+   돌려주므로, 무엇이 저장됐는지 시험에서 확인할 수 있습니다. */
+let POSTED = [];
+let DELETED = [];
+if (SCENARIO === "service") {
+  ["market_prices"].forEach(t => { ANON_INSERT.add(t); ANON_DELETE.add(t); });
+}
+/* 어제 값 — 전일 대비(change) 계산이 맞는지 보려고 미리 넣어 둡니다 */
+const PREV_ROWS = [
+  { item:"한우 지육", grade:"1++",   price:24000, price_date:"2026-09-10" },
+  { item:"한우 지육", grade:"1등급", price:20500, price_date:"2026-09-10" },
+  { item:"돼지 지육", grade:"1등급", price:5820,  price_date:"2026-09-10" },
+];
+
 if (SCENARIO === "no-sort-column") {
   /* 오래 전에 만든 표 — 내용은 있는데 created_at 이 없습니다.
      맨몸 select 는 되고, .order("created_at") 만 400 이 납니다. */
@@ -90,6 +105,7 @@ http.createServer((req, res) => {
     return res.end("Host not in allowlist: example.supabase.co. Add this host to your network egress settings to allow access.");
   }
 
+  if (p === "/__posted") return send(res, 200, { posted: POSTED, deleted: DELETED });
   if (p === "/rest/v1/" ) return send(res, 200, { swagger:"2.0", info:{title:"standard public schema"}, paths:{} });
   if (p.startsWith("/storage/v1/object/list/")) {
     const bucket = p.split("/").pop();
@@ -119,11 +135,26 @@ http.createServer((req, res) => {
 
   if (req.method === "POST") {
     if (!ANON_INSERT.has(table)) return send(res, 401, { message: "new row violates row-level security policy" });
+    if (SCENARIO === "service" && table === "market_prices") {
+      let body = "";
+      req.on("data", c => body += c);
+      req.on("end", () => {
+        try { const j = JSON.parse(body || "[]"); POSTED = POSTED.concat(Array.isArray(j) ? j : [j]); } catch(e){}
+        send(res, 201, []);
+      });
+      return;
+    }
     return send(res, 201, [{ id: "probe-1" }]);
   }
   if (req.method === "DELETE") {
     if (!ANON_DELETE.has(table)) return send(res, 401, { message: "row-level security" });
+    if (SCENARIO === "service") DELETED.push(p + "?" + u.searchParams.toString());
     return send(res, 204, null);
+  }
+
+  if (SCENARIO === "service" && table === "market_prices" && u.searchParams.has("price_date")) {
+    /* price_date=lt.YYYY-MM-DD — 어제 값을 돌려줍니다 */
+    return send(res, 200, PREV_ROWS);
   }
 
   if (!READABLE.has(table)) return send(res, 401, { message: "permission denied" });

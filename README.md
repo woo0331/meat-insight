@@ -60,6 +60,7 @@ values ('beef', '한우 등심', '1+', 64000, '원/kg', current_date);
 | 🟡 | 카카오 로그인 켜기 (코드는 완료, 설정만) | Supabase Providers |
 | 🟡 | 신고·문의를 받으려면 표 만들기 | `db/phase7_report.sql` |
 | 🟡 | **예시 데이터 끄기** — 진짜 손님을 받기 시작하면 | `site-info.js` → `GORI_FEATURES.demo` |
+| 🟡 | **축산 시세 자동 수집 켜기** — 매일 들어올 이유가 생깁니다 | 아래 "축산 시세" 참고 |
 | ⚪ | 홈 뉴스·인사이트 내용 채우기 | `site-info.js` → `GORI_CONTENT` |
 | ⚪ | 약관·방침 한 번 읽어보기 | `terms.html` · `privacy.html` |
 
@@ -74,6 +75,50 @@ Console 을 열고 `[고리]` 경고를 보세요. 어디서 막혔는지 세 �
 라이브러리가 안 뜸(`vendor/` 파일 확인) · 클라이언트를 못 만듦(`SU`/`SK` 확인) ·
 서버 응답 없음(Supabase 프로젝트 일시정지 여부 확인). 권한 문제(RLS·키)면
 "읽을 권한이 없습니다" 라고 따로 나옵니다.
+
+## 축산 시세 자동 수집
+
+홈 "오늘의 축산 정보" 와 시세 화면은 `market_prices` 표만 읽습니다. 그 표가
+비어 있으면 구간째 내려갑니다 — 지금이 그 상태입니다. 축평원 경락가는 공개
+자료이니 하루 한 번 받아 넣으면 **매일 들어올 이유**가 생깁니다.
+
+`.github/workflows/market.yml` 이 매일 아침 9시 10분(KST)에 돌면서
+`tools/market-sync.js` 를 실행합니다. 사이트 코드는 한 줄도 안 바뀝니다.
+
+### 켜는 법 (한 번만)
+
+1. **공공데이터포털**(data.go.kr)에서 축산물품질평가원 시세 API 활용 신청 → 키 발급
+2. 저장소 → **Settings → Secrets and variables → Actions** 에 세 개 등록
+
+   | 이름 | 값 |
+   |---|---|
+   | `KAPE_KEY` | 공공데이터포털에서 받은 키 |
+   | `SUPABASE_URL` | `https://xxxx.supabase.co` |
+   | `SUPABASE_SERVICE_KEY` | Supabase → Settings → API → **service_role** |
+
+   ⚠️ `service_role` 키는 RLS 를 지나칩니다. **저장소 파일이나 화면 소스에
+   절대 넣지 마세요.** Secrets 에만 둡니다.
+
+3. **Actions** 탭 → "축산 시세 수집" → **Run workflow** 로 한 번 손수 돌려 보기
+
+### 처음 한 번은 응답을 맞춰야 합니다
+
+기관마다 엔드포인트 이름과 칸 이름이 다르고 바뀌기도 합니다. 개발 환경에서는
+축평원·공공데이터포털이 막혀 있어 **실제 응답을 확인하지 못했습니다.** 그래서
+응답 모양을 추측해 박아 두지 않았습니다 — 못 읽으면 **0건으로 실패**하고,
+비슷한 값을 만들어 넣지 않습니다 (숫자를 지어내지 않는다).
+
+첫 실행 로그의 "응답 확인" 단계에 받은 내용이 그대로 찍힙니다. 그 모양에 맞게
+`tools/market-sources.js` 의 `SOURCES` · `pickRows` · `mapRow` 만 고치면 됩니다.
+파이프라인(분류 매핑 · 전일 대비 · 중복 방지)은 이미 검증돼 있습니다.
+
+```bash
+node tools/market-sync.js --probe     # 받은 응답을 그대로 보여줌 (안 씀)
+node tools/market-sync.js --dry       # 정리된 행만 보여줌 (안 씀)
+node tools/market-sync.js             # 실제로 넣음
+```
+
+`test/marketsync-e2e.js` 가 파이프라인을 감시합니다.
 
 ## gori-app.js 고치는 법
 

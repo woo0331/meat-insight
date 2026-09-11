@@ -3174,7 +3174,11 @@ async function renderMktStrip(){
     rows=G.MARKET.rows.slice(0,8).map(function(m){
       var nm=m.item||"";
       if(m.grade && nm.indexOf(m.grade)<0) nm+=" "+m.grade;   /* 등급 중복 표기 방지 */
-      return {n:nm,v:Number(m.price),u:m.unit||"원/kg",c:Number(m.change)||0};
+      /* ⚠️ change 가 비어 있는 것과 0 은 다릅니다. 비어 있으면 "어제 값이 없어
+         모른다", 0 은 "정말 안 움직였다" 입니다. ||0 으로 뭉치면 수집 첫날처럼
+         어제 값이 하나도 없을 때 모든 품목이 "보합" 이 됩니다 — 없는 사실입니다. */
+      var chg=(m.change==null||m.change==="")?null:(Number(m.change)||0);
+      return {n:nm,v:Number(m.price),u:m.unit||"원/kg",c:chg};
     });
     when=(G.MARKET.rows[0].price_date||"");
   } else if(typeof PRICE_DATA!=="undefined"){
@@ -3192,13 +3196,14 @@ async function renderMktStrip(){
   src.innerHTML = sample ? '<span class="sample-tag">샘플</span> 실시세 연동 준비 중'
                          : esc(when)+' 기준';
   row.innerHTML=rows.map(function(r){
-    var cls=r.c>0?"up":(r.c<0?"dn":"flat");
-    var arrow=r.c>0?"▲":(r.c<0?"▼":"—");
+    var unknown=(r.c==null);
+    var cls=unknown?"flat":(r.c>0?"up":(r.c<0?"dn":"flat"));
+    var arrow=unknown?"—":(r.c>0?"▲":(r.c<0?"▼":"—"));
     var pct=(r.v&&r.c)?(" ("+Math.abs(Math.round(r.c/r.v*1000)/10)+"%)"):"";
     return '<div class="mkt-c" onclick="go(&quot;market&quot;)" style="cursor:pointer;">'+
       '<div class="mkt-n">'+esc(r.n)+'</div>'+
       '<div class="mkt-v">'+won(r.v)+'<small>'+esc(r.u)+'</small></div>'+
-      '<div class="mkt-d '+cls+'">'+arrow+' '+(r.c?won(Math.abs(r.c)):"보합")+pct+'</div></div>';
+      '<div class="mkt-d '+cls+'">'+arrow+(unknown?"":" "+(r.c?won(Math.abs(r.c)):"보합")+pct)+'</div></div>';
   }).join("");
 }
 G.renderMktStrip=renderMktStrip;

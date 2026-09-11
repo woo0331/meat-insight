@@ -1,0 +1,6 @@
+{"response":{"header":{"resultCode":"00"},"body":{"numOfRows":4,"items":{"item":[
+ {"baseDate":"20260911","lmDiv":"1","itemName":"한우 지육","judgeGradeNm":"1++","avgPrice":"24500"},
+ {"baseDate":"20260911","lmDiv":"1","itemName":"한우 지육","judgeGradeNm":"1등급","avgPrice":"20100"},
+ {"baseDate":"20260911","lmDiv":"2","itemName":"돼지 지육","judgeGradeNm":"1등급","avgPrice":"5820"},
+ {"baseDate":"20260911","lmDiv":"2","itemName":"돼지 삼겹살","judgeGradeNm":"","avgPrice":"22000"}
+]}}}}

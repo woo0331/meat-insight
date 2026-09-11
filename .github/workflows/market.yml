@@ -1,0 +1,54 @@
+# ════════════════════════════════════════════════════════════════════
+# 축평원 시세 하루 한 번 받아 넣기
+#
+# 왜 GitHub Actions 인가
+#   사이트는 정적 파일이라 서버가 없습니다. 브라우저에서 축평원을 직접
+#   부르면 CORS 로 막히고, 무엇보다 **API 키가 화면 소스에 노출**됩니다.
+#   여기서 돌리면 키는 GitHub Secrets 에만 있고, 사이트는 평소처럼
+#   market_prices 만 읽으면 됩니다 — 읽는 쪽 코드는 한 줄도 안 바뀝니다.
+#
+# 운영자가 할 일 (한 번만)
+#   저장소 → Settings → Secrets and variables → Actions → New repository secret
+#     KAPE_KEY               공공데이터포털에서 받은 키
+#     SUPABASE_URL           https://xxxx.supabase.co
+#     SUPABASE_SERVICE_KEY   Supabase → Settings → API → service_role
+#
+#   ⚠️ service_role 키는 RLS 를 지나칩니다. 절대 저장소 파일이나 화면
+#      소스에 넣지 마세요. Secrets 에만 둡니다.
+#
+# 처음 한 번은 Actions 탭에서 "Run workflow" 로 손수 돌려 보세요.
+# 실패하면 로그에 받은 응답이 찍히므로 그걸 보고 맞추면 됩니다.
+# ════════════════════════════════════════════════════════════════════
+name: 축산 시세 수집
+
+on:
+  schedule:
+    # 매일 09:10 KST (UTC 00:10) — 축평원 경락가가 오전에 갱신됩니다
+    - cron: "10 0 * * *"
+  workflow_dispatch:          # 손으로도 돌릴 수 있게
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # 키가 맞는지, 응답이 어떤 모양인지 먼저 남겨 둡니다.
+      # 실패해도 다음 단계를 막지 않습니다 — 로그를 보려고 찍는 것입니다.
+      - name: 응답 확인 (실패해도 넘어감)
+        continue-on-error: true
+        env:
+          KAPE_KEY: ${{ secrets.KAPE_KEY }}
+          MARKET_SOURCE: kape
+        run: node tools/market-sync.js --probe
+
+      - name: 시세 넣기
+        env:
+          KAPE_KEY: ${{ secrets.KAPE_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          MARKET_SOURCE: kape
+        run: node tools/market-sync.js

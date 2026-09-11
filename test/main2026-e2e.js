@@ -218,6 +218,31 @@ async function open(b,w,h,opt){
   }), '');
   await p.evaluate(()=>{location.hash='#/';}); await p.waitForTimeout(900);
 
+  /* ⚠️ 전일 대비가 **비어 있는 것**과 **0** 은 다릅니다. 비어 있으면 "어제
+     값이 없어 모른다", 0 은 "정말 안 움직였다" 입니다. ||0 으로 뭉치면
+     수집 첫날처럼 어제 값이 하나도 없을 때 모든 품목이 "보합" 으로 나옵니다 —
+     없는 사실을 말하는 것입니다 (tools/market-sync.js 도 null 로 넣습니다). */
+  log.push('6-1. 시세 — 모르는 것을 "보합" 이라 하지 않는다');
+  const mp=await b.newPage({viewport:{width:1440,height:950}});
+  mp.on('dialog',d=>d.accept());
+  await mp.addInitScript(FAKE+"\nwindow.__FAKE_INIT({seed:{market_prices:"+JSON.stringify([
+    {id:'m1',category:'beef',item:'한우 지육',grade:'1++',price:24500,unit:'원/kg',change:500,source:'축산물품질평가원',price_date:'2026-09-11'},
+    {id:'m2',category:'pork',item:'돼지 지육',grade:'1등급',price:5820,unit:'원/kg',change:0,source:'축산물품질평가원',price_date:'2026-09-11'},
+    {id:'m3',category:'pork',item:'돼지 삼겹살',grade:null,price:22000,unit:'원/kg',change:null,source:'축산물품질평가원',price_date:'2026-09-11'}
+  ])+"}})");
+  await mp.goto(URL,{waitUntil:'load'}); await mp.waitForTimeout(4200);
+  const mkTxt=await mp.evaluate(()=>{
+    const el=document.getElementById('mkt-strip');
+    return el?[...el.querySelectorAll('.mkt-c')].map(c=>c.innerText.replace(/\s+/g,' ').trim()):[];
+  });
+  chk('오른 것은 ▲ 와 금액', (mkTxt[0]||'').includes('▲ 500'), 'true');
+  chk('0 은 "보합"', (mkTxt[1]||'').includes('보합'), 'true');
+  chk('모르는 것은 "보합" 이라 안 함', (mkTxt[2]||'').includes('보합'), 'false');
+  chk('모르는 것은 — 만', (mkTxt[2]||'').trim().endsWith('—'), 'true');
+  chk('출처·기준일을 밝힘', await mp.evaluate(()=>
+    /2026-09-11/.test(document.getElementById('sec-mkt').innerText)), 'true');
+  await mp.close();
+
   log.push('7. 데이터가 없으면 메인에서 내린다 (예시 데이터 끔)');
   const c=await open(b,1440,950,{noDemo:true, fake:{emptyTables:["purchase_requests","suppliers","market_prices","jobs"]}});
   chk('실시간 요청 숨김', await c.evaluate(()=>{

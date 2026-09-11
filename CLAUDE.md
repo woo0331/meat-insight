@@ -278,13 +278,26 @@ CATS8 의 대분류를 따라 셋씩 넷이다.
 붙여 굵기를 올린다 (`html .ha-btn{...}`). 실제로 겪은 버그다 — 실시간 띠의
 애니메이션을 늦추는 규칙이 통째로 먹히지 않았다.
 
-**검색칸은 `type="search"` + `name` 을 둘 다 준다.** 이 페이지에는 로그인 창
-(`#l-pw`, `type=password`)이 DOM 에 늘 함께 있어서, 크롬 비밀번호 관리자가
-그 앞의 맨 첫 글자칸을 아이디 칸으로 보고 **저장해 둔 아이디를 넣는다** —
-실제로 히어로 검색창에 `admin` 이 채워져 있었다. `autocomplete="off"` 만으로는
-크롬이 무시한다. 웹킷이 붙이는 지우기 버튼은
-`::-webkit-search-cancel-button{appearance:none}` 으로 걷는다.
-`test/offline-e2e.js` 가 감시한다.
+**비밀번호칸은 반드시 `<form>` 안에 둔다.** 히어로 검색창에 `admin` 이 저절로
+박혀 있던 일이 있었다. 이 페이지에는 로그인·회원가입 비밀번호칸이 늘 DOM 에
+있는데 **페이지에 `<form>` 이 하나도 없었다.** 폼이 없으면 크롬은 문서 전체를
+로그인 폼으로 보고, **화면에 보이는 첫 글자칸**을 아이디 칸으로 골라 저장해 둔
+아이디를 넣는다. 그게 히어로 검색창이었다.
+
+`autocomplete="off"` 도, `type="search"` 도 이걸 못 막았다 (둘 다 시도했다).
+구조를 고쳐야 한다.
+
+- 로그인 `#l-form` · 회원가입 `#s-form` 으로 감쌌다. `onsubmit` 이 기존
+  `doLogin()` · `doSignup()` 을 그대로 부르고 `return false` 로 새로고침을
+  막는다. 덤으로 **엔터로도 로그인**이 된다 (전에는 안 됐다).
+- 아이디·비번 칸에 `autocomplete="username"` · `"current-password"` ·
+  `"new-password"` 를 명시해 크롬이 어디에 넣을지 헷갈리지 않게 한다.
+- 검색칸은 `type="search"` + `name` 을 유지하고, 그래도 자동완성이 걸리면
+  **그 순간을 잡아 비운다** — `@keyframes gAutofillSeen` 이
+  `:-webkit-autofill` 에서만 발화하므로 사람이 친 글자와 헷갈리지 않는다.
+- 웹킷이 붙이는 지우기 버튼은 `::-webkit-search-cancel-button{appearance:none}`.
+
+`test/offline-e2e.js` 가 감시한다 — 폼 밖 비밀번호칸이 하나라도 있으면 실패한다.
 
 **사용자가 쓴 글을 화면에 찍을 때는 반드시 `esc()` 를 통과시킨다.**
 `gori-app.js` 의 `esc()` 는 IIFE 안에 갇혀 있어 `index.html` 에서 쓸 수 없다 —

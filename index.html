@@ -1078,6 +1078,11 @@ html .trust-bar{display:none;}
    (:focus-within 이라 입력칸 초점 링과 따로 놉니다 — 링은 접근성용입니다) */
 .gsx:focus-within{border-color:var(--cta);box-shadow:0 14px 34px rgba(0,0,0,.28),0 0 0 3px rgba(180,35,44,.16);}
 .gsx-ico{flex-shrink:0;display:flex;color:var(--ink3);}
+/* 크롬이 저장해 둔 아이디를 검색창에 채우는 순간을 잡습니다.
+   :-webkit-autofill 이 걸릴 때만 이 애니메이션이 발화하므로, 사람이 직접
+   친 글자와 헷갈리지 않습니다. 보이는 변화는 없습니다(0초, 빈 키프레임). */
+@keyframes gAutofillSeen{from{}to{}}
+#hs-input:-webkit-autofill,.gflt-in:-webkit-autofill{animation-name:gAutofillSeen;animation-duration:.001s;}
 /* type="search" 로 바꾸면 웹킷이 자기 지우기 버튼과 여백을 붙입니다 —
    우리 검색창 모양이 흐트러지지 않게 걷어냅니다. */
 .gh-s-in::-webkit-search-decoration,
@@ -2086,9 +2091,16 @@ a.gi-card:hover .gi-t{color:var(--gn2);}
         <div class="modal-sub">고리에서 거래를 이어가세요</div>
         <button class="kakao-btn" onclick="authKakao()"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 .5C4.3.5.5 3.6.5 7.4c0 2.4 1.6 4.5 4 5.7L3.3 17l4.6-3c.35.05.7.07 1.1.07 4.7 0 8.5-3.1 8.5-6.9S13.7.5 9 .5z" fill="#191919"/></svg>카카오로 로그인</button>
         <div class="modal-div"><div class="mdl"></div><div class="mdt">또는</div><div class="mdl"></div></div>
-        <label class="fl">이메일</label><input class="fi" id="l-email" type="email" placeholder="example@email.com" style="margin-bottom:8px;"/>
-        <label class="fl">비밀번호</label><input class="fi" id="l-pw" type="password" placeholder="비밀번호" style="margin-bottom:10px;"/>
-        <button class="btn btn-gn" onclick="doLogin()" style="padding:12px;">로그인</button>
+        <!-- ⚠️ 비밀번호칸을 반드시 <form> 안에 둡니다. 폼이 하나도 없으면 크롬은
+             문서 전체를 로그인 폼으로 보고, **화면에 보이는 첫 글자칸**을 아이디
+             칸으로 골라 저장해 둔 아이디를 넣습니다 — 히어로 검색창에 "admin" 이
+             박혀 있던 게 그래서였습니다. autocomplete 만으로는 안 막힙니다.
+             onsubmit 은 기존 doLogin() 을 그대로 부릅니다 (엔터로도 로그인). -->
+        <form id="l-form" onsubmit="doLogin();return false;" autocomplete="on">
+        <label class="fl" for="l-email">이메일</label><input class="fi" id="l-email" name="email" type="email" autocomplete="username" placeholder="example@email.com" style="margin-bottom:8px;"/>
+        <label class="fl" for="l-pw">비밀번호</label><input class="fi" id="l-pw" name="password" type="password" autocomplete="current-password" placeholder="비밀번호" style="margin-bottom:10px;"/>
+        <button class="btn btn-gn" type="submit" style="padding:12px;">로그인</button>
+        </form>
         <div class="auth-msg" id="login-msg"></div>
         <div class="modal-links" style="margin-top:10px;"><a onclick="switchAuthTab('signup')">회원가입</a> · <a>비밀번호 찾기</a></div>
       </div>
@@ -2097,11 +2109,13 @@ a.gi-card:hover .gi-t{color:var(--gn2);}
         <div class="modal-sub">축산업 통합 플랫폼에 합류하세요</div>
         <button class="kakao-btn" onclick="authKakao()"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 .5C4.3.5.5 3.6.5 7.4c0 2.4 1.6 4.5 4 5.7L3.3 17l4.6-3c.35.05.7.07 1.1.07 4.7 0 8.5-3.1 8.5-6.9S13.7.5 9 .5z" fill="#191919"/></svg>카카오로 가입하기</button>
         <div class="modal-div"><div class="mdl"></div><div class="mdt">또는 이메일로</div><div class="mdl"></div></div>
-        <label class="fl">이름 *</label><input class="fi" id="s-name" placeholder="홍길동" style="margin-bottom:8px;"/>
-        <label class="fl">이메일 *</label><input class="fi" id="s-email" type="email" placeholder="example@email.com" style="margin-bottom:8px;"/>
-        <label class="fl">비밀번호 * (8자 이상)</label><input class="fi" id="s-pw" type="password" placeholder="비밀번호" style="margin-bottom:8px;"/>
-        <label class="fl">회원 유형</label><select class="fi" id="s-type" style="margin-bottom:10px;"><option>구매자 (정육점·고깃집·식품업체)</option><option>공급업체</option><option>구직자 (정육사·발골사)</option></select>
-        <button class="btn btn-gn" onclick="doSignup()" style="padding:12px;">회원가입</button>
+        <form id="s-form" onsubmit="doSignup();return false;" autocomplete="on">
+        <label class="fl" for="s-name">이름 *</label><input class="fi" id="s-name" name="name" autocomplete="name" placeholder="홍길동" style="margin-bottom:8px;"/>
+        <label class="fl" for="s-email">이메일 *</label><input class="fi" id="s-email" name="email" type="email" autocomplete="username" placeholder="example@email.com" style="margin-bottom:8px;"/>
+        <label class="fl" for="s-pw">비밀번호 * (8자 이상)</label><input class="fi" id="s-pw" name="new-password" type="password" autocomplete="new-password" placeholder="비밀번호" style="margin-bottom:8px;"/>
+        <label class="fl" for="s-type">회원 유형</label><select class="fi" id="s-type" name="member-type" style="margin-bottom:10px;"><option>구매자 (정육점·고깃집·식품업체)</option><option>공급업체</option><option>구직자 (정육사·발골사)</option></select>
+        <button class="btn btn-gn" type="submit" style="padding:12px;">회원가입</button>
+        </form>
         <div class="auth-msg" id="signup-msg"></div>
         <div class="modal-links" style="margin-top:8px;font-size:12.5px;"><a onclick="switchAuthTab('login')">이미 계정이 있으신가요?</a></div>
       </div>
@@ -2432,6 +2446,32 @@ function guessCat8(v){
   }
   return best;
 }
+/* ══ 검색창에 남의 아이디가 들어오는 것 막기 ═══════════════════════════
+   이 페이지에는 로그인·회원가입 비밀번호칸이 늘 DOM 에 있습니다. 그것들을
+   <form> 으로 감싸 크롬이 범위를 헷갈리지 않게 했지만(위 auth-modal),
+   브라우저·확장 프로그램에 따라 그래도 채우는 경우가 있습니다.
+   검색창은 우리가 먼저 채우는 일이 없으므로, 자동완성이 걸리면 지웁니다.
+   사람이 친 글자는 건드리지 않습니다 — :-webkit-autofill 일 때만 발화합니다. */
+(function(){
+  function guard(el){
+    if(!el || el.__afGuard) return; el.__afGuard=1;
+    el.addEventListener("animationstart", function(e){
+      if(e.animationName!=="gAutofillSeen") return;
+      /* 자동완성으로 들어온 값만 지웁니다 */
+      setTimeout(function(){ try{ if(el.matches(":-webkit-autofill")) el.value=""; }catch(x){ el.value=""; } },0);
+    });
+  }
+  function scan(){
+    guard(document.getElementById("hs-input"));
+    var f=document.querySelectorAll(".gflt-in");
+    for(var i=0;i<f.length;i++) guard(f[i]);
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",scan);
+  else scan();
+  /* 목록 거르기 칸은 나중에 그려지므로 몇 번 더 훑습니다 */
+  [600,1600,3200].forEach(function(ms){ setTimeout(scan,ms); });
+})();
+
 function heroGo(){
   var v=((document.getElementById("hs-input")||{}).value||"").trim();
   if(!v){go("rw");return;}

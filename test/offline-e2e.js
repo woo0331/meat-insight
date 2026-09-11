@@ -278,7 +278,54 @@ const U={id:'u1',user_metadata:{name:'김철수',role:'buyer'}};
    await new Promise(r=>setTimeout(r,600));
    return !document.getElementById('pg-h').classList.contains('on');
  }), 'true');
+
+ /* ⚠️ 진짜 원인은 **페이지에 <form> 이 하나도 없다는 것** 이었습니다.
+    비밀번호칸 둘이 폼 밖에 떠 있으니 크롬이 문서 전체를 로그인 폼으로 보고,
+    화면에 보이는 첫 글자칸(= 히어로 검색창)을 아이디 칸으로 골랐습니다.
+    type="search" 로도 안 막혔습니다. 폼으로 감싸야 범위가 잡힙니다. */
+ chk('비밀번호칸이 폼 안에 있다', await s1.evaluate(()=>{
+   const bad=[...document.querySelectorAll('input[type=password]')]
+     .filter(e=>!e.form).map(e=>e.id);
+   return bad.join(',');
+ }), '');
+ chk('검색창은 그 폼 밖', await s1.evaluate(()=>
+   !document.getElementById('hs-input').form), 'true');
+ chk('아이디·비번 칸을 명시한다', await s1.evaluate(()=>
+   (document.getElementById('l-email')||{}).getAttribute('autocomplete')+'|'+
+   (document.getElementById('l-pw')||{}).getAttribute('autocomplete')), 'username|current-password');
+ /* 자동완성이 걸리면 검색창만 비웁니다 — 사람이 친 글자는 안 건드립니다 */
+ chk('자동완성 감지 장치', await s1.evaluate(()=>{
+   const css=[...document.styleSheets].some(sh=>{
+     try{ return [...sh.cssRules].some(r=>/gAutofillSeen/.test(r.cssText)); }catch(e){ return false; }
+   });
+   return css && !!document.getElementById('hs-input').__afGuard;
+ }), 'true');
+
+ /* 폼으로 감싸면서 제출 경로가 바뀌었습니다 — 로그인·가입이 그대로 되는지 */
+ log.push('6-1. 로그인·가입은 그대로 (엔터로도)');
+ chk('버튼으로 로그인', await s1.evaluate(async()=>{
+   openModal('login'); await new Promise(r=>setTimeout(r,400));
+   document.getElementById('l-email').value='a@b.c';
+   document.getElementById('l-pw').value='pw123456';
+   document.querySelector('#l-form button[type=submit]').click();
+   await new Promise(r=>setTimeout(r,900));
+   return !!document.querySelector('.hdr-user');
+ }), 'true');
  await s1.close();
+
+ const s2=await b.newPage({viewport:{width:1440,height:900}});
+ await s2.addInitScript(FAKE+"\nwindow.__FAKE_INIT({})");
+ await s2.goto('file:///home/user/meat-insight/index.html',{waitUntil:'load'});
+ await s2.waitForTimeout(3000);
+ await s2.evaluate(async()=>{
+   openModal('login'); await new Promise(r=>setTimeout(r,400));
+   document.getElementById('l-email').value='a@b.c';
+   const pw=document.getElementById('l-pw'); pw.value='pw123456'; pw.focus();
+ });
+ await s2.keyboard.press('Enter'); await s2.waitForTimeout(1000);
+ chk('엔터로도 로그인', await s2.evaluate(()=>!!document.querySelector('.hdr-user')), 'true');
+ chk('폼 제출로 새로고침 안 됨', await s2.evaluate(()=>!!document.getElementById('hs-input')), 'true');
+ await s2.close();
 
  console.log(log.join('\n'));
  console.log('\n오류: '+(errs.length?'\n  '+errs.join('\n  '):'없음'));

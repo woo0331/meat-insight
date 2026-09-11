@@ -149,6 +149,69 @@ const U={id:'u1',user_metadata:{name:'김철수',role:'buyer'}};
  }), 'true');
  await z2.close();
 
+ /* ── 목록이 보이는데 "연결 안 됨" 이라고 하면 안 된다 ──────────────────
+    실제로 그랬습니다. 실시간 띠에 진짜 요청이 흐르고 있는데 화면 아래에는
+    "서버에 연결할 수 없습니다" 가 붙어 있었습니다. 조회 **하나만** 실패해도
+    사이트 전체에 띠를 붙이는 구조였기 때문입니다 — 알림·후기 같은 보조 표가
+    없거나 RLS 로 막혀 있으면 요청·업체 목록은 멀쩡한데 띠가 떴습니다. */
+ log.push('8. 보조 표가 막혀도 목록이 있으면 띠를 안 띄운다');
+ const openW=async(inj)=>{
+   const z=await b.newPage({viewport:{width:1440,height:950}});
+   z._w=[]; z.on('console',m=>{ if(m.type()==='warning') z._w.push(m.text()); });
+   z.on('dialog',d=>d.accept());
+   await z.addInitScript(FAKE+"\nwindow.__FAKE_INIT("+inj+")");
+   await z.goto('file:///home/user/meat-insight/index.html',{waitUntil:'load'});
+   await z.waitForTimeout(4500);
+   return z;
+ };
+ /* notifications · chat_rooms 는 로그인해야 조회됩니다 */
+ const withUser=o=>o.replace(/^\{/,"{user:{id:'u1',email:'a@b.c'},");
+ const state=z=>z.evaluate(()=>({
+   req:(typeof REQS!=='undefined'?REQS.length:-1),
+   sup:(typeof SUPS!=='undefined'?SUPS.length:-1),
+   job:(typeof JOBS!=='undefined'?JOBS.length:-1),
+   bar:!!document.getElementById('net-bar')
+ }));
+ const z3=await openW(withUser("{errorTables:{notifications:{code:'42501',message:'permission denied'},reviews:{code:'42501',message:'permission denied'},chat_rooms:{code:'42501',message:'permission denied'}}}"));
+ const s3=await state(z3);
+ chk('요청·업체 목록은 그대로', (s3.req>0 && s3.sup>0), 'true');
+ chk('띠가 안 뜬다', s3.bar, 'false');
+ /* 이 표들은 거래관리에 들어가야 조회됩니다 — 거기서도 띠가 안 떠야 합니다 */
+ await z3.evaluate(()=>go('my')); await z3.waitForTimeout(2500);
+ chk('거래관리에서도 띠 없음', await z3.evaluate(()=>!!document.getElementById('net-bar')), 'false');
+ chk('어느 표가 실패했는지는 콘솔에',
+   z3._w.some(t=>/조회가 실패했습니다/.test(t)), 'true');
+ await z3.close();
+
+ /* ── 오래된 스키마: 정렬 칸이 없어 400 이 나는 경우 ───────────────────
+    index.html 의 loadFromDB 는 세 표를 .order("created_at") 로 가져옵니다.
+    오래 전에 만든 표에 그 칸이 없으면 PostgREST 가 400 을 돌려주고 목록이
+    통째로 비면서 "서버에 연결할 수 없습니다" 가 떴습니다 — 표는 멀쩡한데도.
+    이제는 정렬 없이 다시 가져옵니다. 순서만 잃고 목록은 보입니다. */
+ log.push('9. 정렬 칸이 없는 오래된 표도 목록은 보인다');
+ for(const [nm,inj] of [
+   ['업체 표만',  "{noSortTables:['suppliers']}"],
+   ['세 표 모두', "{noSortTables:['purchase_requests','suppliers','jobs']}"],
+ ]){
+   const z=await openW(inj);
+   const st=await state(z);
+   chk(nm+' — 요청 보임', st.req>0, 'true');
+   chk(nm+' — 업체 보임', st.sup>0, 'true');
+   chk(nm+' — 구인 보임', st.job>0, 'true');
+   chk(nm+' — 띠 없음', st.bar, 'false');
+   await z.close();
+ }
+ /* 진짜로 아무것도 못 받으면 그때는 띠가 떠야 합니다 */
+ const z4=await openW("{errorAll:{message:'Failed to fetch'}}");
+ const s4=await state(z4);
+ chk('정말 비었을 때는 띠가 뜬다', s4.bar, 'true');
+ /* ⚠️ 예시 데이터가 켜져 있으면 배열은 차 있습니다. 그걸 "내용이 있다" 로
+    세면 서버가 죽은 것을 "원래 잘 되고 있다" 로 보이게 만듭니다 —
+    손님에게는 활발해 보이고 운영자는 장애를 못 봅니다. */
+ chk('예시 데이터는 진짜로 안 센다', await z4.evaluate(()=>
+   (typeof REQS!=='undefined'?REQS:[]).every(r=>String(r.id||'').indexOf('demo-')===0)), 'true');
+ await z4.close();
+
  /* ── 라이브러리는 우리 도메인에서 나온다 ────────────────────────────
     예전에는 jsdelivr 한 줄이었습니다. 그게 막히거나 느리면 window.supabase 가
     안 생기고 sb=null 이 되어 **사이트 전체가** "서버에 연결할 수 없습니다" 가

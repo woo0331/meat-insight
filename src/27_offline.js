@@ -10,7 +10,7 @@
    ════════════════════════════════════════════════════════════════════ */
 
 /* reason — "net" 연결 실패 · "denied" 권한/키 문제(설정) */
-var NET = { ok:null, tried:false, retrying:false, reason:"net", warned:false, diagnosed:false };
+var NET = { ok:null, tried:false, retrying:false, reason:"net", warned:false, diagnosed:false, said:{}, rescued:{} };
 G.NET = NET;
 
 /* 권한·키 문제는 손님이 "다시 시도" 를 눌러도 영영 안 됩니다.
@@ -48,9 +48,40 @@ function netNoteDenied(err){
   }catch(e){}
 }
 
+/* 손님이 실제로 보는 목록을 채우는 표들. 이것들이 살아 있으면 사이트는
+   쓸 수 있는 상태입니다. */
+var NET_CORE=["purchase_requests","suppliers","jobs","market_prices"];
+
+/* 화면에 **진짜** 내용이 있는가 — 있으면 "연결 안 됨" 이라고 말하면 안 됩니다.
+   ⚠️ 예시 데이터(39_demo.js)는 세지 않습니다. 예시로 채워 놓고 띠를 내리면
+      서버가 죽은 것을 "원래 잘 되고 있다" 로 보이게 만듭니다 — 손님에게는
+      활발해 보이고 운영자는 장애를 못 봅니다. 예시 행의 id 는 "demo-" 로
+      시작합니다. */
+function netReal(arr){
+  if(!arr || !arr.length) return 0;
+  var n=0;
+  for(var i=0;i<arr.length;i++){
+    var id=arr[i] && arr[i].id;
+    if(String(id||"").indexOf("demo-")!==0) n++;
+  }
+  return n;
+}
+function netHasData(){
+  try{
+    return netReal(typeof REQS!=="undefined"?REQS:null)>0 ||
+           netReal(typeof SUPS!=="undefined"?SUPS:null)>0 ||
+           netReal(typeof JOBS!=="undefined"?JOBS:null)>0;
+  }catch(e){ return false; }
+}
+
 function netDown(){
   if(navigator && navigator.onLine===false) return true;
   if(!client()) return true;
+  /* ⚠️ 예전에는 **아무 조회 하나만** 실패해도 사이트 전체에 띠가 붙었습니다.
+     알림·채팅·후기 같은 보조 표 하나가 없거나 막혀 있어도, 요청·업체 목록은
+     멀쩡히 보이는데 "서버에 연결할 수 없습니다" 가 떴습니다. 실제로 그랬습니다.
+     목록에 내용이 있으면 띠를 띄우지 않습니다. */
+  if(netHasData()) return false;
   return NET.ok===false;
 }
 
@@ -136,16 +167,60 @@ function patchOffline(){
     var origSel=selectSafe;
     selectSafe=async function(){
       var r=await origSel.apply(this, arguments);
+      var tbl=(arguments && arguments[0]) ? String(arguments[0]) : "";
       if(r && r.error && !r.unavailable){
-        NET.ok=false;
-        if(typeof isDeniedError==="function" && isDeniedError(r.error)) netNoteDenied(r.error);
-        else NET.reason="net";
+        /* 어느 표에서 무엇이 났는지 남깁니다 — "400" 만 보고는 못 찾습니다 */
+        if(!NET.said[tbl]){
+          NET.said[tbl]=true;
+          try{ console.warn("[고리] '"+tbl+"' 조회가 실패했습니다. 응답: ", r.error); }catch(e){}
+        }
+        /* 보조 표 하나가 실패했다고 사이트 전체에 띠를 붙이지 않습니다 */
+        if(NET_CORE.indexOf(tbl)>=0){
+          NET.ok=false;
+          if(typeof isDeniedError==="function" && isDeniedError(r.error)) netNoteDenied(r.error);
+          else NET.reason="net";
+        }
       }
-      else if(r && !r.error){ NET.ok=true; NET.reason="net"; NET.warned=false; }
+      else if(r && !r.error && NET_CORE.indexOf(tbl)>=0){ NET.ok=true; NET.reason="net"; NET.warned=false; }
       NET.tried=true;
       return r;
     };
   }
+  /* ── 못 불러온 목록 구조하기 ────────────────────────────────────────
+     index.html 의 loadFromDB 는 세 표를 .order("created_at") 로 가져옵니다.
+     오래 전에 만든 표에 그 칸이 없으면 PostgREST 가 **400** 을 돌려주고,
+     목록이 통째로 비면서 "서버에 연결할 수 없습니다" 가 뜹니다 —
+     서버도 표도 멀쩡한데 말입니다.
+
+     여기서는 원본을 건드리지 않고, 비어 있는 표만 **정렬 없이** 다시
+     가져와 채웁니다. 순서만 잃을 뿐 목록은 보입니다. */
+  async function netRescue(){
+    var c=client(); if(!c) return;
+    var jobs=[
+      ["purchase_requests", function(){ return typeof REQS!=="undefined"?REQS:null; },
+       function(d){ REQS=d.map(mapReq); try{ renderRQWidget(); renderReqs(); }catch(e){} }],
+      ["suppliers", function(){ return typeof SUPS!=="undefined"?SUPS:null; },
+       function(d){ SUPS=d.map(mapSup);
+         try{ renderSupHome(typeof curSC!=="undefined"?curSC:"all"); renderSups(typeof curSC!=="undefined"?curSC:"all"); }catch(e){} }],
+      ["jobs", function(){ return typeof JOBS!=="undefined"?JOBS:null; },
+       function(d){ JOBS=d.map(mapJob); try{ renderJobWidget(); renderJobsFull(); }catch(e){} }]
+    ];
+    for(var i=0;i<jobs.length;i++){
+      var t=jobs[i][0], cur=jobs[i][1]();
+      if(cur===null || cur.length) continue;          /* 이미 채워졌으면 건너뜁니다 */
+      if(NET.rescued[t]) continue;
+      NET.rescued[t]=true;
+      try{
+        var r=await c.from(t).select("*");
+        if(r.error || !r.data || !r.data.length) continue;
+        jobs[i][2](r.data);
+        try{ console.warn("[고리] '"+t+"' 을(를) 정렬 없이 다시 불러왔습니다 ("+r.data.length+"건). "+
+          "그 표에 created_at 칸이 없어 400 이 났을 수 있습니다."); }catch(e){}
+      }catch(e){}
+    }
+  }
+  G.netRescue=netRescue;
+
   if(typeof loadFromDB==="function"){
     var origLoad=loadFromDB;
     loadFromDB=async function(){
@@ -154,6 +229,7 @@ function patchOffline(){
       try{ r=await origLoad.apply(this, arguments); }
       catch(e){ NET.ok=false; }
       NET.tried=true;
+      try{ await netRescue(); }catch(e){}
       /* 실제로 한 건이라도 받았으면 연결된 것으로 봅니다 */
       if((typeof REQS!=="undefined" && REQS.length) ||
          (typeof SUPS!=="undefined" && SUPS.length) ||

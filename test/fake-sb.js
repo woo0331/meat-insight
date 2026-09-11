@@ -9,6 +9,10 @@ window.__FAKE_INIT = function(opts){
        errorTables : {표이름: 오류} 로 표마다 따로 */
   var errAll = opts.errorAll || null;
   var errTbl = opts.errorTables || {};
+  /* 오래된 스키마 흉내 — 이 표들은 .order()/.eq() 를 붙이면 400 을 돌려주고,
+     맨몸 select 만 성공합니다. 실제 운영 DB 에서 겪은 경우입니다
+     (created_at 칸이 없는 표에 .order("created_at") 를 걸었습니다). */
+  var noSort = opts.noSortTables || [];
   var now = Date.now();
   var DB = {
     purchase_requests: [
@@ -162,6 +166,9 @@ window.__FAKE_INIT = function(opts){
     self.then=function(res,rej){
       var out;
       var forced = errTbl[table] || errAll;
+      if(!forced && noSort.indexOf(table)>=0 && (self._order || self._limit || self._f.length)){
+        forced = { code:'42703', message:'column "created_at" does not exist', status:400 };
+      }
       if(missing.indexOf(table)>=0){ out={ data:null, error:err("Could not find the table 'public."+table+"' in the schema cache",'PGRST205') }; }
       else if(forced){ out={ data:null, error:Object.assign({message:'',code:'',details:'',hint:''}, forced) }; }
       else if(kind==='select'){ out={ data:apply(DB[table]||[]), error:null }; }

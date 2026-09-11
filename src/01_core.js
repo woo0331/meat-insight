@@ -120,13 +120,35 @@ async function updateSafe(table, patch, idCol, idVal){
 }
 G.insertSafe=insertSafe; G.updateSafe=updateSafe;
 
+/* 조회에서 400 이 나는 가장 흔한 이유는 **그 표에 없는 칸으로 정렬·거르기** 를
+   했을 때입니다. 오래 전에 만든 표에는 created_at 같은 칸이 없을 수 있는데,
+   그러면 목록이 통째로 안 나오고 사이트에는 "서버에 연결할 수 없습니다" 가
+   뜹니다 — 서버도 표도 멀쩡한데 말입니다.
+
+   insertSafe 는 예전부터 없는 칸을 빼고 다시 시도했습니다. 조회도 똑같이
+   합니다: 한 번 실패하면 **정렬·거르기 없이** 맨몸으로 다시 가져옵니다.
+   순서만 잃을 뿐 목록은 보입니다. */
+var SEL_BARE={};
 async function selectSafe(table, build){
   var c=client(); if(!c) return { data:[], unavailable:true };
   try{
     var q=c.from(table).select("*");
-    if(build) q=build(q);
+    if(build && !SEL_BARE[table]) q=build(q);
     var res=await q;
-    if(res.error){ if(isMissingTable(res.error)){ SCHEMA[table]=false; return { data:[], unavailable:true }; } return { data:[], error:res.error }; }
+    if(res.error){
+      if(isMissingTable(res.error)){ SCHEMA[table]=false; return { data:[], unavailable:true }; }
+      /* 정렬·거르기를 붙인 채로 실패했다면, 그것부터 의심합니다 */
+      if(build && !SEL_BARE[table]){
+        var bare=await c.from(table).select("*");
+        if(!bare.error){
+          SEL_BARE[table]=true; SCHEMA[table]=true;
+          try{ console.warn("[고리] '"+table+"' 을(를) 정렬·조건 없이 다시 불러왔습니다. "+
+            "그 표에 없는 칸으로 정렬·거르기를 했을 수 있습니다 (오래된 스키마). 응답: ", res.error); }catch(e){}
+          return { data:bare.data||[], degraded:true };
+        }
+      }
+      return { data:[], error:res.error };
+    }
     SCHEMA[table]=true;
     return { data:res.data||[] };
   }catch(e){ return { data:[], unavailable:true }; }

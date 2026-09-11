@@ -179,9 +179,11 @@ async function open(b,w,h,init){
     return /예시/.test(t) ? 'demo-off' : 'FAIL';
   }), 'demo-off');
 
-  log.push('6. 서비스 카드');
-  /* 2026 정리: 메인 핵심 서비스는 넷. 뉴스·커뮤니티는 아래 콘텐츠 구간에서
-     이어집니다 — 모든 기능을 같은 크기로 늘어놓지 않습니다. */
+  log.push('6. 서비스 카드 (마크업은 그대로, 홈에서만 내림)');
+  /* ⚠️ 이 넉 장은 헤더 메뉴 넷과 **글자까지 같아서** 홈에서는 내렸습니다
+     (45_main.js 의 MN_OFF). 마크업·라우트는 그대로 두었으므로 아래 검사는
+     계속 유효합니다 — 되살릴 때 MN_OFF 한 줄만 지우면 됩니다.
+     홈에서 안 보이는지는 test/home-e2e.js 가 봅니다. */
   chk('4장', await p.evaluate(()=>document.querySelectorAll('.svc-cards .svc-card').length), 4);
   chk('제목', await p.evaluate(()=>
     [...document.querySelectorAll('.svc-cards .svc-t')].map(e=>e.textContent.trim()).join('|')),
@@ -202,13 +204,23 @@ async function open(b,w,h,init){
     !document.querySelector('.svc-h2') && !document.querySelector('.svc-eye')), 'true');
 
   log.push('8. 위계 · 신뢰 구간 · 미완성 흔적');
-  chk('구간 순서', await p.evaluate(()=>{
-    const got=[...document.querySelectorAll('#pg-h > *')]
+  chk('구간 순서', await p.evaluate(()=>
+    /* ⚠️ 클래스 이름으로 순서를 재면 mn-w/mn-g(배경 번갈아) · mn-tight(높이)
+       같은 꾸밈 클래스가 붙을 때마다 깨집니다. 무엇이 있는지로 잽니다. */
+    [...document.querySelectorAll('#pg-h > *')]
       .filter(e=>!e.hidden && e.getBoundingClientRect().height>0)
-      /* .rv/.on 은 페이드용이라 순서와 무관합니다 */
-      .map(e=>e.id||e.className.replace(/\s*\brv\b|\s*\bon\b/g,'').trim()).slice(0,4);
-    return got.join(' | ');
-  }), 'gh ph | sec sec-cat8 | sec-mkt | svc-sec');
+      .map(e=>{
+        if(e.classList.contains('gh')) return '히어로';
+        if(e.querySelector('#cat8-grid')) return '업종';
+        if(e.id==='sec-mkt') return '시세';
+        if(e.querySelector('#proc-grid')) return '이용방법';
+        if(e.querySelector('#rq-widget')) return '실시간요청';
+        if(e.id==='why-band') return '신뢰';
+        if(e.classList.contains('sec-sups')) return '등록업체';
+        if(e.id==='brand-sec') return '브랜드';
+        if(e.id==='final-sec') return '마지막';
+        return e.id||'?';
+      }).slice(0,4).join(' | ')), '히어로 | 업종 | 시세 | 이용방법');
   chk('신뢰 구간은 하나만', await p.evaluate(()=>{
     const band=document.getElementById('why-band');
     const bar=document.querySelector('.trust-bar');

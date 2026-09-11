@@ -160,7 +160,7 @@ function seDone(id, name){
     '<div class="gcard" style="text-align:center;padding:34px 22px;">'+
       '<div class="ob-ok">✓</div>'+
       '<div style="font-size:21px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+esc(name||"업체")+' 정보를 저장했습니다</div>'+
-      '<div style="font-size:14.5px;color:var(--ink3);line-height:1.65;">'+
+      '<div style="font-size:14px;color:var(--ink3);line-height:1.65;">'+
         '업체 상세와 검색 결과에 바로 반영됩니다.</div>'+
     '</div>'+
     '<div class="grow keep">'+

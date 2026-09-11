@@ -73,13 +73,24 @@ async function open(b,w,h){
   }), 'false');
 
   log.push('4. 주요 구간은 그대로');
+  /* ⚠️ "핵심 서비스" 카드 넉 장은 헤더 메뉴 넷과 글자까지 같아서 홈에서
+     내렸습니다 (45_main.js 의 MN_OFF). 스크롤해 내려왔는데 맨 위에서 본 것을
+     다시 보는 셈이었습니다. 화면·라우트는 그대로라 헤더·전체메뉴·푸터로 갑니다. */
   for(const [nm,sel] of [['검색','.gh-search'],['업종 바로가기','#cat8-grid .cs-item'],
-                         ['오늘의 축산 정보','#mkt-strip'],['핵심 서비스','.svc-cards .svc-card'],
+                         ['오늘의 축산 정보','#mkt-strip'],
                          ['이용 방법','#proc-grid .proc-step'],['신뢰','#why-band .why-c']]){
     chk('  '+nm, await p.evaluate(s=>{
       const e=document.querySelector(s); return !!(e && e.offsetHeight>0);
     }, sel), 'true');
   }
+  /* 홈에서 내렸으니 갈 길은 반드시 남아 있어야 합니다 */
+  chk('  핵심 서비스 넷은 헤더에', await p.evaluate(()=>
+    ['suppliers','rw','market','jobs'].every(k=>
+      [...document.querySelectorAll('.hdr-nav a')].some(a=>(a.getAttribute('onclick')||'').indexOf(k)>=0))), 'true');
+  chk('  홈에서는 안 보임', await p.evaluate(()=>{
+    const e=document.querySelector('.svc-sec'); return !!(e && e.offsetHeight>0);
+  }), 'false');
+
   chk('주요 구간은 안 접힘', await p.evaluate(()=>
     !!document.querySelector('#cat8-grid')?.closest('.hm-fold')), 'false');
 

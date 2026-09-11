@@ -278,7 +278,12 @@ var MN_OFF=[
   ["#pf-stats-sec",  "지표 줄 — 최종 구조에 없음"],
   ["#case-sec",      "찾아보세요 — 최종 구조에 없음"],
   ["#sec-labor",     "사람이 필요할 때 — 핵심 서비스의 구인구직 카드로 갑니다"],
-  [".recruit-banner","업체 유치 배너 — 마지막 행동의 \"업체 등록하기\" 와 중복"]
+  [".recruit-banner","업체 유치 배너 — 마지막 행동의 \"업체 등록하기\" 와 중복"],
+  /* ⚠️ 핵심 서비스 카드 넉 장(업체 찾기·견적 요청·축산 시세·구인구직)이
+     헤더 메뉴 넷과 **글자까지 똑같았습니다.** 스크롤해서 내려왔는데 맨 위에서
+     본 것을 다시 보는 셈이라 구간 하나가 통째로 낭비였습니다.
+     헤더·전체메뉴·푸터에 다 있으므로 홈에서만 내립니다. */
+  [".svc-sec",       "핵심 서비스 — 헤더 메뉴 넷과 같은 내용"]
 ];
 /* GORI INSIGHT 안에서 콘텐츠가 아닌 위젯 — 업체 이야기는 등록 업체 구간이
    맡습니다. 카드가 일곱 장 늘어서면 무엇을 읽으라는 건지 알 수 없습니다. */
@@ -340,6 +345,37 @@ function mnTrimStats(){
   el.style.gridTemplateColumns="repeat("+real+",1fr)";
 }
 
+/* ── 구간 배경을 흰색–회색 번갈아로 ─────────────────────────────────
+   흰 구간이 두 번, 세 번 연달아 붙어서 어디서 구간이 끝나는지 안 보였습니다.
+   구간마다 배경을 정해 두는 대신, **보이는 순서대로** 번갈아 칠합니다 —
+   MN_OFF 로 구간 하나를 내려도 리듬이 안 깨집니다.
+   어두운 구간(브랜드 선언)과 마지막 행동은 건드리지 않습니다. */
+function mnStripe(){
+  var home=$("pg-h"); if(!home) return;
+  var skip={ "brand-sec":1, "final-sec":1 };
+  var i=0;
+  [].slice.call(home.children).forEach(function(el){
+    if(!el || el.hidden) return;
+    if(skip[el.id]) return;
+    if(el.getBoundingClientRect().height<40) return;
+    if(el.classList.contains("gh")) { i++; return; }   /* 히어로는 자기 배경이 있습니다 */
+    el.classList.remove("mn-w","mn-g");
+    el.classList.add(i%2 ? "mn-g" : "mn-w");
+    i++;
+  });
+  /* 높이 강약 — 읽기만 하는 구간은 줄입니다. 눌러야 하는 구간(업종·시세·
+     실시간 요청)은 그대로 둡니다. 구간 높이가 다 비슷하면 전부 같은 무게로
+     읽혀서 어디를 봐야 할지 모릅니다.
+     ⚠️ :has() 로 잡으면 구형 브라우저에서 안 먹습니다 — 클래스를 붙입니다. */
+  try{
+    var proc=$("proc-grid");
+    var ps=proc && proc.closest("section");
+    if(ps) ps.classList.add("mn-tight");
+    var why=$("why-band"); if(why) why.classList.add("mn-tight");
+  }catch(e){}
+}
+G.mnStripe=mnStripe;
+
 function patchMain(){
   if(G._main) return; G._main=true;
 
@@ -385,6 +421,7 @@ function patchMain(){
     try{ mnBrief(); }catch(e){}
     try{ mnHideEmpty(); }catch(e){}
     try{ mnTrimStats(); }catch(e){}
+    try{ mnStripe(); }catch(e){}   /* 구간을 내린 뒤에 칠해야 리듬이 안 깨집니다 */
   }
   pass();
   [800, 2000, 3800].forEach(function(ms){ setTimeout(pass, ms); });

@@ -29,11 +29,25 @@ async function open(b,w,h,opt){
   const p=await open(b,1440,950);
 
   log.push('1. 구간 순서 (히어로 → 업종 → 브리핑 → 찾아보세요 → 서비스)');
-  chk('앞 다섯 구간', await p.evaluate(()=>
+  /* 핵심 서비스 카드 넉 장은 헤더 메뉴 넷과 글자까지 같아 홈에서 내렸습니다 */
+  chk('앞 네 구간', await p.evaluate(()=>
+    /* ⚠️ 클래스 이름으로 순서를 재면 mn-w/mn-g(배경 번갈아) · mn-tight(높이)
+       같은 꾸밈 클래스가 붙을 때마다 깨집니다. 무엇이 있는지로 잽니다. */
     [...document.querySelectorAll('#pg-h > *')]
       .filter(e=>!e.hidden && e.getBoundingClientRect().height>0)
-      .map(e=>e.id||e.className.replace(/\s*\b(rv|on)\b/g,'').trim()).slice(0,4).join(' | ')),
-    'gh ph | sec sec-cat8 | sec-mkt | svc-sec');
+      .map(e=>{
+        if(e.classList.contains('gh')) return '히어로';
+        if(e.querySelector('#cat8-grid')) return '업종';
+        if(e.id==='sec-mkt') return '시세';
+        if(e.querySelector('#proc-grid')) return '이용방법';
+        if(e.querySelector('#rq-widget')) return '실시간요청';
+        if(e.id==='why-band') return '신뢰';
+        if(e.classList.contains('sec-sups')) return '등록업체';
+        if(e.id==='brand-sec') return '브랜드';
+        if(e.id==='final-sec') return '마지막';
+        return e.id||'?';
+      }).slice(0,4).join(' | ')),
+    '히어로 | 업종 | 시세 | 이용방법');
   chk('브랜드 선언 → 마지막 행동 → 푸터', await p.evaluate(()=>{
     const y=s=>{const e=document.querySelector(s); return e?e.getBoundingClientRect().top+scrollY:-1;};
     return y('#brand-sec')>0 && y('#brand-sec')<y('#final-sec') && y('#final-sec')<y('.footer');

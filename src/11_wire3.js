@@ -168,7 +168,7 @@ function showInstant(req, picks, notified){
         '<div class="ritem-m"><span>📍 '+esc(s.region||"")+'</span>'+
           (s.rating?'<span class="qstar">★ '+Number(s.rating).toFixed(1)+'</span>':'<span>신규</span>')+
           '<span>거래 '+(s.deal_count||0)+'건</span></div>'+
-        (s.instant_note?'<div style="font-size:13.5px;color:var(--ink3);margin-top:8px;">'+esc(s.instant_note)+'</div>':'')+
+        (s.instant_note?'<div style="font-size:13px;color:var(--ink3);margin-top:8px;">'+esc(s.instant_note)+'</div>':'')+
         '<div class="ritem-f"><button class="gbtn gbtn-w gbtn-sm" onclick="curSID=\''+esc(s.id)+'\';go(&quot;sp&quot;)">업체 보기</button>'+
         '<button class="gbtn gbtn-p gbtn-sm" onclick="gStartChat({requestId:\''+esc(req.id)+'\',supplierId:\''+esc(s.id)+'\',supplierUserId:'+(s.user_id?"'"+esc(s.user_id)+"'":"null")+',supplierName:\''+esc(s.name)+'\',buyerUserId:'+(req.user_id?"'"+esc(req.user_id)+"'":"null")+',buyerName:\''+esc(req.buyer_name||"")+'\',firstMessage:\'요청 건으로 문의드립니다.\'})">바로 문의</button></div>'+
         '</div>';

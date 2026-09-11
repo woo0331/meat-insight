@@ -59,14 +59,14 @@ function injectLaborSection(){
         '<div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:6px;">당일알바</div>'+
         '<div style="font-size:14px;color:var(--ink3);line-height:1.6;">발골·정형·포장·상하차 등 오늘·내일 바로 일할 인력을 찾습니다. '+
           '지원자의 경력·가능업무·평점·작업횟수를 보고 선택하세요.</div>'+
-        '<div style="margin-top:14px;font-size:14.5px;font-weight:700;color:var(--gn);">일감 보기 · 등록하기 ›</div></div>'+
+        '<div style="margin-top:14px;font-size:14px;font-weight:700;color:var(--gn);">일감 보기 · 등록하기 ›</div></div>'+
       '<div class="gcard" style="margin:0;cursor:pointer;" onclick="go(&quot;jobs&quot;)">'+
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'+
           '<span class="gbadge gb-bl">채용</span><span class="gbadge gb-gy">장기</span></div>'+
         '<div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:6px;">구인구직</div>'+
         '<div style="font-size:14px;color:var(--ink3);line-height:1.6;">정규직·생산직·영업직·사무직·배송직·경력직 채용. '+
           '공고를 올리거나 구직 프로필을 등록하세요.</div>'+
-        '<div style="margin-top:14px;font-size:14.5px;font-weight:700;color:var(--gn);">공고 보기 · 등록하기 ›</div></div>'+
+        '<div style="margin-top:14px;font-size:14px;font-weight:700;color:var(--gn);">공고 보기 · 등록하기 ›</div></div>'+
     '</div></div>';
   sec.parentNode.insertBefore(el, sec.nextSibling);
 }
@@ -84,7 +84,7 @@ function patchJobsPage(){
     var box=document.createElement("div");
     box.id="jobs-split";
     box.style.cssText="display:flex;gap:8px;align-items:center;justify-content:space-between;background:var(--gnl);border:1px solid var(--gnb);border-radius:12px;padding:13px 16px;margin-bottom:16px;flex-wrap:wrap;";
-    box.innerHTML='<div style="font-size:14.5px;color:var(--gn2);font-weight:600;">'+
+    box.innerHTML='<div style="font-size:14px;color:var(--gn2);font-weight:600;">'+
       '<b>여기는 정규직·장기 채용입니다.</b> 오늘·내일 바로 필요한 현장 인력은 당일알바에서 찾으세요.</div>'+
       '<button class="gbtn gbtn-p gbtn-sm" onclick="gOpenDaily()">당일알바 보기</button>';
     wrap.insertBefore(box, wrap.firstChild);

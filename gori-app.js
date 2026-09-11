@@ -1054,7 +1054,7 @@ function renderDaily(){
           (j.start_time?'<span>🕐 '+esc(j.start_time)+(j.end_time?"~"+esc(j.end_time):"")+'</span>':'')+
           (j.experience?'<span>경력 '+esc(j.experience)+'</span>':'')+
         '</div>'+
-        (j.detail?'<div style="font-size:13.5px;color:var(--ink3);line-height:1.55;">'+esc(j.detail)+'</div>':'')+
+        (j.detail?'<div style="font-size:13px;color:var(--ink3);line-height:1.55;">'+esc(j.detail)+'</div>':'')+
       '</div>'+
       '<div class="dj-r">'+
         '<div class="dj-pay">'+won(j.pay)+'원</div><div class="dj-pt">'+esc(j.pay_type||"일당")+'</div>'+
@@ -1208,7 +1208,7 @@ window.gViewApps=async function(jobId){
               '<div class="wk-st"><span>경력 <b>'+(a.experience_years||0)+'년</b></span>'+
                 '<span>평점 <b>'+(rating?rating.toFixed(1):"신규")+'</b></span>'+
                 '<span>작업 <b>'+cnt+'회</b></span></div>'+
-              (a.message?'<div style="font-size:13.5px;color:var(--ink3);margin-top:8px;line-height:1.55;">'+esc(a.message)+'</div>':'')+
+              (a.message?'<div style="font-size:13px;color:var(--ink3);margin-top:8px;line-height:1.55;">'+esc(a.message)+'</div>':'')+
             '</div>'+
             '<div style="flex-shrink:0;display:flex;flex-direction:column;gap:6px;">'+
               '<button class="gbtn gbtn-p gbtn-sm" onclick="gChooseWorker(\''+a.id+'\',\''+esc(jobId)+'\')"'+(a.status==="선택됨"?" disabled":"")+'>선택</button>'+
@@ -2385,7 +2385,7 @@ function showInstant(req, picks, notified){
         '<div class="ritem-m"><span>📍 '+esc(s.region||"")+'</span>'+
           (s.rating?'<span class="qstar">★ '+Number(s.rating).toFixed(1)+'</span>':'<span>신규</span>')+
           '<span>거래 '+(s.deal_count||0)+'건</span></div>'+
-        (s.instant_note?'<div style="font-size:13.5px;color:var(--ink3);margin-top:8px;">'+esc(s.instant_note)+'</div>':'')+
+        (s.instant_note?'<div style="font-size:13px;color:var(--ink3);margin-top:8px;">'+esc(s.instant_note)+'</div>':'')+
         '<div class="ritem-f"><button class="gbtn gbtn-w gbtn-sm" onclick="curSID=\''+esc(s.id)+'\';go(&quot;sp&quot;)">업체 보기</button>'+
         '<button class="gbtn gbtn-p gbtn-sm" onclick="gStartChat({requestId:\''+esc(req.id)+'\',supplierId:\''+esc(s.id)+'\',supplierUserId:'+(s.user_id?"'"+esc(s.user_id)+"'":"null")+',supplierName:\''+esc(s.name)+'\',buyerUserId:'+(req.user_id?"'"+esc(req.user_id)+"'":"null")+',buyerName:\''+esc(req.buyer_name||"")+'\',firstMessage:\'요청 건으로 문의드립니다.\'})">바로 문의</button></div>'+
         '</div>';
@@ -2664,7 +2664,7 @@ function obStep3(){
       '<div class="gmsg" id="ob-msg3"></div>'+
     '</div>'+
     '<div class="gcard" style="background:var(--gnl);border-color:var(--gnb);">'+
-      '<div style="font-size:14.5px;color:var(--ink2);line-height:1.65;">'+
+      '<div style="font-size:14px;color:var(--ink2);line-height:1.65;">'+
       '<b>지금 없어도 됩니다.</b> 건너뛰고 등록한 뒤 「거래관리 → 업체 인증」에서 언제든 신청할 수 있습니다.</div></div>'+
     '<div class="grow keep"><button class="gbtn gbtn-w" onclick="gObBack()">← 이전</button>'+
     '<button class="gbtn gbtn-p" onclick="gObNext(3)">다음 →</button></div>';
@@ -2852,7 +2852,7 @@ function obDone(vOk, vTotal, photos){
     '<div class="gcard" style="text-align:center;padding:34px 22px;">'+
       '<div class="ob-ok">✓</div>'+
       '<div style="font-size:21px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+esc(d.name)+' 등록 완료</div>'+
-      '<div style="font-size:14.5px;color:var(--ink3);line-height:1.65;">'+
+      '<div style="font-size:14px;color:var(--ink3);line-height:1.65;">'+
         '선택하신 분야의 요청이 올라오면 알림을 받습니다.<br>'+
         (vTotal? (vOk?('인증 '+vOk+'건은 심사 중입니다. 승인되면 배지가 표시됩니다.'):'인증 신청은 나중에 다시 시도해주세요.') : '인증을 등록하면 요청자에게 먼저 노출됩니다.')+
       '</div>'+
@@ -5105,7 +5105,7 @@ function ctComm(){
     return '<div class="comm-row"'+(ctLink(c.url)?' onclick="gCtOpen(\''+esc(c.url)+'\')" style="cursor:pointer;"':'')+'>'+
       '<div class="cr-rank">'+(i+1)+'</div><div style="flex:1;min-width:0;">'+
       '<div class="cr-title">'+esc(c.title)+'</div>'+
-      (c.count?'<div style="font-size:12px;color:var(--ink4);">댓글 '+esc(c.count)+'</div>':'')+
+      (c.count?'<div style="font-size:12.5px;color:var(--ink4);">댓글 '+esc(c.count)+'</div>':'')+
       '</div></div>';
   }).join("");
 }
@@ -6108,7 +6108,7 @@ function seDone(id, name){
     '<div class="gcard" style="text-align:center;padding:34px 22px;">'+
       '<div class="ob-ok">✓</div>'+
       '<div style="font-size:21px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+esc(name||"업체")+' 정보를 저장했습니다</div>'+
-      '<div style="font-size:14.5px;color:var(--ink3);line-height:1.65;">'+
+      '<div style="font-size:14px;color:var(--ink3);line-height:1.65;">'+
         '업체 상세와 검색 결과에 바로 반영됩니다.</div>'+
     '</div>'+
     '<div class="grow keep">'+
@@ -6277,7 +6277,7 @@ function sjPitch(){
   var live = (SH.reqs===null)
     ? '<div class="ghint">요청 현황을 불러오지 못했습니다. 연결이 되면 여기에 표시됩니다.</div>'
     : (open.length
-        ? '<div style="font-size:14.5px;color:var(--ink2);font-weight:600;margin-bottom:10px;">'+
+        ? '<div style="font-size:14px;color:var(--ink2);font-weight:600;margin-bottom:10px;">'+
             '지금 답을 기다리는 요청 <b style="color:var(--gn);">'+open.length+'건</b></div>'+
           recent.map(function(r){ return shReqRow(r); }).join("")+
           /* 넷만 보여주면서 "5건" 이라고 쓰면 세어 본 사람에게는 틀린 숫자입니다 */
@@ -6772,7 +6772,7 @@ function rpDone(which){
       '<div class="ob-ok">✓</div>'+
       '<div style="font-size:21px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+
         (isReport?"신고가 접수되었습니다":"문의가 접수되었습니다")+'</div>'+
-      '<div style="font-size:14.5px;color:var(--ink3);line-height:1.65;">'+
+      '<div style="font-size:14px;color:var(--ink3);line-height:1.65;">'+
         (isReport
           ? '운영자가 확인한 뒤 필요한 조치를 합니다.<br>확인이 필요하면 남겨 주신 연락처로 연락드립니다.'
           : '확인하고 남겨 주신 연락처로 답변드립니다.')+
@@ -8357,8 +8357,13 @@ var CS_ITEMS=[
   {nm:"포장재",      k:"equip",   t:"포장재",      i:"pack",       g:3, bg:"#FDEEDD", c:"#A85F0B"},
   {nm:"장비",        k:"equip",   t:"장비",        i:"equip",      g:3, bg:"#E9EAEC", c:"#4A5058"},
   {nm:"HACCP",       k:"haccp",   t:"HACCP",       i:"haccp",      g:4, bg:"#E2F1E7", c:"#186B3E"},
-  {nm:"인테리어",    k:"startup", t:"인테리어",    i:"interior",   g:4, bg:"#FDEBDF", c:"#A55418"},
-  {nm:"창업·컨설팅", k:"startup", t:"창업·컨설팅", i:"startup",    g:4, bg:"#EDE7FA", c:"#5333A8"}
+  /* ⚠️ "인력" 이 열두 칸에 없었습니다. 카테고리 바에는 인력·알바 · 구인구직이
+     둘이나 있는데 정작 제일 눈에 띄는 자리에서 빠져 있었습니다 — 축산 현장에서
+     사람 구하는 일은 원육만큼 큰 수요입니다.
+     칸을 늘리지 않으려고 "인테리어" 를 "창업·인테리어" 로 합쳤습니다
+     (대분류 이름과도 같아집니다). 네 묶음 × 세 칸은 그대로입니다. */
+  {nm:"인력·구인",     k:"labor",   t:"인력",         i:"labor",    g:4},
+  {nm:"창업·인테리어", k:"startup", t:"창업·컨설팅",   i:"startup",  g:4}
 ];
 G.CS_ITEMS=CS_ITEMS;   /* 회귀 테스트가 목적지를 전수로 봅니다 */
 /* t 는 반드시 그 분야의 legacy 목록에 있는 말이어야 합니다 — 그래야
@@ -8397,6 +8402,10 @@ var CS_ICO={
   haccp:'<path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
   interior:'<rect x="3.6" y="4.4" width="11.4" height="4.6" rx="1.4"/>'+
     '<path d="M15 6.7h4.4v3.6h-6.6V13"/><rect x="10.4" y="13" width="4.8" height="6.6" rx="1.4"/>',
+  labor:'<circle cx="9" cy="8.4" r="3.1"/>'+
+    '<path d="M3.4 19.6c0-3.1 2.5-5.2 5.6-5.2s5.6 2.1 5.6 5.2"/>'+
+    '<circle cx="17.6" cy="9.4" r="2.3"/>'+
+    '<path d="M15.6 15.4c2.1.2 4 1.9 4 4.4"/>',
   startup:'<path d="M9.4 17.2h5.2"/><path d="M10.4 20h3.2"/>'+
     '<path d="M12 3.2a5.6 5.6 0 0 1 3.4 10c-.6.5-1 1.2-1 2H9.6c0-.8-.4-1.5-1-2A5.6 5.6 0 0 1 12 3.2z"/>'
 };
@@ -8842,7 +8851,12 @@ var MN_OFF=[
   ["#pf-stats-sec",  "지표 줄 — 최종 구조에 없음"],
   ["#case-sec",      "찾아보세요 — 최종 구조에 없음"],
   ["#sec-labor",     "사람이 필요할 때 — 핵심 서비스의 구인구직 카드로 갑니다"],
-  [".recruit-banner","업체 유치 배너 — 마지막 행동의 \"업체 등록하기\" 와 중복"]
+  [".recruit-banner","업체 유치 배너 — 마지막 행동의 \"업체 등록하기\" 와 중복"],
+  /* ⚠️ 핵심 서비스 카드 넉 장(업체 찾기·견적 요청·축산 시세·구인구직)이
+     헤더 메뉴 넷과 **글자까지 똑같았습니다.** 스크롤해서 내려왔는데 맨 위에서
+     본 것을 다시 보는 셈이라 구간 하나가 통째로 낭비였습니다.
+     헤더·전체메뉴·푸터에 다 있으므로 홈에서만 내립니다. */
+  [".svc-sec",       "핵심 서비스 — 헤더 메뉴 넷과 같은 내용"]
 ];
 /* GORI INSIGHT 안에서 콘텐츠가 아닌 위젯 — 업체 이야기는 등록 업체 구간이
    맡습니다. 카드가 일곱 장 늘어서면 무엇을 읽으라는 건지 알 수 없습니다. */
@@ -8904,6 +8918,37 @@ function mnTrimStats(){
   el.style.gridTemplateColumns="repeat("+real+",1fr)";
 }
 
+/* ── 구간 배경을 흰색–회색 번갈아로 ─────────────────────────────────
+   흰 구간이 두 번, 세 번 연달아 붙어서 어디서 구간이 끝나는지 안 보였습니다.
+   구간마다 배경을 정해 두는 대신, **보이는 순서대로** 번갈아 칠합니다 —
+   MN_OFF 로 구간 하나를 내려도 리듬이 안 깨집니다.
+   어두운 구간(브랜드 선언)과 마지막 행동은 건드리지 않습니다. */
+function mnStripe(){
+  var home=$("pg-h"); if(!home) return;
+  var skip={ "brand-sec":1, "final-sec":1 };
+  var i=0;
+  [].slice.call(home.children).forEach(function(el){
+    if(!el || el.hidden) return;
+    if(skip[el.id]) return;
+    if(el.getBoundingClientRect().height<40) return;
+    if(el.classList.contains("gh")) { i++; return; }   /* 히어로는 자기 배경이 있습니다 */
+    el.classList.remove("mn-w","mn-g");
+    el.classList.add(i%2 ? "mn-g" : "mn-w");
+    i++;
+  });
+  /* 높이 강약 — 읽기만 하는 구간은 줄입니다. 눌러야 하는 구간(업종·시세·
+     실시간 요청)은 그대로 둡니다. 구간 높이가 다 비슷하면 전부 같은 무게로
+     읽혀서 어디를 봐야 할지 모릅니다.
+     ⚠️ :has() 로 잡으면 구형 브라우저에서 안 먹습니다 — 클래스를 붙입니다. */
+  try{
+    var proc=$("proc-grid");
+    var ps=proc && proc.closest("section");
+    if(ps) ps.classList.add("mn-tight");
+    var why=$("why-band"); if(why) why.classList.add("mn-tight");
+  }catch(e){}
+}
+G.mnStripe=mnStripe;
+
 function patchMain(){
   if(G._main) return; G._main=true;
 
@@ -8949,6 +8994,7 @@ function patchMain(){
     try{ mnBrief(); }catch(e){}
     try{ mnHideEmpty(); }catch(e){}
     try{ mnTrimStats(); }catch(e){}
+    try{ mnStripe(); }catch(e){}   /* 구간을 내린 뒤에 칠해야 리듬이 안 깨집니다 */
   }
   pass();
   [800, 2000, 3800].forEach(function(ms){ setTimeout(pass, ms); });
@@ -9506,14 +9552,14 @@ function injectLaborSection(){
         '<div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:6px;">당일알바</div>'+
         '<div style="font-size:14px;color:var(--ink3);line-height:1.6;">발골·정형·포장·상하차 등 오늘·내일 바로 일할 인력을 찾습니다. '+
           '지원자의 경력·가능업무·평점·작업횟수를 보고 선택하세요.</div>'+
-        '<div style="margin-top:14px;font-size:14.5px;font-weight:700;color:var(--gn);">일감 보기 · 등록하기 ›</div></div>'+
+        '<div style="margin-top:14px;font-size:14px;font-weight:700;color:var(--gn);">일감 보기 · 등록하기 ›</div></div>'+
       '<div class="gcard" style="margin:0;cursor:pointer;" onclick="go(&quot;jobs&quot;)">'+
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'+
           '<span class="gbadge gb-bl">채용</span><span class="gbadge gb-gy">장기</span></div>'+
         '<div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:6px;">구인구직</div>'+
         '<div style="font-size:14px;color:var(--ink3);line-height:1.6;">정규직·생산직·영업직·사무직·배송직·경력직 채용. '+
           '공고를 올리거나 구직 프로필을 등록하세요.</div>'+
-        '<div style="margin-top:14px;font-size:14.5px;font-weight:700;color:var(--gn);">공고 보기 · 등록하기 ›</div></div>'+
+        '<div style="margin-top:14px;font-size:14px;font-weight:700;color:var(--gn);">공고 보기 · 등록하기 ›</div></div>'+
     '</div></div>';
   sec.parentNode.insertBefore(el, sec.nextSibling);
 }
@@ -9531,7 +9577,7 @@ function patchJobsPage(){
     var box=document.createElement("div");
     box.id="jobs-split";
     box.style.cssText="display:flex;gap:8px;align-items:center;justify-content:space-between;background:var(--gnl);border:1px solid var(--gnb);border-radius:12px;padding:13px 16px;margin-bottom:16px;flex-wrap:wrap;";
-    box.innerHTML='<div style="font-size:14.5px;color:var(--gn2);font-weight:600;">'+
+    box.innerHTML='<div style="font-size:14px;color:var(--gn2);font-weight:600;">'+
       '<b>여기는 정규직·장기 채용입니다.</b> 오늘·내일 바로 필요한 현장 인력은 당일알바에서 찾으세요.</div>'+
       '<button class="gbtn gbtn-p gbtn-sm" onclick="gOpenDaily()">당일알바 보기</button>';
     wrap.insertBefore(box, wrap.firstChild);

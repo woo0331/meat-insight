@@ -108,7 +108,7 @@ function sjPitch(){
   var live = (SH.reqs===null)
     ? '<div class="ghint">요청 현황을 불러오지 못했습니다. 연결이 되면 여기에 표시됩니다.</div>'
     : (open.length
-        ? '<div style="font-size:14.5px;color:var(--ink2);font-weight:600;margin-bottom:10px;">'+
+        ? '<div style="font-size:14px;color:var(--ink2);font-weight:600;margin-bottom:10px;">'+
             '지금 답을 기다리는 요청 <b style="color:var(--gn);">'+open.length+'건</b></div>'+
           recent.map(function(r){ return shReqRow(r); }).join("")+
           /* 넷만 보여주면서 "5건" 이라고 쓰면 세어 본 사람에게는 틀린 숫자입니다 */

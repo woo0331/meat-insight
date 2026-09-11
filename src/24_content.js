@@ -98,7 +98,7 @@ function ctComm(){
     return '<div class="comm-row"'+(ctLink(c.url)?' onclick="gCtOpen(\''+esc(c.url)+'\')" style="cursor:pointer;"':'')+'>'+
       '<div class="cr-rank">'+(i+1)+'</div><div style="flex:1;min-width:0;">'+
       '<div class="cr-title">'+esc(c.title)+'</div>'+
-      (c.count?'<div style="font-size:12px;color:var(--ink4);">댓글 '+esc(c.count)+'</div>':'')+
+      (c.count?'<div style="font-size:12.5px;color:var(--ink4);">댓글 '+esc(c.count)+'</div>':'')+
       '</div></div>';
   }).join("");
 }

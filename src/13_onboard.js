@@ -94,7 +94,7 @@ function obStep3(){
       '<div class="gmsg" id="ob-msg3"></div>'+
     '</div>'+
     '<div class="gcard" style="background:var(--gnl);border-color:var(--gnb);">'+
-      '<div style="font-size:14.5px;color:var(--ink2);line-height:1.65;">'+
+      '<div style="font-size:14px;color:var(--ink2);line-height:1.65;">'+
       '<b>지금 없어도 됩니다.</b> 건너뛰고 등록한 뒤 「거래관리 → 업체 인증」에서 언제든 신청할 수 있습니다.</div></div>'+
     '<div class="grow keep"><button class="gbtn gbtn-w" onclick="gObBack()">← 이전</button>'+
     '<button class="gbtn gbtn-p" onclick="gObNext(3)">다음 →</button></div>';
@@ -282,7 +282,7 @@ function obDone(vOk, vTotal, photos){
     '<div class="gcard" style="text-align:center;padding:34px 22px;">'+
       '<div class="ob-ok">✓</div>'+
       '<div style="font-size:21px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px;">'+esc(d.name)+' 등록 완료</div>'+
-      '<div style="font-size:14.5px;color:var(--ink3);line-height:1.65;">'+
+      '<div style="font-size:14px;color:var(--ink3);line-height:1.65;">'+
         '선택하신 분야의 요청이 올라오면 알림을 받습니다.<br>'+
         (vTotal? (vOk?('인증 '+vOk+'건은 심사 중입니다. 승인되면 배지가 표시됩니다.'):'인증 신청은 나중에 다시 시도해주세요.') : '인증을 등록하면 요청자에게 먼저 노출됩니다.')+
       '</div>'+

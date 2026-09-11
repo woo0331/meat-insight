@@ -13,7 +13,7 @@
 .gp-hd .back-btn{flex-shrink:0;white-space:nowrap;}
 .gp-title{font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-.3px;}
 .gp-sub{font-size:14px;color:var(--ink3);margin-top:3px;}
-.gbtn{border:none;border-radius:9px;font-size:15.5px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;padding:13px 22px;white-space:nowrap;flex-shrink:0;transition:background .15s,border-color .15s;}
+.gbtn{border:none;border-radius:9px;font-size:15.5px;font-weight:700;cursor:pointer;font-family:var(--font);padding:13px 22px;white-space:nowrap;flex-shrink:0;transition:background .15s,border-color .15s;}
 /* 주요 CTA 는 딥레드로 통일합니다 (헤더 "요청 올리기" · 히어로 "검색하기" 와
    같은 색). 브랜드색(--gn)은 링크·아이콘·구간 강조에 남겨 둡니다 — 빨강이
    여기저기 퍼지면 이벤트 페이지처럼 보입니다. */
@@ -31,7 +31,7 @@
 .glabel{display:block;font-size:13.5px;font-weight:700;color:var(--ink2);margin:14px 0 6px;}
 .glabel:first-child{margin-top:0;}
 .greq{color:var(--gn);}
-.gin{width:100%;padding:12px 13px;border:1.5px solid var(--bd);border-radius:8px;font-size:15.5px;color:var(--ink);font-family:"Noto Sans KR",sans-serif;background:#fff;outline:none;transition:border-color .15s;}
+.gin{width:100%;padding:12px 13px;border:1.5px solid var(--bd);border-radius:8px;font-size:15.5px;color:var(--ink);font-family:var(--font);background:#fff;outline:none;transition:border-color .15s;}
 .gin:focus{border-color:var(--gn);}
 textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
 .gin.err{border-color:var(--red);background:#FEF6F3;}
@@ -42,7 +42,7 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
 .gmsg.err{background:var(--redbg);color:var(--red);border:1px solid var(--redb);}
 .gmsg.info{background:var(--gnl);color:var(--gn2);border:1px solid var(--gnb);}
 .gpick{display:flex;gap:7px;flex-wrap:wrap;}
-.gpick-i{padding:9px 15px;border:1.5px solid var(--bd);border-radius:999px;font-size:14px;font-weight:600;color:var(--ink2);background:#fff;cursor:pointer;font-family:"Noto Sans KR",sans-serif;transition:all .15s;}
+.gpick-i{padding:9px 15px;border:1.5px solid var(--bd);border-radius:999px;font-size:14px;font-weight:600;color:var(--ink2);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s;}
 .gpick-i:hover{border-color:var(--gn);color:var(--gn);}
 .gpick-i.on{background:var(--gn);border-color:var(--gn);color:#fff;}
 .gempty{background:var(--bg2);border:1px dashed var(--bd2);border-radius:12px;padding:34px 20px;text-align:center;}
@@ -69,7 +69,7 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
 
 /* ── STEP1 대분류·소분류 선택 ── */
 .gcat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-.gcat-c{background:#fff;border:1.5px solid var(--bd);border-radius:12px;padding:16px 10px;text-align:center;cursor:pointer;font-family:"Noto Sans KR",sans-serif;transition:all .15s;}
+.gcat-c{background:#fff;border:1.5px solid var(--bd);border-radius:12px;padding:16px 10px;text-align:center;cursor:pointer;font-family:var(--font);transition:all .15s;}
 .gcat-c:hover{border-color:var(--gn);}
 .gcat-c.on{border-color:var(--gn);background:var(--gnl);}
 .gcat-ic{width:40px;height:40px;margin:0 auto 8px;border-radius:10px;background:var(--gnl);display:flex;align-items:center;justify-content:center;color:var(--gn);}
@@ -188,7 +188,7 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
 .my-kl{font-size:12.5px;color:var(--ink3);margin-top:2px;font-weight:600;}
 .my-tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:2px solid var(--bd);margin-bottom:16px;scrollbar-width:none;}
 .my-tabs::-webkit-scrollbar{display:none;}
-.my-tab{flex-shrink:0;padding:11px 14px;font-size:14.5px;font-weight:700;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:"Noto Sans KR",sans-serif;}
+.my-tab{flex-shrink:0;padding:11px 14px;font-size:14.5px;font-weight:700;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font);}
 .my-tab.on{color:var(--gn);border-bottom-color:var(--gn);}
 .my-tab .cnt{display:inline-block;margin-left:5px;background:var(--gnl);color:var(--gn-on-tint);border-radius:999px;padding:1px 7px;font-size:12.5px;}
 
@@ -258,7 +258,7 @@ textarea.gin{min-height:84px;resize:vertical;line-height:1.6;}
 .chat-sys{align-self:center;font-size:13px;color:var(--ink4);background:#fff;border:1px solid var(--bd);border-radius:999px;padding:6px 14px;}
 .chat-bar{display:flex;gap:8px;align-items:flex-end;margin-top:10px;background:#fff;border:1.5px solid var(--bd);border-radius:14px;padding:8px 8px 8px 14px;}
 .chat-bar:focus-within{border-color:var(--gn);}
-.chat-in{flex:1;border:none;outline:none;resize:none;font-size:15.5px;line-height:1.5;font-family:"Noto Sans KR",sans-serif;color:var(--ink);background:none;padding:8px 0;max-height:120px;}
+.chat-in{flex:1;border:none;outline:none;resize:none;font-size:15.5px;line-height:1.5;font-family:var(--font);color:var(--ink);background:none;padding:8px 0;max-height:120px;}
 .chat-send{flex-shrink:0;width:40px;height:40px;border:none;border-radius:10px;background:var(--gn);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .chat-send:hover{background:var(--gn2);}
 

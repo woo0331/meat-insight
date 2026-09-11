@@ -302,6 +302,33 @@ CATS8 의 대분류를 따라 셋씩 넷이다.
 홈의 마지막 두 구간(브랜드 선언·마지막 행동)은 `45_main.js` 가
 `#pg-h` 맨 끝에 붙인다 — 푸터를 기준으로 삼지 마라.
 
+## Supabase 라이브러리는 우리 도메인에서 나온다
+
+예전에는 `cdn.jsdelivr.net` 한 줄이었다. 그게 막히거나 느리면 `window.supabase`
+가 안 생기고 `sb` 가 null 이 되어 **사이트 전체가** "서버에 연결할 수 없습니다"
+가 된다 — 로그인·요청·견적·업체 목록이 한꺼번에 죽는데 원인은 우리 서버도 DB 도
+아니다. 그래서 `vendor/supabase-js-2.116.0.min.js` 로 직접 내보낸다.
+
+- **둘 다 "아직 없을 때만" 부른다.** `window.supabase||document.write(...)` 를
+  vendor · CDN 두 줄에 각각 건다. 이미 있는 클라이언트를 덮어쓰면 테스트가
+  끼워 넣은 가짜가 죽는다 — 실제로 그렇게 깨뜨렸다 (`e2e.js` ·
+  `gate-e2e.js` · `admin-find-e2e.js` 세 개가 한꺼번에 실패했다).
+- 라이브러리를 쓰는 HTML 은 일곱 개다: `index.html`(+미러) · `admin.html` ·
+  `dashboard.html` · `jobs.html` · `meat_insight_apply.html` ·
+  `purchase_request.html` · `suppliers.html`. **한 곳만 고치면 안 된다.**
+- 올릴 때는 `npm pack @supabase/supabase-js@2` 로 다시 받아 통째로 바꾸고
+  파일 이름의 버전도 같이 올린다 (`vendor/README.md`).
+- **글꼴은 CDN 을 그대로 둔다.** 못 받아도 글꼴만 대체되지 사이트가 멈추지
+  않는다. 다만 `--font` 사슬에 윈도우(맑은 고딕)·맥(애플 SD 산돌) 기본 한글
+  글꼴을 넣어 두었다. `gori-app.css` 에 `"Noto Sans KR"` 을 직접 박아 두면
+  Pretendard 가 못 떴을 때 버튼·입력칸만 다른 글꼴이 된다 — `var(--font)` 를 써라.
+
+**어디서 막혔는지는 콘솔이 말해 준다** (`27_offline.js` 의 `netDiagnose`) —
+라이브러리가 안 뜬 것인지, 클라이언트를 못 만든 것인지, 서버가 응답이 없는
+것인지 세 가지로 나눠 `console.warn` 한다. 예전에는 전부 같은 문구였다.
+
+`test/offline-e2e.js` 가 감시한다.
+
 ## 운영자가 해야 할 설정
 
 `README.md` 의 "남은 것 · 켜야 할 것" 표를 볼 것. 특히 **RLS**(`db/phase4_admin.sql`

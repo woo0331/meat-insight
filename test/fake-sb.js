@@ -187,7 +187,7 @@ window.__FAKE_INIT = function(opts){
 
   var session = opts.user ? { user: opts.user } : null;
   var listeners = [];
-  window.supabase = {
+  var FAKE_SB = {
     createClient: function(){
       return {
         from: function(t){ return {
@@ -239,4 +239,8 @@ window.__FAKE_INIT = function(opts){
       };
     }
   };
+
+  /* 페이지는 window.supabase 가 **없을 때만** 진짜 라이브러리를 부릅니다.
+     그래서 여기서 먼저 넣어 두면 vendor 스크립트가 아예 안 실립니다. */
+  window.supabase = FAKE_SB;
 };

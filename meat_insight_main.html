@@ -84,7 +84,12 @@ body{font-family:var(--font);background:#FFFFFF;color:#17201B;letter-spacing:-.0
   --navy:#12161B;--navy2:#1B2129;
   --gold:#6E4A08;--goldbg:#FCF4E2;
 
-  --font:"Pretendard Variable",Pretendard,"Noto Sans KR",system-ui,-apple-system,sans-serif;
+  /* ⚠️ Pretendard 는 jsdelivr 에서 옵니다. 그게 막히면 글꼴만 대체되면 되지,
+     글씨가 깨져 보이면 안 됩니다. 그래서 윈도우(맑은 고딕)·맥(애플 SD 산돌)
+     기본 한글 글꼴까지 사슬에 넣어 둡니다. Noto Sans KR 은 안 깔린 PC 가
+     많아서 그것만 믿으면 generic sans-serif 로 떨어집니다. */
+  --font:"Pretendard Variable",Pretendard,"Noto Sans KR",system-ui,-apple-system,
+    "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",sans-serif;
   --serif:var(--font);
   --max:1200px;--r:16px;--r-ico:18px;
   --hdr-h:114px;--top-pad:152px;
@@ -2106,7 +2111,20 @@ a.gi-card:hover .gi-t{color:var(--gn2);}
 
 <!-- Supabase — head 에서 옮겨왔습니다. head 에 있으면 HTML 파싱을 막아
      첫 화면이 늦게 그려집니다. 아래 인라인 스크립트보다 먼저이기만 하면 됩니다. -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ⚠️ Supabase 는 **우리 도메인에서** 내보냅니다 (vendor/README.md).
+     예전에는 jsdelivr 한 줄이었는데, 그게 막히거나 느리면 window.supabase 가
+     안 생기고 sb=null 이 되어 사이트 전체가 "서버에 연결할 수 없습니다" 가
+     됩니다 — 로그인·요청·견적·업체 목록이 한꺼번에 죽는데 원인은 우리 쪽이
+     아닙니다. jsdelivr 은 그래도 못 받았을 때를 위한 예비로만 남깁니다. -->
+<script>
+/* 1순위 우리 도메인, 2순위 jsdelivr. 둘 다 "아직 없을 때만" 부릅니다 —
+   이미 window.supabase 가 있으면(테스트가 끼워 넣은 가짜 등) 건드리지 않습니다.
+   document.write 는 파싱 중이라 순서가 보장됩니다. */
+window.supabase||document.write('<scr'+'ipt src="vendor/supabase-js-2.116.0.min.js"><\/scr'+'ipt>');
+</script>
+<script>
+window.supabase||document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/scr'+'ipt>');
+</script>
 <script>
 var SU="https://igignylgzjphtnyxhhsd.supabase.co";
 var SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnaWdueWxnempwaHRueXhoaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDUyMDAsImV4cCI6MjA4OTA4MTIwMH0.3u5gCw1dnG1YSmrzhN3PGVOMoQ1LBtGw0ToNhSeL42A";

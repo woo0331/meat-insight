@@ -5485,11 +5485,32 @@ function patchKakao(){
    ════════════════════════════════════════════════════════════════════ */
 
 /* reason — "net" 연결 실패 · "denied" 권한/키 문제(설정) */
-var NET = { ok:null, tried:false, retrying:false, reason:"net", warned:false };
+var NET = { ok:null, tried:false, retrying:false, reason:"net", warned:false, diagnosed:false };
 G.NET = NET;
 
 /* 권한·키 문제는 손님이 "다시 시도" 를 눌러도 영영 안 됩니다.
    무엇을 고쳐야 하는지는 **운영자에게만** 콘솔로 말합니다 (CLAUDE.md). */
+/* 어느 단계에서 막혔는지 운영자에게 한 줄로 알려 줍니다.
+   "서버에 연결할 수 없습니다" 만 보고는 원인을 좁힐 수 없었습니다 —
+   라이브러리가 안 뜬 것인지, 키가 틀린 것인지, RLS 인지 전부 같은 문구였습니다. */
+function netDiagnose(){
+  if(NET.diagnosed) return; NET.diagnosed=true;
+  try{
+    if(typeof window.supabase==="undefined" || !window.supabase){
+      console.warn("[고리] Supabase 라이브러리가 안 떴습니다. vendor/supabase-js-*.min.js 가 "+
+        "제대로 올라갔는지, 주소가 맞는지 확인하세요. 이게 없으면 로그인·요청·견적이 전부 멈춥니다.");
+      return;
+    }
+    if(!client()){
+      console.warn("[고리] Supabase 클라이언트를 못 만들었습니다. index.html 의 SU · SK 값을 확인하세요.");
+      return;
+    }
+    console.warn("[고리] 서버에 요청은 갔는데 응답을 못 받았습니다. "+
+      "Supabase 프로젝트가 살아 있는지(일시정지 여부), SU 주소가 맞는지 확인하세요. SU = "+
+      (typeof SU!=="undefined"?SU:"(모름)"));
+  }catch(e){}
+}
+
 function netNoteDenied(err){
   NET.reason="denied";
   if(NET.warned) return; NET.warned=true;
@@ -5519,6 +5540,7 @@ function netBar(){
   /* 권한·키 문제일 때는 "연결할 수 없습니다" 가 거짓말이고, 다시 시도해도
      영영 안 됩니다 — 버튼을 빼고 기다려 달라고만 합니다. */
   var denied = (NET.reason==="denied" && navigator.onLine!==false);
+  if(navigator.onLine!==false && NET.reason!=="denied"){ try{ netDiagnose(); }catch(e){} }
   el.innerHTML='<span>'+
     (navigator.onLine===false
       ? "인터넷이 끊겼습니다. 연결을 확인해주세요."

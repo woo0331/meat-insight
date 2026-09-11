@@ -4,11 +4,22 @@ const U={id:'u1',user_metadata:{name:'김철수',role:'buyer'}};
 (async()=>{const b=await chromium.launch();const log=[],errs=[];
  const chk=(n,g,w)=>{const ok=String(g)===String(w);log.push((ok?'  ✅ ':'  ❌ ')+n+': '+g+(ok?'':'  ← 기대 '+w));if(!ok)errs.push(n);};
 
- log.push('1. Supabase 자체가 안 뜰 때 (CDN 실패)');
+ /* ⚠️ 예전에는 이 검사가 "환경에서 jsdelivr 이 막혀 있다" 에 기대고 있었습니다.
+    라이브러리를 vendor/ 로 옮긴 뒤로는 그냥 열면 멀쩡히 뜨므로, 못 받는 상황을
+    **직접 막아서** 만들어야 합니다 — vendor 와 예비 CDN 을 둘 다 끊습니다.
+    이게 실제로 일어나면(파일이 안 올라갔다든가) 사이트 전체가 멈추므로,
+    그때 무엇이 보이는지가 이 검사의 핵심입니다. */
+ log.push('1. Supabase 자체가 안 뜰 때 (라이브러리 로드 실패)');
  const p=await b.newPage({viewport:{width:390,height:844},deviceScaleFactor:2});
  p.on('pageerror',e=>errs.push('cdn: '+e.message.slice(0,60)));
+ p._warns=[]; p.on('console',m=>{ if(m.type()==='warning') p._warns.push(m.text()); });
+ await p.route('**/vendor/supabase-js*.js',r=>r.abort());
+ await p.route('**/cdn.jsdelivr.net/npm/@supabase/**',r=>r.abort());
  await p.goto('file:///home/user/meat-insight/index.html',{waitUntil:'load'});
  await p.waitForTimeout(3200);
+ chk('라이브러리가 정말 안 떴다', await p.evaluate(()=>typeof window.supabase==='undefined'), 'true');
+ chk('운영자에게 원인을 말해준다',
+   p._warns.some(t=>/라이브러리가 안 떴습니다/.test(t)), 'true');
  chk('안내 띠 표시', await p.evaluate(()=>!!document.getElementById('net-bar')), 'true');
  chk('안내 문구', await p.evaluate(()=>document.querySelector('#net-bar span').textContent), '서버에 연결할 수 없습니다. 목록이 비어 보일 수 있습니다.');
  chk('다시 시도 버튼', await p.evaluate(()=>!!document.querySelector('.net-retry')), 'true');
@@ -137,6 +148,47 @@ const U={id:'u1',user_metadata:{name:'김철수',role:'buyer'}};
    return !!bar && /연결할 수 없습니다/.test(bar.textContent) && !!bar.querySelector('.net-retry');
  }), 'true');
  await z2.close();
+
+ /* ── 라이브러리는 우리 도메인에서 나온다 ────────────────────────────
+    예전에는 jsdelivr 한 줄이었습니다. 그게 막히거나 느리면 window.supabase 가
+    안 생기고 sb=null 이 되어 **사이트 전체가** "서버에 연결할 수 없습니다" 가
+    됩니다 — 로그인·요청·견적·업체 목록이 한꺼번에 죽는데 원인은 우리 서버도
+    DB 도 아닙니다. 같은 도메인에서 내보내면 그 고리가 사라집니다. */
+ log.push('7. Supabase 라이브러리는 우리 도메인에서');
+ const fsx=require('fs');
+ chk('vendor 파일이 있다', fsx.existsSync('/home/user/meat-insight/vendor/supabase-js-2.116.0.min.js'), 'true');
+ const HTMLS=['index.html','meat_insight_main.html','admin.html','dashboard.html',
+              'jobs.html','meat_insight_apply.html','purchase_request.html','suppliers.html'];
+ chk('CDN 을 먼저 부르는 파일 없음', HTMLS.filter(f=>{
+   const t=fsx.readFileSync('/home/user/meat-insight/'+f,'utf8');
+   const v=t.indexOf('vendor/supabase-js'), c=t.indexOf('cdn.jsdelivr.net/npm/@supabase');
+   return v<0 || (c>=0 && c<v);      /* vendor 가 없거나 CDN 이 먼저면 탈락 */
+ }).join(','), '');
+ /* 둘 다 "아직 없을 때만" 부릅니다 — 이미 있는 클라이언트를 덮어쓰지 않습니다.
+    (덮어쓰면 테스트가 끼워 넣은 가짜가 죽습니다. 실제로 한 번 그랬습니다) */
+ chk('있으면 안 덮어쓴다', HTMLS.filter(f=>{
+   const t=fsx.readFileSync('/home/user/meat-insight/'+f,'utf8');
+   const m=t.match(/window\.supabase\|\|document\.write/g)||[];
+   return m.length<2;               /* vendor · CDN 둘 다 가드가 있어야 합니다 */
+ }).join(','), '');
+ const v1=await b.newPage({viewport:{width:1440,height:900}});
+ v1._fail=[]; v1.on('requestfailed',r=>v1._fail.push(r.url()));
+ await v1.goto('file:///home/user/meat-insight/index.html',{waitUntil:'load'});
+ await v1.waitForTimeout(2500);
+ chk('라이브러리가 실제로 뜬다', await v1.evaluate(()=>
+   typeof window.supabase!=='undefined' && typeof window.supabase.createClient==='function'), 'true');
+ chk('클라이언트가 만들어진다', await v1.evaluate(()=>!!(typeof sb!=='undefined'&&sb)), 'true');
+ chk('CDN 을 아예 안 부른다', v1._fail.concat([]).some(u=>/@supabase/.test(u)), 'false');
+ /* 글꼴 CDN 이 막혀도 한글이 generic sans-serif 로 떨어지면 안 됩니다 */
+ chk('글꼴 사슬에 시스템 한글 있음', await v1.evaluate(()=>{
+   const f=getComputedStyle(document.documentElement).getPropertyValue('--font');
+   return /Malgun Gothic|맑은 고딕/.test(f) && /Apple SD Gothic Neo/.test(f);
+ }), 'true');
+ chk('버튼·입력칸도 같은 사슬', await v1.evaluate(()=>{
+   const btn=getComputedStyle(document.querySelector('.gbtn')||document.body).fontFamily;
+   return /Pretendard/.test(btn);
+ }), 'true');
+ await v1.close();
 
  /* ── 검색칸이 아이디 칸으로 안 보이는가 ──────────────────────────────
     이 페이지에는 로그인 창(type=password)이 DOM 에 함께 있어서, 크롬

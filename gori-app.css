@@ -1184,3 +1184,27 @@ html #pg-h .mn-tight{padding-top:64px;padding-bottom:64px;}
 @media(max-width:1060px){
   html #pg-h .mn-tight{padding-top:40px;padding-bottom:40px;}
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   업체 연결 (#/claim/<열쇠>) — 운영자가 대신 등록해 둔 업체를
+   사장님이 가져가는 화면. 처음 오는 분이 여는 첫 화면이라, 무엇을
+   얻는지부터 보여 주고 로그인은 그 다음에 말합니다.
+   ════════════════════════════════════════════════════════════════════ */
+.cl-note{margin-top:12px;font-size:13px;line-height:1.65;color:var(--ink3);}
+.cl-ul{margin:2px 0 0;padding-left:18px;}
+.cl-ul li{font-size:14px;line-height:1.8;color:var(--ink2);}
+.cl-ul li b{color:var(--ink);}
+
+.cl-login{background:var(--bg2);border:1px solid var(--bd);border-radius:12px;padding:18px;}
+.cl-login-t{font-size:16px;font-weight:700;color:var(--ink);}
+.cl-login-d{margin:6px 0 14px;font-size:13px;line-height:1.7;color:var(--ink3);}
+
+.cl-ok{font-size:28px;font-weight:600;color:var(--gn2);letter-spacing:-.03em;}
+.cl-sub{margin-top:8px;font-size:15px;color:var(--ink2);}
+.cl-next{margin-top:10px;font-size:13px;line-height:1.7;color:var(--ink3);}
+
+/* 가져가기 버튼은 이 화면에서 유일하게 누를 것이라 폭을 다 씁니다.
+   ⚠️ .gbtn-full 은 이미 26줄에 있고 다른 화면도 씁니다 — 이 화면
+   안에서만 키웁니다. 전체를 건드리면 엉뚱한 데가 같이 커집니다. */
+html #pg-claim .gbtn-full{display:flex;min-height:48px;margin-top:16px;
+  align-items:center;justify-content:center;font-size:15px;}

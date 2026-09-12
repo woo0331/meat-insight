@@ -97,6 +97,13 @@ label:first-child{margin-top:0}
 .row{display:grid;gap:10px}
 .r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:1fr 1fr 1fr}.r4{grid-template-columns:repeat(4,1fr)}
 .msg{margin-top:12px;padding:11px 13px;border-radius:9px;font-size:13px;font-weight:600;display:none}
+/* 업체 대신 등록 폼 — 명함 보고 치는 화면이라 칸을 넉넉히 둡니다 */
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.fg label,.card > label{display:block;font-size:12.5px;font-weight:700;color:var(--ink2)}
+.fg .in,.card > label .in{margin-top:5px}
+.sn-cat{min-height:36px}
+.sn-cat.on{background:var(--gn);color:#fff;border-color:var(--gn)}
+textarea.in{resize:vertical;font-family:inherit;line-height:1.6}
 .msg.on{display:block}
 .msg.ok{background:var(--okl);color:var(--ok)}
 .msg.err{background:var(--gnl);color:var(--gn-on-tint)}
@@ -384,28 +391,145 @@ async function reopen(id){
 }
 
 /* ── 업체 ── */
+/* ── 운영자가 업체를 대신 넣습니다 ─────────────────────────────────
+   사장님께 "사이트 가서 가입하세요" 하면 열에 아홉은 안 합니다.
+   전화로 영업해서 명함을 받아 오면 여기서 대신 넣고, 초대 링크를
+   문자로 보내 드립니다. 계정이 없어도 요청 알림은 문자로 갑니다
+   (db/phase9_invite.sql 의 trg_gori_notify_guest). */
+var SP_CATS=[["meat","원육 구매"],["process","가공·OEM"],["logi","물류·운송"],
+             ["labor","인력·알바"],["job","구인구직"],["equip","장비·부자재"],
+             ["startup","창업·인테리어"],["haccp","HACCP·컨설팅"]];
+var SP_REGIONS=["서울","경기","인천","강원","충북","충남·대전·세종","전북",
+                "전남·광주","경북·대구","경남·부산·울산","제주","전국"];
+var SP_NEW=false;
+
+function spToken(){
+  /* 초대 열쇠 — 겹치면 남의 업체를 가져갈 수 있으므로 넉넉히 뽑습니다 */
+  var a=new Uint8Array(16);
+  (window.crypto||window.msCrypto).getRandomValues(a);
+  return Array.prototype.map.call(a,function(b){return ("0"+b.toString(16)).slice(-2)}).join("");
+}
+function spForm(){
+  if(!SP_NEW) return "";
+  return '<div class="card" style="margin-bottom:14px;padding:16px;">'+
+    '<div style="font-weight:700;margin-bottom:4px;">업체 대신 등록</div>'+
+    '<div class="hd" style="margin:0 0 12px;">명함을 받아 오셨으면 여기에 넣으세요. '+
+      '계정이 없어도 <b>요청이 올라오면 문자가 갑니다.</b> 등록 뒤 초대 링크를 보내면 '+
+      '사장님이 직접 관리할 수 있습니다.</div>'+
+    '<div class="fg">'+
+      '<label>상호 <span style="color:#C0392B">*</span><input class="in" id="sn-name" placeholder="합신식 도축장"></label>'+
+      '<label>연락처 <span style="color:#C0392B">*</span><input class="in" id="sn-contact" placeholder="010-1234-5678" inputmode="tel"></label>'+
+      '<label>지역 <span style="color:#C0392B">*</span><select class="in" id="sn-region">'+
+        SP_REGIONS.map(function(r){return '<option>'+esc(r)+'</option>'}).join("")+'</select></label>'+
+      '<label>대표자<input class="in" id="sn-rep" placeholder="홍길동"></label>'+
+    '</div>'+
+    '<label style="display:block;margin-top:10px;">분야 <span style="color:#C0392B">*</span></label>'+
+    '<div id="sn-cats" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">'+
+      SP_CATS.map(function(c){
+        return '<button type="button" class="b b-w sn-cat" data-k="'+esc(c[0])+'" '+
+               'onclick="this.classList.toggle(\'on\')">'+esc(c[1])+'</button>'}).join("")+'</div>'+
+    '<div class="fg" style="margin-top:10px;">'+
+      '<label>주소<input class="in" id="sn-addr" placeholder="경기 포천시 …"></label>'+
+      '<label>취급 품목<input class="in" id="sn-items" placeholder="한우, 한돈, 지육 (쉼표로)"></label>'+
+    '</div>'+
+    '<label style="display:block;margin-top:10px;">소개'+
+      '<textarea class="in" id="sn-intro" rows="2" placeholder="하시는 일을 한두 줄로"></textarea></label>'+
+    '<div class="msg" id="sn-msg"></div>'+
+    '<div class="acts" style="margin-top:12px;">'+
+      '<button class="b b-p" id="sn-save" onclick="spSave()">등록하기</button>'+
+      '<button class="b b-w" onclick="spToggle(false)">취소</button>'+
+    '</div></div>';
+}
+function spToggle(on){ SP_NEW=(on===undefined?!SP_NEW:!!on); vSup(); }
+
+async function spSave(){
+  var name=($("sn-name").value||"").trim();
+  var contact=($("sn-contact").value||"").trim();
+  var region=$("sn-region").value||"";
+  var cats=[].slice.call(document.querySelectorAll(".sn-cat.on")).map(function(b){return b.dataset.k});
+  var miss=[];
+  if(!name) miss.push("상호");
+  if(!contact) miss.push("연락처");
+  if(!cats.length) miss.push("분야");
+  if(miss.length){ msg("sn-msg","채워 주세요: "+miss.join(", "),"err"); return; }
+  /* 번호가 이상하면 알림이 영영 안 갑니다 — 넣기 전에 봅니다 */
+  var digits=contact.replace(/[^0-9]/g,"");
+  if(!/^(01[0-9]{8,9}|0[2-6][0-9]{7,9})$/.test(digits)){
+    msg("sn-msg","연락처를 다시 봐 주세요. 이 번호로는 요청 알림을 못 보냅니다.","err"); return; }
+
+  var btn=$("sn-save"); btn.disabled=true; btn.textContent="등록 중…";
+  var items=($("sn-items").value||"").split(",").map(function(x){return x.trim()}).filter(Boolean);
+  var row={ name:name, contact:contact, region:region, category_mains:cats,
+            categories:cats.map(function(k){
+              var f=SP_CATS.find(function(c){return c[0]===k}); return f?f[1]:k; }),
+            rep_name:($("sn-rep").value||"").trim()||null,
+            address:($("sn-addr").value||"").trim()||null,
+            items:items.length?items:null,
+            intro:($("sn-intro").value||"").trim()||null,
+            is_verified:false, rating:0, notify_on:true,
+            claim_token:spToken(), invited_at:new Date().toISOString(), added_by:ME.email };
+  var r=await sb.from("suppliers").insert(row).select("id,claim_token").limit(1);
+  btn.disabled=false; btn.textContent="등록하기";
+  if(r.error){
+    /* 오래된 표에는 없는 칸이 있을 수 있습니다 — 빼고 한 번 더 */
+    var m=r.error.message||"";
+    var bad=(m.match(/'([A-Za-z0-9_]+)' column/)||[])[1];
+    if(bad && row[bad]!==undefined){
+      delete row[bad];
+      r=await sb.from("suppliers").insert(row).select("id,claim_token").limit(1);
+    }
+  }
+  if(r.error){ msg("sn-msg","등록 실패: "+r.error.message,"err"); return; }
+  SP_NEW=false;
+  await vSup();
+  var made=(r.data&&r.data[0])||null;
+  msg("sp-msg", name+" 등록했습니다."+(made&&made.claim_token?" 초대 링크를 복사해 문자로 보내세요.":""),"ok");
+}
+
+function spInvite(id, token, name){
+  if(!token){ msg("sp-msg","이 업체는 이미 계정에 연결되어 있습니다.","err"); return; }
+  var url=SITE_BASE+"#/claim/"+encodeURIComponent(token);
+  var text=name+" 사장님, 고리(aboutmeat.co.kr)에 업체를 등록해 두었습니다.\n"+
+           "아래 링크로 들어오시면 견적 요청을 직접 받아보실 수 있습니다.\n"+url;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ msg("sp-msg","초대 문자를 복사했습니다. 붙여넣어 보내세요.","ok"); },
+      function(){ window.prompt("초대 문자 (복사하세요)", text); });
+  } else window.prompt("초대 문자 (복사하세요)", text);
+}
+var SITE_BASE="https://aboutmeat.co.kr/";
+
 async function vSup(){
   var r=await q("suppliers",function(b){return b.order("created_at",{ascending:false})});
+  var guest=r.data.filter(function(s){return !s.user_id}).length;
   var rows=r.data.map(function(s){
     var bd="";
     if(s.is_verified) bd+='<span class="bd bd-o">인증</span> ';
     if(s.haccp) bd+='<span class="bd bd-r">HACCP</span> ';
     if(s.livestock_permit) bd+='<span class="bd bd-b">허가</span> ';
-    return '<tr><td><b>'+esc(s.name||"—")+'</b><div class="mono">'+esc(s.contact||"")+'</div></td>'+
+    /* 계정이 있는지는 운영자가 제일 먼저 알아야 합니다 — 초대를 보낼지 말지가 갈립니다 */
+    var acct = s.user_id ? '<span class="bd bd-b">계정 연결됨</span>'
+                         : '<span class="bd bd-g">계정 없음</span>';
+    var inv = s.user_id ? "" :
+      '<button class="b b-w" onclick="spInvite(\''+s.id+'\',\''+esc(s.claim_token||"")+'\',\''+esc(s.name)+'\')">초대 문자</button>';
+    return '<tr><td><b>'+esc(s.name||"—")+'</b><div class="mono">'+esc(s.contact||"")+'</div>'+
+        (s.added_by?'<div class="mono" style="opacity:.6">대신 등록 · '+esc(s.added_by)+'</div>':"")+'</td>'+
       '<td class="tr">'+esc(s.region||"—")+'</td>'+
       '<td class="tr">'+esc((s.categories||[]).slice(0,3).join(", ")||"—")+'</td>'+
-      '<td>'+(bd||'<span class="bd bd-g">미인증</span>')+'</td>'+
+      '<td>'+acct+' '+(bd||'<span class="bd bd-g">미인증</span>')+'</td>'+
       '<td class="tr">★ '+(Number(s.rating)||0).toFixed(1)+' · 거래 '+(s.deal_count||0)+'</td>'+
       '<td class="tr">'+dt(s.created_at)+'</td>'+
-      '<td><div class="acts">'+
+      '<td><div class="acts">'+inv+
         '<button class="b b-w" onclick="togVerify(\''+s.id+'\','+(s.is_verified?"true":"false")+')">'+(s.is_verified?"인증 해제":"인증")+'</button>'+
         '<button class="b b-d" onclick="rm(\'suppliers\',\''+s.id+'\',\''+esc(s.name)+'\')">삭제</button>'+
       '</div></td></tr>';
   });
-  $("view").innerHTML='<div class="h">업체 <span class="tr">'+r.data.length+'곳</span></div>'+
+  $("view").innerHTML='<div class="h">업체 <span class="tr">'+r.data.length+'곳'+
+      (guest?' · 계정 없음 '+guest+'곳':'')+'</span>'+
+      '<button class="b b-p" style="float:right" onclick="spToggle()">'+(SP_NEW?"닫기":"+ 업체 추가")+'</button></div>'+
     '<div class="hd">인증 버튼은 수동 인증입니다. 서류 심사는 「인증 심사」 탭에서 처리하세요.</div>'+
     '<div class="msg" id="sp-msg"></div>'+
-    tbl(["업체","지역","취급","인증","실적","등록","관리"],rows,"등록된 업체가 없습니다");
+    spForm()+
+    tbl(["업체","지역","취급","상태","실적","등록","관리"],rows,"등록된 업체가 없습니다");
 }
 async function togVerify(id,cur){
   var e=await upd("suppliers",{is_verified:!cur},id);

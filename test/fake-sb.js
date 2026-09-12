@@ -55,6 +55,9 @@ window.__FAKE_INIT = function(opts){
        created_at:new Date(now-172800000).toISOString()},
       {id:'s3', name:'대성기계', region:'대구 북구', categories:['기자재·장비'], category_mains:['equip'],
        rating:0, lead_time:'1일', is_verified:false, deal_count:0, contact:'053-222-2222', created_at:new Date(now-2592e5).toISOString()}
+      /* ⚠️ 여기에 업체를 더하지 마세요. 업체 개수를 세는 회귀가 여럿입니다
+         (admin-find · demo · filter). 한 테스트에만 필요한 행은 그 테스트에서
+         window.__DB 에 직접 넣으세요 — claim-e2e.js 가 그렇게 합니다. */
     ],
     jobs: [
       {id:'j1', kind:'hire', job_role:'발골사', employment:'정규직', pay:'월 340만원~', location:'경기 안양시',
@@ -218,6 +221,23 @@ window.__FAKE_INIT = function(opts){
             }
           };
           return ch;
+        },
+        /* DB 함수 — 지금은 업체 연결(phase9) 하나만 흉내 냅니다.
+           브라우저에서 suppliers 를 직접 고치게 두면 anon 키로 아무 업체나
+           가져갈 수 있어서, 진짜도 함수로 합니다. 그 규칙을 여기서도 지킵니다:
+           열쇠가 맞고 · 아직 주인이 없고 · 로그인했을 때만 바뀝니다. */
+        rpc: function(name, args){
+          return new Promise(function(resolve){
+            if(name!=='gori_claim_supplier')
+              return resolve({ data:null, error: err('function public.'+name+' does not exist','PGRST202') });
+            if(!session || !session.user)
+              return resolve({ data:null, error: err('로그인이 필요합니다') });
+            var t=(args&&args.token)||'';
+            var hit=(DB.suppliers||[]).filter(function(s){ return s.claim_token && s.claim_token===t && !s.user_id; })[0];
+            if(!hit) return resolve({ data:null, error: err('이미 연결되었거나 없는 초대입니다') });
+            hit.user_id=session.user.id; hit.claimed_at=new Date().toISOString(); hit.claim_token=null;
+            resolve({ data:[{ id:hit.id, name:hit.name, region:hit.region, contact:hit.contact }], error:null });
+          });
         },
         removeChannel: function(ch){ if(ch && ch.unsubscribe) ch.unsubscribe(); },
         storage: {

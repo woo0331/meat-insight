@@ -47,7 +47,7 @@ create table public.jobs (id uuid primary key default gen_random_uuid(), created
 SQL
 
 fail=0
-for f in db/phase2_schema.sql db/phase3_schema.sql db/phase4_admin.sql db/phase7_report.sql db/phase8_notify.sql; do
+for f in db/phase2_schema.sql db/phase3_schema.sql db/phase4_admin.sql db/phase7_report.sql db/phase8_notify.sql db/phase9_invite.sql; do
   err=$(psql -h "$D" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -f "$f" 2>&1 | grep -iE "^psql.*ERROR" | head -2)
   if [ -n "$err" ]; then echo "  ❌ $f"; echo "$err" | sed 's/^/      /'; fail=$((fail+1)); else echo "  ✅ $f"; fi
 done
@@ -161,6 +161,53 @@ qn2=$($P -c "select count(*)::text from public.notify_outbox
 nn=$($P -c "select count(*)::text from public.notifications
             where id='44444444-4444-4444-4444-444444444444';")
 [ "$nn" = "1" ] && echo "  ✅ 알림 본체는 그대로" || { echo "  ❌ 알림이 사라짐 ($nn)"; fail=$((fail+1)); }
+
+# ── phase9: 계정 없는 업체도 알림을 받는가 ────────────────────────
+#    운영자가 전화로 영업해서 대신 넣은 업체입니다. user_id 가 없어서
+#    phase3 트리거는 건너뜁니다 — phase9 트리거가 받아야 합니다.
+#    여기서 빠지면 "대신 등록" 이 아무 의미가 없어집니다.
+echo "  ── 대신 등록한 업체 (phase9)"
+$P -q -c "insert into public.suppliers (id,name,region,contact,user_id,category_mains)
+  values ('55555555-5555-5555-5555-555555555555','대신넣은축산','경기 포천시','010-1111-2222',null,array['meat']);" >/dev/null 2>&1
+# 번호가 없는 업체는 보낼 곳이 없으니 담기면 안 됩니다
+$P -q -c "insert into public.suppliers (id,name,region,contact,user_id)
+  values ('66666666-6666-6666-6666-666666666666','번호없는축산','경기 포천시',null,null);" >/dev/null 2>&1
+$P -q -c "insert into public.purchase_requests (id,status,title,region,category_main,user_id)
+  values ('77777777-7777-7777-7777-777777777777','견적대기','한우 등심 300kg','경기 포천시','meat',
+          '88888888-8888-8888-8888-888888888888');" >/dev/null 2>&1
+
+gq=$($P -c "select count(*)::text from public.notify_outbox
+            where supplier_id='55555555-5555-5555-5555-555555555555';")
+[ "$gq" = "1" ] && echo "  ✅ 계정 없는 업체도 큐에 담김" || { echo "  ❌ 안 담김 ($gq) — 대신 등록이 무의미해집니다"; fail=$((fail+1)); }
+
+ph=$($P -c "select coalesce(to_phone,'')::text from public.notify_outbox
+            where supplier_id='55555555-5555-5555-5555-555555555555' limit 1;")
+[ "$ph" = "010-1111-2222" ] && echo "  ✅ 번호가 같이 담김" || { echo "  ❌ 번호가 비었음 ($ph)"; fail=$((fail+1)); }
+
+nq=$($P -c "select count(*)::text from public.notify_outbox
+            where supplier_id='66666666-6666-6666-6666-666666666666';")
+[ "$nq" = "0" ] && echo "  ✅ 번호 없는 업체는 안 담김" || { echo "  ❌ 보낼 곳 없는데 담김 ($nq)"; fail=$((fail+1)); }
+
+# 같은 요청이 두 번 들어와도 한 건 (알림톡은 건당 과금)
+$P -q -c "insert into public.notify_outbox (supplier_id,kind,link,title)
+  values ('55555555-5555-5555-5555-555555555555','request',
+          'req:77777777-7777-7777-7777-777777777777','또') on conflict do nothing;" >/dev/null 2>&1
+dq=$($P -c "select count(*)::text from public.notify_outbox
+            where supplier_id='55555555-5555-5555-5555-555555555555';")
+[ "$dq" = "1" ] && echo "  ✅ 같은 요청은 한 번만" || { echo "  ❌ 중복으로 담김 ($dq)"; fail=$((fail+1)); }
+
+# 초대 열쇠는 겹치면 안 됩니다 (남의 업체를 가져갈 수 있습니다)
+$P -q -c "update public.suppliers set claim_token='aaaaaaaaaaaaaaaaaaaaaaaa'
+  where id='55555555-5555-5555-5555-555555555555';" >/dev/null 2>&1
+dupe=$($P -c "update public.suppliers set claim_token='aaaaaaaaaaaaaaaaaaaaaaaa'
+  where id='66666666-6666-6666-6666-666666666666';" 2>&1 | grep -ci "duplicate key")
+[ "$dupe" = "1" ] && echo "  ✅ 초대 열쇠는 겹칠 수 없음" || { echo "  ❌ 열쇠가 겹칩니다 — 남의 업체를 가져갈 수 있습니다"; fail=$((fail+1)); }
+
+# 로그인 안 한 사람은 업체를 가져갈 수 없어야 합니다
+noauth=$(psql -h "$D" -p "$PORT" -U postgres -d postgres -tA \
+  -c "set role anon; select public.gori_claim_supplier('aaaaaaaaaaaaaaaaaaaaaaaa');" 2>&1 |
+  grep -ci "로그인이 필요합니다\|permission denied")
+[ "$noauth" = "1" ] && echo "  ✅ 로그인 없이는 못 가져감" || { echo "  ❌ 로그인 없이 업체를 가져갔습니다"; fail=$((fail+1)); }
 
 echo
 [ $fail -eq 0 ] && echo "✅ 전체 통과" || echo "❌ $fail건 실패"

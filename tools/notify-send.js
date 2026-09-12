@@ -118,11 +118,14 @@ async function markAll(updates){
   if (!rows.length){ log("보낼 알림이 없습니다."); return; }
   log("밀린 알림 " + rows.length + "건");
 
-  /* 번호 찾기 — 없으면 보낸 척하지 않고 skipped */
+  /* 번호 찾기 — 없으면 보낸 척하지 않고 skipped.
+     ① 큐에 이미 번호가 적혀 있으면 그대로 (운영자가 대신 등록한 업체는
+        계정이 없어서 phase9 트리거가 suppliers.contact 를 같이 담습니다)
+     ② 아니면 user_id 로 업체·요청자 쪽에서 찾습니다 */
   const map  = await phoneMap([...new Set(rows.map(r => r.user_id).filter(Boolean))]);
   const msgs = [], skip = [];
   for (const r of rows){
-    const phone = map[r.user_id];
+    const phone = normPhone(r.to_phone) || map[r.user_id];
     if (!phone){ skip.push({ id: r.id, status: "skipped", error: "전화번호 없음", tries: (r.tries || 0) + 1 }); continue; }
     msgs.push(toMessage(r, phone, cfg));
   }

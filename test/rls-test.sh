@@ -47,7 +47,7 @@ create table public.jobs (id uuid primary key default gen_random_uuid(), created
 SQL
 
 fail=0
-for f in db/phase2_schema.sql db/phase3_schema.sql db/phase4_admin.sql db/phase7_report.sql; do
+for f in db/phase2_schema.sql db/phase3_schema.sql db/phase4_admin.sql db/phase7_report.sql db/phase8_notify.sql; do
   err=$(psql -h "$D" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -f "$f" 2>&1 | grep -iE "^psql.*ERROR" | head -2)
   if [ -n "$err" ]; then echo "  ❌ $f"; echo "$err" | sed 's/^/      /'; fail=$((fail+1)); else echo "  ✅ $f"; fi
 done
@@ -56,11 +56,34 @@ echo "  ── RLS_ON.sql"
 err=$(psql -h "$D" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -f db/RLS_ON.sql 2>&1 | grep -iE "^psql.*ERROR|^ERROR" | head -3)
 if [ -n "$err" ]; then echo "  ❌ 실행 실패"; echo "$err" | sed 's/^/      /'; fail=$((fail+1)); else echo "  ✅ 오류 없이 실행"; fi
 
-# 정책 없이 켜진 표 = 아무도 못 읽는 표
+# 정책 없이 켜진 표 = 아무도 못 읽는 표.
+# 다만 **일부러** 그렇게 둔 표가 있습니다 — 여기에 이름을 적어 둡니다.
+#   notify_outbox : 전화번호가 들어 있습니다. 손님(anon)도 로그인 사용자도
+#                   볼 이유가 없고, 보내는 쪽(tools/notify-send.js)은
+#                   service_role 이라 RLS 를 지나갑니다. 정책을 하나도
+#                   안 만드는 것이 곧 "아무도 못 본다" 입니다.
+# 새 표를 여기 넣기 전에 정말 아무도 읽을 필요가 없는지 따져 보세요.
+DENY_ALL_OK="notify_outbox"
 bare=$($P -c "select string_agg(t,', ') from (select c.relname t from pg_class c
   join pg_namespace n on n.oid=c.relnamespace and n.nspname='public'
   left join pg_policy p on p.polrelid=c.oid where c.relkind='r'
+    and c.relname <> '$DENY_ALL_OK'
   group by c.relname,c.relrowsecurity having c.relrowsecurity and count(p.polname)=0) x;")
+
+# 일부러 막아 둔 표가 실제로 막혀 있는지도 봅니다 (적어만 두고 정책이
+# 생겨 버리면 번호가 새 나갑니다)
+denyon=$($P -c "select c.relrowsecurity::text from pg_class c
+  join pg_namespace n on n.oid=c.relnamespace and n.nspname='public'
+  where c.relname='$DENY_ALL_OK';")
+denyn=$($P -c "select count(p.polname)::text from pg_class c
+  left join pg_policy p on p.polrelid=c.oid
+  join pg_namespace n on n.oid=c.relnamespace and n.nspname='public'
+  where c.relname='$DENY_ALL_OK';")
+if { [ "$denyon" = "true" ] || [ "$denyon" = "t" ]; } && [ "$denyn" = "0" ]; then
+  echo "  ✅ $DENY_ALL_OK 는 아무도 못 읽음 (전화번호 보호)"
+else
+  echo "  ❌ $DENY_ALL_OK 가 열려 있습니다 (RLS=$denyon 정책=$denyn)"; fail=$((fail+1))
+fi
 off=$($P -c "select string_agg(c.relname,', ') from pg_class c
   join pg_namespace n on n.oid=c.relnamespace and n.nspname='public'
   where c.relkind='r' and not c.relrowsecurity;")
@@ -92,6 +115,52 @@ chk "남의 요청 수정 (막혀야)"   deny "update public.purchase_requests s
 chk "남의 요청 삭제 (막혀야)"   deny "delete from public.purchase_requests where id='11111111-1111-1111-1111-111111111111';"
 chk "업체 전체 삭제 (막혀야)"   deny "delete from public.suppliers;"
 chk "가짜 시세 넣기 (막혀야)"   deny "insert into public.market_prices (item,price) values ('가짜',1);"
+
+# ── phase8 트리거가 실제로 그렇게 동작하는가 ──────────────────────
+#    "밤에는 안 보낸다" · "같은 알림을 두 번 넣지 않는다" 는 눈으로 봐서는
+#    맞는지 알 수 없습니다. 시계를 옮겨 놓고 진짜로 넣어 봅니다.
+echo "  ── 알림 큐 (phase8)"
+tq(){ # 이름 · 넣을 시각(KST) · 기대(즉시=now|미룸=defer)
+  local nm="$1" at="$2" want="$3"
+  # 트리거가 쓰는 식을 그대로 계산해 봅니다 (now() 는 못 옮기니까).
+  # 값이 그대로면 즉시 발송, 바뀌면 아침으로 미룬 것입니다.
+  local out; out=$($P -c "
+    with k as (select timestamp '$at' as kst)
+    select case when (case when extract(hour from kst) >= 21
+                             then (date_trunc('day',kst) + interval '1 day 8 hour')
+                           when extract(hour from kst) < 8
+                             then (date_trunc('day',kst) + interval '8 hour')
+                           else kst end) = kst
+                then 'now' else 'defer' end from k;" 2>&1 | tail -1 | tr -d ' ')
+  [ "$out" = "$want" ] && echo "  ✅ $nm" || { echo "  ❌ $nm — $out (기대 $want)"; fail=$((fail+1)); }
+}
+tq "낮 2시는 바로"        "2026-09-12 14:00:00" now
+tq "저녁 8시는 바로"      "2026-09-12 20:59:00" now
+tq "밤 9시는 아침으로"    "2026-09-12 21:00:00" defer
+tq "새벽 3시는 아침으로"  "2026-09-12 03:00:00" defer
+tq "아침 8시는 바로"      "2026-09-12 08:00:00" now
+
+# 실제로 넣어 봅니다 — 알림 한 건에 큐 한 건, 두 번 넣어도 한 건
+$P -q -c "insert into auth.users (id) values ('33333333-3333-3333-3333-333333333333');" >/dev/null 2>&1
+$P -q -c "insert into public.notifications (id,user_id,type,title,body,link)
+  values ('44444444-4444-4444-4444-444444444444','33333333-3333-3333-3333-333333333333',
+          'request','한우 등심 300kg','원육 구매 · 경기','req:r1');" >/dev/null 2>&1
+qn=$($P -c "select count(*)::text from public.notify_outbox
+            where notification_id='44444444-4444-4444-4444-444444444444';")
+[ "$qn" = "1" ] && echo "  ✅ 알림이 큐에 쌓임" || { echo "  ❌ 큐에 안 쌓임 ($qn)"; fail=$((fail+1)); }
+
+# 같은 notification_id 를 또 넣어도 큐는 한 건 (알림톡은 건당 과금)
+$P -q -c "insert into public.notify_outbox (notification_id,user_id,kind)
+  values ('44444444-4444-4444-4444-444444444444','33333333-3333-3333-3333-333333333333','request')
+  on conflict (notification_id) do nothing;" >/dev/null 2>&1
+qn2=$($P -c "select count(*)::text from public.notify_outbox
+             where notification_id='44444444-4444-4444-4444-444444444444';")
+[ "$qn2" = "1" ] && echo "  ✅ 두 번 넣어도 한 건 (중복 과금 방지)" || { echo "  ❌ 중복으로 쌓임 ($qn2)"; fail=$((fail+1)); }
+
+# 큐 적재가 실패해도 알림 자체는 남아야 합니다
+nn=$($P -c "select count(*)::text from public.notifications
+            where id='44444444-4444-4444-4444-444444444444';")
+[ "$nn" = "1" ] && echo "  ✅ 알림 본체는 그대로" || { echo "  ❌ 알림이 사라짐 ($nn)"; fail=$((fail+1)); }
 
 echo
 [ $fail -eq 0 ] && echo "✅ 전체 통과" || echo "❌ $fail건 실패"

@@ -1,0 +1,62 @@
+# ════════════════════════════════════════════════════════════════════
+# 밀린 알림을 카카오 알림톡(없으면 문자)으로 내보냅니다
+#
+# 왜 이렇게 하나
+#   사이트는 정적 파일이라 서버가 없습니다. 브라우저에서 대행사를 직접
+#   부르면 CORS 로 막히고 **API 키가 화면 소스에 노출**됩니다.
+#   여기서 돌리면 키는 GitHub Secrets 에만 있습니다.
+#   저장소가 공개라 Actions 분은 무료·무제한입니다.
+#
+# 왜 15분마다인가
+#   알림톡은 건당 돈이 나갑니다. 요청이 올라오자마자 1초 만에 보낼
+#   필요는 없습니다 — B2B 견적은 어차피 몇 시간 단위로 움직입니다.
+#   밤에는 아예 안 돕니다. 조용한 시간(21~08시)에 생긴 알림은 DB 트리거가
+#   아침 8시로 미뤄 두고, 아침 첫 차례가 한꺼번에 내보냅니다.
+#
+# 운영자가 할 일 (한 번만)
+#   1) db/phase8_notify.sql 을 Supabase SQL Editor 에서 실행
+#   2) 대행사(솔라피 등) 가입 → 발신번호 등록 → API 키 발급
+#   3) 카카오 비즈니스 채널 → 발신프로필 등록 → 템플릿 심사 (2주쯤)
+#   4) 저장소 → Settings → Secrets and variables → Actions 에 넣기
+#        SUPABASE_URL · SUPABASE_SERVICE_KEY
+#        SOLAPI_KEY · SOLAPI_SECRET · SOLAPI_FROM
+#        ALIMTALK_PFID · ALIMTALK_TPL_REQUEST · _QUOTE · _SELECTED
+#
+#   ⚠️ service_role 키는 RLS 를 지나칩니다. Secrets 에만 두세요.
+#   심사 전에도 ALIMTALK_* 없이 돌아갑니다 — 그동안은 문자로 나갑니다.
+# ════════════════════════════════════════════════════════════════════
+name: 알림 내보내기
+
+on:
+  schedule:
+    # 08~21시 KST 만, 15분마다 (UTC 23시 + 00~11시)
+    - cron: "3,18,33,48 23,0-11 * * *"
+  workflow_dispatch:
+
+# 앞 차례가 아직 돌고 있으면 새로 띄우지 않습니다 — 두 번 보내면
+# 두 번 과금됩니다.
+concurrency:
+  group: gori-notify
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: 알림 보내기
+        env:
+          SUPABASE_URL:          ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY:  ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SOLAPI_KEY:            ${{ secrets.SOLAPI_KEY }}
+          SOLAPI_SECRET:         ${{ secrets.SOLAPI_SECRET }}
+          SOLAPI_FROM:           ${{ secrets.SOLAPI_FROM }}
+          ALIMTALK_PFID:         ${{ secrets.ALIMTALK_PFID }}
+          ALIMTALK_TPL_REQUEST:  ${{ secrets.ALIMTALK_TPL_REQUEST }}
+          ALIMTALK_TPL_QUOTE:    ${{ secrets.ALIMTALK_TPL_QUOTE }}
+          ALIMTALK_TPL_SELECTED: ${{ secrets.ALIMTALK_TPL_SELECTED }}
+        run: node tools/notify-send.js

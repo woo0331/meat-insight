@@ -60,6 +60,8 @@ values ('beef', '한우 등심', '1+', 64000, '원/kg', current_date);
 | 🟡 | 카카오 로그인 켜기 (코드는 완료, 설정만) | Supabase Providers |
 | 🟡 | 신고·문의를 받으려면 표 만들기 | `db/phase7_report.sql` |
 | ⚪ | **예시 데이터 끄기** — 목록에 진짜가 들어오면 그 목록의 예시는 저절로 빠지므로 급하진 않습니다 | `site-info.js` → `GORI_FEATURES.demo` |
+| 🔴 | **알림톡 신청** — 요청이 올라와도 업체가 모르면 견적이 안 옵니다. 심사에 2주 걸리니 먼저 걸어 두세요 | `docs/알림톡-신청.md` |
+| 🟡 | 알림 표 만들기 (알림톡·문자 큐) | `db/phase8_notify.sql` |
 | 🟡 | **축산 시세 자동 수집 켜기** — 매일 들어올 이유가 생깁니다 | 아래 "축산 시세" 참고 |
 | ⚪ | 홈 뉴스·인사이트 내용 채우기 | `site-info.js` → `GORI_CONTENT` |
 | ⚪ | 약관·방침 한 번 읽어보기 | `terms.html` · `privacy.html` |

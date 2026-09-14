@@ -36,6 +36,25 @@ const MAX_TRIES = 3;
 
 function die(msg){ console.error("✗ " + msg); process.exit(1); }
 function log(msg){ console.log(msg); }
+/* 아직 설정 전이라 못 보내는 것은 **고장이 아닙니다.** 실패로 끝내면
+   예약이 돌 때마다 저장소 주인에게 실패 메일이 갑니다 — 하루 몇 통씩
+   쌓이면 진짜 고장났을 때 아무도 안 봅니다 (늑대와 소년).
+   할 말은 하고 0으로 끝냅니다. */
+function notReady(msg){ console.log("· " + msg); process.exit(0); }
+
+/* ── 조용한 시간 ────────────────────────────────────────────────────
+   ⚠️ 큐에 담을 때(db/phase8_notify.sql 트리거)도 확인하지만, **보낼 때
+   한 번 더 봅니다.** 예약이 제때 돈다는 보장이 없어서입니다 —
+   실제로 GitHub 이 밀린 예약을 23:08 · 23:35 KST 에 몰아서 돌렸습니다.
+   그때 낮에 쌓인 알림이 같이 나가면 사장님을 밤에 깨웁니다. */
+function kstHour(){
+  /* FAKE_SHIFT_MS 는 회귀에서 시계를 옮겨 보기 위한 것입니다.
+     실제 운영에서는 비어 있고, 비어 있으면 아무 일도 안 합니다. */
+  const shift = Number(process.env.FAKE_SHIFT_MS || 0) || 0;
+  const d = new Date(Date.now() + shift + 9 * 3600 * 1000);
+  return d.getUTCHours();
+}
+function quietNow(){ const h = kstHour(); return (h >= 21 || h < 8); }
 
 /* ── Supabase ─────────────────────────────────────────────────────── */
 function sbCfg(){
@@ -110,10 +129,27 @@ async function markAll(updates){
     pfId:   process.env.ALIMTALK_PFID || "",
   };
 
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY)
+    notReady("아직 SUPABASE_URL · SUPABASE_SERVICE_KEY 가 없습니다. "
+           + "Secrets 에 넣으면 그때부터 보냅니다 (docs/알림톡-신청.md).");
+
+  if (quietNow() && !PROBE && !DRY)
+    notReady("지금은 조용한 시간(21~08시 KST)이라 보내지 않습니다. "
+           + "쌓인 알림은 아침에 그대로 나갑니다.");
+
+  /* ⚠️ 한 번에 다 비웁니다. 예약이 15분마다 돈다고 적어 두었지만 **실제로는
+     하루 서너 번**밖에 안 돌았습니다 (GitHub 예약은 최선을 다할 뿐입니다).
+     그 사이에 쌓인 것을 100건에서 끊으면 나머지는 다음 차례까지 잠듭니다. */
   const now  = new Date().toISOString();
-  const rows = await rest("notify_outbox?select=*"
-    + "&status=eq.pending&send_after=lte." + now
-    + "&order=send_after.asc&limit=" + LIMIT) || [];
+  const rows = [];
+  for(;;){
+    const page = await rest("notify_outbox?select=*"
+      + "&status=eq.pending&send_after=lte." + now
+      + "&order=send_after.asc&limit=" + LIMIT
+      + "&offset=" + rows.length) || [];
+    rows.push(...page);
+    if (page.length < LIMIT || rows.length >= 2000) break;   /* 2000건은 한참입니다 */
+  }
 
   if (!rows.length){ log("보낼 알림이 없습니다."); return; }
   log("밀린 알림 " + rows.length + "건");
@@ -144,8 +180,11 @@ async function markAll(updates){
   if (skip.length){ await markAll(skip); log("번호 없음 " + skip.length + "건은 건너뜁니다."); }
   if (!msgs.length){ log("보낼 수 있는 알림이 없습니다."); return; }
 
-  if (!cfg.key || !cfg.secret) die("SOLAPI_KEY · SOLAPI_SECRET 가 없습니다. 대행사에 가입하고 Secrets 에 넣어 주세요.");
-  if (!cfg.from) die("SOLAPI_FROM (발신번호) 가 없거나 형식이 틀렸습니다. 사전 등록된 번호여야 합니다.");
+  if (!cfg.key || !cfg.secret)
+    notReady("보낼 알림 " + msgs.length + "건이 기다리고 있습니다. "
+           + "대행사(SOLAPI_KEY · SOLAPI_SECRET)를 넣으면 그때 나갑니다.");
+  if (!cfg.from)
+    notReady("SOLAPI_FROM (발신번호) 가 없거나 형식이 틀렸습니다. 사전 등록된 번호여야 합니다.");
   if (!cfg.pfId) log("⚠️ ALIMTALK_PFID 가 없어 문자로만 보냅니다 (알림톡 심사 전이면 정상입니다).");
 
   const body = SEND.body(msgs, cfg);

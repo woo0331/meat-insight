@@ -172,10 +172,38 @@ function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
   chk("3번은 skipped 로 적힘", ghost && ghost.status, "skipped");
   chk("이유도 적힘",           ghost && ghost.error, "전화번호 없음");
   chk("보낼 수 있는 건 안 건드림", patched.filter(x => x.id === 1 || x.id === 2).length, 0);
-  chk("키가 없으면 실패로 끝남", real.code, 1);
-  chk("무엇이 없는지 말해 줌", /SOLAPI_KEY/.test(real.out), "true");
+  /* 대행사 키가 없는 것은 **고장이 아닙니다.** 실패로 끝내면 예약이 돌 때마다
+     저장소 주인에게 실패 메일이 갑니다 — 실제로 이틀에 열 통 왔습니다.
+     그렇게 쌓이면 진짜 고장났을 때 아무도 안 봅니다. */
+  chk("키가 없어도 0으로 끝남", real.code, 0);
+  chk("몇 건이 기다리는지 말해 줌", /건이 기다리고 있습니다/.test(real.out), "true");
 
-  log.push("15. 사이트가 그 링크를 실제로 열 수 있는가");
+  /* ── 밤에 돌아도 안 보낸다 ────────────────────────────────────────
+     큐에 담을 때 트리거가 아침으로 미루지만, **보낼 때 한 번 더** 봐야
+     합니다. 실제로 GitHub 이 밀린 예약을 23:08 · 23:35 KST 에 몰아서
+     돌렸습니다 (2026-09-12~14 실행 기록). 그때 낮에 쌓인 알림이 같이
+     나가면 사장님을 밤에 깨웁니다. */
+  log.push("15. 밤에 돌면 보내지 않는다");
+  const at = (kstHour) => {
+    const nowUtcH  = new Date().getUTCHours();
+    const wantUtcH = (kstHour - 9 + 24) % 24;
+    return { FAKE_SHIFT_MS: String(((wantUtcH - nowUtcH + 24) % 24) * 3600 * 1000) };
+  };
+  const night = await run([], Object.assign({}, ENV, at(23)));
+  chk("밤 11시엔 안 보냄", /조용한 시간/.test(night.out), "true");
+  chk("실패가 아니라 정상 종료", night.code, 0);
+  const dawn = await run([], Object.assign({}, ENV, at(3)));
+  chk("새벽 3시에도 안 보냄", /조용한 시간/.test(dawn.out), "true");
+  chk("낮 2시엔 집어든다",   /밀린 알림/.test((await run([], Object.assign({}, ENV, at(14)))).out), "true");
+  chk("아침 8시엔 집어든다", /밀린 알림/.test((await run([], Object.assign({}, ENV, at(8)))).out),  "true");
+  chk("저녁 8시엔 집어든다", /밀린 알림/.test((await run([], Object.assign({}, ENV, at(20)))).out), "true");
+
+  log.push("16. DB 설정 전에도 실패로 끝내지 않는다");
+  const bare = await run([], at(14));
+  chk("0으로 끝남", bare.code, 0);
+  chk("무엇이 없는지 말해 줌", /SUPABASE_URL/.test(bare.out), "true");
+
+  log.push("17. 사이트가 그 링크를 실제로 열 수 있는가");
   const router = fs.readFileSync(path.join(__dirname, "..", "src", "14_router.js"), "utf8");
   const segs = (router.match(/var RT_SEG2PG\s*=\s*\{([^}]*)\}/) || [])[1] || "";
   ["req", "chat", "order", "sup"].forEach(seg => {

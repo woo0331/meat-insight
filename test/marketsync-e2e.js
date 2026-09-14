@@ -34,7 +34,7 @@ const chk = (n, g, w) => { const ok = String(g) === String(w);
 
 function run(args, env){
   try {
-    return { ok:true, out: execFileSync("node", [SYNC].concat(args), {
+    return { ok:true, code:0, out: execFileSync("node", [SYNC].concat(args), {
       encoding:"utf8", env: Object.assign({}, process.env, env || {}), stdio:["ignore","pipe","pipe"] }) };
   } catch(e){
     return { ok:false, out: String(e.stdout || "") + String(e.stderr || ""), code: e.status };
@@ -64,8 +64,14 @@ function run(args, env){
   chk("--file 이면 출처 몰라도 됨", d.ok, "true");
   const e = run(["--dry"], { MARKET_SOURCE: "없는곳" });
   chk("모르는 출처는 실패", /모르는 출처/.test(e.out), "true");
+  /* 키가 아직 없는 것은 **고장이 아닙니다.** 예약이 돌 때마다 실패로
+     끝내면 저장소 주인에게 실패 메일이 쌓이고 — 실제로 이틀에 열 통
+     왔습니다 — 진짜 고장났을 때 아무도 안 봅니다. 할 말은 하고 0으로
+     끝내되, 숫자를 지어내지 않는 것은 그대로입니다. */
   const f = run(["--dry"], { MARKET_SOURCE: "kape", KAPE_KEY: "" });
-  chk("키 없으면 실패", /KAPE_KEY 가 없습니다/.test(f.out), "true");
+  chk("키 없으면 그렇다고 말함", /KAPE_KEY 가 아직 없습니다/.test(f.out), "true");
+  chk("실패가 아니라 0으로 끝남", f.code, 0);
+  chk("아무 숫자도 안 만듦", /원\/kg|price/.test(f.out), "false");
 
   log.push("3. 실제로 넣기 — 전일 대비 · 중복 방지");
   const m = spawn("node", [MOCK, "service", String(PORT)], { stdio:["ignore","ignore","ignore"] });

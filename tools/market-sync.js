@@ -36,6 +36,9 @@ const SRC_KEY = process.env.MARKET_SOURCE || "kape";
 const SRC = SOURCES[SRC_KEY];
 
 function die(msg, code){ console.error("✗ " + msg); process.exit(code == null ? 1 : code); }
+/* 아직 키가 없는 것은 **고장이 아닙니다.** 실패로 끝내면 예약이 돌 때마다
+   저장소 주인에게 실패 메일이 갑니다 — 쌓이면 진짜 고장을 놓칩니다. */
+function notReady(msg){ console.log("· " + msg); process.exit(0); }
 function today(){
   /* 축평원은 한국 기준으로 하루가 바뀝니다 */
   const d = new Date(Date.now() + 9 * 3600 * 1000);
@@ -46,7 +49,8 @@ async function getRaw(ymd){
   if (FILE) return fs.readFileSync(FILE, "utf8");
   if (!SRC) die("모르는 출처입니다: " + SRC_KEY + " (kape · ekape 중 하나)");
   const key = process.env[SRC.needsKey];
-  if (!key) die(SRC.needsKey + " 가 없습니다. 공공데이터포털에서 키를 발급받아 넣어 주세요.");
+  if (!key) notReady(SRC.needsKey + " 가 아직 없습니다. 공공데이터포털에서 키를 발급받아 "
+                   + "Secrets 에 넣으면 그때부터 받아 옵니다 (README 의 \"축산 시세\").");
   const url = SRC.url(key, ymd);
   const res = await fetch(url, { headers: { accept: "application/json" } });
   const text = await res.text();
@@ -58,7 +62,7 @@ async function getRaw(ymd){
 function sbCfg(){
   const url = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
   const key = process.env.SUPABASE_SERVICE_KEY || "";
-  if (!url || !key) die("SUPABASE_URL · SUPABASE_SERVICE_KEY 가 필요합니다.");
+  if (!url || !key) notReady("아직 SUPABASE_URL · SUPABASE_SERVICE_KEY 가 없습니다.");
   return { url, key };
 }
 async function rest(path, opts){

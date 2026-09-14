@@ -47,7 +47,7 @@ create table public.jobs (id uuid primary key default gen_random_uuid(), created
 SQL
 
 fail=0
-for f in db/phase2_schema.sql db/phase3_schema.sql db/phase4_admin.sql db/phase7_report.sql db/phase8_notify.sql db/phase9_invite.sql; do
+for f in db/phase2_schema.sql db/phase3_schema.sql db/phase4_admin.sql db/phase7_report.sql db/phase8_notify.sql db/phase9_invite.sql db/phase10_24h.sql; do
   err=$(psql -h "$D" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -f "$f" 2>&1 | grep -iE "^psql.*ERROR" | head -2)
   if [ -n "$err" ]; then echo "  ❌ $f"; echo "$err" | sed 's/^/      /'; fail=$((fail+1)); else echo "  ✅ $f"; fi
 done
@@ -119,26 +119,20 @@ chk "가짜 시세 넣기 (막혀야)"   deny "insert into public.market_prices 
 # ── phase8 트리거가 실제로 그렇게 동작하는가 ──────────────────────
 #    "밤에는 안 보낸다" · "같은 알림을 두 번 넣지 않는다" 는 눈으로 봐서는
 #    맞는지 알 수 없습니다. 시계를 옮겨 놓고 진짜로 넣어 봅니다.
-echo "  ── 알림 큐 (phase8)"
-tq(){ # 이름 · 넣을 시각(KST) · 기대(즉시=now|미룸=defer)
-  local nm="$1" at="$2" want="$3"
-  # 트리거가 쓰는 식을 그대로 계산해 봅니다 (now() 는 못 옮기니까).
-  # 값이 그대로면 즉시 발송, 바뀌면 아침으로 미룬 것입니다.
-  local out; out=$($P -c "
-    with k as (select timestamp '$at' as kst)
-    select case when (case when extract(hour from kst) >= 21
-                             then (date_trunc('day',kst) + interval '1 day 8 hour')
-                           when extract(hour from kst) < 8
-                             then (date_trunc('day',kst) + interval '8 hour')
-                           else kst end) = kst
-                then 'now' else 'defer' end from k;" 2>&1 | tail -1 | tr -d ' ')
-  [ "$out" = "$want" ] && echo "  ✅ $nm" || { echo "  ❌ $nm — $out (기대 $want)"; fail=$((fail+1)); }
-}
-tq "낮 2시는 바로"        "2026-09-12 14:00:00" now
-tq "저녁 8시는 바로"      "2026-09-12 20:59:00" now
-tq "밤 9시는 아침으로"    "2026-09-12 21:00:00" defer
-tq "새벽 3시는 아침으로"  "2026-09-12 03:00:00" defer
-tq "아침 8시는 바로"      "2026-09-12 08:00:00" now
+echo "  ── 알림 큐 (phase8 + phase10)"
+# ⚠️ phase10 이 24시간 발송으로 바꿨습니다. 축산은 낮에만 돌아가지 않습니다 —
+#    도축장은 새벽에 시작하고, 당일알바는 밤에 올라와야 다음 날 새벽에
+#    사람이 붙습니다. 밤 11시 "내일 새벽 발골 3명" 을 아침 8시에 보내면
+#    그때는 이미 늦습니다.
+#    그래서 여기서 지키는 것은 "미루는가" 가 아니라 **안 미루는가** 입니다.
+now_due=$($P -c "select count(*)::text from pg_proc p
+  join pg_namespace n on n.oid=p.pronamespace and n.nspname='public'
+  where p.proname='gori_enqueue_notify' and pg_get_functiondef(p.oid) like '%interval ''1 day 8 hour''%';")
+[ "$now_due" = "0" ] && echo "  ✅ 계정 있는 업체 — 아침으로 안 미룸" || { echo "  ❌ 아직 미루고 있습니다"; fail=$((fail+1)); }
+guest_due=$($P -c "select count(*)::text from pg_proc p
+  join pg_namespace n on n.oid=p.pronamespace and n.nspname='public'
+  where p.proname='gori_notify_guest_suppliers' and pg_get_functiondef(p.oid) like '%interval ''1 day 8 hour''%';")
+[ "$guest_due" = "0" ] && echo "  ✅ 대신 등록한 업체 — 아침으로 안 미룸" || { echo "  ❌ 아직 미루고 있습니다"; fail=$((fail+1)); }
 
 # 실제로 넣어 봅니다 — 알림 한 건에 큐 한 건, 두 번 넣어도 한 건
 $P -q -c "insert into auth.users (id) values ('33333333-3333-3333-3333-333333333333');" >/dev/null 2>&1
@@ -148,6 +142,11 @@ $P -q -c "insert into public.notifications (id,user_id,type,title,body,link)
 qn=$($P -c "select count(*)::text from public.notify_outbox
             where notification_id='44444444-4444-4444-4444-444444444444';")
 [ "$qn" = "1" ] && echo "  ✅ 알림이 큐에 쌓임" || { echo "  ❌ 큐에 안 쌓임 ($qn)"; fail=$((fail+1)); }
+
+# 지금 바로 보낼 수 있어야 합니다 (미래로 미뤄져 있으면 밤에 안 나갑니다)
+due=$($P -c "select (send_after <= now())::text from public.notify_outbox
+             where notification_id='44444444-4444-4444-4444-444444444444';")
+[ "$due" = "true" ] && echo "  ✅ 바로 보낼 수 있음 (24시간)" || { echo "  ❌ 미래로 미뤄져 있습니다 ($due)"; fail=$((fail+1)); }
 
 # 같은 notification_id 를 또 넣어도 큐는 한 건 (알림톡은 건당 과금)
 $P -q -c "insert into public.notify_outbox (notification_id,user_id,kind)

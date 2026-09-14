@@ -178,25 +178,36 @@ function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
   chk("키가 없어도 0으로 끝남", real.code, 0);
   chk("몇 건이 기다리는지 말해 줌", /건이 기다리고 있습니다/.test(real.out), "true");
 
-  /* ── 밤에 돌아도 안 보낸다 ────────────────────────────────────────
-     큐에 담을 때 트리거가 아침으로 미루지만, **보낼 때 한 번 더** 봐야
-     합니다. 실제로 GitHub 이 밀린 예약을 23:08 · 23:35 KST 에 몰아서
-     돌렸습니다 (2026-09-12~14 실행 기록). 그때 낮에 쌓인 알림이 같이
-     나가면 사장님을 밤에 깨웁니다. */
-  log.push("15. 밤에 돌면 보내지 않는다");
+  /* ── 24시간 보낸다 ───────────────────────────────────────────────
+     축산은 낮에만 돌아가지 않습니다. 도축장은 새벽에 시작하고, 당일알바는
+     밤에 올라와야 다음 날 새벽에 사람이 붙습니다. 밤 11시에 올라온
+     "내일 새벽 발골 3명" 을 아침 8시에 보내면 그때는 이미 늦습니다.
+     (야간 발송 제한은 광고성에만 걸립니다 — 우리 건 정보성입니다) */
+  log.push("15. 24시간 보낸다");
   const at = (kstHour) => {
     const nowUtcH  = new Date().getUTCHours();
     const wantUtcH = (kstHour - 9 + 24) % 24;
     return { FAKE_SHIFT_MS: String(((wantUtcH - nowUtcH + 24) % 24) * 3600 * 1000) };
   };
-  const night = await run([], Object.assign({}, ENV, at(23)));
-  chk("밤 11시엔 안 보냄", /조용한 시간/.test(night.out), "true");
-  chk("실패가 아니라 정상 종료", night.code, 0);
-  const dawn = await run([], Object.assign({}, ENV, at(3)));
-  chk("새벽 3시에도 안 보냄", /조용한 시간/.test(dawn.out), "true");
-  chk("낮 2시엔 집어든다",   /밀린 알림/.test((await run([], Object.assign({}, ENV, at(14)))).out), "true");
-  chk("아침 8시엔 집어든다", /밀린 알림/.test((await run([], Object.assign({}, ENV, at(8)))).out),  "true");
-  chk("저녁 8시엔 집어든다", /밀린 알림/.test((await run([], Object.assign({}, ENV, at(20)))).out), "true");
+  for (const h of [0, 3, 8, 14, 20, 23]){
+    const r = await run([], Object.assign({}, ENV, at(h)));
+    chk("KST " + String(h).padStart(2, "0") + "시에도 집어든다", /밀린 알림/.test(r.out), "true");
+  }
+
+  log.push("15-1. 그래도 막고 싶으면 QUIET_HOURS 하나로");
+  /* 코드를 고치지 않고 Secrets 만으로 되돌릴 수 있어야 합니다 */
+  const q = (w, h) => Object.assign({}, ENV, at(h), { QUIET_HOURS: w });
+  chk("21-8 · 밤 11시엔 쉼",   /QUIET_HOURS/.test((await run([], q("21-8", 23))).out), "true");
+  chk("21-8 · 새벽 3시엔 쉼",  /QUIET_HOURS/.test((await run([], q("21-8", 3))).out),  "true");
+  chk("21-8 · 낮 2시엔 보냄",  /밀린 알림/.test((await run([], q("21-8", 14))).out),   "true");
+  chk("21-8 · 아침 8시엔 보냄",/밀린 알림/.test((await run([], q("21-8", 8))).out),    "true");
+  /* 자정을 안 넘는 구간도 되어야 합니다 */
+  chk("1-5 · 새벽 3시엔 쉼",   /QUIET_HOURS/.test((await run([], q("1-5", 3))).out),   "true");
+  chk("1-5 · 밤 11시엔 보냄",  /밀린 알림/.test((await run([], q("1-5", 23))).out),    "true");
+  /* 엉터리 값이 발송을 통째로 막으면 안 됩니다 */
+  chk("이상한 값은 무시",      /밀린 알림/.test((await run([], q("아무거나", 3))).out), "true");
+  chk("빈 값도 무시",          /밀린 알림/.test((await run([], q("", 3))).out),         "true");
+  chk("쉴 때도 실패는 아님",   (await run([], q("21-8", 23))).code, 0);
 
   log.push("16. DB 설정 전에도 실패로 끝내지 않는다");
   const bare = await run([], at(14));

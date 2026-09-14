@@ -42,11 +42,20 @@ function log(msg){ console.log(msg); }
    할 말은 하고 0으로 끝냅니다. */
 function notReady(msg){ console.log("· " + msg); process.exit(0); }
 
-/* ── 조용한 시간 ────────────────────────────────────────────────────
-   ⚠️ 큐에 담을 때(db/phase8_notify.sql 트리거)도 확인하지만, **보낼 때
-   한 번 더 봅니다.** 예약이 제때 돈다는 보장이 없어서입니다 —
-   실제로 GitHub 이 밀린 예약을 23:08 · 23:35 KST 에 몰아서 돌렸습니다.
-   그때 낮에 쌓인 알림이 같이 나가면 사장님을 밤에 깨웁니다. */
+/* ── 24시간 보냅니다 ────────────────────────────────────────────────
+   축산은 낮에만 돌아가지 않습니다. 도축장은 새벽에 시작하고, 당일알바는
+   밤에 올라와야 다음 날 새벽에 사람이 붙습니다. 밤 11시에 올라온
+   "내일 새벽 발골 3명" 은 **밤에 가야 쓸모가 있습니다.**
+   그래서 기본은 24시간입니다.
+
+   법으로도 걸리지 않습니다 — 야간 발송 제한(정보통신망법 제50조 제3항)은
+   **광고성 정보**에만 걸리고, 우리가 보내는 것은 "요청이 등록되었습니다"
+   같은 정보성입니다. ⚠️ 그래서 템플릿에 광고 문구를 넣는 순간 이야기가
+   달라집니다 — test/notify-e2e.js 의 4번이 그걸 지킵니다.
+
+   그래도 밤을 막고 싶어지면 **코드를 고치지 말고 Secrets 에**
+   QUIET_HOURS="21-8" 을 넣으면 됩니다 (끄면 다시 24시간).
+   받는 쪽에서 아예 안 받겠다는 것은 예전부터 supplier_prefs.notify_on 입니다. */
 function kstHour(){
   /* FAKE_SHIFT_MS 는 회귀에서 시계를 옮겨 보기 위한 것입니다.
      실제 운영에서는 비어 있고, 비어 있으면 아무 일도 안 합니다. */
@@ -54,7 +63,19 @@ function kstHour(){
   const d = new Date(Date.now() + shift + 9 * 3600 * 1000);
   return d.getUTCHours();
 }
-function quietNow(){ const h = kstHour(); return (h >= 21 || h < 8); }
+/* "21-8" → 21시부터 8시 전까지 쉼. 안 적으면 24시간 보냅니다. */
+function quietWindow(){
+  const m = /^(\d{1,2})\s*-\s*(\d{1,2})$/.exec(String(process.env.QUIET_HOURS || "").trim());
+  if (!m) return null;
+  const from = Number(m[1]) % 24, to = Number(m[2]) % 24;
+  return (from === to) ? null : { from, to };
+}
+function quietNow(){
+  const w = quietWindow(); if (!w) return false;
+  const h = kstHour();
+  return (w.from < w.to) ? (h >= w.from && h < w.to)     /* 예: 1-5 */
+                         : (h >= w.from || h < w.to);    /* 예: 21-8 (자정을 넘음) */
+}
 
 /* ── Supabase ─────────────────────────────────────────────────────── */
 function sbCfg(){
@@ -134,8 +155,8 @@ async function markAll(updates){
            + "Secrets 에 넣으면 그때부터 보냅니다 (docs/알림톡-신청.md).");
 
   if (quietNow() && !PROBE && !DRY)
-    notReady("지금은 조용한 시간(21~08시 KST)이라 보내지 않습니다. "
-           + "쌓인 알림은 아침에 그대로 나갑니다.");
+    notReady("지금은 QUIET_HOURS(" + process.env.QUIET_HOURS + ", KST)라 보내지 않습니다. "
+           + "쌓인 알림은 그 시간이 지나면 그대로 나갑니다.");
 
   /* ⚠️ 한 번에 다 비웁니다. 예약이 15분마다 돈다고 적어 두었지만 **실제로는
      하루 서너 번**밖에 안 돌았습니다 (GitHub 예약은 최선을 다할 뿐입니다).

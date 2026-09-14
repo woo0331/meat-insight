@@ -23,7 +23,9 @@
            "brn", "brn_verified", "is_verified", "images", "intro", "description",
            "deal_count", "review_count", "address", "contact", "rep_name",
            "min_qty", "lead_time", "rating", "regions", "instant_quote",
-           "instant_note", "notify_on", "response_rate", "avg_response_min"] },
+           "instant_note", "notify_on", "response_rate", "avg_response_min",
+           /* phase9 — 운영자가 대신 등록하고 초대 문자를 보낼 때 씁니다 */
+           "claim_token", "invited_at", "claimed_at", "added_by"] },
   { t: "jobs", phase: "기존 + phase2",
     must: ["id", "created_at", "status"],
     want: ["user_id", "kind", "job_role", "employment", "pay", "location",
@@ -78,6 +80,15 @@
   { t: "inquiries", phase: "phase7 (선택)", optional: true,
     must: ["id", "created_at", "kind", "name", "content", "status"],
     want: ["phone", "email", "user_id", "answer"] },
+  /* ⚠️ notify_outbox 는 **anon 이 읽으면 안 되는 표**입니다 — 전화번호가
+     들어 있습니다. RLS 를 켜고 정책을 하나도 안 만들어서 막아 두었고,
+     보내는 쪽(tools/notify-send.js)만 service_role 로 지나갑니다.
+     그래서 점검에서 "권한 없음" 이 나오는 것이 **정답**입니다.
+     denyAnon 을 보고 db-check 이 그렇게 읽습니다. */
+  { t: "notify_outbox", phase: "phase8 (알림 내보내기)", optional: true, denyAnon: true,
+    must: ["id", "notification_id", "user_id", "kind", "status", "send_after"],
+    want: ["to_phone", "title", "body", "link", "tries", "channel",
+           "provider_id", "error", "sent_at", "created_at", "supplier_id"] },
 ];;
   if (typeof module !== "undefined" && module.exports) module.exports = EXPECT;
   else root.GORI_DB_EXPECT = EXPECT;

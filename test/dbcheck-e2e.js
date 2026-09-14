@@ -37,7 +37,22 @@ async function withMock(scenario, fn){
  {
    const p=await open();
    chk('색인 제외', await p.evaluate(()=>document.querySelector('meta[name=robots]').content), 'noindex,nofollow');
-   chk('기대 스키마 로드', await p.evaluate(()=>(window.GORI_DB_EXPECT||[]).length), '19');
+   /* 개수를 박아 두면 표가 하나 늘 때마다 뜻 없이 깨집니다.
+      대신 **사이트가 실제로 쓰는 표가 빠지지 않았는지**를 봅니다. */
+   chk('기대 스키마 로드', await p.evaluate(()=>(window.GORI_DB_EXPECT||[]).length>=19), 'true');
+   chk('핵심 표가 다 들어 있음', await p.evaluate(()=>{
+     const t=(window.GORI_DB_EXPECT||[]).map(e=>e.t);
+     return ['purchase_requests','suppliers','jobs','quotes','market_prices',
+             'notifications','orders','chat_rooms','notify_outbox']
+            .filter(x=>!t.includes(x)).join(',');}), '');
+   /* 전화번호가 든 표는 "막혀 있어야 정답" 이라고 표시돼 있어야 합니다 —
+      안 그러면 점검이 차단을 고장으로 읽습니다 */
+   chk('notify_outbox 는 anon 차단 표시', await p.evaluate(()=>{
+     const e=(window.GORI_DB_EXPECT||[]).find(x=>x.t==='notify_outbox');
+     return !!(e && e.denyAnon);}), 'true');
+   chk('초대 칸을 안다', await p.evaluate(()=>{
+     const e=(window.GORI_DB_EXPECT||[]).find(x=>x.t==='suppliers');
+     return !!(e && e.want.includes('claim_token'));}), 'true');
    chk('시작 버튼', await p.evaluate(()=>!!document.getElementById('go')), 'true');
    chk('가로 넘침 없음', await p.evaluate(()=>document.documentElement.scrollWidth>1100), 'false');
    // file:// 로 열면 자동 채우기가 막힙니다 — 조용히 비워 두지 말고 알려 줘야 합니다

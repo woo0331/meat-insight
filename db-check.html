@@ -226,7 +226,8 @@ pre:empty{display:none}
               if (!h.fromPg){ state[e.t]="intercepted"; problems++;
                 L("   ❌ " + pad + " 판단 불가 — Supabase 가 아닌 곳에서 HTTP " + h.status); return; }
               state[e.t] = "blocked";
-              L("   ✅ " + pad + " 있음 (공개 키 읽기 차단 — RLS 적용됨)");
+              L("   ✅ " + pad + " 있음 (공개 키 읽기 차단 — RLS 적용됨)"
+                + (e.denyAnon ? " — 이 표는 막혀 있는 것이 정답입니다" : ""));
               return;
             }
             if (!h.ok){ state[e.t]="error"; problems++;
@@ -234,6 +235,17 @@ pre:empty{display:none}
 
             state[e.t] = "open";
             var total = (h.range.split("/")[1]) || "?";
+            /* ⚠️ 막혀 있어야 하는 표가 열려 있으면 "있음" 이 아니라 사고입니다.
+               notify_outbox 에는 손님 전화번호가 들어 있고, anon 키는
+               화면 소스에 그대로 있습니다 — 누구나 긁어 갈 수 있습니다. */
+            if (e.denyAnon){
+              problems++;
+              L("   ❌ " + pad + " 공개 키로 읽힙니다(" + total + "행) — 전화번호가 새고 있습니다.");
+              L("      db/phase8_notify.sql 의 RLS 블록을 다시 실행하세요:");
+              L("      alter table public.notify_outbox enable row level security;");
+              L("      revoke all on public.notify_outbox from anon, authenticated;");
+              return;
+            }
             return probeColumns(e.t, e.must).then(function(must){
               return probeColumns(e.t, e.want).then(function(want){
                 if (must.missing.length){
@@ -285,7 +297,38 @@ pre:empty{display:none}
             }
           });
         });
-      }, Promise.resolve()).then(function(){ return st; });
+      }, Promise.resolve()).then(function(){
+        /* ── 2-2. 표가 아니라 함수·트리거로 도는 것 ──────────────────
+           phase9·phase10 은 표를 안 만듭니다 — 함수와 트리거만 바꿉니다.
+           그래서 "표가 있나" 로는 실행 여부를 알 수 없습니다.
+           함수를 실제로 한 번 불러 보고 대답으로 가려냅니다. */
+        L("");
+        L("2-2. 함수 — 초대·연결 (phase9)");
+        /* rest() 가 body 를 직접 JSON 으로 만듭니다 — 객체를 그대로 넘깁니다 */
+        return rest("/rest/v1/rpc/gori_claim_supplier", {
+          method: "POST", body: { token: "check-only-not-a-real-token" }
+        }).then(function(h){
+          var msg = (h.json && (h.json.message || h.json.hint)) || "";
+          var code = (h.json && h.json.code) || "";
+          if (/PGRST202|Could not find the function|does not exist/i.test(msg + code)){
+            warns++;
+            L("   ⚠️ gori_claim_supplier 없음 — db/phase9_invite.sql 을 실행하세요.");
+            L("      운영자가 대신 등록한 업체를 사장님이 가져가는 길이 아직 없습니다.");
+            return;
+          }
+          if (/로그인이 필요합니다|이미 연결|초대 링크가 올바르지/.test(msg)){
+            L("   ✅ gori_claim_supplier 있음 — 열쇠를 확인하고 거절했습니다(정상)");
+            return;
+          }
+          if (h.ok){
+            problems++;
+            L("   ❌ 아무 열쇠나 통과했습니다 — 남의 업체를 가져갈 수 있습니다.");
+            L("      db/phase9_invite.sql 을 다시 실행하세요.");
+            return;
+          }
+          L("   · gori_claim_supplier — HTTP " + h.status + " " + String(msg).slice(0, 80));
+        });
+      }).then(function(){ return st; });
     }).then(function(st){
       if (!st) return;
       L("");

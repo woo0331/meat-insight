@@ -69,13 +69,20 @@ function mkEmptyPage(){
     '실제로 확인되지 않은 가격은 표시하지 않습니다.</div></div>';
 }
 
+/* 보여줄 시세가 없으면 "시세는 참고용입니다" 도 같이 내립니다.
+   없는 것에 대한 주의문은 빈 상자와 같습니다 (CLAUDE.md). */
+function mkWarn(show){
+  var w=document.getElementById("mkt-warn"); if(w) w.hidden=!show;
+}
 window.renderMarket=function(){
   var el=document.getElementById("market-full"); if(!el) return;
   if(typeof SCHEMA!=="undefined" && SCHEMA.market_prices===false){
+    mkWarn(false);
     el.innerHTML=setupNote("시세","phase3_schema.sql"); return;
   }
   var all=mkRows("all");
-  if(!all.length){ el.innerHTML=mkEmptyPage(); return; }
+  if(!all.length){ mkWarn(false); el.innerHTML=mkEmptyPage(); return; }
+  mkWarn(true);                                    /* 보여줄 시세가 있을 때만 */
 
   /* 실제로 데이터가 있는 분류만 탭으로 만듭니다 */
   var have={}; all.forEach(function(m){ have[String(m.category||"etc")]=1; });

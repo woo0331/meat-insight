@@ -100,6 +100,18 @@ function fltBuild(kind){
     return '<option value="'+o[0]+'">'+o[1]+'</option>';
   }).join("");
 
+/* 예시가 붙은 긴 안내문은 390px 에서 **괄호가 열린 채 잘립니다** —
+   "업체명·품목·지역으로 검색 (예: 도축, 부산" 까지만 보였습니다.
+   잘린 문장은 고장으로 읽히니, 좁은 화면에서는 예시를 뺍니다.
+   (칸 자체가 넓어질 수는 없습니다 — 정렬·인증업체만이 같은 줄입니다) */
+function fltPh(isReq){
+  var narrow=false;
+  try{ narrow=(window.innerWidth||0)>0 && window.innerWidth<520; }catch(e){}
+  if(narrow) return isReq ? "품목·지역으로 검색" : "업체명·품목·지역 검색";
+  return isReq ? "품목·지역·내용으로 검색 (예: 삼겹살, 경기)"
+               : "업체명·품목·지역으로 검색 (예: 도축, 부산)";
+}
+
   var bar=document.createElement("div");
   bar.id=id; bar.className="gflt";
   bar.innerHTML=
@@ -109,8 +121,7 @@ function fltBuild(kind){
         /* 목록 거르기 칸도 같은 이유로 type="search" 입니다 — 크롬이
            아이디 칸으로 보고 저장된 값을 넣지 않게 합니다 */
         '<input class="gflt-in" id="'+id+'-q" type="search" name="gori-filter-'+id+'" autocomplete="off" spellcheck="false" '+
-          'aria-label="'+(isReq?"요청 검색":"업체 검색")+'" placeholder="'+
-          (isReq?"품목·지역·내용으로 검색 (예: 삼겹살, 경기)":"업체명·품목·지역으로 검색 (예: 도축, 부산)")+'">'+
+          'aria-label="'+(isReq?"요청 검색":"업체 검색")+'" placeholder="'+fltPh(isReq)+'">'+
         '<button type="button" class="gflt-x" id="'+id+'-x" aria-label="검색어 지우기" hidden>✕</button>'+
       '</div>'+
       '<select class="gflt-sel" id="'+id+'-sort" aria-label="정렬 기준">'+opts+'</select>'+

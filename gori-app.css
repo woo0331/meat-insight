@@ -1208,3 +1208,20 @@ html #pg-h .mn-tight{padding-top:64px;padding-bottom:64px;}
    안에서만 키웁니다. 전체를 건드리면 엉뚱한 데가 같이 커집니다. */
 html #pg-claim .gbtn-full{display:flex;min-height:48px;margin-top:16px;
   align-items:center;justify-content:center;font-size:15px;}
+
+/* ── 구간 머리글이 좁은 화면에서 단어 가운데를 자르지 않게 ──────────
+   `.sec-hd2.row` 는 제목 덩이와 오른쪽 링크를 양끝으로 미는 가로 flex
+   입니다. 390px 에서는 제목 칸이 눌려 **"이용 방" / "법"** 처럼 한
+   낱말이 두 줄로 쪼개졌습니다. 줄을 바꿀 수 있게 열어 두고, 제목 덩이가
+   먼저 폭을 가져가게 합니다. (31_guide.js 의 .gu-hdt 가 제목+설명을
+   한 덩이로 묶습니다 — 안 묶으면 셋이 나란히 서 버립니다) */
+html .sec-hd2.row{flex-wrap:wrap;}
+html .gu-hdt{flex:1 1 220px;min-width:0;}
+html .sec-hd2.row>.more-btn{flex:0 0 auto;}
+
+/* 업체 카드의 별점은 절대 두 줄로 쪼개지지 않습니다.
+   flex 자식은 기본으로 줄어들어서, 옆의 "후기 3 · 거래 42건 · 납기 15분"
+   이 길면 **"★" 과 "4.9" 가 위아래로 갈라졌습니다.** */
+html .sc2-rate{flex-wrap:wrap;align-items:baseline;row-gap:2px;}
+html .sc2-rate em{flex:0 0 auto;white-space:nowrap;}
+html .sc2-rate>span{flex:1 1 auto;min-width:0;}

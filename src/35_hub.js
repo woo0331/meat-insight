@@ -31,10 +31,22 @@ function hubRooms(){ return (typeof CHAT!=="undefined" && CHAT.rooms) ? CHAT.roo
 function hubNotis(){ return (typeof NOTIFS!=="undefined" && NOTIFS) ? NOTIFS : []; }
 
 /* 요청 한 건에 살아 있는 견적 수 */
+/* ⚠️ 같은 요청의 견적 수가 화면마다 달랐습니다.
+   요청 목록(12_redesign)·업체 홈(30_suphome)·내 요청(06_my)은
+   `purchase_requests.quote_count`(DB 가 세어 둔 값)를 읽는데, 여기만
+   내가 불러온 `quotes` 줄을 셌습니다. 그래서 **목록에서 "견적 2 개"
+   이던 요청이 내활동에서는 "견적 0건"** 으로 보였습니다 — quotes 를
+   아직 못 읽었거나(RLS·미설치) 아직 안 불러온 상태에서요.
+   0 은 "아직 아무도 안 보냈다" 는, 확인되지 않은 사실입니다 (규칙 3).
+   둘 중 큰 쪽을 씁니다 — 방금 도착해 counter 가 아직 못 따라온 견적은
+   불러온 목록이 더 많고, 못 읽은 경우는 counter 가 더 많습니다. */
 function hubQn(r){
-  return (MY.quotesIn||[]).filter(function(q){
+  var loaded=(MY.quotesIn||[]).filter(function(q){
     return String(q.request_id)===String(r.id) && q.status!=="철회";
   }).length;
+  var counted=Number(r&&r.quote_count);
+  if(!isFinite(counted) || counted<0) counted=0;
+  return Math.max(loaded, counted);
 }
 
 /* 지금 손이 가야 할 일 — 없는 건 아예 안 보여 줍니다 */

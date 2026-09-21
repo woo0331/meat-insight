@@ -137,6 +137,18 @@ function guInjectPage(){
 function guInjectHomeLink(){
   var sec=document.querySelector("#proc-grid"); if(!sec) return;
   var hd=sec.parentNode.querySelector(".sec-hd2"); if(!hd || hd.querySelector(".gu-more")) return;
+
+  /* ⚠️ `.row` 는 `.sec-hd2` 를 가로 flex 로 바꿉니다. 그런데 이 머리글은
+     제목(h2)과 설명(p)이 **형제**라 — 다른 `.row` 머리글처럼 `<div>` 로
+     묶여 있지 않습니다 — 셋이 한 줄에 나란히 서 버립니다. 390px 에서
+     제목 칸이 145px 로 눌려 **"이용 방" / "법" 으로 단어 가운데가
+     잘렸습니다.** 묶어 두고 줄을 바꿉니다. */
+  if(!hd.querySelector(".gu-hdt")){
+    var wrap=document.createElement("div");
+    wrap.className="gu-hdt";
+    [].slice.call(hd.children).forEach(function(c){ wrap.appendChild(c); });
+    hd.appendChild(wrap);
+  }
   hd.classList.add("row");
   var b=document.createElement("button");
   b.className="more-btn gu-more";

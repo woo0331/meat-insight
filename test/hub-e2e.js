@@ -46,7 +46,13 @@ const openMy = async p => { await p.evaluate(()=>go('my')); await p.waitForTimeo
      알림 탭 배지(counts() 가 따로 센 값)와 맞는지로 교차 확인합니다. */
   const truth = await p.evaluate(()=>{
     const MY=GORI.MY;
-    const qn=r=>MY.quotesIn.filter(q=>String(q.request_id)===String(r.id)&&q.status!=='철회').length;
+    /* ⚠️ 35_hub 의 hubQn 과 같은 셈법이어야 합니다. 불러온 quotes 줄만
+       세면, quotes 를 못 읽었을 때 목록에선 "견적 2 개" 인 요청이
+       여기선 "0건" 이 됩니다 — 실제로 그랬습니다. DB 가 세어 둔
+       quote_count 와 큰 쪽을 씁니다. */
+    const qn=r=>Math.max(
+      MY.quotesIn.filter(q=>String(q.request_id)===String(r.id)&&q.status!=='철회').length,
+      Math.max(0, Number(r.quote_count)||0));
     const badge=[...document.querySelectorAll('#my-body .my-tab')]
       .find(e=>(e.getAttribute('onclick')||'').indexOf("'noti'")>=0);
     const c=badge&&badge.querySelector('.cnt');
@@ -120,7 +126,45 @@ const openMy = async p => { await p.evaluate(()=>go('my')); await p.waitForTimeo
   chk('빈 안내 문구', await n2.evaluate(()=>document.querySelectorAll('.hub-none').length), 6);
   chk('없는데 전체 › 안 보임', await n2.evaluate(()=>document.querySelectorAll('.hub-all').length), 0);
 
-  const allErrs=[].concat(p._errs,m._errs,n2._errs);
+  log.push('7. 같은 요청의 견적 수가 화면마다 같은가');
+  /* 예전에는 요청 목록이 purchase_requests.quote_count 를 읽고,
+     내활동 "한눈에 보기" 만 불러온 quotes 를 셌습니다. **quotes 를 못
+     읽으면**(RLS 가 막았거나 표가 아직 없으면) 목록에서 "견적 2 개"
+     이던 요청이 내활동에서는 "견적 0건" 이 됐습니다 — 세어 본 손님에게
+     둘 중 하나는 거짓말입니다. 0 은 "아직 아무도 안 보냈다" 는,
+     확인되지 않은 사실입니다 (규칙 3).
+     그 상황을 그대로 만듭니다 — quotes 만 42501 로 막습니다. */
+  const q0=await b.newPage({viewport:{width:1440,height:1000}});
+  await q0.addInitScript(FAKE+"\nwindow.__FAKE_INIT("+JSON.stringify({
+    user:BUYER, realtime:true,
+    errorTables:{quotes:{code:'42501',message:'permission denied for table quotes'}}
+  })+");");
+  q0._errs=[]; q0.on('pageerror',e=>q0._errs.push(e.message)); q0.on('dialog',d=>d.accept());
+  await q0.goto('file:///home/user/meat-insight/index.html',{waitUntil:'load'});
+  await q0.waitForTimeout(1900);
+  await openMy(q0);
+  await q0.evaluate(()=>gMyTab('hub')); await q0.waitForTimeout(600);
+
+  const cnt=await q0.evaluate(()=>{
+    const want={};
+    (GORI.MY.reqs||[]).forEach(r=>{ want[String(r.id)]=Math.max(0,Number(r.quote_count)||0); });
+    const got={};
+    [...document.querySelectorAll('.hub-card')].filter(e=>/내 요청/.test(e.textContent))
+      .forEach(card=>[...card.querySelectorAll('.hub-row')].forEach(row=>{
+        const id=(/gOpenRequest\('([^']+)'\)/.exec(row.getAttribute('onclick')||'')||[])[1];
+        const m=/견적\s*(\d+)\s*건/.exec(row.textContent||'');
+        if(id&&m) got[id]=Number(m[1]);
+      }));
+    return {want:want, got:got, loaded:(GORI.MY.quotesIn||[]).length};
+  });
+  chk('quotes 를 못 읽은 상태', cnt.loaded, 0);
+  const ids=Object.keys(cnt.got);
+  chk('한눈에 보기에 요청 줄이 있음', ids.length>0, 'true');
+  chk('DB 가 센 수보다 적게 적힌 줄',
+    ids.filter(k=>cnt.got[k]<(cnt.want[k]||0)).map(k=>k+' '+cnt.got[k]+'건≠'+cnt.want[k]+'건').join(', ') || '없음', '없음');
+  chk('실제로 0 이 아닌 요청이 있었음', Object.keys(cnt.want).some(k=>cnt.want[k]>0), 'true');
+
+  const allErrs=[].concat(p._errs,m._errs,n2._errs,q0._errs);
   console.log(log.join('\n'));
   if(allErrs.length){ console.log('  ❌ 페이지 에러: '+allErrs.join(' / ')); errs.push('pageerror'); }
   else console.log('  ✅ 페이지 에러 없음');

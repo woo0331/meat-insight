@@ -167,10 +167,32 @@ async function probeSchema(){
 }
 G.probeSchema=probeSchema;
 
+/* ⚠️ **운영자에게 할 말을 손님 화면에 찍지 마라.** (CLAUDE.md)
+   예전에는 이 함수가 손님에게 이렇게 말했습니다 —
+     "시세 기능을 쓰려면 DB 준비가 필요합니다.
+      Supabase 대시보드 → SQL Editor 에서 db/phase3_schema.sql 을 실행해 주세요."
+   정육점 사장님이 시세를 눌렀을 때 본 글입니다. 그 순간 미완성 사이트가
+   됩니다. 열여섯 곳에서 이 함수를 쓰고 있었으니 열여섯 곳이 다 그랬습니다.
+
+   손님에게는 **"아직 준비 중"** 까지만, 그리고 지금 할 수 있는 일 하나.
+   무엇을 실행해야 하는지는 console.warn 으로 — 운영자만 봅니다.
+   (32_report.js 의 rpFallback 과 같은 생각입니다) */
+var SETUP_SAID={};
 function setupNote(what, file){
-  return '<div class="setup-note"><b>'+esc(what)+' 기능을 쓰려면 DB 준비가 필요합니다.</b><br>'+
-    'Supabase 대시보드 → SQL Editor 에서 저장소의 <code>db/'+esc(file||"phase2_schema.sql")+'</code> 을 실행해 주세요. '+
-    '기존 테이블·데이터는 그대로 두고 필요한 테이블만 추가합니다.</div>';
+  var f=String(file||"phase2_schema.sql");
+  try{
+    if(!SETUP_SAID[f+what]){
+      SETUP_SAID[f+what]=1;
+      console.warn("[고리] \""+what+"\" 가 아직 안 켜져 있습니다 — Supabase SQL Editor 에서 "+
+                   "db/"+f+" 를 실행하세요. 손님에게는 \"준비 중\" 으로만 보입니다.");
+    }
+  }catch(e){}
+  return '<div class="gempty">'+
+    '<div class="gempty-t">'+esc(what)+'는 아직 준비 중입니다</div>'+
+    '<div class="gempty-d">곧 열어 드리겠습니다. 그동안 필요한 것이 있으시면 '+
+      '요청을 올려 주세요 — 조건에 맞는 업체가 견적을 보냅니다.</div>'+
+    '<button class="gbtn gbtn-p gbtn-sm" onclick="go(&quot;rw&quot;)">요청 올리기</button>'+
+  '</div>';
 }
 G.setupNote=setupNote;
 
@@ -3573,6 +3595,18 @@ function fltBuild(kind){
     return '<option value="'+o[0]+'">'+o[1]+'</option>';
   }).join("");
 
+/* 예시가 붙은 긴 안내문은 390px 에서 **괄호가 열린 채 잘립니다** —
+   "업체명·품목·지역으로 검색 (예: 도축, 부산" 까지만 보였습니다.
+   잘린 문장은 고장으로 읽히니, 좁은 화면에서는 예시를 뺍니다.
+   (칸 자체가 넓어질 수는 없습니다 — 정렬·인증업체만이 같은 줄입니다) */
+function fltPh(isReq){
+  var narrow=false;
+  try{ narrow=(window.innerWidth||0)>0 && window.innerWidth<520; }catch(e){}
+  if(narrow) return isReq ? "품목·지역으로 검색" : "업체명·품목·지역 검색";
+  return isReq ? "품목·지역·내용으로 검색 (예: 삼겹살, 경기)"
+               : "업체명·품목·지역으로 검색 (예: 도축, 부산)";
+}
+
   var bar=document.createElement("div");
   bar.id=id; bar.className="gflt";
   bar.innerHTML=
@@ -3582,8 +3616,7 @@ function fltBuild(kind){
         /* 목록 거르기 칸도 같은 이유로 type="search" 입니다 — 크롬이
            아이디 칸으로 보고 저장된 값을 넣지 않게 합니다 */
         '<input class="gflt-in" id="'+id+'-q" type="search" name="gori-filter-'+id+'" autocomplete="off" spellcheck="false" '+
-          'aria-label="'+(isReq?"요청 검색":"업체 검색")+'" placeholder="'+
-          (isReq?"품목·지역·내용으로 검색 (예: 삼겹살, 경기)":"업체명·품목·지역으로 검색 (예: 도축, 부산)")+'">'+
+          'aria-label="'+(isReq?"요청 검색":"업체 검색")+'" placeholder="'+fltPh(isReq)+'">'+
         '<button type="button" class="gflt-x" id="'+id+'-x" aria-label="검색어 지우기" hidden>✕</button>'+
       '</div>'+
       '<select class="gflt-sel" id="'+id+'-sort" aria-label="정렬 기준">'+opts+'</select>'+
@@ -4052,13 +4085,20 @@ function mkEmptyPage(){
     '실제로 확인되지 않은 가격은 표시하지 않습니다.</div></div>';
 }
 
+/* 보여줄 시세가 없으면 "시세는 참고용입니다" 도 같이 내립니다.
+   없는 것에 대한 주의문은 빈 상자와 같습니다 (CLAUDE.md). */
+function mkWarn(show){
+  var w=document.getElementById("mkt-warn"); if(w) w.hidden=!show;
+}
 window.renderMarket=function(){
   var el=document.getElementById("market-full"); if(!el) return;
   if(typeof SCHEMA!=="undefined" && SCHEMA.market_prices===false){
+    mkWarn(false);
     el.innerHTML=setupNote("시세","phase3_schema.sql"); return;
   }
   var all=mkRows("all");
-  if(!all.length){ el.innerHTML=mkEmptyPage(); return; }
+  if(!all.length){ mkWarn(false); el.innerHTML=mkEmptyPage(); return; }
+  mkWarn(true);                                    /* 보여줄 시세가 있을 때만 */
 
   /* 실제로 데이터가 있는 분류만 탭으로 만듭니다 */
   var have={}; all.forEach(function(m){ have[String(m.category||"etc")]=1; });
@@ -6577,6 +6617,18 @@ function guInjectPage(){
 function guInjectHomeLink(){
   var sec=document.querySelector("#proc-grid"); if(!sec) return;
   var hd=sec.parentNode.querySelector(".sec-hd2"); if(!hd || hd.querySelector(".gu-more")) return;
+
+  /* ⚠️ `.row` 는 `.sec-hd2` 를 가로 flex 로 바꿉니다. 그런데 이 머리글은
+     제목(h2)과 설명(p)이 **형제**라 — 다른 `.row` 머리글처럼 `<div>` 로
+     묶여 있지 않습니다 — 셋이 한 줄에 나란히 서 버립니다. 390px 에서
+     제목 칸이 145px 로 눌려 **"이용 방" / "법" 으로 단어 가운데가
+     잘렸습니다.** 묶어 두고 줄을 바꿉니다. */
+  if(!hd.querySelector(".gu-hdt")){
+    var wrap=document.createElement("div");
+    wrap.className="gu-hdt";
+    [].slice.call(hd.children).forEach(function(c){ wrap.appendChild(c); });
+    hd.appendChild(wrap);
+  }
   hd.classList.add("row");
   var b=document.createElement("button");
   b.className="more-btn gu-more";
@@ -7024,10 +7076,22 @@ function hubRooms(){ return (typeof CHAT!=="undefined" && CHAT.rooms) ? CHAT.roo
 function hubNotis(){ return (typeof NOTIFS!=="undefined" && NOTIFS) ? NOTIFS : []; }
 
 /* 요청 한 건에 살아 있는 견적 수 */
+/* ⚠️ 같은 요청의 견적 수가 화면마다 달랐습니다.
+   요청 목록(12_redesign)·업체 홈(30_suphome)·내 요청(06_my)은
+   `purchase_requests.quote_count`(DB 가 세어 둔 값)를 읽는데, 여기만
+   내가 불러온 `quotes` 줄을 셌습니다. 그래서 **목록에서 "견적 2 개"
+   이던 요청이 내활동에서는 "견적 0건"** 으로 보였습니다 — quotes 를
+   아직 못 읽었거나(RLS·미설치) 아직 안 불러온 상태에서요.
+   0 은 "아직 아무도 안 보냈다" 는, 확인되지 않은 사실입니다 (규칙 3).
+   둘 중 큰 쪽을 씁니다 — 방금 도착해 counter 가 아직 못 따라온 견적은
+   불러온 목록이 더 많고, 못 읽은 경우는 counter 가 더 많습니다. */
 function hubQn(r){
-  return (MY.quotesIn||[]).filter(function(q){
+  var loaded=(MY.quotesIn||[]).filter(function(q){
     return String(q.request_id)===String(r.id) && q.status!=="철회";
   }).length;
+  var counted=Number(r&&r.quote_count);
+  if(!isFinite(counted) || counted<0) counted=0;
+  return Math.max(loaded, counted);
 }
 
 /* 지금 손이 가야 할 일 — 없는 건 아예 안 보여 줍니다 */

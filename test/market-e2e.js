@@ -72,12 +72,38 @@ async function open(b,opts,vp){const p=await b.newPage({viewport:vp||{width:1440
  chk('안내 문구', /등록된 시세가 없습니다/.test(t0), 'true');
  chk('홈 시세 스트립 숨김', await e0.evaluate(()=>{const s=document.getElementById('sec-mkt');return !s||s.hidden;}), 'true');
 
+ log.push('3-1. 보여줄 시세가 없으면 주의문도 내린다');
+ /* "시세는 참고용입니다" 는 시세가 있을 때 할 말입니다. 보여줄 게
+    하나도 없는데 주의문만 남으면 빈 상자와 같습니다 (CLAUDE.md). */
+ {
+   const q=await open(b,{emptyTables:['market_prices']});
+   await q.evaluate(()=>go('market')); await q.waitForTimeout(800);
+   chk('주의문 내려감', await q.evaluate(()=>{
+     const w=document.getElementById('mkt-warn'); return !!(w && w.offsetParent);}), 'false');
+   errs.push(...q._errs.map(e=>'warn-off: '+e));
+   await q.close();
+   const r=await open(b);
+   await r.evaluate(()=>go('market')); await r.waitForTimeout(800);
+   chk('시세가 있으면 주의문도 보임', await r.evaluate(()=>{
+     const w=document.getElementById('mkt-warn'); return !!(w && w.offsetParent);}), 'true');
+   errs.push(...r._errs.map(e=>'warn-on: '+e));
+   await r.close();
+ }
+
  log.push('4. 테이블 자체가 없을 때');
  let m0=await open(b,{missingTables:['market_prices']});
  await m0.evaluate(()=>go('market')); await m0.waitForTimeout(900);
  const t1 = await m0.evaluate(()=>document.getElementById('market-full').textContent.replace(/\s+/g,' ').trim());
  log.push('  화면: '+t1.slice(0,100));
- chk('설치 안내', /phase3_schema/.test(t1), 'true');
+ /* ⚠️ 여기가 거꾸로였습니다 — 이 줄이 "손님 화면에 phase3_schema 가
+    보여야 한다" 고 요구하며 **버그를 지키고 있었습니다.**
+    정육점 사장님이 시세를 누르면 "Supabase 대시보드 → SQL Editor 에서
+    db/phase3_schema.sql 을 실행해 주세요" 를 봤습니다. 그 순간
+    미완성 사이트가 됩니다. 손님에게는 "준비 중" 까지만, 무엇을
+    해야 하는지는 console.warn 으로 (CLAUDE.md). */
+ chk('손님용 문구', /준비 중입니다/.test(t1), 'true');
+ chk('운영자용 문구 안 보임', /Supabase|SQL Editor|phase3|\.sql|대시보드/.test(t1), 'false');
+ chk('돌아갈 길을 줌', /요청 올리기/.test(t1), 'true');
  chk('가짜 숫자 없음', await m0.evaluate(()=>!/20,500|5,180/.test(document.getElementById('market-full').textContent)), 'true');
 
  [p,e0,m0].forEach((x,i)=>errs.push(...x._errs.map(e=>'p'+i+': '+e)));

@@ -167,10 +167,32 @@ async function probeSchema(){
 }
 G.probeSchema=probeSchema;
 
+/* ⚠️ **운영자에게 할 말을 손님 화면에 찍지 마라.** (CLAUDE.md)
+   예전에는 이 함수가 손님에게 이렇게 말했습니다 —
+     "시세 기능을 쓰려면 DB 준비가 필요합니다.
+      Supabase 대시보드 → SQL Editor 에서 db/phase3_schema.sql 을 실행해 주세요."
+   정육점 사장님이 시세를 눌렀을 때 본 글입니다. 그 순간 미완성 사이트가
+   됩니다. 열여섯 곳에서 이 함수를 쓰고 있었으니 열여섯 곳이 다 그랬습니다.
+
+   손님에게는 **"아직 준비 중"** 까지만, 그리고 지금 할 수 있는 일 하나.
+   무엇을 실행해야 하는지는 console.warn 으로 — 운영자만 봅니다.
+   (32_report.js 의 rpFallback 과 같은 생각입니다) */
+var SETUP_SAID={};
 function setupNote(what, file){
-  return '<div class="setup-note"><b>'+esc(what)+' 기능을 쓰려면 DB 준비가 필요합니다.</b><br>'+
-    'Supabase 대시보드 → SQL Editor 에서 저장소의 <code>db/'+esc(file||"phase2_schema.sql")+'</code> 을 실행해 주세요. '+
-    '기존 테이블·데이터는 그대로 두고 필요한 테이블만 추가합니다.</div>';
+  var f=String(file||"phase2_schema.sql");
+  try{
+    if(!SETUP_SAID[f+what]){
+      SETUP_SAID[f+what]=1;
+      console.warn("[고리] \""+what+"\" 가 아직 안 켜져 있습니다 — Supabase SQL Editor 에서 "+
+                   "db/"+f+" 를 실행하세요. 손님에게는 \"준비 중\" 으로만 보입니다.");
+    }
+  }catch(e){}
+  return '<div class="gempty">'+
+    '<div class="gempty-t">'+esc(what)+'는 아직 준비 중입니다</div>'+
+    '<div class="gempty-d">곧 열어 드리겠습니다. 그동안 필요한 것이 있으시면 '+
+      '요청을 올려 주세요 — 조건에 맞는 업체가 견적을 보냅니다.</div>'+
+    '<button class="gbtn gbtn-p gbtn-sm" onclick="go(&quot;rw&quot;)">요청 올리기</button>'+
+  '</div>';
 }
 G.setupNote=setupNote;
 

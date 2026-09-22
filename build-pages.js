@@ -195,6 +195,7 @@ const routes = allRoutes(W);
 let made = 0, skipped = 0;
 const sitemap = [];
 const wrote = new Set();          /* 이번에 만든 index.html 들 */
+const seenTitle = new Map(), seenDesc = new Map();
 for(const route of routes){
   const r = W.routeInfo(route, {});
   if(!r.ok){ console.error("  ! 알 수 없는 주소: "+route); skipped++; continue; }
@@ -227,8 +228,28 @@ for(const route of routes){
     made++;
   }
   /* "/" 는 index.html 자체라 덮어쓰지 않습니다 — 원본이 틀어집니다 */
-  if(!r.noindex) sitemap.push(route);
+  if(!r.noindex){
+    sitemap.push(route);
+    const T = (r.title||"")+"", D = (r.desc||"")+"";
+    (seenTitle.get(T) || seenTitle.set(T,[]).get(T)).push(route);
+    (seenDesc.get(D)  || seenDesc.set(D,[]).get(D)).push(route);
+  }
 }
+
+/* ── 제목·설명이 겹치는 곳이 없는지 ────────────────────────────
+   ⚠️ 소와 돼지에 같은 이름의 분류·부위가 여럿입니다 (위·장류 · 장기류 ·
+   막창 · 간 · 잡뼈 · 선지 · 지방 …). 축종을 안 붙이면 주소가 다른 화면
+   여덟 개가 **똑같은 설명**을 달고 나갑니다. 구글 서치콘솔이 "중복된
+   설명" 으로 표시하고, 검색 결과 두 줄이 같은 말을 합니다. */
+const dups = (map, what) => {
+  const bad = [...map.entries()].filter(([,v])=>v.length>1);
+  if(bad.length){
+    for(const [txt,rs] of bad.slice(0,5))
+      console.error("  ! "+what+"이 겹칩니다: "+rs.join(" · ")+"  →  "+txt.slice(0,50));
+    throw new Error(what+"이 겹치는 곳이 "+bad.length+"군데 있습니다");
+  }
+};
+dups(seenTitle, "제목"); dups(seenDesc, "설명");
 
 /* ── 없어진 주소의 파일을 치웁니다 ─────────────────────────────
    상품이나 도감 부위를 지우면 그 폴더가 **그대로 남습니다.** 남으면

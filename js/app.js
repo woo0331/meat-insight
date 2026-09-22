@@ -251,9 +251,17 @@ window.routeInfo = function(path, qs){
     if((seg[2] && !catN) || (seg[3] && !itN)) { r.ok=false; return r; }
     r.view="cat"; r.sp=seg[1]; r.cat=seg[2]||null; r.item=seg[3]||null;
     r.title = [spN, catN, itN].filter(Boolean).join(" · ");
-    r.desc  = (itN||catN||spN)+" 판매. "+
-      (itN ? itN+josa(itN,"을를")+" 원물·1차 세척·완전 손질 중 필요한 상태로 보내 드립니다."
-           : "신선한 "+(catN||spN)+"를 필요한 규격으로 공급합니다.");
+    /* ⚠️ 설명에 **축종을 붙입니다.** 소와 돼지에 같은 이름의 분류·부위가
+       여럿이라(위·장류 · 장기류 · 막창 · 간 …) 안 붙이면 주소가 다른
+       화면 여덟 개가 **똑같은 설명**을 달고 나갑니다. 구글 서치콘솔이
+       "중복된 설명" 으로 표시하고, 검색 결과 두 줄이 같은 말을 합니다.
+       제목에는 이미 붙어 있었습니다 — 설명만 빠져 있었습니다. */
+    var label = itN ? wowPartTitle(seg[1], itN)
+              : catN ? wowPartTitle(seg[1], catN)
+              : spN;
+    r.desc  = label+" 판매. "+
+      (itN ? label+josa(label,"을를")+" 원물·1차 세척·완전 손질 중 필요한 상태로 보내 드립니다."
+           : "신선한 "+label+josa(label,"을를")+" 필요한 규격으로 공급합니다.");
     return r;
   }
   if(seg[0]==="p" && seg[1]){

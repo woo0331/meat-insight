@@ -88,9 +88,14 @@ function B2BBanner(o){
 }
 
 /* 도감 카드 — 컷아웃 + 이름 */
+/* ⚠️ 사진이 **있는 부위만** 사진을 씁니다. 없는 파일명을 적어 넣으면
+   404 가 한 번 나고 카드가 빈 상자가 됩니다 — 화면에서는 "아직 안 만든
+   사이트" 로 읽힙니다. 사진이 없으면 부위 위치 그림(PartThumb)으로
+   대신합니다. 비슷하게 생겼다고 **남의 부위 사진을 돌려 쓰지 마세요.** */
 function EncyclopediaCard(e, sp){
   return '<a class="qc" href="/enc/'+esc(sp)+'/'+esc(e.slug)+'">'+
-    imgTag(e.img, e.name)+'<b>'+esc(e.name)+'</b></a>';
+    (e.img ? imgTag(e.img, e.name) : PartThumb(sp, e))+
+    '<b>'+esc(e.name)+'</b></a>';
 }
 
 /* ══ 배송 안내 ═══════════════════════════════════════════

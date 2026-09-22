@@ -153,6 +153,10 @@ h1,h2,h3,h4{ margin:0; font-weight:700; line-height:var(--lh-tight); letter-spac
   transition:border-color .15s, box-shadow .15s, transform .15s; display:block; }
 .qc:hover{ border-color:var(--green); box-shadow:var(--shadow-md); transform:translateY(-2px); }
 .qc img{ width:104px; height:104px; object-fit:contain; margin:0 auto var(--s3); }
+/* 사진이 아직 없는 도감 부위 — 사진 대신 부위 위치 그림이 들어옵니다.
+   사진 칸과 **같은 높이**를 써야 카드 줄이 안 어긋납니다. */
+.qc .pd-th{ width:132px; height:104px; display:block; margin:0 auto var(--s3);
+  background:var(--ivory); border-radius:var(--r-md); padding:6px; }
 .qc b{ font-size:var(--t-md); font-weight:700; }
 
 /* ══ 상품 카드 ════════════════════════════════════════════ */
@@ -228,6 +232,9 @@ h1,h2,h3,h4{ margin:0; font-weight:700; line-height:var(--lh-tight); letter-spac
 .empty{ text-align:center; padding:var(--s10) var(--s5); }
 .empty-t{ font-size:var(--t-lg); font-weight:700; margin-bottom:var(--s2); }
 .empty-d{ color:var(--ink2); font-size:var(--t-base); margin-bottom:var(--s6); }
+/* 빈 화면의 버튼 줄 — ⚠️ 막다른 길을 만들지 않습니다. "없습니다" 로
+   끝내면 손님이 뒤로가기를 누르고 그대로 나갑니다. */
+.empty-acts{ display:flex; gap:var(--s2); justify-content:center; flex-wrap:wrap; }
 
 /* ══ 반응형 ═══════════════════════════════════════════════ */
 @media (max-width:1024px){
@@ -250,6 +257,7 @@ h1,h2,h3,h4{ margin:0; font-weight:700; line-height:var(--lh-tight); letter-spac
 @media (max-width:640px){
   .qg{ grid-template-columns:repeat(2,1fr); }
   .qc img{ width:84px; height:84px; }
+  .qc .pd-th{ width:106px; height:84px; }
   /* ⚠️ 모바일에서 사진 칸을 46% 로 두면 **오른쪽에 검은 띠만 남습니다.**
      좁은 화면에서는 사진을 통째로 깔고 위아래 그라데이션으로 글자를 띄웁니다. */
   .hero{ min-height:340px; --hero-photo:100%; }

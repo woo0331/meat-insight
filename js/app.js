@@ -35,7 +35,7 @@ window.addCart = function(id, kg){
   /* 화면에서 이미 막지만 여기서도 막습니다. 담기는 길이 여러 군데라
      (카드·상세·바로구매) 한 곳만 막으면 샙니다. */
   if(typeof isSoldOut==="function" && isSoldOut(p)){
-    toast(p.name+" 은(는) 지금 품절입니다.");
+    toast(p.name+josa(p.name,"은는")+" 지금 품절입니다.");
     return;
   }
   kg = kg || (p.units&&p.units[0]) || 1;
@@ -252,7 +252,7 @@ window.routeInfo = function(path, qs){
     r.view="cat"; r.sp=seg[1]; r.cat=seg[2]||null; r.item=seg[3]||null;
     r.title = [spN, catN, itN].filter(Boolean).join(" · ");
     r.desc  = (itN||catN||spN)+" 판매. "+
-      (itN ? itN+"을(를) 원물·1차 세척·완전 손질 중 필요한 상태로 보내 드립니다."
+      (itN ? itN+josa(itN,"을를")+" 원물·1차 세척·완전 손질 중 필요한 상태로 보내 드립니다."
            : "신선한 "+(catN||spN)+"를 필요한 규격으로 공급합니다.");
     return r;
   }
@@ -273,7 +273,11 @@ window.routeInfo = function(path, qs){
     if(seg[2]){
       var e = wowEnc(seg[1], seg[2]);
       if(!e){ r.ok=false; return r; }
-      r.title = e.name; r.desc = e.desc;
+      r.ent = e;
+      /* ⚠️ 축종을 붙입니다. 소·돼지에 같은 이름의 부위가 여럿이라
+         (간·염통·허파·콩팥·막창·잡뼈·선지·지방…) 그냥 두면 검색
+         결과에 똑같은 제목이 두 줄 뜹니다. */
+      r.title = wowPartTitle(seg[1], e.name); r.desc = e.desc;
     }else if(seg[1]){
       r.title = wowSpeciesName(seg[1])+" 도감";
       r.desc  = wowSpeciesName(seg[1])+" 부위별 특징·식감·손질방법·추천요리를 정리했습니다.";

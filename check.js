@@ -47,6 +47,10 @@ const PAGES = [
   ["/p/b-jira",         "품절 상품"],
   ["/enc/beef",         "부산물 도감"],
   ["/enc/beef/gopchang","도감 부위상세"],
+  /* 사진이 아직 없는 부위 — 사진 칸 대신 부위 그림이 들어갑니다.
+     빈 네모나 404 가 나는지 여기서 걸립니다. */
+  ["/enc/beef/sagol",   "도감 (사진 없는 부위)"],
+  ["/enc/pork",         "돼지 도감"],
   ["/b2b",              "업소용 B2B"],
   ["/b2b/quote",        "대량견적 문의"],
   ["/search?q=곱창",     "검색결과"],
@@ -61,7 +65,10 @@ const PAGES = [
 const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[390,844,"모바일"]];
 
 /* 손님 화면에 있으면 안 되는 말 */
-const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder/i;
+/* ⚠️ 조사를 괄호로 때운 자리(은(는) · 을(를))도 여기서 걸립니다.
+   화면에도 보이지만, 더 나쁜 것은 **구글 검색 결과 줄**에 그대로
+   나간다는 점입니다 — 카테고리 17개가 실제로 그랬습니다. */
+const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
   const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[] };

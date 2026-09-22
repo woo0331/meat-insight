@@ -39,7 +39,7 @@ function loadApp(){
   vm.createContext(sandbox);
 
   const files = [
-    "js/data/site.js", "js/data/categories.js", "js/data/products.js",
+    "js/data/korean.js", "js/data/site.js", "js/data/categories.js", "js/data/products.js",
     "js/data/filters.js", "js/data/encyclopedia.js"
   ];
   for(const f of files) vm.runInContext(fs.readFileSync(path.join(ROOT,f),"utf8"), sandbox, {filename:f});
@@ -158,6 +158,20 @@ function noscriptFor(W, r, route){
     body += "<ul>"+W.WOW_SPECIES.map(s=>L("/c/"+s.slug, s.name)).join("")+
             L("/enc","부산물 도감")+L("/b2b","업소용 · 대량구매")+"</ul>";
   }
+  /* 도감 상세는 **글이 전부인 화면**입니다 (36개는 관련상품도 없습니다).
+     제목과 한 줄 설명만 내보내면 크롤러 눈에 "내용 없음" 이 됩니다. */
+  if(r.view==="enc" && r.slug && r.ent){
+    const e = r.ent;
+    body += "<ul>"+
+      (e.feat    ? "<li>특징 "+esc(e.feat)+"</li>" : "")+
+      (e.texture ? "<li>식감 "+esc(e.texture)+"</li>" : "")+
+      (e.trim    ? "<li>손질방법 "+esc(e.trim)+"</li>" : "")+
+      ((e.cook||[]).length ? "<li>추천요리 "+esc(e.cook.join(", "))+"</li>" : "")+
+    "</ul>";
+    const rel = (e.rel||[]).map(W.wowProduct).filter(Boolean);
+    if(rel.length) body += "<ul>"+rel.map(p=>L("/p/"+p.id, p.name+" "+W.wowWon(p.price)+"원/kg")).join("")+"</ul>";
+    body += "<ul>"+L("/enc/"+r.sp, W.wowSpeciesName(r.sp)+" 도감")+"</ul>";
+  }
   if(r.view==="enc" && !r.slug){
     const sps = r.sp ? [r.sp] : W.WOW_SPECIES.map(s=>s.slug);
     body += "<ul>"+sps.flatMap(sp=>(W.WOW_ENC[sp]||[])
@@ -173,6 +187,7 @@ const routes = allRoutes(W);
 
 let made = 0, skipped = 0;
 const sitemap = [];
+const wrote = new Set();          /* 이번에 만든 index.html 들 */
 for(const route of routes){
   const r = W.routeInfo(route, {});
   if(!r.ok){ console.error("  ! 알 수 없는 주소: "+route); skipped++; continue; }
@@ -183,10 +198,40 @@ for(const route of routes){
   if(route!=="/"){
     fs.mkdirSync(dir, {recursive:true});
     fs.writeFileSync(path.join(dir,"index.html"), html);
+    wrote.add(path.join(dir,"index.html"));
     made++;
   }
   /* "/" 는 index.html 자체라 덮어쓰지 않습니다 — 원본이 틀어집니다 */
   if(!r.noindex) sitemap.push(route);
+}
+
+/* ── 없어진 주소의 파일을 치웁니다 ─────────────────────────────
+   상품이나 도감 부위를 지우면 그 폴더가 **그대로 남습니다.** 남으면
+   sitemap 에는 없는데 주소는 살아 있어, 예전에 색인된 손님과 크롤러가
+   계속 그 화면을 봅니다 (실제로 "돼지 천엽" 이 그랬습니다 — 돼지는
+   위가 하나뿐이라 아예 없는 부위인데 페이지가 남아 있었습니다).
+
+   ⚠️ 이번에 만든 폴더의 **맨 윗 칸(c · p · enc · products …)** 안만
+   훑습니다. css·js·img 는 손대지 않습니다. */
+const roots = new Set(routes.filter(r=>r!=="/").map(r=>r.split("/")[1]));
+let removed = 0;
+function sweep(dir){
+  let left = 0;
+  for(const ent of fs.readdirSync(dir, {withFileTypes:true})){
+    const full = path.join(dir, ent.name);
+    if(ent.isDirectory()){ if(sweep(full)) left++; else fs.rmdirSync(full); }
+    else if(ent.name==="index.html" && !wrote.has(full)){
+      fs.unlinkSync(full);
+      console.log("  · 없어진 주소를 치웁니다: /"+path.relative(ROOT,dir));
+      removed++;
+    }
+    else left++;
+  }
+  return left;
+}
+for(const root of roots){
+  const d = path.join(ROOT, root);
+  if(fs.existsSync(d) && fs.statSync(d).isDirectory()) sweep(d);
 }
 
 /* ── sitemap ──────────────────────────────────────────────────── */
@@ -204,4 +249,5 @@ sitemap.map(r=>'  <url><loc>'+ORIGIN+r+'</loc><lastmod>'+today+
 '\n</urlset>\n');
 
 console.log("페이지 "+made+"개"+(skipped?" (건너뜀 "+skipped+")":"")+
+            (removed?" · 치운 주소 "+removed+"개":"")+
             " · sitemap "+sitemap.length+"개 주소");

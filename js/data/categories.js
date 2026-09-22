@@ -137,3 +137,18 @@ window.wowSpeciesName = function(s){
   var f = WOW_SPECIES.find(function(x){ return x.slug===s; });
   return f ? f.name : null;
 };
+/* "소" · "돼지" — 제목에 붙일 짧은 이름입니다.
+   ⚠️ 소와 돼지에 같은 이름의 부위가 여럿 있습니다 (간·염통·허파·
+   콩팥·막창·잡뼈·선지·지방…). 제목에 축종을 안 붙이면 검색 결과에
+   "간 · ABOUTMEAT" 가 두 줄 나란히 떠서 어느 쪽인지 알 수 없습니다. */
+window.wowSpeciesShort = function(s){
+  var f = WOW_SPECIES.find(function(x){ return x.slug===s; });
+  return f ? f.short : null;
+};
+/* 부위 이름 앞에 축종을 붙입니다. 이미 붙어 있으면 그대로 둡니다 —
+   "소 소머리" · "돼지 돼지머리" 가 되면 안 됩니다. */
+window.wowPartTitle = function(sp, name){
+  var sh = wowSpeciesShort(sp);
+  if(!sh || !name) return name || null;
+  return String(name).indexOf(sh)===0 ? name : sh+" "+name;
+};

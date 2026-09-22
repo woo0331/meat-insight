@@ -74,6 +74,28 @@ function PartDiagram(sp, ent, opt){
   '</figure>';
 }
 
+/* 카드에 넣는 작은 부위 그림 — **사진이 아직 없는 부위**에 씁니다.
+
+   ⚠️ 없는 사진 파일명을 적어 넣어 때우지 마세요. imgTag 가 404 를 한 번
+   내고 카드가 빈 상자가 됩니다. 비슷하게 생겼다고 남의 부위 사진을
+   돌려 쓰는 것은 더 나쁩니다 — 손님은 그 사진으로 살지 말지를 정합니다.
+   사진이 없으면 **어디 부위인지**라도 보여 주는 편이 낫습니다.
+
+   이름표(pd-cap)는 붙이지 않습니다. 카드에 이름이 이미 있습니다. */
+function PartThumb(sp, ent){
+  var sil = SIL[sp] || SIL.beef;
+  var px = (ent && ent.pos) ? (ent.pos[0]*300) : null;
+  var py = (ent && ent.pos) ? (ent.pos[1]*190) : null;
+  return '<svg class="pd-th" viewBox="0 0 300 190" role="img" aria-hidden="true" focusable="false">'+
+    '<path d="'+sil+'" fill="#DCDAD2" stroke="#C9C6BC" stroke-width="1.5" '+
+      'stroke-linejoin="round" stroke-linecap="round"/>'+
+    (px===null ? '' :
+      '<ellipse cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" rx="30" ry="17" '+
+        'fill="#C85B4B" fill-opacity=".22" stroke="#C85B4B" stroke-width="2"/>'+
+      '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="4" fill="#C85B4B"/>')+
+  '</svg>';
+}
+
 /* 부위 요약표 — 그림 옆에 붙는 "한눈에 보는 포인트" */
 function PartPoints(p, ent){
   var rows=[

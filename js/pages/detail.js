@@ -81,7 +81,7 @@ function tabBody(p, ent){
     if(!c.length) return emptyTab("추천요리");
     return '<h3 class="tb-h">추천요리</h3><div class="chips">'+
       c.map(function(x){ return '<span class="chip chip-st">'+esc(x)+'</span>'; }).join("")+'</div>'+
-      '<p class="tb-p">'+esc(p.name)+'은(는) 위 요리에 많이 쓰입니다. 용도에 맞는 손질 상태를 골라 주문하시면 '+
+      '<p class="tb-p">'+esc(p.name)+esc(josa(p.name,"은는"))+' 위 요리에 많이 쓰입니다. 용도에 맞는 손질 상태를 골라 주문하시면 '+
       '받자마자 바로 조리하실 수 있습니다.</p>';
   }
   if(DT.tab==="review"){

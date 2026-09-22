@@ -50,10 +50,13 @@ function encDetail(sp, slug){
     '<a class="btn btn-g" href="/enc/'+esc(sp)+'">도감으로 돌아가기</a></div></div>';
 
   var rel = (e.rel||[]).map(wowProduct).filter(Boolean);
+  /* ⚠️ 사진 칸은 **사진이 있을 때만** 냅니다. 빈 네모를 남겨 두면
+     "사진을 못 불러왔다" 로 읽힙니다 — 자리표시자를 찍지 않는다는
+     규칙이 여기에도 걸립니다. 어디 부위인지는 아래 그림이 말합니다. */
   return Breadcrumb([["홈","/"],["부산물 도감","/enc"],[wowSpeciesName(sp),"/enc/"+sp],[e.name,""]])+
   '<div class="w enc-d">'+
-    '<div class="enc-d-top">'+
-      '<div class="enc-d-img">'+imgTag(e.img, e.name)+'</div>'+
+    '<div class="enc-d-top'+(e.img?"":" enc-d-solo")+'">'+
+      (e.img ? '<div class="enc-d-img">'+imgTag(e.img, e.name)+'</div>' : '')+
       '<div class="enc-d-txt">'+
         '<h1>'+esc(e.name)+'</h1>'+
         '<p class="lead">'+esc(e.desc)+'</p>'+
@@ -67,10 +70,42 @@ function encDetail(sp, slug){
     '</div>'+
     '<div class="enc-d-dia"><h3>이 부위는 어디인가요?</h3>'+PartDiagram(sp, e)+'</div>'+
   '</div>'+
-  /* 관련상품은 **실제로 있는 것만** — 없으면 구간째 뺍니다 */
+  /* 관련상품은 **실제로 있는 것만** 내놓습니다. 다만 없다고 화면을
+     그냥 끝내면 손님이 갈 곳이 없습니다 — 48개 부위 중 상당수가 아직
+     상품이 없으므로, 없을 때는 **없다고 말하고 갈 곳을 줍니다.**
+     "상품이 없습니다" 는 우리가 실제로 아는 사실이라 적어도 됩니다
+     (모르는 것을 없다고 적지 않는다는 규칙과 어긋나지 않습니다). */
   (rel.length ? '<section class="sec sec-w"><div class="w">'+
     '<div class="sec-hd"><div class="sec-hd-t"><h2>'+esc(e.name)+' 상품</h2></div></div>'+
-    ProductGrid(rel)+'</div></section>' : '');
+    ProductGrid(rel)+'</div></section>'
+   : '<section class="sec sec-w"><div class="w"><div class="empty">'+
+      '<div class="empty-t">'+esc(e.name)+esc(josa(e.name,"은는"))+' 아직 등록된 상품이 없습니다</div>'+
+      '<div class="empty-d">필요한 수량과 규격을 알려 주시면 확인해 드립니다.</div>'+
+      '<div class="empty-acts">'+
+        /* ⚠️ 그 분류에 **상품이 실제로 있을 때만** 분류로 보냅니다.
+           없으면 눌렀을 때 빈 목록이 나옵니다 — 손님에게는 고장입니다. */
+        (function(){
+          var hasCat = wowFind({sp:sp, cat:e.cat}).length;
+          var to = hasCat ? "/c/"+sp+"/"+e.cat : "/c/"+sp;
+          var nm = (hasCat && wowCatName(sp, e.cat)) || wowSpeciesName(sp);
+          return '<a class="btn btn-g" href="'+esc(to)+'">'+esc(nm)+' 보기</a>';
+        })()+
+        '<a class="btn" href="/b2b/quote">대량견적 문의</a>'+
+        CallButton("btn", "전화로 문의")+
+      '</div></div></div></section>')+
+  /* 같은 분류의 다른 부위 — 막다른 길을 만들지 않습니다.
+     크롤러도 여기를 타고 다음 부위로 갑니다. */
+  (function(){
+    var sib = (WOW_ENC[sp]||[]).filter(function(x){
+      return x.cat===e.cat && x.slug!==e.slug; }).slice(0,8);
+    if(!sib.length) return "";
+    return '<section class="sec sec-i"><div class="w">'+
+      '<div class="sec-hd"><div class="sec-hd-t"><h2>'+
+        esc(wowCatName(sp, e.cat) || "같은 분류")+'의 다른 부위</h2></div>'+
+        '<a class="sec-more" href="/enc/'+esc(sp)+'">도감 전체보기'+icon("chev",16)+'</a></div>'+
+      '<div class="qg">'+sib.map(function(x){ return EncyclopediaCard(x, sp); }).join("")+
+    '</div></div></section>';
+  })();
 }
 
 /* ── 08. B2B (지시서 19번) ──────────────────────────────── */
@@ -276,7 +311,7 @@ function myBody(t){
   }
   if(!isLoggedIn()){
     var what = t==="quote" ? "문의하신 견적" : (t==="info" ? "회원정보" : "주문 내역");
-    return emptyBox("로그인이 필요합니다", what+"은(는) 로그인 후 확인하실 수 있습니다.","/login","로그인");
+    return emptyBox("로그인이 필요합니다", what+josa(what,"은는")+" 로그인 후 확인하실 수 있습니다.","/login","로그인");
   }
   if(t==="quote") return emptyBox("문의하신 견적이 없습니다","업소용 대량견적을 문의하시면 진행 상황이 이곳에 표시됩니다.","/b2b/quote","대량견적 문의");
   if(t==="info")  return emptyBox("회원정보를 불러올 수 없습니다","잠시 후 다시 시도해 주세요.","/","홈으로");

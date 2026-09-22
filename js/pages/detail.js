@@ -65,7 +65,15 @@ function tabBody(p, ent){
         '<p>'+esc(ent.desc)+'</p>'+
         PartDiagram(p.sp, ent)+
       '</div>'+
-      '<div class="part-r">'+PartPoints(p, ent)+'</div></div>';
+      '<div class="part-r">'+PartPoints(p, ent)+
+        /* ⚠️ 문장 한가운데 링크를 박지 말고 **끝에 버튼으로** 내놓습니다
+           (높이 16px 짜리 글자 링크는 손가락으로 누르기 어렵습니다).
+           이 버튼이 상품 화면과 도감 48개를 이어 주는 유일한 길입니다 —
+           없으면 손질방법·추천요리를 한자리에서 보려는 손님이 갈 데가
+           없고, 크롤러도 상품에서 도감으로 못 넘어갑니다. */
+        '<a class="btn btn-o part-more" href="/enc/'+esc(p.sp)+'/'+esc(ent.slug)+'">'+
+          esc(wowPartTitle(p.sp, ent.name))+' 도감에서 더 보기'+icon("arrow",18)+'</a>'+
+      '</div></div>';
   }
   if(DT.tab==="trim"){
     if(!ent || !ent.trim) return emptyTab("손질과정");

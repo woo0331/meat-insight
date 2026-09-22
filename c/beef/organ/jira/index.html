@@ -9,10 +9,22 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="소 부산물 · 장기류 · 지라 · ABOUTMEAT 축산 부산물 전문마켓">
 <meta property="og:description" content="지라 판매. 지라를 원물·1차 세척·완전 손질 중 필요한 상태로 보내 드립니다.">
-<meta property="og:image" content="/og.jpg">
+<!-- ⚠️ og:image 는 **주소 전체**여야 합니다. "/og.jpg" 로 두면
+     카카오톡·페이스북 미리보기에 사진이 안 뜹니다 — 크롤러는 우리
+     도메인을 모른 채 그 값을 읽습니다. -->
+<meta property="og:image" content="https://aboutmeat.co.kr/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="ABOUTMEAT 축산 부산물 전문마켓">
+<meta property="og:site_name" content="ABOUTMEAT">
+<meta property="og:locale" content="ko_KR">
 <meta property="og:url" content="https://aboutmeat.co.kr/c/beef/organ/jira">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="/manifest.json">
+<!-- ⚠️ rel="icon" 을 안 적으면 브라우저가 /favicon.ico 를 찾습니다.
+     파일이 없으면 **모든 화면에서 404 가 한 번씩** 납니다. -->
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
 <!-- 글꼴은 CDN 이 막혀도 사이트가 멈추지 않습니다 — 대체 사슬에

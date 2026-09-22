@@ -41,18 +41,19 @@ node build-pages.js      # 페이지 75개 + sitemap.xml 다시 만들기
 | `/products` · `/products/today` · `/products/trim` | 전체상품 · 오늘입고 · 손질상품 |
 | `/c/<sp>` · `/<cat>` · `/<item>` | 소·돼지 / 분류 / 세부 품목 |
 | `/p/<id>` | 상품 상세 |
-| `/enc` · `#/enc/<sp>` · `#/enc/<sp>/<slug>` | 부산물 도감 |
-| `/b2b` · `#/b2b/quote` | 업소용 · 대량견적 |
-| `/search?q=` `#/cart` `#/login` `#/signup` `#/my` `#/about` | 나머지 |
+| `/enc` · `/enc/<sp>` · `/enc/<sp>/<slug>` | 부산물 도감 (부위 48개) |
+| `/b2b` · `/b2b/quote` | 업소용 · 대량견적 |
+| `/search?q=` `/cart` `/login` `/signup` `/my` `/about` `/terms` `/privacy` | 나머지 |
 
-**화면을 새로 만들면 `js/app.js` 의 `render()` 와 `TITLES` 둘 다 넣으세요.**
-`render()` 에만 넣으면 문서 제목이 안 바뀌고, 안 넣으면 주소가 `#/` 로
-정리되어 새로고침·공유 링크로 안 열립니다.
+**화면을 새로 만들면 네 군데를 같이 고칩니다** (`js/app.js` 의 `META` ·
+`routeInfo()` · `render()`, 그리고 `build-pages.js` 의 `allRoutes()`).
+`META` 를 빼면 검색 결과 제목·설명이 기본값이 되고, `allRoutes()` 를
+빼면 열리기는 하지만 **검색엔진용 HTML 파일이 안 만들어집니다.**
 
 ## 확인
 
 ```bash
-node check.js     # 16개 화면 × 1440·1024·390px 전수
+node check.js     # 21개 화면 × 1440·1024·390px 전수
 ```
 
 보는 것: JS 에러 · 못 불러온 파일 · 가로 스크롤 · **12px 미만 글씨** ·

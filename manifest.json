@@ -20,9 +20,9 @@
     { "src": "/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "소 부산물",   "short_name": "소",   "url": "/#/c/beef",  "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
-    { "name": "돼지 부산물", "short_name": "돼지", "url": "/#/c/pork",  "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
-    { "name": "업소용 대량구매", "short_name": "업소용", "url": "/#/b2b", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
-    { "name": "장바구니",   "short_name": "장바구니", "url": "/#/cart", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+    { "name": "소 부산물",   "short_name": "소",   "url": "/c/beef",  "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "돼지 부산물", "short_name": "돼지", "url": "/c/pork",  "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "업소용 대량구매", "short_name": "업소용", "url": "/b2b", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "장바구니",   "short_name": "장바구니", "url": "/cart", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
   ]
 }

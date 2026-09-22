@@ -37,6 +37,20 @@ window.addCart = function(id, kg){
   toast(p.name+" "+kg+"kg 을 장바구니에 담았습니다.");
 };
 window.delCart = function(i){ CART.splice(i,1); save(); paintCartN(); route(); };
+/* 장바구니에서 수량을 바꿉니다. 빼고 다시 담게 하면 손님이 상품을
+   다시 찾아 들어가야 합니다 — 실제로 그렇게 되어 있었습니다.
+   kg 단위라 1kg 미만으로는 못 내리고, 0 이 되면 줄을 지웁니다. */
+window.setCartKg = function(i, kg){
+  var c = CART[i]; if(!c) return;
+  kg = Math.round(Number(kg)*10)/10;
+  if(!isFinite(kg) || kg < 1){ delCart(i); return; }
+  c.kg = Math.min(kg, 9999);
+  save(); route();
+};
+window.bumpCart = function(i, d){
+  var c = CART[i]; if(!c) return;
+  setCartKg(i, (Number(c.kg)||0) + d);
+};
 window.buyNow  = function(id){ addCart(id, DT.qty*DT.unit); go("#/cart"); };
 window.checkout= function(){
   try{ console.warn("[ABOUTMEAT] 결제 연동이 아직 없습니다 — PG 사 연동 후 checkout() 을 바꾸세요."); }catch(e){}
@@ -63,6 +77,12 @@ window.toast = function(msg){
   clearTimeout(TT); TT=setTimeout(function(){ t.classList.remove("on"); }, 2600);
 };
 
+/* 로그인 상태. 인증을 붙이기 전까지는 늘 false 입니다.
+   ⚠️ 여기를 true 로 바꾸기 전에 doLogin() 에 실제 인증을 붙이세요.
+   "로그인한 척" 하면 마이페이지가 남의 주문을 보여주는 것처럼
+   읽힙니다 — 없는 사실을 적는 것과 같습니다. */
+window.isLoggedIn = function(){ return !!window.WOW_USER; };
+
 window.go = function(h){ location.hash = h; };
 window.doSearch = function(id){
   var i=$(id); if(!i) return false;
@@ -78,7 +98,21 @@ window.doLogin = function(ev){
 };
 window.doSignup = function(ev){
   ev.preventDefault();
-  try{ console.warn("[ABOUTMEAT] 회원가입 연동이 아직 없습니다 — doSignup() 에 인증을 붙이세요."); }catch(e){}
+  /* 필수 동의를 안 받고 가입시키면 안 됩니다. 인증을 붙인 뒤에도
+     이 확인은 그대로 두세요 (개인정보보호법 제22조). */
+  var missing = els(".agree .ag-r input[data-req]").filter(function(c){ return !c.checked; });
+  if(missing.length){
+    toast("필수 항목에 동의해 주셔야 가입하실 수 있습니다.");
+    var first = missing[0];
+    try{
+      first.closest(".ag-r").classList.add("ag-miss");
+      first.focus({ preventScroll:true });
+      first.closest(".agree").scrollIntoView({ behavior:"smooth", block:"center" });
+    }catch(e){}
+    return false;
+  }
+  try{ console.warn("[ABOUTMEAT] 회원가입 연동이 아직 없습니다 — doSignup() 에 인증을 붙이세요. "+
+    "동의 확인은 이미 들어 있으니 지우지 마세요."); }catch(e){}
   toast("지금은 가입을 받지 못합니다. 곧 열어 드리겠습니다.");
   return false;
 };

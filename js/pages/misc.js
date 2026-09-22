@@ -149,7 +149,16 @@ function PageCart(){
           '<a class="cr-i" href="#/p/'+esc(r.p.id)+'">'+imgTag(r.p.img,r.p.name)+'</a>'+
           '<div class="cr-b"><a class="cr-n" href="#/p/'+esc(r.p.id)+'">'+esc(r.p.name)+'</a>'+
             '<div class="cr-m">'+esc([r.p.origin,WOW_TEMP[r.p.temp],WOW_TRIM[r.p.trim]].filter(Boolean).join(" · "))+'</div>'+
-            '<div class="cr-q">'+r.kg+'kg × '+wowWon(r.p.price)+'원/kg</div></div>'+
+            '<div class="cr-q">'+
+              '<div class="cr-qty">'+
+                '<button onclick="bumpCart('+i+',-1)" aria-label="'+esc(r.p.name)+' 수량 줄이기">'+icon("minus",16)+'</button>'+
+                '<input type="number" min="1" max="9999" step="1" value="'+r.kg+'" '+
+                  'aria-label="'+esc(r.p.name)+' 수량(kg)" onchange="setCartKg('+i+',this.value)">'+
+                '<span class="cr-u">kg</span>'+
+                '<button onclick="bumpCart('+i+',1)" aria-label="'+esc(r.p.name)+' 수량 늘리기">'+icon("plus",16)+'</button>'+
+              '</div>'+
+              '<span class="cr-unit">× '+wowWon(r.p.price)+'원/kg</span>'+
+            '</div></div>'+
           '<div class="cr-r"><b>'+wowWon(r.p.price*r.kg)+'원</b>'+
             '<button class="cr-x" onclick="delCart('+i+')" aria-label="빼기">'+icon("x",18)+'</button></div>'+
         '</div>'; }).join("")+'</div>'+
@@ -198,11 +207,41 @@ function PageSignup(){
         '<input id="s-brn" type="text" required placeholder="000-00-00000"></div>'+
         '<div class="f-r"><label for="s-co">상호 <b>*</b></label>'+
         '<input id="s-co" type="text" required></div>' : '')+
+      /* ⚠️ 동의 없이 가입을 받으면 안 됩니다. 이용약관은 약관규제법상
+         명시·설명 의무가 있고, 개인정보 수집·이용은 개인정보보호법
+         제22조에 따라 **동의를 받아야** 합니다. 무엇에 동의하는지
+         읽을 수 있어야 하므로 문서로 가는 길을 같이 둡니다.
+         필수와 선택은 반드시 나눠 받습니다 — 광고 수신까지 묶어
+         필수로 받으면 그 동의는 무효입니다. */
+      '<fieldset class="agree"><legend>약관 동의</legend>'+
+        '<label class="ag-r ag-all"><input type="checkbox" id="ag-all" onchange="agAll(this)">'+
+          '<span><b>전체 동의</b></span></label>'+
+        agRow("ag-t", "이용약관 동의", "#/terms", true)+
+        agRow("ag-p", "개인정보 수집·이용 동의", "#/privacy", true)+
+        agRow("ag-m", "광고성 정보 수신 동의", null, false)+
+      '</fieldset>'+
       '<button class="btn btn-g btn-lg btn-full" type="submit">가입하기</button>'+
     '</form>'+
     (biz?'':'<p class="auth-n">사업장에서 쓰실 계정인가요? <a href="#/signup?biz=1">사업자 회원가입</a></p>')+
   '</div>';
 }
+
+/* 동의 한 줄. 필수/선택을 글자로 적습니다 — 별표만으로는 손님이
+   무엇을 빼도 되는지 구분하지 못합니다. */
+function agRow(id, label, to, req){
+  return '<label class="ag-r"><input type="checkbox" id="'+id+'"'+(req?' data-req="1"':'')+
+      ' onchange="agSync()">'+
+    '<span>'+esc(label)+' <em class="'+(req?"ag-req":"ag-opt")+'">('+(req?"필수":"선택")+')</em></span>'+
+    (to ? '<a class="ag-v" href="'+esc(to)+'">보기</a>' : '')+
+  '</label>';
+}
+window.agAll = function(el){
+  els(".agree .ag-r:not(.ag-all) input").forEach(function(c){ c.checked = el.checked; });
+};
+window.agSync = function(){
+  var all = els(".agree .ag-r:not(.ag-all) input"), a = $("ag-all");
+  if(a) a.checked = all.length>0 && all.every(function(c){ return c.checked; });
+};
 
 /* ── 12. 마이페이지 ─────────────────────────────────────── */
 var MY_TABS=[["order","주문내역"],["wish","찜한 상품"],["quote","견적 문의"],["info","회원정보"]];
@@ -213,14 +252,23 @@ function PageMy(){
       return '<a class="tab'+(t===x[0]?" on":"")+'" href="#/my?t='+x[0]+'">'+esc(x[1])+'</a>'; }).join("")+'</div>'+
     '<div class="tb">'+myBody(t)+'</div></div>';
 }
+/* ⚠️ **로그인하지 않은 손님에게 "주문 내역이 없습니다" 라고 하면
+   안 됩니다.** 우리는 그 사람이 누구인지 모르므로 주문이 있는지
+   없는지도 모릅니다. 모르는 것을 "없다" 고 적는 것은 지어내는 것과
+   같습니다 (절대 규칙 1번). 찜한 상품만 예외입니다 — 로그인과
+   무관하게 이 브라우저에 저장되므로 실제로 알 수 있습니다. */
 function myBody(t){
   if(t==="wish"){
     var w = WISH.map(wowProduct).filter(Boolean);
     return w.length ? ProductGrid(w)
       : emptyBox("찜한 상품이 없습니다","마음에 드는 부산물을 찜해 두시면 이곳에 모입니다.","#/products","전체상품 보기");
   }
+  if(!isLoggedIn()){
+    var what = t==="quote" ? "문의하신 견적" : (t==="info" ? "회원정보" : "주문 내역");
+    return emptyBox("로그인이 필요합니다", what+"은(는) 로그인 후 확인하실 수 있습니다.","#/login","로그인");
+  }
   if(t==="quote") return emptyBox("문의하신 견적이 없습니다","업소용 대량견적을 문의하시면 진행 상황이 이곳에 표시됩니다.","#/b2b/quote","대량견적 문의");
-  if(t==="info")  return emptyBox("로그인이 필요합니다","회원정보는 로그인 후 확인하실 수 있습니다.","#/login","로그인");
+  if(t==="info")  return emptyBox("회원정보를 불러올 수 없습니다","잠시 후 다시 시도해 주세요.","#/","홈으로");
   return emptyBox("주문 내역이 없습니다","주문하시면 배송 상황을 이곳에서 확인하실 수 있습니다.","#/products","전체상품 보기");
 }
 function emptyBox(t,d,to,cta){

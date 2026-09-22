@@ -53,20 +53,46 @@ function ItemChips(sp, cat, cur){
     }).join("")+'</div>';
 }
 
-/* 필터 — 지시서 11번. 접었다 펼 수 있게 두어 모바일에서 목록을 밀지 않습니다. */
+/* 이 옵션을 켜면 몇 건이 남는지 미리 세어 봅니다.
+   같은 묶음 안의 다른 선택은 빼고 셉니다 — 한 묶음 안은 OR 로
+   걸리므로, "한우" 를 고른 상태에서 "육우" 가 0 으로 보이면 안 됩니다. */
+function fltCount(key, val){
+  var q = {};
+  Object.keys(LS.q).forEach(function(k){ if(k!==key) q[k]=LS.q[k]; });
+  q[key] = [val];
+  return wowFind(q).length;
+}
+
+/* 필터 — 지시서 11번. 접었다 펼 수 있게 두어 모바일에서 목록을 밀지 않습니다.
+
+   ⚠️ **눌러도 0건인 칸을 그냥 두지 마세요.** 소 부산물 화면에서
+   축종 다섯 중 넷(육우·수입소·한돈·수입돈), 상품상태 둘 중 하나(냉동),
+   손질상태 여섯 중 다섯이 전부 0건이었습니다. 눌렀더니 아무것도
+   안 나오는 칸은 손님에게 고장으로 읽힙니다 — 분류 칩에 이미
+   같은 규칙을 쓰고 있었는데(CatChips) 필터만 빠져 있었습니다.
+   지금은 **개수를 같이 적고, 0 이면 못 누르게** 합니다. */
 function ProductFilter(){
   return '<aside class="flt" id="flt"><div class="flt-hd"><b>필터</b>'+
       '<button class="flt-x" onclick="fltReset()">초기화</button></div>'+
     WOW_FILTERS.map(function(g){
       var picked = LS.q[g.key]||[];
-      return '<div class="flt-g"><h4>'+esc(g.name)+'</h4><div class="flt-o">'+
-        g.opts.map(function(o){
-          var on = picked.indexOf(o[0])>=0;
-          return '<label class="flt-c'+(on?" on":"")+'">'+
-            '<input type="checkbox" '+(on?"checked":"")+' '+
+      var rows = g.opts.map(function(o){
+        var on = picked.indexOf(o[0])>=0;
+        /* 구매단위는 상품 데이터로 셀 수 있는 값이 아니라 개수를 안 붙입니다 */
+        var n = (g.key==="unit") ? null : fltCount(g.key, o[0]);
+        var dead = (n===0 && !on);
+        return { on:on, n:n, dead:dead, html:
+          '<label class="flt-c'+(on?" on":"")+(dead?" off":"")+'"'+
+            (dead?' title="지금 조건에 맞는 상품이 없습니다"':'')+'>'+
+            '<input type="checkbox" '+(on?"checked":"")+(dead?" disabled":"")+' '+
               'onchange="fltToggle(\''+esc(g.key)+'\',\''+esc(o[0])+'\')">'+
-            '<span>'+esc(o[1])+'</span></label>';
-        }).join("")+'</div></div>';
+            '<span>'+esc(o[1])+(n!==null?'<em>'+n+'</em>':'')+'</span></label>' };
+      });
+      /* 묶음 안이 전부 0 이면 묶음째 내립니다 — 제목만 남은 빈 상자를
+         두지 않습니다. 고른 것이 있으면 되돌릴 수 있게 남겨 둡니다. */
+      if(rows.every(function(r){ return r.dead; })) return "";
+      return '<div class="flt-g"><h4>'+esc(g.name)+'</h4><div class="flt-o">'+
+        rows.map(function(r){ return r.html; }).join("")+'</div></div>';
     }).join("")+'</aside>';
 }
 

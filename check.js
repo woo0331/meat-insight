@@ -58,10 +58,19 @@ const AUDIT = `(() => {
       const f = parseFloat(c.fontSize);
       if (f < 12) out.small.push(e.className+"|"+f+"px|"+(e.textContent||"").trim().slice(0,14));
     }
-    /* 4. 누르는 것 40px — <button> 만이 아니라 onclick 을 단 것도 전부 */
+    /* 4. 누르는 것 40px — <button> 만이 아니라 onclick 을 단 것도 전부.
+       ⚠️ 체크박스는 **자기 자신이 아니라 감싼 라벨이 누르는 자리**입니다.
+       20px 짜리 체크박스가 44px 라벨 안에 있으면 손가락이 닿는 크기는
+       44px 입니다. 체크박스를 40px 로 키우는 것은 오히려 이상합니다 —
+       그래서 라벨이 있으면 라벨을 재고, 없을 때만 자기 크기를 봅니다. */
     if (e.matches("button, a[href], [onclick], [role=button], select, input[type=checkbox]")
-        && !e.closest("label.flt-c") && c.position!=="absolute") {
-      const h = Math.round(r.height);
+        && c.position!=="absolute") {
+      let box = r;
+      if (e.matches("input[type=checkbox]")) {
+        const lb = e.closest("label");
+        if (lb) box = lb.getBoundingClientRect();
+      }
+      const h = Math.round(box.height);
       if (h > 0 && h < 40 && e.offsetParent !== null)
         out.tap.push(e.tagName+"."+String(e.className).split(" ")[0]+"|"+h+"px|"+(e.textContent||"").trim().slice(0,12));
     }

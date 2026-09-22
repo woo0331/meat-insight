@@ -398,3 +398,41 @@
   .lg-t tbody th{ width:104px; }
   .lg-sub{ padding-left:22px; }
 }
+
+/* 장바구니 수량 — 빼고 다시 담게 하지 않습니다 */
+.cr-q{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; margin-top:var(--s3); }
+.cr-qty{ display:inline-flex; align-items:center; border:1px solid var(--line);
+  border-radius:var(--r); background:var(--white); overflow:hidden; }
+.cr-qty button{ width:40px; height:40px; border:0; background:transparent; cursor:pointer;
+  display:grid; place-items:center; color:var(--ink); }
+.cr-qty button:hover{ background:var(--green-bg); color:var(--green); }
+.cr-qty input{ width:56px; height:40px; border:0; border-left:1px solid var(--line);
+  text-align:center; font-size:var(--t-base); font-weight:700; -moz-appearance:textfield; }
+.cr-qty input::-webkit-outer-spin-button,.cr-qty input::-webkit-inner-spin-button{
+  -webkit-appearance:none; margin:0; }
+.cr-u{ padding:0 var(--s3) 0 6px; font-size:var(--t-sm); color:var(--ink2); font-weight:600;
+  align-self:center; }
+.cr-unit{ font-size:var(--t-sm); color:var(--ink2); }
+
+/* 약관 동의 */
+.agree{ border:1px solid var(--line); border-radius:var(--r); padding:var(--s4) var(--s5) var(--s3);
+  margin:var(--s6) 0 var(--s5); background:var(--white); }
+.agree legend{ font-size:var(--t-sm); color:var(--ink2); padding:0 var(--s2); font-weight:600; }
+.ag-r{ display:flex; align-items:center; gap:var(--s3); min-height:44px; cursor:pointer;
+  font-size:var(--t-base); }
+.ag-r input{ width:20px; height:20px; flex:0 0 auto; accent-color:var(--green); cursor:pointer; }
+.ag-r span{ flex:1 1 auto; min-width:0; }
+.ag-all{ border-bottom:1px solid var(--line); margin-bottom:var(--s2); padding-bottom:var(--s2); }
+.ag-req{ font-style:normal; color:var(--red-ink); font-weight:700; font-size:var(--t-sm); }
+.ag-opt{ font-style:normal; color:var(--ink3); font-size:var(--t-sm); }
+.ag-v{ flex:0 0 auto; min-height:40px; display:inline-flex; align-items:center; padding:0 var(--s2);
+  font-size:var(--t-sm); color:var(--ink2); text-decoration:underline; text-underline-offset:3px; }
+.ag-v:hover{ color:var(--green); }
+.ag-miss{ outline:2px solid var(--red); outline-offset:3px; border-radius:var(--r-sm); }
+
+/* 필터 — 개수 표시와 "고를 수 없음" */
+.flt-c span{ display:inline-flex; align-items:baseline; gap:5px; }
+.flt-c em{ font-style:normal; font-size:var(--t-cap); color:var(--ink3); font-weight:600; }
+.flt-c.on em{ color:var(--green); }
+.flt-c.off{ opacity:.45; cursor:not-allowed; border-style:dashed; }
+.flt-c.off:hover{ border-color:var(--line); color:var(--ink2); }

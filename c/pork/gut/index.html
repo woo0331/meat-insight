@@ -32,6 +32,11 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 
+<!-- 구조화 데이터 (홈). build-pages.js 가 다른 주소를 만들 때 이 자리를
+     그 화면의 것으로 바꿔 끼웁니다 — 아래 script 의 id 를 바꾸지 마세요.
+     JS 가 도는 브라우저에서는 paintLd() 가 화면을 옮길 때마다 갈아 끼웁니다. -->
+<script type="application/ld+json" id="ld">[{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"홈","item":"https://aboutmeat.co.kr/"},{"@type":"ListItem","position":2,"name":"돼지 부산물","item":"https://aboutmeat.co.kr/c/pork"},{"@type":"ListItem","position":3,"name":"위·장류","item":"https://aboutmeat.co.kr/c/pork/gut"}]},{"@context":"https://schema.org","@type":"ItemList","numberOfItems":3,"itemListElement":[{"@type":"ListItem","position":1,"name":"한돈 막창","url":"https://aboutmeat.co.kr/p/p-makchang"},{"@type":"ListItem","position":2,"name":"한돈 소창","url":"https://aboutmeat.co.kr/p/p-sochang"},{"@type":"ListItem","position":3,"name":"오소리감투","url":"https://aboutmeat.co.kr/p/p-osori"}]}]</script>
+
 <link rel="stylesheet" href="/css/tokens.css">
 <link rel="stylesheet" href="/css/app.css">
 <link rel="stylesheet" href="/css/pages.css">

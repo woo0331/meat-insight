@@ -323,8 +323,16 @@ function setMeta(attr, key, val){
    을 넣지 않습니다 — 없는 별점을 검색 결과에 띄우는 셈입니다. */
 function paintLd(r){
   var old = document.getElementById("ld"); if(old) old.remove();
-  var data = window.ldFor ? ldFor(r) : null;
-  if(!data) return;
+  /* 한 화면에 여러 개를 냅니다 — 상품 + 빵부스러기 + 목록.
+     JSON-LD 는 맨 바깥이 배열이어도 됩니다. */
+  var data = [].concat(
+    (window.ldFor ? ldFor(r) : null) || [],
+    (window.ldCrumbs ? ldCrumbs(r, location.pathname) : null) || [],
+    ((window.ldList && (r.view==="cat"||r.view==="list"))
+      ? ldList(wowFind(r.view==="cat" ? {sp:r.sp,cat:r.cat,item:r.item} : listQuery(r.kind))) : null) || []
+  );
+  if(!data.length) return;
+  if(data.length===1) data = data[0];
   var s = document.createElement("script");
   s.type="application/ld+json"; s.id="ld";
   s.textContent = JSON.stringify(data);
@@ -354,12 +362,67 @@ window.ldFor = function(r){
     return o;
   }
   if(r.view==="home"){
-    return { "@context":"https://schema.org", "@type":"OnlineStore",
-      name:"ABOUTMEAT", url:ORIGIN,
-      description: META["/"][1],
-      image: ORIGIN+"/og.jpg" };
+    return [
+      { "@context":"https://schema.org", "@type":"OnlineStore",
+        name:"ABOUTMEAT", url:ORIGIN,
+        description: META["/"][1],
+        image: ORIGIN+"/og.jpg" },
+      /* 검색창 — 구글 결과에 사이트 안 검색칸이 붙습니다.
+         ⚠️ /search 가 실제로 도는 주소라서 적는 것입니다. 없는 기능을
+         적으면 눌러 들어온 손님이 빈 화면을 봅니다. */
+      { "@context":"https://schema.org", "@type":"WebSite",
+        name:"ABOUTMEAT", url:ORIGIN+"/",
+        potentialAction:{ "@type":"SearchAction",
+          target:{ "@type":"EntryPoint", urlTemplate:ORIGIN+"/search?q={search_term_string}" },
+          "query-input":"required name=search_term_string" } }
+    ];
   }
   return null;
+};
+
+/* 화면의 breadcrumb 을 **그대로** 구조화 데이터로도 냅니다.
+   구글 검색 결과의 주소 줄이 "aboutmeat.co.kr › 소 부산물 › 위·장류"
+   처럼 나옵니다.
+
+   ⚠️ 화면에 보이는 것과 **같아야** 합니다. 여기만 늘리면 검색 결과와
+   실제 화면이 다른 말을 하게 됩니다. */
+window.ldCrumbs = function(r, route){
+  /* 홈에서는 빵부스러기가 없습니다 — "홈 › 홈" 이 됩니다.
+     검색에 안 올릴 화면(NOINDEX)도 뺍니다. */
+  if(r.view==="home" || r.noindex) return null;
+  var t = [["홈","/"]];
+  if(r.view==="detail" && r.product){
+    var p = r.product;
+    t.push([wowSpeciesName(p.sp), "/c/"+p.sp]);
+    if(wowCatName(p.sp,p.cat)) t.push([wowCatName(p.sp,p.cat), "/c/"+p.sp+"/"+p.cat]);
+    t.push([p.name, "/p/"+p.id]);
+  } else if(r.view==="cat" && r.sp){
+    t.push([wowSpeciesName(r.sp), "/c/"+r.sp]);
+    if(r.cat && wowCatName(r.sp,r.cat)) t.push([wowCatName(r.sp,r.cat), "/c/"+r.sp+"/"+r.cat]);
+    if(r.item && wowCatName(r.sp,r.cat,r.item))
+      t.push([wowCatName(r.sp,r.cat,r.item), "/c/"+r.sp+"/"+r.cat+"/"+r.item]);
+  } else if(r.view==="enc"){
+    t.push(["부산물 도감","/enc"]);
+    if(r.sp) t.push([wowSpeciesName(r.sp)+" 도감", "/enc/"+r.sp]);
+    if(r.slug && r.ent) t.push([r.ent.name, "/enc/"+r.sp+"/"+r.slug]);
+  } else if(r.title){
+    t.push([r.title, route]);
+  }
+  if(t.length < 2) return null;
+  return { "@context":"https://schema.org", "@type":"BreadcrumbList",
+    itemListElement: t.map(function(x,i){
+      return { "@type":"ListItem", position:i+1, name:x[0], item:ORIGIN+x[1] };
+    }) };
+};
+
+/* 목록 화면에 실린 상품들 — 화면에 보이는 순서 그대로입니다. */
+window.ldList = function(list){
+  if(!list || !list.length) return null;
+  return { "@context":"https://schema.org", "@type":"ItemList",
+    numberOfItems: list.length,
+    itemListElement: list.slice(0,30).map(function(p,i){
+      return { "@type":"ListItem", position:i+1, name:p.name, url:ORIGIN+"/p/"+p.id };
+    }) };
 };
 
 /* "전체상품 / 오늘입고 / 손질상품 / 특가" 가 무엇으로 걸러지는지.

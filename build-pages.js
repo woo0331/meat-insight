@@ -114,11 +114,18 @@ function shell(tpl, r, route, noscript, ld){
         '<meta property="og:description" content="'+esc(r.desc||"")+'">');
   h = h.replace(/<meta property="og:url"[^>]*>/,
         '<meta property="og:url" content="'+esc(canon)+'">');
+  /* ⚠️ index.html 에는 **홈의** 구조화 데이터가 박혀 있습니다.
+     그냥 하나 더 넣으면 한 화면에 id="ld" 가 둘이 되고, 크롤러는
+     홈 정보를 상품 화면에서 또 읽습니다. 있으면 **갈아 끼웁니다.** */
+  const ldTag = ld ? '<script type="application/ld+json" id="ld">'+
+        JSON.stringify(ld).replace(/</g,"\\u003c")+'</script>' : "";
+  const hadLd = /<script type="application\/ld\+json" id="ld">[\s\S]*?<\/script>/.test(h);
+  if(hadLd) h = h.replace(/<script type="application\/ld\+json" id="ld">[\s\S]*?<\/script>/, ldTag);
+
   /* canonical + robots 를 </head> 앞에 */
   const head = '<link rel="canonical" href="'+esc(canon)+'">\n'+
     (r.noindex ? '<meta name="robots" content="noindex, follow">\n' : '')+
-    (ld ? '<script type="application/ld+json" id="ld">'+
-          JSON.stringify(ld).replace(/</g,"\\u003c")+'</script>\n' : '');
+    ((ld && !hadLd) ? ldTag+'\n' : '');
   h = h.replace("</head>", head+"</head>");
   /* JS 가 안 도는 크롤러·브라우저에게 최소한의 내용을 줍니다 */
   h = h.replace('<a class="skip" href="#view">본문 바로가기</a>',
@@ -191,12 +198,30 @@ const wrote = new Set();          /* 이번에 만든 index.html 들 */
 for(const route of routes){
   const r = W.routeInfo(route, {});
   if(!r.ok){ console.error("  ! 알 수 없는 주소: "+route); skipped++; continue; }
-  const ld = W.ldFor ? W.ldFor(r) : null;
+  /* 화면(paintLd)과 **같은 것**을 냅니다 — 상품 + 빵부스러기 + 목록 */
+  let ld = [].concat(
+    (W.ldFor ? W.ldFor(r) : null) || [],
+    (W.ldCrumbs ? W.ldCrumbs(r, route) : null) || [],
+    ((W.ldList && (r.view==="cat"||r.view==="list"))
+      ? W.ldList(W.wowFind(r.view==="cat" ? {sp:r.sp,cat:r.cat,item:r.item} : W.listQuery(r.kind))) : null) || []
+  );
+  if(!ld.length) ld = null; else if(ld.length===1) ld = ld[0];
   const html = shell(tpl, r, route, noscriptFor(W, r, route), ld);
 
   const dir = route==="/" ? ROOT : path.join(ROOT, route.replace(/^\//,""));
   if(route!=="/"){
     fs.mkdirSync(dir, {recursive:true});
+    /* ⚠️ 한 화면에 구조화 데이터가 **하나만** 있어야 합니다.
+       index.html 에 홈의 것이 박혀 있어서, 갈아 끼우지 않고 하나 더
+       넣으면 상품 화면이 홈 정보까지 같이 말하게 됩니다.
+       읽을 수 없는 JSON 도 여기서 걸립니다 — 구글은 통째로 버립니다. */
+    const blocks = html.match(/<script type="application\/ld\+json"[\s\S]*?<\/script>/g) || [];
+    if(blocks.length > 1) throw new Error(route+" : 구조화 데이터가 "+blocks.length+"개입니다");
+    if(blocks.length === 1){
+      const body = blocks[0].replace(/^[^>]*>/,"").replace(/<\/script>$/,"").replace(/\\u003c/g,"<");
+      try{ JSON.parse(body); }
+      catch(e){ throw new Error(route+" : 구조화 데이터를 읽을 수 없습니다 — "+e.message); }
+    }
     fs.writeFileSync(path.join(dir,"index.html"), html);
     wrote.add(path.join(dir,"index.html"));
     made++;

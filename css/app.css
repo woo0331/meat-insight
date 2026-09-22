@@ -10,6 +10,14 @@ body{
   font-family:var(--font); font-size:var(--t-base); line-height:var(--lh-base);
   color:var(--ink); background:var(--ivory);
   -webkit-font-smoothing:antialiased;
+  /* ⚠️ 한글은 기본값(word-break:normal)에서 **글자 아무 데서나** 줄이
+     바뀝니다. "배송비가 무료입니다." 가 "무료입니 / 다." 로 잘려 있었고,
+     낱말 수와 줄 수가 같아서 전수 점검에도 안 잡혔습니다.
+     keep-all 은 띄어쓰기에서만 끊습니다.
+     안전판으로 overflow-wrap:anywhere 를 같이 둡니다 — 띄어쓰기 없이
+     긴 것(주소·계좌번호)이 칸 밖으로 넘치는 것을 막습니다. */
+  word-break:keep-all;
+  overflow-wrap:anywhere;
 }
 img{ max-width:100%; display:block; }
 button,input,select,textarea{ font-family:var(--font); font-size:inherit; color:inherit; }

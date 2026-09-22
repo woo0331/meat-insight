@@ -213,7 +213,12 @@ function PageCart(){
         '<div class="cs-t"><span>합계</span><b>'+wowWon(goods+ship)+'원</b></div>'+
         '<button class="btn btn-g btn-lg btn-full" onclick="checkout()">주문하기</button>'+
         CallButton("btn btn-o btn-full cart-call", "전화로 주문하기")+
-        (freeOver ? '<p class="cs-n">'+wowWon(freeOver)+'원 이상 구매 시 배송비가 무료입니다.</p>' : '')+
+        /* 얼마를 더 담으면 무료가 되는지 — 우리가 **실제로 아는 숫자**라
+           적어도 됩니다. 사장님은 3,000원 아끼려고 한 팩을 더 담습니다. */
+        (freeOver ? '<p class="cs-n">'+(
+          goods>0 && goods<freeOver
+            ? wowWon(freeOver-goods)+'원만 더 담으면 배송비가 무료입니다.'
+            : wowWon(freeOver)+'원 이상 구매 시 배송비가 무료입니다.')+'</p>' : '')+
       '</aside></div>'
       :
       '<div class="empty"><div class="empty-t">장바구니가 비어 있습니다</div>'+

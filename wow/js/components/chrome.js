@@ -1,0 +1,100 @@
+/* ════════════════════════════════════════════════════════════════════
+   Header · SearchBar · GNB · Footer · MobileNavigation
+   화면이 바뀌어도 한 번만 그리고, 현재 위치 표시만 갱신합니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+function Header(){
+  return '<header class="hd">'+
+    '<div class="w hd-top">'+
+      '<a class="hd-logo" href="#/" aria-label="ABOUTMEAT 홈">'+
+        '<b>ABOUTMEAT</b><span>축산 부산물 전문마켓</span></a>'+
+      SearchBar()+
+      '<div class="hd-acts">'+
+        '<div class="hd-links">'+
+          '<a href="#/login">로그인</a>'+
+          '<a href="#/signup">회원가입</a>'+
+          '<a href="#/my">마이페이지</a>'+
+        '</div>'+
+        '<button class="hd-ic" onclick="go(\'#/my\')" aria-label="마이페이지">'+icon("user")+'</button>'+
+        '<button class="hd-ic" onclick="go(\'#/cart\')" aria-label="장바구니">'+icon("cart")+
+          '<span class="cnt" id="cart-n" hidden>0</span></button>'+
+      '</div>'+
+    '</div>'+
+    '<nav class="gnb" aria-label="주요 메뉴"><div class="w gnb-in" id="gnb"></div></nav>'+
+  '</header>';
+}
+
+/* 검색칸은 <form> 안에 둡니다. 폼이 없으면 크롬이 문서 전체를 로그인
+   폼으로 보고 **화면에 보이는 첫 글자칸에 저장된 아이디를 넣습니다.**
+   검색창에 남의 아이디가 저절로 박히는 사고가 그렇게 납니다. */
+function SearchBar(id){
+  id = id || "q-hd";
+  return '<form class="hd-search" role="search" onsubmit="return doSearch(\''+id+'\')">'+
+    '<input id="'+id+'" type="search" name="q" autocomplete="off" '+
+      'aria-label="상품 검색" placeholder="찾으시는 부산물을 검색해 보세요">'+
+    '<button type="submit" aria-label="검색">'+icon("search",20)+'</button></form>';
+}
+
+function paintGnb(){
+  var g=$("gnb"); if(!g) return;
+  var here=location.hash||"#/";
+  g.innerHTML = WOW_GNB.map(function(m){
+    var on = here===m.to || (m.to!=="#/products" && here.indexOf(m.to)===0);
+    return '<a href="'+esc(m.to)+'" class="'+(m.hot?"hot ":"")+(on?"on":"")+'">'+esc(m.name)+'</a>';
+  }).join("");
+}
+
+function Footer(){
+  return '<footer class="ft"><div class="w">'+
+    '<div class="ft-g">'+
+      '<div><b class="ft-lg">ABOUTMEAT</b>'+
+        '<p style="margin:0;line-height:1.8;">소·돼지 부산물 전문 온라인몰<br>'+
+        '도축장에서 시작되는 신선한 원물을<br>필요한 상태와 규격으로 공급합니다.</p></div>'+
+      '<div class="ft-col"><h4>상품</h4>'+
+        '<a href="#/c/beef">소 부산물</a><a href="#/c/pork">돼지 부산물</a>'+
+        '<a href="#/products?trim=full">손질상품</a><a href="#/products?today=1">오늘입고</a></div>'+
+      '<div class="ft-col"><h4>알아보기</h4>'+
+        '<a href="#/enc">부산물 도감</a><a href="#/b2b">업소용·대량구매</a>'+
+        '<a href="#/about">브랜드 스토리</a></div>'+
+      '<div class="ft-col"><h4>고객지원</h4>'+
+        '<a href="#/my">주문 조회</a><a href="#/b2b">대량견적 문의</a>'+
+        '<a href="#/terms">이용약관</a><a href="#/privacy">개인정보처리방침</a></div>'+
+    '</div>'+
+    '<div class="ft-biz" id="ft-biz"></div>'+
+  '</div></footer>';
+}
+
+/* 사업자 정보 — **값이 없는 항목은 자리표시자를 찍지 않고 그 줄을 뺍니다.**
+   "(미기재)" 가 보이면 그 순간 미완성 사이트로 읽힙니다.
+   무엇이 비었는지는 운영자만 보도록 콘솔에 남깁니다. */
+function paintBiz(){
+  var host=$("ft-biz"); if(!host) return;
+  var B = window.WOW_BIZ || {};
+  var rows=[["상호",B.company],["대표",B.ceo],["사업자등록번호",B.brn],
+            ["통신판매업 신고",B.mailOrder],["주소",B.address],
+            ["고객센터",B.phone],["이메일",B.email]];
+  var have=rows.filter(function(r){ return r[1] && String(r[1]).trim(); });
+  var miss=rows.filter(function(r){ return !(r[1] && String(r[1]).trim()); }).map(function(r){return r[0];});
+  if(miss.length){
+    try{ console.warn("[ABOUTMEAT] 푸터 사업자 정보가 비어 있습니다 — js/data/site.js 의 WOW_BIZ 를 채우세요: "+
+      miss.join(", ")+" (전자상거래법 제10조 표시 의무는 사이트 전체에 걸립니다)"); }catch(e){}
+  }
+  host.innerHTML = have.map(function(r){
+    return '<span>'+esc(r[0])+' '+esc(r[1])+'</span>';
+  }).join("") + '<div style="margin-top:8px;">© ABOUTMEAT. All rights reserved.</div>';
+}
+
+function MobileNav(){
+  var m=[["#/","홈","home"],["#/products","카테고리","grid"],["#/search","검색","search"],
+         ["#/my?t=wish","찜","heart"],["#/my","마이","user"]];
+  return '<nav class="mnav" aria-label="모바일 메뉴"><div class="mnav-in">'+
+    m.map(function(x){
+      return '<a href="'+x[0]+'" data-m="'+esc(x[0])+'">'+icon(x[2],21)+'<span>'+esc(x[1])+'</span></a>';
+    }).join("")+'</div></nav>';
+}
+function paintMnav(){
+  var here=location.hash||"#/";
+  els(".mnav a").forEach(function(a){
+    a.classList.toggle("on", a.getAttribute("data-m")===here);
+  });
+}

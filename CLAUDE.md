@@ -20,8 +20,10 @@ js/data/categories.js   소·돼지 전체 분류 · GNB · 퀵 카테고리
 js/data/products.js     상품
 js/data/filters.js      필터·정렬
 js/data/encyclopedia.js 부산물 도감
+js/data/legal-terms.js  이용약관 본문
+js/data/legal-privacy.js 개인정보처리방침 본문
 js/components/          base · chrome · cards · diagram
-js/pages/               home · list · detail · misc
+js/pages/               home · list · detail · misc · legal
 js/app.js               라우터 · 장바구니 · 찜
 img/                    사진 48장
 check.js                전수 점검
@@ -146,6 +148,28 @@ node check.js        # 16개 화면 × 1440·1024·390px 전수 (playwright 필�
 보고 **옛 워커를 그대로 계속 씁니다.** 지금 `sw.js` 는 캐시를 비우고
 스스로 등록을 해제하는 일만 합니다. 충분히 시간이 지난 뒤에 지우세요.
 
+## 약관과 개인정보처리방침
+
+본문은 `js/data/legal-terms.js` · `js/data/legal-privacy.js` 에 있습니다.
+화면(`js/pages/legal.js`)은 그리기만 하니 문구는 데이터만 고치세요.
+
+- **신원 정보를 본문에 박지 마세요.** 상호·대표·사업자등록번호는 문서 맨
+  끝 표 한 곳에서만 `WOW_BIZ` 를 읽어 보여 줍니다. 본문은 "회사" 로만
+  씁니다 — 그래야 `WOW_BIZ` 하나만 채우면 푸터·약관·방침이 같이 따라옵니다.
+- **빈 값은 "(미기재)" 를 찍지 않고 그 줄을 뺍니다.** 하나도 없으면
+  "서비스 준비가 끝나는 대로 게시합니다" 한 줄로 바꿉니다. 무엇이
+  비었는지는 `console.warn` 으로 — 운영자만 봅니다.
+- ⚠️ **결제대행·배송·문자발송 업체를 붙일 때마다** `legal-privacy.js` 의
+  `trustees` 에 한 줄씩 추가하세요. 위탁 현황을 안 적으면 개인정보보호법
+  제26조 위반입니다. 국외 서버를 쓰면 네 번째 칸에 국가를 적습니다.
+- ⚠️ **제15조(청약철회 제한)를 함부로 넓히지 마세요.** 신선식품이라
+  제한이 인정되지만, 인정 범위는 업종·사안마다 다릅니다. 지금은
+  "개봉해 냉장이 해제된 경우 · 요청에 따라 추가 가공한 경우 · 보관
+  부주의로 신선도가 떨어진 경우" 셋으로 좁혀 두었고, **하자·오배송은
+  그대로 철회 가능**하다고 제5항에 따로 적었습니다.
+- **이 두 문서는 제가 쓴 초안입니다.** 판매를 시작하기 전에 변호사나
+  한국소비자원 표준약관과 대조해 확인하세요.
+
 ## 아직 안 된 것
 
 | 항목 | 어디 |
@@ -155,5 +179,4 @@ node check.js        # 16개 화면 × 1440·1024·390px 전수 (playwright 필�
 | 로그인·회원가입 | `js/app.js` 의 `doLogin` · `doSignup` |
 | 결제 | `js/app.js` 의 `checkout` |
 | 대량견적 접수 | `js/pages/misc.js` 의 `submitQuote` |
-| 이용약관·개인정보처리방침 | 지금은 "준비 중" 화면입니다 (`PageDoc`) |
 | 아이콘(`icon-*.png` · `apple-touch-icon.png`) | 아직 예전 사이트 마크입니다 |

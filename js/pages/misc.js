@@ -250,12 +250,3 @@ function PageAbout(){
       '부산물 도감 보기'+icon("arrow",18)+'</a></p>'+
   '</div></section>'+TrustBar();
 }
-
-/* ── 약관 · 개인정보 ────────────────────────────────────── */
-function PageDoc(kind){
-  var t = kind==="privacy" ? "개인정보처리방침" : "이용약관";
-  return '<div class="w doc"><h1 class="pg-h1">'+esc(t)+'</h1>'+
-    '<div class="empty"><div class="empty-t">'+esc(t)+'은 준비 중입니다</div>'+
-    '<div class="empty-d">시행일에 맞춰 이곳에 게시됩니다.</div>'+
-    '<a class="btn btn-o" href="#/">홈으로</a></div></div>';
-}

@@ -141,8 +141,8 @@ function render(){
   else if(path==="/signup")  html = PageSignup();
   else if(path==="/my")      html = PageMy();
   else if(path==="/about")   html = PageAbout();
-  else if(path==="/terms")   html = PageDoc("terms");
-  else if(path==="/privacy") html = PageDoc("privacy");
+  else if(path==="/terms")   html = PageTerms();
+  else if(path==="/privacy") html = PagePrivacy();
   else return bad();
 
   $("view").innerHTML = html;

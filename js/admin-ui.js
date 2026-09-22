@@ -237,5 +237,6 @@ function bootAdmin(){
     e.preventDefault(); e.returnValue = "";
   });
 }
-if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", bootAdmin);
-else bootAdmin();
+/* ⚠️ 여기서 스스로 시작하지 않습니다. admin-gate.js 가 잠금을 푼 뒤에
+   bootAdmin() 을 부릅니다. 여기서 부르면 잠겨 있어도 내용이 그려집니다. */
+window.bootAdmin = bootAdmin;

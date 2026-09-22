@@ -106,6 +106,31 @@ main{ padding:var(--s7) 0 var(--s10); }
 .pg-1{ grid-template-columns:1fr; }
 .ad-prev-n{ font-size:var(--t-cap); color:var(--ink3); margin:var(--s4) 0 0; line-height:1.7; }
 
+/* 잠금 화면 — 풀리기 전에는 내용이 아예 안 그려집니다.
+   숨기기만 하면 소스에서 그냥 보입니다. */
+body.locked{ overflow:hidden; }
+body.locked > header,
+body.locked > nav,
+body.locked > .ad-warn,
+body.locked > #ad-dirty,
+body.locked > main{ display:none; }
+.gate{ position:fixed; inset:0; background:var(--green); display:grid; place-items:center;
+  padding:var(--s5); z-index:100; }
+.gate-box{ width:100%; max-width:340px; background:var(--white); border-radius:var(--r-lg);
+  padding:var(--s7) var(--s6) var(--s6); box-shadow:0 20px 60px rgba(0,0,0,.28); }
+.gate-box b{ display:block; font-size:19px; font-weight:800; letter-spacing:.05em;
+  color:var(--green); }
+.gate-box span{ display:block; font-size:var(--t-sm); color:var(--ink2); margin-bottom:var(--s6); }
+.gate-box label{ display:block; font-size:var(--t-sm); font-weight:600; margin-bottom:6px; }
+.gate-box input{ width:100%; min-height:46px; padding:10px var(--s4); border:1px solid var(--line);
+  border-radius:var(--r); font-size:var(--t-md); margin-bottom:var(--s4); }
+.gate-box input:focus{ border-color:var(--green); }
+.gate-box p{ min-height:20px; margin:var(--s3) 0 0; font-size:var(--t-sm);
+  color:var(--red-ink); text-align:center; }
+.gate-box a{ display:block; text-align:center; font-size:var(--t-sm); color:var(--ink2);
+  min-height:40px; line-height:40px; }
+.gate-box a:hover{ color:var(--green); }
+
 @media (max-width:1024px){
   .ad-cols{ grid-template-columns:1fr; }
   .ad-prev{ position:static; }
@@ -146,6 +171,7 @@ main{ padding:var(--s7) 0 var(--s10); }
 
 <main><div class="w" id="ad-view"></div></main>
 
+<!-- 잠금이 먼저 돌아야 합니다. bootAdmin 은 잠금이 풀린 뒤에만 불립니다. -->
 <script src="js/data/site.js"></script>
 <script src="js/data/categories.js"></script>
 <script src="js/data/products.js"></script>
@@ -154,6 +180,7 @@ main{ padding:var(--s7) 0 var(--s10); }
 <script src="js/components/cards.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/admin-ui.js"></script>
+<script src="js/admin-gate.js"></script>
 <script>
 /* 손님 화면의 toast 는 app.js 에 있습니다. 관리자에는 app.js 를 안 싣기
    때문에(라우터가 화면을 통째로 갈아 치웁니다) 여기 작은 것 하나를 둡니다. */

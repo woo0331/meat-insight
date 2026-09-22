@@ -1,28 +1,35 @@
 # ABOUTMEAT (aboutmeat.co.kr) — 작업 규칙
 
 소·돼지 **부산물 전문 온라인몰**. 빌드 도구 없는 정적 HTML/CSS/JS + Vercel.
+`index.html` 을 그냥 열면 바로 돕니다. 설치할 것도, 빌드할 것도 없습니다.
 
 > **2026-09-22 — 전면 리뉴얼.** 예전에 이 주소에는 축산업 요청·견적 매칭
-> 플랫폼 "고리" 가 있었습니다. 지금은 부산물 전문몰로 완전히 바뀌었고,
-> 고리는 더 이상 서비스하지 않습니다. 고리 파일(`src/` · `test/` · `db/` ·
-> `tools/` · `gori-app.*` · `meat_insight_*.html` 등)은 아직 저장소에
-> 남아 있지만 **사이트에서는 쓰이지 않습니다.** `robots.txt` 로 색인에서
-> 빼 두었습니다. 지울 때는 git 이력에 남으니 되살릴 수 있습니다.
-> 고리 시절 규칙이 필요하면 `git show HEAD~2:CLAUDE.md` 로 볼 수 있습니다.
+> 플랫폼 "고리" 가 있었습니다. 서비스를 끝내고 파일도 전부 지웠습니다
+> (192개). 되살릴 일이 있으면 `git log -- src/` 로 찾을 수 있고,
+> 그 시절 작업 규칙은 `git show 2954760:CLAUDE.md` 에 있습니다.
 
-## 사이트가 어디에 있나
+## 구조
 
 ```
-wow/                     ← 실제 사이트는 전부 여기 있습니다
-vercel.json              /  → /wow/index.html  (/css /js /img 도 같이 넘깁니다)
-404.html · robots.txt · sitemap.xml · manifest.json · og.jpg · sw.js   ← 루트
+index.html              해시 라우팅 SPA 껍데기 (스크립트 순서가 곧 의존 순서)
+css/tokens.css          색·글씨·간격·모서리·비율 — 날값은 여기 한 곳에만
+css/app.css             공통 (헤더·히어로·카드·버튼·푸터·모바일 네비)
+css/pages.css           화면별 (목록·상세·도감·장바구니·폼)
+js/data/site.js         사업자 정보 (WOW_BIZ)
+js/data/categories.js   소·돼지 전체 분류 · GNB · 퀵 카테고리
+js/data/products.js     상품
+js/data/filters.js      필터·정렬
+js/data/encyclopedia.js 부산물 도감
+js/components/          base · chrome · cards · diagram
+js/pages/               home · list · detail · misc
+js/app.js               라우터 · 장바구니 · 찜
+img/                    사진 48장
+check.js                전수 점검
+404.html · robots.txt · sitemap.xml · manifest.json · og.jpg · sw.js
 ```
 
-`vercel.json` 의 rewrites 를 지우면 사이트가 통째로 안 열립니다.
-`wow/` 를 루트로 옮기려면 고리 파일(특히 루트 `index.html`)을 먼저 치워야
-합니다 — 이름이 겹칩니다.
-
-자세한 구조·화면 목록·아직 안 된 것은 **`wow/README.md`** 에 있습니다.
+`vercel.json` 에는 보안 헤더만 있습니다. 정적 사이트라 rewrite 가 필요
+없습니다 — 넣지 마세요.
 
 ## 절대 규칙
 
@@ -50,7 +57,7 @@ vercel.json              /  → /wow/index.html  (/css /js /img 도 같이 넘�
 | `--red` `#C85B4B` | **가격 · 특가 · NEW 배지에만** |
 
 ⚠️ **빨강을 구간 제목이나 카드 배경까지 넓히지 마세요.** 늘어나는 순간
-"전통시장 정육점" 으로 읽히고, 그건 작업지시서가 금지한 방향입니다.
+"전통시장 정육점" 으로 읽히고, 그건 이 사이트가 피해야 할 방향입니다.
 아이보리 위의 가격 글자는 `--red` 가 아니라 `--red-ink`(#A8402F)를 씁니다 —
 본문 대비를 맞추기 위해서입니다.
 
@@ -68,6 +75,8 @@ vercel.json              /  → /wow/index.html  (/css /js /img 도 같이 넘�
 - ⚠️ **이름표를 SVG `<text>` 로 넣지 마세요.** 그림이 줄면 글자도 같이
   줄어 모바일에서 11.5px 이 됐습니다. HTML 로 빼세요
   (`js/components/diagram.js` 의 `.pd-cap`).
+- ⚠️ **문장 한가운데 링크를 박지 마세요.** 높이가 16px 이라 누르기
+  어렵습니다. 문단 끝에 버튼으로 내놓으세요.
 
 ## 실제로 겪은 버그 — 다시 만들지 마세요
 
@@ -86,10 +95,14 @@ vercel.json              /  → /wow/index.html  (/css /js /img 도 같이 넘�
   `.hero .btn-g` 가 한 칸 밝은 초록 + 옅은 테두리로 띄웁니다.
 - **`SIL` 은 `<path>` 요소가 아니라 좌표(`d`) 문자열입니다.** 그냥 넣으면
   글자로 들어가 해부도가 통째로 안 나옵니다.
+- **이미지 이름이 데이터와 한 글자라도 다르면 카드가 빈 상자가 됩니다.**
+  `quick-beef` 와 `q-beef.jpg` 가 어긋나 퀵 카테고리 여덟 장이 전부
+  비었습니다. 컷아웃(`q-*` · `e-*`)은 PNG, 사진은 JPG 이고
+  `imgExt()` 가 앞글자로 확장자를 고릅니다.
 
 ## 사진
 
-`wow/img/` 48장은 **시안 이미지에서 잘라낸 임시 사진**입니다. 시안 원본이
+`img/` 48장은 **시안 이미지에서 잘라낸 임시 사진**입니다. 시안 원본이
 1312px 이라 화소가 그만큼밖에 없어서, 큰 배너는 `background-size:auto 100%`
 로 확대율을 낮춰 씁니다. 실제 촬영본이 생기면 **같은 파일명으로** 바꿔
 넣으면 코드는 안 고쳐도 됩니다.
@@ -97,9 +110,6 @@ vercel.json              /  → /wow/index.html  (/css /js /img 도 같이 넘�
 ⚠️ **글자가 박힌 이미지를 쓰지 마세요.** 시안의 한글은 AI 가 만든 것이라
 글자가 틀려 있습니다. 그래서 글자가 걸린 영역은 잘라내지 않았고, 화면의
 모든 글은 HTML 로 다시 썼습니다.
-
-컷아웃(`q-*` · `e-*`)은 배경을 투명하게 뺀 **PNG**, 사진은 **JPG** 입니다.
-`imgExt()` 가 이름 앞글자로 확장자를 고르므로 규칙을 지켜 이름 지으세요.
 
 ## 화면을 새로 만들 때
 
@@ -112,7 +122,7 @@ vercel.json              /  → /wow/index.html  (/css /js /img 도 같이 넘�
 ## 확인
 
 ```bash
-cd wow && node check.js        # 16개 화면 × 1440·1024·390px 전수
+node check.js        # 16개 화면 × 1440·1024·390px 전수 (playwright 필요)
 ```
 
 보는 것: JS 에러 · 못 불러온 파일 · 가로 스크롤 · **12px 미만 글씨** ·
@@ -127,18 +137,23 @@ cd wow && node check.js        # 16개 화면 × 1440·1024·390px 전수
 `sitemap.xml` · `robots.txt` · `manifest.json` 을 같이 보세요.
 `robots.txt` 로 막아 둔 주소를 `sitemap.xml` 에 올리면 서로 어긋납니다.
 
-⚠️ **`sw.js` 를 지우지 마세요.** 예전 고리 서비스 워커가 손님 브라우저에
-설치돼 있습니다. 파일이 404 가 되면 브라우저는 "갱신 실패" 로 보고 **옛
-워커를 그대로 계속 씁니다.** 지금 `sw.js` 는 캐시를 비우고 스스로 등록을
-해제하는 일만 합니다. 충분히 시간이 지난 뒤에 지우세요.
+상품·카테고리·도감은 해시 주소(`#/c/beef`)라 검색엔진이 따로 읽지
+못합니다. 그래서 `sitemap.xml` 에는 `/` 하나만 있습니다. 개별 색인이
+필요해지면 서버 렌더링이나 실제 경로(`/c/beef`)로 바꿔야 합니다.
+
+⚠️ **`sw.js` 를 지우지 마세요.** 예전 사이트의 서비스 워커가 손님
+브라우저에 설치돼 있습니다. 파일이 404 가 되면 브라우저는 "갱신 실패" 로
+보고 **옛 워커를 그대로 계속 씁니다.** 지금 `sw.js` 는 캐시를 비우고
+스스로 등록을 해제하는 일만 합니다. 충분히 시간이 지난 뒤에 지우세요.
 
 ## 아직 안 된 것
 
 | 항목 | 어디 |
 |---|---|
-| **사업자 정보** (판매 시작 전 필수 — 전자상거래법 제10조) | `wow/js/data/site.js` |
-| 실제 상품·가격 | `wow/js/data/products.js` — 구조는 두고 내용만 교체 |
-| 로그인·회원가입 | `wow/js/app.js` 의 `doLogin` · `doSignup` |
-| 결제 | `wow/js/app.js` 의 `checkout` |
-| 대량견적 접수 | `wow/js/pages/misc.js` 의 `submitQuote` |
-| 아이콘(`icon-*.png` · `apple-touch-icon.png`) | 아직 고리 마크입니다 |
+| **사업자 정보** (판매 시작 전 필수 — 전자상거래법 제10조) | `js/data/site.js` |
+| 실제 상품·가격 | `js/data/products.js` — 구조는 두고 내용만 교체 |
+| 로그인·회원가입 | `js/app.js` 의 `doLogin` · `doSignup` |
+| 결제 | `js/app.js` 의 `checkout` |
+| 대량견적 접수 | `js/pages/misc.js` 의 `submitQuote` |
+| 이용약관·개인정보처리방침 | 지금은 "준비 중" 화면입니다 (`PageDoc`) |
+| 아이콘(`icon-*.png` · `apple-touch-icon.png`) | 아직 예전 사이트 마크입니다 |

@@ -1,28 +1,4 @@
 User-agent: *
 Allow: /
 
-# ── 예전 고리(요청·견적 매칭) 화면들 ──────────────────────────
-# 사이트를 ABOUTMEAT 부산물몰로 전면 리뉴얼하면서 더 이상 쓰지 않습니다.
-# 파일은 아직 저장소에 남아 있어 주소로 직접 들어가면 열리므로,
-# 검색 결과에서 빠지도록 여기서 막아 둡니다.
-# 파일을 실제로 지우고 나면 이 줄들도 같이 지우세요.
-Disallow: /index.html
-Disallow: /meat_insight_main.html
-Disallow: /meat_insight_apply.html
-Disallow: /meat_insight_cases.html
-Disallow: /meat_insight_calculator.html
-Disallow: /meat_insight_diagnosis.html
-Disallow: /meat_insight_admin.html
-Disallow: /terms.html
-Disallow: /privacy.html
-
-# 관리 화면 (로그인으로도 막혀 있습니다)
-Disallow: /admin.html
-Disallow: /admin-gate.js
-Disallow: /dashboard.html
-Disallow: /suppliers.html
-Disallow: /purchase_request.html
-Disallow: /jobs.html
-Disallow: /db-check.html
-
 Sitemap: https://aboutmeat.co.kr/sitemap.xml

@@ -164,6 +164,35 @@ function paintList(){
   var f=$("flt"); if(f) f.outerHTML=ProductFilter();
 }
 
+/* 이 분류의 부위를 카드로 깔아 줍니다.
+
+   왜 띠 하나로는 부족한가:
+   (1) 손님 — 머리·특수부위에 상품이 하나뿐인 화면이 있습니다. 목록이
+       짧아 아래가 텅 비는데, 그 자리에서 "수구레가 뭔지" 를 알려 주면
+       그게 다음 클릭이 됩니다. 빈 땅을 메우려고 넣는 것이 아니라
+       **그 화면에서 손님이 실제로 궁금해하는 것**이라 넣습니다.
+   (2) 검색 — 도감 48개가 /enc/<축종> 한 곳에서만 링크돼 있었습니다.
+       안에서 서로 이어져 있지 않으면 크롤러도 사람도 잘 못 갑니다.
+
+   ⚠️ 분류가 정해져 있으면 **그 분류의 부위만** 냅니다. 장기류를 보는
+   손님에게 소꼬리를 내밀 이유가 없습니다. */
+function EncStrip(sp, cat){
+  var all = (window.WOW_ENC && WOW_ENC[sp]) || [];
+  var list = cat ? all.filter(function(e){ return e.cat===cat; }) : all;
+  if(!list.length) return "";
+  list = list.slice(0,8);
+  /* ⚠️ 분류 이름에 이미 "부위" 가 들어 있습니다 ("머리·특수부위").
+     뒤에 또 붙이면 "머리·특수부위 부위 알아보기" 가 됩니다. */
+  var title = cat ? (wowCatName(sp,cat)+" 알아보기")
+                  : (wowSpeciesShort(sp)+" 부위 알아보기");
+  return '<section class="sec sec-w"><div class="w">'+
+    '<div class="sec-hd"><div class="sec-hd-t"><h2>'+esc(title)+'</h2>'+
+      '<p>특징 · 식감 · 손질방법 · 추천요리를 정리했습니다</p></div>'+
+      '<a class="sec-more" href="/enc/'+esc(sp)+'">도감 전체보기'+icon("chev",16)+'</a></div>'+
+    '<div class="qg">'+list.map(function(e){ return EncyclopediaCard(e, sp); }).join("")+'</div>'+
+  '</div></section>';
+}
+
 function PageList(o){
   o = o || {};
   LS.q = o.q || {}; LS.page = 1;
@@ -187,6 +216,8 @@ function PageList(o){
         '<div class="lst-main" id="lst-body">'+listBody()+'</div>'+
       '</div>'+
     '</div>'+
+    /* 도감으로 가는 길 — 띠 하나로는 부족합니다 */
+    (sp ? EncStrip(sp, cat) : '')+
     /* 카테고리 화면 아래 도감으로 가는 길 (시안의 초록 띠) */
     (sp ? '<section class="sec sec-tight"><div class="w">'+
         '<div class="bnr bnr-plain">'+

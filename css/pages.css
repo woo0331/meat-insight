@@ -516,3 +516,92 @@
 .flt-d[open] summary::before{ content:"－"; }
 .flt-d summary:hover{ color:var(--green); }
 .flt-d .flt-o{ margin-top:6px; }
+
+/* ══ 주문서 · 주문 완료 ═══════════════════════════════════
+   장바구니(.cart-cols)와 같은 뼈대입니다 — 왼쪽에 적는 것, 오른쪽에
+   금액. ⚠️ 그리드 칸에는 min-width:0 (아래 공통 규칙에 이미 있습니다). */
+.od{ padding-bottom:var(--s10); }
+.od-cols{ display:grid; grid-template-columns:1fr 360px; gap:var(--s7); align-items:start; }
+.od-l{ display:grid; gap:var(--s5); }
+.od-s{ background:var(--white); border:1px solid var(--line); border-radius:var(--r-lg);
+  padding:var(--s6); }
+.od-s h2{ font-size:var(--t-lg); margin:0 0 var(--s5); }
+.od-g2{ display:grid; grid-template-columns:1fr 1fr; gap:0 var(--s4); }
+
+/* 주문 상품 줄 */
+.od-i{ display:grid; grid-template-columns:64px 1fr auto; gap:var(--s4); align-items:center;
+  padding:var(--s3) 0; }
+.od-i + .od-i{ border-top:1px solid var(--line-soft); }
+.od-i-img{ width:64px; aspect-ratio:1; border-radius:var(--r); overflow:hidden;
+  background:var(--line-soft); }
+.od-i-img img{ width:100%; height:100%; object-fit:cover; }
+.od-i-b{ min-width:0; display:grid; gap:2px; }
+.od-i-b b{ font-size:var(--t-md); }
+.od-i-b span{ font-size:var(--t-sm); color:var(--ink2); }
+.od-i-p{ font-weight:700; white-space:nowrap; }
+.od-list{ background:var(--white); border:1px solid var(--line); border-radius:var(--r-lg);
+  padding:var(--s4) var(--s6); }
+
+/* "주문하시는 분과 같습니다" — 체크박스는 라벨 전체가 누르는 자리입니다 */
+.od-same{ display:flex; align-items:center; gap:var(--s3); min-height:var(--tap);
+  cursor:pointer; font-size:var(--t-base); margin-bottom:var(--s3); }
+.od-same input{ width:20px; height:20px; accent-color:var(--green); cursor:pointer; }
+
+/* 결제수단 — 고를 수 있는 것만 들어옵니다 (js/data/order.js) */
+.od-pays{ display:grid; gap:var(--s2); }
+.od-pay{ display:flex; align-items:center; gap:var(--s3); min-height:56px; cursor:pointer;
+  border:1px solid var(--line); border-radius:var(--r); padding:0 var(--s4);
+  background:var(--white); }
+.od-pay.on{ border-color:var(--green); background:var(--green-bg); }
+.od-pay input{ width:20px; height:20px; flex:0 0 auto; accent-color:var(--green); cursor:pointer; }
+.od-pay span{ display:grid; gap:1px; min-width:0; }
+.od-pay b{ font-size:var(--t-md); font-weight:700; }
+.od-pay em{ font-style:normal; font-size:var(--t-sm); color:var(--ink2); }
+
+/* 입금 계좌 — 전화로 불러 주기도 하고 눈으로 옮겨 적기도 합니다.
+   ⚠️ 계좌번호는 작게 쓰지 마세요. 한 자리 틀리면 돈이 딴 데로 갑니다. */
+.od-bank{ margin-top:var(--s4); background:var(--ivory); border:1px solid var(--line);
+  border-radius:var(--r); padding:var(--s5); }
+/* ⚠️ `>` 를 빼지 마세요. 안쪽 문단의 <b>("2일 안에")까지 블록이 되어
+   "주문 뒤 / 2일 안에 / 입금해 주세요" 로 세 줄이 됐습니다. */
+.od-bank > b{ display:block; font-size:var(--t-base); margin-bottom:var(--s2); }
+.od-bank p b{ font-weight:700; color:var(--ink); }
+.od-acct{ font-size:var(--t-lg); font-weight:700; letter-spacing:.01em; line-height:1.6; }
+.od-acct span{ font-size:var(--t-sm); font-weight:600; color:var(--ink2); white-space:nowrap; }
+.od-bank p{ margin:var(--s3) 0 0; font-size:var(--t-sm); color:var(--ink2); line-height:1.7; }
+.od-bank-big{ max-width:520px; margin:var(--s6) auto 0; text-align:center; }
+.od-amt{ font-size:var(--t-2xl); font-weight:800; color:var(--red-ink); margin-top:var(--s3); }
+
+/* 오른쪽 금액 칸 */
+.od-sum{ background:var(--white); border:1px solid var(--line); border-radius:var(--r-lg);
+  padding:var(--s6); position:sticky; top:calc(var(--hdr-h) + var(--gnb-h) + 12px); }
+.od-sum h2{ font-size:var(--t-lg); margin:0 0 var(--s4); }
+.od-agree{ margin:var(--s5) 0 var(--s4); }
+.od-why{ list-style:none; margin:0 0 var(--s3); padding:0; display:grid; gap:var(--s2);
+  font-size:var(--t-sm); color:var(--ink2); line-height:1.7; }
+.od-why b{ color:var(--ink); font-weight:700; }
+
+/* 주문 완료 */
+.od-done{ padding:var(--s9) 0 var(--s10); text-align:center; max-width:640px; }
+.od-done-ic{ display:inline-grid; place-items:center; width:64px; height:64px; border-radius:50%;
+  background:var(--green-bg); color:var(--green); margin-bottom:var(--s5); }
+.od-done h1{ font-size:var(--t-2xl); margin:0 0 var(--s2); }
+.od-no-t{ font-size:var(--t-md); color:var(--ink2); margin:0; }
+.od-no-t b{ color:var(--ink); font-weight:700; letter-spacing:.02em; }
+.od-done-n{ font-size:var(--t-base); color:var(--ink2); line-height:1.8; margin:var(--s4) 0 0; }
+.od-done .empty-acts{ margin-top:var(--s7); }
+
+@media (max-width:1024px){
+  .od-cols{ grid-template-columns:1fr; }
+  .od-sum{ position:static; }
+}
+@media (max-width:640px){
+  .od-g2{ grid-template-columns:1fr; }
+  .od-i{ grid-template-columns:56px 1fr; }
+  .od-i-img{ width:56px; }
+  /* 금액이 이름 아래로 내려옵니다 — 좁은 화면에서 셋을 한 줄에 두면
+     상품명이 두 글자만 남습니다 */
+  .od-i-p{ grid-column:2; text-align:right; }
+}
+/* 주문을 못 받는 동안 장바구니에 뜨는 한 줄 */
+.cart-closed{ text-align:left; line-height:1.7; padding:var(--s3) 0; }

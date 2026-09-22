@@ -26,7 +26,8 @@ js/data/encyclopedia.js 부산물 도감
 js/data/legal-terms.js  이용약관 본문
 js/data/legal-privacy.js 개인정보처리방침 본문
 js/components/          base · chrome · cards · diagram
-js/pages/               home · list · detail · misc · legal
+js/pages/               home · list · detail · misc · legal · order
+api/order.js            주문 접수 (Vercel 함수) · api/_data.json 은 만들어진 것
 js/app.js               라우터 · 장바구니 · 찜
 img/                    사진 48장
 check.js                전수 점검
@@ -254,6 +255,57 @@ admin.html              상품·사업자 정보 편집기 (js/admin.js · js/ad
 치웁니다.** 훑는 곳은 만든 주소의 맨 윗 칸(`c` · `p` · `enc` ·
 `products` …)뿐입니다 — `css` · `js` · `img` 는 건드리지 않습니다.
 
+## 주문을 받는 법 (그리고 못 받을 때)
+
+장바구니 → `/order` (주문서) → `api/order.js` → `/order/done`.
+
+**받을 수 있는 결제수단이 하나도 없으면 주문서에 폼을 내지 않습니다.**
+대신 "지금은 이곳에서 주문을 받지 못합니다" 와 전화·견적 버튼을 냅니다.
+장바구니의 "주문하기" 버튼도 같이 사라집니다 — 눌러서 주문서까지
+갔다가 못 받는다는 말을 듣게 하지 않습니다.
+
+| 결제수단 | 켜지는 조건 |
+|---|---|
+| 무통장입금 | `WOW_BIZ` 의 `bankName` · `bankAccount` · `bankHolder` **셋 다** |
+| 카드결제 | `WOW_PG.clientKey` + `wowPayCard()` (PG 사 계약이 필요합니다) |
+
+⚠️ **금액을 화면에서 읽지 마세요.** `wowTotals()` 가 장바구니에서 다시
+세고, `api/order.js` 가 서버에서 **한 번 더** 셉니다. 브라우저에서 도는
+코드는 무엇이든 손님이 고칠 수 있습니다 — 화면의 합계를 그대로 보내면
+개발자도구로 1원짜리 주문을 만들 수 있습니다. 서버가 쓰는 가격표는
+`api/_data.json` 이고 `build-pages.js` 가 만듭니다 (손으로 고치지
+마세요 — 값을 두 군데 적지 않기 위한 것입니다).
+
+⚠️ **동의 확인 코드를 지우지 마세요.** 둘입니다.
+- **구매조건 확인** — 신선식품이라 청약철회가 제한된다는 것, 하자·
+  오배송은 그대로 철회된다는 것, 반송비 부담자. 이 고지 없이 받은
+  주문은 나중에 청약철회 제한을 주장할 수 없습니다(전자상거래법
+  제17조 제2항). 문구는 **이용약관 제15조와 같아야** 합니다.
+- **개인정보 수집·이용** — 항목·목적·보유기간을 동의 자리에서 같이
+  보여 줍니다(개인정보보호법 제15조 제2항).
+
+`check.js` 의 **"주문 흐름" 7개**가 이 셋(결제수단 · 금액 · 동의 둘)을
+지킵니다. 하나로 묶어 검사하면 한쪽을 지워도 나머지가 막아 줘서
+통과합니다 — 실제로 그래서 못 잡았고, 지금은 하나씩 따로 봅니다.
+
+### 주문이 실제로 전달되게 하려면
+
+`api/order.js` 는 **저장하지 않습니다.** 서버도 DB 도 없으니 받아서
+밖으로 보내기만 합니다. Vercel 환경변수에 둘 중 하나를 넣으세요.
+
+| 변수 | 무엇 |
+|---|---|
+| `ORDER_WEBHOOK_URL` | 주문 JSON 을 그대로 POST. 슬랙·Zapier·앱스스크립트 아무거나 |
+| `RESEND_API_KEY` + `ORDER_EMAIL_TO` | 이메일로 받기 (`ORDER_EMAIL_FROM` 은 선택) |
+
+⚠️ 둘 다 없으면 **503 을 돌려줍니다.** 일부러 그렇게 했습니다 — 받을
+곳이 없는데 "접수되었습니다" 라고 하면 손님은 기다리고 주문은
+사라집니다. 지금은 화면이 "지금 접수하지 못했습니다" 라고 말하고
+전화 버튼을 내놓습니다.
+
+⚠️ **키를 저장소에 적지 마세요.** 공개 저장소입니다. `middleware.js`
+의 `ADMIN_PASSWORD` 와 같은 규칙입니다.
+
 ## 검색은 이름만 뒤지면 안 됩니다
 
 손님은 "소곱창" · "탕거리" · "국밥" · "위장류" 처럼 **우리가 붙인 분류
@@ -322,7 +374,7 @@ admin.html              상품·사업자 정보 편집기 (js/admin.js · js/ad
 지금은 `/c/beef` 이고, **주소마다 실제 HTML 파일**이 있습니다.
 
 ```
-node build-pages.js      # 페이지 103개 + sitemap.xml 을 만듭니다
+node build-pages.js      # 페이지 105개 + sitemap.xml + api/_data.json 을 만듭니다
                          # (없어진 주소의 파일도 같이 치웁니다)
 ```
 
@@ -389,12 +441,12 @@ node build-pages.js      # 페이지 103개 + sitemap.xml 을 만듭니다
 ## 확인
 
 ```bash
-node check.js        # 21개 화면 × 1440·1024·390px 전수 (playwright 필요)
+node check.js        # 23개 화면 × 1440·1024·390px 전수 (playwright 필요)
 ```
 
 보는 것: JS 에러 · 못 불러온 파일 · 가로 스크롤 · **12px 미만 글씨** ·
 **40px 미만 누름** · 낱말 가운데 잘림 · 손님 화면에 남은 개발자 말 ·
-링크 99개가 실제로 열리는지 · **주소가 화면에 반영되는지**(헤더 메뉴·아래 네비·마이페이지 탭·사업자 가입).
+링크 100개가 실제로 열리는지 · **주소가 화면에 반영되는지**(헤더 메뉴·아래 네비·마이페이지 탭·사업자 가입) · **주문 흐름**(결제수단·금액·동의 둘·품절).
 
 바꾼 화면은 **데스크톱과 모바일(390px) 둘 다** 실제로 띄워 보세요.
 
@@ -495,8 +547,8 @@ node check.js        # 21개 화면 × 1440·1024·390px 전수 (playwright 필�
 |---|---|
 | **사업자 정보** (판매 시작 전 필수 — 전자상거래법 제10조) | `admin.html` 의 사업자 정보 탭 |
 | 실제 상품·가격 | `admin.html` 에서 넣고 `products.js` 를 내보내세요 |
-| 로그인·회원가입 | `js/app.js` 의 `doLogin` · `doSignup` |
-| 결제 | `js/app.js` 의 `checkout` |
-| 대량견적 접수 | `js/pages/misc.js` 의 `submitQuote` |
-| 아이콘(`icon-*.png` · `apple-touch-icon.png`) | 아직 예전 사이트 마크입니다 |
+| 로그인·회원가입 | `js/app.js` 의 `doLogin` · `doSignup` — **서버가 필요합니다.** 지금은 "준비 중" 까지만 말합니다 (인증 없이 `isLoggedIn()` 을 true 로 만들지 마세요) |
+| 카드결제 | PG 사 계약 → `WOW_PG.clientKey` + `wowPayCard()`. 무통장입금은 계좌만 채우면 바로 됩니다 |
+| 주문 전달처 | Vercel 환경변수 `ORDER_WEBHOOK_URL` 또는 `RESEND_API_KEY`·`ORDER_EMAIL_TO` |
+| 대량견적 접수 | `js/pages/misc.js` 의 `submitQuote` + `WOW_BIZ.quoteTo` |
 | 부위 사진 29장 (48개 중 19개만 있음) | `img/e-<slug>.png` 로 넣으면 `encyclopedia.js` 에 `img` 한 줄만 추가 |

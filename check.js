@@ -55,6 +55,8 @@ const PAGES = [
   ["/b2b/quote",        "대량견적 문의"],
   ["/search?q=곱창",     "검색결과"],
   ["/cart",             "장바구니"],
+  ["/order",            "주문서 (빈 장바구니)"],
+  ["/order/done",       "주문 완료 (새로고침)"],
   ["/login",            "로그인"],
   ["/signup",           "회원가입"],
   ["/my",               "마이페이지"],
@@ -215,6 +217,57 @@ const AUDIT = `(() => {
   }
   console.log("\n── 주소가 화면에 반영되는가 " + NAV.length + "개");
   if (navBad.length) { fail++; console.log("  ❌ "+navBad.length+"건: "+navBad.join(" / ")); }
+  else console.log("  ✅ 전부 맞음");
+
+  /* 9. 주문 흐름
+     ⚠️ 받을 수 없는 결제수단을 내놓지 않는 것, 금액을 화면에서 읽지
+     않고 다시 세는 것, 동의 없이는 접수하지 않는 것 — 셋 다 화면만
+     봐서는 멀쩡해 보입니다. 여기서 따로 확인합니다. */
+  const op = await (await b.newContext({ viewport:{width:1440,height:1000} })).newPage();
+  const ordBad = [];
+  const t = async (name, fn) => { let ok=false;
+    try{ ok = await op.evaluate("(async()=>{ "+fn+" })()"); }catch(e){ ok = "에러 "+e.message; }
+    if (ok !== true) ordBad.push(name + (typeof ok==="string" ? " ("+ok+")" : "")); };
+
+  await op.goto(ROOT + "/p/b-gopchang", { waitUntil:"load" });
+  await op.waitForTimeout(250);
+  await t("계좌가 비면 주문서에 폼이 없다", `
+    addCart("b-gopchang",5); WOW_BIZ.bankName=""; WOW_BIZ.bankAccount=""; WOW_BIZ.bankHolder="";
+    go("/order"); await new Promise(r=>setTimeout(r,120));
+    return !document.getElementById("od-form") && !!document.querySelector(".notice");`);
+  await t("계좌를 채우면 무통장입금이 나온다", `
+    WOW_BIZ.bankName="국민은행"; WOW_BIZ.bankAccount="000-00-0000"; WOW_BIZ.bankHolder="홍길동";
+    render(); await new Promise(r=>setTimeout(r,120));
+    return !!document.getElementById("od-form") &&
+           /무통장입금/.test(document.querySelector(".od-pays").textContent) &&
+           !/카드결제/.test(document.querySelector(".od-pays").textContent);`);
+  await t("금액을 화면이 아니라 데이터에서 센다", `
+    const want = wowProduct("b-gopchang").price*5 + (Number(WOW_BIZ.shipFee)||0);
+    document.querySelector(".cs-t b").textContent = "1원";   /* 화면을 고쳐 봅니다 */
+    return wowTotals(CART).total === want;`);
+  /* ⚠️ 동의는 **둘**입니다 (구매조건 고지 · 개인정보 수집·이용).
+     하나로 묶어 검사하면 한쪽을 지워도 나머지가 막아 줘서 통과합니다 —
+     실제로 그래서 못 잡았습니다. 하나씩 따로 봅니다. */
+  const trySubmit = (agree, priv, want) => `
+    OD.sending=false; render(); await new Promise(r=>setTimeout(r,120));
+    let sent=false; const f=window.fetch;
+    window.fetch=function(){ sent=true; return Promise.reject(new Error("테스트")); };
+    document.getElementById("o-name").value="홍길동";
+    document.getElementById("o-tel").value="010-0000-0000";
+    document.getElementById("o-addr").value="서울시 어딘가 1-2";
+    document.getElementById("o-agree").checked=${agree};
+    document.getElementById("o-priv").checked=${priv};
+    submitOrder({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,200)); window.fetch=f;
+    return sent === ${want};`;
+  await t("구매조건 동의 없이는 접수하지 않는다", trySubmit(false, true, false));
+  await t("개인정보 동의 없이는 접수하지 않는다", trySubmit(true, false, false));
+  await t("둘 다 동의하면 접수를 시도한다",       trySubmit(true,  true,  true));
+  await t("품절은 담기지 않는다", `
+    const n=CART.length; addCart("b-jira",1); return CART.length===n;`);
+
+  console.log("\n── 주문 흐름 7개");
+  if (ordBad.length) { fail++; console.log("  ❌ "+ordBad.length+"건: "+ordBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 
   await b.close();

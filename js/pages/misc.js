@@ -255,7 +255,14 @@ function PageCart(){
         '<div class="cs-r"><span>상품금액</span><b>'+wowWon(goods)+'원</b></div>'+
         '<div class="cs-r"><span>배송비</span><b>'+(ship?wowWon(ship)+'원':'무료')+'</b></div>'+
         '<div class="cs-t"><span>합계</span><b>'+wowWon(goods+ship)+'원</b></div>'+
-        '<button class="btn btn-g btn-lg btn-full" onclick="checkout()">주문하기</button>'+
+        /* ⚠️ 받을 수 있는 결제수단이 없으면 "주문하기" 를 내놓지 않습니다.
+           눌러서 주문서까지 갔다가 "못 받는다" 는 말을 듣게 하지 마세요 —
+           주문서도 같은 판단을 하지만, 장바구니에서 미리 말해 주는 편이
+           손님의 걸음을 아낍니다. */
+        ((typeof wowPayReady==="function" && wowPayReady().length)
+          ? '<button class="btn btn-g btn-lg btn-full" onclick="checkout()">주문하기</button>'
+          : '<p class="cs-n cart-closed">지금은 이곳에서 주문을 받지 못합니다.'+
+            (bizVal("phone") ? ' 전화로 주문해 주세요.' : '')+'</p>')+
         CallButton("btn btn-o btn-full cart-call", "전화로 주문하기")+
         /* 얼마를 더 담으면 무료가 되는지 — 우리가 **실제로 아는 숫자**라
            적어도 됩니다. 사장님은 3,000원 아끼려고 한 팩을 더 담습니다. */

@@ -60,10 +60,10 @@ window.bumpCart = function(i, d){
   setCartKg(i, (Number(c.kg)||0) + d);
 };
 window.buyNow  = function(id){ addCart(id, DT.qty*DT.unit); go("/cart"); };
-window.checkout= function(){
-  try{ console.warn("[ABOUTMEAT] 결제 연동이 아직 없습니다 — PG 사 연동 후 checkout() 을 바꾸세요."); }catch(e){}
-  toast("지금은 이곳에서 결제하지 못합니다. 대량구매는 견적 문의를 이용해 주세요.");
-};
+/* 장바구니 → 주문서. 받을 수 있는 결제수단이 있는지는 **주문서가**
+   판단합니다 (없으면 폼 대신 전화 안내를 냅니다) — 여기서 한 번,
+   거기서 한 번 따로 따지면 둘이 어긋납니다. */
+window.checkout = function(){ go("/order"); };
 window.toggleWish = function(id){
   var i=WISH.indexOf(id);
   if(i<0){ WISH.push(id); toast("찜한 상품에 담았습니다."); }
@@ -203,6 +203,8 @@ var META = {
                 "도축장에서 시작되는 신선한 축산 부산물. 곱창·대창·막창·양·천엽·장기류·머리·족·뼈까지 필요한 손질 상태와 규격으로 공급합니다."],
   "/products": ["전체상품", "소·돼지 부산물 전 품목. 축종·손질 상태·용도로 골라 보세요."],
   "/cart":     ["장바구니", "담으신 부산물을 확인하고 주문하세요."],
+  "/order":    ["주문서", "받으실 곳과 결제수단을 확인하고 주문을 마칩니다."],
+  "/order/done":["주문 완료", "주문이 접수되었습니다."],
   "/login":    ["로그인", "ABOUTMEAT 로그인"],
   "/signup":   ["회원가입", "ABOUTMEAT 회원가입. 사업자회원은 전용가와 대량구매 상담을 이용하실 수 있습니다."],
   "/my":       ["마이페이지", "주문 내역과 찜한 상품을 확인하세요."],
@@ -219,7 +221,7 @@ var META = {
 /* 검색엔진에 올리면 안 되는 주소.
    장바구니·로그인·마이페이지는 사람마다 내용이 다르고, 검색에서
    들어와도 쓸모가 없습니다. 검색 결과 주소는 무한히 생깁니다. */
-var NOINDEX = ["/cart","/login","/signup","/my","/search"];
+var NOINDEX = ["/cart","/order","/order/done","/login","/signup","/my","/search"];
 
 /* 주소 → 무엇을 그릴지. 화면과 메타를 같이 돌려줍니다.
    build-pages.js 도 이 함수를 써서 메타를 뽑으므로, 여기만 고치면
@@ -291,6 +293,10 @@ window.routeInfo = function(path, qs){
       r.desc  = wowSpeciesName(seg[1])+" 부위별 특징·식감·손질방법·추천요리를 정리했습니다.";
     }
     return r;
+  }
+  if(seg[0]==="order"){
+    if(seg[1] && seg[1]!=="done") { r.ok=false; return r; }
+    r.view = seg[1]==="done" ? "orderDone" : "order"; return r;
   }
   if(seg[0]==="b2b"){
     if(seg[1] && seg[1]!=="quote") { r.ok=false; return r; }
@@ -459,6 +465,8 @@ function render(){
     case "quote":   html = PageQuote(); break;
     case "search":  html = PageList({ q:{ text:r.q }, title: r.q?'"'+r.q+'" 검색결과':"검색" }); break;
     case "cart":    html = PageCart(); break;
+    case "order":   html = PageOrder(); break;
+    case "orderDone": html = PageOrderDone(); break;
     case "login":   html = PageLogin(); break;
     case "signup":  html = PageSignup(); break;
     case "my":      html = PageMy(); break;

@@ -161,6 +161,18 @@ function bizView(){
         : '<b>필수 항목이 다 찼습니다</b>')+'</div>'+
       '<div class="ad-bar-r"><button class="btn btn-g btn-sm" onclick="exportBiz()">파일 내보내기</button></div>'+
     '</div>'+
+    /* ⚠️ 주문을 받을 수 있는지 **여기서 바로** 알려 줍니다. 계좌를 안
+       채워 두고 "왜 주문이 안 들어오지" 하는 일이 없도록. */
+    (function(){
+      var ok = ["bankName","bankAccount","bankHolder"].every(function(k){ return String(B[k]||"").trim(); });
+      return '<div class="ad-note'+(ok?"":" ad-note-warn")+'">'+
+        (ok ? '<b>지금 주문을 받을 수 있습니다</b> — 무통장입금으로 접수됩니다. '+
+              '카드결제는 PG 사 연동이 따로 필요합니다.'
+            : '<b>지금은 손님이 주문할 수 없습니다</b> — 입금 은행·계좌번호·예금주(⚑) '+
+              '셋을 다 채우셔야 주문서에 결제수단이 나옵니다. '+
+              '그때까지 주문서에는 "지금은 주문을 받지 못합니다" 와 전화 버튼만 나옵니다.')+
+      '</div>';
+    })()+
     '<div class="ad-note">여기 채운 값이 <b>푸터 · 이용약관 · 개인정보처리방침</b>에 한꺼번에 반영됩니다. '+
       '빈 칸은 화면에서 줄째 빠집니다 — "(미기재)" 를 찍지 않습니다.</div>'+
     '<div class="ad-form ad-biz">'+

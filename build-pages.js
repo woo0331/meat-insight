@@ -40,7 +40,7 @@ function loadApp(){
 
   const files = [
     "js/data/korean.js", "js/data/site.js", "js/data/categories.js", "js/data/products.js",
-    "js/data/filters.js", "js/data/encyclopedia.js"
+    "js/data/filters.js", "js/data/encyclopedia.js", "js/data/order.js"
   ];
   for(const f of files) vm.runInContext(fs.readFileSync(path.join(ROOT,f),"utf8"), sandbox, {filename:f});
 
@@ -70,7 +70,8 @@ function loadApp(){
 function allRoutes(W){
   const out = ["/", "/products", "/enc", "/b2b", "/b2b/quote",
                "/about", "/terms", "/privacy",
-               "/cart", "/login", "/signup", "/my", "/search"];
+               "/cart", "/order", "/order/done",
+               "/login", "/signup", "/my", "/search"];
   /* 오늘입고·손질상품·특가는 **내용이 있을 때만** 만듭니다.
      빈 페이지를 검색엔진에 올리면 "내용 없음" 으로 평가가 깎이고,
      들어온 손님도 빈 화면을 봅니다. */
@@ -279,6 +280,24 @@ for(const root of roots){
   const d = path.join(ROOT, root);
   if(fs.existsSync(d) && fs.statSync(d).isDirectory()) sweep(d);
 }
+
+/* ── 서버가 쓸 가격표 ──────────────────────────────────────────
+   api/order.js 는 손님이 보낸 금액을 믿지 않고 **다시 셉니다.** 그러려면
+   서버도 가격을 알아야 하는데, js/data/products.js 는 `window.…` 를
+   쓰는 브라우저 파일이라 서버에서 그냥 require 할 수 없습니다.
+
+   ⚠️ 값을 두 군데 적지 않으려고 **여기서 만들어 둡니다.** 손으로 고치지
+   마세요 — 상품을 바꾸면 `node build-pages.js` 를 돌리면 됩니다.
+   (require("./_data.json") 이라 Vercel 이 알아서 같이 올립니다.
+    fs 로 읽으면 배포에 안 딸려 가서 서버에서 터집니다.) */
+const apiData = {
+  "_": "build-pages.js 가 만듭니다. 손으로 고치지 마세요.",
+  products: Object.fromEntries(W.WOW_PRODUCTS.map(p =>
+    [p.id, { name:p.name, price:p.price, soldOut: !!p.soldOut }])),
+  ship: { fee: Number(W.WOW_BIZ.shipFee)||0, freeOver: Number(W.WOW_BIZ.shipFreeOver)||0 }
+};
+fs.mkdirSync(path.join(ROOT,"api"), {recursive:true});
+fs.writeFileSync(path.join(ROOT,"api/_data.json"), JSON.stringify(apiData,null,1)+"\n");
 
 /* ── sitemap ──────────────────────────────────────────────────── */
 const today = new Date().toISOString().slice(0,10);

@@ -1,59 +1,37 @@
 /* ════════════════════════════════════════════════════════════════════
-   고리 서비스 워커
-   방침: 항상 네트워크 먼저. 응답이 오면 그 응답을 쓰고 사본만 캐시에
-   남깁니다. 네트워크가 끊겼을 때만 캐시를 꺼내 씁니다.
-   → 배포한 새 파일이 캐시 때문에 안 보이는 일이 생기지 않습니다.
-   ════════════════════════════════════════════════════════════════════ */
-var CACHE = "gori-v1";
-var SHELL = ["/", "/index.html", "/gori-app.js", "/gori-app.css",
-             "/site-info.js", "/icon-192.png", "/manifest.json"];
+   해제 전용 서비스 워커
 
-self.addEventListener("install", function(e){
-  e.waitUntil(
-    caches.open(CACHE)
-      .then(function(c){ return c.addAll(SHELL).catch(function(){ /* 일부 실패해도 설치는 진행 */ }); })
-      .then(function(){ return self.skipWaiting(); })
-  );
+   예전 고리 사이트가 서비스 워커를 설치해 두었습니다. 사이트를
+   ABOUTMEAT 부산물몰로 바꾸면서 그 워커는 더 이상 필요 없는데,
+   ⚠️ **파일을 그냥 지우면 안 됩니다.** sw.js 가 404 가 되면 브라우저는
+   "갱신 실패" 로 보고 이미 설치된 옛 워커를 **그대로 계속 씁니다.**
+   그러면 다시 찾아온 손님은 옛 화면과 옛 캐시를 계속 받게 됩니다.
+
+   그래서 파일은 남기되 하는 일을 "자기 자신을 지우는 것" 하나로
+   바꿨습니다. 옛 워커가 갱신을 확인할 때 이 파일을 받아 가고,
+   캐시를 전부 비운 뒤 스스로 등록을 해제합니다.
+
+   새 사이트는 서비스 워커를 등록하지 않으므로, 한 번 해제되면 끝입니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+self.addEventListener("install", function(){
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", function(e){
   e.waitUntil(
-    caches.keys().then(function(keys){
-      return Promise.all(keys.map(function(k){ return k===CACHE ? null : caches.delete(k); }));
-    }).then(function(){ return self.clients.claim(); })
+    caches.keys()
+      .then(function(keys){
+        return Promise.all(keys.map(function(k){ return caches.delete(k); }));
+      })
+      .then(function(){ return self.registration.unregister(); })
+      .then(function(){ return self.clients.matchAll({ type: "window" }); })
+      .then(function(clients){
+        /* 열려 있는 탭을 한 번 새로 고쳐 새 사이트를 받게 합니다 */
+        clients.forEach(function(c){ if(c.navigate) c.navigate(c.url); });
+      })
+      .catch(function(){})
   );
 });
 
-self.addEventListener("fetch", function(e){
-  var req = e.request;
-  if(req.method !== "GET") return;
-  var url;
-  try{ url = new URL(req.url); }catch(err){ return; }
-  if(url.origin !== self.location.origin) return;        /* 외부 요청은 건드리지 않습니다 */
-  if(url.pathname.indexOf("/rest/") === 0) return;       /* API 응답은 캐시하지 않습니다 */
-
-  e.respondWith(
-    fetch(req).then(function(res){
-      if(res && res.ok && res.type === "basic"){
-        var copy = res.clone();
-        caches.open(CACHE).then(function(c){ c.put(req, copy).catch(function(){}); });
-      }
-      return res;
-    }).catch(function(){
-      return caches.match(req).then(function(hit){
-        if(hit) return hit;
-        if(req.mode === "navigate") return caches.match("/index.html");
-        return new Response("", { status: 504, statusText: "오프라인" });
-      });
-    })
-  );
-});
-
-/* 페이지에서 보내는 강제 해제 신호 (문제가 생겼을 때 탈출구) */
-self.addEventListener("message", function(e){
-  if(e.data === "gori-sw-off"){
-    self.registration.unregister().then(function(){
-      return caches.keys().then(function(ks){ return Promise.all(ks.map(function(k){ return caches.delete(k); })); });
-    });
-  }
-});
+/* fetch 를 가로채지 않습니다 — 모든 요청이 네트워크로 그대로 갑니다. */

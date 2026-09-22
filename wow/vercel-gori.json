@@ -1,9 +1,7 @@
 {
+  "_주의": "되돌리기용. 이 파일을 저장소 맨 위 vercel.json 으로 복사하면 첫 화면이 다시 고리로 돌아갑니다.",
   "rewrites": [
-    { "source": "/",         "destination": "/wow/index.html" },
-    { "source": "/css/(.*)", "destination": "/wow/css/$1" },
-    { "source": "/js/(.*)",  "destination": "/wow/js/$1" },
-    { "source": "/img/(.*)", "destination": "/wow/img/$1" }
+    { "source": "/", "destination": "/index.html" }
   ],
   "headers": [
     {

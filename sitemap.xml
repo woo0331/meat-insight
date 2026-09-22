@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 없는 주소를 올리면 검색엔진이 404 를 물고 갑니다.
-     meat_insight_partner.html 은 저장소에 없는데 여기 있었습니다.
-     lastmod 는 그 파일을 마지막으로 고친 날입니다 (git log). -->
+<!-- ABOUTMEAT — 소·돼지 부산물 전문 온라인몰
+
+     ⚠️ 없는 주소를 올리면 검색엔진이 404 를 물고 갑니다. 사람 눈에는
+     영영 안 보이는 거짓말입니다. 파일을 지우거나 이름을 바꾸면
+     robots.txt · manifest.json 도 같이 보세요.
+
+     상품·카테고리·도감은 해시 주소(#/c/beef)라 검색엔진이 따로 읽지
+     못합니다. 그래서 여기 올리지 않습니다 — 올려도 전부 같은 "/" 로
+     읽혀서 중복으로 취급됩니다. 개별 색인이 필요해지면 그때
+     서버 렌더링이나 실제 경로(/c/beef)로 바꿔야 합니다. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://aboutmeat.co.kr/</loc><lastmod>2026-09-11</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
-  <url><loc>https://aboutmeat.co.kr/terms.html</loc><lastmod>2026-09-07</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://aboutmeat.co.kr/privacy.html</loc><lastmod>2026-09-07</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://aboutmeat.co.kr/meat_insight_apply.html</loc><lastmod>2026-09-11</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://aboutmeat.co.kr/meat_insight_cases.html</loc><lastmod>2026-09-07</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://aboutmeat.co.kr/meat_insight_calculator.html</loc><lastmod>2026-09-07</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://aboutmeat.co.kr/meat_insight_diagnosis.html</loc><lastmod>2026-09-07</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url>
+    <loc>https://aboutmeat.co.kr/</loc>
+    <lastmod>2026-09-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
 </urlset>

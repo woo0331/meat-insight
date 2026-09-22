@@ -141,11 +141,37 @@ function PageB2B(){
 }
 
 /* 대량견적 문의 폼 — 접수처가 아직 없으면 **손님에게는 "아직 이곳에서
-   받지 못합니다" 까지만** 말하고, 무엇을 설정해야 하는지는 콘솔로. */
+   받지 못합니다" 까지만** 말하고, 무엇을 설정해야 하는지는 콘솔로.
+
+   ⚠️ 그 말을 **폼 아래가 아니라 위에** 둡니다. 예전에는 다 적고 누른
+   뒤에야 "여기서는 접수가 안 된다" 고 알렸습니다 — 바쁜 사장님의
+   시간을 버리게 하는 짓입니다.
+
+   ⚠️ 이 폼은 **개인정보를 받습니다** (업체명·담당자·연락처·이메일).
+   개인정보보호법 제15조·제22조상 수집·이용 동의를 받아야 하고,
+   무엇을 · 왜 · 얼마나 보관하는지를 **동의를 받는 자리에서** 알려야
+   합니다. 항목을 바꾸면 legal-privacy.js 제2조·제3조도 같이 고치세요. */
 function PageQuote(){
+  var to    = bizVal("quoteTo");
+  var phone = bizVal("phone");
+  var email = bizVal("email");
+  if(!to){
+    try{ console.warn("[ABOUTMEAT] 견적 문의 접수처가 아직 없습니다 — "+
+      "js/data/site.js 의 WOW_BIZ.quoteTo(이메일 또는 API)를 설정하세요. "+
+      "그때까지 손님에게는 폼 위에 \"이 양식으로는 접수하지 못한다\" 고 먼저 알립니다."); }catch(e){}
+  }
+
   return Breadcrumb([["홈","/"],["업소용","/b2b"],["대량견적 문의",""]])+
   '<div class="w form-wrap"><h1 class="pg-h1">대량견적 문의</h1>'+
     '<p class="pg-lead">필요하신 품목과 수량을 남겨 주시면 담당자가 확인 후 연락드립니다.</p>'+
+    (to ? '' :
+      '<div class="notice"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
+        ((phone||email) ? '<span>아래 연락처로 문의해 주시면 바로 확인해 드립니다.</span>' : '')+
+        ((phone||email) ? '<div class="notice-acts">'+
+          CallButton("btn", "전화로 문의")+
+          (email ? '<a class="btn" href="mailto:'+esc(email)+'">'+esc(email)+'</a>' : '')+
+        '</div>' : '')+
+      '</div>')+
     '<form class="form" onsubmit="return submitQuote(event)">'+
       fRow("업체명","q-co","text",true,"예: 대성국밥")+
       fRow("담당자","q-nm","text",true,"")+
@@ -153,6 +179,19 @@ function PageQuote(){
       fRow("이메일","q-em","email",false,"")+
       '<div class="f-r"><label for="q-it">필요 품목 <b>*</b></label>'+
         '<textarea id="q-it" rows="4" required placeholder="예: 한우 곱창 완전손질 20kg / 주 2회"></textarea></div>'+
+      /* 개인정보 수집·이용 동의 — 무엇을·왜·얼마나를 같이 적습니다 */
+      '<fieldset class="agree"><legend>개인정보 수집·이용 동의</legend>'+
+        '<ul class="ag-why">'+
+          '<li><span>수집 항목</span><b>업체명, 담당자명, 연락처 (선택: 이메일), 필요 품목 및 수량</b></li>'+
+          '<li><span>이용 목적</span><b>견적 산출 및 상담 회신</b></li>'+
+          '<li><span>보유 기간</span><b>문의 처리 완료 후 1년</b></li>'+
+        '</ul>'+
+        '<label class="ag-r"><input type="checkbox" id="q-ag" required>'+
+          '<span>위 내용에 동의합니다 <em class="ag-req">(필수)</em></span>'+
+          '<a class="ag-v" href="/privacy">방침 보기</a></label>'+
+        '<p class="ag-no">동의를 거부하실 수 있으며, 이 경우 이 양식으로는 문의를 접수하지 못합니다'+
+          (phone ? ' — 전화로는 그대로 문의하실 수 있습니다.' : '.')+'</p>'+
+      '</fieldset>'+
       '<button class="btn btn-g btn-lg btn-full" type="submit">문의 보내기</button>'+
     '</form></div>';
 }
@@ -163,9 +202,14 @@ function fRow(label,id,type,req,ph){
 }
 window.submitQuote = function(ev){
   ev.preventDefault();
+  /* ⚠️ 동의 확인을 지우지 마세요. 접수처를 붙일 때 이 줄이 남아 있어야
+     합니다 — 동의 없이 받은 개인정보는 개인정보보호법 제15조 위반입니다. */
+  var ag = $("q-ag");
+  if(ag && !ag.checked){ toast("개인정보 수집·이용에 동의해 주세요."); return false; }
   try{ console.warn("[ABOUTMEAT] 견적 문의 접수처가 아직 연결되지 않았습니다 — "+
     "js/data/site.js 의 WOW_BIZ.quoteTo(이메일 또는 API)를 설정하세요."); }catch(e){}
-  toast("지금은 이곳에서 접수하지 못합니다. 고객센터로 연락해 주세요.");
+  toast(bizVal("phone") ? "지금은 이곳에서 접수하지 못합니다. 고객센터로 연락해 주세요."
+                        : "지금은 이곳에서 접수하지 못합니다.");
   return false;
 };
 

@@ -107,10 +107,17 @@ h1,h2,h3,h4{ margin:0; font-weight:700; line-height:var(--lh-tight); letter-spac
 .hero-btns{ display:flex; gap:var(--s3); flex-wrap:wrap; }
 
 /* ══ 버튼 ═════════════════════════════════════════════════ */
+/* ⚠️ `.btn` **한 개만** 붙은 버튼이 테두리도 바탕도 없어 **글자처럼**
+   보였습니다. 도감 상세의 "대량견적 문의" 와 견적 화면의 연락처 버튼이
+   그랬습니다 — 눌러도 되는 줄 모르면 없는 것과 같습니다.
+   이제 기본이 흰 바탕 + 옅은 테두리(예전 `.btn-o`)입니다. `.btn-g` 나
+   `.btn-gl` 처럼 바탕을 따로 정하는 것들은 아래에서 덮어씁니다. */
 .btn{ display:inline-flex; align-items:center; justify-content:center; gap:var(--s2);
   min-height:var(--tap); padding:0 var(--s6); border-radius:var(--r);
-  font-size:var(--t-md); font-weight:700; cursor:pointer; border:1px solid transparent;
+  font-size:var(--t-md); font-weight:700; cursor:pointer;
+  background:var(--white); color:var(--ink); border:1px solid var(--line);
   transition:background-color .15s, border-color .15s, color .15s; white-space:nowrap; }
+.btn:hover{ border-color:var(--green); color:var(--green); }
 .btn-g{ background:var(--green); color:#fff; }
 .btn-g:hover{ background:var(--green-400); }
 .btn-o{ background:var(--white); color:var(--ink); border-color:var(--line); }

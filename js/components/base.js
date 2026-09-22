@@ -55,7 +55,10 @@ window.icon = function(name, size, fill){
    넣을 때 규칙만 지키면 되고, 잘못 적어 빈 상자가 될 일이 없습니다. */
 window.imgExt = function(name){ return /^[qe]-/.test(String(name)) ? ".png" : ".jpg"; };
 window.imgTag = function(name, alt, cls){
-  return '<img src="img/'+esc(name)+imgExt(name)+'" alt="'+esc(alt||"")+'"'+
+  /* ⚠️ 반드시 **절대 경로**(/img/…)여야 합니다. 상대 경로로 두면
+     /c/beef/gut 같은 깊은 주소에서 /c/beef/gut/img/… 를 찾습니다.
+     주소가 해시(#/…)였을 때는 경로가 늘 "/" 라 안 드러났습니다. */
+  return '<img src="/img/'+esc(name)+imgExt(name)+'" alt="'+esc(alt||"")+'"'+
     (cls?' class="'+esc(cls)+'"':'')+' loading="lazy" '+
     'onerror="this.onerror=null;this.style.background=\'var(--green-bg)\';this.removeAttribute(\'src\');">';
 };

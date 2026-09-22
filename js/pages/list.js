@@ -22,7 +22,7 @@ var CAT_COPY = {
 };
 function CatHero(sp){
   var c = CAT_COPY[sp]; if(!c) return "";
-  return '<section class="cath" style="background-image:url(img/cat-hero-'+esc(sp)+'.jpg)">'+
+  return '<section class="cath" style="background-image:url(/img/cat-hero-'+esc(sp)+'.jpg)">'+
     '<div class="w"><div class="cath-in"><h1>'+esc(c[0])+'</h1><p>'+c[1]+'</p></div></div></section>';
 }
 
@@ -33,7 +33,7 @@ function CatChips(sp, cur){
   var have = cats.filter(function(c){ return wowFind({sp:sp, cat:c.slug}).length; });
   if(!have.length) return "";
   var mk=function(slug,name){
-    return '<a class="chip'+(cur===slug?" on":"")+'" href="#/c/'+esc(sp)+(slug?"/"+esc(slug):"")+'">'+
+    return '<a class="chip'+(cur===slug?" on":"")+'" href="/c/'+esc(sp)+(slug?"/"+esc(slug):"")+'">'+
       esc(name)+'</a>';
   };
   return '<div class="chips">'+mk("","전체")+have.map(function(c){ return mk(c.slug,c.name); }).join("")+'</div>';
@@ -46,9 +46,9 @@ function ItemChips(sp, cat, cur){
   var have=c.items.filter(function(i){ return wowFind({sp:sp,cat:cat,item:i.slug}).length; });
   if(have.length<2) return "";
   return '<div class="chips chips-sm">'+
-    '<a class="chip'+(cur?"":" on")+'" href="#/c/'+esc(sp)+'/'+esc(cat)+'">전체</a>'+
+    '<a class="chip'+(cur?"":" on")+'" href="/c/'+esc(sp)+'/'+esc(cat)+'">전체</a>'+
     have.map(function(i){
-      return '<a class="chip'+(cur===i.slug?" on":"")+'" href="#/c/'+esc(sp)+'/'+esc(cat)+'/'+esc(i.slug)+'">'+
+      return '<a class="chip'+(cur===i.slug?" on":"")+'" href="/c/'+esc(sp)+'/'+esc(cat)+'/'+esc(i.slug)+'">'+
         esc(i.name)+'</a>';
     }).join("")+'</div>';
 }
@@ -169,10 +169,10 @@ function PageList(o){
   LS.q = o.q || {}; LS.page = 1;
   var sp = LS.q.sp, cat = LS.q.cat, item = LS.q.item;
 
-  var crumbs=[["홈","#/"]];
+  var crumbs=[["홈","/"]];
   if(sp){
-    crumbs.push([wowSpeciesName(sp), "#/c/"+sp]);
-    if(cat)  crumbs.push([wowCatName(sp,cat)||"", "#/c/"+sp+"/"+cat]);
+    crumbs.push([wowSpeciesName(sp), "/c/"+sp]);
+    if(cat)  crumbs.push([wowCatName(sp,cat)||"", "/c/"+sp+"/"+cat]);
     if(item) crumbs.push([wowCatName(sp,cat,item)||"", ""]);
   } else {
     crumbs.push([o.title||"전체상품",""]);
@@ -193,7 +193,7 @@ function PageList(o){
           '<div class="bnr-in">'+
             '<h3>'+esc(sp==="pork"?"돼지":"소")+'의 어떤 부위인가요?</h3>'+
             '<p>궁금한 부위를 눌러 보세요. 부위별 특징과 추천 요리를 확인할 수 있습니다.</p>'+
-            '<a class="btn btn-o btn-lg" href="#/enc/'+esc(sp)+'">'+
+            '<a class="btn btn-o btn-lg" href="/enc/'+esc(sp)+'">'+
               esc(wowSpeciesName(sp))+' 도감 보기'+icon("arrow",18)+'</a>'+
           '</div>'+
           '<div class="bnr-fig">'+PartDiagram(sp,null)+'</div>'+

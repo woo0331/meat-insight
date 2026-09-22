@@ -6,17 +6,17 @@
 function Header(){
   return '<header class="hd">'+
     '<div class="w hd-top">'+
-      '<a class="hd-logo" href="#/" aria-label="ABOUTMEAT 홈">'+
+      '<a class="hd-logo" href="/" aria-label="ABOUTMEAT 홈">'+
         '<b>ABOUTMEAT</b><span>축산 부산물 전문마켓</span></a>'+
       SearchBar()+
       '<div class="hd-acts">'+
         '<div class="hd-links">'+
-          '<a href="#/login">로그인</a>'+
-          '<a href="#/signup">회원가입</a>'+
-          '<a href="#/my">마이페이지</a>'+
+          '<a href="/login">로그인</a>'+
+          '<a href="/signup">회원가입</a>'+
+          '<a href="/my">마이페이지</a>'+
         '</div>'+
-        '<button class="hd-ic" onclick="go(\'#/my\')" aria-label="마이페이지">'+icon("user")+'</button>'+
-        '<button class="hd-ic" onclick="go(\'#/cart\')" aria-label="장바구니">'+icon("cart")+
+        '<button class="hd-ic" onclick="go(\'/my\')" aria-label="마이페이지">'+icon("user")+'</button>'+
+        '<button class="hd-ic" onclick="go(\'/cart\')" aria-label="장바구니">'+icon("cart")+
           '<span class="cnt" id="cart-n" hidden>0</span></button>'+
       '</div>'+
     '</div>'+
@@ -37,9 +37,9 @@ function SearchBar(id){
 
 function paintGnb(){
   var g=$("gnb"); if(!g) return;
-  var here=location.hash||"#/";
+  var here=location.hash||"/";
   g.innerHTML = WOW_GNB.map(function(m){
-    var on = here===m.to || (m.to!=="#/products" && here.indexOf(m.to)===0);
+    var on = here===m.to || (m.to!=="/products" && here.indexOf(m.to)===0);
     return '<a href="'+esc(m.to)+'" class="'+(m.hot?"hot ":"")+(on?"on":"")+'">'+esc(m.name)+'</a>';
   }).join("");
 }
@@ -51,14 +51,14 @@ function Footer(){
         '<p style="margin:0;line-height:1.8;">소·돼지 부산물 전문 온라인몰<br>'+
         '도축장에서 시작되는 신선한 원물을<br>필요한 상태와 규격으로 공급합니다.</p></div>'+
       '<div class="ft-col"><h4>상품</h4>'+
-        '<a href="#/c/beef">소 부산물</a><a href="#/c/pork">돼지 부산물</a>'+
-        '<a href="#/products?trim=full">손질상품</a><a href="#/products?today=1">오늘입고</a></div>'+
+        '<a href="/c/beef">소 부산물</a><a href="/c/pork">돼지 부산물</a>'+
+        '<a href="/products/trim">손질상품</a><a href="/products/today">오늘입고</a></div>'+
       '<div class="ft-col"><h4>알아보기</h4>'+
-        '<a href="#/enc">부산물 도감</a><a href="#/b2b">업소용·대량구매</a>'+
-        '<a href="#/about">브랜드 스토리</a></div>'+
+        '<a href="/enc">부산물 도감</a><a href="/b2b">업소용·대량구매</a>'+
+        '<a href="/about">브랜드 스토리</a></div>'+
       '<div class="ft-col"><h4>고객지원</h4>'+
-        '<a href="#/my">주문 조회</a><a href="#/b2b">대량견적 문의</a>'+
-        '<a href="#/terms">이용약관</a><a href="#/privacy">개인정보처리방침</a></div>'+
+        '<a href="/my">주문 조회</a><a href="/b2b">대량견적 문의</a>'+
+        '<a href="/terms">이용약관</a><a href="/privacy">개인정보처리방침</a></div>'+
     '</div>'+
     '<div class="ft-biz" id="ft-biz"></div>'+
   '</div></footer>';
@@ -85,15 +85,15 @@ function paintBiz(){
 }
 
 function MobileNav(){
-  var m=[["#/","홈","home"],["#/products","카테고리","grid"],["#/search","검색","search"],
-         ["#/my?t=wish","찜","heart"],["#/my","마이","user"]];
+  var m=[["/","홈","home"],["/products","카테고리","grid"],["/search","검색","search"],
+         ["/my?t=wish","찜","heart"],["/my","마이","user"]];
   return '<nav class="mnav" aria-label="모바일 메뉴"><div class="mnav-in">'+
     m.map(function(x){
       return '<a href="'+x[0]+'" data-m="'+esc(x[0])+'">'+icon(x[2],21)+'<span>'+esc(x[1])+'</span></a>';
     }).join("")+'</div></nav>';
 }
 function paintMnav(){
-  var here=location.hash||"#/";
+  var here=location.hash||"/";
   els(".mnav a").forEach(function(a){
     a.classList.toggle("on", a.getAttribute("data-m")===here);
   });

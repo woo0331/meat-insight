@@ -133,6 +133,7 @@ window.wowFind = function(q){
     if(q.cat   && p.cat  !== q.cat)  return false;
     if(q.item  && p.item !== q.item) return false;
     if(q.today && !p.today)          return false;
+    if(q.badge && (p.badges||[]).indexOf(q.badge)<0) return false;
     if(q.breed && q.breed.length && q.breed.indexOf(p.breed)<0) return false;
     if(q.temp  && q.temp.length  && q.temp.indexOf(p.temp)<0)   return false;
     if(q.trim  && q.trim.length  && q.trim.indexOf(p.trim)<0)   return false;

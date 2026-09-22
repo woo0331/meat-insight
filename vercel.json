@@ -1,4 +1,15 @@
 {
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/p/:id", "destination": "/index.html" },
+    { "source": "/c/:sp", "destination": "/index.html" },
+    { "source": "/c/:sp/:cat", "destination": "/index.html" },
+    { "source": "/c/:sp/:cat/:item", "destination": "/index.html" },
+    { "source": "/enc/:sp", "destination": "/index.html" },
+    { "source": "/enc/:sp/:slug", "destination": "/index.html" },
+    { "source": "/products/:kind", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -7,6 +18,12 @@
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
         { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=(), payment=()" }
+      ]
+    },
+    {
+      "source": "/img/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     }
   ]

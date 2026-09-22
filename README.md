@@ -20,20 +20,30 @@ js/pages/               home · list · detail · misc
 js/app.js               라우터 · 장바구니 · 찜
 img/                    사진 48장
 check.js                전수 점검 (playwright)
+build-pages.js          주소마다 HTML 파일 생성 (검색엔진용)
 admin.html              상품·사업자 정보 편집기 (js/admin.js · admin-ui.js)
 ```
+
+## 상품을 바꾼 뒤에는
+
+```bash
+node build-pages.js      # 페이지 75개 + sitemap.xml 다시 만들기
+```
+
+주소마다 실제 HTML 파일이 있어야 검색엔진이 제목·설명·가격을 읽습니다.
+안 돌려도 화면은 정상이지만, 새 상품만 검색용 메타가 기본값이 됩니다.
 
 ## 화면 (전부 새로고침·공유 링크로 열립니다)
 
 | 주소 | 화면 |
 |---|---|
-| `#/` | 메인 |
-| `#/products` | 전체상품 (`?today=1` `?trim=full` `?use=업소용`) |
-| `#/c/<sp>` · `/<cat>` · `/<item>` | 소·돼지 / 분류 / 세부 품목 |
-| `#/p/<id>` | 상품 상세 |
-| `#/enc` · `#/enc/<sp>` · `#/enc/<sp>/<slug>` | 부산물 도감 |
-| `#/b2b` · `#/b2b/quote` | 업소용 · 대량견적 |
-| `#/search?q=` `#/cart` `#/login` `#/signup` `#/my` `#/about` | 나머지 |
+| `/` | 메인 |
+| `/products` · `/products/today` · `/products/trim` | 전체상품 · 오늘입고 · 손질상품 |
+| `/c/<sp>` · `/<cat>` · `/<item>` | 소·돼지 / 분류 / 세부 품목 |
+| `/p/<id>` | 상품 상세 |
+| `/enc` · `#/enc/<sp>` · `#/enc/<sp>/<slug>` | 부산물 도감 |
+| `/b2b` · `#/b2b/quote` | 업소용 · 대량견적 |
+| `/search?q=` `#/cart` `#/login` `#/signup` `#/my` `#/about` | 나머지 |
 
 **화면을 새로 만들면 `js/app.js` 의 `render()` 와 `TITLES` 둘 다 넣으세요.**
 `render()` 에만 넣으면 문서 제목이 안 바뀌고, 안 넣으면 주소가 `#/` 로

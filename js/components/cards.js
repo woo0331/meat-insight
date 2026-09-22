@@ -25,12 +25,12 @@ function ProductCard(p){
   var bd = (p.badges||[]).slice();
   if(out) bd = ["out"];          /* 품절이면 NEW·BEST 는 지웁니다 — 못 사는데 부추기면 안 됩니다 */
   return '<article class="pc'+(out?" out":"")+'">'+
-    '<a class="pc-img" href="#/p/'+esc(p.id)+'" aria-label="'+esc(p.name)+(out?" (품절)":"")+' 상세보기">'+
+    '<a class="pc-img" href="/p/'+esc(p.id)+'" aria-label="'+esc(p.name)+(out?" (품절)":"")+' 상세보기">'+
       imgTag(p.img, p.name)+
       (bd.length?'<span class="pc-bd">'+bd.map(ProductBadge).join("")+'</span>':'')+
     '</a>'+
     '<div class="pc-b">'+
-      '<a class="pc-nm" href="#/p/'+esc(p.id)+'">'+esc(p.name)+'</a>'+
+      '<a class="pc-nm" href="/p/'+esc(p.id)+'">'+esc(p.name)+'</a>'+
       '<div class="pc-mt">'+esc(meta)+'</div>'+
       '<div class="pc-f">'+
         '<div class="pc-pr">'+wowWon(p.price)+'원<em> /kg</em></div>'+
@@ -49,7 +49,7 @@ function ProductGrid(list, opt){
     return '<div class="empty">'+
       '<div class="empty-t">'+esc(opt.emptyT||"조건에 맞는 상품이 없습니다")+'</div>'+
       '<div class="empty-d">'+esc(opt.emptyD||"조건을 줄이면 더 많은 부산물을 보실 수 있습니다.")+'</div>'+
-      '<a class="btn btn-g" href="'+esc(opt.emptyTo||"#/products")+'">전체상품 보기</a></div>';
+      '<a class="btn btn-g" href="'+esc(opt.emptyTo||"/products")+'">전체상품 보기</a></div>';
   }
   return '<div class="pg'+(opt.cols===3?" pg-3":"")+'">'+list.map(ProductCard).join("")+'</div>';
 }
@@ -78,18 +78,18 @@ function TrustBar(items){
    데이터(제목·본문·버튼)를 인자로 받습니다. */
 function B2BBanner(o){
   o = o || {};
-  return '<div class="bnr" style="background-image:url(img/'+esc(o.img||"biz-banner")+'.jpg)">'+
+  return '<div class="bnr" style="background-image:url(/img/'+esc(o.img||"biz-banner")+'.jpg)">'+
     '<div class="bnr-in">'+
       '<h3>'+(o.title||'<em>업소용</em>으로 찾으시나요?')+'</h3>'+
       '<p>'+esc(o.desc||"식당 · 국밥집 · 곱창전문점 · 식자재업체를 위한 대용량 부산물 공급")+'</p>'+
-      '<a class="btn btn-o btn-lg" href="'+esc(o.to||"#/b2b")+'">'+
+      '<a class="btn btn-o btn-lg" href="'+esc(o.to||"/b2b")+'">'+
         esc(o.cta||"업소용 상품 보기")+icon("arrow",18)+'</a>'+
     '</div></div>';
 }
 
 /* 도감 카드 — 컷아웃 + 이름 */
 function EncyclopediaCard(e, sp){
-  return '<a class="qc" href="#/enc/'+esc(sp)+'/'+esc(e.slug)+'">'+
+  return '<a class="qc" href="/enc/'+esc(sp)+'/'+esc(e.slug)+'">'+
     imgTag(e.img, e.name)+'<b>'+esc(e.name)+'</b></a>';
 }
 

@@ -9,14 +9,14 @@ function PageHome(){
   return (
   /* ── 히어로 (지시서 5번) ─────────────────────────────── */
   '<section class="hero">'+
-    '<div class="hero-ph" style="background-image:url(img/hero.jpg)"></div>'+
+    '<div class="hero-ph" style="background-image:url(/img/hero.jpg)"></div>'+
     '<div class="w hero-in">'+
       '<h1>부산물을<br>가장 잘 아는 마켓.</h1>'+
       '<p>도축부터 시작되는 신선한 축산 부산물.<br>'+
          '필요한 상태와 규격으로 만나보세요.</p>'+
       '<div class="hero-btns">'+
-        '<a class="btn btn-g btn-lg" href="#/c/beef">소 부산물 보기'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-o btn-lg" href="#/c/pork">돼지 부산물 보기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-g btn-lg" href="/c/beef">소 부산물 보기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="/c/pork">돼지 부산물 보기'+icon("arrow",18)+'</a>'+
       '</div>'+
     '</div></section>'+
 
@@ -36,7 +36,7 @@ function PageHome(){
   '<section class="sec sec-w"><div class="w">'+
     '<div class="sec-hd"><div class="sec-hd-t"><h2>오늘 들어온 부산물</h2>'+
       '<p>당일 작업한 원물을 냉장 상태로 보냅니다</p></div>'+
-      '<a class="sec-more" href="#/products?today=1">전체보기'+icon("chev",16)+'</a></div>'+
+      '<a class="sec-more" href="/products/today">전체보기'+icon("chev",16)+'</a></div>'+
     ProductGrid(today)+
   '</div></section>' : '')+
 
@@ -58,12 +58,12 @@ function PageHome(){
   '</div></section>'+
 
   /* ── 브랜드 (지시서 20번) ────────────────────────────── */
-  '<section class="bnr bnr-flat" style="background-image:url(img/brand.jpg)">'+
+  '<section class="bnr bnr-flat" style="background-image:url(/img/brand.jpg)">'+
     '<div class="w"><div class="bnr-in" style="padding-left:0;padding-right:0;">'+
       '<h3>모든 한 점까지,<br>가치 있게.</h3>'+
       '<p>축산 현장을 이해하는 부산물 전문업체로서,<br>'+
          '버려지던 부위에 제 값을 찾아 드립니다.</p>'+
-      '<a class="btn btn-o btn-lg" href="#/about">브랜드 스토리 보기'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-o btn-lg" href="/about">브랜드 스토리 보기'+icon("arrow",18)+'</a>'+
     '</div></div></section>'
   );
 }

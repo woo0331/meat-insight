@@ -5,7 +5,7 @@
    이름을 바꿀 때 여기만 고치면 헤더 GNB·퀵 카테고리·목록 필터·도감이
    전부 따라옵니다. 화면 코드에 "곱창" 같은 말을 직접 적지 마세요.
 
-   slug 는 주소(#/c/beef/gut/gopchang)와 이미지 파일명에 쓰이므로
+   slug 는 주소(/c/beef/gut/gopchang)와 이미지 파일명에 쓰이므로
    **한 번 정하면 바꾸지 않습니다.** 바꾸면 손님이 저장해 둔 링크가
    죽고, 검색엔진이 물고 있던 주소가 404 가 됩니다.
    ════════════════════════════════════════════════════════════════════ */
@@ -101,25 +101,25 @@ window.WOW_CATS = { beef: WOW_CAT_BEEF, pork: WOW_CAT_PORK };
    합니다 — 어긋나면 카드가 통째로 빈 상자가 되는데, 화면에서는
    "아직 안 만든 사이트" 로 읽힙니다. 이름을 바꾸면 img/ 도 같이 보세요. */
 window.WOW_QUICK = [
-  { slug:"beef",       name:"소 부산물",      to:"#/c/beef",             img:"q-beef" },
-  { slug:"pork",       name:"돼지 부산물",    to:"#/c/pork",             img:"q-pork" },
-  { slug:"gopchang",   name:"곱창·대창",      to:"#/c/beef/gut",         img:"q-gopchang" },
-  { slug:"makchang",   name:"막창",           to:"#/c/beef/gut/makchang",img:"q-makchang" },
-  { slug:"yang",       name:"양·천엽",        to:"#/c/beef/gut/yang",    img:"q-yang" },
-  { slug:"head",       name:"머리·특수부위",  to:"#/c/beef/head",        img:"q-organ" },
-  { slug:"organ",      name:"장기류",         to:"#/c/beef/organ",       img:"e-yeomtong" },
-  { slug:"bone",       name:"뼈·탕거리",      to:"#/c/beef/bone",        img:"q-bone" }
+  { slug:"beef",       name:"소 부산물",      to:"/c/beef",             img:"q-beef" },
+  { slug:"pork",       name:"돼지 부산물",    to:"/c/pork",             img:"q-pork" },
+  { slug:"gopchang",   name:"곱창·대창",      to:"/c/beef/gut",         img:"q-gopchang" },
+  { slug:"makchang",   name:"막창",           to:"/c/beef/gut/makchang",img:"q-makchang" },
+  { slug:"yang",       name:"양·천엽",        to:"/c/beef/gut/yang",    img:"q-yang" },
+  { slug:"head",       name:"머리·특수부위",  to:"/c/beef/head",        img:"q-organ" },
+  { slug:"organ",      name:"장기류",         to:"/c/beef/organ",       img:"e-yeomtong" },
+  { slug:"bone",       name:"뼈·탕거리",      to:"/c/beef/bone",        img:"q-bone" }
 ];
 
 /* 헤더 GNB — 지시서 4번. 일곱 개가 전부입니다. */
 window.WOW_GNB = [
-  { name:"전체상품",    to:"#/products" },
-  { name:"소 부산물",   to:"#/c/beef",   mega:"beef" },
-  { name:"돼지 부산물", to:"#/c/pork",   mega:"pork" },
-  { name:"업소용",      to:"#/b2b" },
-  { name:"손질상품",    to:"#/products?trim=full" },
-  { name:"오늘입고",    to:"#/products?today=1" },
-  { name:"특가",        to:"#/products?sale=1", hot:true }
+  { name:"전체상품",    to:"/products" },
+  { name:"소 부산물",   to:"/c/beef",   mega:"beef" },
+  { name:"돼지 부산물", to:"/c/pork",   mega:"pork" },
+  { name:"업소용",      to:"/b2b" },
+  { name:"손질상품",    to:"/products/trim" },
+  { name:"오늘입고",    to:"/products/today" },
+  { name:"특가",        to:"/products/sale", hot:true }
 ];
 
 /* slug 로 이름을 되찾는 도우미 — 화면 어디서나 씁니다.

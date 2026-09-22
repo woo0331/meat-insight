@@ -13,27 +13,50 @@
      7. 링크가 실제로 열리는지 (죽은 주소가 없는지)
    ════════════════════════════════════════════════════════════════════ */
 const { chromium } = require("/opt/node22/lib/node_modules/playwright");
-const ROOT = "file://" + __dirname + "/index.html";
+/* ⚠️ file:// 로는 못 돕니다. 주소가 경로 방식(/c/beef)이라 진짜 서버가
+   있어야 합니다. Vercel 을 흉내 내는 작은 서버를 띄웁니다 —
+   정적 파일 우선, 없으면 rewrite, 그것도 아니면 404. */
+const http = require("http"), fsx = require("fs"), px = require("path");
+const RW = [/^\/p\/[^/]+$/, /^\/c\/[^/]+$/, /^\/c\/[^/]+\/[^/]+$/,
+            /^\/c\/[^/]+\/[^/]+\/[^/]+$/, /^\/enc\/[^/]+$/,
+            /^\/enc\/[^/]+\/[^/]+$/, /^\/products\/[^/]+$/];
+const MT = { ".html":"text/html;charset=utf-8", ".js":"text/javascript;charset=utf-8",
+  ".css":"text/css;charset=utf-8", ".json":"application/json", ".jpg":"image/jpeg",
+  ".png":"image/png", ".xml":"application/xml", ".txt":"text/plain;charset=utf-8" };
+const PORT = 8123;
+const server = http.createServer((rq,rs)=>{
+  const u = decodeURIComponent(rq.url.split("?")[0]);
+  const send = (f,code)=>{ try{
+    rs.writeHead(code||200,{"content-type":MT[px.extname(f)]||"application/octet-stream"});
+    rs.end(fsx.readFileSync(f)); }catch(e){ rs.writeHead(500); rs.end(); } };
+  let f = px.join(__dirname, u);
+  if(fsx.existsSync(f) && fsx.statSync(f).isDirectory()) f = px.join(f,"index.html");
+  if(fsx.existsSync(f) && fsx.statSync(f).isFile()) return send(f);
+  if(RW.some(r=>r.test(u))) return send(px.join(__dirname,"index.html"));
+  return send(px.join(__dirname,"404.html"), 404);
+});
+const ROOT = "http://127.0.0.1:" + PORT;
 
 const PAGES = [
-  ["#/",                 "메인"],
-  ["#/products",         "전체상품"],
-  ["#/c/beef",           "소 부산물"],
-  ["#/c/pork",           "돼지 부산물"],
-  ["#/c/beef/gut",       "세부 카테고리"],
-  ["#/p/b-gopchang",     "상품상세"],
-  ["#/enc/beef",         "부산물 도감"],
-  ["#/enc/beef/gopchang","도감 부위상세"],
-  ["#/b2b",              "업소용 B2B"],
-  ["#/b2b/quote",        "대량견적 문의"],
-  ["#/search?q=곱창",     "검색결과"],
-  ["#/cart",             "장바구니"],
-  ["#/login",            "로그인"],
-  ["#/signup",           "회원가입"],
-  ["#/my",               "마이페이지"],
-  ["#/about",            "브랜드"],
-  ["#/terms",            "이용약관"],
-  ["#/privacy",          "개인정보처리방침"]
+  ["/",                 "메인"],
+  ["/products",         "전체상품"],
+  ["/c/beef",           "소 부산물"],
+  ["/c/pork",           "돼지 부산물"],
+  ["/c/beef/gut",       "세부 카테고리"],
+  ["/p/b-gopchang",     "상품상세"],
+  ["/p/b-jira",         "품절 상품"],
+  ["/enc/beef",         "부산물 도감"],
+  ["/enc/beef/gopchang","도감 부위상세"],
+  ["/b2b",              "업소용 B2B"],
+  ["/b2b/quote",        "대량견적 문의"],
+  ["/search?q=곱창",     "검색결과"],
+  ["/cart",             "장바구니"],
+  ["/login",            "로그인"],
+  ["/signup",           "회원가입"],
+  ["/my",               "마이페이지"],
+  ["/about",            "브랜드"],
+  ["/terms",            "이용약관"],
+  ["/privacy",          "개인정보처리방침"]
 ];
 const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[390,844,"모바일"]];
 
@@ -93,11 +116,12 @@ const AUDIT = `(() => {
     out.wrap.push(t.slice(0,30)+" ("+toks.length+"낱말 "+rects.length+"줄)");
   }
   out.over = document.documentElement.scrollWidth > W + 1;
-  out.links = [...document.querySelectorAll('a[href^="#/"]')].map(a=>a.getAttribute("href"));
+  out.links = [...document.querySelectorAll('a[href^="/"]')].map(a=>a.getAttribute("href"));
   return out;
 })()`;
 
 (async () => {
+  await new Promise(r=>server.listen(PORT,r));
   const b = await chromium.launch();
   let fail = 0;
   const seenLinks = new Set();
@@ -149,17 +173,16 @@ const AUDIT = `(() => {
     await p.goto(ROOT + l, { waitUntil:"load" });
     await p.waitForTimeout(220);
     const st = await p.evaluate(() => ({
-      hash: location.hash,
-      empty: (document.getElementById("view").textContent||"").trim().length < 30
+      empty: ((document.getElementById("view")||{textContent:""}).textContent||"").trim().length < 30
     }));
-    /* 홈으로 튕겼거나(주소가 #/ 로 정리됨) 본문이 비면 죽은 주소입니다 */
-    if (st.empty || (l !== "#/" && st.hash === "#/")) dead.push(l+" → "+st.hash+(st.empty?" (빈 화면)":""));
+    if (st.empty) dead.push(l+" (빈 화면)");
   }
   console.log("\n── 링크 " + seenLinks.size + "개");
   if (dead.length) { fail++; console.log("  ❌ 안 열리는 주소 "+dead.length+"건: "+dead.slice(0,6).join(" / ")); }
   else console.log("  ✅ 전부 열림");
 
   await b.close();
+  server.close();
   console.log(fail ? "\n❌ "+fail+"개 항목 실패" : "\n✅ 전체 통과");
   process.exit(fail ? 1 : 0);
 })();

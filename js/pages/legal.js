@@ -126,7 +126,7 @@ function PagePrivacy(){
 /* 두 문서가 같은 껍데기를 씁니다 */
 function legalShell(D, tail){
   var eff = bizVal("effective");
-  return Breadcrumb([["홈","#/"],[D.title,""]])+
+  return Breadcrumb([["홈","/"],[D.title,""]])+
   '<div class="w lg">'+
     '<header class="lg-hd">'+
       '<h1>'+esc(D.title)+'</h1>'+

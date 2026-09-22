@@ -57,7 +57,7 @@ function tabBody(p, ent){
          무엇이 없는지 솔직히 말하고 갈 길을 줍니다. */
       return '<div class="empty"><div class="empty-t">이 부위의 안내는 준비 중입니다</div>'+
         '<div class="empty-d">다른 부위는 부산물 도감에서 먼저 보실 수 있습니다.</div>'+
-        '<a class="btn btn-g" href="#/enc/'+esc(p.sp)+'">부산물 도감 보기</a></div>';
+        '<a class="btn btn-g" href="/enc/'+esc(p.sp)+'">부산물 도감 보기</a></div>';
     }
     return '<h3 class="tb-h">부위안내</h3>'+
       '<div class="part"><div class="part-l">'+
@@ -102,23 +102,23 @@ function tabBody(p, ent){
 function emptyTab(n){
   return '<div class="empty"><div class="empty-t">'+esc(n)+' 안내는 준비 중입니다</div>'+
     '<div class="empty-d">필요하신 내용이 있으시면 대량구매 상담으로 문의해 주세요.</div>'+
-    '<a class="btn btn-o" href="#/b2b">문의하기</a></div>';
+    '<a class="btn btn-o" href="/b2b">문의하기</a></div>';
 }
 
 function detailBody(){
   var p = wowProduct(DT.id);
   if(!p){
-    return Breadcrumb([["홈","#/"],["상품",""]])+
+    return Breadcrumb([["홈","/"],["상품",""]])+
       '<div class="w"><div class="empty">'+
       '<div class="empty-t">찾으시는 상품이 없습니다</div>'+
       '<div class="empty-d">주소가 바뀌었거나 판매가 끝난 상품일 수 있습니다.</div>'+
-      '<a class="btn btn-g" href="#/products">전체상품 보기</a></div></div>';
+      '<a class="btn btn-g" href="/products">전체상품 보기</a></div></div>';
   }
   var ent = wowEnc(p.sp, p.item);
   var total = p.price * DT.unit * DT.qty;
 
-  return Breadcrumb([["홈","#/"],[wowSpeciesName(p.sp),"#/c/"+p.sp],
-                     [wowCatName(p.sp,p.cat)||"","#/c/"+p.sp+"/"+p.cat],[p.name,""]])+
+  return Breadcrumb([["홈","/"],[wowSpeciesName(p.sp),"/c/"+p.sp],
+                     [wowCatName(p.sp,p.cat)||"","/c/"+p.sp+"/"+p.cat],[p.name,""]])+
   '<div class="w dt-wrap">'+
     '<div class="dt-cols">'+
       '<div class="dt-l">'+Gallery(p)+'</div>'+

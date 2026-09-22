@@ -266,7 +266,53 @@ const AUDIT = `(() => {
   await t("품절은 담기지 않는다", `
     const n=CART.length; addCart("b-jira",1); return CART.length===n;`);
 
-  console.log("\n── 주문 흐름 7개");
+  /* ⚠️ 여기부터는 **실제 주문 경로**를 그대로 태웁니다. 손으로
+     wowOrderSave() 를 불러 놓고 검사하면, submitOrder 에서 그 줄을
+     지워도 통과합니다 — 실제로 그래서 못 잡았습니다. 접수 성공만
+     흉내 내고(fetch 를 가로채서) 나머지는 진짜 코드가 하게 둡니다. */
+  await t("접수에 성공하면 이 브라우저에 남는다", `
+    localStorage.removeItem("wow.orders");
+    CART.length=0; addCart("b-gopchang",5); OD.sending=false;
+    go("/order"); await new Promise(r=>setTimeout(r,150));
+    const f=window.fetch;
+    window.fetch=function(){ return Promise.resolve({ ok:true,
+      json:()=>Promise.resolve({ no:"20260923-9001", total: wowTotals(CART).total }) }); };
+    document.getElementById("o-name").value="홍길동";
+    document.getElementById("o-tel").value="010-1234-5678";
+    document.getElementById("o-addr").value="서울시 어딘가 1-2";
+    document.getElementById("o-agree").checked=true;
+    document.getElementById("o-priv").checked=true;
+    submitOrder({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,250)); window.fetch=f;
+    const kept = wowOrders();
+    return kept.length===1 && kept[0].no==="20260923-9001" && CART.length===0;`);
+  await t("주문을 새로고침해도 보인다", `
+    OD.done = null;                       /* 새로고침한 셈 칩니다 */
+    go("/order/done?no=20260923-9001"); await new Promise(r=>setTimeout(r,180));
+    const txt = document.getElementById("view").textContent;
+    const kept = wowOrderFind("20260923-9001");
+    return /20260923-9001/.test(txt) && txt.indexOf(wowWon(kept.total)+"원") >= 0;`);
+  await t("마이페이지에 이 브라우저 주문이 보인다", `
+    go("/my?t=order"); await new Promise(r=>setTimeout(r,180));
+    const txt = document.getElementById("view").textContent;
+    return /20260923-9001/.test(txt) && /이 브라우저/.test(txt) && !/로그인이 필요합니다/.test(txt);`);
+  /* ⚠️ 주문한 뒤에 계좌를 바꾸거나 지우면, 손님이 나중에 다시 연
+     완료 화면이 "예금주" 라벨만 남은 빈 상자가 됩니다 */
+  await t("계좌가 비면 빈 계좌칸을 내지 않는다", `
+    const keep = [WOW_BIZ.bankName, WOW_BIZ.bankAccount, WOW_BIZ.bankHolder];
+    WOW_BIZ.bankName=""; WOW_BIZ.bankAccount=""; WOW_BIZ.bankHolder="";
+    OD.done=null; go("/order/done?no=20260923-9001"); await new Promise(r=>setTimeout(r,180));
+    const txt = document.getElementById("view").textContent;
+    const ok = !/예금주/.test(txt) && !/계좌번호/.test(txt) && /20260923-9001/.test(txt);
+    WOW_BIZ.bankName=keep[0]; WOW_BIZ.bankAccount=keep[1]; WOW_BIZ.bankHolder=keep[2];
+    return ok;`);
+
+  /* ⚠️ 공용 PC·가게 공용 태블릿에서 다음 사람이 그대로 봅니다 */
+  await t("이름·연락처·주소는 저장하지 않는다", `
+    const raw = localStorage.getItem("wow.orders")||"";
+    return !/홍길동|010-1234-5678|서울시 어딘가/.test(raw);`);
+
+  console.log("\n── 주문 흐름 12개");
   if (ordBad.length) { fail++; console.log("  ❌ "+ordBad.length+"건: "+ordBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

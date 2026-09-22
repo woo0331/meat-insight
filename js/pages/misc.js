@@ -371,6 +371,14 @@ function myBody(t){
     return w.length ? ProductGrid(w)
       : emptyBox("찜한 상품이 없습니다","마음에 드는 부산물을 찜해 두시면 이곳에 모입니다.","/products","전체상품 보기");
   }
+  /* 주문도 찜과 같습니다 — **이 브라우저에서 넣은 것**은 실제로 압니다.
+     무통장입금은 계좌와 금액을 나중에 다시 봐야 해서 값어치가 큽니다.
+     ⚠️ 다만 이것은 "주문 내역" 이 아닙니다. 다른 기기에서 넣은 주문은
+     여기 없으므로 **"이 브라우저에서"** 라고 반드시 적습니다. */
+  if(t==="order"){
+    var mine = (typeof wowOrders==="function") ? wowOrders() : [];
+    if(mine.length) return myOrders(mine);
+  }
   if(!isLoggedIn()){
     var what = t==="quote" ? "문의하신 견적" : (t==="info" ? "회원정보" : "주문 내역");
     return emptyBox("로그인이 필요합니다", what+josa(what,"은는")+" 로그인 후 확인하실 수 있습니다.","/login","로그인");
@@ -379,6 +387,23 @@ function myBody(t){
   if(t==="info")  return emptyBox("회원정보를 불러올 수 없습니다","잠시 후 다시 시도해 주세요.","/","홈으로");
   return emptyBox("주문 내역이 없습니다","주문하시면 배송 상황을 이곳에서 확인하실 수 있습니다.","/products","전체상품 보기");
 }
+function myOrders(list){
+  /* 최근 것이 위로. 넣은 순서를 믿지 않고 날짜로 세웁니다 */
+  list = list.slice().sort(function(a,b){ return String(b.at||"").localeCompare(String(a.at||"")); });
+  return '<p class="my-note">이 브라우저에서 넣으신 주문입니다. '+
+      '다른 기기에서 넣으신 주문은 로그인 뒤에 보실 수 있습니다.</p>'+
+    '<div class="my-ords">'+list.map(function(o){
+      return '<div class="my-ord">'+
+        '<div class="my-ord-h"><b>'+esc(o.no)+'</b>'+
+          '<span>'+esc(wowOrderDate(o.at))+'</span></div>'+
+        '<div class="my-ord-i">'+(o.items||[]).map(function(x){
+          return esc(x.name)+' '+esc(String(x.kg))+'kg'; }).join(" · ")+'</div>'+
+        '<div class="my-ord-f"><span>'+esc(o.pay==="bank"?"무통장입금":"카드결제")+'</span>'+
+          '<b>'+wowWon(o.total)+'원</b></div>'+
+        '<a class="btn btn-sm" href="/order/done?no='+encodeURIComponent(o.no)+'">자세히 보기</a>'+
+      '</div>'; }).join("")+'</div>';
+}
+
 function emptyBox(t,d,to,cta){
   return '<div class="empty"><div class="empty-t">'+esc(t)+'</div>'+
     '<div class="empty-d">'+esc(d)+'</div>'+

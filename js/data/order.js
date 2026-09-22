@@ -60,3 +60,44 @@ window.wowOrderNo = function(){
   var r = ("000"+Math.floor(Math.random()*10000)).slice(-4);
   return ""+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+r;
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   이 브라우저에서 넣은 주문
+
+   서버도 DB 도 없어서 "내 주문" 을 서버에 물어볼 수 없습니다. 다만
+   **이 브라우저에서 넣은 것**은 실제로 알 수 있습니다 — 찜과 같은
+   이치입니다 (로그인과 무관하게 이 기기에 저장되므로 아는 것).
+
+   무통장입금은 계좌와 금액을 **나중에 다시 봐야 합니다.** 완료 화면을
+   새로고침했더니 사라지면 손님은 얼마를 어디로 보낼지 모르게 됩니다.
+
+   ⚠️ **이름·연락처·주소는 저장하지 않습니다.** 공용 PC·가게 공용
+   태블릿에서 다음 사람이 그대로 봅니다. 다시 보여 줄 값어치가 있는
+   것(주문번호·날짜·금액·결제수단·품목)만 남깁니다.
+   ⚠️ 이것은 "주문 내역" 이 아닙니다. 다른 기기에서 넣은 주문은 여기
+   없습니다 — 화면에 **"이 브라우저에서"** 라고 적어야 합니다.
+   ════════════════════════════════════════════════════════════════════ */
+var WOW_ORD_KEY = "wow.orders", WOW_ORD_MAX = 20;
+
+window.wowOrders = function(){
+  try{ return JSON.parse(localStorage.getItem(WOW_ORD_KEY)||"[]") || []; }
+  catch(e){ return []; }
+};
+window.wowOrderSave = function(o){
+  var list = wowOrders();
+  list.unshift({
+    no:o.no, at:o.at || new Date().toISOString(), pay:o.pay, total:o.total,
+    items:(o.items||[]).map(function(x){ return { name:x.name, kg:x.kg }; })
+  });
+  try{ localStorage.setItem(WOW_ORD_KEY, JSON.stringify(list.slice(0, WOW_ORD_MAX))); }catch(e){}
+};
+window.wowOrderFind = function(no){
+  return wowOrders().filter(function(o){ return o.no === String(no); })[0] || null;
+};
+/* 2026-09-23 처럼 — toLocaleDateString 은 기기 설정에 따라 모양이
+   제각각이라 직접 만듭니다 */
+window.wowOrderDate = function(iso){
+  var d = new Date(iso); if(isNaN(d)) return "";
+  var p = function(n){ return ("0"+n).slice(-2); };
+  return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());
+};

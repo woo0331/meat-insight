@@ -155,14 +155,29 @@ function odPay(pays){
     (OD.pay==="card" ? '<p class="ag-no">다음 화면에서 카드 정보를 넣으시게 됩니다.</p>' : '');
 }
 
-/* 입금 계좌. sum 이 있으면 금액까지 같이 적습니다 (완료 화면) */
+/* 입금 계좌. sum 이 있으면 금액까지 같이 적습니다 (완료 화면)
+
+   ⚠️ **계좌가 비면 "예금주" 라벨만 남습니다.** 자리표시자를 찍지 않는다는
+   규칙이 여기에도 걸립니다. 주문할 때는 계좌가 있어야 무통장입금이
+   나오므로 빈 일이 없지만, **주문한 뒤에 계좌를 바꾸거나 지우면**
+   손님이 나중에 다시 연 완료 화면이 그렇게 됩니다.
+   그때는 계좌 줄을 통째로 빼고 어디에 물어볼지를 냅니다. */
 function odBank(sum){
+  var bank = bizVal("bankName"), acct = bizVal("bankAccount"), who = bizVal("bankHolder");
+  var have = bank && acct && who;
+  if(!have){
+    try{ console.warn("[ABOUTMEAT] 입금 계좌가 비어 있어 완료 화면에 계좌를 내지 못했습니다 — "+
+      "admin.html 의 사업자 정보 탭에서 bankName · bankAccount · bankHolder 를 채우세요."); }catch(e){}
+  }
   return '<div class="od-bank'+(sum!=null?" od-bank-big":"")+'">'+
-    '<b>'+(sum!=null?'아래 계좌로 입금해 주세요':'입금 계좌')+'</b>'+
-    '<div class="od-acct">'+esc(bizVal("bankName")||"")+' '+esc(bizVal("bankAccount")||"")+
-      ' <span>예금주 '+esc(bizVal("bankHolder")||"")+'</span></div>'+
+    '<b>'+(have ? (sum!=null?'아래 계좌로 입금해 주세요':'입금 계좌')
+                : '입금 계좌를 확인해 주세요')+'</b>'+
+    (have ? '<div class="od-acct">'+esc(bank)+' '+esc(acct)+
+              ' <span>예금주 '+esc(who)+'</span></div>' : '')+
     (sum!=null ? '<div class="od-amt">'+wowWon(sum)+'원</div>' : '')+
-    '<p>주문 뒤 <b>2일 안에</b> 입금해 주세요. 입금이 확인되면 작업에 들어갑니다.</p>'+
+    (have ? '<p>주문 뒤 <b>2일 안에</b> 입금해 주세요. 입금이 확인되면 작업에 들어갑니다.</p>'
+          : '<p>입금하실 계좌는 '+(bizVal("phone") ? '아래 번호로 문의해 주세요.' : '주문하실 때 안내해 드린 계좌를 확인해 주세요.')+'</p>'+
+            CallButton("btn","계좌 문의"))+
   '</div>';
 }
 
@@ -200,10 +215,15 @@ window.submitOrder = function(ev){
   if(btn){ btn.disabled = true; btn.textContent = "접수하는 중…"; }
 
   sendOrder(order).then(function(res){
-    OD.done = { no:(res && res.no) || order.no, pay:order.pay, buyer:order.buyer,
-                total:(res && res.total!=null) ? res.total : t.total };
+    var done = { no:(res && res.no) || order.no, pay:order.pay, buyer:order.buyer,
+                 total:(res && res.total!=null) ? res.total : t.total };
+    OD.done = done;
+    /* ⚠️ **이 브라우저에** 남깁니다. 무통장입금은 계좌와 금액을 나중에
+       다시 봐야 하는데, 완료 화면은 새로고침하면 사라집니다.
+       이름·연락처·주소는 넣지 않습니다 (js/data/order.js 의 설명). */
+    wowOrderSave({ no:done.no, at:order.at, pay:done.pay, total:done.total, items:t.items });
     CART.length = 0; save(); paintCartN();
-    go("/order/done");
+    go("/order/done?no="+encodeURIComponent(done.no));
   }).catch(function(err){
     OD.sending = false;
     if(btn){ btn.disabled=false; btn.textContent = wowWon(t.total)+"원 주문하기"; }
@@ -245,13 +265,17 @@ function sendOrder(order){
 
 /* ── 주문 완료 ──────────────────────────────────────────── */
 function PageOrderDone(){
-  var o = OD.done;
-  /* ⚠️ 새로고침하면 이 화면이 비어 보입니다 (기억해 둔 것이 사라집니다).
-     "주문이 안 됐나" 싶게 두지 말고 그렇다고 적어 둡니다. */
+  /* 새로고침해도 보이게 — 주소의 ?no= 로 이 브라우저에 남긴 기록을
+     찾습니다. 방금 넣은 주문(OD.done)에는 입금자명까지 있습니다. */
+  var no = nowQS("no");
+  var kept = no ? wowOrderFind(no) : null;
+  var fresh = (OD.done && (!no || OD.done.no === no)) ? OD.done : null;
+  var o = fresh || (kept ? { no:kept.no, pay:kept.pay, total:kept.total, buyer:{} } : null);
+
   if(!o){
     return '<div class="w"><div class="empty">'+
       '<div class="empty-t">주문 내역을 여기서는 확인할 수 없습니다</div>'+
-      '<div class="empty-d">주문이 끝난 뒤 새로고침하면 이 화면이 비어 보입니다. '+
+      '<div class="empty-d">다른 기기나 다른 브라우저에서 넣으신 주문은 이곳에 없습니다. '+
         '접수된 주문은 등록하신 연락처로 안내해 드립니다.</div>'+
       '<div class="empty-acts"><a class="btn btn-g" href="/products">전체상품 보기</a>'+
         CallButton("btn","전화로 문의")+'</div></div></div>';
@@ -268,6 +292,12 @@ function PageOrderDone(){
     (o.buyer.tel ? '<p class="od-done-n">주문 내역과 배송 안내는 <b>'+esc(o.buyer.tel)+'</b> 으로 알려 드립니다.'+
       (o.buyer.email ? ' 확인 메일도 함께 보내 드립니다.' : '')+'</p>' : '')+
     (bizVal("shipNote") ? '<p class="od-done-n">'+esc(bizVal("shipNote"))+'</p>' : '')+
+    (kept && kept.items && kept.items.length
+      ? '<div class="od-list od-done-list">'+kept.items.map(function(x){
+          return '<div class="od-i"><div class="od-i-b"><b>'+esc(x.name)+'</b></div>'+
+            '<div class="od-i-p">'+x.kg+'kg</div></div>'; }).join("")+'</div>' : '')+
+    '<p class="od-done-n od-keep">이 화면은 <b>이 브라우저</b>에 남겨 두었습니다. '+
+      '마이페이지에서 다시 보실 수 있습니다.</p>'+
     '<div class="empty-acts">'+
       '<a class="btn btn-g btn-lg" href="/products">계속 둘러보기</a>'+
       CallButton("btn btn-lg","문의하기")+

@@ -605,3 +605,22 @@
 }
 /* 주문을 못 받는 동안 장바구니에 뜨는 한 줄 */
 .cart-closed{ text-align:left; line-height:1.7; padding:var(--s3) 0; }
+
+/* 이 브라우저에서 넣은 주문 (마이페이지) */
+.my-note{ font-size:var(--t-sm); color:var(--ink2); margin:0 0 var(--s5); line-height:1.7; }
+.my-ords{ display:grid; gap:var(--s3); }
+.my-ord{ background:var(--white); border:1px solid var(--line); border-radius:var(--r-lg);
+  padding:var(--s5); display:grid; gap:var(--s2); }
+.my-ord-h{ display:flex; justify-content:space-between; align-items:baseline; gap:var(--s3); }
+.my-ord-h b{ font-size:var(--t-md); letter-spacing:.02em; }
+.my-ord-h span{ font-size:var(--t-sm); color:var(--ink2); }
+.my-ord-i{ font-size:var(--t-base); color:var(--ink2); line-height:1.7; }
+.my-ord-f{ display:flex; justify-content:space-between; align-items:baseline;
+  padding-top:var(--s2); border-top:1px solid var(--line-soft); }
+.my-ord-f span{ font-size:var(--t-sm); color:var(--ink2); }
+.my-ord-f b{ font-size:var(--t-lg); font-weight:800; color:var(--red-ink); }
+.my-ord .btn{ justify-self:start; }
+/* 완료 화면에서 다시 보여 주는 품목 줄 */
+.od-done-list{ text-align:left; max-width:520px; margin:var(--s5) auto 0; }
+.od-done-list .od-i{ grid-template-columns:1fr auto; }
+.od-keep{ font-size:var(--t-sm); }

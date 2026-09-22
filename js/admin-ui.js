@@ -37,8 +37,10 @@ function listView(){
             (e.length?'<div class="ad-err">'+esc(e[0])+'</div>':'')+'</td>'+
           '<td>'+esc(cat||"—")+'</td>'+
           '<td class="r">'+(Number(p.price)?wowWon(p.price):'—')+'</td>'+
-          '<td>'+(p.badges||[]).map(ProductBadge).join("")+
-            (p.today?'<span class="bdg bdg-soft">오늘</span>':'')+'</td>'+
+          '<td>'+(p.soldOut?ProductBadge("out"):(p.badges||[]).map(ProductBadge).join(""))+
+            (p.today&&!p.soldOut?'<span class="bdg bdg-soft">오늘</span>':'')+
+            '<label class="ad-so"><input type="checkbox"'+(p.soldOut?" checked":"")+
+              ' onchange="adSold('+i+',this.checked)"><span>품절</span></label></td>'+
           '<td class="ad-act">'+
             '<button onclick="adEdit('+i+')">수정</button>'+
             '<button onclick="adCopy('+i+')">복제</button>'+
@@ -127,6 +129,11 @@ function editView(){
             "특가 배지를 달아도 가격은 따로 내려야 합니다 — 배지만 달면 손님에게 거짓말이 됩니다")+
       '<div class="ad-f"><label class="ad-ck"><input type="checkbox" id="f-today"'+
         (p.today?" checked":"")+' onchange="adSet(this)"><span>오늘 들어온 부산물에 올립니다</span></label></div>'+
+      /* 품절은 당일 수급에 따라 자주 켜고 끕니다 — 목록에서 바로
+         누를 수 있게 편집 화면 위쪽이 아니라 여기 둡니다. */
+      '<div class="ad-f"><label class="ad-ck"><input type="checkbox" id="f-soldOut"'+
+        (p.soldOut?" checked":"")+' onchange="adSet(this)">'+
+        '<span><b>품절</b> — 담기를 막고 "품절" 로 표시합니다</span></label></div>'+
       chips("판매단위 (kg)","units",p.units,[[1,"1kg"],[5,"5kg"],[10,"10kg"],[20,"20kg"]])+
       chips("고를 수 있는 가공상태","trims",p.trims,
             Object.keys(WOW_TRIM).map(function(k){ return [k,WOW_TRIM[k]]; }))+
@@ -171,7 +178,7 @@ function bizView(){
 /* ── 조작 ───────────────────────────────────────────────── */
 var FMAP = { "f-name":"name","f-id":"id","f-sp":"sp","f-cat":"cat","f-item":"item",
   "f-breed":"breed","f-origin":"origin","f-price":"price","f-temp":"temp","f-trim":"trim",
-  "f-img":"img","f-rating":"rating","f-reviews":"reviews","f-today":"today","f-workDate":"workDate" };
+  "f-img":"img","f-rating":"rating","f-reviews":"reviews","f-today":"today","f-workDate":"workDate","f-soldOut":"soldOut" };
 
 window.adSet = function(el){
   var k = FMAP[el.id]; if(!k) return;
@@ -201,6 +208,13 @@ window.adToggle = function(field, val){
   p[field] = a; saveWork();
 };
 window.adPick = function(v){ if(!v) return; P[AD.edit].img = v; saveWork(); };
+/* 목록에서 바로 품절을 켜고 끕니다 — 아침마다 열댓 개를 손보는 일이라
+   상품마다 편집 화면에 들어갔다 나오면 못 씁니다. */
+window.adSold = function(i, on){
+  if(!P[i]) return;
+  if(on) P[i].soldOut = true; else delete P[i].soldOut;
+  saveWork();
+};
 function checkImg(name){
   imgExists(name, function(has){
     var s=$("img-chk"); if(!s) return;
@@ -225,7 +239,14 @@ window.adDel = function(i){
   if(!confirm("“"+(P[i].name||P[i].id||"이 상품")+"” 을 목록에서 뺍니다. 계속할까요?")) return;
   P.splice(i,1); AD.edit = null; saveWork();
 };
-window.bizSet = function(k,v){ B[k]=v; saveBiz(); };
+window.bizSet = function(k,v){
+  /* 배송비·무료기준은 숫자로 둬야 장바구니 계산이 맞습니다.
+     문자열로 들어가면 "3000" + 0 = "30000" 이 됩니다. */
+  B[k] = (k==="shipFee" || k==="shipFreeOver")
+    ? (parseInt(String(v).replace(/[^\d]/g,""),10) || 0)
+    : v;
+  saveBiz();
+};
 window.adTab = function(t){ AD.tab=t; AD.edit=null; paintAdmin(); };
 
 function bootAdmin(){

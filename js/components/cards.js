@@ -11,21 +11,33 @@ function ProductBadge(k){
   return '<span class="bdg '+b[1]+'">'+esc(b[0])+'</span>';
 }
 
+/* ⚠️ 부산물은 **당일 수급이라 품절이 잦습니다.** 품절인 줄 모르고
+   주문했다가 "없는데요" 소리를 들으면 그 손님은 다시 안 옵니다.
+   품절은 (1) 사진을 흐리게 (2) 배지를 달고 (3) **담기를 막습니다.**
+   숨기지는 않습니다 — 없어진 줄 알고 딴 데 가는 것보다, 있다는 걸
+   알고 다음에 오는 편이 낫습니다. */
+window.isSoldOut = function(p){ return !!(p && p.soldOut); };
+
 /* 상품 카드 — 시안 그대로: 사진 / 이름 / 원산지·온도·손질 / 원/kg / 담기 */
 function ProductCard(p){
   var meta=[p.origin, WOW_TEMP[p.temp], WOW_TRIM[p.trim]].filter(Boolean).join(" · ");
-  return '<article class="pc">'+
-    '<a class="pc-img" href="#/p/'+esc(p.id)+'" aria-label="'+esc(p.name)+' 상세보기">'+
+  var out = isSoldOut(p);
+  var bd = (p.badges||[]).slice();
+  if(out) bd = ["out"];          /* 품절이면 NEW·BEST 는 지웁니다 — 못 사는데 부추기면 안 됩니다 */
+  return '<article class="pc'+(out?" out":"")+'">'+
+    '<a class="pc-img" href="#/p/'+esc(p.id)+'" aria-label="'+esc(p.name)+(out?" (품절)":"")+' 상세보기">'+
       imgTag(p.img, p.name)+
-      ((p.badges&&p.badges.length)?'<span class="pc-bd">'+p.badges.map(ProductBadge).join("")+'</span>':'')+
+      (bd.length?'<span class="pc-bd">'+bd.map(ProductBadge).join("")+'</span>':'')+
     '</a>'+
     '<div class="pc-b">'+
       '<a class="pc-nm" href="#/p/'+esc(p.id)+'">'+esc(p.name)+'</a>'+
       '<div class="pc-mt">'+esc(meta)+'</div>'+
       '<div class="pc-f">'+
         '<div class="pc-pr">'+wowWon(p.price)+'원<em> /kg</em></div>'+
-        '<button class="pc-cart" onclick="addCart(\''+esc(p.id)+'\')" '+
-          'aria-label="'+esc(p.name)+' 장바구니에 담기">'+icon("cart",20)+'</button>'+
+        (out
+          ? '<span class="pc-out">품절</span>'
+          : '<button class="pc-cart" onclick="addCart(\''+esc(p.id)+'\')" '+
+            'aria-label="'+esc(p.name)+' 장바구니에 담기">'+icon("cart",20)+'</button>')+
       '</div>'+
     '</div></article>';
 }
@@ -79,4 +91,44 @@ function B2BBanner(o){
 function EncyclopediaCard(e, sp){
   return '<a class="qc" href="#/enc/'+esc(sp)+'/'+esc(e.slug)+'">'+
     imgTag(e.img, e.name)+'<b>'+esc(e.name)+'</b></a>';
+}
+
+/* ══ 배송 안내 ═══════════════════════════════════════════
+   ⚠️ 신선식품은 **"몇 시까지 주문하면 언제 받는지"** 가 살지 말지를
+   정합니다. 곱창집 사장님은 내일 장사에 쓸 것을 오늘 삽니다.
+
+   적어 둔 것만 보여 줍니다. 마감 시간을 모르면서 "내일 도착" 이라고
+   쓸 수는 없습니다 — 지어내는 것과 같습니다. */
+function ShipNote(cls){
+  var rows = [
+    ["truck", "주문 마감", bizVal("shipCutoff")],
+    ["box",   "배송",     bizVal("shipNote")],
+    ["doc",   "배송 제한", bizVal("shipExclude")]
+  ].filter(function(r){ return r[2]; });
+  if(!rows.length){
+    try{ console.warn("[ABOUTMEAT] 배송 안내가 비어 있습니다 — admin.html 에서 "+
+      "shipCutoff(주문 마감) · shipNote(배송) · shipExclude(제한 지역)를 채우세요. "+
+      "신선식품은 \"몇 시까지 주문하면 언제 받는지\" 가 구매를 정합니다."); }catch(e){}
+    return "";
+  }
+  return '<div class="ship '+(cls||"")+'">'+rows.map(function(r){
+    return '<div class="ship-r">'+icon(r[0],18)+
+      '<span>'+esc(r[1])+'</span><b>'+esc(r[2])+'</b></div>';
+  }).join("")+'</div>';
+}
+
+/* ══ 전화 주문 ═══════════════════════════════════════════
+   부산물 B2B 는 전화로 삽니다. 번호를 안 적어 두면 이 버튼은
+   **아예 안 나옵니다** — 눌렀는데 안 걸리는 것보다 없는 게 낫습니다. */
+function CallButton(cls, label){
+  var tel = bizVal("phone");
+  if(!tel){
+    try{ console.warn("[ABOUTMEAT] 고객센터 번호가 없어 전화 주문 버튼을 못 답니다 — "+
+      "admin.html 의 사업자 정보에서 phone 을 채우세요."); }catch(e){}
+    return "";
+  }
+  var hours = bizVal("hours");
+  return '<a class="'+(cls||"btn btn-o btn-lg")+'" href="tel:'+esc(telNum(tel))+'">'+
+    icon("phone",18)+'<span>'+esc(label||("전화 주문 "+tel))+'</span>'+
+    (hours?'<em class="call-h">'+esc(hours)+'</em>':'')+'</a>';
 }

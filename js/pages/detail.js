@@ -123,8 +123,12 @@ function detailBody(){
     '<div class="dt-cols">'+
       '<div class="dt-l">'+Gallery(p)+'</div>'+
       '<div class="dt-r">'+
-        ((p.badges&&p.badges.length)?'<div class="dt-bd">'+p.badges.map(ProductBadge).join("")+
-          (p.today?'<span class="bdg bdg-soft">당일가공</span>':'')+'</div>':'')+
+        (function(){
+          var bd = isSoldOut(p) ? ["out"] : (p.badges||[]);
+          if(!bd.length && !p.today) return "";
+          return '<div class="dt-bd">'+bd.map(ProductBadge).join("")+
+            ((p.today && !isSoldOut(p))?'<span class="bdg bdg-soft">당일가공</span>':'')+'</div>';
+        })()+
         '<h1 class="dt-nm">'+esc(p.name)+'</h1>'+
         '<div class="dt-mt">'+esc([p.origin,WOW_TEMP[p.temp],p.today?"당일가공":null].filter(Boolean).join(" · "))+'</div>'+
         (p.rating ? '<div class="dt-rt">'+Stars(p.rating)+'<b>'+p.rating.toFixed(1)+'</b>'+
@@ -135,11 +139,12 @@ function detailBody(){
         OptRow("가공상태",(p.trims||[]).map(function(t){ return [t,WOW_TRIM[t]]; }), DT.trim||p.trim, "dtTrim")+
         OptRow("용도",(p.uses||[]).map(function(u){ return [u,u]; }), DT.use, "dtUse")+
 
+        ShipNote("ship-dt")+
         '<div class="dt-trust">'+DETAIL_TRUST.map(function(t){
           return '<div class="dtt"><div class="dtt-ic">'+icon(t[0],22)+'</div><span>'+esc(t[1])+'</span></div>';
         }).join("")+'</div>'+
 
-        '<div class="dt-buy">'+
+        (isSoldOut(p) ? '' : '<div class="dt-buy">'+
           '<div class="qty">'+
             '<button onclick="dtQty(-1)" aria-label="수량 줄이기">'+icon("minus",18)+'</button>'+
             '<input id="dt-qty" type="number" min="1" max="999" value="'+DT.qty+'" '+
@@ -147,14 +152,30 @@ function detailBody(){
             '<button onclick="dtQty(1)" aria-label="수량 늘리기">'+icon("plus",18)+'</button>'+
           '</div>'+
           '<div class="dt-tot"><span>총 상품금액</span><b>'+wowWon(total)+'원</b></div>'+
-        '</div>'+
+        '</div>')+
 
-        '<div class="dt-acts">'+
-          '<button class="btn btn-o btn-lg" onclick="addCart(\''+esc(p.id)+'\',DT.qty*DT.unit)">장바구니</button>'+
-          '<button class="btn btn-g btn-lg" onclick="buyNow(\''+esc(p.id)+'\')">바로 구매</button>'+
-          '<button class="btn btn-o btn-lg dt-wish" onclick="toggleWish(\''+esc(p.id)+'\')" '+
-            'aria-label="찜하기">'+icon("heart",20)+'</button>'+
-        '</div>'+
+        (isSoldOut(p)
+          /* 품절이면 수량·담기를 아예 안 그립니다. 흐리게만 해 두면
+             눌러 보는 손님이 생기고, 눌리면 담깁니다. */
+          ? '<div class="dt-out"><b>지금은 품절입니다</b>'+
+              '<p>부산물은 당일 수급에 따라 물량이 달라집니다. '+
+                '들어오는 대로 다시 올립니다.</p>'+
+              (bizVal("phone")
+                ? '<a class="btn btn-g btn-lg btn-full" href="tel:'+esc(telNum(bizVal("phone")))+'">'+
+                  icon("phone",18)+' 입고 문의 '+esc(bizVal("phone"))+'</a>'
+                : '')+
+              '<button class="btn btn-o btn-lg btn-full" onclick="toggleWish(\''+esc(p.id)+'\')">'+
+                icon("heart",18)+' 찜해 두고 알림 받기</button>'+
+            '</div>'
+          : '<div class="dt-acts">'+
+            '<button class="btn btn-o btn-lg" onclick="addCart(\''+esc(p.id)+'\',DT.qty*DT.unit)">장바구니</button>'+
+            '<button class="btn btn-g btn-lg" onclick="buyNow(\''+esc(p.id)+'\')">바로 구매</button>'+
+            '<button class="btn btn-o btn-lg dt-wish" onclick="toggleWish(\''+esc(p.id)+'\')" '+
+              'aria-label="찜하기">'+icon("heart",20)+'</button>'+
+          '</div>'+
+          /* 수량·규격을 물어보고 사는 손님이 많습니다. 담기 옆에
+             전화 한 줄을 둡니다 — 없으면 아무것도 안 그려집니다. */
+          CallButton("dt-call", null))+
       '</div>'+
     '</div>'+
 

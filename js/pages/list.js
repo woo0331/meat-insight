@@ -72,28 +72,53 @@ function fltCount(key, val){
    같은 규칙을 쓰고 있었는데(CatChips) 필터만 빠져 있었습니다.
    지금은 **개수를 같이 적고, 0 이면 못 누르게** 합니다. */
 function ProductFilter(){
+  var groups = WOW_FILTERS.map(function(g, gi){
+    var picked = LS.q[g.key]||[];
+    var rows = g.opts.map(function(o){
+      var on = picked.indexOf(o[0])>=0;
+      /* 구매단위는 상품 데이터로 셀 수 있는 값이 아니라 개수를 안 붙입니다 */
+      var n = (g.key==="unit") ? null : fltCount(g.key, o[0]);
+      var dead = (n===0 && !on);
+      return { on:on, dead:dead, html:
+        '<label class="flt-c'+(on?" on":"")+(dead?" off":"")+'"'+
+          (dead?' title="지금 이 조건에 맞는 상품이 없습니다"':'')+'>'+
+          '<input type="checkbox" '+(on?"checked":"")+(dead?" disabled":"")+' '+
+            'onchange="fltToggle(\''+esc(g.key)+'\',\''+esc(o[0])+'\')">'+
+          '<span>'+esc(o[1])+(n!==null?'<em>'+n+'</em>':'')+'</span></label>' };
+    });
+
+    var live = rows.filter(function(r){ return !r.dead; });
+    var dead = rows.filter(function(r){ return r.dead; });
+    /* 묶음 안이 전부 0 이면 묶음째 내립니다 — 제목만 남은 빈 상자를
+       두지 않습니다. */
+    if(!live.length) return "";
+
+    /* ⚠️ 칸을 전부 펼쳐 두면 필터가 **화면보다 길어집니다.** 실제로
+       995px 이 되어, 붙여 둔(sticky) 보람도 없고 목록보다 길어서 아래에
+       빈 땅이 141px 생겼습니다.
+       그래서 묶음째 접습니다. 앞의 둘(축종·상품 상태)과 **고른 것이 있는
+       묶음**은 펼쳐 둡니다 — 내가 무엇을 걸어 뒀는지는 접혀 있으면
+       안 됩니다. 접힌 묶음에도 고른 개수를 적습니다. */
+    var open = (gi < 2) || picked.length > 0;
+    return '<details class="flt-g"'+(open?" open":"")+'>'+
+      '<summary><span>'+esc(g.name)+'</span>'+
+        (picked.length?'<b class="flt-n2">'+picked.length+'</b>':'')+'</summary>'+
+      '<div class="flt-o">'+live.map(function(r){ return r.html; }).join("")+'</div>'+
+      (dead.length
+        ? '<details class="flt-d"><summary>지금 없는 조건 '+dead.length+'개</summary>'+
+          '<div class="flt-o">'+dead.map(function(r){ return r.html; }).join("")+'</div></details>'
+        : '')+
+    '</details>';
+  }).join("");
+
+  var on = Object.keys(LS.q).filter(function(k){
+    return ["breed","temp","trim","use","unit"].indexOf(k)>=0 && (LS.q[k]||[]).length;
+  }).length;
+
   return '<aside class="flt" id="flt"><div class="flt-hd"><b>필터</b>'+
-      '<button class="flt-x" onclick="fltReset()">초기화</button></div>'+
-    WOW_FILTERS.map(function(g){
-      var picked = LS.q[g.key]||[];
-      var rows = g.opts.map(function(o){
-        var on = picked.indexOf(o[0])>=0;
-        /* 구매단위는 상품 데이터로 셀 수 있는 값이 아니라 개수를 안 붙입니다 */
-        var n = (g.key==="unit") ? null : fltCount(g.key, o[0]);
-        var dead = (n===0 && !on);
-        return { on:on, n:n, dead:dead, html:
-          '<label class="flt-c'+(on?" on":"")+(dead?" off":"")+'"'+
-            (dead?' title="지금 조건에 맞는 상품이 없습니다"':'')+'>'+
-            '<input type="checkbox" '+(on?"checked":"")+(dead?" disabled":"")+' '+
-              'onchange="fltToggle(\''+esc(g.key)+'\',\''+esc(o[0])+'\')">'+
-            '<span>'+esc(o[1])+(n!==null?'<em>'+n+'</em>':'')+'</span></label>' };
-      });
-      /* 묶음 안이 전부 0 이면 묶음째 내립니다 — 제목만 남은 빈 상자를
-         두지 않습니다. 고른 것이 있으면 되돌릴 수 있게 남겨 둡니다. */
-      if(rows.every(function(r){ return r.dead; })) return "";
-      return '<div class="flt-g"><h4>'+esc(g.name)+'</h4><div class="flt-o">'+
-        rows.map(function(r){ return r.html; }).join("")+'</div></div>';
-    }).join("")+'</aside>';
+      (on?'<button class="flt-x" onclick="fltReset()">초기화 ('+on+')</button>'
+        :'<button class="flt-x" onclick="fltReset()" disabled>초기화</button>')+
+    '</div>'+groups+'</aside>';
 }
 
 function sortList(list){

@@ -139,35 +139,46 @@ function PageCart(){
   var rows = CART.map(function(c){
     var p=wowProduct(c.id); return p?{p:p,kg:c.kg}:null;
   }).filter(Boolean);
-  var total = rows.reduce(function(a,r){ return a + r.p.price*r.kg; }, 0);
+  var goods = rows.reduce(function(a,r){ return a + r.p.price*r.kg; }, 0);
+
+  /* ⚠️ 배송비를 화면에 박아 두지 마세요. 관리자에서 바꿀 수 있는 값인데
+     여기에 100000·3000 이 박혀 있으면, 기준을 바꿔도 장바구니만 옛날
+     숫자를 말합니다. WOW_BIZ 에서 읽습니다. */
+  var freeOver = Number(WOW_BIZ.shipFreeOver) || 0;
+  var fee      = Number(WOW_BIZ.shipFee) || 0;
+  var ship = (freeOver && goods >= freeOver) ? 0 : fee;
 
   return Breadcrumb([["홈","#/"],["장바구니",""]])+
   '<div class="w cart-wrap"><h1 class="pg-h1">장바구니</h1>'+
     (rows.length ?
-      '<div class="cart-cols"><div class="cart-l">'+rows.map(function(r,i){
-        return '<div class="cr">'+
-          '<a class="cr-i" href="#/p/'+esc(r.p.id)+'">'+imgTag(r.p.img,r.p.name)+'</a>'+
-          '<div class="cr-b"><a class="cr-n" href="#/p/'+esc(r.p.id)+'">'+esc(r.p.name)+'</a>'+
-            '<div class="cr-m">'+esc([r.p.origin,WOW_TEMP[r.p.temp],WOW_TRIM[r.p.trim]].filter(Boolean).join(" · "))+'</div>'+
-            '<div class="cr-q">'+
-              '<div class="cr-qty">'+
-                '<button onclick="bumpCart('+i+',-1)" aria-label="'+esc(r.p.name)+' 수량 줄이기">'+icon("minus",16)+'</button>'+
-                '<input type="number" min="1" max="9999" step="1" value="'+r.kg+'" '+
-                  'aria-label="'+esc(r.p.name)+' 수량(kg)" onchange="setCartKg('+i+',this.value)">'+
-                '<span class="cr-u">kg</span>'+
-                '<button onclick="bumpCart('+i+',1)" aria-label="'+esc(r.p.name)+' 수량 늘리기">'+icon("plus",16)+'</button>'+
-              '</div>'+
-              '<span class="cr-unit">× '+wowWon(r.p.price)+'원/kg</span>'+
-            '</div></div>'+
-          '<div class="cr-r"><b>'+wowWon(r.p.price*r.kg)+'원</b>'+
-            '<button class="cr-x" onclick="delCart('+i+')" aria-label="빼기">'+icon("x",18)+'</button></div>'+
-        '</div>'; }).join("")+'</div>'+
+      '<div class="cart-cols"><div class="cart-l">'+
+        rows.map(function(r,i){
+          return '<div class="cr">'+
+            '<a class="cr-i" href="#/p/'+esc(r.p.id)+'">'+imgTag(r.p.img,r.p.name)+'</a>'+
+            '<div class="cr-b"><a class="cr-n" href="#/p/'+esc(r.p.id)+'">'+esc(r.p.name)+'</a>'+
+              '<div class="cr-m">'+esc([r.p.origin,WOW_TEMP[r.p.temp],WOW_TRIM[r.p.trim]].filter(Boolean).join(" · "))+'</div>'+
+              '<div class="cr-q">'+
+                '<div class="cr-qty">'+
+                  '<button onclick="bumpCart('+i+',-1)" aria-label="'+esc(r.p.name)+' 수량 줄이기">'+icon("minus",16)+'</button>'+
+                  '<input type="number" min="1" max="9999" step="1" value="'+r.kg+'" '+
+                    'aria-label="'+esc(r.p.name)+' 수량(kg)" onchange="setCartKg('+i+',this.value)">'+
+                  '<span class="cr-u">kg</span>'+
+                  '<button onclick="bumpCart('+i+',1)" aria-label="'+esc(r.p.name)+' 수량 늘리기">'+icon("plus",16)+'</button>'+
+                '</div>'+
+                '<span class="cr-unit">× '+wowWon(r.p.price)+'원/kg</span>'+
+              '</div></div>'+
+            '<div class="cr-r"><b>'+wowWon(r.p.price*r.kg)+'원</b>'+
+              '<button class="cr-x" onclick="delCart('+i+')" aria-label="빼기">'+icon("x",18)+'</button></div>'+
+          '</div>'; }).join("")+
+        ShipNote("ship-cart")+
+      '</div>'+
       '<aside class="cart-s"><h3>결제 예정 금액</h3>'+
-        '<div class="cs-r"><span>상품금액</span><b>'+wowWon(total)+'원</b></div>'+
-        '<div class="cs-r"><span>배송비</span><b>'+(total>=100000?"무료":"3,000원")+'</b></div>'+
-        '<div class="cs-t"><span>합계</span><b>'+wowWon(total+(total>=100000?0:3000))+'원</b></div>'+
+        '<div class="cs-r"><span>상품금액</span><b>'+wowWon(goods)+'원</b></div>'+
+        '<div class="cs-r"><span>배송비</span><b>'+(ship?wowWon(ship)+'원':'무료')+'</b></div>'+
+        '<div class="cs-t"><span>합계</span><b>'+wowWon(goods+ship)+'원</b></div>'+
         '<button class="btn btn-g btn-lg btn-full" onclick="checkout()">주문하기</button>'+
-        '<p class="cs-n">10만원 이상 구매 시 배송비가 무료입니다.</p>'+
+        CallButton("btn btn-o btn-full cart-call", "전화로 주문하기")+
+        (freeOver ? '<p class="cs-n">'+wowWon(freeOver)+'원 이상 구매 시 배송비가 무료입니다.</p>' : '')+
       '</aside></div>'
       :
       '<div class="empty"><div class="empty-t">장바구니가 비어 있습니다</div>'+

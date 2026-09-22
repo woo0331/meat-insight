@@ -30,6 +30,12 @@ function save(){
 
 window.addCart = function(id, kg){
   var p=wowProduct(id); if(!p) return;
+  /* 화면에서 이미 막지만 여기서도 막습니다. 담기는 길이 여러 군데라
+     (카드·상세·바로구매) 한 곳만 막으면 샙니다. */
+  if(typeof isSoldOut==="function" && isSoldOut(p)){
+    toast(p.name+" 은(는) 지금 품절입니다.");
+    return;
+  }
   kg = kg || (p.units&&p.units[0]) || 1;
   var f=CART.find(function(c){ return c.id===id; });
   if(f) f.kg += kg; else CART.push({id:id, kg:kg});
@@ -82,6 +88,9 @@ window.toast = function(msg){
    "로그인한 척" 하면 마이페이지가 남의 주문을 보여주는 것처럼
    읽힙니다 — 없는 사실을 적는 것과 같습니다. */
 window.isLoggedIn = function(){ return !!window.WOW_USER; };
+
+/* 화면에 적는 모양과 tel: 에 넣는 모양이 다릅니다 */
+window.telNum = function(s){ return String(s||"").replace(/[^0-9+]/g,""); };
 
 window.go = function(h){ location.hash = h; };
 window.doSearch = function(id){

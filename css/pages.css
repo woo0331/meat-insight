@@ -67,8 +67,21 @@
 .flt-x{ border:0; background:transparent; color:var(--ink2); font-size:var(--t-sm);
   cursor:pointer; min-height:var(--tap); padding:0 6px; }
 .flt-x:hover{ color:var(--green); }
-.flt-g + .flt-g{ margin-top:var(--s5); }
-.flt-g h4{ font-size:var(--t-base); margin-bottom:var(--s2); }
+.flt-g{ border-top:1px solid var(--line-soft); }
+.flt-g:first-of-type{ border-top:0; }
+.flt-g > summary{ min-height:44px; display:flex; align-items:center; gap:var(--s2);
+  cursor:pointer; font-size:var(--t-base); font-weight:700; list-style:none; }
+.flt-g > summary::-webkit-details-marker{ display:none; }
+.flt-g > summary > span{ flex:1 1 auto; min-width:0; }
+.flt-g > summary::after{ content:""; flex:0 0 auto; width:8px; height:8px;
+  border-right:2px solid var(--ink3); border-bottom:2px solid var(--ink3);
+  transform:rotate(45deg); margin-bottom:3px; transition:transform .15s; }
+.flt-g[open] > summary::after{ transform:rotate(-135deg); margin-bottom:-3px; }
+.flt-g > summary:hover{ color:var(--green); }
+.flt-g > .flt-o{ padding-bottom:var(--s4); }
+.flt-n2{ flex:0 0 auto; min-width:19px; height:19px; padding:0 5px; border-radius:var(--r-pill);
+  background:var(--green); color:#fff; font-size:12px; line-height:19px; text-align:center; }
+.flt-x[disabled]{ opacity:.4; cursor:default; }
 .flt-o{ display:flex; flex-wrap:wrap; gap:6px; }
 .flt-c{ display:inline-flex; align-items:center; min-height:var(--tap); padding:0 var(--s3);
   border:1px solid var(--line); border-radius:var(--r-pill); font-size:var(--t-sm);
@@ -436,3 +449,49 @@
 .flt-c.on em{ color:var(--green); }
 .flt-c.off{ opacity:.45; cursor:not-allowed; border-style:dashed; }
 .flt-c.off:hover{ border-color:var(--line); color:var(--ink2); }
+
+/* ══ 품절 ═════════════════════════════════════════════════
+   흐리게만 하고 담기를 열어 두면 눌러 보는 손님이 생기고, 눌리면
+   담깁니다. 담기 자체를 없애고 "품절" 글자로 바꿉니다. */
+.pc.out .pc-img img{ filter:grayscale(.65) opacity(.55); }
+.pc.out .pc-nm,.pc.out .pc-pr{ color:var(--ink3); }
+.pc.out .pc-pr em{ color:var(--ink3); }
+.pc-out{ flex:0 0 auto; min-height:40px; display:inline-flex; align-items:center;
+  padding:0 var(--s4); border-radius:var(--r); background:var(--ivory);
+  color:var(--ink2); font-size:var(--t-sm); font-weight:700; }
+
+.dt-out{ background:var(--ivory); border:1px solid var(--line); border-radius:var(--r-lg);
+  padding:var(--s6); text-align:center; }
+.dt-out b{ display:block; font-size:var(--t-lg); margin-bottom:var(--s2); }
+.dt-out p{ margin:0 0 var(--s5); font-size:var(--t-base); color:var(--ink2); line-height:1.8; }
+.dt-out .btn + .btn{ margin-top:var(--s2); }
+
+/* ══ 배송 안내 · 전화 주문 ════════════════════════════════ */
+.ship{ background:var(--ivory); border:1px solid var(--line); border-radius:var(--r);
+  padding:var(--s4) var(--s5); display:flex; flex-direction:column; gap:var(--s2); }
+.ship-r{ display:flex; align-items:center; gap:var(--s3); font-size:var(--t-base); }
+.ship-r svg{ flex:0 0 auto; color:var(--green); }
+.ship-r span{ flex:0 0 78px; color:var(--ink2); }
+.ship-r b{ font-weight:600; min-width:0; }
+.ship-dt{ margin:var(--s5) 0 0; }
+.ship-cart{ margin-top:var(--s4); }
+
+.dt-call{ display:flex; align-items:center; justify-content:center; gap:var(--s2);
+  min-height:var(--tap); margin-top:var(--s3); border:1px solid var(--line);
+  border-radius:var(--r); background:var(--white); font-size:var(--t-base);
+  font-weight:600; color:var(--ink2); }
+.dt-call:hover{ border-color:var(--green); color:var(--green); }
+.call-h{ font-style:normal; font-size:var(--t-cap); color:var(--ink3); }
+.cart-call{ margin-top:var(--s2); display:flex; align-items:center; justify-content:center;
+  gap:var(--s2); }
+@media (max-width:640px){ .ship-r{ flex-wrap:wrap; } .ship-r span{ flex:0 0 auto; } }
+
+/* 지금 없는 조건은 접어 둡니다 — 펼쳐 두면 필터가 화면보다 길어집니다 */
+.flt-d{ margin-top:var(--s2); }
+.flt-d summary{ min-height:36px; display:flex; align-items:center; cursor:pointer;
+  font-size:var(--t-cap); color:var(--ink3); list-style:none; }
+.flt-d summary::-webkit-details-marker{ display:none; }
+.flt-d summary::before{ content:"＋"; margin-right:5px; font-weight:700; }
+.flt-d[open] summary::before{ content:"－"; }
+.flt-d summary:hover{ color:var(--green); }
+.flt-d .flt-o{ margin-top:6px; }

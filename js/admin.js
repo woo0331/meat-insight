@@ -140,12 +140,12 @@ function buildProductsFile(){
   var body = P.map(function(p){
     var o = {};
     ["id","sp","cat","item","name","breed","origin","price","temp","trim","img",
-     "badges","today","rating","reviews","units","trims","uses","workDate","detail"]
+     "badges","soldOut","today","rating","reviews","units","trims","uses","workDate","detail"]
       .forEach(function(k){
         var v = p[k];
         if(v===undefined || v===null || v==="") return;
         if(Array.isArray(v) && !v.length) return;
-        if(k==="today" && !v) return;
+        if((k==="today"||k==="soldOut") && !v) return;
         if((k==="rating"||k==="reviews") && !Number(v)) return;
         o[k] = v;
       });
@@ -215,7 +215,21 @@ var BIZ_FIELDS = [
   ["privacyPhone","개인정보 문의 전화","비우면 위 고객센터를 씁니다", false],
   ["hostRegion","개인정보 보관 리전","예: 서울", false],
   ["quoteTo","대량견적 접수처","이메일 주소", false],
-  ["effective","약관·방침 시행일","YYYY-MM-DD", true]
+  ["effective","약관·방침 시행일","YYYY-MM-DD", true],
+
+  /* ── 배송 ───────────────────────────────────────────────
+     신선식품이라 이 셋이 구매를 정합니다. 비어 있으면 상품 상세와
+     장바구니에서 배송 안내가 **아예 안 나옵니다.** */
+  ["shipCutoff","주문 마감 시간","예: 오후 3시 — 이때까지 주문하면 당일 작업", false],
+  ["shipNote","배송 안내","예: 당일 작업 · 익일 냉장 도착", false],
+  ["shipExclude","배송 제한 지역","예: 제주·도서산간 제외", false],
+  ["shipFee","배송비 (원)","3000 — 숫자만", false],
+  ["shipFreeOver","무료배송 기준 (원)","100000 — 이 금액 이상이면 무료", false],
+
+  /* ── 무통장입금 계좌 (결제 붙일 때 씁니다) ──────────────── */
+  ["bankName","입금 은행","예: 국민은행", false],
+  ["bankAccount","계좌번호","", false],
+  ["bankHolder","예금주","", false]
 ];
 var B = {};
 function loadBiz(){

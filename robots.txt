@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
 
+# 관리자 도구 — 손님 화면이 아닙니다
+Disallow: /admin.html
+
 Sitemap: https://aboutmeat.co.kr/sitemap.xml

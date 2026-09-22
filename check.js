@@ -188,6 +188,35 @@ const AUDIT = `(() => {
   if (dead.length) { fail++; console.log("  ❌ 안 열리는 주소 "+dead.length+"건: "+dead.slice(0,6).join(" / ")); }
   else console.log("  ✅ 전부 열림");
 
+  /* 8. 주소가 화면에 실제로 반영되는가
+     ⚠️ 해시(#/…)를 진짜 경로로 바꾼 뒤, 해시를 읽던 자리가 **에러 없이
+     조용히 틀린 답**을 내놓고 있었습니다. 헤더 메뉴가 어느 화면에서도
+     안 켜지고, 모바일 아래 네비는 늘 "홈" 이었고, "찜" 을 눌러도
+     주문내역이 나왔습니다. 화면은 그려지니 위의 검사들은 다 통과합니다 —
+     그래서 여기서 따로 봅니다. */
+  const NAV = [
+    ["/c/beef",        "헤더 메뉴 켜짐",   () => !!document.querySelector('#gnb a.on[href="/c/beef"]')],
+    ["/products/trim", "헤더 메뉴 켜짐",   () => !!document.querySelector('#gnb a.on[href="/products/trim"]')],
+    ["/p/b-gopchang",  "아래 네비 켜짐",   () => !!document.querySelector('.mnav a.on[data-m="/products"]')],
+    ["/",              "아래 네비 홈",     () => !!document.querySelector('.mnav a.on[data-m="/"]')],
+    ["/my?t=wish",     "찜 탭 열림",       () => !!document.querySelector('.tabs a.on[href="/my?t=wish"]')],
+    ["/my",            "주문 탭 열림",     () => !!document.querySelector('.tabs a.on[href="/my?t=order"]')],
+    ["/signup?biz=1",  "사업자 가입 제목", () => /사업자 회원가입/.test(document.querySelector(".pg-h1").textContent)],
+    ["/signup",        "일반 가입 제목",   () => document.querySelector(".pg-h1").textContent.trim()==="회원가입"]
+  ];
+  const navBad = [];
+  const np = await (await b.newContext({ viewport:{width:390,height:900} })).newPage();
+  for (const [url, what, fn] of NAV) {
+    await np.goto(ROOT + url, { waitUntil:"load" });
+    await np.waitForTimeout(220);
+    let ok = false;
+    try { ok = await np.evaluate("("+fn.toString()+")()"); } catch(e){ ok = false; }
+    if (!ok) navBad.push(url+" › "+what);
+  }
+  console.log("\n── 주소가 화면에 반영되는가 " + NAV.length + "개");
+  if (navBad.length) { fail++; console.log("  ❌ "+navBad.length+"건: "+navBad.join(" / ")); }
+  else console.log("  ✅ 전부 맞음");
+
   await b.close();
   server.close();
   console.log(fail ? "\n❌ "+fail+"개 항목 실패" : "\n✅ 전체 통과");

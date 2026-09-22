@@ -238,7 +238,9 @@ function PageLogin(){
     '<p class="auth-n">아직 회원이 아니신가요? <a href="/signup">회원가입</a></p></div>';
 }
 function PageSignup(){
-  var biz = /biz=1/.test(location.hash);
+  /* ⚠️ 해시가 아니라 **?biz=1** 입니다. 해시를 읽던 탓에 B2B 화면의
+     "사업자 회원가입" 버튼이 그냥 회원가입으로 갔습니다. */
+  var biz = nowQS("biz")==="1";
   return '<div class="w auth"><h1 class="pg-h1">'+(biz?"사업자 회원가입":"회원가입")+'</h1>'+
     '<form class="form" id="s-form" onsubmit="return doSignup(event)">'+
       '<div class="f-r"><label for="s-id">아이디 (이메일) <b>*</b></label>'+
@@ -292,7 +294,11 @@ window.agSync = function(){
 /* ── 12. 마이페이지 ─────────────────────────────────────── */
 var MY_TABS=[["order","주문내역"],["wish","찜한 상품"],["quote","견적 문의"],["info","회원정보"]];
 function PageMy(){
-  var t=(/t=(\w+)/.exec(location.hash)||[])[1]||"order";
+  /* ⚠️ 해시가 아니라 **?t=wish** 입니다. 해시를 읽던 탓에 모바일 아래
+     네비의 "찜" 을 눌러도 주문내역이 나왔습니다 — 로그인 없이 볼 수
+     있는 유일한 칸이 바로 찜인데 그리로 못 갔습니다. */
+  var t = nowQS("t") || "order";
+  if(!MY_TABS.some(function(x){ return x[0]===t; })) t = "order";
   return '<div class="w my"><h1 class="pg-h1">마이페이지</h1>'+
     '<div class="tabs">'+MY_TABS.map(function(x){
       return '<a class="tab'+(t===x[0]?" on":"")+'" href="/my?t='+x[0]+'">'+esc(x[1])+'</a>'; }).join("")+'</div>'+

@@ -17,62 +17,77 @@ window.WOW_TEMP  = { chill:"냉장", frozen:"냉동" };
 window.WOW_BREED = { hanwoo:"한우", yukwoo:"육우", impbeef:"수입소",
                      handon:"한돈", imppork:"수입돈" };
 
+/* ⚠️ **평점(rating)·후기 수(reviews)를 지어내지 마세요.**
+   시안을 만들 때 넣어 둔 4.9 (128개 리뷰) 같은 값이 그대로 올라가
+   있었습니다. 화면 위쪽은 "★★★★★ 4.9 (128개 리뷰)" 인데 아래 리뷰
+   탭은 "아직 등록된 리뷰가 없습니다" 라고 말하는, 한 화면 안에서
+   서로 어긋나는 상태였습니다.
+
+   더 나쁜 것은 **구글로 나간다는 점**입니다. ldFor() 가 후기 수가
+   0보다 크면 Product 스키마에 aggregateRating 을 넣습니다 — 한 건도
+   판 적 없는 가게의 검색 결과에 별 넷 반이 뜹니다. 구글은 이것을
+   정책 위반으로 보고, 국내법으로도 표시·광고의 공정화에 관한 법률
+   제3조(거짓·과장 광고)에 걸립니다.
+
+   실제 후기를 받기 시작하면 그때 `rating` · `reviews` 를 넣으세요.
+   그 전에는 **줄이 아예 없어야** 합니다 (0 도 적지 마세요 — 0 은
+   "후기가 0건" 이라고 단정하는 숫자입니다). */
 window.WOW_PRODUCTS = [
   /* ── 소 · 위·장류 ─────────────────────────────────────── */
   { id:"b-gopchang", sp:"beef", cat:"gut", item:"gopchang",
     name:"한우 소곱창", breed:"hanwoo", origin:"국내산 한우",
     price:17900, temp:"chill", trim:"full", img:"p-gopchang",
-    badges:["best","new"], today:true, rating:4.9, reviews:128,
+    badges:["best","new"], today:true,
     units:[1,5,10], trims:["raw","wash","full"], uses:["구이","전골","국밥","업소용"],
     detail:{ main:"detail-gopchang", thumbs:["detail-thumb1","detail-thumb2","detail-thumb3","detail-thumb4"] } },
 
   { id:"b-daechang", sp:"beef", cat:"gut", item:"daechang",
     name:"한우 대창", breed:"hanwoo", origin:"국내산 한우",
     price:14900, temp:"chill", trim:"full", img:"p-daechang",
-    badges:["new"], today:true, rating:4.8, reviews:64,
+    badges:["new"], today:true,
     units:[1,5,10], trims:["raw","wash","full"], uses:["구이","전골","업소용"] },
 
   { id:"b-makchang", sp:"beef", cat:"gut", item:"makchang",
     name:"한우 막창", breed:"hanwoo", origin:"국내산 한우",
     price:13900, temp:"chill", trim:"full", img:"p-makchang",
-    badges:[], rating:4.7, reviews:41,
+    badges:[],
     units:[1,5,10], trims:["raw","wash","full"], uses:["구이","업소용"] },
 
   { id:"b-yang", sp:"beef", cat:"gut", item:"yang",
     name:"한우 양", breed:"hanwoo", origin:"국내산 한우",
     price:9900, temp:"chill", trim:"full", img:"p-yang",
-    badges:[], rating:4.6, reviews:33,
+    badges:[],
     units:[1,5,10], trims:["raw","clean","full"], uses:["탕","전골","업소용"] },
 
   { id:"b-beolzip", sp:"beef", cat:"gut", item:"beolzip",
     name:"벌집양", breed:"hanwoo", origin:"국내산 한우",
     price:8900, temp:"chill", trim:"full", img:"p-beolzip",
-    badges:[], rating:4.7, reviews:28,
+    badges:[],
     units:[1,5,10], trims:["raw","clean","full"], uses:["탕","전골"] },
 
   { id:"b-cheonyeop", sp:"beef", cat:"gut", item:"cheonyeop",
     name:"천엽", breed:"hanwoo", origin:"국내산 한우",
     price:6900, temp:"chill", trim:"full", img:"p-cheonyeop",
-    badges:["new"], today:true, rating:4.5, reviews:19,
+    badges:["new"], today:true,
     units:[1,5,10], trims:["raw","clean","full"], uses:["회","전골"] },
 
   /* ── 소 · 장기류 ──────────────────────────────────────── */
   { id:"b-yeomtong", sp:"beef", cat:"organ", item:"yeomtong",
     name:"염통 (심장)", breed:"hanwoo", origin:"국내산 한우",
     price:4900, temp:"chill", trim:"full", img:"p-yeomtong",
-    badges:[], rating:4.6, reviews:22,
+    badges:[],
     units:[1,5,10], trims:["raw","clean","full"], uses:["구이","꼬치","업소용"] },
 
   { id:"b-gan", sp:"beef", cat:"organ", item:"gan",
     name:"간 (소간)", breed:"hanwoo", origin:"국내산 한우",
     price:3900, temp:"chill", trim:"full", img:"p-gan",
-    badges:[], rating:4.4, reviews:17,
+    badges:[],
     units:[1,5,10], trims:["raw","clean"], uses:["회","볶음"] },
 
   { id:"b-heopa", sp:"beef", cat:"organ", item:"heopa",
     name:"허파", breed:"hanwoo", origin:"국내산 한우",
     price:2900, temp:"chill", trim:"full", img:"p-heopa",
-    badges:[], rating:4.3, reviews:11,
+    badges:[],
     units:[1,5,10], trims:["raw","boil"], uses:["순대","전골"] },
 
   { id:"b-jira", sp:"beef", cat:"organ", item:"jira",
@@ -80,45 +95,45 @@ window.WOW_PRODUCTS = [
     price:2900, temp:"chill", trim:"full", img:"p-jira",
     /* soldOut: 당일 수급에 따라 관리자에서 켜고 끕니다 */
     soldOut:true,
-    badges:[], rating:4.2, reviews:8,
+    badges:[],
     units:[1,5,10], trims:["raw","clean"], uses:["전골","탕"] },
 
   { id:"b-kongpat", sp:"beef", cat:"organ", item:"kongpat",
     name:"콩팥", breed:"hanwoo", origin:"국내산 한우",
     price:3900, temp:"chill", trim:"full", img:"p-kongpat",
-    badges:[], rating:4.3, reviews:9,
+    badges:[],
     units:[1,5,10], trims:["raw","clean"], uses:["구이","전골"] },
 
   /* ── 소 · 머리·특수부위 ───────────────────────────────── */
   { id:"b-useol", sp:"beef", cat:"head", item:"useol",
     name:"우설 (소혀)", breed:"hanwoo", origin:"국내산 한우",
     price:12900, temp:"chill", trim:"full", img:"p-useol",
-    badges:["best"], rating:4.8, reviews:52,
+    badges:["best"],
     units:[1,5,10], trims:["raw","clean","boil"], uses:["구이","편육","업소용"] },
 
   /* ── 돼지 ─────────────────────────────────────────────── */
   { id:"p-makchang", sp:"pork", cat:"gut", item:"makchang",
     name:"한돈 막창", breed:"handon", origin:"국내산 한돈",
     price:8900, temp:"chill", trim:"clean", img:"t-makchang",
-    badges:["new"], today:true, rating:4.7, reviews:38,
+    badges:["new"], today:true,
     units:[1,5,10], trims:["raw","clean","full"], uses:["구이","업소용"] },
 
   { id:"p-sochang", sp:"pork", cat:"gut", item:"sochang",
     name:"한돈 소창", breed:"handon", origin:"국내산 한돈",
     price:7900, temp:"chill", trim:"full", img:"t-daechang",
-    badges:[], rating:4.5, reviews:14,
+    badges:[],
     units:[1,5,10], trims:["raw","clean","full"], uses:["순대","전골","업소용"] },
 
   { id:"p-osori", sp:"pork", cat:"gut", item:"osori",
     name:"오소리감투", breed:"handon", origin:"국내산 한돈",
     price:9900, temp:"chill", trim:"full", img:"t-gopchang",
-    badges:["best"], rating:4.8, reviews:46,
+    badges:["best"],
     units:[1,5,10], trims:["raw","clean","boil"], uses:["편육","전골","업소용"] },
 
   { id:"p-gan", sp:"pork", cat:"organ", item:"gan",
     name:"한돈 간", breed:"handon", origin:"국내산 한돈",
     price:2900, temp:"chill", trim:"clean", img:"p-gan",
-    badges:[], rating:4.2, reviews:7,
+    badges:[],
     units:[1,5,10], trims:["raw","clean"], uses:["순대","볶음"] }
 ];
 

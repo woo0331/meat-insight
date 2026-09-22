@@ -35,13 +35,42 @@ function SearchBar(id){
     '<button type="submit" aria-label="검색">'+icon("search",20)+'</button></form>';
 }
 
+/* ⚠️ **location.hash 를 읽지 마세요.** 주소를 진짜 경로로 바꾼 뒤에도
+   해시를 읽던 곳이 네 군데 남아 있었습니다. 해시는 늘 빈 문자열이라
+   조용히 틀린 답("/")을 돌려줍니다 — 에러가 안 나서 안 드러납니다.
+   실제로 헤더 메뉴가 어느 화면에서도 안 켜졌고, 모바일 아래 네비는
+   늘 "홈" 이 켜져 있었고, "찜" 을 눌러도 주문내역이 나왔습니다. */
+window.nowPath = function(){
+  return location.pathname.replace(/\/index\.html$/,"/").replace(/(.)\/+$/,"$1") || "/";
+};
+/* 주소의 ?a=b 에서 값 하나 — parseQS 는 app.js 에 있고 app.js 가 늦게
+   실행되므로, 화면을 그리는 쪽에서는 이걸 씁니다. */
+window.nowQS = function(k){
+  var m = new RegExp("[?&]"+k+"=([^&#]*)").exec(location.search);
+  return m ? decodeURIComponent(m[1]) : "";
+};
+
 function paintGnb(){
   var g=$("gnb"); if(!g) return;
-  var here=location.hash||"/";
-  g.innerHTML = WOW_GNB.map(function(m){
+  var here=nowPath();
+  /* ⚠️ **누르면 빈 목록이 나오는 칸을 메뉴에 두지 않습니다.**
+     "특가" 는 특가 상품이 하나도 없을 때도 빨갛게 떠 있었습니다.
+     제일 눈에 띄는 자리에 있는 링크가 빈 화면으로 가면 손님은 사이트가
+     고장 난 것으로 읽습니다. 분류 칩·필터에는 이미 있던 규칙인데
+     헤더 메뉴만 빠져 있었습니다. */
+  g.innerHTML = WOW_GNB.filter(gnbAlive).map(function(m){
     var on = here===m.to || (m.to!=="/products" && here.indexOf(m.to)===0);
     return '<a href="'+esc(m.to)+'" class="'+(m.hot?"hot ":"")+(on?"on":"")+'">'+esc(m.name)+'</a>';
   }).join("");
+}
+
+/* /products/<kind> 는 해당 상품이 있을 때만 — 나머지는 늘 내용이 있습니다.
+   ⚠️ build-pages.js 도 같은 셈을 합니다 (없으면 HTML 을 안 만듭니다).
+   둘이 어긋나면 메뉴에는 있는데 검색엔진용 파일은 없는 주소가 생깁니다. */
+function gnbAlive(m){
+  var k = /^\/products\/(.+)$/.exec(m.to || "");
+  if(!k) return true;
+  return wowFind(listQuery(k[1])).length > 0;
 }
 
 function Footer(){
@@ -52,7 +81,10 @@ function Footer(){
         '도축장에서 시작되는 신선한 원물을<br>필요한 상태와 규격으로 공급합니다.</p></div>'+
       '<div class="ft-col"><h4>상품</h4>'+
         '<a href="/c/beef">소 부산물</a><a href="/c/pork">돼지 부산물</a>'+
-        '<a href="/products/trim">손질상품</a><a href="/products/today">오늘입고</a></div>'+
+        /* 헤더와 같은 셈 — 상품이 없으면 그 줄을 뺍니다 */
+        [{name:"손질상품",to:"/products/trim"},{name:"오늘입고",to:"/products/today"}]
+          .filter(gnbAlive).map(function(m){
+            return '<a href="'+esc(m.to)+'">'+esc(m.name)+'</a>'; }).join("")+'</div>'+
       '<div class="ft-col"><h4>알아보기</h4>'+
         '<a href="/enc">부산물 도감</a><a href="/b2b">업소용·대량구매</a>'+
         '<a href="/about">브랜드 스토리</a></div>'+
@@ -93,8 +125,15 @@ function MobileNav(){
     }).join("")+'</div></nav>';
 }
 function paintMnav(){
-  var here=location.hash||"/";
+  /* 아래 네비 다섯 칸 중 **지금 화면이 어느 칸에 속하는지**를 정합니다.
+     상품·분류·도감은 전부 "카테고리" 칸으로 묶습니다 — 손님이 곱창
+     상세를 보는 중에 아무 칸도 안 켜져 있으면 길을 잃습니다. */
+  var p = nowPath(), cur = "";
+  if(p==="/") cur="/";
+  else if(p==="/search") cur="/search";
+  else if(p==="/my") cur = (nowQS("t")==="wish") ? "/my?t=wish" : "/my";
+  else if(/^\/(products|c|p|enc)(\/|$)/.test(p)) cur="/products";
   els(".mnav a").forEach(function(a){
-    a.classList.toggle("on", a.getAttribute("data-m")===here);
+    a.classList.toggle("on", a.getAttribute("data-m")===cur);
   });
 }

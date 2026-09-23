@@ -2,23 +2,11 @@
    주문 접수 (Vercel Serverless Function)   POST /api/order
 
    ── 켜는 방법 ──────────────────────────────────────────
-   Vercel → 프로젝트 → Settings → Environment Variables 에서
-   **둘 중 하나**를 넣으면 주문이 실제로 전달되기 시작합니다.
-
-   (가) 어디로든 보내기 — 가장 간단합니다
-        ORDER_WEBHOOK_URL = https://…   (주문 JSON 을 그대로 POST 합니다)
-        Zapier · Make · 구글 앱스스크립트 · 슬랙 워크플로 · 직접 만든
-        주소 아무거나 됩니다. 슬랙이면 그대로 채널에 뜹니다.
-
-   (나) 이메일로 받기
-        RESEND_API_KEY  = re_…
-        ORDER_EMAIL_TO  = 주문받을주소@example.com
-        ORDER_EMAIL_FROM= onboarding@resend.dev  (도메인 인증 전 기본값)
-
-   둘 다 안 넣으면 **503 을 돌려줍니다.** 일부러 그렇게 했습니다 —
-   받을 곳이 없는데 "접수되었습니다" 라고 하면 손님은 기다리고
-   주문은 사라집니다. 화면도 그때는 "지금 접수하지 못했습니다" 라고
-   말하고 전화 버튼을 내놓습니다.
+   받을 곳(환경변수)은 **api/_send.js** 머리말에 정리해 두었습니다.
+   하나도 없으면 **503 을 돌려줍니다** — 받을 곳이 없는데
+   "접수되었습니다" 라고 하면 손님은 기다리고 주문은 사라집니다.
+   화면도 그때는 "지금 접수하지 못했습니다" 라고 말하고 전화 버튼을
+   내놓습니다.
 
    ⚠️ **금액을 손님이 보낸 값으로 믿지 않습니다.** 브라우저에서 도는
    코드는 무엇이든 고칠 수 있으므로, 여기서 상품 id 와 kg 만 받아
@@ -32,6 +20,7 @@
    ════════════════════════════════════════════════════════════════════ */
 
 const DATA = require("./_data.json");
+const { deliver, clean, won, why } = require("./_send.js");
 
 const MAX_ITEMS = 50;      /* 한 주문에 담을 수 있는 품목 수 */
 const MAX_KG    = 9999;    /* 한 품목 최대 수량 */
@@ -39,10 +28,6 @@ const MAX_KG    = 9999;    /* 한 품목 최대 수량 */
 function bad(res, code, msg){
   res.status(code).json({ error: msg });
 }
-function clean(s, max){
-  return String(s == null ? "" : s).replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max || 200);
-}
-
 /* 화면(js/data/order.js 의 wowTotals)과 **같은 셈법**입니다.
    한쪽만 고치면 손님이 본 금액과 받는 금액이 달라집니다. */
 function totals(items){
@@ -64,8 +49,6 @@ function totals(items){
   return { items: out, goods: goods, ship: ship, total: goods + ship };
 }
 
-function won(n){ return Number(n||0).toLocaleString("ko-KR"); }
-
 function asText(o, t){
   const L = [];
   L.push("주문번호  " + o.no);
@@ -82,45 +65,6 @@ function asText(o, t){
   L.push("배송비    " + (t.ship ? won(t.ship) + "원" : "무료"));
   L.push("합계      " + won(t.total) + "원");
   return L.join("\n");
-}
-
-/* 주문을 밖으로 내보냅니다. 하나라도 성공하면 접수된 것으로 봅니다. */
-async function deliver(payload, text){
-  const hook = process.env.ORDER_WEBHOOK_URL;
-  const key  = process.env.RESEND_API_KEY;
-  const to   = process.env.ORDER_EMAIL_TO;
-  if(!hook && !(key && to)) return { ok:false, why:"nowhere" };
-
-  const errs = [];
-  if(hook){
-    try{
-      const r = await fetch(hook, {
-        method:"POST",
-        headers:{ "content-type":"application/json" },
-        /* 슬랙 · 구글챗처럼 text 만 읽는 곳도 있어서 같이 넣습니다 */
-        body: JSON.stringify(Object.assign({ text: text }, payload))
-      });
-      if(r.ok) return { ok:true };
-      errs.push("webhook " + r.status);
-    }catch(e){ errs.push("webhook " + (e && e.message)); }
-  }
-  if(key && to){
-    try{
-      const r = await fetch("https://api.resend.com/emails", {
-        method:"POST",
-        headers:{ "content-type":"application/json", authorization:"Bearer " + key },
-        body: JSON.stringify({
-          from: process.env.ORDER_EMAIL_FROM || "onboarding@resend.dev",
-          to: to.split(",").map(s => s.trim()).filter(Boolean),
-          subject: "[주문] " + payload.no + " · " + payload.buyer.name + " · " + won(payload.total) + "원",
-          text: text
-        })
-      });
-      if(r.ok) return { ok:true };
-      errs.push("resend " + r.status + " " + (await r.text().catch(()=> "")).slice(0,200));
-    }catch(e){ errs.push("resend " + (e && e.message)); }
-  }
-  return { ok:false, why: errs.join(" / ") || "unknown" };
 }
 
 module.exports = async function handler(req, res){
@@ -154,14 +98,13 @@ module.exports = async function handler(req, res){
   if(!order.buyer.name || !order.buyer.tel) return bad(res, 400, "주문하시는 분의 이름과 연락처를 적어 주세요");
   if(!order.recv.addr) return bad(res, 400, "받으실 주소를 적어 주세요");
 
-  const sent = await deliver(order, asText(order, t));
+  const sent = await deliver("order", order,
+    "[주문] " + order.no + " · " + order.buyer.name + " · " + won(order.total) + "원",
+    asText(order, t));
   if(!sent.ok){
     /* 운영자에게 할 말은 로그로. 손님에게는 화면이 "지금 접수하지
        못했습니다" 까지만 말하고 전화 버튼을 내놓습니다. */
-    console.error("[ABOUTMEAT] 주문을 전달하지 못했습니다 (" + sent.why + "). " +
-      (sent.why === "nowhere"
-        ? "Vercel 환경변수에 ORDER_WEBHOOK_URL 또는 RESEND_API_KEY·ORDER_EMAIL_TO 를 넣으세요."
-        : "받는 쪽 주소와 키를 확인하세요."));
+    console.error("[ABOUTMEAT] 주문을 전달하지 못했습니다 — " + why("order", sent.why));
     return bad(res, 503, "지금 주문을 접수하지 못했습니다");
   }
 

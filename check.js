@@ -312,7 +312,28 @@ const AUDIT = `(() => {
     const raw = localStorage.getItem("wow.orders")||"";
     return !/홍길동|010-1234-5678|서울시 어딘가/.test(raw);`);
 
-  console.log("\n── 주문 흐름 12개");
+  /* 대량견적도 같은 규칙 — 동의 없이는 보내지 않습니다 */
+  await t("견적: 동의 없이는 보내지 않는다", `
+    go("/b2b/quote"); await new Promise(r=>setTimeout(r,180));
+    let sent=false; const f=window.fetch;
+    window.fetch=function(){ sent=true; return Promise.reject(new Error("테스트")); };
+    document.getElementById("q-co").value="대성국밥";
+    document.getElementById("q-nm").value="홍길동";
+    document.getElementById("q-tel").value="010-1234-5678";
+    document.getElementById("q-it").value="한우 곱창 20kg / 주 2회";
+    document.getElementById("q-ag").checked=false;
+    submitQuote({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,180)); window.fetch=f;
+    return sent===false;`);
+  await t("견적: 동의하면 보낸다", `
+    let sent=false; const f=window.fetch;
+    window.fetch=function(){ sent=true; return Promise.reject(new Error("테스트")); };
+    document.getElementById("q-ag").checked=true;
+    submitQuote({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,250)); window.fetch=f;
+    return sent===true;`);
+
+  console.log("\n── 주문·견적 흐름 14개");
   if (ordBad.length) { fail++; console.log("  ❌ "+ordBad.length+"건: "+ordBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

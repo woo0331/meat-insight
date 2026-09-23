@@ -200,18 +200,54 @@ function fRow(label,id,type,req,ph){
     '<input id="'+id+'" type="'+type+'"'+(req?" required":"")+
     (ph?' placeholder="'+esc(ph)+'"':'')+' autocomplete="off"></div>';
 }
+var QS_SENDING = false;
 window.submitQuote = function(ev){
   ev.preventDefault();
-  /* ⚠️ 동의 확인을 지우지 마세요. 접수처를 붙일 때 이 줄이 남아 있어야
-     합니다 — 동의 없이 받은 개인정보는 개인정보보호법 제15조 위반입니다. */
+  if(QS_SENDING) return false;
+
+  /* ⚠️ 동의 확인을 지우지 마세요 — 동의 없이 받은 개인정보는
+     개인정보보호법 제15조 위반입니다. 서버(api/quote.js)에서도 한 번
+     더 막습니다. 화면만 믿으면 그 주소로 직접 보내는 것을 못 막습니다. */
   var ag = $("q-ag");
-  if(ag && !ag.checked){ toast("개인정보 수집·이용에 동의해 주세요."); return false; }
-  try{ console.warn("[ABOUTMEAT] 견적 문의 접수처가 아직 연결되지 않았습니다 — "+
-    "js/data/site.js 의 WOW_BIZ.quoteTo(이메일 또는 API)를 설정하세요."); }catch(e){}
-  toast(bizVal("phone") ? "지금은 이곳에서 접수하지 못합니다. 고객센터로 연락해 주세요."
-                        : "지금은 이곳에서 접수하지 못합니다.");
+  if(ag && !ag.checked){
+    toast("개인정보 수집·이용에 동의해 주세요.");
+    try{ ag.closest(".ag-r").classList.add("ag-miss"); ag.focus({preventScroll:true}); }catch(e){}
+    return false;
+  }
+
+  var body = { co:qv("q-co"), name:qv("q-nm"), tel:qv("q-tel"),
+               email:qv("q-em"), items:qv("q-it"), agree:true };
+  var btn = els("#view button[type=submit]")[0];
+  QS_SENDING = true;
+  if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
+
+  fetch("/api/quote", { method:"POST", headers:{ "content-type":"application/json" },
+                        body: JSON.stringify(body) })
+    .then(function(r){ return r.json().catch(function(){ return {}; })
+      .then(function(j){ if(!r.ok) throw new Error((j && j.error) || ("HTTP "+r.status)); return j; }); })
+    .then(function(){
+      QS_SENDING = false;
+      $("view").innerHTML = Breadcrumb([["홈","/"],["업소용","/b2b"],["대량견적 문의",""]])+
+        '<div class="w form-wrap"><div class="empty">'+
+        '<div class="empty-t">문의가 접수되었습니다</div>'+
+        '<div class="empty-d">담당자가 확인한 뒤 '+esc(body.tel)+' 으로 연락드리겠습니다.</div>'+
+        '<div class="empty-acts"><a class="btn btn-g" href="/products">전체상품 보기</a>'+
+          CallButton("btn","전화로 문의")+'</div></div></div>';
+      window.scrollTo(0,0);
+    })
+    .catch(function(err){
+      QS_SENDING = false;
+      if(btn){ btn.disabled=false; btn.textContent = "문의 보내기"; }
+      /* ⚠️ 손님에게 운영자 할 일을 말하지 않습니다 — 콘솔로 갑니다. */
+      try{ console.warn("[ABOUTMEAT] 견적 문의를 접수하지 못했습니다 — "+((err && err.message)||err)+
+        ". api/quote.js 가 올라가 있는지, Vercel 환경변수(QUOTE_WEBHOOK_URL / ORDER_WEBHOOK_URL "+
+        "또는 RESEND_API_KEY·QUOTE_EMAIL_TO)가 설정되어 있는지 확인하세요."); }catch(e){}
+      toast(bizVal("phone") ? "지금 문의를 접수하지 못했습니다. 전화로 문의해 주세요."
+                            : "지금 문의를 접수하지 못했습니다. 잠시 뒤 다시 시도해 주세요.");
+    });
   return false;
 };
+function qv(id){ var e=$(id); return e ? String(e.value||"").trim() : ""; }
 
 /* ── 10. 장바구니 ───────────────────────────────────────── */
 function PageCart(){

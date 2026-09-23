@@ -214,7 +214,12 @@ var BIZ_FIELDS = [
   ["privacyEmail","개인정보 문의 이메일","비우면 위 문의 이메일을 씁니다", false],
   ["privacyPhone","개인정보 문의 전화","비우면 위 고객센터를 씁니다", false],
   ["hostRegion","개인정보 보관 리전","예: 서울", false],
-  ["quoteTo","대량견적 접수처","이메일 주소", false],
+  /* ⚠️ 여기에 주소를 적는다고 접수가 되는 것이 아닙니다. 실제 접수는
+     Vercel 환경변수(QUOTE_WEBHOOK_URL 또는 RESEND_API_KEY·
+     QUOTE_EMAIL_TO)가 합니다. 이 칸은 **그 설정을 마쳤다는 표시**라,
+     비어 있으면 견적 화면 맨 위에 "지금은 이 양식으로 접수하지
+     못합니다" 안내가 뜹니다. */
+  ["quoteTo","대량견적 접수처","받을 주소 — Vercel 환경변수 설정을 마친 뒤에 적으세요", false],
   ["effective","약관·방침 시행일","YYYY-MM-DD", true],
 
   /* ── 배송 ───────────────────────────────────────────────

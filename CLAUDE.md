@@ -27,7 +27,10 @@ js/data/legal-terms.js  이용약관 본문
 js/data/legal-privacy.js 개인정보처리방침 본문
 js/components/          base · chrome · cards · diagram
 js/pages/               home · list · detail · misc · legal · order
-api/order.js            주문 접수 (Vercel 함수) · api/_data.json 은 만들어진 것
+api/order.js            주문 접수 (Vercel 함수)
+api/quote.js            대량견적 접수
+api/_send.js            둘이 같이 쓰는 발송 (밑줄이라 주소가 안 됩니다)
+api/_data.json          서버가 금액을 다시 셀 때 쓰는 가격표 — 만들어진 것
 js/app.js               라우터 · 장바구니 · 찜
 img/                    사진 48장
 check.js                전수 점검
@@ -284,7 +287,7 @@ admin.html              상품·사업자 정보 편집기 (js/admin.js · js/ad
 - **개인정보 수집·이용** — 항목·목적·보유기간을 동의 자리에서 같이
   보여 줍니다(개인정보보호법 제15조 제2항).
 
-`check.js` 의 **"주문 흐름" 12개**가 이 셋(결제수단 · 금액 · 동의 둘)을
+`check.js` 의 **"주문·견적 흐름" 14개**가 이 셋(결제수단 · 금액 · 동의 둘)을
 지킵니다. 하나로 묶어 검사하면 한쪽을 지워도 나머지가 막아 줘서
 통과합니다 — 실제로 그래서 못 잡았고, 지금은 하나씩 따로 봅니다.
 
@@ -306,20 +309,36 @@ admin.html              상품·사업자 정보 편집기 (js/admin.js · js/ad
   라벨만 남은 빈 상자가 됩니다. 지금은 셋 다 있을 때만 계좌 줄을
   내고, 없으면 문의할 곳을 냅니다.
 
-### 주문이 실제로 전달되게 하려면
+### 주문·견적이 실제로 전달되게 하려면
 
-`api/order.js` 는 **저장하지 않습니다.** 서버도 DB 도 없으니 받아서
-밖으로 보내기만 합니다. Vercel 환경변수에 둘 중 하나를 넣으세요.
+`api/order.js` · `api/quote.js` 는 **저장하지 않습니다.** 서버도 DB 도
+없으니 받아서 밖으로 보내기만 합니다. 보내는 일은 `api/_send.js` 가
+둘을 대신해 합니다. Vercel 환경변수에 넣으세요.
 
 | 변수 | 무엇 |
 |---|---|
-| `ORDER_WEBHOOK_URL` | 주문 JSON 을 그대로 POST. 슬랙·Zapier·앱스스크립트 아무거나 |
-| `RESEND_API_KEY` + `ORDER_EMAIL_TO` | 이메일로 받기 (`ORDER_EMAIL_FROM` 은 선택) |
+| `ORDER_WEBHOOK_URL` | 주문·견적 JSON 을 그대로 POST. 슬랙·Zapier·앱스스크립트 아무거나 |
+| `QUOTE_WEBHOOK_URL` | 견적만 따로 보낼 곳 (없으면 위를 씁니다) |
+| `RESEND_API_KEY` + `ORDER_EMAIL_TO` | 이메일로 받기 |
+| `QUOTE_EMAIL_TO` | 견적 받을 주소 (없으면 위를 씁니다) |
+| `ORDER_EMAIL_FROM` | 보내는 주소 (기본값 `onboarding@resend.dev`) |
 
-⚠️ 둘 다 없으면 **503 을 돌려줍니다.** 일부러 그렇게 했습니다 — 받을
+⚠️ 하나도 없으면 **503 을 돌려줍니다.** 일부러 그렇게 했습니다 — 받을
 곳이 없는데 "접수되었습니다" 라고 하면 손님은 기다리고 주문은
 사라집니다. 지금은 화면이 "지금 접수하지 못했습니다" 라고 말하고
 전화 버튼을 내놓습니다.
+
+⚠️ **`api/` 에서 밑줄로 시작하는 파일**(`_send.js` · `_data.json`)은
+주소가 되지 않습니다. Vercel 규칙입니다 — 이름을 바꾸면
+`/api/_send` 가 열립니다.
+
+⚠️ **`WOW_BIZ.quoteTo` 를 적는다고 접수가 되는 것이 아닙니다.** 실제
+접수는 위 환경변수가 합니다. 그 칸은 **설정을 마쳤다는 표시**라,
+비어 있으면 견적 화면 맨 위에 "지금은 이 양식으로 접수하지 못합니다"
+안내가 뜹니다.
+
+⚠️ **동의는 서버에서도 확인합니다.** `api/quote.js` 는 `agree !== true`
+면 받지 않습니다. 화면만 믿으면 그 주소로 직접 보내는 것을 못 막습니다.
 
 ⚠️ **키를 저장소에 적지 마세요.** 공개 저장소입니다. `middleware.js`
 의 `ADMIN_PASSWORD` 와 같은 규칙입니다.
@@ -464,7 +483,7 @@ node check.js        # 23개 화면 × 1440·1024·390px 전수 (playwright 필�
 
 보는 것: JS 에러 · 못 불러온 파일 · 가로 스크롤 · **12px 미만 글씨** ·
 **40px 미만 누름** · 낱말 가운데 잘림 · 손님 화면에 남은 개발자 말 ·
-링크 100개가 실제로 열리는지 · **주소가 화면에 반영되는지**(헤더 메뉴·아래 네비·마이페이지 탭·사업자 가입) · **주문 흐름**(결제수단·금액·동의 둘·품절·기억해 둔 주문·개인정보).
+링크 100개가 실제로 열리는지 · **주소가 화면에 반영되는지**(헤더 메뉴·아래 네비·마이페이지 탭·사업자 가입) · **주문·견적 흐름**(결제수단·금액·동의·품절·기억해 둔 주문·개인정보).
 
 바꾼 화면은 **데스크톱과 모바일(390px) 둘 다** 실제로 띄워 보세요.
 
@@ -567,6 +586,5 @@ node check.js        # 23개 화면 × 1440·1024·390px 전수 (playwright 필�
 | 실제 상품·가격 | `admin.html` 에서 넣고 `products.js` 를 내보내세요 |
 | 로그인·회원가입 | `js/app.js` 의 `doLogin` · `doSignup` — **서버가 필요합니다.** 지금은 "준비 중" 까지만 말합니다 (인증 없이 `isLoggedIn()` 을 true 로 만들지 마세요) |
 | 카드결제 | PG 사 계약 → `WOW_PG.clientKey` + `wowPayCard()`. 무통장입금은 계좌만 채우면 바로 됩니다 |
-| 주문 전달처 | Vercel 환경변수 `ORDER_WEBHOOK_URL` 또는 `RESEND_API_KEY`·`ORDER_EMAIL_TO` |
-| 대량견적 접수 | `js/pages/misc.js` 의 `submitQuote` + `WOW_BIZ.quoteTo` |
+| 견적·주문 전달처 | Vercel 환경변수 (위 표) — 넣기 전에는 접수가 안 되고 전화 안내가 나갑니다 |
 | 부위 사진 29장 (48개 중 19개만 있음) | `img/e-<slug>.png` 로 넣으면 `encyclopedia.js` 에 `img` 한 줄만 추가 |

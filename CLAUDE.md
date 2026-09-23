@@ -584,7 +584,7 @@ node check.js        # 23개 화면 × 1440·1024·390px 전수 (playwright 필�
 |---|---|
 | **사업자 정보** (판매 시작 전 필수 — 전자상거래법 제10조) | `admin.html` 의 사업자 정보 탭 |
 | 실제 상품·가격 | `admin.html` 에서 넣고 `products.js` 를 내보내세요 |
-| 로그인·회원가입 | `js/app.js` 의 `doLogin` · `doSignup` — **서버가 필요합니다.** 지금은 "준비 중" 까지만 말합니다 (인증 없이 `isLoggedIn()` 을 true 로 만들지 마세요) |
+| 로그인·회원가입 | `js/app.js` 의 `doLogin` · `doSignup` — **서버와 회원 저장소가 필요합니다.** 지금은 폼 **위에** "준비 중" 이라고 먼저 말하고, **회원가입 없이도 주문할 수 있다**는 것을 같이 알립니다. ⚠️ 인증 없이 `isLoggedIn()` 을 true 로 만들지 마세요 |
 | 카드결제 | PG 사 계약 → `WOW_PG.clientKey` + `wowPayCard()`. 무통장입금은 계좌만 채우면 바로 됩니다 |
 | 견적·주문 전달처 | Vercel 환경변수 (위 표) — 넣기 전에는 접수가 안 되고 전화 안내가 나갑니다 |
 | 부위 사진 29장 (48개 중 19개만 있음) | `img/e-<slug>.png` 로 넣으면 `encyclopedia.js` 에 `img` 한 줄만 추가 |

@@ -318,8 +318,26 @@ function PageCart(){
    ⚠️ 비밀번호칸은 반드시 <form> 안에 둡니다. 폼이 없으면 크롬이
    문서 전체를 로그인 폼으로 보고 화면의 첫 글자칸(= 헤더 검색창)에
    저장된 아이디를 밀어 넣습니다. */
+/* ⚠️ "지금은 안 된다" 는 말을 **폼 위에** 둡니다. 아이디·비밀번호를
+   다 적고 누른 뒤에야 알리면 손님의 시간을 버리게 하는 짓입니다
+   (견적 문의에서 한 번 겪은 것과 같은 규칙).
+
+   그리고 **회원가입 없이도 주문할 수 있다**는 것을 같이 알립니다.
+   가입이 막혀 있으니 주문도 못 하는 줄 알고 나가 버리면, 열어 둔
+   주문서가 아무 소용이 없습니다. */
+function authNotice(){
+  var canOrder = (typeof wowPayReady==="function") && wowPayReady().length;
+  return '<div class="notice"><b>회원 기능은 아직 준비 중입니다.</b>'+
+    (canOrder ? '<span>회원가입 없이도 바로 주문하실 수 있습니다.</span>' : '')+
+    '<div class="notice-acts">'+
+      (canOrder ? '<a class="btn" href="/products">전체상품 보기</a>' : '')+
+      CallButton("btn","전화로 문의")+
+      '<a class="btn" href="/b2b/quote">대량견적 문의</a>'+
+    '</div></div>';
+}
+
 function PageLogin(){
-  return '<div class="w auth"><h1 class="pg-h1">로그인</h1>'+
+  return '<div class="w auth"><h1 class="pg-h1">로그인</h1>'+authNotice()+
     '<form class="form" id="l-form" onsubmit="return doLogin(event)">'+
       '<div class="f-r"><label for="l-id">아이디 (이메일)</label>'+
         '<input id="l-id" type="email" autocomplete="username" required></div>'+
@@ -334,6 +352,7 @@ function PageSignup(){
      "사업자 회원가입" 버튼이 그냥 회원가입으로 갔습니다. */
   var biz = nowQS("biz")==="1";
   return '<div class="w auth"><h1 class="pg-h1">'+(biz?"사업자 회원가입":"회원가입")+'</h1>'+
+    authNotice()+
     '<form class="form" id="s-form" onsubmit="return doSignup(event)">'+
       '<div class="f-r"><label for="s-id">아이디 (이메일) <b>*</b></label>'+
         '<input id="s-id" type="email" autocomplete="username" required></div>'+

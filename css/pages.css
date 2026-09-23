@@ -299,11 +299,18 @@
 .about-b a{ color:var(--green); font-weight:600; text-decoration:underline; }
 
 /* ══ 알림 띠 ══════════════════════════════════════════════ */
+/* ⚠️ 모바일에서는 **아래 네비 위로** 띄웁니다. bottom:28px 로 두었더니
+   390px 에서 토스트(722~816px)와 네비(787~844px)가 29px 겹쳐,
+   "장바구니에 담았습니다" 아랫줄이 네비 뒤로 들어갔습니다. */
 .toast{ position:fixed; left:50%; bottom:28px; transform:translate(-50%,16px);
   background:var(--ink); color:#fff; padding:13px var(--s6); border-radius:var(--r);
   font-size:var(--t-base); font-weight:600; z-index:90; opacity:0; pointer-events:none;
   transition:opacity .2s, transform .2s; max-width:calc(100vw - 32px); text-align:center; }
 .toast.on{ opacity:1; transform:translate(-50%,0); }
+/* 아래 네비가 나타나는 폭과 **같은 값**이어야 합니다 (css/app.css 의
+   .mnav 와 같은 640px). 다르게 두면 네비가 없는 폭에서 토스트만
+   공중에 떠 있습니다. */
+@media (max-width:640px){ .toast{ bottom:calc(var(--mnav-h) + 16px); } }
 
 /* ══ 반응형 ═══════════════════════════════════════════════ */
 @media (max-width:1024px){
@@ -396,7 +403,15 @@
 .lg-t th,.lg-t td{ padding:var(--s3) var(--s4); border-bottom:1px solid var(--line);
   text-align:left; vertical-align:top; }
 .lg-t tbody th{ width:150px; background:var(--ivory); color:var(--ink2); font-weight:600; }
-.lg-t3 thead th{ background:var(--green-bg); color:var(--green); font-weight:700; width:auto; }
+/* 위탁 현황 표 — ⚠️ 열 너비를 정하지 않으면 브라우저가 글자 수대로
+   나눕니다. "위탁 업무" 칸이 길어 나머지가 눌리는 바람에
+   "보유·이용 기간" 이 세 줄로 쪼개졌습니다 (2낱말 3줄).
+   세 열의 몫을 못 박아 둡니다. */
+.lg-t3{ table-layout:fixed; }
+.lg-t3 thead th{ background:var(--green-bg); color:var(--green); font-weight:700; }
+.lg-t3 th:nth-child(1){ width:30%; }
+.lg-t3 th:nth-child(2){ width:44%; }
+.lg-t3 th:nth-child(3){ width:26%; }
 .lg-tag{ display:inline-block; font-size:var(--t-cap); font-weight:700; color:var(--red-ink);
   background:#F8ECEA; border-radius:var(--r-sm); padding:2px 7px; margin-left:4px; }
 .lg-none{ margin:0 0 var(--s5); padding:var(--s4) var(--s5); background:var(--ivory);
@@ -412,6 +427,10 @@
 @media (max-width:640px){
   .lg-toc ol{ grid-template-columns:1fr; }
   .lg-t tbody th{ width:104px; }
+  /* 좁은 화면에서는 수탁자 이름을 줄이고 기간에 자리를 줍니다 */
+  .lg-t3 th:nth-child(1){ width:28%; }
+  .lg-t3 th:nth-child(2){ width:38%; }
+  .lg-t3 th:nth-child(3){ width:34%; }
   .lg-sub{ padding-left:22px; }
 }
 

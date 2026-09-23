@@ -281,6 +281,27 @@ for(const root of roots){
   if(fs.existsSync(d) && fs.statSync(d).isDirectory()) sweep(d);
 }
 
+/* ── vercel.json 이 Vercel 이 받아들이는 모양인가 ──────────────
+   ⚠️ Vercel 은 vercel.json 을 **엄격하게** 검사합니다. 헤더 항목에
+   key·value 말고 다른 키가 하나라도 있으면 "Invalid vercel.json" 으로
+   **배포가 통째로 실패합니다.** JSON 에는 주석이 없어서 설명을 "//"
+   키로 넣었다가 그럴 뻔했습니다 — 설명은 CLAUDE.md 에 적으세요. */
+{
+  const vj = JSON.parse(fs.readFileSync(path.join(ROOT,"vercel.json"),"utf8"));
+  const okHeader = ["key","value"], okGroup = ["source","headers","has","missing"];
+  for(const g of (vj.headers||[])){
+    for(const k of Object.keys(g))
+      if(!okGroup.includes(k)) throw new Error("vercel.json headers 에 알 수 없는 키: "+k);
+    for(const h of (g.headers||[]))
+      for(const k of Object.keys(h))
+        if(!okHeader.includes(k)) throw new Error("vercel.json 헤더 항목에 알 수 없는 키: "+k+" (key·value 만 됩니다)");
+  }
+  for(const r of (vj.rewrites||[]))
+    for(const k of Object.keys(r))
+      if(!["source","destination","has","missing"].includes(k))
+        throw new Error("vercel.json rewrites 에 알 수 없는 키: "+k);
+}
+
 /* ── 서버가 쓸 가격표 ──────────────────────────────────────────
    api/order.js 는 손님이 보낸 금액을 믿지 않고 **다시 셉니다.** 그러려면
    서버도 가격을 알아야 하는데, js/data/products.js 는 `window.…` 를

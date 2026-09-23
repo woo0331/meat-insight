@@ -20,13 +20,30 @@
    ════════════════════════════════════════════════════════════════════ */
 
 const DATA = require("./_data.json");
-const { deliver, clean, won, why } = require("./_send.js");
+const { deliver, clean, won, why, fromOurPages } = require("./_send.js");
 
 const MAX_ITEMS = 50;      /* 한 주문에 담을 수 있는 품목 수 */
 const MAX_KG    = 9999;    /* 한 품목 최대 수량 */
 
 function bad(res, code, msg){
   res.status(code).json({ error: msg });
+}
+
+/* 주문번호 — 날짜 + 시각(시분초) + 임의 세 자리.
+   화면(js/data/order.js 의 wowOrderNo)과 같은 모양입니다.
+
+   ⚠️ 예전에는 날짜 + 임의 네 자리였습니다. 하루 100건이면 같은 번호가
+   두 번 나올 확률이 **39%** 였습니다 (생일 문제). 무통장입금은 번호로
+   입금을 대조하므로 겹치면 남의 입금으로 처리됩니다.
+
+   ⚠️ 서버 시계는 UTC 입니다. 한국 시각으로 맞추지 않으면 오후에 넣은
+   주문이 다음 날 번호를 답니다. */
+function orderNo(){
+  const d = new Date(Date.now() + 9*60*60*1000);   /* KST */
+  const p = n => ("0"+n).slice(-2);
+  return "" + d.getUTCFullYear() + p(d.getUTCMonth()+1) + p(d.getUTCDate()) +
+         "-" + p(d.getUTCHours()) + p(d.getUTCMinutes()) + p(d.getUTCSeconds()) +
+         "-" + ("00"+Math.floor(Math.random()*1000)).slice(-3);
 }
 /* 화면(js/data/order.js 의 wowTotals)과 **같은 셈법**입니다.
    한쪽만 고치면 손님이 본 금액과 받는 금액이 달라집니다. */
@@ -73,6 +90,14 @@ module.exports = async function handler(req, res){
     return bad(res, 405, "POST 로 보내 주세요");
   }
 
+  /* ⚠️ 화면에서 온 것만 받습니다 (api/_send.js 의 fromOurPages).
+     자물쇠가 아니라 문턱입니다 — 진짜 속도 제한은 Vercel Firewall 에서. */
+  if(!fromOurPages(req)){
+    console.warn("[ABOUTMEAT] 우리 화면 밖에서 온 요청을 받지 않았습니다 (origin=" +
+      (req.headers.origin || "없음") + ")");
+    return res.status(403).json({ error: "잘못된 요청입니다" });
+  }
+
   let b = req.body;
   if(typeof b === "string"){ try{ b = JSON.parse(b); }catch(e){ b = null; } }
   if(!b || typeof b !== "object") return bad(res, 400, "주문 내용을 읽지 못했습니다");
@@ -85,7 +110,10 @@ module.exports = async function handler(req, res){
 
   const buyer = b.buyer || {}, recv = b.recv || {};
   const order = {
-    no:   clean(b.no, 32) || (Date.now() + ""),
+    /* ⚠️ 손님이 보낸 번호를 쓰지 않습니다. 개발자도구로 아무 번호나
+       적어 보낼 수 있고, 남의 주문번호를 그대로 적으면 입금 대조가
+       엉킵니다. 서버가 새로 만들고, 화면은 이 번호를 씁니다. */
+    no:   orderNo(),
     pay:  (b.pay === "card" ? "card" : "bank"),
     buyer:{ name:clean(buyer.name, 40), tel:clean(buyer.tel, 30), email:clean(buyer.email, 120) },
     recv: { name:clean(recv.name, 40) || clean(buyer.name, 40),

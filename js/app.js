@@ -78,9 +78,19 @@ function paintCartN(){
 
 /* 알림 — 확인 버튼 없는 짧은 띠. 손님 작업을 막지 않습니다. */
 var TT=null;
+/* ⚠️ **읽어 주는 프로그램에도 들리게 합니다.** 담기·품절·동의 누락 안내가
+   전부 토스트라, 이게 없으면 눈이 불편한 손님은 장바구니에 담겼는지
+   아닌지를 알 방법이 없습니다. role="status" + aria-live="polite" 는
+   지금 읽던 것을 끊지 않고 이어서 읽어 줍니다 (assertive 는 말을
+   자릅니다 — 담기 안내가 그렇게까지 급하지는 않습니다). */
 window.toast = function(msg){
   var t=$("toast");
-  if(!t){ t=document.createElement("div"); t.id="toast"; t.className="toast"; document.body.appendChild(t); }
+  if(!t){
+    t=document.createElement("div"); t.id="toast"; t.className="toast";
+    t.setAttribute("role","status");
+    t.setAttribute("aria-live","polite");
+    document.body.appendChild(t);
+  }
   t.textContent=msg; t.classList.add("on");
   clearTimeout(TT); TT=setTimeout(function(){ t.classList.remove("on"); }, 2600);
 };

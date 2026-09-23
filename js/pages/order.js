@@ -296,6 +296,13 @@ function PageOrderDone(){
       ? '<div class="od-list od-done-list">'+kept.items.map(function(x){
           return '<div class="od-i"><div class="od-i-b"><b>'+esc(x.name)+'</b></div>'+
             '<div class="od-i-p">'+x.kg+'kg</div></div>'; }).join("")+'</div>' : '')+
+    /* ⚠️ 취소하는 길이 없으면 손님은 입금해 놓고 전화로 찾아다닙니다.
+       화면에서 취소를 받을 수 없으니(서버도 DB 도 없습니다) **어디로
+       연락하면 되는지**를 적습니다. 번호가 없으면 그 줄을 뺍니다. */
+    (bizVal("phone")
+      ? '<p class="od-done-n">주문을 <b>취소·변경</b>하시려면 '+
+        (o.pay==="bank" ? '입금 전에 ' : '')+'아래 번호로 연락해 주세요.</p>'
+      : '')+
     '<p class="od-done-n od-keep">이 화면은 <b>이 브라우저</b>에 남겨 두었습니다. '+
       '마이페이지에서 다시 보실 수 있습니다.</p>'+
     '<div class="empty-acts">'+

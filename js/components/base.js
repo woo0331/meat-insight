@@ -54,11 +54,21 @@ window.icon = function(name, size, fill){
    확장자를 데이터마다 적지 않고 이름 앞글자로 고릅니다 — 새 그림을
    넣을 때 규칙만 지키면 되고, 잘못 적어 빈 상자가 될 일이 없습니다. */
 window.imgExt = function(name){ return /^[qe]-/.test(String(name)) ? ".png" : ".jpg"; };
-window.imgTag = function(name, alt, cls){
+/* eager=true 는 **스크롤 없이 바로 보이는 사진**에 씁니다.
+
+   ⚠️ 전부 loading="lazy" 로 두면 **첫 화면 사진도 늦게 불러옵니다.**
+   브라우저가 배치를 끝낸 뒤에야 받기 시작하므로, 구글이 재는 LCP
+   (제일 큰 것이 보이기까지)가 그만큼 늦어집니다. 첫 화면 밖은 lazy 가
+   맞습니다 — 도감 48장을 한꺼번에 받을 이유가 없습니다.
+
+   fetchpriority="high" 는 "이걸 먼저 받아라" 는 뜻입니다. eager 만
+   주면 순서는 그대로라 효과가 반쯤입니다. */
+window.imgTag = function(name, alt, cls, eager){
   /* ⚠️ 반드시 **절대 경로**(/img/…)여야 합니다. 상대 경로로 두면
      /c/beef/gut 같은 깊은 주소에서 /c/beef/gut/img/… 를 찾습니다.
      주소가 해시(#/…)였을 때는 경로가 늘 "/" 라 안 드러났습니다. */
   return '<img src="/img/'+esc(name)+imgExt(name)+'" alt="'+esc(alt||"")+'"'+
-    (cls?' class="'+esc(cls)+'"':'')+' loading="lazy" '+
-    'onerror="this.onerror=null;this.style.background=\'var(--green-bg)\';this.removeAttribute(\'src\');">';
+    (cls?' class="'+esc(cls)+'"':'')+
+    (eager ? ' loading="eager" fetchpriority="high"' : ' loading="lazy"')+
+    ' onerror="this.onerror=null;this.style.background=\'var(--green-bg)\';this.removeAttribute(\'src\');">';
 };

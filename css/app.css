@@ -279,6 +279,6 @@ h1,h2,h3,h4{ margin:0; font-weight:700; line-height:var(--lh-tight); letter-spac
   .hero::after{ background:linear-gradient(180deg, rgba(14,26,21,.92) 0%,
                                                    rgba(14,26,21,.78) 52%, rgba(14,26,21,.58) 100%); }
   .mnav{ display:block; }
-  body{ padding-bottom:64px; }   /* 고정 네비에 가리지 않게 */
+  body{ padding-bottom:var(--mnav-h); }   /* 고정 네비에 가리지 않게 */
   .ft{ padding-bottom:var(--s9); }
 }

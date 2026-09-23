@@ -57,7 +57,7 @@ function PageHome(){
     '<div class="sec-hd"><div class="sec-hd-t"><h2>오늘 들어온 부산물</h2>'+
       '<p>당일 작업한 원물을 냉장 상태로 보냅니다</p></div>'+
       '<a class="sec-more" href="/products/today">전체보기'+icon("chev",16)+'</a></div>'+
-    ProductGrid(today)+
+    ProductGrid(today, {lazy:true})+
   '</div></section>' : '')+
 
   /* ── 부산물 도감 (지시서 18번) ───────────────────────────

@@ -14,12 +14,20 @@
    화면이 손님에게 전화로 안내합니다.
    ════════════════════════════════════════════════════════════════════ */
 
-const { deliver, clean, why } = require("./_send.js");
+const { deliver, clean, why, fromOurPages } = require("./_send.js");
 
 module.exports = async function handler(req, res){
   if(req.method !== "POST"){
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "POST 로 보내 주세요" });
+  }
+
+  /* ⚠️ 화면에서 온 것만 받습니다 (api/_send.js 의 fromOurPages).
+     자물쇠가 아니라 문턱입니다 — 진짜 속도 제한은 Vercel Firewall 에서. */
+  if(!fromOurPages(req)){
+    console.warn("[ABOUTMEAT] 우리 화면 밖에서 온 요청을 받지 않았습니다 (origin=" +
+      (req.headers.origin || "없음") + ")");
+    return res.status(403).json({ error: "잘못된 요청입니다" });
   }
 
   let b = req.body;

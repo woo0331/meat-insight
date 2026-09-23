@@ -36,7 +36,7 @@ function encBody(){
           'onclick="encCat(\''+esc(c.slug)+'\')">'+esc(c.name)+'</button></li>'; }).join("")+
     '</ul></aside>'+
     '<div class="enc-main">'+
-      (list.length ? '<div class="qg">'+list.map(function(e){ return EncyclopediaCard(e, EN.sp); }).join("")+'</div>'
+      (list.length ? '<div class="qg">'+list.map(function(e,i){ return EncyclopediaCard(e, EN.sp, i); }).join("")+'</div>'
         : '<div class="empty"><div class="empty-t">이 분류의 도감은 준비 중입니다</div>'+
           '<div class="empty-d">다른 분류를 먼저 보실 수 있습니다.</div></div>')+
     '</div>';
@@ -77,7 +77,7 @@ function encDetail(sp, slug){
      (모르는 것을 없다고 적지 않는다는 규칙과 어긋나지 않습니다). */
   (rel.length ? '<section class="sec sec-w"><div class="w">'+
     '<div class="sec-hd"><div class="sec-hd-t"><h2>'+esc(e.name)+' 상품</h2></div></div>'+
-    ProductGrid(rel)+'</div></section>'
+    ProductGrid(rel, {lazy:true})+'</div></section>'
    : '<section class="sec sec-w"><div class="w"><div class="empty">'+
       '<div class="empty-t">'+esc(e.name)+esc(josa(e.name,"은는"))+' 아직 등록된 상품이 없습니다</div>'+
       '<div class="empty-d">필요한 수량과 규격을 알려 주시면 확인해 드립니다.</div>'+
@@ -133,7 +133,7 @@ function PageB2B(){
     '<div class="sec-hd"><div class="sec-hd-t"><h2>업소용 추천 부산물</h2>'+
       '<p>대용량 규격으로 공급 가능한 품목입니다</p></div>'+
       '<a class="sec-more" href="/products">전체보기'+icon("chev",16)+'</a></div>'+
-    ProductGrid(biz)+'</div></section>' : '')+
+    ProductGrid(biz, {lazy:true})+'</div></section>' : '')+
   '<section class="sec sec-i"><div class="w">'+B2BBanner({
       img:"b2b-hero", title:"필요한 규격이 따로 있으신가요?",
       desc:"수량 · 손질 상태 · 납품 주기를 알려 주시면 담당자가 맞춤 견적을 드립니다.",
@@ -423,7 +423,7 @@ function PageMy(){
 function myBody(t){
   if(t==="wish"){
     var w = WISH.map(wowProduct).filter(Boolean);
-    return w.length ? ProductGrid(w)
+    return w.length ? ProductGrid(w, {lazy:true})
       : emptyBox("찜한 상품이 없습니다","마음에 드는 부산물을 찜해 두시면 이곳에 모입니다.","/products","전체상품 보기");
   }
   /* 주문도 찜과 같습니다 — **이 브라우저에서 넣은 것**은 실제로 압니다.

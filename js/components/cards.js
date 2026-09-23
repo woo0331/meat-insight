@@ -19,14 +19,16 @@ function ProductBadge(k){
 window.isSoldOut = function(p){ return !!(p && p.soldOut); };
 
 /* 상품 카드 — 시안 그대로: 사진 / 이름 / 원산지·온도·손질 / 원/kg / 담기 */
-function ProductCard(p){
+/* eager 는 **한 화면의 앞 네 장**까지만 (한 줄이 넷입니다).
+   더 늘리면 첫 화면 밖 사진까지 먼저 받아 오히려 느려집니다. */
+function ProductCard(p, i){
   var meta=[p.origin, WOW_TEMP[p.temp], WOW_TRIM[p.trim]].filter(Boolean).join(" · ");
   var out = isSoldOut(p);
   var bd = (p.badges||[]).slice();
   if(out) bd = ["out"];          /* 품절이면 NEW·BEST 는 지웁니다 — 못 사는데 부추기면 안 됩니다 */
   return '<article class="pc'+(out?" out":"")+'">'+
     '<a class="pc-img" href="/p/'+esc(p.id)+'" aria-label="'+esc(p.name)+(out?" (품절)":"")+' 상세보기">'+
-      imgTag(p.img, p.name)+
+      imgTag(p.img, p.name, null, i < 4)+
       (bd.length?'<span class="pc-bd">'+bd.map(ProductBadge).join("")+'</span>':'')+
     '</a>'+
     '<div class="pc-b">'+
@@ -51,12 +53,18 @@ function ProductGrid(list, opt){
       '<div class="empty-d">'+esc(opt.emptyD||"조건을 줄이면 더 많은 부산물을 보실 수 있습니다.")+'</div>'+
       '<a class="btn btn-g" href="'+esc(opt.emptyTo||"/products")+'">전체상품 보기</a></div>';
   }
-  return '<div class="pg'+(opt.cols===3?" pg-3":"")+'">'+list.map(ProductCard).join("")+'</div>';
+  /* ⚠️ map(ProductCard) 로 넘기면 두 번째 인자로 **번호가 같이** 갑니다.
+     그게 여기서는 뜻이 있습니다 (앞 네 장을 먼저 받게). 다만 이 그리드가
+     한 화면에 여럿 있으면 아래쪽 것도 "앞 네 장" 이 되므로,
+     첫 그리드가 아닐 때는 opt.lazy 로 끕니다. */
+  return '<div class="pg'+(opt.cols===3?" pg-3":"")+'">'+
+    list.map(function(p,i){ return ProductCard(p, opt.lazy ? 99 : i); }).join("")+'</div>';
 }
 
 /* 퀵 카테고리 카드 — 컷아웃 일러스트 + 이름 */
-function CategoryCard(c){
-  return '<a class="qc" href="'+esc(c.to)+'">'+imgTag(c.img, c.name)+'<b>'+esc(c.name)+'</b></a>';
+function CategoryCard(c, i){
+  return '<a class="qc" href="'+esc(c.to)+'">'+imgTag(c.img, c.name, null, i < 4)+
+    '<b>'+esc(c.name)+'</b></a>';
 }
 
 /* 신뢰 띠 — 지시서 6번. 아이콘 + 제목 + 짧은 설명. */
@@ -92,9 +100,9 @@ function B2BBanner(o){
    404 가 한 번 나고 카드가 빈 상자가 됩니다 — 화면에서는 "아직 안 만든
    사이트" 로 읽힙니다. 사진이 없으면 부위 위치 그림(PartThumb)으로
    대신합니다. 비슷하게 생겼다고 **남의 부위 사진을 돌려 쓰지 마세요.** */
-function EncyclopediaCard(e, sp){
+function EncyclopediaCard(e, sp, i){
   return '<a class="qc" href="/enc/'+esc(sp)+'/'+esc(e.slug)+'">'+
-    (e.img ? imgTag(e.img, e.name) : PartThumb(sp, e))+
+    (e.img ? imgTag(e.img, e.name, null, i < 4) : PartThumb(sp, e))+
     '<b>'+esc(e.name)+'</b></a>';
 }
 

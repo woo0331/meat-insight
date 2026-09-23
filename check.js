@@ -337,6 +337,45 @@ const AUDIT = `(() => {
   if (ordBad.length) { fail++; console.log("  ❌ "+ordBad.length+"건: "+ordBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 
+  /* 10. 알림(토스트)이 보이고 들리는가
+     ⚠️ 담기·품절·동의 누락 안내가 **전부 토스트**입니다. 아래 네비에
+     가리거나 읽어 주는 프로그램이 못 읽으면, 손님은 담겼는지 아닌지를
+     알 방법이 없습니다. 둘 다 화면은 멀쩡해 보여서 위 검사들은 통과합니다. */
+  const tstBad = [];
+  for (const w of [390, 1440]) {
+    const tp = await (await b.newContext({ viewport:{width:w,height:844} })).newPage();
+    await tp.goto(ROOT + "/products", { waitUntil:"load" });
+    await tp.waitForTimeout(250);
+    await tp.evaluate(() => addCart("b-gopchang", 1));
+    await tp.waitForTimeout(200);
+    const r = await tp.evaluate(() => {
+      const t = document.getElementById("toast");
+      if (!t) return { none:true };
+      const tr = t.getBoundingClientRect();
+      const n = document.querySelector(".mnav");
+      const on = n && getComputedStyle(n).display !== "none";
+      const nr = on ? n.getBoundingClientRect() : null;
+      return {
+        over: nr ? Math.max(0, Math.round(tr.bottom - nr.top)) : 0,
+        offscreen: Math.round(tr.bottom) > Math.round(innerHeight),
+        live: t.getAttribute("aria-live"), role: t.getAttribute("role"),
+        shown: getComputedStyle(t).opacity !== "0"
+      };
+    });
+    if (r.none)        tstBad.push(w+"px: 토스트가 안 뜸");
+    else {
+      if (!r.shown)    tstBad.push(w+"px: 토스트가 안 보임");
+      if (r.over > 0)  tstBad.push(w+"px: 아래 네비에 "+r.over+"px 가림");
+      if (r.offscreen) tstBad.push(w+"px: 화면 밖으로 나감");
+      if (r.role !== "status" || r.live !== "polite")
+                       tstBad.push(w+"px: 읽어 주는 프로그램이 못 읽음 (role/aria-live 없음)");
+    }
+    await tp.close();
+  }
+  console.log("\n── 알림이 보이고 들리는가");
+  if (tstBad.length) { fail++; console.log("  ❌ "+tstBad.length+"건: "+tstBad.join(" / ")); }
+  else console.log("  ✅ 두 폭 다 맞음");
+
   await b.close();
   server.close();
   console.log(fail ? "\n❌ "+fail+"개 항목 실패" : "\n✅ 전체 통과");

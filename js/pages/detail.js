@@ -21,7 +21,8 @@ function Gallery(p){
   var d = p.detail || {};
   var imgs = [d.main || p.img].concat(d.thumbs || []);
   return '<div class="gal">'+
-    '<div class="gal-main">'+imgTag(imgs[DT.img]||imgs[0], p.name)+'</div>'+
+    /* 상세의 큰 사진이 이 화면의 제일 큰 것입니다 — 먼저 받습니다 */
+    '<div class="gal-main">'+imgTag(imgs[DT.img]||imgs[0], p.name, null, true)+'</div>'+
     (imgs.length>1 ? '<div class="gal-th">'+imgs.map(function(g,i){
       return '<button class="gal-t'+(i===DT.img?" on":"")+'" onclick="DT.img='+i+';paintDetail()" '+
         'aria-label="'+esc(p.name)+' 사진 '+(i+1)+'번">'+imgTag(g, "")+'</button>';
@@ -198,7 +199,7 @@ function detailBody(){
     var rel = wowFind({sp:p.sp, cat:p.cat}).filter(function(x){ return x.id!==p.id; }).slice(0,4);
     return rel.length ? '<section class="sec sec-w"><div class="w">'+
       '<div class="sec-hd"><div class="sec-hd-t"><h2>이런 부산물도 있습니다</h2></div></div>'+
-      ProductGrid(rel)+'</div></section>' : '';
+      ProductGrid(rel, {lazy:true})+'</div></section>' : '';
   })();
 }
 

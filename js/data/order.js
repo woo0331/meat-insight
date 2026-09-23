@@ -53,12 +53,24 @@ window.wowTotals = function(cart){
   return { items:items, goods:goods, ship:ship, total:goods+ship, freeOver:freeOver };
 };
 
-/* 주문번호 — 날짜 + 임의 네 자리.
-   전화로 불러 줄 수 있게 짧게 둡니다 ("이공이육공구이이 다시 사칠삼일"). */
+/* 주문번호 — 날짜 + 시각(시분초) + 임의 두 자리.
+
+   ⚠️ 예전에는 **날짜 + 임의 네 자리**였습니다. 계산해 보니 하루 100건이면
+   같은 번호가 두 번 나올 확률이 **39%** 입니다 (생일 문제). 무통장입금은
+   번호로 입금을 대조하므로 겹치면 남의 입금으로 처리됩니다.
+   지금은 **같은 초에 들어온 주문끼리** 세 자리가 겹쳐야 하므로
+   사실상 안 겹칩니다.
+
+   ⚠️ 이 번호는 **참고용**입니다. 진짜 번호는 서버(api/order.js)가
+   따로 만들어 돌려줍니다 — 손님이 개발자도구로 자기 번호를 고르면
+   안 되기 때문입니다. 화면은 서버가 준 번호를 씁니다.
+
+   전화로 불러 줄 수 있는 길이를 유지합니다 (날짜-시각-셋). */
 window.wowOrderNo = function(){
   var d = new Date(), p = function(n){ return ("0"+n).slice(-2); };
-  var r = ("000"+Math.floor(Math.random()*10000)).slice(-4);
-  return ""+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+r;
+  return ""+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+
+         "-"+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+
+         "-"+("00"+Math.floor(Math.random()*1000)).slice(-3);
 };
 
 /* ════════════════════════════════════════════════════════════════════

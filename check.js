@@ -20,9 +20,13 @@ const http = require("http"), fsx = require("fs"), px = require("path");
 /* build-pages.js 가 만든 HTML 이 없는 **주소 안의 주소**만 여기 둡니다
    (vercel.json 의 rewrites 와 같은 구실). 나머지는 전부 진짜 파일입니다. */
 const RW = [/^\/partners\/[^/]+$/, /^\/lab\/[^/]+$/];
+/* ⚠️ `.svg` 를 빠뜨리면 그림이 application/octet-stream 으로 나가서
+   브라우저가 **그리지 않고 alt 글자만** 보여 줍니다. 화면은 멀쩡해
+   보이는데 사진 자리가 전부 글자가 됩니다 — 실제로 그렇게 봤습니다. */
 const MT = { ".html":"text/html;charset=utf-8", ".js":"text/javascript;charset=utf-8",
   ".css":"text/css;charset=utf-8", ".json":"application/json", ".jpg":"image/jpeg",
-  ".png":"image/png", ".xml":"application/xml", ".txt":"text/plain;charset=utf-8" };
+  ".png":"image/png", ".svg":"image/svg+xml", ".ico":"image/x-icon",
+  ".xml":"application/xml", ".txt":"text/plain;charset=utf-8" };
 const PORT = 8123;
 const server = http.createServer((rq,rs)=>{
   const u = decodeURIComponent(rq.url.split("?")[0]);
@@ -409,6 +413,35 @@ const AUDIT = `(() => {
     ptSend({preventDefault(){}});
     await new Promise(r=>setTimeout(r,200)); window.fetch=o;
     return sent===false;`);
+  /* ⚠️ 사진이 **실제로 그려지는가.** 파일이 없거나 서버가 엉뚱한
+     content-type 으로 내보내면 브라우저는 그림 대신 alt 글자만
+     보여 줍니다 — 화면은 멀쩡해 보이고 JS 에러도 안 납니다.
+     실제로 .svg 를 application/octet-stream 으로 내보내서 사진 자리가
+     전부 글자가 된 적이 있습니다. */
+  /* ⚠️ `img.complete` 를 기다리면 **멈춥니다.** loading="lazy" 인
+     그림은 화면에 들어오기 전까지 load 도 error 도 안 쏩니다 — 실제로
+     검사가 12분 동안 멈춰 있었습니다. 주소를 직접 받아 봅니다. */
+  await f("메인의 사진이 실제로 열린다", "/", `
+    const srcs = [...new Set([...document.querySelectorAll("#view img.ph, #view img.ph-bg")]
+      .map(i => i.getAttribute("src")).filter(Boolean))];
+    if(!srcs.length) return "사진이 한 장도 없습니다";
+    const bad = [];
+    for(const u of srcs){
+      try{
+        const res = await fetch(u, { cache:"no-store" });
+        const ct = res.headers.get("content-type") || "";
+        if(!res.ok) bad.push(u + " → " + res.status);
+        else if(!/^image\\//.test(ct)) bad.push(u + " → " + (ct || "타입 없음"));
+      }catch(e){ bad.push(u + " → " + e.message); }
+    }
+    return bad.length ? bad.join(" / ") : true;`);
+  /* ⚠️ 그림은 봐도 못 읽는 손님이 있습니다 */
+  await f("사진마다 무엇이 찍혔는지 적혀 있다", "/", `
+    const bad = [...document.querySelectorAll("#view img.ph")]
+      .filter(i => !(i.getAttribute("alt")||"").trim())
+      .map(i => i.getAttribute("src"));
+    return bad.length ? bad.join(" ") + " 에 alt 가 없습니다" : true;`);
+
   /* ⚠️ 약관·방침이 쇼핑몰 기준으로 되돌아가면 여기서 걸립니다 */
   await f("약관에 쇼핑몰 문구가 남아 있지 않다", "/terms", `
     const t = document.getElementById("view").textContent;
@@ -417,7 +450,7 @@ const AUDIT = `(() => {
     const t = document.getElementById("view").textContent;
     return /별도의 동의/.test(t) && /Vercel/.test(t);`);
 
-  console.log("\n── 새 화면 흐름 " + 14 + "개");
+  console.log("\n── 새 화면 흐름 " + 16 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

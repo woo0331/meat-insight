@@ -3,7 +3,7 @@
 
    실행:  node check.js
 
-   15개 화면 × 데스크톱·태블릿·모바일 세 폭에서
+   19개 화면 × 데스크톱·태블릿·모바일 세 폭에서
      1. JS 에러 · 못 불러온 파일
      2. 가로 스크롤
      3. 12px 미만 글씨 (연세 있는 사장님이 폰으로 읽습니다)
@@ -42,16 +42,20 @@ const PAGES = [
   ["/sos",             "사장님 SOS"],
   ["/sos?c=duct",      "SOS (분류 고른 채로)"],
   ["/start",           "창업 프로젝트"],
-  ["/start/cost",      "창업비 계산기"],
+  ["/start/cost",      "창업비 정리표"],
   ["/check",           "무료 사업진단"],
   ["/partners",        "업체 찾기"],
-  ["/request",         "견적 요청"],
+  ["/request",         "견적 요청 (고르는 화면)"],
+  ["/request?s=duct",  "견적 요청 (덕트)"],
+  ["/request?s=beef-supply", "견적 요청 (육류 공급)"],
   ["/lab",             "사장님 연구소"],
   ["/partner",         "파트너 안내"],
   ["/partner/apply",   "파트너 등록"],
+  ["/about",           "소개"],
+  ["/terms",           "이용약관"],
+  ["/privacy",         "개인정보처리방침"],
   ["/my",              "MY BUSINESS"],
   ["/login",           "로그인"],
-  ["/about",           "소개"],
   ["/nope",            "없는 주소"]
 ];
 const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[390,844,"모바일"]];
@@ -60,7 +64,10 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[390,844,"모바
 /* ⚠️ 조사를 괄호로 때운 자리(은(는) · 을(를))도 여기서 걸립니다.
    화면에도 보이지만, 더 나쁜 것은 **구글 검색 결과 줄**에 그대로
    나간다는 점입니다 — 카테고리 17개가 실제로 그랬습니다. */
-const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|[은는이가을를와과](\([은는이가을를와과]\))/i;
+/* ⚠️ "지시서 12번" 이 파트너 안내 화면에 그대로 나간 적이 있습니다.
+   운영자끼리 쓰는 말(지시서 · 스펙 · MVP · 어드민 · TODO)은 손님 화면에
+   있으면 안 됩니다 (절대 규칙 3). */
+const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
   const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[] };
@@ -218,7 +225,16 @@ const AUDIT = `(() => {
     ["/sos?q=%ED%85%8C%EC%8A%A4%ED%8A%B8", "메인에서 적은 말이 넘어옴",
       () => document.getElementById("s-q").value === "테스트"],
     ["/sos?c=duct", "고른 분류가 켜져 있음",
-      () => !!document.querySelector('#s-cat .pk.on[data-k="duct"]')]
+      () => !!document.querySelector('#s-cat .pk.on[data-k="duct"]')],
+    ["/request?s=duct", "고른 서비스로 요청서가 뜸",
+      () => document.getElementById("rq-svc").value === "duct"
+         && !!document.getElementById("rq-f-fires")],
+    ["/request?s=beef-supply", "서비스마다 묻는 칸이 다름",
+      () => !!document.getElementById("rq-f-amount")
+         && !document.getElementById("rq-f-fires")],
+    ["/request?s=nope-없는것", "모르는 서비스는 영문 key 를 안 찍고 고르는 화면으로",
+      () => !document.getElementById("rq-svc")
+         && document.getElementById("view").textContent.indexOf("nope") < 0]
   ];
   const navBad = [];
   const np = await (await b.newContext({ viewport:{width:390,height:900} })).newPage();
@@ -291,6 +307,118 @@ const AUDIT = `(() => {
     return hit.length ? hit.join("·")+" 가 보입니다" : true;`);
   console.log("\n── SOS 흐름 " + 5 + "개");
   if (sosBad.length) { fail++; console.log("  ❌ "+sosBad.length+"건: "+sosBad.join(" / ")); }
+  else console.log("  ✅ 전부 맞음");
+
+  /* 9-2. 새 화면들이 실제로 굴러가는가
+     ⚠️ 화면이 **그려지는 것**과 **되는 것**은 다릅니다. 위의 검사들은
+     그려지기만 하면 전부 통과합니다. */
+  const flowBad = [];
+  const fp = await (await b.newContext({ viewport:{width:1280,height:900} })).newPage();
+  const f = async (name, url, fn) => {
+    await fp.goto(ROOT + url, { waitUntil:"load" });
+    await fp.waitForTimeout(250);
+    let ok;
+    try { ok = await fp.evaluate("(async()=>{ "+fn+" })()"); }
+    catch(e){ ok = "에러 "+e.message; }
+    if (ok !== true) flowBad.push(name + (typeof ok === "string" ? " ("+ok+")" : "")); };
+
+  await f("진단: 안 고르면 결과가 안 나온다", "/check", `
+    chkDone({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,200));
+    return !document.querySelector(".ring");`);
+  await f("진단: 여덟 개 고르면 결과가 나온다", "/check", `
+    WOW_CHECK.forEach(it => chkPick(it.key, 0));
+    chkDone({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,250));
+    return !!document.querySelector(".ring")
+        && document.querySelector(".ring-n b").textContent === "100";`);
+  await f("진단: 점수가 고른 답을 따라간다", "/check", `
+    WOW_CHECK.forEach(it => chkPick(it.key, 2));   /* 전부 0점짜리 */
+    chkDone({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,250));
+    return document.querySelector(".ring-n b").textContent === "0";`);
+  await f("진단: 원가율은 적은 숫자를 나눈 값이다", "/check", `
+    document.getElementById("ck-sales").value = "7,000";
+    document.getElementById("ck-meat").value  = "2,400";
+    chkRate();
+    await new Promise(r=>setTimeout(r,120));
+    return document.querySelector(".chk-rate-n").textContent.indexOf("34.3") === 0;`);
+
+  await f("창업: 체크가 남는다", "/start", `
+    try{ localStorage.clear(); }catch(e){}
+    render();
+    await new Promise(r=>setTimeout(r,150));
+    stToggle("area", true);
+    await new Promise(r=>setTimeout(r,200));
+    const n = document.querySelector(".st-pg-t b").textContent.trim();
+    render();
+    await new Promise(r=>setTimeout(r,200));
+    return n === "1 / 20"
+        && document.querySelector(".st-pg-t b").textContent.trim() === "1 / 20";`);
+  await f("창업: 지우면 0 으로 돌아간다", "/start", `
+    stToggle("area", true); stToggle("shop", true);
+    await new Promise(r=>setTimeout(r,150));
+    stReset();
+    await new Promise(r=>setTimeout(r,200));
+    return document.querySelector(".st-pg-t b").textContent.trim() === "0 / 20";`);
+
+  await f("창업비: 합계가 적은 값의 합이다", "/start/cost", `
+    try{ localStorage.clear(); }catch(e){}
+    render();
+    await new Promise(r=>setTimeout(r,200));
+    costIn("shop","5,000"); costIn("interior","3,200");
+    await new Promise(r=>setTimeout(r,150));
+    const t = document.getElementById("cost-sum").textContent;
+    try{ localStorage.clear(); }catch(e){}
+    return t.indexOf("8,200") >= 0 && t.indexOf("2칸") >= 0;`);
+  /* ⚠️ 예상 금액을 지어내지 않습니다 — 아무것도 안 적었으면 합계도 없어야 합니다 */
+  await f("창업비: 안 적으면 숫자를 지어내지 않는다", "/start/cost", `
+    try{ localStorage.clear(); }catch(e){}
+    render();
+    await new Promise(r=>setTimeout(r,200));
+    const t = document.getElementById("cost-sum").textContent;
+    return !/[0-9]/.test(t.replace(/0칸/,""));`);
+
+  await f("견적: 동의 없이는 안 보낸다", "/request?s=duct", `
+    document.getElementById("rq-q").value = "덕트 냄새가 납니다";
+    document.getElementById("rq-name").value = "홍길동";
+    document.getElementById("rq-tel").value = "010-1234-5678";
+    document.getElementById("rq-ag").checked = false;
+    let sent=false; const o=window.fetch;
+    window.fetch=function(){ sent=true; return Promise.reject(new Error("테스트")); };
+    reqSend({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,200)); window.fetch=o;
+    return sent===false;`);
+  await f("견적: 동의하면 보낸다", "/request?s=duct", `
+    document.getElementById("rq-q").value = "덕트 냄새가 납니다";
+    document.getElementById("rq-name").value = "홍길동";
+    document.getElementById("rq-tel").value = "010-1234-5678";
+    document.getElementById("rq-ag").checked = true;
+    let body=null; const o=window.fetch;
+    window.fetch=function(u,i){ body=JSON.parse(i.body); return Promise.reject(new Error("테스트")); };
+    reqSend({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,250)); window.fetch=o;
+    return !!body && body.service==="duct" && body.agree===true;`);
+  await f("파트너: 서비스를 안 고르면 안 보낸다", "/partner/apply", `
+    document.getElementById("pt-co").value="가나덕트";
+    document.getElementById("pt-name").value="홍길동";
+    document.getElementById("pt-tel").value="010-1234-5678";
+    document.getElementById("pt-ag").checked=true;
+    let sent=false; const o=window.fetch;
+    window.fetch=function(){ sent=true; return Promise.reject(new Error("테스트")); };
+    ptSend({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,200)); window.fetch=o;
+    return sent===false;`);
+  /* ⚠️ 약관·방침이 쇼핑몰 기준으로 되돌아가면 여기서 걸립니다 */
+  await f("약관에 쇼핑몰 문구가 남아 있지 않다", "/terms", `
+    const t = document.getElementById("view").textContent;
+    return !/청약철회|배송|재화등의 공급|신선식품/.test(t);`);
+  await f("방침에 중개자 지위와 제3자 제공이 적혀 있다", "/privacy", `
+    const t = document.getElementById("view").textContent;
+    return /별도의 동의/.test(t) && /Vercel/.test(t);`);
+
+  console.log("\n── 새 화면 흐름 " + 14 + "개");
+  if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 
   /* 10. 알림(토스트)이 보이고 들리는가

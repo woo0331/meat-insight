@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>업체 찾기 · ABOUTMEAT · 고기 사업자 문제해결</title>
-<meta name="description" content="고깃집·정육점 경험이 있는 업체를 지역·서비스·예산·일정에 맞춰 찾아 드립니다.">
+<meta name="description" content="업체 명단을 드리지 않습니다. 필요한 일을 고르시면 지역·예산·일정에 맞는 곳을 최대 세 곳 찾아 견적을 받아 드립니다.">
 <meta name="theme-color" content="#6B2436">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="업체 찾기 · ABOUTMEAT · 고기 사업자 문제해결">
-<meta property="og:description" content="고깃집·정육점 경험이 있는 업체를 지역·서비스·예산·일정에 맞춰 찾아 드립니다.">
+<meta property="og:description" content="업체 명단을 드리지 않습니다. 필요한 일을 고르시면 지역·예산·일정에 맞는 곳을 최대 세 곳 찾아 견적을 받아 드립니다.">
 <!-- ⚠️ og:image 는 **주소 전체**여야 합니다. "/og.jpg" 로 두면 크롤러가
      우리 도메인을 모르는 채로 읽어 카카오톡·페이스북 미리보기에 안 뜹니다. -->
 <meta property="og:image" content="https://aboutmeat.co.kr/og.jpg">
@@ -37,11 +37,10 @@
 <link rel="stylesheet" href="/css/app.css">
 <link rel="stylesheet" href="/css/pages.css">
 <link rel="canonical" href="https://aboutmeat.co.kr/partners">
-<meta name="robots" content="noindex, follow">
 </head>
 <body>
 <a class="skip" href="#view">본문 바로가기</a>
-<noscript><h1>업체 찾기</h1><p>고깃집·정육점 경험이 있는 업체를 지역·서비스·예산·일정에 맞춰 찾아 드립니다.</p><h2>육류 · 식자재</h2><ul><li>육류 공급</li><li>식자재</li><li>포장재</li><li>주류</li></ul><h2>공간 · 시설</h2><ul><li>인테리어</li><li>덕트 · 환기</li><li>주방설비</li><li>냉장 · 냉동</li><li>전기</li><li>가스</li><li>간판</li></ul><h2>장비</h2><ul><li>육절기</li><li>골절기</li><li>진공기</li><li>쇼케이스</li><li>숙성고</li><li>저울</li><li>기타 정육장비</li></ul><h2>운영</h2><ul><li>POS</li><li>키오스크</li><li>CCTV</li><li>인터넷</li><li>방역</li><li>청소</li><li>세무</li><li>노무</li></ul><h2>성장</h2><ul><li>마케팅</li><li>사진 · 영상</li><li>디자인</li><li>온라인판매</li><li>OEM · PB</li></ul><h2>전문 서비스</h2><ul><li>HACCP</li><li>위생</li><li>컨설팅</li><li>물류</li></ul></noscript>
+<noscript><h1>업체 찾기</h1><p>업체 명단을 드리지 않습니다. 필요한 일을 고르시면 지역·예산·일정에 맞는 곳을 최대 세 곳 찾아 견적을 받아 드립니다.</p><h2>육류 · 식자재</h2><ul><li>육류 공급</li><li>식자재</li><li>포장재</li><li>주류</li></ul><h2>공간 · 시설</h2><ul><li>인테리어</li><li>덕트 · 환기</li><li>주방설비</li><li>냉장 · 냉동</li><li>전기</li><li>가스</li><li>간판</li></ul><h2>장비</h2><ul><li>육절기</li><li>골절기</li><li>진공기</li><li>쇼케이스</li><li>숙성고</li><li>저울</li><li>기타 정육장비</li></ul><h2>운영</h2><ul><li>POS</li><li>키오스크</li><li>CCTV</li><li>인터넷</li><li>방역</li><li>청소</li><li>세무</li><li>노무</li></ul><h2>성장</h2><ul><li>마케팅</li><li>사진 · 영상</li><li>디자인</li><li>온라인판매</li><li>OEM · PB</li></ul><h2>전문 서비스</h2><ul><li>HACCP</li><li>위생</li><li>컨설팅</li><li>물류</li></ul></noscript>
 
 <!-- ⚠️ 자산 경로는 반드시 절대 경로(/js/… · /img/…)여야 합니다.
      상대 경로면 /start/cost 같은 깊은 주소에서 /start/js/… 를 찾아
@@ -53,12 +52,23 @@
 <script src="/js/data/services.js"></script>
 <script src="/js/data/startup.js"></script>
 <script src="/js/data/photos.js"></script>
+<script src="/js/data/check.js"></script>
+<script src="/js/data/reqforms.js"></script>
+<script src="/js/data/legal-terms.js"></script>
+<script src="/js/data/legal-privacy.js"></script>
 
 <script src="/js/components/base.js"></script>
 <script src="/js/components/chrome.js"></script>
 
+<!-- ⚠️ sos.js 가 fRow · Notice · CallButton 을 내놓습니다.
+     다른 폼 화면들이 그걸 쓰므로 sos.js 를 먼저 둡니다. -->
 <script src="/js/pages/home.js"></script>
 <script src="/js/pages/sos.js"></script>
+<script src="/js/pages/check.js"></script>
+<script src="/js/pages/start.js"></script>
+<script src="/js/pages/request.js"></script>
+<script src="/js/pages/partner.js"></script>
+<script src="/js/pages/legal.js"></script>
 
 <script src="/js/app.js"></script>
 

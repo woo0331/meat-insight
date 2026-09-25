@@ -2,4 +2,14 @@
 <!-- build-pages.js 가 만듭니다 (2026-09-25). 손으로 고치지 마세요. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://aboutmeat.co.kr/</loc><lastmod>2026-09-25</lastmod><priority>1.0</priority></url>
+  <url><loc>https://aboutmeat.co.kr/start</loc><lastmod>2026-09-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://aboutmeat.co.kr/start/cost</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/check</loc><lastmod>2026-09-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://aboutmeat.co.kr/partners</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/request</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/partner</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/partner/apply</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/about</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/terms</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/privacy</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
 </urlset>

@@ -30,12 +30,12 @@ var META = {
                 "지금 겪고 계신 문제를 그대로 적어 주세요. 무엇이 필요한 일인지 정리해 드리고, 조건에 맞는 업체를 찾아 드립니다. 무료입니다."],
   "/start":    ["고깃집 창업 프로젝트",
                 "상권·점포·인테리어·덕트·주방·냉장·정육장비·인허가까지 20가지를 순서대로 정리해 드립니다."],
-  "/start/cost":["창업비 계산기",
-                "지역·평수·업종을 넣으면 고깃집 창업비를 항목별 예상 범위로 알려 드립니다."],
+  "/start/cost":["창업비 정리표",
+                "고깃집 창업비에서 빠뜨리기 쉬운 항목을 전부 늘어놓고, 받으신 견적을 넣어 합계와 빈 칸을 정리해 드립니다."],
   "/check":    ["무료 사업진단",
-                "육류원가·인건비·고정비·시설·마케팅을 8가지 항목으로 점검하고, 샐 곳을 찾아 드립니다."],
+                "육류원가·거래처·인건비·고정비·시설·메뉴·마케팅·위생 8가지로, 지금 무엇을 파악하고 계시고 무엇이 비어 있는지 정리해 드립니다."],
   "/partners": ["업체 찾기",
-                "고깃집·정육점 경험이 있는 업체를 지역·서비스·예산·일정에 맞춰 찾아 드립니다."],
+                "업체 명단을 드리지 않습니다. 필요한 일을 고르시면 지역·예산·일정에 맞는 곳을 최대 세 곳 찾아 견적을 받아 드립니다."],
   "/request":  ["견적 요청",
                 "덕트·인테리어·육류공급 등 필요한 일을 적어 주시면 조건에 맞는 업체 견적을 받아 드립니다."],
   "/lab":      ["사장님 연구소",
@@ -46,7 +46,8 @@ var META = {
   "/my":       ["MY BUSINESS", "내 요청과 받은 견적을 한곳에서 관리합니다."],
   "/login":    ["로그인", "ABOUTMEAT 로그인."],
   "/signup":   ["회원가입", "ABOUTMEAT 회원가입."],
-  "/about":    ["ABOUTMEAT 소개", "고기 사업자의 문제를 해결하는 곳입니다."],
+  "/about":    ["ABOUTMEAT 소개",
+                "고깃집·정육점 사장님이 장사하다 막히면 물어보는 곳입니다. 무엇을 하고 무엇을 하지 않는지 적어 두었습니다."],
   "/terms":    ["이용약관", "ABOUTMEAT 서비스 이용약관입니다."],
   "/privacy":  ["개인정보처리방침", "ABOUTMEAT 개인정보처리방침입니다."]
 };
@@ -58,20 +59,10 @@ var NOINDEX = ["/my","/login","/signup","/sos","/check/result","/quotes"];
    ⚠️ 빈 화면을 두지 마세요. 눌렀는데 아무것도 없으면 손님에게는
    고장으로 읽힙니다. */
 var SOON = {
-  "/start":    ["창업 프로젝트", "상권부터 오픈준비까지 20가지를 순서대로 짚어 드리는 화면입니다."],
-  "/start/cost":["창업비 계산기", "지역·평수·업종으로 항목별 예상 범위를 계산해 드리는 화면입니다."],
-  "/check":    ["무료 사업진단", "8가지 항목으로 지금 가게 상태를 점검하는 화면입니다."],
-  "/partners": ["업체 찾기", "조건에 맞는 업체를 찾아 드리는 화면입니다."],
-  "/request":  ["견적 요청", "서비스별 요청서를 받는 화면입니다."],
   "/lab":      ["사장님 연구소", "고기 장사에 필요한 글을 모으는 화면입니다."],
-  "/partner":  ["파트너 안내", "파트너로 함께하시는 방법을 안내하는 화면입니다."],
-  "/partner/apply":["파트너 등록", "파트너 등록을 받는 화면입니다."],
   "/my":       ["MY BUSINESS", "내 요청과 받은 견적을 모아 보는 화면입니다."],
   "/login":    ["로그인", "회원 기능을 준비하고 있습니다."],
-  "/signup":   ["회원가입", "회원 기능을 준비하고 있습니다."],
-  "/about":    ["ABOUTMEAT 소개", "저희가 어떤 곳인지 적는 화면입니다."],
-  "/terms":    ["이용약관", "약관을 새 서비스에 맞게 다시 쓰고 있습니다."],
-  "/privacy":  ["개인정보처리방침", "방침을 새 서비스에 맞게 다시 쓰고 있습니다."]
+  "/signup":   ["회원가입", "회원 기능을 준비하고 있습니다."]
 };
 
 /* 주소 → 무엇을 그릴지. build-pages.js 도 이 함수를 써서 메타를 뽑으므로
@@ -83,7 +74,21 @@ window.routeInfo = function(path, qs){
   if(m){ r.title = m[0]; r.desc = m[1]; }
 
   if(path === "/"){ r.view = "home"; r.title = null; r.desc = META["/"][1]; return r; }
-  if(path === "/sos"){ r.view = "sos"; return r; }
+
+  var VIEW = {
+    "/sos":           "sos",
+    "/check":         "check",
+    "/start":         "start",
+    "/start/cost":    "cost",
+    "/partners":      "partners",
+    "/request":       "request",
+    "/partner":       "partner",
+    "/partner/apply": "partnerApply",
+    "/about":         "about",
+    "/terms":         "terms",
+    "/privacy":       "privacy"
+  };
+  if(VIEW[path]){ r.view = VIEW[path]; return r; }
   if(SOON[path]){ r.view = "soon"; r.soon = SOON[path]; r.noindex = true; return r; }
 
   r.ok = false; return r;
@@ -124,10 +129,20 @@ function render(){
 
   var html;
   switch(r.view){
-    case "home": html = PageHome(); break;
-    case "sos":  html = PageSos();  break;
-    case "soon": html = PageSoon(r.soon); break;
-    default:     return notFound(path);
+    case "home":         html = PageHome();          break;
+    case "sos":          html = PageSos();           break;
+    case "check":        html = PageCheck();         break;
+    case "start":        html = PageStart();         break;
+    case "cost":         html = PageCost();          break;
+    case "partners":     html = PagePartners();      break;
+    case "request":      html = PageRequest();       break;
+    case "partner":      html = PagePartner();       break;
+    case "partnerApply": html = PagePartnerApply();  break;
+    case "about":        html = PageAbout();         break;
+    case "terms":        html = PageTerms();         break;
+    case "privacy":      html = PagePrivacy();       break;
+    case "soon":         html = PageSoon(r.soon);    break;
+    default:             return notFound(path);
   }
 
   $("view").innerHTML = html;
@@ -138,6 +153,13 @@ function render(){
   RT.keepScroll = false;
 }
 window.render = render;
+
+/* 같은 화면을 다시 그립니다. 목록에서 체크 하나 눌렀는데 맨 위로
+   튀어 올라가면 사장님은 자기가 뭘 잘못 누른 줄 압니다. */
+window.rerender = function(keepScroll){
+  if(keepScroll) RT.keepScroll = true;
+  render();
+};
 
 /* 아직 안 만든 화면 — 무엇을 할 곳인지 적고, 지금 할 수 있는 것을 줍니다 */
 function PageSoon(s){

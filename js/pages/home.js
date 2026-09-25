@@ -35,6 +35,7 @@ function PageHome(){
          LiveBand()+        /* 실제 요청 현황 — 데이터 있을 때만 */
          StoryBand()+       /* 사장님 스토리 — 실제 사례 있을 때만 */
          LabBand()+         /* 사장님 연구소 — 글 있을 때만 */
+         FaqBand()+
          PartnerBand()+
          FinalCTA();
 }
@@ -125,7 +126,7 @@ function HowRow(){
     ["shield","맞는 곳 세 군데만",     "목록을 뿌리지 않고 골라서 보여 드립니다."]
   ];
   return '<section class="how"><div class="w how-in">'+rows.map(function(r){
-    return '<div class="how-i">'+icon(r[0],22)+
+    return '<div class="how-i"><span class="how-ic">'+icon(r[0],22)+'</span>'+
       '<b>'+esc(r[1])+'</b><span>'+esc(r[2])+'</span></div>';
   }).join("")+'</div></section>';
 }
@@ -259,7 +260,7 @@ function StartBand(){
     }).join("")+'</ol>'+
 
     (steps.length ? '<ul class="chips chips-d">'+steps.map(function(s){
-        return '<li>'+esc(s.name)+'</li>'; }).join("")+'</ul>' : '')+
+        return '<li>'+icon(s.icon||"check",16)+esc(s.name)+'</li>'; }).join("")+'</ul>' : '')+
 
     '<div class="row-cta">'+
       '<a class="btn btn-w btn-lg" href="/start/cost">내 창업비 알아보기'+icon("arrow",18)+'</a>'+
@@ -274,9 +275,12 @@ function StartBand(){
    그때 붙입니다 — 지금은 "어떻게 되는지" 만 설명합니다. */
 function MatchBand(){
   var steps = [
-    ["상황을 적습니다",   "문제나 필요한 것을 그대로 적어 주시면 됩니다. 양식이 없어도 됩니다."],
-    ["우리가 알아봅니다", "무엇이 필요한 일인지 정리하고, 지역 · 예산 · 일정 조건을 잡습니다."],
-    ["세 곳만 비교합니다", "조건에 맞는 곳에만 요청이 갑니다. 가격 · 일정 · A/S 를 한 화면에서 보세요."]
+    ["상황을 적습니다",   "edit",
+     "문제나 필요한 것을 그대로 적어 주시면 됩니다. 양식이 없어도 됩니다."],
+    ["우리가 알아봅니다", "search",
+     "무엇이 필요한 일인지 정리하고, 지역 · 예산 · 일정 조건을 잡습니다."],
+    ["세 곳만 비교합니다", "scale",
+     "조건에 맞는 곳에만 요청이 갑니다. 가격 · 일정 · A/S 를 한 화면에서 보세요."]
   ];
   return '<section class="sec"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">업체 매칭</p>'+
@@ -285,7 +289,7 @@ function MatchBand(){
         '사장님 조건에 맞는 곳을 찾아 드리는 게 목적입니다.</p></div>'+
     '<ol class="steps">'+steps.map(function(s,i){
       return '<li><span class="steps-n">'+("0"+(i+1))+'</span>'+
-        '<b>'+esc(s[0])+'</b><span>'+esc(s[1])+'</span></li>';
+        '<b>'+icon(s[1],20)+esc(s[0])+'</b><span>'+esc(s[2])+'</span></li>';
     }).join("")+'</ol>'+
     '<div class="row-cta row-mid">'+
       '<a class="btn btn-b btn-lg" href="/sos">지금 물어보기'+icon("arrow",18)+'</a>'+
@@ -311,11 +315,15 @@ function CatBand(){
         encodeURIComponent(g.key)+'">'+
         (ph ? '<span class="cat-ph">'+photoBox("cat-"+g.key)+'</span>' : '')+
         '<span class="cat-b">'+
-          '<span class="cat-t">'+icon(ic[g.key]||"chev",20)+'<b>'+esc(g.name)+'</b></span>'+
-          (g.lead ? '<span class="cat-l">'+esc(g.lead)+'</span>' : '')+
+          '<span class="cat-t">'+
+            '<span class="cat-ic">'+icon(g.icon||ic[g.key]||"chev",22)+'</span>'+
+            '<b>'+esc(g.name)+'</b>'+
+            (g.lead ? '<span class="cat-l">'+esc(g.lead)+'</span>' : '')+
+          '</span>'+
           '<span class="cat-i">'+g.items.slice(0,5).map(function(it){
-            return esc(it.name); }).join(" · ")+
-            (g.items.length > 5 ? ' 외 '+(g.items.length-5)+'가지' : '')+'</span>'+
+            return '<em>'+esc(it.name)+'</em>'; }).join("")+
+            (g.items.length > 5 ? '<em class="cat-more">외 '+(g.items.length-5)+'가지</em>' : '')+
+          '</span>'+
         '</span></a>';
     }).join("")+'</div>'+
   '</div></section>';
@@ -332,6 +340,7 @@ function WorryBand(){
         '<p>고르시면 그 이야기부터 시작합니다. 여기 없는 것도 그냥 적어 주세요.</p></div>'+
       '<div class="prob-g'+(ph?'':' prob-g-w')+'">'+WOW_PROBLEMS.map(function(p){
         return '<a class="prob" href="'+esc(p.to || ("/sos?c="+encodeURIComponent(p.key)))+'">'+
+          '<span class="prob-ic">'+icon(p.icon||"chat",20)+'</span>'+
           '<span class="prob-b"><b>'+esc(p.name)+'</b>'+
             (p.hint ? '<span>'+esc(p.hint)+'</span>' : '')+'</span>'+
           '<span class="prob-go">'+icon("chev",16)+'</span></a>';
@@ -382,6 +391,45 @@ function LabBand(){
       '<h2>알고 하면 덜 씁니다</h2>'+
       '<a class="sec-more" href="/lab">전체보기'+icon("chev",16)+'</a></div>'+
     '<div class="card-g">'+posts.slice(0,3).map(PostCard).join("")+'</div>'+
+  '</div></section>';
+}
+
+/* ── 11.5 자주 묻는 것 ─────────────────────────────────────
+   ⚠️ **"평균 ○일 안에" · "○곳이 이용" 같은 숫자를 넣지 마세요.**
+   여기 적는 것은 전부 지금 지킬 수 있는 말이어야 합니다. 답을 모르는
+   질문은 넣지 말고, 넣었으면 모른다고 적으세요. */
+function FaqBand(){
+  var qs = [
+    ["정말 무료인가요?", "won",
+     "물어보시는 것과 업체를 찾아 드리는 것에는 비용을 받지 않습니다. "+
+     "공사나 납품 대금은 사장님과 업체가 직접 주고받으시는 돈이고, 저희는 받지 않습니다."],
+    ["가입해야 하나요?", "user",
+     "아니요. 연락받으실 곳만 적어 주시면 됩니다. 이름과 연락처 외에는 "+
+     "매칭에 실제로 쓰이는 것만 여쭤봅니다."],
+    ["업체를 몇 곳이나 소개해 주시나요?", "users",
+     "한 요청에 최대 세 곳입니다. 열 곳을 붙여 드리면 비교가 아니라 전화 폭탄이 됩니다. "+
+     "맞는 곳을 못 찾으면 못 찾았다고 말씀드립니다."],
+    ["연락처가 업체로 바로 넘어가나요?", "lock",
+     "아닙니다. 어느 업체에 넘길지 정해지면 그 업체가 어디인지 먼저 알려 드리고, "+
+     "그때 다시 여쭤봅니다. 원하지 않으시면 넘기지 않습니다."],
+    ["언제 연락 주시나요?", "clock",
+     "확인한 뒤 바로 연락드립니다. 다만 \"몇 시간 안에\" 라고는 적지 않겠습니다 — "+
+     "지금 그 약속을 지킬 수 있다고 장담할 수 없습니다."],
+    ["광고비를 낸 업체가 위에 올라가나요?", "shield",
+     "그렇게 하지 않습니다. 돈을 낸 순서로 보여 드리면 사장님이 저희를 믿을 이유가 없어집니다. "+
+     "광고 상품을 만들게 되면 그것이 광고라고 화면에 적겠습니다."]
+  ];
+  return '<section class="sec sec-warm"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">자주 묻는 것</p>'+
+      '<h2>물어보기 전에 궁금하신 것</h2></div>'+
+    '<div class="faq">'+qs.map(function(q, i){
+      /* <details> 는 JS 없이도 열립니다 — 스크립트가 늦게 떠도 읽힙니다 */
+      return '<details class="faq-i"'+(i === 0 ? ' open' : '')+'>'+
+        '<summary><span class="faq-ic">'+icon(q[1],18)+'</span>'+
+          '<b>'+esc(q[0])+'</b>'+
+          '<span class="faq-x" aria-hidden="true">'+icon("chevd",18)+'</span></summary>'+
+        '<p>'+esc(q[2])+'</p></details>';
+    }).join("")+'</div>'+
   '</div></section>';
 }
 

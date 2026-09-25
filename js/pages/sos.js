@@ -87,12 +87,18 @@ function Consent(){
   return '<fieldset class="agree"><legend>개인정보 수집·이용 동의</legend>'+
     '<ul class="ag-why">'+
       '<li><span>수집 항목</span><b>성함, 연락처 (선택: 업종, 지역, 적어 주신 내용)</b></li>'+
-      '<li><span>이용 목적</span><b>문의 확인 및 답변, 필요 시 업체 연결</b></li>'+
+      '<li><span>이용 목적</span><b>문의 확인 및 답변, 해결 방향 안내</b></li>'+
       '<li><span>보유 기간</span><b>문의 처리 완료 후 1년</b></li>'+
     '</ul>'+
     '<label class="ag-r"><input type="checkbox" id="s-ag" required>'+
       '<span>위 내용에 동의합니다 <em class="ag-req">(필수)</em></span>'+
       '<a class="ag-v" href="/privacy">방침 보기</a></label>'+
+    /* ⚠️ **업체에 연락처를 넘기는 것은 여기 동의에 들어 있지 않습니다.**
+       그 순간이 제3자 제공(개인정보보호법 제17조)이고, 누구에게 넘기는지
+       정해지기 전에 뭉뚱그려 받는 동의는 제17조 제2항 위반입니다.
+       업체가 정해진 뒤에 상호를 알리고 따로 받습니다. */
+    '<p class="ag-no">업체에 연락처를 전달하는 것은 여기에 포함되지 않습니다 — '+
+      '연결할 업체가 정해지면 어디인지 알려 드리고 그때 따로 여쭙겠습니다.</p>'+
     '<p class="ag-no">동의를 거부하실 수 있으며, 이 경우 이 양식으로는 '+
       '문의를 접수하지 못합니다'+
       (bizVal("phone") ? ' — 전화로는 그대로 문의하실 수 있습니다.' : '.')+'</p>'+

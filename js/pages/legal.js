@@ -74,8 +74,6 @@ function bizTable(){
     ["대표자",           bizVal("ceo")],
     ["사업자등록번호",    bizVal("brn")],
     ["통신판매업 신고번호", bizVal("mailOrder")],
-    ["축산물 영업신고번호", bizVal("meatLicense")],
-    ["HACCP 인증번호",   bizVal("haccp")],
     ["사업장 주소",       bizVal("address")],
     ["고객센터",         bizVal("phone")],
     ["상담 시간",        bizVal("hours")],
@@ -83,7 +81,7 @@ function bizTable(){
   ],
   "사업자 정보는 서비스 준비가 끝나는 대로 이곳에 게시합니다.",
   "약관·방침의 사업자 정보가 비어 있습니다 — js/data/site.js 의 WOW_BIZ 를 채우세요. "+
-  "전자상거래법 제10조 표시 의무라 판매 시작 전에 반드시 필요합니다.");
+  "전자상거래법 제10조 표시 의무라 영업 시작 전에 반드시 필요합니다.");
 }
 
 function PageTerms(){
@@ -107,12 +105,16 @@ function PagePrivacy(){
   var trustee = tr.length
     ? '<table class="lg-t lg-t3"><thead><tr><th>수탁자</th><th>위탁 업무</th><th>보유·이용 기간</th></tr></thead><tbody>'+
         tr.map(function(r){
-          return '<tr><td>'+esc(r[0])+(r[3]?' <span class="lg-tag">국외 · '+esc(r[3])+'</span>':'')+
-                 '</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>';
+          /* data-h 는 좁은 화면에서 칸 앞에 붙는 제목입니다 — 표가
+             세로로 펴지면 어느 칸인지 알 수 없어집니다 (css/pages.css) */
+          return '<tr><td data-h="수탁자">'+esc(r[0])+
+                 (r[3]?' <span class="lg-tag">국외 · '+esc(r[3])+'</span>':'')+
+                 '</td><td data-h="위탁 업무">'+esc(r[1])+
+                 '</td><td data-h="보유·이용 기간">'+esc(r[2])+'</td></tr>';
         }).join("")+'</tbody></table>'
     : (function(){
         try{ console.warn("[ABOUTMEAT] 개인정보 처리 위탁 현황이 비어 있습니다 — "+
-          "결제대행·배송·문자발송 업체를 붙일 때마다 js/data/legal-privacy.js 의 trustees 에 "+
+          "호스팅·접수처(웹훅·메일) 업체를 붙일 때마다 js/data/legal-privacy.js 의 trustees 에 "+
           "한 줄씩 추가하세요. 안 적으면 개인정보보호법 제26조 위반입니다."); }catch(e){}
         return '<p class="lg-none">현재 외부에 위탁하고 있는 개인정보 처리 업무가 없습니다.</p>';
       })();
@@ -126,8 +128,8 @@ function PagePrivacy(){
 /* 두 문서가 같은 껍데기를 씁니다 */
 function legalShell(D, tail){
   var eff = bizVal("effective");
-  return Breadcrumb([["홈","/"],[D.title,""]])+
-  '<div class="w lg">'+
+  return '<div class="w lg">'+
+    '<a class="back-l" href="/">'+icon("back",18)+'홈으로</a>'+
     '<header class="lg-hd">'+
       '<h1>'+esc(D.title)+'</h1>'+
       '<p class="lg-intro">'+esc(D.intro)+'</p>'+

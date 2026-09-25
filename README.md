@@ -13,7 +13,7 @@
 
 ```bash
 node build-pages.js   # 주소마다 HTML + sitemap.xml 을 만듭니다
-node check.js         # 전수 점검 (playwright 필요)
+node check.js         # 19개 화면 전수 점검 (playwright 필요)
 ```
 
 `check.js` 는 Vercel 을 흉내 낸 작은 서버를 띄웁니다 — 주소가 진짜
@@ -25,14 +25,16 @@ node check.js         # 전수 점검 (playwright 필요)
 |---|---|---|
 | `/` | 메인 | 됨 |
 | `/sos` | 사장님 SOS | 됨 |
-| `/start` · `/start/cost` | 창업 프로젝트 · 창업비 계산기 | 준비 중 |
-| `/check` | 무료 사업진단 | 준비 중 |
-| `/partners` · `/partners/:id` | 업체 찾기 · 파트너 프로필 | 준비 중 |
-| `/request` · `/quotes` | 견적 요청 · 견적 비교 | 준비 중 |
+| `/check` | 무료 사업진단 (8항목 → 점수 → 항목별 CTA) | 됨 |
+| `/start` | 창업 프로젝트 (20단계 · 체크 저장) | 됨 |
+| `/start/cost` | 창업비 정리표 | 됨 |
+| `/partners` | 업체 찾기 (명단이 아니라 **무엇이 필요한지 고르는 화면**) | 됨 |
+| `/request` | 견적 요청 (서비스마다 묻는 칸이 다릅니다) | 됨 |
+| `/partner` · `/partner/apply` | 파트너 안내 · 등록 | 됨 |
+| `/about` | ABOUTMEAT 소개 | 됨 |
+| `/terms` · `/privacy` | 약관 · 방침 (중개·매칭 기준) | 됨 · **초안** |
 | `/lab` | 사장님 연구소 | 준비 중 |
-| `/partner` · `/partner/apply` | 파트너 안내 · 등록 | 준비 중 |
-| `/my` | MY BUSINESS | 준비 중 |
-| `/terms` · `/privacy` | 약관 · 방침 | 다시 쓰는 중 |
+| `/my` · `/login` · `/signup` | MY · 로그인 · 가입 | 준비 중 (백엔드) |
 
 **준비 중** 화면은 빈 화면이 아닙니다 — 무엇을 할 곳인지 적고 지금 할
 수 있는 것(SOS·전화)을 줍니다. 전부 `noindex` 입니다.

@@ -105,6 +105,13 @@ ul,ol{ margin:0; padding:0; list-style:none; }
 .sec-more:hover{ color:var(--burgundy); }
 .lead{ font-size:var(--t-lg); color:var(--ink2); line-height:1.75; }
 .note{ font-size:var(--t-sm); color:var(--ink3); margin-top:var(--s3) !important; }
+/* ⚠️ **`<br class="br-m">` 뒤에는 반드시 띄어쓰기를 하나 두세요.**
+   좁은 화면에서 이 `<br>` 은 display:none 으로 사라지는데, 띄어쓰기가
+   없으면 앞뒤 낱말이 그대로 붙습니다 — "차리는 데알아볼 게".
+   ⚠️ 띄어쓰기는 `<br>` **앞이 아니라 뒤**입니다. 줄바꿈 바로 다음에
+   오는 공백은 브라우저가 지우므로 넓은 화면에서는 아무 표도 안 납니다.
+   앞에 두면 넓은 화면에서 줄 끝에 공백이 남습니다.
+   check.js 가 실제로 붙는지 검사합니다. */
 .br-m{ display:inline; }
 @media (max-width:640px){ .br-m{ display:none; } .sec-more{ position:static; } }
 
@@ -138,10 +145,15 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   font-size:var(--t-cap); font-weight:600; position:relative; }
 .mnav a.on{ color:var(--burgundy); }
 /* 가운데 SOS 를 크게 (지시서 29번) */
-.mnav a.big{ color:var(--burgundy); }
-.mnav a.big .ic{ background:var(--burgundy); color:#fff; border-radius:var(--r-pill);
+.mnav a.big{ color:var(--red); }
+/* ⚠️ 밝은 빨강(--red)을 쓰는 세 자리 중 하나입니다. 이 동그란 단추는
+   38px 밖에 안 되는데 아래 네비에서 제일 먼저 눈에 들어와야 합니다 —
+   딥 버건디는 그 크기에서 검게 보여 다른 칸과 구분이 안 됩니다.
+   ⚠️ 누르는 칸 자체는 --mnav-h(64px) 이라 40px 규칙을 지킵니다.
+   아이콘만 작은 것이고 <a> 는 칸 전체입니다. */
+.mnav a.big .ic{ background:var(--red); color:#fff; border-radius:var(--r-pill);
   padding:7px; width:38px; height:38px; margin-top:-14px;
-  box-shadow:0 4px 12px rgba(107,36,54,.32); }
+  box-shadow:0 4px 12px rgba(193,39,45,.34); }
 @media (max-width:860px){
   .mnav{ display:block; }
   body{ padding-bottom:var(--mnav-h); }

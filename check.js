@@ -3,10 +3,10 @@
 
    실행:  node check.js
 
-   12개 페이지 × 데스크톱·태블릿·모바일 세 폭에서
+   15개 화면 × 데스크톱·태블릿·모바일 세 폭에서
      1. JS 에러 · 못 불러온 파일
      2. 가로 스크롤
-     3. 12px 미만 글씨 (사업자·연세 있는 손님이 kg 단가를 읽습니다)
+     3. 12px 미만 글씨 (연세 있는 사장님이 폰으로 읽습니다)
      4. 40px 미만으로 누르는 것
      5. 낱말 가운데가 잘리는 곳
      6. 손님 화면에 남은 개발자 말 · undefined · NaN
@@ -17,9 +17,9 @@ const { chromium } = require("/opt/node22/lib/node_modules/playwright");
    있어야 합니다. Vercel 을 흉내 내는 작은 서버를 띄웁니다 —
    정적 파일 우선, 없으면 rewrite, 그것도 아니면 404. */
 const http = require("http"), fsx = require("fs"), px = require("path");
-const RW = [/^\/p\/[^/]+$/, /^\/c\/[^/]+$/, /^\/c\/[^/]+\/[^/]+$/,
-            /^\/c\/[^/]+\/[^/]+\/[^/]+$/, /^\/enc\/[^/]+$/,
-            /^\/enc\/[^/]+\/[^/]+$/, /^\/products\/[^/]+$/];
+/* build-pages.js 가 만든 HTML 이 없는 **주소 안의 주소**만 여기 둡니다
+   (vercel.json 의 rewrites 와 같은 구실). 나머지는 전부 진짜 파일입니다. */
+const RW = [/^\/partners\/[^/]+$/, /^\/lab\/[^/]+$/];
 const MT = { ".html":"text/html;charset=utf-8", ".js":"text/javascript;charset=utf-8",
   ".css":"text/css;charset=utf-8", ".json":"application/json", ".jpg":"image/jpeg",
   ".png":"image/png", ".xml":"application/xml", ".txt":"text/plain;charset=utf-8" };
@@ -63,7 +63,7 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[390,844,"모바
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[] };
   const vis = e => {
     const c = getComputedStyle(e);
     if (c.display==="none" || c.visibility==="hidden" || +c.opacity===0) return false;
@@ -125,6 +125,19 @@ const AUDIT = `(() => {
     if (rects.length <= toks.length + (mid?1:0)) continue;
     out.wrap.push(t.slice(0,30)+" ("+toks.length+"낱말 "+rects.length+"줄)");
   }
+  /* 8. br.br-m 이 좁은 화면에서 사라질 때 앞뒤 낱말이 붙는가
+     ⚠️ 이건 **가로 스크롤도 에러도 안 나고 화면도 멀쩡합니다.** 글자만
+     "차리는 데알아볼 게" 로 붙습니다. 실제로 그렇게 나갔습니다.
+     띄어쓰기는 br 뒤에 둡니다 — 줄바꿈 다음 공백은 넓은 화면에서
+     브라우저가 지우므로 표가 안 납니다. */
+  document.querySelectorAll("br.br-m").forEach(br => {
+    if (getComputedStyle(br).display !== "none") return;
+    const pv = br.previousSibling, nx = br.nextSibling;
+    const a = (pv && pv.nodeType === 3) ? pv.nodeValue : "";
+    const z = (nx && nx.nodeType === 3) ? nx.nodeValue : "";
+    if (/\\s$/.test(a) || /^\\s/.test(z)) return;
+    out.glue.push(a.trim().slice(-8) + "↔" + z.trim().slice(0,8));
+  });
   out.over = document.documentElement.scrollWidth > W + 1;
   out.links = [...document.querySelectorAll('a[href^="/"]')].map(a=>a.getAttribute("href"));
   return out;
@@ -146,14 +159,14 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
       const a = await p.evaluate(AUDIT);
       a.links.forEach(l => seenLinks.add(l));
       if (a.over) bad.over.push(name);
-      ["small","tap","wrap","bad"].forEach(k =>
+      ["small","tap","wrap","bad","glue"].forEach(k =>
         a[k].forEach(x => bad[k].push(name+" › "+x)));
     }
 
@@ -165,6 +178,7 @@ const AUDIT = `(() => {
       ["12px 미만 글씨",     uniq(bad.small)],
       ["40px 미만 누름",     uniq(bad.tap)],
       ["낱말 가운데 잘림",   uniq(bad.wrap)],
+      ["줄바꿈 사라져 낱말 붙음", uniq(bad.glue)],
       ["개발자 말 노출",     uniq(bad.bad)]
     ];
     console.log("\n── " + vn + " (" + w + "px)");
@@ -257,12 +271,25 @@ const AUDIT = `(() => {
     const ps=[...document.querySelectorAll("#s-cat .pk")];
     sosPick(ps[0]); sosPick(ps[3]);
     return document.querySelectorAll("#s-cat .pk.on").length===1;`);
-  /* ⚠️ 지어낸 숫자를 화면에 내지 않습니다 (지시서 43번) */
+  /* ⚠️ 지어낸 숫자를 화면에 내지 않습니다 (지시서 43번 · 절대 규칙 1).
+     업체 수 · 계약 수 · 절감금액 · 고객 수 · 평점 · 시공건수 —
+     실제 데이터가 없으면 그 구간을 **아예 내지 않습니다.**
+     ⚠️ 시안에 "3,200+ 사장님 · 1,500+ 검증된 업체 · 만족도 98%" 와
+     별점 "4.9 (120)" 이 있었습니다. 그게 여기서 걸려야 합니다. */
+  const FAKE = [
+    ["실적 수식어",  /[0-9][0-9,]*\s*(건|곳|명|원|개)\s*(절감|달성|계약|등록|이용|돌파|시공)/],
+    ["n+ 꼴 숫자",   /[0-9][0-9,]*\s*\+/],
+    ["만족도·성공률", /(만족도|재구매율|성공률|정확도)\s*[0-9]/],
+    ["누적·총 실적", /(누적|총)\s*[0-9][0-9,]*\s*(건|곳|명|개)/],
+    ["별점",        /[★⭐]|[0-5]\.[0-9]\s*\(\s*[0-9]+\s*\)/]
+  ];
   await t("메인에 지어낸 실적 숫자가 없다", `
-    go("/"); await new Promise(r=>setTimeout(r,200));
+    go("/"); await new Promise(r=>setTimeout(r,250));
     const txt=document.getElementById("view").textContent;
-    return !/[0-9,]+\s*(건|곳|명|원)\s*(절감|달성|계약|등록|이용)/.test(txt);`);
-  console.log("\n── SOS 흐름 " + 4 + "개");
+    const hit=${JSON.stringify(FAKE.map(f=>[f[0],f[1].source]))}
+      .filter(f=>new RegExp(f[1]).test(txt)).map(f=>f[0]);
+    return hit.length ? hit.join("·")+" 가 보입니다" : true;`);
+  console.log("\n── SOS 흐름 " + 5 + "개");
   if (sosBad.length) { fail++; console.log("  ❌ "+sosBad.length+"건: "+sosBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

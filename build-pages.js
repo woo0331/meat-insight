@@ -31,7 +31,8 @@ function loadApp(){
   vm.createContext(sb);
 
   for(const f of ["js/data/korean.js","js/data/site.js","js/data/situations.js",
-                  "js/data/problems.js","js/data/services.js","js/data/startup.js"])
+                  "js/data/problems.js","js/data/services.js","js/data/startup.js",
+                  "js/data/photos.js"])
     vm.runInContext(fs.readFileSync(path.join(ROOT,f),"utf8"), sb, {filename:f});
 
   /* app.js 는 통째로 돌리면 document 를 건드립니다. 필요한 조각만

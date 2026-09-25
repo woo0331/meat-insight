@@ -33,7 +33,8 @@ function loadApp(){
   for(const f of ["js/data/korean.js","js/data/site.js","js/data/situations.js",
                   "js/data/problems.js","js/data/services.js","js/data/startup.js",
                   "js/data/photos.js","js/data/check.js","js/data/reqforms.js",
-                  "js/data/legal-terms.js","js/data/legal-privacy.js"])
+                  "js/data/legal-terms.js","js/data/legal-privacy.js",
+                  "js/data/posts.js"])
     vm.runInContext(fs.readFileSync(path.join(ROOT,f),"utf8"), sb, {filename:f});
 
   /* app.js 는 통째로 돌리면 document 를 건드립니다. 필요한 조각만
@@ -50,10 +51,14 @@ function loadApp(){
 /* ── 만들 주소 ───────────────────────────────────────────────────
    ⚠️ 화면을 새로 만들면 여기에도 넣어야 HTML 파일이 생깁니다.
    안 넣으면 열리기는 하지만 검색에 안 잡힙니다. */
-function allRoutes(){
-  return ["/", "/sos", "/start", "/start/cost", "/check", "/partners",
-          "/request", "/lab", "/partner", "/partner/apply",
-          "/my", "/login", "/signup", "/about", "/terms", "/privacy"];
+function allRoutes(W){
+  const fixed = ["/", "/sos", "/start", "/start/cost", "/check", "/partners",
+                 "/request", "/lab", "/partner", "/partner/apply",
+                 "/my", "/quotes", "/login", "/signup", "/about", "/terms", "/privacy"];
+  /* 연구소 글은 하나하나가 주소입니다 — 검색에서 들어오는 문이라
+     반드시 진짜 HTML 파일이 있어야 합니다. */
+  const posts = (W.WOW_POSTS || []).map(p => "/lab/" + p.slug);
+  return fixed.concat(posts);
 }
 
 function esc(s){
@@ -104,6 +109,18 @@ function noscriptFor(W, r, route){
     body += "<ol>"+W.WOW_STARTUP_STEPS.map(s =>
       "<li>"+esc(s.name)+(s.line?" — "+esc(s.line):"")+"</li>").join("")+"</ol>";
   }
+  if(route.indexOf("/lab/") === 0){
+    const post = (W.WOW_POSTS||[]).filter(p => "/lab/"+p.slug === route)[0];
+    if(post) body += post.body.map(s =>
+      "<h2>"+esc(s.h)+"</h2>"+
+      (s.p||[]).map(t => "<p>"+esc(t)+"</p>").join("")+
+      ((s.list||[]).length ? "<ul>"+s.list.map(t => "<li>"+esc(t)+"</li>").join("")+"</ul>" : "")
+    ).join("");
+  }
+  if(route === "/lab"){
+    body += "<ul>"+(W.WOW_POSTS||[]).map(p =>
+      L("/lab/"+p.slug, p.title+" — "+p.lead)).join("")+"</ul>";
+  }
   if(route === "/partners"){
     body += W.WOW_SERVICE_GROUPS.map(g =>
       "<h2>"+esc(g.name)+"</h2><ul>"+g.items.map(it =>
@@ -138,7 +155,7 @@ function checkVercel(){
 checkVercel();
 const W = loadApp();
 const tpl = fs.readFileSync(path.join(ROOT,"index.html"),"utf8");
-const routes = allRoutes();
+const routes = allRoutes(W);
 
 let made = 0, skipped = 0;
 const sitemap = [];
@@ -207,7 +224,8 @@ for(const root of roots){
 
 /* ── sitemap ──────────────────────────────────────────────────── */
 const today = new Date().toISOString().slice(0,10);
-const prio = r => r === "/" ? "1.0" : /^\/(sos|check|start)$/.test(r) ? "0.8" : "0.6";
+const prio = r => r === "/" ? "1.0" : /^\/(sos|check|start|lab)$/.test(r) ? "0.8"
+                : r.indexOf("/lab/") === 0 ? "0.7" : "0.6";
 fs.writeFileSync(path.join(ROOT,"sitemap.xml"),
 '<?xml version="1.0" encoding="UTF-8"?>\n'+
 '<!-- build-pages.js 가 만듭니다 ('+today+'). 손으로 고치지 마세요. -->\n'+

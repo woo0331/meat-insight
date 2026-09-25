@@ -74,7 +74,7 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[390,844,"모바
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[] };
   const vis = e => {
     const c = getComputedStyle(e);
     if (c.display==="none" || c.visibility==="hidden" || +c.opacity===0) return false;
@@ -136,6 +136,41 @@ const AUDIT = `(() => {
     if (rects.length <= toks.length + (mid?1:0)) continue;
     out.wrap.push(t.slice(0,30)+" ("+toks.length+"낱말 "+rects.length+"줄)");
   }
+  /* 7-2. grid 칸에서 **글이 딴 칸으로 튀는가**
+     ⚠️ 이 버그를 세 번 만들었습니다. display:grid 인 칸에 글을 그냥
+     넣고 그 안에 <b> 를 쓰면 <b> 가 딴 칸이 됩니다. 칸 수를 넘으면
+     다음 줄로 넘어가서 "최대 세 곳" 과 "입니다." 가 다른 줄에 앉고,
+     칸이 좁으면 글자가 한 자씩 세로로 쪼개집니다. 에러도 안 나고
+     JS 도 멀쩡해서 다른 검사에 안 걸립니다.
+
+     ⚠️ "아이콘 + 글" 은 정상입니다 (칸 두 개에 항목 두 개). 문제는
+     **항목 수가 칸 수를 넘는데 그중에 맨글이 섞여 있을 때**입니다.
+     고치는 법은 하나 — 글 전체를 <span> 하나로 감싸세요.
+     일부러 그렇게 둔 곳에는 class 에 'g-mix' 를 다세요. */
+  document.querySelectorAll("body *").forEach(el => {
+    if (!vis(el)) return;
+    const c = getComputedStyle(el);
+    if (c.display !== "grid" && c.display !== "inline-grid") return;
+    if (String(el.className).indexOf("g-mix") >= 0) return;
+    const tpl = c.gridTemplateColumns;
+    /* ⚠️ 여기서 정규식을 쓰지 마세요. 이 검사는 **템플릿 문자열 안**에
+       들어 있어서 백슬래시-s 가 그냥 s 로 바뀝니다 — 두 번 당했습니다.
+       계산된 값은 항상 공백으로 나뉘므로 문자열 split 이면 됩니다. */
+    const tracks = (!tpl || tpl === "none")
+      ? 1 : tpl.trim().split(" ").filter(Boolean).length;
+    let text = 0, items = 0;
+    el.childNodes.forEach(n => {
+      if (n.nodeType === 3 && n.nodeValue.trim()) { text++; items++; }
+      else if (n.nodeType === 1) {
+        const cs = getComputedStyle(n);
+        if (cs.position !== "absolute" && cs.position !== "fixed" && cs.display !== "none") items++;
+      }
+    });
+    if (text > 0 && items > tracks)
+      out.mix.push(String(el.className || el.tagName).split(" ")[0] +
+        "|칸"+tracks+"에 항목"+items+"|" + (el.textContent||"").trim().slice(0,20));
+  });
+
   /* 8. br.br-m 이 좁은 화면에서 사라질 때 앞뒤 낱말이 붙는가
      ⚠️ 이건 **가로 스크롤도 에러도 안 나고 화면도 멀쩡합니다.** 글자만
      "차리는 데알아볼 게" 로 붙습니다. 실제로 그렇게 나갔습니다.
@@ -170,14 +205,14 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
       const a = await p.evaluate(AUDIT);
       a.links.forEach(l => seenLinks.add(l));
       if (a.over) bad.over.push(name);
-      ["small","tap","wrap","bad","glue"].forEach(k =>
+      ["small","tap","wrap","bad","glue","mix"].forEach(k =>
         a[k].forEach(x => bad[k].push(name+" › "+x)));
     }
 
@@ -190,6 +225,7 @@ const AUDIT = `(() => {
       ["40px 미만 누름",     uniq(bad.tap)],
       ["낱말 가운데 잘림",   uniq(bad.wrap)],
       ["줄바꿈 사라져 낱말 붙음", uniq(bad.glue)],
+      ["grid 칸에 글과 태그가 섞임", uniq(bad.mix)],
       ["개발자 말 노출",     uniq(bad.bad)]
     ];
     console.log("\n── " + vn + " (" + w + "px)");

@@ -107,10 +107,13 @@ function PagePrivacy(){
         tr.map(function(r){
           /* data-h 는 좁은 화면에서 칸 앞에 붙는 제목입니다 — 표가
              세로로 펴지면 어느 칸인지 알 수 없어집니다 (css/pages.css) */
-          return '<tr><td data-h="수탁자">'+esc(r[0])+
+          /* ⚠️ 칸 안의 글은 **하나로 감쌉니다.** 좁은 화면에서 이 칸이
+             grid 로 펴지는데, 안 감싸면 "국외 · 미국" 배지가 이름과
+             다른 줄로 떨어집니다. */
+          return '<tr><td data-h="수탁자"><span>'+esc(r[0])+
                  (r[3]?' <span class="lg-tag">국외 · '+esc(r[3])+'</span>':'')+
-                 '</td><td data-h="위탁 업무">'+esc(r[1])+
-                 '</td><td data-h="보유·이용 기간">'+esc(r[2])+'</td></tr>';
+                 '</span></td><td data-h="위탁 업무"><span>'+esc(r[1])+
+                 '</span></td><td data-h="보유·이용 기간"><span>'+esc(r[2])+'</span></td></tr>';
         }).join("")+'</tbody></table>'
     : (function(){
         try{ console.warn("[ABOUTMEAT] 개인정보 처리 위탁 현황이 비어 있습니다 — "+

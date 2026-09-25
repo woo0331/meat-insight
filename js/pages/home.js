@@ -26,10 +26,12 @@
 function PageHome(){
   return Hero()+
          HowRow()+
+         ToolBand()+        /* 지금 바로 해 볼 수 있는 것 — 우리를 쓸 이유 */
          Situations()+
          CheckBand()+
          StartBand()+
          MatchBand()+
+         DiffBand()+        /* 직접 알아보실 때와 무엇이 다른가 */
          CatBand()+
          WorryBand()+
          LiveBand()+        /* 실제 요청 현황 — 데이터 있을 때만 */
@@ -38,6 +40,101 @@ function PageHome(){
          FaqBand()+
          PartnerBand()+
          FinalCTA();
+}
+
+/* ── 02.5 지금 바로 해 보실 수 있는 것 ───────────────────────
+   ⚠️ **이 구간이 "왜 여기를 써야 하는가" 에 답합니다.**
+   업체를 연결해 주겠다는 말은 누구나 합니다. 다른 점은 **연결되기
+   전에 이미 쓸모가 있다**는 것입니다 — 가입도 상담도 없이, 지금
+   이 자리에서 숫자가 나오고 정리가 됩니다.
+
+   ⚠️ 여기 적는 것은 전부 **실제로 되는 것**이어야 합니다. 아직 안
+   만든 것을 적어 두면 눌렀을 때 준비 중 화면이 나옵니다. */
+function ToolBand(){
+  var tools = [
+    { to:"/check", icon:"gauge", tag:"3분",
+      name:"무료 사업진단",
+      line:"8가지로 <b>지금 무엇을 모르고 계신지</b>를 정리해 드립니다. "+
+           "매출과 육류 매입비를 적으시면 원가율도 그 자리에서 계산됩니다.",
+      cta:"진단해 보기" },
+    { to:"/start/cost", icon:"won", tag:"창업 준비 중이라면",
+      name:"창업비 정리표",
+      line:"빠뜨리기 쉬운 13칸을 늘어놓고, 받으신 견적을 넣으면 "+
+           "합계와 <b>아직 안 받은 칸</b>이 보입니다.",
+      cta:"정리표 열기" },
+    { to:"/quotes", icon:"scale", tag:"견적을 받으셨다면",
+      name:"견적 비교",
+      line:"금액·기간·A/S·포함 범위를 나란히 놓고 봅니다. "+
+           "견적서에서 자주 빠지는 <b>물어볼 것 9가지</b>도 같이 드립니다.",
+      cta:"비교해 보기" }
+  ];
+  return '<section class="sec"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">가입 없이, 지금</p>'+
+      '<h2>연결해 드리기 전에<br class="br-m"> 먼저 쓸모가 있어야 한다고 봅니다.</h2>'+
+      '<p>상담을 신청하셔야 뭔가 알려 드리는 곳이 아닙니다. '+
+        '아래 셋은 지금 이 자리에서 바로 되고, 결과는 이 브라우저에 남습니다.</p></div>'+
+    '<div class="tool-g">'+tools.map(function(t){
+      return '<a class="tool" href="'+esc(t.to)+'">'+
+        '<span class="tool-t"><span class="tool-ic">'+icon(t.icon,24)+'</span>'+
+          '<em>'+esc(t.tag)+'</em></span>'+
+        '<b>'+esc(t.name)+'</b>'+
+        '<span class="tool-l">'+t.line+'</span>'+
+        '<span class="tool-go">'+esc(t.cta)+icon("arrow",18)+'</span></a>';
+    }).join("")+'</div>'+
+  '</div></section>';
+}
+
+/* ── 06.5 직접 알아보실 때와 무엇이 다른가 ──────────────────
+   ⚠️ **다른 회사를 깎아내리지 않습니다.** 표시·광고의 공정화에 관한
+   법률 제3조는 부당하게 비교하는 표시도 금지합니다. 그래서 견주는
+   대상은 경쟁사가 아니라 **"사장님이 직접 알아보실 때"** 입니다 —
+   그건 사실이고, 실제로 손님이 겪는 일입니다.
+
+   ⚠️ 여기 적는 것은 전부 **우리가 실제로 하는 방식**이어야 합니다.
+   지키지 못할 것을 적으면 그 순간 거짓말이 됩니다. */
+function DiffBand(){
+  var rows = [
+    ["업체 찾기",
+     "검색하고 전화를 돌려야 합니다. 누가 고깃집을 해 봤는지 알 방법이 없습니다.",
+     "고깃집 · 정육점 경험을 확인한 곳에만 요청을 보냅니다. <b>최대 세 곳</b>입니다."],
+    ["견적 받기",
+     "업체마다 양식이 달라 나란히 놓고 볼 수가 없습니다.",
+     "같은 조건으로 요청을 보내고, 받은 견적을 <b>한 화면에서 비교</b>하십니다."],
+    ["무엇을 물어볼지",
+     "뭘 물어야 하는지 모르는 채로 계약하게 됩니다. 추가금은 그 다음에 옵니다.",
+     "서비스마다 <b>물어볼 것</b>을 미리 드립니다. 덕트는 화구 수, 육류는 월 사용량."],
+    ["소개 순서",
+     "광고비를 낸 곳이 위에 올라옵니다.",
+     "<b>광고비를 받고 순서를 바꾸지 않습니다.</b> 조건이 맞는 곳만 보냅니다."],
+    ["비용",
+     "시간이 듭니다. 잘못 고르면 다시 공사합니다.",
+     "물어보시는 것과 업체를 찾아 드리는 것은 <b>무료</b>입니다."]
+  ];
+  return '<section class="sec sec-warm"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">무엇이 다른가</p>'+
+      '<h2>혼자 알아보시면<br class="br-m"> 여기서 시간이 갑니다.</h2>'+
+      '<p>업체를 많이 아는 것이 아니라, <b>무엇을 물어봐야 하는지를 아는 것</b>이 '+
+        '다른 점입니다.</p></div>'+
+    '<div class="diff">'+
+      '<div class="diff-h"><span></span>'+
+        '<span class="diff-a">직접 알아보실 때</span>'+
+        '<span class="diff-b">ABOUTMEAT</span></div>'+
+      rows.map(function(r){
+        /* ⚠️ 글을 <span> 으로 **반드시 감쌉니다.** 이 칸이 grid 라,
+           안 감싸면 글 안의 <b> 가 딴 칸으로 튀어 "최대 세 곳" 과
+           "입니다." 가 다른 줄에 앉습니다. 실제로 그랬습니다. */
+        return '<div class="diff-r">'+
+          '<b class="diff-k">'+esc(r[0])+'</b>'+
+          '<span class="diff-a"><i aria-hidden="true">'+icon("x",16)+'</i>'+
+            '<span>'+r[1]+'</span></span>'+
+          '<span class="diff-b"><i aria-hidden="true">'+icon("check",16)+'</i>'+
+            '<span>'+r[2]+'</span></span>'+
+        '</div>';
+      }).join("")+
+    '</div>'+
+    '<p class="note diff-n">여기 적은 것은 전부 저희가 실제로 하는 방식입니다. '+
+      '지키지 못하는 일이 생기면 이 줄부터 고치겠습니다.</p>'+
+  '</div></section>';
 }
 
 /* ── 01 HERO ───────────────────────────────────────────────
@@ -386,11 +483,21 @@ function StoryBand(){
 function LabBand(){
   var posts = window.WOW_POSTS;
   if(!posts || !posts.length) return "";
+  /* ⚠️ 앞에서 세 편을 그냥 자르면 같은 분류만 나옵니다. 처음 오신
+     분이 제일 많이 막히는 셋을 골라 두고, 없으면 앞에서 채웁니다. */
+  var want = ["meat-cost-rate", "duct-smell-complaint", "startup-cost-missing"];
+  var pick = want.map(function(sl){ return wowPost(sl); }).filter(Boolean);
+  posts.forEach(function(p){
+    if(pick.length < 3 && pick.indexOf(p) < 0) pick.push(p);
+  });
+
   return '<section class="sec sec-warm"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">사장님 연구소</p>'+
       '<h2>알고 하면 덜 씁니다</h2>'+
-      '<a class="sec-more" href="/lab">전체보기'+icon("chev",16)+'</a></div>'+
-    '<div class="card-g">'+posts.slice(0,3).map(PostCard).join("")+'</div>'+
+      '<p>고기 장사를 하면서 실제로 막히는 것들을 정리했습니다. '+
+        '읽고 나서 <b>바로 할 수 있는 것</b>까지 적었습니다.</p>'+
+      '<a class="sec-more" href="/lab">글 '+posts.length+'편 전부 보기'+icon("chev",16)+'</a></div>'+
+    '<div class="lab-g">'+pick.slice(0,3).map(PostCard).join("")+'</div>'+
   '</div></section>';
 }
 

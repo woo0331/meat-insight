@@ -15,6 +15,26 @@
    ════════════════════════════════════════════════════════════════════ */
 
 var CHK = { step:"ask", ans:{}, sales:"", meat:"" };
+var CHK_KEY = "wow.check.v1";
+
+/* 진단 결과를 이 브라우저에 남깁니다 — MY 화면이 "지난 진단" 으로
+   보여 주고, 다음에 오셨을 때 처음부터 다시 하지 않으셔도 됩니다.
+   ⚠️ **적으신 매출·매입비 숫자는 담지 않습니다.** 가게 컴퓨터는 여러
+   사람이 씁니다. 담는 것은 점수와 약한 항목 이름까지입니다. */
+function chkSave(score, weakKeys){
+  try{
+    localStorage.setItem(CHK_KEY, JSON.stringify({
+      at: Date.now(), score: score, weak: weakKeys.slice(0, 8)
+    }));
+  }catch(e){}
+}
+window.chkLast = function(){
+  try{
+    var o = JSON.parse(localStorage.getItem(CHK_KEY) || "null");
+    return (o && typeof o.score === "number") ? o : null;
+  }catch(e){ return null; }
+};
+window.chkClear = function(){ try{ localStorage.removeItem(CHK_KEY); }catch(e){} };
 
 /* 화면 머리의 "할 수 있는 것 · 할 수 없는 것" 한 줄.
    ⚠️ `html` 은 **우리가 쓴 문장**입니다. 손님이 쓴 글을 여기 넣지
@@ -49,6 +69,7 @@ function CheckAsk(){
     '</div></section>'+
 
     '<div class="w chk">'+
+      ChkLastBand()+
       '<form onsubmit="return chkDone(event)">'+
 
       /* 숫자 두 칸 — 있으면 원가율을 같이 계산해 드립니다. 없어도
@@ -79,6 +100,26 @@ function CheckAsk(){
       '</div>'+
       '</form>'+
     '</div>';
+}
+
+/* 지난번 결과가 있으면 알려 줍니다 — 처음부터 다시 하시는 줄 알고
+   닫는 분이 있습니다. */
+function ChkLastBand(){
+  var last = chkLast();
+  if(!last) return "";
+  var band = wowCheckBand(last.score);
+  var names = (last.weak || []).map(function(k){
+    var it = WOW_CHECK.filter(function(x){ return x.key === k; })[0];
+    return it ? it.name : null;
+  }).filter(Boolean).slice(0, 3);
+  return '<div class="chk-last">'+
+    '<span class="chk-last-n st st-'+esc(band.tone)+'">지난 진단 '+last.score+'점</span>'+
+    '<span class="chk-last-t">'+
+      (names.length ? esc(names.join(" · "))+josa(names[names.length-1],"이가")+' 약하게 나왔습니다.'
+                    : '여덟 가지를 다 보고 계셨습니다.')+
+    '</span>'+
+    '<a class="btn btn-o chk-last-go" href="/my">MY 에서 보기</a>'+
+  '</div>';
 }
 
 function ChkItem(it, i){
@@ -187,6 +228,8 @@ function CheckResult(){
 
   var s = chkNum(CHK.sales), m = chkNum(CHK.meat);
   var rate = (s > 0 && m > 0) ? (m / s * 100) : null;
+
+  chkSave(score, weak.map(function(r){ return r.it.key; }));
 
   return '<div class="w res">'+
     '<div class="res-hd">'+

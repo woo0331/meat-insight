@@ -69,7 +69,22 @@ window.WOW_PHOTOS = {
   partner: { src:"/img/partner.svg",
     alt:"주방 후드 아래에서 작업을 설명하는 기사와 공구 가방" },
   final:   { src:"/img/final.svg", dark:true,
-    alt:"후드가 내려온 저녁 고깃집 홀" }
+    alt:"후드가 내려온 저녁 고깃집 홀" },
+
+  /* 연구소 글 썸네일 — 분류마다 두 벌. 같은 분류 카드가 나란히
+     놓여도 겹쳐 보이지 않게 합니다 (js/pages/lab.js 의 PostCard). */
+  "post-cost-0": { src:"/img/post-cost-0.svg", alt:"계산기와 장부, 동전" },
+  "post-cost-1": { src:"/img/post-cost-1.svg", alt:"저울과 고기 상자, 나란히 놓인 견적서 세 장" },
+  "post-run-0": { src:"/img/post-run-0.svg", alt:"메뉴판과 매출 막대그래프, 시계" },
+  "post-run-1": { src:"/img/post-run-1.svg", alt:"배달앱 화면과 포장 용기, 정산 내역서" },
+  "post-fac-0": { src:"/img/post-fac-0.svg", alt:"후드와 온도계, 공구 가방" },
+  "post-fac-1": { src:"/img/post-fac-1.svg", alt:"냉장고와 육절기, 점검 기록지" },
+  "post-law-0": { src:"/img/post-law-0.svg", alt:"서류 두 장과 도장" },
+  "post-law-1": { src:"/img/post-law-1.svg", alt:"근로계약서와 마주 선 두 사람, 달력" },
+  "post-start-0": { src:"/img/post-start-0.svg", alt:"점포 도면과 자, 연필, 열쇠" },
+  "post-start-1": { src:"/img/post-start-1.svg", alt:"빈 점포와 사다리, 예산표" },
+  "post-grow-0": { src:"/img/post-grow-0.svg", alt:"매출이 오르는 화면과 나란한 두 매장" },
+  "post-grow-1": { src:"/img/post-grow-1.svg", alt:"셔터 내린 가게와 정리한 상자, 점검 목록" }
 };
 
 

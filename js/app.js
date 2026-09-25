@@ -43,7 +43,10 @@ var META = {
   "/partner":  ["파트너 안내",
                 "고깃집·정육점을 아는 업체를 찾고 있습니다. 조건에 맞는 요청만 보내 드립니다."],
   "/partner/apply":["파트너 등록", "ABOUTMEAT 파트너로 등록하고 조건에 맞는 요청을 받아 보세요."],
-  "/my":       ["MY BUSINESS", "내 요청과 받은 견적을 한곳에서 관리합니다."],
+  "/my":       ["MY BUSINESS",
+                "진단 결과·창업 진행·창업비·견적 비교·읽던 글을 한 화면에서 이어서 하실 수 있습니다."],
+  "/quotes":   ["견적 비교",
+                "받으신 견적을 나란히 놓고 금액·기간·A/S·포함 범위를 비교하고, 빠뜨린 질문을 확인합니다."],
   "/login":    ["로그인", "ABOUTMEAT 로그인."],
   "/signup":   ["회원가입", "ABOUTMEAT 회원가입."],
   "/about":    ["ABOUTMEAT 소개",
@@ -59,8 +62,6 @@ var NOINDEX = ["/my","/login","/signup","/sos","/check/result","/quotes"];
    ⚠️ 빈 화면을 두지 마세요. 눌렀는데 아무것도 없으면 손님에게는
    고장으로 읽힙니다. */
 var SOON = {
-  "/lab":      ["사장님 연구소", "고기 장사에 필요한 글을 모으는 화면입니다."],
-  "/my":       ["MY BUSINESS", "내 요청과 받은 견적을 모아 보는 화면입니다."],
   "/login":    ["로그인", "회원 기능을 준비하고 있습니다."],
   "/signup":   ["회원가입", "회원 기능을 준비하고 있습니다."]
 };
@@ -85,10 +86,26 @@ window.routeInfo = function(path, qs){
     "/partner":       "partner",
     "/partner/apply": "partnerApply",
     "/about":         "about",
+    "/lab":           "lab",
+    "/my":            "my",
+    "/quotes":        "quotes",
     "/terms":         "terms",
     "/privacy":       "privacy"
   };
   if(VIEW[path]){ r.view = VIEW[path]; return r; }
+
+  /* 글 하나 — 주소 안의 주소입니다. 제목·설명을 글에서 가져옵니다.
+     ⚠️ 여기서 제목을 안 채우면 검색 결과에 글마다 같은 줄이 나갑니다. */
+  var m = /^\/lab\/([a-z0-9-]+)$/.exec(path);
+  if(m){
+    var post = (typeof wowPost === "function") ? wowPost(m[1]) : null;
+    if(post){
+      r.view = "post"; r.post = post;
+      r.title = post.title; r.desc = post.lead;
+      return r;
+    }
+    r.ok = false; return r;      /* 없는 글은 404 — 빈 화면을 두지 않습니다 */
+  }
   if(SOON[path]){ r.view = "soon"; r.soon = SOON[path]; r.noindex = true; return r; }
 
   r.ok = false; return r;
@@ -139,6 +156,10 @@ function render(){
     case "partner":      html = PagePartner();       break;
     case "partnerApply": html = PagePartnerApply();  break;
     case "about":        html = PageAbout();         break;
+    case "lab":          html = PageLab();           break;
+    case "my":           html = PageMy();            break;
+    case "quotes":       html = PageQuotes();        break;
+    case "post":         html = PagePost(r.post);    break;
     case "terms":        html = PageTerms();         break;
     case "privacy":      html = PagePrivacy();       break;
     case "soon":         html = PageSoon(r.soon);    break;
@@ -149,6 +170,7 @@ function render(){
   paintMeta(r);
   paintGnb(); paintMnav(); paintBiz();
   if(r.view === "home" && typeof askRotate === "function") askRotate();
+  if(r.view === "post" && typeof labSeen === "function") labSeen(r.post.slug);
   if(!RT.keepScroll) window.scrollTo(0,0);
   RT.keepScroll = false;
 }

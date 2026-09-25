@@ -21,7 +21,7 @@ window.WOW_GNB = [
 /* 모바일 아래 네비 — 가운데 SOS 를 크게 (지시서 29번) */
 var MNAV = [
   { to:"/",        name:"홈",   icon:"home" },
-  { to:"/request", name:"견적", icon:"doc"  },
+  { to:"/request", name:"견적", icon:"doc"  },   /* 요청 → 비교는 그 안에서 */
   { to:"/sos",     name:"SOS",  icon:"alert", big:true },
   { to:"/partners",name:"업체", icon:"search" },
   { to:"/my",      name:"MY",   icon:"user" }
@@ -91,14 +91,15 @@ function Footer(){
       '</div>'+
       '<div class="ft-col"><h4>시작하기</h4>'+
         '<a href="/sos">사장님 SOS</a><a href="/check">무료 사업진단</a>'+
-        '<a href="/start">창업 준비</a><a href="/request">견적 요청</a></div>'+
+        '<a href="/start">창업 준비</a><a href="/start/cost">창업비 정리표</a>'+
+        '<a href="/request">견적 요청</a></div>'+
       '<div class="ft-col"><h4>알아보기</h4>'+
-        '<a href="/partners">업체 찾기</a><a href="/lab">사장님 연구소</a>'+
-        '<a href="/about">ABOUTMEAT 소개</a></div>'+
+        '<a href="/partners">업체 찾기</a><a href="/quotes">견적 비교</a>'+
+        '<a href="/lab">사장님 연구소</a><a href="/about">ABOUTMEAT 소개</a></div>'+
       '<div class="ft-col"><h4>파트너</h4>'+
         '<a href="/partner/apply">파트너 등록</a><a href="/partner">파트너 안내</a></div>'+
       '<div class="ft-col"><h4>고객지원</h4>'+
-        '<a href="/my">내 요청 보기</a>'+
+        '<a href="/my">MY BUSINESS</a>'+
         '<a href="/terms">이용약관</a><a href="/privacy">개인정보처리방침</a></div>'+
     '</div>'+
     '<div class="ft-biz" id="ft-biz"></div>'+

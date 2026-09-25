@@ -1,7 +1,9 @@
 User-agent: *
 Allow: /
 
-# 관리자 도구 — 손님 화면이 아닙니다
-Disallow: /admin.html
+# 사람마다 내용이 다른 화면 — 검색에 올릴 것이 없습니다
+Disallow: /my
+Disallow: /login
+Disallow: /signup
 
 Sitemap: https://aboutmeat.co.kr/sitemap.xml

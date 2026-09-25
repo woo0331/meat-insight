@@ -1,28 +1,53 @@
 {
-  "name": "ABOUTMEAT — 축산 부산물 전문마켓",
+  "name": "ABOUTMEAT — 고기 사업자 문제해결",
   "short_name": "ABOUTMEAT",
-  "description": "소·돼지 부산물 전문 온라인몰. 도축장에서 시작되는 신선한 축산 부산물을 필요한 손질 상태와 규격으로 공급합니다.",
+  "description": "고깃집·정육점 사장님의 문제 해결 플랫폼. 창업·운영·원가·시설·매출·확장·정리까지 상황만 말씀해주세요.",
   "lang": "ko",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F6F4EE",
-  "theme_color": "#123D32",
+  "background_color": "#FAF8F6",
+  "theme_color": "#6B2436",
   "categories": [
-    "shopping",
-    "food",
-    "business"
+    "business",
+    "productivity"
   ],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "shortcuts": [
-    { "name": "소 부산물",   "short_name": "소",   "url": "/c/beef",  "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
-    { "name": "돼지 부산물", "short_name": "돼지", "url": "/c/pork",  "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
-    { "name": "업소용 대량구매", "short_name": "업소용", "url": "/b2b", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
-    { "name": "장바구니",   "short_name": "장바구니", "url": "/cart", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+    {
+      "name": "사장님 SOS",
+      "short_name": "SOS",
+      "url": "/sos"
+    },
+    {
+      "name": "무료 사업진단",
+      "short_name": "진단",
+      "url": "/check"
+    },
+    {
+      "name": "창업 준비",
+      "short_name": "창업",
+      "url": "/start"
+    }
   ]
 }

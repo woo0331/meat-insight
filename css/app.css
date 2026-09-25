@@ -1,284 +1,164 @@
 /* ════════════════════════════════════════════════════════════════════
-   WOW ABOUTMEAT — 화면 스타일
-   색·크기·간격은 전부 tokens.css 의 var() 로만 씁니다.
+   공통 — 바탕 · 헤더 · 버튼 · 푸터 · 모바일 네비 · 알림
+   날값은 css/tokens.css 한 곳에만. 여기서는 var(--…) 로만 씁니다.
    ════════════════════════════════════════════════════════════════════ */
 
 *,*::before,*::after{ box-sizing:border-box; }
-html,body{ margin:0; padding:0; }
 html{ -webkit-text-size-adjust:100%; }
 body{
-  font-family:var(--font); font-size:var(--t-base); line-height:var(--lh-base);
-  color:var(--ink); background:var(--ivory);
+  margin:0; font-family:var(--font); font-size:var(--t-base);
+  line-height:var(--lh-base); color:var(--ink); background:var(--bg);
   -webkit-font-smoothing:antialiased;
-  /* ⚠️ 한글은 기본값(word-break:normal)에서 **글자 아무 데서나** 줄이
-     바뀝니다. "배송비가 무료입니다." 가 "무료입니 / 다." 로 잘려 있었고,
-     낱말 수와 줄 수가 같아서 전수 점검에도 안 잡혔습니다.
-     keep-all 은 띄어쓰기에서만 끊습니다.
-     안전판으로 overflow-wrap:anywhere 를 같이 둡니다 — 띄어쓰기 없이
-     긴 것(주소·계좌번호)이 칸 밖으로 넘치는 것을 막습니다. */
+  /* ⚠️ 한글은 기본값에서 **글자 아무 데서나** 줄이 바뀝니다
+     ("무료입니 / 다."). keep-all 은 띄어쓰기에서만 끊습니다.
+     안전판으로 overflow-wrap 을 같이 둡니다 — keep-all 만 두면
+     띄어쓰기 없이 긴 것이 칸 밖으로 넘쳐 가로 스크롤이 생깁니다. */
   word-break:keep-all;
   overflow-wrap:anywhere;
 }
-img{ max-width:100%; display:block; }
-button,input,select,textarea{ font-family:var(--font); font-size:inherit; color:inherit; }
+h1,h2,h3,h4{ margin:0; font-weight:800; letter-spacing:-.025em; line-height:var(--lh-tight); }
+p{ margin:0; }
 a{ color:inherit; text-decoration:none; }
-h1,h2,h3,h4{ margin:0; font-weight:700; line-height:var(--lh-tight); letter-spacing:-.02em; }
+button{ font:inherit; color:inherit; }
+img{ max-width:100%; display:block; }
+ul,ol{ margin:0; padding:0; list-style:none; }
+:focus-visible{ outline:2px solid var(--burgundy); outline-offset:3px; border-radius:4px; }
 
-/* 초점 테두리는 절대 지우지 않습니다 — 키보드로만 쓰는 손님이 있습니다 */
-:focus-visible{ outline:2px solid var(--green); outline-offset:2px; border-radius:4px; }
+.w{ width:100%; max-width:var(--w); margin:0 auto; padding:0 var(--s6); }
+@media (max-width:640px){ .w{ padding:0 var(--s4); } }
 
-/* ⚠️ `width:100%` 가 없으면 **그리드 칸 안에서 폭이 내용 크기로
-   쪼그라듭니다.** 그리드 아이템에 `margin:0 auto` 를 주면 stretch 가
-   꺼지기 때문입니다. 실제로 히어로 글자가 1280px 폭을 못 쓰고 441px 로
-   줄어 화면 한가운데에 몰렸습니다 (.hero · .cath · .ench · .bnr 전부). */
-.w{ width:100%; max-width:var(--max); margin:0 auto; padding:0 var(--gutter); }
-.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+/* 읽어 주는 프로그램에만 보이는 글 */
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);
+  white-space:nowrap; }
+.skip{ position:absolute; left:-9999px; top:0; z-index:200; background:var(--burgundy);
+  color:#fff; padding:12px 18px; border-radius:0 0 var(--r) 0; }
+.skip:focus{ left:0; }
 
-/* ══ 헤더 ══════════════════════════════════════════════════ */
-.hd{ position:sticky; top:0; z-index:60; background:var(--white);
-     border-bottom:1px solid var(--line); }
-.hd-top{ height:var(--hdr-h); display:flex; align-items:center; gap:var(--s6); }
-.hd-logo{ display:flex; flex-direction:column; justify-content:center; flex:0 0 auto; }
-.hd-logo b{ font-size:20px; font-weight:800; letter-spacing:.06em; color:var(--green); }
-.hd-logo span{ font-size:var(--t-cap); color:var(--ink2); letter-spacing:.02em; margin-top:1px; }
+/* ══ 헤더 ═════════════════════════════════════════════════ */
+.hd{ background:var(--surface); border-bottom:1px solid var(--line);
+  position:sticky; top:0; z-index:60; }
+.hd-in{ display:flex; align-items:center; gap:var(--s7); height:var(--hdr-h); }
+.lg{ display:flex; flex-direction:column; justify-content:center; flex:0 0 auto; }
+.lg b{ font-size:19px; font-weight:800; letter-spacing:.055em; color:var(--burgundy); }
+.lg span{ font-size:var(--t-cap); color:var(--ink3); margin-top:1px; letter-spacing:.01em; }
 
-.hd-search{ flex:1 1 auto; max-width:460px; position:relative; }
-.hd-search input{
-  width:100%; height:42px; padding:0 44px 0 16px; border:1px solid var(--line);
-  border-radius:var(--r-pill); background:var(--white); font-size:var(--t-base);
+.gnb{ display:flex; gap:var(--s6); flex:1 1 auto; min-width:0; }
+.gnb a{ display:inline-flex; align-items:center; min-height:var(--tap);
+  font-size:var(--t-md); font-weight:600; color:var(--ink2); white-space:nowrap;
+  border-bottom:2px solid transparent; }
+.gnb a:hover{ color:var(--ink); }
+.gnb a.on{ color:var(--burgundy); border-bottom-color:var(--burgundy); }
+
+.hd-r{ display:flex; align-items:center; gap:var(--s5); flex:0 0 auto; }
+.hd-txt{ display:inline-flex; align-items:center; min-height:var(--tap);
+  font-size:var(--t-base); font-weight:600; color:var(--ink2); white-space:nowrap; }
+.hd-txt:hover{ color:var(--burgundy); }
+.hd-cta{ min-height:42px; padding:0 var(--s5); }
+.hd-m{ display:none; }
+
+@media (max-width:1040px){
+  .hd-in{ gap:var(--s5); }
+  .gnb{ gap:var(--s4); }
+  .hd-txt{ display:none; }
 }
-.hd-search input::placeholder{ color:var(--ink3); }
-.hd-search button{
-  position:absolute; right:4px; top:4px; width:34px; height:34px; border:0;
-  background:transparent; border-radius:var(--r-pill); cursor:pointer;
-  display:grid; place-items:center; color:var(--ink2);
+@media (max-width:860px){
+  /* 좁아지면 메뉴는 아래 네비가 맡습니다 — 헤더에 다 우겨넣지 않습니다 */
+  .gnb, .hd-r{ display:none; }
+  .hd-in{ justify-content:space-between; }
+  .hd-m{ display:inline-flex; align-items:center; justify-content:center;
+    width:var(--tap); height:var(--tap); border:1px solid var(--line);
+    border-radius:var(--r-pill); color:var(--burgundy); }
 }
-.hd-acts{ margin-left:auto; display:flex; align-items:center; gap:var(--s1); }
-.hd-ic{ width:var(--tap); height:var(--tap); border:0; background:transparent; cursor:pointer;
-  border-radius:var(--r); display:grid; place-items:center; color:var(--ink); position:relative; }
-.hd-ic:hover{ background:var(--green-bg); }
-.hd-ic .cnt{ position:absolute; top:4px; right:3px; min-width:18px; height:18px; padding:0 4px;
-  background:var(--red); color:#fff; border-radius:var(--r-pill);
-  font-size:12px; font-weight:700; line-height:18px; text-align:center; }
-.hd-links{ display:flex; align-items:center; gap:var(--s3); margin-left:var(--s3); }
-.hd-links a{ font-size:var(--t-sm); color:var(--ink2); white-space:nowrap;
-  min-height:var(--tap); display:inline-flex; align-items:center; }
-.hd-links a:hover{ color:var(--green); }
 
-/* GNB */
-.gnb{ border-top:1px solid var(--line-soft); background:var(--white); }
-.gnb-in{ height:var(--gnb-h); display:flex; align-items:stretch; gap:var(--s7); overflow-x:auto;
-  scrollbar-width:none; }
-.gnb-in::-webkit-scrollbar{ display:none; }
-.gnb a{ display:inline-flex; align-items:center; white-space:nowrap; font-size:var(--t-md);
-  font-weight:600; color:var(--ink); position:relative; min-height:var(--tap); }
-.gnb a:hover{ color:var(--green); }
-.gnb a.on{ color:var(--green); }
-.gnb a.on::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:2px; background:var(--green); }
-.gnb a.hot{ color:var(--red); }
-
-/* ══ 히어로 ═══════════════════════════════════════════════
-   시안의 어두운 사진 히어로. 글자는 우리가 HTML 로 얹습니다 —
-   시안 이미지에 박힌 AI 한글은 쓰지 않습니다. */
-/* 시안처럼 왼쪽에 글, 오른쪽에 사진입니다.
-   ⚠️ 사진을 화면 전체에 깔면 **원본이 152px 짜리라 뭉개집니다** (시안
-   전체가 1312px 이라 잘라낼 화소가 그만큼밖에 없습니다). 오른쪽 46%
-   에만 깔아 확대율을 낮추고, 왼쪽은 딥그린으로 채웁니다 —
-   글자 대비도 이쪽이 확실합니다. 실제 촬영본이 생기면
-   `--hero-photo` 를 100%로 올려 통째로 까시면 됩니다. */
-.hero{ position:relative; min-height:440px; display:grid; align-items:center;
-  background:var(--green); overflow:hidden; --hero-photo:46%; }
-/* ⚠️ 사진을 `--hero-img` 같은 CSS 변수로 넘기지 마세요.
-   변수 안의 `url()` 은 **HTML 이 아니라 그 CSS 파일 기준**으로 풀립니다 —
-   `img/hero.jpg` 가 `css/img/hero.jpg` 가 되어 사진 칸이 통째로 검게
-   비었습니다. 실제 요소에 인라인 background-image 를 주면 문서 기준으로
-   풀려서 CSS 를 어디에 두든 안전합니다. */
-.hero-ph{ position:absolute; right:0; top:0; bottom:0; width:var(--hero-photo);
-  background:#1A1512 center/cover no-repeat; }
-.hero::after{ content:""; position:absolute; inset:0;
-  background:linear-gradient(90deg, var(--green) 0%, var(--green) 44%,
-                                    rgba(18,61,50,.72) 56%, rgba(18,61,50,.18) 72%,
-                                    rgba(18,61,50,0) 88%); }
-.hero-in{ position:relative; z-index:2; padding:var(--s10) 0; }
-.hero h1{ font-size:var(--t-hero); color:#fff; font-weight:800; letter-spacing:-.035em;
-  margin-bottom:var(--s5); }
-.hero p{ color:rgba(255,255,255,.88); font-size:var(--t-lg); margin:0 0 var(--s7);
-  line-height:1.72; max-width:30ch; }
-.hero-btns{ display:flex; gap:var(--s3); flex-wrap:wrap; }
-
-/* ══ 버튼 ═════════════════════════════════════════════════ */
-/* ⚠️ `.btn` **한 개만** 붙은 버튼이 테두리도 바탕도 없어 **글자처럼**
-   보였습니다. 도감 상세의 "대량견적 문의" 와 견적 화면의 연락처 버튼이
-   그랬습니다 — 눌러도 되는 줄 모르면 없는 것과 같습니다.
-   이제 기본이 흰 바탕 + 옅은 테두리(예전 `.btn-o`)입니다. `.btn-g` 나
-   `.btn-gl` 처럼 바탕을 따로 정하는 것들은 아래에서 덮어씁니다. */
+/* ══ 버튼 ═════════════════════════════════════════════════
+   ⚠️ `.btn` 하나만 붙여도 **버튼으로 보여야** 합니다. 테두리도 바탕도
+   없으면 글자처럼 보이고, 눌러도 되는 줄 모르면 없는 것과 같습니다. */
 .btn{ display:inline-flex; align-items:center; justify-content:center; gap:var(--s2);
-  min-height:var(--tap); padding:0 var(--s6); border-radius:var(--r);
-  font-size:var(--t-md); font-weight:700; cursor:pointer;
-  background:var(--white); color:var(--ink); border:1px solid var(--line);
-  transition:background-color .15s, border-color .15s, color .15s; white-space:nowrap; }
-.btn:hover{ border-color:var(--green); color:var(--green); }
-.btn-g{ background:var(--green); color:#fff; }
-.btn-g:hover{ background:var(--green-400); }
-.btn-o{ background:var(--white); color:var(--ink); border-color:var(--line); }
-.btn-o:hover{ border-color:var(--green); color:var(--green); }
-.btn-gl{ background:transparent; color:#fff; border-color:rgba(255,255,255,.55); }
-.btn-gl:hover{ background:rgba(255,255,255,.12); }
-/* ⚠️ 히어로 왼쪽 판이 --green 이라 `.btn-g` 를 그대로 두면 **버튼이
-   배경에 묻혀 사라집니다.** 실제로 "소 부산물 보기" 가 안 보였습니다.
-   시안처럼 한 칸 밝은 초록 + 옅은 테두리로 띄웁니다. */
-.hero .btn-g{ background:var(--green-400); border-color:rgba(255,255,255,.32); }
-.hero .btn-g:hover{ background:#36685A; border-color:rgba(255,255,255,.5); }
-.btn-lg{ min-height:52px; padding:0 var(--s7); font-size:var(--t-lg); }
-.btn-sm{ min-height:var(--tap); padding:0 var(--s4); font-size:var(--t-base); }
+  min-height:var(--tap); padding:0 var(--s6); border-radius:var(--r-pill);
+  font-size:var(--t-md); font-weight:700; cursor:pointer; white-space:nowrap;
+  background:var(--surface); color:var(--ink); border:1px solid var(--line);
+  transition:background-color .15s, border-color .15s, color .15s, box-shadow .15s; }
+.btn:hover{ border-color:var(--burgundy); color:var(--burgundy); }
+.btn-b{ background:var(--burgundy); border-color:var(--burgundy); color:#fff;
+  box-shadow:var(--shadow); }
+.btn-b:hover{ background:var(--burgundy-600); border-color:var(--burgundy-600); color:#fff; }
+.btn-o{ background:var(--surface); color:var(--ink); border-color:var(--line); }
+/* 어두운 배경 위에서는 딥 버건디가 배경에 묻힙니다 — 흰 버튼을 씁니다 */
+.btn-w{ background:#fff; border-color:#fff; color:var(--burgundy); }
+.btn-w:hover{ background:#fff; color:var(--burgundy-600); border-color:#fff; }
+.btn-lg{ min-height:56px; padding:0 var(--s7); font-size:var(--t-lg); }
 .btn-full{ width:100%; }
+.btn .ic{ flex:0 0 auto; }
+
+.row-cta{ display:flex; gap:var(--s3); flex-wrap:wrap; }
 
 /* ══ 구간 ═════════════════════════════════════════════════ */
-.sec{ padding:var(--sec-y) 0; }
-.sec-tight{ padding:var(--sec-y-tight) 0; }
-.sec-w{ background:var(--white); }
-.sec-i{ background:var(--ivory); }
-.sec-g{ background:var(--green-bg); }
-.sec-hd{ display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s4);
-  margin-bottom:var(--s7); flex-wrap:wrap; }
-.sec-hd-t{ flex:1 1 260px; min-width:0; }
-.sec-hd h2{ font-size:var(--t-3xl); font-weight:800; }
-.sec-hd p{ margin:var(--s2) 0 0; color:var(--ink2); font-size:var(--t-md); }
-.sec-more{ flex:0 0 auto; font-size:var(--t-base); color:var(--ink2); font-weight:600;
-  min-height:var(--tap); display:inline-flex; align-items:center; gap:4px; }
-.sec-more:hover{ color:var(--green); }
-.sec-c{ text-align:center; }
-.sec-c .sec-hd{ justify-content:center; }
-.sec-c .sec-hd-t{ flex:1 1 100%; text-align:center; }
-
-/* ══ 신뢰 띠 ══════════════════════════════════════════════ */
-.trust{ background:var(--ivory); border-bottom:1px solid var(--line); }
-.trust-g{ display:grid; grid-template-columns:repeat(4,1fr); }
-.trust-i{ padding:var(--s7) var(--s4); text-align:center; position:relative; }
-.trust-i + .trust-i::before{ content:""; position:absolute; left:0; top:28%; bottom:28%;
-  width:1px; background:var(--line); }
-.trust-ic{ width:38px; height:38px; margin:0 auto var(--s3); color:var(--green); }
-.trust-i b{ display:block; font-size:var(--t-md); font-weight:700; }
-.trust-i span{ display:block; font-size:var(--t-sm); color:var(--ink2); margin-top:3px; }
-
-/* ══ 퀵 카테고리 ══════════════════════════════════════════ */
-.qg{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--grid-gap); }
-.qc{ background:var(--white); border:1px solid var(--line); border-radius:var(--r-lg);
-  padding:var(--s4) var(--s3) var(--s4); text-align:center; cursor:pointer;
-  transition:border-color .15s, box-shadow .15s, transform .15s; display:block; }
-.qc:hover{ border-color:var(--green); box-shadow:var(--shadow-md); transform:translateY(-2px); }
-.qc img{ width:104px; height:104px; object-fit:contain; margin:0 auto var(--s3); }
-/* 사진이 아직 없는 도감 부위 — 사진 대신 부위 위치 그림이 들어옵니다.
-   사진 칸과 **같은 높이**를 써야 카드 줄이 안 어긋납니다. */
-.qc .pd-th{ width:132px; height:104px; display:block; margin:0 auto var(--s3);
-  background:var(--ivory); border-radius:var(--r-md); padding:6px; }
-.qc b{ font-size:var(--t-md); font-weight:700; }
-
-/* ══ 상품 카드 ════════════════════════════════════════════ */
-.pg{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--grid-gap); }
-.pg-3{ grid-template-columns:repeat(3,1fr); }
-.pc{ background:var(--white); border:1px solid var(--line); border-radius:var(--r-lg);
-  overflow:hidden; display:flex; flex-direction:column; transition:border-color .15s, box-shadow .15s; }
-.pc:hover{ border-color:var(--green); box-shadow:var(--shadow-md); }
-.pc-img{ position:relative; aspect-ratio:var(--ar-square); background:var(--line-soft);
-  display:block; overflow:hidden; }
-.pc-img img{ width:100%; height:100%; object-fit:cover; }
-.pc-bd{ position:absolute; top:var(--s2); left:var(--s2); display:flex; gap:4px; flex-wrap:wrap; }
-.bdg{ font-size:var(--t-cap); font-weight:800; letter-spacing:.02em; padding:3px 8px;
-  border-radius:var(--r-sm); color:#fff; line-height:1.5; }
-.bdg-new{ background:var(--red); }
-.bdg-best{ background:var(--green); }
-.bdg-sale{ background:#8A5A1E; }
-.bdg-out{ background:var(--ink2); }
-.pc-b{ padding:var(--s4); display:flex; flex-direction:column; gap:var(--s1); flex:1 1 auto; }
-/* ⚠️ 상품명은 **누르는 것**입니다. 24px 짜리 글줄로 두면 손가락이
-   빗나갑니다 — 연세 있는 사장님이 kg 단가를 보고 누르는 자리입니다.
-   `padding` 으로 높이를 만들면 "천엽" 처럼 짧은 이름에서 다시 낮아지니
-   `min-height` + `flex` 로 잡습니다 (CLAUDE.md 와 같은 이유). */
-.pc-nm{ font-size:var(--t-md); font-weight:700; color:var(--ink);
-  display:flex; align-items:center; min-height:40px; }
-.pc-mt{ font-size:var(--t-sm); color:var(--ink2); }
-.pc-f{ margin-top:auto; padding-top:var(--s3); display:flex; align-items:flex-end;
-  justify-content:space-between; gap:var(--s2); }
-.pc-pr{ font-size:var(--t-xl); font-weight:800; color:var(--red-ink); white-space:nowrap; }
-.pc-pr em{ font-style:normal; font-size:var(--t-sm); font-weight:600; color:var(--ink2); }
-.pc-cart{ flex:0 0 auto; width:var(--tap); height:var(--tap); border:0; cursor:pointer;
-  border-radius:var(--r); background:var(--green); color:#fff; display:grid; place-items:center; }
-.pc-cart:hover{ background:var(--green-400); }
-
-/* ══ 배너 ═════════════════════════════════════════════════ */
-.bnr{ position:relative; border-radius:var(--r-lg); overflow:hidden; min-height:230px;
-  display:grid; align-items:center; background:var(--green) right center/auto 100% no-repeat; }
-.bnr::after{ content:""; position:absolute; inset:0;
-  background:linear-gradient(95deg, rgba(18,61,50,.96) 0%, rgba(18,61,50,.88) 40%,
-                                    rgba(18,61,50,.35) 74%, rgba(18,61,50,.05) 100%); }
-.bnr-in{ position:relative; z-index:2; padding:var(--s8) var(--s8); max-width:620px; }
-.bnr h3{ font-size:var(--t-3xl); color:#fff; font-weight:800; margin-bottom:var(--s3); }
-.bnr h3 em{ font-style:normal; color:#EBD9A6; }
-.bnr p{ color:rgba(255,255,255,.85); font-size:var(--t-md); margin:0 0 var(--s6); line-height:1.7; }
+.sec{ padding:var(--s10) 0; }
+.sec-warm{ background:var(--bg-warm); }
+.sec-hd{ margin-bottom:var(--s8); position:relative; }
+.sec-hd h2{ font-size:var(--t-3xl); }
+.sec-hd p{ margin-top:var(--s3); color:var(--ink2); font-size:var(--t-lg); max-width:62ch; }
+.eyebrow{ font-size:var(--t-sm); font-weight:800; letter-spacing:.09em;
+  color:var(--burgundy); margin-bottom:var(--s3) !important; text-transform:uppercase; }
+.sec-more{ position:absolute; right:0; bottom:2px; display:inline-flex; align-items:center;
+  gap:4px; min-height:var(--tap); font-size:var(--t-base); font-weight:600; color:var(--ink2); }
+.sec-more:hover{ color:var(--burgundy); }
+.lead{ font-size:var(--t-lg); color:var(--ink2); line-height:1.75; }
+.note{ font-size:var(--t-sm); color:var(--ink3); margin-top:var(--s3) !important; }
+.br-m{ display:inline; }
+@media (max-width:640px){ .br-m{ display:none; } .sec-more{ position:static; } }
 
 /* ══ 푸터 ═════════════════════════════════════════════════ */
-.ft{ background:var(--green); color:rgba(255,255,255,.75); padding:var(--s9) 0 var(--s8);
-  font-size:var(--t-sm); }
-.ft-g{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--s7); margin-bottom:var(--s8); }
-.ft b.ft-lg{ display:block; font-size:19px; font-weight:800; letter-spacing:.06em; color:#fff;
-  margin-bottom:var(--s2); }
-.ft-col h4{ color:#fff; font-size:var(--t-base); margin-bottom:var(--s3); }
-.ft-col a{ display:block; padding:5px 0; min-height:var(--tap); display:flex; align-items:center; }
+.ft{ background:var(--burgundy); color:rgba(255,255,255,.72);
+  padding:var(--s10) 0 var(--s7); margin-top:0; font-size:var(--t-base); }
+.ft-g{ display:grid; grid-template-columns:1.6fr repeat(4,1fr); gap:var(--s7); }
+.ft-b p{ margin:var(--s4) 0 var(--s5); line-height:1.8; color:rgba(255,255,255,.72); }
+.ft-lg{ font-size:20px; font-weight:800; letter-spacing:.055em; color:#fff; }
+.ft .btn-o{ background:transparent; border-color:rgba(255,255,255,.4); color:#fff; }
+.ft .btn-o:hover{ background:rgba(255,255,255,.1); border-color:#fff; color:#fff; }
+.ft-col h4{ font-size:var(--t-base); color:#fff; margin-bottom:var(--s4); }
+/* ⚠️ 누르는 것은 40px 이상. 38px 로 두었다가 전수 점검에 168건이
+   걸렸습니다 — 푸터 링크가 화면마다 반복되기 때문입니다. */
+.ft-col a{ display:block; min-height:44px; line-height:44px; color:rgba(255,255,255,.72); }
 .ft-col a:hover{ color:#fff; }
-.ft-biz{ border-top:1px solid rgba(255,255,255,.16); padding-top:var(--s5);
-  font-size:var(--t-cap); line-height:1.9; color:rgba(255,255,255,.62); }
-.ft-biz span{ margin-right:var(--s4); white-space:nowrap; }
+.ft-biz{ margin-top:var(--s8); padding-top:var(--s5);
+  border-top:1px solid rgba(255,255,255,.16); font-size:var(--t-cap);
+  color:rgba(255,255,255,.55); display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5); }
+.ft-cp{ flex-basis:100%; margin-top:var(--s2); }
+@media (max-width:900px){ .ft-g{ grid-template-columns:1fr 1fr; gap:var(--s6); }
+  .ft-b{ grid-column:1 / -1; } }
 
-/* ══ 모바일 하단 고정 네비 ════════════════════════════════ */
+/* ══ 모바일 아래 네비 ═════════════════════════════════════ */
 .mnav{ display:none; position:fixed; left:0; right:0; bottom:0; z-index:70;
-  background:var(--white); border-top:1px solid var(--line);
+  background:var(--surface); border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom); }
 .mnav-in{ display:grid; grid-template-columns:repeat(5,1fr); }
-.mnav a{ min-height:56px; display:flex; flex-direction:column; align-items:center;
-  justify-content:center; gap:3px; font-size:var(--t-cap); color:var(--ink2); position:relative; }
-.mnav a.on{ color:var(--green); font-weight:700; }
-.mnav a .cnt{ position:absolute; top:5px; right:50%; margin-right:-21px; min-width:17px; height:17px;
-  background:var(--red); color:#fff; border-radius:var(--r-pill); font-size:12px;
-  line-height:17px; text-align:center; padding:0 4px; font-weight:700; }
-
-/* ══ 빈 상태 ══════════════════════════════════════════════
-   "없는 것을 보여주지 않는다" — 자리표시자 대신 갈 길을 줍니다. */
-.empty{ text-align:center; padding:var(--s10) var(--s5); }
-.empty-t{ font-size:var(--t-lg); font-weight:700; margin-bottom:var(--s2); }
-.empty-d{ color:var(--ink2); font-size:var(--t-base); margin-bottom:var(--s6); }
-/* 빈 화면의 버튼 줄 — ⚠️ 막다른 길을 만들지 않습니다. "없습니다" 로
-   끝내면 손님이 뒤로가기를 누르고 그대로 나갑니다. */
-.empty-acts{ display:flex; gap:var(--s2); justify-content:center; flex-wrap:wrap; }
-
-/* ══ 반응형 ═══════════════════════════════════════════════ */
-@media (max-width:1024px){
-  .qg{ grid-template-columns:repeat(4,1fr); }
-  .pg{ grid-template-columns:repeat(3,1fr); }
-  .ft-g{ grid-template-columns:1fr 1fr 1fr; }
-  .hero{ min-height:380px; --hero-photo:52%; }
-}
-@media (max-width:768px){
-  .hd-search{ display:none; }
-  .hd-links{ display:none; }
-  .trust-g{ grid-template-columns:repeat(2,1fr); }
-  .trust-i:nth-child(3)::before,.trust-i:nth-child(1)::before{ display:none; }
-  .pg{ grid-template-columns:repeat(2,1fr); }
-  .ft-g{ grid-template-columns:1fr 1fr; }
-  .bnr-in{ padding:var(--s7) var(--s5); }
-  .bnr::after{ background:linear-gradient(180deg, rgba(18,61,50,.95) 0%,
-                                                  rgba(18,61,50,.86) 58%, rgba(18,61,50,.55) 100%); }
-}
-@media (max-width:640px){
-  .qg{ grid-template-columns:repeat(2,1fr); }
-  .qc img{ width:84px; height:84px; }
-  .qc .pd-th{ width:106px; height:84px; }
-  /* ⚠️ 모바일에서 사진 칸을 46% 로 두면 **오른쪽에 검은 띠만 남습니다.**
-     좁은 화면에서는 사진을 통째로 깔고 위아래 그라데이션으로 글자를 띄웁니다. */
-  .hero{ min-height:340px; --hero-photo:100%; }
-  .hero::after{ background:linear-gradient(180deg, rgba(14,26,21,.92) 0%,
-                                                   rgba(14,26,21,.78) 52%, rgba(14,26,21,.58) 100%); }
+.mnav a{ min-height:var(--mnav-h); display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:3px; color:var(--ink3);
+  font-size:var(--t-cap); font-weight:600; position:relative; }
+.mnav a.on{ color:var(--burgundy); }
+/* 가운데 SOS 를 크게 (지시서 29번) */
+.mnav a.big{ color:var(--burgundy); }
+.mnav a.big .ic{ background:var(--burgundy); color:#fff; border-radius:var(--r-pill);
+  padding:7px; width:38px; height:38px; margin-top:-14px;
+  box-shadow:0 4px 12px rgba(107,36,54,.32); }
+@media (max-width:860px){
   .mnav{ display:block; }
-  body{ padding-bottom:var(--mnav-h); }   /* 고정 네비에 가리지 않게 */
-  .ft{ padding-bottom:var(--s9); }
+  body{ padding-bottom:var(--mnav-h); }
 }
+
+/* ══ 알림 ═════════════════════════════════════════════════
+   ⚠️ 모바일에서는 아래 네비 **위로** 띄웁니다. 안 그러면 네비에 가려
+   아랫줄이 잘립니다. 이 미디어쿼리는 .mnav 가 나타나는 폭과 같아야
+   합니다. */
+.toast{ position:fixed; left:50%; bottom:28px; transform:translate(-50%,14px);
+  background:var(--ink); color:#fff; padding:14px var(--s6); border-radius:var(--r);
+  font-size:var(--t-base); font-weight:600; z-index:90; opacity:0; pointer-events:none;
+  transition:opacity .2s, transform .2s; max-width:calc(100vw - 32px); text-align:center;
+  box-shadow:var(--shadow-lg); }
+.toast.on{ opacity:1; transform:translate(-50%,0); }
+@media (max-width:860px){ .toast{ bottom:calc(var(--mnav-h) + 16px); } }
+
+/* ⚠️ 그리드 칸은 기본이 min-width:auto 라, 안에 가로로 긴 것이 있으면
+   칸이 화면보다 넓어져 페이지 전체에 가로 스크롤이 생깁니다. */
+.ft-g > *, .band > *, .f-2 > *{ min-width:0; }

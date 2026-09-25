@@ -92,7 +92,7 @@ function PageRequest(){
       '<div class="f-2">'+form.map(ReqField).join("")+'</div>'+
 
       '<div class="f-2">'+
-        fRow("지역","rq-region","text",false,"예: 경기 안양","address-level2")+
+        regionRow("rq-region")+
         fRow("예산 (만원)","rq-budget","text",false,"모르시면 비워 두세요","off")+
       '</div>'+
 
@@ -200,7 +200,7 @@ window.reqSend = function(ev){
     service: svcKey,
     serviceName: wowServiceName(svcKey) || "",
     q:      rval("rq-q"),
-    region: rval("rq-region"),
+    region: regionVal("rq-region"),
     budget: rval("rq-budget"),
     name:   rval("rq-name"),
     tel:    rval("rq-tel"),

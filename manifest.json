@@ -48,6 +48,11 @@
       "name": "창업 준비",
       "short_name": "창업",
       "url": "/start"
+    },
+    {
+      "name": "견적 비교",
+      "short_name": "견적비교",
+      "url": "/quotes"
     }
   ]
 }

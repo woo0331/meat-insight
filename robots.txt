@@ -3,7 +3,12 @@ Allow: /
 
 # 사람마다 내용이 다른 화면 — 검색에 올릴 것이 없습니다
 Disallow: /my
+Disallow: /quotes
 Disallow: /login
 Disallow: /signup
+
+# 검색 결과 화면 — 무한히 만들어집니다. 색인되면 같은 화면이
+# 주소만 다르게 수천 개 잡힙니다.
+Disallow: /search
 
 Sitemap: https://aboutmeat.co.kr/sitemap.xml

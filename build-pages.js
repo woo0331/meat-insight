@@ -32,7 +32,7 @@ function loadApp(){
 
   for(const f of ["js/data/korean.js","js/data/site.js","js/data/situations.js",
                   "js/data/problems.js","js/data/services.js","js/data/startup.js",
-                  "js/data/photos.js","js/data/check.js","js/data/reqforms.js",
+                  "js/data/photos.js","js/data/check.js","js/data/regions.js","js/data/reqforms.js",
                   "js/data/legal-terms.js","js/data/legal-privacy.js",
                   "js/data/posts.js"])
     vm.runInContext(fs.readFileSync(path.join(ROOT,f),"utf8"), sb, {filename:f});
@@ -54,7 +54,7 @@ function loadApp(){
 function allRoutes(W){
   const fixed = ["/", "/sos", "/start", "/start/cost", "/check", "/partners",
                  "/request", "/lab", "/partner", "/partner/apply",
-                 "/my", "/quotes", "/login", "/signup", "/about", "/terms", "/privacy"];
+                 "/my", "/quotes", "/search", "/login", "/signup", "/about", "/terms", "/privacy"];
   /* 연구소 글은 하나하나가 주소입니다 — 검색에서 들어오는 문이라
      반드시 진짜 HTML 파일이 있어야 합니다. */
   const posts = (W.WOW_POSTS || []).map(p => "/lab/" + p.slug);

@@ -53,7 +53,7 @@ function PageSos(){
       '</div>'+
       '<div class="f-2">'+
         fRow("업종","s-kind","text",false,"예: 고깃집 / 정육점","organization")+
-        fRow("지역","s-region","text",false,"예: 경기 안양","address-level2")+
+        regionRow("s-region")+
       '</div>'+
 
       Consent()+
@@ -106,6 +106,28 @@ function Consent(){
   '</fieldset>';
 }
 
+/* 지역 — 시·도는 고르고, 그 아래는 직접. 매칭에 쓰이므로 받습니다.
+   ⚠️ 시·군·구를 목록으로 만들지 않는 이유는 js/data/regions.js 머리말에
+   적어 두었습니다. */
+window.regionRow = function(id){
+  return '<div class="f-r"><label for="'+id+'-s">지역 <em>(선택)</em></label>'+
+    '<div class="f-reg">'+
+      '<select id="'+id+'-s" class="f-sel">'+
+        '<option value="">시 · 도</option>'+
+        (window.WOW_REGIONS||[]).map(function(r){
+          return '<option>'+esc(r)+'</option>'; }).join("")+
+      '</select>'+
+      '<input id="'+id+'" type="text" placeholder="시 · 군 · 구 (예: 안양)"'+
+        ' autocomplete="address-level2">'+
+    '</div>'+
+    '<p class="f-hint">업체는 다니는 범위가 정해져 있습니다. '+
+      '적어 주시면 갈 수 있는 곳에만 요청을 보냅니다.</p></div>';
+};
+window.regionVal = function(id){
+  var sel = $(id+"-s"), inp = $(id);
+  return wowRegionText(sel ? sel.value : "", inp ? inp.value : "");
+};
+
 function fRow(label,id,type,req,ph,ac){
   return '<div class="f-r"><label for="'+id+'">'+esc(label)+
     (req?' <b>*</b>':' <em>(선택)</em>')+'</label>'+
@@ -144,7 +166,7 @@ window.sosSend = function(ev){
     name:   val("s-name"),
     tel:    val("s-tel"),
     biz:    val("s-kind"),
-    region: val("s-region"),
+    region: regionVal("s-region"),
     agree:  true
   };
 

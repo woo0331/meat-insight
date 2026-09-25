@@ -13,7 +13,7 @@
 
 ```bash
 node build-pages.js   # 주소마다 HTML + sitemap.xml 을 만듭니다
-node check.js         # 19개 화면 전수 점검 (playwright 필요)
+node check.js         # 23개 화면 전수 점검 (playwright 필요)
 node tools/test-api.js # 접수 주소 검사
 node tools/make-img.js # 그림 다시 그리기
 ```
@@ -28,18 +28,25 @@ node tools/make-img.js # 그림 다시 그리기
 | `/` | 메인 | 됨 |
 | `/sos` | 사장님 SOS | 됨 |
 | `/check` | 무료 사업진단 (8항목 → 점수 → 항목별 CTA) | 됨 |
-| `/start` | 창업 프로젝트 (20단계 · 체크 저장) | 됨 |
-| `/start/cost` | 창업비 정리표 | 됨 |
+| `/start` | 창업 프로젝트 (20단계 · 체크가 남습니다) | 됨 |
+| `/start/cost` | 창업비 정리표 (13칸) | 됨 |
+| `/quotes` | **견적 비교** (받은 견적을 나란히 · 물어볼 것 9가지) | 됨 |
 | `/partners` | 업체 찾기 (명단이 아니라 **무엇이 필요한지 고르는 화면**) | 됨 |
 | `/request` | 견적 요청 (서비스마다 묻는 칸이 다릅니다) | 됨 |
+| `/lab` · `/lab/:slug` | **사장님 연구소** — 글 12편 | 됨 |
+| `/search` | 검색 (글·서비스·화면을 한 번에) | 됨 |
+| `/my` | MY BUSINESS (이 브라우저에 쌓인 것) | 됨 |
 | `/partner` · `/partner/apply` | 파트너 안내 · 등록 | 됨 |
 | `/about` | ABOUTMEAT 소개 | 됨 |
 | `/terms` · `/privacy` | 약관 · 방침 (중개·매칭 기준) | 됨 · **초안** |
-| `/lab` | 사장님 연구소 | 준비 중 |
-| `/my` · `/login` · `/signup` | MY · 로그인 · 가입 | 준비 중 (백엔드) |
+| `/login` · `/signup` | 로그인 · 가입 | 준비 중 (백엔드) |
 
-**준비 중** 화면은 빈 화면이 아닙니다 — 무엇을 할 곳인지 적고 지금 할
-수 있는 것(SOS·전화)을 줍니다. 전부 `noindex` 입니다.
+**준비 중** 화면은 빈 화면이 아닙니다 — 무엇을 할 곳인지 적고, 지금 할
+수 있는 것을 같이 줍니다. 로그인은 없어도 진단·창업 체크·창업비·견적
+비교가 전부 되고 결과가 `/my` 에 남는다는 것을 그 화면에서 알려 줍니다.
+
+`/my` · `/quotes` · `/search` · `/login` · `/signup` 은 `noindex` 입니다 —
+사람마다 다르거나 무한히 만들어지는 화면입니다.
 
 ## 접수가 되게 하려면
 

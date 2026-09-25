@@ -54,6 +54,11 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   font-size:var(--t-base); font-weight:600; color:var(--ink2); white-space:nowrap; }
 .hd-txt:hover{ color:var(--burgundy); }
 .hd-cta{ min-height:42px; padding:0 var(--s5); }
+.hd-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:var(--tap); height:var(--tap); border-radius:var(--r-pill);
+  color:var(--ink2); }
+.hd-ic:hover{ background:var(--bg-warm); color:var(--burgundy); }
+.hd-m-wrap{ display:none; }
 .hd-m{ display:none; }
 
 @media (max-width:1040px){
@@ -65,6 +70,7 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   /* 좁아지면 메뉴는 아래 네비가 맡습니다 — 헤더에 다 우겨넣지 않습니다 */
   .gnb, .hd-r{ display:none; }
   .hd-in{ justify-content:space-between; }
+  .hd-m-wrap{ display:inline-flex; gap:var(--s2); }
   .hd-m{ display:inline-flex; align-items:center; justify-content:center;
     width:var(--tap); height:var(--tap); border:1px solid var(--line);
     border-radius:var(--r-pill); color:var(--burgundy); }
@@ -174,3 +180,38 @@ ul,ol{ margin:0; padding:0; list-style:none; }
 /* ⚠️ 그리드 칸은 기본이 min-width:auto 라, 안에 가로로 긴 것이 있으면
    칸이 화면보다 넓어져 페이지 전체에 가로 스크롤이 생깁니다. */
 .ft-g > *, .band > *, .f-2 > *{ min-width:0; }
+
+/* ══ 손맛 ═════════════════════════════════════════════════
+   ⚠️ **스크롤에 맞춰 나타나는 연출은 넣지 않았습니다.** 보기에는
+   좋지만, 화면에 들어오기 전까지 opacity:0 이라 (1) 전수 점검이 그
+   구간을 "안 보인다" 고 건너뛰고 (2) JS 가 늦거나 막히면 손님에게
+   본문이 통째로 안 보입니다. 사이트가 안 보이는 것보다 덜 화려한
+   편이 낫습니다. 움직임은 **누른 것에 대한 반응**에만 씁니다. */
+.btn:active{ transform:translateY(1px); }
+.sit:active, .cat:active, .prob:active, .tool:active,
+.pcard:active, .mycard:active, .svc-i:active{ transform:translateY(0); }
+
+/* 눌리는 것에는 손가락 모양을, 그리고 회색 하이라이트는 끕니다 */
+a, button, label, summary, [onclick]{ -webkit-tap-highlight-color:transparent; }
+
+/* ⚠️ 움직임을 줄여 달라고 설정한 손님이 있습니다. 어지럼증·멀미
+   때문인 경우가 많습니다 — 그 설정을 존중합니다. */
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration:.001ms !important; animation-iteration-count:1 !important;
+    transition-duration:.001ms !important; scroll-behavior:auto !important;
+  }
+}
+
+/* 글 안에서 앵커로 뛸 때 제목이 sticky 헤더에 가리지 않게 */
+html{ scroll-padding-top:calc(var(--hdr-h) + 16px); }
+
+/* 인쇄 — 견적 비교·진단 결과를 뽑아 가시는 분이 있습니다.
+   화면에서만 쓸모 있는 것은 빼고, 종이는 흑백이라는 것을 압니다. */
+@media print{
+  .hd, .mnav, .ft, .toast, .row-cta, .st-cta, .post-cta, .res-cta,
+  .qc-acts, .st-foot, .sec-more, .skip{ display:none !important; }
+  body{ background:#fff; padding-bottom:0; }
+  .qc-t input, .qc-t textarea{ border:0; background:transparent; }
+  a[href^="/"]::after{ content:""; }
+}

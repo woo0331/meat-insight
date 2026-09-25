@@ -1041,9 +1041,19 @@
   border-radius:var(--r-xl); padding:var(--s6); margin-bottom:var(--s9); }
 .qc-ask-p{ margin:var(--s3) 0 var(--s4) !important; font-size:var(--t-base); color:var(--ink2); }
 
+/* ⚠️ 좁은 화면에서 표에 min-width 를 남겨 두면 **한 칸밖에 안 보입니다.**
+   "나란히 놓고 보세요" 라고 해 놓고 하나만 보이면 이 화면은 하는 일이
+   없습니다. 390px 에서 두 칸은 들어가게 줄이고, 셋 넷째부터만 옆으로
+   밀리게 합니다. */
 @media (max-width:640px){
-  .qc-t th{ width:110px; font-size:var(--t-sm); }
-  .qc-t th, .qc-t td{ padding:var(--s2) var(--s3); }
+  .qc-t{ min-width:0; }
+  .qc-t th{ width:84px; font-size:var(--t-sm); }
+  .qc-t th em{ display:block; }
+  .qc-t th, .qc-t td{ padding:var(--s2); }
+  .qc-t input, .qc-t textarea{ min-width:0; padding:8px 10px; font-size:var(--t-sm); }
+  .qc-x{ right:0; top:0; width:36px; height:36px; }
+  .qc-n{ font-size:var(--t-cap); }
+  .qc-tag{ font-size:10.5px; padding:2px 7px; }
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -1156,3 +1166,56 @@
   .diff-r .diff-b{ background:transparent; }
   .diff-r .diff-b::before{ content:""; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   검색
+   ⚠️ **못 찾았을 때가 더 중요합니다.** "결과 없음" 으로 끝내면 손님은
+   그냥 나갑니다. 그 자리에서 적어서 물어보는 길을 냅니다.
+   ════════════════════════════════════════════════════════════════════ */
+.srch{ padding:var(--s9) 0 var(--s10); max-width:820px; }
+.srch .pg-h1{ font-size:var(--t-3xl); margin-bottom:var(--s6); }
+.srch-f{ display:grid; grid-template-columns:auto 1fr auto; align-items:center;
+  gap:var(--s3); background:var(--surface); border:2px solid var(--line);
+  border-radius:var(--r-pill); padding:var(--s2) var(--s2) var(--s2) var(--s6);
+  margin-bottom:var(--s7); transition:border-color .15s, box-shadow .15s; }
+.srch-f:focus-within{ border-color:var(--burgundy); box-shadow:0 0 0 4px var(--burgundy-50); }
+.srch-ic{ display:inline-flex; color:var(--ink3); }
+.srch-f input{ min-width:0; min-height:var(--tap); border:0; outline:0; background:transparent;
+  font:inherit; font-size:var(--t-lg); color:var(--ink); }
+.srch-f input::placeholder{ color:var(--ink3); }
+.srch-hint{ background:var(--bg-warm); border-radius:var(--r-lg); padding:var(--s6); }
+.srch-hint .note{ margin:0 0 var(--s3) !important; }
+.srch-hint .chips li{ padding:0; }
+.srch-hint .chips a{ display:inline-flex; align-items:center; min-height:44px;
+  padding:0 var(--s5); }
+.srch-n{ font-size:var(--t-base); color:var(--ink2); margin-bottom:var(--s4) !important; }
+.srch-n b{ color:var(--burgundy); }
+.srch-l{ display:grid; gap:var(--s2); }
+.srch-l a{ display:grid; grid-template-columns:auto 1fr auto; gap:var(--s4);
+  align-items:center; background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-lg); padding:var(--s4) var(--s5); min-height:var(--tap);
+  transition:border-color .15s, box-shadow .15s; }
+.srch-l a:hover{ border-color:var(--burgundy); box-shadow:var(--shadow); }
+.srch-r-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:40px; height:40px; border-radius:var(--r-pill);
+  background:var(--burgundy-50); color:var(--burgundy); }
+.srch-r-t{ display:grid; gap:2px; min-width:0; }
+.srch-r-t em{ font-style:normal; font-size:var(--t-cap); font-weight:700; color:var(--ink3); }
+.srch-r-t b{ font-size:var(--t-md); }
+.srch-r-t > span{ font-size:var(--t-sm); color:var(--ink2); }
+.srch-r-go{ color:var(--ink3); display:inline-flex; }
+.srch-none{ background:var(--bg-warm); border-radius:var(--r-xl); padding:var(--s8);
+  text-align:center; }
+.srch-none b{ font-size:var(--t-xl); display:block; margin-bottom:var(--s3); }
+.srch-none p{ font-size:var(--t-lg); color:var(--ink2); line-height:1.8;
+  max-width:52ch; margin:0 auto var(--s6); }
+.srch-none .row-cta{ justify-content:center; }
+
+/* 지역 — 시·도 고르기 + 그 아래 직접 적기 */
+.f-reg{ display:grid; grid-template-columns:130px 1fr; gap:var(--s2); }
+.f-reg input{ width:100%; min-height:var(--tap); padding:13px var(--s4);
+  border:1px solid var(--line); border-radius:var(--r); background:var(--surface);
+  font:inherit; font-size:var(--t-md); color:var(--ink); }
+.f-reg input:focus{ outline:0; border-color:var(--burgundy);
+  box-shadow:0 0 0 3px var(--burgundy-50); }
+@media (max-width:420px){ .f-reg{ grid-template-columns:1fr; } }

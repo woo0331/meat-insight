@@ -118,7 +118,7 @@ function PagePartnerApply(){
         }).join("")+'</div></div>'+
 
       '<div class="f-2">'+
-        fRow("주로 일하시는 지역","pt-region","text",false,"예: 경기 남부","address-level2")+
+        regionRow("pt-region")+
         fRow("고깃집 · 정육점 경험","pt-exp","text",false,"예: 고깃집 덕트 8년","off")+
       '</div>'+
 
@@ -170,7 +170,7 @@ window.ptSend = function(ev){
   var body = {
     kind:"partner",
     company: rval("pt-co"), name: rval("pt-name"), tel: rval("pt-tel"),
-    brn: rval("pt-brn"), region: rval("pt-region"), exp: rval("pt-exp"),
+    brn: rval("pt-brn"), region: regionVal("pt-region"), exp: rval("pt-exp"),
     note: rval("pt-note"),
     services: svcs,
     serviceNames: svcs.map(function(k){ return wowServiceName(k) || k; }),

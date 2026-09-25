@@ -34,13 +34,17 @@ function Header(){
         '<b>ABOUTMEAT</b><span>고기 사업자 문제해결</span></a>'+
       '<nav class="gnb" id="gnb" aria-label="주요 메뉴"></nav>'+
       '<div class="hd-r">'+
+        '<a class="hd-ic" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
         '<a class="hd-txt" href="/login">로그인</a>'+
         '<a class="hd-txt" href="/partner/apply">파트너 등록</a>'+
         /* Primary CTA — 지시서 29번. 이 버튼 하나가 헤더에서 제일
            눈에 띄어야 합니다. */
         '<a class="btn btn-b hd-cta" href="/sos">무료 상담</a>'+
       '</div>'+
-      '<a class="hd-m" href="/sos" aria-label="무료 상담">'+icon("chat",20)+'</a>'+
+      '<span class="hd-m-wrap">'+
+        '<a class="hd-m" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
+        '<a class="hd-m" href="/sos" aria-label="무료 상담">'+icon("chat",20)+'</a>'+
+      '</span>'+
     '</div>'+
   '</header>';
 }

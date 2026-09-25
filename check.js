@@ -486,7 +486,129 @@ const AUDIT = `(() => {
     const t = document.getElementById("view").textContent;
     return /별도의 동의/.test(t) && /Vercel/.test(t);`);
 
-  console.log("\n── 새 화면 흐름 " + 16 + "개");
+  /* ── 화면과 화면이 **실제로 이어지는가** ────────────────────
+     ⚠️ 화면 하나하나가 되는 것과, 눌렀을 때 **다음 화면으로 값이
+     넘어가는 것**은 다릅니다. 여기가 끊기면 손님은 같은 것을 두 번
+     적게 되고, 대개 거기서 닫습니다. */
+  await f("메인 입력창 → SOS 로 적은 말이 넘어간다", "/", `
+    document.getElementById("ask").value = "덕트 냄새가 납니다";
+    askGo({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,300));
+    return location.pathname === "/sos"
+        && document.getElementById("s-q").value === "덕트 냄새가 납니다";`);
+  await f("메인 짧은 단추 → 입력창이 채워진다", "/", `
+    askFill(2);
+    await new Promise(r=>setTimeout(r,150));
+    const v = document.getElementById("ask").value;
+    return v.length > 5 && v === WOW_ASK_CHIPS[2].ask;`);
+  await f("메인 상황 카드 → SOS 에 상황이 채워진다", "/", `
+    const a = [...document.querySelectorAll(".sit")].find(x => x.href.indexOf("/sos?") >= 0);
+    if(!a) return "상황 카드에 SOS 로 가는 것이 없습니다";
+    go(a.getAttribute("href"));
+    await new Promise(r=>setTimeout(r,300));
+    return document.getElementById("s-q").value.length > 5;`);
+  await f("메인 고민 카드 → SOS 에 분류가 켜진다", "/", `
+    const a = [...document.querySelectorAll(".prob")].find(x => x.href.indexOf("c=duct") >= 0);
+    if(!a) return "덕트 고민 카드가 없습니다";
+    go(a.getAttribute("href"));
+    await new Promise(r=>setTimeout(r,300));
+    return !!document.querySelector('#s-cat .pk.on[data-k="duct"]');`);
+  await f("메인 서비스 묶음 → 업체 찾기의 그 묶음으로", "/", `
+    go("/partners?g=space");
+    await new Promise(r=>setTimeout(r,300));
+    return !!document.querySelector("#g-space.on");`);
+  await f("업체 찾기 → 견적 요청서로 서비스가 넘어간다", "/partners", `
+    const a = document.querySelector('.svc-i[href*="s=duct"]');
+    if(!a) return "덕트 칸이 없습니다";
+    go(a.getAttribute("href"));
+    await new Promise(r=>setTimeout(r,300));
+    return document.getElementById("rq-svc").value === "duct";`);
+
+  await f("진단 결과 → MY 에 남는다", "/check", `
+    try{ localStorage.clear(); }catch(e){}
+    render(); await new Promise(r=>setTimeout(r,200));
+    WOW_CHECK.forEach(it => chkPick(it.key, 1));
+    chkDone({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,300));
+    go("/my"); await new Promise(r=>setTimeout(r,300));
+    const t = document.getElementById("view").textContent;
+    return /50점/.test(t) && /무료 사업진단/.test(t);`);
+  await f("진단 결과 → 이 결과로 물어보기가 SOS 를 채운다", "/check", `
+    WOW_CHECK.forEach(it => chkPick(it.key, 2));
+    chkDone({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,300));
+    const a = document.querySelector('.res-cta a[href^="/sos"]');
+    if(!a) return "이 결과로 물어보기 단추가 없습니다";
+    go(a.getAttribute("href"));
+    await new Promise(r=>setTimeout(r,300));
+    return document.getElementById("s-q").value.indexOf("사업진단") >= 0;`);
+  await f("창업 체크 → MY 에 남는다", "/start", `
+    try{ localStorage.clear(); }catch(e){}
+    render(); await new Promise(r=>setTimeout(r,200));
+    stToggle("area", true); stToggle("shop", true);
+    await new Promise(r=>setTimeout(r,250));
+    go("/my"); await new Promise(r=>setTimeout(r,300));
+    return /2 \\/ 20/.test(document.getElementById("view").textContent);`);
+  await f("창업비 → MY 에 합계가 남는다", "/start/cost", `
+    try{ localStorage.clear(); }catch(e){}
+    render(); await new Promise(r=>setTimeout(r,200));
+    costIn("shop","5,000"); costIn("interior","3,200");
+    await new Promise(r=>setTimeout(r,200));
+    go("/my"); await new Promise(r=>setTimeout(r,300));
+    return /8,200/.test(document.getElementById("view").textContent);`);
+  await f("견적 비교 → MY 에 남는다", "/quotes", `
+    try{ localStorage.clear(); }catch(e){}
+    render(); await new Promise(r=>setTimeout(r,250));
+    qcTitle("40평 덕트 재시공");
+    qcSet(0,"co","가나덕트"); qcSet(0,"price","1200");
+    qcSet(1,"co","다라환기"); qcSet(1,"price","1650");
+    await new Promise(r=>setTimeout(r,250));
+    const gap = document.querySelector(".qc-sum").textContent;
+    go("/my"); await new Promise(r=>setTimeout(r,300));
+    const my = document.getElementById("view").textContent;
+    return /450/.test(gap) && /2곳/.test(my) && /40평 덕트 재시공/.test(my);`);
+  await f("읽던 글 → MY 에 남는다", "/lab/meat-cost-rate", `
+    go("/my"); await new Promise(r=>setTimeout(r,300));
+    return /읽던 글/.test(document.getElementById("view").textContent)
+        && /육류원가율/.test(document.getElementById("view").textContent);`);
+  await f("MY 전부 지우기가 실제로 지운다", "/my", `
+    const old = window.confirm; window.confirm = () => true;
+    myReset(); window.confirm = old;
+    await new Promise(r=>setTimeout(r,300));
+    const t = document.getElementById("view").textContent;
+    return /아직 시작하신 것이 없습니다/.test(t);`);
+
+  await f("연구소 분류 탭이 실제로 걸러 준다", "/lab?c=fac", `
+    const n = document.querySelectorAll(".pcard").length;
+    const want = wowPostsIn("fac").length;
+    return n === want && n > 0 && n < WOW_POSTS.length;`);
+  await f("글 체크리스트가 남는다", "/lab/duct-smell-complaint", `
+    try{ localStorage.removeItem("wow.lab.v1"); }catch(e){}
+    render(); await new Promise(r=>setTimeout(r,250));
+    postCk("duct-smell-complaint", 0, true);
+    await new Promise(r=>setTimeout(r,150));
+    render(); await new Promise(r=>setTimeout(r,250));
+    return document.querySelectorAll(".post-ck-l input:checked").length === 1;`);
+  await f("검색이 글·서비스·화면을 같이 찾는다", "/search?q=%EB%8D%95%ED%8A%B8", `
+    const kinds = [...document.querySelectorAll(".srch-r-t em")].map(e => e.textContent);
+    return kinds.length >= 3 && new Set(kinds).size >= 3;`);
+  await f("못 찾으면 물어보는 길을 준다", "/search?q=zzz없는말zzz", `
+    const a = document.querySelector('.srch-none a[href^="/sos?q="]');
+    return !!a;`);
+  await f("지역을 고르면 요청에 실린다", "/request?s=duct", `
+    document.getElementById("rq-region-s").value = "경기";
+    document.getElementById("rq-region").value = "안양";
+    document.getElementById("rq-q").value = "덕트 냄새";
+    document.getElementById("rq-name").value = "홍길동";
+    document.getElementById("rq-tel").value = "010-1234-5678";
+    document.getElementById("rq-ag").checked = true;
+    let body=null; const o=window.fetch;
+    window.fetch=function(u,i){ body=JSON.parse(i.body); return Promise.reject(new Error("테스트")); };
+    reqSend({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,250)); window.fetch=o;
+    return !!body && body.region === "경기 안양";`);
+
+  console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

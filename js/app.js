@@ -45,6 +45,8 @@ var META = {
   "/partner/apply":["파트너 등록", "ABOUTMEAT 파트너로 등록하고 조건에 맞는 요청을 받아 보세요."],
   "/my":       ["MY BUSINESS",
                 "진단 결과·창업 진행·창업비·견적 비교·읽던 글을 한 화면에서 이어서 하실 수 있습니다."],
+  "/search":   ["검색",
+                "글·서비스·화면을 한 번에 찾습니다. 못 찾으시면 그대로 적어서 물어보시면 됩니다."],
   "/quotes":   ["견적 비교",
                 "받으신 견적을 나란히 놓고 금액·기간·A/S·포함 범위를 비교하고, 빠뜨린 질문을 확인합니다."],
   "/login":    ["로그인", "ABOUTMEAT 로그인."],
@@ -56,14 +58,16 @@ var META = {
 };
 
 /* 사람마다 내용이 다른 화면과 결과 화면은 검색에 안 올립니다 */
-var NOINDEX = ["/my","/login","/signup","/sos","/check/result","/quotes"];
+var NOINDEX = ["/my","/login","/signup","/sos","/check/result","/quotes","/search"];
 
 /* 아직 안 만든 화면 — 무엇을 하는 곳인지 적고 지금 할 수 있는 것을 줍니다.
    ⚠️ 빈 화면을 두지 마세요. 눌렀는데 아무것도 없으면 손님에게는
    고장으로 읽힙니다. */
 var SOON = {
-  "/login":    ["로그인", "회원 기능을 준비하고 있습니다."],
-  "/signup":   ["회원가입", "회원 기능을 준비하고 있습니다."]
+  "/login":    ["로그인",
+                "회원 기능은 아직입니다. 다만 **로그인하지 않으셔도** 진단·창업 체크·창업비·견적 비교는 그대로 되고, 결과는 MY BUSINESS 에 남습니다."],
+  "/signup":   ["회원가입",
+                "회원 기능은 아직입니다. 가입하지 않으셔도 문의·견적 요청·진단이 전부 됩니다."]
 };
 
 /* 주소 → 무엇을 그릴지. build-pages.js 도 이 함수를 써서 메타를 뽑으므로
@@ -89,6 +93,7 @@ window.routeInfo = function(path, qs){
     "/lab":           "lab",
     "/my":            "my",
     "/quotes":        "quotes",
+    "/search":        "search",
     "/terms":         "terms",
     "/privacy":       "privacy"
   };
@@ -159,6 +164,7 @@ function render(){
     case "lab":          html = PageLab();           break;
     case "my":           html = PageMy();            break;
     case "quotes":       html = PageQuotes();        break;
+    case "search":       html = PageSearch();        break;
     case "post":         html = PagePost(r.post);    break;
     case "terms":        html = PageTerms();         break;
     case "privacy":      html = PagePrivacy();       break;
@@ -185,14 +191,17 @@ window.rerender = function(keepScroll){
 
 /* 아직 안 만든 화면 — 무엇을 할 곳인지 적고, 지금 할 수 있는 것을 줍니다 */
 function PageSoon(s){
+  /* ⚠️ 준비 중 화면이 **막다른 길이 되면 안 됩니다.** 무엇을 할 곳인지
+     적고, 지금 할 수 있는 것을 반드시 같이 냅니다. */
   return '<div class="w soon">'+
     '<p class="eyebrow">준비 중</p>'+
     '<h1>'+esc(s[0])+'</h1>'+
-    '<p class="soon-p">'+esc(s[1])+'</p>'+
+    '<p class="soon-p">'+esc(s[1]).replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>")+'</p>'+
     '<p class="soon-n">아직 열지 못했습니다. 그동안은 <b>바로 물어봐 주세요</b> — '+
       '같은 일을 사람이 직접 해 드립니다.</p>'+
     '<div class="row-cta">'+
       '<a class="btn btn-b btn-lg" href="/sos">무료로 물어보기'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-o btn-lg" href="/my">MY BUSINESS 보기</a>'+
       CallButton("btn btn-o btn-lg","전화로 문의")+
     '</div>'+
   '</div>';

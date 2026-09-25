@@ -36,6 +36,7 @@ function PageStart(){
   var got = WOW_STARTUP_STEPS.filter(function(s){ return done[s.key]; }).length;
 
   return '<section class="pg-hero pg-hero-d">'+
+      photoBg("sit-start")+'<div class="hero-sh"></div>'+
       '<div class="w">'+
       '<p class="eyebrow">창업 프로젝트</p>'+
       '<h1 class="pg-h1">고깃집 하나 차리는 데<br class="br-m"> 알아볼 게 너무 많으니까.</h1>'+

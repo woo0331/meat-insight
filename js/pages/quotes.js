@@ -62,7 +62,8 @@ function PageQuotes(){
   var S = qcLoad();
   if(!S.list.length){ S.list = [{}, {}]; qcSave(S); }   /* 빈 화면을 두지 않습니다 */
 
-  return '<section class="pg-hero"><div class="w">'+
+  return '<section class="pg-hero"><div class="w pgh">'+
+    '<div class="pgh-t">'+
       '<p class="eyebrow">견적 비교</p>'+
       '<h1 class="pg-h1">받으신 견적, 나란히 놓고 보세요.</h1>'+
       '<p class="pg-lead">금액만 보고 고르면 나중에 추가금이 붙습니다. '+
@@ -73,6 +74,8 @@ function PageQuotes(){
                      "같은 자리에 놓고 빠진 칸을 보여 드리는 데까지입니다.")+
         fact("hand", "아직 견적이 하나뿐이어도 됩니다. 넣어 두시고 나중에 채우셔도 남아 있습니다.")+
       '</ul>'+
+    '</div>'+
+    '<figure class="pgh-f">'+photoBox("hero-quotes")+'</figure>'+
     '</div></section>'+
 
     '<div class="w qc">'+

@@ -34,7 +34,7 @@ function loadApp(){
                   "js/data/problems.js","js/data/services.js","js/data/startup.js",
                   "js/data/photos.js","js/data/check.js","js/data/regions.js","js/data/reqforms.js",
                   "js/data/legal-terms.js","js/data/legal-privacy.js",
-                  "js/data/posts.js"])
+                  "js/data/posts.js","js/data/faq.js"])
     vm.runInContext(fs.readFileSync(path.join(ROOT,f),"utf8"), sb, {filename:f});
 
   /* app.js 는 통째로 돌리면 document 를 건드립니다. 필요한 조각만
@@ -66,10 +66,93 @@ function esc(s){
     .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
+/* ── 구조화 데이터 (JSON-LD) ──────────────────────────────────
+   구글이 제목·설명 말고 **이 화면이 무엇인지**를 읽는 자리입니다.
+   연구소 글은 Article 로, 사이트는 WebSite + 검색으로, 주소 안의
+   주소는 BreadcrumbList 로 알려 줍니다.
+
+   ⚠️ **평점·리뷰 수·업체 수를 넣지 마세요** (절대 규칙 1).
+   aggregateRating 을 넣으면 검색 결과에 별이 뜨는데, 그 별은 실제
+   후기가 있어야 붙일 수 있는 것입니다. 없는 별을 붙이면 지어낸
+   숫자를 구글에까지 내보내는 셈이고, 적발되면 리치 결과가 통째로
+   막힙니다. 예전 부산물몰에서 실제로 그랬습니다.
+
+   ⚠️ 화면에 없는 것을 여기에만 적지 마세요. 구글은 "구조화 데이터가
+   화면 내용과 같아야 한다" 고 못 박아 두었습니다. */
+function jsonLd(W, r, route){
+  const org = {
+    "@type":"Organization", name:"ABOUTMEAT", url:ORIGIN,
+    logo:ORIGIN+"/icon-512.png"
+  };
+  const out = [];
+
+  if(route === "/"){
+    const faq = (W.WOW_FAQ || []);
+    if(faq.length)
+      out.push({ "@context":"https://schema.org", "@type":"FAQPage",
+        inLanguage:"ko",
+        mainEntity: faq.map(f => ({ "@type":"Question", name:f.q,
+          acceptedAnswer:{ "@type":"Answer", text:f.a } })) });
+    out.push({ "@context":"https://schema.org", "@type":"WebSite",
+      name:"ABOUTMEAT", url:ORIGIN, inLanguage:"ko",
+      description:r.desc || "",
+      potentialAction:{ "@type":"SearchAction",
+        target:{ "@type":"EntryPoint", urlTemplate:ORIGIN+"/search?q={q}" },
+        "query-input":"required name=q" } });
+    out.push({ "@context":"https://schema.org", "@type":"Organization",
+      name:"ABOUTMEAT", url:ORIGIN, logo:ORIGIN+"/icon-512.png",
+      description:"고깃집·정육점 사장님의 문제를 정리하고, 조건에 맞는 업체를 최대 세 곳 찾아 견적을 받아 드리는 중개 서비스입니다." });
+  }
+
+  if(route.indexOf("/lab/") === 0){
+    const post = (W.WOW_POSTS||[]).filter(p => "/lab/"+p.slug === route)[0];
+    if(post){
+      out.push({ "@context":"https://schema.org", "@type":"Article",
+        headline: post.title, description: post.lead,
+        inLanguage:"ko",
+        datePublished: post.updated, dateModified: post.updated,
+        author: org, publisher: org,
+        mainEntityOfPage:{ "@type":"WebPage", "@id":ORIGIN+route },
+        articleSection: (W.wowPostCatName && W.wowPostCatName(post.cat)) || undefined });
+      const cat = (W.wowPostCatName && W.wowPostCatName(post.cat)) || "글";
+      out.push({ "@context":"https://schema.org", "@type":"BreadcrumbList",
+        itemListElement:[
+          { "@type":"ListItem", position:1, name:"홈", item:ORIGIN+"/" },
+          { "@type":"ListItem", position:2, name:"사장님 연구소", item:ORIGIN+"/lab" },
+          { "@type":"ListItem", position:3, name:post.title }
+        ]});
+    }
+  }
+
+  if(route === "/lab"){
+    out.push({ "@context":"https://schema.org", "@type":"CollectionPage",
+      name:"사장님 연구소", description:r.desc || "", inLanguage:"ko",
+      url:ORIGIN+"/lab",
+      mainEntity:{ "@type":"ItemList",
+        itemListElement:(W.WOW_POSTS||[]).map((p,i) => ({
+          "@type":"ListItem", position:i+1, name:p.title, url:ORIGIN+"/lab/"+p.slug })) }});
+  }
+
+  if(route === "/start/cost" || route === "/check" || route === "/quotes"){
+    out.push({ "@context":"https://schema.org", "@type":"WebApplication",
+      name:r.title, description:r.desc || "", url:ORIGIN+route,
+      applicationCategory:"BusinessApplication",
+      operatingSystem:"Web", inLanguage:"ko", publisher:org,
+      /* 무료라는 것은 화면에도 적혀 있는 사실입니다 */
+      offers:{ "@type":"Offer", price:"0", priceCurrency:"KRW" } });
+  }
+
+  if(!out.length) return "";
+  return out.map(o =>
+    '<script type="application/ld+json">'+
+    JSON.stringify(o).replace(/</g,"\\u003c")+
+    '</'+'script>').join("\n");
+}
+
 /* ── 껍데기 ───────────────────────────────────────────────────
    index.html 을 그대로 쓰되 <head> 의 메타만 갈아 끼웁니다.
    스크립트·CSS 는 절대 경로라 어느 깊이에서 열어도 같습니다. */
-function shell(tpl, r, route, noscript){
+function shell(tpl, r, route, noscript, ld){
   const site = "ABOUTMEAT · 고기 사업자 문제해결";
   const title = (r.title ? r.title+" · " : "") + site;
   const canon = ORIGIN + (r.canon || route);
@@ -84,7 +167,8 @@ function shell(tpl, r, route, noscript){
   h = h.replace(/<meta property="og:url"[^>]*>/,
         '<meta property="og:url" content="'+esc(canon)+'">');
   const head = '<link rel="canonical" href="'+esc(canon)+'">\n'+
-    (r.noindex ? '<meta name="robots" content="noindex, follow">\n' : '');
+    (r.noindex ? '<meta name="robots" content="noindex, follow">\n' : '')+
+    (r.noindex ? '' : (ld ? ld+'\n' : ''));
   h = h.replace("</head>", head+"</head>");
   /* JS 가 안 도는 크롤러에게 최소한의 내용을 줍니다 */
   h = h.replace('<a class="skip" href="#view">본문 바로가기</a>',
@@ -165,7 +249,7 @@ const seenTitle = new Map(), seenDesc = new Map();
 for(const route of routes){
   const r = W.routeInfo(route, {});
   if(!r.ok){ console.error("  ! 알 수 없는 주소: "+route); skipped++; continue; }
-  const html = shell(tpl, r, route, noscriptFor(W, r, route));
+  const html = shell(tpl, r, route, noscriptFor(W, r, route), jsonLd(W, r, route));
 
   if(route !== "/"){
     const dir = path.join(ROOT, route.replace(/^\//,""));
@@ -174,7 +258,20 @@ for(const route of routes){
     wrote.add(path.join(dir,"index.html"));
     made++;
   }
-  /* "/" 는 index.html 자체라 덮어쓰지 않습니다 — 원본이 틀어집니다 */
+  /* "/" 는 index.html 자체라 덮어쓰지 않습니다 — 원본이 틀어집니다.
+     다만 구조화 데이터만은 **표시한 줄 사이에** 써 넣습니다.
+     안 그러면 메인에만 JSON-LD 가 없게 됩니다. */
+  if(route === "/"){
+    const ld = jsonLd(W, r, route);
+    const tplPath = path.join(ROOT, "index.html");
+    let src = fs.readFileSync(tplPath, "utf8");
+    const a = src.indexOf("<!-- ld:start -->"), b = src.indexOf("<!-- ld:end -->");
+    if(a < 0 || b < 0)
+      throw new Error("index.html 에서 ld:start / ld:end 표시를 못 찾았습니다 — 지우셨나요?");
+    src = src.slice(0, a) + "<!-- ld:start -->\n" + ld + "\n" +
+          src.slice(b);
+    fs.writeFileSync(tplPath, src);
+  }
 
   if(!r.noindex){
     sitemap.push(route);

@@ -84,7 +84,17 @@ window.WOW_PHOTOS = {
   "post-start-0": { src:"/img/post-start-0.svg", alt:"점포 도면과 자, 연필, 열쇠" },
   "post-start-1": { src:"/img/post-start-1.svg", alt:"빈 점포와 사다리, 예산표" },
   "post-grow-0": { src:"/img/post-grow-0.svg", alt:"매출이 오르는 화면과 나란한 두 매장" },
-  "post-grow-1": { src:"/img/post-grow-1.svg", alt:"셔터 내린 가게와 정리한 상자, 점검 목록" }
+  "post-grow-1": { src:"/img/post-grow-1.svg", alt:"셔터 내린 가게와 정리한 상자, 점검 목록" },
+
+  /* 화면 머리 옆 그림 */
+  "hero-check":    { src:"/img/hero-check.svg",
+    alt:"점수 고리와 항목별 점검 카드" },
+  "hero-partners": { src:"/img/hero-partners.svg",
+    alt:"여러 업체 중에서 세 곳만 골라 앞으로 내놓은 모습" },
+  "hero-quotes":   { src:"/img/hero-quotes.svg",
+    alt:"나란히 놓인 견적서 세 장과 돋보기" },
+  "hero-about":    { src:"/img/hero-about.svg",
+    alt:"적어 주신 문제에서 사람을 거쳐 업체로 이어지는 흐름" }
 };
 
 

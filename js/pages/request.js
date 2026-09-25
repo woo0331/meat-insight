@@ -18,7 +18,8 @@ var REQ = { sending:false, done:null };
 function PagePartners(){
   var q = nowQS("g");                       /* 메인에서 묶음을 누르고 왔을 때 */
   var groups = WOW_SERVICE_GROUPS;
-  return '<section class="pg-hero"><div class="w">'+
+  return '<section class="pg-hero"><div class="w pgh">'+
+    '<div class="pgh-t">'+
       '<p class="eyebrow">업체 찾기</p>'+
       '<h1 class="pg-h1">업체를 찾아 드립니다.<br class="br-m"> 명단을 드리지 않습니다.</h1>'+
       '<p class="pg-lead">수백 곳을 뒤지실 필요 없습니다. 무엇이 필요하신지만 고르시면 '+
@@ -27,6 +28,8 @@ function PagePartners(){
         "필요한 것을 고릅니다","조건에 맞는 곳에만 요청이 갑니다","세 곳 견적을 비교합니다"
       ].map(function(t,i){
         return '<li><b>'+("0"+(i+1))+'</b>'+esc(t)+'</li>'; }).join("")+'</ol>'+
+    '</div>'+
+    '<figure class="pgh-f">'+photoBox("hero-partners")+'</figure>'+
     '</div></section>'+
 
     '<div class="w svc">'+

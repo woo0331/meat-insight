@@ -35,7 +35,9 @@ function PagePartner(){
     ["연락이 닿는가",                "요청이 갔는데 하루가 지나도 답이 없으면 다음부터 안 보냅니다."]
   ];
 
-  return '<section class="pg-hero pg-hero-d"><div class="w">'+
+  return '<section class="pg-hero pg-hero-d">'+
+    photoBg("partner")+'<div class="hero-sh"></div>'+
+    '<div class="w">'+
       '<p class="eyebrow">파트너 모집</p>'+
       '<h1 class="pg-h1">고깃집 · 정육점을 아는<br class="br-m"> 업체를 찾고 있습니다.</h1>'+
       '<p class="pg-lead">광고비를 받고 위에 올려 드리는 곳이 아닙니다. '+
@@ -233,12 +235,15 @@ function PageAbout(){
     "광고비 순서로 보여 주지 않습니다",
     "없는 숫자를 지어내지 않습니다"
   ];
-  return '<section class="pg-hero"><div class="w">'+
+  return '<section class="pg-hero"><div class="w pgh">'+
+    '<div class="pgh-t">'+
       '<p class="eyebrow">ABOUTMEAT</p>'+
       '<h1 class="pg-h1">고기 장사를 하다 막혔을 때<br class="br-m"> 물어보는 곳입니다.</h1>'+
       '<p class="pg-lead">고깃집과 정육점은 일반 음식점과 다릅니다. 환기 · 배수 · 냉장 · '+
         '원가 구조가 전부 다른데, 물어볼 데가 마땅치 않습니다. '+
         '그래서 만들었습니다.</p>'+
+    '</div>'+
+    '<figure class="pgh-f">'+photoBox("hero-about")+'</figure>'+
     '</div></section>'+
 
     '<div class="w ab">'+

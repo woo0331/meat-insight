@@ -49,7 +49,8 @@ function PageCheck(){
 
 /* ── 묻는 화면 ────────────────────────────────────────────── */
 function CheckAsk(){
-  return '<section class="pg-hero"><div class="w">'+
+  return '<section class="pg-hero"><div class="w pgh">'+
+    '<div class="pgh-t">'+
       '<p class="eyebrow">무료 사업진단</p>'+
       '<h1 class="pg-h1">지금 가게, 어디가 새고 있을까요?</h1>'+
       '<p class="pg-lead">8가지만 고르시면 됩니다. 3분이면 끝나고, '+
@@ -66,6 +67,8 @@ function CheckAsk(){
           "<b>무엇을 모르고 계신지</b>를 정리해 드립니다.")+
         fact("clock", "중간에 그만두셔도 아무것도 남지 않습니다.")+
       '</ul>'+
+    '</div>'+
+    '<figure class="pgh-f">'+photoBox("hero-check")+'</figure>'+
     '</div></section>'+
 
     '<div class="w chk">'+

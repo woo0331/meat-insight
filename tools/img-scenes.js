@@ -473,4 +473,84 @@ S["post-grow-1"] = () => svg(1440, PH,
     ].join(""), "translate(960,148)")
 , C.paper);
 
+/* ── 화면 머리 옆 그림 (1200×840) ──────────────────────────
+   글 왼쪽, 그림 오른쪽. 4:3 에 가깝게 잘립니다. */
+const HW = 1200, HH = 840;
+function hdesk(){
+  return room(HW, HH, HH*0.66, C.wall, C.paper2) + r(0, HH*0.66, HW, 14, C.wood2);
+}
+
+S["hero-check"] = () => svg(HW, HH,
+  hdesk() +
+  /* 점수 고리 */
+  g([ c(0,0,150,C.paper2),
+      p("M0,-150 A150,150 0 1 1 -106,106 L-74,74 A104,104 0 1 0 0,-104 Z", C.burg),
+      c(0,0,104,C.paper),
+      r(-52,-26,104,22,C.ink,7), r(-30,10,60,14,C.steel2,6)
+    ].join(""), "translate(310,290)") +
+  /* 항목 카드 여덟 */
+  [0,1,2,3].map(rw => [0,1].map(cl =>
+    g([ r(0,0,230,86,C.light,12), r(20,26,34,34,C.paper2,8),
+        r(72,30,120-(rw%2)*30,12,C.steel2,6),
+        r(72,50,80,10,C.paper2,5),
+        p("M28,44 L37,53 L52,36 L58,42 L37,66 L22,50 Z",
+          rw < 2 ? C.burg : (rw === 2 ? C.warn : C.steel2))
+      ].join(""), "translate("+(620+cl*250)+","+(150+rw*152)+")")).join("")).join("")
+, C.paper);
+
+S["hero-partners"] = () => svg(HW, HH,
+  hdesk() +
+  /* 많은 업체 중에서 셋만 */
+  [0,1,2,3,4,5,6,7].map(i => {
+    const x = 90 + (i%4)*100, y = 120 + Math.floor(i/4)*120;
+    return r(x, y, 78, 96, C.paper2, 10);
+  }).join("") +
+  /* 고른 셋 */
+  [0,1,2].map(i => g([
+      r(0,0,250,300,C.light,16), r(0,0,250,10,C.burg,16),
+      r(28,44,70,70,C.burgundy50 || C.burg50 || "#F9F1F2", 14),
+      c(63,79,22,C.burg),
+      r(28,140,180,16,C.steel2,6), r(28,172,130,14,C.paper2,6),
+      r(28,220,120,44,C.burg,10)
+    ].join(""), "translate("+(560+i*215)+","+(340-(i===1?40:0))+")")).join("") +
+  /* 화살표 */
+  p("M470,300 L530,300 L530,282 L578,312 L530,342 L530,324 L470,324 Z", C.burg)
+, C.paper);
+
+S["hero-quotes"] = () => svg(HW, HH,
+  hdesk() +
+  /* 견적서 세 장 — 가운데가 앞으로 */
+  [0,1,2].map(i => g([
+      r(0,0,300,420,i===1?C.white:C.light,14),
+      r(30,36,150,22,i===1?C.burg:C.steel,8),
+      [0,1,2,3,4].map(k => r(30,94+k*44,190-(k%2)*60,14,C.steel2,6)).join(""),
+      [0,1,2,3,4].map(k => r(232,94+k*44,40,14,C.paper2,6)).join(""),
+      r(30,330,240,46,i===1?C.burg:C.paper2,10)
+    ].join(""), "translate("+(70+i*330)+","+(150-(i===1?50:0))+")")).join("") +
+  /* 돋보기 */
+  g([ c(0,0,64,"rgba(255,255,255,.5)"), c(0,0,64,"none"),
+      p("M-46,-46 A64,64 0 1 1 -46,46 A64,64 0 1 1 -46,-46 Z","none"),
+      c(0,0,58,C.paper), c(0,0,58,"rgba(107,36,54,.08)"),
+      p("M44,44 L96,96 L76,116 L28,64 Z", C.burg),
+      c(0,0,64,"none")
+    ].join(""), "translate(560,560)")
+, C.paper);
+
+S["hero-about"] = () => svg(HW, HH,
+  hdesk() +
+  /* 문제 → 정리 → 업체 */
+  g([ r(0,0,280,200,C.light,16),
+      [0,1,2].map(i => r(30,40+i*46,220-(i%2)*70,15,C.steel2,6)).join("")
+    ].join(""), "translate(60,140)") +
+  p("M370,230 L420,230 L420,214 L462,242 L420,270 L420,254 L370,254 Z", C.burg) +
+  /* 사람 */
+  shadow(600, 556, 68) +
+  figure({ x:600, y:554, h:300, body:C.light, pants:C.ink, apron:C.burg, arm:"fold" }) +
+  p("M740,230 L790,230 L790,214 L832,242 L790,270 L790,254 L740,254 Z", C.burg) +
+  /* 업체 셋 */
+  [0,1,2].map(i => g([ r(0,0,170,110,C.wall2), r(0,0,170,22,C.burg),
+      r(24,44,122,50,C.light,4) ].join(""),
+      "translate(870,"+(120+i*160)+")")).join("")
+, C.paper);
+
 module.exports = S;

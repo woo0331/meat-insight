@@ -506,36 +506,18 @@ function LabBand(){
    여기 적는 것은 전부 지금 지킬 수 있는 말이어야 합니다. 답을 모르는
    질문은 넣지 말고, 넣었으면 모른다고 적으세요. */
 function FaqBand(){
-  var qs = [
-    ["정말 무료인가요?", "won",
-     "물어보시는 것과 업체를 찾아 드리는 것에는 비용을 받지 않습니다. "+
-     "공사나 납품 대금은 사장님과 업체가 직접 주고받으시는 돈이고, 저희는 받지 않습니다."],
-    ["가입해야 하나요?", "user",
-     "아니요. 연락받으실 곳만 적어 주시면 됩니다. 이름과 연락처 외에는 "+
-     "매칭에 실제로 쓰이는 것만 여쭤봅니다."],
-    ["업체를 몇 곳이나 소개해 주시나요?", "users",
-     "한 요청에 최대 세 곳입니다. 열 곳을 붙여 드리면 비교가 아니라 전화 폭탄이 됩니다. "+
-     "맞는 곳을 못 찾으면 못 찾았다고 말씀드립니다."],
-    ["연락처가 업체로 바로 넘어가나요?", "lock",
-     "아닙니다. 어느 업체에 넘길지 정해지면 그 업체가 어디인지 먼저 알려 드리고, "+
-     "그때 다시 여쭤봅니다. 원하지 않으시면 넘기지 않습니다."],
-    ["언제 연락 주시나요?", "clock",
-     "확인한 뒤 바로 연락드립니다. 다만 \"몇 시간 안에\" 라고는 적지 않겠습니다 — "+
-     "지금 그 약속을 지킬 수 있다고 장담할 수 없습니다."],
-    ["광고비를 낸 업체가 위에 올라가나요?", "shield",
-     "그렇게 하지 않습니다. 돈을 낸 순서로 보여 드리면 사장님이 저희를 믿을 이유가 없어집니다. "+
-     "광고 상품을 만들게 되면 그것이 광고라고 화면에 적겠습니다."]
-  ];
+  var qs = window.WOW_FAQ || [];
+  if(!qs.length) return "";
   return '<section class="sec sec-warm"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">자주 묻는 것</p>'+
       '<h2>물어보기 전에 궁금하신 것</h2></div>'+
     '<div class="faq">'+qs.map(function(q, i){
       /* <details> 는 JS 없이도 열립니다 — 스크립트가 늦게 떠도 읽힙니다 */
       return '<details class="faq-i"'+(i === 0 ? ' open' : '')+'>'+
-        '<summary><span class="faq-ic">'+icon(q[1],18)+'</span>'+
-          '<b>'+esc(q[0])+'</b>'+
+        '<summary><span class="faq-ic">'+icon(q.icon || "info",18)+'</span>'+
+          '<b>'+esc(q.q)+'</b>'+
           '<span class="faq-x" aria-hidden="true">'+icon("chevd",18)+'</span></summary>'+
-        '<p>'+esc(q[2])+'</p></details>';
+        '<p>'+esc(q.a)+'</p></details>';
     }).join("")+'</div>'+
   '</div></section>';
 }

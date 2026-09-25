@@ -13,7 +13,7 @@
 
 ```bash
 node build-pages.js   # 주소마다 HTML + sitemap.xml 을 만듭니다
-node check.js         # 23개 화면 전수 점검 (playwright 필요)
+node check.js         # 26개 화면 전수 점검 (playwright 필요)
 node tools/test-api.js # 접수 주소 검사
 node tools/make-img.js # 그림 다시 그리기
 ```

@@ -3,7 +3,7 @@
 
    실행:  node check.js
 
-   19개 화면 × 데스크톱·태블릿·모바일 세 폭에서
+   26개 화면 × 데스크톱·태블릿·모바일 세 폭에서
      1. JS 에러 · 못 불러온 파일
      2. 가로 스크롤
      3. 12px 미만 글씨 (연세 있는 사장님이 폰으로 읽습니다)
@@ -53,6 +53,15 @@ const PAGES = [
   ["/request?s=duct",  "견적 요청 (덕트)"],
   ["/request?s=beef-supply", "견적 요청 (육류 공급)"],
   ["/lab",             "사장님 연구소"],
+  ["/lab?c=fac",       "연구소 (분류 고른 채로)"],
+  /* ⚠️ 글 화면이 검사에 아예 안 들어가 있었습니다. 열두 편이 통째로
+     안 보이고 있었던 셈입니다 — 제목(h1) 검사를 일부러 깨 봤는데
+     안 걸려서 알았습니다. 제일 긴 것과 목록이 많은 것을 넣습니다. */
+  ["/lab/duct-smell-complaint", "글 (덕트 민원)"],
+  ["/lab/open-permits",         "글 (오픈 인허가)"],
+  ["/quotes",          "견적 비교"],
+  ["/search?q=%EB%8D%95%ED%8A%B8", "검색 결과"],
+  ["/search?q=zzz",    "검색 (못 찾음)"],
   ["/partner",         "파트너 안내"],
   ["/partner/apply",   "파트너 등록"],
   ["/about",           "소개"],
@@ -74,7 +83,7 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[390,844,"모바
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[] };
   const vis = e => {
     const c = getComputedStyle(e);
     if (c.display==="none" || c.visibility==="hidden" || +c.opacity===0) return false;
@@ -184,6 +193,19 @@ const AUDIT = `(() => {
     if (/\\s$/.test(a) || /^\\s/.test(z)) return;
     out.glue.push(a.trim().slice(-8) + "↔" + z.trim().slice(0,8));
   });
+  /* 9. 화면마다 제목(h1)이 **딱 하나** 있는가
+     ⚠️ 없으면 읽어 주는 프로그램 사용자가 "여기가 어디인지" 를 못
+     잡고, 구글도 화면의 주제를 못 잡습니다. 여러 개면 무엇이 주제인지
+     알 수 없습니다. 화면을 새로 만들 때 제일 자주 빠뜨립니다. */
+  {
+    /* ⚠️ 404.html 은 라우터 밖에서 혼자 뜨는 화면이라 #view 가 없습니다.
+       그래서 #view 가 없으면 main 에서 셉니다 — 안 그러면 "제목이
+       없다" 는 오탐이 납니다. */
+    const root = document.getElementById("view") || document.querySelector("main") || document.body;
+    const h1 = [...root.querySelectorAll("h1")].filter(vis);
+    if (h1.length !== 1)
+      out.h1.push(h1.length === 0 ? "제목(h1)이 없습니다" : "제목(h1)이 "+h1.length+"개입니다");
+  }
   out.over = document.documentElement.scrollWidth > W + 1;
   out.links = [...document.querySelectorAll('a[href^="/"]')].map(a=>a.getAttribute("href"));
   return out;
@@ -205,14 +227,14 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
       const a = await p.evaluate(AUDIT);
       a.links.forEach(l => seenLinks.add(l));
       if (a.over) bad.over.push(name);
-      ["small","tap","wrap","bad","glue","mix"].forEach(k =>
+      ["small","tap","wrap","bad","glue","mix","h1"].forEach(k =>
         a[k].forEach(x => bad[k].push(name+" › "+x)));
     }
 
@@ -226,6 +248,7 @@ const AUDIT = `(() => {
       ["낱말 가운데 잘림",   uniq(bad.wrap)],
       ["줄바꿈 사라져 낱말 붙음", uniq(bad.glue)],
       ["grid 칸에 글과 태그가 섞임", uniq(bad.mix)],
+      ["화면 제목(h1)", uniq(bad.h1)],
       ["개발자 말 노출",     uniq(bad.bad)]
     ];
     console.log("\n── " + vn + " (" + w + "px)");

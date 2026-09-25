@@ -141,19 +141,32 @@ function ReqField(f){
     '<input id="'+id+'" data-k="'+esc(f.key)+'" type="text" autocomplete="off"></div>';
 }
 
-/* 고르지 않고 들어왔을 때 — 빈 화면 대신 고르는 화면을 줍니다 */
+/* 고르지 않고 들어왔을 때 — 빈 화면 대신 고르는 화면을 줍니다.
+   ⚠️ 서른 개를 한 덩어리로 늘어놓으면 눈이 미끄러집니다. 묶음으로
+   끊어 주면 "내 것이 어느 쪽인지" 부터 잡힙니다. */
 function ReqPick(){
-  return '<div class="w form-wrap">'+
+  return '<div class="w form-wrap form-wide">'+
     '<h1 class="pg-h1">어떤 견적이 필요하세요?</h1>'+
-    '<p class="pg-lead">고르시면 그 일에 맞는 것만 여쭤봅니다. '+
-      '여기 없으면 그냥 적어 주셔도 됩니다.</p>'+
-    '<div class="pick pick-wrap">'+WOW_SERVICES.map(function(s){
-      return '<a class="pk" href="/request?s='+encodeURIComponent(s.key)+'">'+
-        esc(s.name)+'</a>';
-    }).join("")+'</div>'+
-    '<div class="row-cta" style="margin-top:var(--s7)">'+
-      '<a class="btn btn-o btn-lg" href="/sos">여기 없는 것 물어보기</a>'+
-    '</div>'+
+    '<p class="pg-lead">고르시면 그 일에 맞는 것만 여쭤봅니다 — 덕트는 화구 수, '+
+      '육류는 월 사용량. 여기 없으면 그냥 적어 주셔도 됩니다.</p>'+
+    WOW_SERVICE_GROUPS.map(function(g){
+      return '<section class="rq-g">'+
+        '<h2>'+icon(g.icon||"chev",20)+esc(g.name)+
+          (g.lead ? '<em>'+esc(g.lead)+'</em>' : '')+'</h2>'+
+        '<div class="pick pick-wrap">'+g.items.map(function(it){
+          return '<a class="pk" href="/request?s='+encodeURIComponent(it.key)+'">'+
+            esc(it.name)+'</a>';
+        }).join("")+'</div>'+
+      '</section>';
+    }).join("")+
+    '<section class="st-cta">'+
+      '<h2>여기 없는 것도 됩니다.</h2>'+
+      '<p>고기 장사와 관련된 것이면 그대로 적어 주세요. 무엇이 필요한 일인지부터 '+
+        '같이 정리하겠습니다.</p>'+
+      '<div class="row-cta">'+
+        '<a class="btn btn-b btn-lg" href="/sos">그냥 적어서 물어보기'+icon("arrow",18)+'</a>'+
+      '</div>'+
+    '</section>'+
   '</div>';
 }
 

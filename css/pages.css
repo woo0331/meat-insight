@@ -1241,3 +1241,12 @@
 .pg-hero-d .hero-sh{ background:linear-gradient(90deg,
   rgba(24,20,19,.94) 0%, rgba(24,20,19,.86) 52%, rgba(24,20,19,.68) 100%); }
 .pg-hero-d .w{ position:relative; }
+
+/* 견적 요청 — 무엇을 고를지 (묶음으로 끊어 줍니다) */
+.form-wide{ max-width:var(--w); }
+.rq-g{ margin-bottom:var(--s7); }
+.rq-g h2{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap;
+  font-size:var(--t-xl); margin-bottom:var(--s4);
+  padding-bottom:var(--s3); border-bottom:1px solid var(--line); }
+.rq-g h2 .ic{ color:var(--burgundy); }
+.rq-g h2 em{ font-style:normal; font-size:var(--t-sm); font-weight:600; color:var(--ink3); }

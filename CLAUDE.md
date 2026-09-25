@@ -214,16 +214,35 @@ AI 스타트업 느낌 · 지나친 아이콘 사용. 아이콘을 늘리기 전
 ### 접수가 실제로 되게 하려면
 
 `api/quote.js` 는 **저장하지 않습니다.** 서버도 DB 도 없으니 받아서 밖으로
-보내기만 합니다. Vercel 환경변수에 넣으세요.
+보내기만 합니다. Vercel → Settings → Environment Variables 에 넣으세요.
+
+**하나만 넣으면 전부 그리로 옵니다.**
 
 | 변수 | 무엇 |
 |---|---|
-| `ORDER_WEBHOOK_URL` | 요청 JSON 을 그대로 POST. 슬랙 워크플로 주소만 넣어도 채널에 바로 뜹니다 |
-| `QUOTE_WEBHOOK_URL` | 따로 보낼 곳 (없으면 위를 씁니다) |
-| `RESEND_API_KEY` + `ORDER_EMAIL_TO` | 이메일로 받기 |
+| `INTAKE_WEBHOOK_URL` | 접수 JSON 을 그대로 POST. 슬랙 워크플로 주소만 넣어도 채널에 바로 뜹니다 |
+| `RESEND_API_KEY` + `INTAKE_EMAIL_TO` | 메일로 받기 (resend.com). 주소는 쉼표로 여러 개 |
+| `INTAKE_EMAIL_FROM` | 보내는 주소 (기본값 `onboarding@resend.dev`) |
+
+종류별로 나눠 받고 싶을 때만 더 넣습니다 (없으면 위를 씁니다) —
+`SOS_WEBHOOK_URL`·`SOS_EMAIL_TO` · `QUOTE_WEBHOOK_URL`·`QUOTE_EMAIL_TO` ·
+`PARTNER_WEBHOOK_URL`·`PARTNER_EMAIL_TO`.
+
+⚠️ 예전 이름 `ORDER_WEBHOOK_URL`·`ORDER_EMAIL_TO`·`ORDER_EMAIL_FROM` 도
+그대로 받습니다 (부산물몰 때 이름입니다). 새로 넣을 때는 `INTAKE_*`.
+
+⚠️ **환경변수를 넣은 뒤에는 다시 배포해야 적용됩니다.** Vercel 은 이미
+떠 있는 함수에 값을 밀어 넣지 않습니다. Deployments → 맨 위 → Redeploy.
+
+⚠️ 세 환경(Production·Preview·Development) 중 **Production 에 체크**가
+되어 있는지 보세요. 미리보기에서만 되는 일이 생깁니다.
 
 ⚠️ 하나도 없으면 **503 을 돌려줍니다.** 받을 곳이 없는데 "접수되었습니다"
 라고 하면 손님은 기다리고 요청은 사라집니다.
+
+⚠️ 넣었으면 `js/data/site.js` 의 `WOW_BIZ.sosReady` 를 `true` 로 바꾸고
+커밋하세요. 그 전까지는 폼 **위에** "지금은 이 양식으로 접수하지 못합니다"
+가 뜹니다. 반대로 **설정 전에 켜 두면 손님이 다 적고 눌렀는데 실패합니다.**
 
 ⚠️ **`api/` 에서 밑줄로 시작하는 파일**(`_send.js`)은 주소가 되지
 않습니다. Vercel 규칙입니다 — 이름을 바꾸면 `/api/_send` 가 열립니다.
@@ -231,8 +250,24 @@ AI 스타트업 느낌 · 지나친 아이콘 사용. 아이콘을 늘리기 전
 ⚠️ **키를 저장소에 적지 마세요.** 공개 저장소입니다.
 
 ⚠️ **개인정보 처리위탁이 늘어납니다.** 이 환경변수를 채우는 순간 그
-회사가 손님의 성함·연락처를 받게 됩니다. `legal-privacy.js` 의
-`trustees` 에 한 줄을 같이 넣으세요 (제26조).
+회사(슬랙·Resend 등)가 손님의 성함·연락처를 받게 됩니다.
+`js/data/legal-privacy.js` 의 `trustees` 에 한 줄을 **같은 날** 넣으세요
+(제26조). 미국 회사면 국가도 적습니다 (제28조의8).
+
+### 화면이 보내는 칸과 서버가 읽는 칸이 어긋나면 조용히 사라집니다
+
+⚠️ 실제로 그랬습니다 — 견적 요청이 `service`·`budget`·`detail` 을
+보내는데 `api/quote.js` 는 `svc` 하나만 읽고 있었고, 파트너 등록은
+아예 견적으로 처리되어 **업체명과 취급 서비스가 통째로 빠졌습니다.**
+에러도 안 나고 접수도 성공합니다. 받아 보는 사람만 이상해집니다.
+
+```bash
+node tools/test-api.js   # 화면이 보낸 칸이 빠짐없이 나가는지 (23개)
+```
+
+⚠️ `node check.js` 는 이걸 **못 잡습니다.** 그쪽은 브라우저로 화면만
+보고 Vercel 함수는 돌리지 않습니다. 화면의 `body = {...}` 를 고치면
+`api/quote.js` 와 이 검사를 **같이** 고치세요.
 
 ### 화면 밖에서 오는 요청은 받지 않습니다
 

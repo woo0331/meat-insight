@@ -229,8 +229,8 @@ window.reqSend = function(ev){
       REQ.sending = false;
       if(btn){ btn.disabled = false; btn.textContent = "견적 요청하기"; }
       try{ console.warn("[ABOUTMEAT] 견적 요청 실패 — "+((err && err.message)||err)+
-        ". Vercel 환경변수(ORDER_WEBHOOK_URL 또는 RESEND_API_KEY·ORDER_EMAIL_TO)를 "+
-        "확인하세요."); }catch(e){}
+        ". Vercel 환경변수(INTAKE_WEBHOOK_URL 또는 RESEND_API_KEY·INTAKE_EMAIL_TO)를 "+
+        "확인하세요. 넣은 뒤에는 다시 배포해야 적용됩니다."); }catch(e){}
       toast(bizVal("phone")
         ? "지금 접수하지 못했습니다. 전화로 말씀해 주세요."
         : "지금 접수하지 못했습니다. 잠시 뒤 다시 시도해 주세요.");

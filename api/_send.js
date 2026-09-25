@@ -6,25 +6,44 @@
    /api/_send 로 열리면 안 됩니다.
 
    ── 환경변수 ──────────────────────────────────────────
-   ORDER_WEBHOOK_URL   주문·견적 JSON 을 그대로 POST 합니다
-   QUOTE_WEBHOOK_URL   견적만 따로 보낼 곳 (없으면 위를 씁니다)
-   RESEND_API_KEY      이메일로 받을 때
-   ORDER_EMAIL_TO      주문 받을 주소 (쉼표로 여러 개)
-   QUOTE_EMAIL_TO      견적 받을 주소 (없으면 위를 씁니다)
-   ORDER_EMAIL_FROM    보내는 주소 (기본값 onboarding@resend.dev)
+   **하나만 넣으면 전부 그리로 옵니다.** 나누고 싶을 때만 더 넣으세요.
+
+   INTAKE_WEBHOOK_URL   모든 접수를 JSON 으로 POST 합니다 (기본 받을 곳)
+   INTAKE_EMAIL_TO      메일로 받을 주소 (쉼표로 여러 개)
+   RESEND_API_KEY       메일로 받을 때 필요한 키 (resend.com)
+   INTAKE_EMAIL_FROM    보내는 주소 (기본값 onboarding@resend.dev)
+
+   종류별로 따로 받고 싶을 때만 (없으면 위의 INTAKE_* 를 씁니다)
+   SOS_WEBHOOK_URL      · SOS_EMAIL_TO       사장님 SOS
+   QUOTE_WEBHOOK_URL    · QUOTE_EMAIL_TO     견적 요청
+   PARTNER_WEBHOOK_URL  · PARTNER_EMAIL_TO   파트너 등록
+
+   ⚠️ 예전 이름 ORDER_WEBHOOK_URL · ORDER_EMAIL_TO · ORDER_EMAIL_FROM 도
+   그대로 받습니다 (부산물몰 때 쓰던 이름입니다). 새로 넣으실 때는
+   INTAKE_* 를 쓰세요.
 
    ⚠️ 하나도 없으면 **실패로 돌려줍니다.** 받을 곳이 없는데
-   "접수되었습니다" 라고 하면 손님은 기다리고 주문은 사라집니다.
+   "접수되었습니다" 라고 하면 손님은 기다리고 요청은 사라집니다.
    ⚠️ 키를 저장소에 적지 마세요 — 공개 저장소입니다.
    ════════════════════════════════════════════════════════════════════ */
 
 function won(n){ return Number(n||0).toLocaleString("ko-KR"); }
 
-/* kind: "order" | "quote" — 견적은 따로 보낼 곳이 있으면 그리로 */
+/* 종류별 환경변수를 먼저 보고, 없으면 공통을 씁니다.
+   ⚠️ kind 는 손님이 보낸 값에서 옵니다 — 그대로 process.env 의 키로
+   쓰면 안 됩니다. 알파벳만 남기고 잘라서 씁니다. */
+function envFor(kind, suffix){
+  const up = String(kind || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 16);
+  return (up && process.env[up + suffix]) || null;
+}
+
+/* kind: "sos" | "quote" | "partner" */
 async function deliver(kind, payload, subject, text){
-  const hook = (kind === "quote" && process.env.QUOTE_WEBHOOK_URL) || process.env.ORDER_WEBHOOK_URL;
+  const hook = envFor(kind, "_WEBHOOK_URL") ||
+               process.env.INTAKE_WEBHOOK_URL || process.env.ORDER_WEBHOOK_URL;
   const key  = process.env.RESEND_API_KEY;
-  const to   = (kind === "quote" && process.env.QUOTE_EMAIL_TO) || process.env.ORDER_EMAIL_TO;
+  const to   = envFor(kind, "_EMAIL_TO") ||
+               process.env.INTAKE_EMAIL_TO || process.env.ORDER_EMAIL_TO;
   if(!hook && !(key && to)) return { ok:false, why:"nowhere" };
 
   const errs = [];
@@ -45,7 +64,8 @@ async function deliver(kind, payload, subject, text){
         method:"POST",
         headers:{ "content-type":"application/json", authorization:"Bearer " + key },
         body: JSON.stringify({
-          from: process.env.ORDER_EMAIL_FROM || "onboarding@resend.dev",
+          from: process.env.INTAKE_EMAIL_FROM || process.env.ORDER_EMAIL_FROM ||
+                "onboarding@resend.dev",
           to: to.split(",").map(s => s.trim()).filter(Boolean),
           subject: subject, text: text
         })
@@ -67,8 +87,9 @@ function clean(s, max){
 
 function why(kind, reason){
   return reason === "nowhere"
-    ? "Vercel 환경변수에 " + (kind==="quote" ? "QUOTE_WEBHOOK_URL / QUOTE_EMAIL_TO 또는 " : "") +
-      "ORDER_WEBHOOK_URL 또는 RESEND_API_KEY·ORDER_EMAIL_TO 를 넣으세요."
+    ? "받을 곳이 없습니다. Vercel → Settings → Environment Variables 에 " +
+      "INTAKE_WEBHOOK_URL 하나를 넣거나, RESEND_API_KEY 와 INTAKE_EMAIL_TO 를 " +
+      "같이 넣으세요. 넣은 뒤에는 **다시 배포해야** 적용됩니다."
     : "받는 쪽 주소와 키를 확인하세요. (" + reason + ")";
 }
 

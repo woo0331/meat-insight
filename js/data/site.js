@@ -34,7 +34,7 @@ window.WOW_BIZ = {
   /* ── 접수가 실제로 되는가 ────────────────────────────────
      ⚠️ 이 칸은 **"Vercel 환경변수 설정을 마쳤다" 는 표시**입니다.
      여기에 뭘 적는다고 접수가 되는 게 아닙니다. 실제 접수는
-     ORDER_WEBHOOK_URL 또는 RESEND_API_KEY·ORDER_EMAIL_TO 가 합니다
+     INTAKE_WEBHOOK_URL 또는 RESEND_API_KEY·INTAKE_EMAIL_TO 가 합니다
      (api/_send.js 머리말을 보세요).
 
      꺼져 있으면 SOS 화면 **맨 위에** "지금은 이 양식으로 접수하지

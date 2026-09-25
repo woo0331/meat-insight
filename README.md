@@ -14,6 +14,7 @@
 ```bash
 node build-pages.js   # 주소마다 HTML + sitemap.xml 을 만듭니다
 node check.js         # 19개 화면 전수 점검 (playwright 필요)
+node tools/test-api.js # 접수 주소 검사
 node tools/make-img.js # 그림 다시 그리기
 ```
 
@@ -43,14 +44,19 @@ node tools/make-img.js # 그림 다시 그리기
 ## 접수가 되게 하려면
 
 `api/quote.js` 는 요청을 **저장하지 않습니다.** 받아서 밖으로 보내기만
-합니다. Vercel → Settings → Environment Variables 에 둘 중 하나:
+합니다. Vercel → Settings → Environment Variables 에 **둘 중 하나**:
 
-- `ORDER_WEBHOOK_URL` — 요청 JSON 을 그대로 POST (슬랙 워크플로 주소만
+- `INTAKE_WEBHOOK_URL` — 접수 JSON 을 그대로 POST (슬랙 워크플로 주소만
   넣어도 채널에 바로 뜹니다)
-- `RESEND_API_KEY` + `ORDER_EMAIL_TO` — 이메일로 받기
+- `RESEND_API_KEY` + `INTAKE_EMAIL_TO` — 메일로 받기
 
-넣은 뒤 `js/data/site.js` 의 `WOW_BIZ.sosReady` 를 켜세요. 그 전에는
-SOS 화면 맨 위에 "지금은 이 양식으로 접수하지 못합니다" 가 뜹니다.
+넣은 뒤 **다시 배포**하고(Vercel 은 이미 떠 있는 함수에 값을 밀어 넣지
+않습니다), `js/data/site.js` 의 `WOW_BIZ.sosReady` 를 `true` 로 바꾸세요.
+그 전에는 폼 위에 "지금은 이 양식으로 접수하지 못합니다" 가 뜹니다.
+
+```bash
+node tools/test-api.js   # 화면이 보낸 칸이 빠짐없이 나가는지 (23개)
+```
 
 ## 사진
 

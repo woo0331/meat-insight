@@ -71,7 +71,8 @@ function PageSos(){
 function Notice(){
   if(bizVal("sosReady")) return "";
   try{ console.warn("[ABOUTMEAT] SOS 접수처가 아직 없습니다 — Vercel 환경변수에 "+
-    "ORDER_WEBHOOK_URL 또는 RESEND_API_KEY·ORDER_EMAIL_TO 를 넣고, "+
+    "INTAKE_WEBHOOK_URL 하나를 넣거나 RESEND_API_KEY 와 INTAKE_EMAIL_TO 를 "+
+    "같이 넣고 다시 배포한 뒤, "+
     "js/data/site.js 의 WOW_BIZ.sosReady 를 켜세요."); }catch(e){}
   var phone = bizVal("phone");
   return '<div class="notice"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+

@@ -17,7 +17,7 @@
    ════════════════════════════════════════════════════════════════════ */
 
 function PageMy(){
-  var cards = [MyCheck(), MyStart(), MyCost(), MyYield(), MyBep(), MyQuotes(), MyRead()];
+  var cards = [MyCheck(), MyStart(), MyCost(), MyYield(), MyBep(), MyLabor(), MyQuotes(), MyRead()];
   var some  = cards.filter(function(c){ return c.has; });
 
   return '<section class="pg-hero"><div class="w pgh">'+
@@ -150,6 +150,19 @@ function MyBep(){
     line: b.month !== null
       ? '이 조건이면 <b>한 달에 그만큼</b>을 파셔야 본전입니다.'
       : b.n + '칸을 적으셨습니다. 고정비와 비율을 채우시면 본전 매출이 나옵니다.',
+    cta:"이어서 계산하기" };
+}
+
+function MyLabor(){
+  var b = (typeof lbBrief === "function") ? lbBrief() : { n:0 };
+  if(!b.n) return { has:false, icon:"users", name:"인건비율 계산", to:"/tools/labor",
+    empty:"급여·4대보험·사장님 몫까지 넣으면 실제 인건비율이 나옵니다.",
+    ctaOff:"계산해 보기" };
+  return { has:true, icon:"users", name:"인건비율 계산", to:"/tools/labor",
+    value: b.rate !== null ? '<b>'+esc(b.rate)+'<em>%</em></b>' : '<b>'+b.n+'칸</b>',
+    line: b.rate !== null
+      ? '지금 적으신 값으로는 <b>매출의 그만큼</b>이 사람 값입니다.'
+      : b.n + '칸을 적으셨습니다. 월 매출을 채우시면 비율이 나옵니다.',
     cta:"이어서 계산하기" };
 }
 

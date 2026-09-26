@@ -64,42 +64,30 @@ function PageHome(){
    ⚠️ 여기 적는 것은 전부 **실제로 되는 것**이어야 합니다. 아직 안
    만든 것을 적어 두면 눌렀을 때 준비 중 화면이 나옵니다. */
 function ToolBand(){
-  var tools = [
-    { to:"/check", icon:"gauge", tag:"3분",
-      name:"무료 사업진단",
-      line:"8가지로 <b>지금 무엇을 모르고 계신지</b>를 정리해 드립니다. "+
-           "매출과 육류 매입비를 적으시면 원가율도 그 자리에서 계산됩니다.",
-      cta:"진단해 보기" },
-    { to:"/tools/yield", icon:"knife", tag:"1분",
-      name:"수율 원가 계산",
-      line:"매입 단가는 <b>원육</b> 기준인데 파는 것은 <b>손질 후 정육</b>입니다. "+
-           "손질 전후 무게만 적으시면 실제 1kg 원가와 1인분 원가가 나옵니다.",
-      cta:"계산해 보기" },
-    { to:"/tools/bep", icon:"target", tag:"2분",
-      name:"손익분기 계산",
-      line:"고정비와 매출 대비 비율을 적으시면 <b>한 달에 얼마를 팔아야 본전인지</b>, "+
-           "하루로 나누면 얼마인지가 나옵니다.",
-      cta:"계산해 보기" }
-  ];
+  /* ⚠️ **여섯 개가 전부 실제로 되는 것입니다.** 안 만든 것을 "준비중"
+     으로 채워 넣지 않았습니다 — 칸을 채우려고 없는 기능을 적으면 그게
+     지어낸 화면입니다 (절대 규칙 1·2).
+     ⚠️ 새 계산기를 만들면 `TOOL_LIST`(js/pages/tools.js) 한 곳만
+     고치세요. 여기는 그걸 그대로 읽습니다. */
+  var tools = (window.TOOL_LIST || []);
+  if(!tools.length) return "";
   return '<section class="sec"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">가입 없이, 지금</p>'+
       '<h2>연결해 드리기 전에<br class="br-m"> 먼저 쓸모가 있어야 한다고 봅니다.</h2>'+
       '<p>상담을 신청하셔야 뭔가 알려 드리는 곳이 아닙니다. '+
-        '아래 셋은 지금 이 자리에서 바로 되고, 결과는 이 브라우저에 남습니다.</p></div>'+
-    '<div class="tool-g">'+tools.map(function(t){
-      return '<a class="tool" href="'+esc(t.to)+'">'+
+        '아래 여섯은 지금 이 자리에서 바로 되고, 결과는 이 브라우저에 남습니다.</p>'+
+      '<a class="sec-more" href="/tools">도구 전부 보기'+icon("chev",16)+'</a></div>'+
+    '<div class="tool-g tool-g6">'+tools.map(function(t, i){
+      return '<a class="tool '+tnClass("t"+((i % 8) + 1))+'" href="'+esc(t.to)+'">'+
         '<span class="tool-t"><span class="tool-ic">'+icon(t.icon,24)+'</span>'+
-          '<em>'+esc(t.tag)+'</em></span>'+
+          '<em>'+esc(t.time)+'</em></span>'+
         '<b>'+esc(t.name)+'</b>'+
-        '<span class="tool-l">'+t.line+'</span>'+
-        '<span class="tool-go">'+esc(t.cta)+icon("arrow",18)+'</span></a>';
+        '<span class="tool-l">'+esc(t.line)+'</span>'+
+        '<span class="tool-go">해 보기'+icon("arrow",18)+'</span></a>';
     }).join("")+'</div>'+
-    /* ⚠️ 나머지 둘(창업비 정리표 · 견적 비교)도 실제로 되는 것입니다.
-       카드를 다섯 개로 늘리면 첫 화면이 늘어져서, 문 하나로 모읍니다. */
-    '<p class="tool-more">창업비 정리표와 견적 비교까지 다섯 가지가 있습니다.'+
-      '<a class="btn btn-o" href="/tools">도구 전부 보기'+icon("arrow",18)+'</a></p>'+
   '</div></section>';
 }
+
 
 /* ── 06.5 직접 알아보실 때와 무엇이 다른가 ──────────────────
    ⚠️ **다른 회사를 깎아내리지 않습니다.** 표시·광고의 공정화에 관한
@@ -316,18 +304,25 @@ window.askGo = function(ev){
    장을 화면 위쪽에 늘어놓으면 "사진 못 넣은 사이트" 로 읽힙니다
    (js/data/photos.js 의 hasPhoto). */
 function Situations(){
+  /* ⚠️ **다섯을 똑같이 늘어놓으면 고르는 게 아니라 훑게 됩니다.**
+     앞의 둘은 크게(가로짜임), 가운데 "문제 발생" 은 **어두운 강조
+     카드**로 냅니다 — 지금 당장 급한 분이 제일 먼저 눈에 담아야 할
+     칸이기 때문입니다.
+     ⚠️ 크기와 색만 다르고 **내용은 다섯이 같습니다.** 큰 칸에만 있는
+     정보를 만들지 마세요 — 좁은 화면에서는 다섯이 같은 모양이 됩니다.
+     ⚠️ 이모지를 쓰지 않습니다 (지시서 §6). 아이콘은 선으로만. */
+  var TINT = ["sit-v1","sit-v2","sit-dark","sit-v3","sit-v4"];
   return '<section class="sec sec-white"><div class="w">'+
-    '<div class="sec-hd"><h2>지금 어떤 상황이세요?</h2>'+
+    '<div class="sec-hd"><p class="eyebrow">상황 고르기</p>'+
+      '<h2>지금 어떤 상황이세요?</h2>'+
       '<p>사장님의 상황에 맞는 해결방법부터 찾아드립니다.</p></div>'+
-    /* ⚠️ **앞의 둘을 크게 냅니다 (벤토).** 다섯 장을 똑같은 크기로
-       늘어놓으면 무엇부터 봐야 할지가 없어서 그냥 훑게 됩니다.
-       창업 준비 · 운영 중이 제일 많이 눌리는 자리라 그 둘을 키웁니다.
-       ⚠️ 크기만 다를 뿐 **내용은 같습니다** — 큰 칸에만 있는 정보를
-       만들지 마세요. 좁은 화면에서는 다섯이 다시 같은 크기가 됩니다. */
     '<div class="sit-g">'+WOW_SITUATIONS.map(function(s, i){
-      var ph = hasPhoto("sit-"+s.key);
+      var dark = (i === 2);
+      /* 어두운 강조 카드에는 사진을 깔지 않습니다 — 그림 위에 어두운
+         겹을 또 얹으면 흐릿한 덩어리가 됩니다 (히어로에서 겪었습니다) */
+      var ph = !dark && hasPhoto("sit-"+s.key);
       return '<a class="sit '+tnClass(s.tone)+(ph?'':' sit-flat')+
-        (i < 2 ? ' sit-lg' : '')+'" href="'+esc(s.to)+
+        (i < 2 ? ' sit-lg' : '')+' '+TINT[i]+'" href="'+esc(s.to)+
         (s.ask ? '?q='+encodeURIComponent(s.ask) : '')+'">'+
         (ph ? '<span class="sit-ph">'+photoBox("sit-"+s.key)+
               '<span class="sit-ic">'+icon(s.icon,22)+'</span></span>' : '')+
@@ -337,13 +332,12 @@ function Situations(){
           (s.tag ? '<span class="sit-tag">'+esc(s.tag)+'</span>' : '')+
           '<span class="sit-l">'+esc(s.line)+'</span>'+
           '<span class="sit-d">'+esc(s.desc)+'</span>'+
-          /* 시안의 동그란 화살표. ⚠️ 카드 전체가 이미 링크라 이건
-             **버튼이 아니라 표시**입니다 — 안에 또 링크를 넣지 마세요. */
           '<span class="sit-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
         '</span></a>';
     }).join("")+'</div>'+
   '</div></section>';
 }
+
 
 /* ── 04 무료 사업진단 (지시서 8번) ─────────────────────────
    ⚠️ 여기 보이는 숫자는 **손님이 방금 적은 숫자로 계산한 것**입니다.
@@ -355,50 +349,77 @@ function Situations(){
    따라 다르고, 우리에게 그 기준을 뒷받침할 데이터가 없습니다.
    그래서 상태색(--ok/--warn/--bad)도 쓰지 않습니다. */
 function CheckBand(){
-  return '<section class="sec sec-white"><div class="w ckb">'+
-    /* ① 왼쪽 — 왜 해야 하는가 */
-    '<div class="ckb-t">'+
-      '<p class="eyebrow">무료 사업진단</p>'+
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">무료 사업진단</p>'+
       '<h2>사장님, 지금 장사<br class="br-m"> 제대로 남기고 계신가요?</h2>'+
-      '<p class="lead">매출이 높아도 비용이 새고 있다면 실제로 남는 돈은 '+
-        '달라집니다.</p>'+
-      '<div class="row-cta">'+
-        '<a class="btn btn-b btn-lg" href="/check">무료로 사업진단 하기'+icon("arrow",18)+'</a>'+
-      '</div>'+
-      '<p class="note">회원가입 없이 3분이면 됩니다.</p>'+
-    '</div>'+
-
-    /* ② 가운데 — 두 칸만 적으면 원가율이 나옵니다.
-       ⚠️ 시안에는 "직원 수" 칸도 있었지만 뺐습니다. 직원 수만으로는
-       **아무것도 계산할 수 없습니다** — 묻고 안 쓰면 사장님 시간을
-       버리게 하는 짓입니다. 인건비는 진단 8항목에서 묻습니다. */
+      '<p>매출이 높아도 비용이 새고 있다면 실제로 남는 돈은 달라집니다. '+
+        '네 칸만 적으시면 지금 비율이 바로 나옵니다.</p></div>'+
+    '<div class="ckb">'+
+    /* ① 왼쪽 — 사장님 숫자를 적는 칸
+       ⚠️ **묻고 안 쓰는 칸을 만들지 마세요.** 네 칸은 전부 오른쪽
+       비율에 실제로 쓰입니다. 직원 수만 묻고 아무것도 계산하지 않으면
+       사장님 시간을 버리게 하는 짓입니다. */
     '<div class="ckb-c">'+
       '<h3>내 가게 간단 입력</h3>'+
-      '<div class="calc-f">'+
-        '<label for="cc-sales">월 매출</label>'+
-        '<span class="calc-in"><input id="cc-sales" type="text" inputmode="numeric"'+
-          ' placeholder="예: 7,000" oninput="costCalc()" autocomplete="off">'+
-          '<em>만원</em></span>'+
-      '</div>'+
-      '<div class="calc-f">'+
-        '<label for="cc-meat">그중 육류 매입비</label>'+
-        '<span class="calc-in"><input id="cc-meat" type="text" inputmode="numeric"'+
-          ' placeholder="예: 2,400" oninput="costCalc()" autocomplete="off">'+
-          '<em>만원</em></span>'+
-      '</div>'+
-      '<div class="calc-out" id="cc-out">'+CostGauge(null)+'</div>'+
+      [["cc-sales","월 매출","예: 7,000"],
+       ["cc-meat","그중 육류 매입비","예: 2,400"],
+       ["cc-labor","인건비 (월 합계)","예: 1,300"],
+       ["cc-rent","임대료 (월)","예: 450"]].map(function(f){
+        return '<div class="calc-f">'+
+          '<label for="'+f[0]+'">'+esc(f[1])+'</label>'+
+          '<span class="calc-in"><input id="'+f[0]+'" type="text" inputmode="numeric"'+
+            ' placeholder="'+esc(f[2])+'" oninput="costCalc()" autocomplete="off">'+
+            '<em>만원</em></span></div>';
+      }).join("")+
+      '<p class="note">적으신 숫자는 이 브라우저 밖으로 나가지 않습니다.</p>'+
+    '</div>'+
+
+    /* ② 가운데 — 적으신 것을 나눈 결과.
+       ⚠️ **"몇 %면 좋다" 고 단정하지 않습니다.** 업종·평수·부위 구성
+       마다 달라서 그 기준을 뒷받침할 데이터가 우리에게 없습니다.
+       그래서 상태색(--ok/--warn/--bad)도 여기에는 쓰지 않습니다. */
+    '<div class="ckb-c ckb-num">'+
+      '<h3>지금 우리 가게 비율</h3>'+
+      '<div id="cc-out">'+CostRows(null,null,null)+'</div>'+
+      '<p class="note">좋다 나쁘다를 매기지 않습니다. 업종 · 평수 · 부위 '+
+        '구성마다 기준이 달라서, 그 기준값이 우리에게 없기 때문입니다.</p>'+
     '</div>'+
 
     /* ③ 오른쪽 — 진단 결과.
-       ⚠️ 시안에는 "78 / 100 · 양호 · 개선가능" 이 미리 찍혀 있었습니다.
-       **넣지 않았습니다.** 아무것도 안 하신 분에게 점수를 보여 주면 그게
-       지어낸 숫자이고, "양호/개선가능" 은 업종·평수별 기준값이 있어야
-       하는 판정인데 우리에게 그 기준이 없습니다 (절대 규칙 1).
-       대신 **진단을 마치신 분에게는 본인 점수를 그대로** 보여 줍니다 —
-       이 브라우저에 남아 있는 값이라 지어낼 여지가 없습니다. */
+       ⚠️ 아무것도 안 하신 분에게 점수를 미리 찍어 두지 마세요. 그게
+       지어낸 숫자이고, "양호/개선가능" 은 우리에게 없는 기준값이
+       있어야 하는 판정입니다 (절대 규칙 1). */
     '<div class="ckb-r" id="ckb-r">'+CheckScore()+'</div>'+
+    '</div>'+
+
+    '<a class="btn btn-b btn-lg ckb-cta" href="/check">'+
+      '무료 사업진단 시작하기'+icon("arrow",18)+'</a>'+
+    '<p class="note ckb-cta-n">회원가입 없이 3분이면 됩니다. '+
+      '여덟 가지를 고르시면 무엇이 비어 있는지 정리해 드립니다.</p>'+
   '</div></section>';
 }
+
+/* 적으신 숫자를 나눈 세 비율.
+   ⚠️ **안 적으신 칸은 `—` 입니다.** 0 으로 치거나 평균값으로 메우면
+   그 순간 지어낸 숫자가 됩니다 (절대 규칙 1). */
+function CostRows(meatPct, laborPct, rentPct){
+  var rows = [
+    ["육류 원가율", meatPct,  "월 매출과 육류 매입비를 적으시면 나옵니다"],
+    ["인건비율",    laborPct, "월 매출과 인건비를 적으시면 나옵니다"],
+    ["임대료 비율", rentPct,  "월 매출과 임대료를 적으시면 나옵니다"]
+  ];
+  return '<ul class="ccr">'+rows.map(function(r){
+    var on = (r[1] !== null && isFinite(r[1]));
+    return '<li class="ccr-i'+(on?' on':'')+'">'+
+      '<span class="ccr-k">'+esc(r[0])+'</span>'+
+      '<span class="ccr-v">'+(on ? esc(r[1].toFixed(1))+'<em>%</em>' : '—')+'</span>'+
+      (on ? '<span class="ccr-bar"><i style="width:'+
+              Math.max(2, Math.min(100, r[1])).toFixed(1)+'%"></i></span>'
+          : '<span class="ccr-h">'+esc(r[2])+'</span>')+
+    '</li>';
+  }).join("")+'</ul>';
+}
+
 
 /* 이 브라우저에 진단 결과가 있으면 그것을, 없으면 무엇을 하는 곳인지 */
 function CheckScore(){
@@ -448,29 +469,7 @@ function HomeRing(score){
     '</div>';
 }
 
-/* 동그란 눈금. pct 가 null 이면 빈 눈금과 안내만 보여 줍니다. */
-function CostGauge(pct){
-  var R = 52, C = 2 * Math.PI * R;
-  var p = (pct == null) ? 0 : Math.max(0, Math.min(100, pct));
-  var off = C * (1 - p / 100);
-  return '<svg class="gauge" viewBox="0 0 128 128" aria-hidden="true">'+
-      '<circle class="gauge-t" cx="64" cy="64" r="'+R+'"/>'+
-      '<circle class="gauge-v" cx="64" cy="64" r="'+R+'"'+
-        ' stroke-dasharray="'+C.toFixed(1)+'"'+
-        ' stroke-dashoffset="'+off.toFixed(1)+'"/>'+
-    '</svg>'+
-    '<div class="gauge-n">'+
-      (pct == null
-        ? '<b class="gauge-none">—</b><span>두 칸을 적어 주세요</span>'
-        : '<b>'+pct.toFixed(1)+'<em>%</em></b><span>육류원가율</span>')+
-    '</div>'+
-    '<p class="gauge-p">'+
-      (pct == null
-        ? '적으신 숫자는 이 브라우저 밖으로 나가지 않습니다.'
-        : '이 숫자가 높은지 낮은지는 업종 · 부위 · 지역에 따라 다릅니다. '+
-          '인건비 · 고정비까지 8가지로 같이 보시려면 무료 사업진단을 해 보세요.')+
-    '</p>';
-}
+
 
 /* 쉼표가 섞여 들어와도 읽습니다 — 사장님은 "7,000" 이라고 칩니다 */
 function calcNum(id){
@@ -480,12 +479,15 @@ function calcNum(id){
 }
 window.costCalc = function(){
   var out = $("cc-out"); if(!out) return;
-  var sales = calcNum("cc-sales"), meat = calcNum("cc-meat");
-  /* 매출이 0 이면 나눌 수 없습니다. 매입이 매출보다 커도 그대로
-     보여 줍니다 — 실제로 그런 달이 있고, 그게 바로 알려야 할 값입니다. */
-  out.innerHTML = (sales > 0 && meat > 0) ? CostGauge(meat / sales * 100)
-                                          : CostGauge(null);
+  var sales = calcNum("cc-sales");
+  var pct = function(v){ return (sales > 0 && v > 0) ? (v / sales * 100) : null; };
+  /* ⚠️ 매입이 매출보다 커도 그대로 보여 줍니다 — 실제로 그런 달이
+     있고, 그게 바로 알려야 할 값입니다. 우리가 깎지 않습니다. */
+  out.innerHTML = CostRows(pct(calcNum("cc-meat")),
+                           pct(calcNum("cc-labor")),
+                           pct(calcNum("cc-rent")));
 };
+
 
 
 
@@ -594,40 +596,40 @@ function CatBand(){
   '</div></section>';
 }
 
-/* ── 08 요즘 어떤 고민이 있으세요? (지시서 11번) ──────────
-   사진이 있으면 왼쪽에 세우고, 없으면 **글이 화면 전체를 씁니다.** */
+/* ── 고민 목록 (§7) ──────────────────────────────────────────
+   ⚠️ **"실시간 인기" · "많이 묻는" 이라고 쓰지 않습니다.** 접수를
+   저장하는 곳이 없어서 몇 번 물어보셨는지를 셀 방법이 자체가 없습니다
+   (절대 규칙 1). 조회수도 같은 이유로 안 찍습니다.
+   ⚠️ 01~06 번호는 **순위가 아니라 차례**입니다. 목록을 훑기 쉽게
+   하려고 붙인 것이고, 화면에도 "순위" 라는 말이 없습니다.
+   ⚠️ 줄에 적히는 질문은 가이드의 `ask0` — **사장님이 실제로 쓰시는
+   말투**로 적어 둔 것입니다. 지어낸 문장이 아닙니다. */
 function WorryBand(){
-  /* ⚠️ 열두 개를 다 펼치면 고르는 게 아니라 **훑게** 됩니다. 시안대로
-     여섯 개만 내고 나머지는 SOS 화면에서 봅니다 — 거기서는 적는 것이
-     주인공이라 열두 개가 다 있어도 괜찮습니다.
-     ⚠️ 왼쪽에 세워 두던 세로 그림은 뺐습니다. 칸을 반으로 줄여서
-     고민 여섯 개가 두 줄로 눌려 있었습니다. */
-  var six = WOW_PROBLEMS.slice(0, 6);
-  return '<section class="sec sec-tone"><div class="w">'+
-    /* ⚠️ 히어로가 이미 "뭐가 고민이세요?" 라고 묻습니다. 바로 아래에서
-       같은 질문을 또 하면 두 구간이 같은 말을 하는 것으로 읽힙니다.
-       여기는 **묻는 자리가 아니라 우리가 무엇을 드리는지 말하는
-       자리**입니다 — 그게 이 사이트가 전화번호부와 다른 점입니다. */
-    '<div class="sec-hd" id="worry"><h2>업체를 부르기 전에 확인할 것</h2>'+
-      '<p>고민을 고르시면 <b>지금 직접 보실 것</b>과 <b>업체에 물어보실 것</b>을 '+
-        '먼저 알려 드립니다. 여기 없는 것도 그냥 적어 주세요.</p>'+
-      '<a class="sec-more" href="/problems">고민별 해결방법 전부 보기'+
-        icon("chev",16)+'</a></div>'+
-    '<div class="prob-g prob-g-w">'+six.map(function(p){
-      /* ⚠️ 가이드가 있으면 **해결방법으로 먼저** 보냅니다. 곧장 폼이나
-         업체로 보내면 그 순간 이 사이트는 전화번호부가 됩니다
-         (지시서 3번). 가이드가 없는 분류만 예전처럼 갑니다. */
-      var to = (typeof wowHasGuide === "function" && wowHasGuide(p.key))
-        ? "/problem/" + p.key
-        : (p.to || ("/sos?c=" + encodeURIComponent(p.key)));
-      return '<a class="prob '+tnClass(p.tone)+'" href="'+esc(to)+'">'+
-        '<span class="prob-ic">'+icon(p.icon||"chat",20)+'</span>'+
-        '<span class="prob-b"><b>'+esc(p.name)+'</b>'+
-          (p.hint ? '<span>'+esc(p.hint)+'</span>' : '')+'</span>'+
-        '<span class="prob-go">'+icon("chev",16)+'</span></a>';
-    }).join("")+'</div>'+
+  var six = (window.WOW_GUIDES||[]).slice(0, 6);
+  if(!six.length) return "";
+  return '<section class="sec sec-tone"><div class="w wrk">'+
+    '<div class="wrk-t">'+
+      '<p class="eyebrow">고민 해결</p>'+
+      '<h2>업체를 부르기 전에<br class="br-m"> 확인할 것</h2>'+
+      '<p class="lead">고민을 고르시면 <b>지금 직접 보실 것</b>과 '+
+        '<b>업체에 물어보실 것</b>을 먼저 알려 드립니다. 여기 없는 것도 '+
+        '그냥 적어 주세요.</p>'+
+      '<div class="row-cta">'+
+        '<a class="btn btn-o" href="/problems">고민별 해결방법 전부 보기'+
+          icon("arrow",18)+'</a>'+
+      '</div>'+
+    '</div>'+
+    '<ol class="wrk-l">'+six.map(function(g,i){
+      return '<li><a href="/problem/'+encodeURIComponent(g.key)+'">'+
+        '<span class="wrk-n">'+("0"+(i+1))+'</span>'+
+        '<span class="wrk-b"><b>'+esc(g.ask0)+'</b>'+
+          '<span>'+esc(g.h1)+'</span></span>'+
+        '<span class="wrk-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
+      '</a></li>';
+    }).join("")+'</ol>'+
   '</div></section>';
 }
+
 
 /* ── 09 실제 요청/해결 현황 ────────────────────────────────
    ⚠️ **실제 데이터가 없으면 이 구간은 아예 나오지 않습니다.**

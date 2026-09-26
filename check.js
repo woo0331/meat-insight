@@ -74,6 +74,7 @@ const PAGES = [
   ["/tools",           "도구 모음"],
   ["/tools/yield",     "수율 원가 계산"],
   ["/tools/bep",       "손익분기 계산"],
+  ["/tools/labor",     "인건비율 계산"],
   ["/search?q=%EB%8D%95%ED%8A%B8", "검색 결과"],
   ["/search?q=zzz",    "검색 (못 찾음)"],
   ["/partner",         "파트너 안내"],
@@ -634,9 +635,11 @@ const AUDIT = `(() => {
      바로 폼으로 보내면 그 순간 전화번호부가 됩니다. 그래서 **두 걸음**
      을 다 따라가 보고, 끝에 분류가 실려 있는지를 봅니다. */
   await f("메인 고민 카드 → 해결방법 → SOS 에 분류가 켜진다", "/", `
-    const a = [...document.querySelectorAll(".prob")]
+    /* ⚠️ 메인의 고민은 카드(.prob)가 아니라 **줄(.wrk-l)** 이 됐습니다.
+       모양이 바뀌어도 가는 곳은 같아야 합니다 — 그걸 봅니다. */
+    const a = [...document.querySelectorAll(".wrk-l a, .prob")]
       .find(x => (x.getAttribute("href")||"").indexOf("/problem/duct") === 0);
-    if(!a) return "덕트 고민 카드가 해결방법으로 가지 않습니다";
+    if(!a) return "덕트 고민 줄이 해결방법으로 가지 않습니다";
     go(a.getAttribute("href"));
     await new Promise(r=>setTimeout(r,350));
     if(!document.querySelector(".gd-hd h1")) return "해결방법 화면이 안 떴습니다";
@@ -951,9 +954,9 @@ const AUDIT = `(() => {
     try{ localStorage.clear(); }catch(e){}
     return (t.indexOf("손익분기 계산") >= 0 && t.indexOf("3,333") >= 0)
       || "MY 에 안 보입니다";`);
-  await f("도구 모음에서 다섯 가지가 전부 열린다", "/tools", `
+  await f("도구 모음에서 여섯 가지가 전부 열린다", "/tools", `
     const hrefs = [...document.querySelectorAll(".tl-c")].map(a=>a.getAttribute("href"));
-    const want = ["/check","/tools/yield","/tools/bep","/start/cost","/quotes"];
+    const want = ["/check","/tools/yield","/tools/bep","/tools/labor","/start/cost","/quotes"];
     return want.every(w => hrefs.indexOf(w) >= 0) || hrefs.join(" ");`);
 
   /* ── 머리말(head): 브라우저로는 표가 안 나는 것들 ──────────
@@ -1046,18 +1049,25 @@ const AUDIT = `(() => {
      합니다.
      ⚠️ 아래 코드는 **백틱 문자열 안**입니다 — 정규식의 백슬래시가
      그냥 글자가 됩니다. 그래서 정규식을 아예 안 씁니다. */
-  await f("고민 카드가 업체가 아니라 해결방법으로 간다", "/", `
-    const cards = [...document.querySelectorAll(".prob")];
-    if(!cards.length) return "고민 카드가 하나도 없습니다";
-    const bad = [];
+  /* ⚠️ 메인의 고민은 줄(.wrk-l)이고 /problems 화면은 카드(.prob)입니다.
+     **둘 다** 업체가 아니라 해결방법으로 가야 합니다. */
+  await f("고민을 누르면 업체가 아니라 해결방법으로 간다", "/", `
+    const rows = [...document.querySelectorAll(".wrk-l a")];
+    if(!rows.length) return "메인에 고민 줄이 하나도 없습니다";
+    const bad = rows.map(a => a.getAttribute("href") || "")
+      .filter(h => h.indexOf("/problem/") !== 0);
+    if(bad.length) return "메인: " + bad.join(" ");
+    go("/problems");
+    await new Promise(r=>setTimeout(r,320));
+    const cards = [...document.querySelectorAll(".prob, .gdl")];
+    if(!cards.length) return "/problems 에 고민 카드가 하나도 없습니다";
+    const bad2 = [];
     cards.forEach(a => {
       const href = a.getAttribute("href") || "";
-      const name = (a.querySelector("b") || {}).textContent || "?";
-      const p = WOW_PROBLEMS.filter(x => x.name === name)[0];
-      if(p && wowHasGuide(p.key) && href.indexOf("/problem/") !== 0)
-        bad.push(name + " → " + href);
+      if(href.indexOf("/problem/") !== 0 && href.indexOf("/sos") !== 0)
+        bad2.push(href);
     });
-    return bad.length ? bad.join(" / ") : true;`);
+    return bad2.length ? "/problems: " + bad2.join(" ") : true;`);
 
   await f("가이드가 가리키는 글 · 도구 · 서비스가 전부 있다", "/problems", `
     const bad = [];

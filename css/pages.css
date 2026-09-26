@@ -2542,3 +2542,112 @@
 .res-i-gd:hover .ic{ color:#fff; }
 .st-tag-gd{ color:var(--t3-ink); background:var(--t3-bg); }
 .st-tag-gd:hover{ color:#fff; background:var(--t3-ink); }
+
+/* ════════════════════════════════════════════════════════════════════
+   상황 카드의 네 가지 면 + 어두운 강조 카드 (§6 · §20)
+
+   ⚠️ **카드가 전부 같은 면이면 다섯 칸이 표처럼 읽힙니다.** 흰 면 ·
+   옅은 분홍 · 웜 크림을 섞고, 가운데 하나만 어둡게 둡니다.
+   ⚠️ 어두운 카드를 **둘 이상 만들지 마세요.** 둘이 되는 순간 강조가
+   아니라 무늬가 됩니다.
+   ⚠️ 이 규칙들은 "카드 면" 목록(.sec-white .sit 등)보다 **뒤에**
+   있어야 이깁니다. 앞에 두면 조용히 안 먹습니다.
+   ════════════════════════════════════════════════════════════════════ */
+.sec-white .sit-v1, .sit-v1{ background:var(--bg-warm); }
+.sec-white .sit-v2, .sit-v2{ background:var(--tint-2); }
+.sec-white .sit-v3, .sit-v3{ background:var(--tint); }
+.sec-white .sit-v4, .sit-v4{ background:var(--bg-warm); }
+.sec-white .sit-v1:hover, .sec-white .sit-v2:hover,
+.sec-white .sit-v3:hover, .sec-white .sit-v4:hover{ background:var(--line-soft); }
+
+/* 어두운 강조 카드 — 지금 당장 급한 분이 먼저 담아야 할 칸 */
+.sec-white .sit-dark, .sit-dark{
+  background:linear-gradient(158deg, var(--burg-deep) 0%, var(--burg-deep-2) 100%);
+  color:#fff; }
+.sec-white .sit-dark:hover, .sit-dark:hover{
+  background:linear-gradient(158deg, #82203\32 0%, var(--burg-deep) 100%); }
+.sit-dark .sit-ic{ background:rgba(255,255,255,.14); color:#fff; }
+.sit-dark .sit-b > b{ color:#fff; }
+.sit-dark .sit-tag{ background:rgba(255,255,255,.16); color:#fff; }
+.sit-dark .sit-l{ color:#fff; }
+.sit-dark .sit-d{ color:rgba(255,255,255,.66); }
+.sit-dark .sit-go{ background:rgba(255,255,255,.16); color:#fff; }
+.sit-dark:hover .sit-go{ background:#fff; color:var(--burg-deep); }
+
+/* ════════════════════════════════════════════════════════════════════
+   고민 목록 (§7) — 카드가 아니라 **줄**입니다
+
+   ⚠️ 번호는 **순위가 아니라 차례**입니다. 조회수 · "실시간 인기" 를
+   여기에 붙이지 마세요 — 셀 방법이 없습니다 (절대 규칙 1).
+   ════════════════════════════════════════════════════════════════════ */
+.wrk{ display:grid; grid-template-columns:minmax(0,.86fr) minmax(0,1.14fr);
+  gap:var(--s9); align-items:start; }
+.wrk-t h2{ font-size:var(--t-3xl); line-height:var(--lh-tight);
+  letter-spacing:var(--tr-head); }
+.wrk-t .lead{ margin-top:var(--s5); }
+.wrk-t .row-cta{ margin-top:var(--s7); }
+.wrk-l{ display:grid; gap:2px; }
+.wrk-l a{ display:grid; grid-template-columns:auto 1fr auto; gap:var(--s5);
+  align-items:center; min-height:76px; padding:var(--s4) var(--s6);
+  background:var(--surface); color:var(--ink);
+  transition:background-color .18s ease, transform .18s ease; }
+.wrk-l li:first-child a{ border-radius:var(--r-lg) var(--r-lg) 0 0; }
+.wrk-l li:last-child a{ border-radius:0 0 var(--r-lg) var(--r-lg); }
+.wrk-l a:hover{ background:#fff; transform:translateX(3px); }
+.wrk-n{ font-size:var(--t-lg); font-weight:800; color:var(--burgundy-400);
+  letter-spacing:.02em; font-variant-numeric:tabular-nums; }
+.wrk-l a:hover .wrk-n{ color:var(--burgundy); }
+.wrk-b{ display:grid; gap:2px; min-width:0; }
+.wrk-b > b{ font-size:var(--t-md); letter-spacing:-.01em; line-height:1.5; }
+.wrk-b > span{ font-size:var(--t-sm); color:var(--ink3); }
+.wrk-go{ color:var(--ink3); display:inline-flex; transition:transform .2s ease; }
+.wrk-l a:hover .wrk-go{ color:var(--burgundy); transform:translateX(3px); }
+@media (max-width:1040px){
+  .wrk{ grid-template-columns:1fr; gap:var(--s7); }
+}
+@media (max-width:520px){
+  .wrk-l a{ gap:var(--s4); padding:var(--s4) var(--s5); }
+  .wrk-go{ display:none; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   사업진단 구간 — 제품처럼 (§8)
+
+   ⚠️ **미리 찍힌 점수를 두지 마세요.** 아무것도 안 하신 분에게 보여
+   주면 그게 지어낸 숫자이고, "양호/개선가능" 은 업종·평수별 기준값이
+   있어야 하는 판정인데 우리에게 그 기준이 없습니다.
+   ⚠️ 비율에 **상태색(--ok/--warn/--bad)을 쓰지 마세요.** "몇 %면
+   좋다" 를 우리가 정할 근거가 없습니다 — 메인·도구의 원가율과 같은
+   이유입니다.
+   ════════════════════════════════════════════════════════════════════ */
+.ckb-num .ccr{ display:grid; gap:var(--s4); }
+.ccr-i{ display:grid; grid-template-columns:1fr auto; gap:var(--s2) var(--s4);
+  align-items:baseline; padding-bottom:var(--s3);
+  border-bottom:1px solid var(--line-soft); }
+.ccr-i:last-child{ border-bottom:0; padding-bottom:0; }
+.ccr-k{ font-size:var(--t-sm); font-weight:700; color:var(--ink2); }
+.ccr-v{ font-size:var(--t-2xl); font-weight:800; letter-spacing:-.03em;
+  color:var(--ink3); font-variant-numeric:tabular-nums; }
+.ccr-i.on .ccr-v{ color:var(--ink); }
+.ccr-v em{ font-style:normal; font-size:var(--t-lg); margin-left:2px;
+  color:var(--ink2); }
+/* ⚠️ 막대는 **크기를 보여 줄 뿐** 좋고 나쁨이 아닙니다. 색을 나누지
+   마세요 — 나누는 순간 우리가 판정한 것이 됩니다. */
+.ccr-bar{ grid-column:1 / -1; height:6px; border-radius:var(--r-pill);
+  background:var(--line-soft); overflow:hidden; }
+.ccr-bar i{ display:block; height:100%; border-radius:var(--r-pill);
+  background:var(--burgundy); transition:width .35s cubic-bezier(.2,.7,.3,1); }
+.ccr-h{ grid-column:1 / -1; font-size:var(--t-cap); color:var(--ink3);
+  line-height:1.6; }
+
+.ckb-cta{ display:flex; width:100%; margin-top:var(--s7); }
+.ckb-cta-n{ text-align:center; margin-top:var(--s3); }
+
+/* 계산기 여섯 (§9) — 한 줄에 셋씩 두 줄 */
+.tool-g6{ grid-template-columns:repeat(3,1fr); }
+/* ⚠️ 분류색은 **아이콘 타일에만**. 카드 전체나 버튼에 쓰지 마세요. */
+.tool-g6 .tool-ic{ background:var(--ic-bg, var(--burgundy-50));
+  color:var(--ic-ink, var(--burgundy)); }
+.tool-g6 .tool:hover .tool-ic{ background:var(--ic-ink, var(--burgundy)); color:#fff; }
+@media (max-width:1040px){ .tool-g6{ grid-template-columns:1fr 1fr; } }
+@media (max-width:640px){ .tool-g6{ grid-template-columns:1fr; } }

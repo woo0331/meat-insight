@@ -70,7 +70,7 @@ function allRoutes(W){
   const fixed = ["/", "/sos", "/start", "/start/cost", "/check", "/partners",
                  "/request", "/lab", "/partner", "/partner/apply",
                  "/my", "/quotes", "/search",
-                 "/tools", "/tools/yield", "/tools/bep", "/problems", "/login", "/signup", "/about", "/terms", "/privacy"];
+                 "/tools", "/tools/yield", "/tools/bep", "/tools/labor", "/problems", "/login", "/signup", "/about", "/terms", "/privacy"];
   /* 연구소 글은 하나하나가 주소입니다 — 검색에서 들어오는 문이라
      반드시 진짜 HTML 파일이 있어야 합니다. */
   const posts = (W.WOW_POSTS || []).map(p => "/lab/" + p.slug);
@@ -188,7 +188,8 @@ function jsonLd(W, r, route){
   }
 
   if(route === "/start/cost" || route === "/check" || route === "/quotes" ||
-     route === "/tools/yield" || route === "/tools/bep"){
+     route === "/tools/yield" || route === "/tools/bep" ||
+     route === "/tools/labor"){
     out.push({ "@context":"https://schema.org", "@type":"WebApplication",
       name:r.title, description:r.desc || "", url:ORIGIN+route,
       applicationCategory:"BusinessApplication",
@@ -288,6 +289,7 @@ function noscriptFor(W, r, route){
       UL([L("/check","무료 사업진단 — 여덟 가지로 지금 무엇을 모르고 계신지 정리합니다"),
           L("/tools/yield","수율 원가 계산 — 손질 후 무게로 실제 1kg 원가를 냅니다"),
           L("/tools/bep","손익분기 계산 — 한 달에 얼마를 팔아야 본전인지 냅니다"),
+          L("/tools/labor","인건비율 계산 — 4대보험과 사장님 몫까지 넣어 실제 인건비율을 냅니다"),
           L("/start/cost","창업비 정리표 — 빠뜨리기 쉬운 항목과 아직 안 받은 견적"),
           L("/quotes","견적 비교 — 받은 견적을 같은 자리에 놓고 견줍니다")]);
     body += "<h2>고기 장사에 필요한 것</h2>"+
@@ -327,6 +329,7 @@ function noscriptFor(W, r, route){
       L("/check","무료 사업진단 — 여덟 가지로 지금 무엇이 비어 있는지 정리합니다"),
       L("/tools/yield","수율 원가 계산 — 매입 단가와 손질 후 무게로 실제 1kg 원가를 냅니다"),
       L("/tools/bep","손익분기 계산 — 고정비와 변동비율로 한 달에 얼마를 팔아야 본전인지 냅니다"),
+      L("/tools/labor","인건비율 계산 — 급여·4대보험·사장님 몫까지 넣어 실제 인건비율과 한 사람당 매출을 냅니다"),
       L("/start/cost","창업비 정리표 — 빠뜨리기 쉬운 항목을 늘어놓고 아직 안 받은 견적을 보여 줍니다"),
       L("/quotes","견적 비교 — 받은 견적을 같은 자리에 놓고 포함 범위까지 견줍니다")]);
     body += "<p>전부 가입 없이 무료이고, 적으신 숫자는 이 브라우저 밖으로 " +

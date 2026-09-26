@@ -50,11 +50,13 @@ var META = {
   "/search":   ["검색",
                 "글·서비스·화면을 한 번에 찾습니다. 못 찾으시면 그대로 적어서 물어보시면 됩니다."],
   "/tools":    ["사장님 도구",
-                "수율 원가·손익분기·창업비·견적 비교·사업진단. 사장님 가게 숫자로 바로 확인하실 수 있습니다. 가입 없이 무료입니다."],
+                "수율 원가·손익분기·인건비율·창업비·견적 비교·사업진단. 사장님 가게 숫자로 바로 확인하실 수 있습니다. 가입 없이 무료입니다."],
   "/tools/yield":["수율 원가 계산",
                 "원육을 손질하고 나면 원가가 달라집니다. 매입 단가와 손질 전후 무게로 실제 1kg 원가와 1인분 원가를 냅니다."],
   "/tools/bep": ["손익분기 계산",
                 "고정비와 매출 대비 비율을 적으시면 한 달에 얼마를 팔아야 본전인지, 하루로 나누면 얼마인지 나옵니다."],
+  "/tools/labor":["인건비율 계산",
+                "급여만 보면 한 사람 값이 실제보다 적게 보입니다. 4대보험과 사장님 몫까지 넣어 실제 인건비율과 한 사람당 매출을 냅니다."],
   "/quotes":   ["견적 비교",
                 "받으신 견적을 나란히 놓고 금액·기간·A/S·포함 범위를 비교하고, 빠뜨린 질문을 확인합니다."],
   "/login":    ["로그인", "ABOUTMEAT 로그인."],
@@ -104,6 +106,7 @@ window.routeInfo = function(path, qs){
     "/tools":         "tools",
     "/tools/yield":   "yield",
     "/tools/bep":     "bep",
+    "/tools/labor":   "labor",
     "/search":        "search",
     "/problems":      "problems",
     "/terms":         "terms",
@@ -193,6 +196,7 @@ function render(){
     case "tools":        html = PageTools();          break;
     case "yield":        html = PageYield();          break;
     case "bep":          html = PageBep();            break;
+    case "labor":        html = PageLabor();          break;
     case "search":       html = PageSearch();        break;
     case "post":         html = PagePost(r.post);    break;
     case "problem":      html = PageProblem(r.guide); break;

@@ -123,6 +123,7 @@ function Footer(){
         '<a href="/check">무료 사업진단</a>'+
         '<a href="/start">창업 준비</a><a href="/start/cost">창업비 정리표</a>'+
         '<a href="/tools/yield">수율 원가 계산</a><a href="/tools/bep">손익분기 계산</a>'+
+        '<a href="/tools/labor">인건비율 계산</a>'+
         '<a href="/request">견적 요청</a></div>'+
       '<div class="ft-col"><h4>알아보기</h4>'+
         '<a href="/partners">업체 찾기</a><a href="/quotes">견적 비교</a>'+

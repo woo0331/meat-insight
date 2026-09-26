@@ -26,6 +26,7 @@
 
 var YL_KEY  = "wow.yield.v1";
 var BEP_KEY = "wow.bep.v1";
+var LB_KEY  = "wow.labor.v1";
 
 /* ⚠️ localStorage 는 사파리 비공개 모드 등에서 **던집니다.** 감싸지
    않으면 화면이 통째로 안 그려집니다. */
@@ -90,7 +91,7 @@ function tlOut(name, val, unit, need){
    ⚠️ 명단이 아니라 **지금 바로 되는 것**을 모아 둔 자리입니다.
    전부 가입 없이, 사람 손을 안 타고 됩니다.
    ════════════════════════════════════════════════════════════ */
-var TOOL_LIST = [
+window.TOOL_LIST = [
   { to:"/check",      icon:"gauge", name:"무료 사업진단",
     line:"여덟 가지로 지금 무엇을 파악하고 계시고 무엇이 비어 있는지 셉니다.",
     time:"3분" },
@@ -103,6 +104,9 @@ var TOOL_LIST = [
   { to:"/start/cost",  icon:"won",   name:"창업비 정리표",
     line:"빠뜨리기 쉬운 칸을 전부 늘어놓고, 받으신 견적으로 합계와 빈 칸을 봅니다.",
     time:"5분" },
+  { to:"/tools/labor", icon:"users", name:"인건비율 계산",
+    line:"월 매출과 인건비를 적으시면 인건비율과 한 사람당 매출이 나옵니다.",
+    time:"1분" },
   { to:"/quotes",      icon:"scale", name:"견적 비교",
     line:"받으신 견적을 나란히 놓고 금액·기간·A/S·포함 범위를 맞춰 봅니다.",
     time:"5분" }
@@ -409,4 +413,131 @@ window.bepBrief = function(){
   var cm = varN ? (100 - varSum) : null;
   var month = (fixN && cm !== null && cm > 0) ? won(Math.round(fixSum / (cm / 100))) : null;
   return { n:n, total:keys.length, month:month };
+};
+
+
+/* ════════════════════════════════════════════════════════════
+   인건비율 (/tools/labor)
+
+   ⚠️ **"인건비율 몇 %가 적정" 이라고 쓰지 마세요.** 홀·주방 구성,
+   사장님이 직접 뛰시는지, 배달 비중, 지역 시급이 전부 다릅니다.
+   여기서 나오는 숫자는 사장님이 적으신 값을 나눈 것까지입니다.
+
+   ⚠️ **사장 인건비는 따로 묻습니다.** 안 넣고 계산하면 실제보다
+   인건비율이 낮게 보이고, 그 숫자로 사람을 더 뽑으시면 그때부터
+   틀어집니다. 넣을지 말지는 사장님이 고르십니다 — 우리가 대신
+   정하면 그게 지어낸 기준입니다.
+   ════════════════════════════════════════════════════════════ */
+var LB_SALES = [
+  { key:"sales",  name:"월 매출",        hint:"부가세를 뺀 매출로 적으시면 비율이 더 정확합니다", unit:"만원" }
+];
+var LB_COST = [
+  { key:"wage",   name:"직원 급여 합계",  hint:"이번 달에 실제로 나간 급여 (홀 · 주방 전부)", unit:"만원" },
+  { key:"ins",    name:"4대보험 · 퇴직충당", hint:"사업주 부담분. 모르시면 비워 두세요", unit:"만원" },
+  { key:"owner",  name:"사장 인건비",     hint:"직접 뛰시는 몫을 넣을지는 사장님이 고르십니다", unit:"만원" }
+];
+var LB_RUN = [
+  { key:"heads",  name:"일하는 사람 수",  hint:"사장님 포함 여부는 위 사장 인건비와 맞추세요", unit:"명" },
+  { key:"days",   name:"월 영업일수",     hint:"쉬는 날을 뺀 날수", unit:"일" }
+];
+
+function PageLabor(){
+  var v = tlLoad(LB_KEY);
+  return '<section class="pg-hero"><div class="w pgh">'+
+      '<div class="pgh-t">'+
+      '<p class="eyebrow">도구 · 인건비율</p>'+
+      '<h1 class="pg-h1">사람 값이<br class="br-m"> 매출의 몇 %인가요?</h1>'+
+      '<p class="pg-lead">급여만 보면 한 사람 값이 실제보다 적게 보입니다. '+
+        '4대보험과 사장님 몫까지 넣어야 실제 비율이 나옵니다.</p>'+
+      '<ul class="pg-facts">'+
+        fact("info", "<b>몇 %가 적정이라고 말하지 않습니다.</b> 홀·주방 구성, "+
+          "사장님이 직접 뛰시는지, 배달 비중, 지역 시급이 전부 다릅니다.")+
+        fact("hand", "<b>사장 인건비를 넣을지는 사장님이 고르십니다.</b> 안 넣으면 "+
+          "비율이 낮게 보이고, 그 숫자로 사람을 더 뽑으시면 그때부터 틀어집니다.")+
+        fact("lock", "적으신 숫자는 이 브라우저에만 남습니다. 서버로 보내지 않습니다.")+
+      '</ul>'+
+      '</div>'+
+      '<figure class="pgh-f">'+photoBox("hero-bep")+'</figure>'+
+    '</div></section>'+
+
+    '<div class="w tl">'+
+      '<h2 class="tl-h">매출 <span>비율의 분모입니다</span></h2>'+
+      '<ul class="tl-l">'+LB_SALES.map(function(r){ return tlRow(r, v, "lbIn"); }).join("")+'</ul>'+
+
+      '<h2 class="tl-h">사람에게 나가는 돈 <span>한 달 기준</span></h2>'+
+      '<ul class="tl-l">'+LB_COST.map(function(r){ return tlRow(r, v, "lbIn"); }).join("")+'</ul>'+
+
+      '<h2 class="tl-h">나눠 볼 기준 <span>안 적으셔도 인건비율까지는 나옵니다</span></h2>'+
+      '<ul class="tl-l">'+LB_RUN.map(function(r){ return tlRow(r, v, "lbIn"); }).join("")+'</ul>'+
+
+      '<div class="tl-res" id="lb-res">'+LbRes(v)+'</div>'+
+
+      '<div class="st-foot">'+
+        '<p class="note">적으신 숫자는 이 브라우저에만 남습니다.</p>'+
+        '<button class="btn btn-o" type="button" onclick="lbReset()">'+
+          icon("refresh",18)+'적은 숫자 지우기</button>'+
+      '</div>'+
+
+      '<section class="st-cta">'+
+        '<h2>사람을 줄이기 전에 시간을 먼저 보세요.</h2>'+
+        '<p>같은 인원이라도 피크 시간과 한가한 시간에 몇 명이 서 있는지에 따라 '+
+          '같은 비율이 전혀 다른 뜻이 됩니다. 어느 시간대가 무거운지 적어 주시면 '+
+          '그 자리부터 같이 봅니다.</p>'+
+        '<div class="row-cta">'+
+          '<a class="btn btn-b btn-lg" href="/problem/staff">직원 · 인건비 해결방법 보기'+icon("arrow",18)+'</a>'+
+          '<a class="btn btn-o btn-lg" href="/tools/bep">손익분기 계산하기</a>'+
+        '</div>'+
+      '</section>'+
+    '</div>';
+}
+
+function LbRes(v){
+  var sales = has(v.sales) ? numOf(v.sales) : null;
+  var sum = 0, n = 0;
+  LB_COST.forEach(function(r){ if(has(v[r.key])){ sum += numOf(v[r.key]); n++; } });
+  var cost = n ? sum : null;
+  var rate = (sales && cost !== null) ? (cost / sales * 100) : null;
+  var perHead = (sales && has(v.heads)) ? (sales / numOf(v.heads)) : null;
+  var perDay  = (cost !== null && has(v.days)) ? (cost / numOf(v.days)) : null;
+
+  var note;
+  if(cost === null)        note = "사람에게 나가는 돈을 한 칸이라도 적으시면 시작됩니다.";
+  else if(sales === null)  note = "월 매출을 적으시면 인건비율이 나옵니다.";
+  else if(!has(v.owner))   note = "사장 인건비를 비워 두셨습니다. 직접 뛰시는 몫을 넣으면 "+
+                                  "비율이 올라갑니다 — 어느 쪽으로 보실지는 사장님이 정하십니다.";
+  else if(perHead === null) note = "일하는 사람 수를 적으시면 한 사람당 매출까지 나옵니다.";
+  else                     note = "이 숫자는 사장님이 적으신 값을 나눈 것입니다. "+
+                                  "저희가 정한 기준이 아닙니다.";
+
+  return '<div class="tl-og">'+
+      tlOut("인건비 합계", cost === null ? null : won(Math.round(cost)), "만원", "사람 값 한 칸")+
+      tlOut("인건비율", rate === null ? null : dec1(rate), "%", "월 매출")+
+      tlOut("한 사람당 월 매출", perHead === null ? null : won(Math.round(perHead)), "만원", "사람 수")+
+      tlOut("하루 인건비", perDay === null ? null : won(Math.round(perDay)), "만원", "월 영업일수")+
+    '</div>'+
+    '<p class="tl-note"><span>'+esc(note)+'</span></p>';
+}
+
+window.lbIn = function(key, val){
+  var o = tlLoad(LB_KEY);
+  if(String(val || "").trim()) o[key] = val; else delete o[key];
+  tlSave(LB_KEY, o);
+  var el = $("lb-res");
+  if(el) el.innerHTML = LbRes(o);
+};
+window.lbReset = function(){
+  tlSave(LB_KEY, {});
+  toast("적으신 숫자를 지웠습니다.");
+  rerender(true);
+};
+window.lbBrief = function(){
+  var v = tlLoad(LB_KEY);
+  var keys = LB_SALES.concat(LB_COST).concat(LB_RUN);
+  var n = keys.filter(function(r){ return has(v[r.key]); }).length;
+  if(!n) return { n:0 };
+  var sales = has(v.sales) ? numOf(v.sales) : null;
+  var sum = 0, c = 0;
+  LB_COST.forEach(function(r){ if(has(v[r.key])){ sum += numOf(v[r.key]); c++; } });
+  var rate = (sales && c) ? dec1(sum / sales * 100) : null;
+  return { n:n, total:keys.length, rate:rate };
 };

@@ -1256,10 +1256,32 @@ const AUDIT = `(() => {
     });
     return bad.length ? "값이 나갈 수 있는 자리: " + bad.join(" ") : true;`);
 
+  /* ── 헤더 ────────────────────────────────────────────────
+     ⚠️ 둘 다 **맨 위에서는 멀쩡해 보입니다.** 화면을 내린 채로 찍어
+     보고서야 알았습니다 —
+      · `position:sticky` 만 적어 두고 감싸개(`#chrome-t`)의 높이가
+        헤더와 같으면 sticky 가 붙어 있을 범위가 없어 그냥 올라갑니다.
+      · 반투명 헤더는 밑으로 지나가는 글자가 메뉴와 겹쳐 읽힙니다.
+     에러도 가로 스크롤도 안 나서 다른 검사는 전부 통과합니다. */
+  await f("헤더가 화면을 내려도 붙어 있다", "/", `
+    window.scrollTo(0, 900);
+    await new Promise(r => setTimeout(r, 250));
+    const h = document.querySelector(".hd");
+    if(!h) return "헤더가 없습니다";
+    const top = Math.round(h.getBoundingClientRect().top);
+    window.scrollTo(0, 0);
+    return top === 0 || "내렸더니 헤더가 top:" + top + " 로 올라갔습니다";`);
+  await f("헤더가 불투명해서 밑의 글자가 안 비친다", "/", `
+    const cs = getComputedStyle(document.querySelector(".hd"));
+    const m = cs.backgroundColor.split("(")[1] || "";
+    const parts = m.split(")")[0].split(",");
+    const a = parts.length > 3 ? parseFloat(parts[3]) : 1;
+    return a >= 0.99 || "헤더 배경이 반투명합니다 (" + cs.backgroundColor + ")";`);
+
   console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 +
               "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 9 +
               "개 · 접수처 없음 " + 5 + "개 · 도구 계산 " + 9 +
-              "개 · 머리말 " + 3 + "개 · 고민 가이드 " + 13 + "개 · 관리자 " + 5 + "개 · 검색 " + 4 + "개");
+              "개 · 머리말 " + 3 + "개 · 헤더 " + 2 + "개 · 고민 가이드 " + 13 + "개 · 관리자 " + 5 + "개 · 검색 " + 4 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

@@ -285,9 +285,16 @@ document.addEventListener("DOMContentLoaded", function(){
   $("chrome-b").innerHTML = Footer() + MobileNav() + FloatCta();
   /* 조금 내려가면 따라다니는 단추가 나타납니다.
      ⚠️ passive:true — 스크롤마다 도는 손이라 이걸 빼면 스크롤이 끕끕해집니다. */
-  window.addEventListener("scroll", function(){
-    var f = $("fab"); if(!f) return;
-    f.classList.toggle("on", window.scrollY > 560);
-  }, { passive:true });
+  /* ⚠️ 붙박이 헤더가 처음부터 그림자를 달고 있으면 맨 위에서 화면이
+     두 겹으로 보입니다. **내려가기 시작한 뒤에만** 띄웁니다 —
+     그래야 "따라오고 있다" 가 읽힙니다. */
+  var root = document.documentElement;
+  function onScroll(){
+    var y = window.scrollY;
+    root.classList.toggle("sc", y > 8);
+    var f = $("fab"); if(f) f.classList.toggle("on", y > 560);
+  }
+  window.addEventListener("scroll", onScroll, { passive:true });
+  onScroll();
   render();
 });

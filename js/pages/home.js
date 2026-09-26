@@ -152,9 +152,26 @@ function DiffBand(){
    어두운 바탕 위 왼쪽 정렬. 제일 큰 것은 **입력창**입니다.
    ⚠️ 어두운 면은 버건디가 아니라 차콜(--dark)입니다. 여기까지 브랜드
    색으로 칠하면 화면 절반이 버건디가 되어 정육점 간판이 됩니다. */
+/* ── 01 히어로 ───────────────────────────────────────────────
+   ⚠️ **밝은 두 칸입니다 (2026-09-26 세 번째 손질).** 예전에는 차콜
+   바탕에 벡터 그림을 깔고 어두운 겹을 얹었습니다. 실제 현장 사진이라면
+   그게 맞지만, 지금 들어 있는 것은 코드로 그린 그림이라 **글자 밑에서
+   흐릿한 덩어리**로만 보였고 첫 화면의 인상을 통째로 어둡게 만들었습니다.
+
+   ⚠️ 오른쪽에 두는 것은 **사진이 아니라 우리 화면 자체**입니다.
+   이 사이트가 전화번호부와 다른 이유는 "업체를 대 준다" 가 아니라
+   "업체를 부르기 전에 무엇을 물어봐야 하는지 안다" 인데, 그건 말로는
+   증명이 안 됩니다. 실제 가이드의 **물어볼 것**을 그대로 보여 줍니다.
+
+   ⚠️ 여기에 **꾸민 숫자를 넣지 마세요.** 화면 흉내에 "절감 320만원" ·
+   "만족도 98%" 를 찍으면 그게 바로 지어낸 실적입니다 (절대 규칙 1).
+   보여 주는 글은 전부 `js/data/guides.js` 에 실제로 있는 문장입니다. */
 function Hero(){
-  return '<section class="hero hero-dk">'+
-    photoBg("hero-wide")+'<div class="hero-sh"></div>'+
+  return '<section class="hero hero-lt2">'+
+    /* 아주 옅게 번지는 두 덩어리 — 장식이지만 면이 아니라 **빛**입니다.
+       ⚠️ 색을 진하게 올리지 마세요. 올리는 순간 그라디언트 배너가 됩니다. */
+    '<span class="hero-blob hb-1" aria-hidden="true"></span>'+
+    '<span class="hero-blob hb-2" aria-hidden="true"></span>'+
     '<div class="w hero-grid">'+
     '<div class="hero-in">'+
       '<p class="hero-kicker">사장님은 장사만 하세요.</p>'+
@@ -182,7 +199,7 @@ function Hero(){
       /* ── 히어로 아래 네 칸 ──────────────────────────────
          ⚠️ 시안에는 여기에 "3,200+ 사장님 · 1,500+ 검증된 업체 ·
          만족도 98% · 24시간 응답" 이 있었습니다. **넣지 않았습니다.**
-         지금 그 값이 하나도 없고, 없는 숫자를 적는 것은 지시서 43번
+         지금 그 값이 하나도 없고, 없는 숫자를 적는 것은 절대 규칙 1
          위반이자 표시광고법 제3조(거짓·과장 광고)에 걸립니다.
          ⚠️ 대신 **지금 지킬 수 있는 약속**을 같은 자리에 같은 모양으로
          둡니다. 실제 값이 생기면 이 네 칸의 내용만 바꾸면 됩니다.
@@ -196,33 +213,49 @@ function Hero(){
           return '<li><b>'+esc(x[0])+'</b><span>'+esc(x[1])+'</span></li>';
         }).join("")+'</ul>'+
     '</div>'+
-    /* ⚠️ 시안의 오른쪽 떠 있는 카드입니다. 바탕이 어두워졌으므로
-       그림 카드가 아니라 **흰 카드**가 와야 눈에 들어옵니다. */
-    '<aside class="hero-card">'+
-      '<a href="/check">'+
-        '<span class="hc-ic">'+icon("gauge",22)+'</span>'+
-        '<span class="hc-t"><em>지금, 무료로</em><b>사업진단 받아보세요</b></span>'+
-        '<span class="hc-p">육류원가·인건비·고정비까지 여덟 가지로, '+
-          '지금 무엇을 모르고 계신지 정리해 드립니다.</span>'+
-        '<span class="hc-go">3분이면 끝납니다'+icon("arrow",16)+'</span>'+
-      '</a>'+
-    '</aside>'+
-    '<div class="hero-art">'+
-      '<span aria-hidden="true">'+photoBox("hero")+'</span>'+
-      /* 그림 가장자리에 붙는 작은 알약 셋 — 꾸밈이자 **바로 가는 길**입니다.
-         ⚠️ 여기에 실적·금액·후기를 적지 마세요. 값이 없습니다. 적을 수
-         있는 것은 **우리가 실제로 견적을 받아 드리는 일**까지입니다. */
-      '<ul class="hero-tags">'+
-        [["duct","fire","덕트 · 환기"],
-         ["cold","snow","냉장 · 냉동"],
-         ["beef-supply","truck","육류 공급"]].map(function(t,i){
-          return '<li class="ht-'+(i+1)+'">'+
-            '<a href="/request?s='+encodeURIComponent(t[0])+'">'+
-              icon(t[1],17)+'<span>'+esc(t[2])+'</span></a></li>';
-        }).join("")+'</ul>'+
-    '</div>'+
+
+    '<div class="hero-ui">'+ HeroMock() + HeroCheckCard() +'</div>'+
     '</div>'+
   '</section>';
+}
+
+/* ── 히어로 오른쪽: 우리 화면을 그대로 보여 줍니다 ──────────
+   ⚠️ **가짜 데이터가 한 글자도 없습니다.** 제목도 질문도 전부
+   `js/data/guides.js` 의 덕트 가이드에서 그대로 가져옵니다. 가이드를
+   고치면 여기도 같이 바뀝니다 — 어긋날 자리가 없습니다.
+   ⚠️ 가이드가 없으면 **이 칸이 통째로 안 나옵니다** (절대 규칙 2).
+   빈 액자를 두지 않습니다. */
+function HeroMock(){
+  var g = (window.wowGuide ? wowGuide("duct") : null);
+  if(!g || !g.ask || !g.ask.length) return "";
+  /* 업체에게 나가는 글과 같은 이유로 별표를 떼어냅니다 — 화면 흉내
+     안에서 `**` 가 글자로 찍히면 그 순간 흉내가 들통납니다. */
+  var rows = g.ask.slice(0,4).map(function(t,i){
+    return '<span class="humo-i"><i aria-hidden="true">'+(i+1)+'</i>'+
+      '<em>'+esc(String(t).replace(/\*\*/g,""))+'</em></span>';
+  }).join("");
+  return '<a class="humo" href="/problem/'+encodeURIComponent(g.key)+'">'+
+    '<span class="humo-bar" aria-hidden="true">'+
+      '<i></i><i></i><i></i><u>aboutmeat.co.kr/problem/'+esc(g.key)+'</u></span>'+
+    '<span class="humo-b">'+
+      '<span class="humo-tag tn6">'+esc(g.h1)+'</span>'+
+      '<b class="humo-h">업체를 부르기 전에 물어볼 것</b>'+
+      '<span class="humo-l">'+rows+'</span>'+
+      '<span class="humo-go">이 고민 해결방법 보기'+icon("arrow",16)+'</span>'+
+    '</span></a>';
+}
+
+/* 흉내 화면 밑에 겹쳐 놓는 작은 카드 — 진단으로 가는 길 */
+function HeroCheckCard(){
+  return '<aside class="hero-card">'+
+    '<a href="/check">'+
+      '<span class="hc-ic">'+icon("gauge",22)+'</span>'+
+      '<span class="hc-t"><em>지금, 무료로</em><b>사업진단 받아보세요</b></span>'+
+      '<span class="hc-p">육류원가·인건비·고정비까지 여덟 가지로, '+
+        '지금 무엇을 모르고 계신지 정리해 드립니다.</span>'+
+      '<span class="hc-go">3분이면 끝납니다'+icon("arrow",16)+'</span>'+
+    '</a>'+
+  '</aside>';
 }
 
 /* 입력창 예시가 돌아갑니다 — 빈 칸만 보여 주면 사장님은 안 씁니다.

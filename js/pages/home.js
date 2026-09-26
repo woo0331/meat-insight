@@ -24,10 +24,16 @@
    ════════════════════════════════════════════════════════════════════ */
 
 function PageHome(){
+  /* ⚠️ **상황 고르기를 히어로 바로 밑에 둡니다.** 손님이 제일 먼저
+     하는 일은 업체 검색이 아니라 "내가 지금 무엇 때문에 들어왔는가" 를
+     고르는 것입니다 (지시서 3번). 입력창에 길게 적기 부담스러운 분은
+     여기서 시작합니다 — 그러니 스크롤을 한참 내려야 나오면 안 됩니다.
+     ⚠️ 여기에 **업체나 서비스 카테고리를 올리지 마세요.** 그건 전화
+     번호부가 됩니다. 올라와도 되는 것은 **손님의 상황**까지입니다. */
   return Hero()+
+         Situations()+
          HowRow()+
          ToolBand()+        /* 지금 바로 해 볼 수 있는 것 — 우리를 쓸 이유 */
-         Situations()+
          CheckBand()+
          StartBand()+
          MatchBand()+
@@ -255,6 +261,7 @@ function Situations(){
         '<span class="sit-b">'+
           (ph ? '' : '<span class="sit-ic">'+icon(s.icon,22)+'</span>')+
           '<b>'+esc(s.name)+'</b>'+
+          (s.tag ? '<span class="sit-tag">'+esc(s.tag)+'</span>' : '')+
           '<span class="sit-l">'+esc(s.line)+'</span>'+
           '<span class="sit-d">'+esc(s.desc)+'</span>'+
         '</span></a>';
@@ -344,8 +351,11 @@ window.costCalc = function(){
 };
 
 /* ── 05 창업 프로젝트 (지시서 9번) ─────────────────────────
-   어두운 띠. 20단계를 다 늘어놓으면 숨이 막히므로, **다섯 마디**로
-   묶어 보여 주고 전체는 /start 에서 봅니다. */
+   20단계를 다 늘어놓으면 숨이 막히므로, **다섯 마디**로 묶어 보여 주고
+   전체는 /start 에서 봅니다.
+   ⚠️ 예전에는 차콜 띠였습니다. 화면 한가운데에 어두운 덩어리가 있으면
+   그 위아래가 다 눌려 보여서, 옅은 브랜드색 띠(.sec-tone)로 바꿨습니다.
+   어두운 면은 **맨 끝 CTA 한 군데**만 남깁니다. */
 function StartBand(){
   var phases = [
     ["상권 · 점포", "어디서 몇 평으로 할지"],
@@ -355,10 +365,10 @@ function StartBand(){
     ["오픈",        "인허가 · 세무 · 마케팅"]
   ];
   var steps = (window.WOW_STARTUP_STEPS || []);
-  return '<section class="dark"><div class="w">'+
-    '<div class="sec-hd sec-hd-d"><p class="eyebrow">창업 프로젝트</p>'+
+  return '<section class="sec-tone"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">창업 프로젝트</p>'+
       '<h2>고깃집 하나 차리는 데<br class="br-m"> 알아볼 게 너무 많으니까.</h2>'+
-      '<p>상권부터 오픈까지 '+(steps.length||20)+'가지를 순서대로 정리해 드립니다. '+
+      '<p>상권부터 오픈까지 <b>'+(steps.length||20)+'가지</b>를 순서대로 정리해 드립니다. '+
         '지금 어디쯤인지, 다음에 뭘 해야 하는지가 한 화면에 보입니다.</p></div>'+
 
     '<ol class="flow">'+phases.map(function(p,i){
@@ -366,12 +376,12 @@ function StartBand(){
         '<b>'+esc(p[0])+'</b><span class="flow-d">'+esc(p[1])+'</span></li>';
     }).join("")+'</ol>'+
 
-    (steps.length ? '<ul class="chips chips-d">'+steps.map(function(s){
+    (steps.length ? '<ul class="chips chips-lg">'+steps.map(function(s){
         return '<li>'+icon(s.icon||"check",16)+esc(s.name)+'</li>'; }).join("")+'</ul>' : '')+
 
     '<div class="row-cta">'+
-      '<a class="btn btn-w btn-lg" href="/start/cost">내 창업비 알아보기'+icon("arrow",18)+'</a>'+
-      '<a class="btn btn-gh btn-lg" href="/start">창업 프로젝트 시작하기</a>'+
+      '<a class="btn btn-b btn-lg" href="/start/cost">내 창업비 알아보기'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-o btn-lg" href="/start">창업 프로젝트 시작하기</a>'+
     '</div>'+
   '</div></section>';
 }
@@ -411,7 +421,7 @@ function MatchBand(){
 function CatBand(){
   var ic = { meat:"truck", space:"store", equip:"tool",
              ops:"clock", grow:"up", pro:"shield" };
-  return '<section class="sec sec-warm"><div class="w">'+
+  return '<section class="sec sec-tint"><div class="w">'+
     '<div class="sec-hd"><h2>고기 장사에 필요한 모든 것</h2>'+
       '<p>고기부터 덕트 · 장비 · 세무까지. 어디에 물어야 할지 모를 때 '+
         '여기서 시작하시면 됩니다.</p>'+
@@ -518,7 +528,7 @@ function LabBand(){
 function FaqBand(){
   var qs = window.WOW_FAQ || [];
   if(!qs.length) return "";
-  return '<section class="sec sec-warm"><div class="w">'+
+  return '<section class="sec sec-tint"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">자주 묻는 것</p>'+
       '<h2>물어보기 전에 궁금하신 것</h2></div>'+
     '<div class="faq">'+qs.map(function(q, i){

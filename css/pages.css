@@ -1546,3 +1546,56 @@
   .hero-grid{ grid-template-columns:1fr; }
   .hero-art{ display:none; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   색이 있는 구간 · 배지 — "밋밋함" 을 없애는 자리
+
+   ⚠️ 흰색과 회색만 번갈아 칠하면 아무리 잘 짜도 심심합니다. 그렇다고
+   브랜드색을 넓게 칠하면 정육점 간판이 됩니다. 답은 **채도를 거의
+   없앤 브랜드색**입니다 — 분홍으로 읽히지 않는 선까지만.
+
+   ⚠️ 어두운 면은 **맨 끝 CTA 한 군데**만 남깁니다. 화면 한가운데에
+   차콜 덩어리가 있으면 그 위아래가 다 눌려 보입니다.
+   ════════════════════════════════════════════════════════════════════ */
+.sec-tone{ position:relative; background:var(--tint); padding:var(--s10) 0; }
+/* ⚠️ 이름을 `band-t` 로 지었다가 바로 물렸습니다 — 그 이름은 이미
+   **띠 안의 글 칸**(진단·파트너 구간)으로 쓰이고 있어서, 그 칸에
+   구간 배경과 padding 이 통째로 먹습니다. 로고(.lg) 때와 같은 사고입니다.
+   위아래 경계를 선이 아니라 **색이 스며드는 것**으로 둡니다 */
+.sec-tone::before, .sec-tone::after{ content:""; position:absolute; left:0; right:0;
+  height:40px; pointer-events:none; }
+.sec-tone::before{ top:0; background:linear-gradient(180deg, var(--bg), rgba(251,244,245,0)); }
+.sec-tone::after{ bottom:0; background:linear-gradient(0deg, var(--bg), rgba(251,244,245,0)); }
+
+/* 창업 다섯 마디 — 어두운 띠에서 밝은 띠로 옮겨 오면서 색을 뒤집습니다.
+   ⚠️ 반투명 흰색으로 둔 선들은 밝은 바탕에서 **아무것도 안 보입니다.** */
+.sec-tone .flow li{ border-top-color:var(--line); }
+.sec-tone .flow li + li::before{ border-top-color:var(--ink3); border-right-color:var(--ink3); }
+.sec-tone .flow-n{ color:var(--burgundy); }
+.sec-tone .flow b{ color:var(--ink); }
+.sec-tone .flow-d{ color:var(--ink2); }
+
+/* 칩 — 흰 알약에 옅은 그림자. 테두리를 두르면 스무 개가 다 선으로 보입니다 */
+.chips li{ border-color:transparent; box-shadow:var(--shadow); }
+.chips li .ic{ color:var(--burgundy); }
+
+/* ── 구간마다 색을 번갈아 ──────────────────────────────────
+   ⚠️ `.sec-warm` 만 쓰면 회색-흰색-회색이라 단조롭습니다. 옅은
+   브랜드색을 한 칸 섞어 리듬을 만듭니다. */
+.sec-tint{ background:var(--tint-2); }
+
+/* 상황 카드의 알약 — **언제 쓰는 카드인지**를 한 낱말로.
+   ⚠️ "제일 많이 고르는" 같은 말을 넣지 마세요. 세어 본 적이 없습니다. */
+.sit-tag{ justify-self:start; font-size:var(--t-cap); font-weight:800;
+  letter-spacing:.01em; color:var(--burgundy); background:var(--burgundy-50);
+  border-radius:var(--r-pill); padding:5px 11px; margin-bottom:2px; }
+
+/* 약속 세 줄 — 동그라미보다 둥근 사각 타일이 정돈돼 보입니다 */
+.how-ic{ width:48px; height:48px; border-radius:16px;
+  border:1px solid var(--gold-line); }
+
+/* 구간 설명 속의 **실제 숫자**만 브랜드색으로. 색이 한 점 들어가면
+   글 덩어리가 훨씬 덜 심심해 보입니다.
+   ⚠️ 여기에 강조할 수 있는 것은 **셀 수 있는 것**뿐입니다 — 창업 단계
+   스무 개, 진단 여덟 항목처럼. 실적·만족도·업체 수는 값이 없습니다. */
+.sec-hd p b{ color:var(--burgundy); font-weight:800; }

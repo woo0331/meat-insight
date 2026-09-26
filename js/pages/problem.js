@@ -91,7 +91,15 @@ function PageProblem(g){
                '<span>'+labMark(t)+'</span></li>';
       }).join("")+'</ol>'+
       '<p class="gd-ask-n">이 질문들은 요청서에도 그대로 들어갑니다 — '+
-      '따로 적지 않으셔도 됩니다.</p>')+
+      '따로 적지 않으셔도 됩니다.</p>'+
+      /* ⚠️ 흐름의 마지막 칸으로 잇는 자리입니다. 질문 바로 아래여야
+         합니다 — 맺음까지 내리면 "받은 다음에 뭘 하지" 가 끊깁니다. */
+      '<a class="gd-ask-go" href="/quotes?g='+esc(g.key)+'">'+
+        '<span class="gd-ask-go-ic">'+icon("scale",20)+'</span>'+
+        '<span class="gd-ask-go-t"><b>견적을 받으셨으면 나란히 놓아 보세요</b>'+
+          '<span>업체마다 이 질문에 뭐라고 했는지 적어 두시면, '+
+            '어디가 무엇을 빼고 계산했는지 보입니다.</span></span>'+
+        '<span class="gd-ask-go-a">'+icon("arrow",18)+'</span></a>')+
 
     (g.law
       ? '<section class="gd-law">'+

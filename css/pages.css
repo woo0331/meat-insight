@@ -2371,3 +2371,67 @@
   min-height:44px; margin-top:var(--s2);
   font-size:var(--t-sm); font-weight:700; color:var(--burgundy); }
 @media (max-width:560px){ .rq-ask{ padding:var(--s5); } }
+
+/* ── 가이드 → 견적 비교로 잇는 줄 ─────────────────────────
+   질문 바로 아래입니다. 맺음까지 내리면 "받은 다음에 뭘 하지" 가
+   끊깁니다. */
+.gd-ask-go{ display:grid; grid-template-columns:auto 1fr auto; gap:var(--s4);
+  align-items:center; margin-top:var(--s5); padding:var(--s5);
+  background:var(--tint-2); border-radius:var(--r-xl);
+  transition:transform .15s ease; }
+.gd-ask-go:hover{ transform:translateY(-1px); }
+.gd-ask-go-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:14px;
+  background:var(--surface); color:var(--t3-ink); }
+/* ⚠️ `>` 를 빼지 마세요 — 문장 속 <b> 까지 덩어리가 됩니다 */
+.gd-ask-go-t > b{ display:block; font-size:var(--t-md); color:var(--ink);
+  margin-bottom:4px; }
+.gd-ask-go-t > span{ display:block; font-size:var(--t-sm); color:var(--ink2);
+  line-height:1.7; }
+.gd-ask-go-a{ color:var(--t3-ink); }
+@media (max-width:560px){
+  .gd-ask-go{ grid-template-columns:auto 1fr; }
+  .gd-ask-go-a{ display:none; }
+}
+
+/* ── 견적 비교: 어느 고민의 견적인가 ───────────────────── */
+.qc-from{ display:grid; grid-template-columns:auto 1fr auto; gap:var(--s4);
+  align-items:center; margin-bottom:var(--s5); padding:var(--s5);
+  background:var(--ic-bg, var(--bg-warm)); border-radius:var(--r-xl); }
+.qc-from-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:14px;
+  background:var(--surface); color:var(--ic-ink, var(--burgundy)); }
+.qc-from-t > b{ display:block; font-size:var(--t-md); color:var(--ink);
+  margin-bottom:4px; }
+.qc-from-t > span{ display:block; font-size:var(--t-sm); color:var(--ink2);
+  line-height:1.7; }
+.qc-from-go{ display:inline-flex; align-items:center; gap:4px;
+  min-height:44px; padding:0 var(--s3); white-space:nowrap;
+  font-size:var(--t-sm); font-weight:700;
+  color:var(--ic-ink, var(--burgundy)); }
+@media (max-width:760px){
+  .qc-from{ grid-template-columns:auto 1fr; }
+  .qc-from-go{ grid-column:1 / -1; }
+}
+
+/* ── 업체마다 뭐라고 하던가요 ─────────────────────────── */
+.qc-ans{ margin-top:var(--s8); }
+.qc-ans-p{ margin:var(--s3) 0 var(--s5); font-size:var(--t-sm);
+  color:var(--ink2); line-height:1.75; }
+.qc-ans-p > b{ color:var(--ink); }
+/* 질문 칸은 금액 표보다 넓어야 읽힙니다.
+   ⚠️ 바탕 규칙의 `.qc-t th{ white-space:nowrap }` 을 **반드시 풀어야**
+   합니다 — 질문은 낱말이 아니라 문장이라, 안 풀면 표가 화면 밖으로
+   끝없이 늘어납니다. */
+.qc-t-a th[scope="row"]{ width:34%; min-width:180px; white-space:normal;
+  font-size:var(--t-sm); font-weight:600; color:var(--ink2);
+  line-height:1.6; vertical-align:top; padding-top:var(--s4); }
+.qc-t-a textarea{ min-height:56px; }
+/* ⚠️ 좁은 화면 규칙이 **앞에** 있습니다 (640px). 여기서 min-width 를
+   그냥 두면 그걸 덮어써서 견적 칸이 90px 로 쪼그라들고 "견적 1" 이
+   세 줄로 쪼개집니다 — 전수 점검이 실제로 네 건을 잡았습니다. */
+@media (max-width:640px){
+  .qc-t-a th[scope="row"]{ width:118px; min-width:0;
+    font-size:var(--t-cap); padding-top:var(--s2); }
+  .qc-t-a textarea{ min-height:48px; }
+}

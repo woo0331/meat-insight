@@ -53,14 +53,36 @@ function qcLoad(){
     if(!o || typeof o !== "object") o = {};
     if(!Array.isArray(o.list)) o.list = [];
     if(!o.ask || typeof o.ask !== "object") o.ask = {};
+    /* 어느 고민의 견적인지. ⚠️ 없어도 화면은 그대로 돕니다 —
+       예전에 적어 두신 것이 사라지면 안 됩니다. */
+    if(typeof o.guide !== "string") o.guide = "";
     return o;
-  }catch(e){ return { list:[], ask:{}, title:"" }; }
+  }catch(e){ return { list:[], ask:{}, title:"", guide:"" }; }
 }
+
+/* 이 비교가 어느 가이드의 것인지. 주소에 실려 오면 그것을 따르고,
+   없으면 저장해 둔 것을 씁니다.
+   ⚠️ 주소에 **없는 key** 가 오면 무시합니다 — 손님이 고친 주소로
+   빈 표가 나오면 안 됩니다. */
+function qcGuide(S){
+  var q = (typeof nowQS === "function") ? nowQS("g") : "";
+  if(q && typeof wowGuide === "function" && wowGuide(q)) return wowGuide(q);
+  if(S.guide && typeof wowGuide === "function") return wowGuide(S.guide);
+  return null;
+}
+
+/* 별표 표시를 떼어낸 맨 글. 표 안에서는 굵게가 오히려 읽기를 방해합니다. */
+function qcPlain(t){ return String(t).split("**").join(""); }
 function qcSave(o){ try{ localStorage.setItem(QC_KEY, JSON.stringify(o)); }catch(e){} }
 
 function PageQuotes(){
   var S = qcLoad();
   if(!S.list.length){ S.list = [{}, {}]; qcSave(S); }   /* 빈 화면을 두지 않습니다 */
+
+  /* 가이드를 타고 오셨으면 그 고민을 기억해 둡니다. 다음에 그냥
+     /quotes 로 오셔도 같은 질문이 그대로 있습니다. */
+  var G = qcGuide(S);
+  if(G && S.guide !== G.key){ S.guide = G.key; qcSave(S); }
 
   return '<section class="pg-hero"><div class="w pgh">'+
     '<div class="pgh-t">'+
@@ -79,6 +101,7 @@ function PageQuotes(){
     '</div></section>'+
 
     '<div class="w qc">'+
+      QcFrom(G)+
       '<div class="qc-top">'+
         '<label class="sr" for="qc-title">무슨 공사인가요</label>'+
         '<input id="qc-title" class="qc-title" type="text" autocomplete="off"'+
@@ -106,6 +129,8 @@ function PageQuotes(){
       '</tbody></table></div>'+
 
       QcSum(S.list)+
+
+      QcAnswers(G, S.list)+
 
       '<section class="qc-ask">'+
         '<div class="post-ck-h"><b>'+icon("chat",20)+'이건 물어보셨나요</b>'+
@@ -266,5 +291,93 @@ window.qcReset = function(){
 window.qcBrief = function(){
   var S = qcLoad();
   var filled = S.list.filter(function(q){ return (q.co||"").trim() || qcNum(q.price) > 0; });
-  return { title:S.title || "", n:filled.length, asked:Object.keys(S.ask).length, total:QC_ASK.length };
+  /* 업체마다 적어 두신 답이 몇 개인지. ⚠️ 가이드를 안 타고 오셨으면
+     0 이 아니라 **없음**입니다 — 0 도 숫자라서 "안 적었다" 로 읽힙니다. */
+  var G = (S.guide && typeof wowGuide === "function") ? wowGuide(S.guide) : null;
+  var ans = null;
+  if(G){
+    ans = 0;
+    S.list.forEach(function(q){
+      if(q.a) Object.keys(q.a).forEach(function(k){ if(String(q.a[k]).trim()) ans++; });
+    });
+  }
+  return { title:S.title || "", n:filled.length,
+           asked:Object.keys(S.ask).length, total:QC_ASK.length,
+           guide:G ? G.h1 : "", guideKey:G ? G.key : "",
+           ans:ans, ansTotal:G ? G.ask.length * Math.max(filled.length, 1) : 0 };
+};
+
+/* ── 어느 고민의 견적인가 ─────────────────────────────────
+   ⚠️ 가이드를 안 타고 오셨으면 **아무것도 안 냅니다** (절대 규칙 2).
+   "고민을 고르지 않았습니다" 같은 빈 줄을 두지 않습니다. */
+function QcFrom(G){
+  if(!G) return "";
+  var p = wowProblem(G.key);
+  return '<div class="qc-from'+(p ? ' '+tnClass(p.tone) : '')+'">'+
+    '<span class="qc-from-ic">'+icon(p ? p.icon : "chat", 20)+'</span>'+
+    '<span class="qc-from-t">'+
+      '<b>'+esc(G.h1)+' 견적을 비교하는 중입니다</b>'+
+      '<span>가이드에서 물어보라고 드린 것들을 아래에 그대로 놓았습니다. '+
+        '업체마다 뭐라고 했는지 적어 보시면 어디가 무엇을 빼고 계산했는지 '+
+        '보입니다.</span>'+
+    '</span>'+
+    '<a class="qc-from-go" href="/problem/'+esc(G.key)+'">'+
+      '가이드 다시 보기'+icon("chev",16)+'</a>'+
+  '</div>';
+}
+
+/* ── 업체마다 뭐라고 하던가요 ─────────────────────────────
+   흐름의 마지막 칸입니다.
+
+     가이드(물어볼 것) → 요청서(업체에 전달) → **여기(답을 나란히)**
+
+   ⚠️ 금액 비교가 뜻이 있으려면 **포함 범위가 같아야** 합니다. 그걸
+   가르는 것이 바로 이 질문들의 답이라, 금액 표 바로 다음에 둡니다.
+   ⚠️ 여기에 "어느 답이 낫다" 를 표시하지 마세요. 우리는 그 공사를
+   보지 않았습니다 — 나란히 놓는 데까지입니다. */
+function QcAnswers(G, list){
+  if(!G || !G.ask || !G.ask.length) return "";
+
+  return '<section class="qc-ans">'+
+    '<div class="post-ck-h"><b>'+icon("list",20)+'업체마다 뭐라고 하던가요</b>'+
+      '<span>'+G.ask.length+'가지</span></div>'+
+    '<p class="qc-ans-p">가이드에서 물어보라고 드린 것들입니다. '+
+      '<b>답이 다르면 금액 비교가 뜻이 없습니다</b> — 포함 범위가 다른 것이니까요. '+
+      '들으신 대로 짧게 적어 두시면 됩니다.</p>'+
+    '<div class="qc-wrap"><table class="qc-t qc-t-a"><tbody>'+
+      '<tr class="qc-head"><th scope="row"><span class="sr">질문</span></th>'+
+        list.map(function(q, i){
+          var co = String(q.co || "").trim();
+          /* ⚠️ 업체명을 적으셨으면 그것을 머리에 씁니다 — "견적 1" 보다
+             "가나덕트" 가 훨씬 빨리 읽힙니다. esc() 를 꼭 통과시킵니다. */
+          return '<td>'+esc(co || ("견적 " + (i+1)))+'</td>';
+        }).join("")+'</tr>'+
+      G.ask.map(function(t, qi){ return qcAnsRow(t, qi, list); }).join("")+
+    '</tbody></table></div>'+
+  '</section>';
+}
+
+function qcAnsRow(t, qi, list){
+  return '<tr>'+
+    '<th scope="row">'+esc(qcPlain(t))+'</th>'+
+    list.map(function(q, i){
+      var v = (q.a && q.a[qi]) || "";
+      var id = "qc-a-"+qi+"-"+i;
+      return '<td>'+
+        '<label class="sr" for="'+id+'">견적 '+(i+1)+' — '+esc(qcPlain(t))+'</label>'+
+        '<textarea id="'+id+'" rows="2" placeholder="들으신 대로"'+
+          ' oninput="qcAns('+i+','+qi+',this.value)">'+esc(v)+'</textarea>'+
+      '</td>';
+    }).join("")+
+  '</tr>';
+}
+
+/* ⚠️ 적는 중에 화면을 다시 그리지 마세요 — 커서가 맨 앞으로 튑니다.
+   저장만 하고 아무것도 다시 그리지 않습니다. */
+window.qcAns = function(i, qi, val){
+  var S = qcLoad();
+  if(!S.list[i]) S.list[i] = {};
+  if(!S.list[i].a || typeof S.list[i].a !== "object") S.list[i].a = {};
+  S.list[i].a[qi] = val;
+  qcSave(S);
 };

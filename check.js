@@ -62,6 +62,7 @@ const PAGES = [
   ["/problem/interior","가이드 (인테리어 · 목록 제일 긺)"],
   ["/problem/exit",    "가이드 (가게 정리 · 맺음 카드 네 장)"],
   ["/request?s=pack",  "견적 요청 (가이드 없는 서비스)"],
+  ["/quotes?g=duct",   "견적 비교 (덕트 가이드에서 옴)"],
   ["/lab",             "사장님 연구소"],
   ["/lab?c=fac",       "연구소 (분류 고른 채로)"],
   /* ⚠️ 글 화면이 검사에 아예 안 들어가 있었습니다. 열두 편이 통째로
@@ -1057,10 +1058,47 @@ const AUDIT = `(() => {
     return !document.querySelector(".rq-ask")
         || "물어볼 것 상자가 비어 있는 채로 나옵니다";`);
 
+  /* ── 가이드 → 요청서 → 견적 비교 ─────────────────────────
+     흐름의 **마지막 칸**입니다. 여기까지 이어져야 사장님이 같은 것을
+     두 번 적지 않습니다.
+       가이드(물어볼 것) → 요청서(업체에 전달) → 견적 비교(답을 나란히) */
+  await f("가이드에서 견적 비교로 가면 그 질문이 실려 있다", "/problem/duct", `
+    const a = document.querySelector(".gd-ask-go");
+    if(!a) return "가이드에 견적 비교로 가는 길이 없습니다";
+    go(a.getAttribute("href"));
+    await new Promise(r=>setTimeout(r,400));
+    const g = wowGuide("duct");
+    const rows = [...document.querySelectorAll(".qc-t-a tbody tr")].slice(1);
+    if(rows.length !== g.ask.length)
+      return rows.length + " / 가이드의 질문 " + g.ask.length;
+    /* 별표 표시가 표에 그대로 찍히면 안 됩니다 */
+    const txt = document.querySelector(".qc-t-a").textContent;
+    return txt.indexOf("*") < 0 || "표에 별표 표시가 찍혔습니다";`);
+
+  await f("업체 답을 적으면 이 브라우저에 남는다", "/quotes?g=duct", `
+    const ta = document.getElementById("qc-a-0-0");
+    if(!ta) return "답 적는 칸이 없습니다";
+    qcAns(0, 0, "옥상으로 빼는 건 안 된다고 합니다");
+    go("/"); await new Promise(r=>setTimeout(r,250));
+    go("/quotes"); await new Promise(r=>setTimeout(r,400));
+    const back = document.getElementById("qc-a-0-0");
+    if(!back) return "다시 왔더니 답 칸이 사라졌습니다";
+    return back.value.indexOf("옥상") >= 0 || "적은 것이 안 남았습니다";`);
+
+  /* ⚠️ 주소에 가이드가 없으면 **예전 그대로**여야 합니다. 예전에 적어
+     두신 비교가 사라지거나 빈 표가 생기면 안 됩니다. */
+  await f("가이드 없이 들어가면 빈 표를 만들지 않는다", "/quotes", `
+    localStorage.removeItem("wow.quotes.v1");
+    go("/"); await new Promise(r=>setTimeout(r,250));
+    go("/quotes"); await new Promise(r=>setTimeout(r,400));
+    if(document.querySelector(".qc-t-a")) return "빈 질문 표가 나옵니다";
+    if(document.querySelector(".qc-from")) return "어느 고민인지 모르는데 띠가 나옵니다";
+    return !!document.querySelector(".qc-ask") || "공통 물어볼 것이 사라졌습니다";`);
+
   console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 +
               "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 6 +
               "개 · 접수처 없음 " + 5 + "개 · 도구 계산 " + 9 +
-              "개 · 머리말 " + 3 + "개 · 고민 가이드 " + 10 + "개");
+              "개 · 머리말 " + 3 + "개 · 고민 가이드 " + 13 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

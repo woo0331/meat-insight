@@ -158,11 +158,18 @@ function MyQuotes(){
   if(!b.n) return { has:false, icon:"scale", name:"견적 비교", to:"/quotes",
     empty:"받으신 견적을 나란히 놓고 금액·일정·A/S·포함 범위를 비교합니다.",
     ctaOff:"견적 비교하기" };
-  return { has:true, icon:"scale", name:"견적 비교", to:"/quotes",
+  /* 어느 고민의 견적인지 · 업체 답을 몇 개 적으셨는지.
+     ⚠️ 가이드를 안 타고 오셨으면 `ans` 가 **null** 입니다 — 0 을 찍으면
+     "안 적었다" 로 읽히는데, 사실은 물어볼 목록 자체가 없습니다. */
+  return { has:true, icon:"scale", name:"견적 비교",
+    to:"/quotes"+(b.guideKey ? "?g="+encodeURIComponent(b.guideKey) : ""),
     value:'<b>'+b.n+'곳</b>',
     line:(b.title ? '<b>'+esc(b.title)+'</b> · ' : '')+
+         (b.guide ? esc(b.guide)+' · ' : '')+
          (b.n < 2 ? '한 곳뿐입니다. 두 곳 이상이어야 비교가 됩니다.'
-                  : '물어볼 것 '+b.asked+' / '+b.total+' 을 확인하셨습니다.'),
+                  : '물어볼 것 '+b.asked+' / '+b.total+' 을 확인하셨습니다.')+
+         (b.ans !== null && b.ans !== undefined
+            ? ' 업체 답은 '+b.ans+'칸 적으셨습니다.' : ''),
     cta:"비교 화면 열기" };
 }
 

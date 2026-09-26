@@ -159,21 +159,28 @@ ul,ol{ margin:0; padding:0; list-style:none; }
 @media (max-width:640px){ .br-m{ display:none; } .sec-more{ position:static; } }
 
 /* ══ 푸터 ═════════════════════════════════════════════════ */
-.ft{ background:var(--burgundy); color:rgba(255,255,255,.72);
+/* ⚠️ 푸터를 **통째로 버건디**로 칠해 두었습니다. 화면 아래 한 뼘이
+   전부 브랜드색이라, 지시서 30번이 금지한 "버건디 면적 넓히기" 에
+   정확히 해당합니다. 밝은 바탕으로 두고 브랜드색은 **로고와 단추**에만
+   남깁니다 — 기준 화면의 푸터도 밝습니다.
+   ⚠️ 되돌리지 마세요. 색을 넓게 칠해서 얻는 무게감은 없습니다. */
+.ft{ background:var(--bg-warm); color:var(--ink2);
+  border-top:1px solid var(--line);
   padding:var(--s10) 0 var(--s7); margin-top:0; font-size:var(--t-base); }
 .ft-g{ display:grid; grid-template-columns:1.6fr repeat(4,1fr); gap:var(--s7); }
-.ft-b p{ margin:var(--s4) 0 var(--s5); line-height:1.8; color:rgba(255,255,255,.72); }
-.ft-lg{ font-size:20px; font-weight:800; letter-spacing:.055em; color:#fff; }
-.ft .btn-o{ background:transparent; border-color:rgba(255,255,255,.4); color:#fff; }
-.ft .btn-o:hover{ background:rgba(255,255,255,.1); border-color:#fff; color:#fff; }
-.ft-col h4{ font-size:var(--t-base); color:#fff; margin-bottom:var(--s4); }
+.ft-b p{ margin:var(--s4) 0 var(--s5); line-height:1.8; color:var(--ink2); }
+.ft-lg{ font-size:20px; font-weight:800; letter-spacing:.055em; color:var(--burgundy); }
+.ft .btn-o{ background:var(--surface); border-color:var(--line); color:var(--ink); }
+.ft .btn-o:hover{ background:var(--surface); border-color:var(--burgundy);
+  color:var(--burgundy); }
+.ft-col h4{ font-size:var(--t-base); color:var(--ink); margin-bottom:var(--s4); }
 /* ⚠️ 누르는 것은 40px 이상. 38px 로 두었다가 전수 점검에 168건이
    걸렸습니다 — 푸터 링크가 화면마다 반복되기 때문입니다. */
-.ft-col a{ display:block; min-height:44px; line-height:44px; color:rgba(255,255,255,.72); }
-.ft-col a:hover{ color:#fff; }
+.ft-col a{ display:block; min-height:44px; line-height:44px; color:var(--ink2); }
+.ft-col a:hover{ color:var(--burgundy); }
 .ft-biz{ margin-top:var(--s8); padding-top:var(--s5);
-  border-top:1px solid rgba(255,255,255,.16); font-size:var(--t-cap);
-  color:rgba(255,255,255,.55); display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5); }
+  border-top:1px solid var(--line); font-size:var(--t-cap);
+  color:var(--ink3); display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5); }
 .ft-cp{ flex-basis:100%; margin-top:var(--s2); }
 @media (max-width:900px){ .ft-g{ grid-template-columns:1fr 1fr; gap:var(--s6); }
   .ft-b{ grid-column:1 / -1; } }

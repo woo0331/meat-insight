@@ -502,7 +502,9 @@
    ════════════════════════════════════════════════════════════════════ */
 .pg-hero{ background:var(--surface); border-bottom:1px solid var(--line);
   padding:var(--s9) 0 var(--s8); }
-.pg-hero .pg-h1{ font-size:var(--t-3xl); letter-spacing:-.035em; margin-bottom:var(--s4); }
+/* ⚠️ 제목이 44px 로 커진 뒤로 16px 간격은 설명줄이 제목에 붙어
+   보입니다. 글씨가 커지면 사이도 같이 커져야 같은 밀도로 읽힙니다. */
+.pg-hero .pg-h1{ font-size:var(--t-3xl); letter-spacing:-.035em; margin-bottom:var(--s5); }
 .pg-hero .pg-lead{ max-width:62ch; margin-bottom:0; }
 .pg-hero .row-cta{ margin-top:var(--s7); }
 /* 어두운 머리 — 창업 · 파트너처럼 "시작하는" 화면에만 */

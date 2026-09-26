@@ -137,6 +137,13 @@ function searchRun(q){
       if(String(r.line||"").toLowerCase().indexOf(w) >= 0) score += 2;
       if(r.title.toLowerCase().indexOf(w) >= 0) score += 6;   /* 제목에 있으면 위로 */
     });
+    /* ⚠️ **해결방법을 글보다 위에 둡니다.** 흐름의 가운데 칸이
+       해결방법이고, 글은 읽을거리입니다. "덕트" 를 쳤을 때 연구소
+       글이 가이드보다 위에 뜨면, 지금 민원을 받고 계신 사장님이
+       확인할 것·물어볼 것 대신 읽을거리부터 보게 됩니다.
+       ⚠️ 점수를 크게 주지 마세요 — 엉뚱한 가이드가 딱 맞는 글을
+       이기면 그게 더 나쁩니다. 비슷할 때만 앞서는 정도입니다. */
+    if(score > 0 && r.kind === "guide") score += 3;
     return all ? { r:r, score:score } : null;
   }).filter(Boolean)
     .sort(function(a,b){ return b.score - a.score; });

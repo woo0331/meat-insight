@@ -386,11 +386,17 @@
 
 /* 문제 분류 고르기 */
 .pick{ display:flex; flex-wrap:wrap; gap:var(--s2); }
+/* ⚠️ 알약을 **테두리로만** 두면 열댓 개가 나란히 있을 때 화면이 선으로
+   가득 찹니다. 흰 알약 + 아주 옅은 그림자 쪽이 훨씬 정돈돼 보입니다. */
 .pk{ min-height:44px; padding:0 var(--s5); border-radius:var(--r-pill);
-  border:1px solid var(--line); background:var(--surface); cursor:pointer;
+  border:1px solid transparent; background:var(--surface); cursor:pointer;
+  box-shadow:var(--shadow);
   font-size:var(--t-base); font-weight:600; color:var(--ink2);
-  transition:border-color .15s, background-color .15s, color .15s; }
-.pk:hover{ border-color:var(--burgundy); color:var(--burgundy); }
+  transition:border-color .16s ease, background-color .16s ease, color .16s ease,
+             box-shadow .16s ease, transform .1s ease; }
+.pk:hover{ border-color:var(--burgundy); color:var(--burgundy);
+  box-shadow:var(--shadow-md); }
+.pk:active{ transform:translateY(1px); }
 .pk.on{ background:var(--burgundy); border-color:var(--burgundy); color:#fff; }
 
 /* 동의 — 무엇을·왜·얼마나를 동의 자리에서 같이 보여 줍니다 */
@@ -1470,9 +1476,16 @@
 
 /* 적는 줄·고르는 줄은 카드가 아닙니다 — 떠 있으면 안 되고, 옅은 면으로
    깔려 있어야 몇 줄이 이어져도 눈이 편합니다. */
-.tl-i, .cost-i, .svc-i{
+/* ⚠️ `.svc-i` 를 여기 같이 넣었다가 물렀습니다. 그건 **적는 줄이 아니라
+   누르면 넘어가는 칸**입니다 — 옅은 회색으로 깔아 두면 꺼진 줄처럼
+   보여서 누를 수 있는 것인 줄 모릅니다. */
+.tl-i, .cost-i{
   background:var(--bg-warm); border-color:transparent; border-radius:var(--r-lg);
   box-shadow:none; }
+.svc-i{ background:var(--surface); border-color:transparent;
+  border-radius:var(--r-lg); box-shadow:var(--shadow);
+  transition:box-shadow .2s ease, transform .2s ease; }
+.svc-i:hover{ box-shadow:var(--shadow-md); transform:translateY(-2px); }
 .tl-i:focus-within, .cost-i:focus-within{ background:var(--surface);
   box-shadow:var(--shadow); }
 
@@ -1639,3 +1652,10 @@
    안 튑니다 (아이콘 + 글 = 항목 2개). */
 .pk .ic{ flex:0 0 auto; color:var(--ink3); margin-right:6px; }
 .pk.on .ic{ color:#fff; }
+
+/* 견적 요청 고르기 — 묶음 제목의 아이콘 타일 */
+.rq-g-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:15px;
+  background:var(--burgundy-50); color:var(--burgundy);
+  border:1px solid var(--gold-line); }
+.rq-g h2{ border-bottom-color:var(--line-soft); }

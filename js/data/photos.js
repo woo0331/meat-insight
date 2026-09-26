@@ -94,6 +94,8 @@ window.WOW_PHOTOS = {
     alt:"아직 아무것도 들어오지 않은 빈 점포. 사다리와 도면, 쌓아 둔 상자가 보입니다" },
   "hero-partner":  { src:"/img/hero-partner.svg",
     alt:"공구 가방을 옆에 두고 주방에 선 시공 기사. 후드와 냉장고가 보입니다" },
+  "hero-my":       { src:"/img/hero-my.svg",
+    alt:"체크 표시가 붙은 줄들이 적힌 클립보드와, 뒤에 쌓아 둔 종이" },
   "hero-lab":      { src:"/img/hero-lab.svg",
     alt:"펼쳐 놓은 공책과 쌓아 둔 자료, 연필이 놓인 책상" },
   "hero-tools":    { src:"/img/hero-tools.svg",

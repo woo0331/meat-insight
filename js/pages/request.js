@@ -147,12 +147,14 @@ function ReqField(f){
    끊어 주면 "내 것이 어느 쪽인지" 부터 잡힙니다. */
 function ReqPick(){
   return '<div class="w form-wrap form-wide">'+
+    '<p class="eyebrow">견적 요청</p>'+
     '<h1 class="pg-h1">어떤 견적이 필요하세요?</h1>'+
     '<p class="pg-lead">고르시면 그 일에 맞는 것만 여쭤봅니다 — 덕트는 화구 수, '+
       '육류는 월 사용량. 여기 없으면 그냥 적어 주셔도 됩니다.</p>'+
     WOW_SERVICE_GROUPS.map(function(g){
       return '<section class="rq-g">'+
-        '<h2>'+icon(g.icon||"chev",20)+esc(g.name)+
+        '<h2><span class="rq-g-ic">'+icon(g.icon||"chev",22)+'</span>'+
+          '<span>'+esc(g.name)+'</span>'+
           (g.lead ? '<em>'+esc(g.lead)+'</em>' : '')+'</h2>'+
         '<div class="pick pick-wrap">'+g.items.map(function(it){
           return '<a class="pk" href="/request?s='+encodeURIComponent(it.key)+'">'+

@@ -714,6 +714,25 @@ S["hero-cost"] = () => svg(HW, HH,
       ].join(""), "translate(220,"+(130+i*96)+")")).join("")
 , C.paper);
 
+S["hero-my"] = () => svg(HW, HH,
+  hdesk() +
+  /* 클립보드 한 장 + 뒤에 쌓인 것들 — "여태 해 둔 것" 을 말합니다 */
+  [0,1].map(i => r(300-i*26, 190+i*22, 560, 470, i?C.paper2:C.steel, 18)).join("") +
+  g([ r(0,0,560,470,C.white,18),
+      r(200,-16,160,34,C.steel2,10), r(236,-8,88,18,C.paper2,6),
+      [0,1,2,3].map(rw =>
+        r(50, 84+rw*96, 460, 70, C.light, 12)).join(""),
+      [0,1,2,3].map(rw =>
+        r(76, 104+rw*96, 30, 30, rw<3?C.burg:C.paper2, 8)).join(""),
+      [0,1,2,3].map(rw =>
+        r(124, 110+rw*96, 220-(rw%2)*60, 12, C.steel2, 6)).join(""),
+      [0,1,2,3].map(rw =>
+        r(124, 132+rw*96, 150-(rw%3)*40, 10, C.paper2, 5)).join(""),
+      [0,1,2].map(rw =>
+        r(396, 108+rw*96, 88, 20, C.paper2, 7)).join("")
+    ].join(""), "translate(326,170)")
+, C.paper);
+
 S["hero-about"] = () => svg(HW, HH,
   hdesk() +
   /* 문제 → 정리 → 업체 */

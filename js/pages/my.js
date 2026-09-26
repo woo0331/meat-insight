@@ -20,7 +20,8 @@ function PageMy(){
   var cards = [MyCheck(), MyStart(), MyCost(), MyYield(), MyBep(), MyQuotes(), MyRead()];
   var some  = cards.filter(function(c){ return c.has; });
 
-  return '<section class="pg-hero"><div class="w">'+
+  return '<section class="pg-hero"><div class="w pgh">'+
+      '<div class="pgh-t">'+
       '<p class="eyebrow">MY BUSINESS</p>'+
       '<h1 class="pg-h1">지금까지 하신 것</h1>'+
       '<p class="pg-lead">'+
@@ -34,6 +35,8 @@ function PageMy(){
                      "브라우저 기록을 지우면 같이 없어집니다.")+
         fact("user", "성함·연락처는 담지 않습니다.")+
       '</ul>'+
+      '</div>'+
+      '<figure class="pgh-f">'+photoBox("hero-my")+'</figure>'+
     '</div></section>'+
 
     '<div class="w my">'+

@@ -24,9 +24,24 @@ function PageSos(){
   var picked = c ? wowProblem(c) : null;
 
   return '<div class="w form-wrap">'+
+    '<p class="eyebrow">사장님 SOS</p>'+
     '<h1 class="pg-h1">어떤 문제가 있으세요?</h1>'+
     '<p class="pg-lead">상황을 그대로 적어 주시면 됩니다. '+
       '무엇이 필요한 일인지는 저희가 정리하겠습니다.</p>'+
+
+    /* ⚠️ **적고 나면 무슨 일이 일어나는지**를 적기 전에 보여 줍니다.
+       모르는 채로 성함·연락처를 적으라고 하면 대부분 닫습니다.
+       ⚠️ 여기에 "몇 시간 안에" 같은 시간 약속을 넣지 마세요. 지킬 수
+       없습니다 (절대 규칙 5 · 약관 제8조). */
+    '<ol class="sflow">'+
+      [["edit","적어 주시면"],
+       ["list","무엇이 필요한 일인지 정리하고"],
+       ["users","조건 맞는 곳을 최대 세 곳 찾아"],
+       ["scale","견적을 나란히 놓아 드립니다"]].map(function(x,i){
+        return '<li><span class="sflow-n">'+(i+1)+'</span>'+
+          '<span class="sflow-ic">'+icon(x[0],18)+'</span>'+
+          '<span class="sflow-t">'+esc(x[1])+'</span></li>';
+      }).join("")+'</ol>'+
 
     Notice()+
 
@@ -45,7 +60,8 @@ function PageSos(){
           var on = picked && picked.key === p.key;
           return '<button type="button" class="pk'+(on?" on":"")+'" '+
             'data-k="'+esc(p.key)+'" aria-pressed="'+(on?"true":"false")+'" '+
-            'onclick="sosPick(this)">'+esc(p.name)+'</button>';
+            'onclick="sosPick(this)">'+icon(p.icon||"chat",16)+
+            '<span>'+esc(p.name)+'</span></button>';
         }).join("")+'</div></div>'+
 
       '<div class="f-2">'+

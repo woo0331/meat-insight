@@ -366,12 +366,19 @@
 .f-r label{ display:block; font-size:var(--t-base); font-weight:700; margin-bottom:var(--s2); }
 .f-r label b{ color:var(--burgundy); }
 .f-r label em{ font-style:normal; font-weight:600; color:var(--ink3); font-size:var(--t-sm); }
-.f-r input, .f-r textarea{ width:100%; min-height:var(--tap);
-  padding:13px var(--s4); border:1px solid var(--line); border-radius:var(--r);
-  background:var(--surface); font:inherit; font-size:var(--t-md); color:var(--ink); }
+/* ⚠️ **적는 칸은 적는 칸으로 보여야 합니다.** 흰 바탕(--surface)에
+   옅은 테두리로 두었더니, 바탕을 밝게 올린 뒤로 칸과 바탕의 밝기가
+   거의 같아져서 **빈 자리처럼** 보였습니다. 계산기의 적는 줄과 같은
+   방법으로 갑니다 — 옅은 면으로 깔고, 손이 닿으면 흰색으로 떠오릅니다. */
+.f-r input, .f-r textarea, .f-r select{ width:100%; min-height:var(--tap);
+  padding:13px var(--s4); border:1px solid transparent; border-radius:var(--r);
+  background:var(--bg-warm); font:inherit; font-size:var(--t-md); color:var(--ink);
+  transition:background-color .16s ease, border-color .16s ease, box-shadow .16s ease; }
 .f-r textarea{ resize:vertical; line-height:1.7; }
-.f-r input:focus, .f-r textarea:focus{ outline:0; border-color:var(--burgundy);
+.f-r input:focus, .f-r textarea:focus, .f-r select:focus{ outline:0;
+  background:var(--surface); border-color:var(--burgundy);
   box-shadow:0 0 0 3px var(--burgundy-50); }
+.f-r input:hover, .f-r textarea:hover, .f-r select:hover{ background:var(--line-soft); }
 .f-hint{ margin-top:var(--s2); font-size:var(--t-sm); color:var(--ink3); line-height:1.7; }
 .f-2{ display:grid; grid-template-columns:1fr 1fr; gap:0 var(--s4); }
 .f-foot{ margin-top:var(--s4); font-size:var(--t-sm); color:var(--ink3); text-align:center; }
@@ -1599,3 +1606,36 @@
    ⚠️ 여기에 강조할 수 있는 것은 **셀 수 있는 것**뿐입니다 — 창업 단계
    스무 개, 진단 여덟 항목처럼. 실적·만족도·업체 수는 값이 없습니다. */
 .sec-hd p b{ color:var(--burgundy); font-weight:800; }
+
+/* ── SOS: 적고 나면 무슨 일이 일어나는가 ───────────────────
+   ⚠️ 모르는 채로 성함·연락처를 적으라고 하면 대부분 닫습니다. 네 칸을
+   먼저 보여 주는 것이 꾸밈이자 안내입니다.
+   ⚠️ 여기에 **시간 약속을 적지 마세요** — 지킬 수 없습니다. */
+.sflow{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s3);
+  margin:var(--s6) 0 var(--s7); }
+/* ⚠️ 번호·아이콘·글을 **한 줄에** 두면 칸이 170px 밖에 안 되어 글이
+   한 낱말씩 네 줄로 쪼개집니다. 번호와 아이콘을 윗줄에 두고 글에
+   칸 전체를 줍니다. */
+.sflow li{ display:grid; grid-template-columns:auto 1fr; align-items:center;
+  gap:var(--s2) var(--s2); padding:var(--s4) var(--s5); border-radius:var(--r-lg);
+  background:var(--surface); box-shadow:var(--shadow); }
+.sflow-t{ grid-column:1 / -1; }
+.sflow-ic{ justify-self:start; }
+.sflow-n{ display:inline-flex; align-items:center; justify-content:center;
+  width:22px; height:22px; border-radius:var(--r-pill);
+  background:var(--burgundy); color:#fff;
+  font-size:var(--t-cap); font-weight:800; }
+.sflow-ic{ display:inline-flex; color:var(--burgundy); }
+.sflow-t{ font-size:var(--t-sm); color:var(--ink2); font-weight:600; line-height:1.5; }
+@media (max-width:860px){
+  .sflow{ grid-template-columns:1fr 1fr; }
+}
+@media (max-width:480px){
+  .sflow{ grid-template-columns:1fr; gap:var(--s2); }
+}
+
+/* 고르는 알약에 아이콘 한 개 — 열두 개가 나란히 있을 때 눈이 훑습니다.
+   ⚠️ `.pk` 는 flex 라, 글을 <span> 으로 감싸야 낱말이 딴 칸으로
+   안 튑니다 (아이콘 + 글 = 항목 2개). */
+.pk .ic{ flex:0 0 auto; color:var(--ink3); margin-right:6px; }
+.pk.on .ic{ color:#fff; }

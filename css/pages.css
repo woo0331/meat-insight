@@ -1659,3 +1659,72 @@
   background:var(--burgundy-50); color:var(--burgundy);
   border:1px solid var(--gold-line); }
 .rq-g h2{ border-bottom-color:var(--line-soft); }
+
+/* ════════════════════════════════════════════════════════════════════
+   입체감 — 평평한 면을 걷어냅니다
+
+   ⚠️ 지시서 30번이 금지한 것은 **과도한 그라디언트**입니다. 무지개나
+   보라→파랑처럼 **색이 바뀌는** 것이 그렇습니다. 여기서 쓰는 것은
+   **같은 색의 명암 두 단**뿐입니다 — 빛이 위에서 온다고 치고 위는
+   밝게, 아래는 한 단 어둡게. 색이 바뀌는 게 보이면 이미 과한 것입니다.
+
+   ⚠️ 그림자는 **두 겹**입니다. 바로 밑에 닿는 짧은 것 하나(접지)와
+   멀리 퍼지는 옅은 것 하나(공중). 한 겹만 쓰면 스티커처럼 보입니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── 아이콘 타일: 눌러 찍은 것처럼 ────────────────────────
+   안쪽 윗선(흰색)은 빛, 안쪽 아랫선(버건디)은 그늘입니다. 둘이 같이
+   있어야 도톰해 보입니다 — 하나만 두면 그냥 테두리로 읽힙니다. */
+.cat-ic, .tl-c-ic, .mycard-ic, .prob-ic, .svc-g-ic, .rq-g-ic, .how-ic, .faq-ic{
+  background:linear-gradient(162deg, #FFFFFF 0%, var(--burgundy-50) 52%, #F3E3E6 100%);
+  box-shadow:inset 0 1px 0 #fff,
+             inset 0 -2px 5px rgba(107,36,54,.10),
+             0 2px 5px rgba(58,44,36,.07); }
+.cat:hover .cat-ic, .tl-c:hover .tl-c-ic, .prob:hover .prob-ic,
+.mycard:hover .mycard-ic, .svc-g.on .svc-g-ic, .faq-i[open] .faq-ic{
+  background:linear-gradient(162deg, var(--burgundy-600) 0%, var(--burgundy) 58%, #571D2C 100%);
+  color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.26),
+             0 6px 14px -4px rgba(107,36,54,.42); }
+
+/* 진한 타일(메인 도구 카드 · 진단 완료 · 창업 사진칩) */
+.tool-ic, .done-ic, .st-ph-ic, .sflow-n{
+  background:linear-gradient(162deg, var(--burgundy-600) 0%, var(--burgundy) 58%, #571D2C 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.26),
+             0 6px 14px -4px rgba(107,36,54,.38); }
+
+/* ── 카드: 접지 그림자 + 공중 그림자 ───────────────────── */
+.sit, .cat, .tool, .mycard, .tl-c, .prob, .pcard, .faq-i, .post-ck, .sflow li{
+  box-shadow:0 1px 2px rgba(58,44,36,.05),
+             0 12px 26px -10px rgba(58,44,36,.16); }
+.sit:hover, .cat:hover, .tool:hover, .mycard:hover, .tl-c:hover,
+.prob:hover, .pcard:hover{
+  box-shadow:0 2px 4px rgba(58,44,36,.06),
+             0 26px 46px -16px rgba(58,44,36,.26); }
+
+/* ── 그림 카드 뒤의 빛 ────────────────────────────────────
+   ⚠️ 그림이 흰 바탕에 그냥 얹혀 있으면 붙여 놓은 종이처럼 보입니다.
+   뒤에 아주 옅은 빛을 한 겹 깔면 공간 안에 놓인 것처럼 읽힙니다. */
+.hero-art, .pgh-f{ position:relative; }
+.hero-art::before, .pgh-f::before{ content:""; position:absolute;
+  left:-4%; right:-4%; top:2%; bottom:-6%; z-index:-1;
+  border-radius:50%;
+  background:radial-gradient(58% 54% at 50% 50%,
+    rgba(107,36,54,.16) 0%, rgba(107,36,54,0) 72%);
+  filter:blur(22px); }
+.hero-art .ph, .pgh-f .ph{
+  box-shadow:0 2px 6px rgba(58,44,36,.07),
+             0 34px 60px -22px rgba(58,44,36,.34); }
+
+/* ── 히어로 입력창: 제일 앞에 떠 있어야 합니다 ──────────── */
+.hero-lt .ask{ box-shadow:0 2px 6px rgba(58,44,36,.07),
+                          0 26px 48px -16px rgba(58,44,36,.30); }
+.hero-lt .ask:focus-within{ box-shadow:0 0 0 3px var(--burgundy-50),
+                                       0 2px 6px rgba(58,44,36,.07),
+                                       0 26px 48px -16px rgba(58,44,36,.34); }
+
+/* ── 어두운 결과 패널도 평평하지 않게 ────────────────────── */
+.tl-res, .cost-sum{
+  background:linear-gradient(168deg, var(--dark-2) 0%, var(--dark) 62%, #171413 100%);
+  box-shadow:0 2px 6px rgba(58,44,36,.10),
+             0 30px 56px -20px rgba(32,28,27,.42); }

@@ -154,6 +154,13 @@ function GdEnd(g, svc, post){
             '<em>계산해 보기'+icon("arrow",16)+'</em></a>'
         : '')+
 
+      (g.also
+        ? '<a class="gd-end-c" href="'+esc(g.also[0])+'">'+
+            '<b>'+esc(g.also[1])+'</b>'+
+            '<span>'+esc(g.also[2])+'</span>'+
+            '<em>보러 가기'+icon("arrow",16)+'</em></a>'
+        : '')+
+
       (post
         ? '<a class="gd-end-c" href="/lab/'+esc(post.slug)+'">'+
             '<b>'+esc(post.title)+'</b>'+

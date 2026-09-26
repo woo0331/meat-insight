@@ -55,6 +55,9 @@ window.WOW_PROBLEMS = [
   { key:"market", tone:"t1",   name:"마케팅",      icon:"megaphone", hint:"배달·리뷰·단골" },
   { key:"tax", tone:"t3",      name:"세무/노무",   icon:"doc",       hint:"신고·4대보험·근로계약" },
   { key:"startup", tone:"t2",  name:"창업",        icon:"seed",      hint:"상권·점포·인허가", to:"/start" },
+  /* 상황 카드의 "사업 정리" 가 갈 곳이 SOS 밖에 없었습니다.
+     정리는 순서를 지키면 덜 잃는 일이라 가이드가 제일 필요합니다. */
+  { key:"exit",    tone:"t8",  name:"가게 정리",  icon:"box",       hint:"양도·권리금·장비 처분" },
   { key:"etc", tone:"t7",      name:"기타",        icon:"chat",      hint:"위에 없는 것" }
 ];
 

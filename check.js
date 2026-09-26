@@ -60,6 +60,8 @@ const PAGES = [
   ["/problem/duct",    "가이드 (덕트 민원)"],
   ["/problem/cold",    "가이드 (냉장 고장 · 위험 신호 있음)"],
   ["/problem/interior","가이드 (인테리어 · 목록 제일 긺)"],
+  ["/problem/exit",    "가이드 (가게 정리 · 맺음 카드 네 장)"],
+  ["/request?s=pack",  "견적 요청 (가이드 없는 서비스)"],
   ["/lab",             "사장님 연구소"],
   ["/lab?c=fac",       "연구소 (분류 고른 채로)"],
   /* ⚠️ 글 화면이 검사에 아예 안 들어가 있었습니다. 열두 편이 통째로
@@ -1012,10 +1014,53 @@ const AUDIT = `(() => {
     });
     return bad.length ? bad.join(" / ") : true;`);
 
+  /* ⚠️ 제가 글을 쓸 때 쓰는 표시(⚠️)가 **손님 화면으로 새어 나갔습니다.**
+     가게 정리 가이드 본문에 그대로 찍혀 있었습니다 — 절대 규칙 3
+     (운영자에게 할 말을 손님 화면에 찍지 않는다)입니다. 표시는
+     주석에만 둡니다. */
+  await f("가이드 본문에 작성 표시가 안 남아 있다", "/problems", `
+    const bad = [];
+    for(const g of WOW_GUIDES){
+      const txt = JSON.stringify(g);
+      ["⚠", "TODO", "FIXME", "지시서"].forEach(w => {
+        if(txt.indexOf(w) >= 0) bad.push(g.key + " 에 " + w);
+      });
+    }
+    return bad.length ? bad.join(" / ") : true;`);
+
+  /* ── 가이드의 "물어볼 것" 이 요청서까지 오는가 ──────────
+     ⚠️ 가이드를 읽고 오셔도 요청서에서 다시 적어야 하면 거기서
+     끊깁니다. 손님은 같은 것을 두 번 적게 되고 그 자리에서 닫습니다. */
+  await f("요청서에 가이드의 물어볼 것이 그대로 나온다", "/request?s=duct", `
+    const g = wowGuideForService("duct");
+    if(!g) return "덕트 서비스에 가이드가 안 붙었습니다";
+    const box = [...document.querySelectorAll(".rq-ask-c")];
+    if(box.length !== g.ask.length)
+      return box.length + " / 가이드의 질문 " + g.ask.length;
+    return box.every(b => b.checked) || "기본으로 켜져 있지 않습니다";`);
+
+  /* ⚠️ 보내는 칸을 실제로 만들어 봅니다. 화면에 보이는 것과 **보내는
+     것**이 어긋나면 에러도 없이 조용히 사라집니다. */
+  await f("끈 것은 빼고 켠 것만 보내는 칸에 실린다", "/request?s=duct", `
+    const box = [...document.querySelectorAll(".rq-ask-c")];
+    box[0].checked = false;
+    const out = reqAsks();
+    if(out.length !== box.length - 1)
+      return out.length + " / 켜 둔 것 " + (box.length - 1);
+    if(out.join(" ").indexOf("*") >= 0)
+      return "별표 표시가 그대로 나갑니다 — 업체는 화면이 아니라 글자를 봅니다";
+    return true;`);
+
+  /* ⚠️ 빈 상자를 두지 않습니다 (절대 규칙 2) */
+  await f("가이드가 없는 서비스면 그 구간이 아예 안 나온다", "/request?s=pack", `
+    if(wowGuideForService("pack")) return "pack 에 가이드가 붙어 있습니다";
+    return !document.querySelector(".rq-ask")
+        || "물어볼 것 상자가 비어 있는 채로 나옵니다";`);
+
   console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 +
               "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 6 +
               "개 · 접수처 없음 " + 5 + "개 · 도구 계산 " + 9 +
-              "개 · 머리말 " + 3 + "개 · 고민 가이드 " + 6 + "개");
+              "개 · 머리말 " + 3 + "개 · 고민 가이드 " + 10 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

@@ -86,6 +86,13 @@ module.exports = async function handler(req, res){
     q.q           = clean(b.q, 4000);
     q.budget      = clean(b.budget, 40);
     q.detail      = detailLines(b.detail);   /* 서비스마다 다른 답 */
+    /* 해결 가이드에서 고르신 "업체에 물어볼 것".
+       ⚠️ 이건 사장님이 업체에게 **대신 물어봐 달라고 맡기신 것**입니다.
+       빠뜨리면 요청은 성공하는데 정작 물어볼 것이 사라집니다. */
+    q.asks        = (Array.isArray(b.asks) ? b.asks : [])
+                      .slice(0, 20)
+                      .map(function(x){ return clean(x, 200); })
+                      .filter(Boolean);
   }
   else {                             /* partner */
     q.company = clean(b.company, 80);
@@ -146,6 +153,13 @@ module.exports = async function handler(req, res){
     L.push("");
     L.push(kind === "sos" ? "── 적어 주신 상황 ──" : "── 필요한 것 ──");
     L.push(q.q);
+    /* ⚠️ **제일 아래**에 둡니다. 업체에 견적을 부탁할 때 그대로 옮겨
+       적을 수 있어야 하는 목록이라, 다른 것과 섞이면 안 됩니다. */
+    if(q.asks && q.asks.length){
+      L.push("");
+      L.push("── 업체에 물어봐 달라고 하신 것 ──");
+      q.asks.forEach(function(x, i){ L.push("  " + (i+1) + ". " + x); });
+    }
   }
   const text = L.join("\n");
 

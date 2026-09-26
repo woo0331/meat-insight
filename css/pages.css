@@ -2341,3 +2341,33 @@
   .sos-tip{ grid-template-columns:auto 1fr; }
   .sos-tip-go{ display:none; }
 }
+
+/* ── 요청서의 "업체에 물어볼 것" ───────────────────────────
+   해결 가이드의 질문을 그대로 얹은 자리입니다. 고르신 것이 요청서와
+   같이 업체에 갑니다.
+   ⚠️ 카드가 아니라 **적는 줄**입니다 — 옅은 면으로 깔립니다. */
+.rq-ask{ border:0; margin:0 0 var(--s6); padding:var(--s6);
+  background:var(--bg-warm); border-radius:var(--r-xl); }
+.rq-ask legend{ padding:0; font-size:var(--t-md); font-weight:800;
+  color:var(--ink); }
+.rq-ask legend em{ font-style:normal; font-weight:600; color:var(--ink3); }
+.rq-ask-l{ margin:var(--s2) 0 var(--s4); font-size:var(--t-sm);
+  color:var(--ink2); line-height:1.7; }
+/* ⚠️ `>` 를 빼지 마세요 — 문장 속 <b> 까지 덩어리가 됩니다 */
+.rq-ask-l > b, .rq-ask-g span > b{ color:var(--ink); }
+.rq-ask-g{ display:grid; gap:2px; }
+.rq-ask-g li{ display:block; }
+/* ⚠️ 누르는 것은 40px 이상입니다. padding 만으로 만들면 짧은 질문에서
+   다시 낮아지므로 min-height 를 같이 둡니다. */
+.rq-ask-g label{ display:grid; grid-template-columns:auto 1fr;
+  gap:var(--s3); align-items:start; min-height:44px;
+  padding:var(--s3) var(--s4); border-radius:var(--r);
+  background:var(--surface); cursor:pointer;
+  font-size:var(--t-sm); color:var(--ink2); line-height:1.7; }
+.rq-ask-g label:hover{ color:var(--ink); }
+.rq-ask-g input{ width:18px; height:18px; margin-top:5px;
+  accent-color:var(--burgundy); }
+.rq-ask-more{ display:inline-flex; align-items:center; gap:4px;
+  min-height:44px; margin-top:var(--s2);
+  font-size:var(--t-sm); font-weight:700; color:var(--burgundy); }
+@media (max-width:560px){ .rq-ask{ padding:var(--s5); } }

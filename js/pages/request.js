@@ -95,6 +95,11 @@ function PageRequest(){
       /* 서비스마다 다른 칸 (js/data/reqforms.js). 전부 선택입니다. */
       '<div class="f-2">'+form.map(ReqField).join("")+'</div>'+
 
+      /* ⚠️ 해결 가이드의 "물어볼 것" 을 여기에 얹습니다. 가이드를 읽고
+         오셔도 요청서에서 다시 적어야 하면 그 자리에서 끊깁니다 —
+         손님은 같은 것을 두 번 적게 되고 거기서 닫습니다. */
+      ReqAsks(svc)+
+
       '<div class="f-2">'+
         regionRow("rq-region")+
         fRow("예산 (만원)","rq-budget","text",false,"모르시면 비워 두세요","off")+
@@ -178,7 +183,11 @@ function ReqPick(){
 function ReqConsent(){
   return '<fieldset class="agree"><legend>개인정보 수집·이용 동의</legend>'+
     '<ul class="ag-why">'+
-      '<li><span>수집 항목</span><b>성함, 연락처 (선택: 지역, 예산, 적어 주신 내용)</b></li>'+
+      /* ⚠️ 실제로 받는 것을 **빠짐없이** 적습니다. "업체에 물어봐 달라고
+         고르신 것" 을 더했으면 이 줄도 같이 고쳐야 합니다 —
+         개인정보보호법 제15조 제2항은 수집 항목을 알리도록 정합니다. */
+      '<li><span>수집 항목</span><b>성함, 연락처 (선택: 지역, 예산, '+
+        '적어 주신 내용, 업체에 물어봐 달라고 고르신 항목)</b></li>'+
       '<li><span>이용 목적</span><b>견적 요청 확인 및 답변, 적합한 업체 검토</b></li>'+
       '<li><span>보유 기간</span><b>요청 처리 완료 후 1년</b></li>'+
     '</ul>'+
@@ -224,6 +233,10 @@ window.reqSend = function(ev){
     name:   rval("rq-name"),
     tel:    rval("rq-tel"),
     detail: extra,
+    /* 가이드에서 고르신 "업체에 물어볼 것".
+       ⚠️ 화면이 보내는 칸을 늘렸으면 api/quote.js 와 tools/test-api.js 를
+       **같이** 고치세요. 안 그러면 에러도 없이 조용히 사라집니다. */
+    asks:   reqAsks(),
     agree:  true
   };
 
@@ -274,4 +287,50 @@ function ReqDone(){
       '<a class="btn btn-o btn-lg" href="/">홈으로</a>'+
     '</div>'+
   '</div>';
+}
+
+
+/* ── 업체에 물어볼 것 ─────────────────────────────────────
+   이 사이트가 전화번호부와 다른 점이 **무엇을 물어봐야 하는지 안다**는
+   것인데, 그게 가이드 화면에만 있으면 요청서에서 끊깁니다. 그래서
+   가이드가 있는 서비스면 그 질문들을 여기에 그대로 내고, 고르신 것이
+   업체에게 **요청서와 같이** 갑니다.
+
+   ⚠️ 기본을 전부 켜 둡니다. 좋은 질문이라 고르는 수고를 드릴 이유가
+   없고, 빼고 싶은 것만 끄시면 됩니다.
+   ⚠️ 가이드가 없는 서비스면 **이 구간이 통째로 안 나옵니다** — 빈
+   상자를 두지 않습니다 (절대 규칙 2). */
+function ReqAsks(svc){
+  var g = (typeof wowGuideForService === "function")
+    ? wowGuideForService(svc.key) : null;
+  if(!g || !g.ask || !g.ask.length) return "";
+
+  return '<fieldset class="rq-ask"><legend>업체에 이걸 물어봐 드릴까요?'+
+      ' <em>(선택)</em></legend>'+
+    '<p class="rq-ask-l">고깃집 · 정육점에서 나중에 문제가 되는 것들입니다. '+
+      '켜 두시면 <b>요청서와 같이 업체에 갑니다.</b> 빼고 싶은 것만 '+
+      '끄시면 됩니다.</p>'+
+    '<ul class="rq-ask-g">'+g.ask.map(function(t,i){
+      var id = "rq-ask-"+i;
+      /* ⚠️ 별표 표시를 지우고 **맨 글로** 보냅니다. 업체가 받아 보는
+         것은 화면이 아니라 글자라, `**` 가 그대로 찍히면 이상합니다. */
+      var plain = String(t).split("**").join("");
+      return '<li><label for="'+id+'">'+
+        '<input type="checkbox" id="'+id+'" class="rq-ask-c" checked '+
+          'data-t="'+esc(plain)+'">'+
+        '<span>'+labMark(t)+'</span></label></li>';
+    }).join("")+'</ul>'+
+    '<a class="rq-ask-more" href="/problem/'+esc(g.key)+'">'+
+      '이게 왜 중요한지 보기'+icon("chev",16)+'</a>'+
+  '</fieldset>';
+}
+
+/* 켜져 있는 것만 글로 모읍니다. ⚠️ 하나도 없으면 **빈 배열**입니다 —
+   서버가 "없음" 을 찍지 않도록. */
+function reqAsks(){
+  var out = [];
+  els(".rq-ask-c").forEach(function(el){
+    if(el.checked) out.push(el.getAttribute("data-t") || "");
+  });
+  return out.filter(Boolean);
 }

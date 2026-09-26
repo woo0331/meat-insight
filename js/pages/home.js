@@ -289,7 +289,7 @@ function HowRow(){
 function Situations(){
   return '<section class="sec"><div class="w">'+
     '<div class="sec-hd"><h2>지금 어떤 상황이세요?</h2>'+
-      '<p>하나만 고르시면 거기서부터 같이 봅니다.</p></div>'+
+      '<p>사장님의 상황에 맞는 해결방법부터 찾아드립니다.</p></div>'+
     '<div class="sit-g">'+WOW_SITUATIONS.map(function(s){
       var ph = hasPhoto("sit-"+s.key);
       return '<a class="sit'+(ph?'':' sit-flat')+'" href="'+esc(s.to)+
@@ -302,6 +302,9 @@ function Situations(){
           (s.tag ? '<span class="sit-tag">'+esc(s.tag)+'</span>' : '')+
           '<span class="sit-l">'+esc(s.line)+'</span>'+
           '<span class="sit-d">'+esc(s.desc)+'</span>'+
+          /* 시안의 동그란 화살표. ⚠️ 카드 전체가 이미 링크라 이건
+             **버튼이 아니라 표시**입니다 — 안에 또 링크를 넣지 마세요. */
+          '<span class="sit-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
         '</span></a>';
     }).join("")+'</div>'+
   '</div></section>';
@@ -454,7 +457,12 @@ window.costCalc = function(){
    후기" 는 후기가 한 건도 없어서 뺐습니다 — 없는 것을 있다고 적으면
    표시광고법 제3조(거짓·과장 광고)입니다. 후기가 쌓이면 그때 넣습니다. */
 function BrandBand(){
-  return '<section class="bband"><div class="w bband-in">'+
+  return '<section class="bband">'+
+    /* 시안의 왼쪽 고기 사진. ⚠️ 사진이 없으면 **빈 액자를 두지 않고**
+       그 칸을 아예 빼고 글이 왼쪽 끝부터 시작합니다 (절대 규칙 2). */
+    (hasPhoto("band-meat")
+      ? '<div class="bband-ph" aria-hidden="true">'+photoBox("band-meat")+'</div>' : '')+
+    '<div class="w bband-in'+(hasPhoto("band-meat")?' bband-ph-on':'')+'">'+
     '<h2>좋은 고기, 좋은 사장님,<br class="br-m"> 더 좋은 매장을 만듭니다.</h2>'+
     '<ul class="bband-l">'+
       [["badge","조건 맞는 곳만"],
@@ -547,15 +555,17 @@ function CatBand(){
       return '<a class="cat'+(ph?'':' cat-flat')+'" href="/partners?g='+
         encodeURIComponent(g.key)+'">'+
         (ph ? '<span class="cat-ph">'+photoBox("cat-"+g.key)+'</span>' : '')+
+        /* ⚠️ 시안처럼 **한 줄에 여섯**을 놓으려면 카드가 낮아야 합니다.
+           안에 들어 있던 칩 목록(다섯 개 + "외 n가지")을 빼고 **한 줄
+           글**로 줄였습니다 — 칩이 두 줄이 되는 순간 카드가 두 배로
+           높아져서 한 줄에 여섯이 안 들어갑니다. */
         '<span class="cat-b">'+
           '<span class="cat-t">'+
-            '<span class="cat-ic">'+icon(g.icon||ic[g.key]||"chev",22)+'</span>'+
+            '<span class="cat-ic">'+icon(g.icon||ic[g.key]||"chev",20)+'</span>'+
             '<b>'+esc(g.name)+'</b>'+
-            (g.lead ? '<span class="cat-l">'+esc(g.lead)+'</span>' : '')+
           '</span>'+
-          '<span class="cat-i">'+g.items.slice(0,5).map(function(it){
-            return '<em>'+esc(it.name)+'</em>'; }).join("")+
-            (g.items.length > 5 ? '<em class="cat-more">외 '+(g.items.length-5)+'가지</em>' : '')+
+          '<span class="cat-sub">'+
+            esc(g.items.slice(0,3).map(function(it){ return it.name; }).join(" · "))+
           '</span>'+
         '</span></a>';
     }).join("")+'</div>'+
@@ -630,13 +640,30 @@ function LabBand(){
     if(pick.length < 3 && pick.indexOf(p) < 0) pick.push(p);
   });
 
+  /* ⚠️ 시안은 여기가 "다른 사장님들은 이렇게 시작했습니다" (사례 3장)
+     + 오른쪽 파트너 카드였습니다. **사례가 한 건도 없습니다** — 지어낸
+     창업비·기간을 적을 수 없으니(지시서 43번), 같은 **틀**에 지금 있는
+     진짜 내용(연구소 글 세 편)을 놓습니다. 실제 사례가 생기면
+     WOW_STORIES 가 채워지고 StoryBand 가 이 자리 위에 나타납니다. */
   return '<section class="sec sec-warm"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">사장님 연구소</p>'+
       '<h2>알고 하면 덜 씁니다</h2>'+
       '<p>고기 장사를 하면서 실제로 막히는 것들을 정리했습니다. '+
         '읽고 나서 <b>바로 할 수 있는 것</b>까지 적었습니다.</p>'+
       '<a class="sec-more" href="/lab">글 '+posts.length+'편 전부 보기'+icon("chev",16)+'</a></div>'+
-    '<div class="lab-g">'+pick.slice(0,3).map(PostCard).join("")+'</div>'+
+    '<div class="lab-split">'+
+      '<div class="lab-g">'+pick.slice(0,3).map(PostCard).join("")+'</div>'+
+      /* 시안 오른쪽의 어두운 파트너 카드 */
+      '<aside class="pt-card">'+
+        '<b>고기 사업자를<br> 고객으로 만나고 계신가요?</b>'+
+        '<span>광고만 하지 말고, 실제 도움이 필요한 사장님을 만나세요.</span>'+
+        '<a class="btn btn-w" href="/partner/apply">파트너로 등록하기'+icon("arrow",16)+'</a>'+
+        '<ul class="pt-card-l">'+
+          (window.WOW_SERVICE_GROUPS||[]).slice(0,6).map(function(g){
+            return '<li>'+esc(g.name)+'</li>'; }).join("")+
+        '</ul>'+
+      '</aside>'+
+    '</div>'+
   '</div></section>';
 }
 

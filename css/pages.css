@@ -1217,10 +1217,13 @@
   .diff-r{ grid-template-columns:1fr; }
   .diff-k{ padding:var(--s5) var(--s5) var(--s2); }
   .diff-r > span{ padding:var(--s2) var(--s5); }
-  .diff-r > span:last-child{ padding-bottom:var(--s5); margin-top:var(--s2); }
-  .diff-r .diff-a::after{ content:none; }
-  .diff-r .diff-b{ background:transparent; }
-  .diff-r .diff-b::before{ content:""; }
+  .diff-r > span:last-child{ margin-top:var(--s2); }
+  /* ⚠️ 여기에 `::before{content:""}` 를 두지 마세요. 빈 가짜요소도 **grid
+     칸 하나를 차지합니다.** 체크 아이콘이 둘째 칸으로 밀려 혼자 오른쪽
+     끝에 앉고, 글이 통째로 다음 줄로 내려갔습니다. 지우는 것은
+     `content:none` 이지 빈 문자열이 아닙니다. 실제로 그랬습니다. */
+  .diff-r .diff-b{ margin:var(--s2) var(--s4) var(--s5);
+    padding:var(--s4); border-radius:var(--r-md); }
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -2006,3 +2009,89 @@
 .prob-g-w{ grid-template-columns:repeat(3,1fr); }
 @media (max-width:900px){ .prob-g-w{ grid-template-columns:1fr 1fr; } }
 @media (max-width:560px){ .prob-g-w{ grid-template-columns:1fr; } }
+
+/* ════════════════════════════════════════════════════════════════════
+   시안 프레임 맞추기 — 카테고리 한 줄 · 빨간 띠 사진 · 상황 화살표
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 카테고리 — 시안처럼 한 줄에 여섯 */
+.cat-g{ grid-template-columns:repeat(6,1fr); gap:var(--s3); }
+.cat-ph{ aspect-ratio:4/3; }
+.cat-b{ padding:var(--s4); gap:var(--s2); }
+.cat-flat .cat-b{ padding:var(--s5) var(--s4); }
+.cat-t{ grid-template-columns:auto 1fr; gap:var(--s3); align-items:center; }
+.cat-ic{ grid-row:auto; width:38px; height:38px; border-radius:12px; }
+.cat-t b{ font-size:var(--t-md); }
+.cat-sub{ font-size:var(--t-cap); color:var(--ink3); line-height:1.6; }
+@media (max-width:1200px){ .cat-g{ grid-template-columns:repeat(3,1fr); } }
+@media (max-width:760px){ .cat-g{ grid-template-columns:1fr 1fr; } }
+/* ⚠️ 위의 760px 규칙이 뒤에 오므로, 앞쪽 520px 한 줄 규칙을 덮습니다.
+   그대로 두면 390px 에서 카드가 둘씩 앉은 채 안쪽이 "사진 110px + 글"
+   가로짜임이라 글 칸이 75px 로 쪼그라듭니다 — "육류 · 식자재" 가 여섯
+   줄이 됐습니다. 여기서 다시 한 줄로 되돌립니다. */
+@media (max-width:520px){
+  .cat-g{ grid-template-columns:1fr; }
+  /* ⚠️ 위의 `.cat-ph{aspect-ratio:4/3}` 가 **뒤에 있어서** 앞쪽 520px
+     규칙의 `aspect-ratio:auto` 를 덮습니다. 높이가 `100%` 로 정해진
+     칸에 비율을 주면 브라우저가 **폭을 거꾸로 계산해** 110px 짜리
+     사진 칸을 넘어섭니다 — 그림이 글자 위를 덮었습니다. */
+  .cat-ph{ aspect-ratio:auto; width:100%; height:100%; }
+  /* 사진이 이미 무엇인지 말해 줍니다. 아이콘까지 두면 같은 말을 두 번
+     하면서 제목과 설명줄의 시작점만 어긋납니다. */
+  .cat-t .cat-ic{ display:none; }
+  .cat-t{ grid-template-columns:1fr; }
+}
+
+/* 상황 카드의 동그란 화살표 */
+.sit-b{ position:relative; }
+.sit-go{ display:inline-flex; align-items:center; justify-content:center;
+  width:30px; height:30px; border-radius:var(--r-pill);
+  background:var(--surface); color:var(--ink3);
+  box-shadow:0 1px 2px rgba(23,23,28,.06), 0 4px 10px -4px rgba(23,23,28,.18);
+  transition:background-color .18s ease, color .18s ease;
+  /* ⚠️ 흐름에 그대로 두면 설명이 짧은 카드("사업 정리")에서만 화살표가
+     위로 올라와 다섯 장의 높이가 어긋나 보입니다. 카드마다 글 길이가
+     다르므로 **아래에 붙여 둡니다.** 자리는 아래 padding 으로 비웁니다. */
+  position:absolute; left:var(--s5); bottom:var(--s5); }
+.sit-b{ padding-bottom:calc(var(--s5) + 30px + var(--s3)); }
+.sit-flat .sit-b{ padding-bottom:calc(var(--s6) + 30px + var(--s3)); }
+.sit-flat .sit-go{ left:var(--s6); bottom:var(--s6); }
+.sit:hover .sit-go{ background:var(--burgundy); color:#fff; }
+@media (max-width:640px){
+  .sit-go{ display:none; }
+  /* 화살표를 숨겼으면 비워 둔 자리도 같이 거둡니다 */
+  .sit-b, .sit-flat .sit-b{ padding-bottom:var(--s4); }
+}
+
+/* 빨간 띠의 왼쪽 사진 */
+.bband{ position:relative; overflow:hidden; }
+.bband-ph{ position:absolute; left:0; top:0; bottom:0; width:26%; }
+.bband-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0; }
+/* ⚠️ 사진 위로 브랜드색이 번지게 해야 글과 사진이 한 덩어리로 읽힙니다 */
+.bband-ph::after{ content:""; position:absolute; inset:0;
+  background:linear-gradient(90deg, rgba(107,36,54,.46) 0%,
+    rgba(107,36,54,.82) 58%, var(--burgundy) 100%); }
+.bband-ph-on{ padding-left:22%; }
+@media (max-width:900px){
+  .bband-ph{ display:none; }
+  .bband-ph-on{ padding-left:0; }
+}
+
+/* ── 연구소 세 편 + 파트너 카드 (시안의 2단) ───────────────── */
+.lab-split{ display:grid; grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);
+  gap:var(--s5); align-items:start; }
+.lab-split .lab-g{ grid-template-columns:repeat(3,1fr); }
+.pt-card{ display:grid; gap:var(--s4); align-content:start;
+  background:var(--burgundy); color:#fff; border-radius:var(--r-xl);
+  padding:var(--s7) var(--s6); }
+.pt-card > b{ font-size:var(--t-xl); line-height:1.45; color:#fff; }
+.pt-card > span{ font-size:var(--t-sm); color:rgba(255,255,255,.78); line-height:1.7; }
+.pt-card .btn-w{ justify-self:start; }
+.pt-card-l{ display:flex; flex-wrap:wrap; gap:6px; margin-top:var(--s2); }
+.pt-card-l li{ font-size:var(--t-cap); font-weight:600; color:#fff;
+  background:rgba(255,255,255,.14); border-radius:var(--r-pill); padding:5px 11px; }
+@media (max-width:1040px){
+  .lab-split{ grid-template-columns:1fr; }
+  .lab-split .lab-g{ grid-template-columns:repeat(3,1fr); }
+}
+@media (max-width:760px){ .lab-split .lab-g{ grid-template-columns:1fr; } }

@@ -75,6 +75,10 @@ window.WOW_PHOTOS = {
 
   worry:   { src:"/img/worry.svg",
     alt:"카운터에 서서 쌓인 고지서와 계산기를 앞에 두고 있는 사장님" },
+  /* 빨간 띠의 왼쪽. ⚠️ 26% 폭으로 아주 납작하게 잘리고 위에 버건디가
+     덮이므로 **볼 것은 왼쪽**에 있어야 합니다. */
+  "band-meat": { src:"/img/band-meat.svg",
+    alt:"쇼케이스 앞에 선 앞치마 차림의 사장님과 쌓인 포장 상자" },
   partner: { src:"/img/partner.svg",
     alt:"주방 후드 아래에서 작업을 설명하는 기사와 공구 가방" },
   final:   { src:"/img/final.svg", dark:true,

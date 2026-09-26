@@ -13,6 +13,7 @@
   <url><loc>https://aboutmeat.co.kr/tools</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
   <url><loc>https://aboutmeat.co.kr/tools/yield</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
   <url><loc>https://aboutmeat.co.kr/tools/bep</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/problems</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
   <url><loc>https://aboutmeat.co.kr/about</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
   <url><loc>https://aboutmeat.co.kr/terms</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
   <url><loc>https://aboutmeat.co.kr/privacy</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
@@ -28,4 +29,14 @@
   <url><loc>https://aboutmeat.co.kr/lab/aging-showcase</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
   <url><loc>https://aboutmeat.co.kr/lab/second-store</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
   <url><loc>https://aboutmeat.co.kr/lab/closing-checklist</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://aboutmeat.co.kr/problem/cost</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/problem/supply</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/problem/sales</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/problem/staff</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/problem/cold</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/problem/duct</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/problem/equip</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/problem/interior</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/problem/market</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/problem/tax</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
 </urlset>

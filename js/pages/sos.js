@@ -45,6 +45,12 @@ function PageSos(){
 
     Notice()+
 
+    /* ⚠️ 분류를 이미 고르고 오셨는데 그 고민의 해결방법이 있다면,
+       적기 전에 먼저 보여 드립니다. 여기서 끝나는 일이 꽤 있고,
+       읽고 오시면 **적어 주시는 내용이 훨씬 정확해집니다.**
+       가이드가 없는 분류면 이 줄은 아예 안 나옵니다. */
+    SosGuideTip(picked)+
+
     '<div id="s-err"></div>'+
     '<form class="form" onsubmit="return sosSend(event)">'+
 
@@ -314,3 +320,20 @@ window.CallButton = function(cls, label){
   return '<a class="'+esc(cls||"btn")+'" href="tel:'+esc(telNum(tel))+'">'+
     icon("phone",18)+esc(label||tel)+'</a>';
 };
+
+
+/* 고른 분류에 해결방법이 있으면 폼 위에 한 줄. ⚠️ 없으면 **빈 칸을
+   두지 말고 통째로 뺍니다** (절대 규칙 2). */
+function SosGuideTip(picked){
+  if(!picked || typeof wowHasGuide !== "function" || !wowHasGuide(picked.key))
+    return "";
+  var g = wowGuide(picked.key);
+  return '<a class="sos-tip" href="/problem/'+esc(picked.key)+'">'+
+    '<span class="sos-tip-ic">'+icon("bulb",20)+'</span>'+
+    '<span class="sos-tip-t">'+
+      '<b>적으시기 전에 — '+esc(g.h1)+'</b>'+
+      '<span>'+esc(g.lead)+' 직접 확인할 것 '+g.self.length+'가지와 '+
+        '업체에 물어볼 것 '+g.ask.length+'가지를 정리해 두었습니다.</span>'+
+    '</span>'+
+    '<span class="sos-tip-go">'+icon("arrow",18)+'</span></a>';
+}

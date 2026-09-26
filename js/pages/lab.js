@@ -104,7 +104,10 @@ function postThumb(p){
 /* 목록 카드 — 메인(LabBand)도 같이 씁니다 */
 window.PostCard = function(p){
   var cn = wowPostCatName(p.cat);
-  return '<a class="pcard" href="/lab/'+esc(p.slug)+'">'+
+  /* 분류마다 색이 다릅니다. ⚠️ tone 이 없으면 tnClass 가 빈 문자열을
+     돌려주고, 그러면 CSS 의 되돌림 값이 살아 예전처럼 버건디입니다. */
+  var c  = wowPostCat(p.cat);
+  return '<a class="pcard '+tnClass(c && c.tone)+'" href="/lab/'+esc(p.slug)+'">'+
     '<span class="pcard-ph">'+photoBox(postThumb(p))+
       '<span class="pcard-ic">'+icon(p.icon || "doc", 20)+'</span></span>'+
     '<span class="pcard-b">'+

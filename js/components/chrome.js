@@ -11,6 +11,11 @@
    ════════════════════════════════════════════════════════════════════ */
 
 window.WOW_GNB = [
+  /* ⚠️ 제일 앞이 **고민 해결**입니다. 손님이 처음 하는 일은 업체
+     검색이 아니라 "내가 지금 무엇 때문에 들어왔는가" 를 고르는 것이고
+     (지시서 3번), 그 답이 여기 있습니다. 업체찾기를 앞에 두면 그
+     순간 전화번호부의 차림새가 됩니다. */
+  { name:"고민 해결",    to:"/problems" },
   { name:"창업",         to:"/start" },
   { name:"사업진단",     to:"/check" },
   { name:"도구",         to:"/tools" },
@@ -108,7 +113,8 @@ function Footer(){
         '<a class="btn btn-o" href="/sos">무료로 물어보기'+icon("arrow",18)+'</a>'+
       '</div>'+
       '<div class="ft-col"><h4>시작하기</h4>'+
-        '<a href="/sos">사장님 SOS</a><a href="/check">무료 사업진단</a>'+
+        '<a href="/sos">사장님 SOS</a><a href="/problems">고민별 해결방법</a>'+
+        '<a href="/check">무료 사업진단</a>'+
         '<a href="/start">창업 준비</a><a href="/start/cost">창업비 정리표</a>'+
         '<a href="/tools/yield">수율 원가 계산</a><a href="/tools/bep">손익분기 계산</a>'+
         '<a href="/request">견적 요청</a></div>'+

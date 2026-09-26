@@ -52,6 +52,14 @@ const PAGES = [
   ["/request",         "견적 요청 (고르는 화면)"],
   ["/request?s=duct",  "견적 요청 (덕트)"],
   ["/request?s=beef-supply", "견적 요청 (육류 공급)"],
+  /* 문제별 해결 가이드 — 흐름의 가운데 두 칸입니다.
+     ⚠️ 열 편을 다 넣으면 검사가 한참 길어집니다. **짜임새가 서로 다른
+     세 편**을 고릅니다 — 위험 신호가 있는 것(cold), 없는 것(duct),
+     목록이 제일 긴 것(interior). */
+  ["/problems",        "고민별 해결방법"],
+  ["/problem/duct",    "가이드 (덕트 민원)"],
+  ["/problem/cold",    "가이드 (냉장 고장 · 위험 신호 있음)"],
+  ["/problem/interior","가이드 (인테리어 · 목록 제일 긺)"],
   ["/lab",             "사장님 연구소"],
   ["/lab?c=fac",       "연구소 (분류 고른 채로)"],
   /* ⚠️ 글 화면이 검사에 아예 안 들어가 있었습니다. 열두 편이 통째로
@@ -555,11 +563,22 @@ const AUDIT = `(() => {
     go(a.getAttribute("href"));
     await new Promise(r=>setTimeout(r,300));
     return document.getElementById("s-q").value.length > 5;`);
-  await f("메인 고민 카드 → SOS 에 분류가 켜진다", "/", `
-    const a = [...document.querySelectorAll(".prob")].find(x => x.href.indexOf("c=duct") >= 0);
-    if(!a) return "덕트 고민 카드가 없습니다";
+  /* ⚠️ **한 번에 SOS 로 가지 않습니다.** 고민 카드는 먼저 해결방법으로
+     가고, 거기서 SOS 로 갑니다 (문제 입력 → 이해 → 해결방법 → …).
+     바로 폼으로 보내면 그 순간 전화번호부가 됩니다. 그래서 **두 걸음**
+     을 다 따라가 보고, 끝에 분류가 실려 있는지를 봅니다. */
+  await f("메인 고민 카드 → 해결방법 → SOS 에 분류가 켜진다", "/", `
+    const a = [...document.querySelectorAll(".prob")]
+      .find(x => (x.getAttribute("href")||"").indexOf("/problem/duct") === 0);
+    if(!a) return "덕트 고민 카드가 해결방법으로 가지 않습니다";
     go(a.getAttribute("href"));
-    await new Promise(r=>setTimeout(r,300));
+    await new Promise(r=>setTimeout(r,350));
+    if(!document.querySelector(".gd-hd h1")) return "해결방법 화면이 안 떴습니다";
+    const s = [...document.querySelectorAll(".gd-end-c")]
+      .find(x => (x.getAttribute("href")||"").indexOf("/sos") === 0);
+    if(!s) return "해결방법에서 SOS 로 가는 길이 없습니다";
+    go(s.getAttribute("href"));
+    await new Promise(r=>setTimeout(r,350));
     return !!document.querySelector('#s-cat .pk.on[data-k="duct"]');`);
   await f("메인 서비스 묶음 → 업체 찾기의 그 묶음으로", "/", `
     go("/partners?g=space");
@@ -908,10 +927,95 @@ const AUDIT = `(() => {
     }
     return bad.length ? bad.join(" ") + " 에 noindex 가 없습니다" : true;`);
 
+  /* ── 고민 해결 가이드 ────────────────────────────────────
+     ⚠️ 이 묶음이 지키는 것은 **이 사이트가 전화번호부가 아니라는
+     것**입니다 (지시서 3번). 고민을 누르면 업체가 아니라 해결방법이
+     먼저 나와야 하고, 거기 적힌 것은 전부 지어내지 않은 것이어야
+     합니다.
+     ⚠️ 아래 코드는 **백틱 문자열 안**입니다 — 정규식의 백슬래시가
+     그냥 글자가 됩니다. 그래서 정규식을 아예 안 씁니다. */
+  await f("고민 카드가 업체가 아니라 해결방법으로 간다", "/", `
+    const cards = [...document.querySelectorAll(".prob")];
+    if(!cards.length) return "고민 카드가 하나도 없습니다";
+    const bad = [];
+    cards.forEach(a => {
+      const href = a.getAttribute("href") || "";
+      const name = (a.querySelector("b") || {}).textContent || "?";
+      const p = WOW_PROBLEMS.filter(x => x.name === name)[0];
+      if(p && wowHasGuide(p.key) && href.indexOf("/problem/") !== 0)
+        bad.push(name + " → " + href);
+    });
+    return bad.length ? bad.join(" / ") : true;`);
+
+  await f("가이드가 가리키는 글 · 도구 · 서비스가 전부 있다", "/problems", `
+    const bad = [];
+    for(const g of WOW_GUIDES){
+      if(g.post && !wowPost(g.post)) bad.push(g.key + " → 없는 글 " + g.post);
+      if(g.svc  && !wowService(g.svc)) bad.push(g.key + " → 없는 서비스 " + g.svc);
+      if(g.tool){
+        const r = await fetch(g.tool[0], { cache:"no-store" });
+        if(!r.ok) bad.push(g.key + " → 안 열리는 도구 " + g.tool[0]);
+      }
+    }
+    return bad.length ? bad.join(" / ") : true;`);
+
+  /* ⚠️ 여기서 숫자가 하나라도 새면 절대 규칙 1 위반입니다. 사장님이
+     그 금액으로 업체와 싸우거나 돈을 빌리러 갑니다. */
+  await f("가이드에 지어낸 금액 · 비율이 없다", "/problems", `
+    const bad = [];
+    for(const g of WOW_GUIDES){
+      const txt = JSON.stringify(g);
+      ["만원","억원","원가율 3","수율 6"].forEach(u => {
+        if(txt.indexOf(u) >= 0) bad.push(g.key + " 에 \\"" + u + "\\"");
+      });
+      for(let i = 1; i < txt.length; i++)
+        if(txt[i] === "%" && txt[i-1] >= "0" && txt[i-1] <= "9"){
+          bad.push(g.key + " 에 숫자+%"); break;
+        }
+    }
+    return bad.length ? bad.join(" / ") : true;`);
+
+  /* ⚠️ 법령은 바뀝니다. 조문만 적고 어디서 확인하는지를 안 적으면
+     틀린 날이 옵니다. */
+  await f("법 · 제도에는 확인하는 곳이 같이 있다", "/problem/duct", `
+    const bad = [];
+    for(const g of WOW_GUIDES)
+      if(g.law && !(g.law.where || "").trim()) bad.push(g.key);
+    if(bad.length) return bad.join(" ") + " 에 확인하는 곳이 없습니다";
+    return !!document.querySelector(".gd-law-w");`);
+
+  await f("가이드 맺음이 분류와 내용을 싣고 SOS 로 간다", "/problem/cold", `
+    const a = [...document.querySelectorAll(".gd-end-c")]
+      .filter(x => (x.getAttribute("href")||"").indexOf("/sos") === 0)[0];
+    if(!a) return "SOS 로 가는 길이 없습니다";
+    go(a.getAttribute("href"));
+    await new Promise(r=>setTimeout(r,350));
+    const ta = document.getElementById("s-q");
+    if(!ta || !ta.value.trim()) return "적어 둔 말이 안 실렸습니다";
+    const on = document.querySelector("#s-cat .pk.on");
+    return !!on || "분류가 안 골라졌습니다";`);
+
+  /* ⚠️ 목록 화면이 업체 명단이 되면 그 순간 지시서 3번 위반입니다 */
+  await f("고민 목록이 업체 명단이 아니다", "/problems", `
+    const bad = [];
+    [...document.querySelectorAll(".gdl")].forEach(a => {
+      const href = a.getAttribute("href") || "";
+      if(href.indexOf("/problem/") !== 0) bad.push(href);
+    });
+    /* ⚠️ 처음에 "시공" 을 통째로 막았더니 "인테리어 · 시공 견적을 받을
+       때" 가 걸렸습니다. 막아야 하는 것은 **업체를 세는 말**입니다 —
+       평점 · 후기 수 · 시공건수 같은, 실제 데이터가 없으면 지어낼
+       수밖에 없는 것들. */
+    const txt = document.querySelector(".gdl-g").textContent;
+    ["평점","시공건수","후기 ","리뷰 ","만족도","누적 "].forEach(w => {
+      if(txt.indexOf(w) >= 0) bad.push("업체를 세는 말: " + w.trim());
+    });
+    return bad.length ? bad.join(" / ") : true;`);
+
   console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 +
               "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 6 +
               "개 · 접수처 없음 " + 5 + "개 · 도구 계산 " + 9 +
-              "개 · 머리말 " + 3 + "개");
+              "개 · 머리말 " + 3 + "개 · 고민 가이드 " + 6 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

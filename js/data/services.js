@@ -16,7 +16,7 @@
    ════════════════════════════════════════════════════════════════════ */
 
 window.WOW_SERVICE_GROUPS = [
-  { key:"meat", icon:"truck", name:"육류 · 식자재", lead:"매일 들어오는 것",
+  { key:"meat", tone:"t6", icon:"truck", name:"육류 · 식자재", lead:"매일 들어오는 것",
     items:[
       { key:"beef-supply", name:"육류 공급", req:"meat",
         line:"한우·한돈·수입육 직납" },
@@ -25,7 +25,7 @@ window.WOW_SERVICE_GROUPS = [
       { key:"drink",       name:"주류",     req:null, line:"주류 거래처" }
     ]},
 
-  { key:"space", icon:"store", name:"공간 · 시설", lead:"한 번 하면 오래 가는 것",
+  { key:"space", tone:"t3", icon:"store", name:"공간 · 시설", lead:"한 번 하면 오래 가는 것",
     items:[
       { key:"interior", name:"인테리어",   req:"interior", line:"신규·리뉴얼·부분시공" },
       { key:"duct",     name:"덕트 · 환기", req:"duct",     line:"배기·냄새·민원" },
@@ -36,7 +36,7 @@ window.WOW_SERVICE_GROUPS = [
       { key:"sign",     name:"간판",       req:null, line:"외부·내부 사인" }
     ]},
 
-  { key:"equip", icon:"tool", name:"장비", lead:"정육 작업에 쓰는 것",
+  { key:"equip", tone:"t7", icon:"tool", name:"장비", lead:"정육 작업에 쓰는 것",
     items:[
       { key:"slicer",   name:"육절기",     req:null, line:"" },
       { key:"bonesaw",  name:"골절기",     req:null, line:"" },
@@ -47,7 +47,7 @@ window.WOW_SERVICE_GROUPS = [
       { key:"equip-etc",name:"기타 정육장비", req:null, line:"" }
     ]},
 
-  { key:"ops", icon:"clock", name:"운영", lead:"매달 나가는 것",
+  { key:"ops", tone:"t5", icon:"clock", name:"운영", lead:"매달 나가는 것",
     items:[
       { key:"pos",     name:"POS",      req:null, line:"" },
       { key:"kiosk",   name:"키오스크",  req:null, line:"" },
@@ -59,7 +59,7 @@ window.WOW_SERVICE_GROUPS = [
       { key:"labor",   name:"노무",      req:null, line:"" }
     ]},
 
-  { key:"grow", icon:"up", name:"성장", lead:"더 팔기 위한 것",
+  { key:"grow", tone:"t2", icon:"up", name:"성장", lead:"더 팔기 위한 것",
     items:[
       { key:"marketing", name:"마케팅",     req:null, line:"" },
       { key:"photo",     name:"사진 · 영상", req:null, line:"" },
@@ -68,7 +68,7 @@ window.WOW_SERVICE_GROUPS = [
       { key:"oem",       name:"OEM · PB",   req:null, line:"" }
     ]},
 
-  { key:"pro", icon:"shield", name:"전문 서비스", lead:"자격이 필요한 것",
+  { key:"pro", tone:"t4", icon:"shield", name:"전문 서비스", lead:"자격이 필요한 것",
     items:[
       { key:"haccp",   name:"HACCP",  req:null, line:"" },
       { key:"hygiene", name:"위생",   req:null, line:"" },

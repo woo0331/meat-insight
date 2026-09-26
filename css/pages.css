@@ -232,7 +232,8 @@
 /* ⚠️ 어두운 구간의 머리말은 **금빛**입니다. 밝은 버건디(#A44C5E)와
    금빛 실선을 같이 두면 색이 둘이라 산만합니다 — 선과 글자를 한 색으로
    맞춥니다. 면을 칠하는 것이 아니라 글자 한 줄이라 면적은 그대로입니다. */
-.sec-hd-d .eyebrow{ color:var(--gold-on-dark); }
+/* ⚠️ 금빛은 걷어냈습니다. 어두운 면 위 머리말은 흰 계열입니다. */
+.sec-hd-d .eyebrow{ color:var(--on-dark); }
 /* 어두운 바탕 위의 테두리 버튼 — .btn-o 는 흰 바탕을 깔아 버립니다 */
 .btn-gh{ background:transparent; border-color:rgba(255,255,255,.4); color:#fff; }
 .btn-gh:hover{ background:rgba(255,255,255,.1); border-color:#fff; color:#fff; }
@@ -1223,7 +1224,7 @@
      끝에 앉고, 글이 통째로 다음 줄로 내려갔습니다. 지우는 것은
      `content:none` 이지 빈 문자열이 아닙니다. 실제로 그랬습니다. */
   .diff-r .diff-b{ margin:var(--s2) var(--s4) var(--s5);
-    padding:var(--s4); border-radius:var(--r-md); }
+    padding:var(--s4); border-radius:var(--r); }
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -2095,3 +2096,248 @@
   .lab-split .lab-g{ grid-template-columns:repeat(3,1fr); }
 }
 @media (max-width:760px){ .lab-split .lab-g{ grid-template-columns:1fr; } }
+
+/* ════════════════════════════════════════════════════════════════════
+   분류색 — 아이콘 타일과 배지에만
+   **사장님 지시 (2026-09-26): 키 컬러가 하나뿐이라 밋밋하다.**
+
+   ⚠️ 버건디 면적을 넓혀서 푸는 문제가 아닙니다. 버튼 · 로고 · 어두운
+   띠는 그대로 브랜드색입니다. 여기서 색이 바뀌는 것은 **아이콘 타일과
+   작은 배지뿐**입니다 — 구간 배경이나 카드 전체에는 쓰지 마세요.
+
+   ⚠️ 색은 데이터가 정합니다 (`tone:"t3"`). CSS 에 카테고리 이름을
+   박아 두면 분류가 늘 때마다 CSS 를 고쳐야 합니다.
+   ════════════════════════════════════════════════════════════════════ */
+.tn1{ --ic-ink:var(--t1-ink); --ic-bg:var(--t1-bg); }
+.tn2{ --ic-ink:var(--t2-ink); --ic-bg:var(--t2-bg); }
+.tn3{ --ic-ink:var(--t3-ink); --ic-bg:var(--t3-bg); }
+.tn4{ --ic-ink:var(--t4-ink); --ic-bg:var(--t4-bg); }
+.tn5{ --ic-ink:var(--t5-ink); --ic-bg:var(--t5-bg); }
+.tn6{ --ic-ink:var(--t6-ink); --ic-bg:var(--t6-bg); }
+.tn7{ --ic-ink:var(--t7-ink); --ic-bg:var(--t7-bg); }
+.tn8{ --ic-ink:var(--t8-ink); --ic-bg:var(--t8-bg); }
+
+/* ⚠️ 되돌림 값(`var(--x, 기본)`)을 반드시 두세요. tone 이 안 붙은
+   자리는 예전 그대로 버건디여야 합니다. */
+.cat-ic, .prob-ic, .sit-ic, .tl-c-ic, .mycard-ic, .svc-g-ic,
+.chk-q-ic, .rq-g-ic, .how-ic, .faq-ic{
+  background:var(--ic-bg, var(--burgundy-50));
+  color:var(--ic-ink, var(--burgundy)); }
+
+.cat:hover .cat-ic, .prob:hover .prob-ic, .mycard-off:hover .mycard-ic,
+.tl-c:hover .tl-c-ic, .svc-g:hover .svc-g-ic{
+  background:var(--ic-ink, var(--burgundy)); color:#fff; }
+
+/* 분류 배지 — 글 목록 · 가이드 머리말 */
+.tbadge{ display:inline-flex; align-items:center; gap:6px;
+  font-size:var(--t-cap); font-weight:800; letter-spacing:.01em;
+  padding:5px 11px; border-radius:var(--r-pill);
+  background:var(--ic-bg, var(--burgundy-50));
+  color:var(--ic-ink, var(--burgundy)); }
+
+/* ════════════════════════════════════════════════════════════════════
+   문제별 해결 가이드 (/problem/<key>) · 목록 (/problems)
+
+   ⚠️ 화면 순서가 **사장님이 실제로 하실 순서**입니다 —
+   위험 → 직접 확인 → 의심할 것 → 알려 줄 것 → 물어볼 것 → 법.
+   CSS 로 순서를 바꾸지 마세요.
+   ════════════════════════════════════════════════════════════════════ */
+.gd{ max-width:860px; padding-top:var(--s6); padding-bottom:var(--s10); }
+.gd-hd{ margin:var(--s5) 0 var(--s7); }
+.gd-m{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--s3);
+  margin-bottom:var(--s4); }
+.gd-m > span:last-child{ font-size:var(--t-cap); color:var(--ink3); }
+.gd-hd h1{ font-size:var(--t-3xl); line-height:1.24; letter-spacing:var(--tr-head); }
+.gd-lead{ margin-top:var(--s3); font-size:var(--t-lg); color:var(--ink2);
+  line-height:1.7; }
+.gd-intro p{ font-size:var(--t-base); color:var(--ink2); line-height:1.85;
+  margin-bottom:var(--s4); }
+/* ⚠️ `>` 를 빼지 마세요. 문장 속 <b> 까지 덩어리가 되면 그 낱말만
+   딴 줄에 앉습니다 — 이 저장소에서 다섯 번 겪었습니다. */
+.gd-intro p > b, .gd-cz-i p > b, .gd-self span > b, .gd-ask span > b,
+.gd-tell span > b, .gd-warn span > b, .gd-law > p > b{ color:var(--ink); }
+
+/* 위험 신호 — 제일 위. 유일하게 빨강을 씁니다 */
+.gd-warn{ margin:var(--s6) 0; padding:var(--s6);
+  background:#FEF5F4; border-radius:var(--r-xl);
+  border-left:3px solid var(--red); }
+.gd-warn > b{ display:flex; align-items:center; gap:var(--s2);
+  font-size:var(--t-md); color:var(--red-600); margin-bottom:var(--s3); }
+.gd-warn ul{ display:grid; gap:var(--s3); }
+.gd-warn li{ display:grid; grid-template-columns:auto 1fr; gap:var(--s3);
+  font-size:var(--t-base); color:var(--ink2); line-height:1.75; }
+.gd-warn li::before{ content:""; width:6px; height:6px; margin-top:11px;
+  border-radius:50%; background:var(--red); }
+
+/* 단계 */
+.gd-s{ margin-top:var(--s9); }
+.gd-s-h{ display:grid; grid-template-columns:auto 1fr; gap:var(--s4);
+  align-items:start; margin-bottom:var(--s5); }
+.gd-s-n{ display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:var(--r-pill);
+  background:var(--burgundy); color:#fff;
+  font-size:var(--t-sm); font-weight:800;
+  font-variant-numeric:tabular-nums; }
+.gd-s-t h2{ font-size:var(--t-xl); line-height:1.35; }
+.gd-s-t p{ margin-top:6px; font-size:var(--t-sm); color:var(--ink3);
+  line-height:1.7; }
+
+/* 1 직접 확인 — 적는 줄처럼 옅게 깔립니다 (카드가 아닙니다) */
+.gd-self{ display:grid; gap:2px; }
+.gd-self li{ display:grid; grid-template-columns:auto 1fr; gap:var(--s4);
+  align-items:start; padding:var(--s5); background:var(--bg-warm);
+  font-size:var(--t-base); color:var(--ink2); line-height:1.75; }
+.gd-self li:first-child{ border-radius:var(--r-lg) var(--r-lg) 0 0; }
+.gd-self li:last-child{ border-radius:0 0 var(--r-lg) var(--r-lg); }
+.gd-self i{ display:inline-flex; align-items:center; justify-content:center;
+  width:26px; height:26px; border-radius:var(--r-pill);
+  background:var(--surface); color:var(--ink3);
+  font-style:normal; font-size:var(--t-cap); font-weight:800;
+  font-variant-numeric:tabular-nums; }
+
+/* 2 의심할 것 */
+.gd-cz{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s4); }
+.gd-cz-i{ padding:var(--s5); background:var(--surface);
+  border-radius:var(--r-lg); box-shadow:var(--shadow);
+  border-top:3px solid var(--ic-ink, var(--burgundy)); }
+.gd-cz-i > b{ display:block; font-size:var(--t-md); margin-bottom:6px; }
+.gd-cz-i p{ font-size:var(--t-sm); color:var(--ink2); line-height:1.75; }
+
+/* 3 알려 줄 것 */
+.gd-tell{ display:grid; gap:var(--s3); padding:var(--s6);
+  background:var(--tint-2); border-radius:var(--r-xl); }
+.gd-tell li{ display:grid; grid-template-columns:auto 1fr; gap:var(--s3);
+  align-items:start; font-size:var(--t-base); color:var(--ink2);
+  line-height:1.7; }
+.gd-tell li > svg{ margin-top:5px; color:var(--t2-ink); }
+
+/* 4 물어볼 것 — 이 사이트의 핵심 자산입니다 */
+.gd-ask{ display:grid; gap:var(--s3); }
+.gd-ask li{ display:grid; grid-template-columns:auto 1fr; gap:var(--s4);
+  align-items:start; padding:var(--s5) var(--s6);
+  background:var(--surface); border-radius:var(--r-lg);
+  box-shadow:var(--shadow);
+  font-size:var(--t-base); color:var(--ink); line-height:1.75; }
+.gd-ask i{ font-style:normal; font-size:var(--t-cap); font-weight:800;
+  color:var(--burgundy); background:var(--burgundy-50);
+  border-radius:var(--r-pill); padding:5px 10px; white-space:nowrap;
+  font-variant-numeric:tabular-nums; }
+.gd-ask-n{ margin-top:var(--s4); font-size:var(--t-cap); color:var(--ink3); }
+
+/* 법 · 제도 */
+.gd-law{ margin-top:var(--s9); padding:var(--s7);
+  background:var(--bg-warm); border-radius:var(--r-xl); }
+.gd-law-k{ display:flex; align-items:center; gap:6px;
+  font-size:var(--t-cap); font-weight:800; letter-spacing:.02em;
+  color:var(--t4-ink); margin-bottom:var(--s3); }
+.gd-law > b{ display:block; font-size:var(--t-md); margin-bottom:var(--s2); }
+.gd-law > p{ font-size:var(--t-base); color:var(--ink2); line-height:1.8; }
+/* ⚠️ 법령은 바뀝니다. "어디서 확인하는지" 는 지우지 마세요. */
+.gd-law-w{ margin-top:var(--s4); padding-top:var(--s4);
+  border-top:1px solid var(--line);
+  font-size:var(--t-sm); color:var(--ink2); }
+.gd-law-w > em{ display:block; font-style:normal; font-size:var(--t-cap);
+  font-weight:800; color:var(--ink3); margin-bottom:4px; }
+.gd-law-w > span{ display:block; }
+
+/* 맺음 */
+.gd-end{ margin-top:var(--s10); }
+.gd-end > h2{ font-size:var(--t-2xl); margin-bottom:var(--s5); }
+.gd-end-g{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s4); }
+.gd-end-c{ display:grid; align-content:start; gap:6px; padding:var(--s6);
+  background:var(--surface); border-radius:var(--r-xl);
+  box-shadow:var(--shadow);
+  transition:transform .15s ease, box-shadow .15s ease; }
+.gd-end-c:hover{ transform:translateY(-2px); box-shadow:var(--shadow-md); }
+.gd-end-c > b{ font-size:var(--t-md); color:var(--ink); }
+.gd-end-c > span{ font-size:var(--t-sm); color:var(--ink2); line-height:1.7; }
+.gd-end-c > em{ display:inline-flex; align-items:center; gap:6px;
+  margin-top:var(--s3); font-style:normal;
+  font-size:var(--t-sm); font-weight:700; color:var(--burgundy); }
+.gd-more{ margin-top:var(--s7); padding-top:var(--s6);
+  border-top:1px solid var(--line); }
+.gd-more > b{ display:block; font-size:var(--t-md); margin-bottom:var(--s4); }
+.gd-more-g{ display:flex; flex-wrap:wrap; gap:var(--s3); }
+.gd-more-i{ display:inline-flex; align-items:center; gap:var(--s2);
+  min-height:44px; padding:0 var(--s5) 0 var(--s3);
+  border-radius:var(--r-pill); background:var(--bg-warm);
+  font-size:var(--t-sm); font-weight:700; color:var(--ink);
+  transition:background-color .15s ease; }
+.gd-more-i:hover{ background:var(--ic-bg, var(--burgundy-50)); }
+.gd-more-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:30px; height:30px; border-radius:var(--r-pill);
+  background:var(--ic-bg, var(--burgundy-50));
+  color:var(--ic-ink, var(--burgundy)); }
+
+/* ── 목록 (/problems) ───────────────────────────────────── */
+.gdl-g{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s4); }
+.gdl{ display:grid; grid-template-columns:auto 1fr auto; gap:var(--s4);
+  align-items:start; padding:var(--s6);
+  background:var(--surface); border-radius:var(--r-xl);
+  box-shadow:var(--shadow);
+  transition:transform .15s ease, box-shadow .15s ease; }
+.gdl:hover{ transform:translateY(-2px); box-shadow:var(--shadow-md); }
+.gdl-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:54px; height:54px; border-radius:16px;
+  background:var(--ic-bg, var(--burgundy-50));
+  color:var(--ic-ink, var(--burgundy)); }
+.gdl-b{ display:grid; gap:6px; min-width:0; }
+.gdl-b > b{ font-size:var(--t-lg); line-height:1.4; }
+.gdl-l{ font-size:var(--t-sm); color:var(--ink2); line-height:1.7; }
+.gdl-n{ display:flex; flex-wrap:wrap; gap:6px; margin-top:var(--s2); }
+.gdl-n em{ font-style:normal; font-size:var(--t-cap); font-weight:700;
+  color:var(--ink3); background:var(--bg-warm);
+  border-radius:var(--r-pill); padding:4px 10px;
+  font-variant-numeric:tabular-nums; }
+.gdl-go{ color:var(--ink3); margin-top:var(--s2); }
+.gdl:hover .gdl-go{ color:var(--ic-ink, var(--burgundy)); }
+
+.gdl-rest{ margin-top:var(--s8); padding:var(--s7);
+  background:var(--bg-warm); border-radius:var(--r-xl); }
+.gdl-rest > b{ display:block; font-size:var(--t-md); margin-bottom:var(--s2); }
+.gdl-rest > p{ font-size:var(--t-sm); color:var(--ink2); line-height:1.75;
+  margin-bottom:var(--s4); }
+.gdl-rest-g{ display:flex; flex-wrap:wrap; gap:var(--s3); }
+.gdl-rest-i{ display:inline-flex; align-items:center; gap:var(--s2);
+  min-height:44px; padding:0 var(--s5); border-radius:var(--r-pill);
+  background:var(--surface); color:var(--ink);
+  font-size:var(--t-sm); font-weight:700; }
+.gdl-rest-i:hover{ color:var(--burgundy); }
+
+@media (max-width:860px){
+  .gd-cz, .gd-end-g, .gdl-g{ grid-template-columns:1fr; }
+  .gd-hd h1{ font-size:var(--t-2xl); }
+  .gd-s{ margin-top:var(--s7); }
+  .gd-law, .gdl-rest, .gd-tell{ padding:var(--s5); }
+  .gd-ask li, .gd-self li{ padding:var(--s4) var(--s5); }
+  .gdl{ padding:var(--s5); grid-template-columns:auto 1fr; }
+  /* ⚠️ 화살표를 숨겼으면 칸도 같이 거둬야 합니다 — 안 그러면 빈 칸이
+     남아 글이 좁아집니다. */
+  .gdl-go{ display:none; }
+}
+
+/* 글 카드의 분류 배지와 아이콘도 분류색을 씁니다 */
+.pcard-ic{ background:var(--ic-bg, var(--burgundy-50)) !important;
+  color:var(--ic-ink, var(--burgundy)) !important; }
+.pcard-m em{ color:var(--ic-ink, var(--burgundy));
+  background:var(--ic-bg, var(--burgundy-50)); }
+
+/* SOS — 고른 분류에 해결방법이 있을 때의 한 줄 */
+.sos-tip{ display:grid; grid-template-columns:auto 1fr auto; gap:var(--s4);
+  align-items:center; margin-bottom:var(--s5); padding:var(--s5);
+  background:var(--t1-bg); border-radius:var(--r-xl);
+  transition:transform .15s ease; }
+.sos-tip:hover{ transform:translateY(-1px); }
+.sos-tip-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:14px;
+  background:#fff; color:var(--t1-ink); }
+/* ⚠️ `>` 를 빼지 마세요 — 안쪽 글의 <b> 까지 덩어리가 됩니다 */
+.sos-tip-t > b{ display:block; font-size:var(--t-md); color:var(--ink);
+  margin-bottom:4px; }
+.sos-tip-t > span{ display:block; font-size:var(--t-sm); color:var(--ink2);
+  line-height:1.7; }
+.sos-tip-go{ color:var(--t1-ink); }
+@media (max-width:560px){
+  .sos-tip{ grid-template-columns:auto 1fr; }
+  .sos-tip-go{ display:none; }
+}

@@ -30,11 +30,26 @@ function loadApp(){
   sb.window = sb;
   vm.createContext(sb);
 
-  for(const f of ["js/data/korean.js","js/data/site.js","js/data/situations.js",
-                  "js/data/problems.js","js/data/services.js","js/data/startup.js",
-                  "js/data/photos.js","js/data/check.js","js/data/regions.js","js/data/reqforms.js",
-                  "js/data/legal-terms.js","js/data/legal-privacy.js",
-                  "js/data/posts.js","js/data/faq.js"])
+  /* ⚠️ **순서가 곧 의존 순서입니다** — 뒤의 파일이 앞의 것을 씁니다.
+     guides.js 는 problems.js 의 key 를 그대로 쓰므로 그 뒤여야 합니다. */
+  const DATA = ["js/data/korean.js","js/data/site.js","js/data/situations.js",
+                "js/data/problems.js","js/data/services.js","js/data/startup.js",
+                "js/data/photos.js","js/data/check.js","js/data/regions.js","js/data/reqforms.js",
+                "js/data/legal-terms.js","js/data/legal-privacy.js",
+                "js/data/posts.js","js/data/guides.js","js/data/faq.js"];
+
+  /* ⚠️ 여기는 **glob 이 아니라 손으로 적은 목록**입니다. 새 데이터
+     파일을 만들고 여기에 안 넣으면, 그 데이터를 쓰는 주소가 **에러
+     없이 통째로 안 만들어집니다.** guides.js 에서 실제로 그랬습니다 —
+     "페이지 33개" 만 보고 넘어갈 뻔했습니다. 그래서 셉니다. */
+  const onDisk = fs.readdirSync(path.join(ROOT,"js/data"))
+    .filter(f => f.endsWith(".js")).map(f => "js/data/"+f).sort();
+  const missing = onDisk.filter(f => !DATA.includes(f));
+  if(missing.length)
+    throw new Error("js/data 에 있는데 build-pages 가 안 읽는 파일: " +
+      missing.join(", ") + "\n   → 위의 DATA 목록에 **의존 순서에 맞게** 넣으세요.");
+
+  for(const f of DATA)
     vm.runInContext(fs.readFileSync(path.join(ROOT,f),"utf8"), sb, {filename:f});
 
   /* app.js 는 통째로 돌리면 document 를 건드립니다. 필요한 조각만
@@ -55,11 +70,15 @@ function allRoutes(W){
   const fixed = ["/", "/sos", "/start", "/start/cost", "/check", "/partners",
                  "/request", "/lab", "/partner", "/partner/apply",
                  "/my", "/quotes", "/search",
-                 "/tools", "/tools/yield", "/tools/bep", "/login", "/signup", "/about", "/terms", "/privacy"];
+                 "/tools", "/tools/yield", "/tools/bep", "/problems", "/login", "/signup", "/about", "/terms", "/privacy"];
   /* 연구소 글은 하나하나가 주소입니다 — 검색에서 들어오는 문이라
      반드시 진짜 HTML 파일이 있어야 합니다. */
   const posts = (W.WOW_POSTS || []).map(p => "/lab/" + p.slug);
-  return fixed.concat(posts);
+  /* 문제별 해결 가이드 — 흐름의 가운데 두 칸이자 **검색에서 들어오는
+     제일 큰 문**입니다. "덕트 냄새 민원" 으로 검색해 들어오시는 분이
+     제일 먼저 만나는 화면이므로 반드시 진짜 HTML 파일이어야 합니다. */
+  const guides = (W.WOW_GUIDES || []).map(g => "/problem/" + g.key);
+  return fixed.concat(posts).concat(guides);
 }
 
 function esc(s){
@@ -123,6 +142,40 @@ function jsonLd(W, r, route){
           { "@type":"ListItem", position:3, name:post.title }
         ]});
     }
+  }
+
+  /* 문제별 해결 가이드 — Article 로 알립니다.
+     ⚠️ **FAQPage 를 쓰지 마세요.** 가이드의 "물어볼 것" 은 업체에게
+     던질 질문이지 **우리가 답을 단 질문이 아닙니다.** 구글은 구조화
+     데이터가 화면 내용과 같기를 요구하므로, 답이 없는 질문을 FAQ 로
+     내보내면 어긋납니다. */
+  if(route.indexOf("/problem/") === 0){
+    const g = (W.WOW_GUIDES||[]).filter(x => "/problem/"+x.key === route)[0];
+    if(g){
+      const pr = (W.wowProblem && W.wowProblem(g.key)) || null;
+      out.push({ "@context":"https://schema.org", "@type":"Article",
+        headline: g.h1, description: g.lead, inLanguage:"ko",
+        author: org, publisher: org,
+        mainEntityOfPage:{ "@type":"WebPage", "@id":ORIGIN+route },
+        articleSection: pr ? pr.name : undefined });
+      out.push({ "@context":"https://schema.org", "@type":"BreadcrumbList",
+        itemListElement:[
+          { "@type":"ListItem", position:1, name:"홈", item:ORIGIN+"/" },
+          { "@type":"ListItem", position:2, name:"고민별 해결방법",
+            item:ORIGIN+"/problems" },
+          { "@type":"ListItem", position:3, name:g.h1 }
+        ]});
+    }
+  }
+
+  if(route === "/problems"){
+    out.push({ "@context":"https://schema.org", "@type":"CollectionPage",
+      name:"고민별 해결방법", description:r.desc || "", inLanguage:"ko",
+      url:ORIGIN+"/problems",
+      mainEntity:{ "@type":"ItemList",
+        itemListElement:(W.WOW_GUIDES||[]).map((g,i) => ({
+          "@type":"ListItem", position:i+1, name:g.h1,
+          url:ORIGIN+"/problem/"+g.key })) }});
   }
 
   if(route === "/lab"){
@@ -224,6 +277,20 @@ function noscriptFor(W, r, route){
     body += "<ul>"+(W.WOW_POSTS||[]).map(p =>
       L("/lab/"+p.slug, p.title+" — "+p.lead)).join("")+"</ul>";
   }
+  if(route.indexOf("/problem/") === 0){
+    const g = (W.WOW_GUIDES||[]).filter(x => "/problem/"+x.key === route)[0];
+    if(g){
+      body += g.intro.map(t => "<p>"+esc(t.replace(/\*\*/g,""))+"</p>").join("");
+      body += "<h2>직접 확인할 것</h2><ul>"+g.self.map(t =>
+        "<li>"+esc(t.replace(/\*\*/g,""))+"</li>").join("")+"</ul>";
+      body += "<h2>견적 받을 때 물어볼 것</h2><ul>"+g.ask.map(t =>
+        "<li>"+esc(t.replace(/\*\*/g,""))+"</li>").join("")+"</ul>";
+    }
+  }
+  if(route === "/problems"){
+    body += "<ul>"+(W.WOW_GUIDES||[]).map(g =>
+      L("/problem/"+g.key, g.h1+" — "+g.lead)).join("")+"</ul>";
+  }
   if(route === "/partners"){
     body += W.WOW_SERVICE_GROUPS.map(g =>
       "<h2>"+esc(g.name)+"</h2><ul>"+g.items.map(it =>
@@ -237,6 +304,33 @@ function noscriptFor(W, r, route){
    key·value 말고 다른 키가 하나라도 있으면 "Invalid vercel.json" 으로
    **배포가 통째로 실패합니다.** JSON 에는 주석이 없으니 설명은
    CLAUDE.md 에 적으세요. */
+/* ── 없는 CSS 변수를 쓰고 있지 않은가 ─────────────────────────
+   ⚠️ **없는 변수는 에러가 아니라 침묵입니다.** `var(--t-h1)` 처럼
+   오타를 내면 그 줄만 통째로 무시되고, 제목이 본문 크기로 나옵니다.
+   브라우저 콘솔에도 안 찍히고 전수 점검도 통과합니다 — 실제로 가이드
+   화면의 h1 이 15px 로 나갔습니다.
+   ⚠️ 되돌림 값이 있는 것(`var(--x, 기본)`)은 일부러 그런 것이므로
+   봐줍니다. */
+function checkCssVars(){
+  const files = ["css/tokens.css","css/app.css","css/pages.css"];
+  const src = files.map(f => fs.readFileSync(path.join(ROOT,f),"utf8"));
+  const all = src.join("\n");
+  const defined = new Set();
+  for(const m of all.matchAll(/(--[a-z0-9-]+)\s*:/g)) defined.add(m[1]);
+
+  const bad = [];
+  files.forEach((f,i) => {
+    src[i].split("\n").forEach((line, n) => {
+      /* 되돌림 값이 있으면 `var(--x, …)` — 쉼표가 있는 것은 건너뜁니다 */
+      for(const m of line.matchAll(/var\(\s*(--[a-z0-9-]+)\s*\)/g))
+        if(!defined.has(m[1])) bad.push(f+":"+(n+1)+"  "+m[1]);
+    });
+  });
+  if(bad.length)
+    throw new Error("정의되지 않은 CSS 변수를 쓰고 있습니다 (그 줄은 " +
+      "**조용히 무시됩니다**):\n   " + bad.join("\n   "));
+}
+
 function checkVercel(){
   const vj = JSON.parse(fs.readFileSync(path.join(ROOT,"vercel.json"),"utf8"));
   for(const g of (vj.headers||[])){
@@ -255,6 +349,7 @@ function checkVercel(){
 }
 
 /* ── 실행 ─────────────────────────────────────────────────────── */
+checkCssVars();
 checkVercel();
 const W = loadApp();
 const tpl = fs.readFileSync(path.join(ROOT,"index.html"),"utf8");

@@ -33,12 +33,12 @@
    ════════════════════════════════════════════════════════════════════ */
 
 window.WOW_POST_CATS = [
-  { key:"cost",  name:"원가 · 비용", icon:"won" },
-  { key:"run",   name:"운영",       icon:"gauge" },
-  { key:"fac",   name:"시설 · 장비", icon:"tool" },
-  { key:"law",   name:"인허가 · 노무", icon:"shield" },
-  { key:"start", name:"창업",       icon:"seed" },
-  { key:"grow",  name:"성장 · 정리", icon:"up" }
+  { key:"cost", tone:"t1",  name:"원가 · 비용", icon:"won" },
+  { key:"run", tone:"t5",   name:"운영",       icon:"gauge" },
+  { key:"fac", tone:"t7",   name:"시설 · 장비", icon:"tool" },
+  { key:"law", tone:"t4",   name:"인허가 · 노무", icon:"shield" },
+  { key:"start", tone:"t2", name:"창업",       icon:"seed" },
+  { key:"grow", tone:"t3",  name:"성장 · 정리", icon:"up" }
 ];
 
 window.WOW_POSTS = [

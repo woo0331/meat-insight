@@ -45,6 +45,8 @@ var META = {
   "/partner/apply":["파트너 등록", "ABOUTMEAT 파트너로 등록하고 조건에 맞는 요청을 받아 보세요."],
   "/my":       ["MY BUSINESS",
                 "진단 결과·창업 진행·창업비·견적 비교·읽던 글을 한 화면에서 이어서 하실 수 있습니다."],
+  "/problems": ["고민별 해결방법",
+                "고깃집·정육점에서 자주 나오는 고민을 직접 확인할 것과 업체에 물어볼 것으로 정리했습니다. 가입 없이 읽으시면 됩니다."],
   "/search":   ["검색",
                 "글·서비스·화면을 한 번에 찾습니다. 못 찾으시면 그대로 적어서 물어보시면 됩니다."],
   "/tools":    ["사장님 도구",
@@ -103,6 +105,7 @@ window.routeInfo = function(path, qs){
     "/tools/yield":   "yield",
     "/tools/bep":     "bep",
     "/search":        "search",
+    "/problems":      "problems",
     "/terms":         "terms",
     "/privacy":       "privacy"
   };
@@ -120,6 +123,20 @@ window.routeInfo = function(path, qs){
     }
     r.ok = false; return r;      /* 없는 글은 404 — 빈 화면을 두지 않습니다 */
   }
+  /* 문제별 해결 가이드 — 흐름의 **가운데 두 칸**(이해 · 해결방법)입니다.
+     ⚠️ 제목·설명을 가이드에서 가져옵니다. 여기서 안 채우면 검색 결과에
+     열 줄이 똑같은 말을 합니다. */
+  var gm = /^\/problem\/([a-z0-9-]+)$/.exec(path);
+  if(gm){
+    var gd = (typeof wowGuide === "function") ? wowGuide(gm[1]) : null;
+    if(gd){
+      r.view = "problem"; r.guide = gd;
+      r.title = gd.h1; r.desc = gd.lead;
+      return r;
+    }
+    r.ok = false; return r;    /* 없는 분류는 404 — 빈 화면을 두지 않습니다 */
+  }
+
   if(SOON[path]){ r.view = "soon"; r.soon = SOON[path]; r.noindex = true; return r; }
 
   r.ok = false; return r;
@@ -178,6 +195,8 @@ function render(){
     case "bep":          html = PageBep();            break;
     case "search":       html = PageSearch();        break;
     case "post":         html = PagePost(r.post);    break;
+    case "problem":      html = PageProblem(r.guide); break;
+    case "problems":     html = PageProblems();      break;
     case "terms":        html = PageTerms();         break;
     case "privacy":      html = PagePrivacy();       break;
     case "soon":         html = PageSoon(r.soon);    break;

@@ -292,7 +292,7 @@ function Situations(){
       '<p>사장님의 상황에 맞는 해결방법부터 찾아드립니다.</p></div>'+
     '<div class="sit-g">'+WOW_SITUATIONS.map(function(s){
       var ph = hasPhoto("sit-"+s.key);
-      return '<a class="sit'+(ph?'':' sit-flat')+'" href="'+esc(s.to)+
+      return '<a class="sit '+tnClass(s.tone)+(ph?'':' sit-flat')+'" href="'+esc(s.to)+
         (s.ask ? '?q='+encodeURIComponent(s.ask) : '')+'">'+
         (ph ? '<span class="sit-ph">'+photoBox("sit-"+s.key)+
               '<span class="sit-ic">'+icon(s.icon,22)+'</span></span>' : '')+
@@ -552,7 +552,7 @@ function CatBand(){
       '<a class="sec-more" href="/partners">업체 찾기'+icon("chev",16)+'</a></div>'+
     '<div class="cat-g">'+WOW_SERVICE_GROUPS.map(function(g){
       var ph = hasPhoto("cat-"+g.key);
-      return '<a class="cat'+(ph?'':' cat-flat')+'" href="/partners?g='+
+      return '<a class="cat '+tnClass(g.tone)+(ph?'':' cat-flat')+'" href="/partners?g='+
         encodeURIComponent(g.key)+'">'+
         (ph ? '<span class="cat-ph">'+photoBox("cat-"+g.key)+'</span>' : '')+
         /* ⚠️ 시안처럼 **한 줄에 여섯**을 놓으려면 카드가 낮아야 합니다.
@@ -582,11 +582,19 @@ function WorryBand(){
      고민 여섯 개가 두 줄로 눌려 있었습니다. */
   var six = WOW_PROBLEMS.slice(0, 6);
   return '<section class="sec"><div class="w">'+
-    '<div class="sec-hd"><h2>요즘 어떤 고민이 있으세요?</h2>'+
-      '<p>고르시면 그 이야기부터 시작합니다. 여기 없는 것도 그냥 적어 주세요.</p>'+
-      '<a class="sec-more" href="/sos">더 많은 고민 보기'+icon("chev",16)+'</a></div>'+
+    '<div class="sec-hd" id="worry"><h2>요즘 어떤 고민이 있으세요?</h2>'+
+      '<p>고르시면 <b>업체를 부르기 전에 확인할 것</b>부터 알려 드립니다. '+
+        '여기 없는 것도 그냥 적어 주세요.</p>'+
+      '<a class="sec-more" href="/problems">고민별 해결방법 전부 보기'+
+        icon("chev",16)+'</a></div>'+
     '<div class="prob-g prob-g-w">'+six.map(function(p){
-      return '<a class="prob" href="'+esc(p.to || ("/sos?c="+encodeURIComponent(p.key)))+'">'+
+      /* ⚠️ 가이드가 있으면 **해결방법으로 먼저** 보냅니다. 곧장 폼이나
+         업체로 보내면 그 순간 이 사이트는 전화번호부가 됩니다
+         (지시서 3번). 가이드가 없는 분류만 예전처럼 갑니다. */
+      var to = (typeof wowHasGuide === "function" && wowHasGuide(p.key))
+        ? "/problem/" + p.key
+        : (p.to || ("/sos?c=" + encodeURIComponent(p.key)));
+      return '<a class="prob '+tnClass(p.tone)+'" href="'+esc(to)+'">'+
         '<span class="prob-ic">'+icon(p.icon||"chat",20)+'</span>'+
         '<span class="prob-b"><b>'+esc(p.name)+'</b>'+
           (p.hint ? '<span>'+esc(p.hint)+'</span>' : '')+'</span>'+

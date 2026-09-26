@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>매출이 떨어질 때 · ABOUTMEAT · 고기 사업자 문제해결</title>
+<meta name="description" content="손님 수가 준 것 · 객단가가 준 것 · 회전이 준 것은 처방이 전부 다릅니다.">
+<meta name="theme-color" content="#6B2436">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="매출이 떨어질 때 · ABOUTMEAT · 고기 사업자 문제해결">
+<meta property="og:description" content="손님 수가 준 것 · 객단가가 준 것 · 회전이 준 것은 처방이 전부 다릅니다.">
+<!-- ⚠️ og:image 는 **주소 전체**여야 합니다. "/og.jpg" 로 두면 크롤러가
+     우리 도메인을 모르는 채로 읽어 카카오톡·페이스북 미리보기에 안 뜹니다. -->
+<meta property="og:image" content="https://aboutmeat.co.kr/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="ABOUTMEAT — 고기 사업자 문제해결">
+<meta property="og:site_name" content="ABOUTMEAT">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:url" content="https://aboutmeat.co.kr/problem/sales">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- ⚠️ 이 파일은 build-pages.js 가 **다시 쓰지 않습니다**(원본이라서).
+     그래서 다른 화면과 달리 canonical 을 손으로 둡니다. 없으면 JS 를
+     안 돌리는 크롤러 눈에 메인만 canonical 이 없습니다.
+     다른 주소로 열렸을 때는 app.js 의 paintMeta() 가 고쳐 씁니다. -->
+<link rel="canonical" href="https://aboutmeat.co.kr/problem/sales">
+
+<link rel="manifest" href="/manifest.json">
+<!-- ⚠️ rel="icon" 을 안 적으면 브라우저가 /favicon.ico 를 찾습니다.
+     파일이 없으면 모든 화면에서 404 가 한 번씩 납니다. -->
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+<!-- 글꼴은 CDN 이 막혀도 사이트가 멈추지 않습니다 — 대체 사슬에
+     윈도우(맑은 고딕)·맥(애플 SD 산돌) 기본 한글 글꼴이 들어 있습니다. -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/app.css">
+<link rel="stylesheet" href="/css/pages.css">
+
+<!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
+     마세요 — 다음에 돌릴 때 덮어써집니다. 내용은 js/data/faq.js 와
+     js/app.js 의 META 에서 나옵니다. -->
+<!-- ld:start -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ko","mainEntity":[{"@type":"Question","name":"정말 무료인가요?","acceptedAnswer":{"@type":"Answer","text":"물어보시는 것과 업체를 찾아 드리는 것에는 비용을 받지 않습니다. 공사나 납품 대금은 사장님과 업체가 직접 주고받으시는 돈이고, 저희는 받지 않습니다."}},{"@type":"Question","name":"가입해야 하나요?","acceptedAnswer":{"@type":"Answer","text":"아니요. 연락받으실 곳만 적어 주시면 됩니다. 이름과 연락처 외에는 매칭에 실제로 쓰이는 것만 여쭤봅니다. 진단·창업 체크·창업비 정리·견적 비교는 가입 없이 그대로 쓰실 수 있고, 결과는 이 브라우저에 남습니다."}},{"@type":"Question","name":"업체를 몇 곳이나 소개해 주시나요?","acceptedAnswer":{"@type":"Answer","text":"한 요청에 최대 세 곳입니다. 열 곳을 붙여 드리면 비교가 아니라 전화 폭탄이 됩니다. 맞는 곳을 못 찾으면 못 찾았다고 말씀드립니다."}},{"@type":"Question","name":"연락처가 업체로 바로 넘어가나요?","acceptedAnswer":{"@type":"Answer","text":"아닙니다. 어느 업체에 넘길지 정해지면 그 업체가 어디인지 먼저 알려 드리고, 그때 다시 여쭤봅니다. 원하지 않으시면 넘기지 않습니다. 접수 단계에서 받는 동의에는 업체 전달이 들어 있지 않습니다."}},{"@type":"Question","name":"언제 연락 주시나요?","acceptedAnswer":{"@type":"Answer","text":"확인한 뒤 바로 연락드립니다. 다만 \"몇 시간 안에\" 라고는 적지 않겠습니다 — 지금 그 약속을 지킬 수 있다고 장담할 수 없습니다."}},{"@type":"Question","name":"광고비를 낸 업체가 위에 올라가나요?","acceptedAnswer":{"@type":"Answer","text":"그렇게 하지 않습니다. 돈을 낸 순서로 보여 드리면 사장님이 저희를 믿을 이유가 없어집니다. 광고 상품을 만들게 되면 그것이 광고라고 화면에 적겠습니다."}},{"@type":"Question","name":"고기를 파시나요?","acceptedAnswer":{"@type":"Answer","text":"팔지 않습니다. 이곳은 고기를 파는 곳이 아니라 고기 장사를 하시는 분의 문제를 푸는 곳입니다. 육류 거래처가 필요하시면 조건에 맞는 공급처를 찾아 드립니다."}},{"@type":"Question","name":"저희가 계약 당사자인가요?","acceptedAnswer":{"@type":"Answer","text":"아닙니다. 저희는 중개자이고, 계약은 사장님과 업체가 직접 하십니다. 그래서 공사 결과·납기·하자에 대한 책임은 그 거래의 당사자에게 있습니다. 이용약관 제5조에 그대로 적어 두었습니다."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"ABOUTMEAT","url":"https://aboutmeat.co.kr","inLanguage":"ko","description":"고깃집·정육점 사장님의 문제 해결 플랫폼. 창업·운영·원가·시설·매출·확장·정리까지 상황만 말씀해주시면 해결방법부터 적합한 업체 비교까지 도와드립니다.","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://aboutmeat.co.kr/search?q={q}"},"query-input":"required name=q"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"ABOUTMEAT","url":"https://aboutmeat.co.kr","logo":"https://aboutmeat.co.kr/icon-512.png","description":"고깃집·정육점 사장님의 문제를 정리하고, 조건에 맞는 업체를 최대 세 곳 찾아 견적을 받아 드리는 중개 서비스입니다."}</script>
+<!-- ld:end -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"매출이 떨어질 때","description":"손님 수가 준 것 · 객단가가 준 것 · 회전이 준 것은 처방이 전부 다릅니다.","inLanguage":"ko","author":{"@type":"Organization","name":"ABOUTMEAT","url":"https://aboutmeat.co.kr","logo":"https://aboutmeat.co.kr/icon-512.png"},"publisher":{"@type":"Organization","name":"ABOUTMEAT","url":"https://aboutmeat.co.kr","logo":"https://aboutmeat.co.kr/icon-512.png"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://aboutmeat.co.kr/problem/sales"},"articleSection":"매출"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"홈","item":"https://aboutmeat.co.kr/"},{"@type":"ListItem","position":2,"name":"고민별 해결방법","item":"https://aboutmeat.co.kr/problems"},{"@type":"ListItem","position":3,"name":"매출이 떨어질 때"}]}</script>
+</head>
+<body>
+<a class="skip" href="#view">본문 바로가기</a>
+<noscript><h1>매출이 떨어질 때</h1><p>손님 수가 준 것 · 객단가가 준 것 · 회전이 준 것은 처방이 전부 다릅니다.</p><p>&quot;매출이 떨어졌다&quot; 는 결과이지 원인이 아닙니다. 매출은 손님 수 × 객단가 이고, 손님 수는 다시 자리 수 × 회전 입니다. 어느 칸이 줄었는지 모르고 손을 대면, 광고비만 쓰고 원래 자리로 돌아옵니다.</p><p>POS 에 답이 있습니다. 석 달치를 요일 · 시간대별로 나눠 보시면 대개 한 칸에서만 빠져 있습니다. 평일 점심이 빠진 것과 주말 저녁이 빠진 것은 완전히 다른 문제입니다.</p><h2>직접 확인할 것</h2><ul><li>POS 에서 석 달치 일자별 객수와 객단가를 뽑아 보세요. 둘 중 어느 쪽이 줄었는지가 먼저입니다.</li><li>요일 · 시간대별로 나눠 보세요. 전체가 준 것이 아니라 한 칸만 빠진 경우가 많습니다.</li><li>메뉴별 판매량과 원가율을 나란히 놓아 보세요. 잘 나가는 메뉴가 남는 메뉴는 아닙니다.</li><li>배달 비중이 얼마이고, 수수료와 포장재를 빼고 남는지 계산해 보세요. 매출이 늘었는데 돈이 안 남는 자리가 여기입니다.</li><li>지도(네이버 · 카카오)에 적힌 영업시간 · 주차 · 메뉴가 지금과 맞나요. 틀린 정보는 광고보다 먼저 손님을 돌려보냅니다.</li></ul><h2>견적 받을 때 물어볼 것</h2><ul><li>무엇을 얼마나 늘려 주시는지 숫자로 말씀해 주실 수 있나요.</li><li>그걸 어떻게 측정하나요. 측정 결과를 제가 직접 볼 수 있나요.</li><li>계약 기간과 중도 해지 조건이 어떻게 되나요.</li><li>광고비와 대행비가 나뉘어 있나요. 광고비는 어디로 나가나요.</li><li>만들어 주신 사진 · 계정 · 콘텐츠의 소유권은 누구에게 있나요.</li></ul></noscript>
+
+<!-- ⚠️ 자산 경로는 반드시 절대 경로(/js/… · /img/…)여야 합니다.
+     상대 경로면 /start/cost 같은 깊은 주소에서 /start/js/… 를 찾아
+     스크립트가 통째로 404 가 됩니다. -->
+<script src="/js/data/korean.js"></script>
+<script src="/js/data/site.js"></script>
+<script src="/js/data/situations.js"></script>
+<script src="/js/data/problems.js"></script>
+<script src="/js/data/services.js"></script>
+<script src="/js/data/startup.js"></script>
+<script src="/js/data/photos.js"></script>
+<script src="/js/data/check.js"></script>
+<script src="/js/data/faq.js"></script>
+<script src="/js/data/regions.js"></script>
+<script src="/js/data/reqforms.js"></script>
+<script src="/js/data/posts.js"></script>
+<script src="/js/data/guides.js"></script>
+<script src="/js/data/legal-terms.js"></script>
+<script src="/js/data/legal-privacy.js"></script>
+
+<script src="/js/components/base.js"></script>
+<script src="/js/components/chrome.js"></script>
+
+<!-- ⚠️ sos.js 가 fRow · Notice · CallButton 을 내놓습니다.
+     다른 폼 화면들이 그걸 쓰므로 sos.js 를 먼저 둡니다. -->
+<script src="/js/pages/home.js"></script>
+<script src="/js/pages/sos.js"></script>
+<script src="/js/pages/check.js"></script>
+<script src="/js/pages/start.js"></script>
+<script src="/js/pages/request.js"></script>
+<script src="/js/pages/partner.js"></script>
+<script src="/js/pages/lab.js"></script>
+<script src="/js/pages/problem.js"></script>
+<script src="/js/pages/quotes.js"></script>
+<script src="/js/pages/tools.js"></script>
+<script src="/js/pages/my.js"></script>
+<script src="/js/pages/search.js"></script>
+<script src="/js/pages/legal.js"></script>
+
+<script src="/js/app.js"></script>
+
+<div id="chrome-t"></div>
+<main id="view"></main>
+<div id="chrome-b"></div>
+</body>
+</html>

@@ -44,18 +44,18 @@ window.WOW_ASK_CHIPS = [
 /* 빠른 선택 — 지시서 11번의 12개 그대로.
    `to` 가 있으면 그 화면으로, 없으면 SOS 입력창에 분류만 찍습니다. */
 window.WOW_PROBLEMS = [
-  { key:"cost",     name:"고기 원가",   icon:"won",       hint:"원가율·부위 구성·로스" },
-  { key:"supply",   name:"거래처",      icon:"truck",     hint:"육류 공급·직납·결제조건" },
-  { key:"sales",    name:"매출",        icon:"chart",     hint:"객단가·회전율·메뉴" },
-  { key:"staff",    name:"직원",        icon:"users",     hint:"채용·인건비·노무" },
-  { key:"cold",     name:"냉장/냉동",   icon:"snow",      hint:"고장·증설·숙성고" },
-  { key:"duct",     name:"덕트",        icon:"fire",      hint:"냄새·민원·배기" },
-  { key:"equip",    name:"장비",        icon:"knife",     hint:"육절기·골절기·진공기" },
-  { key:"interior", name:"인테리어",    icon:"store",     hint:"신규·리뉴얼·부분시공" },
-  { key:"market",   name:"마케팅",      icon:"megaphone", hint:"배달·리뷰·단골" },
-  { key:"tax",      name:"세무/노무",   icon:"doc",       hint:"신고·4대보험·근로계약" },
-  { key:"startup",  name:"창업",        icon:"seed",      hint:"상권·점포·인허가", to:"/start" },
-  { key:"etc",      name:"기타",        icon:"chat",      hint:"위에 없는 것" }
+  { key:"cost", tone:"t1",     name:"고기 원가",   icon:"won",       hint:"원가율·부위 구성·로스" },
+  { key:"supply", tone:"t2",   name:"거래처",      icon:"truck",     hint:"육류 공급·직납·결제조건" },
+  { key:"sales", tone:"t3",    name:"매출",        icon:"chart",     hint:"객단가·회전율·메뉴" },
+  { key:"staff", tone:"t4",    name:"직원",        icon:"users",     hint:"채용·인건비·노무" },
+  { key:"cold", tone:"t5",     name:"냉장/냉동",   icon:"snow",      hint:"고장·증설·숙성고" },
+  { key:"duct", tone:"t6",     name:"덕트",        icon:"fire",      hint:"냄새·민원·배기" },
+  { key:"equip", tone:"t7",    name:"장비",        icon:"knife",     hint:"육절기·골절기·진공기" },
+  { key:"interior", tone:"t8", name:"인테리어",    icon:"store",     hint:"신규·리뉴얼·부분시공" },
+  { key:"market", tone:"t1",   name:"마케팅",      icon:"megaphone", hint:"배달·리뷰·단골" },
+  { key:"tax", tone:"t3",      name:"세무/노무",   icon:"doc",       hint:"신고·4대보험·근로계약" },
+  { key:"startup", tone:"t2",  name:"창업",        icon:"seed",      hint:"상권·점포·인허가", to:"/start" },
+  { key:"etc", tone:"t7",      name:"기타",        icon:"chat",      hint:"위에 없는 것" }
 ];
 
 window.wowProblem = function(key){

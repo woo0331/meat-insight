@@ -134,11 +134,11 @@ ul,ol{ margin:0; padding:0; list-style:none; }
 .eyebrow{ font-size:var(--t-sm); font-weight:800; letter-spacing:.11em;
   color:var(--burgundy); margin-bottom:var(--s3) !important; text-transform:uppercase; }
 .eyebrow::before{ content:""; display:inline-block; vertical-align:middle;
-  width:22px; height:1px; margin:-2px 10px 0 0; background:var(--gold); }
+  width:22px; height:1px; margin:-2px 10px 0 0; background:var(--gold-line); }
 /* 어두운 구간에서는 한 단 밝은 금빛이라야 보입니다 */
 .dark .eyebrow, .pg-hero-d .eyebrow, .hero .eyebrow{ color:#fff; }
 .dark .eyebrow::before, .pg-hero-d .eyebrow::before, .hero .eyebrow::before{
-  background:var(--gold-on-dark); }
+  background:var(--gold-line); }
 
 /* 큰 제목은 줄 끝이 들쭉날쭉하면 초라해 보입니다 — 줄을 고르게 나눕니다.
    ⚠️ balance 는 낱말 **사이**만 고릅니다. 낱말 가운데를 자르지 않습니다. */

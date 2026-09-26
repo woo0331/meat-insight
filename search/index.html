@@ -55,7 +55,6 @@
 </head>
 <body>
 <a class="skip" href="#view">본문 바로가기</a>
-<noscript><h1>검색</h1><p>글·서비스·화면을 한 번에 찾습니다. 못 찾으시면 그대로 적어서 물어보시면 됩니다.</p></noscript>
 
 <!-- ⚠️ 자산 경로는 반드시 절대 경로(/js/… · /img/…)여야 합니다.
      상대 경로면 /start/cost 같은 깊은 주소에서 /start/js/… 를 찾아
@@ -98,7 +97,10 @@
 <script src="/js/app.js"></script>
 
 <div id="chrome-t"></div>
-<main id="view"></main>
+<!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가
+     이 사이에 **크롤러가 읽을 본문**을 써 넣습니다. 메인은 원본이라
+     shell() 이 손대지 않아서, 한동안 여기가 빈 칸으로 나갔습니다. -->
+<main id="view"><div class="pre w"><h1>검색</h1><p>글·서비스·화면을 한 번에 찾습니다. 못 찾으시면 그대로 적어서 물어보시면 됩니다.</p></div></main>
 <div id="chrome-b"></div>
 </body>
 </html>

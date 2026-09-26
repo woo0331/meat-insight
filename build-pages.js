@@ -242,62 +242,143 @@ function shell(tpl, r, route, noscript, ld){
   /* 만든 것을 바로 세어 봅니다 — 위를 고치다 다시 둘이 되는 일을 막습니다 */
   const n = (h.match(/<link rel="canonical"/g) || []).length;
   if(n !== 1) throw new Error(route+" 의 canonical 이 "+n+"개입니다 (하나여야 합니다)");
-  /* JS 가 안 도는 크롤러에게 최소한의 내용을 줍니다 */
-  h = h.replace('<a class="skip" href="#view">본문 바로가기</a>',
-    '<a class="skip" href="#view">본문 바로가기</a>\n<noscript>'+noscript+'</noscript>');
+  /* ⚠️ **크롤러 본문을 `<noscript>` 안에 두지 마세요.** 구글은 읽긴
+     하지만 뒤로 미루고, 네이버·빙·카카오·LLM 봇은 대개 **통째로
+     무시**합니다. 실제로 www.aboutmeat.co.kr 을 밖에서 열어 보니
+     본문이 "본문 바로가기" 한 줄로만 잡혔습니다.
+     그래서 진짜 `<main id="view">` **안에** 넣습니다. 화면을 그릴 때
+     app.js 의 render() 가 innerHTML 로 갈아 끼우므로 손님 눈에는
+     아무 차이가 없고, 첫 그림이 오히려 빨라집니다. */
+  const mainTag = '<main id="view">';
+  const mi = h.indexOf(mainTag);
+  if(mi < 0) throw new Error(route+' 에 <main id="view"> 가 없습니다');
+  const me = h.indexOf("</main>", mi);
+  if(me < 0) throw new Error(route+" 에 </main> 가 없습니다");
+  h = h.slice(0, mi + mainTag.length) +
+      '<div class="pre w">' + noscript + '</div>' +
+      h.slice(me);
   return h;
 }
 
+/* ── 크롤러가 읽을 본문 ─────────────────────────────────────
+   ⚠️ 이건 "구색" 이 아니라 **검색엔진이 보는 우리 사이트 전부**입니다.
+   JS 를 안 돌리는 크롤러(네이버·빙·카카오·LLM 봇)에게는 여기 적힌
+   것만 존재합니다. 화면에 있는 내용은 여기에도 있어야 합니다.
+
+   ⚠️ **지어낸 것을 여기에 적지 마세요.** 화면에 없는 업체 수 · 후기 ·
+   실적을 여기에만 적으면 그게 구글에까지 나가는 거짓말입니다
+   (절대 규칙 1). 전부 js/data 에서 그대로 가져옵니다.
+
+   ⚠️ 데이터를 새로 만들면 **여기에도 넣으세요.** check.js 의
+   "크롤러가 읽을 본문이 있다" 가 글자 수로 지켜 주지만, 무엇이
+   빠졌는지까지는 못 봅니다. */
 function noscriptFor(W, r, route){
   const L = (u,t)=>'<li><a href="'+esc(u)+'">'+esc(t)+'</a></li>';
+  const UL = (arr)=>"<ul>"+arr.join("")+"</ul>";
+  const plain = (t)=>esc(String(t).replace(/\*\*/g,""));
   let body = "<h1>"+esc(r.title || "ABOUTMEAT")+"</h1><p>"+esc(r.desc||"")+"</p>";
+
   if(route === "/"){
-    body += "<ul>"+W.WOW_SITUATIONS.map(s =>
-      L(s.to, s.name+" — "+s.line)).join("")+"</ul>";
-    body += "<ul>"+L("/sos","사장님 SOS")+L("/check","무료 사업진단")+
-            L("/start","창업 프로젝트")+L("/partners","업체 찾기")+"</ul>";
+    body += "<h2>지금 어떤 상황이세요?</h2>"+
+      UL(W.WOW_SITUATIONS.map(s => L(s.to, s.name+" — "+s.line)));
+    /* 고민 열둘은 가이드로 보냅니다 — 화면과 같은 곳으로 */
+    body += "<h2>업체를 부르기 전에 확인할 것</h2>"+
+      UL((W.WOW_GUIDES||[]).map(g => L("/problem/"+g.key, g.h1+" — "+g.lead)));
+    body += "<h2>가입 없이 지금 해 보실 수 있는 것</h2>"+
+      UL([L("/check","무료 사업진단 — 여덟 가지로 지금 무엇을 모르고 계신지 정리합니다"),
+          L("/tools/yield","수율 원가 계산 — 손질 후 무게로 실제 1kg 원가를 냅니다"),
+          L("/tools/bep","손익분기 계산 — 한 달에 얼마를 팔아야 본전인지 냅니다"),
+          L("/start/cost","창업비 정리표 — 빠뜨리기 쉬운 항목과 아직 안 받은 견적"),
+          L("/quotes","견적 비교 — 받은 견적을 같은 자리에 놓고 견줍니다")]);
+    body += "<h2>고기 장사에 필요한 것</h2>"+
+      (W.WOW_SERVICE_GROUPS||[]).map(g =>
+        "<h3>"+esc(g.name)+"</h3>"+
+        UL(g.items.map(it => L("/request?s="+encodeURIComponent(it.key), it.name+
+            (it.line ? " — "+it.line : ""))))).join("");
+    body += "<h2>사장님 연구소</h2>"+
+      UL((W.WOW_POSTS||[]).map(pp => L("/lab/"+pp.slug, pp.title+" — "+pp.lead)));
+    body += "<h2>자주 묻는 것</h2>"+
+      (W.WOW_FAQ||[]).map(f =>
+        "<h3>"+esc(f.q)+"</h3><p>"+esc(f.a)+"</p>").join("");
+    body += UL([L("/sos","사장님 SOS — 상황을 적어 주시면 정리해 드립니다"),
+                L("/problems","고민별 해결방법 전부 보기"),
+                L("/partners","업체 찾기"), L("/partner/apply","파트너 등록")]);
   }
+
   if(route === "/sos"){
-    body += "<ul>"+W.WOW_PROBLEMS.map(p =>
-      "<li>"+esc(p.name)+(p.hint?" — "+esc(p.hint):"")+"</li>").join("")+"</ul>";
+    body += UL(W.WOW_PROBLEMS.map(p =>
+      "<li>"+esc(p.name)+(p.hint?" — "+esc(p.hint):"")+"</li>"));
   }
   if(route === "/start"){
     body += "<ol>"+W.WOW_STARTUP_STEPS.map(s =>
       "<li>"+esc(s.name)+(s.line?" — "+esc(s.line):"")+"</li>").join("")+"</ol>";
   }
+  if(route === "/check"){
+    body += "<h2>여덟 가지를 봅니다</h2>"+
+      UL((W.WOW_CHECK||[]).map(c =>
+        "<li>"+esc(c.name)+(c.why?" — "+esc(c.why):"")+"</li>"));
+    body += "<p>좋다 나쁘다를 매기지 않습니다. 업종·평수·지역마다 기준이 " +
+      "달라서 우리에게 그 기준값이 없기 때문입니다. 대신 지금 무엇을 " +
+      "알고 계시고 무엇을 모르시는지를 셉니다. 적으신 내용은 이 브라우저 " +
+      "밖으로 나가지 않습니다.</p>";
+  }
+  if(route === "/tools"){
+    body += UL([
+      L("/check","무료 사업진단 — 여덟 가지로 지금 무엇이 비어 있는지 정리합니다"),
+      L("/tools/yield","수율 원가 계산 — 매입 단가와 손질 후 무게로 실제 1kg 원가를 냅니다"),
+      L("/tools/bep","손익분기 계산 — 고정비와 변동비율로 한 달에 얼마를 팔아야 본전인지 냅니다"),
+      L("/start/cost","창업비 정리표 — 빠뜨리기 쉬운 항목을 늘어놓고 아직 안 받은 견적을 보여 줍니다"),
+      L("/quotes","견적 비교 — 받은 견적을 같은 자리에 놓고 포함 범위까지 견줍니다")]);
+    body += "<p>전부 가입 없이 무료이고, 적으신 숫자는 이 브라우저 밖으로 " +
+      "나가지 않습니다. 안 적으신 칸은 비워 둡니다 — 평균값으로 메우면 " +
+      "그게 지어낸 숫자입니다.</p>";
+  }
   if(route.indexOf("/lab/") === 0){
     const post = (W.WOW_POSTS||[]).filter(p => "/lab/"+p.slug === route)[0];
     if(post) body += post.body.map(s =>
       "<h2>"+esc(s.h)+"</h2>"+
-      (s.p||[]).map(t => "<p>"+esc(t)+"</p>").join("")+
-      ((s.list||[]).length ? "<ul>"+s.list.map(t => "<li>"+esc(t)+"</li>").join("")+"</ul>" : "")
+      (s.p||[]).map(t => "<p>"+plain(t)+"</p>").join("")+
+      ((s.list||[]).length ? UL(s.list.map(t => "<li>"+plain(t)+"</li>")) : "")
     ).join("");
   }
   if(route === "/lab"){
-    body += "<ul>"+(W.WOW_POSTS||[]).map(p =>
-      L("/lab/"+p.slug, p.title+" — "+p.lead)).join("")+"</ul>";
+    body += UL((W.WOW_POSTS||[]).map(p =>
+      L("/lab/"+p.slug, p.title+" — "+p.lead)));
   }
+  /* ⚠️ 가이드는 이 사이트의 핵심 자산입니다. **본문을 통째로** 냅니다 —
+     검색으로 들어오는 분이 제일 많이 찾는 것이 이 내용입니다. */
   if(route.indexOf("/problem/") === 0){
     const g = (W.WOW_GUIDES||[]).filter(x => "/problem/"+x.key === route)[0];
     if(g){
-      body += g.intro.map(t => "<p>"+esc(t.replace(/\*\*/g,""))+"</p>").join("");
-      body += "<h2>직접 확인할 것</h2><ul>"+g.self.map(t =>
-        "<li>"+esc(t.replace(/\*\*/g,""))+"</li>").join("")+"</ul>";
-      body += "<h2>견적 받을 때 물어볼 것</h2><ul>"+g.ask.map(t =>
-        "<li>"+esc(t.replace(/\*\*/g,""))+"</li>").join("")+"</ul>";
+      body += g.intro.map(t => "<p>"+plain(t)+"</p>").join("");
+      if((g.warn||[]).length)
+        body += "<h2>이런 신호가 있으면 먼저 멈추세요</h2>"+
+          UL(g.warn.map(t => "<li>"+plain(t)+"</li>"));
+      body += "<h2>지금 직접 확인할 것</h2>"+
+        UL(g.self.map(t => "<li>"+plain(t)+"</li>"));
+      body += "<h2>먼저 의심할 것</h2>"+
+        UL((g.causes||[]).map(c => "<li>"+esc(c.t)+" — "+plain(c.d)+"</li>"));
+      body += "<h2>업체에 미리 알려 줄 것</h2>"+
+        UL((g.tell||[]).map(t => "<li>"+plain(t)+"</li>"));
+      body += "<h2>견적 받을 때 물어볼 것</h2>"+
+        UL(g.ask.map(t => "<li>"+plain(t)+"</li>"));
+      if(g.law) body += "<h2>"+esc(g.law.t)+"</h2><p>"+plain(g.law.d)+"</p>"+
+        (g.law.where ? "<p>확인하는 곳: "+esc(g.law.where)+"</p>" : "");
     }
   }
   if(route === "/problems"){
-    body += "<ul>"+(W.WOW_GUIDES||[]).map(g =>
-      L("/problem/"+g.key, g.h1+" — "+g.lead)).join("")+"</ul>";
+    body += UL((W.WOW_GUIDES||[]).map(g =>
+      L("/problem/"+g.key, g.h1+" — "+g.lead)));
   }
-  if(route === "/partners"){
-    body += W.WOW_SERVICE_GROUPS.map(g =>
-      "<h2>"+esc(g.name)+"</h2><ul>"+g.items.map(it =>
-        "<li>"+esc(it.name)+"</li>").join("")+"</ul>").join("");
+  if(route === "/partners" || route === "/request"){
+    body += (W.WOW_SERVICE_GROUPS||[]).map(g =>
+      "<h2>"+esc(g.name)+"</h2>"+UL(g.items.map(it =>
+        L("/request?s="+encodeURIComponent(it.key), it.name+
+          (it.line ? " — "+it.line : ""))))).join("");
   }
   return body;
 }
+
 
 /* ── vercel.json 이 Vercel 이 받아들이는 모양인가 ──────────────
    ⚠️ Vercel 은 vercel.json 을 엄격하게 검사합니다. 헤더 항목에
@@ -384,6 +465,17 @@ for(const route of routes){
       throw new Error("index.html 에서 ld:start / ld:end 표시를 못 찾았습니다 — 지우셨나요?");
     src = src.slice(0, a) + "<!-- ld:start -->\n" + ld + "\n" +
           src.slice(b);
+    /* ⚠️ **메인에는 크롤러 본문이 통째로 없었습니다.** index.html 은
+       원본이라 shell() 이 손대지 않는데, 그래서 `<main id="view">` 가
+       빈 칸인 채로 나갔습니다 — 밖에서 확인하니 본문이 "본문 바로가기"
+       한 줄뿐이었습니다. 제일 중요한 화면이 제일 비어 있었습니다.
+       여기도 표시한 줄 사이에 써 넣습니다. */
+    const c1 = "<!-- crawl:start -->", c2 = "<!-- crawl:end -->";
+    const ca = src.indexOf(c1), cb = src.indexOf(c2);
+    if(ca < 0 || cb < 0)
+      throw new Error("index.html 에서 crawl:start / crawl:end 표시를 못 찾았습니다 — 지우셨나요?");
+    src = src.slice(0, ca) + c1 + '<div class="pre w">' +
+          noscriptFor(W, r, route) + "</div>" + src.slice(cb);
     fs.writeFileSync(tplPath, src);
   }
 

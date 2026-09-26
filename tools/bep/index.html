@@ -55,7 +55,6 @@
 </head>
 <body>
 <a class="skip" href="#view">본문 바로가기</a>
-<noscript><h1>손익분기 계산</h1><p>고정비와 매출 대비 비율을 적으시면 한 달에 얼마를 팔아야 본전인지, 하루로 나누면 얼마인지 나옵니다.</p></noscript>
 
 <!-- ⚠️ 자산 경로는 반드시 절대 경로(/js/… · /img/…)여야 합니다.
      상대 경로면 /start/cost 같은 깊은 주소에서 /start/js/… 를 찾아
@@ -98,7 +97,10 @@
 <script src="/js/app.js"></script>
 
 <div id="chrome-t"></div>
-<main id="view"></main>
+<!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가
+     이 사이에 **크롤러가 읽을 본문**을 써 넣습니다. 메인은 원본이라
+     shell() 이 손대지 않아서, 한동안 여기가 빈 칸으로 나갔습니다. -->
+<main id="view"><div class="pre w"><h1>손익분기 계산</h1><p>고정비와 매출 대비 비율을 적으시면 한 달에 얼마를 팔아야 본전인지, 하루로 나누면 얼마인지 나옵니다.</p></div></main>
 <div id="chrome-b"></div>
 </body>
 </html>

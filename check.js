@@ -942,6 +942,31 @@ const AUDIT = `(() => {
     }
     return bad.length ? bad.join(" / ") : true;`);
 
+  /* ⚠️ **검색엔진에게는 여기 적힌 것만 존재합니다.** 이 사이트는 JS 로
+     화면을 그리는데, 크롤러가 JS 를 안 돌리면 빈 화면을 봅니다.
+     실제로 www.aboutmeat.co.kr 을 밖에서 확인했더니 메인 본문이
+     **"본문 바로가기" 한 줄**로만 잡혔습니다 — `<main id="view">` 가
+     빈 칸이었고, 다른 화면은 본문이 `<noscript>` 안에만 있었습니다.
+     ⚠️ 렌더된 DOM 을 보는 검사로는 이 종류를 영영 못 잡습니다.
+     **파일을 그대로 받아서** 스크립트를 떼고 글자를 셉니다. */
+  await f("크롤러가 읽을 본문이 화면마다 있다", "/", `
+    /* ⚠️ 한글은 같은 내용이라도 **글자 수가 훨씬 적습니다.** 영어
+       기준으로 잡았다가 멀쩡한 화면이 전부 걸렸습니다. 지금 값의
+       7할쯤으로 두어, 내용이 통째로 빠지는 것만 잡게 합니다. */
+    const want = [["/", 2300], ["/problems", 500], ["/problem/duct", 1000],
+                  ["/check", 300], ["/partners", 280], ["/lab", 700],
+                  ["/lab/open-permits", 700], ["/start", 370], ["/tools", 300]];
+    const bad = [];
+    for(const [u, min] of want){
+      const html = await (await fetch(u, { cache:"no-store" })).text();
+      const body = html.slice(html.indexOf("<body"));
+      const text = body.replace(/<script[^]*?<\\/script>/g, " ")
+                       .replace(/<[^>]*>/g, " ").replace(/\\s+/g, " ").trim();
+      if(text.length < min) bad.push(u + " → " + text.length + "자 (" + min + "자 이상이어야 합니다)");
+      else if(body.indexOf("<h1>") < 0) bad.push(u + " → h1 이 없습니다");
+    }
+    return bad.length ? bad.join(" / ") : true;`);
+
   /* ⚠️ 사람마다 다른 화면이 검색에 올라가면 남의 견적 비교가 잡힙니다 */
   await f("사람마다 다른 화면은 검색에 안 올라간다", "/", `
     const bad = [];
@@ -1320,7 +1345,7 @@ const AUDIT = `(() => {
   console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 +
               "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 9 +
               "개 · 접수처 없음 " + 5 + "개 · 도구 계산 " + 9 +
-              "개 · 머리말 " + 4 + "개 · 헤더·카드 면 " + 3 + "개 · 고민 가이드 " + 13 + "개 · 관리자 " + 5 + "개 · 검색 " + 4 + "개");
+              "개 · 머리말 " + 5 + "개 · 헤더·카드 면 " + 3 + "개 · 고민 가이드 " + 13 + "개 · 관리자 " + 5 + "개 · 검색 " + 4 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

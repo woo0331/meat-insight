@@ -303,3 +303,24 @@ html{ scroll-padding-top:calc(var(--hdr-h) + 16px); }
 @media (prefers-reduced-motion: reduce){
   .fab{ transition:opacity .01s; transform:none; }
 }
+
+/* ══ 크롤러가 읽는 본문 (build-pages.js 가 <main> 안에 써 넣습니다) ══
+   ⚠️ **`display:none` 으로 숨기지 마세요.** 숨긴 글은 검색엔진이
+   값을 낮춰 보거나 아예 무시합니다 — 그러면 넣은 뜻이 없어집니다.
+   화면을 그리는 순간(app.js 의 render) innerHTML 로 갈아 끼워지므로
+   손님에게는 아주 잠깐만 보입니다. 그 잠깐이 흉하지 않게만 해 둡니다.
+   ⚠️ 오히려 첫 그림이 빨라집니다 — 예전에는 JS 가 다 돌 때까지
+   흰 화면이었습니다. */
+.pre{ padding:var(--s9) 0 var(--s10); }
+.pre h1{ font-size:var(--t-3xl); letter-spacing:var(--tr-head);
+  line-height:var(--lh-tight); margin-bottom:var(--s4); }
+.pre h2{ font-size:var(--t-xl); margin:var(--s7) 0 var(--s3); }
+.pre h3{ font-size:var(--t-md); margin:var(--s5) 0 var(--s2); }
+.pre p{ color:var(--ink2); line-height:var(--lh-base); margin-bottom:var(--s3);
+  max-width:70ch; }
+.pre ul, .pre ol{ display:grid; gap:var(--s2); margin-bottom:var(--s4);
+  padding-left:var(--s5); }
+.pre li{ color:var(--ink2); line-height:1.7; }
+.pre ol li{ list-style:decimal; }
+.pre ul li{ list-style:disc; }
+.pre a{ color:var(--burgundy); font-weight:600; }

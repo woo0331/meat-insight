@@ -54,7 +54,6 @@
 </head>
 <body>
 <a class="skip" href="#view">본문 바로가기</a>
-<noscript><h1>사장님 도구</h1><p>수율 원가·손익분기·창업비·견적 비교·사업진단. 사장님 가게 숫자로 바로 확인하실 수 있습니다. 가입 없이 무료입니다.</p></noscript>
 
 <!-- ⚠️ 자산 경로는 반드시 절대 경로(/js/… · /img/…)여야 합니다.
      상대 경로면 /start/cost 같은 깊은 주소에서 /start/js/… 를 찾아
@@ -97,7 +96,10 @@
 <script src="/js/app.js"></script>
 
 <div id="chrome-t"></div>
-<main id="view"></main>
+<!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가
+     이 사이에 **크롤러가 읽을 본문**을 써 넣습니다. 메인은 원본이라
+     shell() 이 손대지 않아서, 한동안 여기가 빈 칸으로 나갔습니다. -->
+<main id="view"><div class="pre w"><h1>사장님 도구</h1><p>수율 원가·손익분기·창업비·견적 비교·사업진단. 사장님 가게 숫자로 바로 확인하실 수 있습니다. 가입 없이 무료입니다.</p><ul><li><a href="/check">무료 사업진단 — 여덟 가지로 지금 무엇이 비어 있는지 정리합니다</a></li><li><a href="/tools/yield">수율 원가 계산 — 매입 단가와 손질 후 무게로 실제 1kg 원가를 냅니다</a></li><li><a href="/tools/bep">손익분기 계산 — 고정비와 변동비율로 한 달에 얼마를 팔아야 본전인지 냅니다</a></li><li><a href="/start/cost">창업비 정리표 — 빠뜨리기 쉬운 항목을 늘어놓고 아직 안 받은 견적을 보여 줍니다</a></li><li><a href="/quotes">견적 비교 — 받은 견적을 같은 자리에 놓고 포함 범위까지 견줍니다</a></li></ul><p>전부 가입 없이 무료이고, 적으신 숫자는 이 브라우저 밖으로 나가지 않습니다. 안 적으신 칸은 비워 둡니다 — 평균값으로 메우면 그게 지어낸 숫자입니다.</p></div></main>
 <div id="chrome-b"></div>
 </body>
 </html>

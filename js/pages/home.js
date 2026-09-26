@@ -565,20 +565,23 @@ function CatBand(){
 /* ── 08 요즘 어떤 고민이 있으세요? (지시서 11번) ──────────
    사진이 있으면 왼쪽에 세우고, 없으면 **글이 화면 전체를 씁니다.** */
 function WorryBand(){
-  var ph = hasPhoto("worry");
-  return '<section class="sec"><div class="w'+(ph?' worry':'')+'">'+
-    (ph ? '<figure class="worry-f">'+photoBox("worry","ph-tall")+'</figure>' : '')+
-    '<div class="worry-t">'+
-      '<div class="sec-hd"><h2>요즘 어떤 고민이 있으세요?</h2>'+
-        '<p>고르시면 그 이야기부터 시작합니다. 여기 없는 것도 그냥 적어 주세요.</p></div>'+
-      '<div class="prob-g'+(ph?'':' prob-g-w')+'">'+WOW_PROBLEMS.map(function(p){
-        return '<a class="prob" href="'+esc(p.to || ("/sos?c="+encodeURIComponent(p.key)))+'">'+
-          '<span class="prob-ic">'+icon(p.icon||"chat",20)+'</span>'+
-          '<span class="prob-b"><b>'+esc(p.name)+'</b>'+
-            (p.hint ? '<span>'+esc(p.hint)+'</span>' : '')+'</span>'+
-          '<span class="prob-go">'+icon("chev",16)+'</span></a>';
-      }).join("")+'</div>'+
-    '</div>'+
+  /* ⚠️ 열두 개를 다 펼치면 고르는 게 아니라 **훑게** 됩니다. 시안대로
+     여섯 개만 내고 나머지는 SOS 화면에서 봅니다 — 거기서는 적는 것이
+     주인공이라 열두 개가 다 있어도 괜찮습니다.
+     ⚠️ 왼쪽에 세워 두던 세로 그림은 뺐습니다. 칸을 반으로 줄여서
+     고민 여섯 개가 두 줄로 눌려 있었습니다. */
+  var six = WOW_PROBLEMS.slice(0, 6);
+  return '<section class="sec"><div class="w">'+
+    '<div class="sec-hd"><h2>요즘 어떤 고민이 있으세요?</h2>'+
+      '<p>고르시면 그 이야기부터 시작합니다. 여기 없는 것도 그냥 적어 주세요.</p>'+
+      '<a class="sec-more" href="/sos">더 많은 고민 보기'+icon("chev",16)+'</a></div>'+
+    '<div class="prob-g prob-g-w">'+six.map(function(p){
+      return '<a class="prob" href="'+esc(p.to || ("/sos?c="+encodeURIComponent(p.key)))+'">'+
+        '<span class="prob-ic">'+icon(p.icon||"chat",20)+'</span>'+
+        '<span class="prob-b"><b>'+esc(p.name)+'</b>'+
+          (p.hint ? '<span>'+esc(p.hint)+'</span>' : '')+'</span>'+
+        '<span class="prob-go">'+icon("chev",16)+'</span></a>';
+    }).join("")+'</div>'+
   '</div></section>';
 }
 

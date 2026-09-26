@@ -2001,3 +2001,8 @@
   .bband-in{ grid-template-columns:1fr; gap:var(--s6); }
   .bband-l{ grid-template-columns:1fr 1fr; gap:var(--s5) var(--s4); }
 }
+
+/* 고민 여섯 — 시안대로 한 줄에 셋 */
+.prob-g-w{ grid-template-columns:repeat(3,1fr); }
+@media (max-width:900px){ .prob-g-w{ grid-template-columns:1fr 1fr; } }
+@media (max-width:560px){ .prob-g-w{ grid-template-columns:1fr; } }

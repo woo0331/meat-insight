@@ -10,7 +10,10 @@ const C = {
   floor:"#DCDFE7", light:"#FFFFFF", white:"#FFFFFF",
   ink:"#2A2A31",  ink2:"#55555F",  ink3:"#9A9AA5",
   steel:"#CFD3DC", steel2:"#B7BCC8", steel3:"#969CAA",
-  burg:"#6B2436", burg2:"#8C3A4C", burg3:"#A95566",
+  /* ⚠️ 브랜드색은 css/tokens.css 의 --burgundy 와 **같은 값**이어야
+     합니다. 2026-09-26 크림슨(#A9253B)으로 바뀌었는데 그림 팔레트만
+     옛 딥 버건디로 남아, 버튼보다 앞치마가 어두워 보였습니다. */
+  burg:"#A9253B", burg2:"#BE4257", burg3:"#D4657A",
   meat:"#B04A52", meat2:"#CE757E",
   wood:"#C9955F", wood2:"#A87749",
   glow:"#F2D9AE"

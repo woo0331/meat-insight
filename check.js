@@ -921,6 +921,27 @@ const AUDIT = `(() => {
       if(n !== 1) bad.push(u + " → 제목 " + n + "개");
     }
     return bad.length ? bad.join(" / ") : true;`);
+  /* ⚠️ **브랜드색을 베껴 둔 자리가 셋 있습니다.** 라우터 밖에서 혼자
+     떠야 하는 404, 그림을 그리는 팔레트, 폰 주소창 색(manifest).
+     토큰을 바꾸고 이 셋을 안 고치면 **거기만 옛 색으로 남습니다** —
+     에러도 안 나고 화면도 멀쩡합니다. 실제로 셋 다 그랬습니다. */
+  await f("브랜드색이 베껴 둔 자리와 어긋나지 않는다", "/", `
+    const tok = await (await fetch("/css/tokens.css", { cache:"no-store" })).text();
+    const m = tok.split("--burgundy:")[1];
+    if(!m) return "tokens.css 에서 --burgundy 를 못 찾았습니다";
+    const brand = m.split(";")[0].trim().toUpperCase();
+    const bad = [];
+    const files = [["/404.html","--burgundy:"], ["/tools/img-lib.js",'burg:"'],
+                   ["/manifest.json",'"theme_color": "']];
+    for(const [u, key] of files){
+      const t = await (await fetch(u, { cache:"no-store" })).text();
+      const i = t.indexOf(key);
+      if(i < 0){ bad.push(u + " 에서 " + key + " 를 못 찾았습니다"); continue; }
+      const seg = t.slice(i + key.length, i + key.length + 10).toUpperCase();
+      if(seg.indexOf(brand) !== 0) bad.push(u + " → " + seg.slice(0,7) + " (토큰은 " + brand + ")");
+    }
+    return bad.length ? bad.join(" / ") : true;`);
+
   /* ⚠️ 사람마다 다른 화면이 검색에 올라가면 남의 견적 비교가 잡힙니다 */
   await f("사람마다 다른 화면은 검색에 안 올라간다", "/", `
     const bad = [];
@@ -1299,7 +1320,7 @@ const AUDIT = `(() => {
   console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 +
               "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 9 +
               "개 · 접수처 없음 " + 5 + "개 · 도구 계산 " + 9 +
-              "개 · 머리말 " + 3 + "개 · 헤더·카드 면 " + 3 + "개 · 고민 가이드 " + 13 + "개 · 관리자 " + 5 + "개 · 검색 " + 4 + "개");
+              "개 · 머리말 " + 4 + "개 · 헤더·카드 면 " + 3 + "개 · 고민 가이드 " + 13 + "개 · 관리자 " + 5 + "개 · 검색 " + 4 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

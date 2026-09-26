@@ -542,7 +542,12 @@ S["post-grow-1"] = () => svg(1440, PH,
    글 왼쪽, 그림 오른쪽. 4:3 에 가깝게 잘립니다. */
 const HW = 1200, HH = 840;
 function hdesk(){
-  return room(HW, HH, HH*0.66, C.wall, C.paper2) + r(0, HH*0.66, HW, 14, C.wood2);
+  /* ⚠️ 여기에 **나무색 띠를 두지 마세요.** 상판의 앞면을 뜻하던
+     14px 띠였는데, 화면 머리 그림은 카드가 그 위에 떠 있는 구도라
+     카드 사이로 **갈색 실선 하나가 화면을 가로지르는 것**처럼 보였습니다
+     — 화면 열두 개에서 같은 줄이 보였습니다. 벽과 바닥의 톤 차이와
+     room() 의 옅은 그림자만으로 충분합니다. */
+  return room(HW, HH, HH*0.66, C.wall, C.paper2);
 }
 
 S["hero-check"] = () => svg(HW, HH,

@@ -197,7 +197,8 @@ function costSave(o){ try{ localStorage.setItem(COST_KEY, JSON.stringify(o)); }c
 
 function PageCost(){
   var v = costLoad();
-  return '<section class="pg-hero"><div class="w">'+
+  return '<section class="pg-hero"><div class="w pgh">'+
+      '<div class="pgh-t">'+
       '<p class="eyebrow">창업비 정리표</p>'+
       '<h1 class="pg-h1">창업비, 빠뜨린 칸이 있으신가요?</h1>'+
       '<p class="pg-lead">받으신 견적을 칸에 적으시면 합계와 <b>아직 안 받은 견적</b>이 '+
@@ -210,6 +211,8 @@ function PageCost(){
         fact("lock", "적으신 금액은 이 브라우저에만 남습니다. 서버로 보내지 않습니다.")+
         fact("hand", "모르는 칸은 비워 두세요. 그 칸이 바로 견적을 받아야 할 곳입니다.")+
       '</ul>'+
+      '</div>'+
+      '<figure class="pgh-f">'+photoBox("hero-cost")+'</figure>'+
     '</div></section>'+
 
     '<div class="w cost">'+

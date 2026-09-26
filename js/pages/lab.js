@@ -46,7 +46,8 @@ function PageLab(){
   var list = wowPostsIn(cat);
   var tabs = [{ key:"all", name:"전체", icon:"list" }].concat(WOW_POST_CATS);
 
-  return '<section class="pg-hero"><div class="w">'+
+  return '<section class="pg-hero"><div class="w pgh">'+
+      '<div class="pgh-t">'+
       '<p class="eyebrow">사장님 연구소</p>'+
       '<h1 class="pg-h1">알고 하면 덜 씁니다.</h1>'+
       '<p class="pg-lead">고기 장사를 하면서 실제로 막히는 것들을 정리했습니다. '+
@@ -58,6 +59,8 @@ function PageLab(){
                       "\"평균 원가율 ○%\" 같은 말이 없는 이유입니다.")+
         fact("user",  "가입하지 않으셔도 전부 읽으실 수 있습니다.")+
       '</ul>'+
+      '</div>'+
+      '<figure class="pgh-f">'+photoBox("hero-lab")+'</figure>'+
     '</div></section>'+
 
     '<div class="w lab">'+

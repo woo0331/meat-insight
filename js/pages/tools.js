@@ -109,7 +109,8 @@ var TOOL_LIST = [
 ];
 
 function PageTools(){
-  return '<section class="pg-hero"><div class="w">'+
+  return '<section class="pg-hero"><div class="w pgh">'+
+      '<div class="pgh-t">'+
       '<p class="eyebrow">도구</p>'+
       '<h1 class="pg-h1">숫자로 보셔야<br class="br-m"> 결정이 됩니다.</h1>'+
       '<p class="pg-lead">감으로 하시던 것을 사장님 가게 숫자로 확인하는 자리입니다. '+
@@ -120,6 +121,8 @@ function PageTools(){
           "여기 나오는 숫자는 전부 사장님이 적으신 값을 나눈 것입니다.")+
         fact("lock", "적으신 숫자는 이 브라우저에만 남습니다. 서버로 보내지 않습니다.")+
       '</ul>'+
+      '</div>'+
+      '<figure class="pgh-f">'+photoBox("hero-tools")+'</figure>'+
     '</div></section>'+
 
     '<div class="w tl-hub">'+
@@ -166,7 +169,8 @@ var YL_ROWS = [
 
 function PageYield(){
   var v = tlLoad(YL_KEY);
-  return '<section class="pg-hero"><div class="w">'+
+  return '<section class="pg-hero"><div class="w pgh">'+
+      '<div class="pgh-t">'+
       '<p class="eyebrow">도구 · 수율 원가</p>'+
       '<h1 class="pg-h1">손질하고 나면<br class="br-m"> 원가가 달라집니다.</h1>'+
       '<p class="pg-lead">매입 단가는 <b>원육</b> 기준인데 파는 것은 <b>손질 후 정육</b>입니다. '+
@@ -177,6 +181,8 @@ function PageYield(){
           "<b>나란히 견줄 때</b> 쓰시는 것이 제일 정확합니다.")+
         fact("lock", "적으신 숫자는 이 브라우저에만 남습니다. 서버로 보내지 않습니다.")+
       '</ul>'+
+      '</div>'+
+      '<figure class="pgh-f">'+photoBox("hero-yield")+'</figure>'+
     '</div></section>'+
 
     '<div class="w tl">'+
@@ -281,7 +287,8 @@ var BEP_RUN = [
 
 function PageBep(){
   var v = tlLoad(BEP_KEY);
-  return '<section class="pg-hero"><div class="w">'+
+  return '<section class="pg-hero"><div class="w pgh">'+
+      '<div class="pgh-t">'+
       '<p class="eyebrow">도구 · 손익분기</p>'+
       '<h1 class="pg-h1">한 달에 얼마를 팔아야<br class="br-m"> 본전인가요?</h1>'+
       '<p class="pg-lead">이 숫자를 모르면 매출이 늘어도 불안하고, 줄어도 얼마나 급한지 모릅니다. '+
@@ -293,6 +300,8 @@ function PageBep(){
           "매출에 따라 시간이 늘고 주는 가게라면 그만큼을 아래 수수료 비율 쪽으로 보셔야 맞습니다.")+
         fact("lock", "적으신 숫자는 이 브라우저에만 남습니다. 서버로 보내지 않습니다.")+
       '</ul>'+
+      '</div>'+
+      '<figure class="pgh-f">'+photoBox("hero-bep")+'</figure>'+
     '</div></section>'+
 
     '<div class="w tl">'+

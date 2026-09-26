@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- ⚠️ 손님 화면이 아닙니다. 검색에 절대 올라가면 안 됩니다. -->
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>관리자 작업대 — ABOUTMEAT</title>
+<link rel="icon" href="/icon-512.png">
+<!--
+  ════════════════════════════════════════════════════════════════
+  관리자 작업대 (지시서 35번)
+
+  ⚠️ **이 파일은 middleware.js 가 서버에서 막습니다.** Vercel 환경변수
+  ADMIN_PASSWORD 가 없으면 아예 열리지 않습니다(503). 비밀번호를 여기
+  적지 마세요 — 이 저장소는 공개입니다.
+
+  ⚠️ **SPA(index.html)가 아닙니다.** 손님 화면의 라우터·헤더·푸터를
+  쓰지 않습니다. 관리자 화면이 손님 화면과 같은 껍데기를 쓰면, 손님
+  화면을 고칠 때마다 여기가 조용히 깨집니다.
+
+  ⚠️ **build-pages.js 가 이 파일을 건드리지 않습니다.** 스윕은 주소
+  폴더 안의 index.html 만 지웁니다. 여기에 손으로 적은 것이 사라질까
+  걱정하지 않으셔도 됩니다.
+  ════════════════════════════════════════════════════════════════
+-->
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/app.css">
+<link rel="stylesheet" href="/css/pages.css">
+<link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="ad-body">
+
+<header class="ad-hd">
+  <div class="w ad-hd-in">
+    <a class="lg" href="/" aria-label="ABOUTMEAT 홈">
+      <b>ABOUTMEAT</b><span>관리자 작업대</span></a>
+    <span class="ad-tag">저장하지 않습니다 · 브라우저 안에서만 돕니다</span>
+  </div>
+</header>
+
+<main class="w ad-main">
+  <h1 class="ad-h1">들어온 접수를 정리해서 내보내는 자리</h1>
+  <p class="ad-sub">지금은 <b>접수를 저장하는 곳이 없습니다.</b> 그래서 여기에
+    접수 목록은 없습니다 — 있는 척하면 그게 지어낸 화면입니다. 슬랙이나 메일로
+    받으신 것을 붙여 넣으시면, 보낼 글 세 가지를 만들어 드립니다.</p>
+
+  <div id="ad"></div>
+
+  <section class="ad-s ad-no">
+    <h2>이 화면이 하지 않는 것</h2>
+    <ul>
+      <li><b>접수를 저장하지 않습니다.</b> 서버도 DB 도 없습니다. 새로고침하면
+        붙여 넣으신 것이 사라집니다.</li>
+      <li><b>자동으로 분류하지 않습니다.</b> 낱말이 겹치는 분류를 먼저 보여 줄
+        뿐이고, 고르는 것은 사람입니다.</li>
+      <li><b>업체에 자동으로 보내지 않습니다.</b> 만들어진 글을 복사해서
+        사람이 보냅니다.</li>
+      <li><b>손님 성함 · 연락처를 업체 글에 넣지 않습니다.</b> 업체가 정해진
+        뒤에 상호를 알리고 다시 동의를 받아야 넘길 수 있습니다
+        (개인정보보호법 제17조).</li>
+    </ul>
+  </section>
+</main>
+
+<!-- 순서가 곧 의존 순서입니다 — 데이터 먼저, 도구 다음, 화면 마지막 -->
+<script src="/js/components/base.js"></script>
+<script src="/js/data/site.js"></script>
+<script src="/js/data/problems.js"></script>
+<script src="/js/data/services.js"></script>
+<script src="/js/data/posts.js"></script>
+<script src="/js/data/guides.js"></script>
+<script src="/js/data/legal-privacy.js"></script>
+<script src="/js/admin.js"></script>
+</body>
+</html>

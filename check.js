@@ -1095,10 +1095,84 @@ const AUDIT = `(() => {
     if(document.querySelector(".qc-from")) return "어느 고민인지 모르는데 띠가 나옵니다";
     return !!document.querySelector(".qc-ask") || "공통 물어볼 것이 사라졌습니다";`);
 
+  /* ── 관리자 작업대 ──────────────────────────────────────
+     ⚠️ 여기는 **손님 화면이 아닙니다.** 그래서 PAGES 에 넣지 않습니다 —
+     "개발자 말 노출" 이 환경변수 이름을 전부 잡아 오탐이 됩니다.
+     대신 이 묶음이 **일이 실제로 되는지**를 봅니다.
+     ⚠️ 전수 점검의 흉내 서버에는 middleware 가 없어서 그냥 열립니다.
+     실제 배포에서는 Basic 인증이 먼저 막습니다. */
+  await f("관리자: 붙여 넣으면 분류를 골라 준다", "/admin.html", `
+    document.getElementById("ad-in").value =
+      "성함      홍길동\\n연락처    010-1234-5678\\n지역      경기 안양\\n" +
+      "\\n── 적어 주신 상황 ──\\n덕트 냄새 민원이 계속 들어옵니다.";
+    adRead();
+    await new Promise(r=>setTimeout(r,300));
+    const got = document.getElementById("ad-prob").value;
+    return got === "duct" || "고른 분류가 " + (got || "없음") + " 입니다";`);
+
+  /* ⚠️ 이 검사가 이 화면에서 제일 중요합니다. 업체에 성함·연락처가
+     넘어가면 개인정보보호법 제17조 위반입니다 — 업체가 정해진 뒤에
+     상호를 알리고 **다시** 동의를 받아야 넘길 수 있습니다. */
+  await f("관리자: 업체 글에 성함 · 연락처가 안 들어간다", "/admin.html", `
+    document.getElementById("ad-in").value =
+      "성함      홍길동\\n연락처    010-1234-5678\\n" +
+      "\\n── 적어 주신 상황 ──\\n덕트 냄새 민원이 계속 들어옵니다.";
+    adRead();
+    await new Promise(r=>setTimeout(r,300));
+    const v = document.getElementById("ad-t-vendor").value;
+    if(v.indexOf("홍길동") >= 0) return "업체 글에 성함이 들어 있습니다";
+    if(v.replace(/[^0-9]/g,"").indexOf("01012345678") >= 0)
+      return "업체 글에 연락처가 들어 있습니다";
+    if(v.indexOf("덕트 냄새 민원") < 0) return "정작 상황이 안 들어갔습니다";
+    return true;`);
+
+  await f("관리자: 세 가지 글에 별표 표시가 안 남는다", "/admin.html", `
+    document.getElementById("ad-in").value =
+      "성함      홍길동\\n\\n── 적어 주신 상황 ──\\n덕트 냄새 민원입니다.";
+    adRead();
+    await new Promise(r=>setTimeout(r,300));
+    const all = ["reply","vendor","consent"]
+      .map(k => document.getElementById("ad-t-"+k).value).join("");
+    return all.indexOf("*") < 0
+      || "메일 · 문자에는 별표가 그대로 찍힙니다";`);
+
+  /* ⚠️ 접수를 저장하지 않는다는 말이 사실인지 봅니다. 붙여 넣으신
+     것에는 손님 성함·연락처가 들어 있습니다. */
+  await f("관리자: 접수를 이 브라우저에도 남기지 않는다", "/admin.html", `
+    document.getElementById("ad-in").value =
+      "성함      홍길동\\n연락처    010-1234-5678\\n\\n── 적어 주신 상황 ──\\n덕트입니다.";
+    adRead();
+    await new Promise(r=>setTimeout(r,300));
+    let dump = "";
+    try{
+      for(let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        dump += k + "=" + localStorage.getItem(k) + " ";
+      }
+    }catch(e){ return true; }
+    if(dump.indexOf("홍길동") >= 0) return "성함이 localStorage 에 남았습니다";
+    if(dump.replace(/[^0-9]/g,"").indexOf("01012345678") >= 0)
+      return "연락처가 localStorage 에 남았습니다";
+    return true;`);
+
+  /* 설정 상태 주소는 **값을 절대 돌려주지 않습니다.** 미들웨어가 앞에서
+     막지만, 혹시 뚫려도 주소·키가 새면 안 됩니다. */
+  await f("관리자: 설정 주소가 값을 돌려주지 않는다", "/admin.html", `
+    const src = await (await fetch("/api/admin-health.js", { cache:"no-store" }))
+      .text().catch(() => "");
+    if(!src) return true;            /* 흉내 서버가 안 주면 넘어갑니다 */
+    const bad = [];
+    /* 값을 그대로 담아 보내는 꼴이 있는지 — has() 로만 나가야 합니다 */
+    ["process.env.INTAKE_WEBHOOK_URL,", "process.env.RESEND_API_KEY,",
+     "json({ url", "value:"].forEach(w => {
+      if(src.indexOf(w) >= 0) bad.push(w);
+    });
+    return bad.length ? "값이 나갈 수 있는 자리: " + bad.join(" ") : true;`);
+
   console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 +
               "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 6 +
               "개 · 접수처 없음 " + 5 + "개 · 도구 계산 " + 9 +
-              "개 · 머리말 " + 3 + "개 · 고민 가이드 " + 13 + "개");
+              "개 · 머리말 " + 3 + "개 · 고민 가이드 " + 13 + "개 · 관리자 " + 5 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

@@ -1,0 +1,126 @@
+/* ════════════════════════════════════════════════════════════════════
+   관리자 작업대 (/admin)
+
+   ⚠️ 손님 화면이 아니라 **일하는 화면**입니다. 그래서 규칙이 조금
+   다릅니다 — 여백을 줄이고, 한 화면에 많이 보이게 합니다. 대신
+   **글씨 12px 미만 금지 · 누르는 것 40px 이상**은 그대로 지킵니다.
+   여기도 사람이 씁니다.
+
+   ⚠️ 손님 화면 클래스와 **이름이 겹치지 않게** 전부 `ad-` 로 시작합니다.
+   이 저장소에서 `.lg` · `.band-t` · `ScoreRing` 로 세 번 당했습니다.
+   (`.lg` 로고만 일부러 같이 씁니다 — 같은 로고이기 때문입니다.)
+   ════════════════════════════════════════════════════════════════════ */
+
+.ad-body{ background:var(--bg-warm); }
+
+.ad-hd{ background:var(--surface); border-bottom:1px solid var(--line); }
+.ad-hd-in{ display:flex; align-items:center; justify-content:space-between;
+  gap:var(--s4); min-height:64px; flex-wrap:wrap; }
+.ad-tag{ font-size:var(--t-cap); font-weight:700; color:var(--t2-ink);
+  background:var(--t2-bg); border-radius:var(--r-pill); padding:6px 12px; }
+
+.ad-main{ padding:var(--s7) 0 var(--s10); display:grid; gap:var(--s5); }
+.ad-h1{ font-size:var(--t-2xl); line-height:1.3; }
+.ad-sub{ font-size:var(--t-sm); color:var(--ink2); line-height:1.75;
+  max-width:70ch; }
+/* ⚠️ `>` 를 빼지 마세요 — 문장 속 <b> 까지 덩어리가 됩니다 */
+.ad-sub > b, .ad-lead > b, .ad-no li > b, .ad-h p > b{ color:var(--ink); }
+
+.ad-s{ background:var(--surface); border-radius:var(--r-xl);
+  padding:var(--s6); }
+.ad-s > h2{ font-size:var(--t-lg); margin-bottom:var(--s3); }
+.ad-lead{ font-size:var(--t-sm); color:var(--ink2); line-height:1.75;
+  margin-bottom:var(--s4); max-width:70ch; }
+.ad-empty{ font-size:var(--t-sm); color:var(--ink3); }
+
+/* 적는 칸 — 카드가 아니라 깔린 면입니다 */
+.ad-s textarea, .ad-f input, .ad-f select{
+  width:100%; min-height:44px; padding:var(--s3) var(--s4);
+  border:1px solid var(--line); border-radius:var(--r);
+  background:var(--bg-warm); color:var(--ink);
+  font-family:var(--font); font-size:var(--t-sm); line-height:1.7; }
+.ad-s textarea{ resize:vertical; }
+.ad-s textarea:focus, .ad-f input:focus, .ad-f select:focus{
+  outline:0; background:var(--surface); border-color:var(--burgundy);
+  box-shadow:0 0 0 3px var(--burgundy-50); }
+
+.ad-acts{ display:flex; flex-wrap:wrap; gap:var(--s3); margin-top:var(--s4); }
+
+.ad-g{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--s4); }
+.ad-f label{ display:block; font-size:var(--t-cap); font-weight:700;
+  color:var(--ink2); margin-bottom:6px; }
+.ad-f label em{ font-style:normal; font-weight:600; color:var(--ink3); }
+
+/* ── 설정 상태 ───────────────────────────────────────────── */
+.ad-h{ padding:var(--s5); border-radius:var(--r-lg); margin-bottom:var(--s4); }
+.ad-h > b{ display:block; font-size:var(--t-md); margin-bottom:6px; }
+.ad-h p{ font-size:var(--t-sm); line-height:1.75; }
+.ad-h code{ font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size:var(--t-cap); background:rgba(23,23,28,.07);
+  border-radius:4px; padding:2px 6px; }
+/* 상태색은 **상태값에만** — 여기가 바로 그 자리입니다 */
+.ad-h-on{ background:#EAF6F0; color:var(--ok); }
+.ad-h-on > b{ color:var(--ok); }
+.ad-h-on p{ color:var(--ink2); }
+.ad-h-off{ background:#FEF5F4; color:var(--bad); }
+.ad-h-off > b{ color:var(--bad); }
+.ad-h-off p{ color:var(--ink2); }
+.ad-h-env{ display:inline-block; margin-top:var(--s3);
+  font-size:var(--t-cap); color:var(--ink3); }
+
+.ad-bad{ padding:var(--s5); border-radius:var(--r-lg);
+  background:#FEF5F4; border-left:3px solid var(--bad);
+  margin-bottom:var(--s4); }
+.ad-bad > b{ display:block; font-size:var(--t-md); color:var(--bad);
+  margin-bottom:6px; }
+.ad-bad p{ font-size:var(--t-sm); color:var(--ink2); line-height:1.75; }
+.ad-bad code{ font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size:var(--t-cap); background:rgba(23,23,28,.07);
+  border-radius:4px; padding:2px 6px; }
+.ad-bad p > b{ color:var(--ink); }
+
+.ad-rows{ display:grid; gap:2px; }
+.ad-rows li{ display:flex; align-items:center; justify-content:space-between;
+  gap:var(--s3); min-height:44px; padding:var(--s2) var(--s4);
+  background:var(--bg-warm); font-size:var(--t-sm); color:var(--ink2); }
+.ad-rows li:first-child{ border-radius:var(--r) var(--r) 0 0; }
+.ad-rows li:last-child{ border-radius:0 0 var(--r) var(--r); }
+.ad-rows em{ font-style:normal; font-size:var(--t-cap); font-weight:800;
+  border-radius:var(--r-pill); padding:4px 10px; white-space:nowrap; }
+.ad-rows em.on{ color:var(--ok); background:#EAF6F0; }
+.ad-rows em.off{ color:var(--ink3); background:var(--surface); }
+.ad-note{ margin-top:var(--s3); font-size:var(--t-cap); color:var(--ink3);
+  line-height:1.7; }
+.ad-note > b{ color:var(--ink2); }
+
+/* ── 만들어진 글 ─────────────────────────────────────────── */
+#ad-out{ display:grid; gap:var(--s4); }
+.ad-c{ background:var(--bg-warm); border-radius:var(--r-lg);
+  padding:var(--s4); }
+.ad-c-h{ display:flex; align-items:center; justify-content:space-between;
+  gap:var(--s3); margin-bottom:var(--s3); }
+.ad-c-h > b{ font-size:var(--t-md); }
+.ad-c textarea{ background:var(--surface);
+  font-family:ui-monospace, SFMono-Regular, Menlo, "Malgun Gothic", monospace;
+  font-size:var(--t-cap); line-height:1.8; }
+/* 개인정보가 섞였을 때 — 막지 않고 **보이게** 합니다 */
+.ad-vet{ display:flex; align-items:flex-start; gap:var(--s2);
+  margin-bottom:var(--s3); padding:var(--s3) var(--s4);
+  border-radius:var(--r); background:#FEF5F4;
+  font-size:var(--t-cap); color:var(--bad); line-height:1.7; font-weight:700; }
+.ad-vet svg{ flex:none; margin-top:2px; }
+
+/* ── 하지 않는 것 ────────────────────────────────────────── */
+.ad-no{ background:transparent; padding:var(--s6) 0 0; }
+.ad-no ul{ display:grid; gap:var(--s3); }
+.ad-no li{ font-size:var(--t-sm); color:var(--ink2); line-height:1.75;
+  padding-left:var(--s4); position:relative; }
+.ad-no li::before{ content:""; position:absolute; left:0; top:10px;
+  width:5px; height:5px; border-radius:50%; background:var(--ink3); }
+
+@media (max-width:760px){
+  .ad-g{ grid-template-columns:1fr; }
+  .ad-s{ padding:var(--s5); }
+  .ad-main{ padding:var(--s5) 0 var(--s8); }
+  .ad-c-h{ flex-wrap:wrap; }
+}

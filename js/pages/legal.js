@@ -131,7 +131,11 @@ function PagePrivacy(){
 /* 두 문서가 같은 껍데기를 씁니다 */
 function legalShell(D, tail){
   var eff = bizVal("effective");
-  return '<div class="w lg">'+
+  /* ⚠️ 클래스 이름이 `lg` 였습니다 — **헤더 로고(.lg)와 같은 이름**이라
+     약관 화면의 padding 이 로고에 그대로 먹어서, 모든 화면에서 로고가
+     헤더 밖으로 밀려 윗부분이 잘려 있었습니다. 에러도 안 나고 가로
+     스크롤도 안 생겨서 전수 점검에도 안 걸렸습니다. `lgp` 로 바꿉니다. */
+  return '<div class="w lgp">'+
     '<a class="back-l" href="/">'+icon("back",18)+'홈으로</a>'+
     '<header class="lg-hd">'+
       '<h1>'+esc(D.title)+'</h1>'+

@@ -57,16 +57,16 @@ function ToolBand(){
       line:"8가지로 <b>지금 무엇을 모르고 계신지</b>를 정리해 드립니다. "+
            "매출과 육류 매입비를 적으시면 원가율도 그 자리에서 계산됩니다.",
       cta:"진단해 보기" },
-    { to:"/start/cost", icon:"won", tag:"창업 준비 중이라면",
-      name:"창업비 정리표",
-      line:"빠뜨리기 쉬운 13칸을 늘어놓고, 받으신 견적을 넣으면 "+
-           "합계와 <b>아직 안 받은 칸</b>이 보입니다.",
-      cta:"정리표 열기" },
-    { to:"/quotes", icon:"scale", tag:"견적을 받으셨다면",
-      name:"견적 비교",
-      line:"금액·기간·A/S·포함 범위를 나란히 놓고 봅니다. "+
-           "견적서에서 자주 빠지는 <b>물어볼 것 9가지</b>도 같이 드립니다.",
-      cta:"비교해 보기" }
+    { to:"/tools/yield", icon:"knife", tag:"1분",
+      name:"수율 원가 계산",
+      line:"매입 단가는 <b>원육</b> 기준인데 파는 것은 <b>손질 후 정육</b>입니다. "+
+           "손질 전후 무게만 적으시면 실제 1kg 원가와 1인분 원가가 나옵니다.",
+      cta:"계산해 보기" },
+    { to:"/tools/bep", icon:"target", tag:"2분",
+      name:"손익분기 계산",
+      line:"고정비와 매출 대비 비율을 적으시면 <b>한 달에 얼마를 팔아야 본전인지</b>, "+
+           "하루로 나누면 얼마인지가 나옵니다.",
+      cta:"계산해 보기" }
   ];
   return '<section class="sec"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">가입 없이, 지금</p>'+
@@ -81,6 +81,10 @@ function ToolBand(){
         '<span class="tool-l">'+t.line+'</span>'+
         '<span class="tool-go">'+esc(t.cta)+icon("arrow",18)+'</span></a>';
     }).join("")+'</div>'+
+    /* ⚠️ 나머지 둘(창업비 정리표 · 견적 비교)도 실제로 되는 것입니다.
+       카드를 다섯 개로 늘리면 첫 화면이 늘어져서, 문 하나로 모읍니다. */
+    '<p class="tool-more">창업비 정리표와 견적 비교까지 다섯 가지가 있습니다.'+
+      '<a class="btn btn-o" href="/tools">도구 전부 보기'+icon("arrow",18)+'</a></p>'+
   '</div></section>';
 }
 
@@ -142,10 +146,9 @@ function DiffBand(){
    ⚠️ 어두운 면은 버건디가 아니라 차콜(--dark)입니다. 여기까지 브랜드
    색으로 칠하면 화면 절반이 버건디가 되어 정육점 간판이 됩니다. */
 function Hero(){
-  return '<section class="hero">'+
-    photoBg("hero")+
-    '<div class="hero-sh"></div>'+
-    '<div class="w hero-in">'+
+  return '<section class="hero hero-lt">'+
+    '<div class="w hero-grid">'+
+    '<div class="hero-in">'+
       '<p class="hero-kicker">사장님은 장사만 하세요.</p>'+
       '<h1 class="hero-h">고기 장사,<br>뭐가 <em>고민</em>이세요?</h1>'+
       '<p class="hero-p">창업 · 원가 · 시설 · 매출 · 확장 · 정리까지.<br class="br-m"> '+
@@ -167,6 +170,13 @@ function Hero(){
       '<ul class="ask-chips">'+(window.WOW_ASK_CHIPS||[]).map(function(c,i){
         return '<li><button type="button" onclick="askFill('+i+')">'+
           esc(c.tag)+'</button></li>'; }).join("")+'</ul>'+
+    '</div>'+
+    /* 오른쪽 그림 — 배경으로 깔지 않고 **칸 안에** 둡니다. 배경으로
+       깔면 글자 밑에서 흐려져 무엇인지 알아볼 수 없고, 어두운 겹까지
+       깔아야 해서 첫 화면이 통째로 어두워집니다.
+       ⚠️ 읽어 주는 프로그램에는 필요 없는 그림이라 aria-hidden 입니다 —
+       같은 내용을 왼쪽 글이 이미 말합니다. */
+    '<div class="hero-art" aria-hidden="true">'+photoBox("hero")+'</div>'+
     '</div>'+
   '</section>';
 }

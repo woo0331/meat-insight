@@ -143,6 +143,17 @@ function PagePost(post){
 
     (post.check && post.check.length ? PostCheck(post, done) : '')+
 
+    /* ⚠️ 글은 알려 주는 것이고 도구는 해 보는 것입니다. 읽고 나서
+       할 것이 없으면 그 글은 안 쓴 것과 같습니다. */
+    (post.tool
+      ? '<a class="post-tool" href="'+esc(post.tool[0])+'">'+
+          '<span class="post-tool-ic">'+icon("gauge",22)+'</span>'+
+          '<span class="post-tool-t"><em>읽으셨으면 바로 해 보세요</em>'+
+            '<b>'+esc(post.tool[1])+'</b>'+
+            '<span>'+esc(post.tool[2])+'</span></span>'+
+          '<span class="post-tool-go">'+icon("arrow",18)+'</span></a>'
+      : '')+
+
     '<section class="post-cta">'+
       '<h2>여기까지 보시고, 이제 어떻게 하시겠습니까?</h2>'+
       '<p>글로는 여기까지입니다. 사장님 가게를 봐야 아는 것은 '+

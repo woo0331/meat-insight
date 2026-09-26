@@ -1250,3 +1250,55 @@
   padding-bottom:var(--s3); border-bottom:1px solid var(--line); }
 .rq-g h2 .ic{ color:var(--burgundy); }
 .rq-g h2 em{ font-style:normal; font-size:var(--t-sm); font-weight:600; color:var(--ink3); }
+
+/* 접수 실패 안내 — ⚠️ 토스트는 사라집니다. 길게 적은 글을 들고 계신
+   손님에게는 화면에 **남아 있는** 안내가 필요합니다. */
+.notice-bad{ background:var(--bad-bg); border-color:#F0CFC9; }
+/* ⚠️ **`>` 를 빼지 마세요.** `.notice-bad b` 로 두면 문장 **안의** <b> 까지
+   flex 상자가 되어 그 낱말만 딴 줄에 앉습니다. 같은 실수를 네 번째
+   했습니다 — 이제 check.js 가 잡습니다. */
+.notice-bad > b{ display:flex; align-items:center; gap:var(--s3); color:var(--bad); }
+.notice-bad > b .ic{ flex:0 0 auto; }
+
+/* 진단 결과 — 약한 항목마다 "읽을 것" 과 "할 것" */
+.res-i-acts{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap;
+  justify-content:flex-end; }
+.res-i-post{ display:inline-flex; align-items:center; gap:6px; min-height:44px;
+  padding:0 var(--s4); border-radius:var(--r-pill); font-size:var(--t-sm);
+  font-weight:700; color:var(--ink2); background:var(--bg-warm); max-width:260px; }
+.res-i-post > span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.res-i-post .ic{ flex:0 0 auto; color:var(--ink3); }
+.res-i-post:hover{ background:var(--burgundy-50); color:var(--burgundy); }
+.res-i-post:hover .ic{ color:var(--burgundy); }
+@media (max-width:640px){
+  .res-i-acts{ grid-column:1 / -1; justify-content:flex-start; }
+  .res-i-post{ max-width:100%; }
+}
+
+/* 창업 단계 — 그 단계를 다룬 글 */
+.st-tag-post{ color:var(--ink2); background:var(--bg-warm); }
+.st-tag-post .ic{ color:var(--ink3); }
+.st-tag-post:hover{ background:var(--burgundy-50); color:var(--burgundy); }
+.st-tag-post:hover .ic{ color:var(--burgundy); }
+.st-i-r{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap;
+  justify-content:flex-end; }
+
+/* 글 끝 — 읽고 바로 써 볼 도구 */
+.post-tool{ display:grid; grid-template-columns:auto 1fr auto; gap:var(--s4);
+  align-items:center; background:var(--burgundy-50); border:1px solid #EFDCE0;
+  border-radius:var(--r-xl); padding:var(--s5) var(--s6); margin-bottom:var(--s8);
+  transition:border-color .15s, box-shadow .15s; }
+.post-tool:hover{ border-color:var(--burgundy); box-shadow:var(--shadow); }
+.post-tool-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:48px; height:48px; border-radius:var(--r-pill);
+  background:var(--burgundy); color:#fff; }
+.post-tool-t{ display:grid; gap:2px; min-width:0; }
+.post-tool-t em{ font-style:normal; font-size:var(--t-cap); font-weight:700;
+  color:var(--burgundy); }
+.post-tool-t b{ font-size:var(--t-lg); }
+.post-tool-t > span{ font-size:var(--t-sm); color:var(--ink2); line-height:1.7; }
+.post-tool-go{ color:var(--burgundy); display:inline-flex; }
+@media (max-width:560px){
+  .post-tool{ grid-template-columns:auto 1fr; padding:var(--s5); }
+  .post-tool-go{ display:none; }
+}

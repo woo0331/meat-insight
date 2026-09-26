@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- build-pages.js 가 만듭니다 (2026-09-25). 손으로 고치지 마세요. -->
+<!-- build-pages.js 가 만듭니다 (2026-09-26). 손으로 고치지 마세요. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://aboutmeat.co.kr/</loc><lastmod>2026-09-25</lastmod><priority>1.0</priority></url>
-  <url><loc>https://aboutmeat.co.kr/start</loc><lastmod>2026-09-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://aboutmeat.co.kr/start/cost</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
-  <url><loc>https://aboutmeat.co.kr/check</loc><lastmod>2026-09-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://aboutmeat.co.kr/partners</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
-  <url><loc>https://aboutmeat.co.kr/request</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
-  <url><loc>https://aboutmeat.co.kr/lab</loc><lastmod>2026-09-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://aboutmeat.co.kr/partner</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
-  <url><loc>https://aboutmeat.co.kr/partner/apply</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
-  <url><loc>https://aboutmeat.co.kr/about</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
-  <url><loc>https://aboutmeat.co.kr/terms</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
-  <url><loc>https://aboutmeat.co.kr/privacy</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
-  <url><loc>https://aboutmeat.co.kr/lab/meat-cost-rate</loc><lastmod>2026-09-25</lastmod><priority>0.7</priority></url>
-  <url><loc>https://aboutmeat.co.kr/lab/change-meat-supplier</loc><lastmod>2026-09-25</lastmod><priority>0.7</priority></url>
-  <url><loc>https://aboutmeat.co.kr/lab/duct-smell-complaint</loc><lastmod>2026-09-25</lastmod><priority>0.7</priority></url>
-  <url><loc>https://aboutmeat.co.kr/lab/fridge-breakdown</loc><lastmod>2026-09-25</lastmod><priority>0.7</priority></url>
-  <url><loc>https://aboutmeat.co.kr/lab/open-permits</loc><lastmod>2026-09-25</lastmod><priority>0.7</priority></url>
-  <url><loc>https://aboutmeat.co.kr/lab/labor-cost</loc><lastmod>2026-09-25</lastmod><priority>0.7</priority></url>
-  <url><loc>https://aboutmeat.co.kr/lab/startup-cost-missing</loc><lastmod>2026-09-25</lastmod><priority>0.7</priority></url>
-  <url><loc>https://aboutmeat.co.kr/lab/menu-margin</loc><lastmod>2026-09-25</lastmod><priority>0.7</priority></url>
-  <url><loc>https://aboutmeat.co.kr/lab/delivery-vs-hall</loc><lastmod>2026-09-25</lastmod><priority>0.7</priority></url>
-  <url><loc>https://aboutmeat.co.kr/lab/aging-showcase</loc><lastmod>2026-09-25</lastmod><priority>0.7</priority></url>
-  <url><loc>https://aboutmeat.co.kr/lab/second-store</loc><lastmod>2026-09-25</lastmod><priority>0.7</priority></url>
-  <url><loc>https://aboutmeat.co.kr/lab/closing-checklist</loc><lastmod>2026-09-25</lastmod><priority>0.7</priority></url>
+  <url><loc>https://aboutmeat.co.kr/</loc><lastmod>2026-09-26</lastmod><priority>1.0</priority></url>
+  <url><loc>https://aboutmeat.co.kr/start</loc><lastmod>2026-09-26</lastmod><priority>0.8</priority></url>
+  <url><loc>https://aboutmeat.co.kr/start/cost</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/check</loc><lastmod>2026-09-26</lastmod><priority>0.8</priority></url>
+  <url><loc>https://aboutmeat.co.kr/partners</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/request</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/lab</loc><lastmod>2026-09-26</lastmod><priority>0.8</priority></url>
+  <url><loc>https://aboutmeat.co.kr/partner</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/partner/apply</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/about</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/terms</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/privacy</loc><lastmod>2026-09-26</lastmod><priority>0.6</priority></url>
+  <url><loc>https://aboutmeat.co.kr/lab/meat-cost-rate</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://aboutmeat.co.kr/lab/change-meat-supplier</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://aboutmeat.co.kr/lab/duct-smell-complaint</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://aboutmeat.co.kr/lab/fridge-breakdown</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://aboutmeat.co.kr/lab/open-permits</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://aboutmeat.co.kr/lab/labor-cost</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://aboutmeat.co.kr/lab/startup-cost-missing</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://aboutmeat.co.kr/lab/menu-margin</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://aboutmeat.co.kr/lab/delivery-vs-hall</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://aboutmeat.co.kr/lab/aging-showcase</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://aboutmeat.co.kr/lab/second-store</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://aboutmeat.co.kr/lab/closing-checklist</loc><lastmod>2026-09-26</lastmod><priority>0.7</priority></url>
 </urlset>

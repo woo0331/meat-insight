@@ -252,12 +252,19 @@ function CheckResult(){
     (weak.length ? '<section class="res-sec">'+
       '<h2>먼저 보실 것 '+weak.length+'가지</h2>'+
       '<ul class="res-l">'+weak.map(function(r){
+        /* ⚠️ 약하다고 알려만 주고 끝내면 사장님은 뭘 해야 할지 모릅니다.
+           **읽을 것**(글)과 **할 것**(견적·상담)을 같이 냅니다. */
+        var post = r.it.post ? wowPost(r.it.post) : null;
         return '<li class="res-i res-'+esc(r.opt[2])+'">'+
           '<span class="res-i-ic">'+icon(r.it.icon,20)+'</span>'+
           '<span class="res-i-t"><b>'+esc(r.it.name)+'</b>'+
             '<span>'+esc(r.opt[0])+'</span></span>'+
-          '<a class="btn btn-o res-i-go" href="'+esc(r.it.cta[1])+'">'+
-            esc(r.it.cta[0])+'</a></li>';
+          '<span class="res-i-acts">'+
+            (post ? '<a class="res-i-post" href="/lab/'+esc(post.slug)+'">'+
+                    icon("doc",16)+'<span>'+esc(post.title)+'</span></a>' : '')+
+            '<a class="btn btn-o res-i-go" href="'+esc(r.it.cta[1])+'">'+
+              esc(r.it.cta[0])+'</a>'+
+          '</span></li>';
       }).join("")+'</ul></section>'
     : '<section class="res-sec"><h2>여덟 가지를 다 보고 계십니다</h2>'+
       '<p class="lead">여기서부터는 "알고 있다" 가 아니라 "줄였다" 로 '+

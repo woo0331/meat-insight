@@ -9,6 +9,9 @@
    (js/data/services.js). 비어 있는 단계는 업체를 부르는 일이 아니라
    사장님이 직접 정하는 일입니다 — 그 차이를 화면에서 보여 줍니다.
 
+   ⚠️ `post` 는 그 단계를 다룬 연구소 글입니다. 억지로 붙이지 마세요 —
+   맞는 글이 없으면 비웁니다. 엉뚱한 글로 보내면 다음부터 안 누릅니다.
+
    ⚠️ **기간·비용을 여기에 적지 마세요.** 지역·평수·업종에 따라 몇 배씩
    차이 납니다. 숫자는 창업비 계산기(/start/cost)가 **범위로** 말합니다.
    ════════════════════════════════════════════════════════════════════ */
@@ -18,15 +21,15 @@ window.WOW_STARTUP_STEPS = [
     line:"어디서 할지. 여기서 틀리면 나머지가 다 소용없습니다." },
   { key:"shop", icon:"building", name:"점포",       svc:null,        self:true,
     line:"평수 · 층 · 권리금 · 임대조건" },
-  { key:"plan", icon:"doc", name:"사업계획",   svc:"consult",
+  { key:"plan", icon:"doc", name:"사업계획",   svc:"consult", post:"startup-cost-missing",
     line:"메뉴 · 객단가 · 목표 매출 · 손익 계산" },
   { key:"interior", icon:"store", name:"인테리어",   svc:"interior",
     line:"고깃집은 환기와 동선이 먼저입니다" },
-  { key:"duct", icon:"fire", name:"덕트 · 환기", svc:"duct",
+  { key:"duct", icon:"fire", name:"덕트 · 환기", svc:"duct", post:"duct-smell-complaint",
     line:"민원의 대부분이 여기서 나옵니다" },
   { key:"kitchen", icon:"tool", name:"주방",       svc:"kitchen",
     line:"급배수 · 후드 · 가스 배관" },
-  { key:"cold", icon:"snow", name:"냉장 · 냉동", svc:"cold",
+  { key:"cold", icon:"snow", name:"냉장 · 냉동", svc:"cold", post:"aging-showcase",
     line:"워크인 · 쇼케이스 · 숙성고" },
   { key:"meatgear", icon:"knife", name:"정육장비",   svc:"slicer",
     line:"육절기 · 골절기 · 진공기 · 저울" },
@@ -37,15 +40,15 @@ window.WOW_STARTUP_STEPS = [
   { key:"pos", icon:"chart", name:"POS",        svc:"pos",   line:"" },
   { key:"cctv", icon:"camera", name:"CCTV",       svc:"cctv",  line:"" },
   { key:"net", icon:"globe", name:"인터넷",     svc:"net",   line:"" },
-  { key:"beef", icon:"truck", name:"육류 공급",  svc:"beef-supply",
+  { key:"beef", icon:"truck", name:"육류 공급",  svc:"beef-supply", post:"change-meat-supplier",
     line:"거래처가 원가를 정합니다. 최소 세 곳은 비교하세요" },
   { key:"food", icon:"box", name:"식자재",     svc:"food",  line:"" },
   { key:"drink", icon:"box", name:"주류",       svc:"drink", line:"" },
-  { key:"permit", icon:"shield", name:"인허가",     svc:null,    self:true,
+  { key:"permit", icon:"shield", name:"인허가",     svc:null,    self:true, post:"open-permits",
     line:"영업신고 · 위생교육 · 소방 · 옥외광고물" },
-  { key:"tax", icon:"doc", name:"세무 · 노무", svc:"tax",
+  { key:"tax", icon:"doc", name:"세무 · 노무", svc:"tax", post:"labor-cost",
     line:"사업자등록 · 4대보험 · 근로계약서" },
-  { key:"market", icon:"megaphone", name:"마케팅",     svc:"marketing",
+  { key:"market", icon:"megaphone", name:"마케팅",     svc:"marketing", post:"delivery-vs-hall",
     line:"오픈 전에 시작해야 오픈 날 손님이 옵니다" },
   { key:"open", icon:"check", name:"오픈준비",   svc:null,    self:true,
     line:"시운전 · 교육 · 시식 · 초도 발주" }

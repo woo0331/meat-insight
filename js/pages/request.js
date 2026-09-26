@@ -82,6 +82,7 @@ function PageRequest(){
 
     Notice()+
 
+    '<div id="rq-err"></div>'+
     '<form class="form" onsubmit="return reqSend(event)">'+
       '<input type="hidden" id="rq-svc" value="'+esc(svc.key)+'">'+
 
@@ -225,6 +226,7 @@ window.reqSend = function(ev){
   };
 
   REQ.sending = true;
+  sendOk("rq-err");
   var btn = $("rq-go");
   if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
 
@@ -247,9 +249,8 @@ window.reqSend = function(ev){
       try{ console.warn("[ABOUTMEAT] 견적 요청 실패 — "+((err && err.message)||err)+
         ". Vercel 환경변수(INTAKE_WEBHOOK_URL 또는 RESEND_API_KEY·INTAKE_EMAIL_TO)를 "+
         "확인하세요. 넣은 뒤에는 다시 배포해야 적용됩니다."); }catch(e){}
-      toast(bizVal("phone")
-        ? "지금 접수하지 못했습니다. 전화로 말씀해 주세요."
-        : "지금 접수하지 못했습니다. 잠시 뒤 다시 시도해 주세요.");
+      sendFail("rq-err", "reqSend({preventDefault:function(){}})", body.q);
+      toast("지금 접수하지 못했습니다. 적으신 내용은 그대로 있습니다.");
     });
   return false;
 };

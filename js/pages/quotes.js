@@ -145,7 +145,10 @@ function qcRow(f, list){
       best = f.cmp === "min" ? Math.min.apply(null, valid) : Math.max.apply(null, valid);
   }
   return '<tr>'+
-    '<th scope="row">'+esc(f.label)+(f.unit ? ' <em>('+esc(f.unit)+')</em>' : '')+'</th>'+
+    /* ⚠️ 좁은 화면에서는 단위를 일부러 아랫줄로 내립니다(칸이 84px 뿐).
+       그래서 "문장 속 덩어리" 검사에서 빼 달라는 표시를 답니다. */
+    '<th scope="row">'+esc(f.label)+
+      (f.unit ? ' <em class="g-mix">('+esc(f.unit)+')</em>' : '')+'</th>'+
     list.map(function(q, i){
       var v = q[f.key] || "";
       var mark = (best !== null && qcNum(v) === best);

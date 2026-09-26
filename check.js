@@ -180,6 +180,28 @@ const AUDIT = `(() => {
         "|칸"+tracks+"에 항목"+items+"|" + (el.textContent||"").trim().slice(0,20));
   });
 
+  /* 7-3. 문장 **한가운데**에 덩어리(block/flex/grid)가 끼어 있는가
+     ⚠️ CSS 선택자를 넓게 쓰다가 네 번 겪었습니다. ".notice-bad b" 처럼
+     자식 기호 없이 쓰면 제목용 <b> 뿐 아니라 **문장 안의 <b> 까지** 덩어리가
+     되어 그 낱말만 딴 줄에 앉습니다. "적어 주신 내용은 / 그대로 남아
+     있습니다. / 잠시 뒤 …" 처럼요.
+     ⚠️ 고치는 법은 자식 기호 하나입니다. 일부러 그런 곳은 class 에 'g-mix'. */
+  document.querySelectorAll("b, strong, em, i, span, a, code").forEach(el => {
+    if (!vis(el)) return;
+    if (String(el.className).indexOf("g-mix") >= 0) return;
+    const d = getComputedStyle(el).display;
+    if (d !== "block" && d !== "flex" && d !== "grid") return;
+    const par = el.parentElement; if (!par) return;
+    if (String(par.className).indexOf("g-mix") >= 0) return;
+    const pd = getComputedStyle(par).display;
+    if (pd === "grid" || pd === "inline-grid" || pd === "flex" || pd === "inline-flex") return;
+    let text = 0;
+    par.childNodes.forEach(n => { if (n.nodeType === 3 && n.nodeValue.trim()) text++; });
+    if (text > 0)
+      out.mix.push(el.tagName.toLowerCase()+"."+String(el.className||par.className||"").split(" ")[0]+
+        "|문장 속 "+d+"|"+(el.textContent||"").trim().slice(0,18));
+  });
+
   /* 8. br.br-m 이 좁은 화면에서 사라질 때 앞뒤 낱말이 붙는가
      ⚠️ 이건 **가로 스크롤도 에러도 안 나고 화면도 멀쩡합니다.** 글자만
      "차리는 데알아볼 게" 로 붙습니다. 실제로 그렇게 나갔습니다.
@@ -631,7 +653,95 @@ const AUDIT = `(() => {
     await new Promise(r=>setTimeout(r,250)); window.fetch=o;
     return !!body && body.region === "경기 안양";`);
 
-  console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 + "개");
+  /* ── 접수가 실패했을 때 ────────────────────────────────────
+     ⚠️ 이 화면은 **실패해야 나옵니다.** 그래서 평소 전수 점검에는
+     아예 안 잡힙니다 — 일부러 실패시켜서 봅니다. 실제로 이 상태에서
+     CSS 선택자 실수(.notice-bad b)로 문장이 깨진 적이 있습니다. */
+  const failSetup = `
+    document.getElementById("s-q").value = "덕트 냄새 민원이 계속 들어옵니다. 3년 전에 시공했습니다.";
+    document.getElementById("s-name").value = "홍길동";
+    document.getElementById("s-tel").value = "010-1234-5678";
+    document.getElementById("s-ag").checked = true;
+    window.fetch = function(){ return Promise.resolve({ ok:false, status:503,
+      json:()=>Promise.resolve({error:"지금 접수하지 못했습니다"}) }); };
+    sosSend({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,400));`;
+
+  await f("접수 실패해도 적은 글이 남는다", "/sos", failSetup + `
+    return document.getElementById("s-q").value.length > 10
+        && !!document.querySelector("#s-err .notice-bad");`);
+  await f("실패 안내가 다시 보내기와 복사를 준다", "/sos", failSetup + `
+    const t = [...document.querySelectorAll("#s-err button")].map(b => b.textContent);
+    const copy = document.querySelector("#s-err button[data-t]");
+    return t.some(x => /다시 보내기/.test(x)) && t.some(x => /복사/.test(x))
+        && !!copy && (copy.getAttribute("data-t")||"").indexOf("덕트") >= 0;`);
+  await f("실패 안내를 읽어 주는 프로그램이 알아챈다", "/sos", failSetup + `
+    return document.querySelector("#s-err .notice-bad").getAttribute("role") === "alert";`);
+  /* ⚠️ 문장 안의 <b> 가 덩어리가 되면 그 낱말만 딴 줄에 앉습니다 */
+  await f("실패 안내 문장이 줄을 깨지 않는다", "/sos", failSetup + `
+    const bad = [...document.querySelectorAll("#s-err .notice-bad span b")]
+      .filter(b => { const d = getComputedStyle(b).display;
+                     return d === "block" || d === "flex" || d === "grid"; });
+    return bad.length ? bad.length + "군데가 문장 속에서 덩어리가 되었습니다" : true;`);
+  await f("실패한 뒤 다시 보낼 수 있다", "/sos", failSetup + `
+    let tried = 0;
+    window.fetch = function(){ tried++; return Promise.resolve({ ok:false, status:503,
+      json:()=>Promise.resolve({}) }); };
+    document.querySelector("#s-err button").click();
+    await new Promise(r=>setTimeout(r,400));
+    return tried === 1 && !document.getElementById("s-go").disabled;`);
+
+  /* ── 도구와 글이 서로 이어지는가 ──────────────────────────
+     ⚠️ 도구는 "해 보는 것" 이고 글은 "알려 주는 것" 입니다. 둘이 따로
+     놀면 진단을 받고도 뭘 읽을지 모르고, 글을 읽고도 뭘 할지 모릅니다. */
+  await f("진단 결과가 약한 항목의 글로 보낸다", "/check", `
+    WOW_CHECK.forEach(it => chkPick(it.key, 2));   /* 전부 0점 */
+    chkDone({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,300));
+    const links = [...document.querySelectorAll(".res-i-post")];
+    if(!links.length) return "글로 가는 길이 하나도 없습니다";
+    const want = WOW_CHECK.filter(c => c.post).length;
+    return links.length === want
+      || links.length + " / 글이 붙은 항목 " + want;`);
+  await f("진단에서 걸린 글 주소가 실제로 열린다", "/check", `
+    WOW_CHECK.forEach(it => chkPick(it.key, 2));
+    chkDone({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,300));
+    const a = document.querySelector(".res-i-post");
+    go(a.getAttribute("href"));
+    await new Promise(r=>setTimeout(r,300));
+    return !!document.querySelector(".post-hd h1");`);
+  await f("창업 단계에서 그 단계 글로 간다", "/start", `
+    const links = [...document.querySelectorAll(".st-tag-post")];
+    const want = WOW_STARTUP_STEPS.filter(s => s.post).length;
+    if(links.length !== want) return links.length + " / " + want;
+    go(links[0].getAttribute("href"));
+    await new Promise(r=>setTimeout(r,300));
+    return !!document.querySelector(".post-hd h1");`);
+  await f("글 끝에서 도구로 간다", "/lab/meat-cost-rate", `
+    const a = document.querySelector(".post-tool");
+    if(!a) return "도구로 가는 길이 없습니다";
+    go(a.getAttribute("href"));
+    await new Promise(r=>setTimeout(r,300));
+    return location.pathname === "/check";`);
+  /* ⚠️ 없는 글을 가리키면 손님이 404 를 봅니다 */
+  await f("가리키는 글이 전부 실제로 있다", "/", `
+    const slugs = new Set(WOW_POSTS.map(p => p.slug));
+    const bad = [].concat(
+      WOW_CHECK.filter(c => c.post && !slugs.has(c.post)).map(c => "진단:"+c.post),
+      WOW_STARTUP_STEPS.filter(s => s.post && !slugs.has(s.post)).map(s => "창업:"+s.post));
+    return bad.length ? bad.join(" ") : true;`);
+  await f("글이 가리키는 도구 주소가 전부 열린다", "/", `
+    const bad = [];
+    for(const p of WOW_POSTS){
+      if(!p.tool) continue;
+      const r = routeInfo(p.tool[0].split("?")[0], {});
+      if(!r.ok) bad.push(p.slug + "→" + p.tool[0]);
+    }
+    return bad.length ? bad.join(" ") : true;`);
+
+  console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 +
+              "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 6 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

@@ -112,6 +112,8 @@ function StStep(s, done){
       '</span>'+
     '</label>'+
     '<span class="st-i-r">'+
+      (s.post ? '<a class="st-tag st-tag-post" href="/lab/'+esc(s.post)+'">'+
+           icon("doc",14)+'읽어 보기</a>' : '')+
       (s.self
         ? '<span class="st-tag st-tag-self">사장님이 정합니다</span>'
         : (svc ? '<a class="st-tag st-tag-svc" href="/request?s='+encodeURIComponent(s.svc)+'">'+

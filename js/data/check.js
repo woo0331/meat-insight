@@ -16,6 +16,9 @@
    why   왜 보는지 한 줄 (손님이 "이걸 왜 묻지" 하지 않게)
    opts  [보기, 점수 0~2, 상태]  — 상태는 ok · warn · bad
    cta   [단추 글자, 주소]        — 그 항목이 약할 때 지금 할 수 있는 것
+   post  그 주제를 다룬 연구소 글 (js/data/posts.js 의 slug)
+         ⚠️ 억지로 붙이지 마세요. 맞는 글이 없으면 비워 둡니다 —
+         엉뚱한 글로 보내면 다음부터 글을 안 누릅니다.
 
    ⚠️ 보기를 네 개 이상으로 늘리지 마세요. 여덟 항목 × 네 보기면 서른두
    번을 읽어야 합니다. 바쁜 사장님은 거기서 닫습니다.
@@ -29,7 +32,7 @@ window.WOW_CHECK = [
       ["대충은 아는데 정확히는 모릅니다",     1, "warn"],
       ["따로 계산해 본 적이 없습니다",        0, "bad"]
     ],
-    cta:["거래처 비교해 보기", "/request?s=beef-supply"] },
+    cta:["거래처 비교해 보기", "/request?s=beef-supply"], post:"meat-cost-rate" },
 
   { key:"supply", name:"거래처", icon:"truck",
     why:"한 곳만 오래 쓰면 단가가 올라도 알 방법이 없습니다.",
@@ -38,7 +41,7 @@ window.WOW_CHECK = [
       ["한 곳만 쓰지만 단가는 확인합니다",  1, "warn"],
       ["한 곳만 오래 쓰고 있습니다",        0, "bad"]
     ],
-    cta:["육류 공급 견적 받기", "/request?s=beef-supply"] },
+    cta:["육류 공급 견적 받기", "/request?s=beef-supply"], post:"change-meat-supplier" },
 
   { key:"labor", name:"인건비", icon:"users",
     why:"매출 대비 인건비율과 주휴·4대보험까지 같이 봐야 실제 숫자가 나옵니다.",
@@ -47,7 +50,7 @@ window.WOW_CHECK = [
       ["급여는 알지만 비율로는 안 봅니다",    1, "warn"],
       ["사람 쓰는 대로 나가고 있습니다",      0, "bad"]
     ],
-    cta:["노무 상담 요청", "/request?s=labor"] },
+    cta:["노무 상담 요청", "/request?s=labor"], post:"labor-cost" },
 
   { key:"fixed", name:"고정비", icon:"building",
     why:"임대료·공과금·리스는 장사가 안 되는 달에도 그대로 나갑니다.",
@@ -65,7 +68,7 @@ window.WOW_CHECK = [
       ["문제가 생기면 그때 부릅니다",         1, "warn"],
       ["몇 년째 손 안 대고 있습니다",         0, "bad"]
     ],
-    cta:["시설 점검 견적 받기", "/request?s=cold"] },
+    cta:["시설 점검 견적 받기", "/request?s=cold"], post:"fridge-breakdown" },
 
   { key:"menu", name:"메뉴 · 객단가", icon:"list",
     why:"어느 메뉴가 남고 어느 메뉴가 손해인지는 팔리는 수와 다릅니다.",
@@ -74,7 +77,7 @@ window.WOW_CHECK = [
       ["잘 나가는 메뉴만 압니다",             1, "warn"],
       ["메뉴별로 따져 본 적이 없습니다",      0, "bad"]
     ],
-    cta:["메뉴 · 객단가 상담", "/sos?c=sales"] },
+    cta:["메뉴 · 객단가 상담", "/sos?c=sales"], post:"menu-margin" },
 
   { key:"market", name:"마케팅 · 단골", icon:"megaphone",
     why:"새 손님을 부르는 값과 단골이 다시 오는 값은 다릅니다.",
@@ -83,7 +86,7 @@ window.WOW_CHECK = [
       ["배달앱·리뷰 정도만 관리합니다",       1, "warn"],
       ["따로 하는 게 없습니다",               0, "bad"]
     ],
-    cta:["마케팅 견적 받기", "/request?s=marketing"] },
+    cta:["마케팅 견적 받기", "/request?s=marketing"], post:"delivery-vs-hall" },
 
   { key:"legal", name:"위생 · 인허가", icon:"shield",
     why:"영업신고·위생교육·소방은 걸리면 장사를 못 하게 됩니다.",
@@ -92,7 +95,7 @@ window.WOW_CHECK = [
       ["받아는 뒀는데 날짜는 모릅니다",      1, "warn"],
       ["무엇이 필요한지 잘 모릅니다",        0, "bad"]
     ],
-    cta:["위생 · 인허가 물어보기", "/sos?c=tax"] }
+    cta:["위생 · 인허가 물어보기", "/sos?c=tax"], post:"open-permits" }
 ];
 
 /* 점수 구간 — ⚠️ "잘하는 가게 / 못하는 가게" 가 아니라 **얼마나 파악하고

@@ -30,6 +30,7 @@ function PageSos(){
 
     Notice()+
 
+    '<div id="s-err"></div>'+
     '<form class="form" onsubmit="return sosSend(event)">'+
 
       '<div class="f-r"><label for="s-q">지금 상황 <b>*</b></label>'+
@@ -128,6 +129,55 @@ window.regionVal = function(id){
   return wowRegionText(sel ? sel.value : "", inp ? inp.value : "");
 };
 
+/* ── 접수가 실패했을 때 ────────────────────────────────────
+   ⚠️ 여태 토스트 한 줄로 끝났습니다. 전화번호도 아직 없어서, 손님은
+   길게 적은 글을 들고 **막다른 길**에 섭니다. 다시 적으라고 할 수는
+   없습니다.
+
+   그래서 (1) 적으신 것을 화면에 그대로 두고 (2) **복사**해 둘 수 있게
+   하고 (3) 다시 시도를 주고 (4) 전화가 있으면 전화를 줍니다.
+   화면을 다시 그리지 않습니다 — 다시 그리면 적으신 글이 날아갑니다. */
+window.sendFail = function(boxId, retryFn, copyText){
+  var box = $(boxId); if(!box) return;
+  var tel = bizVal("phone");
+  box.innerHTML =
+    '<div class="notice notice-bad" role="alert">'+
+      '<b>'+icon("alert",20)+'지금 접수하지 못했습니다.</b>'+
+      '<span>적어 주신 내용은 <b>그대로 남아 있습니다.</b> 잠시 뒤 다시 '+
+        '눌러 보시거나, 아래에서 복사해 두셨다가 보내 주셔도 됩니다.</span>'+
+      '<div class="notice-acts">'+
+        '<button class="btn btn-b" type="button" onclick="'+esc(retryFn)+'">'+
+          icon("refresh",18)+'다시 보내기</button>'+
+        '<button class="btn" type="button" onclick="sendCopy(this)"'+
+          ' data-t="'+esc(copyText||"")+'">'+icon("doc",18)+'적은 내용 복사</button>'+
+        (tel ? CallButton("btn","전화로 문의") : '')+
+      '</div>'+
+    '</div>';
+  try{ box.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(e){}
+};
+window.sendOk = function(boxId){ var b = $(boxId); if(b) b.innerHTML = ""; };
+
+/* 복사 — ⚠️ navigator.clipboard 는 https 가 아니거나 오래된
+   브라우저에서 없습니다. 없으면 옛 방법으로 갑니다. */
+window.sendCopy = function(btn){
+  var t = btn.getAttribute("data-t") || "";
+  var done = function(){ toast("적으신 내용을 복사했습니다."); };
+  var fail = function(){ toast("복사하지 못했습니다. 직접 선택해서 복사해 주세요."); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done, fail);
+    return;
+  }
+  try{
+    var ta = document.createElement("textarea");
+    ta.value = t; ta.setAttribute("readonly","");
+    ta.style.position = "fixed"; ta.style.left = "-9999px";
+    document.body.appendChild(ta); ta.select();
+    var ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    ok ? done() : fail();
+  }catch(e){ fail(); }
+};
+
 function fRow(label,id,type,req,ph,ac){
   return '<div class="f-r"><label for="'+id+'">'+esc(label)+
     (req?' <b>*</b>':' <em>(선택)</em>')+'</label>'+
@@ -171,6 +221,7 @@ window.sosSend = function(ev){
   };
 
   SOS.sending = true;
+  sendOk("s-err");
   var btn = $("s-go");
   if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
 
@@ -191,11 +242,13 @@ window.sosSend = function(ev){
       SOS.sending = false;
       if(btn){ btn.disabled = false; btn.textContent = "무료로 물어보기"; }
       try{ console.warn("[ABOUTMEAT] SOS 접수 실패 — "+((err && err.message)||err)+
-        ". api/quote.js 가 올라가 있는지, Vercel 환경변수가 설정되어 있는지 "+
+        ". api/quote.js 가 올라가 있는지, Vercel 환경변수(INTAKE_WEBHOOK_URL 또는 "+
+        "RESEND_API_KEY·INTAKE_EMAIL_TO)가 설정되어 있는지, 넣은 뒤 다시 배포했는지 "+
         "확인하세요."); }catch(e){}
-      toast(bizVal("phone")
-        ? "지금 접수하지 못했습니다. 전화로 말씀해 주세요."
-        : "지금 접수하지 못했습니다. 잠시 뒤 다시 시도해 주세요.");
+      /* ⚠️ 토스트는 몇 초 뒤 사라집니다. 길게 적은 글을 들고 계신
+         손님에게는 **남아 있는 안내**가 필요합니다. */
+      sendFail("s-err", "sosSend({preventDefault:function(){}})", body.q);
+      toast("지금 접수하지 못했습니다. 적으신 내용은 그대로 있습니다.");
     });
   return false;
 };

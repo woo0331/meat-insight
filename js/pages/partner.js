@@ -102,6 +102,7 @@ function PagePartnerApply(){
 
     Notice()+
 
+    '<div id="pt-err"></div>'+
     '<form class="form" onsubmit="return ptSend(event)">'+
       '<div class="f-2">'+
         fRow("업체명","pt-co","text",true,"","organization")+
@@ -180,6 +181,7 @@ window.ptSend = function(ev){
   };
 
   PT.sending = true;
+  sendOk("pt-err");
   var btn = $("pt-go");
   if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
 
@@ -196,7 +198,8 @@ window.ptSend = function(ev){
       PT.sending = false;
       if(btn){ btn.disabled = false; btn.textContent = "등록 신청하기"; }
       try{ console.warn("[ABOUTMEAT] 파트너 등록 실패 — "+((err && err.message)||err)); }catch(e){}
-      toast("지금 접수하지 못했습니다. 잠시 뒤 다시 시도해 주세요.");
+      sendFail("pt-err", "ptSend({preventDefault:function(){}})", body.note || body.company);
+      toast("지금 접수하지 못했습니다. 적으신 내용은 그대로 있습니다.");
     });
   return false;
 };

@@ -252,3 +252,24 @@ html{ scroll-padding-top:calc(var(--hdr-h) + 16px); }
   .qc-t input, .qc-t textarea{ border:0; background:transparent; }
   a[href^="/"]::after{ content:""; }
 }
+
+/* ══ 따라다니는 단추 ══════════════════════════════════════
+   ⚠️ 아래 네비(.mnav)가 나오는 폭에서는 **숨깁니다.** 둘 다 띄우면
+   화면 아래가 단추로 막혀서 정작 내용이 안 보입니다. 미디어쿼리 폭을
+   .mnav 쪽과 **같게** 두세요. */
+.fab{ position:fixed; right:24px; bottom:24px; z-index:70;
+  display:inline-flex; align-items:center; gap:8px;
+  min-height:var(--tap); padding:0 var(--s6);
+  border-radius:var(--r-pill); background:var(--burgundy); color:#fff;
+  font-size:var(--t-md); font-weight:700; white-space:nowrap;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16), var(--shadow-lg);
+  opacity:0; visibility:hidden; transform:translateY(12px);
+  transition:opacity .25s ease, transform .25s ease, visibility .25s,
+             background-color .16s ease; }
+.fab.on{ opacity:1; visibility:visible; transform:none; }
+.fab:hover{ background:var(--burgundy-600); color:#fff; }
+@media (max-width:860px){ .fab{ display:none; } }
+/* ⚠️ 움직임이 불편한 분에게는 떠오르는 동작을 빼 줍니다 */
+@media (prefers-reduced-motion: reduce){
+  .fab{ transition:opacity .01s; transform:none; }
+}

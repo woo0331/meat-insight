@@ -263,6 +263,12 @@ function setMeta(attr, key, val){
 /* ── 시작 ──────────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", function(){
   $("chrome-t").innerHTML = Header();
-  $("chrome-b").innerHTML = Footer() + MobileNav();
+  $("chrome-b").innerHTML = Footer() + MobileNav() + FloatCta();
+  /* 조금 내려가면 따라다니는 단추가 나타납니다.
+     ⚠️ passive:true — 스크롤마다 도는 손이라 이걸 빼면 스크롤이 끕끕해집니다. */
+  window.addEventListener("scroll", function(){
+    var f = $("fab"); if(!f) return;
+    f.classList.toggle("on", window.scrollY > 560);
+  }, { passive:true });
   render();
 });

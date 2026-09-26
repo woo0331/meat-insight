@@ -60,6 +60,19 @@ function paintGnb(){
   }).join("");
 }
 
+/* ── 넓은 화면에서 따라다니는 단추 ─────────────────────────
+   ⚠️ 손님은 아래로 내려가다가 "물어봐야겠다" 고 마음먹습니다. 그때
+   헤더는 이미 화면 밖입니다 — 다시 맨 위로 올라가게 하지 않습니다.
+
+   ⚠️ **좁은 화면에는 내지 않습니다.** 아래 네비(.mnav)가 같은 일을
+   하고 있어서, 둘이 겹치면 화면 아래가 단추로 막힙니다.
+   ⚠️ 첫 화면에서는 숨깁니다. 히어로에 이미 큰 입력창이 있는데 그 위에
+   단추를 또 띄우면 가립니다 — 조금 내려간 뒤에 나타납니다(app.js). */
+function FloatCta(){
+  return '<a class="fab" id="fab" href="/sos">'+
+    icon("chat",20)+'<b>무료로 물어보기</b></a>';
+}
+
 function MobileNav(){
   return '<nav class="mnav" aria-label="모바일 메뉴"><div class="mnav-in">'+
     MNAV.map(function(m){

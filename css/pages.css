@@ -1302,3 +1302,8 @@
   .post-tool{ grid-template-columns:auto 1fr; padding:var(--s5); }
   .post-tool-go{ display:none; }
 }
+
+/* 접수처가 없을 때 — ⚠️ "못 받습니다" 로 끝내면 막다른 길입니다.
+   지금 쓸 수 있는 것을 같이 냅니다. */
+.notice-sub{ font-size:var(--t-sm) !important; color:var(--ink3) !important; }
+.notice-acts .btn{ min-height:44px; padding:0 var(--s4); font-size:var(--t-base); }

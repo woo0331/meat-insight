@@ -68,18 +68,35 @@ function PageSos(){
 }
 
 /* ⚠️ 접수처가 없으면 **폼 위에서 먼저** 말합니다. 다 적고 누른 뒤에
-   알리면 바쁜 사장님의 시간을 버리게 하는 짓입니다. */
+   알리면 바쁜 사장님의 시간을 버리게 하는 짓입니다.
+
+   ⚠️ 그런데 "못 받습니다" 로 끝내면 **막다른 길**입니다. 전화번호도
+   아직 없어서 지금은 연락할 방법이 하나도 없습니다. 그러면 손님은
+   그냥 나갑니다. 그래서 **지금 당장 쓸 수 있는 것**을 같이 냅니다 —
+   가입 없이 바로 되고, 사람 손을 안 타는 것들입니다. */
 function Notice(){
   if(bizVal("sosReady")) return "";
-  try{ console.warn("[ABOUTMEAT] SOS 접수처가 아직 없습니다 — Vercel 환경변수에 "+
-    "INTAKE_WEBHOOK_URL 하나를 넣거나 RESEND_API_KEY 와 INTAKE_EMAIL_TO 를 "+
-    "같이 넣고 다시 배포한 뒤, "+
-    "js/data/site.js 의 WOW_BIZ.sosReady 를 켜세요."); }catch(e){}
+  try{ console.warn("[ABOUTMEAT] 접수처가 아직 없습니다 — Vercel 환경변수에 "+
+    "INTAKE_WEBHOOK_URL 하나를 넣거나 RESEND_API_KEY 와 INTAKE_EMAIL_TO 를 같이 넣고 "+
+    "**다시 배포**한 뒤, js/data/site.js 의 WOW_BIZ.sosReady 를 켜세요. "+
+    "그리고 같은 날 js/data/legal-privacy.js 의 trustees 에 그 회사를 한 줄 넣으세요."); }catch(e){}
+
   var phone = bizVal("phone");
-  return '<div class="notice"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
-    (phone ? '<span>전화로 말씀해 주시면 바로 도와드리겠습니다.</span>'+
-      '<div class="notice-acts">'+CallButton("btn","전화로 문의")+'</div>'
-           : '<span>접수 준비가 끝나는 대로 이곳에서 바로 받겠습니다.</span>')+
+  return '<div class="notice">'+
+    '<b>지금은 이 양식으로 접수하지 못합니다.</b>'+
+    (phone
+      ? '<span>전화로 말씀해 주시면 바로 도와드리겠습니다.</span>'+
+        '<div class="notice-acts">'+CallButton("btn","전화로 문의")+'</div>'
+      : '<span>연락받을 창구를 준비하는 중입니다. 적어 주셔도 저희에게 '+
+        '닿지 않으니, <b>준비가 끝난 뒤에 다시 와 주세요.</b></span>'+
+        '<span class="notice-sub">그동안 아래는 가입 없이 바로 쓰실 수 있습니다 — '+
+          '사람 손을 타지 않고 이 브라우저에서 바로 됩니다.</span>'+
+        '<div class="notice-acts">'+
+          '<a class="btn" href="/check">'+icon("gauge",18)+'무료 사업진단</a>'+
+          '<a class="btn" href="/start/cost">'+icon("won",18)+'창업비 정리표</a>'+
+          '<a class="btn" href="/quotes">'+icon("scale",18)+'견적 비교</a>'+
+          '<a class="btn" href="/lab">'+icon("doc",18)+'사장님 연구소</a>'+
+        '</div>')+
   '</div>';
 }
 

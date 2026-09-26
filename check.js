@@ -740,8 +740,46 @@ const AUDIT = `(() => {
     }
     return bad.length ? bad.join(" ") : true;`);
 
+  /* ── 접수처가 없을 때 ─────────────────────────────────────
+     ⚠️ 접수처(Vercel 환경변수)를 넣기 전에 sosReady 를 켜 두면, 손님이
+     다 적고 눌렀는데 실패합니다. 그리고 전화번호도 없으면 연락할
+     방법이 하나도 없는 화면이 됩니다 — 그러면 그냥 나갑니다. */
+  await f("접수처가 없으면 폼 **위에** 미리 알린다", "/sos", `
+    if(bizVal("sosReady")) return true;           /* 켜 두셨으면 넘어갑니다 */
+    const n = document.querySelector(".notice"), form = document.querySelector("form.form");
+    if(!n) return "안내가 없습니다";
+    return n.getBoundingClientRect().top < form.getBoundingClientRect().top
+      || "안내가 폼 아래에 있습니다";`);
+  await f("견적 요청·파트너 등록에도 같이 알린다", "/request?s=duct", `
+    if(bizVal("sosReady")) return true;
+    if(!document.querySelector(".notice")) return "견적 요청에 안내가 없습니다";
+    go("/partner/apply"); await new Promise(r=>setTimeout(r,300));
+    return !!document.querySelector(".notice") || "파트너 등록에 안내가 없습니다";`);
+  /* ⚠️ "못 받습니다" 로 끝내면 막다른 길입니다 */
+  await f("안내가 막다른 길이 아니다", "/sos", `
+    if(bizVal("sosReady")) return true;
+    const outs = [...document.querySelectorAll(".notice a")].map(a => a.getAttribute("href"));
+    return outs.length >= 2 || "지금 할 수 있는 것으로 가는 길이 없습니다";`);
+  await f("sosReady 를 켜면 안내가 사라진다", "/sos", `
+    const was = WOW_BIZ.sosReady;
+    WOW_BIZ.sosReady = true; render();
+    await new Promise(r=>setTimeout(r,250));
+    const gone = !document.querySelector(".notice");
+    WOW_BIZ.sosReady = was; render();
+    await new Promise(r=>setTimeout(r,250));
+    return gone || "켜 두어도 안내가 남습니다";`);
+  /* ⚠️ **안 쓰는 회사를 방침에 적어 두는 것도 사실과 다른 방침**입니다.
+     접수처가 없는데 "슬랙에 전달합니다" 가 적혀 있으면 안 됩니다. */
+  await f("안 쓰는 접수처가 방침에 적혀 있지 않다", "/privacy", `
+    if(bizVal("sosReady")) return true;
+    const bad = (WOW_PRIVACY.trustees||[])
+      .filter(t => /전달|발송/.test(String(t[1]||"")))
+      .map(t => t[0]);
+    return bad.length ? bad.join(" ") + " 가 적혀 있는데 접수처는 아직 없습니다" : true;`);
+
   console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 +
-              "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 6 + "개");
+              "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 6 +
+              "개 · 접수처 없음 " + 5 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

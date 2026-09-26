@@ -826,4 +826,19 @@ const AUDIT = `(() => {
   server.close();
   console.log(fail ? "\n❌ "+fail+"개 항목 실패" : "\n✅ 전체 통과");
   process.exit(fail ? 1 : 0);
-})();
+})().catch(err => {
+  /* ⚠️ 도중에 터지면 **검사를 안 한 것**입니다 — 통과가 아닙니다.
+     브라우저가 도중에 닫히면(메모리 부족·강제 종료) Node 가 스택을
+     그대로 토해 내는데, 그 화면만 보면 무엇이 잘못됐는지 모릅니다.
+     여기서 받아서 사람 말로 적고 **1 로 끝냅니다.**
+
+     ⚠️ `node check.js | tail` 처럼 파이프로 넘기면 끝 숫자가 tail 의
+     것이 됩니다. 실패해도 0 으로 읽힙니다 — 파이프 없이 돌리거나
+     `; echo EXIT=${PIPESTATUS[0]}` 을 붙이세요. */
+  const m = (err && err.message) ? err.message : String(err);
+  console.error("\n❌ 검사를 끝내지 못했습니다 — " + m);
+  if (m.indexOf("closed") >= 0)
+    console.error("   브라우저가 도중에 닫혔습니다. 대개 메모리가 모자란 것입니다 —" +
+                  " 다시 돌려 보시고, 계속 그러면 VIEWS 를 줄여서 나눠 돌리세요.");
+  process.exit(1);
+});

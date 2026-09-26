@@ -255,11 +255,22 @@ function CheckResult(){
         /* ⚠️ 약하다고 알려만 주고 끝내면 사장님은 뭘 해야 할지 모릅니다.
            **읽을 것**(글)과 **할 것**(견적·상담)을 같이 냅니다. */
         var post = r.it.post ? wowPost(r.it.post) : null;
+        /* ⚠️ **가이드가 글보다 먼저입니다.** 약한 항목으로 나왔다는 것은
+           지금 손을 대야 한다는 뜻이고, 그때 필요한 것은 읽을거리가
+           아니라 **지금 확인할 것과 물어볼 것**입니다.
+           ⚠️ 맞는 가이드가 없으면 비웁니다 (고정비 · 위생 · 인허가). */
+        var gd = (r.it.guide && typeof wowGuide === "function")
+          ? wowGuide(r.it.guide) : null;
         return '<li class="res-i res-'+esc(r.opt[2])+'">'+
           '<span class="res-i-ic">'+icon(r.it.icon,20)+'</span>'+
           '<span class="res-i-t"><b>'+esc(r.it.name)+'</b>'+
             '<span>'+esc(r.opt[0])+'</span></span>'+
           '<span class="res-i-acts">'+
+            /* ⚠️ `res-i-post` 를 같이 달지 마세요. 전수 점검의 "진단 →
+               글" 이 그 클래스 **개수**로 글 연결을 세는데, 가이드까지
+               섞이면 검사가 뜻을 잃습니다. 생김새만 CSS 에서 나눠 씁니다. */
+            (gd ? '<a class="res-i-gd" href="/problem/'+esc(r.it.guide)+'">'+
+                    icon("list",16)+'<span>'+esc(gd.h1)+'</span></a>' : '')+
             (post ? '<a class="res-i-post" href="/lab/'+esc(post.slug)+'">'+
                     icon("doc",16)+'<span>'+esc(post.title)+'</span></a>' : '')+
             '<a class="btn btn-o res-i-go" href="'+esc(r.it.cta[1])+'">'+

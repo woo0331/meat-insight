@@ -117,6 +117,11 @@ function StStep(s, done){
       '</span>'+
     '</label>'+
     '<span class="st-i-r">'+
+      /* ⚠️ 가이드가 먼저입니다 — 이 단계에서 **무엇을 확인하고 무엇을
+         물어볼지**가 읽을거리보다 급합니다. 없으면 비웁니다. */
+      (s.guide && typeof wowGuide === "function" && wowGuide(s.guide)
+        ? '<a class="st-tag st-tag-gd" href="/problem/'+esc(s.guide)+'">'+
+           icon("list",14)+'확인할 것</a>' : '')+
       (s.post ? '<a class="st-tag st-tag-post" href="/lab/'+esc(s.post)+'">'+
            icon("doc",14)+'읽어 보기</a>' : '')+
       (s.self

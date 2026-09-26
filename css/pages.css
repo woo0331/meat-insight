@@ -2435,3 +2435,20 @@
     font-size:var(--t-cap); padding-top:var(--s2); }
   .qc-t-a textarea{ min-height:48px; }
 }
+
+/* 진단 결과 · 창업 단계에서 해결 가이드로 가는 줄
+   ⚠️ 글(읽을거리)과 **구분되어야** 합니다. 약한 항목으로 나왔다는 건
+   지금 손을 대야 한다는 뜻이라, 읽을거리보다 이쪽이 먼저입니다. */
+/* 생김새는 글 줄과 같되 색으로 구분합니다.
+   ⚠️ 클래스는 **따로**입니다 — `.res-i-post` 개수로 글 연결을 세는
+   검사가 있어서, 같이 달면 그 검사가 뜻을 잃습니다. */
+.res-i-gd{ display:inline-flex; align-items:center; gap:6px; min-height:44px;
+  padding:0 var(--s4); border-radius:var(--r-pill); font-size:var(--t-sm);
+  font-weight:700; max-width:260px;
+  color:var(--t3-ink); background:var(--t3-bg); }
+.res-i-gd > span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.res-i-gd .ic{ flex:0 0 auto; color:var(--t3-ink); }
+.res-i-gd:hover{ background:var(--t3-ink); color:#fff; }
+.res-i-gd:hover .ic{ color:#fff; }
+.st-tag-gd{ color:var(--t3-ink); background:var(--t3-bg); }
+.st-tag-gd:hover{ color:#fff; background:var(--t3-ink); }

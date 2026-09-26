@@ -25,7 +25,7 @@
    ════════════════════════════════════════════════════════════════════ */
 
 window.WOW_CHECK = [
-  { key:"cost", name:"육류원가", icon:"won",
+  { key:"cost", guide:"cost", name:"육류원가", icon:"won",
     why:"고깃집에서 제일 크고, 제일 조용히 새는 칸입니다.",
     opts:[
       ["매달 원가율을 숫자로 보고 있습니다", 2, "ok"],
@@ -34,7 +34,7 @@ window.WOW_CHECK = [
     ],
     cta:["거래처 비교해 보기", "/request?s=beef-supply"], post:"meat-cost-rate" },
 
-  { key:"supply", name:"거래처", icon:"truck",
+  { key:"supply", guide:"supply", name:"거래처", icon:"truck",
     why:"한 곳만 오래 쓰면 단가가 올라도 알 방법이 없습니다.",
     opts:[
       ["두 곳 이상에서 단가를 받아 봅니다", 2, "ok"],
@@ -43,7 +43,7 @@ window.WOW_CHECK = [
     ],
     cta:["육류 공급 견적 받기", "/request?s=beef-supply"], post:"change-meat-supplier" },
 
-  { key:"labor", name:"인건비", icon:"users",
+  { key:"labor", guide:"staff", name:"인건비", icon:"users",
     why:"매출 대비 인건비율과 주휴·4대보험까지 같이 봐야 실제 숫자가 나옵니다.",
     opts:[
       ["인건비율을 숫자로 보고 있습니다",     2, "ok"],
@@ -61,7 +61,7 @@ window.WOW_CHECK = [
     ],
     cta:["어디서 줄일 수 있는지 물어보기", "/sos?c=cost"] },
 
-  { key:"facility", name:"시설 상태", icon:"snow",
+  { key:"facility", guide:"cold", name:"시설 상태", icon:"snow",
     why:"냉장·덕트·전기는 고장 나고 나서 부르면 두 배로 듭니다.",
     opts:[
       ["점검 주기를 정해 두고 보고 있습니다", 2, "ok"],
@@ -70,7 +70,7 @@ window.WOW_CHECK = [
     ],
     cta:["시설 점검 견적 받기", "/request?s=cold"], post:"fridge-breakdown" },
 
-  { key:"menu", name:"메뉴 · 객단가", icon:"list",
+  { key:"menu", guide:"sales", name:"메뉴 · 객단가", icon:"list",
     why:"어느 메뉴가 남고 어느 메뉴가 손해인지는 팔리는 수와 다릅니다.",
     opts:[
       ["메뉴별 원가와 마진을 알고 있습니다",  2, "ok"],
@@ -79,7 +79,7 @@ window.WOW_CHECK = [
     ],
     cta:["메뉴 · 객단가 상담", "/sos?c=sales"], post:"menu-margin" },
 
-  { key:"market", name:"마케팅 · 단골", icon:"megaphone",
+  { key:"market", guide:"market", name:"마케팅 · 단골", icon:"megaphone",
     why:"새 손님을 부르는 값과 단골이 다시 오는 값은 다릅니다.",
     opts:[
       ["재방문 손님을 따로 챙기고 있습니다",  2, "ok"],

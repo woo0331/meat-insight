@@ -1095,6 +1095,48 @@ const AUDIT = `(() => {
     if(document.querySelector(".qc-from")) return "어느 고민인지 모르는데 띠가 나옵니다";
     return !!document.querySelector(".qc-ask") || "공통 물어볼 것이 사라졌습니다";`);
 
+  /* ── 진단 · 창업 단계에서 해결 가이드로 ─────────────────
+     ⚠️ 약한 항목으로 나왔다는 것은 **지금 손을 대야 한다**는 뜻입니다.
+     그때 필요한 것은 읽을거리가 아니라 확인할 것과 물어볼 것입니다. */
+  await f("진단 결과가 그 항목의 해결 가이드로 보낸다", "/check", `
+    WOW_CHECK.forEach(it => chkPick(it.key, 2));   /* 전부 0점 */
+    chkDone({preventDefault(){}});
+    await new Promise(r=>setTimeout(r,350));
+    const links = [...document.querySelectorAll(".res-i-gd")];
+    const want = WOW_CHECK.filter(c => c.guide).length;
+    if(!want) return "진단에 가이드가 하나도 안 붙었습니다";
+    if(links.length !== want) return links.length + " / 가이드가 붙은 항목 " + want;
+    go(links[0].getAttribute("href"));
+    await new Promise(r=>setTimeout(r,350));
+    return !!document.querySelector(".gd-hd h1") || "가이드 화면이 안 떴습니다";`);
+
+  await f("창업 단계에서 그 단계의 해결 가이드로 간다", "/start", `
+    const links = [...document.querySelectorAll(".st-tag-gd")];
+    const want = WOW_STARTUP_STEPS.filter(s => s.guide).length;
+    if(!want) return "창업 단계에 가이드가 하나도 안 붙었습니다";
+    if(links.length !== want) return links.length + " / " + want;
+    go(links[0].getAttribute("href"));
+    await new Promise(r=>setTimeout(r,350));
+    return !!document.querySelector(".gd-hd h1") || "가이드 화면이 안 떴습니다";`);
+
+  /* ⚠️ 없는 가이드를 가리키면 손님이 404 를 봅니다. 그리고 **억지로
+     붙이지 않았는지**도 같이 봅니다 — 맞는 것이 없으면 비워야 합니다. */
+  await f("가리키는 가이드가 전부 있고, 없는 자리는 비어 있다", "/check", `
+    const bad = [];
+    WOW_CHECK.forEach(c => {
+      if(c.guide && !wowGuide(c.guide)) bad.push("진단 " + c.key + " → " + c.guide);
+    });
+    WOW_STARTUP_STEPS.forEach(s => {
+      if(s.guide && !wowGuide(s.guide)) bad.push("창업 " + s.key + " → " + s.guide);
+    });
+    /* 고정비 · 위생/인허가에는 맞는 가이드가 없습니다. 붙어 있으면
+       억지로 붙인 것입니다 — 엉뚱한 데로 보내면 다음부터 안 누릅니다. */
+    ["fixed", "legal"].forEach(k => {
+      const it = WOW_CHECK.filter(c => c.key === k)[0];
+      if(it && it.guide) bad.push("진단 " + k + " 에 억지로 붙었습니다");
+    });
+    return bad.length ? bad.join(" / ") : true;`);
+
   /* ── 검색이 새 화면을 아는가 ────────────────────────────
      ⚠️ 화면을 열두 개 만들어 놓고 **사이트 검색이 모르면** 손님에게는
      없는 것과 같습니다. 실제로 가이드가 색인에 통째로 빠져 있었습니다. */
@@ -1215,7 +1257,7 @@ const AUDIT = `(() => {
     return bad.length ? "값이 나갈 수 있는 자리: " + bad.join(" ") : true;`);
 
   console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 +
-              "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 6 +
+              "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 9 +
               "개 · 접수처 없음 " + 5 + "개 · 도구 계산 " + 9 +
               "개 · 머리말 " + 3 + "개 · 고민 가이드 " + 13 + "개 · 관리자 " + 5 + "개 · 검색 " + 4 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }

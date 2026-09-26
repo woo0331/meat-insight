@@ -159,7 +159,11 @@
   .sit-g{ grid-template-columns:1fr; gap:var(--s3); }
   .sit{ grid-template-columns:96px 1fr; grid-template-rows:auto; align-items:stretch; }
   .sit-ph{ aspect-ratio:auto; height:100%; }
-  .sit-ic{ left:auto; right:-14px; bottom:var(--s3); width:32px; height:32px; }
+  /* ⚠️ 아이콘을 사진과 글의 **경계에 걸쳐** 두었더니, 타일에 명암이
+     들어간 뒤로는 어디에 붙은 것인지 모를 덩어리로 보였습니다.
+     사진 안쪽 왼쪽 아래로 넣습니다 — 넓은 화면과 같은 자리입니다. */
+  .sit-ic{ left:8px; right:auto; bottom:8px; width:34px; height:34px;
+    border-radius:11px; }
   .sit-b{ padding:var(--s4) var(--s5); }
   .sit-d{ display:none; }      /* 좁은 화면에서는 한 줄 설명이면 충분합니다 */
   .sit-flat{ grid-template-columns:auto 1fr; min-height:0; align-items:center; }

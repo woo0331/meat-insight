@@ -1412,7 +1412,10 @@
   color:var(--ink2); text-align:center; }
 .tool-more .btn{ margin-left:var(--s4); vertical-align:middle; }
 @media (max-width:640px){
-  .tool-more .btn{ display:flex; margin:var(--s4) 0 0; }
+  /* ⚠️ `display:flex` 로 바꾸지 마세요. 다른 버튼은 전부 inline-flex 인데
+     여기만 flex 로 두면 **문장 속 덩어리**가 되어, 앞뒤 글과 다른 칸에
+     앉습니다. 폭만 100% 로 늘립니다 — 전수 점검이 실제로 잡았습니다. */
+  .tool-more .btn{ width:100%; margin:var(--s4) 0 0; }
 }
 
 /* ── 아이콘 칩을 한 벌로 맞춥니다 ─────────────────────────

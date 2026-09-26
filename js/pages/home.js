@@ -389,13 +389,13 @@ function CheckBand(){
       '<div class="calc-f">'+
         '<label for="cc-sales">월 매출</label>'+
         '<span class="calc-in"><input id="cc-sales" type="text" inputmode="numeric"'+
-          ' placeholder="7,000" oninput="costCalc()" autocomplete="off">'+
+          ' placeholder="예: 7,000" oninput="costCalc()" autocomplete="off">'+
           '<em>만원</em></span>'+
       '</div>'+
       '<div class="calc-f">'+
         '<label for="cc-meat">그중 육류 매입비</label>'+
         '<span class="calc-in"><input id="cc-meat" type="text" inputmode="numeric"'+
-          ' placeholder="2,400" oninput="costCalc()" autocomplete="off">'+
+          ' placeholder="예: 2,400" oninput="costCalc()" autocomplete="off">'+
           '<em>만원</em></span>'+
       '</div>'+
       '<div class="calc-out" id="cc-out">'+CostGauge(null)+'</div>'+

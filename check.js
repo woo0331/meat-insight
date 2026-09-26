@@ -1278,10 +1278,28 @@ const AUDIT = `(() => {
     const a = parts.length > 3 ? parseFloat(parts[3]) : 1;
     return a >= 0.99 || "헤더 배경이 반투명합니다 (" + cs.backgroundColor + ")";`);
 
+  /* ⚠️ **카드가 구간 바탕과 같은 색이면 카드가 아닙니다.** 이 저장소는
+     카드를 그림자가 아니라 **면**으로 구분합니다 — 흰 구간에서는 옅은
+     회색, 회색·색 구간에서는 흰색. 그 목록이 CSS 에 손으로 적혀 있어서
+     새 카드를 만들고 빠뜨리면 조용히 사라집니다. 진단 카드(.ckb-c)가
+     실제로 그랬습니다. 에러도 안 나고 다른 검사도 전부 통과합니다. */
+  await f("카드가 구간 바탕과 같은 색이 아니다", "/", `
+    const sel = ".sit,.cat,.tool,.mycard,.tl-c,.prob,.pcard,.faq-i,.ckb-c";
+    const bad = [];
+    [...document.querySelectorAll(sel)].forEach(el => {
+      let sec = el.closest("section"); if(!sec) return;
+      const cb = getComputedStyle(el).backgroundColor;
+      let sb = getComputedStyle(sec).backgroundColor;
+      /* 구간이 투명이면 그 위(body)의 색이 실제 바탕입니다 */
+      if(sb === "rgba(0, 0, 0, 0)") sb = getComputedStyle(document.body).backgroundColor;
+      if(cb === sb) bad.push((el.className || "?").split(" ")[0]);
+    });
+    return bad.length ? [...new Set(bad)].join(" ") + " 가 구간 바탕과 같은 색입니다" : true;`);
+
   console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 +
               "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 9 +
               "개 · 접수처 없음 " + 5 + "개 · 도구 계산 " + 9 +
-              "개 · 머리말 " + 3 + "개 · 헤더 " + 2 + "개 · 고민 가이드 " + 13 + "개 · 관리자 " + 5 + "개 · 검색 " + 4 + "개");
+              "개 · 머리말 " + 3 + "개 · 헤더·카드 면 " + 3 + "개 · 고민 가이드 " + 13 + "개 · 관리자 " + 5 + "개 · 검색 " + 4 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

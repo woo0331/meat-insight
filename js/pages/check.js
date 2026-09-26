@@ -84,11 +84,11 @@ function CheckAsk(){
         '<div class="chk-num-g">'+
           '<div class="calc-f"><label for="ck-sales">월 매출</label>'+
             '<span class="calc-in"><input id="ck-sales" type="text" inputmode="numeric"'+
-              ' placeholder="7,000" value="'+esc(CHK.sales)+'" autocomplete="off"'+
+              ' placeholder="예: 7,000" value="'+esc(CHK.sales)+'" autocomplete="off"'+
               ' oninput="chkRate()"><em>만원</em></span></div>'+
           '<div class="calc-f"><label for="ck-meat">그중 육류 매입비</label>'+
             '<span class="calc-in"><input id="ck-meat" type="text" inputmode="numeric"'+
-              ' placeholder="2,400" value="'+esc(CHK.meat)+'" autocomplete="off"'+
+              ' placeholder="예: 2,400" value="'+esc(CHK.meat)+'" autocomplete="off"'+
               ' oninput="chkRate()"><em>만원</em></span></div>'+
           '<div class="chk-rate" id="ck-rate">'+ChkRate(null)+'</div>'+
         '</div>'+

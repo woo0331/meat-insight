@@ -182,7 +182,20 @@ function Hero(){
        깔아야 해서 첫 화면이 통째로 어두워집니다.
        ⚠️ 읽어 주는 프로그램에는 필요 없는 그림이라 aria-hidden 입니다 —
        같은 내용을 왼쪽 글이 이미 말합니다. */
-    '<div class="hero-art" aria-hidden="true">'+photoBox("hero")+'</div>'+
+    '<div class="hero-art">'+
+      '<span aria-hidden="true">'+photoBox("hero")+'</span>'+
+      /* 그림 가장자리에 붙는 작은 알약 셋 — 꾸밈이자 **바로 가는 길**입니다.
+         ⚠️ 여기에 실적·금액·후기를 적지 마세요. 값이 없습니다. 적을 수
+         있는 것은 **우리가 실제로 견적을 받아 드리는 일**까지입니다. */
+      '<ul class="hero-tags">'+
+        [["duct","fire","덕트 · 환기"],
+         ["cold","snow","냉장 · 냉동"],
+         ["beef-supply","truck","육류 공급"]].map(function(t,i){
+          return '<li class="ht-'+(i+1)+'">'+
+            '<a href="/request?s='+encodeURIComponent(t[0])+'">'+
+              icon(t[1],17)+'<span>'+esc(t[2])+'</span></a></li>';
+        }).join("")+'</ul>'+
+    '</div>'+
     '</div>'+
   '</section>';
 }

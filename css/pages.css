@@ -457,11 +457,17 @@
 .pg-hero-d .pg-facts b{ color:#fff; }
 .pg-hero-d .pg-facts .ic{ color:var(--burgundy-400); }
 
+/* ⚠️ 어두운 머리에 얹던 상자였습니다(반투명 흰색). 밝은 머리로
+   바뀌었으니 밝은 바탕에서 보이는 색으로 둡니다 — 반투명 흰색을 밝은
+   바탕에 두면 **아무것도 안 보입니다.** */
 .pg-now{ display:grid; grid-template-columns:auto 1fr; gap:var(--s3);
   align-items:start; margin-top:var(--s7); padding:var(--s5) var(--s6);
-  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
-  border-radius:var(--r-lg); font-size:var(--t-base); color:var(--on-dark);
+  background:var(--bg-warm); border:0;
+  border-radius:var(--r-lg); font-size:var(--t-base); color:var(--ink2);
   line-height:1.7; max-width:74ch; }
+.pg-now .ic{ color:var(--burgundy); margin-top:3px; }
+.pg-hero-d .pg-now{ background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.18); color:var(--on-dark); }
 .pg-now .ic{ margin-top:3px; color:#fff; }
 
 /* 뒤로 가는 줄 — ⚠️ 문장 가운데 링크가 아니라 **한 줄짜리 단추**입니다 */

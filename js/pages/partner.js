@@ -35,21 +35,23 @@ function PagePartner(){
     ["연락이 닿는가",                "요청이 갔는데 하루가 지나도 답이 없으면 다음부터 안 보냅니다."]
   ];
 
-  return '<section class="pg-hero pg-hero-d">'+
-    photoBg("partner")+'<div class="hero-sh"></div>'+
-    '<div class="w">'+
+  /* ⚠️ 창업 화면과 같은 이유로 밝은 두 칸입니다 — 아래 주석 참고 */
+  return '<section class="pg-hero"><div class="w pgh">'+
+    '<div class="pgh-t">'+
       '<p class="eyebrow">파트너 모집</p>'+
       '<h1 class="pg-h1">고깃집 · 정육점을 아는<br class="br-m"> 업체를 찾고 있습니다.</h1>'+
       '<p class="pg-lead">광고비를 받고 위에 올려 드리는 곳이 아닙니다. '+
         '조건이 맞는 요청만 골라서 보내 드립니다.</p>'+
       '<div class="row-cta">'+
-        '<a class="btn btn-w btn-lg" href="/partner/apply">파트너 등록하기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-b btn-lg" href="/partner/apply">파트너 등록하기'+icon("arrow",18)+'</a>'+
       '</div>'+
       /* ⚠️ 지금 상태를 먼저 밝힙니다. 이걸 숨기고 등록시키면
          들어와서 아무것도 없는 것을 보는 순간 신뢰를 잃습니다. */
       '<p class="pg-now">'+icon("info",18)+
         '지금은 서비스를 여는 중입니다. 요청 건수나 계약 실적을 아직 말씀드릴 수 없습니다 — '+
         '없는 숫자를 지어내지 않겠습니다. 먼저 등록해 두시면 요청이 열리는 대로 연락드립니다.</p>'+
+    '</div>'+
+    '<figure class="pgh-f">'+photoBox("hero-partner")+'</figure>'+
     '</div></section>'+
 
     '<div class="w pt-pg">'+

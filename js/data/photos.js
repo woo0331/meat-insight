@@ -90,6 +90,10 @@ window.WOW_PHOTOS = {
   "post-grow-1": { src:"/img/post-grow-1.svg", alt:"셔터 내린 가게와 정리한 상자, 점검 목록" },
 
   /* 화면 머리 옆 그림 */
+  "hero-start":    { src:"/img/hero-start.svg",
+    alt:"아직 아무것도 들어오지 않은 빈 점포. 사다리와 도면, 쌓아 둔 상자가 보입니다" },
+  "hero-partner":  { src:"/img/hero-partner.svg",
+    alt:"공구 가방을 옆에 두고 주방에 선 시공 기사. 후드와 냉장고가 보입니다" },
   "hero-check":    { src:"/img/hero-check.svg",
     alt:"점수 고리와 항목별 점검 카드" },
   "hero-partners": { src:"/img/hero-partners.svg",

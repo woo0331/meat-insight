@@ -35,19 +35,24 @@ function PageStart(){
   var total = WOW_STARTUP_STEPS.length;
   var got = WOW_STARTUP_STEPS.filter(function(s){ return done[s.key]; }).length;
 
-  return '<section class="pg-hero pg-hero-d">'+
-      photoBg("sit-start")+'<div class="hero-sh"></div>'+
-      '<div class="w">'+
+  /* ⚠️ 예전에는 어두운 머리에 그림을 **배경으로** 깔았습니다. 지금
+     들어 있는 것은 사진이 아니라 벡터 그림이라, 그렇게 두면 글자 밑에서
+     흐릿한 갈색 덩어리로만 보였습니다. 메인과 같은 **밝은 두 칸**으로
+     맞춥니다 (진단 화면과 같은 .pgh 짜임새). */
+  return '<section class="pg-hero"><div class="w pgh">'+
+      '<div class="pgh-t">'+
       '<p class="eyebrow">창업 프로젝트</p>'+
       '<h1 class="pg-h1">고깃집 하나 차리는 데<br class="br-m"> 알아볼 게 너무 많으니까.</h1>'+
       '<p class="pg-lead">상권부터 오픈까지 '+total+'가지를 순서대로 정리했습니다. '+
         '하신 것을 눌러 두시면 다음에 뭘 해야 하는지가 한눈에 보입니다.</p>'+
       '<div class="row-cta">'+
-        '<a class="btn btn-w btn-lg" href="/start/cost">창업비 정리하기'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-gh btn-lg" href="/sos?q='+
+        '<a class="btn btn-b btn-lg" href="/start/cost">창업비 정리하기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="/sos?q='+
           encodeURIComponent("고깃집을 창업하려는데 뭐부터 해야 할지 모르겠어요.")+
           '">어디서부터 할지 물어보기</a>'+
       '</div>'+
+      '</div>'+
+      '<figure class="pgh-f">'+photoBox("hero-start")+'</figure>'+
     '</div></section>'+
 
     '<div class="w st">'+

@@ -1,14 +1,19 @@
 /* 그림 조각 — 장면들이 같이 씁니다.
    ⚠️ 면(fill)만 씁니다. 선으로 그리면 줄이면 사라지고 키우면 도드라집니다. */
+/* ⚠️ 2026-09-26 — **베이지를 걷어냈습니다.** 벽·바닥·강철이 전부
+   누런 갈색이라 그림이 통째로 탁하고 오래돼 보였습니다. 기준 화면의
+   그림은 **밝은 중성 바탕에 색이 몇 점**입니다.
+   ⚠️ 색은 고기(meat)·브랜드(burg)·나무(wood) **세 가지만** 씁니다.
+   나머지는 전부 회색 단계입니다 — 색을 늘리면 다시 탁해집니다. */
 const C = {
-  paper:"#EDE6DF", paper2:"#E4DAD1", wall:"#DCD1C7", wall2:"#D0C4B9",
-  floor:"#C7BBB0", light:"#F8F4F0", white:"#FFFFFF",
-  ink:"#332C2A",  ink2:"#574D49",  ink3:"#8C807A",
-  steel:"#C6BDB5", steel2:"#ABA098", steel3:"#8E847D",
+  paper:"#F7F8FA", paper2:"#EDEFF4", wall:"#F1F2F6", wall2:"#E5E7EE",
+  floor:"#DCDFE7", light:"#FFFFFF", white:"#FFFFFF",
+  ink:"#2A2A31",  ink2:"#55555F",  ink3:"#9A9AA5",
+  steel:"#CFD3DC", steel2:"#B7BCC8", steel3:"#969CAA",
   burg:"#6B2436", burg2:"#8C3A4C", burg3:"#A95566",
-  meat:"#A94A50", meat2:"#C2707A",
-  wood:"#B98A57", wood2:"#9C7048",
-  glow:"#E8C79A"
+  meat:"#B04A52", meat2:"#CE757E",
+  wood:"#C9955F", wood2:"#A87749",
+  glow:"#F2D9AE"
 };
 
 const r  = (x,y,w,h,f,rd) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}"${rd?` rx="${rd}"`:""}/>`;
@@ -195,9 +200,11 @@ const SHADE =
 
 function svg(w, hh, inner, bg){
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${hh}" width="${w}" height="${hh}" role="img">`+
-    SHADE +
+    /* ⚠️ 한때 그림 **전체**에 빛·그늘·모서리 눌림을 덮었습니다. 입체감
+       대신 **사진에 필터 씌운 것 같은 인위적인 느낌**이 났습니다 —
+       걷어냈습니다. 입체감은 조각마다(쇼케이스 유리, 문짝, 상판 두께)
+       넣습니다. 되살리지 마세요. */
     r(0,0,w,hh, bg || C.paper) + inner +
-    r(0,0,w,hh,"url(#gTop)") + r(0,0,w,hh,"url(#gBot)") + r(0,0,w,hh,"url(#gVig)") +
     `</svg>\n`;
 }
 

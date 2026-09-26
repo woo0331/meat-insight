@@ -1531,9 +1531,9 @@
    ⚠️ 실제 현장 사진이 들어오면 이 결정을 다시 보세요 — 사진은 어두운
    겹 위에 얹는 쪽이 낫습니다.
    ════════════════════════════════════════════════════════════════════ */
-.hero-lt{ background:
-    radial-gradient(1100px 520px at 88% 18%, rgba(107,36,54,.07) 0%, rgba(107,36,54,0) 62%),
-    linear-gradient(170deg, #FFFFFF 0%, var(--bg) 46%, #F5EFEC 100%);
+/* ⚠️ 분홍 기운이 도는 웜 그라디언트였습니다. 바탕이 흰색이 된 뒤로는
+   그 분홍이 그대로 보여서 화면이 누렇고 탁해 보였습니다 — 중성으로. */
+.hero-lt{ background:linear-gradient(180deg, #FFFFFF 0%, #F5F6FA 100%);
   color:var(--ink); }
 /* 밝은 히어로에는 금빛 실선을 두지 않습니다 — 어두운 면 위에서만 보입니다 */
 .hero-lt::after{ display:none; }
@@ -1784,3 +1784,90 @@
   left:0; right:0; top:0; height:1px;
   background:linear-gradient(90deg, rgba(168,131,75,0) 0%,
     rgba(168,131,75,.20) 30%, rgba(168,131,75,.20) 70%, rgba(168,131,75,0) 100%); }
+
+/* ════════════════════════════════════════════════════════════════════
+   장식을 걷어냅니다 (2026-09-26 두 번째 손질)
+
+   ⚠️ 앞서 금빛 실선 · 눌러 찍은 듯한 그라디언트 타일 · 두 겹 그림자 ·
+   그림 위 명암막을 얹었습니다. **고급스러워지기는커녕 꾸민 티가 났고,
+   지시서 30번이 금지한 "AI 스타트업 느낌" 에 가까워졌습니다.**
+
+   기준 화면(아정당)에는 그런 장식이 하나도 없습니다 — 흰 바탕,
+   그림자 없는 옅은 회색 카드, 색은 브랜드색 하나. 그 쪽으로 되돌립니다.
+
+   ⚠️ **이 블록을 지우고 위의 장식을 되살리지 마세요.** 한 번 해 보고
+   아니라고 판단한 것입니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 금빛 장식 전부 제거 */
+.eyebrow::before{ display:none; }
+.eyebrow{ color:var(--burgundy); }
+.lg b::after{ display:none; }
+.hero::after, .dark::after, .final::after,
+.tl-res::after, .cost-sum::after,
+.sec-warm::before, .sec-tint::before{ display:none; }
+.cat-ic, .tl-c-ic, .mycard-ic, .prob-ic, .svc-g-ic, .ab-ic, .faq-ic,
+.chk-q-ic, .rq-g-ic, .how-ic, .sit-ic{ border:0; }
+
+/* 아이콘 타일 — 납작한 한 가지 면. 그라디언트도 안쪽 선도 없습니다 */
+.cat-ic, .tl-c-ic, .mycard-ic, .prob-ic, .svc-g-ic, .rq-g-ic, .how-ic, .faq-ic{
+  background:var(--burgundy-50); color:var(--burgundy);
+  box-shadow:none; }
+.cat:hover .cat-ic, .tl-c:hover .tl-c-ic, .prob:hover .prob-ic,
+.mycard:hover .mycard-ic, .svc-g.on .svc-g-ic, .faq-i[open] .faq-ic{
+  background:var(--burgundy); color:#fff; box-shadow:none; }
+.tool-ic, .done-ic, .st-ph-ic, .sflow-n{
+  background:var(--burgundy); box-shadow:none; }
+.sit-ic{ background:var(--surface); color:var(--burgundy); box-shadow:none; }
+
+/* ── 카드: 그림자가 아니라 **면**으로 구분합니다 ───────────
+   흰 구간에서는 옅은 회색 면, 회색 구간에서는 흰 면. 기준 화면이
+   쓰는 방법이고, 띄우지 않으니 화면이 훨씬 차분합니다. */
+.sit, .cat, .tool, .mycard, .tl-c, .prob, .pcard, .faq-i, .post-ck, .sflow li{
+  background:var(--bg-warm); box-shadow:none; border:0;
+  transition:background-color .18s ease, transform .18s ease; }
+.sec-warm .sit, .sec-warm .cat, .sec-warm .tool, .sec-warm .mycard,
+.sec-warm .tl-c, .sec-warm .prob, .sec-warm .pcard, .sec-warm .faq-i,
+.sec-tint .sit, .sec-tint .cat, .sec-tint .tool, .sec-tint .mycard,
+.sec-tint .tl-c, .sec-tint .prob, .sec-tint .pcard, .sec-tint .faq-i,
+.sec-tone .sit, .sec-tone .cat, .sec-tone .tool{ background:var(--surface); }
+.sit:hover, .cat:hover, .tool:hover, .mycard:hover, .tl-c:hover,
+.prob:hover, .pcard:hover{
+  background:var(--line-soft); box-shadow:none; transform:none; }
+.sec-warm .sit:hover, .sec-warm .cat:hover, .sec-warm .tool:hover,
+.sec-warm .mycard:hover, .sec-warm .tl-c:hover, .sec-warm .prob:hover,
+.sec-warm .pcard:hover, .sec-tint .sit:hover, .sec-tint .cat:hover,
+.sec-tint .tool:hover, .sec-tint .mycard:hover, .sec-tint .tl-c:hover,
+.sec-tint .prob:hover, .sec-tint .pcard:hover,
+.sec-tone .sit:hover, .sec-tone .cat:hover, .sec-tone .tool:hover{
+  background:#FAFAFC; }
+
+/* 알약·칩도 같은 규칙 */
+.pk, .chips li, .hero-lt .ask-chips button{
+  background:var(--bg-warm); border-color:transparent; box-shadow:none; }
+.pk:hover, .hero-lt .ask-chips button:hover{
+  background:var(--line-soft); border-color:transparent;
+  color:var(--burgundy); box-shadow:none; }
+.pk.on{ background:var(--burgundy); color:#fff; }
+
+/* 그림 뒤의 빛 · 그림자 제거 */
+.hero-art::before, .pgh-f::before{ display:none; }
+.hero-art .ph, .pgh-f .ph{ box-shadow:none; }
+.hero-tags a{ box-shadow:0 1px 2px rgba(23,23,28,.04), 0 6px 16px -8px rgba(23,23,28,.18); }
+.hero-tags a:hover{ transform:none;
+  box-shadow:0 1px 2px rgba(23,23,28,.05), 0 8px 20px -8px rgba(23,23,28,.22); }
+.hero-lt .ask{ box-shadow:0 1px 2px rgba(23,23,28,.04), 0 10px 30px -12px rgba(23,23,28,.20); }
+.hero-lt .ask:focus-within{ box-shadow:0 0 0 3px var(--burgundy-50),
+                                       0 10px 30px -12px rgba(23,23,28,.22); }
+
+/* 어두운 패널도 단색으로 — 그라디언트를 걷습니다 */
+.tl-res, .cost-sum{ background:var(--dark); box-shadow:none; }
+.final{ background:var(--dark); }
+.final .hero-sh{ background:linear-gradient(180deg,
+  rgba(23,20,19,.88) 0%, rgba(23,20,19,.76) 100%); }
+
+/* 버튼 — 안쪽 윗선(가짜 입체)을 뺍니다 */
+.btn-b{ box-shadow:none; }
+.btn-b:hover{ box-shadow:none; }
+.fab{ box-shadow:0 2px 6px rgba(23,23,28,.10), 0 12px 28px -10px rgba(23,23,28,.30); }
+.final .btn-w{ box-shadow:none; }

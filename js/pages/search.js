@@ -36,11 +36,40 @@ function searchIndex(){
       hay:[s.name, s.line, s.groupName].join(" ") });
   });
 
+  /* 고민 분류 — ⚠️ **해결방법이 있으면 거기로 보냅니다.** 예전에는 전부
+     `/sos?c=` 로 보냈는데, 그러면 홈에서 "덕트" 를 누르면 가이드가 뜨고
+     검색에서 누르면 폼이 떠서 같은 고민이 두 군데로 갈립니다. 그리고
+     곧장 폼으로 보내는 것은 지시서 3번이 금지한 전화번호부 꼴입니다.
+     ⚠️ 가이드가 있는 분류는 **여기서 한 번만** 넣습니다 — 아래에서 또
+     넣으면 같은 고민이 검색 결과에 두 번 나옵니다. */
   (window.WOW_PROBLEMS || []).forEach(function(p){
-    ix.push({ kind:"prob", icon:p.icon || "chat",
-      title:p.name+" 문제", line:(p.hint||"")+" — 상황을 적어 주시면 정리해 드립니다",
-      to:p.to || ("/sos?c="+encodeURIComponent(p.key)), tag:"물어보기",
-      hay:[p.name, p.hint].join(" ") });
+    var g = (typeof wowGuide === "function") ? wowGuide(p.key) : null;
+
+    if(!g){
+      ix.push({ kind:"prob", icon:p.icon || "chat",
+        title:p.name+" 문제", line:(p.hint||"")+" — 상황을 적어 주시면 정리해 드립니다",
+        to:p.to || ("/sos?c="+encodeURIComponent(p.key)), tag:"물어보기",
+        hay:[p.name, p.hint].join(" ") });
+      return;
+    }
+
+    /* 가이드 본문을 통째로 검색감으로 씁니다. 이게 있어야 "배기구" ·
+       "가스켓" · "권리금" 처럼 **손님이 실제로 치는 말**로 찾아집니다 —
+       분류 이름("덕트")만 넣어 두면 그 말을 모르는 분은 못 찾습니다. */
+    var body = []
+      .concat(g.intro || [])
+      .concat(g.self || [])
+      .concat(g.warn || [])
+      .concat(g.tell || [])
+      .concat(g.ask || [])
+      .concat((g.causes || []).map(function(c){ return c.t + " " + c.d; }))
+      .concat(g.law ? [g.law.t, g.law.d, g.law.where] : [])
+      .join(" ").split("**").join("");
+
+    ix.push({ kind:"guide", icon:p.icon || "chat",
+      title:g.h1, line:g.lead,
+      to:"/problem/"+encodeURIComponent(p.key), tag:"해결방법",
+      hay:[p.name, p.hint, g.h1, g.lead, body].join(" ") });
   });
 
   (window.WOW_STARTUP_STEPS || []).forEach(function(s){
@@ -58,6 +87,7 @@ function searchIndex(){
 
   /* 화면 자체도 찾아집니다 — "견적 비교" 를 치면 그 화면이 나와야 합니다 */
   [["사장님 SOS","무엇이든 적어서 물어보는 곳","/sos","alert"],
+   ["고민별 해결방법","업체를 부르기 전에 확인할 것과 물어볼 것","/problems","list"],
    ["무료 사업진단","8가지로 지금 상태를 정리합니다","/check","gauge"],
    ["창업 프로젝트","20단계를 순서대로","/start","seed"],
    ["창업비 정리표","빠뜨리기 쉬운 13칸","/start/cost","won"],
@@ -83,20 +113,45 @@ function searchIndex(){
 /* 낱말을 다 품고 있으면 맞은 것으로 봅니다.
    ⚠️ 한글은 형태소가 붙습니다 — "덕트가" 로 쳐도 "덕트" 를 찾아야
    하므로, 낱말 자체를 통째로 품는지만 봅니다. */
+/* 몇 번 나오는가. ⚠️ `split(w).length - 1` 로 세면 빈 낱말에서 터집니다 */
+function countIn(hay, w){
+  if(!w) return 0;
+  var n = 0, i = 0;
+  while((i = hay.indexOf(w, i)) >= 0){ n++; i += w.length; if(n >= 8) break; }
+  return n;
+}
+
 function searchRun(q){
   var words = String(q||"").toLowerCase().split(/[\s,·]+/).filter(Boolean);
   if(!words.length) return [];
-  return searchIndex().map(function(r){
+  var hit = searchIndex().map(function(r){
     var score = 0, all = true;
     words.forEach(function(w){
       if(r.hay.indexOf(w) < 0){ all = false; return; }
-      score += 1;
-      if(r.title.toLowerCase().indexOf(w) >= 0) score += 3;   /* 제목에 있으면 위로 */
+      /* ⚠️ "한 번이라도 나오면 1점" 으로 두었더니 **그 말을 스치듯
+         언급한 글**이 정작 그 말이 주제인 화면보다 위로 갔습니다 —
+         "권리금" 을 쳤는데 가게 정리 가이드가 네 번째였습니다.
+         그래서 **몇 번 나오는지**를 셉니다 (많아도 네 번까지만 —
+         길이가 긴 글이 무조건 이기면 그것도 틀립니다). */
+      score += Math.min(4, countIn(r.hay, w));
+      if(String(r.line||"").toLowerCase().indexOf(w) >= 0) score += 2;
+      if(r.title.toLowerCase().indexOf(w) >= 0) score += 6;   /* 제목에 있으면 위로 */
     });
     return all ? { r:r, score:score } : null;
   }).filter(Boolean)
-    .sort(function(a,b){ return b.score - a.score; })
-    .map(function(x){ return x.r; });
+    .sort(function(a,b){ return b.score - a.score; });
+
+  /* ⚠️ **가는 곳이 같은 줄은 하나만 냅니다.** 창업 단계 스무 개가 전부
+     `/start` 로 가서, "덕트" 를 치면 같은 화면으로 가는 줄이 두세 개
+     나란히 떴습니다. 손님 눈에는 그냥 중복입니다 — 점수가 제일 높은
+     것만 남깁니다. */
+  var seen = {}, out = [];
+  hit.forEach(function(x){
+    var k = x.r.to;
+    if(seen[k]) return;
+    seen[k] = 1; out.push(x.r);
+  });
+  return out;
 }
 
 function PageSearch(){

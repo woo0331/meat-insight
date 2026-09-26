@@ -1095,6 +1095,51 @@ const AUDIT = `(() => {
     if(document.querySelector(".qc-from")) return "어느 고민인지 모르는데 띠가 나옵니다";
     return !!document.querySelector(".qc-ask") || "공통 물어볼 것이 사라졌습니다";`);
 
+  /* ── 검색이 새 화면을 아는가 ────────────────────────────
+     ⚠️ 화면을 열두 개 만들어 놓고 **사이트 검색이 모르면** 손님에게는
+     없는 것과 같습니다. 실제로 가이드가 색인에 통째로 빠져 있었습니다. */
+  await f("검색이 가이드를 찾는다", "/search", `
+    const bad = [];
+    for(const g of WOW_GUIDES){
+      const hit = searchRun(g.h1).filter(x => x.to === "/problem/" + g.key);
+      if(!hit.length) bad.push(g.key);
+    }
+    return bad.length ? "못 찾는 가이드: " + bad.join(" ") : true;`);
+
+  /* ⚠️ 손님은 "덕트" 가 아니라 "배기구" 라고 칩니다. 분류 이름만
+     색인에 넣어 두면 그 말을 모르는 분은 영영 못 찾습니다. */
+  await f("검색이 본문 속 낱말로도 가이드를 찾는다", "/search", `
+    const want = [["배기구","duct"], ["가스켓","cold"],
+                  ["정화조","startup"], ["권리금","exit"]];
+    const bad = [];
+    for(const [w, key] of want){
+      const hit = searchRun(w).filter(x => x.to === "/problem/" + key);
+      if(!hit.length) bad.push(w + " → " + key);
+    }
+    return bad.length ? "못 찾음: " + bad.join(" / ") : true;`);
+
+  /* ⚠️ 홈에서 누르면 해결방법, 검색에서 누르면 폼 — 이렇게 갈리면
+     같은 고민이 두 군데로 갑니다 (지시서 3번). */
+  await f("검색 결과가 폼이 아니라 해결방법으로 간다", "/search", `
+    const bad = [];
+    for(const p of WOW_PROBLEMS){
+      if(!wowHasGuide(p.key)) continue;
+      const rows = searchRun(p.name).filter(
+        x => (x.to||"").indexOf("/sos?c=" + p.key) === 0);
+      if(rows.length) bad.push(p.key);
+    }
+    return bad.length ? "아직 폼으로 보냅니다: " + bad.join(" ") : true;`);
+
+  /* ⚠️ 창업 단계 스무 개가 전부 /start 로 가서 같은 줄이 여러 개
+     떴습니다. 손님 눈에는 그냥 중복입니다. */
+  await f("검색 결과에 같은 곳으로 가는 줄이 둘 이상 없다", "/search", `
+    const bad = [];
+    for(const w of ["덕트", "창업", "원가", "냉장"]){
+      const to = searchRun(w).map(x => x.to);
+      if(to.length !== new Set(to).size) bad.push(w);
+    }
+    return bad.length ? "중복이 나오는 말: " + bad.join(" ") : true;`);
+
   /* ── 관리자 작업대 ──────────────────────────────────────
      ⚠️ 여기는 **손님 화면이 아닙니다.** 그래서 PAGES 에 넣지 않습니다 —
      "개발자 말 노출" 이 환경변수 이름을 전부 잡아 오탐이 됩니다.
@@ -1172,7 +1217,7 @@ const AUDIT = `(() => {
   console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 +
               "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 6 +
               "개 · 접수처 없음 " + 5 + "개 · 도구 계산 " + 9 +
-              "개 · 머리말 " + 3 + "개 · 고민 가이드 " + 13 + "개 · 관리자 " + 5 + "개");
+              "개 · 머리말 " + 3 + "개 · 고민 가이드 " + 13 + "개 · 관리자 " + 5 + "개 · 검색 " + 4 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

@@ -35,6 +35,7 @@ function PageHome(){
          HowRow()+
          ToolBand()+        /* 지금 바로 해 볼 수 있는 것 — 우리를 쓸 이유 */
          CheckBand()+
+         BrandBand()+     /* 시안의 빨간 띠 — 버건디를 면으로 쓰는 유일한 자리 */
          StartBand()+
          MatchBand()+
          DiffBand()+        /* 직접 알아보실 때와 무엇이 다른가 */
@@ -152,7 +153,8 @@ function DiffBand(){
    ⚠️ 어두운 면은 버건디가 아니라 차콜(--dark)입니다. 여기까지 브랜드
    색으로 칠하면 화면 절반이 버건디가 되어 정육점 간판이 됩니다. */
 function Hero(){
-  return '<section class="hero hero-lt">'+
+  return '<section class="hero hero-dk">'+
+    photoBg("hero-wide")+'<div class="hero-sh"></div>'+
     '<div class="w hero-grid">'+
     '<div class="hero-in">'+
       '<p class="hero-kicker">사장님은 장사만 하세요.</p>'+
@@ -176,12 +178,35 @@ function Hero(){
       '<ul class="ask-chips">'+(window.WOW_ASK_CHIPS||[]).map(function(c,i){
         return '<li><button type="button" onclick="askFill('+i+')">'+
           esc(c.tag)+'</button></li>'; }).join("")+'</ul>'+
+
+      /* ── 히어로 아래 네 칸 ──────────────────────────────
+         ⚠️ 시안에는 여기에 "3,200+ 사장님 · 1,500+ 검증된 업체 ·
+         만족도 98% · 24시간 응답" 이 있었습니다. **넣지 않았습니다.**
+         지금 그 값이 하나도 없고, 없는 숫자를 적는 것은 지시서 43번
+         위반이자 표시광고법 제3조(거짓·과장 광고)에 걸립니다.
+         ⚠️ 대신 **지금 지킬 수 있는 약속**을 같은 자리에 같은 모양으로
+         둡니다. 실제 값이 생기면 이 네 칸의 내용만 바꾸면 됩니다.
+         ⚠️ "24시간 응답" 처럼 **시간을 약속하는 말도 넣지 마세요** —
+         약관 제8조가 회신 시점을 보장하지 않는다고 적고 있습니다. */
+      '<ul class="hero-facts">'+
+        [["상담료","받지 않습니다"],
+         ["회원가입","하지 않으셔도 됩니다"],
+         ["업체","조건 맞는 곳만 최대 3곳"],
+         ["견적","나란히 놓고 비교"]].map(function(x){
+          return '<li><b>'+esc(x[0])+'</b><span>'+esc(x[1])+'</span></li>';
+        }).join("")+'</ul>'+
     '</div>'+
-    /* 오른쪽 그림 — 배경으로 깔지 않고 **칸 안에** 둡니다. 배경으로
-       깔면 글자 밑에서 흐려져 무엇인지 알아볼 수 없고, 어두운 겹까지
-       깔아야 해서 첫 화면이 통째로 어두워집니다.
-       ⚠️ 읽어 주는 프로그램에는 필요 없는 그림이라 aria-hidden 입니다 —
-       같은 내용을 왼쪽 글이 이미 말합니다. */
+    /* ⚠️ 시안의 오른쪽 떠 있는 카드입니다. 바탕이 어두워졌으므로
+       그림 카드가 아니라 **흰 카드**가 와야 눈에 들어옵니다. */
+    '<aside class="hero-card">'+
+      '<a href="/check">'+
+        '<span class="hc-ic">'+icon("gauge",22)+'</span>'+
+        '<span class="hc-t"><em>지금, 무료로</em><b>사업진단 받아보세요</b></span>'+
+        '<span class="hc-p">육류원가·인건비·고정비까지 여덟 가지로, '+
+          '지금 무엇을 모르고 계신지 정리해 드립니다.</span>'+
+        '<span class="hc-go">3분이면 끝납니다'+icon("arrow",16)+'</span>'+
+      '</a>'+
+    '</aside>'+
     '<div class="hero-art">'+
       '<span aria-hidden="true">'+photoBox("hero")+'</span>'+
       /* 그림 가장자리에 붙는 작은 알약 셋 — 꾸밈이자 **바로 가는 길**입니다.
@@ -292,36 +317,97 @@ function Situations(){
    따라 다르고, 우리에게 그 기준을 뒷받침할 데이터가 없습니다.
    그래서 상태색(--ok/--warn/--bad)도 쓰지 않습니다. */
 function CheckBand(){
-  return '<section class="sec sec-warm"><div class="w band">'+
-    '<div class="band-t">'+
+  return '<section class="sec sec-warm"><div class="w ckb">'+
+    /* ① 왼쪽 — 왜 해야 하는가 */
+    '<div class="ckb-t">'+
       '<p class="eyebrow">무료 사업진단</p>'+
-      '<h2>사장님, 지금 제대로<br class="br-m"> 남기고 계신가요?</h2>'+
-      '<p class="lead">매출이 높다고 남는 건 아닙니다. 두 칸만 적어 보세요. '+
-        '지금 육류원가가 매출의 몇 퍼센트인지 바로 보여 드립니다.</p>'+
+      '<h2>사장님, 지금 장사<br class="br-m"> 제대로 남기고 계신가요?</h2>'+
+      '<p class="lead">매출이 높아도 비용이 새고 있다면 실제로 남는 돈은 '+
+        '달라집니다.</p>'+
       '<div class="row-cta">'+
-        '<a class="btn btn-b btn-lg" href="/check">8가지로 제대로 진단하기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-b btn-lg" href="/check">무료로 사업진단 하기'+icon("arrow",18)+'</a>'+
       '</div>'+
-      '<p class="note">3분이면 끝납니다. 가입하지 않으셔도 됩니다.</p>'+
+      '<p class="note">회원가입 없이 3분이면 됩니다.</p>'+
     '</div>'+
 
-    '<div class="band-f">'+
-      '<div class="calc">'+
-        '<div class="calc-f">'+
-          '<label for="cc-sales">월 매출</label>'+
-          '<span class="calc-in"><input id="cc-sales" type="text" inputmode="numeric"'+
-            ' placeholder="7,000" oninput="costCalc()" autocomplete="off">'+
-            '<em>만원</em></span>'+
-        '</div>'+
-        '<div class="calc-f">'+
-          '<label for="cc-meat">그중 육류 매입비</label>'+
-          '<span class="calc-in"><input id="cc-meat" type="text" inputmode="numeric"'+
-            ' placeholder="2,400" oninput="costCalc()" autocomplete="off">'+
-            '<em>만원</em></span>'+
-        '</div>'+
-        '<div class="calc-out" id="cc-out">'+CostGauge(null)+'</div>'+
+    /* ② 가운데 — 두 칸만 적으면 원가율이 나옵니다.
+       ⚠️ 시안에는 "직원 수" 칸도 있었지만 뺐습니다. 직원 수만으로는
+       **아무것도 계산할 수 없습니다** — 묻고 안 쓰면 사장님 시간을
+       버리게 하는 짓입니다. 인건비는 진단 8항목에서 묻습니다. */
+    '<div class="ckb-c">'+
+      '<h3>내 가게 간단 입력</h3>'+
+      '<div class="calc-f">'+
+        '<label for="cc-sales">월 매출</label>'+
+        '<span class="calc-in"><input id="cc-sales" type="text" inputmode="numeric"'+
+          ' placeholder="7,000" oninput="costCalc()" autocomplete="off">'+
+          '<em>만원</em></span>'+
       '</div>'+
+      '<div class="calc-f">'+
+        '<label for="cc-meat">그중 육류 매입비</label>'+
+        '<span class="calc-in"><input id="cc-meat" type="text" inputmode="numeric"'+
+          ' placeholder="2,400" oninput="costCalc()" autocomplete="off">'+
+          '<em>만원</em></span>'+
+      '</div>'+
+      '<div class="calc-out" id="cc-out">'+CostGauge(null)+'</div>'+
     '</div>'+
+
+    /* ③ 오른쪽 — 진단 결과.
+       ⚠️ 시안에는 "78 / 100 · 양호 · 개선가능" 이 미리 찍혀 있었습니다.
+       **넣지 않았습니다.** 아무것도 안 하신 분에게 점수를 보여 주면 그게
+       지어낸 숫자이고, "양호/개선가능" 은 업종·평수별 기준값이 있어야
+       하는 판정인데 우리에게 그 기준이 없습니다 (절대 규칙 1).
+       대신 **진단을 마치신 분에게는 본인 점수를 그대로** 보여 줍니다 —
+       이 브라우저에 남아 있는 값이라 지어낼 여지가 없습니다. */
+    '<div class="ckb-r" id="ckb-r">'+CheckScore()+'</div>'+
   '</div></section>';
+}
+
+/* 이 브라우저에 진단 결과가 있으면 그것을, 없으면 무엇을 하는 곳인지 */
+function CheckScore(){
+  var last = (typeof chkLast === "function") ? chkLast() : null;
+  if(!last){
+    return '<h3>우리 가게 진단 결과</h3>'+
+      '<div class="ring ring-empty">'+HomeRing(null)+'</div>'+
+      '<p class="ckb-r-p">아직 진단을 안 하셨습니다. 여덟 가지를 고르시면 '+
+        '<b>무엇을 파악하고 계시고 무엇이 비어 있는지</b>가 여기 남습니다.</p>'+
+      '<a class="btn btn-o btn-full" href="/check">진단 시작하기'+icon("arrow",16)+'</a>';
+  }
+  var band = wowCheckBand(last.score);
+  var weak = (last.weak || []).map(function(k){
+    var it = WOW_CHECK.filter(function(x){ return x.key === k; })[0];
+    return it ? it.name : null; }).filter(Boolean);
+  var strong = WOW_CHECK.filter(function(it){
+    return (last.weak || []).indexOf(it.key) < 0; }).map(function(it){ return it.name; });
+  return '<h3>우리 가게 진단 결과</h3>'+
+    '<div class="ring ring-'+esc(band.tone)+'">'+HomeRing(last.score)+'</div>'+
+    '<ul class="ckb-r-l">'+
+      strong.slice(0,3).map(function(n){
+        return '<li><i class="dot dot-ok"></i>'+esc(n)+'</li>'; }).join("")+
+      weak.slice(0,3).map(function(n){
+        return '<li><i class="dot dot-bad"></i>'+esc(n)+'</li>'; }).join("")+
+    '</ul>'+
+    '<p class="ckb-r-p">'+esc(band.line || "")+'</p>'+
+    '<a class="btn btn-b btn-full" href="/check">결과 다시 보기'+icon("arrow",16)+'</a>';
+}
+
+/* 점수 고리 — 진단 결과 화면과 같은 모양입니다.
+   ⚠️ 이름이 `ScoreRing` 이었는데 **js/pages/check.js 에 같은 이름이
+   이미 있었습니다.** 그 파일이 나중에 로드되어 이쪽을 덮어썼고, 메인이
+   통째로 안 그려졌습니다(TypeError). 전역 함수는 파일이 달라도 이름이
+   하나뿐입니다 — 메인 전용 함수는 `Home*` 을 붙입니다. */
+function HomeRing(score){
+  var R = 52, C = 2 * Math.PI * R;
+  var p = (score == null) ? 0 : Math.max(0, Math.min(100, score));
+  return '<svg viewBox="0 0 128 128" aria-hidden="true">'+
+      '<circle class="ring-t" cx="64" cy="64" r="'+R+'"/>'+
+      '<circle class="ring-v" cx="64" cy="64" r="'+R+'"'+
+        ' stroke-dasharray="'+C.toFixed(1)+'"'+
+        ' stroke-dashoffset="'+(C*(1-p/100)).toFixed(1)+'"/>'+
+    '</svg>'+
+    '<div class="ring-n">'+
+      (score == null ? '<b>—</b><em>아직 없음</em>'
+                     : '<b>'+score+'</b><em>/ 100</em>')+
+    '</div>';
 }
 
 /* 동그란 눈금. pct 가 null 이면 빈 눈금과 안내만 보여 줍니다. */
@@ -362,6 +448,23 @@ window.costCalc = function(){
   out.innerHTML = (sales > 0 && meat > 0) ? CostGauge(meat / sales * 100)
                                           : CostGauge(null);
 };
+
+/* ── 04.5 브랜드 띠 (시안의 빨간 줄) ───────────────────────
+   ⚠️ 네 칸에 **지킬 수 있는 말만** 적습니다. 시안에 있던 "실제 사장님
+   후기" 는 후기가 한 건도 없어서 뺐습니다 — 없는 것을 있다고 적으면
+   표시광고법 제3조(거짓·과장 광고)입니다. 후기가 쌓이면 그때 넣습니다. */
+function BrandBand(){
+  return '<section class="bband"><div class="w bband-in">'+
+    '<h2>좋은 고기, 좋은 사장님,<br class="br-m"> 더 좋은 매장을 만듭니다.</h2>'+
+    '<ul class="bband-l">'+
+      [["badge","조건 맞는 곳만"],
+       ["won","상담·견적 무료"],
+       ["scale","견적은 나란히"],
+       ["seed","창업부터 정리까지"]].map(function(x){
+        return '<li>'+icon(x[0],26)+'<b>'+esc(x[1])+'</b></li>'; }).join("")+
+    '</ul>'+
+  '</div></section>';
+}
 
 /* ── 05 창업 프로젝트 (지시서 9번) ─────────────────────────
    20단계를 다 늘어놓으면 숨이 막히므로, **다섯 마디**로 묶어 보여 주고

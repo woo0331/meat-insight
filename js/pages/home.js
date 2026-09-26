@@ -30,17 +30,25 @@ function PageHome(){
      여기서 시작합니다 — 그러니 스크롤을 한참 내려야 나오면 안 됩니다.
      ⚠️ 여기에 **업체나 서비스 카테고리를 올리지 마세요.** 그건 전화
      번호부가 됩니다. 올라와도 되는 것은 **손님의 상황**까지입니다. */
+  /* ⚠️ **순서가 곧 손님이 하실 순서입니다.**
+       상황 고르기 → 고민 고르기 → 어떤 곳인가 → 지금 해 볼 것(진단·
+       계산기·창업) → 그다음에 비로소 업체·견적 이야기.
+     고민을 아래로 내려 두었더니 상황 카드와 고민 카드 사이에 진단 ·
+     계산기 · 창업 · 매칭이 통째로 끼어 있었습니다. 둘은 **같은 질문의
+     굵기만 다른 것**이라 붙어 있어야 합니다.
+     ⚠️ 업체 카테고리(CatBand)를 위로 올리지 마세요. 첫 화면 가까이에
+     업체 목록 차림새가 오면 그 순간 전화번호부입니다 (지시서 3번). */
   return Hero()+
-         Situations()+
+         Situations()+      /* 굵게 — 다섯 상황 */
+         WorryBand()+       /* 가늘게 — 열둘 중 여섯 고민 */
          HowRow()+
-         ToolBand()+        /* 지금 바로 해 볼 수 있는 것 — 우리를 쓸 이유 */
          CheckBand()+
-         BrandBand()+     /* 시안의 빨간 띠 — 버건디를 면으로 쓰는 유일한 자리 */
+         ToolBand()+        /* 지금 바로 해 볼 수 있는 것 — 우리를 쓸 이유 */
          StartBand()+
+         BrandBand()+       /* 화면 한가운데의 딥 버건디 — 장면이 바뀝니다 */
          MatchBand()+
-         DiffBand()+        /* 직접 알아보실 때와 무엇이 다른가 */
          CatBand()+
-         WorryBand()+
+         DiffBand()+        /* 직접 알아보실 때와 무엇이 다른가 */
          LiveBand()+        /* 실제 요청 현황 — 데이터 있을 때만 */
          StoryBand()+       /* 사장님 스토리 — 실제 사례 있을 때만 */
          LabBand()+         /* 사장님 연구소 — 글 있을 때만 */
@@ -75,7 +83,7 @@ function ToolBand(){
            "하루로 나누면 얼마인지가 나옵니다.",
       cta:"계산해 보기" }
   ];
-  return '<section class="sec"><div class="w">'+
+  return '<section class="sec sec-warm"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">가입 없이, 지금</p>'+
       '<h2>연결해 드리기 전에<br class="br-m"> 먼저 쓸모가 있어야 한다고 봅니다.</h2>'+
       '<p>상담을 신청하셔야 뭔가 알려 드리는 곳이 아닙니다. '+
@@ -121,7 +129,7 @@ function DiffBand(){
      "시간이 듭니다. 잘못 고르면 다시 공사합니다.",
      "물어보시는 것과 업체를 찾아 드리는 것은 <b>무료</b>입니다."]
   ];
-  return '<section class="sec sec-warm"><div class="w">'+
+  return '<section class="sec sec-tint"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">무엇이 다른가</p>'+
       '<h2>혼자 알아보시면<br class="br-m"> 여기서 시간이 갑니다.</h2>'+
       '<p>업체를 많이 아는 것이 아니라, <b>무엇을 물어봐야 하는지를 아는 것</b>이 '+
@@ -323,9 +331,15 @@ function Situations(){
   return '<section class="sec"><div class="w">'+
     '<div class="sec-hd"><h2>지금 어떤 상황이세요?</h2>'+
       '<p>사장님의 상황에 맞는 해결방법부터 찾아드립니다.</p></div>'+
-    '<div class="sit-g">'+WOW_SITUATIONS.map(function(s){
+    /* ⚠️ **앞의 둘을 크게 냅니다 (벤토).** 다섯 장을 똑같은 크기로
+       늘어놓으면 무엇부터 봐야 할지가 없어서 그냥 훑게 됩니다.
+       창업 준비 · 운영 중이 제일 많이 눌리는 자리라 그 둘을 키웁니다.
+       ⚠️ 크기만 다를 뿐 **내용은 같습니다** — 큰 칸에만 있는 정보를
+       만들지 마세요. 좁은 화면에서는 다섯이 다시 같은 크기가 됩니다. */
+    '<div class="sit-g">'+WOW_SITUATIONS.map(function(s, i){
       var ph = hasPhoto("sit-"+s.key);
-      return '<a class="sit '+tnClass(s.tone)+(ph?'':' sit-flat')+'" href="'+esc(s.to)+
+      return '<a class="sit '+tnClass(s.tone)+(ph?'':' sit-flat')+
+        (i < 2 ? ' sit-lg' : '')+'" href="'+esc(s.to)+
         (s.ask ? '?q='+encodeURIComponent(s.ask) : '')+'">'+
         (ph ? '<span class="sit-ph">'+photoBox("sit-"+s.key)+
               '<span class="sit-ic">'+icon(s.icon,22)+'</span></span>' : '')+
@@ -353,7 +367,7 @@ function Situations(){
    따라 다르고, 우리에게 그 기준을 뒷받침할 데이터가 없습니다.
    그래서 상태색(--ok/--warn/--bad)도 쓰지 않습니다. */
 function CheckBand(){
-  return '<section class="sec sec-warm"><div class="w ckb">'+
+  return '<section class="sec"><div class="w ckb">'+
     /* ① 왼쪽 — 왜 해야 하는가 */
     '<div class="ckb-t">'+
       '<p class="eyebrow">무료 사업진단</p>'+
@@ -491,21 +505,34 @@ window.costCalc = function(){
    표시광고법 제3조(거짓·과장 광고)입니다. 후기가 쌓이면 그때 넣습니다. */
 function BrandBand(){
   return '<section class="bband">'+
-    /* 시안의 왼쪽 고기 사진. ⚠️ 사진이 없으면 **빈 액자를 두지 않고**
-       그 칸을 아예 빼고 글이 왼쪽 끝부터 시작합니다 (절대 규칙 2). */
-    (hasPhoto("band-meat")
-      ? '<div class="bband-ph" aria-hidden="true">'+photoBox("band-meat")+'</div>' : '')+
-    '<div class="w bband-in'+(hasPhoto("band-meat")?' bband-ph-on':'')+'">'+
-    '<h2>좋은 고기, 좋은 사장님,<br class="br-m"> 더 좋은 매장을 만듭니다.</h2>'+
+    '<div class="w bband-in">'+
+    '<div class="bband-t">'+
+      '<p class="bband-k">ABOUTMEAT</p>'+
+      '<h2>좋은 고기, 좋은 사장님,<br class="br-m"> 더 좋은 매장을 만듭니다.</h2>'+
+      '<p class="bband-p">고기 장사는 아는 사람에게 물어야 빨리 끝납니다. '+
+        '무엇이 문제인지 정리하는 것부터, 업체에 무엇을 물어볼지, '+
+        '받은 견적을 어떻게 견줄지까지 같이 봅니다.</p>'+
+      '<div class="bband-cta">'+
+        '<a class="btn btn-w" href="/sos">무료로 물어보기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-gh" href="/problems">고민별 해결방법 보기</a>'+
+      '</div>'+
+    '</div>'+
+    /* ⚠️ 여기에 업체 수 · 계약 수 · 만족도를 적지 마세요. 그 값이
+       하나도 없습니다 (절대 규칙 1 · 표시광고법 제3조). 적을 수 있는
+       것은 **우리가 실제로 하는 일**까지입니다. */
     '<ul class="bband-l">'+
-      [["badge","조건 맞는 곳만"],
-       ["won","상담·견적 무료"],
-       ["scale","견적은 나란히"],
-       ["seed","창업부터 정리까지"]].map(function(x){
-        return '<li>'+icon(x[0],26)+'<b>'+esc(x[1])+'</b></li>'; }).join("")+
+      [["badge","조건 맞는 곳만","고깃집 · 정육점을 해 본 업체인지 먼저 봅니다"],
+       ["won","상담 · 견적 무료","물어보는 데 돈을 받지 않습니다"],
+       ["scale","견적은 나란히","포함 범위까지 같이 놓고 견줍니다"],
+       ["seed","창업부터 정리까지","여는 것도 닫는 것도 같이 봅니다"]]
+      .map(function(x){
+        return '<li><span class="bband-ic">'+icon(x[0],22)+'</span>'+
+          '<span class="bband-b"><b>'+esc(x[1])+'</b>'+
+          '<span>'+esc(x[2])+'</span></span></li>'; }).join("")+
     '</ul>'+
   '</div></section>';
 }
+
 
 /* ── 05 창업 프로젝트 (지시서 9번) ─────────────────────────
    20단계를 다 늘어놓으면 숨이 막히므로, **다섯 마디**로 묶어 보여 주고
@@ -578,7 +605,7 @@ function MatchBand(){
 function CatBand(){
   var ic = { meat:"truck", space:"store", equip:"tool",
              ops:"clock", grow:"up", pro:"shield" };
-  return '<section class="sec sec-tint"><div class="w">'+
+  return '<section class="sec sec-warm"><div class="w">'+
     '<div class="sec-hd"><h2>고기 장사에 필요한 모든 것</h2>'+
       '<p>고기부터 덕트 · 장비 · 세무까지. 어디에 물어야 할지 모를 때 '+
         '여기서 시작하시면 됩니다.</p>'+
@@ -614,7 +641,7 @@ function WorryBand(){
      ⚠️ 왼쪽에 세워 두던 세로 그림은 뺐습니다. 칸을 반으로 줄여서
      고민 여섯 개가 두 줄로 눌려 있었습니다. */
   var six = WOW_PROBLEMS.slice(0, 6);
-  return '<section class="sec"><div class="w">'+
+  return '<section class="sec sec-warm"><div class="w">'+
     '<div class="sec-hd" id="worry"><h2>요즘 어떤 고민이 있으세요?</h2>'+
       '<p>고르시면 <b>업체를 부르기 전에 확인할 것</b>부터 알려 드립니다. '+
         '여기 없는 것도 그냥 적어 주세요.</p>'+
@@ -686,7 +713,7 @@ function LabBand(){
      창업비·기간을 적을 수 없으니(지시서 43번), 같은 **틀**에 지금 있는
      진짜 내용(연구소 글 세 편)을 놓습니다. 실제 사례가 생기면
      WOW_STORIES 가 채워지고 StoryBand 가 이 자리 위에 나타납니다. */
-  return '<section class="sec sec-warm"><div class="w">'+
+  return '<section class="sec"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">사장님 연구소</p>'+
       '<h2>알고 하면 덜 씁니다</h2>'+
       '<p>고기 장사를 하면서 실제로 막히는 것들을 정리했습니다. '+
@@ -715,7 +742,7 @@ function LabBand(){
 function FaqBand(){
   var qs = window.WOW_FAQ || [];
   if(!qs.length) return "";
-  return '<section class="sec sec-tint"><div class="w">'+
+  return '<section class="sec sec-warm"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">자주 묻는 것</p>'+
       '<h2>물어보기 전에 궁금하신 것</h2></div>'+
     '<div class="faq">'+qs.map(function(q, i){
@@ -738,7 +765,7 @@ function PartnerBand(){
     ["견적을 냅니다",     "가격 · 일정 · A/S 를 적어 보내시면 됩니다."],
     ["직접 이야기합니다", "고객이 고르면 바로 연결됩니다."]
   ];
-  return '<section class="sec sec-warm"><div class="w'+(ph?' band band-flip':' pt-one')+'">'+
+  return '<section class="sec sec-tint"><div class="w'+(ph?' band band-flip':' pt-one')+'">'+
     '<div class="band-t">'+
       '<p class="eyebrow">파트너 모집</p>'+
       '<h2>고깃집 · 정육점을 아는<br class="br-m"> 업체를 찾고 있습니다.</h2>'+

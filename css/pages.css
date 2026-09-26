@@ -135,8 +135,29 @@
   .how-i:last-child{ border-bottom:0; }
 }
 
-/* ══ 상황 다섯 ════════════════════════════════════════════ */
-.sit-g{ display:grid; grid-template-columns:repeat(5,1fr); gap:var(--s4); }
+/* ══ 상황 다섯 — 벤토 ═════════════════════════════════════
+   ⚠️ 다섯을 똑같은 폭으로 늘어놓으면 **고르는 게 아니라 훑게** 됩니다.
+   앞의 둘(창업 준비 · 운영 중)을 크게 내서 눈이 갈 곳을 만듭니다.
+   ⚠️ 큰 칸에만 있는 정보를 만들지 마세요 — 크기만 다르고 내용은
+   같아야 합니다. 안 그러면 좁은 화면에서 그 정보가 사라집니다. */
+.sit-g{ display:grid; grid-template-columns:repeat(6,1fr); gap:var(--s4); }
+.sit-lg{ grid-column:span 3; }
+.sit-g > .sit:nth-child(n+3){ grid-column:span 2; }
+/* ⚠️ 큰 칸은 **가로짜임**입니다 (사진 왼쪽 · 글 오른쪽). 세로로 두고
+   사진만 키웠더니 카드 하나가 570px 이 되어 상황 다섯을 보는 데만
+   화면 한 개 반이 걸렸습니다. 납작하게 잘라 봤더니 이번에는 사람 발이
+   잘렸습니다 — 그림은 세로로 그려져 있어서 세로를 깎으면 안 됩니다.
+   가로짜임이면 비율을 안 건드리고도 카드가 낮아집니다. */
+.sit-lg{ grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);
+  grid-template-rows:1fr; align-items:stretch; }
+.sit-lg .sit-ph{ aspect-ratio:auto; height:100%; min-height:260px; }
+.sit-lg .sit-b{ align-content:center; padding:var(--s7); }
+/* ⚠️ 가운데 정렬한 칸에 **절대 위치 화살표**를 그대로 두면 설명줄
+   위에 겹쳐 앉습니다. 큰 칸에서는 화살표를 글 흐름 안에 둡니다.
+   (`.sit-b` 한 겹짜리 규칙보다 진해서 뒤에 오는 것과 상관없이 이깁니다) */
+.sit-lg .sit-go{ position:static; margin-top:var(--s3); }
+.sit-lg .sit-b, .sit-lg.sit-flat .sit-b{ padding-bottom:var(--s7); }
+.sit-lg .sit-b > b{ font-size:var(--t-2xl); letter-spacing:-.025em; }
 .sit{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
   overflow:hidden; display:grid; grid-template-rows:auto 1fr; align-content:start;
   transition:border-color .2s ease, box-shadow .28s cubic-bezier(.2,.7,.3,1),
@@ -156,7 +177,16 @@
 .sit-b > b{ font-size:var(--t-xl); }
 .sit-l{ font-size:var(--t-base); color:var(--ink); font-weight:600; }
 .sit-d{ font-size:var(--t-sm); color:var(--ink2); line-height:1.7; }
-@media (max-width:1040px){ .sit-g{ grid-template-columns:repeat(3,1fr); } }
+/* ⚠️ 좁아지면 벤토를 풉니다. `.sit-lg` 는 `.sit` 보다 진한 선택자라
+   `grid-column:auto` 를 **같은 진하기 이상**으로 다시 써야 풀립니다. */
+@media (max-width:1040px){
+  .sit-g{ grid-template-columns:repeat(3,1fr); }
+  .sit-g > .sit:nth-child(n){ grid-column:auto; }
+  .sit-g > .sit-lg{ grid-template-columns:1fr; grid-template-rows:auto 1fr; }
+  .sit-lg .sit-ph{ aspect-ratio:4/3; height:auto; min-height:0; }
+  .sit-lg .sit-b{ align-content:start; padding:var(--s5); }
+  .sit-lg .sit-b > b{ font-size:var(--t-xl); letter-spacing:-.02em; }
+}
 @media (max-width:640px){
   /* 폰에서는 사진을 왼쪽에 작게 두고 글을 오른쪽에 둡니다 —
      다섯 장을 세로로 쌓으면 상황을 고르기까지 한참 내려야 합니다. */
@@ -1674,7 +1704,11 @@
              0 6px 14px -4px rgba(107,36,54,.38); }
 
 /* ── 카드: 접지 그림자 + 공중 그림자 ───────────────────── */
-.sit, .cat, .tool, .mycard, .tl-c, .prob, .pcard, .faq-i, .post-ck, .sflow li{
+/* ⚠️ 새 카드를 만들면 **이 목록에 넣으세요.** 빠뜨리면 흰 구간에서
+   흰 카드가 되어 카드인지 아닌지 알 수 없게 됩니다 — 에러도 안 나고
+   전수 점검도 통과합니다. 진단 카드(.ckb-c)가 실제로 그랬습니다. */
+.sit, .cat, .tool, .mycard, .tl-c, .prob, .pcard, .faq-i, .post-ck, .sflow li,
+.ckb-c{
   box-shadow:0 1px 2px rgba(58,44,36,.05),
              0 12px 26px -10px rgba(58,44,36,.16); }
 .sit:hover, .cat:hover, .tool:hover, .mycard:hover, .tl-c:hover,
@@ -1761,13 +1795,18 @@
 /* ── 카드: 그림자가 아니라 **면**으로 구분합니다 ───────────
    흰 구간에서는 옅은 회색 면, 회색 구간에서는 흰 면. 기준 화면이
    쓰는 방법이고, 띄우지 않으니 화면이 훨씬 차분합니다. */
-.sit, .cat, .tool, .mycard, .tl-c, .prob, .pcard, .faq-i, .post-ck, .sflow li{
+/* ⚠️ 새 카드를 만들면 **이 목록에 넣으세요.** 빠뜨리면 흰 구간에서
+   흰 카드가 되어 카드인지 아닌지 알 수 없게 됩니다 — 에러도 안 나고
+   전수 점검도 통과합니다. 진단 카드(.ckb-c)가 실제로 그랬습니다. */
+.sit, .cat, .tool, .mycard, .tl-c, .prob, .pcard, .faq-i, .post-ck, .sflow li,
+.ckb-c{
   background:var(--bg-warm); box-shadow:none; border:0;
   transition:background-color .18s ease, transform .18s ease; }
 .sec-warm .sit, .sec-warm .cat, .sec-warm .tool, .sec-warm .mycard,
 .sec-warm .tl-c, .sec-warm .prob, .sec-warm .pcard, .sec-warm .faq-i,
 .sec-tint .sit, .sec-tint .cat, .sec-tint .tool, .sec-tint .mycard,
 .sec-tint .tl-c, .sec-tint .prob, .sec-tint .pcard, .sec-tint .faq-i,
+.sec-warm .ckb-c, .sec-tint .ckb-c, .sec-tone .ckb-c,
 .sec-tone .sit, .sec-tone .cat, .sec-tone .tool{ background:var(--surface); }
 .sit:hover, .cat:hover, .tool:hover, .mycard:hover, .tl-c:hover,
 .prob:hover, .pcard:hover{
@@ -1983,23 +2022,50 @@
 @media (max-width:700px){ .ckb{ grid-template-columns:1fr; } }
 
 /* ════════════════════════════════════════════════════════════════════
-   브랜드 띠 — 시안의 빨간 줄
-   ⚠️ 이 띠가 **버건디를 면으로 쓰는 유일한 자리**입니다. 여기서 더
-   늘리지 마세요 (지시서 30번).
+   화면 한가운데의 딥 버건디 구간 (지시서 §15)
+
+   ⚠️ **이 한 군데만 브랜드색을 넓게 씁니다.** 스크롤하다 장면이 한 번
+   바뀌어야 페이지가 끝없이 이어지는 느낌을 벗습니다. 여기서 더
+   늘리면 지시서 30번이 금지한 정육점 간판이 됩니다.
+   ⚠️ 히어로가 밝아졌으므로 여기가 **첫 어두운 면**입니다. 마지막
+   CTA(차콜)와는 색이 달라야 "또 같은 띠" 로 읽히지 않습니다.
+   ⚠️ 왼쪽에 깔던 벡터 그림은 뺐습니다 — 브랜드색 위에서 형체가
+   안 보이고 얼룩처럼만 보였습니다.
    ⚠️ 시안의 네 칸에 "실제 사장님 후기" 가 있었습니다. 후기가 한 건도
    없어서 뺐습니다 — 없는 것을 있다고 적으면 표시광고법 제3조입니다.
    ════════════════════════════════════════════════════════════════════ */
-.bband{ background:var(--burgundy); color:#fff; padding:var(--s8) 0; }
-.bband-in{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);
-  gap:var(--s8); align-items:center; }
-.bband h2{ font-size:var(--t-2xl); color:#fff; line-height:1.4; }
-.bband-l{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s5); }
-.bband-l li{ display:grid; justify-items:center; gap:var(--s3); text-align:center; }
-.bband-l .ic{ color:#fff; opacity:.9; }
-.bband-l b{ font-size:var(--t-sm); font-weight:700; color:#fff; }
-@media (max-width:900px){
-  .bband-in{ grid-template-columns:1fr; gap:var(--s6); }
-  .bband-l{ grid-template-columns:1fr 1fr; gap:var(--s5) var(--s4); }
+.bband{ background:linear-gradient(152deg, var(--burg-deep) 0%,
+    var(--burg-deep-2) 58%, #4E0F1C 100%);
+  color:#fff; padding:var(--s10) 0; }
+.bband-in{ display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+  gap:var(--s9); align-items:center; }
+.bband-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.14em;
+  color:var(--burgundy-400); margin-bottom:var(--s4); }
+.bband h2{ font-size:var(--t-3xl); color:#fff;
+  line-height:var(--lh-tight); letter-spacing:var(--tr-head); }
+.bband-p{ margin-top:var(--s5); font-size:var(--t-lg); line-height:1.75;
+  color:rgba(255,255,255,.80); max-width:46ch; }
+.bband-cta{ display:flex; flex-wrap:wrap; gap:var(--s3); margin-top:var(--s7); }
+
+.bband-l{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s4); }
+/* ⚠️ 칸 둘에 항목 둘 — grid 칸에 글과 태그를 섞지 않습니다 */
+.bband-l li{ display:grid; grid-template-columns:auto 1fr; gap:var(--s4);
+  align-items:start; padding:var(--s5);
+  background:rgba(255,255,255,.07); border-radius:var(--r-lg); }
+.bband-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:42px; height:42px; border-radius:14px;
+  background:rgba(255,255,255,.12); color:#fff; }
+.bband-b{ display:grid; gap:4px; }
+.bband-b b{ font-size:var(--t-md); font-weight:800; color:#fff; }
+.bband-b span{ font-size:var(--t-sm); line-height:1.65;
+  color:rgba(255,255,255,.66); }
+@media (max-width:980px){
+  .bband-in{ grid-template-columns:1fr; gap:var(--s7); }
+  .bband{ padding:var(--s9) 0; }
+}
+@media (max-width:560px){
+  .bband-l{ grid-template-columns:1fr; }
+  .bband-p{ font-size:var(--t-base); }
 }
 
 /* 고민 여섯 — 시안대로 한 줄에 셋 */
@@ -2058,20 +2124,6 @@
   .sit-go{ display:none; }
   /* 화살표를 숨겼으면 비워 둔 자리도 같이 거둡니다 */
   .sit-b, .sit-flat .sit-b{ padding-bottom:var(--s4); }
-}
-
-/* 빨간 띠의 왼쪽 사진 */
-.bband{ position:relative; overflow:hidden; }
-.bband-ph{ position:absolute; left:0; top:0; bottom:0; width:26%; }
-.bband-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0; }
-/* ⚠️ 사진 위로 브랜드색이 번지게 해야 글과 사진이 한 덩어리로 읽힙니다 */
-.bband-ph::after{ content:""; position:absolute; inset:0;
-  background:linear-gradient(90deg, rgba(107,36,54,.46) 0%,
-    rgba(107,36,54,.82) 58%, var(--burgundy) 100%); }
-.bband-ph-on{ padding-left:22%; }
-@media (max-width:900px){
-  .bband-ph{ display:none; }
-  .bband-ph-on{ padding-left:0; }
 }
 
 /* ── 연구소 세 편 + 파트너 카드 (시안의 2단) ───────────────── */

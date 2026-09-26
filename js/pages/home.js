@@ -642,9 +642,13 @@ function WorryBand(){
      고민 여섯 개가 두 줄로 눌려 있었습니다. */
   var six = WOW_PROBLEMS.slice(0, 6);
   return '<section class="sec sec-warm"><div class="w">'+
-    '<div class="sec-hd" id="worry"><h2>요즘 어떤 고민이 있으세요?</h2>'+
-      '<p>고르시면 <b>업체를 부르기 전에 확인할 것</b>부터 알려 드립니다. '+
-        '여기 없는 것도 그냥 적어 주세요.</p>'+
+    /* ⚠️ 히어로가 이미 "뭐가 고민이세요?" 라고 묻습니다. 바로 아래에서
+       같은 질문을 또 하면 두 구간이 같은 말을 하는 것으로 읽힙니다.
+       여기는 **묻는 자리가 아니라 우리가 무엇을 드리는지 말하는
+       자리**입니다 — 그게 이 사이트가 전화번호부와 다른 점입니다. */
+    '<div class="sec-hd" id="worry"><h2>업체를 부르기 전에 확인할 것</h2>'+
+      '<p>고민을 고르시면 <b>지금 직접 보실 것</b>과 <b>업체에 물어보실 것</b>을 '+
+        '먼저 알려 드립니다. 여기 없는 것도 그냥 적어 주세요.</p>'+
       '<a class="sec-more" href="/problems">고민별 해결방법 전부 보기'+
         icon("chev",16)+'</a></div>'+
     '<div class="prob-g prob-g-w">'+six.map(function(p){

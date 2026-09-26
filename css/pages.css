@@ -203,6 +203,15 @@
   .sit-flat{ grid-template-columns:auto 1fr; min-height:0; align-items:center; }
   .sit-flat .sit-b{ padding:var(--s4) var(--s5) var(--s4) 0; }
   .sit-flat .sit-ic{ margin:0 0 0 var(--s5); width:40px; height:40px; }
+  /* ⚠️ 벤토의 큰 칸도 **다섯 장과 같은 모양**이 되어야 합니다. 위
+     1040px 블록의 `.sit-g > .sit-lg` 가 여기 `.sit` 보다 진해서, 안
+     적어 두면 큰 두 장만 사진을 크게 인 채로 남습니다 — 폰에서 상황
+     다섯을 보는 데만 화면 세 개가 걸렸습니다. */
+  .sit-g > .sit-lg{ grid-template-columns:96px 1fr; grid-template-rows:auto; }
+  .sit-lg .sit-ph{ aspect-ratio:auto; height:100%; min-height:0; }
+  .sit-lg .sit-b, .sit-lg.sit-flat .sit-b{ padding:var(--s4) var(--s5);
+    align-content:center; }
+  .sit-lg .sit-b > b{ font-size:var(--t-lg); }
 }
 
 /* ══ 좌우 띠 (진단 · 파트너) ══════════════════════════════ */

@@ -30,6 +30,13 @@ button{ font:inherit; color:inherit; }
 img{ max-width:100%; display:block; }
 ul,ol{ margin:0; padding:0; list-style:none; }
 :focus-visible{ outline:2px solid var(--burgundy); outline-offset:3px; border-radius:4px; }
+/* ⚠️ 적는 칸의 예시 글은 **적힌 값처럼 보이면 안 됩니다.** 진단의 월
+   매출 칸은 글씨가 굵고 커서, 브라우저 기본 회색으로는 "7,000" 이
+   이미 적혀 있는 것처럼 읽혔습니다 — 사장님이 그대로 두고 넘어가면
+   우리가 숫자를 지어낸 셈이 됩니다.
+   ⚠️ `opacity:1` 을 빼지 마세요. 파이어폭스는 예시 글에 투명도를
+   따로 먹여서 색만 정하면 더 흐려집니다. */
+input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 
 .w{ width:100%; max-width:var(--w); margin:0 auto; padding:0 var(--s6); }
 @media (max-width:640px){ .w{ padding:0 var(--s4); } }

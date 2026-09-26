@@ -283,6 +283,7 @@ function CheckResult(){
       '<div class="row-cta">'+
         '<a class="btn btn-b btn-lg" href="'+esc(chkSosLink(weak))+'">'+
           '이 결과로 물어보기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="/tools">숫자로 더 보기</a>'+
         '<button class="btn btn-o btn-lg" type="button" onclick="chkAgain()">'+
           icon("refresh",18)+'다시 진단하기</button>'+
       '</div>'+

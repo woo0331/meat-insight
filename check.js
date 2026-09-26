@@ -60,6 +60,9 @@ const PAGES = [
   ["/lab/duct-smell-complaint", "글 (덕트 민원)"],
   ["/lab/open-permits",         "글 (오픈 인허가)"],
   ["/quotes",          "견적 비교"],
+  ["/tools",           "도구 모음"],
+  ["/tools/yield",     "수율 원가 계산"],
+  ["/tools/bep",       "손익분기 계산"],
   ["/search?q=%EB%8D%95%ED%8A%B8", "검색 결과"],
   ["/search?q=zzz",    "검색 (못 찾음)"],
   ["/partner",         "파트너 안내"],
@@ -718,12 +721,19 @@ const AUDIT = `(() => {
     go(links[0].getAttribute("href"));
     await new Promise(r=>setTimeout(r,300));
     return !!document.querySelector(".post-hd h1");`);
+  /* ⚠️ 가는 곳을 여기에 **박아 두지 마세요.** 글이 가리키는 도구가
+     바뀌면 검사만 빨갛게 되고 정작 고칠 것은 없습니다. 글이 적어 둔
+     주소와 단추가 같은지, 눌렀을 때 거기로 가는지를 봅니다. */
   await f("글 끝에서 도구로 간다", "/lab/meat-cost-rate", `
+    const want = (wowPost("meat-cost-rate").tool || [])[0];
+    if(!want) return "글에 도구가 적혀 있지 않습니다";
     const a = document.querySelector(".post-tool");
     if(!a) return "도구로 가는 길이 없습니다";
-    go(a.getAttribute("href"));
+    if(a.getAttribute("href") !== want)
+      return "글은 " + want + " 인데 단추는 " + a.getAttribute("href");
+    go(want);
     await new Promise(r=>setTimeout(r,300));
-    return location.pathname === "/check";`);
+    return location.pathname === want || "눌렀더니 " + location.pathname;`);
   /* ⚠️ 없는 글을 가리키면 손님이 404 를 봅니다 */
   await f("가리키는 글이 전부 실제로 있다", "/", `
     const slugs = new Set(WOW_POSTS.map(p => p.slug));
@@ -777,9 +787,131 @@ const AUDIT = `(() => {
       .map(t => t[0]);
     return bad.length ? bad.join(" ") + " 가 적혀 있는데 접수처는 아직 없습니다" : true;`);
 
+  /* ── 도구: 사장님이 적은 값을 나눈 것까지만 ────────────────
+     지어낼 여지가 없는 계산이라는 말은, 뒤집으면 **안 적은 칸을
+     메우면 그 순간 지어낸 숫자**라는 뜻입니다. 빈 칸이 "—" 로
+     남는지를 먼저 봅니다. */
+  await f("수율: 안 적으면 숫자를 지어내지 않는다", "/tools/yield", `
+    try{ localStorage.clear(); }catch(e){}
+    render();
+    await new Promise(r=>setTimeout(r,250));
+    const bs = [...document.querySelectorAll("#yl-res .tl-o b")].map(b=>b.textContent.trim());
+    return (bs.length === 4 && bs.every(t => t === "—"))
+      || "빈 칸에 " + bs.join(" / ") + " 가 나왔습니다";`);
+  await f("수율: 적은 값을 나눈 값이 나온다", "/tools/yield", `
+    try{ localStorage.clear(); }catch(e){}
+    render();
+    await new Promise(r=>setTimeout(r,200));
+    ylIn("price","20,000"); ylIn("inkg","10"); ylIn("outkg","6.5");
+    ylIn("serve","180");    ylIn("sell","18,000");
+    await new Promise(r=>setTimeout(r,200));
+    const bs = [...document.querySelectorAll("#yl-res .tl-o b")].map(b=>b.textContent.trim());
+    const want = ["65%","30,769원/kg","5,538원","30.8%"];
+    return bs.join("|") === want.join("|") || bs.join(" / ");`);
+  await f("수율: 적은 숫자가 남는다", "/tools/yield", `
+    render();
+    await new Promise(r=>setTimeout(r,250));
+    return document.getElementById("tl-price").value === "20,000"
+      || "다시 열었더니 비어 있습니다";`);
+  await f("수율: 지우면 빈 칸으로 돌아간다", "/tools/yield", `
+    ylReset();
+    await new Promise(r=>setTimeout(r,250));
+    const bs = [...document.querySelectorAll("#yl-res .tl-o b")].map(b=>b.textContent.trim());
+    return (document.getElementById("tl-price").value === "" && bs.every(t => t === "—"))
+      || "지운 뒤에도 숫자가 남아 있습니다";`);
+
+  await f("손익분기: 비율이 없으면 본전 매출을 내지 않는다", "/tools/bep", `
+    try{ localStorage.clear(); }catch(e){}
+    render();
+    await new Promise(r=>setTimeout(r,200));
+    bepIn("rent","1,000");
+    await new Promise(r=>setTimeout(r,200));
+    const bs = [...document.querySelectorAll("#bep-res .tl-o b")].map(b=>b.textContent.trim());
+    return (bs[0] === "1,000만원" && bs[1] === "—" && bs[2] === "—")
+      || bs.join(" / ");`);
+  await f("손익분기: 고정비와 비율로 본전 매출이 나온다", "/tools/bep", `
+    try{ localStorage.clear(); }catch(e){}
+    render();
+    await new Promise(r=>setTimeout(r,200));
+    bepIn("rent","1,000"); bepIn("labor","800"); bepIn("util","150"); bepIn("etc","50");
+    bepIn("food","35");    bepIn("fee","5");
+    bepIn("days","26");    bepIn("ticket","30,000");
+    await new Promise(r=>setTimeout(r,200));
+    const bs = [...document.querySelectorAll("#bep-res .tl-o b")].map(b=>b.textContent.trim());
+    const want = ["2,000만원","60%","3,333만원","128만원"];
+    const note = document.querySelector("#bep-res .tl-note").textContent;
+    if(bs.join("|") !== want.join("|")) return bs.join(" / ");
+    return note.indexOf("43분") >= 0 || "하루 손님 수가 안 나옵니다";`);
+  /* ⚠️ 많이 팔수록 손해인 조건을 "본전 매출" 로 얼버무리면 안 됩니다 */
+  await f("손익분기: 변동비가 100%를 넘으면 그렇게 말한다", "/tools/bep", `
+    try{ localStorage.clear(); }catch(e){}
+    render();
+    await new Promise(r=>setTimeout(r,200));
+    bepIn("rent","1,000"); bepIn("food","70"); bepIn("fee","40");
+    await new Promise(r=>setTimeout(r,200));
+    const bs = [...document.querySelectorAll("#bep-res .tl-o b")].map(b=>b.textContent.trim());
+    const note = document.querySelector("#bep-res .tl-note").textContent;
+    return (bs[2] === "—" && note.indexOf("100%") >= 0)
+      || "본전 매출 " + bs[2] + " / " + note.slice(0,40);`);
+
+  await f("도구에서 적은 것이 MY 에 뜬다", "/tools/bep", `
+    try{ localStorage.clear(); }catch(e){}
+    render();
+    await new Promise(r=>setTimeout(r,200));
+    bepIn("rent","1,000"); bepIn("labor","800"); bepIn("util","150"); bepIn("etc","50");
+    bepIn("food","35");    bepIn("fee","5");
+    go("/my");
+    await new Promise(r=>setTimeout(r,300));
+    const t = document.getElementById("view").textContent;
+    try{ localStorage.clear(); }catch(e){}
+    return (t.indexOf("손익분기 계산") >= 0 && t.indexOf("3,333") >= 0)
+      || "MY 에 안 보입니다";`);
+  await f("도구 모음에서 다섯 가지가 전부 열린다", "/tools", `
+    const hrefs = [...document.querySelectorAll(".tl-c")].map(a=>a.getAttribute("href"));
+    const want = ["/check","/tools/yield","/tools/bep","/start/cost","/quotes"];
+    return want.every(w => hrefs.indexOf(w) >= 0) || hrefs.join(" ");`);
+
+  /* ── 머리말(head): 브라우저로는 표가 안 나는 것들 ──────────
+     ⚠️ 화면을 그리고 나면 JS(paintMeta)가 canonical 을 고쳐 놓기 때문에,
+     **브라우저로 봐서는 멀쩡합니다.** 크롤러가 읽는 것은 고쳐지기 전의
+     HTML 입니다 — 그래서 여기서는 화면을 보지 않고 **파일을 그대로
+     받아서** 셉니다. 실제로 canonical 이 화면마다 둘씩 나가고 있었고,
+     전수 점검은 그동안 전부 통과했습니다. */
+  await f("화면마다 canonical 이 하나이고 제 주소를 가리킨다", "/", `
+    const urls = ["/sos","/check","/tools/yield","/tools/bep","/lab","/my","/start/cost"];
+    const bad = [];
+    for(const u of urls){
+      const html = await (await fetch(u, { cache:"no-store" })).text();
+      const n = html.split('<link rel="canonical"').length - 1;
+      if(n !== 1){ bad.push(u + " → canonical " + n + "개"); continue; }
+      const i = html.indexOf('<link rel="canonical"');
+      const seg = html.slice(i, i + 160);
+      if(seg.indexOf('href="https://aboutmeat.co.kr' + u + '"') < 0)
+        bad.push(u + " → " + seg.slice(0, 70));
+    }
+    return bad.length ? bad.join(" / ") : true;`);
+  await f("화면마다 제목이 하나다", "/", `
+    const urls = ["/","/sos","/tools","/tools/bep","/lab/open-permits"];
+    const bad = [];
+    for(const u of urls){
+      const html = await (await fetch(u, { cache:"no-store" })).text();
+      const n = html.split("<title>").length - 1;
+      if(n !== 1) bad.push(u + " → 제목 " + n + "개");
+    }
+    return bad.length ? bad.join(" / ") : true;`);
+  /* ⚠️ 사람마다 다른 화면이 검색에 올라가면 남의 견적 비교가 잡힙니다 */
+  await f("사람마다 다른 화면은 검색에 안 올라간다", "/", `
+    const bad = [];
+    for(const u of ["/my","/quotes","/search"]){
+      const html = await (await fetch(u, { cache:"no-store" })).text();
+      if(html.indexOf('name="robots" content="noindex') < 0) bad.push(u);
+    }
+    return bad.length ? bad.join(" ") + " 에 noindex 가 없습니다" : true;`);
+
   console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 +
               "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 6 +
-              "개 · 접수처 없음 " + 5 + "개");
+              "개 · 접수처 없음 " + 5 + "개 · 도구 계산 " + 9 +
+              "개 · 머리말 " + 3 + "개");
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

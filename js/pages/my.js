@@ -17,7 +17,7 @@
    ════════════════════════════════════════════════════════════════════ */
 
 function PageMy(){
-  var cards = [MyCheck(), MyStart(), MyCost(), MyQuotes(), MyRead()];
+  var cards = [MyCheck(), MyStart(), MyCost(), MyYield(), MyBep(), MyQuotes(), MyRead()];
   var some  = cards.filter(function(c){ return c.has; });
 
   return '<section class="pg-hero"><div class="w">'+
@@ -124,6 +124,32 @@ function MyCost(){
     cta:"이어서 적기" };
 }
 
+function MyYield(){
+  var b = (typeof ylBrief === "function") ? ylBrief() : { n:0 };
+  if(!b.n) return { has:false, icon:"knife", name:"수율 원가 계산", to:"/tools/yield",
+    empty:"손질하고 나면 원가가 달라집니다. 실제 1kg 원가와 1인분 원가를 냅니다.",
+    ctaOff:"계산해 보기" };
+  return { has:true, icon:"knife", name:"수율 원가 계산", to:"/tools/yield",
+    value: b.rate !== null ? '<b>'+esc(b.rate)+'<em>%</em></b>' : '<b>'+b.n+'칸</b>',
+    line: b.real !== null
+      ? '손질 후 실제 원가가 <b>'+esc(b.real)+'원/kg</b> 으로 나왔습니다.'
+      : b.n + '칸을 적으셨습니다. 나머지를 채우시면 실제 원가가 나옵니다.',
+    cta:"이어서 계산하기" };
+}
+
+function MyBep(){
+  var b = (typeof bepBrief === "function") ? bepBrief() : { n:0 };
+  if(!b.n) return { has:false, icon:"target", name:"손익분기 계산", to:"/tools/bep",
+    empty:"고정비와 비율을 적으시면 한 달에 얼마를 팔아야 본전인지 나옵니다.",
+    ctaOff:"계산해 보기" };
+  return { has:true, icon:"target", name:"손익분기 계산", to:"/tools/bep",
+    value: b.month !== null ? '<b>'+esc(b.month)+'<em>만원</em></b>' : '<b>'+b.n+'칸</b>',
+    line: b.month !== null
+      ? '이 조건이면 <b>한 달에 그만큼</b>을 파셔야 본전입니다.'
+      : b.n + '칸을 적으셨습니다. 고정비와 비율을 채우시면 본전 매출이 나옵니다.',
+    cta:"이어서 계산하기" };
+}
+
 function MyQuotes(){
   var b = (typeof qcBrief === "function") ? qcBrief() : { n:0 };
   if(!b.n) return { has:false, icon:"scale", name:"견적 비교", to:"/quotes",
@@ -151,8 +177,9 @@ function MyRead(){
 
 /* ⚠️ 되돌릴 수 없으므로 한 번 물어봅니다 */
 window.myReset = function(){
-  if(!confirm("이 브라우저에 남은 진단 결과 · 창업 체크 · 창업비 · 견적 비교 · 읽던 글을 전부 지웁니다.\n되돌릴 수 없습니다. 지울까요?")) return;
-  ["wow.check.v1","wow.start.v1","wow.cost.v1","wow.quotes.v1","wow.read.v1","wow.lab.v1"]
+  if(!confirm("이 브라우저에 남은 진단 결과 · 창업 체크 · 창업비 · 수율 원가 · 손익분기 · 견적 비교 · 읽던 글을 전부 지웁니다.\n되돌릴 수 없습니다. 지울까요?")) return;
+  ["wow.check.v1","wow.start.v1","wow.cost.v1","wow.quotes.v1","wow.read.v1","wow.lab.v1",
+   "wow.yield.v1","wow.bep.v1"]
     .forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
   rerender(true);
   toast("이 기기에 남은 기록을 전부 지웠습니다.");

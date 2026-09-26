@@ -54,7 +54,8 @@ function loadApp(){
 function allRoutes(W){
   const fixed = ["/", "/sos", "/start", "/start/cost", "/check", "/partners",
                  "/request", "/lab", "/partner", "/partner/apply",
-                 "/my", "/quotes", "/search", "/login", "/signup", "/about", "/terms", "/privacy"];
+                 "/my", "/quotes", "/search",
+                 "/tools", "/tools/yield", "/tools/bep", "/login", "/signup", "/about", "/terms", "/privacy"];
   /* 연구소 글은 하나하나가 주소입니다 — 검색에서 들어오는 문이라
      반드시 진짜 HTML 파일이 있어야 합니다. */
   const posts = (W.WOW_POSTS || []).map(p => "/lab/" + p.slug);
@@ -133,7 +134,8 @@ function jsonLd(W, r, route){
           "@type":"ListItem", position:i+1, name:p.title, url:ORIGIN+"/lab/"+p.slug })) }});
   }
 
-  if(route === "/start/cost" || route === "/check" || route === "/quotes"){
+  if(route === "/start/cost" || route === "/check" || route === "/quotes" ||
+     route === "/tools/yield" || route === "/tools/bep"){
     out.push({ "@context":"https://schema.org", "@type":"WebApplication",
       name:r.title, description:r.desc || "", url:ORIGIN+route,
       applicationCategory:"BusinessApplication",
@@ -166,10 +168,27 @@ function shell(tpl, r, route, noscript, ld){
         '<meta property="og:description" content="'+esc(r.desc||"")+'">');
   h = h.replace(/<meta property="og:url"[^>]*>/,
         '<meta property="og:url" content="'+esc(canon)+'">');
-  const head = '<link rel="canonical" href="'+esc(canon)+'">\n'+
+  /* ⚠️ index.html 에 canonical 이 **손으로 박혀 있습니다**(메인은
+     build-pages 가 덮어쓰지 않는 파일이라 그렇게 두었습니다). 여기서
+     canonical 을 덧붙이면 화면마다 canonical 이 **둘**이 됩니다.
+     구글은 서로 다른 canonical 이 둘이면 **둘 다 무시**하고, 먼저 오는
+     것만 읽는 크롤러에게는 모든 화면이 메인의 복제본으로 읽힙니다.
+     ⚠️ 그래서 덧붙이지 않고 **갈아 끼웁니다.** 화면은 JS 가 다시
+     고쳐 주기 때문에 브라우저로 봐서는 표가 안 납니다 — 실제로 그렇게
+     한동안 두 개가 나가고 있었습니다. */
+  if(!/<link rel="canonical"[^>]*>/.test(h))
+    throw new Error("index.html 에 canonical 이 없습니다 — 갈아 끼울 자리가 없습니다");
+  h = h.replace(/<link rel="canonical"[^>]*>/,
+        '<link rel="canonical" href="'+esc(canon)+'">');
+
+  const head =
     (r.noindex ? '<meta name="robots" content="noindex, follow">\n' : '')+
     (r.noindex ? '' : (ld ? ld+'\n' : ''));
-  h = h.replace("</head>", head+"</head>");
+  if(head) h = h.replace("</head>", head+"</head>");
+
+  /* 만든 것을 바로 세어 봅니다 — 위를 고치다 다시 둘이 되는 일을 막습니다 */
+  const n = (h.match(/<link rel="canonical"/g) || []).length;
+  if(n !== 1) throw new Error(route+" 의 canonical 이 "+n+"개입니다 (하나여야 합니다)");
   /* JS 가 안 도는 크롤러에게 최소한의 내용을 줍니다 */
   h = h.replace('<a class="skip" href="#view">본문 바로가기</a>',
     '<a class="skip" href="#view">본문 바로가기</a>\n<noscript>'+noscript+'</noscript>');

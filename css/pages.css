@@ -1307,3 +1307,76 @@
    지금 쓸 수 있는 것을 같이 냅니다. */
 .notice-sub{ font-size:var(--t-sm) !important; color:var(--ink3) !important; }
 .notice-acts .btn{ min-height:44px; padding:0 var(--s4); font-size:var(--t-base); }
+
+/* ════════════════════════════════════════════════════════════════════
+   도구 모음 · 수율 원가 · 손익분기
+
+   ⚠️ 결과 칸에 **상태색(--ok/--warn/--bad)을 쓰지 마세요.** 좋다/나쁘다를
+   가르려면 업종·부위·지역별 기준값이 있어야 하는데 우리에게 없습니다.
+   여기 숫자는 사장님이 적은 값을 나눈 것까지입니다.
+   ⚠️ 값이 없는 칸은 "—" 입니다. 0 으로 채우면 지어낸 숫자가 됩니다.
+   ════════════════════════════════════════════════════════════════════ */
+.tl-hub{ padding:var(--s9) 0 var(--s10); max-width:900px; }
+.tl-g{ display:grid; gap:var(--s3); margin-bottom:var(--s8); }
+.tl-c{ display:grid; grid-template-columns:auto 1fr auto; align-items:center;
+  gap:var(--s4); min-height:var(--tap); background:var(--surface);
+  border:1px solid var(--line); border-radius:var(--r-lg); padding:var(--s5); }
+.tl-c:hover{ border-color:var(--burgundy); }
+.tl-c-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:46px; height:46px; border-radius:var(--r-pill);
+  background:var(--burgundy-50); color:var(--burgundy); }
+.tl-c:hover .tl-c-ic{ background:var(--burgundy); color:#fff; }
+/* ⚠️ grid 칸 안에서 글과 태그를 섞지 마세요 — <b> 가 딴 칸이 됩니다.
+   그래서 글 전체를 .tl-c-t 하나로 감쌉니다. */
+.tl-c-t{ display:grid; gap:2px; min-width:0; }
+.tl-c-t b{ font-size:var(--t-md); }
+.tl-c-t > span{ font-size:var(--t-sm); color:var(--ink3); line-height:1.6; }
+.tl-c-go{ display:inline-flex; align-items:center; gap:2px; white-space:nowrap;
+  font-size:var(--t-sm); font-weight:700; color:var(--burgundy); }
+
+.tl{ padding:var(--s9) 0 var(--s10); max-width:820px; }
+/* ⚠️ 여기를 flex 로 두면 제목 글자와 <span> 이 **서로 다른 칸**이 됩니다.
+   좁은 화면에서 제목만 따로 눌려 한 자씩 쪼개집니다 — 그냥 블록으로 둡니다. */
+.tl-h{ font-size:var(--t-xl); margin-bottom:var(--s4); }
+.tl-h span{ display:inline-block; margin-left:var(--s3);
+  font-size:var(--t-sm); font-weight:600; color:var(--ink3); }
+.tl-l{ display:grid; gap:var(--s2); margin-bottom:var(--s7); }
+.tl-i{ display:grid; grid-template-columns:1fr 200px; gap:var(--s4);
+  align-items:center; background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-lg); padding:var(--s4) var(--s5); }
+.tl-t{ display:grid; gap:1px; min-width:0; }
+.tl-t b{ font-size:var(--t-md); }
+.tl-t > span{ font-size:var(--t-sm); color:var(--ink3); line-height:1.6; }
+/* ⚠️ 단위를 칸 오른쪽에 겹치려면 감싼 <span> 이 position:relative 여야
+   합니다. 안 주면 단위가 칸 아래로 떨어집니다. */
+.tl-in{ position:relative; display:block; }
+.tl-in em{ position:absolute; right:var(--s4); top:50%; transform:translateY(-50%);
+  font-style:normal; font-size:var(--t-sm); font-weight:600; color:var(--ink3);
+  pointer-events:none; }
+.tl-in input{ width:100%; min-height:var(--tap); padding:10px 62px 10px var(--s4);
+  border:1px solid var(--line); border-radius:var(--r); background:var(--bg);
+  font:inherit; font-size:var(--t-lg); font-weight:700; color:var(--ink); text-align:right; }
+.tl-in input:focus{ outline:0; border-color:var(--burgundy); background:var(--surface);
+  box-shadow:0 0 0 3px var(--burgundy-50); }
+@media (max-width:640px){
+  .tl-i{ grid-template-columns:1fr; }
+}
+
+.tl-res{ background:var(--dark); color:#fff; border-radius:var(--r-xl); padding:var(--s7); }
+.tl-og{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s4);
+  padding-bottom:var(--s5); border-bottom:1px solid rgba(255,255,255,.18); }
+.tl-o{ display:grid; gap:2px; align-content:start; min-width:0; }
+.tl-o-n{ font-size:var(--t-sm); color:var(--on-dark); }
+.tl-o b{ font-size:30px; font-weight:800; letter-spacing:-.04em; color:#fff;
+  line-height:1.15; }
+.tl-o b em{ font-style:normal; font-size:var(--t-base); margin-left:3px;
+  color:var(--on-dark); }
+.tl-dash{ font-style:normal; color:var(--on-dark-3); }
+.tl-o-h{ font-size:var(--t-cap); color:var(--on-dark-3); }
+.tl-o-off b{ color:var(--on-dark-3); }
+.tl-note{ margin-top:var(--s4) !important; font-size:var(--t-base);
+  color:var(--on-dark); line-height:1.75; }
+.tl-note b{ color:#fff; }
+@media (max-width:760px){
+  .tl-og{ grid-template-columns:repeat(2,1fr); gap:var(--s5); }
+}

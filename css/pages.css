@@ -266,6 +266,7 @@
 /* ⚠️ position:relative 가 없으면 위쪽 금빛 실선(::after)이 이 구간이
    아니라 엉뚱한 조상에 붙습니다. */
 .dark{ position:relative; background:var(--dark); color:#fff; padding:var(--s10) 0; }
+.sec-hd h2 em{ font-style:normal; color:var(--burgundy); }
 .sec-hd-d h2{ color:#fff; }
 .sec-hd-d p{ color:var(--on-dark); }
 /* ⚠️ 어두운 구간의 머리말은 **금빛**입니다. 밝은 버건디(#A44C5E)와
@@ -281,15 +282,28 @@
    글자로 넣으면 읽어 주는 프로그램이 "오른쪽 화살표" 를 다섯 번 읽습니다. */
 .flow{ display:grid; grid-template-columns:repeat(5,1fr); gap:var(--s5);
   margin-bottom:var(--s8); }
+/* ⚠️ **기본을 밝은 바탕에 맞춰 둡니다.** 예전에는 이 흐름이 어두운
+   구간에만 있어서 글자가 흰색이 기본이었고, 밝은 쪽은 `.sec-tone`
+   안에서만 되돌려 놓았습니다. 창업 구간을 순백으로 옮기자 **다섯
+   마디의 제목과 설명이 통째로 안 보였습니다** — 흰 글자가 흰 바탕에
+   있었습니다. 에러도 안 나고 전수 점검도 통과했습니다.
+   어두운 구간에서 쓸 일이 생기면 `.flow-d-on` 을 같이 붙이세요. */
 .flow li{ position:relative; display:grid; gap:var(--s2); align-content:start;
-  padding-top:var(--s5); border-top:2px solid rgba(255,255,255,.22); }
+  padding-top:var(--s5); border-top:2px solid var(--line); }
 .flow li + li::before{ content:""; position:absolute; left:calc(var(--s5) * -.5 - 4px);
-  top:-2px; width:9px; height:9px; border-top:2px solid rgba(255,255,255,.3);
-  border-right:2px solid rgba(255,255,255,.3); transform:translate(-50%,-50%) rotate(45deg); }
-.flow-n{ font-size:var(--t-sm); font-weight:800; color:var(--burgundy-400);
+  top:-2px; width:9px; height:9px; border-top:2px solid var(--ink3);
+  border-right:2px solid var(--ink3); transform:translate(-50%,-50%) rotate(45deg); }
+.flow-n{ font-size:var(--t-sm); font-weight:800; color:var(--burgundy);
   letter-spacing:.08em; }
-.flow b{ font-size:var(--t-lg); color:#fff; }
-.flow-d{ font-size:var(--t-sm); color:var(--on-dark-3); line-height:1.7; }
+.flow b{ font-size:var(--t-lg); color:var(--ink); letter-spacing:-.02em; }
+.flow-d{ font-size:var(--t-sm); color:var(--ink2); line-height:1.7; }
+/* 어두운 구간용 — 지금은 쓰는 곳이 없습니다 */
+.flow-on-dark li{ border-top-color:rgba(255,255,255,.22); }
+.flow-on-dark li + li::before{ border-top-color:rgba(255,255,255,.3);
+  border-right-color:rgba(255,255,255,.3); }
+.flow-on-dark .flow-n{ color:var(--burgundy-400); }
+.flow-on-dark b{ color:#fff; }
+.flow-on-dark .flow-d{ color:var(--on-dark-3); }
 @media (max-width:900px){ .flow{ grid-template-columns:1fr 1fr; }
   .flow li + li::before{ display:none; } }
 @media (max-width:480px){ .flow{ grid-template-columns:1fr; } }
@@ -1610,11 +1624,6 @@
 
 /* 창업 다섯 마디 — 어두운 띠에서 밝은 띠로 옮겨 오면서 색을 뒤집습니다.
    ⚠️ 반투명 흰색으로 둔 선들은 밝은 바탕에서 **아무것도 안 보입니다.** */
-.sec-tone .flow li{ border-top-color:var(--line); }
-.sec-tone .flow li + li::before{ border-top-color:var(--ink3); border-right-color:var(--ink3); }
-.sec-tone .flow-n{ color:var(--burgundy); }
-.sec-tone .flow b{ color:var(--ink); }
-.sec-tone .flow-d{ color:var(--ink2); }
 
 /* 칩 — 흰 알약에 옅은 그림자. 테두리를 두르면 스무 개가 다 선으로 보입니다 */
 .chips li{ border-color:transparent; box-shadow:var(--shadow); }
@@ -1624,6 +1633,10 @@
    ⚠️ `.sec-warm` 만 쓰면 회색-흰색-회색이라 단조롭습니다. 옅은
    브랜드색을 한 칸 섞어 리듬을 만듭니다. */
 .sec-tint{ background:var(--tint-2); }
+/* ⚠️ **순백 구간**입니다. 바탕(--bg)이 웜 화이트라 순백과 나란히 두면
+   장면이 한 번 바뀝니다 — 같은 색 두 구간이 이어지면 한 구간으로
+   읽힙니다. 여기 카드는 밑의 "카드 면" 규칙대로 --bg-warm 입니다. */
+.sec-white{ background:var(--surface); }
 
 /* 상황 카드의 알약 — **언제 쓰는 카드인지**를 한 낱말로.
    ⚠️ "제일 많이 고르는" 같은 말을 넣지 마세요. 세어 본 적이 없습니다. */
@@ -1842,7 +1855,9 @@
 
 /* 어두운 패널도 단색으로 — 그라디언트를 걷습니다 */
 .tl-res, .cost-sum{ background:var(--dark); box-shadow:none; }
-.final{ background:var(--dark); }
+/* ⚠️ 매칭 구간(.mband)과 **같은 색으로 두지 마세요.** 여기는 그보다
+   더 가라앉은 쪽입니다 — 둘이 같으면 "또 같은 띠" 로 읽힙니다. */
+.final{ background:linear-gradient(168deg, #4A101D 0%, #2E0A13 62%, #1C0509 100%); }
 .final .hero-sh{ background:linear-gradient(180deg,
   rgba(23,20,19,.88) 0%, rgba(23,20,19,.76) 100%); }
 
@@ -1853,47 +1868,43 @@
 .final .btn-w{ box-shadow:none; }
 
 /* ════════════════════════════════════════════════════════════════════
-   히어로 — **밝은 두 칸** (2026-09-26 세 번째 손질)
+   히어로 — 밝은 두 칸 (글 왼쪽 · 우리 화면 오른쪽)
 
-   ⚠️ 어두운 바탕 + 벡터 그림으로 돌아갔다가 다시 밝은 쪽으로 옵니다.
-   이유는 팔레트가 아니라 **그림 자체**였습니다. 코드로 그린 벡터를
-   글자 밑에 깔면 어떤 팔레트로 칠해도 흐릿한 덩어리로 보입니다.
-   실제 현장 사진이 들어오면 이 결정을 다시 보세요 — 그때는 어두운
-   겹을 얹은 사진 히어로가 맞습니다.
+   ⚠️ 어두운 바탕 + 벡터 그림으로 돌아갔다가 다시 밝은 쪽으로 왔습니다.
+   흐렸던 이유는 팔레트가 아니라 **그림 자체**였습니다 — 코드로 그린
+   벡터를 글자 밑에 깔면 어떤 색으로 칠해도 흐릿한 덩어리로 보입니다.
 
-   ⚠️ 오른쪽 칸은 **사진이 아니라 우리 화면 흉내**입니다. 그래서
-   `.ph-bg` · `.hero-art` · `.hero-tags` 를 쓰지 않습니다.
-   ⚠️ 장식은 아주 옅게 번지는 두 덩어리뿐입니다. 진하게 올리면
-   그라디언트 배너가 되고, 그건 금지된 "AI 스타트업 느낌" 입니다.
+   ⚠️ 오른쪽은 **사진 한 장이 아니라 사진 위에 겹친 제품 화면**입니다.
+   사진만 두면 쇼핑몰 배너가 되고, 화면만 두면 차갑습니다.
+   실제 현장 사진이 들어오면 `photos.js` 의 경로만 바꾸면 됩니다.
    ════════════════════════════════════════════════════════════════════ */
 .hero-lt2{ background:
-    linear-gradient(180deg, #FFFFFF 0%, var(--tint-2) 62%, var(--bg) 100%);
+    linear-gradient(168deg, #FFFFFF 0%, #FDF5F6 46%, var(--bg) 100%);
   color:var(--ink); padding:var(--s9) 0 var(--s10); }
-/* 어두운 히어로용 장식은 전부 끕니다 */
 .hero-lt2::after{ display:none; }
 .hero-lt2 .hero-in{ max-width:none; }
 
 .hero-blob{ position:absolute; z-index:-1; border-radius:50%;
-  filter:blur(90px); pointer-events:none; }
-.hb-1{ width:520px; height:520px; top:-190px; right:-120px;
+  filter:blur(96px); pointer-events:none; }
+.hb-1{ width:560px; height:560px; top:-210px; right:-130px;
   background:rgba(169,37,59,.10); }
-.hb-2{ width:420px; height:420px; bottom:-200px; left:-140px;
-  background:rgba(44,90,140,.07); }
+.hb-2{ width:440px; height:440px; bottom:-220px; left:-150px;
+  background:rgba(184,115,51,.08); }
 
-.hero-grid{ display:grid; grid-template-columns:minmax(0,1.16fr) minmax(0,.84fr);
+/* §1 — 좌 55~60% · 우 40~45% */
+.hero-grid{ display:grid; grid-template-columns:minmax(0,1.32fr) minmax(0,1fr);
   gap:var(--s9); align-items:center; }
 
 .hero-lt2 .hero-kicker{ color:var(--burgundy); font-weight:800;
-  letter-spacing:.01em; }
+  letter-spacing:.02em; font-size:var(--t-sm); text-transform:none; }
 .hero-lt2 .hero-h{ color:var(--ink); }
-/* ⚠️ 밝은 바탕에서는 밝은 빨강이 아니라 **버건디**입니다. --red 를
-   쓰는 세 자리는 전부 "어두운 바탕이거나 작은 동그라미" 입니다. */
+/* ⚠️ 밝은 바탕에서는 밝은 빨강이 아니라 **브랜드 크림슨**입니다 */
 .hero-lt2 .hero-h em{ color:var(--burgundy); }
 .hero-lt2 .hero-p{ color:var(--ink2); }
 .hero-lt2 .ask{ box-shadow:0 1px 2px rgba(23,23,28,.05),
-                            0 18px 40px -18px rgba(23,23,28,.28); }
+                            0 20px 44px -18px rgba(23,23,28,.30); }
 .hero-lt2 .ask:focus-within{ box-shadow:0 0 0 3px var(--burgundy-50),
-                            0 18px 40px -18px rgba(23,23,28,.28); }
+                            0 20px 44px -18px rgba(23,23,28,.30); }
 .hero-lt2 .ask-go{ background:var(--burgundy); }
 .hero-lt2 .ask-go:hover{ background:var(--burgundy-600); }
 .hero-lt2 .ask-chips button{ background:var(--surface); color:var(--ink2);
@@ -1901,81 +1912,69 @@
 .hero-lt2 .ask-chips button:hover{ border-color:var(--burgundy);
   color:var(--burgundy); background:var(--surface); }
 
-/* 네 칸 약속 — 시안의 숫자 줄과 같은 자리, 같은 모양.
-   ⚠️ 여기에 실적 숫자를 넣지 마세요 (절대 규칙 1 · 표시광고법 제3조). */
-/* ⚠️ `repeat(4,auto)` + 넓은 gap 으로 두었더니 "하지 않으셔도 / 됩니다" 가
-   두 줄로 쪼개졌습니다. 칸을 고르게 나누고 사이를 좁힙니다. */
-.hero-facts{ display:grid; grid-template-columns:repeat(4,1fr);
-  gap:var(--s4); margin-top:var(--s8);
-  padding-top:var(--s6); border-top:1px solid var(--line); }
-.hero-facts li{ display:grid; gap:2px; }
-.hero-facts b{ font-size:var(--t-xl); color:var(--ink); letter-spacing:-.02em; }
-.hero-facts span{ font-size:var(--t-sm); color:var(--ink2); }
-
-/* ── 오른쪽: 우리 화면 흉내 ────────────────────────────────
-   ⚠️ 여기에 **꾸민 숫자를 넣지 마세요.** 글은 전부 guides.js 에서
-   그대로 옵니다 (js/pages/home.js 의 HeroMock). */
-.hero-ui{ display:grid; gap:0; align-content:center; }
-.humo{ display:block; background:var(--surface); border-radius:var(--r-xl);
-  overflow:hidden; color:var(--ink);
+/* ── 오른쪽 무대: 사진 + 그 위에 겹친 우리 화면 ─────────────── */
+.hstage{ position:relative; padding-bottom:var(--s8); }
+.hstage-ph{ display:block; border-radius:var(--r-xl); overflow:hidden;
   box-shadow:0 1px 2px rgba(23,23,28,.05),
-             0 28px 60px -26px rgba(23,23,28,.30);
-  transition:transform .2s ease; }
-.humo:hover{ transform:translateY(-3px); }
-.humo-bar{ display:flex; align-items:center; gap:6px;
-  min-height:38px; padding:0 var(--s4);
-  background:var(--bg-warm); border-bottom:1px solid var(--line-soft); }
-.humo-bar i{ width:9px; height:9px; border-radius:50%;
-  background:var(--line); flex:0 0 auto; }
-.humo-bar u{ margin-left:var(--s3); text-decoration:none;
-  font-size:var(--t-cap); color:var(--ink3); letter-spacing:.01em;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.humo-b{ display:grid; gap:var(--s3); padding:var(--s6); }
-.humo-tag{ justify-self:start; font-size:var(--t-cap); font-weight:800;
-  border-radius:var(--r-pill); padding:5px 11px;
-  color:var(--ic-ink, var(--burgundy)); background:var(--ic-bg, var(--burgundy-50)); }
-.humo-h{ font-size:var(--t-xl); letter-spacing:-.02em; }
-.humo-l{ display:grid; gap:var(--s2); margin-top:2px; }
+             0 30px 64px -28px rgba(23,23,28,.34); }
+.hstage-ph .ph{ width:100%; height:auto; aspect-ratio:4/3; object-fit:cover;
+  display:block; }
+
+/* 겹치는 카드 — 사진의 아래쪽을 물고 왼쪽으로 조금 나옵니다 */
+.hsf{ position:relative; display:grid; gap:var(--s3);
+  width:80%; margin:-13% 0 0 auto; margin-right:var(--s6);
+  padding:var(--s6); background:var(--surface); color:var(--ink);
+  border-radius:var(--r-xl);
+  box-shadow:0 1px 2px rgba(23,23,28,.06),
+             0 26px 56px -22px rgba(23,23,28,.38);
+  transition:transform .22s ease, box-shadow .22s ease; }
+.hsf:hover{ transform:translateY(-4px);
+  box-shadow:0 2px 4px rgba(23,23,28,.07),
+             0 34px 68px -24px rgba(23,23,28,.44); }
+.hsf-q{ display:grid; gap:4px; }
+.hsf-q > b{ font-size:var(--t-cap); font-weight:800; letter-spacing:.02em;
+  color:var(--ink3); }
+.hsf-q > em{ font-style:normal; font-size:var(--t-lg); font-weight:700;
+  letter-spacing:-.02em; line-height:1.45; }
+.hsf-arw{ justify-self:center; color:var(--burgundy); opacity:.55;
+  display:inline-flex; }
+.hsf-b{ display:grid; gap:var(--s3); padding:var(--s5);
+  background:var(--bg-warm); border-radius:var(--r-lg); }
+.hsf-b > b{ font-size:var(--t-sm); font-weight:800; color:var(--ink); }
+.hsf-l{ display:grid; gap:var(--s2); }
 /* ⚠️ 칸 둘에 항목 둘 — grid 칸에 글과 태그를 섞지 않습니다 */
-.humo-i{ display:grid; grid-template-columns:auto 1fr; gap:var(--s3);
-  align-items:start; padding:var(--s3) var(--s4);
-  background:var(--bg-warm); border-radius:var(--r); }
-.humo-i i{ font-style:normal; font-size:var(--t-cap); font-weight:800;
+.hsf-i{ display:grid; grid-template-columns:auto 1fr; gap:var(--s3);
+  align-items:center; }
+.hsf-i i{ font-style:normal; font-size:var(--t-cap); font-weight:800;
   color:var(--burgundy); background:var(--surface);
   width:22px; height:22px; border-radius:50%;
   display:inline-flex; align-items:center; justify-content:center; }
-.humo-i em{ font-style:normal; font-size:var(--t-sm); color:var(--ink2);
-  line-height:1.65; }
-.humo-go{ display:inline-flex; align-items:center; gap:5px; margin-top:var(--s2);
+.hsf-i em{ font-style:normal; font-size:var(--t-sm); color:var(--ink2); }
+.hsf-go{ display:inline-flex; align-items:center; gap:5px;
   font-size:var(--t-sm); font-weight:800; color:var(--burgundy); }
+.hsf-go .ic{ transition:transform .2s ease; }
+.hsf:hover .hsf-go .ic{ transform:translateX(3px); }
 
-/* 흉내 화면에 살짝 겹쳐 올라오는 작은 카드 */
-.hero-card{ position:relative; z-index:1;
-  margin:calc(var(--s5) * -1) calc(var(--s5) * -1) 0 var(--s7); }
-.hero-card a{ display:grid; gap:var(--s3); padding:var(--s6);
-  background:var(--surface); border-radius:var(--r-xl); color:var(--ink);
-  box-shadow:0 1px 2px rgba(23,23,28,.05),
-             0 22px 48px -22px rgba(23,23,28,.34);
-  transition:transform .2s ease; }
-.hero-card a:hover{ transform:translateY(-3px); }
-.hc-ic{ display:inline-flex; align-items:center; justify-content:center;
-  width:46px; height:46px; border-radius:15px;
+/* ── 히어로 아래 신뢰 줄 (§3) ───────────────────────────────
+   ⚠️ 여기에 실적 숫자를 넣지 마세요 (절대 규칙 1 · 표시광고법 제3조). */
+.tbar{ background:var(--surface); border-top:1px solid var(--line-soft);
+  border-bottom:1px solid var(--line-soft); }
+.tbar-in{ display:grid; grid-template-columns:repeat(4,1fr);
+  gap:var(--s4); padding:var(--s6) var(--s6); }
+.tbar-i{ display:grid; grid-template-columns:auto 1fr; gap:var(--s4);
+  align-items:start; }
+.tbar-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:40px; height:40px; border-radius:13px; flex:none;
   background:var(--burgundy-50); color:var(--burgundy); }
-.hc-t{ display:grid; gap:1px; }
-.hc-t em{ font-style:normal; font-size:var(--t-sm); font-weight:700;
-  color:var(--burgundy); }
-.hc-t b{ font-size:var(--t-xl); letter-spacing:-.02em; }
-.hc-p{ font-size:var(--t-sm); color:var(--ink2); line-height:1.7; }
-.hc-go{ display:inline-flex; align-items:center; gap:4px;
-  font-size:var(--t-sm); font-weight:700; color:var(--burgundy); }
+.tbar-t{ display:grid; gap:2px; min-width:0; }
+.tbar-t b{ font-size:var(--t-md); letter-spacing:-.01em; }
+.tbar-t span{ font-size:var(--t-sm); color:var(--ink2); line-height:1.6; }
 
 /* ⚠️ 뒤에 붙인 묶음이 앞의 미디어쿼리를 덮습니다 — 좁은 폭 규칙을
-   **여기서 다시** 씁니다. 앞에 있던 것이 살아 있을 거라고 믿지 마세요. */
-@media (max-width:1040px){
+   **여기서 다시** 씁니다. */
+@media (max-width:1100px){
   .hero-grid{ gap:var(--s7); }
-  /* ⚠️ 겹쳐 놓은 카드를 오른쪽으로 내밀면 좁은 화면에서 칸 밖으로
-     삐져나가 가로 스크롤이 납니다. 내미는 것은 넓은 화면에서만. */
-  .hero-card{ margin-right:0; }
+  .tbar-in{ grid-template-columns:1fr 1fr; gap:var(--s5); }
 }
 @media (max-width:980px){
   .hero-grid{ grid-template-columns:1fr; gap:var(--s8); }
@@ -1983,18 +1982,15 @@
      화면에서 제일 큰 것은 입력창이어야 합니다 (지시서 3번). */
   .hero-ui{ order:2; }
   .hero-lt2{ padding:var(--s8) 0 var(--s9); }
-  .hb-1{ width:360px; height:360px; top:-150px; right:-110px; }
+  .hb-1{ width:380px; height:380px; top:-160px; right:-120px; }
   .hb-2{ display:none; }
+  .hsf{ width:92%; margin:-14% auto 0 auto; }
 }
-@media (max-width:760px){
-  .hero-facts{ grid-template-columns:1fr 1fr; gap:var(--s5) var(--s6); }
-  .hero-card{ margin:calc(var(--s5) * -1) 0 0 var(--s5); }
-}
-@media (max-width:520px){
-  .humo-b{ padding:var(--s5); }
-  .hero-card a{ padding:var(--s5); }
-  .hero-card{ margin:calc(var(--s4) * -1) 0 0 var(--s4); }
-  .humo-bar u{ display:none; }
+@media (max-width:560px){
+  .tbar-in{ grid-template-columns:1fr; gap:var(--s4); padding:var(--s5) var(--s6); }
+  .hsf{ width:100%; margin:calc(var(--s7) * -1) 0 0 0; padding:var(--s5); }
+  .hstage{ padding-bottom:0; }
+  .hsf-q > em{ font-size:var(--t-md); }
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -2035,50 +2031,83 @@
 @media (max-width:700px){ .ckb{ grid-template-columns:1fr; } }
 
 /* ════════════════════════════════════════════════════════════════════
-   화면 한가운데의 딥 버건디 구간 (지시서 §15)
+   화면 한가운데의 딥 버건디 구간 — 업체 매칭 (§11 · §15)
 
    ⚠️ **이 한 군데만 브랜드색을 넓게 씁니다.** 스크롤하다 장면이 한 번
-   바뀌어야 페이지가 끝없이 이어지는 느낌을 벗습니다. 여기서 더
-   늘리면 지시서 30번이 금지한 정육점 간판이 됩니다.
-   ⚠️ 히어로가 밝아졌으므로 여기가 **첫 어두운 면**입니다. 마지막
-   CTA(차콜)와는 색이 달라야 "또 같은 띠" 로 읽히지 않습니다.
-   ⚠️ 왼쪽에 깔던 벡터 그림은 뺐습니다 — 브랜드색 위에서 형체가
-   안 보이고 얼룩처럼만 보였습니다.
-   ⚠️ 시안의 네 칸에 "실제 사장님 후기" 가 있었습니다. 후기가 한 건도
-   없어서 뺐습니다 — 없는 것을 있다고 적으면 표시광고법 제3조입니다.
+   바뀌어야 페이지가 끝없이 이어지는 느낌을 벗습니다.
+   ⚠️ 마지막 CTA 와 **같은 색으로 두지 마세요.** 여기는 딥 버건디,
+   마지막은 그보다 더 어두운 쪽입니다 — 둘이 같으면 "또 같은 띠" 로
+   읽힙니다.
+   ⚠️ 옛 `.bband`(높이 150px 짜리 빨간 줄)는 없앴습니다. 거기 있던 네
+   가지 약속은 히어로 아래 신뢰 줄(`.tbar`)이 같은 말을 합니다.
    ════════════════════════════════════════════════════════════════════ */
-.bband{ background:linear-gradient(152deg, var(--burg-deep) 0%,
-    var(--burg-deep-2) 58%, #4E0F1C 100%);
+.mband{ background:linear-gradient(152deg, var(--burg-deep) 0%,
+    var(--burg-deep-2) 60%, #4E0F1C 100%);
   color:#fff; padding:var(--s10) 0; }
-.bband-in{ display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+.mband-in{ display:grid; grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);
   gap:var(--s9); align-items:center; }
-.bband-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.14em;
+.mband-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.14em;
   color:var(--burgundy-400); margin-bottom:var(--s4); }
-.bband h2{ font-size:var(--t-3xl); color:#fff;
+.mband h2{ font-size:var(--t-3xl); color:#fff;
   line-height:var(--lh-tight); letter-spacing:var(--tr-head); }
-.bband-p{ margin-top:var(--s5); font-size:var(--t-lg); line-height:1.75;
-  color:rgba(255,255,255,.80); max-width:46ch; }
-.bband-cta{ display:flex; flex-wrap:wrap; gap:var(--s3); margin-top:var(--s7); }
+.mband-p{ margin-top:var(--s5); font-size:var(--t-lg); line-height:1.75;
+  color:rgba(255,255,255,.80); max-width:44ch; }
+.mband-cta{ display:flex; flex-wrap:wrap; gap:var(--s3); margin-top:var(--s7); }
 
-.bband-l{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s4); }
-/* ⚠️ 칸 둘에 항목 둘 — grid 칸에 글과 태그를 섞지 않습니다 */
-.bband-l li{ display:grid; grid-template-columns:auto 1fr; gap:var(--s4);
-  align-items:start; padding:var(--s5);
-  background:rgba(255,255,255,.07); border-radius:var(--r-lg); }
-.bband-ic{ display:inline-flex; align-items:center; justify-content:center;
-  width:42px; height:42px; border-radius:14px;
+/* STEP 01 → 02 → 03 */
+.mstep{ display:grid; gap:var(--s4); }
+.mstep li{ position:relative; display:grid; gap:var(--s2);
+  padding:var(--s5) var(--s6); border-radius:var(--r-lg);
+  background:rgba(255,255,255,.07); }
+.mstep-n{ font-size:var(--t-cap); font-weight:800; letter-spacing:.12em;
+  color:var(--burgundy-400); }
+.mstep-ic{ position:absolute; right:var(--s6); top:var(--s5);
+  display:inline-flex; align-items:center; justify-content:center;
+  width:40px; height:40px; border-radius:13px;
   background:rgba(255,255,255,.12); color:#fff; }
-.bband-b{ display:grid; gap:4px; }
-.bband-b b{ font-size:var(--t-md); font-weight:800; color:#fff; }
-.bband-b span{ font-size:var(--t-sm); line-height:1.65;
-  color:rgba(255,255,255,.66); }
+.mstep li > b{ font-size:var(--t-xl); letter-spacing:-.02em; color:#fff; }
+.mstep-d{ font-size:var(--t-sm); line-height:1.65; color:rgba(255,255,255,.66);
+  max-width:38ch; }
+/* 단계 사이의 이음선 */
+.mstep li + li::before{ content:""; position:absolute; left:var(--s8);
+  top:calc(var(--s4) * -1); width:1px; height:var(--s4);
+  background:rgba(255,255,255,.28); }
 @media (max-width:980px){
-  .bband-in{ grid-template-columns:1fr; gap:var(--s7); }
-  .bband{ padding:var(--s9) 0; }
+  .mband-in{ grid-template-columns:1fr; gap:var(--s7); }
+  .mband{ padding:var(--s9) 0; }
 }
 @media (max-width:560px){
-  .bband-l{ grid-template-columns:1fr; }
-  .bband-p{ font-size:var(--t-base); }
+  .mband-p{ font-size:var(--t-base); }
+  .mstep-ic{ display:none; }
+}
+
+/* ── WHY ABOUTMEAT 의 흐름 두 칸 (§14) ──────────────────────
+   ⚠️ 여기에 "몇 시간 절약" 같은 숫자를 적지 마세요 — 재어 본 적이
+   없습니다 (절대 규칙 1). 하는 일을 나란히 놓는 데까지입니다. */
+.wflow{ display:grid; grid-template-columns:1fr auto 1fr; gap:var(--s6);
+  align-items:center; margin-bottom:var(--s8); }
+.wflow-c{ padding:var(--s6); border-radius:var(--r-xl); }
+.wflow-c > b{ display:block; font-size:var(--t-sm); font-weight:800;
+  margin-bottom:var(--s4); }
+.wflow-c ul{ display:grid; gap:var(--s2); }
+.wflow-a{ background:var(--bg-warm); }
+.wflow-a > b{ color:var(--ink3); }
+.wflow-a li{ font-size:var(--t-sm); color:var(--ink2);
+  padding:var(--s2) var(--s4); background:var(--surface);
+  border-radius:var(--r-pill); text-decoration:line-through;
+  text-decoration-color:var(--ink3); text-decoration-thickness:1px; }
+.wflow-b{ background:var(--burgundy-50); }
+.wflow-b > b{ color:var(--burgundy); }
+/* ⚠️ 칸 둘에 항목 둘 — grid 칸에 글과 태그를 섞지 않습니다 */
+.wflow-b li{ display:grid; grid-template-columns:auto 1fr; gap:var(--s3);
+  align-items:center; font-size:var(--t-sm); font-weight:600; color:var(--ink);
+  padding:var(--s2) var(--s4); background:var(--surface);
+  border-radius:var(--r-pill); }
+.wflow-b li .ic{ color:var(--burgundy); }
+.wflow-x{ color:var(--burgundy); opacity:.5; display:inline-flex; }
+@media (max-width:760px){
+  .wflow{ grid-template-columns:1fr; gap:var(--s4); }
+  .wflow-x{ justify-self:center; transform:rotate(90deg); }
 }
 
 /* 고민 여섯 — 시안대로 한 줄에 셋 */

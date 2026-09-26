@@ -97,7 +97,59 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[390,844,"모바
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[] };
+  /* ⚠️ **흰 글자가 흰 바탕에 앉는 일이 실제로 있었습니다.** 창업 다섯
+     마디(.flow)는 어두운 구간에만 있던 것이라 글자색 기본이 흰색이고,
+     밝은 쪽은 .sec-tone 안에서만 되돌려 놓았습니다. 그 구간을 순백으로
+     옮기자 제목과 설명이 **통째로 안 보였습니다** — 에러도 안 나고
+     가로 스크롤도 안 나고 이 검사들도 전부 통과했습니다.
+     그래서 글자색과 실제 바탕색의 **밝기 차이**를 직접 잽니다.
+     ⚠️ 1.6 은 "거의 안 보인다" 는 선입니다. 낮은 대비를 전부 잡으려는
+     게 아닙니다 — 그건 디자인 판단이고 여기서 할 일이 아닙니다. */
+  /* [r,g,b,a] 로 돌려줍니다 — 반투명을 **불투명으로 착각하면** 안 됩니다.
+     .mstep 의 rgba(255,255,255,.07) 을 흰색으로 읽어 딥 버건디 위의 흰
+     글자 12개가 오탐으로 걸렸습니다. */
+  const rgb = v => {
+    const m = (v||"").match(/[0-9.]+/g); if(!m) return null;
+    const a = m.length > 3 ? parseFloat(m[3]) : 1;
+    if(a === 0) return null;
+    return [+m[0], +m[1], +m[2], a];
+  };
+  const lum = c => {
+    const f = x => { x /= 255; return x <= .03928 ? x/12.92 : Math.pow((x+.055)/1.055, 2.4); };
+    return .2126*f(c[0]) + .7152*f(c[1]) + .0722*f(c[2]);
+  };
+  /* ⚠️ **그라디언트·사진 위는 재지 않습니다.** computed style 의
+     backgroundColor 는 그라디언트일 때 투명으로 나옵니다 — 그대로
+     위로 올라가면 "흰 바탕" 으로 잘못 읽어서, 딥 버건디 구간의 흰
+     글자 16개가 전부 오탐으로 걸렸습니다. 색을 모르면 **건너뜁니다.**
+     바탕이 단색인 곳만 봅니다 — 흰 글자가 흰 바탕에 앉는 사고는
+     대부분 단색 구간에서 납니다. */
+  const bgOf = e => {
+    const layers = [];   /* 위에서 아래로 쌓인 반투명 면들 */
+    let n = e;
+    while(n && n !== document.documentElement){
+      const cs = getComputedStyle(n);
+      if(cs.backgroundImage && cs.backgroundImage !== "none") return null;
+      const c = rgb(cs.backgroundColor);
+      if(c){
+        if(c[3] >= .999){
+          /* 불투명한 면을 만났습니다 — 위에 쌓인 것들을 여기에 얹습니다 */
+          let out = [c[0], c[1], c[2]];
+          for(let i = layers.length - 1; i >= 0; i--){
+            const l = layers[i];
+            out = [l[0]*l[3] + out[0]*(1-l[3]),
+                   l[1]*l[3] + out[1]*(1-l[3]),
+                   l[2]*l[3] + out[2]*(1-l[3])];
+          }
+          return out;
+        }
+        layers.push(c);
+      }
+      n = n.parentElement;
+    }
+    return null;   /* 끝까지 불투명한 면이 없으면 모르는 것으로 둡니다 */
+  };
   const vis = e => {
     const c = getComputedStyle(e);
     if (c.display==="none" || c.visibility==="hidden" || +c.opacity===0) return false;
@@ -113,6 +165,15 @@ const AUDIT = `(() => {
     if (leaf) {
       const f = parseFloat(c.fontSize);
       if (f < 12) out.small.push(e.className+"|"+f+"px|"+(e.textContent||"").trim().slice(0,14));
+      /* 3-2. 글자가 바탕에 묻히는가 */
+      const fg = rgb(c.color);
+      const bg = fg ? bgOf(e) : null;
+      if (fg && bg) {
+        const a = lum(fg), b2 = lum(bg);
+        const ratio = (Math.max(a,b2) + .05) / (Math.min(a,b2) + .05);
+        if (ratio < 1.6)
+          out.dim.push(e.className+"|"+ratio.toFixed(2)+"|"+(e.textContent||"").trim().slice(0,14));
+      }
     }
     /* 4. 누르는 것 40px — <button> 만이 아니라 onclick 을 단 것도 전부.
        ⚠️ 체크박스는 **자기 자신이 아니라 감싼 라벨이 누르는 자리**입니다.
@@ -263,14 +324,14 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
       const a = await p.evaluate(AUDIT);
       a.links.forEach(l => seenLinks.add(l));
       if (a.over) bad.over.push(name);
-      ["small","tap","wrap","bad","glue","mix","h1"].forEach(k =>
+      ["small","tap","wrap","bad","glue","mix","h1","dim"].forEach(k =>
         a[k].forEach(x => bad[k].push(name+" › "+x)));
     }
 
@@ -280,6 +341,7 @@ const AUDIT = `(() => {
       ["못 불러온 파일",      uniq(miss)],
       ["가로 스크롤",        bad.over],
       ["12px 미만 글씨",     uniq(bad.small)],
+      ["글자가 바탕에 묻힘",  uniq(bad.dim)],
       ["40px 미만 누름",     uniq(bad.tap)],
       ["낱말 가운데 잘림",   uniq(bad.wrap)],
       ["줄바꿈 사라져 낱말 붙음", uniq(bad.glue)],
@@ -318,7 +380,8 @@ const AUDIT = `(() => {
     ["/sos",        "헤더 메뉴 없음(SOS는 GNB 밖)", () => !document.querySelector("#gnb a.on")],
     ["/start",      "헤더 메뉴 켜짐", () => !!document.querySelector('#gnb a.on[href="/start"]')],
     ["/check",      "헤더 메뉴 켜짐", () => !!document.querySelector('#gnb a.on[href="/check"]')],
-    ["/partners",   "아래 네비 켜짐", () => !!document.querySelector('.mnav a.on[data-m="/partners"]')],
+    ["/partners",   "아래 네비 켜짐", () => !!document.querySelector('.mnav a.on[data-m="/quotes"]')],
+    ["/start",      "아래 네비 창업", () => !!document.querySelector('.mnav a.on[data-m="/start"]')],
     ["/",           "아래 네비 홈",   () => !!document.querySelector('.mnav a.on[data-m="/"]')],
     ["/sos",        "아래 네비 SOS",  () => !!document.querySelector('.mnav a.on[data-m="/sos"]')],
     ["/sos?q=%ED%85%8C%EC%8A%A4%ED%8A%B8", "메인에서 적은 말이 넘어옴",

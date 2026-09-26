@@ -16,20 +16,24 @@ window.WOW_GNB = [
      (지시서 3번), 그 답이 여기 있습니다. 업체찾기를 앞에 두면 그
      순간 전화번호부의 차림새가 됩니다. */
   { name:"고민 해결",    to:"/problems" },
-  { name:"창업",         to:"/start" },
+  { name:"창업하기",     to:"/start" },
   { name:"사업진단",     to:"/check" },
-  { name:"도구",         to:"/tools" },
-  { name:"업체찾기",     to:"/partners" },
-  { name:"견적요청",     to:"/request" },
-  { name:"사장님 연구소", to:"/lab" }
+  { name:"전문업체",     to:"/partners" },
+  { name:"견적비교",     to:"/quotes" },
+  { name:"사장님 연구소", to:"/lab" },
+  { name:"파트너스",     to:"/partner" }
 ];
+/* ⚠️ **계산기(/tools)를 헤더에서 뺐습니다.** 여덟 개가 되면 손님이
+   "무엇을 하는 곳인가" 대신 "어디를 눌러야 하나" 를 고민합니다
+   (지시서 42번). 대신 메인에 계산기 구간이 통째로 있고, 푸터에도
+   다섯 가지가 전부 있습니다. */
 
 /* 모바일 아래 네비 — 가운데 SOS 를 크게 (지시서 29번) */
 var MNAV = [
   { to:"/",        name:"홈",   icon:"home" },
-  { to:"/request", name:"견적", icon:"doc"  },   /* 요청 → 비교는 그 안에서 */
+  { to:"/start",   name:"창업", icon:"seed" },
   { to:"/sos",     name:"SOS",  icon:"alert", big:true },
-  { to:"/partners",name:"업체", icon:"search" },
+  { to:"/quotes",  name:"견적", icon:"scale" },
   { to:"/my",      name:"MY",   icon:"user" }
 ];
 
@@ -42,10 +46,9 @@ function Header(){
       '<div class="hd-r">'+
         '<a class="hd-ic" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
         '<a class="hd-txt" href="/login">로그인</a>'+
-        '<a class="hd-txt" href="/partner/apply">파트너 등록</a>'+
         /* Primary CTA — 지시서 29번. 이 버튼 하나가 헤더에서 제일
            눈에 띄어야 합니다. */
-        '<a class="btn btn-b hd-cta" href="/sos">무료 상담</a>'+
+        '<a class="btn btn-b hd-cta" href="/sos">무료로 물어보기</a>'+
       '</div>'+
       '<span class="hd-m-wrap">'+
         '<a class="hd-m" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
@@ -92,8 +95,11 @@ function paintMnav(){
   var p = nowPath(), cur = "";
   if(p === "/") cur = "/";
   else if(/^\/sos/.test(p))      cur = "/sos";
-  else if(/^\/request|^\/quotes/.test(p)) cur = "/request";
-  else if(/^\/partners?/.test(p)) cur = "/partners";
+  else if(/^\/start/.test(p))    cur = "/start";
+  /* ⚠️ 업체 찾기 · 파트너도 **견적 칸**을 켭니다. 아래 네비가 다섯
+     칸이라 업체 칸이 따로 없는데, 아무 칸도 안 켜져 있으면 손님이
+     길을 잃습니다. 업체를 고르는 일은 결국 견적으로 이어집니다. */
+  else if(/^\/request|^\/quotes|^\/partners?/.test(p)) cur = "/quotes";
   else if(/^\/my/.test(p))        cur = "/my";
   els(".mnav a").forEach(function(a){
     a.classList.toggle("on", a.getAttribute("data-m") === cur);

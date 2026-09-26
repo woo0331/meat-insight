@@ -41,11 +41,9 @@ function PageHome(){
   return Hero()+
          Situations()+      /* 굵게 — 다섯 상황 */
          WorryBand()+       /* 가늘게 — 열둘 중 여섯 고민 */
-         HowRow()+
          CheckBand()+
          ToolBand()+        /* 지금 바로 해 볼 수 있는 것 — 우리를 쓸 이유 */
          StartBand()+
-         BrandBand()+       /* 화면 한가운데의 딥 버건디 — 장면이 바뀝니다 */
          MatchBand()+
          CatBand()+
          DiffBand()+        /* 직접 알아보실 때와 무엇이 다른가 */
@@ -83,7 +81,7 @@ function ToolBand(){
            "하루로 나누면 얼마인지가 나옵니다.",
       cta:"계산해 보기" }
   ];
-  return '<section class="sec sec-warm"><div class="w">'+
+  return '<section class="sec"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">가입 없이, 지금</p>'+
       '<h2>연결해 드리기 전에<br class="br-m"> 먼저 쓸모가 있어야 한다고 봅니다.</h2>'+
       '<p>상담을 신청하셔야 뭔가 알려 드리는 곳이 아닙니다. '+
@@ -129,11 +127,29 @@ function DiffBand(){
      "시간이 듭니다. 잘못 고르면 다시 공사합니다.",
      "물어보시는 것과 업체를 찾아 드리는 것은 <b>무료</b>입니다."]
   ];
-  return '<section class="sec sec-tint"><div class="w">'+
-    '<div class="sec-hd"><p class="eyebrow">무엇이 다른가</p>'+
-      '<h2>혼자 알아보시면<br class="br-m"> 여기서 시간이 갑니다.</h2>'+
+  return '<section class="sec sec-tone"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">WHY ABOUTMEAT</p>'+
+      '<h2>20번 알아볼 일을<br class="br-m"> <em>한 곳에서.</em></h2>'+
       '<p>업체를 많이 아는 것이 아니라, <b>무엇을 물어봐야 하는지를 아는 것</b>이 '+
         '다른 점입니다.</p></div>'+
+    /* ⚠️ 왼쪽은 **지금 사장님이 실제로 하시는 일**이고 오른쪽은
+       우리가 하는 일입니다. 여기에 "몇 시간 절약" 같은 숫자를 적지
+       마세요 — 재어 본 적이 없습니다 (절대 규칙 1). */
+    '<div class="wflow">'+
+      '<div class="wflow-c wflow-a">'+
+        '<b>지금은 이렇게 하십니다</b>'+
+        '<ul>'+["네이버 검색","전화 돌리기","업체 찾아 보기","견적서 받기",
+                "카톡으로 주고받기","엑셀에 옮겨 적기","다시 검색"].map(function(t){
+          return '<li>'+esc(t)+'</li>'; }).join("")+'</ul>'+
+      '</div>'+
+      '<div class="wflow-x" aria-hidden="true">'+icon("arrow",26)+'</div>'+
+      '<div class="wflow-c wflow-b">'+
+        '<b>ABOUTMEAT 에서는</b>'+
+        '<ul>'+["상황 입력","확인할 것 · 물어볼 것","전문업체 비교",
+                "견적 한 화면에서 관리","해결"].map(function(t){
+          return '<li>'+icon("check",15)+'<span>'+esc(t)+'</span></li>'; }).join("")+'</ul>'+
+      '</div>'+
+    '</div>'+
     '<div class="diff">'+
       '<div class="diff-h"><span></span>'+
         '<span class="diff-a">직접 알아보실 때</span>'+
@@ -161,31 +177,23 @@ function DiffBand(){
    ⚠️ 어두운 면은 버건디가 아니라 차콜(--dark)입니다. 여기까지 브랜드
    색으로 칠하면 화면 절반이 버건디가 되어 정육점 간판이 됩니다. */
 /* ── 01 히어로 ───────────────────────────────────────────────
-   ⚠️ **밝은 두 칸입니다 (2026-09-26 세 번째 손질).** 예전에는 차콜
-   바탕에 벡터 그림을 깔고 어두운 겹을 얹었습니다. 실제 현장 사진이라면
-   그게 맞지만, 지금 들어 있는 것은 코드로 그린 그림이라 **글자 밑에서
-   흐릿한 덩어리**로만 보였고 첫 화면의 인상을 통째로 어둡게 만들었습니다.
-
-   ⚠️ 오른쪽에 두는 것은 **사진이 아니라 우리 화면 자체**입니다.
-   이 사이트가 전화번호부와 다른 이유는 "업체를 대 준다" 가 아니라
-   "업체를 부르기 전에 무엇을 물어봐야 하는지 안다" 인데, 그건 말로는
-   증명이 안 됩니다. 실제 가이드의 **물어볼 것**을 그대로 보여 줍니다.
-
-   ⚠️ 여기에 **꾸민 숫자를 넣지 마세요.** 화면 흉내에 "절감 320만원" ·
-   "만족도 98%" 를 찍으면 그게 바로 지어낸 실적입니다 (절대 규칙 1).
-   보여 주는 글은 전부 `js/data/guides.js` 에 실제로 있는 문장입니다. */
+   ⚠️ **밝은 두 칸입니다.** 왼쪽 글 · 오른쪽 우리 화면.
+   ⚠️ 오른쪽에 두는 것은 사진 한 장이 아니라 **사진 위에 겹친 우리
+   제품 화면**입니다. 이 사이트가 전화번호부와 다른 이유는 "업체를
+   대 준다" 가 아니라 "업체를 부르기 전에 무엇부터 가려야 하는지 안다"
+   인데, 그건 말로는 증명이 안 됩니다.
+   ⚠️ 여기에 **꾸민 숫자를 넣지 마세요.** 겹쳐 놓은 화면의 글은 전부
+   `js/data/guides.js` 의 실제 문장입니다 (절대 규칙 1). */
 function Hero(){
   return '<section class="hero hero-lt2">'+
-    /* 아주 옅게 번지는 두 덩어리 — 장식이지만 면이 아니라 **빛**입니다.
-       ⚠️ 색을 진하게 올리지 마세요. 올리는 순간 그라디언트 배너가 됩니다. */
     '<span class="hero-blob hb-1" aria-hidden="true"></span>'+
     '<span class="hero-blob hb-2" aria-hidden="true"></span>'+
     '<div class="w hero-grid">'+
     '<div class="hero-in">'+
-      '<p class="hero-kicker">사장님은 장사만 하세요.</p>'+
+      '<p class="hero-kicker">고기 사업자를 위한 비즈니스 플랫폼</p>'+
       '<h1 class="hero-h">고기 장사,<br>뭐가 <em>고민</em>이세요?</h1>'+
-      '<p class="hero-p">창업 · 원가 · 시설 · 매출 · 확장 · 정리까지.<br class="br-m"> '+
-        '상황만 적어 주시면 해결방법부터 맞는 업체까지 찾아 드립니다.</p>'+
+      '<p class="hero-p">창업부터 운영 · 원가 · 시설 · 거래처 · 성장까지.<br class="br-m"> '+
+        '필요한 해결책과 전문업체를 한곳에서 찾아보세요.</p>'+
 
       '<form class="ask" onsubmit="return askGo(event)">'+
         '<label class="sr" for="ask">어떤 문제가 있으신가요</label>'+
@@ -193,77 +201,73 @@ function Hero(){
         '<textarea id="ask" rows="1" enterkeyhint="go"'+
           ' placeholder="'+esc(WOW_ASK_SAMPLES[0])+'"'+
           ' oninput="askGrow(this)" onkeydown="askKey(event)"></textarea>'+
-        /* 좁은 화면에서는 단추가 한 줄을 다 차지합니다. 동그란 화살표만
-           있으면 무엇을 하는 단추인지 모르니 그때만 글자를 보여 줍니다. */
         '<button class="ask-go" type="submit" aria-label="문제 적고 시작하기">'+
           '<b class="ask-go-t" aria-hidden="true">물어보기</b>'+icon("arrow",22)+'</button>'+
       '</form>'+
 
-      /* 짧은 단추 — 입력창을 대신하는 게 아니라 **채워 주는** 것입니다 */
       '<ul class="ask-chips">'+(window.WOW_ASK_CHIPS||[]).map(function(c,i){
         return '<li><button type="button" onclick="askFill('+i+')">'+
           esc(c.tag)+'</button></li>'; }).join("")+'</ul>'+
-
-      /* ── 히어로 아래 네 칸 ──────────────────────────────
-         ⚠️ 시안에는 여기에 "3,200+ 사장님 · 1,500+ 검증된 업체 ·
-         만족도 98% · 24시간 응답" 이 있었습니다. **넣지 않았습니다.**
-         지금 그 값이 하나도 없고, 없는 숫자를 적는 것은 절대 규칙 1
-         위반이자 표시광고법 제3조(거짓·과장 광고)에 걸립니다.
-         ⚠️ 대신 **지금 지킬 수 있는 약속**을 같은 자리에 같은 모양으로
-         둡니다. 실제 값이 생기면 이 네 칸의 내용만 바꾸면 됩니다.
-         ⚠️ "24시간 응답" 처럼 **시간을 약속하는 말도 넣지 마세요** —
-         약관 제8조가 회신 시점을 보장하지 않는다고 적고 있습니다. */
-      '<ul class="hero-facts">'+
-        [["상담료","받지 않습니다"],
-         ["회원가입","하지 않으셔도 됩니다"],
-         ["업체","조건 맞는 곳만 최대 3곳"],
-         ["견적","나란히 놓고 비교"]].map(function(x){
-          return '<li><b>'+esc(x[0])+'</b><span>'+esc(x[1])+'</span></li>';
-        }).join("")+'</ul>'+
     '</div>'+
 
-    '<div class="hero-ui">'+ HeroMock() + HeroCheckCard() +'</div>'+
+    '<div class="hero-ui">'+ HeroStage() +'</div>'+
     '</div>'+
-  '</section>';
+  '</section>'+ TrustBar();
 }
 
-/* ── 히어로 오른쪽: 우리 화면을 그대로 보여 줍니다 ──────────
-   ⚠️ **가짜 데이터가 한 글자도 없습니다.** 제목도 질문도 전부
-   `js/data/guides.js` 의 덕트 가이드에서 그대로 가져옵니다. 가이드를
-   고치면 여기도 같이 바뀝니다 — 어긋날 자리가 없습니다.
-   ⚠️ 가이드가 없으면 **이 칸이 통째로 안 나옵니다** (절대 규칙 2).
-   빈 액자를 두지 않습니다. */
-function HeroMock(){
-  var g = (window.wowGuide ? wowGuide("duct") : null);
-  if(!g || !g.ask || !g.ask.length) return "";
-  /* 업체에게 나가는 글과 같은 이유로 별표를 떼어냅니다 — 화면 흉내
-     안에서 `**` 가 글자로 찍히면 그 순간 흉내가 들통납니다. */
-  var rows = g.ask.slice(0,4).map(function(t,i){
-    return '<span class="humo-i"><i aria-hidden="true">'+(i+1)+'</i>'+
-      '<em>'+esc(String(t).replace(/\*\*/g,""))+'</em></span>';
+/* ── 히어로 오른쪽: 사진 위에 겹친 우리 화면 ────────────────
+   ⚠️ 사진은 아직 **그림(SVG)** 입니다. 실제 고깃집 · 정육 작업 사진이
+   생기면 `js/data/photos.js` 의 경로만 바꾸면 그대로 사진이 됩니다 —
+   짜임새는 이미 사진을 전제로 짜 두었습니다.
+   ⚠️ 겹친 카드의 글은 전부 `wowGuide("cost")` 에서 그대로 옵니다. */
+function HeroStage(){
+  var g = (window.wowGuide ? wowGuide("cost") : null);
+  var ph = hasPhoto("hero");
+  if(!g) return ph ? '<div class="hstage"><span class="hstage-ph">'+
+    photoBox("hero")+'</span></div>' : "";
+
+  /* 무엇 때문인지 가르는 세 가지 — 가이드의 `causes` 제목 그대로 */
+  var rows = (g.causes||[]).slice(0,3).map(function(c,i){
+    return '<span class="hsf-i"><i aria-hidden="true">'+(i+1)+'</i>'+
+      '<em>'+esc(c.t)+'</em></span>';
   }).join("");
-  return '<a class="humo" href="/problem/'+encodeURIComponent(g.key)+'">'+
-    '<span class="humo-bar" aria-hidden="true">'+
-      '<i></i><i></i><i></i><u>aboutmeat.co.kr/problem/'+esc(g.key)+'</u></span>'+
-    '<span class="humo-b">'+
-      '<span class="humo-tag tn6">'+esc(g.h1)+'</span>'+
-      '<b class="humo-h">업체를 부르기 전에 물어볼 것</b>'+
-      '<span class="humo-l">'+rows+'</span>'+
-      '<span class="humo-go">이 고민 해결방법 보기'+icon("arrow",16)+'</span>'+
-    '</span></a>';
+
+  return '<div class="hstage">'+
+    (ph ? '<span class="hstage-ph" aria-hidden="true">'+photoBox("hero")+'</span>' : '')+
+    /* 위에 겹치는 카드 — 고민 → 가릴 것 → 해결방법 */
+    '<a class="hsf" href="/problem/'+encodeURIComponent(g.key)+'">'+
+      '<span class="hsf-q">'+
+        '<b>사장님의 고민</b>'+
+        '<em>“'+esc(g.ask0)+'”</em>'+
+      '</span>'+
+      '<span class="hsf-arw" aria-hidden="true">'+icon("chevd",18)+'</span>'+
+      '<span class="hsf-b">'+
+        '<b>먼저 무엇 때문인지 가릅니다</b>'+
+        '<span class="hsf-l">'+rows+'</span>'+
+      '</span>'+
+      '<span class="hsf-go">해결방법 보기'+icon("arrow",16)+'</span>'+
+    '</a>'+
+  '</div>';
 }
 
-/* 흉내 화면 밑에 겹쳐 놓는 작은 카드 — 진단으로 가는 길 */
-function HeroCheckCard(){
-  return '<aside class="hero-card">'+
-    '<a href="/check">'+
-      '<span class="hc-ic">'+icon("gauge",22)+'</span>'+
-      '<span class="hc-t"><em>지금, 무료로</em><b>사업진단 받아보세요</b></span>'+
-      '<span class="hc-p">육류원가·인건비·고정비까지 여덟 가지로, '+
-        '지금 무엇을 모르고 계신지 정리해 드립니다.</span>'+
-      '<span class="hc-go">3분이면 끝납니다'+icon("arrow",16)+'</span>'+
-    '</a>'+
-  '</aside>';
+/* ── 히어로 아래 신뢰 줄 ─────────────────────────────────────
+   ⚠️ 시안에는 여기에 "3,200+ 사장님 · 만족도 98%" 가 있었습니다.
+   **넣지 않았습니다.** 그 값이 하나도 없고, 없는 숫자를 적는 것은
+   절대 규칙 1 위반이자 표시광고법 제3조(거짓·과장 광고)입니다.
+   ⚠️ 여기 적힌 넷은 전부 **지금 지킬 수 있는 말**입니다. 시간을
+   약속하는 말("24시간 응답")도 넣지 마세요 — 약관 제8조가 회신 시점을
+   보장하지 않는다고 적고 있습니다. */
+function TrustBar(){
+  var rows = [
+    ["won",   "상담료 없음",   "물어보시는 것도 업체를 찾아 드리는 것도 무료입니다"],
+    ["scale", "조건 비교",     "받은 견적을 포함 범위까지 같이 놓고 견줍니다"],
+    ["knife", "고기 사업 전문", "고깃집 · 정육점에서 실제로 나오는 고민만 다룹니다"],
+    ["badge", "전문업체 연결",  "조건이 맞는 곳만, 목록을 뿌리지 않고 골라서 보냅니다"]
+  ];
+  return '<section class="tbar"><div class="w tbar-in">'+rows.map(function(r){
+    return '<div class="tbar-i"><span class="tbar-ic">'+icon(r[0],20)+'</span>'+
+      '<span class="tbar-t"><b>'+esc(r[1])+'</b><span>'+esc(r[2])+'</span></span></div>';
+  }).join("")+'</div></section>';
 }
 
 /* 입력창 예시가 돌아갑니다 — 빈 칸만 보여 주면 사장님은 안 씁니다.
@@ -305,30 +309,14 @@ window.askGo = function(ev){
   return false;
 };
 
-/* ── 02 어떻게 되는 곳인가 ─────────────────────────────────
-   ⚠️ 여기에 **숫자를 넣지 마세요.** "3,200+ 사장님" · "1,500+ 업체" ·
-   "만족도 98%" 는 지금 이 서비스에 실제 값이 없습니다. 없는 숫자를
-   적으면 지시서 43번 위반이고 표시광고법 제3조(거짓·과장 광고)에도
-   걸립니다. 그래서 이 줄은 **숫자가 아니라 약속**만 적습니다 —
-   전부 지금 지킬 수 있는 말들입니다. */
-function HowRow(){
-  var rows = [
-    ["won",   "물어보는 건 무료",     "상담료를 받지 않습니다."],
-    ["user",  "가입하지 않아도 됩니다", "연락받을 곳만 적어 주시면 됩니다."],
-    ["shield","맞는 곳 세 군데만",     "목록을 뿌리지 않고 골라서 보여 드립니다."]
-  ];
-  return '<section class="how"><div class="w how-in">'+rows.map(function(r){
-    return '<div class="how-i"><span class="how-ic">'+icon(r[0],22)+'</span>'+
-      '<b>'+esc(r[1])+'</b><span>'+esc(r[2])+'</span></div>';
-  }).join("")+'</div></section>';
-}
+
 
 /* ── 03 지금 어떤 상황이세요? (지시서 5번) ──────────────────
    ⚠️ 사진이 있으면 사진 카드, 없으면 **글 카드**입니다. 빈 액자 다섯
    장을 화면 위쪽에 늘어놓으면 "사진 못 넣은 사이트" 로 읽힙니다
    (js/data/photos.js 의 hasPhoto). */
 function Situations(){
-  return '<section class="sec"><div class="w">'+
+  return '<section class="sec sec-white"><div class="w">'+
     '<div class="sec-hd"><h2>지금 어떤 상황이세요?</h2>'+
       '<p>사장님의 상황에 맞는 해결방법부터 찾아드립니다.</p></div>'+
     /* ⚠️ **앞의 둘을 크게 냅니다 (벤토).** 다섯 장을 똑같은 크기로
@@ -367,7 +355,7 @@ function Situations(){
    따라 다르고, 우리에게 그 기준을 뒷받침할 데이터가 없습니다.
    그래서 상태색(--ok/--warn/--bad)도 쓰지 않습니다. */
 function CheckBand(){
-  return '<section class="sec"><div class="w ckb">'+
+  return '<section class="sec sec-white"><div class="w ckb">'+
     /* ① 왼쪽 — 왜 해야 하는가 */
     '<div class="ckb-t">'+
       '<p class="eyebrow">무료 사업진단</p>'+
@@ -499,39 +487,7 @@ window.costCalc = function(){
                                           : CostGauge(null);
 };
 
-/* ── 04.5 브랜드 띠 (시안의 빨간 줄) ───────────────────────
-   ⚠️ 네 칸에 **지킬 수 있는 말만** 적습니다. 시안에 있던 "실제 사장님
-   후기" 는 후기가 한 건도 없어서 뺐습니다 — 없는 것을 있다고 적으면
-   표시광고법 제3조(거짓·과장 광고)입니다. 후기가 쌓이면 그때 넣습니다. */
-function BrandBand(){
-  return '<section class="bband">'+
-    '<div class="w bband-in">'+
-    '<div class="bband-t">'+
-      '<p class="bband-k">ABOUTMEAT</p>'+
-      '<h2>좋은 고기, 좋은 사장님,<br class="br-m"> 더 좋은 매장을 만듭니다.</h2>'+
-      '<p class="bband-p">고기 장사는 아는 사람에게 물어야 빨리 끝납니다. '+
-        '무엇이 문제인지 정리하는 것부터, 업체에 무엇을 물어볼지, '+
-        '받은 견적을 어떻게 견줄지까지 같이 봅니다.</p>'+
-      '<div class="bband-cta">'+
-        '<a class="btn btn-w" href="/sos">무료로 물어보기'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-gh" href="/problems">고민별 해결방법 보기</a>'+
-      '</div>'+
-    '</div>'+
-    /* ⚠️ 여기에 업체 수 · 계약 수 · 만족도를 적지 마세요. 그 값이
-       하나도 없습니다 (절대 규칙 1 · 표시광고법 제3조). 적을 수 있는
-       것은 **우리가 실제로 하는 일**까지입니다. */
-    '<ul class="bband-l">'+
-      [["badge","조건 맞는 곳만","고깃집 · 정육점을 해 본 업체인지 먼저 봅니다"],
-       ["won","상담 · 견적 무료","물어보는 데 돈을 받지 않습니다"],
-       ["scale","견적은 나란히","포함 범위까지 같이 놓고 견줍니다"],
-       ["seed","창업부터 정리까지","여는 것도 닫는 것도 같이 봅니다"]]
-      .map(function(x){
-        return '<li><span class="bband-ic">'+icon(x[0],22)+'</span>'+
-          '<span class="bband-b"><b>'+esc(x[1])+'</b>'+
-          '<span>'+esc(x[2])+'</span></span></li>'; }).join("")+
-    '</ul>'+
-  '</div></section>';
-}
+
 
 
 /* ── 05 창업 프로젝트 (지시서 9번) ─────────────────────────
@@ -549,7 +505,7 @@ function StartBand(){
     ["오픈",        "인허가 · 세무 · 마케팅"]
   ];
   var steps = (window.WOW_STARTUP_STEPS || []);
-  return '<section class="sec-tone"><div class="w">'+
+  return '<section class="sec sec-white"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">창업 프로젝트</p>'+
       '<h2>고깃집 하나 차리는 데<br class="br-m"> 알아볼 게 너무 많으니까.</h2>'+
       '<p>상권부터 오픈까지 <b>'+(steps.length||20)+'가지</b>를 순서대로 정리해 드립니다. '+
@@ -576,27 +532,33 @@ function StartBand(){
    그때 붙입니다 — 지금은 "어떻게 되는지" 만 설명합니다. */
 function MatchBand(){
   var steps = [
-    ["상황을 적습니다",   "edit",
+    ["상황 입력", "edit",
      "문제나 필요한 것을 그대로 적어 주시면 됩니다. 양식이 없어도 됩니다."],
-    ["우리가 알아봅니다", "search",
-     "무엇이 필요한 일인지 정리하고, 지역 · 예산 · 일정 조건을 잡습니다."],
-    ["세 곳만 비교합니다", "scale",
-     "조건에 맞는 곳에만 요청이 갑니다. 가격 · 일정 · A/S 를 한 화면에서 보세요."]
+    ["조건 확인", "search",
+     "무엇이 필요한 일인지 정리하고 지역 · 예산 · 일정 조건을 잡습니다."],
+    ["전문업체 비교", "scale",
+     "조건에 맞는 곳에만 요청이 갑니다. 가격 · 일정 · A/S 를 한 화면에서."]
   ];
-  return '<section class="sec"><div class="w">'+
-    '<div class="sec-hd"><p class="eyebrow">업체 매칭</p>'+
+  return '<section class="mband">'+
+    '<div class="w mband-in">'+
+    '<div class="mband-t">'+
+      '<p class="mband-k">업체 매칭</p>'+
       '<h2>업체 찾느라<br class="br-m"> 전화 돌리지 마세요.</h2>'+
-      '<p>업체를 많이 보여 드리는 게 목적이 아닙니다. '+
-        '사장님 조건에 맞는 곳을 찾아 드리는 게 목적입니다.</p></div>'+
-    '<ol class="steps">'+steps.map(function(s,i){
-      return '<li><span class="steps-n">'+("0"+(i+1))+'</span>'+
-        '<b>'+icon(s[1],20)+esc(s[0])+'</b><span>'+esc(s[2])+'</span></li>';
-    }).join("")+'</ol>'+
-    '<div class="row-cta row-mid">'+
-      '<a class="btn btn-b btn-lg" href="/sos">지금 물어보기'+icon("arrow",18)+'</a>'+
+      '<p class="mband-p">필요한 조건만 알려주시면 '+
+        '고기 사업 경험이 있는 전문업체를 비교해드립니다.</p>'+
+      '<div class="mband-cta">'+
+        '<a class="btn btn-w btn-lg" href="/request">무료 견적받기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-gh btn-lg" href="/partners">어떤 업체가 필요한지 고르기</a>'+
+      '</div>'+
     '</div>'+
+    '<ol class="mstep">'+steps.map(function(st,i){
+      return '<li><span class="mstep-n">STEP '+("0"+(i+1))+'</span>'+
+        '<span class="mstep-ic">'+icon(st[1],20)+'</span>'+
+        '<b>'+esc(st[0])+'</b><span class="mstep-d">'+esc(st[2])+'</span></li>';
+    }).join("")+'</ol>'+
   '</div></section>';
 }
+
 
 /* ── 07 고기 장사에 필요한 모든 것 (지시서 25번) ────────────
    ⚠️ **첫 화면이 아니라 여기**입니다 (지시서 3번). 들어오자마자
@@ -605,7 +567,7 @@ function MatchBand(){
 function CatBand(){
   var ic = { meat:"truck", space:"store", equip:"tool",
              ops:"clock", grow:"up", pro:"shield" };
-  return '<section class="sec sec-warm"><div class="w">'+
+  return '<section class="sec"><div class="w">'+
     '<div class="sec-hd"><h2>고기 장사에 필요한 모든 것</h2>'+
       '<p>고기부터 덕트 · 장비 · 세무까지. 어디에 물어야 할지 모를 때 '+
         '여기서 시작하시면 됩니다.</p>'+
@@ -641,7 +603,7 @@ function WorryBand(){
      ⚠️ 왼쪽에 세워 두던 세로 그림은 뺐습니다. 칸을 반으로 줄여서
      고민 여섯 개가 두 줄로 눌려 있었습니다. */
   var six = WOW_PROBLEMS.slice(0, 6);
-  return '<section class="sec sec-warm"><div class="w">'+
+  return '<section class="sec sec-tone"><div class="w">'+
     /* ⚠️ 히어로가 이미 "뭐가 고민이세요?" 라고 묻습니다. 바로 아래에서
        같은 질문을 또 하면 두 구간이 같은 말을 하는 것으로 읽힙니다.
        여기는 **묻는 자리가 아니라 우리가 무엇을 드리는지 말하는
@@ -690,7 +652,7 @@ function LiveBand(){
 function StoryBand(){
   var st = window.WOW_STORIES;
   if(!st || !st.length) return "";
-  return '<section class="sec"><div class="w">'+
+  return '<section class="sec sec-white"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">사장님 스토리</p>'+
       '<h2>다른 사장님들은 이렇게 시작했습니다</h2>'+
       '<a class="sec-more" href="/stories">전체보기'+icon("chev",16)+'</a></div>'+
@@ -717,7 +679,7 @@ function LabBand(){
      창업비·기간을 적을 수 없으니(지시서 43번), 같은 **틀**에 지금 있는
      진짜 내용(연구소 글 세 편)을 놓습니다. 실제 사례가 생기면
      WOW_STORIES 가 채워지고 StoryBand 가 이 자리 위에 나타납니다. */
-  return '<section class="sec"><div class="w">'+
+  return '<section class="sec sec-warm"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">사장님 연구소</p>'+
       '<h2>알고 하면 덜 씁니다</h2>'+
       '<p>고기 장사를 하면서 실제로 막히는 것들을 정리했습니다. '+
@@ -746,7 +708,7 @@ function LabBand(){
 function FaqBand(){
   var qs = window.WOW_FAQ || [];
   if(!qs.length) return "";
-  return '<section class="sec sec-warm"><div class="w">'+
+  return '<section class="sec sec-white"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">자주 묻는 것</p>'+
       '<h2>물어보기 전에 궁금하신 것</h2></div>'+
     '<div class="faq">'+qs.map(function(q, i){
@@ -793,12 +755,13 @@ function FinalCTA(){
     photoBg("final")+
     '<div class="hero-sh"></div>'+
     '<div class="w final-in">'+
-      '<h2>사장님은 장사만 하세요.</h2>'+
-      '<p>복잡한 건 ABOUTMEAT이 알아보겠습니다.</p>'+
+      '<h2>사장님은<br class="br-m"> 장사만 하세요.</h2>'+
+      '<p>창업부터 운영까지, 복잡한 일은 ABOUTMEAT이 함께 해결하겠습니다.</p>'+
       '<div class="row-cta row-mid">'+
-        '<a class="btn btn-w btn-lg" href="/sos">무료로 물어보기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-w btn-lg" href="/sos">지금 고민 무료로 물어보기'+icon("arrow",18)+'</a>'+
         '<a class="btn btn-gh btn-lg" href="/check">무료 사업진단</a>'+
       '</div>'+
     '</div>'+
   '</section>';
 }
+

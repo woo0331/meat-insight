@@ -3018,3 +3018,112 @@
   .sb-c .sit-l{ font-size:var(--t-sm); }
   .sb-d .sit-ph{ aspect-ratio:auto; height:100%; }
 }
+
+/* ── ABOUT SCAN — 설명이 아니라 계기판 (§18~21) ─────────────────
+   왼쪽은 말, 오른쪽 큰 칸은 **실제로 돌아가는 화면**입니다. 구간의
+   3분의 2를 화면에 내줍니다 — "이런 걸 해 드립니다" 라고 쓰는 것보다
+   지금 자리에서 숫자가 나오는 편이 훨씬 빠릅니다.
+   ⚠️ **미리 찍힌 숫자를 두지 마세요** (절대 규칙 1). 안 적으시면 세
+   칸은 `—` 입니다.
+   ⚠️ 판의 바탕색은 여기서 정하지 않습니다 — `.ckb-c` 가 "카드 면"
+   목록을 따라갑니다. 흰 구간에서는 옅은 회색 면이 됩니다. */
+.scan{ display:grid; grid-template-columns:minmax(0,.46fr) minmax(0,1fr);
+  gap:var(--s9); align-items:center; }
+.scan-t h2{ font-size:var(--t-3xl); line-height:var(--lh-tight);
+  letter-spacing:var(--tr-head); margin-bottom:var(--s5); }
+.scan-t .lead{ margin-bottom:var(--s7); }
+.scan-t .btn{ display:flex; width:100%; }
+.scan-t .note{ text-align:center; }
+
+.scan-ui{ padding:0; overflow:hidden; }
+/* 판의 머리 줄 — 제품 화면처럼 보이게 하는 것은 장식이 아니라 이 줄 */
+.scan-bar{ display:flex; align-items:center; justify-content:space-between;
+  gap:var(--s4); padding:var(--s5) var(--s7);
+  border-bottom:1px solid var(--line); }
+.scan-bar b{ font-size:var(--t-md); }
+.scan-bar span{ font-size:var(--t-cap); color:var(--ink3); }
+
+/* ⚠️ 네 칸을 **한 줄에 넷으로 두지 마세요.** 칸이 좁아져서 예시 글이
+   "예: 7,00" 으로 잘렸습니다 — 가로 스크롤도 에러도 안 나고, 잘린
+   자리만 보입니다. 둘씩 두 줄로 둡니다. */
+.scan-in{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s5) var(--s6);
+  padding:var(--s7) var(--s7) var(--s6); }
+
+/* 나눈 결과 — **크게**. 이 구간의 힘은 여기서 나옵니다. */
+.scan-out{ padding:0 var(--s7) var(--s5); }
+.scan-out .ccr{ display:grid; grid-template-columns:repeat(3,1fr);
+  gap:var(--s6); }
+.scan-out .ccr-i{ display:grid; grid-template-columns:1fr; gap:var(--s2);
+  align-content:start; border-bottom:0; padding-bottom:0; }
+/* 적으시면 숫자가 **확 커집니다.** 안 적으셨을 때부터 64px 짜리
+   줄표를 세워 두면 그 자체가 무슨 값처럼 보입니다. */
+.scan-out .ccr-v{ font-size:var(--t-num); line-height:1; font-weight:900;
+  letter-spacing:-.05em; transition:font-size .2s ease; }
+.scan-out .ccr-i:not(.on) .ccr-v{ font-size:var(--t-2xl); }
+.scan-out .ccr-v em{ font-size:var(--t-2xl); margin-left:1px; }
+.scan-out .ccr-bar{ grid-column:auto; margin-top:var(--s2); }
+.scan-out .ccr-h{ grid-column:auto; }
+.scan-n{ padding:0 var(--s7) var(--s6); margin-top:0 !important; }
+
+/* 이 브라우저에 남아 있는 진단 결과 — 판의 바닥 줄 */
+.scan-r.ckb-r{ border-radius:0; background:var(--tint);
+  border-top:1px solid var(--line);
+  grid-template-columns:auto minmax(0,1fr); justify-items:stretch;
+  text-align:left; align-items:center; gap:var(--s4) var(--s7);
+  padding:var(--s7); }
+.scan-r h3{ grid-column:1 / -1; justify-self:start; }
+.scan-r .ring{ margin:0; }
+.scan-r .ckb-r-l, .scan-r .ckb-r-p, .scan-r .btn{ grid-column:2; }
+.scan-r .ckb-r-p{ margin-top:var(--s2); }
+
+@media (max-width:1040px){
+  .scan{ grid-template-columns:1fr; gap:var(--s7); }
+  .scan-t .btn{ width:auto; display:inline-flex; }
+  .scan-t .note{ text-align:left; }
+  .scan-in{ padding:var(--s6) var(--s6) var(--s5); gap:var(--s4) var(--s5); }
+  .scan-out{ padding:0 var(--s6) var(--s5); }
+  .scan-out .ccr{ gap:var(--s5); }
+  .scan-n{ padding:0 var(--s6) var(--s5); }
+  .scan-bar{ padding:var(--s4) var(--s6); }
+  .scan-r.ckb-r{ padding:var(--s6); }
+}
+@media (max-width:640px){
+  /* ⚠️ 폰에서도 **칸을 지우지 않습니다.** 줄여도 되는 것은 글자
+     크기와 여백까지입니다 — 적는 칸이 사라지면 폰 손님에게는 이
+     기능이 없는 것과 같습니다. */
+  .scan-in{ grid-template-columns:1fr; gap:var(--s3); }
+  .scan-out .ccr{ grid-template-columns:1fr; gap:var(--s4); }
+  .scan-out .ccr-i{ grid-template-columns:1fr auto; align-items:baseline; }
+  .scan-out .ccr-v{ font-size:var(--t-num-s); }
+  .scan-out .ccr-bar, .scan-out .ccr-h{ grid-column:1 / -1; }
+  .scan-r.ckb-r{ grid-template-columns:1fr; }
+  .scan-r .ckb-r-l, .scan-r .ckb-r-p, .scan-r .btn{ grid-column:1; }
+  .scan-r .ring{ justify-self:center; }
+}
+
+/* ── 카드 안의 작은 계산기 (§22) ────────────────────────────────
+   아이콘 하나로는 "계산기가 여섯 개 있다" 까지만 전해집니다. **무엇을
+   적으면 무엇이 나오는가**를 칸 모양 그대로 보여 줍니다.
+   ⚠️ 나오는 값 자리는 `—` 입니다. 그럴듯한 숫자를 넣으면 그 순간
+   지어낸 값입니다 (절대 규칙 1).
+   ⚠️ 글자는 `--t-cap`(12.5px) 아래로 내려가지 않습니다. */
+.tool-mini{ display:grid; gap:6px; margin-top:var(--s2); }
+.tm-r, .tm-o{ display:flex; align-items:center; justify-content:space-between;
+  gap:var(--s3); border-radius:var(--r-sm); padding:9px var(--s4);
+  font-size:var(--t-cap); line-height:1.3; }
+.tm-r{ background:var(--bg-warm); border:1px solid var(--line-soft); }
+.tm-r i, .tm-o i{ font-style:normal; font-weight:700; color:var(--ink2); }
+.tm-r u{ text-decoration:none; color:var(--ink3); }
+.tm-o{ background:var(--burgundy-50); }
+.tm-o i{ color:var(--burgundy); }
+.tm-o b{ font-size:var(--t-lg); font-weight:900; color:var(--burgundy);
+  line-height:1; }
+/* 흰 카드가 아닌 구간에서는 적는 줄이 바탕에 묻힙니다 */
+.sec-tone .tm-r, .sec-warm .tm-r{ background:var(--bg); }
+
+@media (max-width:760px){
+  /* 카드가 줄이 되면 작은 계산기는 뺍니다 — **링크가 아니라 미리보기**
+     라서 없어져도 폰 손님이 못 하게 되는 일이 없습니다. 링크는 하나도
+     숨기지 않습니다. */
+  .tool-g6 .tool-mini{ display:none; }
+}

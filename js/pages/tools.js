@@ -94,22 +94,22 @@ function tlOut(name, val, unit, need){
 window.TOOL_LIST = [
   { to:"/check",      icon:"gauge", name:"무료 사업진단",
     line:"여덟 가지로 지금 무엇을 파악하고 계시고 무엇이 비어 있는지 셉니다.",
-    time:"3분" },
+    time:"3분", ask:[["월 매출","만원"],["육류 매입비","만원"]], out:"육류 원가율" },
   { to:"/tools/yield", icon:"knife", name:"수율 원가 계산",
     line:"원육을 손질하고 나면 원가가 달라집니다. 실제 1kg 원가와 1인분 원가를 냅니다.",
-    time:"1분" },
+    time:"1분", ask:[["매입 단가","원/kg"],["손질 후 무게","kg"]], out:"실제 1kg 원가" },
   { to:"/tools/bep",   icon:"target", name:"손익분기 계산",
     line:"고정비와 재료비율을 적으시면 한 달에 얼마를 팔아야 본전인지 나옵니다.",
-    time:"2분" },
+    time:"2분", ask:[["월 고정비","만원"],["변동비율","%"]], out:"본전 매출" },
   { to:"/start/cost",  icon:"won",   name:"창업비 정리표",
     line:"빠뜨리기 쉬운 칸을 전부 늘어놓고, 받으신 견적으로 합계와 빈 칸을 봅니다.",
-    time:"5분" },
+    time:"5분", ask:[["항목별 견적","만원"]], out:"합계 · 아직 안 받은 칸" },
   { to:"/tools/labor", icon:"users", name:"인건비율 계산",
     line:"월 매출과 인건비를 적으시면 인건비율과 한 사람당 매출이 나옵니다.",
-    time:"1분" },
+    time:"1분", ask:[["월 매출","만원"],["인건비 합계","만원"]], out:"인건비율" },
   { to:"/quotes",      icon:"scale", name:"견적 비교",
     line:"받으신 견적을 나란히 놓고 금액·기간·A/S·포함 범위를 맞춰 봅니다.",
-    time:"5분" }
+    time:"5분", ask:[["업체별 금액","만원"],["공사 기간","일"]], out:"제일 낮은 · 제일 짧은" }
 ];
 
 function PageTools(){

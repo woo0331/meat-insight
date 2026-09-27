@@ -94,12 +94,17 @@ function ToolBand(){
      으로 채워 넣지 않았습니다 — 칸을 채우려고 없는 기능을 적으면 그게
      지어낸 화면입니다 (절대 규칙 1·2).
      ⚠️ 새 계산기를 만들면 `TOOL_LIST`(js/pages/tools.js) 한 곳만
-     고치세요. 여기는 그걸 그대로 읽습니다. */
+     고치세요. 여기는 그걸 그대로 읽습니다.
+     ⚠️ 카드에 **무엇을 적으면 무엇이 나오는지**를 작은 화면으로
+     보여 줍니다 (§22). 아이콘 하나로는 "계산기가 여섯 개 있다" 까지만
+     전해지고, 그 여섯이 내 일과 무슨 상관인지는 안 전해집니다.
+     ⚠️ **나오는 값 자리에 숫자를 찍지 마세요.** 적으신 것이 없으니
+     `—` 입니다. 그럴듯한 값을 넣으면 그게 지어낸 숫자입니다. */
   var tools = (window.TOOL_LIST || []);
   if(!tools.length) return "";
   return '<section class="sec"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">가입 없이, 지금</p>'+
-      '<h2>연결해 드리기 전에<br class="br-m"> 먼저 쓸모가 있어야 한다고 봅니다.</h2>'+
+      '<h2>장사, 감으로 하지 마세요.</h2>'+
       '<p>상담을 신청하셔야 뭔가 알려 드리는 곳이 아닙니다. '+
         '아래 여섯은 지금 이 자리에서 바로 되고, 결과는 이 브라우저에 남습니다.</p>'+
       '<a class="sec-more" href="/tools">도구 전부 보기'+icon("chev",16)+'</a></div>'+
@@ -109,9 +114,23 @@ function ToolBand(){
           '<em>'+esc(t.time)+'</em></span>'+
         '<b>'+esc(t.name)+'</b>'+
         '<span class="tool-l">'+esc(t.line)+'</span>'+
+        ToolMini(t)+
         '<span class="tool-go"><em>해 보기</em>'+icon("arrow",18)+'</span></a>';
     }).join("")+'</div>'+
   '</div></section>';
+}
+
+/* 카드 안의 작은 계산기 — **적는 칸과 나오는 칸**을 그대로 보여 줍니다.
+   ⚠️ 값이 없는 도구는 이 칸을 통째로 뺍니다 (절대 규칙 2). 빈 상자를
+   두느니 없는 편이 낫습니다. */
+function ToolMini(t){
+  if(!t.ask || !t.ask.length || !t.out) return "";
+  return '<span class="tool-mini" aria-hidden="true">'+
+    t.ask.map(function(a){
+      return '<span class="tm-r"><i>'+esc(a[0])+'</i><u>'+esc(a[1])+'</u></span>';
+    }).join("")+
+    '<span class="tm-o"><i>'+esc(t.out)+'</i><b>—</b></span>'+
+  '</span>';
 }
 
 
@@ -384,18 +403,35 @@ function Situations(){
    따라 다르고, 우리에게 그 기준을 뒷받침할 데이터가 없습니다.
    그래서 상태색(--ok/--warn/--bad)도 쓰지 않습니다. */
 function CheckBand(){
-  return '<section class="sec sec-white"><div class="w">'+
-    '<div class="sec-hd"><p class="eyebrow">무료 사업진단</p>'+
-      '<h2>사장님, 지금 장사<br class="br-m"> 제대로 남기고 계신가요?</h2>'+
-      '<p>매출이 높아도 비용이 새고 있다면 실제로 남는 돈은 달라집니다. '+
-        '네 칸만 적으시면 지금 비율이 바로 나옵니다.</p></div>'+
-    '<div class="ckb">'+
-    /* ① 왼쪽 — 사장님 숫자를 적는 칸
-       ⚠️ **묻고 안 쓰는 칸을 만들지 마세요.** 네 칸은 전부 오른쪽
-       비율에 실제로 쓰입니다. 직원 수만 묻고 아무것도 계산하지 않으면
-       사장님 시간을 버리게 하는 짓입니다. */
-    '<div class="ckb-c">'+
-      '<h3>내 가게 간단 입력</h3>'+
+  /* ⚠️ **이 구간은 설명이 아니라 제품 화면입니다** (§18~21).
+     왼쪽은 말 한 줄과 버튼까지, 오른쪽 큰 칸은 실제로 돌아가는
+     계기판입니다 — "이런 걸 해 드립니다" 라고 쓰는 것보다 **지금
+     자리에서 숫자가 나오는 것**이 훨씬 빠릅니다.
+     ⚠️ **미리 찍힌 숫자를 두지 마세요.** 아무것도 안 적으셨으면 세
+     칸은 `—` 입니다. 예시값을 채워 두면 그게 지어낸 숫자이고,
+     사장님이 그대로 두고 넘어가면 우리가 지어낸 것이 됩니다.
+     ⚠️ 여기는 **흉내 화면이 아닙니다.** 실제로 계산하는 칸이라
+     "예시 화면" 배지를 달지 않습니다 — 달면 진짜를 가짜라고 하는
+     것이 됩니다. 배지는 히어로의 흉내 화면에만 있습니다. */
+  return '<section class="sec sec-white"><div class="w scan">'+
+    '<div class="scan-t">'+
+      '<p class="eyebrow">무료 사업진단</p>'+
+      '<h2>사장님,<br class="br-m"> 진짜 얼마 남으세요?</h2>'+
+      '<p class="lead">매출이 높아도 비용이 새고 있으면 실제로 남는 돈은 '+
+        '달라집니다. 네 칸만 적으시면 지금 비율이 바로 나옵니다.</p>'+
+      '<a class="btn btn-b btn-lg" href="/check">'+
+        '무료 사업진단 시작하기'+icon("arrow",18)+'</a>'+
+      '<p class="note">회원가입 없이 3분이면 됩니다. 여덟 가지를 고르시면 '+
+        '무엇이 비어 있는지 정리해 드립니다.</p>'+
+    '</div>'+
+
+    '<div class="ckb-c scan-ui">'+
+      '<div class="scan-bar"><b>내 가게 숫자</b>'+
+        '<span>이 브라우저에서만 계산합니다</span></div>'+
+
+      /* ① 적는 줄 — ⚠️ **묻고 안 쓰는 칸을 만들지 마세요.** 네 칸은
+         전부 아래 비율에 실제로 쓰입니다. */
+      '<div class="scan-in">'+
       [["cc-sales","월 매출","예: 7,000"],
        ["cc-meat","그중 육류 매입비","예: 2,400"],
        ["cc-labor","인건비 (월 합계)","예: 1,300"],
@@ -406,31 +442,19 @@ function CheckBand(){
             ' placeholder="'+esc(f[2])+'" oninput="costCalc()" autocomplete="off">'+
             '<em>만원</em></span></div>';
       }).join("")+
-      '<p class="note">적으신 숫자는 이 브라우저 밖으로 나가지 않습니다.</p>'+
-    '</div>'+
+      '</div>'+
 
-    /* ② 가운데 — 적으신 것을 나눈 결과.
-       ⚠️ **"몇 %면 좋다" 고 단정하지 않습니다.** 업종·평수·부위 구성
-       마다 달라서 그 기준을 뒷받침할 데이터가 우리에게 없습니다.
-       그래서 상태색(--ok/--warn/--bad)도 여기에는 쓰지 않습니다. */
-    '<div class="ckb-c ckb-num">'+
-      '<h3>지금 우리 가게 비율</h3>'+
-      '<div id="cc-out">'+CostRows(null,null,null)+'</div>'+
-      '<p class="note">좋다 나쁘다를 매기지 않습니다. 업종 · 평수 · 부위 '+
-        '구성마다 기준이 달라서, 그 기준값이 우리에게 없기 때문입니다.</p>'+
-    '</div>'+
+      /* ② 나눈 결과 — 크게. ⚠️ **"몇 %면 좋다" 고 단정하지
+         않습니다.** 업종·평수·부위 구성마다 달라서 그 기준을 뒷받침할
+         데이터가 우리에게 없습니다. 상태색도 여기에는 쓰지 않습니다. */
+      '<div id="cc-out" class="scan-out">'+CostRows(null,null,null)+'</div>'+
+      '<p class="note scan-n">좋다 나쁘다를 매기지 않습니다. 업종 · 평수 · '+
+        '부위 구성마다 기준이 달라서, 그 기준값이 우리에게 없기 때문입니다. '+
+        '적으신 숫자는 이 브라우저 밖으로 나가지 않습니다.</p>'+
 
-    /* ③ 오른쪽 — 진단 결과.
-       ⚠️ 아무것도 안 하신 분에게 점수를 미리 찍어 두지 마세요. 그게
-       지어낸 숫자이고, "양호/개선가능" 은 우리에게 없는 기준값이
-       있어야 하는 판정입니다 (절대 규칙 1). */
-    '<div class="ckb-r" id="ckb-r">'+CheckScore()+'</div>'+
+      /* ③ 이 브라우저에 남아 있는 진단 결과 */
+      '<div class="ckb-r scan-r" id="ckb-r">'+CheckScore()+'</div>'+
     '</div>'+
-
-    '<a class="btn btn-b btn-lg ckb-cta" href="/check">'+
-      '무료 사업진단 시작하기'+icon("arrow",18)+'</a>'+
-    '<p class="note ckb-cta-n">회원가입 없이 3분이면 됩니다. '+
-      '여덟 가지를 고르시면 무엇이 비어 있는지 정리해 드립니다.</p>'+
   '</div></section>';
 }
 

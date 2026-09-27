@@ -324,3 +324,50 @@ html{ scroll-padding-top:calc(var(--hdr-h) + 16px); }
 .pre ol li{ list-style:decimal; }
 .pre ul li{ list-style:disc; }
 .pre a{ color:var(--burgundy); font-weight:600; }
+
+/* ══ 모바일 SOS 바닥 시트 (§24) ═══════════════════════════
+   ⚠️ **여기서 접수하지 않습니다.** 적으신 말을 들고 /sos 로 넘어갑니다.
+   동의 · 연락처 · 접수 가능 여부 안내가 전부 거기 있고, 그걸 시트에
+   또 만들면 두 군데가 어긋납니다.
+   ⚠️ 첨부 칸을 만들지 마세요 — 받아 둘 곳이 없습니다. 고르게 해 놓고
+   조용히 버리면 그게 거짓말입니다 (절대 규칙 5). */
+.sheet{ position:fixed; inset:0; z-index:90; }
+.sheet-bg{ position:absolute; inset:0; background:rgba(23,20,19,.5);
+  opacity:0; transition:opacity .22s ease; }
+.sheet.on .sheet-bg{ opacity:1; }
+.sheet-p{ position:absolute; left:0; right:0; bottom:0;
+  max-height:88vh; overflow:auto; display:grid; gap:var(--s4);
+  padding:var(--s3) var(--s6) calc(var(--s7) + env(safe-area-inset-bottom));
+  background:var(--surface); border-radius:var(--r-xl) var(--r-xl) 0 0;
+  transform:translateY(100%); transition:transform .24s cubic-bezier(.2,.7,.3,1);
+  box-shadow:0 -12px 40px -12px rgba(23,23,28,.4); }
+.sheet.on .sheet-p{ transform:translateY(0); }
+.sheet-grip{ justify-self:center; width:40px; height:4px; border-radius:999px;
+  background:var(--line); }
+.sheet-hd{ display:flex; align-items:center; justify-content:space-between;
+  gap:var(--s3); }
+.sheet-hd h2{ font-size:var(--t-xl); letter-spacing:-.02em; }
+.sheet-x{ display:inline-flex; align-items:center; justify-content:center;
+  width:var(--tap); height:var(--tap); margin-right:calc(var(--s3) * -1);
+  border:0; background:transparent; color:var(--ink2); cursor:pointer; }
+.sheet-p textarea{ width:100%; min-height:96px; resize:vertical;
+  padding:var(--s4); border:1px solid var(--line); border-radius:var(--r);
+  background:var(--bg-warm); color:var(--ink);
+  font:inherit; font-size:var(--t-md); line-height:1.65; }
+.sheet-p textarea:focus{ outline:0; background:var(--surface);
+  border-color:var(--burgundy); box-shadow:0 0 0 3px var(--burgundy-50); }
+.sheet-c{ display:flex; flex-wrap:wrap; gap:var(--s2); }
+.sheet-c button{ min-height:var(--tap); padding:0 var(--s4); cursor:pointer;
+  border:1px solid var(--line); border-radius:var(--r-pill);
+  background:var(--surface); color:var(--ink2);
+  font-size:var(--t-sm); font-weight:600; }
+.sheet-c button:hover{ border-color:var(--burgundy); color:var(--burgundy); }
+.sheet-go{ width:100%; }
+.sheet-n{ font-size:var(--t-cap); color:var(--ink3); line-height:1.7; }
+/* 시트가 열린 동안 뒤가 스크롤되면 손가락이 헛돕니다 */
+body.sheet-on{ overflow:hidden; }
+/* ⚠️ 넓은 화면에서는 시트를 쓰지 않습니다 — /sos 화면이 더 큽니다 */
+@media (min-width:861px){ .sheet{ display:none; } }
+@media (prefers-reduced-motion: reduce){
+  .sheet-bg, .sheet-p{ transition:none; }
+}

@@ -1422,6 +1422,69 @@ const AUDIT = `(() => {
   if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 
+  /* 9-2. 폰의 SOS 바닥 시트 (지시서 §24)
+     ⚠️ **폰에서 제일 큰 단추**입니다. 여기가 막히면 급한 사장님이
+     아무 데도 못 갑니다. 넓은 화면에서는 시트를 쓰지 않고 /sos 화면으로
+     그냥 가야 합니다 — 두 가지를 다 봅니다.
+     ⚠️ 첨부 칸이 **없어야** 합니다. 받아 둘 곳이 없는데 고르게 해 놓고
+     조용히 버리면 그게 거짓말입니다 (절대 규칙 5). */
+  const shBad = [];
+  {
+    const sp = await (await b.newContext({ viewport:{width:390,height:844} })).newPage();
+    await sp.goto(ROOT + "/", { waitUntil:"load" });
+    await sp.waitForTimeout(300);
+    await sp.click(".mnav a.big");
+    await sp.waitForTimeout(400);
+    const r1 = await sp.evaluate(() => {
+      const el = document.getElementById("sos-sheet");
+      const p = el && el.querySelector(".sheet-p");
+      return {
+        open: !!(el && !el.hidden),
+        modal: p && p.getAttribute("aria-modal") === "true",
+        labelled: p && !!document.getElementById(p.getAttribute("aria-labelledby")||""),
+        file: !!(el && el.querySelector('input[type=file]')),
+        onPath: location.pathname
+      };
+    });
+    if(!r1.open)      shBad.push("390px: SOS 를 눌렀는데 시트가 안 열립니다");
+    if(!r1.modal)     shBad.push("aria-modal 이 없습니다");
+    if(!r1.labelled)  shBad.push("시트에 이름(aria-labelledby)이 없습니다");
+    if(r1.file)       shBad.push("첨부 칸이 있습니다 — 받아 둘 곳이 없습니다");
+    if(r1.onPath !== "/") shBad.push("시트를 여는 대신 화면이 넘어갔습니다");
+
+    /* ⚠️ 시트가 안 열렸는데 그대로 fill 을 하면 playwright 가 30초
+       기다리다 **검사가 통째로 죽습니다.** 죽으면 무엇이 틀렸는지
+       읽을 수가 없습니다 — 여기서 끊고 다음으로 넘어갑니다. */
+    if(r1.open){
+    await sp.fill("#sheet-q", "덕트 냄새 민원이 들어옵니다");
+    await sp.click(".sheet-go");
+    await sp.waitForTimeout(450);
+    const r2 = await sp.evaluate(() => ({
+      path: location.pathname,
+      q: (document.getElementById("s-q")||{}).value || "",
+      closed: (document.getElementById("sos-sheet")||{}).hidden === true
+    }));
+    if(r2.path !== "/sos")            shBad.push("해결방법 찾기를 눌렀는데 SOS 로 안 갑니다");
+    if(r2.q.indexOf("덕트") < 0)      shBad.push("적은 말이 SOS 로 안 넘어갑니다");
+    if(!r2.closed)                    shBad.push("넘어간 뒤에도 시트가 안 닫힙니다");
+    }
+    await sp.close();
+
+    /* 넓은 화면에서는 시트가 아니라 화면으로 */
+    const wp = await (await b.newContext({ viewport:{width:1440,height:900} })).newPage();
+    await wp.goto(ROOT + "/", { waitUntil:"load" });
+    await wp.waitForTimeout(300);
+    const wide = await wp.evaluate(() => {
+      const el = document.getElementById("sos-sheet");
+      return !el || getComputedStyle(el).display === "none";
+    });
+    if(!wide) shBad.push("1440px 에서도 시트가 살아 있습니다");
+    await wp.close();
+  }
+  console.log("\n── 폰 SOS 바닥 시트");
+  if (shBad.length) { fail++; console.log("  ❌ "+shBad.length+"건: "+shBad.join(" / ")); }
+  else console.log("  ✅ 열리고 · 넘어가고 · 닫힙니다");
+
   /* 10. 알림(토스트)이 보이고 들리는가
      ⚠️ 담기·품절·동의 누락 안내가 **전부 토스트**입니다. 아래 네비에
      가리거나 읽어 주는 프로그램이 못 읽으면, 손님은 담겼는지 아닌지를

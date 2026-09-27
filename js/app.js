@@ -300,5 +300,10 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   window.addEventListener("scroll", onScroll, { passive:true });
   onScroll();
+  /* ⚠️ 열린 것은 Esc 로 닫혀야 합니다. 바닥 시트가 안 닫히면 폰에서
+     뒤로 가기 말고는 빠져나갈 길이 없습니다. */
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && typeof sosSheetClose === "function") sosSheetClose();
+  });
   render();
 });

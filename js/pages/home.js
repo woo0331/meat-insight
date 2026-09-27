@@ -498,35 +498,62 @@ window.costCalc = function(){
    ⚠️ 예전에는 차콜 띠였습니다. 화면 한가운데에 어두운 덩어리가 있으면
    그 위아래가 다 눌려 보여서, 옅은 브랜드색 띠(.sec-tone)로 바꿨습니다.
    어두운 면은 **맨 끝 CTA 한 군데**만 남깁니다. */
+/* ── 창업 프로젝트 (§10) ─────────────────────────────────────
+   ⚠️ **대시보드처럼 보이되, 숫자는 전부 사장님 것입니다.**
+   시안에는 "수원 · 45평 · 돼지고기 전문점 · 진행률 37%" 가 미리
+   찍혀 있었습니다. 넣지 않았습니다 — 아무것도 안 하신 분에게 보여
+   주면 그게 지어낸 화면입니다 (절대 규칙 1).
+   아직 시작 전이면 **0 / 20 그대로** 보여 주고, 체크를 하신 분에게는
+   이 브라우저에 남아 있는 **본인 진행 상태**를 그대로 냅니다. */
 function StartBand(){
-  var phases = [
-    ["상권 · 점포", "어디서 몇 평으로 할지"],
-    ["설계 · 계획", "메뉴 · 객단가 · 손익"],
-    ["시공",        "인테리어 · 덕트 · 주방"],
-    ["장비 · 거래처","냉장 · 정육장비 · 육류"],
-    ["오픈",        "인허가 · 세무 · 마케팅"]
-  ];
-  var steps = (window.WOW_STARTUP_STEPS || []);
-  return '<section class="sec sec-white"><div class="w">'+
-    '<div class="sec-hd"><p class="eyebrow">창업 프로젝트</p>'+
+  var steps  = (window.WOW_STARTUP_STEPS || []);
+  var phases = (window.WOW_STARTUP_PHASES || []);
+  var done   = (typeof stLoad === "function") ? stLoad() : {};
+  var got    = steps.filter(function(s){ return done[s.key]; }).length;
+  var pct    = steps.length ? Math.round(got / steps.length * 100) : 0;
+
+  return '<section class="sec sec-white"><div class="w stb">'+
+    '<div class="stb-t">'+
+      '<p class="eyebrow">창업 프로젝트</p>'+
       '<h2>고깃집 하나 차리는 데<br class="br-m"> 알아볼 게 너무 많으니까.</h2>'+
-      '<p>상권부터 오픈까지 <b>'+(steps.length||20)+'가지</b>를 순서대로 정리해 드립니다. '+
-        '지금 어디쯤인지, 다음에 뭘 해야 하는지가 한 화면에 보입니다.</p></div>'+
+      '<p class="lead">상권부터 오픈까지 <b>'+(steps.length||20)+'가지</b>를 순서대로 '+
+        '정리해 드립니다. 지금 어디쯤인지, 다음에 뭘 해야 하는지가 한 화면에 '+
+        '보입니다. 체크한 것은 이 브라우저에 남습니다.</p>'+
+      '<div class="row-cta">'+
+        '<a class="btn btn-b btn-lg" href="/start">'+
+          (got ? '이어서 하기' : '내 창업 프로젝트 시작하기')+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="/start/cost">창업비 정리표</a>'+
+      '</div>'+
+    '</div>'+
 
-    '<ol class="flow">'+phases.map(function(p,i){
-      return '<li><span class="flow-n">'+(i+1)+'</span>'+
-        '<b>'+esc(p[0])+'</b><span class="flow-d">'+esc(p[1])+'</span></li>';
-    }).join("")+'</ol>'+
-
-    (steps.length ? '<ul class="chips chips-lg">'+steps.map(function(s){
-        return '<li>'+icon(s.icon||"check",16)+esc(s.name)+'</li>'; }).join("")+'</ul>' : '')+
-
-    '<div class="row-cta">'+
-      '<a class="btn btn-b btn-lg" href="/start/cost">내 창업비 알아보기'+icon("arrow",18)+'</a>'+
-      '<a class="btn btn-o btn-lg" href="/start">창업 프로젝트 시작하기</a>'+
+    /* 오른쪽 — 진행 상태판 */
+    '<div class="stb-d">'+
+      '<div class="stb-h">'+
+        '<span class="stb-h-t"><b>고깃집 창업 프로젝트</b>'+
+          '<span>'+(got ? esc(got)+' / '+esc(steps.length)+'단계 하셨습니다'
+                        : '아직 시작 전입니다') +'</span></span>'+
+        '<span class="stb-pct'+(got?'':' off')+'">'+esc(pct)+'<em>%</em></span>'+
+      '</div>'+
+      '<span class="stb-bar"><i style="width:'+Math.max(pct,1)+'%"></i></span>'+
+      '<ul class="stb-l">'+phases.map(function(ph){
+        var mine = ph.steps.map(function(k){
+          return steps.filter(function(s){ return s.key === k; })[0]; }).filter(Boolean);
+        var n = mine.filter(function(s){ return done[s.key]; }).length;
+        var state = !n ? "off" : (n === mine.length ? "on" : "half");
+        return '<li class="stb-r stb-'+state+'">'+
+          '<span class="stb-ic">'+icon(state === "on" ? "check"
+            : (state === "half" ? "clock" : "chevd"), 16)+'</span>'+
+          '<span class="stb-b"><b>'+esc(ph.name)+'</b>'+
+            '<span>'+mine.map(function(s){ return esc(s.name); }).join(" · ")+'</span></span>'+
+          '<span class="stb-n">'+esc(n)+'/'+esc(mine.length)+'</span></li>';
+      }).join("")+'</ul>'+
+      '<p class="note stb-note">'+(got
+        ? '이 브라우저에 남아 있는 사장님 진행 상태입니다.'
+        : '체크를 시작하시면 여기가 채워집니다. 미리 찍어 둔 숫자가 아닙니다.')+'</p>'+
     '</div>'+
   '</div></section>';
 }
+
 
 /* ── 06 전문업체 3곳 매칭 (지시서 12번) ─────────────────────
    ⚠️ 여기에 **업체 카드를 놓지 마세요.** 등록된 파트너가 아직 없고,
@@ -566,35 +593,43 @@ function MatchBand(){
    ⚠️ **첫 화면이 아니라 여기**입니다 (지시서 3번). 들어오자마자
    카테고리를 늘어놓으면 전화번호부가 됩니다. 손님이 "내 상황" 을
    먼저 고른 다음에 보여 주는 지도입니다. */
+/* ── 서비스 분류 여섯 (§13) ──────────────────────────────────
+   ⚠️ **업체 이름을 여기에 만들지 마세요.** 이 화면은 "무엇이 필요한지"
+   를 고르는 자리이지 업체 명단이 아닙니다 — 명단이 되는 순간 지시서
+   3번이 금지한 전화번호부입니다.
+   ⚠️ 하위 서비스는 `js/data/services.js` 에서 그대로 옵니다. 여기에
+   손으로 적어 두면 데이터가 늘 때마다 어긋납니다. */
 function CatBand(){
-  var ic = { meat:"truck", space:"store", equip:"tool",
-             ops:"clock", grow:"up", pro:"shield" };
   return '<section class="sec"><div class="w">'+
-    '<div class="sec-hd"><h2>고기 장사에 필요한 모든 것</h2>'+
+    '<div class="sec-hd"><p class="eyebrow">서비스 분류</p>'+
+      '<h2>고기 장사에 필요한 모든 것</h2>'+
       '<p>고기부터 덕트 · 장비 · 세무까지. 어디에 물어야 할지 모를 때 '+
         '여기서 시작하시면 됩니다.</p>'+
-      '<a class="sec-more" href="/partners">업체 찾기'+icon("chev",16)+'</a></div>'+
-    '<div class="cat-g">'+WOW_SERVICE_GROUPS.map(function(g){
+      '<a class="sec-more" href="/partners">전문업체 찾기'+icon("chev",16)+'</a></div>'+
+    '<div class="cat-g cat-g6">'+WOW_SERVICE_GROUPS.map(function(g){
       var ph = hasPhoto("cat-"+g.key);
-      return '<a class="cat '+tnClass(g.tone)+(ph?'':' cat-flat')+'" href="/partners?g='+
-        encodeURIComponent(g.key)+'">'+
-        (ph ? '<span class="cat-ph">'+photoBox("cat-"+g.key)+'</span>' : '')+
-        /* ⚠️ 시안처럼 **한 줄에 여섯**을 놓으려면 카드가 낮아야 합니다.
-           안에 들어 있던 칩 목록(다섯 개 + "외 n가지")을 빼고 **한 줄
-           글**로 줄였습니다 — 칩이 두 줄이 되는 순간 카드가 두 배로
-           높아져서 한 줄에 여섯이 안 들어갑니다. */
-        '<span class="cat-b">'+
-          '<span class="cat-t">'+
-            '<span class="cat-ic">'+icon(g.icon||ic[g.key]||"chev",20)+'</span>'+
-            '<b>'+esc(g.name)+'</b>'+
-          '</span>'+
-          '<span class="cat-sub">'+
-            esc(g.items.slice(0,3).map(function(it){ return it.name; }).join(" · "))+
-          '</span>'+
-        '</span></a>';
+      var items = g.items.slice(0, 5);
+      return '<div class="catc '+tnClass(g.tone)+'">'+
+        (ph ? '<a class="catc-ph" href="/partners?g='+encodeURIComponent(g.key)+'"'+
+              ' aria-label="'+esc(g.name)+' 업체 찾기">'+photoBox("cat-"+g.key)+'</a>' : '')+
+        '<div class="catc-b">'+
+          '<a class="catc-t" href="/partners?g='+encodeURIComponent(g.key)+'">'+
+            '<span class="catc-ic">'+icon(g.icon||"chev",22)+'</span>'+
+            '<span class="catc-n"><b>'+esc(g.name)+'</b>'+
+              '<span>'+esc(g.lead||"")+'</span></span>'+
+            '<span class="catc-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
+          '</a>'+
+          '<ul class="catc-l">'+items.map(function(it){
+            return '<li><a href="/request?s='+encodeURIComponent(it.key)+'">'+
+              esc(it.name)+'</a></li>'; }).join("")+
+            (g.items.length > items.length
+              ? '<li class="catc-more">외 '+(g.items.length - items.length)+'가지</li>' : '')+
+          '</ul>'+
+        '</div></div>';
     }).join("")+'</div>'+
   '</div></section>';
 }
+
 
 /* ── 고민 목록 (§7) ──────────────────────────────────────────
    ⚠️ **"실시간 인기" · "많이 묻는" 이라고 쓰지 않습니다.** 접수를
@@ -665,43 +700,51 @@ function StoryBand(){
 /* ── 11 사장님 연구소 (지시서 21번) ────────────────────────
    ⚠️ 글이 하나도 없으면 안 나옵니다. 빈 구간을 두면 "만들다 만 사이트"
    로 읽힙니다. */
+/* ── 사장님 연구소 (§16) — 에디토리얼 ────────────────────────
+   ⚠️ 블로그 그리드처럼 같은 카드 넷을 늘어놓지 않습니다. 한 편을
+   크게 내고 나머지는 줄로 둡니다 — 무엇부터 읽어야 할지가 보입니다.
+   ⚠️ 글이 없으면 **구간째 안 나옵니다** (절대 규칙 2). */
 function LabBand(){
   var posts = window.WOW_POSTS;
   if(!posts || !posts.length) return "";
-  /* ⚠️ 앞에서 세 편을 그냥 자르면 같은 분류만 나옵니다. 처음 오신
-     분이 제일 많이 막히는 셋을 골라 두고, 없으면 앞에서 채웁니다. */
-  var want = ["meat-cost-rate", "duct-smell-complaint", "startup-cost-missing"];
+  var want = ["meat-cost-rate", "duct-smell-complaint", "startup-cost-missing",
+              "open-permits", "labor-cost"];
   var pick = want.map(function(sl){ return wowPost(sl); }).filter(Boolean);
-  posts.forEach(function(p){
-    if(pick.length < 3 && pick.indexOf(p) < 0) pick.push(p);
-  });
+  posts.forEach(function(p){ if(pick.length < 5 && pick.indexOf(p) < 0) pick.push(p); });
 
-  /* ⚠️ 시안은 여기가 "다른 사장님들은 이렇게 시작했습니다" (사례 3장)
-     + 오른쪽 파트너 카드였습니다. **사례가 한 건도 없습니다** — 지어낸
-     창업비·기간을 적을 수 없으니(지시서 43번), 같은 **틀**에 지금 있는
-     진짜 내용(연구소 글 세 편)을 놓습니다. 실제 사례가 생기면
-     WOW_STORIES 가 채워지고 StoryBand 가 이 자리 위에 나타납니다. */
+  var lead = pick[0], rest = pick.slice(1, 5);
+  var lc = (typeof wowPostCat === "function") ? wowPostCat(lead.cat) : null;
+
   return '<section class="sec sec-warm"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">사장님 연구소</p>'+
       '<h2>알고 하면 덜 씁니다</h2>'+
       '<p>고기 장사를 하면서 실제로 막히는 것들을 정리했습니다. '+
         '읽고 나서 <b>바로 할 수 있는 것</b>까지 적었습니다.</p>'+
       '<a class="sec-more" href="/lab">글 '+posts.length+'편 전부 보기'+icon("chev",16)+'</a></div>'+
-    '<div class="lab-split">'+
-      '<div class="lab-g">'+pick.slice(0,3).map(PostCard).join("")+'</div>'+
-      /* 시안 오른쪽의 어두운 파트너 카드 */
-      '<aside class="pt-card">'+
-        '<b>고기 사업자를<br> 고객으로 만나고 계신가요?</b>'+
-        '<span>광고만 하지 말고, 실제 도움이 필요한 사장님을 만나세요.</span>'+
-        '<a class="btn btn-w" href="/partner/apply">파트너로 등록하기'+icon("arrow",16)+'</a>'+
-        '<ul class="pt-card-l">'+
-          (window.WOW_SERVICE_GROUPS||[]).slice(0,6).map(function(g){
-            return '<li>'+esc(g.name)+'</li>'; }).join("")+
-        '</ul>'+
-      '</aside>'+
+    '<div class="edi">'+
+      '<a class="edi-f '+tnClass(lc && lc.tone)+'" href="/lab/'+esc(lead.slug)+'">'+
+        '<span class="edi-f-ph">'+photoBox(postThumb(lead))+'</span>'+
+        '<span class="edi-f-b">'+
+          '<span class="edi-m"><em>'+esc(wowPostCatName(lead.cat)||"")+'</em>'+
+            '<span>'+(lead.read ? esc(lead.read)+'분이면 읽습니다' : '')+'</span></span>'+
+          '<b>'+esc(lead.title)+'</b>'+
+          '<span class="edi-l">'+esc(lead.lead)+'</span>'+
+          '<span class="edi-go">읽어 보기'+icon("arrow",16)+'</span>'+
+        '</span></a>'+
+      '<ul class="edi-l-list">'+rest.map(function(p, i){
+        var c = (typeof wowPostCat === "function") ? wowPostCat(p.cat) : null;
+        return '<li><a class="'+tnClass(c && c.tone)+'" href="/lab/'+esc(p.slug)+'">'+
+          '<span class="edi-n">'+("0"+(i+2))+'</span>'+
+          '<span class="edi-b"><b>'+esc(p.title)+'</b>'+
+            '<span>'+esc(wowPostCatName(p.cat)||"")+
+              (p.read ? ' · '+esc(p.read)+'분' : '')+'</span></span>'+
+          '<span class="edi-arw" aria-hidden="true">'+icon("arrow",16)+'</span>'+
+        '</a></li>';
+      }).join("")+'</ul>'+
     '</div>'+
   '</div></section>';
 }
+
 
 /* ── 11.5 자주 묻는 것 ─────────────────────────────────────
    ⚠️ **"평균 ○일 안에" · "○곳이 이용" 같은 숫자를 넣지 마세요.**
@@ -729,21 +772,25 @@ function FaqBand(){
 function PartnerBand(){
   var ph = hasPhoto("partner");
   var how = [
-    ["요청을 받습니다",   "조건에 맞는 것만 갑니다. 아무거나 안 보냅니다."],
-    ["견적을 냅니다",     "가격 · 일정 · A/S 를 적어 보내시면 됩니다."],
-    ["직접 이야기합니다", "고객이 고르면 바로 연결됩니다."]
+    ["광고 노출이 아닙니다", "돈을 낸 곳이 위에 올라가지 않습니다."],
+    ["실제 요청만 갑니다",   "지역 · 서비스 · 규모가 맞는 것만 보냅니다."],
+    ["직접 이야기합니다",    "고객이 고르면 바로 연결됩니다."]
   ];
   return '<section class="sec sec-tint"><div class="w'+(ph?' band band-flip':' pt-one')+'">'+
     '<div class="band-t">'+
       '<p class="eyebrow">파트너 모집</p>'+
-      '<h2>고깃집 · 정육점을 아는<br class="br-m"> 업체를 찾고 있습니다.</h2>'+
-      '<p class="lead">광고비를 받고 위에 올려 드리는 곳이 아닙니다. '+
-        '조건이 맞는 요청만 골라서 보내 드립니다.</p>'+
+      '<h2>새로운 고객을<br class="br-m"> 찾고 계신가요?</h2>'+
+      /* ⚠️ 여기에 **"월 n건의 요청" · "등록 업체 n곳"** 을 적지 마세요.
+         지금 그 값이 하나도 없습니다 (절대 규칙 1). 적을 수 있는 것은
+         **우리가 어떻게 하겠다는 약속**까지입니다. */
+      '<p class="lead">ABOUTMEAT 에는 지금 서비스를 필요로 하는 '+
+        '<b>고깃집 · 정육점 사업자</b>가 찾아옵니다. 광고비를 받고 위에 '+
+        '올려 드리는 곳이 아니라, 조건이 맞는 요청만 골라서 보내 드립니다.</p>'+
       '<ul class="pt-l'+(ph?'':' pt-l-row')+'">'+how.map(function(x){
         return '<li>'+icon("check",18)+'<b>'+esc(x[0])+'</b><span>'+esc(x[1])+'</span></li>';
       }).join("")+'</ul>'+
       '<div class="row-cta">'+
-        '<a class="btn btn-b btn-lg" href="/partner/apply">파트너 등록하기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-b btn-lg" href="/partner/apply">파트너 무료 등록'+icon("arrow",18)+'</a>'+
         '<a class="btn btn-o btn-lg" href="/partner">어떻게 되나요?</a>'+
       '</div>'+
     '</div>'+

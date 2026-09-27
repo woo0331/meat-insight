@@ -1021,7 +1021,9 @@ const AUDIT = `(() => {
        7할쯤으로 두어, 내용이 통째로 빠지는 것만 잡게 합니다. */
     const want = [["/", 2300], ["/problems", 500], ["/problem/duct", 1000],
                   ["/check", 300], ["/partners", 280], ["/lab", 700],
-                  ["/lab/open-permits", 700], ["/start", 370], ["/tools", 300]];
+                  ["/lab/open-permits", 700], ["/start", 370], ["/tools", 300],
+                  ["/tools/labor", 350], ["/tools/yield", 250],
+                  ["/tools/bep", 270], ["/start/cost", 170]];
     const bad = [];
     for(const [u, min] of want){
       const html = await (await fetch(u, { cache:"no-store" })).text();

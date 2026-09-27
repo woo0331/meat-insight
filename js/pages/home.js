@@ -171,9 +171,15 @@ function DiffBand(){
     '<div class="wflow">'+
       '<div class="wflow-c wflow-a">'+
         '<b>지금은 이렇게 하십니다</b>'+
+        /* ⚠️ 이 일곱 줄은 **흩어져 있다가 제자리로 모입니다**
+           (§27). 스크롤해서 보일 때 붙는 `data-rv` 로만 움직이고,
+           `prefers-reduced-motion` 이면 처음부터 제자리입니다.
+           ⚠️ `--rvd` 는 인라인이 아니라 CSS 의 `:nth-child` 가
+           정합니다 — 인라인 변수는 `build-pages.js` 의 CSS 변수
+           검사가 못 봅니다. */
         '<ul>'+["네이버 검색","전화 돌리기","업체 찾아 보기","견적서 받기",
                 "카톡으로 주고받기","엑셀에 옮겨 적기","다시 검색"].map(function(t){
-          return '<li>'+esc(t)+'</li>'; }).join("")+'</ul>'+
+          return '<li data-rv>'+esc(t)+'</li>'; }).join("")+'</ul>'+
       '</div>'+
       '<div class="wflow-x" aria-hidden="true">'+icon("arrow",26)+'</div>'+
       '<div class="wflow-c wflow-b">'+
@@ -202,6 +208,10 @@ function DiffBand(){
     '</div>'+
     '<p class="note diff-n">여기 적은 것은 전부 저희가 실제로 하는 방식입니다. '+
       '지키지 못하는 일이 생기면 이 줄부터 고치겠습니다.</p>'+
+    /* ⚠️ 장면의 마지막 한 줄 (§28). **여기에 숫자를 붙이지
+       마세요** — "n곳 비교" · "n시간 절약" 은 재어 본 적이 없습니다. */
+    '<p class="why-end" data-rv>검색하지 말고, <em>ABOUTMEAT</em>에 '+
+      '물어보세요.</p>'+
   '</div></section>';
 }
 
@@ -627,24 +637,33 @@ function MatchBand(){
     ["전문업체 비교", "scale",
      "조건에 맞는 곳에만 요청이 갑니다. 가격 · 일정 · A/S 를 한 화면에서."]
   ];
+  /* ⚠️ **화면을 가득 채우는 딥 버건디 구간은 여기 하나뿐입니다.**
+     브랜드색을 넓게 쓰는 자리가 둘이 되면 그때부터 정육점 간판입니다.
+     ⚠️ **업체 수 · 계약 수를 적지 마세요** (절대 규칙 1). 등록된
+     파트너가 0 곳입니다. 여기서 셀 수 있는 것은 **차례**뿐입니다.
+     ⚠️ 01 → 02 → 03 은 순위가 아니라 **하시는 차례**입니다. */
   return '<section class="mband">'+
+    '<span class="mband-glow" aria-hidden="true"></span>'+
     '<div class="w mband-in">'+
-    '<div class="mband-t">'+
       '<p class="mband-k">업체 매칭</p>'+
       '<h2>업체 찾느라<br class="br-m"> 전화 돌리지 마세요.</h2>'+
-      '<p class="mband-p">필요한 조건만 알려주시면 '+
-        '고기 사업 경험이 있는 전문업체를 비교해드립니다.</p>'+
+      '<p class="mband-p">필요한 조건만 알려주시면 고기 사업 경험이 있는 '+
+        '전문업체를 비교해 드립니다.</p>'+
+      '<ol class="mstep">'+steps.map(function(st,i){
+        return '<li>'+
+          (i ? '<span class="mstep-ar" aria-hidden="true">'+icon("arrow",20)+'</span>' : '')+
+          '<span class="mstep-n">STEP '+("0"+(i+1))+'</span>'+
+          '<span class="mstep-ic">'+icon(st[1],22)+'</span>'+
+          '<b>'+esc(st[0])+'</b>'+
+          '<span class="mstep-d">'+esc(st[2])+'</span>'+
+        '</li>';
+      }).join("")+'</ol>'+
       '<div class="mband-cta">'+
         '<a class="btn btn-w btn-lg" href="/request">무료 견적받기'+icon("arrow",18)+'</a>'+
         '<a class="btn btn-gh btn-lg" href="/partners">어떤 업체가 필요한지 고르기</a>'+
       '</div>'+
     '</div>'+
-    '<ol class="mstep">'+steps.map(function(st,i){
-      return '<li><span class="mstep-n">STEP '+("0"+(i+1))+'</span>'+
-        '<span class="mstep-ic">'+icon(st[1],20)+'</span>'+
-        '<b>'+esc(st[0])+'</b><span class="mstep-d">'+esc(st[2])+'</span></li>';
-    }).join("")+'</ol>'+
-  '</div></section>';
+  '</section>';
 }
 
 
@@ -661,7 +680,7 @@ function MatchBand(){
 function CatBand(){
   return '<section class="sec"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">서비스 분류</p>'+
-      '<h2>고기 장사에 필요한 모든 것</h2>'+
+      '<h2>잘하는 업체, 직접 찾지 마세요.</h2>'+
       '<p>고기부터 덕트 · 장비 · 세무까지. 어디에 물어야 할지 모를 때 '+
         '여기서 시작하시면 됩니다.</p>'+
       '<a class="sec-more" href="/partners">전문업체 찾기'+icon("chev",16)+'</a></div>'+

@@ -52,17 +52,19 @@
       rgba(20,17,16,0) 70%, rgba(20,17,16,.55) 100%),
     linear-gradient(90deg, rgba(20,17,16,.96) 0%, rgba(20,17,16,.90) 38%,
       rgba(20,17,16,.66) 66%, rgba(20,17,16,.46) 100%); }
-/* ⚠️ 금빛 실선을 쓰는 세 번째 자리 — **어두운 패널 위쪽의 1px 선**.
-   면으로 칠하지 않습니다. 어두운 구간이 위에서 그냥 뚝 시작하는 것과
-   실선 한 줄이 그어진 것은 인상이 꽤 다릅니다. */
+/* 어두운 구간 위쪽의 1px 선 — 구간이 위에서 그냥 뚝 시작하는 것과
+   실선 한 줄이 그어진 것은 인상이 꽤 다릅니다.
+   ⚠️ **금빛(#C9A66B)이었습니다.** 걷어내기로 한 장식인데 이 두 군데만
+   살아 있었고, 화면에서는 고급이 아니라 누런 얼룩으로 보였습니다.
+   되살리지 마세요 — 옅은 흰 선이면 됩니다. */
 .hero::after, .dark::after, .final::after{ content:""; position:absolute;
   left:0; right:0; top:0; height:1px; z-index:1;
-  background:linear-gradient(90deg, rgba(201,166,107,0) 0%,
-    rgba(201,166,107,.55) 22%, rgba(201,166,107,.55) 78%, rgba(201,166,107,0) 100%); }
+  background:linear-gradient(90deg, rgba(255,255,255,0) 0%,
+    rgba(255,255,255,.16) 22%, rgba(255,255,255,.16) 78%, rgba(255,255,255,0) 100%); }
 .tl-res, .cost-sum{ position:relative; overflow:hidden; }
 .tl-res::after, .cost-sum::after{ content:""; position:absolute; left:0; right:0; top:0;
-  height:1px; background:linear-gradient(90deg, rgba(201,166,107,0) 0%,
-    rgba(201,166,107,.5) 30%, rgba(201,166,107,.5) 70%, rgba(201,166,107,0) 100%); }
+  height:1px; background:linear-gradient(90deg, rgba(227,38,54,0) 0%,
+    rgba(227,38,54,.30) 30%, rgba(227,38,54,.30) 70%, rgba(227,38,54,0) 100%); }
 .hero-in{ position:relative; max-width:760px; }
 .hero-kicker{ font-size:var(--t-md); font-weight:700; letter-spacing:-.01em;
   color:var(--on-dark); margin-bottom:var(--s4); }
@@ -416,7 +418,7 @@
 
 /* ══ 마지막 CTA ═══════════════════════════════════════════ */
 .final{ position:relative; isolation:isolate; overflow:hidden;
-  background:var(--dark); color:#fff; padding:var(--s11) 0; text-align:center; }
+  background:var(--dark); color:#fff; padding:var(--s12) 0; text-align:center; }
 .final .hero-sh{ background:linear-gradient(180deg, rgba(24,20,19,.9) 0%,
   rgba(24,20,19,.78) 100%); }
 .final-in{ position:relative; }
@@ -1763,11 +1765,16 @@
 /* ── 마지막 CTA: 어두운 면 하나뿐이니 제대로 ───────────────
    ⚠️ 화면에서 유일하게 남은 어두운 구간입니다. 여기까지 평평하면
    페이지가 그냥 끝나 버립니다 — 빛을 한 겹 얹어 마무리를 줍니다. */
-.final{ background:linear-gradient(168deg, var(--dark-2) 0%, var(--dark) 56%, #16110F 100%); }
-.final .hero-sh{ background:
-  radial-gradient(70% 90% at 50% 8%, rgba(201,166,107,.16) 0%, rgba(201,166,107,0) 60%),
-  linear-gradient(180deg, rgba(24,20,19,.86) 0%, rgba(24,20,19,.74) 100%); }
-.final h2{ letter-spacing:var(--tr-hero); }
+/* ── 마지막 CTA — 가라앉은 붉은 검정 (§42) ──────────────────────
+   ⚠️ **매칭 구간(`.mband`)과 색이 달라야 합니다.** 같은 딥 버건디로
+   두면 "또 같은 띠" 로 읽혀서 두 장면이 한 장면이 됩니다. 여기는
+   훨씬 어두운, 붉은 기가 남은 검정입니다.
+   ⚠️ **금빛을 되살리지 마세요.** 여기 라디얼이 금색(#C9A66B)으로
+   남아 있었습니다 — 걷어내기로 한 장식인데 이 한 줄만 살아 있었고,
+   화면에서는 그냥 누런 얼룩으로 보였습니다. */
+.final h2{ font-size:var(--t-sig); font-weight:900; line-height:1.05;
+  letter-spacing:-.045em; }
+.final p{ max-width:46ch; margin-left:auto; margin-right:auto; }
 .final .btn-w{ box-shadow:inset 0 1px 0 rgba(255,255,255,.9),
                           0 18px 34px -12px rgba(0,0,0,.55); }
 
@@ -1775,10 +1782,12 @@
    ⚠️ 색이 다른 구간이 **칼로 자른 듯** 맞닿으면 종이 두 장을 붙인
    것처럼 보입니다. 경계에 아주 옅은 겹을 한 줄 깔아 이어 줍니다. */
 .sec-warm, .sec-tint{ position:relative; }
+/* ⚠️ **금빛 실선을 되살리지 마세요.** 여기도 금색(#A8834B)으로 남아
+   있었습니다. 중성 회색 한 줄이면 구간이 이어지는 데 충분합니다. */
 .sec-warm::before, .sec-tint::before{ content:""; position:absolute;
   left:0; right:0; top:0; height:1px;
-  background:linear-gradient(90deg, rgba(168,131,75,0) 0%,
-    rgba(168,131,75,.20) 30%, rgba(168,131,75,.20) 70%, rgba(168,131,75,0) 100%); }
+  background:linear-gradient(90deg, rgba(21,21,23,0) 0%,
+    rgba(21,21,23,.07) 30%, rgba(21,21,23,.07) 70%, rgba(21,21,23,0) 100%); }
 
 /* ════════════════════════════════════════════════════════════════════
    장식을 걷어냅니다 (2026-09-26 두 번째 손질)
@@ -1858,9 +1867,16 @@
 .tl-res, .cost-sum{ background:var(--dark); box-shadow:none; }
 /* ⚠️ 매칭 구간(.mband)과 **같은 색으로 두지 마세요.** 여기는 그보다
    더 가라앉은 쪽입니다 — 둘이 같으면 "또 같은 띠" 로 읽힙니다. */
-.final{ background:linear-gradient(168deg, #4A101D 0%, #2E0A13 62%, #1C0509 100%); }
-.final .hero-sh{ background:linear-gradient(180deg,
-  rgba(23,20,19,.88) 0%, rgba(23,20,19,.76) 100%); }
+.final{ background:linear-gradient(168deg, #3A0B16 0%, #23070E 60%, #140407 100%); }
+/* ⚠️ **겹이 옅으면 그림의 회색이 이깁니다.** 잿빛(23,20,19) 으로
+   덮고 있어서, 아래 바탕을 아무리 붉게 해도 화면은 그냥 회색 판이
+   나왔습니다 — 붉은 검정으로 보이게 하는 것은 바탕이 아니라 **이
+   겹**입니다. 그림은 결만 남기고 색은 여기서 정합니다.
+   ⚠️ `.final .hero-sh` 는 이 파일에 **세 번** 나옵니다. 고칠 때는
+   제일 뒤에 있는 이것을 고치세요 — 앞의 것을 고치면 조용히 집니다. */
+.final .hero-sh{ background:
+  radial-gradient(74% 96% at 50% 2%, rgba(227,38,54,.30) 0%, rgba(227,38,54,0) 64%),
+  linear-gradient(180deg, rgba(46,10,20,.92) 0%, rgba(16,4,8,.94) 100%); }
 
 /* 버튼 — 안쪽 윗선(가짜 입체)을 뺍니다 */
 .btn-b{ box-shadow:none; }
@@ -2099,44 +2115,63 @@
    ⚠️ 옛 `.bband`(높이 150px 짜리 빨간 줄)는 없앴습니다. 거기 있던 네
    가지 약속은 히어로 아래 신뢰 줄(`.tbar`)이 같은 말을 합니다.
    ════════════════════════════════════════════════════════════════════ */
-.mband{ background:linear-gradient(152deg, var(--burg-deep) 0%,
-    var(--burg-deep-2) 60%, #4E0F1C 100%);
+/* ── FULL RED MATCHING — 화면을 가득 채우는 한 장면 (§23~25) ─────
+   ⚠️ **딥 버건디를 면으로 쓰는 곳은 여기 하나뿐입니다.** 둘이 되는
+   순간 지시서 30번이 금지한 정육점 간판이 됩니다. 마지막 CTA 는
+   차콜이라 "또 같은 띠" 로 안 읽힙니다.
+   ⚠️ **업체 수 · 계약 수를 적지 마세요** (절대 규칙 1). 여기서 셀 수
+   있는 것은 사장님이 하실 **차례**뿐입니다. */
+.mband{ position:relative; isolation:isolate; overflow:hidden;
+  background:linear-gradient(152deg, var(--burg-deep) 0%,
+    var(--burg-deep-2) 58%, #4E0F1C 100%);
   color:#fff; padding:var(--s10) 0; }
-.mband-in{ display:grid; grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);
-  gap:var(--s9); align-items:center; }
-.mband-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.14em;
-  color:var(--burgundy-400); margin-bottom:var(--s4); }
-.mband h2{ font-size:var(--t-3xl); color:#fff;
-  line-height:var(--lh-tight); letter-spacing:var(--tr-head); }
-.mband-p{ margin-top:var(--s5); font-size:var(--t-lg); line-height:1.75;
-  color:rgba(255,255,255,.80); max-width:44ch; }
-.mband-cta{ display:flex; flex-wrap:wrap; gap:var(--s3); margin-top:var(--s7); }
+.mband-glow{ position:absolute; z-index:-1; pointer-events:none;
+  left:50%; top:-14%; width:1180px; height:760px; transform:translateX(-50%);
+  background:radial-gradient(50% 50% at 50% 50%,
+    rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 70%); }
+.mband-in{ display:grid; justify-items:center; text-align:center;
+  gap:var(--s5); }
+.mband-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.16em;
+  color:var(--burgundy-400); margin-bottom:0; }
+.mband h2{ font-size:var(--t-hero); font-weight:900; color:#fff;
+  line-height:1.04; letter-spacing:-.045em; }
+.mband-p{ margin-top:0; font-size:var(--t-lg); line-height:1.75;
+  color:rgba(255,255,255,.80); max-width:52ch; }
 
-/* STEP 01 → 02 → 03 */
-.mstep{ display:grid; gap:var(--s4); }
-.mstep li{ position:relative; display:grid; gap:var(--s2);
-  padding:var(--s5) var(--s6); border-radius:var(--r-lg);
-  background:rgba(255,255,255,.07); }
+/* STEP 01 → 02 → 03 — 가로로 섭니다 */
+.mstep{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s7);
+  width:100%; margin-top:var(--s7); text-align:left; }
+.mstep li{ position:relative; display:grid; gap:var(--s3);
+  align-content:start; padding:var(--s7) var(--s6);
+  border-radius:var(--r-xl); background:rgba(255,255,255,.07); }
 .mstep-n{ font-size:var(--t-cap); font-weight:800; letter-spacing:.12em;
   color:var(--burgundy-400); }
-.mstep-ic{ position:absolute; right:var(--s6); top:var(--s5);
-  display:inline-flex; align-items:center; justify-content:center;
-  width:40px; height:40px; border-radius:13px;
+/* ⚠️ 아이콘을 오른쪽 위에 **절대 위치**로 두면 글과 겹칩니다. 가로로
+   설 때는 글 흐름 안에 둡니다. */
+.mstep-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:46px; height:46px; border-radius:15px;
   background:rgba(255,255,255,.12); color:#fff; }
 .mstep li > b{ font-size:var(--t-xl); letter-spacing:-.02em; color:#fff; }
-.mstep-d{ font-size:var(--t-sm); line-height:1.65; color:rgba(255,255,255,.66);
-  max-width:38ch; }
-/* 단계 사이의 이음선 */
-.mstep li + li::before{ content:""; position:absolute; left:var(--s8);
-  top:calc(var(--s4) * -1); width:1px; height:var(--s4);
-  background:rgba(255,255,255,.28); }
+.mstep-d{ font-size:var(--t-sm); line-height:1.7; color:rgba(255,255,255,.68); }
+/* 단계 사이의 화살표 — ⚠️ 가짜요소가 아니라 **실제 요소**입니다.
+   `display:grid` 인 칸에 빈 가짜요소를 두면 칸 하나를 먹습니다. */
+.mstep-ar{ position:absolute; top:50%; left:calc(-1 * (var(--s7) / 2 + 11px));
+  transform:translateY(-50%); display:inline-flex;
+  color:rgba(255,255,255,.42); }
+.mband-cta{ display:flex; flex-wrap:wrap; justify-content:center;
+  gap:var(--s3); margin-top:var(--s7); }
+
 @media (max-width:980px){
-  .mband-in{ grid-template-columns:1fr; gap:var(--s7); }
-  .mband{ padding:var(--s9) 0; }
+  .mband{ padding:var(--s10) 0; }
+  .mstep{ grid-template-columns:1fr; gap:var(--s5); }
+  /* 세로로 서면 화살표도 같이 눕습니다 */
+  .mstep-ar{ top:calc(-1 * (var(--s5) / 2 + 11px)); left:var(--s6);
+    transform:rotate(90deg); }
+  .mstep li{ padding:var(--s6); }
 }
 @media (max-width:560px){
   .mband-p{ font-size:var(--t-base); }
-  .mstep-ic{ display:none; }
+  .mband-cta .btn{ width:100%; }
 }
 
 /* ── WHY ABOUTMEAT 의 흐름 두 칸 (§14) ──────────────────────
@@ -2779,7 +2814,10 @@
 .sec .catc, .sec-white .catc{ background:var(--bg-warm); }
 .sec-warm .catc, .sec-tint .catc, .sec-tone .catc{ background:var(--surface); }
 .catc-ph{ display:block; overflow:hidden; }
-.catc-ph .ph{ width:100%; height:auto; aspect-ratio:16/9; object-fit:cover;
+/* ⚠️ **사진이 먼저 오는 카드입니다** (§26). 16:9 로 두었더니 사진이
+   카드의 절반도 못 차지해서, 글이 먼저 읽히고 "목록" 처럼 보였습니다.
+   업체를 고르는 자리에서 먼저 눈에 담기는 것은 **현장 모습**입니다. */
+.catc-ph .ph{ width:100%; height:auto; aspect-ratio:4/3; object-fit:cover;
   display:block; transition:transform .45s cubic-bezier(.2,.7,.3,1); }
 .catc:hover .catc-ph .ph{ transform:scale(1.04); }
 .catc-b{ display:grid; gap:var(--s4); align-content:start; padding:var(--s6); }
@@ -3126,4 +3164,38 @@
      라서 없어져도 폰 손님이 못 하게 되는 일이 없습니다. 링크는 하나도
      숨기지 않습니다. */
   .tool-g6 .tool-mini{ display:none; }
+}
+
+/* ── WHY ABOUTMEAT — 흩어진 것이 한곳으로 (§27~28) ───────────────
+   왼쪽 일곱 줄은 **지금 사장님이 실제로 하시는 일**입니다. 스크롤해서
+   보이는 순간 흩어져 있던 줄이 차례로 제자리에 앉습니다 — 그게 이
+   구간이 하는 말(스무 번 알아볼 일을 한 곳에서)과 같은 말입니다.
+   ⚠️ **인라인 `--rvd` 를 쓰지 마세요.** `build-pages.js` 의 CSS 변수
+   검사가 인라인 값을 못 봐서 "정의되지 않은 변수" 로 멈춥니다.
+   차례는 여기서 `:nth-child` 로 정합니다.
+   ⚠️ 움직임은 **위치만**입니다. 그림자 · 빛 · 크기 변화를 더하지
+   마세요 — 걷어낸 장식을 되살리는 길입니다. */
+.wflow-a li[data-rv]:nth-child(odd){ transform:translate(-22px,16px) rotate(-1.6deg); }
+.wflow-a li[data-rv]:nth-child(even){ transform:translate(22px,16px) rotate(1.4deg); }
+.wflow-a li[data-rv]:nth-child(1){ --rvd:.00s; }
+.wflow-a li[data-rv]:nth-child(2){ --rvd:.06s; }
+.wflow-a li[data-rv]:nth-child(3){ --rvd:.12s; }
+.wflow-a li[data-rv]:nth-child(4){ --rvd:.18s; }
+.wflow-a li[data-rv]:nth-child(5){ --rvd:.24s; }
+.wflow-a li[data-rv]:nth-child(6){ --rvd:.30s; }
+.wflow-a li[data-rv]:nth-child(7){ --rvd:.36s; }
+/* ⚠️ 진하기가 위와 **같으므로 반드시 뒤에** 와야 제자리로 돌아옵니다 */
+.wflow-a li[data-rv].rv-on{ transform:none; }
+
+/* 장면의 마지막 한 줄 */
+.why-end{ margin-top:var(--s9); text-align:center;
+  font-size:var(--t-2xl); font-weight:800; letter-spacing:-.03em;
+  line-height:var(--lh-tight); color:var(--ink); }
+.why-end em{ font-style:normal; color:var(--burgundy); }
+@media (max-width:640px){
+  .why-end{ margin-top:var(--s7); font-size:var(--t-xl); }
+  /* 좁은 화면에서는 옆으로 흩어질 자리가 없습니다 — 위아래로만 */
+  .wflow-a li[data-rv]:nth-child(odd),
+  .wflow-a li[data-rv]:nth-child(even){ transform:translateY(14px); }
+  .wflow-a li[data-rv].rv-on{ transform:none; }
 }

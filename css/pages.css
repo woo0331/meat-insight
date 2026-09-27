@@ -3054,7 +3054,17 @@
   .sb-c.sit-flat{ min-height:0; }
   .sb-c .sit-b > b, .sb-e .sit-b > b{ font-size:var(--t-lg); }
   .sb-c .sit-l{ font-size:var(--t-sm); }
+  /* ⚠️ `.sb-d{ grid-template-rows:1fr auto }` 가 이 파일 **뒤쪽**에
+     있어서, 폰에서 `.sit{ grid-template-rows:auto }` 를 덮고 있었습니다.
+     사진 칸이 세로로 한 칸 더 생겨 그림이 96px 안에서 엉뚱하게
+     잘렸습니다 — 에러도 가로 스크롤도 안 났습니다. */
+  .sit-g > .sit.sb-d{ grid-template-rows:auto; }
   .sb-d .sit-ph{ aspect-ratio:auto; height:100%; }
+  /* ⚠️ 폰의 사진 기둥은 96px 짜리 **아주 좁은 세로 조각**입니다.
+     가운데를 자르면 그림마다 엉뚱한 데가 걸립니다 — 사업 확장은
+     사장님과 가게가 왼쪽 4분의 1 에 있어서, 가운데를 자르니 가게와
+     선반 사이 빈 벽만 남았습니다. 자르는 기준을 사람 쪽으로 옮깁니다. */
+  .sb-d .sit-ph .ph{ object-position:25% 50%; }
 }
 
 /* ── ABOUT SCAN — 설명이 아니라 계기판 (§18~21) ─────────────────

@@ -108,8 +108,8 @@ function ToolBand(){
       '<p>상담을 신청하셔야 뭔가 알려 드리는 곳이 아닙니다. '+
         '아래 여섯은 지금 이 자리에서 바로 되고, 결과는 이 브라우저에 남습니다.</p>'+
       '<a class="sec-more" href="/tools">도구 전부 보기'+icon("chev",16)+'</a></div>'+
-    '<div class="tool-g tool-g6">'+tools.map(function(t, i){
-      return '<a class="tool '+tnClass("t"+((i % 8) + 1))+'" href="'+esc(t.to)+'">'+
+    '<div class="tool-g tool-g6 rv-stg">'+tools.map(function(t, i){
+      return '<a data-rv class="tool '+tnClass("t"+((i % 8) + 1))+'" href="'+esc(t.to)+'">'+
         '<span class="tool-t"><span class="tool-ic">'+icon(t.icon,24)+'</span>'+
           '<em>'+esc(t.time)+'</em></span>'+
         '<b>'+esc(t.name)+'</b>'+
@@ -274,7 +274,7 @@ function HeroStage(){
 
   return '<div class="hstage">'+
     (hasPhoto("hero")
-      ? '<span class="hstage-ph" aria-hidden="true">'+photoBox("hero")+'</span>' : '')+
+      ? '<span class="hstage-ph" aria-hidden="true">'+photoBox("hero", null, true)+'</span>' : '')+
 
     /* ① 고민 한 줄 */
     '<div class="hcard hcard-q">'+
@@ -379,12 +379,12 @@ function Situations(){
     '<div class="sec-hd"><p class="eyebrow">상황 고르기</p>'+
       '<h2>지금 어떤 상황이세요?</h2>'+
       '<p>사장님의 상황에 맞는 해결방법부터 찾아드립니다.</p></div>'+
-    '<div class="sit-g">'+WOW_SITUATIONS.map(function(s, i){
+    '<div class="sit-g rv-stg">'+WOW_SITUATIONS.map(function(s, i){
       /* 빨강 칸과 한 줄 칸에는 사진을 깔지 않습니다 — 색 위에 그림을
          또 얹으면 흐릿한 덩어리가 됩니다 (히어로에서 겪었습니다) */
       var noPh = (i === 2 || i === 4);
       var ph = !noPh && hasPhoto("sit-"+s.key);
-      return '<a class="sit '+tnClass(s.tone)+(ph?'':' sit-flat')+
+      return '<a data-rv class="sit '+tnClass(s.tone)+(ph?'':' sit-flat')+
         (i < 2 ? ' sit-lg' : '')+(i === 2 ? ' sit-dark' : '')+' '+CELL[i]+' '+TINT[i]+
         '" href="'+esc(s.to)+
         (s.ask ? '?q='+encodeURIComponent(s.ask) : '')+'">'+
@@ -684,10 +684,10 @@ function CatBand(){
       '<p>고기부터 덕트 · 장비 · 세무까지. 어디에 물어야 할지 모를 때 '+
         '여기서 시작하시면 됩니다.</p>'+
       '<a class="sec-more" href="/partners">전문업체 찾기'+icon("chev",16)+'</a></div>'+
-    '<div class="cat-g cat-g6">'+WOW_SERVICE_GROUPS.map(function(g){
+    '<div class="cat-g cat-g6 rv-stg">'+WOW_SERVICE_GROUPS.map(function(g){
       var ph = hasPhoto("cat-"+g.key);
       var items = g.items.slice(0, 5);
-      return '<div class="catc '+tnClass(g.tone)+'">'+
+      return '<div data-rv class="catc '+tnClass(g.tone)+'">'+
         (ph ? '<a class="catc-ph" href="/partners?g='+encodeURIComponent(g.key)+'"'+
               ' aria-label="'+esc(g.name)+' 업체 찾기">'+photoBox("cat-"+g.key)+'</a>' : '')+
         '<div class="catc-b">'+

@@ -389,3 +389,20 @@ body.sheet-on{ overflow:hidden; }
 @media (prefers-reduced-motion: reduce){
   [data-rv]{ opacity:1; transform:none; transition:none; }
 }
+
+/* ── 줄줄이 선 칸은 차례로 드러납니다 (§36) ──────────────────────
+   ⚠️ **차례(`--rvd`)를 인라인으로 넣지 마세요.** `build-pages.js` 의
+   CSS 변수 검사가 인라인 값을 못 봐서 "정의되지 않은 변수" 로 멈춥니다.
+   ⚠️ 움직이는 것은 **위치와 투명도뿐**입니다. 크기 · 빛 · 그림자를
+   같이 움직이면 그때부터 꾸민 티가 납니다 (2026-09-26 기록).
+   ⚠️ 이 목록을 늘릴 때는 한 줄에 서는 칸 수만큼만 두세요. 한 줄이
+   여섯이면 여섯째까지면 충분합니다. */
+.rv-stg > [data-rv]:nth-child(2){ --rvd:.06s; }
+.rv-stg > [data-rv]:nth-child(3){ --rvd:.12s; }
+.rv-stg > [data-rv]:nth-child(4){ --rvd:.18s; }
+.rv-stg > [data-rv]:nth-child(5){ --rvd:.24s; }
+.rv-stg > [data-rv]:nth-child(6){ --rvd:.30s; }
+
+/* 눌리는 느낌 — 누름 자체가 피드백입니다 */
+.btn:active{ transform:translateY(1px); }
+@media (prefers-reduced-motion: reduce){ .btn:active{ transform:none; } }

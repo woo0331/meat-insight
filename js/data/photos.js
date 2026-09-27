@@ -147,12 +147,17 @@ window.wowPhoto = function(key){
    ⚠️ 없을 때 `alt` 를 단 빈 칸을 만들지 않습니다. 읽어 주는 프로그램이
    "정육점에서 고기를 손질하는 사장님" 이라고 읽어 주는데 실제로는
    아무것도 없으면, 그건 없는 것보다 나쁩니다. aria-hidden 으로 둡니다. */
-window.photoBox = function(key, cls){
+/* ⚠️ 세 번째 값 `eager` 는 **첫 화면에 보이는 사진**에만 씁니다.
+   첫 화면 사진에 `loading="lazy"` 를 걸면 브라우저가 나중으로 미뤄서
+   제일 큰 그림이 늦게 뜹니다 — 손님이 체감하는 "느리다" 가 대개
+   이것입니다. 반대로 아래쪽 사진까지 eager 로 두면 첫 화면이 마흔
+   장을 기다립니다. **히어로 한 장뿐입니다.** */
+window.photoBox = function(key, cls, eager){
   var c = "ph" + (cls ? " " + cls : "");
   var p = wowPhoto(key);
   if(!p) return '<div class="' + c + ' ph-none" aria-hidden="true"></div>';
   return '<img class="' + c + '" src="' + esc(p.src) + '" alt="' + esc(p.alt || "") + '"' +
-    ' loading="lazy" decoding="async">';
+    (eager ? ' fetchpriority="high"' : ' loading="lazy"') + ' decoding="async">';
 };
 
 /* 사진이 있는가. 화면은 이걸 보고 **짜임새 자체를 바꿉니다.**
@@ -165,6 +170,7 @@ window.hasPhoto = function(key){ return !!wowPhoto(key); };
 window.photoBg = function(key){
   var p = wowPhoto(key);
   if(!p) return "";
+  /* 바탕 사진은 지금 마지막 CTA 한 군데뿐이고 화면 맨 아래에 있습니다 */
   return '<img class="ph-bg" src="' + esc(p.src) + '" alt="" aria-hidden="true"' +
-    ' decoding="async">';
+    ' loading="lazy" decoding="async">';
 };

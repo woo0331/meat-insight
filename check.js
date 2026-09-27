@@ -312,6 +312,26 @@ const AUDIT = `(() => {
 (async () => {
   await new Promise(r=>server.listen(PORT,r));
   const b = await chromium.launch();
+
+  // 스크롤하면 드러나는 구간(`[data-rv]`)은 처음에 `opacity:0` 입니다. 검사의
+  // `vis()` 가 그걸 "안 보이는 것" 으로 보고 건너뛰면 글씨 크기 · 누름 크기 ·
+  // 낱말 잘림 검사가 **조용히 헐거워집니다.** 그래서 모든 context 에서
+  // 처음부터 드러난 상태로 둡니다 (없애는 게 아니라 끝난 상태로 고정).
+  const newCtx = b.newContext.bind(b);
+  b.newContext = async (o) => {
+    const c = await newCtx(o);
+    await c.addInitScript(() => {
+      const on = () => {
+        const s = document.createElement("style");
+        s.textContent = "[data-rv]{opacity:1 !important;transform:none !important;transition:none !important}";
+        (document.head || document.documentElement).appendChild(s);
+      };
+      if (document.readyState === "loading")
+        document.addEventListener("DOMContentLoaded", on, { once:true });
+      else on();
+    });
+    return c;
+  };
   let fail = 0;
   const seenLinks = new Set();
 

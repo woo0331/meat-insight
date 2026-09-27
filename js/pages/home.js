@@ -39,6 +39,7 @@ function PageHome(){
      ⚠️ 업체 카테고리(CatBand)를 위로 올리지 마세요. 첫 화면 가까이에
      업체 목록 차림새가 오면 그 순간 전화번호부입니다 (지시서 3번). */
   return Hero()+
+         SceneCopy()+       /* 장면 하나 — 이 사이트가 무엇을 바꾸는가 */
          Situations()+      /* 굵게 — 다섯 상황 */
          WorryBand()+       /* 가늘게 — 열둘 중 여섯 고민 */
          CheckBand()+
@@ -53,6 +54,31 @@ function PageHome(){
          FaqBand()+
          PartnerBand()+
          FinalCTA();
+}
+
+/* ── 01.5 장면 하나 — 히어로와 카드 사이 ───────────────────────
+   ⚠️ **히어로 다음에 곧장 카드 그리드를 붙이지 않습니다.** 첫 화면에서
+   카드가 바로 이어지면 "또 목록" 으로 읽히고, 이 사이트가 **무엇을
+   바꾸는 곳인가**를 말할 자리가 없어집니다. 여기는 광고 영상의 한
+   장면처럼 **글자 하나로만** 채웁니다 — 카드도 아이콘도 두지 않습니다.
+
+   ⚠️ **숫자를 적지 마세요** (절대 규칙 1). 이 구간의 힘은 크기와
+   여백에서 나옵니다. 실적 숫자를 얹으면 지어낸 값이 되고 장면도 같이
+   무너집니다.
+   ⚠️ **제목(h1)은 히어로에 하나뿐입니다** — 여기는 `h2` 입니다.
+   ⚠️ 아래 두 줄은 스크롤해야 드러납니다(`data-rv`). 물음이 먼저 서고
+   답이 뒤에 와야 장면이 됩니다 — 한꺼번에 나오면 그냥 문단입니다.
+   ⚠️ `--rvd` 는 인라인이라 `build-pages.js` 의 CSS 변수 검사가 못
+   봅니다. CSS 쪽은 반드시 `var(--rvd, 0s)` 로 적습니다. */
+function SceneCopy(){
+  return '<section class="scene" aria-labelledby="scene-h">'+
+    '<span class="scene-glow" aria-hidden="true"></span>'+
+    '<div class="w scene-in">'+
+      '<h2 class="scene-q" id="scene-h">고기 장사하면서,<br class="br-m"> '+
+        '아직도 다 직접 알아보세요?</h2>'+
+      '<p class="scene-a" data-rv>이제 <em>한 곳</em>에 물어보세요.</p>'+
+      '<p class="scene-bm" data-rv style="--rvd:.14s">ABOUTMEAT</p>'+
+    '</div></section>';
 }
 
 /* ── 02.5 지금 바로 해 보실 수 있는 것 ───────────────────────
@@ -304,24 +330,34 @@ window.askGo = function(ev){
    (js/data/photos.js 의 hasPhoto). */
 function Situations(){
   /* ⚠️ **다섯을 똑같이 늘어놓으면 고르는 게 아니라 훑게 됩니다.**
-     앞의 둘은 크게(가로짜임), 가운데 "문제 발생" 은 **어두운 강조
-     카드**로 냅니다 — 지금 당장 급한 분이 제일 먼저 눈에 담아야 할
-     칸이기 때문입니다.
-     ⚠️ 크기와 색만 다르고 **내용은 다섯이 같습니다.** 큰 칸에만 있는
-     정보를 만들지 마세요 — 좁은 화면에서는 다섯이 같은 모양이 됩니다.
+     칸마다 크기·짜임새·색이 다릅니다 (§16 벤토) —
+       창업 준비  큰 칸 + 사진 (가로짜임)
+       운영 중    중간 칸 + 사진 (가로짜임)
+       문제 발생  **넓은 빨강 칸** — 지금 당장 급한 분이 먼저 담을 곳
+       사업 확장  사진이 주인공인 칸 (세로짜임)
+       사업 정리  한 줄짜리 얇은 칸
+     ⚠️ 크기와 짜임새만 다르고 **내용은 다섯이 같습니다.** 큰 칸에만
+     있는 정보를 만들지 마세요 — 좁은 화면에서는 다섯이 같은 모양이
+     되고, 그때 그 정보가 통째로 사라집니다.
+     ⚠️ **DOM 순서와 보이는 순서가 같아야 합니다.** 격자 자리를 손으로
+     정할 때 순서를 뒤섞으면 키보드로 넘기는 분과 읽어 주는 프로그램이
+     화면과 다른 차례로 듣습니다.
      ⚠️ 이모지를 쓰지 않습니다 (지시서 §6). 아이콘은 선으로만. */
-  var TINT = ["sit-v1","sit-v2","sit-dark","sit-v3","sit-v4"];
+  var CELL = ["sb-a","sb-b","sb-c","sb-d","sb-e"];
+  /* 면 색 — 나란히 선 칸끼리 같은 색이 되지 않게 합니다 */
+  var TINT = ["sit-v1","sit-v2","","sit-v3","sit-v4"];
   return '<section class="sec sec-white"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">상황 고르기</p>'+
       '<h2>지금 어떤 상황이세요?</h2>'+
       '<p>사장님의 상황에 맞는 해결방법부터 찾아드립니다.</p></div>'+
     '<div class="sit-g">'+WOW_SITUATIONS.map(function(s, i){
-      var dark = (i === 2);
-      /* 어두운 강조 카드에는 사진을 깔지 않습니다 — 그림 위에 어두운
-         겹을 또 얹으면 흐릿한 덩어리가 됩니다 (히어로에서 겪었습니다) */
-      var ph = !dark && hasPhoto("sit-"+s.key);
+      /* 빨강 칸과 한 줄 칸에는 사진을 깔지 않습니다 — 색 위에 그림을
+         또 얹으면 흐릿한 덩어리가 됩니다 (히어로에서 겪었습니다) */
+      var noPh = (i === 2 || i === 4);
+      var ph = !noPh && hasPhoto("sit-"+s.key);
       return '<a class="sit '+tnClass(s.tone)+(ph?'':' sit-flat')+
-        (i < 2 ? ' sit-lg' : '')+' '+TINT[i]+'" href="'+esc(s.to)+
+        (i < 2 ? ' sit-lg' : '')+(i === 2 ? ' sit-dark' : '')+' '+CELL[i]+' '+TINT[i]+
+        '" href="'+esc(s.to)+
         (s.ask ? '?q='+encodeURIComponent(s.ask) : '')+'">'+
         (ph ? '<span class="sit-ph">'+photoBox("sit-"+s.key)+
               '<span class="sit-ic">'+icon(s.icon,22)+'</span></span>' : '')+

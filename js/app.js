@@ -211,6 +211,7 @@ function render(){
   paintMeta(r);
   paintGnb(); paintMnav(); paintBiz();
   if(r.view === "home" && typeof askRotate === "function") askRotate();
+  initReveal();
   if(r.view === "post" && typeof labSeen === "function") labSeen(r.post.slug);
   if(!RT.keepScroll) window.scrollTo(0,0);
   RT.keepScroll = false;
@@ -300,6 +301,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   window.addEventListener("scroll", onScroll, { passive:true });
   onScroll();
+  initReveal();
   /* ⚠️ 열린 것은 Esc 로 닫혀야 합니다. 바닥 시트가 안 닫히면 폰에서
      뒤로 가기 말고는 빠져나갈 길이 없습니다. */
   document.addEventListener("keydown", function(e){
@@ -307,3 +309,43 @@ document.addEventListener("DOMContentLoaded", function(){
   });
   render();
 });
+
+
+/* ── 스크롤하면 나타나는 것 (지시서 §36) ──────────────────────
+   `data-rv` 를 단 요소가 화면에 들어오면 `.rv-on` 이 붙습니다.
+
+   ⚠️ **과하게 쓰지 마세요.** 모든 것이 움직이면 아무것도 안 움직이는
+   것과 같고, 사장님은 스크롤할 때마다 기다리게 됩니다. 시그니처 장면
+   (GIANT COPY · WHY · 마지막 CTA)과 큰 숫자 정도까지입니다.
+   ⚠️ 움직임을 싫어하는 설정이거나 IntersectionObserver 가 없으면
+   **바로 보여 줍니다.** 안 보이는 채로 남으면 그건 고장입니다.
+   ⚠️ 한 번 나타나면 다시 숨기지 않습니다(unobserve). 위아래로
+   움직일 때마다 깜빡이면 그게 더 거슬립니다. */
+var RV_IO = null;
+function initReveal(){
+  var els = els2("[data-rv]");
+  if(!els.length) return;
+  var reduce = false;
+  try{ reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+  if(reduce || typeof IntersectionObserver !== "function"){
+    els.forEach(function(e){ e.classList.add("rv-on"); });
+    return;
+  }
+  if(!RV_IO){
+    RV_IO = new IntersectionObserver(function(list){
+      list.forEach(function(x){
+        if(!x.isIntersecting) return;
+        x.target.classList.add("rv-on");
+        RV_IO.unobserve(x.target);
+      });
+    }, { rootMargin:"0px 0px -12% 0px", threshold:0.12 });
+  }
+  els.forEach(function(e){
+    if(e.classList.contains("rv-on")) return;
+    RV_IO.observe(e);
+  });
+}
+/* ⚠️ `els()` 는 components/base.js 것이고 이 파일보다 먼저 옵니다.
+   다만 이름이 겹치는 지역 변수(`els`)를 위에서 썼으므로 따로 둡니다 —
+   이 저장소는 이름이 겹쳐 세 번 조용히 깨졌습니다. */
+function els2(sel){ return [].slice.call(document.querySelectorAll(sel)); }

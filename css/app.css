@@ -373,3 +373,19 @@ body.sheet-on{ overflow:hidden; }
 @media (prefers-reduced-motion: reduce){
   .sheet-bg, .sheet-p{ transition:none; }
 }
+
+/* ══ 스크롤하면 나타나는 것 (지시서 §36) ══════════════════
+   ⚠️ **과하게 쓰지 마세요.** 모든 것이 움직이면 아무것도 안 움직이는
+   것과 같습니다. 시그니처 장면과 큰 숫자 정도까지입니다.
+   ⚠️ 움직임을 싫어하는 설정에서는 처음부터 보입니다.
+   ⚠️ 전수 점검은 재기 전에 `.rv-on` 을 전부 붙입니다 — 안 그러면
+   투명한 요소를 "안 보이는 것" 으로 치고 건너뛰어, 글씨 크기·누름
+   크기 검사가 통째로 헐거워집니다. */
+[data-rv]{ opacity:0; transform:translateY(24px);
+  transition:opacity .62s cubic-bezier(.2,.7,.3,1),
+             transform .62s cubic-bezier(.2,.7,.3,1);
+  transition-delay:var(--rvd, 0s); }
+[data-rv].rv-on{ opacity:1; transform:none; }
+@media (prefers-reduced-motion: reduce){
+  [data-rv]{ opacity:1; transform:none; transition:none; }
+}

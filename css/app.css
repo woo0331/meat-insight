@@ -39,6 +39,8 @@ ul,ol{ margin:0; padding:0; list-style:none; }
 input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 
 .w{ width:100%; max-width:var(--w); margin:0 auto; padding:0 var(--s6); }
+/* 히어로처럼 더 넓게 쓰는 자리 (지시서 §5) */
+.w-wide{ width:100%; max-width:var(--w-wide); margin:0 auto; padding:0 var(--s6); }
 @media (max-width:640px){ .w{ padding:0 var(--s4); } }
 
 /* 읽어 주는 프로그램에만 보이는 글 */

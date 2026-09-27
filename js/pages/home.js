@@ -164,34 +164,38 @@ function DiffBand(){
    어두운 바탕 위 왼쪽 정렬. 제일 큰 것은 **입력창**입니다.
    ⚠️ 어두운 면은 버건디가 아니라 차콜(--dark)입니다. 여기까지 브랜드
    색으로 칠하면 화면 절반이 버건디가 되어 정육점 간판이 됩니다. */
-/* ── 01 히어로 ───────────────────────────────────────────────
-   ⚠️ **밝은 두 칸입니다.** 왼쪽 글 · 오른쪽 우리 화면.
-   ⚠️ 오른쪽에 두는 것은 사진 한 장이 아니라 **사진 위에 겹친 우리
-   제품 화면**입니다. 이 사이트가 전화번호부와 다른 이유는 "업체를
-   대 준다" 가 아니라 "업체를 부르기 전에 무엇부터 가려야 하는지 안다"
-   인데, 그건 말로는 증명이 안 됩니다.
-   ⚠️ 여기에 **꾸민 숫자를 넣지 마세요.** 겹쳐 놓은 화면의 글은 전부
-   `js/data/guides.js` 의 실제 문장입니다 (절대 규칙 1). */
+/* ── 01 히어로 — 사이트 전체에서 가장 중요 (지시서 §6~14) ────
+   왼쪽 글, 오른쪽 **사진 × 제품 화면**. 높이는 첫 화면을 꽉 채웁니다.
+
+   ⚠️ 오른쪽은 사진 한 장이 아닙니다. 사진 위에 우리 화면이 떠 있고,
+   들어오자마자 **한 번** 움직여서 이 서비스가 무엇을 하는지 보여 줍니다.
+   ⚠️ 그 흉내에 쓰는 글은 **예시**입니다. 그래서 카드에 "예시 화면"
+   배지를 답니다 (절대 규칙 1 · 지시서 §53). 체크 목록은 지어낸 것이
+   아니라 `WOW_STARTUP_STEPS` 의 실제 창업 단계에서 꺼냅니다.
+   ⚠️ "AI 가 분석합니다" 라고 쓰지 마세요 — 자동분류를 하지 않습니다
+   (절대 규칙 5). 우리가 하는 일은 **꺼내서 정리하는 것**입니다. */
 function Hero(){
-  return '<section class="hero hero-lt2">'+
-    '<span class="hero-blob hb-1" aria-hidden="true"></span>'+
-    '<span class="hero-blob hb-2" aria-hidden="true"></span>'+
-    '<div class="w hero-grid">'+
+  return '<section class="hero hero-red">'+
+    '<span class="hero-glow hg-1" aria-hidden="true"></span>'+
+    '<span class="hero-glow hg-2" aria-hidden="true"></span>'+
+    '<div class="w-wide hero-grid">'+
     '<div class="hero-in">'+
       '<p class="hero-kicker">고기 사업자를 위한 비즈니스 플랫폼</p>'+
       '<h1 class="hero-h">고기 장사,<br>뭐가 <em>고민</em>이세요?</h1>'+
       '<p class="hero-p">창업부터 운영 · 원가 · 시설 · 거래처 · 성장까지.<br class="br-m"> '+
-        '필요한 해결책과 전문업체를 한곳에서 찾아보세요.</p>'+
+        '고기 사업에 필요한 일을 한곳에서 해결하세요.</p>'+
 
+      /* ⚠️ 이 칸은 검색창이 아니라 **이 사이트의 대표 UI** 입니다.
+         작게 만들지 마세요 — 첫 화면에서 제일 큰 것이어야 합니다. */
       '<form class="ask" onsubmit="return askGo(event)">'+
-        '<label class="sr" for="ask">어떤 문제가 있으신가요</label>'+
-        '<span class="ask-ic" aria-hidden="true">'+icon("search",20)+'</span>'+
+        '<label class="sr" for="ask">지금 고민을 적어 주세요</label>'+
         '<textarea id="ask" rows="1" enterkeyhint="go"'+
-          ' placeholder="'+esc(WOW_ASK_SAMPLES[0])+'"'+
+          ' placeholder="지금 고민을 편하게 말씀해주세요."'+
           ' oninput="askGrow(this)" onkeydown="askKey(event)"></textarea>'+
-        '<button class="ask-go" type="submit" aria-label="문제 적고 시작하기">'+
-          '<b class="ask-go-t" aria-hidden="true">물어보기</b>'+icon("arrow",22)+'</button>'+
+        '<button class="ask-go" type="submit" aria-label="고민 적고 시작하기">'+
+          '<b class="ask-go-t" aria-hidden="true">물어보기</b>'+icon("arrow",24)+'</button>'+
       '</form>'+
+      '<p class="ask-eg" id="ask-eg" aria-hidden="true"></p>'+
 
       '<ul class="ask-chips">'+(window.WOW_ASK_CHIPS||[]).map(function(c,i){
         return '<li><button type="button" onclick="askFill('+i+')">'+
@@ -200,76 +204,71 @@ function Hero(){
 
     '<div class="hero-ui">'+ HeroStage() +'</div>'+
     '</div>'+
-  '</section>'+ TrustBar();
+  '</section>';
 }
 
-/* ── 히어로 오른쪽: 사진 위에 겹친 우리 화면 ────────────────
-   ⚠️ 사진은 아직 **그림(SVG)** 입니다. 실제 고깃집 · 정육 작업 사진이
-   생기면 `js/data/photos.js` 의 경로만 바꾸면 그대로 사진이 됩니다 —
-   짜임새는 이미 사진을 전제로 짜 두었습니다.
-   ⚠️ 겹친 카드의 글은 전부 `wowGuide("cost")` 에서 그대로 옵니다. */
+/* ── 히어로 오른쪽: 사진 × 제품 화면 (§11~13) ────────────────
+   ⚠️ 여기 숫자·업체·후기를 지어내지 마세요. 흉내 화면에 찍히는 글은
+   **예시라고 적힌 상황 한 줄**과 **실제 창업 단계 이름**뿐입니다. */
 function HeroStage(){
-  var g = (window.wowGuide ? wowGuide("cost") : null);
-  var ph = hasPhoto("hero");
-  if(!g) return ph ? '<div class="hstage"><span class="hstage-ph">'+
-    photoBox("hero")+'</span></div>' : "";
-
-  /* 무엇 때문인지 가르는 세 가지 — 가이드의 `causes` 제목 그대로 */
-  var rows = (g.causes||[]).slice(0,3).map(function(c,i){
-    return '<span class="hsf-i"><i aria-hidden="true">'+(i+1)+'</i>'+
-      '<em>'+esc(c.t)+'</em></span>';
-  }).join("");
+  var steps = (window.WOW_STARTUP_STEPS || []);
+  var want  = ["shop", "interior", "duct", "cold", "beef"];
+  var pick  = want.map(function(k){
+    return steps.filter(function(s){ return s.key === k; })[0]; }).filter(Boolean);
+  if(pick.length < 4) pick = steps.slice(0, 5);
 
   return '<div class="hstage">'+
-    (ph ? '<span class="hstage-ph" aria-hidden="true">'+photoBox("hero")+'</span>' : '')+
-    /* 위에 겹치는 카드 — 고민 → 가릴 것 → 해결방법 */
-    '<a class="hsf" href="/problem/'+encodeURIComponent(g.key)+'">'+
-      '<span class="hsf-q">'+
-        '<b>사장님의 고민</b>'+
-        '<em>“'+esc(g.ask0)+'”</em>'+
-      '</span>'+
-      '<span class="hsf-arw" aria-hidden="true">'+icon("chevd",18)+'</span>'+
-      '<span class="hsf-b">'+
-        '<b>먼저 무엇 때문인지 가릅니다</b>'+
-        '<span class="hsf-l">'+rows+'</span>'+
-      '</span>'+
-      '<span class="hsf-go">해결방법 보기'+icon("arrow",16)+'</span>'+
-    '</a>'+
+    (hasPhoto("hero")
+      ? '<span class="hstage-ph" aria-hidden="true">'+photoBox("hero")+'</span>' : '')+
+
+    /* ① 고민 한 줄 */
+    '<div class="hcard hcard-q">'+
+      '<span class="hcard-m"><em>사장님의 고민</em>'+
+        '<i class="hcard-eg">예시 화면</i></span>'+
+      '<b>“수원에서 45평 돼지고기집을<br> 준비하고 있어요.”</b>'+
+    '</div>'+
+
+    /* ② 우리가 꺼내 드리는 것 — 실제 창업 단계 이름입니다 */
+    '<div class="hcard hcard-a">'+
+      '<span class="hcard-t">'+
+        '<span class="hcard-dot" aria-hidden="true"><i></i><i></i><i></i></span>'+
+        '<b>필요한 준비를 꺼냅니다</b></span>'+
+      '<ul class="hcard-l">'+pick.slice(0,5).map(function(st,i){
+        return '<li style="--d:'+(1.1 + i*0.22)+'s">'+icon("check",15)+
+          '<span>'+esc(st.name)+'</span></li>';
+      }).join("")+'</ul>'+
+      '<a class="hcard-go" href="/start">창업 계획 확인하기'+icon("arrow",16)+'</a>'+
+    '</div>'+
   '</div>';
 }
 
-/* ── 히어로 아래 신뢰 줄 ─────────────────────────────────────
-   ⚠️ 시안에는 여기에 "3,200+ 사장님 · 만족도 98%" 가 있었습니다.
-   **넣지 않았습니다.** 그 값이 하나도 없고, 없는 숫자를 적는 것은
-   절대 규칙 1 위반이자 표시광고법 제3조(거짓·과장 광고)입니다.
-   ⚠️ 여기 적힌 넷은 전부 **지금 지킬 수 있는 말**입니다. 시간을
-   약속하는 말("24시간 응답")도 넣지 마세요 — 약관 제8조가 회신 시점을
-   보장하지 않는다고 적고 있습니다. */
-function TrustBar(){
-  var rows = [
-    ["won",   "상담료 없음",   "물어보시는 것도 업체를 찾아 드리는 것도 무료입니다"],
-    ["scale", "조건 비교",     "받은 견적을 포함 범위까지 같이 놓고 견줍니다"],
-    ["knife", "고기 사업 전문", "고깃집 · 정육점에서 실제로 나오는 고민만 다룹니다"],
-    ["badge", "전문업체 연결",  "조건이 맞는 곳만, 목록을 뿌리지 않고 골라서 보냅니다"]
-  ];
-  return '<section class="tbar"><div class="w tbar-in">'+rows.map(function(r){
-    return '<div class="tbar-i"><span class="tbar-ic">'+icon(r[0],20)+'</span>'+
-      '<span class="tbar-t"><b>'+esc(r[1])+'</b><span>'+esc(r[2])+'</span></span></div>';
-  }).join("")+'</div></section>';
-}
-
-/* 입력창 예시가 돌아갑니다 — 빈 칸만 보여 주면 사장님은 안 씁니다.
-   ⚠️ 손님이 한 글자라도 적으면 멈춥니다. 쓰는 중에 글자가 바뀌면
-   깜짝 놀랍니다. */
+/* 적는 칸 **아래**에서 예시가 돌아갑니다 (지시서 §9).
+   ⚠️ 예전에는 placeholder 를 갈아 끼웠습니다. 그러면 "무엇을 적는
+   칸인가" 가 3초마다 바뀌어서, 정작 칸의 이름이 없어집니다. 칸에는
+   한 문장을 고정으로 두고, 예시는 따로 흐르게 합니다.
+   ⚠️ 손님이 한 글자라도 적거나 칸에 들어가면 **멈춥니다.** 쓰는 중에
+   밑에서 글자가 움직이면 신경이 쓰입니다.
+   ⚠️ 읽어 주는 프로그램에는 안 읽힙니다(`aria-hidden`) — 3초마다
+   바뀌는 글을 읽어 주면 방해만 됩니다. */
 var ASK_I = 0, ASK_T = null;
 function askRotate(){
   clearInterval(ASK_T);
+  var put = function(){
+    var eg = $("ask-eg"), el = $("ask");
+    if(!eg) return;
+    if(el && (el.value || document.activeElement === el)){ eg.textContent = ""; return; }
+    eg.textContent = "예: " + WOW_ASK_SAMPLES[ASK_I];
+    eg.classList.remove("on");
+    /* 다음 그림틀에서 클래스를 다시 붙여야 전환이 다시 돕니다 */
+    requestAnimationFrame(function(){ eg.classList.add("on"); });
+  };
+  put();
   ASK_T = setInterval(function(){
     var el = $("ask");
-    if(!el || el.value || document.activeElement === el) return;
+    if(el && (el.value || document.activeElement === el)) return;
     ASK_I = (ASK_I + 1) % WOW_ASK_SAMPLES.length;
-    el.setAttribute("placeholder", WOW_ASK_SAMPLES[ASK_I]);
-  }, 3200);
+    put();
+  }, 3400);
 }
 window.askGrow = function(el){
   el.style.height = "auto";

@@ -11,17 +11,16 @@
    ════════════════════════════════════════════════════════════════════ */
 
 window.WOW_GNB = [
-  /* ⚠️ 제일 앞이 **고민 해결**입니다. 손님이 처음 하는 일은 업체
-     검색이 아니라 "내가 지금 무엇 때문에 들어왔는가" 를 고르는 것이고
-     (지시서 3번), 그 답이 여기 있습니다. 업체찾기를 앞에 두면 그
-     순간 전화번호부의 차림새가 됩니다. */
-  { name:"고민 해결",    to:"/problems" },
-  { name:"창업하기",     to:"/start" },
+  /* 지시서 §44 그대로입니다. ⚠️ "고민 해결"(/problems)이 메뉴에서
+     빠졌지만, 그 길은 **빨간 Primary CTA("고민 물어보기")** 와 히어로의
+     빠른 선택 · 고민 구간 · 푸터가 함께 지킵니다 — 메뉴 링크 하나보다
+     빨간 단추 하나가 더 큽니다. 여기에 일곱 번째를 더하지 마세요. */
+  { name:"창업",         to:"/start" },
   { name:"사업진단",     to:"/check" },
   { name:"전문업체",     to:"/partners" },
-  { name:"견적비교",     to:"/quotes" },
+  { name:"견적",         to:"/quotes" },
   { name:"사장님 연구소", to:"/lab" },
-  { name:"파트너스",     to:"/partner" }
+  { name:"파트너",       to:"/partner" }
 ];
 /* ⚠️ **계산기(/tools)를 헤더에서 뺐습니다.** 여덟 개가 되면 손님이
    "무엇을 하는 곳인가" 대신 "어디를 눌러야 하나" 를 고민합니다
@@ -48,7 +47,7 @@ function Header(){
         '<a class="hd-txt" href="/login">로그인</a>'+
         /* Primary CTA — 지시서 29번. 이 버튼 하나가 헤더에서 제일
            눈에 띄어야 합니다. */
-        '<a class="btn btn-b hd-cta" href="/sos">무료로 물어보기</a>'+
+        '<a class="btn btn-b hd-cta" href="/sos">고민 물어보기</a>'+
       '</div>'+
       '<span class="hd-m-wrap">'+
         '<a class="hd-m" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+

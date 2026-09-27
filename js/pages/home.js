@@ -39,6 +39,7 @@ function PageHome(){
      ⚠️ 업체 카테고리(CatBand)를 위로 올리지 마세요. 첫 화면 가까이에
      업체 목록 차림새가 오면 그 순간 전화번호부입니다 (지시서 3번). */
   return Hero()+
+         MobileQuick()+     /* 폰에서만 — 무엇을 할 수 있는 곳인지 한 화면에 */
          SceneCopy()+       /* 장면 하나 — 이 사이트가 무엇을 바꾸는가 */
          Situations()+      /* 굵게 — 다섯 상황 */
          WorryBand()+       /* 가늘게 — 열둘 중 여섯 고민 */
@@ -55,6 +56,56 @@ function PageHome(){
          PartnerBand()+
          FinalCTA();
 }
+
+/* ── 폰 전용: 빠른 메뉴 ──────────────────────
+   폰으로 들어오시면 히어로 다음이 곧장 긴 구간입니다. "여기서 무엇을
+   할 수 있는가" 를 알려면 스무 화면을 내려야 했습니다.
+
+   ⚠️ **여기 있는 여덟은 전부 넓은 화면의 메뉴 · 푸터에 이미 있는
+   것입니다.** 폰에만 있는 기능을 만든 것이 아니라, 폰에서 **찾기
+   어려웠던 것을 앞으로 꺼낸** 것입니다.
+   ⚠️ **없는 화면을 넣지 마세요.** 여덟 개 주소가 전부 실제로 열립니다
+   (`check.js` 가 링크를 전부 눌러 봅니다).
+   ⚠️ 넓은 화면에서는 안 나옵니다 — 거기서는 헤더 메뉴가 같은 일을
+   하고, 첫 화면 가까이에 칸을 늘어놓으면 전화번호부가 됩니다. */
+function MobileQuick(){
+  var items = [
+    ["/start",    "seed",  "창업 준비"],
+    ["/check",    "gauge", "무료 진단"],
+    ["/problems", "bulb",  "고민 해결"],
+    ["/partners", "store", "업체 찾기"],
+    ["/request",  "doc",   "견적 요청"],
+    ["/quotes",   "scale", "견적 비교"],
+    ["/tools",    "chart", "계산기"],
+    ["/my",       "user",  "내 기록"]
+  ];
+  return '<section class="mq" aria-label="바로 가기">'+
+    '<div class="w"><ul class="mq-g">'+items.map(function(it, i){
+      return '<li><a class="mq-i '+tnClass("t"+(i+1))+'" href="'+esc(it[0])+'">'+
+        '<span class="mq-ic">'+icon(it[1],22)+'</span>'+
+        '<span>'+esc(it[2])+'</span></a></li>';
+    }).join("")+'</ul></div></section>';
+}
+
+/* ── 폰에서만 접히는 칸 ────────────────────────
+   ⚠️ **링크와 기능은 절대 접지 않습니다.** 접는 것은 **설명과 도구
+   본체**까지이고, 한 번 누르면 그대로 나옵니다. 폰에서만 안 보이는
+   링크를 만들면 그 기능은 폰 손님에게 없는 것과 같습니다.
+   ⚠️ `<details>` 를 쓰지 않았습니다. 넓은 화면에서 항상 펼쳐 두려면
+   `open` 을 켜 둬야 하는데, 그러면 폰에서도 펼쳐집니다. 여는 것은
+   클래스 하나로 합니다 — 넓은 화면에서는 단추가 아예 안 나옵니다. */
+function MFold(label, inner){
+  return '<div class="m-fold">'+
+    '<button type="button" class="m-fold-b" onclick="mFold(this)" aria-expanded="false">'+
+      '<span>'+esc(label)+'</span>'+icon("chevd",18)+'</button>'+
+    '<div class="m-fold-c">'+inner+'</div>'+
+  '</div>';
+}
+window.mFold = function(btn){
+  var box = btn.parentNode; if(!box) return;
+  var on = box.classList.toggle("on");
+  btn.setAttribute("aria-expanded", on ? "true" : "false");
+};
 
 /* ── 01.5 장면 하나 — 히어로와 카드 사이 ───────────────────────
    ⚠️ **히어로 다음에 곧장 카드 그리드를 붙이지 않습니다.** 첫 화면에서
@@ -168,7 +219,9 @@ function DiffBand(){
     /* ⚠️ 왼쪽은 **지금 사장님이 실제로 하시는 일**이고 오른쪽은
        우리가 하는 일입니다. 여기에 "몇 시간 절약" 같은 숫자를 적지
        마세요 — 재어 본 적이 없습니다 (절대 규칙 1). */
-    '<div class="wflow">'+
+    /* 폰에서는 접습니다 — 링크가 아니라 **설명**입니다. 한 번 누르면
+       그대로 나오고, 넓은 화면에서는 늘 펼쳐져 있습니다. */
+    MFold('직접 알아보실 때와 뭐가 다른가요', '<div class="wflow">'+
       '<div class="wflow-c wflow-a">'+
         '<b>지금은 이렇게 하십니다</b>'+
         /* ⚠️ 이 일곱 줄은 **흩어져 있다가 제자리로 모입니다**
@@ -207,7 +260,7 @@ function DiffBand(){
       }).join("")+
     '</div>'+
     '<p class="note diff-n">여기 적은 것은 전부 저희가 실제로 하는 방식입니다. '+
-      '지키지 못하는 일이 생기면 이 줄부터 고치겠습니다.</p>'+
+      '지키지 못하는 일이 생기면 이 줄부터 고치겠습니다.</p>')+
     /* ⚠️ 장면의 마지막 한 줄 (§28). **여기에 숫자를 붙이지
        마세요** — "n곳 비교" · "n시간 절약" 은 재어 본 적이 없습니다. */
     '<p class="why-end" data-rv>검색하지 말고, <em>ABOUTMEAT</em>에 '+
@@ -435,7 +488,10 @@ function CheckBand(){
         '무엇이 비어 있는지 정리해 드립니다.</p>'+
     '</div>'+
 
-    '<div class="ckb-c scan-ui">'+
+    /* 폰에서는 이 판을 접어 둡니다 — 읽는 구간이 아니라 **도구**라
+       한 번 누르고 쓰시면 되고, 펼친 채로 두면 구간 하나가 화면 두
+       개를 먹습니다. 넓은 화면에서는 늘 펼쳐져 있습니다. */
+    MFold('내 가게 숫자 넣어보기', '<div class="ckb-c scan-ui">'+
       '<div class="scan-bar"><b>내 가게 숫자</b>'+
         '<span>이 브라우저에서만 계산합니다</span></div>'+
 
@@ -464,7 +520,7 @@ function CheckBand(){
 
       /* ③ 이 브라우저에 남아 있는 진단 결과 */
       '<div class="ckb-r scan-r" id="ckb-r">'+CheckScore()+'</div>'+
-    '</div>'+
+    '</div>')+
   '</div></section>';
 }
 
@@ -649,7 +705,7 @@ function MatchBand(){
       '<h2>업체 찾느라<br class="br-m"> 전화 돌리지 마세요.</h2>'+
       '<p class="mband-p">필요한 조건만 알려주시면 고기 사업 경험이 있는 '+
         '전문업체를 비교해 드립니다.</p>'+
-      '<ol class="mstep">'+steps.map(function(st,i){
+      '<ol class="mstep h-sc">'+steps.map(function(st,i){
         return '<li>'+
           (i ? '<span class="mstep-ar" aria-hidden="true">'+icon("arrow",20)+'</span>' : '')+
           '<span class="mstep-n">STEP '+("0"+(i+1))+'</span>'+
@@ -684,7 +740,7 @@ function CatBand(){
       '<p>고기부터 덕트 · 장비 · 세무까지. 어디에 물어야 할지 모를 때 '+
         '여기서 시작하시면 됩니다.</p>'+
       '<a class="sec-more" href="/partners">전문업체 찾기'+icon("chev",16)+'</a></div>'+
-    '<div class="cat-g cat-g6 rv-stg">'+WOW_SERVICE_GROUPS.map(function(g){
+    '<div class="cat-g cat-g6 rv-stg h-sc">'+WOW_SERVICE_GROUPS.map(function(g){
       var ph = hasPhoto("cat-"+g.key);
       var items = g.items.slice(0, 5);
       return '<div data-rv class="catc '+tnClass(g.tone)+'">'+
@@ -809,7 +865,7 @@ function LabBand(){
           '<span class="edi-l">'+esc(lead.lead)+'</span>'+
           '<span class="edi-go">읽어 보기'+icon("arrow",16)+'</span>'+
         '</span></a>'+
-      '<ul class="edi-l-list">'+rest.map(function(p, i){
+      '<ul class="edi-l-list h-sc">'+rest.map(function(p, i){
         var c = (typeof wowPostCat === "function") ? wowPostCat(p.cat) : null;
         return '<li><a class="'+tnClass(c && c.tone)+'" href="/lab/'+esc(p.slug)+'">'+
           '<span class="edi-n">'+("0"+(i+2))+'</span>'+

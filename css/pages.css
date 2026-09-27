@@ -1234,6 +1234,7 @@
 .tool > b{ font-size:var(--t-2xl); letter-spacing:-.03em; }
 .tool-l{ font-size:var(--t-base); color:var(--ink2); line-height:1.8; }
 .tool-l b{ color:var(--ink); }
+.tool-go em{ font-style:normal; }
 .tool-go{ display:inline-flex; align-items:center; gap:6px; margin-top:var(--s3);
   min-height:44px; font-size:var(--t-md); font-weight:700; color:var(--burgundy); }
 @media (max-width:1040px){ .tool-g{ grid-template-columns:1fr; }
@@ -2804,4 +2805,39 @@
   .edi-f-b{ padding:var(--s5); }
   .edi-l-list a{ gap:var(--s4); padding:var(--s4) var(--s5); }
   .edi-arw{ display:none; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   폰에서 길이를 줄입니다 (§24 — 데스크톱을 줄여 놓지 않습니다)
+
+   ⚠️ **내용을 숨겨서 줄이지 마세요.** 폰에서만 안 보이는 링크를
+   만들면 그 기능은 폰 손님에게 없는 것과 같습니다. 줄이는 것은
+   **사진 높이와 여백**까지입니다.
+   ════════════════════════════════════════════════════════════════════ */
+@media (max-width:660px){
+  /* 계산기 여섯 — 카드가 아니라 줄로. 여섯 장을 세로로 쌓으면
+     그것만 화면 세 개가 걸립니다 */
+  .tool-g6{ gap:2px; }
+  .tool-g6 .tool{ display:grid; grid-template-columns:auto 1fr auto;
+    gap:var(--s4); align-items:center; padding:var(--s4) var(--s5);
+    border-radius:0; min-height:76px; }
+  .tool-g6 .tool:first-child{ border-radius:var(--r-lg) var(--r-lg) 0 0; }
+  .tool-g6 .tool:last-child{ border-radius:0 0 var(--r-lg) var(--r-lg); }
+  .tool-g6 .tool-t{ margin:0; }
+  .tool-g6 .tool-t em{ display:none; }   /* 소요 시간은 줄에서 뺍니다 */
+  .tool-g6 .tool-ic{ width:40px; height:40px; border-radius:13px; }
+  .tool-g6 .tool > b{ font-size:var(--t-md); }
+  .tool-g6 .tool-l{ display:none; }      /* 한 줄 설명은 도구 화면에 있습니다 */
+  /* ⚠️ `font-size:0` 으로 글자를 없애지 마세요 — 읽어 주는 프로그램이
+     어떻게 읽을지가 브라우저마다 다릅니다. 줄 전체가 이미 링크이고
+     이름은 카드 제목이 줍니다. 여기서는 꾸밈 글자만 감춥니다. */
+  .tool-g6 .tool-go em{ display:none; }
+  .tool-g6 .tool-go{ gap:0; color:var(--ink3); }
+
+  /* 서비스 분류 — 사진을 납작하게, 여백을 좁게 */
+  .cat-g6{ gap:var(--s4); }
+  .catc-ph .ph{ aspect-ratio:2.6/1; }
+  .catc-b{ padding:var(--s5); gap:var(--s3); }
+  .catc-ic{ width:40px; height:40px; border-radius:13px; }
+  .catc-n > b{ font-size:var(--t-lg); }
 }

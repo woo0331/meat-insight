@@ -83,7 +83,7 @@ function ToolBand(){
           '<em>'+esc(t.time)+'</em></span>'+
         '<b>'+esc(t.name)+'</b>'+
         '<span class="tool-l">'+esc(t.line)+'</span>'+
-        '<span class="tool-go">해 보기'+icon("arrow",18)+'</span></a>';
+        '<span class="tool-go"><em>해 보기</em>'+icon("arrow",18)+'</span></a>';
     }).join("")+'</div>'+
   '</div></section>';
 }

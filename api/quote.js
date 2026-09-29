@@ -53,7 +53,7 @@ module.exports = async function handler(req, res){
   /* ⚠️ 화면에서 온 것만 받습니다. 자물쇠가 아니라 문턱입니다 —
      진짜 속도 제한은 Vercel Firewall 에서 거세요. */
   if(!fromOurPages(req)){
-    console.warn("[ABOUTMEAT] 우리 화면 밖에서 온 요청을 받지 않았습니다 (origin=" +
+    console.warn("[site] 우리 화면 밖에서 온 요청을 받지 않았습니다 (origin=" +
       (req.headers.origin || "없음") + ")");
     return res.status(403).json({ error: "잘못된 요청입니다" });
   }
@@ -165,7 +165,7 @@ module.exports = async function handler(req, res){
 
   const sent = await deliver(kind, q, subject, text);
   if(!sent.ok){
-    console.error("[ABOUTMEAT] 요청을 전달하지 못했습니다 — " + why(kind, sent.why));
+    console.error("[site] 요청을 전달하지 못했습니다 — " + why(kind, sent.why));
     return res.status(503).json({ error: "지금 접수하지 못했습니다" });
   }
   res.status(200).json({ ok: true });

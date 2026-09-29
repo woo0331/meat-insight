@@ -1,10 +1,31 @@
 /* ════════════════════════════════════════════════════════════════════
-   라우터 · 메타 — 지시서 40번
+   라우터 · 메타 (§46 SEO)
 
    ⚠️ **주소는 진짜 경로입니다** (해시가 아닙니다). 해시 뒤는 서버로
    전송되지 않아서, 크롤러 눈에는 화면이 몇 개든 주소가 "/" 하나뿐입니다.
    ⚠️ `location.hash` 를 읽지 마세요. 늘 빈 문자열이라 **에러 없이 조용히
    틀린 답**을 돌려줍니다. `nowPath()` · `nowQS()` 를 쓰세요.
+
+   ── 주소 얼개 (§46) ─────────────────────────────────────────────
+   /                      두 선택 — 창업이냐 폐업이냐
+   /startup               업종 고르기
+   /startup/:industry     그 업종의 창업에 필요한 모든 것
+   /closure               정리 방법 고르기
+   /closure/:industry     그 업종의 폐업에 필요한 모든 것
+   /providers             업체찾기 — 분류 고르기
+   /providers/:cat        그 분류의 업체 (`?s=` 하위분류 · `?r=` 지역)
+   /p/:id                 업체 상세
+   /c/:cat                정보 · 매물 성격의 분류 (상권 · 절차 · 자금)
+   /franchise             프랜차이즈 · /franchise/:cat · /f/:slug
+   /stores                점포 · 상가 · 매장 양도
+   /assets                시설 · 집기 · 재고
+   /support               지원사업 · /content · /content/:slug
+   /quote                 견적 요청   /join  업체 입점
+   /my  /search  /about  /terms  /privacy
+
+   ⚠️ **한 화면에 주소 하나.** `/providers/:cat` 은 업체를 찾는 분류만,
+   `/c/:cat` 은 나머지만 받습니다. 둘 다 받으면 같은 내용이 두 주소로
+   나가고 구글이 **둘 다 무시**합니다.
 
    화면을 새로 만들 때 고치는 곳은 네 군데입니다:
    META → routeInfo() → render() 의 switch → build-pages.js 의 allRoutes().
@@ -22,125 +43,149 @@ window.nowQS = function(k){
 };
 
 /* 제목과 **설명**. 설명을 비우면 구글이 본문에서 아무 문장이나 가져다
-   씁니다 (지시서 41번: SEO · Metadata). */
+   씁니다. 화면마다 서로 달라야 합니다 — build-pages 가 겹치면 멈춥니다. */
 var META = {
-  "/":         ["고기 장사, 뭐가 고민이세요?",
-                "고깃집·정육점 사장님의 문제 해결 플랫폼. 창업·운영·원가·시설·매출·확장·정리까지 상황만 말씀해주시면 해결방법부터 적합한 업체 비교까지 도와드립니다."],
-  "/sos":      ["사장님 SOS",
-                "지금 겪고 계신 문제를 그대로 적어 주세요. 무엇이 필요한 일인지 정리해 드리고, 조건에 맞는 업체를 찾아 드립니다. 무료입니다."],
-  "/start":    ["고깃집 창업 프로젝트",
-                "상권·점포·인테리어·덕트·주방·냉장·정육장비·인허가까지 20가지를 순서대로 정리해 드립니다."],
-  "/start/cost":["창업비 정리표",
-                "고깃집 창업비에서 빠뜨리기 쉬운 항목을 전부 늘어놓고, 받으신 견적을 넣어 합계와 빈 칸을 정리해 드립니다."],
-  "/check":    ["무료 사업진단",
-                "육류원가·거래처·인건비·고정비·시설·메뉴·마케팅·위생 8가지로, 지금 무엇을 파악하고 계시고 무엇이 비어 있는지 정리해 드립니다."],
-  "/partners": ["업체 찾기",
-                "업체 명단을 드리지 않습니다. 필요한 일을 고르시면 지역·예산·일정에 맞는 곳을 최대 세 곳 찾아 견적을 받아 드립니다."],
-  "/request":  ["견적 요청",
-                "덕트·인테리어·육류공급 등 필요한 일을 적어 주시면 조건에 맞는 업체 견적을 받아 드립니다."],
-  "/lab":      ["사장님 연구소",
-                "창업·운영·원가·고기·시설·마케팅·세무노무까지, 고기 장사에 필요한 것만 정리했습니다."],
-  "/partner":  ["파트너 안내",
-                "고깃집·정육점을 아는 업체를 찾고 있습니다. 조건에 맞는 요청만 보내 드립니다."],
-  "/partner/apply":["파트너 등록", "ABOUTMEAT 파트너로 등록하고 조건에 맞는 요청을 받아 보세요."],
-  "/my":       ["MY BUSINESS",
-                "진단 결과·창업 진행·창업비·견적 비교·읽던 글을 한 화면에서 이어서 하실 수 있습니다."],
-  "/problems": ["고민별 해결방법",
-                "고깃집·정육점에서 자주 나오는 고민을 직접 확인할 것과 업체에 물어볼 것으로 정리했습니다. 가입 없이 읽으시면 됩니다."],
-  "/search":   ["검색",
-                "글·서비스·화면을 한 번에 찾습니다. 못 찾으시면 그대로 적어서 물어보시면 됩니다."],
-  "/tools":    ["사장님 도구",
-                "수율 원가·손익분기·인건비율·창업비·견적 비교·사업진단. 사장님 가게 숫자로 바로 확인하실 수 있습니다. 가입 없이 무료입니다."],
-  "/tools/yield":["수율 원가 계산",
-                "원육을 손질하고 나면 원가가 달라집니다. 매입 단가와 손질 전후 무게로 실제 1kg 원가와 1인분 원가를 냅니다."],
-  "/tools/bep": ["손익분기 계산",
-                "고정비와 매출 대비 비율을 적으시면 한 달에 얼마를 팔아야 본전인지, 하루로 나누면 얼마인지 나옵니다."],
-  "/tools/labor":["인건비율 계산",
-                "급여만 보면 한 사람 값이 실제보다 적게 보입니다. 4대보험과 사장님 몫까지 넣어 실제 인건비율과 한 사람당 매출을 냅니다."],
-  "/quotes":   ["견적 비교",
-                "받으신 견적을 나란히 놓고 금액·기간·A/S·포함 범위를 비교하고, 빠뜨린 질문을 확인합니다."],
-  "/login":    ["로그인", "ABOUTMEAT 로그인."],
-  "/signup":   ["회원가입", "ABOUTMEAT 회원가입."],
-  "/about":    ["ABOUTMEAT 소개",
-                "고깃집·정육점 사장님이 장사하다 막히면 물어보는 곳입니다. 무엇을 하고 무엇을 하지 않는지 적어 두었습니다."],
-  "/terms":    ["이용약관", "ABOUTMEAT 서비스 이용약관입니다."],
-  "/privacy":  ["개인정보처리방침", "ABOUTMEAT 개인정보처리방침입니다."]
+  "/":          ["창업에 필요한 모든 것, 폐업에 필요한 모든 것",
+                 "장사를 시작하시나요, 정리하시나요. 업종과 지역만 고르시면 점포 · 인테리어 · 장비 · 프랜차이즈부터 매장 양도 · 철거 · 원상복구 · 폐업 신고까지 필요한 전문업체를 찾고 비교하고 견적받으실 수 있습니다."],
+  "/startup":   ["창업 — 어떤 사업을 준비하세요?",
+                 "업종만 고르시면 그 업종 창업에 실제로 필요한 것만 추려 드립니다. 점포 · 상권 · 인테리어 · 장비 · 가구 · POS · 공급 · 인허가 · 마케팅까지."],
+  "/closure":   ["폐업 — 사업을 어떻게 정리하세요?",
+                 "매장 양도 · 시설 집기 처분 · 재고 · 철거 · 원상복구 · 폐기물 · 폐업신고 · 계약 해지까지, 정리에 필요한 곳을 한곳에서 찾습니다."],
+  "/providers": ["업체찾기",
+                 "인테리어 · 철거 · 간판 · 주방설비 · POS · 세무 · 노무 · 청소까지. 지역과 업종에 맞는 업체를 비교하고 견적을 받으세요."],
+  "/franchise": ["프랜차이즈",
+                 "업종별 프랜차이즈 브랜드를 창업비 · 가맹비 · 권장 평수 · 모집지역으로 비교하고 창업 상담을 신청하실 수 있습니다."],
+  "/stores":    ["점포 · 상가 · 매장 양도",
+                 "지역 · 업종 · 평수 · 보증금 · 월세 · 권리금으로 찾습니다. 시설을 그대로 인수할 수 있는 매장도 함께 봅니다."],
+  "/assets":    ["시설 · 집기 · 재고",
+                 "정리하시는 사장님이 내놓은 주방장비 · 커피머신 · 가구 · POS · 운동기구 · 미용기기와 남은 재고를 찾습니다."],
+  "/support":   ["자금 · 정부지원",
+                 "창업자금 · 정책자금 · 폐업지원 · 철거비 지원까지, 조건에 맞으면 신청하실 수 있는 지원사업을 모읍니다."],
+  "/content":   ["창업 · 폐업 정보",
+                 "창업비용 · 철거비 · 원상복구 범위 · 권리금 · 사업자등록 · 폐업신고처럼 실제로 막히는 것만 정리합니다."],
+  "/quote":     ["견적 요청",
+                 "한 번만 적으시면 조건에 맞는 업체들에 같이 전달합니다. 받으신 제안을 한 화면에서 비교하세요."],
+  "/join":      ["업체 입점하기",
+                 "창업과 폐업을 준비하는 사장님이 직접 찾아옵니다. 지역과 전문 분야가 맞는 요청만 받아 보세요. 기본 입점은 무료입니다."],
+  "/my":        ["MY",
+                 "내 창업 · 내 폐업 진행 상황과 받은 견적, 저장한 업체를 한 화면에서 이어서 하실 수 있습니다."],
+  "/search":    ["통합검색",
+                 "업체 · 프랜차이즈 · 매장 · 시설장비 · 정보를 한 번에 찾습니다."],
+  "/about":     ["소개",
+                 "무엇을 하고 무엇을 하지 않는지 적어 두었습니다. 저희는 중개자이고 거래 당사자가 아닙니다."],
+  "/terms":     ["이용약관", "서비스 이용약관입니다."],
+  "/privacy":   ["개인정보처리방침", "개인정보처리방침입니다."]
 };
 
-/* 사람마다 내용이 다른 화면과 결과 화면은 검색에 안 올립니다 */
-var NOINDEX = ["/my","/login","/signup","/sos","/check/result","/quotes","/search"];
+/* 사람마다 내용이 다른 화면과 결과 화면은 검색에 올리지 않습니다 */
+var NOINDEX = ["/my","/search","/quote"];
 
-/* 아직 안 만든 화면 — 무엇을 하는 곳인지 적고 지금 할 수 있는 것을 줍니다.
-   ⚠️ 빈 화면을 두지 마세요. 눌렀는데 아무것도 없으면 손님에게는
-   고장으로 읽힙니다. */
-var SOON = {
-  "/login":    ["로그인",
-                "회원 기능은 아직입니다. 다만 **로그인하지 않으셔도** 진단·창업 체크·창업비·견적 비교는 그대로 되고, 결과는 MY BUSINESS 에 남습니다."],
-  "/signup":   ["회원가입",
-                "회원 기능은 아직입니다. 가입하지 않으셔도 문의·견적 요청·진단이 전부 됩니다."]
-};
-
-/* 주소 → 무엇을 그릴지. build-pages.js 도 이 함수를 써서 메타를 뽑으므로
-   여기만 고치면 화면과 정적 파일이 같이 따라옵니다. */
-window.routeInfo = function(path, qs){
-  var r = { ok:true, path:path, title:null, desc:null, canon:path,
+window.routeInfo = function(path){
+  var r = { ok:true, title:"", desc:"", canon:null,
             noindex: NOINDEX.indexOf(path) >= 0, view:null };
-  var m = META[path];
-  if(m){ r.title = m[0]; r.desc = m[1]; }
-
-  if(path === "/"){ r.view = "home"; r.title = null; r.desc = META["/"][1]; return r; }
+  if(META[path]){ r.title = META[path][0]; r.desc = META[path][1]; }
 
   var VIEW = {
-    "/sos":           "sos",
-    "/check":         "check",
-    "/start":         "start",
-    "/start/cost":    "cost",
-    "/partners":      "partners",
-    "/request":       "request",
-    "/partner":       "partner",
-    "/partner/apply": "partnerApply",
-    "/about":         "about",
-    "/lab":           "lab",
-    "/my":            "my",
-    "/quotes":        "quotes",
-    "/tools":         "tools",
-    "/tools/yield":   "yield",
-    "/tools/bep":     "bep",
-    "/tools/labor":   "labor",
-    "/search":        "search",
-    "/problems":      "problems",
-    "/terms":         "terms",
-    "/privacy":       "privacy"
+    "/":          "home",
+    "/startup":   "startup",
+    "/closure":   "closure",
+    "/providers": "providers",
+    "/franchise": "franchise",
+    "/stores":    "stores",
+    "/assets":    "assets",
+    "/support":   "support",
+    "/content":   "contents",
+    "/quote":     "quote",
+    "/join":      "join",
+    "/my":        "my",
+    "/search":    "search",
+    "/about":     "about",
+    "/terms":     "terms",
+    "/privacy":   "privacy"
   };
   if(VIEW[path]){ r.view = VIEW[path]; return r; }
 
-  /* 글 하나 — 주소 안의 주소입니다. 제목·설명을 글에서 가져옵니다.
-     ⚠️ 여기서 제목을 안 채우면 검색 결과에 글마다 같은 줄이 나갑니다. */
-  var m = /^\/lab\/([a-z0-9-]+)$/.exec(path);
+  /* 업종별 창업 — /startup/cafe */
+  var m = /^\/startup\/([a-z0-9-]+)$/.exec(path);
   if(m){
-    var post = (typeof wowPost === "function") ? wowPost(m[1]) : null;
-    if(post){
-      r.view = "post"; r.post = post;
-      r.title = post.title; r.desc = post.lead;
-      return r;
-    }
-    r.ok = false; return r;      /* 없는 글은 404 — 빈 화면을 두지 않습니다 */
+    var ind = (typeof amIndustry === "function") ? amIndustry(m[1]) : null;
+    if(!ind){ r.ok = false; return r; }
+    r.view = "startupIndustry"; r.industry = ind;
+    r.title = ind.name + " 창업 — 필요한 모든 것";
+    r.desc  = ind.name + " 창업에 실제로 필요한 것만 추렸습니다. " +
+              "점포 · 상권 · 인테리어 · " + (ind.equip[0] ? ind.equip[0].name + " · " : "") +
+              "가구 · POS · 인허가 · 마케팅까지 업체를 비교하고 견적을 받으세요.";
+    return r;
   }
-  /* 문제별 해결 가이드 — 흐름의 **가운데 두 칸**(이해 · 해결방법)입니다.
-     ⚠️ 제목·설명을 가이드에서 가져옵니다. 여기서 안 채우면 검색 결과에
-     열 줄이 똑같은 말을 합니다. */
-  var gm = /^\/problem\/([a-z0-9-]+)$/.exec(path);
-  if(gm){
-    var gd = (typeof wowGuide === "function") ? wowGuide(gm[1]) : null;
-    if(gd){
-      r.view = "problem"; r.guide = gd;
-      r.title = gd.h1; r.desc = gd.lead;
-      return r;
-    }
-    r.ok = false; return r;    /* 없는 분류는 404 — 빈 화면을 두지 않습니다 */
+  /* 업종별 폐업 — /closure/restaurant */
+  var mc = /^\/closure\/([a-z0-9-]+)$/.exec(path);
+  if(mc){
+    var ind2 = (typeof amIndustry === "function") ? amIndustry(mc[1]) : null;
+    if(!ind2){ r.ok = false; return r; }
+    r.view = "closureIndustry"; r.industry = ind2;
+    r.title = ind2.name + " 폐업 — 정리에 필요한 모든 것";
+    r.desc  = ind2.name + " 정리에 필요한 것을 순서대로 정리했습니다. " +
+              "매장 양도 · 시설 집기 처분 · 재고 · 철거 · 원상복구 · 폐업신고까지.";
+    return r;
   }
-
-  if(SOON[path]){ r.view = "soon"; r.soon = SOON[path]; r.noindex = true; return r; }
+  /* 업체를 찾는 분류 — /providers/interior */
+  var mp = /^\/providers\/([a-z0-9-]+)$/.exec(path);
+  if(mp){
+    var pc = (typeof amCat === "function") ? amCat(mp[1]) : null;
+    if(!pc || pc.kind !== "provider"){ r.ok = false; return r; }
+    r.view = "providerCat"; r.cat = pc;
+    r.title = pc.name + " 업체찾기";
+    r.desc  = pc.desc + " " + (pc.items||[]).slice(0,6).map(function(i){ return i.name; }).join(" · ") +
+              " 전문업체를 지역과 업종으로 비교하실 수 있습니다.";
+    return r;
+  }
+  /* 정보 · 매물 성격의 분류 — /c/area */
+  var mcat = /^\/c\/([a-z0-9-]+)$/.exec(path);
+  if(mcat){
+    var cc = (typeof amCat === "function") ? amCat(mcat[1]) : null;
+    if(!cc || cc.kind === "provider"){ r.ok = false; return r; }
+    r.view = "cat"; r.cat = cc;
+    r.title = cc.name;
+    r.desc  = cc.desc + " " + (cc.items||[]).slice(0,6).map(function(i){ return i.name; }).join(" · ") + ".";
+    return r;
+  }
+  /* 프랜차이즈 분류 — /franchise/cafe */
+  var mf = /^\/franchise\/([a-z0-9-]+)$/.exec(path);
+  if(mf){
+    var fc = (typeof amFranchiseCat === "function") ? amFranchiseCat(mf[1]) : null;
+    if(!fc){ r.ok = false; return r; }
+    r.view = "franchiseCat"; r.fcat = fc;
+    r.title = fc.name + " 프랜차이즈";
+    r.desc  = fc.name + " 프랜차이즈 브랜드를 창업비 · 가맹비 · 권장 평수 · 모집지역으로 비교하고 창업 상담을 신청하실 수 있습니다.";
+    return r;
+  }
+  /* 브랜드 상세 — /f/:slug */
+  var mfd = /^\/f\/([a-z0-9-]+)$/.exec(path);
+  if(mfd){
+    var fr = (typeof amFranchise === "function") ? amFranchise(mfd[1]) : null;
+    if(!fr){ r.ok = false; return r; }
+    r.view = "franchiseOne"; r.fr = fr;
+    r.title = fr.name; r.desc = fr.intro || "";
+    return r;
+  }
+  /* 업체 상세 — /p/:id */
+  var mpd = /^\/p\/([a-z0-9-]+)$/.exec(path);
+  if(mpd){
+    var pv = (typeof amProvider === "function") ? amProvider(mpd[1]) : null;
+    if(!pv){ r.ok = false; return r; }
+    r.view = "providerOne"; r.provider = pv;
+    r.title = pv.name; r.desc = pv.intro || "";
+    return r;
+  }
+  /* 글 하나 — /content/:slug */
+  var mct = /^\/content\/([a-z0-9-]+)$/.exec(path);
+  if(mct){
+    var ct = (typeof amContent === "function") ? amContent(mct[1]) : null;
+    if(!ct){ r.ok = false; return r; }
+    r.view = "content"; r.content = ct;
+    r.title = ct.title; r.desc = ct.lead;
+    return r;
+  }
 
   r.ok = false; return r;
 };
@@ -180,39 +225,37 @@ function render(){
 
   var html;
   switch(r.view){
-    case "home":         html = PageHome();          break;
-    case "sos":          html = PageSos();           break;
-    case "check":        html = PageCheck();         break;
-    case "start":        html = PageStart();         break;
-    case "cost":         html = PageCost();          break;
-    case "partners":     html = PagePartners();      break;
-    case "request":      html = PageRequest();       break;
-    case "partner":      html = PagePartner();       break;
-    case "partnerApply": html = PagePartnerApply();  break;
-    case "about":        html = PageAbout();         break;
-    case "lab":          html = PageLab();           break;
-    case "my":           html = PageMy();            break;
-    case "quotes":       html = PageQuotes();        break;
-    case "tools":        html = PageTools();          break;
-    case "yield":        html = PageYield();          break;
-    case "bep":          html = PageBep();            break;
-    case "labor":        html = PageLabor();          break;
-    case "search":       html = PageSearch();        break;
-    case "post":         html = PagePost(r.post);    break;
-    case "problem":      html = PageProblem(r.guide); break;
-    case "problems":     html = PageProblems();      break;
-    case "terms":        html = PageTerms();         break;
-    case "privacy":      html = PagePrivacy();       break;
-    case "soon":         html = PageSoon(r.soon);    break;
-    default:             return notFound(path);
+    case "home":            html = PageHome();                      break;
+    case "startup":         html = PageStartup();                   break;
+    case "startupIndustry": html = PageStartupIndustry(r.industry); break;
+    case "closure":         html = PageClosure();                   break;
+    case "closureIndustry": html = PageClosureIndustry(r.industry);  break;
+    case "providers":       html = PageProviders();                 break;
+    case "providerCat":     html = PageProviderCat(r.cat);          break;
+    case "providerOne":     html = PageProviderOne(r.provider);     break;
+    case "cat":             html = PageCat(r.cat);                  break;
+    case "franchise":       html = PageFranchise();                 break;
+    case "franchiseCat":    html = PageFranchiseCat(r.fcat);        break;
+    case "franchiseOne":    html = PageFranchiseOne(r.fr);          break;
+    case "stores":          html = PageStores();                    break;
+    case "assets":          html = PageAssets();                    break;
+    case "support":         html = PageSupport();                   break;
+    case "contents":        html = PageContents();                  break;
+    case "content":         html = PageContent(r.content);          break;
+    case "quote":           html = PageQuote();                     break;
+    case "join":            html = PageJoin();                      break;
+    case "my":              html = PageMy();                        break;
+    case "search":          html = PageSearch();                    break;
+    case "about":           html = PageAbout();                     break;
+    case "terms":           html = PageTerms();                     break;
+    case "privacy":         html = PagePrivacy();                   break;
+    default:                return notFound(path);
   }
 
   $("view").innerHTML = html;
   paintMeta(r);
-  paintGnb(); paintMnav(); paintBiz();
-  if(r.view === "home" && typeof askRotate === "function") askRotate();
+  paintChrome();
   initReveal();
-  if(r.view === "post" && typeof labSeen === "function") labSeen(r.post.slug);
   if(!RT.keepScroll) window.scrollTo(0,0);
   RT.keepScroll = false;
 }
@@ -225,43 +268,27 @@ window.rerender = function(keepScroll){
   render();
 };
 
-/* 아직 안 만든 화면 — 무엇을 할 곳인지 적고, 지금 할 수 있는 것을 줍니다 */
-function PageSoon(s){
-  /* ⚠️ 준비 중 화면이 **막다른 길이 되면 안 됩니다.** 무엇을 할 곳인지
-     적고, 지금 할 수 있는 것을 반드시 같이 냅니다. */
-  return '<div class="w soon">'+
-    '<p class="eyebrow">준비 중</p>'+
-    '<h1>'+esc(s[0])+'</h1>'+
-    '<p class="soon-p">'+esc(s[1]).replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>")+'</p>'+
-    '<p class="soon-n">아직 열지 못했습니다. 그동안은 <b>바로 물어봐 주세요</b> — '+
-      '같은 일을 사람이 직접 해 드립니다.</p>'+
-    '<div class="row-cta">'+
-      '<a class="btn btn-b btn-lg" href="/sos">무료로 물어보기'+icon("arrow",18)+'</a>'+
-      '<a class="btn btn-o btn-lg" href="/my">MY BUSINESS 보기</a>'+
-      CallButton("btn btn-o btn-lg","전화로 문의")+
-    '</div>'+
-  '</div>';
-}
-
 function notFound(path){
   $("view").innerHTML =
-    '<div class="w soon">'+
+    '<div class="w pad-pg">'+
       '<p class="eyebrow">404</p>'+
-      '<h1>찾으시는 페이지가 없습니다.</h1>'+
-      '<p class="soon-p">주소가 바뀌었을 수 있습니다.</p>'+
+      '<h1 class="pg-h1">찾으시는 페이지가 없습니다.</h1>'+
+      '<p class="pg-lead">주소가 바뀌었을 수 있습니다. 창업과 폐업 둘 중 '+
+        '하나를 고르시면 거기서 다시 찾으실 수 있습니다.</p>'+
       '<div class="row-cta">'+
-        '<a class="btn btn-b btn-lg" href="/">홈으로</a>'+
-        '<a class="btn btn-o btn-lg" href="/sos">무료로 물어보기</a>'+
+        '<a class="btn btn-b btn-lg" href="/startup">창업 시작하기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="/closure">폐업 시작하기</a>'+
       '</div>'+
     '</div>';
-  document.title = "찾을 수 없습니다 · ABOUTMEAT";
-  paintGnb(); paintMnav(); paintBiz();
-  try{ console.warn("[ABOUTMEAT] 알 수 없는 주소: "+path); }catch(e){}
+  document.title = "찾을 수 없습니다 · " + ((window.AM_BRAND||{}).name || "");
+  paintChrome();
+  try{ console.warn("[router] 알 수 없는 주소: "+path); }catch(e){}
 }
 
 /* ── 메타 ──────────────────────────────────────────────────── */
 function paintMeta(r){
-  var site = "ABOUTMEAT · 고기 사업자 문제해결";
+  var B = window.AM_BRAND || {};
+  var site = (B.name || "") + " · " + (B.sub || "");
   document.title = (r.title ? r.title + " · " : "") + site;
   setMeta("name","description", r.desc || META["/"][1]);
   setMeta("property","og:title", document.title);
@@ -286,66 +313,51 @@ function setMeta(attr, key, val){
 
 /* ── 시작 ──────────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", function(){
-  $("chrome-t").innerHTML = Header();
-  $("chrome-b").innerHTML = Footer() + MobileNav() + FloatCta();
-  /* 조금 내려가면 따라다니는 단추가 나타납니다.
-     ⚠️ passive:true — 스크롤마다 도는 손이라 이걸 빼면 스크롤이 끕끕해집니다. */
+  mountChrome();
   /* ⚠️ 붙박이 헤더가 처음부터 그림자를 달고 있으면 맨 위에서 화면이
-     두 겹으로 보입니다. **내려가기 시작한 뒤에만** 띄웁니다 —
-     그래야 "따라오고 있다" 가 읽힙니다. */
+     두 겹으로 보입니다. **내려가기 시작한 뒤에만** 띄웁니다.
+     ⚠️ passive:true — 스크롤마다 도는 손이라 빼면 스크롤이 끕끕해집니다. */
   var root = document.documentElement;
-  function onScroll(){
-    var y = window.scrollY;
-    root.classList.toggle("sc", y > 8);
-    var f = $("fab"); if(f) f.classList.toggle("on", y > 560);
-  }
+  function onScroll(){ root.classList.toggle("sc", window.scrollY > 8); }
   window.addEventListener("scroll", onScroll, { passive:true });
   onScroll();
   initReveal();
-  /* ⚠️ 열린 것은 Esc 로 닫혀야 합니다. 바닥 시트가 안 닫히면 폰에서
-     뒤로 가기 말고는 빠져나갈 길이 없습니다. */
-  document.addEventListener("keydown", function(e){
-    if(e.key === "Escape" && typeof sosSheetClose === "function") sosSheetClose();
-  });
   render();
 });
 
-
-/* ── 스크롤하면 나타나는 것 (지시서 §36) ──────────────────────
+/* ── 스크롤하면 나타나는 것 ────────────────────────────────────
    `data-rv` 를 단 요소가 화면에 들어오면 `.rv-on` 이 붙습니다.
 
    ⚠️ **과하게 쓰지 마세요.** 모든 것이 움직이면 아무것도 안 움직이는
-   것과 같고, 사장님은 스크롤할 때마다 기다리게 됩니다. 시그니처 장면
-   (GIANT COPY · WHY · 마지막 CTA)과 큰 숫자 정도까지입니다.
+   것과 같고, 손님은 스크롤할 때마다 기다리게 됩니다.
    ⚠️ 움직임을 싫어하는 설정이거나 IntersectionObserver 가 없으면
    **바로 보여 줍니다.** 안 보이는 채로 남으면 그건 고장입니다.
-   ⚠️ 한 번 나타나면 다시 숨기지 않습니다(unobserve). 위아래로
-   움직일 때마다 깜빡이면 그게 더 거슬립니다. */
+   ⚠️ 차례(`--rvd`)는 인라인으로 넣지 마세요 — build-pages 의 CSS 변수
+   검사가 인라인 값을 못 봐서 "정의되지 않은 변수" 로 멈춥니다. */
 var RV_IO = null;
 function initReveal(){
-  var els = els2("[data-rv]");
-  if(!els.length) return;
+  var list = els2("[data-rv]");
+  if(!list.length) return;
   var reduce = false;
   try{ reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
   if(reduce || typeof IntersectionObserver !== "function"){
-    els.forEach(function(e){ e.classList.add("rv-on"); });
+    list.forEach(function(e){ e.classList.add("rv-on"); });
     return;
   }
   if(!RV_IO){
-    RV_IO = new IntersectionObserver(function(list){
-      list.forEach(function(x){
+    RV_IO = new IntersectionObserver(function(xs){
+      xs.forEach(function(x){
         if(!x.isIntersecting) return;
         x.target.classList.add("rv-on");
         RV_IO.unobserve(x.target);
       });
     }, { rootMargin:"0px 0px -12% 0px", threshold:0.12 });
   }
-  els.forEach(function(e){
+  list.forEach(function(e){
     if(e.classList.contains("rv-on")) return;
     RV_IO.observe(e);
   });
 }
-/* ⚠️ `els()` 는 components/base.js 것이고 이 파일보다 먼저 옵니다.
-   다만 이름이 겹치는 지역 변수(`els`)를 위에서 썼으므로 따로 둡니다 —
-   이 저장소는 이름이 겹쳐 세 번 조용히 깨졌습니다. */
+/* ⚠️ `els()` 는 components/base.js 것입니다. 이름이 겹치는 지역 변수를
+   쓰다 세 번 조용히 깨졌으므로 따로 둡니다. */
 function els2(sel){ return [].slice.call(document.querySelectorAll(sel)); }

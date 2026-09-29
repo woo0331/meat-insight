@@ -1,209 +1,89 @@
 /* ════════════════════════════════════════════════════════════════════
-   MY BUSINESS (/my)
+   MY — 내 창업 / 내 폐업 (§42)
 
-   로그인이 없어도 **다시 올 이유**를 만드는 자리입니다. 진단 결과 ·
-   창업 진행 · 창업비 · 견적 비교 · 읽던 글이 이 브라우저에 남아 있고,
-   여기서 이어서 하실 수 있습니다.
+   로그인이 없어도 다시 올 이유를 만드는 자리입니다. 전부
+   `localStorage` 이고 **서버로 보내지 않습니다.**
 
-   ⚠️ **전부 이 브라우저에만 있습니다.** 서버에 없습니다. 그래서
-   기기를 바꾸면 안 보이고, 브라우저 기록을 지우면 없어집니다.
-   그 사실을 화면 맨 위에 적습니다 — 나중에 "내 자료 어디 갔냐" 는
-   말이 나오지 않게.
-
-   ⚠️ **성함·연락처를 담지 않습니다.** 가게 컴퓨터·태블릿은 여러 사람이
-   씁니다. 담는 것은 점수 · 체크 표시 · 사장님이 적은 금액까지입니다.
-
-   ⚠️ `noindex` 입니다 (사람마다 다릅니다).
+   ⚠️ **성함 · 연락처를 담지 않습니다.** 가게 컴퓨터는 여러 사람이 씁니다.
+   ⚠️ `localStorage` 는 사파리 비공개 모드에서 **던집니다.** 감싸지
+   않으면 화면이 통째로 안 그려집니다 (`amGet`/`amSet` 이 감쌉니다).
+   ⚠️ **아직 안 하신 칸도 숨기지 않습니다.** 숨기면 여기서 무엇을 할 수
+   있는지 모르게 됩니다.
    ════════════════════════════════════════════════════════════════════ */
 
+var MKEY = "am.profile.v1";
+
 function PageMy(){
-  var cards = [MyCheck(), MyStart(), MyCost(), MyYield(), MyBep(), MyLabor(), MyQuotes(), MyRead()];
-  var some  = cards.filter(function(c){ return c.has; });
+  var p = amGet(MKEY, { side:"", industry:"", region:"", gu:"", pyeong:"", dday:"" });
+  var qs = amGet("am.quotes.v1", []);
+  var ind = p.industry ? amIndustry(p.industry) : null;
 
-  return '<section class="pg-hero"><div class="w pgh">'+
-      '<div class="pgh-t">'+
-      '<p class="eyebrow">MY BUSINESS</p>'+
-      '<h1 class="pg-h1">지금까지 하신 것</h1>'+
-      '<p class="pg-lead">'+
-        (some.length
-          ? '이어서 하시면 됩니다. 아래는 이 브라우저에 남아 있는 것들입니다.'
-          : '아직 시작하신 것이 없습니다. 아래 중 하나부터 해 보세요 — '+
-            '가입하지 않으셔도 되고, 3분이면 끝납니다.')+'</p>'+
-      '<ul class="pg-facts">'+
-        fact("lock", "전부 <b>이 브라우저에만</b> 있습니다. 서버에 올리지 않습니다.")+
-        fact("info", "그래서 기기를 바꾸시면 안 보입니다. "+
-                     "브라우저 기록을 지우면 같이 없어집니다.")+
-        fact("user", "성함·연락처는 담지 않습니다.")+
-      '</ul>'+
-      '</div>'+
-      '<figure class="pgh-f">'+photoBox("hero-my")+'</figure>'+
-    '</div></section>'+
+  return PgHero({
+    kicker:"MY",
+    h1raw: p.side === "close" ? "내 폐업" : (p.side === "start" ? "내 창업" : "지금 어느 쪽이세요?"),
+    lead:"이 브라우저에만 남습니다. 서버로 보내지 않습니다.",
+    tight:true
+  })+
+  '<section class="sec sec-white"><div class="w">'+
+    '<div class="my-set">'+
+      '<div class="f-r"><label for="my-side">상황</label>'+
+        '<select class="sel" id="my-side" onchange="myPut()">'+
+          '<option value=""'+(!p.side?" selected":"")+'>고르지 않음</option>'+
+          '<option value="start"'+(p.side==="start"?" selected":"")+'>창업 준비중</option>'+
+          '<option value="close"'+(p.side==="close"?" selected":"")+'>폐업 준비중</option>'+
+        '</select></div>'+
+      '<div class="f-r"><label for="my-ind">업종</label>'+
+        IndustrySelect("my-ind", p.industry, "myPut()")+'</div>'+
+      '<div class="f-r"><label for="my-reg">지역</label>'+
+        RegionSelect("my-reg", p.region, "myPut()")+'</div>'+
+      '<div class="f-r"><label for="my-py">평수</label>'+
+        '<input id="my-py" inputmode="numeric" value="'+esc(p.pyeong||"")+'" '+
+        'onchange="myPut()" placeholder="예: 30"></div>'+
+    '</div>'+
 
-    '<div class="w my">'+
-      '<div class="my-g">'+cards.map(MyCard).join("")+'</div>'+
+    (p.side && ind
+      ? '<div class="my-next"><h2>'+esc(ind.name)+' '+
+          (p.side==="close"?"정리":"창업")+'에 필요한 것</h2>'+
+          '<div class="cat-g cat-g4">'+
+            amCatsFor(p.industry, p.side==="close"?"close":"start").slice(0,8)
+              .map(function(c){ return CatCard(c, p.industry); }).join("")+
+          '</div>'+
+          '<div class="row-cta">'+
+            '<a class="btn btn-b" href="'+esc(p.side==="close"?("/closure/"+p.industry):("/startup/"+p.industry))+'">'+
+              '전부 보기'+icon("arrow",16)+'</a>'+
+            '<a class="btn btn-o" href="'+esc(quoteTo({industry:p.industry,region:p.region,side:p.side}))+'">'+
+              '견적 요청</a>'+
+          '</div></div>'
+      : Empty({
+          icon:"user",
+          title:"상황과 업종을 고르시면",
+          text:"그 업종에 실제로 필요한 것만 여기 모아 드립니다.",
+          cta:'<a class="btn btn-b" href="/startup">창업 시작하기'+icon("arrow",16)+'</a>'+
+              '<a class="btn btn-o" href="/closure">폐업 시작하기</a>'
+        }))+
 
-      (some.length
-        ? '<div class="st-foot">'+
-            '<p class="note">이 기기에 남은 것을 전부 지웁니다. 되돌릴 수 없습니다.</p>'+
-            '<button class="btn btn-o" type="button" onclick="myReset()">'+
-              icon("refresh",18)+'내 기록 전부 지우기</button>'+
-          '</div>'
-        : '')+
+    '<div class="my-next"><h2>받은 제안</h2>'+
+      (qs.length
+        ? '<p class="lead">'+qs.length+'건을 적어 두셨습니다.</p>'+
+          '<div class="row-cta"><a class="btn btn-o" href="/quote">비교 화면으로</a></div>'
+        : '<p class="lead">아직 적어 두신 제안이 없습니다. 견적을 받으시면 '+
+          '<a href="/quote">여기</a>에 나란히 놓고 보실 수 있습니다.</p>')+
+    '</div>'+
 
-      '<section class="st-cta">'+
-        '<h2>여기 없는 것은 사람이 합니다.</h2>'+
-        '<p>진단도 계산도 결국 사장님 가게를 봐야 답이 나옵니다. '+
-          '지금 막힌 것을 적어 주시면 무엇이 필요한 일인지부터 정리해 드립니다.</p>'+
-        '<div class="row-cta">'+
-          '<a class="btn btn-b btn-lg" href="/sos">무료로 물어보기'+icon("arrow",18)+'</a>'+
-          CallButton("btn btn-o btn-lg","전화로 문의")+
-        '</div>'+
-      '</section>'+
-    '</div>';
+    '<div class="row-cta"><button class="btn btn-gh" type="button" onclick="myClear()">'+
+      '내 기록 전부 지우기</button></div>'+
+  '</div></section>';
 }
 
-/* 카드 하나 — has 가 false 면 "아직 안 하셨습니다" 로 그립니다.
-   ⚠️ 빈 칸을 숨기지 않습니다. 무엇을 할 수 있는 곳인지 모르게 됩니다. */
-function MyCard(c){
-  return '<a class="mycard'+(c.has?"":" mycard-off")+'" href="'+esc(c.to)+'">'+
-    '<span class="mycard-h">'+
-      '<span class="mycard-ic">'+icon(c.icon,22)+'</span>'+
-      '<b>'+esc(c.name)+'</b>'+
-      (c.has ? '<span class="mycard-v">'+c.value+'</span>' : '')+
-    '</span>'+
-    '<span class="mycard-l">'+(c.has ? c.line : esc(c.empty))+'</span>'+
-    '<span class="mycard-go">'+esc(c.has ? c.cta : c.ctaOff)+icon("chev",16)+'</span>'+
-  '</a>';
-}
-
-function MyCheck(){
-  var last = (typeof chkLast === "function") ? chkLast() : null;
-  if(!last) return { has:false, icon:"gauge", name:"무료 사업진단", to:"/check",
-    empty:"8가지로 지금 무엇을 파악하고 계신지 정리합니다. 3분.",
-    ctaOff:"진단 시작하기" };
-  var band = wowCheckBand(last.score);
-  var names = (last.weak||[]).map(function(k){
-    var it = WOW_CHECK.filter(function(x){ return x.key === k; })[0];
-    return it ? it.name : null; }).filter(Boolean).slice(0,3);
-  return { has:true, icon:"gauge", name:"무료 사업진단", to:"/check",
-    value:'<b class="st st-'+esc(band.tone)+'">'+last.score+'점</b>',
-    line: names.length
-      ? '<b>'+esc(names.join(" · "))+'</b>'+esc(josa(names[names.length-1],"이가"))+' 약하게 나왔습니다.'
-      : '여덟 가지를 다 보고 계십니다.',
-    cta:"다시 진단하기" };
-}
-
-function MyStart(){
-  var done = 0, total = (window.WOW_STARTUP_STEPS || []).length;
-  try{
-    var o = JSON.parse(localStorage.getItem("wow.start.v1") || "{}");
-    done = WOW_STARTUP_STEPS.filter(function(s){ return o[s.key]; }).length;
-  }catch(e){}
-  if(!done) return { has:false, icon:"seed", name:"창업 프로젝트", to:"/start",
-    empty:"상권부터 오픈까지 "+total+"가지를 순서대로. 하신 것을 눌러 두시면 남습니다.",
-    ctaOff:"창업 단계 보기" };
-  return { has:true, icon:"seed", name:"창업 프로젝트", to:"/start",
-    value:'<b>'+done+' / '+total+'</b>',
-    line: done === total ? '다 하셨습니다. 오픈 준비만 남았습니다.'
-                         : '다음에 하실 것이 <b>'+(total-done)+'가지</b> 남았습니다.',
-    cta:"이어서 하기" };
-}
-
-function MyCost(){
-  var sum = 0, n = 0;
-  try{
-    var o = JSON.parse(localStorage.getItem("wow.cost.v1") || "{}");
-    Object.keys(o).forEach(function(k){
-      var v = parseFloat(String(o[k]).replace(/[^0-9.]/g,""));
-      if(isFinite(v) && v > 0){ sum += v; n++; }
-    });
-  }catch(e){}
-  if(!n) return { has:false, icon:"won", name:"창업비 정리표", to:"/start/cost",
-    empty:"빠뜨리기 쉬운 13칸. 받으신 견적을 적으면 합계와 빈 칸이 보입니다.",
-    ctaOff:"정리표 열기" };
-  return { has:true, icon:"won", name:"창업비 정리표", to:"/start/cost",
-    value:'<b>'+won(Math.round(sum))+'<em>만원</em></b>',
-    line: n + '칸을 적으셨습니다. <b>' + (13 - n) + '칸</b>이 아직 비어 있습니다.',
-    cta:"이어서 적기" };
-}
-
-function MyYield(){
-  var b = (typeof ylBrief === "function") ? ylBrief() : { n:0 };
-  if(!b.n) return { has:false, icon:"knife", name:"수율 원가 계산", to:"/tools/yield",
-    empty:"손질하고 나면 원가가 달라집니다. 실제 1kg 원가와 1인분 원가를 냅니다.",
-    ctaOff:"계산해 보기" };
-  return { has:true, icon:"knife", name:"수율 원가 계산", to:"/tools/yield",
-    value: b.rate !== null ? '<b>'+esc(b.rate)+'<em>%</em></b>' : '<b>'+b.n+'칸</b>',
-    line: b.real !== null
-      ? '손질 후 실제 원가가 <b>'+esc(b.real)+'원/kg</b> 으로 나왔습니다.'
-      : b.n + '칸을 적으셨습니다. 나머지를 채우시면 실제 원가가 나옵니다.',
-    cta:"이어서 계산하기" };
-}
-
-function MyBep(){
-  var b = (typeof bepBrief === "function") ? bepBrief() : { n:0 };
-  if(!b.n) return { has:false, icon:"target", name:"손익분기 계산", to:"/tools/bep",
-    empty:"고정비와 비율을 적으시면 한 달에 얼마를 팔아야 본전인지 나옵니다.",
-    ctaOff:"계산해 보기" };
-  return { has:true, icon:"target", name:"손익분기 계산", to:"/tools/bep",
-    value: b.month !== null ? '<b>'+esc(b.month)+'<em>만원</em></b>' : '<b>'+b.n+'칸</b>',
-    line: b.month !== null
-      ? '이 조건이면 <b>한 달에 그만큼</b>을 파셔야 본전입니다.'
-      : b.n + '칸을 적으셨습니다. 고정비와 비율을 채우시면 본전 매출이 나옵니다.',
-    cta:"이어서 계산하기" };
-}
-
-function MyLabor(){
-  var b = (typeof lbBrief === "function") ? lbBrief() : { n:0 };
-  if(!b.n) return { has:false, icon:"users", name:"인건비율 계산", to:"/tools/labor",
-    empty:"급여·4대보험·사장님 몫까지 넣으면 실제 인건비율이 나옵니다.",
-    ctaOff:"계산해 보기" };
-  return { has:true, icon:"users", name:"인건비율 계산", to:"/tools/labor",
-    value: b.rate !== null ? '<b>'+esc(b.rate)+'<em>%</em></b>' : '<b>'+b.n+'칸</b>',
-    line: b.rate !== null
-      ? '지금 적으신 값으로는 <b>매출의 그만큼</b>이 사람 값입니다.'
-      : b.n + '칸을 적으셨습니다. 월 매출을 채우시면 비율이 나옵니다.',
-    cta:"이어서 계산하기" };
-}
-
-function MyQuotes(){
-  var b = (typeof qcBrief === "function") ? qcBrief() : { n:0 };
-  if(!b.n) return { has:false, icon:"scale", name:"견적 비교", to:"/quotes",
-    empty:"받으신 견적을 나란히 놓고 금액·일정·A/S·포함 범위를 비교합니다.",
-    ctaOff:"견적 비교하기" };
-  /* 어느 고민의 견적인지 · 업체 답을 몇 개 적으셨는지.
-     ⚠️ 가이드를 안 타고 오셨으면 `ans` 가 **null** 입니다 — 0 을 찍으면
-     "안 적었다" 로 읽히는데, 사실은 물어볼 목록 자체가 없습니다. */
-  return { has:true, icon:"scale", name:"견적 비교",
-    to:"/quotes"+(b.guideKey ? "?g="+encodeURIComponent(b.guideKey) : ""),
-    value:'<b>'+b.n+'곳</b>',
-    line:(b.title ? '<b>'+esc(b.title)+'</b> · ' : '')+
-         (b.guide ? esc(b.guide)+' · ' : '')+
-         (b.n < 2 ? '한 곳뿐입니다. 두 곳 이상이어야 비교가 됩니다.'
-                  : '물어볼 것 '+b.asked+' / '+b.total+' 을 확인하셨습니다.')+
-         (b.ans !== null && b.ans !== undefined
-            ? ' 업체 답은 '+b.ans+'칸 적으셨습니다.' : ''),
-    cta:"비교 화면 열기" };
-}
-
-function MyRead(){
-  var recent = (typeof labRecent === "function") ? labRecent(3) : [];
-  if(!recent.length) return { has:false, icon:"doc", name:"읽던 글", to:"/lab",
-    empty:"원가 · 거래처 · 덕트 · 냉장 · 인허가 · 노무. 읽고 바로 할 수 있는 것까지.",
-    ctaOff:"연구소 둘러보기" };
-  return { has:true, icon:"doc", name:"읽던 글", to:"/lab/"+recent[0].slug,
-    value:'<b>'+recent.length+'편</b>',
-    line:'<b>'+esc(recent[0].title)+'</b>'+
-         (recent.length > 1 ? ' 외 '+(recent.length-1)+'편' : ''),
-    cta:"이어서 읽기" };
-}
-
-/* ⚠️ 되돌릴 수 없으므로 한 번 물어봅니다 */
-window.myReset = function(){
-  if(!confirm("이 브라우저에 남은 진단 결과 · 창업 체크 · 창업비 · 수율 원가 · 손익분기 · 견적 비교 · 읽던 글을 전부 지웁니다.\n되돌릴 수 없습니다. 지울까요?")) return;
-  ["wow.check.v1","wow.start.v1","wow.cost.v1","wow.quotes.v1","wow.read.v1","wow.lab.v1",
-   "wow.yield.v1","wow.bep.v1"]
-    .forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+window.myPut = function(){
+  amSet(MKEY, {
+    side: $("my-side").value, industry: $("my-ind").value,
+    region: $("my-reg").value, gu:"", pyeong: $("my-py").value.trim(), dday:""
+  });
   rerender(true);
-  toast("이 기기에 남은 기록을 전부 지웠습니다.");
+};
+/* ⚠️ 되돌릴 수 없으므로 한 번 물어봅니다 */
+window.myClear = function(){
+  if(!confirm("이 브라우저에 남은 기록을 전부 지웁니다. 되돌릴 수 없습니다.")) return;
+  amDel(MKEY); amDel("am.quotes.v1"); rerender(true);
 };

@@ -1,14 +1,14 @@
 {
-  "name": "ABOUTMEAT — 고기 사업자 문제해결",
-  "short_name": "ABOUTMEAT",
-  "description": "고깃집·정육점 사장님의 문제 해결 플랫폼. 창업·운영·원가·시설·매출·확장·정리까지 상황만 말씀해주세요.",
+  "name": "시작과 정리 — 창업 · 폐업 전문 플랫폼",
+  "short_name": "시작과 정리",
+  "description": "창업에 필요한 모든 것, 폐업에 필요한 모든 것. 업종과 지역만 고르시면 필요한 전문업체를 찾고 비교하고 견적받으실 수 있습니다.",
   "lang": "ko",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FCFAF8",
-  "theme_color": "#E32636",
+  "background_color": "#F7F8FA",
+  "theme_color": "#0B1220",
   "categories": [
     "business",
     "productivity"
@@ -34,25 +34,9 @@
     }
   ],
   "shortcuts": [
-    {
-      "name": "사장님 SOS",
-      "short_name": "SOS",
-      "url": "/sos"
-    },
-    {
-      "name": "무료 사업진단",
-      "short_name": "진단",
-      "url": "/check"
-    },
-    {
-      "name": "창업 준비",
-      "short_name": "창업",
-      "url": "/start"
-    },
-    {
-      "name": "견적 비교",
-      "short_name": "견적비교",
-      "url": "/quotes"
-    }
+    { "name": "창업 시작하기", "short_name": "창업", "url": "/startup" },
+    { "name": "폐업 시작하기", "short_name": "폐업", "url": "/closure" },
+    { "name": "업체찾기",     "short_name": "업체", "url": "/providers" },
+    { "name": "견적 요청",     "short_name": "견적", "url": "/quote" }
   ]
 }

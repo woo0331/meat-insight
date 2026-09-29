@@ -54,13 +54,13 @@ function legalTable(rows, emptyMsg, warnKeys){
   var have = rows.filter(function(r){ return r[1]; });
   if(!have.length){
     if(warnKeys){
-      try{ console.warn("[ABOUTMEAT] "+warnKeys); }catch(e){}
+      try{ console.warn("[site] "+warnKeys); }catch(e){}
     }
     return '<p class="lg-none">'+esc(emptyMsg)+'</p>';
   }
   var miss = rows.filter(function(r){ return !r[1]; }).map(function(r){ return r[0]; });
   if(miss.length && warnKeys){
-    try{ console.warn("[ABOUTMEAT] "+warnKeys+" — 아직 빈 항목: "+miss.join(", ")); }catch(e){}
+    try{ console.warn("[site] "+warnKeys+" — 아직 빈 항목: "+miss.join(", ")); }catch(e){}
   }
   return '<table class="lg-t"><tbody>'+ have.map(function(r){
     return '<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>';
@@ -116,7 +116,7 @@ function PagePrivacy(){
                  '</span></td><td data-h="보유·이용 기간"><span>'+esc(r[2])+'</span></td></tr>';
         }).join("")+'</tbody></table>'
     : (function(){
-        try{ console.warn("[ABOUTMEAT] 개인정보 처리 위탁 현황이 비어 있습니다 — "+
+        try{ console.warn("[site] 개인정보 처리 위탁 현황이 비어 있습니다 — "+
           "호스팅·접수처(웹훅·메일) 업체를 붙일 때마다 js/data/legal-privacy.js 의 trustees 에 "+
           "한 줄씩 추가하세요. 안 적으면 개인정보보호법 제26조 위반입니다."); }catch(e){}
         return '<p class="lg-none">현재 외부에 위탁하고 있는 개인정보 처리 업무가 없습니다.</p>';

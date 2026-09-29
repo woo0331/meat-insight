@@ -43,7 +43,7 @@ var KO_PAIR = {
 /* josa("곱창","을를") → "을",  josa("지라","을를") → "를" */
 window.josa = function(word, pair){
   var t = KO_PAIR[pair];
-  if(!t){ try{ console.warn("[ABOUTMEAT] 모르는 조사 짝: "+pair); }catch(e){} return ""; }
+  if(!t){ try{ console.warn("[site] 모르는 조사 짝: "+pair); }catch(e){} return ""; }
   /* (으)로 는 ㄹ 받침이 예외입니다 — "물로" · "서울로" */
   if(t[0]==="으로"){
     var s = String(word==null?"":word).trim();

@@ -1,0 +1,276 @@
+/* ════════════════════════════════════════════════════════════════════
+   견적 요청 · 받은 제안 비교 (§38)
+
+   **같은 내용을 업체마다 다시 적지 않게 하는 것**이 이 화면의 전부입니다.
+   한 번 적으시면 조건에 맞는 곳에 같이 전달하고, 받으신 제안은 한
+   화면에서 나란히 놓고 보십니다.
+
+   ⚠️ **접수는 `api/quote.js` 가 받습니다.** 화면이 보내는 칸과 서버가
+   읽는 칸이 어긋나면 **에러도 없이 조용히 사라집니다.** 고칠 때는
+   `node tools/test-api.js` 를 같이 돌리세요.
+   ⚠️ **동의 없이 보내지 않습니다.** 화면에서 한 번, 서버
+   (`agree !== true`)에서 한 번 막습니다.
+   ⚠️ **업체에 연락처를 넘기는 것은 이 동의에 포함되지 않습니다**
+   (개인정보보호법 제17조). 업체가 정해지면 상호를 알리고 다시 받습니다.
+   ⚠️ **첨부 칸을 만들지 마세요.** 지금 파일을 받아 둘 곳이 없습니다.
+   고르게 해 놓고 조용히 버리면 그게 거짓말입니다. 사진은 주소를
+   적어 주시게 합니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+var QKEY = "am.quotes.v1";
+
+function PageQuote(){
+  var cat  = nowQS("c"), sub = nowQS("s");
+  var ind  = nowQS("i"), reg = nowQS("r");
+  var side = nowQS("side") || "start";
+  var c    = cat ? amCat(cat) : null;
+  var subName = "";
+  if(c){
+    var hit = amCatItems(c, ind).filter(function(x){ return x.key === sub; })[0];
+    subName = hit ? hit.name : "";
+  }
+  var ready = !!(window.WOW_BIZ && WOW_BIZ.sosReady);
+  var what = subName || (c ? c.name : "");
+
+  return PgHero({
+    kicker:"견적 요청",
+    h1raw:"한 번만 적으시면<br class=\"br-m\"> 여러 곳에서 답이 옵니다.",
+    lead:"업종 · 지역 · 평수 · 예산 · 일정만 적어 주세요. 조건에 맞는 업체에 같이 전달합니다. 무료입니다.",
+    tight:true
+  })+
+  '<section class="sec sec-white"><div class="w form-wrap">'+
+    (ready ? "" :
+      '<div class="notice-bad"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
+        '<p>접수처 설정이 끝나면 바로 열립니다. 그동안에는 '+
+        '<a href="/providers">업체찾기</a>에서 분야를 보시거나, '+
+        '<a href="/content">창업 · 폐업 정보</a>에서 무엇을 확인해야 하는지 '+
+        '먼저 보실 수 있습니다.</p></div>')+
+
+    '<form id="q-f" onsubmit="return quoteSend(event)">'+
+      '<div class="f-r"><label for="q-side">무엇 때문에 <b>*</b></label>'+
+        '<select class="sel" id="q-side">'+
+          '<option value="start"'+(side!=="close"?" selected":"")+'>창업 — 시작하려고 합니다</option>'+
+          '<option value="close"'+(side==="close"?" selected":"")+'>폐업 — 정리하려고 합니다</option>'+
+        '</select></div>'+
+
+      '<div class="f-r"><label for="q-what">필요한 일 <b>*</b></label>'+
+        '<input id="q-what" required value="'+esc(what)+'" '+
+          'placeholder="예: 카페 인테리어 / 주방 철거 / POS 설치"></div>'+
+
+      '<div class="f-2">'+
+        '<div class="f-r"><label for="q-ind">업종</label>'+IndustrySelect("q-ind", ind)+'</div>'+
+        '<div class="f-r"><label for="q-reg">지역 <b>*</b></label>'+RegionSelect("q-reg", reg)+'</div>'+
+      '</div>'+
+      '<div class="f-2">'+
+        '<div class="f-r"><label for="q-gu">시 · 군 · 구</label>'+
+          '<input id="q-gu" placeholder="예: 안양시"></div>'+
+        '<div class="f-r"><label for="q-py">평수</label>'+
+          '<input id="q-py" inputmode="numeric" placeholder="예: 30"></div>'+
+      '</div>'+
+      '<div class="f-2">'+
+        '<div class="f-r"><label for="q-bud">예산</label>'+
+          '<input id="q-bud" placeholder="예: 5,000만원 / 아직 모름"></div>'+
+        '<div class="f-r"><label for="q-when">희망 일정</label>'+
+          '<input id="q-when" placeholder="예: 2027년 2월 오픈 / 이번 달 안"></div>'+
+      '</div>'+
+
+      '<div class="f-r"><label for="q-q">자세한 내용 <b>*</b></label>'+
+        '<textarea id="q-q" rows="6" required '+
+          'placeholder="지금 상황과 필요한 것을 그대로 적어 주세요. 양식이 없어도 됩니다."></textarea></div>'+
+      /* ⚠️ 파일을 받아 둘 곳이 없어서 **주소로 받습니다.** 첨부 칸을
+         만들어 놓고 버리는 것보다 낫습니다. */
+      '<div class="f-r"><label for="q-img">사진 · 도면 주소</label>'+
+        '<input id="q-img" placeholder="공유 링크가 있으면 붙여 주세요 (선택)"></div>'+
+
+      '<div class="f-2">'+
+        '<div class="f-r"><label for="q-name">성함 <b>*</b></label>'+
+          '<input id="q-name" required></div>'+
+        '<div class="f-r"><label for="q-tel">연락처 <b>*</b></label>'+
+          '<input id="q-tel" type="tel" required placeholder="010-0000-0000"></div>'+
+      '</div>'+
+
+      AgreeBox("q-ag","성함 · 연락처 · 업종 · 지역 · 평수 · 예산 · 일정 · 적어 주신 내용",
+               "견적 요청 접수와 상담 안내","접수일로부터 1년")+
+      '<div id="q-fail"></div>'+
+      '<button class="btn btn-b btn-lg btn-full" type="submit"'+(ready?"":" disabled")+'>'+
+        '견적 요청하기'+icon("arrow",18)+'</button>'+
+      '<p class="note note-mid">보내고 나면 이 브라우저에 요청 내용이 남아, '+
+        '받으신 제안을 아래에서 비교하실 수 있습니다.</p>'+
+    '</form>'+
+  '</div></section>'+
+  CompareBand();
+}
+
+/* ── 받은 제안 비교 (§38) ───────────────────────────────────────
+   ⚠️ 저장할 곳이 없어서 **이 브라우저에만** 남습니다. 서버로 보내지
+   않습니다 — 화면에도 그렇게 적혀 있습니다.
+   ⚠️ **"이게 제일 좋습니다" 라고 하지 마세요.** 우리는 그 공사를 보지
+   않았고, 제일 싼 것이 제일 좋은 것도 아닙니다. 포함 범위가 다르면
+   금액 비교 자체가 뜻이 없습니다. */
+function CompareBand(){
+  var qs = amGet(QKEY, []);
+  return '<section class="sec"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">받은 제안</p>'+
+      '<h2>여러 곳을 나란히 놓고 보세요</h2>'+
+      '<p>금액만 보면 틀립니다. <b>무엇이 포함됐는지</b>가 같아야 비교가 뜻을 가집니다.</p></div>'+
+    (qs.length ? QcTable(qs) : Empty({
+      icon:"scale",
+      title:"아직 적어 두신 제안이 없습니다",
+      text:"업체에서 견적을 받으시면 여기에 적어 두세요. 금액 · 기간 · 포함 범위 · "+
+           "A/S 를 나란히 놓고 보실 수 있습니다. 이 브라우저에만 남고 서버로 보내지 않습니다.",
+      cta:'<button class="btn btn-o" type="button" onclick="qcAdd()">'+
+          '제안 직접 적어두기'+icon("plus",16)+'</button>'
+    }))+
+  '</div></section>';
+}
+function QcTable(qs){
+  var rows = [["company","업체명"],["price","금액"],["days","기간"],
+              ["scope","포함 범위"],["as","A/S"],["note","메모"]];
+  return '<div class="qc-wrap"><table class="qc-t"><thead><tr><th>항목</th>'+
+    qs.map(function(q,i){
+      return '<th>'+esc(q.company || ("제안 "+(i+1)))+
+        '<button class="qc-x" type="button" onclick="qcDel('+i+')" aria-label="지우기">'+
+        icon("x",14)+'</button></th>';
+    }).join("")+'</tr></thead><tbody>'+
+    rows.map(function(r){
+      return '<tr><th scope="row">'+esc(r[1])+'</th>'+
+        qs.map(function(q,i){
+          return '<td><input value="'+esc(q[r[0]]||"")+'" '+
+            'oninput="qcSet('+i+',\''+r[0]+'\',this.value)" '+
+            'aria-label="'+esc(r[1])+'"></td>';
+        }).join("")+'</tr>';
+    }).join("")+
+    '</tbody></table></div>'+
+    '<div class="row-cta"><button class="btn btn-o" type="button" onclick="qcAdd()">'+
+      '제안 추가'+icon("plus",16)+'</button>'+
+      '<button class="btn btn-gh" type="button" onclick="qcClear()">전부 지우기</button></div>'+
+    '<p class="note">어느 것이 낫다고 표시하지 않습니다. 저희는 그 현장을 보지 않았습니다.</p>';
+}
+window.qcAdd = function(){
+  var qs = amGet(QKEY, []); qs.push({}); amSet(QKEY, qs); rerender(true);
+};
+/* ⚠️ 적는 중에 화면을 다시 그리지 마세요 — 커서가 날아가고 적던 것이
+   사라집니다. 저장만 합니다. */
+window.qcSet = function(i, k, v){
+  var qs = amGet(QKEY, []); if(!qs[i]) return; qs[i][k] = v; amSet(QKEY, qs);
+};
+window.qcDel = function(i){
+  var qs = amGet(QKEY, []); qs.splice(i,1); amSet(QKEY, qs); rerender(true);
+};
+window.qcClear = function(){
+  if(!confirm("적어 두신 제안을 전부 지웁니다. 되돌릴 수 없습니다.")) return;
+  amDel(QKEY); rerender(true);
+};
+
+/* ── 보내기 ─────────────────────────────────────────────────────
+   ⚠️ **화면이 보내는 칸 = `api/quote.js` 가 읽는 칸.** 어긋나면
+   조용히 사라집니다. `node tools/test-api.js` 로 같이 확인하세요. */
+window.quoteSend = function(ev){
+  ev.preventDefault();
+  if(!$("q-ag").checked){ toast("개인정보 수집 · 이용 동의가 필요합니다"); return false; }
+  var ind = $("q-ind").value, reg = $("q-reg").value;
+  var body = {
+    kind: "quote",
+    name:  $("q-name").value.trim(),
+    tel:   $("q-tel").value.trim(),
+    region: reg ? amRegionName(reg) : "",
+    service: "", serviceName: $("q-what").value.trim(),
+    q:      $("q-q").value.trim(),
+    budget: $("q-bud").value.trim(),
+    detail: {
+      "상황":  $("q-side").value === "close" ? "폐업 · 정리" : "창업 · 시작",
+      "업종":  ind ? amIndustryName(ind) : "",
+      "시군구": $("q-gu").value.trim(),
+      "평수":  $("q-py").value.trim(),
+      "일정":  $("q-when").value.trim(),
+      "사진":  $("q-img").value.trim()
+    },
+    agree: true
+  };
+  return amSend("q-fail", body, "quoteSend");
+};
+
+window.joinSend = function(ev){
+  ev.preventDefault();
+  if(!$("jn-ag").checked){ toast("개인정보 수집 · 이용 동의가 필요합니다"); return false; }
+  var reg = $("jn-reg").value, ind = $("jn-ind").value;
+  var body = {
+    kind: "partner",
+    name:  $("jn-ceo").value.trim(),
+    tel:   $("jn-tel").value.trim(),
+    email: $("jn-mail").value.trim(),
+    region: reg ? amRegionName(reg) : "",
+    company: $("jn-name").value.trim(),
+    exp:  ind ? amIndustryName(ind) : "",
+    note: $("jn-note").value.trim(),
+    serviceNames: [$("jn-svc").value.trim()].filter(Boolean),
+    agree: true
+  };
+  return amSend("jn-fail", body, "joinSend");
+};
+
+/* 공통 보내기 — ⚠️ **실패했을 때가 더 중요합니다.** 길게 적으신 글을
+   들고 막다른 길에 서게 하지 않습니다. 적으신 것을 화면에 그대로 두고,
+   복사해 두실 수 있게 하고, 다시 시도를 줍니다.
+   ⚠️ **화면을 다시 그리지 마세요** — 다시 그리면 적으신 글이 날아갑니다. */
+window.amSend = function(failId, body, again){
+  var btn = document.querySelector("#"+failId+" ~ button") ||
+            document.querySelector("form button[type=submit]");
+  if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
+  fetch("/api/quote", {
+    method:"POST", headers:{ "content-type":"application/json" },
+    body: JSON.stringify(body)
+  }).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+    .then(function(x){
+      if(!x.ok) throw new Error((x.j && x.j.error) || "보내지 못했습니다");
+      var box = $(failId);
+      if(box) box.innerHTML = '<div class="notice-ok"><b>접수되었습니다.</b>'+
+        '<p>적어 주신 연락처로 안내드리겠습니다. 회신 시점을 약속드리지는 않습니다.</p></div>';
+      toast("접수되었습니다");
+      var f = box && box.closest("form"); if(f) f.reset();
+      if(btn){ btn.disabled = false; btn.textContent = "다시 보내기"; }
+    })
+    .catch(function(e){ sendFail(failId, again, body, e.message); });
+  return false;
+};
+
+function sendFail(failId, again, body, msg){
+  var box = $(failId); if(!box) return;
+  var txt = Object.keys(body).map(function(k){
+    var v = body[k];
+    if(v && typeof v === "object" && !Array.isArray(v)){
+      return Object.keys(v).filter(function(kk){ return v[kk]; })
+             .map(function(kk){ return kk + ": " + v[kk]; }).join("\n");
+    }
+    return (Array.isArray(v) ? v.join(", ") : v) ? (k + ": " + v) : "";
+  }).filter(Boolean).join("\n");
+
+  box.innerHTML = '<div class="notice-bad"><b>지금은 접수되지 않았습니다.</b>'+
+    '<p>적어 주신 내용은 <b>그대로 남아 있습니다.</b> 잠시 뒤 다시 눌러 보시거나, '+
+      '아래 단추로 복사해 두셨다가 보내 주세요.</p>'+
+    '<div class="row-cta">'+
+      '<button class="btn btn-o" type="button" onclick="amCopy(this)" '+
+        'data-copy="'+esc(txt)+'">적은 내용 복사'+icon("doc",16)+'</button>'+
+    '</div>'+
+    (msg ? '<p class="note">'+esc(msg)+'</p>' : '')+
+  '</div>';
+  var btn = document.querySelector("form button[type=submit]");
+  if(btn){ btn.disabled = false; btn.textContent = "다시 시도"; }
+}
+
+/* ⚠️ `navigator.clipboard` 는 https 가 아니거나 오래된 브라우저에
+   없습니다. 옛 방법으로 떨어지게 해 둡니다. */
+window.amCopy = function(btn){
+  var t = btn.getAttribute("data-copy") || "";
+  function done(){ toast("복사했습니다"); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done, fallback);
+  }else fallback();
+  function fallback(){
+    var ta = document.createElement("textarea");
+    ta.value = t; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); done(); }catch(e){ toast("복사하지 못했습니다"); }
+    document.body.removeChild(ta);
+  }
+};

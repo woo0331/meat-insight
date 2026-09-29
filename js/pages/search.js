@@ -1,216 +1,139 @@
 /* ════════════════════════════════════════════════════════════════════
-   검색 (/search)
+   통합검색 (§43)
 
-   글 12편 · 서비스 30개 · 문제 12개 · 창업 20단계가 쌓이면, 손님은
-   메뉴를 훑는 대신 **찾습니다.** 백엔드가 없어도 됩니다 — 찾을 것이
-   전부 이미 브라우저에 있습니다.
+   결과를 **업체 · 프랜차이즈 · 매장 · 시설장비 · 분류 · 정보**로
+   나눠서 보여 줍니다.
 
-   ⚠️ **못 찾았을 때가 더 중요합니다.** "검색 결과가 없습니다" 로
-   끝내면 손님은 그냥 나갑니다. 우리는 그 자리에서 **적어서 물어보는
-   길**을 냅니다 — 그게 이 사이트가 하는 일이기도 합니다.
-
-   ⚠️ 손님이 적은 말을 화면에 그대로 찍는 자리가 많습니다.
-   전부 esc() 를 통과시킵니다 (절대 규칙 4).
+   ⚠️ **새 데이터를 만들면 여기 색인에도 넣으세요.** 이 저장소에서
+   글 열두 편을 만들어 놓고 검색에 안 넣어서, 손님에게는 없는 것과
+   같았던 적이 있습니다.
+   ⚠️ **분류 이름만 넣지 마세요.** 손님은 "닥트" 가 아니라 "후드" ·
+   "배기" 라고 치고, "폐업신고" 를 "사업자 정리" 라고 칩니다.
+   하위 분류 이름과 업종 이름을 전부 색인에 넣습니다.
+   ⚠️ **못 찾았을 때 막다른 길로 두지 마세요.** 그대로 적어서 물어보는
+   길을 반드시 같이 냅니다.
    ════════════════════════════════════════════════════════════════════ */
 
-/* 찾을 것을 한 벌로 모읍니다. 화면을 열 때 한 번만 만듭니다. */
-var SEARCH_IX = null;
-function searchIndex(){
-  if(SEARCH_IX) return SEARCH_IX;
-  var ix = [];
-
-  (window.WOW_POSTS || []).forEach(function(p){
-    var body = (p.body||[]).map(function(s){
-      return [s.h].concat(s.p||[], s.list||[], [s.note||"", s.warn||""]).join(" ");
-    }).join(" ");
-    ix.push({ kind:"post", icon:p.icon || "doc",
-      title:p.title, line:p.lead, to:"/lab/"+p.slug,
-      tag:wowPostCatName(p.cat) || "연구소",
-      hay:[p.title, p.lead, body, (p.check||[]).join(" ")].join(" ") });
-  });
-
-  (window.WOW_SERVICES || []).forEach(function(s){
-    ix.push({ kind:"svc", icon:"doc",
-      title:s.name, line:(s.line || s.groupName)+" 견적을 받아 드립니다",
-      to:"/request?s="+encodeURIComponent(s.key), tag:"견적 요청",
-      hay:[s.name, s.line, s.groupName].join(" ") });
-  });
-
-  /* 고민 분류 — ⚠️ **해결방법이 있으면 거기로 보냅니다.** 예전에는 전부
-     `/sos?c=` 로 보냈는데, 그러면 홈에서 "덕트" 를 누르면 가이드가 뜨고
-     검색에서 누르면 폼이 떠서 같은 고민이 두 군데로 갈립니다. 그리고
-     곧장 폼으로 보내는 것은 지시서 3번이 금지한 전화번호부 꼴입니다.
-     ⚠️ 가이드가 있는 분류는 **여기서 한 번만** 넣습니다 — 아래에서 또
-     넣으면 같은 고민이 검색 결과에 두 번 나옵니다. */
-  (window.WOW_PROBLEMS || []).forEach(function(p){
-    var g = (typeof wowGuide === "function") ? wowGuide(p.key) : null;
-
-    if(!g){
-      ix.push({ kind:"prob", icon:p.icon || "chat",
-        title:p.name+" 문제", line:(p.hint||"")+" — 상황을 적어 주시면 정리해 드립니다",
-        to:p.to || ("/sos?c="+encodeURIComponent(p.key)), tag:"물어보기",
-        hay:[p.name, p.hint].join(" ") });
-      return;
-    }
-
-    /* 가이드 본문을 통째로 검색감으로 씁니다. 이게 있어야 "배기구" ·
-       "가스켓" · "권리금" 처럼 **손님이 실제로 치는 말**로 찾아집니다 —
-       분류 이름("덕트")만 넣어 두면 그 말을 모르는 분은 못 찾습니다. */
-    var body = []
-      .concat(g.intro || [])
-      .concat(g.self || [])
-      .concat(g.warn || [])
-      .concat(g.tell || [])
-      .concat(g.ask || [])
-      .concat((g.causes || []).map(function(c){ return c.t + " " + c.d; }))
-      .concat(g.law ? [g.law.t, g.law.d, g.law.where] : [])
-      .join(" ").split("**").join("");
-
-    ix.push({ kind:"guide", icon:p.icon || "chat",
-      title:g.h1, line:g.lead,
-      to:"/problem/"+encodeURIComponent(p.key), tag:"해결방법",
-      hay:[p.name, p.hint, g.h1, g.lead, body].join(" ") });
-  });
-
-  (window.WOW_STARTUP_STEPS || []).forEach(function(s){
-    ix.push({ kind:"step", icon:s.icon || "seed",
-      title:"창업 — "+s.name, line:s.line || "창업 단계에서 보는 것",
-      to:"/start", tag:"창업 단계",
-      hay:[s.name, s.line].join(" ") });
-  });
-
-  (window.WOW_CHECK || []).forEach(function(c){
-    ix.push({ kind:"chk", icon:c.icon || "gauge",
-      title:"진단 — "+c.name, line:c.why || "", to:"/check", tag:"사업진단",
-      hay:[c.name, c.why].join(" ") });
-  });
-
-  /* 화면 자체도 찾아집니다 — "견적 비교" 를 치면 그 화면이 나와야 합니다 */
-  [["사장님 SOS","무엇이든 적어서 물어보는 곳","/sos","alert"],
-   ["고민별 해결방법","업체를 부르기 전에 확인할 것과 물어볼 것","/problems","list"],
-   ["무료 사업진단","8가지로 지금 상태를 정리합니다","/check","gauge"],
-   ["창업 프로젝트","20단계를 순서대로","/start","seed"],
-   ["창업비 정리표","빠뜨리기 쉬운 13칸","/start/cost","won"],
-   ["견적 비교","받으신 견적을 나란히 놓고","/quotes","scale"],
-   ["사장님 도구","지금 바로 써 보실 수 있는 계산 다섯 가지","/tools","tool"],
-   ["수율 원가 계산","원육을 손질한 뒤 실제 1kg 원가와 1인분 원가","/tools/yield","knife"],
-   ["손익분기 계산","한 달에 얼마를 팔아야 본전인지","/tools/bep","target"],
-   ["인건비율 계산","급여·4대보험·사장님 몫까지 넣어 실제 인건비율과 한 사람당 매출을","/tools/labor","users"],
-   ["업체 찾기","무엇이 필요하신지 고르면 최대 세 곳","/partners","search"],
-   ["사장님 연구소","고기 장사에 필요한 글","/lab","doc"],
-   ["MY BUSINESS","지금까지 하신 것","/my","user"],
-   ["파트너 등록","업체로 등록하기","/partner/apply","users"],
-   ["ABOUTMEAT 소개","무엇을 하고 무엇을 안 하는가","/about","info"]
-  ].forEach(function(r){
-    ix.push({ kind:"page", icon:r[3], title:r[0], line:r[1], to:r[2], tag:"화면",
-              hay:r[0]+" "+r[1] });
-  });
-
-  ix.forEach(function(r){ r.hay = String(r.hay||"").toLowerCase(); });
-  SEARCH_IX = ix;
-  return ix;
+function PageSearch(){
+  var q = (nowQS("q") || "").trim();
+  var res = q ? amSearch(q) : null;
+  return PgHero({
+    kicker:"통합검색",
+    h1raw:"무엇을 찾으세요?",
+    lead:"업체 · 프랜차이즈 · 매장 · 시설장비 · 정보를 한 번에 찾습니다.",
+    tight:true
+  })+
+  '<section class="sec sec-white"><div class="w">'+
+    '<form class="sb" onsubmit="return searchGo(event)">'+
+      '<span class="sb-ic" aria-hidden="true">'+icon("search",20)+'</span>'+
+      '<input id="sb-q" value="'+esc(q)+'" placeholder="카페 인테리어 · 안양 철거 · 미용실 POS · 카페 양도" '+
+        'aria-label="검색어">'+
+      '<button class="btn btn-b" type="submit">검색</button>'+
+    '</form>'+
+    (!q ? SearchHints() : (res.total
+      ? res.groups.map(function(g){
+          if(!g.rows.length) return "";
+          return '<div class="sr-g"><h2>'+esc(g.name)+' <em>'+g.rows.length+'</em></h2><ul class="sr-l">'+
+            g.rows.map(function(r){
+              return '<li><a href="'+esc(r.to)+'"><b>'+esc(r.name)+'</b>'+
+                (r.sub?'<span>'+esc(r.sub)+'</span>':'')+
+                '<span class="sr-go" aria-hidden="true">'+icon("chev",15)+'</span></a></li>';
+            }).join("")+'</ul></div>';
+        }).join("")
+      : Empty({
+          icon:"search",
+          title:'"'+q+'" 로 찾은 것이 없습니다',
+          text:"다른 말로 찾아 보시거나, 필요한 일을 그대로 적어서 물어보세요. "+
+               "분류에 없는 일도 찾아 드립니다.",
+          cta:'<a class="btn btn-b" href="/quote">그대로 적어서 물어보기'+icon("arrow",16)+'</a>'+
+              '<a class="btn btn-o" href="/providers">분류로 찾기</a>'
+        })))+
+  '</div></section>';
 }
 
-/* 낱말을 다 품고 있으면 맞은 것으로 봅니다.
-   ⚠️ 한글은 형태소가 붙습니다 — "덕트가" 로 쳐도 "덕트" 를 찾아야
-   하므로, 낱말 자체를 통째로 품는지만 봅니다. */
-/* 몇 번 나오는가. ⚠️ `split(w).length - 1` 로 세면 빈 낱말에서 터집니다 */
-function countIn(hay, w){
-  if(!w) return 0;
-  var n = 0, i = 0;
-  while((i = hay.indexOf(w, i)) >= 0){ n++; i += w.length; if(n >= 8) break; }
+function SearchHints(){
+  var eg = ["카페 인테리어","안양 철거","미용실 POS","음식점 주방설비",
+            "카페 양도","원상복구","폐업신고","권리금","세무사"];
+  return '<div class="sr-hint"><b>이렇게 찾아 보세요</b><ul class="chip-g">'+
+    eg.map(function(t){
+      return '<li><a class="chip" href="/search?q='+encodeURIComponent(t)+'">'+esc(t)+'</a></li>';
+    }).join("")+'</ul></div>';
+}
+
+window.searchGo = function(ev){
+  ev.preventDefault();
+  var v = $("sb-q").value.trim();
+  go("/search"+(v ? "?q="+encodeURIComponent(v) : ""));
+  return false;
+};
+
+/* 점수는 **몇 번 나오는지**로 셉니다 — 한 번이라도 나오면 1점으로 두면
+   스치듯 언급한 것이 정작 그 말이 주제인 화면보다 위로 갑니다. */
+function amScore(hay, words){
+  var n = 0, low = hay.toLowerCase();
+  words.forEach(function(w){
+    var i = 0, c = 0;
+    while((i = low.indexOf(w, i)) >= 0 && c < 4){ c++; i += w.length; }
+    n += c;
+  });
   return n;
 }
 
-function searchRun(q){
-  var words = String(q||"").toLowerCase().split(/[\s,·]+/).filter(Boolean);
-  if(!words.length) return [];
-  var hit = searchIndex().map(function(r){
-    var score = 0, all = true;
-    words.forEach(function(w){
-      if(r.hay.indexOf(w) < 0){ all = false; return; }
-      /* ⚠️ "한 번이라도 나오면 1점" 으로 두었더니 **그 말을 스치듯
-         언급한 글**이 정작 그 말이 주제인 화면보다 위로 갔습니다 —
-         "권리금" 을 쳤는데 가게 정리 가이드가 네 번째였습니다.
-         그래서 **몇 번 나오는지**를 셉니다 (많아도 네 번까지만 —
-         길이가 긴 글이 무조건 이기면 그것도 틀립니다). */
-      score += Math.min(4, countIn(r.hay, w));
-      if(String(r.line||"").toLowerCase().indexOf(w) >= 0) score += 2;
-      if(r.title.toLowerCase().indexOf(w) >= 0) score += 6;   /* 제목에 있으면 위로 */
-    });
-    /* ⚠️ **해결방법을 글보다 위에 둡니다.** 흐름의 가운데 칸이
-       해결방법이고, 글은 읽을거리입니다. "덕트" 를 쳤을 때 연구소
-       글이 가이드보다 위에 뜨면, 지금 민원을 받고 계신 사장님이
-       확인할 것·물어볼 것 대신 읽을거리부터 보게 됩니다.
-       ⚠️ 점수를 크게 주지 마세요 — 엉뚱한 가이드가 딱 맞는 글을
-       이기면 그게 더 나쁩니다. 비슷할 때만 앞서는 정도입니다. */
-    if(score > 0 && r.kind === "guide") score += 3;
-    return all ? { r:r, score:score } : null;
-  }).filter(Boolean)
-    .sort(function(a,b){ return b.score - a.score; });
+window.amSearch = function(q){
+  var words = q.toLowerCase().split(" ").filter(Boolean);
+  var G = {
+    provider:{ name:"업체", rows:[] }, franchise:{ name:"프랜차이즈", rows:[] },
+    store:{ name:"매장 · 점포", rows:[] }, asset:{ name:"시설 · 장비", rows:[] },
+    cat:{ name:"분류", rows:[] }, industry:{ name:"업종", rows:[] },
+    content:{ name:"정보", rows:[] }
+  };
+  function push(g, name, sub, to, score){ if(score > 0) G[g].rows.push({name:name,sub:sub,to:to,s:score}); }
 
-  /* ⚠️ **가는 곳이 같은 줄은 하나만 냅니다.** 창업 단계 스무 개가 전부
-     `/start` 로 가서, "덕트" 를 치면 같은 화면으로 가는 줄이 두세 개
-     나란히 떴습니다. 손님 눈에는 그냥 중복입니다 — 점수가 제일 높은
-     것만 남깁니다. */
-  var seen = {}, out = [];
-  hit.forEach(function(x){
-    var k = x.r.to;
-    if(seen[k]) return;
-    seen[k] = 1; out.push(x.r);
+  (window.AM_INDUSTRIES||[]).forEach(function(i){
+    var s = amScore(i.name+" "+i.lead, words);
+    push("industry", i.name+" 창업", i.lead, "/startup/"+i.key, s);
+    push("industry", i.name+" 폐업", "정리에 필요한 것", "/closure/"+i.key, s ? s-0.5 : 0);
   });
-  return out;
-}
+  AM_CATS.forEach(function(c){
+    var subs = (c.items||[]).map(function(x){ return x.name; }).join(" ");
+    var s = amScore(c.name+" "+c.lead+" "+c.desc+" "+subs, words);
+    push("cat", c.name, c.lead, catTo(c), s);
+    (c.items||[]).forEach(function(it){
+      var ss = amScore(it.name, words);
+      if(ss > 0) push("cat", it.name, c.name,
+        (c.kind === "provider" ? "/providers/"+c.key+"?s="+encodeURIComponent(it.key) : catTo(c)), ss + 1);
+    });
+  });
+  (window.AM_PROVIDERS||[]).forEach(function(p){
+    push("provider", p.name, (p.regions||[]).map(function(k){ return amRegionName(k); }).join(" · "),
+      "/p/"+p.id, amScore(p.name+" "+(p.intro||"")+" "+(p.subs||[]).join(" "), words));
+  });
+  (window.AM_FRANCHISES||[]).forEach(function(f){
+    push("franchise", f.name, f.intro||"", "/f/"+f.slug, amScore(f.name+" "+(f.intro||""), words));
+  });
+  (window.AM_STORES||[]).forEach(function(s){
+    push("store", s.title, amRegionName(s.region, s.gu), "/stores",
+      amScore(s.title+" "+amIndustryName(s.industry), words));
+  });
+  (window.AM_ASSETS||[]).forEach(function(a){
+    push("asset", a.title, amRegionName(a.region, a.gu), "/assets",
+      amScore(a.title+" "+(a.brand||"")+" "+amIndustryName(a.industry), words));
+  });
+  (window.AM_CONTENTS||[]).forEach(function(c){
+    push("content", c.title, c.lead, "/content/"+c.slug,
+      amScore(c.title+" "+c.lead, words));
+  });
 
-function PageSearch(){
-  var q = nowQS("q");
-  var hits = q ? searchRun(q) : [];
-
-  return '<div class="w srch">'+
-    '<h1 class="pg-h1">무엇을 찾으세요?</h1>'+
-    '<form class="srch-f" onsubmit="return srchGo(event)">'+
-      '<label class="sr" for="sq">찾을 말</label>'+
-      '<span class="srch-ic" aria-hidden="true">'+icon("search",20)+'</span>'+
-      '<input id="sq" type="search" value="'+esc(q)+'" autocomplete="off"'+
-        ' placeholder="덕트 · 원가율 · 창업비 · 인허가 …">'+
-      '<button class="btn btn-b" type="submit">찾기</button>'+
-    '</form>'+
-
-    (!q
-      ? '<div class="srch-hint">'+
-          '<p class="note">많이 찾으시는 것</p>'+
-          '<ul class="chips">'+["덕트","원가율","거래처","냉장고","창업비","인허가","주휴수당","2호점"]
-            .map(function(w){
-              return '<li><a href="/search?q='+encodeURIComponent(w)+'">'+esc(w)+'</a></li>';
-            }).join("")+'</ul>'+
-        '</div>'
-      : hits.length
-        ? '<p class="srch-n"><b>'+esc(q)+'</b> — '+hits.length+'개를 찾았습니다.</p>'+
-          '<ul class="srch-l">'+hits.slice(0,30).map(function(r){
-            return '<li><a href="'+esc(r.to)+'">'+
-              '<span class="srch-r-ic">'+icon(r.icon,20)+'</span>'+
-              '<span class="srch-r-t"><em>'+esc(r.tag)+'</em>'+
-                '<b>'+esc(r.title)+'</b>'+
-                '<span>'+esc(r.line)+'</span></span>'+
-              '<span class="srch-r-go">'+icon("chev",16)+'</span></a></li>';
-          }).join("")+'</ul>'
-        /* ⚠️ 못 찾았을 때가 더 중요합니다. 여기서 끝내지 않습니다. */
-        : '<div class="srch-none">'+
-            '<b>'+esc(q)+' 로는 찾지 못했습니다.</b>'+
-            '<p>글에 없는 것일 수 있습니다. 그대로 적어서 물어봐 주시면 '+
-              '무엇이 필요한 일인지부터 같이 정리하겠습니다. 비용은 들지 않습니다.</p>'+
-            '<div class="row-cta">'+
-              '<a class="btn btn-b btn-lg" href="/sos?q='+encodeURIComponent(q)+'">'+
-                '이대로 물어보기'+icon("arrow",18)+'</a>'+
-              '<a class="btn btn-o btn-lg" href="/lab">연구소 글 보기</a>'+
-            '</div>'+
-          '</div>')+
-  '</div>';
-}
-
-window.srchGo = function(ev){
-  ev.preventDefault();
-  var el = $("sq"), v = el ? String(el.value||"").trim() : "";
-  go("/search" + (v ? "?q="+encodeURIComponent(v) : ""));
-  return false;
+  /* ⚠️ 가는 곳이 같은 줄은 하나만 냅니다 — 같은 줄이 두세 개 나란히
+     뜨면 검색이 고장난 것처럼 보입니다. */
+  var total = 0;
+  var groups = Object.keys(G).map(function(k){
+    var seen = {};
+    G[k].rows = G[k].rows.sort(function(a,b){ return b.s - a.s; })
+      .filter(function(r){ if(seen[r.to]) return false; seen[r.to] = 1; return true; })
+      .slice(0, 12);
+    total += G[k].rows.length;
+    return G[k];
+  });
+  return { total:total, groups:groups };
 };

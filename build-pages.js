@@ -32,11 +32,11 @@ function loadApp(){
 
   /* ⚠️ **순서가 곧 의존 순서입니다** — 뒤의 파일이 앞의 것을 씁니다.
      guides.js 는 problems.js 의 key 를 그대로 쓰므로 그 뒤여야 합니다. */
-  const DATA = ["js/data/korean.js","js/data/site.js","js/data/situations.js",
-                "js/data/problems.js","js/data/services.js","js/data/startup.js",
-                "js/data/photos.js","js/data/check.js","js/data/regions.js","js/data/reqforms.js",
-                "js/data/legal-terms.js","js/data/legal-privacy.js",
-                "js/data/posts.js","js/data/guides.js","js/data/faq.js"];
+  const DATA = ["js/data/korean.js","js/data/brand.js","js/data/site.js",
+                "js/data/regions.js","js/data/industries.js","js/data/catalog.js",
+                "js/data/franchise.js","js/data/providers.js","js/data/market.js",
+                "js/data/support.js","js/data/content.js","js/data/photos.js",
+                "js/data/legal-terms.js","js/data/legal-privacy.js"];
 
   /* ⚠️ 여기는 **glob 이 아니라 손으로 적은 목록**입니다. 새 데이터
      파일을 만들고 여기에 안 넣으면, 그 데이터를 쓰는 주소가 **에러
@@ -67,18 +67,29 @@ function loadApp(){
    ⚠️ 화면을 새로 만들면 여기에도 넣어야 HTML 파일이 생깁니다.
    안 넣으면 열리기는 하지만 검색에 안 잡힙니다. */
 function allRoutes(W){
-  const fixed = ["/", "/sos", "/start", "/start/cost", "/check", "/partners",
-                 "/request", "/lab", "/partner", "/partner/apply",
-                 "/my", "/quotes", "/search",
-                 "/tools", "/tools/yield", "/tools/bep", "/tools/labor", "/problems", "/login", "/signup", "/about", "/terms", "/privacy"];
-  /* 연구소 글은 하나하나가 주소입니다 — 검색에서 들어오는 문이라
-     반드시 진짜 HTML 파일이 있어야 합니다. */
-  const posts = (W.WOW_POSTS || []).map(p => "/lab/" + p.slug);
-  /* 문제별 해결 가이드 — 흐름의 가운데 두 칸이자 **검색에서 들어오는
-     제일 큰 문**입니다. "덕트 냄새 민원" 으로 검색해 들어오시는 분이
-     제일 먼저 만나는 화면이므로 반드시 진짜 HTML 파일이어야 합니다. */
-  const guides = (W.WOW_GUIDES || []).map(g => "/problem/" + g.key);
-  return fixed.concat(posts).concat(guides);
+  const fixed = ["/", "/startup", "/closure", "/providers", "/franchise",
+                 "/stores", "/assets", "/support", "/content",
+                 "/quote", "/join", "/my", "/search",
+                 "/about", "/terms", "/privacy"];
+  /* 업종별 창업 · 폐업 — **검색에서 들어오는 제일 큰 문**입니다
+     ("카페 창업" · "음식점 폐업"). 반드시 진짜 HTML 파일이어야 합니다. */
+  const inds  = (W.AM_INDUSTRIES || []).map(i => i.key);
+  const flows = inds.map(k => "/startup/" + k).concat(inds.map(k => "/closure/" + k));
+  /* 업체를 찾는 분류 — /providers/interior 처럼 (§46) */
+  const pcats = (W.AM_CATS || []).filter(c => c.kind === "provider")
+                  .map(c => "/providers/" + c.key);
+  /* 정보 · 매물 성격의 분류 — ⚠️ `to` 가 따로 있는 것은 그 주소가
+     진짜 화면이므로 여기서 또 만들지 않습니다 (주소 두 개가 같은
+     내용을 내면 구글이 둘 다 무시합니다). */
+  const icats = (W.AM_CATS || []).filter(c => c.kind !== "provider" && !c.to)
+                  .map(c => "/c/" + c.key);
+  const fcats = (W.AM_FRANCHISE_CATS || []).map(c => "/franchise/" + c.key);
+  /* 업체 · 브랜드 · 글은 **등록된 것만** 주소가 됩니다. 지금 0 건이라
+     0 개가 만들어집니다 — 없는 것을 만들지 않습니다. */
+  const pvs = (W.AM_PROVIDERS || []).map(p => "/p/" + p.id);
+  const frs = (W.AM_FRANCHISES || []).map(f => "/f/" + f.slug);
+  const cts = (W.AM_CONTENTS  || []).map(c => "/content/" + c.slug);
+  return fixed.concat(flows, pcats, icats, fcats, pvs, frs, cts);
 }
 
 function esc(s){
@@ -88,128 +99,115 @@ function esc(s){
 
 /* ── 구조화 데이터 (JSON-LD) ──────────────────────────────────
    구글이 제목·설명 말고 **이 화면이 무엇인지**를 읽는 자리입니다.
-   연구소 글은 Article 로, 사이트는 WebSite + 검색으로, 주소 안의
-   주소는 BreadcrumbList 로 알려 줍니다.
 
-   ⚠️ **평점·리뷰 수·업체 수를 넣지 마세요** (절대 규칙 1).
-   aggregateRating 을 넣으면 검색 결과에 별이 뜨는데, 그 별은 실제
-   후기가 있어야 붙일 수 있는 것입니다. 없는 별을 붙이면 지어낸
+   ⚠️⚠️ **`aggregateRating` 을 넣지 마세요.** 검색 결과에 별이 뜨는데,
+   그 별은 실제 후기가 있어야 붙이는 것입니다. 없는 별을 붙이면 지어낸
    숫자를 구글에까지 내보내는 셈이고, 적발되면 리치 결과가 통째로
-   막힙니다. 예전 부산물몰에서 실제로 그랬습니다.
-
-   ⚠️ 화면에 없는 것을 여기에만 적지 마세요. 구글은 "구조화 데이터가
+   막힙니다.
+   ⚠️ **화면에 없는 것을 여기에만 적지 마세요.** 구글은 "구조화 데이터가
    화면 내용과 같아야 한다" 고 못 박아 두었습니다. */
-function jsonLd(W, r, route){
-  const org = {
-    "@type":"Organization", name:"ABOUTMEAT", url:ORIGIN,
-    logo:ORIGIN+"/icon-512.png"
-  };
-  const out = [];
-
-  if(route === "/"){
-    const faq = (W.WOW_FAQ || []);
-    if(faq.length)
-      out.push({ "@context":"https://schema.org", "@type":"FAQPage",
-        inLanguage:"ko",
-        mainEntity: faq.map(f => ({ "@type":"Question", name:f.q,
-          acceptedAnswer:{ "@type":"Answer", text:f.a } })) });
-    out.push({ "@context":"https://schema.org", "@type":"WebSite",
-      name:"ABOUTMEAT", url:ORIGIN, inLanguage:"ko",
-      description:r.desc || "",
-      potentialAction:{ "@type":"SearchAction",
-        target:{ "@type":"EntryPoint", urlTemplate:ORIGIN+"/search?q={q}" },
-        "query-input":"required name=q" } });
-    out.push({ "@context":"https://schema.org", "@type":"Organization",
-      name:"ABOUTMEAT", url:ORIGIN, logo:ORIGIN+"/icon-512.png",
-      description:"고깃집·정육점 사장님의 문제를 정리하고, 조건에 맞는 업체를 최대 세 곳 찾아 견적을 받아 드리는 중개 서비스입니다." });
-  }
-
-  if(route.indexOf("/lab/") === 0){
-    const post = (W.WOW_POSTS||[]).filter(p => "/lab/"+p.slug === route)[0];
-    if(post){
-      out.push({ "@context":"https://schema.org", "@type":"Article",
-        headline: post.title, description: post.lead,
-        inLanguage:"ko",
-        datePublished: post.updated, dateModified: post.updated,
-        author: org, publisher: org,
-        mainEntityOfPage:{ "@type":"WebPage", "@id":ORIGIN+route },
-        articleSection: (W.wowPostCatName && W.wowPostCatName(post.cat)) || undefined });
-      const cat = (W.wowPostCatName && W.wowPostCatName(post.cat)) || "글";
-      out.push({ "@context":"https://schema.org", "@type":"BreadcrumbList",
-        itemListElement:[
-          { "@type":"ListItem", position:1, name:"홈", item:ORIGIN+"/" },
-          { "@type":"ListItem", position:2, name:"사장님 연구소", item:ORIGIN+"/lab" },
-          { "@type":"ListItem", position:3, name:post.title }
-        ]});
-    }
-  }
-
-  /* 문제별 해결 가이드 — Article 로 알립니다.
-     ⚠️ **FAQPage 를 쓰지 마세요.** 가이드의 "물어볼 것" 은 업체에게
-     던질 질문이지 **우리가 답을 단 질문이 아닙니다.** 구글은 구조화
-     데이터가 화면 내용과 같기를 요구하므로, 답이 없는 질문을 FAQ 로
-     내보내면 어긋납니다. */
-  if(route.indexOf("/problem/") === 0){
-    const g = (W.WOW_GUIDES||[]).filter(x => "/problem/"+x.key === route)[0];
-    if(g){
-      const pr = (W.wowProblem && W.wowProblem(g.key)) || null;
-      out.push({ "@context":"https://schema.org", "@type":"Article",
-        headline: g.h1, description: g.lead, inLanguage:"ko",
-        author: org, publisher: org,
-        mainEntityOfPage:{ "@type":"WebPage", "@id":ORIGIN+route },
-        articleSection: pr ? pr.name : undefined });
-      out.push({ "@context":"https://schema.org", "@type":"BreadcrumbList",
-        itemListElement:[
-          { "@type":"ListItem", position:1, name:"홈", item:ORIGIN+"/" },
-          { "@type":"ListItem", position:2, name:"고민별 해결방법",
-            item:ORIGIN+"/problems" },
-          { "@type":"ListItem", position:3, name:g.h1 }
-        ]});
-    }
-  }
-
-  if(route === "/problems"){
-    out.push({ "@context":"https://schema.org", "@type":"CollectionPage",
-      name:"고민별 해결방법", description:r.desc || "", inLanguage:"ko",
-      url:ORIGIN+"/problems",
-      mainEntity:{ "@type":"ItemList",
-        itemListElement:(W.WOW_GUIDES||[]).map((g,i) => ({
-          "@type":"ListItem", position:i+1, name:g.h1,
-          url:ORIGIN+"/problem/"+g.key })) }});
-  }
-
-  if(route === "/lab"){
-    out.push({ "@context":"https://schema.org", "@type":"CollectionPage",
-      name:"사장님 연구소", description:r.desc || "", inLanguage:"ko",
-      url:ORIGIN+"/lab",
-      mainEntity:{ "@type":"ItemList",
-        itemListElement:(W.WOW_POSTS||[]).map((p,i) => ({
-          "@type":"ListItem", position:i+1, name:p.title, url:ORIGIN+"/lab/"+p.slug })) }});
-  }
-
-  if(route === "/start/cost" || route === "/check" || route === "/quotes" ||
-     route === "/tools/yield" || route === "/tools/bep" ||
-     route === "/tools/labor"){
-    out.push({ "@context":"https://schema.org", "@type":"WebApplication",
-      name:r.title, description:r.desc || "", url:ORIGIN+route,
-      applicationCategory:"BusinessApplication",
-      operatingSystem:"Web", inLanguage:"ko", publisher:org,
-      /* 무료라는 것은 화면에도 적혀 있는 사실입니다 */
-      offers:{ "@type":"Offer", price:"0", priceCurrency:"KRW" } });
-  }
-
-  if(!out.length) return "";
-  return out.map(o =>
-    '<script type="application/ld+json">'+
-    JSON.stringify(o).replace(/</g,"\\u003c")+
-    '</'+'script>').join("\n");
+/* ⚠️ `jsonLd()` 는 **객체 배열**을 돌려줍니다. 화면에 넣을 때는 반드시
+   이 함수를 거치세요 — 그냥 문자열로 이으면 `[object Object]` 가
+   화면 맨 위에 찍힙니다. 실제로 한 번 그렇게 나갔습니다. */
+function ldTags(arr){
+  if(!arr || !arr.length) return "";
+  return arr.map(o =>
+    '<script type="application/ld+json">' +
+    JSON.stringify(o).replace(/</g,"\\u003c") +
+    '</' + 'script>').join("\n");
 }
 
-/* ── 껍데기 ───────────────────────────────────────────────────
-   index.html 을 그대로 쓰되 <head> 의 메타만 갈아 끼웁니다.
-   스크립트·CSS 는 절대 경로라 어느 깊이에서 열어도 같습니다. */
+function jsonLd(W, r, route){
+  const B = W.AM_BRAND || {};
+  const out = [];
+  const crumb = (items) => ({
+    "@context":"https://schema.org","@type":"BreadcrumbList",
+    itemListElement: items.map((it,i) => ({
+      "@type":"ListItem", position:i+1, name:it[0],
+      item: ORIGIN + it[1]
+    }))
+  });
+
+  if(route === "/"){
+    out.push({
+      "@context":"https://schema.org","@type":"WebSite",
+      name:B.name, url:ORIGIN, inLanguage:"ko", description:B.desc,
+      potentialAction:{ "@type":"SearchAction",
+        target:{ "@type":"EntryPoint", urlTemplate: ORIGIN+"/search?q={q}" },
+        "query-input":"required name=q" }
+    });
+    out.push({
+      "@context":"https://schema.org","@type":"Organization",
+      name:B.name, url:ORIGIN, logo:ORIGIN+"/icon-512.png", description:B.desc
+    });
+    return out;
+  }
+
+  const mi = /^\/(startup|closure)\/([a-z0-9-]+)$/.exec(route);
+  if(mi){
+    const side = mi[1] === "startup" ? "창업" : "폐업";
+    const ind = (W.AM_INDUSTRIES||[]).filter(x => x.key === mi[2])[0];
+    if(ind){
+      out.push(crumb([[side, "/"+mi[1]], [ind.name+" "+side, route]]));
+      /* 이 화면이 하는 일은 **필요한 것을 목록으로 보여 주는 것**입니다 */
+      const cats = (W.AM_CATS||[]).filter(c =>
+        ((mi[1]==="startup" ? ind.startup : ind.closure)||[]).indexOf(c.key) >= 0);
+      if(cats.length) out.push({
+        "@context":"https://schema.org","@type":"ItemList",
+        name: ind.name+" "+side+"에 필요한 것",
+        itemListElement: cats.map((c,i) => ({
+          "@type":"ListItem", position:i+1, name:c.name }))
+      });
+    }
+    return out;
+  }
+  const mp = /^\/providers\/([a-z0-9-]+)$/.exec(route);
+  if(mp){
+    const c = (W.AM_CATS||[]).filter(x => x.key === mp[1])[0];
+    if(c){
+      out.push(crumb([["업체찾기","/providers"], [c.name, route]]));
+      out.push({
+        "@context":"https://schema.org","@type":"ItemList",
+        name: c.name, itemListElement:(c.items||[]).map((it,i) => ({
+          "@type":"ListItem", position:i+1, name:it.name }))
+      });
+    }
+    return out;
+  }
+  const mf = /^\/franchise\/([a-z0-9-]+)$/.exec(route);
+  if(mf){
+    const c = (W.AM_FRANCHISE_CATS||[]).filter(x => x.key === mf[1])[0];
+    if(c) out.push(crumb([["프랜차이즈","/franchise"], [c.name, route]]));
+    return out;
+  }
+  const mc = /^\/content\/([a-z0-9-]+)$/.exec(route);
+  if(mc){
+    const ct = (W.AM_CONTENTS||[]).filter(x => x.slug === mc[1])[0];
+    if(ct){
+      out.push(crumb([["정보","/content"], [ct.title, route]]));
+      out.push({
+        "@context":"https://schema.org","@type":"Article",
+        headline:ct.title, description:ct.lead, inLanguage:"ko",
+        datePublished:ct.at, author:{ "@type":"Organization", name:B.name }
+      });
+    }
+    return out;
+  }
+  const mcc = /^\/c\/([a-z0-9-]+)$/.exec(route);
+  if(mcc){
+    const c = (W.AM_CATS||[]).filter(x => x.key === mcc[1])[0];
+    if(c){
+      const side = ((W.AM_START_CATS||[]).some(x=>x.key===c.key)) ? "창업" : "폐업";
+      out.push(crumb([[side, side==="창업"?"/startup":"/closure"], [c.name, route]]));
+    }
+    return out;
+  }
+  return out;
+}
+
 function shell(tpl, r, route, noscript, ld){
-  const site = "ABOUTMEAT · 고기 사업자 문제해결";
+  const B = (globalThis.__W && globalThis.__W.AM_BRAND) || {};
+  const site = (B.name || "") + " · " + (B.sub || "");
   const title = (r.title ? r.title+" · " : "") + site;
   const canon = ORIGIN + (r.canon || route);
   let h = tpl;
@@ -234,6 +232,18 @@ function shell(tpl, r, route, noscript, ld){
     throw new Error("index.html 에 canonical 이 없습니다 — 갈아 끼울 자리가 없습니다");
   h = h.replace(/<link rel="canonical"[^>]*>/,
         '<link rel="canonical" href="'+esc(canon)+'">');
+
+  /* ⚠️⚠️ **템플릿의 ld 표시 구간을 반드시 비웁니다.** 하위 화면은
+     `index.html` 을 본으로 뜨는데, 거기에는 **메인의** 구조화 데이터가
+     이미 들어 있습니다. 비우지 않고 뒤에 덧붙이면 화면마다 메인 것이
+     같이 나가고, 앞선 빌드가 남긴 낡은 글까지 그대로 따라갑니다 —
+     실제로 `[object Object]` 가 모든 하위 화면 맨 위에 찍혀 나갔습니다.
+     메인(`/`)은 이 함수를 타지 않고 표시 구간에 직접 씁니다. */
+  const la = h.indexOf("<!-- ld:start -->"), lb = h.indexOf("<!-- ld:end -->");
+  if(la < 0 || lb < 0)
+    throw new Error("index.html 에서 ld:start / ld:end 표시를 못 찾았습니다 — 지우셨나요?");
+  h = h.slice(0, la) + "<!-- ld:start -->\n<!-- ld:end -->" +
+      h.slice(lb + "<!-- ld:end -->".length);
 
   const head =
     (r.noindex ? '<meta name="robots" content="noindex, follow">\n' : '')+
@@ -261,187 +271,167 @@ function shell(tpl, r, route, noscript, ld){
   return h;
 }
 
-/* ── 크롤러가 읽을 본문 ─────────────────────────────────────
-   ⚠️ 이건 "구색" 이 아니라 **검색엔진이 보는 우리 사이트 전부**입니다.
-   JS 를 안 돌리는 크롤러(네이버·빙·카카오·LLM 봇)에게는 여기 적힌
-   것만 존재합니다. 화면에 있는 내용은 여기에도 있어야 합니다.
+/* ── 크롤러가 읽는 본문 ────────────────────────────────────────
+   **검색엔진에게는 이 글이 사이트 전부입니다.** 자바스크립트를 돌리기
+   전의 HTML 에 본문이 없으면, 네이버 · 빙 · 카카오 · LLM 봇은 빈
+   화면을 봅니다.
 
-   ⚠️ **지어낸 것을 여기에 적지 마세요.** 화면에 없는 업체 수 · 후기 ·
-   실적을 여기에만 적으면 그게 구글에까지 나가는 거짓말입니다
-   (절대 규칙 1). 전부 js/data 에서 그대로 가져옵니다.
-
-   ⚠️ 데이터를 새로 만들면 **여기에도 넣으세요.** check.js 의
-   "크롤러가 읽을 본문이 있다" 가 글자 수로 지켜 주지만, 무엇이
-   빠졌는지까지는 못 봅니다. */
+   ⚠️ **`<noscript>` 안에 넣지 마세요.** 진짜 `<main id="view">` 안에
+   써 넣습니다. 화면을 그릴 때 `render()` 가 갈아 끼우므로 손님 눈에는
+   차이가 없고, 첫 그림은 오히려 빨라집니다.
+   ⚠️⚠️ **지어낸 것을 여기에 적지 마세요.** 화면에 없는 업체 수 · 후기 ·
+   실적을 여기에만 적으면 그게 구글에까지 나가는 거짓말입니다. 전부
+   `js/data` 에서 그대로 가져옵니다.
+   ⚠️ 데이터를 새로 만들면 여기에도 넣으세요. */
 function noscriptFor(W, r, route){
-  const L = (u,t)=>'<li><a href="'+esc(u)+'">'+esc(t)+'</a></li>';
-  const UL = (arr)=>"<ul>"+arr.join("")+"</ul>";
-  const plain = (t)=>esc(String(t).replace(/\*\*/g,""));
-  let body = "<h1>"+esc(r.title || "ABOUTMEAT")+"</h1><p>"+esc(r.desc||"")+"</p>";
+  const B = W.AM_BRAND || {};
+  const L = [];
+  const h1 = t => L.push("<h1>"+esc(t)+"</h1>");
+  const h2 = t => L.push("<h2>"+esc(t)+"</h2>");
+  const p  = t => L.push("<p>"+esc(t)+"</p>");
+  const ul = xs => { if(xs.length) L.push("<ul>"+xs.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul>"); };
+  const catNames = cs => cs.map(c => c.name + " — " + c.lead);
+  const subNames = c => (c.items||[]).map(i => i.name);
+
+  h1(r.title || B.name);
+  p(r.desc || B.desc);
 
   if(route === "/"){
-    body += "<h2>지금 어떤 상황이세요?</h2>"+
-      UL(W.WOW_SITUATIONS.map(s => L(s.to, s.name+" — "+s.line)));
-    /* 고민 열둘은 가이드로 보냅니다 — 화면과 같은 곳으로 */
-    body += "<h2>업체를 부르기 전에 확인할 것</h2>"+
-      UL((W.WOW_GUIDES||[]).map(g => L("/problem/"+g.key, g.h1+" — "+g.lead)));
-    body += "<h2>가입 없이 지금 해 보실 수 있는 것</h2>"+
-      UL([L("/check","무료 사업진단 — 여덟 가지로 지금 무엇을 모르고 계신지 정리합니다"),
-          L("/tools/yield","수율 원가 계산 — 손질 후 무게로 실제 1kg 원가를 냅니다"),
-          L("/tools/bep","손익분기 계산 — 한 달에 얼마를 팔아야 본전인지 냅니다"),
-          L("/tools/labor","인건비율 계산 — 4대보험과 사장님 몫까지 넣어 실제 인건비율을 냅니다"),
-          L("/start/cost","창업비 정리표 — 빠뜨리기 쉬운 항목과 아직 안 받은 견적"),
-          L("/quotes","견적 비교 — 받은 견적을 같은 자리에 놓고 견줍니다")]);
-    body += "<h2>고기 장사에 필요한 것</h2>"+
-      (W.WOW_SERVICE_GROUPS||[]).map(g =>
-        "<h3>"+esc(g.name)+"</h3>"+
-        UL(g.items.map(it => L("/request?s="+encodeURIComponent(it.key), it.name+
-            (it.line ? " — "+it.line : ""))))).join("");
-    body += "<h2>사장님 연구소</h2>"+
-      UL((W.WOW_POSTS||[]).map(pp => L("/lab/"+pp.slug, pp.title+" — "+pp.lead)));
-    body += "<h2>자주 묻는 것</h2>"+
-      (W.WOW_FAQ||[]).map(f =>
-        "<h3>"+esc(f.q)+"</h3><p>"+esc(f.a)+"</p>").join("");
-    body += UL([L("/sos","사장님 SOS — 상황을 적어 주시면 정리해 드립니다"),
-                L("/problems","고민별 해결방법 전부 보기"),
-                L("/partners","업체 찾기"), L("/partner/apply","파트너 등록")]);
+    h2("창업 — 사업을 시작하는 데 필요한 모든 것");
+    ul(catNames(W.AM_START_CATS||[]));
+    h2("폐업 — 사업을 정리하는 데 필요한 모든 것");
+    ul(catNames(W.AM_CLOSE_CATS||[]));
+    h2("업종");
+    ul((W.AM_INDUSTRIES||[]).map(i => i.name + " — " + i.lead));
+    h2("한 사장님의 끝이 다른 사장님의 시작이 됩니다");
+    p("정리하시는 사장님이 내놓은 점포 · 시설 · 집기 · 재고를, 같은 업종을 "+
+      "준비하는 사장님이 찾습니다.");
+    return L.join("");
   }
 
-  if(route === "/sos"){
-    body += UL(W.WOW_PROBLEMS.map(p =>
-      "<li>"+esc(p.name)+(p.hint?" — "+esc(p.hint):"")+"</li>"));
-  }
-  if(route === "/start"){
-    body += "<ol>"+W.WOW_STARTUP_STEPS.map(s =>
-      "<li>"+esc(s.name)+(s.line?" — "+esc(s.line):"")+"</li>").join("")+"</ol>";
-  }
-  if(route === "/check"){
-    body += "<h2>여덟 가지를 봅니다</h2>"+
-      UL((W.WOW_CHECK||[]).map(c =>
-        "<li>"+esc(c.name)+(c.why?" — "+esc(c.why):"")+"</li>"));
-    body += "<p>좋다 나쁘다를 매기지 않습니다. 업종·평수·지역마다 기준이 " +
-      "달라서 우리에게 그 기준값이 없기 때문입니다. 대신 지금 무엇을 " +
-      "알고 계시고 무엇을 모르시는지를 셉니다. 적으신 내용은 이 브라우저 " +
-      "밖으로 나가지 않습니다.</p>";
-  }
-  if(route === "/tools"){
-    body += UL([
-      L("/check","무료 사업진단 — 여덟 가지로 지금 무엇이 비어 있는지 정리합니다"),
-      L("/tools/yield","수율 원가 계산 — 매입 단가와 손질 후 무게로 실제 1kg 원가를 냅니다"),
-      L("/tools/bep","손익분기 계산 — 고정비와 변동비율로 한 달에 얼마를 팔아야 본전인지 냅니다"),
-      L("/tools/labor","인건비율 계산 — 급여·4대보험·사장님 몫까지 넣어 실제 인건비율과 한 사람당 매출을 냅니다"),
-      L("/start/cost","창업비 정리표 — 빠뜨리기 쉬운 항목을 늘어놓고 아직 안 받은 견적을 보여 줍니다"),
-      L("/quotes","견적 비교 — 받은 견적을 같은 자리에 놓고 포함 범위까지 견줍니다")]);
-    body += "<p>전부 가입 없이 무료이고, 적으신 숫자는 이 브라우저 밖으로 " +
-      "나가지 않습니다. 안 적으신 칸은 비워 둡니다 — 평균값으로 메우면 " +
-      "그게 지어낸 숫자입니다.</p>";
-  }
-  /* ⚠️ 계산기 화면들도 **검색으로 들어오는 자리**입니다. 제목과
-     설명만으로는 85자밖에 안 됐습니다 — 무엇을 묻고 무엇이 나오는지를
-     같이 냅니다. 전부 화면에 실제로 있는 말입니다. */
-  if(route === "/tools/labor"){
-    body += "<h2>무엇을 적으시면 되나요</h2>"+
-      UL(["<li>월 매출</li>", "<li>직원 급여 합계 (홀 · 주방 전부)</li>",
-          "<li>4대보험 · 퇴직충당 (사업주 부담분)</li>",
-          "<li>사장 인건비 — 직접 뛰시는 몫을 넣을지는 사장님이 고르십니다</li>",
-          "<li>일하는 사람 수 · 월 영업일수</li>"])+
-      "<h2>무엇이 나오나요</h2>"+
-      UL(["<li>인건비 합계</li>", "<li>인건비율 (인건비 합계 \u00f7 월 매출)</li>",
-          "<li>한 사람당 월 매출</li>", "<li>하루 인건비</li>"])+
-      "<p>인건비율 몇 %가 적정이라고 말하지 않습니다. 홀\u00b7주방 구성, " +
-      "사장님이 직접 뛰시는지, 배달 비중, 지역 시급이 전부 다릅니다. " +
-      "급여만 보면 한 사람 값이 실제보다 적게 보입니다 — 4대보험과 " +
-      "사장님 몫까지 넣어야 실제 비율이 나옵니다. 적으신 숫자는 이 " +
-      "브라우저 밖으로 나가지 않습니다.</p>";
-  }
-  if(route === "/tools/yield"){
-    body += "<h2>무엇을 적으시면 되나요</h2>"+
-      UL(["<li>매입 단가 (원육 1kg 기준)</li>", "<li>손질 전 무게</li>",
-          "<li>손질 후 무게</li>", "<li>1인분 중량 · 판매가</li>"])+
-      "<h2>무엇이 나오나요</h2>"+
-      UL(["<li>수율 (손질 후 \u00f7 손질 전)</li>", "<li>실제 1kg 원가</li>",
-          "<li>1인분 원가와 원가율</li>"])+
-      "<p>매입 단가는 원육 기준인데 파는 것은 손질 후 정육입니다. " +
-      "수율 몇 %가 정상이라고 말하지 않습니다 — 부위와 손질 기준마다 " +
-      "다릅니다. 안 적으신 칸은 평균값으로 메우지 않습니다.</p>";
-  }
-  if(route === "/tools/bep"){
-    body += "<h2>무엇을 적으시면 되나요</h2>"+
-      UL(["<li>매달 나가는 돈 (임차료 · 인건비 · 공과금 · 설비 등)</li>",
-          "<li>팔릴 때마다 나가는 비율 (식재료비 · 수수료)</li>",
-          "<li>월 영업일수 · 객단가</li>"])+
-      "<h2>무엇이 나오나요</h2>"+
-      UL(["<li>고정비 합계</li>", "<li>공헌이익률 (100% \u2212 변동비율)</li>",
-          "<li>본전 월 매출 · 하루 필요 매출</li>"])+
-      "<p>인건비를 고정비에 넣었습니다 — 월급제 기준입니다. 변동비율 " +
-      "합이 100%를 넘으면 손익분기 매출이라는 것이 없습니다. 그때는 " +
-      "큰 숫자를 하나 내놓는 대신 그 사실을 적습니다.</p>";
-  }
-  if(route === "/start/cost"){
-    body += "<p>예상 금액을 알려 드리지 않습니다. 지역 · 평수 · 시공 " +
-      "수준에 따라 항목마다 몇 배씩 차이 납니다. 빠뜨리기 쉬운 항목을 " +
-      "전부 늘어놓고, 사장님이 실제로 받으신 견적을 적으시면 합계와 " +
-      "아직 안 받은 칸을 보여 드립니다.</p>";
-  }
-  if(route.indexOf("/lab/") === 0){
-    const post = (W.WOW_POSTS||[]).filter(p => "/lab/"+p.slug === route)[0];
-    if(post) body += post.body.map(s =>
-      "<h2>"+esc(s.h)+"</h2>"+
-      (s.p||[]).map(t => "<p>"+plain(t)+"</p>").join("")+
-      ((s.list||[]).length ? UL(s.list.map(t => "<li>"+plain(t)+"</li>")) : "")
-    ).join("");
-  }
-  if(route === "/lab"){
-    body += UL((W.WOW_POSTS||[]).map(p =>
-      L("/lab/"+p.slug, p.title+" — "+p.lead)));
-  }
-  /* ⚠️ 가이드는 이 사이트의 핵심 자산입니다. **본문을 통째로** 냅니다 —
-     검색으로 들어오는 분이 제일 많이 찾는 것이 이 내용입니다. */
-  if(route.indexOf("/problem/") === 0){
-    const g = (W.WOW_GUIDES||[]).filter(x => "/problem/"+x.key === route)[0];
-    if(g){
-      body += g.intro.map(t => "<p>"+plain(t)+"</p>").join("");
-      if((g.warn||[]).length)
-        body += "<h2>이런 신호가 있으면 먼저 멈추세요</h2>"+
-          UL(g.warn.map(t => "<li>"+plain(t)+"</li>"));
-      body += "<h2>지금 직접 확인할 것</h2>"+
-        UL(g.self.map(t => "<li>"+plain(t)+"</li>"));
-      body += "<h2>먼저 의심할 것</h2>"+
-        UL((g.causes||[]).map(c => "<li>"+esc(c.t)+" — "+plain(c.d)+"</li>"));
-      body += "<h2>업체에 미리 알려 줄 것</h2>"+
-        UL((g.tell||[]).map(t => "<li>"+plain(t)+"</li>"));
-      body += "<h2>견적 받을 때 물어볼 것</h2>"+
-        UL(g.ask.map(t => "<li>"+plain(t)+"</li>"));
-      if(g.law) body += "<h2>"+esc(g.law.t)+"</h2><p>"+plain(g.law.d)+"</p>"+
-        (g.law.where ? "<p>확인하는 곳: "+esc(g.law.where)+"</p>" : "");
+  const mi = /^\/(startup|closure)\/([a-z0-9-]+)$/.exec(route);
+  if(mi){
+    const ind = (W.AM_INDUSTRIES||[]).filter(x => x.key === mi[2])[0];
+    if(ind){
+      const start = mi[1] === "startup";
+      const order = (start ? ind.startup : ind.closure) || [];
+      const all = start ? (W.AM_START_CATS||[]) : (W.AM_CLOSE_CATS||[]);
+      const cats = order.map(k => all.filter(c => c.key === k)[0]).filter(Boolean);
+      if(ind.equip && ind.equip.length){
+        h2(ind.name + (start ? " 창업에 필요한 장비" : " 정리할 시설 · 장비"));
+        ul(ind.equip.map(e => e.name));
+      }
+      h2(ind.name + (start ? " 창업에 필요한 모든 것" : " 폐업에 필요한 모든 것"));
+      cats.forEach(c => { L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc); ul(subNames(c)); });
+      if(!start && (ind.stock||[]).length){ h2("재고 처분"); ul(ind.stock); }
     }
+    return L.join("");
   }
-  if(route === "/problems"){
-    body += UL((W.WOW_GUIDES||[]).map(g =>
-      L("/problem/"+g.key, g.h1+" — "+g.lead)));
+
+  const mp = /^\/providers\/([a-z0-9-]+)$/.exec(route);
+  const mc = /^\/c\/([a-z0-9-]+)$/.exec(route);
+  if(mp || mc){
+    const key = (mp||mc)[1];
+    const c = (W.AM_CATS||[]).filter(x => x.key === key)[0];
+    if(c){
+      h2(c.name + " — " + c.lead);
+      ul(subNames(c));
+      h2("업종별로 찾기");
+      ul((W.AM_INDUSTRIES||[]).map(i => i.name));
+      h2("지역별로 찾기");
+      ul((W.AM_REGIONS||[]).map(x => x.name));
+    }
+    return L.join("");
   }
-  if(route === "/partners" || route === "/request"){
-    body += (W.WOW_SERVICE_GROUPS||[]).map(g =>
-      "<h2>"+esc(g.name)+"</h2>"+UL(g.items.map(it =>
-        L("/request?s="+encodeURIComponent(it.key), it.name+
-          (it.line ? " — "+it.line : ""))))).join("");
+
+  if(route === "/startup" || route === "/closure"){
+    const start = route === "/startup";
+    h2("업종");
+    ul((W.AM_INDUSTRIES||[]).map(i => i.name + " — " + i.lead));
+    h2(start ? "창업에 필요한 모든 것" : "폐업에 필요한 모든 것");
+    (start ? (W.AM_START_CATS||[]) : (W.AM_CLOSE_CATS||[])).forEach(c => {
+      L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc); ul(subNames(c));
+    });
+    return L.join("");
   }
-  return body;
+
+  if(route === "/providers"){
+    (W.AM_CATS||[]).filter(c => c.kind === "provider").forEach(c => {
+      L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc); ul(subNames(c));
+    });
+    h2("지역");
+    ul((W.AM_REGIONS||[]).map(x => x.name));
+    return L.join("");
+  }
+
+  if(route === "/franchise" || /^\/franchise\//.test(route)){
+    h2("프랜차이즈 분류");
+    ul((W.AM_FRANCHISE_CATS||[]).map(c => c.name));
+    h2("브랜드마다 확인하실 것");
+    ul(["총 예상 창업비","가맹비","교육비","보증금","인테리어비","설비비",
+        "권장 평수","가맹점 수","본사 지원","모집지역","정보공개서"]);
+    p("본사가 직접 등록하고 정보공개서로 확인한 값만 올립니다.");
+    return L.join("");
+  }
+
+  if(route === "/stores"){
+    h2("이런 조건으로 찾습니다");
+    ul(["지역","업종","평수","보증금","월세","권리금","시설 인수 가능 여부"]);
+    h2("업종");  ul((W.AM_INDUSTRIES||[]).map(i => i.name));
+    h2("지역");  ul((W.AM_REGIONS||[]).map(x => x.name));
+    return L.join("");
+  }
+  if(route === "/assets"){
+    h2("업종별로 나오는 시설 · 장비");
+    (W.AM_INDUSTRIES||[]).filter(i => (i.equip||[]).length).forEach(i => {
+      L.push("<h3>"+esc(i.name)+"</h3>");
+      ul(i.equip.map(e => e.name).concat(i.stock||[]));
+    });
+    return L.join("");
+  }
+  if(route === "/support"){
+    h2("자금 · 정부지원");
+    ul(["창업자금","정책자금","정부지원사업","보증제도",
+        "폐업지원","철거비 지원","재취업","재창업"]);
+    p("공고 원문을 확인한 것만 올립니다. 지원사업은 해마다 바뀌고 예산이 "+
+      "소진되면 중간에 닫힙니다.");
+    return L.join("");
+  }
+  if(route === "/join"){
+    h2("입점 분야");
+    (W.AM_CATS||[]).filter(c => c.kind === "provider").forEach(c => {
+      L.push("<h3>"+esc(c.name)+"</h3>"); ul(subNames(c));
+    });
+    return L.join("");
+  }
+  if(route === "/content"){
+    h2("창업 · 폐업 정보");
+    ul((W.AM_CONTENTS||[]).map(c => c.title));
+    return L.join("");
+  }
+  const mct = /^\/content\/([a-z0-9-]+)$/.exec(route);
+  if(mct){
+    const ct = (W.AM_CONTENTS||[]).filter(x => x.slug === mct[1])[0];
+    if(ct) (ct.body||[]).forEach(b => {
+      if(b.h) h2(b.h); (b.p||[]).forEach(p); ul(b.ul||[]);
+    });
+    return L.join("");
+  }
+  if(route === "/about"){
+    h2("하는 일");
+    ul(["필요한 업체 · 전문가 · 프랜차이즈를 분류와 지역으로 찾아 드립니다.",
+        "한 번 적으신 내용을 조건이 맞는 여러 곳에 같이 전달합니다.",
+        "정리하시는 사장님의 점포 · 시설 · 집기를 시작하시는 사장님께 이어 드립니다."]);
+    h2("하지 않는 일");
+    ul(["직접 인테리어 · 철거 · 세무 · 마케팅을 하지 않습니다.",
+        "광고비를 받고 업체 순서를 바꾸지 않습니다.",
+        "등록된 적 없는 업체 · 브랜드 · 매물을 화면에 만들지 않습니다.",
+        "거래 당사자가 아닙니다."]);
+    return L.join("");
+  }
+  return L.join("");
 }
 
-
-/* ── vercel.json 이 Vercel 이 받아들이는 모양인가 ──────────────
-   ⚠️ Vercel 은 vercel.json 을 엄격하게 검사합니다. 헤더 항목에
-   key·value 말고 다른 키가 하나라도 있으면 "Invalid vercel.json" 으로
-   **배포가 통째로 실패합니다.** JSON 에는 주석이 없으니 설명은
-   CLAUDE.md 에 적으세요. */
-/* ── 없는 CSS 변수를 쓰고 있지 않은가 ─────────────────────────
-   ⚠️ **없는 변수는 에러가 아니라 침묵입니다.** `var(--t-h1)` 처럼
-   오타를 내면 그 줄만 통째로 무시되고, 제목이 본문 크기로 나옵니다.
-   브라우저 콘솔에도 안 찍히고 전수 점검도 통과합니다 — 실제로 가이드
-   화면의 h1 이 15px 로 나갔습니다.
-   ⚠️ 되돌림 값이 있는 것(`var(--x, 기본)`)은 일부러 그런 것이므로
-   봐줍니다. */
 function checkCssVars(){
   const files = ["css/tokens.css","css/app.css","css/pages.css"];
   const src = files.map(f => fs.readFileSync(path.join(ROOT,f),"utf8"));
@@ -483,6 +473,7 @@ function checkVercel(){
 checkCssVars();
 checkVercel();
 const W = loadApp();
+globalThis.__W = W;   /* shell() 이 브랜드 이름을 읽습니다 */
 const tpl = fs.readFileSync(path.join(ROOT,"index.html"),"utf8");
 const routes = allRoutes(W);
 
@@ -494,7 +485,7 @@ const seenTitle = new Map(), seenDesc = new Map();
 for(const route of routes){
   const r = W.routeInfo(route, {});
   if(!r.ok){ console.error("  ! 알 수 없는 주소: "+route); skipped++; continue; }
-  const html = shell(tpl, r, route, noscriptFor(W, r, route), jsonLd(W, r, route));
+  const html = shell(tpl, r, route, noscriptFor(W, r, route), ldTags(jsonLd(W, r, route)));
 
   if(route !== "/"){
     const dir = path.join(ROOT, route.replace(/^\//,""));
@@ -507,7 +498,7 @@ for(const route of routes){
      다만 구조화 데이터만은 **표시한 줄 사이에** 써 넣습니다.
      안 그러면 메인에만 JSON-LD 가 없게 됩니다. */
   if(route === "/"){
-    const ld = jsonLd(W, r, route);
+    const ld = ldTags(jsonLd(W, r, route));
     const tplPath = path.join(ROOT, "index.html");
     let src = fs.readFileSync(tplPath, "utf8");
     const a = src.indexOf("<!-- ld:start -->"), b = src.indexOf("<!-- ld:end -->");

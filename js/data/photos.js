@@ -1,176 +1,38 @@
 /* ════════════════════════════════════════════════════════════════════
-   사진 자리 — 지시서 32번
+   사진 자리
 
-   이 사이트는 **고기를 파는 곳이 아니라 사업자를 위한 서비스**입니다.
-   그래서 접시에 담긴 고기 사진이 아니라 **실제 고깃집 · 정육점 · 주방 ·
-   덕트 · 쇼케이스 · 사장 · 작업현장** 사진을 씁니다.
-   사람과 사업장 사진의 비중을 높이세요.
+   ⚠️ **지금 한 장도 없습니다.** 예전의 그림 41장은 전부 고깃집 · 정육점
+   장면이라 2026-09-29 리뉴얼 때 걷어냈습니다 (§53). 모든 업종의
+   사장님이 손님인 플랫폼에 한 업종 그림을 깔아 두면, 나머지 어느
+   업종에게도 "여긴 내 자리가 아니네" 로 읽힙니다.
 
-   ⚠️ **AI 티가 강한 고기 사진을 남발하지 마세요** (지시서 32번).
-   ⚠️ **글자가 박힌 이미지를 쓰지 마세요.** AI 가 만든 한글은 글자가
-      틀려 있고, 틀린 글자는 고칠 수도 없습니다.
+   ⚠️ **의미 없는 AI 이미지를 남발하지 마세요** (§54). 여기 들어갈 것은
+   **업체가 직접 올린 포트폴리오**와 **사장님이 올린 매물 사진**입니다.
+   그 두 가지가 이 플랫폼의 진짜 그림이고, 그때까지는 비워 둡니다.
 
-   ── 지금 들어 있는 것은 사진이 아니라 그림입니다 ────────
-   ⚠️ **실제 사진이 한 장도 없습니다.** 지금 들어 있는 15장은 제가
-   그린 벡터 그림(SVG)입니다. 빈 액자를 두는 것보다는 낫지만,
-   **실제 고깃집 · 정육점 · 주방 · 덕트 · 쇼케이스 · 사장님 사진으로
-   바꾸는 것이 원래 계획입니다** (지시서 32번: 사람과 사업장 사진
-   비중을 높인다). 그림은 "여기가 어떤 자리인지" 만 알려 줍니다 —
-   손님을 설득하는 것은 실제 현장 사진입니다.
-
-   그림 규칙 (바꾸거나 더 그릴 때)
-     · 면(fill)으로만 그립니다. 선으로 그리면 줄일 때 사라집니다.
-     · **얼굴을 그리지 않습니다.** 얼굴을 그리는 순간 "누구" 가 되고,
-       그러면 우리 손님이 아닌 사람이 됩니다.
-     · 색은 css/tokens.css 와 같은 계열만. 버건디는 **한 점**에만.
-     · 소·돼지 그림을 넣지 않습니다 (지시서 30번).
-     · ⚠️ **그리는 순서가 곧 앞뒤입니다.** 카운터를 사람보다 먼저
-       그리면 사람이 카운터 위에 올라선 것처럼 보입니다.
-     · ⚠️ 어두운 면 위에 어두운 사람을 두지 마세요. 실제로 한 장이
-       통째로 안 보였습니다.
-     · 글자를 넣지 않습니다. 그림 안의 글자는 번역도 확대도 안 됩니다.
-
-   ⚠️ `alt` 는 **사진에 무엇이 찍혀 있는지**를 적습니다. "고깃집 사진"
-   같은 말은 눈이 불편한 손님에게 아무것도 알려 주지 않습니다.
-   ⚠️ 뒤에 글자를 얹는 사진(hero · final)은 `dark:true` 를 주세요 —
-   어두운 겹을 깔아 글자가 읽히게 합니다.
+   ⚠️ **"이미지 준비 중" 같은 자리표시자를 찍지 마세요.** 빈 회색 칸이
+   보이면 그 순간 미완성 사이트로 읽힙니다. 사진이 없으면 화면이
+   `hasPhoto()` 를 보고 **글이 주인공인 짜임새**로 갑니다.
    ════════════════════════════════════════════════════════════════════ */
 
-window.WOW_PHOTOS = {
-  /* ══ 메인 히어로 두 자리 — **지금은 화면에서 쓰지 않습니다** ══
-     2026-09-26, 메인 히어로가 밝은 두 칸이 되면서 오른쪽에 들어가는
-     것이 그림이 아니라 **우리 화면 흉내**(js/pages/home.js 의 HeroMock)
-     로 바뀌었습니다. 코드로 그린 벡터를 크게 걸거나 글자 밑에 깔면
-     어떤 팔레트로 칠해도 흐릿한 덩어리로 보였기 때문입니다.
+window.WOW_PHOTOS = {};
 
-     ⚠️ **지우지 마세요.** 실제 현장 사진이 생기면 그때 이 두 자리로
-     사진 히어로를 되살립니다 — 사진이라면 그 짜임새가 맞습니다.
-     그때는 경로만 바꾸면 됩니다.
-     ⚠️ 둘은 **자르는 모양이 아예 다릅니다.** hero-wide 는 바탕에 까는
-     납작한 띠(1600×620, 볼 것은 오른쪽 — 글자가 왼쪽 60% 를 덮습니다),
-     hero 는 칸에 넣는 10:7 입니다. 바꿔 쓰지 마세요. */
-  "hero-wide": { src:"/img/hero.svg", dark:true,
-    alt:"" },
-
-  hero: { src:"/img/hero-home.svg",
-    alt:"정육 작업대 앞에 선 사장님. 뒤로 갈고리·쇼케이스·냉장고가 보입니다" },
-
-  "sit-start": { src:"/img/sit-start.svg",
-    alt:"아직 아무것도 들어오지 않은 빈 점포. 사다리와 도면이 놓여 있습니다" },
-  "sit-run":   { src:"/img/sit-run.svg",
-    alt:"카운터에서 POS 와 장부를 보고 있는 사장님. 뒤로 쇼케이스가 있습니다" },
-  "sit-solve": { src:"/img/sit-solve.svg",
-    alt:"문이 열린 채 물이 새는 냉장고와 공구 가방을 든 기사" },
-  "sit-grow":  { src:"/img/sit-grow.svg",
-    alt:"영업 중인 1호점 옆에 비계가 세워진 2호점 공사 현장" },
-  "sit-exit":  { src:"/img/sit-exit.svg",
-    alt:"셔터가 반쯤 내려온 가게 앞에 선 사장님과 정리해 둔 상자들" },
-
-  "cat-meat":  { src:"/img/cat-meat.svg",
-    alt:"냉장 탑차와 내려놓은 육류 상자들, 손수레" },
-  "cat-space": { src:"/img/cat-space.svg",
-    alt:"천장 덕트와 후드가 내려온 고깃집 홀. 타일 벽과 로스터 테이블" },
-  "cat-equip": { src:"/img/cat-equip.svg",
-    alt:"작업대 위의 육절기 · 진공기 · 저울" },
-  "cat-ops":   { src:"/img/cat-ops.svg",
-    alt:"카운터의 POS 와 카드 단말기, 키오스크, 천장의 CCTV" },
-  "cat-grow":  { src:"/img/cat-grow.svg",
-    alt:"오르는 막대그래프와 손전화 화면" },
-  "cat-pro":   { src:"/img/cat-pro.svg",
-    alt:"항목을 체크한 점검표와 위생모 · 위생장갑" },
-
-  worry:   { src:"/img/worry.svg",
-    alt:"카운터에 서서 쌓인 고지서와 계산기를 앞에 두고 있는 사장님" },
-  /* ⚠️ **지금 화면에서 쓰지 않습니다 (2026-09-26).** 옛 빨간 띠의
-     왼쪽에 깔던 그림인데, 그 자리가 딥 버건디 한 색으로 칠한 구간이
-     되면서 빠졌습니다 — 브랜드색 위에서 형체가 안 보이고 얼룩처럼만
-     보였습니다. 실제 **사진**이 들어오면 그때 다시 쓸 자리라 지우지
-     않고 둡니다 (`hero` · `hero-wide` 도 같은 처지입니다). */
-  "band-meat": { src:"/img/band-meat.svg",
-    alt:"쇼케이스 앞에 선 앞치마 차림의 사장님과 쌓인 포장 상자" },
-  partner: { src:"/img/partner.svg",
-    alt:"주방 후드 아래에서 작업을 설명하는 기사와 공구 가방" },
-  final:   { src:"/img/final.svg", dark:true,
-    alt:"후드가 내려온 저녁 고깃집 홀" },
-
-  /* 연구소 글 썸네일 — 분류마다 두 벌. 같은 분류 카드가 나란히
-     놓여도 겹쳐 보이지 않게 합니다 (js/pages/lab.js 의 PostCard). */
-  "post-cost-0": { src:"/img/post-cost-0.svg", alt:"계산기와 장부, 동전" },
-  "post-cost-1": { src:"/img/post-cost-1.svg", alt:"저울과 고기 상자, 나란히 놓인 견적서 세 장" },
-  "post-run-0": { src:"/img/post-run-0.svg", alt:"메뉴판과 매출 막대그래프, 시계" },
-  "post-run-1": { src:"/img/post-run-1.svg", alt:"배달앱 화면과 포장 용기, 정산 내역서" },
-  "post-fac-0": { src:"/img/post-fac-0.svg", alt:"후드와 온도계, 공구 가방" },
-  "post-fac-1": { src:"/img/post-fac-1.svg", alt:"냉장고와 육절기, 점검 기록지" },
-  "post-law-0": { src:"/img/post-law-0.svg", alt:"서류 두 장과 도장" },
-  "post-law-1": { src:"/img/post-law-1.svg", alt:"근로계약서와 마주 선 두 사람, 달력" },
-  "post-start-0": { src:"/img/post-start-0.svg", alt:"점포 도면과 자, 연필, 열쇠" },
-  "post-start-1": { src:"/img/post-start-1.svg", alt:"빈 점포와 사다리, 예산표" },
-  "post-grow-0": { src:"/img/post-grow-0.svg", alt:"매출이 오르는 화면과 나란한 두 매장" },
-  "post-grow-1": { src:"/img/post-grow-1.svg", alt:"셔터 내린 가게와 정리한 상자, 점검 목록" },
-
-  /* 화면 머리 옆 그림 */
-  "hero-start":    { src:"/img/hero-start.svg",
-    alt:"아직 아무것도 들어오지 않은 빈 점포. 사다리와 도면, 쌓아 둔 상자가 보입니다" },
-  "hero-partner":  { src:"/img/hero-partner.svg",
-    alt:"공구 가방을 옆에 두고 주방에 선 시공 기사. 후드와 냉장고가 보입니다" },
-  "hero-my":       { src:"/img/hero-my.svg",
-    alt:"체크 표시가 붙은 줄들이 적힌 클립보드와, 뒤에 쌓아 둔 종이" },
-  "hero-lab":      { src:"/img/hero-lab.svg",
-    alt:"펼쳐 놓은 공책과 쌓아 둔 자료, 연필이 놓인 책상" },
-  "hero-tools":    { src:"/img/hero-tools.svg",
-    alt:"계산기와 숫자를 적어 둔 종이 두 장이 놓인 책상" },
-  "hero-yield":    { src:"/img/hero-yield.svg",
-    alt:"저울에 올린 고기와, 손질 전후로 크기가 달라진 두 덩이" },
-  "hero-bep":      { src:"/img/hero-bep.svg",
-    alt:"본전 선을 넘어서며 높아지는 막대 그래프와 동전 더미" },
-  "hero-cost":     { src:"/img/hero-cost.svg",
-    alt:"금액을 적은 줄과 아직 비어 있는 줄이 섞인 항목 목록" },
-  "hero-check":    { src:"/img/hero-check.svg",
-    alt:"점수 고리와 항목별 점검 카드" },
-  "hero-partners": { src:"/img/hero-partners.svg",
-    alt:"여러 업체 중에서 세 곳만 골라 앞으로 내놓은 모습" },
-  "hero-quotes":   { src:"/img/hero-quotes.svg",
-    alt:"나란히 놓인 견적서 세 장과 돋보기" },
-  "hero-about":    { src:"/img/hero-about.svg",
-    alt:"적어 주신 문제에서 사람을 거쳐 업체로 이어지는 흐름" }
-};
-
-
-/* 사진 한 장. 없으면 null 입니다 — 화면이 알아서 빈 액자로 둡니다. */
 window.wowPhoto = function(key){
   var p = (window.WOW_PHOTOS || {})[key];
   return (p && p.src) ? p : null;
 };
+window.hasPhoto = function(key){ return !!wowPhoto(key); };
 
-/* ── 사진 자리 ──────────────────────────────────────────────
-   있으면 <img>, 없으면 **빈 액자**입니다.
-   ⚠️ 없을 때 `alt` 를 단 빈 칸을 만들지 않습니다. 읽어 주는 프로그램이
-   "정육점에서 고기를 손질하는 사장님" 이라고 읽어 주는데 실제로는
-   아무것도 없으면, 그건 없는 것보다 나쁩니다. aria-hidden 으로 둡니다. */
 /* ⚠️ 세 번째 값 `eager` 는 **첫 화면에 보이는 사진**에만 씁니다.
-   첫 화면 사진에 `loading="lazy"` 를 걸면 브라우저가 나중으로 미뤄서
-   제일 큰 그림이 늦게 뜹니다 — 손님이 체감하는 "느리다" 가 대개
-   이것입니다. 반대로 아래쪽 사진까지 eager 로 두면 첫 화면이 마흔
-   장을 기다립니다. **히어로 한 장뿐입니다.** */
+   첫 화면 사진에 `loading="lazy"` 를 걸면 제일 큰 그림이 늦게 떠서
+   손님이 "느리다" 고 느낍니다. 반대로 아래쪽까지 eager 로 두면 첫
+   화면이 아래 사진들을 다 기다립니다. */
 window.photoBox = function(key, cls, eager){
   var c = "ph" + (cls ? " " + cls : "");
   var p = wowPhoto(key);
-  if(!p) return '<div class="' + c + ' ph-none" aria-hidden="true"></div>';
+  /* ⚠️ 없을 때 `alt` 를 단 빈 칸을 만들지 않습니다. 읽어 주는
+     프로그램이 없는 사진을 설명하는 것은 없는 것보다 나쁩니다. */
+  if(!p) return '<span class="' + c + ' ph-none" aria-hidden="true"></span>';
   return '<img class="' + c + '" src="' + esc(p.src) + '" alt="' + esc(p.alt || "") + '"' +
     (eager ? ' fetchpriority="high"' : ' loading="lazy"') + ' decoding="async">';
-};
-
-/* 사진이 있는가. 화면은 이걸 보고 **짜임새 자체를 바꿉니다.**
-   ⚠️ 빈 액자를 크게 두면 "사진 못 넣은 사이트" 로 보입니다. 사진이
-   없을 때는 액자를 키우는 대신 **글이 주인공인 짜임새**로 갑니다.
-   사진이 들어오면 그때 사진이 주인공인 짜임새로 저절로 바뀝니다. */
-window.hasPhoto = function(key){ return !!wowPhoto(key); };
-
-/* 글자를 얹는 바탕 사진. 없으면 어두운 면으로 둡니다. */
-window.photoBg = function(key){
-  var p = wowPhoto(key);
-  if(!p) return "";
-  /* 바탕 사진은 지금 마지막 CTA 한 군데뿐이고 화면 맨 아래에 있습니다 */
-  return '<img class="ph-bg" src="' + esc(p.src) + '" alt="" aria-hidden="true"' +
-    ' loading="lazy" decoding="async">';
 };

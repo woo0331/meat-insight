@@ -1,408 +1,261 @@
 /* ════════════════════════════════════════════════════════════════════
-   공통 — 바탕 · 헤더 · 버튼 · 푸터 · 모바일 네비 · 알림
-   날값은 css/tokens.css 한 곳에만. 여기서는 var(--…) 로만 씁니다.
+   공통 — 바탕 · 헤더 · 푸터 · 아래 네비 · 버튼 · 폼 · 알림
+
+   ⚠️ **날값(색 · 크기 · 간격)을 여기 적지 마세요.** 전부
+   `css/tokens.css` 에 있습니다. 여기 적으면 한 곳에서 못 바꿉니다.
    ════════════════════════════════════════════════════════════════════ */
 
 *,*::before,*::after{ box-sizing:border-box; }
 html{ -webkit-text-size-adjust:100%; }
 body{
-  margin:0; font-family:var(--font); font-size:var(--t-base);
-  line-height:var(--lh-base); color:var(--ink); background:var(--bg);
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font); font-size:var(--t-base);
+  line-height:var(--lh-base); letter-spacing:-.011em;
+  font-variant-numeric:tabular-nums;
+  /* ⚠️ 한글은 브라우저 기본값이 **글자 단위**로 끊습니다 ("무료입니 / 다.").
+     `keep-all` 로 띄어쓰기에서만 끊고, 띄어쓰기 없이 긴 것(주소 · 계좌번호)이
+     칸 밖으로 넘치지 않게 `anywhere` 를 안전판으로 같이 둡니다. */
+  word-break:keep-all; overflow-wrap:anywhere;
   -webkit-font-smoothing:antialiased;
-  /* ⚠️ 한글은 기본값에서 **글자 아무 데서나** 줄이 바뀝니다
-     ("무료입니 / 다."). keep-all 은 띄어쓰기에서만 끊습니다.
-     안전판으로 overflow-wrap 을 같이 둡니다 — keep-all 만 두면
-     띄어쓰기 없이 긴 것이 칸 밖으로 넘쳐 가로 스크롤이 생깁니다. */
-  word-break:keep-all;
-  overflow-wrap:anywhere;
 }
-h1,h2,h3,h4{ margin:0; font-weight:800; letter-spacing:var(--tr-head);
-  line-height:var(--lh-tight); }
-/* ⚠️ **숫자는 폭이 같아야 합니다.** 기본 글꼴은 1 이 좁아서, 금액이
-   바뀔 때마다 칸이 들썩입니다. 숫자를 크게 보여 주는 사이트에서 이게
-   제일 티 나는 허술함입니다. */
-.tl-o b, .tl-note b, .cost-sum-l b, .ring-n b, .chk-rate-n, .st-pg-t b,
-.mycard-v, .qc-v, .tool-t em, input, .cost-in input, .tl-in input{
-  font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; }
-p{ margin:0; }
+img,svg{ max-width:100%; }
+img{ height:auto; }
 a{ color:inherit; text-decoration:none; }
 button{ font:inherit; color:inherit; }
-img{ max-width:100%; display:block; }
-ul,ol{ margin:0; padding:0; list-style:none; }
-:focus-visible{ outline:2px solid var(--burgundy); outline-offset:3px; border-radius:4px; }
-/* ⚠️ 적는 칸의 예시 글은 **적힌 값처럼 보이면 안 됩니다.** 진단의 월
-   매출 칸은 글씨가 굵고 커서, 브라우저 기본 회색으로는 "7,000" 이
-   이미 적혀 있는 것처럼 읽혔습니다 — 사장님이 그대로 두고 넘어가면
-   우리가 숫자를 지어낸 셈이 됩니다.
-   ⚠️ `opacity:1` 을 빼지 마세요. 파이어폭스는 예시 글에 투명도를
-   따로 먹여서 색만 정하면 더 흐려집니다. */
+h1,h2,h3,h4{ margin:0; font-weight:800; letter-spacing:var(--tr-head);
+  line-height:var(--lh-tight); }
+p,ul,ol{ margin:0; padding:0; }
+ul,ol{ list-style:none; }
+:focus-visible{ outline:2px solid var(--blue); outline-offset:3px; border-radius:4px; }
+
+/* ⚠️ 적는 칸의 예시 글이 **이미 적힌 값처럼** 보이면, 사장님이 그대로
+   두고 넘어갈 때 우리가 숫자를 지어낸 셈이 됩니다.
+   ⚠️ `opacity:1` 을 빼지 마세요 — 파이어폭스는 예시 글에 투명도를
+   따로 먹여서, 색만 정하면 더 흐려집니다. */
 input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 
 .w{ width:100%; max-width:var(--w); margin:0 auto; padding:0 var(--s6); }
-/* 히어로처럼 더 넓게 쓰는 자리 (지시서 §5) */
 .w-wide{ width:100%; max-width:var(--w-wide); margin:0 auto; padding:0 var(--s6); }
-@media (max-width:640px){ .w{ padding:0 var(--s4); } }
+@media (max-width:640px){ .w,.w-wide{ padding:0 var(--s4); } }
 
-/* 읽어 주는 프로그램에만 보이는 글 */
-.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);
-  white-space:nowrap; }
-.skip{ position:absolute; left:-9999px; top:0; z-index:200; background:var(--burgundy);
-  color:#fff; padding:12px 18px; border-radius:0 0 var(--r) 0; }
+.skip{ position:absolute; left:-9999px; top:0; z-index:100;
+  background:var(--ink); color:#fff; padding:var(--s3) var(--s5); }
 .skip:focus{ left:0; }
 
-/* ══ 헤더 ═════════════════════════════════════════════════ */
-/* ⚠️ **`position:sticky` 만 적어 두면 붙지 않습니다.** 헤더는
-   `#chrome-t` 안에 그려지는데, 그 칸의 높이가 헤더 높이와 똑같아서
-   sticky 가 붙어 있을 범위가 69px 밖에 없습니다 — 조금만 내려가면
-   부모와 함께 화면 밖으로 나갑니다. 에러도 안 나고 맨 위에서는 멀쩡히
-   보여서, **화면을 내린 채로 찍어 보고서야** 알았습니다.
-   `display:contents` 로 감싸개를 없애면 헤더가 body 의 자식이 되어
-   그때부터 실제로 붙습니다. ⚠️ 이 줄을 지우지 마세요.
-   check.js 의 "헤더가 내려도 붙어 있는가" 가 이걸 지킵니다. */
+/* 넓은 화면에서만 줄을 바꿉니다.
+   ⚠️ **`<br class="br-m">` 뒤에 띄어쓰기를 하나 두세요.** 좁아지면 이
+   `<br>` 이 사라지는데, 없으면 앞뒤 낱말이 그대로 붙습니다. */
+@media (max-width:640px){ .br-m{ display:none; } }
+
+/* ── 헤더 ────────────────────────────────────────────────────────
+   ⚠️ **`#chrome-t{ display:contents }` 를 지우지 마세요.** 감싸개
+   높이가 헤더 높이와 같아서, 이게 없으면 `position:sticky` 가 적혀
+   있어도 안 붙습니다. 맨 위에서는 멀쩡해 보이고 에러도 안 납니다. */
 #chrome-t{ display:contents; }
-/* ⚠️ 붙박이 헤더가 완전히 불투명하면 판때기처럼 얹힌 느낌이 납니다.
-   살짝 비치게 두면 아래 내용이 지나가는 것이 보여 한 겹으로 읽힙니다.
-   backdrop-filter 를 못 쓰는 브라우저에서는 그냥 흰 바탕입니다. */
-.hd{ background:var(--surface); border-bottom:1px solid var(--line);
-  position:sticky; top:0; z-index:60;
-  transition:box-shadow .2s ease, border-color .2s ease; }
-/* ⚠️ 내려가기 시작한 뒤에만 그림자를 답니다 (js/app.js 의 onScroll).
-   맨 위에서부터 달아 두면 히어로 위에 판때기가 하나 얹힌 것처럼
-   보입니다 — 밝은 히어로에서 특히 그렇습니다. */
-.sc .hd{ border-bottom-color:transparent;
-  box-shadow:0 1px 0 rgba(23,23,28,.05), 0 6px 20px -10px rgba(23,23,28,.22); }
-/* ⚠️ **반투명을 걷어냈습니다 (2026-09-26).** 헤더가 실제로 붙게 되자
-   그 밑으로 지나가는 글자가 비쳐서 메뉴와 겹쳐 읽혔습니다 — 화면을
-   내린 채로 찍어 보고서야 보였습니다. backdrop-filter 는 뒤를 흐릴 뿐
-   지우지 않습니다. 글씨가 겹쳐 보이는 것보다 불투명한 편이 낫습니다. */
-.lg b{ position:relative; }
-/* 로고 밑의 금빛 실선 — 금빛을 쓰는 두 번째 자리 */
-.lg b::after{ content:""; position:absolute; left:0; right:0; bottom:-3px;
-  height:1px; background:var(--gold-line); }
+.hd{ position:sticky; top:0; z-index:50; background:var(--surface);
+  border-bottom:1px solid var(--line); }
+/* ⚠️ 반투명 헤더로 두지 마세요. `backdrop-filter` 는 뒤를 흐릴 뿐
+   지우지 않아서, 밑으로 지나가는 글자가 메뉴와 겹쳐 읽힙니다. */
+.sc .hd{ box-shadow:0 1px 0 var(--line), 0 6px 20px -14px rgba(15,27,45,.35); }
 .hd-in{ display:flex; align-items:center; gap:var(--s7); height:var(--hdr-h); }
-.lg{ display:flex; flex-direction:column; justify-content:center; flex:0 0 auto; }
-.lg b{ font-size:19px; font-weight:800; letter-spacing:.055em; color:var(--burgundy); }
-.lg span{ font-size:var(--t-cap); color:var(--ink3); margin-top:1px; letter-spacing:.01em; }
+
+.lg{ display:flex; flex-direction:column; justify-content:center; flex:none;
+  line-height:1.15; }
+.lg b{ font-size:var(--t-lg); font-weight:900; letter-spacing:-.03em; color:var(--ink); }
+.lg span{ font-size:var(--t-cap); color:var(--ink3); margin-top:1px; }
+.lg-ft b{ color:var(--ink); }
 
 .gnb{ display:flex; gap:var(--s6); flex:1 1 auto; min-width:0; }
-.gnb a{ display:inline-flex; align-items:center; min-height:var(--tap);
-  font-size:var(--t-md); font-weight:600; color:var(--ink2); white-space:nowrap;
-  border-bottom:2px solid transparent; }
+.gnb a{ display:inline-flex; align-items:center; min-height:40px;
+  font-size:var(--t-md); font-weight:700; color:var(--ink2); white-space:nowrap; }
 .gnb a:hover{ color:var(--ink); }
-.gnb a.on{ color:var(--burgundy); border-bottom-color:var(--burgundy); }
+.gnb a.on{ color:var(--blue); }
 
-.hd-r{ display:flex; align-items:center; gap:var(--s5); flex:0 0 auto; }
-.hd-txt{ display:inline-flex; align-items:center; min-height:var(--tap);
-  font-size:var(--t-base); font-weight:600; color:var(--ink2); white-space:nowrap; }
-.hd-txt:hover{ color:var(--burgundy); }
-.hd-cta{ min-height:42px; padding:0 var(--s5); }
+.hd-r{ display:flex; align-items:center; gap:var(--s4); flex:none; }
 .hd-ic{ display:inline-flex; align-items:center; justify-content:center;
-  width:var(--tap); height:var(--tap); border-radius:var(--r-pill);
-  color:var(--ink2); }
-.hd-ic:hover{ background:var(--bg-warm); color:var(--burgundy); }
-.hd-m-wrap{ display:none; }
-.hd-m{ display:none; }
+  width:40px; height:40px; border-radius:var(--r); color:var(--ink2); }
+.hd-ic:hover{ background:var(--bg-2); color:var(--ink); }
+.hd-txt{ display:inline-flex; align-items:center; min-height:40px;
+  font-size:var(--t-sm); font-weight:700; color:var(--ink2); }
+.hd-cta{ min-height:42px; padding:0 var(--s5); font-size:var(--t-sm); }
 
-@media (max-width:1040px){
-  .hd-in{ gap:var(--s5); }
-  .gnb{ gap:var(--s4); }
-  .hd-txt{ display:none; }
-}
-@media (max-width:860px){
-  /* 좁아지면 메뉴는 아래 네비가 맡습니다 — 헤더에 다 우겨넣지 않습니다 */
-  .gnb, .hd-r{ display:none; }
+@media (max-width:1080px){ .hd-in{ gap:var(--s5); } .gnb{ gap:var(--s4); } }
+@media (max-width:900px){
+  .gnb, .hd-txt{ display:none; }
   .hd-in{ justify-content:space-between; }
-  .hd-m-wrap{ display:inline-flex; gap:var(--s2); }
-  .hd-m{ display:inline-flex; align-items:center; justify-content:center;
-    width:var(--tap); height:var(--tap); border:1px solid var(--line);
-    border-radius:var(--r-pill); color:var(--burgundy); }
+  .hd-cta{ display:none; }
 }
 
-/* ══ 버튼 ═════════════════════════════════════════════════
-   ⚠️ `.btn` 하나만 붙여도 **버튼으로 보여야** 합니다. 테두리도 바탕도
-   없으면 글자처럼 보이고, 눌러도 되는 줄 모르면 없는 것과 같습니다. */
+/* ── 아래 네비 (폰) ─────────────────────────────────────────────── */
+.mnav{ display:none; }
+@media (max-width:900px){
+  .mnav{ display:grid; grid-template-columns:repeat(5,1fr);
+    position:fixed; left:0; right:0; bottom:0; z-index:60;
+    background:var(--surface); border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom); }
+  .mnav a{ display:grid; justify-items:center; gap:3px;
+    min-height:var(--mnav-h); padding:9px 2px 7px;
+    font-size:11.5px; font-weight:700; color:var(--ink3); }
+  .mnav a.on{ color:var(--blue); }
+  body{ padding-bottom:var(--mnav-h); }
+}
+/* ⚠️ 11.5px 은 **아래 네비 글자 한 군데뿐**입니다. 다섯 칸을 한 줄에
+   넣으려면 이보다 크게는 안 들어가고, 아이콘이 뜻을 같이 전합니다.
+   본문 글씨는 12.5px(--t-cap) 아래로 내리지 마세요. */
+
+/* ── 버튼 ────────────────────────────────────────────────────────
+   ⚠️ **누르는 것은 40px 이상.** `padding` 만으로 높이를 만들지 마세요 —
+   짧은 이름에서 다시 낮아집니다. */
 .btn{ display:inline-flex; align-items:center; justify-content:center; gap:var(--s2);
-  min-height:var(--tap); padding:0 var(--s6); border-radius:var(--r-pill);
-  font-size:var(--t-md); font-weight:700; cursor:pointer; white-space:nowrap;
-  background:var(--surface); color:var(--ink); border:1px solid var(--line);
-  letter-spacing:-.01em;
-  transition:background-color .16s ease, border-color .16s ease, color .16s ease,
-             box-shadow .16s ease, transform .1s ease; }
-.btn:hover{ border-color:var(--burgundy); color:var(--burgundy); }
-/* ⚠️ 단색 버튼은 평평해 보입니다. **안쪽 윗선 한 줄**(inset)이
-   들어가면 도장처럼 단단해 보입니다 — 그라디언트를 쓰지 않고 입체감을
-   내는 방법입니다 (지시서 30번이 과한 그라디언트를 금지합니다). */
-.btn-b{ background:var(--burgundy); border-color:var(--burgundy); color:#fff;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.16), var(--shadow-md); }
+  min-height:var(--tap); padding:0 var(--s6); border-radius:var(--r-in);
+  font-size:var(--t-base); font-weight:700; border:1px solid transparent;
+  cursor:pointer; transition:background .15s, border-color .15s, transform .12s; }
 .btn:active{ transform:translateY(1px); }
-.btn-b:hover{ background:var(--burgundy-600); border-color:var(--burgundy-600); color:#fff; }
+.btn-b{ background:var(--blue); color:#fff; }
+.btn-b:hover{ background:var(--blue-600); }
+.btn-b[disabled]{ background:var(--ink3); cursor:not-allowed; }
 .btn-o{ background:var(--surface); color:var(--ink); border-color:var(--line); }
-/* 어두운 배경 위에서는 딥 버건디가 배경에 묻힙니다 — 흰 버튼을 씁니다 */
-.btn-w{ background:#fff; border-color:#fff; color:var(--burgundy); }
-.btn-w:hover{ background:#fff; color:var(--burgundy-600); border-color:#fff; }
+.btn-o:hover{ border-color:var(--ink3); }
+.btn-w{ background:#fff; color:var(--ink); }
+.btn-gh{ background:transparent; color:#fff; border-color:rgba(255,255,255,.34); }
+.btn-gh:hover{ border-color:#fff; }
 .btn-lg{ min-height:56px; padding:0 var(--s7); font-size:var(--t-lg); }
-.btn-full{ width:100%; }
-.btn .ic{ flex:0 0 auto; }
-
+.btn-full{ display:flex; width:100%; }
 .row-cta{ display:flex; gap:var(--s3); flex-wrap:wrap; }
+.row-mid{ justify-content:center; }
+@media (max-width:560px){ .row-cta .btn{ width:100%; } }
+@media (prefers-reduced-motion: reduce){ .btn:active{ transform:none; } }
 
-/* ══ 구간 ═════════════════════════════════════════════════ */
+/* ── 구간 ────────────────────────────────────────────────────────
+   ⚠️ 같은 바탕이 두 번 이어지면 두 구간이 한 구간으로 읽힙니다.
+   `.sec` 와 `.sec-white` 를 번갈아 씁니다. */
 .sec{ padding:var(--s10) 0; }
-.sec-warm{ background:var(--bg-warm); }
+.sec-white{ background:var(--surface); }
 .sec-hd{ margin-bottom:var(--s8); position:relative; }
 .sec-hd h2{ font-size:var(--t-3xl); }
 .sec-hd p{ margin-top:var(--s3); color:var(--ink2); font-size:var(--t-lg); max-width:62ch; }
-/* ⚠️ 여기가 금빛 실선을 쓰는 첫 자리입니다. **면으로 칠하지 않고**
-   22px짜리 1px 선 하나입니다. flex 로 만들지 않은 것은, grid/flex 칸에
-   글을 그냥 넣으면 낱말이 딴 칸으로 튀기 때문입니다 — ::before 를
-   inline-block 으로 둡니다. */
-.eyebrow{ font-size:var(--t-sm); font-weight:800; letter-spacing:.11em;
-  color:var(--burgundy); margin-bottom:var(--s3) !important; text-transform:uppercase; }
-.eyebrow::before{ content:""; display:inline-block; vertical-align:middle;
-  width:22px; height:1px; margin:-2px 10px 0 0; background:var(--gold-line); }
-/* 어두운 구간에서는 한 단 밝은 금빛이라야 보입니다 */
-.dark .eyebrow, .pg-hero-d .eyebrow, .hero .eyebrow{ color:#fff; }
-.dark .eyebrow::before, .pg-hero-d .eyebrow::before, .hero .eyebrow::before{
-  background:var(--gold-line); }
+.sec-hd p b{ color:var(--ink); }
+.eyebrow{ font-size:var(--t-sm); font-weight:800; letter-spacing:.1em;
+  color:var(--blue); margin-bottom:var(--s3); text-transform:uppercase; }
+.sec-more{ position:absolute; right:0; bottom:2px; display:inline-flex;
+  align-items:center; gap:4px; min-height:40px;
+  font-size:var(--t-sm); font-weight:700; color:var(--ink2); }
+.sec-more:hover{ color:var(--blue); }
+@media (max-width:720px){
+  .sec-more{ position:static; margin-top:var(--s3); }
+  .sec-hd{ margin-bottom:var(--s6); }
+}
+.lead{ color:var(--ink2); font-size:var(--t-lg); }
+.note{ font-size:var(--t-sm); color:var(--ink3); margin-top:var(--s3); }
+.note-mid{ text-align:center; }
+.note a{ color:var(--ink2); text-decoration:underline; text-underline-offset:3px; }
+.note-box{ background:var(--bg-2); border-radius:var(--r-lg);
+  padding:var(--s5) var(--s6); margin-top:0; line-height:1.8; }
+.note-box b{ color:var(--ink2); }
 
-/* 큰 제목은 줄 끝이 들쭉날쭉하면 초라해 보입니다 — 줄을 고르게 나눕니다.
-   ⚠️ balance 는 낱말 **사이**만 고릅니다. 낱말 가운데를 자르지 않습니다. */
-.sec-hd h2, .pg-h1, .st-cta h2, .hero h1{ text-wrap:balance; }
-.sec-more{ position:absolute; right:0; bottom:2px; display:inline-flex; align-items:center;
-  gap:4px; min-height:var(--tap); font-size:var(--t-base); font-weight:600; color:var(--ink2); }
-.sec-more:hover{ color:var(--burgundy); }
-.lead{ font-size:var(--t-lg); color:var(--ink2); line-height:1.75; }
-.note{ font-size:var(--t-sm); color:var(--ink3); margin-top:var(--s3) !important; }
-/* ⚠️ **`<br class="br-m">` 뒤에는 반드시 띄어쓰기를 하나 두세요.**
-   좁은 화면에서 이 `<br>` 은 display:none 으로 사라지는데, 띄어쓰기가
-   없으면 앞뒤 낱말이 그대로 붙습니다 — "차리는 데알아볼 게".
-   ⚠️ 띄어쓰기는 `<br>` **앞이 아니라 뒤**입니다. 줄바꿈 바로 다음에
-   오는 공백은 브라우저가 지우므로 넓은 화면에서는 아무 표도 안 납니다.
-   앞에 두면 넓은 화면에서 줄 끝에 공백이 남습니다.
-   check.js 가 실제로 붙는지 검사합니다. */
-.br-m{ display:inline; }
-@media (max-width:640px){ .br-m{ display:none; } .sec-more{ position:static; } }
+/* ── 폼 ──────────────────────────────────────────────────────────
+   ⚠️ **적는 칸은 적는 칸으로 보여야 합니다.** 흰 바탕에 옅은 테두리로
+   두면 바탕과 밝기가 거의 같아 빈 자리처럼 보입니다. */
+.form-wrap{ max-width:var(--w-read); }
+.f-r{ margin-bottom:var(--s5); }
+.f-r label{ display:block; font-size:var(--t-base); font-weight:700; margin-bottom:var(--s2); }
+.f-r label b{ color:var(--blue); }
+.f-2{ display:grid; grid-template-columns:1fr 1fr; gap:0 var(--s5); }
+@media (max-width:560px){ .f-2{ grid-template-columns:1fr; } }
+input[type=text],input[type=tel],input[type=email],input:not([type]),textarea,.sel{
+  display:block; width:100%; min-height:var(--tap);
+  padding:12px var(--s5); border:1px solid var(--line); border-radius:var(--r-in);
+  background:var(--bg-2); color:var(--ink); font:inherit; }
+textarea{ min-height:120px; resize:vertical; line-height:1.7; }
+input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
+  background:var(--surface); box-shadow:0 0 0 3px var(--blue-50); }
+.sel{ appearance:none; cursor:pointer;
+  background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%238A99AC' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right var(--s4) center;
+  padding-right:var(--s9); }
 
-/* ══ 푸터 ═════════════════════════════════════════════════ */
-/* ⚠️ 푸터를 **통째로 버건디**로 칠해 두었습니다. 화면 아래 한 뼘이
-   전부 브랜드색이라, 지시서 30번이 금지한 "버건디 면적 넓히기" 에
-   정확히 해당합니다. 밝은 바탕으로 두고 브랜드색은 **로고와 단추**에만
-   남깁니다 — 기준 화면의 푸터도 밝습니다.
-   ⚠️ 되돌리지 마세요. 색을 넓게 칠해서 얻는 무게감은 없습니다. */
-.ft{ background:var(--bg-warm); color:var(--ink2);
-  border-top:1px solid var(--line);
-  padding:var(--s10) 0 var(--s7); margin-top:0; font-size:var(--t-base); }
-.ft-g{ display:grid; grid-template-columns:1.6fr repeat(4,1fr); gap:var(--s7); }
-.ft-b p{ margin:var(--s4) 0 var(--s5); line-height:1.8; color:var(--ink2); }
-.ft-lg{ font-size:20px; font-weight:800; letter-spacing:.055em; color:var(--burgundy); }
-.ft .btn-o{ background:var(--surface); border-color:var(--line); color:var(--ink); }
-.ft .btn-o:hover{ background:var(--surface); border-color:var(--burgundy);
-  color:var(--burgundy); }
-.ft-col h4{ font-size:var(--t-base); color:var(--ink); margin-bottom:var(--s4); }
-/* ⚠️ 누르는 것은 40px 이상. 38px 로 두었다가 전수 점검에 168건이
-   걸렸습니다 — 푸터 링크가 화면마다 반복되기 때문입니다. */
-.ft-col a{ display:block; min-height:44px; line-height:44px; color:var(--ink2); }
-.ft-col a:hover{ color:var(--burgundy); }
-.ft-biz{ margin-top:var(--s8); padding-top:var(--s5);
-  border-top:1px solid var(--line); font-size:var(--t-cap);
-  color:var(--ink3); display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5); }
+/* 동의 상자 — 수집 항목 · 이용 목적 · 보유 기간을 같은 자리에서 */
+.agree{ background:var(--bg-2); border-radius:var(--r-lg);
+  padding:var(--s5) var(--s6); margin:var(--s6) 0; }
+.agree-l{ display:flex; align-items:flex-start; gap:var(--s3);
+  min-height:var(--tap); cursor:pointer; font-weight:700; }
+.agree-l input{ width:20px; height:20px; margin-top:12px; flex:none; accent-color:var(--blue); }
+.agree-l span{ padding-top:11px; }
+.agree-l b{ color:var(--blue); }
+.agree-u{ display:grid; gap:6px; margin-top:var(--s2);
+  font-size:var(--t-sm); color:var(--ink2); }
+.agree-u b{ display:inline-block; min-width:74px; color:var(--ink); }
+.agree-n{ margin-top:var(--s4); font-size:var(--t-sm); color:var(--ink2); line-height:1.75; }
+.agree-n a{ color:var(--blue); text-decoration:underline; text-underline-offset:3px; }
+
+.notice-bad,.notice-ok{ border-radius:var(--r-lg); padding:var(--s5) var(--s6);
+  margin-bottom:var(--s6); font-size:var(--t-sm); line-height:1.75; }
+.notice-bad{ background:var(--bad-bg); }
+.notice-ok{ background:var(--ok-bg); }
+/* ⚠️ `>` 를 빼지 마세요. `.notice-bad b` 로 두면 **문장 안의 `<b>` 까지**
+   덩어리가 되어 그 낱말만 딴 줄에 앉습니다. */
+.notice-bad > b,.notice-ok > b{ display:block; font-size:var(--t-base); margin-bottom:4px; }
+.notice-bad{ color:#7A1F1F; } .notice-ok{ color:#0B5E42; }
+.notice-bad a{ color:inherit; text-decoration:underline; text-underline-offset:3px; }
+
+/* ── 푸터 ────────────────────────────────────────────────────────── */
+.ft{ background:var(--bg-2); border-top:1px solid var(--line);
+  padding:var(--s10) 0 var(--s7); font-size:var(--t-base); }
+.ft-g{ display:grid; grid-template-columns:1.5fr repeat(4,1fr); gap:var(--s7); }
+.ft-b p{ margin:var(--s4) 0 var(--s5); line-height:1.8; color:var(--ink2);
+  font-size:var(--t-sm); }
+.ft-col h4{ font-size:var(--t-base); margin-bottom:var(--s3); }
+.ft-col a{ display:inline-flex; align-items:center; min-height:40px;
+  color:var(--ink2); font-size:var(--t-sm); }
+.ft-col a:hover{ color:var(--blue); }
+.ft-role{ margin-top:var(--s8); padding-top:var(--s5);
+  border-top:1px solid var(--line); font-size:var(--t-sm);
+  color:var(--ink2); line-height:1.8; }
+.ft-biz{ margin-top:var(--s4); font-size:var(--t-cap); color:var(--ink3);
+  display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5); }
 .ft-cp{ flex-basis:100%; margin-top:var(--s2); }
-@media (max-width:900px){ .ft-g{ grid-template-columns:1fr 1fr; gap:var(--s6); }
-  .ft-b{ grid-column:1 / -1; } }
-
-/* ══ 모바일 아래 네비 ═════════════════════════════════════ */
-.mnav{ display:none; position:fixed; left:0; right:0; bottom:0; z-index:70;
-  background:var(--surface); border-top:1px solid var(--line);
-  padding-bottom:env(safe-area-inset-bottom); }
-.mnav-in{ display:grid; grid-template-columns:repeat(5,1fr); }
-.mnav a{ min-height:var(--mnav-h); display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:3px; color:var(--ink3);
-  font-size:var(--t-cap); font-weight:600; position:relative; }
-.mnav a.on{ color:var(--burgundy); }
-/* 가운데 SOS 를 크게 (지시서 29번) */
-.mnav a.big{ color:var(--red); }
-/* ⚠️ 밝은 빨강(--red)을 쓰는 세 자리 중 하나입니다. 이 동그란 단추는
-   38px 밖에 안 되는데 아래 네비에서 제일 먼저 눈에 들어와야 합니다 —
-   딥 버건디는 그 크기에서 검게 보여 다른 칸과 구분이 안 됩니다.
-   ⚠️ 누르는 칸 자체는 --mnav-h(64px) 이라 40px 규칙을 지킵니다.
-   아이콘만 작은 것이고 <a> 는 칸 전체입니다. */
-.mnav a.big .ic{ background:var(--red); color:#fff; border-radius:var(--r-pill);
-  padding:7px; width:38px; height:38px; margin-top:-14px;
-  box-shadow:0 4px 12px rgba(193,39,45,.34); }
-@media (max-width:860px){
-  .mnav{ display:block; }
-  body{ padding-bottom:var(--mnav-h); }
+@media (max-width:900px){
+  .ft-g{ grid-template-columns:1fr 1fr; gap:var(--s6); }
+  .ft-b{ grid-column:1 / -1; }
 }
+@media (max-width:560px){ .ft-g{ grid-template-columns:1fr 1fr; } }
 
-/* ══ 알림 ═════════════════════════════════════════════════
-   ⚠️ 모바일에서는 아래 네비 **위로** 띄웁니다. 안 그러면 네비에 가려
-   아랫줄이 잘립니다. 이 미디어쿼리는 .mnav 가 나타나는 폭과 같아야
-   합니다. */
+/* ── 알림 ────────────────────────────────────────────────────────
+   ⚠️ 폰에서 **아래 네비에 가립니다.** 이 미디어쿼리는 `.mnav` 가
+   나타나는 폭과 **같아야** 합니다. */
 .toast{ position:fixed; left:50%; bottom:28px; transform:translate(-50%,14px);
-  background:var(--ink); color:#fff; padding:14px var(--s6); border-radius:var(--r);
-  font-size:var(--t-base); font-weight:600; z-index:90; opacity:0; pointer-events:none;
-  transition:opacity .2s, transform .2s; max-width:calc(100vw - 32px); text-align:center;
-  box-shadow:var(--shadow-lg); }
+  z-index:90; background:var(--ink); color:#fff;
+  padding:14px var(--s6); border-radius:var(--r-in);
+  font-size:var(--t-sm); font-weight:600; box-shadow:var(--shadow-lg);
+  opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
 .toast.on{ opacity:1; transform:translate(-50%,0); }
-@media (max-width:860px){ .toast{ bottom:calc(var(--mnav-h) + 16px); } }
+@media (max-width:900px){ .toast{ bottom:calc(var(--mnav-h) + 16px); } }
 
-/* ⚠️ 그리드 칸은 기본이 min-width:auto 라, 안에 가로로 긴 것이 있으면
-   칸이 화면보다 넓어져 페이지 전체에 가로 스크롤이 생깁니다. */
-.ft-g > *, .band > *, .f-2 > *{ min-width:0; }
-
-/* ══ 손맛 ═════════════════════════════════════════════════
-   ⚠️ **스크롤에 맞춰 나타나는 연출은 넣지 않았습니다.** 보기에는
-   좋지만, 화면에 들어오기 전까지 opacity:0 이라 (1) 전수 점검이 그
-   구간을 "안 보인다" 고 건너뛰고 (2) JS 가 늦거나 막히면 손님에게
-   본문이 통째로 안 보입니다. 사이트가 안 보이는 것보다 덜 화려한
-   편이 낫습니다. 움직임은 **누른 것에 대한 반응**에만 씁니다. */
-.btn:active{ transform:translateY(1px); }
-.sit:active, .cat:active, .prob:active, .tool:active,
-.pcard:active, .mycard:active, .svc-i:active{ transform:translateY(0); }
-
-/* 눌리는 것에는 손가락 모양을, 그리고 회색 하이라이트는 끕니다 */
-a, button, label, summary, [onclick]{ -webkit-tap-highlight-color:transparent; }
-
-/* ⚠️ 움직임을 줄여 달라고 설정한 손님이 있습니다. 어지럼증·멀미
-   때문인 경우가 많습니다 — 그 설정을 존중합니다. */
-@media (prefers-reduced-motion: reduce){
-  *, *::before, *::after{
-    animation-duration:.001ms !important; animation-iteration-count:1 !important;
-    transition-duration:.001ms !important; scroll-behavior:auto !important;
-  }
-}
-
-/* 글 안에서 앵커로 뛸 때 제목이 sticky 헤더에 가리지 않게 */
-html{ scroll-padding-top:calc(var(--hdr-h) + 16px); }
-
-/* 인쇄 — 견적 비교·진단 결과를 뽑아 가시는 분이 있습니다.
-   화면에서만 쓸모 있는 것은 빼고, 종이는 흑백이라는 것을 압니다. */
-@media print{
-  .hd, .mnav, .ft, .toast, .row-cta, .st-cta, .post-cta, .res-cta,
-  .qc-acts, .st-foot, .sec-more, .skip{ display:none !important; }
-  body{ background:#fff; padding-bottom:0; }
-  .qc-t input, .qc-t textarea{ border:0; background:transparent; }
-  a[href^="/"]::after{ content:""; }
-}
-
-/* ══ 따라다니는 단추 ══════════════════════════════════════
-   ⚠️ 아래 네비(.mnav)가 나오는 폭에서는 **숨깁니다.** 둘 다 띄우면
-   화면 아래가 단추로 막혀서 정작 내용이 안 보입니다. 미디어쿼리 폭을
-   .mnav 쪽과 **같게** 두세요. */
-.fab{ position:fixed; right:24px; bottom:24px; z-index:70;
-  display:inline-flex; align-items:center; gap:8px;
-  min-height:var(--tap); padding:0 var(--s6);
-  border-radius:var(--r-pill); background:var(--burgundy); color:#fff;
-  font-size:var(--t-md); font-weight:700; white-space:nowrap;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.16), var(--shadow-lg);
-  opacity:0; visibility:hidden; transform:translateY(12px);
-  transition:opacity .25s ease, transform .25s ease, visibility .25s,
-             background-color .16s ease; }
-.fab.on{ opacity:1; visibility:visible; transform:none; }
-.fab:hover{ background:var(--burgundy-600); color:#fff; }
-@media (max-width:860px){ .fab{ display:none; } }
-/* ⚠️ 움직임이 불편한 분에게는 떠오르는 동작을 빼 줍니다 */
-@media (prefers-reduced-motion: reduce){
-  .fab{ transition:opacity .01s; transform:none; }
-}
-
-/* ══ 크롤러가 읽는 본문 (build-pages.js 가 <main> 안에 써 넣습니다) ══
-   ⚠️ **`display:none` 으로 숨기지 마세요.** 숨긴 글은 검색엔진이
-   값을 낮춰 보거나 아예 무시합니다 — 그러면 넣은 뜻이 없어집니다.
-   화면을 그리는 순간(app.js 의 render) innerHTML 로 갈아 끼워지므로
-   손님에게는 아주 잠깐만 보입니다. 그 잠깐이 흉하지 않게만 해 둡니다.
-   ⚠️ 오히려 첫 그림이 빨라집니다 — 예전에는 JS 가 다 돌 때까지
-   흰 화면이었습니다. */
-.pre{ padding:var(--s9) 0 var(--s10); }
-.pre h1{ font-size:var(--t-3xl); letter-spacing:var(--tr-head);
-  line-height:var(--lh-tight); margin-bottom:var(--s4); }
-.pre h2{ font-size:var(--t-xl); margin:var(--s7) 0 var(--s3); }
-.pre h3{ font-size:var(--t-md); margin:var(--s5) 0 var(--s2); }
-.pre p{ color:var(--ink2); line-height:var(--lh-base); margin-bottom:var(--s3);
-  max-width:70ch; }
-.pre ul, .pre ol{ display:grid; gap:var(--s2); margin-bottom:var(--s4);
-  padding-left:var(--s5); }
-.pre li{ color:var(--ink2); line-height:1.7; }
-.pre ol li{ list-style:decimal; }
-.pre ul li{ list-style:disc; }
-.pre a{ color:var(--burgundy); font-weight:600; }
-
-/* ══ 모바일 SOS 바닥 시트 (§24) ═══════════════════════════
-   ⚠️ **여기서 접수하지 않습니다.** 적으신 말을 들고 /sos 로 넘어갑니다.
-   동의 · 연락처 · 접수 가능 여부 안내가 전부 거기 있고, 그걸 시트에
-   또 만들면 두 군데가 어긋납니다.
-   ⚠️ 첨부 칸을 만들지 마세요 — 받아 둘 곳이 없습니다. 고르게 해 놓고
-   조용히 버리면 그게 거짓말입니다 (절대 규칙 5). */
-.sheet{ position:fixed; inset:0; z-index:90; }
-.sheet-bg{ position:absolute; inset:0; background:rgba(23,20,19,.5);
-  opacity:0; transition:opacity .22s ease; }
-.sheet.on .sheet-bg{ opacity:1; }
-.sheet-p{ position:absolute; left:0; right:0; bottom:0;
-  max-height:88vh; overflow:auto; display:grid; gap:var(--s4);
-  padding:var(--s3) var(--s6) calc(var(--s7) + env(safe-area-inset-bottom));
-  background:var(--surface); border-radius:var(--r-xl) var(--r-xl) 0 0;
-  transform:translateY(100%); transition:transform .24s cubic-bezier(.2,.7,.3,1);
-  box-shadow:0 -12px 40px -12px rgba(23,23,28,.4); }
-.sheet.on .sheet-p{ transform:translateY(0); }
-.sheet-grip{ justify-self:center; width:40px; height:4px; border-radius:999px;
-  background:var(--line); }
-.sheet-hd{ display:flex; align-items:center; justify-content:space-between;
-  gap:var(--s3); }
-.sheet-hd h2{ font-size:var(--t-xl); letter-spacing:-.02em; }
-.sheet-x{ display:inline-flex; align-items:center; justify-content:center;
-  width:var(--tap); height:var(--tap); margin-right:calc(var(--s3) * -1);
-  border:0; background:transparent; color:var(--ink2); cursor:pointer; }
-.sheet-p textarea{ width:100%; min-height:96px; resize:vertical;
-  padding:var(--s4); border:1px solid var(--line); border-radius:var(--r);
-  background:var(--bg-warm); color:var(--ink);
-  font:inherit; font-size:var(--t-md); line-height:1.65; }
-.sheet-p textarea:focus{ outline:0; background:var(--surface);
-  border-color:var(--burgundy); box-shadow:0 0 0 3px var(--burgundy-50); }
-.sheet-c{ display:flex; flex-wrap:wrap; gap:var(--s2); }
-.sheet-c button{ min-height:var(--tap); padding:0 var(--s4); cursor:pointer;
-  border:1px solid var(--line); border-radius:var(--r-pill);
-  background:var(--surface); color:var(--ink2);
-  font-size:var(--t-sm); font-weight:600; }
-.sheet-c button:hover{ border-color:var(--burgundy); color:var(--burgundy); }
-.sheet-go{ width:100%; }
-.sheet-n{ font-size:var(--t-cap); color:var(--ink3); line-height:1.7; }
-/* 시트가 열린 동안 뒤가 스크롤되면 손가락이 헛돕니다 */
-body.sheet-on{ overflow:hidden; }
-/* ⚠️ 넓은 화면에서는 시트를 쓰지 않습니다 — /sos 화면이 더 큽니다 */
-@media (min-width:861px){ .sheet{ display:none; } }
-@media (prefers-reduced-motion: reduce){
-  .sheet-bg, .sheet-p{ transition:none; }
-}
-
-/* ══ 스크롤하면 나타나는 것 (지시서 §36) ══════════════════
-   ⚠️ **과하게 쓰지 마세요.** 모든 것이 움직이면 아무것도 안 움직이는
-   것과 같습니다. 시그니처 장면과 큰 숫자 정도까지입니다.
-   ⚠️ 움직임을 싫어하는 설정에서는 처음부터 보입니다.
-   ⚠️ 전수 점검은 재기 전에 `.rv-on` 을 전부 붙입니다 — 안 그러면
-   투명한 요소를 "안 보이는 것" 으로 치고 건너뛰어, 글씨 크기·누름
-   크기 검사가 통째로 헐거워집니다. */
-[data-rv]{ opacity:0; transform:translateY(24px);
-  transition:opacity .62s cubic-bezier(.2,.7,.3,1),
-             transform .62s cubic-bezier(.2,.7,.3,1);
+/* ── 스크롤하면 드러나는 것 ──────────────────────────────────────
+   ⚠️ 차례(`--rvd`)를 인라인으로 넣지 마세요 — build-pages 의 CSS 변수
+   검사가 인라인 값을 못 봐서 "정의되지 않은 변수" 로 멈춥니다.
+   받는 쪽은 반드시 되돌림 값(`var(--rvd, 0s)`)으로 씁니다. */
+[data-rv]{ opacity:0; transform:translateY(20px);
+  transition:opacity .6s cubic-bezier(.2,.7,.3,1),
+             transform .6s cubic-bezier(.2,.7,.3,1);
   transition-delay:var(--rvd, 0s); }
 [data-rv].rv-on{ opacity:1; transform:none; }
 @media (prefers-reduced-motion: reduce){
   [data-rv]{ opacity:1; transform:none; transition:none; }
 }
+.rv-stg > [data-rv]:nth-child(2){ --rvd:.05s; }
+.rv-stg > [data-rv]:nth-child(3){ --rvd:.10s; }
+.rv-stg > [data-rv]:nth-child(4){ --rvd:.15s; }
+.rv-stg > [data-rv]:nth-child(5){ --rvd:.20s; }
+.rv-stg > [data-rv]:nth-child(6){ --rvd:.25s; }
 
-/* ── 줄줄이 선 칸은 차례로 드러납니다 (§36) ──────────────────────
-   ⚠️ **차례(`--rvd`)를 인라인으로 넣지 마세요.** `build-pages.js` 의
-   CSS 변수 검사가 인라인 값을 못 봐서 "정의되지 않은 변수" 로 멈춥니다.
-   ⚠️ 움직이는 것은 **위치와 투명도뿐**입니다. 크기 · 빛 · 그림자를
-   같이 움직이면 그때부터 꾸민 티가 납니다 (2026-09-26 기록).
-   ⚠️ 이 목록을 늘릴 때는 한 줄에 서는 칸 수만큼만 두세요. 한 줄이
-   여섯이면 여섯째까지면 충분합니다. */
-.rv-stg > [data-rv]:nth-child(2){ --rvd:.06s; }
-.rv-stg > [data-rv]:nth-child(3){ --rvd:.12s; }
-.rv-stg > [data-rv]:nth-child(4){ --rvd:.18s; }
-.rv-stg > [data-rv]:nth-child(5){ --rvd:.24s; }
-.rv-stg > [data-rv]:nth-child(6){ --rvd:.30s; }
-
-/* 눌리는 느낌 — 누름 자체가 피드백입니다 */
-.btn:active{ transform:translateY(1px); }
-@media (prefers-reduced-motion: reduce){ .btn:active{ transform:none; } }
+/* ── 크롤러가 읽는 본문 ──────────────────────────────────────────
+   ⚠️ **`display:none` 으로 숨기지 마세요.** 숨긴 글은 검색엔진이 값을
+   낮춰 보거나 아예 무시합니다. 잠깐 보이는 게 정상입니다 — 화면을
+   그리면 `render()` 가 갈아 끼웁니다. */
+.pre{ padding:var(--s9) 0 var(--s10); }
+.pre h1{ font-size:var(--t-2xl); margin-bottom:var(--s4); }
+.pre h2{ font-size:var(--t-xl); margin:var(--s7) 0 var(--s3); }
+.pre p{ color:var(--ink2); margin-bottom:var(--s3); max-width:70ch; }
+.pre ul{ display:grid; gap:var(--s2); margin-bottom:var(--s4); }
+.pre li{ color:var(--ink2); }

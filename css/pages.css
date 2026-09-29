@@ -142,7 +142,25 @@
 .two-k{ font-size:var(--t-cap); font-weight:900; letter-spacing:.18em; color:var(--blue); }
 .two-c .cat-g{ grid-template-columns:1fr 1fr; }
 @media (max-width:1040px){ .two{ grid-template-columns:1fr; gap:var(--s9); } }
-@media (max-width:600px){ .two-c .cat-g{ grid-template-columns:1fr; } }
+@media (max-width:600px){
+  /* ⚠️ 폰에서 열두 장을 세로로 쌓으면 이 구간 하나가 3,300px 입니다 —
+     페이지의 3분의 1이 "훑어볼 분류" 로 채워집니다. 옆으로 넘기게
+     하면 **하나도 숨기지 않고** 높이만 줄어듭니다.
+     ⚠️ 화면 끝까지 닿아야 "더 있다" 가 보입니다. `.w` 의 좌우 여백만큼
+     밖으로 빼고 같은 만큼 안쪽 여백을 줍니다 — 잘리는 것은 이 칸이라
+     **문서에는 가로 스크롤이 생기지 않습니다.** */
+  .two-c{ min-width:0; }
+  .two-c .cat-g{
+    display:flex; grid-template-columns:none; gap:var(--s3); min-width:0;
+    overflow-x:auto; scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    margin:0 calc(var(--s4) * -1); padding:0 var(--s4) var(--s2);
+  }
+  .two-c .cat-g::-webkit-scrollbar{ display:none; }
+  .two-c .cat-g > .cat{
+    flex:0 0 auto; width:78vw; max-width:300px; scroll-snap-align:start;
+  }
+}
 
 /* ════════ 칩 ═════════════════════════════════════════════════════ */
 .chip-g{ display:flex; flex-wrap:wrap; gap:var(--s2); }

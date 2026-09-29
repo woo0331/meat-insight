@@ -1,32 +1,7 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
-  "rewrites": [
-    {
-      "source": "/sos",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/start/:sub",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/partner/:sub",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/lab/:slug",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/partners/:id",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/request/:svc",
-      "destination": "/index.html"
-    }
-  ],
+  "rewrites": [],
   "headers": [
     {
       "source": "/(.*)",
@@ -54,15 +29,6 @@
         {
           "key": "Content-Security-Policy",
           "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self'"
-        }
-      ]
-    },
-    {
-      "source": "/img/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
         }
       ]
     }

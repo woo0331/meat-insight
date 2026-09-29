@@ -85,7 +85,10 @@ window.amSearch = function(q){
     provider:{ name:"업체", rows:[] }, franchise:{ name:"프랜차이즈", rows:[] },
     store:{ name:"매장 · 점포", rows:[] }, asset:{ name:"시설 · 장비", rows:[] },
     cat:{ name:"분류", rows:[] }, industry:{ name:"업종", rows:[] },
-    content:{ name:"정보", rows:[] }
+    content:{ name:"정보", rows:[] },
+    /* ⚠️ `push()` 는 없는 묶음 이름을 받으면 그 자리에서 던집니다 —
+       화면이 통째로 안 그려집니다. 묶음을 먼저 만드세요. */
+    info:{ name:"자주 묻는 것", rows:[] }
   };
   function push(g, name, sub, to, score){ if(score > 0) G[g].rows.push({name:name,sub:sub,to:to,s:score}); }
 
@@ -122,6 +125,13 @@ window.amSearch = function(q){
   (window.AM_CONTENTS||[]).forEach(function(c){
     push("content", c.title, c.lead, "/content/"+c.slug,
       amScore(c.title+" "+c.lead, words));
+  });
+
+  /* ⚠️ 자주 묻는 것은 **질문과 답 본문 전체**를 검색감으로 씁니다.
+     손님은 "자주 묻는 것" 이라고 치지 않고 "무료" · "연락처" ·
+     "환불" 이라고 칩니다. */
+  (window.AM_FAQ || []).forEach(function(x){
+    push("info", x.q, "자주 묻는 것", "/faq", amScore(x.q+" "+x.a, words));
   });
 
   /* ⚠️ 가는 곳이 같은 줄은 하나만 냅니다 — 같은 줄이 두세 개 나란히

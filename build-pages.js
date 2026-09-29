@@ -36,7 +36,8 @@ function loadApp(){
                 "js/data/regions.js","js/data/industries.js","js/data/catalog.js",
                 "js/data/franchise.js","js/data/providers.js","js/data/market.js",
                 "js/data/support.js","js/data/content.js","js/data/photos.js",
-                "js/data/legal-terms.js","js/data/legal-privacy.js"];
+                "js/data/legal-terms.js","js/data/legal-privacy.js",
+                "js/data/faq.js"];
 
   /* ⚠️ 여기는 **glob 이 아니라 손으로 적은 목록**입니다. 새 데이터
      파일을 만들고 여기에 안 넣으면, 그 데이터를 쓰는 주소가 **에러
@@ -70,7 +71,7 @@ function allRoutes(W){
   const fixed = ["/", "/startup", "/closure", "/providers", "/franchise",
                  "/stores", "/assets", "/support", "/content",
                  "/quote", "/join", "/my", "/search",
-                 "/about", "/terms", "/privacy"];
+                 "/faq", "/about", "/terms", "/privacy"];
   /* 업종별 창업 · 폐업 — **검색에서 들어오는 제일 큰 문**입니다
      ("카페 창업" · "음식점 폐업"). 반드시 진짜 HTML 파일이어야 합니다. */
   const inds  = (W.AM_INDUSTRIES || []).map(i => i.key);
@@ -140,6 +141,27 @@ function jsonLd(W, r, route){
       "@context":"https://schema.org","@type":"Organization",
       name:B.name, url:ORIGIN, logo:ORIGIN+"/icon-512.png", description:B.desc
     });
+    /* ⚠️ FAQPage 는 **여기 말고 `/faq`** 에 답니다. 메인은 여섯만
+       발췌로 내는데, 발췌에 FAQPage 를 달면 화면에 없는 질문이
+       구조화 데이터로 나가거나 같은 FAQ 가 두 주소로 중복됩니다. */
+    return out;
+  }
+
+  if(route === "/faq"){
+    const fq = W.AM_FAQ || [];
+    /* ⚠️ 비면 안 넣습니다 — 빈 FAQPage 는 오류로 잡힙니다.
+       ⚠️ 화면(PageFaq)과 **같은 파일**(js/data/faq.js)을 읽습니다.
+       한쪽만 고치면 구조화 데이터와 화면이 어긋나고, 적발되면
+       리치 결과가 통째로 막힙니다.
+       ⚠️ 메인에는 달지 않습니다 — 거기는 여섯만 발췌로 냅니다. */
+    if(fq.length) out.push({
+      "@context":"https://schema.org","@type":"FAQPage",
+      mainEntity: fq.map(x => ({
+        "@type":"Question", name:x.q,
+        acceptedAnswer:{ "@type":"Answer", text:x.a }
+      }))
+    });
+    out.push(crumb([["홈","/"],["자주 묻는 것","/faq"]]));
     return out;
   }
 
@@ -320,9 +342,26 @@ function noscriptFor(W, r, route){
     ul(catNames(W.AM_CLOSE_CATS||[]));
     h2("업종");
     ul((W.AM_INDUSTRIES||[]).map(i => i.name + " — " + i.lead));
+    h2("어떻게 진행되나");
+    ul(["조건을 고릅니다 — 업종 · 지역 · 필요한 서비스. 가입하지 않으셔도 됩니다.",
+        "한 번만 적어 보냅니다 — 같은 내용을 업체마다 다시 적지 않으셔도 됩니다.",
+        "받으신 제안을 나란히 놓습니다 — 무엇이 포함됐는지가 같아야 비교가 뜻을 가집니다."]);
     h2("한 사장님의 끝이 다른 사장님의 시작이 됩니다");
     p("정리하시는 사장님이 내놓은 점포 · 시설 · 집기 · 재고를, 같은 업종을 "+
       "준비하는 사장님이 찾습니다.");
+    /* ⚠️ 화면(FaqBand)이 여섯만 내므로 여기도 여섯입니다. 크롤러에게만
+       더 보여 주면 화면과 다른 것을 내보내는 셈입니다. 전체는 /faq 에
+       있고 그 주소가 sitemap 에 들어 있습니다. */
+    const fq2 = (W.AM_FAQ || []).slice(0, 6);
+    if(fq2.length){
+      h2("자주 묻는 것");
+      fq2.forEach(x => { L.push("<h3>"+esc(x.q)+"</h3>"); p(x.a); });
+    }
+    return L.join("");
+  }
+
+  if(route === "/faq"){
+    (W.AM_FAQ||[]).forEach(x => { L.push("<h2>"+esc(x.q)+"</h2>"); p(x.a); });
     return L.join("");
   }
 

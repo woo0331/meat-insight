@@ -247,6 +247,48 @@
   .cat-ic{ width:38px; height:38px; border-radius:12px; margin-bottom:0; }
 }
 
+/* ════════ 어떻게 진행되나 — 세 걸음 ══════════════════════════════
+   ⚠️ **세 걸음을 넘기지 마세요.** 넷이 되면 절차로 읽힙니다.
+   ⚠️ 카드로 띄우지 않습니다. 번호를 크게 두고 옅은 면으로 깔면
+   "읽을 것" 이 아니라 "따라갈 것" 으로 읽힙니다. */
+.how-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s5);
+  margin:0; padding:0; list-style:none; counter-reset:none; }
+.how-i{ display:grid; align-content:start; gap:var(--s2);
+  padding:var(--s8) var(--s7); border-radius:var(--r-xl);
+  background:var(--surface); position:relative; }
+.sec-white .how-i{ background:var(--bg-2); }
+.how-n{ font-size:var(--t-2xl); font-weight:900; line-height:1;
+  color:var(--blue); letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums; }
+.how-ic{ position:absolute; right:var(--s7); top:var(--s8);
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:14px;
+  background:var(--blue-50); color:var(--blue); }
+.how-t{ font-size:var(--t-lg); margin-top:var(--s4); }
+.how-d{ font-size:var(--t-sm); color:var(--ink2); line-height:1.75; }
+@media (max-width:900px){ .how-g{ grid-template-columns:1fr; gap:var(--s3); } }
+@media (max-width:520px){
+  .how-i{ padding:var(--s6) var(--s5); }
+  /* ⚠️ 좁아지면 아이콘이 제목 위에 앉습니다. 폰에서는 뺍니다 —
+     여기서 아이콘이 없어도 못 알아볼 것이 없습니다. */
+  .how-ic{ display:none; }
+  .how-t{ margin-top:var(--s2); }
+}
+
+/* ════════ 자주 묻는 것 ═══════════════════════════════════════════
+   ⚠️ 접지 않습니다. 접힌 글은 검색엔진이 낮춰 볼 수 있고, 답이
+   짧아서 접을 이유도 없습니다. */
+.w-narrow{ max-width:860px; }
+.faq-l{ display:grid; gap:var(--s3); margin:0; padding:0; list-style:none; }
+.faq-i{ padding:var(--s7); border-radius:var(--r-xl); background:var(--bg-2); }
+.faq-q{ display:block; font-size:var(--t-lg); }
+.faq-a{ margin-top:var(--s3); font-size:var(--t-base);
+  color:var(--ink2); line-height:1.8; }
+@media (max-width:520px){
+  .faq-i{ padding:var(--s6) var(--s5); }
+  .faq-a{ font-size:var(--t-sm); }
+}
+
 /* 창업 / 폐업 두 칸 (메인) */
 .two{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s8); }
 .two-hd{ display:flex; align-items:center; gap:var(--s3); margin-bottom:var(--s5);

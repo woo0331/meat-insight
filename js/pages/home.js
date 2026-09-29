@@ -20,9 +20,11 @@ function PageHome(){
          TrustBar()+
          ScaleBand()+
          IndustryBand()+
+         HowBand()+
          WhatBand()+
          BridgeBand()+
          JoinBand()+
+         FaqBand()+
          FinalBand();
 }
 
@@ -163,11 +165,55 @@ function IndustryBand(){
   '</div></section>';
 }
 
+/* ── 03-2 어떻게 진행되는가 (§37) ───────────────────────────────
+   여태 메인 어디에도 **진행 방법**이 없었습니다. 손님이 "업체를
+   보여 주는 곳" 까지는 알아도 "그래서 뭘 하면 되는데" 를 모르면
+   거기서 닫습니다.
+
+   ⚠️ **세 걸음을 넘기지 마세요.** 넷이 되는 순간 절차로 읽히고,
+   절차로 읽히면 귀찮아 보입니다.
+   ⚠️ **"몇 시간 안에" 를 적지 마세요** (절대 규칙 5). 업체 회신
+   시점은 우리가 지킬 수 있는 약속이 아닙니다 — 약관 제8조와
+   FAQ 가 같은 말을 합니다. */
+function HowBand(){
+  var step = [
+    ["01", "조건을 고릅니다",
+     "업종 · 지역 · 필요한 서비스. 가입하지 않으셔도 됩니다.",
+     "sliders"],
+    ["02", "한 번만 적어 보냅니다",
+     "같은 내용을 업체마다 다시 적지 않으셔도 됩니다. "+
+     "조건이 맞는 곳에 같이 전달합니다.",
+     "mail"],
+    ["03", "받으신 제안을 나란히 놓습니다",
+     "금액만 보면 틀립니다. 무엇이 포함됐는지가 같아야 비교가 뜻을 "+
+     "가집니다 — 그 자리를 만들어 드립니다.",
+     "scale"]
+  ];
+  return '<section class="sec"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">어떻게 진행되나</p>'+
+      '<h2>업체를 찾아 전화를 돌리는 대신,<br class="br-m"> '+
+        '한 번만 적으시면 됩니다.</h2>'+
+    '</div>'+
+    '<ol class="how-g">'+ step.map(function(x){
+      return '<li class="how-i">'+
+        '<span class="how-n">'+esc(x[0])+'</span>'+
+        '<span class="how-ic">'+icon(x[3],22)+'</span>'+
+        '<b class="how-t">'+esc(x[1])+'</b>'+
+        '<span class="how-d">'+esc(x[2])+'</span>'+
+      '</li>';
+    }).join("")+'</ol>'+
+    '<div class="row-cta"><a class="btn btn-b btn-lg" href="/quote">'+
+      '견적 요청하기'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-o btn-lg" href="/providers">업체 먼저 둘러보기</a></div>'+
+  '</div></section>';
+}
+
 /* ── 04 무엇을 도와드리나 ────────────────────────────────────────
    ⚠️ 여기서도 **업체를 나열하지 않습니다.** 분류까지입니다. */
 function WhatBand(){
-  var st = (window.AM_START_CATS||[]).slice(0, 6);
-  var cl = (window.AM_CLOSE_CATS||[]).slice(0, 6);
+  var st = (window.AM_START_CATS||[]).slice(0, 4);
+  var cl = (window.AM_CLOSE_CATS||[]).slice(0, 4);
   return '<section class="sec"><div class="w">'+
     '<div class="sec-hd">'+
       '<p class="eyebrow">무엇을 찾아 드리나</p>'+
@@ -239,6 +285,40 @@ function JoinBand(){
       return '<li>'+icon("check",18)+
         '<span><b>'+esc(h[0])+'</b><i>'+esc(h[1])+'</i></span></li>';
     }).join("")+'</ul>'+
+  '</div></section>';
+}
+
+/* ── 07 자주 묻는 것 ────────────────────────────────────────────
+   ⚠️ 화면과 구조화 데이터(JSON-LD)가 `js/data/faq.js` **한 곳**을
+   같이 읽습니다. 구글이 "구조화 데이터는 화면 내용과 같아야 한다"
+   고 못 박아 두었습니다 — 한쪽만 고치면 어긋납니다.
+   ⚠️ 비면 구간째 빠집니다 (절대 규칙 2). */
+function FaqBand(){
+  var all = (window.amFaq ? amFaq() : []);
+  if(!all.length) return "";
+  /* ⚠️ 메인에는 **여섯까지**입니다. 열을 다 펴 두었더니 이 구간 하나가
+     2,162px 이 되어 메인에서 제일 긴 구간이 됐습니다. 나머지는 /faq
+     에서 봅니다 — 숨기는 것이 아니라 옮기는 것이고, 단추가 바로
+     아래 있습니다. */
+  var f = all.slice(0, 6);
+  return '<section class="sec sec-white"><div class="w w-narrow">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">자주 묻는 것</p>'+
+      '<h2>먼저 궁금해하시는 것들</h2>'+
+    '</div>'+
+    '<ul class="faq-l">'+ f.map(function(x, i){
+      /* ⚠️ `<details>` 를 쓰지 않은 이유는 접힌 글을 검색엔진이
+         낮춰 볼 수 있어서입니다. 여기서는 처음부터 펴 둡니다 —
+         답이 짧아서 접을 이유도 없습니다. */
+      return '<li class="faq-i">'+
+        '<b class="faq-q">'+esc(x.q)+'</b>'+
+        '<p class="faq-a">'+esc(x.a)+'</p>'+
+      '</li>';
+    }).join("")+'</ul>'+
+    (all.length > f.length
+      ? '<div class="row-cta row-mid"><a class="btn btn-o" href="/faq">'+
+        '자주 묻는 것 전부 보기'+icon("arrow",16)+'</a></div>'
+      : "")+
   '</div></section>';
 }
 

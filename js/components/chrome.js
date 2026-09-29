@@ -111,7 +111,7 @@ function Footer(){
               ["/assets","시설 · 집기 처분"],["/support","폐업지원"]]],
     ["함께", [["/join","업체 입점하기"],["/quote","견적 요청"],
               ["/content","창업 · 폐업 정보"],["/support","지원사업"]]],
-    ["안내", [["/my","MY"],["/search","검색"],
+    ["안내", [["/my","MY"],["/faq","자주 묻는 것"],["/search","검색"],
               ["/terms","이용약관"],["/privacy","개인정보처리방침"]]]
   ];
   return '<footer class="ft"><div class="w">'+

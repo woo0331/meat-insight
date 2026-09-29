@@ -77,6 +77,7 @@ const PAGES = [
   ["/search",            "검색 (처음)"],
   ["/search?q=%EC%B9%B4%ED%8E%98%20%EC%9D%B8%ED%85%8C%EB%A6%AC%EC%96%B4", "검색 결과 (카페 인테리어)"],
   ["/search?q=zzz",      "검색 (못 찾음)"],
+  ["/faq",               "자주 묻는 것"],
   ["/about",             "소개"],
   ["/terms",             "이용약관"],
   ["/privacy",           "개인정보처리방침"],
@@ -735,8 +736,43 @@ const AUDIT = `(() => {
     if(/[0-9][0-9,]*\\s*\\+/.test(t)) return "n+ 꼴이 있습니다 — 센 값은 그냥 센 값입니다";
     return true;`);
 
-  console.log("\n── 흐름 " + 27 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
-              "접수 4 · MY 3 · 검색 3 · 문서 3 · 메인 히어로 3 · 규모감 2)");
+  /* ⑩ 자주 묻는 것 · 진행 방법
+     ⚠️ 구글은 구조화 데이터가 **화면 내용과 같아야 한다**고 못 박아
+     두었습니다. 어긋난 것이 적발되면 리치 결과가 통째로 막힙니다 —
+     예전 부산물몰에서 실제로 그랬습니다. */
+  await f("FAQ 화면과 구조화 데이터가 같은 것을 말한다", "/faq", `
+    const q = [].slice.call(document.querySelectorAll(".faq-q"))
+      .map(function(e){ return e.textContent.trim(); });
+    if(!q.length) return "화면에 문답이 없습니다";
+    const ld = [].slice.call(document.querySelectorAll('script[type="application/ld+json"]'))
+      .map(function(e){ try{ return JSON.parse(e.textContent); }catch(err){ return {}; } })
+      .filter(function(x){ return x["@type"] === "FAQPage"; })[0];
+    if(!ld) return "FAQPage 구조화 데이터가 없습니다";
+    const lq = (ld.mainEntity || []).map(function(x){ return x.name; });
+    if(lq.length !== q.length)
+      return "화면 " + q.length + "개 · 구조화 데이터 " + lq.length + "개";
+    for(let i = 0; i < q.length; i++)
+      if(lq.indexOf(q[i]) < 0) return "화면에만 있는 질문: " + q[i];
+    return true;`);
+  await f("FAQ 에 지킬 수 없는 약속이 없다", "/faq", `
+    const t = document.getElementById("view").textContent;
+    const bad = [];
+    if(/[0-9]+\\s*시간\\s*(안|이내)/.test(t))  bad.push("몇 시간 안에");
+    if(/[0-9]+\\s*일\\s*(안|이내)/.test(t))    bad.push("며칠 안에");
+    if(/당일\\s*(연락|회신|견적)/.test(t))     bad.push("당일 연락");
+    if(/보장(합니다|해\\s*드립니다)/.test(t))  bad.push("보장합니다");
+    if(/최저가|무조건/.test(t))                bad.push("최저가 · 무조건");
+    return bad.length ? bad.join(" · ") + " 가 있습니다" : true;`);
+  await f("진행 방법이 세 걸음을 넘지 않는다", "/", `
+    const n = document.querySelectorAll(".how-i").length;
+    if(!n) return "진행 방법 구간이 없습니다";
+    if(n > 3) return n + "걸음입니다 — 넷이 되면 절차로 읽힙니다";
+    const t = document.querySelector(".how-g").textContent;
+    if(/[0-9]+\\s*시간\\s*(안|이내)/.test(t)) return "몇 시간 안에 가 있습니다";
+    return true;`);
+
+  console.log("\n── 흐름 " + 30 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
+              "접수 4 · MY 3 · 검색 3 · 문서 3 · 메인 히어로 3 · 규모감 2 · FAQ · 진행 3)");
   if (flowBad.length) { fail++; console.log("  ❌ " + flowBad.length + "건: " + flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

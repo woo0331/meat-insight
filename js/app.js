@@ -71,6 +71,8 @@ var META = {
                  "내 창업 · 내 폐업 진행 상황과 받은 견적, 저장한 업체를 한 화면에서 이어서 하실 수 있습니다."],
   "/search":    ["통합검색",
                  "업체 · 프랜차이즈 · 매장 · 시설장비 · 정보를 한 번에 찾습니다."],
+  "/faq":       ["자주 묻는 것",
+                 "돈이 드는지, 연락처가 업체에 바로 넘어가는지, 등록된 업체가 몇 곳인지 — 먼저 궁금해하시는 것들에 그대로 답했습니다."],
   "/about":     ["소개",
                  "무엇을 하고 무엇을 하지 않는지 적어 두었습니다. 저희는 중개자이고 거래 당사자가 아닙니다."],
   "/terms":     ["이용약관",
@@ -101,6 +103,7 @@ window.routeInfo = function(path){
     "/join":      "join",
     "/my":        "my",
     "/search":    "search",
+    "/faq":       "faq",
     "/about":     "about",
     "/terms":     "terms",
     "/privacy":   "privacy"
@@ -248,6 +251,7 @@ function render(){
     case "join":            html = PageJoin();                      break;
     case "my":              html = PageMy();                        break;
     case "search":          html = PageSearch();                    break;
+    case "faq":             html = PageFaq();                       break;
     case "about":           html = PageAbout();                     break;
     case "terms":           html = PageTerms();                     break;
     case "privacy":         html = PagePrivacy();                   break;

@@ -134,3 +134,50 @@ function PageAbout(){
     '아닙니다 (전자상거래법 제20조 제1항). 상품 · 서비스 · 거래 조건에 대한 책임은 '+
     '각 업체에 있습니다.</p></div></section>';
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   자주 묻는 것 (/faq)
+
+   ⚠️ 메인(FaqBand)과 **같은 파일**(`js/data/faq.js`)을 읽습니다.
+   ⚠️ **구조화 데이터(FAQPage)는 이 화면에만 답니다.** 메인에는 여섯만
+   발췌로 내는데, 발췌에 FAQPage 를 달면 화면에 없는 질문이 구조화
+   데이터로 나가거나 같은 FAQ 가 두 주소로 중복됩니다.
+   ════════════════════════════════════════════════════════════════════ */
+function PageFaq(){
+  var f = (window.amFaq ? amFaq() : []);
+  /* ⚠️ 비어도 **빈 화면으로 두지 않습니다** (절대 규칙 2). */
+  if(!f.length) return PgHero({ kicker:"자주 묻는 것", h1:"자주 묻는 것", tight:true })+
+    '<section class="sec"><div class="w w-narrow">'+
+      Empty({
+        icon:"info",
+        title:"아직 정리된 문답이 없습니다",
+        text:"궁금한 것을 견적 요청에 적어 주시면 답해 드리고, 자주 나오는 것은 "+
+             "여기에 정리해 둡니다.",
+        cta:'<a class="btn btn-b" href="/quote">견적 요청하기</a>'+
+            '<a class="btn btn-o" href="/about">소개 보기</a>'
+      })+
+    '</div></section>';
+
+  return PgHero({
+    crumb: Crumb([["홈","/"],["자주 묻는 것", null]]),
+    kicker:"자주 묻는 것",
+    h1:"먼저 궁금해하시는 것들",
+    lead:"약속드릴 수 없는 것은 약속드리지 않고, 아직 없는 것은 없다고 적었습니다.",
+    tight:true
+  })+
+  '<section class="sec"><div class="w w-narrow">'+
+    '<ul class="faq-l">'+ f.map(function(x){
+      return '<li class="faq-i">'+
+        '<b class="faq-q">'+esc(x.q)+'</b>'+
+        '<p class="faq-a">'+esc(x.a)+'</p>'+
+      '</li>';
+    }).join("")+'</ul>'+
+    /* ⚠️ 막다른 길로 두지 않습니다 — 여기까지 읽으신 분께 지금
+       실제로 되는 것을 냅니다. */
+    '<p class="note note-mid">여기 없는 것이 궁금하시면 요청에 그대로 적어 주세요.</p>'+
+    '<div class="row-cta row-mid">'+
+      '<a class="btn btn-b btn-lg" href="/quote">견적 요청하기'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-o btn-lg" href="/about">소개 보기</a>'+
+    '</div>'+
+  '</div></section>';
+}

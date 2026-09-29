@@ -88,8 +88,9 @@
 .sh-in{ display:grid; align-content:center; gap:var(--s3);
   padding:var(--s10) var(--s9) var(--s10); width:100%; max-width:620px; }
 .sh-k{ font-size:var(--t-cap); font-weight:900; letter-spacing:.26em; }
-.sh-start .sh-k{ color:var(--blue-400); }
-.sh-close .sh-k{ color:rgba(255,255,255,.62); }
+/* §21 — 샴페인 골드는 **악센트 네 자리**에만. 여기가 그 하나입니다. */
+.sh-start .sh-k{ color:var(--gold-on-dark); }
+.sh-close .sh-k{ color:var(--gold-on-dark); }
 
 /* 주인공 */
 .sh-n{ font-style:normal; font-size:var(--t-split); font-weight:900;
@@ -275,6 +276,40 @@
   .how-t{ margin-top:var(--s2); }
 }
 
+/* ════════ 대형 통합검색 (§5) ═════════════════════════════════════
+   ⚠️ 히어로가 아니라 **히어로 다음**입니다. 첫 화면의 주인공은 두
+   낱말이고, 적는 칸이 하나 생기면 그 둘이 그만큼 작아집니다. */
+.sb-b{ text-align:center; }
+.sb-h{ font-size:var(--t-3xl); font-weight:900; line-height:1.2;
+  letter-spacing:var(--tr-head); }
+.sb-p{ margin-top:var(--s3); font-size:var(--t-base); color:var(--ink2); }
+.sb-f{ display:flex; align-items:center; gap:var(--s3);
+  margin:var(--s7) auto 0; padding:var(--s3) var(--s3) var(--s3) var(--s6);
+  border-radius:var(--r-pill); background:var(--bg-2);
+  border:1px solid var(--line); transition:border-color .15s, box-shadow .2s; }
+.sb-f:focus-within{ border-color:var(--blue); box-shadow:0 0 0 4px var(--blue-50); }
+.sb-f-ic{ display:inline-flex; color:var(--ink3); flex:0 0 auto; }
+/* ⚠️ `min-width:0` 이 없으면 flex 칸이 안 줄어들어 폰에서 넘칩니다 */
+.sb-f input{ flex:1 1 auto; min-width:0; border:0; background:transparent;
+  font-size:var(--t-lg); color:var(--ink); min-height:var(--tap);
+  outline:none; }
+.sb-f input::-webkit-search-cancel-button{ -webkit-appearance:none; }
+.sb-f .btn{ flex:0 0 auto; }
+.sb-t{ display:flex; flex-wrap:wrap; justify-content:center; gap:var(--s2);
+  margin:var(--s5) 0 0; padding:0; list-style:none; }
+.sb-t a{ display:inline-flex; align-items:center; min-height:40px;
+  padding:0 var(--s5); border-radius:var(--r-pill);
+  background:var(--bg-2); color:var(--ink2);
+  font-size:var(--t-cap); text-decoration:none; transition:background .15s; }
+.sb-t a:hover{ background:var(--blue-50); color:var(--blue); }
+@media (max-width:560px){
+  .sb-f{ padding:var(--s2) var(--s2) var(--s2) var(--s4); gap:var(--s2); }
+  .sb-f input{ font-size:var(--t-base); }
+  /* ⚠️ 폰에서 버튼 글자를 지우지 마세요 — 돋보기만 남으면 무엇을
+     누르는지가 안 보입니다. 패딩만 줄입니다. */
+  .sb-f .btn{ padding:0 var(--s5); }
+}
+
 /* ════════ 창업 = 과정 (§7) ═══════════════════════════════════════
    ⚠️ 분류를 늘어놓지 않고 **단계**로 묶습니다. 손님이 알고 싶은 것은
    분류 이름이 아니라 "지금 어디까지 왔고 다음에 뭘 해야 하는가"
@@ -286,7 +321,9 @@
 .stp:first-child{ border-top:0; padding-top:0; }
 .stp-h{ display:grid; align-content:start; gap:4px; position:sticky; top:96px; }
 .stp-n{ font-size:var(--t-cap); font-weight:900; letter-spacing:.16em;
-  color:var(--blue); font-variant-numeric:tabular-nums; }
+  color:var(--gold); font-variant-numeric:tabular-nums; }
+/* ⚠️ 단계를 나누는 선도 골드입니다 — 아주 옅게. 진하게 하면 표가 됩니다. */
+.stp{ border-top-color:var(--line); }
 .stp-t{ font-size:var(--t-xl); }
 .stp-d{ font-size:var(--t-cap); color:var(--ink3); line-height:1.7; }
 .stp-c{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s3); }
@@ -351,7 +388,22 @@
   border-top:1px solid var(--line); color:var(--ink3); }
 .tl-c-m em{ font-style:normal; font-size:var(--t-cap); }
 @media (max-width:900px){ .tl-g{ grid-template-columns:1fr 1fr; } }
-@media (max-width:600px){ .tl-g{ grid-template-columns:1fr; gap:var(--s3); } }
+@media (max-width:600px){
+  .tl-g{ grid-template-columns:1fr; gap:var(--s3); }
+  /* 메인의 도구 줄만 옆으로 넘깁니다 (`.tl-g-h`). `/tools` 화면은
+     그 목록이 본문이라 그대로 쌓습니다.
+     ⚠️ `min-width:0` 이 없으면 감싸개가 안 줄어들어 **문서에 가로
+     스크롤**이 생깁니다 — 메인의 분류 줄에서 실제로 그랬습니다. */
+  .tl-g-h{
+    display:flex; grid-template-columns:none; min-width:0;
+    gap:var(--s3); overflow-x:auto; scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    margin:0 calc(var(--s4) * -1); padding:0 var(--s4) var(--s2);
+  }
+  .tl-g-h::-webkit-scrollbar{ display:none; }
+  .tl-g-h > li{ flex:0 0 auto; width:78vw; max-width:300px;
+    scroll-snap-align:start; }
+}
 
 .tl-h{ font-size:var(--t-xl); margin:var(--s9) 0 var(--s4); }
 .tl-h:first-child{ margin-top:0; }
@@ -551,9 +603,12 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .pv-b{ display:grid; gap:6px; align-content:start; padding:var(--s5) var(--s6) var(--s6); }
 .pv-t{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; }
 .pv-t b{ font-size:var(--t-lg); }
+/* ⚠️ 인증 배지는 **상태색이 아니라 골드**입니다. `--ok`(초록)는
+   "좋다/나쁘다" 를 말하는 색인데, 인증은 판정이 아니라 **확인했다는
+   표시**입니다. 초록으로 두면 인증 없는 업체가 "나쁘다" 로 읽힙니다. */
 .pv-vf{ display:inline-flex; align-items:center; gap:3px; font-style:normal;
-  font-size:var(--t-cap); font-weight:700; color:var(--ok);
-  background:var(--ok-bg); border-radius:var(--r-pill); padding:3px 9px; }
+  font-size:var(--t-cap); font-weight:700; color:var(--gold);
+  background:var(--gold-bg); border-radius:var(--r-pill); padding:3px 9px; }
 .pv-m{ font-size:var(--t-cap); color:var(--ink3); }
 .pv-r{ display:flex; align-items:center; gap:6px; font-size:var(--t-sm); color:var(--ink2); }
 .pv-r b{ color:var(--ink); }
@@ -672,7 +727,10 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    달라야 "또 같은 띠" 로 안 읽힙니다. */
 .bridge{ position:relative; isolation:isolate; overflow:hidden;
   background:linear-gradient(160deg, var(--navy-3) 0%, var(--navy-2) 58%, var(--navy) 100%);
-  color:#fff; padding:var(--s11) 0; }
+  color:#fff; padding:var(--s11) 0;
+  /* §21 — 어두운 구간의 위 경계에 머리카락 한 올. ⚠️ 굵게 하지
+     마세요. 1px 을 넘으면 그 순간 장식이 됩니다. */
+  border-top:1px solid var(--gold-line); }
 .bridge-glow{ position:absolute; z-index:-1; pointer-events:none;
   left:50%; top:-10%; width:1000px; height:620px; transform:translateX(-50%);
   background:radial-gradient(50% 50% at 50% 50%,

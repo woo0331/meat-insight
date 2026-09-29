@@ -881,9 +881,55 @@ const AUDIT = `(() => {
     if(shown !== all) return "화면 " + shown + "개 · 전체 " + all + "개 — 잘라 냈습니다";
     return true;`);
 
-  console.log("\n── 흐름 " + 39 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
+  /* ⑭ 샴페인 골드는 **악센트로만** (§21)
+     ⚠️ 이 저장소에서 금빛을 넓게 썼다가 통째로 걷어낸 적이 있습니다 —
+     고급스러움이 아니라 꾸민 티였습니다. 면으로 번지는 것을 막습니다. */
+  await f("골드를 면으로 쓰지 않는다", "/", `
+    const isGold = function(bg){
+      const m = String(bg).match(/rgba?\\((\\d+), ?(\\d+), ?(\\d+)(?:, ?([0-9.]+))?/);
+      if(!m) return false;
+      const r = +m[1], g = +m[2], b = +m[3], a = m[4] === undefined ? 1 : +m[4];
+      if(a < 0.2) return false;             /* 아주 옅은 선은 봐줍니다 */
+      return r > 140 && g > 110 && b < 160 && (r - b) > 45 && (g - b) > 20;
+    };
+    const bad = [];
+    document.querySelectorAll("#view *").forEach(function(e){
+      const rc = e.getBoundingClientRect();
+      if(rc.width * rc.height < 20000) return;   /* 작은 배지는 괜찮습니다 */
+      if(isGold(getComputedStyle(e).backgroundColor))
+        bad.push((e.className || e.tagName).toString().slice(0, 24));
+    });
+    return bad.length ? "면으로 쓴 곳: " + bad.slice(0, 3).join(" · ") : true;`);
+  await f("골드가 버튼 · 링크의 행동색을 빼앗지 않는다", "/", `
+    /* ⚠️ 행동색은 **하나**여야 손님이 "누를 것" 을 배웁니다.
+       버튼이 금색이 되면 그 규칙이 깨집니다. */
+    const b1 = document.querySelector(".btn-b");
+    if(!b1) return "기본 버튼이 없습니다";
+    const bg = getComputedStyle(b1).backgroundColor;
+    const m = bg.match(/rgba?\\((\\d+), ?(\\d+), ?(\\d+)/);
+    if(!m) return "버튼 바탕을 못 읽습니다";
+    const r = +m[1], b = +m[3];
+    if(r > b) return "기본 버튼이 파랑이 아닙니다 — " + bg;
+    return true;`);
+  await f("메인 통합검색이 실제로 검색으로 간다", "/", `
+    const f2 = document.querySelector(".sb-f");
+    if(!f2) return "검색 구간이 없습니다";
+    if(f2.getAttribute("action") !== "/search") return "form 이 /search 로 안 갑니다";
+    if(!f2.querySelector('input[name="q"]')) return "q 칸이 없습니다";
+    /* ⚠️ 추천 검색어는 **실제로 결과가 나오는 것**만 둡니다. 눌렀는데
+       빈 화면이면 검색이 고장난 것처럼 보입니다. */
+    const tips = [].slice.call(document.querySelectorAll(".sb-t a"));
+    for(const a of tips){
+      const q = decodeURIComponent((a.getAttribute("href").split("q=")[1] || ""));
+      if(!q) return "추천어에 q 가 없습니다";
+      if(!window.amSearch || !(amSearch(q) || {}).total)
+        return "'" + q + "' 는 결과가 안 나옵니다";
+    }
+    return true;`);
+
+  console.log("\n── 흐름 " + 42 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
               "접수 4 · MY 3 · 검색 3 · 문서 3 · 메인 히어로 3 · 규모감 2 · FAQ · 진행 3 · " +
-              "정보 글 3 · 글 잇기 2 · 창업 과정 · 폐업 선택 4)");
+              "정보 글 3 · 글 잇기 2 · 창업 과정 · 폐업 선택 4 · 골드 · 통합검색 3)");
   if (flowBad.length) { fail++; console.log("  ❌ " + flowBad.length + "건: " + flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

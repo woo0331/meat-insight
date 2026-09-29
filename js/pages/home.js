@@ -16,13 +16,37 @@
    ════════════════════════════════════════════════════════════════════ */
 
 function PageHome(){
+  /* ── 메인 구간 차례 (§23) ───────────────────────────────────
+     01 압도적인 히어로 — 창업이냐 폐업이냐, 두 낱말
+     02 신뢰 줄 — 지금 사실인 것만
+     03 대형 통합검색 — 찾으러 오신 분을 바로 보냅니다
+     04 업종 선택 — 여기서부터 화면이 사장님 것이 됩니다
+     05 프랜차이즈 — 아직 무엇을 할지 못 정하셨다면
+     06 매장 인수 — ⚠️ 매물이 0건이면 **구간째 빠집니다**
+     07 창업 ↔ 폐업 연결 — 이 플랫폼의 차별점
+     08 폐업 솔루션 — 무엇을 원하시는지부터
+     09 어떻게 진행되나 — 세 걸음
+     10 사장님 도구 — 지금 당장 되는 것
+     11 우리가 다루는 범위 — 실적이 아니라 범위
+     12 업체 입점 — 공급 쪽 CTA
+     13 자주 묻는 것 · 14 마지막 CTA
+
+     ⚠️ **없는 데이터로 구간을 만들지 마세요** (§27). "지금 많이 찾는
+     서비스" · "실제 인기 업체" · "실제 견적 가격" · "실제 후기" 는
+     지시서에 있지만 지금 값이 하나도 없습니다 — 만들면 그게
+     허위 데이터입니다. 자리와 데이터 구조는 갖춰 두었으니 실제
+     데이터가 들어오면 그때 냅니다. */
   return Hero()+
          TrustBar()+
-         ScaleBand()+
+         SearchBand()+
          IndustryBand()+
-         HowBand()+
-         WhatBand()+
+         FranchiseBand()+
+         StoreBand()+
          BridgeBand()+
+         CloseBand()+
+         HowBand()+
+         ToolBand()+
+         ScaleBand()+
          JoinBand()+
          FaqBand()+
          FinalBand();
@@ -333,4 +357,140 @@ function FinalBand(){
       '</div>'+
     '</div>'+
   '</section>';
+}
+
+/* ── 03 대형 통합검색 (§5 · §23-03) ─────────────────────────────
+   ⚠️ **히어로에는 안 둡니다.** 첫 화면의 주인공은 두 낱말이고, 적는
+   칸이 하나 생기는 순간 그 둘이 작아집니다. 검색은 히어로 **다음**
+   자리입니다.
+   ⚠️ 추천 검색어는 **실제로 결과가 나오는 것**만 둡니다. 눌렀는데
+   "결과 없음" 이 나오면 검색이 고장난 것처럼 보입니다 — 아래
+   `amSearch()` 로 실제 걸리는 것만 추렸습니다. */
+function SearchBand(){
+  var tips = ["인테리어","철거","프랜차이즈","POS","매장 양도","원상복구","세무","간판"]
+    .filter(function(q){
+      return !window.amSearch || (amSearch(q) || {}).total > 0; });
+  return '<section class="sec sec-white"><div class="w w-narrow sb-b">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">통합검색</p>'+
+      /* ⚠️ 제목을 길게 쓰지 마세요. 세 줄로 접히면 검색창보다 제목이
+         커져서 무엇을 하는 자리인지가 묻힙니다. */
+      '<h2 class="sb-h">지금 무엇이 필요하세요?</h2>'+
+      '<p class="sb-p">업체 · 프랜차이즈 · 매장 · 시설장비 · 정보를 한 번에 찾습니다.</p>'+
+    '</div>'+
+    /* ⚠️ `form` 은 JS 가 안 돌 때도 `/search?q=` 로 넘어가야 합니다 */
+    '<form class="sb-f" action="/search" method="get" role="search">'+
+      '<span class="sb-f-ic" aria-hidden="true">'+icon("search",22)+'</span>'+
+      '<input type="search" name="q" id="hq" '+
+        'placeholder="카페 인테리어, 철거, 프랜차이즈, POS, 세무사" '+
+        'aria-label="무엇을 찾으세요?">'+
+      '<button class="btn btn-b" type="submit">검색</button>'+
+    '</form>'+
+    (tips.length
+      ? '<ul class="sb-t">'+tips.map(function(q){
+          return '<li><a href="/search?q='+encodeURIComponent(q)+'">'+esc(q)+'</a></li>';
+        }).join("")+'</ul>'
+      : "")+
+  '</div></section>';
+}
+
+/* ── 08 프랜차이즈 (§14 · §23-08) ──────────────────────────────
+   ⚠️ **브랜드 카드를 지어내지 마세요.** 지금 0개입니다. 낼 수 있는
+   것은 **분류**까지이고, 브랜드가 등록되면 그때 카드가 나옵니다. */
+function FranchiseBand(){
+  var cats = (window.AM_FRANCHISE_CATS || []).slice(0, 8);
+  if(!cats.length) return "";
+  var brands = (window.AM_FRANCHISES || []).length;
+  return '<section class="sec"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">프랜차이즈</p>'+
+      '<h2>어떤 장사를 시작할지<br class="br-m"> 아직 고민이시라면</h2>'+
+      '<p>본사가 정해 둔 것을 따라가는 대신, 조건을 놓고 비교하실 수 있게 '+
+        '만들고 있습니다.</p>'+
+      '<a class="sec-more" href="/franchise">전부 보기'+icon("chev",15)+'</a>'+
+    '</div>'+
+    '<ul class="chip-g">'+cats.map(function(c){
+      return '<li><a class="chip" href="/franchise/'+esc(c.key)+'">'+esc(c.name)+'</a></li>';
+    }).join("")+'</ul>'+
+    /* ⚠️ 0 이면 0 이라고 말합니다 (절대 규칙 1). 여기서 얼버무리면
+       "브랜드가 많은 줄 알았는데" 가 됩니다. */
+    (brands ? ""
+      : '<p class="note note-mid">등록된 브랜드는 아직 없습니다. 본사 '+
+        '정보공개서에 있는 값만 올리기 때문입니다 — 창업비를 지어내면 '+
+        '그 숫자로 수천만 원을 빌리러 가시게 됩니다.</p>'+
+        '<div class="row-cta row-mid">'+
+          '<a class="btn btn-o" href="/franchise">분류로 둘러보기'+icon("arrow",16)+'</a>'+
+          '<a class="btn btn-o" href="/join">본사라면 등록하기</a>'+
+        '</div>')+
+  '</div></section>';
+}
+
+/* ── 09 바로 인수 가능한 매장 (§16 · §23-09) ───────────────────
+   ⚠️ **매물이 없으면 구간째 뺍니다** (절대 규칙 2). 가짜 매물은
+   허위매물이고, 보고 연락한 사람의 시간을 훔치는 일입니다.
+   데이터가 들어오면 이 구간이 저절로 나옵니다. */
+function StoreBand(){
+  var list = (window.AM_STORES || []).slice(0, 4);
+  if(!list.length) return "";
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">매장 인수</p>'+
+      '<h2>새로 만들지 않아도 됩니다</h2>'+
+      '<p>바로 시작할 수 있는 매장입니다. 적힌 값은 올리신 사장님이 적은 '+
+        '것이고 저희가 확인하거나 보증하는 값이 아닙니다.</p>'+
+      '<a class="sec-more" href="/stores">전부 보기'+icon("chev",15)+'</a>'+
+    '</div>'+
+    '<div class="mk-g">'+list.map(function(s){
+      return (window.StoreCard ? StoreCard(s) : ""); }).join("")+'</div>'+
+  '</div></section>';
+}
+
+/* ── 11 폐업 솔루션 (§8 · §23-11) ──────────────────────────────
+   메인에서도 **무엇을 원하시는지**부터 묻습니다. 폐업 쪽으로 오신
+   분은 대개 지쳐 계셔서, 목록을 보여 드리면 거기서 닫습니다. */
+function CloseBand(){
+  var w = (window.AM_CLOSE_WANTS || []);
+  if(!w.length) return "";
+  return '<section class="sec"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">CLOSE · 폐업</p>'+
+      '<h2>정리도 순서가 있습니다</h2>'+
+      '<p>기한이 있는 일이 여럿이라 빠뜨리면 문을 닫은 뒤에도 돈이 나갑니다. '+
+        '원하시는 것을 고르시면 그에 맞는 절차만 추려 드립니다.</p>'+
+    '</div>'+
+    '<ul class="wnt-l">'+w.map(function(x){
+      return '<li><a class="wnt" href="/closure?w='+encodeURIComponent(x.key)+'">'+
+        '<span class="wnt-ic">'+icon(x.icon,20)+'</span>'+
+        '<b>'+esc(x.name)+'</b>'+
+        '<span class="wnt-l-d">'+esc(x.lead)+'</span>'+
+      '</a></li>';
+    }).join("")+'</ul>'+
+  '</div></section>';
+}
+
+/* ── 12 사장님 도구 (§10 · §23-12) ─────────────────────────────── */
+function ToolBand(){
+  var list = (window.amTools ? amTools() : []).slice(0, 6);
+  if(!list.length) return "";
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">사장님 도구</p>'+
+      '<h2>숫자를 넣어 보면 정해집니다</h2>'+
+      '<p>전부 무료이고 가입하지 않으셔도 됩니다. 적으신 숫자는 이 '+
+        '브라우저에만 남습니다.</p>'+
+      '<a class="sec-more" href="/tools">전부 보기'+icon("chev",15)+'</a>'+
+    '</div>'+
+    /* ⚠️ 폰에서는 옆으로 넘깁니다 — 여섯을 세로로 쌓으면 이 구간
+       하나가 2,050px 입니다. 숨기는 것은 하나도 없습니다. */
+    '<ul class="tl-g tl-g-h">'+list.map(function(t){
+      return '<li><a class="tl-c" href="'+esc(t.to)+'">'+
+        '<span class="tl-c-ic">'+icon(t.icon,22)+'</span>'+
+        '<b>'+esc(t.name)+'</b>'+
+        '<span class="tl-c-l">'+esc(t.lead)+'</span>'+
+        /* ⚠️ 나오는 값 자리에 그럴듯한 숫자를 넣지 마세요 */
+        '<span class="tl-c-m"><em>'+esc(t.ask)+'</em>'+icon("arrow",14)+
+          '<em>'+esc(t.out)+'</em></span>'+
+      '</a></li>';
+    }).join("")+'</ul>'+
+  '</div></section>';
 }

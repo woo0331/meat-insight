@@ -38,6 +38,16 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .w-wide{ width:100%; max-width:var(--w-wide); margin:0 auto; padding:0 var(--s6); }
 @media (max-width:640px){ .w,.w-wide{ padding:0 var(--s4); } }
 
+/* 눈에는 안 보이지만 읽어 주는 프로그램과 크롤러에게는 보이는 글.
+   ⚠️ `display:none` 으로 숨기지 마세요 — 그러면 크롤러가 값을 낮춰
+   보거나 아예 무시합니다.
+   ⚠️ 글씨 크기와 색을 그대로 둡니다. 전수 점검이 1px 짜리 칸도
+   "보이는 것" 으로 세기 때문에, 여기를 1px 글씨로 두면 **12px 미만**
+   으로 걸립니다. */
+.sr-only{ position:absolute; width:1px; height:1px; overflow:hidden;
+  clip-path:inset(50%); white-space:nowrap;
+  font-size:var(--t-base); color:#000; background:#fff; }
+
 .skip{ position:absolute; left:-9999px; top:0; z-index:100;
   background:var(--ink); color:#fff; padding:var(--s3) var(--s5); }
 .skip:focus{ left:0; }

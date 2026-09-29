@@ -25,37 +25,52 @@ function PageHome(){
          FinalBand();
 }
 
-/* ── 01 두 선택 ─────────────────────────────────────────────────
-   ⚠️ 카드 둘의 **대비는 색이 아니라 짜임새**로 만듭니다 (§4).
-   창업은 밝은 면에 파랑 강조, 폐업은 짙은 남색 면. 빨강/초록으로
-   나누면 그 순간 촌스러워지고 "폐업은 나쁜 것" 이라는 말이 됩니다. */
-function Hero(){
-  return '<section class="hero">'+
-    '<span class="hero-glow" aria-hidden="true"></span>'+
-    '<div class="w hero-in">'+
-      '<h1 class="hero-h">장사를 시작하시나요?<br class="br-m"> '+
-        '아니면 <em>정리</em>하시나요?</h1>'+
-      '<p class="hero-p">대한민국 사장님의 시작과 끝을 한곳에서.</p>'+
+/* ── 01 Split Hero — 첫 화면의 주인공은 두 낱말뿐입니다 ────────
+   ⚠️ **설명문과 잔 요소로 시선을 나누지 마세요.** 여기서 손님이 할
+   일은 딱 하나입니다 — 시작이냐 정리냐. 그 둘만 크게 둡니다.
 
-      '<div class="pick">'+
-        '<a class="pick-c pick-start" href="/startup">'+
-          '<span class="pick-k">START</span>'+
-          '<b>창업</b>'+
-          '<span class="pick-l">사업을 시작하는 데 필요한 모든 것</span>'+
-          '<span class="pick-s">점포 · 상권 · 인테리어 · 장비 · 가구 · POS · '+
-            '공급 · 인허가 · 마케팅 · 자금</span>'+
-          '<span class="pick-go">창업 시작하기'+icon("arrow",18)+'</span>'+
-        '</a>'+
-        '<a class="pick-c pick-close" href="/closure">'+
-          '<span class="pick-k">CLOSE</span>'+
-          '<b>폐업</b>'+
-          '<span class="pick-l">사업을 정리하는 데 필요한 모든 것</span>'+
-          '<span class="pick-s">매장 양도 · 시설 집기 · 재고 · 철거 · '+
-            '원상복구 · 폐기물 · 세무 · 노무 · 계약 해지</span>'+
-          '<span class="pick-go">폐업 시작하기'+icon("arrow",18)+'</span>'+
-        '</a>'+
-      '</div>'+
-    '</div>'+
+   ⚠️ **대비는 색이 아니라 무게와 짜임새입니다** (§4). 빨강/초록으로
+   나누면 촌스러워지고 "폐업은 나쁜 것" 이라는 말이 됩니다. 두 쪽 다
+   같은 남색 계열이고 **깊이만** 다릅니다 — 왼쪽은 푸른 기가 도는
+   남색, 오른쪽은 거의 검정에 가까운 남색.
+
+   ⚠️ **사진이 없으면 빈 액자를 두지 않습니다** (절대 규칙 2).
+   `photoBox()` 가 없을 때 `.ph-none` 을 돌려주고, 그때는 겹(`.sh-v`)
+   자체가 배경이 됩니다. 사진이 생기면 `WOW_PHOTOS` 의 경로만 바꾸면
+   그대로 깔립니다 — 화면은 안 고칩니다.
+
+   ⚠️ **색을 정하는 것은 사진이 아니라 겹입니다.** 사진을 아무리
+   좋은 것으로 바꿔도 겹이 잿빛이면 화면은 회색 판입니다. */
+function Hero(){
+  var side = [
+    { k:"START", n:"창업", to:"/startup", cls:"sh-start", ph:"hero-start",
+      lead:"처음부터 제대로.",
+      sub:"점포부터 인테리어, 장비, 프랜차이즈, 세무, 마케팅까지.",
+      go:"창업 시작하기" },
+    { k:"CLOSE", n:"폐업", to:"/closure", cls:"sh-close", ph:"hero-close",
+      lead:"끝까지 제대로.",
+      sub:"매장양도부터 집기처분, 철거, 원상복구, 세무까지.",
+      go:"폐업 시작하기" }
+  ];
+  /* ⚠️ `h1` 은 화면에 **딱 하나**여야 합니다. 두 낱말이 주인공이지만
+     제목은 하나라, 읽어 주는 프로그램용으로 한 줄을 두고 눈에 보이는
+     큰 글자는 그 안의 `<em>` 으로 둡니다. */
+  return '<section class="shero">'+
+    '<h1 class="sr-only">창업에 필요한 모든 것, 폐업에 필요한 모든 것 — '+
+      esc(amBrand())+'</h1>'+
+    '<div class="sh-g">'+ side.map(function(d, i){
+      return '<a class="sh '+d.cls+'" href="'+esc(d.to)+'">'+
+        '<span class="sh-ph">'+photoBox(d.ph, "sh-img", i === 0)+'</span>'+
+        '<span class="sh-v" aria-hidden="true"></span>'+
+        '<span class="sh-in">'+
+          '<span class="sh-k">'+esc(d.k)+'</span>'+
+          '<em class="sh-n">'+esc(d.n)+'</em>'+
+          '<b class="sh-l">'+esc(d.lead)+'</b>'+
+          '<span class="sh-d">'+esc(d.sub)+'</span>'+
+          '<span class="sh-go">'+esc(d.go)+icon("arrow",20)+'</span>'+
+        '</span>'+
+      '</a>';
+    }).join("")+'</div>'+
   '</section>';
 }
 

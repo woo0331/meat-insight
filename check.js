@@ -666,8 +666,48 @@ const AUDIT = `(() => {
     if(t.indexOf("거래 당사자가 아닙니다") < 0) return "중개자 지위가 없습니다";
     return true;`);
 
-  console.log("\n── 흐름 " + 22 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
-              "접수 4 · MY 3 · 검색 3 · 문서 3)");
+  /* ⑧ 메인 Split Hero — 첫 화면의 주인공은 **두 낱말**입니다 (§2)
+     ⚠️ 이건 "보기 좋은가" 를 재는 검사가 아닙니다. 나중에 여기에
+     설명 · 검색창 · 숫자를 하나씩 더하다 보면 두 낱말이 조용히
+     작아지는데, 그걸 막는 것이 목적입니다. */
+  await f("히어로의 주인공이 창업 · 폐업 두 낱말이다", "/", `
+    const n = [].slice.call(document.querySelectorAll(".shero .sh-n"));
+    if(n.length !== 2) return "큰 낱말이 " + n.length + "개입니다";
+    const t = n.map(function(e){ return e.textContent.trim(); });
+    if(t[0] !== "창업" || t[1] !== "폐업") return t.join(" · ") + " 입니다";
+    const px = parseFloat(getComputedStyle(n[0]).fontSize);
+    if(px < 56) return "글씨가 " + Math.round(px) + "px 입니다 (56px 이상)";
+    const h = document.querySelector(".shero").getBoundingClientRect().height;
+    if(h < innerHeight * 0.6) return "히어로가 " + Math.round(h) + "px 입니다";
+    return true;`);
+  await f("히어로에 지어낸 숫자 · 잔 요소를 더하지 않았다", "/", `
+    const s = document.querySelector(".shero");
+    const t = s.textContent;
+    const pat = [[/\\d[\\d,]*\\s*\\+/, "n+ 꼴"], [/만족도/, "만족도"], [/누적/, "누적"],
+                 [/업체\\s*\\d/, "업체 수"], [/\\d+\\s*만\\s*명/, "회원 수"]];
+    for(const q of pat){ if(q[0].test(t)) return q[1] + " 가 있습니다"; }
+    if(s.querySelectorAll("input,select,textarea").length)
+      return "적는 칸이 생겼습니다 — 히어로에서 고르는 것은 둘뿐입니다";
+    const a = s.querySelectorAll("a");
+    if(a.length !== 2) return "누를 곳이 " + a.length + "개입니다 (창업 · 폐업 둘)";
+    return true;`);
+  await f("창업과 폐업을 색으로 가르지 않는다", "/", `
+    const v = [".sh-start .sh-v", ".sh-close .sh-v"].map(function(q){
+      const e = document.querySelector(q.split(" ")[0] + " .sh-v");
+      return e ? getComputedStyle(e).backgroundImage + getComputedStyle(e).backgroundColor : ""; });
+    for(const bg of v){
+      const m = bg.match(/rgba?\\((\\d+), ?(\\d+), ?(\\d+)/g) || [];
+      for(const c of m){
+        const p = c.match(/(\\d+), ?(\\d+), ?(\\d+)/);
+        const r = +p[1], g = +p[2], b2 = +p[3];
+        if(r > 150 && g < 90 && b2 < 90) return "빨강이 있습니다 " + c;
+        if(g > 150 && r < 90 && b2 < 120) return "초록이 있습니다 " + c;
+      }
+    }
+    return true;`);
+
+  console.log("\n── 흐름 " + 25 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
+              "접수 4 · MY 3 · 검색 3 · 문서 3 · 메인 히어로 3)");
   if (flowBad.length) { fail++; console.log("  ❌ " + flowBad.length + "건: " + flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

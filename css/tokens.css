@@ -70,6 +70,11 @@
           "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 
   --t-hero:  76px;   /* 메인 히어로 */
+  /* 메인 Split Hero 의 '창업' · '폐업' — 화면 폭을 따라갑니다.
+     ⚠️ 이것만 clamp() 입니다. 좁은 화면 토큰(아래 미디어쿼리)으로
+     줄이면 1440px 에서 임팩트가 죽고, 고정값으로 두면 390px 에서
+     두 글자가 칸 밖으로 넘칩니다. */
+  --t-split: clamp(62px, 10.2vw, 172px);
   --t-sig:   56px;   /* 장면용 큰 글자 */
   --t-3xl:   42px;   /* 구간 제목 */
   --t-2xl:   30px;

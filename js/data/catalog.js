@@ -332,3 +332,92 @@ window.amSub = function(catKey, subKey, industryKey){
   var r = amCatItems(c, industryKey).filter(function(i){ return i.key === subKey; });
   return r.length ? r[0] : null;
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   창업을 **과정**으로 보여 줍니다 (§7)
+
+   분류를 열세 개 늘어놓으면 손님이 그걸 공부해야 합니다. 사장님이
+   알고 싶은 것은 **"내가 지금 어디까지 왔고 다음에 뭘 해야 하는가"**
+   입니다.
+
+   ⚠️ **단계는 업종과 무관하게 같습니다.** 자리를 찾고 → 만들고 →
+   채우고 → 영업 준비하고 → 손님을 받는 것은 카페든 미용실이든
+   같습니다. 업종이 갈리는 것은 **각 단계 안의 하위 서비스**입니다
+   (카페 3단계에 커피머신, 미용 3단계에 샴푸대).
+
+   ⚠️⚠️ **모든 분류가 어느 한 단계에는 들어가야 합니다.** 빠뜨리면
+   그 분류가 창업 화면에서 **조용히 사라집니다** — 에러도 안 나고
+   화면도 멀쩡합니다. `check.js` 가 개수를 맞춰 봅니다.
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_START_STEPS = [
+  { n:"01", key:"place", name:"자리 찾기", icon:"map",
+    lead:"무엇을 할지 정하고, 돈을 마련하고, 자리를 고릅니다",
+    cats:["item","fund","store","area"] },
+  { n:"02", key:"build", name:"가게 만들기", icon:"hammer",
+    lead:"공사가 제일 오래 걸리고 제일 많이 듭니다",
+    cats:["interior"] },
+  { n:"03", key:"fill",  name:"채우기", icon:"box",
+    lead:"업종에 따라 여기가 제일 많이 갈립니다",
+    cats:["equip","furniture","supply"] },
+  { n:"04", key:"ready", name:"영업 준비", icon:"doc",
+    lead:"서류와 시스템. 빠뜨리면 문을 못 엽니다",
+    cats:["it","admin","staff"] },
+  { n:"05", key:"open",  name:"손님 받기", icon:"megaphone",
+    lead:"열고 나서가 진짜 시작입니다",
+    cats:["marketing","clean"] }
+];
+
+/* 그 업종의 그 단계에 들어가는 분류.
+   ⚠️ 업종 차례(`amCatsFor`)를 **단계 안에서** 지킵니다 — 업종이 먼저
+   꼽은 분류가 그 단계에서도 앞에 옵니다. */
+window.amStepCats = function(step, industryKey){
+  var order = (window.amCatsFor ? amCatsFor(industryKey, "start") : (window.AM_START_CATS||[]));
+  var want = {};
+  (step.cats || []).forEach(function(k){ want[k] = 1; });
+  return order.filter(function(c){ return want[c.key]; });
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   폐업은 목록이 아니라 **무엇을 원하시는가**부터 묻습니다 (§8)
+
+   폐업 화면에 들어오자마자 분류 열두 개를 늘어놓으면, 이미 지쳐
+   계신 분께 숙제를 하나 더 드리는 것입니다. 원하는 결과를 고르시면
+   그에 맞는 절차만 추려 드립니다.
+
+   ⚠️ **고르신 것에 없는 분류를 숨기지 마세요.** 추려 낸 것 아래에
+   나머지도 냅니다 — 숨기면 그 사장님에게는 그 기능이 없는 것이
+   됩니다. `check.js` 가 봅니다.
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_CLOSE_WANTS = [
+  { key:"pass",  name:"가게를 통째로 넘기고 싶어요", icon:"key",
+    lead:"양도가 되면 철거비도 안 들고 권리금도 회수할 기회가 생깁니다",
+    cats:["transfer","contract","tax","labor"] },
+  { key:"money", name:"최대한 돈을 남기고 정리하고 싶어요", icon:"won",
+    lead:"버리는 것보다 넘기는 쪽이 낫습니다. 시설 · 집기 · 재고까지",
+    cats:["transfer","asset","stock","tax","support"] },
+  { key:"fast",  name:"최대한 빨리 정리하고 싶어요", icon:"clock",
+    lead:"임대 기간이 남아 있으면 하루가 돈입니다",
+    cats:["demolish","restore","waste","process","contract"] },
+  { key:"lost",  name:"무엇부터 해야 할지 모르겠어요", icon:"info",
+    lead:"순서대로 짚어 드립니다. 기한이 있는 것이 여럿입니다",
+    cats:["process","tax","labor","contract","restore"] }
+];
+
+window.amCloseWant = function(key){
+  var r = (window.AM_CLOSE_WANTS||[]).filter(function(w){ return w.key === key; });
+  return r.length ? r[0] : null;
+};
+
+/* 고르신 것에 맞는 분류를 **앞에**, 나머지는 뒤에.
+   ⚠️ 잘라 내지 않습니다 — 숨기면 그 기능이 없는 것이 됩니다. */
+window.amCloseCatsFor = function(wantKey, industryKey){
+  var all = (window.amCatsFor ? amCatsFor(industryKey, "close") : (window.AM_CLOSE_CATS||[]));
+  var w = amCloseWant(wantKey);
+  if(!w) return { hit:all, rest:[] };
+  var want = {};
+  w.cats.forEach(function(k){ want[k] = 1; });
+  return {
+    hit:  all.filter(function(c){ return want[c.key]; }),
+    rest: all.filter(function(c){ return !want[c.key]; })
+  };
+};

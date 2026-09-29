@@ -26,16 +26,8 @@ function PageStartup(){
   '<section class="sec sec-white"><div class="w">'+
     IndustryGrid("/startup","")+
   '</div></section>'+
-  '<section class="sec"><div class="w">'+
-    '<div class="sec-hd">'+
-      '<p class="eyebrow">업종을 아직 못 정하셨다면</p>'+
-      '<h2>창업에 필요한 모든 것</h2>'+
-      '<p>업종을 고르지 않고 분류부터 보셔도 됩니다.</p>'+
-    '</div>'+
-    '<div class="cat-g cat-g4">'+
-      (window.AM_START_CATS||[]).map(function(c){ return CatCard(c,""); }).join("")+
-    '</div>'+
-  '</div></section>'+
+  /* 업종을 아직 안 고르셨어도 **순서**는 같습니다 */
+  StepBand(null)+
   StartupHelpBand();
 }
 
@@ -56,17 +48,7 @@ function PageStartupIndustry(ind){
   /* 장비를 제일 앞에 한 번 보여 줍니다 — 업종이 갈리는 것이 여기라
      "이 사이트가 내 업종을 안다" 가 여기서 읽힙니다 (§12) */
   (ind.equip && ind.equip.length ? EquipBand(ind) : "")+
-  '<section class="sec'+(ind.equip && ind.equip.length ? '' : ' sec-white')+'"><div class="w">'+
-    '<div class="sec-hd">'+
-      '<p class="eyebrow">창업 준비 순서대로</p>'+
-      '<h2>'+esc(ind.name)+' 창업에 필요한 모든 것</h2>'+
-      '<p>필요 없는 것은 건너뛰셔도 됩니다. 분류를 누르면 그 일을 하는 '+
-        '업체를 지역으로 비교하실 수 있습니다.</p>'+
-    '</div>'+
-    '<div class="cat-g cat-g4">'+
-      cats.map(function(c){ return CatCard(c, ind.key); }).join("")+
-    '</div>'+
-  '</div></section>'+
+  StepBand(ind)+
   (fcat ? FranchiseHint(fcat, ind) : "")+
   BridgeFor(ind, "start")+
   ReadBand({ side:"start", industry:ind.key,
@@ -114,11 +96,7 @@ function PageClosure(){
     lead:"통째로 넘기실 수도 있고, 시설만 파실 수도 있습니다. 순서와 기한이 있는 일이라 " +
          "빠뜨리면 돈이 나갑니다."
   })+
-  '<section class="sec sec-white"><div class="w">'+
-    '<div class="cat-g cat-g4">'+
-      (window.AM_CLOSE_CATS||[]).map(function(c){ return CatCard(c,""); }).join("")+
-    '</div>'+
-  '</div></section>'+
+  WantBand(null)+
   '<section class="sec"><div class="w">'+
     '<div class="sec-hd">'+
       '<p class="eyebrow">업종을 고르시면</p>'+
@@ -130,9 +108,84 @@ function PageClosure(){
   ClosureHelpBand();
 }
 
+/* ── 폐업은 목록이 아니라 **무엇을 원하시는가**부터 (§8) ──────────
+   폐업 화면에 들어오자마자 분류 열두 개를 늘어놓으면, 이미 지쳐
+   계신 분께 숙제를 하나 더 드리는 것입니다.
+
+   ⚠️ **고르신 것에 없는 분류를 숨기지 마세요.** 추린 것 아래에
+   나머지도 냅니다 — 숨기면 그 사장님에게는 그 기능이 없는 것이
+   됩니다. `check.js` 가 개수를 셉니다. */
+function WantBand(ind){
+  var wants = (window.AM_CLOSE_WANTS || []);
+  if(!wants.length) return "";
+  var i    = ind ? ind.key : "";
+  var base = ind ? ("/closure/" + ind.key) : "/closure";
+  var now  = nowQS("w");
+  var sel  = (window.amCloseWant ? amCloseWant(now) : null);
+
+  var pick = '<section class="sec sec-white"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">먼저 한 가지만</p>'+
+      '<h2>어떻게 정리하고 싶으세요?</h2>'+
+      '<p>고르시면 그에 맞는 절차만 앞으로 꺼내 드립니다. '+
+        '나머지도 아래에 그대로 있습니다.</p>'+
+    '</div>'+
+    '<ul class="wnt-l">'+ wants.map(function(w){
+      var on = (sel && sel.key === w.key);
+      return '<li><a class="wnt'+(on?" on":"")+'" href="'+
+        esc(base + "?w=" + encodeURIComponent(w.key))+'"'+
+        (on ? ' aria-current="true"' : '')+'>'+
+        '<span class="wnt-ic">'+icon(w.icon,20)+'</span>'+
+        '<b>'+esc(w.name)+'</b>'+
+        '<span class="wnt-l-d">'+esc(w.lead)+'</span>'+
+      '</a></li>';
+    }).join("")+'</ul>'+
+  '</div></section>';
+
+  if(!sel){
+    /* 아직 안 고르셨으면 분류 전부를 그대로 냅니다 — 고르는 것이
+       의무가 되면 안 됩니다 */
+    var all = (window.amCatsFor ? amCatsFor(i, "close") : (window.AM_CLOSE_CATS||[]));
+    return pick + '<section class="sec"><div class="w">'+
+      '<div class="sec-hd">'+
+        '<p class="eyebrow">고르지 않고 보셔도 됩니다</p>'+
+        '<h2>정리에 필요한 것 전부</h2>'+
+      '</div>'+
+      '<div class="cat-g cat-g4">'+
+        all.map(function(c){ return CatCard(c, i); }).join("")+
+      '</div>'+
+    '</div></section>';
+  }
+
+  var g = amCloseCatsFor(sel.key, i);
+  return pick +
+  '<section class="sec"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">고르신 것에 맞춰</p>'+
+      '<h2>'+esc(sel.name.replace(/[.?]$/, ""))+' — 이것부터입니다</h2>'+
+      '<p>'+esc(sel.lead)+'</p>'+
+    '</div>'+
+    '<div class="cat-g cat-g4">'+
+      g.hit.map(function(c){ return CatCard(c, i); }).join("")+
+    '</div>'+
+    (g.rest.length
+      ? '<div class="sec-hd sec-hd-sub">'+
+          '<h2 class="pg-h2">나머지도 그대로 있습니다</h2>'+
+          '<p>해당 없으면 건너뛰셔도 됩니다.</p>'+
+        '</div>'+
+        '<div class="cat-g cat-g4">'+
+          g.rest.map(function(c){ return CatCard(c, i); }).join("")+
+        '</div>'
+      : "")+
+    '<div class="row-cta"><a class="btn btn-b btn-lg" href="'+
+      esc(quoteTo({industry:i, side:"close"}))+'">'+
+      '한 번에 견적 요청'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-o btn-lg" href="/tools/close">폐업 체크리스트</a></div>'+
+  '</div></section>';
+}
+
 /* ── /closure/:industry ─────────────────────────────────────────── */
 function PageClosureIndustry(ind){
-  var cats = amCatsFor(ind.key, "close");
   return PgHero({
     crumb: Crumb([["폐업","/closure"],[ind.name]]),
     kicker:"CLOSE · " + ind.name,
@@ -145,16 +198,7 @@ function PageClosureIndustry(ind){
         '시설 · 집기 내놓기</a>'
   })+
   (ind.equip && ind.equip.length ? SellBand(ind) : "")+
-  '<section class="sec'+(ind.equip && ind.equip.length ? '' : ' sec-white')+'"><div class="w">'+
-    '<div class="sec-hd">'+
-      '<p class="eyebrow">정리 순서대로</p>'+
-      '<h2>'+esc(ind.name)+' 폐업에 필요한 모든 것</h2>'+
-      '<p>해당 없는 것은 건너뛰셔도 됩니다.</p>'+
-    '</div>'+
-    '<div class="cat-g cat-g4">'+
-      cats.map(function(c){ return CatCard(c, ind.key); }).join("")+
-    '</div>'+
-  '</div></section>'+
+  WantBand(ind)+
   BridgeFor(ind, "close")+
   ReadBand({ side:"close", industry:ind.key,
              title:"정리할 때 자주 막히는 것" })+
@@ -264,4 +308,50 @@ function PageCat(cat){
      구간째 빠집니다 */
   ReadBand({ cat:cat.key, side:side, industry:ind,
              title:cat.name+" 에서 자주 막히는 것" });
+}
+
+/* ── 창업을 과정으로 (§7) ────────────────────────────────────────
+   분류 열세 개를 늘어놓으면 손님이 그걸 공부해야 합니다. 사장님이
+   알고 싶은 것은 **"지금 어디까지 왔고 다음에 뭘 해야 하는가"**
+   입니다.
+
+   ⚠️ **단계는 업종과 무관하게 같습니다.** 갈리는 것은 단계 **안**의
+   하위 서비스입니다 — 카페 3단계에 커피머신, 미용 3단계에 샴푸대.
+   ⚠️ **어느 단계에도 안 든 분류가 없어야 합니다.** 빠지면 그 분류가
+   조용히 사라집니다 — `check.js` 가 개수를 맞춰 봅니다. */
+function StepBand(ind){
+  var steps = (window.AM_START_STEPS || []);
+  if(!steps.length) return "";
+  var i = ind ? ind.key : "";
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">창업 준비 순서대로</p>'+
+      '<h2>'+(ind ? esc(ind.name)+' 창업, 이 순서로 하시면 됩니다' : '창업은 이 순서로 하시면 됩니다')+'</h2>'+
+      '<p>분류를 외우실 필요 없습니다. 지금 하실 단계만 보세요 — '+
+        '필요 없는 것은 건너뛰셔도 됩니다.</p>'+
+    '</div>'+
+    '<ol class="stp-l">'+ steps.map(function(st){
+      var cs = (window.amStepCats ? amStepCats(st, i) : []);
+      /* ⚠️ 분류가 하나도 없는 단계는 통째로 뺍니다 (절대 규칙 2) */
+      if(!cs.length) return "";
+      return '<li class="stp">'+
+        '<div class="stp-h">'+
+          '<span class="stp-n">STEP '+esc(st.n)+'</span>'+
+          '<b class="stp-t">'+esc(st.name)+'</b>'+
+          '<span class="stp-d">'+esc(st.lead)+'</span>'+
+        '</div>'+
+        '<div class="stp-c">'+ cs.map(function(c){
+          var items = (window.amCatItems ? amCatItems(c, i) : []).slice(0, 5);
+          return '<a class="stp-i'+tn(c.tone)+'" href="'+esc(catTo(c))+
+            (i ? '?i='+encodeURIComponent(i) : '')+'">'+
+            '<span class="stp-i-ic">'+icon(c.icon,20)+'</span>'+
+            '<b>'+esc(c.name)+'</b>'+
+            (items.length ? '<span class="stp-i-s">'+
+              items.map(function(x){ return esc(x.name); }).join(" · ")+'</span>' : '')+
+            '<span class="stp-i-go" aria-hidden="true">'+icon("arrow",15)+'</span>'+
+          '</a>';
+        }).join("")+'</div>'+
+      '</li>';
+    }).join("")+'</ol>'+
+  '</div></section>';
 }

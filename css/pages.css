@@ -275,6 +275,63 @@
   .how-t{ margin-top:var(--s2); }
 }
 
+/* ════════ 창업 = 과정 (§7) ═══════════════════════════════════════
+   ⚠️ 분류를 늘어놓지 않고 **단계**로 묶습니다. 손님이 알고 싶은 것은
+   분류 이름이 아니라 "지금 어디까지 왔고 다음에 뭘 해야 하는가"
+   입니다. */
+.stp-l{ display:grid; gap:var(--s5); margin:0; padding:0; list-style:none;
+  counter-reset:none; }
+.stp{ display:grid; grid-template-columns:230px 1fr; gap:var(--s6);
+  padding:var(--s7) 0; border-top:1px solid var(--line); }
+.stp:first-child{ border-top:0; padding-top:0; }
+.stp-h{ display:grid; align-content:start; gap:4px; position:sticky; top:96px; }
+.stp-n{ font-size:var(--t-cap); font-weight:900; letter-spacing:.16em;
+  color:var(--blue); font-variant-numeric:tabular-nums; }
+.stp-t{ font-size:var(--t-xl); }
+.stp-d{ font-size:var(--t-cap); color:var(--ink3); line-height:1.7; }
+.stp-c{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s3); }
+.stp-i{ display:grid; align-content:start; gap:4px; position:relative;
+  padding:var(--s5) var(--s6); border-radius:var(--r-lg);
+  background:var(--bg-2); text-decoration:none; color:inherit;
+  transition:background .15s, transform .15s; }
+.sec-white .stp-i{ background:var(--bg-2); }
+.stp-i:hover{ background:var(--surface); transform:translateY(-2px);
+  box-shadow:var(--shadow-md); }
+.stp-i-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:36px; height:36px; border-radius:11px; margin-bottom:4px;
+  background:var(--ic-bg, var(--blue-50)); color:var(--ic-ink, var(--blue)); }
+.stp-i > b{ font-size:var(--t-base); }
+.stp-i-s{ font-size:var(--t-cap); color:var(--ink3); line-height:1.65; }
+.stp-i-go{ position:absolute; right:var(--s5); top:var(--s5); color:var(--ink3); }
+.stp-i:hover .stp-i-go{ color:var(--blue); }
+@media (max-width:980px){
+  .stp{ grid-template-columns:1fr; gap:var(--s4); }
+  /* ⚠️ 좁은 폭에서 `position:sticky` 를 풀어야 합니다. 안 풀면 제목이
+     화면에 붙은 채 카드만 지나가서 어느 단계인지 헷갈립니다. */
+  .stp-h{ position:static; }
+}
+@media (max-width:620px){ .stp-c{ grid-template-columns:1fr; } }
+
+/* ════════ 폐업 = 무엇을 원하시는가 (§8) ═════════════════════════ */
+.wnt-l{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s4);
+  margin:0; padding:0; list-style:none; }
+.wnt{ display:grid; align-content:start; gap:6px; height:100%;
+  padding:var(--s7); border-radius:var(--r-xl);
+  background:var(--bg-2); border:1px solid transparent;
+  text-decoration:none; color:inherit;
+  transition:border-color .15s, background .15s, transform .15s; }
+.wnt:hover{ transform:translateY(-3px); box-shadow:var(--shadow-md);
+  background:var(--surface); }
+.wnt.on{ border-color:var(--blue); background:var(--blue-50); }
+.wnt-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:14px; margin-bottom:var(--s2);
+  background:var(--surface); color:var(--blue); }
+.wnt.on .wnt-ic{ background:var(--blue); color:#fff; }
+.wnt > b{ font-size:var(--t-lg); line-height:1.4; }
+.wnt-l-d{ font-size:var(--t-cap); color:var(--ink3); line-height:1.7; }
+.sec-hd-sub{ margin-top:var(--s10); }
+@media (max-width:720px){ .wnt-l{ grid-template-columns:1fr; gap:var(--s3); } }
+
 /* ════════ 사장님 도구 ════════════════════════════════════════════ */
 .tl-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s4);
   margin:0; padding:0; list-style:none; }

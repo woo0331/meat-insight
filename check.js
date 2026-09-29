@@ -849,9 +849,41 @@ const AUDIT = `(() => {
     if(b && !b.querySelector("a")) return "빈 구간이 나왔습니다";
     return true;`);
 
-  console.log("\n── 흐름 " + 35 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
+  /* ⑬ 창업 = 과정 (§7) · 폐업 = 무엇을 원하시는가 (§8)
+     ⚠️ 둘 다 **분류를 잘라 내면** 그 기능이 그 손님에게는 없는 것이
+     됩니다. 개수를 세는 것이 이 검사의 전부입니다. */
+  await f("창업 단계에 분류가 하나도 안 빠진다", "/startup/cafe", `
+    const cards = document.querySelectorAll(".stp-i").length;
+    const all = (window.AM_START_CATS || []).length;
+    if(!cards) return "단계 구간이 없습니다";
+    if(cards !== all) return "화면 " + cards + "개 · 분류 " + all + "개";
+    const steps = [].slice.call(document.querySelectorAll(".stp-n"))
+      .map(function(e){ return e.textContent.trim(); });
+    if(steps.length < 3) return "단계가 " + steps.length + "개입니다";
+    if(steps[0].indexOf("01") < 0) return "첫 단계가 01 이 아닙니다";
+    return true;`);
+  await f("창업 단계 안에서도 업종이 갈린다", "/startup/cafe", `
+    /* 카페 3단계(채우기)에 커피머신이 보여야 업종을 안다는 뜻입니다 */
+    const t = document.querySelector(".stp-l").textContent;
+    if(t.indexOf("커피머신") < 0) return "카페인데 커피머신이 없습니다";
+    return true;`);
+  await f("폐업: 무엇을 원하는지 먼저 묻는다", "/closure", `
+    const w = document.querySelectorAll(".wnt").length;
+    if(w < 3) return "고를 것이 " + w + "개입니다";
+    const a = document.querySelector(".wnt");
+    if(!/\\?w=/.test(a.getAttribute("href"))) return "고르면 주소에 안 실립니다";
+    return true;`);
+  await f("폐업: 고른 것에 없는 분류도 안 숨긴다", "/closure/cafe?w=fast", `
+    const on = document.querySelector(".wnt.on");
+    if(!on) return "고른 것이 표시가 안 됩니다";
+    const shown = document.querySelectorAll(".cat").length;
+    const all = (window.amCatsFor ? amCatsFor("cafe", "close") : []).length;
+    if(shown !== all) return "화면 " + shown + "개 · 전체 " + all + "개 — 잘라 냈습니다";
+    return true;`);
+
+  console.log("\n── 흐름 " + 39 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
               "접수 4 · MY 3 · 검색 3 · 문서 3 · 메인 히어로 3 · 규모감 2 · FAQ · 진행 3 · " +
-              "정보 글 3 · 글 잇기 2)");
+              "정보 글 3 · 글 잇기 2 · 창업 과정 · 폐업 선택 4)");
   if (flowBad.length) { fail++; console.log("  ❌ " + flowBad.length + "건: " + flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

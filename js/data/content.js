@@ -441,6 +441,24 @@ window.amContent = function(slug){
   var r = (window.AM_CONTENTS||[]).filter(function(c){ return c.slug === slug; });
   return r.length ? r[0] : null;
 };
+/* 지금 보고 계신 자리에 맞는 글을 고릅니다.
+   ⚠️ **억지로 붙이지 마세요.** 맞는 것이 없으면 빈 배열을 돌려주고
+   화면은 구간째 뺍니다 (절대 규칙 2). 엉뚱한 데로 보내면 다음부터
+   안 누릅니다.
+   ⚠️ 분류가 같은 글이 **먼저**입니다. 원상복구 화면에 원상복구 글이
+   아니라 사업자등록 글이 위에 오면 안 됩니다. */
+window.amContentsFor = function(o){
+  o = o || {};
+  var all = window.AM_CONTENTS || [];
+  var hit = [], rest = [];
+  all.forEach(function(c){
+    if(o.industry && c.industry && c.industry !== o.industry) return;
+    if(o.cat && c.cat === o.cat){ hit.push(c); return; }
+    if(o.side && (c.side === o.side || c.side === "both")) rest.push(c);
+  });
+  return hit.concat(rest).slice(0, o.limit || 3);
+};
+
 window.amContents = function(f){
   f = f || {};
   return (window.AM_CONTENTS||[]).filter(function(c){

@@ -89,7 +89,11 @@ function PageProviderCat(cat){
         '곳에 같이 전달하고, 받으신 제안을 한 화면에서 비교하실 수 있습니다.</p></div>'+
     '<a class="btn btn-b btn-lg" href="'+esc(quoteTo({cat:cat.key,sub:sub,industry:ind,region:reg,side:side}))+'">'+
       '견적 요청하기'+icon("arrow",18)+'</a>'+
-  '</div></section>';
+  '</div></section>'+
+  /* 업체를 부르기 전에 알아 두면 견적이 정확해지는 것들.
+     ⚠️ 맞는 글이 없으면 구간째 빠집니다 (절대 규칙 2). */
+  ReadBand({ cat:cat.key, side:side, industry:ind,
+             title:"업체를 부르기 전에 알아 두면" });
 }
 
 function pcUrl(cat, sub, ind, reg){

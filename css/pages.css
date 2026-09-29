@@ -275,6 +275,30 @@
   .how-t{ margin-top:var(--s2); }
 }
 
+/* ════════ 읽을 것 — 지금 이 자리에서 필요한 글 ═══════════════════ */
+.rd-l{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s4);
+  margin:0; padding:0; list-style:none; }
+.rd-l a{ display:grid; align-content:start; gap:6px; position:relative;
+  height:100%; padding:var(--s7); border-radius:var(--r-xl);
+  background:var(--surface); text-decoration:none; color:inherit;
+  transition:transform .15s, box-shadow .2s; }
+.sec-white .rd-l a{ background:var(--bg-2); }
+.rd-l a:hover{ transform:translateY(-3px); box-shadow:var(--shadow-md); }
+.rd-m{ font-size:var(--t-cap); font-weight:800; color:var(--blue);
+  letter-spacing:.04em; }
+.rd-l b{ font-size:var(--t-lg); line-height:1.4; }
+.rd-p{ font-size:var(--t-cap); color:var(--ink3); line-height:1.7;
+  margin-top:2px; }
+.rd-go{ position:absolute; right:var(--s6); top:var(--s7); color:var(--ink3); }
+.rd-l a:hover .rd-go{ color:var(--blue); }
+@media (max-width:900px){ .rd-l{ grid-template-columns:1fr; gap:var(--s3); } }
+@media (max-width:520px){
+  .rd-l a{ padding:var(--s6) var(--s5); }
+  /* ⚠️ 화살표가 제목 위에 앉습니다. 폰에서는 뺍니다 — 카드 전체가
+     링크라 화살표가 없어도 누를 수 있다는 것이 보입니다. */
+  .rd-go{ display:none; }
+}
+
 /* ════════ 자주 묻는 것 ═══════════════════════════════════════════
    ⚠️ 접지 않습니다. 접힌 글은 검색엔진이 낮춰 볼 수 있고, 답이
    짧아서 접을 이유도 없습니다. */

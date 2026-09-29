@@ -42,7 +42,12 @@ function PageStores(){
               '<a class="btn btn-o" href="/closure">내 매장 내놓기</a>'
         }))+
   '</div></section>'+
-  BridgeNote();
+  BridgeNote()+
+  /* 자리를 보러 오신 분께 계약 전에 확인할 것을 냅니다 —
+     이 화면이 `store` 분류의 진짜 주소라 `/c/store` 가 아니라
+     여기에 붙습니다 */
+  ReadBand({ cat:"store", side:"start", industry:ind,
+             title:"계약 전에 확인하실 것" });
 }
 
 function StoreCard(s){
@@ -97,7 +102,9 @@ function PageAssets(){
               '찾는 조건 남기기</a>'
         }))+
   '</div></section>'+
-  BridgeNote();
+  BridgeNote()+
+  ReadBand({ cat:"asset", side:"close", industry:ind,
+             title:"넘기기 전에 알아 두면" });
 }
 
 function AssetCard(a){

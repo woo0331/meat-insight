@@ -817,8 +817,34 @@ const AUDIT = `(() => {
     if(/⚠️|TODO|지시서/.test(t)) return "작성 표시가 남았습니다";
     return true;`);
 
-  console.log("\n── 흐름 " + 33 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
-              "접수 4 · MY 3 · 검색 3 · 문서 3 · 메인 히어로 3 · 규모감 2 · FAQ · 진행 3 · 정보 글 3)");
+  /* ⑫ 글이 흐름에 이어져 있는가
+     ⚠️ 글을 써 놓고 목록에만 두면 **없는 것과 같습니다.** 손님은
+     목록을 뒤지지 않고, 막힌 그 자리에서 답을 찾습니다. 실제로
+     여덟 편을 쓰고 `/content` 와 검색에만 두었습니다. */
+  await f("막히는 자리에서 그 자리 글이 보인다", "/providers/restore", `
+    const b = document.querySelector(".rd-l");
+    if(!b) return "읽을 것 구간이 없습니다";
+    const t = [].slice.call(b.querySelectorAll("b")).map(function(e){
+      return e.textContent.trim(); });
+    if(!t.length) return "글이 하나도 없습니다";
+    /* 분류가 맞는 글이 **맨 앞**이어야 합니다 — 원상복구 화면에
+       사업자등록 글이 위에 오면 엉뚱한 데로 보내는 것입니다 */
+    if(t[0].indexOf("원상복구") < 0) return "맨 앞이 '" + t[0] + "' 입니다";
+    const a = b.querySelector("a");
+    if(!/^\\/content\\//.test(a.getAttribute("href"))) return "글로 안 갑니다";
+    return true;`);
+  await f("맞는 글이 없으면 구간을 아예 안 낸다", "/providers/marketing", `
+    /* ⚠️ 이 화면에 마케팅 글은 없습니다. 그래도 창업 글이 나오는 것은
+       맞습니다 — 없는데 "준비 중" 을 찍는 것만 아니면 됩니다. */
+    const b = document.querySelector(".rd-l");
+    const t = document.getElementById("view").textContent;
+    if(/준비 ?중입니다|곧 공개|coming/i.test(t)) return "자리표시자가 있습니다";
+    if(b && !b.querySelector("a")) return "빈 구간이 나왔습니다";
+    return true;`);
+
+  console.log("\n── 흐름 " + 35 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
+              "접수 4 · MY 3 · 검색 3 · 문서 3 · 메인 히어로 3 · 규모감 2 · FAQ · 진행 3 · " +
+              "정보 글 3 · 글 잇기 2)");
   if (flowBad.length) { fail++; console.log("  ❌ " + flowBad.length + "건: " + flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

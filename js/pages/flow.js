@@ -69,6 +69,8 @@ function PageStartupIndustry(ind){
   '</div></section>'+
   (fcat ? FranchiseHint(fcat, ind) : "")+
   BridgeFor(ind, "start")+
+  ReadBand({ side:"start", industry:ind.key,
+             title:"창업에서 자주 막히는 것" })+
   StartupHelpBand();
 }
 
@@ -154,6 +156,8 @@ function PageClosureIndustry(ind){
     '</div>'+
   '</div></section>'+
   BridgeFor(ind, "close")+
+  ReadBand({ side:"close", industry:ind.key,
+             title:"정리할 때 자주 막히는 것" })+
   ClosureHelpBand();
 }
 
@@ -255,5 +259,9 @@ function PageCat(cat){
           '견적 요청하기'+icon("arrow",16)+'</a>'+
           '<a class="btn btn-o" href="/join">이 분야 업체라면 입점하기</a>'
     })+
-  '</div></section>';
+  '</div></section>'+
+  /* 여기서 막히신 분께 그 자리에서 답을 냅니다 — 맞는 글이 없으면
+     구간째 빠집니다 */
+  ReadBand({ cat:cat.key, side:side, industry:ind,
+             title:cat.name+" 에서 자주 막히는 것" });
 }

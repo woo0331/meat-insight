@@ -163,3 +163,36 @@ window.amSet = function(key, val){
   try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){}
 };
 window.amDel = function(key){ try{ localStorage.removeItem(key); }catch(e){} };
+
+/* ── 읽을 것 — 지금 이 자리에서 필요한 글 ────────────────────────
+   ⚠️ 글을 써 놓고 **흐름에 안 이으면 없는 것과 같습니다.** 실제로
+   여덟 편을 쓰고 `/content` 와 검색에만 두었다가 이 구간을
+   만들었습니다 — 손님은 목록을 뒤지지 않고, 막힌 그 자리에서
+   답을 찾습니다.
+
+   ⚠️ **맞는 글이 없으면 구간째 뺍니다** (절대 규칙 2). "준비 중"
+   을 찍지 않습니다.
+   ⚠️ **억지로 붙이지 마세요.** 엉뚱한 데로 보내면 다음부터 안
+   누릅니다 — `amContentsFor()` 가 분류가 맞는 것을 먼저 냅니다. */
+window.ReadBand = function(o){
+  o = o || {};
+  var list = (window.amContentsFor ? amContentsFor(o) : []);
+  if(!list.length) return "";
+  return '<section class="sec"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">먼저 읽어 두시면</p>'+
+      '<h2>'+esc(o.title || "여기서 자주 막히는 것")+'</h2>'+
+    '</div>'+
+    '<ul class="rd-l">'+list.map(function(c){
+      return '<li><a href="/content/'+esc(c.slug)+'">'+
+        '<span class="rd-m">'+esc(c.side === "close" ? "폐업" : "창업")+
+          (c.read ? ' · '+esc(String(c.read))+'분' : '')+'</span>'+
+        '<b>'+esc(c.title)+'</b>'+
+        '<span class="rd-p">'+esc(c.lead)+'</span>'+
+        '<span class="rd-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
+      '</a></li>';
+    }).join("")+'</ul>'+
+    '<div class="row-cta"><a class="btn btn-o" href="/content">'+
+      '창업 · 폐업 정보 전부 보기'+icon("arrow",16)+'</a></div>'+
+  '</div></section>';
+};

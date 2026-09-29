@@ -82,7 +82,7 @@
 
 .crumb{ display:flex; align-items:center; gap:6px; flex-wrap:wrap;
   margin-bottom:var(--s5); font-size:var(--t-sm); color:var(--ink3); }
-.crumb a{ color:var(--ink2); min-height:32px; display:inline-flex; align-items:center; }
+.crumb a{ color:var(--ink2); min-height:40px; display:inline-flex; align-items:center; }
 .crumb a:hover{ color:var(--blue); }
 .crumb b{ color:var(--ink); font-weight:700; }
 
@@ -368,9 +368,12 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .join-l{ display:grid; gap:var(--s4); }
 .join-l li{ display:grid; grid-template-columns:auto 1fr; gap:var(--s3);
   align-items:start; color:var(--blue); }
-.join-l span{ display:grid; gap:2px; color:var(--ink2); font-size:var(--t-sm);
-  line-height:1.7; }
+/* ⚠️ **`display:grid` 인 칸에 글과 태그를 섞지 마세요.** 이 안에는
+   `<b>` 와 맨글이 같이 있어서, grid 로 두면 `<b>` 가 딴 칸이 되고
+   낱말이 딴 줄에 앉습니다. 전수 점검이 "칸1에 항목2" 로 잡습니다. */
+.join-l span{ display:grid; gap:2px; }
 .join-l b{ color:var(--ink); font-size:var(--t-base); }
+.join-l i{ font-style:normal; color:var(--ink2); font-size:var(--t-sm); line-height:1.7; }
 .join-cat{ margin-bottom:var(--s6); }
 .join-cat > b{ display:block; font-size:var(--t-base); margin-bottom:var(--s3); }
 @media (max-width:980px){ .join-b{ grid-template-columns:1fr; gap:var(--s7); } }
@@ -465,3 +468,43 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .tn-t6{ --ic-ink:var(--tn6-ink); --ic-bg:var(--tn6-bg); }
 .tn-t7{ --ic-ink:var(--tn7-ink); --ic-bg:var(--tn7-bg); }
 .tn-t8{ --ic-ink:var(--tn8-ink); --ic-bg:var(--tn8-bg); }
+
+/* ════════ 약관 · 개인정보처리방침 ════════════════════════════════
+   ⚠️ 클래스 이름이 헤더 로고(`.lg`)와 겹치지 않게 `.lgp` 로 둡니다.
+   예전에 둘 다 `.lg` 였다가 약관 쪽 padding 이 로고에 먹어서 **모든
+   화면에서 로고 윗부분이 잘려** 있었습니다.
+   ⚠️ 목차와 되돌아가기는 **누르는 것**입니다 — 40px 이상. */
+.lgp{ padding:var(--s9) 0 var(--s11); max-width:var(--w-read); }
+.back-l{ display:inline-flex; align-items:center; min-height:44px;
+  font-size:var(--t-sm); font-weight:700; color:var(--ink2); }
+.back-l:hover{ color:var(--blue); }
+.lg-hd{ margin:var(--s5) 0 var(--s7); }
+.lg-hd h1{ font-size:var(--t-3xl); }
+.lg-eff{ margin-top:var(--s3); font-size:var(--t-sm); color:var(--ink3); }
+.lg-intro{ padding:var(--s6); background:var(--bg-2); border-radius:var(--r-lg);
+  color:var(--ink2); line-height:1.85; margin-bottom:var(--s8); }
+.lg-toc{ display:grid; gap:2px; padding:var(--s5) var(--s6);
+  background:var(--bg-2); border-radius:var(--r-lg); margin-bottom:var(--s9); }
+.lg-toc a{ display:flex; align-items:center; min-height:40px;
+  font-size:var(--t-sm); color:var(--ink2); }
+.lg-toc a:hover{ color:var(--blue); }
+.lg-a{ margin-bottom:var(--s8); scroll-margin-top:calc(var(--hdr-h) + 16px); }
+.lg-t{ font-size:var(--t-xl); margin-bottom:var(--s4); }
+.lg-t3{ font-size:var(--t-lg); }
+.lg-sub{ font-size:var(--t-base); font-weight:700; margin:var(--s5) 0 var(--s2); }
+.lg-body{ display:grid; gap:var(--s3); }
+.lg-p{ color:var(--ink2); line-height:1.9; }
+.lg-n{ font-size:var(--t-sm); color:var(--ink3); }
+.lg-none{ color:var(--ink3); }
+.lg-tag{ display:inline-flex; align-items:center; font-size:var(--t-cap);
+  font-weight:700; color:var(--blue); background:var(--blue-50);
+  border-radius:var(--r-pill); padding:4px 11px; margin-bottom:var(--s3); }
+.lg-cols{ width:100%; border-collapse:collapse; font-size:var(--t-sm); }
+.lg-cols th,.lg-cols td{ padding:var(--s3) var(--s4); border:1px solid var(--line);
+  text-align:left; vertical-align:top; color:var(--ink2); }
+.lg-cols th{ background:var(--bg-2); color:var(--ink); white-space:nowrap; }
+.lg-fin{ margin-top:var(--s9); padding-top:var(--s6); border-top:1px solid var(--line); }
+.lg-tail{ margin-bottom:0; }
+@media (max-width:560px){
+  .lg-cols{ display:block; overflow-x:auto; }
+}

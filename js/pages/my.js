@@ -70,7 +70,7 @@ function PageMy(){
           '<a href="/quote">여기</a>에 나란히 놓고 보실 수 있습니다.</p>')+
     '</div>'+
 
-    '<div class="row-cta"><button class="btn btn-gh" type="button" onclick="myClear()">'+
+    '<div class="row-cta"><button class="btn btn-o" type="button" onclick="myClear()">'+
       '내 기록 전부 지우기</button></div>'+
   '</div></section>';
 }

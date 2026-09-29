@@ -88,8 +88,11 @@ function IndustryBand(){
       '<p>업종만 고르시면 그 업종 창업에 <b>실제로 필요한 것만</b> 추려 드립니다.</p>'+
     '</div>'+
     IndustryGrid("/startup","")+
-    '<p class="note note-mid">정리하시는 중이라면 '+
-      '<a href="/closure">폐업에서 시작</a>하시면 됩니다.</p>'+
+    /* ⚠️ 문장 한가운데 링크를 박지 않습니다 — 16px 이라 누르기
+       어렵습니다. 문단 끝에 버튼으로 내놓습니다. */
+    '<p class="note note-mid">정리하시는 중이신가요?</p>'+
+    '<div class="row-cta row-mid"><a class="btn btn-o" href="/closure">'+
+      '폐업에서 시작하기'+icon("arrow",16)+'</a></div>'+
   '</div></section>';
 }
 
@@ -164,7 +167,10 @@ function JoinBand(){
       '</div>'+
     '</div>'+
     '<ul class="join-l">'+how.map(function(h){
-      return '<li>'+icon("check",18)+'<span><b>'+esc(h[0])+'</b>'+esc(h[1])+'</span></li>';
+      /* ⚠️ `display:grid` 인 칸에 **맨글을 두지 마세요.** 태그로 감싸야
+         칸 수와 항목 수가 맞습니다 — 안 그러면 낱말이 딴 줄에 앉습니다. */
+      return '<li>'+icon("check",18)+
+        '<span><b>'+esc(h[0])+'</b><i>'+esc(h[1])+'</i></span></li>';
     }).join("")+'</ul>'+
   '</div></section>';
 }

@@ -407,6 +407,25 @@ function noscriptFor(W, r, route){
   if(route === "/content"){
     h2("창업 · 폐업 정보");
     ul((W.AM_CONTENTS||[]).map(c => c.title));
+    /* ⚠️ 글이 아직 없어도 **무엇을 다루는 자리인지**는 적습니다.
+       크롤러에게 빈 화면을 주면 이 주소는 없는 것과 같습니다.
+       ⚠️ 여기에 금액을 적지 마세요 — 근거를 댈 수 없으면 "무엇이
+       금액을 가르는가" 를 적습니다 (§45). */
+    h2("창업에서 막히는 것");
+    ul(["업종별 창업비용은 무엇이 가르는가 — 평수 · 지역 · 철거 유무 · 시설 인수 여부",
+        "권리금은 무엇에 대한 값인가",
+        "사업자등록과 업종별 인허가 순서",
+        "상가 임대차계약에서 확인할 것",
+        "정책자금과 정부지원사업 신청 조건"]);
+    h2("폐업에서 막히는 것");
+    ul(["폐업 절차와 기한이 있는 신고",
+        "원상복구 범위는 계약서의 어디를 보는가",
+        "철거비는 무엇이 가르는가 — 평수 · 층수 · 폐기물 종류 · 반출 조건",
+        "시설과 집기를 버리지 않고 넘기는 방법",
+        "직원 퇴직금과 4대보험 정리 순서",
+        "인터넷 · POS · 렌탈 계약 해지와 위약금"]);
+    p("근거를 댈 수 있는 것만 씁니다. 법령과 제도는 바뀌므로 확인하는 곳을 " +
+      "같이 적습니다 (관할 구청 · 세무서 · 고용노동부).");
     return L.join("");
   }
   const mct = /^\/content\/([a-z0-9-]+)$/.exec(route);
@@ -414,6 +433,19 @@ function noscriptFor(W, r, route){
     const ct = (W.AM_CONTENTS||[]).filter(x => x.slug === mct[1])[0];
     if(ct) (ct.body||[]).forEach(b => {
       if(b.h) h2(b.h); (b.p||[]).forEach(p); ul(b.ul||[]);
+    });
+    return L.join("");
+  }
+  /* 약관 · 방침 — ⚠️ 본문이 데이터에 있으므로 조문 제목이라도 냅니다.
+     크롤러에게 빈 화면을 주면 이 주소는 없는 것과 같습니다. */
+  if(route === "/terms" || route === "/privacy"){
+    const D = route === "/terms" ? (W.WOW_TERMS||{}) : (W.WOW_PRIVACY||{});
+    if(D.intro) p(D.intro);
+    (D.articles || D.sections || []).forEach(a => {
+      const t = a.title || a.h || "";
+      if(t) h2(t);
+      const items = a.items || a.body || a.lines || [];
+      ul(items.filter(x => typeof x === "string"));
     });
     return L.join("");
   }

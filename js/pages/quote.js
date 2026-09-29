@@ -143,7 +143,7 @@ function QcTable(qs){
     '</tbody></table></div>'+
     '<div class="row-cta"><button class="btn btn-o" type="button" onclick="qcAdd()">'+
       '제안 추가'+icon("plus",16)+'</button>'+
-      '<button class="btn btn-gh" type="button" onclick="qcClear()">전부 지우기</button></div>'+
+      '<button class="btn btn-o" type="button" onclick="qcClear()">전부 지우기</button></div>'+
     '<p class="note">어느 것이 낫다고 표시하지 않습니다. 저희는 그 현장을 보지 않았습니다.</p>';
 }
 window.qcAdd = function(){
@@ -168,6 +168,15 @@ window.qcClear = function(){
 window.quoteSend = function(ev){
   ev.preventDefault();
   if(!$("q-ag").checked){ toast("개인정보 수집 · 이용 동의가 필요합니다"); return false; }
+  /* ⚠️ **화면에서도 막습니다.** `required` 는 폼 제출을 막아 주지만
+     이 함수를 직접 부르면 그냥 지나갑니다 — 서버가 400 을 돌려줘도
+     그때는 이미 보낸 것입니다. */
+  var need = [["q-what","필요한 일"],["q-q","자세한 내용"],
+              ["q-name","성함"],["q-tel","연락처"]];
+  for(var i=0;i<need.length;i++){
+    if(!$(need[i][0]).value.trim()){
+      toast(need[i][1]+"을(를) 적어 주세요"); $(need[i][0]).focus(); return false; }
+  }
   var ind = $("q-ind").value, reg = $("q-reg").value;
   var body = {
     kind: "quote",
@@ -193,6 +202,12 @@ window.quoteSend = function(ev){
 window.joinSend = function(ev){
   ev.preventDefault();
   if(!$("jn-ag").checked){ toast("개인정보 수집 · 이용 동의가 필요합니다"); return false; }
+  var jneed = [["jn-name","업체명"],["jn-ceo","담당자 성함"],
+               ["jn-tel","연락처"],["jn-svc","하시는 일"]];
+  for(var j=0;j<jneed.length;j++){
+    if(!$(jneed[j][0]).value.trim()){
+      toast(jneed[j][1]+"을(를) 적어 주세요"); $(jneed[j][0]).focus(); return false; }
+  }
   var reg = $("jn-reg").value, ind = $("jn-ind").value;
   var body = {
     kind: "partner",

@@ -78,8 +78,12 @@ function EquipBand(ind){
     '<div class="sec-hd">'+
       '<p class="eyebrow">'+esc(ind.name)+' 전용</p>'+
       '<h2>이 업종에 필요한 장비</h2>'+
+      /* ⚠️ 문장 한가운데 링크를 박지 않습니다 — 21px 이라 누르기
+         어렵습니다. 문단 끝에 버튼으로 내놓습니다. */
       '<p>업종마다 다릅니다. 새로 사실 수도 있고, 정리하시는 곳에서 '+
-        '<a href="/assets?i='+encodeURIComponent(ind.key)+'">중고로 인수</a>하실 수도 있습니다.</p>'+
+        '중고로 인수하실 수도 있습니다.</p>'+
+      '<a class="sec-more" href="/assets?i='+encodeURIComponent(ind.key)+'">'+
+        '중고 시설 · 장비 보기'+icon("chev",15)+'</a>'+
     '</div>'+
     '<ul class="chip-g">'+ind.equip.map(function(e){
       return '<li><a class="chip" href="/providers/equip?s='+encodeURIComponent(e.key)+

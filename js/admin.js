@@ -138,11 +138,14 @@ function adPick(text, keys){
 function adGuess(text){
   var t = String(text || "");
   var best = null, bestN = 0;
-  WOW_PROBLEMS.forEach(function(p){
-    var words = (p.name + " " + (p.hint || "")).split(/[\s·,]+/).filter(Boolean);
+  /* 분류와 **하위 분류 이름**을 같이 봅니다 — 접수 글에는 "닥트" ·
+     "원상복구" 처럼 하위 분류 이름이 그대로 들어옵니다. */
+  (window.AM_CATS || []).forEach(function(c){
+    var words = [c.name, c.lead].concat((c.items||[]).map(function(i){ return i.name; }))
+                  .join(" ").split(/[\s·,]+/).filter(Boolean);
     var n = 0;
     words.forEach(function(w){ if(w.length > 1 && t.indexOf(w) >= 0) n++; });
-    if(n > bestN){ bestN = n; best = p.key; }
+    if(n > bestN){ bestN = n; best = c.key; }
   });
   return bestN > 0 ? best : "";
 }
@@ -163,6 +166,21 @@ window.adRead = function(){
 
 window.adSet = function(what, v){ AD[what] = v; adDraw(); };
 
+/* 분류 전체의 하위 분류 — 업체 입점과 견적 전달의 단위입니다 */
+function adAllSubs(){
+  var out = [];
+  (window.AM_CATS || []).forEach(function(c){
+    (c.items || []).forEach(function(i){
+      out.push([c.key + ":" + i.key, c.name + " · " + i.name]);
+    });
+  });
+  return out;
+}
+function adSubName(v){
+  var hit = adAllSubs().filter(function(x){ return x[0] === v; })[0];
+  return hit ? hit[1].split(" · ").pop() : "";
+}
+
 function adFields(){
   var raw = ($("ad-in") || {}).value || "";
   return {
@@ -181,10 +199,9 @@ function adDraw(){
   var box = $("ad-out");
   if(!box) return;
   var F = adFields();
-  var G = AD.prob && typeof wowGuide === "function" ? wowGuide(AD.prob) : null;
-  var P = AD.prob && typeof wowProblem === "function" ? wowProblem(AD.prob) : null;
-  var svcName = AD.svc && typeof wowServiceName === "function"
-    ? wowServiceName(AD.svc) : "";
+  var G = null;                       /* 가이드는 이 플랫폼에 없습니다 */
+  var P = AD.prob && typeof amCat === "function" ? amCat(AD.prob) : null;
+  var svcName = AD.svc ? adSubName(AD.svc) : "";
 
   if(!F.raw.trim()){
     box.innerHTML = '<p class="ad-empty">접수 내용을 붙여 넣고 '+
@@ -230,7 +247,7 @@ function adVet(id, text){
 
 function adReply(F, P, G){
   var L = [];
-  L.push("사장님, ABOUTMEAT 입니다.");
+  L.push("사장님, 시작과 정리 입니다.");
   L.push("");
   L.push("적어 주신 내용 잘 받았습니다" + (P ? " (" + P.name + ")" : "") + ".");
   L.push("");
@@ -253,9 +270,21 @@ function adReply(F, P, G){
   return adText(L);
 }
 
+/* 신원이 드러나는 줄을 걷어냅니다 — 업체에 보내는 글에만 씁니다.
+   ⚠️ 이름표(성함 · 연락처)가 없는 줄에 전화번호가 섞여 있을 수도 있어서
+   **번호 꼴 자체**도 같이 지웁니다. */
+function adStripPii(raw){
+  var drop = /^\s*[·\-*]?\s*(성함|이름|연락처|전화|휴대폰|핸드폰|이메일|메일|E-?mail)\s*[:：]?/i;
+  return String(raw || "").split("\n").filter(function(line){
+    return !drop.test(line);
+  }).join("\n")
+    .replace(/0\d{1,2}[-.\s]?\d{3,4}[-.\s]?\d{4}/g, "(연락처는 동의 후 전달)")
+    .replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, "(이메일은 동의 후 전달)");
+}
+
 function adVendor(F, P, G, svcName){
   var L = [];
-  L.push("[ABOUTMEAT] 요청 한 건 보내 드립니다.");
+  L.push("[시작과 정리] 요청 한 건 보내 드립니다.");
   L.push("");
   if(svcName) L.push("· 서비스   " + svcName);
   if(P)       L.push("· 분류     " + P.name);
@@ -264,7 +293,12 @@ function adVendor(F, P, G, svcName){
   if(F.budget)L.push("· 예산     " + F.budget);
   L.push("");
   L.push("── 사장님이 적어 주신 상황 ──");
-  L.push(adBody(F.raw));
+  /* ⚠️⚠️ **붙여 넣은 원문을 그대로 넣으면 안 됩니다.** 거기에는 성함과
+     연락처가 같이 들어 있습니다 — 업체가 정해지기 전에 넘기면
+     개인정보보호법 제17조 위반입니다. 신원 줄을 먼저 걷어냅니다.
+     ⚠️ 걸러 낸 뒤에도 `adVet()` 가 한 번 더 보고 **보이게** 합니다
+     (막지는 않습니다 — 막으면 다른 데로 우회합니다). */
+  L.push(adBody(adStripPii(F.raw)));
   L.push("");
   if(G && G.ask.length){
     L.push("── 견적에 이 답을 같이 적어 주세요 ──");
@@ -281,7 +315,7 @@ function adVendor(F, P, G, svcName){
 function adConsent(F, svcName){
   var co = AD.co.trim();
   var L = [];
-  L.push("사장님, ABOUTMEAT 입니다.");
+  L.push("사장님, 시작과 정리 입니다.");
   L.push("");
   L.push("요청하신 건을 맡아 주실 업체가 정해졌습니다.");
   L.push("");
@@ -383,9 +417,9 @@ function adInit(){
         '골라 둡니다. 맞는지 보시고 고치세요 — 자동으로 분류하지 않습니다.</p>'+
       '<div class="ad-g">'+
         adSel("ad-prob", "문제 분류", "prob",
-          WOW_PROBLEMS.map(function(p){ return [p.key, p.name]; }))+
+          (window.AM_CATS||[]).map(function(c){ return [c.key, c.name]; }))+
         adSel("ad-svc", "견적 서비스", "svc",
-          WOW_SERVICES.map(function(s){ return [s.key, s.groupName+" · "+s.name]; }))+
+          adAllSubs())+
         '<div class="ad-f"><label for="ad-co">업체명 <em>(정해졌으면)</em></label>'+
           '<input id="ad-co" type="text" autocomplete="off" placeholder="예: 가나덕트"'+
           ' oninput="adSet(\'co\',this.value)"></div>'+

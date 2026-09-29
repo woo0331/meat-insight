@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   ABOUTMEAT 전수 점검
+   전수 점검 — 창업 · 폐업 플랫폼
 
    실행:  node check.js
 
@@ -42,49 +42,45 @@ const server = http.createServer((rq,rs)=>{
 const ROOT = "http://127.0.0.1:" + PORT;
 
 const PAGES = [
-  ["/",                "메인"],
-  ["/sos",             "사장님 SOS"],
-  ["/sos?c=duct",      "SOS (분류 고른 채로)"],
-  ["/start",           "창업 프로젝트"],
-  ["/start/cost",      "창업비 정리표"],
-  ["/check",           "무료 사업진단"],
-  ["/partners",        "업체 찾기"],
-  ["/request",         "견적 요청 (고르는 화면)"],
-  ["/request?s=duct",  "견적 요청 (덕트)"],
-  ["/request?s=beef-supply", "견적 요청 (육류 공급)"],
-  /* 문제별 해결 가이드 — 흐름의 가운데 두 칸입니다.
-     ⚠️ 열 편을 다 넣으면 검사가 한참 길어집니다. **짜임새가 서로 다른
-     세 편**을 고릅니다 — 위험 신호가 있는 것(cold), 없는 것(duct),
-     목록이 제일 긴 것(interior). */
-  ["/problems",        "고민별 해결방법"],
-  ["/problem/duct",    "가이드 (덕트 민원)"],
-  ["/problem/cold",    "가이드 (냉장 고장 · 위험 신호 있음)"],
-  ["/problem/interior","가이드 (인테리어 · 목록 제일 긺)"],
-  ["/problem/exit",    "가이드 (가게 정리 · 맺음 카드 네 장)"],
-  ["/request?s=pack",  "견적 요청 (가이드 없는 서비스)"],
-  ["/quotes?g=duct",   "견적 비교 (덕트 가이드에서 옴)"],
-  ["/lab",             "사장님 연구소"],
-  ["/lab?c=fac",       "연구소 (분류 고른 채로)"],
-  /* ⚠️ 글 화면이 검사에 아예 안 들어가 있었습니다. 열두 편이 통째로
-     안 보이고 있었던 셈입니다 — 제목(h1) 검사를 일부러 깨 봤는데
-     안 걸려서 알았습니다. 제일 긴 것과 목록이 많은 것을 넣습니다. */
-  ["/lab/duct-smell-complaint", "글 (덕트 민원)"],
-  ["/lab/open-permits",         "글 (오픈 인허가)"],
-  ["/quotes",          "견적 비교"],
-  ["/tools",           "도구 모음"],
-  ["/tools/yield",     "수율 원가 계산"],
-  ["/tools/bep",       "손익분기 계산"],
-  ["/tools/labor",     "인건비율 계산"],
-  ["/search?q=%EB%8D%95%ED%8A%B8", "검색 결과"],
-  ["/search?q=zzz",    "검색 (못 찾음)"],
-  ["/partner",         "파트너 안내"],
-  ["/partner/apply",   "파트너 등록"],
-  ["/about",           "소개"],
-  ["/terms",           "이용약관"],
-  ["/privacy",         "개인정보처리방침"],
-  ["/my",              "MY BUSINESS"],
-  ["/login",           "로그인"],
-  ["/nope",            "없는 주소"]
+  ["/",                  "메인 — 두 선택"],
+  ["/startup",           "창업 진입 (업종 고르기)"],
+  /* 업종 열넷을 다 넣으면 검사가 한참 길어집니다. **짜임새가 서로 다른
+     것**을 고릅니다 — 장비가 제일 많은 것(cafe), 재고가 도는 것
+     (restaurant), 장비가 없는 것(etc), 폐업 쪽이 특이한 것(gym). */
+  ["/startup/cafe",      "카페 창업"],
+  ["/startup/restaurant","음식점 창업"],
+  ["/startup/etc",       "기타 업종 창업 (장비 없음)"],
+  ["/closure",           "폐업 진입 (정리 방법)"],
+  ["/closure/restaurant","음식점 폐업"],
+  ["/closure/gym",       "헬스장 폐업"],
+  ["/providers",         "업체찾기"],
+  ["/providers/interior","인테리어 · 시공 업체"],
+  ["/providers/demolish","철거 업체"],
+  ["/providers/it",      "IT · 매장시스템 업체"],
+  ["/providers/admin",   "행정 · 전문가"],
+  ["/providers/interior?s=duct&i=cafe&r=gyeonggi", "업체 (하위분류 · 업종 · 지역 고른 채)"],
+  ["/c/area",            "상권 · 입지"],
+  ["/c/process",         "폐업 절차"],
+  ["/c/item",            "창업 아이템"],
+  ["/franchise",         "프랜차이즈"],
+  ["/franchise/cafe",    "카페 프랜차이즈"],
+  ["/stores",            "점포 · 상가"],
+  ["/stores?i=cafe",     "점포 (업종 고른 채)"],
+  ["/assets",            "시설 · 집기"],
+  ["/assets?i=gym",      "시설 (업종 고른 채)"],
+  ["/support",           "자금 · 정부지원"],
+  ["/content",           "창업 · 폐업 정보"],
+  ["/quote",             "견적 요청"],
+  ["/quote?c=interior&i=cafe&r=gyeonggi&side=start", "견적 요청 (조건 실려 옴)"],
+  ["/join",              "업체 입점하기"],
+  ["/my",                "MY"],
+  ["/search",            "검색 (처음)"],
+  ["/search?q=%EC%B9%B4%ED%8E%98%20%EC%9D%B8%ED%85%8C%EB%A6%AC%EC%96%B4", "검색 결과 (카페 인테리어)"],
+  ["/search?q=zzz",      "검색 (못 찾음)"],
+  ["/about",             "소개"],
+  ["/terms",             "이용약관"],
+  ["/privacy",           "개인정보처리방침"],
+  ["/nope",              "없는 주소"]
 ];
 const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[390,844,"모바일"]];
 
@@ -400,26 +396,43 @@ const AUDIT = `(() => {
      ⚠️ 해시를 읽던 자리가 남으면 **에러 없이 조용히 틀린 답**을 냅니다.
      화면은 그려지니 위의 검사들은 다 통과합니다 — 그래서 따로 봅니다. */
   const NAV = [
-    ["/sos",        "헤더 메뉴 없음(SOS는 GNB 밖)", () => !document.querySelector("#gnb a.on")],
-    ["/start",      "헤더 메뉴 켜짐", () => !!document.querySelector('#gnb a.on[href="/start"]')],
-    ["/check",      "헤더 메뉴 켜짐", () => !!document.querySelector('#gnb a.on[href="/check"]')],
-    ["/partners",   "아래 네비 켜짐", () => !!document.querySelector('.mnav a.on[data-m="/quotes"]')],
-    ["/start",      "아래 네비 창업", () => !!document.querySelector('.mnav a.on[data-m="/start"]')],
-    ["/",           "아래 네비 홈",   () => !!document.querySelector('.mnav a.on[data-m="/"]')],
-    ["/sos",        "아래 네비 SOS",  () => !!document.querySelector('.mnav a.on[data-m="/sos"]')],
-    ["/sos?q=%ED%85%8C%EC%8A%A4%ED%8A%B8", "메인에서 적은 말이 넘어옴",
-      () => document.getElementById("s-q").value === "테스트"],
-    ["/sos?c=duct", "고른 분류가 켜져 있음",
-      () => !!document.querySelector('#s-cat .pk.on[data-k="duct"]')],
-    ["/request?s=duct", "고른 서비스로 요청서가 뜸",
-      () => document.getElementById("rq-svc").value === "duct"
-         && !!document.getElementById("rq-f-fires")],
-    ["/request?s=beef-supply", "서비스마다 묻는 칸이 다름",
-      () => !!document.getElementById("rq-f-amount")
-         && !document.getElementById("rq-f-fires")],
-    ["/request?s=nope-없는것", "모르는 서비스는 영문 key 를 안 찍고 고르는 화면으로",
-      () => !document.getElementById("rq-svc")
-         && document.getElementById("view").textContent.indexOf("nope") < 0]
+    ["/startup",   "헤더 메뉴 켜짐",
+      () => !!document.querySelector('#gnb a.on[data-to="/startup"]')],
+    ["/closure",   "헤더 메뉴 켜짐",
+      () => !!document.querySelector('#gnb a.on[data-to="/closure"]')],
+    ["/startup/cafe", "속화면에서도 부모 메뉴가 켜짐",
+      () => !!document.querySelector('#gnb a.on[data-to="/startup"]')],
+    ["/providers", "아래 네비 켜짐",
+      () => !!document.querySelector('.mnav a.on[data-to="/providers"]')],
+    ["/stores",    "아래 네비는 제일 가까운 칸",
+      () => !!document.querySelector('.mnav a.on[data-to="/providers"]')],
+    ["/",          "아래 네비 홈",
+      () => !!document.querySelector('.mnav a.on[data-to="/"]')],
+    ["/closure/gym", "아래 네비 폐업",
+      () => !!document.querySelector('.mnav a.on[data-to="/closure"]')],
+    /* 주소에 실린 조건이 화면에 그대로 반영되는가 — 끊기면 손님은
+       같은 것을 두 번 적게 되고 거기서 닫습니다. */
+    ["/quote?c=interior&s=duct&i=cafe&r=gyeonggi&side=start",
+      "견적 요청에 조건이 채워짐",
+      () => document.getElementById("q-what").value.indexOf("닥트") >= 0
+         && document.getElementById("q-ind").value === "cafe"
+         && document.getElementById("q-reg").value === "gyeonggi"
+         && document.getElementById("q-side").value === "start"],
+    ["/providers/interior?s=duct", "고른 하위 분류 칩이 켜짐",
+      () => !!document.querySelector('.chip.on')],
+    ["/assets?i=gym", "업종을 고르면 그 업종 장비 칩이 나옴",
+      () => document.getElementById("fil-i").value === "gym"
+         && document.body.textContent.indexOf("운동기구") >= 0],
+    ["/startup/cafe", "업종별 장비가 그 업종 것으로 바뀜",
+      () => document.body.textContent.indexOf("커피머신") >= 0
+         && document.body.textContent.indexOf("미용의자") < 0],
+    ["/startup/hair", "다른 업종이면 다른 장비가 나옴",
+      () => document.body.textContent.indexOf("미용의자") >= 0
+         && document.body.textContent.indexOf("커피머신") < 0],
+    ["/closure/gym", "폐업도 업종마다 다름",
+      () => document.body.textContent.indexOf("운동기구") >= 0],
+    ["/startup/nope-없는업종", "없는 업종은 404 로",
+      () => document.body.textContent.indexOf("찾으시는 페이지가 없습니다") >= 0]
   ];
   const navBad = [];
   const np = await (await b.newContext({ viewport:{width:390,height:900} })).newPage();
@@ -434,970 +447,231 @@ const AUDIT = `(() => {
   if (navBad.length) { fail++; console.log("  ❌ "+navBad.length+"건: "+navBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 
-  /* 9. SOS 접수 — 동의 없이는 보내지 않습니다
-     ⚠️ 동의 없이 받은 개인정보는 개인정보보호법 제15조 위반입니다.
-     화면에서 한 번, 서버(api/quote.js)에서 한 번 막습니다. */
-  const sosBad = [];
-  const sp = await (await b.newContext({ viewport:{width:1440,height:1000} })).newPage();
-  const t = async (name, fn) => { let ok=false;
-    try{ ok = await sp.evaluate("(async()=>{ "+fn+" })()"); }catch(e){ ok = "에러 "+e.message; }
-    if (ok !== true) sosBad.push(name + (typeof ok==="string" ? " ("+ok+")" : "")); };
-  await sp.goto(ROOT + "/sos", { waitUntil:"load" });
-  await sp.waitForTimeout(250);
+  /* ── 흐름 검사 ─────────────────────────────────────────────
+     화면 하나하나가 그려지는 것과, **눌렀을 때 다음 화면으로 값이
+     넘어가는 것**은 다릅니다. 끊기면 손님은 같은 것을 두 번 적게
+     되고 거기서 닫습니다.
 
-  const fill = `
-    document.getElementById("s-q").value="덕트 냄새 민원이 들어옵니다";
-    document.getElementById("s-name").value="홍길동";
-    document.getElementById("s-tel").value="010-1234-5678";`;
-  await t("동의 없이는 보내지 않는다", `
-    SOS.sending=false; render(); await new Promise(r=>setTimeout(r,150));
-    ${fill}
-    document.getElementById("s-ag").checked=false;
-    let sent=false; const f=window.fetch;
-    window.fetch=function(){ sent=true; return Promise.reject(new Error("테스트")); };
-    sosSend({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,200)); window.fetch=f;
-    return sent===false;`);
-  await t("동의하면 보낸다", `
-    SOS.sending=false; render(); await new Promise(r=>setTimeout(r,150));
-    ${fill}
-    document.getElementById("s-ag").checked=true;
-    let sent=false; const f=window.fetch;
-    window.fetch=function(){ sent=true; return Promise.reject(new Error("테스트")); };
-    sosSend({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,250)); window.fetch=f;
-    return sent===true;`);
-  await t("분류는 하나만 골라진다", `
-    SOS.sending=false; render(); await new Promise(r=>setTimeout(r,150));
-    const ps=[...document.querySelectorAll("#s-cat .pk")];
-    sosPick(ps[0]); sosPick(ps[3]);
-    return document.querySelectorAll("#s-cat .pk.on").length===1;`);
-  /* ⚠️ 지어낸 숫자를 화면에 내지 않습니다 (지시서 43번 · 절대 규칙 1).
-     업체 수 · 계약 수 · 절감금액 · 고객 수 · 평점 · 시공건수 —
-     실제 데이터가 없으면 그 구간을 **아예 내지 않습니다.**
-     ⚠️ 시안에 "3,200+ 사장님 · 1,500+ 검증된 업체 · 만족도 98%" 와
-     별점 "4.9 (120)" 이 있었습니다. 그게 여기서 걸려야 합니다. */
-  const FAKE = [
-    ["실적 수식어",  /[0-9][0-9,]*\s*(건|곳|명|원|개)\s*(절감|달성|계약|등록|이용|돌파|시공)/],
-    ["n+ 꼴 숫자",   /[0-9][0-9,]*\s*\+/],
-    ["만족도·성공률", /(만족도|재구매율|성공률|정확도)\s*[0-9]/],
-    ["누적·총 실적", /(누적|총)\s*[0-9][0-9,]*\s*(건|곳|명|개)/],
-    ["별점",        /[★⭐]|[0-5]\.[0-9]\s*\(\s*[0-9]+\s*\)/]
-  ];
-  await t("메인에 지어낸 실적 숫자가 없다", `
-    go("/"); await new Promise(r=>setTimeout(r,250));
-    const txt=document.getElementById("view").textContent;
-    const hit=${JSON.stringify(FAKE.map(f=>[f[0],f[1].source]))}
-      .filter(f=>new RegExp(f[1]).test(txt)).map(f=>f[0]);
-    return hit.length ? hit.join("·")+" 가 보입니다" : true;`);
-  console.log("\n── SOS 흐름 " + 5 + "개");
-  if (sosBad.length) { fail++; console.log("  ❌ "+sosBad.length+"건: "+sosBad.join(" / ")); }
-  else console.log("  ✅ 전부 맞음");
-
-  /* 9-2. 새 화면들이 실제로 굴러가는가
-     ⚠️ 화면이 **그려지는 것**과 **되는 것**은 다릅니다. 위의 검사들은
-     그려지기만 하면 전부 통과합니다. */
+     ⚠️ 이 검사들은 **백틱 문자열**로 브라우저에 건네집니다. 백슬래시-s
+     를 쓰면 그냥 s 가 됩니다 — 정규식이 필요하면 백슬래시를 두 번
+     쓰거나 문자열 split 으로 피하세요. 주석 안에 백틱도 금지입니다. */
   const flowBad = [];
   const fp = await (await b.newContext({ viewport:{width:1280,height:900} })).newPage();
-  const f = async (name, url, fn) => {
+  const f = async (name, url, body) => {
     await fp.goto(ROOT + url, { waitUntil:"load" });
-    await fp.waitForTimeout(250);
+    await fp.waitForTimeout(240);
     let ok;
-    try { ok = await fp.evaluate("(async()=>{ "+fn+" })()"); }
-    catch(e){ ok = "에러 "+e.message; }
-    if (ok !== true) flowBad.push(name + (typeof ok === "string" ? " ("+ok+")" : "")); };
+    try{ ok = await fp.evaluate("(async()=>{ " + body + " })()"); }
+    catch(e){ ok = "에러 " + e.message; }
+    if (ok !== true) flowBad.push(name + (typeof ok === "string" ? " (" + ok + ")" : ""));
+  };
 
-  await f("진단: 안 고르면 결과가 안 나온다", "/check", `
-    chkDone({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,200));
-    return !document.querySelector(".ring");`);
-  await f("진단: 여덟 개 고르면 결과가 나온다", "/check", `
-    WOW_CHECK.forEach(it => chkPick(it.key, 0));
-    chkDone({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,250));
-    return !!document.querySelector(".ring")
-        && document.querySelector(".ring-n b").textContent === "100";`);
-  await f("진단: 점수가 고른 답을 따라간다", "/check", `
-    WOW_CHECK.forEach(it => chkPick(it.key, 2));   /* 전부 0점짜리 */
-    chkDone({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,250));
-    return document.querySelector(".ring-n b").textContent === "0";`);
-  await f("진단: 원가율은 적은 숫자를 나눈 값이다", "/check", `
-    document.getElementById("ck-sales").value = "7,000";
-    document.getElementById("ck-meat").value  = "2,400";
-    chkRate();
-    await new Promise(r=>setTimeout(r,120));
-    return document.querySelector(".chk-rate-n").textContent.indexOf("34.3") === 0;`);
-
-  await f("창업: 체크가 남는다", "/start", `
-    try{ localStorage.clear(); }catch(e){}
-    render();
-    await new Promise(r=>setTimeout(r,150));
-    stToggle("area", true);
-    await new Promise(r=>setTimeout(r,200));
-    const n = document.querySelector(".st-pg-t b").textContent.trim();
-    render();
-    await new Promise(r=>setTimeout(r,200));
-    return n === "1 / 20"
-        && document.querySelector(".st-pg-t b").textContent.trim() === "1 / 20";`);
-  await f("창업: 지우면 0 으로 돌아간다", "/start", `
-    stToggle("area", true); stToggle("shop", true);
-    await new Promise(r=>setTimeout(r,150));
-    stReset();
-    await new Promise(r=>setTimeout(r,200));
-    return document.querySelector(".st-pg-t b").textContent.trim() === "0 / 20";`);
-
-  await f("창업비: 합계가 적은 값의 합이다", "/start/cost", `
-    try{ localStorage.clear(); }catch(e){}
-    render();
-    await new Promise(r=>setTimeout(r,200));
-    costIn("shop","5,000"); costIn("interior","3,200");
-    await new Promise(r=>setTimeout(r,150));
-    const t = document.getElementById("cost-sum").textContent;
-    try{ localStorage.clear(); }catch(e){}
-    return t.indexOf("8,200") >= 0 && t.indexOf("2칸") >= 0;`);
-  /* ⚠️ 예상 금액을 지어내지 않습니다 — 아무것도 안 적었으면 합계도 없어야 합니다 */
-  await f("창업비: 안 적으면 숫자를 지어내지 않는다", "/start/cost", `
-    try{ localStorage.clear(); }catch(e){}
-    render();
-    await new Promise(r=>setTimeout(r,200));
-    const t = document.getElementById("cost-sum").textContent;
-    return !/[0-9]/.test(t.replace(/0칸/,""));`);
-
-  await f("견적: 동의 없이는 안 보낸다", "/request?s=duct", `
-    document.getElementById("rq-q").value = "덕트 냄새가 납니다";
-    document.getElementById("rq-name").value = "홍길동";
-    document.getElementById("rq-tel").value = "010-1234-5678";
-    document.getElementById("rq-ag").checked = false;
-    let sent=false; const o=window.fetch;
-    window.fetch=function(){ sent=true; return Promise.reject(new Error("테스트")); };
-    reqSend({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,200)); window.fetch=o;
-    return sent===false;`);
-  await f("견적: 동의하면 보낸다", "/request?s=duct", `
-    document.getElementById("rq-q").value = "덕트 냄새가 납니다";
-    document.getElementById("rq-name").value = "홍길동";
-    document.getElementById("rq-tel").value = "010-1234-5678";
-    document.getElementById("rq-ag").checked = true;
-    let body=null; const o=window.fetch;
-    window.fetch=function(u,i){ body=JSON.parse(i.body); return Promise.reject(new Error("테스트")); };
-    reqSend({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,250)); window.fetch=o;
-    return !!body && body.service==="duct" && body.agree===true;`);
-  await f("파트너: 서비스를 안 고르면 안 보낸다", "/partner/apply", `
-    document.getElementById("pt-co").value="가나덕트";
-    document.getElementById("pt-name").value="홍길동";
-    document.getElementById("pt-tel").value="010-1234-5678";
-    document.getElementById("pt-ag").checked=true;
-    let sent=false; const o=window.fetch;
-    window.fetch=function(){ sent=true; return Promise.reject(new Error("테스트")); };
-    ptSend({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,200)); window.fetch=o;
-    return sent===false;`);
-  /* ⚠️ 사진이 **실제로 그려지는가.** 파일이 없거나 서버가 엉뚱한
-     content-type 으로 내보내면 브라우저는 그림 대신 alt 글자만
-     보여 줍니다 — 화면은 멀쩡해 보이고 JS 에러도 안 납니다.
-     실제로 .svg 를 application/octet-stream 으로 내보내서 사진 자리가
-     전부 글자가 된 적이 있습니다. */
-  /* ⚠️ `img.complete` 를 기다리면 **멈춥니다.** loading="lazy" 인
-     그림은 화면에 들어오기 전까지 load 도 error 도 안 쏩니다 — 실제로
-     검사가 12분 동안 멈춰 있었습니다. 주소를 직접 받아 봅니다. */
-  await f("메인의 사진이 실제로 열린다", "/", `
-    const srcs = [...new Set([...document.querySelectorAll("#view img.ph, #view img.ph-bg")]
-      .map(i => i.getAttribute("src")).filter(Boolean))];
-    if(!srcs.length) return "사진이 한 장도 없습니다";
-    const bad = [];
-    for(const u of srcs){
-      try{
-        const res = await fetch(u, { cache:"no-store" });
-        const ct = res.headers.get("content-type") || "";
-        if(!res.ok) bad.push(u + " → " + res.status);
-        else if(!/^image\\//.test(ct)) bad.push(u + " → " + (ct || "타입 없음"));
-      }catch(e){ bad.push(u + " → " + e.message); }
-    }
-    return bad.length ? bad.join(" / ") : true;`);
-  /* ⚠️ 그림은 봐도 못 읽는 손님이 있습니다 */
-  await f("사진마다 무엇이 찍혔는지 적혀 있다", "/", `
-    const bad = [...document.querySelectorAll("#view img.ph")]
-      .filter(i => !(i.getAttribute("alt")||"").trim())
-      .map(i => i.getAttribute("src"));
-    return bad.length ? bad.join(" ") + " 에 alt 가 없습니다" : true;`);
-
-  /* ⚠️ 약관·방침이 쇼핑몰 기준으로 되돌아가면 여기서 걸립니다 */
-  await f("약관에 쇼핑몰 문구가 남아 있지 않다", "/terms", `
+  /* ① 지어낸 것이 화면에 없는가 — 이 플랫폼에서 제일 중요한 검사입니다.
+     업체 · 브랜드 · 매물이 0 인데 카드가 그려져 있으면 그건 없는 회사를
+     광고하는 것이고 표시광고법 제3조 위반입니다. */
+  await f("업체가 0곳이면 업체 카드를 만들지 않는다", "/providers/interior", `
+    const n = document.querySelectorAll(".pv").length;
+    if(n > 0 && (window.AM_PROVIDERS||[]).length === 0)
+      return "등록 0곳인데 업체 카드가 " + n + "장 있습니다";
+    return true;`);
+  await f("브랜드가 0개면 브랜드 카드를 만들지 않는다", "/franchise/cafe", `
+    const n = document.querySelectorAll(".fr").length;
+    if(n > 0 && (window.AM_FRANCHISES||[]).length === 0)
+      return "등록 0개인데 브랜드 카드가 " + n + "장 있습니다";
+    return true;`);
+  await f("매물이 0건이면 매물 카드를 만들지 않는다", "/stores", `
+    const n = document.querySelectorAll(".mk").length;
+    if(n > 0 && (window.AM_STORES||[]).length === 0)
+      return "등록 0건인데 매물 카드가 " + n + "장 있습니다";
+    return true;`);
+  await f("평점은 후기에서 계산한다 (값으로 저장하지 않는다)", "/providers", `
+    const bad = (window.AM_PROVIDERS||[]).filter(function(p){
+      return p.rating !== undefined || p.reviewCount !== undefined; });
+    if(bad.length) return "Provider 에 평점/후기수가 값으로 박혀 있습니다";
+    const s = window.amProviderStats({ reviews:[], portfolio:[] });
+    if(s.rating !== null) return "후기가 없는데 평점이 null 이 아닙니다";
+    const s2 = window.amProviderStats({ reviews:[{score:{total:4}},{score:{total:5}}] });
+    if(s2.rating !== 4.5) return "후기 평균이 틀립니다 (" + s2.rating + ")";
+    return true;`);
+  await f("지어낸 실적 숫자가 메인에 없다", "/", `
     const t = document.getElementById("view").textContent;
-    return !/청약철회|배송|재화등의 공급|신선식품/.test(t);`);
-  await f("방침에 중개자 지위와 제3자 제공이 적혀 있다", "/privacy", `
+    const bad = [];
+    if(/[0-9][0-9,]*\\s*\\+\\s*(곳|개|명|건)/.test(t)) bad.push("n+ 꼴");
+    if(t.indexOf("만족도") >= 0) bad.push("만족도");
+    if(t.indexOf("누적") >= 0) bad.push("누적");
+    if(/평점\\s*[0-9]/.test(t)) bad.push("평점");
+    if(/(등록\\s*업체|입점\\s*업체|누적\\s*거래)\\s*[0-9]/.test(t)) bad.push("업체 수");
+    return bad.length ? bad.join(" · ") + " 가 있습니다" : true;`);
+
+  /* ② 업종에 따라 실제로 다른 것이 보이는가 (§59 Q2 · Q3) */
+  await f("카페와 미용실은 서로 다른 장비가 보인다", "/startup/cafe", `
     const t = document.getElementById("view").textContent;
-    return /별도의 동의/.test(t) && /Vercel/.test(t);`);
-
-  /* ── 화면과 화면이 **실제로 이어지는가** ────────────────────
-     ⚠️ 화면 하나하나가 되는 것과, 눌렀을 때 **다음 화면으로 값이
-     넘어가는 것**은 다릅니다. 여기가 끊기면 손님은 같은 것을 두 번
-     적게 되고, 대개 거기서 닫습니다. */
-  await f("메인 입력창 → SOS 로 적은 말이 넘어간다", "/", `
-    document.getElementById("ask").value = "덕트 냄새가 납니다";
-    askGo({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,300));
-    return location.pathname === "/sos"
-        && document.getElementById("s-q").value === "덕트 냄새가 납니다";`);
-  await f("메인 짧은 단추 → 입력창이 채워진다", "/", `
-    askFill(2);
-    await new Promise(r=>setTimeout(r,150));
-    const v = document.getElementById("ask").value;
-    return v.length > 5 && v === WOW_ASK_CHIPS[2].ask;`);
-  await f("메인 상황 카드 → SOS 에 상황이 채워진다", "/", `
-    const a = [...document.querySelectorAll(".sit")].find(x => x.href.indexOf("/sos?") >= 0);
-    if(!a) return "상황 카드에 SOS 로 가는 것이 없습니다";
-    go(a.getAttribute("href"));
-    await new Promise(r=>setTimeout(r,300));
-    return document.getElementById("s-q").value.length > 5;`);
-  /* ⚠️ **한 번에 SOS 로 가지 않습니다.** 고민 카드는 먼저 해결방법으로
-     가고, 거기서 SOS 로 갑니다 (문제 입력 → 이해 → 해결방법 → …).
-     바로 폼으로 보내면 그 순간 전화번호부가 됩니다. 그래서 **두 걸음**
-     을 다 따라가 보고, 끝에 분류가 실려 있는지를 봅니다. */
-  await f("메인 고민 카드 → 해결방법 → SOS 에 분류가 켜진다", "/", `
-    /* ⚠️ 메인의 고민은 카드(.prob)가 아니라 **줄(.wrk-l)** 이 됐습니다.
-       모양이 바뀌어도 가는 곳은 같아야 합니다 — 그걸 봅니다. */
-    const a = [...document.querySelectorAll(".wrk-l a, .prob")]
-      .find(x => (x.getAttribute("href")||"").indexOf("/problem/duct") === 0);
-    if(!a) return "덕트 고민 줄이 해결방법으로 가지 않습니다";
-    go(a.getAttribute("href"));
-    await new Promise(r=>setTimeout(r,350));
-    if(!document.querySelector(".gd-hd h1")) return "해결방법 화면이 안 떴습니다";
-    const s = [...document.querySelectorAll(".gd-end-c")]
-      .find(x => (x.getAttribute("href")||"").indexOf("/sos") === 0);
-    if(!s) return "해결방법에서 SOS 로 가는 길이 없습니다";
-    go(s.getAttribute("href"));
-    await new Promise(r=>setTimeout(r,350));
-    return !!document.querySelector('#s-cat .pk.on[data-k="duct"]');`);
-  await f("메인 서비스 묶음 → 업체 찾기의 그 묶음으로", "/", `
-    go("/partners?g=space");
-    await new Promise(r=>setTimeout(r,300));
-    return !!document.querySelector("#g-space.on");`);
-  await f("업체 찾기 → 견적 요청서로 서비스가 넘어간다", "/partners", `
-    const a = document.querySelector('.svc-i[href*="s=duct"]');
-    if(!a) return "덕트 칸이 없습니다";
-    go(a.getAttribute("href"));
-    await new Promise(r=>setTimeout(r,300));
-    return document.getElementById("rq-svc").value === "duct";`);
-
-  await f("진단 결과 → MY 에 남는다", "/check", `
-    try{ localStorage.clear(); }catch(e){}
-    render(); await new Promise(r=>setTimeout(r,200));
-    WOW_CHECK.forEach(it => chkPick(it.key, 1));
-    chkDone({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,300));
-    go("/my"); await new Promise(r=>setTimeout(r,300));
+    if(t.indexOf("커피머신") < 0) return "카페인데 커피머신이 없습니다";
+    if(t.indexOf("샴푸대") >= 0)  return "카페인데 미용 장비가 보입니다";
+    return true;`);
+  await f("음식점과 헬스장은 서로 다른 것을 정리한다", "/closure/gym", `
     const t = document.getElementById("view").textContent;
-    return /50점/.test(t) && /무료 사업진단/.test(t);`);
-  await f("진단 결과 → 이 결과로 물어보기가 SOS 를 채운다", "/check", `
-    WOW_CHECK.forEach(it => chkPick(it.key, 2));
-    chkDone({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,300));
-    const a = document.querySelector('.res-cta a[href^="/sos"]');
-    if(!a) return "이 결과로 물어보기 단추가 없습니다";
-    go(a.getAttribute("href"));
-    await new Promise(r=>setTimeout(r,300));
-    return document.getElementById("s-q").value.indexOf("사업진단") >= 0;`);
-  await f("창업 체크 → MY 에 남는다", "/start", `
-    try{ localStorage.clear(); }catch(e){}
-    render(); await new Promise(r=>setTimeout(r,200));
-    stToggle("area", true); stToggle("shop", true);
-    await new Promise(r=>setTimeout(r,250));
-    go("/my"); await new Promise(r=>setTimeout(r,300));
-    return /2 \\/ 20/.test(document.getElementById("view").textContent);`);
-  await f("창업비 → MY 에 합계가 남는다", "/start/cost", `
-    try{ localStorage.clear(); }catch(e){}
-    render(); await new Promise(r=>setTimeout(r,200));
-    costIn("shop","5,000"); costIn("interior","3,200");
-    await new Promise(r=>setTimeout(r,200));
-    go("/my"); await new Promise(r=>setTimeout(r,300));
-    return /8,200/.test(document.getElementById("view").textContent);`);
-  await f("견적 비교 → MY 에 남는다", "/quotes", `
-    try{ localStorage.clear(); }catch(e){}
-    render(); await new Promise(r=>setTimeout(r,250));
-    qcTitle("40평 덕트 재시공");
-    qcSet(0,"co","가나덕트"); qcSet(0,"price","1200");
-    qcSet(1,"co","다라환기"); qcSet(1,"price","1650");
-    await new Promise(r=>setTimeout(r,250));
-    const gap = document.querySelector(".qc-sum").textContent;
-    go("/my"); await new Promise(r=>setTimeout(r,300));
-    const my = document.getElementById("view").textContent;
-    return /450/.test(gap) && /2곳/.test(my) && /40평 덕트 재시공/.test(my);`);
-  await f("읽던 글 → MY 에 남는다", "/lab/meat-cost-rate", `
-    go("/my"); await new Promise(r=>setTimeout(r,300));
-    return /읽던 글/.test(document.getElementById("view").textContent)
-        && /육류원가율/.test(document.getElementById("view").textContent);`);
-  await f("MY 전부 지우기가 실제로 지운다", "/my", `
-    const old = window.confirm; window.confirm = () => true;
-    myReset(); window.confirm = old;
-    await new Promise(r=>setTimeout(r,300));
-    const t = document.getElementById("view").textContent;
-    return /아직 시작하신 것이 없습니다/.test(t);`);
-
-  await f("연구소 분류 탭이 실제로 걸러 준다", "/lab?c=fac", `
-    const n = document.querySelectorAll(".pcard").length;
-    const want = wowPostsIn("fac").length;
-    return n === want && n > 0 && n < WOW_POSTS.length;`);
-  await f("글 체크리스트가 남는다", "/lab/duct-smell-complaint", `
-    try{ localStorage.removeItem("wow.lab.v1"); }catch(e){}
-    render(); await new Promise(r=>setTimeout(r,250));
-    postCk("duct-smell-complaint", 0, true);
-    await new Promise(r=>setTimeout(r,150));
-    render(); await new Promise(r=>setTimeout(r,250));
-    return document.querySelectorAll(".post-ck-l input:checked").length === 1;`);
-  await f("검색이 글·서비스·화면을 같이 찾는다", "/search?q=%EB%8D%95%ED%8A%B8", `
-    const kinds = [...document.querySelectorAll(".srch-r-t em")].map(e => e.textContent);
-    return kinds.length >= 3 && new Set(kinds).size >= 3;`);
-  await f("못 찾으면 물어보는 길을 준다", "/search?q=zzz없는말zzz", `
-    const a = document.querySelector('.srch-none a[href^="/sos?q="]');
-    return !!a;`);
-  await f("지역을 고르면 요청에 실린다", "/request?s=duct", `
-    document.getElementById("rq-region-s").value = "경기";
-    document.getElementById("rq-region").value = "안양";
-    document.getElementById("rq-q").value = "덕트 냄새";
-    document.getElementById("rq-name").value = "홍길동";
-    document.getElementById("rq-tel").value = "010-1234-5678";
-    document.getElementById("rq-ag").checked = true;
-    let body=null; const o=window.fetch;
-    window.fetch=function(u,i){ body=JSON.parse(i.body); return Promise.reject(new Error("테스트")); };
-    reqSend({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,250)); window.fetch=o;
-    return !!body && body.region === "경기 안양";`);
-
-  /* ── 접수가 실패했을 때 ────────────────────────────────────
-     ⚠️ 이 화면은 **실패해야 나옵니다.** 그래서 평소 전수 점검에는
-     아예 안 잡힙니다 — 일부러 실패시켜서 봅니다. 실제로 이 상태에서
-     CSS 선택자 실수(.notice-bad b)로 문장이 깨진 적이 있습니다. */
-  const failSetup = `
-    document.getElementById("s-q").value = "덕트 냄새 민원이 계속 들어옵니다. 3년 전에 시공했습니다.";
-    document.getElementById("s-name").value = "홍길동";
-    document.getElementById("s-tel").value = "010-1234-5678";
-    document.getElementById("s-ag").checked = true;
-    window.fetch = function(){ return Promise.resolve({ ok:false, status:503,
-      json:()=>Promise.resolve({error:"지금 접수하지 못했습니다"}) }); };
-    sosSend({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,400));`;
-
-  await f("접수 실패해도 적은 글이 남는다", "/sos", failSetup + `
-    return document.getElementById("s-q").value.length > 10
-        && !!document.querySelector("#s-err .notice-bad");`);
-  await f("실패 안내가 다시 보내기와 복사를 준다", "/sos", failSetup + `
-    const t = [...document.querySelectorAll("#s-err button")].map(b => b.textContent);
-    const copy = document.querySelector("#s-err button[data-t]");
-    return t.some(x => /다시 보내기/.test(x)) && t.some(x => /복사/.test(x))
-        && !!copy && (copy.getAttribute("data-t")||"").indexOf("덕트") >= 0;`);
-  await f("실패 안내를 읽어 주는 프로그램이 알아챈다", "/sos", failSetup + `
-    return document.querySelector("#s-err .notice-bad").getAttribute("role") === "alert";`);
-  /* ⚠️ 문장 안의 <b> 가 덩어리가 되면 그 낱말만 딴 줄에 앉습니다 */
-  await f("실패 안내 문장이 줄을 깨지 않는다", "/sos", failSetup + `
-    const bad = [...document.querySelectorAll("#s-err .notice-bad span b")]
-      .filter(b => { const d = getComputedStyle(b).display;
-                     return d === "block" || d === "flex" || d === "grid"; });
-    return bad.length ? bad.length + "군데가 문장 속에서 덩어리가 되었습니다" : true;`);
-  await f("실패한 뒤 다시 보낼 수 있다", "/sos", failSetup + `
-    let tried = 0;
-    window.fetch = function(){ tried++; return Promise.resolve({ ok:false, status:503,
-      json:()=>Promise.resolve({}) }); };
-    document.querySelector("#s-err button").click();
-    await new Promise(r=>setTimeout(r,400));
-    return tried === 1 && !document.getElementById("s-go").disabled;`);
-
-  /* ── 도구와 글이 서로 이어지는가 ──────────────────────────
-     ⚠️ 도구는 "해 보는 것" 이고 글은 "알려 주는 것" 입니다. 둘이 따로
-     놀면 진단을 받고도 뭘 읽을지 모르고, 글을 읽고도 뭘 할지 모릅니다. */
-  await f("진단 결과가 약한 항목의 글로 보낸다", "/check", `
-    WOW_CHECK.forEach(it => chkPick(it.key, 2));   /* 전부 0점 */
-    chkDone({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,300));
-    const links = [...document.querySelectorAll(".res-i-post")];
-    if(!links.length) return "글로 가는 길이 하나도 없습니다";
-    const want = WOW_CHECK.filter(c => c.post).length;
-    return links.length === want
-      || links.length + " / 글이 붙은 항목 " + want;`);
-  await f("진단에서 걸린 글 주소가 실제로 열린다", "/check", `
-    WOW_CHECK.forEach(it => chkPick(it.key, 2));
-    chkDone({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,300));
-    const a = document.querySelector(".res-i-post");
-    go(a.getAttribute("href"));
-    await new Promise(r=>setTimeout(r,300));
-    return !!document.querySelector(".post-hd h1");`);
-  await f("창업 단계에서 그 단계 글로 간다", "/start", `
-    const links = [...document.querySelectorAll(".st-tag-post")];
-    const want = WOW_STARTUP_STEPS.filter(s => s.post).length;
-    if(links.length !== want) return links.length + " / " + want;
-    go(links[0].getAttribute("href"));
-    await new Promise(r=>setTimeout(r,300));
-    return !!document.querySelector(".post-hd h1");`);
-  /* ⚠️ 가는 곳을 여기에 **박아 두지 마세요.** 글이 가리키는 도구가
-     바뀌면 검사만 빨갛게 되고 정작 고칠 것은 없습니다. 글이 적어 둔
-     주소와 단추가 같은지, 눌렀을 때 거기로 가는지를 봅니다. */
-  await f("글 끝에서 도구로 간다", "/lab/meat-cost-rate", `
-    const want = (wowPost("meat-cost-rate").tool || [])[0];
-    if(!want) return "글에 도구가 적혀 있지 않습니다";
-    const a = document.querySelector(".post-tool");
-    if(!a) return "도구로 가는 길이 없습니다";
-    if(a.getAttribute("href") !== want)
-      return "글은 " + want + " 인데 단추는 " + a.getAttribute("href");
-    go(want);
-    await new Promise(r=>setTimeout(r,300));
-    return location.pathname === want || "눌렀더니 " + location.pathname;`);
-  /* ⚠️ 없는 글을 가리키면 손님이 404 를 봅니다 */
-  await f("가리키는 글이 전부 실제로 있다", "/", `
-    const slugs = new Set(WOW_POSTS.map(p => p.slug));
-    const bad = [].concat(
-      WOW_CHECK.filter(c => c.post && !slugs.has(c.post)).map(c => "진단:"+c.post),
-      WOW_STARTUP_STEPS.filter(s => s.post && !slugs.has(s.post)).map(s => "창업:"+s.post));
-    return bad.length ? bad.join(" ") : true;`);
-  await f("글이 가리키는 도구 주소가 전부 열린다", "/", `
-    const bad = [];
-    for(const p of WOW_POSTS){
-      if(!p.tool) continue;
-      const r = routeInfo(p.tool[0].split("?")[0], {});
-      if(!r.ok) bad.push(p.slug + "→" + p.tool[0]);
-    }
-    return bad.length ? bad.join(" ") : true;`);
-
-  /* ── 접수처가 없을 때 ─────────────────────────────────────
-     ⚠️ 접수처(Vercel 환경변수)를 넣기 전에 sosReady 를 켜 두면, 손님이
-     다 적고 눌렀는데 실패합니다. 그리고 전화번호도 없으면 연락할
-     방법이 하나도 없는 화면이 됩니다 — 그러면 그냥 나갑니다. */
-  await f("접수처가 없으면 폼 **위에** 미리 알린다", "/sos", `
-    if(bizVal("sosReady")) return true;           /* 켜 두셨으면 넘어갑니다 */
-    const n = document.querySelector(".notice"), form = document.querySelector("form.form");
-    if(!n) return "안내가 없습니다";
-    return n.getBoundingClientRect().top < form.getBoundingClientRect().top
-      || "안내가 폼 아래에 있습니다";`);
-  await f("견적 요청·파트너 등록에도 같이 알린다", "/request?s=duct", `
-    if(bizVal("sosReady")) return true;
-    if(!document.querySelector(".notice")) return "견적 요청에 안내가 없습니다";
-    go("/partner/apply"); await new Promise(r=>setTimeout(r,300));
-    return !!document.querySelector(".notice") || "파트너 등록에 안내가 없습니다";`);
-  /* ⚠️ "못 받습니다" 로 끝내면 막다른 길입니다 */
-  await f("안내가 막다른 길이 아니다", "/sos", `
-    if(bizVal("sosReady")) return true;
-    const outs = [...document.querySelectorAll(".notice a")].map(a => a.getAttribute("href"));
-    return outs.length >= 2 || "지금 할 수 있는 것으로 가는 길이 없습니다";`);
-  await f("sosReady 를 켜면 안내가 사라진다", "/sos", `
-    const was = WOW_BIZ.sosReady;
-    WOW_BIZ.sosReady = true; render();
-    await new Promise(r=>setTimeout(r,250));
-    const gone = !document.querySelector(".notice");
-    WOW_BIZ.sosReady = was; render();
-    await new Promise(r=>setTimeout(r,250));
-    return gone || "켜 두어도 안내가 남습니다";`);
-  /* ⚠️ **안 쓰는 회사를 방침에 적어 두는 것도 사실과 다른 방침**입니다.
-     접수처가 없는데 "슬랙에 전달합니다" 가 적혀 있으면 안 됩니다. */
-  await f("안 쓰는 접수처가 방침에 적혀 있지 않다", "/privacy", `
-    if(bizVal("sosReady")) return true;
-    const bad = (WOW_PRIVACY.trustees||[])
-      .filter(t => /전달|발송/.test(String(t[1]||"")))
-      .map(t => t[0]);
-    return bad.length ? bad.join(" ") + " 가 적혀 있는데 접수처는 아직 없습니다" : true;`);
-
-  /* ── 도구: 사장님이 적은 값을 나눈 것까지만 ────────────────
-     지어낼 여지가 없는 계산이라는 말은, 뒤집으면 **안 적은 칸을
-     메우면 그 순간 지어낸 숫자**라는 뜻입니다. 빈 칸이 "—" 로
-     남는지를 먼저 봅니다. */
-  await f("수율: 안 적으면 숫자를 지어내지 않는다", "/tools/yield", `
-    try{ localStorage.clear(); }catch(e){}
-    render();
-    await new Promise(r=>setTimeout(r,250));
-    const bs = [...document.querySelectorAll("#yl-res .tl-o b")].map(b=>b.textContent.trim());
-    return (bs.length === 4 && bs.every(t => t === "—"))
-      || "빈 칸에 " + bs.join(" / ") + " 가 나왔습니다";`);
-  await f("수율: 적은 값을 나눈 값이 나온다", "/tools/yield", `
-    try{ localStorage.clear(); }catch(e){}
-    render();
-    await new Promise(r=>setTimeout(r,200));
-    ylIn("price","20,000"); ylIn("inkg","10"); ylIn("outkg","6.5");
-    ylIn("serve","180");    ylIn("sell","18,000");
-    await new Promise(r=>setTimeout(r,200));
-    const bs = [...document.querySelectorAll("#yl-res .tl-o b")].map(b=>b.textContent.trim());
-    const want = ["65%","30,769원/kg","5,538원","30.8%"];
-    return bs.join("|") === want.join("|") || bs.join(" / ");`);
-  await f("수율: 적은 숫자가 남는다", "/tools/yield", `
-    render();
-    await new Promise(r=>setTimeout(r,250));
-    return document.getElementById("tl-price").value === "20,000"
-      || "다시 열었더니 비어 있습니다";`);
-  await f("수율: 지우면 빈 칸으로 돌아간다", "/tools/yield", `
-    ylReset();
-    await new Promise(r=>setTimeout(r,250));
-    const bs = [...document.querySelectorAll("#yl-res .tl-o b")].map(b=>b.textContent.trim());
-    return (document.getElementById("tl-price").value === "" && bs.every(t => t === "—"))
-      || "지운 뒤에도 숫자가 남아 있습니다";`);
-
-  await f("손익분기: 비율이 없으면 본전 매출을 내지 않는다", "/tools/bep", `
-    try{ localStorage.clear(); }catch(e){}
-    render();
-    await new Promise(r=>setTimeout(r,200));
-    bepIn("rent","1,000");
-    await new Promise(r=>setTimeout(r,200));
-    const bs = [...document.querySelectorAll("#bep-res .tl-o b")].map(b=>b.textContent.trim());
-    return (bs[0] === "1,000만원" && bs[1] === "—" && bs[2] === "—")
-      || bs.join(" / ");`);
-  await f("손익분기: 고정비와 비율로 본전 매출이 나온다", "/tools/bep", `
-    try{ localStorage.clear(); }catch(e){}
-    render();
-    await new Promise(r=>setTimeout(r,200));
-    bepIn("rent","1,000"); bepIn("labor","800"); bepIn("util","150"); bepIn("etc","50");
-    bepIn("food","35");    bepIn("fee","5");
-    bepIn("days","26");    bepIn("ticket","30,000");
-    await new Promise(r=>setTimeout(r,200));
-    const bs = [...document.querySelectorAll("#bep-res .tl-o b")].map(b=>b.textContent.trim());
-    const want = ["2,000만원","60%","3,333만원","128만원"];
-    const note = document.querySelector("#bep-res .tl-note").textContent;
-    if(bs.join("|") !== want.join("|")) return bs.join(" / ");
-    return note.indexOf("43분") >= 0 || "하루 손님 수가 안 나옵니다";`);
-  /* ⚠️ 많이 팔수록 손해인 조건을 "본전 매출" 로 얼버무리면 안 됩니다 */
-  await f("손익분기: 변동비가 100%를 넘으면 그렇게 말한다", "/tools/bep", `
-    try{ localStorage.clear(); }catch(e){}
-    render();
-    await new Promise(r=>setTimeout(r,200));
-    bepIn("rent","1,000"); bepIn("food","70"); bepIn("fee","40");
-    await new Promise(r=>setTimeout(r,200));
-    const bs = [...document.querySelectorAll("#bep-res .tl-o b")].map(b=>b.textContent.trim());
-    const note = document.querySelector("#bep-res .tl-note").textContent;
-    return (bs[2] === "—" && note.indexOf("100%") >= 0)
-      || "본전 매출 " + bs[2] + " / " + note.slice(0,40);`);
-
-  await f("도구에서 적은 것이 MY 에 뜬다", "/tools/bep", `
-    try{ localStorage.clear(); }catch(e){}
-    render();
-    await new Promise(r=>setTimeout(r,200));
-    bepIn("rent","1,000"); bepIn("labor","800"); bepIn("util","150"); bepIn("etc","50");
-    bepIn("food","35");    bepIn("fee","5");
-    go("/my");
-    await new Promise(r=>setTimeout(r,300));
-    const t = document.getElementById("view").textContent;
-    try{ localStorage.clear(); }catch(e){}
-    return (t.indexOf("손익분기 계산") >= 0 && t.indexOf("3,333") >= 0)
-      || "MY 에 안 보입니다";`);
-  await f("도구 모음에서 여섯 가지가 전부 열린다", "/tools", `
-    const hrefs = [...document.querySelectorAll(".tl-c")].map(a=>a.getAttribute("href"));
-    const want = ["/check","/tools/yield","/tools/bep","/tools/labor","/start/cost","/quotes"];
-    return want.every(w => hrefs.indexOf(w) >= 0) || hrefs.join(" ");`);
-
-  /* ── 머리말(head): 브라우저로는 표가 안 나는 것들 ──────────
-     ⚠️ 화면을 그리고 나면 JS(paintMeta)가 canonical 을 고쳐 놓기 때문에,
-     **브라우저로 봐서는 멀쩡합니다.** 크롤러가 읽는 것은 고쳐지기 전의
-     HTML 입니다 — 그래서 여기서는 화면을 보지 않고 **파일을 그대로
-     받아서** 셉니다. 실제로 canonical 이 화면마다 둘씩 나가고 있었고,
-     전수 점검은 그동안 전부 통과했습니다. */
-  await f("화면마다 canonical 이 하나이고 제 주소를 가리킨다", "/", `
-    const urls = ["/sos","/check","/tools/yield","/tools/bep","/lab","/my","/start/cost"];
-    const bad = [];
-    for(const u of urls){
-      const html = await (await fetch(u, { cache:"no-store" })).text();
-      const n = html.split('<link rel="canonical"').length - 1;
-      if(n !== 1){ bad.push(u + " → canonical " + n + "개"); continue; }
-      const i = html.indexOf('<link rel="canonical"');
-      const seg = html.slice(i, i + 160);
-      if(seg.indexOf('href="https://aboutmeat.co.kr' + u + '"') < 0)
-        bad.push(u + " → " + seg.slice(0, 70));
-    }
-    return bad.length ? bad.join(" / ") : true;`);
-  await f("화면마다 제목이 하나다", "/", `
-    const urls = ["/","/sos","/tools","/tools/bep","/lab/open-permits"];
-    const bad = [];
-    for(const u of urls){
-      const html = await (await fetch(u, { cache:"no-store" })).text();
-      const n = html.split("<title>").length - 1;
-      if(n !== 1) bad.push(u + " → 제목 " + n + "개");
-    }
-    return bad.length ? bad.join(" / ") : true;`);
-  /* ⚠️ **브랜드색을 베껴 둔 자리가 셋 있습니다.** 라우터 밖에서 혼자
-     떠야 하는 404, 그림을 그리는 팔레트, 폰 주소창 색(manifest).
-     토큰을 바꾸고 이 셋을 안 고치면 **거기만 옛 색으로 남습니다** —
-     에러도 안 나고 화면도 멀쩡합니다. 실제로 셋 다 그랬습니다. */
-  await f("브랜드색이 베껴 둔 자리와 어긋나지 않는다", "/", `
-    const tok = await (await fetch("/css/tokens.css", { cache:"no-store" })).text();
-    const m = tok.split("--burgundy:")[1];
-    if(!m) return "tokens.css 에서 --burgundy 를 못 찾았습니다";
-    const brand = m.split(";")[0].trim().toUpperCase();
-    const bad = [];
-    const files = [["/404.html","--burgundy:"], ["/tools/img-lib.js",'burg:"'],
-                   ["/manifest.json",'"theme_color": "']];
-    for(const [u, key] of files){
-      const t = await (await fetch(u, { cache:"no-store" })).text();
-      const i = t.indexOf(key);
-      if(i < 0){ bad.push(u + " 에서 " + key + " 를 못 찾았습니다"); continue; }
-      const seg = t.slice(i + key.length, i + key.length + 10).toUpperCase();
-      if(seg.indexOf(brand) !== 0) bad.push(u + " → " + seg.slice(0,7) + " (토큰은 " + brand + ")");
-    }
-    return bad.length ? bad.join(" / ") : true;`);
-
-  /* ⚠️ **검색엔진에게는 여기 적힌 것만 존재합니다.** 이 사이트는 JS 로
-     화면을 그리는데, 크롤러가 JS 를 안 돌리면 빈 화면을 봅니다.
-     실제로 www.aboutmeat.co.kr 을 밖에서 확인했더니 메인 본문이
-     **"본문 바로가기" 한 줄**로만 잡혔습니다 — `<main id="view">` 가
-     빈 칸이었고, 다른 화면은 본문이 `<noscript>` 안에만 있었습니다.
-     ⚠️ 렌더된 DOM 을 보는 검사로는 이 종류를 영영 못 잡습니다.
-     **파일을 그대로 받아서** 스크립트를 떼고 글자를 셉니다. */
-  await f("크롤러가 읽을 본문이 화면마다 있다", "/", `
-    /* ⚠️ 한글은 같은 내용이라도 **글자 수가 훨씬 적습니다.** 영어
-       기준으로 잡았다가 멀쩡한 화면이 전부 걸렸습니다. 지금 값의
-       7할쯤으로 두어, 내용이 통째로 빠지는 것만 잡게 합니다. */
-    const want = [["/", 2300], ["/problems", 500], ["/problem/duct", 1000],
-                  ["/check", 300], ["/partners", 280], ["/lab", 700],
-                  ["/lab/open-permits", 700], ["/start", 370], ["/tools", 300],
-                  ["/tools/labor", 350], ["/tools/yield", 250],
-                  ["/tools/bep", 270], ["/start/cost", 170]];
-    const bad = [];
-    for(const [u, min] of want){
-      const html = await (await fetch(u, { cache:"no-store" })).text();
-      const body = html.slice(html.indexOf("<body"));
-      const text = body.replace(/<script[^]*?<\\/script>/g, " ")
-                       .replace(/<[^>]*>/g, " ").replace(/\\s+/g, " ").trim();
-      if(text.length < min) bad.push(u + " → " + text.length + "자 (" + min + "자 이상이어야 합니다)");
-      else if(body.indexOf("<h1>") < 0) bad.push(u + " → h1 이 없습니다");
-    }
-    return bad.length ? bad.join(" / ") : true;`);
-
-  /* ⚠️ 사람마다 다른 화면이 검색에 올라가면 남의 견적 비교가 잡힙니다 */
-  await f("사람마다 다른 화면은 검색에 안 올라간다", "/", `
-    const bad = [];
-    for(const u of ["/my","/quotes","/search"]){
-      const html = await (await fetch(u, { cache:"no-store" })).text();
-      if(html.indexOf('name="robots" content="noindex') < 0) bad.push(u);
-    }
-    return bad.length ? bad.join(" ") + " 에 noindex 가 없습니다" : true;`);
-
-  /* ── 고민 해결 가이드 ────────────────────────────────────
-     ⚠️ 이 묶음이 지키는 것은 **이 사이트가 전화번호부가 아니라는
-     것**입니다 (지시서 3번). 고민을 누르면 업체가 아니라 해결방법이
-     먼저 나와야 하고, 거기 적힌 것은 전부 지어내지 않은 것이어야
-     합니다.
-     ⚠️ 아래 코드는 **백틱 문자열 안**입니다 — 정규식의 백슬래시가
-     그냥 글자가 됩니다. 그래서 정규식을 아예 안 씁니다. */
-  /* ⚠️ 메인의 고민은 줄(.wrk-l)이고 /problems 화면은 카드(.prob)입니다.
-     **둘 다** 업체가 아니라 해결방법으로 가야 합니다. */
-  await f("고민을 누르면 업체가 아니라 해결방법으로 간다", "/", `
-    const rows = [...document.querySelectorAll(".wrk-l a")];
-    if(!rows.length) return "메인에 고민 줄이 하나도 없습니다";
-    const bad = rows.map(a => a.getAttribute("href") || "")
-      .filter(h => h.indexOf("/problem/") !== 0);
-    if(bad.length) return "메인: " + bad.join(" ");
-    go("/problems");
-    await new Promise(r=>setTimeout(r,320));
-    const cards = [...document.querySelectorAll(".prob, .gdl")];
-    if(!cards.length) return "/problems 에 고민 카드가 하나도 없습니다";
-    const bad2 = [];
-    cards.forEach(a => {
-      const href = a.getAttribute("href") || "";
-      if(href.indexOf("/problem/") !== 0 && href.indexOf("/sos") !== 0)
-        bad2.push(href);
-    });
-    return bad2.length ? "/problems: " + bad2.join(" ") : true;`);
-
-  await f("가이드가 가리키는 글 · 도구 · 서비스가 전부 있다", "/problems", `
-    const bad = [];
-    for(const g of WOW_GUIDES){
-      if(g.post && !wowPost(g.post)) bad.push(g.key + " → 없는 글 " + g.post);
-      if(g.svc  && !wowService(g.svc)) bad.push(g.key + " → 없는 서비스 " + g.svc);
-      if(g.tool){
-        const r = await fetch(g.tool[0], { cache:"no-store" });
-        if(!r.ok) bad.push(g.key + " → 안 열리는 도구 " + g.tool[0]);
-      }
-    }
-    return bad.length ? bad.join(" / ") : true;`);
-
-  /* ⚠️ 여기서 숫자가 하나라도 새면 절대 규칙 1 위반입니다. 사장님이
-     그 금액으로 업체와 싸우거나 돈을 빌리러 갑니다. */
-  await f("가이드에 지어낸 금액 · 비율이 없다", "/problems", `
-    const bad = [];
-    for(const g of WOW_GUIDES){
-      const txt = JSON.stringify(g);
-      ["만원","억원","원가율 3","수율 6"].forEach(u => {
-        if(txt.indexOf(u) >= 0) bad.push(g.key + " 에 \\"" + u + "\\"");
-      });
-      for(let i = 1; i < txt.length; i++)
-        if(txt[i] === "%" && txt[i-1] >= "0" && txt[i-1] <= "9"){
-          bad.push(g.key + " 에 숫자+%"); break;
-        }
-    }
-    return bad.length ? bad.join(" / ") : true;`);
-
-  /* ⚠️ 법령은 바뀝니다. 조문만 적고 어디서 확인하는지를 안 적으면
-     틀린 날이 옵니다. */
-  await f("법 · 제도에는 확인하는 곳이 같이 있다", "/problem/duct", `
-    const bad = [];
-    for(const g of WOW_GUIDES)
-      if(g.law && !(g.law.where || "").trim()) bad.push(g.key);
-    if(bad.length) return bad.join(" ") + " 에 확인하는 곳이 없습니다";
-    return !!document.querySelector(".gd-law-w");`);
-
-  await f("가이드 맺음이 분류와 내용을 싣고 SOS 로 간다", "/problem/cold", `
-    const a = [...document.querySelectorAll(".gd-end-c")]
-      .filter(x => (x.getAttribute("href")||"").indexOf("/sos") === 0)[0];
-    if(!a) return "SOS 로 가는 길이 없습니다";
-    go(a.getAttribute("href"));
-    await new Promise(r=>setTimeout(r,350));
-    const ta = document.getElementById("s-q");
-    if(!ta || !ta.value.trim()) return "적어 둔 말이 안 실렸습니다";
-    const on = document.querySelector("#s-cat .pk.on");
-    return !!on || "분류가 안 골라졌습니다";`);
-
-  /* ⚠️ 목록 화면이 업체 명단이 되면 그 순간 지시서 3번 위반입니다 */
-  await f("고민 목록이 업체 명단이 아니다", "/problems", `
-    const bad = [];
-    [...document.querySelectorAll(".gdl")].forEach(a => {
-      const href = a.getAttribute("href") || "";
-      if(href.indexOf("/problem/") !== 0) bad.push(href);
-    });
-    /* ⚠️ 처음에 "시공" 을 통째로 막았더니 "인테리어 · 시공 견적을 받을
-       때" 가 걸렸습니다. 막아야 하는 것은 **업체를 세는 말**입니다 —
-       평점 · 후기 수 · 시공건수 같은, 실제 데이터가 없으면 지어낼
-       수밖에 없는 것들. */
-    const txt = document.querySelector(".gdl-g").textContent;
-    ["평점","시공건수","후기 ","리뷰 ","만족도","누적 "].forEach(w => {
-      if(txt.indexOf(w) >= 0) bad.push("업체를 세는 말: " + w.trim());
-    });
-    return bad.length ? bad.join(" / ") : true;`);
-
-  /* ⚠️ 제가 글을 쓸 때 쓰는 표시(⚠️)가 **손님 화면으로 새어 나갔습니다.**
-     가게 정리 가이드 본문에 그대로 찍혀 있었습니다 — 절대 규칙 3
-     (운영자에게 할 말을 손님 화면에 찍지 않는다)입니다. 표시는
-     주석에만 둡니다. */
-  await f("가이드 본문에 작성 표시가 안 남아 있다", "/problems", `
-    const bad = [];
-    for(const g of WOW_GUIDES){
-      const txt = JSON.stringify(g);
-      ["⚠", "TODO", "FIXME", "지시서"].forEach(w => {
-        if(txt.indexOf(w) >= 0) bad.push(g.key + " 에 " + w);
-      });
-    }
-    return bad.length ? bad.join(" / ") : true;`);
-
-  /* ── 가이드의 "물어볼 것" 이 요청서까지 오는가 ──────────
-     ⚠️ 가이드를 읽고 오셔도 요청서에서 다시 적어야 하면 거기서
-     끊깁니다. 손님은 같은 것을 두 번 적게 되고 그 자리에서 닫습니다. */
-  await f("요청서에 가이드의 물어볼 것이 그대로 나온다", "/request?s=duct", `
-    const g = wowGuideForService("duct");
-    if(!g) return "덕트 서비스에 가이드가 안 붙었습니다";
-    const box = [...document.querySelectorAll(".rq-ask-c")];
-    if(box.length !== g.ask.length)
-      return box.length + " / 가이드의 질문 " + g.ask.length;
-    return box.every(b => b.checked) || "기본으로 켜져 있지 않습니다";`);
-
-  /* ⚠️ 보내는 칸을 실제로 만들어 봅니다. 화면에 보이는 것과 **보내는
-     것**이 어긋나면 에러도 없이 조용히 사라집니다. */
-  await f("끈 것은 빼고 켠 것만 보내는 칸에 실린다", "/request?s=duct", `
-    const box = [...document.querySelectorAll(".rq-ask-c")];
-    box[0].checked = false;
-    const out = reqAsks();
-    if(out.length !== box.length - 1)
-      return out.length + " / 켜 둔 것 " + (box.length - 1);
-    if(out.join(" ").indexOf("*") >= 0)
-      return "별표 표시가 그대로 나갑니다 — 업체는 화면이 아니라 글자를 봅니다";
+    if(t.indexOf("운동기구") < 0) return "헬스장인데 운동기구가 없습니다";
+    if(t.indexOf("주방기기") >= 0) return "헬스장인데 주방기기가 보입니다";
+    return true;`);
+  await f("업종 차례에서 빠진 분류도 잘라 내지 않는다", "/startup/online", `
+    const all = (window.AM_START_CATS||[]).length;
+    const got = window.amCatsFor("online","start").length;
+    if(got !== all) return "분류 " + all + "개 중 " + got + "개만 나옵니다";
     return true;`);
 
-  /* ⚠️ 빈 상자를 두지 않습니다 (절대 규칙 2) */
-  await f("가이드가 없는 서비스면 그 구간이 아예 안 나온다", "/request?s=pack", `
-    if(wowGuideForService("pack")) return "pack 에 가이드가 붙어 있습니다";
-    return !document.querySelector(".rq-ask")
-        || "물어볼 것 상자가 비어 있는 채로 나옵니다";`);
+  /* ③ 조건이 다음 화면으로 넘어가는가 */
+  await f("분류 → 견적 요청으로 조건이 넘어간다", "/providers/interior?i=cafe&r=gyeonggi", `
+    const a = document.querySelector('a[href^="/quote"]');
+    if(!a) return "견적 요청으로 가는 링크가 없습니다";
+    const h = a.getAttribute("href");
+    if(h.indexOf("i=cafe") < 0 || h.indexOf("r=gyeonggi") < 0)
+      return "고른 조건이 주소에 안 실립니다 (" + h + ")";
+    return true;`);
+  await f("업종 화면 → 견적 요청에 업종이 실린다", "/startup/hair", `
+    const a = document.querySelector('a[href^="/quote"]');
+    if(!a) return "견적 요청 링크가 없습니다";
+    return a.getAttribute("href").indexOf("i=hair") >= 0 ? true
+         : "업종이 안 실립니다 (" + a.getAttribute("href") + ")";`);
+  await f("거르개를 바꾸면 주소가 바뀐다", "/providers/interior", `
+    document.getElementById("fil-r").value = "seoul";
+    window.pcGo("interior");
+    await new Promise(r => setTimeout(r, 200));
+    return location.search.indexOf("r=seoul") >= 0 ? true
+         : "주소에 안 실렸습니다 (" + location.search + ")";`);
 
-  /* ── 가이드 → 요청서 → 견적 비교 ─────────────────────────
-     흐름의 **마지막 칸**입니다. 여기까지 이어져야 사장님이 같은 것을
-     두 번 적지 않습니다.
-       가이드(물어볼 것) → 요청서(업체에 전달) → 견적 비교(답을 나란히) */
-  await f("가이드에서 견적 비교로 가면 그 질문이 실려 있다", "/problem/duct", `
-    const a = document.querySelector(".gd-ask-go");
-    if(!a) return "가이드에 견적 비교로 가는 길이 없습니다";
-    go(a.getAttribute("href"));
-    await new Promise(r=>setTimeout(r,400));
-    const g = wowGuide("duct");
-    const rows = [...document.querySelectorAll(".qc-t-a tbody tr")].slice(1);
-    if(rows.length !== g.ask.length)
-      return rows.length + " / 가이드의 질문 " + g.ask.length;
-    /* 별표 표시가 표에 그대로 찍히면 안 됩니다 */
-    const txt = document.querySelector(".qc-t-a").textContent;
-    return txt.indexOf("*") < 0 || "표에 별표 표시가 찍혔습니다";`);
-
-  await f("업체 답을 적으면 이 브라우저에 남는다", "/quotes?g=duct", `
-    const ta = document.getElementById("qc-a-0-0");
-    if(!ta) return "답 적는 칸이 없습니다";
-    qcAns(0, 0, "옥상으로 빼는 건 안 된다고 합니다");
-    go("/"); await new Promise(r=>setTimeout(r,250));
-    go("/quotes"); await new Promise(r=>setTimeout(r,400));
-    const back = document.getElementById("qc-a-0-0");
-    if(!back) return "다시 왔더니 답 칸이 사라졌습니다";
-    return back.value.indexOf("옥상") >= 0 || "적은 것이 안 남았습니다";`);
-
-  /* ⚠️ 주소에 가이드가 없으면 **예전 그대로**여야 합니다. 예전에 적어
-     두신 비교가 사라지거나 빈 표가 생기면 안 됩니다. */
-  await f("가이드 없이 들어가면 빈 표를 만들지 않는다", "/quotes", `
-    localStorage.removeItem("wow.quotes.v1");
-    go("/"); await new Promise(r=>setTimeout(r,250));
-    go("/quotes"); await new Promise(r=>setTimeout(r,400));
-    if(document.querySelector(".qc-t-a")) return "빈 질문 표가 나옵니다";
-    if(document.querySelector(".qc-from")) return "어느 고민인지 모르는데 띠가 나옵니다";
-    return !!document.querySelector(".qc-ask") || "공통 물어볼 것이 사라졌습니다";`);
-
-  /* ── 진단 · 창업 단계에서 해결 가이드로 ─────────────────
-     ⚠️ 약한 항목으로 나왔다는 것은 **지금 손을 대야 한다**는 뜻입니다.
-     그때 필요한 것은 읽을거리가 아니라 확인할 것과 물어볼 것입니다. */
-  await f("진단 결과가 그 항목의 해결 가이드로 보낸다", "/check", `
-    WOW_CHECK.forEach(it => chkPick(it.key, 2));   /* 전부 0점 */
-    chkDone({preventDefault(){}});
-    await new Promise(r=>setTimeout(r,350));
-    const links = [...document.querySelectorAll(".res-i-gd")];
-    const want = WOW_CHECK.filter(c => c.guide).length;
-    if(!want) return "진단에 가이드가 하나도 안 붙었습니다";
-    if(links.length !== want) return links.length + " / 가이드가 붙은 항목 " + want;
-    go(links[0].getAttribute("href"));
-    await new Promise(r=>setTimeout(r,350));
-    return !!document.querySelector(".gd-hd h1") || "가이드 화면이 안 떴습니다";`);
-
-  await f("창업 단계에서 그 단계의 해결 가이드로 간다", "/start", `
-    const links = [...document.querySelectorAll(".st-tag-gd")];
-    const want = WOW_STARTUP_STEPS.filter(s => s.guide).length;
-    if(!want) return "창업 단계에 가이드가 하나도 안 붙었습니다";
-    if(links.length !== want) return links.length + " / " + want;
-    go(links[0].getAttribute("href"));
-    await new Promise(r=>setTimeout(r,350));
-    return !!document.querySelector(".gd-hd h1") || "가이드 화면이 안 떴습니다";`);
-
-  /* ⚠️ 없는 가이드를 가리키면 손님이 404 를 봅니다. 그리고 **억지로
-     붙이지 않았는지**도 같이 봅니다 — 맞는 것이 없으면 비워야 합니다. */
-  await f("가리키는 가이드가 전부 있고, 없는 자리는 비어 있다", "/check", `
-    const bad = [];
-    WOW_CHECK.forEach(c => {
-      if(c.guide && !wowGuide(c.guide)) bad.push("진단 " + c.key + " → " + c.guide);
-    });
-    WOW_STARTUP_STEPS.forEach(s => {
-      if(s.guide && !wowGuide(s.guide)) bad.push("창업 " + s.key + " → " + s.guide);
-    });
-    /* 고정비 · 위생/인허가에는 맞는 가이드가 없습니다. 붙어 있으면
-       억지로 붙인 것입니다 — 엉뚱한 데로 보내면 다음부터 안 누릅니다. */
-    ["fixed", "legal"].forEach(k => {
-      const it = WOW_CHECK.filter(c => c.key === k)[0];
-      if(it && it.guide) bad.push("진단 " + k + " 에 억지로 붙었습니다");
-    });
-    return bad.length ? bad.join(" / ") : true;`);
-
-  /* ── 검색이 새 화면을 아는가 ────────────────────────────
-     ⚠️ 화면을 열두 개 만들어 놓고 **사이트 검색이 모르면** 손님에게는
-     없는 것과 같습니다. 실제로 가이드가 색인에 통째로 빠져 있었습니다. */
-  await f("검색이 가이드를 찾는다", "/search", `
-    const bad = [];
-    for(const g of WOW_GUIDES){
-      const hit = searchRun(g.h1).filter(x => x.to === "/problem/" + g.key);
-      if(!hit.length) bad.push(g.key);
-    }
-    return bad.length ? "못 찾는 가이드: " + bad.join(" ") : true;`);
-
-  /* ⚠️ 손님은 "덕트" 가 아니라 "배기구" 라고 칩니다. 분류 이름만
-     색인에 넣어 두면 그 말을 모르는 분은 영영 못 찾습니다. */
-  await f("검색이 본문 속 낱말로도 가이드를 찾는다", "/search", `
-    const want = [["배기구","duct"], ["가스켓","cold"],
-                  ["정화조","startup"], ["권리금","exit"]];
-    const bad = [];
-    for(const [w, key] of want){
-      const hit = searchRun(w).filter(x => x.to === "/problem/" + key);
-      if(!hit.length) bad.push(w + " → " + key);
-    }
-    return bad.length ? "못 찾음: " + bad.join(" / ") : true;`);
-
-  /* ⚠️ 홈에서 누르면 해결방법, 검색에서 누르면 폼 — 이렇게 갈리면
-     같은 고민이 두 군데로 갑니다 (지시서 3번). */
-  await f("검색 결과가 폼이 아니라 해결방법으로 간다", "/search", `
-    const bad = [];
-    for(const p of WOW_PROBLEMS){
-      if(!wowHasGuide(p.key)) continue;
-      const rows = searchRun(p.name).filter(
-        x => (x.to||"").indexOf("/sos?c=" + p.key) === 0);
-      if(rows.length) bad.push(p.key);
-    }
-    return bad.length ? "아직 폼으로 보냅니다: " + bad.join(" ") : true;`);
-
-  /* ⚠️ 창업 단계 스무 개가 전부 /start 로 가서 같은 줄이 여러 개
-     떴습니다. 손님 눈에는 그냥 중복입니다. */
-  await f("검색 결과에 같은 곳으로 가는 줄이 둘 이상 없다", "/search", `
-    const bad = [];
-    for(const w of ["덕트", "창업", "원가", "냉장"]){
-      const to = searchRun(w).map(x => x.to);
-      if(to.length !== new Set(to).size) bad.push(w);
-    }
-    return bad.length ? "중복이 나오는 말: " + bad.join(" ") : true;`);
-
-  /* ── 관리자 작업대 ──────────────────────────────────────
-     ⚠️ 여기는 **손님 화면이 아닙니다.** 그래서 PAGES 에 넣지 않습니다 —
-     "개발자 말 노출" 이 환경변수 이름을 전부 잡아 오탐이 됩니다.
-     대신 이 묶음이 **일이 실제로 되는지**를 봅니다.
-     ⚠️ 전수 점검의 흉내 서버에는 middleware 가 없어서 그냥 열립니다.
-     실제 배포에서는 Basic 인증이 먼저 막습니다. */
-  await f("관리자: 붙여 넣으면 분류를 골라 준다", "/admin.html", `
-    document.getElementById("ad-in").value =
-      "성함      홍길동\\n연락처    010-1234-5678\\n지역      경기 안양\\n" +
-      "\\n── 적어 주신 상황 ──\\n덕트 냄새 민원이 계속 들어옵니다.";
-    adRead();
-    await new Promise(r=>setTimeout(r,300));
-    const got = document.getElementById("ad-prob").value;
-    return got === "duct" || "고른 분류가 " + (got || "없음") + " 입니다";`);
-
-  /* ⚠️ 이 검사가 이 화면에서 제일 중요합니다. 업체에 성함·연락처가
-     넘어가면 개인정보보호법 제17조 위반입니다 — 업체가 정해진 뒤에
-     상호를 알리고 **다시** 동의를 받아야 넘길 수 있습니다. */
-  await f("관리자: 업체 글에 성함 · 연락처가 안 들어간다", "/admin.html", `
-    document.getElementById("ad-in").value =
-      "성함      홍길동\\n연락처    010-1234-5678\\n" +
-      "\\n── 적어 주신 상황 ──\\n덕트 냄새 민원이 계속 들어옵니다.";
-    adRead();
-    await new Promise(r=>setTimeout(r,300));
-    const v = document.getElementById("ad-t-vendor").value;
-    if(v.indexOf("홍길동") >= 0) return "업체 글에 성함이 들어 있습니다";
-    if(v.replace(/[^0-9]/g,"").indexOf("01012345678") >= 0)
-      return "업체 글에 연락처가 들어 있습니다";
-    if(v.indexOf("덕트 냄새 민원") < 0) return "정작 상황이 안 들어갔습니다";
+  /* ④ 접수 — ⚠️ 동의 없이 받은 개인정보는 개인정보보호법 제15조
+     위반입니다. 화면에서 한 번, 서버(api/quote.js)에서 한 번 막습니다. */
+  await f("견적: 동의 없이는 보내지 않는다", "/quote", `
+    let sent = false;
+    const o = window.fetch; window.fetch = function(){ sent = true; return o.apply(this, arguments); };
+    document.getElementById("q-what").value = "카페 인테리어";
+    document.getElementById("q-q").value = "30평 신규 오픈입니다";
+    document.getElementById("q-name").value = "홍길동";
+    document.getElementById("q-tel").value = "010-1234-5678";
+    document.getElementById("q-ag").checked = false;
+    try{ window.quoteSend({ preventDefault:function(){} }); }catch(e){}
+    await new Promise(r => setTimeout(r, 120));
+    window.fetch = o;
+    return sent ? "동의 없이 보냈습니다" : true;`);
+  await f("견적: 동의하면 적은 칸이 빠짐없이 나간다", "/quote", `
+    let body = null;
+    const o = window.fetch;
+    window.fetch = function(u, i){ try{ body = JSON.parse(i.body); }catch(e){}
+      return Promise.resolve({ ok:true, json:function(){ return Promise.resolve({}); } }); };
+    document.getElementById("q-what").value = "카페 인테리어";
+    document.getElementById("q-q").value = "30평 신규 오픈입니다";
+    document.getElementById("q-name").value = "홍길동";
+    document.getElementById("q-tel").value = "010-1234-5678";
+    document.getElementById("q-ind").value = "cafe";
+    document.getElementById("q-reg").value = "gyeonggi";
+    document.getElementById("q-py").value = "30";
+    document.getElementById("q-ag").checked = true;
+    try{ window.quoteSend({ preventDefault:function(){} }); }catch(e){}
+    await new Promise(r => setTimeout(r, 200));
+    window.fetch = o;
+    if(!body) return "보내지 않았습니다";
+    if(body.agree !== true) return "동의 표시가 안 실렸습니다";
+    if(!body.serviceName || !body.q || !body.name || !body.tel) return "필수 칸이 빠졌습니다";
+    if(!body.detail || body.detail["업종"] !== "카페 · 디저트") return "업종이 안 실렸습니다";
+    if(body.detail["평수"] !== "30") return "평수가 안 실렸습니다";
+    return true;`);
+  await f("입점: 업체명이 없으면 안 보낸다", "/join", `
+    let sent = false;
+    const o = window.fetch; window.fetch = function(){ sent = true; return o.apply(this, arguments); };
+    document.getElementById("jn-ag").checked = true;
+    try{ window.joinSend({ preventDefault:function(){} }); }catch(e){}
+    await new Promise(r => setTimeout(r, 120));
+    window.fetch = o;
+    return sent ? "업체명 없이 보냈습니다" : true;`);
+  /* ⚠️ 업체에 연락처를 넘기는 것은 이 동의에 포함되지 않습니다
+     (개인정보보호법 제17조). 이 문장을 지우면 안 됩니다. */
+  await f("동의 상자에 제3자 제공이 빠져 있다고 적혀 있다", "/quote", `
+    const t = document.querySelector(".agree").textContent;
+    if(t.indexOf("수집 항목") < 0) return "수집 항목이 없습니다";
+    if(t.indexOf("이용 목적") < 0) return "이용 목적이 없습니다";
+    if(t.indexOf("보유 기간") < 0) return "보유 기간이 없습니다";
+    if(t.indexOf("포함되지 않습니다") < 0) return "업체 전달이 빠져 있다는 말이 없습니다";
     return true;`);
 
-  await f("관리자: 세 가지 글에 별표 표시가 안 남는다", "/admin.html", `
-    document.getElementById("ad-in").value =
-      "성함      홍길동\\n\\n── 적어 주신 상황 ──\\n덕트 냄새 민원입니다.";
-    adRead();
-    await new Promise(r=>setTimeout(r,300));
-    const all = ["reply","vendor","consent"]
-      .map(k => document.getElementById("ad-t-"+k).value).join("");
-    return all.indexOf("*") < 0
-      || "메일 · 문자에는 별표가 그대로 찍힙니다";`);
-
-  /* ⚠️ 접수를 저장하지 않는다는 말이 사실인지 봅니다. 붙여 넣으신
-     것에는 손님 성함·연락처가 들어 있습니다. */
-  await f("관리자: 접수를 이 브라우저에도 남기지 않는다", "/admin.html", `
-    document.getElementById("ad-in").value =
-      "성함      홍길동\\n연락처    010-1234-5678\\n\\n── 적어 주신 상황 ──\\n덕트입니다.";
-    adRead();
-    await new Promise(r=>setTimeout(r,300));
+  /* ⑤ MY — ⚠️ 성함 · 연락처를 이 브라우저에 담지 않습니다 */
+  await f("MY: 고른 것이 남는다", "/my", `
+    try{ localStorage.clear(); }catch(e){}
+    document.getElementById("my-side").value = "start";
+    document.getElementById("my-ind").value = "cafe";
+    document.getElementById("my-reg").value = "gyeonggi";
+    document.getElementById("my-py").value = "30";
+    window.myPut();
+    await new Promise(r => setTimeout(r, 200));
+    const p = JSON.parse(localStorage.getItem("am.profile.v1") || "{}");
+    if(p.industry !== "cafe" || p.side !== "start") return "안 남았습니다";
+    if(document.getElementById("view").textContent.indexOf("카페") < 0)
+      return "화면에 안 비칩니다";
+    return true;`);
+  await f("MY: 성함 · 연락처를 담지 않는다", "/quote", `
     let dump = "";
-    try{
-      for(let i = 0; i < localStorage.length; i++){
-        const k = localStorage.key(i);
-        dump += k + "=" + localStorage.getItem(k) + " ";
-      }
-    }catch(e){ return true; }
-    if(dump.indexOf("홍길동") >= 0) return "성함이 localStorage 에 남았습니다";
-    if(dump.replace(/[^0-9]/g,"").indexOf("01012345678") >= 0)
-      return "연락처가 localStorage 에 남았습니다";
+    try{ for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i); dump += k + "=" + localStorage.getItem(k) + " "; } }
+    catch(e){ return true; }
+    if(dump.indexOf("홍길동") >= 0) return "성함이 남았습니다";
+    if(dump.replace(/[^0-9]/g,"").indexOf("01012345678") >= 0) return "연락처가 남았습니다";
+    return true;`);
+  await f("견적 비교: 적은 것이 남고 지워진다", "/quote", `
+    try{ localStorage.clear(); }catch(e){}
+    window.qcAdd();
+    await new Promise(r => setTimeout(r, 200));
+    window.qcSet(0, "company", "가나건설");
+    window.qcSet(0, "price", "3000");
+    const a = JSON.parse(localStorage.getItem("am.quotes.v1") || "[]");
+    if(!a.length || a[0].company !== "가나건설") return "안 남았습니다";
+    window.qcDel(0);
+    await new Promise(r => setTimeout(r, 200));
+    const b2 = JSON.parse(localStorage.getItem("am.quotes.v1") || "[]");
+    return b2.length === 0 ? true : "안 지워졌습니다";`);
+
+  /* ⑥ 검색 — ⚠️ 새 데이터를 만들면 색인에도 넣으세요 */
+  await f("검색이 분류 · 하위분류 · 업종을 같이 찾는다", "/search", `
+    const r1 = window.amSearch("인테리어");
+    if(!r1.total) return "인테리어를 못 찾습니다";
+    const r2 = window.amSearch("철거");
+    if(!r2.total) return "철거를 못 찾습니다";
+    const r3 = window.amSearch("카페");
+    if(!r3.total) return "카페를 못 찾습니다";
+    const r4 = window.amSearch("폐업신고");
+    if(!r4.total) return "폐업신고를 못 찾습니다";
+    return true;`);
+  await f("검색: 가는 곳이 같은 줄은 하나만 낸다", "/search", `
+    const r = window.amSearch("카페");
+    const seen = {}; let dup = 0;
+    r.groups.forEach(function(g){ g.rows.forEach(function(x){
+      if(seen[x.to]) dup++; seen[x.to] = 1; }); });
+    return dup ? dup + "개가 같은 곳으로 갑니다" : true;`);
+  await f("검색: 못 찾으면 물어보는 길을 준다", "/search?q=zzzqqq", `
+    const a = document.querySelector('#view a[href^="/quote"]');
+    return a ? true : "막다른 길입니다";`);
+
+  /* ⑦ 문서 — 중개자 지위는 전자상거래법 제20조 제1항입니다 */
+  await f("푸터에 중개자 지위가 적혀 있다", "/", `
+    const t = document.querySelector(".ft-role").textContent;
+    if(t.indexOf("통신판매중개자") < 0) return "중개자라는 말이 없습니다";
+    if(t.indexOf("당사자가 아닙니다") < 0) return "거래 당사자가 아니라는 말이 없습니다";
+    return true;`);
+  await f("약관에 고기 플랫폼 문구가 남아 있지 않다", "/terms", `
+    const t = document.getElementById("view").textContent;
+    const bad = ["고깃집","정육점","축산","육류 공급"].filter(function(w){ return t.indexOf(w) >= 0; });
+    return bad.length ? bad.join(" · ") + " 가 남아 있습니다" : true;`);
+  await f("매물 화면이 적힌 값의 출처를 밝힌다", "/stores", `
+    const t = document.getElementById("view").textContent;
+    if(t.indexOf("올리신 사장님이 적은 값") < 0) return "누가 적은 값인지 안 밝힙니다";
+    if(t.indexOf("거래 당사자가 아닙니다") < 0) return "중개자 지위가 없습니다";
     return true;`);
 
-  /* 설정 상태 주소는 **값을 절대 돌려주지 않습니다.** 미들웨어가 앞에서
-     막지만, 혹시 뚫려도 주소·키가 새면 안 됩니다. */
-  await f("관리자: 설정 주소가 값을 돌려주지 않는다", "/admin.html", `
-    const src = await (await fetch("/api/admin-health.js", { cache:"no-store" }))
-      .text().catch(() => "");
-    if(!src) return true;            /* 흉내 서버가 안 주면 넘어갑니다 */
-    const bad = [];
-    /* 값을 그대로 담아 보내는 꼴이 있는지 — has() 로만 나가야 합니다 */
-    ["process.env.INTAKE_WEBHOOK_URL,", "process.env.RESEND_API_KEY,",
-     "json({ url", "value:"].forEach(w => {
-      if(src.indexOf(w) >= 0) bad.push(w);
-    });
-    return bad.length ? "값이 나갈 수 있는 자리: " + bad.join(" ") : true;`);
+  console.log("\n── 흐름 " + 22 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
+              "접수 4 · MY 3 · 검색 3 · 문서 3)");
+  if (flowBad.length) { fail++; console.log("  ❌ " + flowBad.length + "건: " + flowBad.join(" / ")); }
+  else console.log("  ✅ 전부 맞음");
+
+  const hdFrom = flowBad.length;
 
   /* ── 헤더 ────────────────────────────────────────────────
      ⚠️ 둘 다 **맨 위에서는 멀쩡해 보입니다.** 화면을 내린 채로 찍어
@@ -1427,7 +701,7 @@ const AUDIT = `(() => {
      새 카드를 만들고 빠뜨리면 조용히 사라집니다. 진단 카드(.ckb-c)가
      실제로 그랬습니다. 에러도 안 나고 다른 검사도 전부 통과합니다. */
   await f("카드가 구간 바탕과 같은 색이 아니다", "/", `
-    const sel = ".sit,.cat,.tool,.mycard,.tl-c,.prob,.pcard,.faq-i,.ckb-c";
+    const sel = ".cat,.ind,.pv,.fr,.fc,.mk,.help,.sp,.empty";
     const bad = [];
     [...document.querySelectorAll(sel)].forEach(el => {
       let sec = el.closest("section"); if(!sec) return;
@@ -1439,75 +713,59 @@ const AUDIT = `(() => {
     });
     return bad.length ? [...new Set(bad)].join(" ") + " 가 구간 바탕과 같은 색입니다" : true;`);
 
-  console.log("\n── 새 화면 흐름 " + 16 + "개 · 화면이 이어지는가 " + 18 +
-              "개 · 접수 실패 " + 5 + "개 · 도구와 글 " + 9 +
-              "개 · 접수처 없음 " + 5 + "개 · 도구 계산 " + 9 +
-              "개 · 머리말 " + 5 + "개 · 헤더·카드 면 " + 3 + "개 · 고민 가이드 " + 13 + "개 · 관리자 " + 5 + "개 · 검색 " + 4 + "개");
-  if (flowBad.length) { fail++; console.log("  ❌ "+flowBad.length+"건: "+flowBad.join(" / ")); }
-  else console.log("  ✅ 전부 맞음");
+  console.log("\n── 헤더 · 카드 면 3개");
+  const hdBad = flowBad.slice(hdFrom);
+  if (hdBad.length) { fail++; console.log("  ❌ "+hdBad.length+"건: "+hdBad.join(" / ")); }
+  else console.log("  ✅ 붙어 있고 · 불투명하고 · 카드가 구분됩니다");
+  await fp.close();
 
-  /* 9-2. 폰의 SOS 바닥 시트 (지시서 §24)
-     ⚠️ **폰에서 제일 큰 단추**입니다. 여기가 막히면 급한 사장님이
-     아무 데도 못 갑니다. 넓은 화면에서는 시트를 쓰지 않고 /sos 화면으로
-     그냥 가야 합니다 — 두 가지를 다 봅니다.
-     ⚠️ 첨부 칸이 **없어야** 합니다. 받아 둘 곳이 없는데 고르게 해 놓고
-     조용히 버리면 그게 거짓말입니다 (절대 규칙 5). */
-  const shBad = [];
+  /* ── 머리말 · 크롤러 본문 (§46) ─────────────────────────────
+     ⚠️ **렌더된 DOM 을 보는 검사로는 이 종류를 영영 못 잡습니다.**
+     화면을 그리고 나면 `paintMeta()` 가 canonical 을 제 주소로 고쳐
+     놓기 때문입니다. 크롤러가 읽는 것은 **고쳐지기 전의 파일**이라,
+     여기서는 파일을 그대로 받아서 셉니다. */
+  const headBad = [];
   {
-    const sp = await (await b.newContext({ viewport:{width:390,height:844} })).newPage();
-    await sp.goto(ROOT + "/", { waitUntil:"load" });
-    await sp.waitForTimeout(300);
-    await sp.click(".mnav a.big");
-    await sp.waitForTimeout(400);
-    const r1 = await sp.evaluate(() => {
-      const el = document.getElementById("sos-sheet");
-      const p = el && el.querySelector(".sheet-p");
-      return {
-        open: !!(el && !el.hidden),
-        modal: p && p.getAttribute("aria-modal") === "true",
-        labelled: p && !!document.getElementById(p.getAttribute("aria-labelledby")||""),
-        file: !!(el && el.querySelector('input[type=file]')),
-        onPath: location.pathname
-      };
-    });
-    if(!r1.open)      shBad.push("390px: SOS 를 눌렀는데 시트가 안 열립니다");
-    if(!r1.modal)     shBad.push("aria-modal 이 없습니다");
-    if(!r1.labelled)  shBad.push("시트에 이름(aria-labelledby)이 없습니다");
-    if(r1.file)       shBad.push("첨부 칸이 있습니다 — 받아 둘 곳이 없습니다");
-    if(r1.onPath !== "/") shBad.push("시트를 여는 대신 화면이 넘어갔습니다");
+    const strip = t => t.replace(/<script[\s\S]*?<\/script>/g,"")
+                        .replace(/<style[\s\S]*?<\/style>/g,"")
+                        .replace(/<!--[\s\S]*?-->/g,"")
+                        .replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+    for (const [url, name] of PAGES) {
+      if (url === "/nope") continue;
+      /* ⚠️ `noindex` 화면(MY · 검색 · 견적 요청)은 검색에 올리지 않으므로
+         크롤러 본문을 요구하지 않습니다. 요구하면 오탐만 쌓입니다. */
+      const path = url.split("?")[0];
+      if (["/my","/search","/quote"].indexOf(path) >= 0) continue;
+      const res = await fetch(ROOT + path).catch(() => null);
+      if (!res || !res.ok) { headBad.push(name + ": 파일이 없습니다"); continue; }
+      const html = await res.text();
 
-    /* ⚠️ 시트가 안 열렸는데 그대로 fill 을 하면 playwright 가 30초
-       기다리다 **검사가 통째로 죽습니다.** 죽으면 무엇이 틀렸는지
-       읽을 수가 없습니다 — 여기서 끊고 다음으로 넘어갑니다. */
-    if(r1.open){
-    await sp.fill("#sheet-q", "덕트 냄새 민원이 들어옵니다");
-    await sp.click(".sheet-go");
-    await sp.waitForTimeout(450);
-    const r2 = await sp.evaluate(() => ({
-      path: location.pathname,
-      q: (document.getElementById("s-q")||{}).value || "",
-      closed: (document.getElementById("sos-sheet")||{}).hidden === true
-    }));
-    if(r2.path !== "/sos")            shBad.push("해결방법 찾기를 눌렀는데 SOS 로 안 갑니다");
-    if(r2.q.indexOf("덕트") < 0)      shBad.push("적은 말이 SOS 로 안 넘어갑니다");
-    if(!r2.closed)                    shBad.push("넘어간 뒤에도 시트가 안 닫힙니다");
+      const can = (html.match(/<link rel="canonical"/g) || []).length;
+      if (can !== 1) headBad.push(name + ": canonical 이 " + can + "개");
+
+      const og = /<meta property="og:image" content="https?:\/\//.test(html);
+      if (!og) headBad.push(name + ": og:image 가 주소 전체가 아닙니다");
+
+      const ti = (html.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || "";
+      if (!ti.trim()) headBad.push(name + ": 제목이 비었습니다");
+      const de = (html.match(/<meta name="description" content="([^"]*)"/) || [])[1] || "";
+      if (de.trim().length < 30) headBad.push(name + ": 설명이 너무 짧습니다");
+
+      /* ⚠️ 한글은 같은 내용이라도 글자 수가 훨씬 적습니다. 영어 기준으로
+         잡았다가 멀쩡한 화면이 전부 걸린 적이 있습니다. */
+      const main = (html.match(/<main id="view">([\s\S]*?)<\/main>/) || [])[1] || "";
+      const len = strip(main).length;
+      if (len < 150) headBad.push(name + ": 크롤러가 읽을 본문이 " + len + "자뿐입니다");
+
+      /* 지어낸 실적이 크롤러 본문에만 들어가면 그게 구글에 나가는 거짓말입니다 */
+      const body = strip(main);
+      if (/[0-9][0-9,]*\s*\+\s*(곳|개|명|건)/.test(body) || body.indexOf("만족도") >= 0)
+        headBad.push(name + ": 크롤러 본문에 지어낸 실적 숫자가 있습니다");
     }
-    await sp.close();
-
-    /* 넓은 화면에서는 시트가 아니라 화면으로 */
-    const wp = await (await b.newContext({ viewport:{width:1440,height:900} })).newPage();
-    await wp.goto(ROOT + "/", { waitUntil:"load" });
-    await wp.waitForTimeout(300);
-    const wide = await wp.evaluate(() => {
-      const el = document.getElementById("sos-sheet");
-      return !el || getComputedStyle(el).display === "none";
-    });
-    if(!wide) shBad.push("1440px 에서도 시트가 살아 있습니다");
-    await wp.close();
   }
-  console.log("\n── 폰 SOS 바닥 시트");
-  if (shBad.length) { fail++; console.log("  ❌ "+shBad.length+"건: "+shBad.join(" / ")); }
-  else console.log("  ✅ 열리고 · 넘어가고 · 닫힙니다");
+  console.log("\n── 머리말 · 크롤러 본문 " + (PAGES.length - 1) + "개 화면");
+  if (headBad.length) { fail++; console.log("  ❌ " + headBad.length + "건: " + headBad.slice(0,8).join(" / ")); }
+  else console.log("  ✅ canonical 하나 · og:image 전체주소 · 제목/설명 · 본문 충분");
 
   /* 10. 알림(토스트)이 보이고 들리는가
      ⚠️ 담기·품절·동의 누락 안내가 **전부 토스트**입니다. 아래 네비에
@@ -1516,7 +774,7 @@ const AUDIT = `(() => {
   const tstBad = [];
   for (const w of [390, 1440]) {
     const tp = await (await b.newContext({ viewport:{width:w,height:844} })).newPage();
-    await tp.goto(ROOT + "/sos", { waitUntil:"load" });
+    await tp.goto(ROOT + "/quote", { waitUntil:"load" });
     await tp.waitForTimeout(250);
     await tp.evaluate(() => toast("테스트 알림입니다"));
     await tp.waitForTimeout(200);

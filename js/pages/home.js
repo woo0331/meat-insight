@@ -18,6 +18,7 @@
 function PageHome(){
   return Hero()+
          TrustBar()+
+         ScaleBand()+
          IndustryBand()+
          WhatBand()+
          BridgeBand()+
@@ -89,6 +90,57 @@ function TrustBar(){
       return '<div class="tbar-i">'+icon(r[0],20)+
         '<span><b>'+esc(r[1])+'</b><em>'+esc(r[2])+'</em></span></div>';
     }).join("")+
+  '</div></section>';
+}
+
+/* ── 02-2 규모감 — 우리가 다루는 범위 ───────────────────────────
+   "플랫폼 규모감" 은 회원 수 · 거래액으로 내는 것이 아닙니다. 그건
+   지금 0 이고, 지어내면 절대 규칙 1 위반입니다.
+
+   대신 **우리가 실제로 다루는 범위**를 보여 줍니다. 이건 지어낼 수가
+   없습니다 — 아래 숫자는 전부 `AM_INDUSTRIES` · `AM_CATS` 를 **그
+   자리에서 세는 것**이라, 분류를 하나 늘리면 숫자도 같이 늘고,
+   손으로 고쳐 쓸 자리가 없습니다.
+
+   ⚠️ **여기에 업체 수 · 계약 수 · 만족도를 붙이지 마세요.** 그건
+   성과이지 범위가 아니고, 지금 그 값이 하나도 없습니다.
+   ⚠️ **`n+` 꼴로 쓰지 마세요.** "183+" 는 센 값이 아니라 부풀린
+   값입니다. 센 값은 그냥 183 입니다. */
+function ScaleBand(){
+  var ind = (window.AM_INDUSTRIES || []).length;
+  var st  = (window.AM_START_CATS || []).length;
+  var cl  = (window.AM_CLOSE_CATS || []).length;
+  var sub = (window.AM_CATS || []).reduce(function(a, c){
+    return a + ((c.items || []).length); }, 0);
+
+  /* ⚠️ 데이터가 비면 이 구간을 통째로 뺍니다 (절대 규칙 2).
+     "0개 분야" 는 규모감이 아니라 미완성 표시입니다. */
+  if(!ind || !st || !cl || !sub) return "";
+
+  var n = [
+    [ind, "업종",        "음식점부터 사무 · 전문서비스까지"],
+    [st,  "창업 분야",   "점포 · 인테리어 · 장비 · 인허가 · 자금"],
+    [cl,  "폐업 분야",   "양도 · 처분 · 철거 · 원상복구 · 세무"],
+    [sub, "세부 서비스", "업종을 고르시면 필요한 것만 추려 드립니다"]
+  ];
+  return '<section class="scale"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">우리가 다루는 범위</p>'+
+      '<h2 class="scale-h">가게 하나를 열고 닫는 데<br class="br-m"> '+
+        '필요한 것은 <em>생각보다 많습니다.</em></h2>'+
+    '</div>'+
+    '<ul class="scale-g">'+ n.map(function(x){
+      /* ⚠️ grid 칸에 맨글을 두지 않습니다 — 태그로 감쌉니다. */
+      return '<li class="scale-i">'+
+        '<b class="scale-n">'+x[0]+'</b>'+
+        '<span class="scale-k">'+esc(x[1])+'</span>'+
+        '<span class="scale-l">'+esc(x[2])+'</span>'+
+      '</li>';
+    }).join("")+'</ul>'+
+    /* ⚠️ 이 줄을 지우지 마세요. 숫자만 크게 띄우면 "업체가 183곳" 으로
+       읽힙니다. 무엇을 센 값인지 밝혀야 합니다. */
+    '<p class="scale-n-b">이 숫자는 저희가 다루는 <b>분야의 수</b>입니다. '+
+      '등록된 업체 수나 거래 실적이 아닙니다.</p>'+
   '</div></section>';
 }
 

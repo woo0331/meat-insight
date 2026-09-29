@@ -706,8 +706,37 @@ const AUDIT = `(() => {
     }
     return true;`);
 
-  console.log("\n── 흐름 " + 25 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
-              "접수 4 · MY 3 · 검색 3 · 문서 3 · 메인 히어로 3)");
+  /* ⑨ 규모감 숫자 — **센 값**이어야 합니다
+     ⚠️ 여기가 이 플랫폼에서 숫자를 크게 띄우는 유일한 자리라, 나중에
+     "183 을 300 으로 고쳐 두면 커 보이겠다" 가 제일 쉽게 벌어지는
+     곳입니다. 화면의 숫자를 데이터에서 다시 세어 맞춰 봅니다. */
+  await f("규모감 숫자가 손으로 쓴 값이 아니라 센 값이다", "/", `
+    const n = [].slice.call(document.querySelectorAll(".scale-n"))
+      .map(function(e){ return parseInt(e.textContent.trim(), 10); });
+    if(n.length !== 4) return "숫자 칸이 " + n.length + "개입니다";
+    const want = [
+      (window.AM_INDUSTRIES || []).length,
+      (window.AM_START_CATS || []).length,
+      (window.AM_CLOSE_CATS || []).length,
+      (window.AM_CATS || []).reduce(function(a, c){
+        return a + ((c.items || []).length); }, 0)
+    ];
+    for(let i = 0; i < 4; i++)
+      if(n[i] !== want[i])
+        return i + "번째가 화면 " + n[i] + " · 실제 " + want[i] + " 입니다";
+    return true;`);
+  await f("규모감 숫자가 무엇을 센 값인지 밝힌다", "/", `
+    const s = document.querySelector(".scale");
+    if(!s) return "구간이 없습니다";
+    const t = s.textContent;
+    if(t.indexOf("분야의 수") < 0) return "무엇을 센 값인지 안 밝힙니다";
+    if(t.indexOf("등록된 업체 수나 거래 실적이 아닙니다") < 0)
+      return "업체 수 · 실적이 아니라는 말이 없습니다";
+    if(/[0-9][0-9,]*\\s*\\+/.test(t)) return "n+ 꼴이 있습니다 — 센 값은 그냥 센 값입니다";
+    return true;`);
+
+  console.log("\n── 흐름 " + 27 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
+              "접수 4 · MY 3 · 검색 3 · 문서 3 · 메인 히어로 3 · 규모감 2)");
   if (flowBad.length) { fail++; console.log("  ❌ " + flowBad.length + "건: " + flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

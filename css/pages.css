@@ -601,9 +601,14 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   gap:var(--s2) var(--s4); padding:var(--s4) var(--s5);
   background:var(--bg-2); border-radius:var(--r-lg); }
 .sr-l a:hover{ background:var(--blue-50); }
-.sr-l b{ font-size:var(--t-base); }
-.sr-l span{ grid-column:1; font-size:var(--t-cap); color:var(--ink3); }
-.sr-go{ grid-column:2; grid-row:1 / span 2; color:var(--ink3); }
+/* ⚠️ `.sr-l span` 은 `.sr-go` 보다 **진한 선택자**입니다
+   (클래스1+타입2 vs 클래스1). 그래서 화살표가 1번 칸으로 끌려가고
+   제목이 2번 칸으로 밀려, 폰에서 글 칸이 13px 로 쪼그라들어 한
+   낱말이 53줄이 됐습니다 — 에러도 가로 스크롤도 안 났습니다.
+   덮어쓰는 쪽을 **같은 진하기 이상으로** 다시 써야 합니다. */
+.sr-l a > b{ grid-column:1; font-size:var(--t-base); }
+.sr-l a > span{ grid-column:1; font-size:var(--t-cap); color:var(--ink3); }
+.sr-l a > .sr-go{ grid-column:2; grid-row:1 / span 2; color:var(--ink3); }
 
 /* ════════ MY ═════════════════════════════════════════════════════ */
 .my-set{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s5);

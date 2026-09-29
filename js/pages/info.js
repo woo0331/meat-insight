@@ -86,9 +86,12 @@ function PageContent(c){
   '<section class="sec sec-white"><div class="w read">'+
     (c.body||[]).map(function(b){
       return (b.h ? '<h2>'+esc(b.h)+'</h2>' : '')+
-        (b.p||[]).map(function(t){ return '<p>'+esc(t)+'</p>'; }).join("")+
+        /* ⚠️ 본문은 `mark()` 입니다 — `esc()` 를 먼저 통과시킨 뒤
+           `**굵게**` 만 되살립니다. `esc()` 만 쓰면 별표가 글자로
+           찍히고, 순서를 바꾸면 남이 넣은 태그가 돕니다. */
+        (b.p||[]).map(function(t){ return '<p>'+mark(t)+'</p>'; }).join("")+
         ((b.ul||[]).length ? '<ul>'+b.ul.map(function(t){
-          return '<li>'+esc(t)+'</li>'; }).join("")+'</ul>' : '');
+          return '<li>'+mark(t)+'</li>'; }).join("")+'</ul>' : '');
     }).join("")+
     /* ⚠️ 법령과 제도는 바뀝니다. **어디서 확인하는지**를 같이 답니다. */
     ((c.source||[]).length ? '<div class="src"><b>확인하는 곳</b><ul>'+
@@ -96,8 +99,13 @@ function PageContent(c){
         return '<li>'+esc(s.name)+' — '+esc(s.where)+'</li>'; }).join("")+
       '</ul></div>' : '')+
     /* 글 끝은 항상 지금 할 수 있는 일로 맺습니다 */
+    /* ⚠️ `/providers/<분류>` 를 무조건 만들면 **죽은 주소**가 됩니다.
+       업체를 찾는 분류(kind:"provider")만 그 주소를 가지고, 점포 ·
+       매물 · 정보 성격의 분류는 각자 제 화면이 따로 있습니다.
+       `catTo()` 가 그 갈림을 아는 유일한 함수입니다 — 실제로
+       `/providers/store` 가 빈 화면으로 나갔습니다. */
     (c.next ? '<div class="row-cta"><a class="btn btn-b btn-lg" href="'+
-      esc(c.next.cat ? ("/providers/"+c.next.cat) : "/quote")+'">'+
+      esc(c.next.cat && amCat(c.next.cat) ? catTo(amCat(c.next.cat)) : "/quote")+'">'+
       esc(c.next.label||"업체 찾아보기")+icon("arrow",18)+'</a></div>' : '')+
   '</div></section>';
 }

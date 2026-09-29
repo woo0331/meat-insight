@@ -487,9 +487,20 @@ function noscriptFor(W, r, route){
   const mct = /^\/content\/([a-z0-9-]+)$/.exec(route);
   if(mct){
     const ct = (W.AM_CONTENTS||[]).filter(x => x.slug === mct[1])[0];
+    /* ⚠️ 별표를 **떼고** 내보냅니다. 화면은 `mark()` 가 `**굵게**` 를
+       `<b>` 로 살리지만, 여기는 `esc()` 라 별표가 글자로 남습니다 —
+       크롤러와 LLM 봇이 읽는 것이 그 글입니다. */
+    const plain = t => String(t||"").replace(/\*\*/g, "");
     if(ct) (ct.body||[]).forEach(b => {
-      if(b.h) h2(b.h); (b.p||[]).forEach(p); ul(b.ul||[]);
+      if(b.h) h2(plain(b.h));
+      (b.p||[]).forEach(t => p(plain(t)));
+      ul((b.ul||[]).map(plain));
     });
+    /* 법령은 바뀝니다 — 확인하는 곳을 크롤러에게도 냅니다 */
+    if(ct && (ct.source||[]).length){
+      h2("확인하는 곳");
+      ul(ct.source.map(x => x.name + " — " + x.where));
+    }
     return L.join("");
   }
   /* 약관 · 방침 — ⚠️ 본문이 데이터에 있으므로 조문 제목이라도 냅니다.

@@ -15,6 +15,16 @@ window.esc = function(s){
     .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 };
 
+/* 본문에서 허용하는 표시는 `**굵게**` **하나뿐**입니다.
+   ⚠️ **순서를 바꾸지 마세요.** `esc()` 를 **먼저** 통과시킨 다음 별표만
+   되살립니다. 거꾸로 하면 글에 넣은 `<img onerror=…>` 가 남의
+   브라우저에서 돕니다 (절대 규칙 4).
+   ⚠️ 별표를 안 떼고 `esc()` 만 쓰면 화면에 `**` 가 글자로 찍힙니다 —
+   예전 저장소에서 실제로 그렇게 나갔습니다. */
+window.mark = function(s){
+  return esc(s).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+};
+
 /* 숫자에 쉼표 — 금액은 사장님이 눈으로 읽습니다 */
 window.won = function(n){ return Number(n||0).toLocaleString("ko-KR"); };
 

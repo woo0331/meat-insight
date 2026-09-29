@@ -78,6 +78,17 @@ const PAGES = [
   ["/search?q=%EC%B9%B4%ED%8E%98%20%EC%9D%B8%ED%85%8C%EB%A6%AC%EC%96%B4", "검색 결과 (카페 인테리어)"],
   ["/search?q=zzz",      "검색 (못 찾음)"],
   ["/faq",               "자주 묻는 것"],
+  /* ⚠️ 글을 만들었으면 여기 넣으세요. 예전 저장소에서 연구소 글 열두
+     편이 한동안 전수 점검에 **아예 안 들어가** 있었습니다 — 제목 검사를
+     일부러 깨 봤는데 안 걸려서 알았습니다. */
+  ["/content/sabeopja-deungrok",   "정보 — 사업자등록"],
+  ["/content/inheoga-jongryu",     "정보 — 인허가 종류"],
+  ["/content/sangga-gyeyak-check", "정보 — 상가 계약"],
+  ["/content/gwolligeum-bohostory","정보 — 권리금"],
+  ["/content/cheot-jigwon",        "정보 — 첫 직원"],
+  ["/content/pyeeop-sunseo",       "정보 — 폐업 순서"],
+  ["/content/wonsang-bokgu-beomwi","정보 — 원상복구"],
+  ["/content/pyeeop-jigwon-jeongri","정보 — 폐업 직원"],
   ["/about",             "소개"],
   ["/terms",             "이용약관"],
   ["/privacy",           "개인정보처리방침"],
@@ -771,8 +782,43 @@ const AUDIT = `(() => {
     if(/[0-9]+\\s*시간\\s*(안|이내)/.test(t)) return "몇 시간 안에 가 있습니다";
     return true;`);
 
-  console.log("\n── 흐름 " + 30 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
-              "접수 4 · MY 3 · 검색 3 · 문서 3 · 메인 히어로 3 · 규모감 2 · FAQ · 진행 3)");
+  /* ⑪ 정보 글 — 근거를 댈 수 있는 것만 씁니다 (§45)
+     ⚠️ 여기가 지어낸 금액이 제일 쉽게 새어 나오는 자리입니다. "철거비
+     평당 5만원" 을 적으면 사장님이 그 숫자로 예산을 잡고 업체와
+     싸웁니다. */
+  await f("정보 글에 지어낸 금액 · 비율이 없다", "/content", `
+    const bad = [];
+    for(const c of (window.AM_CONTENTS || [])){
+      const t = (c.body || []).map(function(b){
+        return [b.h || ""].concat(b.p || [], b.ul || []).join(" "); }).join(" ") +
+        " " + (c.lead || "");
+      if(/[0-9][0-9,]*\\s*(만원|억원|천원)/.test(t))
+        bad.push(c.slug + " 금액");
+      /* 법정 기간(30일 · 1년 · 15시간)은 지어낸 값이 아닙니다.
+         퍼센트는 우리가 댈 근거가 없으므로 전부 잡습니다. */
+      if(/[0-9]+\\s*%/.test(t)) bad.push(c.slug + " 비율");
+      if(/평당|평 ?당/.test(t) && /[0-9]/.test(t)) bad.push(c.slug + " 평단가");
+    }
+    return bad.length ? bad.join(" · ") : true;`);
+  await f("정보 글이 어디서 확인하는지 같이 적는다", "/content", `
+    const bad = [];
+    for(const c of (window.AM_CONTENTS || [])){
+      const src = c.source || [];
+      if(!src.length){ bad.push(c.slug + " 확인처 없음"); continue; }
+      for(const s of src)
+        if(!s.where) bad.push(c.slug + " → " + s.name + " 의 확인처가 빔");
+    }
+    return bad.length ? bad.join(" · ") : true;`);
+  await f("정보 글 화면에 별표가 글자로 남지 않는다", "/content/wonsang-bokgu-beomwi", `
+    const t = document.querySelector(".read").textContent;
+    if(t.indexOf("**") >= 0) return "별표가 글자로 찍혔습니다";
+    if(!document.querySelector(".read b")) return "굵게가 하나도 안 살았습니다";
+    /* 작성 표시는 주석에만 둡니다 — 손님 화면에 나가면 안 됩니다 */
+    if(/⚠️|TODO|지시서/.test(t)) return "작성 표시가 남았습니다";
+    return true;`);
+
+  console.log("\n── 흐름 " + 33 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
+              "접수 4 · MY 3 · 검색 3 · 문서 3 · 메인 히어로 3 · 규모감 2 · FAQ · 진행 3 · 정보 글 3)");
   if (flowBad.length) { fail++; console.log("  ❌ " + flowBad.length + "건: " + flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

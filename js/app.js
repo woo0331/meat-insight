@@ -71,6 +71,20 @@ var META = {
                  "내 창업 · 내 폐업 진행 상황과 받은 견적, 저장한 업체를 한 화면에서 이어서 하실 수 있습니다."],
   "/search":    ["통합검색",
                  "업체 · 프랜차이즈 · 매장 · 시설장비 · 정보를 한 번에 찾습니다."],
+  "/tools":     ["사장님 도구",
+                 "창업비 정리표 · 월 고정비 · 손익분기 · 인건비율 · 신규 창업과 매장 인수 비교 · 폐업 체크리스트. 전부 무료입니다."],
+  "/tools/cost":["창업비 정리표",
+                 "빠뜨리기 쉬운 항목을 전부 늘어놓고, 실제로 받으신 견적을 적으면 합계와 아직 안 받은 칸을 보여 드립니다."],
+  "/tools/fixed":["월 고정비 계산",
+                 "팔리든 안 팔리든 나가는 돈을 더하고, 하루에 얼마를 벌어야 그것만이라도 맞는지 보여 드립니다."],
+  "/tools/bep": ["손익분기 계산",
+                 "고정비를 공헌이익률로 나눕니다. 본전이 되는 월 매출과 하루 매출, 하루 손님 수까지."],
+  "/tools/labor":["인건비율 계산",
+                 "매출 대비 인건비가 몇 퍼센트인지. 판정하지 않고 사장님 가게의 흐름을 보시게 합니다."],
+  "/tools/vs":  ["신규 창업 vs 매장 인수",
+                 "새로 만드는 것과 하던 가게를 받는 것. 들어가는 돈과 문 여는 시점을 나란히 놓습니다."],
+  "/tools/close":["폐업 체크리스트",
+                 "정리 순서대로 짚어 가며 빠뜨린 것을 찾습니다. 기한이 있는 것이 여럿입니다."],
   "/faq":       ["자주 묻는 것",
                  "돈이 드는지, 연락처가 업체에 바로 넘어가는지, 등록된 업체가 몇 곳인지 — 먼저 궁금해하시는 것들에 그대로 답했습니다."],
   "/about":     ["소개",
@@ -103,6 +117,13 @@ window.routeInfo = function(path){
     "/join":      "join",
     "/my":        "my",
     "/search":    "search",
+    "/tools":      "tools",
+    "/tools/cost": "tool-cost",
+    "/tools/fixed":"tool-fixed",
+    "/tools/bep":  "tool-bep",
+    "/tools/labor":"tool-labor",
+    "/tools/vs":   "tool-vs",
+    "/tools/close":"tool-close",
     "/faq":       "faq",
     "/about":     "about",
     "/terms":     "terms",
@@ -251,6 +272,13 @@ function render(){
     case "join":            html = PageJoin();                      break;
     case "my":              html = PageMy();                        break;
     case "search":          html = PageSearch();                    break;
+    case "tools":           html = PageTools();                     break;
+    case "tool-cost":       html = PageToolCost();                  break;
+    case "tool-fixed":      html = PageToolFixed();                 break;
+    case "tool-bep":        html = PageToolBep();                   break;
+    case "tool-labor":      html = PageToolLabor();                 break;
+    case "tool-vs":         html = PageToolVs();                    break;
+    case "tool-close":      html = PageToolClose();                 break;
     case "faq":             html = PageFaq();                       break;
     case "about":           html = PageAbout();                     break;
     case "terms":           html = PageTerms();                     break;

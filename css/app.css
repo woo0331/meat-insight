@@ -222,7 +222,9 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 /* ── 푸터 ────────────────────────────────────────────────────────── */
 .ft{ background:var(--bg-2); border-top:1px solid var(--line);
   padding:var(--s10) 0 var(--s7); font-size:var(--t-base); }
-.ft-g{ display:grid; grid-template-columns:1.5fr repeat(4,1fr); gap:var(--s7); }
+/* ⚠️ 칸 수를 묶음 수에 맞추세요. `repeat(4,1fr)` 로 두고 묶음을
+   다섯으로 늘리면 다섯째가 다음 줄로 혼자 떨어집니다. */
+.ft-g{ display:grid; grid-template-columns:1.4fr repeat(5,1fr); gap:var(--s6); }
 .ft-b p{ margin:var(--s4) 0 var(--s5); line-height:1.8; color:var(--ink2);
   font-size:var(--t-sm); }
 .ft-col h4{ font-size:var(--t-base); margin-bottom:var(--s3); }

@@ -37,7 +37,7 @@ function loadApp(){
                 "js/data/franchise.js","js/data/providers.js","js/data/market.js",
                 "js/data/support.js","js/data/content.js","js/data/photos.js",
                 "js/data/legal-terms.js","js/data/legal-privacy.js",
-                "js/data/faq.js"];
+                "js/data/faq.js","js/data/tools.js"];
 
   /* ⚠️ 여기는 **glob 이 아니라 손으로 적은 목록**입니다. 새 데이터
      파일을 만들고 여기에 안 넣으면, 그 데이터를 쓰는 주소가 **에러
@@ -71,6 +71,8 @@ function allRoutes(W){
   const fixed = ["/", "/startup", "/closure", "/providers", "/franchise",
                  "/stores", "/assets", "/support", "/content",
                  "/quote", "/join", "/my", "/search",
+                 "/tools", "/tools/cost", "/tools/fixed", "/tools/bep",
+                 "/tools/labor", "/tools/vs", "/tools/close",
                  "/faq", "/about", "/terms", "/privacy"];
   /* 업종별 창업 · 폐업 — **검색에서 들어오는 제일 큰 문**입니다
      ("카페 창업" · "음식점 폐업"). 반드시 진짜 HTML 파일이어야 합니다. */
@@ -362,6 +364,56 @@ function noscriptFor(W, r, route){
 
   if(route === "/faq"){
     (W.AM_FAQ||[]).forEach(x => { L.push("<h2>"+esc(x.q)+"</h2>"); p(x.a); });
+    return L.join("");
+  }
+  if(route === "/tools"){
+    h2("무료로 쓰실 수 있는 계산기");
+    (W.AM_TOOLS||[]).forEach(t => {
+      L.push("<h3>"+esc(t.name)+"</h3>");
+      p(t.lead + " — " + t.ask + " 를 적으시면 " + t.out + " 이 나옵니다.");
+    });
+    /* ⚠️ 여기에 기준값을 적지 마세요 — "인건비율 25%면 정상" 같은 것은
+       업종 · 지역마다 달라서 근거를 댈 수 없습니다. */
+    p("전부 사장님이 적으신 숫자를 나누는 것까지입니다. 기준값을 만들어 " +
+      "좋다 나쁘다 판정하지 않습니다. 적으신 숫자는 이 브라우저에만 남고 " +
+      "서버로 보내지 않습니다.");
+    return L.join("");
+  }
+  const mtl = /^\/tools\/([a-z]+)$/.exec(route);
+  if(mtl){
+    const t = (W.AM_TOOLS||[]).filter(x => x.key === mtl[1])[0];
+    if(t){
+      h2(t.name);
+      p(t.lead + ".");
+      p(t.ask + " 를 적으시면 " + t.out + " 이 나옵니다. 안 적으신 칸은 " +
+        "계산에서 빠지고, 업계 평균으로 메우지 않습니다.");
+      if(t.key === "cost"){
+        h2("적는 항목");
+        (W.AM_COST_GROUPS||[]).forEach(g => {
+          L.push("<h3>"+esc(g.h)+"</h3>");
+          ul(g.items.map(i => i.name));
+        });
+      }
+      if(t.key === "close"){
+        h2("짚어 볼 것");
+        (W.AM_CLOSE_CHECK||[]).forEach(g => {
+          L.push("<h3>"+esc(g.h)+"</h3>");
+          ul(g.items.map(i => i.t + (i.due ? " (기한 있음)" : "")));
+        });
+      }
+      if(t.key === "bep" || t.key === "fixed"){
+        h2("적는 항목");
+        ul((W.AM_FIXED||[]).map(r => r.name + " — " + r.hint));
+      }
+      if(t.key === "labor"){
+        h2("적는 항목");
+        ul((W.AM_LABOR||[]).map(r => r.name + " — " + r.hint));
+      }
+      if(t.key === "vs"){
+        h2("나란히 놓는 것");
+        ul((W.AM_VS||[]).map(r => (r.side === "new" ? "새로 만들 때 · " : "가게를 받을 때 · ") + r.name));
+      }
+    }
     return L.join("");
   }
 

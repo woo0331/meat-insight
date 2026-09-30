@@ -70,6 +70,11 @@ const CASES = [
    `document.querySelector(".jn-now-t h2").textContent = "월 30건의 요청을 보장합니다";`],
   ["입점 화면이 연락처는 나중에 간다고 밝힌다",
    `document.querySelectorAll(".jn-req-l > li > b")[0].textContent = "연락처";`],
+  ["업종 화면에는 그 업종 글이 맨 앞에 온다",
+   `document.querySelector(".rd-l b").textContent =
+      "사업자등록 — 언제, 어디서, 무엇을 들고 가나";`],
+  ["폐업 글은 주황 쪽 · 창업 글은 초록 쪽으로 물든다",
+   `document.getElementById("view").className = "";`],
   ["카드가 구간 바탕과 같은 색이 아니다",
    `document.querySelectorAll(".lcc")[0].style.background =
       getComputedStyle(document.querySelector(".lcat")).backgroundColor;`]

@@ -113,12 +113,12 @@ Object.keys(PHOTOS).forEach(key => {
 
   const [mw, mh] = slot.min || [0, 0];
   if(d.w < mw || d.h < mh)
-    bad.push(tag + " — " + d.w + "×" + d.h + " 입니다. 최소 " + mw + "×" + mh +
+    bad.push(tag + " — " + d.w + "×" + d.h + "입니다. 최소 " + mw + "×" + mh +
       " (" + slot.where + ")");
 
   const r = d.w / d.h, [r1, r2] = slot.ratio || [0, 99];
   if(r < r1 || r > r2)
-    bad.push(tag + " — 비율 " + r.toFixed(2) + " 입니다 (" + r1 + "~" + r2 +
+    bad.push(tag + " — 비율 " + r.toFixed(2) + "입니다 (" + r1 + "~" + r2 +
       " 사이라야 덜 잘립니다 · " + slot.where + ")");
 
   if(kb > (slot.maxKB || 9999))

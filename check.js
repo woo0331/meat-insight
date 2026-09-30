@@ -104,6 +104,14 @@ const PAGES = [
   ["/content/cheolgeo-gyeonjeok-gareuneun-geot","정보 — 철거 견적"],
   ["/content/maejang-yangdo-gyeyak","정보 — 매장 양도"],
   ["/content/gyeyak-haeji-modu",   "정보 — 계약 해지"],
+  ["/content/cafe-yeongeop-singo", "정보 — 카페 영업신고"],
+  ["/content/eumsikjeom-yeongeop-singo", "정보 — 음식점 영업신고"],
+  ["/content/miyong-yeongeop-singo", "정보 — 미용실 신고"],
+  ["/content/gym-singo-daesang", "정보 — 헬스장 신고"],
+  ["/content/gym-pyeeop-hoewongwon", "정보 — 헬스장 회원권"],
+  ["/content/hagwon-pyeeop-gyoseupbi", "정보 — 학원 교습비"],
+  ["/content/eumsikjeom-wonsang-bokgu", "정보 — 음식점 원상복구"],
+  ["/content/muin-maejang-jeongri", "정보 — 무인매장 정리"],
   ["/about",             "소개"],
   ["/terms",             "이용약관"],
   ["/privacy",           "개인정보처리방침"],
@@ -515,8 +523,13 @@ const AUDIT = `(() => {
      를 쓰면 그냥 s 가 됩니다 — 정규식이 필요하면 백슬래시를 두 번
      쓰거나 문자열 split 으로 피하세요. 주석 안에 백틱도 금지입니다. */
   const flowBad = [];
+  /* ⚠️ 개수를 **손으로 적지 마세요.** 이 저장소에서 손으로 적은 목록
+     때문에 새 검사가 영원히 안 돌아간 적이 있습니다. 실제로 54 라고
+     적혀 있는 동안 검사는 59개였습니다 — 세어서 내놓습니다. */
+  let flowN = 0;
   const fp = await (await b.newContext({ viewport:{width:1280,height:900} })).newPage();
   const f = async (name, url, body) => {
+    flowN++;
     await fp.goto(ROOT + url, { waitUntil:"load" });
     await fp.waitForTimeout(240);
     let ok;
@@ -575,7 +588,7 @@ const AUDIT = `(() => {
       if(want[i] === 0 && num !== null)
         bad.push((i+1) + "번째 칸이 0인데 숫자 " + num + " 을 적었습니다");
       if(want[i] > 0 && parseInt(String(num).replace(/,/g, ""), 10) !== want[i])
-        bad.push((i+1) + "번째 칸이 화면 " + cell[i] + " · 실제 " + want[i] + " 입니다");
+        bad.push((i+1) + "번째 칸이 화면 " + cell[i] + " · 실제 " + want[i] + "입니다");
     }
     return bad.length ? bad.join(" · ") + " 가 있습니다" : true;`);
 
@@ -750,7 +763,7 @@ const AUDIT = `(() => {
     const n = [].slice.call(document.querySelectorAll(".lh .sh-n"));
     if(n.length !== 2) return "큰 낱말이 " + n.length + "개입니다";
     const t = n.map(function(e){ return e.textContent.trim(); });
-    if(t[0] !== "창업" || t[1] !== "폐업") return t.join(" · ") + " 입니다";
+    if(t[0] !== "창업" || t[1] !== "폐업") return t.join(" · ") + "입니다";
     const px = parseFloat(getComputedStyle(n[0]).fontSize);
     if(px < 56) return "글씨가 " + Math.round(px) + "px 입니다 (56px 이상)";
     /* §5 — 데스크톱 최소 620px. 화면 높이 비율로 재면 세로가 긴
@@ -824,7 +837,7 @@ const AUDIT = `(() => {
     ];
     for(let i = 0; i < 4; i++)
       if(n[i] !== want[i])
-        return i + "번째가 화면 " + n[i] + " · 실제 " + want[i] + " 입니다";
+        return i + "번째가 화면 " + n[i] + " · 실제 " + want[i] + "입니다";
     return true;`);
   await f("규모감 숫자가 무엇을 센 값인지 밝힌다", "/", `
     /* scale-b 는 랜딩(ONE STOP 구간 안) · scale 은 /about 입니다.
@@ -936,6 +949,37 @@ const AUDIT = `(() => {
     if(/준비 ?중입니다|곧 공개|coming/i.test(t)) return "자리표시자가 있습니다";
     if(b && !b.querySelector("a")) return "빈 구간이 나왔습니다";
     return true;`);
+  /* ⚠️ 글 하나도 **그 글이 어느 쪽 것인지**를 따라야 합니다. 창업
+     화면에서 초록 카드를 눌러 들어갔는데 글이 파랑이면 같은 사이트로
+     안 읽힙니다. 색을 하나하나 보지 않고 side- 클래스만 봅니다 —
+     색은 pages.css 의 변수 하나가 한꺼번에 바꿉니다. */
+  await f("폐업 글은 주황 쪽 · 창업 글은 초록 쪽으로 물든다",
+          "/content/gym-pyeeop-hoewongwon", `
+    const v = document.getElementById("view");
+    if(!v.classList.contains("side-close"))
+      return "폐업 글인데 " + (v.className || "(없음)") + "입니다";
+    /* 실제로 색이 바뀌었는지까지 봅니다 — 클래스만 붙고 규칙이 없으면
+       아무 일도 안 일어납니다 */
+    const blue = getComputedStyle(v).getPropertyValue("--blue").trim();
+    const base = getComputedStyle(document.documentElement)
+      .getPropertyValue("--blue").trim();
+    if(!blue || blue === base) return "--blue 가 그대로입니다 (" + blue + ")";
+    return true;`);
+  /* ⚠️ 업종 화면(`/startup/:industry`)은 amContentsFor 에 **분류를 안
+     넘깁니다.** 업종만 보고도 위로 올려야 하는데, 안 그러면 카페 창업
+     화면 맨 앞에 사업자등록 글이 앉습니다 — 실제로 그랬습니다. */
+  await f("업종 화면에는 그 업종 글이 맨 앞에 온다", "/startup/cafe", `
+    const b = document.querySelector(".rd-l");
+    if(!b) return "읽을 것 구간이 없습니다";
+    const t = [].slice.call(b.querySelectorAll("b")).map(function(e){
+      return e.textContent.trim(); });
+    if(!t.length) return "글이 하나도 없습니다";
+    if(t[0].indexOf("카페") < 0) return "맨 앞이 '" + t[0] + "' 입니다";
+    /* 다른 업종 글이 섞이면 그 업종 사장님을 엉뚱한 데로 보냅니다 */
+    const other = t.filter(function(x){
+      return /미용실|헬스장|학원|무인매장|음식점/.test(x); });
+    if(other.length) return "다른 업종 글이 섞였습니다: " + other.join(" / ");
+    return true;`);
 
   /* ⑬ 창업 = 과정 (§7) · 폐업 = 무엇을 원하시는가 (§8)
      ⚠️ 둘 다 **분류를 잘라 내면** 그 기능이 그 손님에게는 없는 것이
@@ -1008,7 +1052,7 @@ const AUDIT = `(() => {
     if(!a) return "헤더에 검색으로 가는 링크가 없습니다";
     const r = a.getBoundingClientRect();
     if(r.width < 40 || r.height < 40)
-      return "검색 아이콘이 " + Math.round(r.width) + "x" + Math.round(r.height) + " 입니다";
+      return "검색 아이콘이 " + Math.round(r.width) + "x" + Math.round(r.height) + "입니다";
     return true;`);
   await f("추천 검색어가 실제로 결과를 낸다", "/search", `
     /* ⚠️ 눌렀는데 "결과 없음" 이 나오면 검색이 고장난 것처럼 보입니다 */
@@ -1079,7 +1123,7 @@ const AUDIT = `(() => {
     const got = [].slice.call(document.querySelectorAll("#view > section"))
       .map(function(e){ return (e.className || "").split(" ")[0]; });
     if(got.join(",") !== want.join(","))
-      return "차례가 " + got.join(" → ") + " 입니다";
+      return "차례가 " + got.join(" → ") + "입니다";
     return true;`);
   await f("어두운 면이 화면의 15% 를 넘지 않는다", "/", `
     /* ⚠️ §2 — 남색은 12~15% 까지이고, 짙은 색 **전면 배경**은 푸터
@@ -1126,7 +1170,7 @@ const AUDIT = `(() => {
     const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
     /* ⚠️ 폐업 쪽을 좁히면 "덜 중요한 것" 으로 읽힙니다 (§6 · §15) */
     if(innerWidth > 820 && Math.abs(ra.width - rb.width) > 2)
-      return "좌우 폭이 " + Math.round(ra.width) + " · " + Math.round(rb.width) + " 입니다";
+      return "좌우 폭이 " + Math.round(ra.width) + " · " + Math.round(rb.width) + "입니다";
     const col = function(e){
       const m = getComputedStyle(e).backgroundColor.match(/(\\d+), ?(\\d+), ?(\\d+)/);
       return m ? [+m[1], +m[2], +m[3]] : null;
@@ -1176,7 +1220,7 @@ const AUDIT = `(() => {
       if(!el) continue;
       const got = (el.querySelector(".join-n") || {}).textContent || "";
       const num = parseInt((got.match(/[0-9]+/) || [0])[0], 10);
-      if(want !== num) return c.name + " 가 화면 " + got.trim() + " · 실제 " + want + " 입니다";
+      if(want !== num) return c.name + " 가 화면 " + got.trim() + " · 실제 " + want + "입니다";
     }
     return true;`);
   await f("입점 화면에 지킬 수 없는 약속이 없다", "/join", `
@@ -1209,10 +1253,14 @@ const AUDIT = `(() => {
         return "전달되는 칸에 " + x + " 가 있습니다";
     return true;`);
 
-  console.log("\n── 흐름 " + 52 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
-              "접수 4 · MY 3 · 검색 3 · 문서 3 · 히어로 3 · 규모감 2 · FAQ · 진행 3 · " +
-              "정보 글 3 · 글 잇기 2 · 창업 과정 · 폐업 선택 4 · 골드 2 · 검색 진입 2 · " +
-              "MY 도구 2 · 랜딩 4 · 업체 입점 3)");
+  /* ⚠️ 어느 묶음이 몇 개인지는 **적지 않습니다.** 두 번 어긋났습니다 —
+     검사를 더하면서 숫자를 같이 안 고치니 "흐름 52개" 라고 적힌 채
+     실제로는 56개를 돌고 있었습니다. 총 개수는 위에서 세고, 여기는
+     **무엇을 보는지**만 적습니다. */
+  console.log("\n── 흐름 " + flowN + "개 (지어낸 것 없음 · 업종 개인화 · 조건 전달 · " +
+              "접수 · MY · 검색 · 문서 · 히어로 · 규모감 · FAQ · 진행 · " +
+              "정보 글 · 글 잇기 · 창업 과정 · 폐업 선택 · 골드 · 검색 진입 · " +
+              "MY 도구 · 랜딩 · 업체 입점)");
   if (flowBad.length) { fail++; console.log("  ❌ " + flowBad.length + "건: " + flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

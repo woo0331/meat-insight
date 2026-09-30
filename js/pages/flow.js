@@ -307,7 +307,7 @@ function PageCat(cat){
   /* 여기서 막히신 분께 그 자리에서 답을 냅니다 — 맞는 글이 없으면
      구간째 빠집니다 */
   ReadBand({ cat:cat.key, side:side, industry:ind,
-             title:cat.name+" 에서 자주 막히는 것" });
+             title:cat.name+"에서 자주 막히는 것" });
 }
 
 /* ── 창업을 과정으로 (§7) ────────────────────────────────────────

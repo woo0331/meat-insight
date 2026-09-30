@@ -245,9 +245,14 @@ function adVet(id, text){
     "없습니다 (개인정보보호법 제17조) — 지우고 보내세요.";
 }
 
+/* ⚠️ 브랜드 이름을 손으로 적지 마세요. js/data/brand.js 한 줄이
+   일하는 이름이고, 사장님이 정하시면 그 줄만 바꿉니다 — 여기에
+   적어 두면 회신 글 · 동의 요청 글에만 옛 이름이 남습니다. */
+function adBrand(){ return (window.AM_BRAND || {}).name || "저희"; }
+
 function adReply(F, P, G){
   var L = [];
-  L.push("사장님, 시작과 정리 입니다.");
+  L.push("사장님, " + adBrand() + "입니다.");
   L.push("");
   L.push("적어 주신 내용 잘 받았습니다" + (P ? " (" + P.name + ")" : "") + ".");
   L.push("");
@@ -315,7 +320,7 @@ function adVendor(F, P, G, svcName){
 function adConsent(F, svcName){
   var co = AD.co.trim();
   var L = [];
-  L.push("사장님, 시작과 정리 입니다.");
+  L.push("사장님, " + adBrand() + "입니다.");
   L.push("");
   L.push("요청하신 건을 맡아 주실 업체가 정해졌습니다.");
   L.push("");
@@ -562,7 +567,7 @@ function adInviteMail(v){
   L.push("제목: (광고) " + (v.catName ? v.catName + " " : "") +
     "업체를 찾고 있습니다 — " + v.brand);
   L.push("");
-  L.push("안녕하세요. " + v.brand + " 입니다.");
+  L.push("안녕하세요. " + v.brand + "입니다.");
   L.push("");
   L.push(v.what);
   L.push((v.reg ? v.reg + " 지역의 " : "") +
@@ -596,8 +601,8 @@ function adInviteCall(v){
   L.push("");
   L.push("1) 누구인지 (5초)");
   /* ⚠️ 이름을 두 번 말하지 않습니다 — 전화에서는 그게 바로 들립니다 */
-  L.push("   " + v.brand + " 라고 합니다. 창업 · 폐업을 준비하는 사장님이");
-  L.push("   필요한 업체를 찾고 비교하는 곳입니다.");
+  L.push("   " + koWith(v.brand, "이라고라고") + " 합니다. 창업 · 폐업을 준비하는");
+  L.push("   사장님이 필요한 업체를 찾고 비교하는 곳입니다.");
   L.push("");
   L.push("2) 왜 전화했는지 (10초)");
   L.push("   " + (v.reg ? v.reg + " " : "") + (v.catName ? v.catName + " " : "") +
@@ -610,7 +615,7 @@ function adInviteCall(v){
   v.promise.forEach(function(x){ L.push("   " + x); });
   L.push("");
   L.push("5) 무엇을 부탁드리는지");
-  L.push("   " + v.site + " 에서 하시는 일과 지역만 등록해 주시면 됩니다.");
+  L.push("   " + v.site + "에서 하시는 일과 지역만 등록해 주시면 됩니다.");
   L.push("   문자로 주소 보내 드려도 될까요?  ← 여기서 수신동의를 받으십니다");
   L.push("");
   L.push("[자주 나오는 질문]");

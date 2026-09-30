@@ -248,6 +248,12 @@ window.addEventListener("popstate", function(){ render(); });
 function sideOf(r){
   if(r.view === "startup" || r.view === "startupIndustry") return "side-start";
   if(r.view === "closure" || r.view === "closureIndustry") return "side-close";
+  /* 글 하나(/content/:slug)는 **그 글이 어느 쪽 것인지**를 따릅니다.
+     창업 화면에서 초록 카드를 눌러 들어갔는데 글이 파랑으로 뜨면
+     같은 사이트로 안 읽힙니다. side:"both" 인 글은 한쪽으로
+     물들이지 않습니다 — 양쪽 다 보는 글이기 때문입니다. */
+  if(r.content && r.content.side === "start") return "side-start";
+  if(r.content && r.content.side === "close") return "side-close";
   /* 분류 화면은 그 분류가 어느 쪽 것인지를 따릅니다 */
   var k = r.cat && (r.cat.key || r.cat);
   if(k && window.amCatSide){

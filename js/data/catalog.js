@@ -421,3 +421,23 @@ window.amCloseCatsFor = function(wantKey, industryKey){
     rest: all.filter(function(c){ return !want[c.key]; })
   };
 };
+
+/* 업체가 "내가 하는 일" 을 찾을 때 쓰는 목록.
+   ⚠️ `byIndustry` 분류(시설 · 장비)는 하위가 **업종에서** 옵니다.
+   업종을 안 고른 화면(`/join`)에서는 비어 있어서, 제목만 남고 칸이
+   텅 비었습니다 — 절대 규칙 2 위반입니다. 그래서 여기서는 **모든
+   업종의 장비를 합쳐서** 돌려줍니다. 주방설비 업체도 미용기기
+   업체도 자기 분야를 찾을 수 있어야 입점합니다.
+   ⚠️ 같은 이름이 여러 업종에 있습니다(냉장 · 냉동). 한 번만 냅니다. */
+window.amAllSubs = function(cat){
+  if(!cat) return [];
+  if(!cat.byIndustry) return (cat.items || []).slice();
+  var seen = {}, out = [];
+  (window.AM_INDUSTRIES || []).forEach(function(i){
+    (i.equip || []).forEach(function(e){
+      if(seen[e.name]) return;
+      seen[e.name] = 1; out.push(e);
+    });
+  });
+  return out;
+};

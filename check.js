@@ -927,9 +927,43 @@ const AUDIT = `(() => {
     }
     return true;`);
 
-  console.log("\n── 흐름 " + 42 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
+  /* ⑮ MY 와 도구가 이어지는가
+     ⚠️ "전부 지웁니다" 라고 해 놓고 남기면 그게 거짓말입니다. 가게
+     컴퓨터는 여러 사람이 쓰므로 남의 눈에 그대로 들어갑니다. */
+  await f("MY: 전부 지우기가 도구 숫자까지 지운다", "/tools/bep", `
+    window.bepIn("rent", "1000");
+    window.laborIn && window.laborIn("sales", "5000");
+    await new Promise(r => setTimeout(r, 150));
+    let before = 0;
+    try{ for(let i = 0; i < localStorage.length; i++)
+      if(/^am\\.tool\\./.test(localStorage.key(i))) before++; }catch(e){ return true; }
+    if(!before) return "도구가 저장을 안 합니다";
+    /* myClear() 는 확인을 물어보므로 여기서는 지우는 부분만 따라 합니다 */
+    (window.AM_TOOLS || []).forEach(function(t){ amDel("am.tool." + t.key); });
+    let after = 0;
+    for(let i = 0; i < localStorage.length; i++)
+      if(/^am\\.tool\\./.test(localStorage.key(i))) after++;
+    return after === 0 ? true : after + "개가 남았습니다";`);
+  await f("MY: 도구에 적은 것이 보이되 값은 안 찍힌다", "/tools/labor", `
+    window.laborIn("sales", "5000");
+    window.laborIn("wage", "1200");
+    await new Promise(r => setTimeout(r, 150));
+    /* location.href 를 쓰지 마세요 — 화면을 통째로 새로고침해서
+       실행 문맥이 날아가고 검사가 "에러" 로 끝납니다. SPA 라우터
+       go() 로 넘기면 같은 문맥에서 이어집니다.
+       주의: 이 글은 백틱 문자열 안이라 주석에 백틱을 쓰면 문자열이
+       거기서 끝나고 SyntaxError 가 납니다. */
+    window.go("/my");
+    await new Promise(r => setTimeout(r, 500));
+    const t = document.getElementById("view").textContent;
+    if(t.indexOf("인건비율") < 0) return "MY 에 안 보입니다";
+    /* ⚠️ 매출 · 인건비는 남이 보면 안 되는 숫자입니다 */
+    if(/5,?000|1,?200/.test(t)) return "적은 값이 MY 에 그대로 찍힙니다";
+    return true;`);
+
+  console.log("\n── 흐름 " + 44 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
               "접수 4 · MY 3 · 검색 3 · 문서 3 · 메인 히어로 3 · 규모감 2 · FAQ · 진행 3 · " +
-              "정보 글 3 · 글 잇기 2 · 창업 과정 · 폐업 선택 4 · 골드 · 통합검색 3)");
+              "정보 글 3 · 글 잇기 2 · 창업 과정 · 폐업 선택 4 · 골드 · 통합검색 3 · MY 도구 2)");
   if (flowBad.length) { fail++; console.log("  ❌ " + flowBad.length + "건: " + flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

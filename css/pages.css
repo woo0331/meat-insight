@@ -276,6 +276,28 @@
   .how-t{ margin-top:var(--s2); }
 }
 
+/* 입점 분야 — ⚠️ 칩을 다 늘어놓지 않습니다. 분야마다 여섯까지. */
+.join-g{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s5) var(--s7); }
+.join-cat > b{ display:block; font-size:var(--t-base); margin-bottom:var(--s2); }
+.chip-more{ color:var(--ink3); background:transparent; }
+@media (max-width:760px){ .join-g{ grid-template-columns:1fr; gap:var(--s4); } }
+
+/* MY — 도구에 적어 두신 것 */
+.my-tl{ display:grid; gap:var(--s2); margin:var(--s4) 0 0; padding:0; list-style:none; }
+.my-tl a{ display:grid; grid-template-columns:auto 1fr auto auto; align-items:center;
+  gap:var(--s3); min-height:var(--tap); padding:var(--s3) var(--s5);
+  border-radius:var(--r-lg); background:var(--bg-2);
+  text-decoration:none; color:inherit; transition:background .15s; }
+.my-tl a:hover{ background:var(--blue-50); }
+.my-tl-ic{ display:inline-flex; color:var(--blue); }
+.my-tl-n{ font-size:var(--t-cap); color:var(--ink3); }
+.my-tl-go{ color:var(--ink3); }
+@media (max-width:520px){
+  .my-tl a{ grid-template-columns:auto 1fr auto; }
+  /* 좁으면 "n칸" 을 둘째 줄로 내립니다 — 셋째 칸에 자리가 없습니다 */
+  .my-tl-n{ grid-column:2; grid-row:2; }
+}
+
 /* ════════ 대형 통합검색 (§5) ═════════════════════════════════════
    ⚠️ 히어로가 아니라 **히어로 다음**입니다. 첫 화면의 주인공은 두
    낱말이고, 적는 칸이 하나 생기면 그 둘이 그만큼 작아집니다. */

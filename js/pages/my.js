@@ -62,6 +62,8 @@ function PageMy(){
               '<a class="btn btn-o" href="/closure">폐업 시작하기</a>'
         }))+
 
+    MyTools()+
+
     '<div class="my-next"><h2>받은 제안</h2>'+
       (qs.length
         ? '<p class="lead">'+qs.length+'건을 적어 두셨습니다.</p>'+
@@ -85,5 +87,46 @@ window.myPut = function(){
 /* ⚠️ 되돌릴 수 없으므로 한 번 물어봅니다 */
 window.myClear = function(){
   if(!confirm("이 브라우저에 남은 기록을 전부 지웁니다. 되돌릴 수 없습니다.")) return;
-  amDel(MKEY); amDel("am.quotes.v1"); rerender(true);
+  amDel(MKEY); amDel("am.quotes.v1");
+  /* ⚠️⚠️ **도구에 적은 숫자도 같이 지웁니다.** 여기를 빠뜨리면
+     "전부 지웁니다" 라고 해 놓고 계산기 숫자가 그대로 남습니다 —
+     가게 컴퓨터는 여러 사람이 쓰므로 그게 그대로 남의 눈에 들어갑니다.
+     ⚠️ 새 도구를 만들면 `AM_TOOLS` 에만 넣으면 여기도 같이 지워집니다.
+     목록을 손으로 또 적지 마세요. */
+  (window.AM_TOOLS || []).forEach(function(t){ amDel("am.tool." + t.key); });
+  rerender(true);
 };
+
+/* ── 도구에 적어 두신 것 ──────────────────────────────────────────
+   ⚠️ 도구를 만들어 놓고 MY 에 안 이으면, 사장님은 어디에 적었는지
+   찾으러 돌아다니게 됩니다.
+   ⚠️ **적은 값을 여기 그대로 찍지 않습니다.** 매출 · 인건비는 남이
+   보면 안 되는 숫자입니다 — "적어 두셨습니다" 까지만 알리고 값은
+   그 화면에서 보시게 합니다. */
+function MyTools(){
+  var list = (window.AM_TOOLS || []).map(function(t){
+    var v = amGet("am.tool." + t.key, null);
+    var n = 0;
+    if(v && typeof v === "object")
+      n = Object.keys(v).filter(function(k){
+        return v[k] !== "" && v[k] !== null && v[k] !== undefined && v[k] !== false; }).length;
+    return { t:t, n:n };
+  }).filter(function(x){ return x.n > 0; });
+
+  if(!list.length) return '<div class="my-next"><h2>사장님 도구</h2>'+
+    '<p class="lead">아직 적어 두신 숫자가 없습니다. '+
+      '창업비 · 고정비 · 손익분기를 적어 두시면 여기 모아 드립니다.</p>'+
+    '<div class="row-cta"><a class="btn btn-o" href="/tools">도구 보기'+icon("arrow",16)+'</a></div>'+
+  '</div>';
+
+  return '<div class="my-next"><h2>사장님 도구</h2>'+
+    '<ul class="my-tl">'+list.map(function(x){
+      return '<li><a href="'+esc(x.t.to)+'">'+
+        '<span class="my-tl-ic">'+icon(x.t.icon,18)+'</span>'+
+        '<b>'+esc(x.t.name)+'</b>'+
+        '<span class="my-tl-n">'+x.n+'칸 적어 두셨습니다</span>'+
+        '<span class="my-tl-go" aria-hidden="true">'+icon("arrow",15)+'</span>'+
+      '</a></li>';
+    }).join("")+'</ul>'+
+  '</div>';
+}

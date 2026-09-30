@@ -210,7 +210,12 @@ function PageJoin(){
   var subs = [];
   AM_CATS.forEach(function(c){
     if(c.kind !== "provider") return;
-    subs.push({ cat:c, items:c.items||[] });
+    /* ⚠️ `amAllSubs()` 입니다. `c.items` 를 그대로 쓰면 업종에서
+       값을 받는 분류(시설 · 장비)가 여기서 **텅 빕니다** — 제목만
+       남고 칸이 비어서 미완성으로 읽힙니다 (절대 규칙 2). */
+    var it = (window.amAllSubs ? amAllSubs(c) : (c.items||[]));
+    if(!it.length) return;          /* 그래도 비면 줄째 뺍니다 */
+    subs.push({ cat:c, items:it });
   });
   var ready = !!(window.WOW_BIZ && WOW_BIZ.sosReady);
 
@@ -223,12 +228,20 @@ function PageJoin(){
     '<div class="sec-hd"><p class="eyebrow">이런 곳을 찾고 있습니다</p>'+
       '<h2>입점 분야</h2>'+
       '<p>여기 없는 분야도 적어 주시면 분류를 만들어 드립니다.</p></div>'+
-    subs.map(function(g){
+    /* ⚠️ **123개를 다 늘어놓지 마세요.** 이 화면이 하는 일은 업체를
+       설득해 등록시키는 것인데, 칩 벽이 2,000px 이면 신청 폼이
+       한참 아래로 밀립니다. 분야마다 여섯까지만 보이고 나머지는
+       개수로 냅니다 — 어느 분야든 자기 일이 여기 있다는 것만
+       알면 됩니다. 정확한 내용은 아래 "하시는 일" 에 적으십니다. */
+    '<div class="join-g">'+subs.map(function(g){
+      var show = g.items.slice(0, 6), more = g.items.length - show.length;
       return '<div class="join-cat"><b>'+esc(g.cat.name)+'</b>'+
-        '<ul class="chip-g">'+g.items.map(function(i){
+        '<ul class="chip-g">'+show.map(function(i){
           return '<li><span class="chip chip-flat">'+esc(i.name)+'</span></li>';
-        }).join("")+'</ul></div>';
-    }).join("")+
+        }).join("")+
+        (more > 0 ? '<li><span class="chip chip-flat chip-more">외 '+more+'</span></li>' : '')+
+        '</ul></div>';
+    }).join("")+'</div>'+
   '</div></section>'+
 
   '<section class="sec"><div class="w form-wrap">'+

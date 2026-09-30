@@ -172,11 +172,21 @@
   letter-spacing:-.035em; line-height:1.24; color:var(--navy); }
 .sec-hd-c > p{ margin-left:auto; margin-right:auto; }
 
-.lbr-g{ display:grid; gap:var(--s6); align-items:center;
+/* ⚠️ **두 기둥의 무게가 같아야 합니다** — 한쪽이 가벼우면 화살표가 한
+   방향으로만 읽힙니다. `align-items:center` 로 두었더니 왼쪽 자산 카드
+   221px · 오른쪽 이어받는 카드 319px 으로 98px 이 어긋났고, 두 기둥의
+   딱지가 49px 씩 다른 높이에 앉았습니다. 검사는 못 잡습니다 — 찍어 보고
+   알았습니다. 그래서 기둥은 늘리고(stretch), 가운데만 가운데에 둡니다. */
+.lbr-g{ display:grid; gap:var(--s6); align-items:stretch;
   grid-template-columns:1fr auto 1fr; }
+.lbr-mid{ align-self:center; }
 
-/* 좌우 기둥 — 사진이 없으면 글만 남습니다 (§16) */
-.lbr-side{ display:grid; gap:var(--s3); align-content:center; }
+/* 좌우 기둥 — 사진이 없으면 글만 남습니다 (§16)
+   ⚠️ 칸 수가 사진 유무에 따라 둘~넷으로 바뀝니다. 그래서 `grid-template-rows`
+   로 세지 않고 **flex 로 두고 마지막 칸(카드)에 남는 높이를 줍니다** —
+   사진이 들어와도 고칠 자리가 없습니다. */
+.lbr-side{ display:flex; flex-direction:column; gap:var(--s3); }
+.lbr-side > :last-child{ flex:1 1 auto; }
 
 /* ⚠️ `overflow:hidden` 을 액자에 걸면 **옆에 붙인 손글씨 딱지가
    잘립니다** — 실제로 "정리하는 사장님" 의 첫 글자가 잘렸습니다.
@@ -192,9 +202,12 @@
   color:var(--close-dark); }
 .lbr-hw-st{ color:var(--start-dark); }
 
+/* 기둥이 늘어나면 카드도 늘어납니다 — 남는 높이는 **타일 쪽**으로
+   흘려 보냅니다. 제목 밑에 빈 칸으로 고이면 layout 이 틀어진 것처럼
+   보입니다. 사진이 들어오면 타일이 원래 이만큼 커집니다. */
 .lbr-as{ border-radius:var(--r-2xl); background:var(--bg);
   box-shadow:var(--shadow-card), inset 0 0 0 1px var(--line);
-  padding:var(--s5); }
+  padding:var(--s5); display:grid; grid-template-rows:auto 1fr; }
 .lbr-as-t{ font-size:var(--t-sm); font-weight:800; color:var(--close-dark);
   margin-bottom:var(--s4); }
 .lbr-as-g{ display:grid; gap:var(--s3); grid-template-columns:repeat(3,1fr); }
@@ -239,7 +252,7 @@
    한쪽이 가벼우면 화살표가 한 방향으로만 읽힙니다. */
 .lbr-gn{ border-radius:var(--r-2xl); background:var(--bg);
   box-shadow:var(--shadow-card), inset 0 0 0 1px var(--line);
-  padding:var(--s5); }
+  padding:var(--s5); display:grid; grid-template-rows:auto 1fr; }
 .lbr-gn-t{ font-size:var(--t-sm); font-weight:800; color:var(--start-dark);
   margin-bottom:var(--s4); }
 .lbr-gn-g{ display:grid; gap:var(--s3); }

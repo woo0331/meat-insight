@@ -1213,6 +1213,26 @@ const AUDIT = `(() => {
       if(ratio < 3.2) return "흰 글자가 안 읽힙니다 (대비 " + ratio.toFixed(2) + ")";
     }
     return true;`);
+  await f("연결 구간 두 기둥의 무게가 같다", "/", `
+    /* 두 기둥의 크기가 다르면 화살표가 한 방향으로만 읽힙니다 (§8 · §9).
+       실제로 왼쪽 자산 카드 221px · 오른쪽 이어받는 카드 319px 으로
+       98px 이 어긋났고, 두 딱지가 49px 씩 다른 높이에 앉아 있었습니다.
+       전수 점검은 통과했고 찍어 보고 알았습니다 — 그래서 여기 둡니다.
+       ⚠️ 이 검사를 지우려거든 시안을 먼저 고치세요. */
+    const a = document.querySelector(".lbr-side-cl");
+    const b = document.querySelector(".lbr-side-st");
+    if(!a || !b) return "연결 구간 두 기둥 중 하나가 없습니다";
+    /* 900px 아래에서는 세로로 쌓입니다 — 나란히 놓인 때만 봅니다 */
+    if(innerWidth <= 900) return true;
+    const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+    if(Math.abs(ra.width - rb.width) > 2)
+      return "좌우 폭이 " + Math.round(ra.width) + " · " + Math.round(rb.width) + "입니다";
+    if(Math.abs(ra.height - rb.height) > 2)
+      return "좌우 높이가 " + Math.round(ra.height) + " · " + Math.round(rb.height) + "입니다";
+    if(Math.abs(ra.top - rb.top) > 2)
+      return "두 기둥의 윗머리가 " +
+        Math.round(Math.abs(ra.top - rb.top)) + "px 어긋났습니다";
+    return true;`);
 
   /* ⑰ 업체 입점 (/join) — 공급 쪽이 이 플랫폼의 목숨입니다
      ⚠️ 여기가 **성과를 지어내고 싶어지는 자리**입니다. 업체를

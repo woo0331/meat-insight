@@ -48,6 +48,8 @@ const CASES = [
    `document.querySelector(".lh-in").insertAdjacentHTML("beforeend","<a href=/x>또</a>");`],
   ["창업은 초록 · 폐업은 주황이고 빨강이 아니다",
    `document.querySelector(".lh-cl").style.color = "rgb(214,28,28)";`],
+  ["연결 구간 두 기둥의 무게가 같다",
+   `document.querySelector(".lbr-g").style.alignItems = "center";`],
   ["규모감 숫자가 손으로 쓴 값이 아니라 센 값이다",
    `document.querySelectorAll(".scale-n")[3].textContent = "500";`],
   ["규모감 숫자가 무엇을 센 값인지 밝힌다",

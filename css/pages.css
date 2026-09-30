@@ -807,6 +807,28 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .two-list h2{ font-size:var(--t-xl); margin-bottom:var(--s5); }
 @media (max-width:820px){ .two-list{ grid-template-columns:1fr; gap:var(--s7); } }
 
+/* ════════ 어디서 찾는가 (/support) ══════════════════════════════
+   ⚠️ 여기는 **기관**까지입니다. 개별 공고를 카드로 만들지 마세요 —
+   해마다 바뀌고 예산이 소진되면 닫힙니다. */
+.spw-l{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s4); }
+.spw{ display:grid; align-content:start; gap:var(--s3); min-width:0;
+  padding:var(--s6); border-radius:var(--r-lg);
+  background:var(--surface); border:1px solid var(--line);
+  box-shadow:var(--shadow-card); }
+.spw > b{ font-size:var(--t-lg); line-height:1.4; color:var(--navy); }
+.spw-w{ font-size:var(--t-sm); color:var(--ink2); line-height:1.8; }
+/* ⚠️ **맨글을 섞지 않습니다.** `em` 을 `display:block` 으로 만들어
+   줄을 나누려 하면 "문장 속 block" 으로 걸립니다 — 이미 한 번 겪은
+   길입니다. 칸을 둘로 나누고 글도 태그(`i`)로 감쌉니다. */
+.spw-f{ display:grid; gap:2px; font-size:var(--t-sm); color:var(--ink2);
+  line-height:1.8; padding-top:var(--s3); border-top:1px solid var(--line-soft); }
+.spw-f > em{ font-style:normal; font-size:var(--t-cap);
+  font-weight:800; color:var(--blue); }
+.spw-f > i{ font-style:normal; }
+.spw-go{ display:inline-flex; align-items:center; gap:6px; min-height:40px;
+  font-size:var(--t-sm); font-weight:700; color:var(--blue); width:fit-content; }
+@media (max-width:820px){ .spw-l{ grid-template-columns:1fr; } }
+
 /* ════════ 검색 ═══════════════════════════════════════════════════ */
 .sb{ display:flex; align-items:center; gap:var(--s3); padding:var(--s3);
   background:var(--bg-2); border-radius:var(--r-xl); margin-bottom:var(--s8); }

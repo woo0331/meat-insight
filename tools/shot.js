@@ -47,7 +47,9 @@ const srv = http.createServer((req,res)=>{
     if(full === "full"){
       await pg.evaluate(() => {
         document.querySelectorAll("[data-rv]").forEach(e => e.classList.add("rv-on")); });
-      await pg.waitForTimeout(250);
+      /* 나타나는 움직임이 .6s 라 넉넉히 기다립니다 — 250ms 로 두었더니
+         마지막 줄이 흐릿하게 찍혔습니다 */
+      await pg.waitForTimeout(750);
     }
     await pg.screenshot({ path:"/tmp/shots/"+name+".png", fullPage: full === "full" });
     await ctx.close();

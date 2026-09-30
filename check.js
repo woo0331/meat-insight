@@ -113,7 +113,7 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[390,844,"모바
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[] };
   /* ⚠️ **흰 글자가 흰 바탕에 앉는 일이 실제로 있었습니다.** 창업 다섯
      마디(.flow)는 어두운 구간에만 있던 것이라 글자색 기본이 흰색이고,
      밝은 쪽은 .sec-tone 안에서만 되돌려 놓았습니다. 그 구간을 순백으로
@@ -194,6 +194,14 @@ const AUDIT = `(() => {
     if (!vis(e)) return;
     const c = getComputedStyle(e), r = e.getBoundingClientRect();
     const leaf = !e.children.length && (e.textContent||"").trim();
+
+    /* 3-0. 굵게 표시가 글자로 새어 나왔는가
+       ⚠️ 데이터에 마크다운 별표를 쓰고 esc() 로 내보내면 **이렇게**
+       그대로 찍힙니다. /content 에서 한 번 겪어서 거기만 보고 있었는데,
+       /support 에서 또 났습니다 — 이제 모든 화면에서 봅니다. */
+    if (leaf && (e.textContent || "").indexOf("**") >= 0)
+      out.star.push((e.className || e.tagName) + "|" +
+        (e.textContent || "").trim().slice(0, 24));
 
     /* 3. 12px 미만 */
     if (leaf) {
@@ -380,7 +388,7 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
@@ -408,7 +416,8 @@ const AUDIT = `(() => {
       ["grid 칸에 글과 태그가 섞임", uniq(bad.mix)],
       ["화면 제목(h1)", uniq(bad.h1)],
       ["개발자 말 노출",     uniq(bad.bad)],
-      ["구간 머리말이 회색으로 죽음", uniq(bad.eye)]
+      ["구간 머리말이 회색으로 죽음", uniq(bad.eye)],
+      ["별표(**)가 글자로 남음", uniq(bad.star)]
     ];
     console.log("\n── " + vn + " (" + w + "px)");
     rows.forEach(([n,v]) => {

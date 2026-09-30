@@ -45,6 +45,47 @@ function PageSupport(){
           cta:'<a class="btn btn-b" href="/startup">창업 준비 계속하기'+icon("arrow",16)+'</a>'+
               '<a class="btn btn-o" href="/closure">폐업 정리 계속하기</a>'
         }))+
+  '</div></section>'+
+  SupportWhere(side);
+}
+
+/* ── 어디서 찾는가 ───────────────────────────────────────────────
+   ⚠️ **공고를 지어내지 않는 대신, 어디를 봐야 하는지는 냅니다.**
+   공고는 해마다 바뀌지만 기관은 잘 안 바뀝니다. 이게 사장님이 실제로
+   필요한 첫걸음이고, 지어내지 않고 낼 수 있는 것입니다.
+   ⚠️ **개별 사업 이름을 여기 적지 마세요** — 이름은 해마다 바뀝니다.
+   ⚠️ 링크는 `checked` 를 켠 것만 나갑니다 (js/data/support.js). */
+function SupportWhere(side){
+  var list = (window.amSupportWhere ? amSupportWhere(side || null) : []);
+  if(!list.length) return "";
+  return '<section class="sec"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">어디서 찾는가</p>'+
+      '<h2>공고는 여기에 올라옵니다</h2>'+
+      '<p>지원사업은 해마다 바뀌고 예산이 소진되면 중간에 닫힙니다. '+
+        '그래서 사업 이름을 적어 두는 대신 <b>어디를 봐야 하는지</b>를 '+
+        '적어 둡니다. 저희가 심사하지 않고, 신청도 각 기관에 직접 하십니다.</p>'+
+    '</div>'+
+    '<ul class="spw-l rv-stg">'+ list.map(function(x){
+      return '<li class="spw" data-rv>'+
+        '<b>'+esc(x.org)+'</b>'+
+        '<span class="spw-w">'+esc(x.what)+'</span>'+
+        /* ⚠️ `em` 을 `display:block` 으로 만들어 줄을 나누면 "문장 속
+           block" 으로 걸립니다 — 이 저장소에서 이미 한 번 겪은 길입니다.
+           칸을 둘로 나누고 **글도 태그로 감쌉니다.** */
+        '<span class="spw-f"><em>찾는 법</em><i>'+esc(x.find)+'</i></span>'+
+        /* ⚠️ 눌러 보고 켠 것만 링크가 됩니다. 죽은 링크는 없는 것보다
+           나쁩니다 — "이 사이트도 관리 안 하는구나" 로 읽힙니다. */
+        (x.url
+          ? '<a class="spw-go" href="'+esc(x.url)+'" target="_blank" rel="noopener">'+
+            '기관 홈페이지'+icon("arrow",15)+'</a>'
+          : '')+
+      '</li>';
+    }).join("")+'</ul>'+
+    '<p class="note note-box">여기 적힌 것은 <b>기관</b>까지입니다. 개별 공고가 '+
+      '아닙니다 — 대상 · 금액 · 기한은 그 기관의 공고에서 직접 확인하셔야 하고, '+
+      '신청과 심사도 그쪽에서 합니다. 저희는 어디를 봐야 하는지까지만 '+
+      '알려 드립니다.</p>'+
   '</div></section>';
 }
 

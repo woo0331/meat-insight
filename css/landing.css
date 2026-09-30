@@ -191,7 +191,12 @@
 /* ⚠️ `overflow:hidden` 을 액자에 걸면 **옆에 붙인 손글씨 딱지가
    잘립니다** — 실제로 "정리하는 사장님" 의 첫 글자가 잘렸습니다.
    모서리는 사진 자체(`.ph`)에 줍니다. */
-.lbr-p .ph{ width:100%; border-radius:var(--r-2xl); overflow:hidden; }
+/* ⚠️ `photoBox()` 는 `<img class="ph">` 를 냅니다 — `object-fit` 을 안 주면
+   기본값이 `fill` 이라 **사진이 비율을 무시하고 늘어납니다.** 이 저장소의
+   다른 사진 자리(.pv-ph · .fr-ph · .mk-ph · .lh-ph …)는 전부 cover 인데
+   연결 구간 두 곳만 빠져 있었습니다. 사진이 0장이라 안 보였습니다. */
+.lbr-p .ph{ width:100%; border-radius:var(--r-2xl); overflow:hidden;
+  object-fit:cover; }
 .lbr-p-cl .ph{ aspect-ratio:4/5; }
 .lbr-p-st .ph{ aspect-ratio:5/4; }
 .lbr-p-ow .ph{ aspect-ratio:4/5; }
@@ -213,11 +218,20 @@
 .lbr-as-g{ display:grid; gap:var(--s3); grid-template-columns:repeat(3,1fr); }
 /* ⚠️ grid 칸에 맨글과 태그를 섞지 마세요 — 사진이 들어오면 `<i>` 가
    딴 칸이 됩니다. 칸마다 다시 grid 를 펴서 둘을 세웁니다. */
-.lbr-as-g > li{ display:grid; gap:6px; justify-items:center;
-  align-content:center; min-height:64px; padding:var(--s3) var(--s2);
+/* ⚠️ grid 가 아니라 **flex** 입니다. grid 로 두고 `1fr auto` 를 주면
+   사진이 없는 타일에도 빈 둘째 행과 그 gap 이 생겨 글자가 6px 치우칩니다.
+   flex 면 사진이 남는 높이를 먹고(`flex:1`), 사진이 없으면 글자 하나가
+   가운데에 섭니다 — 칸을 세지 않아도 둘 다 맞습니다. */
+.lbr-as-g > li{ display:flex; flex-direction:column; gap:6px;
+  align-items:center; justify-content:center;
+  min-height:64px; padding:var(--s3) var(--s2);
   border-radius:var(--r); background:var(--close-soft); }
 .lbr-as-g .ph{ background:var(--surface); }
-.lbr-as-g .ph{ width:100%; aspect-ratio:4/3; border-radius:var(--r-sm); }
+/* 타일이 늘어나면 **사진이** 늘어납니다. 여기에 `aspect-ratio` 를 박으면
+   사진 높이가 고정돼 타일 안에 190px 짜리 빈 분홍 칸이 남습니다 (겪었습니다).
+   `min-height:0` 이 없으면 flex 항목이 안 줄어듭니다. */
+.lbr-as-g .ph{ width:100%; flex:1 1 auto; min-height:48px;
+  object-fit:cover; border-radius:var(--r-sm); }
 .lbr-as-g i{ font-style:normal; font-size:var(--t-cap); font-weight:700;
   color:var(--close-dark); }
 

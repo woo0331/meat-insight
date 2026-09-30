@@ -113,7 +113,7 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[390,844,"모바
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[] };
   /* ⚠️ **흰 글자가 흰 바탕에 앉는 일이 실제로 있었습니다.** 창업 다섯
      마디(.flow)는 어두운 구간에만 있던 것이라 글자색 기본이 흰색이고,
      밝은 쪽은 .sec-tone 안에서만 되돌려 놓았습니다. 그 구간을 순백으로
@@ -172,6 +172,24 @@ const AUDIT = `(() => {
     const r = e.getBoundingClientRect();
     return r.width>0 && r.height>0;
   };
+  /* ⚠️ **구간 머리말(.eyebrow)이 회색으로 죽는 일이 실제로 있었습니다.**
+     ⚠️ 이 글은 백틱 문자열(AUDIT) 안입니다 — 주석에 백틱을 쓰면
+     문자열이 거기서 끝납니다. 세 번째입니다.
+     .sec-hd p (0,1,1)가 .eyebrow (0,1,0)를 이겨서 사이트 전체에서
+     회색이었는데, 에러도 안 나고 다른 검사도 전부 통과했습니다 —
+     찍어 보고서야 알았습니다. 머리말은 **강조색**이어야 합니다.
+     흐린 글자색(--ink2 · --ink3)으로 끝나면 여기서 걸립니다. */
+  document.querySelectorAll(".eyebrow").forEach(e => {
+    if (!vis(e)) return;
+    /* ⚠️ 여기는 백틱 문자열 안입니다 — 정규식에 한 겹 역슬래시를 쓰면
+       (/\\s/ 처럼 두 겹으로 안 쓰면) 그냥 s 로 먹혀서 **아무것도 안
+       지웁니다.** 아예 역슬래시를 쓰지 않습니다. */
+    const c = (getComputedStyle(e).color || "").split(" ").join("");
+    const dead = ["rgb(82,96,109)", "rgb(123,135,148)", "rgb(16,42,67)"];
+    if (dead.indexOf(c) >= 0)
+      out.eye.push((e.className || "") + "|" + (e.textContent || "").trim().slice(0, 12));
+  });
+
   document.querySelectorAll("body *").forEach(e => {
     if (!vis(e)) return;
     const c = getComputedStyle(e), r = e.getBoundingClientRect();
@@ -362,15 +380,19 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
       const a = await p.evaluate(AUDIT);
       a.links.forEach(l => seenLinks.add(l));
       if (a.over) bad.over.push(name);
-      ["small","tap","wrap","bad","glue","mix","h1","dim"].forEach(k =>
-        a[k].forEach(x => bad[k].push(name+" › "+x)));
+      /* ⚠️ 여기가 **손으로 적은 목록**이었습니다. 검사를 하나 새로
+         넣고 여기에 안 넣으면 그 검사는 **영원히 통과합니다** — 실제로
+         "구간 머리말" 검사를 그렇게 만들었다가, 일부러 망가뜨려 보고서야
+         알았습니다. 이제 `bad` 의 키에서 그대로 가져옵니다. */
+      Object.keys(bad).filter(k => k !== "over").forEach(k =>
+        (a[k] || []).forEach(x => bad[k].push(name+" › "+x)));
     }
 
     const uniq = a => [...new Set(a)];
@@ -385,7 +407,8 @@ const AUDIT = `(() => {
       ["줄바꿈 사라져 낱말 붙음", uniq(bad.glue)],
       ["grid 칸에 글과 태그가 섞임", uniq(bad.mix)],
       ["화면 제목(h1)", uniq(bad.h1)],
-      ["개발자 말 노출",     uniq(bad.bad)]
+      ["개발자 말 노출",     uniq(bad.bad)],
+      ["구간 머리말이 회색으로 죽음", uniq(bad.eye)]
     ];
     console.log("\n── " + vn + " (" + w + "px)");
     rows.forEach(([n,v]) => {

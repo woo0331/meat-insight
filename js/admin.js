@@ -431,10 +431,226 @@ function adInit(){
       '<p class="ad-lead">고치셔도 됩니다. 복사해서 슬랙 · 메일 · 문자로 '+
         '보내시면 됩니다.</p>'+
       '<div id="ad-out"></div>'+
+    '</section>'+
+
+    '<section class="ad-s">'+
+      '<h2>5. 업체에 보낼 초대 글</h2>'+
+      /* ⚠️ 운영자 화면이라 여기에 법 얘기를 적습니다 (절대 규칙 3).
+         손님 화면에는 안 나갑니다. */
+      '<div class="notice-bad"><b>보내기 전에 — 정보통신망법 제50조</b>'+
+        '<p>영리 목적의 광고성 정보를 <b>문자 · 카톡 · 이메일</b>로 보내려면 '+
+        '미리 <b>수신동의</b>를 받아야 합니다. 홈페이지에 번호가 공개돼 있다는 '+
+        '것은 동의가 아닙니다. 제일 안전한 것은 <b>전화로 먼저 말하고 그 자리에서 '+
+        '동의를 받는 것</b>입니다. 전자적으로 보내실 때는 제목의 (광고) 표기와 '+
+        '본문의 보내는 사람 · 연락처 · 수신거부 방법을 지우지 마세요. '+
+        '21시~08시 사이에는 보내지 마십시오.</p></div>'+
+      '<p class="ad-lead">분야와 지역을 고르시면 그 업체에 맞는 글이 나옵니다. '+
+        '<b>지금 등록된 업체 수는 세어서 그대로 적습니다</b> — 0이면 0이라고 '+
+        '적습니다. 부풀리면 업체가 등록하고 바로 압니다.</p>'+
+      '<div class="ad-g">'+
+        adSel2("ad-icat", "분야", "icat",
+          adInviteCat().map(function(c){ return [c.key, c.name]; }))+
+        adSel2("ad-ireg", "지역", "ireg",
+          (window.AM_REGIONS||[]).map(function(r){ return [r.key, r.name]; }))+
+      '</div>'+
+      '<div id="ad-inv-out"></div>'+
     '</section>';
 
   adHealth();
   adDraw();
+  adInviteDraw();
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   업체에 보낼 초대 글 (§ 업체 입점)
+
+   업체가 모이지 않으면 이 플랫폼은 아무것도 아닌데, 지금 업체가
+   이 화면까지 오게 할 길이 없습니다. 그래서 **직접 연락하실 때 쓰실
+   글**을 만들어 둡니다.
+
+   ⚠️⚠️ **여기 적히는 것은 전부 지금 사실인 것과 약속까지입니다.**
+   "월 n건의 요청이 옵니다" 를 넣지 마세요 — 지금 0 이고, 업체는
+   등록하고 나서 바로 압니다. 그때 잃는 것이 훨씬 큽니다.
+
+   ⚠️⚠️ **정보통신망법 제50조.** 영리 목적의 광고성 정보를 문자 ·
+   카톡 · 이메일로 보내려면 **미리 수신동의**를 받아야 합니다.
+   홈페이지에 번호가 공개돼 있다는 것은 동의가 아닙니다. 어겼을 때
+   과태료가 작지 않습니다. 그래서 —
+     · 제일 안전한 것은 **전화로 직접 말하는 것**입니다.
+     · 전자적으로 보내실 거면 제목에 (광고), 보내는 사람과 연락처,
+       무료 수신거부 방법이 **본문에 있어야 합니다.**
+     · 21시~08시 사이에는 보내지 마세요 (별도 동의가 필요합니다).
+   아래 글에 그 자리를 미리 넣어 두었습니다. 지우지 마세요.
+   ════════════════════════════════════════════════════════════════════ */
+
+function adInviteCat(){
+  return (window.AM_CATS || []).filter(function(c){ return c.kind === "provider"; });
+}
+
+/* 지금 이 분야에 몇 곳인가 — ⚠️ 세는 값입니다 */
+function adInviteN(catKey){
+  var c = (window.amCat ? amCat(catKey) : null);
+  return (c && window.amProvidersInCat) ? amProvidersInCat(c) : 0;
+}
+
+function adInvite(){
+  var c = AD.icat ? (window.amCat ? amCat(AD.icat) : null) : null;
+  var catName = c ? c.name : "";
+  var reg = AD.ireg ? (window.amRegion ? (amRegion(AD.ireg) || {}).name : "") : "";
+  var n = AD.icat ? adInviteN(AD.icat) : (window.AM_PROVIDERS || []).length;
+  var brand = (window.AM_BRAND || {}).name || "";
+  var site = "https://aboutmeat.co.kr/join";
+  var B = window.WOW_BIZ || {};
+
+  /* 무엇을 하는 곳인지 — 한 문장 */
+  var what = brand + "는 창업 · 폐업을 준비하는 사장님이 필요한 업체를 " +
+    "찾고 비교하는 곳입니다.";
+  var who = (reg ? reg + " " : "") + (catName ? catName + " " : "") + "업체";
+
+  /* ⚠️ 0 이면 0 이라고 말합니다. 이 단계에서 제일 센 말입니다. */
+  var now = n === 0
+    ? (catName ? catName + " 분야는 아직 등록된 업체가 없습니다." :
+        "아직 등록된 업체가 없습니다.") + " 부풀려 말씀드리지 않겠습니다 — " +
+      "지금 들어오시면 " + (catName ? "그 분야의 " : "") + "첫 번째입니다."
+    : (catName ? catName + " 분야에 지금 " : "지금 ") + n + "곳이 등록돼 있습니다.";
+
+  /* 약속 — js/data/join.js 와 **같은 말**이어야 합니다 */
+  var promise = [
+    "· 기본 입점은 무료입니다.",
+    "· 지역과 전문 분야가 맞는 요청만 보내 드립니다.",
+    "· 광고비를 받고 소개 순서를 바꾸지 않습니다.",
+    "· 손님 연락처는 업체가 정해지고 그분이 다시 동의하신 뒤에 전달됩니다."
+  ];
+
+  /* ⚠️ 전송자 정보 — 사업자 정보가 비어 있으면 **그 줄을 빼고**
+     대신 적어야 할 것이 있다고 알립니다 (절대 규칙 2 · 3). */
+  var from = [];
+  if(B.name)  from.push(B.name);
+  if(B.bizNo) from.push("사업자등록번호 " + B.bizNo);
+  if(B.phone) from.push(B.phone);
+  if(B.email) from.push(B.email);
+
+  return { catName:catName, reg:reg, n:n, brand:brand, site:site,
+           what:what, who:who, now:now, promise:promise, from:from };
+}
+
+/* 문자 · 카톡 — ⚠️ 짧아야 읽힙니다 */
+function adInviteSms(v){
+  var L = [];
+  L.push("(광고) " + v.brand);
+  L.push("");
+  L.push(v.who + " 사장님 안녕하세요.");
+  L.push(v.what);
+  L.push("");
+  L.push(v.now);
+  L.push("기본 입점은 무료이고, 지역과 분야가 맞는 요청만 보내 드립니다.");
+  L.push("");
+  L.push("등록: " + v.site);
+  L.push("");
+  if(v.from.length) L.push(v.from.join(" · "));
+  else L.push("[보내는 사람 · 사업자등록번호 · 연락처를 여기 적으세요]");
+  /* ⚠️ `"글" + 값 || "대체"` 로 쓰지 마세요 — 앞의 이어붙인 글이 늘
+     참이라 대체값이 안 나오고 `undefined` 가 그대로 찍힙니다. */
+  var off = (window.WOW_BIZ || {}).phone;
+  L.push("무료수신거부 " + (off || "[수신거부 번호를 여기 적으세요]"));
+  return adText(L);
+}
+
+/* 이메일 — ⚠️ 제목 앞의 (광고) 를 지우지 마세요 */
+function adInviteMail(v){
+  var L = [];
+  L.push("제목: (광고) " + (v.catName ? v.catName + " " : "") +
+    "업체를 찾고 있습니다 — " + v.brand);
+  L.push("");
+  L.push("안녕하세요. " + v.brand + " 입니다.");
+  L.push("");
+  L.push(v.what);
+  L.push((v.reg ? v.reg + " 지역의 " : "") +
+    (v.catName ? v.catName + " " : "") + "업체를 찾고 있어 연락드립니다.");
+  L.push("");
+  L.push("[지금 상태]");
+  L.push(v.now);
+  L.push("");
+  L.push("[업체에 이렇게 하겠습니다]");
+  v.promise.forEach(function(x){ L.push(x); });
+  L.push("");
+  L.push("[어떻게 진행되나]");
+  L.push("1. 하시는 일과 지역을 등록합니다 (아래 주소, 양식 한 번)");
+  L.push("2. 조건이 맞는 요청을 받습니다 — 받으실지는 업체가 정하십니다");
+  L.push("3. 사장님과 직접 계약하십니다 (저희는 중개자이고 거래 당사자가 아닙니다)");
+  L.push("");
+  L.push("등록: " + v.site);
+  L.push("궁금하신 것은 이 메일로 그대로 답장 주셔도 됩니다.");
+  L.push("");
+  L.push("---");
+  if(v.from.length) L.push(v.from.join(" · "));
+  else L.push("[보내는 사람 · 사업자등록번호 · 주소 · 연락처를 여기 적으세요]");
+  L.push("이 메일을 받지 않으시려면 이 주소로 '수신거부' 라고 답장해 주세요.");
+  return adText(L);
+}
+
+/* 전화 — ⚠️ 읽는 글이 아니라 **말하는 순서**입니다 */
+function adInviteCall(v){
+  var L = [];
+  L.push("[전화로 말할 순서 — 읽지 마시고 말로 하세요]");
+  L.push("");
+  L.push("1) 누구인지 (5초)");
+  /* ⚠️ 이름을 두 번 말하지 않습니다 — 전화에서는 그게 바로 들립니다 */
+  L.push("   " + v.brand + " 라고 합니다. 창업 · 폐업을 준비하는 사장님이");
+  L.push("   필요한 업체를 찾고 비교하는 곳입니다.");
+  L.push("");
+  L.push("2) 왜 전화했는지 (10초)");
+  L.push("   " + (v.reg ? v.reg + " " : "") + (v.catName ? v.catName + " " : "") +
+    "업체를 찾고 있어서 연락드렸습니다.");
+  L.push("");
+  L.push("3) 지금 상태 — ⚠️ 부풀리지 마세요");
+  L.push("   " + v.now);
+  L.push("");
+  L.push("4) 무엇을 드리는지");
+  v.promise.forEach(function(x){ L.push("   " + x); });
+  L.push("");
+  L.push("5) 무엇을 부탁드리는지");
+  L.push("   " + v.site + " 에서 하시는 일과 지역만 등록해 주시면 됩니다.");
+  L.push("   문자로 주소 보내 드려도 될까요?  ← 여기서 수신동의를 받으십니다");
+  L.push("");
+  L.push("[자주 나오는 질문]");
+  L.push("· 돈 드나요 → 기본 입점은 무료입니다. 유료 상품이 생기면 미리 알리고");
+  L.push("  동의하신 경우에만 적용합니다.");
+  L.push("· 요청이 얼마나 오나요 → 지금은 약속드릴 수 없습니다. 모으는 중이라");
+  L.push("  건수를 말씀드리면 그건 지어낸 숫자입니다.");
+  L.push("· 광고비 내면 위에 올려 주나요 → 아닙니다. 지역과 분야가 맞는지로");
+  L.push("  냅니다. 광고 자리가 생기면 광고라고 표시합니다.");
+  L.push("· 손님 연락처 바로 오나요 → 아닙니다. 업종 · 지역 · 필요한 것 ·");
+  L.push("  상황까지입니다. 성함과 연락처는 그분이 다시 동의하신 뒤에 갑니다.");
+  return adText(L);
+}
+
+function adInviteDraw(){
+  var box = $("ad-inv-out");
+  if(!box) return;
+  var v = adInvite();
+  var warn = v.from.length ? "" :
+    '<p class="ad-vet">'+icon("alert",16)+
+      '보내는 사람 정보(상호 · 사업자등록번호 · 연락처)가 비어 있습니다. '+
+      '문자 · 메일로 보내실 때는 정보통신망법 제50조 제4항에 따라 본문에 '+
+      '있어야 합니다 — js/data/site.js 의 WOW_BIZ 를 채우시거나 글에서 직접 '+
+      '적어 넣으세요.</p>';
+  box.innerHTML = warn +
+    adCard("문자 · 카톡 (짧게)", "inv-sms",  adInviteSms(v)) +
+    adCard("이메일",            "inv-mail", adInviteMail(v)) +
+    adCard("전화로 말할 순서",   "inv-call", adInviteCall(v));
+}
+
+window.adInviteSet = function(what, v){ AD[what] = v; adInviteDraw(); };
+
+function adSel2(id, label, key, opts){
+  return '<div class="ad-f"><label for="'+id+'">'+esc(label)+'</label>'+
+    '<select id="'+id+'" class="f-sel" onchange="adInviteSet(\''+key+'\',this.value)">'+
+      '<option value="">고르지 않음</option>'+
+      opts.map(function(o){
+        return '<option value="'+esc(o[0])+'">'+esc(o[1])+'</option>';
+      }).join("")+
+    '</select></div>';
 }
 
 function adSel(id, label, key, opts){

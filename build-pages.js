@@ -68,7 +68,7 @@ function loadApp(){
    ⚠️ 화면을 새로 만들면 여기에도 넣어야 HTML 파일이 생깁니다.
    안 넣으면 열리기는 하지만 검색에 안 잡힙니다. */
 function allRoutes(W){
-  const fixed = ["/", "/startup", "/closure", "/providers", "/franchise",
+  const fixed = ["/", "/home", "/startup", "/closure", "/providers", "/franchise",
                  "/stores", "/assets", "/support", "/content",
                  "/quote", "/join", "/my", "/search",
                  "/tools", "/tools/cost", "/tools/fixed", "/tools/bep",
@@ -147,6 +147,250 @@ function jsonLd(W, r, route){
        발췌로 내는데, 발췌에 FAQPage 를 달면 화면에 없는 질문이
        구조화 데이터로 나가거나 같은 FAQ 가 두 주소로 중복됩니다. */
     return out;
+  }
+
+  if(route === "/faq"){
+    const fq = W.AM_FAQ || [];
+    /* ⚠️ 비면 안 넣습니다 — 빈 FAQPage 는 오류로 잡힙니다.
+       ⚠️ 화면(PageFaq)과 **같은 파일**(js/data/faq.js)을 읽습니다.
+       한쪽만 고치면 구조화 데이터와 화면이 어긋나고, 적발되면
+       리치 결과가 통째로 막힙니다.
+       ⚠️ 메인에는 달지 않습니다 — 거기는 여섯만 발췌로 냅니다. */
+    if(fq.length) out.push({
+      "@context":"https://schema.org","@type":"FAQPage",
+      mainEntity: fq.map(x => ({
+        "@type":"Question", name:x.q,
+        acceptedAnswer:{ "@type":"Answer", text:x.a }
+      }))
+    });
+    out.push(crumb([["홈","/"],["자주 묻는 것","/faq"]]));
+    return out;
+  }
+
+  const mi = /^\/(startup|closure)\/([a-z0-9-]+)$/.exec(route);
+  if(mi){
+    const side = mi[1] === "startup" ? "창업" : "폐업";
+    const ind = (W.AM_INDUSTRIES||[]).filter(x => x.key === mi[2])[0];
+    if(ind){
+      out.push(crumb([[side, "/"+mi[1]], [ind.name+" "+side, route]]));
+      /* 이 화면이 하는 일은 **필요한 것을 목록으로 보여 주는 것**입니다 */
+      const cats = (W.AM_CATS||[]).filter(c =>
+        ((mi[1]==="startup" ? ind.startup : ind.closure)||[]).indexOf(c.key) >= 0);
+      if(cats.length) out.push({
+        "@context":"https://schema.org","@type":"ItemList",
+        name: ind.name+" "+side+"에 필요한 것",
+        itemListElement: cats.map((c,i) => ({
+          "@type":"ListItem", position:i+1, name:c.name }))
+      });
+    }
+    return out;
+  }
+  const mp = /^\/providers\/([a-z0-9-]+)$/.exec(route);
+  if(mp){
+    const c = (W.AM_CATS||[]).filter(x => x.key === mp[1])[0];
+    if(c){
+      out.push(crumb([["업체찾기","/providers"], [c.name, route]]));
+      out.push({
+        "@context":"https://schema.org","@type":"ItemList",
+        name: c.name, itemListElement:(c.items||[]).map((it,i) => ({
+          "@type":"ListItem", position:i+1, name:it.name }))
+      });
+    }
+    return out;
+  }
+  const mf = /^\/franchise\/([a-z0-9-]+)$/.exec(route);
+  if(mf){
+    const c = (W.AM_FRANCHISE_CATS||[]).filter(x => x.key === mf[1])[0];
+    if(c) out.push(crumb([["프랜차이즈","/franchise"], [c.name, route]]));
+    return out;
+  }
+  const mc = /^\/content\/([a-z0-9-]+)$/.exec(route);
+  if(mc){
+    const ct = (W.AM_CONTENTS||[]).filter(x => x.slug === mc[1])[0];
+    if(ct){
+      out.push(crumb([["정보","/content"], [ct.title, route]]));
+      out.push({
+        "@context":"https://schema.org","@type":"Article",
+        headline:ct.title, description:ct.lead, inLanguage:"ko",
+        datePublished:ct.at, author:{ "@type":"Organization", name:B.name }
+      });
+    }
+    return out;
+  }
+  const mcc = /^\/c\/([a-z0-9-]+)$/.exec(route);
+  if(mcc){
+    const c = (W.AM_CATS||[]).filter(x => x.key === mcc[1])[0];
+    if(c){
+      const side = ((W.AM_START_CATS||[]).some(x=>x.key===c.key)) ? "창업" : "폐업";
+      out.push(crumb([[side, side==="창업"?"/startup":"/closure"], [c.name, route]]));
+    }
+    return out;
+  }
+  return out;
+}
+
+function shell(tpl, r, route, noscript, ld){
+  const B = (globalThis.__W && globalThis.__W.AM_BRAND) || {};
+  const site = (B.name || "") + " · " + (B.sub || "");
+  const title = (r.title ? r.title+" · " : "") + site;
+  const canon = ORIGIN + (r.canon || route);
+  let h = tpl;
+  h = h.replace(/<title>[\s\S]*?<\/title>/, "<title>"+esc(title)+"</title>");
+  h = h.replace(/<meta name="description"[^>]*>/,
+        '<meta name="description" content="'+esc(r.desc||"")+'">');
+  h = h.replace(/<meta property="og:title"[^>]*>/,
+        '<meta property="og:title" content="'+esc(title)+'">');
+  h = h.replace(/<meta property="og:description"[^>]*>/,
+        '<meta property="og:description" content="'+esc(r.desc||"")+'">');
+  h = h.replace(/<meta property="og:url"[^>]*>/,
+        '<meta property="og:url" content="'+esc(canon)+'">');
+  /* ⚠️ index.html 에 canonical 이 **손으로 박혀 있습니다**(메인은
+     build-pages 가 덮어쓰지 않는 파일이라 그렇게 두었습니다). 여기서
+     canonical 을 덧붙이면 화면마다 canonical 이 **둘**이 됩니다.
+     구글은 서로 다른 canonical 이 둘이면 **둘 다 무시**하고, 먼저 오는
+     것만 읽는 크롤러에게는 모든 화면이 메인의 복제본으로 읽힙니다.
+     ⚠️ 그래서 덧붙이지 않고 **갈아 끼웁니다.** 화면은 JS 가 다시
+     고쳐 주기 때문에 브라우저로 봐서는 표가 안 납니다 — 실제로 그렇게
+     한동안 두 개가 나가고 있었습니다. */
+  if(!/<link rel="canonical"[^>]*>/.test(h))
+    throw new Error("index.html 에 canonical 이 없습니다 — 갈아 끼울 자리가 없습니다");
+  h = h.replace(/<link rel="canonical"[^>]*>/,
+        '<link rel="canonical" href="'+esc(canon)+'">');
+
+  /* ⚠️⚠️ **템플릿의 ld 표시 구간을 반드시 비웁니다.** 하위 화면은
+     `index.html` 을 본으로 뜨는데, 거기에는 **메인의** 구조화 데이터가
+     이미 들어 있습니다. 비우지 않고 뒤에 덧붙이면 화면마다 메인 것이
+     같이 나가고, 앞선 빌드가 남긴 낡은 글까지 그대로 따라갑니다 —
+     실제로 `[object Object]` 가 모든 하위 화면 맨 위에 찍혀 나갔습니다.
+     메인(`/`)은 이 함수를 타지 않고 표시 구간에 직접 씁니다. */
+  const la = h.indexOf("<!-- ld:start -->"), lb = h.indexOf("<!-- ld:end -->");
+  if(la < 0 || lb < 0)
+    throw new Error("index.html 에서 ld:start / ld:end 표시를 못 찾았습니다 — 지우셨나요?");
+  h = h.slice(0, la) + "<!-- ld:start -->\n<!-- ld:end -->" +
+      h.slice(lb + "<!-- ld:end -->".length);
+
+  const head =
+    (r.noindex ? '<meta name="robots" content="noindex, follow">\n' : '')+
+    (r.noindex ? '' : (ld ? ld+'\n' : ''));
+  if(head) h = h.replace("</head>", head+"</head>");
+
+  /* 만든 것을 바로 세어 봅니다 — 위를 고치다 다시 둘이 되는 일을 막습니다 */
+  const n = (h.match(/<link rel="canonical"/g) || []).length;
+  if(n !== 1) throw new Error(route+" 의 canonical 이 "+n+"개입니다 (하나여야 합니다)");
+  /* ⚠️ **크롤러 본문을 `<noscript>` 안에 두지 마세요.** 구글은 읽긴
+     하지만 뒤로 미루고, 네이버·빙·카카오·LLM 봇은 대개 **통째로
+     무시**합니다. 실제로 www.aboutmeat.co.kr 을 밖에서 열어 보니
+     본문이 "본문 바로가기" 한 줄로만 잡혔습니다.
+     그래서 진짜 `<main id="view">` **안에** 넣습니다. 화면을 그릴 때
+     app.js 의 render() 가 innerHTML 로 갈아 끼우므로 손님 눈에는
+     아무 차이가 없고, 첫 그림이 오히려 빨라집니다. */
+  const mainTag = '<main id="view">';
+  const mi = h.indexOf(mainTag);
+  if(mi < 0) throw new Error(route+' 에 <main id="view"> 가 없습니다');
+  const me = h.indexOf("</main>", mi);
+  if(me < 0) throw new Error(route+" 에 </main> 가 없습니다");
+  h = h.slice(0, mi + mainTag.length) +
+      '<div class="pre w">' + noscript + '</div>' +
+      h.slice(me);
+  return h;
+}
+
+/* ── 크롤러가 읽는 본문 ────────────────────────────────────────
+   **검색엔진에게는 이 글이 사이트 전부입니다.** 자바스크립트를 돌리기
+   전의 HTML 에 본문이 없으면, 네이버 · 빙 · 카카오 · LLM 봇은 빈
+   화면을 봅니다.
+
+   ⚠️ **`<noscript>` 안에 넣지 마세요.** 진짜 `<main id="view">` 안에
+   써 넣습니다. 화면을 그릴 때 `render()` 가 갈아 끼우므로 손님 눈에는
+   차이가 없고, 첫 그림은 오히려 빨라집니다.
+   ⚠️⚠️ **지어낸 것을 여기에 적지 마세요.** 화면에 없는 업체 수 · 후기 ·
+   실적을 여기에만 적으면 그게 구글에까지 나가는 거짓말입니다. 전부
+   `js/data` 에서 그대로 가져옵니다.
+   ⚠️ 데이터를 새로 만들면 여기에도 넣으세요. */
+function noscriptFor(W, r, route){
+  const B = W.AM_BRAND || {};
+  const L = [];
+  const h1 = t => L.push("<h1>"+esc(t)+"</h1>");
+  const h2 = t => L.push("<h2>"+esc(t)+"</h2>");
+  const p  = t => L.push("<p>"+esc(t)+"</p>");
+  const ul = xs => { if(xs.length) L.push("<ul>"+xs.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul>"); };
+  const catNames = cs => cs.map(c => c.name + " — " + c.lead);
+  const subNames = c => (c.items||[]).map(i => i.name);
+
+  h1(r.title || B.name);
+  p(r.desc || B.desc);
+
+  if(route === "/"){
+    /* ⚠️ **화면과 같은 말이어야 합니다.** 크롤러가 읽는 것과 손님이
+       보는 것이 다르면 그게 구글에 나가는 거짓말입니다. 아래는
+       js/pages/home.js 의 구간 다섯을 그대로 따라갑니다.
+       ⚠️ 여기에만 숫자를 적지 마세요 — 화면에 없는 업체 수 · 실적을
+       여기에 적으면 검색엔진에게만 하는 거짓말이 됩니다. 새 랜딩에는
+       실적 숫자가 한 곳도 없어서 여기도 없습니다. */
+    h2("사장님의 시작과 끝을 연결합니다.");
+    p("좋은 시작을 돕고, 안전한 정리를 지원하는 사장님 맞춤 플랫폼, " +
+      ((B.ko || B.name)) + "입니다.");
+
+    h2("시작할 때도, 정리할 때도 혼자 알아볼 필요 없습니다.");
+    p("점포부터 인테리어, 장비, 세무, 마케팅까지. 매장 양도부터 철거, " +
+      "원상복구, 세무 정리까지. 사장님에게 필요한 모든 과정을 한 곳에서 " +
+      "쉽고 빠르게 해결할 수 있습니다.");
+
+    h2("START · 창업 — 새로운 사업을 시작합니다");
+    ul(["프랜차이즈", "점포 · 상권", "인테리어", "장비 · 가구",
+        "POS · IT", "세무 · 노무", "마케팅", "기타 서비스"]);
+    h2("CLOSE · 폐업 — 사업을 정리합니다");
+    ul(["매장 양도", "시설 · 집기 처분", "재고 처리", "철거 · 원상복구",
+        "세무 · 노무", "폐업 지원", "법률 · 행정", "청소 · 방역"]);
+
+    h2("한 사장님의 끝이 다른 사장님의 시작이 됩니다.");
+    p("사용하던 매장이, 다음 사장님에게는 새로운 시작이 될 수 있습니다. " +
+      ((B.ko || B.name)) + "가 그 연결을 만들어갑니다.");
+    ul(["폐업하는 사장님의 자산 — 매장 · 시설 · 장비 · 가구 · 집기 · 재고"]);
+
+    h2("사람은 바뀌어도, 가게는 계속됩니다.");
+    p("누군가의 끝이, 또 다른 누군가의 시작이 되는 선순환의 장을 만들어갑니다.");
+
+    h2("시작하시나요?");
+    p("지금, 더 큰 가능성이 열립니다. 창업에 필요한 모든 것이 준비되어 있습니다.");
+    h2("정리하시나요?");
+    p("잘 정리하는 것도 다음을 위한 준비입니다. 폐업에 필요한 모든 것이 " +
+      "준비되어 있습니다.");
+
+    h2("업종");
+    ul((W.AM_INDUSTRIES||[]).map(i2 => i2.name + " — " + i2.lead));
+    return L.join("");
+  }
+
+  /* ── 서비스 허브 (/home) ─────────────────────────────────────
+     ⚠️ 랜딩에서 뺀 것들이 여기 있습니다. 여기 숫자는 전부 **세는
+     값**이라 손으로 적을 자리가 없습니다. */
+  if(route === "/home"){
+    const nPv = (W.AM_PROVIDERS||[]).length;
+    const nFr = (W.AM_FRANCHISES||[]).length;
+    const nSt = (W.AM_STORES||[]).length;
+    const nAs = (W.AM_ASSETS||[]).length;
+    h2("창업이든 정리든, 필요한 것부터 고르세요");
+    ul(["창업 — 새로운 사업을 시작합니다",
+        "폐업 — 사업을 정리합니다"]);
+    h2("이런 것도 여기 있습니다");
+    ul(["업체찾기 — 분야와 지역으로 찾고, 한 번에 견적을 받습니다 (" +
+          (nPv ? nPv + "곳" : "0곳 · 모으는 중") + ")",
+        "프랜차이즈 — 정보공개서에 있는 값만 보여 드립니다 (" +
+          (nFr ? nFr + "개" : "0개 · 모으는 중") + ")",
+        "점포 · 매장 양도 — 자리를 찾거나, 쓰던 가게를 넘깁니다 (" +
+          (nSt ? nSt + "건" : "0건 · 등록 시작") + ")",
+        "시설 · 집기 · 재고 — 쓰던 장비를 넘기고, 중고로 갖춥니다 (" +
+          (nAs ? nAs + "건" : "0건 · 등록 시작") + ")",
+        "자금 · 정부지원 — 어디를 봐야 하는지부터 모아 두었습니다",
+        "창업 · 폐업 정보 — 검색해도 답이 잘 안 나오는 것만 씁니다 (" +
+          (W.AM_CONTENTS||[]).length + "편)",
+        "사장님 도구 — 창업비 · 고정비 · 손익분기를 직접 재 봅니다",
+        "내 기록 — 적어 두신 조건과 받은 제안을 이 기기에 모읍니다"]);
+    h2("이 분야 업체시라면");
+    p("지금 등록된 업체는 " + nPv + "곳입니다. 숨기지 않고 그대로 적습니다 — " +
+      "그래서 지금 들어오시면 첫 번째입니다.");
+    return L.join("");
   }
 
   if(route === "/faq"){

@@ -20,13 +20,16 @@
    순간 헤더가 판때기로 읽힙니다. */
 window.AM_GNB = [
   { to:"/about",     name:"플랫폼 소개" },
+  { to:"/home",      name:"서비스" },
   { to:"/startup",   name:"창업" },
   { to:"/closure",   name:"폐업" },
-  { to:"/franchise", name:"프랜차이즈" },
   { to:"/providers", name:"업체찾기" },
-  { to:"/stores",    name:"매장인수" },
-  { to:"/tools",     name:"사장님 도구" }
+  { to:"/stores",    name:"매장인수" }
 ];
+/* ⚠️ 시안의 메뉴는 플랫폼 소개 · 서비스 · **이용사례 · 파트너사 ·
+   뉴스** 다섯입니다. 뒤의 셋은 **안 만들었습니다** — 이용사례 0건 ·
+   등록 업체 0곳 · 뉴스 없음이라 셋 다 빈 화면이 됩니다 (절대 규칙
+   1 · 2). 내용이 생기면 여기 한 줄씩 더하면 됩니다. */
 
 /* 폰 아래 네비 — 다섯 칸을 넘기지 마세요. 손가락이 닿는 폭이 줄고
    무엇이 중요한지가 안 보입니다. */
@@ -45,8 +48,10 @@ function Header(){
   /* ⚠️ 본문 바로가기는 `index.html` 에 이미 있습니다. 여기서 또 내면
      읽어 주는 프로그램에 같은 것이 두 번 들립니다. */
   return '<header class="hd"><div class="w-wide hd-in">'+
-    '<a class="lg" href="/" aria-label="'+esc(brandName())+' 홈">'+
-      '<b>'+esc(brandName())+'</b><span>'+esc(brandSub())+'</span></a>'+
+    '<a class="lg hd-lg" href="/" aria-label="'+esc(brandName())+' 홈">'+
+      '<span class="hd-lg-i" aria-hidden="true">'+icon("home",20)+'</span>'+
+      '<span class="hd-lg-t"><b>'+esc(brandName())+'</b>'+
+        '<i>'+esc(brandSub())+'</i></span></a>'+
     '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
       AM_GNB.map(function(m){
         return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+esc(m.name)+'</a>';
@@ -60,9 +65,13 @@ function Header(){
          읽히고, 절대 규칙 5(하지 않은 일을 했다고 하지 않는다)에
          걸립니다. 회원 기능이 생기면 그때 이 한 줄을 바꿉니다. */
       '<a class="hd-txt" href="/my">내 기록</a>'+
-      /* ⚠️ 입점 CTA 는 **늘 보여야 합니다** (§39). 업체가 모이지 않으면
-         이 플랫폼은 아무것도 아닙니다. */
-      '<a class="btn btn-b hd-cta" href="/join">업체 입점하기</a>'+
+      /* ⚠️ 시안(§5)의 헤더 CTA 는 **플랫폼 시작하기**입니다. 전에는
+         여기가 "업체 입점하기" 였는데, 입점은 `/home` 위쪽과 푸터에
+         그대로 있습니다 — 지운 것이 아닙니다. */
+      /* ⚠️ 폰에서는 "플랫폼" 을 접습니다. 다 적어 두면 헤더가 390px 를
+         넘겨 **가로 스크롤**이 생깁니다 (실제로 415px 였습니다). */
+      '<a class="btn btn-nv hd-cta" href="/home">'+
+        '<span class="hd-cta-w">플랫폼 </span>시작하기'+icon("arrow",16)+'</a>'+
     '</div>'+
   '</div></header>';
 }

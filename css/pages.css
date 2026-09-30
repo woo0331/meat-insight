@@ -957,3 +957,64 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
      "없음" 이 아니라 높이 있는 상자입니다. */
   .lg-cols td:not([data-h])::before{ content:none; }
 }
+
+/* ════════ 서비스 허브 (/home) ═══════════════════════════════════
+   ⚠️ 랜딩(`/`)이 아닙니다. 랜딩은 3초 안에 무엇인지 알리는 화면이고
+   여기는 **기능이 다 모인 화면**입니다 (지시서 §1 · §20).
+   ⚠️ 클래스 이름을 `hb-` 로 시작하게 두었습니다 — `landing.css` 가
+   이 파일 **뒤에** 실려서, 이름이 겹치면 여기가 조용히 집니다. */
+.hb-two{ display:grid; gap:var(--s5); grid-template-columns:1fr 1fr; }
+.hb-b{ position:relative; display:grid; gap:var(--s2);
+  align-content:center; min-height:190px; padding:var(--s7);
+  border-radius:var(--r-3xl); transition:transform .15s, box-shadow .2s; }
+.hb-b:hover{ transform:translateY(-2px); box-shadow:var(--shadow-md); }
+.hb-b-st{ background:var(--start-soft); }
+.hb-b-cl{ background:var(--close-soft); }
+.hb-b-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.12em; }
+.hb-b-st .hb-b-k{ color:var(--start-dark); }
+.hb-b-cl .hb-b-k{ color:var(--close-dark); }
+.hb-b b{ font-size:var(--t-3xl); font-weight:900; letter-spacing:-.03em;
+  color:var(--navy); }
+.hb-b i{ font-style:normal; font-size:var(--t-md); color:var(--ink2); }
+.hb-b-go{ position:absolute; right:var(--s6); top:var(--s6);
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:999px; background:var(--surface); }
+.hb-b-st .hb-b-go{ color:var(--start-dark); }
+.hb-b-cl .hb-b-go{ color:var(--close-dark); }
+
+.hb-g{ display:grid; gap:var(--s4); grid-template-columns:repeat(4,1fr); }
+.hb-g a{ display:grid; gap:var(--s2); align-content:start;
+  min-height:172px; padding:var(--s6); border-radius:var(--r-2xl);
+  background:var(--surface); box-shadow:var(--shadow-card);
+  transition:transform .15s, box-shadow .2s; }
+.hb-g a:hover{ transform:translateY(-2px); box-shadow:var(--shadow-card-h); }
+.hb-i{ display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:var(--r-lg);
+  background:var(--blue-50); color:var(--blue); }
+/* ⚠️ grid 칸에 맨글과 태그를 섞지 마세요 — `<b>` 가 딴 칸이 됩니다.
+   제목과 개수를 **감싸개 하나** 안에 넣고 그 안에서 다시 폅니다. */
+.hb-t{ display:flex; align-items:baseline; gap:var(--s2); flex-wrap:wrap; }
+.hb-t b{ font-size:var(--t-lg); font-weight:800; color:var(--ink); }
+.hb-t em{ font-style:normal; font-size:var(--t-cap); font-weight:700;
+  color:var(--ink3); }
+.hb-g i{ font-style:normal; font-size:var(--t-sm); line-height:1.65;
+  color:var(--ink2); }
+
+/* 업체 입점 — ⚠️ 남색을 넓게 쓰는 자리는 푸터뿐이라 **카드 한 장**까지 */
+.hb-jn{ border-radius:var(--r-3xl); background:var(--navy-dark);
+  padding:var(--s8); display:grid; gap:var(--s6);
+  grid-template-columns:1fr auto; align-items:center; }
+.hb-jn-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.14em;
+  color:var(--gold-on-dark); }
+.hb-jn-t h2{ margin-top:var(--s2); font-size:var(--t-2xl); color:#fff; }
+.hb-jn-t p{ margin-top:var(--s3); font-size:var(--t-md); line-height:1.7;
+  color:rgba(255,255,255,.82); max-width:56ch; }
+.hb-jn .btn-w{ min-height:52px; padding:0 var(--s6); font-weight:800;
+  color:var(--navy-dark); }
+
+@media (max-width:1100px){ .hb-g{ grid-template-columns:1fr 1fr; } }
+@media (max-width:760px){
+  .hb-two{ grid-template-columns:1fr; }
+  .hb-jn{ grid-template-columns:1fr; }
+}
+@media (max-width:520px){ .hb-g{ grid-template-columns:1fr; } }

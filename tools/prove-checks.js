@@ -41,23 +41,23 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
 
 const CASES = [
   ["지어낸 실적 숫자가 메인에 없다",
-   `document.querySelectorAll(".lst-v")[0].textContent = "1,200곳";`],
-  ["히어로의 주인공이 창업 · 폐업 두 낱말이다",
-   `document.querySelectorAll(".lh .sh-n")[1].className = "gone";`],
-  ["히어로에 지어낸 숫자 · 잔 요소를 더하지 않았다",
-   `document.querySelector(".lh-in").insertAdjacentHTML("beforeend","<input>");`],
+   `document.querySelector(".lh-d").textContent = "입점 업체 1,200곳";`],
+  ["히어로 제목이 창업부터 폐업까지다",
+   `document.querySelector(".lh-h").textContent = "창업 플랫폼";`],
+  ["히어로에 누를 곳이 하나뿐이다",
+   `document.querySelector(".lh-in").insertAdjacentHTML("beforeend","<a href=/x>또</a>");`],
   ["창업은 초록 · 폐업은 주황이고 빨강이 아니다",
    `document.querySelector(".lh-cl").style.color = "rgb(214,28,28)";`],
   ["규모감 숫자가 손으로 쓴 값이 아니라 센 값이다",
    `document.querySelectorAll(".scale-n")[3].textContent = "500";`],
   ["규모감 숫자가 무엇을 센 값인지 밝힌다",
-   `document.querySelector(".lin-nb").remove();`],
+   `document.querySelector(".scale-n-b").remove();`],
   ["랜딩에 서비스 메인 기능을 끌어오지 않았다",
    `document.querySelector("#view section").insertAdjacentHTML("beforeend","<input name=q>");`],
-  ["랜딩 구간 차례가 지시서와 같다",
-   `document.querySelector(".lpb").remove();`],
+  ["랜딩 구간 차례가 시안과 같다",
+   `document.querySelector(".lbr").remove();`],
   ["어두운 면이 화면의 15% 를 넘지 않는다",
-   `document.querySelector(".lcat").style.background = "#0B1220";`],
+   `document.querySelector(".lin").style.background = "#0B1220";`],
   ["마지막 CTA 가 초록 · 주황 반반이다",
    `document.querySelector(".lfin-cl").style.background = "rgb(200,24,24)";`],
   ["랜딩에서 검색으로 가는 길이 있다",
@@ -79,8 +79,8 @@ const CASES = [
    `document.querySelectorAll(".chip-g-fil .chip")[0]
       .textContent = "전체 120";`],
   ["카드가 구간 바탕과 같은 색이 아니다",
-   `document.querySelectorAll(".lcc")[0].style.background =
-      getComputedStyle(document.querySelector(".lcat")).backgroundColor;`]
+   `document.querySelectorAll(".lsd-g a")[0].style.background =
+      getComputedStyle(document.querySelector(".lin")).backgroundColor;`]
 ];
 
 (async()=>{

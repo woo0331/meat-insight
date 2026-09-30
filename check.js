@@ -128,7 +128,11 @@ const PAGES = [
   ["/privacy",           "개인정보처리방침"],
   ["/nope",              "없는 주소"]
 ];
-const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[390,844,"모바일"]];
+/* ⚠️ **360px 을 같이 봅니다.** 폰은 390px 만 있는 것이 아닙니다 —
+   갤럭시 계열이 360px 이고, 새 헤더가 거기서만 370px 로 넘쳐
+   가로 스크롤이 났습니다. 390 만 재던 동안 통과하고 있었습니다. */
+const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],
+               [390,844,"모바일"],[360,800,"좁은 폰"]];
 
 /* 손님 화면에 있으면 안 되는 말 */
 /* ⚠️ 조사를 괄호로 때운 자리(은(는) · 을(를))도 여기서 걸립니다.
@@ -577,30 +581,17 @@ const AUDIT = `(() => {
     if(s2.rating !== 4.5) return "후기 평균이 틀립니다 (" + s2.rating + ")";
     return true;`);
   await f("지어낸 실적 숫자가 메인에 없다", "/", `
+    /* ⚠️ 새 랜딩(시안)에는 실적 숫자가 **한 곳도 없습니다.** 그래서
+       낱말로 막지 않고 "n곳 · n개 · n건" 꼴이 하나라도 있으면 잡습니다.
+       업체가 실제로 등록되어도 랜딩에는 숫자가 안 나오는 것이 맞고,
+       세는 값이 필요한 화면은 /home 입니다. */
     const t = document.getElementById("view").textContent;
     const bad = [];
-    if(/[0-9][0-9,]*\\s*\\+\\s*(곳|개|명|건)/.test(t)) bad.push("n+ 꼴");
-    if(t.indexOf("만족도") >= 0) bad.push("만족도");
-    if(t.indexOf("누적") >= 0) bad.push("누적");
-    if(/평점\\s*[0-9]/.test(t)) bad.push("평점");
-    /* ⚠️ 낱말로 막지 않고 **값을 다시 세어** 맞춰 봅니다. "입점 업체
-       n곳" 을 낱말로 금지해 두면, 업체가 실제로 등록된 날 이 검사가
-       거짓으로 걸립니다 — 그때 검사를 끄게 되고 그게 제일 위험합니다. */
-    const want = [
-      (window.AM_PROVIDERS || []).length,
-      (window.AM_FRANCHISES || []).length,
-      (window.AM_STORES || []).length + (window.AM_ASSETS || []).length
-    ];
-    const cell = [].slice.call(document.querySelectorAll(".lst-v"))
-      .map(function(e){ return e.textContent.trim(); });
-    if(cell.length !== 4) return "떠 있는 카드가 " + cell.length + "칸입니다";
-    for(let i = 0; i < 3; i++){
-      const num = (cell[i].match(/[0-9][0-9,]*/) || [null])[0];
-      if(want[i] === 0 && num !== null)
-        bad.push((i+1) + "번째 칸이 0인데 숫자 " + num + " 을 적었습니다");
-      if(want[i] > 0 && parseInt(String(num).replace(/,/g, ""), 10) !== want[i])
-        bad.push((i+1) + "번째 칸이 화면 " + cell[i] + " · 실제 " + want[i] + "입니다");
-    }
+    const pat = [[/[0-9][0-9,]*\\s*\\+\\s*(곳|개|명|건)/, "n+ 꼴"],
+                 [/[0-9][0-9,]*\\s*(곳|개사|명)/, "실적 숫자"],
+                 [/만족도/, "만족도"], [/누적/, "누적"],
+                 [/평점\\s*[0-9]/, "평점"], [/[0-9]+\\s*만\\s*명/, "회원 수"]];
+    for(const q of pat){ if(q[0].test(t)) bad.push(q[1]); }
     return bad.length ? bad.join(" · ") + " 가 있습니다" : true;`);
 
   /* ② 업종에 따라 실제로 다른 것이 보이는가 (§59 Q2 · Q3) */
@@ -770,28 +761,28 @@ const AUDIT = `(() => {
      ⚠️ 이건 "보기 좋은가" 를 재는 검사가 아닙니다. 나중에 여기에
      설명 · 검색창 · 숫자를 하나씩 더하다 보면 두 낱말이 조용히
      작아지는데, 그걸 막는 것이 목적입니다. */
-  await f("히어로의 주인공이 창업 · 폐업 두 낱말이다", "/", `
-    const n = [].slice.call(document.querySelectorAll(".lh .sh-n"));
-    if(n.length !== 2) return "큰 낱말이 " + n.length + "개입니다";
-    const t = n.map(function(e){ return e.textContent.trim(); });
-    if(t[0] !== "창업" || t[1] !== "폐업") return t.join(" · ") + "입니다";
-    const px = parseFloat(getComputedStyle(n[0]).fontSize);
-    if(px < 56) return "글씨가 " + Math.round(px) + "px 입니다 (56px 이상)";
-    /* §5 — 데스크톱 최소 620px. 화면 높이 비율로 재면 세로가 긴
-       기계에서 거짓으로 걸립니다. */
-    const h = document.querySelector(".lh").getBoundingClientRect().height;
-    if(h < 560) return "히어로가 " + Math.round(h) + "px 입니다 (620px 기준)";
+  await f("히어로 제목이 창업부터 폐업까지다", "/", `
+    const h = document.querySelector(".lh .lh-h");
+    if(!h) return "히어로 제목이 없습니다";
+    const t = h.textContent.replace(/\\s+/g, "");
+    if(t !== "창업부터폐업까지.") return "제목이 " + h.textContent.trim() + "입니다";
+    if(!h.querySelector(".lh-cl")) return "폐업 강조가 없습니다";
+    const px = parseFloat(getComputedStyle(h).fontSize);
+    if(px < 56) return "글씨가 " + Math.round(px) + "px 입니다 (§18 — 64~72px)";
+    /* §3 — 데스크톱 첫 화면 700~780px */
+    const hh = document.querySelector(".lh").getBoundingClientRect().height;
+    if(hh < 660) return "히어로가 " + Math.round(hh) + "px 입니다 (700px 기준)";
     return true;`);
-  await f("히어로에 지어낸 숫자 · 잔 요소를 더하지 않았다", "/", `
-    const s = document.querySelector(".lh");
-    const t = s.textContent;
-    const pat = [[/\\d[\\d,]*\\s*\\+/, "n+ 꼴"], [/만족도/, "만족도"], [/누적/, "누적"],
-                 [/업체\\s*\\d/, "업체 수"], [/\\d+\\s*만\\s*명/, "회원 수"]];
-    for(const q of pat){ if(q[0].test(t)) return q[1] + " 가 있습니다"; }
-    if(s.querySelectorAll("input,select,textarea").length)
-      return "적는 칸이 생겼습니다 — 히어로에서 고르는 것은 둘뿐입니다";
-    const a = s.querySelectorAll("a");
-    if(a.length !== 2) return "누를 곳이 " + a.length + "개입니다 (창업 · 폐업 둘)";
+  await f("히어로에 누를 곳이 하나뿐이다", "/", `
+    /* ⚠️ §3 — "HERO에서는 버튼을 여러 개 만들지 않는다. 하나의 강한
+       CTA만 둔다." 여기에 두 번째 버튼이나 적는 칸을 더하지 마세요. */
+    const s2 = document.querySelector(".lh");
+    if(s2.querySelectorAll("input,select,textarea").length)
+      return "적는 칸이 생겼습니다";
+    const a = s2.querySelectorAll("a");
+    if(a.length !== 1) return "누를 곳이 " + a.length + "개입니다 (하나여야 합니다)";
+    if(a[0].getAttribute("href") !== "/home")
+      return "CTA 가 " + a[0].getAttribute("href") + " 로 갑니다 (/home 이어야 합니다)";
     return true;`);
   /* ⚠️⚠️ **2026-09-30 지시로 규칙이 뒤집혔습니다.** 전에는 "창업과
      폐업을 색으로 가르지 않는다" 였습니다 — 빨강/초록으로 나누면
@@ -803,39 +794,34 @@ const AUDIT = `(() => {
          그대로 돌아옵니다)
      입니다. `--close` 를 붉은 쪽으로 옮기면 여기서 걸립니다. */
   await f("창업은 초록 · 폐업은 주황이고 빨강이 아니다", "/", `
-    const col = function(q){
+    const col = function(q, prop){
       const e = document.querySelector(q);
       if(!e) return null;
-      const m = getComputedStyle(e).color.match(/(\\d+), ?(\\d+), ?(\\d+)/);
+      const m = getComputedStyle(e)[prop || "color"].match(/(\\d+), ?(\\d+), ?(\\d+)/);
       return m ? [+m[1], +m[2], +m[3]] : null;
     };
-    const st = col(".lh-st"), cl = col(".lh-cl");
-    if(!st || !cl) return "히어로의 두 낱말 색을 못 읽습니다";
-    if(!(st[1] > st[0] + 30 && st[1] > st[2] + 20))
-      return "창업 쪽이 초록이 아닙니다 rgb(" + st.join(",") + ")";
+    /* 시안 §3 — "창업부터" 는 Deep Navy, "폐업" 은 Orange */
+    const hd = col(".lh-h"), cl = col(".lh-cl");
+    if(!hd || !cl) return "히어로 제목 색을 못 읽습니다";
+    if(!(hd[2] > hd[0] + 30)) return "제목이 남색이 아닙니다 rgb(" + hd.join(",") + ")";
     if(!(cl[0] > cl[1] + 40 && cl[1] > cl[2]))
-      return "폐업 쪽이 주황이 아닙니다 rgb(" + cl.join(",") + ")";
-    /* ⚠️ 주황과 빨강의 경계 — 초록 성분이 확 내려가면 빨강입니다 */
-    if(cl[1] < 55)
-      return "폐업 쪽이 빨강으로 넘어갔습니다 rgb(" + cl.join(",") + ")";
-    /* 단추도 같은 규칙입니다 */
-    const b = function(q){
-      const e = document.querySelector(q);
-      if(!e) return null;
-      const m = getComputedStyle(e).backgroundColor.match(/(\\d+), ?(\\d+), ?(\\d+)/);
-      return m ? [+m[1], +m[2], +m[3]] : null;
-    };
-    const bs = b(".lh-cta .btn-st"), bc = b(".lh-cta .btn-cl");
-    if(!bs || !bc) return "히어로 단추를 못 찾습니다";
-    if(!(bs[1] > bs[0] + 30)) return "창업 단추가 초록이 아닙니다";
-    if(!(bc[0] > bc[1] + 40 && bc[1] >= 55)) return "폐업 단추가 주황이 아닙니다";
+      return "폐업이 주황이 아닙니다 rgb(" + cl.join(",") + ")";
+    /* ⚠️ 주황과 빨강의 경계 — 초록 성분이 확 내려가면 빨강입니다.
+       빨강으로 가면 "폐업은 나쁜 것" 이라는 옛 걱정이 그대로 돌아옵니다. */
+    if(cl[1] < 55) return "폐업이 빨강으로 넘어갔습니다 rgb(" + cl.join(",") + ")";
+    /* 큰 카드 둘도 같은 규칙입니다 */
+    const bs = col(".lsd-st .lsd-b", "backgroundColor");
+    const bc = col(".lsd-cl .lsd-b", "backgroundColor");
+    if(!bs || !bc) return "START · CLOSE 배지를 못 찾습니다";
+    if(!(bs[1] > bs[0] + 30)) return "START 배지가 초록이 아닙니다";
+    if(!(bc[0] > bc[1] + 40 && bc[1] >= 45)) return "CLOSE 배지가 주황이 아닙니다";
     return true;`);
 
   /* ⑨ 규모감 숫자 — **센 값**이어야 합니다
      ⚠️ 여기가 이 플랫폼에서 숫자를 크게 띄우는 유일한 자리라, 나중에
      "183 을 300 으로 고쳐 두면 커 보이겠다" 가 제일 쉽게 벌어지는
      곳입니다. 화면의 숫자를 데이터에서 다시 세어 맞춰 봅니다. */
-  await f("규모감 숫자가 손으로 쓴 값이 아니라 센 값이다", "/", `
+  await f("규모감 숫자가 손으로 쓴 값이 아니라 센 값이다", "/about", `
     const n = [].slice.call(document.querySelectorAll(".scale-n"))
       .map(function(e){ return parseInt(e.textContent.trim(), 10); });
     if(n.length !== 4) return "숫자 칸이 " + n.length + "개입니다";
@@ -850,7 +836,7 @@ const AUDIT = `(() => {
       if(n[i] !== want[i])
         return i + "번째가 화면 " + n[i] + " · 실제 " + want[i] + "입니다";
     return true;`);
-  await f("규모감 숫자가 무엇을 센 값인지 밝힌다", "/", `
+  await f("규모감 숫자가 무엇을 센 값인지 밝힌다", "/about", `
     /* scale-b 는 랜딩(ONE STOP 구간 안) · scale 은 /about 입니다.
        ⚠️ 이 글은 백틱 문자열 안이라 **주석에 백틱을 쓰면** 문자열이
        거기서 끝나고 검사가 통째로 멈춥니다. 또 그랬습니다. */
@@ -1061,7 +1047,7 @@ const AUDIT = `(() => {
         bad.push((e.className || e.tagName).toString().slice(0, 24));
     });
     return bad.length ? "면으로 쓴 곳: " + bad.slice(0, 3).join(" · ") : true;`);
-  await f("골드가 버튼 · 링크의 행동색을 빼앗지 않는다", "/", `
+  await f("골드가 버튼 · 링크의 행동색을 빼앗지 않는다", "/quote", `
     /* ⚠️ 행동색은 **하나**여야 손님이 "누를 것" 을 배웁니다.
        버튼이 금색이 되면 그 규칙이 깨집니다. */
     const b1 = document.querySelector(".btn-b");
@@ -1146,11 +1132,18 @@ const AUDIT = `(() => {
     return bad.length
       ? bad.join(" · ") + " 가 랜딩에 들어왔습니다 (§23 — 각자 주소에 있습니다)"
       : true;`);
-  await f("랜딩 구간 차례가 지시서와 같다", "/", `
-    /* §24 의 차례입니다. 늘리거나 섞기 전에 §23 을 먼저 읽으세요. */
-    const want = ["lh","lst","lin","ltwo","lpb","lbr","lcat","ljn","lfin"];
+  await f("랜딩 구간 차례가 시안과 같다", "/", `
+    /* 시안의 차례입니다 — 히어로 / ONE STOP+카드 둘 / 연결 /
+       브랜드 메시지 / 마지막 CTA. 늘리기 전에 §19 · §21 을 읽으세요. */
+    const want = ["lh","lin","lbr","lsc","lfin"];
     const got = [].slice.call(document.querySelectorAll("#view > section"))
-      .map(function(e){ return (e.className || "").split(" ")[0]; });
+      .map(function(e){
+        const c = (e.className || "").split(" ");
+        /* ⚠️ 구간이 .sec 를 같이 답니다 — 첫 낱말만 보면 전부 "sec"
+           으로 읽혀 이 검사가 아무것도 안 잡습니다. 우리 표시를 찾습니다. */
+        for(const x of c){ if(want.indexOf(x) >= 0) return x; }
+        return c[0] || "?";
+      });
     if(got.join(",") !== want.join(","))
       return "차례가 " + got.join(" → ") + "입니다";
     return true;`);
@@ -1337,7 +1330,7 @@ const AUDIT = `(() => {
        **그라디언트 큰 카드**라서, 구간 배경과 비교하면 거짓으로
        걸립니다. */
     const sel = ".cat,.ind,.pv,.fr,.fc,.mk,.help,.sp,.empty," +
-                ".lst-c,.lcc,.lpb-i,.lbr-c";
+                ".lsd-g a,.hb-g a,.hb-b,.lbr-as";
     const bad = [];
     [...document.querySelectorAll(sel)].forEach(el => {
       let sec = el.closest("section"); if(!sec) return;

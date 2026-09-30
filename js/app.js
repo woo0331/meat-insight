@@ -47,6 +47,9 @@ window.nowQS = function(k){
 var META = {
   "/":          ["창업에 필요한 모든 것, 폐업에 필요한 모든 것",
                  "장사를 시작하시나요, 정리하시나요. 업종과 지역만 고르시면 점포 · 인테리어 · 장비 · 프랜차이즈부터 매장 양도 · 철거 · 원상복구 · 폐업 신고까지 필요한 전문업체를 찾고 비교하고 견적받으실 수 있습니다."],
+  /* 랜딩(/)의 "플랫폼 시작하기" 가 도착하는 서비스 허브 */
+  "/home":      ["서비스 — 무엇부터 하시겠습니까?",
+                 "창업과 폐업에 필요한 업체 · 프랜차이즈 · 점포 · 시설 · 지원사업 · 정보 · 계산기를 한곳에 모았습니다. 필요한 것부터 고르세요."],
   "/startup":   ["창업 — 어떤 사업을 준비하세요?",
                  "업종만 고르시면 그 업종 창업에 실제로 필요한 것만 추려 드립니다. 점포 · 상권 · 인테리어 · 장비 · 가구 · POS · 공급 · 인허가 · 마케팅까지."],
   "/closure":   ["폐업 — 사업을 어떻게 정리하세요?",
@@ -105,6 +108,7 @@ window.routeInfo = function(path){
 
   var VIEW = {
     "/":          "home",
+    "/home":      "hub",
     "/startup":   "startup",
     "/closure":   "closure",
     "/providers": "providers",
@@ -272,6 +276,7 @@ function render(){
   var html;
   switch(r.view){
     case "home":            html = PageHome();                      break;
+    case "hub":             html = PageHub();                       break;
     case "startup":         html = PageStartup();                   break;
     case "startupIndustry": html = PageStartupIndustry(r.industry); break;
     case "closure":         html = PageClosure();                   break;

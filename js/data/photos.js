@@ -50,6 +50,37 @@
    넣는 법 — 파일을 `img/` 에 두고 아래에 한 줄씩 적습니다.
      "hero-start": { src:"/img/hero-start.jpg", alt:"…" }
    ⚠️ `alt` 를 비우지 마세요. 읽어 주는 프로그램과 검색엔진이 봅니다. */
+/* ── 자리의 규격 ─────────────────────────────────────────────────
+   ⚠️ **여기가 한 곳입니다.** `tools/check-photos.js` 와 `build-pages.js`
+   가 이 목록을 읽습니다 — 자리를 늘리거나 크기를 바꾸면 여기만
+   고치세요. 화면과 검사가 따로 놀지 않게 하려는 것입니다.
+
+   `min`   넣을 그림의 **최소** 가로×세로 (레티나 2배를 감안한 값)
+   `ratio` 가로÷세로가 이 사이여야 합니다. 벗어나면 많이 잘립니다
+   `maxKB` 이 용량을 넘으면 첫 화면이 느려집니다 */
+window.WOW_PHOTO_SLOTS = [
+  { key:"hero-start", where:"히어로 왼쪽",  min:[1100,1100], ratio:[0.85,1.35], maxKB:220,
+    note:"주인공을 **왼쪽 가장자리** 쪽에. 폰에서 세로로 길게 잘립니다" },
+  { key:"hero-close", where:"히어로 오른쪽", min:[1100,1100], ratio:[0.85,1.35], maxKB:220,
+    note:"주인공을 **오른쪽 가장자리** 쪽에. 처연한 장면은 안 됩니다" },
+
+  { key:"prob-store",     where:"문제 제기 · 점포 · 상가", min:[700,440], ratio:[1.45,1.85], maxKB:80,
+    note:"채도가 낮춰져 깔립니다 — 형태가 분명한 것으로" },
+  { key:"prob-interior",  where:"문제 제기 · 인테리어 · 시공", min:[700,440], ratio:[1.45,1.85], maxKB:80 },
+  { key:"prob-equip",     where:"문제 제기 · 시설 · 장비",   min:[700,440], ratio:[1.45,1.85], maxKB:80 },
+  { key:"prob-it",        where:"문제 제기 · IT · 매장시스템", min:[700,440], ratio:[1.45,1.85], maxKB:80 },
+  { key:"prob-admin",     where:"문제 제기 · 행정 · 전문가",  min:[700,440], ratio:[1.45,1.85], maxKB:80 },
+  { key:"prob-marketing", where:"문제 제기 · 마케팅 · 디자인", min:[700,440], ratio:[1.45,1.85], maxKB:80 },
+
+  { key:"cta-start", where:"마지막 CTA 왼쪽",  min:[1400,540], ratio:[2.0,3.0], maxKB:280,
+    note:"34% 만 비칩니다 — 복잡한 사진은 얼룩으로 보입니다" },
+  { key:"cta-close", where:"마지막 CTA 오른쪽", min:[1400,540], ratio:[2.0,3.0], maxKB:280,
+    note:"정리하는 장면입니다. 불 꺼진 가게 · 고개 숙인 사람은 안 됩니다" }
+];
+
+/* ⚠️ 키를 **여기 없는 이름으로 적으면 조용히 안 나옵니다.** 에러도
+   안 나고 화면도 멀쩡합니다 — `hero_start` 처럼 한 글자만 달라도
+   그렇습니다. `build-pages.js` 가 그것만 따로 막습니다. */
 window.WOW_PHOTOS = {};
 
 window.wowPhoto = function(key){

@@ -645,6 +645,28 @@ function checkCssVars(){
       "**조용히 무시됩니다**):\n   " + bad.join("\n   "));
 }
 
+/* ⚠️ 사진 키를 **한 글자 틀리면 조용히 안 나옵니다.** 에러도 안 나고
+   화면도 멀쩡합니다 (`hero_start` 처럼). 없는 파일을 적어 두면 배포된
+   화면에서 404 가 나는데 그것도 조용합니다. 빌드할 때마다 막습니다.
+   ⚠️ 크기 · 비율 · 용량까지는 `node tools/check-photos.js` 가 봅니다 —
+   여기서는 파일을 열지 않습니다(빌드가 느려집니다). */
+function checkPhotos(W){
+  const slots = new Set((W.WOW_PHOTO_SLOTS || []).map(s => s.key));
+  const bad = [];
+  for(const [k, p] of Object.entries(W.WOW_PHOTOS || {})){
+    if(!slots.has(k))
+      bad.push('"' + k + '" 는 없는 자리입니다 (js/data/photos.js 의 WOW_PHOTO_SLOTS)');
+    if(!p || !p.src){ bad.push('"' + k + '" 에 src 가 없습니다'); continue; }
+    if(p.src[0] !== "/")
+      bad.push('"' + k + '" 의 경로가 / 로 시작하지 않습니다 — 깊은 주소에서 404 가 납니다');
+    else if(!fs.existsSync(path.join(ROOT, p.src.replace(/^\//, ""))))
+      bad.push('"' + k + '" — 파일이 없습니다: ' + p.src);
+  }
+  if(bad.length)
+    throw new Error("사진 자리가 어긋났습니다 (그 사진은 **조용히 안 나옵니다**):\n   " +
+      bad.join("\n   "));
+}
+
 function checkVercel(){
   const vj = JSON.parse(fs.readFileSync(path.join(ROOT,"vercel.json"),"utf8"));
   for(const g of (vj.headers||[])){
@@ -666,6 +688,7 @@ function checkVercel(){
 checkCssVars();
 checkVercel();
 const W = loadApp();
+checkPhotos(W);
 globalThis.__W = W;   /* shell() 이 브랜드 이름을 읽습니다 */
 const tpl = fs.readFileSync(path.join(ROOT,"index.html"),"utf8");
 const routes = allRoutes(W);

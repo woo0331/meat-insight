@@ -4,6 +4,11 @@ test/*.jpg
 test/*.log
 test/rt.log
 
+# 사진 원본 — tools/fit-photos.js 가 img/ 에 규격을 맞춰 내놓습니다.
+# 원본은 크고, 유료 스톡이면 라이선스 때문에 공개 저장소에 올리면
+# 안 되는 경우도 있습니다. 버전 관리하고 싶으시면 이 두 줄을 지우세요.
+img/raw/
+
 # 로컬 도구
 node_modules/
 package-lock.json

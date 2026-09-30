@@ -95,6 +95,7 @@ middleware.js           /admin 과 /api/admin-health 를 서버에서 막습니�
 admin.html · js/admin.js · css/admin.css   관리자 작업대
 api/admin-health.js     접수처 환경변수가 설정됐는지 — **값은 안 돌려줍니다**
 tools/test-api.js       접수 API 계약 검사 (27개)
+tools/fit-photos.js     원본을 자리 규격에 맞춰 줍니다 (img/raw → img)
 tools/check-photos.js   넣은 사진이 규격에 맞는가 (크기 · 비율 · 용량 · alt)
 tools/check-korean.js   조사가 낱말에서 떨어졌는지 ("서면 으로")
 tools/prove-checks.js   검사가 **실제로 잡는지** 되돌려 봅니다 (19개)
@@ -741,9 +742,27 @@ node tools/test-api.js   # 화면이 보낸 칸이 빠짐없이 나가는지 (27
 비율 · 용량까지. `tools/check-photos.js` 와 `build-pages.js` 가 그
 목록을 읽습니다. 자리를 늘리면 거기만 고치세요.
 
+### 규격은 손으로 맞추지 마세요
+
+자리마다 최소 크기 · 비율 범위 · 용량 상한이 따로이고 자리가 열넷입니다.
+원본을 **`img/raw/` 에 자리 이름으로** 넣고 돌리면 맞춰 줍니다.
+
 ```bash
-node tools/check-photos.js   # 크기 · 비율 · 용량 · alt · 안 쓰는 파일
+node tools/fit-photos.js           # img/raw/hero-start.jpg → img/hero-start.jpg
+node tools/fit-photos.js --write   # photos.js 의 WOW_PHOTOS 까지 적어 줍니다
+node tools/check-photos.js         # 크기 · 비율 · 용량 · alt · 안 쓰는 파일
 ```
+
+- 비율이 범위 안이면 **한 픽셀도 안 자릅니다.** 밖이면 제일 조금 잘라
+  넣고, `anchor`(히어로는 left · right)를 보고 남길 쪽을 고릅니다.
+- ⚠️ **원본보다 키우지 않습니다.** 작으면 실패로 냅니다 — 키운 것은
+  규격을 맞춘 것이 아니라 뿌옇게 만든 것입니다.
+- ⚠️ **기본은 JPEG 입니다.** 화면이 `<img src>` 하나라 `<picture>` 분기가
+  없어서 WebP 를 못 읽는 브라우저에서는 **그냥 안 나옵니다.**
+- ⚠️ **`alt` 는 사람이 씁니다.** 도구는 빈 칸으로 두고, `check-photos` 가
+  빈 alt 를 **실패로** 잡습니다.
+- `img/raw/` 는 화면이 안 읽고 `.gitignore` 에 있습니다 (유료 스톡
+  원본을 공개 저장소에 올리지 않기 위해서입니다).
 
 - ⚠️⚠️ **키를 한 글자 틀리면 조용히 안 나옵니다** (`hero_start`). 에러도
   안 나고 화면도 멀쩡합니다. `build-pages.js` 의 `checkPhotos()` 가
@@ -915,6 +934,7 @@ node build-pages.js    # 주소마다 HTML + sitemap
 node tools/shot.js "/|1440|home"   # 화면을 찍어 봅니다 (눈으로 볼 것)
 node tools/prove-checks.js         # 검사가 **실제로 잡는지** (19개)
 node tools/og.js                   # 공유 미리보기 그림 (한글 글꼴 필요)
+node tools/fit-photos.js           # 원본을 규격에 맞춰 줍니다 (--write 로 photos.js 까지)
 node tools/check-photos.js         # 넣은 사진이 규격에 맞는가
 node tools/check-korean.js         # 조사가 낱말에서 떨어졌는가
 node --check check.js              # ⚠️ check.js 를 고쳤으면 **이걸로** 봅니다
@@ -994,6 +1014,8 @@ node --check check.js              # ⚠️ check.js 를 고쳤으면 **이걸�
 | 헤더 CTA 글자가 길어짐 | 360px(갤럭시)에서만 370px 로 넘쳐 가로 스크롤 — 390 만 재던 검사는 통과 |
 | `background:linear-gradient(…)` 만 적음 | `backgroundColor` 가 투명으로 읽혀 색 검사가 `rgb(0,0,0)` 으로 잡음 |
 | 흰 카드를 흰 구간 위에 | 그림자로만 보임 — "카드가 구간 바탕과 같은 색" 이 잡음 |
+| 정규식 `\{[\s\S]*?\n\};` 로 칸 갈아 끼움 | 다음에 오는 **함수를 통째로 삼킴** — 문법도 멀쩡했고 화면도 안 죽음. 중괄호 짝을 세고, 쓴 뒤 되읽어 확인합니다 |
+| `readdirSync` 결과에 폴더 | `img/raw/` 를 "안 쓰는 파일" 로 경고 — `isDirectory()` 로 걸러야 합니다 |
 
 ## 아직 안 된 것
 

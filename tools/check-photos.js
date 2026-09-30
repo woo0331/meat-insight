@@ -144,6 +144,10 @@ const IMG = path.join(ROOT, "img");
 if(fs.existsSync(IMG)){
   fs.readdirSync(IMG).forEach(f => {
     if(f[0] === ".") return;
+    /* ⚠️ **폴더는 파일이 아닙니다.** img/raw/ (원본 두는 곳)를
+       "안 쓰는 파일" 로 잡아서 경고가 났습니다 — 원본은 화면이
+       읽지 않는 것이 맞습니다. */
+    if(fs.statSync(path.join(IMG, f)).isDirectory()) return;
     const rel = path.join("img", f);
     if(!used.has(rel))
       warn.push(rel + " — WOW_PHOTOS 에 없는 파일입니다 (안 쓰입니다)");

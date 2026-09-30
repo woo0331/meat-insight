@@ -8,122 +8,6 @@
    되어 낱말이 딴 줄에 앉습니다. 글은 `<span>` 으로 감쌉니다.
    ════════════════════════════════════════════════════════════════════ */
 
-/* ════════ 메인 Split Hero (§2) ═══════════════════════════════════
-   첫 화면의 주인공은 **두 낱말**입니다 — 창업 · 폐업.
-
-   ⚠️ **여기에 설명 · 검색창 · 칩 · 숫자를 더하지 마세요.** 하나
-   더할 때마다 두 낱말이 그만큼 작아집니다. 힘은 장식이 아니라
-   **크기 · 대비 · 여백**에서 나옵니다.
-
-   ⚠️ **두 쪽을 색으로 가르지 마세요** (§4). 둘 다 같은 남색 계열이고
-   **깊이만** 다릅니다 — 왼쪽은 푸른 기, 오른쪽은 거의 검정.
-   빨강/초록으로 나누면 "폐업은 나쁜 것" 이라는 말이 됩니다.
-
-   ⚠️ **`.sh-v`(겹)가 색을 정합니다.** 사진이 아닙니다. 사진을 아무리
-   좋은 것으로 바꿔도 겹이 잿빛이면 화면은 회색 판입니다. 사진이
-   없을 때는 이 겹 자체가 배경이 됩니다. */
-.shero{ position:relative; }
-
-/* ⚠️ grid 가 아니라 **flex** 입니다. 한쪽에 마우스를 올리면 그쪽이
-   넓어져야 하는데, grid 로 하면 `grid-template-columns` 를 부모에서
-   바꿔야 해서 `:has()` 가 필요합니다. flex 는 `flex-grow` 를 자기
-   자신에게 주면 되므로 선택자가 단순합니다. */
-.sh-g{ display:flex; min-height:82vh; }
-.sh{ position:relative; isolation:isolate; overflow:hidden;
-  /* ⚠️ `flex-basis` 는 **0** 이어야 합니다. `50%` 로 두면 둘이 합쳐
-     100% 라 남는 자리가 없고, `flex-grow` 는 **남는 자리만** 나눠
-     주므로 아무 일도 안 일어납니다 — 흐려지기만 하고 넓어지지
-     않았습니다. 에러도 안 나서 찍어 봐도 티가 잘 안 납니다. */
-  flex:1 1 0%; min-width:0; display:flex; align-items:center;
-  color:#fff; text-decoration:none;
-  transition:flex-grow .5s cubic-bezier(.22,.7,.25,1), opacity .35s; }
-
-/* 마우스를 올린 쪽이 넓어지고, **반대쪽이 가라앉습니다.**
-   ⚠️ 둘 다 있어야 합니다 — 넓어지기만 하면 움직임이 안 읽히고,
-   어두워지기만 하면 "고를 수 없는 것" 처럼 보입니다.
-
-   ⚠️ 가라앉히는 것을 `opacity` 로 하지 마세요. 뒤가 **흰 페이지**라
-   투명해질수록 오히려 **밝아집니다** — 찍어 보니 폐업 쪽이 잿빛으로
-   떴습니다. 어두운 막(`::after`)을 덮어야 실제로 물러납니다. */
-.sh::after{ content:""; position:absolute; inset:0; z-index:-1;
-  background:#05070C; opacity:0; pointer-events:none;
-  transition:opacity .4s; }
-@media (hover:hover) and (min-width:861px){
-  .sh-g:hover .sh{ flex-grow:.86; }
-  .sh-g:hover .sh::after{ opacity:.58; }
-  .sh-g .sh:hover{ flex-grow:1.34; }
-  .sh-g .sh:hover::after{ opacity:0; }
-}
-
-/* 사진 자리 — 지금은 비어 있습니다. 생기면 경로만 바꿉니다. */
-.sh-ph{ position:absolute; inset:0; z-index:-2; }
-.sh-ph .ph{ width:100%; height:100%; object-fit:cover; display:block;
-  transform:scale(1.04); transition:transform .8s cubic-bezier(.22,.7,.25,1); }
-.sh:hover .sh-ph .ph{ transform:scale(1.10); }
-/* ⚠️ 사진이 없을 때 회색 판을 깔지 않습니다 — 겹이 배경입니다. */
-.sh-ph .ph-none{ background:none; }
-
-/* ⚠️ 겹(`.sh-v`)만으로 색을 내지 마세요. 패널 자신에게 **바탕색을
-   같이** 줍니다. 두 가지 이유입니다 —
-   ① 그라디언트가 안 그려지는 상황에서도 흰 글자가 읽힙니다.
-   ② 전수 점검의 "글자가 바탕에 묻힘" 은 **자기와 조상의 배경색**을
-      봅니다. 색이 절대 위치한 형제에만 있으면 흰 바탕으로 읽어서
-      흰 글자 7건이 걸립니다 — 실제로 그렇게 걸렸습니다. */
-.sh-start{ background:#0C1A38; }
-.sh-close{ background:#0B0E15; }
-
-.sh-v{ position:absolute; inset:0; z-index:-1; }
-.sh-start .sh-v{
-  background:
-    radial-gradient(70% 55% at 22% 12%, rgba(27,92,255,.30) 0%, rgba(27,92,255,0) 70%),
-    linear-gradient(162deg, #10224A 0%, #0C1A38 52%, #0A1430 100%); }
-.sh-close .sh-v{
-  background:
-    radial-gradient(70% 55% at 78% 12%, rgba(120,140,180,.16) 0%, rgba(120,140,180,0) 70%),
-    linear-gradient(162deg, #161A24 0%, #0B0E15 58%, #06080C 100%); }
-
-/* ⚠️ 가운데에 둡니다. 아래로 붙였더니 사진이 없는 지금은 **위쪽
-   절반이 통째로 죽은 칸**이었습니다 — 찍어 보고서야 알았습니다.
-   사진이 들어오면 그때 아래로 내릴지 다시 보세요. */
-.sh-in{ display:grid; align-content:center; gap:var(--s3);
-  padding:var(--s10) var(--s9) var(--s10); width:100%; max-width:620px; }
-.sh-k{ font-size:var(--t-cap); font-weight:900; letter-spacing:.26em; }
-/* §21 — 샴페인 골드는 **악센트 네 자리**에만. 여기가 그 하나입니다. */
-.sh-start .sh-k{ color:var(--gold-on-dark); }
-.sh-close .sh-k{ color:var(--gold-on-dark); }
-
-/* 주인공 */
-.sh-n{ font-style:normal; font-size:var(--t-split); font-weight:900;
-  line-height:.92; letter-spacing:-.045em; }
-.sh-l{ font-size:var(--t-xl); font-weight:800; margin-top:var(--s3); }
-.sh-d{ font-size:var(--t-base); line-height:1.75;
-  color:var(--on-dark-2); max-width:44ch; }
-.sh-go{ display:inline-flex; align-items:center; gap:8px; margin-top:var(--s6);
-  min-height:var(--tap); padding:0 var(--s7); border-radius:var(--r-pill);
-  font-size:var(--t-base); font-weight:800; width:fit-content;
-  background:rgba(255,255,255,.12); color:#fff;
-  border:1px solid rgba(255,255,255,.24);
-  transition:background .2s, border-color .2s, transform .2s; }
-.sh-start .sh-go{ background:var(--blue); border-color:var(--blue); }
-.sh:hover .sh-go{ transform:translateX(3px); }
-.sh-close:hover .sh-go{ background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.4); }
-
-/* ⚠️ 폰에서는 **위아래로 쌓습니다.** 좌우 반쪽으로 두면 '창업' 두
-   글자가 한 글자씩 세로로 쪼개집니다.
-   ⚠️ 마우스가 없으므로 넓어지는 움직임도 끕니다 (위 미디어쿼리). */
-@media (max-width:860px){
-  .sh-g{ flex-direction:column; min-height:0; }
-  .sh{ flex:0 0 auto; min-height:44vh; }
-  .sh-in{ padding:var(--s9) var(--s6) var(--s8); max-width:none; }
-  .sh-n{ line-height:.96; }
-}
-@media (max-width:520px){
-  .sh{ min-height:0; }
-  .sh-in{ padding:var(--s8) var(--s5) var(--s7); gap:var(--s2); }
-  .sh-d{ font-size:var(--t-sm); }
-  .sh-go{ margin-top:var(--s5); }
-}
-
 /* ════════ 규모감 — 우리가 다루는 범위 ════════════════════════════
    ⚠️ 어두운 히어로 바로 다음이라 **밝아야** 장면이 바뀝니다. 여기를
    어둡게 칠하면 첫 두 화면이 한 덩어리로 읽힙니다.
@@ -133,7 +17,7 @@
 .sec-hd-c{ text-align:center; }
 .scale-h{ font-size:var(--t-sig); font-weight:900;
   line-height:1.16; letter-spacing:var(--tr-head); }
-.scale-h em{ font-style:normal; color:var(--blue); }
+.scale-h em{ font-style:normal; color:var(--start-dark); }
 
 .scale-g{ display:grid; grid-template-columns:repeat(4,1fr);
   gap:var(--s6); margin-top:var(--s9); }
@@ -145,7 +29,7 @@
 /* ⚠️ 숫자 폭을 고정합니다. 기본 글꼴은 1 이 좁아서 칸마다 가운데가
    어긋나 보입니다. */
 .scale-n{ font-size:var(--t-sig); font-weight:900; line-height:1;
-  letter-spacing:-.045em; color:var(--blue);
+  letter-spacing:-.045em; color:var(--navy);
   font-variant-numeric:tabular-nums; }
 .scale-k{ font-size:var(--t-lg); font-weight:800; margin-top:var(--s2); }
 .scale-l{ font-size:var(--t-cap); color:var(--ink3); line-height:1.6; }
@@ -743,35 +627,6 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mk-p{ font-size:var(--t-base); font-weight:700; color:var(--ink); }
 @media (max-width:1040px){ .mk-g{ grid-template-columns:1fr 1fr; } }
 @media (max-width:600px){ .mk-g{ grid-template-columns:1fr; } }
-
-/* ════════ 창업 ↔ 폐업 장면 (§34 · §57) ═══════════════════════════
-   ⚠️ 어두운 구간은 **둘뿐**입니다 — 이 장면과 마지막 CTA. 둘의 색이
-   달라야 "또 같은 띠" 로 안 읽힙니다. */
-.bridge{ position:relative; isolation:isolate; overflow:hidden;
-  background:linear-gradient(160deg, var(--navy-3) 0%, var(--navy-2) 58%, var(--navy) 100%);
-  color:#fff; padding:var(--s11) 0;
-  /* §21 — 어두운 구간의 위 경계에 머리카락 한 올. ⚠️ 굵게 하지
-     마세요. 1px 을 넘으면 그 순간 장식이 됩니다. */
-  border-top:1px solid var(--gold-line); }
-.bridge-glow{ position:absolute; z-index:-1; pointer-events:none;
-  left:50%; top:-10%; width:1000px; height:620px; transform:translateX(-50%);
-  background:radial-gradient(50% 50% at 50% 50%,
-    rgba(27,92,255,.30) 0%, rgba(27,92,255,0) 70%); }
-.bridge-in{ text-align:center; }
-.bridge-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.18em;
-  color:var(--blue-400); margin-bottom:var(--s4); }
-.bridge h2{ font-size:var(--t-sig); font-weight:900; color:#fff;
-  line-height:1.12; letter-spacing:-.04em; }
-.bridge h2 em{ font-style:normal; color:var(--blue-400); }
-.bridge-p{ margin:var(--s5) auto 0; max-width:54ch; font-size:var(--t-lg);
-  color:var(--on-dark); line-height:1.8; }
-.bridge .row-cta{ margin-top:var(--s8); }
-
-/* ════════ 마지막 CTA ═════════════════════════════════════════════ */
-.final{ background:var(--navy); color:#fff; padding:var(--s11) 0; text-align:center; }
-.final h2{ font-size:var(--t-3xl); color:#fff; }
-.final p{ margin-top:var(--s4); font-size:var(--t-lg); color:var(--on-dark); }
-.final .row-cta{ margin-top:var(--s8); }
 
 /* ════════ 도움 카드 · 띠 CTA ═════════════════════════════════════ */
 .help-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s4); }

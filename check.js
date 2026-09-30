@@ -519,7 +519,24 @@ const AUDIT = `(() => {
     if(t.indexOf("만족도") >= 0) bad.push("만족도");
     if(t.indexOf("누적") >= 0) bad.push("누적");
     if(/평점\\s*[0-9]/.test(t)) bad.push("평점");
-    if(/(등록\\s*업체|입점\\s*업체|누적\\s*거래)\\s*[0-9]/.test(t)) bad.push("업체 수");
+    /* ⚠️ 낱말로 막지 않고 **값을 다시 세어** 맞춰 봅니다. "입점 업체
+       n곳" 을 낱말로 금지해 두면, 업체가 실제로 등록된 날 이 검사가
+       거짓으로 걸립니다 — 그때 검사를 끄게 되고 그게 제일 위험합니다. */
+    const want = [
+      (window.AM_PROVIDERS || []).length,
+      (window.AM_FRANCHISES || []).length,
+      (window.AM_STORES || []).length + (window.AM_ASSETS || []).length
+    ];
+    const cell = [].slice.call(document.querySelectorAll(".lst-v"))
+      .map(function(e){ return e.textContent.trim(); });
+    if(cell.length !== 4) return "떠 있는 카드가 " + cell.length + "칸입니다";
+    for(let i = 0; i < 3; i++){
+      const num = (cell[i].match(/[0-9][0-9,]*/) || [null])[0];
+      if(want[i] === 0 && num !== null)
+        bad.push((i+1) + "번째 칸이 0인데 숫자 " + num + " 을 적었습니다");
+      if(want[i] > 0 && parseInt(String(num).replace(/,/g, ""), 10) !== want[i])
+        bad.push((i+1) + "번째 칸이 화면 " + cell[i] + " · 실제 " + want[i] + " 입니다");
+    }
     return bad.length ? bad.join(" · ") + " 가 있습니다" : true;`);
 
   /* ② 업종에 따라 실제로 다른 것이 보이는가 (§59 Q2 · Q3) */
@@ -690,17 +707,19 @@ const AUDIT = `(() => {
      설명 · 검색창 · 숫자를 하나씩 더하다 보면 두 낱말이 조용히
      작아지는데, 그걸 막는 것이 목적입니다. */
   await f("히어로의 주인공이 창업 · 폐업 두 낱말이다", "/", `
-    const n = [].slice.call(document.querySelectorAll(".shero .sh-n"));
+    const n = [].slice.call(document.querySelectorAll(".lh .sh-n"));
     if(n.length !== 2) return "큰 낱말이 " + n.length + "개입니다";
     const t = n.map(function(e){ return e.textContent.trim(); });
     if(t[0] !== "창업" || t[1] !== "폐업") return t.join(" · ") + " 입니다";
     const px = parseFloat(getComputedStyle(n[0]).fontSize);
     if(px < 56) return "글씨가 " + Math.round(px) + "px 입니다 (56px 이상)";
-    const h = document.querySelector(".shero").getBoundingClientRect().height;
-    if(h < innerHeight * 0.6) return "히어로가 " + Math.round(h) + "px 입니다";
+    /* §5 — 데스크톱 최소 620px. 화면 높이 비율로 재면 세로가 긴
+       기계에서 거짓으로 걸립니다. */
+    const h = document.querySelector(".lh").getBoundingClientRect().height;
+    if(h < 560) return "히어로가 " + Math.round(h) + "px 입니다 (620px 기준)";
     return true;`);
   await f("히어로에 지어낸 숫자 · 잔 요소를 더하지 않았다", "/", `
-    const s = document.querySelector(".shero");
+    const s = document.querySelector(".lh");
     const t = s.textContent;
     const pat = [[/\\d[\\d,]*\\s*\\+/, "n+ 꼴"], [/만족도/, "만족도"], [/누적/, "누적"],
                  [/업체\\s*\\d/, "업체 수"], [/\\d+\\s*만\\s*명/, "회원 수"]];
@@ -710,19 +729,42 @@ const AUDIT = `(() => {
     const a = s.querySelectorAll("a");
     if(a.length !== 2) return "누를 곳이 " + a.length + "개입니다 (창업 · 폐업 둘)";
     return true;`);
-  await f("창업과 폐업을 색으로 가르지 않는다", "/", `
-    const v = [".sh-start .sh-v", ".sh-close .sh-v"].map(function(q){
-      const e = document.querySelector(q.split(" ")[0] + " .sh-v");
-      return e ? getComputedStyle(e).backgroundImage + getComputedStyle(e).backgroundColor : ""; });
-    for(const bg of v){
-      const m = bg.match(/rgba?\\((\\d+), ?(\\d+), ?(\\d+)/g) || [];
-      for(const c of m){
-        const p = c.match(/(\\d+), ?(\\d+), ?(\\d+)/);
-        const r = +p[1], g = +p[2], b2 = +p[3];
-        if(r > 150 && g < 90 && b2 < 90) return "빨강이 있습니다 " + c;
-        if(g > 150 && r < 90 && b2 < 120) return "초록이 있습니다 " + c;
-      }
-    }
+  /* ⚠️⚠️ **2026-09-30 지시로 규칙이 뒤집혔습니다.** 전에는 "창업과
+     폐업을 색으로 가르지 않는다" 였습니다 — 빨강/초록으로 나누면
+     "폐업은 나쁜 것" 이 되기 때문입니다. 지시서가 그 걱정을 짚고
+     (§6 "폐업하는 사람을 실패자처럼 표현하지 않는다") **주황**으로
+     정했습니다. 그래서 지금 지키는 것은 —
+       · 창업 쪽은 초록 · 폐업 쪽은 주황
+       · 폐업 쪽이 **빨강으로 흘러가지 않는 것** (그 순간 옛 걱정이
+         그대로 돌아옵니다)
+     입니다. `--close` 를 붉은 쪽으로 옮기면 여기서 걸립니다. */
+  await f("창업은 초록 · 폐업은 주황이고 빨강이 아니다", "/", `
+    const col = function(q){
+      const e = document.querySelector(q);
+      if(!e) return null;
+      const m = getComputedStyle(e).color.match(/(\\d+), ?(\\d+), ?(\\d+)/);
+      return m ? [+m[1], +m[2], +m[3]] : null;
+    };
+    const st = col(".lh-st"), cl = col(".lh-cl");
+    if(!st || !cl) return "히어로의 두 낱말 색을 못 읽습니다";
+    if(!(st[1] > st[0] + 30 && st[1] > st[2] + 20))
+      return "창업 쪽이 초록이 아닙니다 rgb(" + st.join(",") + ")";
+    if(!(cl[0] > cl[1] + 40 && cl[1] > cl[2]))
+      return "폐업 쪽이 주황이 아닙니다 rgb(" + cl.join(",") + ")";
+    /* ⚠️ 주황과 빨강의 경계 — 초록 성분이 확 내려가면 빨강입니다 */
+    if(cl[1] < 55)
+      return "폐업 쪽이 빨강으로 넘어갔습니다 rgb(" + cl.join(",") + ")";
+    /* 단추도 같은 규칙입니다 */
+    const b = function(q){
+      const e = document.querySelector(q);
+      if(!e) return null;
+      const m = getComputedStyle(e).backgroundColor.match(/(\\d+), ?(\\d+), ?(\\d+)/);
+      return m ? [+m[1], +m[2], +m[3]] : null;
+    };
+    const bs = b(".lh-cta .btn-st"), bc = b(".lh-cta .btn-cl");
+    if(!bs || !bc) return "히어로 단추를 못 찾습니다";
+    if(!(bs[1] > bs[0] + 30)) return "창업 단추가 초록이 아닙니다";
+    if(!(bc[0] > bc[1] + 40 && bc[1] >= 55)) return "폐업 단추가 주황이 아닙니다";
     return true;`);
 
   /* ⑨ 규모감 숫자 — **센 값**이어야 합니다
@@ -745,7 +787,10 @@ const AUDIT = `(() => {
         return i + "번째가 화면 " + n[i] + " · 실제 " + want[i] + " 입니다";
     return true;`);
   await f("규모감 숫자가 무엇을 센 값인지 밝힌다", "/", `
-    const s = document.querySelector(".scale");
+    /* scale-b 는 랜딩(ONE STOP 구간 안) · scale 은 /about 입니다.
+       ⚠️ 이 글은 백틱 문자열 안이라 **주석에 백틱을 쓰면** 문자열이
+       거기서 끝나고 검사가 통째로 멈춥니다. 또 그랬습니다. */
+    const s = document.querySelector(".scale-b, .scale");
     if(!s) return "구간이 없습니다";
     const t = s.textContent;
     if(t.indexOf("분야의 수") < 0) return "무엇을 센 값인지 안 밝힙니다";
@@ -781,7 +826,10 @@ const AUDIT = `(() => {
     if(/보장(합니다|해\\s*드립니다)/.test(t))  bad.push("보장합니다");
     if(/최저가|무조건/.test(t))                bad.push("최저가 · 무조건");
     return bad.length ? bad.join(" · ") + " 가 있습니다" : true;`);
-  await f("진행 방법이 세 걸음을 넘지 않는다", "/", `
+  /* ⚠️ 2026-09-30 §23 으로 **랜딩에서 /about 으로 옮겼습니다.**
+     랜딩은 브랜드 소개 화면이고, 진행 방법 · 범위 · FAQ 는 서비스
+     설명이라 소개 화면이 갖습니다. 지운 것이 아닙니다. */
+  await f("진행 방법이 세 걸음을 넘지 않는다", "/about", `
     const n = document.querySelectorAll(".how-i").length;
     if(!n) return "진행 방법 구간이 없습니다";
     if(n > 3) return n + "걸음입니다 — 넷이 되면 절차로 읽힙니다";
@@ -911,14 +959,21 @@ const AUDIT = `(() => {
     const r = +m[1], b = +m[3];
     if(r > b) return "기본 버튼이 파랑이 아닙니다 — " + bg;
     return true;`);
-  await f("메인 통합검색이 실제로 검색으로 간다", "/", `
-    const f2 = document.querySelector(".sb-f");
-    if(!f2) return "검색 구간이 없습니다";
-    if(f2.getAttribute("action") !== "/search") return "form 이 /search 로 안 갑니다";
-    if(!f2.querySelector('input[name="q"]')) return "q 칸이 없습니다";
-    /* ⚠️ 추천 검색어는 **실제로 결과가 나오는 것**만 둡니다. 눌렀는데
-       빈 화면이면 검색이 고장난 것처럼 보입니다. */
-    const tips = [].slice.call(document.querySelectorAll(".sb-t a"));
+  /* ⚠️ 2026-09-30 §23 · §4 — 랜딩에서 대형 검색창을 뺐습니다. 검색은
+     **헤더 아이콘**과 `/search` 입니다. 그래서 두 가지를 봅니다 —
+     랜딩에서 검색으로 가는 길이 있는가, 그리고 추천 검색어가 실제로
+     결과를 내는가. */
+  await f("랜딩에서 검색으로 가는 길이 있다", "/", `
+    const a = document.querySelector('.hd a[href="/search"]');
+    if(!a) return "헤더에 검색으로 가는 링크가 없습니다";
+    const r = a.getBoundingClientRect();
+    if(r.width < 40 || r.height < 40)
+      return "검색 아이콘이 " + Math.round(r.width) + "x" + Math.round(r.height) + " 입니다";
+    return true;`);
+  await f("추천 검색어가 실제로 결과를 낸다", "/search", `
+    /* ⚠️ 눌렀는데 "결과 없음" 이 나오면 검색이 고장난 것처럼 보입니다 */
+    const tips = [].slice.call(document.querySelectorAll(".sr-hint .chip"));
+    if(!tips.length) return "추천 검색어가 없습니다";
     for(const a of tips){
       const q = decodeURIComponent((a.getAttribute("href").split("q=")[1] || ""));
       if(!q) return "추천어에 q 가 없습니다";
@@ -961,9 +1016,102 @@ const AUDIT = `(() => {
     if(/5,?000|1,?200/.test(t)) return "적은 값이 MY 에 그대로 찍힙니다";
     return true;`);
 
-  console.log("\n── 흐름 " + 44 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
-              "접수 4 · MY 3 · 검색 3 · 문서 3 · 메인 히어로 3 · 규모감 2 · FAQ · 진행 3 · " +
-              "정보 글 3 · 글 잇기 2 · 창업 과정 · 폐업 선택 4 · 골드 · 통합검색 3 · MY 도구 2)");
+  /* ⑯ 랜딩이 랜딩으로 남아 있는가 (2026-09-30 §23 · §24 · §2 · §15)
+     ⚠️ 이 넷은 **되돌리기 쉬운 것**만 봅니다. 여태 이 저장소에서
+     제일 자주 벌어진 일이 "메인에 기능을 하나만 더" 였고, 그때마다
+     무엇을 하는 곳인지가 묻혔습니다. */
+  await f("랜딩에 서비스 메인 기능을 끌어오지 않았다", "/", `
+    const v = document.getElementById("view");
+    const bad = [];
+    if(v.querySelectorAll("input,select,textarea").length)
+      bad.push("적는 칸");
+    const lists = [[".pv", "업체 카드"], [".fr", "프랜차이즈 카드"],
+                   [".mk", "매물 카드"], [".tl-c", "계산기 카드"],
+                   [".flt", "거르개"], [".sr-l", "검색 결과"]];
+    for(const q of lists)
+      if(v.querySelector(q[0])) bad.push(q[1]);
+    return bad.length
+      ? bad.join(" · ") + " 가 랜딩에 들어왔습니다 (§23 — 각자 주소에 있습니다)"
+      : true;`);
+  await f("랜딩 구간 차례가 지시서와 같다", "/", `
+    /* §24 의 차례입니다. 늘리거나 섞기 전에 §23 을 먼저 읽으세요. */
+    const want = ["lh","lst","lin","ltwo","lpb","lbr","lcat","ljn","lfin"];
+    const got = [].slice.call(document.querySelectorAll("#view > section"))
+      .map(function(e){ return (e.className || "").split(" ")[0]; });
+    if(got.join(",") !== want.join(","))
+      return "차례가 " + got.join(" → ") + " 입니다";
+    return true;`);
+  await f("어두운 면이 화면의 15% 를 넘지 않는다", "/", `
+    /* ⚠️ §2 — 남색은 12~15% 까지이고, 짙은 색 **전면 배경**은 푸터
+       뿐입니다. 본문에서 어두운 면은 업체 입점 카드(§14)와 창업↔폐업
+       장면의 가운데 칸(§11)까지입니다.
+       ⚠️ 낱개를 세지 않고 **넓이를 재는** 이유는, 카드 한 장이
+       늘어나는 것보다 "구간 하나를 통째로 어둡게" 가 실제 위험이기
+       때문입니다. 어두운 테마로 되돌아가는 것을 여기서 막습니다.
+       푸터는 #view 밖이라 세지 않습니다. */
+    const lum = function(c){
+      const g = function(x){ x /= 255;
+        return x <= .03928 ? x/12.92 : Math.pow((x+.055)/1.055, 2.4); };
+      return .2126*g(c[0]) + .7152*g(c[1]) + .0722*g(c[2]);
+    };
+    const isDark = function(e){
+      const m = getComputedStyle(e).backgroundColor
+        .match(/(\\d+), ?(\\d+), ?(\\d+)(?:, ?([0-9.]+))?/);
+      if(!m) return false;
+      if(m[4] !== undefined && +m[4] < 0.9) return false;
+      return lum([+m[1], +m[2], +m[3]]) < 0.09;
+    };
+    const view = document.getElementById("view");
+    let area = 0;
+    const seen = [];
+    document.querySelectorAll("#view *").forEach(function(e){
+      if(!isDark(e)) return;
+      /* 어두운 칸 안의 어두운 칸은 두 번 세지 않습니다 */
+      for(const p2 of seen) if(p2.contains(e)) return;
+      seen.push(e);
+      const r = e.getBoundingClientRect();
+      area += r.width * r.height;
+    });
+    const total = view.clientWidth * view.scrollHeight;
+    if(!total) return "본문 크기를 못 읽습니다";
+    const pct = area / total * 100;
+    if(pct > 15)
+      return "어두운 면이 " + pct.toFixed(1) + "% 입니다 (15% 까지) — " +
+        seen.map(function(e){ return (e.className || e.tagName).toString().split(" ")[0]; })
+            .slice(0, 4).join(" · ");
+    return true;`);
+  await f("마지막 CTA 가 초록 · 주황 반반이다", "/", `
+    const a = document.querySelector(".lfin-st"), b = document.querySelector(".lfin-cl");
+    if(!a || !b) return "마지막 CTA 두 쪽 중 하나가 없습니다";
+    const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+    /* ⚠️ 폐업 쪽을 좁히면 "덜 중요한 것" 으로 읽힙니다 (§6 · §15) */
+    if(innerWidth > 820 && Math.abs(ra.width - rb.width) > 2)
+      return "좌우 폭이 " + Math.round(ra.width) + " · " + Math.round(rb.width) + " 입니다";
+    const col = function(e){
+      const m = getComputedStyle(e).backgroundColor.match(/(\\d+), ?(\\d+), ?(\\d+)/);
+      return m ? [+m[1], +m[2], +m[3]] : null;
+    };
+    const ca = col(a), cb = col(b);
+    if(!ca || !cb) return "바탕색을 못 읽습니다";
+    if(!(ca[1] > ca[0] + 30 && ca[1] > ca[2] + 20))
+      return "창업 쪽이 초록이 아닙니다 rgb(" + ca.join(",") + ")";
+    if(!(cb[0] > cb[1] + 40 && cb[1] > cb[2]))
+      return "폐업 쪽이 주황이 아닙니다 rgb(" + cb.join(",") + ")";
+    if(cb[1] < 45) return "폐업 쪽이 빨강으로 넘어갔습니다 rgb(" + cb.join(",") + ")";
+    /* 흰 글자를 얹는 자리라 **짙은 쪽**이어야 읽힙니다 */
+    const f2 = function(x){ x /= 255;
+      return x <= .03928 ? x/12.92 : Math.pow((x+.055)/1.055, 2.4); };
+    const L = function(c){ return .2126*f2(c[0]) + .7152*f2(c[1]) + .0722*f2(c[2]); };
+    for(const c of [ca, cb]){
+      const ratio = 1.05 / (L(c) + .05);
+      if(ratio < 3.2) return "흰 글자가 안 읽힙니다 (대비 " + ratio.toFixed(2) + ")";
+    }
+    return true;`);
+
+  console.log("\n── 흐름 " + 49 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
+              "접수 4 · MY 3 · 검색 3 · 문서 3 · 히어로 3 · 규모감 2 · FAQ · 진행 3 · " +
+              "정보 글 3 · 글 잇기 2 · 창업 과정 · 폐업 선택 4 · 골드 2 · 검색 진입 2 · " +
+              "MY 도구 2 · 랜딩 4)");
   if (flowBad.length) { fail++; console.log("  ❌ " + flowBad.length + "건: " + flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 
@@ -984,12 +1132,20 @@ const AUDIT = `(() => {
     const top = Math.round(h.getBoundingClientRect().top);
     window.scrollTo(0, 0);
     return top === 0 || "내렸더니 헤더가 top:" + top + " 로 올라갔습니다";`);
-  await f("헤더가 불투명해서 밑의 글자가 안 비친다", "/", `
+  /* ⚠️ 2026-09-30 §4 가 `rgba(255,255,255,.96)` + `blur(12px)` 을
+     못박았습니다. 전에 반투명 헤더로 글자가 겹쳐 읽힌 적이 있어
+     완전 불투명을 요구하던 검사인데, .96 은 사실상 불투명하고
+     `backdrop-filter` 가 뒤를 흐려 줍니다. 그래서 **.94 미만**과
+     **blur 없음**을 막습니다 — 여기를 더 투명하게 두지 마세요. */
+  await f("헤더가 거의 불투명해서 밑의 글자가 안 비친다", "/", `
     const cs = getComputedStyle(document.querySelector(".hd"));
     const m = cs.backgroundColor.split("(")[1] || "";
     const parts = m.split(")")[0].split(",");
     const a = parts.length > 3 ? parseFloat(parts[3]) : 1;
-    return a >= 0.99 || "헤더 배경이 반투명합니다 (" + cs.backgroundColor + ")";`);
+    if(a < 0.94) return "헤더 배경이 반투명합니다 (" + cs.backgroundColor + ")";
+    if(a < 0.999 && (cs.backdropFilter || cs.webkitBackdropFilter || "").indexOf("blur") < 0)
+      return "반투명인데 blur 가 없습니다 — 밑의 글자가 그대로 비칩니다";
+    return true;`);
 
   /* ⚠️ **카드가 구간 바탕과 같은 색이면 카드가 아닙니다.** 이 저장소는
      카드를 그림자가 아니라 **면**으로 구분합니다 — 흰 구간에서는 옅은
@@ -997,7 +1153,13 @@ const AUDIT = `(() => {
      새 카드를 만들고 빠뜨리면 조용히 사라집니다. 진단 카드(.ckb-c)가
      실제로 그랬습니다. 에러도 안 나고 다른 검사도 전부 통과합니다. */
   await f("카드가 구간 바탕과 같은 색이 아니다", "/", `
-    const sel = ".cat,.ind,.pv,.fr,.fc,.mk,.help,.sp,.empty";
+    /* ⚠️ 새 카드를 만들면 여기 넣으세요 — 빠뜨리면 구간 바탕과 같은
+       색이 되어도 조용히 통과합니다.
+       ⚠️ lsc-i 는 넣지 않습니다. 그 카드가 앉는 면은 구간이 아니라
+       **그라디언트 큰 카드**라서, 구간 배경과 비교하면 거짓으로
+       걸립니다. */
+    const sel = ".cat,.ind,.pv,.fr,.fc,.mk,.help,.sp,.empty," +
+                ".lst-c,.lcc,.lpb-i,.lbr-c";
     const bad = [];
     [...document.querySelectorAll(sel)].forEach(el => {
       let sec = el.closest("section"); if(!sec) return;
@@ -1117,6 +1279,7 @@ const AUDIT = `(() => {
      `; echo EXIT=${PIPESTATUS[0]}` 을 붙이세요. */
   const m = (err && err.message) ? err.message : String(err);
   console.error("\n❌ 검사를 끝내지 못했습니다 — " + m);
+  if(err && err.stack) console.error(err.stack);
   if (m.indexOf("closed") >= 0)
     console.error("   브라우저가 도중에 닫혔습니다. 대개 메모리가 모자란 것입니다 —" +
                   " 다시 돌려 보시고, 계속 그러면 VIEWS 를 줄여서 나눠 돌리세요.");

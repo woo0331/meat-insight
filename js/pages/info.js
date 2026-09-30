@@ -110,6 +110,134 @@ function PageContent(c){
   '</div></section>';
 }
 
+
+/* ════════════════════════════════════════════════════════════════════
+   플랫폼 소개 (/about) 에 붙는 구간 넷
+
+   ⚠️ **이 넷은 원래 메인에 있었습니다.** 2026-09-30 지시서 §23 이
+   "랜딩과 실제 서비스 메인을 분리한다" 고 정해서 여기로 옮겼습니다 —
+   지운 것이 아닙니다. 랜딩(§24 차례)에 다시 끌어오지 마세요.
+
+   ⚠️ **`check.js` 가 이 넷을 `/about` 에서 봅니다.** 여기서 빼면
+   "규모감 숫자가 센 값이다" · "진행이 세 걸음" · "화면과 구조화
+   데이터가 같다" 검사가 같이 무너집니다.
+   ════════════════════════════════════════════════════════════════════ */
+function TrustBar(){
+  var rows = [
+    ["won",   "찾고 비교하는 것은 무료",   "상담료를 받지 않습니다"],
+    ["scale", "추천 · 광고는 그렇다고 표시합니다", "일반 결과는 조건 적합도 순입니다"],
+    ["shield","중개자이고 거래 당사자가 아닙니다", "계약은 업체와 직접 하십니다"],
+    ["map",   "전국 시 · 군 · 구 기준",     "지역이 맞아야 견적이 뜻이 있습니다"]
+  ];
+  return '<section class="tbar"><div class="w tbar-g">'+
+    rows.map(function(r){
+      return '<div class="tbar-i">'+icon(r[0],20)+
+        '<span><b>'+esc(r[1])+'</b><em>'+esc(r[2])+'</em></span></div>';
+    }).join("")+
+  '</div></section>';
+}
+
+function ScaleBand(){
+  var ind = (window.AM_INDUSTRIES || []).length;
+  var st  = (window.AM_START_CATS || []).length;
+  var cl  = (window.AM_CLOSE_CATS || []).length;
+  var sub = (window.AM_CATS || []).reduce(function(a, c){
+    return a + ((c.items || []).length); }, 0);
+
+  /* ⚠️ 데이터가 비면 이 구간을 통째로 뺍니다 (절대 규칙 2).
+     "0개 분야" 는 규모감이 아니라 미완성 표시입니다. */
+  if(!ind || !st || !cl || !sub) return "";
+
+  var n = [
+    [ind, "업종",        "음식점부터 사무 · 전문서비스까지"],
+    [st,  "창업 분야",   "점포 · 인테리어 · 장비 · 인허가 · 자금"],
+    [cl,  "폐업 분야",   "양도 · 처분 · 철거 · 원상복구 · 세무"],
+    [sub, "세부 서비스", "업종을 고르시면 필요한 것만 추려 드립니다"]
+  ];
+  return '<section class="scale"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">우리가 다루는 범위</p>'+
+      '<h2 class="scale-h">가게 하나를 열고 닫는 데<br class="br-m"> '+
+        '필요한 것은 <em>생각보다 많습니다.</em></h2>'+
+    '</div>'+
+    '<ul class="scale-g">'+ n.map(function(x){
+      /* ⚠️ grid 칸에 맨글을 두지 않습니다 — 태그로 감쌉니다. */
+      return '<li class="scale-i">'+
+        '<b class="scale-n">'+x[0]+'</b>'+
+        '<span class="scale-k">'+esc(x[1])+'</span>'+
+        '<span class="scale-l">'+esc(x[2])+'</span>'+
+      '</li>';
+    }).join("")+'</ul>'+
+    /* ⚠️ 이 줄을 지우지 마세요. 숫자만 크게 띄우면 "업체가 183곳" 으로
+       읽힙니다. 무엇을 센 값인지 밝혀야 합니다. */
+    '<p class="scale-n-b">이 숫자는 저희가 다루는 <b>분야의 수</b>입니다. '+
+      '등록된 업체 수나 거래 실적이 아닙니다.</p>'+
+  '</div></section>';
+}
+
+function HowBand(){
+  var step = [
+    ["01", "조건을 고릅니다",
+     "업종 · 지역 · 필요한 서비스. 가입하지 않으셔도 됩니다.",
+     "sliders"],
+    ["02", "한 번만 적어 보냅니다",
+     "같은 내용을 업체마다 다시 적지 않으셔도 됩니다. "+
+     "조건이 맞는 곳에 같이 전달합니다.",
+     "mail"],
+    ["03", "받으신 제안을 나란히 놓습니다",
+     "금액만 보면 틀립니다. 무엇이 포함됐는지가 같아야 비교가 뜻을 "+
+     "가집니다 — 그 자리를 만들어 드립니다.",
+     "scale"]
+  ];
+  return '<section class="sec"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">어떻게 진행되나</p>'+
+      '<h2>업체를 찾아 전화를 돌리는 대신,<br class="br-m"> '+
+        '한 번만 적으시면 됩니다.</h2>'+
+    '</div>'+
+    '<ol class="how-g">'+ step.map(function(x){
+      return '<li class="how-i">'+
+        '<span class="how-n">'+esc(x[0])+'</span>'+
+        '<span class="how-ic">'+icon(x[3],22)+'</span>'+
+        '<b class="how-t">'+esc(x[1])+'</b>'+
+        '<span class="how-d">'+esc(x[2])+'</span>'+
+      '</li>';
+    }).join("")+'</ol>'+
+    '<div class="row-cta"><a class="btn btn-b btn-lg" href="/quote">'+
+      '견적 요청하기'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-o btn-lg" href="/providers">업체 먼저 둘러보기</a></div>'+
+  '</div></section>';
+}
+
+function FaqBand(){
+  var all = (window.amFaq ? amFaq() : []);
+  if(!all.length) return "";
+  /* ⚠️ 메인에는 **여섯까지**입니다. 열을 다 펴 두었더니 이 구간 하나가
+     2,162px 이 되어 메인에서 제일 긴 구간이 됐습니다. 나머지는 /faq
+     에서 봅니다 — 숨기는 것이 아니라 옮기는 것이고, 단추가 바로
+     아래 있습니다. */
+  var f = all.slice(0, 6);
+  return '<section class="sec sec-white"><div class="w w-narrow">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">자주 묻는 것</p>'+
+      '<h2>먼저 궁금해하시는 것들</h2>'+
+    '</div>'+
+    '<ul class="faq-l">'+ f.map(function(x, i){
+      /* ⚠️ `<details>` 를 쓰지 않은 이유는 접힌 글을 검색엔진이
+         낮춰 볼 수 있어서입니다. 여기서는 처음부터 펴 둡니다 —
+         답이 짧아서 접을 이유도 없습니다. */
+      return '<li class="faq-i">'+
+        '<b class="faq-q">'+esc(x.q)+'</b>'+
+        '<p class="faq-a">'+esc(x.a)+'</p>'+
+      '</li>';
+    }).join("")+'</ul>'+
+    (all.length > f.length
+      ? '<div class="row-cta row-mid"><a class="btn btn-o" href="/faq">'+
+        '자주 묻는 것 전부 보기'+icon("arrow",16)+'</a></div>'
+      : "")+
+  '</div></section>';
+}
+
 function PageAbout(){
   var B = window.AM_BRAND || {};
   var yes = [
@@ -137,6 +265,10 @@ function PageAbout(){
     '<div><h2>하지 않는 일</h2><ul class="tick-l tick-x">'+no.map(function(t){
       return '<li>'+icon("x",16)+'<span>'+esc(t)+'</span></li>'; }).join("")+'</ul></div>'+
   '</div></section>'+
+  TrustBar()+
+  ScaleBand()+
+  HowBand()+
+  FaqBand()+
   '<section class="sec"><div class="w"><p class="note note-box">'+
     esc(B.name||"")+'은 통신판매중개자이며 입점 업체와 이용자 사이의 거래 당사자가 '+
     '아닙니다 (전자상거래법 제20조 제1항). 상품 · 서비스 · 거래 조건에 대한 책임은 '+

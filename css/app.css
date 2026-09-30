@@ -34,9 +34,11 @@ ul,ol{ list-style:none; }
    따로 먹여서, 색만 정하면 더 흐려집니다. */
 input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 
-.w{ width:100%; max-width:var(--w); margin:0 auto; padding:0 var(--s6); }
-.w-wide{ width:100%; max-width:var(--w-wide); margin:0 auto; padding:0 var(--s6); }
-@media (max-width:640px){ .w,.w-wide{ padding:0 var(--s4); } }
+/* §3 — 콘텐츠 1280 · 좌우 32px. 폰에서는 `--pad` 가 20px 로 내려갑니다.
+   ⚠️ 좌우 여백을 여기서만 정합니다. 화면 CSS 에 또 적으면 구간마다
+   왼쪽 줄이 어긋나고, 그건 스크롤하면서 눈에 걸립니다. */
+.w{ width:100%; max-width:var(--w); margin:0 auto; padding:0 var(--pad); }
+.w-wide{ width:100%; max-width:var(--w-wide); margin:0 auto; padding:0 var(--pad); }
 
 /* 눈에는 안 보이지만 읽어 주는 프로그램과 크롤러에게는 보이는 글.
    ⚠️ `display:none` 으로 숨기지 마세요 — 그러면 크롤러가 값을 낮춰
@@ -62,24 +64,29 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
    높이가 헤더 높이와 같아서, 이게 없으면 `position:sticky` 가 적혀
    있어도 안 붙습니다. 맨 위에서는 멀쩡해 보이고 에러도 안 납니다. */
 #chrome-t{ display:contents; }
-.hd{ position:sticky; top:0; z-index:50; background:var(--surface);
-  border-bottom:1px solid var(--line); }
-/* ⚠️ 반투명 헤더로 두지 마세요. `backdrop-filter` 는 뒤를 흐릴 뿐
-   지우지 않아서, 밑으로 지나가는 글자가 메뉴와 겹쳐 읽힙니다. */
+/* §4 — **흰 헤더입니다.** 어두운 헤더로 되돌리지 마세요.
+   ⚠️ 투명도는 .96 까지입니다. 더 투명하게 두면 `backdrop-filter` 가
+   뒤를 흐릴 뿐 지우지 않아서, 밑으로 지나가는 글자가 메뉴와 겹쳐
+   읽힙니다 — 한 번 겪었습니다. */
+.hd{ position:sticky; top:0; z-index:50;
+  background:rgba(255,255,255,.96); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line-soft); }
 .sc .hd{ box-shadow:0 1px 0 var(--line), 0 6px 20px -14px rgba(15,27,45,.35); }
-.hd-in{ display:flex; align-items:center; gap:var(--s7); height:var(--hdr-h); }
+.hd-in{ display:flex; align-items:center; gap:var(--s6); height:var(--hdr-h); }
 
 .lg{ display:flex; flex-direction:column; justify-content:center; flex:none;
   min-height:44px; line-height:1.15; }
 .lg b{ font-size:var(--t-lg); font-weight:900; letter-spacing:-.03em; color:var(--ink); }
-.lg span{ font-size:var(--t-cap); color:var(--ink3); margin-top:1px; }
-.lg-ft b{ color:var(--ink); }
+.lg span{ font-size:var(--t-cap); color:var(--ink3); margin-top:1px;
+  white-space:nowrap; }
+.lg-ft b{ color:#fff; }
 
-.gnb{ display:flex; gap:var(--s6); flex:1 1 auto; min-width:0; }
+.gnb{ display:flex; gap:var(--s5); flex:1 1 auto; min-width:0;
+  justify-content:center; }
 .gnb a{ display:inline-flex; align-items:center; min-height:40px;
-  font-size:var(--t-md); font-weight:700; color:var(--ink2); white-space:nowrap; }
+  font-size:var(--t-sm); font-weight:700; color:var(--ink2); white-space:nowrap; }
 .gnb a:hover{ color:var(--ink); }
-.gnb a.on{ color:var(--blue); }
+.gnb a.on{ color:var(--navy); }
 
 .hd-r{ display:flex; align-items:center; gap:var(--s4); flex:none; }
 .hd-ic{ display:inline-flex; align-items:center; justify-content:center;
@@ -87,13 +94,21 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .hd-ic:hover{ background:var(--bg-2); color:var(--ink); }
 .hd-txt{ display:inline-flex; align-items:center; min-height:40px;
   font-size:var(--t-sm); font-weight:700; color:var(--ink2); }
-.hd-cta{ min-height:42px; padding:0 var(--s5); font-size:var(--t-sm); }
+/* §4 — 입점 단추만 남색 채움입니다. 이것 하나만 채워야 어디를
+   눌러야 하는지가 한눈에 보입니다. */
+.hd-cta{ min-height:42px; padding:0 var(--s5); font-size:var(--t-sm);
+  background:var(--navy); border-color:var(--navy); color:#fff; }
+.hd-cta:hover{ background:var(--navy-dark); border-color:var(--navy-dark); }
 
-@media (max-width:1080px){ .hd-in{ gap:var(--s5); } .gnb{ gap:var(--s4); } }
+@media (max-width:1180px){ .hd-in{ gap:var(--s5); } .gnb{ gap:var(--s4); } }
+@media (max-width:1040px){ .lg span{ display:none; } .gnb{ gap:var(--s3); } }
+/* §22 — 폰에서는 헤더를 단순하게. 메뉴는 아래 네비가 맡습니다.
+   ⚠️ **입점 CTA 는 폰에서도 둡니다** (§39). 업체가 모이지 않으면 이
+   플랫폼은 아무것도 아니고, 업체 사장님도 폰으로 들어옵니다. */
 @media (max-width:900px){
   .gnb, .hd-txt{ display:none; }
-  .hd-in{ justify-content:space-between; }
-  .hd-cta{ display:none; }
+  .hd-in{ justify-content:space-between; gap:var(--s3); }
+  .hd-cta{ min-height:40px; padding:0 var(--s4); }
 }
 
 /* ── 아래 네비 (폰) ─────────────────────────────────────────────── */
@@ -120,7 +135,8 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .btn{ display:inline-flex; align-items:center; justify-content:center; gap:var(--s2);
   min-height:var(--tap); padding:0 var(--s6); border-radius:var(--r-in);
   font-size:var(--t-base); font-weight:700; border:1px solid transparent;
-  cursor:pointer; transition:background .15s, border-color .15s, transform .12s; }
+  cursor:pointer;
+  transition:background .2s, border-color .2s, transform .2s, box-shadow .2s; }
 .btn:active{ transform:translateY(1px); }
 .btn-b{ background:var(--blue); color:#fff; }
 .btn-b:hover{ background:var(--blue-600); }
@@ -130,7 +146,23 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .btn-w{ background:#fff; color:var(--ink); }
 .btn-gh{ background:transparent; color:#fff; border-color:rgba(255,255,255,.34); }
 .btn-gh:hover{ border-color:#fff; }
+/* §5 — 창업 초록 · 폐업 주황. 두 단추는 **같은 크기**입니다. */
+.btn-st{ background:var(--start); color:#fff; border-color:var(--start); }
+.btn-st:hover{ background:var(--start-dark); border-color:var(--start-dark); }
+.btn-cl{ background:var(--close); color:#fff; border-color:var(--close); }
+.btn-cl:hover{ background:var(--close-dark); border-color:var(--close-dark); }
+.btn-nv{ background:var(--navy); color:#fff; border-color:var(--navy); }
+.btn-nv:hover{ background:var(--navy-dark); border-color:var(--navy-dark); }
 .btn-lg{ min-height:56px; padding:0 var(--s7); font-size:var(--t-lg); }
+/* §5 hover — 2px 들리고 그림자. ⚠️ 크기를 키우지 마세요(zoom 금지 §21) */
+@media (hover:hover){
+  .btn-st:hover, .btn-cl:hover, .btn-nv:hover, .btn-b:hover{
+    transform:translateY(-2px); box-shadow:var(--shadow-btn); }
+}
+@media (prefers-reduced-motion: reduce){
+  .btn-st:hover, .btn-cl:hover, .btn-nv:hover, .btn-b:hover{
+    transform:none; box-shadow:none; }
+}
 .btn-full{ display:flex; width:100%; }
 .row-cta{ display:flex; gap:var(--s3); flex-wrap:wrap; }
 .row-mid{ justify-content:center; }
@@ -140,7 +172,7 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 /* ── 구간 ────────────────────────────────────────────────────────
    ⚠️ 같은 바탕이 두 번 이어지면 두 구간이 한 구간으로 읽힙니다.
    `.sec` 와 `.sec-white` 를 번갈아 씁니다. */
-.sec{ padding:var(--s10) 0; }
+.sec{ padding:var(--sec-y) 0; }
 .sec-white{ background:var(--surface); }
 .sec-hd{ margin-bottom:var(--s8); position:relative; }
 .sec-hd h2{ font-size:var(--t-3xl); }
@@ -220,21 +252,26 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 .notice-bad{ color:#7A1F1F; } .notice-ok{ color:#0B5E42; }
 
 /* ── 푸터 ────────────────────────────────────────────────────────── */
-.ft{ background:var(--bg-2); border-top:1px solid var(--line);
-  padding:var(--s10) 0 var(--s7); font-size:var(--t-base); }
+/* §16 — 짙은 남색을 **넓게 쓰는 자리는 푸터뿐입니다** (§2 · §26).
+   ⚠️ 다른 구간을 이 색으로 칠하지 마세요. 밝은 화면이 목적이고,
+   `check.js` 가 큰 칸의 배경에서 짙은 남색을 셉니다. */
+.ft{ background:var(--navy-dark); color:var(--on-dark);
+  padding:var(--sec-y) 0 var(--s7); font-size:var(--t-base); }
 /* ⚠️ 칸 수를 묶음 수에 맞추세요. `repeat(4,1fr)` 로 두고 묶음을
    다섯으로 늘리면 다섯째가 다음 줄로 혼자 떨어집니다. */
 .ft-g{ display:grid; grid-template-columns:1.4fr repeat(5,1fr); gap:var(--s6); }
-.ft-b p{ margin:var(--s4) 0 var(--s5); line-height:1.8; color:var(--ink2);
+.ft-b p{ margin:var(--s4) 0 var(--s5); line-height:1.8; color:var(--on-dark-2);
   font-size:var(--t-sm); }
-.ft-col h4{ font-size:var(--t-base); margin-bottom:var(--s3); }
+.ft .btn-o{ background:transparent; color:#fff; border-color:rgba(255,255,255,.34); }
+.ft .btn-o:hover{ border-color:#fff; }
+.ft-col h4{ font-size:var(--t-base); margin-bottom:var(--s3); color:#fff; }
 .ft-col a{ display:inline-flex; align-items:center; min-height:40px;
-  color:var(--ink2); font-size:var(--t-sm); }
-.ft-col a:hover{ color:var(--blue); }
+  color:var(--on-dark); font-size:var(--t-sm); }
+.ft-col a:hover{ color:#fff; }
 .ft-role{ margin-top:var(--s8); padding-top:var(--s5);
-  border-top:1px solid var(--line); font-size:var(--t-sm);
-  color:var(--ink2); line-height:1.8; }
-.ft-biz{ margin-top:var(--s4); font-size:var(--t-cap); color:var(--ink3);
+  border-top:1px solid rgba(255,255,255,.14); font-size:var(--t-sm);
+  color:var(--on-dark-2); line-height:1.8; }
+.ft-biz{ margin-top:var(--s4); font-size:var(--t-cap); color:var(--on-dark-2);
   display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5); }
 .ft-cp{ flex-basis:100%; margin-top:var(--s2); }
 @media (max-width:900px){

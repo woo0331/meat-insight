@@ -1,6 +1,6 @@
 {
-  "name": "시작과 정리 — 창업 · 폐업 전문 플랫폼",
-  "short_name": "시작과 정리",
+  "name": "ABOUTMEAT — 창업 · 폐업 전문 플랫폼",
+  "short_name": "ABOUTMEAT",
   "description": "창업에 필요한 모든 것, 폐업에 필요한 모든 것. 업종과 지역만 고르시면 필요한 전문업체를 찾고 비교하고 견적받으실 수 있습니다.",
   "lang": "ko",
   "start_url": "/",
@@ -34,9 +34,25 @@
     }
   ],
   "shortcuts": [
-    { "name": "창업 시작하기", "short_name": "창업", "url": "/startup" },
-    { "name": "폐업 시작하기", "short_name": "폐업", "url": "/closure" },
-    { "name": "업체찾기",     "short_name": "업체", "url": "/providers" },
-    { "name": "견적 요청",     "short_name": "견적", "url": "/quote" }
+    {
+      "name": "창업 시작하기",
+      "short_name": "창업",
+      "url": "/startup"
+    },
+    {
+      "name": "폐업 시작하기",
+      "short_name": "폐업",
+      "url": "/closure"
+    },
+    {
+      "name": "업체찾기",
+      "short_name": "업체",
+      "url": "/providers"
+    },
+    {
+      "name": "견적 요청",
+      "short_name": "견적",
+      "url": "/quote"
+    }
   ]
 }

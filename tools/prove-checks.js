@@ -53,6 +53,16 @@ const CASES = [
   ["자산 타일이 세로로 길쭉하지 않다",
    `document.querySelectorAll(".lbr-as-g > li")
       .forEach(function(e){ e.style.height = "320px"; });`],
+  ["허브 두 갈래 카드의 분야 수가 센 값이다",
+   `document.querySelector(".hs-st .hs-more i").textContent = "40개 분야";`],
+  ["허브 두 갈래 카드의 크기가 같다",
+   `document.querySelector(".hs-cl").style.width = "60%";`],
+  ["메인 구간 차례가 지시서와 같다",
+   `const v = document.getElementById("view");
+    v.insertBefore(v.children[3], v.children[1]);`],
+  ["이웃한 두 구간이 붙어 보이지 않는다",
+   `document.querySelectorAll("#view > section")[7]
+      .style.background = "#EAF8F3";`],
   ["규모감 숫자가 손으로 쓴 값이 아니라 센 값이다",
    `document.querySelectorAll(".scale-n")[3].textContent = "500";`],
   ["규모감 숫자가 무엇을 센 값인지 밝힌다",
@@ -88,7 +98,48 @@ const CASES = [
       getComputedStyle(document.querySelector(".lin")).backgroundColor;`]
 ];
 
+/* ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ 먼저: **검사 본문에서 백슬래시가 먹었는지** 봅니다.
+
+   검사 본문은 백틱 문자열입니다. `\\d` 라고 두 겹으로 적어야 실행될 때
+   `\d` 가 됩니다. 한 겹으로 적으면 템플릿 문자열이 먹어서 그냥 `d` 가
+   되고, 정규식이 아무것도 못 맞혀서 **검사가 영원히 통과합니다.**
+
+   이 저장소에서 **네 번** 당했습니다. 화면도 멀쩡하고 문법도 멀쩡하고
+   `node --check` 도 통과합니다 — 그냥 아무것도 안 잡을 뿐입니다.
+   그래서 돌릴 때마다 먼저 봅니다.
+   ══════════════════════════════════════════════════════════════════ */
+function proveEscapes(){
+  /* ⚠️ **탐지기 자신이 같은 함정에 빠지면 안 됩니다.** 정규식으로 찾으면
+     그 정규식의 백슬래시도 먹힐 수 있고, 실제로 `function(w)` 의 `(w)` 를
+     오탐으로 잡았습니다. 그래서 **글자 그대로** 비교합니다 —
+     `(d+)` · `/s+/` 같은 꼴은 정상 코드에 거의 안 나옵니다. */
+  const EATEN = ["(d+)", "(s+)", "(w+)", "(D+)", "(S+)", "(W+)",
+                 "/d+/", "/s+/", "/w+/", "/d/", "/s/", "/w/",
+                 "[^>]*", "replace(/s", "split(/s", "match(/d"];
+  const SAFE = ["[^>]*"];   /* HTML 태그 지우기 — 이건 정상입니다 */
+  const bad = [];
+  const re = /await f\("([^"]+)",\s*"([^"]+)",\s*`([\s\S]*?)`\);/g;
+  let m;
+  while((m = re.exec(src))){
+    let body;
+    try { body = eval("`" + m[3] + "`"); } catch(e){ continue; }
+    const hit = EATEN.filter(function(x){
+      return SAFE.indexOf(x) < 0 && body.indexOf(x) >= 0; });
+    if(hit.length) bad.push(m[1] + "   — " + hit.join(" "));
+  }
+  if(bad.length){
+    console.log("\n❌ 검사 본문에서 백슬래시가 먹었습니다:");
+    bad.forEach(function(n){ console.log("   · " + n); });
+    console.log("   두 겹으로 적으세요. 이 검사들은 아무것도 안 잡습니다.\n");
+    return false;
+  }
+  console.log("✅ 검사 본문의 정규식이 전부 살아 있습니다 (백슬래시 안 먹음)");
+  return true;
+}
+
 (async()=>{
+  if(!proveEscapes()) process.exit(1);
   await new Promise(r=>srv.listen(PORT,r));
   const b = await chromium.launch();
   const pg = await (await b.newContext({viewport:{width:1440,height:900}})).newPage();

@@ -37,7 +37,7 @@ window.AM_START_CATS = [
       { key:"takeover",    name:"기존 매장 인수", to:"/stores" }
     ]},
 
-  { key:"store", name:"점포 · 상가", icon:"key", tone:"t2", kind:"listing",
+  { key:"store", name:"점포 · 상가", icon:"pin", tone:"t2", kind:"listing",
     lead:"자리를 정합니다",
     desc:"지역 · 업종 · 평수 · 보증금 · 월세 · 권리금으로 찾습니다.",
     to:"/stores",
@@ -63,7 +63,7 @@ window.AM_START_CATS = [
       { key:"site-consult",name:"입지 상담", kind:"provider" }
     ]},
 
-  { key:"interior", name:"인테리어 · 시공", icon:"hammer", tone:"t4", kind:"provider",
+  { key:"interior", name:"인테리어 · 시공", icon:"roller", tone:"t4", kind:"provider",
     lead:"가게를 만듭니다",
     desc:"지역 · 업종 · 평수 · 예산으로 업체를 비교하고 견적을 받습니다.",
     items:[
@@ -104,7 +104,7 @@ window.AM_START_CATS = [
       { key:"e-menu",    name:"전자메뉴판" },  { key:"security",name:"보안" }
     ]},
 
-  { key:"supply", name:"운영 공급업체", icon:"truck", tone:"t2", kind:"provider",
+  { key:"supply", name:"운영 공급업체", icon:"pkgck", tone:"t2", kind:"provider",
     lead:"매일 들어오는 것",
     desc:"거래처를 새로 뚫거나 바꾸실 때 조건을 비교합니다.",
     items:[
@@ -115,7 +115,7 @@ window.AM_START_CATS = [
       { key:"cleaning-sup",name:"청소용품" }
     ]},
 
-  { key:"admin", name:"행정 · 전문가", icon:"shield", tone:"t7", kind:"provider",
+  { key:"admin", name:"행정 · 전문가", icon:"briefcase", tone:"t7", kind:"provider",
     lead:"서류와 자격",
     desc:"지역 · 전문분야 · 상담 가능 여부로 전문가를 찾습니다.",
     items:[
@@ -150,7 +150,7 @@ window.AM_START_CATS = [
       { key:"open-mkt", name:"오픈 마케팅" }
     ]},
 
-  { key:"clean", name:"청소 · 방역 · 유지관리", icon:"broom", tone:"t2", kind:"provider",
+  { key:"clean", name:"청소 · 방역 · 유지관리", icon:"sparkle", tone:"t2", kind:"provider",
     lead:"열기 전과 연 다음",
     desc:"입주청소부터 정기 관리까지 맡길 곳을 찾습니다.",
     items:[
@@ -160,7 +160,7 @@ window.AM_START_CATS = [
       { key:"facility", name:"시설관리" }
     ]},
 
-  { key:"fund", name:"자금 · 정부지원", icon:"won", tone:"t5", kind:"info",
+  { key:"fund", name:"자금 · 정부지원", icon:"wallet", tone:"t5", kind:"info",
     lead:"돈이 드는 일이니까",
     desc:"창업자금과 정책자금 정보를 모아 둡니다.",
     to:"/support",
@@ -174,7 +174,7 @@ window.AM_START_CATS = [
 
 /* ── CLOSE · 폐업에 필요한 모든 것 ──────────────────────────────── */
 window.AM_CLOSE_CATS = [
-  { key:"process", name:"폐업 절차", icon:"list", tone:"t7", kind:"info",
+  { key:"process", name:"폐업 절차", icon:"listck", tone:"t7", kind:"info",
     lead:"무엇부터 해야 하는지",
     desc:"순서 · 필요서류 · 예상되는 비용 · 기한을 정리합니다.",
     items:[
@@ -183,7 +183,7 @@ window.AM_CLOSE_CATS = [
       { key:"schedule",  name:"일정관리" },        { key:"expert",  name:"관련 전문가" }
     ]},
 
-  { key:"transfer", name:"매장 양도", icon:"key", tone:"t1", kind:"listing",
+  { key:"transfer", name:"매장 양도", icon:"store", tone:"t1", kind:"listing",
     lead:"가게를 통째로 넘기기",
     desc:"점포 · 권리금 · 시설을 포함해 넘기실 수 있습니다.",
     to:"/stores",
@@ -193,7 +193,7 @@ window.AM_CLOSE_CATS = [
       { key:"fc-transfer",   name:"프랜차이즈 매장 양도" }
     ]},
 
-  { key:"asset", name:"시설 · 집기 처분", icon:"box", tone:"t3", kind:"listing",
+  { key:"asset", name:"시설 · 집기 처분", icon:"sofa", tone:"t3", kind:"listing",
     lead:"쓰던 장비와 집기",
     desc:"개별 판매 · 일괄 판매 · 시설 전체 인수까지 됩니다.",
     to:"/assets",
@@ -205,7 +205,7 @@ window.AM_CLOSE_CATS = [
       { key:"biz-eq",    name:"업소용 장비" }
     ]},
 
-  { key:"stock", name:"재고 처분", icon:"layers", tone:"t2", kind:"listing",
+  { key:"stock", name:"재고 처분", icon:"boxes", tone:"t2", kind:"listing",
     lead:"남은 것",
     desc:"식자재 · 상품 · 포장재 · 소모품을 업종별로 내놓습니다.",
     to:"/assets",
@@ -224,7 +224,7 @@ window.AM_CLOSE_CATS = [
       { key:"facility", name:"시설철거" },  { key:"waste",   name:"폐기물" }
     ]},
 
-  { key:"restore", name:"원상복구", icon:"refresh", tone:"t5", kind:"provider",
+  { key:"restore", name:"원상복구", icon:"roller", tone:"t5", kind:"provider",
     lead:"임대차가 끝나기 전에",
     desc:"어디까지 복구해야 하는지부터 확인하고 견적을 받습니다.",
     items:[
@@ -243,7 +243,7 @@ window.AM_CLOSE_CATS = [
       { key:"biz-eq",    name:"업소용 장비" },   { key:"recycle", name:"재활용품" }
     ]},
 
-  { key:"tax", name:"폐업 세무 · 행정", icon:"doc", tone:"t7", kind:"provider",
+  { key:"tax", name:"폐업 세무 · 행정", icon:"calc", tone:"t7", kind:"provider",
     lead:"신고하고 정리하는 일",
     desc:"기한을 놓치면 가산세가 붙습니다. 전문가와 확인하세요.",
     items:[
@@ -261,7 +261,7 @@ window.AM_CLOSE_CATS = [
       { key:"consult",  name:"노무상담" }
     ]},
 
-  { key:"contract", name:"계약 해지", icon:"x", tone:"t4", kind:"provider",
+  { key:"contract", name:"계약 해지", icon:"filex", tone:"t4", kind:"provider",
     lead:"묶여 있는 것들",
     desc:"약정 기간이 남아 있으면 위약금이 생깁니다. 먼저 확인하세요.",
     items:[
@@ -281,7 +281,7 @@ window.AM_CLOSE_CATS = [
       { key:"consult",  name:"법률상담" }
     ]},
 
-  { key:"support", name:"폐업지원", icon:"badge", tone:"t2", kind:"info",
+  { key:"support", name:"폐업지원", icon:"coins", tone:"t2", kind:"info",
     lead:"받을 수 있는 것",
     desc:"철거비 지원처럼 조건만 맞으면 받는 것이 있습니다.",
     to:"/support",

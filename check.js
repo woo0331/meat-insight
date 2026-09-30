@@ -43,6 +43,10 @@ const ROOT = "http://127.0.0.1:" + PORT;
 
 const PAGES = [
   ["/",                  "메인 — 두 선택"],
+  /* ⚠️⚠️ **여기 빠져 있었습니다.** 랜딩 CTA 가 도착하는 화면인데도
+     PAGES 에 없어서 아무 검사도 안 받고 있었고, 크롤러 본문이 95자로
+     나가는 것도 못 잡았습니다. 화면을 만들면 여기 넣으세요. */
+  ["/home",              "서비스 메인 — 실제로 쓰는 화면"],
   ["/startup",           "창업 진입 (업종 고르기)"],
   /* 업종 열넷을 다 넣으면 검사가 한참 길어집니다. **짜임새가 서로 다른
      것**을 고릅니다 — 장비가 제일 많은 것(cafe), 재고가 도는 것
@@ -1250,6 +1254,96 @@ const AUDIT = `(() => {
     if(k > 1.5)
       return "타일이 " + Math.round(r.width) + "×" + Math.round(r.height) +
         "입니다 (높이/폭 " + k.toFixed(2) + ", 1.5 까지)";
+    return true;`);
+  await f("허브 두 갈래 카드의 분야 수가 센 값이다", "/home", `
+    /* ⚠️ 분야 수를 손으로 적으면 분류를 늘렸을 때 그 자리만 옛 숫자로
+       남습니다 — 데이터에서 다시 세어 맞춰 봅니다.
+       ⚠️ 대표로 보여 주는 여섯도 **실제 분류 이름**이어야 합니다. */
+    const pair = [
+      [".hs-st", (window.AM_START_CATS || []), "창업"],
+      [".hs-cl", (window.AM_CLOSE_CATS || []), "폐업"]
+    ];
+    for(const p of pair){
+      const card = document.querySelector(p[0]);
+      if(!card) return p[2] + " 카드가 없습니다";
+      const el = card.querySelector(".hs-more i");
+      if(!el) return p[2] + " 카드에 분야 수가 없습니다";
+      const got = parseInt(el.textContent.replace(/[^0-9]/g, ""), 10);
+      if(got !== p[1].length)
+        return p[2] + " 카드가 " + got + "개라는데 실제 " + p[1].length + "개입니다";
+      const names = p[1].map(function(c){ return c.name; });
+      const shown = [].slice.call(card.querySelectorAll(".hs-g b"))
+        .map(function(e){ return e.textContent.trim(); });
+      if(!shown.length) return p[2] + " 카드에 대표 분야가 없습니다";
+      /* ⚠️ 13개 · 12개를 여기서 다 펼치지 않습니다 (§5) */
+      if(shown.length > 6)
+        return p[2] + " 카드가 " + shown.length + "개를 펼쳤습니다 (여섯까지)";
+      for(const t of shown)
+        if(names.indexOf(t) < 0)
+          return p[2] + " 카드의 '" + t + "' 는 실제 분류에 없습니다";
+    }
+    return true;`);
+  await f("허브 두 갈래 카드의 크기가 같다", "/home", `
+    /* 폐업 쪽을 좁히거나 가볍게 만들면 그게 "덜 중요한 것" 이라는
+       말입니다 (§6 · §15). 나란히 놓인 때만 봅니다. */
+    const a = document.querySelector(".hs-st"), b = document.querySelector(".hs-cl");
+    if(!a || !b) return "두 갈래 카드 중 하나가 없습니다";
+    if(innerWidth <= 900) return true;
+    const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+    if(Math.abs(ra.width - rb.width) > 2 || Math.abs(ra.height - rb.height) > 2)
+      return "창업 " + Math.round(ra.width) + "×" + Math.round(ra.height) +
+        " · 폐업 " + Math.round(rb.width) + "×" + Math.round(rb.height) + "입니다";
+    return true;`);
+  await f("메인 구간 차례가 지시서와 같다", "/home", `
+    /* 지시서 §2 의 차례입니다. 늘리거나 섞기 전에 거기를 먼저 고치세요.
+       ⚠️ 구간이 .sec 를 같이 답니다 — 첫 낱말만 보면 전부 "sec" 으로
+       읽혀 이 검사가 아무것도 안 잡습니다. 우리 표시를 찾습니다. */
+    const want = ["hh","hs-two","hi-g","hv-g","pv","fr","mk","hp","hbr","ht-g","hr","hjn"];
+    const S = [].slice.call(document.querySelectorAll("#view > section"));
+    if(S.length !== 12) return "구간이 " + S.length + "개입니다 (열둘이어야 합니다)";
+    const got = S.map(function(e, i){
+      const mark = ["hh","hbr","hjn"];
+      for(const m of mark) if(e.classList.contains(m)) return m;
+      /* 안쪽 표시로 무슨 구간인지 가립니다 */
+      if(e.querySelector(".hs-two")) return "hs-two";
+      if(e.querySelector(".hi-g"))   return "hi-g";
+      if(e.querySelector(".hv-g"))   return "hv-g";
+      if(e.querySelector(".ht-g"))   return "ht-g";
+      const hd = (e.querySelector(".eyebrow") || {}).textContent || "";
+      if(hd.indexOf("PARTNERS") >= 0)  return "pv";
+      if(hd.indexOf("FRANCHISE") >= 0) return "fr";
+      if(hd.indexOf("TAKE OVER") >= 0) return "mk";
+      if(hd.indexOf("PRICE") >= 0)     return "hp";
+      if(hd.indexOf("REVIEWS") >= 0)   return "hr";
+      return "?" + i;
+    });
+    if(got.join(",") !== want.join(","))
+      return "차례가 " + got.join(" → ") + "입니다";
+    return true;`);
+  await f("이웃한 두 구간이 붙어 보이지 않는다", "/home", `
+    /* ⚠️⚠️ 이 저장소에서 **두 번** 당했습니다 — 아이보리와 웜 화이트를
+       나란히 두어 한 구간으로 읽혔고, 매장(초록 틴트)과 가격(파랑 틴트)이
+       채널당 7 차이라 또 붙어 보였습니다. "완전히 같은 색" 만 보면
+       둘 다 통과합니다. **채널차로** 봅니다. */
+    const S = [].slice.call(document.querySelectorAll("#view > section"));
+    const rgb = function(e){
+      const m = getComputedStyle(e).backgroundColor.match(/(\\d+), ?(\\d+), ?(\\d+)/);
+      return m ? [+m[1], +m[2], +m[3]] : null;
+    };
+    let prev = null, prevName = "";
+    for(const e of S){
+      const c = rgb(e);
+      const name = (e.className || "").toString().split(" ")
+        .filter(function(x){ return x && x !== "sec"; })[0] || e.tagName;
+      if(prev && c){
+        let d = 0;
+        for(let k = 0; k < 3; k++) d = Math.max(d, Math.abs(prev[k] - c[k]));
+        if(d <= 8)
+          return prevName + " 와 " + name + " 의 바탕이 채널당 " + d +
+            " 차이입니다 (한 구간으로 읽힙니다)";
+      }
+      prev = c; prevName = name;
+    }
     return true;`);
 
   /* ⑰ 업체 입점 (/join) — 공급 쪽이 이 플랫폼의 목숨입니다

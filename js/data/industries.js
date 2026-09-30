@@ -96,7 +96,7 @@ window.AM_INDUSTRIES = [
     startup:["item","store","area","interior","equip","furniture","it","admin","staff","marketing","clean","fund"],
     closure:["transfer","asset","demolish","restore","waste","tax","labor","contract","support"] },
 
-  { key:"academy", name:"학원 · 교육", icon:"book", tone:"t7",
+  { key:"academy", name:"학원 · 교육", icon:"grad", tone:"t7",
     lead:"교습소 · 공부방 · 예체능 · 직업교육",
     equip:[
       { key:"desk",     name:"책상 · 의자" },
@@ -120,7 +120,7 @@ window.AM_INDUSTRIES = [
     startup:["item","store","area","interior","equip","furniture","it","supply","admin","marketing","clean","fund"],
     closure:["transfer","asset","stock","demolish","restore","tax","labor","contract","support"] },
 
-  { key:"retail", name:"소매 · 편의점", icon:"cart", tone:"t2",
+  { key:"retail", name:"소매 · 편의점", icon:"bag", tone:"t2",
     lead:"편의점 · 마트 · 전문소매 · 잡화",
     equip:[
       { key:"showcase",  name:"쇼케이스 · 진열냉장" },
@@ -132,7 +132,7 @@ window.AM_INDUSTRIES = [
     startup:["item","store","area","interior","equip","furniture","it","supply","admin","staff","marketing","clean","fund"],
     closure:["transfer","asset","stock","demolish","restore","tax","labor","contract","support"] },
 
-  { key:"unmanned", name:"무인매장", icon:"robot", tone:"t5",
+  { key:"unmanned", name:"무인매장", icon:"scan", tone:"t5",
     lead:"무인카페 · 무인점포 · 스터디카페 · 셀프세탁",
     equip:[
       { key:"vending",  name:"자동판매 · 무인기기" },
@@ -168,7 +168,7 @@ window.AM_INDUSTRIES = [
     startup:["item","store","area","interior","furniture","it","admin","staff","marketing","clean","fund"],
     closure:["transfer","asset","demolish","restore","tax","labor","contract","support"] },
 
-  { key:"online", name:"온라인 · 판매", icon:"globe", tone:"t1",
+  { key:"online", name:"온라인 · 판매", icon:"laptop", tone:"t1",
     lead:"온라인몰 · 스마트스토어 · 라이브 · 도소매",
     equip:[
       { key:"studio",  name:"촬영 · 스튜디오" },
@@ -180,7 +180,7 @@ window.AM_INDUSTRIES = [
     startup:["item","interior","equip","it","supply","admin","marketing","fund"],
     closure:["asset","stock","tax","contract","support"] },
 
-  { key:"etc", name:"기타", icon:"plus", tone:"t7",
+  { key:"etc", name:"기타", icon:"grid", tone:"t7",
     lead:"여기 없는 업종도 그대로 적어 주시면 됩니다",
     equip:[],
     stock:["사업장 재고"],

@@ -121,6 +121,24 @@
   --cyan:           var(--c-cyan);
   --brown:          var(--c-brown);
 
+  /* ── 2026-09-30 메인 개편 §28 — 악센트마다 옅은 바탕 한 짝 ────────
+     아이콘 타일 · 작은 칩에만 씁니다. 카드 전체를 이 색으로 칠하지
+     마세요 (§12 · §16). 밝기는 그 색의 8~12% 수준입니다. */
+  --teal:           #28A59A;
+  --teal-soft:      #EAF7F5;
+  --purple-soft:    #F2EEFC;
+  --pink-soft:      #FDEEF5;
+  --blue-soft:      var(--blue-50);
+  --gold-soft:      #FBF5E8;
+  --brown-soft:     #F6EFE8;
+  --cyan-soft:      #E8F5F8;
+  --slate:          #5B7186;
+  --slate-soft:     #EEF1F4;
+  --indigo:         #5A63C7;
+  --indigo-soft:    #EEEFFB;
+  --burgundy:       #9A4257;
+  --burgundy-soft:  #F9EDF0;
+
   /* 상태값에만 씁니다 — 진단 · 배지 · 검증 표시 */
   --ok:          #0E9F6E;  --ok-bg:   #E7F7F1;
   --warn:        #C2760B;  --warn-bg: #FCF4E6;

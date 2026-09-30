@@ -94,3 +94,24 @@ window.amMatchForStartup = function(industryKey, regionKey){
     assets: amAssets({ industry:industryKey, region:regionKey })
   };
 };
+
+/* ── 실제 견적 가격대 (메인 §21) ──────────────────────────────────
+   ⚠️⚠️ **평균가를 지어내지 마세요.** 사장님이 그 숫자를 들고 업체와
+   협상하러 가십니다. 틀리면 깎이거나 계약이 깨집니다.
+
+   한 건의 생김새 —
+     { key:"interior-cafe", name:"카페 인테리어 (10평)",
+       range:"1,200만 ~ 2,600만원",   실제 견적의 범위 (평균이 아닙니다)
+       n:37,                          그 범위를 낸 견적 건수
+       asOf:"2026-09-30" }            **확인한 날**
+
+   ⚠️ `range` · `n` · `asOf` 가 다 있는 것만 화면에 냅니다. 하나라도
+   없으면 근거를 못 대는 숫자입니다.
+   ⚠️ `n` 이 적으면 범위가 아니라 우연입니다. 열 건 아래는 올리지 마세요.
+   ⚠️ 지금 **비어 있는 것이 맞습니다.** 견적이 0건입니다. */
+window.AM_QUOTE_STATS = [];
+window.amQuoteStats = function(){
+  return (window.AM_QUOTE_STATS||[]).filter(function(q){
+    return q && q.range && q.asOf && (q.n || 0) >= 10;
+  });
+};

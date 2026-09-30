@@ -278,74 +278,384 @@ function FinalBand(){
    ⚠️ **여기에도 숫자를 지어내지 않습니다.** 칸마다 붙는 개수는 전부
    배열을 그 자리에서 세는 값이라 손으로 적을 자리가 없습니다.
    ════════════════════════════════════════════════════════════════════ */
-var HUB = [
-  { to:"/providers", ic:"users",  t:"업체찾기",
-    d:"분야와 지역으로 찾고, 한 번에 견적을 받습니다.", n:function(){
-      return (window.AM_PROVIDERS||[]).length; }, unit:"곳" },
-  { to:"/franchise", ic:"store",  t:"프랜차이즈",
-    d:"정보공개서에 있는 값만 보여 드립니다.", n:function(){
-      return (window.AM_FRANCHISES||[]).length; }, unit:"개" },
-  { to:"/stores",    ic:"key",    t:"점포 · 매장 양도",
-    d:"자리를 찾거나, 쓰던 가게를 넘깁니다.", n:function(){
-      return (window.AM_STORES||[]).length; }, unit:"건" },
-  { to:"/assets",    ic:"box",    t:"시설 · 집기 · 재고",
-    d:"쓰던 장비를 넘기고, 중고로 갖춥니다.", n:function(){
-      return (window.AM_ASSETS||[]).length; }, unit:"건" },
-  { to:"/support",   ic:"badge",  t:"자금 · 정부지원",
-    d:"어디를 봐야 하는지부터 모아 두었습니다." },
-  { to:"/content",   ic:"book",   t:"창업 · 폐업 정보",
-    d:"검색해도 답이 잘 안 나오는 것만 씁니다.", n:function(){
-      return (window.AM_CONTENTS||[]).length; }, unit:"편" },
-  { to:"/tools",     ic:"gauge",  t:"사장님 도구",
-    d:"창업비 · 고정비 · 손익분기를 직접 재 봅니다." },
-  { to:"/my",        ic:"user",   t:"내 기록",
-    d:"적어 두신 조건과 받은 제안을 이 기기에 모읍니다." }
-];
+/* ══════════════════════════════════════════════════════════════════
+   서비스 메인 (/home) — 2026-09-30 메인 개편 지시서
 
-function PageHub(){
-  return PgHero({
-    kicker:"서비스",
-    h1raw:"무엇부터 하시겠습니까?",
-    lead:"창업이든 정리든, 필요한 것을 한곳에서 찾고 비교하고 견적받으실 수 있습니다.",
-    tight:true
-  })+
-  /* 두 갈래 — 이 플랫폼이 하는 일은 결국 이 둘입니다 */
-  '<section class="sec sec-white"><div class="w">'+
-    '<div class="hb-two">'+
-      '<a class="hb-b hb-b-st" href="/startup">'+
-        '<span class="hb-b-k">START</span>'+
-        '<b>창업</b>'+
-        '<i>새로운 사업을 시작합니다.</i>'+
-        '<span class="hb-b-go">'+icon("arrow",20)+'</span></a>'+
-      '<a class="hb-b hb-b-cl" href="/closure">'+
-        '<span class="hb-b-k">CLOSE</span>'+
-        '<b>폐업</b>'+
-        '<i>사업을 정리합니다.</i>'+
-        '<span class="hb-b-go">'+icon("arrow",20)+'</span></a>'+
+   ⚠️⚠️ **랜딩(/)과 역할이 다릅니다** (지시서 §3). 랜딩은 브랜드 소개,
+   여기는 **실제로 쓰는 화면**입니다. 그래서 긴 브랜드 설명 대신 바로
+   행동으로 보냅니다 — 검색 · 업종 고르기 · 서비스 고르기.
+
+   구간 차례는 지시서 §2 입니다. `check.js` 가 이 차례를 셉니다.
+     ① 히어로  ② START/CLOSE  ③ 업종  ④ 핵심 서비스  ⑤ 업체
+     ⑥ 프랜차이즈  ⑦ 매장 인수  ⑧ 가격 데이터  ⑨ 끝과 시작
+     ⑩ 사장님 도구  ⑪ 후기  ⑫ 업체 입점
+
+   ⚠️⚠️ **없는 것은 없다고 말합니다** (절대 규칙 1 · 지시서 §17 · §21 ·
+   §25). 업체 0곳 · 브랜드 0개 · 매물 0건 · 견적 데이터 0건 · 후기 0건
+   이고, 카드를 지어내지 않고 `Empty()` 로 **지금 실제로 되는 것**을
+   같이 냅니다.
+
+   ⚠️ 아이콘은 `icon()` 하나만 씁니다 — 24 viewBox · 선 1.8 · round.
+   섞어 쓰면 한 화면에서 아이콘이 따로 놉니다 (§6 · §29).
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── ① 히어로 (§3 · §4) ────────────────────────────────────────────
+   ⚠️ 전체를 짙은 남색으로 만들지 마세요 — 아이보리 바탕에 남색 제목,
+   창업은 초록 · 폐업은 주황입니다. 첫 화면에서 색 체계가 바로 읽혀야
+   합니다. */
+var HUB_SUGGEST = ["카페 인테리어", "음식점 철거", "프랜차이즈",
+                   "매장 양도", "POS", "세무사"];
+
+function HubHero(){
+  return '<section class="hh">'+
+    '<div class="w hh-in">'+
+      '<p class="hh-k">BUSINESS START &amp; CLOSE PLATFORM</p>'+
+      '<h1 class="hh-h"><em class="hh-st">창업</em>에 필요한 모든 것.<br class="br-m"> '+
+        '<em class="hh-cl">폐업</em>에 필요한 모든 것.</h1>'+
+      '<p class="hh-d">점포부터 인테리어, 장비, 세무, 마케팅까지.<br class="br-m"> '+
+        '매장 양도부터 시설 처분, 철거, 원상복구까지.</p>'+
+      '<p class="hh-cta">'+
+        '<a class="btn btn-st btn-lg" href="/startup">창업 시작하기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-cl btn-lg" href="/closure">폐업 시작하기'+icon("arrow",18)+'</a>'+
+      '</p>'+
+      /* 통합 검색 — ⚠️ 폼입니다. 엔터로도 가야 합니다 */
+      '<form class="hh-s" onsubmit="return hubSearch(event)" role="search">'+
+        '<span class="hh-s-i" aria-hidden="true">'+icon("search",20)+'</span>'+
+        '<input type="search" name="q" id="hubQ" autocomplete="off" '+
+          'aria-label="통합 검색" '+
+          'placeholder="인테리어, 철거, 프랜차이즈, POS, 세무사를 검색해 보세요">'+
+        '<button class="btn btn-nv" type="submit">검색</button>'+
+      '</form>'+
+      '<p class="hh-sg"><i>많이 찾는 것</i>'+HUB_SUGGEST.map(function(q){
+        return '<a href="/search?q='+encodeURIComponent(q)+'">'+esc(q)+'</a>'; }).join("")+'</p>'+
     '</div>'+
-  '</div></section>'+
-  /* 나머지 기능 — ⚠️ 개수는 전부 세는 값입니다 */
-  '<section class="sec"><div class="w">'+
-    '<div class="sec-hd"><p class="eyebrow">모아 보기</p>'+
-      '<h2>이런 것도 여기 있습니다</h2></div>'+
-    '<ul class="hb-g">'+HUB.map(function(h){
-      var n = h.n ? h.n() : null;
-      return '<li><a href="'+esc(h.to)+'">'+
-        '<span class="hb-i">'+icon(h.ic,22)+'</span>'+
-        '<span class="hb-t"><b>'+esc(h.t)+'</b>'+
-          (n === null ? '' : '<em>'+n+esc(h.unit)+'</em>')+'</span>'+
-        '<i>'+esc(h.d)+'</i></a></li>'; }).join("")+'</ul>'+
-  '</div></section>'+
-  /* 업체 입점 — ⚠️ 랜딩에서 뺐으므로 **여기가 본자리**입니다 */
-  '<section class="sec sec-white"><div class="w">'+
-    '<div class="hb-jn">'+
-      '<div class="hb-jn-t">'+
-        '<p class="hb-jn-k">PARTNER</p>'+
-        '<h2>이 분야 업체시라면</h2>'+
-        '<p>지금 등록된 업체는 '+(window.AM_PROVIDERS||[]).length+'곳입니다. '+
-          '숨기지 않고 그대로 적습니다 — 그래서 지금 들어오시면 첫 번째입니다.</p>'+
+  '</section>';
+}
+window.hubSearch = function(e){
+  e.preventDefault();
+  var v = (document.getElementById("hubQ") || {}).value || "";
+  v = v.trim();
+  if(!v){ toast("찾으실 것을 적어 주세요"); return false; }
+  go("/search?q=" + encodeURIComponent(v));
+  return false;
+};
+
+/* ── ② START / CLOSE (§5) ─────────────────────────────────────────
+   ⚠️ **13개 · 12개를 여기서 다 펼치지 않습니다** — 대표 여섯씩입니다.
+   ⚠️ 여섯은 손으로 고른 것이 아니라 `AM_START_CATS` · `AM_CLOSE_CATS`
+   의 **앞에서 여섯**입니다. 분류를 늘리면 따라옵니다.
+   ⚠️ 나머지는 잘라 낸 것이 아니라 "전체 서비스 보기" 가 데려갑니다. */
+function HubSide(o){
+  var all = o.cats || [];
+  if(!all.length) return "";      /* 데이터가 비면 카드째 뺍니다 */
+  var six = all.slice(0, 6);
+  return '<div class="hs hs-'+o.cls+'">'+
+    '<p class="hs-k">'+esc(o.kicker)+'</p>'+
+    '<h3 class="hs-h">'+esc(o.title)+'</h3>'+
+    '<p class="hs-d">'+esc(o.lead)+'</p>'+
+    '<ul class="hs-g">'+six.map(function(c){
+      return '<li><a href="'+esc(amCatTo(c))+'">'+
+        '<span class="ic-t">'+icon(c.icon,26)+'</span>'+
+        '<b>'+esc(c.name)+'</b></a></li>'; }).join("")+'</ul>'+
+    '<p class="hs-more"><a href="'+esc(o.to)+'">'+esc(o.title)+
+      ' 전체 서비스 보기'+icon("arrow",16)+'</a>'+
+      '<i>'+all.length+'개 분야</i></p>'+
+  '</div>';
+}
+/* 분류마다 진짜 화면이 다릅니다 — `to` 가 있으면 그쪽, 업체를 찾는
+   분류는 `/providers/:cat`, 나머지는 `/c/:cat` 입니다 (§46). */
+function amCatTo(c){
+  if(c.to) return c.to;
+  return (c.kind === "provider" ? "/providers/" : "/c/") + c.key;
+}
+function HubTwo(){
+  var st = HubSide({ cls:"st", to:"/startup", kicker:"START", title:"창업",
+    lead:"새로 시작하는 데 필요한 것을 한곳에서.",
+    cats:(window.AM_START_CATS||[]) });
+  var cl = HubSide({ cls:"cl", to:"/closure", kicker:"CLOSE", title:"폐업",
+    lead:"잘 정리하는 것도 사업입니다.",
+    cats:(window.AM_CLOSE_CATS||[]) });
+  if(!st || !cl) return "";
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="hs-two">'+st+cl+'</div>'+
+  '</div></section>';
+}
+
+/* ── ③ 업종 고르기 (§10 · §11 · §12 · §14) ────────────────────────
+   ⚠️ 업종 카드는 장식이 아닙니다 — 누르면 그 업종 창업 화면으로 가고,
+   거기서 그 업종에 맞는 분류 · 장비 · 글이 나옵니다.
+   ⚠️ 카드 전체를 업종 색으로 칠하지 마세요 (§12). 색은 아이콘 타일에만. */
+function HubIndustry(){
+  var L = (window.AM_INDUSTRIES||[]);
+  if(!L.length) return "";
+  /* ⚠️ 앞 구간(START/CLOSE)이 흰색이라 여기는 옅은 회색입니다. 둘 다
+     흰색으로 두었더니 **두 구간이 한 구간으로 읽혔습니다** (§31).
+     검사가 이웃한 두 구간의 바탕색을 봅니다. */
+  return '<section class="sec sec-gray"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">BUSINESS CATEGORY</p>'+
+      '<h2>어떤 사업을 준비하세요?</h2>'+
+      '<p>업종을 고르시면 필요한 서비스와 업체를 바로 보여 드립니다.</p></div>'+
+    '<ul class="hi-g">'+L.map(function(i){
+      return '<li class="tn-'+esc(i.tone||"t7")+'">'+
+        '<a href="/startup/'+esc(i.key)+'">'+
+          '<span class="ic-t">'+icon(i.icon,26)+'</span>'+
+          '<b>'+esc(i.name)+'</b></a></li>'; }).join("")+'</ul>'+
+  '</div></section>';
+}
+
+/* ── ④ 핵심 서비스 (§15 · §16) ────────────────────────────────────
+   ⚠️ 색은 **의미**입니다 (§27) — 초록 창업 · 주황 정리 · 파랑 정보/IT ·
+   보라 세무 · 분홍 마케팅 · 금색 프랜차이즈 · 청록 매장.
+   ⚠️ 옅은 바탕 + 아이콘과 화살표에만 악센트입니다 (§16). */
+var HUB_SVC = [
+  { k:"interior", ic:"roller",    t:"인테리어 · 시공", d:"설계 · 전기 · 배관 · 가스", c:"st" },
+  { k:"demolish", ic:"hammer",    t:"철거 · 원상복구", d:"철거 · 원상복구 · 폐기물", c:"cl" },
+  { k:"fr",       ic:"store",     t:"프랜차이즈",      d:"정보공개서에 있는 값만",     c:"gd" },
+  { k:"it",       ic:"monitor",   t:"POS · IT",        d:"POS · 키오스크 · CCTV",     c:"bl" },
+  { k:"tax",      ic:"calc",      t:"세무 · 노무",      d:"세무사 · 노무사 · 4대보험",  c:"pu" },
+  { k:"transfer", ic:"pin",       t:"매장 양도 · 인수", d:"자리를 넘기고, 이어받고",   c:"tl" },
+  { k:"equip",    ic:"tool",      t:"시설 · 장비",      d:"주방 · 냉동 · 간판 · 가구",  c:"sl" },
+  { k:"marketing",ic:"megaphone", t:"마케팅 · 디자인",  d:"네이밍 · 로고 · SNS",       c:"pk" }
+];
+function HubServices(){
+  var cats = (window.AM_CATS||[]);
+  var byKey = {}; cats.forEach(function(c){ byKey[c.key] = c; });
+  var items = HUB_SVC.map(function(s){
+    if(s.k === "fr") return { s:s, to:"/franchise" };
+    if(s.k === "transfer") return { s:s, to:"/stores" };
+    var c = byKey[s.k];
+    return c ? { s:s, to:amCatTo(c) } : null;
+  }).filter(Boolean);
+  if(!items.length) return "";
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">MOST REQUESTED</p>'+
+      '<h2>지금 무엇이 필요하세요?</h2>'+
+      '<p>많이 찾으시는 것부터 모았습니다.</p></div>'+
+    '<ul class="hv-g">'+items.map(function(x){
+      return '<li class="hv-'+x.s.c+'"><a href="'+esc(x.to)+'">'+
+        '<span class="ic-t">'+icon(x.s.ic,27)+'</span>'+
+        '<span class="hv-t"><b>'+esc(x.s.t)+'</b><i>'+esc(x.s.d)+'</i></span>'+
+        '<span class="hv-go" aria-hidden="true">'+icon("arrow",18)+'</span>'+
+      '</a></li>'; }).join("")+'</ul>'+
+  '</div></section>';
+}
+
+/* ── 구간 한 벌 — 데이터가 있으면 카드, 없으면 Empty ──────────────
+   ⚠️⚠️ **카드를 지어내지 마세요** (절대 규칙 1 · §17 · §21 · §25).
+   업체 0곳인데 여섯 장을 채워 두면 그 순간 없는 회사를 광고하는
+   것이고 표시광고법 제3조 위반입니다. 0 이면 0 이라고 말하고,
+   대신 **지금 실제로 되는 것**을 같이 냅니다. */
+function HubBand(o){
+  return '<section class="sec '+esc(o.bg||"")+'"><div class="w">'+
+    '<div class="sec-hd'+(o.mid?" sec-hd-c":"")+'">'+
+      (o.kicker ? '<p class="eyebrow">'+esc(o.kicker)+'</p>' : '')+
+      '<h2>'+o.h+'</h2>'+
+      (o.lead ? '<p>'+esc(o.lead)+'</p>' : '')+'</div>'+
+    o.body+
+  '</div></section>';
+}
+
+/* ── ⑤ 사장님들이 찾는 업체 (§17 · §18) ───────────────────────────── */
+function HubProviders(){
+  var n = (window.AM_PROVIDERS||[]).length;
+  var body = n
+    ? '<ul class="pv-g">'+(window.AM_PROVIDERS||[]).slice(0,6).map(function(p){
+        return ProviderCard(p); }).join("")+'</ul>'+
+      '<p class="row-cta row-mid"><a class="btn btn-nv" href="/providers">'+
+        '업체 전체 보기'+icon("arrow",18)+'</a></p>'
+    : Empty({ icon:"users", title:"아직 등록된 업체가 없습니다",
+        text:"업체를 지어내지 않습니다. 지금은 모으는 중이고, 등록되는 대로 "+
+             "분야 · 지역으로 찾으실 수 있습니다. 먼저 조건을 남겨 두시면 "+
+             "업체가 들어올 때 그 조건으로 전달합니다.",
+        cta:'<a class="btn btn-nv" href="/quote">조건 남기고 견적 요청'+icon("arrow",18)+'</a>'+
+            '<a class="btn btn-o" href="/join">업체로 입점하기</a>' });
+  return HubBand({ bg:"sec-ivory", kicker:"PARTNERS", h:"사장님들이 찾는 업체",
+    lead:"업종과 지역에 맞는 전문업체를 비교해 보세요.", body:body });
+}
+
+/* ── ⑥ 프랜차이즈 (§19) ───────────────────────────────────────────
+   ⚠️ 창업비는 **정보공개서에 있는 값**이어야 합니다 (가맹사업법).
+   `source` 와 `asOf` 가 없는 금액은 화면에 안 나옵니다. */
+function HubFranchise(){
+  var n = (window.AM_FRANCHISES||[]).length;
+  var body = n
+    ? '<ul class="fr-g">'+(window.AM_FRANCHISES||[]).slice(0,6).map(function(f){
+        return FranchiseCard(f); }).join("")+'</ul>'+
+      '<p class="row-cta row-mid"><a class="btn btn-nv" href="/franchise">'+
+        '브랜드 전체 보기'+icon("arrow",18)+'</a></p>'
+    : Empty({ icon:"store", title:"아직 등록된 브랜드가 없습니다",
+        text:"창업비는 정보공개서에 적힌 값만 올립니다. 근거 없는 금액을 "+
+             "보시고 수천만 원을 빌리러 가시면 안 되기 때문입니다. "+
+             "확인한 브랜드부터 하나씩 올립니다.",
+        cta:'<a class="btn btn-nv" href="/startup">창업 준비부터 보기'+icon("arrow",18)+'</a>' });
+  return HubBand({ bg:"sec-white", kicker:"FRANCHISE",
+    h:"어떤 장사를 시작할지 고민이라면",
+    lead:"예산과 조건에 맞는 프랜차이즈를 찾아보세요.", body:body });
+}
+
+/* ── ⑦ 바로 시작할 수 있는 매장 (§20) ─────────────────────────────
+   ⚠️ 평수 · 보증금 · 월세 · 권리금은 **올리신 사장님이 적은 값**이고
+   우리가 확인하거나 보증하는 값이 아닙니다 — 카드가 그렇게 밝힙니다. */
+function HubStores(){
+  var L = (window.AM_STORES||[]);
+  var body = L.length
+    ? '<ul class="mk-g">'+L.slice(0,6).map(function(s){ return StoreCard(s); }).join("")+'</ul>'+
+      '<p class="row-cta row-mid"><a class="btn btn-nv" href="/stores">'+
+        '매장 전체 보기'+icon("arrow",18)+'</a></p>'
+    : Empty({ icon:"pin", title:"아직 올라온 매장이 없습니다",
+        text:"허위매물을 만들지 않습니다. 보고 연락하신 시간을 훔치는 일이라서요. "+
+             "정리하시는 사장님이 올리시면 그대로 보입니다.",
+        cta:'<a class="btn btn-st" href="/stores">매장 내놓기'+icon("arrow",18)+'</a>'+
+            '<a class="btn btn-o" href="/closure">폐업 준비부터 보기</a>' });
+  return HubBand({ bg:"sec-start", kicker:"TAKE OVER",
+    h:"새로 만들지 않아도 됩니다",
+    lead:"이미 준비된 매장에서 더 빨리 시작하실 수 있습니다.", body:body });
+}
+
+/* ── ⑧ 가격 · 견적 데이터 (§21) ───────────────────────────────────
+   ⚠️⚠️ **평균가를 지어내지 마세요.** 견적이 0건이라 숫자가 없습니다.
+   "얼마쯤" 을 적어 두면 사장님이 그 숫자로 협상하러 갑니다. 대신
+   **무엇이 금액을 가르는가**를 냅니다 — 그건 근거를 댈 수 있습니다. */
+function HubPrice(){
+  var L = (typeof amQuoteStats === "function") ? amQuoteStats() : [];
+  var body = L.length
+    ? '<ul class="hp-g">'+L.map(function(q){
+        return '<li><b>'+esc(q.name)+'</b><em>'+esc(q.range)+'</em>'+
+          '<i>'+esc(q.asOf)+' 확인 · 견적 '+q.n+'건</i></li>'; }).join("")+'</ul>'
+    : Empty({ icon:"chart", title:"가격 데이터를 모으는 중입니다",
+        text:"평균가를 지어내지 않습니다. 사장님이 그 숫자를 들고 협상하러 "+
+             "가시기 때문입니다. 실제 견적이 쌓이면 범위와 확인한 날짜를 "+
+             "같이 냅니다. 그때까지는 무엇이 금액을 가르는지를 글로 적어 두었습니다.",
+        cta:'<a class="btn btn-nv" href="/content">무엇이 금액을 가르나'+icon("arrow",18)+'</a>'+
+            '<a class="btn btn-o" href="/tools/cost">창업비 직접 재 보기</a>' });
+  return HubBand({ bg:"sec-blue", kicker:"PRICE",
+    h:"다른 사장님들은 얼마에 하셨을까?", body:body });
+}
+
+/* ── ⑨ 한 사장님의 끝이 다른 사장님의 시작 (§22) ──────────────────
+   ⚠️ 다른 구간보다 크게 냅니다. 이 플랫폼의 차별점이라서입니다.
+   ⚠️ 폐업 쪽을 처연하게 쓰지 마세요 — 실패가 아니라 다음 단계입니다. */
+var HUB_FLOW_CL = [
+  { ic:"store", n:"매장" }, { ic:"tool", n:"시설" }, { ic:"sofa", n:"장비 · 가구" },
+  { ic:"boxes", n:"재고" }
+];
+var HUB_FLOW_ST = [
+  { ic:"pin",   n:"매장 인수", d:"상권을 처음부터 다시 찾지 않아도 됩니다" },
+  { ic:"tool",  n:"시설 활용", d:"쓸 수 있는 것은 새로 사지 않아도 됩니다" },
+  { ic:"clock", n:"빠른 오픈", d:"공사 기간이 줄어 문을 빨리 엽니다" }
+];
+function HubBridge(){
+  return '<section class="sec hbr"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">START &amp; CLOSE</p>'+
+      '<h2>한 사장님의 끝이<br class="br-m"> 다른 사장님의 시작이 됩니다.</h2>'+
+      '<p>쓰던 매장과 시설이, 다음 사장님에게는 새로운 시작이 될 수 있습니다.</p>'+
+    '</div>'+
+    '<div class="hbr-g">'+
+      '<div class="hbr-c hbr-cl">'+
+        '<p class="hbr-k">정리하는 사장님</p>'+
+        (hasPhoto("flow-close") ? '<figure class="hbr-p">'+photoBox("flow-close")+'</figure>' : '')+
+        '<ul class="hbr-l">'+HUB_FLOW_CL.map(function(x){
+          return '<li><span class="ic-t">'+icon(x.ic,24)+'</span><b>'+esc(x.n)+'</b></li>';
+        }).join("")+'</ul>'+
       '</div>'+
-      '<a class="btn btn-w" href="/join">업체 입점하기'+icon("arrow",18)+'</a>'+
+      '<div class="hbr-m">'+
+        '<span class="hbr-arw hbr-arw-in" aria-hidden="true"></span>'+
+        '<div class="hbr-logo">'+
+          '<span class="hbr-logo-i">'+icon("home",26)+'</span>'+
+          '<b>'+esc(amBrand())+'</b>'+
+          '<i>조건 · 지역 · 업종으로 잇습니다</i>'+
+        '</div>'+
+        '<span class="hbr-arw hbr-arw-out" aria-hidden="true"></span>'+
+      '</div>'+
+      '<div class="hbr-c hbr-st">'+
+        '<p class="hbr-k hbr-k-st">창업하는 사장님</p>'+
+        (hasPhoto("flow-start") ? '<figure class="hbr-p">'+photoBox("flow-start")+'</figure>' : '')+
+        '<ul class="hbr-l hbr-l-st">'+HUB_FLOW_ST.map(function(x){
+          return '<li><span class="ic-t">'+icon(x.ic,24)+'</span>'+
+            '<span class="hbr-tx"><b>'+esc(x.n)+'</b><i>'+esc(x.d)+'</i></span></li>';
+        }).join("")+'</ul>'+
+      '</div>'+
     '</div>'+
   '</div></section>';
+}
+
+/* ── ⑩ 사장님 도구 (§23 · §24) ────────────────────────────────────
+   ⚠️ 도구 목록은 `AM_TOOLS` 하나입니다 — 여기에 손으로 적지 마세요.
+   아이콘과 악센트만 여기서 붙입니다. */
+var HUB_TOOL_IC = {
+  cost: { ic:"wallet",  c:"st" }, bep:   { ic:"chart",   c:"bl" },
+  labor:{ ic:"users",   c:"pu" }, fixed: { ic:"receipt", c:"tl" },
+  vs:   { ic:"compare", c:"gd" }, close: { ic:"listck",  c:"cl" }
+};
+function HubTools(){
+  var L = (window.AM_TOOLS||[]);
+  if(!L.length) return "";
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">TOOLS</p>'+
+      '<h2>사장님 도구</h2>'+
+      '<p>창업과 운영, 정리에 필요한 숫자를 직접 재 보세요. '+
+        '적으신 숫자는 이 브라우저에만 남습니다.</p></div>'+
+    '<ul class="ht-g">'+L.map(function(t){
+      var m = HUB_TOOL_IC[t.key] || { ic:"gauge", c:"bl" };
+      return '<li class="hv-'+m.c+'"><a href="/tools/'+esc(t.key)+'">'+
+        '<span class="ic-t">'+icon(m.ic,26)+'</span>'+
+        '<b>'+esc(t.name)+'</b><i>'+esc(t.lead)+'</i></a></li>'; }).join("")+'</ul>'+
+  '</div></section>';
+}
+
+/* ── ⑪ 후기 (§25) ─────────────────────────────────────────────────
+   ⚠️⚠️ **후기를 지어내지 마세요.** 평점도 후기 수도 값으로 들고 있지
+   않습니다 — `amProviderStats()` 가 실제 후기 배열에서 계산합니다. */
+function HubReviews(){
+  /* ⚠️ 전역 후기 배열은 없습니다 — 후기는 **업체 안**에 들어 있고
+     (`p.reviews`), 평점도 거기서 계산합니다. 여기서도 그대로 모읍니다.
+     숫자로 들고 있지 않으니 손으로 적어 넣을 자리가 없습니다. */
+  var rv = [];
+  (window.AM_PROVIDERS||[]).forEach(function(p){
+    (p.reviews||[]).forEach(function(r){
+      rv.push({ r:r, p:p }); });
+  });
+  rv.sort(function(a,b){ return String(b.r.at||"").localeCompare(String(a.r.at||"")); });
+  var body = rv.length
+    ? '<ul class="hr-g">'+rv.slice(0,3).map(function(x){
+        return '<li><span class="hr-q">'+icon("chat",20)+'</span>'+
+          '<p>'+esc(x.r.text||"")+'</p>'+
+          '<i>'+esc(x.p.name||"")+(x.r.at ? ' · '+esc(x.r.at) : '')+'</i></li>';
+      }).join("")+'</ul>'
+    : Empty({ icon:"star", title:"첫 이용후기가 곧 올라옵니다",
+        text:"후기를 지어내지 않습니다. 실제로 연결된 사장님이 쓰신 것만 "+
+             "올리고, 평점은 그 후기에서 계산합니다 — 손으로 적는 자리가 없습니다.",
+        cta:'<a class="btn btn-nv" href="/quote">견적 요청하기'+icon("arrow",18)+'</a>' });
+  return HubBand({ bg:"sec-ivory", kicker:"REVIEWS",
+    h:"실제 사장님들의 경험", mid:true, body:body });
+}
+
+/* ── ⑫ 업체 입점 (§26 · §37) ──────────────────────────────────────
+   ⚠️ 여기 하나만 어두운 면입니다. 푸터와 붙어 있지 않게 위에 밝은
+   구간(후기)이 옵니다 (§31 — 어두운 구간 연속 금지).
+   ⚠️ **성과를 지어내지 마세요.** "월 n건" 은 지금 0 입니다. 낼 수 있는
+   것은 지금 사실인 것과 지키겠다는 약속까지입니다. */
+function HubJoin(){
+  var cats = (window.AM_CATS||[]).filter(function(c){ return c.kind === "provider"; });
+  return '<section class="sec hjn"><div class="w">'+
+    '<div class="hjn-c">'+
+      '<div class="hjn-t">'+
+        '<p class="hjn-k">PARTNER</p>'+
+        '<h2>사장님을 찾는 업체인가요?</h2>'+
+        '<p>실제로 창업 · 폐업을 준비하시는 분들을 만나 보세요. '+
+          '기본 입점은 무료이고, 지금은 초기 파트너를 모집하고 있습니다.</p>'+
+        (cats.length ? '<ul class="hjn-l">'+cats.slice(0,10).map(function(c){
+          return '<li>'+icon(c.icon,18)+esc(c.name)+'</li>'; }).join("")+'</ul>' : '')+
+      '</div>'+
+      '<p class="hjn-go"><a class="btn btn-w" href="/join">'+
+        '무료로 입점하기'+icon("arrow",18)+'</a></p>'+
+    '</div>'+
+  '</div></section>';
+}
+
+function PageHub(){
+  return HubHero()+ HubTwo()+ HubIndustry()+ HubServices()+
+         HubProviders()+ HubFranchise()+ HubStores()+ HubPrice()+
+         HubBridge()+ HubTools()+ HubReviews()+ HubJoin();
 }

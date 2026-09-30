@@ -45,6 +45,29 @@ window.telNum = function(s){ return String(s||"").replace(/[^0-9+]/g,""); };
    업종의 사장님이 손님입니다 — 아이콘은 **분류를 훑을 수 있게** 하는
    표지이지 장식이 아닙니다 (§54). */
 var IC = {
+  /* ── 2026-09-30 메인 개편 — 지시서가 부르는 Lucide 아이콘을 채웠습니다.
+     ⚠️ 규격은 위와 같습니다: 24 viewBox · fill none · currentColor ·
+     round cap/join. 다른 데서 복붙해 오면 **선 굵기와 끝 모양이 달라져**
+     한 화면 안에서 아이콘이 따로 놉니다 (지시서 §29). */
+  roller:  '<rect x="3" y="4" width="11" height="5" rx="1.4"/><path d="M14 6.5h4.5A1.5 1.5 0 0 1 20 8v2.5a1.5 1.5 0 0 1-1.5 1.5H12"/><rect x="9.5" y="12" width="5" height="8" rx="1.4"/>',
+  calc:    '<rect x="4" y="2.5" width="16" height="19" rx="2.2"/><path d="M8 7h8"/><path d="M8.5 11.5h.01"/><path d="M12 11.5h.01"/><path d="M15.5 11.5h.01"/><path d="M8.5 15.5h.01"/><path d="M12 15.5h.01"/><path d="M15.5 15.5v3"/><path d="M8.5 18.5h4"/>',
+  boxes:   '<path d="M2.5 9.8 7 7.3l4.5 2.5v4.9L7 17.2l-4.5-2.5Z"/><path d="M12.5 9.8 17 7.3l4.5 2.5v4.9L17 17.2l-4.5-2.5Z"/><path d="M7.5 3.6 12 1.1l4.5 2.5v4.9L12 11l-4.5-2.5Z"/>',
+  filex:   '<path d="M14.5 2.5H7a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7Z"/><path d="M14.5 2.5V7H19"/><path d="M9.5 12.5 14 17"/><path d="M14 12.5 9.5 17"/>',
+  /* ⚠️ 손 + 동전으로 그렸더니 27px 에서 **무슨 모양인지 안 읽혔습니다.**
+     동전 더미가 작은 크기에서 훨씬 확실합니다. */
+  coins:   '<ellipse cx="12" cy="6.5" rx="6.2" ry="2.7"/><path d="M5.8 6.5v4.3c0 1.5 2.8 2.7 6.2 2.7s6.2-1.2 6.2-2.7V6.5"/><path d="M5.8 10.8v4.3c0 1.5 2.8 2.7 6.2 2.7s6.2-1.2 6.2-2.7v-4.3"/>',
+  grad:    '<path d="M2.5 8.5 12 4l9.5 4.5L12 13Z"/><path d="M6.5 10.8V16c0 1.4 2.5 2.6 5.5 2.6s5.5-1.2 5.5-2.6v-5.2"/><path d="M21.5 8.5V14"/>',
+  bag:     '<path d="M5 7h14l-1 13.5H6Z"/><path d="M8.5 9.5V6a3.5 3.5 0 0 1 7 0v3.5"/>',
+  scan:    '<path d="M3 7.5V5.5a2 2 0 0 1 2-2h2"/><path d="M17 3.5h2a2 2 0 0 1 2 2v2"/><path d="M21 16.5v2a2 2 0 0 1-2 2h-2"/><path d="M7 20.5H5a2 2 0 0 1-2-2v-2"/><path d="M3.5 12h17"/>',
+  laptop:  '<rect x="4" y="5" width="16" height="10.5" rx="1.8"/><path d="M2 18.5h20"/>',
+  grid:    '<rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/>',
+  ruler:   '<path d="M14.8 2.6 21.4 9.2a1.4 1.4 0 0 1 0 2L11 21.6a1.4 1.4 0 0 1-2 0L2.4 15a1.4 1.4 0 0 1 0-2L12.8 2.6a1.4 1.4 0 0 1 2 0Z"/><path d="M11 5.5 13.5 8"/><path d="M8 8.5 10.5 11"/><path d="M5 11.5 7.5 14"/>',
+  wallet:  '<rect x="2.5" y="6" width="19" height="13" rx="2.2"/><path d="M2.5 10.5h19"/><path d="M6 3.5h10"/><path d="M17 14.8h.01"/>',
+  receipt: '<path d="M5 2.5h14v19l-2.3-1.6-2.3 1.6-2.4-1.6L9.6 21.5 7.3 19.9 5 21.5Z"/><path d="M8.5 7.5h7"/><path d="M8.5 11.5h7"/><path d="M8.5 15.5h4"/>',
+  compare: '<path d="M4 6.5h9.5"/><path d="M11 4 13.5 6.5 11 9"/><path d="M20 17.5h-9.5"/><path d="M13 15 10.5 17.5 13 20"/><circle cx="19" cy="6.5" r="2.4"/><circle cx="5" cy="17.5" r="2.4"/>',
+  listck:  '<path d="M3 6 4.5 7.5 7 5"/><path d="M3 12.5 4.5 14 7 11.5"/><path d="M3 19 4.5 20.5 7 18"/><path d="M10.5 6.5H21"/><path d="M10.5 13H21"/><path d="M10.5 19.5H21"/>',
+  files:   '<path d="M8 2.5h6.5L19 7v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4.5a2 2 0 0 1 2-2Z"/><path d="M14.5 2.5V7H19"/><path d="M3.5 7.5v12a2 2 0 0 0 2 2h9"/>',
+  pkgck:   '<path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5Z"/><path d="M3 8.5 12 13l9-4.5"/><path d="M9.5 15.4 11.4 17.3 15 13.7"/>',
   /* ── 상황 다섯 (js/data/situations.js) ── */
   seed:  '<path d="M12 21v-7"/><path d="M12 14c0-4 3-7 7-7 0 4-3 7-7 7Z"/><path d="M12 14c0-3.3-2.7-6-6-6 0 3.3 2.7 6 6 6Z"/>',
   gauge: '<path d="M12 14 16 9"/><path d="M4 19a9 9 0 1 1 16 0"/><circle cx="12" cy="19" r="1.4"/>',
@@ -118,7 +141,9 @@ var IC = {
      어느 업종에게도 "여긴 내 자리가 아니네" 로 읽힙니다. */
   utensils:'<path d="M7 3v8a2.5 2.5 0 0 0 5 0V3"/><path d="M9.5 11v10"/><path d="M17.5 3c-1.6 1.4-2.5 3.4-2.5 5.6V13h4V8.6c0-2.2-.9-4.2-2.5-5.6Z"/><path d="M17.5 13v8"/>',
   cup:    '<path d="M4 7h12v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V7Z"/><path d="M16 9h2.2a2.8 2.8 0 0 1 0 5.6H16"/><path d="M6 3.5v1.6"/><path d="M10 3.5v1.6"/><path d="M14 3.5v1.6"/>',
-  glass:  '<path d="M6 4h12l-5 7v7"/><path d="M9 21h6"/><path d="M13 18v3"/>',
+  /* ⚠️ 좁은 V 자(칵테일 잔)로 두었더니 27px 에서 **뾰족한 삼각형**으로
+     읽혔습니다. 둥근 잔(Lucide wine)이 작은 크기에서 훨씬 잘 읽힙니다. */
+  glass:  '<path d="M8 22h8"/><path d="M12 15v7"/><path d="M7 10h10"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/>',
   scissors:'<circle cx="6.5" cy="17.5" r="2.5"/><circle cx="6.5" cy="6.5" r="2.5"/><path d="M8.6 8.4 20 19"/><path d="M8.6 15.6 20 5"/>',
   sparkle:'<path d="M12 3l1.9 5.3L19 10l-5.1 1.7L12 17l-1.9-5.3L5 10l5.1-1.7Z"/><path d="M18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8Z"/>',
   dumbbell:'<rect x="2.5" y="8.5" width="3.5" height="7" rx="1.2"/><rect x="18" y="8.5" width="3.5" height="7" rx="1.2"/><path d="M6 12h12"/><path d="M8.5 6.5v11"/><path d="M15.5 6.5v11"/>',
@@ -142,7 +167,7 @@ window.icon = function(name, size){
   var d = IC[name]; if(!d) return "";
   var s = size || 22;
   return '<svg class="ic" width="'+s+'" height="'+s+'" viewBox="0 0 24 24" aria-hidden="true" '+
-    'fill="none" stroke="currentColor" stroke-width="1.6" '+
+    'fill="none" stroke="currentColor" stroke-width="1.8" '+
     'stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>';
 };
 

@@ -89,8 +89,57 @@ function SupportWhere(side){
   '</div></section>';
 }
 
+/* ── 글 목록 (/content) ────────────────────────────────────────
+   ⚠️ **한 줄로 쭉 내려가면 아무도 안 읽습니다.** 글이 서른 편을
+   넘으면서 목록이 화면 다섯 개 높이가 됐습니다. 그래서 쪽(창업/폐업)과
+   분류 칩으로 거릅니다.
+
+   ⚠️ **분류 머리말로 묶어 보았다가 물렀습니다.** 분류 25개에 글 35편
+   이라 묶음마다 한두 편뿐이고, 머리말이 차지하는 높이가 줄어드는
+   높이보다 컸습니다 (7,794px → 7,412px). 지금은 칩이 그 일을 합니다.
+
+   ⚠️ 거르개는 `/support` · `/providers` 와 **같은 `?side=` · 같은
+   `.chip-g-fil`** 을 씁니다 — 화면마다 다른 거르개를 만들면 같은
+   사이트로 안 읽힙니다.
+
+   ⚠️ **없는 칸은 안 냅니다.** 글이 없는 분류는 칩이 아예 안 나옵니다
+   (절대 규칙 2). 개수는 전부 그 자리에서 **세는 값**이라 손으로 적을
+   자리가 없습니다. */
+function ctUrl(side, cat){
+  var q = [];
+  if(side) q.push("side="+encodeURIComponent(side));
+  if(cat)  q.push("cat="+encodeURIComponent(cat));
+  return "/content" + (q.length ? "?"+q.join("&") : "");
+}
+
 function PageContents(){
-  var list = amContents({});
+  var side = nowQS("side"); if(side !== "start" && side !== "close") side = "";
+  var cat  = nowQS("cat");
+
+  var all = amContents({});
+  /* 쪽으로 먼저 거릅니다. "both" 인 글은 양쪽에 다 나옵니다 */
+  var bySide = all.filter(function(c){
+    return !side || c.side === side || c.side === "both"; });
+  /* 그 쪽에서 글이 있는 분류만 칩으로 냅니다 */
+  var cats = (window.AM_CATS||[]).filter(function(k){
+    return bySide.some(function(c){ return c.cat === k.key; }); });
+  if(cat && !cats.some(function(k){ return k.key === cat; })) cat = "";
+  var list = cat ? bySide.filter(function(c){ return c.cat === cat; }) : bySide;
+
+  var nStart = all.filter(function(c){ return c.side !== "close"; }).length;
+  var nClose = all.filter(function(c){ return c.side !== "start"; }).length;
+  var cnt = function(k){
+    return bySide.filter(function(c){ return c.cat === k; }).length; };
+
+  var card = function(c){
+    return '<li><a href="/content/'+esc(c.slug)+'">'+
+      '<span class="ct-m">'+esc(c.side==="close"?"폐업":c.side==="both"?"창업 · 폐업":"창업")+
+        (c.industry?' · '+esc(amIndustryName(c.industry)):'')+
+        (c.read?' · '+esc(String(c.read))+'분':'')+'</span>'+
+      '<b>'+esc(c.title)+'</b>'+
+      '<span class="ct-p">'+esc(c.lead)+'</span></a></li>';
+  };
+
   return PgHero({
     kicker:"창업 · 폐업 정보",
     h1raw:"실제로 막히는 것만<br class=\"br-m\"> 정리합니다.",
@@ -98,15 +147,30 @@ function PageContents(){
     tight:true
   })+
   '<section class="sec sec-white"><div class="w">'+
+    '<ul class="chip-g chip-g-fil">'+
+      '<li><a class="chip'+(side?"":" on")+'" href="'+esc(ctUrl("",""))+'">'+
+        '전체 '+all.length+'</a></li>'+
+      '<li><a class="chip'+(side==="start"?" on":"")+'" href="'+esc(ctUrl("start",""))+'">'+
+        '창업 '+nStart+'</a></li>'+
+      '<li><a class="chip'+(side==="close"?" on":"")+'" href="'+esc(ctUrl("close",""))+'">'+
+        '폐업 '+nClose+'</a></li>'+
+    '</ul>'+
+    /* ⚠️ **분야 칩은 쪽을 고른 뒤에만 냅니다.** 25개를 다 깔면 폰에서
+       화면 하나를 통째로 먹고 글이 한 편도 안 보입니다 (실제로 그랬습니다).
+       이 사이트가 원래 하는 일이 "창업이냐 폐업이냐" 를 먼저 묻는
+       것이라 차례도 그쪽이 맞습니다. */
+    ((side || cat) && cats.length > 1
+      ? '<ul class="chip-g chip-g-fil ct-f2">'+
+          '<li><a class="chip chip-2'+(cat?"":" on")+'" href="'+esc(ctUrl(side,""))+'">'+
+            '분야 전체</a></li>'+
+          cats.map(function(k){
+            return '<li><a class="chip chip-2'+(cat===k.key?" on":"")+'" href="'+
+              esc(ctUrl(side, k.key))+'">'+esc(k.name)+' '+cnt(k.key)+'</a></li>';
+          }).join("")+
+        '</ul>'
+      : '')+
     (list.length
-      ? '<ul class="ct-l">'+list.map(function(c){
-          return '<li><a href="/content/'+esc(c.slug)+'">'+
-            '<span class="ct-m">'+esc(c.side==="close"?"폐업":"창업")+
-              (c.industry?' · '+esc(amIndustryName(c.industry)):'')+
-              (c.read?' · '+esc(String(c.read))+'분':'')+'</span>'+
-            '<b>'+esc(c.title)+'</b>'+
-            '<span class="ct-p">'+esc(c.lead)+'</span></a></li>';
-        }).join("")+'</ul>'
+      ? '<ul class="ct-l">'+list.map(card).join("")+'</ul>'
       : Empty({
           icon:"book",
           title:"글을 준비하고 있습니다",

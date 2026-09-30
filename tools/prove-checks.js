@@ -75,6 +75,9 @@ const CASES = [
       "사업자등록 — 언제, 어디서, 무엇을 들고 가나";`],
   ["폐업 글은 주황 쪽 · 창업 글은 초록 쪽으로 물든다",
    `document.getElementById("view").className = "";`],
+  ["글 목록 거르개 숫자가 센 값이다",
+   `document.querySelectorAll(".chip-g-fil .chip")[0]
+      .textContent = "전체 120";`],
   ["카드가 구간 바탕과 같은 색이 아니다",
    `document.querySelectorAll(".lcc")[0].style.background =
       getComputedStyle(document.querySelector(".lcat")).backgroundColor;`]

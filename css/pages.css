@@ -786,13 +786,20 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .sp-go{ display:inline-flex; align-items:center; gap:5px; min-height:44px;
   font-size:var(--t-sm); font-weight:700; color:var(--blue); }
 
+/* ⚠️ 서른다섯 편이 한 줄로 내려가면 화면 다섯 개 높이가 됩니다.
+   넓을 때는 두 칸으로 냅니다 — 좁히면 카드 안 글자 폭이 줄어 낱말
+   가운데서 잘리므로(실제로 겪었습니다) 900px 부터만 나눕니다. */
 .ct-l{ display:grid; gap:var(--s3); }
+@media (min-width:900px){ .ct-l{ grid-template-columns:1fr 1fr; } }
 .ct-l a{ display:grid; gap:4px; padding:var(--s6); background:var(--bg-2);
   border-radius:var(--r-xl); transition:transform .15s, box-shadow .2s; }
 .ct-l a:hover{ transform:translateY(-2px); box-shadow:var(--shadow-md); }
 .ct-m{ font-size:var(--t-cap); color:var(--ink3); }
 .ct-l b{ font-size:var(--t-lg); }
 .ct-p{ font-size:var(--t-sm); color:var(--ink2); line-height:1.7; }
+/* 두 번째 거르개 줄(분야) — 첫 줄과 붙어 보이지 않게 위만 당깁니다.
+   ⚠️ 첫 줄의 .chip-g-fil 이 이미 아래 여백을 갖고 있습니다 */
+.ct-f2{ margin-top:calc(var(--s6) * -1 + var(--s3)); }
 
 .read{ max-width:var(--w-read); }
 .read h2{ font-size:var(--t-xl); margin:var(--s8) 0 var(--s4); }

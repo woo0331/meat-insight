@@ -991,6 +991,24 @@ const AUDIT = `(() => {
       return /미용실|헬스장|학원|무인매장|음식점/.test(x); });
     if(other.length) return "다른 업종 글이 섞였습니다: " + other.join(" / ");
     return true;`);
+  /* ⚠️ 거르개 숫자를 손으로 적으면 글을 더할 때마다 어긋납니다. 화면의
+     세 칸을 **데이터에서 다시 세어** 맞춰 봅니다 (절대 규칙 1). */
+  await f("글 목록 거르개 숫자가 센 값이다", "/content", `
+    const chips = [].slice.call(document.querySelectorAll(".chip-g-fil .chip"));
+    if(chips.length < 3) return "거르개가 없습니다";
+    const all = window.AM_CONTENTS || [];
+    const want = [all.length,
+      all.filter(function(c){ return c.side !== "close"; }).length,
+      all.filter(function(c){ return c.side !== "start"; }).length];
+    for(let i = 0; i < 3; i++){
+      const got = parseInt((chips[i].textContent.match(/[0-9]+/) || [-1])[0], 10);
+      if(got !== want[i])
+        return chips[i].textContent.trim() + " · 실제 " + want[i] + "입니다";
+    }
+    /* 눌러서 실제로 걸러지는가 */
+    const n = document.querySelectorAll(".ct-l > li").length;
+    if(n !== all.length) return "전체인데 " + n + "편만 나옵니다";
+    return true;`);
 
   /* ⑬ 창업 = 과정 (§7) · 폐업 = 무엇을 원하시는가 (§8)
      ⚠️ 둘 다 **분류를 잘라 내면** 그 기능이 그 손님에게는 없는 것이

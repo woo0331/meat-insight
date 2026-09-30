@@ -183,7 +183,7 @@ window.AM_CLOSE_CATS = [
       { key:"schedule",  name:"일정관리" },        { key:"expert",  name:"관련 전문가" }
     ]},
 
-  { key:"transfer", name:"매장 양도", icon:"store", tone:"t1", kind:"listing",
+  { key:"transfer", name:"매장 양도", icon:"handover", tone:"t1", kind:"listing",
     lead:"가게를 통째로 넘기기",
     desc:"점포 · 권리금 · 시설을 포함해 넘기실 수 있습니다.",
     to:"/stores",

@@ -62,7 +62,7 @@ function legalTable(rows, emptyMsg, warnKeys){
   if(miss.length && warnKeys){
     try{ console.warn("[site] "+warnKeys+" — 아직 빈 항목: "+miss.join(", ")); }catch(e){}
   }
-  return '<table class="lg-t"><tbody>'+ have.map(function(r){
+  return '<table class="lg-cols"><tbody>'+ have.map(function(r){
     return '<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>';
   }).join("") +'</tbody></table>';
 }
@@ -103,7 +103,7 @@ function PagePrivacy(){
 
   var tr = (D.trustees || []);
   var trustee = tr.length
-    ? '<table class="lg-t lg-t3"><thead><tr><th>수탁자</th><th>위탁 업무</th><th>보유·이용 기간</th></tr></thead><tbody>'+
+    ? '<table class="lg-cols"><thead><tr><th>수탁자</th><th>위탁 업무</th><th>보유·이용 기간</th></tr></thead><tbody>'+
         tr.map(function(r){
           /* data-h 는 좁은 화면에서 칸 앞에 붙는 제목입니다 — 표가
              세로로 펴지면 어느 칸인지 알 수 없어집니다 (css/pages.css) */

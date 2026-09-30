@@ -908,8 +908,12 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   font-size:var(--t-sm); color:var(--ink2); }
 .lg-toc a:hover{ color:var(--blue); }
 .lg-a{ margin-bottom:var(--s8); scroll-margin-top:calc(var(--hdr-h) + 16px); }
-.lg-t{ font-size:var(--t-xl); margin-bottom:var(--s4); }
-.lg-t3{ font-size:var(--t-lg); }
+/* ⚠️ `.lg-t` · `.lg-t3` 를 되살리지 마세요. 조문 제목용으로 만든
+   이름인데 표(`<table class="lg-t">`)가 그걸 쓰고 있어서, 표 글씨가
+   제목 크기(23px)로 나오고 표 스타일은 하나도 안 먹었습니다. 그 결과
+   수탁자 칸이 99px 로 쪼그라들어 "Slack Technologies, LLC" 가 네 줄로
+   쪼개졌습니다 — 에러도 가로 스크롤도 안 났습니다. 표는 `.lg-cols`
+   하나뿐입니다. */
 .lg-sub{ font-size:var(--t-base); font-weight:700; margin:var(--s5) 0 var(--s2); }
 .lg-body{ display:grid; gap:var(--s3); }
 .lg-p{ color:var(--ink2); line-height:1.9; }
@@ -924,6 +928,21 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .lg-cols th{ background:var(--bg-2); color:var(--ink); white-space:nowrap; }
 .lg-fin{ margin-top:var(--s9); padding-top:var(--s6); border-top:1px solid var(--line); }
 .lg-tail{ margin-bottom:0; }
-@media (max-width:560px){
-  .lg-cols{ display:block; overflow-x:auto; }
+/* ⚠️ 좁은 화면에서 표를 **세로로 폅니다.** 세 칸을 그대로 두면 첫
+   칸이 99px 이 되어 회사 이름이 글자 단위로 쪼개집니다. 가로
+   스크롤로 두면 손님이 오른쪽에 뭐가 있는지 모릅니다.
+   ⚠️ 칸 앞에 `data-h` 로 제목을 붙여야 어느 칸인지 알 수 있습니다 —
+   세로로 펴면 머리글 줄이 안 보이기 때문입니다. */
+@media (max-width:640px){
+  .lg-cols, .lg-cols tbody, .lg-cols tr, .lg-cols td{ display:block; width:100%; }
+  .lg-cols thead{ display:none; }
+  .lg-cols tr{ border:1px solid var(--line); border-radius:var(--r-lg);
+    padding:var(--s4); margin-bottom:var(--s3); }
+  .lg-cols td{ border:0; padding:var(--s2) 0; }
+  .lg-cols td::before{ content:attr(data-h); display:block;
+    font-size:var(--t-cap); font-weight:700; color:var(--ink3);
+    margin-bottom:2px; }
+  /* ⚠️ `data-h` 가 없는 칸에는 빈 상자를 만들지 마세요 — 빈 문자열은
+     "없음" 이 아니라 높이 있는 상자입니다. */
+  .lg-cols td:not([data-h])::before{ content:none; }
 }

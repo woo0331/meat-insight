@@ -79,7 +79,11 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .lg b{ font-size:var(--t-lg); font-weight:900; letter-spacing:-.03em; color:var(--ink); }
 .lg span{ font-size:var(--t-cap); color:var(--ink3); margin-top:1px;
   white-space:nowrap; }
+.lg-ft{ flex-direction:row; align-items:baseline; gap:8px; flex-wrap:wrap; }
 .lg-ft b{ color:#fff; }
+/* 로고 옆 태그라인 — ⚠️ 12px 미만 금지라 --t-cap(13px) 입니다 */
+.lg-ft i{ font-style:normal; font-size:var(--t-cap); letter-spacing:-.02em;
+  color:var(--on-dark-2); }
 
 .gnb{ display:flex; gap:var(--s5); flex:1 1 auto; min-width:0;
   justify-content:center; }
@@ -264,7 +268,8 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
   padding:var(--sec-y) 0 var(--s7); font-size:var(--t-base); }
 /* ⚠️ 칸 수를 묶음 수에 맞추세요. `repeat(4,1fr)` 로 두고 묶음을
    다섯으로 늘리면 다섯째가 다음 줄로 혼자 떨어집니다. */
-.ft-g{ display:grid; grid-template-columns:1.4fr repeat(5,1fr); gap:var(--s6); }
+/* 다섯 칸 → 셋. 시안(§13)의 차분한 한 판에 가깝게 */
+.ft-g{ display:grid; grid-template-columns:1.6fr repeat(3,1fr); gap:var(--s7); }
 .ft-b p{ margin:var(--s4) 0 var(--s5); line-height:1.8; color:var(--on-dark-2);
   font-size:var(--t-sm); }
 .ft .btn-o{ background:transparent; color:#fff; border-color:rgba(255,255,255,.34); }
@@ -274,7 +279,7 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
   color:var(--on-dark); font-size:var(--t-sm); }
 .ft-col a:hover{ color:#fff; }
 .ft-role{ margin-top:var(--s8); padding-top:var(--s5);
-  border-top:1px solid rgba(255,255,255,.14); font-size:var(--t-sm);
+  border-top:1px solid var(--on-dark-line); font-size:var(--t-sm);
   color:var(--on-dark-2); line-height:1.8; }
 .ft-biz{ margin-top:var(--s4); font-size:var(--t-cap); color:var(--on-dark-2);
   display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5); }
@@ -284,6 +289,15 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
   .ft-b{ grid-column:1 / -1; }
 }
 @media (max-width:560px){ .ft-g{ grid-template-columns:1fr 1fr; } }
+
+/* 시안의 맨 아랫줄 — 소개 · FAQ · 약관 · 방침.
+   ⚠️ 누르는 것은 40px 이상입니다. 한 줄로 눕혀도 높이는 지킵니다. */
+.ft-tail{ display:flex; flex-wrap:wrap; gap:0 var(--s5);
+  margin-top:var(--s7); padding-top:var(--s5);
+  border-top:1px solid var(--on-dark-line); }
+.ft-tail a{ display:inline-flex; align-items:center; min-height:40px;
+  font-size:var(--t-sm); font-weight:600; color:var(--on-dark-2); }
+.ft-tail a:hover{ color:#fff; }
 
 /* ── 알림 ────────────────────────────────────────────────────────
    ⚠️ 폰에서 **아래 네비에 가립니다.** 이 미디어쿼리는 `.mnav` 가

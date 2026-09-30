@@ -157,22 +157,26 @@
 /* ════════ ③ 연결 — 끝이 시작이 됩니다 ══════════════════════════
    ⚠️ **아이콘 도식으로 줄이지 마세요** (§9). 사진이 이야기를 합니다.
    흐름은 주황(정리) → 남색(우리) → 초록(시작)입니다. */
-/* ⚠️ 흰 바탕으로 두었더니 **흰 자산 카드가 구간 바탕과 같은 색**이
-   되어 그림자로만 보였습니다 (전수 점검이 잡았습니다). 구간마다 흰색 ·
-   웜 화이트 · 아이보리를 번갈아 칠하는 규칙과도 맞습니다 — 앞 구간이
-   아이보리(.lin)라 여기는 웜 화이트입니다. */
-.lbr{ background:var(--bg); }
+/* ⚠️ 여기 바탕을 두 번 고쳤습니다.
+   ① 흰색으로 뒀더니 **흰 카드가 구간 바탕과 같은 색**이라 그림자로만
+      보였습니다 (검사가 잡았습니다).
+   ② 그래서 웜 화이트(--bg #FDFBF7)로 바꿨더니, 이번엔 앞 구간
+      아이보리(--ivory #FAF7F1)와 채널당 3~6 차이라 **두 구간이 한
+      구간으로 읽혔습니다.** 검사는 "완전히 같은 색" 만 잡아서 통과했고,
+      찍어 보고서야 알았습니다.
+   지금은 구간을 흰색으로 되돌리고 **카드 쪽에 색과 선**을 줍니다 —
+   아이보리 → 흰색이라 경계가 분명하고, 카드도 따로 읽힙니다. */
+.lbr{ background:var(--surface); }
 .sec-hd-c{ text-align:center; }
 .sec-hd-c h2{ font-size:clamp(28px, 3.4vw, 48px); font-weight:900;
   letter-spacing:-.035em; line-height:1.24; color:var(--navy); }
 .sec-hd-c > p{ margin-left:auto; margin-right:auto; }
 
-.lbr-g{ display:grid; gap:var(--s5); align-items:center;
-  grid-template-columns:.8fr 1.15fr .95fr .9fr; }
+.lbr-g{ display:grid; gap:var(--s6); align-items:center;
+  grid-template-columns:1fr auto 1fr; }
 
 /* 좌우 기둥 — 사진이 없으면 글만 남습니다 (§16) */
 .lbr-side{ display:grid; gap:var(--s3); align-content:center; }
-.lbr-side-st{ text-align:right; }
 
 /* ⚠️ `overflow:hidden` 을 액자에 걸면 **옆에 붙인 손글씨 딱지가
    잘립니다** — 실제로 "정리하는 사장님" 의 첫 글자가 잘렸습니다.
@@ -188,8 +192,9 @@
   color:var(--close-dark); }
 .lbr-hw-st{ color:var(--start-dark); }
 
-.lbr-as{ border-radius:var(--r-2xl); background:var(--surface);
-  box-shadow:var(--shadow-card); padding:var(--s5); }
+.lbr-as{ border-radius:var(--r-2xl); background:var(--bg);
+  box-shadow:var(--shadow-card), inset 0 0 0 1px var(--line);
+  padding:var(--s5); }
 .lbr-as-t{ font-size:var(--t-sm); font-weight:800; color:var(--close-dark);
   margin-bottom:var(--s4); }
 .lbr-as-g{ display:grid; gap:var(--s3); grid-template-columns:repeat(3,1fr); }
@@ -198,6 +203,7 @@
 .lbr-as-g > li{ display:grid; gap:6px; justify-items:center;
   align-content:center; min-height:64px; padding:var(--s3) var(--s2);
   border-radius:var(--r); background:var(--close-soft); }
+.lbr-as-g .ph{ background:var(--surface); }
 .lbr-as-g .ph{ width:100%; aspect-ratio:4/3; border-radius:var(--r-sm); }
 .lbr-as-g i{ font-style:normal; font-size:var(--t-cap); font-weight:700;
   color:var(--close-dark); }
@@ -229,17 +235,37 @@
   var(--start), rgba(8,168,117,.22)); }
 .lbr-arw-out::after{ border-left-color:rgba(8,168,117,.22); }
 
-.lbr-new-t{ font-size:var(--t-sm); font-weight:800; color:var(--start-dark); }
+/* 이어받는 쪽 — 왼쪽 자산 카드와 **무게가 같아야** 합니다.
+   한쪽이 가벼우면 화살표가 한 방향으로만 읽힙니다. */
+.lbr-gn{ border-radius:var(--r-2xl); background:var(--bg);
+  box-shadow:var(--shadow-card), inset 0 0 0 1px var(--line);
+  padding:var(--s5); }
+.lbr-gn-t{ font-size:var(--t-sm); font-weight:800; color:var(--start-dark);
+  margin-bottom:var(--s4); }
+.lbr-gn-g{ display:grid; gap:var(--s3); }
+/* ⚠️ grid 칸에 맨글과 태그를 섞지 마세요 — `<b>` 가 딴 칸이 됩니다.
+   칸마다 다시 grid 를 펴서 제목과 설명을 세웁니다. */
+.lbr-gn-g > li{ display:grid; gap:2px; padding:var(--s3) var(--s4);
+  border-radius:var(--r); background:var(--start-soft); }
+.lbr-gn-g b{ font-size:var(--t-sm); font-weight:800; color:var(--start-dark); }
+.lbr-gn-g i{ font-style:normal; font-size:var(--t-cap); line-height:1.6;
+  color:var(--ink2); }
 
-@media (max-width:1180px){
-  .lbr-g{ grid-template-columns:1fr 1fr; }
-  .lbr-mid{ grid-column:1 / -1; }
-}
-@media (max-width:760px){
-  /* 세로 흐름 (§23) — 정리 ↓ 자산 ↓ ABOUTMEAT ↓ 새로운 시작 */
+@media (max-width:900px){
+  /* 세로 흐름 (§23) — 정리하는 사장님 ↓ 자산 ↓ ABOUTMEAT ↓ 새로운 시작.
+     ⚠️ 가운데 화살표가 옆으로 누운 채 세로로 쌓이면 흐름이 안 읽힙니다 */
   .lbr-g{ grid-template-columns:1fr; }
-  .lbr-side-st{ text-align:left; }
-  .lbr-arw{ max-width:none; }
+  .lbr-mid{ padding:var(--s3) 0; }
+  .lbr-arw{ max-width:none; width:10px; height:44px; }
+  .lbr-arw::before{ inset:0 3px 12px 3px; }
+  .lbr-arw::after{ right:50%; top:auto; bottom:0; margin:0 -7px 0 0;
+    border-left-color:transparent !important; }
+  .lbr-arw-in::after{ border-top-color:var(--close); }
+  .lbr-arw-out::after{ border-top-color:rgba(8,168,117,.22); }
+  .lbr-arw-in::before{ background:linear-gradient(180deg,
+    rgba(243,107,56,.22), var(--close)); }
+  .lbr-arw-out::before{ background:linear-gradient(180deg,
+    var(--start), rgba(8,168,117,.22)); }
 }
 
 /* ════════ ④ 브랜드 메시지 — 전면 사진 ══════════════════════════ */

@@ -154,25 +154,48 @@ var LASSETS = [
   { k:"asset-stock",     n:"재고" }
 ];
 
+/* 이어받는 쪽에서 실제로 달라지는 것 — ⚠️ 왼쪽 자산 여섯을 그대로
+   다시 적지 않습니다. 같은 말을 두 번 하면 화살표가 무슨 뜻인지
+   흐려집니다. **그것이 다음 사장님에게 무엇인지**를 적습니다. */
+var LGAINS = [
+  { n:"자리",      d:"상권을 처음부터 다시 찾지 않아도 됩니다" },
+  { n:"시설 · 장비", d:"쓸 수 있는 것은 새로 사지 않아도 됩니다" },
+  { n:"여는 날",    d:"공사 기간이 줄어 문을 빨리 엽니다" }
+];
+
 function FlowBand(){
   /* ⚠️ **빈 회색 상자를 깔지 않습니다** (§16 — "임의의 컬러 박스로
-     대체하지 않는다"). 사진이 없는 자리는 액자째 빼고, 글과 자산
-     카드만으로도 이야기가 서게 두었습니다. 사진이 들어오면 저절로
-     제자리에 붙습니다. */
+     대체하지 않는다"). 사진이 없는 자리는 액자째 뺍니다.
+     ⚠️ 그런데 액자만 빼면 **글자 한 줄만 남아 기둥이 텅 빕니다.**
+     그래서 사진이 없을 때는 자산 카드가 곧 "정리하는 쪽" 이고,
+     오른쪽은 이어받는 쪽 카드가 자리를 지킵니다 — 사진이 들어오면
+     그 위로 액자가 붙습니다. */
   var pCl = hasPhoto("flow-close");
   var pSt = hasPhoto("flow-start");
   var pOw = hasPhoto("flow-start-owner");
 
+  /* ── 정리하는 쪽 ── */
   var left = '<div class="lbr-side lbr-side-cl">'+
     '<p class="lbr-hw">정리하는 사장님</p>'+
     (pCl ? '<figure class="lbr-p lbr-p-cl">'+photoBox("flow-close")+'</figure>' : '')+
+    '<div class="lbr-as">'+
+      '<p class="lbr-as-t">폐업하는 사장님의 자산</p>'+
+      '<ul class="lbr-as-g">'+LASSETS.map(function(a){
+        return '<li>'+(hasPhoto(a.k) ? photoBox(a.k) : '')+
+          '<i>'+esc(a.n)+'</i></li>'; }).join("")+'</ul>'+
+    '</div>'+
   '</div>';
 
+  /* ── 이어받는 쪽 ── */
   var right = '<div class="lbr-side lbr-side-st">'+
-    '<p class="lbr-new-t">창업하는 사장님의 새로운 시작</p>'+
+    '<p class="lbr-hw lbr-hw-st">창업하는 사장님</p>'+
     (pSt ? '<figure class="lbr-p lbr-p-st">'+photoBox("flow-start")+'</figure>' : '')+
     (pOw ? '<figure class="lbr-p lbr-p-ow">'+photoBox("flow-start-owner")+'</figure>' : '')+
-    '<p class="lbr-hw lbr-hw-st">새로운 시작을 응원합니다</p>'+
+    '<div class="lbr-gn">'+
+      '<p class="lbr-gn-t">새로운 시작에서 달라지는 것</p>'+
+      '<ul class="lbr-gn-g">'+LGAINS.map(function(g){
+        return '<li><b>'+esc(g.n)+'</b><i>'+esc(g.d)+'</i></li>'; }).join("")+'</ul>'+
+    '</div>'+
   '</div>';
 
   return '<section class="sec lbr"><div class="w">'+
@@ -183,13 +206,6 @@ function FlowBand(){
     '</div>'+
     '<div class="lbr-g">'+
       left+
-      /* 폐업하는 사장님의 자산 — 사진이 없으면 타일은 이름만 남습니다 */
-      '<div class="lbr-as">'+
-        '<p class="lbr-as-t">폐업하는 사장님의 자산</p>'+
-        '<ul class="lbr-as-g">'+LASSETS.map(function(a){
-          return '<li>'+(hasPhoto(a.k) ? photoBox(a.k) : '')+
-            '<i>'+esc(a.n)+'</i></li>'; }).join("")+'</ul>'+
-      '</div>'+
       /* 가운데 — 우리. 주황(정리)이 들어오고 초록(시작)이 나갑니다 */
       '<div class="lbr-mid">'+
         '<span class="lbr-arw lbr-arw-in" aria-hidden="true"></span>'+

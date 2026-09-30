@@ -172,21 +172,26 @@
   letter-spacing:-.035em; line-height:1.24; color:var(--navy); }
 .sec-hd-c > p{ margin-left:auto; margin-right:auto; }
 
-/* ⚠️ **두 기둥의 무게가 같아야 합니다** — 한쪽이 가벼우면 화살표가 한
-   방향으로만 읽힙니다. `align-items:center` 로 두었더니 왼쪽 자산 카드
-   221px · 오른쪽 이어받는 카드 319px 으로 98px 이 어긋났고, 두 기둥의
-   딱지가 49px 씩 다른 높이에 앉았습니다. 검사는 못 잡습니다 — 찍어 보고
-   알았습니다. 그래서 기둥은 늘리고(stretch), 가운데만 가운데에 둡니다. */
+/* ⚠️⚠️ **맞추는 것은 두 기둥의 윗머리이지 카드 높이가 아닙니다.**
+   실제로 보이던 결함은 `align-items:center` 탓에 두 딱지("정리하는
+   사장님" / "창업하는 사장님")가 49px 어긋난 것이었습니다. 그래서 기둥을
+   늘려(stretch) 윗머리를 맞추고, 가운데(로고 · 화살표)만 가운데에 둡니다.
+
+   ⚠️ **남는 높이를 카드에 주지 마세요.** 한 번 그렇게 했다가 —
+   `.lbr-side > :last-child{flex:1}` — 사진이 **한쪽에만** 들어오자
+   오른쪽 기둥이 액자 때문에 748px 이 되고 왼쪽 자산 카드가 711px 까지
+   끌려 올라가서, 타일 하나가 146×309 인 **세로 2:1 칸**이 됐습니다.
+   가로 사진을 거기 넣으면 좌우가 크게 잘립니다. 카드 높이는 내용이
+   다르면 다른 것이 맞고, 짧은 쪽 아래에 여백이 남는 것이 맞습니다. */
 .lbr-g{ display:grid; gap:var(--s6); align-items:stretch;
   grid-template-columns:1fr auto 1fr; }
 .lbr-mid{ align-self:center; }
 
-/* 좌우 기둥 — 사진이 없으면 글만 남습니다 (§16)
-   ⚠️ 칸 수가 사진 유무에 따라 둘~넷으로 바뀝니다. 그래서 `grid-template-rows`
-   로 세지 않고 **flex 로 두고 마지막 칸(카드)에 남는 높이를 줍니다** —
-   사진이 들어와도 고칠 자리가 없습니다. */
-.lbr-side{ display:flex; flex-direction:column; gap:var(--s3); }
-.lbr-side > :last-child{ flex:1 1 auto; }
+/* 좌우 기둥 — 사진이 없으면 글만 남습니다 (§16).
+   칸 수가 사진 유무에 따라 둘~넷으로 바뀌므로 행을 세지 않습니다.
+   위에서부터 쌓고(flex-start) 남는 높이는 아래에 둡니다. */
+.lbr-side{ display:flex; flex-direction:column; gap:var(--s3);
+  justify-content:flex-start; }
 
 /* ⚠️ `overflow:hidden` 을 액자에 걸면 **옆에 붙인 손글씨 딱지가
    잘립니다** — 실제로 "정리하는 사장님" 의 첫 글자가 잘렸습니다.

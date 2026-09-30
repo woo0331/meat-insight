@@ -1213,12 +1213,13 @@ const AUDIT = `(() => {
       if(ratio < 3.2) return "흰 글자가 안 읽힙니다 (대비 " + ratio.toFixed(2) + ")";
     }
     return true;`);
-  await f("연결 구간 두 기둥의 무게가 같다", "/", `
-    /* 두 기둥의 크기가 다르면 화살표가 한 방향으로만 읽힙니다 (§8 · §9).
-       실제로 왼쪽 자산 카드 221px · 오른쪽 이어받는 카드 319px 으로
-       98px 이 어긋났고, 두 딱지가 49px 씩 다른 높이에 앉아 있었습니다.
-       전수 점검은 통과했고 찍어 보고 알았습니다 — 그래서 여기 둡니다.
-       ⚠️ 이 검사를 지우려거든 시안을 먼저 고치세요. */
+  await f("연결 구간 두 딱지가 같은 높이에 앉는다", "/", `
+    /* 실제로 보이던 결함은 두 딱지("정리하는 사장님" / "창업하는 사장님")가
+       49px 어긋난 것이었습니다 (§8 · §9 — 한쪽이 가벼우면 화살표가 한
+       방향으로만 읽힙니다). 전수 점검은 통과했고 찍어 보고 알았습니다.
+       ⚠️ **카드 높이까지 같기를 바라지 마세요** — 한 번 그렇게 맞췄다가
+       사진이 한쪽에만 들어오자 반대쪽 타일이 세로 2:1 로 늘어났습니다.
+       그건 아래 "자산 타일이 세로로 길쭉하지 않다" 가 봅니다. */
     const a = document.querySelector(".lbr-side-cl");
     const b = document.querySelector(".lbr-side-st");
     if(!a || !b) return "연결 구간 두 기둥 중 하나가 없습니다";
@@ -1227,11 +1228,28 @@ const AUDIT = `(() => {
     const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
     if(Math.abs(ra.width - rb.width) > 2)
       return "좌우 폭이 " + Math.round(ra.width) + " · " + Math.round(rb.width) + "입니다";
-    if(Math.abs(ra.height - rb.height) > 2)
-      return "좌우 높이가 " + Math.round(ra.height) + " · " + Math.round(rb.height) + "입니다";
-    if(Math.abs(ra.top - rb.top) > 2)
-      return "두 기둥의 윗머리가 " +
-        Math.round(Math.abs(ra.top - rb.top)) + "px 어긋났습니다";
+    const ka = a.querySelector(".lbr-hw"), kb = b.querySelector(".lbr-hw");
+    if(!ka || !kb) return "딱지 둘 중 하나가 없습니다";
+    const ta = ka.getBoundingClientRect().top, tb = kb.getBoundingClientRect().top;
+    if(Math.abs(ta - tb) > 2)
+      return "두 딱지가 " + Math.round(Math.abs(ta - tb)) + "px 어긋났습니다";
+    return true;`);
+  await f("자산 타일이 세로로 길쭉하지 않다", "/", `
+    /* 정리하는 쪽 자산 여섯은 **가로 사진**이 들어가는 칸입니다.
+       카드에 남는 높이를 주었더니(.lbr-side > :last-child{flex:1}) 사진이
+       한쪽에만 들어온 상태에서 오른쪽 기둥이 748px 이 되고 왼쪽 자산
+       카드가 711px 까지 끌려 올라가, 타일 하나가 146×309 인 세로 2:1 칸이
+       됐습니다 — 가로 사진을 넣으면 좌우가 크게 잘립니다.
+       사진이 없을 때 0.44 · 여덟 장일 때 0.99 라 1.5 면 넉넉합니다. */
+    if(innerWidth <= 900) return true;
+    const li = document.querySelector(".lbr-as-g > li");
+    if(!li) return "자산 타일이 없습니다";
+    const r = li.getBoundingClientRect();
+    if(!r.width) return "타일 크기를 못 읽습니다";
+    const k = r.height / r.width;
+    if(k > 1.5)
+      return "타일이 " + Math.round(r.width) + "×" + Math.round(r.height) +
+        "입니다 (높이/폭 " + k.toFixed(2) + ", 1.5 까지)";
     return true;`);
 
   /* ⑰ 업체 입점 (/join) — 공급 쪽이 이 플랫폼의 목숨입니다

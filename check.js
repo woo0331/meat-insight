@@ -1108,10 +1108,71 @@ const AUDIT = `(() => {
     }
     return true;`);
 
-  console.log("\n── 흐름 " + 49 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
+  /* ⑰ 업체 입점 (/join) — 공급 쪽이 이 플랫폼의 목숨입니다
+     ⚠️ 여기가 **성과를 지어내고 싶어지는 자리**입니다. 업체를
+     설득해야 하는 화면이라 "월 n건의 요청" 을 적고 싶어집니다.
+     지금 0 이고, 적으면 표시광고법 제3조 위반입니다. */
+  await f("입점 화면이 업체 0곳을 0 이라고 말한다", "/join", `
+    const t = document.getElementById("view").textContent;
+    const n = (window.AM_PROVIDERS || []).length;
+    if(n === 0){
+      if(t.indexOf("0곳") < 0 && t.indexOf("아직") < 0)
+        return "업체가 0곳인데 화면이 그렇게 말하지 않습니다";
+      /* 분야마다 붙는 배지도 0 이면 0 이라고 해야 합니다 */
+      const badge = [].slice.call(document.querySelectorAll(".join-n"));
+      if(!badge.length) return "분야마다 지금 몇 곳인지 안 냅니다";
+      for(const b of badge)
+        if(/[0-9]/.test(b.textContent) && b.textContent.indexOf("0곳") < 0)
+          return "등록 0곳인데 분야 배지에 숫자가 있습니다 — " + b.textContent.trim();
+      return true;
+    }
+    /* 업체가 생기면 **센 값**과 맞아야 합니다 */
+    const cats = (window.AM_CATS || []).filter(function(c){ return c.kind === "provider"; });
+    for(const c of cats){
+      const want = window.amProvidersInCat(c);
+      const el = [].slice.call(document.querySelectorAll(".join-cat")).filter(function(e){
+        return (e.querySelector("b") || {}).textContent &&
+               e.querySelector("b").textContent.indexOf(c.name) === 0; })[0];
+      if(!el) continue;
+      const got = (el.querySelector(".join-n") || {}).textContent || "";
+      const num = parseInt((got.match(/[0-9]+/) || [0])[0], 10);
+      if(want !== num) return c.name + " 가 화면 " + got.trim() + " · 실제 " + want + " 입니다";
+    }
+    return true;`);
+  await f("입점 화면에 지킬 수 없는 약속이 없다", "/join", `
+    /* ⚠️ 요청 건수 · 회신 시점 · 1위는 우리가 정할 수 있는 것이
+       아닙니다. 약관 제6조 · 제8조와 어긋나면 그때부터 채무입니다. */
+    const t = document.getElementById("view").textContent;
+    const bad = [];
+    const pat = [[/월\\s*[0-9]/, "월 n건"], [/[0-9]\\s*건의?\\s*요청/, "n건의 요청"],
+                 [/보장/, "보장"], [/최저가/, "최저가"], [/[0-9]\\s*시간\\s*(안|내)/, "n시간 안에"],
+                 [/당일\\s*(연락|배정)/, "당일 연락"], [/1\\s*위/, "1위"],
+                 [/무조건/, "무조건"]];
+    for(const q of pat) if(q[0].test(t)) bad.push(q[1]);
+    return bad.length ? bad.join(" · ") + " 가 있습니다" : true;`);
+  await f("입점 화면이 연락처는 나중에 간다고 밝힌다", "/join", `
+    /* ⚠️ 업체가 "등록하면 연락처가 바로 오는구나" 로 잘못 알면,
+       실제로 안 왔을 때 그게 거짓말이 됩니다. 그리고 미리 뭉뚱그려
+       받는 동의는 개인정보보호법 제17조 제2항 위반입니다. */
+    const box = document.querySelector(".jn-req");
+    if(!box) return "요청이 어떻게 오는지 안 보여 줍니다";
+    const t = box.textContent;
+    if(t.indexOf("제17조") < 0) return "제17조 근거가 없습니다";
+    if(t.indexOf("들어 있지 않습니다") < 0)
+      return "연락처가 안 온다는 말이 없습니다";
+    /* 전달되는 칸 목록에 성함 · 연락처가 섞여 있으면 안 됩니다 */
+    const fields = [].slice.call(box.querySelectorAll(".jn-req-l > li > b"))
+      .map(function(e){ return e.textContent.trim(); });
+    if(!fields.length) return "전달되는 칸 목록이 없습니다";
+    for(const x of fields)
+      if(/성함|이름|연락처|전화|휴대폰/.test(x))
+        return "전달되는 칸에 " + x + " 가 있습니다";
+    return true;`);
+
+  console.log("\n── 흐름 " + 52 + "개 (지어낸 것 없음 5 · 업종 개인화 3 · 조건 전달 3 · " +
               "접수 4 · MY 3 · 검색 3 · 문서 3 · 히어로 3 · 규모감 2 · FAQ · 진행 3 · " +
               "정보 글 3 · 글 잇기 2 · 창업 과정 · 폐업 선택 4 · 골드 2 · 검색 진입 2 · " +
-              "MY 도구 2 · 랜딩 4)");
+              "MY 도구 2 · 랜딩 4 · 업체 입점 3)");
   if (flowBad.length) { fail++; console.log("  ❌ " + flowBad.length + "건: " + flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

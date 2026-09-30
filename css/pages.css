@@ -161,8 +161,73 @@
 }
 
 /* 입점 분야 — ⚠️ 칩을 다 늘어놓지 않습니다. 분야마다 여섯까지. */
+/* ════════ 업체 입점 (/join) — 설득하는 화면 ══════════════════════
+   ⚠️ **성과를 지어내지 마세요.** 여기 숫자는 전부 `AM_PROVIDERS` 를
+   그 자리에서 센 값이고, 0 이면 0 이라고 말합니다. 글은
+   `js/data/join.js` 한 곳에 있습니다. */
+.jn-now{ display:grid; grid-template-columns:1.1fr .9fr; gap:var(--s7) var(--s9);
+  align-items:center; }
+.jn-now-t h2{ font-size:var(--t-2xl); color:var(--navy); }
+.jn-now-t h2 em{ font-style:normal; color:var(--start-dark); }
+.jn-now-t .lead{ margin-top:var(--s4); }
+.jn-now-t .lead b{ color:var(--ink); }
+.jn-now-l{ display:grid; gap:var(--s3); min-width:0; }
+.jn-now-l > li{ display:grid; grid-template-columns:auto 1fr; align-items:baseline;
+  gap:var(--s4); padding:var(--s4) var(--s5); border-radius:var(--r-lg);
+  background:var(--bg); border:1px solid var(--line); }
+.jn-now-l b{ font-size:var(--t-lg); font-weight:800; color:var(--navy);
+  white-space:nowrap; }
+.jn-now-l span{ font-size:var(--t-sm); color:var(--ink2); }
+@media (max-width:900px){ .jn-now{ grid-template-columns:1fr; gap:var(--s6); } }
+
+/* 요청이 이런 칸으로 옵니다
+   ⚠️ 이 구간의 바탕은 `--bg`(웜 화이트)입니다. 상자까지 `--bg` 로
+   두면 **상자가 안 보입니다** — 흰 면으로 띄웁니다. */
+.jn-req{ border-radius:var(--r-2xl); background:var(--surface);
+  border:1px solid var(--line); padding:var(--s7);
+  box-shadow:var(--shadow-card); }
+.jn-req-l{ display:grid; grid-template-columns:repeat(5,1fr); gap:var(--s4); }
+.jn-req-l > li{ display:grid; align-content:start; gap:4px; min-width:0;
+  padding:var(--s4) var(--s5); border-radius:var(--r-lg);
+  background:var(--bg); }
+.jn-req-l b{ font-size:var(--t-base); color:var(--ink); }
+.jn-req-l span{ font-size:var(--t-cap); color:var(--ink2); line-height:1.6; }
+/* ⚠️ 이 줄이 이 구간의 핵심입니다 — 연락처가 안 온다는 말 */
+.jn-req-n{ display:grid; grid-template-columns:auto 1fr; gap:var(--s3);
+  align-items:start; margin-top:var(--s6); padding-top:var(--s5);
+  border-top:1px solid var(--line);
+  font-size:var(--t-sm); color:var(--ink2); line-height:1.75; }
+.jn-req-n > span > b{ color:var(--ink); }
+.jn-req-n > svg{ color:var(--start-dark); margin-top:3px; }
+@media (max-width:980px){ .jn-req-l{ grid-template-columns:1fr 1fr 1fr; } }
+@media (max-width:640px){
+  .jn-req{ padding:var(--s5); }
+  .jn-req-l{ grid-template-columns:1fr 1fr; gap:var(--s3); }
+}
+
+/* 약속 넷 */
+.jn-why{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s5); }
+.jn-why > li{ display:grid; align-content:start; gap:var(--s3); min-width:0;
+  padding:var(--s7); border-radius:var(--r-lg);
+  background:var(--bg); border:1px solid var(--line); }
+.jn-why-ic{ display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:var(--r-sm);
+  background:var(--start-soft); color:var(--start-dark); }
+.jn-why > li > b{ font-size:var(--t-lg); line-height:1.4; }
+.jn-why-d{ font-size:var(--t-sm); color:var(--ink2); line-height:1.8; }
+@media (max-width:820px){ .jn-why{ grid-template-columns:1fr; } }
+
+/* 분야마다 지금 몇 곳인가 — ⚠️ 센 값입니다 */
+/* ⚠️ `.join-cat > b` 가 **세 곳에** 있었습니다 — 뒤의 것이 이겨서
+   여기 적은 것이 조용히 안 먹었습니다. 한 곳으로 합쳤습니다. */
+.join-cat > b{ display:flex; align-items:baseline; gap:var(--s3); flex-wrap:wrap;
+  font-size:var(--t-base); margin-bottom:var(--s3); }
+.join-n{ font-style:normal; font-size:var(--t-cap); font-weight:700;
+  color:var(--start-dark); background:var(--start-soft);
+  border-radius:var(--r-pill); padding:3px 10px; }
+.join-n0{ color:var(--ink3); background:var(--bg-2); }
+
 .join-g{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s5) var(--s7); }
-.join-cat > b{ display:block; font-size:var(--t-base); margin-bottom:var(--s2); }
 .chip-more{ color:var(--ink3); background:transparent; }
 @media (max-width:760px){ .join-g{ grid-template-columns:1fr; gap:var(--s4); } }
 
@@ -666,7 +731,6 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .join-l b{ color:var(--ink); font-size:var(--t-base); }
 .join-l i{ font-style:normal; color:var(--ink2); font-size:var(--t-sm); line-height:1.7; }
 .join-cat{ margin-bottom:var(--s6); }
-.join-cat > b{ display:block; font-size:var(--t-base); margin-bottom:var(--s3); }
 @media (max-width:980px){ .join-b{ grid-template-columns:1fr; gap:var(--s7); } }
 
 /* ════════ 지원사업 · 정보 · 읽는 글 ══════════════════════════════ */

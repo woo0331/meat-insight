@@ -64,6 +64,12 @@ const CASES = [
    `document.querySelector('.hd a[href="/search"]').remove();`],
   ["헤더가 거의 불투명해서 밑의 글자가 안 비친다",
    `document.querySelector(".hd").style.background = "rgba(255,255,255,.5)";`],
+  ["입점 화면이 업체 0곳을 0 이라고 말한다",
+   `document.querySelectorAll(".join-n")[0].textContent = "12곳";`],
+  ["입점 화면에 지킬 수 없는 약속이 없다",
+   `document.querySelector(".jn-now-t h2").textContent = "월 30건의 요청을 보장합니다";`],
+  ["입점 화면이 연락처는 나중에 간다고 밝힌다",
+   `document.querySelectorAll(".jn-req-l > li > b")[0].textContent = "연락처";`],
   ["카드가 구간 바탕과 같은 색이 아니다",
    `document.querySelectorAll(".lcc")[0].style.background =
       getComputedStyle(document.querySelector(".lcat")).backgroundColor;`]

@@ -206,6 +206,22 @@ function ReviewBlock(p){
 }
 
 /* ── /join — 업체 입점 (§39) ───────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════
+   업체 입점 (/join) — **설득하는 화면입니다**
+
+   이 화면이 하는 일은 하나입니다 — 업체 사장님이 **등록 버튼을
+   누르게 하는 것.** 업체가 모이지 않으면 이 플랫폼은 아무것도
+   아닙니다.
+
+   ⚠️⚠️ **성과를 지어내지 마세요.** "월 n건의 요청" · "n곳이 함께합니다"
+   는 지금 0 이고, 적으면 표시광고법 제3조 위반입니다. 여기서 낼 수
+   있는 것은 **지금 사실인 것**과 **우리가 지키겠다는 약속**까지입니다.
+   글은 `js/data/join.js` 한 곳에 있습니다.
+
+   ⚠️ **0 을 숨기지 않습니다.** 오히려 그대로 말하는 것이 이 단계에서
+   제일 센 말입니다 — "이 분야에 아직 아무도 없습니다." 등록되면 그
+   자리에 실제 숫자가 나오고, 고쳐 쓸 자리가 없습니다.
+   ════════════════════════════════════════════════════════════════════ */
 function PageJoin(){
   var subs = [];
   AM_CATS.forEach(function(c){
@@ -224,27 +240,157 @@ function PageJoin(){
     h1raw:"창업과 폐업을 준비하는<br class=\"br-m\"> 사장님이 직접 찾아옵니다.",
     lead:"하시는 일과 지역만 등록해 두시면, 조건이 맞는 요청만 보내 드립니다. 기본 입점은 무료입니다."
   })+
-  '<section class="sec sec-white"><div class="w">'+
+  JoinNow(subs)+
+  JoinWhat()+
+  JoinWhy()+
+  JoinHow()+
+  JoinFields(subs)+
+  JoinFaq()+
+  JoinForm(ready);
+}
+
+/* ── ① 지금 상태 — ⚠️ 0 을 그대로 말합니다 ───────────────────────
+   이 단계에서 제일 센 말은 "아직 아무도 없습니다" 입니다. 부풀리면
+   등록한 업체가 곧 알아채고, 그때 잃는 것이 훨씬 큽니다. */
+function JoinNow(subs){
+  var n = (window.AM_PROVIDERS || []).length;
+  var open = !!(window.WOW_BIZ && WOW_BIZ.sosReady);
+  /* 아직 아무도 없는 분야 — 세는 값입니다 */
+  var empty = subs.filter(function(g){
+    return window.amProvidersInCat ? amProvidersInCat(g.cat) === 0 : true; }).length;
+
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="jn-now">'+
+      '<div class="jn-now-t">'+
+        '<p class="eyebrow">지금 상태</p>'+
+        (n
+          ? '<h2>지금 <em>'+n+'곳</em>이 등록돼 있습니다.</h2>'+
+            '<p class="lead">분야와 지역이 맞는 요청을 나눠 받습니다.</p>'
+          : '<h2>아직 <em>아무도</em> 등록하지 않았습니다.</h2>'+
+            '<p class="lead">부풀려 말씀드리지 않겠습니다. 지금 등록된 업체는 '+
+              '0곳이고, 그래서 지금 들어오시면 그 분야의 <b>첫 번째</b>입니다.</p>')+
+      '</div>'+
+      '<ul class="jn-now-l">'+
+        '<li><b>'+esc(open ? "열려 있습니다" : "준비 중입니다")+'</b>'+
+          '<span>사장님 쪽 견적 요청 접수</span></li>'+
+        '<li><b>'+(empty || subs.length)+'개 분야</b>'+
+          '<span>'+esc(empty ? "아직 등록된 업체가 없습니다" : "업체를 받고 있습니다")+'</span></li>'+
+        '<li><b>무료</b><span>기본 입점 · 프로필 관리</span></li>'+
+      '</ul>'+
+    '</div>'+
+  '</div></section>';
+}
+
+/* ── ② 무엇을 받게 되나 ──────────────────────────────────────────
+   업체가 제일 먼저 묻는 것입니다 — "그래서 뭐가 오는데?"
+   ⚠️ **지어낸 손님을 만들지 마세요.** 이건 특정 요청이 아니라
+   **견적 요청 화면이 받는 칸의 목록**입니다.
+   ⚠️ **성함 · 연락처를 여기 넣지 마세요** (제17조). */
+function JoinWhat(){
+  var f = (window.AM_JOIN_FIELDS || []);
+  if(!f.length) return "";
+  return '<section class="sec"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">무엇을 받게 되나</p>'+
+      '<h2>요청은 이런 칸으로 옵니다</h2>'+
+      '<p>사장님이 직접 적어 보내신 내용을 그대로 전달합니다. '+
+        '받으실지 말지는 업체가 정하십니다.</p>'+
+    '</div>'+
+    '<div class="jn-req">'+
+      '<ul class="jn-req-l">'+ f.map(function(x){
+        return '<li><b>'+esc(x[0])+'</b><span>'+esc(x[1])+'</span></li>';
+      }).join("")+'</ul>'+
+      /* ⚠️ 이 줄을 지우지 마세요. 없으면 업체가 "등록하면 연락처가
+         바로 오는구나" 로 잘못 압니다. */
+      '<p class="jn-req-n">'+icon("lock",16)+
+        '<span>성함과 연락처는 <b>여기 들어 있지 않습니다.</b> 업체가 '+
+        '정해지면 사장님께 어느 업체인지 알려 드리고, 그때 다시 동의를 '+
+        '받은 뒤에 전달합니다 (개인정보보호법 제17조).</span></p>'+
+    '</div>'+
+  '</div></section>';
+}
+
+/* ── ③ 왜 여기인가 — 약속 넷 ─────────────────────────────────── */
+function JoinWhy(){
+  var w = (window.AM_JOIN_WHY || []);
+  if(!w.length) return "";
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">약속</p>'+
+      '<h2>업체에 이렇게 하겠습니다</h2>'+
+      '<p>전부 <a href="/terms">이용약관</a>에 근거가 있는 말입니다. '+
+        '약관과 다른 말을 화면에 적지 않습니다.</p>'+
+    '</div>'+
+    '<ul class="jn-why rv-stg">'+ w.map(function(x){
+      return '<li data-rv><span class="jn-why-ic">'+icon(x.icon,22)+'</span>'+
+        '<b>'+esc(x.t)+'</b><span class="jn-why-d">'+esc(x.d)+'</span></li>';
+    }).join("")+'</ul>'+
+  '</div></section>';
+}
+
+/* ── ④ 어떻게 진행되나 — 셋 ─────────────────────────────────── */
+function JoinHow(){
+  var st = (window.AM_JOIN_STEPS || []);
+  if(!st.length) return "";
+  return '<section class="sec"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">어떻게 진행되나</p>'+
+      '<h2>세 걸음이면 됩니다</h2></div>'+
+    '<ol class="how-g">'+ st.map(function(x){
+      return '<li class="how-i">'+
+        '<span class="how-n">'+esc(x.n)+'</span>'+
+        '<b class="how-t">'+esc(x.t)+'</b>'+
+        '<span class="how-d">'+esc(x.d)+'</span>'+
+      '</li>';
+    }).join("")+'</ol>'+
+  '</div></section>';
+}
+
+/* ── ⑤ 입점 분야 ─────────────────────────────────────────────────
+   ⚠️ **123개를 다 늘어놓지 마세요.** 이 화면이 하는 일은 업체를
+   설득해 등록시키는 것인데, 칩 벽이 2,000px 이면 신청 폼이 한참
+   아래로 밀립니다. 분야마다 여섯까지만 보이고 나머지는 개수로
+   냅니다 — 어느 분야든 자기 일이 여기 있다는 것만 알면 됩니다. */
+function JoinFields(subs){
+  if(!subs.length) return "";
+  return '<section class="sec sec-white"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">이런 곳을 찾고 있습니다</p>'+
       '<h2>입점 분야</h2>'+
       '<p>여기 없는 분야도 적어 주시면 분류를 만들어 드립니다.</p></div>'+
-    /* ⚠️ **123개를 다 늘어놓지 마세요.** 이 화면이 하는 일은 업체를
-       설득해 등록시키는 것인데, 칩 벽이 2,000px 이면 신청 폼이
-       한참 아래로 밀립니다. 분야마다 여섯까지만 보이고 나머지는
-       개수로 냅니다 — 어느 분야든 자기 일이 여기 있다는 것만
-       알면 됩니다. 정확한 내용은 아래 "하시는 일" 에 적으십니다. */
     '<div class="join-g">'+subs.map(function(g){
       var show = g.items.slice(0, 6), more = g.items.length - show.length;
-      return '<div class="join-cat"><b>'+esc(g.cat.name)+'</b>'+
+      var n = window.amProvidersInCat ? amProvidersInCat(g.cat) : 0;
+      return '<div class="join-cat"><b>'+esc(g.cat.name)+
+        /* ⚠️ 0 이면 0 이라고 말합니다. 등록되면 저절로 숫자가 됩니다. */
+        '<i class="join-n'+(n ? "" : " join-n0")+'">'+
+          esc(n ? n + "곳" : "아직 없음")+'</i></b>'+
         '<ul class="chip-g">'+show.map(function(i){
           return '<li><span class="chip chip-flat">'+esc(i.name)+'</span></li>';
         }).join("")+
         (more > 0 ? '<li><span class="chip chip-flat chip-more">외 '+more+'</span></li>' : '')+
         '</ul></div>';
     }).join("")+'</div>'+
-  '</div></section>'+
+  '</div></section>';
+}
 
-  '<section class="sec"><div class="w form-wrap">'+
+/* ── ⑥ 업체가 자주 묻는 것 ──────────────────────────────────────
+   ⚠️ **FAQPage 구조화 데이터를 달지 마세요.** `/faq` 가 손님용 FAQ 로
+   이미 달고 있어서, 여기에 또 달면 같은 유형이 두 주소로 나갑니다. */
+function JoinFaq(){
+  var f = (window.amJoinFaq ? amJoinFaq() : []);
+  if(!f.length) return "";
+  return '<section class="sec"><div class="w w-narrow">'+
+    '<div class="sec-hd"><p class="eyebrow">업체가 자주 묻는 것</p>'+
+      '<h2>먼저 궁금해하시는 것들</h2></div>'+
+    '<ul class="faq-l">'+ f.map(function(x){
+      return '<li class="faq-i"><b class="faq-q">'+esc(x.q)+'</b>'+
+        '<p class="faq-a">'+esc(x.a)+'</p></li>';
+    }).join("")+'</ul>'+
+  '</div></section>';
+}
+
+/* ── ⑦ 신청 폼 ─────────────────────────────────────────────────── */
+function JoinForm(ready){
+  return '<section class="sec sec-white"><div class="w form-wrap">'+
     '<h2 class="pg-h2">입점 신청</h2>'+
     (ready ? "" :
       /* ⚠️ **"접수하지 못한다" 는 말을 폼 위에 둡니다.** 다 적고 누른

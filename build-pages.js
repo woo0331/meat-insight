@@ -37,7 +37,7 @@ function loadApp(){
                 "js/data/franchise.js","js/data/providers.js","js/data/market.js",
                 "js/data/support.js","js/data/content.js","js/data/photos.js",
                 "js/data/legal-terms.js","js/data/legal-privacy.js",
-                "js/data/faq.js","js/data/tools.js"];
+                "js/data/faq.js","js/data/tools.js","js/data/join.js"];
 
   /* ⚠️ 여기는 **glob 이 아니라 손으로 적은 목록**입니다. 새 데이터
      파일을 만들고 여기에 안 넣으면, 그 데이터를 쓰는 주소가 **에러
@@ -526,10 +526,40 @@ function noscriptFor(W, r, route){
     return L.join("");
   }
   if(route === "/join"){
+    /* ⚠️ 화면(PageJoin)과 **같은 말**이어야 합니다. 글은
+       js/data/join.js 한 곳에 있습니다.
+       ⚠️ 여기에만 성과를 적지 마세요 — "월 n건" · "n곳이 함께합니다"
+       는 지금 0 이고, 크롤러에게만 적으면 그게 구글에 나가는
+       거짓말입니다. */
+    const nPv = (W.AM_PROVIDERS||[]).length;
+    h2("지금 상태");
+    p(nPv
+      ? "지금 " + nPv + "곳이 등록돼 있습니다."
+      : "아직 아무도 등록하지 않았습니다. 부풀려 말씀드리지 않겠습니다 — " +
+        "지금 등록된 업체는 0곳이고, 그래서 지금 들어오시면 그 분야의 첫 번째입니다.");
+
+    h2("요청은 이런 칸으로 옵니다");
+    ul((W.AM_JOIN_FIELDS||[]).map(f => f[0] + " — " + f[1]));
+    p("성함과 연락처는 여기 들어 있지 않습니다. 업체가 정해지면 사장님께 " +
+      "어느 업체인지 알려 드리고, 그때 다시 동의를 받은 뒤에 전달합니다 " +
+      "(개인정보보호법 제17조).");
+
+    h2("업체에 이렇게 하겠습니다");
+    ul((W.AM_JOIN_WHY||[]).map(x => x.t + " — " + x.d));
+
+    h2("어떻게 진행되나");
+    ul((W.AM_JOIN_STEPS||[]).map(x => x.t + " — " + x.d));
+
     h2("입점 분야");
     (W.AM_CATS||[]).filter(c => c.kind === "provider").forEach(c => {
       L.push("<h3>"+esc(c.name)+"</h3>"); ul(subNames(c));
     });
+
+    const jf = (W.AM_JOIN_FAQ || []);
+    if(jf.length){
+      h2("업체가 자주 묻는 것");
+      jf.forEach(x => { L.push("<h3>"+esc(x.q)+"</h3>"); p(x.a); });
+    }
     return L.join("");
   }
   if(route === "/content"){

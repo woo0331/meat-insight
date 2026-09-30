@@ -57,6 +57,9 @@ const CASES = [
    `document.querySelector(".hs-st .hs-more i").textContent = "40개 분야";`],
   ["허브 두 갈래 카드의 크기가 같다",
    `document.querySelector(".hs-cl").style.width = "60%";`],
+  ["랜딩 미니카드 아이콘이 분류 것과 같다",
+   `document.querySelector(".lsd-st .lsd-i svg").innerHTML =
+      document.querySelectorAll(".lsd-st .lsd-i svg")[1].innerHTML;`],
   ["메인 구간 차례가 지시서와 같다",
    `const v = document.getElementById("view");
     v.insertBefore(v.children[3], v.children[1]);`],
@@ -127,6 +130,25 @@ function proveEscapes(){
     const hit = EATEN.filter(function(x){
       return SAFE.indexOf(x) < 0 && body.indexOf(x) >= 0; });
     if(hit.length) bad.push(m[1] + "   — " + hit.join(" "));
+  }
+  /* ⚠️⚠️ **검사 본문의 주석에 백틱이 있으면 문자열이 거기서 끝납니다.**
+     이 저장소에서 **세 번** 당했고, 이번(다섯 번째 escape 사고)에도
+     `catalog.js` 라고 적었다가 걸렸습니다. node --check 가 잡아 주기는
+     하지만, 백틱이 짝을 이루면 파싱이 통과해 버립니다 — 그때는 검사
+     본문이 **조용히 잘린 채** 돕니다. 그래서 여기서도 셉니다. */
+  {
+    const re2 = /await f\("([^"]+)",\s*"([^"]+)",\s*`([\s\S]*?)`\);/g;
+    let m2, cut = [];
+    while((m2 = re2.exec(src))){
+      /* 본문이 return 으로 안 끝나면 잘린 것입니다 */
+      if(!/return\s+(true|[^;]+);\s*$/.test(m2[3].trim())) cut.push(m2[1]);
+    }
+    if(cut.length){
+      console.log("\n❌ 검사 본문이 중간에 잘렸습니다 (주석에 백틱?):");
+      cut.forEach(function(n){ console.log("   · " + n); });
+      console.log("");
+      return false;
+    }
   }
   if(bad.length){
     console.log("\n❌ 검사 본문에서 백슬래시가 먹었습니다:");

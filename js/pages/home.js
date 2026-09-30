@@ -84,26 +84,48 @@ function Hero(){
    ⚠️ 여기서 빠진 분류는 **잘라 낸 것이 아닙니다** — "기타 서비스" 와
    카드 오른쪽 위 화살표가 `/startup` · `/closure` 로 보내고, 거기
    에는 스물다섯 개가 전부 있습니다. */
+/* ⚠️⚠️ **아이콘을 여기 손으로 적지 마세요.** `cat` 에 분류 key 를 적으면
+   `catalog.js` 에서 가져옵니다 (§29). 손으로 적어 두었더니 랜딩과
+   `/home` 이 서로 다른 아이콘을 쓰게 됐습니다 — 한 사이트에서 같은
+   것이 화면마다 다르게 보였습니다. 실제로 이랬습니다:
+
+     프랜차이즈 = 전구    `bulb` 는 /home 에서 **창업 아이템**입니다
+     재고 처리 = 장바구니  재고가 아니라 쇼핑으로 읽힙니다
+     인테리어 · 철거 = 둘 다 망치   한 화면에 같은 아이콘, 다른 뜻
+     세무 · 노무 = 방패(창업) / 문서(폐업)   같은 것인데 서로 다름
+
+   ⚠️ 분류가 없는 카드(프랜차이즈 · 기타)만 `ic` 를 직접 적습니다. */
 var LSTART = [
-  { n:"프랜차이즈",  ic:"bulb",      to:"/franchise",        t:"franchise" },
-  { n:"점포 · 상권", ic:"map",       to:"/c/area",           t:"estate" },
-  { n:"인테리어",    ic:"hammer",    to:"/providers/interior", t:"interior" },
-  { n:"장비 · 가구", ic:"sofa",      to:"/providers/furniture", t:"furniture" },
-  { n:"POS · IT",   ic:"monitor",   to:"/providers/it",      t:"pos" },
-  { n:"세무 · 노무", ic:"shield",    to:"/providers/admin",   t:"tax" },
-  { n:"마케팅",      ic:"megaphone", to:"/providers/marketing", t:"mkt" },
-  { n:"기타 서비스", ic:"layers",    to:"/startup",           t:"etc" }
+  { n:"프랜차이즈",  ic:"store",  to:"/franchise",           t:"franchise" },
+  { n:"점포 · 상권", cat:"area",  to:"/c/area",              t:"estate" },
+  { n:"인테리어",    cat:"interior", to:"/providers/interior", t:"interior" },
+  { n:"장비 · 가구", cat:"furniture", to:"/providers/furniture", t:"furniture" },
+  { n:"POS · IT",   cat:"it",    to:"/providers/it",        t:"pos" },
+  /* 딱지는 "세무 · 노무" 인데 가는 곳은 행정 · 전문가입니다. 아이콘은
+     **딱지를 따릅니다** — 손님이 보는 말이 그쪽이라서요. */
+  { n:"세무 · 노무", cat:"tax",   to:"/providers/admin",     t:"tax" },
+  { n:"마케팅",      cat:"marketing", to:"/providers/marketing", t:"mkt" },
+  { n:"기타 서비스", ic:"grid",   to:"/startup",             t:"etc" }
 ];
 var LCLOSE = [
-  { n:"매장 양도",      ic:"key",     to:"/stores",             t:"estate" },
-  { n:"시설 · 집기 처분", ic:"box",   to:"/assets",             t:"equip" },
-  { n:"재고 처리",      ic:"cart",    to:"/assets",            t:"food" },
-  { n:"철거 · 원상복구", ic:"hammer", to:"/providers/demolish", t:"demolish" },
-  { n:"세무 · 노무",    ic:"doc",     to:"/providers/tax",      t:"tax" },
-  { n:"폐업 지원",      ic:"badge",   to:"/support",            t:"pos" },
-  { n:"법률 · 행정",    ic:"scale",   to:"/providers/law",      t:"etc" },
-  { n:"청소 · 방역",    ic:"broom",   to:"/providers/clean",    t:"clean" }
+  { n:"매장 양도",      cat:"transfer", to:"/stores",          t:"estate" },
+  { n:"시설 · 집기 처분", cat:"asset",  to:"/assets",          t:"equip" },
+  { n:"재고 처리",      cat:"stock",    to:"/assets",          t:"food" },
+  { n:"철거 · 원상복구", cat:"demolish", to:"/providers/demolish", t:"demolish" },
+  { n:"세무 · 노무",    cat:"tax",      to:"/providers/tax",   t:"tax" },
+  { n:"폐업 지원",      cat:"support",  to:"/support",         t:"pos" },
+  { n:"법률 · 행정",    cat:"law",      to:"/providers/law",   t:"etc" },
+  { n:"청소 · 방역",    cat:"clean",    to:"/providers/clean", t:"clean" }
 ];
+/* 분류에서 아이콘을 가져옵니다 — 분류 쪽을 고치면 랜딩도 같이 따라옵니다.
+   ⚠️ 없는 key 를 적으면 조용히 빈 아이콘이 되므로 `check.js` 가 봅니다. */
+function lIcon(o){
+  if(o.cat){
+    var c = (window.AM_CATS||[]).filter(function(x){ return x.key === o.cat; })[0];
+    if(c && c.icon) return c.icon;
+  }
+  return o.ic || "";
+}
 
 function sideCard(o){
   return '<div class="lsd lsd-'+o.side+'">'+
@@ -115,7 +137,7 @@ function sideCard(o){
     '</div>'+
     '<ul class="lsd-g">'+o.items.map(function(x){
       return '<li><a href="'+esc(x.to)+'">'+
-        '<span class="lsd-i lt-'+esc(x.t)+'">'+icon(x.ic,22)+'</span>'+
+        '<span class="lsd-i lt-'+esc(x.t)+'">'+icon(lIcon(x),22)+'</span>'+
         '<i>'+esc(x.n)+'</i></a></li>'; }).join("")+'</ul>'+
   '</div>';
 }

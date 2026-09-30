@@ -1294,6 +1294,34 @@ const AUDIT = `(() => {
       return "창업 " + Math.round(ra.width) + "×" + Math.round(ra.height) +
         " · 폐업 " + Math.round(rb.width) + "×" + Math.round(rb.height) + "입니다";
     return true;`);
+  await f("랜딩 미니카드 아이콘이 분류 것과 같다", "/", `
+    /* ⚠️⚠️ 손으로 적어 두었더니 랜딩과 /home 이 **서로 다른 아이콘**을
+       쓰고 있었습니다 — 프랜차이즈가 전구(= /home 의 창업 아이템),
+       재고 처리가 장바구니, 인테리어와 철거가 둘 다 망치였습니다.
+       한 사이트에서 같은 것이 화면마다 다르게 보이면 안 됩니다 (§29).
+       이제 catalog.js 에서 가져오므로, 그것이 실제로 먹는지 봅니다.
+       (⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다 — 다섯 번째입니다) */
+    const cards = [].slice.call(document.querySelectorAll(".lsd-g a"));
+    if(!cards.length) return "미니카드가 없습니다";
+    /* 아이콘이 비어 있으면 key 를 잘못 적은 것입니다 — 조용히 빈 칸이 됩니다 */
+    for(const a of cards){
+      const sv = a.querySelector(".lsd-i svg");
+      if(!sv || !sv.innerHTML.trim())
+        return "'" + (a.textContent||"").trim().slice(0,12) + "' 카드에 아이콘이 없습니다";
+    }
+    /* 같은 카드 안에서 같은 아이콘이 두 번 나오면 뜻이 흐려집니다 */
+    for(const box of [".lsd-st", ".lsd-cl"]){
+      const g = document.querySelector(box);
+      if(!g) continue;
+      const seen = [];
+      for(const sv of g.querySelectorAll(".lsd-i svg")){
+        const d = sv.innerHTML.trim();
+        if(seen.indexOf(d) >= 0)
+          return box + " 안에 같은 아이콘이 두 번 나옵니다";
+        seen.push(d);
+      }
+    }
+    return true;`);
   await f("메인 구간 차례가 지시서와 같다", "/home", `
     /* 지시서 §2 의 차례입니다. 늘리거나 섞기 전에 거기를 먼저 고치세요.
        ⚠️ 구간이 .sec 를 같이 답니다 — 첫 낱말만 보면 전부 "sec" 으로

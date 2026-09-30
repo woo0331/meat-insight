@@ -40,6 +40,15 @@ const srv = http.createServer((req,res)=>{
     await pg.goto(ROOT+url, { waitUntil:"load" });
     await pg.waitForTimeout(400);
     if(full && /^[0-9]+$/.test(full)){ await pg.evaluate(y=>window.scrollTo(0,+y), full); await pg.waitForTimeout(300); }
+    /* ⚠️ **페이지 전체를 찍을 때는 나타나는 것들을 먼저 켭니다.**
+       `data-rv` 는 화면에 들어와야 `.rv-on` 이 붙는데, fullPage 캡처는
+       뷰포트를 그렇게 굴리지 않아서 **아래쪽 구간이 통째로 빈 칸으로
+       찍힙니다.** 그걸 보고 "구간이 비었다" 고 두 번 착각했습니다. */
+    if(full === "full"){
+      await pg.evaluate(() => {
+        document.querySelectorAll("[data-rv]").forEach(e => e.classList.add("rv-on")); });
+      await pg.waitForTimeout(250);
+    }
     await pg.screenshot({ path:"/tmp/shots/"+name+".png", fullPage: full === "full" });
     await ctx.close();
     console.log(name);

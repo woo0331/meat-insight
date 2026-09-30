@@ -177,6 +177,11 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .sec-hd{ margin-bottom:var(--s8); position:relative; }
 .sec-hd h2{ font-size:var(--t-3xl); }
 .sec-hd p{ margin-top:var(--s3); color:var(--ink2); font-size:var(--t-lg); max-width:62ch; }
+/* ⚠️ **머리말도 `<p>` 입니다.** `.sec-hd p`(0,1,1)가 `.eyebrow`(0,1,0)를
+   이겨서, 구간 머리말이 **사이트 전체에서 회색으로 죽어 있었습니다** —
+   에러도 안 나고 찍어 보고서야 알았습니다. 여기서 되돌립니다. */
+.sec-hd > .eyebrow{ color:var(--blue); margin-top:0; font-size:var(--t-sm);
+  max-width:none; }
 .sec-hd p b{ color:var(--ink); }
 .eyebrow{ font-size:var(--t-sm); font-weight:800; letter-spacing:.1em;
   color:var(--blue); margin-bottom:var(--s3); text-transform:uppercase; }

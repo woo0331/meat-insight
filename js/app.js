@@ -244,6 +244,20 @@ document.addEventListener("click", function(ev){
 window.addEventListener("popstate", function(){ render(); });
 
 /* ── 그리기 ────────────────────────────────────────────────── */
+/* 이 화면이 창업 쪽인가 폐업 쪽인가 — 아니면 어느 쪽도 아닌가 */
+function sideOf(r){
+  if(r.view === "startup" || r.view === "startupIndustry") return "side-start";
+  if(r.view === "closure" || r.view === "closureIndustry") return "side-close";
+  /* 분류 화면은 그 분류가 어느 쪽 것인지를 따릅니다 */
+  var k = r.cat && (r.cat.key || r.cat);
+  if(k && window.amCatSide){
+    var s = amCatSide(k);
+    if(s === "start") return "side-start";
+    if(s === "close") return "side-close";
+  }
+  return "";
+}
+
 function render(){
   var path = nowPath();
   var r = routeInfo(path, {});
@@ -286,6 +300,12 @@ function render(){
     default:                return notFound(path);
   }
 
+  /* ⚠️ 창업 쪽 화면은 초록, 폐업 쪽 화면은 주황으로 **통째로** 물들입니다.
+     규칙을 수십 개 고치는 대신 `--blue` 계열 변수를 이 안에서만 다시
+     정의합니다 — 강조색이 전부 그 변수를 거치기 때문입니다 (css/pages.css).
+     ⚠️ 헤더 · 푸터는 `#view` 밖이라 그대로 남습니다. 거기까지 물들면
+     화면마다 머리가 바뀌어 한 사이트로 안 읽힙니다. */
+  $("view").className = sideOf(r);
   $("view").innerHTML = html;
   paintMeta(r);
   paintChrome();

@@ -55,6 +55,8 @@
   --start:       #12A878;
   --start-dark:  #07865F;
   --start-soft:  #EAF8F3;
+  /* 눌렀을 때 · 흰 글자를 얹는 자리에만 (마지막 CTA · 창업 쪽 버튼) */
+  --start-deep:  #056B4C;
 
   /* CLOSE — 폐업. ⚠️ 주황이지 빨강이 아닙니다 */
   --close:       #F26A3D;

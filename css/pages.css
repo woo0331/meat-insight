@@ -67,9 +67,50 @@
 @media (max-width:900px){ .tbar-g{ grid-template-columns:1fr 1fr; } }
 @media (max-width:520px){ .tbar-g{ grid-template-columns:1fr; gap:var(--s4); } }
 
+/* ════════ 창업 쪽 · 폐업 쪽 물들이기 ═════════════════════════════
+   랜딩에서 START = 초록 · CLOSE = 주황으로 정했는데, 속화면이 전부
+   파랑이면 **같은 사이트로 안 읽힙니다.**
+
+   ⚠️ 규칙을 수십 개 고치지 마세요. 이 저장소의 강조색은 거의 전부
+   `--blue` 계열 변수를 거칩니다 — 그 변수를 `#view` 안에서만 다시
+   정의하면 아이콘 타일 · 칩 · 버튼 · 머리말 · 포커스 테두리가
+   한꺼번에 따라옵니다. 어느 쪽인지는 `js/app.js` 의 `sideOf()` 가
+   붙입니다.
+
+   ⚠️ **글자로 쓰는 색은 짙은 쪽(`--start-dark` · `--close-dark`)입니다.**
+   `--start`(#12A878) 를 흰 바탕의 글자색으로 쓰면 대비가 3.0 이라
+   작은 글씨가 읽히지 않습니다.
+   ⚠️ 헤더 · 푸터는 `#view` 밖이라 안 물듭니다. 거기까지 바뀌면
+   화면마다 머리가 달라져 한 사이트로 안 읽힙니다. */
+.side-start{
+  --blue:     var(--start-dark);
+  --blue-600: var(--start-deep);
+  --blue-400: var(--start);
+  --blue-50:  var(--start-soft);
+  --blue-100: #D7F0E6;
+}
+.side-close{
+  --blue:     var(--close-dark);
+  --blue-600: var(--close-deep);
+  --blue-400: var(--close);
+  --blue-50:  var(--close-soft);
+  --blue-100: #FFE0D2;
+}
+
 /* ════════ 화면 머리 — 모든 속화면이 같은 것을 씁니다 ═════════════ */
-.pgh{ background:var(--surface); border-bottom:1px solid var(--line);
-  padding:var(--s10) 0 var(--s9); }
+.pgh{ position:relative; background:var(--surface);
+  border-bottom:1px solid var(--line); padding:var(--s10) 0 var(--s9); }
+/* ⚠️ 속화면 머리가 밋밋한 흰 판이면 랜딩과 **다른 사이트**로 읽힙니다.
+   랜딩 히어로와 같은 식으로 한쪽에만 옅게 번지게 둡니다 — 면으로
+   칠하지 않습니다 (§2 면적 비율). */
+.side-start .pgh{
+  background:
+    radial-gradient(60% 120% at 0% 0%, rgba(18,168,120,.13) 0%, rgba(18,168,120,0) 72%),
+    linear-gradient(180deg, #FFFFFF 0%, var(--start-soft) 100%); }
+.side-close .pgh{
+  background:
+    radial-gradient(60% 120% at 0% 0%, rgba(242,106,61,.13) 0%, rgba(242,106,61,0) 72%),
+    linear-gradient(180deg, #FFFFFF 0%, var(--close-soft) 100%); }
 .pgh-tight{ padding:var(--s9) 0 var(--s7); }
 .pg-h1{ font-size:var(--t-3xl); font-weight:900; letter-spacing:var(--tr-head); }
 .pg-h1 em{ font-style:normal; color:var(--blue); }

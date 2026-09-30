@@ -89,7 +89,10 @@ middleware.js           /admin 과 /api/admin-health 를 서버에서 막습니�
 admin.html · js/admin.js · css/admin.css   관리자 작업대
 api/admin-health.js     접수처 환경변수가 설정됐는지 — **값은 안 돌려줍니다**
 tools/test-api.js       접수 API 계약 검사 (27개)
-tools/shot.js           화면을 찍어 봅니다 · tools/og.html  공유 이미지
+tools/prove-checks.js   검사가 **실제로 잡는지** 되돌려 봅니다 (13개)
+tools/shot.js           화면을 찍어 봅니다
+tools/og.js             공유 미리보기 그림을 만듭니다 → /og.jpg
+tools/og.html           그 그림의 원본 (브랜드 이름은 og.js 가 넣습니다)
 404.html · robots.txt · sitemap.xml · manifest.json · og.jpg · sw.js
 ```
 
@@ -658,9 +661,31 @@ node tools/test-api.js   # 화면이 보낸 칸이 빠짐없이 나가는지 (27
 ⚠️ **폐업 쪽 사진을 처연하게 쓰지 마세요** (§6). 실패가 아니라
 정리와 다음 단계입니다 — 불 꺼진 가게 · 고개 숙인 사람은 안 됩니다.
 
-⚠️ `og.jpg` 는 **옛 브랜드 그대로**입니다. `tools/og.html` 을 브라우저로
-띄워 다시 찍어야 하는데, **한글 글꼴이 있는 기계**에서 해야 합니다 —
-글꼴 CDN 이 막힌 곳에서 찍으면 한글이 네모로 나옵니다.
+### 공유 미리보기 (`og.jpg`)
+
+카카오톡 · 페이스북 · 슬랙에 주소를 붙였을 때 뜨는 그림입니다.
+
+```bash
+node tools/og.js      # tools/og.html → /og.jpg (1200×630)
+```
+
+- ⚠️⚠️ **한글 글꼴이 있는 기계에서 찍어야 합니다.** 글꼴 CDN 이 막힌
+  곳에서 찍으면 한글이 **네모**로 나오고, 그 그림이 한 번 퍼지면
+  카카오 · 페이스북 캐시에 한참 남습니다. `tools/og.js` 가 먼저
+  `fc-match` 로 보고 **없으면 찍지 않고 멈춥니다** — 까는 법도 같이
+  찍어 줍니다 (npm 은 이 환경에서 열려 있어 `npm pack pretendard` 로
+  받습니다).
+- ⚠️ 찍은 뒤에도 제목 칸의 **폭을 재서** 글꼴이 실제로 먹었는지 봅니다.
+  글꼴이 안 먹으면 글자 폭이 터무니없어집니다.
+- ⚠️ **브랜드 이름을 `tools/og.html` 에 적지 마세요.** `tools/og.js` 가
+  `js/data/brand.js` 에서 읽어 넣습니다 — 이름을 정하시면 그 한 줄만
+  바꾸고 다시 찍으면 됩니다.
+- ⚠️ **숫자를 넣지 마세요.** 공유 미리보기는 우리 손을 떠나 한참
+  돌아다닙니다 (절대 규칙 1).
+- ⚠️ 크기는 **1200×630** 입니다. `index.html` 의 `og:image:width` ·
+  `og:image:height` 와 같아야 합니다.
+- ⚠️ 바꾼 뒤 배포하고 **카카오톡 디버거 · 페이스북 Sharing Debugger 에서
+  한 번 긁어 주세요.** 안 그러면 예전 그림이 계속 나옵니다.
 
 ## 이 브라우저에 남는 것들
 
@@ -723,6 +748,7 @@ node tools/test-api.js # 접수 주소가 화면이 보낸 칸을 전달하는�
 node build-pages.js    # 주소마다 HTML + sitemap
 node tools/shot.js "/|1440|home"   # 화면을 찍어 봅니다 (눈으로 볼 것)
 node tools/prove-checks.js         # 검사가 **실제로 잡는지** (13개)
+node tools/og.js                   # 공유 미리보기 그림 (한글 글꼴 필요)
 ```
 
 보는 것: JS 에러 · 못 불러온 파일 · 가로 스크롤 · **12px 미만 글씨** ·
@@ -781,6 +807,5 @@ node tools/prove-checks.js         # 검사가 **실제로 잡는지** (13개)
 | **접수처** | 환경변수를 채우고 `WOW_BIZ.sosReady` 를 켜야 실제로 접수됩니다 |
 | **사업자 정보** | 영업 시작 전에는 반드시 필요합니다 (전자상거래법 제10조) |
 | **약관 · 방침 검토** | 중개 · 매칭 기준 초안입니다. 영업 전에 확인하세요 |
-| **`og.jpg`** | 옛 브랜드 그대로. 한글 글꼴 있는 기계에서 다시 찍어야 합니다 |
 | **사진** | 업체 포트폴리오와 매물 사진이 들어올 자리입니다 |
 | **지역 랜딩** | "안양 카페 인테리어" 같은 조합 주소는 매물·업체가 쌓인 뒤에 엽니다 |

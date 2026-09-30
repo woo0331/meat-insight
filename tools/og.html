@@ -1,27 +1,74 @@
 <!doctype html><meta charset="utf-8">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<title>공유 미리보기 원본 (og.jpg)</title>
+<!-- ════════════════════════════════════════════════════════════════
+     카카오톡 · 페이스북 · 슬랙에 링크를 붙였을 때 뜨는 그림입니다.
+     `node tools/og.js` 가 이 화면을 1200×630 으로 찍어 `/og.jpg` 로
+     씁니다. 손으로 열어 봐도 됩니다.
+
+     ⚠️ **글꼴 CDN 을 부르지 않습니다.** 막힌 곳에서 찍으면 한글이
+     네모로 나옵니다 — 기계에 깔린 Pretendard 를 그대로 씁니다.
+     없으면 `tools/og.js` 가 무엇을 깔아야 하는지 알려 줍니다.
+
+     ⚠️ **브랜드 이름을 여기 적지 마세요.** `js/data/brand.js` 에서
+     읽어 넣습니다 (`data-brand` · `data-sub`). 이름을 정하시면
+     그 한 줄만 바꾸면 이 그림도 같이 바뀝니다.
+
+     ⚠️ **숫자를 넣지 마세요.** 업체 수 · 실적은 지금 0 이고, 공유
+     미리보기는 우리 손을 떠나 한참 돌아다닙니다 (절대 규칙 1).
+     ════════════════════════════════════════════════════════════════ -->
 <style>
- html,body{margin:0;padding:0}
- .og{position:relative;width:1200px;height:630px;overflow:hidden;background:#151517;
-     font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif;color:#fff;
-     word-break:keep-all}
- .og img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:62% 70%}
- .sh{position:absolute;inset:0;background:linear-gradient(90deg,rgba(24,20,19,.95) 0%,rgba(24,20,19,.86) 48%,rgba(24,20,19,.6) 100%)}
- .in{position:relative;padding:76px 72px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center}
- .lg{font-size:26px;font-weight:800;letter-spacing:.06em;color:#fff;margin-bottom:34px}
- h1{font-size:76px;font-weight:800;letter-spacing:-.04em;line-height:1.2;margin:0 0 26px}
- em{font-style:normal;color:#E32636}
- p{font-size:27px;line-height:1.6;color:rgba(255,255,255,.76);margin:0;max-width:34ch}
- .b{margin-top:38px;display:inline-flex;align-items:center;gap:10px;align-self:flex-start;
-    background:#E32636;border-radius:999px;padding:16px 32px;font-size:23px;font-weight:700}
+ html,body{ margin:0; padding:0; background:#fff; }
+ .og{
+   position:relative; width:1200px; height:630px; overflow:hidden;
+   box-sizing:border-box; padding:72px 78px;
+   display:flex; flex-direction:column; justify-content:center;
+   font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif;
+   color:#102A43; word-break:keep-all; letter-spacing:-.01em;
+   /* 랜딩 히어로와 같은 바탕 — 웜 화이트에 좌 초록 · 우 주황 번짐 */
+   background:
+     radial-gradient(52% 70% at 2% 16%,  rgba(18,168,120,.16) 0%, rgba(18,168,120,0) 70%),
+     radial-gradient(52% 70% at 98% 16%, rgba(242,106,61,.16) 0%, rgba(242,106,61,0) 70%),
+     linear-gradient(180deg, #FFFFFF 0%, #FBF8F2 100%);
+ }
+ /* 샴페인 골드는 이 한 줄까지입니다 (§21) */
+ .k{ font-size:23px; font-weight:900; letter-spacing:.26em; color:#D5AA55; }
+ h1{ margin:26px 0 0; font-size:96px; font-weight:900; line-height:1.06;
+     letter-spacing:-.045em; color:#123B68; }
+ h1 em{ font-style:normal; }
+ .st{ color:#07865F; }   /* 창업 */
+ .cl{ color:#D95128; }   /* 폐업 */
+ p{ margin:26px 0 0; font-size:32px; font-weight:700; color:#102A43; }
+ .pills{ margin-top:44px; display:flex; gap:16px; }
+ .pill{ display:inline-flex; align-items:center; gap:10px;
+        border-radius:16px; padding:18px 34px;
+        font-size:26px; font-weight:800; color:#fff; }
+ .pill-st{ background:#12A878; }
+ .pill-cl{ background:#F26A3D; }
+ /* 브랜드는 아래 왼쪽 한 줄 — 제목이 주인공입니다 */
+ .brand{ position:absolute; left:78px; bottom:56px;
+         display:flex; align-items:baseline; gap:14px; }
+ .brand b{ font-size:28px; font-weight:900; letter-spacing:-.03em; color:#102A43; }
+ .brand span{ font-size:21px; color:#7B8794; }
+ /* 아래 가장자리에 초록 → 주황 한 줄 */
+ .edge{ position:absolute; left:0; right:0; bottom:0; height:8px;
+        background:linear-gradient(90deg,#12A878 0%,#123B68 52%,#F26A3D 100%); }
 </style>
-<div class="og">
-  <img src="/img/hero.svg" alt="">
-  <div class="sh"></div>
-  <div class="in">
-    <div class="lg">ABOUTMEAT</div>
-    <h1>고기 장사,<br>뭐가 <em>고민</em>이세요?</h1>
-    <p>창업 · 원가 · 시설 · 매출 · 확장 · 정리까지.<br>상황만 적어 주시면 찾아 드립니다.</p>
-    <div class="b">무료로 물어보기 →</div>
+<div class="og" id="og">
+  <div class="k">START &amp; CLOSE</div>
+  <h1><em class="st">창업</em>부터 <em class="cl">폐업</em>까지.</h1>
+  <p>사장님에게 필요한 모든 것을 한 곳에서.</p>
+  <div class="pills">
+    <span class="pill pill-st">창업 시작하기 →</span>
+    <span class="pill pill-cl">폐업 시작하기 →</span>
   </div>
+  <div class="brand"><b id="og-brand"></b><span id="og-sub"></span></div>
+  <div class="edge"></div>
 </div>
+<script>
+  /* ⚠️ 이름을 여기 적지 않습니다 — tools/og.js 가 js/data/brand.js 를
+     읽어 `data-brand` · `data-sub` 로 넣어 줍니다. 그냥 브라우저로
+     열어 봤을 때만 아래 기본값이 보입니다. */
+  var d = document.documentElement.dataset;
+  document.getElementById("og-brand").textContent = d.brand || "시작과 정리";
+  document.getElementById("og-sub").textContent   = d.sub   || "창업 · 폐업 전문 플랫폼";
+</script>

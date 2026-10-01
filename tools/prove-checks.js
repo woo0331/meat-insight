@@ -108,6 +108,22 @@ const CASES = [
       "사업자등록 — 언제, 어디서, 무엇을 들고 가나";`],
   ["폐업 글은 주황 쪽 · 창업 글은 초록 쪽으로 물든다",
    `document.getElementById("view").className = "";`],
+  ["계산기가 말이 안 되는 숫자를 내지 않는다",
+   /* 1% 아래 공헌이익률을 막던 것을 풀어 놓습니다 — 전에 그랬습니다 */
+   `window.BepRes = (function(orig){
+      return function(v){
+        const out = orig(v);
+        if(out.indexOf("99%를 넘습니다") < 0) return out;
+        const fix = ["rent","labor","util","lease","loan","etc"]
+          .reduce(function(a,k){ const x=parseFloat(v[k]); return a+(isFinite(x)?x:0); },0);
+        const varSum = ["mat","fee"]
+          .reduce(function(a,k){ const x=parseFloat(v[k]); return a+(isFinite(x)?x:0); },0);
+        const cm = 100 - varSum;
+        return out.replace("—", (fix/(cm/100)).toLocaleString()+"만원")
+                  .replace("99%를 넘습니다", "공헌이익률 0%");
+      };
+    })(window.BepRes);
+    window.bepIn("mat", 99.99);`],
   ["검색이 글 본문까지 찾는다",
    /* 글 색인을 **제목 + 머리말**로 되돌려 놓습니다 — 전에 그랬습니다.
       ⚠️ 본문을 편 글자는 slug 로 **캐시**되므로, body 만 비우면 이미

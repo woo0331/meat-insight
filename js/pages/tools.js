@@ -224,8 +224,17 @@ function BepRes(v){
     if(tlHas(v[r.key])){ varSum += tlNum(v[r.key]); varN++; }
   });
   var cm = varN ? (100 - varSum) : null;   /* 공헌이익률 % */
+  /* ⚠️⚠️ **100% 를 넘는 것만 막으면 모자랍니다.** 변동비 합이 99.99%
+     이면 공헌이익률이 0.01% 라, 나눈 값이 **85조원** 같은 숫자가 되어
+     버젓이 나왔습니다 — 게다가 배지는 소수 첫째 자리에서 반올림해
+     "공헌이익률 0%" 라고 적고 있었습니다. 0 으로 나눈 값이 유한할 수는
+     없으니 화면이 스스로 모순된 말을 한 셈입니다.
+     1% 아래에서는 적으신 비율이 0.1 만 틀려도 답이 몇 배로 흔들립니다.
+     그런 숫자는 정보가 아니라 **잘못된 확신**이라, 숫자 대신 왜 안
+     나오는지를 적습니다. */
+  var tiny = (cm !== null && cm > 0 && cm < 1);
   var month = null, day = null, guests = null;
-  if(fixN && cm !== null && cm > 0) month = fixSum / (cm / 100);
+  if(fixN && cm !== null && cm >= 1) month = fixSum / (cm / 100);
   if(month !== null && tlHas(v.days) && tlNum(v.days) > 0) day = month / tlNum(v.days);
   if(day !== null && tlHas(v.ticket) && tlNum(v.ticket) > 0)
     guests = Math.ceil(day * 10000 / tlNum(v.ticket));
@@ -240,12 +249,18 @@ function BepRes(v){
   else if(over)        note = "팔릴 때마다 나가는 비율이 100%를 넘습니다. 이 조건에서는 "+
                               "많이 팔수록 더 손해입니다 — 손익분기 매출이라는 것이 없습니다. "+
                               "비율 칸을 다시 봐 주세요.";
+  else if(tiny)        note = "팔릴 때마다 나가는 비율이 99%를 넘습니다. 남는 것이 "+
+                              "100원에 1원이 안 되는 조건이라, 본전 매출이 현실에 없는 "+
+                              "크기로 나옵니다 — 비율을 0.1만 다르게 적어도 답이 몇 배로 "+
+                              "바뀝니다. 숫자를 내는 대신 적어 둡니다. 비율 칸을 다시 봐 주세요.";
   else                 note = "고정비를 공헌이익률(100% − 변동비율)로 나눈 값입니다. "+
                               "안 적으신 칸은 계산에서 빠집니다.";
 
   return '<div class="tl-res-g">'+
     tlOut("본전이 되는 월 매출", (month !== null && !over) ? tlMan(month) : null,
-          (cm !== null && cm > 0) ? "공헌이익률 " + (Math.round(cm * 10) / 10) + "%" : "")+
+          /* ⚠️ 1% 아래를 반올림하면 "공헌이익률 0%" 가 됩니다 — 숫자를
+             안 내는 자리라 배지도 안 답니다. */
+          (cm !== null && cm >= 1) ? "공헌이익률 " + (Math.round(cm * 10) / 10) + "%" : "")+
     tlOut("하루 매출", day !== null ? tlMan(day) : null,
           day !== null ? "" : "월 영업일수를 적으시면 나옵니다")+
     tlOut("하루 손님 수", guests !== null ? won(guests) + "명" : null,

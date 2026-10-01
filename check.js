@@ -1344,6 +1344,42 @@ const AUDIT = `(() => {
   /* ⑮ MY 와 도구가 이어지는가
      ⚠️ "전부 지웁니다" 라고 해 놓고 남기면 그게 거짓말입니다. 가게
      컴퓨터는 여러 사람이 쓰므로 남의 눈에 그대로 들어갑니다. */
+  await f("계산기가 말이 안 되는 숫자를 내지 않는다", "/tools/bep", `
+    /* ⚠️⚠️ 변동비 합이 **100% 를 넘는 것**은 막고 있었는데, 99.99% 는
+       안 막고 있었습니다. 공헌이익률이 0.01% 라 나눈 값이 85조원으로
+       나왔고, 배지는 반올림해서 "공헌이익률 0%" 라고 적었습니다 —
+       0 으로 나눈 값이 유한할 수 없으니 화면이 스스로 모순된 말을 한
+       셈입니다. 사장님은 그 숫자를 들고 은행에 가십니다.
+       ⚠️ 1% 아래에서는 비율을 0.1 만 다르게 적어도 답이 몇 배로
+       흔들립니다 — 그건 정보가 아니라 잘못된 확신입니다. */
+    const set = function(id, x){
+      const e = document.getElementById(id);
+      if(!e) return false;
+      e.value = String(x);
+      e.dispatchEvent(new Event("input", { bubbles:true }));
+      return true;
+    };
+    if(!set("bepIn-rent", 500)) return "고정비 칸을 못 찾습니다";
+    if(!set("bepIn-mat", 99.99)) return "비율 칸을 못 찾습니다";
+    await new Promise(function(r){ setTimeout(r, 120); });
+    const box = document.querySelector(".tl-res");
+    if(!box) return "결과 칸이 없습니다";
+    const t = box.innerText || "";
+    if(/NaN|Infinity/.test(t)) return "결과에 NaN · Infinity 가 있습니다";
+    /* 공헌이익률 0% 라고 적어 놓고 숫자를 내면 안 됩니다 */
+    if(/공헌이익률 0%/.test(t)) return "공헌이익률 0% 인데 숫자를 냅니다";
+    /* 억 단위를 넘는 자리수(쉼표 네 덩이 이상)는 현실에 없는 값입니다 */
+    if(/[0-9]{1,3}(,[0-9]{3}){3,}/.test(t))
+      return "현실에 없는 자릿수가 나옵니다 — " + t.split("\\n")[1];
+    /* 숫자 대신 왜 안 나오는지가 적혀 있어야 합니다 */
+    if(t.indexOf("99%") < 0 && t.indexOf("비율 칸") < 0)
+      return "숫자를 안 내는 까닭이 안 적혀 있습니다";
+    /* ⚠️ 정상 범위에서는 **나와야** 합니다 — 너무 넓게 막으면 그것도 고장입니다 */
+    set("bepIn-mat", 50);
+    await new Promise(function(r){ setTimeout(r, 120); });
+    const t2 = (document.querySelector(".tl-res") || {}).innerText || "";
+    if(t2.indexOf("공헌이익률 50%") < 0) return "정상 조건에서 결과가 안 나옵니다";
+    return true;`);
   await f("MY: 전부 지우기가 도구 숫자까지 지운다", "/tools/bep", `
     window.bepIn("rent", "1000");
     window.laborIn && window.laborIn("sales", "5000");

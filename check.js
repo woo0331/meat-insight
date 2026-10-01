@@ -263,10 +263,16 @@ const AUDIT = `(() => {
     /* 3-0. 굵게 표시가 글자로 새어 나왔는가
        ⚠️ 데이터에 마크다운 별표를 쓰고 esc() 로 내보내면 **이렇게**
        그대로 찍힙니다. /content 에서 한 번 겪어서 거기만 보고 있었는데,
-       /support 에서 또 났습니다 — 이제 모든 화면에서 봅니다. */
-    if (leaf && (e.textContent || "").indexOf("**") >= 0)
-      out.star.push((e.className || e.tagName) + "|" +
-        (e.textContent || "").trim().slice(0, 24));
+       /support 에서 또 났습니다 — 이제 모든 화면에서 봅니다.
+
+       ⚠️⚠️ **잎사귀만 보면 안 됩니다.** 자식 태그가 하나라도 있으면
+       건너뛰고 있어서, 약관·방침의 조문(p 안에 번호 span 이 있습니다)에
+       남아 있던 별표를 **통째로 놓쳤습니다.** 이제 그 칸이 **직접
+       들고 있는 글자**만 봅니다 — 부모까지 중복으로 잡히지도 않습니다. */
+    const ownTxt = [].slice.call(e.childNodes)
+      .filter(n => n.nodeType === 3).map(n => n.nodeValue).join("");
+    if (ownTxt.indexOf("**") >= 0)
+      out.star.push((e.className || e.tagName) + "|" + ownTxt.trim().slice(0, 24));
 
     /* 3. 12px 미만 */
     if (leaf) {

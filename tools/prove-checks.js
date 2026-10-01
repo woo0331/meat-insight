@@ -258,6 +258,27 @@ async function proveAudit(pg){
       "  [지금 " + JSON.stringify(before) +
       " → 한 칸을 준비 중으로 하면 " + JSON.stringify(after).slice(0,50) + "]");
   }
+  /* 별표(**)가 글자로 남음 — ⚠️ **자식 태그가 있는 칸**에 넣어서
+     봅니다. 전에는 잎사귀만 보고 있어서, 약관·방침의 조문(p 안에
+     번호 span 이 있습니다)에 남아 있던 별표를 통째로 놓쳤습니다.
+     잎사귀에 넣는 되돌리기로는 그 구멍이 안 드러납니다. */
+  for(const u of ["/privacy", "/terms"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).star;
+    await pg.evaluate(() => {
+      const e = document.querySelector("#view p.lg-p > span.lg-n");
+      if(e) e.insertAdjacentText("afterend", "**별도의 동의**를 받습니다.");
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).star;
+    const ok = before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 별표(**)가 글자로 남음 · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → 자식 있는 칸에 별표를 넣으면 " + JSON.stringify(after).slice(0,50) + "]");
+  }
+
   return bad;
 }
 

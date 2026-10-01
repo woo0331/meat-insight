@@ -106,10 +106,17 @@ function adHealthView(h){
       '환경변수를 넣은 뒤에는 <b>반드시 다시 배포</b>해야 반영됩니다.</p>';
 }
 
+/* ⚠️ **호스팅(Vercel)은 접수처가 아닙니다.** 그 줄은 접수처를 붙이기
+   전부터 늘 있어서, 개수만 세면 이 경고가 **영원히 안 뜹니다** — 실제로
+   그랬습니다. 접수 내용을 받아 가는 회사가 한 줄이라도 있는지 봅니다
+   (호스팅 줄은 "호스팅" 이라고 적혀 있어 걸러집니다). */
 function adTrustees(){
   try{
     var t = WOW_PRIVACY && WOW_PRIVACY.trustees;
-    return !!(t && t.length);
+    if(!t || !t.length) return false;
+    return t.some(function(r){
+      return String(r && r[1] || "").indexOf("호스팅") < 0;
+    });
   }catch(e){ return false; }
 }
 

@@ -6,6 +6,7 @@
 <title>페이지를 찾을 수 없습니다 · <!--brand-->ABOUTMEAT<!--/brand--></title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#FFFFFF">
+<meta name="color-scheme" content="only light">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <style>
   /* 색·글씨 단계는 본 사이트(css/tokens.css)와 **같은 값이어야 합니다.**
@@ -16,6 +17,7 @@
      고치면 404 만 옛 색으로 남습니다 — 에러도 안 나고 아무도 안 봅니다.
      check.js 의 "404 가 본 사이트와 같은 색을 쓴다" 가 잡습니다. */
   :root{
+    color-scheme: only light;   /* ⚠️ 자동 다크모드 반전 끄기 — css/tokens.css 와 같은 줄입니다 */
     --navy:#123B68; --navy-dark:#092B50; --bg:#FDFBF7; --surface:#fff;
     /* ⚠️ 이 화면은 라우터 밖이라 `css/tokens.css` 를 **안 읽습니다** —
        색을 바꾸면 여기도 같이 고쳐야 합니다. 2026-10-01 에 글자 세 단계를

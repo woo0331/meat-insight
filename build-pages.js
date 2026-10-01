@@ -308,6 +308,7 @@ function shell(tpl, r, route, noscript, ld){
   /* 내용이 바뀌면 주소가 바뀌도록 — 안 붙이면 손님은 옛 CSS 를 계속 씁니다 */
   h = stampAssets(h);
   checkStamped(h, route);
+  checkColorScheme(h, route);
   return h;
 }
 
@@ -834,6 +835,30 @@ function checkStamped(html, where){
     throw new Error(where + " 에 캐시 값이 안 붙은 자산이 있습니다: " + bare.join(" "));
 }
 
+/* ⚠️⚠️ **브라우저가 색을 뒤집는 것을 막는 한 줄이 살아 있는지 봅니다.**
+   안드로이드 크롬 · 삼성 인터넷의 "자동 다크 모드" 는 `color-scheme` 을
+   선언하지 않은 사이트를 **알고리즘으로 반전**시킵니다. 실제로 사장님
+   폰에서 바탕이 검정이 되고 **폐업 주황이 빨강**으로 보였습니다 — 그
+   빨강은 저희 토큰 어디에도 없는 색이고, CLAUDE.md 가 "폐업이 빨강으로
+   흘러가지 않을 것" 이라고 못박아 둔 바로 그 사고입니다.
+
+   ⚠️ **전수 점검(`check.js`)은 이것을 영원히 못 잡습니다.** 데스크톱
+   크로미움은 자동 다크 모드가 꺼져 있어서 로컬에서는 늘 멀쩡합니다.
+   그래서 빌드가 봅니다 — 화면마다 메타 태그가 있는지, 토큰에 CSS
+   선언이 있는지 둘 다입니다 (CSS 가 늦게 와도 메타가 먼저 막습니다). */
+const CS_META = /<meta\s+name="color-scheme"\s+content="only light">/;
+function checkColorScheme(html, where){
+  if(!CS_META.test(html))
+    throw new Error(where + ' 에 color-scheme 메타가 없습니다 — 안드로이드 '
+      + '브라우저가 바탕을 검정으로, 폐업 주황을 빨강으로 뒤집습니다');
+}
+function checkColorSchemeCss(){
+  const css = fs.readFileSync(path.join(ROOT, "css/tokens.css"), "utf8");
+  if(!/color-scheme:\s*only light/.test(css))
+    throw new Error("css/tokens.css 의 :root 에 color-scheme: only light 가 "
+      + "없습니다 — 자동 다크 모드가 색을 뒤집습니다");
+}
+
 /* ── 라우터 밖 파일에 브랜드 이름 넣기 ──────────────────────────────
    ⚠️⚠️ `404.html` 과 `admin.html` 은 **라우터 밖에서 혼자 뜨는** 파일이라
    `js/data/brand.js` 를 안 읽습니다. 그래서 이름을 바꿨을 때 **거기만
@@ -861,12 +886,14 @@ function brandStatics(W){
        옛 색으로 남습니다. 404.html 은 인라인 style 이라 자산이 없습니다. */
     out = stampAssets(out);
     checkStamped(out, f);
+    checkColorScheme(out, f);
     if(out !== src){ fs.writeFileSync(p, out); console.log("  " + f + " 갱신"); }
   }
 }
 
 /* ── 실행 ─────────────────────────────────────────────────────── */
 checkCssVars();
+checkColorSchemeCss();
 checkVercel();
 const W = loadApp();
 checkPhotos(W);
@@ -919,6 +946,7 @@ for(const route of routes){
        붙어 있는 값을 떼고 다시 붙입니다 (stampAssets 가 그렇게 합니다). */
     src = stampAssets(src);
     checkStamped(src, "index.html");
+    checkColorScheme(src, "index.html");
     fs.writeFileSync(tplPath, src);
   }
 

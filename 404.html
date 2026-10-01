@@ -17,7 +17,11 @@
      check.js 의 "404 가 본 사이트와 같은 색을 쓴다" 가 잡습니다. */
   :root{
     --navy:#123B68; --navy-dark:#092B50; --bg:#FDFBF7; --surface:#fff;
-    --ink:#102A43; --ink2:#52606D; --ink3:#7B8794; --line:#E5EAF0;
+    /* ⚠️ 이 화면은 라우터 밖이라 `css/tokens.css` 를 **안 읽습니다** —
+       색을 바꾸면 여기도 같이 고쳐야 합니다. 2026-10-01 에 글자 세 단계를
+       읽히는 값으로 내리면서 여기만 옛 값(--ink3 #7B8794, 대비 3.66)이
+       남아 있었습니다. */
+    --ink:#102F50; --ink2:#4A596A; --ink3:#5F6A76; --line:#E5EAF0;
     --font:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,
            "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
   }

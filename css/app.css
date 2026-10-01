@@ -151,10 +151,19 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .btn-gh{ background:transparent; color:#fff; border-color:rgba(255,255,255,.34); }
 .btn-gh:hover{ border-color:#fff; }
 /* §5 — 창업 초록 · 폐업 주황. 두 단추는 **같은 크기**입니다. */
-.btn-st{ background:var(--start); color:#fff; border-color:var(--start); }
-.btn-st:hover{ background:var(--start-dark); border-color:var(--start-dark); }
-.btn-cl{ background:var(--close); color:#fff; border-color:var(--close); }
-.btn-cl:hover{ background:var(--close-dark); border-color:var(--close-dark); }
+/* ⚠️⚠️ **흰 글자를 얹는 면은 짙은 쪽입니다** (2026-10-01 지시서 §4
+   "CTA Contrast 개선"). `--start`(#08A875) 위의 흰 글자는 대비 3.06,
+   `--close`(#F36B38) 위는 3.01 이었습니다 — 이 사이트에서 제일 많이
+   눌리는 두 단추가 기준(4.5) 바닥에 있었습니다.
+   ⚠️ **색을 바꾼 것이 아닙니다** — 같은 초록 · 같은 주황의 짙은 단계이고,
+   원래 hover 에 쓰던 값입니다. 옅은 쪽(`--start` · `--close`)은 테두리 ·
+   아이콘 · 카드 악센트에 그대로 남습니다.
+   ⚠️ 폐업이 빨강으로 넘어가지 않게 `--close-dark`(초록 성분 81)까지만
+   내렸습니다 — `check.js` 가 그 선을 봅니다. */
+.btn-st{ background:var(--start-dark); color:#fff; border-color:var(--start-dark); }
+.btn-st:hover{ background:var(--start-deep); border-color:var(--start-deep); }
+.btn-cl{ background:var(--close-dark); color:#fff; border-color:var(--close-dark); }
+.btn-cl:hover{ background:var(--close-deep); border-color:var(--close-deep); }
 .btn-nv{ background:var(--navy); color:#fff; border-color:var(--navy); }
 .btn-nv:hover{ background:var(--navy-dark); border-color:var(--navy-dark); }
 .btn-lg{ min-height:56px; padding:0 var(--s7); font-size:var(--t-lg); }
@@ -187,11 +196,18 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 /* ⚠️ **머리말도 `<p>` 입니다.** `.sec-hd p`(0,1,1)가 `.eyebrow`(0,1,0)를
    이겨서, 구간 머리말이 **사이트 전체에서 회색으로 죽어 있었습니다** —
    에러도 안 나고 찍어 보고서야 알았습니다. 여기서 되돌립니다. */
-.sec-hd > .eyebrow{ color:var(--blue); margin-top:0; font-size:var(--t-sm);
+/* ⚠️⚠️ **색은 여기서 정해집니다** — 아래 `.eyebrow`(0,1,0)를 이 규칙
+   (0,2,0)이 이깁니다. 2026-10-01 에 아래만 `--blue-600` 으로 고쳤다가
+   **아무 변화가 없었습니다.** 바꾸시려면 두 곳을 같이 보세요. */
+.sec-hd > .eyebrow{ color:var(--blue-600); margin-top:0; font-size:var(--t-sm);
   max-width:none; }
 .sec-hd p b{ color:var(--ink); }
+/* ⚠️ 2026-10-01 — `--blue` 에서 `--blue-600` 으로 내렸습니다. 15px 굵은
+   글씨가 옅은 바탕에서 대비 2.5~3.1 이라 안 읽혔습니다. 쪽 색은 그대로
+   따라옵니다 — `.side-start` · `.side-close` 가 `--blue-600` 도 같이
+   갈아 끼우기 때문입니다 (창업은 start-deep · 폐업은 close-deep). */
 .eyebrow{ font-size:var(--t-sm); font-weight:800; letter-spacing:.1em;
-  color:var(--blue); margin-bottom:var(--s3); text-transform:uppercase; }
+  color:var(--blue-600); margin-bottom:var(--s3); text-transform:uppercase; }
 .sec-more{ position:absolute; right:0; bottom:2px; display:inline-flex;
   align-items:center; gap:4px; min-height:40px;
   font-size:var(--t-sm); font-weight:700; color:var(--ink2); }
@@ -232,7 +248,8 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .form-wrap{ max-width:var(--w-read); }
 .f-r{ margin-bottom:var(--s5); }
 .f-r label{ display:block; font-size:var(--t-base); font-weight:700; margin-bottom:var(--s2); }
-.f-r label b{ color:var(--blue); }
+/* 필수 표시(*) — 작고 굵어서 `--blue` 로는 대비 3.71 입니다 */
+.f-r label b{ color:var(--blue-600); }
 .f-2{ display:grid; grid-template-columns:1fr 1fr; gap:0 var(--s5); }
 @media (max-width:560px){ .f-2{ grid-template-columns:1fr; } }
 input[type=text],input[type=tel],input[type=email],input:not([type]),textarea,.sel{
@@ -254,7 +271,8 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
   min-height:var(--tap); cursor:pointer; font-weight:700; }
 .agree-l input{ width:20px; height:20px; margin-top:12px; flex:none; accent-color:var(--blue); }
 .agree-l span{ padding-top:11px; }
-.agree-l b{ color:var(--blue); }
+/* 동의 상자의 방침 링크 — 법으로 알려야 하는 자리라 더 읽혀야 합니다 */
+.agree-l b{ color:var(--blue-600); }
 .agree-u{ display:grid; gap:6px; margin-top:var(--s2);
   font-size:var(--t-sm); color:var(--ink2); }
 .agree-u b{ display:inline-block; min-width:74px; color:var(--ink); }

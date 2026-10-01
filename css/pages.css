@@ -339,8 +339,10 @@
   padding:var(--s7) 0; border-top:1px solid var(--line); }
 .stp:first-child{ border-top:0; padding-top:0; }
 .stp-h{ display:grid; align-content:start; gap:4px; position:sticky; top:96px; }
+/* ⚠️ 글자는 `--gold` 가 아니라 `--gold-text` 입니다 — `--gold` 로 두면
+   13px 에서 대비가 1.82 라 거의 안 보입니다 (실제로 그랬습니다). */
 .stp-n{ font-size:var(--t-cap); font-weight:900; letter-spacing:.16em;
-  color:var(--gold); font-variant-numeric:tabular-nums; }
+  color:var(--gold-text); font-variant-numeric:tabular-nums; }
 /* ⚠️ 단계를 나누는 선도 골드입니다 — 아주 옅게. 진하게 하면 표가 됩니다. */
 .stp{ border-top-color:var(--line); }
 .stp-t{ font-size:var(--t-xl); }
@@ -502,8 +504,10 @@
 .ck-i.on .ck-t b{ color:var(--ink3); text-decoration:line-through; }
 .ck-t i{ font-style:normal; font-size:var(--t-cap); color:var(--ink3);
   line-height:1.6; }
+/* ⚠️ `--warn` 은 **배지 바탕**에 쓰는 상태색입니다. 13px 글자로 쓰면
+   옅은 바탕에서 대비 3.32 라 안 읽힙니다 — 글자는 짙은 쪽입니다. */
 .ck-due{ font-style:normal; font-size:var(--t-cap); font-weight:800;
-  color:var(--warn); white-space:nowrap; }
+  color:var(--warn-dark, #8A5300); white-space:nowrap; }
 @media (max-width:520px){
   .ck-b{ grid-template-columns:auto 1fr; gap:var(--s3); padding:var(--s4); }
   /* 기한 표시가 셋째 칸인데 두 칸으로 접히면 자리가 없습니다 —
@@ -520,7 +524,8 @@
   transition:transform .15s, box-shadow .2s; }
 .sec-white .rd-l a{ background:var(--bg-2); }
 .rd-l a:hover{ transform:translateY(-3px); box-shadow:var(--shadow-md); }
-.rd-m{ font-size:var(--t-cap); font-weight:800; color:var(--blue);
+/* ⚠️ 13px 굵은 글씨라 `--blue` 로는 옅은 바탕에서 3.4~4.3 이었습니다. */
+.rd-m{ font-size:var(--t-cap); font-weight:800; color:var(--blue-600);
   letter-spacing:.04em; }
 .rd-l b{ font-size:var(--t-lg); line-height:1.4; }
 .rd-p{ font-size:var(--t-cap); color:var(--ink3); line-height:1.7;
@@ -585,7 +590,9 @@
   font-size:var(--t-sm); font-weight:600; }
 .sec-white .chip{ background:var(--bg-2); }
 a.chip:hover{ background:var(--blue-50); color:var(--blue); }
-.chip.on{ background:var(--blue); color:#fff; }
+/* ⚠️ 고른 칩은 흰 글자라 바탕이 짙어야 합니다 — `--blue` 위에서는
+   대비가 3.71 이었습니다. */
+.chip.on{ background:var(--blue-600); color:#fff; }
 .chip-flat{ background:transparent; box-shadow:inset 0 0 0 1px var(--line); }
 .chip-2{ box-shadow:inset 0 0 0 1px var(--line); background:transparent; }
 .chip-g-fil{ margin-bottom:var(--s6); }
@@ -949,7 +956,7 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .lg-p{ color:var(--ink2); line-height:1.9; }
 .lg-n{ font-size:var(--t-sm); color:var(--ink3); }
 .lg-none{ color:var(--ink3); }
-.lg-tag{ display:inline-flex; align-items:center; font-size:var(--t-cap);
+.lg-tag{ color:var(--blue-600); display:inline-flex; align-items:center; font-size:var(--t-cap);
   font-weight:700; color:var(--blue); background:var(--blue-50);
   border-radius:var(--r-pill); padding:4px 11px; margin-bottom:var(--s3); }
 .lg-cols{ width:100%; border-collapse:collapse; font-size:var(--t-sm); }
@@ -1114,7 +1121,7 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   align-items:center; min-height:600px; }
 .mh-tx{ min-width:0; }
 .mh-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.14em;
-  color:var(--gold-ink, #A97F2E); }
+  color:var(--gold-text); }
 /* §26 — 데스크톱 64~76px. `--t-hero` 가 clamp(48,5vw,76) 입니다. */
 .mh-h{ margin-top:var(--s3); font-size:var(--t-hero); font-weight:900;
   letter-spacing:-.04em; line-height:1.14; color:var(--navy); }
@@ -1177,7 +1184,8 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mh-fc-st{ --ic-ink:var(--start-dark); --ic-bg:var(--start-soft); }
 .mh-fc-st b{ color:var(--start-dark); }
 .mh-fc-cl{ --ic-ink:var(--close-dark); --ic-bg:var(--close-soft); }
-.mh-fc-cl b{ color:var(--close-dark); }
+/* ⚠️ 흰 카드 위 15px 굵은 글씨 — `--close-dark` 로는 4.07 입니다 */
+.mh-fc-cl b{ color:var(--close-deep); }
 .mh-fc-w{ --ic-ink:#fff; --ic-bg:var(--navy); }
 .mh-fc-w b{ color:var(--navy); letter-spacing:-.01em; font-size:var(--t-md); }
 .mh-fc-w i{ color:var(--ink2); font-weight:700; font-size:var(--t-sm); }
@@ -1221,8 +1229,11 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .ms-ph .ph{ width:100%; aspect-ratio:16/7; object-fit:cover; display:block; }
 .ms-b{ display:flex; flex-direction:column; flex:1 1 auto; padding:var(--s7); }
 .ms-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.12em; }
-.ms-st .ms-k{ color:var(--start-dark); }
-.ms-cl .ms-k{ color:var(--close-dark); }
+/* ⚠️ 15px 굵은 글씨라 민트 · 피치 위에서 `--start-dark` 는 3.69,
+   `--close-dark` 는 4.21 이었습니다. 한 단계 더 짙은 쪽으로 — 초록과
+   주황은 그대로입니다 (`check.js` 가 빨강으로 넘어가는지 봅니다). */
+.ms-st .ms-k{ color:var(--start-deep); }
+.ms-cl .ms-k{ color:var(--close-deep); }
 .ms-h{ margin-top:var(--s2); font-size:var(--t-3xl); font-weight:900;
   letter-spacing:-.03em; color:var(--navy); }
 .ms-d{ margin-top:6px; font-size:var(--t-md); color:var(--ink2); }
@@ -1304,8 +1315,8 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mbr-st{ background:var(--bg-mint); --ic-ink:var(--start-dark); --ic-bg:#fff;
   box-shadow:var(--shadow-soft), inset 0 0 0 1px var(--line-mint); }
 .mbr-k{ font-size:var(--t-sm); font-weight:800; font-style:italic;
-  color:var(--close-dark); }
-.mbr-k-st{ color:var(--start-dark); }
+  color:var(--close-deep); }
+.mbr-k-st{ color:var(--start-deep); }
 /* ⚠️ `photoBox()` 를 쓰는 자리에는 반드시 `object-fit:cover` 를 주세요 —
    기본값이 `fill` 이라 안 주면 사진이 비율을 무시하고 늘어납니다. */
 .mbr-p .ph{ width:100%; aspect-ratio:5/3; border-radius:var(--r-lg);

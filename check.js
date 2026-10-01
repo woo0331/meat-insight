@@ -279,14 +279,29 @@ const AUDIT = `(() => {
     if (leaf) {
       const f = parseFloat(c.fontSize);
       if (f < 12) out.small.push(e.className+"|"+f+"px|"+(e.textContent||"").trim().slice(0,14));
-      /* 3-2. 글자가 바탕에 묻히는가 */
+      /* 3-2. 글자가 바탕에 묻히는가 — **WCAG AA**
+         ⚠️⚠️ **기준이 1.6 이었습니다.** 그건 "완전히 사라졌나" 를 보는
+         값이지 읽힘이 아닙니다. 그 바람에 13px 설명글이 대비 3.4 로
+         **사이트 전체 40군데 넘게** 앉아 있는 것을 아무도 못 봤습니다 —
+         손님이 40~60대 사장님인 플랫폼에서 제일 나쁜 종류입니다.
+         제일 많이 눌리는 두 단추(창업 · 폐업)도 흰 글자 3.0 이었습니다.
+
+         AA 는 **보통 글자 4.5 · 큰 글자 3.0** 이고, 큰 글자는
+         24px 이상이거나 18.66px 이상이면서 굵은 것입니다 (17px 굵은
+         글씨는 **큰 글자가 아닙니다** — 거기서 걸렸습니다).
+         ⚠️ 반투명 글자(opacity · rgba)는 뒤가 섞여서 제대로 못 잽니다 —
+         건너뜁니다. 그건 눈으로 보셔야 합니다. */
       const fg = rgb(c.color);
       const bg = fg ? bgOf(e) : null;
-      if (fg && bg) {
+      if (fg && bg && +c.opacity >= 0.95 && (fg[3] === undefined || fg[3] >= 0.95)) {
         const a = lum(fg), b2 = lum(bg);
         const ratio = (Math.max(a,b2) + .05) / (Math.min(a,b2) + .05);
-        if (ratio < 1.6)
-          out.dim.push(e.className+"|"+ratio.toFixed(2)+"|"+(e.textContent||"").trim().slice(0,14));
+        const px = parseFloat(c.fontSize), wt = parseInt(c.fontWeight) || 400;
+        const big = px >= 24 || (px >= 18.66 && wt >= 700);
+        const need = big ? 3.0 : 4.5;
+        if (ratio < need)
+          out.dim.push(e.className+"|"+ratio.toFixed(2)+"<"+need+"|"+
+            Math.round(px)+"px/"+wt+"|"+(e.textContent||"").trim().slice(0,14));
       }
     }
     /* 4. 누르는 것 40px — <button> 만이 아니라 onclick 을 단 것도 전부.

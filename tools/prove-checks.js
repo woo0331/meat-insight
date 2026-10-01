@@ -278,6 +278,29 @@ async function proveAudit(pg){
       " → 푸터를 본문 색으로 하면 " + JSON.stringify(after).slice(0,50) + "]");
   }
 
+  /* 글자가 바탕에 묻힘 — **기준이 1.6 이었습니다.** 그때는 13px 설명글이
+     대비 3.4 로 사이트 전체에 앉아 있어도 통과했습니다. 그 상태를
+     되돌려 놓고 지금 기준(AA)이 잡는지 봅니다. */
+  for(const u of ["/", "/about"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).dim;
+    await pg.evaluate(() => {
+      /* 옛 --ink3 로 되돌립니다 — 흰 바탕에서 3.66 입니다 */
+      document.documentElement.style.setProperty("--ink3", "#7B8794");
+      document.querySelectorAll("p, i, span").forEach(function(e){
+        if(!e.children.length && (e.textContent||"").trim())
+          e.style.color = "#7B8794"; });
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).dim;
+    const ok = before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 글자가 바탕에 묻힘(AA) · " + u +
+      "  [지금 " + JSON.stringify(before).slice(0,40) +
+      " → 옛 흐린 색으로 되돌리면 " + JSON.stringify(after).slice(0,60) + "]");
+  }
+
   /* "준비 중" 자리표시자 — 프랜차이즈 분류 칸을 원래대로 돌려놓습니다.
      열두 칸이 전부 "준비 중" 이었고, 세는 값(0개 브랜드)을 내야 할
      자리였습니다 (절대 규칙 2). */

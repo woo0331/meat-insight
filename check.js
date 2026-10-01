@@ -148,7 +148,7 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[] };
   /* ⚠️ **흰 글자가 흰 바탕에 앉는 일이 실제로 있었습니다.** 창업 다섯
      마디(.flow)는 어두운 구간에만 있던 것이라 글자색 기본이 흰색이고,
      밝은 쪽은 .sec-tone 안에서만 되돌려 놓았습니다. 그 구간을 순백으로
@@ -417,6 +417,82 @@ const AUDIT = `(() => {
         .slice(0,3).map(x => x[1]).join(" · "));
   }
 
+  /* ⚠️⚠️ **이웃한 두 구간이 붙어 보이는지도 화면마다 봅니다.**
+     이 검사도 /home 한 곳에서만 돌고 있었습니다 — 어두운 면 검사와
+     똑같은 구멍입니다 (푸터 사고). 구간을 쓰는 화면은 /home 만이
+     아닙니다.
+     사람 눈 기준 색차(ΔE)로 봅니다 — 채널차로 재면 민트와 하늘이
+     7 차이인데 ΔE 5.95 로 뚜렷이 다르고, 아이보리와 웜 화이트는
+     채널차 6 인데 ΔE 1.74 로 하나로 읽힙니다. 기준은 2.5 입니다. */
+  {
+    const lab = c => {
+      const r = [c[0], c[1], c[2]].map(v => { v /= 255;
+        return v <= .04045 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); });
+      const X = (r[0]*.4124 + r[1]*.3576 + r[2]*.1805) / .95047;
+      const Y = (r[0]*.2126 + r[1]*.7152 + r[2]*.0722);
+      const Z = (r[0]*.0193 + r[1]*.1192 + r[2]*.9505) / 1.08883;
+      const g = t => t > .008856 ? Math.cbrt(t) : 7.787*t + 16/116;
+      return [116*g(Y) - 16, 500*(g(X) - g(Y)), 200*(g(Y) - g(Z))];
+    };
+    const dE = (a, b) => { const A = lab(a), B = lab(b);
+      return Math.sqrt(Math.pow(A[0]-B[0],2) + Math.pow(A[1]-B[1],2)
+                     + Math.pow(A[2]-B[2],2)); };
+    /* ⚠️⚠️ **바탕을 안 준 구간은 건너뛰면 안 됩니다.** 그런 구간은
+       body 의 웜 화이트가 그대로 비치므로, 둘이 나란히 오면 **똑같은
+       색 두 개**입니다. 처음에 투명이라고 건너뛰었다가 업종 화면의
+       "sec → sec" 두 쌍을 통째로 놓쳤습니다.
+       그래서 투명이면 **위로 올라가 실제로 보이는 색**을 찾습니다.
+       ⚠️ 그라디언트(backgroundImage)를 준 구간은 색 하나로 줄일 수
+       없어서 그때만 건너뜁니다. */
+    const eff = e => {
+      let n = e;
+      while(n){
+        const cs = getComputedStyle(n);
+        if(cs.backgroundImage && cs.backgroundImage !== "none") return null;
+        const c = rgb(cs.backgroundColor);
+        if(c && c[3] >= 0.9) return c;
+        n = n.parentElement;
+      }
+      return null;
+    };
+    /* ⚠️ **눈에 보이는 구분선이 있으면 같은 색이어도 갈립니다.**
+       속화면 머리(.pgh)는 흰 바탕에 1px 선을 깔아 아래 흰 구간과
+       나누는 **의도된 짜임새**입니다 — 선을 안 보면 26개 화면이
+       오탐으로 걸립니다. */
+    const line = (e, side) => {
+      if(!e) return false;
+      const cs = getComputedStyle(e);
+      if(parseFloat(cs["border" + side + "Width"]) < 1) return false;
+      if(cs["border" + side + "Style"] === "none") return false;
+      const c = rgb(cs["border" + side + "Color"]);
+      return !!(c && c[3] >= 0.3);
+    };
+    const sec = [].slice.call(document.querySelectorAll("#view > section"));
+    let prev = null, prevName = "", prevEl = null;
+    for(const e of sec){
+      const c = eff(e);
+      const name = (e.className || "").toString().split(" ")
+        .filter(x => x && x !== "sec")[0] || e.tagName.toLowerCase();
+      if(!c){ prev = null; prevEl = null; continue; }
+      if(prev && dE(prev, c) < 2.5
+         && !line(prevEl, "Bottom") && !line(e, "Top"))
+        out.tone.push(prevName + " ↔ " + name + " ΔE " + dE(prev, c).toFixed(2));
+      prev = c; prevName = name; prevEl = e;
+    }
+    /* ⚠️⚠️ **마지막 구간과 푸터도 비교합니다.** 푸터를 밝게 바꾸면서
+       웜 아이보리로 두었더니 아이보리 구간과 ΔE 0.88 이라 푸터가
+       본문에 녹아 버렸습니다 — 구간끼리만 보면 통과합니다.
+       ⚠️ 이 주석에 백틱을 쓰지 마세요. 문자열이 거기서 끝납니다
+       (여섯 번째 escape 사고 — 방금 또 했습니다). */
+    const ft = document.querySelector("footer.ft");
+    if(prev && ft){
+      const c = eff(ft);
+      if(c && dE(prev, c) < 2.5
+         && !line(prevEl, "Bottom") && !line(ft, "Top"))
+        out.tone.push(prevName + " ↔ 푸터 ΔE " + dE(prev, c).toFixed(2));
+    }
+  }
+
   out.links = [...document.querySelectorAll('a[href^="/"]')].map(a=>a.getAttribute("href"));
   return out;
 })()`;
@@ -459,7 +535,7 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
@@ -489,7 +565,8 @@ const AUDIT = `(() => {
       ["개발자 말 노출",     uniq(bad.bad)],
       ["구간 머리말이 회색으로 죽음", uniq(bad.eye)],
       ["별표(**)가 글자로 남음", uniq(bad.star)],
-      ["어두운 면이 15% 넘음",   uniq(bad.dark)]
+      ["어두운 면이 15% 넘음",   uniq(bad.dark)],
+      ["이웃한 두 구간이 붙어 보임", uniq(bad.tone)]
     ];
     console.log("\n── " + vn + " (" + w + "px)");
     rows.forEach(([n,v]) => {

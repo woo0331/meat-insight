@@ -192,6 +192,52 @@ async function proveAudit(pg){
       "  [지금 " + JSON.stringify(before) +
       " → 푸터를 다시 어둡게 하면 " + JSON.stringify(after).slice(0,50) + "]");
   }
+
+  /* 이웃한 두 구간이 붙어 보임 — 둘째 구간을 첫째와 같은 색으로
+     돌려놓고 잡히는지 봅니다. ⚠️ 바탕을 **안 준** 구간도 봐야 합니다 —
+     처음에 투명이라고 건너뛰었다가 업종 화면의 두 쌍을 놓쳤습니다. */
+  for(const u of ["/startup", "/startup/cafe", "/providers/interior"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).tone;
+    await pg.evaluate(() => {
+      /* ⚠️ 맨 앞은 히어로이고 그라디언트라 색 하나로 안 줄어듭니다 —
+         검사가 건너뛰므로 되돌리기가 안 먹습니다. **뒤에서 두 구간**을
+         씁니다. (처음에 s[0]·s[1] 로 적었다가 "안 잡는다" 로 나왔는데,
+         검사가 아니라 되돌리기가 틀린 것이었습니다.) */
+      const s = [...document.querySelectorAll("#view > section")];
+      if(s.length > 2)
+        s[s.length-1].style.background =
+          getComputedStyle(s[s.length-2]).backgroundColor;
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).tone;
+    const ok = before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 이웃한 두 구간이 붙어 보임 · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → 둘째를 첫째와 같은 색으로 하면 " + JSON.stringify(after).slice(0,50) + "]");
+  }
+
+  /* 마지막 구간 ↔ 푸터 — 푸터를 본문 색으로 돌려놓고 봅니다.
+     ⚠️ 푸터에 **테두리를 두면 안 됩니다.** 검사가 그 선을 보고
+     통과시켜서, 푸터가 다시 본문과 같은 색이 되어도 아무도 모릅니다. */
+  for(const u of ["/providers/interior", "/about"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).tone;
+    await pg.evaluate(() => {
+      const s = [...document.querySelectorAll("#view > section")];
+      document.querySelector("footer.ft").style.background =
+        getComputedStyle(s[s.length-1]).backgroundColor; });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).tone;
+    const ok = before.length === 0 && after.some(x => x.indexOf("푸터") >= 0);
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 마지막 구간 ↔ 푸터 · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → 푸터를 본문 색으로 하면 " + JSON.stringify(after).slice(0,50) + "]");
+  }
   return bad;
 }
 

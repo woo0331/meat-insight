@@ -268,6 +268,51 @@ function sideOf(r){
   return "";
 }
 
+/* ── 구간 바탕이 연달아 같지 않게 (§21) ──────────────────────────────
+   ⚠️⚠️ **바탕을 함수마다 손으로 적으면 반드시 어긋납니다.** 구간은
+   데이터에 따라 통째로 빠지고(ReadBand 는 맞는 글이 없으면 ""),
+   업종마다 개수가 달라집니다 — 그래서 이웃이 바뀝니다. 실제로
+   `/startup` 에서 **흰 구간이 셋 연달아** 나와 한 덩어리로 읽혔고,
+   업종 화면에서는 웜 화이트 두 쌍이 붙어 있었습니다.
+
+   그래서 **그린 다음에 차례를 보고** 겹치는 것만 다음 바탕으로
+   밀어 줍니다. 각자 정해 둔 바탕은 겹치지 않는 한 그대로 둡니다 —
+   랜딩과 `/home` 은 지시서가 차례를 정해 두었고 겹치는 데가 없어서
+   아무것도 안 바뀝니다.
+
+   ⚠️ **묶음으로 봅니다.** 웜 화이트(`--bg` #FDFBF7)와 크림
+   (`--bg-cream` #FCFAF6)은 ΔE 0.35 라 사람 눈에 같은 색입니다 —
+   클래스 이름만 보면 "다르다" 로 빠집니다.
+   ⚠️ 돌려 쓰는 셋은 서로 ΔE 2.5 이상입니다 (흰 ↔ 회 3.12 ·
+   회 ↔ 웜 3.68 · 웜 ↔ 흰 2.53). 바꾸시려면 셋을 다시 재 보세요.
+   `check.js` 가 화면마다 실제로 그려진 색으로 다시 봅니다. */
+var TONE_CLS = { white:"sec-white", gray:"sec-gray", warm:"" };
+function toneGroup(e){
+  var c = " " + (e.className || "") + " ";
+  if(c.indexOf(" sec-white ") >= 0) return "white";
+  if(c.indexOf(" sec-gray ")  >= 0) return "gray";
+  if(c.indexOf(" sec-ivory ") >= 0) return "ivory";
+  if(c.indexOf(" sec-start ") >= 0) return "mint";
+  if(c.indexOf(" sec-blue ")  >= 0) return "sky";
+  /* 크림과 "바탕 안 준 구간" 은 같은 묶음입니다 (ΔE 0.35) */
+  return "warm";
+}
+function paintTones(){
+  var v = $("view"); if(!v) return;
+  var sec = [].slice.call(v.children).filter(function(e){
+    return e.tagName === "SECTION"; });
+  for(var i = 1; i < sec.length; i++){
+    var prev = toneGroup(sec[i-1]);
+    if(toneGroup(sec[i]) !== prev) continue;
+    var next = (i + 1 < sec.length) ? toneGroup(sec[i+1]) : "";
+    var pick = ["white","gray","warm"].filter(function(t){
+      return t !== prev && t !== next; })[0]
+      || ["white","gray","warm"].filter(function(t){ return t !== prev; })[0];
+    sec[i].classList.remove("sec-white","sec-gray","sec-cream");
+    if(TONE_CLS[pick]) sec[i].classList.add(TONE_CLS[pick]);
+  }
+}
+
 function render(){
   var path = nowPath();
   var r = routeInfo(path, {});
@@ -318,6 +363,7 @@ function render(){
      화면마다 머리가 바뀌어 한 사이트로 안 읽힙니다. */
   $("view").className = sideOf(r);
   $("view").innerHTML = html;
+  paintTones();
   paintMeta(r);
   paintChrome();
   initReveal();

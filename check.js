@@ -127,6 +127,13 @@ const PAGES = [
   ["/content/pyegimul-jeungmyeong", "정보 — 폐기물 증명"],
   ["/content/datum-saenggyeoss-eul-ttae", "정보 — 다툼이 생겼을 때"],
   ["/content/pyeeop-hal-ttae-batneun-geot", "정보 — 폐업 지원 어디를 보나"],
+  /* 카페 · 음식점 (2026-10-01) — 업종이 붙은 글입니다 */
+  ["/content/cafe-interior-seolbi",    "정보 — 카페 인테리어"],
+  ["/content/cafe-jangbi-golgi",       "정보 — 카페 장비"],
+  ["/content/cafe-wonsang-bokgu",      "정보 — 카페 원상복구"],
+  ["/content/eumsikjeom-jubang-gongsa","정보 — 음식점 주방 공사"],
+  ["/content/eumsikjeom-bogeonjeung",  "정보 — 음식점 보건증 · 위생교육"],
+  ["/content/eumsikjeom-yangdo-seunggye", "정보 — 음식점 양도와 승계"],
   ["/about",             "소개"],
   ["/terms",             "이용약관"],
   ["/privacy",           "개인정보처리방침"],

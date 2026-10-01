@@ -69,7 +69,11 @@ function loadApp(){
    ⚠️ 화면을 새로 만들면 여기에도 넣어야 HTML 파일이 생깁니다.
    안 넣으면 열리기는 하지만 검색에 안 잡힙니다. */
 function allRoutes(W){
-  const fixed = ["/", "/home", "/startup", "/closure", "/providers", "/franchise",
+  /* ⚠️⚠️ **`/home` 이 여기 없는 것은 실수가 아닙니다** (2026-10-01).
+     랜딩을 없애면서 그 화면이 `/` 가 됐습니다. 옛 주소는
+     `vercel.json` 의 redirects 가 308 로 `/` 에 보냅니다 — 여기에
+     다시 넣으면 **같은 내용이 두 주소로 나가고 구글이 둘 다 무시**합니다. */
+  const fixed = ["/", "/startup", "/closure", "/providers", "/franchise",
                  "/stores", "/assets", "/support", "/content",
                  "/quote", "/join", "/my", "/search",
                  "/tools", "/tools/cost", "/tools/fixed", "/tools/bep",
@@ -345,96 +349,54 @@ function noscriptFor(W, r, route){
   h1(r.title || B.name);
   p(r.desc || B.desc);
 
-  if(route === "/"){
-    /* ⚠️ **화면과 같은 말이어야 합니다.** 크롤러가 읽는 것과 손님이
-       보는 것이 다르면 그게 구글에 나가는 거짓말입니다. 아래는
-       js/pages/home.js 의 구간 차례(§24)를 그대로 따라갑니다.
-       ⚠️ 여기에만 숫자를 적지 마세요 — 화면에 없는 업체 수 · 실적을
-       여기에 적으면 검색엔진에게만 하는 거짓말이 됩니다. */
-    h2("창업부터 폐업까지. 사장님에게 필요한 모든 것을 한 곳에서.");
-    p("좋은 시작을 돕고, 안전한 정리를 지원하는 사장님 맞춤 플랫폼입니다.");
+  /* ── 메인 (/) ────────────────────────────────────────────────
+     > **2026-10-01 — 랜딩을 없앴습니다.** 전에는 여기에 랜딩용 본문이
+     > 있었고, 그 안에 **"지금 상태"** 네 줄(입점 파트너 모집중 ·
+     > 브랜드 등록 준비중 · 매물 등록 시작 · 접수 준비중)이 들어
+     > 있었습니다. 화면에는 안 보이는데 **크롤러 본문에는 거의 맨 위**라,
+     > 자바스크립트가 돌기 전에 들어온 분과 검색엔진에게 "아직 준비
+     > 중인 플랫폼" 으로 읽혔습니다. 지시서 §12 로 **뺐습니다.**
+     >
+     > ⚠️ 0 을 숨긴 것이 아닙니다 — 업체 · 브랜드 · 매물이 0 이라는
+     > 말은 아래 각 구간에 그대로 있고, 거기가 **화면과 같은 자리**입니다.
 
-    /* ⚠️ 화면의 떠 있는 카드와 **같은 말**입니다. 지금 업체 0곳 ·
-       브랜드 0개 · 매물 0건이라 숫자가 아니라 상태를 적습니다. */
-    const nPv = (W.AM_PROVIDERS||[]).length;
-    const nFr = (W.AM_FRANCHISES||[]).length;
-    const nMk = (W.AM_STORES||[]).length + (W.AM_ASSETS||[]).length;
-    h2("지금 상태");
-    ul(["입점 업체 — " + (nPv ? nPv + "곳" : "입점 파트너 모집중"),
-        "프랜차이즈 브랜드 — " + (nFr ? nFr + "개" : "브랜드 등록 준비중"),
-        "매장 · 시설 정보 — " + (nMk ? nMk + "건" : "매물 등록 시작"),
-        "견적 · 입점 접수 — " + (((W.WOW_BIZ||{}).sosReady)
-          ? "지금 접수받습니다" : "접수 준비중")]);
-    p("등록된 업체 · 브랜드 · 매물을 지어내지 않습니다. 지금은 모으는 중이고, " +
-      "들어오는 대로 실제 숫자가 나옵니다.");
-
-    h2("장사의 시작과 끝, 생각보다 해야 할 일이 많습니다.");
-    p("필요한 업체를 찾고, 비교하고, 견적을 받고, 연결합니다. 인테리어 한 곳, " +
-      "장비 한 곳, 세무 한 곳을 따로 알아보시던 일을 한곳에서 하십니다.");
-    /* ⚠️ 화면의 범위 숫자와 같은 값이어야 합니다 — 그래서 여기서도
-       **그 자리에서 셉니다.** 손으로 적을 자리가 없습니다. */
-    p("업종 " + (W.AM_INDUSTRIES||[]).length +
-      " · 창업 " + (W.AM_START_CATS||[]).length +
-      "분야 · 폐업 " + (W.AM_CLOSE_CATS||[]).length +
-      "분야 · 세부 서비스 " + (W.AM_CATS||[]).reduce(function(a2,c){
-        return a2 + ((c.items||[]).length); }, 0) +
-      ". 이 숫자는 다루는 분야의 수이고, 등록된 업체 수나 거래 실적이 아닙니다.");
-
-    h2("START · 창업 — 새로운 사업을 시작합니다");
-    ul(catNames((W.AM_START_CATS||[]).slice(0, 8)));
-    h2("CLOSE · 폐업 — 사업을 정리합니다");
-    ul(catNames((W.AM_CLOSE_CATS||[]).slice(0, 8)));
-
-    h2("장사 하나 시작하려고 몇 군데나 알아보셨나요?");
-    p("상가 따로, 인테리어 따로, 장비 따로, POS 따로, 세무 따로, 마케팅 따로. " +
-      "이제 한곳에서 — 한 번만 적으시면 조건이 맞는 곳에 같이 전달합니다.");
-
-    h2("끝은 또 다른 시작이 됩니다");
-    p("한 사장님의 끝이 다른 사장님의 시작이 됩니다. 정리하시는 사장님이 " +
-      "내놓은 점포 · 시설 · 집기 · 재고를, 같은 업종을 준비하는 사장님이 찾습니다.");
-
-    h2("사장님에게 필요한 업체도 이곳에 모입니다");
-    p("인테리어 · 철거 · 간판 · 주방설비 · POS · 세무 · 노무 · 청소 · " +
-      "마케팅까지. 분야와 지역이 맞는 곳만 찾아 드립니다.");
-
-    h2("고객을 찾고 계신가요?");
-    ul(["광고가 아니라 요청입니다 — 지역과 전문 분야가 맞는 요청만 보내 드립니다.",
-        "기본 입점은 무료입니다 — 프로필 · 지역 · 서비스를 직접 관리하십니다.",
-        "광고는 광고라고 표시합니다 — 일반 결과는 조건 적합도를 기준으로 냅니다."]);
-
-    h2("업종");
-    ul((W.AM_INDUSTRIES||[]).map(i => i.name + " — " + i.lead));
-    return L.join("");
-  }
-
-  /* ── 서비스 허브 (/home) ─────────────────────────────────────
-     ⚠️ 이 블록이 **죽은 복사본에만** 들어 있어서 `/home` 이 95자짜리
-     크롤러 본문으로 나가고 있었습니다. 랜딩 CTA 가 도착하는 화면인데도
-     `check.js` 의 `PAGES` 에 없어서 아무 검사도 안 받았습니다.
+     ⚠️ **화면과 같은 말이어야 합니다.** 크롤러가 읽는 것과 손님이
+     보는 것이 다르면 그게 구글에 나가는 거짓말입니다. 아래는
+     `js/pages/home.js` 의 구간 차례를 그대로 따라갑니다.
      ⚠️ 숫자는 전부 **세는 값**입니다. 손으로 적을 자리가 없습니다. */
-  if(route === "/home"){
+  if(route === "/"){
     const nPv = (W.AM_PROVIDERS||[]).length;
     const nFr = (W.AM_FRANCHISES||[]).length;
     const nSt = (W.AM_STORES||[]).length;
     const nAs = (W.AM_ASSETS||[]).length;
     const stC = (W.AM_START_CATS||[]), clC = (W.AM_CLOSE_CATS||[]);
-    /* ⚠️ 화면(PageHub)의 구간 차례를 그대로 따라갑니다. 크롤러가 읽는
-       것과 손님이 보는 것이 다르면 그게 구글에 나가는 거짓말입니다. */
-    h2("창업에 필요한 모든 것. 폐업에 필요한 모든 것.");
-    p("점포부터 인테리어, 장비, 세무, 마케팅까지. 매장 양도부터 시설 처분, " +
-      "철거, 원상복구까지. 업종을 고르시면 필요한 서비스와 업체를 바로 " +
-      "보여 드립니다.");
 
+    h2("창업에 필요한 모든 것. 폐업에 필요한 모든 것.");
+    p("시작부터 정리까지, 사장님에게 필요한 모든 것을 한곳에서. 점포부터 " +
+      "인테리어, 장비, 세무, 마케팅까지. 매장 양도부터 시설 처분, 철거, " +
+      "원상복구까지. 업종을 선택하면 필요한 서비스를 빠르게 찾아드립니다.");
+
+    /* ⚠️ 화면의 범위 숫자와 같은 값이어야 합니다 — 그래서 여기서도
+       **그 자리에서 셉니다.** "이 숫자는 분야의 수" 줄도 화면과 같이
+       나갑니다 (없으면 "업체가 183곳" 으로 읽힙니다). */
+    p("업종 " + (W.AM_INDUSTRIES||[]).length +
+      " · 창업 · 폐업 전문분야 " + (W.AM_CATS||[]).length +
+      " · 세부 서비스 " + (W.AM_CATS||[]).reduce(function(a2,c){
+        return a2 + ((c.items||[]).length); }, 0) +
+      ". 이 숫자는 저희가 다루는 분야의 수이고, 등록된 업체 수나 거래 " +
+      "실적이 아닙니다.");
+
+    h2("시작하시나요, 정리하시나요?");
     if(stC.length){
-      h2("창업 — 새로 시작하는 데 필요한 것 (" + stC.length + "개 분야)");
+      h2("창업 — 사업의 시작에 필요한 모든 것 (" + stC.length + "개 분야)");
       ul(catNames(stC));
     }
     if(clC.length){
-      h2("폐업 — 잘 정리하는 것도 사업입니다 (" + clC.length + "개 분야)");
+      h2("폐업 — 잘 정리하는 것도 다음을 위한 준비입니다 (" + clC.length + "개 분야)");
       ul(catNames(clC));
     }
 
-    h2("어떤 사업을 준비하세요?");
+    h2("어떤 사업을 하고 계세요?");
     ul((W.AM_INDUSTRIES||[]).map(i => i.name + " — " + i.lead));
 
     /* ⚠️⚠️ 지어낸 숫자를 여기에 적지 마세요. 화면이 0 이라고 말하는
@@ -759,7 +721,7 @@ function noscriptFor(W, r, route){
 }
 
 function checkCssVars(){
-  const files = ["css/tokens.css","css/app.css","css/pages.css","css/landing.css"];
+  const files = ["css/tokens.css","css/app.css","css/pages.css"];
   const src = files.map(f => fs.readFileSync(path.join(ROOT,f),"utf8"));
   const all = src.join("\n");
   const defined = new Set();
@@ -815,6 +777,22 @@ function checkVercel(){
     for(const k of Object.keys(r))
       if(!["source","destination","has","missing"].includes(k))
         throw new Error("vercel.json rewrites 에 알 수 없는 키: "+k);
+  for(const r of (vj.redirects||[]))
+    for(const k of Object.keys(r))
+      if(!["source","destination","permanent","statusCode","has","missing"].includes(k))
+        throw new Error("vercel.json redirects 에 알 수 없는 키: "+k);
+
+  /* ⚠️⚠️ **옛 주소가 끊기지 않게 지킵니다** (2026-10-01).
+     랜딩을 없애면서 `/home` 이 `/` 가 됐습니다. 그 주소는 헤더 CTA ·
+     랜딩 CTA · 푸터가 몇 주 동안 가리키고 있었고 밖으로도 퍼졌습니다.
+     이 줄이 없으면 그 링크가 전부 404 입니다 — **화면으로는 표가 안
+     나서** 아무도 모릅니다. 그래서 빌드가 멈춥니다.
+     ⚠️ JSON 이라 주석을 못 답니다. 여기가 그 주석입니다. */
+  const back = (vj.redirects||[]).some(r =>
+    r.source === "/home" && r.destination === "/");
+  if(!back)
+    throw new Error("vercel.json 에 /home → / 리다이렉트가 없습니다 — " +
+      "랜딩을 없애면서 /home 이 / 가 됐습니다. 빼면 밖에서 퍼간 링크가 404 입니다.");
 }
 
 

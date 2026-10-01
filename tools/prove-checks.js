@@ -41,44 +41,59 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
 
 const CASES = [
   ["지어낸 실적 숫자가 메인에 없다",
-   `document.querySelector(".lh-d").textContent = "입점 업체 1,200곳";`],
-  ["히어로 제목이 창업부터 폐업까지다",
-   `document.querySelector(".lh-h").textContent = "창업 플랫폼";`],
-  ["히어로에 누를 곳이 하나뿐이다",
-   `document.querySelector(".lh-in").insertAdjacentHTML("beforeend","<a href=/x>또</a>");`],
+   `document.querySelector(".mh-d").textContent = "입점 업체 1,200곳";`],
+  ["히어로 제목이 창업 · 폐업 두 낱말을 주인공으로 둔다",
+   `document.querySelector(".mh-h").textContent = "창업 플랫폼";`],
+  ["히어로에서 바로 찾고 바로 갈라진다",
+   `document.querySelector(".mh-s").remove();`],
   ["창업은 초록 · 폐업은 주황이고 빨강이 아니다",
-   `document.querySelector(".lh-cl").style.color = "rgb(214,28,28)";`],
+   `document.querySelector(".mh-cl").style.color = "rgb(214,28,28)";`],
   ["연결 구간 두 딱지가 같은 높이에 앉는다",
-   `document.querySelector(".lbr-g").style.alignItems = "center";`],
-  ["자산 타일이 세로로 길쭉하지 않다",
-   `document.querySelectorAll(".lbr-as-g > li")
-      .forEach(function(e){ e.style.height = "320px"; });`],
-  ["허브 두 갈래 카드의 분야 수가 센 값이다",
-   `document.querySelector(".hs-st .hs-more i").textContent = "40개 분야";`],
-  ["허브 두 갈래 카드의 크기가 같다",
-   `document.querySelector(".hs-cl").style.width = "60%";`],
-  ["랜딩 미니카드 아이콘이 분류 것과 같다",
-   `document.querySelector(".lsd-st .lsd-i svg").innerHTML =
-      document.querySelectorAll(".lsd-st .lsd-i svg")[1].innerHTML;`],
+   `document.querySelector(".mbr-g").style.alignItems = "center";
+    document.querySelector(".mbr-cl .mbr-l").insertAdjacentHTML("beforeend",
+      "<li style=height:120px>늘림</li>");`],
+  ["사진 자리가 비율을 무시하고 늘어나지 않는다",
+   `for(const sh of document.styleSheets){
+      let rules; try { rules = sh.cssRules; } catch(e){ continue; }
+      if(!rules) continue;
+      for(const r of rules)
+        if(r.selectorText === ".mbr-p .ph") r.style.objectFit = "fill";
+    }`],
+  ["큰 카드 둘의 분야 수가 센 값이다",
+   `document.querySelector(".ms-st .ms-more i").textContent = "40개 분야";`],
+  ["큰 카드 둘의 크기가 같다",
+   `document.querySelector(".ms-cl").style.width = "60%";`],
+  ["큰 카드 여섯의 아이콘이 분류 것과 같다",
+   `document.querySelector(".ms-st .ms-g svg").innerHTML =
+      document.querySelectorAll(".ms-st .ms-g svg")[1].innerHTML;`],
+  ["업종 열넷이 저마다 다른 색을 쓴다",
+   /* ⚠️ `.ic-t` 에 transition 이 걸려 있어서 그냥 바꾸면 **색이 번지는
+      도중**에 재어 다른 값이 나옵니다 — 되돌리기가 헛돕니다. 끕니다. */
+   `const t = document.querySelectorAll(".mi-g .ic-t");
+    t[1].style.transition = "none";
+    t[1].style.background = getComputedStyle(t[0]).backgroundColor;`],
   ["메인 구간 차례가 지시서와 같다",
    `const v = document.getElementById("view");
     v.insertBefore(v.children[3], v.children[1]);`],
   ["이웃한 두 구간이 붙어 보이지 않는다",
    `document.querySelectorAll("#view > section")[7]
-      .style.background = "#EAF8F3";`],
+      .style.background = "#ECF8F3";`],
   ["규모감 숫자가 손으로 쓴 값이 아니라 센 값이다",
    `document.querySelectorAll(".scale-n")[3].textContent = "500";`],
   ["규모감 숫자가 무엇을 센 값인지 밝힌다",
    `document.querySelector(".scale-n-b").remove();`],
-  ["랜딩에 서비스 메인 기능을 끌어오지 않았다",
-   `document.querySelector("#view section").insertAdjacentHTML("beforeend","<input name=q>");`],
-  ["랜딩 구간 차례가 시안과 같다",
-   `document.querySelector(".lbr").remove();`],
+  /* ⚠️ 랜딩을 없앴으므로 "랜딩에 기능을 끌어오지 않았다" 는 반대가
+     됐습니다 — 이제 랜딩 구간이 **되살아나는 것**을 되돌려 봅니다. */
+  ["메인(/)이 중간 소개 화면이 아니다",
+   `document.querySelector("#view").insertAdjacentHTML("afterbegin",
+      "<section class=lh>랜딩이 돌아옴</section>");`],
   ["어두운 면이 화면의 15% 를 넘지 않는다",
-   `document.querySelector(".lin").style.background = "#0B1220";`],
-  ["마지막 CTA 가 밝은 민트 · 피치이고 악센트로 말한다",
-   `document.querySelector(".lfin-st").style.background = "rgb(10,91,66)";`],
-  ["랜딩에서 검색으로 가는 길이 있다",
+   /* ⚠️ 구간 **하나**로는 모자랍니다 — 메인이 9,600px 이라 한 구간은
+      7% 밖에 안 됩니다. 어두운 테마로 되돌아가는 것을 재현하려면
+      위쪽 여섯 구간을 통째로 어둡게 해야 합니다. */
+   `[...document.querySelectorAll("#view > section")].slice(0, 6)
+      .forEach(function(e){ e.style.background = "#0B1220"; });`],
+  ["어느 화면에서나 검색으로 가는 길이 있다",
    `document.querySelector('.hd a[href="/search"]').remove();`],
   ["헤더가 거의 불투명해서 밑의 글자가 안 비친다",
    `document.querySelector(".hd").style.background = "rgba(255,255,255,.5)";`],
@@ -97,8 +112,12 @@ const CASES = [
    `document.querySelectorAll(".chip-g-fil .chip")[0]
       .textContent = "전체 120";`],
   ["카드가 구간 바탕과 같은 색이 아니다",
-   `document.querySelectorAll(".lsd-g a")[0].style.background =
-      getComputedStyle(document.querySelector(".lin")).backgroundColor;`]
+   /* ⚠️ 바탕만 같게 하면 안 잡힙니다 — **테두리가 있으면 카드로
+      읽힌다**고 봐 주기 때문입니다. 그림자로만 보이는 상태를
+      만들려면 테두리도 같이 없애야 합니다. */
+   `const a = document.querySelectorAll(".mi-g a")[0];
+    a.style.border = "none";
+    a.style.background = getComputedStyle(a.closest("section")).backgroundColor;`]
 ];
 
 /* ══════════════════════════════════════════════════════════════════
@@ -127,6 +146,15 @@ function proveEscapes(){
   while((m = re.exec(src))){
     let body;
     try { body = eval("`" + m[3] + "`"); } catch(e){ continue; }
+    /* ⚠️⚠️ **검사 이름에 백틱을 쓰지 마세요.** 쓰면 여기 정규식이
+       본문을 엉뚱하게 잘라 내고, eval 이 문자열이 아닌 것을 돌려줘서
+       `body.indexOf is not a function` 으로 터집니다. 실제로 한 번
+       그랬습니다 — 조용히 넘기면 그 검사만 escape 탐지 밖이 됩니다. */
+    if(typeof body !== "string"){
+      console.log("\n❌ 검사 본문을 못 읽었습니다: " + m[1]);
+      console.log("   검사 이름에 백틱이 들어갔는지 보세요.\n");
+      return false;
+    }
     const hit = EATEN.filter(function(x){
       return SAFE.indexOf(x) < 0 && body.indexOf(x) >= 0; });
     if(hit.length) bad.push(m[1] + "   — " + hit.join(" "));
@@ -165,7 +193,7 @@ function proveEscapes(){
 
    `await f(...)` 꼴이 아니라 화면마다 도는 검사라 위의 `CASES` 로는
    못 잡습니다. 그런데 바로 그 묶음에서 사고가 났습니다 — 어두운 면을
-   랜딩과 /home 에서만 재고 있었고, 푸터(547px)가 짧은 화면에서는
+   랜딩과 서비스 메인에서만 재고 있었고, 푸터(547px)가 짧은 화면에서는
    **43.9%** 였는데 **78개 화면이 검사 밖**이었습니다.
 
    그래서 푸터를 일부러 다시 어둡게 해 놓고 "어두운 면이 15% 넘음" 이

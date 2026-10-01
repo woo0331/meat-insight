@@ -47,9 +47,6 @@ window.nowQS = function(k){
 var META = {
   "/":          ["창업에 필요한 모든 것, 폐업에 필요한 모든 것",
                  "장사를 시작하시나요, 정리하시나요. 업종과 지역만 고르시면 점포 · 인테리어 · 장비 · 프랜차이즈부터 매장 양도 · 철거 · 원상복구 · 폐업 신고까지 필요한 전문업체를 찾고 비교하고 견적받으실 수 있습니다."],
-  /* 랜딩(/)의 "플랫폼 시작하기" 가 도착하는 서비스 허브 */
-  "/home":      ["서비스 — 무엇부터 하시겠습니까?",
-                 "창업과 폐업에 필요한 업체 · 프랜차이즈 · 점포 · 시설 · 지원사업 · 정보 · 계산기를 한곳에 모았습니다. 필요한 것부터 고르세요."],
   "/startup":   ["창업 — 어떤 사업을 준비하세요?",
                  "업종만 고르시면 그 업종 창업에 실제로 필요한 것만 추려 드립니다. 점포 · 상권 · 인테리어 · 장비 · 가구 · POS · 공급 · 인허가 · 마케팅까지."],
   "/closure":   ["폐업 — 사업을 어떻게 정리하세요?",
@@ -107,8 +104,11 @@ window.routeInfo = function(path){
   if(META[path]){ r.title = META[path][0]; r.desc = META[path][1]; }
 
   var VIEW = {
-    "/":          "home",
-    "/home":      "hub",
+    /* ⚠️⚠️ **`/` 가 곧 서비스 메인입니다** (2026-10-01 지시서 §1 · §29).
+       중간 소개 화면(Intro · Splash · Gateway)을 다시 끼우지 마세요.
+       옛 주소 `/home` 은 `vercel.json` 이 308 로 여기 보냅니다 —
+       화면이 아니라 **안 깨지라고 남겨 둔 길**입니다. */
+    "/":          "main",
     "/startup":   "startup",
     "/closure":   "closure",
     "/providers": "providers",
@@ -277,7 +277,7 @@ function sideOf(r){
 
    그래서 **그린 다음에 차례를 보고** 겹치는 것만 다음 바탕으로
    밀어 줍니다. 각자 정해 둔 바탕은 겹치지 않는 한 그대로 둡니다 —
-   랜딩과 `/home` 은 지시서가 차례를 정해 두었고 겹치는 데가 없어서
+   메인(`/`)은 지시서가 차례를 정해 두었고 겹치는 데가 없어서
    아무것도 안 바뀝니다.
 
    ⚠️ **묶음으로 봅니다.** 웜 화이트(`--bg` #FDFBF7)와 크림
@@ -320,8 +320,7 @@ function render(){
 
   var html;
   switch(r.view){
-    case "home":            html = PageHome();                      break;
-    case "hub":             html = PageHub();                       break;
+    case "main":            html = PageMain();                      break;
     case "startup":         html = PageStartup();                   break;
     case "startupIndustry": html = PageStartupIndustry(r.industry); break;
     case "closure":         html = PageClosure();                   break;

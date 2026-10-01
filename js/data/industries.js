@@ -21,7 +21,7 @@
    ════════════════════════════════════════════════════════════════════ */
 
 window.AM_INDUSTRIES = [
-  { key:"restaurant", name:"음식점", icon:"utensils", tone:"t1",
+  { key:"restaurant", name:"음식점", icon:"utensils", tone:"t9",
     lead:"한식 · 중식 · 일식 · 양식 · 분식 · 고깃집",
     equip:[
       { key:"kitchen-eq", name:"주방기기" },
@@ -34,7 +34,7 @@ window.AM_INDUSTRIES = [
     startup:["item","store","area","interior","equip","furniture","it","supply","admin","staff","marketing","clean","fund"],
     closure:["transfer","asset","stock","demolish","restore","waste","tax","labor","contract","law","support"] },
 
-  { key:"cafe", name:"카페 · 디저트", icon:"cup", tone:"t2",
+  { key:"cafe", name:"카페 · 디저트", icon:"cup", tone:"t10",
     lead:"카페 · 베이커리 · 디저트 · 브런치",
     equip:[
       { key:"espresso", name:"커피머신" },
@@ -48,7 +48,7 @@ window.AM_INDUSTRIES = [
     startup:["item","store","area","interior","equip","furniture","it","supply","admin","marketing","clean","fund"],
     closure:["transfer","asset","stock","demolish","restore","waste","tax","labor","contract","support"] },
 
-  { key:"bar", name:"주점 · 바", icon:"glass", tone:"t8",
+  { key:"bar", name:"주점 · 바", icon:"glass", tone:"t6",
     lead:"호프 · 이자카야 · 와인바 · 칵테일바",
     equip:[
       { key:"kitchen-eq", name:"주방기기" },
@@ -60,7 +60,7 @@ window.AM_INDUSTRIES = [
     startup:["item","store","area","interior","equip","furniture","it","supply","admin","staff","marketing","clean","fund"],
     closure:["transfer","asset","stock","demolish","restore","waste","tax","labor","contract","support"] },
 
-  { key:"hair", name:"미용 · 헤어", icon:"scissors", tone:"t3",
+  { key:"hair", name:"미용 · 헤어", icon:"scissors", tone:"t8",
     lead:"헤어샵 · 바버샵 · 두피관리",
     equip:[
       { key:"salon-chair", name:"미용의자" },
@@ -72,7 +72,7 @@ window.AM_INDUSTRIES = [
     startup:["item","store","area","interior","equip","furniture","it","admin","staff","marketing","clean","fund"],
     closure:["transfer","asset","stock","demolish","restore","tax","labor","contract","support"] },
 
-  { key:"beauty", name:"네일 · 뷰티", icon:"sparkle", tone:"t8",
+  { key:"beauty", name:"네일 · 뷰티", icon:"sparkle", tone:"t3",
     lead:"네일 · 속눈썹 · 왁싱 · 피부관리",
     equip:[
       { key:"beauty-bed", name:"관리 베드 · 의자" },
@@ -84,7 +84,7 @@ window.AM_INDUSTRIES = [
     startup:["item","store","area","interior","equip","furniture","it","admin","marketing","clean","fund"],
     closure:["transfer","asset","stock","demolish","restore","tax","labor","contract","support"] },
 
-  { key:"gym", name:"헬스 · PT", icon:"dumbbell", tone:"t5",
+  { key:"gym", name:"헬스 · PT", icon:"dumbbell", tone:"t1",
     lead:"헬스장 · PT샵 · 필라테스 · 요가",
     equip:[
       { key:"fitness",  name:"운동기구" },
@@ -96,7 +96,7 @@ window.AM_INDUSTRIES = [
     startup:["item","store","area","interior","equip","furniture","it","admin","staff","marketing","clean","fund"],
     closure:["transfer","asset","demolish","restore","waste","tax","labor","contract","support"] },
 
-  { key:"academy", name:"학원 · 교육", icon:"grad", tone:"t7",
+  { key:"academy", name:"학원 · 교육", icon:"grad", tone:"t11",
     lead:"교습소 · 공부방 · 예체능 · 직업교육",
     equip:[
       { key:"desk",     name:"책상 · 의자" },
@@ -108,7 +108,7 @@ window.AM_INDUSTRIES = [
     startup:["item","store","area","interior","equip","furniture","it","admin","staff","marketing","clean","fund"],
     closure:["transfer","asset","demolish","restore","tax","labor","contract","support"] },
 
-  { key:"pet", name:"반려동물", icon:"paw", tone:"t4",
+  { key:"pet", name:"반려동물", icon:"paw", tone:"t2",
     lead:"펫샵 · 미용 · 호텔 · 유치원 · 동물병원",
     equip:[
       { key:"pet-groom", name:"미용장비" },
@@ -120,7 +120,7 @@ window.AM_INDUSTRIES = [
     startup:["item","store","area","interior","equip","furniture","it","supply","admin","marketing","clean","fund"],
     closure:["transfer","asset","stock","demolish","restore","tax","labor","contract","support"] },
 
-  { key:"retail", name:"소매 · 편의점", icon:"bag", tone:"t2",
+  { key:"retail", name:"소매 · 편의점", icon:"bag", tone:"t12",
     lead:"편의점 · 마트 · 전문소매 · 잡화",
     equip:[
       { key:"showcase",  name:"쇼케이스 · 진열냉장" },
@@ -156,7 +156,7 @@ window.AM_INDUSTRIES = [
     startup:["item","store","area","interior","equip","furniture","it","admin","staff","marketing","clean","fund"],
     closure:["transfer","asset","stock","demolish","restore","waste","tax","labor","contract","support"] },
 
-  { key:"office", name:"사무 · 전문서비스", icon:"briefcase", tone:"t7",
+  { key:"office", name:"사무 · 전문서비스", icon:"briefcase", tone:"t13",
     lead:"사무실 · 상담소 · 공유오피스 · 전문직",
     equip:[
       { key:"desk",   name:"사무가구" },
@@ -168,7 +168,7 @@ window.AM_INDUSTRIES = [
     startup:["item","store","area","interior","furniture","it","admin","staff","marketing","clean","fund"],
     closure:["transfer","asset","demolish","restore","tax","labor","contract","support"] },
 
-  { key:"online", name:"온라인 · 판매", icon:"laptop", tone:"t1",
+  { key:"online", name:"온라인 · 판매", icon:"laptop", tone:"t14",
     lead:"온라인몰 · 스마트스토어 · 라이브 · 도소매",
     equip:[
       { key:"studio",  name:"촬영 · 스튜디오" },
@@ -180,7 +180,7 @@ window.AM_INDUSTRIES = [
     startup:["item","interior","equip","it","supply","admin","marketing","fund"],
     closure:["asset","stock","tax","contract","support"] },
 
-  { key:"etc", name:"기타", icon:"grid", tone:"t7",
+  { key:"etc", name:"기타", icon:"grid", tone:"t4",
     lead:"여기 없는 업종도 그대로 적어 주시면 됩니다",
     equip:[],
     stock:["사업장 재고"],

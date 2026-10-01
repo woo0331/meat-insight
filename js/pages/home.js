@@ -192,12 +192,11 @@ var MAIN_CLOSE6 = [
   { cat:"demolish" }, { cat:"restore" }, { cat:"tax" }
 ];
 
-/* 분류마다 진짜 화면이 다릅니다 — `to` 가 있으면 그쪽, 업체를 찾는
-   분류는 `/providers/:cat`, 나머지는 `/c/:cat` 입니다 (§46). */
-function amCatTo(c){
-  if(c.to) return c.to;
-  return (c.kind === "provider" ? "/providers/" : "/c/") + c.key;
-}
+/* ⚠️⚠️ **분류 → 주소는 `catTo()` 한 곳입니다** (`js/components/ui.js`).
+   여기에 똑같은 함수(`amCatTo`)를 하나 더 들고 있었습니다 — 글자까지
+   같았습니다. 분류 `kind` 가 하나 늘면 한쪽만 고치게 되고, 그러면
+   **메인만 조용히 엉뚱한 주소로** 보냅니다 (다른 화면은 다 맞고요).
+   2026-10-01 에 지웠습니다. 새로 만들지 마세요. */
 /* key 를 분류로 바꿉니다. ⚠️ **없는 key 는 조용히 빠집니다** — 그래서
    `check.js` 가 여섯이 다 나왔는지 셉니다. */
 function mainSix(list){
@@ -205,7 +204,7 @@ function mainSix(list){
   return list.map(function(x){
     if(!x.cat) return { ic:x.ic, name:x.t, to:x.to };
     var c = by[x.cat];
-    return c ? { ic:c.icon, name:c.name, to:amCatTo(c) } : null;
+    return c ? { ic:c.icon, name:c.name, to:catTo(c) } : null;
   }).filter(Boolean);
 }
 
@@ -294,7 +293,7 @@ function MainServices(){
     if(s.k === "fr")       return { s:s, to:"/franchise" };
     if(s.k === "transfer") return { s:s, to:"/stores" };
     var c = by[s.k];
-    return c ? { s:s, to:amCatTo(c) } : null;
+    return c ? { s:s, to:catTo(c) } : null;
   }).filter(Boolean);
   if(!items.length) return "";
   return '<section class="sec sec-white"><div class="w">'+

@@ -70,13 +70,40 @@ window.searchGo = function(ev){
 /* 점수는 **몇 번 나오는지**로 셉니다 — 한 번이라도 나오면 1점으로 두면
    스치듯 언급한 것이 정작 그 말이 주제인 화면보다 위로 갑니다. */
 function amScore(hay, words){
-  var n = 0, low = hay.toLowerCase();
+  var n = 0, hit = 0, low = hay.toLowerCase();
   words.forEach(function(w){
     var i = 0, c = 0;
     while((i = low.indexOf(w, i)) >= 0 && c < 4){ c++; i += w.length; }
+    if(c) hit++;
     n += c;
   });
-  return n;
+  /* ⚠️⚠️ **낱말을 더 많이 맞힌 쪽이 먼저입니다** (2026-10-01).
+     전에는 낱말마다 센 수를 그냥 더했습니다. 그래서 "주류 면허" 를
+     치면 **"면허" 하나만 맞은 미용실 글**이, 둘 다 맞은 주점 글보다
+     위에 앉았습니다 — 흔한 낱말 하나가 드문 낱말을 묻어 버립니다.
+     맞힌 낱말 수를 곱해서 둘 다 맞은 쪽을 올립니다.
+     ⚠️ 한 낱말짜리 검색에는 아무 영향이 없습니다 (hit 가 1 이라서). */
+  return words.length > 1 ? n * hit : n;
+}
+
+/* 글 한 편을 **검색할 수 있는 한 덩이 글자**로 폅니다.
+   ⚠️ `body[]` 는 { h, p[], ul[] } 꼴입니다 — 셋 다 넣습니다.
+   ⚠️ `source` 와 `next` 는 뺍니다. 출처 기관 이름("국세청")이 본문보다
+   흔해서, 안 빼면 세무와 상관없는 글이 "국세청" 검색에 줄줄이 걸립니다. */
+var AM_CT_TEXT = {};
+function amContentText(c){
+  /* ⚠️ 글 객체에 `__tx` 를 붙이지 않습니다 — 공유 데이터에 몰래 칸을
+     하나 더하는 것이고, 나중에 그 객체를 그대로 내보내는 자리가
+     생기면 거기에 같이 딸려 나갑니다. 밖에 따로 들고 있습니다. */
+  if(AM_CT_TEXT[c.slug] !== undefined) return AM_CT_TEXT[c.slug];
+  var out = [];
+  (c.body || []).forEach(function(b){
+    if(b.h) out.push(b.h);
+    (b.p  || []).forEach(function(t){ out.push(t); });
+    (b.ul || []).forEach(function(t){ out.push(t); });
+  });
+  /* 굵게 표시(**)는 검색감이 아닙니다 — 낱말 가운데 들어가면 못 맞힙니다 */
+  return (AM_CT_TEXT[c.slug] = out.join(" ").split("**").join(""));
 }
 
 window.amSearch = function(q){
@@ -122,9 +149,20 @@ window.amSearch = function(q){
     push("asset", a.title, amRegionName(a.region, a.gu), "/assets",
       amScore(a.title+" "+(a.brand||"")+" "+amIndustryName(a.industry), words));
   });
+  /* ⚠️⚠️ **글은 본문까지 검색감입니다** (2026-10-01).
+     전에는 제목과 머리말만 봤습니다. 그런데 손님은 글 제목을 치지
+     않습니다 — "배달" · "간이과세" · "보건증" 이라고 칩니다. 그 낱말이
+     **글 본문에는 다 있는데** 검색은 0건을 냈습니다. 사이트가 답을
+     들고 있으면서 못 찾아 주는 셈이라, `/faq` 와 같은 방식으로
+     바꿨습니다 (거기도 "답 본문 전체" 를 씁니다).
+
+     ⚠️ 제목이 맞은 글이 본문만 맞은 글보다 **위로** 와야 합니다 —
+     그래서 제목 · 머리말에 가중치 3 을 주고 본문은 1 입니다. 안 그러면
+     "원상복구" 를 쳤을 때 그 말이 스쳐 지나가는 긴 글이 정작 원상복구
+     글보다 위에 앉습니다. */
   (window.AM_CONTENTS||[]).forEach(function(c){
     push("content", c.title, c.lead, "/content/"+c.slug,
-      amScore(c.title+" "+c.lead, words));
+      amScore(c.title+" "+c.lead, words) * 3 + amScore(amContentText(c), words));
   });
 
   /* ⚠️ 자주 묻는 것은 **질문과 답 본문 전체**를 검색감으로 씁니다.

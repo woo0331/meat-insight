@@ -905,6 +905,31 @@ const AUDIT = `(() => {
     const r4 = window.amSearch("폐업신고");
     if(!r4.total) return "폐업신고를 못 찾습니다";
     return true;`);
+  await f("검색이 글 본문까지 찾는다", "/search", `
+    /* ⚠️⚠️ 전에는 글을 **제목과 머리말로만** 색인했습니다. 손님은 글
+       제목을 치지 않습니다 — "배달" · "간이과세" · "보건증" 이라고
+       칩니다. 그 낱말이 본문에는 다 있는데 검색은 0건을 냈습니다.
+       사이트가 답을 들고 있으면서 못 찾아 주는 것이 제일 나쁩니다.
+       여기 적는 낱말은 전부 **본문에만** 있는 것입니다 — 제목이나
+       머리말로 돌아가면 바로 0 이 됩니다. */
+    const only = ["배달", "간이과세", "보건증"];
+    const info = function(r){
+      const g = (r.groups || []).filter(function(x){ return x.name === "정보"; })[0];
+      return g ? g.rows.length : 0;
+    };
+    for(const w of only){
+      const r = window.amSearch(w);
+      if(!info(r)) return "'" + w + "' 가 글에서 안 나옵니다 (본문 색인이 빠졌습니다)";
+    }
+    /* ⚠️ 낱말을 더 많이 맞힌 글이 먼저여야 합니다. "주류 면허" 를 치면
+       '면허' 하나만 맞은 미용실 글이 1등이었습니다 — 흔한 낱말 하나가
+       드문 낱말을 묻어 버립니다. */
+    const two = window.amSearch("주류 면허");
+    const g2 = (two.groups || []).filter(function(x){ return x.name === "정보"; })[0];
+    if(!g2 || !g2.rows.length) return "'주류 면허' 가 글에서 안 나옵니다";
+    if(g2.rows[0].name.indexOf("주점") < 0)
+      return "'주류 면허' 맨 앞이 '" + g2.rows[0].name + "' 입니다 (주점 글이어야 합니다)";
+    return true;`);
   await f("검색: 가는 곳이 같은 줄은 하나만 낸다", "/search", `
     const r = window.amSearch("카페");
     const seen = {}; let dup = 0;

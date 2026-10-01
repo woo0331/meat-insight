@@ -108,6 +108,17 @@ const CASES = [
       "사업자등록 — 언제, 어디서, 무엇을 들고 가나";`],
   ["폐업 글은 주황 쪽 · 창업 글은 초록 쪽으로 물든다",
    `document.getElementById("view").className = "";`],
+  ["검색이 글 본문까지 찾는다",
+   /* 글 색인을 **제목 + 머리말**로 되돌려 놓습니다 — 전에 그랬습니다.
+      ⚠️ 본문을 편 글자는 slug 로 **캐시**되므로, body 만 비우면 이미
+      캐시된 값이 그대로 나와서 되돌리기가 헛돕니다. slug 까지 바꿔
+      캐시를 비켜 갑니다 (제목은 그대로라 검사가 보는 값은 같습니다). */
+   `window.AM_CONTENTS = window.AM_CONTENTS.map(function(c){
+      const d = Object.assign({}, c);
+      d.slug = c.slug + "-nobody";
+      d.body = [];
+      return d;
+    });`],
   ["글 목록 거르개 숫자가 센 값이다",
    `document.querySelectorAll(".chip-g-fil .chip")[0]
       .textContent = "전체 120";`],

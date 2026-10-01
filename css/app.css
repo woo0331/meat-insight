@@ -177,6 +177,9 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
    ⚠️ 같은 바탕이 두 번 이어지면 두 구간이 한 구간으로 읽힙니다.
    `.sec` 와 `.sec-white` 를 번갈아 씁니다. */
 .sec{ padding:var(--sec-y) 0; }
+/* ⚠️ 고지 한 줄짜리 띠에 구간 높이(96px씩)를 주지 마세요. /stores 에서
+   두 줄짜리 고지가 **구간 하나만큼** 높아 본문이 끊겨 보였습니다. */
+.sec-note{ padding:var(--s7) 0; }
 .sec-white{ background:var(--surface); }
 .sec-hd{ margin-bottom:var(--s8); position:relative; }
 .sec-hd h2{ font-size:var(--t-3xl); }
@@ -213,9 +216,15 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
   color:var(--blue); text-decoration:underline; text-underline-offset:3px; }
 .note a{ color:var(--ink2); }
 .notice-bad a, .notice-ok a{ color:inherit; }
+/* ⚠️ **흐린 글자(--ink3)를 쓰지 않습니다.** 이 상자에 들어가는 셋이
+   전부 **법으로 알려야 하는 고지**입니다 — 중개자 지위(전자상거래법
+   제20조 제1항) · 매물 값이 누구 것인지 · 지원사업은 기관까지만.
+   --ink3 는 이 바탕에서 대비가 3.41 이라 14px 이 묻힙니다 (--ink2 는
+   5.12). 읽히지 않는 고지는 고지가 아닙니다. */
 .note-box{ background:var(--bg-2); border-radius:var(--r-lg);
-  padding:var(--s5) var(--s6); margin-top:0; line-height:1.8; }
-.note-box b{ color:var(--ink2); }
+  padding:var(--s5) var(--s6); margin-top:0; line-height:1.8;
+  color:var(--ink2); }
+.note-box b{ color:var(--ink); }
 
 /* ── 폼 ──────────────────────────────────────────────────────────
    ⚠️ **적는 칸은 적는 칸으로 보여야 합니다.** 흰 바탕에 옅은 테두리로

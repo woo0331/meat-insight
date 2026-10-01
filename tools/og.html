@@ -69,6 +69,6 @@
      읽어 `data-brand` · `data-sub` 로 넣어 줍니다. 그냥 브라우저로
      열어 봤을 때만 아래 기본값이 보입니다. */
   var d = document.documentElement.dataset;
-  document.getElementById("og-brand").textContent = d.brand || "시작과 정리";
+  document.getElementById("og-brand").textContent = d.brand || "";
   document.getElementById("og-sub").textContent   = d.sub   || "창업 · 폐업 전문 플랫폼";
 </script>

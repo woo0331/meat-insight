@@ -374,7 +374,7 @@ function PageAbout(){
   ScaleBand()+
   HowBand()+
   FaqBand()+
-  '<section class="sec"><div class="w"><p class="note note-box">'+
+  '<section class="sec sec-note"><div class="w"><p class="note note-box">'+
     esc(B.name||"")+'은 통신판매중개자이며 입점 업체와 이용자 사이의 거래 당사자가 '+
     '아닙니다 (전자상거래법 제20조 제1항). 상품 · 서비스 · 거래 조건에 대한 책임은 '+
     '각 업체에 있습니다.</p></div></section>';

@@ -813,11 +813,40 @@ function checkVercel(){
         throw new Error("vercel.json rewrites 에 알 수 없는 키: "+k);
 }
 
+
+/* ── 라우터 밖 파일에 브랜드 이름 넣기 ──────────────────────────────
+   ⚠️⚠️ `404.html` 과 `admin.html` 은 **라우터 밖에서 혼자 뜨는** 파일이라
+   `js/data/brand.js` 를 안 읽습니다. 그래서 이름을 바꿨을 때 **거기만
+   옛 이름이 남았습니다** — 404 화면과 관리자 작업대가 몇 달째 "시작과
+   정리" 를 달고 있었고, 아무 검사도 그걸 안 봤습니다.
+
+   이제 `<!--brand-->…<!--/brand-->` 사이를 빌드할 때마다 갈아 끼웁니다.
+   파일을 그냥 열어도 안에 적힌 이름이 그대로 보이므로 화면이 깨지지
+   않고, 빌드하면 늘 `AM_BRAND.name` 과 같아집니다.
+
+   ⚠️ 표가 하나도 없으면 **멈춥니다.** 누가 지우면 그 파일이 조용히
+   옛 이름으로 굳기 때문입니다. */
+function brandStatics(W){
+  const name = (W.AM_BRAND || {}).name || "";
+  if(!name) throw new Error("AM_BRAND.name 이 비었습니다");
+  for(const f of ["404.html", "admin.html"]){
+    const p = path.join(ROOT, f);
+    const src = fs.readFileSync(p, "utf8");
+    const re = /<!--brand-->[\s\S]*?<!--\/brand-->/g;
+    const n = (src.match(re) || []).length;
+    if(!n) throw new Error(f + " 에 <!--brand--> 표가 없습니다 — "
+      + "브랜드 이름을 손으로 적어 두면 이름을 바꿔도 거기만 안 바뀝니다");
+    const out = src.replace(re, "<!--brand-->" + esc(name) + "<!--/brand-->");
+    if(out !== src){ fs.writeFileSync(p, out); console.log("  " + f + " 브랜드 이름 " + n + "곳"); }
+  }
+}
+
 /* ── 실행 ─────────────────────────────────────────────────────── */
 checkCssVars();
 checkVercel();
 const W = loadApp();
 checkPhotos(W);
+brandStatics(W);
 globalThis.__W = W;   /* shell() 이 브랜드 이름을 읽습니다 */
 const tpl = fs.readFileSync(path.join(ROOT,"index.html"),"utf8");
 const routes = allRoutes(W);

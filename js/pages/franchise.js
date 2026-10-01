@@ -26,7 +26,10 @@ function PageFranchise(){
       return '<li><a class="fc'+tn(c.tone)+'" href="/franchise/'+esc(c.key)+'">'+
         '<span class="fc-ic">'+icon(c.icon,22)+'</span>'+
         '<b>'+esc(c.name)+'</b>'+
-        '<span class="fc-n">'+(n ? n+"개 브랜드" : "준비 중")+'</span></a></li>';
+        /* ⚠️ 0 일 때 "준비 중" 을 찍지 않습니다 (절대 규칙 2). 세는 값을
+           그대로 냅니다 — 등록되면 저절로 숫자가 되고, 0 이면 0 이라고
+           말하는 것이 이 플랫폼의 약속입니다. */
+        '<span class="fc-n">'+n+'개 브랜드</span></a></li>';
     }).join("")+'</ul>'+
     (!(window.AM_FRANCHISES||[]).length ? Empty({
       icon:"store",

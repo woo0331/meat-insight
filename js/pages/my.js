@@ -68,8 +68,13 @@ function PageMy(){
       (qs.length
         ? '<p class="lead">'+qs.length+'건을 적어 두셨습니다.</p>'+
           '<div class="row-cta"><a class="btn btn-o" href="/quote">비교 화면으로</a></div>'
+        /* ⚠️ 문장 한가운데 링크를 박지 않습니다 — 높이가 16px 이라
+           누르기 어렵습니다. 문단 끝에 버튼으로 냅니다 (바로 위
+           칸과 같은 꼴입니다). */
         : '<p class="lead">아직 적어 두신 제안이 없습니다. 견적을 받으시면 '+
-          '<a href="/quote">여기</a>에 나란히 놓고 보실 수 있습니다.</p>')+
+          '나란히 놓고 보실 수 있습니다.</p>'+
+          '<div class="row-cta"><a class="btn btn-o" href="/quote">'+
+            '제안 비교 화면 열기</a></div>')+
     '</div>'+
 
     '<div class="row-cta"><button class="btn btn-o" type="button" onclick="myClear()">'+

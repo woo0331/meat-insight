@@ -289,7 +289,10 @@ function adStripPii(raw){
 
 function adVendor(F, P, G, svcName){
   var L = [];
-  L.push("[시작과 정리] 요청 한 건 보내 드립니다.");
+  /* ⚠️ 브랜드 이름을 손으로 적지 마세요 — 이름을 바꾸면 여기만 옛
+     이름이 남습니다. 실제로 한 번 그랬고, 이번에 또 한 자리가
+     남아 있었습니다. adBrand() 를 쓰세요. */
+  L.push("[" + adBrand() + "] 요청 한 건 보내 드립니다.");
   L.push("");
   if(svcName) L.push("· 서비스   " + svcName);
   if(P)       L.push("· 분류     " + P.name);

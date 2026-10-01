@@ -238,6 +238,26 @@ async function proveAudit(pg){
       "  [지금 " + JSON.stringify(before) +
       " → 푸터를 본문 색으로 하면 " + JSON.stringify(after).slice(0,50) + "]");
   }
+
+  /* "준비 중" 자리표시자 — 프랜차이즈 분류 칸을 원래대로 돌려놓습니다.
+     열두 칸이 전부 "준비 중" 이었고, 세는 값(0개 브랜드)을 내야 할
+     자리였습니다 (절대 규칙 2). */
+  for(const u of ["/franchise", "/join"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).ph;
+    await pg.evaluate(() => {
+      const e = document.querySelector("#view .fc-n, #view .jn-now-l b");
+      if(e) e.textContent = "준비 중";
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).ph;
+    const ok = before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " \"준비 중\" 자리표시자 · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → 한 칸을 준비 중으로 하면 " + JSON.stringify(after).slice(0,50) + "]");
+  }
   return bad;
 }
 

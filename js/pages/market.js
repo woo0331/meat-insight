@@ -131,7 +131,7 @@ window.mkGo = function(base){
 
 /* ⚠️ 중개자라는 사실과, 적힌 값이 누구 것인지를 같이 말합니다 */
 function BridgeNote(){
-  return '<section class="sec"><div class="w">'+
+  return '<section class="sec sec-note"><div class="w">'+
     '<p class="note note-box">여기 적힌 평수 · 보증금 · 월세 · 권리금 · 매출은 '+
       '<b>올리신 사장님이 적은 값</b>이고, 저희가 확인하거나 보증하는 값이 아닙니다. '+
       '저희는 통신판매중개자이며 거래 당사자가 아닙니다 — 계약 전에 반드시 '+

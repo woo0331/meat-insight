@@ -148,7 +148,7 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[] };
   /* ⚠️ **흰 글자가 흰 바탕에 앉는 일이 실제로 있었습니다.** 창업 다섯
      마디(.flow)는 어두운 구간에만 있던 것이라 글자색 기본이 흰색이고,
      밝은 쪽은 .sec-tone 안에서만 되돌려 놓았습니다. 그 구간을 순백으로
@@ -493,6 +493,24 @@ const AUDIT = `(() => {
     }
   }
 
+  /* ⚠️⚠️ **"준비 중" 을 찍지 않습니다** (절대 규칙 2 · 5).
+     값이 0 이면 0 이라고 말하고, 없으면 줄째 뺍니다. "준비 중" 은
+     ① 미완성 사이트로 읽히고 ② 언제 된다는 약속으로 읽힙니다.
+     실제로 프랜차이즈 분류 **열두 칸 전부**가 "준비 중" 이었습니다 —
+     세는 값(0개 브랜드)을 내야 할 자리였습니다.
+     ⚠️ 문장 속의 "창업 준비 중인 분" 은 정상입니다. 그래서 **칸
+     하나가 통째로 그 말인 것**만 봅니다. */
+  {
+    const PH = ["준비 중", "준비중", "준비 중입니다", "준비중입니다",
+                "coming soon", "Coming Soon", "TBD", "미정"];
+    document.querySelectorAll("#view *").forEach(e => {
+      if(e.children.length) return;                 /* 잎사귀만 */
+      const t = (e.textContent || "").trim();
+      if(PH.indexOf(t) >= 0)
+        out.ph.push((e.className || e.tagName).toString().split(" ")[0] + " › " + t);
+    });
+  }
+
   out.links = [...document.querySelectorAll('a[href^="/"]')].map(a=>a.getAttribute("href"));
   return out;
 })()`;
@@ -535,7 +553,7 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
@@ -566,7 +584,8 @@ const AUDIT = `(() => {
       ["구간 머리말이 회색으로 죽음", uniq(bad.eye)],
       ["별표(**)가 글자로 남음", uniq(bad.star)],
       ["어두운 면이 15% 넘음",   uniq(bad.dark)],
-      ["이웃한 두 구간이 붙어 보임", uniq(bad.tone)]
+      ["이웃한 두 구간이 붙어 보임", uniq(bad.tone)],
+      ["\"준비 중\" 자리표시자", uniq(bad.ph)]
     ];
     console.log("\n── " + vn + " (" + w + "px)");
     rows.forEach(([n,v]) => {

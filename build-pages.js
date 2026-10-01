@@ -18,6 +18,7 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const crypto = require("crypto");
 
 const ROOT = __dirname;
 const ORIGIN = "https://aboutmeat.co.kr";
@@ -300,6 +301,9 @@ function shell(tpl, r, route, noscript, ld){
   h = h.slice(0, mi + mainTag.length) +
       '<div class="pre w">' + noscript + '</div>' +
       h.slice(me);
+  /* 내용이 바뀌면 주소가 바뀌도록 — 안 붙이면 손님은 옛 CSS 를 계속 씁니다 */
+  h = stampAssets(h);
+  checkStamped(h, route);
   return h;
 }
 
@@ -814,6 +818,44 @@ function checkVercel(){
 }
 
 
+/* ── 캐시 깨기 — 내용이 바뀌면 주소가 바뀝니다 ──────────────────────
+   ⚠️⚠️ **색을 다 바꿔 놓고도 손님 화면이 안 바뀌었습니다.**
+   `/css/tokens.css` 라는 이름이 한 번도 안 바뀌어서, 브라우저가 전에
+   받아 둔 파일을 계속 썼습니다. 코드도 배포도 멀쩡했고 전수 점검도
+   통과했습니다 — 검사는 **로컬 서버**를 보니까요.
+
+   그래서 파일 내용으로 짧은 값을 만들어 주소 뒤에 붙입니다.
+   내용이 그대로면 값도 그대로라 **괜히 다시 받지 않고**, 한 글자라도
+   바뀌면 주소가 달라져 **반드시 새로 받습니다.**
+
+   ⚠️ 이미 붙어 있는 `?v=` 는 **먼저 떼고** 다시 붙입니다. index.html 은
+   빌드가 제자리에서 고치는 파일이라, 안 떼면 두 번 붙습니다.
+   ⚠️ 파일을 그냥 열어도(`file://`) 질의만 붙은 것이라 그대로 열립니다. */
+const ASSET_V = {};
+function assetVer(p){
+  if(ASSET_V[p] !== undefined) return ASSET_V[p];
+  const f = path.join(ROOT, p.replace(/^\//, ""));
+  let v = "";
+  try {
+    v = crypto.createHash("sha1").update(fs.readFileSync(f)).digest("hex").slice(0, 8);
+  } catch(e){
+    throw new Error("캐시 값을 만들 파일이 없습니다: " + p + " — 주소를 잘못 적으셨나요?");
+  }
+  return (ASSET_V[p] = v);
+}
+function stampAssets(html){
+  return html.replace(
+    /((?:href|src)=")(\/(?:css|js)\/[^"?]+\.(?:css|js))(?:\?v=[0-9a-f]+)?(")/g,
+    function(_, a, p, b){ return a + p + "?v=" + assetVer(p) + b; });
+}
+/* ⚠️ 붙이고 나서 **빠진 것이 없는지 셉니다.** 새 CSS 나 JS 를 넣고
+   여기 정규식에 안 걸리면 그 파일만 조용히 캐시에 묶입니다. */
+function checkStamped(html, where){
+  const bare = (html.match(/(?:href|src)="\/(?:css|js)\/[^"]+\.(?:css|js)"/g) || []);
+  if(bare.length)
+    throw new Error(where + " 에 캐시 값이 안 붙은 자산이 있습니다: " + bare.join(" "));
+}
+
 /* ── 라우터 밖 파일에 브랜드 이름 넣기 ──────────────────────────────
    ⚠️⚠️ `404.html` 과 `admin.html` 은 **라우터 밖에서 혼자 뜨는** 파일이라
    `js/data/brand.js` 를 안 읽습니다. 그래서 이름을 바꿨을 때 **거기만
@@ -836,8 +878,12 @@ function brandStatics(W){
     const n = (src.match(re) || []).length;
     if(!n) throw new Error(f + " 에 <!--brand--> 표가 없습니다 — "
       + "브랜드 이름을 손으로 적어 두면 이름을 바꿔도 거기만 안 바뀝니다");
-    const out = src.replace(re, "<!--brand-->" + esc(name) + "<!--/brand-->");
-    if(out !== src){ fs.writeFileSync(p, out); console.log("  " + f + " 브랜드 이름 " + n + "곳"); }
+    let out = src.replace(re, "<!--brand-->" + esc(name) + "<!--/brand-->");
+    /* 관리자 작업대도 같은 CSS 를 씁니다 — 여기만 빠지면 운영자 화면이
+       옛 색으로 남습니다. 404.html 은 인라인 style 이라 자산이 없습니다. */
+    out = stampAssets(out);
+    checkStamped(out, f);
+    if(out !== src){ fs.writeFileSync(p, out); console.log("  " + f + " 갱신"); }
   }
 }
 
@@ -891,6 +937,10 @@ for(const route of routes){
       throw new Error("index.html 에서 crawl:start / crawl:end 표시를 못 찾았습니다 — 지우셨나요?");
     src = src.slice(0, ca) + c1 + '<div class="pre w">' +
           noscriptFor(W, r, route) + "</div>" + src.slice(cb);
+    /* ⚠️ index.html 은 빌드가 **제자리에서** 고치는 파일이라, 이미
+       붙어 있는 값을 떼고 다시 붙입니다 (stampAssets 가 그렇게 합니다). */
+    src = stampAssets(src);
+    checkStamped(src, "index.html");
     fs.writeFileSync(tplPath, src);
   }
 

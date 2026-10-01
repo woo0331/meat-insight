@@ -140,6 +140,7 @@
   --bg-lav:      #F5F1FB;   /* Lavender Tint */
   --bg-sand:     #FAF4E8;   /* Sand Tint */
   /* 옅은 바탕 위의 테두리 (§9 · §22) */
+  --line-sky:    #D9E8F6;
   --line-mint:   #D6EEE4;
   --line-peach:  #F9DED1;
   /* 밝은 면 위의 카드 그림자 — ⚠️ 진하게 넣지 마세요 (§22 · §30) */

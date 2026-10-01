@@ -154,7 +154,7 @@ function Footer(){
           '<i>'+esc(brandSub())+'</i></a>'+
         '<p>'+esc((window.AM_BRAND||{}).slogan || "")+'<br> '+
           '창업에 필요한 모든 것, 폐업에 필요한 모든 것.</p>'+
-        '<a class="btn btn-o" href="/join">업체 입점하기'+icon("arrow",16)+'</a>'+
+        '<a class="btn btn-nv" href="/join">업체 입점하기'+icon("arrow",16)+'</a>'+
       '</div>'+
       cols.map(function(c){
         return '<div class="ft-col"><h4>'+esc(c[0])+'</h4><ul>'+

@@ -80,10 +80,10 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .lg span{ font-size:var(--t-cap); color:var(--ink3); margin-top:1px;
   white-space:nowrap; }
 .lg-ft{ flex-direction:row; align-items:baseline; gap:8px; flex-wrap:wrap; }
-.lg-ft b{ color:#fff; }
+.lg-ft b{ color:var(--navy); }
 /* 로고 옆 태그라인 — ⚠️ 12px 미만 금지라 --t-cap(13px) 입니다 */
 .lg-ft i{ font-style:normal; font-size:var(--t-cap); letter-spacing:-.02em;
-  color:var(--on-dark-2); }
+  color:var(--ink2); }
 
 .gnb{ display:flex; gap:var(--s5); flex:1 1 auto; min-width:0;
   justify-content:center; }
@@ -261,27 +261,38 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 .notice-bad{ color:#7A1F1F; } .notice-ok{ color:#0B5E42; }
 
 /* ── 푸터 ────────────────────────────────────────────────────────── */
-/* §16 — 짙은 남색을 **넓게 쓰는 자리는 푸터뿐입니다** (§2 · §26).
-   ⚠️ 다른 구간을 이 색으로 칠하지 마세요. 밝은 화면이 목적이고,
-   `check.js` 가 큰 칸의 배경에서 짙은 남색을 셉니다. */
-.ft{ background:var(--navy-dark); color:var(--on-dark);
-  padding:var(--sec-y) 0 var(--s7); font-size:var(--t-base); }
+/* ⚠️⚠️ **푸터는 밝습니다** (2026-10-01 §1).
+   짙은 남색으로 두었다가, 푸터 높이가 547px 이라 **짧은 화면에서는
+   화면의 절반**을 먹었습니다 — /search 43.9% · /tools 30.7% · /my 27.6%.
+   랜딩과 /home 은 길어서 14% · 6% 로 통과했고, 그 둘만 재고 있어서
+   **78개 화면을 못 봤습니다.** 지시서 §1 의 "밝은 면 80% 이상" 은
+   화면마다 지켜야 하는 값입니다.
+
+   그래서 바탕을 웜 아이보리로 내리고 글자를 남색 · 회청으로 올렸습니다.
+   `check.js` 의 "어두운 면이 화면의 15% 를 넘지 않는다" 가 이제
+   **전 화면**에서 돕니다.
+
+   ⚠️ 여기를 다시 어둡게 하시려면 **짧은 화면부터 재 보세요** —
+   긴 화면만 보면 통과합니다. */
+.ft{ background:var(--bg-ivory2); color:var(--ink2);
+  border-top:1px solid var(--line);
+  padding:var(--s9) 0 var(--s6); font-size:var(--t-base); }
 /* ⚠️ 칸 수를 묶음 수에 맞추세요. `repeat(4,1fr)` 로 두고 묶음을
    다섯으로 늘리면 다섯째가 다음 줄로 혼자 떨어집니다. */
 /* 다섯 칸 → 셋. 시안(§13)의 차분한 한 판에 가깝게 */
-.ft-g{ display:grid; grid-template-columns:1.6fr repeat(3,1fr); gap:var(--s7); }
-.ft-b p{ margin:var(--s4) 0 var(--s5); line-height:1.8; color:var(--on-dark-2);
+.ft-g{ display:grid; grid-template-columns:1.6fr repeat(3,1fr); gap:var(--s6); }
+.ft-b p{ margin:var(--s3) 0 var(--s4); line-height:1.8; color:var(--ink2);
   font-size:var(--t-sm); }
-.ft .btn-o{ background:transparent; color:#fff; border-color:rgba(255,255,255,.34); }
-.ft .btn-o:hover{ border-color:#fff; }
-.ft-col h4{ font-size:var(--t-base); margin-bottom:var(--s3); color:#fff; }
+.ft-col h4{ font-size:var(--t-base); margin-bottom:var(--s2); color:var(--navy); }
 .ft-col a{ display:inline-flex; align-items:center; min-height:40px;
-  color:var(--on-dark); font-size:var(--t-sm); }
-.ft-col a:hover{ color:#fff; }
-.ft-role{ margin-top:var(--s8); padding-top:var(--s5);
-  border-top:1px solid var(--on-dark-line); font-size:var(--t-sm);
-  color:var(--on-dark-2); line-height:1.8; }
-.ft-biz{ margin-top:var(--s4); font-size:var(--t-cap); color:var(--on-dark-2);
+  color:var(--ink2); font-size:var(--t-sm); }
+.ft-col a:hover{ color:var(--navy); }
+/* ⚠️ 흐린 글자(--ink3)를 쓰지 마세요 — 아이보리 위에서 대비가 3.36 이라
+   13px 글씨가 묻힙니다. --ink2 는 5.04 로 통과합니다. */
+.ft-role{ margin-top:var(--s6); padding-top:var(--s4);
+  border-top:1px solid var(--line); font-size:var(--t-sm);
+  color:var(--ink2); line-height:1.8; }
+.ft-biz{ margin-top:var(--s3); font-size:var(--t-cap); color:var(--ink2);
   display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5); }
 .ft-cp{ flex-basis:100%; margin-top:var(--s2); }
 @media (max-width:900px){
@@ -293,11 +304,11 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 /* 시안의 맨 아랫줄 — 소개 · FAQ · 약관 · 방침.
    ⚠️ 누르는 것은 40px 이상입니다. 한 줄로 눕혀도 높이는 지킵니다. */
 .ft-tail{ display:flex; flex-wrap:wrap; gap:0 var(--s5);
-  margin-top:var(--s7); padding-top:var(--s5);
-  border-top:1px solid var(--on-dark-line); }
+  margin-top:var(--s6); padding-top:var(--s4);
+  border-top:1px solid var(--line); }
 .ft-tail a{ display:inline-flex; align-items:center; min-height:40px;
-  font-size:var(--t-sm); font-weight:600; color:var(--on-dark-2); }
-.ft-tail a:hover{ color:#fff; }
+  font-size:var(--t-sm); font-weight:600; color:var(--ink2); }
+.ft-tail a:hover{ color:var(--navy); }
 
 /* ── 알림 ────────────────────────────────────────────────────────
    ⚠️ 폰에서 **아래 네비에 가립니다.** 이 미디어쿼리는 `.mnav` 가

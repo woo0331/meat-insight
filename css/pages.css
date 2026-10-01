@@ -447,22 +447,28 @@
   .tl-i-f input{ flex:1 1 auto; width:auto; min-width:0; }
 }
 
-/* 결과 — ⚠️ 상태색(--ok/--warn/--bad)을 쓰지 마세요. 판정하지 않습니다. */
+/* 결과 — ⚠️ 상태색(--ok/--warn/--bad)을 쓰지 마세요. 판정하지 않습니다.
+   ⚠️⚠️ **짙은 남색 칸이었습니다.** 계산기 화면은 짧은데 이 칸은 크고
+   길어서, 좁은 폭에서 세로로 쌓이면 화면의 15.8% 가 됐습니다 —
+   §22 의 "어두운 카드 금지" 이기도 합니다. 지금은 하늘 틴트 바탕에
+   남색 숫자입니다. */
 .tl-res{ margin-top:var(--s8); padding:var(--s8) var(--s7);
-  border-radius:var(--r-xl); background:var(--navy); color:#fff; }
+  border-radius:var(--r-xl); background:var(--bg-sky); color:var(--ink);
+  border:1px solid var(--line-sky); }
 .tl-res-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s5); }
 .tl-res-g2{ grid-template-columns:1fr 1fr; }
 .tl-res-g + .tl-res-g{ margin-top:var(--s6); padding-top:var(--s6);
-  border-top:1px solid rgba(255,255,255,.14); }
+  border-top:1px solid var(--line-sky); }
 .tl-o{ display:grid; gap:4px; align-content:start; }
-.tl-o-k{ font-size:var(--t-cap); color:var(--on-dark-2); }
+/* ⚠️ 흐린 글자(--ink3)를 쓰지 마세요 — 하늘 틴트 위에서 13px 이 묻힙니다 */
+.tl-o-k{ font-size:var(--t-cap); color:var(--ink2); }
 .tl-o-v{ font-size:var(--t-2xl); font-weight:900; line-height:1.1;
-  letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
-.tl-o-s{ font-size:var(--t-cap); color:var(--on-dark-2); line-height:1.6; }
+  letter-spacing:-.03em; font-variant-numeric:tabular-nums; color:var(--navy); }
+.tl-o-s{ font-size:var(--t-cap); color:var(--ink2); line-height:1.6; }
 .tl-res-n{ margin-top:var(--s6); font-size:var(--t-cap);
-  color:var(--on-dark-2); line-height:1.8; }
+  color:var(--ink2); line-height:1.8; }
 .tl-res-n + .tl-res-n{ margin-top:var(--s3); }
-.tl-res-n b{ color:#fff; }
+.tl-res-n b{ color:var(--navy); }
 @media (max-width:720px){
   .tl-res{ padding:var(--s6) var(--s5); }
   .tl-res-g, .tl-res-g2{ grid-template-columns:1fr; gap:var(--s4); }

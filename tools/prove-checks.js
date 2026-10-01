@@ -160,6 +160,41 @@ function proveEscapes(){
   return true;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   전수 점검(AUDIT)의 **묶음 검사**도 되돌려 봅니다.
+
+   `await f(...)` 꼴이 아니라 화면마다 도는 검사라 위의 `CASES` 로는
+   못 잡습니다. 그런데 바로 그 묶음에서 사고가 났습니다 — 어두운 면을
+   랜딩과 /home 에서만 재고 있었고, 푸터(547px)가 짧은 화면에서는
+   **43.9%** 였는데 **78개 화면이 검사 밖**이었습니다.
+
+   그래서 푸터를 일부러 다시 어둡게 해 놓고 "어두운 면이 15% 넘음" 이
+   실제로 실패로 바뀌는지 봅니다. ⚠️ 짧은 화면에서 재세요 — 긴 화면만
+   보면 통과합니다.
+   ══════════════════════════════════════════════════════════════════ */
+const BAD = eval(src.match(/^const BAD = (.+);$/m)[1]);
+const AUDIT = eval("`" + src.match(/const AUDIT = `([\s\S]*?)`;\n/)[1] + "`");
+
+async function proveAudit(pg){
+  let bad = 0;
+  for(const u of ["/search", "/tools", "/my"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).dark;
+    await pg.evaluate(() => {
+      const f = document.querySelector("footer.ft");
+      if(f) f.style.background = "#062B51"; });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).dark;
+    const ok = before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 어두운 면이 15% 넘음 · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → 푸터를 다시 어둡게 하면 " + JSON.stringify(after).slice(0,50) + "]");
+  }
+  return bad;
+}
+
 (async()=>{
   if(!proveEscapes()) process.exit(1);
   await new Promise(r=>srv.listen(PORT,r));
@@ -182,6 +217,7 @@ function proveEscapes(){
       "  [되돌리기 전 " + JSON.stringify(before).slice(0,40) +
       " → 후 " + JSON.stringify(after).slice(0,60) + "]");
   }
+  bad += await proveAudit(pg);
   await b.close(); srv.close();
   console.log(bad ? "\n❌ " + bad + "개가 실제로 안 잡습니다" : "\n✅ 전부 실제로 잡습니다");
   process.exit(bad?1:0);

@@ -148,7 +148,7 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[] };
   /* ⚠️ **흰 글자가 흰 바탕에 앉는 일이 실제로 있었습니다.** 창업 다섯
      마디(.flow)는 어두운 구간에만 있던 것이라 글자색 기본이 흰색이고,
      밝은 쪽은 .sec-tone 안에서만 되돌려 놓았습니다. 그 구간을 순백으로
@@ -381,6 +381,42 @@ const AUDIT = `(() => {
       out.h1.push(h1.length === 0 ? "제목(h1)이 없습니다" : "제목(h1)이 "+h1.length+"개입니다");
   }
   out.over = document.documentElement.scrollWidth > W + 1;
+
+  /* ⚠️⚠️ **어두운 면을 화면마다 잽니다** (2026-10-01 §1 — 밝은 면 80% 이상).
+     전에는 랜딩 한 곳에서, 그것도 #view 안만 쟀습니다. 푸터는 #view 밖이라
+     빠져 있었는데 높이가 547px 이라, 짧은 화면에서는 그 하나가 화면의
+     절반이었습니다 — /search 43.9% · /tools 30.7% · /my 27.6%. 랜딩과
+     /home 은 길어서 14% · 6% 로 통과했고, **78개 화면을 아무도 안
+     보고 있었습니다.**
+     그래서 여기서는 **푸터를 포함한 문서 전체**를 잽니다. */
+  {
+    const dk = e => {
+      const c = rgb(getComputedStyle(e).backgroundColor);
+      if(!c || c[3] < 0.9) return false;
+      return lum(c) < 0.09;
+    };
+    let area = 0; const seen = [], big = [];
+    document.querySelectorAll("body *").forEach(e => {
+      const cs = getComputedStyle(e);
+      if(cs.display === "none" || cs.visibility === "hidden") return;
+      if(cs.position === "fixed") return;   /* 헤더·아래 네비는 겹침입니다 */
+      if(!dk(e)) return;
+      for(const q of seen) if(q.contains(e)) return;
+      seen.push(e);
+      const r = e.getBoundingClientRect();
+      area += r.width * r.height;
+      big.push([r.width * r.height,
+        (e.className || e.tagName).toString().split(" ")[0]]);
+    });
+    const total = W * document.documentElement.scrollHeight;
+    const pct = total ? area / total * 100 : 0;
+    /* ⚠️ **넓은 것부터** 적습니다. DOM 차례대로 적었더니 건너뛰기 링크와
+       로고 타일이 먼저 나와서, 정작 범인인 푸터가 안 보였습니다. */
+    if(pct > 15)
+      out.dark.push(pct.toFixed(1) + "% — " + big.sort((x,y) => y[0] - x[0])
+        .slice(0,3).map(x => x[1]).join(" · "));
+  }
+
   out.links = [...document.querySelectorAll('a[href^="/"]')].map(a=>a.getAttribute("href"));
   return out;
 })()`;
@@ -423,7 +459,7 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
@@ -452,7 +488,8 @@ const AUDIT = `(() => {
       ["화면 제목(h1)", uniq(bad.h1)],
       ["개발자 말 노출",     uniq(bad.bad)],
       ["구간 머리말이 회색으로 죽음", uniq(bad.eye)],
-      ["별표(**)가 글자로 남음", uniq(bad.star)]
+      ["별표(**)가 글자로 남음", uniq(bad.star)],
+      ["어두운 면이 15% 넘음",   uniq(bad.dark)]
     ];
     console.log("\n── " + vn + " (" + w + "px)");
     rows.forEach(([n,v]) => {

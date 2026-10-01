@@ -19,7 +19,7 @@
   background:
     radial-gradient(60% 70% at 18% 40%, rgba(8,168,117,.10), transparent 70%),
     radial-gradient(60% 70% at 82% 40%, rgba(243,107,56,.10), transparent 70%),
-    linear-gradient(180deg, #FFFFFF 0%, var(--bg) 100%); }
+    linear-gradient(180deg, #FFFFFF 0%, var(--bg-cream) 100%); }
 
 .lh-ph{ position:absolute; inset:0 auto 0 0; width:34%; z-index:0; }
 .lh-ph-r{ inset:0 0 0 auto; }
@@ -92,7 +92,8 @@
 }
 
 /* ════════ ② ONE STOP + START / CLOSE 카드 둘 ════════════════════ */
-.lin{ background:var(--ivory); }
+/* §5 — START/CLOSE 구간은 Warm Ivory, 그 위에 민트 · 피치 카드 */
+.lin{ background:var(--bg-ivory2); }
 .lin-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.12em;
   color:var(--start-dark); }
 .lin-hd{ margin-top:var(--s4); display:grid; gap:var(--s6);
@@ -301,8 +302,10 @@
 }
 
 /* ════════ ④ 브랜드 메시지 — 전면 사진 ══════════════════════════ */
+/* §23 — 사진 위에 어두운 막을 씌우지 않습니다. 사진이 없을 때는
+   옅은 하늘빛에서 Warm Cream 으로 내려갑니다. */
 .lsc{ position:relative; overflow:hidden; isolation:isolate;
-  background:linear-gradient(180deg, #EAF2FA 0%, #F7FAFD 60%, var(--bg) 100%); }
+  background:linear-gradient(180deg, var(--bg-sky) 0%, #F7FAFD 60%, var(--bg-cream) 100%); }
 .lsc-bg{ position:absolute; inset:0; z-index:0; }
 .lsc-bg .ph{ width:100%; height:100%; border-radius:0; }
 .lsc-bg img{ object-fit:cover; }
@@ -331,17 +334,23 @@
 .lfin{ display:grid; grid-template-columns:1fr 1fr; }
 .lfin-c{ position:relative; overflow:hidden; isolation:isolate;
   min-height:420px; display:flex; align-items:center; }
-/* ⚠️ `background` 한 줄에 그라디언트만 적으면 `backgroundColor` 가
-   투명으로 읽힙니다 — 전수 점검이 "창업 쪽이 초록이 아닙니다
-   rgb(0,0,0)" 로 잡았습니다. **바탕색을 따로 두고** 그 위에 겹칩니다. */
-.lfin-st{ background-color:var(--start-dark);
-  background-image:linear-gradient(135deg, var(--start-dark), var(--start-deep)); }
-.lfin-cl{ background-color:var(--close-dark);
-  background-image:linear-gradient(135deg, var(--close-dark), var(--close-deep)); }
+/* ⚠️⚠️ **2026-10-01 §5 — 진한 면을 걷어냈습니다.** 전에는 짙은 초록과
+   짙은 주황으로 420px 을 통째로 칠해서, 푸터와 합쳐 랜딩의 어두운 면이
+   22.3% 였습니다(화면을 찍어 픽셀을 세어 봤습니다). 밝은 면이 71.4% 라
+   기준(80%)에 못 미쳤습니다.
+
+   이제 **옅은 민트 · 피치 바탕에 악센트로** 말합니다 — 대비는 바탕을
+   어둡게 해서가 아니라 초록 · 주황 **악센트 차이**로 냅니다 (§16).
+   ⚠️ `background` 한 줄에 그라디언트만 적으면 `backgroundColor` 가
+   투명으로 읽힙니다 — 바탕색을 따로 두고 그 위에 겹칩니다. */
+.lfin-st{ background-color:var(--bg-mint);
+  background-image:linear-gradient(135deg, var(--bg-mint), #E2F4EC); }
+.lfin-cl{ background-color:var(--bg-peach);
+  background-image:linear-gradient(135deg, var(--bg-peach), #FFE9DE); }
 
 /* 사진은 바깥 가장자리에 서고 안쪽으로 사라집니다 — 시안의 짜임새 */
 .lfin-ph{ position:absolute; inset:0 auto 0 0; width:42%; z-index:0;
-  opacity:.34; -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 42%,transparent 100%);
+  opacity:.42; -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 42%,transparent 100%);
   mask-image:linear-gradient(90deg,#000 0%,#000 42%,transparent 100%); }
 .lfin-cl .lfin-ph{ inset:0 0 0 auto;
   -webkit-mask-image:linear-gradient(270deg,#000 0%,#000 42%,transparent 100%);
@@ -352,18 +361,21 @@
 
 .lfin-in{ position:relative; z-index:1; width:100%; text-align:center;
   padding:var(--s9) var(--s6); }
-.lfin-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.14em;
-  color:rgba(255,255,255,.82); }
+/* 옅은 바탕 위라 글자는 **짙은 쪽**입니다 — `--start`(#08A875)를 글자로
+   쓰면 대비가 3.0 이라 작은 글씨가 안 읽힙니다 */
+.lfin-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.14em; }
+.lfin-st .lfin-k{ color:var(--start-dark); }
+.lfin-cl .lfin-k{ color:var(--close-dark); }
 .lfin-in h2{ margin-top:var(--s2); font-size:clamp(28px, 3.2vw, 44px);
-  font-weight:900; letter-spacing:-.035em; color:#fff; }
+  font-weight:900; letter-spacing:-.035em; color:var(--navy); }
 .lfin-d{ margin-top:var(--s4); font-size:var(--t-md); line-height:1.75;
-  color:rgba(255,255,255,.90); }
-/* ⚠️ `.btn-w`(흰 바탕 · 어두운 글자)입니다. `.btn-gh` 를 쓰면 흰
-   글자가 흰 바탕에 앉습니다 — 전에 그렇게 나간 적이 있습니다. */
-.lfin .btn-w{ margin-top:var(--s6); min-height:52px; padding:0 var(--s7);
+  color:var(--ink2); }
+.lfin .btn{ margin-top:var(--s6); min-height:52px; padding:0 var(--s7);
   font-weight:800; }
-.lfin-st .btn-w{ color:var(--start-deep); }
-.lfin-cl .btn-w{ color:var(--close-deep); }
+/* 두 쪽을 가르는 1px — 바탕이 둘 다 옅어서 경계가 필요합니다 */
+@media (min-width:761px){
+  .lfin-cl{ box-shadow:inset 1px 0 0 rgba(15,43,68,.07); }
+}
 
 @media (max-width:760px){
   /* 세로로 — START 아래 CLOSE (§23) */

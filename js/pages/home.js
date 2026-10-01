@@ -271,7 +271,10 @@ function finalHalf(o){
       '<p class="lfin-k">'+esc(o.badge)+'</p>'+
       '<h2>'+esc(o.title)+'</h2>'+
       '<p class="lfin-d">'+esc(o.d1)+'<br class="br-m"> '+esc(o.d2)+'</p>'+
-      '<a class="btn btn-w" href="'+esc(o.to)+'">'+esc(o.cta)+icon("arrow",18)+'</a>'+
+      /* ⚠️ 옅은 민트 · 피치 바탕 위라 **흰 버튼은 안 보입니다.**
+         쪽에 맞는 솔리드 버튼(초록 · 주황)이 여기서 악센트입니다 (§6 · §7). */
+      '<a class="btn btn-'+o.side+' btn-lg" href="'+esc(o.to)+'">'+
+        esc(o.cta)+icon("arrow",18)+'</a>'+
     '</div>'+
   '</div>';
 }

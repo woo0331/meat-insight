@@ -1190,11 +1190,17 @@ const AUDIT = `(() => {
         seen.map(function(e){ return (e.className || e.tagName).toString().split(" ")[0]; })
             .slice(0, 4).join(" · ");
     return true;`);
-  await f("마지막 CTA 가 초록 · 주황 반반이다", "/", `
+  await f("마지막 CTA 가 밝은 민트 · 피치이고 악센트로 말한다", "/", `
+    /* ⚠️⚠️ **2026-10-01 §5 · §6 · §7 — 진한 면을 걷어냈습니다.**
+       전에는 짙은 초록 · 주황으로 420px 을 통째로 칠해서, 푸터와 합쳐
+       랜딩의 어두운 면이 22.3% 였습니다 (화면을 찍어 픽셀을 세었습니다).
+       이제 옅은 바탕에 **악센트로** 말합니다 — 대비는 바탕을 어둡게
+       해서가 아니라 초록 · 주황 차이로 냅니다.
+       ⚠️ 그래도 **두 쪽의 크기는 같아야 합니다** (§6 · §15). 폐업 쪽을
+       좁히면 그게 "덜 중요한 것" 이라는 말입니다. */
     const a = document.querySelector(".lfin-st"), b = document.querySelector(".lfin-cl");
     if(!a || !b) return "마지막 CTA 두 쪽 중 하나가 없습니다";
     const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
-    /* ⚠️ 폐업 쪽을 좁히면 "덜 중요한 것" 으로 읽힙니다 (§6 · §15) */
     if(innerWidth > 820 && Math.abs(ra.width - rb.width) > 2)
       return "좌우 폭이 " + Math.round(ra.width) + " · " + Math.round(rb.width) + "입니다";
     const col = function(e){
@@ -1203,19 +1209,32 @@ const AUDIT = `(() => {
     };
     const ca = col(a), cb = col(b);
     if(!ca || !cb) return "바탕색을 못 읽습니다";
-    if(!(ca[1] > ca[0] + 30 && ca[1] > ca[2] + 20))
-      return "창업 쪽이 초록이 아닙니다 rgb(" + ca.join(",") + ")";
-    if(!(cb[0] > cb[1] + 40 && cb[1] > cb[2]))
-      return "폐업 쪽이 주황이 아닙니다 rgb(" + cb.join(",") + ")";
-    if(cb[1] < 45) return "폐업 쪽이 빨강으로 넘어갔습니다 rgb(" + cb.join(",") + ")";
-    /* 흰 글자를 얹는 자리라 **짙은 쪽**이어야 읽힙니다 */
-    const f2 = function(x){ x /= 255;
-      return x <= .03928 ? x/12.92 : Math.pow((x+.055)/1.055, 2.4); };
-    const L = function(c){ return .2126*f2(c[0]) + .7152*f2(c[1]) + .0722*f2(c[2]); };
-    for(const c of [ca, cb]){
-      const ratio = 1.05 / (L(c) + .05);
-      if(ratio < 3.2) return "흰 글자가 안 읽힙니다 (대비 " + ratio.toFixed(2) + ")";
+    /* 바탕은 **밝아야** 합니다 — 셋 다 215 이상이면 옅은 틴트입니다 */
+    for(const pair of [[ca, "창업"], [cb, "폐업"]]){
+      const c = pair[0];
+      if(Math.min(c[0], c[1], c[2]) < 215)
+        return pair[1] + " 쪽 바탕이 어둡습니다 rgb(" + c.join(",") + ") — 옅은 틴트여야 합니다";
     }
+    /* 옅어도 **쪽은 보여야** 합니다 — 창업은 초록 쪽, 폐업은 주황 쪽 */
+    if(!(ca[1] >= ca[0] && ca[1] >= ca[2]))
+      return "창업 쪽이 초록으로 안 기울었습니다 rgb(" + ca.join(",") + ")";
+    if(!(cb[0] >= cb[1] && cb[1] >= cb[2]))
+      return "폐업 쪽이 주황으로 안 기울었습니다 rgb(" + cb.join(",") + ")";
+    /* 악센트(버튼)가 그 쪽 색이어야 합니다 — 여기가 색을 말하는 자리입니다 */
+    const btn = function(e){
+      const t = e.querySelector(".btn");
+      if(!t) return null;
+      const m = getComputedStyle(t).backgroundColor.match(/(\\d+), ?(\\d+), ?(\\d+)/);
+      return m ? [+m[1], +m[2], +m[3]] : null;
+    };
+    const ba = btn(a), bb = btn(b);
+    if(!ba || !bb) return "마지막 CTA 에 버튼이 없습니다";
+    if(!(ba[1] > ba[0] + 30 && ba[1] > ba[2] + 20))
+      return "창업 버튼이 초록이 아닙니다 rgb(" + ba.join(",") + ")";
+    if(!(bb[0] > bb[1] + 40 && bb[1] > bb[2]))
+      return "폐업 버튼이 주황이 아닙니다 rgb(" + bb.join(",") + ")";
+    /* ⚠️ 폐업 쪽이 빨강으로 흘러가면 "폐업은 나쁜 것" 이 됩니다 (§6) */
+    if(bb[1] < 45) return "폐업 버튼이 빨강으로 넘어갔습니다 rgb(" + bb.join(",") + ")";
     return true;`);
   await f("연결 구간 두 딱지가 같은 높이에 앉는다", "/", `
     /* 실제로 보이던 결함은 두 딱지("정리하는 사장님" / "창업하는 사장님")가
@@ -1350,9 +1369,33 @@ const AUDIT = `(() => {
     return true;`);
   await f("이웃한 두 구간이 붙어 보이지 않는다", "/home", `
     /* ⚠️⚠️ 이 저장소에서 **두 번** 당했습니다 — 아이보리와 웜 화이트를
-       나란히 두어 한 구간으로 읽혔고, 매장(초록 틴트)과 가격(파랑 틴트)이
-       채널당 7 차이라 또 붙어 보였습니다. "완전히 같은 색" 만 보면
-       둘 다 통과합니다. **채널차로** 봅니다. */
+       나란히 두어 한 구간으로 읽혔습니다. "완전히 같은 색" 만 보면
+       통과하고, **채널차**로 봐도 빗나갑니다.
+
+       채널차로 재면 민트와 하늘이 7 차이라 "붙어 보인다" 고 잡히는데,
+       실제로는 치우친 쪽이 달라서(민트는 초록 · 하늘은 파랑) 사람 눈에
+       뚜렷이 다릅니다. 반대로 아이보리와 웜 화이트는 둘 다 따뜻해서
+       채널차가 6 이어도 하나로 읽힙니다.
+
+       그래서 **사람 눈 기준 색차(ΔE)** 로 봅니다. 재 본 값 —
+         아이보리 vs 웜 화이트  1.74   한 구간으로 읽힘 (겪은 것)
+         크림 vs 흰색          2.73   살짝 다름 (지시서 §21 의 리듬)
+         흰색 vs 회색          3.12   다름
+         민트 vs 하늘          5.95   뚜렷이 다름
+       2.3 이 겨우 구별되는 차이라, 기준을 **2.5** 로 둡니다. */
+    const lab = function(c){
+      const r = [c[0], c[1], c[2]].map(function(v){ v /= 255;
+        return v <= .04045 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); });
+      const X = (r[0]*.4124 + r[1]*.3576 + r[2]*.1805) / .95047;
+      const Y = (r[0]*.2126 + r[1]*.7152 + r[2]*.0722);
+      const Z = (r[0]*.0193 + r[1]*.1192 + r[2]*.9505) / 1.08883;
+      const f2 = function(t){ return t > .008856 ? Math.cbrt(t) : 7.787*t + 16/116; };
+      return [116*f2(Y) - 16, 500*(f2(X) - f2(Y)), 200*(f2(Y) - f2(Z))];
+    };
+    const dE = function(a, b){
+      const A = lab(a), B = lab(b);
+      return Math.sqrt(Math.pow(A[0]-B[0],2) + Math.pow(A[1]-B[1],2) + Math.pow(A[2]-B[2],2));
+    };
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     const rgb = function(e){
       const m = getComputedStyle(e).backgroundColor.match(/(\\d+), ?(\\d+), ?(\\d+)/);
@@ -1364,11 +1407,10 @@ const AUDIT = `(() => {
       const name = (e.className || "").toString().split(" ")
         .filter(function(x){ return x && x !== "sec"; })[0] || e.tagName;
       if(prev && c){
-        let d = 0;
-        for(let k = 0; k < 3; k++) d = Math.max(d, Math.abs(prev[k] - c[k]));
-        if(d <= 8)
-          return prevName + " 와 " + name + " 의 바탕이 채널당 " + d +
-            " 차이입니다 (한 구간으로 읽힙니다)";
+        const d = dE(prev, c);
+        if(d < 2.5)
+          return prevName + " 와 " + name + " 사이 색차가 ΔE " +
+            d.toFixed(2) + " 뿐입니다 (2.5 아래면 한 구간으로 읽힙니다)";
       }
       prev = c; prevName = name;
     }

@@ -55,44 +55,54 @@
 <body>
 <a class="skip" href="#view">본문 바로가기</a>
 
+<!-- ⚠️⚠️ **`defer` 를 빼지 마세요.** 이 스크립트 서른넷은 `<body>` 맨
+     위, 미리 그려 둔 본문보다 **앞**에 있습니다.
+     동기 스크립트는 HTML 파싱을 막으므로, `defer` 가 없으면 **서른넷을
+     다 받을 때까지 화면이 빈 채로** 있습니다 — 느린 3G 에서 6.3초였고,
+     정작 보여 줄 글은 이미 HTML 안에 들어 있었습니다.
+
+     `defer` 는 **차례를 지킵니다** (이 저장소는 스크립트 순서가 곧 의존
+     순서입니다). 실행은 `DOMContentLoaded` 보다 먼저라 `js/app.js` 의
+     시작 코드도 그대로 돕니다. `async` 는 차례가 섞여서 안 됩니다.
+     `build-pages.js` 의 `checkDefer()` 가 빠지면 빌드를 멈춥니다. -->
 <!-- ⚠️ 자산 경로는 반드시 절대 경로(/js/… · /img/…)여야 합니다.
      상대 경로면 /start/cost 같은 깊은 주소에서 /start/js/… 를 찾아
      스크립트가 통째로 404 가 됩니다. -->
-<script src="/js/data/korean.js?v=c5c3addd"></script>
-<script src="/js/data/brand.js?v=76b2f5ab"></script>
-<script src="/js/data/site.js?v=2a122923"></script>
-<script src="/js/data/regions.js?v=149bea2a"></script>
-<script src="/js/data/industries.js?v=ba3fe298"></script>
-<script src="/js/data/catalog.js?v=d3ea04b4"></script>
-<script src="/js/data/franchise.js?v=8dfc74f4"></script>
-<script src="/js/data/providers.js?v=6681a7f4"></script>
-<script src="/js/data/market.js?v=7eacce92"></script>
-<script src="/js/data/support.js?v=4fbaba73"></script>
-<script src="/js/data/content.js?v=a677efe1"></script>
-<script src="/js/data/photos.js?v=8d746d0e"></script>
-<script src="/js/data/legal-terms.js?v=797281f2"></script>
-<script src="/js/data/legal-privacy.js?v=2c1a3d66"></script>
-<script src="/js/data/faq.js?v=9d470b8f"></script>
-<script src="/js/data/tools.js?v=99d77bee"></script>
-<script src="/js/data/join.js?v=957dd8d8"></script>
+<script defer src="/js/data/korean.js?v=c5c3addd"></script>
+<script defer src="/js/data/brand.js?v=76b2f5ab"></script>
+<script defer src="/js/data/site.js?v=2a122923"></script>
+<script defer src="/js/data/regions.js?v=149bea2a"></script>
+<script defer src="/js/data/industries.js?v=ba3fe298"></script>
+<script defer src="/js/data/catalog.js?v=d3ea04b4"></script>
+<script defer src="/js/data/franchise.js?v=8dfc74f4"></script>
+<script defer src="/js/data/providers.js?v=6681a7f4"></script>
+<script defer src="/js/data/market.js?v=7eacce92"></script>
+<script defer src="/js/data/support.js?v=4fbaba73"></script>
+<script defer src="/js/data/content.js?v=a677efe1"></script>
+<script defer src="/js/data/photos.js?v=8d746d0e"></script>
+<script defer src="/js/data/legal-terms.js?v=797281f2"></script>
+<script defer src="/js/data/legal-privacy.js?v=2c1a3d66"></script>
+<script defer src="/js/data/faq.js?v=9d470b8f"></script>
+<script defer src="/js/data/tools.js?v=99d77bee"></script>
+<script defer src="/js/data/join.js?v=957dd8d8"></script>
 
-<script src="/js/components/base.js?v=4089cd91"></script>
-<script src="/js/components/ui.js?v=b1afd1ae"></script>
-<script src="/js/components/chrome.js?v=b1f4cc84"></script>
+<script defer src="/js/components/base.js?v=4089cd91"></script>
+<script defer src="/js/components/ui.js?v=b1afd1ae"></script>
+<script defer src="/js/components/chrome.js?v=b1f4cc84"></script>
 
-<script src="/js/pages/home.js?v=f98a58c8"></script>
-<script src="/js/pages/flow.js?v=c5b7827a"></script>
-<script src="/js/pages/providers.js?v=c0df5131"></script>
-<script src="/js/pages/franchise.js?v=3b23534b"></script>
-<script src="/js/pages/market.js?v=5201861d"></script>
-<script src="/js/pages/quote.js?v=6c2055e4"></script>
-<script src="/js/pages/info.js?v=1bedf6ed"></script>
-<script src="/js/pages/tools.js?v=a1bfb22b"></script>
-<script src="/js/pages/my.js?v=5f379bde"></script>
-<script src="/js/pages/search.js?v=b746a978"></script>
-<script src="/js/pages/legal.js?v=915c15ae"></script>
+<script defer src="/js/pages/home.js?v=f98a58c8"></script>
+<script defer src="/js/pages/flow.js?v=c5b7827a"></script>
+<script defer src="/js/pages/providers.js?v=c0df5131"></script>
+<script defer src="/js/pages/franchise.js?v=3b23534b"></script>
+<script defer src="/js/pages/market.js?v=5201861d"></script>
+<script defer src="/js/pages/quote.js?v=6c2055e4"></script>
+<script defer src="/js/pages/info.js?v=1bedf6ed"></script>
+<script defer src="/js/pages/tools.js?v=a1bfb22b"></script>
+<script defer src="/js/pages/my.js?v=5f379bde"></script>
+<script defer src="/js/pages/search.js?v=b746a978"></script>
+<script defer src="/js/pages/legal.js?v=915c15ae"></script>
 
-<script src="/js/app.js?v=fb91304a"></script>
+<script defer src="/js/app.js?v=fb91304a"></script>
 
 <div id="chrome-t"></div>
 <!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가

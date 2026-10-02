@@ -309,6 +309,8 @@ function shell(tpl, r, route, noscript, ld){
   h = stampAssets(h);
   checkStamped(h, route);
   checkColorScheme(h, route);
+  checkDefer(h, route);
+  checkAlive(h, route, WANT_SCRIPTS);
   return h;
 }
 
@@ -970,6 +972,44 @@ function checkStamped(html, where){
    크로미움은 자동 다크 모드가 꺼져 있어서 로컬에서는 늘 멀쩡합니다.
    그래서 빌드가 봅니다 — 화면마다 메타 태그가 있는지, 토큰에 CSS
    선언이 있는지 둘 다입니다 (CSS 가 늦게 와도 메타가 먼저 막습니다). */
+/* ⚠️⚠️ **`defer` 가 빠지면 화면이 빈 채로 몇 초 있습니다.** 스크립트
+   서른둘이 미리 그려 둔 본문보다 **앞**에 있어서, 동기로 두면 그 서른둘을
+   다 받을 때까지 HTML 파싱이 멈춥니다 — 느린 3G 에서 6.3초였고, 보여 줄
+   글은 이미 HTML 안에 있었습니다. `async` 는 차례가 섞여서 안 됩니다
+   (이 저장소는 스크립트 순서가 곧 의존 순서입니다). */
+/* ⚠️⚠️⚠️ **빌드가 죽은 화면 142개를 만들고도 "✅" 라고 했습니다.**
+   `index.html` 의 주석에 `<main id="view">` 라는 **글자**를 적었더니,
+   크롤러 본문을 끼워 넣는 코드가 그 표시를 문자열로 찾다가 **주석 쪽을
+   먼저 맞혀서** 스크립트 서른둘을 통째로 삼켰습니다. 문법도 멀쩡하고
+   빌드도 성공이고 화면만 아무것도 안 하는 상태였습니다.
+
+   이 저장소에서 **세 번째** 같은 사고입니다 (`if(route === "/"){` 로
+   칸 갈아 끼우다 `shell()` 을 삼킨 것이 둘). 그래서 이제 **결과물을
+   세어 봅니다** — 끼워 넣는 코드를 아무리 고쳐도, 스크립트가 사라지면
+   여기서 멈춥니다.
+
+   ⚠️ 표시(`<main id="view">` · `crawl:start`)를 **글자로 적지 마세요.**
+   꼭 적어야 하면 띄어 쓰거나 다른 말로 풀어 쓰세요. */
+function checkAlive(html, where, want){
+  const n = (html.match(/<script[^>]+src="\/js\//g) || []).length;
+  if(n !== want)
+    throw new Error(where + " 에 스크립트가 " + n + "개입니다 (본보기는 " + want + "개) — "
+      + "끼워 넣는 코드가 삼켰을 수 있습니다. 화면은 아무것도 안 합니다");
+  if(html.indexOf('id="view"') < 0)
+    throw new Error(where + " 에 본문 자리가 없습니다");
+}
+
+function checkDefer(html, where){
+  const bare = (html.match(/<script src="\/js\/[^"]+"><\/script>/g) || []);
+  if(bare.length)
+    throw new Error(where + " 에 defer 없는 스크립트가 " + bare.length + "개 있습니다 — "
+      + "미리 그려 둔 본문이 그만큼 늦게 보입니다: " + bare.slice(0,3).join(" "));
+  const async_ = (html.match(/<script[^>]*\basync\b[^>]*src="\/js\//g) || []);
+  if(async_.length)
+    throw new Error(where + " 에 async 스크립트가 있습니다 — 차례가 섞여서 "
+      + "의존 순서가 깨집니다. defer 를 쓰세요");
+}
+
 const CS_META = /<meta\s+name="color-scheme"\s+content="only light">/;
 function checkColorScheme(html, where){
   if(!CS_META.test(html))
@@ -1122,6 +1162,10 @@ checkPhotos(W);
 brandStatics(W);
 globalThis.__W = W;   /* shell() 이 브랜드 이름을 읽습니다 */
 const tpl = fs.readFileSync(path.join(ROOT,"index.html"),"utf8");
+/* 본보기(index.html)가 들고 있는 스크립트 수 — 만들어진 화면도 같아야 합니다 */
+const WANT_SCRIPTS = (tpl.match(/<script[^>]+src="\/js\//g) || []).length;
+if(WANT_SCRIPTS < 10)
+  throw new Error("index.html 의 스크립트가 " + WANT_SCRIPTS + "개뿐입니다 — 본보기가 이미 깨졌습니다");
 const routes = allRoutes(W);
 
 let made = 0, skipped = 0;
@@ -1169,6 +1213,7 @@ for(const route of routes){
     src = stampAssets(src);
     checkStamped(src, "index.html");
     checkColorScheme(src, "index.html");
+    checkDefer(src, "index.html");
     fs.writeFileSync(tplPath, src);
   }
 

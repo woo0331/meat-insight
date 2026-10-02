@@ -75,10 +75,34 @@ window.amProviderStats = function(p){
   return s;
 };
 
-/* 조건으로 거르기 — 지역 · 업종 · 서비스 (§35) */
+/* ⚠️⚠️ **업체가 이 분류의 일을 하는가** — 하위 분류 key 로 봅니다.
+   `subs` 에 적는 것은 **하위 분류**(`catalog.js` 의 `items[].key`)이지
+   분류 key 가 아닙니다.
+
+   ⚠️ 비어 있으면 **아무 분류에도 안 걸립니다.** 지역 · 업종은 안 적으면
+   "전국 · 전업종" 으로 읽는 게 말이 되지만, 하시는 일을 안 적은 것을
+   "전부 다 합니다" 로 읽으면 인테리어 업체가 세무 화면에 앉습니다.
+   비어 있는 채로 등록되는 것은 `build-pages.js` 가 막습니다.
+
+   ⚠️ 이 규칙은 **여기 한 곳**입니다. `join.js` 의 `amProvidersInCat()`
+   도 이것을 부릅니다 — 두 곳에 적으면 한쪽만 고치게 됩니다. */
+window.amProviderInCat = function(p, cat){
+  var keys = ((cat && cat.items) || []).map(function(i){ return i.key; });
+  if(!keys.length) return false;
+  return (p.subs || []).some(function(s){ return keys.indexOf(s) >= 0; });
+};
+
+/* 조건으로 거르기 — 분류 · 지역 · 업종 · 서비스 (§35)
+   ⚠️⚠️ **`cat` 을 빼먹지 마세요.** `/providers/:cat` 이 분류를 안 넘기고
+   있어서, 하위 분류를 고르기 전에는 **등록된 모든 업체가 모든 분야
+   화면에** 나왔습니다 — 철거를 찾는 손님에게 인테리어 업체가 보이고,
+   그 업체에 철거 요청이 갑니다. 업체가 0곳이라 아무도 못 봤고,
+   **첫 업체를 등록하는 날** 터질 버그였습니다. */
 window.amProviders = function(f){
   f = f || {};
+  var cat = f.cat ? (window.amCat ? amCat(f.cat) : null) : null;
   return (window.AM_PROVIDERS||[]).filter(function(p){
+    if(f.cat      && !window.amProviderInCat(p, cat)) return false;
     if(f.sub      && (p.subs||[]).indexOf(f.sub) < 0) return false;
     if(f.industry && (p.industries||[]).length &&
        (p.industries||[]).indexOf(f.industry) < 0) return false;

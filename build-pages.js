@@ -763,6 +763,44 @@ function checkPhotos(W){
       bad.join("\n   "));
 }
 
+/* ⚠️⚠️ **업체를 등록했는데 아무 데도 안 나오는 것**을 막습니다.
+   `subs` 에 적는 것은 **하위 분류**(`catalog.js` 의 `items[].key`)이지
+   분류 key 가 아닙니다 — `"interior"` 처럼 **둘 다 있는 이름**이 섞여
+   있어서 헷갈리기 딱 좋습니다. 틀리면 에러도 안 나고 화면도 멀쩡하고,
+   그 업체만 **조용히 어느 분야에도 안 뜹니다.**
+
+   영업 나가서 받아 온 첫 업체가 그렇게 되면 제일 나쁩니다 — 업체에는
+   "올려 드렸습니다" 라고 말해 둔 뒤이기 때문입니다. */
+function checkProviders(W){
+  const cats = W.AM_CATS || [];
+  const subKeys = new Set();
+  cats.forEach(c => (c.items || []).forEach(i => subKeys.add(i.key)));
+  const catKeys = new Set(cats.map(c => c.key));
+  const regions = new Set((W.AM_REGIONS || []).map(r => r.key));
+  const inds    = new Set((W.AM_INDUSTRIES || []).map(i => i.key));
+  const bad = [];
+  (W.AM_PROVIDERS || []).forEach(p => {
+    const who = p.id || p.name || "(이름 없는 업체)";
+    if(!p.id)   bad.push(who + ": id 가 없습니다 — /p/:id 화면이 안 생깁니다");
+    if(!p.name) bad.push(who + ": name 이 없습니다");
+    const subs = p.subs || [];
+    if(!subs.length)
+      bad.push(who + ": subs 가 비었습니다 — 어느 분야 화면에도 안 나옵니다");
+    subs.forEach(k => {
+      if(subKeys.has(k)) return;
+      bad.push(who + ": subs 의 \"" + k + "\" 는 하위 분류가 아닙니다"
+        + (catKeys.has(k) ? " (그건 분류 key 입니다 — 그 분류의 items 에서 고르세요)" : ""));
+    });
+    (p.regions   || []).forEach(k => { if(!regions.has(k)) bad.push(who + ": 없는 지역 " + k); });
+    (p.industries|| []).forEach(k => { if(!inds.has(k))    bad.push(who + ": 없는 업종 " + k); });
+  });
+  const ids = (W.AM_PROVIDERS || []).map(p => p.id).filter(Boolean);
+  ids.forEach((id, n) => { if(ids.indexOf(id) !== n) bad.push("id 가 겹칩니다: " + id); });
+  if(bad.length)
+    throw new Error("업체 등록이 어긋났습니다 (그 업체는 **조용히 안 나옵니다**):\n   "
+      + bad.join("\n   "));
+}
+
 function checkVercel(){
   const vj = JSON.parse(fs.readFileSync(path.join(ROOT,"vercel.json"),"utf8"));
   for(const g of (vj.headers||[])){
@@ -896,6 +934,7 @@ checkCssVars();
 checkColorSchemeCss();
 checkVercel();
 const W = loadApp();
+checkProviders(W);
 checkPhotos(W);
 brandStatics(W);
 globalThis.__W = W;   /* shell() 이 브랜드 이름을 읽습니다 */

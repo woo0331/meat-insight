@@ -760,6 +760,44 @@ const AUDIT = `(() => {
     if(n > 0 && (window.AM_STORES||[]).length === 0)
       return "등록 0건인데 매물 카드가 " + n + "장 있습니다";
     return true;`);
+  /* ⚠️⚠️ **업체가 0곳이라 업체 관련 검사가 전부 "없다" 만 보고 있었습니다.**
+     그래서 `/providers/:cat` 이 분류를 안 넘기는 것을 아무도 못 봤습니다 —
+     하위 분류를 고르기 전에는 **등록된 모든 업체가 모든 분야 화면에**
+     나왔습니다. 철거를 찾는 손님에게 인테리어 업체가 보이고, 그 업체에
+     철거 요청이 갑니다. 첫 업체를 등록하는 날 터질 버그였습니다.
+
+     검사가 **업체를 하나 끼워 넣고** 봅니다 — 저장소의 데이터는 그대로
+     0곳이고, 지어낸 업체는 이 검사 안에서만 삽니다. */
+  await f("업체는 자기 분야에만 나온다", "/providers/interior", `
+    window.AM_PROVIDERS.push({
+      id:"zz-check", name:"검사용 업체", regions:["gyeonggi"],
+      industries:["cafe"], subs:["interior"], intro:"검사 안에서만 삽니다."
+    });
+    const inCat  = window.amProviders({ cat:"interior" }).length;
+    const offCat = window.amProviders({ cat:"demolish" }).length;
+    const offInd = window.amProviders({ cat:"interior", industry:"gym" }).length;
+    const offReg = window.amProviders({ cat:"interior", region:"seoul" }).length;
+    window.AM_PROVIDERS = window.AM_PROVIDERS.filter(function(p){ return p.id !== "zz-check"; });
+    let why = true;
+    if(!inCat)      why = "자기 분야(인테리어)에서 안 보입니다";
+    else if(offCat) why = "남의 분야(철거)에 " + offCat + "곳 나옵니다 — 분류를 안 넘기고 있습니다";
+    else if(offInd) why = "전문 업종이 아닌데 업종 거르개에 걸립니다";
+    else if(offReg) why = "서비스 지역이 아닌데 지역 거르개에 걸립니다";
+    return why;`);
+  /* 같은 규칙을 두 곳에 적으면 한쪽만 고치게 됩니다 (amCatTo 로 겪었습니다). */
+  await f("입점 배지와 업체찾기가 같은 규칙으로 센다", "/join", `
+    window.AM_PROVIDERS.push({
+      id:"zz-check", name:"검사용 업체", regions:["gyeonggi"],
+      industries:["cafe"], subs:["interior"], intro:"검사 안에서만 삽니다."
+    });
+    const a  = window.amProvidersInCat(window.amCat("interior"));
+    const b  = window.amProviders({ cat:"interior" }).length;
+    const dz = window.amProvidersInCat(window.amCat("demolish"));
+    window.AM_PROVIDERS = window.AM_PROVIDERS.filter(function(p){ return p.id !== "zz-check"; });
+    let why = true;
+    if(a !== b)  why = "입점 배지 " + a + "곳 · 업체찾기 " + b + "곳 — 규칙이 갈렸습니다";
+    else if(dz)  why = "철거 배지가 " + dz + "곳이라고 합니다";
+    return why;`);
   await f("평점은 후기에서 계산한다 (값으로 저장하지 않는다)", "/providers", `
     const bad = (window.AM_PROVIDERS||[]).filter(function(p){
       return p.rating !== undefined || p.reviewCount !== undefined; });

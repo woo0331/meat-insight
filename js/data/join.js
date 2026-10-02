@@ -106,10 +106,11 @@ window.amJoinFaq = function(){ return (window.AM_JOIN_FAQ || []).slice(); };
 
 /* 어느 분야에 업체가 몇 곳인가 — ⚠️ **세는 값입니다.**
    `subs`(하위 분류 key)로 맞춰 봅니다. 값으로 저장하지 마세요. */
+/* ⚠️ 규칙은 `providers.js` 의 `amProviderInCat()` 한 곳입니다 — 전에
+   여기에 같은 것을 다시 적어 두었는데, 그러면 분류 생김새가 바뀔 때
+   한쪽만 고치게 됩니다 (이 저장소에서 `amCatTo()` 로 겪었습니다). */
 window.amProvidersInCat = function(cat){
-  var keys = (cat && cat.items || []).map(function(i){ return i.key; });
-  if(!keys.length) return 0;
   return (window.AM_PROVIDERS || []).filter(function(p){
-    return (p.subs || []).some(function(s){ return keys.indexOf(s) >= 0; });
+    return window.amProviderInCat(p, cat);
   }).length;
 };

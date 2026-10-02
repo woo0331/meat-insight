@@ -40,6 +40,15 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* 분류를 안 넘기면(옛 버그) 모든 업체가 모든 분야에 나옵니다. */
+  ["업체는 자기 분야에만 나온다",
+   `const real = window.amProviders;
+    window.amProviders = function(f){
+      f = Object.assign({}, f); delete f.cat;   /* 분류를 빠뜨리던 그때 */
+      return real(f);
+    };`],
+  ["입점 배지와 업체찾기가 같은 규칙으로 센다",
+   `window.amProvidersInCat = function(){ return 99; };`],
   /* 하지 않는 저장을 한다고 적어 두면 걸려야 합니다 (절대 규칙 5). */
   ["견적: 요청을 저장한다는 말과 실제가 같다",
    `document.querySelector("#q-f .note-mid").textContent =

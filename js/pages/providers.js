@@ -41,7 +41,9 @@ function PageProviderCat(cat){
   var sub = nowQS("s"), ind = nowQS("i"), reg = nowQS("r");
   var side = amCatSide(cat.key);
   var items = amCatItems(cat, ind);
-  var list = amProviders({ sub:sub || null, industry:ind || null, region:reg || null });
+  /* ⚠️⚠️ `cat` 을 꼭 넘깁니다 — 안 넘기면 모든 업체가 모든 분야에 나옵니다. */
+  var list = amProviders({ cat:cat.key, sub:sub || null,
+                           industry:ind || null, region:reg || null });
 
   return PgHero({
     crumb: Crumb([["업체찾기","/providers"],[cat.name]]),
@@ -144,6 +146,15 @@ function PageProviderOne(p){
       (p.since ? '<div class="pv-stat"><span class="pv-stat-v"><b>'+esc(String(p.since))+'</b></span>'+
             '<span class="pv-stat-l">시작한 해</span></div>' : '')+
     '</div>'+
+
+    /* ⚠️ **시·군·구는 적어 받아 놓고 안 쓰고 있었습니다.** 경기도는
+       넓어서 "경기" 만 보면 안양 업체인지 포천 업체인지 모릅니다 —
+       안 맞는 곳에 견적이 가면 손님도 업체도 헛걸음합니다. 업체가
+       적어 준 범위를 그대로 냅니다 (우리가 확인한 값이 아닙니다). */
+    ((p.gu||[]).length ? '<div class="pv-sec"><h2>일하는 지역</h2>'+
+      '<ul class="chip-g">'+p.gu.map(function(g){
+        return '<li><span class="chip chip-flat">'+esc(g)+'</span></li>'; }).join("")+
+      '</ul><p class="note">업체가 적어 준 범위입니다.</p></div>' : '')+
 
     (subs.length ? '<div class="pv-sec"><h2>전문 서비스</h2>'+
       '<ul class="chip-g">'+subs.map(function(n){

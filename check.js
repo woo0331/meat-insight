@@ -798,14 +798,20 @@ const AUDIT = `(() => {
       id:"zz-check", name:"검사용 업체", regions:["gyeonggi"],
       industries:["cafe"], subs:["interior"], intro:"검사 안에서만 삽니다."
     });
-    const inCat  = window.amProviders({ cat:"interior" }).length;
-    const offCat = window.amProviders({ cat:"demolish" }).length;
-    const offInd = window.amProviders({ cat:"interior", industry:"gym" }).length;
-    const offReg = window.amProviders({ cat:"interior", region:"seoul" }).length;
+    /* ⚠️⚠️ **갯수를 그냥 세면 안 됩니다** — 저장소에 진짜 업체가 등록되면
+       그 수가 섞여서 검사가 엉뚱하게 실패합니다. 실제로 그랬습니다.
+       끼워 넣은 **그 한 곳이 어디에 나오는가**만 봅니다. */
+    const has = function(f){
+      return window.amProviders(f).some(function(p){ return p.id === "zz-check"; });
+    };
+    const inCat  = has({ cat:"interior" });
+    const offCat = has({ cat:"demolish" });
+    const offInd = has({ cat:"interior", industry:"gym" });
+    const offReg = has({ cat:"interior", region:"seoul" });
     window.AM_PROVIDERS = window.AM_PROVIDERS.filter(function(p){ return p.id !== "zz-check"; });
     let why = true;
     if(!inCat)      why = "자기 분야(인테리어)에서 안 보입니다";
-    else if(offCat) why = "남의 분야(철거)에 " + offCat + "곳 나옵니다 — 분류를 안 넘기고 있습니다";
+    else if(offCat) why = "남의 분야(철거)에 나옵니다 — 분류를 안 넘기고 있습니다";
     else if(offInd) why = "전문 업종이 아닌데 업종 거르개에 걸립니다";
     else if(offReg) why = "서비스 지역이 아닌데 지역 거르개에 걸립니다";
     return why;`);
@@ -923,13 +929,20 @@ const AUDIT = `(() => {
       id:"zz-check", name:"검사용 업체", regions:["gyeonggi"],
       industries:["cafe"], subs:["interior"], intro:"검사 안에서만 삽니다."
     });
+    /* ⚠️ 여기도 **늘어난 값**으로 봅니다 — 진짜 업체가 등록되면 절대값은
+       달라지지만, 한 곳을 넣었을 때 **양쪽이 똑같이 1 늘어야** 합니다. */
     const a  = window.amProvidersInCat(window.amCat("interior"));
     const b  = window.amProviders({ cat:"interior" }).length;
     const dz = window.amProvidersInCat(window.amCat("demolish"));
     window.AM_PROVIDERS = window.AM_PROVIDERS.filter(function(p){ return p.id !== "zz-check"; });
+    const a0 = window.amProvidersInCat(window.amCat("interior"));
+    const b0 = window.amProviders({ cat:"interior" }).length;
+    const d0 = window.amProvidersInCat(window.amCat("demolish"));
     let why = true;
-    if(a !== b)  why = "입점 배지 " + a + "곳 · 업체찾기 " + b + "곳 — 규칙이 갈렸습니다";
-    else if(dz)  why = "철거 배지가 " + dz + "곳이라고 합니다";
+    if(a !== b)            why = "입점 배지 " + a + "곳 · 업체찾기 " + b + "곳 — 규칙이 갈렸습니다";
+    else if(a - a0 !== 1)  why = "한 곳을 넣었는데 입점 배지가 " + (a - a0) + " 늘었습니다";
+    else if(b - b0 !== 1)  why = "한 곳을 넣었는데 업체찾기가 " + (b - b0) + " 늘었습니다";
+    else if(dz !== d0)     why = "철거 배지가 같이 늘었습니다 (" + d0 + " → " + dz + ")";
     return why;`);
   await f("평점은 후기에서 계산한다 (값으로 저장하지 않는다)", "/providers", `
     const bad = (window.AM_PROVIDERS||[]).filter(function(p){

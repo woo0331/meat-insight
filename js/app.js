@@ -98,6 +98,40 @@ var META = {
 /* 사람마다 내용이 다른 화면과 결과 화면은 검색에 올리지 않습니다 */
 var NOINDEX = ["/my","/search","/quote"];
 
+/* ⚠️⚠️ **업체 · 브랜드 상세의 설명을 등록값으로 만듭니다.**
+   전에는 `pv.intro` 한 줄을 그대로 썼습니다 — 소개가 짧으면 검색 결과에
+   쓸 설명이 안 되고(30자 미만이면 빌드가 멈춥니다), 그 화면이 바로
+   "안양 카페 인테리어 업체" 로 잡혀야 할 자리입니다.
+
+   ⚠️ **지어내지 않습니다** — 지역 · 하는 일 · 업종은 전부 등록된 값이고,
+   없으면 그 조각이 빠집니다 (절대 규칙 1). */
+function pvDesc(pv){
+  var who = [];
+  var reg = (pv.regions||[]).map(amRegionName).filter(Boolean);
+  var gu  = (pv.gu||[]).slice(0, 3);
+  var sub = (pv.subs||[]).map(amSubName).filter(Boolean);
+  var ind = (pv.industries||[]).map(amIndustryName).filter(Boolean);
+  if(reg.length || gu.length) who.push((gu.length ? gu.join(" · ") : reg.join(" · ")) + "에서");
+  if(ind.length) who.push(ind.join(" · "));
+  if(sub.length) who.push(sub.join(" · ") + " 일을 합니다.");
+  else who.push("일하는 업체입니다.");
+  var out = pv.name + " — " + who.join(" ");
+  if(pv.intro) out += " " + pv.intro;
+  return out + " 지역 · 업종 · 평수 · 예산을 적으시면 견적을 받으실 수 있습니다. " +
+         "연락처는 사장님이 동의하신 뒤에만 오갑니다.";
+}
+function frDesc(fr){
+  var fc = (typeof amFranchiseCat === "function") ? amFranchiseCat(fr.cat) : null;
+  var out = fr.name + " — " + (fc ? fc.name + " 프랜차이즈입니다. " : "");
+  if(fr.intro) out += fr.intro + " ";
+  var c = (typeof amFranchiseCost === "function") ? amFranchiseCost(fr) : null;
+  /* ⚠️ 금액은 출처와 기준일이 있는 것만 — 검색 결과에도 같은 규칙입니다 */
+  if(c && c.total) out += "총 예상 창업비 " + c.total + (c.unit||"만원") +
+                          " (" + c.source + " 기준 " + c.asOf + "). ";
+  if(c && c.pyeong) out += "권장 평수 " + c.pyeong + "평. ";
+  return out + "창업비 · 가맹비 · 보증금 · 모집지역을 같은 기준으로 비교하실 수 있습니다.";
+}
+
 window.routeInfo = function(path){
   var r = { ok:true, title:"", desc:"", canon:null,
             noindex: NOINDEX.indexOf(path) >= 0, view:null };
@@ -195,7 +229,7 @@ window.routeInfo = function(path){
     var fr = (typeof amFranchise === "function") ? amFranchise(mfd[1]) : null;
     if(!fr){ r.ok = false; return r; }
     r.view = "franchiseOne"; r.fr = fr;
-    r.title = fr.name; r.desc = fr.intro || "";
+    r.title = fr.name; r.desc = frDesc(fr);
     return r;
   }
   /* 업체 상세 — /p/:id */
@@ -204,7 +238,7 @@ window.routeInfo = function(path){
     var pv = (typeof amProvider === "function") ? amProvider(mpd[1]) : null;
     if(!pv){ r.ok = false; return r; }
     r.view = "providerOne"; r.provider = pv;
-    r.title = pv.name; r.desc = pv.intro || "";
+    r.title = pv.name; r.desc = pvDesc(pv);
     return r;
   }
   /* 글 하나 — /content/:slug */

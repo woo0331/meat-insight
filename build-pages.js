@@ -652,6 +652,78 @@ function noscriptFor(W, r, route){
       "같이 적습니다 (관할 구청 · 세무서 · 고용노동부).");
     return L.join("");
   }
+  /* ⚠️⚠️ **업체 · 브랜드 상세에는 크롤러 본문이 없었습니다.** 23자짜리
+     로 나가고 있었고, 설명(description)도 소개 한 줄이라 너무 짧았습니다.
+     데이터가 0이라 그 주소 자체가 안 만들어져서 몇 달째 아무도 못 봤고,
+     **첫 업체를 등록하는 날** 그 화면이 그대로 구글에 갔을 것입니다 —
+     정작 "안양 카페 인테리어 업체" 로 잡혀야 할 화면입니다.
+
+     ⚠️ 여기 적는 것은 **전부 등록된 값**입니다. 업체 수 · 실적 · 평점을
+     지어내지 않습니다 (절대 규칙 1). 후기가 없으면 그 줄이 아예 빠집니다. */
+  const mpv = /^\/p\/([a-z0-9-]+)$/.exec(route);
+  if(mpv){
+    const pv = (W.AM_PROVIDERS||[]).filter(x => x.id === mpv[1])[0];
+    if(pv){
+      const regs = (pv.regions||[]).map(k => W.amRegionName ? W.amRegionName(k) : k);
+      const gus  = pv.gu || [];
+      const inds = (pv.industries||[]).map(k => W.amIndustryName ? W.amIndustryName(k) : k);
+      const subs = (pv.subs||[]).map(k => W.amSubName ? W.amSubName(k) : k);
+      h2("하는 일");
+      ul(subs);
+      if(regs.length || gus.length){
+        h2("일하는 지역");
+        ul(regs.concat(gus));
+      }
+      if(inds.length){ h2("전문 업종"); ul(inds); }
+      const st = W.amProviderStats ? W.amProviderStats(pv) : null;
+      /* ⚠️ 후기가 없으면 **그 줄을 아예 안 냅니다** — "평점 0.0" 은 평점이
+         아니고, 화면에 없는 것을 크롤러에게만 주면 안 됩니다. */
+      if(st && st.rating != null)
+        p("이 업체에 올라온 후기 " + st.reviews + "건의 평균 만족도는 "
+          + st.rating + "점입니다. 플랫폼을 통해 상담 · 계약하신 분이 쓰신 것만 올립니다.");
+      const bd = W.amProviderBadges ? W.amProviderBadges(pv) : [];
+      if(bd.length){ h2("확인한 것"); ul(bd); }
+      if(pv.since) p(pv.since + "년부터 일하고 있습니다.");
+      p("연락처를 바로 드리지 않습니다. 필요한 내용을 적어 주시면 그대로 "
+        + "전달하고, 업체 연락처는 사장님이 동의하신 뒤에만 오갑니다. "
+        + "견적은 무료이고, 저희는 거래 당사자가 아닌 통신판매중개자입니다.");
+    }
+    return L.join("");
+  }
+  const mfr = /^\/f\/([a-z0-9-]+)$/.exec(route);
+  if(mfr){
+    const fr = (W.AM_FRANCHISES||[]).filter(x => x.slug === mfr[1])[0];
+    if(fr){
+      const fc = (W.AM_FRANCHISE_CATS||[]).filter(c => c.key === fr.cat)[0];
+      if(fc) p(fc.name + " 프랜차이즈입니다.");
+      ul(fr.features || []);
+      /* ⚠️ 금액은 **출처와 기준일이 있는 것만** 냅니다 (가맹사업법).
+         화면이 숨기는 값을 크롤러에게만 주면 그게 더 나쁩니다. */
+      const c = W.amFranchiseCost ? W.amFranchiseCost(fr) : null;
+      if(c){
+        h2("창업비");
+        const rows = [["total","총 예상 창업비"],["join","가맹비"],["edu","교육비"],
+                      ["deposit","보증금"],["interior","인테리어"],["equip","장비"],["etc","기타"]];
+        ul(rows.filter(x => c[x[0]]).map(x => x[1] + " " + c[x[0]] + (c.unit||"만원")));
+        if(c.pyeong) p("권장 평수는 " + c.pyeong + "평입니다.");
+        p("출처 " + c.source + " · 기준일 " + c.asOf
+          + ". 점포 비용과 지역에 따라 달라집니다. 실제 금액은 정보공개서와 본사 상담으로 확인하세요.");
+      } else {
+        p("본사가 금액을 등록하지 않았습니다. 상담으로 확인하세요.");
+      }
+      if((fr.support||[]).length){ h2("본사 지원"); ul(fr.support); }
+      if((fr.regions||[]).length){
+        h2("모집 지역");
+        ul(fr.regions.map(k => W.amRegionName ? W.amRegionName(k) : k));
+      }
+      if(fr.disclosure && fr.disclosure.has && fr.disclosure.no)
+        p("정보공개서 등록번호 " + fr.disclosure.no
+          + (fr.disclosure.at ? " · 등록일 " + fr.disclosure.at : "") + ".");
+      p("저희는 가맹본부가 아니라 통신판매중개자입니다. 계약은 본사와 직접 하십니다.");
+    }
+    return L.join("");
+  }
+
   const mct = /^\/content\/([a-z0-9-]+)$/.exec(route);
   if(mct){
     const ct = (W.AM_CONTENTS||[]).filter(x => x.slug === mct[1])[0];
@@ -1144,8 +1216,23 @@ for(const root of roots){
 
 /* ── sitemap ──────────────────────────────────────────────────── */
 const today = new Date().toISOString().slice(0,10);
-const prio = r => r === "/" ? "1.0" : /^\/(sos|check|start|lab)$/.test(r) ? "0.8"
-                : r.indexOf("/lab/") === 0 ? "0.7" : "0.6";
+/* ⚠️ **앞 서비스에서 남은 줄이었습니다** — `/sos` · `/check` · `/start` ·
+   `/lab` 은 지금 하나도 없는 주소라, 메인 말고는 전부 0.6 으로 나가고
+   있었습니다 (`robots.txt` 에서 겪은 것과 같은 꼴입니다).
+
+   지금 얼개로 다시 적습니다. 손님이 처음 닿아야 하는 쪽이 높습니다 —
+   창업 · 폐업 진입(0.9) → 업종별 · 분야별(0.8) → 목록 화면(0.7) →
+   나머지(0.6) → 약관 · 방침(0.3, 있어야 하지만 찾아 들어오는 글은
+   아닙니다). */
+const prio = r => {
+  if(r === "/") return "1.0";
+  if(/^\/(startup|closure)$/.test(r)) return "0.9";
+  if(/^\/(startup|closure)\/[^/]+$/.test(r)) return "0.8";
+  if(/^\/(providers|franchise|c)\/[^/]+$/.test(r)) return "0.8";
+  if(/^\/(providers|franchise|stores|assets|support|content|tools|join)$/.test(r)) return "0.7";
+  if(/^\/(terms|privacy)$/.test(r)) return "0.3";
+  return "0.6";
+};
 fs.writeFileSync(path.join(ROOT,"sitemap.xml"),
 '<?xml version="1.0" encoding="UTF-8"?>\n'+
 '<!-- build-pages.js 가 만듭니다 ('+today+'). 손으로 고치지 마세요. -->\n'+

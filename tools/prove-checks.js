@@ -40,6 +40,10 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* 하지 않는 저장을 한다고 적어 두면 걸려야 합니다 (절대 규칙 5). */
+  ["견적: 요청을 저장한다는 말과 실제가 같다",
+   `document.querySelector("#q-f .note-mid").textContent =
+      "보내고 나면 이 브라우저에 요청 내용이 남아, 아래에서 비교하실 수 있습니다.";`],
   ["지어낸 실적 숫자가 메인에 없다",
    `document.querySelector(".mh-d").textContent = "입점 업체 1,200곳";`],
   ["히어로 제목이 창업 · 폐업 두 낱말을 주인공으로 둔다",

@@ -908,6 +908,36 @@ const AUDIT = `(() => {
     await new Promise(r => setTimeout(r, 200));
     const b2 = JSON.parse(localStorage.getItem("am.quotes.v1") || "[]");
     return b2.length === 0 ? true : "안 지워졌습니다";`);
+  /* 하는 일과 적어 둔 말이 **같아야** 합니다 (절대 규칙 5). 전에 폼 아래에
+     "보내고 나면 이 브라우저에 요청 내용이 남아" 라고 적혀 있었는데
+     amSend() 는 보낸 뒤 아무것도 저장하지 않았습니다 — 그 말을 믿고 탭을
+     닫으시면 적으신 것이 없어집니다. 둘 중 **어느 쪽을 고쳐도** 통과하도록,
+     말과 행동이 어긋날 때만 걸립니다. */
+  await f("견적: 요청을 저장한다는 말과 실제가 같다", "/quote", `
+    try{ localStorage.removeItem("am.quotes.v1"); }catch(e){}
+    const noteEl = document.querySelector("#q-f .note-mid");
+    const note = noteEl ? (noteEl.textContent || "") : "";
+    const claims = note.indexOf("보내고 나면") >= 0 || note.indexOf("요청 내용이 남") >= 0;
+    const real = window.fetch;
+    let sent = false;
+    window.fetch = function(){
+      sent = true;
+      return Promise.resolve({ ok:true, json: function(){ return Promise.resolve({ ok:true }); } });
+    };
+    document.getElementById("q-what").value = "카페 인테리어";
+    document.getElementById("q-q").value    = "25평입니다";
+    document.getElementById("q-name").value = "홍길동";
+    document.getElementById("q-tel").value  = "010-1234-5678";
+    document.getElementById("q-ag").checked = true;
+    window.quoteSend({ preventDefault: function(){} });
+    await new Promise(r => setTimeout(r, 350));
+    window.fetch = real;
+    if(!sent) return "보내지지 않아서 이 검사가 아무것도 안 보고 있습니다";
+    const saved = localStorage.getItem("am.quotes.v1");
+    const saves = !!saved && saved !== "[]";
+    if(claims && !saves) return "저장한다고 적어 두고 저장하지 않습니다: " + note.slice(0, 40);
+    if(saves && !claims) return "적어 두지 않은 저장을 합니다: " + saved.slice(0, 60);
+    return true;`);
 
   /* ⑥ 검색 — ⚠️ 새 데이터를 만들면 색인에도 넣으세요 */
   await f("검색이 분류 · 하위분류 · 업종을 같이 찾는다", "/search", `

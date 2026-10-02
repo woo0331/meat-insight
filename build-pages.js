@@ -97,7 +97,10 @@ function allRoutes(W){
   const pvs = (W.AM_PROVIDERS || []).map(p => "/p/" + p.id);
   const frs = (W.AM_FRANCHISES || []).map(f => "/f/" + f.slug);
   const cts = (W.AM_CONTENTS  || []).map(c => "/content/" + c.slug);
-  return fixed.concat(flows, pcats, icats, fcats, pvs, frs, cts);
+  /* 매물도 등록된 것만 주소가 됩니다 — 지금 0건이라 0개가 만들어집니다 */
+  const sts = (W.AM_STORES || []).map(x => "/s/" + x.id);
+  const ass = (W.AM_ASSETS || []).map(x => "/a/" + x.id);
+  return fixed.concat(flows, pcats, icats, fcats, pvs, frs, cts, sts, ass);
 }
 
 function esc(s){
@@ -220,6 +223,40 @@ function jsonLd(W, r, route){
         datePublished:ct.at, author:{ "@type":"Organization", name:B.name }
       });
     }
+    return out;
+  }
+  /* 상세 네 갈래의 빵부스러기 — 검색 결과에 "매장 인수 › 안양 평촌
+     18평 카페 양도" 로 나옵니다. 네 화면 다 없었습니다.
+
+     ⚠️⚠️ **`Product` · `Offer` 를 붙이지 마세요.** 값이 붙으면 "우리가
+     파는 물건" 이 되는데 저희는 거래 당사자가 아닌 중개자입니다
+     (전자상거래법 제20조 제1항). 게다가 그 금액은 올리신 사장님이
+     적으신 값이라 저희가 보증할 수 없습니다 — 구조화 데이터로 내보내는
+     순간 보증하는 셈입니다.
+     ⚠️⚠️ **`aggregateRating` 을 붙이지 마세요.** 없는 별을 구글에까지
+     내보내는 것이고, 적발되면 리치 결과가 통째로 막힙니다. */
+  const mdp = /^\/p\/([a-zA-Z0-9-]+)$/.exec(route);
+  if(mdp){
+    const x = (W.AM_PROVIDERS||[]).filter(v => v.id === mdp[1])[0];
+    if(x) out.push(crumb([["업체찾기","/providers"], [x.name, route]]));
+    return out;
+  }
+  const mdf = /^\/f\/([a-zA-Z0-9-]+)$/.exec(route);
+  if(mdf){
+    const x = (W.AM_FRANCHISES||[]).filter(v => v.slug === mdf[1])[0];
+    if(x) out.push(crumb([["프랜차이즈","/franchise"], [x.name, route]]));
+    return out;
+  }
+  const mds = /^\/s\/([a-zA-Z0-9-]+)$/.exec(route);
+  if(mds){
+    const x = (W.AM_STORES||[]).filter(v => v.id === mds[1])[0];
+    if(x) out.push(crumb([["매장 인수","/stores"], [x.title, route]]));
+    return out;
+  }
+  const mda = /^\/a\/([a-zA-Z0-9-]+)$/.exec(route);
+  if(mda){
+    const x = (W.AM_ASSETS||[]).filter(v => v.id === mda[1])[0];
+    if(x) out.push(crumb([["시설 · 집기","/assets"], [x.title, route]]));
     return out;
   }
   const mcc = /^\/c\/([a-z0-9-]+)$/.exec(route);
@@ -740,6 +777,67 @@ function noscriptFor(W, r, route){
     return L.join("");
   }
 
+  /* 매물 상세 — ⚠️⚠️ **매출은 크롤러 본문에도 넣지 않습니다.** 확인할
+     방법이 없는 숫자이고, 검색 결과는 우리 손을 떠나 한참 돌아다닙니다.
+     ⚠️ 연락처 · 상호 · 번지 주소는 스키마에 없고, 여기에도 없습니다 —
+     매물 하나가 곧 올리신 사장님의 개인정보가 되면 안 됩니다. */
+  const mst = /^\/s\/([a-zA-Z0-9-]+)$/.exec(route);
+  if(mst){
+    const st = (W.AM_STORES||[]).filter(x => x.id === mst[1])[0];
+    if(st){
+      const where = W.amRegionName ? W.amRegionName(st.region, st.gu) : st.region;
+      const ind   = W.amIndustryName ? W.amIndustryName(st.industry) : st.industry;
+      p([where, ind].filter(Boolean).join(" ") + " 매장입니다"
+        + (st.kind === "lease" ? " (임대)" : st.kind === "transfer" ? " (양도)" : "") + ".");
+      h2("조건");
+      ul([
+        st.pyeong    != null ? "면적 " + st.pyeong + "평" : "",
+        st.deposit   != null ? "보증금 " + st.deposit + "만원" : "",
+        st.rent      != null ? "월세 " + st.rent + "만원" : "",
+        st.premium   != null ? "권리금 " + st.premium + "만원" : "",
+        st.equipCost != null ? "시설 인수비 " + st.equipCost + "만원" : "",
+        st.since ? "운영 " + st.since + "년부터" : (st.months ? "운영 " + st.months + "개월" : ""),
+        st.wantAt ? "넘기고 싶은 시점 " + st.wantAt : "",
+        st.withEquip ? "시설을 그대로 인수하실 수 있습니다" : "",
+        st.fc ? "프랜차이즈 매장입니다" : ""
+      ].filter(Boolean));
+      if(st.text){ h2("사장님 설명"); p(st.text); }
+      p("적힌 값은 올리신 사장님이 적으신 것이고 저희가 확인하거나 보증하는 "
+        + "값이 아닙니다. 계약 전에 등기부 · 임대차계약서 · 관리비 · 원상복구 "
+        + "범위를 직접 확인하세요. 저희는 거래 당사자가 아닌 통신판매중개자이고, "
+        + "연락처는 두 사장님이 동의하신 뒤에만 오갑니다.");
+    }
+    return L.join("");
+  }
+  const mas = /^\/a\/([a-zA-Z0-9-]+)$/.exec(route);
+  if(mas){
+    const as = (W.AM_ASSETS||[]).filter(x => x.id === mas[1])[0];
+    if(as){
+      const where = W.amRegionName ? W.amRegionName(as.region, as.gu) : as.region;
+      const ind   = W.amIndustryName ? W.amIndustryName(as.industry) : as.industry;
+      /* ⚠️ `as.sub` 는 key 입니다 — 이름으로 바꿔서 냅니다 */
+      const kind  = W.amEquipName ? W.amEquipName(as.sub) : "";
+      p([where, ind, kind].filter(Boolean).join(" ")
+        + (as.cat === "stock" ? " 재고입니다." : "입니다."));
+      h2("조건");
+      const d = (W.AM_DEAL_KINDS||[]).filter(x => x.key === as.deal)[0];
+      ul([
+        as.price != null ? "가격 " + as.price + "만원" + (as.nego ? " (협의 가능)" : "") : "가격 협의",
+        as.brand ? "제조사 " + as.brand : "",
+        as.year  ? as.year + "년식" : "",
+        as.count ? "수량 " + as.count + "개" : "",
+        as.state ? "상태 " + as.state : "",
+        d ? d.name : ""
+      ].filter(Boolean));
+      if(as.text){ h2("사장님 설명"); p(as.text); }
+      p("사업을 정리하면서 나온 것입니다. 적힌 값은 올리신 사장님이 적으신 "
+        + "것이고 저희가 확인하거나 보증하는 값이 아닙니다. 보시려는 날짜를 "
+        + "적으시면 그대로 전달하고, 연락처는 두 사장님이 동의하신 뒤에만 "
+        + "오갑니다 — 저희는 거래 당사자가 아닌 통신판매중개자입니다.");
+    }
+    return L.join("");
+  }
+
   const mct = /^\/content\/([a-z0-9-]+)$/.exec(route);
   if(mct){
     const ct = (W.AM_CONTENTS||[]).filter(x => x.slug === mct[1])[0];
@@ -1086,6 +1184,18 @@ function checkMarketData(W){
     if(x.region   && !regions.has(x.region)) bad.push(who + ": 없는 지역 " + x.region);
     if(x.storeId && !storeIds.has(x.storeId))
       bad.push(who + ": storeId \"" + x.storeId + "\" 인 매물이 없습니다 (끊어진 연결)");
+    /* ⚠️⚠️ `sub`(장비 종류)가 틀리거나 비면 **조용히 안 나옵니다.**
+       `/assets` 는 업종의 장비 칩으로 거르는데 거기에 안 걸리고, 상세
+       화면의 종류 딱지도 사라집니다 — 업체 `subs` 가 그랬던 것과 같은
+       자리입니다. 장비 key 는 `industries.js` 의 `equip` 에 있습니다. */
+    if(!x.sub)
+      bad.push(who + ": sub(장비 종류)가 없습니다 — 장비 칩으로 **못 찾습니다**");
+    else if(!W.amEquipName)
+      bad.push("amEquipName() 이 없습니다 — 장비 key 를 이름으로 못 바꿉니다 "
+        + "(쓰는 쪽에 typeof 방어가 걸려 있어 **딱지만 조용히 사라집니다**)");
+    else if(!W.amEquipName(x.sub))
+      bad.push(who + ": 없는 장비 종류 \"" + x.sub + "\" — industries.js 의 equip key 여야 합니다"
+        + " (틀리면 에러 없이 **조용히 안 나옵니다**)");
   });
 
   /* ── 지원사업 공고 ── */
@@ -1250,7 +1360,7 @@ dups(seenTitle,"제목"); dups(seenDesc,"설명");
 
    그래서 **데이터로 만들어지는 뿌리는 늘 훑습니다** — 지금 주소가
    하나도 없어도 들어가서 비웁니다. */
-const DATA_ROOTS = ["p", "f", "c", "content", "startup", "closure", "providers", "franchise"];
+const DATA_ROOTS = ["p", "f", "s", "a", "c", "content", "startup", "closure", "providers", "franchise"];
 const roots = new Set(
   routes.filter(r => r !== "/").map(r => r.split("/")[1]).concat(DATA_ROOTS));
 let removed = 0;

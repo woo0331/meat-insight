@@ -57,7 +57,8 @@ function PageFranchiseCat(fc){
       RegionSelect("fil-r", reg, "fcGo('"+esc(fc.key)+"')")+
       '<span class="fil-n">'+list.length+'개</span></div>'+
     (list.length
-      ? '<div class="fr-g">'+list.map(FranchiseCard).join("")+'</div>'
+      ? '<div class="fr-g">'+list.slice(0, amShown(list.length)).map(FranchiseCard).join("")+'</div>'+
+        MoreBtn(list.length)
       : Empty({
           icon:fc.icon,
           title:esc(fc.name)+" 브랜드가 아직 없습니다",
@@ -87,6 +88,7 @@ function FranchiseCard(f){
         (c.pyeong ? '<em>'+esc(String(c.pyeong))+'평~</em>' : '')+
         (f.stores != null ? '<em>가맹점 '+esc(won(f.stores))+'</em>' : '')+
       '</span>'+
+      '<span class="mk-go">브랜드 보기'+icon("arrow",16)+'</span>'+
     '</span></a>';
 }
 

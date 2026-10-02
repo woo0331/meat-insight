@@ -135,6 +135,10 @@ window.ProviderCard = function(p){
           '<em>후기 '+s.reviews+'</em>'+(s.jobs ? '<em>작업 '+s.jobs+'</em>' : '')+'</span>'
         : '<span class="pv-r pv-r-none">아직 후기가 없습니다</span>')+
       (p.intro ? '<span class="pv-i">'+esc(p.intro)+'</span>' : '')+
+      /* ⚠️ 카드 전체가 `<a>` 라 여기에 또 `<a>` 를 넣을 수 없습니다
+         (링크 안의 링크). 누를 곳은 카드 한 장이고, 이 줄은 **누를 수
+         있다는 표시**입니다 — 차례는 사진 → 정보 → CTA (§22). */
+      '<span class="mk-go">업체 보기'+icon("arrow",16)+'</span>'+
     '</span>'+
   '</a>';
 };
@@ -196,4 +200,47 @@ window.ReadBand = function(o){
     '<div class="row-cta"><a class="btn btn-o" href="/content">'+
       '창업 · 폐업 정보 전부 보기'+icon("arrow",16)+'</a></div>'+
   '</div></section>';
+};
+
+/* ── 목록을 한 번에 다 그리지 않습니다 ───────────────────────────────
+   ⚠️⚠️ **등록이 0건이라 아무도 몰랐습니다.** `/providers/:cat` ·
+   `/stores` · `/assets` · `/franchise/:cat` 이 전부 목록을 **통째로**
+   그립니다. 매물이 1000건이 되는 날 카드 1000장이 한 번에 DOM 에
+   들어가고, 폰에서는 그대로 멈춥니다 — 사진도 1000장입니다
+   (`loading="lazy"` 가 받아 주는 것은 내려받기까지이고, 요소 1000개를
+   그리는 것은 그대로입니다).
+
+   24장씩 내고 "더 보기" 로 늘립니다.
+
+   ⚠️ 늘린 상태는 **주소(`?n=`)에 실어서** 뒤로 가기 · 새로고침 ·
+   링크 공유에 살아남습니다. 화면을 다시 그려도 그대로입니다.
+   ⚠️ canonical 은 `nowPath()` 라 질의문자가 빠집니다 — 같은 내용이
+   `?n=48` 로 또 나가서 구글이 둘 다 무시하는 일은 없습니다.
+   ⚠️ **숫자를 손으로 적지 마세요.** "n건 중 m건" 은 전부 센 값입니다. */
+window.AM_PAGE = 24;
+
+window.amShown = function(total){
+  var n = parseInt(nowQS("n"), 10);
+  if(!(n > 0)) n = AM_PAGE;
+  return Math.min(Math.max(n, AM_PAGE), total);
+};
+
+/* 지금 주소에서 `n` 만 갈아 끼운 주소 */
+function amPageHref(n){
+  var qs = (location.search || "").replace(/^\?/, "")
+    .split("&").filter(function(kv){ return kv && kv.indexOf("n=") !== 0; });
+  qs.push("n=" + n);
+  return nowPath() + "?" + qs.join("&");
+};
+
+window.MoreBtn = function(total){
+  var n = amShown(total);
+  if(n >= total) return "";
+  var rest = total - n;
+  var step = Math.min(AM_PAGE, rest);
+  /* ⚠️ `rel="nofollow"` — 크롤러가 `?n=` 변형을 따라다닐 까닭이 없습니다.
+     canonical 이 이미 막아 주지만 긁는 횟수까지 줄입니다. */
+  return '<p class="row-cta row-mid"><a class="btn btn-o" rel="nofollow" data-keep href="'+
+    esc(amPageHref(n + step))+'">'+step+'건 더 보기'+icon("arrow",16)+
+    '<em class="more-n">'+n+' / '+total+'</em></a></p>';
 };

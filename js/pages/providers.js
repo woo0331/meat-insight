@@ -72,7 +72,12 @@ function PageProviderCat(cat){
     '</div>'+
 
     (list.length
-      ? '<div class="pv-g">'+list.map(ProviderCard).join("")+'</div>'
+      /* ⚠️ 24장씩 — 1000곳이 등록되는 날 카드 1000장을 한 번에
+         그리지 않습니다 (`MoreBtn()` 한 곳에서 셉니다). */
+      ? '<div class="pv-g">'+list.slice(0, amShown(list.length)).map(ProviderCard).join("")+'</div>'+
+        /* ⚠️ 차례의 기준을 밝힙니다 (약관 제6조 제4항) */
+        '<p class="note">등록된 차례로 냅니다. 광고로 위에 올린 자리는 없습니다.</p>'+
+        MoreBtn(list.length)
       : Empty({
           icon:cat.icon,
           title:"조건에 맞는 업체가 아직 없습니다",

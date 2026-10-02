@@ -132,6 +132,39 @@ function frDesc(fr){
   return out + "창업비 · 가맹비 · 보증금 · 모집지역을 같은 기준으로 비교하실 수 있습니다.";
 }
 
+/* 매물 상세의 설명 — ⚠️ **올리신 사장님이 적은 값만** 씁니다. 평수 ·
+   보증금 · 월세 · 권리금을 우리가 확인하지 않으므로 설명에도 "사장님이
+   적으신 값" 이라는 꼬리를 답니다. 매출은 **설명에 넣지 않습니다** —
+   검색 결과는 우리 손을 떠나 한참 돌아다니고, 확인할 방법이 없는
+   숫자를 거기까지 내보내면 안 됩니다. */
+function stDesc(s){
+  var where = amRegionName(s.region, s.gu);
+  var out = s.title + " — " + [where, amIndustryName(s.industry)].filter(Boolean).join(" ");
+  var m = [];
+  if(s.pyeong  != null) m.push(s.pyeong + "평");
+  if(s.deposit != null) m.push("보증금 " + s.deposit + "만원");
+  if(s.rent    != null) m.push("월세 " + s.rent + "만원");
+  if(s.premium != null) m.push("권리금 " + s.premium + "만원");
+  if(m.length) out += " " + m.join(" · ") + ".";
+  if(s.withEquip) out += " 시설을 그대로 인수하실 수 있습니다.";
+  return out + " 올리신 사장님이 적으신 값이고 저희가 보증하는 값이 아닙니다. " +
+         "보시려는 날짜를 적으시면 그대로 전달합니다.";
+}
+function asDesc(a){
+  var where = amRegionName(a.region, a.gu);
+  var kind  = (typeof amEquipName === "function") ? amEquipName(a.sub) : "";
+  var out = a.title + " — " + [where, amIndustryName(a.industry), kind]
+            .filter(Boolean).join(" ") + ".";
+  var m = [];
+  if(a.brand) m.push(a.brand);
+  if(a.year)  m.push(a.year + "년식");
+  if(a.price != null) m.push(a.price + "만원" + (a.nego ? " (협의 가능)" : ""));
+  if(m.length) out += " " + m.join(" · ") + ".";
+  var d = (window.AM_DEAL_KINDS||[]).filter(function(x){ return x.key === a.deal; })[0];
+  if(d) out += " " + d.name + "로 거래하실 수 있습니다.";
+  return out + " 사업을 정리하면서 나온 것이고, 올리신 사장님이 적으신 값입니다.";
+}
+
 window.routeInfo = function(path){
   var r = { ok:true, title:"", desc:"", canon:null,
             noindex: NOINDEX.indexOf(path) >= 0, view:null };
@@ -241,6 +274,27 @@ window.routeInfo = function(path){
     r.title = pv.name; r.desc = pvDesc(pv);
     return r;
   }
+  /* 점포 상세 — /s/:id
+     ⚠️ 이 둘이 없어서 매물 카드가 **열리지 않았습니다.** 한 건을 찾아
+     오는 `amStore()` · `amAsset()` 은 처음부터 있었는데 쓰는 화면이
+     없었고, 사장님이 적어 주신 설명 · 사진 · 매출이 전부 죽은 칸이었습니다. */
+  var mst = /^\/s\/([a-zA-Z0-9-]+)$/.exec(path);
+  if(mst){
+    var st = (typeof amStore === "function") ? amStore(mst[1]) : null;
+    if(!st){ r.ok = false; return r; }
+    r.view = "storeOne"; r.store = st;
+    r.title = st.title; r.desc = stDesc(st);
+    return r;
+  }
+  /* 시설 · 집기 상세 — /a/:id */
+  var mas = /^\/a\/([a-zA-Z0-9-]+)$/.exec(path);
+  if(mas){
+    var as = (typeof amAsset === "function") ? amAsset(mas[1]) : null;
+    if(!as){ r.ok = false; return r; }
+    r.view = "assetOne"; r.asset = as;
+    r.title = as.title; r.desc = asDesc(as);
+    return r;
+  }
   /* 글 하나 — /content/:slug */
   var mct = /^\/content\/([a-z0-9-]+)$/.exec(path);
   if(mct){
@@ -277,7 +331,10 @@ document.addEventListener("click", function(ev){
   if(/^\/api\//.test(href)) return;
   ev.preventDefault();
   if(href === location.pathname + location.search) return;
-  go(href);
+  /* ⚠️ "더 보기"(`data-keep`)는 **스크롤을 지킵니다.** 목록을 늘리는
+     것인데 맨 위로 올라가면 방금 보던 자리를 잃고, 그러면 한 번 더
+     누르지 않습니다. */
+  go(href, { keepScroll: a.hasAttribute("data-keep") });
 });
 window.addEventListener("popstate", function(){ render(); });
 
@@ -366,6 +423,8 @@ function render(){
     case "franchise":       html = PageFranchise();                 break;
     case "franchiseCat":    html = PageFranchiseCat(r.fcat);        break;
     case "franchiseOne":    html = PageFranchiseOne(r.fr);          break;
+    case "storeOne":        html = PageStoreOne(r.store);         break;
+    case "assetOne":        html = PageAssetOne(r.asset);         break;
     case "stores":          html = PageStores();                    break;
     case "assets":          html = PageAssets();                    break;
     case "support":         html = PageSupport();                   break;

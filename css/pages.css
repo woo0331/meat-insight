@@ -759,7 +759,8 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 /* ════════ 매물 (§9 · §23~25) ═════════════════════════════════════ */
 .mk-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s5); }
 .mk{ display:grid; grid-template-rows:auto 1fr; border-radius:var(--r-xl);
-  overflow:hidden; background:var(--bg-2); }
+  overflow:hidden; background:var(--bg-2); transition:transform .15s, box-shadow .2s; }
+.mk:hover{ transform:translateY(-3px); box-shadow:var(--shadow-md); }
 .mk-ph{ display:block; aspect-ratio:4/3; overflow:hidden; background:var(--line-soft); }
 .mk-ph .ph{ width:100%; height:100%; object-fit:cover; display:block; }
 .mk-b{ display:grid; gap:5px; align-content:start; padding:var(--s5) var(--s6) var(--s6); }
@@ -769,6 +770,40 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mk-p{ font-size:var(--t-base); font-weight:700; color:var(--ink); }
 @media (max-width:1040px){ .mk-g{ grid-template-columns:1fr 1fr; } }
 @media (max-width:600px){ .mk-g{ grid-template-columns:1fr; } }
+
+/* 카드 맨 아래 "누를 수 있다" 줄 — 사진 → 정보 → CTA (§22).
+   ⚠️ 카드 전체가 `<a>` 라 여기에 또 `<a>` 를 넣지 않습니다. 누르는
+   것은 카드 한 장이므로 이 줄은 **40px 규칙에 걸리지 않습니다** —
+   `<span>` 이고 onclick 도 없습니다. */
+.mk-go{ display:inline-flex; align-items:center; gap:5px; margin-top:var(--s3);
+  font-size:var(--t-sm); font-weight:700; color:var(--blue); }
+.pv:hover .mk-go, .fr:hover .mk-go, .mk:hover .mk-go{ gap:9px; }
+
+/* ════════ 매물 상세 (/s/:id · /a/:id) ════════════════════════════
+   ⚠️ 값이 없는 칸은 `mkSpecs()` 가 **아예 안 넣습니다** — CSS 로
+   숨기지 않습니다 (빈 상자가 칸 하나를 차지합니다). */
+.mk-sp{ display:grid; grid-template-columns:repeat(2,1fr); gap:0;
+  list-style:none; margin:var(--s6) 0 var(--s8);
+  border-top:1px solid var(--line); }
+.mk-sp li{ display:flex; align-items:baseline; justify-content:space-between;
+  gap:var(--s4); padding:var(--s4) var(--s5);
+  border-bottom:1px solid var(--line); }
+.mk-sp-l{ font-size:var(--t-cap); color:var(--ink2); }
+.mk-sp-v{ font-size:var(--t-base); font-weight:700; color:var(--ink);
+  text-align:right; }
+/* ⚠️ 매출은 **확인할 방법이 없는 값**입니다. 30px 으로 두었더니
+   화면에서 제일 큰 숫자가 됐습니다 — 제일 못 믿을 숫자를 제일 크게
+   내면 그게 지어낸 신뢰입니다. 조건표의 값들과 같은 무게로 둡니다. */
+.mk-sales{ font-size:var(--t-xl); font-weight:800; color:var(--navy); }
+.mk-text{ font-size:var(--t-base); color:var(--ink2); line-height:1.85;
+  white-space:pre-line; }
+.mk-gal{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s3); }
+.mk-gal .ph{ width:100%; aspect-ratio:4/3; object-fit:cover; display:block;
+  border-radius:var(--r-in); background:var(--line-soft); }
+@media (max-width:700px){
+  .mk-sp{ grid-template-columns:1fr; }
+  .mk-gal{ grid-template-columns:1fr 1fr; }
+}
 
 /* ════════ 도움 카드 · 띠 CTA ═════════════════════════════════════ */
 .help-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s4); }
@@ -1460,3 +1495,9 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   .mh-s input{ height:46px; font-size:var(--t-md); }
   .mh-s .btn{ width:100%; min-height:48px; }
 }
+
+/* "더 보기" 안의 센 값 — ⚠️ `--ink3` 는 흰 바탕(`--surface`)에서 4.63
+   으로 AA(4.5)를 넘깁니다. `.btn-o` 바탕이 흰색이라 그 값이 그대로
+   적용됩니다. 더 흐리게 두지 마세요. */
+.more-n{ font-style:normal; font-size:var(--t-cap); font-weight:400;
+  color:var(--ink3); }

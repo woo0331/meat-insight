@@ -187,6 +187,8 @@ const PAGES = [
   };
   pick("p", "업체 상세", 2);
   pick("f", "브랜드 상세", 2);
+  pick("s", "점포 상세", 2);
+  pick("a", "시설 상세", 2);
 })();
 /* ⚠️ **360px 을 같이 봅니다.** 폰은 390px 만 있는 것이 아닙니다 —
    갤럭시 계열이 360px 이고, 새 헤더가 거기서만 370px 로 넘쳐
@@ -1952,6 +1954,123 @@ const AUDIT = `(() => {
         return "전달되는 칸에 " + x + " 가 있습니다";
     return true;`);
 
+  /* ══════════════════════════════════════════════════════════════
+     매물 — ⚠️⚠️ **`amStore()` 와 `amAsset()` 이 아무 데서도 안 불리고
+     있었습니다.** 한 건을 찾아 오는 함수가 처음부터 있었는데 쓰는
+     화면이 없었고, 카드는 `<div>` 라 **열리지 않았습니다.** 사장님이
+     적어 주신 설명 · 사진 · 매출 · 시설인수비 · 운영기간이 전부 죽은
+     칸이었습니다. 매물이 0건이라 아무도 못 봤습니다 — 첫 매물을
+     올리는 날 그대로 터졌을 자리입니다.
+     ⚠️ 여기도 **끼워 넣고** 봅니다. 저장소 데이터는 그대로 0건입니다. */
+  await f("매물 카드가 상세로 열린다", "/stores", `
+    window.AM_STORES.push({
+      id:"zz-store", kind:"transfer", industry:"cafe",
+      region:"gyeonggi", gu:"안양시", pyeong:18,
+      deposit:3000, rent:180, premium:2000, withEquip:true,
+      title:"검사용 매장", text:"검사 안에서만 삽니다.", at:"2026-10-02"
+    });
+    window.rerender(true);
+    await new Promise(r => setTimeout(r, 60));
+    /* ⚠️⚠️ **주소를 글자 그대로 적지 마세요.** prove-checks 의 escape
+       탐지기는 한 겹으로 먹힌 역슬래시+s 를 찾는데, 그 꼴과 이 주소가
+       구별이 안 됩니다. 탐지기를 느슨하게 하면 이 저장소에서 네 번 당한
+       사고가 다시 안 잡히므로 **검사 쪽에서 비켜** 갑니다.
+       ⚠️ 이 주석에 백틱을 쓰지 마세요 — 본문이 백틱 문자열이라 거기서
+       끝납니다 (방금 그렇게 한 번 깨뜨렸습니다). */
+    const ROUTE = "/" + "s" + "/";
+    const a = document.querySelector('.mk-g a[href="' + ROUTE + 'zz-store"]');
+    const ok = !!a;
+    const tap = a ? a.getBoundingClientRect().height : 0;
+    window.AM_STORES = window.AM_STORES.filter(function(x){ return x.id !== "zz-store"; });
+    window.rerender(true);
+    if(!ok) return "매물 카드가 상세로 가는 링크가 아닙니다 — 열 수가 없습니다";
+    if(tap < 40) return "카드 높이가 " + Math.round(tap) + "px 입니다";
+    return true;`);
+
+  await f("점포 상세가 적힌 값만 내고 매출은 누가 적었는지 밝힌다", "/stores", `
+    window.AM_STORES.push({
+      id:"zz-store2", kind:"transfer", industry:"cafe",
+      region:"gyeonggi", gu:"안양시", pyeong:18,
+      deposit:3000, rent:180, sales:1200, since:2019,
+      title:"검사용 매장2", text:"검사 안에서만 삽니다.", at:"2026-10-02"
+    });
+    const html = PageStoreOne(window.amStore("zz-store2"));
+    window.AM_STORES = window.AM_STORES.filter(function(x){ return x.id !== "zz-store2"; });
+    const el = document.createElement("div"); el.innerHTML = html;
+    const t = el.textContent;
+    /* 적은 값은 나와야 합니다 */
+    if(t.indexOf("18평") < 0)   return "면적이 안 나옵니다";
+    if(t.indexOf("3,000") < 0)  return "보증금이 안 나옵니다";
+    if(t.indexOf("2019") < 0)   return "운영 기간이 안 나옵니다";
+    if(t.indexOf("검사 안에서만") < 0) return "사장님 설명이 안 나옵니다";
+    /* ⚠️⚠️ 안 적은 값은 **빈 칸으로도 안 나와야** 합니다 (절대 규칙 2).
+       ⚠️ 화면 글 전체에서 찾으면 안 됩니다 — 아래 "읽을 것" 구간에
+       "권리금 — 법이 보호하는 것과 아닌 것" 글이 붙어서 **검사가 엉뚱하게
+       실패합니다.** 조건표의 **딱지만** 봅니다. */
+    const labels = [].slice.call(el.querySelectorAll(".mk-sp-l"))
+      .map(function(e){ return e.textContent.trim(); });
+    if(!labels.length) return "조건표가 아예 없습니다";
+    if(labels.indexOf("권리금") >= 0)     return "안 적은 권리금 칸이 나옵니다";
+    if(labels.indexOf("시설 인수비") >= 0) return "안 적은 시설 인수비 칸이 나옵니다";
+    const vals = [].slice.call(el.querySelectorAll(".mk-sp-v"))
+      .map(function(e){ return e.textContent.trim(); }).join(" | ");
+    if(/undefined|null|NaN|미기재/.test(vals)) return "조건표에 빈 값이 찍힙니다 — " + vals;
+    /* ⚠️⚠️ 매출은 **누가 적은 값인지** 반드시 같이 나옵니다 */
+    if(t.indexOf("사장님이 적으신 값") < 0)
+      return "매출을 우리가 확인한 값처럼 냅니다 — 그 숫자로 권리금을 주게 됩니다";
+    /* ⚠️ 중개자 고지 — 전자상거래법 제20조 제1항 */
+    if(t.indexOf("거래 당사자가 아닙니다") < 0) return "중개자 고지가 없습니다";
+    /* ⚠️ 연락처를 바로 주지 않습니다 */
+    if(!/연락처를 바로 드리지 않습니다/.test(t)) return "연락처를 바로 주는 것처럼 읽힙니다";
+    return true;`);
+
+  await f("시설 상세가 장비 종류를 영문 key 로 내지 않는다", "/assets", `
+    /* ⚠️ 포트폴리오가 \`gyeonggi\` 를 그대로 찍었던 것과 같은 사고입니다 */
+    window.AM_ASSETS.push({
+      id:"zz-asset", cat:"asset", sub:"espresso", deal:"single",
+      industry:"cafe", region:"gyeonggi", gu:"안양시",
+      title:"검사용 장비", brand:"검사", year:2021, price:300, nego:true,
+      text:"검사 안에서만 삽니다.", at:"2026-10-02"
+    });
+    const html = PageAssetOne(window.amAsset("zz-asset"));
+    const dsc  = window.routeInfo("/a/zz-asset").desc;
+    window.AM_ASSETS = window.AM_ASSETS.filter(function(x){ return x.id !== "zz-asset"; });
+    const el = document.createElement("div"); el.innerHTML = html;
+    const t = el.textContent;
+    if(/espresso/.test(t))   return "화면에 영문 key(espresso)가 나옵니다";
+    if(/gyeonggi/.test(t))   return "화면에 영문 key(gyeonggi)가 나옵니다";
+    if(t.indexOf("커피머신") < 0) return "장비 종류 이름이 안 나옵니다";
+    if(t.indexOf("경기 안양시") < 0) return "시·군·구가 안 나옵니다";
+    if(/espresso|gyeonggi/.test(dsc)) return "검색 설명에 영문 key 가 나갑니다";
+    if(dsc.length < 30) return "검색 설명이 " + dsc.length + "자입니다 (30자 미만)";
+    return true;`);
+
+  await f("목록이 길어도 한 번에 다 그리지 않는다", "/stores", `
+    /* ⚠️⚠️ **등록이 0건이라 아무도 몰랐습니다.** 1000건이 되는 날
+       카드 1000장이 한 번에 DOM 에 들어가고 폰에서는 그대로 멈춥니다. */
+    const N = window.AM_PAGE;
+    if(!(N > 0)) return "한 번에 낼 개수가 정해져 있지 않습니다";
+    for(let i = 0; i < N + 5; i++) window.AM_STORES.push({
+      id:"zz-m" + i, kind:"transfer", industry:"cafe",
+      region:"gyeonggi", gu:"안양시", pyeong:10,
+      title:"검사용 매장 " + i, at:"2026-10-02"
+    });
+    window.rerender(true);
+    await new Promise(r => setTimeout(r, 80));
+    const drawn = document.querySelectorAll('.mk-g > a').length;
+    const more  = document.querySelector('.row-cta a[data-keep]');
+    const href  = more ? more.getAttribute("href") : "";
+    const keep  = more ? more.hasAttribute("data-keep") : false;
+    window.AM_STORES = window.AM_STORES.filter(function(x){ return !/^zz-m/.test(x.id); });
+    window.rerender(true);
+    if(drawn > N) return (N + 5) + "건을 " + drawn + "장 통째로 그렸습니다";
+    if(drawn !== N) return "한 번에 " + N + "장이어야 하는데 " + drawn + "장입니다";
+    if(!more) return "나머지를 볼 '더 보기' 가 없습니다 — " + (5) + "건이 묻힙니다";
+    if(!/[?&]n=/.test(href)) return "'더 보기' 가 주소에 상태를 안 싣습니다";
+    /* ⚠️ 스크롤을 지켜야 합니다 — 맨 위로 올라가면 방금 보던 자리를 잃습니다 */
+    if(!keep) return "'더 보기' 를 누르면 맨 위로 올라갑니다";
+    return true;`);
+
   /* ⚠️ 어느 묶음이 몇 개인지는 **적지 않습니다.** 두 번 어긋났습니다 —
      검사를 더하면서 숫자를 같이 안 고치니 "흐름 52개" 라고 적힌 채
      실제로는 56개를 돌고 있었습니다. 총 개수는 위에서 세고, 여기는
@@ -1959,7 +2078,7 @@ const AUDIT = `(() => {
   console.log("\n── 흐름 " + flowN + "개 (지어낸 것 없음 · 업종 개인화 · 조건 전달 · " +
               "접수 · MY · 검색 · 문서 · 히어로 · 규모감 · FAQ · 진행 · " +
               "정보 글 · 글 잇기 · 창업 과정 · 폐업 선택 · 골드 · 검색 진입 · " +
-              "MY 도구 · 랜딩 · 업체 입점)");
+              "MY 도구 · 메인 · 업체 입점 · 매물)");
   if (flowBad.length) { fail++; console.log("  ❌ " + flowBad.length + "건: " + flowBad.join(" / ")); }
   else console.log("  ✅ 전부 맞음");
 

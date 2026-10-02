@@ -76,6 +76,24 @@ const CASES = [
     };`],
   ["입점 배지와 업체찾기가 같은 규칙으로 센다",
    `window.amProvidersInCat = function(){ return 99; };`],
+  /* 매물 카드가 `<div>` 로 돌아가면(옛 모습) 열 수가 없어야 걸립니다. */
+  ["매물 카드가 상세로 열린다",
+   `window.StoreCard = function(s){
+      return "<div class=mk><b>" + s.title + "</b></div>";   /* 안 열리던 그때 */
+    };`],
+  /* 매출을 "누가 적은 값" 없이 숫자만 내면 걸려야 합니다. */
+  ["점포 상세가 적힌 값만 내고 매출은 누가 적었는지 밝힌다",
+   `const real = window.PageStoreOne;
+    window.PageStoreOne = function(s){
+      return real(s).replace(/사장님이 적으신 값[^<]*/g, "");
+    };`],
+  /* 장비 key 를 이름으로 안 바꾸면 화면에 `espresso` 가 나와야 걸립니다. */
+  ["시설 상세가 장비 종류를 영문 key 로 내지 않는다",
+   `window.amEquipName = function(k){ return k; };      /* key 를 그대로 찍던 그때 */`],
+  /* 목록을 통째로 그리면(옛 모습) 걸려야 합니다. */
+  ["목록이 길어도 한 번에 다 그리지 않는다",
+   `window.amShown = function(total){ return total; };  /* 다 그리던 그때 */
+    window.MoreBtn  = function(){ return ""; };`],
   /* 하지 않는 저장을 한다고 적어 두면 걸려야 합니다 (절대 규칙 5). */
   ["견적: 요청을 저장한다는 말과 실제가 같다",
    `document.querySelector("#q-f .note-mid").textContent =

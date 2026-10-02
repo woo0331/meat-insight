@@ -195,3 +195,25 @@ window.amIndustry = function(key){
 window.amIndustryName = function(key){
   var i = amIndustry(key); return i ? i.name : "";
 };
+
+/* 장비 key → 이름. ⚠️ 매물 화면이 `a.sub` 를 그대로 찍으면 화면에
+   **`espresso` 같은 영문 key** 가 나옵니다 — 포트폴리오에서 `gyeonggi`
+   가 그대로 나왔던 것과 똑같은 사고입니다. 자산이 0건이라 아직
+   아무도 못 봤습니다. 장비는 업종마다 따로 적혀 있어서 전부 훑습니다
+   (`catalog.js` 의 `amSubName()` 과 같은 짜임새입니다).
+
+   ⚠️⚠️ **쓰는 쪽에 `typeof amEquipName === "function"` 같은 방어가
+   걸려 있습니다.** 그래서 이 함수가 없어지면 에러 없이 **딱지만 조용히
+   사라집니다** — 실제로 `git checkout -- js/data/` 한 번에 날아갔고
+   빌드도 통과했습니다. 지우지 마세요. */
+window.amEquipName = function(key){
+  if(!key) return "";
+  var hit = "";
+  (window.AM_INDUSTRIES||[]).some(function(i){
+    return (i.equip||[]).some(function(e){
+      if(e.key === key){ hit = e.name; return true; }
+      return false;
+    });
+  });
+  return hit;
+};

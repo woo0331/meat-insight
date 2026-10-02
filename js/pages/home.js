@@ -328,8 +328,16 @@ function MainBand(o){
 function MainProviders(){
   var n = (window.AM_PROVIDERS||[]).length;
   var body = n
-    ? '<ul class="pv-g">'+(window.AM_PROVIDERS||[]).slice(0,6).map(function(p){
-        return ProviderCard(p); }).join("")+'</ul>'+
+    ? '<div class="pv-g">'+(window.AM_PROVIDERS||[]).slice(0,6).map(function(p){
+        return ProviderCard(p); }).join("")+'</div>'+
+        /* ⚠️⚠️ **차례를 밝힙니다** — 약관 제6조 제4항이 "광고 순서의
+           기준을 밝힌다" 고 적어 두었고, `join.js` 의 약속도 "추천 ·
+           상단노출 같은 광고 상품이 생기면 광고라고 표시한다" 입니다.
+           지금은 그런 상품이 없어서 등록된 차례 그대로입니다 — 업체가
+           늘어난 뒤에도 이 줄과 실제가 같아야 합니다.
+           ⚠️ `featured` · `추천` 칸을 만들지 마세요. 만드는 순간 이
+           줄이 거짓이 되고, 표시 없는 상단노출은 표시광고법 문제입니다. */
+        '<p class="note note-mid">등록된 차례로 냅니다. 광고로 위에 올린 자리는 없습니다.</p>'+
       '<p class="row-cta row-mid"><a class="btn btn-nv" href="/providers">'+
         '업체 전체 보기'+icon("arrow",18)+'</a></p>'
     : Empty({ icon:"users", title:"아직 등록된 업체가 없습니다",
@@ -348,8 +356,8 @@ function MainProviders(){
 function MainFranchise(){
   var n = (window.AM_FRANCHISES||[]).length;
   var body = n
-    ? '<ul class="fr-g">'+(window.AM_FRANCHISES||[]).slice(0,6).map(function(f){
-        return FranchiseCard(f); }).join("")+'</ul>'+
+    ? '<div class="fr-g">'+(window.AM_FRANCHISES||[]).slice(0,6).map(function(f){
+        return FranchiseCard(f); }).join("")+'</div>'+
       '<p class="row-cta row-mid"><a class="btn btn-nv" href="/franchise">'+
         '브랜드 전체 보기'+icon("arrow",18)+'</a></p>'
     : Empty({ icon:"store", title:"아직 등록된 브랜드가 없습니다",
@@ -368,7 +376,7 @@ function MainFranchise(){
 function MainStores(){
   var L = (window.AM_STORES||[]);
   var body = L.length
-    ? '<ul class="mk-g">'+L.slice(0,6).map(function(s){ return StoreCard(s); }).join("")+'</ul>'+
+    ? '<div class="mk-g">'+L.slice(0,6).map(function(s){ return StoreCard(s); }).join("")+'</div>'+
       '<p class="row-cta row-mid"><a class="btn btn-nv" href="/stores">'+
         '매장 전체 보기'+icon("arrow",18)+'</a></p>'
     : Empty({ icon:"pin", title:"아직 올라온 매장이 없습니다",

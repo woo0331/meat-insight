@@ -443,10 +443,10 @@ function JoinForm(ready){
         '<a href="/providers">업체찾기</a>와 <a href="/quote">견적 요청</a>은 '+
         '그대로 쓰실 수 있습니다.</p></div>')+
     '<form id="join-f" onsubmit="return joinSend(event)">'+
-      Field("jn-name","업체명","",true)+
-      Field("jn-ceo","담당자 성함","",true)+
-      Field("jn-tel","연락처","010-0000-0000",true,"tel")+
-      Field("jn-mail","이메일","",false,"email")+
+      Field("jn-name","업체명","",true,"text","organization")+
+      Field("jn-ceo","담당자 성함","",true,"text","name")+
+      Field("jn-tel","연락처","010-0000-0000",true,"tel","tel")+
+      Field("jn-mail","이메일","",false,"email","email")+
       '<div class="f-r"><label for="jn-svc">하시는 일 <b>*</b></label>'+
         '<input id="jn-svc" required placeholder="예: 카페 인테리어, 주방 철거"></div>'+
       '<div class="f-r"><label for="jn-reg">서비스 가능 지역 <b>*</b></label>'+
@@ -464,10 +464,16 @@ function JoinForm(ready){
   '</div></section>';
 }
 
-/* 폼 한 줄 */
-window.Field = function(id, label, ph, req, type){
+/* 폼 한 줄
+   ⚠️ **`autocomplete` 을 꼭 주세요.** 손님이 40~60대 사장님이고 거의 폰
+   입니다 — 성함 · 연락처를 매번 손으로 치게 하면 거기서 그만두십니다.
+   표준 값을 주면 브라우저가 저장해 둔 것을 한 번에 채워 줍니다.
+   ⚠️ 표준에 없는 말을 적으면 **아무 효과가 없습니다** (그냥 무시됩니다) —
+   name · tel · email · organization · address-level2 를 씁니다. */
+window.Field = function(id, label, ph, req, type, auto){
   return '<div class="f-r"><label for="'+esc(id)+'">'+esc(label)+(req?' <b>*</b>':'')+'</label>'+
     '<input id="'+esc(id)+'" type="'+esc(type||"text")+'"'+(req?" required":"")+
+    (auto?' autocomplete="'+esc(auto)+'"':'')+
     (ph?' placeholder="'+esc(ph)+'"':'')+'></div>';
 };
 

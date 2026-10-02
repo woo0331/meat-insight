@@ -63,7 +63,7 @@ function PageQuote(){
       '</div>'+
       '<div class="f-2">'+
         '<div class="f-r"><label for="q-gu">시 · 군 · 구</label>'+
-          '<input id="q-gu" placeholder="예: 안양시"></div>'+
+          '<input id="q-gu" autocomplete="address-level2" placeholder="예: 안양시"></div>'+
         '<div class="f-r"><label for="q-py">평수</label>'+
           '<input id="q-py" inputmode="numeric" placeholder="예: 30"></div>'+
       '</div>'+
@@ -83,10 +83,13 @@ function PageQuote(){
         '<input id="q-img" placeholder="공유 링크가 있으면 붙여 주세요 (선택)"></div>'+
 
       '<div class="f-2">'+
+        /* ⚠️ `autocomplete` — 폰으로 적는 분들이라 한 번에 채워지는 것이
+           크게 다릅니다. 표준 값이라야 효과가 있습니다. */
         '<div class="f-r"><label for="q-name">성함 <b>*</b></label>'+
-          '<input id="q-name" required></div>'+
+          '<input id="q-name" required autocomplete="name"></div>'+
         '<div class="f-r"><label for="q-tel">연락처 <b>*</b></label>'+
-          '<input id="q-tel" type="tel" required placeholder="010-0000-0000"></div>'+
+          '<input id="q-tel" type="tel" required autocomplete="tel" '+
+            'placeholder="010-0000-0000"></div>'+
       '</div>'+
 
       AgreeBox("q-ag","성함 · 연락처 · 업종 · 지역 · 평수 · 예산 · 일정 · 적어 주신 내용",

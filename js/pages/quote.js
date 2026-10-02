@@ -240,10 +240,27 @@ window.amSend = function(failId, body, again){
   var btn = document.querySelector("#"+failId+" ~ button") ||
             document.querySelector("form button[type=submit]");
   if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
-  fetch("/api/quote", {
-    method:"POST", headers:{ "content-type":"application/json" },
-    body: JSON.stringify(body)
-  }).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+
+  /* ⚠️⚠️ **시간 제한이 없으면 영원히 "보내는 중…" 입니다.** 지하 상가나
+     신호가 약한 곳에서 요청이 멈추면 `fetch` 는 돌아오지 않고, 단추는
+     비활성인 채로 남고, 애써 만들어 둔 실패 처리(적은 글 보존 · 복사
+     단추 · 다시 시도)가 **영영 안 나옵니다.** 길게 적어 주신 사장님이
+     아무것도 못 하고 막다른 길에 섭니다.
+
+     ⚠️ 20초입니다. 더 짧으면 Vercel 함수가 처음 깨어나는 동안(콜드
+     스타트) 멀쩡한 요청을 끊고, 더 길면 손님이 먼저 포기하십니다.
+     ⚠️ 끊어도 **서버에는 이미 닿았을 수 있습니다** — 그래서 실패 글이
+     "접수되지 않았습니다" 가 아니라 "지금은 접수되지 않았습니다" 이고,
+     다시 보내시면 운영자에게 두 번 올 뿐 잃는 것은 없습니다. */
+  var ctl = (typeof AbortController === "function") ? new AbortController() : null;
+  var late = setTimeout(function(){ if(ctl) ctl.abort(); }, 20000);
+  var opt = { method:"POST", headers:{ "content-type":"application/json" },
+              body: JSON.stringify(body) };
+  if(ctl) opt.signal = ctl.signal;
+
+  fetch("/api/quote", opt)
+    .then(function(r){ clearTimeout(late);
+      return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
     .then(function(x){
       if(!x.ok) throw new Error((x.j && x.j.error) || "보내지 못했습니다");
       var box = $(failId);
@@ -253,7 +270,15 @@ window.amSend = function(failId, body, again){
       var f = box && box.closest("form"); if(f) f.reset();
       if(btn){ btn.disabled = false; btn.textContent = "다시 보내기"; }
     })
-    .catch(function(e){ sendFail(failId, again, body, e.message); });
+    .catch(function(e){
+      clearTimeout(late);
+      /* 끊긴 것인지 서버가 거절한 것인지를 갈라서 말합니다 — 손님이
+         무엇을 하셔야 하는지가 다릅니다. */
+      var why = (e && (e.name === "AbortError" || /aborted/i.test(e.message || "")))
+        ? "연결이 오래 걸려 끊었습니다. 신호가 잡히는 곳에서 다시 눌러 주세요."
+        : (e && e.message);
+      sendFail(failId, again, body, why);
+    });
   return false;
 };
 

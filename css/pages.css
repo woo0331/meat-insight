@@ -270,8 +270,14 @@
    여기 적은 것이 조용히 안 먹었습니다. 한 곳으로 합쳤습니다. */
 .join-cat > b{ display:flex; align-items:baseline; gap:var(--s3); flex-wrap:wrap;
   font-size:var(--t-base); margin-bottom:var(--s3); }
+/* ⚠️⚠️ 글자색은 `--start-dark` 가 아니라 **`--start-deep`** 입니다.
+   옅은 초록 위에서 `--start-dark` 는 대비 **4.19** 로 13px 굵은 글씨가
+   AA(4.5)에 못 미칩니다 (`--start-deep` 은 5.98). 업체가 0곳일 때는
+   `.join-n0`(회색)로 그려져서 **이 배지가 한 번도 안 걸렸습니다** —
+   등록이 시작되는 순간 전 분야에 깔리는 글자입니다.
+   ⚠️ 바로 위 `.jn-why-ic` 는 **아이콘**이라 3.0 이면 되고 그대로 둡니다. */
 .join-n{ font-style:normal; font-size:var(--t-cap); font-weight:700;
-  color:var(--start-dark); background:var(--start-soft);
+  color:var(--start-deep); background:var(--start-soft);
   border-radius:var(--r-pill); padding:3px 10px; }
 .join-n0{ color:var(--ink3); background:var(--bg-2); }
 

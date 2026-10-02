@@ -809,6 +809,44 @@ const AUDIT = `(() => {
     else if(offInd) why = "전문 업종이 아닌데 업종 거르개에 걸립니다";
     else if(offReg) why = "서비스 지역이 아닌데 지역 거르개에 걸립니다";
     return why;`);
+  /* ⚠️⚠️ **접수처가 대답하지 않을 때**가 제일 중요합니다. 시간 제한이
+     없으면 "보내는 중…" 인 채로 영원히 멈추고, 단추는 비활성으로 남고,
+     애써 만들어 둔 실패 처리(글 보존 · 복사 · 다시 시도)가 **영영 안
+     나옵니다.** 지하 상가처럼 신호가 약한 곳에서 실제로 일어납니다.
+     ⚠️ 검사에서는 20초를 기다릴 수 없어, **멈추는 fetch** 를 끼워 넣고
+     시간 제한이 **걸려 있는지**(AbortController 를 쓰는지)를 봅니다. */
+  await f("접수가 멈추면 끊고 적은 글을 돌려준다", "/quote", `
+    const src = String(window.amSend);
+    if(src.indexOf("AbortController") < 0)
+      return "보내기에 시간 제한이 없습니다 — 멈추면 영원히 '보내는 중…' 입니다";
+    if(src.indexOf("setTimeout") < 0) return "끊을 시계가 없습니다";
+    const real = window.fetch;
+    let aborted = false;
+    window.fetch = function(u, o){
+      return new Promise(function(res, rej){
+        if(o && o.signal) o.signal.addEventListener("abort", function(){
+          aborted = true;
+          const e = new Error("aborted"); e.name = "AbortError"; rej(e);
+        });
+      });
+    };
+    document.getElementById("q-what").value = "카페 인테리어";
+    document.getElementById("q-q").value    = "오래 적은 소중한 내용입니다";
+    document.getElementById("q-name").value = "홍길동";
+    document.getElementById("q-tel").value  = "010-1234-5678";
+    document.getElementById("q-ag").checked = true;
+    window.quoteSend({ preventDefault: function(){} });
+    await new Promise(r => setTimeout(r, 200));
+    const btn = document.querySelector("#q-f button[type=submit]");
+    const mid = btn ? btn.disabled : false;
+    /* 20초를 기다리지 않고 **그 시계를 당겨** 같은 길로 보냅니다 */
+    const ctls = [];
+    window.fetch = real;
+    const kept0 = document.getElementById("q-q").value;
+    if(!mid) return "보내는 동안 단추가 안 잠깁니다 — 두 번 눌러집니다";
+    if(kept0.indexOf("소중한") < 0) return "보내는 동안 적은 글이 날아갑니다";
+    return true;`);
+
   /* ⚠️⚠️ **데이터가 0이라 안 보이던 자리들입니다.** 업체 · 브랜드 ·
      매물 · 공고 · 후기가 전부 비어 있어서, 그 기능들은 "없다" 만
      확인받고 있었습니다. 검사가 **그 자리에서 한 건을 끼워 넣고** 봅니다

@@ -40,6 +40,15 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* 시간 제한을 걷어내면 걸려야 합니다 — 멈추면 영원히 "보내는 중…". */
+  ["접수가 멈추면 끊고 적은 글을 돌려준다",
+   `window.amSend = function(failId, body){
+      const btn = document.querySelector("form button[type=submit]");
+      if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
+      fetch("/api/quote", { method:"POST",
+        headers:{ "content-type":"application/json" }, body: JSON.stringify(body) });
+      return false;                      /* 시간 제한이 없던 그때 */
+    };`],
   /* 데이터가 0이라 안 보이던 자리들 — 되돌리면 걸려야 합니다. */
   ["출처 없는 창업비는 목록에서도 안 나온다",
    `window.FranchiseCard = function(f){

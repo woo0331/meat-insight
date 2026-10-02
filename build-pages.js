@@ -675,12 +675,26 @@ function noscriptFor(W, r, route){
         ul(regs.concat(gus));
       }
       if(inds.length){ h2("전문 업종"); ul(inds); }
-      const st = W.amProviderStats ? W.amProviderStats(pv) : null;
-      /* ⚠️ 후기가 없으면 **그 줄을 아예 안 냅니다** — "평점 0.0" 은 평점이
-         아니고, 화면에 없는 것을 크롤러에게만 주면 안 됩니다. */
-      if(st && st.rating != null)
-        p("이 업체에 올라온 후기 " + st.reviews + "건의 평균 만족도는 "
-          + st.rating + "점입니다. 플랫폼을 통해 상담 · 계약하신 분이 쓰신 것만 올립니다.");
+      /* ⚠️⚠️ **평균을 말하지 않고 후기 그 자체를 냅니다.** 처음에 "평균
+         만족도 4.5점" 이라고 적었다가 전수 점검에 걸렸습니다 — 계산된
+         값이긴 하지만 "만족도" 는 지어낸 신뢰의 전형적인 말이고,
+         CLAUDE.md 도 "만족도를 붙이지 마세요" 라고 적어 두었습니다.
+         **검사가 맞았습니다.**
+
+         그리고 검색에 쓸모 있는 것도 평균이 아니라 **사장님이 쓰신 글**
+         입니다. 이름은 화면과 똑같이 `amMaskName()` 으로 가립니다. */
+      const rv = (pv.reviews||[]).filter(function(x){ return x.text; });
+      if(rv.length){
+        h2("후기");
+        ul(rv.slice(0, 5).map(function(x){
+          const who = x.by && W.amMaskName ? W.amMaskName(x.by) + " 사장님" : "사장님";
+          const what = [x.industry && W.amIndustryName ? W.amIndustryName(x.industry) : "",
+                        x.sub && W.amSubName ? W.amSubName(x.sub) : ""].filter(Boolean).join(" · ");
+          return who + (what ? " · " + what : "") + " — " + x.text;
+        }));
+        p("플랫폼을 통해 상담 · 계약하신 분이 쓰신 것만 올립니다. "
+          + "저희가 대신 적지 않습니다.");
+      }
       const bd = W.amProviderBadges ? W.amProviderBadges(pv) : [];
       if(bd.length){ h2("확인한 것"); ul(bd); }
       if(pv.since) p(pv.since + "년부터 일하고 있습니다.");

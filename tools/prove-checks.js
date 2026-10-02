@@ -76,6 +76,18 @@ const CASES = [
     };`],
   ["입점 배지와 업체찾기가 같은 규칙으로 센다",
    `window.amProvidersInCat = function(){ return 99; };`],
+  /* 조사를 손으로 적던 그때 — ⚠️ `koWith` 를 바꿔치기해서는 안 됩니다.
+     그러면 **다시 그리지 않아** 화면 글자가 그대로라 엉뚱하게 통과/실패
+     합니다 (처음에 그렇게 짰다가 "인수인계는 가 화면에 있습니다" 라는
+     앞뒤 안 맞는 말로 걸렸습니다). 실제 사고는 **화면에 찍힌 글자**가
+     틀린 것이므로, 글자를 그때처럼 바꿔 놓습니다. */
+  ["브랜드 이름 뒤 조사를 손으로 적지 않는다",
+   `const nm = (window.AM_BRAND || {}).name || "";
+    const right = window.koWith(nm, "은는").slice(nm.length);
+    const wrong = right === "은" ? "는" : "은";
+    document.querySelectorAll(".ft-role, .note-box").forEach(function(e){
+      e.textContent = e.textContent.split(nm + right).join(nm + wrong);
+    });`],
   /* 매물 카드가 `<div>` 로 돌아가면(옛 모습) 열 수가 없어야 걸립니다. */
   ["매물 카드가 상세로 열린다",
    `window.StoreCard = function(s){

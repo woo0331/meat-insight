@@ -518,7 +518,9 @@ function adInvite(){
   var B = window.WOW_BIZ || {};
 
   /* 무엇을 하는 곳인지 — 한 문장 */
-  var what = brand + "는 창업 · 폐업을 준비하는 사장님이 필요한 업체를 " +
+  /* ⚠️ 이름 뒤 조사는 `koWith()` 가 고릅니다 — 손으로 적어 두면 이름을
+     바꿀 때 "인수인계은" 같은 것이 업체에게 그대로 나갑니다. */
+  var what = koWith(brand, "은는") + " 창업 · 폐업을 준비하는 사장님이 필요한 업체를 " +
     "찾고 비교하는 곳입니다.";
   var who = (reg ? reg + " " : "") + (catName ? catName + " " : "") + "업체";
 

@@ -1,4 +1,4 @@
-# ABOUTMEAT
+# 인수인계
 
 고기 사업자의 문제 해결 플랫폼. 고깃집·정육점 사장님이 장사하다 막히면
 물어보는 곳입니다.
@@ -37,7 +37,7 @@ node tools/make-img.js # 그림 다시 그리기
 | `/search` | 검색 (글·서비스·화면을 한 번에) | 됨 |
 | `/my` | MY BUSINESS (이 브라우저에 쌓인 것) | 됨 |
 | `/partner` · `/partner/apply` | 파트너 안내 · 등록 | 됨 |
-| `/about` | ABOUTMEAT 소개 | 됨 |
+| `/about` | 인수인계 소개 | 됨 |
 | `/terms` · `/privacy` | 약관 · 방침 (중개·매칭 기준) | 됨 · **초안** |
 | `/login` · `/signup` | 로그인 · 가입 | 준비 중 (백엔드) |
 

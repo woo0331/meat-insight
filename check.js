@@ -2071,6 +2071,39 @@ const AUDIT = `(() => {
     if(!keep) return "'더 보기' 를 누르면 맨 위로 올라갑니다";
     return true;`);
 
+  /* ⚠️⚠️ **브랜드 이름 뒤의 조사를 손으로 적으면 안 됩니다.**
+     "ABOUTMEAT은 통신판매중개자이며" 로 박아 두었다가 이름이 "인수인계"
+     가 되자 **"인수인계은"** 이 됐습니다 — 하필 전자상거래법 제20조
+     제1항이 **고지하라고 정한 그 문장**이고, 푸터라서 **모든 화면**에
+     나옵니다. `korean.js` 의 `koWith()` 가 받침을 보고 고릅니다.
+     ⚠️ 이름이 또 바뀔 자리라(이 저장소에서 세 번째입니다) 검사가
+     **이름을 바꿔 끼워 보고** 둘 다 맞는지 봅니다. */
+  await f("브랜드 이름 뒤 조사를 손으로 적지 않는다", "/about", `
+    const t = document.body.textContent;
+    const nm = (window.AM_BRAND||{}).name || "";
+    if(!nm) return "브랜드 이름이 비었습니다";
+    /* 지금 이름으로 틀린 조사가 찍혀 있지 않은지 */
+    const right = window.koWith(nm, "은는").slice(nm.length);
+    const wrong = right === "은" ? "는" : "은";
+    if(t.indexOf(nm + wrong) >= 0) return "'" + nm + wrong + "' 가 화면에 있습니다";
+    /* 중개자 고지가 실제로 있어야 합니다 (전자상거래법 제20조 제1항) */
+    if(t.indexOf(nm + right + " 통신판매중개자") < 0)
+      return "중개자 고지에 이름과 조사가 안 붙습니다";
+    /* ⚠️ **받침 있는 이름으로 바꿔 끼워 봅니다** — 손으로 적어 둔
+       자리가 있으면 여기서 드러납니다. */
+    const keep = window.AM_BRAND.name;
+    window.AM_BRAND.name = "창업마당";          /* 받침 있음 → '은' 이라야 */
+    window.rerender(true);
+    await new Promise(r => setTimeout(r, 60));
+    const t2 = document.body.textContent;
+    window.AM_BRAND.name = keep;
+    window.rerender(true);
+    if(t2.indexOf("창업마당는") >= 0)
+      return "받침 있는 이름으로 바꾸니 '창업마당는' 이 나옵니다 — 조사를 손으로 적은 자리가 있습니다";
+    if(t2.indexOf("창업마당은 통신판매중개자") < 0)
+      return "이름을 바꾸니 중개자 고지에 조사가 안 붙습니다";
+    return true;`);
+
   /* ⚠️ 어느 묶음이 몇 개인지는 **적지 않습니다.** 두 번 어긋났습니다 —
      검사를 더하면서 숫자를 같이 안 고치니 "흐름 52개" 라고 적힌 채
      실제로는 56개를 돌고 있었습니다. 총 개수는 위에서 세고, 여기는

@@ -54,7 +54,7 @@ function page(title, body, status) {
     'p{color:rgba(255,255,255,.78);font-size:14px;margin:0}' +
     'code{background:rgba(255,255,255,.14);padding:2px 6px;border-radius:4px}' +
     'a{color:#fff;font-size:14px;display:inline-block;margin-top:20px}</style>' +
-    '</head><body><div><b>ABOUTMEAT</b>' + body +
+    '</head><body><div><b>인수인계</b>' + body +
     '<a href="/">← 사이트로 돌아가기</a></div></body></html>',
     { status: status, headers: { "content-type": "text/html; charset=utf-8" } }
   );
@@ -92,7 +92,10 @@ export default function middleware(request) {
          ⚠️ realm 에 한글을 쓰지 마세요. HTTP 헤더는 ASCII(latin-1)만
          담을 수 있어서, 한글을 넣으면 응답을 만들 때 통째로 터집니다.
          실제로 "상품 관리" 라고 썼다가 터졌습니다. */
-      "WWW-Authenticate": 'Basic realm="ABOUTMEAT Admin", charset="UTF-8"',
+      /* ⚠️⚠️ **realm 에 브랜드 이름을 넣지 마세요.** 이름이 한글이 된
+         뒤로는 더 그렇습니다 — 바로 위 주석대로 HTTP 헤더는 ASCII 만
+         담아서, 한글을 넣으면 응답을 만들 때 통째로 터집니다. */
+      "WWW-Authenticate": 'Basic realm="Admin", charset="UTF-8"',
       "content-type": "text/plain; charset=utf-8"
     }
   });

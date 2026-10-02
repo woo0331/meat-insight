@@ -272,12 +272,17 @@ function jsonLd(W, r, route){
 }
 
 
-function shell(tpl, r, route, noscript, ld){
+/* 머리말 여섯 — ⚠️⚠️ **`shell()` 안에만 두지 마세요.** 메인(`/`)은
+   `index.html` **자체**라 `shell()` 을 안 거칩니다. 그래서 브랜드 이름을
+   바꿨을 때 하위 141개는 새 이름으로 나가는데 **제일 많이 공유되는
+   메인만 옛 이름**으로 남았습니다 (제목 · og:title · og:site_name ·
+   og:image:alt 넷). 화면으로는 표가 안 나고 **공유해 봐야** 압니다 —
+   같은 자리에서 두 번째 사고입니다. 두 곳이 이 함수 하나를 부릅니다. */
+function metaTags(h, r, route){
   const B = (globalThis.__W && globalThis.__W.AM_BRAND) || {};
   const site = (B.name || "") + " · " + (B.sub || "");
   const title = (r.title ? r.title+" · " : "") + site;
   const canon = ORIGIN + (r.canon || route);
-  let h = tpl;
   h = h.replace(/<title>[\s\S]*?<\/title>/, "<title>"+esc(title)+"</title>");
   h = h.replace(/<meta name="description"[^>]*>/,
         '<meta name="description" content="'+esc(r.desc||"")+'">');
@@ -287,13 +292,16 @@ function shell(tpl, r, route, noscript, ld){
         '<meta property="og:description" content="'+esc(r.desc||"")+'">');
   h = h.replace(/<meta property="og:url"[^>]*>/,
         '<meta property="og:url" content="'+esc(canon)+'">');
-  /* ⚠️⚠️ 이 둘을 안 갈아 끼웠더니 **118개 화면 전부**가 옛 브랜드 이름을
-     카카오 · 페이스북 · 검색엔진에 내보내고 있었습니다. 제목과 og:title
-     만 고치고 있어서 화면으로는 표가 안 났습니다 — 공유해 봐야 압니다. */
   h = h.replace(/<meta property="og:site_name"[^>]*>/,
         '<meta property="og:site_name" content="'+esc(B.name||"")+'">');
   h = h.replace(/<meta property="og:image:alt"[^>]*>/,
         '<meta property="og:image:alt" content="'+esc(site)+'">');
+  return h;
+}
+
+function shell(tpl, r, route, noscript, ld){
+  let h = metaTags(tpl, r, route);
+  const canon = ORIGIN + (r.canon || route);
   /* ⚠️ index.html 에 canonical 이 **손으로 박혀 있습니다**(메인은
      build-pages 가 덮어쓰지 않는 파일이라 그렇게 두었습니다). 여기서
      canonical 을 덧붙이면 화면마다 canonical 이 **둘**이 됩니다.
@@ -1259,6 +1267,22 @@ function brandStatics(W){
     checkColorScheme(out, f);
     if(out !== src){ fs.writeFileSync(p, out); console.log("  " + f + " 갱신"); }
   }
+
+  /* ⚠️⚠️ **`brand.js` 를 못 읽는 자리가 둘 더 있습니다.**
+     `manifest.json` 은 JSON 이고, `middleware.js` 는 Edge 런타임이라
+     화면 스크립트를 못 씁니다. 손으로 적어 둔 값이라 이름을 바꾸면
+     **거기만 옛 이름으로 남습니다** — 이 저장소에서 브랜드 이름이 세
+     번 바뀌었고 그때마다 뒤늦게 찾았습니다 (관리자 회신 글 · `adVendor()` ·
+     404 · 관리자 작업대 · `WOW_BIZ.service`). 그래서 **셉니다.**
+     ⚠️ 고치는 것이 아니라 멈춥니다 — 저 둘은 사람이 보고 바꿔야 하는
+     자리입니다 (realm 처럼 한글을 넣으면 안 되는 칸이 섞여 있습니다). */
+  for(const [f, why] of [["manifest.json", "홈 화면에 추가하면 여기 이름이 뜹니다"],
+                         ["middleware.js", "관리자 차단 화면에 이 이름이 뜹니다"]]){
+    const src = fs.readFileSync(path.join(ROOT, f), "utf8");
+    if(src.indexOf(name) < 0)
+      throw new Error(f + " 에 브랜드 이름(" + name + ")이 없습니다 — " + why
+        + ". 이 파일은 brand.js 를 못 읽어서 손으로 고쳐야 합니다");
+  }
 }
 
 /* ── 실행 ─────────────────────────────────────────────────────── */
@@ -1318,6 +1342,10 @@ for(const route of routes){
       throw new Error("index.html 에서 crawl:start / crawl:end 표시를 못 찾았습니다 — 지우셨나요?");
     src = src.slice(0, ca) + c1 + '<div class="pre w">' +
           noscriptFor(W, r, route) + "</div>" + src.slice(cb);
+    /* ⚠️⚠️ **머리말도 여기서 갈아 끼웁니다.** 메인은 `shell()` 을 안
+       거쳐서, 안 하면 브랜드 이름을 바꿨을 때 **메인만 옛 이름**으로
+       남습니다 — 제일 많이 공유되는 화면입니다. */
+    src = metaTags(src, r, route);
     /* ⚠️ index.html 은 빌드가 **제자리에서** 고치는 파일이라, 이미
        붙어 있는 값을 떼고 다시 붙입니다 (stampAssets 가 그렇게 합니다). */
     src = stampAssets(src);

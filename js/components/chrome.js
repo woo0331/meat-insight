@@ -170,7 +170,7 @@ function Footer(){
       return '<li><a href="'+esc(l[0])+'">'+esc(l[1])+'</a></li>'; }).join("")+'</ul>'+
     /* ⚠️ 중개자라는 사실을 미리 알립니다 — 전자상거래법 제20조 제1항.
        안 알리면 제20조의2 에 따라 연대책임을 집니다. 지우지 마세요. */
-    '<p class="ft-role">'+esc(brandName())+'은 통신판매중개자이며 '+
+    '<p class="ft-role">'+esc(koWith(brandName(),"은는"))+' 통신판매중개자이며 '+
       '입점 업체와 이용자 사이의 거래 당사자가 아닙니다. '+
       '상품 · 서비스 · 거래 조건에 대한 책임은 각 업체에 있습니다.</p>'+
     '<div class="ft-biz" id="ft-biz"></div>'+

@@ -73,7 +73,9 @@ window.fcGo = function(k){
 };
 
 function FranchiseCard(f){
-  var c = f.cost || {};
+  /* ⚠️⚠️ 출처 없는 금액은 **목록에서도** 안 찍습니다 — 손님은 상세를
+     안 열어 보셔도 그만이고, 카드의 숫자를 들고 은행에 가십니다. */
+  var c = amFranchiseCost(f) || {};
   return '<a class="fr" href="/f/'+esc(f.slug)+'">'+
     '<span class="fr-ph">'+(f.cover
       ? '<img class="ph" src="'+esc(f.cover)+'" alt="'+esc(f.name)+' 매장 사진" loading="lazy" decoding="async">'
@@ -90,7 +92,7 @@ function FranchiseCard(f){
 
 /* ── /f/:slug — 브랜드 상세 (§8) ───────────────────────────────── */
 function PageFranchiseOne(f){
-  var c = f.cost || {};
+  var c = amFranchiseCost(f) || {};
   var rows = [["join","가맹비"],["edu","교육비"],["deposit","보증금"],
               ["interior","인테리어비"],["equip","설비비"],["etc","기타 비용"]];
   var fc = amFranchiseCat(f.cat);

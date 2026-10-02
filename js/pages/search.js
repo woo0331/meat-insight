@@ -113,6 +113,7 @@ window.amSearch = function(q){
     store:{ name:"매장 · 점포", rows:[] }, asset:{ name:"시설 · 장비", rows:[] },
     cat:{ name:"분류", rows:[] }, industry:{ name:"업종", rows:[] },
     content:{ name:"정보", rows:[] },
+    support:{ name:"지원사업", rows:[] },
     /* ⚠️ `push()` 는 없는 묶음 이름을 받으면 그 자리에서 던집니다 —
        화면이 통째로 안 그려집니다. 묶음을 먼저 만드세요. */
     info:{ name:"자주 묻는 것", rows:[] }
@@ -163,6 +164,22 @@ window.amSearch = function(q){
   (window.AM_CONTENTS||[]).forEach(function(c){
     push("content", c.title, c.lead, "/content/"+c.slug,
       amScore(c.title+" "+c.lead, words) * 3 + amScore(amContentText(c), words));
+  });
+
+  /* ⚠️⚠️ **지원사업 공고도 검색감입니다.** 전에는 색인에 아예 없어서,
+     "소상공인" · "정책자금" · "간판 지원" 을 쳐도 공고가 안 나왔습니다.
+     기한이 있는 것이라 못 찾으면 **기회를 놓치는** 쪽입니다.
+
+     ⚠️ **`amSupports()` 를 거칩니다** — `link`(공고 원문) 없는 항목은
+     화면에 안 나오는데 검색에만 나오면, 눌러 들어간 자리에 그 공고가
+     없습니다. 거르는 규칙이 두 곳에서 갈리면 안 됩니다.
+
+     ⚠️ 기관 이름(`org`)과 대상(`who`)까지 검색감입니다 — 손님은 공고
+     이름을 모르고 "소상공인시장진흥공단" 이나 "폐업" 이라고 칩니다. */
+  (typeof amSupports === "function" ? amSupports() : []).forEach(function(x){
+    push("support", x.name, (x.org || "") + (x.when ? " · " + x.when : ""), "/support",
+      amScore(x.name + " " + (x.org||""), words) * 3 +
+      amScore([x.who, x.what, x.amount].filter(Boolean).join(" "), words));
   });
 
   /* ⚠️ 자주 묻는 것은 **질문과 답 본문 전체**를 검색감으로 씁니다.

@@ -40,6 +40,24 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* 데이터가 0이라 안 보이던 자리들 — 되돌리면 걸려야 합니다. */
+  ["출처 없는 창업비는 목록에서도 안 나온다",
+   `window.FranchiseCard = function(f){
+      const c = (f && f.cost) || {};           /* 출처를 안 보던 그때 */
+      return "<a>" + f.name + (c.total ? " 총 " + c.total.toLocaleString() + "만원" : "") + "</a>";
+    };`],
+  ["후기 평점은 계산값이고 이름은 가려서 낸다",
+   `window.amProviderBadges = function(p){
+      const v = (p && p.verified) || {};
+      return v.biz ? ["사업자 확인"] : [];      /* 첫 배지만 내던 그때 */
+    };`],
+  ["공고는 원문 링크가 있는 것만 낸다",
+   `window.amSupports = function(side){
+      return (window.AM_SUPPORTS || []).filter(function(s){
+        return !side || s.side === side || s.side === "both"; });  /* link 를 안 보던 그때 */
+    };`],
+  ["가격은 10건 이상 · 기준일 있는 것만 낸다",
+   `window.amQuoteStats = function(){ return window.AM_QUOTE_STATS || []; };`],
   /* 분류를 안 넘기면(옛 버그) 모든 업체가 모든 분야에 나옵니다. */
   ["업체는 자기 분야에만 나온다",
    `const real = window.amProviders;

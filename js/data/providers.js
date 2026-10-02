@@ -86,6 +86,32 @@ window.amProviderStats = function(p){
 
    ⚠️ 이 규칙은 **여기 한 곳**입니다. `join.js` 의 `amProvidersInCat()`
    도 이것을 부릅니다 — 두 곳에 적으면 한쪽만 고치게 됩니다. */
+/* ⚠️⚠️ **플랫폼이 확인한 것**만 배지로 냅니다 (§40).
+   전에는 `ProviderCard` 안에 적혀 있었고 **첫 배지 하나만** 찍었습니다 —
+   사업자 확인이 켜져 있으면 보험 가입은 영영 안 보입니다. 게다가
+   **상세 화면(`/p/:id`)에는 아예 없었습니다** — 손님이 업체를 고르는
+   자리가 거기인데 목록에만 보였습니다.
+
+   ⚠️ 상태색(`--ok` 초록)이 아니라 **골드**입니다. 초록은 "좋다/나쁘다"
+   를 말하는 색인데, 확인은 판정이 아니라 **확인했다는 표시**입니다. */
+window.amProviderBadges = function(p){
+  var v = (p && p.verified) || {}, out = [];
+  if(v.biz)       out.push("사업자 확인");
+  if(v.license)   out.push("면허 확인");
+  if(v.insurance) out.push("보험 가입");
+  return out;
+};
+
+/* ⚠️ 후기를 쓰신 분의 이름은 **가려서** 냅니다. 그대로 올리면 그 자체가
+   개인정보이고, 가게 상호와 붙으면 누구인지 특정됩니다.
+   "김사장" → "김○○" · "이훈" → "이○" 입니다. */
+window.amMaskName = function(n){
+  n = String(n || "").trim();
+  if(!n) return "";
+  if(n.length === 1) return n;
+  return n.charAt(0) + new Array(n.length).join("○");
+};
+
 window.amProviderInCat = function(p, cat){
   var keys = ((cat && cat.items) || []).map(function(i){ return i.key; });
   if(!keys.length) return false;

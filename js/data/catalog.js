@@ -295,6 +295,19 @@ window.AM_CLOSE_CATS = [
 /* ── 찾아 쓰는 함수 ──────────────────────────────────────────────── */
 window.AM_CATS = (window.AM_START_CATS || []).concat(window.AM_CLOSE_CATS || []);
 
+/* 하위 분류 key → 이름. ⚠️ 전에는 `/p/:id` 화면 안에 박혀 있어서,
+   다른 자리(후기 · 검색)에서 쓰려면 같은 반복문을 또 적어야 했습니다. */
+window.amSubName = function(key){
+  if(!key) return "";
+  var cats = window.AM_CATS || [];
+  for(var i = 0; i < cats.length; i++){
+    var items = cats[i].items || [];
+    for(var j = 0; j < items.length; j++)
+      if(items[j].key === key) return items[j].name;
+  }
+  return key;
+};
+
 window.amCat = function(key){
   var r = AM_CATS.filter(function(c){ return c.key === key; });
   return r.length ? r[0] : null;

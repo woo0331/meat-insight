@@ -49,6 +49,18 @@ window.amFranchiseCat = function(key){
   var r = AM_FRANCHISE_CATS.filter(function(c){ return c.key === key; });
   return r.length ? r[0] : null;
 };
+/* ⚠️⚠️ **출처와 기준일이 있는 금액만** 돌려줍니다 (가맹사업법).
+   없으면 `null` 이고, 화면은 금액 자리를 통째로 뺍니다.
+
+   ⚠️ 전에는 **상세 화면만** 이 조건을 보고 있었고, 목록 카드는
+   `cost.total` 을 그냥 찍었습니다 — 사장님은 목록에서 "총 8,000만원" 을
+   보고 그 숫자를 들고 은행에 가십니다. 상세를 안 열어 보셔도 그만입니다.
+   **한 곳에서** 정하고 양쪽이 이것을 부릅니다. */
+window.amFranchiseCost = function(f){
+  var c = (f && f.cost) || {};
+  return (c.source && c.asOf) ? c : null;
+};
+
 window.amFranchise = function(slug){
   var r = (window.AM_FRANCHISES||[]).filter(function(f){ return f.slug === slug; });
   return r.length ? r[0] : null;

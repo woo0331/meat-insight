@@ -638,9 +638,19 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 /* ⚠️ 인증 배지는 **상태색이 아니라 골드**입니다. `--ok`(초록)는
    "좋다/나쁘다" 를 말하는 색인데, 인증은 판정이 아니라 **확인했다는
    표시**입니다. 초록으로 두면 인증 없는 업체가 "나쁘다" 로 읽힙니다. */
+/* ⚠️⚠️ 글자는 `--gold` 가 아니라 **`--gold-text`** 입니다. `--gold` 를
+   금색 틴트 바탕에 얹으면 대비가 **1.99** 라 13px 굵은 글씨가 거의
+   안 보입니다 (재 봤습니다 · `--gold-text` 는 5.84). 업체가 0곳이라
+   이 배지가 **한 번도 안 그려져서** 전수 점검의 대비 검사도 못 봤습니다. */
 .pv-vf{ display:inline-flex; align-items:center; gap:3px; font-style:normal;
-  font-size:var(--t-cap); font-weight:700; color:var(--gold);
+  font-size:var(--t-cap); font-weight:700; color:var(--gold-text);
   background:var(--gold-bg); border-radius:var(--r-pill); padding:3px 9px; }
+/* 상세 화면의 확인 배지 줄 */
+.pv-vf-l{ display:flex; flex-wrap:wrap; gap:var(--s2); list-style:none;
+  padding:0; margin:0 0 var(--s4); }
+/* 후기를 누가 · 무슨 일로 썼는지 */
+.rv-who{ font-size:var(--t-cap); color:var(--ink2); font-weight:600;
+  margin:var(--s2) 0 var(--s1); }
 .pv-m{ font-size:var(--t-cap); color:var(--ink3); }
 .pv-r{ display:flex; align-items:center; gap:6px; font-size:var(--t-sm); color:var(--ink2); }
 .pv-r b{ color:var(--ink); }

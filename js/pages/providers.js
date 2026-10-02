@@ -119,12 +119,18 @@ window.pcGo = function(catKey){
 /* ── /p/:id — 업체 상세 (§37) ──────────────────────────────────── */
 function PageProviderOne(p){
   var s = amProviderStats(p) || {};
-  var subs = (p.subs||[]).map(function(k){
-    for(var i=0;i<AM_CATS.length;i++){
-      var hit = (AM_CATS[i].items||[]).filter(function(x){ return x.key === k; })[0];
-      if(hit) return hit.name;
-    }
-    return k;
+  var subs = (p.subs||[]).map(amSubName);
+  /* ⚠️⚠️ **조건을 그대로 넘깁니다.** 전에 여기만 `quoteTo({})` 라,
+     업체 상세에서 "무료 견적받기" 를 누르면 **빈 견적 화면**이 떴습니다 —
+     분야 화면(`/providers/:cat`)에서는 분류 · 업종 · 지역이 다 따라가는데
+     정작 업체를 보고 마음을 정한 자리에서 처음부터 다시 적게 했습니다.
+     ⚠️ 업체를 지정해 보내는 것이 **아닙니다** — 업체에 연락처를 넘기는
+     것은 상호를 알리고 따로 동의받습니다 (개인정보보호법 제17조).
+     여기서 넘기는 것은 **사장님이 다시 안 적어도 되게** 하는 조건뿐입니다. */
+  var pvQ = quoteTo({
+    sub:      (p.subs || [])[0] || "",
+    industry: (p.industries || [])[0] || "",
+    region:   (p.regions || [])[0] || ""
   });
   return PgHero({
     crumb: Crumb([["업체찾기","/providers"],[p.name]]),
@@ -134,6 +140,15 @@ function PageProviderOne(p){
     tight:true
   })+
   '<section class="sec sec-white"><div class="w pv-one">'+
+    /* ⚠️⚠️ **확인한 것은 결정하는 자리에 있어야 합니다.** 전에는 목록
+       카드에만 있고 상세에는 없었습니다 — 손님이 업체를 고르는 화면이
+       여기입니다. 확인 안 한 항목은 안 적습니다 (없는 신뢰를 만들지
+       않습니다). */
+    (amProviderBadges(p).length
+      ? '<ul class="pv-vf-l">'+amProviderBadges(p).map(function(bd){
+          return '<li><em class="pv-vf">'+icon("check",13)+esc(bd)+'</em></li>'; }).join("")+
+        '</ul>'
+      : '')+
     '<div class="pv-one-m">'+
       /* ⚠️ 후기가 없으면 평점 줄을 통째로 뺍니다 */
       (s.rating != null
@@ -173,7 +188,10 @@ function PageProviderOne(p){
         return '<div class="pf">'+
           (f.after ? '<img class="ph" src="'+esc(f.after)+'" alt="'+esc(f.title)+' 완료 사진" loading="lazy" decoding="async">' : '')+
           '<b>'+esc(f.title)+'</b>'+
-          '<span>'+esc([amIndustryName(f.industry), f.region, f.year].filter(Boolean).join(" · "))+'</span>'+
+          /* ⚠️ `f.region` 은 **key**(`gyeonggi`)입니다 — 그대로 찍으면
+             화면에 영문 key 가 나옵니다. 실제로 그랬습니다. */
+          '<span>'+esc([amIndustryName(f.industry), amRegionName(f.region), f.year]
+            .filter(Boolean).join(" · "))+'</span>'+
         '</div>'; }).join("")+'</div></div>' : '')+
 
     ((p.reviews||[]).length ? ReviewBlock(p) : '')+
@@ -183,15 +201,22 @@ function PageProviderOne(p){
       title:"상담과 견적으로 시작하세요",
       text:"연락처를 바로 드리지 않습니다. 필요한 내용을 적어 주시면 그대로 전달하고, "+
            "업체 연락처는 사장님이 동의하신 뒤에만 오갑니다.",
-      cta:'<a class="btn btn-b" href="'+esc(quoteTo({}))+'">무료 견적받기'+icon("arrow",16)+'</a>'
+      cta:'<a class="btn btn-b" href="'+esc(pvQ)+'">무료 견적받기'+icon("arrow",16)+'</a>'
     })+
   '</div></section>'+
 
   /* 폰에서 늘 붙어 있는 CTA (§37) */
   '<div class="sticky-cta">'+
-    '<a class="btn btn-b" href="'+esc(quoteTo({}))+'">무료 견적받기</a>'+
-    '<a class="btn btn-o" href="'+esc(quoteTo({}))+'">상담 요청</a>'+
+    '<a class="btn btn-b" href="'+esc(pvQ)+'">무료 견적받기</a>'+
+    '<a class="btn btn-o" href="'+esc(pvQ)+'">상담 요청</a>'+
   '</div>';
+}
+
+function rvWho(r){
+  var who = r.by ? amMaskName(r.by) + " 사장님" : "사장님";
+  var what = [r.industry ? amIndustryName(r.industry) : "", amSubName(r.sub)]
+             .filter(Boolean).join(" · ");
+  return esc(who) + (what ? " · " + esc(what) : "");
 }
 
 function ReviewBlock(p){
@@ -205,6 +230,11 @@ function ReviewBlock(p){
             ? '<em class="rv-bd">'+icon("check",12)+esc(AM_REVIEW_BADGES[r.badge])+'</em>' : '')+
           '<span class="rv-at">'+esc(r.at||"")+'</span>'+
         '</div>'+
+        /* ⚠️ **누가 · 무슨 일로** 쓴 후기인지가 빠져 있었습니다.
+           카페 사장님에게는 "카페 · 인테리어 후기" 라야 자기 이야기로
+           읽힙니다. 이름은 `amMaskName()` 으로 가립니다 — 그대로 올리면
+           상호와 붙어서 누구인지 특정됩니다. */
+        '<p class="rv-who">'+ rvWho(r) +'</p>'+
         (r.text ? '<p>'+esc(r.text)+'</p>' : '')+
         '<ul class="rv-ax">'+(window.AM_REVIEW_AXES||[]).filter(function(a){
             return a.key !== "total" && sc[a.key];

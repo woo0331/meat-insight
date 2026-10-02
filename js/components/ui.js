@@ -112,10 +112,8 @@ window.CatCard = function(c, industryKey){
    별 다섯 개를 회색으로 그려 두는 것도 지어낸 신뢰입니다. */
 window.ProviderCard = function(p){
   var s = amProviderStats(p) || {};
-  var badges = [];
-  if(p.verified && p.verified.biz)       badges.push("사업자 확인");
-  if(p.verified && p.verified.license)   badges.push("면허 확인");
-  if(p.verified && p.verified.insurance) badges.push("보험 가입");
+  /* ⚠️ 규칙은 `providers.js` 의 `amProviderBadges()` 한 곳입니다. */
+  var badges = amProviderBadges(p);
 
   return '<a class="pv" href="/p/'+esc(p.id)+'">'+
     '<span class="pv-ph">'+(p.cover
@@ -123,7 +121,10 @@ window.ProviderCard = function(p){
         : '<span class="ph ph-none" aria-hidden="true"></span>')+'</span>'+
     '<span class="pv-b">'+
       '<span class="pv-t"><b>'+esc(p.name)+'</b>'+
-        (badges.length ? '<em class="pv-vf">'+icon("check",13)+esc(badges[0])+'</em>' : '')+
+        /* ⚠️ 전에 `badges[0]` 만 찍어서, 사업자 확인이 있으면 보험 가입이
+           영영 안 보였습니다. 셋뿐이고 다 짧아서 전부 냅니다. */
+        badges.map(function(bd){
+          return '<em class="pv-vf">'+icon("check",13)+esc(bd)+'</em>'; }).join("")+
       '</span>'+
       '<span class="pv-m">'+
         esc((p.regions||[]).map(function(k){ return amRegionName(k); }).filter(Boolean).join(" · ") || "지역 미등록")+

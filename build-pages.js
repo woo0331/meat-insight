@@ -897,6 +897,102 @@ function checkColorSchemeCss(){
       + "없습니다 — 자동 다크 모드가 색을 뒤집습니다");
 }
 
+/* ⚠️⚠️ **등록했는데 조용히 안 나오는 것**을 막습니다 — 업체(`checkProviders`)
+   와 같은 까닭입니다. 브랜드 · 매물 · 자산 · 공고는 전부 **거르개를
+   통과해야만** 화면에 나오는데, 한 칸만 틀려도 에러 없이 빠집니다.
+   영업에서 받아 온 것을 올린 날 그러면 제일 나쁩니다. */
+function checkMarketData(W){
+  const bad = [];
+  const regions = new Set((W.AM_REGIONS || []).map(r => r.key));
+  const inds    = new Set((W.AM_INDUSTRIES || []).map(i => i.key));
+  const dupe = (list, key, what) => {
+    const seen = new Set();
+    list.forEach(x => {
+      const v = x[key];
+      if(!v) return bad.push(what + ": " + key + " 가 없습니다");
+      if(seen.has(v)) bad.push(what + ": " + key + " 가 겹칩니다 — " + v);
+      seen.add(v);
+    });
+  };
+
+  /* ── 프랜차이즈 ── */
+  const fcats = new Set((W.AM_FRANCHISE_CATS || []).map(c => c.key));
+  const FR = W.AM_FRANCHISES || [];
+  dupe(FR, "slug", "브랜드");
+  FR.forEach(f => {
+    const who = f.slug || f.name || "(이름 없는 브랜드)";
+    if(!f.name) bad.push(who + ": name 이 없습니다");
+    if(!fcats.has(f.cat)) bad.push(who + ": 없는 프랜차이즈 분류 " + f.cat);
+    (f.regions || []).forEach(k => { if(!regions.has(k)) bad.push(who + ": 없는 지역 " + k); });
+    const c = f.cost || {};
+    /* ⚠️ 가맹사업법 — 출처와 기준일 없는 금액은 화면에 **안 나옵니다.**
+       적어 놓고 안 나오면 "왜 금액이 안 보이지" 로 한참 헤맵니다. */
+    const hasMoney = ["total","join","edu","deposit","interior","equip","etc"]
+      .some(k => c[k]);
+    if(hasMoney && !(c.source && c.asOf))
+      bad.push(who + ": 금액을 적었는데 cost.source / cost.asOf 가 없습니다"
+        + " — 화면에 **안 나옵니다** (가맹사업법: 정보공개서 출처와 기준일)");
+    if(f.stores === 0)
+      bad.push(who + ": 가맹점 수가 0 입니다 — 모르면 null 입니다 (0 은 '한 곳도 없다' 는 숫자)");
+    if(f.disclosure && f.disclosure.has && !f.disclosure.no)
+      bad.push(who + ": 정보공개서가 있다는데 등록번호가 없습니다");
+  });
+
+  /* ── 매물 · 자산 ── */
+  const ST = W.AM_STORES || [], AS = W.AM_ASSETS || [];
+  dupe(ST, "id", "매물"); dupe(AS, "id", "자산");
+  ST.forEach(x => {
+    const who = x.id || "(id 없는 매물)";
+    if(!x.title) bad.push(who + ": title 이 없습니다");
+    if(["transfer","lease"].indexOf(x.kind) < 0) bad.push(who + ": kind 는 transfer 또는 lease 입니다 — " + x.kind);
+    if(x.industry && !inds.has(x.industry)) bad.push(who + ": 없는 업종 " + x.industry);
+    if(x.region   && !regions.has(x.region)) bad.push(who + ": 없는 지역 " + x.region);
+    if(!x.industry || !x.region)
+      bad.push(who + ": 업종 · 지역이 없으면 거르개에서 **빠집니다**");
+  });
+  const storeIds = new Set(ST.map(x => x.id));
+  AS.forEach(x => {
+    const who = x.id || "(id 없는 자산)";
+    if(!x.title) bad.push(who + ": title 이 없습니다");
+    if(["asset","stock"].indexOf(x.cat) < 0) bad.push(who + ": cat 은 asset 또는 stock 입니다 — " + x.cat);
+    if(x.deal && ["single","bulk","all"].indexOf(x.deal) < 0) bad.push(who + ": 없는 deal " + x.deal);
+    if(x.industry && !inds.has(x.industry)) bad.push(who + ": 없는 업종 " + x.industry);
+    if(x.region   && !regions.has(x.region)) bad.push(who + ": 없는 지역 " + x.region);
+    if(x.storeId && !storeIds.has(x.storeId))
+      bad.push(who + ": storeId \"" + x.storeId + "\" 인 매물이 없습니다 (끊어진 연결)");
+  });
+
+  /* ── 지원사업 공고 ── */
+  const SP = W.AM_SUPPORTS || [];
+  dupe(SP, "key", "공고");
+  SP.forEach(x => {
+    const who = x.key || x.name || "(이름 없는 공고)";
+    if(!x.name) bad.push(who + ": name 이 없습니다");
+    if(["start","close","both"].indexOf(x.side) < 0)
+      bad.push(who + ": side 는 start · close · both 입니다 — " + x.side);
+    /* ⚠️ `amSupports()` 가 link 없는 것을 **아예 안 냅니다.** 적어 두고
+       안 나오면 "왜 안 뜨지" 로 헤매니, 빌드가 먼저 말합니다. */
+    if(!x.link)
+      bad.push(who + ": link(공고 원문)가 없습니다 — 화면에 **안 나옵니다**");
+    if(!x.asOf)
+      bad.push(who + ": asOf(확인한 날)가 없습니다 — 열어 보지 않고 적으면 그 자체가 거짓말입니다");
+  });
+
+  /* ── 가격 데이터 ── */
+  (W.AM_QUOTE_STATS || []).forEach((q, n) => {
+    const who = "가격 " + (q.cat || n);
+    if(!q.range) bad.push(who + ": range 가 없습니다");
+    if(!q.asOf)  bad.push(who + ": asOf 가 없습니다 — 화면에 안 나옵니다");
+    if((q.n || 0) < 10)
+      bad.push(who + ": 건수가 " + (q.n || 0) + "건입니다 — 10건 아래는 화면에 **안 나옵니다**"
+        + " (적은 표본으로 시세를 말하지 않습니다)");
+  });
+
+  if(bad.length)
+    throw new Error("등록한 데이터가 어긋났습니다 (그 항목은 **조용히 안 나옵니다**):\n   "
+      + bad.join("\n   "));
+}
+
 /* ── 라우터 밖 파일에 브랜드 이름 넣기 ──────────────────────────────
    ⚠️⚠️ `404.html` 과 `admin.html` 은 **라우터 밖에서 혼자 뜨는** 파일이라
    `js/data/brand.js` 를 안 읽습니다. 그래서 이름을 바꿨을 때 **거기만
@@ -935,6 +1031,7 @@ checkColorSchemeCss();
 checkVercel();
 const W = loadApp();
 checkProviders(W);
+checkMarketData(W);
 checkPhotos(W);
 brandStatics(W);
 globalThis.__W = W;   /* shell() 이 브랜드 이름을 읽습니다 */
@@ -1014,7 +1111,17 @@ dups(seenTitle,"제목"); dups(seenDesc,"설명");
    주소는 살아 있어, 예전에 색인된 손님과 크롤러가 계속 그 화면을 봅니다.
    ⚠️ 이번에 만든 주소의 **맨 윗 칸**만 훑습니다 — css·js·img 는
    건드리지 않습니다. */
-const roots = new Set(routes.filter(r => r !== "/").map(r => r.split("/")[1]));
+/* ⚠️⚠️ **데이터가 비면 그 뿌리가 목록에서 빠져서, 안을 아예 안
+   들여다봅니다.** 업체 한 곳을 등록했다가 내리면 `/p/:id` 화면이
+   서버에 **영영 남습니다** — 사이트맵에서는 빠지는데 주소는 살아
+   있어서, 입점을 그만둔 업체의 소개가 계속 떠 있고 검색에도 남습니다.
+   실제로 `p/` 안에 지워졌어야 할 화면이 남아 있는 것을 보았습니다.
+
+   그래서 **데이터로 만들어지는 뿌리는 늘 훑습니다** — 지금 주소가
+   하나도 없어도 들어가서 비웁니다. */
+const DATA_ROOTS = ["p", "f", "c", "content", "startup", "closure", "providers", "franchise"];
+const roots = new Set(
+  routes.filter(r => r !== "/").map(r => r.split("/")[1]).concat(DATA_ROOTS));
 let removed = 0;
 function sweep(dir){
   let left = 0;

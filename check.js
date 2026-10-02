@@ -163,6 +163,31 @@ const PAGES = [
   ["/privacy",           "개인정보처리방침"],
   ["/nope",              "없는 주소"]
 ];
+
+/* ⚠️⚠️ **업체 · 브랜드 상세는 데이터가 있어야만 생기는 주소**라,
+   표본에 손으로 적어 둘 수가 없습니다 — 지금은 업체 0곳 · 브랜드 0개라
+   그 주소 자체가 없습니다. 그런데 **등록되는 순간 손님이 제일 많이
+   보는 화면**이 거기입니다 (업체찾기 → 업체 상세 → 견적).
+
+   그래서 **빌드가 만들어 둔 것을 읽어** 표본에 붙입니다. 등록이
+   한 건이라도 생기면 그날부터 대비 · 누름 크기 · 가로 스크롤 ·
+   어두운 면까지 **저절로** 같이 봅니다. 아무도 안 넣어도 됩니다.
+
+   ⚠️ 많아지면 검사가 한참 길어지므로 **종류마다 둘까지**만 봅니다 —
+   틀이 같아서 셋째부터는 같은 것을 또 재는 셈입니다. */
+(function addBuilt(){
+  const fsx = require("fs"), px = require("path");
+  const pick = (dir, label, n) => {
+    const root = px.join(__dirname, dir);
+    if(!fsx.existsSync(root)) return;
+    fsx.readdirSync(root, { withFileTypes:true })
+      .filter(d => d.isDirectory())
+      .slice(0, n)
+      .forEach(d => PAGES.push(["/" + dir + "/" + d.name, label + " — " + d.name]));
+  };
+  pick("p", "업체 상세", 2);
+  pick("f", "브랜드 상세", 2);
+})();
 /* ⚠️ **360px 을 같이 봅니다.** 폰은 390px 만 있는 것이 아닙니다 —
    갤럭시 계열이 360px 이고, 새 헤더가 거기서만 370px 로 넘쳐
    가로 스크롤이 났습니다. 390 만 재던 동안 통과하고 있었습니다. */
@@ -784,6 +809,76 @@ const AUDIT = `(() => {
     else if(offInd) why = "전문 업종이 아닌데 업종 거르개에 걸립니다";
     else if(offReg) why = "서비스 지역이 아닌데 지역 거르개에 걸립니다";
     return why;`);
+  /* ⚠️⚠️ **데이터가 0이라 안 보이던 자리들입니다.** 업체 · 브랜드 ·
+     매물 · 공고 · 후기가 전부 비어 있어서, 그 기능들은 "없다" 만
+     확인받고 있었습니다. 검사가 **그 자리에서 한 건을 끼워 넣고** 봅니다
+     — 저장소 데이터는 그대로 0 입니다 (절대 규칙 1). */
+  await f("출처 없는 창업비는 목록에서도 안 나온다", "/franchise/cafe", `
+    window.AM_FRANCHISES.push(
+      { slug:"zz-src", name:"출처있는브랜드", cat:"cafe", intro:"검사용",
+        cost:{ total:9500, unit:"만원", source:"정보공개서", asOf:"2026-01-02" },
+        stores:null, regions:["gyeonggi"] },
+      { slug:"zz-nosrc", name:"출처없는브랜드", cat:"cafe", intro:"검사용",
+        cost:{ total:8000, unit:"만원" }, stores:null, regions:["gyeonggi"] });
+    const card  = window.FranchiseCard(window.amFranchise("zz-nosrc"));
+    const card2 = window.FranchiseCard(window.amFranchise("zz-src"));
+    window.AM_FRANCHISES = window.AM_FRANCHISES.filter(function(x){
+      return x.slug.indexOf("zz-") !== 0; });
+    let why = true;
+    if(card.indexOf("8,000") >= 0 || card.indexOf("8000") >= 0)
+      why = "출처 없는 금액이 목록 카드에 찍힙니다 (가맹사업법)";
+    else if(card2.indexOf("9,500") < 0)
+      why = "출처 있는 금액까지 안 찍습니다 — 너무 넓게 막았습니다";
+    return why;`);
+  await f("후기 평점은 계산값이고 이름은 가려서 낸다", "/providers", `
+    const p = { id:"zz-rv", name:"검사용 업체", regions:["gyeonggi"],
+      industries:["cafe"], subs:["interior"], intro:"검사용",
+      verified:{ biz:true, license:false, insurance:true },
+      reviews:[ { at:"2026-09-01", by:"김사장", industry:"cafe", sub:"interior",
+                  score:{ total:5 }, text:"좋았습니다", badge:"contract" },
+                { at:"2026-09-20", by:"이사장", industry:"cafe", sub:"interior",
+                  score:{ total:4 }, text:"괜찮았습니다" } ] };
+    const st = window.amProviderStats(p);
+    const bd = window.amProviderBadges(p);
+    const masked = window.amMaskName("김사장");
+    let why = true;
+    if(!st || st.rating !== 4.5) why = "평점이 계산값이 아닙니다 — " + (st && st.rating);
+    else if(st.reviews !== 2)   why = "후기 수가 센 값이 아닙니다";
+    else if(bd.length !== 2)    why = "확인한 것을 다 안 냅니다 — " + bd.join(",");
+    else if(bd.indexOf("면허 확인") >= 0) why = "확인 안 한 것을 냅니다";
+    else if(masked.indexOf("사장") >= 0 || masked.charAt(0) !== "김")
+      why = "이름이 안 가려집니다 — " + masked;
+    return why;`);
+  await f("공고는 원문 링크가 있는 것만 낸다", "/support", `
+    window.AM_SUPPORTS.push(
+      { key:"zz-ok", side:"start", name:"검사용 공고 A", org:"기관",
+        link:"https://example.com/", asOf:"2026-10-01" },
+      { key:"zz-no", side:"start", name:"검사용 공고 B", org:"기관",
+        asOf:"2026-10-01" });
+    const got = window.amSupports().map(function(x){ return x.key; });
+    const inSearch = JSON.stringify(window.amSearch("검사용 공고"));
+    window.AM_SUPPORTS = window.AM_SUPPORTS.filter(function(x){
+      return x.key.indexOf("zz-") !== 0; });
+    let why = true;
+    if(got.indexOf("zz-ok") < 0) why = "원문 있는 공고가 안 나옵니다";
+    else if(got.indexOf("zz-no") >= 0) why = "원문 없는 공고가 나옵니다";
+    else if(inSearch.indexOf("검사용 공고 A") < 0) why = "공고가 검색에 안 걸립니다";
+    else if(inSearch.indexOf("검사용 공고 B") >= 0) why = "원문 없는 공고가 검색에만 나옵니다";
+    return why;`);
+  await f("가격은 10건 이상 · 기준일 있는 것만 낸다", "/", `
+    window.AM_QUOTE_STATS.push(
+      { cat:"zz-a", range:"평당 100~120만원", n:12, asOf:"2026-10-01" },
+      { cat:"zz-b", range:"평당 50~60만원",   n:9,  asOf:"2026-10-01" },
+      { cat:"zz-c", range:"평당 70~80만원",   n:30 });
+    const got = window.amQuoteStats().map(function(x){ return x.cat; });
+    window.AM_QUOTE_STATS = window.AM_QUOTE_STATS.filter(function(x){
+      return String(x.cat).indexOf("zz-") !== 0; });
+    let why = true;
+    if(got.indexOf("zz-a") < 0) why = "10건 넘는 것이 안 나옵니다";
+    else if(got.indexOf("zz-b") >= 0) why = "9건짜리가 나옵니다 — 적은 표본으로 시세를 말합니다";
+    else if(got.indexOf("zz-c") >= 0) why = "기준일 없는 것이 나옵니다";
+    return why;`);
+
   /* 같은 규칙을 두 곳에 적으면 한쪽만 고치게 됩니다 (amCatTo 로 겪었습니다). */
   await f("입점 배지와 업체찾기가 같은 규칙으로 센다", "/join", `
     window.AM_PROVIDERS.push({

@@ -301,6 +301,15 @@ function MainIndustry(){
           (on ? ' aria-current="true"' : '')+'>'+
           '<span class="ic-t">'+icon(x.icon,26)+'</span>'+
           '<b>'+esc(x.name)+'</b>'+
+          /* ⚠️ **색 말고 내용으로 가릅니다.** 사진이 0장이라 카드를
+             틴트로만 갈라 두었는데, 색은 "내 업종이 어느 것인가" 를
+             말해 주지 못합니다. `lead` 는 `industries.js` 에 열넷 다
+             적혀 있고 `/startup` 의 `.ind-l` 은 이미 쓰고 있었는데
+             **메인만 안 읽고** 있었습니다 — 손으로 적지 마세요. */
+          /* ⚠️ 구분점이 **줄 머리로 내려가지 않게** 앞말에 붙입니다
+             ("한식 · 중식 · 일식 · 양식 / · 분식 · 고깃집" 이 됩니다).
+             줄바꿈은 점 **뒤에서만** 일어납니다. */
+          (x.lead ? '<i class="mi-l">'+esc(x.lead).split(" · ").join("\u00A0· ")+'</i>' : '')+
           (on ? '<span class="mi-x" aria-hidden="true">'+icon("check",14)+'</span>' : '')+
         '</a></li>'; }).join("")+'</ul>'+
     (cur ? '<p class="row-cta row-mid"><a class="btn btn-o" href="'+esc(to(""))+'" data-keep>'+

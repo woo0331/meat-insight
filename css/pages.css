@@ -1354,7 +1354,7 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    ④ 업종 열넷 (§17 ~ §19)
    ══════════════════════════════════════════════════════════════════
    ⚠️ **카드는 흰색**이고 색은 아이콘 타일에만 들어갑니다. */
-.mi-g{ display:grid; gap:var(--s4); grid-template-columns:repeat(7,1fr); }
+.mi-g{ display:grid; gap:var(--s4); grid-template-columns:repeat(5,1fr); }
 .mi-g > li > a{ display:grid; gap:10px; justify-items:center; text-align:center;
   min-height:var(--tap); padding:var(--s5) 10px; background:var(--surface);
   border:1px solid var(--line); border-radius:18px;
@@ -1365,6 +1365,15 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mi-g > li > a:hover .ic-t{ transform:scale(1.06); }
 .mi-g b{ font-size:var(--t-cap); font-weight:700; color:var(--ink);
   line-height:1.4; }
+/* ⚠️ **색은 "내 업종이 어느 것인가" 를 말해 주지 못합니다.** 사진이 0장
+   이라 카드를 분류색 틴트로 갈라 두었는데, 틴트로 갈리는 것은 **서로
+   다르다**까지이고 미용실 사장님이 "헤어 · 바버 · 두피관리" 를 보고
+   자기 자리를 찾는 일은 글이 합니다. `industries.js` 의 `lead` 열넷을
+   그대로 냅니다 (`/startup` 의 `.ind-l` 과 같은 값).
+   ⚠️ `--ink3` 는 아이보리 위에서 4.63 이라 margin 이 얇습니다 —
+   틴트 열넷 위에 깔리는 글이라 `--ink2`(6.02) 를 씁니다. */
+.mi-l{ font-style:normal; font-size:var(--t-cap); font-weight:500;
+  color:var(--ink2); line-height:1.55; }
 
 /* ══════════════════════════════════════════════════════════════════
    ⑤ 핵심 서비스 여덟 (§20)
@@ -1497,7 +1506,7 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 
 /* ── 좁은 화면 ───────────────────────────────────────────────────── */
 @media (max-width:1100px){
-  .mi-g{ grid-template-columns:repeat(5,1fr); }
+  .mi-g{ grid-template-columns:repeat(4,1fr); }
   .mv-g{ grid-template-columns:repeat(2,1fr); }
   .ms-g{ grid-template-columns:repeat(3,1fr); }
 }

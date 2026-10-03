@@ -1828,6 +1828,34 @@ const AUDIT = `(() => {
     }
     if(dup.length) return "겹치는 업종 카드 바탕이 " + dup.length + "개 있습니다 — " + dup[0];
     return true;`);
+  await f("업종 카드가 색만이 아니라 그 업종에 무엇이 들어가는지 말한다", "/", `
+    /* ⚠️⚠️ **색으로는 "내 업종이 어느 것인가" 를 말할 수 없습니다.**
+       사진이 0장이라 업종 카드를 분류색 틴트로 갈라 두었는데, 틴트가
+       말해 주는 것은 **서로 다르다**까지입니다. 미용실 사장님이 자기
+       자리를 찾는 일은 "헤어샵 · 바버샵 · 두피관리" 라는 글이 합니다.
+       그 글은 industries.js 의 lead 열넷이고 /startup 의 .ind-l 은
+       처음부터 쓰고 있었는데 **메인만 안 읽고** 있었습니다.
+       ⚠️ 손으로 적으면 업종을 늘릴 때 어긋나므로 데이터와 **글자까지**
+       맞는지 봅니다. 숨기는 것도 안 됩니다 — 숨기면 다시 색뿐입니다. */
+    const L = (window.AM_INDUSTRIES || []);
+    const cards = [].slice.call(document.querySelectorAll(".mi-g > li > a"));
+    if(cards.length !== L.length) return "업종 카드가 " + cards.length + "개입니다";
+    for(let i = 0; i < L.length; i++){
+      const lead = (L[i].lead || "").trim();
+      if(!lead) return L[i].key + " 에 lead 가 없습니다";
+      const el = cards[i].querySelector(".mi-l");
+      if(!el) return L[i].key + " 카드에 설명 줄이 없습니다";
+      /* 구분점이 줄 머리로 안 가게 띄어쓰기 한 칸을 안 깨지는 칸으로
+         바꿔 둡니다 — 되돌려 놓고 글자를 맞춰 봅니다. */
+      const NB = String.fromCharCode(160);
+      if((el.textContent || "").split(NB).join(" ").trim() !== lead)
+        return L[i].key + " 카드 설명이 데이터와 다릅니다";
+      const cs = getComputedStyle(el);
+      if(cs.display === "none" || cs.visibility === "hidden")
+        return L[i].key + " 카드 설명이 숨겨져 있습니다";
+      if(parseFloat(cs.fontSize) < 12) return "설명 줄이 " + cs.fontSize + "입니다";
+    }
+    return true;`);
   await f("메인 구간 차례가 지시서와 같다", "/", `
     /* 지시서 §2 의 차례입니다. 늘리거나 섞기 전에 거기를 먼저 고치세요.
        ⚠️ 구간이 .sec 를 같이 답니다 — 첫 낱말만 보면 전부 "sec" 으로

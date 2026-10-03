@@ -154,6 +154,11 @@ const CASES = [
    `const t = document.querySelectorAll(".mi-g > li > a");
     t[1].style.transition = "none";
     t[1].style.background = getComputedStyle(t[0]).backgroundColor;`],
+  /* ⚠️ 숨기는 쪽으로 되돌립니다 — 글자를 지우면 "없다" 로 걸리는데,
+     진짜 무서운 것은 **폰에서 길이를 줄이려고 숨기는 것**입니다.
+     숨기면 그 카드는 다시 색뿐이 됩니다. */
+  ["업종 카드가 색만이 아니라 그 업종에 무엇이 들어가는지 말한다",
+   `document.querySelectorAll(".mi-g .mi-l")[3].style.display = "none";`],
   ["메인 구간 차례가 지시서와 같다",
    `const v = document.getElementById("view");
     v.insertBefore(v.children[3], v.children[1]);`],

@@ -123,13 +123,14 @@ const CASES = [
    `document.querySelector("#q-f .note-mid").textContent =
       "보내고 나면 이 브라우저에 요청 내용이 남아, 아래에서 비교하실 수 있습니다.";`],
   ["지어낸 실적 숫자가 메인에 없다",
-   `document.querySelector(".mh-d").textContent = "입점 업체 1,200곳";`],
+   `document.querySelector(".mh2-d").textContent = "입점 업체 1,200곳";`],
   ["히어로 제목이 창업 · 폐업 두 낱말을 주인공으로 둔다",
-   `document.querySelector(".mh-h").textContent = "창업 플랫폼";`],
+   `document.querySelector(".mval-h").textContent = "창업 플랫폼";`],
+  /* ⚠️ 빠른 진입 하나를 가짜 링크로 — 지시서 §26 "버튼 → 실제 Link" */
   ["히어로에서 바로 찾고 바로 갈라진다",
-   `document.querySelector(".mh-s").remove();`],
+   `document.querySelector(".mh2-cl .mh2-q a").setAttribute("href", "#");`],
   ["창업은 초록 · 폐업은 주황이고 빨강이 아니다",
-   `document.querySelector(".mh-cl").style.color = "rgb(214,28,28)";`],
+   `document.querySelector(".mval-h .mh-cl").style.color = "rgb(214,28,28)";`],
   ["연결 구간 두 딱지가 같은 높이에 앉는다",
    `document.querySelector(".mbr-g").style.alignItems = "center";
     document.querySelector(".mbr-cl .mbr-l").insertAdjacentHTML("beforeend",
@@ -141,24 +142,23 @@ const CASES = [
       for(const r of rules)
         if(r.selectorText === ".mbr-p .ph") r.style.objectFit = "fill";
     }`],
-  ["큰 카드 둘의 분야 수가 센 값이다",
-   `document.querySelector(".ms-st .ms-more i").textContent = "40개 분야";`],
-  ["큰 카드 둘의 크기가 같다",
-   `document.querySelector(".ms-cl").style.width = "60%";`],
-  ["큰 카드 여섯의 아이콘이 분류 것과 같다",
-   `document.querySelector(".ms-st .ms-g svg").innerHTML =
-      document.querySelectorAll(".ms-st .ms-g svg")[1].innerHTML;`],
+  /* 이름을 분류에 없는 것으로 바꿔 놓습니다 — 손으로 적으면 이렇게 됩니다 */
+  ["히어로 빠른 진입 여섯이 분류에서 온다",
+   `const b = document.querySelectorAll(".mh2-cl .mh2-q b");
+    b[0].textContent = "매장정리대행"; b[1].textContent = "장비처분대행";`],
+  ["히어로 두 장의 크기가 같다",
+   `document.querySelector(".mh2-cl").style.width = "60%";`],
+  ["히어로 여섯의 아이콘이 분류 것과 같다",
+   `document.querySelector(".mh2-st .mh2-q svg").innerHTML =
+      document.querySelectorAll(".mh2-st .mh2-q svg")[1].innerHTML;`],
   ["업종 열넷이 저마다 다른 색을 쓴다",
    /* ⚠️ `.ic-t` 에 transition 이 걸려 있어서 그냥 바꾸면 **색이 번지는
       도중**에 재어 다른 값이 나옵니다 — 되돌리기가 헛돕니다. 끕니다. */
    `const t = document.querySelectorAll(".mi-g > li > a");
-    t[1].style.transition = "none";
-    t[1].style.background = getComputedStyle(t[0]).backgroundColor;`],
-  /* ⚠️ 숨기는 쪽으로 되돌립니다 — 글자를 지우면 "없다" 로 걸리는데,
-     진짜 무서운 것은 **폰에서 길이를 줄이려고 숨기는 것**입니다.
-     숨기면 그 카드는 다시 색뿐이 됩니다. */
-  ["업종 카드가 색만이 아니라 그 업종에 무엇이 들어가는지 말한다",
-   `document.querySelectorAll(".mi-g .mi-l")[3].style.display = "none";`],
+    const a0 = t[0].querySelector(".ic-t"), a1 = t[1].querySelector(".ic-t");
+    t[1].style.transition = "none"; a1.style.transition = "none";
+    t[1].style.background = getComputedStyle(t[0]).backgroundColor;
+    a1.style.background = getComputedStyle(a0).backgroundColor;`],
   ["메인 구간 차례가 지시서와 같다",
    `const v = document.getElementById("view");
     v.insertBefore(v.children[3], v.children[1]);`],
@@ -185,8 +185,12 @@ const CASES = [
       위쪽 여섯 구간을 통째로 어둡게 해야 합니다. */
    `[...document.querySelectorAll("#view > section")].slice(0, 6)
       .forEach(function(e){ e.style.background = "#0B1220"; });`],
+  /* ⚠️ 길이 **둘**입니다 (넓은 화면은 입력칸, 좁은 화면은 돋보기).
+     하나만 지우면 다른 하나가 남아서 되돌리기가 헛돕니다 — 실제로
+     돋보기만 지웠다가 "검사가 안 잡는다" 로 보였습니다. */
   ["어느 화면에서나 검색으로 가는 길이 있다",
-   `document.querySelector('.hd a[href="/search"]').remove();`],
+   `document.querySelectorAll('.hd a[href="/search"], .hd .hd-s')
+      .forEach(function(e){ e.remove(); });`],
   ["헤더가 거의 불투명해서 밑의 글자가 안 비친다",
    `document.querySelector(".hd").style.background = "rgba(255,255,255,.5)";`],
   ["입점 화면이 업체 0곳을 0 이라고 말한다",

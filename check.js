@@ -1192,61 +1192,71 @@ const AUDIT = `(() => {
      설명 · 검색창 · 숫자를 하나씩 더하다 보면 두 낱말이 조용히
      작아지는데, 그걸 막는 것이 목적입니다. */
   await f("히어로 제목이 창업 · 폐업 두 낱말을 주인공으로 둔다", "/", `
-    const h = document.querySelector(".mh .mh-h");
-    if(!h) return "히어로 제목이 없습니다";
+    /* ⚠️⚠️ **2026-10-03 리뉴얼 — 제목이 히어로 밖으로 나갔습니다.**
+       히어로가 START/CLOSE 두 장이 되면서 한쪽만 h1 으로 올릴 수가
+       없어졌고(둘이 똑같이 중요합니다), 화면의 h1 은 **딱 하나**여야
+       합니다. 지시서 §7 이 바로 이 문장을 Headline 으로 적어 두어서
+       가치 구간의 h1 이 그 자리입니다. */
+    const h = document.querySelector(".mval-h");
+    if(!h) return "브랜드 가치 구간의 제목이 없습니다";
+    if(h.tagName !== "H1") return "그 제목이 h1 이 아닙니다 (" + h.tagName + ")";
     const t = h.textContent.replace(/\\s+/g, "");
     if(t !== "창업에필요한모든것.폐업에필요한모든것.")
       return "제목이 " + h.textContent.trim() + "입니다";
     if(!h.querySelector(".mh-st")) return "창업 강조가 없습니다";
     if(!h.querySelector(".mh-cl")) return "폐업 강조가 없습니다";
     const px = parseFloat(getComputedStyle(h).fontSize);
-    if(innerWidth > 1200 && px < 56)
-      return "글씨가 " + Math.round(px) + "px 입니다 (§26 — 64~76px)";
+    if(innerWidth > 1200 && px < 34)
+      return "글씨가 " + Math.round(px) + "px 입니다 (지시서 §7 의 Headline 입니다)";
+    /* 히어로 두 장의 큰 글자(창업 · 폐업)도 작아지면 안 됩니다 */
+    const hs = document.querySelector(".mh2-st .mh2-h");
+    const hc = document.querySelector(".mh2-cl .mh2-h");
+    if(!hs || !hc) return "히어로 두 장의 제목이 없습니다";
+    if(hs.textContent.trim() !== "창업" || hc.textContent.trim() !== "폐업")
+      return "히어로 제목이 창업 · 폐업이 아닙니다";
+    if(innerWidth > 1200 && parseFloat(getComputedStyle(hs).fontSize) < 44)
+      return "히어로 제목이 " + Math.round(parseFloat(getComputedStyle(hs).fontSize)) + "px 입니다";
     /* §4 — 데스크톱 첫 화면 680~760px.
        ⚠️ 재는 것은 **첫 화면까지**입니다 — 범위 숫자 띠(.mst)는 히어로와
        같은 구간 안이지만 첫 화면 아래에 붙는 것이라 빼고 잽니다.
        구간 전체를 재면 띠 높이까지 더해져 늘 "너무 길다" 가 됩니다. */
     if(innerWidth > 1200){
-      const sec = document.querySelector(".mh");
-      const bar = document.querySelector(".mh .mst");
-      const top = sec.getBoundingClientRect().top;
-      const hh = bar ? bar.getBoundingClientRect().top - top
-                     : sec.getBoundingClientRect().height;
-      if(hh < 660) return "첫 화면이 " + Math.round(hh) + "px 입니다 (680~760px)";
-      if(hh > 800) return "첫 화면이 " + Math.round(hh) + "px 입니다 — 너무 깁니다 (680~760px)";
+      const hh = document.querySelector(".mh").getBoundingClientRect().height;
+      if(hh < 580) return "첫 화면이 " + Math.round(hh) + "px 입니다 (600~760px)";
+      if(hh > 800) return "첫 화면이 " + Math.round(hh) + "px 입니다 — 너무 깁니다";
     }
     return true;`);
   await f("히어로에서 바로 찾고 바로 갈라진다", "/", `
-    /* ⚠️⚠️ **규칙이 뒤집혔습니다** (2026-10-01 §1 · §6 · §8). 전에는
-       "히어로에 누를 곳이 하나뿐" 이었습니다 — 랜딩이라 "플랫폼
-       시작하기" 하나로 메인에 보내는 것이 전부였기 때문입니다.
-       그 중간 화면을 없앴으니, 이제 히어로가 **실제로 쓰는 자리**입니다.
-       검색창 · 추천 검색어 · START/CLOSE 두 갈래가 다 있어야 합니다. */
+    /* ⚠️⚠️ **규칙이 두 번 뒤집혔습니다.** ① 랜딩 시절에는 "히어로에
+       누를 곳이 하나뿐"(플랫폼 시작하기) 이었습니다. ② 랜딩을 없애고
+       히어로를 쓰는 자리로 만들면서 검색창 · 추천 검색어 · 두 갈래가
+       다 있어야 했습니다. ③ 2026-10-03 리뉴얼로 히어로가 **START/CLOSE
+       두 장**이 되면서 검색은 **헤더**로 올라갔습니다 (지시서 §2 · §3).
+       지금 지키는 것은 — 검색은 어디서나 되고, 히어로에서 두 갈래가
+       같은 무게로 갈리고, 빠른 진입 여섯이 실제로 눌린다. */
+    if(!document.querySelector('.hd input[type="search"], .hd a[href="/search"]'))
+      return "헤더에 검색으로 가는 길이 없습니다";
     const s2 = document.querySelector(".mh");
     if(!s2) return "히어로가 없습니다";
-    const q = s2.querySelector('input[type="search"]');
-    if(!q) return "히어로에 검색창이 없습니다 (§6 — 핵심 UI 입니다)";
-    const rq = q.getBoundingClientRect();
-    if(rq.height < 44)
-      return "검색창이 " + Math.round(rq.height) + "px 입니다 (대형이어야 합니다)";
-    const chips = s2.querySelectorAll(".mh-sg a");
-    if(chips.length < 4) return "추천 검색어가 " + chips.length + "개입니다";
-    for(const c of chips){
-      const href = c.getAttribute("href") || "";
-      /* ⚠️ §7 — 가짜 링크 금지 */
-      if(!href || href === "#") return "추천 검색어에 가짜 링크가 있습니다";
-      const rc = c.getBoundingClientRect();
-      if(rc.height < 44)
-        return "추천 검색어 칩이 " + Math.round(rc.height) + "px 입니다 (44px 기준)";
-    }
-    const st = s2.querySelector('.mh-cta a[href="/startup"]');
-    const cl = s2.querySelector('.mh-cta a[href="/closure"]');
+    const st = s2.querySelector('.mh2-st a[href="/startup"]');
+    const cl = s2.querySelector('.mh2-cl a[href="/closure"]');
     if(!st || !cl) return "START / CLOSE 두 갈래가 히어로에 없습니다";
-    /* ⚠️ §8 — 두 단추의 크기가 같아야 합니다. 한쪽을 작게 만들면
-       그게 "덜 중요한 것" 이라는 말입니다. */
+    /* ⚠️ 두 단추의 크기가 같아야 합니다 (§3 — 50:50). 한쪽을 작게
+       만들면 그게 "덜 중요한 것" 이라는 말입니다. */
     const ra = st.getBoundingClientRect(), rb = cl.getBoundingClientRect();
-    if(Math.abs(ra.width - rb.width) > 2)
-      return "두 단추 폭이 " + Math.round(ra.width) + " · " + Math.round(rb.width) + "입니다";
+    if(Math.abs(ra.height - rb.height) > 2)
+      return "두 단추 높이가 " + Math.round(ra.height) + " · " + Math.round(rb.height) + "입니다";
+    /* 빠른 진입 여섯 — ⚠️ 가짜 링크 금지 · 누르는 칸 40px 이상 */
+    for(const box of [".mh2-st", ".mh2-cl"]){
+      const q = [].slice.call(document.querySelectorAll(box + " .mh2-q a"));
+      if(q.length !== 6) return box + " 의 빠른 진입이 " + q.length + "개입니다 (여섯)";
+      for(const a2 of q){
+        const href = a2.getAttribute("href") || "";
+        if(!href || href === "#") return box + " 에 가짜 링크가 있습니다";
+        if(a2.getBoundingClientRect().height < 40)
+          return box + " 의 빠른 진입이 40px 아래입니다";
+      }
+    }
     return true;`);
   /* ⚠️⚠️ **2026-09-30 지시로 규칙이 뒤집혔습니다.** 전에는 "창업과
      폐업을 색으로 가르지 않는다" 였습니다 — 빨강/초록으로 나누면
@@ -1264,8 +1274,8 @@ const AUDIT = `(() => {
       const m = getComputedStyle(e)[prop || "color"].match(/(\\d+), ?(\\d+), ?(\\d+)/);
       return m ? [+m[1], +m[2], +m[3]] : null;
     };
-    /* 시안 §3 — "창업부터" 는 Deep Navy, "폐업" 은 Orange */
-    const hd = col(".mh-h"), cl = col(".mh-cl");
+    /* ⚠️ 제목은 리뉴얼로 가치 구간(.mval-h)의 h1 이 됐습니다 */
+    const hd = col(".mval-h"), cl = col(".mval-h .mh-cl");
     if(!hd || !cl) return "히어로 제목 색을 못 읽습니다";
     if(!(hd[2] > hd[0] + 30)) return "제목이 남색이 아닙니다 rgb(" + hd.join(",") + ")";
     if(!(cl[0] > cl[1] + 40 && cl[1] > cl[2]))
@@ -1274,25 +1284,28 @@ const AUDIT = `(() => {
        빨강으로 가면 "폐업은 나쁜 것" 이라는 옛 걱정이 그대로 돌아옵니다. */
     if(cl[1] < 55) return "폐업이 빨강으로 넘어갔습니다 rgb(" + cl.join(",") + ")";
     /* 히어로의 "창업" 도 초록이어야 합니다 */
-    const st = col(".mh-st");
+    const st = col(".mval-h .mh-st");
     if(!st) return "히어로 창업 강조 색을 못 읽습니다";
     if(!(st[1] > st[0] + 30 && st[1] > st[2] + 20))
       return "창업이 초록이 아닙니다 rgb(" + st.join(",") + ")";
-    /* 큰 카드 둘도 같은 규칙입니다 — 머리말 글자색으로 봅니다 */
-    const bs = col(".ms-st .ms-k");
-    const bc = col(".ms-cl .ms-k");
-    if(!bs || !bc) return "START · CLOSE 머리말을 못 찾습니다";
-    if(!(bs[1] > bs[0] + 30)) return "START 머리말이 초록이 아닙니다";
-    if(!(bc[0] > bc[1] + 40 && bc[1] >= 45)) return "CLOSE 머리말이 주황이 아닙니다";
-    /* 두 큰 카드의 바탕도 각각 민트 · 피치 쪽이어야 합니다 */
-    const ca = col(".ms-st", "backgroundColor"), cb = col(".ms-cl", "backgroundColor");
-    if(!ca || !cb) return "큰 카드 바탕을 못 읽습니다";
-    if(!(ca[1] >= ca[0] && ca[1] >= ca[2]))
-      return "창업 카드가 초록으로 안 기울었습니다 rgb(" + ca.join(",") + ")";
+    /* ⚠️⚠️ **히어로 두 장도 같은 규칙입니다.** 리뉴얼 지시서 §1 이
+       START = Blue/Green · CLOSE = Warm Brown/Orange 라고 적었고, §4 가
+       START 카드에 Dark Navy Overlay 를 지시했습니다 — 그래서 START
+       카드는 **남색**이고 CLOSE 카드는 **따뜻한 쪽**입니다.
+       ⚠️ 여기서 꼭 지켜야 하는 것은 **CLOSE 가 빨강으로 흘러가지 않는
+       것**입니다. 빨강이 되는 순간 "폐업은 나쁜 것" 이라는 옛 걱정이
+       그대로 돌아옵니다 (§6). */
+    const ca = col(".mh2-st", "backgroundColor"), cb = col(".mh2-cl", "backgroundColor");
+    if(!ca || !cb) return "히어로 두 장의 바탕을 못 읽습니다";
+    if(!(ca[2] > ca[0] + 20)) return "START 카드가 남색이 아닙니다 rgb(" + ca.join(",") + ")";
     if(!(cb[0] >= cb[1] && cb[1] >= cb[2]))
-      return "폐업 카드가 주황으로 안 기울었습니다 rgb(" + cb.join(",") + ")";
-    /* ⚠️ 폐업 쪽이 빨강으로 흘러가면 "폐업은 나쁜 것" 이 됩니다 (§6) */
-    if(cb[1] < 215) return "폐업 카드가 붉은 쪽으로 갔습니다 rgb(" + cb.join(",") + ")";
+      return "CLOSE 카드가 따뜻한 쪽이 아닙니다 rgb(" + cb.join(",") + ")";
+    if(cb[1] < 215) return "CLOSE 카드가 붉은 쪽으로 갔습니다 rgb(" + cb.join(",") + ")";
+    /* CLOSE 쪽 악센트(머리말 · 단추)도 주황이고 빨강이 아니어야 합니다 */
+    const bc = col(".mh2-cl .mh2-k b");
+    if(!bc) return "CLOSE 머리말을 못 찾습니다";
+    if(!(bc[0] > bc[1] + 40)) return "CLOSE 머리말이 주황이 아닙니다 rgb(" + bc.join(",") + ")";
+    if(bc[1] < 45) return "CLOSE 머리말이 빨강으로 넘어갔습니다 rgb(" + bc.join(",") + ")";
     return true;`);
 
   /* ⑨ 규모감 숫자 — **센 값**이어야 합니다
@@ -1539,11 +1552,19 @@ const AUDIT = `(() => {
   /* ⚠️ 검색은 **히어로의 대형 검색창**(§6)과 헤더 아이콘 둘입니다.
      히어로 쪽은 위의 "히어로에서 바로 찾고 바로 갈라진다" 가 봅니다. */
   await f("어느 화면에서나 검색으로 가는 길이 있다", "/", `
-    const a = document.querySelector('.hd a[href="/search"]');
-    if(!a) return "헤더에 검색으로 가는 링크가 없습니다";
-    const r = a.getBoundingClientRect();
-    if(r.width < 40 || r.height < 40)
-      return "검색 아이콘이 " + Math.round(r.width) + "x" + Math.round(r.height) + "입니다";
+    /* ⚠️ 2026-10-03 — 넓은 화면에서는 **입력칸**, 좁은 화면에서는
+       **돋보기 단추**입니다 (지시서 §2). 둘 중 하나는 늘 보여야 합니다. */
+    const vis = function(e){
+      if(!e) return null;
+      const r = e.getBoundingClientRect();
+      return (r.width >= 40 && r.height >= 40) ? r : null;
+    };
+    const box = vis(document.querySelector(".hd .hd-s"));
+    const ico = vis(document.querySelector('.hd a[href="/search"]'));
+    if(!box && !ico) return "헤더에 쓸 수 있는 검색 자리가 없습니다";
+    /* 입력칸이 보이면 엔터로 실제로 가야 합니다 */
+    if(box && !document.querySelector('.hd input[type="search"]'))
+      return "헤더 검색이 입력칸이 아닙니다";
     return true;`);
   await f("추천 검색어가 실제로 결과를 낸다", "/search", `
     /* ⚠️ 눌렀는데 "결과 없음" 이 나오면 검색이 고장난 것처럼 보입니다 */
@@ -1642,11 +1663,17 @@ const AUDIT = `(() => {
     /* ⚠️ 2026-10-03 — 손으로 고른 "핵심 서비스 여덟"(.mv-g)은 "고른
        업종에 필요한 모든 것"(.mfit-tb)으로 **대체**됐습니다. 지운 것이
        아니라 데이터에서 오는 쪽으로 바뀐 것이라, 찾는 표시만 바꿉니다. */
-    const need = [['input[type="search"]', "검색창"], [".mi-g", "업종 고르기"],
+    /* ⚠️ 2026-10-03 리뉴얼 — START/CLOSE 는 .ms-two 가 아니라
+       **히어로 두 장**(.mh2-c)이고, 검색은 헤더로 올라갔습니다.
+       ⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다 — 일곱 번째입니다 */
+    const need = [[".mh2-c", "START / CLOSE 두 장"], [".mi-g", "업종 고르기"],
                   [".mfit-tb", "업종별 필요한 것"], [".fit-g", "서비스 분야"],
-                  [".ms-two", "START / CLOSE"], [".mst-g", "범위 숫자"]];
+                  [".mfeat-g", "큰 카드 셋"], [".msvc-g", "주요 서비스"],
+                  [".mst-g", "범위 숫자"]];
     for(const q of need)
       if(!v.querySelector(q[0])) return q[1] + " 가 메인에 없습니다";
+    if(!document.querySelector('.hd input[type="search"], .hd a[href="/search"]'))
+      return "검색으로 가는 길이 없습니다";
     /* ⚠️ 게이트웨이로 보내는 길이 남아 있으면 안 됩니다 (§29) */
     const gate = [].slice.call(document.querySelectorAll('a[href="/home"]'));
     if(gate.length)
@@ -1721,7 +1748,7 @@ const AUDIT = `(() => {
        입니다. 안 주면 사진이 **비율을 무시하고 늘어납니다.** 연결 구간
        두 곳이 실제로 빠져 있었는데 **사진이 0장이라 아무도 몰랐습니다.**
        그래서 사진이 없을 때도 규칙이 걸려 있는지만 봅니다. */
-    const want = [".mh-ph .ph", ".ms-ph .ph", ".mbr-p .ph"];
+    const want = [".mh2-ph .ph", ".mfeat-ph .ph", ".msvc-ph .ph", ".mbr-p .ph"];
     const bad = [];
     for(const q of want){
       let ok = false;
@@ -1735,126 +1762,85 @@ const AUDIT = `(() => {
       if(!ok) bad.push(q);
     }
     return bad.length ? bad.join(" · ") + " 에 object-fit:cover 가 없습니다" : true;`);
-  await f("큰 카드 둘의 분야 수가 센 값이다", "/", `
-    /* ⚠️ 분야 수를 손으로 적으면 분류를 늘렸을 때 그 자리만 옛 숫자로
-       남습니다 — 데이터에서 다시 세어 맞춰 봅니다.
-       ⚠️ 대표로 보여 주는 여섯도 **실제 분류 이름**이어야 합니다. */
-    const pair = [
-      [".ms-st", (window.AM_START_CATS || []), "창업"],
-      [".ms-cl", (window.AM_CLOSE_CATS || []), "폐업"]
-    ];
-    for(const p of pair){
-      const card = document.querySelector(p[0]);
-      if(!card) return p[2] + " 카드가 없습니다";
-      const el = card.querySelector(".ms-more i");
-      if(!el) return p[2] + " 카드에 분야 수가 없습니다";
-      const got = parseInt(el.textContent.replace(/[^0-9]/g, ""), 10);
-      if(got !== p[1].length)
-        return p[2] + " 카드가 " + got + "개라는데 실제 " + p[1].length + "개입니다";
-      const names = p[1].map(function(c){ return c.name; });
-      const shown = [].slice.call(card.querySelectorAll(".ms-g b"))
+  await f("히어로 빠른 진입 여섯이 분류에서 온다", "/", `
+    /* ⚠️⚠️ 이름 · 아이콘 · 링크를 손으로 적어 두었더니 화면마다 **서로
+       다른 아이콘**을 쓰고 있었습니다 (프랜차이즈가 전구, 인테리어와
+       철거가 둘 다 망치). 이제 분류 key 만 적고 catalog.js 에서
+       가져오므로, 그것이 실제로 먹는지 봅니다.
+       ⚠️ 분류가 없는 카드(프랜차이즈)는 쪽마다 하나까지 봐줍니다. */
+    const names = (window.AM_CATS || []).map(function(c){ return c.name; });
+    for(const box of [".mh2-st", ".mh2-cl"]){
+      const g = document.querySelector(box);
+      if(!g) return box + " 가 없습니다";
+      const shown = [].slice.call(g.querySelectorAll(".mh2-q b"))
         .map(function(e){ return e.textContent.trim(); });
       if(shown.length !== 6)
-        return p[2] + " 카드가 " + shown.length + "개입니다 (§14 · §15 — 여섯입니다)";
-      /* ⚠️ 이름을 손으로 적으면 분류 이름을 고쳤을 때 여기만 옛 이름이
-         남습니다. 분류 key 로 적고 catalog.js 에서 가져오는지 봅니다.
-         ⚠️ 분류가 없는 카드(프랜차이즈)는 하나까지 봐줍니다. */
+        return box + " 가 " + shown.length + "개입니다 (여섯이어야 합니다)";
       let off = 0;
-      for(const t of shown) if(names.indexOf(t) < 0) off++;
-      if(off > 1)
-        return p[2] + " 카드에 실제 분류가 아닌 이름이 " + off + "개입니다";
+      for(const n of shown) if(names.indexOf(n) < 0) off++;
+      if(off > 1) return box + " 에 분류에 없는 이름이 " + off + "개 있습니다";
     }
     return true;`);
-  await f("큰 카드 둘의 크기가 같다", "/", `
+  await f("히어로 두 장의 크기가 같다", "/", `
     /* 폐업 쪽을 좁히거나 가볍게 만들면 그게 "덜 중요한 것" 이라는
-       말입니다 (§6 · §15). 나란히 놓인 때만 봅니다. */
-    const a = document.querySelector(".ms-st"), b = document.querySelector(".ms-cl");
+       말입니다 (지시서 §3 — 50:50). 나란히 놓인 때만 봅니다. */
+    const a = document.querySelector(".mh2-st"), b = document.querySelector(".mh2-cl");
     if(!a || !b) return "두 갈래 카드 중 하나가 없습니다";
-    if(innerWidth <= 900) return true;
+    if(innerWidth <= 980) return true;
     const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
     if(Math.abs(ra.width - rb.width) > 2 || Math.abs(ra.height - rb.height) > 2)
       return "창업 " + Math.round(ra.width) + "×" + Math.round(ra.height) +
         " · 폐업 " + Math.round(rb.width) + "×" + Math.round(rb.height) + "입니다";
     return true;`);
-  await f("큰 카드 여섯의 아이콘이 분류 것과 같다", "/", `
-    /* ⚠️⚠️ 손으로 적어 두었더니 두 화면이 **서로 다른 아이콘**을 쓰고
-       있었습니다 — 프랜차이즈가 전구, 재고 처리가 장바구니, 인테리어와
-       철거가 둘 다 망치였습니다. 한 사이트에서 같은 것이 화면마다
-       다르게 보이면 안 됩니다 (§27). 이제 catalog.js 에서 가져오므로,
-       그것이 실제로 먹는지 봅니다.
-       (⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다 — 여섯 번째입니다) */
-    const cards = [].slice.call(document.querySelectorAll(".ms-g a"));
-    if(!cards.length) return "큰 카드 안에 항목이 없습니다";
-    /* 아이콘이 비어 있으면 key 를 잘못 적은 것입니다 — 조용히 빈 칸이 됩니다 */
+  await f("히어로 여섯의 아이콘이 분류 것과 같다", "/", `
+    /* ⚠️ 아이콘이 비면 key 를 잘못 적은 것입니다 — 조용히 빈 칸이 됩니다.
+       (⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다) */
+    const cards = [].slice.call(document.querySelectorAll(".mh2-q a"));
+    if(!cards.length) return "히어로 안에 빠른 진입이 없습니다";
     for(const a of cards){
       const sv = a.querySelector("svg");
       if(!sv || !sv.innerHTML.trim())
         return "'" + (a.textContent||"").trim().slice(0,12) + "' 항목에 아이콘이 없습니다";
     }
     /* 같은 카드 안에서 같은 아이콘이 두 번 나오면 뜻이 흐려집니다 */
-    for(const box of [".ms-st", ".ms-cl"]){
+    for(const box of [".mh2-st", ".mh2-cl"]){
       const g = document.querySelector(box);
       if(!g) continue;
       const seen = [];
-      for(const sv of g.querySelectorAll(".ms-g svg")){
+      for(const sv of g.querySelectorAll(".mh2-q svg")){
         const d = sv.innerHTML.trim();
-        if(seen.indexOf(d) >= 0)
-          return box + " 안에 같은 아이콘이 두 번 나옵니다";
+        if(seen.indexOf(d) >= 0) return box + " 안에 같은 아이콘이 두 번 나옵니다";
         seen.push(d);
       }
     }
     return true;`);
   await f("업종 열넷이 저마다 다른 색을 쓴다", "/", `
     /* ⚠️ 지시서 §19 — "사이트에 컬러가 살아있어야 한다." 전에는 분류색이
-       여덟뿐이라 업종 열넷에서 t7 이 넷 · t8 · t2 · t5 · t1 이 둘씩
-       겹쳤습니다. 색이 겹치면 업종이 구분되지 않습니다.
-       ⚠️ 색은 industries.js 의 tone 한 줄입니다 — 화면에 손으로 적지 마세요.
+       여덟뿐이라 t7 이 넷 · t8 · t2 · t5 · t1 이 둘씩 겹쳤습니다.
+       ⚠️ 색은 industries.js 의 tone 한 줄입니다 — 손으로 적지 마세요.
 
-       ⚠️⚠️ **2026-10-03 에 보는 자리를 옮겼습니다.** 전에는 아이콘
-       타일의 바탕을 셌는데, 시안대로 색을 **카드**로 옮기고 타일을
-       흰색으로 띄우면서 타일 열넷이 전부 같은 흰색이 됐습니다 —
-       검사가 "13개 겹침" 으로 잡았고 **그 지적은 맞았습니다**(그때는
-       어디에도 색이 없을 수 있으니까요). 보는 것은 "타일" 이 아니라
-       **업종이 색으로 갈리는가** 이므로 **카드 바탕**을 셉니다. */
+       ⚠️⚠️ **보는 자리를 두 번 옮겼습니다.** 10-03 아침에는 색이 카드
+       바탕에 있었고(타일은 흰색), 같은 날 리뉴얼 §8 로 카드가 흰색이
+       되고 색이 **타일**로 돌아왔습니다. 그때마다 검사가 "13개 겹침"
+       으로 걸렸고 **두 번 다 지적이 맞았습니다.** 그래서 이제는 어느
+       한쪽이 아니라 **카드 바탕 + 타일 바탕을 묶어서** 봅니다 — 색이
+       어느 쪽에 있든 "업종이 색으로 갈리는가" 만 보면 됩니다. */
     const cards = [].slice.call(document.querySelectorAll(".mi-g > li > a"));
     if(cards.length !== (window.AM_INDUSTRIES || []).length)
       return "업종 카드가 " + cards.length + "개입니다";
+    const clear = /rgba\(0, 0, 0, 0\)|transparent/;
     const seen = {}, dup = [];
     for(const t of cards){
-      const c = getComputedStyle(t).backgroundColor;
-      /* ⚠️ 투명이면 뒤 구간 색이 비쳐서 **전부 같은 색**입니다 */
-      if(/rgba\(0, 0, 0, 0\)|transparent/.test(c)) return "업종 카드에 바탕색이 없습니다";
-      if(seen[c]) dup.push(c); else seen[c] = 1;
+      const cb = getComputedStyle(t).backgroundColor;
+      const tl = t.querySelector(".ic-t");
+      const tb = tl ? getComputedStyle(tl).backgroundColor : "";
+      /* ⚠️ 둘 다 투명이면 뒤 구간이 비쳐 **전부 같은 색**입니다 */
+      if(clear.test(cb) && (!tb || clear.test(tb)))
+        return "업종 카드에 색이 아무 데도 없습니다";
+      const key = cb + "|" + tb;
+      if(seen[key]) dup.push(key); else seen[key] = 1;
     }
-    if(dup.length) return "겹치는 업종 카드 바탕이 " + dup.length + "개 있습니다 — " + dup[0];
-    return true;`);
-  await f("업종 카드가 색만이 아니라 그 업종에 무엇이 들어가는지 말한다", "/", `
-    /* ⚠️⚠️ **색으로는 "내 업종이 어느 것인가" 를 말할 수 없습니다.**
-       사진이 0장이라 업종 카드를 분류색 틴트로 갈라 두었는데, 틴트가
-       말해 주는 것은 **서로 다르다**까지입니다. 미용실 사장님이 자기
-       자리를 찾는 일은 "헤어샵 · 바버샵 · 두피관리" 라는 글이 합니다.
-       그 글은 industries.js 의 lead 열넷이고 /startup 의 .ind-l 은
-       처음부터 쓰고 있었는데 **메인만 안 읽고** 있었습니다.
-       ⚠️ 손으로 적으면 업종을 늘릴 때 어긋나므로 데이터와 **글자까지**
-       맞는지 봅니다. 숨기는 것도 안 됩니다 — 숨기면 다시 색뿐입니다. */
-    const L = (window.AM_INDUSTRIES || []);
-    const cards = [].slice.call(document.querySelectorAll(".mi-g > li > a"));
-    if(cards.length !== L.length) return "업종 카드가 " + cards.length + "개입니다";
-    for(let i = 0; i < L.length; i++){
-      const lead = (L[i].lead || "").trim();
-      if(!lead) return L[i].key + " 에 lead 가 없습니다";
-      const el = cards[i].querySelector(".mi-l");
-      if(!el) return L[i].key + " 카드에 설명 줄이 없습니다";
-      /* 구분점이 줄 머리로 안 가게 띄어쓰기 한 칸을 안 깨지는 칸으로
-         바꿔 둡니다 — 되돌려 놓고 글자를 맞춰 봅니다. */
-      const NB = String.fromCharCode(160);
-      if((el.textContent || "").split(NB).join(" ").trim() !== lead)
-        return L[i].key + " 카드 설명이 데이터와 다릅니다";
-      const cs = getComputedStyle(el);
-      if(cs.display === "none" || cs.visibility === "hidden")
-        return L[i].key + " 카드 설명이 숨겨져 있습니다";
-      if(parseFloat(cs.fontSize) < 12) return "설명 줄이 " + cs.fontSize + "입니다";
-    }
+    if(dup.length) return "겹치는 업종 색이 " + dup.length + "개 있습니다 — " + dup[0];
     return true;`);
   await f("메인 구간 차례가 지시서와 같다", "/", `
     /* 지시서 §2 의 차례입니다. 늘리거나 섞기 전에 거기를 먼저 고치세요.
@@ -1864,7 +1850,7 @@ const AUDIT = `(() => {
        떨어져 나오고(§3), "고른 업종에 필요한 모든 것"(§5)이 새로
        들어오고, 손으로 고른 "핵심 서비스 여덟"(.mv-g)은 그것으로
        대체됐습니다. */
-    const want = ["mh","mnum","mi-g","mfit","ms-two","pv","fr","mk","hp","mbr","mt-g","hr","mjn"];
+    const want = ["mh","mval","mnum","mi-g","mfit","mfeat","msvc","pv","fr","mk","mbr","mt-g","mjn"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== 13) return "구간이 " + S.length + "개입니다 (열셋이어야 합니다)";
     /* ⚠️ 숫자 구간은 이제 **히어로 밖**입니다. 떼어 놓으면 바탕이 둘 다
@@ -1876,8 +1862,10 @@ const AUDIT = `(() => {
       for(const m of mark) if(e.classList.contains(m)) return m;
       /* 안쪽 표시로 무슨 구간인지 가립니다 */
       if(e.classList.contains("mnum")) return "mnum";
+      if(e.classList.contains("mval")) return "mval";
+      if(e.classList.contains("mfeat")) return "mfeat";
+      if(e.classList.contains("msvc")) return "msvc";
       if(e.querySelector(".mfit-tb")) return "mfit";
-      if(e.querySelector(".ms-two")) return "ms-two";
       if(e.querySelector(".mi-g"))   return "mi-g";
       if(e.querySelector(".mt-g"))   return "mt-g";
       const hd = (e.querySelector(".eyebrow") || {}).textContent || "";
@@ -1913,7 +1901,11 @@ const AUDIT = `(() => {
       return "분야가 " + got.length + "개입니다 (" + window.AM_START_CATS.length + "개 전부여야 합니다)";
     /* ③ 하위 항목이 **그 업종 것**이어야 합니다 — 카페면 커피머신 */
     const eq = (window.amIndustry("cafe").equip || []).map(function(e){ return e.name; });
-    const txt = document.querySelector("#view > section:nth-child(4)").textContent;
+    /* ⚠️ nth-child 로 세지 마세요 — 구간이 하나 늘면 조용히 엉뚱한
+       구간을 봅니다 (리뉴얼로 실제로 그랬습니다). */
+    const fit = document.querySelector(".fit-g");
+    if(!fit) return "고른 업종 구간이 없습니다";
+    const txt = fit.closest("section").textContent;
     if(eq.length && txt.indexOf(eq[0]) < 0)
       return "시설 · 장비 하위가 카페 것이 아닙니다 (" + eq[0] + " 가 없습니다)";
     /* ④ 고른 업종이 업종 카드에 표시돼야 합니다 */

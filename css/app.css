@@ -96,6 +96,29 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .hd-ic{ display:inline-flex; align-items:center; justify-content:center;
   width:40px; height:40px; border-radius:var(--r); color:var(--ink2); }
 .hd-ic:hover{ background:var(--bg-2); color:var(--ink); }
+/* ⚠️⚠️ 시안 §2 의 **통합검색**입니다. 히어로가 START/CLOSE 두 장이
+   되면서 큰 검색창이 들어갈 자리가 없어졌는데, 지우지 않고 여기로
+   올렸습니다 — 모든 화면에서 쓸 수 있게 된 쪽이 낫습니다.
+   ⚠️ 높이를 40px 아래로 내리지 마세요 (누르는 칸입니다). */
+.hd-s{ flex:0 1 280px; display:flex; align-items:center; gap:8px;
+  min-width:0; height:42px; padding:0 var(--s4);
+  background:var(--bg-2); border:1px solid var(--line); border-radius:var(--r-pill); }
+.hd-s:focus-within{ border-color:var(--blue); background:var(--surface); }
+.hd-s-i{ flex:0 0 auto; display:inline-flex; color:var(--ink3); }
+.hd-s input{ flex:1 1 auto; min-width:0; height:100%; border:0; outline:0;
+  background:transparent; font-size:var(--t-cap); color:var(--ink); }
+.hd-s input::placeholder{ color:var(--ink3); }
+/* ⚠️ 헤더 오른쪽은 **줄바꿈 금지**입니다. 글자가 두 줄이 되면 헤더
+   높이가 늘어나고 "내 기 / 록" 처럼 낱말이 잘립니다 — 실제로 그랬습니다. */
+.hd-r{ flex-wrap:nowrap; }
+.hd-txt, .hd-cta{ white-space:nowrap; }
+/* 넓은 화면에서는 입력칸이 있으니 돋보기 단추는 접습니다 */
+.hd-ic-s{ display:none; }
+@media (max-width:1180px){
+  .hd-s{ display:none; }
+  .hd-ic-s{ display:inline-flex; }
+}
+.hd-txt svg{ margin-right:6px; }
 .hd-txt{ display:inline-flex; align-items:center; min-height:40px;
   font-size:var(--t-sm); font-weight:700; color:var(--ink2); }
 /* §4 — 입점 단추만 남색 채움입니다. 이것 하나만 채워야 어디를
@@ -104,7 +127,7 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
   background:var(--navy); border-color:var(--navy); color:#fff; }
 .hd-cta:hover{ background:var(--navy-dark); border-color:var(--navy-dark); }
 
-@media (max-width:1180px){ .hd-in{ gap:var(--s5); } .gnb{ gap:var(--s4); } }
+@media (max-width:1240px){ .hd-in{ gap:var(--s5); } .gnb{ gap:var(--s4); } }
 @media (max-width:1040px){ .lg span{ display:none; } .gnb{ gap:var(--s3); } }
 /* §22 — 폰에서는 헤더를 단순하게. 메뉴는 아래 네비가 맡습니다.
    ⚠️ **입점 CTA 는 폰에서도 둡니다** (§39). 업체가 모이지 않으면 이

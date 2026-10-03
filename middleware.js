@@ -54,7 +54,7 @@ function page(title, body, status) {
     'p{color:rgba(255,255,255,.78);font-size:14px;margin:0}' +
     'code{background:rgba(255,255,255,.14);padding:2px 6px;border-radius:4px}' +
     'a{color:#fff;font-size:14px;display:inline-block;margin-top:20px}</style>' +
-    '</head><body><div><b>인수인계</b>' + body +
+    '</head><body><div><b>STARTCLOSE</b>' + body +
     '<a href="/">← 사이트로 돌아가기</a></div></body></html>',
     { status: status, headers: { "content-type": "text/html; charset=utf-8" } }
   );

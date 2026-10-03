@@ -1162,96 +1162,171 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    냅니다 (§25). 전수 점검이 어두운 면 15% 를 잽니다.
 
    ⚠️ 데스크톱 첫 화면 **680~760px** (§4). 검사가 660px 아래면 잡습니다. */
-.mh{ background:
-  radial-gradient(1100px 460px at 14% 0%, var(--bg-mint) 0%, transparent 62%),
-  radial-gradient(1100px 460px at 88% 6%, var(--bg-peach) 0%, transparent 62%),
-  var(--bg-cream);
-  padding:var(--s10) 0 var(--s9); }
-/* §9 — 55:45. ⚠️ 글만 가운데 두지 않습니다. */
-/* ⚠️⚠️ **70:30 입니다 — 재어 보고 정했습니다 (2026-10-03).**
-   제목이 "창업에 필요한 모든 것." 열한 글자이고, `--t-hero` 가 1440px
-   에서 76px 이라 한 줄에 **약 820px** 이 듭니다. 55:45(638px)에서는
-   **네 줄로 깨지고** 히어로가 923px 이 됐습니다 (`check.js` 기준 830
-   위). 글자를 줄이는 쪽(60px)으로 먼저 고쳤다가 "제목이 64~76px" 검사에
-   걸렸고, **그 검사가 맞습니다** — 지시서가 원하는 것은 더 강한 첫
-   인상이지 작은 제목이 아닙니다. 칸을 넓히는 쪽이 답입니다.
-   ⚠️ 검색창은 `.mh-s` 의 max-width 로 따로 잡습니다 (§5: 650~800px). */
-.mh-in{ display:grid; gap:var(--s8); grid-template-columns:70fr 30fr;
-  align-items:center; min-height:600px; }
-.mh-tx{ min-width:0; }
-.mh-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.14em;
-  color:var(--gold-text); }
-/* §26 — 데스크톱 64~76px. `--t-hero` 가 clamp(48,5.4vw,76) 입니다.
-   ⚠️ **줄이지 마세요.** 줄이면 "히어로 제목이 두 낱말을 주인공으로
-   둔다" 검사에 걸립니다 — 들어갈 칸이 모자라면 `.mh-in` 의 비율을
-   넓히는 쪽입니다 (바로 위). */
-.mh-h{ margin-top:var(--s3); font-size:var(--t-hero); font-weight:900;
-  letter-spacing:-.04em; line-height:1.14; color:var(--navy); }
-.mh-h em{ font-style:normal; }
+/* ⚠️⚠️ **2026-10-03 리뉴얼 — 히어로가 START/CLOSE 두 장이 됐습니다**
+   (지시서 §3 ~ §6). 전에는 왼쪽 글 + 오른쪽 비주얼 한 판이었습니다.
+
+   ⚠️⚠️ **어두운 면 규칙이 한 번 뒤집혔습니다.** CLAUDE.md 는 "어두운
+   배경을 쓸 수 있는 자리는 업체 입점 카드 하나뿐 · 히어로에는 쓰지
+   않습니다" 였습니다. 지시서 §4 가 "사진 위에 Dark Navy Overlay" 로
+   **직접 지시**했습니다. 지키는 것은 **면적**입니다 — 전수 점검이
+   푸터를 포함한 문서 전체에서 어두운 면 15% 를 재고, 재 보니 이
+   카드까지 넣어도 한참 아래입니다. 그 검사를 약하게 만들지 마세요.
+
+   ⚠️ **두 장의 크기 · 비율이 같아야 합니다** (§3 "50:50에 가까운").
+   한쪽을 좁히면 그게 "덜 중요한 것" 이라는 말입니다. */
+.mh{ background:var(--bg-cream); padding:var(--s4) 0 0; }
+.mh2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.mh2-c{ position:relative; overflow:hidden; border-radius:var(--r-2xl);
+  display:flex; flex-direction:column; justify-content:space-between;
+  gap:var(--s8); min-height:540px; padding:var(--s9) var(--s8) var(--s7); }
+/* 사진은 액자째 바닥에 깔리고, 그 위에 막이 덮입니다. 0장이면 둘 다
+   없고 카드 **자신의 바탕색**이 그 자리를 지킵니다 (절대 규칙 2). */
+.mh2-ph{ position:absolute; inset:0; margin:0; z-index:0; }
+.mh2-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0; }
+.mh2-c::after{ content:""; position:absolute; inset:0; z-index:1; }
+.mh2-noph::after{ content:none; }
+.mh2-b, .mh2-q{ position:relative; z-index:2; }
+
+.mh2-st{ background:var(--navy-dark); color:#fff; }
+.mh2-st::after{ background:linear-gradient(100deg,
+  rgba(6,43,81,.93) 0%, rgba(6,43,81,.70) 58%, rgba(6,43,81,.52) 100%); }
+/* ⚠️ Warm Beige 입니다 — 아홉 바탕 중 아직 안 쓰던 `--bg-sand`.
+   왼쪽이 짙은 남색이라 오른쪽은 **밝아야** 대비가 납니다 (§5). */
+.mh2-cl{ background:var(--bg-sand); color:var(--ink); }
+.mh2-cl::after{ background:linear-gradient(100deg,
+  rgba(250,244,232,.95) 0%, rgba(250,244,232,.76) 58%, rgba(250,244,232,.58) 100%); }
+
+.mh2-k{ display:flex; align-items:center; gap:10px;
+  font-size:var(--t-sm); letter-spacing:.12em; }
+.mh2-k b{ font-weight:900; }
+.mh2-k span{ letter-spacing:0; font-weight:600; font-size:var(--t-cap); }
+.mh2-k span::before{ content:"|"; margin-right:10px; opacity:.5; }
+.mh2-st .mh2-k b{ color:#fff; }
+.mh2-st .mh2-k span{ color:rgba(255,255,255,.80); }
+.mh2-cl .mh2-k b{ color:var(--close-deep); }
+.mh2-cl .mh2-k span{ color:var(--ink2); }
+
+/* ⚠️ 한 글자(창업 · 폐업)가 주인공입니다 — 잔 요소를 더하지 마세요 */
+.mh2-h{ margin-top:var(--s4); font-size:clamp(48px, 4.6vw, 68px);
+  font-weight:900; letter-spacing:-.03em; line-height:1.05; }
+.mh2-st .mh2-h{ color:#fff; }
+.mh2-cl .mh2-h{ color:var(--ink); }
+.mh2-d{ margin-top:var(--s5); font-size:var(--t-lg); font-weight:600;
+  line-height:1.6; }
+.mh2-st .mh2-d{ color:rgba(255,255,255,.88); }
+.mh2-cl .mh2-d{ color:var(--ink2); }
+.mh2-go{ margin-top:var(--s7); }
+
+/* 빠른 진입 여섯 — ⚠️ 누르는 칸입니다. 40px 아래로 내리지 마세요. */
+.mh2-q{ display:grid; grid-template-columns:repeat(6,1fr); gap:var(--s2);
+  margin-top:var(--s8); }
+.mh2-q > li{ min-width:0; }
+.mh2-q a{ display:grid; justify-items:center; gap:8px; text-align:center;
+  min-height:76px; padding:8px 2px; border-radius:var(--r-lg);
+  transition:background .2s; }
+.mh2-qi{ display:inline-flex; align-items:center; justify-content:center;
+  width:46px; height:46px; border-radius:var(--r-pill); }
+.mh2-q b{ font-size:var(--t-cap); font-weight:700; line-height:1.35; }
+.mh2-st .mh2-qi{ background:rgba(255,255,255,.14); color:#fff; }
+.mh2-st .mh2-q b{ color:rgba(255,255,255,.90); }
+.mh2-st .mh2-q a:hover{ background:rgba(255,255,255,.10); }
+.mh2-cl .mh2-qi{ background:#fff; color:var(--close-deep);
+  box-shadow:0 2px 8px rgba(15,43,68,.07); }
+.mh2-cl .mh2-q b{ color:var(--ink2); }
+.mh2-cl .mh2-q a:hover{ background:rgba(255,255,255,.60); }
+
+/* 밝은 카드 위의 CLOSE 단추 — ⚠️ 주황이지 빨강이 아닙니다 */
+.btn-cd{ background:var(--close-deep); color:#fff; border-color:var(--close-deep); }
+.btn-cd:hover{ filter:brightness(.94); color:#fff; }
+
+/* ══════════════════════════════════════════════════════════════════
+   ② 브랜드 가치 넷 (지시서 §7)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ 이 구간의 h2 자리가 화면의 **h1** 입니다 — 히어로 두 장이
+   똑같이 중요해서 한쪽만 h1 으로 올릴 수가 없습니다. */
+.mval-k{ letter-spacing:.3em; }
+.mval-h{ margin-top:var(--s3); font-size:clamp(28px, 2.9vw, 42px);
+  font-weight:900; letter-spacing:-.03em; line-height:1.3; color:var(--navy); }
+.mval-h em{ font-style:normal; }
+/* ⚠️⚠️ 이 두 줄을 지우지 마세요 — 히어로 CSS 와 함께 지웠다가 제목의
+   "폐업" 이 남색이 됐습니다. 창업은 초록 · 폐업은 **주황**(빨강이
+   아닙니다)이고, 글자로 쓰는 색이라 **짙은 쪽**을 씁니다. */
 .mh-st{ color:var(--start-dark); }
 .mh-cl{ color:var(--close-dark); }
-.mh-d{ margin-top:var(--s4); font-size:var(--t-lg); color:var(--ink2);
-  line-height:1.7; }
+.mval-g{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s6);
+  margin-top:var(--s8); }
+.mval-g > li{ display:flex; align-items:flex-start; gap:var(--s4); min-width:0; }
+.mval-i{ flex:0 0 auto; display:inline-flex; align-items:center;
+  justify-content:center; width:52px; height:52px; border-radius:var(--r-pill);
+  background:var(--bg-sky); color:var(--navy); }
+.mval-t{ display:grid; gap:4px; min-width:0; }
+.mval-t b{ font-size:var(--t-md); font-weight:800; color:var(--ink); }
+.mval-t i{ font-style:normal; font-size:var(--t-cap); color:var(--ink2);
+  line-height:1.55; }
 
-/* 대형 검색창 (§6) — ⚠️ 히어로의 **핵심 UI** 입니다. 작게 만들지 마세요. */
-/* ⚠️ 지시서 §5 — 650~800px. 글자 칸이 넓어져도 검색창은 여기서 잡습니다 */
-.mh-s{ max-width:760px; display:flex; gap:var(--s2); align-items:center; margin-top:var(--s6);
-  padding:8px 8px 8px var(--s5); background:var(--surface);
-  border:1px solid var(--line); border-radius:20px;
-  box-shadow:0 14px 38px rgba(15,43,68,.09); }
-.mh-s-i{ display:inline-flex; color:var(--ink3); flex:0 0 auto; }
-.mh-s input{ flex:1 1 auto; min-width:0; height:58px; border:0; outline:0;
-  background:transparent; font-size:var(--t-lg); color:var(--ink); }
-.mh-s input::placeholder{ color:var(--ink3); }
-.mh-s:focus-within{ border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft); }
-.mh-s .btn{ flex:0 0 auto; min-height:58px; border-radius:16px; }
+/* ══════════════════════════════════════════════════════════════════
+   ⑥ 큰 카드 셋 — 프랜차이즈 · 점포 · 인테리어 (지시서 §10 · §11)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️ 사진이 들어오면 사진이 주인공이 되고 글은 막 위에 앉습니다.
+   0장이면 **옅은 바탕 + 큰 아이콘**으로 자리를 지킵니다 — "이미지
+   준비 중" 같은 자리표시자를 찍지 않습니다. */
+.mfeat-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s5); }
+.mfeat-c{ position:relative; overflow:hidden; display:flex;
+  min-height:300px; border-radius:var(--r-2xl); border:1px solid var(--line);
+  transition:transform .25s, box-shadow .25s; }
+.mfeat-c:hover{ transform:translateY(-4px); box-shadow:0 16px 34px rgba(15,43,68,.10); }
+.mfeat-ph{ position:absolute; inset:0; margin:0; z-index:0; }
+.mfeat-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0; }
+.mfeat-c::after{ content:""; position:absolute; inset:0; z-index:1;
+  background:linear-gradient(180deg, rgba(6,43,81,.30) 0%, rgba(6,43,81,.82) 100%); }
+.mfeat-noph::after{ content:none; }
+.mfeat-b{ position:relative; z-index:2; display:flex; flex-direction:column;
+  gap:6px; align-self:flex-end; padding:var(--s7) var(--s6) var(--s6); }
+.mfeat-k{ font-style:normal; font-size:var(--t-cap); font-weight:800;
+  letter-spacing:.18em; }
+.mfeat-h{ font-size:var(--t-2xl); font-weight:900; letter-spacing:-.02em;
+  line-height:1.3; }
+.mfeat-d{ font-style:normal; margin-top:4px; font-size:var(--t-cap);
+  line-height:1.6; }
+.mfeat-go{ display:inline-flex; align-items:center; gap:6px; align-self:flex-start;
+  min-height:40px; margin-top:var(--s4); padding:0 var(--s5);
+  border-radius:var(--r-pill); font-size:var(--t-cap); font-weight:800; }
+/* 사진이 있을 때 — 흰 글자 */
+.mfeat-c:not(.mfeat-noph) .mfeat-k{ color:var(--gold-on-dark); }
+.mfeat-c:not(.mfeat-noph) .mfeat-h,
+.mfeat-c:not(.mfeat-noph) .mfeat-d{ color:#fff; }
+.mfeat-c:not(.mfeat-noph) .mfeat-go{ background:#fff; color:var(--navy); }
+/* 사진이 0장일 때 — 옅은 바탕에 남색 글 (⚠️ 셋이 서로 다른 바탕) */
+.mfeat-noph .mfeat-k{ color:var(--ink3); }
+.mfeat-noph .mfeat-h{ color:var(--navy); }
+.mfeat-noph .mfeat-d{ color:var(--ink2); }
+.mfeat-noph .mfeat-go{ background:var(--navy); color:#fff; }
+.mfeat-noph.mfeat-franchise{ background:var(--bg-sky); }
+.mfeat-noph.mfeat-store{ background:var(--bg-ivory2); }
+.mfeat-noph.mfeat-interior{ background:var(--bg-sand); }
+.mfeat-ic{ position:absolute; right:-14px; top:-10px; z-index:1;
+  color:var(--navy); opacity:.08; pointer-events:none; }
 
-/* 추천 검색어 (§7) — ⚠️ 44px 이상입니다. 전수 점검 기준(40)보다
-   지시서 기준(44)이 커서 **큰 쪽**을 따릅니다. */
-.mh-sg{ display:flex; flex-wrap:wrap; gap:8px; margin-top:var(--s4); }
-.mh-sg a{ display:inline-flex; align-items:center; min-height:44px;
-  padding:0 14px; border-radius:999px; background:var(--surface);
-  border:1px solid var(--line); font-size:var(--t-sm); font-weight:700;
-  color:var(--ink2); transition:border-color .2s, color .2s; }
-.mh-sg a:hover{ border-color:var(--blue); color:var(--blue-600); }
+/* ══════════════════════════════════════════════════════════════════
+   ⑦ 주요 서비스 여덟 (지시서 §12 · §13)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️ "지금 많이 찾는" 이 아닙니다 — 이용 데이터를 안 모읍니다. */
+.msvc-g{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s5); }
+.msvc-g a{ display:grid; gap:4px; height:100%; padding-bottom:var(--s4);
+  border-radius:var(--r-lg); overflow:hidden; background:var(--surface);
+  border:1px solid var(--line); transition:transform .25s, box-shadow .25s; }
+.msvc-g a:hover{ transform:translateY(-4px);
+  box-shadow:0 16px 34px rgba(15,43,68,.10); }
+.msvc-ph{ display:block; aspect-ratio:16/10; }
+.msvc-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0; }
+/* 사진이 0장이면 분류 아이콘이 자리를 지킵니다 */
+.msvc-ph-n{ display:flex; align-items:center; justify-content:center;
+  background:var(--ic-bg); color:var(--ic-ink); }
+.msvc-g b{ margin-top:var(--s4); padding:0 var(--s5);
+  font-size:var(--t-md); font-weight:800; color:var(--ink); }
+.msvc-g i{ font-style:normal; padding:0 var(--s5); font-size:var(--t-cap);
+  color:var(--ink2); line-height:1.55; }
 
-/* §8 — ⚠️ **두 단추의 크기가 같아야 합니다.** 1fr 1fr 로 잡습니다. */
-.mh-cta{ display:grid; gap:var(--s3); grid-template-columns:1fr 1fr;
-  margin-top:var(--s6); }
-.mh-cta .btn{ justify-content:center; }
-
-/* 오른쪽 비주얼 (§9 · §10) — 사진이 없으면 작은 카드가 자리를 지킵니다.
-   ⚠️ **빈 회색 상자를 깔지 않습니다** — 액자째 뺍니다. */
-.mh-art{ position:relative; display:grid; gap:var(--s4); min-width:0; }
-.mh-ph .ph{ width:100%; border-radius:var(--r-2xl); object-fit:cover;
-  box-shadow:0 22px 50px rgba(15,43,68,.14); }
-.mh-ph-a .ph{ aspect-ratio:4/5; }
-.mh-ph-b .ph{ aspect-ratio:4/3; }
-/* 사진이 하나라도 있으면 카드는 사진 위에 겹칩니다 */
-.mh-art:not(.mh-art-none) .mh-fc{ position:absolute; right:0; bottom:-14px;
-  width:min(280px, 82%); }
-.mh-fc{ display:grid; gap:var(--s4); }
-.mh-fc > li{ display:flex; align-items:center; gap:var(--s4);
-  padding:var(--s5); background:var(--surface); border-radius:20px;
-  box-shadow:0 16px 38px rgba(15,43,68,.11); }
-/* ⚠️ **셋을 계단처럼 어긋나게 둡니다.** 셋 다 같은 폭으로 쌓으면
-   "떠 있는 카드" 가 아니라 **그냥 목록**으로 읽힙니다 — 실제로 그렇게
-   보여서 다시 짰습니다. 넷으로 늘리지는 마세요 (§10). */
-.mh-fc-st{ width:88%; }
-.mh-fc-cl{ width:88%; margin-left:auto; }
-.mh-fc-w{ width:100%; }
-.mh-fc-t{ display:grid; gap:2px; min-width:0; }
-.mh-fc b{ font-size:var(--t-sm); font-weight:900; letter-spacing:.08em; }
-.mh-fc i{ font-style:normal; font-size:var(--t-md); font-weight:800;
-  color:var(--ink); }
-.mh-fc-st{ --ic-ink:var(--start-dark); --ic-bg:var(--start-soft); }
-.mh-fc-st b{ color:var(--start-dark); }
-.mh-fc-cl{ --ic-ink:var(--close-dark); --ic-bg:var(--close-soft); }
-/* ⚠️ 흰 카드 위 15px 굵은 글씨 — `--close-dark` 로는 4.07 입니다 */
-.mh-fc-cl b{ color:var(--close-deep); }
-.mh-fc-w{ --ic-ink:#fff; --ic-bg:var(--navy); }
-.mh-fc-w b{ color:var(--navy); letter-spacing:-.01em; font-size:var(--t-md); }
-.mh-fc-w i{ color:var(--ink2); font-weight:700; font-size:var(--t-sm); }
 
 /* ══════════════════════════════════════════════════════════════════
    ② 범위 숫자 띠 (§11)
@@ -1354,9 +1429,9 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    ④ 업종 열넷 (§17 ~ §19)
    ══════════════════════════════════════════════════════════════════
    ⚠️ **카드는 흰색**이고 색은 아이콘 타일에만 들어갑니다. */
-.mi-g{ display:grid; gap:var(--s4); grid-template-columns:repeat(5,1fr); }
-.mi-g > li > a{ display:grid; gap:10px; justify-items:center; text-align:center;
-  min-height:var(--tap); padding:var(--s5) 10px; background:var(--surface);
+.mi-g{ display:grid; gap:var(--s3); grid-template-columns:repeat(7,1fr); }
+.mi-g > li > a{ display:grid; gap:8px; justify-items:center; text-align:center;
+  min-height:var(--tap); padding:var(--s4) 6px; background:var(--surface);
   border:1px solid var(--line); border-radius:18px;
   transition:transform .25s, box-shadow .25s, border-color .25s; }
 .mi-g > li > a:hover{ transform:translateY(-4px);
@@ -1505,19 +1580,27 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mjn-go{ flex:0 0 auto; }
 
 /* ── 좁은 화면 ───────────────────────────────────────────────────── */
+@media (max-width:1180px){
+  .mh2-c{ padding:var(--s8) var(--s6) var(--s6); min-height:500px; }
+  .mh2-q{ grid-template-columns:repeat(3,1fr); row-gap:var(--s3); }
+  .mval-g{ grid-template-columns:repeat(2,1fr); }
+}
 @media (max-width:1100px){
-  .mi-g{ grid-template-columns:repeat(4,1fr); }
+  .mi-g{ grid-template-columns:repeat(5,1fr); }
   .mv-g{ grid-template-columns:repeat(2,1fr); }
   .ms-g{ grid-template-columns:repeat(3,1fr); }
+  .msvc-g{ grid-template-columns:repeat(3,1fr); }
 }
 @media (max-width:980px){
   /* §30 — 폰 차례: 제목 → 설명 → 검색 → START/CLOSE → 비주얼.
      DOM 이 그 차례라 한 칸으로 쌓기만 하면 됩니다. */
-  .mh-in{ grid-template-columns:1fr; min-height:0; gap:var(--s7); }
-  .mh-art:not(.mh-art-none) .mh-fc{ position:static; width:auto; }
-  .mh-fc{ grid-template-columns:repeat(3,1fr); gap:var(--s3); }
-  .mh-fc-st, .mh-fc-cl, .mh-fc-w{ width:auto; margin-left:0; }
+  /* 지시서 §24 — 폰에서는 START/CLOSE 를 **세로로 쌓습니다.**
+     나란히 두면 한 장이 180px 이라 제목도 빠른 진입도 안 들어갑니다. */
+  .mh2{ grid-template-columns:1fr; }
+  .mh2-c{ min-height:0; }
   .ms-two{ grid-template-columns:1fr; }
+  .mfeat-g{ grid-template-columns:1fr; }
+  .mfeat-c{ min-height:220px; }
 }
 @media (max-width:900px){
   .mbr-g{ grid-template-columns:1fr; }
@@ -1537,24 +1620,24 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 }
 @media (max-width:760px){
   .mi-g{ grid-template-columns:repeat(3,1fr); }
-  .mh{ padding:var(--s8) 0 var(--s7); }
   .mst{ padding-top:var(--s7); }
   .mst-g{ padding:var(--s5) var(--s4); }
-  .mh-fc{ grid-template-columns:1fr; }
+  .msvc-g{ grid-template-columns:repeat(2,1fr); }
+  .mval-g{ grid-template-columns:1fr; gap:var(--s5); }
 }
 @media (max-width:560px){
-  .mi-g{ grid-template-columns:repeat(2,1fr); }
+  /* 아이콘 + 이름뿐이라 폰에서도 셋이 들어갑니다 (지시서 §24) */
+  .mi-g{ grid-template-columns:repeat(3,1fr); }
   .mv-g, .hp-g, .hr-g, .mt-g{ grid-template-columns:1fr; }
   .ms-g{ grid-template-columns:repeat(2,1fr); }
   .ms-b{ padding:var(--s6); }
   .mjn-c{ padding:var(--s6); }
   /* 숫자 셋을 한 줄에 두면 "183" 이 눌립니다 */
   .mst-g{ grid-template-columns:1fr; gap:var(--s4); }
-  .mh-cta{ grid-template-columns:1fr; }
-  /* 검색은 한 줄에 다 안 들어갑니다 — 단추를 아래로 내립니다 */
-  .mh-s{ flex-wrap:wrap; border-radius:var(--r-xl); padding:var(--s4); }
-  .mh-s input{ height:46px; font-size:var(--t-md); }
-  .mh-s .btn{ width:100%; min-height:48px; }
+  .mh2-c{ padding:var(--s7) var(--s5) var(--s5); gap:var(--s6); }
+  .mh2-q{ gap:2px; margin-top:var(--s6); }
+  .mh2-q a{ min-height:68px; }
+  .mh2-go .btn{ width:100%; justify-content:center; }
 }
 
 /* "더 보기" 안의 센 값 — ⚠️ `--ink3` 는 흰 바탕(`--surface`)에서 4.63
@@ -1566,12 +1649,10 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 /* ════════ 업종 고르기 · 고른 업종에 필요한 모든 것 (2026-10-03) ════
    ⚠️ 고른 업종은 주소(`?i=`)에 실립니다 — 상태를 CSS 로만 들고 있으면
    새로고침에 날아가고 링크로 공유도 안 됩니다. */
-.mi-g > li.on > a{ border-color:var(--blue); box-shadow:var(--shadow-md);
-  background:var(--blue-50); }
-.mi-g > li.on b{ color:var(--navy); }
-.mi-x{ position:absolute; top:8px; right:8px; display:inline-flex;
+
+.mi-x{ position:absolute; top:6px; right:6px; display:inline-flex;
   align-items:center; justify-content:center; width:20px; height:20px;
-  border-radius:var(--r-pill); background:var(--blue); color:#fff; }
+  border-radius:var(--r-pill); }
 .mi-g > li > a{ position:relative; }
 .mi-g + .row-cta{ margin-top:var(--s6); }
 
@@ -1593,12 +1674,6 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   .mfit-t{ padding:0 var(--s4); }
 }
 
-/* "서비스 바로가기" 딱지 — ⚠️ "인기 검색어" 가 아닙니다 (지시서 §6).
-   검색 기록을 안 모으므로 무엇이 인기인지 우리는 모릅니다. */
-.mh-sg-l{ margin-top:var(--s5); font-size:var(--t-cap); font-weight:700;
-  color:var(--ink2); letter-spacing:.02em; }
-.mh-sg{ margin-top:var(--s2) !important; }
-
 /* 작은 Empty — ⚠️ 빈 구간이 다섯 개 이어지는 메인에서 씁니다 (§28).
    분야 화면(`/providers/:cat` 등)은 그 화면에 Empty 가 하나뿐이라
    큰 쪽을 그대로 씁니다. */
@@ -1619,13 +1694,6 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    들어간 그 화면에 전부 있습니다. */
 @media (max-width:700px){
   .cat-s{ display:none; }
-}
-/* ⚠️ 사진이 없을 때만 떠 있는 카드 셋이 자리를 지킵니다 — 데스크톱은
-   45% 칸을 채워야 하지만 **폰에는 채울 칸이 없고**, 바로 위 CTA 와
-   같은 말을 세 번 더 합니다. 사진이 들어오면(`.mh-art` 에 `-none` 이
-   빠지면) 폰에서도 그대로 나옵니다. */
-@media (max-width:900px){
-  .mh-art-none{ display:none; }
 }
 
 /* ════════ 작은 분야 카드 — 시안(AFTER)의 밀도 ════════════════════
@@ -1677,16 +1745,28 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    ⚠️ 어두운 카드가 아닙니다. `--tn*-bg` 는 전부 흰색에 가까운 틴트라
    글자 대비가 그대로입니다 (전수 점검이 네 폭에서 봅니다).
    ⚠️ 사진이 들어오면 사진이 주인공이 되므로 그때 다시 보세요. */
-.mi-g > li > a,
+/* ⚠️⚠️ **2026-10-03 리뉴얼 §8 — 업종 카드만 흰색으로 되돌렸습니다.**
+   같은 날 아침에는 카드를 분류색 틴트로 칠했는데(사장님 "색감있게"),
+   리뉴얼로 이 줄의 **역할이 바뀌었습니다** — 고르는 카드가 아니라
+   **거르개**입니다. §8 이 "나머지는 White Card · 선택된 업종은 Navy
+   Background + White Icon/Text" 라고 못박았고, 거르개는 **무엇이
+   켜졌는지**가 한눈에 보여야 합니다. 열넷이 전부 틴트면 켜진 하나가
+   묻힙니다.
+   ⚠️ 색은 안 없어졌습니다 — 아이콘 타일이 그대로 분류색이고, 서비스
+   여덟 · 큰 카드 셋 · 히어로가 색을 냅니다.
+   ⚠️ `.fit` (고른 업종에 필요한 것)은 **틴트 그대로**입니다. 거기는
+   거르개가 아니라 고르는 카드입니다. */
 .fit{ background:var(--ic-bg); border-color:transparent; }
-.mi-g > li > a .ic-t,
 .fit-ic{ background:#fff; color:var(--ic-ink);
   box-shadow:0 2px 8px rgba(15,43,68,.06); }
-/* 눌릴 수 있다는 표시도 **그 분류의 색**으로 */
-.mi-g > li > a:hover,
 .fit:hover{ border-color:var(--ic-ink); }
-.mi-g > li.on > a{ background:var(--ic-bg); border-color:var(--ic-ink); }
-.mi-x{ background:var(--ic-ink); }
+.mi-g > li > a .ic-t{ background:var(--ic-bg); color:var(--ic-ink); }
+.mi-g > li > a:hover{ border-color:var(--ic-ink); }
+.mi-g > li.on > a{ background:var(--navy); border-color:var(--navy);
+  box-shadow:var(--shadow-md); }
+.mi-g > li.on > a .ic-t{ background:rgba(255,255,255,.16); color:#fff; }
+.mi-g > li.on b{ color:#fff; }
+.mi-x{ background:#fff; color:var(--navy); }
 
 /* 숫자 카드도 민숭민숭하지 않게 — 하늘 틴트 + 금 실선 (§21 의 악센트) */
 .mst-box{ background:var(--bg-sky); border-color:var(--gold-line); }

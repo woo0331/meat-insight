@@ -41,7 +41,11 @@ window.Crumb = function(items){
    요청 · 입점 · 등록)을 같이 냅니다. */
 window.Empty = function(o){
   o = o || {};
-  return '<div class="empty">'+
+  /* ⚠️ `sm` — 메인처럼 **빈 구간이 여럿 이어지는 자리**에서는 Empty 를
+     작게 냅니다 (2026-10-03 지시서 §28). 큰 Empty 카드 다섯 장이
+     이어지면 "데이터가 없는 플랫폼" 이 화면 길이로도 읽힙니다.
+     데이터가 들어오면 그 구간은 저절로 카드 높이로 커집니다. */
+  return '<div class="empty'+(o.sm ? " empty-sm" : "")+'">'+
     '<span class="empty-ic" aria-hidden="true">'+icon(o.icon||"search",26)+'</span>'+
     '<b>'+esc(o.title||"아직 등록된 것이 없습니다")+'</b>'+
     (o.text ? '<p>'+esc(o.text)+'</p>' : '')+

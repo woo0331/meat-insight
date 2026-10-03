@@ -113,6 +113,12 @@ function MainHero(){
           'aria-label="통합 검색" placeholder="무엇이 필요하세요?">'+
         '<button class="btn btn-nv" type="submit">검색</button>'+
       '</form>'+
+      /* ⚠️⚠️ **"인기 검색어" 라고 쓰지 마세요** (지시서 §6). 검색 기록을
+         모으지 않으므로 무엇이 인기인지 우리는 **모릅니다** — 적는 순간
+         절대 규칙 5 입니다. 지금 낼 수 있는 말은 "많이 찾는 서비스" 가
+         아니라 **"바로 가기"** 까지입니다. 실제 검색 데이터가 쌓이면
+         그때 이름을 바꾸세요. */
+      '<p class="mh-sg-l">서비스 바로가기</p>'+
       '<p class="mh-sg">'+MAIN_SUGGEST.map(function(s){
         return '<a href="'+esc(s.to)+'">'+esc(s.q)+'</a>'; }).join("")+'</p>'+
 
@@ -125,11 +131,6 @@ function MainHero(){
     '</div>'+
     MainHeroArt()+
   '</div>'+
-  /* ⚠️⚠️ **범위 숫자 띠는 히어로와 같은 구간 안입니다.** 따로 구간으로
-     떼었더니 바탕이 둘 다 크림이라 `check.js` 의 "이웃한 두 구간이 붙어
-     보임" 이 ΔE 0.00 으로 잡았습니다 — 맞는 지적입니다. 히어로에
-     **붙는** 띠이지 다음 구간이 아닙니다 (§11). */
-  MainScale()+
   '</section>';
 }
 window.mainSearch = function(e){
@@ -163,12 +164,18 @@ function MainScale(){
     { n:cat, u:"창업 · 폐업 전문분야" },
     { n:sub, u:"세부 서비스" }
   ];
-  return '<div class="mst"><div class="w">'+
+  /* ⚠️⚠️ **전에는 히어로 안에 붙은 띠였습니다.** 따로 떼면 바탕이 둘 다
+     크림이라 "이웃한 두 구간이 붙어 보임" 이 ΔE 0.00 으로 잡혔었습니다 —
+     그래서 이번에는 **흰 구간**으로 떼어 냅니다 (크림 ↔ 흰 ΔE 2.53).
+     지시서 §3 이 숫자를 독립 Section 으로 두라고 합니다.
+     ⚠️ 숫자를 키우되 **"분야의 수" 줄은 그대로** 둡니다 (§9) — 숫자만
+     크게 띄우면 "업체가 183곳" 으로 읽힙니다. */
+  return '<section class="sec sec-white mnum"><div class="w">'+
     '<ul class="mst-g">'+rows.map(function(r){
       return '<li><b>'+r.n+'</b><i>'+esc(r.u)+'</i></li>'; }).join("")+'</ul>'+
     '<p class="mst-n">이 숫자는 저희가 다루는 <b>분야의 수</b>입니다 — '+
       '등록된 업체 수가 아닙니다.</p>'+
-  '</div></div>';
+  '</div></section>';
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -259,15 +266,92 @@ function MainTwo(){
 function MainIndustry(){
   var L = (window.AM_INDUSTRIES||[]);
   if(!L.length) return "";
+  var cur  = nowQS("i");
+  var side = (nowQS("side") === "close") ? "close" : "start";
+  /* 고른 업종은 주소(`?i=`)에 실립니다 — 뒤로 가기 · 새로고침 · 링크
+     공유에 살아남고, canonical 은 `nowPath()` 라 질의문자가 빠져서
+     같은 내용이 두 주소로 나가지 않습니다. */
+  var to = function(k){
+    var q = [];
+    if(k) q.push("i=" + encodeURIComponent(k));
+    if(side === "close") q.push("side=close");
+    return "/" + (q.length ? "?" + q.join("&") : "");
+  };
   return '<section class="sec sec-gray"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">BUSINESS CATEGORY</p>'+
-      '<h2>어떤 사업을 하고 계세요?</h2>'+
-      '<p>업종을 선택하면 필요한 서비스를 빠르게 찾아드립니다.</p></div>'+
-    '<ul class="mi-g">'+L.map(function(i){
-      return '<li class="tn-'+esc(i.tone||"t7")+'">'+
-        '<a href="/startup/'+esc(i.key)+'">'+
-          '<span class="ic-t">'+icon(i.icon,26)+'</span>'+
-          '<b>'+esc(i.name)+'</b></a></li>'; }).join("")+'</ul>'+
+      '<h2>내 업종을 고르면<br class="br-m"> 필요한 모든 것이 펼쳐집니다.</h2>'+
+      '<p>아래 구간이 고르신 업종에 맞게 바뀝니다. '+
+        '업종을 모르셔도 그냥 둘러보실 수 있습니다.</p></div>'+
+    '<ul class="mi-g">'+L.map(function(x){
+      var on = (x.key === cur);
+      /* ⚠️ `data-keep` — 업종을 고르면 바로 아래 구간이 바뀌는데, 맨
+         위로 올라가 버리면 **무엇이 바뀌었는지 못 봅니다.** */
+      return '<li class="tn-'+esc(x.tone||"t7")+(on?" on":"")+'">'+
+        '<a href="'+esc(to(on ? "" : x.key))+'" data-keep'+
+          (on ? ' aria-current="true"' : '')+'>'+
+          '<span class="ic-t">'+icon(x.icon,26)+'</span>'+
+          '<b>'+esc(x.name)+'</b>'+
+          (on ? '<span class="mi-x" aria-hidden="true">'+icon("check",14)+'</span>' : '')+
+        '</a></li>'; }).join("")+'</ul>'+
+    (cur ? '<p class="row-cta row-mid"><a class="btn btn-o" href="'+esc(to(""))+'" data-keep>'+
+      '업종 선택 해제</a></p>' : '')+
+  '</div></section>';
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ⑤ 고른 업종에 필요한 **모든 것** (지시서 §13 ~ §18)
+   ══════════════════════════════════════════════════════════════════
+   이번 작업의 핵심입니다. "카페를 하고 싶은데 뭐가 필요한지 모르겠다"
+   는 분이 **업종 하나만 고르면** 필요한 것이 차례대로 펼쳐지는 자리.
+
+   ⚠️⚠️ **업종별 목록을 코드에 적지 마세요** (§14). "카페면 커피머신 ·
+   원두 · POS" 를 손으로 적으면 업종이 늘 때마다 거기를 고쳐야 하고,
+   `catalog.js` 와 어긋나면 **그 분류가 조용히 빠집니다.** 차례는
+   `amCatsFor(업종, 쪽)` 가, 하위 항목은 `amCatItems(분류, 업종)` 가
+   정합니다 — 이 저장소에서 업종이 갈리는 곳은 그 둘뿐입니다.
+   ⚠️ 업종을 안 고르셔도 **비지 않습니다** — 그 쪽 분류 전부가 나옵니다.
+   ⚠️ 토글은 기존 START/CLOSE 구조 그대로입니다 (§17). 새 개념이
+   아니라 **보는 각도**만 바꾸는 것입니다. */
+function MainFit(){
+  var side = (nowQS("side") === "close") ? "close" : "start";
+  var key  = nowQS("i");
+  var ind  = key && window.amIndustry ? amIndustry(key) : null;
+  if(key && !ind) key = "";          /* 없는 업종 key 는 없는 셈 칩니다 */
+  var cats = (window.amCatsFor ? amCatsFor(key || null, side) : []);
+  if(!cats.length) return "";
+
+  var tab = function(sd, label){
+    var q = [];
+    if(key) q.push("i=" + encodeURIComponent(key));
+    if(sd === "close") q.push("side=close");
+    return '<a class="mfit-t'+(side===sd?" on":"")+'" href="/'+
+      (q.length ? "?" + q.join("&") : "")+'" data-keep'+
+      (side===sd ? ' aria-current="true"' : '')+'>'+esc(label)+'</a>';
+  };
+  var who = ind ? ind.name : "";
+  var h2  = who
+    ? esc(who) + (side==="close" ? " 정리에" : " 창업에") + " 필요한 모든 것"
+    : (side==="close" ? "사업을 정리할 때 필요한 모든 것" : "창업할 때 필요한 모든 것");
+
+  return '<section class="sec sec-white"><div class="w">'+
+    /* ⚠️ 머리말에 업종 이름을 또 적지 않습니다 — 바로 아래 h2 가 이미
+       "카페 · 디저트 창업에 필요한 모든 것" 입니다. 여기는 **지금 어느
+       쪽을 보고 있는지**를 냅니다. */
+    '<div class="sec-hd"><p class="eyebrow">'+
+      (side==="close" ? "CLOSE · 사업 정리" : "START · 창업 준비")+'</p>'+
+      '<h2>'+h2+'</h2>'+
+      '<p>'+(who
+        ? '이 업종에서 자주 쓰이는 차례로 냅니다.'
+        : '업종을 고르시면 그 업종의 차례로 다시 정렬됩니다.')+'</p></div>'+
+    '<div class="mfit-tb" role="tablist" aria-label="창업 · 정리">'+
+      tab("start","창업 준비")+tab("close","사업 정리")+'</div>'+
+    /* ⚠️ `CatCard()` 한 벌을 그대로 씁니다 — 분류 화면과 **같은 생김새**
+       라야 눌러 들어간 자리가 같은 사이트로 읽힙니다. 업종을 넘기면
+       하위 항목(장비 등)도 그 업종 것으로 바뀝니다. */
+    '<ul class="cat-g">'+cats.map(function(c){
+      return '<li>'+CatCard(c, key || "")+'</li>'; }).join("")+'</ul>'+
+    '<p class="note note-mid">'+cats.length+'개 분야 전부입니다. '+
+      '누르시면 그 분야의 업체 · 정보로 이어집니다.</p>'+
   '</div></section>';
 }
 
@@ -340,7 +424,7 @@ function MainProviders(){
         '<p class="note note-mid">등록된 차례로 냅니다. 광고로 위에 올린 자리는 없습니다.</p>'+
       '<p class="row-cta row-mid"><a class="btn btn-nv" href="/providers">'+
         '업체 전체 보기'+icon("arrow",18)+'</a></p>'
-    : Empty({ icon:"users", title:"아직 등록된 업체가 없습니다",
+    : Empty({ sm:true, icon:"users", title:"아직 등록된 업체가 없습니다",
         text:"업체를 지어내지 않습니다. 지금은 모으는 중이고, 등록되는 대로 "+
              "분야 · 지역으로 찾으실 수 있습니다. 먼저 조건을 남겨 두시면 "+
              "업체가 들어올 때 그 조건으로 전달합니다.",
@@ -360,7 +444,7 @@ function MainFranchise(){
         return FranchiseCard(f); }).join("")+'</div>'+
       '<p class="row-cta row-mid"><a class="btn btn-nv" href="/franchise">'+
         '브랜드 전체 보기'+icon("arrow",18)+'</a></p>'
-    : Empty({ icon:"store", title:"아직 등록된 브랜드가 없습니다",
+    : Empty({ sm:true, icon:"store", title:"아직 등록된 브랜드가 없습니다",
         text:"창업비는 정보공개서에 적힌 값만 올립니다. 근거 없는 금액을 "+
              "보시고 수천만 원을 빌리러 가시면 안 되기 때문입니다. "+
              "확인한 브랜드부터 하나씩 올립니다.",
@@ -379,7 +463,7 @@ function MainStores(){
     ? '<div class="mk-g">'+L.slice(0,6).map(function(s){ return StoreCard(s); }).join("")+'</div>'+
       '<p class="row-cta row-mid"><a class="btn btn-nv" href="/stores">'+
         '매장 전체 보기'+icon("arrow",18)+'</a></p>'
-    : Empty({ icon:"pin", title:"아직 올라온 매장이 없습니다",
+    : Empty({ sm:true, icon:"pin", title:"아직 올라온 매장이 없습니다",
         text:"허위매물을 만들지 않습니다. 보고 연락하신 시간을 훔치는 일이라서요. "+
              "정리하시는 사장님이 올리시면 그대로 보입니다.",
         cta:'<a class="btn btn-st" href="/stores">매장 내놓기'+icon("arrow",18)+'</a>'+
@@ -399,7 +483,7 @@ function MainPrice(){
     ? '<ul class="hp-g">'+L.map(function(q){
         return '<li><b>'+esc(q.name)+'</b><em>'+esc(q.range)+'</em>'+
           '<i>'+esc(q.asOf)+' 확인 · 견적 '+q.n+'건</i></li>'; }).join("")+'</ul>'
-    : Empty({ icon:"chart", title:"가격 데이터를 모으는 중입니다",
+    : Empty({ sm:true, icon:"chart", title:"가격 데이터를 모으는 중입니다",
         text:"평균가를 지어내지 않습니다. 사장님이 그 숫자를 들고 협상하러 "+
              "가시기 때문입니다. 실제 견적이 쌓이면 범위와 확인한 날짜를 "+
              "같이 냅니다. 그때까지는 무엇이 금액을 가르는지를 글로 적어 두었습니다.",
@@ -434,7 +518,7 @@ function MainBridge(){
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">START &amp; CLOSE</p>'+
       '<h2>한 사장님의 끝이<br class="br-m"> 다른 사장님의 시작이 됩니다.</h2>'+
-      '<p>쓰던 매장과 시설이, 다음 사장님에게는 새로운 시작이 될 수 있습니다.</p>'+
+      '<p>버리는 것은 줄이고, 다음 사장님의 시작으로.</p>'+
     '</div>'+
     '<div class="mbr-g">'+
       '<div class="mbr-c mbr-cl">'+
@@ -508,7 +592,7 @@ function MainReviews(){
           '<p>'+esc(x.r.text||"")+'</p>'+
           '<i>'+esc(x.p.name||"")+(x.r.at ? ' · '+esc(x.r.at) : '')+'</i></li>';
       }).join("")+'</ul>'
-    : Empty({ icon:"star", title:"첫 이용후기가 곧 올라옵니다",
+    : Empty({ sm:true, icon:"star", title:"첫 이용후기가 곧 올라옵니다",
         text:"후기를 지어내지 않습니다. 실제로 연결된 사장님이 쓰신 것만 "+
              "올리고, 평점은 그 후기에서 계산합니다 — 손으로 적는 자리가 없습니다.",
         cta:'<a class="btn btn-nv" href="/quote">견적 요청하기'+icon("arrow",18)+'</a>' });
@@ -543,7 +627,17 @@ function MainJoin(){
 /* ⚠️ **구간을 더하거나 차례를 바꾸시려면 지시서를 먼저 고치세요.**
    `check.js` 의 "메인 구간 차례가 지시서와 같다" 가 열셋을 셉니다. */
 function PageMain(){
-  return MainHero()+ MainTwo()+ MainIndustry()+ MainServices()+
+  /* ⚠️⚠️ **차례는 2026-10-03 지시서**입니다 — 히어로 → 숫자 →
+     업종 고르기 → 고른 업종에 필요한 모든 것 → START/CLOSE → 업체 →
+     프랜차이즈 → 매장 → 가격 → 브랜드 스토리 → 도구 → 후기 → 입점.
+     `check.js` 의 "메인 구간 차례가 지시서와 같다" 가 이 열셋을 셉니다.
+
+     ⚠️ 전에 있던 "핵심 서비스 여덟"(`MainServices`)은 **`MainFit` 이
+     대신합니다.** 손으로 고른 여덟 개는 `catalog.js` 의 부분집합이었고,
+     업종을 고르면 그 업종 차례로 **전부** 나오는 쪽이 지시서 §13~§18
+     이 말하는 것입니다. 함수는 지우지 않고 남겨 두었습니다 — 되돌리실
+     일이 생기면 여기 한 줄입니다. */
+  return MainHero()+ MainScale()+ MainIndustry()+ MainFit()+ MainTwo()+
          MainProviders()+ MainFranchise()+ MainStores()+ MainPrice()+
          MainBridge()+ MainTools()+ MainReviews()+ MainJoin();
 }

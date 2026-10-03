@@ -1168,12 +1168,23 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   var(--bg-cream);
   padding:var(--s10) 0 var(--s9); }
 /* §9 — 55:45. ⚠️ 글만 가운데 두지 않습니다. */
-.mh-in{ display:grid; gap:var(--s8); grid-template-columns:55fr 45fr;
+/* ⚠️⚠️ **70:30 입니다 — 재어 보고 정했습니다 (2026-10-03).**
+   제목이 "창업에 필요한 모든 것." 열한 글자이고, `--t-hero` 가 1440px
+   에서 76px 이라 한 줄에 **약 820px** 이 듭니다. 55:45(638px)에서는
+   **네 줄로 깨지고** 히어로가 923px 이 됐습니다 (`check.js` 기준 830
+   위). 글자를 줄이는 쪽(60px)으로 먼저 고쳤다가 "제목이 64~76px" 검사에
+   걸렸고, **그 검사가 맞습니다** — 지시서가 원하는 것은 더 강한 첫
+   인상이지 작은 제목이 아닙니다. 칸을 넓히는 쪽이 답입니다.
+   ⚠️ 검색창은 `.mh-s` 의 max-width 로 따로 잡습니다 (§5: 650~800px). */
+.mh-in{ display:grid; gap:var(--s8); grid-template-columns:70fr 30fr;
   align-items:center; min-height:600px; }
 .mh-tx{ min-width:0; }
 .mh-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.14em;
   color:var(--gold-text); }
-/* §26 — 데스크톱 64~76px. `--t-hero` 가 clamp(48,5vw,76) 입니다. */
+/* §26 — 데스크톱 64~76px. `--t-hero` 가 clamp(48,5.4vw,76) 입니다.
+   ⚠️ **줄이지 마세요.** 줄이면 "히어로 제목이 두 낱말을 주인공으로
+   둔다" 검사에 걸립니다 — 들어갈 칸이 모자라면 `.mh-in` 의 비율을
+   넓히는 쪽입니다 (바로 위). */
 .mh-h{ margin-top:var(--s3); font-size:var(--t-hero); font-weight:900;
   letter-spacing:-.04em; line-height:1.14; color:var(--navy); }
 .mh-h em{ font-style:normal; }
@@ -1183,16 +1194,17 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   line-height:1.7; }
 
 /* 대형 검색창 (§6) — ⚠️ 히어로의 **핵심 UI** 입니다. 작게 만들지 마세요. */
-.mh-s{ display:flex; gap:var(--s2); align-items:center; margin-top:var(--s6);
+/* ⚠️ 지시서 §5 — 650~800px. 글자 칸이 넓어져도 검색창은 여기서 잡습니다 */
+.mh-s{ max-width:760px; display:flex; gap:var(--s2); align-items:center; margin-top:var(--s6);
   padding:8px 8px 8px var(--s5); background:var(--surface);
   border:1px solid var(--line); border-radius:20px;
   box-shadow:0 14px 38px rgba(15,43,68,.09); }
 .mh-s-i{ display:inline-flex; color:var(--ink3); flex:0 0 auto; }
-.mh-s input{ flex:1 1 auto; min-width:0; height:54px; border:0; outline:0;
+.mh-s input{ flex:1 1 auto; min-width:0; height:58px; border:0; outline:0;
   background:transparent; font-size:var(--t-lg); color:var(--ink); }
 .mh-s input::placeholder{ color:var(--ink3); }
 .mh-s:focus-within{ border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft); }
-.mh-s .btn{ flex:0 0 auto; min-height:54px; border-radius:16px; }
+.mh-s .btn{ flex:0 0 auto; min-height:58px; border-radius:16px; }
 
 /* 추천 검색어 (§7) — ⚠️ 44px 이상입니다. 전수 점검 기준(40)보다
    지시서 기준(44)이 커서 **큰 쪽**을 따릅니다. */
@@ -1246,16 +1258,29 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    ══════════════════════════════════════════════════════════════════
    ⚠️ 히어로에 **붙는** 띠라 위 여백이 없습니다. 구간으로 떼어 놓으면
    첫 화면이 길어져 START/CLOSE 가 밀립니다. */
-.mst{ padding-top:var(--s8); }
-.mst-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s4);
-  padding:var(--s6) var(--s7); background:var(--surface);
-  border:1px solid var(--line); border-radius:var(--r-2xl);
-  box-shadow:var(--shadow-soft); }
-.mst-g > li{ display:grid; gap:4px; justify-items:center; text-align:center; }
-.mst-g b{ font-size:var(--t-num-s); font-weight:900; letter-spacing:-.03em;
+/* ⚠️ 2026-10-03 — 히어로 안의 얇은 띠에서 **자기 구간**으로 커졌습니다
+   (지시서 §3 · §8). 숫자가 "작은 정보" 가 아니라 **규모를 말하는
+   Brand Asset** 이 되는 것이 목표입니다. */
+.mnum{ padding-top:var(--s9); padding-bottom:var(--s9); }
+.mst-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s6);
+  padding:0; background:transparent; border:0; border-radius:0; box-shadow:none; }
+.mst-g > li{ display:grid; gap:6px; justify-items:center; text-align:center;
+  position:relative; }
+/* 칸 사이 얇은 금 — ⚠️ 테두리 상자로 묶으면 다시 "작은 정보" 가 됩니다 */
+.mst-g > li + li::before{ content:""; position:absolute; left:calc(var(--s6) / -2);
+  top:12%; bottom:12%; width:1px; background:var(--line); }
+.mst-g b{ font-size:var(--t-num); font-weight:900; letter-spacing:-.04em;
   color:var(--navy); line-height:1; }
-.mst-g i{ font-style:normal; font-size:var(--t-sm); font-weight:700;
+.mst-g i{ font-style:normal; font-size:var(--t-base); font-weight:700;
   color:var(--ink2); }
+@media (max-width:700px){
+  /* ⚠️ 폰에서도 **3열을 지킵니다** (지시서 §8) — 세로로 쌓으면 세 숫자가
+     한눈에 안 들어옵니다. 숫자만 줄입니다. */
+  .mst-g{ gap:var(--s4); }
+  .mst-g b{ font-size:var(--t-num-s); }
+  .mst-g i{ font-size:var(--t-cap); }
+  .mst-g > li + li::before{ left:calc(var(--s4) / -2); }
+}
 /* ⚠️ **이 줄을 숨기지 마세요.** 숫자만 띄우면 "업체가 183곳" 으로
    읽힙니다 — 폰에서도 보입니다. */
 .mst-n{ margin-top:var(--s3); text-align:center; font-size:var(--t-cap);
@@ -1501,3 +1526,68 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    적용됩니다. 더 흐리게 두지 마세요. */
 .more-n{ font-style:normal; font-size:var(--t-cap); font-weight:400;
   color:var(--ink3); }
+
+/* ════════ 업종 고르기 · 고른 업종에 필요한 모든 것 (2026-10-03) ════
+   ⚠️ 고른 업종은 주소(`?i=`)에 실립니다 — 상태를 CSS 로만 들고 있으면
+   새로고침에 날아가고 링크로 공유도 안 됩니다. */
+.mi-g > li.on > a{ border-color:var(--blue); box-shadow:var(--shadow-md);
+  background:var(--blue-50); }
+.mi-g > li.on b{ color:var(--navy); }
+.mi-x{ position:absolute; top:8px; right:8px; display:inline-flex;
+  align-items:center; justify-content:center; width:20px; height:20px;
+  border-radius:var(--r-pill); background:var(--blue); color:#fff; }
+.mi-g > li > a{ position:relative; }
+.mi-g + .row-cta{ margin-top:var(--s6); }
+
+/* 창업 준비 / 사업 정리 토글 — ⚠️ 새 개념이 아니라 기존 START/CLOSE
+   를 보는 각도만 바꾸는 것입니다 (지시서 §17). */
+.mfit-tb{ display:inline-flex; gap:4px; padding:4px; margin-bottom:var(--s7);
+  background:var(--bg-2); border-radius:var(--r-pill); }
+.mfit-t{ display:inline-flex; align-items:center; justify-content:center;
+  min-height:var(--tap); padding:0 var(--s7); border-radius:var(--r-pill);
+  font-size:var(--t-base); font-weight:700; color:var(--ink2);
+  transition:background .18s, color .18s, box-shadow .18s; }
+.mfit-t:hover{ color:var(--ink); }
+/* ⚠️ 켜진 쪽은 **흰 글자**라 바탕이 짙어야 합니다 — `--start`/`--close`
+   는 옅어서 대비가 3.0 입니다 (CLAUDE.md 의 "글자로 쓰는 색은 짙은 쪽"). */
+.mfit-t.on{ background:var(--surface); color:var(--navy);
+  box-shadow:var(--shadow-md); }
+@media (max-width:560px){
+  .mfit-tb{ display:grid; grid-template-columns:1fr 1fr; width:100%; }
+  .mfit-t{ padding:0 var(--s4); }
+}
+
+/* "서비스 바로가기" 딱지 — ⚠️ "인기 검색어" 가 아닙니다 (지시서 §6).
+   검색 기록을 안 모으므로 무엇이 인기인지 우리는 모릅니다. */
+.mh-sg-l{ margin-top:var(--s5); font-size:var(--t-cap); font-weight:700;
+  color:var(--ink2); letter-spacing:.02em; }
+.mh-sg{ margin-top:var(--s2) !important; }
+
+/* 작은 Empty — ⚠️ 빈 구간이 다섯 개 이어지는 메인에서 씁니다 (§28).
+   분야 화면(`/providers/:cat` 등)은 그 화면에 Empty 가 하나뿐이라
+   큰 쪽을 그대로 씁니다. */
+.empty-sm{ padding:var(--s7) var(--s6); }
+.empty-sm .empty-ic{ width:44px; height:44px; }
+.empty-sm > b{ font-size:var(--t-lg); }
+.empty-sm > p{ max-width:56ch; font-size:var(--t-sm); }
+@media (max-width:560px){ .empty-sm{ padding:var(--s6) var(--s5); } }
+
+/* ════════ 폰에서 길이 줄이기 (2026-10-03 지시서 §36 · §37) ════════
+   ⚠️ 재어 보고 고쳤습니다 — 390px 에서 "필요한 모든 것" 구간이
+   **3,488px**(화면 네 개)였고 문서 전체가 15,514px 였습니다.
+
+   ⚠️ **2열로 나누지 않았습니다.** 390px 을 둘로 쪼개면 카드 안 글자
+   칸이 175px 이라 "업종별 창업정보" 같은 말이 **낱말 가운데서
+   잘립니다** — 글 목록에서 이미 겪은 일입니다. 대신 **하위 항목
+   미리보기만** 접습니다. 카드는 열셋 다 보이고, 하위 항목은 눌러
+   들어간 그 화면에 전부 있습니다. */
+@media (max-width:700px){
+  .cat-s{ display:none; }
+}
+/* ⚠️ 사진이 없을 때만 떠 있는 카드 셋이 자리를 지킵니다 — 데스크톱은
+   45% 칸을 채워야 하지만 **폰에는 채울 칸이 없고**, 바로 위 CTA 와
+   같은 말을 세 번 더 합니다. 사진이 들어오면(`.mh-art` 에 `-none` 이
+   빠지면) 폰에서도 그대로 나옵니다. */
+@media (max-width:900px){
+  .mh-art-none{ display:none; }
+}

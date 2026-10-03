@@ -76,6 +76,18 @@ const CASES = [
     };`],
   ["입점 배지와 업체찾기가 같은 규칙으로 센다",
    `window.amProvidersInCat = function(){ return 99; };`],
+  /* 업종 차례를 안 따르고 그냥 전부 내던 그때로 되돌리면 걸려야 합니다. */
+  /* ⚠️⚠️ **`amCatsFor` 를 바꿔치기하면 안 됩니다.** 검사가 "화면이
+     데이터와 같은가" 를 보는데, 데이터 쪽을 망가뜨리면 **둘 다 같이
+     틀려서** 검사가 통과해 버립니다 (처음에 그렇게 짰다가 걸렸습니다).
+     망가뜨릴 것은 **화면이 업종을 안 읽는 것** 쪽입니다. */
+  ["업종을 고르면 그 업종 차례로 펼쳐진다",
+   `const real = window.nowQS;
+    window.nowQS = function(k){ return k === "i" ? "" : real(k); };  /* 업종을 안 읽던 그때 */
+    window.rerender(true);`],
+  /* 토글이 주소에 상태를 안 싣던 그때. */
+  ["창업 · 정리 토글이 실제로 쪽을 바꾼다",
+   `document.querySelectorAll(".mfit-t").forEach(function(t){ t.setAttribute("href", "/"); });`],
   /* 조사를 손으로 적던 그때 — ⚠️ `koWith` 를 바꿔치기해서는 안 됩니다.
      그러면 **다시 그리지 않아** 화면 글자가 그대로라 엉뚱하게 통과/실패
      합니다 (처음에 그렇게 짰다가 "인수인계는 가 화면에 있습니다" 라는
@@ -145,9 +157,14 @@ const CASES = [
   ["메인 구간 차례가 지시서와 같다",
    `const v = document.getElementById("view");
     v.insertBefore(v.children[3], v.children[1]);`],
+  /* ⚠️ 색을 **글자로 적지 마세요.** "[7] 을 민트로" 로 적어 두었더니
+     구간 차례가 바뀌면서 그 자리가 원래 민트라 **되돌리기가 no-op** 이
+     됐고, 검사가 멀쩡한데 "안 잡는다" 로 보였습니다. 이웃의 **실제
+     배경을 읽어서** 같게 만듭니다 — 차례가 또 바뀌어도 삽니다. */
   ["이웃한 두 구간이 붙어 보이지 않는다",
-   `document.querySelectorAll("#view > section")[7]
-      .style.background = "#ECF8F3";`],
+   `const S = document.querySelectorAll("#view > section");
+    const prev = getComputedStyle(S[S.length - 3]).backgroundColor;
+    S[S.length - 2].style.background = prev;`],
   ["규모감 숫자가 손으로 쓴 값이 아니라 센 값이다",
    `document.querySelectorAll(".scale-n")[3].textContent = "500";`],
   ["규모감 숫자가 무엇을 센 값인지 밝힌다",

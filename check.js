@@ -1639,8 +1639,12 @@ const AUDIT = `(() => {
       if(v.querySelector(q)) return "랜딩 구간(" + q + ")이 되살아났습니다";
     /* 실제로 쓰는 것들이 메인에 있어야 합니다 (⚠️ 이 주석에 백틱을
        쓰면 문자열이 거기서 끝납니다 — 여섯 번째입니다) */
+    /* ⚠️ 2026-10-03 — 손으로 고른 "핵심 서비스 여덟"(.mv-g)은 "고른
+       업종에 필요한 모든 것"(.mfit-tb)으로 **대체**됐습니다. 지운 것이
+       아니라 데이터에서 오는 쪽으로 바뀐 것이라, 찾는 표시만 바꿉니다. */
     const need = [['input[type="search"]', "검색창"], [".mi-g", "업종 고르기"],
-                  [".mv-g", "핵심 서비스"], [".ms-two", "START / CLOSE"]];
+                  [".mfit-tb", "업종별 필요한 것"], [".cat-g", "서비스 분야"],
+                  [".ms-two", "START / CLOSE"], [".mst-g", "범위 숫자"]];
     for(const q of need)
       if(!v.querySelector(q[0])) return q[1] + " 가 메인에 없습니다";
     /* ⚠️ 게이트웨이로 보내는 길이 남아 있으면 안 됩니다 (§29) */
@@ -1819,19 +1823,25 @@ const AUDIT = `(() => {
     /* 지시서 §2 의 차례입니다. 늘리거나 섞기 전에 거기를 먼저 고치세요.
        ⚠️ 구간이 .sec 를 같이 답니다 — 첫 낱말만 보면 전부 "sec" 으로
        읽혀 이 검사가 아무것도 안 잡습니다. 우리 표시를 찾습니다. */
-    const want = ["mh","ms-two","mi-g","mv-g","pv","fr","mk","hp","mbr","mt-g","hr","mjn"];
+    /* ⚠️ 2026-10-03 지시서로 **열셋**이 됐습니다 — 숫자가 자기 구간으로
+       떨어져 나오고(§3), "고른 업종에 필요한 모든 것"(§5)이 새로
+       들어오고, 손으로 고른 "핵심 서비스 여덟"(.mv-g)은 그것으로
+       대체됐습니다. */
+    const want = ["mh","mnum","mi-g","mfit","ms-two","pv","fr","mk","hp","mbr","mt-g","hr","mjn"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
-    if(S.length !== 12) return "구간이 " + S.length + "개입니다 (열둘이어야 합니다)";
-    /* ⚠️ 범위 숫자 띠(.mst)는 히어로와 **같은 구간 안**입니다 — 떼어
-       놓으면 바탕이 둘 다 크림이라 "붙어 보임" 으로 잡힙니다. */
-    if(!document.querySelector(".mh .mst")) return "범위 숫자 띠가 히어로 안에 없습니다";
+    if(S.length !== 13) return "구간이 " + S.length + "개입니다 (열셋이어야 합니다)";
+    /* ⚠️ 숫자 구간은 이제 **히어로 밖**입니다. 떼어 놓으면 바탕이 둘 다
+       크림이라 "붙어 보임" 으로 잡혔었기 때문에 **흰 구간**으로 둡니다 —
+       바로 아래 "이웃한 두 구간이 붙어 보이지 않는다" 가 그걸 봅니다. */
+    if(document.querySelector(".mh .mst-g")) return "숫자가 아직 히어로 안에 있습니다";
     const got = S.map(function(e, i){
       const mark = ["mh","mbr","mjn"];
       for(const m of mark) if(e.classList.contains(m)) return m;
       /* 안쪽 표시로 무슨 구간인지 가립니다 */
+      if(e.classList.contains("mnum")) return "mnum";
+      if(e.querySelector(".mfit-tb")) return "mfit";
       if(e.querySelector(".ms-two")) return "ms-two";
       if(e.querySelector(".mi-g"))   return "mi-g";
-      if(e.querySelector(".mv-g"))   return "mv-g";
       if(e.querySelector(".mt-g"))   return "mt-g";
       const hd = (e.querySelector(".eyebrow") || {}).textContent || "";
       if(hd.indexOf("PARTNERS") >= 0)  return "pv";
@@ -1844,6 +1854,61 @@ const AUDIT = `(() => {
     if(got.join(",") !== want.join(","))
       return "차례가 " + got.join(" → ") + "입니다";
     return true;`);
+  /* ⚠️⚠️ 2026-10-03 지시서의 **핵심**입니다 (§13 ~ §18) — "카페를 하고
+     싶은데 뭐가 필요한지 모르겠다" 는 분이 업종 하나만 고르면 필요한
+     것이 그 업종 차례로 펼쳐져야 합니다.
+     ⚠️ 업종별 목록을 **코드에 적으면 안 됩니다** (§14). `amCatsFor()` 와
+     `amCatItems()` 두 곳이 정하고, 화면은 그 결과만 그립니다 — 그래서
+     검사도 "화면이 데이터와 같은가" 로 봅니다. */
+  await f("업종을 고르면 그 업종 차례로 펼쳐진다", "/?i=cafe", `
+    const names = function(){
+      return [].slice.call(document.querySelectorAll(".mfit-tb ~ .cat-g > li .cat > b"))
+        .map(function(e){ return e.textContent.trim(); });
+    };
+    /* ① 데이터가 정한 차례와 화면이 같아야 합니다 */
+    const want = window.amCatsFor("cafe","start").map(function(c){ return c.name; });
+    const got  = names();
+    if(!got.length) return "고른 업종의 분야가 하나도 안 나옵니다";
+    if(got.join("|") !== want.join("|"))
+      return "차례가 데이터와 다릅니다 — 화면 " + got.slice(0,3).join(" · ");
+    /* ② ⚠️ 업종 차례에서 빠진 분류도 **잘라 내면 안 됩니다** */
+    if(got.length !== window.AM_START_CATS.length)
+      return "분야가 " + got.length + "개입니다 (" + window.AM_START_CATS.length + "개 전부여야 합니다)";
+    /* ③ 하위 항목이 **그 업종 것**이어야 합니다 — 카페면 커피머신 */
+    const eq = (window.amIndustry("cafe").equip || []).map(function(e){ return e.name; });
+    const txt = document.querySelector("#view > section:nth-child(4)").textContent;
+    if(eq.length && txt.indexOf(eq[0]) < 0)
+      return "시설 · 장비 하위가 카페 것이 아닙니다 (" + eq[0] + " 가 없습니다)";
+    /* ④ 고른 업종이 업종 카드에 표시돼야 합니다 */
+    if(!document.querySelector(".mi-g > li.on")) return "고른 업종이 표시가 안 납니다";
+    return true;`);
+
+  await f("창업 · 정리 토글이 실제로 쪽을 바꾼다", "/?i=cafe", `
+    const names = function(){
+      return [].slice.call(document.querySelectorAll(".cat-g > li .cat > b"))
+        .map(function(e){ return e.textContent.trim(); });
+    };
+    const a = names();
+    const tabs = [].slice.call(document.querySelectorAll(".mfit-t"));
+    if(tabs.length !== 2) return "토글이 둘이 아닙니다";
+    /* ⚠️ 누를 수 있는 크기여야 합니다 */
+    for(const t of tabs){
+      const h = t.getBoundingClientRect().height;
+      if(h < 40) return "토글 높이가 " + Math.round(h) + "px 입니다";
+    }
+    /* ⚠️ 주소에 실려야 뒤로 가기 · 새로고침 · 공유에 살아남습니다 */
+    const close = tabs[1].getAttribute("href") || "";
+    if(close.indexOf("side=close") < 0) return "토글이 주소에 상태를 안 싣습니다";
+    if(close.indexOf("i=cafe") < 0) return "토글을 누르면 고른 업종이 풀립니다";
+    tabs[1].click();
+    await new Promise(r => setTimeout(r, 120));
+    const b = names();
+    if(!b.length) return "정리 쪽이 비었습니다";
+    if(a.join("|") === b.join("|")) return "토글을 눌러도 목록이 그대로입니다";
+    const wantC = window.amCatsFor("cafe","close").map(function(c){ return c.name; });
+    if(b.join("|") !== wantC.join("|")) return "정리 쪽 차례가 데이터와 다릅니다";
+    return true;`);
+
   await f("이웃한 두 구간이 붙어 보이지 않는다", "/", `
     /* ⚠️⚠️ 이 저장소에서 **두 번** 당했습니다 — 아이보리와 웜 화이트를
        나란히 두어 한 구간으로 읽혔습니다. "완전히 같은 색" 만 보면

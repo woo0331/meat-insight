@@ -159,10 +159,13 @@ function MainScale(){
   var sub = (window.AM_CATS||[]).reduce(function(n,c){
     return n + ((c.items||[]).length); }, 0);
   if(!ind || !cat || !sub) return "";   /* 데이터가 비면 띠째 뺍니다 */
+  /* ⚠️ 시안(AFTER)의 짜임새 — 큰 숫자 + 영문 머리말 + 한글 이름.
+     ⚠️ 영문은 **장식**입니다. 한글 이름을 지우지 마세요 — 손님이
+     40~60대 사장님입니다. */
   var rows = [
-    { n:ind, u:"업종" },
-    { n:cat, u:"창업 · 폐업 전문분야" },
-    { n:sub, u:"세부 서비스" }
+    { n:ind, k:"BUSINESS TYPES",    u:"업종" },
+    { n:cat, k:"SPECIALIZED FIELDS", u:"분야" },
+    { n:sub, k:"SERVICES",          u:"서비스" }
   ];
   /* ⚠️⚠️ **전에는 히어로 안에 붙은 띠였습니다.** 따로 떼면 바탕이 둘 다
      크림이라 "이웃한 두 구간이 붙어 보임" 이 ΔE 0.00 으로 잡혔었습니다 —
@@ -171,10 +174,17 @@ function MainScale(){
      ⚠️ 숫자를 키우되 **"분야의 수" 줄은 그대로** 둡니다 (§9) — 숫자만
      크게 띄우면 "업체가 183곳" 으로 읽힙니다. */
   return '<section class="sec sec-white mnum"><div class="w">'+
-    '<ul class="mst-g">'+rows.map(function(r){
-      return '<li><b>'+r.n+'</b><i>'+esc(r.u)+'</i></li>'; }).join("")+'</ul>'+
-    '<p class="mst-n">이 숫자는 저희가 다루는 <b>분야의 수</b>입니다 — '+
-      '등록된 업체 수가 아닙니다.</p>'+
+    '<div class="mst-box">'+
+      '<ul class="mst-g">'+rows.map(function(r){
+        return '<li><b>'+r.n+'</b>'+
+          '<span class="mst-k">'+esc(r.k)+'</span>'+
+          '<i>'+esc(r.u)+'</i></li>'; }).join("")+'</ul>'+
+      /* ⚠️⚠️ **이 줄을 지우지 마세요.** 숫자만 크게 띄우면 "업체가
+         183곳" 으로 읽힙니다. 시안도 ⓘ 로 같은 자리에 두었습니다 —
+         폰에서도 숨기지 않습니다. */
+      '<p class="mst-n">'+icon("info",16)+
+        '<span>서비스 <b>분류 기준</b>이며 등록된 업체 수가 아닙니다.</span></p>'+
+    '</div>'+
   '</div></section>';
 }
 
@@ -337,21 +347,31 @@ function MainFit(){
     /* ⚠️ 머리말에 업종 이름을 또 적지 않습니다 — 바로 아래 h2 가 이미
        "카페 · 디저트 창업에 필요한 모든 것" 입니다. 여기는 **지금 어느
        쪽을 보고 있는지**를 냅니다. */
-    '<div class="sec-hd"><p class="eyebrow">'+
-      (side==="close" ? "CLOSE · 사업 정리" : "START · 창업 준비")+'</p>'+
+    '<div class="sec-hd sec-hd-row"><div>'+
+      '<p class="eyebrow">'+
+        (side==="close" ? "CLOSE · 사업 정리" : "START · 창업 준비")+'</p>'+
       '<h2>'+h2+'</h2>'+
       '<p>'+(who
         ? '이 업종에서 자주 쓰이는 차례로 냅니다.'
         : '업종을 고르시면 그 업종의 차례로 다시 정렬됩니다.')+'</p></div>'+
+      /* 시안의 "전체보기 >" — 분야를 끝까지 보는 진짜 화면으로 보냅니다 */
+      '<a class="sec-hd-all" href="'+(side==="close" ? "/closure" : "/startup")+
+        (key ? "/"+esc(key) : "")+'">전체보기'+icon("arrow",16)+'</a>'+
+    '</div>'+
     '<div class="mfit-tb" role="tablist" aria-label="창업 · 정리">'+
       tab("start","창업 준비")+tab("close","사업 정리")+'</div>'+
-    /* ⚠️ `CatCard()` 한 벌을 그대로 씁니다 — 분류 화면과 **같은 생김새**
-       라야 눌러 들어간 자리가 같은 사이트로 읽힙니다. 업종을 넘기면
-       하위 항목(장비 등)도 그 업종 것으로 바뀝니다. */
-    '<ul class="cat-g">'+cats.map(function(c){
-      return '<li>'+CatCard(c, key || "")+'</li>'; }).join("")+'</ul>'+
+    /* ⚠️⚠️ **큰 카드(`CatCard`)를 쓰지 않습니다.** 시안(AFTER)의 이
+       자리는 작은 카드가 한눈에 깔리는 짜임새이고, 큰 카드로 열셋을
+       내면 1440px 에서 **1,801px**(화면 두 개)이 됩니다 — 재 봤습니다.
+       분류 화면(`/c/:cat`)은 큰 카드 그대로입니다.
+       ⚠️ 시안의 "23개 · 18개" 는 **업체 수**인데 지금 0곳이라 그대로
+       쓰면 지어낸 숫자입니다 (절대 규칙 1). 대신 **하위 서비스 이름
+       셋**을 냅니다 — 세는 값이고, 카페면 "커피머신 · 그라인더 ·
+       제빙기" 로 그 업종 것이 바로 보입니다. */
+    '<ul class="fit-g">'+cats.map(function(c){
+      return '<li>'+FitCard(c, key || "")+'</li>'; }).join("")+'</ul>'+
     '<p class="note note-mid">'+cats.length+'개 분야 전부입니다. '+
-      '누르시면 그 분야의 업체 · 정보로 이어집니다.</p>'+
+      '숫자는 분야 안의 <b>세부 서비스 수</b>이고 등록된 업체 수가 아닙니다.</p>'+
   '</div></section>';
 }
 
@@ -533,7 +553,8 @@ function MainBridge(){
         '<div class="mbr-logo">'+
           '<span class="mbr-logo-i">'+icon("home",26)+'</span>'+
           '<b>'+esc(amBrand())+'</b>'+
-          '<i>업종 · 지역 · 조건으로 잇습니다</i>'+
+          /* 시안 §31 — 짧고 한눈에. 길게 설명하지 않습니다. */
+          '<i>버리는 것을 줄이고<br> 다음 사장님의 시작으로</i>'+
         '</div>'+
         '<span class="mbr-arw mbr-arw-out" aria-hidden="true"></span>'+
       '</div>'+

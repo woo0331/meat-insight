@@ -28,9 +28,12 @@ window.AM_GNB = [
   { to:"/startup",   name:"창업" },
   { to:"/closure",   name:"폐업" },
   { to:"/franchise", name:"프랜차이즈" },
-  { to:"/providers", name:"업체찾기" },
-  { to:"/stores",    name:"매장인수" },
-  { to:"/tools",     name:"사장님 도구" }
+  /* ⚠️ 시안(AFTER)의 짧은 이름입니다 — 칸이 넓어져 360px 여유도
+     같이 생깁니다. ⚠️ 시안의 **가격 · 후기 · 로그인은 안 넣습니다**:
+     그 화면이 없어서 누르면 빈 화면이고, 가짜 링크는 절대 규칙 5 입니다. */
+  { to:"/stores",    name:"매장" },
+  { to:"/providers", name:"업체" },
+  { to:"/tools",     name:"도구" }
 ];
 
 /* 폰 아래 네비 — 다섯 칸을 넘기지 마세요. 손가락이 닿는 폭이 줄고

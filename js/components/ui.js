@@ -248,3 +248,31 @@ window.MoreBtn = function(total){
     esc(amPageHref(n + step))+'">'+step+'건 더 보기'+icon("arrow",16)+
     '<em class="more-n">'+n+' / '+total+'</em></a></p>';
 };
+
+/* ── 작은 분야 카드 — 메인의 "필요한 모든 것" 전용 ────────────────
+   ⚠️⚠️ **`CatCard()` 와 갈라 둔 까닭.** 분류 화면은 분야 하나를 자세히
+   보여 주는 자리라 큰 카드가 맞지만, 메인은 **열셋을 한눈에** 깔아야
+   합니다 — 큰 카드로 내면 1440px 에서 1,801px(화면 두 개)이 됐습니다.
+
+   ⚠️⚠️ **시안의 "23개 · 18개" 를 그대로 쓰면 안 됩니다.** 그건 업체
+   수이고 지금 0곳이라 지어낸 숫자가 됩니다 (절대 규칙 1). 여기 적는
+   것은 **하위 서비스 이름 셋 + 센 값**이라 손으로 고칠 자리가 없고,
+   카페를 고르면 "커피머신 · 그라인더 · 제빙기" 로 그 업종 것이
+   바로 보입니다. */
+window.FitCard = function(c, industryKey){
+  var all  = (window.amCatItems ? amCatItems(c, industryKey) : []);
+  var some = all.slice(0, 3).map(function(i){ return i.name; });
+  return '<a class="fit'+tn(c.tone)+'" href="'+esc(catTo(c))+
+    (industryKey ? '?i='+encodeURIComponent(industryKey) : '')+'">'+
+    '<span class="fit-ic">'+icon(c.icon,24)+'</span>'+
+    '<span class="fit-b">'+
+      /* ⚠️ 이름과 센 값을 **각자 태그**에 담습니다 — 한 칸에 맨글과
+         태그를 섞으면 grid 에서 깨지고, 검사도 "창업 아이템8" 을 읽게
+         됩니다 (실제로 그렇게 짰다가 고쳤습니다). */
+      '<b><span class="fit-nm">'+esc(c.name)+'</span>'+
+        (all.length ? '<em class="fit-n">'+all.length+'</em>' : '')+'</b>'+
+      (some.length ? '<i>'+esc(some.join(" · "))+
+        (all.length > some.length ? ' 외 '+(all.length-some.length) : '')+'</i>' : '')+
+    '</span>'+
+  '</a>';
+};

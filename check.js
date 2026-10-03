@@ -1643,7 +1643,7 @@ const AUDIT = `(() => {
        업종에 필요한 모든 것"(.mfit-tb)으로 **대체**됐습니다. 지운 것이
        아니라 데이터에서 오는 쪽으로 바뀐 것이라, 찾는 표시만 바꿉니다. */
     const need = [['input[type="search"]', "검색창"], [".mi-g", "업종 고르기"],
-                  [".mfit-tb", "업종별 필요한 것"], [".cat-g", "서비스 분야"],
+                  [".mfit-tb", "업종별 필요한 것"], [".fit-g", "서비스 분야"],
                   [".ms-two", "START / CLOSE"], [".mst-g", "범위 숫자"]];
     for(const q of need)
       if(!v.querySelector(q[0])) return q[1] + " 가 메인에 없습니다";
@@ -1808,16 +1808,25 @@ const AUDIT = `(() => {
     /* ⚠️ 지시서 §19 — "사이트에 컬러가 살아있어야 한다." 전에는 분류색이
        여덟뿐이라 업종 열넷에서 t7 이 넷 · t8 · t2 · t5 · t1 이 둘씩
        겹쳤습니다. 색이 겹치면 업종이 구분되지 않습니다.
-       ⚠️ 색은 industries.js 의 tone 한 줄입니다 — 화면에 손으로 적지 마세요. */
-    const tiles = [].slice.call(document.querySelectorAll(".mi-g .ic-t"));
-    if(tiles.length !== (window.AM_INDUSTRIES || []).length)
-      return "업종 타일이 " + tiles.length + "개입니다";
+       ⚠️ 색은 industries.js 의 tone 한 줄입니다 — 화면에 손으로 적지 마세요.
+
+       ⚠️⚠️ **2026-10-03 에 보는 자리를 옮겼습니다.** 전에는 아이콘
+       타일의 바탕을 셌는데, 시안대로 색을 **카드**로 옮기고 타일을
+       흰색으로 띄우면서 타일 열넷이 전부 같은 흰색이 됐습니다 —
+       검사가 "13개 겹침" 으로 잡았고 **그 지적은 맞았습니다**(그때는
+       어디에도 색이 없을 수 있으니까요). 보는 것은 "타일" 이 아니라
+       **업종이 색으로 갈리는가** 이므로 **카드 바탕**을 셉니다. */
+    const cards = [].slice.call(document.querySelectorAll(".mi-g > li > a"));
+    if(cards.length !== (window.AM_INDUSTRIES || []).length)
+      return "업종 카드가 " + cards.length + "개입니다";
     const seen = {}, dup = [];
-    for(const t of tiles){
+    for(const t of cards){
       const c = getComputedStyle(t).backgroundColor;
+      /* ⚠️ 투명이면 뒤 구간 색이 비쳐서 **전부 같은 색**입니다 */
+      if(/rgba\(0, 0, 0, 0\)|transparent/.test(c)) return "업종 카드에 바탕색이 없습니다";
       if(seen[c]) dup.push(c); else seen[c] = 1;
     }
-    if(dup.length) return "겹치는 아이콘 바탕이 " + dup.length + "개 있습니다 — " + dup[0];
+    if(dup.length) return "겹치는 업종 카드 바탕이 " + dup.length + "개 있습니다 — " + dup[0];
     return true;`);
   await f("메인 구간 차례가 지시서와 같다", "/", `
     /* 지시서 §2 의 차례입니다. 늘리거나 섞기 전에 거기를 먼저 고치세요.
@@ -1862,7 +1871,7 @@ const AUDIT = `(() => {
      검사도 "화면이 데이터와 같은가" 로 봅니다. */
   await f("업종을 고르면 그 업종 차례로 펼쳐진다", "/?i=cafe", `
     const names = function(){
-      return [].slice.call(document.querySelectorAll(".mfit-tb ~ .cat-g > li .cat > b"))
+      return [].slice.call(document.querySelectorAll(".fit-g > li .fit .fit-nm"))
         .map(function(e){ return e.textContent.trim(); });
     };
     /* ① 데이터가 정한 차례와 화면이 같아야 합니다 */
@@ -1885,7 +1894,7 @@ const AUDIT = `(() => {
 
   await f("창업 · 정리 토글이 실제로 쪽을 바꾼다", "/?i=cafe", `
     const names = function(){
-      return [].slice.call(document.querySelectorAll(".cat-g > li .cat > b"))
+      return [].slice.call(document.querySelectorAll(".fit-g > li .fit .fit-nm"))
         .map(function(e){ return e.textContent.trim(); });
     };
     const a = names();

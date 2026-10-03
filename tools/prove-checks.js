@@ -151,7 +151,7 @@ const CASES = [
   ["업종 열넷이 저마다 다른 색을 쓴다",
    /* ⚠️ `.ic-t` 에 transition 이 걸려 있어서 그냥 바꾸면 **색이 번지는
       도중**에 재어 다른 값이 나옵니다 — 되돌리기가 헛돕니다. 끕니다. */
-   `const t = document.querySelectorAll(".mi-g .ic-t");
+   `const t = document.querySelectorAll(".mi-g > li > a");
     t[1].style.transition = "none";
     t[1].style.background = getComputedStyle(t[0]).backgroundColor;`],
   ["메인 구간 차례가 지시서와 같다",

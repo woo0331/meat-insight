@@ -166,7 +166,7 @@ window.WOW_PHOTO_SLOTS = [
    이 칸을 되읽어 보세요 (실제로 hero-close 가 한 번 빠졌습니다). */
 window.WOW_PHOTOS = {
   "hero-start": { src:"/img/hero-start.jpg",
-    alt:"큰 창으로 햇빛이 드는 상업공간. 나무 카운터 위로 검은 펜던트 조명이 줄지어 있습니다" },
+    alt:"큰 창으로 햇빛이 드는 상업공간에서 작업자들이 카운터와 조명을 설치하고 있습니다" },
   "hero-close": { src:"/img/hero-close.jpg",
     alt:"비워 둔 상가 내부의 콘크리트 기둥과 통창" }
 };

@@ -154,8 +154,13 @@ const CASES = [
    `window.AM_STAGES[5].cats = window.AM_STAGES[5].cats.slice(1);`],
   ["히어로 두 장의 크기가 같다",
    `document.querySelector(".hp2-cl").style.flex = "1 1 70%";`],
+  /* ⚠️⚠️ **아이콘 칸(.stg-i)만 집어야 합니다.** 처음에
+     ".mstg-g > li > a svg" 로 적었더니 **화살표까지** 걸려서
+     [아이콘0, 화살표0, 아이콘1, …] 이 되고, 0번에 화살표를 넣는 바람에
+     아이콘끼리는 여전히 달라 "검사가 안 잡는다" 로 나왔습니다 —
+     검사가 아니라 되돌리기가 틀린 것이었습니다 (이 저장소에서 세 번째). */
   ["단계 카드 여섯의 아이콘이 저마다 다르다",
-   `const sv = document.querySelectorAll(".mstg-g > li > a svg");
+   `const sv = document.querySelectorAll(".mstg-g .stg-i svg");
     sv[0].innerHTML = sv[1].innerHTML;`],
   ["업종 열넷이 저마다 다른 색을 쓴다",
    /* ⚠️ `.ic-t` 에 transition 이 걸려 있어서 그냥 바꾸면 **색이 번지는

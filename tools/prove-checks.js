@@ -123,12 +123,16 @@ const CASES = [
    `document.querySelector("#q-f .note-mid").textContent =
       "보내고 나면 이 브라우저에 요청 내용이 남아, 아래에서 비교하실 수 있습니다.";`],
   ["지어낸 실적 숫자가 메인에 없다",
-   `document.querySelector(".mh2-d").textContent = "입점 업체 1,200곳";`],
+   `document.querySelector(".hp2-d").textContent = "입점 업체 1,200곳";`],
   ["히어로 제목이 창업 · 폐업 두 낱말을 주인공으로 둔다",
    `document.querySelector(".mval-h").textContent = "창업 플랫폼";`],
-  /* ⚠️ 빠른 진입 하나를 가짜 링크로 — 지시서 §26 "버튼 → 실제 Link" */
+  /* ⚠️⚠️ 되돌리기는 **검사가 실제로 보는 것**을 망가뜨려야 합니다.
+     검색 가는 길을 지울 때 입력칸만 지우고 돋보기를 남겼다가 "검사가
+     안 잡는다" 로 보였던 적이 있습니다 — 검사가 아니라 되돌리기가
+     틀렸던 것입니다. 여기서는 바로가기 하나를 가짜 링크로 만듭니다
+     (지시서 §26 "버튼 → 실제 Link"). */
   ["히어로에서 바로 찾고 바로 갈라진다",
-   `document.querySelector(".mh2-cl .mh2-q a").setAttribute("href", "#");`],
+   `document.querySelector(".mqk-g > li > a").setAttribute("href", "#");`],
   ["창업은 초록 · 폐업은 주황이고 빨강이 아니다",
    `document.querySelector(".mval-h .mh-cl").style.color = "rgb(214,28,28)";`],
   ["연결 구간 두 딱지가 같은 높이에 앉는다",
@@ -143,14 +147,14 @@ const CASES = [
         if(r.selectorText === ".mbr-p .ph") r.style.objectFit = "fill";
     }`],
   /* 이름을 분류에 없는 것으로 바꿔 놓습니다 — 손으로 적으면 이렇게 됩니다 */
-  ["히어로 빠른 진입 여섯이 분류에서 온다",
-   `const b = document.querySelectorAll(".mh2-cl .mh2-q b");
-    b[0].textContent = "매장정리대행"; b[1].textContent = "장비처분대행";`],
+  ["분야 바로가기 열이 분류에서 온다",
+   `const b = document.querySelectorAll(".mqk-g > li > a > b");
+    b[1].textContent = "매장정리대행"; b[2].textContent = "장비처분대행";`],
   ["히어로 두 장의 크기가 같다",
-   `document.querySelector(".mh2-cl").style.width = "60%";`],
-  ["히어로 여섯의 아이콘이 분류 것과 같다",
-   `document.querySelector(".mh2-st .mh2-q svg").innerHTML =
-      document.querySelectorAll(".mh2-st .mh2-q svg")[1].innerHTML;`],
+   `document.querySelector(".hp2-cl").style.flex = "1 1 70%";`],
+  ["바로가기 열 아이콘이 저마다 다르다",
+   `const sv = document.querySelectorAll(".mqk-g > li > a svg");
+    sv[0].innerHTML = sv[1].innerHTML;`],
   ["업종 열넷이 저마다 다른 색을 쓴다",
    /* ⚠️ `.ic-t` 에 transition 이 걸려 있어서 그냥 바꾸면 **색이 번지는
       도중**에 재어 다른 값이 나옵니다 — 되돌리기가 헛돕니다. 끕니다. */

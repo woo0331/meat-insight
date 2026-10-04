@@ -469,11 +469,17 @@ const AUDIT = `(() => {
      보고 있었습니다.**
      그래서 여기서는 **푸터를 포함한 문서 전체**를 잽니다. */
   {
-    const dk = e => {
-      const c = rgb(getComputedStyle(e).backgroundColor);
+    /* ⚠️⚠️ **가짜요소의 바탕도 셉니다.** 2026-10-04 히어로의 짙은
+       남색은 대각선 때문에 판 자신이 아니라 ::before 에 있습니다 —
+       판만 읽으면 투명으로 읽혀 이 검사가 그 면을 **못 봅니다.**
+       그라디언트를 그대로 읽었다가 똑같이 빠졌던 자리입니다. 넓이는
+       판 자신의 크기로 잡습니다 (가짜요소는 rect 가 없습니다). */
+    const dk1 = (e, ps) => {
+      const c = rgb(getComputedStyle(e, ps || null).backgroundColor);
       if(!c || c[3] < 0.9) return false;
       return lum(c) < 0.09;
     };
+    const dk = e => dk1(e) || dk1(e, "::before") || dk1(e, "::after");
     let area = 0; const seen = [], big = [];
     document.querySelectorAll("body *").forEach(e => {
       const cs = getComputedStyle(e);
@@ -1209,8 +1215,8 @@ const AUDIT = `(() => {
     if(innerWidth > 1200 && px < 34)
       return "글씨가 " + Math.round(px) + "px 입니다 (지시서 §7 의 Headline 입니다)";
     /* 히어로 두 장의 큰 글자(창업 · 폐업)도 작아지면 안 됩니다 */
-    const hs = document.querySelector(".mh2-st .mh2-h");
-    const hc = document.querySelector(".mh2-cl .mh2-h");
+    const hs = document.querySelector(".hp2-st .hp2-h");
+    const hc = document.querySelector(".hp2-cl .hp2-h");
     if(!hs || !hc) return "히어로 두 장의 제목이 없습니다";
     if(hs.textContent.trim() !== "창업" || hc.textContent.trim() !== "폐업")
       return "히어로 제목이 창업 · 폐업이 아닙니다";
@@ -1244,24 +1250,46 @@ const AUDIT = `(() => {
       return "헤더에 검색으로 가는 길이 없습니다";
     const s2 = document.querySelector(".mh");
     if(!s2) return "히어로가 없습니다";
-    const st = s2.querySelector('.mh2-st a[href="/startup"]');
-    const cl = s2.querySelector('.mh2-cl a[href="/closure"]');
+    const st = s2.querySelector('.hp2-st a[href="/startup"]');
+    const cl = s2.querySelector('.hp2-cl a[href="/closure"]');
     if(!st || !cl) return "START / CLOSE 두 갈래가 히어로에 없습니다";
     /* ⚠️ 두 단추의 크기가 같아야 합니다 (§3 — 50:50). 한쪽을 작게
        만들면 그게 "덜 중요한 것" 이라는 말입니다. */
     const ra = st.getBoundingClientRect(), rb = cl.getBoundingClientRect();
     if(Math.abs(ra.height - rb.height) > 2)
       return "두 단추 높이가 " + Math.round(ra.height) + " · " + Math.round(rb.height) + "입니다";
-    /* 빠른 진입 여섯 — ⚠️ 가짜 링크 금지 · 누르는 칸 40px 이상 */
-    for(const box of [".mh2-st", ".mh2-cl"]){
-      const q = [].slice.call(document.querySelectorAll(box + " .mh2-q a"));
-      if(q.length !== 6) return box + " 의 빠른 진입이 " + q.length + "개입니다 (여섯)";
-      for(const a2 of q){
-        const href = a2.getAttribute("href") || "";
-        if(!href || href === "#") return box + " 에 가짜 링크가 있습니다";
-        if(a2.getBoundingClientRect().height < 40)
-          return box + " 의 빠른 진입이 40px 아래입니다";
-      }
+    /* ⚠️⚠️ **2026-10-04 개편 — 빠른 진입 여섯이 두 곳으로 갈렸습니다.**
+       히어로가 화면 폭을 쓰는 두 판이 되면서 판 안에 열두 칸을 넣을
+       자리가 없어졌고, 지시서 §9 · §13 이 그 일을 **떠 있는 검색
+       패널**과 **분야 바로가기 열**에 맡겼습니다. 지운 것이 아닙니다 —
+       지금 지키는 것은 그 둘이 **실제로 동작하는가**입니다.
+
+       ⚠️ 장식용 검색창 금지 (§11). 적는 칸 · 지역 · 단추가 다 있고,
+       보내는 곳이 실제 주소여야 합니다. */
+    const sf = document.querySelector(".msr-f");
+    if(!sf) return "떠 있는 검색 패널이 없습니다";
+    if(!sf.querySelector("#msrQ")) return "검색 패널에 적는 칸이 없습니다";
+    if(!sf.querySelector("#msrR option[value='seoul'], #msrR option")) 
+      return "검색 패널에 지역 고르개가 없습니다";
+    if(!sf.querySelector("button[type='submit']")) return "검색 단추가 없습니다";
+    if(!/mainFind/.test(sf.getAttribute("onsubmit") || ""))
+      return "검색 패널이 아무 데도 보내지 않습니다 (장식용입니다)";
+    /* 탭 — 다섯이고 전부 실제 주소 */
+    const tb = [].slice.call(document.querySelectorAll(".msr-tb .msr-t"));
+    if(tb.length < 3) return "검색 탭이 " + tb.length + "개입니다";
+    if(!document.querySelector(".msr-t.on")) return "고른 탭이 표시되지 않습니다";
+    /* 추천 검색어 — ⚠️ "인기" 라고 쓰면 안 됩니다 (기록을 안 모읍니다) */
+    const ch = document.querySelector(".msr-ch");
+    if(!ch) return "추천 검색어가 없습니다";
+    if(/인기/.test(ch.textContent)) return "검색 기록을 모으지 않는데 '인기' 라고 적었습니다";
+    /* 분야 바로가기 열 — ⚠️ 가짜 링크 금지 · 누르는 칸 40px 이상 */
+    const qk = [].slice.call(document.querySelectorAll(".mqk-g > li > a"));
+    if(qk.length !== 10) return "분야 바로가기가 " + qk.length + "개입니다 (열)";
+    for(const a2 of qk){
+      const href = a2.getAttribute("href") || "";
+      if(!href || href === "#") return "분야 바로가기에 가짜 링크가 있습니다";
+      if(a2.getBoundingClientRect().height < 40)
+        return "분야 바로가기 칸이 40px 아래입니다";
     }
     return true;`);
   /* ⚠️⚠️ **2026-09-30 지시로 규칙이 뒤집혔습니다.** 전에는 "창업과
@@ -1274,10 +1302,15 @@ const AUDIT = `(() => {
          그대로 돌아옵니다)
      입니다. `--close` 를 붉은 쪽으로 옮기면 여기서 걸립니다. */
   await f("창업은 초록 · 폐업은 주황이고 빨강이 아니다", "/", `
-    const col = function(q, prop){
+    /* ⚠️⚠️ **가짜요소(::before)도 읽어야 합니다.** 히어로 두 판의
+       바탕은 대각선 때문에 판 자신이 아니라 ::before 에 있습니다 —
+       판만 읽으면 backgroundColor 가 투명으로 읽혀 **rgb(0,0,0)**
+       으로 잡힙니다 (이 저장소에서 그라디언트로 한 번 겪었습니다). */
+    const col = function(q, prop, pseudo){
       const e = document.querySelector(q);
       if(!e) return null;
-      const m = getComputedStyle(e)[prop || "color"].match(/(\\d+), ?(\\d+), ?(\\d+)/);
+      const m = getComputedStyle(e, pseudo || null)[prop || "color"]
+        .match(/(\\d+), ?(\\d+), ?(\\d+)/);
       return m ? [+m[1], +m[2], +m[3]] : null;
     };
     /* ⚠️ 제목은 리뉴얼로 가치 구간(.mval-h)의 h1 이 됐습니다 */
@@ -1301,17 +1334,20 @@ const AUDIT = `(() => {
        ⚠️ 여기서 꼭 지켜야 하는 것은 **CLOSE 가 빨강으로 흘러가지 않는
        것**입니다. 빨강이 되는 순간 "폐업은 나쁜 것" 이라는 옛 걱정이
        그대로 돌아옵니다 (§6). */
-    const ca = col(".mh2-st", "backgroundColor"), cb = col(".mh2-cl", "backgroundColor");
+    const ca = col(".hp2-st", "backgroundColor", "::before");
+    const cb = col(".hp2-cl", "backgroundColor", "::before");
     if(!ca || !cb) return "히어로 두 장의 바탕을 못 읽습니다";
     if(!(ca[2] > ca[0] + 20)) return "START 카드가 남색이 아닙니다 rgb(" + ca.join(",") + ")";
     if(!(cb[0] >= cb[1] && cb[1] >= cb[2]))
       return "CLOSE 카드가 따뜻한 쪽이 아닙니다 rgb(" + cb.join(",") + ")";
     if(cb[1] < 215) return "CLOSE 카드가 붉은 쪽으로 갔습니다 rgb(" + cb.join(",") + ")";
-    /* CLOSE 쪽 악센트(머리말 · 단추)도 주황이고 빨강이 아니어야 합니다 */
-    const bc = col(".mh2-cl .mh2-k b");
-    if(!bc) return "CLOSE 머리말을 못 찾습니다";
-    if(!(bc[0] > bc[1] + 40)) return "CLOSE 머리말이 주황이 아닙니다 rgb(" + bc.join(",") + ")";
-    if(bc[1] < 45) return "CLOSE 머리말이 빨강으로 넘어갔습니다 rgb(" + bc.join(",") + ")";
+    /* CLOSE 쪽 단추도 주황이고 빨강이 아니어야 합니다.
+       ⚠️⚠️ **여기에 포인트 레드를 쓰면 안 됩니다** — 이 문서가 여러
+       곳에서 "폐업이 빨강으로 흘러가지 않을 것" 을 못박아 둔 자리입니다. */
+    const bc = col(".hp2-cl .hp2-go .btn", "backgroundColor");
+    if(!bc) return "CLOSE 단추를 못 찾습니다";
+    if(!(bc[0] > bc[1] + 40)) return "CLOSE 단추가 주황이 아닙니다 rgb(" + bc.join(",") + ")";
+    if(bc[1] < 45) return "CLOSE 단추가 빨강으로 넘어갔습니다 rgb(" + bc.join(",") + ")";
     return true;`);
 
   /* ⑨ 규모감 숫자 — **센 값**이어야 합니다
@@ -1669,10 +1705,11 @@ const AUDIT = `(() => {
     /* ⚠️ 2026-10-03 — 손으로 고른 "핵심 서비스 여덟"(.mv-g)은 "고른
        업종에 필요한 모든 것"(.mfit-tb)으로 **대체**됐습니다. 지운 것이
        아니라 데이터에서 오는 쪽으로 바뀐 것이라, 찾는 표시만 바꿉니다. */
-    /* ⚠️ 2026-10-03 리뉴얼 — START/CLOSE 는 .ms-two 가 아니라
-       **히어로 두 장**(.mh2-c)이고, 검색은 헤더로 올라갔습니다.
+    /* ⚠️ 2026-10-04 개편 — START/CLOSE 는 .ms-two 도 .mh2-c 도 아니라
+       **히어로 두 판**(.hp2)이고, 검색은 헤더와 떠 있는 패널 둘입니다.
        ⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다 — 일곱 번째입니다 */
-    const need = [[".mh2-c", "START / CLOSE 두 장"], [".mi-g", "업종 고르기"],
+    const need = [[".hp2", "창업 / 폐업 두 판"], [".msr-f", "떠 있는 검색 패널"],
+                  [".mqk-g", "분야 바로가기 열"], [".mi-g", "업종 고르기"],
                   [".mfit-tb", "업종별 필요한 것"], [".fit-g", "서비스 분야"],
                   [".mfeat-g", "큰 카드 셋"], [".msvc-g", "주요 서비스"],
                   [".mst-g", "범위 숫자"]];
@@ -1698,12 +1735,20 @@ const AUDIT = `(() => {
         return x <= .03928 ? x/12.92 : Math.pow((x+.055)/1.055, 2.4); };
       return .2126*g(c[0]) + .7152*g(c[1]) + .0722*g(c[2]);
     };
-    const isDark = function(e){
-      const m = getComputedStyle(e).backgroundColor
+    /* ⚠️⚠️ **가짜요소의 바탕도 셉니다.** 2026-10-04 히어로의 짙은
+       남색은 대각선 때문에 판 자신이 아니라 ::before 에 있습니다 —
+       판만 읽으면 투명으로 읽혀 **이 검사가 그 면을 못 봅니다.**
+       그라디언트로 한 번 똑같이 빠졌던 자리입니다. 넓이는 판 자신의
+       크기로 잡습니다 (가짜요소는 getBoundingClientRect 가 없습니다). */
+    const darkBg = function(e, pseudo){
+      const m = getComputedStyle(e, pseudo || null).backgroundColor
         .match(/(\\d+), ?(\\d+), ?(\\d+)(?:, ?([0-9.]+))?/);
       if(!m) return false;
       if(m[4] !== undefined && +m[4] < 0.9) return false;
       return lum([+m[1], +m[2], +m[3]]) < 0.09;
+    };
+    const isDark = function(e){
+      return darkBg(e) || darkBg(e, "::before") || darkBg(e, "::after");
     };
     const view = document.getElementById("view");
     let area = 0;
@@ -1754,7 +1799,7 @@ const AUDIT = `(() => {
        입니다. 안 주면 사진이 **비율을 무시하고 늘어납니다.** 연결 구간
        두 곳이 실제로 빠져 있었는데 **사진이 0장이라 아무도 몰랐습니다.**
        그래서 사진이 없을 때도 규칙이 걸려 있는지만 봅니다. */
-    const want = [".mh2-ph .ph", ".mfeat-ph .ph", ".msvc-ph .ph", ".mbr-p .ph"];
+    const want = [".hp2-ph .ph", ".mfeat-ph .ph", ".msvc-ph .ph", ".mbr-p .ph"];
     const bad = [];
     for(const q of want){
       let ok = false;
@@ -1768,57 +1813,64 @@ const AUDIT = `(() => {
       if(!ok) bad.push(q);
     }
     return bad.length ? bad.join(" · ") + " 에 object-fit:cover 가 없습니다" : true;`);
-  await f("히어로 빠른 진입 여섯이 분류에서 온다", "/", `
+  await f("분야 바로가기 열이 분류에서 온다", "/", `
     /* ⚠️⚠️ 이름 · 아이콘 · 링크를 손으로 적어 두었더니 화면마다 **서로
        다른 아이콘**을 쓰고 있었습니다 (프랜차이즈가 전구, 인테리어와
        철거가 둘 다 망치). 이제 분류 key 만 적고 catalog.js 에서
        가져오므로, 그것이 실제로 먹는지 봅니다.
-       ⚠️ 분류가 없는 카드(프랜차이즈)는 쪽마다 하나까지 봐줍니다. */
+       ⚠️ 분류가 없는 칸(프랜차이즈)은 하나까지 봐줍니다.
+
+       ⚠️⚠️ 2026-10-04 개편으로 보는 자리가 **히어로 안에서 바로가기
+       열로** 옮겨졌습니다. 지키는 것은 그대로입니다 — 이름을 손으로
+       적지 않는가. */
     const names = (window.AM_CATS || []).map(function(c){ return c.name; });
-    for(const box of [".mh2-st", ".mh2-cl"]){
-      const g = document.querySelector(box);
-      if(!g) return box + " 가 없습니다";
-      const shown = [].slice.call(g.querySelectorAll(".mh2-q b"))
-        .map(function(e){ return e.textContent.trim(); });
-      if(shown.length !== 6)
-        return box + " 가 " + shown.length + "개입니다 (여섯이어야 합니다)";
-      let off = 0;
-      for(const n of shown) if(names.indexOf(n) < 0) off++;
-      if(off > 1) return box + " 에 분류에 없는 이름이 " + off + "개 있습니다";
+    const shown = [].slice.call(document.querySelectorAll(".mqk-g > li > a > b"))
+      .map(function(e){ return e.textContent.trim(); });
+    if(shown.length !== 10)
+      return "바로가기가 " + shown.length + "개입니다 (열이어야 합니다)";
+    let off = 0;
+    for(const n of shown) if(names.indexOf(n) < 0) off++;
+    if(off > 1) return "분류에 없는 이름이 " + off + "개 있습니다";
+    /* ⚠️ 주소도 전부 실제로 있는 화면이어야 합니다 (가짜 링크 금지) */
+    const seenTo = {};
+    for(const a of document.querySelectorAll(".mqk-g > li > a")){
+      const h = a.getAttribute("href") || "";
+      if(!/^\\/[a-z]/.test(h)) return "바로가기 주소가 이상합니다 (" + h + ")";
+      if(seenTo[h]) return "같은 주소로 보내는 칸이 둘 있습니다 (" + h + ")";
+      seenTo[h] = 1;
     }
     return true;`);
   await f("히어로 두 장의 크기가 같다", "/", `
     /* 폐업 쪽을 좁히거나 가볍게 만들면 그게 "덜 중요한 것" 이라는
        말입니다 (지시서 §3 — 50:50). 나란히 놓인 때만 봅니다. */
-    const a = document.querySelector(".mh2-st"), b = document.querySelector(".mh2-cl");
-    if(!a || !b) return "두 갈래 카드 중 하나가 없습니다";
+    const a = document.querySelector(".hp2-st"), b = document.querySelector(".hp2-cl");
+    if(!a || !b) return "두 갈래 판 중 하나가 없습니다";
     if(innerWidth <= 980) return true;
     const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
     if(Math.abs(ra.width - rb.width) > 2 || Math.abs(ra.height - rb.height) > 2)
       return "창업 " + Math.round(ra.width) + "×" + Math.round(ra.height) +
         " · 폐업 " + Math.round(rb.width) + "×" + Math.round(rb.height) + "입니다";
     return true;`);
-  await f("히어로 여섯의 아이콘이 분류 것과 같다", "/", `
+  await f("바로가기 열 아이콘이 저마다 다르다", "/", `
     /* ⚠️ 아이콘이 비면 key 를 잘못 적은 것입니다 — 조용히 빈 칸이 됩니다.
        (⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다) */
-    const cards = [].slice.call(document.querySelectorAll(".mh2-q a"));
-    if(!cards.length) return "히어로 안에 빠른 진입이 없습니다";
+    const cards = [].slice.call(document.querySelectorAll(".mqk-g > li > a"));
+    if(!cards.length) return "분야 바로가기가 없습니다";
+    const seen = [];
     for(const a of cards){
       const sv = a.querySelector("svg");
       if(!sv || !sv.innerHTML.trim())
-        return "'" + (a.textContent||"").trim().slice(0,12) + "' 항목에 아이콘이 없습니다";
+        return "'" + (a.textContent||"").trim().slice(0,12) + "' 칸에 아이콘이 없습니다";
+      /* ⚠️⚠️ 한 줄에 같은 아이콘이 두 번 오면 무엇이 무엇인지 흐려집니다 —
+         매장 양도에 store 를 주었더니 프랜차이즈와 겹쳤습니다. */
+      const d = sv.innerHTML.trim();
+      if(seen.indexOf(d) >= 0)
+        return "'" + (a.textContent||"").trim().slice(0,12) + "' 이 같은 아이콘을 또 씁니다";
+      seen.push(d);
     }
-    /* 같은 카드 안에서 같은 아이콘이 두 번 나오면 뜻이 흐려집니다 */
-    for(const box of [".mh2-st", ".mh2-cl"]){
-      const g = document.querySelector(box);
-      if(!g) continue;
-      const seen = [];
-      for(const sv of g.querySelectorAll(".mh2-q svg")){
-        const d = sv.innerHTML.trim();
-        if(seen.indexOf(d) >= 0) return box + " 안에 같은 아이콘이 두 번 나옵니다";
-        seen.push(d);
-      }
-    }
+    /* 검색 패널의 탭 아이콘도 비면 안 됩니다 */
+    for(const sv of document.querySelectorAll(".msr-t svg"))
+      if(!sv.innerHTML.trim()) return "검색 탭에 빈 아이콘이 있습니다";
     return true;`);
   await f("업종 열넷이 저마다 다른 색을 쓴다", "/", `
     /* ⚠️ 지시서 §19 — "사이트에 컬러가 살아있어야 한다." 전에는 분류색이
@@ -1855,7 +1907,12 @@ const AUDIT = `(() => {
     /* ⚠️ 2026-10-03 지시서로 **열셋**이 됐습니다 — 숫자가 자기 구간으로
        떨어져 나오고(§3), "고른 업종에 필요한 모든 것"(§5)이 새로
        들어오고, 손으로 고른 "핵심 서비스 여덟"(.mv-g)은 그것으로
-       대체됐습니다. */
+       대체됐습니다.
+       ⚠️⚠️ 2026-10-04 개편으로 히어로 아래에 **분야 바로가기 열**이
+       붙었는데, 그것은 구간이 아니라 **nav** 입니다 (링크 목록이라
+       그게 맞습니다) — 그래서 여기 셈은 그대로 열셋입니다. 그 열은
+       위의 "히어로에서 바로 찾고 바로 갈라진다" 가 열 칸으로 봅니다.
+       ⚠️ 구간으로 바꾸시려면 want 에 넣고 숫자도 같이 고치세요. */
     const want = ["mh","mval","mnum","mi-g","mfit","mfeat","msvc","pv","fr","mk","mbr","mt-g","mjn"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== 13) return "구간이 " + S.length + "개입니다 (열셋이어야 합니다)";

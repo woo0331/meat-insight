@@ -34,11 +34,34 @@
    지운 것이 아닙니다 — 신뢰줄 · 범위 · 진행 방법 · FAQ 가 다 거기
    있습니다. */
 window.AM_GNB = [
+  /* ⚠️⚠️ **일곱입니다.** 2026-10-04 HERO 개편 지시서 §2 는 레퍼런스처럼
+     **열둘**(상가·점포 · 인테리어 · 주방설비 · 가구·집기 · POS·시스템 ·
+     세무·노무 · 마케팅 · 철거·원상복구 · 매장양도 · 커뮤니티 ·
+     프랜차이즈 · 업체찾기)을 적었는데, **재 보니 들어가지 않습니다.**
+
+       1280px 에서 메뉴가 쓸 수 있는 폭   548px
+       열둘이 필요한 폭                   741px   (글자 521 + 간격 220)
+       일곱이 필요한 폭                   429px
+
+     1440px 에서도 708 자리에 742 가 필요해서 넘칩니다. 넘치면 가로
+     스크롤이 나는 것이 아니라 **메뉴가 헤더 오른쪽(검색 · 내 기록 ·
+     입점) 위로 올라앉습니다** — 전수 점검이 못 잡는 종류입니다
+     (`.gnb` 가 `min-width:0` 이라 문서 폭은 그대로입니다).
+
+     ⚠️ 그래서 **분야는 헤더가 아니라 메인의 "분야 바로가기" 열**과
+     `업체찾기` 안에 둡니다 — 한 번 더 누르지만 글자가 겹치지 않습니다.
+     ⚠️ **여덟으로 늘리지 마세요.** 1280 에서는 여덟도 들어가지만
+     900~940px(메뉴가 접히기 직전)에서 오른쪽과 겹칩니다 — 재 봤습니다.
+
+     ⚠️ 일곱 전부 **실제로 있는 화면**입니다 (가짜 링크는 절대 규칙 5).
+     지시서의 `커뮤니티` 는 백엔드가 있어야 하는 게시판이라 넣지
+     않았고, `매장양도` 는 `/stores` 와 같은 화면입니다 — 그 화면의
+     이름을 지시서 말투대로 **상가·점포**로 바꿨습니다. */
   { to:"/startup",   name:"창업" },
   { to:"/closure",   name:"폐업" },
   { to:"/providers", name:"업체찾기" },
   { to:"/franchise", name:"프랜차이즈" },
-  { to:"/stores",    name:"매장/시설" },
+  { to:"/stores",    name:"상가·점포" },
   { to:"/support",   name:"지원정보" },
   { to:"/content",   name:"콘텐츠" }
 ];
@@ -62,8 +85,10 @@ function Header(){
   return '<header class="hd"><div class="w-wide hd-in">'+
     '<a class="lg hd-lg" href="/" aria-label="'+esc(brandName())+' 홈">'+
       '<span class="hd-lg-i" aria-hidden="true">'+icon("home",20)+'</span>'+
+      /* ⚠️ 지시서 §2 — 로고 아래 작은 영문. `AM_BRAND.en` 한 곳에서
+         옵니다. 손으로 적지 마세요. */
       '<span class="hd-lg-t"><b>'+esc(brandName())+'</b>'+
-        '<i>'+esc(brandSub())+'</i></span></a>'+
+        '<i>'+esc((window.AM_BRAND||{}).en || brandSub())+'</i></span></a>'+
     '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
       AM_GNB.map(function(m){
         return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+esc(m.name)+'</a>';
@@ -81,6 +106,7 @@ function Header(){
           'aria-label="통합 검색" placeholder="원하는 서비스나 업체를 검색하세요.">'+
       '</form>'+
       '<a class="hd-ic hd-ic-s" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
+      '<span class="hd-sep" aria-hidden="true"></span>'+
       /* ⚠️ **"로그인" 이라고 적지 마세요.** 시안 §2 에는 로그인이
          있지만 지금 백엔드가 없어서 로그인이라는 기능 자체가
          없습니다 — 눌러도 로그인 화면이 없으면 그건 고장난 것으로

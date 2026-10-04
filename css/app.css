@@ -129,6 +129,18 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 
 @media (max-width:1240px){ .hd-in{ gap:var(--s5); } .gnb{ gap:var(--s4); } }
 @media (max-width:1040px){ .lg span{ display:none; } .gnb{ gap:var(--s3); } }
+/* ⚠️ 메뉴가 접히기 **바로 전**(901~980px)이 제일 좁습니다 — 일곱이
+   381px 를 쓰는데 그 폭에서는 378px 만 남아서, 메뉴 마지막 칸이 헤더
+   오른쪽 위로 올라앉습니다. 글씨를 한 단계(13px) 내려서 비웁니다.
+   ⚠️ **12px 미만으로 내리지 마세요** — `--t-cap` 이 제일 작은 단계입니다.
+   ⚠️ `display:none` 을 1040px 로 올리지 마세요 — 아래 네비가 900px
+   에서야 나와서 901~1040px 에 **메뉴가 아무것도 없게** 됩니다. */
+@media (max-width:980px){ .gnb a{ font-size:var(--t-cap); } }
+/* 로고 아래 영문 한 줄 — 좁아지면 접습니다 (브랜드 이름만 남습니다) */
+@media (max-width:1040px){ .hd-lg-t i{ display:none; } }
+/* 검색과 "내 기록" 사이의 가느다란 가름선 (§2) */
+.hd-sep{ flex:0 0 auto; width:1px; height:22px; background:var(--line); }
+@media (max-width:900px){ .hd-sep{ display:none; } }
 /* §22 — 폰에서는 헤더를 단순하게. 메뉴는 아래 네비가 맡습니다.
    ⚠️ **입점 CTA 는 폰에서도 둡니다** (§39). 업체가 모이지 않으면 이
    플랫폼은 아무것도 아니고, 업체 사장님도 폰으로 들어옵니다. */
@@ -189,14 +201,22 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .btn-cl:hover{ background:var(--close-deep); border-color:var(--close-deep); }
 .btn-nv{ background:var(--navy); color:#fff; border-color:var(--navy); }
 .btn-nv:hover{ background:var(--navy-dark); border-color:var(--navy-dark); }
+/* ⚠️⚠️ POINT RED — 2026-10-04 §4 가 정한 **검색 CTA 한 자리**입니다.
+   흰 글자 대비 5.07 로 AA 를 넘깁니다. 넓게 칠하지 마세요 (§4 "사이트
+   전체를 빨갛게 만들지 않는다").
+   ⚠️⚠️ **폐업 쪽에 쓰지 마세요.** 이 문서가 여러 곳에서 "폐업이
+   빨강으로 흘러가지 않을 것" 을 못박아 둔 까닭 그대로입니다 — 빨강은
+   "폐업은 나쁜 것" 이라는 말이 됩니다. 폐업은 `--close` 계열입니다. */
+.btn-pt{ background:var(--point); color:#fff; border-color:var(--point); }
+.btn-pt:hover{ background:var(--point-dark); border-color:var(--point-dark); }
 .btn-lg{ min-height:56px; padding:0 var(--s7); font-size:var(--t-lg); }
 /* §5 hover — 2px 들리고 그림자. ⚠️ 크기를 키우지 마세요(zoom 금지 §21) */
 @media (hover:hover){
-  .btn-st:hover, .btn-cl:hover, .btn-nv:hover, .btn-b:hover{
+  .btn-st:hover, .btn-cl:hover, .btn-nv:hover, .btn-b:hover, .btn-pt:hover{
     transform:translateY(-2px); box-shadow:var(--shadow-btn); }
 }
 @media (prefers-reduced-motion: reduce){
-  .btn-st:hover, .btn-cl:hover, .btn-nv:hover, .btn-b:hover{
+  .btn-st:hover, .btn-cl:hover, .btn-nv:hover, .btn-b:hover, .btn-pt:hover{
     transform:none; box-shadow:none; }
 }
 .btn-full{ display:flex; width:100%; }

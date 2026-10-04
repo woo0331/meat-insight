@@ -59,83 +59,187 @@
    비주얼. DOM 이 그 차례라 좁아지면 저절로 그렇게 쌓입니다.
    **오른쪽 비주얼을 DOM 앞으로 옮기지 마세요.** */
 
-/* ⚠️⚠️ **히어로의 여섯은 이름이 아니라 분류 key 입니다.** 이름 ·
-   아이콘 · 링크를 손으로 적어 두었더니 화면마다 **서로 다른 아이콘**을
-   쓰고 있었습니다 (프랜차이즈가 전구, 철거와 인테리어가 둘 다 망치).
-   key 만 적으면 전부 `catalog.js` 에서 옵니다 — 거기를 고치면 여기도
-   따라옵니다. 분류가 없는 카드(프랜차이즈)만 `ic` 와 `to` 를 직접
-   적고, `check.js` 가 그런 것을 하나까지만 봐줍니다. */
-var MAIN_START6 = [
-  { ic:"store", t:"프랜차이즈", to:"/franchise" },
-  { cat:"store" }, { cat:"interior" }, { cat:"equip" },
-  { cat:"admin" }, { cat:"marketing" }
-];
-var MAIN_CLOSE6 = [
-  { cat:"transfer" }, { cat:"asset" }, { cat:"demolish" },
-  { cat:"tax" }, { cat:"contract" }, { cat:"support" }
-];
+/* ══════════════════════════════════════════════════════════════════
+   ① HERO — 창업 / 폐업 두 판 (2026-10-04 개편 지시서 §3 ~ §8)
+   ══════════════════════════════════════════════════════════════════
+   화면 너비를 쓰는 대형 비주얼 둘이고, 가운데가 **대각선**으로
+   갈립니다 (§8 — 수직선만 넣지 않습니다).
 
-/* ⚠️⚠️ **분류 → 주소는 `catTo()` 한 곳입니다** (`js/components/ui.js`).
-   여기에 똑같은 함수(`amCatTo`)를 하나 더 들고 있었습니다 — 글자까지
-   같았습니다. 분류 `kind` 가 하나 늘면 한쪽만 고치게 되고, 그러면
-   **메인만 조용히 엉뚱한 주소로** 보냅니다. 새로 만들지 마세요. */
-function mainSix(list){
-  var by = {}; (window.AM_CATS||[]).forEach(function(c){ by[c.key] = c; });
-  return list.map(function(x){
-    if(!x.cat) return { ic:x.ic, name:x.t, to:x.to };
-    var c = by[x.cat];
-    return c ? { ic:c.icon, name:c.name, to:catTo(c) } : null;
-  }).filter(Boolean);
-}
+   ⚠️⚠️ **사진이 0장입니다.** 레퍼런스는 사진이 주인공인 화면인데
+   저희에게는 아직 한 장도 없습니다. 그래서 —
+     · 사진이 있으면 → 사진 + gradient overlay (왼쪽 warm · 오른쪽 cool)
+     · 사진이 0장이면 → **밝은 톤 면**으로 자리를 지킵니다
+   "이미지 준비 중" 같은 자리표시자는 찍지 않습니다 (절대 규칙 2).
+   ⚠️⚠️ 사진이 들어오면 **어두운 막이 생깁니다** — 그때 어두운 면 15%
+   를 반드시 다시 재세요. 지금은 사진이 없어 잴 수가 없습니다.
 
-/* 히어로 한 쪽 — ⚠️ 두 장의 **크기 · 비율 · 무게가 같아야** 합니다
-   (지시서 §3 "50:50에 가까운 비율"). 한쪽을 좁히면 그게 "덜 중요한
-   것" 이라는 말입니다 — `check.js` 가 폭과 높이를 잽니다. */
-function MainHeroCard(o){
-  var six = mainSix(o.six);
-  if(!six.length) return "";
+   ⚠️⚠️ **두 판의 크기 · 무게가 같아야 합니다** (§3 — 50:50).
+   폐업 쪽을 좁히거나 가볍게 만들면 그게 "덜 중요한 것" 이라는 말입니다.
+   ⚠️ **폐업을 부정적으로 쓰지 마세요** (§7) — 끝이 아니라 다음 시작. */
+function MainHeroPane(o){
   var ph = hasPhoto(o.photo);
-  return '<article class="mh2-c mh2-'+o.cls+(ph ? "" : " mh2-noph")+'">'+
-    /* ⚠️ 사진이 들어오면 그 위에 막을 씌웁니다 (지시서 §4 · §5) —
-       왼쪽은 Dark Navy, 오른쪽은 Warm Beige. 0장이면 액자째 빠지고
-       카드 **자신의 바탕색**이 그 자리를 지킵니다. "이미지 준비 중"
-       같은 자리표시자를 찍지 않습니다. */
-    (ph ? '<figure class="mh2-ph">'+photoBox(o.photo,"",true)+'</figure>' : '')+
-    '<div class="mh2-b">'+
-      '<p class="mh2-k"><b>'+esc(o.kicker)+'</b>'+
-        '<span>'+esc(o.who)+'</span></p>'+
-      '<h2 class="mh2-h">'+esc(o.title)+'</h2>'+
-      '<p class="mh2-d">'+o.lead+'</p>'+
-      '<p class="mh2-go"><a class="btn btn-lg '+esc(o.btn)+'" href="'+esc(o.to)+'">'+
+  return '<article class="hp2 hp2-'+o.cls+(ph ? "" : " hp2-noph")+'">'+
+    (ph ? '<figure class="hp2-ph">'+photoBox(o.photo,"",true)+'</figure>' : '')+
+    '<div class="hp2-b">'+
+      '<p class="hp2-k">'+esc(o.kicker)+'</p>'+
+      '<h2 class="hp2-h">'+esc(o.title)+
+        '<em class="hp2-dot" aria-hidden="true"></em></h2>'+
+      '<p class="hp2-d">'+o.lead+'</p>'+
+      '<p class="hp2-go"><a class="btn btn-lg '+esc(o.btn)+'" href="'+esc(o.to)+'">'+
         esc(o.cta)+icon("arrow",18)+'</a></p>'+
     '</div>'+
-    /* 빠른 진입 여섯 — ⚠️ 장식이 아닙니다. 전부 실제로 결과가 나오는
-       주소이고 이름 · 아이콘은 `catalog.js` 에서 옵니다 (지시서 §26). */
-    '<ul class="mh2-q">'+six.map(function(c){
-      return '<li><a href="'+esc(c.to)+'">'+
-        '<span class="mh2-qi">'+icon(c.ic,22)+'</span>'+
-        '<b>'+esc(c.name)+'</b></a></li>'; }).join("")+'</ul>'+
   '</article>';
 }
-
-/* ⚠️⚠️ **제목(h1)은 여기에 없습니다.** 두 카드가 똑같이 중요해서
-   한쪽만 h1 으로 올릴 수가 없고, 화면마다 h1 은 **딱 하나**여야
-   합니다 (전수 점검이 셉니다). 그래서 h1 은 바로 아래 가치 구간의
-   "창업에 필요한 모든 것. 폐업에 필요한 모든 것." 입니다 — 지시서
-   §7 이 그 문장을 Headline 으로 적어 두었습니다. */
 function MainHero(){
-  var st = MainHeroCard({ cls:"st", kicker:"START", who:"시작하는 사장을 위한",
-    title:"창업", to:"/startup", cta:"창업 시작하기", btn:"btn-w", photo:"hero-start",
-    lead:'사업을 시작하는 데<br> 필요한 모든 것.<br class="br-m"> 지금 한 곳에서 준비하세요.',
-    six:MAIN_START6 });
-  var cl = MainHeroCard({ cls:"cl", kicker:"CLOSE", who:"정리하는 사장을 위한",
-    title:"폐업", to:"/closure", cta:"폐업 시작하기", btn:"btn-cd", photo:"hero-close",
-    lead:'사업을 정리하는 데<br> 필요한 모든 것.<br class="br-m"> 안전하고 빠르게 해결하세요.',
-    six:MAIN_CLOSE6 });
-  if(!st || !cl) return "";
-  return '<section class="mh"><div class="w-wide mh2">'+st+cl+'</div></section>';
+  return '<section class="mh"><div class="mh-two">'+
+    /* ⚠️ 단추 색이 다른 것은 **바탕이 달라서**입니다 — 짙은 남색 위에는
+       흰 단추, 밝은 샌드 위에는 짙은 주황 단추라야 글자가 읽힙니다
+       (AA 4.5). 크기 · 글씨 · 자리는 둘이 똑같습니다. */
+    MainHeroPane({ cls:"st", photo:"hero-start", to:"/startup", btn:"btn-w",
+      kicker:"좋은 시작, 든든한 파트너와 함께", title:"창업",
+      lead:'사업을 시작하는 데<br> 필요한 모든 것', cta:"창업 서비스 찾기" })+
+    MainHeroPane({ cls:"cl", photo:"hero-close", to:"/closure", btn:"btn-cd",
+      kicker:"끝까지 책임지는, 새로운 시작을 위해", title:"폐업",
+      lead:'사업을 정리하는 데<br> 필요한 모든 것', cta:"폐업 서비스 찾기" })+
+  '</div>'+ MainSearch() +'</section>';
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   ② 떠 있는 검색 패널 (§9 ~ §12)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **장식용 검색창을 만들지 마세요** (§11). 전부 실제로
+   동작합니다 — 탭이 **어디서 찾을지**, 지역이 `?r=`, 검색어가 `?q=`.
+
+     검색어가 있으면  →  /search?q=…   (글 · 업체 · 공고를 다 훑습니다)
+     검색어가 없으면  →  탭의 화면 (지역을 받는 곳이면 ?r= 를 달아서)
+
+   ⚠️ **"인기 검색어" 라고 쓰지 마세요** (§12 자신이 적어 둔 경고).
+   검색 기록을 모으지 않아서 무엇이 인기인지 **우리는 모릅니다** —
+   지금 딱지는 **추천 검색어**입니다. 실제 데이터가 쌓이면 바꾸세요. */
+/* ⚠️⚠️ `region` 은 **그 화면이 실제로 `?r=` 를 읽는가**입니다 —
+   받지 않는 곳에 붙이면 조용히 버려지고, 고르신 분은 걸린 줄 압니다.
+   읽는 곳을 직접 찾아 확인했습니다 (`nowQS("r")`) —
+   `/providers` · `/franchise` · `/stores` · `/assets` 넷은 읽고,
+   `/support` 는 **전국 공고**라 지역 거르개가 없습니다. */
+var MAIN_TABS = [
+  { k:"pv", name:"업체 찾기",  ic:"users", to:"/providers", region:true },
+  { k:"fr", name:"프랜차이즈", ic:"store", to:"/franchise", region:true },
+  { k:"st", name:"상가·점포",  ic:"pin",   to:"/stores",    region:true },
+  { k:"as", name:"시설·집기",  ic:"sofa",  to:"/assets",    region:true },
+  { k:"sp", name:"지원정보",   ic:"badge", to:"/support" }
+];
+/* ⚠️ 추천 검색어 — **전부 실제로 결과가 나오는 주소**입니다 (가짜 링크
+   금지). 분야가 있는 것은 그 분야 화면으로 바로 보냅니다. */
+var MAIN_CHIPS = [
+  { q:"카페 인테리어",   to:"/providers/interior?i=cafe" },
+  { q:"주방설비",        to:"/providers/equip" },
+  { q:"상가 임대",       to:"/stores" },
+  { q:"철거 업체",       to:"/providers/demolish" },
+  { q:"POS 시스템",      to:"/providers/it" },
+  { q:"세무 상담",       to:"/providers/admin" },
+  { q:"프랜차이즈 창업", to:"/franchise" },
+  { q:"매장 양도",       to:"/stores" },
+  { q:"간판 제작",       to:"/providers/interior" },
+  { q:"원상복구",        to:"/providers/restore" }
+];
+function MainSearch(){
+  var cur = nowQS("t") || "pv";
+  if(!MAIN_TABS.some(function(t){ return t.k === cur; })) cur = "pv";
+  var tab = MAIN_TABS.filter(function(t){ return t.k === cur; })[0];
+  var regions = (window.AM_REGIONS || []);
+  return '<div class="msr"><div class="w"><div class="msr-in">'+
+    '<div class="msr-tb">'+MAIN_TABS.map(function(t){
+      return '<a class="msr-t'+(t.k===cur?" on":"")+'" href="/?t='+esc(t.k)+'" data-keep'+
+        (t.k===cur ? ' aria-current="true"' : '')+'>'+
+        icon(t.ic,18)+'<b>'+esc(t.name)+'</b></a>'; }).join("")+'</div>'+
+    '<form class="msr-f" role="search" onsubmit="return mainFind(event)">'+
+      /* ⚠️⚠️ 지역을 **안 받는 화면(지원정보)에서는 아예 안 냅니다.**
+         내 놓고 버리면 고르신 분은 걸린 줄 아는데 실제로는 전국이
+         나옵니다 — 하지 않은 일을 했다고 말하는 것입니다 (절대 규칙 5). */
+      (tab.region ?
+      '<label class="msr-rg">'+
+        '<span class="msr-rg-i" aria-hidden="true">'+icon("pin",18)+'</span>'+
+        '<select id="msrR" aria-label="지역 선택">'+
+          '<option value="">지역 선택</option>'+
+          regions.map(function(r){
+            return '<option value="'+esc(r.key)+'">'+esc(r.name)+'</option>'; }).join("")+
+        '</select>'+
+      '</label>' : "")+
+      '<span class="msr-q">'+
+        '<span class="msr-q-i" aria-hidden="true">'+icon("search",20)+'</span>'+
+        '<input type="search" id="msrQ" name="q" autocomplete="off" '+
+          'aria-label="업체 · 서비스 검색" placeholder="어떤 업체나 서비스를 찾고 계신가요?">'+
+      '</span>'+
+      '<button class="btn btn-pt" type="submit">'+icon("search",18)+'검색하기</button>'+
+    '</form>'+
+    '<p class="msr-ch"><b>추천 검색어</b>'+MAIN_CHIPS.map(function(c){
+      return '<a href="'+esc(c.to)+'">'+esc(c.q)+'</a>'; }).join("")+'</p>'+
+  '</div></div></div>';
+}
+window.mainFind = function(e){
+  e.preventDefault();
+  var q = ((document.getElementById("msrQ")||{}).value || "").trim();
+  var r = ((document.getElementById("msrR")||{}).value || "").trim();
+  /* 적으신 말이 있으면 통합검색이 제일 많이 훑습니다 (글 · 업체 · 공고) */
+  if(q){ go("/search?q=" + encodeURIComponent(q)); return false; }
+  var cur = nowQS("t") || "pv";
+  var t = MAIN_TABS.filter(function(x){ return x.k === cur; })[0] || MAIN_TABS[0];
+  /* 지역은 **받는 화면에만** 붙입니다 — 안 받는 곳에 붙이면 조용히 버려집니다 */
+  go(t.to + (r && t.region ? "?r=" + encodeURIComponent(r) : ""));
+  return false;
+};
+
+/* ══════════════════════════════════════════════════════════════════
+   ③ 분야 바로가기 열 (§13)
+   ══════════════════════════════════════════════════════════════════
+   검색 패널 바로 아래에 걸치는 아이콘 열입니다.
+
+   ⚠️ 아이콘은 icon() 한 벌입니다 — 24 viewBox · 선 1.8 · round ·
+   currentColor. 이모지 · 일러스트 · 색 아이콘 금지 (§13 이 직접
+   적었습니다). 이름 · 아이콘 · 주소는 전부 catalog.js 에서 옵니다 —
+   여기 적는 것은 **어느 분류를 앞에 낼지**뿐입니다 (분류가 아닌
+   프랜차이즈 하나만 ic 와 to 를 직접 적습니다).
+
+   ⚠️⚠️ **아래 MainServices() 와 같은 것을 두 번 내지 않습니다.**
+   그쪽은 **서비스 분야**(인테리어 · 장비 · IT …)를 설명과 함께 내는
+   자리이고, 여기는 **갈 곳**입니다 — 프랜차이즈 · 매물 · 상권 ·
+   폐업 절차처럼 저마다 다른 화면으로 보냅니다. 겹치는 것은 열 중
+   둘(인테리어 · 시설·장비)이고, 제일 많이 찾는 둘이라 남겼습니다.
+
+   ⚠️⚠️ **창업 다섯 · 폐업 다섯입니다.** 한쪽을 줄이면 그게 "덜
+   중요한 것" 이라는 말입니다 (§7). 늘리거나 줄이실 때도 짝을
+   맞추세요.
+   ⚠️ 열 칸의 아이콘이 **전부 달라야 합니다** — 같은 아이콘 둘이
+   한 줄에 오면 무엇이 무엇인지 흐려집니다. check.js 가 봅니다. */
+var MAIN_QUICK = [
+  /* 창업 쪽 다섯 */
+  { ic:"store", to:"/franchise", name:"프랜차이즈" },   /* 분류가 없는 화면 */
+  { cat:"store" },      /* 점포 · 상가      → /stores    · pin     */
+  { cat:"area"  },      /* 상권 · 입지      → /c/area    · map     */
+  { cat:"interior" },   /* 인테리어 · 시공  → /providers · roller  */
+  { cat:"equip" },      /* 시설 · 장비      → /providers · tool    */
+  /* 폐업 쪽 다섯 */
+  { cat:"process" },    /* 폐업 절차        → /c/process · listck  */
+  { cat:"asset" },      /* 시설 · 집기 처분 → /assets    · sofa    */
+  { cat:"waste" },      /* 폐기물 · 수거    → /providers · trash   */
+  { cat:"tax" },        /* 폐업 세무 · 행정 → /providers · calc    */
+  { cat:"support" }     /* 폐업지원         → /support   · coins   */
+];
+function MainQuick(){
+  var by = {}; (window.AM_CATS||[]).forEach(function(c){ by[c.key] = c; });
+  var L = MAIN_QUICK.map(function(x){
+    if(!x.cat) return { name:x.name, icon:x.ic, to:x.to };
+    var c = by[x.cat];
+    return c ? { name:c.name, icon:c.icon, to:catTo(c) } : null;
+  }).filter(Boolean);
+  if(!L.length) return "";
+  return '<nav class="mqk" aria-label="분야 바로가기"><div class="w">'+
+    '<ul class="mqk-g">'+L.map(function(c){
+      return '<li><a href="'+esc(c.to)+'">'+
+        '<span class="mqk-i">'+icon(c.icon,26)+'</span>'+
+        '<b>'+esc(c.name)+'</b></a></li>'; }).join("")+'</ul>'+
+  '</div></nav>';
+}
 /* ══════════════════════════════════════════════════════════════════
    ② 브랜드 가치 (지시서 §7)
    ══════════════════════════════════════════════════════════════════
@@ -683,19 +787,24 @@ function MainJoin(){
 }
 
 /* ⚠️ **구간을 더하거나 차례를 바꾸시려면 지시서를 먼저 고치세요.**
-   `check.js` 의 "메인 구간 차례가 지시서와 같다" 가 열셋을 셉니다. */
+   `check.js` 의 "메인 구간 차례가 지시서와 같다" 가 **구간 열셋**을
+   셉니다 — 분야 바로가기 열은 `<nav>` 라 그 셈에 안 들어가고, "히어로
+   에서 바로 찾고 바로 갈라진다" 가 열 칸으로 봅니다. */
 function PageMain(){
-  /* ⚠️⚠️ **차례는 2026-10-03 리뉴얼 지시서**입니다 —
-       ① 히어로 START/CLOSE 두 장 (§3~§6)
-       ② 브랜드 가치 넷            (§7)
-       ③ 범위 숫자                 (§20 이 금지한 "회원 수" 가 아니라
+  /* ⚠️⚠️ **차례는 2026-10-04 히어로 개편 지시서**입니다 (그 아래는
+     2026-10-03 리뉴얼 지시서를 그대로 둡니다 — "히어로 아래의 기존
+     섹션은 삭제하지 않는다") —
+       ① 히어로 창업/폐업 두 판 + 떠 있는 검색 패널 (10-04 §3~§12)
+       ② 분야 바로가기 열          (10-04 §13)
+       ③ 브랜드 가치 넷            (§7)
+       ④ 범위 숫자                 (§20 이 금지한 "회원 수" 가 아니라
                                     세는 값입니다 — 아래 설명)
-       ④ 업종 고르기               (§8)
-       ⑤ 고른 업종에 필요한 것      (§9)
-       ⑥ 큰 카드 셋                (§10 · §11)
-       ⑦ 주요 서비스 여덟          (§12 · §13)
-       ⑧ 업체 · ⑨ 프랜차이즈 · ⑩ 매장   (§14 ~ §16)
-       ⑪ 창업 ↔ 폐업 (§17) · ⑫ 도구 (§18) · ⑬ 업체 입점 (§19)
+       ⑤ 업종 고르기               (§8)
+       ⑥ 고른 업종에 필요한 것      (§9)
+       ⑦ 큰 카드 셋                (§10 · §11)
+       ⑧ 주요 서비스 여덟          (§12 · §13)
+       ⑨ 업체 · ⑩ 프랜차이즈 · ⑪ 매장   (§14 ~ §16)
+       ⑫ 창업 ↔ 폐업 (§17) · ⑬ 도구 (§18) · ⑭ 업체 입점 (§19)
 
      ⚠️⚠️ **지시서 §20 이 금지한 것은 "32,581+ 회원 · 8,219+ 업체 ·
      125,430+ 견적 · 96% 만족도" 입니다.** 그건 실적이고 지금 전부
@@ -712,8 +821,8 @@ function PageMain(){
        · `MainPrice()`   견적 0건이라 늘 Empty 이고 지시서에 없습니다
        · `MainReviews()` 후기 0건. §7 이 "실제 후기 확인" 을 지금
                          핵심 가치로 쓰지 말라고 적었습니다 */
-  return MainHero()+ MainValue()+ MainScale()+ MainIndustry()+ MainFit()+
-         MainFeature()+ MainServices()+
+  return MainHero()+ MainQuick()+ MainValue()+ MainScale()+
+         MainIndustry()+ MainFit()+ MainFeature()+ MainServices()+
          MainProviders()+ MainFranchise()+ MainStores()+
          MainBridge()+ MainTools()+ MainJoin();
 }

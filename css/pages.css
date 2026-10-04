@@ -1154,90 +1154,170 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .hv-tl{ --ic-ink:var(--teal);       --ic-bg:var(--teal-soft); }
 .hv-sl{ --ic-ink:var(--slate);      --ic-bg:var(--slate-soft); }
 /* ══════════════════════════════════════════════════════════════════
-   ① 히어로 (2026-10-01 지시서 §4 ~ §10 · §25)
+   ① 히어로 — 창업 / 폐업 두 판 (2026-10-04 개편 지시서 §3 ~ §8)
    ══════════════════════════════════════════════════════════════════
-   ⚠️⚠️ **어두운 전면 배경을 쓰지 마세요.** 바탕은 크림이고, 좌우로
-   아주 옅은 민트 · 피치가 깔립니다. 임팩트는 어둡게 해서 내는 것이
-   아니라 **큰 글씨 · 큰 검색창 · 초록/주황 악센트 · 넓은 여백**으로
-   냅니다 (§25). 전수 점검이 어두운 면 15% 를 잽니다.
+   화면 너비를 통째로 쓰는 두 판이고, 가운데가 **대각선**으로
+   갈립니다 (§8 — 수직선 하나만 긋지 않습니다).
 
-   ⚠️ 데스크톱 첫 화면 **680~760px** (§4). 검사가 660px 아래면 잡습니다. */
-/* ⚠️⚠️ **2026-10-03 리뉴얼 — 히어로가 START/CLOSE 두 장이 됐습니다**
-   (지시서 §3 ~ §6). 전에는 왼쪽 글 + 오른쪽 비주얼 한 판이었습니다.
+   ⚠️⚠️ **두 판의 크기가 같습니다** (§3 — 50:50). `flex:1 1 50%` 둘이고
+   한쪽에 `flex-grow` 를 더하지 마세요 — 폐업 쪽을 좁히면 그게 "덜
+   중요한 것" 이라는 말입니다. `check.js` 가 폭과 높이를 1px 까지 잽니다.
 
-   ⚠️⚠️ **어두운 면 규칙이 한 번 뒤집혔습니다.** CLAUDE.md 는 "어두운
-   배경을 쓸 수 있는 자리는 업체 입점 카드 하나뿐 · 히어로에는 쓰지
-   않습니다" 였습니다. 지시서 §4 가 "사진 위에 Dark Navy Overlay" 로
-   **직접 지시**했습니다. 지키는 것은 **면적**입니다 — 전수 점검이
-   푸터를 포함한 문서 전체에서 어두운 면 15% 를 재고, 재 보니 이
-   카드까지 넣어도 한참 아래입니다. 그 검사를 약하게 만들지 마세요.
+   ⚠️⚠️ **대각선은 ::before 와 사진 액자에만 겁니다** — 판 자체에
+   `clip-path` 를 걸면 글자와 단추도 같이 잘립니다. 두 판의 바탕이
+   가운데에서 44px 씩 서로의 영역으로 넘어가고, 넘어간 만큼을 반대로
+   잘라서 **딱 맞물립니다** (아래 수를 바꾸실 때는 둘을 같이).
 
-   ⚠️ **두 장의 크기 · 비율이 같아야 합니다** (§3 "50:50에 가까운").
-   한쪽을 좁히면 그게 "덜 중요한 것" 이라는 말입니다. */
-.mh{ background:var(--bg-cream); padding:var(--s4) 0 0; }
-.mh2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.mh2-c{ position:relative; overflow:hidden; border-radius:var(--r-2xl);
-  display:flex; flex-direction:column; justify-content:space-between;
-  gap:var(--s8); min-height:540px; padding:var(--s9) var(--s8) var(--s7); }
-/* 사진은 액자째 바닥에 깔리고, 그 위에 막이 덮입니다. 0장이면 둘 다
-   없고 카드 **자신의 바탕색**이 그 자리를 지킵니다 (절대 규칙 2). */
-.mh2-ph{ position:absolute; inset:0; margin:0; z-index:0; }
-.mh2-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0; }
-.mh2-c::after{ content:""; position:absolute; inset:0; z-index:1; }
-.mh2-noph::after{ content:none; }
-.mh2-b, .mh2-q{ position:relative; z-index:2; }
+       왼쪽 바탕  right:-44px  +  오른쪽 아래를 88px 잘라냄
+       오른쪽 바탕 left:-44px  +  왼쪽 위를   88px 잘라냄
 
-.mh2-st{ background:var(--navy-dark); color:#fff; }
-.mh2-st::after{ background:linear-gradient(100deg,
-  rgba(6,43,81,.93) 0%, rgba(6,43,81,.70) 58%, rgba(6,43,81,.52) 100%); }
-/* ⚠️ Warm Beige 입니다 — 아홉 바탕 중 아직 안 쓰던 `--bg-sand`.
-   왼쪽이 짙은 남색이라 오른쪽은 **밝아야** 대비가 납니다 (§5). */
-.mh2-cl{ background:var(--bg-sand); color:var(--ink); }
-.mh2-cl::after{ background:linear-gradient(100deg,
-  rgba(250,244,232,.95) 0%, rgba(250,244,232,.76) 58%, rgba(250,244,232,.58) 100%); }
+   ⚠️ **사진이 0장입니다.** 있으면 사진 + 막이고, 없으면 판 자신의
+   바탕색이 자리를 지킵니다 — "이미지 준비 중" 을 찍지 않습니다
+   (절대 규칙 2). ⚠️⚠️ 사진이 들어오면 **어두운 막이 생깁니다** —
+   그때 어두운 면 15% 를 반드시 다시 재세요.
 
-.mh2-k{ display:flex; align-items:center; gap:10px;
-  font-size:var(--t-sm); letter-spacing:.12em; }
-.mh2-k b{ font-weight:900; }
-.mh2-k span{ letter-spacing:0; font-weight:600; font-size:var(--t-cap); }
-.mh2-k span::before{ content:"|"; margin-right:10px; opacity:.5; }
-.mh2-st .mh2-k b{ color:#fff; }
-.mh2-st .mh2-k span{ color:rgba(255,255,255,.80); }
-.mh2-cl .mh2-k b{ color:var(--close-deep); }
-.mh2-cl .mh2-k span{ color:var(--ink2); }
+   ⚠️ **폐업을 어둡거나 처연하게 만들지 마세요** (§7). 끝이 아니라
+   다음 시작이고, 두 판의 **밝기만 다릅니다**(남색 ↔ 샌드) — 그건
+   한 판에 흰 글자를 얹기 위한 것이고 무게는 같습니다. */
+.mh{ position:relative; background:var(--bg-cream); padding:0; }
+.mh-two{ position:relative; display:flex; align-items:stretch; }
+.hp2{ position:relative; flex:1 1 50%; min-width:0; display:flex;
+  align-items:center; min-height:520px;
+  padding:var(--s10) 0 calc(var(--s10) + var(--s9)); }
+/* 바탕 — 대각선으로 맞물립니다 (위 설명) */
+.hp2::before{ content:""; position:absolute; top:0; bottom:0; z-index:0; }
+.hp2-st::before{ left:0; right:-44px; background:var(--navy-dark);
+  clip-path:polygon(0 0, 100% 0, calc(100% - 88px) 100%, 0 100%); }
+/* ⚠️ Warm Sand 입니다 — 아홉 바탕 중 `--bg-sand`. 왼쪽이 짙은 남색이라
+   오른쪽은 **밝아야** 두 판이 갈립니다 (§5). */
+.hp2-cl::before{ left:-44px; right:0; background:var(--bg-sand);
+  clip-path:polygon(88px 0, 100% 0, 100% 100%, 0 100%); }
+/* 사진 액자도 **같은 대각선**을 씁니다 — 안 맞추면 사진이 네모로 남아
+   대각선이 사라집니다. ⚠️ `object-fit:cover` 를 반드시 주세요: `.ph` 는
+   `<img>` 라 기본값이 `fill` 이고, 안 주면 사진이 늘어납니다. */
+.hp2-ph{ position:absolute; top:0; bottom:0; margin:0; z-index:1; }
+.hp2-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0; }
+.hp2-ph::after{ content:""; position:absolute; inset:0; }
+.hp2-st .hp2-ph{ left:0; right:-44px;
+  clip-path:polygon(0 0, 100% 0, calc(100% - 88px) 100%, 0 100%); }
+.hp2-cl .hp2-ph{ left:-44px; right:0;
+  clip-path:polygon(88px 0, 100% 0, 100% 100%, 0 100%); }
+/* 사진 위의 막 — 왼쪽은 짙은 남색(cool), 오른쪽은 웜 샌드(warm).
+   사진이 없으면 액자째 없어서 막도 없습니다. */
+.hp2-st .hp2-ph::after{ background:linear-gradient(100deg,
+  rgba(6,43,81,.92) 0%, rgba(6,43,81,.72) 58%, rgba(6,43,81,.54) 100%); }
+.hp2-cl .hp2-ph::after{ background:linear-gradient(100deg,
+  rgba(250,244,232,.94) 0%, rgba(250,244,232,.78) 58%, rgba(250,244,232,.60) 100%); }
 
-/* ⚠️ 한 글자(창업 · 폐업)가 주인공입니다 — 잔 요소를 더하지 마세요 */
-.mh2-h{ margin-top:var(--s4); font-size:clamp(48px, 4.6vw, 68px);
-  font-weight:900; letter-spacing:-.03em; line-height:1.05; }
-.mh2-st .mh2-h{ color:#fff; }
-.mh2-cl .mh2-h{ color:var(--ink); }
-.mh2-d{ margin-top:var(--s5); font-size:var(--t-lg); font-weight:600;
+/* 글 — ⚠️ 폭과 자리를 본문 기둥(`.w`)에 맞춥니다. 안 맞추면 히어로
+   글만 좌우로 어긋나 보입니다. 가운데 56px 은 **대각선을 피하는
+   여백**이라 줄이지 마세요 — 줄이면 글자가 대각선에 올라앉습니다. */
+.hp2-b{ position:relative; z-index:2;
+  width:calc(100% - var(--pad)); max-width:calc(var(--w) / 2 - var(--pad)); }
+.hp2-st .hp2-b{ margin-left:auto;  padding-right:var(--s9); }
+.hp2-cl .hp2-b{ margin-right:auto; padding-left:var(--s9); }
+
+.hp2-k{ font-size:var(--t-sm); font-weight:700; letter-spacing:-.01em; }
+.hp2-st .hp2-k{ color:rgba(255,255,255,.82); }
+.hp2-cl .hp2-k{ color:var(--ink2); }
+/* ⚠️ 두 글자(창업 · 폐업)가 주인공입니다 — 잔 요소를 더하지 마세요 */
+.hp2-h{ display:flex; align-items:flex-start; gap:10px; margin-top:var(--s4);
+  font-size:clamp(46px, 4.4vw, 68px); font-weight:900;
+  letter-spacing:-.04em; line-height:1.05; }
+.hp2-dot{ flex:0 0 auto; width:11px; height:11px; margin-top:.42em;
+  border-radius:var(--r-pill); }
+.hp2-st .hp2-h{ color:#fff; }
+.hp2-st .hp2-dot{ background:var(--start); }
+.hp2-cl .hp2-h{ color:var(--ink); }
+.hp2-cl .hp2-dot{ background:var(--close); }
+.hp2-d{ margin-top:var(--s5); font-size:var(--t-lg); font-weight:600;
   line-height:1.6; }
-.mh2-st .mh2-d{ color:rgba(255,255,255,.88); }
-.mh2-cl .mh2-d{ color:var(--ink2); }
-.mh2-go{ margin-top:var(--s7); }
+.hp2-st .hp2-d{ color:rgba(255,255,255,.88); }
+.hp2-cl .hp2-d{ color:var(--ink2); }
+.hp2-go{ margin-top:var(--s7); }
 
-/* 빠른 진입 여섯 — ⚠️ 누르는 칸입니다. 40px 아래로 내리지 마세요. */
-.mh2-q{ display:grid; grid-template-columns:repeat(6,1fr); gap:var(--s2);
-  margin-top:var(--s8); }
-.mh2-q > li{ min-width:0; }
-.mh2-q a{ display:grid; justify-items:center; gap:8px; text-align:center;
-  min-height:76px; padding:8px 2px; border-radius:var(--r-lg);
-  transition:background .2s; }
-.mh2-qi{ display:inline-flex; align-items:center; justify-content:center;
-  width:46px; height:46px; border-radius:var(--r-pill); }
-.mh2-q b{ font-size:var(--t-cap); font-weight:700; line-height:1.35; }
-.mh2-st .mh2-qi{ background:rgba(255,255,255,.14); color:#fff; }
-.mh2-st .mh2-q b{ color:rgba(255,255,255,.90); }
-.mh2-st .mh2-q a:hover{ background:rgba(255,255,255,.10); }
-.mh2-cl .mh2-qi{ background:#fff; color:var(--close-deep);
-  box-shadow:0 2px 8px rgba(15,43,68,.07); }
-.mh2-cl .mh2-q b{ color:var(--ink2); }
-.mh2-cl .mh2-q a:hover{ background:rgba(255,255,255,.60); }
-
-/* 밝은 카드 위의 CLOSE 단추 — ⚠️ 주황이지 빨강이 아닙니다 */
+/* 밝은 판 위의 CLOSE 단추 — ⚠️ 주황이지 빨강이 아닙니다 */
 .btn-cd{ background:var(--close-deep); color:#fff; border-color:var(--close-deep); }
 .btn-cd:hover{ filter:brightness(.94); color:#fff; }
+
+/* ══════════════════════════════════════════════════════════════════
+   ①-2 떠 있는 검색 패널 (2026-10-04 §9 ~ §12)
+   ══════════════════════════════════════════════════════════════════
+   히어로 사진 영역과 다음 구간 **사이에 걸칩니다** — 음수 margin 으로
+   올려 놓고, 그만큼 히어로 판의 아래 padding 에 미리 자리를 비워
+   두었습니다 (`.hp2` 의 `padding-bottom`). ⚠️ 한쪽만 고치면 글자가
+   패널 밑으로 들어갑니다.
+
+   ⚠️⚠️ **장식용이 아닙니다** (§11). 탭이 어디서 찾을지, 지역이 `?r=`,
+   적으신 말이 `?q=` 로 실제로 갑니다 — `mainFind()` 한 곳입니다. */
+.msr{ position:relative; z-index:5; margin-top:calc(var(--s9) * -1);
+  padding-bottom:var(--s9); }
+.msr-in{ background:#fff; border:1px solid var(--line);
+  border-radius:var(--r-2xl); box-shadow:var(--shadow-float);
+  padding:var(--s4) var(--s6) var(--s6); }
+/* 탭 — ⚠️ 누르는 칸입니다 (44px 이상) */
+.msr-tb{ display:flex; flex-wrap:wrap; gap:var(--s1);
+  border-bottom:1px solid var(--line); }
+.msr-t{ display:inline-flex; align-items:center; gap:7px; min-height:48px;
+  padding:0 var(--s4); margin-bottom:-1px; border-bottom:2.5px solid transparent;
+  font-size:var(--t-sm); color:var(--ink2); }
+.msr-t b{ font-weight:700; }
+.msr-t svg{ flex:0 0 auto; color:var(--ink3); }
+.msr-t:hover{ color:var(--ink); }
+/* 고른 탭 — ⚠️ 포인트 레드는 **고른 상태와 CTA** 까지입니다 (§4) */
+.msr-t.on{ color:var(--point-dark); border-bottom-color:var(--point); }
+.msr-t.on svg{ color:var(--point-dark); }
+/* 한 줄 — 지역 · 적는 칸 · 단추 */
+.msr-f{ display:flex; align-items:stretch; gap:var(--s3); margin-top:var(--s5); }
+.msr-rg, .msr-q{ position:relative; display:flex; align-items:center;
+  background:var(--bg-gray); border:1px solid var(--line);
+  border-radius:var(--r-in); }
+.msr-rg{ flex:0 0 190px; }
+.msr-q{ flex:1 1 auto; min-width:0; }
+.msr-rg-i, .msr-q-i{ display:inline-flex; align-items:center;
+  justify-content:center; flex:0 0 auto; width:44px; color:var(--ink3); }
+.msr-rg select, .msr-q input{ width:100%; min-width:0; min-height:56px;
+  padding:0 var(--s4) 0 0; border:0; background:transparent;
+  font-size:var(--t-md); font-weight:600; color:var(--ink); }
+.msr-rg select{ appearance:none; cursor:pointer; padding-right:var(--s7); }
+.msr-rg::after{ content:""; position:absolute; right:var(--s4); width:8px;
+  height:8px; border-right:2px solid var(--ink3); border-bottom:2px solid var(--ink3);
+  transform:rotate(45deg) translateY(-2px); pointer-events:none; }
+.msr-q input::placeholder{ color:var(--ink3); font-weight:500; }
+.msr-q input::-webkit-search-cancel-button{ cursor:pointer; }
+.msr-f .btn{ flex:0 0 auto; min-height:58px; padding:0 var(--s7);
+  font-size:var(--t-md); }
+/* 추천 검색어 — ⚠️ **"인기 검색어" 가 아닙니다.** 검색 기록을 모으지
+   않아서 무엇이 인기인지 우리는 모릅니다 (§12 · 절대 규칙 5). */
+.msr-ch{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2);
+  margin-top:var(--s4); }
+.msr-ch > b{ flex:0 0 auto; margin-right:var(--s1); font-size:var(--t-cap);
+  font-weight:800; color:var(--ink3); }
+.msr-ch > a{ display:inline-flex; align-items:center; min-height:40px;
+  padding:0 var(--s4); border:1px solid var(--line);
+  border-radius:var(--r-pill); background:#fff;
+  font-size:var(--t-cap); font-weight:600; color:var(--ink2); }
+.msr-ch > a:hover{ border-color:var(--point); color:var(--point-dark);
+  background:var(--point-soft); }
+
+/* ══════════════════════════════════════════════════════════════════
+   ①-3 분야 바로가기 열 (2026-10-04 §13)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️ 열 칸입니다 — 창업 다섯 · 폐업 다섯. 아이콘은 `icon()` 한 벌이고
+   색을 넣지 않습니다(선 하나). 누르는 칸이라 84px 을 지킵니다. */
+.mqk{ background:var(--bg-cream); padding:0 0 var(--s9); }
+.mqk-g{ display:grid; grid-template-columns:repeat(10, 1fr); gap:var(--s2); }
+.mqk-g > li{ min-width:0; }
+.mqk-g a{ display:grid; justify-items:center; gap:9px; text-align:center;
+  min-height:84px; padding:var(--s3) 4px; border-radius:var(--r-lg);
+  transition:background .2s; }
+.mqk-g a:hover{ background:#fff; box-shadow:var(--shadow-card); }
+.mqk-i{ display:inline-flex; align-items:center; justify-content:center;
+  width:48px; height:48px; border-radius:var(--r-pill);
+  background:#fff; border:1px solid var(--line); color:var(--navy); }
+.mqk-g a:hover .mqk-i{ border-color:var(--point); color:var(--point-dark); }
+.mqk-g b{ font-size:var(--t-cap); font-weight:700; line-height:1.35;
+  color:var(--ink2); letter-spacing:-.03em; }
 
 /* ══════════════════════════════════════════════════════════════════
    ② 브랜드 가치 넷 (지시서 §7)
@@ -1581,8 +1661,12 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 
 /* ── 좁은 화면 ───────────────────────────────────────────────────── */
 @media (max-width:1180px){
-  .mh2-c{ padding:var(--s8) var(--s6) var(--s6); min-height:500px; }
-  .mh2-q{ grid-template-columns:repeat(3,1fr); row-gap:var(--s3); }
+  .hp2{ min-height:480px; padding:var(--s9) 0 calc(var(--s9) * 2); }
+  .hp2-st .hp2-b{ padding-right:var(--s8); }
+  .hp2-cl .hp2-b{ padding-left:var(--s8); }
+  /* 열 칸을 다섯씩 두 줄로 — 더 좁히면 이름이 낱말 가운데서 잘립니다 */
+  .mqk-g{ grid-template-columns:repeat(5,1fr); row-gap:var(--s2); }
+  .msr-rg{ flex:0 0 164px; }
   .mval-g{ grid-template-columns:repeat(2,1fr); }
 }
 @media (max-width:1100px){
@@ -1594,10 +1678,21 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 @media (max-width:980px){
   /* §30 — 폰 차례: 제목 → 설명 → 검색 → START/CLOSE → 비주얼.
      DOM 이 그 차례라 한 칸으로 쌓기만 하면 됩니다. */
-  /* 지시서 §24 — 폰에서는 START/CLOSE 를 **세로로 쌓습니다.**
-     나란히 두면 한 장이 180px 이라 제목도 빠른 진입도 안 들어갑니다. */
-  .mh2{ grid-template-columns:1fr; }
-  .mh2-c{ min-height:0; }
+  /* 지시서 §24 — 폰에서는 창업/폐업을 **세로로 쌓습니다.** 나란히
+     두면 한 판이 180px 이라 제목도 단추도 안 들어갑니다.
+     ⚠️⚠️ 쌓으면 **대각선을 끕니다** — 위아래로 놓인 두 판 사이의
+     대각선은 가로로 누운 쐐기가 되어 어느 쪽 것인지 안 읽힙니다.
+     ⚠️ 두 판의 padding 을 다르게 주지 마세요 — 한쪽이 길어지면 그게
+     "덜 중요한 것" 이 됩니다. 패널 자리는 `.msr` 가 스스로 냅니다. */
+  .mh-two{ flex-direction:column; }
+  .hp2{ min-height:0; padding:var(--s9) 0; }
+  .hp2-st::before, .hp2-cl::before,
+  .hp2-st .hp2-ph, .hp2-cl .hp2-ph{ left:0; right:0; clip-path:none; }
+  .hp2-st .hp2-b, .hp2-cl .hp2-b{ width:100%; max-width:var(--w);
+    margin:0 auto; padding:0 var(--pad); }
+  /* 쌓이면 패널은 **걸치지 않습니다** — 위가 샌드 바탕이라 걸쳐 놓으면
+     패널 위쪽만 바탕이 달라 보입니다 */
+  .msr{ margin-top:0; padding-top:var(--s7); }
   .ms-two{ grid-template-columns:1fr; }
   .mfeat-g{ grid-template-columns:1fr; }
   .mfeat-c{ min-height:220px; }
@@ -1634,10 +1729,16 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   .mjn-c{ padding:var(--s6); }
   /* 숫자 셋을 한 줄에 두면 "183" 이 눌립니다 */
   .mst-g{ grid-template-columns:1fr; gap:var(--s4); }
-  .mh2-c{ padding:var(--s7) var(--s5) var(--s5); gap:var(--s6); }
-  .mh2-q{ gap:2px; margin-top:var(--s6); }
-  .mh2-q a{ min-height:68px; }
-  .mh2-go .btn{ width:100%; justify-content:center; }
+  .hp2{ padding:var(--s8) 0; }
+  .hp2-go .btn{ width:100%; justify-content:center; }
+  /* ⚠️ 한 줄에 셋을 두면 적는 칸이 90px 이 됩니다 — 줄째 내립니다 */
+  .msr-in{ padding:var(--s3) var(--s4) var(--s5); }
+  .msr-f{ flex-wrap:wrap; gap:var(--s2); }
+  .msr-rg, .msr-q, .msr-f .btn{ flex:1 1 100%; }
+  .msr-t{ padding:0 var(--s3); }
+  .mqk-g{ gap:2px; }
+  .mqk-g a{ min-height:78px; }
+  .mqk-i{ width:44px; height:44px; }
 }
 
 /* "더 보기" 안의 센 값 — ⚠️ `--ink3` 는 흰 바탕(`--surface`)에서 4.63

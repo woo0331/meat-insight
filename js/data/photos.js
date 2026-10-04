@@ -102,22 +102,22 @@ window.WOW_PHOTO_SLOTS = [
      글자가 사진 위에 올라앉지 않습니다.
      ⚠️ 원본 이름은 지시서 §19 대로 `category-*.jpg` 입니다. */
   { key:"category-startup", where:"단계 카드 01 · 창업 준비",
-    min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
+    min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center", temp:true,
     note:"사업계획서 · 노트 · 펜 · 노트북 · 밝은 상업공간. ⚠️ 커피컵처럼 한 업종이 떠오르는 사진에 기대지 마세요 — '준비한다' 는 느낌이 먼저입니다" },
   { key:"category-location", where:"단계 카드 02 · 상가 · 입지",
-    min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
+    min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center", temp:true,
     note:"한국의 깔끔한 상업지역 · 상가 외관. ⚠️ 브랜드 로고 · 간판 글자가 보이면 안 되고, 해외 거리 느낌도 피합니다" },
   { key:"category-build", where:"단계 카드 03 · 매장 만들기",
-    min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
+    min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center", temp:true,
     note:"마감 · 조명 설치 · 가구 배치. ⚠️ 거친 건설현장이 아니라 **매장이 완성되어 가는 모습**입니다" },
   { key:"category-operation", where:"단계 카드 04 · 매장 운영",
-    min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
+    min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center", temp:true,
     note:"POS · 매출 관리 · 주문 관리. ⚠️ 실제 서비스 상표나 POS 브랜드 로고가 보이면 안 됩니다" },
   { key:"category-transfer", where:"단계 카드 05 · 매장 양도 · 양수",
-    min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
+    min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center", temp:true,
     note:"계약서 · 열쇠 · 깔끔한 상업공간. ⚠️ 악수 스톡사진 느낌은 피합니다 — 이 플랫폼의 핵심 차별화 자리라 고급스럽고 신뢰감 있게" },
   { key:"category-closing", where:"단계 카드 06 · 폐업 · 정리",
-    min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
+    min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center", temp:true,
     note:"정리된 박스 · 집기 이동 · 전문 작업자의 정리. ⚠️⚠️ 폐허 · 쓰레기 더미 · 불 꺼진 매장 · 실패한 느낌 **절대 금지** — 폐업은 실패가 아니라 안전한 정리입니다" },
 
   /* ── START / CLOSE 큰 카드 (§16) ─────────────────────────────
@@ -190,6 +190,18 @@ window.WOW_PHOTO_SLOTS = [
 window.WOW_PHOTOS = {
   "hero-start": { src:"/img/hero-start.jpg",
     alt:"큰 창으로 햇빛이 드는 상업공간에서 작업자들이 카운터와 조명을 설치하고 있습니다" },
+  "category-startup": { src:"/img/category-startup.jpg",
+    alt:"사업계획서와 노트, 펜이 놓인 밝은 책상" },
+  "category-location": { src:"/img/category-location.jpg",
+    alt:"햇빛이 드는 거리의 깔끔한 상가 건물" },
+  "category-build": { src:"/img/category-build.jpg",
+    alt:"사다리와 조명이 놓인, 마감 중인 상업공간" },
+  "category-operation": { src:"/img/category-operation.jpg",
+    alt:"카운터 위의 주문·매출 관리 화면" },
+  "category-transfer": { src:"/img/category-transfer.jpg",
+    alt:"계약서와 열쇠가 놓인 상담 테이블" },
+  "category-closing": { src:"/img/category-closing.jpg",
+    alt:"정리된 종이상자와 운반 카트가 놓인 빈 상업공간" },
   "hero-close": { src:"/img/hero-close.jpg",
     alt:"햇빛이 드는 상가 내부에서 작업자들이 마감재를 떼어 내고 정리하고 있습니다" }
 };

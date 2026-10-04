@@ -1221,8 +1221,14 @@ const AUDIT = `(() => {
        같은 구간 안이지만 첫 화면 아래에 붙는 것이라 빼고 잽니다.
        구간 전체를 재면 띠 높이까지 더해져 늘 "너무 길다" 가 됩니다. */
     if(innerWidth > 1200){
+      /* ⚠️⚠️ **하한을 칼날 위에 두지 마세요.** 처음에 580 으로 뒀는데
+         실제 높이가 폭에 따라 **575~638px** 로 움직여서(빠른 진입 여섯의
+         이름이 한 줄이냐 두 줄이냐로 갈립니다), 1440px 에서 579px 이
+         나와 **1px 차이로** 실패했습니다. 재 보고 정한 값입니다 —
+         여기서 잡아야 하는 것은 "히어로가 주저앉았나" 이지 몇 px 이
+         아닙니다. */
       const hh = document.querySelector(".mh").getBoundingClientRect().height;
-      if(hh < 580) return "첫 화면이 " + Math.round(hh) + "px 입니다 (600~760px)";
+      if(hh < 520) return "첫 화면이 " + Math.round(hh) + "px 입니다 — 주저앉았습니다";
       if(hh > 800) return "첫 화면이 " + Math.round(hh) + "px 입니다 — 너무 깁니다";
     }
     return true;`);

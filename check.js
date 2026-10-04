@@ -995,6 +995,33 @@ const AUDIT = `(() => {
       return "도구가 '도구' 묶음이 아니라 다른 묶음에 들어갑니다";
     return true;`);
 
+  await f("저장한 업체가 MY 로 이어진다", "/my", `
+    /* 지시서 §13 — CTA 넷 가운데 "관심 업체 저장".
+       ⚠️⚠️ 이 화면의 **설명이 이미 "저장한 업체" 를 약속**하고 있었는데
+       기능이 없었습니다 (절대 규칙 5).
+       ⚠️ 담는 것은 **업체 id 하나뿐**입니다 — 성함 · 연락처를 담으면
+       가게 컴퓨터에 그대로 남습니다. */
+    window.AM_PROVIDERS.push({ id:"zz-sv", name:"검사용 저장업체",
+      regions:["gyeonggi"], industries:["cafe"], subs:["interior"],
+      intro:"검사 안에서만 삽니다." });
+    amSet(window.AM_SAVE_KEY, ["zz-sv", "zz-내려간업체"]);
+    rerender(true);
+    await new Promise(function(r){ setTimeout(r, 120); });
+    let why = true;
+    const t = document.getElementById("view").textContent || "";
+    if(t.indexOf("저장한 업체 1곳") < 0) why = "저장한 업체가 MY 에 안 나옵니다";
+    else if(t.indexOf("검사용 저장업체") < 0) why = "저장한 업체 이름이 안 나옵니다";
+    /* ⚠️ 내려간 업체는 기록에서도 빠져야 합니다 — 안 빠지면 영영 남고,
+       눌렀을 때 404 입니다 */
+    else if(amSaved().length !== 1) why = "내려간 업체가 기록에 그대로 남습니다";
+    /* ⚠️ 저장하는 것은 id 뿐입니다 */
+    else if(amSaved().some(function(x){ return typeof x !== "string"; }))
+      why = "id 말고 다른 것을 담고 있습니다";
+    amDel(window.AM_SAVE_KEY);
+    window.AM_PROVIDERS = window.AM_PROVIDERS.filter(function(p){ return p.id !== "zz-sv"; });
+    rerender(true);
+    return why;`);
+
   await f("업체는 자기 분야에만 나온다", "/providers/interior", `
     window.AM_PROVIDERS.push({
       id:"zz-check", name:"검사용 업체", regions:["gyeonggi"],

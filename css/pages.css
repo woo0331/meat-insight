@@ -2286,3 +2286,6 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   .cn-tl a:hover{ border-color:var(--blue); }
   .cn-tl a:hover .cn-go{ color:var(--blue); }
 }
+
+/* 관심 업체 단추 — ⚠️ 아이콘 + 글자라 `.btn` 기본 폭으로는 좁습니다 */
+.btn-ic{ display:inline-flex; align-items:center; gap:6px; }

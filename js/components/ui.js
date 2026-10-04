@@ -230,6 +230,30 @@ window.CmpBar = function(){
   '</div></div>';
 };
 
+/* ── 관심 업체 저장 (2026-10-05 V2 §13) ─────────────────────────
+   > "관심 업체 저장" — 업체 상세의 CTA 넷 가운데 하나입니다.
+
+   ⚠️⚠️ **`/my` 의 설명이 이미 "저장한 업체" 를 약속하고 있었습니다** —
+   기능이 없는 채로요. 하지 않은 일을 했다고 말한 것이라(절대 규칙 5)
+   약속한 쪽을 만들었습니다.
+   ⚠️ 담는 것은 **업체 id 하나**뿐입니다. 성함 · 연락처는 안 담습니다 —
+   가게 컴퓨터는 여러 사람이 씁니다.
+   ⚠️ 서버로 보내지 않습니다. */
+window.AM_SAVE_KEY = "am.saved.v1";
+
+window.amSaved = function(){
+  var v = amGet(AM_SAVE_KEY, []);
+  return Array.isArray(v) ? v : [];
+};
+window.amIsSaved = function(id){ return amSaved().indexOf(id) >= 0; };
+window.saveToggle = function(id){
+  var l = amSaved(), i = l.indexOf(id);
+  if(i >= 0){ l.splice(i, 1); toast("관심 업체에서 뺐습니다"); }
+  else { l.push(id); toast("관심 업체에 담았습니다 — MY 에서 보실 수 있습니다"); }
+  amSet(AM_SAVE_KEY, l);
+  rerender(true);
+};
+
 /* 견적 요청으로 넘기는 단추 — 조건을 주소에 실어 보냅니다.
    ⚠️ 끊기면 손님은 같은 것을 두 번 적게 되고 거기서 닫습니다. */
 window.quoteTo = function(o){

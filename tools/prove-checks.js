@@ -40,6 +40,15 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* 내려간 업체를 기록에서 안 지우면 걸려야 합니다 */
+  ["저장한 업체가 MY 로 이어진다",
+   `window.MySaved = (function(real){
+      return function(){
+        /* 내려간 업체를 안 걸러 내던 그때 */
+        const ids = window.amSaved();
+        return '<div class="my-next"><h2>저장한 업체 ' + ids.length + '곳</h2></div>';
+      };
+    })(window.MySaved);`],
   /* 계산 결과에서 업체로 가는 길을 걷어내면 걸려야 합니다 */
   ["계산 결과에서 업체로 가는 길이 있다",
    `window.AM_TOOLS = (window.AM_TOOLS||[]).map(function(t){

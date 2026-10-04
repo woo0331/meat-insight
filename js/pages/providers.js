@@ -211,15 +211,35 @@ function PageProviderOne(p){
       title:"상담과 견적으로 시작하세요",
       text:"연락처를 바로 드리지 않습니다. 필요한 내용을 적어 주시면 그대로 전달하고, "+
            "업체 연락처는 사장님이 동의하신 뒤에만 오갑니다.",
-      cta:'<a class="btn btn-b" href="'+esc(pvQ)+'">무료 견적받기'+icon("arrow",16)+'</a>'
+      /* ⚠️⚠️ **아래 붙는 CTA 는 폰에서만 보입니다** (`.sticky-cta`) —
+         저장 단추를 거기에만 두었더니 넓은 화면에서는 **저장할 방법이
+         아예 없었습니다.** 찍어 보고 알았습니다. 여기에도 같이 둡니다. */
+      cta:'<a class="btn btn-b" href="'+esc(pvQ)+'">무료 견적받기'+icon("arrow",16)+'</a>'+
+          SaveBtn(p)
     })+
   '</div></section>'+
 
-  /* 폰에서 늘 붙어 있는 CTA (§37) */
+  /* 폰에서 늘 붙어 있는 CTA (§37)
+     ⚠️ 2026-10-05 V2 §13 이 CTA 넷(무료 상담 · 견적 요청 · 전화 문의 ·
+     관심 업체 저장)을 적었습니다. **전화 문의는 안 넣었습니다** —
+     업체 전화번호를 화면에 깔면 그건 전화번호부이고(§54), 중개를
+     거치지 않아 제3자 제공 동의 절차도 건너뜁니다. 저장은 넣었습니다. */
   '<div class="sticky-cta">'+
     '<a class="btn btn-b" href="'+esc(pvQ)+'">무료 견적받기</a>'+
     '<a class="btn btn-o" href="'+esc(pvQ)+'">상담 요청</a>'+
+    SaveBtn(p)+
   '</div>';
+}
+
+/* 관심 업체 단추 — ⚠️ **한 곳에서만 만듭니다.** 두 자리(본문 끝 ·
+   폰 고정 CTA)가 같이 쓰는데 따로 적으면 서로 달라집니다. */
+function SaveBtn(p){
+  var on = (typeof amIsSaved === "function") && amIsSaved(p.id);
+  return '<button class="btn btn-o btn-ic" type="button"'+
+    ' onclick="saveToggle(\''+esc(p.id)+'\')"'+
+    ' aria-pressed="'+(on ? "true" : "false")+'">'+
+    icon(on ? "check" : "plus", 16)+
+    '<span>'+(on ? "저장됨" : "관심 업체")+'</span></button>';
 }
 
 function rvWho(r){

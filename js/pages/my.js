@@ -62,6 +62,8 @@ function PageMy(){
               '<a class="btn btn-o" href="/closure">폐업 시작하기</a>'
         }))+
 
+    MySaved()+
+
     MyTools()+
 
     '<div class="my-next"><h2>받은 제안</h2>'+
@@ -92,7 +94,7 @@ window.myPut = function(){
 /* ⚠️ 되돌릴 수 없으므로 한 번 물어봅니다 */
 window.myClear = function(){
   if(!confirm("이 브라우저에 남은 기록을 전부 지웁니다. 되돌릴 수 없습니다.")) return;
-  amDel(MKEY); amDel("am.quotes.v1");
+  amDel(MKEY); amDel("am.quotes.v1"); amDel(window.AM_SAVE_KEY || "am.saved.v1");
   /* ⚠️⚠️ **도구에 적은 숫자도 같이 지웁니다.** 여기를 빠뜨리면
      "전부 지웁니다" 라고 해 놓고 계산기 숫자가 그대로 남습니다 —
      가게 컴퓨터는 여러 사람이 쓰므로 그게 그대로 남의 눈에 들어갑니다.
@@ -101,6 +103,46 @@ window.myClear = function(){
   (window.AM_TOOLS || []).forEach(function(t){ amDel("am.tool." + t.key); });
   rerender(true);
 };
+
+/* ── 저장한 업체 (2026-10-05 V2 §13) ─────────────────────────────
+   ⚠️⚠️ **이 화면의 설명이 "저장한 업체" 를 이미 약속하고 있었습니다** —
+   기능은 없는 채로요. 하지 않은 일을 했다고 말한 자리라(절대 규칙 5)
+   약속한 쪽을 만들었습니다.
+   ⚠️ **담는 것은 업체 id 하나뿐**입니다. 성함 · 연락처는 안 담습니다.
+   ⚠️ 내려간 업체는 조용히 빠집니다 — 없는 업체 이름을 들고 있으면
+   눌렀을 때 404 입니다. */
+function MySaved(){
+  var ids = (window.amSaved ? amSaved() : []);
+  var ps  = ids.map(function(id){ return amProvider(id); }).filter(Boolean);
+  /* ⚠️ 내려간 업체는 기록에서도 지웁니다 — 안 지우면 영영 남습니다 */
+  if(ps.length !== ids.length)
+    amSet(window.AM_SAVE_KEY || "am.saved.v1", ps.map(function(p){ return p.id; }));
+
+  if(!ps.length) return '<div class="my-next"><h2>저장한 업체</h2>'+
+    '<p class="lead">아직 저장하신 업체가 없습니다. 업체 화면에서 '+
+      '\u201C관심 업체\u201D 를 누르시면 여기 모아 드립니다.</p>'+
+    '<div class="row-cta"><a class="btn btn-o" href="/providers">업체찾기'+icon("arrow",16)+'</a></div>'+
+  '</div>';
+
+  return '<div class="my-next"><h2>저장한 업체 '+ps.length+'곳</h2>'+
+    '<ul class="my-tl">'+ps.map(function(p){
+      return '<li><a href="/p/'+esc(p.id)+'">'+
+        '<span class="my-tl-ic">'+icon("users",18)+'</span>'+
+        '<b>'+esc(p.name)+'</b>'+
+        '<span class="my-tl-n">'+esc((p.regions||[]).map(amRegionName)
+          .filter(Boolean).join(" · ") || "지역 미등록")+'</span>'+
+        '<span class="my-tl-go" aria-hidden="true">'+icon("arrow",15)+'</span>'+
+      '</a></li>';
+    }).join("")+'</ul>'+
+    '<div class="row-cta">'+
+      (ps.length > 1
+        ? '<a class="btn btn-b" href="/compare?ids='+esc(ps.slice(0, window.AM_CMP_MAX || 3)
+            .map(function(p){ return p.id; }).join(","))+'">저장한 업체 비교하기'+icon("arrow",16)+'</a>'
+        : '')+
+      '<a class="btn btn-o" href="/providers">업체 더 찾기</a>'+
+    '</div>'+
+  '</div>';
+}
 
 /* ── 도구에 적어 두신 것 ──────────────────────────────────────────
    ⚠️ 도구를 만들어 놓고 MY 에 안 이으면, 사장님은 어디에 적었는지

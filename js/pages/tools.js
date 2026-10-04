@@ -59,12 +59,44 @@ function tlFoot(resetFn, note){
 }
 
 /* 도구 끝에서 다음 걸음 — 막다른 길로 두지 않습니다 */
-function tlNext(label, href, other){
+function tlNext(label, href, key){
   return '<section class="sec"><div class="w band-cta">'+
     '<div><p class="eyebrow">다음으로</p><h2>'+esc(label)+'</h2></div>'+
     '<a class="btn btn-b btn-lg" href="'+esc(href)+'">견적 요청하기'+icon("arrow",18)+'</a>'+
   '</div></section>'+
-  (other ? '' : '');
+  tlRel(key);
+}
+
+/* ── 계산 결과 → 업체 (2026-10-05 V2 §17) ───────────────────────
+   > "계산기 자체로 끝나면 안 된다. 정보 → 계산 → 업체 탐색 →
+   >  상담/견적 이라는 전환 구조를 만든다."
+
+   ⚠️ 어느 분야로 보낼지는 `tools.js` 의 `rel` 한 곳입니다 — 화면에
+   적으면 도구를 늘릴 때마다 두 곳을 고치게 됩니다.
+   ⚠️ 없는 분류 · 하위를 적으면 **빌드가 멈춥니다** (`checkProcess()`). */
+function tlRel(key){
+  var t = key && (window.amTool ? amTool(key) : null);
+  var rel = (t && t.rel) || [];
+  if(!rel.length) return "";
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">계산해 보셨으면</p>'+
+      '<h2>이제 그 금액을 실제로 받아 보세요</h2>'+
+      '<p>적으신 숫자는 받으신 견적이라야 뜻이 있습니다. 분야마다 업체를 '+
+        '비교하고 한 번에 요청하실 수 있습니다.</p>'+
+    '</div>'+
+    '<ul class="ops-g">'+rel.map(function(r){
+      var c = (window.amCat ? amCat(r.cat) : null);
+      if(!c) return "";
+      var nm = r.sub && window.amSubName ? amSubName(r.sub) : c.name;
+      var to = catTo(c) + (r.sub ? "?s=" + encodeURIComponent(r.sub) : "");
+      return '<li><a class="ops'+tn(c.tone)+'" href="'+esc(to)+'">'+
+        '<span class="ops-i">'+icon(c.icon,22)+'</span>'+
+        '<b>'+esc(nm)+'</b>'+
+        '<span class="ops-go" aria-hidden="true">'+icon("chev",15)+'</span>'+
+      '</a></li>';
+    }).join("")+'</ul>'+
+  '</div></section>';
 }
 
 /* ════════ 도구 모음 ═════════════════════════════════════════════ */
@@ -151,7 +183,7 @@ function PageToolCost(){
     '<div class="tl-res" id="tl-res">'+CostRes(v)+'</div>'+
     tlFoot("costReset")+
   '</div></section>'+
-  tlNext("빠진 항목이 보이면 그 항목부터 견적을 받으세요", "/quote?side=start");
+  tlNext("빠진 항목이 보이면 그 항목부터 견적을 받으세요", "/quote?side=start", "cost");
 }
 
 /* ════════ 월 고정비 ═══════════════════════════════════════════════ */
@@ -201,7 +233,7 @@ function PageToolFixed(){
     '<div class="tl-res" id="tl-res">'+FixedRes(v)+'</div>'+
     tlFoot("fixedReset")+
   '</div></section>'+
-  tlNext("큰 칸부터 조건을 바꾸면 이번 달부터 바뀝니다", "/quote");
+  tlNext("큰 칸부터 조건을 바꾸면 이번 달부터 바뀝니다", "/quote", "fixed");
 }
 
 /* ════════ 손익분기 ════════════════════════════════════════════════ */
@@ -296,7 +328,7 @@ function PageToolBep(){
     '<div class="tl-res" id="tl-res">'+BepRes(v)+'</div>'+
     tlFoot("bepReset")+
   '</div></section>'+
-  tlNext("고정비를 줄이는 쪽이 대개 더 빠릅니다", "/quote");
+  tlNext("고정비를 줄이는 쪽이 대개 더 빠릅니다", "/quote", "bep");
 }
 
 /* ════════ 인건비율 ════════════════════════════════════════════════ */
@@ -356,7 +388,7 @@ function PageToolLabor(){
     '<div class="tl-res" id="tl-res">'+LaborRes(v)+'</div>'+
     tlFoot("laborReset")+
   '</div></section>'+
-  tlNext("사람을 쓰기 전에 확인할 것이 여럿입니다", "/providers/staff");
+  tlNext("사람을 쓰기 전에 확인할 것이 여럿입니다", "/providers/staff", "labor");
 }
 
 /* ════════ 신규 창업 vs 매장 인수 (§16) ═══════════════════════════ */
@@ -435,7 +467,8 @@ function PageToolVs(){
     '<div><p class="eyebrow">받는 쪽을 보고 계시면</p>'+
       '<h2>바로 시작할 수 있는 매장을 보세요</h2></div>'+
     '<a class="btn btn-b btn-lg" href="/stores">매장 보기'+icon("arrow",18)+'</a>'+
-  '</div></section>';
+  '</div></section>'+
+  tlRel("vs");
 }
 
 /* ════════ 폐업 체크리스트 ═════════════════════════════════════════ */
@@ -501,5 +534,5 @@ function PageToolClose(){
     '<div class="tl-res" id="tl-res">'+CloseRes(v)+'</div>'+
     tlFoot("closeReset", "체크한 것은 이 브라우저에만 남습니다. 서버로 보내지 않습니다.")+
   '</div></section>'+
-  tlNext("철거 · 원상복구 · 폐기물은 업체가 합니다", "/quote?side=close");
+  tlNext("철거 · 원상복구 · 폐기물은 업체가 합니다", "/quote?side=close", "close");
 }

@@ -25,28 +25,50 @@ window.AM_TOOLS = [
   { key:"cost",  to:"/tools/cost",  icon:"won",    name:"창업비 정리표",
     lead:"빠뜨리기 쉬운 항목을 늘어놓고, 받으신 견적을 적으면 합계가 나옵니다",
     ask:"항목별로 받은 견적", out:"합계 · 아직 안 받은 칸", time:"5분",
-    side:"start" },
+    side:"start",
+    /* ⚠️⚠️ **계산기로 끝나면 안 됩니다** (2026-10-05 V2 §17) —
+       "20평 음식점 창업비 계산 완료 → 인테리어 업체 알아보기 →
+       주방설비 → POS → 세무사". 정보 → 계산 → 업체 → 상담이
+       이어져야 합니다.
+       ⚠️ `cat` 은 `catalog.js` 의 분류 key, `sub` 는 그 하위 key 입니다 —
+       없는 것을 적으면 빌드가 멈춥니다 (`checkProcess()`). */
+    rel:[{cat:"interior"},{cat:"equip"},{cat:"furniture"},{cat:"it"},{cat:"admin"}] },
   { key:"fixed", to:"/tools/fixed", icon:"calendar", name:"월 고정비 계산",
     lead:"팔리든 안 팔리든 나가는 돈. 하루에 얼마를 벌어야 하는지까지",
     ask:"임차료 · 인건비 · 공과금", out:"월 고정비 · 하루치", time:"2분",
-    side:"both" },
+    side:"both",
+    rel:[{cat:"admin",sub:"tax-agent"},{cat:"it"},{cat:"supply"},{cat:"clean"},
+         {cat:"contract"}] },
   { key:"bep",   to:"/tools/bep",   icon:"target", name:"손익분기 계산",
     lead:"고정비를 공헌이익률로 나눕니다. 본전이 되는 매출이 얼마인지",
     ask:"월 고정비 · 변동비 비율", out:"본전 매출 · 하루 매출", time:"3분",
-    side:"both" },
+    side:"both",
+    rel:[{cat:"marketing"},{cat:"supply"},{cat:"admin",sub:"tax-agent"}] },
   { key:"labor", to:"/tools/labor", icon:"users",  name:"인건비율 계산",
     lead:"매출 대비 인건비. 사장 인건비를 넣을지는 사장님이 고르십니다",
     ask:"월 매출 · 인건비 합계", out:"인건비율 · 1인당 매출", time:"1분",
-    side:"both" },
+    side:"both",
+    rel:[{cat:"staff"},{cat:"admin",sub:"labor-agent"}] },
   { key:"vs",    to:"/tools/vs",    icon:"scale",  name:"신규 창업 vs 매장 인수",
     lead:"새로 만드는 것과 하던 가게를 받는 것. 들어가는 돈과 시간을 나란히",
     ask:"양쪽에 드는 돈 · 기간", out:"초기 비용 차이 · 회수 기준", time:"4분",
-    side:"start" },
+    side:"start",
+    rel:[{cat:"store"},{cat:"transfer"},{cat:"asset"},{cat:"interior"}] },
   { key:"close", to:"/tools/close", icon:"list",   name:"폐업 체크리스트",
     lead:"순서대로 짚어 가며 빠뜨린 것을 찾습니다. 기한이 있는 것이 여럿입니다",
     ask:"해당하는 것 체크", out:"남은 것 · 기한 있는 것", time:"5분",
-    side:"close" }
+    side:"close",
+    rel:[{cat:"demolish"},{cat:"restore"},{cat:"waste"},{cat:"tax"},
+         {cat:"labor"},{cat:"contract"}] }
 ];
+
+/* 그 분야에서 쓸 만한 도구 — ⚠️ 위의 `rel` 을 **거꾸로** 읽습니다.
+   분야마다 도구를 또 적으면 둘이 어긋납니다 (V2 §10 ⑩ · §17). */
+window.amToolsForCat = function(catKey){
+  if(!catKey) return [];
+  return (window.AM_TOOLS||[]).filter(function(t){
+    return (t.rel||[]).some(function(r){ return r.cat === catKey; }); });
+};
 
 window.amTool = function(key){
   var r = (window.AM_TOOLS||[]).filter(function(t){ return t.key === key; });

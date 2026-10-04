@@ -898,11 +898,14 @@ const AUDIT = `(() => {
     if((document.getElementById("view").textContent||"").indexOf(sp.name) >= 0)
       return "업체찾기 화면에 예시가 나옵니다";
     /* 검색에도 안 나와야 합니다 */
-    /* ⚠️ amSearch 는 **묶음 객체**를 돌려줍니다 — 배열이 아닙니다.
+    /* ⚠️⚠️ amSearch 는 { total, groups } 를 돌려줍니다 — 묶음 **객체**도
+       배열도 아닙니다. 처음에 Object.keys 로 돌렸더니 rows 가 영영
+       undefined 라 **아무것도 안 보는 검사**가 됐습니다 (통과만 했습니다).
        (⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다 — 아홉 번째입니다) */
-    const G = window.amSearch ? amSearch(sp.name) : {};
-    const hit = Object.keys(G).some(function(k){
-      return ((G[k]||{}).rows||[]).some(function(x){
+    const R = window.amSearch ? amSearch(sp.name) : { groups:[] };
+    if(!R || !R.groups) return "검색이 묶음을 안 돌려줍니다 — 검사가 아무것도 못 봅니다";
+    const hit = (R.groups||[]).some(function(g){
+      return (g.rows||[]).some(function(x){
         return String(x.name||"").indexOf(sp.name) >= 0; }); });
     if(hit) return "검색 결과에 예시가 나옵니다";
     return true;`);
@@ -922,6 +925,74 @@ const AUDIT = `(() => {
        업체 페이지가 sitemap 과 구글까지 나갑니다 */
     if(box.querySelector('a[href^="/p/"]'))
       return "예시 카드가 업체 상세로 링크됩니다";
+    return true;`);
+
+  /* ══ 정보 → 계산 → 업체 → 상담 (2026-10-05 V2 §10 · §17 · §22) ══ */
+
+  await f("계산 결과에서 업체로 가는 길이 있다", "/tools/cost", `
+    /* 지시서 §17 — "계산기 자체로 끝나면 안 된다."
+       ⚠️ 어느 분야로 보낼지는 tools.js 의 rel 한 곳입니다. */
+    const t = window.amTool ? amTool("cost") : null;
+    if(!t || !(t.rel||[]).length) return "창업비 계산기에 이어지는 분야가 없습니다";
+    const L = [].slice.call(document.querySelectorAll("#view .ops-g > li > a"));
+    if(L.length !== t.rel.length)
+      return "화면에 " + L.length + "칸인데 데이터는 " + t.rel.length + "개입니다";
+    for(const a of L){
+      const h = a.getAttribute("href") || "";
+      if(!h || h === "#") return "가짜 링크가 있습니다";
+      if(a.getBoundingClientRect().height < 40) return "40px 미만 칸이 있습니다";
+    }
+    /* 도구마다 이어지는 분야가 **다 있어야** 합니다 */
+    for(const x of (window.AM_TOOLS||[])){
+      if(!(x.rel||[]).length) return x.name + " 에 이어지는 분야가 없습니다";
+      for(const r of x.rel){
+        const c = window.amCat(r.cat);
+        if(!c) return x.name + " 이 없는 분류 " + r.cat + " 을 가리킵니다";
+        if(r.sub && !(c.items||[]).some(function(i){ return i.key === r.sub; }))
+          return x.name + " 의 하위 " + r.sub + " 가 " + r.cat + " 에 없습니다";
+      }
+    }
+    return true;`);
+
+  await f("글 끝에 관련 서비스 · 업체 · 도구가 붙는다", "/content/interior-gyeyak-check", `
+    /* 지시서 §10 ⑧ ⑨ ⑩ — 글 하나를 단순 게시물로 만들지 않습니다.
+       ⚠️ 업체 수는 **세는 값**입니다. 0 이면 0 이라고 말해야 합니다. */
+    const B = [].slice.call(document.querySelectorAll("#view .cn-b"));
+    if(B.length < 2) return "글 끝 묶음이 " + B.length + "개뿐입니다";
+    const hd = B.map(function(e){
+      return ((e.querySelector(".cn-h")||{}).textContent||"").trim(); });
+    if(hd.indexOf("관련 서비스") < 0) return "관련 서비스 묶음이 없습니다";
+    if(hd.indexOf("관련 계산기") < 0) return "관련 계산기 묶음이 없습니다";
+    const n = window.amProvidersInCat ? amProvidersInCat(window.amCat("interior")) : 0;
+    const note = ((document.querySelector("#view .cn-n")||{}).textContent||"");
+    if(note.indexOf(n + "곳") < 0)
+      return "등록 업체 수가 센 값과 다릅니다 — 화면 '" + note.slice(0,30) + "'";
+    if(!n && note.indexOf("지어내지 않습니다") < 0)
+      return "0곳인데 지어내지 않는다는 말이 없습니다";
+    for(const a of document.querySelectorAll("#view .cn-b a")){
+      const h = a.getAttribute("href") || "";
+      if(!h || h === "#") return "글 끝에 가짜 링크가 있습니다";
+      if(a.getBoundingClientRect().height < 40) return "글 끝 링크가 40px 미만입니다";
+    }
+    return true;`);
+
+  await f("검색이 도구와 여정도 찾는다", "/search", `
+    /* 지시서 §22 — 업체 · 정보 · 서비스 · 매물 · 도구로 구분합니다.
+       ⚠️ 색인에 없으면 메인에서만 갈 수 있는 화면이 됩니다. */
+    const find = function(q, to){
+      const R = window.amSearch(q);
+      if(!R || !R.groups) return null;
+      for(const g of R.groups) for(const r of (g.rows||[]))
+        if(r.to === to) return g.name;
+      return null;
+    };
+    if(!find("손익분기", "/tools/bep")) return "'손익분기' 로 도구가 안 나옵니다";
+    if(!find("창업비", "/tools/cost")) return "'창업비' 로 도구가 안 나옵니다";
+    if(!find("인수", "/acquisition")) return "'인수' 로 인수 · 양도 화면이 안 나옵니다";
+    if(!find("운영", "/operation")) return "'운영' 으로 매장 운영 화면이 안 나옵니다";
+    /* 도구는 자기 묶음으로 갈립니다 */
+    if(find("손익분기", "/tools/bep") !== "도구")
+      return "도구가 '도구' 묶음이 아니라 다른 묶음에 들어갑니다";
     return true;`);
 
   await f("업체는 자기 분야에만 나온다", "/providers/interior", `

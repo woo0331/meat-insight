@@ -1236,6 +1236,9 @@ function checkProcess(W){
   Object.keys(W.AM_PROCESS||{}).forEach(k =>
     (W.AM_PROCESS[k]||[]).forEach((st, i) => chk("AM_PROCESS."+k+"["+i+"] "+st.name, st)));
   (W.AM_OPS||[]).forEach((o, i) => chk("AM_OPS["+i+"] "+o.name, o));
+  /* 계산 결과에서 업체로 가는 길 (V2 §17) */
+  (W.AM_TOOLS||[]).forEach(t => (t.rel||[]).forEach((o, i) =>
+    chk("AM_TOOLS."+t.key+".rel["+i+"]", o)));
   /* 여정 넷이 단계 여섯을 빠짐없이 한 번씩 나눠 가지는가 */
   const stages = (W.AM_STAGES||[]).map(x => x.key);
   const used = [];

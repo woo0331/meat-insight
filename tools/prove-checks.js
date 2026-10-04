@@ -40,6 +40,18 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* 계산 결과에서 업체로 가는 길을 걷어내면 걸려야 합니다 */
+  ["계산 결과에서 업체로 가는 길이 있다",
+   `window.AM_TOOLS = (window.AM_TOOLS||[]).map(function(t){
+      return t.key === "cost" ? Object.assign({}, t, { rel:[] }) : t; });`],
+  /* 글 끝의 업체 수를 손으로 적어 넣으면 걸려야 합니다 */
+  ["글 끝에 관련 서비스 · 업체 · 도구가 붙는다",
+   `document.querySelectorAll(".cn-n").forEach(function(e){
+      e.textContent = "인테리어 · 시공 분야에 등록된 업체 23곳";   /* 지어낸 숫자 */
+    });`],
+  /* 도구를 색인에서 빼면 걸려야 합니다 */
+  ["검색이 도구와 여정도 찾는다",
+   `window.AM_TOOLS = [];`],
   /* 체크칸을 카드(링크) 안으로 넣으면 걸려야 합니다 */
   ["업체 둘을 나란히 비교할 수 있다",
    `window.ProviderPickCard = function(p){

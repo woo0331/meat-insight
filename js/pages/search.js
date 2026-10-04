@@ -127,6 +127,7 @@ window.amSearch = function(q){
     store:{ name:"매장 · 점포", rows:[] }, asset:{ name:"시설 · 장비", rows:[] },
     cat:{ name:"분류", rows:[] }, industry:{ name:"업종", rows:[] },
     content:{ name:"정보", rows:[] },
+    tool:{ name:"도구", rows:[] },
     support:{ name:"지원사업", rows:[] },
     /* ⚠️ `push()` 는 없는 묶음 이름을 받으면 그 자리에서 던집니다 —
        화면이 통째로 안 그려집니다. 묶음을 먼저 만드세요. */
@@ -144,8 +145,26 @@ window.amSearch = function(q){
      **단계 이름**입니다 — 색인에 없으면 메인에서만 갈 수 있는 화면이
      됩니다. 대표 서비스(`sub`)까지 검색감으로 씁니다. */
   (window.AM_STAGES || []).forEach(function(st){
-    push("cat", st.name, st.lead, "/g/" + st.key,
+    /* ⚠️ 여정 넷과 **이름이 겹칩니다** (매장 운영 · 매장 양도 양수) —
+       같은 이름 두 줄이 나란히 뜨면 검색이 고장난 것처럼 보입니다.
+       단계 쪽에 "단계" 를 붙여 갈라 둡니다. */
+    push("cat", st.name + " 단계", st.lead, "/g/" + st.key,
       amScore(st.name + " " + st.lead + " " + st.sub, words) * 2);
+  });
+  /* ⚠️⚠️ **여정 넷도 검색감입니다** (2026-10-05 V2 §1 · §22).
+     손님은 "운영" · "인수" · "양도" 라고 치는데, 그건 분류 이름도
+     단계 이름도 아니라 **여정 이름**입니다 — 색인에 없으면 메인에서만
+     갈 수 있는 화면이 됩니다. */
+  (window.AM_JOURNEYS || []).forEach(function(j){
+    push("cat", j.name, j.q, j.to,
+      amScore(j.name + " " + j.q + " " + j.lead + " " + j.sub, words) * 2);
+  });
+  /* ⚠️⚠️ **도구도 검색감입니다** (§22 — "검색 결과는 업체 · 정보 ·
+     서비스 · 매물 · 도구로 구분한다"). "손익분기" · "창업비" · "폐업
+     체크리스트" 를 치는 분이 실제로 많은데 색인에 없었습니다. */
+  (window.AM_TOOLS || []).forEach(function(t){
+    push("tool", t.name, t.lead, t.to,
+      amScore(t.name + " " + t.lead + " " + (t.ask||"") + " " + (t.out||""), words) * 2);
   });
   AM_CATS.forEach(function(c){
     var subs = (c.items||[]).map(function(x){ return x.name; }).join(" ");

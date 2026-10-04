@@ -214,6 +214,66 @@ function PageContent(c){
     (c.next ? '<div class="row-cta"><a class="btn btn-b btn-lg" href="'+
       esc(c.next.cat && amCat(c.next.cat) ? catTo(amCat(c.next.cat)) : "/quote")+'">'+
       esc(c.next.label||"업체 찾아보기")+icon("arrow",18)+'</a></div>' : '')+
+  '</div></section>'+
+  ContentNext(c);
+}
+
+/* ── 글 하나의 끝 — 관련 서비스 · 업체 · 계산기 · 이어 읽을 글 ────
+   (2026-10-05 V2 §10 ⑧ ⑨ ⑩)
+
+   > "정보글 하나를 단순 텍스트 게시물로 만들지 않는다."
+
+   ⚠️⚠️ **없는 것은 줄째 뺍니다** (절대 규칙 2). 업체가 0곳인 분야에
+   "0곳" 칸을 비워 두지 않고, 맞는 도구가 없으면 그 묶음이 아예 안
+   나옵니다.
+   ⚠️ 업체 수는 **세는 값**입니다 (`amProvidersInCat`). 손으로 적을
+   자리가 없습니다. */
+function ContentNext(c){
+  var cat   = c.cat ? amCat(c.cat) : null;
+  var tools = (window.amToolsForCat ? amToolsForCat(c.cat) : []);
+  /* 이어 읽을 글 — ⚠️ 자기 자신은 빼야 합니다 */
+  var more  = (window.amContentsFor
+    ? amContentsFor({ cat:c.cat, side:c.side, industry:c.industry, limit:4 })
+    : []).filter(function(x){ return x.slug !== c.slug; }).slice(0, 3);
+  if(!cat && !tools.length && !more.length) return "";
+
+  var n = (cat && window.amProvidersInCat) ? amProvidersInCat(cat) : 0;
+  var subs = cat ? (window.amCatItems ? amCatItems(cat, c.industry || "") : (cat.items||[])) : [];
+
+  return '<section class="sec sec-white"><div class="w w-narrow">'+
+    (cat ? '<div class="cn-b">'+
+      '<p class="cn-h">관련 서비스</p>'+
+      '<ul class="chip-g">'+subs.slice(0, 8).map(function(i){
+        /* ⚠️ 하위로 좁혀 보냅니다 — 글을 읽고 바로 그 일을 맡기는 자리 */
+        return '<li><a class="chip" href="'+esc(catTo(cat) +
+          (cat.kind === "provider" ? "?s=" + encodeURIComponent(i.key) : ""))+'">'+
+          esc(i.name)+'</a></li>'; }).join("")+'</ul>'+
+      /* ⚠️ 0 이면 0 이라고 말하고, 지금 되는 것(견적 요청)을 같이 냅니다 */
+      '<p class="cn-n">'+esc(cat.name)+' 분야에 등록된 업체 '+n+'곳'+
+        (n ? '' : ' — 없는 업체를 지어내지 않습니다. 견적을 남기시면 조건에 맞는 곳을 찾아 연결해 드립니다.')+'</p>'+
+      '<div class="row-cta">'+
+        '<a class="btn btn-b" href="'+esc(catTo(cat))+'">'+
+          esc(cat.kind === "provider" ? cat.name + " 업체 보기" : cat.name + " 보기")+icon("arrow",16)+'</a>'+
+        '<a class="btn btn-o" href="'+esc(quoteTo({ cat:c.cat, industry:c.industry||"", side:c.side }))+'">'+
+          '견적 요청하기</a>'+
+      '</div>'+
+    '</div>' : '')+
+    (tools.length ? '<div class="cn-b">'+
+      '<p class="cn-h">관련 계산기</p>'+
+      '<ul class="cn-tl">'+tools.map(function(t){
+        return '<li><a href="'+esc(t.to)+'">'+icon(t.icon,18)+
+          '<b>'+esc(t.name)+'</b><em>'+esc(t.lead)+'</em>'+
+          '<span class="cn-go" aria-hidden="true">'+icon("chev",15)+'</span></a></li>';
+      }).join("")+'</ul>'+
+    '</div>' : '')+
+    (more.length ? '<div class="cn-b">'+
+      '<p class="cn-h">이어서 보시면</p>'+
+      '<ul class="cn-tl">'+more.map(function(x){
+        return '<li><a href="/content/'+esc(x.slug)+'">'+icon("book",18)+
+          '<b>'+esc(x.title)+'</b><em>'+esc(x.lead)+'</em>'+
+          '<span class="cn-go" aria-hidden="true">'+icon("chev",15)+'</span></a></li>';
+      }).join("")+'</ul>'+
+    '</div>' : '')+
   '</div></section>';
 }
 

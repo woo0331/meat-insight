@@ -1845,15 +1845,29 @@ const AUDIT = `(() => {
     const shown = [].slice.call(document.querySelectorAll(".mstg-g > li > a"));
     if(shown.length !== 6) return "화면의 단계 카드가 " + shown.length + "개입니다";
     for(let i = 0; i < 6; i++){
-      const b2 = shown[i].querySelector(".stg-b b");
-      const i2 = shown[i].querySelector(".stg-b i");
+      const b2 = shown[i].querySelector(".stg-h b");
+      const i2 = shown[i].querySelector(".stg-s");
+      const c2 = shown[i].querySelector(".stg-c");
       if(!b2 || b2.textContent.trim() !== S[i].name)
         return (i+1) + "번째 이름이 데이터와 다릅니다";
       if(!i2 || i2.textContent.trim() !== S[i].sub)
         return (i+1) + "번째 하위 설명이 데이터와 다릅니다";
+      if(!c2 || !c2.textContent.trim()) return (i+1) + "번째 설명 문구가 없습니다";
       const h = shown[i].getAttribute("href") || "";
       if(h !== "/g/" + S[i].key) return (i+1) + "번째 주소가 " + h + "입니다";
+      /* ⚠️ 카드마다 **색이 달라야** 합니다 (§15) — 여섯이 같은 틴트면
+         "사업의 흐름" 이 색으로 안 읽힙니다. 틴트는 lifecycle.js 의
+         tone 한 줄이고 화면에 적는 자리가 없습니다. */
+      const bg = getComputedStyle(shown[i]).backgroundImage +
+                 getComputedStyle(shown[i]).backgroundColor;
+      if(!bg) return (i+1) + "번째 카드 바탕을 못 읽습니다";
     }
+    /* 여섯의 틴트가 저마다 다른지 */
+    const tones = shown.map(function(a2){
+      return getComputedStyle(a2.querySelector(".stg-i")).color; });
+    const seenT = {}, dupT = [];
+    tones.forEach(function(t){ if(seenT[t]) dupT.push(t); seenT[t] = 1; });
+    if(dupT.length) return "겹치는 카드 색이 " + dupT.length + "개 있습니다";
     return true;`);
   await f("히어로 두 장의 크기가 같다", "/", `
     /* 폐업 쪽을 좁히거나 가볍게 만들면 그게 "덜 중요한 것" 이라는

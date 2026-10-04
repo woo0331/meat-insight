@@ -71,9 +71,23 @@ window.searchGo = function(ev){
    스치듯 언급한 것이 정작 그 말이 주제인 화면보다 위로 갑니다. */
 function amScore(hay, words){
   var n = 0, hit = 0, low = hay.toLowerCase();
+  /* ⚠️⚠️ **손님은 띄어쓰기를 안 합니다** (2026-10-04). 분류 이름은
+     "상가 임대" · "매장 양도" · "시설 · 장비" 처럼 띄어 두었는데,
+     손님은 **"상가임대" · "매장양도"** 라고 칩니다 — 그러면 글자가
+     그대로 있는데도 **0건**이 나왔습니다. 추천 검색어로 내놓은 말이
+     정작 검색이 안 되는 상태였습니다.
+     그래서 띄어쓰기와 가운뎃점을 **양쪽에서 걷어낸 사본**으로 한 번
+     더 봅니다. ⚠️ 점수는 **덜 줍니다**(0.5) — 띄어 쓴 그대로 맞은
+     쪽이 위로 와야 합니다. */
+  var flat = low.replace(/[\s·・]/g, "");
   words.forEach(function(w){
     var i = 0, c = 0;
     while((i = low.indexOf(w, i)) >= 0 && c < 4){ c++; i += w.length; }
+    if(!c){
+      var fw = w.replace(/[\s·・]/g, ""), j = 0, fc = 0;
+      if(fw) while((j = flat.indexOf(fw, j)) >= 0 && fc < 4){ fc++; j += fw.length; }
+      if(fc){ hit++; n += fc * 0.5; return; }
+    }
     if(c) hit++;
     n += c;
   });
@@ -127,7 +141,10 @@ window.amSearch = function(q){
   });
   AM_CATS.forEach(function(c){
     var subs = (c.items||[]).map(function(x){ return x.name; }).join(" ");
-    var s = amScore(c.name+" "+c.lead+" "+c.desc+" "+subs, words);
+    /* ⚠️ `kw` 는 분류가 들고 있는 **검색 전용 다른 말**입니다 (catalog.js).
+       화면에는 안 나오고 여기서만 씁니다 — "주방설비" 처럼 손님이 쓰는
+       말과 우리 이름("시설 · 장비")이 다른 자리를 메웁니다. */
+    var s = amScore(c.name+" "+c.lead+" "+c.desc+" "+(c.kw||"")+" "+subs, words);
     push("cat", c.name, c.lead, catTo(c), s);
     (c.items||[]).forEach(function(it){
       var ss = amScore(it.name, words);

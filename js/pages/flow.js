@@ -372,13 +372,10 @@ function StageNear(st){
   return '<section class="sec sec-cream"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">이 앞뒤로는</p>'+
       '<h2>사업은 한 단계에서 끝나지 않습니다</h2></div>'+
+    /* ⚠️ 카드 생김새는 `StageCard()` **한 곳**입니다 (home.js) —
+       여기에 또 적으면 메인과 단계 화면이 서로 달라집니다. */
     '<ul class="mstg-g mstg-g-near">'+near.map(function(s){
-      return '<li><a href="'+esc(amStageTo(s))+'" class="stg'+tn(s.tone)+'">'+
-        '<span class="stg-i">'+icon(s.icon,26)+'</span>'+
-        '<span class="stg-b"><em class="stg-no">'+esc(s.no)+'</em>'+
-          '<b>'+esc(s.name)+'</b><i>'+esc(s.sub)+'</i></span>'+
-        '<span class="stg-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
-      '</a></li>'; }).join("")+'</ul>'+
+      return '<li>'+StageCard(s)+'</li>'; }).join("")+'</ul>'+
   '</div></section>';
 }
 

@@ -139,14 +139,26 @@ var MAIN_TABS = [
    금지). 분야가 있는 것은 그 분야 화면으로 바로 보냅니다. */
 /* ⚠️ 2026-10-04 §12 — **일곱으로 줄였습니다.** 열 개는 칩 줄이
    패널 아래를 한 줄 더 먹고, 그만큼 "무엇부터 누를까" 가 흐려집니다. */
+/* ⚠️⚠️ **열 개 전부 검색해 보고 결과가 나오는 것만 둡니다.** 2026-10-04
+   에 재 보니 `주방설비` · `상가임대` · `매장양도` · `철거·원상복구` 가
+   **0건**이었습니다 — 손님이 띄어쓰기를 안 하는데 분류 이름은 띄어 두었고
+   ("상가 임대" · "매장 양도"), `시설 · 장비` 는 "주방설비" 라는 글자를
+   아예 안 들고 있었습니다. 추천해 놓고 쳐 보면 0건인 상태였습니다.
+   `amScore()` 의 띄어쓰기 무시 한 겹과 `catalog.js` 의 `kw` 로 고쳤고,
+   지금은 열 개 다 1건 이상입니다. ⚠️ 칩을 더하실 때도 **쳐 보세요.**
+   ⚠️ 칩은 **검색이 아니라 그 화면으로** 바로 보냅니다 — 답이 있는
+   자리로 바로 가는 쪽이 낫습니다. */
 var MAIN_CHIPS = [
-  { q:"인테리어",      to:"/providers/interior" },
-  { q:"주방설비",      to:"/providers/equip" },
-  { q:"상가 임대",     to:"/stores" },
-  { q:"세무",          to:"/providers/admin" },
-  { q:"POS",           to:"/providers/it" },
-  { q:"매장 양도",     to:"/g/transfer" },
-  { q:"철거 · 원상복구", to:"/providers/demolish" }
+  { q:"인테리어",       to:"/providers/interior" },
+  { q:"주방설비",       to:"/providers/equip" },
+  { q:"상가임대",       to:"/stores" },
+  { q:"세무",           to:"/providers/admin" },
+  { q:"POS",            to:"/providers/it" },
+  { q:"매장양도",       to:"/g/transfer" },
+  { q:"철거 · 원상복구", to:"/providers/demolish" },
+  { q:"간판",           to:"/providers/interior?s=sign" },
+  { q:"청소",           to:"/providers/clean" },
+  { q:"마케팅",         to:"/providers/marketing" }
 ];
 function MainSearch(){
   var cur = nowQS("t") || "pv";
@@ -174,7 +186,11 @@ function MainSearch(){
       '<span class="msr-q">'+
         '<span class="msr-q-i" aria-hidden="true">'+icon("search",20)+'</span>'+
         '<input type="search" id="msrQ" name="q" autocomplete="off" '+
-          'aria-label="업체 · 서비스 검색" placeholder="어떤 업체나 서비스를 찾고 계신가요?">'+
+          'aria-label="업체 · 서비스 검색" '+
+          /* ⚠️ 보기를 같이 적습니다 — 업체 이름을 모르셔도 **서비스
+             이름**으로 찾을 수 있다는 것이 여기서 읽혀야 합니다 (§3).
+             ⚠️ 적어 둔 넷은 전부 **실제로 결과가 나오는 말**입니다. */
+          'placeholder="어떤 업체나 서비스를 찾고 계신가요? (예: 인테리어, 주방설비, 세무, 상가임대 등)">'+
       '</span>'+
       '<button class="btn btn-pt" type="submit">'+icon("search",18)+'검색하기</button>'+
     '</form>'+
@@ -222,17 +238,32 @@ function MainStage(){
          **한 줄만** 씁니다 — 둘 다 넣으면 화면이 복잡해집니다. */
       '<p>장사의 시작부터 운영, 인수인계와 정리까지.</p></div>'+
     '</div>'+
-    '<ul class="mstg-g">'+L.map(function(s){
-      return '<li><a href="'+esc(amStageTo(s))+'" class="stg'+tn(s.tone)+'">'+
-        '<span class="stg-i">'+icon(s.icon,26)+'</span>'+
-        '<span class="stg-b">'+
-          '<em class="stg-no">'+esc(s.no)+'</em>'+
-          '<b>'+esc(s.name)+'</b>'+
-          '<i>'+esc(s.sub)+'</i>'+
-        '</span>'+
-        '<span class="stg-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
-      '</a></li>'; }).join("")+'</ul>'+
+    '<ul class="mstg-g">'+L.map(function(s){ return '<li>'+StageCard(s)+'</li>'; }).join("")+'</ul>'+
   '</div></nav>';
+}
+
+/* 단계 카드 한 장 — 메인과 단계 화면(앞뒤 두 장)이 같이 씁니다.
+   ⚠️⚠️ **사진이 없으면 아래 띠를 아예 안 그립니다** (절대 규칙 2).
+   빈 액자를 반쯤 깔아 두면 카드 여섯이 전부 "준비 중" 으로 읽힙니다 —
+   사진이 들어오면 **이 파일을 한 줄도 안 고치고** 띠가 생깁니다.
+   ⚠️ 사진 키는 `lifecycle.js` 가 아니라 **자리 이름 규칙**입니다
+   (`category-<단계키>`). `photos.js` 의 자리 목록과 짝이 맞아야 하고,
+   한 글자만 틀려도 조용히 안 나옵니다 — 빌드가 막습니다. */
+function StageCard(s){
+  var key = "category-" + s.key;
+  var ph  = (typeof hasPhoto === "function") && hasPhoto(key);
+  return '<a href="'+esc(amStageTo(s))+'" class="stg'+tn(s.tone)+(ph ? " stg-ph" : "")+'">'+
+    '<span class="stg-t">'+
+      '<span class="stg-h">'+
+        '<span class="stg-i">'+icon(s.icon,24)+'</span>'+
+        '<b>'+esc(s.name)+'</b>'+
+      '</span>'+
+      '<em class="stg-c">'+(s.copy || esc(s.lead))+'</em>'+
+      '<i class="stg-s">'+esc(s.sub)+'</i>'+
+    '</span>'+
+    (ph ? '<span class="stg-img">'+photoBox(key)+'</span>' : '')+
+    '<span class="stg-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
+  '</a>';
 }
 /* ══════════════════════════════════════════════════════════════════
    ② 브랜드 가치 (지시서 §7)

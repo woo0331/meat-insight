@@ -74,7 +74,8 @@ function PageProviderCat(cat){
     (list.length
       /* ⚠️ 24장씩 — 1000곳이 등록되는 날 카드 1000장을 한 번에
          그리지 않습니다 (`MoreBtn()` 한 곳에서 셉니다). */
-      ? '<div class="pv-g">'+list.slice(0, amShown(list.length)).map(ProviderCard).join("")+'</div>'+
+      /* ⚠️ 목록에서는 **비교에 담을 수 있는** 카드를 냅니다 (V2 §14) */
+      ? '<div class="pv-g">'+list.slice(0, amShown(list.length)).map(ProviderPickCard).join("")+'</div>'+
         /* ⚠️ 차례의 기준을 밝힙니다 (약관 제6조 제4항) */
         '<p class="note">등록된 차례로 냅니다. 광고로 위에 올린 자리는 없습니다.</p>'+
         MoreBtn(list.length)
@@ -100,6 +101,7 @@ function PageProviderCat(cat){
     '<a class="btn btn-b btn-lg" href="'+esc(quoteTo({cat:cat.key,sub:sub,industry:ind,region:reg,side:side}))+'">'+
       '견적 요청하기'+icon("arrow",18)+'</a>'+
   '</div></section>'+
+  CmpBar()+
   /* 업체를 부르기 전에 알아 두면 견적이 정확해지는 것들.
      ⚠️ 맞는 글이 없으면 구간째 빠집니다 (절대 규칙 2). */
   ReadBand({ cat:cat.key, side:side, industry:ind,
@@ -291,11 +293,84 @@ function PageJoin(){
   })+
   JoinNow(subs)+
   JoinWhat()+
+  /* ⚠️⚠️ V2 지시서 §26 이 "별도 파트너 페이지" 를 적었는데, 이 화면이
+     이미 그 화면입니다 — 또 만들면 **같은 내용이 두 주소로** 나가고
+     구글이 둘 다 무시합니다. 없던 것(§26 의 "입점하면 어디에
+     노출되는지 · 업체 카드 예시 · 업체 상세페이지 예시")만 여기에
+     더했습니다. `/partners` 는 vercel 이 308 로 여기 보냅니다. */
+  JoinShow()+
   JoinWhy()+
   JoinHow()+
   JoinFields(subs)+
   JoinFaq()+
   JoinForm(ready);
+}
+
+/* ── 입점하면 어디에 보이나 + 이렇게 보입니다 (V2 §26 · §19) ──────
+   ⚠️⚠️ **여기 쓰는 프로필은 `AM_SAMPLES` 이고 `AM_PROVIDERS` 가
+   아닙니다.** 업체찾기 · 검색 · 메인 · sitemap 어디에도 안 나옵니다 —
+   지어낸 업체를 손님 동선에 섞으면 표시광고법 제3조입니다.
+   ⚠️ 카드마다 **예시 딱지**를 붙이고 구간 아래에 한 줄을 더 적습니다.
+   ⚠️ 노출 자리는 전부 **실제로 있는 화면**입니다. 없는 자리를 적으면
+   업체에게 하는 거짓말이고, 등록하고 나면 바로 압니다. */
+var JOIN_WHERE = [
+  { ic:"search",   t:"업체찾기",        p:"분야 · 지역 · 업종 · 하위 서비스로 좁혀 찾는 화면", to:"/providers" },
+  { ic:"grid",     t:"분야 화면",       p:"인테리어 · 철거 · 세무처럼 분야마다 있는 화면", to:"/providers/interior" },
+  { ic:"compare",  t:"업체 비교",       p:"손님이 두세 곳을 나란히 놓고 보는 화면" },
+  { ic:"home",     t:"메인 업체 구간",  p:"첫 화면에서 등록된 차례로", to:"/" },
+  { ic:"layers",   t:"사업 단계 화면",  p:"그 단계에 필요한 분야로 들어온 손님에게", to:"/g/build" },
+  { ic:"doc",      t:"견적 요청",       p:"분야 · 지역이 맞는 요청을 나눠 받습니다", to:"/quote" }
+];
+function JoinShow(){
+  var sp = (typeof amSample === "function") ? amSample("provider") : null;
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">입점하면 어디에 보이나</p>'+
+      '<h2>등록 한 번으로 이 자리에 같이 올라갑니다</h2>'+
+      '<p>따로 신청하실 것이 없습니다. 하시는 일과 지역이 맞는 자리에 저절로 나갑니다.</p>'+
+    '</div>'+
+    '<ul class="ops-g">'+JOIN_WHERE.map(function(w){
+      var in1 = '<span class="ops-i">'+icon(w.ic,22)+'</span>'+
+        '<b>'+esc(w.t)+'</b>';
+      /* ⚠️ 아직 화면이 없는 자리는 **링크를 걸지 않습니다** (가짜 링크 금지) */
+      return '<li>'+(w.to
+        ? '<a class="ops" href="'+esc(w.to)+'">'+in1+
+          '<span class="ops-go" aria-hidden="true">'+icon("chev",15)+'</span></a>'
+        : '<span class="ops">'+in1+'</span>')+'</li>';
+    }).join("")+'</ul>'+
+    (sp ? '<div class="jn-ex">'+
+      '<p class="jn-ex-h"><b>업체 카드는 이렇게 보입니다</b>'+
+        '<em>아래는 예시입니다 — 실제 업체가 아니고, 손님 화면 어디에도 나오지 않습니다.</em></p>'+
+      '<div class="jn-ex-b"><span class="jn-ex-tag">예시</span>'+
+        ProviderCard(sp)+
+      '</div>'+
+      '<p class="jn-ex-h"><b>상세 화면에는 이만큼 들어갑니다</b>'+
+        '<em>사진 · 전문분야 · 전문업종 · 활동지역 · 가격 · 포트폴리오 · 인증 · 후기 · 상담 시간.</em></p>'+
+      '<ul class="jn-ex-l">'+ joinExRows(sp).map(function(r){
+        return '<li><b>'+esc(r[0])+'</b><span>'+esc(r[1])+'</span></li>'; }).join("")+'</ul>'+
+      '<p class="sec-note">'+icon("info",15)+
+        /* ⚠️ 여기는 `mark()` 를 안 거치는 자리라 별표가 **글자로** 찍힙니다 */
+        '평점과 후기 수는 값으로 저장하지 않습니다 — 손님이 쓰신 후기에서 계산합니다. '+
+        '등록하실 때 적는 칸 자체가 없습니다.</p>'+
+    '</div>' : '')+
+  '</div></section>';
+}
+/* 상세에 실제로 들어가는 칸 — ⚠️ **예시 프로필의 값에서 셉니다.**
+   손으로 적으면 화면이 바뀔 때 여기만 옛말이 됩니다. */
+function joinExRows(p){
+  var st = amProviderStats(p) || {};
+  var rows = [
+    ["전문 서비스", (p.subs||[]).map(amSubName).join(" · ")],
+    ["전문 업종",   (p.industries||[]).map(amIndustryName).join(" · ")],
+    ["활동 지역",   (p.regions||[]).map(amRegionName).concat(p.gu||[]).join(" · ")],
+    ["포트폴리오",  (p.portfolio||[]).length + "건 — 공사 내용 · 업종 · 지역 · 연도 · 사진"],
+    ["인증",        amProviderBadges(p).join(" · ") || "확인한 것만"],
+    ["상담 가능 시간", p.consultHours || ""]
+  ];
+  if(st.rating != null)
+    rows.push(["후기", "평점 " + st.rating + " · " + st.reviews + "건 (후기에서 계산한 값입니다)"]);
+  /* ⚠️ 값이 없는 줄은 **아예 뺍니다** — "(미기재)" 를 찍지 않습니다 */
+  return rows.filter(function(r){ return r[1]; });
 }
 
 /* ── ① 지금 상태 — ⚠️ 0 을 그대로 말합니다 ───────────────────────
@@ -505,3 +580,88 @@ window.AgreeBox = function(id, what, why, how){
       '<a href="/privacy">개인정보처리방침</a></p>'+
   '</div>';
 };
+
+
+/* ── /compare — 업체 비교 (2026-10-05 V2 §14) ────────────────────
+   > "업체 / 지역 / 전문분야 / 전문업종 / 가격정보 / 평점 / 후기 /
+   >  포트폴리오 / 인증 / A/S / 응답속도"
+
+   ⚠️⚠️ **없는 칸은 줄째 뺍니다** (절대 규칙 2). 세 곳 다 안 적은
+   항목을 빈 칸으로 늘어놓으면, 비교표가 "미기재" 로 가득 찹니다.
+   ⚠️⚠️ **응답속도는 재어 본 값만** 냅니다 (`responseHours`). 지금은
+   재는 장치가 없어서 비어 있고, 그래서 그 줄이 **안 나옵니다** —
+   "빠름" 같은 말을 적으면 하지 않은 일을 했다고 말하는 것입니다
+   (절대 규칙 5).
+   ⚠️ 평점 · 후기 수는 **후기 배열에서 계산**합니다 (`amProviderStats`). */
+function PageCompare(){
+  var ids = String(nowQS("ids") || "").split(",")
+    .map(function(x){ return x.trim(); }).filter(Boolean).slice(0, AM_CMP_MAX);
+  var ps = ids.map(function(id){ return amProvider(id); }).filter(Boolean);
+
+  if(!ps.length) return PgHero({
+      crumb: Crumb([["업체찾기","/providers"],["업체 비교"]]),
+      kicker:"COMPARE", h1:"업체 비교", tight:true })+
+    '<section class="sec sec-white"><div class="w w-narrow">'+
+      Empty({ icon:"compare", title:"비교할 업체를 아직 안 고르셨습니다",
+        text:"업체찾기에서 카드의 ‘비교’ 를 눌러 두세요. " + AM_CMP_MAX +
+             "곳까지 나란히 놓고 보실 수 있습니다.",
+        reads: amContentsFor({ cat:"interior", side:"start", limit:3 }),
+        readTitle:"업체를 고르기 전에 보시면",
+        cta:'<a class="btn btn-b" href="/providers">업체찾기로'+icon("arrow",16)+'</a>'+
+            '<a class="btn btn-o" href="'+esc(quoteTo({}))+'">견적부터 요청하기</a>' })+
+    '</div></section>';
+
+  /* 줄 — [딱지, 업체마다 값을 내는 함수]. 세 곳 다 비면 줄째 뺍니다. */
+  var rows = [
+    ["활동 지역", function(p){
+      return (p.regions||[]).map(amRegionName).filter(Boolean)
+        .concat(p.gu||[]).join(" · "); }],
+    ["전문 서비스", function(p){ return (p.subs||[]).map(amSubName).join(" · "); }],
+    ["전문 업종",   function(p){ return (p.industries||[]).map(amIndustryName).join(" · "); }],
+    ["평점",        function(p){ var st = amProviderStats(p)||{};
+      return st.rating != null ? st.rating + " (후기 " + st.reviews + "건)" : ""; }],
+    ["포트폴리오",  function(p){ var n = (p.portfolio||[]).length;
+      return n ? n + "건" : ""; }],
+    ["인증",        function(p){ return amProviderBadges(p).join(" · "); }],
+    ["가격 정보",   function(p){
+      return (p.price||[]).map(function(x){
+        return x.name + (x.from ? " " + x.from.toLocaleString() + "만원~" : ""); }).join(" · "); }],
+    ["시작한 해",   function(p){ return p.since ? String(p.since) : ""; }],
+    ["상담 가능 시간", function(p){ return p.consultHours || ""; }],
+    /* ⚠️ 재어 본 값이 없으면 이 줄은 안 나옵니다 */
+    ["평균 응답",   function(p){
+      return p.responseHours != null ? p.responseHours + "시간 안" : ""; }]
+  ].filter(function(r){ return ps.some(function(p){ return r[1](p); }); });
+
+  return PgHero({
+    crumb: Crumb([["업체찾기","/providers"],["업체 비교"]]),
+    kicker:"COMPARE",
+    h1:"업체 " + ps.length + "곳 비교",
+    lead:"등록된 값만 나란히 놓습니다. 적지 않은 항목은 줄째 뺐습니다 — 빈 칸을 채워 보여 드리지 않습니다.",
+    tight:true
+  })+
+  '<section class="sec sec-white"><div class="w">'+
+    '<div class="cmp-wrap"><table class="cmp"><thead><tr><th scope="col">항목</th>'+
+      ps.map(function(p){
+        return '<th scope="col"><a class="cmp-nm" href="/p/'+esc(p.id)+'">'+esc(p.name)+'</a></th>';
+      }).join("")+'</tr></thead><tbody>'+
+      rows.map(function(r){
+        return '<tr><th scope="row">'+esc(r[0])+'</th>'+
+          ps.map(function(p){
+            var v = r[1](p);
+            /* ⚠️ 한 곳만 안 적었을 때는 "—" 입니다 — 지어내지 않습니다 */
+            return '<td>'+(v ? esc(v) : '<em class="cmp-no">—</em>')+'</td>';
+          }).join("")+'</tr>';
+      }).join("")+
+      '<tr><th scope="row">견적</th>'+ps.map(function(p){
+        return '<td><a class="btn btn-b btn-sm" href="'+esc(quoteTo({
+          sub:(p.subs||[])[0]||"", industry:(p.industries||[])[0]||"",
+          region:(p.regions||[])[0]||"" }))+'">견적 요청</a></td>';
+      }).join("")+'</tr>'+
+    '</tbody></table></div>'+
+    /* ⚠️ 중개자 고지 — 전자상거래법 제20조 제1항 */
+    '<p class="sec-note">'+icon("info",15)+
+      '적힌 값은 업체가 등록한 것이고, 저희가 확인하거나 보증하는 값이 아닙니다. '+
+      '인증은 저희가 서류로 확인한 항목만 붙습니다.</p>'+
+  '</div></section>';
+}

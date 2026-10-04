@@ -87,6 +87,8 @@ var META = {
                  "창업과 폐업을 준비하는 사장님이 직접 찾아옵니다. 지역과 전문 분야가 맞는 요청만 받아 보세요. 기본 입점은 무료입니다."],
   "/my":        ["MY",
                  "내 창업 · 내 폐업 진행 상황과 받은 견적, 저장한 업체를 한 화면에서 이어서 하실 수 있습니다."],
+  "/compare":   ["업체 비교",
+                 "고르신 업체를 지역 · 전문분야 · 전문업종 · 평점 · 포트폴리오 · 인증 · 상담 시간으로 나란히 놓고 보십시오. 등록된 값만 냅니다."],
   "/search":    ["통합검색",
                  "업체 · 프랜차이즈 · 매장 · 시설장비 · 정보를 한 번에 찾습니다."],
   "/tools":     ["사장님 도구",
@@ -114,7 +116,9 @@ var META = {
 };
 
 /* 사람마다 내용이 다른 화면과 결과 화면은 검색에 올리지 않습니다 */
-var NOINDEX = ["/my","/search","/quote"];
+/* ⚠️ `/compare` 는 고른 업체마다 내용이 달라지는 **결과 화면**이라
+   색인에 올리지 않습니다 (`/search` 와 같은 까닭입니다). */
+var NOINDEX = ["/my","/search","/quote","/compare"];
 
 /* ⚠️⚠️ **업체 · 브랜드 상세의 설명을 등록값으로 만듭니다.**
    전에는 `pv.intro` 한 줄을 그대로 썼습니다 — 소개가 짧으면 검색 결과에
@@ -208,6 +212,7 @@ window.routeInfo = function(path){
     "/join":      "join",
     "/my":        "my",
     "/search":    "search",
+    "/compare":   "compare",
     "/tools":      "tools",
     "/tools/cost": "tool-cost",
     "/tools/fixed":"tool-fixed",
@@ -487,6 +492,7 @@ function render(){
     case "join":            html = PageJoin();                      break;
     case "my":              html = PageMy();                        break;
     case "search":          html = PageSearch();                    break;
+    case "compare":         html = PageCompare();                   break;
     case "tools":           html = PageTools();                     break;
     case "tool-cost":       html = PageToolCost();                  break;
     case "tool-fixed":      html = PageToolFixed();                 break;

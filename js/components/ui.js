@@ -134,7 +134,13 @@ window.ProviderCard = function(p){
   /* ⚠️ 규칙은 `providers.js` 의 `amProviderBadges()` 한 곳입니다. */
   var badges = amProviderBadges(p);
 
-  return '<a class="pv" href="/p/'+esc(p.id)+'">'+
+  /* ⚠️⚠️ **예시 프로필은 링크가 아닙니다.** `/p/sample-provider` 라는
+     화면을 만들면 지어낸 업체 페이지가 생기고 sitemap · 구글까지
+     나갑니다 (절대 규칙 1). `/join` 의 "이렇게 보입니다" 구간에서만
+     쓰는 그림이라, 누를 수 없는 칸으로 냅니다 — 가짜 링크도 아니고
+     가짜 화면도 아닙니다. */
+  var ex = !!p.sample;
+  return (ex ? '<div class="pv pv-ex">' : '<a class="pv" href="/p/'+esc(p.id)+'">')+
     '<span class="pv-ph">'+(p.cover
         ? '<img class="ph" src="'+esc(p.cover)+'" alt="'+esc(p.name)+' 작업 사진" loading="lazy" decoding="async">'
         : '<span class="ph ph-none" aria-hidden="true"></span>')+'</span>'+
@@ -157,9 +163,71 @@ window.ProviderCard = function(p){
       /* ⚠️ 카드 전체가 `<a>` 라 여기에 또 `<a>` 를 넣을 수 없습니다
          (링크 안의 링크). 누를 곳은 카드 한 장이고, 이 줄은 **누를 수
          있다는 표시**입니다 — 차례는 사진 → 정보 → CTA (§22). */
-      '<span class="mk-go">업체 보기'+icon("arrow",16)+'</span>'+
+      '<span class="mk-go">'+(ex ? '업체 상세로' : '업체 보기')+icon("arrow",16)+'</span>'+
     '</span>'+
-  '</a>';
+  (ex ? '</div>' : '</a>');
+};
+
+/* ── 업체 비교 (2026-10-05 V2 §14) ───────────────────────────────
+   > "사용자가 2~3개 업체를 선택해서 비교할 수 있게 설계한다."
+
+   ⚠️⚠️ **고른 것은 주소(`?cmp=`)에 싣습니다.** localStorage 에 두면
+   뒤로 가기 · 새로고침에 살아남기는 해도 **링크로 보낼 수가 없습니다** —
+   "이 두 곳 중에 뭐가 나아?" 를 사장님이 가족에게 보내는 일이
+   이 기능의 절반입니다.
+   ⚠️ 카드가 통째로 `<a>` 라 체크칸을 **그 안에 넣을 수 없습니다**
+   (링크 안의 누름). 밖에 형제로 둡니다. */
+window.AM_CMP_MAX = 3;
+
+window.amCmpIds = function(){
+  return String(nowQS("cmp") || "").split(",")
+    .map(function(x){ return x.trim(); }).filter(Boolean).slice(0, AM_CMP_MAX);
+};
+window.cmpToggle = function(id){
+  var ids = amCmpIds(), i = ids.indexOf(id);
+  if(i >= 0) ids.splice(i, 1);
+  else {
+    if(ids.length >= AM_CMP_MAX){
+      toast("비교는 " + AM_CMP_MAX + "곳까지입니다"); rerender(true); return;
+    }
+    ids.push(id);
+  }
+  /* 주소의 다른 조건(업종 · 지역 · 하위분류)은 그대로 둡니다 */
+  var qs = new URLSearchParams(location.search);
+  if(ids.length) qs.set("cmp", ids.join(",")); else qs.delete("cmp");
+  var q = qs.toString();
+  go(nowPath() + (q ? "?" + q : ""), { keepScroll:true });
+};
+
+/* 비교에 담을 수 있는 업체 카드 — ⚠️ 목록 화면에서만 씁니다.
+   메인에서는 담는 칸을 내지 않습니다 (첫 화면에 기능을 늘어놓지
+   않습니다). */
+window.ProviderPickCard = function(p){
+  var ids = amCmpIds(), on = ids.indexOf(p.id) >= 0;
+  return '<div class="pv-w'+(on ? " on" : "")+'">'+
+    ProviderCard(p)+
+    '<label class="pv-ck">'+
+      '<input type="checkbox"'+(on ? " checked" : "")+
+        ' onchange="cmpToggle(\''+esc(p.id)+'\')"'+
+        ' aria-label="'+esc(p.name)+' 비교에 담기">'+
+      '<span>비교</span>'+
+    '</label>'+
+  '</div>';
+};
+
+/* 고른 것이 있을 때 아래에 붙는 띠 — ⚠️ 없으면 **아무것도 안 그립니다** */
+window.CmpBar = function(){
+  var ids = amCmpIds();
+  if(!ids.length) return "";
+  var names = ids.map(function(id){
+    var p = amProvider(id); return p ? p.name : null; }).filter(Boolean);
+  if(!names.length) return "";
+  return '<div class="cmp-bar" role="status"><div class="w cmp-bar-in">'+
+    '<span class="cmp-bar-n"><b>'+names.length+'곳</b> 담았습니다</span>'+
+    '<span class="cmp-bar-l">'+esc(names.join(" · "))+'</span>'+
+    '<a class="btn btn-b" href="/compare?ids='+esc(ids.join(","))+'">'+
+      '업체 비교하기'+icon("arrow",16)+'</a>'+
+  '</div></div>';
 };
 
 /* 견적 요청으로 넘기는 단추 — 조건을 주소에 실어 보냅니다.

@@ -1,0 +1,80 @@
+/* ════════════════════════════════════════════════════════════════════
+   예시 프로필 (2026-10-05 V2 지시서 §19 · §26)
+
+   > "개발 및 업체 영업을 위해 일부 SAMPLE 업체 프로필을 사용할 수
+   >  있다. 하지만 **반드시 명확하게 SAMPLE 로 표시**한다.
+   >  실제 업체, 실제 후기, 실제 거래 실적처럼 보이게 만들지 않는다."
+
+   ⚠️⚠️ **이것은 `AM_PROVIDERS` 가 아닙니다.** 일부러 다른 배열에
+   두었습니다 — 그래서 업체찾기 목록 · 분야 화면 · 검색 · 메인 ·
+   sitemap · `/p/:id` 어디에도 **나오지 않습니다.** 손님이 인테리어
+   업체를 찾다가 이것을 보고 전화를 걸 수 있는 자리가 **한 곳도
+   없습니다.** 지어낸 업체를 손님 동선에 섞는 순간 표시·광고의
+   공정화에 관한 법률 제3조이고, 보고 연락한 사람의 시간을 훔치는
+   일입니다 (절대 규칙 1).
+
+   나오는 자리는 **`/join` 의 "이렇게 보입니다" 구간 하나**뿐입니다.
+   그 화면은 업체 사장님께 "등록하시면 이렇게 나갑니다" 를 보여 드리는
+   자리이고, 카드마다 **예시 딱지**가 붙고 구간 아래에 한 줄을 더
+   적습니다. `/join` 은 색인에서 빼지 않습니다 — 업체가 검색으로
+   찾아와야 하는 화면이라서입니다. 대신 **예시라는 말이 화면에
+   그대로** 있어서 검색 결과에 나가도 같은 말을 합니다.
+
+   ⚠️ **끄는 스위치**가 `AM_SAMPLE_ON` 입니다 (§19 — "나중에 관리자에서
+   쉽게 삭제 또는 비활성화"). `false` 로 두면 구간째 사라집니다.
+   ⚠️ **숫자를 늘리지 마세요.** 여기 적힌 평점은 아래 후기 셋에서
+   `amProviderStats()` 가 **계산**합니다 — 값으로 적는 칸이 없습니다.
+   ⚠️ **응답속도를 적지 않았습니다.** 재 본 적이 없는 값이라 적으면
+   하지 않은 일을 했다고 말하는 것입니다 (절대 규칙 5). 대신 업체가
+   **직접 적는** 상담 가능 시간(`consultHours`)을 냅니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+window.AM_SAMPLE_ON = true;
+
+window.AM_SAMPLES = {
+  /* ⚠️ 이름을 실제 상호처럼 짓지 마세요. 어디에도 없는 이름이라야
+     합니다 — 비슷한 상호를 쓰는 곳이 실제로 있으면 그 회사 광고가
+     됩니다. */
+  provider: {
+    id:"sample-provider", sample:true,
+    name:"예시 인테리어",
+    regions:["gyeonggi"],
+    gu:["안양시","군포시","의왕시"],
+    industries:["cafe","restaurant"],
+    subs:["interior","design","electric","sign"],
+    intro:"예시로 만든 프로필입니다. 실제 업체가 아닙니다 — 등록하시면 이런 짜임새로 나갑니다.",
+    since:2015, staff:6,
+    consultHours:"평일 09:00~18:00",
+    verified:{ biz:true, license:true, insurance:true },
+    portfolio:[
+      { title:"18평 카페 — 카운터와 전기 증설", industry:"cafe",
+        region:"gyeonggi", year:2026, images:[] },
+      { title:"26평 음식점 — 주방 덕트와 배수", industry:"restaurant",
+        region:"gyeonggi", year:2025, images:[] },
+      { title:"12평 테이크아웃 — 간판과 외부", industry:"cafe",
+        region:"gyeonggi", year:2025, images:[] }
+    ],
+    /* ⚠️ 평점은 여기서 **계산**됩니다. 4.8 같은 값을 적는 칸이 없습니다. */
+    reviews:[
+      { at:"2026-09-12", by:"김사장", industry:"cafe", sub:"interior",
+        score:{ total:5, price:4, speed:5, pro:5, schedule:5, again:5 },
+        text:"예시 후기입니다. 실제 후기가 아닙니다 — 손님이 쓰신 글만 올라갑니다.",
+        badge:"contract" },
+      { at:"2026-08-30", by:"이사장", industry:"restaurant", sub:"electric",
+        score:{ total:5, price:4, speed:4, pro:5, schedule:4, again:5 },
+        text:"예시 후기입니다. 실제 후기가 아닙니다.",
+        badge:"deal" },
+      { at:"2026-07-21", by:"박사장", industry:"cafe", sub:"sign",
+        score:{ total:4, price:4, speed:5, pro:4, schedule:5, again:4 },
+        text:"예시 후기입니다. 실제 후기가 아닙니다.",
+        badge:"consult" }
+    ]
+  }
+};
+
+/* ⚠️ 스위치가 꺼져 있으면 **아무것도 돌려주지 않습니다** — 부르는
+   쪽은 그 구간을 통째로 뺍니다 (절대 규칙 2). */
+window.amSample = function(key){
+  if(!window.AM_SAMPLE_ON) return null;
+  return (window.AM_SAMPLES || {})[key] || null;
+};

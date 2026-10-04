@@ -40,6 +40,29 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* 체크칸을 카드(링크) 안으로 넣으면 걸려야 합니다 */
+  ["업체 둘을 나란히 비교할 수 있다",
+   `window.ProviderPickCard = function(p){
+      /* 체크칸을 카드 안에 넣던 그때 — 링크 안의 누름입니다 */
+      return '<div class="pv-w">' + window.ProviderCard(p).replace("</a>",
+        '<label class="pv-ck"><input type="checkbox"><span>비교</span></label></a>') + '</div>';
+    };`],
+  /* 아무도 안 적은 칸을 채워 내면 걸려야 합니다.
+     ⚠️ 이 검사는 **스스로 다시 그립니다**(업체를 끼워 넣으니까) —
+     DOM 을 미리 고쳐 놓으면 그 그리기에 지워집니다. 그리는 함수를
+     감싸야 합니다. */
+  ["비교표는 안 적은 값을 지어내지 않는다",
+   `window.PageCompare = (function(real){
+      return function(){
+        return real().split('<em class="cmp-no">\u2014</em>').join("빠름");
+      };
+    })(window.PageCompare);`],
+  /* 예시 프로필을 손님 목록에 섞으면 걸려야 합니다 */
+  ["예시 프로필이 손님 화면에 섞이지 않는다",
+   `window.AM_PROVIDERS.push(window.amSample("provider"));`],
+  /* 예시 딱지를 떼면 걸려야 합니다 */
+  ["입점 화면의 예시는 예시라고 밝힌다",
+   `document.querySelectorAll(".jn-ex-tag").forEach(function(e){ e.remove(); });`],
   /* ══ 여정 넷 (2026-10-05 V2) — 되돌려 보고 실제로 잡히는지 ══════ */
   /* 단계 하나를 두 여정에 넣으면 걸려야 합니다 */
   ["여정 넷이 단계 여섯을 빠짐없이 나눠 가진다",

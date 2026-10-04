@@ -41,7 +41,10 @@ function loadApp(){
                    그대로 쓰므로 **그 뒤**입니다 (2026-10-05 V2 §1) */
                 "js/data/journey.js",
                 "js/data/franchise.js","js/data/providers.js","js/data/market.js",
-                "js/data/support.js","js/data/content.js","js/data/photos.js",
+                "js/data/support.js","js/data/content.js",
+                /* ⚠️ sample 은 providers 의 계산 함수를 쓰므로 **그 뒤**입니다.
+                   AM_PROVIDERS 에는 **안 들어갑니다** (§19) */
+                "js/data/sample.js","js/data/photos.js",
                 "js/data/legal-terms.js","js/data/legal-privacy.js",
                 "js/data/faq.js","js/data/tools.js","js/data/join.js"];
 
@@ -81,7 +84,7 @@ function allRoutes(W){
   const fixed = ["/", "/startup", "/operation", "/acquisition", "/closure",
                  "/providers", "/franchise",
                  "/stores", "/assets", "/support", "/content",
-                 "/quote", "/join", "/my", "/search",
+                 "/quote", "/join", "/my", "/search", "/compare",
                  "/tools", "/tools/cost", "/tools/fixed", "/tools/bep",
                  "/tools/labor", "/tools/vs", "/tools/close",
                  "/faq", "/about", "/terms", "/privacy"];

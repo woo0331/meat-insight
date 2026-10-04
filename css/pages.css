@@ -2180,3 +2180,80 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   .hiw-g{ grid-template-columns:1fr; }
   .aq-tb{ grid-template-columns:1fr; }
 }
+
+/* ── 입점하면 이렇게 보입니다 (V2 §26 · §19) ──────────────────────
+   ⚠️⚠️ **예시 딱지를 지우지 마세요.** 여기 카드는 지어낸 프로필이고,
+   딱지가 없으면 그 순간 **없는 회사를 광고**하는 화면이 됩니다
+   (표시·광고의 공정화에 관한 법률 제3조 · 절대 규칙 1). */
+.jn-ex{ margin-top:var(--s8); padding-top:var(--s8);
+  border-top:1px solid var(--line); }
+.jn-ex-h{ display:flex; flex-direction:column; gap:4px; margin-bottom:var(--s4); }
+.jn-ex-h + .jn-ex-h{ margin-top:var(--s8); }
+.jn-ex-h > b{ font-size:var(--t-lg); font-weight:800; letter-spacing:-.03em;
+  color:var(--ink); }
+.jn-ex-h > em{ font-style:normal; font-size:var(--t-sm); color:var(--ink2);
+  line-height:1.6; }
+.jn-ex-b{ position:relative; max-width:420px; }
+.jn-ex-tag{ position:absolute; z-index:2; top:10px; left:10px;
+  display:inline-flex; align-items:center; min-height:26px; padding:0 10px;
+  border-radius:var(--r-pill);
+  background:var(--navy); color:#fff;
+  font-size:var(--t-cap); font-weight:800; letter-spacing:.02em; }
+/* 상세에 들어가는 칸 — ⚠️ grid 칸에 맨글과 태그를 섞지 않습니다 */
+.jn-ex-l{ display:grid; grid-template-columns:140px 1fr; gap:var(--s2) var(--s4);
+  padding:var(--s5); border:1px solid var(--line); border-radius:var(--r-lg);
+  background:var(--surface); }
+.jn-ex-l > li{ display:contents; }
+.jn-ex-l b{ font-size:var(--t-cap); font-weight:700; color:var(--ink2); }
+.jn-ex-l span{ font-size:var(--t-sm); color:var(--ink); line-height:1.6; }
+@media (max-width:560px){
+  .jn-ex-l{ grid-template-columns:1fr; gap:var(--s1); }
+  .jn-ex-l > li{ display:block; padding:var(--s2) 0;
+    border-bottom:1px solid var(--line); }
+  .jn-ex-l > li:last-child{ border-bottom:0; }
+}
+/* 예시 카드는 누를 수 없습니다 — ⚠️ 커서가 손가락이면 눌리는 줄 압니다 */
+.pv-ex{ cursor:default; }
+
+/* ── 업체 비교 (V2 §14) ─────────────────────────────────────────── */
+.pv-w{ position:relative; display:flex; flex-direction:column; min-width:0; }
+.pv-w > .pv{ flex:1 1 auto; }
+/* ⚠️ 체크칸은 카드(`<a>`) **밖**입니다 — 안에 두면 링크 안의 누름입니다.
+   ⚠️ 누르는 것은 40px 이상입니다. */
+.pv-ck{ display:inline-flex; align-items:center; gap:var(--s2);
+  align-self:flex-start; min-height:44px; margin-top:var(--s2);
+  padding:0 var(--s4) 0 var(--s3); border:1px solid var(--line);
+  border-radius:var(--r-pill); background:var(--surface);
+  font-size:var(--t-cap); font-weight:700; color:var(--ink2); cursor:pointer; }
+.pv-ck input{ width:18px; height:18px; accent-color:var(--blue); cursor:pointer; }
+.pv-w.on .pv-ck{ border-color:var(--blue); color:var(--navy); background:var(--bg-2); }
+@media (hover:hover){ .pv-ck:hover{ border-color:var(--blue); } }
+
+/* 담은 것이 있을 때만 나오는 띠 — ⚠️ `position:fixed` 는 **안 씁니다.**
+   짧은 화면에서 본문을 덮고, 어두운 면 검사도 고정 요소를 빼고 셉니다. */
+.cmp-bar{ background:var(--bg-2); border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line); }
+.cmp-bar-in{ display:flex; align-items:center; gap:var(--s4);
+  flex-wrap:wrap; padding:var(--s5) var(--pad); }
+.cmp-bar-n{ font-size:var(--t-sm); color:var(--ink2); }
+.cmp-bar-n b{ color:var(--navy); }
+.cmp-bar-l{ flex:1 1 200px; min-width:0; font-size:var(--t-sm);
+  font-weight:700; color:var(--ink); }
+
+/* 비교표 — ⚠️ 좁은 화면에서는 **표만** 옆으로 밉니다. 문서 전체에
+   가로 스크롤이 나면 전수 점검이 잡고, 무엇보다 읽기 어렵습니다. */
+.cmp-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch;
+  border:1px solid var(--line); border-radius:var(--r-lg);
+  background:var(--surface); }
+.cmp{ width:100%; border-collapse:collapse; min-width:560px; }
+.cmp th, .cmp td{ padding:var(--s4) var(--s4); text-align:left;
+  border-bottom:1px solid var(--line); vertical-align:top;
+  font-size:var(--t-sm); line-height:1.55; }
+.cmp thead th{ background:var(--bg-2); font-weight:800; color:var(--ink);
+  border-bottom:1px solid var(--line); }
+.cmp tbody th{ width:140px; font-size:var(--t-cap); font-weight:700;
+  color:var(--ink2); background:var(--bg-2); }
+.cmp tbody tr:last-child th, .cmp tbody tr:last-child td{ border-bottom:0; }
+.cmp-nm{ font-size:var(--t-md); font-weight:800; color:var(--navy); }
+.cmp-no{ font-style:normal; color:var(--ink3); }
+@media (hover:hover){ .cmp-nm:hover{ color:var(--blue); } }

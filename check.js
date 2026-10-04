@@ -70,6 +70,7 @@ const PAGES = [
   ["/closure/restaurant","음식점 폐업"],
   ["/closure/gym",       "헬스장 폐업"],
   ["/providers",         "업체찾기"],
+  ["/compare",           "업체 비교 (0곳일 때)"],
   ["/providers/interior","인테리어 · 시공 업체"],
   ["/providers/demolish","철거 업체"],
   ["/providers/it",      "IT · 매장시스템 업체"],
@@ -812,6 +813,117 @@ const AUDIT = `(() => {
 
      검사가 **업체를 하나 끼워 넣고** 봅니다 — 저장소의 데이터는 그대로
      0곳이고, 지어낸 업체는 이 검사 안에서만 삽니다. */
+  /* ══ 업체 비교 (2026-10-05 V2 §14) ══════════════════════════════
+     ⚠️⚠️ **업체가 0곳이라 이 기능은 아무 검사도 못 받습니다.** 그래서
+     검사 안에서 둘을 끼워 넣고 봅니다 — 저장소 데이터는 그대로 0 입니다
+     (절대 규칙 1). 첫 업체가 등록되는 날 터질 자리입니다. */
+  await f("업체 둘을 나란히 비교할 수 있다", "/providers/interior", `
+    window.AM_PROVIDERS.push(
+      { id:"zz-cmp-a", name:"검사용 가", regions:["gyeonggi"], gu:["안양시"],
+        industries:["cafe"], subs:["interior"], intro:"검사 안에서만 삽니다.",
+        since:2015, consultHours:"평일 09:00~18:00", verified:{ biz:true },
+        reviews:[{ at:"2026-01-01", by:"김사장", industry:"cafe", sub:"interior",
+                   score:{ total:5 }, text:"검사" }] },
+      { id:"zz-cmp-b", name:"검사용 나", regions:["seoul"],
+        industries:["restaurant"], subs:["interior"], intro:"검사 안에서만 삽니다." });
+    rerender(true);
+    await new Promise(function(r){ setTimeout(r, 120); });
+    let why = true;
+    const w = document.querySelectorAll(".pv-g .pv-w");
+    if(w.length < 2) why = "목록에 담는 칸이 있는 카드가 " + w.length + "장입니다";
+    else {
+      const ck = w[0].querySelector(".pv-ck input");
+      if(!ck) why = "카드에 비교 체크칸이 없습니다";
+      /* ⚠️ 체크칸이 카드(a) 안에 있으면 링크 안의 누름입니다 */
+      else if(w[0].querySelector("a .pv-ck")) why = "체크칸이 링크 안에 있습니다";
+      else if(ck.getBoundingClientRect().height < 40 &&
+              w[0].querySelector(".pv-ck").getBoundingClientRect().height < 40)
+        why = "비교 체크칸이 40px 미만입니다";
+      else if(window.AM_CMP_MAX < 2 || window.AM_CMP_MAX > 3)
+        why = "비교 가능 개수가 " + window.AM_CMP_MAX + "곳입니다 (둘~셋)";
+    }
+    window.AM_PROVIDERS = window.AM_PROVIDERS.filter(function(p){
+      return p.id.indexOf("zz-cmp-") !== 0; });
+    rerender(true);
+    return why;`);
+
+  await f("비교표는 안 적은 값을 지어내지 않는다", "/compare?ids=zz-cmp-a,zz-cmp-b", `
+    window.AM_PROVIDERS.push(
+      { id:"zz-cmp-a", name:"검사용 가", regions:["gyeonggi"], gu:["안양시"],
+        industries:["cafe"], subs:["interior"], intro:"검사 안에서만 삽니다.",
+        since:2015, consultHours:"평일 09:00~18:00", verified:{ biz:true },
+        reviews:[{ at:"2026-01-01", by:"김사장", industry:"cafe", sub:"interior",
+                   score:{ total:5 }, text:"검사" }] },
+      { id:"zz-cmp-b", name:"검사용 나", regions:["seoul"],
+        industries:["restaurant"], subs:["interior"], intro:"검사 안에서만 삽니다." });
+    rerender(true);
+    await new Promise(function(r){ setTimeout(r, 120); });
+    let why = true;
+    const tb = document.querySelector(".cmp");
+    if(!tb) why = "비교표가 안 나옵니다";
+    else {
+      const head = tb.querySelectorAll("thead th").length;
+      const labs = [].slice.call(tb.querySelectorAll("tbody th"))
+        .map(function(e){ return e.textContent.trim(); });
+      if(head !== 3) why = "표의 칸이 " + head + "개입니다 (항목 + 업체 둘)";
+      /* ⚠️⚠️ **재어 본 적 없는 값을 줄로 만들지 않습니다** — 응답속도는
+         재는 장치가 없어서 두 곳 다 비어 있고, 그러면 줄째 빠져야 합니다
+         (절대 규칙 2 · 5). */
+      else if(labs.indexOf("평균 응답") >= 0)
+        why = "아무도 안 적은 '평균 응답' 줄이 나옵니다";
+      /* ⚠️ 한 곳만 안 적은 칸은 '—' 입니다 — 채워 넣지 않습니다 */
+      else if(!tb.querySelector(".cmp-no")) why = "안 적은 칸을 무언가로 채웠습니다";
+      /* ⚠️ 평점은 후기에서 **계산**한 값입니다 */
+      else if(labs.indexOf("평점") < 0) why = "평점 줄이 없습니다";
+      else if((tb.textContent||"").indexOf("4.") < 0 && (tb.textContent||"").indexOf("5") < 0)
+        why = "계산한 평점이 안 나옵니다";
+      /* ⚠️ 중개자 고지 — 전자상거래법 제20조 제1항 */
+      else if((document.getElementById("view").textContent||"")
+                .indexOf("저희가 확인하거나 보증하는 값이 아닙니다") < 0)
+        why = "적힌 값이 누구 것인지 밝히는 줄이 없습니다";
+    }
+    window.AM_PROVIDERS = window.AM_PROVIDERS.filter(function(p){
+      return p.id.indexOf("zz-cmp-") !== 0; });
+    return why;`);
+
+  /* ⚠️⚠️ 예시 프로필이 **손님 동선에 섞이지 않는지** 봅니다 (V2 §19).
+     지어낸 업체가 업체찾기 · 검색 · 메인 · sitemap 에 한 번이라도
+     나오면 표시광고법 제3조입니다 (절대 규칙 1). */
+  await f("예시 프로필이 손님 화면에 섞이지 않는다", "/providers/interior", `
+    const sp = window.amSample ? window.amSample("provider") : null;
+    if(!sp) return true;                       /* 스위치가 꺼져 있으면 건너뜁니다 */
+    if((window.AM_PROVIDERS||[]).some(function(p){ return p.id === sp.id; }))
+      return "예시 프로필이 AM_PROVIDERS 에 들어 있습니다";
+    if(window.amProvider(sp.id)) return "예시 프로필이 /p/ 로 열립니다";
+    if((document.getElementById("view").textContent||"").indexOf(sp.name) >= 0)
+      return "업체찾기 화면에 예시가 나옵니다";
+    /* 검색에도 안 나와야 합니다 */
+    /* ⚠️ amSearch 는 **묶음 객체**를 돌려줍니다 — 배열이 아닙니다.
+       (⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다 — 아홉 번째입니다) */
+    const G = window.amSearch ? amSearch(sp.name) : {};
+    const hit = Object.keys(G).some(function(k){
+      return ((G[k]||{}).rows||[]).some(function(x){
+        return String(x.name||"").indexOf(sp.name) >= 0; }); });
+    if(hit) return "검색 결과에 예시가 나옵니다";
+    return true;`);
+
+  /* 입점 화면에서는 **예시라고 밝히고** 보여 줍니다 (§26) */
+  await f("입점 화면의 예시는 예시라고 밝힌다", "/join", `
+    const sp = window.amSample ? window.amSample("provider") : null;
+    if(!sp) return true;
+    const box = document.querySelector(".jn-ex");
+    if(!box) return "입점 화면에 '이렇게 보입니다' 구간이 없습니다";
+    const tag = box.querySelector(".jn-ex-tag");
+    if(!tag || (tag.textContent||"").indexOf("예시") < 0)
+      return "예시 카드에 예시 딱지가 없습니다";
+    if((box.textContent||"").indexOf("실제 업체가 아니") < 0)
+      return "실제 업체가 아니라는 줄이 없습니다";
+    /* ⚠️ 예시 카드는 **눌리지 않습니다** — /p/ 화면을 만들면 지어낸
+       업체 페이지가 sitemap 과 구글까지 나갑니다 */
+    if(box.querySelector('a[href^="/p/"]'))
+      return "예시 카드가 업체 상세로 링크됩니다";
+    return true;`);
+
   await f("업체는 자기 분야에만 나온다", "/providers/interior", `
     window.AM_PROVIDERS.push({
       id:"zz-check", name:"검사용 업체", regions:["gyeonggi"],
@@ -2537,7 +2649,9 @@ const AUDIT = `(() => {
       /* ⚠️ `noindex` 화면(MY · 검색 · 견적 요청)은 검색에 올리지 않으므로
          크롤러 본문을 요구하지 않습니다. 요구하면 오탐만 쌓입니다. */
       const path = url.split("?")[0];
-      if (["/my","/search","/quote"].indexOf(path) >= 0) continue;
+      /* ⚠️ 이 목록은 `js/app.js` 의 `NOINDEX` 와 **같아야 합니다** —
+         한쪽만 늘리면 여기서 오탐이 납니다 (`/compare` 가 그랬습니다). */
+      if (["/my","/search","/quote","/compare"].indexOf(path) >= 0) continue;
       const res = await fetch(ROOT + path).catch(() => null);
       if (!res || !res.ok) { headBad.push(name + ": 파일이 없습니다"); continue; }
       const html = await res.text();

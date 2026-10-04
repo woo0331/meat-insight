@@ -55,6 +55,10 @@ const PAGES = [
   ["/g/startup",         "단계 01 창업 준비 (분류 밖 카드 한 장)"],
   ["/g/location",        "단계 02 상가 · 입지 (제일 짧음)"],
   ["/g/closing",         "단계 06 폐업 · 정리 (제일 긺)"],
+  /* 여정 넷 (2026-10-05 V2 §1) — 운영 · 인수/양도는 **새 화면**이라
+     표본에 넣습니다. 창업 · 폐업은 이미 아래에 있습니다. */
+  ["/operation",         "여정 — 매장 운영 (중립)"],
+  ["/acquisition",       "여정 — 인수 · 양도 (중립 · 두 길)"],
   ["/startup",           "창업 진입 (업종 고르기)"],
   /* 업종 열넷을 다 넣으면 검사가 한참 길어집니다. **짜임새가 서로 다른
      것**을 고릅니다 — 장비가 제일 많은 것(cafe), 재고가 도는 것
@@ -1880,6 +1884,137 @@ const AUDIT = `(() => {
       return "창업 " + Math.round(ra.width) + "×" + Math.round(ra.height) +
         " · 폐업 " + Math.round(rb.width) + "×" + Math.round(rb.height) + "입니다";
     return true;`);
+  /* ══ 여정 넷 (2026-10-05 V2 지시서 §1 · §2 · §4 · §6 · §7 · §31) ══ */
+
+  await f("여정 넷이 단계 여섯을 빠짐없이 나눠 가진다", "/", `
+    /* 지시서 §1 — 창업 준비 · 매장 운영 · 인수 양도 · 폐업 정리.
+       ⚠️⚠️ **새 분류를 만든 것이 아닙니다.** 단계 여섯을 묶어 보는
+       틀이라, 단계 하나가 두 여정에 들어가거나 빠지면 손님은 그
+       기능을 **영영 못 찾습니다.**
+       (⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다) */
+    const J = window.AM_JOURNEYS || [];
+    const S = window.AM_STAGES || [];
+    if(J.length !== 4) return "여정이 " + J.length + "개입니다 (넷이어야 합니다)";
+    const used = [];
+    for(const j of J) for(const k of (j.stages||[])){
+      if(!S.some(function(x){ return x.key === k; })) return j.key + " 에 없는 단계 " + k;
+      used.push(k);
+    }
+    for(const st of S){
+      const n = used.filter(function(x){ return x === st.key; }).length;
+      if(n !== 1) return "단계 " + st.key + " 가 여정 " + n + "곳에 들어 있습니다";
+    }
+    /* ② 화면이 데이터와 같은가 */
+    const cards = [].slice.call(document.querySelectorAll(".jy-g > li > a"));
+    if(cards.length !== 4) return "화면의 여정 카드가 " + cards.length + "장입니다";
+    const seen = [];
+    for(let i = 0; i < 4; i++){
+      const a = cards[i], j = J[i];
+      const nm = (a.querySelector("b")||{}).textContent || "";
+      if(nm.trim() !== j.name) return i + "번째 카드가 '" + nm.trim() + "' 입니다 (" + j.name + ")";
+      const q = (a.querySelector(".jy-q")||{}).textContent || "";
+      if(q.trim() !== j.q) return j.name + " 의 질문이 데이터와 다릅니다";
+      if(a.getAttribute("href") !== j.to) return j.name + " 이 " + a.getAttribute("href") + " 로 갑니다";
+      if(a.querySelector("a")) return j.name + " 카드 안에 또 링크가 있습니다";
+      const r = a.getBoundingClientRect();
+      if(r.height < 40) return j.name + " 카드가 " + Math.round(r.height) + "px 입니다";
+      const sv = a.querySelector(".jy-i svg");
+      if(!sv || !sv.innerHTML.trim()) return j.name + " 에 아이콘이 없습니다";
+      const d = sv.innerHTML.trim();
+      if(seen.indexOf(d) >= 0) return j.name + " 이 같은 아이콘을 또 씁니다";
+      seen.push(d);
+    }
+    return true;`);
+
+  await f("운영 화면이 실제로 있는 분야로만 보낸다", "/operation", `
+    /* 지시서 §6 — 창업할 때 한 번 쓰고 마는 사이트가 되지 않게 하는
+       화면입니다. ⚠️ 여기 칸은 전부 catalog 의 분류 · 하위 key 라야
+       합니다 — 없는 것을 적으면 가짜 링크입니다 (절대 규칙 5). */
+    const L = window.AM_OPS || [];
+    if(L.length < 10) return "운영 과제가 " + L.length + "개뿐입니다";
+    const cards = [].slice.call(document.querySelectorAll(".ops-g > li > a"));
+    if(cards.length !== L.length)
+      return "화면에 " + cards.length + "칸인데 데이터는 " + L.length + "개입니다";
+    for(let i = 0; i < L.length; i++){
+      const o = L[i], a = cards[i];
+      const nm = (a.querySelector("b")||{}).textContent || "";
+      if(nm.trim() !== o.name) return i + "번째가 '" + nm.trim() + "' 입니다 (" + o.name + ")";
+      const href = a.getAttribute("href") || "";
+      if(!href || href === "#") return o.name + " 이 아무 데도 안 갑니다";
+      if(o.cat){
+        const c = window.amCat(o.cat);
+        if(!c) return o.name + " 이 없는 분류 " + o.cat + " 을 가리킵니다";
+        if(o.sub && !(c.items||[]).some(function(x){ return x.key === o.sub; }))
+          return o.name + " 의 하위 " + o.sub + " 가 " + o.cat + " 에 없습니다";
+      }
+      if(a.getBoundingClientRect().height < 40)
+        return o.name + " 칸이 40px 미만입니다";
+    }
+    /* ⚠️ 운영 화면은 **중립**입니다 — 창업도 폐업도 아닙니다 */
+    const cls = document.getElementById("view").className;
+    if(cls.indexOf("side-") >= 0) return "운영 화면이 " + cls + " 로 물들었습니다";
+    return true;`);
+
+  await f("인수 · 양도는 한쪽으로 물들지 않고 두 길이 같은 무게다", "/acquisition", `
+    /* ⚠️⚠️ 넘기시는 분과 받으시는 분이 **같은 화면**을 봅니다.
+       초록으로 칠하면 정리하시는 분에게, 주황으로 칠하면 인수하시는
+       분에게 "여긴 내 자리가 아니네" 가 됩니다. */
+    const cls = document.getElementById("view").className;
+    if(cls.indexOf("side-") >= 0) return "인수 · 양도 화면이 " + cls + " 로 물들었습니다";
+    const tabs = [].slice.call(document.querySelectorAll(".aq-tb .aq-t"));
+    if(tabs.length !== 2) return "두 길이 " + tabs.length + "개입니다";
+    const w0 = tabs[0].getBoundingClientRect(), w1 = tabs[1].getBoundingClientRect();
+    if(Math.abs(w0.width - w1.width) > 1)
+      return "두 길의 폭이 " + Math.round(w0.width) + " · " + Math.round(w1.width) + " 로 다릅니다";
+    if(!tabs.some(function(t){ return t.classList.contains("on"); }))
+      return "어느 길이 켜졌는지 표가 안 납니다";
+    /* 걸음이 데이터 개수와 같아야 합니다 */
+    const steps = document.querySelectorAll(".pcs > li").length;
+    const want  = (window.AM_PROCESS||{})["acq-in"].length;
+    if(steps !== want) return "받는 쪽 걸음이 " + steps + "개입니다 (" + want + ")";
+    /* ⚠️ 매출은 올리신 사장님이 적은 값이라고 밝힙니다 */
+    const t = document.getElementById("view").textContent;
+    if(t.indexOf("올리신 사장님이 적으신 값") < 0)
+      return "적힌 값이 누구 것인지 밝히는 줄이 없습니다";
+    return true;`);
+
+  await f("준비 과정의 걸음마다 갈 곳이 있다", "/startup", `
+    /* 지시서 §4 — 걸음마다 정보 · 업체 · 도구를 연결합니다.
+       ⚠️ 걸음만 적어 두고 갈 데가 없으면 그건 **읽을거리**이지
+       플랫폼이 아닙니다. */
+    const want = (window.AM_PROCESS||{}).startup.length;
+    const L = [].slice.call(document.querySelectorAll(".pcs > li"));
+    if(L.length !== want) return "걸음이 " + L.length + "개입니다 (" + want + ")";
+    for(let i = 0; i < L.length; i++){
+      const ls = L[i].querySelectorAll(".pcs-l");
+      if(!ls.length) return (i+1) + "번째 걸음에 갈 곳이 하나도 없습니다";
+      for(const a of ls){
+        const h = a.getAttribute("href") || "";
+        if(!h || h === "#") return (i+1) + "번째 걸음에 가짜 링크가 있습니다";
+        if(a.getBoundingClientRect().height < 40)
+          return (i+1) + "번째 걸음의 단추가 40px 미만입니다";
+      }
+      if(L[i].querySelector("a a")) return (i+1) + "번째 걸음에 링크 안 링크가 있습니다";
+    }
+    return true;`);
+
+  await f("빈 칸이 읽을 것을 같이 낸다", "/providers/interior", `
+    /* 지시서 §18 — "등록된 업체가 없습니다" 가 화면마다 크게 반복되면
+       손님은 **사이트 전체를 미완성**으로 읽습니다. 기다리는 동안
+       실제로 도움이 되는 글을 같이 냅니다.
+       ⚠️ 업체가 등록되면 이 칸은 사라집니다 — 그때는 건너뜁니다. */
+    const em = document.querySelector("#view .empty");
+    if(!em) return true;
+    const rl = em.querySelector(".empty-rl a");
+    if(!rl) return "빈 칸에 읽을 것이 하나도 없습니다";
+    const h = rl.getAttribute("href") || "";
+    if(h.indexOf("/content/") !== 0) return "빈 칸의 글 링크 주소가 이상합니다 — " + h;
+    if(rl.getBoundingClientRect().height < 40) return "빈 칸의 글 링크가 40px 미만입니다";
+    /* ⚠️ 0 을 숨기지 않습니다 — 여전히 0 이라고 말해야 합니다 */
+    if((em.textContent||"").indexOf("아직 없습니다") < 0)
+      return "0 이라고 말하는 줄이 사라졌습니다";
+    return true;`);
+
   await f("단계 카드 여섯의 아이콘이 저마다 다르다", "/", `
     /* ⚠️ 아이콘이 비면 key 를 잘못 적은 것입니다 — 조용히 빈 칸이 됩니다.
        (⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다) */
@@ -1942,15 +2077,19 @@ const AUDIT = `(() => {
        그게 맞습니다) — 그래서 여기 셈은 그대로 열셋입니다. 그 열은
        위의 "히어로에서 바로 찾고 바로 갈라진다" 가 열 칸으로 봅니다.
        ⚠️ 구간으로 바꾸시려면 want 에 넣고 숫자도 같이 고치세요. */
-    const want = ["mh","mval","mnum","mi-g","mfit","mfeat","msvc","pv","fr","mk","mbr","mt-g","mjn"];
+    /* ⚠️⚠️ 2026-10-05 V2 지시서 §24 로 **열다섯**이 됐습니다 —
+       "지금 무엇을 준비하고 계신가요"(여정 넷, §2)와 "이용방법
+       다섯 걸음"(§25) 둘이 들어왔습니다. 나머지는 이미 있던 구간이
+       그 자리를 맡습니다. */
+    const want = ["mh","mjy","mval","mnum","mi-g","mfit","mfeat","msvc","pv","fr","mk","mbr","mt-g","mhow","mjn"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
-    if(S.length !== 13) return "구간이 " + S.length + "개입니다 (열셋이어야 합니다)";
+    if(S.length !== 15) return "구간이 " + S.length + "개입니다 (열다섯이어야 합니다)";
     /* ⚠️ 숫자 구간은 이제 **히어로 밖**입니다. 떼어 놓으면 바탕이 둘 다
        크림이라 "붙어 보임" 으로 잡혔었기 때문에 **흰 구간**으로 둡니다 —
        바로 아래 "이웃한 두 구간이 붙어 보이지 않는다" 가 그걸 봅니다. */
     if(document.querySelector(".mh .mst-g")) return "숫자가 아직 히어로 안에 있습니다";
     const got = S.map(function(e, i){
-      const mark = ["mh","mbr","mjn"];
+      const mark = ["mh","mjy","mhow","mbr","mjn"];
       for(const m of mark) if(e.classList.contains(m)) return m;
       /* 안쪽 표시로 무슨 구간인지 가립니다 */
       if(e.classList.contains("mnum")) return "mnum";

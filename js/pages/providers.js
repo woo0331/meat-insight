@@ -83,6 +83,9 @@ function PageProviderCat(cat){
           title:"조건에 맞는 업체가 아직 없습니다",
           text:"없는 업체를 지어내지 않습니다. 대신 견적 요청을 남기시면 "+
                "저희가 조건에 맞는 곳을 찾아 연결해 드립니다.",
+          /* §18 — 빈 칸을 콘텐츠로. 그 분류에서 실제로 막히는 글을 같이 냅니다 */
+          reads: amContentsFor({ cat:cat.key, side:side, industry:ind, limit:3 }),
+          readTitle:"업체를 부르기 전에 보시면 견적이 정확해집니다",
           cta:'<a class="btn btn-b" href="'+esc(quoteTo({cat:cat.key,sub:sub,industry:ind,region:reg,side:side}))+'">'+
               '견적 요청하기'+icon("arrow",16)+'</a>'+
               '<a class="btn btn-o" href="/join">'+esc(cat.name)+' 업체라면 입점하기</a>'

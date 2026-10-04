@@ -36,6 +36,8 @@ function PageFranchise(){
       title:"아직 등록된 브랜드가 없습니다",
       text:"없는 브랜드와 창업비를 지어내지 않습니다. 본사가 직접 등록한 값만 올립니다. "+
            "개인창업으로 준비하신다면 업종별 창업 화면에서 시작하실 수 있습니다.",
+      reads: amContentsFor({ cat:"item", side:"start", limit:3 }),
+      readTitle:"브랜드를 고르기 전에 보시면",
       cta:'<a class="btn btn-b" href="/startup">업종별 창업 보기'+icon("arrow",16)+'</a>'+
           '<a class="btn btn-o" href="/join">본사라면 브랜드 등록</a>'
     }) : "")+
@@ -61,8 +63,11 @@ function PageFranchiseCat(fc){
         MoreBtn(list.length)
       : Empty({
           icon:fc.icon,
-          title:esc(fc.name)+" 브랜드가 아직 없습니다",
+          /* ⚠️ `Empty()` 가 이미 `esc()` 를 거칩니다 — 두 번 거치면 `&amp;` 가 글자로 찍힙니다 */
+          title:fc.name+" 브랜드가 아직 없습니다",
           text:"본사가 직접 등록한 값만 올립니다. 등록을 원하시면 무료로 시작하실 수 있습니다.",
+          reads: amContentsFor({ cat:"item", side:"start", limit:3 }),
+          readTitle:"브랜드를 고르기 전에 보시면",
           cta:'<a class="btn btn-b" href="/join">브랜드 등록하기'+icon("arrow",16)+'</a>'+
               '<a class="btn btn-o" href="/startup">개인창업으로 보기</a>'
         }))+

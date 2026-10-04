@@ -45,10 +45,25 @@ window.Empty = function(o){
      작게 냅니다 (2026-10-03 지시서 §28). 큰 Empty 카드 다섯 장이
      이어지면 "데이터가 없는 플랫폼" 이 화면 길이로도 읽힙니다.
      데이터가 들어오면 그 구간은 저절로 카드 높이로 커집니다. */
-  return '<div class="empty'+(o.sm ? " empty-sm" : "")+'">'+
+  /* ⚠️⚠️ **빈 칸 자체가 콘텐츠가 되어야 합니다** (2026-10-05 V2 §18).
+     "등록된 업체가 없습니다" 가 화면마다 크게 반복되면, 손님은 기능
+     하나가 아니라 **사이트 전체를 미완성**으로 읽습니다. 그래서
+     기다리는 동안 **지금 실제로 도움이 되는 글**을 같이 냅니다.
+     ⚠️ 글은 `amContentsFor()` 가 고른 **실제로 있는 글**만입니다 —
+     없으면 그 줄은 아예 안 나옵니다 (절대 규칙 2). */
+  var reads = (o.reads || []).filter(Boolean).slice(0, 3);
+  return '<div class="empty'+(o.sm ? " empty-sm" : "")+(reads.length ? " empty-rd" : "")+'">'+
     '<span class="empty-ic" aria-hidden="true">'+icon(o.icon||"search",26)+'</span>'+
     '<b>'+esc(o.title||"아직 등록된 것이 없습니다")+'</b>'+
     (o.text ? '<p>'+esc(o.text)+'</p>' : '')+
+    (reads.length
+      ? '<div class="empty-rl">'+
+          '<p class="empty-rh">'+esc(o.readTitle || "기다리시는 동안 먼저 보셔도 됩니다")+'</p>'+
+          '<ul>'+reads.map(function(c){
+            return '<li><a href="/content/'+esc(c.slug)+'">'+
+              icon("book",15)+'<span>'+esc(c.title)+'</span></a></li>'; }).join("")+
+        '</ul></div>'
+      : '')+
     (o.cta ? '<div class="row-cta row-mid">'+o.cta+'</div>' : '')+
   '</div>';
 };

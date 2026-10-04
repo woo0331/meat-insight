@@ -42,6 +42,8 @@ function PageSupport(){
           text:"공고 원문을 확인한 것만 올립니다. 지원사업은 해마다 바뀌고 예산이 소진되면 "+
                "중간에 닫혀서, 틀린 정보는 없는 것보다 나쁩니다. "+
                "그동안에는 소상공인시장진흥공단과 관할 지자체 공고를 직접 확인하세요.",
+          reads: amContentsFor({ cat:"fund", side:"start", limit:3 }),
+          readTitle:"그동안 보셔도 되는 것",
           cta:'<a class="btn btn-b" href="/startup">창업 준비 계속하기'+icon("arrow",16)+'</a>'+
               '<a class="btn btn-o" href="/closure">폐업 정리 계속하기</a>'
         }))+

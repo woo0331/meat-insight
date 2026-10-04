@@ -26,9 +26,23 @@ function PageStartup(){
   '<section class="sec sec-white"><div class="w">'+
     IndustryGrid("/startup","")+
   '</div></section>'+
-  /* 업종을 아직 안 고르셨어도 **순서**는 같습니다 */
+  /* ⚠️ **할 일 먼저, 분야는 그 다음**입니다. 분야 묶음을 먼저 내면
+     손님이 "인테리어 · 시공" 이라는 말을 모를 때 첫 화면이 전부 남의
+     말이 됩니다 (메인에서 분류 열 개를 걷어낸 것과 같은 까닭입니다).
+     준비 과정 열두 걸음 — 2026-10-05 V2 §4.
+     ⚠️ `StepBand()` 와 다른 것입니다. 저쪽은 **큰 흐름 넷**이고
+     이쪽은 **실제로 할 일 열둘**이라 걸음마다 정보 · 업체 · 도구가
+     걸립니다. 둘 다 둡니다 — 큰 그림을 보고 들어와 할 일을 봅니다. */
+  ProcessBand({ key:"startup", kicker:"STARTUP PROCESS",
+    title:"창업 준비, 무엇부터 하나요?",
+    lead:"열두 걸음입니다. 걸음마다 읽을 것 · 맡길 곳 · 계산할 것을 바로 열어 보실 수 있습니다.",
+    note:"업종을 고르시면 걸음마다 그 업종에 맞는 장비 · 업체 · 글로 좁혀집니다." })+
+  /* 업종을 아직 안 고르셨어도 **분야**는 같습니다 */
   StepBand(null)+
-  StartupHelpBand();
+  StartupHelpBand()+
+  JourneyBand({ current:"startup", tone:"sec-white",
+    title:"다른 것도 준비하고 계신가요?",
+    lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." });
 }
 
 /* ── /startup/:industry — 그 업종의 창업 전부 ────────────────────── */
@@ -48,6 +62,10 @@ function PageStartupIndustry(ind){
   /* 장비를 제일 앞에 한 번 보여 줍니다 — 업종이 갈리는 것이 여기라
      "이 사이트가 내 업종을 안다" 가 여기서 읽힙니다 (§12) */
   (ind.equip && ind.equip.length ? EquipBand(ind) : "")+
+  ProcessBand({ key:"startup", kicker:"STARTUP PROCESS",
+    title:ind.name+" 창업, 무엇부터 하나요?",
+    lead:"열두 걸음입니다. 걸음마다 "+ind.name+"에 맞는 업체 · 장비 · 글로 바로 넘어갑니다.",
+    industry:ind.key, tone:"sec-gray" })+
   StepBand(ind)+
   (fcat ? FranchiseHint(fcat, ind) : "")+
   BridgeFor(ind, "start")+
@@ -105,7 +123,19 @@ function PageClosure(){
     '</div>'+
     IndustryGrid("/closure","")+
   '</div></section>'+
-  ClosureHelpBand();
+  /* 정리 열세 걸음 — 2026-10-05 V2 §8.
+     ⚠️ **폐업을 철거업체 연결 서비스로 만들지 않습니다** (§8). 손님이
+     "폐업하려면 뭘 해야 하지" 라고 생각했을 때 전체 절차를 여기서
+     이해하실 수 있어야 합니다. */
+  ProcessBand({ key:"closing", kicker:"CLOSING PROCESS",
+    title:"정리, 무엇부터 하나요?",
+    lead:"열세 걸음입니다. 기한이 있는 것이 여럿이라 순서가 곧 돈입니다.",
+    tone:"sec-white",
+    note:"통째로 넘길 수 있으면 철거비와 원상복구가 줄어듭니다 — 일곱째 걸음을 먼저 보셔도 됩니다." })+
+  ClosureHelpBand()+
+  JourneyBand({ current:"closing",
+    title:"다른 것도 준비하고 계신가요?",
+    lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." });
 }
 
 /* ── 폐업은 목록이 아니라 **무엇을 원하시는가**부터 (§8) ──────────
@@ -200,6 +230,10 @@ function PageClosureIndustry(ind){
   (ind.equip && ind.equip.length ? SellBand(ind) : "")+
   WantBand(ind)+
   BridgeFor(ind, "close")+
+  ProcessBand({ key:"closing", kicker:"CLOSING PROCESS",
+    title:ind.name+" 정리, 무엇부터 하나요?",
+    lead:"열세 걸음입니다. 걸음마다 "+ind.name+"에 맞는 업체 · 글로 바로 넘어갑니다.",
+    industry:ind.key, tone:"sec-gray" })+
   ReadBand({ side:"close", industry:ind.key,
              title:"정리할 때 자주 막히는 것" })+
   ClosureHelpBand();
@@ -394,8 +428,13 @@ function StepBand(ind){
   var i = ind ? ind.key : "";
   return '<section class="sec sec-white"><div class="w">'+
     '<div class="sec-hd">'+
-      '<p class="eyebrow">창업 준비 순서대로</p>'+
-      '<h2>'+(ind ? esc(ind.name)+' 창업, 이 순서로 하시면 됩니다' : '창업은 이 순서로 하시면 됩니다')+'</h2>'+
+      /* ⚠️⚠️ **바로 위 `ProcessBand()` 와 같은 말을 하지 마세요.**
+         저쪽은 "무엇부터 하나요"(할 일 열둘)이고 여기는 "어느 분야가
+         있나요"(분야 열셋을 네 묶음으로)입니다. 둘 다 "순서" 라고
+         적었더니 **같은 구간을 두 번 낸 것**으로 읽혔습니다 —
+         찍어 보고 알았습니다. */
+      '<p class="eyebrow">분야로 찾기</p>'+
+      '<h2>'+(ind ? esc(ind.name)+' 창업에 필요한 분야' : '창업에 필요한 분야 전부')+'</h2>'+
       '<p>분류를 외우실 필요 없습니다. 지금 하실 단계만 보세요 — '+
         '필요 없는 것은 건너뛰셔도 됩니다.</p>'+
     '</div>'+

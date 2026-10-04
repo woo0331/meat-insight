@@ -233,10 +233,14 @@ function MainStage(){
   if(!L.length) return "";
   return '<nav class="mstg" aria-label="사업 단계로 찾기"><div class="w">'+
     '<div class="sec-hd sec-hd-row"><div>'+
-      '<h2>어느 단계에 계신가요?</h2>'+
-      /* ⚠️ 지시서 §18 의 메시지입니다. 히어로 글과 겹치지 않게
-         **한 줄만** 씁니다 — 둘 다 넣으면 화면이 복잡해집니다. */
-      '<p>장사의 시작부터 운영, 인수인계와 정리까지.</p></div>'+
+      /* ⚠️⚠️ **바로 위 여정 넷과 같은 질문을 또 하지 마세요.**
+         "지금 무엇을 준비하고 계신가요?" 다음에 "어느 단계에
+         계신가요?" 가 오면 손님은 **같은 것을 두 번 묻는다**고
+         읽습니다 (찍어 보고 알았습니다). 여정은 **고르는 입구**이고
+         여기는 그 안의 **사업 흐름**이라, 머리말로 그걸 말합니다. */
+      '<h2>사업 단계별 서비스</h2>'+
+      '<p>시작 → 자리 → 구축 → 운영 → 인수인계 → 정리. '+
+        '단계마다 필요한 분야를 모아 두었습니다.</p></div>'+
     '</div>'+
     '<ul class="mstg-g">'+L.map(function(s){ return '<li>'+StageCard(s)+'</li>'; }).join("")+'</ul>'+
   '</div></nav>';
@@ -588,6 +592,53 @@ function MainBand(o){
   '</div></section>';
 }
 
+/* ── ② 지금 무엇을 준비하고 계신가요 (2026-10-05 V2 §2 · §24) ─────
+   ⚠️⚠️ 이 구간이 V2 지시서의 **입구**입니다. 손님이 사이트 구조를
+   공부하지 않고 **자기 입으로 하는 말** 하나를 고르면, 그 다음이
+   전부 그 쪽으로 좁혀집니다.
+   ⚠️ 생김새는 `JourneyPick()` **한 곳**입니다 (`js/pages/journey.js`) —
+   메인과 여정 네 화면이 같이 씁니다. 두 곳에 적으면 서로 달라집니다. */
+function MainJourney(){
+  return '<section class="sec mjy"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">WHERE ARE YOU NOW</p>'+
+      '<h2>지금 무엇을 준비하고 계신가요?</h2>'+
+      '<p>고르시면 그 자리에서 필요한 정보 · 업체 · 도구만 추려 드립니다.</p>'+
+    '</div>'+
+    JourneyPick("")+
+  '</div></section>';
+}
+
+/* ── ⑬ 이용방법 다섯 걸음 (V2 §25) ───────────────────────────────
+   ⚠️ **처음 오신 분이 설명 없이 쓰게 하는 것**이 목적입니다.
+   ⚠️ **지킬 수 없는 약속을 적지 마세요** (절대 규칙 5) — 회신 시점은
+   업체가 정하는 것이라 "몇 시간 안에" 를 적지 않습니다. */
+var MAIN_HOW = [
+  { ic:"target",   t:"내 상황 고르기",   p:"창업 · 운영 · 인수 · 양도 · 폐업 가운데 하나." },
+  { ic:"pin",      t:"업종과 지역",      p:"고르시면 그 업종에 실제로 필요한 것만 남습니다." },
+  { ic:"book",     t:"정보와 비용 확인", p:"무엇이 금액을 가르는지부터 보시고 도구로 계산합니다." },
+  { ic:"compare",  t:"업체 비교",        p:"지역 · 전문분야 · 인증을 나란히 놓고 고릅니다." },
+  { ic:"doc",      t:"상담 · 견적 요청", p:"한 번만 적으시면 조건에 맞는 곳에 같이 전달합니다." }
+];
+function MainHow(){
+  return '<section class="sec mhow"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">HOW IT WORKS</p>'+
+      '<h2>'+esc((window.AM_BRAND||{}).name || "")+' 이용방법</h2>'+
+      '<p>가입 없이, 다섯 걸음입니다.</p>'+
+    '</div>'+
+    /* ⚠️⚠️ `.how-*` 는 `/about` · `/join` 의 **진행 셋**이 이미 씁니다 —
+       그 이름으로 적었다가 두 화면을 통째로 깨뜨렸습니다. `.hiw-*` 입니다. */
+    '<ol class="hiw-g">'+MAIN_HOW.map(function(h, i){
+      return '<li class="hiw"><span class="hiw-n">STEP '+(i+1)+'</span>'+
+        '<span class="hiw-i">'+icon(h.ic,22)+'</span>'+
+        '<b>'+esc(h.t)+'</b><em>'+esc(h.p)+'</em></li>';
+    }).join("")+'</ol>'+
+    '<p class="sec-note">'+icon("info",15)+
+      '업체 회신 시점은 업체가 정합니다 — 저희가 보장하지 않습니다.</p>'+
+  '</div></section>';
+}
+
 /* ── ⑥ 사장님들이 찾는 업체 ─────────────────────────────────────── */
 function MainProviders(){
   var n = (window.AM_PROVIDERS||[]).length;
@@ -820,6 +871,7 @@ function PageMain(){
      2026-10-03 리뉴얼 지시서를 그대로 둡니다 — "히어로 아래의 기존
      섹션은 삭제하지 않는다") —
        ① 히어로 창업/폐업 두 판 + 떠 있는 검색 패널 (10-04 §3~§12)
+       ②-0 **지금 무엇을 준비하고 계신가요 — 여정 넷** (10-05 V2 §2)
        ② 사업 단계 여섯            (10-04 구조 개편 §3~§9)
        ③ 브랜드 가치 넷            (§7)
        ④ 범위 숫자                 (§20 이 금지한 "회원 수" 가 아니라
@@ -829,7 +881,14 @@ function PageMain(){
        ⑦ 큰 카드 셋                (§10 · §11)
        ⑧ 주요 서비스 여덟          (§12 · §13)
        ⑨ 업체 · ⑩ 프랜차이즈 · ⑪ 매장   (§14 ~ §16)
-       ⑫ 창업 ↔ 폐업 (§17) · ⑬ 도구 (§18) · ⑭ 업체 입점 (§19)
+       ⑫ 창업 ↔ 폐업 (§17) · ⑬ 도구 (§18)
+       ⑬-2 **이용방법 다섯 걸음** (10-05 V2 §25)
+       ⑭ 업체 입점 (§19)
+
+     ⚠️ 2026-10-05 V2 지시서 §24 가 구간 열넷을 적었습니다. 그중
+     "현재 무엇을 준비하고 있나요" 와 "이용방법" 둘이 없어서 넣었고,
+     나머지는 이미 있는 구간이 그 자리를 맡고 있습니다 — **구간
+     열다섯**입니다 (`check.js` 가 셉니다).
 
      ⚠️⚠️ **지시서 §20 이 금지한 것은 "32,581+ 회원 · 8,219+ 업체 ·
      125,430+ 견적 · 96% 만족도" 입니다.** 그건 실적이고 지금 전부
@@ -846,8 +905,8 @@ function PageMain(){
        · `MainPrice()`   견적 0건이라 늘 Empty 이고 지시서에 없습니다
        · `MainReviews()` 후기 0건. §7 이 "실제 후기 확인" 을 지금
                          핵심 가치로 쓰지 말라고 적었습니다 */
-  return MainHero()+ MainStage()+ MainValue()+ MainScale()+
+  return MainHero()+ MainJourney()+ MainStage()+ MainValue()+ MainScale()+
          MainIndustry()+ MainFit()+ MainFeature()+ MainServices()+
          MainProviders()+ MainFranchise()+ MainStores()+
-         MainBridge()+ MainTools()+ MainJoin();
+         MainBridge()+ MainTools()+ MainHow()+ MainJoin();
 }

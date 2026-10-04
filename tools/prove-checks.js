@@ -40,6 +40,28 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* ══ 여정 넷 (2026-10-05 V2) — 되돌려 보고 실제로 잡히는지 ══════ */
+  /* 단계 하나를 두 여정에 넣으면 걸려야 합니다 */
+  ["여정 넷이 단계 여섯을 빠짐없이 나눠 가진다",
+   `window.AM_JOURNEYS = (window.AM_JOURNEYS||[]).map(function(j){
+      /* 운영 여정이 매장 만들기까지 가져가 버린 그때 */
+      return j.key === "operation" ? Object.assign({}, j, { stages:["operation","build"] }) : j; });`],
+  /* 없는 하위 분류를 가리키면 걸려야 합니다 */
+  ["운영 화면이 실제로 있는 분야로만 보낸다",
+   `window.AM_OPS = (window.AM_OPS||[]).map(function(o){
+      return o.name === "세무 · 기장" ? Object.assign({}, o, { sub:"없는하위" }) : o; });`],
+  /* 인수 · 양도를 한쪽 색으로 칠하면 걸려야 합니다.
+     ⚠️ 되돌리기는 **그릴 때가 아니라 그려진 뒤에** 돕니다 — 그리는
+     함수를 바꿔치기해도 화면은 이미 그려져 있어서 아무 일이 안
+     납니다 (그렇게 짰다가 "검사가 안 잡는다" 로 보였습니다).
+     DOM 을 직접 건드립니다. */
+  ["인수 · 양도는 한쪽으로 물들지 않고 두 길이 같은 무게다",
+   `document.getElementById("view").className = "side-start";`],
+  /* 걸음에서 갈 곳을 걷어내면 걸려야 합니다 */
+  ["준비 과정의 걸음마다 갈 곳이 있다",
+   `document.querySelectorAll(".pcs-ls").forEach(function(e){ e.innerHTML = ""; });`],
+  ["빈 칸이 읽을 것을 같이 낸다",
+   `document.querySelectorAll(".empty-rl").forEach(function(e){ e.remove(); });`],
   /* 시간 제한을 걷어내면 걸려야 합니다 — 멈추면 영원히 "보내는 중…". */
   ["접수가 멈추면 끊고 적은 글을 돌려준다",
    `window.amSend = function(failId, body){

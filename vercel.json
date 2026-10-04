@@ -2,7 +2,12 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
-    { "source": "/home", "destination": "/", "permanent": true }
+    { "source": "/home", "destination": "/", "permanent": true },
+    { "source": "/closing", "destination": "/closure", "permanent": true },
+    { "source": "/companies", "destination": "/providers", "permanent": true },
+    { "source": "/companies/:cat", "destination": "/providers/:cat", "permanent": true },
+    { "source": "/guides", "destination": "/content", "permanent": true },
+    { "source": "/guides/:slug", "destination": "/content", "permanent": true }
   ],
   "rewrites": [],
   "headers": [

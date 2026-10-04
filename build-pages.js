@@ -37,6 +37,9 @@ function loadApp(){
                 "js/data/regions.js","js/data/industries.js","js/data/catalog.js",
                 /* ⚠️ lifecycle 은 catalog 의 key 를 그대로 쓰므로 **그 뒤**입니다 */
                 "js/data/lifecycle.js",
+                /* ⚠️ journey 는 lifecycle 의 단계 key 와 catalog 의 분류 key 를
+                   그대로 쓰므로 **그 뒤**입니다 (2026-10-05 V2 §1) */
+                "js/data/journey.js",
                 "js/data/franchise.js","js/data/providers.js","js/data/market.js",
                 "js/data/support.js","js/data/content.js","js/data/photos.js",
                 "js/data/legal-terms.js","js/data/legal-privacy.js",
@@ -75,7 +78,8 @@ function allRoutes(W){
      랜딩을 없애면서 그 화면이 `/` 가 됐습니다. 옛 주소는
      `vercel.json` 의 redirects 가 308 로 `/` 에 보냅니다 — 여기에
      다시 넣으면 **같은 내용이 두 주소로 나가고 구글이 둘 다 무시**합니다. */
-  const fixed = ["/", "/startup", "/closure", "/providers", "/franchise",
+  const fixed = ["/", "/startup", "/operation", "/acquisition", "/closure",
+                 "/providers", "/franchise",
                  "/stores", "/assets", "/support", "/content",
                  "/quote", "/join", "/my", "/search",
                  "/tools", "/tools/cost", "/tools/fixed", "/tools/bep",
@@ -610,8 +614,46 @@ function noscriptFor(W, r, route){
     return L.join("");
   }
 
+  /* 여정 넷 — 운영 · 인수/양도 (2026-10-05 V2 §6 · §7)
+     ⚠️ **화면과 같은 것**을 냅니다. 크롤러에게만 더 보여 주면 화면과
+     다른 것을 내보내는 셈입니다. */
+  if(route === "/operation"){
+    h2("운영하면서 막히는 자리");
+    ul((W.AM_OPS||[]).map(o => o.name));
+    h2("업종마다 쓰는 것이 다릅니다");
+    ul((W.AM_INDUSTRIES||[]).map(i => i.name + " — " + i.lead));
+    h2("운영에 필요한 분야");
+    const opc = {};
+    (W.AM_OPS||[]).forEach(o => { if(o.cat) opc[o.cat] = 1; });
+    (W.AM_CATS||[]).filter(c => opc[c.key]).forEach(c => {
+      L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc); ul(subNames(c));
+    });
+    return L.join("");
+  }
+  if(route === "/acquisition"){
+    const nSt2 = (W.AM_STORES||[]).length, nAs2 = (W.AM_ASSETS||[]).length;
+    h2("받을 때는 이 순서입니다");
+    ul((W.AM_PROCESS||{})["acq-in"].map((x,i) => (i+1) + ". " + x.name + " — " + x.lead));
+    h2("넘길 때는 이 순서입니다");
+    ul((W.AM_PROCESS||{})["acq-out"].map((x,i) => (i+1) + ". " + x.name + " — " + x.lead));
+    h2("지금 올라온 것");
+    /* ⚠️ 0 이면 0 이라고 적습니다 (절대 규칙 1) */
+    p("매장 매물 " + nSt2 + "건 · 시설 · 장비 " + nAs2 + "건. " +
+      (nSt2 || nAs2 ? "등록된 차례로 냅니다. 광고로 위에 올린 자리는 없습니다."
+                    : "아직 올라온 매물이 없습니다. 없는 매물을 지어내지 않습니다."));
+    p("매물에 적힌 평수 · 보증금 · 월세 · 권리금 · 매출은 올리신 사장님이 " +
+      "적으신 값이고, 저희가 확인하거나 보증하는 값이 아닙니다.");
+    return L.join("");
+  }
+
   if(route === "/startup" || route === "/closure"){
     const start = route === "/startup";
+    /* 준비 과정 — 2026-10-05 V2 §4(창업 12걸음) · §8(폐업 13걸음) */
+    const pr = (W.AM_PROCESS||{})[start ? "startup" : "closing"] || [];
+    if(pr.length){
+      h2(start ? "창업 준비, 무엇부터 하나요?" : "폐업, 무엇부터 하나요?");
+      ul(pr.map((x,i) => (i+1) + ". " + x.name + " — " + x.lead));
+    }
     h2("업종");
     ul((W.AM_INDUSTRIES||[]).map(i => i.name + " — " + i.lead));
     h2(start ? "창업에 필요한 모든 것" : "폐업에 필요한 모든 것");
@@ -1166,6 +1208,49 @@ function checkColorSchemeCss(){
    와 같은 까닭입니다. 브랜드 · 매물 · 자산 · 공고는 전부 **거르개를
    통과해야만** 화면에 나오는데, 한 칸만 틀려도 에러 없이 빠집니다.
    영업에서 받아 온 것을 올린 날 그러면 제일 나쁩니다. */
+/* ── 준비 과정 · 운영 과제가 가리키는 것이 **실제로 있는가**
+   (2026-10-05 V2 §4 · §6 · §8) ──────────────────────────────────
+   ⚠️⚠️ 걸음에 적은 `cat` · `sub` · `read` · `tool` · `to` 가 하나라도
+   없으면 **가짜 링크**입니다 (절대 규칙 5). 화면에서는 그냥 404 로
+   열리고 에러도 안 나서, 손님이 눌러 봐야 압니다 — 여기서 멈춥니다. */
+function checkProcess(W){
+  const cats = {};
+  (W.AM_CATS||[]).forEach(c => { cats[c.key] = c; });
+  const slugs = new Set((W.AM_CONTENTS||[]).map(c => c.slug));
+  const tools = new Set((W.AM_TOOLS||[]).map(t => t.key));
+  const routes = new Set(allRoutes(W));
+  const bad = [];
+  const chk = (where, o) => {
+    if(o.cat && !cats[o.cat]) bad.push(where + " — 없는 분류 " + o.cat);
+    if(o.sub && o.cat && cats[o.cat] &&
+       !(cats[o.cat].items||[]).some(i => i.key === o.sub))
+      bad.push(where + " — " + o.cat + " 에 없는 하위 " + o.sub);
+    if(o.read && !slugs.has(o.read)) bad.push(where + " — 없는 글 " + o.read);
+    if(o.tool && !tools.has(o.tool)) bad.push(where + " — 없는 도구 " + o.tool);
+    [o.to, o.to2].forEach(t => {
+      if(t && !routes.has(t)) bad.push(where + " — 없는 주소 " + t); });
+  };
+  Object.keys(W.AM_PROCESS||{}).forEach(k =>
+    (W.AM_PROCESS[k]||[]).forEach((st, i) => chk("AM_PROCESS."+k+"["+i+"] "+st.name, st)));
+  (W.AM_OPS||[]).forEach((o, i) => chk("AM_OPS["+i+"] "+o.name, o));
+  /* 여정 넷이 단계 여섯을 빠짐없이 한 번씩 나눠 가지는가 */
+  const stages = (W.AM_STAGES||[]).map(x => x.key);
+  const used = [];
+  (W.AM_JOURNEYS||[]).forEach(j => (j.stages||[]).forEach(k => {
+    if(stages.indexOf(k) < 0) bad.push("AM_JOURNEYS." + j.key + " — 없는 단계 " + k);
+    used.push(k);
+  }));
+  stages.forEach(k => {
+    const n = used.filter(x => x === k).length;
+    if(n !== 1) bad.push("단계 " + k + " 가 여정 " + n + "곳에 들어 있습니다 (하나여야 합니다)");
+  });
+  (W.AM_JOURNEYS||[]).forEach(j => {
+    if(!routes.has(j.to)) bad.push("AM_JOURNEYS." + j.key + " — 없는 주소 " + j.to); });
+  if(bad.length)
+    throw new Error("준비 과정 · 운영 과제가 없는 것을 가리킵니다 —\n   " +
+      bad.join("\n   ") + "\n   → 가짜 링크는 절대 규칙 5 입니다. 있는 것만 적으세요.");
+}
+
 function checkMarketData(W){
   const bad = [];
   const regions = new Set((W.AM_REGIONS || []).map(r => r.key));
@@ -1323,6 +1408,7 @@ checkCssVars();
 checkColorSchemeCss();
 checkVercel();
 const W = loadApp();
+checkProcess(W);
 checkProviders(W);
 checkMarketData(W);
 checkPhotos(W);
@@ -1456,7 +1542,8 @@ const today = new Date().toISOString().slice(0,10);
    아닙니다). */
 const prio = r => {
   if(r === "/") return "1.0";
-  if(/^\/(startup|closure)$/.test(r)) return "0.9";
+  /* 여정 넷 (2026-10-05 V2 §1) — 메인 다음으로 손님이 처음 닿는 자리 */
+  if(/^\/(startup|operation|acquisition|closure)$/.test(r)) return "0.9";
   /* 사업 단계 여섯 — 메인 다음으로 **손님이 처음 닿는 자리**입니다
      (2026-10-04 구조 개편). 창업 · 폐업 진입과 같은 층입니다. */
   if(/^\/g\/[^/]+$/.test(r)) return "0.9";

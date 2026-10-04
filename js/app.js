@@ -58,6 +58,15 @@ var META = {
                  ((window.AM_BRAND || {}).name || "") + "."],
   "/startup":   ["창업 — 어떤 사업을 준비하세요?",
                  "업종만 고르시면 그 업종 창업에 실제로 필요한 것만 추려 드립니다. 점포 · 상권 · 인테리어 · 장비 · 가구 · POS · 공급 · 인허가 · 마케팅까지."],
+  /* 2026-10-05 V2 지시서 §1 — 여정 넷. 창업 · 폐업은 이미 있던 주소이고
+     운영 · 인수/양도 둘이 새로 생겼습니다 (§28 의 `/operation` ·
+     `/acquisition`). ⚠️ `/closing` · `/companies` · `/guides` 는
+     `vercel.json` 이 308 로 보냅니다 — 같은 내용을 두 주소로 내면
+     구글이 둘 다 무시합니다. */
+  "/operation": ["매장 운영 — 운영하면서 필요한 모든 것",
+                 "세무 · 노무 · 직원 · POS · CCTV · 인터넷 · 식자재 · 소모품 · 청소 · 방역 · 시설보수 · 보험 · 법률 · 마케팅까지. 문을 연 뒤에 생기는 일을 맡길 곳을 한곳에서 찾습니다."],
+  "/acquisition":["매장 인수 · 양도 — 받는 쪽과 넘기는 쪽",
+                 "있던 가게를 받으면 공사 기간과 초기 비용이 줄고, 넘기면 철거비와 원상복구가 줄어듭니다. 순서 · 권리금 · 시설 인수 범위 · 임대차 승계까지 짚어 드립니다."],
   "/closure":   ["폐업 — 사업을 어떻게 정리하세요?",
                  "매장 양도 · 시설 집기 처분 · 재고 · 철거 · 원상복구 · 폐기물 · 폐업신고 · 계약 해지까지, 정리에 필요한 곳을 한곳에서 찾습니다."],
   "/providers": ["업체찾기",
@@ -186,6 +195,8 @@ window.routeInfo = function(path){
        화면이 아니라 **안 깨지라고 남겨 둔 길**입니다. */
     "/":          "main",
     "/startup":   "startup",
+    "/operation": "operation",
+    "/acquisition":"acquisition",
     "/closure":   "closure",
     "/providers": "providers",
     "/franchise": "franchise",
@@ -368,6 +379,12 @@ window.addEventListener("popstate", function(){ render(); });
 function sideOf(r){
   if(r.view === "startup" || r.view === "startupIndustry") return "side-start";
   if(r.view === "closure" || r.view === "closureIndustry") return "side-close";
+  /* ⚠️⚠️ 여정 넷 가운데 **매장 운영 · 인수 · 양도는 중립(파랑)** 입니다.
+     운영은 창업도 폐업도 아니고, 인수 · 양도는 넘기시는 분과 받으시는
+     분이 **같은 화면**을 봅니다 — 한쪽 색으로 칠하면 다른 쪽에게
+     "여긴 내 자리가 아니네" 가 됩니다 (`/stores` · `/assets` 와 같은
+     까닭입니다). */
+  if(r.view === "operation" || r.view === "acquisition") return "";
   /* 사업 단계 화면 — ⚠️ `both`(매장 양도·양수)는 **한쪽으로 물들이지
      않습니다.** 넘기시는 분과 받으시는 분이 같은 화면을 봅니다
      (`/stores` · `/assets` 를 중립으로 둔 것과 같은 까닭입니다). */
@@ -447,6 +464,8 @@ function render(){
     case "main":            html = PageMain();                      break;
     case "stage":           html = PageStage(r.stage);              break;
     case "startup":         html = PageStartup();                   break;
+    case "operation":       html = PageOperation();                 break;
+    case "acquisition":     html = PageAcquisition();               break;
     case "startupIndustry": html = PageStartupIndustry(r.industry); break;
     case "closure":         html = PageClosure();                   break;
     case "closureIndustry": html = PageClosureIndustry(r.industry);  break;

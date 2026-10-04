@@ -1457,6 +1457,9 @@ const today = new Date().toISOString().slice(0,10);
 const prio = r => {
   if(r === "/") return "1.0";
   if(/^\/(startup|closure)$/.test(r)) return "0.9";
+  /* 사업 단계 여섯 — 메인 다음으로 **손님이 처음 닿는 자리**입니다
+     (2026-10-04 구조 개편). 창업 · 폐업 진입과 같은 층입니다. */
+  if(/^\/g\/[^/]+$/.test(r)) return "0.9";
   if(/^\/(startup|closure)\/[^/]+$/.test(r)) return "0.8";
   if(/^\/(providers|franchise|c)\/[^/]+$/.test(r)) return "0.8";
   if(/^\/(providers|franchise|stores|assets|support|content|tools|join)$/.test(r)) return "0.7";

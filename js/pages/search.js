@@ -139,6 +139,14 @@ window.amSearch = function(q){
     push("industry", i.name+" 창업", i.lead, "/startup/"+i.key, s);
     push("industry", i.name+" 폐업", "정리에 필요한 것", "/closure/"+i.key, s ? s-0.5 : 0);
   });
+  /* ⚠️ **사업 단계 여섯도 검색감입니다** (2026-10-04 구조 개편).
+     손님은 "매장 운영" · "양도" 라고 치는데, 그건 분류 이름이 아니라
+     **단계 이름**입니다 — 색인에 없으면 메인에서만 갈 수 있는 화면이
+     됩니다. 대표 서비스(`sub`)까지 검색감으로 씁니다. */
+  (window.AM_STAGES || []).forEach(function(st){
+    push("cat", st.name, st.lead, "/g/" + st.key,
+      amScore(st.name + " " + st.lead + " " + st.sub, words) * 2);
+  });
   AM_CATS.forEach(function(c){
     var subs = (c.items||[]).map(function(x){ return x.name; }).join(" ");
     /* ⚠️ `kw` 는 분류가 들고 있는 **검색 전용 다른 말**입니다 (catalog.js).

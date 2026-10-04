@@ -1195,6 +1195,13 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .hp2-st{ --ph-pos:0% 45%; }
 .hp2-st::before{ left:0; right:-44px; background:var(--navy-dark);
   clip-path:polygon(0 0, 100% 0, calc(100% - 88px) 100%, 0 100%); }
+/* ⚠️ 폐업 쪽 사진은 **작업자와 치우는 짐이 가운데**에 있습니다.
+   50% 로 두면 좁은 폭에서도 그 장면이 남습니다 — 오른쪽 끝(100%)으로
+   밀면 사다리와 자재만 남아 "정리하는 중" 이 안 읽힙니다.
+   1440 · 390 · 2560 에서 50% · 70% · 100% 를 나란히 찍어 보고
+   정했습니다. ⚠️ 기본값과 같은 값이지만 **일부러 적어 둡니다** —
+   사진을 바꿀 때 여기를 같이 보시라고요. */
+.hp2-cl{ --ph-pos:50% 50%; }
 /* ⚠️ Warm Sand 입니다 — 아홉 바탕 중 `--bg-sand`. 왼쪽이 짙은 남색이라
    오른쪽은 **밝아야** 두 판이 갈립니다 (§5). */
 .hp2-cl::before{ left:-44px; right:0; background:var(--bg-sand);

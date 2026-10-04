@@ -1,4 +1,4 @@
-# 인수인계 (aboutmeat.co.kr) — 작업 규칙
+# 인수인계 (storeway.co.kr) — 작업 규칙
 
 **창업 · 폐업 전문 버티컬 플랫폼.** 빌드 도구 없는 정적 HTML/CSS/JS +
 Vercel 함수. `index.html` 을 그냥 열면 바로 돕니다.
@@ -61,11 +61,37 @@ Vercel 함수. `index.html` 을 그냥 열면 바로 돕니다.
 인테리어 견적 · 세무 · 지원사업을 보러 오신 분에게는 "여기가 내
 자리인가" 가 생깁니다. 사장님이 판단하신 것이라 그대로 따랐습니다.
 
-⚠️ **도메인은 아직 `aboutmeat.co.kr` 입니다.** 2026-10-04 에
-`storeway.co.kr` 을 사셨고 Vercel 에 붙이는 중입니다 — 옮기실 때
-`build-pages.js` 의 `ORIGIN` · `index.html` 의 네 자리 ·
-`robots.txt` 의 Sitemap 줄 · `js/data/site.js` 의 `WOW_BIZ.site` 가
-같이 따라가고, 옛 도메인은 **지우지 말고 301 리다이렉트**로 둡니다.
+## 공식 주소는 `https://storeway.co.kr` 입니다 (2026-10-04 전환)
+
+> 옛 주소 `aboutmeat.co.kr` · `www.aboutmeat.co.kr` ·
+> `www.storeway.co.kr` 셋 다 **Vercel 이 308 로** 여기 보냅니다.
+
+⚠️⚠️ **코드에서 도메인 리다이렉트를 또 만들지 마세요.** Vercel 설정과
+겹치면 무한 루프가 납니다. `vercel.json` 의 redirects 는 `/home` → `/`
+**하나뿐**이고 그건 도메인이 아니라 **경로**입니다.
+
+⚠️ 주소가 박히는 자리는 **여섯**입니다 — 또 바꾸시면 전부 같이 갑니다.
+
+| 어디 | 무엇 |
+|---|---|
+| `build-pages.js` 의 `ORIGIN` | canonical · sitemap · og:url · JSON-LD · 빵부스러기 |
+| `js/app.js` 의 `ORIGIN` | 화면이 돌 때의 canonical · og:url |
+| `index.html` | og:image · og:url · canonical · JSON-LD 둘 (메인 전용 손박음) |
+| `robots.txt` | `Sitemap:` 한 줄 |
+| `js/data/site.js` | `WOW_BIZ.site` |
+| `js/admin.js` | 업체 초대 글의 `/join` 주소 |
+
+⚠️ **영문 브랜드 `STOREWAY` 를 화면에서 이름처럼 쓰지 마세요.** 손님에게
+먼저 보이는 이름은 `인수인계` 하나입니다 — 둘을 따로 내면 **서로 다른
+서비스 둘**로 읽힙니다. 지금 쓰는 자리는 구조화 데이터의
+`alternateName` 뿐입니다 (`AM_BRAND.en`).
+
+⚠️⚠️ **제목 규칙은 `amTitle()` 한 곳입니다** (`js/data/brand.js`).
+`js/app.js` 의 `paintMeta()` 와 `build-pages.js` 의 `metaTags()` 가
+**둘 다** 부릅니다 — 한쪽에만 적으면 **메인만 제목이 다릅니다**
+(이름을 바꿨을 때 실제로 그랬고, 화면으로는 표가 안 나고 공유해 봐야
+압니다). 메인은 `인수인계 | …` 로 이름이 앞, 나머지는
+`<화면 제목> · 인수인계 · 사장님의 모든 시작과 끝` 입니다.
 
 ⚠️ 이름을 바꾸면 **`brand.js` 를 못 읽는 네 곳**도 같이 고칩니다 —
 `404.html` · `admin.html`(빌드가 갈아 끼웁니다) · `manifest.json` ·

@@ -16,4 +16,4 @@ Disallow: /my
 # 주소만 다르게 수천 개 잡힙니다.
 Disallow: /search
 
-Sitemap: https://aboutmeat.co.kr/sitemap.xml
+Sitemap: https://storeway.co.kr/sitemap.xml

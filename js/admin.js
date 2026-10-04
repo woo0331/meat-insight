@@ -263,18 +263,14 @@ function adReply(F, P, G){
   L.push("");
   L.push("적어 주신 내용 잘 받았습니다" + (P ? " (" + P.name + ")" : "") + ".");
   L.push("");
-  if(G){
-    L.push("업체를 부르시기 전에 직접 확인해 보시면 좋은 것부터 알려 드립니다.");
-    G.self.slice(0, 4).forEach(function(t, i){
-      L.push("  " + (i + 1) + ". " + adPlain(t));
-    });
-    L.push("");
-    L.push("전체는 여기에 정리해 두었습니다 — https://aboutmeat.co.kr/problem/" + G.key);
-    L.push("");
-    L.push("견적을 받으실 때는 이걸 꼭 물어보세요.");
-    G.ask.slice(0, 3).forEach(function(t){ L.push("  · " + adPlain(t)); });
-    L.push("");
-  }
+  /* ⚠️⚠️ 여기 있던 "가이드 안내" 열두 줄을 지웠습니다 (2026-10-04).
+     바로 위에서 `var G = null;` 이라 **한 번도 안 도는 블록**이었고,
+     그 안이 `https://(옛 도메인)/problem/…` 를 적고 있었습니다 —
+     `/problem/:key` 는 앞 서비스(고기 사업자 문제해결)의 주소라
+     이 사이트에 **없습니다.** 죽은 코드가 죽은 주소를 들고 있어서
+     지웠습니다. 가이드를 다시 만드시면 그때 되살리세요
+     (`git show 406ba2f^:js/data/guides.js`). */
+
   /* ⚠️ 지킬 수 없는 약속을 적지 않습니다 (절대 규칙 5).
      "몇 시간 안에" · "며칠 안에" 를 넣지 마세요. */
   L.push("조건에 맞는 곳을 찾아 보고 다시 연락드리겠습니다.");
@@ -514,7 +510,7 @@ function adInvite(){
   var reg = AD.ireg ? (window.amRegion ? (amRegion(AD.ireg) || {}).name : "") : "";
   var n = AD.icat ? adInviteN(AD.icat) : (window.AM_PROVIDERS || []).length;
   var brand = (window.AM_BRAND || {}).name || "";
-  var site = "https://aboutmeat.co.kr/join";
+  var site = "https://storeway.co.kr/join";
   var B = window.WOW_BIZ || {};
 
   /* 무엇을 하는 곳인지 — 한 문장 */

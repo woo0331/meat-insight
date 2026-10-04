@@ -21,7 +21,7 @@ const vm = require("vm");
 const crypto = require("crypto");
 
 const ROOT = __dirname;
-const ORIGIN = "https://aboutmeat.co.kr";
+const ORIGIN = "https://storeway.co.kr";   /* ⚠️ 공식 주소 한 곳 — 2026-10-04 전환 */
 
 /* ── 데이터와 routeInfo 를 가짜 window 에 올려 그대로 씁니다 ───── */
 function loadApp(){
@@ -142,14 +142,18 @@ function jsonLd(W, r, route){
   if(route === "/"){
     out.push({
       "@context":"https://schema.org","@type":"WebSite",
-      name:B.name, url:ORIGIN, inLanguage:"ko", description:B.desc,
+      /* ⚠️ alternateName 은 영문 브랜드(STOREWAY)입니다 — 검색엔진에게
+         "인수인계와 STOREWAY 는 같은 곳" 이라고 알려 주는 표준 칸입니다.
+         화면에서 이름처럼 쓰지는 않습니다 (지시서 §3). */
+      name:B.name, alternateName:B.en, url:ORIGIN, inLanguage:"ko", description:B.desc,
       potentialAction:{ "@type":"SearchAction",
         target:{ "@type":"EntryPoint", urlTemplate: ORIGIN+"/search?q={q}" },
         "query-input":"required name=q" }
     });
     out.push({
       "@context":"https://schema.org","@type":"Organization",
-      name:B.name, url:ORIGIN, logo:ORIGIN+"/icon-512.png", description:B.desc
+      name:B.name, alternateName:B.en, url:ORIGIN,
+      logo:ORIGIN+"/icon-512.png", description:B.desc
     });
     /* ⚠️ FAQPage 는 **여기 말고 `/faq`** 에 답니다. 메인은 여섯만
        발췌로 내는데, 발췌에 FAQPage 를 달면 화면에 없는 질문이
@@ -281,7 +285,10 @@ function jsonLd(W, r, route){
 function metaTags(h, r, route){
   const B = (globalThis.__W && globalThis.__W.AM_BRAND) || {};
   const site = (B.name || "") + " · " + (B.sub || "");
-  const title = (r.title ? r.title+" · " : "") + site;
+  /* ⚠️ 제목 규칙은 js/data/brand.js 의 amTitle() 한 곳입니다 —
+     app.js 의 paintMeta() 도 같은 것을 부릅니다. 한쪽에만 적으면
+     메인만 제목이 달라집니다 (실제로 그랬습니다). */
+  const title = globalThis.__W.amTitle(r.title || "", r.canon || route);
   const canon = ORIGIN + (r.canon || route);
   h = h.replace(/<title>[\s\S]*?<\/title>/, "<title>"+esc(title)+"</title>");
   h = h.replace(/<meta name="description"[^>]*>/,

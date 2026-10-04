@@ -31,7 +31,7 @@
    META → routeInfo() → render() 의 switch → build-pages.js 의 allRoutes().
    ════════════════════════════════════════════════════════════════════ */
 
-var ORIGIN = "https://aboutmeat.co.kr";
+var ORIGIN = "https://storeway.co.kr";   /* ⚠️ 공식 주소 — 2026-10-04 전환 */
 var RT = { keepScroll:false };
 
 window.nowPath = function(){
@@ -45,8 +45,10 @@ window.nowQS = function(k){
 /* 제목과 **설명**. 설명을 비우면 구글이 본문에서 아무 문장이나 가져다
    씁니다. 화면마다 서로 달라야 합니다 — build-pages 가 겹치면 멈춥니다. */
 var META = {
-  "/":          ["창업에 필요한 모든 것, 폐업에 필요한 모든 것",
-                 "장사를 시작하시나요, 정리하시나요. 업종과 지역만 고르시면 점포 · 인테리어 · 장비 · 프랜차이즈부터 매장 양도 · 철거 · 원상복구 · 폐업 신고까지 필요한 전문업체를 찾고 비교하고 견적받으실 수 있습니다."],
+  /* ⚠️ 메인 제목은 amTitle() 이 "인수인계 | …" 로 이름을 앞에 둡니다
+     (2026-10-04 지시서 §5). 여기 적는 것은 **뒷말**입니다. */
+  "/":          ["창업부터 폐업까지 사장님에게 필요한 모든 것",
+                 "창업 준비부터 매장 운영, 업체 찾기, 프랜차이즈, 매장 · 시설, 폐업까지. 사장님에게 필요한 업체와 서비스를 한 곳에서 찾는 인수인계."],
   "/startup":   ["창업 — 어떤 사업을 준비하세요?",
                  "업종만 고르시면 그 업종 창업에 실제로 필요한 것만 추려 드립니다. 점포 · 상권 · 인테리어 · 장비 · 가구 · POS · 공급 · 인허가 · 마케팅까지."],
   "/closure":   ["폐업 — 사업을 어떻게 정리하세요?",
@@ -491,8 +493,9 @@ function notFound(path){
 /* ── 메타 ──────────────────────────────────────────────────── */
 function paintMeta(r){
   var B = window.AM_BRAND || {};
-  var site = (B.name || "") + " · " + (B.sub || "");
-  document.title = (r.title ? r.title + " · " : "") + site;
+  /* ⚠️ 제목 규칙은 js/data/brand.js 의 amTitle() 한 곳입니다 —
+     build-pages.js 의 metaTags() 도 같은 것을 부릅니다. */
+  document.title = window.amTitle(r.title || "", r.canon || nowPath());
   setMeta("name","description", r.desc || META["/"][1]);
   setMeta("property","og:title", document.title);
   setMeta("property","og:description", r.desc || META["/"][1]);

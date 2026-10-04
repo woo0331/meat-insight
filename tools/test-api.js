@@ -30,7 +30,7 @@ function ok(name, cond, got){
 /* 화면에서 온 것처럼 보이게 합니다 (api/_send.js 의 fromOurPages) */
 function fakeReq(body){
   return { method:"POST",
-           headers:{ origin:"https://aboutmeat.co.kr", host:"aboutmeat.co.kr" },
+           headers:{ origin:"https://storeway.co.kr", host:"storeway.co.kr" },
            body: body };
 }
 function fakeRes(){

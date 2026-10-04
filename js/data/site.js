@@ -16,7 +16,7 @@ window.WOW_BIZ = {
   /* ⚠️ 서비스 이름을 여기 또 적지 않습니다. 이름은 js/data/brand.js
      한 곳에서만 정합니다 — 두 곳에 적으면 한쪽만 바뀝니다. 실제로
      여기에 옛 이름이 남아 있었습니다. */
-  site:           "https://aboutmeat.co.kr",
+  site:           "https://storeway.co.kr",
 
   /* ── 전자상거래법 제10조 표시 의무 (영업 시작 전 필수) ──────── */
   company:        "",     // 상호

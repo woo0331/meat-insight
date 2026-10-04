@@ -48,6 +48,13 @@ const PAGES = [
      ⚠️ 전에 여기 빠져 있었습니다. 랜딩 CTA 가 도착하는 화면인데도
      PAGES 에 없어서 아무 검사도 안 받고 있었고, 크롤러 본문이 95자로
      나가는 것도 못 잡았습니다. 화면을 만들면 여기 넣으세요. */
+  /* 사업 단계 여섯 (2026-10-04 구조 개편) — ⚠️ **짜임새가 서로 다른
+     것**을 고릅니다. `closing` 은 분류 아홉으로 제일 길고, `location`
+     은 둘로 제일 짧고, `startup` 만 분류가 아닌 카드(프랜차이즈)를
+     한 장 더 답니다. 나머지 셋은 `tools/sweep-rest.js` 가 훑습니다. */
+  ["/g/startup",         "단계 01 창업 준비 (분류 밖 카드 한 장)"],
+  ["/g/location",        "단계 02 상가 · 입지 (제일 짧음)"],
+  ["/g/closing",         "단계 06 폐업 · 정리 (제일 긺)"],
   ["/startup",           "창업 진입 (업종 고르기)"],
   /* 업종 열넷을 다 넣으면 검사가 한참 길어집니다. **짜임새가 서로 다른
      것**을 고릅니다 — 장비가 제일 많은 것(cafe), 재고가 도는 것
@@ -1282,14 +1289,17 @@ const AUDIT = `(() => {
     const ch = document.querySelector(".msr-ch");
     if(!ch) return "추천 검색어가 없습니다";
     if(/인기/.test(ch.textContent)) return "검색 기록을 모으지 않는데 '인기' 라고 적었습니다";
-    /* 분야 바로가기 열 — ⚠️ 가짜 링크 금지 · 누르는 칸 40px 이상 */
-    const qk = [].slice.call(document.querySelectorAll(".mqk-g > li > a"));
-    if(qk.length !== 10) return "분야 바로가기가 " + qk.length + "개입니다 (열)";
+    /* 사업 단계 여섯 — ⚠️ 가짜 링크 금지 · 누르는 칸 40px 이상 */
+    const qk = [].slice.call(document.querySelectorAll(".mstg-g > li > a"));
+    if(qk.length !== 6) return "사업 단계가 " + qk.length + "개입니다 (여섯)";
     for(const a2 of qk){
       const href = a2.getAttribute("href") || "";
-      if(!href || href === "#") return "분야 바로가기에 가짜 링크가 있습니다";
+      if(!/^\\/[a-z]/.test(href)) return "사업 단계에 가짜 링크가 있습니다 (" + href + ")";
       if(a2.getBoundingClientRect().height < 40)
-        return "분야 바로가기 칸이 40px 아래입니다";
+        return "사업 단계 칸이 40px 아래입니다";
+      /* ⚠️ 카드가 통째로 눌려야 합니다 — 안에 또 링크를 넣으면
+         브라우저가 쪼개 버리고 누르는 자리가 작아집니다 (§5) */
+      if(a2.querySelector("a")) return "단계 카드 안에 또 링크가 있습니다";
     }
     return true;`);
   /* ⚠️⚠️ **2026-09-30 지시로 규칙이 뒤집혔습니다.** 전에는 "창업과
@@ -1709,7 +1719,7 @@ const AUDIT = `(() => {
        **히어로 두 판**(.hp2)이고, 검색은 헤더와 떠 있는 패널 둘입니다.
        ⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다 — 일곱 번째입니다 */
     const need = [[".hp2", "창업 / 폐업 두 판"], [".msr-f", "떠 있는 검색 패널"],
-                  [".mqk-g", "분야 바로가기 열"], [".mi-g", "업종 고르기"],
+                  [".mstg-g", "사업 단계 여섯"], [".mi-g", "업종 고르기"],
                   [".mfit-tb", "업종별 필요한 것"], [".fit-g", "서비스 분야"],
                   [".mfeat-g", "큰 카드 셋"], [".msvc-g", "주요 서비스"],
                   [".mst-g", "범위 숫자"]];
@@ -1813,31 +1823,36 @@ const AUDIT = `(() => {
       if(!ok) bad.push(q);
     }
     return bad.length ? bad.join(" · ") + " 에 object-fit:cover 가 없습니다" : true;`);
-  await f("분야 바로가기 열이 분류에서 온다", "/", `
-    /* ⚠️⚠️ 이름 · 아이콘 · 링크를 손으로 적어 두었더니 화면마다 **서로
-       다른 아이콘**을 쓰고 있었습니다 (프랜차이즈가 전구, 인테리어와
-       철거가 둘 다 망치). 이제 분류 key 만 적고 catalog.js 에서
-       가져오므로, 그것이 실제로 먹는지 봅니다.
-       ⚠️ 분류가 없는 칸(프랜차이즈)은 하나까지 봐줍니다.
-
-       ⚠️⚠️ 2026-10-04 개편으로 보는 자리가 **히어로 안에서 바로가기
-       열로** 옮겨졌습니다. 지키는 것은 그대로입니다 — 이름을 손으로
-       적지 않는가. */
-    const names = (window.AM_CATS || []).map(function(c){ return c.name; });
-    const shown = [].slice.call(document.querySelectorAll(".mqk-g > li > a > b"))
-      .map(function(e){ return e.textContent.trim(); });
-    if(shown.length !== 10)
-      return "바로가기가 " + shown.length + "개입니다 (열이어야 합니다)";
-    let off = 0;
-    for(const n of shown) if(names.indexOf(n) < 0) off++;
-    if(off > 1) return "분류에 없는 이름이 " + off + "개 있습니다";
-    /* ⚠️ 주소도 전부 실제로 있는 화면이어야 합니다 (가짜 링크 금지) */
-    const seenTo = {};
-    for(const a of document.querySelectorAll(".mqk-g > li > a")){
-      const h = a.getAttribute("href") || "";
-      if(!/^\\/[a-z]/.test(h)) return "바로가기 주소가 이상합니다 (" + h + ")";
-      if(seenTo[h]) return "같은 주소로 보내는 칸이 둘 있습니다 (" + h + ")";
-      seenTo[h] = 1;
+  await f("사업 단계 여섯이 분류 스물다섯을 빠짐없이 나눠 가진다", "/", `
+    /* ⚠️⚠️ **2026-10-04 구조 개편의 핵심입니다.** 여섯은 새 분류가
+       아니라 catalog.js 의 분류를 묶어 보는 틀입니다 — 그래서 분류
+       하나가 **빠지면 그 기능이 메인에서 갈 길을 잃고**, 둘에 겹치면
+       같은 것이 두 군데서 나옵니다.
+       ⚠️ 이름 · 하위 설명 · 아이콘 · 주소를 화면에 손으로 적지
+       않는지도 같이 봅니다 (lifecycle.js 한 곳입니다). */
+    const S = (window.AM_STAGES || []);
+    if(S.length !== 6) return "사업 단계가 " + S.length + "개입니다 (여섯)";
+    const all = (window.AM_CATS || []).map(function(c){ return c.key; });
+    const seen = {}, dup = [], ghost = [];
+    S.forEach(function(s2){ (s2.cats || []).forEach(function(k){
+      if(all.indexOf(k) < 0) ghost.push(k);
+      if(seen[k]) dup.push(k); seen[k] = 1; }); });
+    if(ghost.length) return "없는 분류를 가리킵니다 — " + ghost.join(" · ");
+    if(dup.length)   return "두 단계에 겹친 분류가 있습니다 — " + dup.join(" · ");
+    const miss = all.filter(function(k){ return !seen[k]; });
+    if(miss.length) return "어느 단계에도 안 든 분류가 있습니다 — " + miss.join(" · ");
+    /* 화면의 여섯이 그 데이터에서 그대로 나오는지 */
+    const shown = [].slice.call(document.querySelectorAll(".mstg-g > li > a"));
+    if(shown.length !== 6) return "화면의 단계 카드가 " + shown.length + "개입니다";
+    for(let i = 0; i < 6; i++){
+      const b2 = shown[i].querySelector(".stg-b b");
+      const i2 = shown[i].querySelector(".stg-b i");
+      if(!b2 || b2.textContent.trim() !== S[i].name)
+        return (i+1) + "번째 이름이 데이터와 다릅니다";
+      if(!i2 || i2.textContent.trim() !== S[i].sub)
+        return (i+1) + "번째 하위 설명이 데이터와 다릅니다";
+      const h = shown[i].getAttribute("href") || "";
+      if(h !== "/g/" + S[i].key) return (i+1) + "번째 주소가 " + h + "입니다";
     }
     return true;`);
   await f("히어로 두 장의 크기가 같다", "/", `
@@ -1851,17 +1866,17 @@ const AUDIT = `(() => {
       return "창업 " + Math.round(ra.width) + "×" + Math.round(ra.height) +
         " · 폐업 " + Math.round(rb.width) + "×" + Math.round(rb.height) + "입니다";
     return true;`);
-  await f("바로가기 열 아이콘이 저마다 다르다", "/", `
+  await f("단계 카드 여섯의 아이콘이 저마다 다르다", "/", `
     /* ⚠️ 아이콘이 비면 key 를 잘못 적은 것입니다 — 조용히 빈 칸이 됩니다.
        (⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다) */
-    const cards = [].slice.call(document.querySelectorAll(".mqk-g > li > a"));
-    if(!cards.length) return "분야 바로가기가 없습니다";
+    const cards = [].slice.call(document.querySelectorAll(".mstg-g > li > a"));
+    if(!cards.length) return "사업 단계 카드가 없습니다";
     const seen = [];
     for(const a of cards){
       const sv = a.querySelector("svg");
       if(!sv || !sv.innerHTML.trim())
         return "'" + (a.textContent||"").trim().slice(0,12) + "' 칸에 아이콘이 없습니다";
-      /* ⚠️⚠️ 한 줄에 같은 아이콘이 두 번 오면 무엇이 무엇인지 흐려집니다 —
+      /* ⚠️⚠️ 여섯에 같은 아이콘이 두 번 오면 무엇이 무엇인지 흐려집니다 —
          매장 양도에 store 를 주었더니 프랜차이즈와 겹쳤습니다. */
       const d = sv.innerHTML.trim();
       if(seen.indexOf(d) >= 0)

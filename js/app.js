@@ -211,6 +211,22 @@ window.routeInfo = function(path){
   };
   if(VIEW[path]){ r.view = VIEW[path]; return r; }
 
+  /* 사업 단계 — /g/build (2026-10-04 구조 개편)
+     ⚠️ 새 분류를 만든 것이 아니라 `catalog.js` 의 분류를 묶어 보는
+     화면입니다. 제목 · 설명이 여섯 개 다 달라야 빌드가 통과합니다. */
+  var mg = /^\/g\/([a-z0-9-]+)$/.exec(path);
+  if(mg){
+    var st = (typeof amStage === "function") ? amStage(mg[1]) : null;
+    if(!st){ r.ok = false; return r; }
+    var sc = (typeof amStageCats === "function") ? amStageCats(st) : [];
+    r.view = "stage"; r.stage = st;
+    r.title = st.name + " — 필요한 서비스 한곳에서";
+    r.desc  = st.lead + " " + st.sub + " 등 " + st.name.replace(/ /g, "") +
+              " 단계에 필요한 분야 " + sc.length + "가지를 모았습니다. " +
+              "업체를 비교하고 한 번에 견적을 받으세요.";
+    return r;
+  }
+
   /* 업종별 창업 — /startup/cafe */
   var m = /^\/startup\/([a-z0-9-]+)$/.exec(path);
   if(m){
@@ -352,6 +368,14 @@ window.addEventListener("popstate", function(){ render(); });
 function sideOf(r){
   if(r.view === "startup" || r.view === "startupIndustry") return "side-start";
   if(r.view === "closure" || r.view === "closureIndustry") return "side-close";
+  /* 사업 단계 화면 — ⚠️ `both`(매장 양도·양수)는 **한쪽으로 물들이지
+     않습니다.** 넘기시는 분과 받으시는 분이 같은 화면을 봅니다
+     (`/stores` · `/assets` 를 중립으로 둔 것과 같은 까닭입니다). */
+  if(r.stage){
+    if(r.stage.side === "start") return "side-start";
+    if(r.stage.side === "close") return "side-close";
+    return "";
+  }
   /* 글 하나(/content/:slug)는 **그 글이 어느 쪽 것인지**를 따릅니다.
      창업 화면에서 초록 카드를 눌러 들어갔는데 글이 파랑으로 뜨면
      같은 사이트로 안 읽힙니다. side:"both" 인 글은 한쪽으로
@@ -421,6 +445,7 @@ function render(){
   var html;
   switch(r.view){
     case "main":            html = PageMain();                      break;
+    case "stage":           html = PageStage(r.stage);              break;
     case "startup":         html = PageStartup();                   break;
     case "startupIndustry": html = PageStartupIndustry(r.industry); break;
     case "closure":         html = PageClosure();                   break;

@@ -132,7 +132,7 @@ const CASES = [
      틀렸던 것입니다. 여기서는 바로가기 하나를 가짜 링크로 만듭니다
      (지시서 §26 "버튼 → 실제 Link"). */
   ["히어로에서 바로 찾고 바로 갈라진다",
-   `document.querySelector(".mqk-g > li > a").setAttribute("href", "#");`],
+   `document.querySelector(".mstg-g > li > a").setAttribute("href", "#");`],
   ["창업은 초록 · 폐업은 주황이고 빨강이 아니다",
    `document.querySelector(".mval-h .mh-cl").style.color = "rgb(214,28,28)";`],
   ["연결 구간 두 딱지가 같은 높이에 앉는다",
@@ -147,13 +147,15 @@ const CASES = [
         if(r.selectorText === ".mbr-p .ph") r.style.objectFit = "fill";
     }`],
   /* 이름을 분류에 없는 것으로 바꿔 놓습니다 — 손으로 적으면 이렇게 됩니다 */
-  ["분야 바로가기 열이 분류에서 온다",
-   `const b = document.querySelectorAll(".mqk-g > li > a > b");
-    b[1].textContent = "매장정리대행"; b[2].textContent = "장비처분대행";`],
+  /* ⚠️ 되돌리기는 **데이터 쪽**을 망가뜨려야 합니다 — 화면만 고치면
+     "이름이 데이터와 다릅니다" 로 잡혀서, 정작 지키려는 것(분류 스물
+     다섯이 빠짐없이 나뉘는가)이 확인되지 않습니다. */
+  ["사업 단계 여섯이 분류 스물다섯을 빠짐없이 나눠 가진다",
+   `window.AM_STAGES[5].cats = window.AM_STAGES[5].cats.slice(1);`],
   ["히어로 두 장의 크기가 같다",
    `document.querySelector(".hp2-cl").style.flex = "1 1 70%";`],
-  ["바로가기 열 아이콘이 저마다 다르다",
-   `const sv = document.querySelectorAll(".mqk-g > li > a svg");
+  ["단계 카드 여섯의 아이콘이 저마다 다르다",
+   `const sv = document.querySelectorAll(".mstg-g > li > a svg");
     sv[0].innerHTML = sv[1].innerHTML;`],
   ["업종 열넷이 저마다 다른 색을 쓴다",
    /* ⚠️ `.ic-t` 에 transition 이 걸려 있어서 그냥 바꾸면 **색이 번지는

@@ -121,26 +121,32 @@ function MainHero(){
    읽는 곳을 직접 찾아 확인했습니다 (`nowQS("r")`) —
    `/providers` · `/franchise` · `/stores` · `/assets` 넷은 읽고,
    `/support` 는 **전국 공고**라 지역 거르개가 없습니다. */
+/* ⚠️⚠️ **2026-10-04 구조 개편 §10** — `시설·집기` 가 독립 탭이었는데
+   그건 **분류 하나**이지 손님이 "어디서 찾을지" 를 고르는 단위가
+   아닙니다. 그 자리를 **매장 양도·양수**가 받았습니다 (브랜드 이름과
+   가장 직접 닿는 서비스입니다 — §14).
+   ⚠️ `/assets` **주소는 그대로 살아 있습니다.** 탭에서 뺀 것은 UI 노출
+   구조뿐이고, 매장 양도·양수 단계 화면과 `/assets` 카드가 그리로
+   보냅니다 (§10 "route 자체를 삭제하지 않는다"). */
 var MAIN_TABS = [
-  { k:"pv", name:"업체 찾기",  ic:"users", to:"/providers", region:true },
-  { k:"fr", name:"프랜차이즈", ic:"store", to:"/franchise", region:true },
-  { k:"st", name:"상가·점포",  ic:"pin",   to:"/stores",    region:true },
-  { k:"as", name:"시설·집기",  ic:"sofa",  to:"/assets",    region:true },
-  { k:"sp", name:"지원정보",   ic:"badge", to:"/support" }
+  { k:"pv", name:"업체 찾기",     ic:"users",    to:"/providers", region:true },
+  { k:"fr", name:"프랜차이즈",    ic:"store",    to:"/franchise", region:true },
+  { k:"st", name:"상가·점포",     ic:"pin",      to:"/stores",    region:true },
+  { k:"tr", name:"매장 양도·양수", ic:"handover", to:"/g/transfer" },
+  { k:"sp", name:"창업·폐업 지원", ic:"badge",    to:"/support" }
 ];
 /* ⚠️ 추천 검색어 — **전부 실제로 결과가 나오는 주소**입니다 (가짜 링크
    금지). 분야가 있는 것은 그 분야 화면으로 바로 보냅니다. */
+/* ⚠️ 2026-10-04 §12 — **일곱으로 줄였습니다.** 열 개는 칩 줄이
+   패널 아래를 한 줄 더 먹고, 그만큼 "무엇부터 누를까" 가 흐려집니다. */
 var MAIN_CHIPS = [
-  { q:"카페 인테리어",   to:"/providers/interior?i=cafe" },
-  { q:"주방설비",        to:"/providers/equip" },
-  { q:"상가 임대",       to:"/stores" },
-  { q:"철거 업체",       to:"/providers/demolish" },
-  { q:"POS 시스템",      to:"/providers/it" },
-  { q:"세무 상담",       to:"/providers/admin" },
-  { q:"프랜차이즈 창업", to:"/franchise" },
-  { q:"매장 양도",       to:"/stores" },
-  { q:"간판 제작",       to:"/providers/interior" },
-  { q:"원상복구",        to:"/providers/restore" }
+  { q:"인테리어",      to:"/providers/interior" },
+  { q:"주방설비",      to:"/providers/equip" },
+  { q:"상가 임대",     to:"/stores" },
+  { q:"세무",          to:"/providers/admin" },
+  { q:"POS",           to:"/providers/it" },
+  { q:"매장 양도",     to:"/g/transfer" },
+  { q:"철거 · 원상복구", to:"/providers/demolish" }
 ];
 function MainSearch(){
   var cur = nowQS("t") || "pv";
@@ -190,54 +196,42 @@ window.mainFind = function(e){
 };
 
 /* ══════════════════════════════════════════════════════════════════
-   ③ 분야 바로가기 열 (§13)
+   ③ 사업 단계 여섯 (2026-10-04 카테고리 구조 개편 §3 ~ §9)
    ══════════════════════════════════════════════════════════════════
-   검색 패널 바로 아래에 걸치는 아이콘 열입니다.
+   ⚠️⚠️ **전에는 분류 아이콘 열 개를 한 줄로 늘어놓았습니다.** 그걸
+   그만둔 까닭은 §0 입니다 — 손님이 "인테리어·시공" 이라는 말을
+   모르면 열 칸이 전부 남의 말이고, 앞으로 분류가 늘수록 그 줄은
+   **업체 목록 사이트**처럼 보입니다.
 
-   ⚠️ 아이콘은 icon() 한 벌입니다 — 24 viewBox · 선 1.8 · round ·
-   currentColor. 이모지 · 일러스트 · 색 아이콘 금지 (§13 이 직접
-   적었습니다). 이름 · 아이콘 · 주소는 전부 catalog.js 에서 옵니다 —
-   여기 적는 것은 **어느 분류를 앞에 낼지**뿐입니다 (분류가 아닌
-   프랜차이즈 하나만 ic 와 to 를 직접 적습니다).
+   지금은 사장님의 **생애주기 여섯**이고, 왼쪽에서 오른쪽으로 읽으면
+   그대로 사업의 흐름입니다 —
 
-   ⚠️⚠️ **아래 MainServices() 와 같은 것을 두 번 내지 않습니다.**
-   그쪽은 **서비스 분야**(인테리어 · 장비 · IT …)를 설명과 함께 내는
-   자리이고, 여기는 **갈 곳**입니다 — 프랜차이즈 · 매물 · 상권 ·
-   폐업 절차처럼 저마다 다른 화면으로 보냅니다. 겹치는 것은 열 중
-   둘(인테리어 · 시설·장비)이고, 제일 많이 찾는 둘이라 남겼습니다.
+       창업 → 자리 → 구축 → 운영 → 인수인계 → 정리
 
-   ⚠️⚠️ **창업 다섯 · 폐업 다섯입니다.** 한쪽을 줄이면 그게 "덜
-   중요한 것" 이라는 말입니다 (§7). 늘리거나 줄이실 때도 짝을
-   맞추세요.
-   ⚠️ 열 칸의 아이콘이 **전부 달라야 합니다** — 같은 아이콘 둘이
-   한 줄에 오면 무엇이 무엇인지 흐려집니다. check.js 가 봅니다. */
-var MAIN_QUICK = [
-  /* 창업 쪽 다섯 */
-  { ic:"store", to:"/franchise", name:"프랜차이즈" },   /* 분류가 없는 화면 */
-  { cat:"store" },      /* 점포 · 상가      → /stores    · pin     */
-  { cat:"area"  },      /* 상권 · 입지      → /c/area    · map     */
-  { cat:"interior" },   /* 인테리어 · 시공  → /providers · roller  */
-  { cat:"equip" },      /* 시설 · 장비      → /providers · tool    */
-  /* 폐업 쪽 다섯 */
-  { cat:"process" },    /* 폐업 절차        → /c/process · listck  */
-  { cat:"asset" },      /* 시설 · 집기 처분 → /assets    · sofa    */
-  { cat:"waste" },      /* 폐기물 · 수거    → /providers · trash   */
-  { cat:"tax" },        /* 폐업 세무 · 행정 → /providers · calc    */
-  { cat:"support" }     /* 폐업지원         → /support   · coins   */
-];
-function MainQuick(){
-  var by = {}; (window.AM_CATS||[]).forEach(function(c){ by[c.key] = c; });
-  var L = MAIN_QUICK.map(function(x){
-    if(!x.cat) return { name:x.name, icon:x.ic, to:x.to };
-    var c = by[x.cat];
-    return c ? { name:c.name, icon:c.icon, to:catTo(c) } : null;
-  }).filter(Boolean);
+   ⚠️ 여섯은 `js/data/lifecycle.js` **한 곳**에서 옵니다. 이름 ·
+   하위 설명 · 아이콘 · 주소를 여기 적지 마세요.
+   ⚠️ 카드가 통째로 눌립니다 (§5). 안에 또 링크를 넣지 마세요 —
+   `<a>` 안의 `<a>` 는 브라우저가 쪼개 버립니다. */
+function MainStage(){
+  var L = (window.AM_STAGES || []);
   if(!L.length) return "";
-  return '<nav class="mqk" aria-label="분야 바로가기"><div class="w">'+
-    '<ul class="mqk-g">'+L.map(function(c){
-      return '<li><a href="'+esc(c.to)+'">'+
-        '<span class="mqk-i">'+icon(c.icon,26)+'</span>'+
-        '<b>'+esc(c.name)+'</b></a></li>'; }).join("")+'</ul>'+
+  return '<nav class="mstg" aria-label="사업 단계로 찾기"><div class="w">'+
+    '<div class="sec-hd sec-hd-row"><div>'+
+      '<h2>어느 단계에 계신가요?</h2>'+
+      /* ⚠️ 지시서 §18 의 메시지입니다. 히어로 글과 겹치지 않게
+         **한 줄만** 씁니다 — 둘 다 넣으면 화면이 복잡해집니다. */
+      '<p>장사의 시작부터 운영, 인수인계와 정리까지.</p></div>'+
+    '</div>'+
+    '<ul class="mstg-g">'+L.map(function(s){
+      return '<li><a href="'+esc(amStageTo(s))+'" class="stg'+tn(s.tone)+'">'+
+        '<span class="stg-i">'+icon(s.icon,26)+'</span>'+
+        '<span class="stg-b">'+
+          '<em class="stg-no">'+esc(s.no)+'</em>'+
+          '<b>'+esc(s.name)+'</b>'+
+          '<i>'+esc(s.sub)+'</i>'+
+        '</span>'+
+        '<span class="stg-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
+      '</a></li>'; }).join("")+'</ul>'+
   '</div></nav>';
 }
 /* ══════════════════════════════════════════════════════════════════
@@ -795,7 +789,7 @@ function PageMain(){
      2026-10-03 리뉴얼 지시서를 그대로 둡니다 — "히어로 아래의 기존
      섹션은 삭제하지 않는다") —
        ① 히어로 창업/폐업 두 판 + 떠 있는 검색 패널 (10-04 §3~§12)
-       ② 분야 바로가기 열          (10-04 §13)
+       ② 사업 단계 여섯            (10-04 구조 개편 §3~§9)
        ③ 브랜드 가치 넷            (§7)
        ④ 범위 숫자                 (§20 이 금지한 "회원 수" 가 아니라
                                     세는 값입니다 — 아래 설명)
@@ -821,7 +815,7 @@ function PageMain(){
        · `MainPrice()`   견적 0건이라 늘 Empty 이고 지시서에 없습니다
        · `MainReviews()` 후기 0건. §7 이 "실제 후기 확인" 을 지금
                          핵심 가치로 쓰지 말라고 적었습니다 */
-  return MainHero()+ MainQuick()+ MainValue()+ MainScale()+
+  return MainHero()+ MainStage()+ MainValue()+ MainScale()+
          MainIndustry()+ MainFit()+ MainFeature()+ MainServices()+
          MainProviders()+ MainFranchise()+ MainStores()+
          MainBridge()+ MainTools()+ MainJoin();

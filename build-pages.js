@@ -35,6 +35,8 @@ function loadApp(){
      guides.js 는 problems.js 의 key 를 그대로 쓰므로 그 뒤여야 합니다. */
   const DATA = ["js/data/korean.js","js/data/brand.js","js/data/site.js",
                 "js/data/regions.js","js/data/industries.js","js/data/catalog.js",
+                /* ⚠️ lifecycle 은 catalog 의 key 를 그대로 쓰므로 **그 뒤**입니다 */
+                "js/data/lifecycle.js",
                 "js/data/franchise.js","js/data/providers.js","js/data/market.js",
                 "js/data/support.js","js/data/content.js","js/data/photos.js",
                 "js/data/legal-terms.js","js/data/legal-privacy.js",
@@ -92,6 +94,10 @@ function allRoutes(W){
   const icats = (W.AM_CATS || []).filter(c => c.kind !== "provider" && !c.to)
                   .map(c => "/c/" + c.key);
   const fcats = (W.AM_FRANCHISE_CATS || []).map(c => "/franchise/" + c.key);
+  /* 사업 단계 여섯 — 2026-10-04 구조 개편. ⚠️ 새 분류가 아니라
+     `catalog.js` 의 분류를 묶어 보는 화면이라, 분류 주소는 그대로
+     따로 만들어집니다 (여기는 묶음이고 거기는 낱개입니다). */
+  const stgs  = (W.AM_STAGES || []).map(s2 => "/g/" + s2.key);
   /* 업체 · 브랜드 · 글은 **등록된 것만** 주소가 됩니다. 지금 0 건이라
      0 개가 만들어집니다 — 없는 것을 만들지 않습니다. */
   const pvs = (W.AM_PROVIDERS || []).map(p => "/p/" + p.id);
@@ -100,7 +106,7 @@ function allRoutes(W){
   /* 매물도 등록된 것만 주소가 됩니다 — 지금 0건이라 0개가 만들어집니다 */
   const sts = (W.AM_STORES || []).map(x => "/s/" + x.id);
   const ass = (W.AM_ASSETS || []).map(x => "/a/" + x.id);
-  return fixed.concat(flows, pcats, icats, fcats, pvs, frs, cts, sts, ass);
+  return fixed.concat(flows, stgs, pcats, icats, fcats, pvs, frs, cts, sts, ass);
 }
 
 function esc(s){
@@ -580,6 +586,26 @@ function noscriptFor(W, r, route){
       ul((W.AM_INDUSTRIES||[]).map(i => i.name));
       h2("지역별로 찾기");
       ul((W.AM_REGIONS||[]).map(x => x.name));
+    }
+    return L.join("");
+  }
+
+  /* 사업 단계 — /g/build (2026-10-04 구조 개편)
+     ⚠️ 화면과 **같은 것**을 냅니다 — 그 단계의 분류와 하위 서비스.
+     크롤러에게만 더 보여 주면 화면과 다른 것을 내보내는 셈입니다. */
+  if(/^\/g\//.test(route)){
+    const st = r.stage;
+    if(st){
+      const cs = (W.amStageCats ? W.amStageCats(st) : []);
+      h2(st.name + " 단계에 필요한 분야");
+      cs.forEach(c => {
+        L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc);
+        ul((W.amCatItems ? W.amCatItems(c, "") : (c.items||[])).map(i => i.name));
+      });
+      (st.extra || []).forEach(x => { L.push("<h3>"+esc(x.name)+"</h3>"); p(x.lead); });
+      const L2 = (W.AM_STAGES || []);
+      h2("사업 단계 여섯");
+      ul(L2.map(x => x.no + " " + x.name + " — " + x.lead + " " + x.sub));
     }
     return L.join("");
   }

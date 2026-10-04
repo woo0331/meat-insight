@@ -310,6 +310,78 @@ function PageCat(cat){
              title:cat.name+"에서 자주 막히는 것" });
 }
 
+
+/* ── /g/:stage — 사업 단계 하나 (2026-10-04 구조 개편) ───────────────
+   메인의 여섯 카드가 도착하는 자리입니다. **메인은 단순하게, 내부는
+   전문적으로** (§15) — 여기서 그 단계의 분류를 전부 펼칩니다.
+
+   ⚠️⚠️ **분류를 새로 만들지 않습니다.** `catalog.js` 의 분류를
+   `lifecycle.js` 가 묶어 둔 차례대로 그릴 뿐이고, 카드를 누르면
+   원래 있던 분류 화면(`/providers/:cat` · `/c/:cat` · `/stores` ·
+   `/assets` · `/support`)으로 갑니다 — 새 빈 화면을 만들지 않습니다.
+   ⚠️ 업체를 여기서 나열하지 마세요. 여기는 "무엇이 필요한지" 를
+   고르는 자리입니다 (§54). */
+function PageStage(st){
+  var cats = amStageCats(st);
+  var ind  = nowQS("i");
+  /* 단계가 들고 있는 하위 서비스를 **세어서** 냅니다 — 손으로 적지
+     않습니다 (분류를 늘리면 저절로 따라옵니다). */
+  var n = cats.reduce(function(a, c){ return a + amCatItems(c, ind).length; }, 0);
+  var side = (st.side === "both") ? "" : st.side;
+  return PgHero({
+    crumb: Crumb([["사업 단계","/"],[st.name]]),
+    kicker:"STEP " + st.no + " · " + st.sub,
+    h1:st.name,
+    /* ⚠️ 단계 이름 뒤에 조사를 붙이지 마세요 — 이름에 가운뎃점이
+       들어 있어 "폐업 · 정리 에" 가 됩니다 (분류 화면에서 "원상복구
+       에서" 로 한 번 겪은 자리입니다). "이 단계" 로 받습니다.
+       ⚠️ 숫자는 **세는 값**입니다. 분류를 늘리면 저절로 따라옵니다. */
+    lead:st.lead + " 이 단계에 필요한 분야 " + cats.length +
+         (n ? "가지와 세부 서비스 " + n + "가지를 모았습니다." : "가지를 모았습니다."),
+    cta:'<a class="btn btn-b btn-lg" href="'+esc(quoteTo({industry:ind, side:side || "start"}))+'">'+
+        '한 번에 견적 요청'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="/join">이 분야 업체라면 입점하기</a>'
+  })+
+  '<section class="sec sec-white"><div class="w">'+
+    '<ul class="cat-g">'+
+      cats.map(function(c){ return '<li>'+CatCard(c, ind)+'</li>'; }).join("")+
+      /* 분류가 아닌 화면(프랜차이즈)은 직접 적은 한 장까지입니다 */
+      (st.extra || []).map(function(x){
+        return '<li><a class="cat" href="'+esc(x.to)+'">'+
+          '<span class="cat-ic">'+icon(x.icon,22)+'</span>'+
+          '<b>'+esc(x.name)+'</b>'+
+          '<span class="cat-l">'+esc(x.lead)+'</span>'+
+          '<span class="cat-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
+        '</a></li>'; }).join("")+
+    '</ul>'+
+  '</div></section>'+
+  /* 이웃한 단계로 바로 넘어갈 수 있게 — 사업은 한 단계에서 끝나지
+     않습니다. ⚠️ 여섯을 다 내지 않고 **앞뒤 하나씩**만 냅니다. */
+  StageNear(st)+
+  ReadBand({ side:side, industry:ind,
+             title:st.name+"에서 자주 막히는 것" });
+}
+
+/* 앞뒤 단계 — 차례가 곧 사업의 흐름이라, 끝에서는 한쪽만 나옵니다 */
+function StageNear(st){
+  var L = (window.AM_STAGES || []);
+  var i = L.indexOf(st);
+  if(i < 0) return "";
+  var near = [L[i-1], L[i+1]].filter(Boolean);
+  if(!near.length) return "";
+  return '<section class="sec sec-cream"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">이 앞뒤로는</p>'+
+      '<h2>사업은 한 단계에서 끝나지 않습니다</h2></div>'+
+    '<ul class="mstg-g mstg-g-near">'+near.map(function(s){
+      return '<li><a href="'+esc(amStageTo(s))+'" class="stg'+tn(s.tone)+'">'+
+        '<span class="stg-i">'+icon(s.icon,26)+'</span>'+
+        '<span class="stg-b"><em class="stg-no">'+esc(s.no)+'</em>'+
+          '<b>'+esc(s.name)+'</b><i>'+esc(s.sub)+'</i></span>'+
+        '<span class="stg-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
+      '</a></li>'; }).join("")+'</ul>'+
+  '</div></section>';
+}
+
 /* ── 창업을 과정으로 (§7) ────────────────────────────────────────
    분류 열세 개를 늘어놓으면 손님이 그걸 공부해야 합니다. 사장님이
    알고 싶은 것은 **"지금 어디까지 왔고 다음에 뭘 해야 하는가"**

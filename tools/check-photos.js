@@ -111,10 +111,19 @@ Object.keys(PHOTOS).forEach(key => {
   if(!d){ bad.push(tag + " — 그림 파일이 아닌 것 같습니다 (" + p.src + ")"); return; }
   if(!d.w || !d.h){ bad.push(tag + " — 크기를 못 읽었습니다 (" + d.type + ")"); return; }
 
+  /* ⚠️⚠️ **`temp:true` 는 규격을 낮추는 것이 아닙니다.** 자리에 적힌
+     최소 크기는 그대로 두고, **지금 임시 그림이 들어가 있다**는 사실을
+     돌릴 때마다 말하게 하는 표시입니다 — 실패로 멈추지는 않지만
+     ⚠️ 줄에 계속 뜹니다. 원본이 들어오면 `temp` 를 지우세요.
+     ⚠️ 검사를 통과시키려고 `min` 을 내리지 마세요. 그 순간 이 자리의
+     품질 기준이 영영 사라집니다. */
   const [mw, mh] = slot.min || [0, 0];
-  if(d.w < mw || d.h < mh)
-    bad.push(tag + " — " + d.w + "×" + d.h + "입니다. 최소 " + mw + "×" + mh +
-      " (" + slot.where + ")");
+  if(d.w < mw || d.h < mh){
+    const msg = tag + " — " + d.w + "×" + d.h + "입니다. 최소 " + mw + "×" + mh +
+      " (" + slot.where + ")";
+    if(slot.temp) warn.push(msg + "  ← 임시 그림입니다. 원본으로 바꾸세요");
+    else bad.push(msg);
+  }
 
   const r = d.w / d.h, [r1, r2] = slot.ratio || [0, 99];
   if(r < r1 || r > r2)

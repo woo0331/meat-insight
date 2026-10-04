@@ -67,10 +67,10 @@ window.WOW_PHOTO_SLOTS = [
   /* ⚠️ anchor 가 바깥쪽인 것은 **가운데가 대각선으로 깎이기** 때문입니다
      (2026-10-04). 가운데를 남기면 주인공이 잘려 나갑니다. */
   { key:"hero-start", where:"히어로 왼쪽 판 (새로 여는 상업공간)",
-    min:[1400,900], ratio:[1.3,1.7], maxKB:300, anchor:"left",
+    min:[1400,900], ratio:[1.3,1.7], maxKB:300, anchor:"left", temp:true,
     note:"실제 한국에서 운영될 법한 상업공간 · 자연광 · 고해상도. ⚠️ 위에 짙은 남색 막이 덮이고 글이 판 가운데 높이에 앉습니다 — 주인공을 거기 두지 마세요. ⚠️ 사진 안에 글자 · 상호 · 로고가 보이면 안 됩니다" },
   { key:"hero-close", where:"히어로 오른쪽 판 (정리하는 상업공간)",
-    min:[1400,900], ratio:[1.3,1.7], maxKB:300, anchor:"right",
+    min:[1400,900], ratio:[1.3,1.7], maxKB:300, anchor:"right", temp:true,
     note:"같은 공간이 정리되는 듯한 장면이면 가장 좋습니다. 밝은 샌드 막이 덮입니다. ⚠️ 실패한 장면이 아니라 다음을 준비하는 장면입니다 — 불 꺼진 가게 · 고개 숙인 사람 금지" },
 
   /* ── START / CLOSE 큰 카드 (§16) ─────────────────────────────
@@ -123,7 +123,22 @@ window.WOW_PHOTO_SLOTS = [
 /* ⚠️ 키를 **여기 없는 이름으로 적으면 조용히 안 나옵니다.** 에러도
    안 나고 화면도 멀쩡합니다 — `hero_start` 처럼 한 글자만 달라도
    그렇습니다. `build-pages.js` 가 그것만 따로 막습니다. */
-window.WOW_PHOTOS = {};
+/* ⚠️⚠️ **히어로 두 장은 임시입니다** (2026-10-04 사장님 지시로 넣었습니다).
+   사장님이 주신 **시안 그림에서 글자가 없는 자리를 잘라낸** 조각이라
+   300×210 · 390×275 로, 자리가 요구하는 1400×900 에 한참 못 미칩니다.
+   화면에서는 막이 덮여 티가 덜 나지만 **1920px 에서는 뭉개집니다.**
+
+   원본 두 장이 들어오면 **한 번에 끝납니다** —
+     img/raw/hero-start.jpg · img/raw/hero-close.jpg 에 넣고
+     node tools/fit-photos.js --write
+   그리고 아래 자리 목록에서 `temp:true` 두 줄을 지우세요.
+   ⚠️ `tools/check-photos.js` 가 돌 때마다 ⚠️ 줄로 계속 알려 줍니다. */
+window.WOW_PHOTOS = {
+  "hero-start": { src:"/img/hero-start.jpg",
+    alt:"조명이 켜진 식당 주방에서 영업을 준비하는 사람" },
+  "hero-close": { src:"/img/hero-close.jpg",
+    alt:"공사 중인 상가 내부에서 집기를 정리하는 작업자" }
+};
 
 window.wowPhoto = function(key){
   var p = (window.WOW_PHOTOS || {})[key];

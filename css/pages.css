@@ -1186,6 +1186,12 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   padding:var(--s10) 0 calc(var(--s10) + var(--s9)); }
 /* 바탕 — 대각선으로 맞물립니다 (위 설명) */
 .hp2::before{ content:""; position:absolute; top:0; bottom:0; z-index:0; }
+/* ⚠️ 지금 사진은 **왼쪽에 나무 카운터 · 위에 줄조명 · 오른쪽에 통창**
+   입니다. 가로가 잘리는 폭(1280 아래 · 폰)에서는 왼쪽을 남겨야
+   카운터와 조명이 같이 보입니다 — 가운데로 두면 창문만 남습니다.
+   세로 45% 는 **바닥보다 천장 쪽**을 남깁니다 (2560px 처럼 액자가
+   사진보다 넓은 폭에서 위아래가 잘립니다). */
+.hp2-st{ --ph-pos:0% 45%; }
 .hp2-st::before{ left:0; right:-44px; background:var(--navy-dark);
   clip-path:polygon(0 0, 100% 0, calc(100% - 88px) 100%, 0 100%); }
 /* ⚠️ Warm Sand 입니다 — 아홉 바탕 중 `--bg-sand`. 왼쪽이 짙은 남색이라
@@ -1196,7 +1202,14 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    대각선이 사라집니다. ⚠️ `object-fit:cover` 를 반드시 주세요: `.ph` 는
    `<img>` 라 기본값이 `fill` 이고, 안 주면 사진이 늘어납니다. */
 .hp2-ph{ position:absolute; top:0; bottom:0; margin:0; z-index:1; }
-.hp2-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0; }
+.hp2-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0;
+  object-position:var(--ph-pos, 50% 50%); }
+/* ⚠️⚠️ **액자 비율이 폭마다 크게 달라집니다** — 재 보니 1.09(360px) ~
+   2.66(980px 세로쌓임)입니다. 원본보다 액자가 좁으면 **좌우**가,
+   넓으면 **위아래**가 잘립니다. 그래서 어느 쪽을 남길지는 사진마다
+   다르고, 자리마다 `--ph-pos` 한 줄로 고릅니다.
+   ⚠️ 사진을 바꾸면 **이 값도 같이 보세요** — 안 보면 주인공이 잘린
+   채로 몇 주 갑니다 (찍어 봐야 압니다. 검사는 못 잡습니다). */
 .hp2-ph::after{ content:""; position:absolute; inset:0; }
 .hp2-st .hp2-ph{ left:0; right:-44px;
   clip-path:polygon(0 0, 100% 0, calc(100% - 88px) 100%, 0 100%); }

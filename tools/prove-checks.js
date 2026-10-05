@@ -40,6 +40,28 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* ══ 도구 열셋 (2026-10-05 V2 §16) ══════════════════════════════ */
+  /* 묶음을 떼면 걸려야 합니다 — 떼면 목록에서 조용히 빠집니다 */
+  ["도구 열셋이 저마다 묶음과 갈 곳을 가진다",
+   `window.AM_TOOLS = (window.AM_TOOLS||[]).map(function(t){
+      return t.key === "margin" ? Object.assign({}, t, { grp:"" }) : t; });`],
+  /* 10년 한도를 걷어내면 25,000년이 숫자로 나옵니다 */
+  ["권리금 계산이 사람이 못 받는 기간을 숫자로 내지 않는다",
+   /* ⚠️⚠️ `PremiumRes` 를 바꿔치기해도 **아무 일이 안 납니다** —
+      `tlWire()` 가 적는 함수를 만들 때 그 함수를 **값으로 잡아** 두기
+      때문입니다. 적는 함수 쪽을 감싸야 합니다 (열 번째 "되돌리기가
+      틀렸습니다"). */
+   `window.premiumIn = (function(real){
+      return function(k, val){
+        real(k, val);
+        const el = document.getElementById("tl-res");
+        /* 한도를 안 보던 그때 — 300,000개월이 그대로 나왔습니다 */
+        if(el) el.innerHTML = el.innerHTML.split("10년이 넘습니다").join("300,000개월");
+      };
+    })(window.premiumIn);`],
+  /* 돌아오는 돈을 안 세면 걸려야 합니다 */
+  ["폐업 예상비용이 돌아오는 돈을 같이 센다",
+   `window.AM_CLOSE_IN = [];`],
   /* 내려간 업체를 기록에서 안 지우면 걸려야 합니다 */
   ["저장한 업체가 MY 로 이어진다",
    `window.MySaved = (function(real){

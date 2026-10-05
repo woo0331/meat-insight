@@ -2289,3 +2289,8 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 
 /* 관심 업체 단추 — ⚠️ 아이콘 + 글자라 `.btn` 기본 폭으로는 좁습니다 */
 .btn-ic{ display:inline-flex; align-items:center; gap:6px; }
+
+/* 도구 묶음 머리말 (V2 §16 — 여섯에서 열셋이 됐습니다) */
+.tl-gh{ margin:var(--s8) 0 var(--s4); font-size:var(--t-lg); font-weight:800;
+  letter-spacing:-.03em; color:var(--ink); }
+.tl-gh:first-child{ margin-top:0; }

@@ -105,6 +105,21 @@ var META = {
                  "새로 만드는 것과 하던 가게를 받는 것. 들어가는 돈과 문 여는 시점을 나란히 놓습니다."],
   "/tools/close":["폐업 체크리스트",
                  "정리 순서대로 짚어 가며 빠뜨린 것을 찾습니다. 기한이 있는 것이 여럿입니다."],
+  /* 2026-10-05 V2 §16 — 지시서가 적은 열여덟 중 모자라던 것들 */
+  "/tools/target":["목표 매출 계산",
+                 "가져가고 싶은 월 순이익을 적으시면, 그러려면 얼마를 팔아야 하는지 월 매출 · 하루 매출 · 하루 손님 수까지 나옵니다."],
+  "/tools/premium":["권리금 따져보기",
+                 "달라는 권리금이 몇 달이면 돌아오는지, 그중 눈에 보이는 시설값이 얼마인지를 갈라 봅니다. 남은 계약 안에 회수되는지까지."],
+  "/tools/rent":["임대료 비율 계산",
+                 "월 매출에서 월세와 관리비가 몇 퍼센트인지. 권리금까지 영업 기간으로 나눠 보면 자리에 실제로 쓰는 돈이 보입니다."],
+  "/tools/hire":["직원 고용비용 계산",
+                 "급여만 보시면 실제보다 적게 잡힙니다. 사업주 부담 4대보험 · 퇴직충당 · 식대까지 더한 한 사람 월 비용과 1년치."],
+  "/tools/delivery":["배달 한 건 남는 돈",
+                 "중개 · 결제 수수료는 비율로, 배달비 · 포장재 · 재료비는 건마다 빠집니다. 둘을 갈라서 한 건에 얼마가 남는지 봅니다."],
+  "/tools/margin":["원가율 · 마진 계산",
+                 "판매가와 재료비를 넣으면 원가율과 한 개 남는 돈이 같이 나옵니다. 한 달 판매 수량까지 적으시면 달 단위로도 봅니다."],
+  "/tools/closecost":["폐업 예상비용",
+                 "철거 · 원상복구 · 위약금처럼 나가는 돈과 보증금 · 시설 매각처럼 돌아오는 돈을 같이 놓습니다. 중요한 것은 그 차액입니다."],
   "/faq":       ["자주 묻는 것",
                  "돈이 드는지, 연락처가 업체에 바로 넘어가는지, 등록된 업체가 몇 곳인지 — 먼저 궁금해하시는 것들에 그대로 답했습니다."],
   "/about":     ["소개",
@@ -220,6 +235,13 @@ window.routeInfo = function(path){
     "/tools/labor":"tool-labor",
     "/tools/vs":   "tool-vs",
     "/tools/close":"tool-close",
+    "/tools/target":"tool-target",
+    "/tools/premium":"tool-premium",
+    "/tools/rent":"tool-rent",
+    "/tools/hire":"tool-hire",
+    "/tools/delivery":"tool-delivery",
+    "/tools/margin":"tool-margin",
+    "/tools/closecost":"tool-closecost",
     "/faq":       "faq",
     "/about":     "about",
     "/terms":     "terms",
@@ -500,6 +522,13 @@ function render(){
     case "tool-labor":      html = PageToolLabor();                 break;
     case "tool-vs":         html = PageToolVs();                    break;
     case "tool-close":      html = PageToolClose();                 break;
+    case "tool-target":     html = PageToolTarget();                break;
+    case "tool-premium":    html = PageToolPremium();               break;
+    case "tool-rent":       html = PageToolRent();                  break;
+    case "tool-hire":       html = PageToolHire();                  break;
+    case "tool-delivery":   html = PageToolDelivery();              break;
+    case "tool-margin":     html = PageToolMargin();                break;
+    case "tool-closecost":  html = PageToolCloseCost();             break;
     case "faq":             html = PageFaq();                       break;
     case "about":           html = PageAbout();                     break;
     case "terms":           html = PageTerms();                     break;

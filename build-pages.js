@@ -85,8 +85,7 @@ function allRoutes(W){
                  "/providers", "/franchise",
                  "/stores", "/assets", "/support", "/content",
                  "/quote", "/join", "/my", "/search", "/compare",
-                 "/tools", "/tools/cost", "/tools/fixed", "/tools/bep",
-                 "/tools/labor", "/tools/vs", "/tools/close",
+                 "/tools",
                  "/faq", "/about", "/terms", "/privacy"];
   /* 업종별 창업 · 폐업 — **검색에서 들어오는 제일 큰 문**입니다
      ("카페 창업" · "음식점 폐업"). 반드시 진짜 HTML 파일이어야 합니다. */
@@ -105,6 +104,9 @@ function allRoutes(W){
      `catalog.js` 의 분류를 묶어 보는 화면이라, 분류 주소는 그대로
      따로 만들어집니다 (여기는 묶음이고 거기는 낱개입니다). */
   const stgs  = (W.AM_STAGES || []).map(s2 => "/g/" + s2.key);
+  /* ⚠️ 도구 주소는 `AM_TOOLS` 에서 가져옵니다 — 손으로 적어 두면
+     도구를 늘릴 때마다 여기를 잊어 **주소가 조용히 안 만들어집니다.** */
+  const tls = (W.AM_TOOLS || []).map(t => t.to);
   /* 업체 · 브랜드 · 글은 **등록된 것만** 주소가 됩니다. 지금 0 건이라
      0 개가 만들어집니다 — 없는 것을 만들지 않습니다. */
   const pvs = (W.AM_PROVIDERS || []).map(p => "/p/" + p.id);
@@ -113,7 +115,7 @@ function allRoutes(W){
   /* 매물도 등록된 것만 주소가 됩니다 — 지금 0건이라 0개가 만들어집니다 */
   const sts = (W.AM_STORES || []).map(x => "/s/" + x.id);
   const ass = (W.AM_ASSETS || []).map(x => "/a/" + x.id);
-  return fixed.concat(flows, stgs, pcats, icats, fcats, pvs, frs, cts, sts, ass);
+  return fixed.concat(tls, flows, stgs, pcats, icats, fcats, pvs, frs, cts, sts, ass);
 }
 
 function esc(s){
@@ -557,6 +559,23 @@ function noscriptFor(W, r, route){
       if(t.key === "vs"){
         h2("나란히 놓는 것");
         ul((W.AM_VS||[]).map(r => (r.side === "new" ? "새로 만들 때 · " : "가게를 받을 때 · ") + r.name));
+      }
+      /* 2026-10-05 V2 §16 로 더한 일곱 — ⚠️ 목록을 손으로 또 적지
+         않습니다. 데이터 배열 이름만 도구 key 에 맞춰 둡니다. */
+      const MORE = { target:"AM_TARGET", premium:"AM_PREMIUM", rent:"AM_RENT",
+                     hire:"AM_HIRE", delivery:"AM_DELIVERY", margin:"AM_MARGIN" };
+      if(MORE[t.key]){
+        h2("적는 항목");
+        ul((W[MORE[t.key]]||[]).map(r =>
+          r.name + (r.unit ? " (" + r.unit + ")" : "") + (r.hint ? " — " + r.hint : "")));
+      }
+      if(t.key === "closecost"){
+        h2("나가는 돈");
+        ul((W.AM_CLOSE_OUT||[]).map(r => r.name + (r.hint ? " — " + r.hint : "")));
+        h2("돌아오는 돈");
+        ul((W.AM_CLOSE_IN||[]).map(r => r.name + (r.hint ? " — " + r.hint : "")));
+        p("나가는 돈만 세면 반쪽입니다. 보증금과 시설 매각은 돌아오는 쪽이라, " +
+          "둘을 같이 놓아야 실제로 얼마가 드는지가 나옵니다.");
       }
     }
     return L.join("");
@@ -1239,6 +1258,14 @@ function checkProcess(W){
   /* 계산 결과에서 업체로 가는 길 (V2 §17) */
   (W.AM_TOOLS||[]).forEach(t => (t.rel||[]).forEach((o, i) =>
     chk("AM_TOOLS."+t.key+".rel["+i+"]", o)));
+  /* ⚠️⚠️ 도구의 묶음 이름이 `AM_TOOL_GROUPS` 에 없으면 그 도구가
+     **목록에서 조용히 빠집니다** — 주소는 살아 있어서 아무도 모릅니다. */
+  const tg = W.AM_TOOL_GROUPS || [];
+  (W.AM_TOOLS||[]).forEach(t => {
+    if(!t.grp) bad.push("AM_TOOLS." + t.key + " — 묶음(grp)이 없습니다");
+    else if(tg.indexOf(t.grp) < 0)
+      bad.push("AM_TOOLS." + t.key + " — AM_TOOL_GROUPS 에 없는 묶음 " + t.grp);
+  });
   /* 여정 넷이 단계 여섯을 빠짐없이 한 번씩 나눠 가지는가 */
   const stages = (W.AM_STAGES||[]).map(x => x.key);
   const used = [];

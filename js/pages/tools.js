@@ -99,6 +99,415 @@ function tlRel(key){
   '</div></section>';
 }
 
+/* 묶음별로 적는 줄을 냅니다 — ⚠️ 줄마다 `group` 을 데이터에 적고
+   화면은 그것만 읽습니다. 화면에 묶음 이름을 또 적으면 데이터를
+   고칠 때 두 곳을 고치게 됩니다. */
+function tlGroups(rows, v, fn, subs){
+  var seen = [], out = "";
+  rows.forEach(function(r){ if(seen.indexOf(r.group || "") < 0) seen.push(r.group || ""); });
+  seen.forEach(function(g){
+    var mine = rows.filter(function(r){ return (r.group || "") === g; });
+    if(!mine.length) return;
+    if(g) out += '<h2 class="tl-h">'+esc(g)+
+      ((subs && subs[g]) ? '<span>'+esc(subs[g])+'</span>' : '')+'</h2>';
+    out += '<ul class="tl-l">'+mine.map(function(r){ return tlRow(r, v, fn); }).join("")+'</ul>';
+  });
+  return out;
+}
+
+/* 비율 한 줄 — ⚠️ 나누는 쪽이 0 이거나 안 적혔으면 `null` 입니다.
+   0 으로 나눈 값을 내면 Infinity 가 화면에 찍힙니다. */
+function tlPct(part, whole){
+  if(!(whole > 0)) return null;
+  return Math.round(part / whole * 1000) / 10;
+}
+
+/* 적는 함수 · 지우는 함수를 한 번에 만듭니다 — ⚠️ 도구 일곱 개에
+   같은 코드를 일곱 번 적으면 한 곳만 고치는 사고가 납니다. */
+function tlWire(key, resFn){
+  window[key + "In"] = function(k, val){
+    var v = tlGet(key); v[k] = val; tlPut(key, v);
+    var el = document.getElementById("tl-res");
+    if(el) el.innerHTML = resFn(v);
+  };
+  window[key + "Reset"] = function(){
+    if(!confirm("적으신 숫자를 전부 지웁니다. 되돌릴 수 없습니다.")) return;
+    amDel(tlKey(key)); rerender(true);
+  };
+}
+
+/* 도구 한 화면의 틀 — 머리 · 적는 줄 · 결과 · 발 · 다음 걸음 */
+function tlPage(o){
+  var v = tlGet(o.key);
+  return PgHero({
+    crumb: Crumb([["사장님 도구","/tools"],[o.h1]]),
+    kicker:"사장님 도구", h1:o.h1, lead:o.lead, tight:true
+  })+
+  '<section class="sec sec-white"><div class="w w-narrow">'+
+    tlGroups(o.rows, v, o.key + "In", o.subs)+
+    '<div class="tl-res" id="tl-res">'+o.res(v)+'</div>'+
+    tlFoot(o.key + "Reset")+
+  '</div></section>'+
+  tlNext(o.next, o.nextTo || "/quote", o.key);
+}
+
+/* ════════ 목표 매출 (V2 §16) ══════════════════════════════════════
+   ⚠️ 손익분기와 **같은 나눗셈**입니다 — 분자에 목표 순이익이 더해질
+   뿐입니다. 그래서 경계 처리도 그대로 가져옵니다 (공헌이익률 1% 아래는
+   숫자 대신 까닭). */
+function TargetRes(v){
+  var fix = tlHas(v.fixed) ? tlNum(v.fixed) : null;
+  var pro = tlHas(v.profit) ? tlNum(v.profit) : null;
+  var cm  = tlHas(v.varpct) ? (100 - tlNum(v.varpct)) : null;
+  var over = (cm !== null && cm <= 0);
+  var tiny = (cm !== null && cm > 0 && cm < 1);
+  var month = null, day = null, guests = null;
+  if(fix !== null && pro !== null && cm !== null && cm >= 1)
+    month = (fix + pro) / (cm / 100);
+  if(month !== null && tlHas(v.days) && tlNum(v.days) > 0) day = month / tlNum(v.days);
+  if(day !== null && tlHas(v.ticket) && tlNum(v.ticket) > 0)
+    guests = Math.ceil(day * 10000 / tlNum(v.ticket));
+  /* 본전까지만 가는 매출도 같이 냅니다 — 목표와 얼마나 떨어져 있는지 */
+  var bep = (fix !== null && cm !== null && cm >= 1) ? fix / (cm / 100) : null;
+
+  var note;
+  if(pro === null)      note = "가져가고 싶은 월 순이익을 적으시면 시작됩니다.";
+  else if(fix === null) note = "월 고정비를 적으시면 필요한 매출이 나옵니다.";
+  else if(cm === null)  note = "팔릴 때마다 나가는 비율을 적으시면 나옵니다.";
+  else if(over)         note = "팔릴 때마다 나가는 비율이 100%를 넘습니다. 이 조건에서는 "+
+                               "많이 팔수록 더 손해라, 목표에 닿는 매출이라는 것이 없습니다. "+
+                               "비율 칸을 다시 봐 주세요.";
+  else if(tiny)         note = "팔릴 때마다 나가는 비율이 99%를 넘습니다. 비율을 0.1만 "+
+                               "다르게 적어도 답이 몇 배로 바뀌는 조건이라, 숫자를 내는 "+
+                               "대신 적어 둡니다.";
+  else                  note = "(고정비 + 목표 순이익)을 공헌이익률로 나눈 값입니다. "+
+                               "안 적으신 칸은 계산에서 빠집니다.";
+
+  return '<div class="tl-res-g">'+
+    tlOut("필요한 월 매출", month !== null ? tlMan(month) : null,
+          (cm !== null && cm >= 1) ? "공헌이익률 " + (Math.round(cm * 10) / 10) + "%" : "")+
+    tlOut("하루 매출", day !== null ? tlMan(day) : null,
+          day !== null ? "" : "월 영업일수를 적으시면 나옵니다")+
+    tlOut("하루 손님 수", guests !== null ? won(guests) + "명" : null,
+          guests !== null ? "" : "객단가를 적으시면 나옵니다")+
+    tlOut("본전이 되는 매출", bep !== null ? tlMan(bep) : null,
+          bep !== null ? "여기까지는 순이익 0입니다" : "")+
+  '</div>'+
+  '<p class="tl-res-n">'+esc(note)+'</p>'+
+  '<p class="tl-res-n">순이익은 <b>세금을 내기 전</b> 기준입니다. '+
+    '사장님 인건비를 고정비에 넣으셨는지에 따라 뜻이 달라집니다 — '+
+    '넣으셨다면 여기 순이익은 그 위에 더 남는 몫입니다.</p>';
+}
+
+/* ════════ 권리금 따져보기 (V2 §16) ════════════════════════════════
+   ⚠️⚠️ **월 순이익은 넘기시는 분이 적은 값입니다.** 우리가 확인할
+   방법이 없는데 숫자만 내놓으면, 그걸 믿고 수천만 원을 내십니다 —
+   매물 화면의 매출과 같은 자리입니다. 화면이 그 말을 같이 냅니다. */
+function PremiumRes(v){
+  var pre = tlHas(v.premium) ? tlNum(v.premium) : null;
+  var eq  = tlHas(v.equip) ? tlNum(v.equip) : null;
+  var pro = tlHas(v.profit) ? tlNum(v.profit) : null;
+  var mon = tlHas(v.months) ? tlNum(v.months) : null;
+
+  var back = (pre !== null && pro !== null && pro > 0) ? pre / pro : null;
+  /* ⚠️⚠️ **손익분기의 85조원과 같은 자리입니다.** 월 순이익을 0.01 로
+     적으면 회수 기간이 **300,000개월(25,000년)** 로 나왔습니다 — 숫자가
+     나왔다는 것만으로 답처럼 읽힙니다. 상가건물 임대차보호법의 갱신요구권이
+     최장 10년이라, 그 너머는 "언제 회수되나" 라는 질문 자체가 성립하지
+     않습니다. 숫자 대신 그 사실을 적습니다. */
+  var tooLong = (back !== null && back > 120);
+  var good = (pre !== null && eq !== null) ? pre - eq : null;
+  var inTerm = (back !== null && !tooLong && mon !== null && mon > 0) ? (back <= mon) : null;
+
+  var note;
+  if(pre === null)      note = "달라는 권리금을 적으시면 시작됩니다.";
+  else if(pro === null) note = "월 순이익을 적으시면 몇 달이면 돌아오는지 나옵니다.";
+  else if(!(pro > 0))   note = "월 순이익이 0 이하이면 권리금이 영업으로는 돌아오지 않습니다. "+
+                               "시설값만 보시는 것이 맞습니다.";
+  else if(tooLong)      note = "지금 적으신 값으로는 회수에 10년이 넘게 걸립니다. "+
+                               "상가건물 임대차보호법의 갱신요구권이 최장 10년이라, "+
+                               "그 안에 돌아오지 않는 조건입니다 — 월 순이익 칸을 다시 봐 주세요.";
+  else                  note = "권리금을 월 순이익으로 나눈 값입니다. 안 적으신 칸은 계산에서 빠집니다.";
+
+  return '<div class="tl-res-g">'+
+    tlOut("돌아오는 데 걸리는 기간",
+          back === null ? null
+            : (tooLong ? "10년이 넘습니다" : (Math.round(back * 10) / 10) + "개월"),
+          back === null ? "월 순이익을 적으시면 나옵니다"
+            : (tooLong ? "월 순이익 칸을 다시 봐 주세요" : ""))+
+    tlOut("시설값을 뺀 영업권 몫", good !== null ? tlMan(good) : null,
+          good !== null ? "" : "시설 · 집기 값을 적으시면 나옵니다")+
+    tlOut("남은 계약 안에 회수되나",
+          inTerm === null ? null : (inTerm ? "계약 안에 들어옵니다" : "계약보다 깁니다"),
+          mon !== null ? "남은 계약 " + won(mon) + "개월" : "남은 임대차 기간을 적으시면 나옵니다")+
+  '</div>'+
+  '<p class="tl-res-n">'+esc(note)+'</p>'+
+  /* ⚠️ 지우지 마세요 — 이 도구에서 제일 중요한 줄입니다 */
+  '<p class="tl-res-n"><b>월 순이익은 넘기시는 분이 적어 주신 값입니다.</b> '+
+    '저희가 확인하거나 보증하는 값이 아닙니다 — 카드 매출 자료 · 부가세 '+
+    '신고서 · 임대차 계약서를 직접 보시고 적으세요.</p>'+
+  '<p class="tl-res-n">남은 계약보다 회수 기간이 길면, 계약이 갱신되어야 '+
+    '본전이 됩니다 — <b>갱신 여부는 건물주가 정합니다.</b> 상가건물 임대차보호법의 '+
+    '갱신요구권에는 기간과 예외가 있어서 계약서와 같이 보셔야 합니다.</p>';
+}
+
+/* ════════ 임대료 비율 (V2 §16) ════════════════════════════════════ */
+function RentRes(v){
+  var sal = tlHas(v.sales) ? tlNum(v.sales) : null;
+  var monthly = 0, has = false;
+  ["rent","mgmt"].forEach(function(k){ if(tlHas(v[k])){ monthly += tlNum(v[k]); has = true; } });
+  var pct = (has && sal !== null) ? tlPct(monthly, sal) : null;
+
+  var pre = tlHas(v.premium) ? tlNum(v.premium) : null;
+  var mon = tlHas(v.months) ? tlNum(v.months) : null;
+  var preMonthly = (pre !== null && mon !== null && mon > 0) ? pre / mon : null;
+  var pct2 = (pct !== null && preMonthly !== null) ? tlPct(monthly + preMonthly, sal) : null;
+
+  var note;
+  if(!has)             note = "월세나 관리비를 적으시면 시작됩니다.";
+  else if(sal === null)note = "월 매출을 적으시면 비율이 나옵니다.";
+  else if(!(sal > 0))  note = "월 매출이 0이면 비율을 낼 수 없습니다.";
+  else                 note = "달마다 나가는 임차료를 월 매출로 나눈 값입니다. "+
+                              "몇 %면 좋다고 말씀드리지 않습니다 — 업종 · 상권 · 평수마다 "+
+                              "달라서 우리가 댈 근거가 없습니다.";
+
+  return '<div class="tl-res-g">'+
+    tlOut("임차료 비율", pct !== null ? pct + "%" : null,
+          has ? "월 " + tlMan(monthly) : "")+
+    tlOut("권리금까지 나눠 보면", pct2 !== null ? pct2 + "%" : null,
+          preMonthly !== null ? "권리금 월 " + tlMan(preMonthly) + " 몫"
+            : (pre !== null ? "앞으로 영업할 개월을 적으시면 나옵니다"
+                            : "권리금과 영업할 개월을 적으시면 나옵니다"))+
+    tlOut("묶여 있는 보증금", tlHas(v.deposit) ? tlMan(tlNum(v.deposit)) : null,
+          tlHas(v.deposit) ? "돌려받는 돈이라 비용에 안 더했습니다" : "")+
+  '</div>'+
+  '<p class="tl-res-n">'+esc(note)+'</p>'+
+  '<p class="tl-res-n">권리금은 <b>한 번에 낸 돈</b>이라 달마다 나가지는 않습니다. '+
+    '다만 그만큼을 영업 기간으로 나눠 보면 실제로 자리에 쓰는 돈이 보입니다 — '+
+    '계약이 일찍 끝나면 그 몫은 더 커집니다.</p>';
+}
+
+/* ════════ 직원 고용비용 (V2 §16) ══════════════════════════════════
+   ⚠️⚠️ **4대보험 요율을 박아 두지 않았습니다.** 해마다 바뀌고 산재는
+   업종마다 다릅니다 — 적어 두면 틀린 날부터 거짓말입니다. */
+function HireRes(v){
+  var wage = tlHas(v.wage) ? tlNum(v.wage) : null;
+  var ins  = (wage !== null && tlHas(v.insPct)) ? wage * tlNum(v.insPct) / 100 : null;
+  /* 퇴직충당 — 근로자퇴직급여보장법의 30일분 평균임금(급여의 1/12) */
+  var sev  = (wage !== null) ? wage / 12 : null;
+  var meal = tlHas(v.meal) ? tlNum(v.meal) : 0;
+  var etc  = tlHas(v.etc) ? tlNum(v.etc) : 0;
+  var one  = (wage !== null) ? wage + (ins || 0) + sev + meal + etc : null;
+  var n    = tlHas(v.heads) ? tlNum(v.heads) : null;
+  var all  = (one !== null && n !== null && n > 0) ? one * n : null;
+  var year = (all !== null) ? all * 12 : null;
+  var up   = (one !== null && wage > 0) ? tlPct(one - wage, wage) : null;
+
+  var note;
+  if(wage === null)         note = "월 급여를 적으시면 시작됩니다.";
+  else if(!tlHas(v.insPct)) note = "사업주 4대보험 부담률을 적으시면 그 줄이 더해집니다. "+
+                                   "지금은 급여 · 퇴직충당 · 식대까지만 더했습니다.";
+  else                      note = "급여에 사업주 부담 4대보험 · 퇴직충당 · 식대 · 그 외를 "+
+                                   "더한 값입니다. 안 적으신 칸은 계산에서 빠집니다.";
+
+  return '<div class="tl-res-g">'+
+    tlOut("한 사람 월 실제 비용", one !== null ? tlMan(one) : null,
+          up !== null ? "급여보다 " + up + "% 더" : "")+
+    tlOut("전체 월", all !== null ? tlMan(all) : null,
+          all !== null ? won(n) + "명 기준" : "사람 수를 적으시면 나옵니다")+
+    tlOut("1년", year !== null ? tlMan(year) : null,
+          year !== null ? "같은 조건이 열두 달 이어질 때" : "")+
+  '</div>'+
+  '<p class="tl-res-n">'+esc(note)+'</p>'+
+  '<p class="tl-res-n">퇴직충당은 <b>급여의 1/12</b> 로 잡았습니다 — '+
+    '퇴직금이 30일분 평균임금이라 미리 쌓아 두는 몫입니다. '+
+    '계속 근로가 1년 미만이면 발생하지 않으니, 단기 아르바이트라면 그만큼 빼고 보세요. '+
+    '주휴수당 · 연장 · 야간 · 휴일 수당은 근무 형태마다 달라서 '+
+    '<b>급여 칸에 포함해서</b> 적어 주세요.</p>';
+}
+
+/* ════════ 배달 한 건 (V2 §16) ═════════════════════════════════════ */
+function DeliveryRes(v){
+  var price = tlHas(v.price) ? tlNum(v.price) : null;
+  var pctSum = 0, pctHas = false;
+  ["feePct","payPct"].forEach(function(k){
+    if(tlHas(v[k])){ pctSum += tlNum(v[k]); pctHas = true; } });
+  var feeWon = (price !== null && pctHas) ? price * pctSum / 100 : null;
+  var flat = 0, flatHas = false;
+  ["deliver","pack","food","ad"].forEach(function(k){
+    if(tlHas(v[k])){ flat += tlNum(v[k]); flatHas = true; } });
+  var left = (price !== null) ? price - (feeWon || 0) - flat : null;
+  var pct  = (left !== null) ? tlPct(left, price) : null;
+
+  var note;
+  if(price === null)             note = "메뉴 판매가를 적으시면 시작됩니다.";
+  else if(!pctHas && !flatHas)   note = "수수료율이나 건당 나가는 돈을 적으시면 나옵니다.";
+  else if(left !== null && left < 0)
+                                 note = "지금 적으신 조건에서는 한 건 팔 때마다 돈이 나갑니다. "+
+                                        "칸을 다시 봐 주세요 — 특히 수수료율과 배달비 부담을요.";
+  else                           note = "판매가에서 비율로 빠지는 것과 건마다 빠지는 것을 뺀 값입니다. "+
+                                        "안 적으신 칸은 계산에서 빠집니다.";
+
+  return '<div class="tl-res-g">'+
+    tlOut("한 건 남는 돈", left !== null ? won(Math.round(left)) + "원" : null,
+          pct !== null ? "판매가의 " + pct + "%" : "")+
+    tlOut("수수료로 빠지는 돈", feeWon !== null ? won(Math.round(feeWon)) + "원" : null,
+          pctHas ? "합 " + (Math.round(pctSum * 10) / 10) + "%" : "수수료율을 적으시면 나옵니다")+
+    tlOut("건마다 빠지는 돈", flatHas ? won(Math.round(flat)) + "원" : null,
+          flatHas ? "배달비 · 포장재 · 재료비 · 광고비" : "")+
+  '</div>'+
+  '<p class="tl-res-n">'+esc(note)+'</p>'+
+  '<p class="tl-res-n">여기서 <b>임차료 · 인건비 같은 고정비는 빼지 않았습니다.</b> '+
+    '한 건이 남기는 돈(공헌이익)이지 순이익이 아닙니다 — 고정비까지 보시려면 '+
+    '손익분기 계산을 같이 쓰세요.</p>'+
+  '<p class="tl-res-n">부가세는 다루지 않았습니다. 판매가와 재료비를 <b>같은 기준</b>'+
+    '(둘 다 세금 포함이거나 둘 다 제외)으로 적어 주셔야 맞습니다.</p>';
+}
+
+/* ════════ 원가율 · 마진 (V2 §16) ══════════════════════════════════ */
+function MarginRes(v){
+  var price = tlHas(v.price) ? tlNum(v.price) : null;
+  var cost  = tlHas(v.cost) ? tlNum(v.cost) : null;
+  var etc   = tlHas(v.etc) ? tlNum(v.etc) : 0;
+  var rate  = (price !== null && cost !== null) ? tlPct(cost, price) : null;
+  var cm    = (price !== null && cost !== null) ? price - cost - etc : null;
+  var cmPct = (cm !== null) ? tlPct(cm, price) : null;
+  var qty   = tlHas(v.qty) ? tlNum(v.qty) : null;
+  var month = (cm !== null && qty !== null) ? cm * qty : null;
+
+  var note;
+  if(price === null)    note = "판매가를 적으시면 시작됩니다.";
+  else if(!(price > 0)) note = "판매가가 0이면 비율을 낼 수 없습니다.";
+  else if(cost === null)note = "재료비를 적으시면 원가율이 나옵니다.";
+  else if(cm !== null && cm < 0)
+                        note = "지금 적으신 값으로는 한 개 팔 때마다 돈이 나갑니다. "+
+                               "판매가와 원가 칸을 다시 봐 주세요.";
+  else                  note = "원가를 판매가로 나눈 값입니다. 몇 %면 좋다고 말씀드리지 "+
+                               "않습니다 — 업종마다 구조가 달라서 우리가 댈 근거가 없습니다.";
+
+  return '<div class="tl-res-g">'+
+    tlOut("원가율", rate !== null ? rate + "%" : null,
+          rate !== null ? "판매가 대비 재료비" : "")+
+    tlOut("한 개 남는 돈", cm !== null ? won(Math.round(cm)) + "원" : null,
+          cmPct !== null ? "판매가의 " + cmPct + "%" : "")+
+    tlOut("한 달 남는 돈", month !== null ? won(Math.round(month)) + "원" : null,
+          month !== null ? won(qty) + "개 기준" : "판매 수량을 적으시면 나옵니다")+
+  '</div>'+
+  '<p class="tl-res-n">'+esc(note)+'</p>'+
+  '<p class="tl-res-n">"한 달 남는 돈" 은 <b>고정비를 빼기 전</b> 값입니다 — '+
+    '여기서 임차료 · 인건비 · 공과금이 빠져야 순이익입니다. '+
+    '그 선을 보시려면 손익분기 계산을 같이 쓰세요.</p>';
+}
+
+/* ════════ 폐업 예상비용 (V2 §16) ══════════════════════════════════
+   ⚠️⚠️ **나가는 돈만 세면 반쪽입니다.** 보증금과 시설 매각이 들어오는
+   쪽에 있어서, 둘을 같이 놓아야 실제로 얼마가 드는지가 나옵니다. */
+function CloseCostRes(v){
+  function sum(rows){
+    var t = 0, n = 0;
+    rows.forEach(function(r){ if(tlHas(v[r.key])){ t += tlNum(v[r.key]); n++; } });
+    return { t:t, n:n };
+  }
+  var out = sum(window.AM_CLOSE_OUT || []);
+  var inn = sum(window.AM_CLOSE_IN || []);
+  var net = (out.n || inn.n) ? out.t - inn.t : null;
+  var total = (window.AM_CLOSE_OUT || []).length + (window.AM_CLOSE_IN || []).length;
+  var filled = out.n + inn.n;
+
+  var note;
+  if(!filled) note = "한 칸이라도 적으시면 시작됩니다. 받으신 견적을 그대로 적으세요.";
+  else        note = "적으신 " + filled + "칸으로 셈한 값입니다 (전체 " + total + "칸). "+
+                     "안 적으신 칸은 계산에서 빠집니다 — 평균으로 메우지 않습니다.";
+
+  return '<div class="tl-res-g">'+
+    tlOut(net !== null && net < 0 ? "정리하고 남는 돈" : "실제로 드는 돈",
+          net !== null ? tlMan(Math.abs(net)) : null,
+          net !== null ? (net < 0 ? "돌아오는 돈이 더 큽니다" : "나가는 돈 − 돌아오는 돈") : "")+
+    tlOut("나가는 돈", out.n ? tlMan(out.t) : null,
+          out.n ? out.n + "칸 적으심" : "")+
+    tlOut("돌아오는 돈", inn.n ? tlMan(inn.t) : null,
+          inn.n ? inn.n + "칸 적으심" : "")+
+  '</div>'+
+  '<p class="tl-res-n">'+esc(note)+'</p>'+
+  '<p class="tl-res-n"><b>금액을 대신 넣어 드리지 않습니다.</b> 철거비와 원상복구비는 '+
+    '평수가 아니라 무엇을 뜯어내느냐로 갈립니다 — 업체 견적을 받아 그 값을 적으세요.</p>'+
+  '<p class="tl-res-n">통째로 <b>넘기시면</b> 철거 · 원상복구 칸이 통째로 빠지는 경우가 '+
+    '있습니다. 닫기로 정하기 전에 양도가 되는지부터 보시는 쪽이 대개 쌉니다.</p>';
+}
+
+/* ── 일곱 도구의 적는 함수 · 지우는 함수 · 화면 ─────────────────── */
+tlWire("target",    TargetRes);
+tlWire("premium",   PremiumRes);
+tlWire("rent",      RentRes);
+tlWire("hire",      HireRes);
+tlWire("delivery",  DeliveryRes);
+tlWire("margin",    MarginRes);
+tlWire("closecost", CloseCostRes);
+
+function PageToolTarget(){ return tlPage({
+  key:"target", h1:"목표 매출 계산", rows:(window.AM_TARGET||[]), res:TargetRes,
+  lead:"가져가고 싶은 돈을 먼저 적으시면, 그러려면 얼마를 팔아야 하는지가 나옵니다. "+
+       "손익분기가 본전이라면 이것은 그 위입니다.",
+  subs:{ "지금 조건":"손익분기 계산에 적으신 값을 그대로 옮기셔도 됩니다",
+         "나눠 보기":"안 적으셔도 월 매출까지는 나옵니다" },
+  next:"매출을 올리는 쪽과 비용을 줄이는 쪽을 같이 보세요" }); }
+
+function PageToolPremium(){ return tlPage({
+  key:"premium", h1:"권리금 따져보기", rows:(window.AM_PREMIUM||[]), res:PremiumRes,
+  lead:"달라는 권리금이 몇 달이면 돌아오는지, 그중 눈에 보이는 시설값이 얼마인지를 "+
+       "갈라 봅니다. 적으신 숫자를 나누는 것까지입니다.",
+  subs:{ "받은 값":"넘기시는 분이 적어 주신 값입니다" },
+  next:"계약 전에 봐 줄 전문가를 찾으세요", nextTo:"/providers/law" }); }
+
+function PageToolRent(){ return tlPage({
+  key:"rent", h1:"임대료 비율 계산", rows:(window.AM_RENT||[]), res:RentRes,
+  lead:"매출에서 임차료가 몇 %인지. 권리금까지 영업 기간으로 나눠 보면 자리에 "+
+       "실제로 쓰는 돈이 보입니다.",
+  subs:{ "한 번에 낸 것":"비워 두셔도 위의 비율은 나옵니다" },
+  next:"조건이 맞는 자리를 더 보세요", nextTo:"/stores" }); }
+
+function PageToolHire(){ return tlPage({
+  key:"hire", h1:"직원 고용비용 계산", rows:(window.AM_HIRE||[]), res:HireRes,
+  lead:"급여만 보시면 실제보다 적게 잡힙니다. 사업주 부담 4대보험 · 퇴직충당 · "+
+       "식대까지 더해 한 사람에게 실제로 드는 돈을 봅니다.",
+  subs:{ "한 사람 기준":"요율은 해마다 바뀌어서 저희가 적어 두지 않습니다" },
+  next:"채용과 노무는 맡기실 수 있습니다", nextTo:"/providers/staff" }); }
+
+function PageToolDelivery(){ return tlPage({
+  key:"delivery", h1:"배달 한 건 남는 돈", rows:(window.AM_DELIVERY||[]), res:DeliveryRes,
+  lead:"중개 · 결제 수수료는 비율로, 배달비 · 포장재 · 재료비는 건마다 빠집니다. "+
+       "둘을 갈라서 한 건에 얼마가 남는지 봅니다.",
+  subs:{ "비율로 빠지는 것":"계약서에 적힌 값을 그대로 적으세요" },
+  next:"포장재와 식자재 조건부터 비교해 보세요", nextTo:"/providers/supply" }); }
+
+function PageToolMargin(){ return tlPage({
+  key:"margin", h1:"원가율 · 마진 계산", rows:(window.AM_MARGIN||[]), res:MarginRes,
+  lead:"원가율과 마진은 같은 값을 뒤집어 본 것입니다. 한 번에 같이 냅니다.",
+  subs:{ "한 달로 보면":"비워 두셔도 비율은 나옵니다" },
+  next:"재료비는 거래처 조건에서 갈립니다", nextTo:"/providers/supply" }); }
+
+function PageToolCloseCost(){
+  var v = tlGet("closecost");
+  return PgHero({
+    crumb: Crumb([["사장님 도구","/tools"],["폐업 예상비용"]]),
+    kicker:"사장님 도구", h1:"폐업 예상비용",
+    lead:"나가는 돈만 세면 반쪽입니다. 보증금과 시설 매각은 돌아오는 쪽이라, "+
+         "둘을 같이 놓아야 실제로 얼마가 드는지가 나옵니다.",
+    tight:true
+  })+
+  '<section class="sec sec-white"><div class="w w-narrow">'+
+    '<h2 class="tl-h">나가는 돈 <span>받으신 견적을 그대로</span></h2>'+
+    '<ul class="tl-l">'+(window.AM_CLOSE_OUT||[]).map(function(r){
+      return tlRow(r, v, "closecostIn"); }).join("")+'</ul>'+
+    '<h2 class="tl-h">돌아오는 돈 <span>확정된 것만</span></h2>'+
+    '<ul class="tl-l">'+(window.AM_CLOSE_IN||[]).map(function(r){
+      return tlRow(r, v, "closecostIn"); }).join("")+'</ul>'+
+    '<div class="tl-res" id="tl-res">'+CloseCostRes(v)+'</div>'+
+    tlFoot("closecostReset")+
+  '</div></section>'+
+  tlNext("철거 · 원상복구 · 폐기물은 업체가 합니다", "/quote?side=close", "closecost");
+}
+
 /* ════════ 도구 모음 ═════════════════════════════════════════════ */
 function PageTools(){
   var list = (window.amTools ? amTools() : []);
@@ -111,19 +520,28 @@ function PageTools(){
          "우리가 댈 근거가 없습니다.",
     tight:true
   })+
+  /* ⚠️⚠️ **열셋을 한 줄로 늘어놓지 않습니다** (V2 §16 으로 여섯에서
+     열셋이 됐습니다). 평평한 열셋은 다섯 줄이라 "무엇부터 누를까" 가
+     묻힙니다 — 사장님이 던지는 질문으로 묶습니다.
+     ⚠️ 묶음 차례는 `tools.js` 의 `AM_TOOL_GROUPS` 한 곳입니다. */
   '<section class="sec sec-white"><div class="w">'+
-    '<ul class="tl-g">'+list.map(function(t){
-      return '<li><a class="tl-c" href="'+esc(t.to)+'">'+
-        '<span class="tl-c-ic">'+icon(t.icon,22)+'</span>'+
-        '<b>'+esc(t.name)+'</b>'+
-        '<span class="tl-c-l">'+esc(t.lead)+'</span>'+
-        /* ⚠️ 나오는 값 자리는 `—` 입니다. 그럴듯한 숫자를 넣으면 그
-           순간 지어낸 값입니다. */
-        '<span class="tl-c-m">'+
-          '<em>'+esc(t.ask)+'</em>'+icon("arrow",14)+'<em>'+esc(t.out)+'</em>'+
-        '</span>'+
-      '</a></li>';
-    }).join("")+'</ul>'+
+    (window.AM_TOOL_GROUPS||[]).map(function(g){
+      var mine = list.filter(function(t){ return t.grp === g; });
+      if(!mine.length) return "";        /* 빈 묶음은 줄째 뺍니다 */
+      return '<h2 class="tl-gh">'+esc(g)+'</h2>'+
+      '<ul class="tl-g">'+mine.map(function(t){
+        return '<li><a class="tl-c" href="'+esc(t.to)+'">'+
+          '<span class="tl-c-ic">'+icon(t.icon,22)+'</span>'+
+          '<b>'+esc(t.name)+'</b>'+
+          '<span class="tl-c-l">'+esc(t.lead)+'</span>'+
+          /* ⚠️ 나오는 값 자리는 `—` 입니다. 그럴듯한 숫자를 넣으면 그
+             순간 지어낸 값입니다. */
+          '<span class="tl-c-m">'+
+            '<em>'+esc(t.ask)+'</em>'+icon("arrow",14)+'<em>'+esc(t.out)+'</em>'+
+          '</span>'+
+        '</a></li>';
+      }).join("")+'</ul>';
+    }).join("")+
     '<p class="note note-mid">받으신 견적을 나란히 놓고 비교하는 것은 따로 있습니다.</p>'+
     '<div class="row-cta row-mid"><a class="btn btn-o" href="/quote">'+
       '견적 비교하기'+icon("arrow",16)+'</a></div>'+

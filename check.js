@@ -71,6 +71,14 @@ const PAGES = [
   ["/closure/gym",       "헬스장 폐업"],
   ["/providers",         "업체찾기"],
   ["/compare",           "업체 비교 (0곳일 때)"],
+  /* 도구 열셋 — ⚠️ **짜임새가 서로 다른 것**을 고릅니다. 나머지는
+     `tools/sweep-rest.js` 가 훑습니다 (전부 넣으면 검사가 두 배로 깁니다).
+       target     나눗셈 + 경계(공헌이익률 1% 아래)
+       premium    나눗셈 + 경계(회수 10년 초과)
+       closecost  나가는 쪽 · 돌아오는 쪽 두 묶음 */
+  ["/tools/target",      "도구 — 목표 매출"],
+  ["/tools/premium",     "도구 — 권리금"],
+  ["/tools/closecost",   "도구 — 폐업 예상비용"],
   ["/providers/interior","인테리어 · 시공 업체"],
   ["/providers/demolish","철거 업체"],
   ["/providers/it",      "IT · 매장시스템 업체"],
@@ -1847,6 +1855,98 @@ const AUDIT = `(() => {
   /* ⑮ MY 와 도구가 이어지는가
      ⚠️ "전부 지웁니다" 라고 해 놓고 남기면 그게 거짓말입니다. 가게
      컴퓨터는 여러 사람이 쓰므로 남의 눈에 그대로 들어갑니다. */
+  /* ══ 도구 열셋 (2026-10-05 V2 §16) ═══════════════════════════════ */
+
+  await f("도구 열셋이 저마다 묶음과 갈 곳을 가진다", "/tools", `
+    /* ⚠️ 묶음 이름이 AM_TOOL_GROUPS 에 없으면 그 도구가 목록에서
+       **조용히 빠집니다** — 주소는 살아 있어서 아무도 모릅니다. */
+    const T = window.AM_TOOLS || [], G = window.AM_TOOL_GROUPS || [];
+    if(T.length < 13) return "도구가 " + T.length + "개뿐입니다";
+    for(const t of T){
+      if(!t.grp) return t.name + " 에 묶음이 없습니다";
+      if(G.indexOf(t.grp) < 0) return t.name + " 의 묶음 '" + t.grp + "' 이 차례에 없습니다";
+      if(!(t.rel||[]).length) return t.name + " 에 이어지는 분야가 없습니다";
+    }
+    /* 화면에 전부 나와야 합니다 — 하나라도 빠지면 그 주소는 길이 없습니다 */
+    const cards = [].slice.call(document.querySelectorAll("#view .tl-g > li > a"));
+    if(cards.length !== T.length)
+      return "화면에 " + cards.length + "장인데 데이터는 " + T.length + "개입니다";
+    const hrefs = cards.map(function(a){ return a.getAttribute("href"); });
+    for(const t of T) if(hrefs.indexOf(t.to) < 0) return t.name + " 이 목록에 없습니다";
+    /* 묶음 머리말이 쓰이는 묶음 수와 같아야 합니다 */
+    const used = G.filter(function(g){ return T.some(function(t){ return t.grp === g; }); });
+    const hs = document.querySelectorAll("#view .tl-gh").length;
+    if(hs !== used.length) return "묶음 머리말이 " + hs + "개입니다 (" + used.length + ")";
+    return true;`);
+
+  await f("권리금 계산이 사람이 못 받는 기간을 숫자로 내지 않는다", "/tools/premium", `
+    /* ⚠️⚠️ 손익분기의 85조원과 **같은 자리**입니다. 월 순이익을 0.01 로
+       적으면 회수 기간이 300,000개월(25,000년)로 나왔습니다 — 숫자가
+       나왔다는 것만으로 답처럼 읽힙니다. */
+    const set = function(id, x){
+      const e = document.getElementById(id);
+      if(!e) return false;
+      e.value = String(x);
+      e.dispatchEvent(new Event("input", { bubbles:true }));
+      return true;
+    };
+    if(!set("premiumIn-premium", 3000)) return "권리금 칸을 못 찾습니다";
+    if(!set("premiumIn-profit", 0.01)) return "월 순이익 칸을 못 찾습니다";
+    await new Promise(function(r){ setTimeout(r, 120); });
+    const box = document.querySelector(".tl-res");
+    if(!box) return "결과 칸이 없습니다";
+    let t = box.innerText || "";
+    if(/NaN|Infinity/.test(t)) return "결과에 NaN · Infinity 가 있습니다";
+    /* ⚠️⚠️ **글 전체에서 찾지 마세요.** 아래 설명글에 "최장 10년" 이
+       들어 있어서, 값 칸에 300,000개월이 찍혀 있어도 통과했습니다 —
+       이 저장소에서 "검사가 화면 글 전체에서 찾음" 으로 겪은 자리입니다.
+       **값 칸 하나**만 봅니다. */
+    const cell = function(){
+      const o = document.querySelector(".tl-res .tl-o");
+      return o ? ((o.querySelector(".tl-o-v")||{}).textContent || "").trim() : "";
+    };
+    const v1 = cell();
+    const m1 = /^([0-9,.]+)개월/.exec(v1);
+    if(m1 && parseFloat(m1[1].replace(/,/g, "")) > 120)
+      return "회수 기간 칸에 " + v1 + " 이 나옵니다 — 사람이 못 받는 기간입니다";
+    if(v1.indexOf("10년") < 0)
+      return "회수 기간 칸이 '" + v1 + "' 입니다 — 10년이 넘는다고 말해야 합니다";
+    /* ⚠️ 적힌 값이 누구 것인지 밝히는 줄 — 매물 화면의 매출과 같은 자리입니다 */
+    if(t.indexOf("넘기시는 분이 적어 주신 값") < 0)
+      return "월 순이익이 누구 값인지 밝히는 줄이 없습니다";
+    /* ⚠️ 정상 범위에서는 **나와야** 합니다 — 너무 넓게 막으면 그것도 고장입니다 */
+    set("premiumIn-profit", 250);
+    await new Promise(function(r){ setTimeout(r, 120); });
+    const v2 = cell();
+    if(!/^[0-9,.]+개월/.test(v2))
+      return "정상 조건(월 250만원)에서 기간이 '" + v2 + "' 로 나옵니다";
+    return true;`);
+
+  await f("폐업 예상비용이 돌아오는 돈을 같이 센다", "/tools/closecost", `
+    /* ⚠️⚠️ **나가는 돈만 세면 반쪽입니다.** 보증금과 시설 매각이
+       들어오는 쪽에 있어서, 둘을 같이 놓아야 실제로 얼마가 드는지가
+       나옵니다 — 지시서는 셋을 따로 적었지만 따로 두면 그 차액을
+       아무도 못 봅니다. */
+    if(!(window.AM_CLOSE_IN||[]).length) return "돌아오는 돈 칸이 없습니다";
+    if(!(window.AM_CLOSE_OUT||[]).length) return "나가는 돈 칸이 없습니다";
+    const set = function(id, x){
+      const e = document.getElementById(id);
+      if(!e) return false;
+      e.value = String(x);
+      e.dispatchEvent(new Event("input", { bubbles:true }));
+      return true;
+    };
+    if(!set("closecostIn-demolish", 500)) return "철거 칸을 못 찾습니다";
+    if(!set("closecostIn-deposit", 3000)) return "보증금 칸을 못 찾습니다";
+    await new Promise(function(r){ setTimeout(r, 120); });
+    const t = (document.querySelector(".tl-res")||{}).innerText || "";
+    if(/NaN|Infinity/.test(t)) return "결과에 NaN · Infinity 가 있습니다";
+    /* 돌아오는 돈이 더 크면 "남는 돈" 이라고 말해야 합니다 */
+    if(t.indexOf("남는 돈") < 0)
+      return "돌아오는 돈이 더 큰데 그렇게 말하지 않습니다";
+    if(t.indexOf("2,500") < 0) return "차액이 안 맞습니다 — " + t.split("\\n")[1];
+    return true;`);
+
   await f("계산기가 말이 안 되는 숫자를 내지 않는다", "/tools/bep", `
     /* ⚠️⚠️ 변동비 합이 **100% 를 넘는 것**은 막고 있었는데, 99.99% 는
        안 막고 있었습니다. 공헌이익률이 0.01% 라 나눈 값이 85조원으로

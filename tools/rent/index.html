@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>임대료 비율 계산 · 인수인계 · 사장님의 모든 시작과 끝</title>
+<meta name="description" content="월 매출에서 월세와 관리비가 몇 퍼센트인지. 권리금까지 영업 기간으로 나눠 보면 자리에 실제로 쓰는 돈이 보입니다.">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="color-scheme" content="only light">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="임대료 비율 계산 · 인수인계 · 사장님의 모든 시작과 끝">
+<meta property="og:description" content="월 매출에서 월세와 관리비가 몇 퍼센트인지. 권리금까지 영업 기간으로 나눠 보면 자리에 실제로 쓰는 돈이 보입니다.">
+<!-- ⚠️ og:image 는 **주소 전체**여야 합니다. "/og.jpg" 로 두면 크롤러가
+     우리 도메인을 모르는 채로 읽어 카카오톡·페이스북 미리보기에 안 뜹니다. -->
+<meta property="og:image" content="https://storeway.co.kr/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="인수인계 · 사장님의 모든 시작과 끝">
+<meta property="og:site_name" content="인수인계">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:url" content="https://storeway.co.kr/tools/rent">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- ⚠️ 이 파일은 build-pages.js 가 **다시 쓰지 않습니다**(원본이라서).
+     그래서 다른 화면과 달리 canonical 을 손으로 둡니다. 없으면 JS 를
+     안 돌리는 크롤러 눈에 메인만 canonical 이 없습니다.
+     다른 주소로 열렸을 때는 app.js 의 paintMeta() 가 고쳐 씁니다. -->
+<link rel="canonical" href="https://storeway.co.kr/tools/rent">
+
+<link rel="manifest" href="/manifest.json">
+<!-- ⚠️ rel="icon" 을 안 적으면 브라우저가 /favicon.ico 를 찾습니다.
+     파일이 없으면 모든 화면에서 404 가 한 번씩 납니다. -->
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+<!-- 글꼴은 CDN 이 막혀도 사이트가 멈추지 않습니다 — 대체 사슬에
+     윈도우(맑은 고딕)·맥(애플 SD 산돌) 기본 한글 글꼴이 들어 있습니다. -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+
+<link rel="stylesheet" href="/css/tokens.css?v=c59b824b">
+<link rel="stylesheet" href="/css/app.css?v=a5b9e289">
+<link rel="stylesheet" href="/css/pages.css?v=95608f8d">
+
+<!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
+     마세요 — 다음에 돌릴 때 덮어써집니다. 내용은 js/data/faq.js 와
+     js/app.js 의 META 에서 나옵니다. -->
+<!-- ld:start -->
+<!-- ld:end -->
+</head>
+<body>
+<a class="skip" href="#view">본문 바로가기</a>
+
+<!-- ⚠️⚠️ **`defer` 를 빼지 마세요.** 이 스크립트 서른넷은 `<body>` 맨
+     위, 미리 그려 둔 본문보다 **앞**에 있습니다.
+     동기 스크립트는 HTML 파싱을 막으므로, `defer` 가 없으면 **서른넷을
+     다 받을 때까지 화면이 빈 채로** 있습니다 — 느린 3G 에서 6.3초였고,
+     정작 보여 줄 글은 이미 HTML 안에 들어 있었습니다.
+
+     `defer` 는 **차례를 지킵니다** (이 저장소는 스크립트 순서가 곧 의존
+     순서입니다). 실행은 `DOMContentLoaded` 보다 먼저라 `js/app.js` 의
+     시작 코드도 그대로 돕니다. `async` 는 차례가 섞여서 안 됩니다.
+     `build-pages.js` 의 `checkDefer()` 가 빠지면 빌드를 멈춥니다. -->
+<!-- ⚠️ 자산 경로는 반드시 절대 경로(/js/… · /img/…)여야 합니다.
+     상대 경로면 /start/cost 같은 깊은 주소에서 /start/js/… 를 찾아
+     스크립트가 통째로 404 가 됩니다. -->
+<script defer src="/js/data/korean.js?v=c5c3addd"></script>
+<script defer src="/js/data/brand.js?v=d027b9d8"></script>
+<script defer src="/js/data/site.js?v=60a1048b"></script>
+<script defer src="/js/data/regions.js?v=149bea2a"></script>
+<script defer src="/js/data/industries.js?v=ec9afca1"></script>
+<script defer src="/js/data/catalog.js?v=058bde9c"></script>
+<script defer src="/js/data/lifecycle.js?v=c41a8ad4"></script>
+<script defer src="/js/data/journey.js?v=1bc0dbdb"></script>
+<script defer src="/js/data/franchise.js?v=8dfc74f4"></script>
+<script defer src="/js/data/providers.js?v=6681a7f4"></script>
+<script defer src="/js/data/market.js?v=7eacce92"></script>
+<script defer src="/js/data/support.js?v=4fbaba73"></script>
+<script defer src="/js/data/content.js?v=a677efe1"></script>
+<script defer src="/js/data/sample.js?v=11c4fbdd"></script>
+<script defer src="/js/data/photos.js?v=3582d9f5"></script>
+<script defer src="/js/data/legal-terms.js?v=797281f2"></script>
+<script defer src="/js/data/legal-privacy.js?v=2c1a3d66"></script>
+<script defer src="/js/data/faq.js?v=9d470b8f"></script>
+<script defer src="/js/data/tools.js?v=20e6eb70"></script>
+<script defer src="/js/data/join.js?v=957dd8d8"></script>
+
+<script defer src="/js/components/base.js?v=16b8381f"></script>
+<script defer src="/js/components/ui.js?v=53b8c29b"></script>
+<script defer src="/js/components/chrome.js?v=2b23409e"></script>
+
+<script defer src="/js/pages/home.js?v=57967794"></script>
+<script defer src="/js/pages/journey.js?v=cca5930d"></script>
+<script defer src="/js/pages/flow.js?v=6bc36d55"></script>
+<script defer src="/js/pages/providers.js?v=d491b5c2"></script>
+<script defer src="/js/pages/franchise.js?v=450bfe0c"></script>
+<script defer src="/js/pages/market.js?v=0fb072d0"></script>
+<script defer src="/js/pages/quote.js?v=6c2055e4"></script>
+<script defer src="/js/pages/info.js?v=ceb60d46"></script>
+<script defer src="/js/pages/tools.js?v=48d9271c"></script>
+<script defer src="/js/pages/my.js?v=7c9fbfbf"></script>
+<script defer src="/js/pages/search.js?v=7dd86c89"></script>
+<script defer src="/js/pages/legal.js?v=915c15ae"></script>
+
+<script defer src="/js/app.js?v=ac460e6d"></script>
+
+<div id="chrome-t"></div>
+<!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가
+     이 사이에 **크롤러가 읽을 본문**을 써 넣습니다. 메인은 원본이라
+     shell() 이 손대지 않아서, 한동안 여기가 빈 칸으로 나갔습니다. -->
+<main id="view"><div class="pre w"><h1>임대료 비율 계산</h1><p>월 매출에서 월세와 관리비가 몇 퍼센트인지. 권리금까지 영업 기간으로 나눠 보면 자리에 실제로 쓰는 돈이 보입니다.</p><h2>임대료 비율 계산</h2><p>매출에서 임차료가 몇 %인지. 권리금까지 달마다 나눠 보면 더 큽니다.</p><p>월 매출 · 월세 · 관리비 를 적으시면 임차료 비율 · 권리금 포함 비율 이 나옵니다. 안 적으신 칸은 계산에서 빠지고, 업계 평균으로 메우지 않습니다.</p><h2>적는 항목</h2><ul><li>월 매출 (만원) — 부가세를 뺀 매출로 적으시면 비율이 더 정확합니다</li><li>월세 (만원)</li><li>관리비 (만원)</li><li>권리금 (만원) — 있으면. 아래 개월로 나눠 달마다 얼마인지 같이 봅니다</li><li>보증금 (만원) — 돌려받는 돈이라 비용에 안 더합니다 — 얼마가 묶여 있는지만 냅니다</li><li>앞으로 영업할 개월 (개월) — 권리금을 나눠 보려면 적으세요</li></ul></div></main>
+<div id="chrome-b"></div>
+</body>
+</html>

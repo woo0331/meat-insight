@@ -45,7 +45,10 @@ window.AM_SAMPLES = {
     intro:"예시로 만든 프로필입니다. 실제 업체가 아닙니다 — 등록하시면 이런 짜임새로 나갑니다.",
     since:2015, staff:6,
     consultHours:"평일 09:00~18:00",
-    verified:{ biz:true, license:true, insurance:true },
+    /* ⚠️ 여섯 중 넷만 켭니다 — 전부 켜 두면 업체 사장님이 "등록하면
+       저절로 다 켜지는구나" 로 읽습니다. 확인은 저희가 서류를 보고
+       하나씩 켜는 것입니다 (V2 §20). */
+    verified:{ biz:true, owner:true, phone:true, license:true },
     portfolio:[
       { title:"18평 카페 — 카운터와 전기 증설", industry:"cafe",
         region:"gyeonggi", year:2026, images:[] },

@@ -17,7 +17,15 @@
 
 function PageStores(){
   var ind = nowQS("i"), reg = nowQS("r");
-  var list = amStores({ industry:ind||null, region:reg||null });
+  var pk = nowQS("pk") === "1", kd = nowQS("kd");
+  var rng = {};
+  (window.AM_STORE_RANGES||[]).forEach(function(g){ rng[g.key] = nowQS(g.key); });
+  var base = { industry:ind||null, region:reg||null };
+  var f = { industry:ind||null, region:reg||null, parking:pk, kind:kd||null };
+  (window.AM_STORE_RANGES||[]).forEach(function(g){ if(rng[g.key]) f[g.key] = rng[g.key]; });
+  var list = amStores(f);
+  /* ⚠️ 지역 · 업종만 건 수 — 구간 거르개가 몇 건을 숨겼는지 밝히려고 */
+  var all  = amStores(base);
   return PgHero({
     kicker:"점포 · 상가 · 매장 양도",
     h1raw:"자리부터 정합니다.",
@@ -26,10 +34,26 @@ function PageStores(){
     cta:'<a class="btn btn-o btn-lg" href="'+esc(quoteTo({side:"close"}))+'">내 매장 내놓기'+icon("arrow",18)+'</a>'
   })+
   '<section class="sec sec-white"><div class="w">'+
-    '<div class="fil"><span class="fil-ic" aria-hidden="true">'+icon("sliders",18)+'</span>'+
+    /* 거르개 — 2026-10-05 V2 §7.
+       ⚠️⚠️ **월매출로는 안 거릅니다.** 올리신 사장님이 적은 값이라
+       확인할 방법이 없는데 거르개로 만들면 그 숫자가 사실처럼 읽힙니다 —
+       화면이 그 값을 낼 때마다 누구 값인지 밝히는 것과 같은 까닭입니다. */
+    '<div class="fil fil-wrap"><span class="fil-ic" aria-hidden="true">'+icon("sliders",18)+'</span>'+
       IndustrySelect("fil-i", ind, "mkGo('/stores')")+
       RegionSelect("fil-r", reg, "mkGo('/stores')")+
-      '<span class="fil-n">'+list.length+'건</span></div>'+
+      '<select class="sel" id="fil-kd" aria-label="거래 방식" onchange="mkGo(\'/stores\')">'+
+        /* ⚠️ 딱지를 길게 적으면 **폰에서 잘립니다** — 390px 에서
+           "양도 · 임대 전체" 가 "양도 · 임대 전" 으로 나왔습니다.
+           옆 칸들과 같은 "<무엇> 전체" 꼴로 맞춥니다. */
+        '<option value="">거래 전체</option>'+
+        '<option value="transfer"'+(kd==="transfer"?" selected":"")+'>매장 양도</option>'+
+        '<option value="lease"'+(kd==="lease"?" selected":"")+'>신규 임대</option>'+
+      '</select>'+
+      (window.AM_STORE_RANGES||[]).map(function(g){
+        return mkRangeSel(g, rng[g.key], "/stores"); }).join("")+
+      mkCk("pk", "주차 가능", pk, "/stores")+
+      mkCount(list.length, all.length)+
+    '</div>'+
     (list.length
       ? '<div class="mk-g">'+list.slice(0, amShown(list.length)).map(StoreCard).join("")+'</div>'+
         MoreBtn(list.length)
@@ -80,7 +104,11 @@ function StoreCard(s){
 
 function PageAssets(){
   var ind = nowQS("i"), reg = nowQS("r"), cat = nowQS("c"), sub = nowQS("s");
-  var list = amAssets({ industry:ind||null, region:reg||null, cat:cat||null, sub:sub||null });
+  var dl = nowQS("dl"), pr = nowQS("pr");
+  var base = { industry:ind||null, region:reg||null, cat:cat||null, sub:sub||null };
+  var list = amAssets({ industry:ind||null, region:reg||null, cat:cat||null, sub:sub||null,
+                        deal:dl||null, pr:pr||null });
+  var all  = amAssets(base);
   var indObj = ind ? amIndustry(ind) : null;
   return PgHero({
     kicker:"시설 · 집기 · 재고",
@@ -91,15 +119,34 @@ function PageAssets(){
   })+
   '<section class="sec sec-white"><div class="w">'+
     (indObj && indObj.equip.length ? '<ul class="chip-g chip-g-fil">'+
-      '<li><a class="chip'+(sub?"":" on")+'" href="/assets?i='+encodeURIComponent(ind)+'">전체</a></li>'+
+      '<li><a class="chip'+(sub?"":" on")+'" href="'+esc(mkKeep("/assets",{s:""}))+'">전체</a></li>'+
       indObj.equip.map(function(e){
-        return '<li><a class="chip'+(sub===e.key?" on":"")+'" href="/assets?i='+
-          encodeURIComponent(ind)+'&s='+encodeURIComponent(e.key)+'">'+esc(e.name)+'</a></li>';
+        return '<li><a class="chip'+(sub===e.key?" on":"")+'" href="'+
+          esc(mkKeep("/assets",{s:e.key}))+'">'+esc(e.name)+'</a></li>';
       }).join("")+'</ul>' : "")+
-    '<div class="fil"><span class="fil-ic" aria-hidden="true">'+icon("sliders",18)+'</span>'+
+    '<div class="fil fil-wrap"><span class="fil-ic" aria-hidden="true">'+icon("sliders",18)+'</span>'+
+      /* ⚠️⚠️ 고른 장비 칩(`?s=`)과 종류(`?c=`)를 **숨은 칸으로 들고
+         갑니다.** 안 들고 가면 지역을 바꾸는 순간 칩이 조용히 꺼지고,
+         손님은 자기가 끈 줄 모르고 결과가 늘어난 것만 봅니다 —
+         `/providers/:cat` 에서 하위 분류를 그렇게 지키고 있습니다. */
+      '<input type="hidden" id="fil-c" value="'+esc(cat)+'">'+
+      '<input type="hidden" id="fil-s" value="'+esc(sub)+'">'+
       IndustrySelect("fil-i", ind, "mkGo('/assets')")+
       RegionSelect("fil-r", reg, "mkGo('/assets')")+
-      '<span class="fil-n">'+list.length+'건</span></div>'+
+      '<select class="sel" id="fil-dl" aria-label="거래 단위" onchange="mkGo(\'/assets\')">'+
+        '<option value="">낱개 · 일괄 전체</option>'+
+        '<option value="single"'+(dl==="single"?" selected":"")+'>낱개로</option>'+
+        '<option value="bulk"'+(dl==="bulk"?" selected":"")+'>묶음으로</option>'+
+        '<option value="all"'+(dl==="all"?" selected":"")+'>시설 전체</option>'+
+      '</select>'+
+      '<select class="sel" id="fil-pr" aria-label="값" onchange="mkGo(\'/assets\')">'+
+        '<option value="">값 전체</option>'+
+        (window.AM_ASSET_PRICE||[]).map(function(o){
+          return '<option value="'+esc(o.k)+'"'+(pr===o.k?" selected":"")+'>'+
+            esc(o.name)+'</option>'; }).join("")+
+      '</select>'+
+      mkCount(list.length, all.length)+
+    '</div>'+
     (list.length
       ? '<div class="mk-g">'+list.slice(0, amShown(list.length)).map(AssetCard).join("")+'</div>'+
         MoreBtn(list.length)
@@ -141,12 +188,61 @@ function AssetCard(a){
     '</span></a>';
 }
 
+/* ── 매물 거르개 (2026-10-05 V2 §7) ──────────────────────────────
+   ⚠️⚠️ **주소에 전부 실립니다.** 뒤로 가기 · 새로고침 · 링크 공유에
+   살아남아야 "이 조건으로 본 것" 을 가족에게 보낼 수 있습니다.
+   ⚠️ 칸 이름(`id`)이 곧 주소의 key 입니다 — `mkGo()` 가 한 곳에서
+   읽어 모으기 때문에, 칸을 늘려도 거기만 고치면 됩니다. */
+var MK_KEYS = ["i","r","c","s","py","dp","rt","pm","pk","kd","dl","pr"];
+
 window.mkGo = function(base){
-  var i = $("fil-i"), r = $("fil-r"); var q = [];
-  if(i && i.value) q.push("i="+encodeURIComponent(i.value));
-  if(r && r.value) q.push("r="+encodeURIComponent(r.value));
+  var q = [];
+  MK_KEYS.forEach(function(k){
+    var e = $("fil-" + k);
+    if(!e) return;
+    var v = (e.type === "checkbox") ? (e.checked ? "1" : "") : e.value;
+    if(v) q.push(k + "=" + encodeURIComponent(v));
+  });
   go(base+(q.length ? "?"+q.join("&") : ""));
 };
+
+/* 켜 둔 거르개는 그대로 두고 **한 칸만** 바꾼 주소를 만듭니다.
+   ⚠️ 칩을 누를 때 나머지가 꺼지면, 손님은 자기가 끈 줄 모르고 결과가
+   늘어난 것만 봅니다. 빈 문자열을 주면 그 칸만 끕니다. */
+function mkKeep(base, over){
+  var q = [];
+  MK_KEYS.forEach(function(k){
+    var v = (over && Object.prototype.hasOwnProperty.call(over, k))
+      ? over[k] : nowQS(k);
+    if(v) q.push(k + "=" + encodeURIComponent(v));
+  });
+  return base + (q.length ? "?" + q.join("&") : "");
+}
+
+/* 구간 고르개 하나 — ⚠️ 이름을 손으로 적지 마세요. `market.js` 의
+   `AM_STORE_RANGES` 한 곳에서 옵니다. */
+function mkRangeSel(g, val, base){
+  return '<select class="sel" id="fil-'+esc(g.key)+'" aria-label="'+esc(g.name)+'" '+
+    'onchange="mkGo(\''+esc(base)+'\')">'+
+    '<option value="">'+esc(g.name)+' 전체</option>'+
+    (g.opts||[]).map(function(o){
+      return '<option value="'+esc(o.k)+'"'+(val===o.k?" selected":"")+'>'+
+        esc(o.name)+'</option>';
+    }).join("")+'</select>';
+}
+/* 체크 한 칸 — ⚠️ `<label>` 로 감싸 글자를 눌러도 켜집니다 (누름 44px) */
+function mkCk(id, name, on, base){
+  return '<label class="fil-ck'+(on?" on":"")+'">'+
+    '<input type="checkbox" id="fil-'+esc(id)+'"'+(on?" checked":"")+
+    ' onchange="mkGo(\''+esc(base)+'\')">'+
+    '<span>'+esc(name)+'</span></label>';
+}
+/* 거르개로 몇 건이 빠졌는지 — ⚠️ 안 밝히면 손님은 원래 그만큼인 줄 압니다 */
+function mkCount(shown, all){
+  return '<span class="fil-n">'+shown+'건'+
+    (all > shown ? '<em class="fil-off">거르개로 '+(all - shown)+'건 숨김</em>' : '')+
+  '</span>';
+}
 
 /* ⚠️ 중개자라는 사실과, 적힌 값이 누구 것인지를 같이 말합니다 */
 function BridgeNote(){

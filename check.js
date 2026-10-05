@@ -2706,6 +2706,108 @@ const AUDIT = `(() => {
     if(!keep) return "'더 보기' 를 누르면 맨 위로 올라갑니다";
     return true;`);
 
+  /* ── 2026-10-05 V2 §7 · §11 의 거르개 ─────────────────────────────
+     ⚠️⚠️ **"확인" 이 두 뜻으로 쓰였습니다.** 배지 목록에 "포트폴리오
+     확인" 을 적어 두었더니 "확인된 곳만" 거르개가 **사진만 올린 업체**
+     까지 집었습니다 — 저희가 서류를 본 것과 업체가 사진을 올린 것은
+     다른 일입니다. 지금은 amProviderVerified(서류) 와
+     amProviderBadges(서류 + 센 값)가 갈려 있고, 거르개는 앞쪽만 봅니다.
+     ⚠️ 업체가 0곳이라 이 자리는 **등록되는 날까지 아무도 안 봅니다** —
+     검사가 그 자리에서 세 곳을 끼워 넣고 봅니다 (저장소는 그대로 0곳). */
+  await f("업체 거르개가 확인과 포트폴리오를 가른다", "/providers/interior", `
+    const base = { regions:["gyeonggi"], industries:["cafe"],
+                   subs:["interior"], intro:"검사 안에서만 삽니다." };
+    window.AM_PROVIDERS.push(
+      Object.assign({ id:"zz-v", name:"확인만", verified:{ biz:true } }, base),
+      Object.assign({ id:"zz-f", name:"포트폴리오만",
+        portfolio:[{ title:"검사용", at:2025 }] }, base),
+      Object.assign({ id:"zz-n", name:"둘다없음" }, base));
+    const ids = function(f){
+      return window.amProviders(Object.assign({ cat:"interior" }, f))
+        .filter(function(p){ return /^zz-/.test(p.id); })
+        .map(function(p){ return p.id; }).sort().join(",");
+    };
+    const all  = ids({});
+    const onV  = ids({ verified:true });
+    const onF  = ids({ folio:true });
+    const both = ids({ verified:true, folio:true });
+    /* 서류를 본 것만 "확인" 입니다 — 센 값은 거기 안 들어갑니다 */
+    const vFolio = window.amProviderVerified(window.amProvider("zz-f"));
+    const bFolio = window.amProviderBadges(window.amProvider("zz-f"));
+    window.AM_PROVIDERS = window.AM_PROVIDERS.filter(function(p){
+      return !/^zz-/.test(p.id); });
+    if(all !== "zz-f,zz-n,zz-v") return "거르개를 안 걸었는데 셋이 다 안 나옵니다 — " + all;
+    if(onV !== "zz-v") return "'확인된 곳만' 이 서류 본 곳만 안 냅니다 — " + onV;
+    if(onF !== "zz-f") return "'포트폴리오 있는 곳만' 이 안 맞습니다 — " + onF;
+    if(both !== "")    return "둘 다 켰는데 한쪽만 맞는 곳이 나옵니다 — " + both;
+    if(vFolio.length)  return "포트폴리오를 '확인' 으로 셉니다 — " + vFolio.join(",");
+    if(!bFolio.some(function(x){ return x.indexOf("포트폴리오") === 0; }))
+      return "배지에서 포트폴리오 건수가 사라졌습니다";
+    return true;`);
+
+  /* ⚠️⚠️ **구간이 겹치면 거르개를 믿을 수 없습니다.** 처음에 위아래를
+     둘 다 닫아 두었더니 보증금 3,000만원짜리가 "1천~3천" 과 "3천~5천"
+     **두 칸에 다 걸렸습니다.** 손님이 3천~5천을 골랐는데 3,000 짜리가
+     나오면 그 다음부터 거르개를 안 씁니다.
+     ⚠️ 경계값 **바로 그 값**을 넣어 봅니다 — 손익분기 85조원 · 권리금
+     25,000년이 둘 다 "경계만 보고 그 옆을 안 봐서" 났습니다. */
+  await f("매물 거르개의 칸이 겹치지도 비지도 않는다", "/stores", `
+    const groups = (window.AM_STORE_RANGES||[]).map(function(g){
+      return { name:g.name, opts:g.opts };
+    }).concat([{ name:"시설 값", opts:window.AM_ASSET_PRICE||[] }]);
+    if(groups.length < 5) return "거르개 묶음이 모자랍니다 — " + groups.length;
+    for(const g of groups){
+      if(!(g.opts||[]).length) return "거르개 묶음 " + g.name + "에 칸이 없습니다";
+      /* 재 보는 값 — 경계와 그 바로 위아래 */
+      const probes = [];
+      g.opts.forEach(function(o){
+        [o.min, o.max].forEach(function(v){
+          if(v == null) return;
+          [v, v + 1, v - 1].forEach(function(x){
+            if(x >= 0 && probes.indexOf(x) < 0) probes.push(x); });
+        });
+      });
+      for(const v of probes){
+        const hit = g.opts.filter(function(o){ return window.amInRange(v, o); });
+        if(hit.length > 1)
+          return g.name + " " + v + " → " + hit.length + "칸에 걸립니다 — " +
+                 hit.map(function(o){ return o.name; }).join(" / ");
+        if(hit.length === 0)
+          return g.name + " " + v + " → 어느 칸에도 안 걸립니다";
+      }
+      /* ⚠️ **안 적은 값은 어디에도 안 걸립니다** — 모르는 것을 조건 건
+         손님에게 섞어 보내면 헛걸음입니다 */
+      if(g.opts.some(function(o){ return window.amInRange(null, o); }))
+        return "거르개 묶음 " + g.name + "에서 값을 안 적은 매물이 걸립니다";
+    }
+    return true;`);
+
+  /* ⚠️⚠️ **거르개로 몇 건이 빠졌는지 밝혀야 합니다.** 안 밝히면 손님은
+     그 분야에 원래 그만큼만 있는 줄 알고 나갑니다 — 0 을 0 이라고
+     말하는 것과 같은 까닭입니다 (절대 규칙 2). */
+  await f("거르개로 숨긴 건수를 밝힌다", "/providers/interior?v=1", `
+    const base = { regions:["gyeonggi"], industries:["cafe"],
+                   subs:["interior"], intro:"검사 안에서만 삽니다." };
+    window.AM_PROVIDERS.push(
+      Object.assign({ id:"zz-h1", name:"확인된 곳", verified:{ biz:true } }, base),
+      Object.assign({ id:"zz-h2", name:"안된 곳 하나" }, base),
+      Object.assign({ id:"zz-h3", name:"안된 곳 둘" }, base));
+    window.rerender(true);
+    await new Promise(r => setTimeout(r, 80));
+    const ck  = document.getElementById("fil-v");
+    const off = document.querySelector(".fil-off");
+    const txt = off ? off.textContent : "";
+    const n   = document.querySelectorAll(".pv-g > .pv-w").length;
+    window.AM_PROVIDERS = window.AM_PROVIDERS.filter(function(p){
+      return !/^zz-h/.test(p.id); });
+    window.rerender(true);
+    if(!ck) return "'확인된 곳만' 체크칸이 없습니다";
+    if(!ck.checked) return "주소에 켜져 있는데 체크칸이 꺼져 있습니다";
+    if(n !== 1) return "거르개를 켰는데 " + n + "곳이 나옵니다";
+    if(!off) return "거르개로 두 곳이 빠졌는데 그 사실을 안 밝힙니다";
+    if(txt.indexOf("2") < 0) return "숨긴 건수가 센 값이 아닙니다 — " + txt;
+    return true;`);
+
   /* ⚠️⚠️ **브랜드 이름 뒤의 조사를 손으로 적으면 안 됩니다.**
      "ABOUTMEAT은 통신판매중개자이며" 로 박아 두었다가 이름이 "인수인계"
      가 되자 **"인수인계은"** 이 됐습니다 — 하필 전자상거래법 제20조

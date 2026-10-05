@@ -2294,3 +2294,23 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .tl-gh{ margin:var(--s8) 0 var(--s4); font-size:var(--t-lg); font-weight:800;
   letter-spacing:-.03em; color:var(--ink); }
 .tl-gh:first-child{ margin-top:0; }
+
+/* ── 매물 · 업체 거르개 (2026-10-05 V2 §7 · §11) ─────────────────
+   ⚠️ 칸이 넷에서 **여덟**이 됐습니다. 한 줄에 다 넣으려 하면 좁은
+   화면에서 적는 칸이 90px 이 됩니다 — 줄바꿈을 허용합니다. */
+.fil-wrap{ flex-wrap:wrap; row-gap:var(--s2); }
+/* 켜고 끄는 한 칸 — ⚠️ `<label>` 이라 글자를 눌러도 켜집니다.
+   ⚠️ 누르는 것은 40px 이상입니다 (`--tap` 은 48px). */
+.fil-ck{ display:inline-flex; align-items:center; gap:var(--s2);
+  min-height:44px; padding:0 var(--s4) 0 var(--s3);
+  border:1px solid var(--line); border-radius:var(--r-pill);
+  background:var(--surface); font-size:var(--t-cap); font-weight:700;
+  color:var(--ink2); cursor:pointer; white-space:nowrap; }
+.fil-ck input{ width:17px; height:17px; accent-color:var(--blue); cursor:pointer; }
+.fil-ck.on{ border-color:var(--blue); background:var(--bg-2); color:var(--navy); }
+@media (hover:hover){ .fil-ck:hover{ border-color:var(--blue); } }
+/* ⚠️⚠️ **거르개로 몇 건이 빠졌는지 밝힙니다.** 안 밝히면 손님은 그
+   분야에 원래 그만큼뿐인 줄 압니다 — 0 을 0 이라고 말하는 것과 같은
+   까닭입니다. */
+.fil-off{ display:block; font-style:normal; font-size:var(--t-cap);
+  font-weight:400; color:var(--ink2); }

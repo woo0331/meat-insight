@@ -39,10 +39,16 @@ function PageProviders(){
 /* ── /providers/:cat — 그 분류의 업체 ───────────────────────────── */
 function PageProviderCat(cat){
   var sub = nowQS("s"), ind = nowQS("i"), reg = nowQS("r");
+  /* 2026-10-05 V2 §11 — 우리가 **실제로 들고 있는 사실**로만 거릅니다 */
+  var vf = nowQS("v") === "1", fo = nowQS("f") === "1";
   var side = amCatSide(cat.key);
   var items = amCatItems(cat, ind);
   /* ⚠️⚠️ `cat` 을 꼭 넘깁니다 — 안 넘기면 모든 업체가 모든 분야에 나옵니다. */
   var list = amProviders({ cat:cat.key, sub:sub || null,
+                           industry:ind || null, region:reg || null,
+                           verified:vf, folio:fo });
+  /* 거르개를 켜면 몇 곳이 빠지는지 — ⚠️ **센 값**입니다 */
+  var all  = amProviders({ cat:cat.key, sub:sub || null,
                            industry:ind || null, region:reg || null });
 
   return PgHero({
@@ -68,7 +74,26 @@ function PageProviderCat(cat){
       IndustrySelect("fil-i", ind, "pcGo('"+esc(cat.key)+"')")+
       RegionSelect("fil-r", reg, "pcGo('"+esc(cat.key)+"')")+
       '<input type="hidden" id="fil-s" value="'+esc(sub)+'">'+
-      '<span class="fil-n">'+(list.length ? list.length+"곳" : "0곳")+'</span>'+
+      /* ⚠️⚠️ **재 본 적 없는 값으로는 안 거릅니다.** 지시서 §11 의
+         "평점 · 응답속도 · 가격대" 는 각각 후기 0건 · 재는 장치 없음 ·
+         업체마다 단위가 달라서, 거르개로 만들면 아무도 안 걸리거나
+         지어낸 순서가 됩니다. 아래 둘은 우리가 **서류로 확인한 사실**과
+         **세는 값**입니다.
+         ⚠️ 체크칸은 `<label>` 로 감싸서 글자를 눌러도 켜집니다 (누름 44px). */
+      '<label class="fil-ck'+(vf?" on":"")+'">'+
+        '<input type="checkbox" id="fil-v"'+(vf?" checked":"")+
+        ' onchange="pcGo(\''+esc(cat.key)+'\')">'+
+        '<span>확인된 곳만</span></label>'+
+      '<label class="fil-ck'+(fo?" on":"")+'">'+
+        '<input type="checkbox" id="fil-f"'+(fo?" checked":"")+
+        ' onchange="pcGo(\''+esc(cat.key)+'\')">'+
+        '<span>포트폴리오 있는 곳만</span></label>'+
+      '<span class="fil-n">'+(list.length ? list.length+"곳" : "0곳")+
+        /* ⚠️ 거르개 때문에 빠진 곳이 몇인지 **밝힙니다** — 안 밝히면
+           손님은 그 분야에 업체가 원래 그만큼인 줄 압니다 */
+        ((vf || fo) && all.length > list.length
+          ? '<em class="fil-off">거르개로 '+(all.length - list.length)+'곳 숨김</em>' : '')+
+      '</span>'+
     '</div>'+
 
     (list.length
@@ -113,16 +138,23 @@ function pcUrl(cat, sub, ind, reg){
   if(sub) q.push("s="+encodeURIComponent(sub));
   if(ind) q.push("i="+encodeURIComponent(ind));
   if(reg) q.push("r="+encodeURIComponent(reg));
+  /* ⚠️ 하위 분류를 바꿔도 켜 둔 거르개는 **그대로 둡니다** — 꺼지면
+     손님은 자기가 끈 줄 모르고 결과가 늘어난 것만 봅니다. */
+  if(nowQS("v") === "1") q.push("v=1");
+  if(nowQS("f") === "1") q.push("f=1");
   return "/providers/"+cat.key+(q.length ? "?"+q.join("&") : "");
 }
 /* 거르개를 바꾸면 주소가 바뀝니다 — 주소가 화면을 정합니다.
    ⚠️ 상태를 변수에만 들고 있으면 새로고침·뒤로가기에서 사라집니다. */
 window.pcGo = function(catKey){
   var i = $("fil-i"), r = $("fil-r"), s = $("fil-s");
+  var v = $("fil-v"), f = $("fil-f");
   var q = [];
   if(s && s.value) q.push("s="+encodeURIComponent(s.value));
   if(i && i.value) q.push("i="+encodeURIComponent(i.value));
   if(r && r.value) q.push("r="+encodeURIComponent(r.value));
+  if(v && v.checked) q.push("v=1");
+  if(f && f.checked) q.push("f=1");
   go("/providers/"+catKey+(q.length ? "?"+q.join("&") : ""));
 };
 
@@ -365,7 +397,7 @@ function JoinShow(){
         ProviderCard(sp)+
       '</div>'+
       '<p class="jn-ex-h"><b>상세 화면에는 이만큼 들어갑니다</b>'+
-        '<em>사진 · 전문분야 · 전문업종 · 활동지역 · 가격 · 포트폴리오 · 인증 · 후기 · 상담 시간.</em></p>'+
+        '<em>사진 · 전문분야 · 전문업종 · 활동지역 · 가격 · 포트폴리오 · 확인 · 후기 · 상담 시간.</em></p>'+
       '<ul class="jn-ex-l">'+ joinExRows(sp).map(function(r){
         return '<li><b>'+esc(r[0])+'</b><span>'+esc(r[1])+'</span></li>'; }).join("")+'</ul>'+
       '<p class="sec-note">'+icon("info",15)+
@@ -384,7 +416,11 @@ function joinExRows(p){
     ["전문 업종",   (p.industries||[]).map(amIndustryName).join(" · ")],
     ["활동 지역",   (p.regions||[]).map(amRegionName).concat(p.gu||[]).join(" · ")],
     ["포트폴리오",  (p.portfolio||[]).length + "건 — 공사 내용 · 업종 · 지역 · 연도 · 사진"],
-    ["인증",        amProviderBadges(p).join(" · ") || "확인한 것만"],
+    /* ⚠️ 바로 위가 포트폴리오 줄이라 여기는 **서류로 확인한 것**만
+       냅니다 — `amProviderBadges()` 를 쓰면 "포트폴리오 3건" 이 두 줄에
+       나옵니다. ⚠️ 딱지는 "인증" 이 아니라 **"확인"** 입니다 (저희가
+       자격을 주는 것이 아니라 서류를 봤다는 표시입니다). */
+    ["확인",        amProviderVerified(p).join(" · ") || "확인한 것만"],
     ["상담 가능 시간", p.consultHours || ""]
   ];
   if(st.rating != null)
@@ -642,7 +678,8 @@ function PageCompare(){
       return st.rating != null ? st.rating + " (후기 " + st.reviews + "건)" : ""; }],
     ["포트폴리오",  function(p){ var n = (p.portfolio||[]).length;
       return n ? n + "건" : ""; }],
-    ["인증",        function(p){ return amProviderBadges(p).join(" · "); }],
+    /* ⚠️ 위에 포트폴리오 줄이 따로 있어 **서류로 확인한 것**만 냅니다 */
+    ["확인",        function(p){ return amProviderVerified(p).join(" · "); }],
     ["가격 정보",   function(p){
       return (p.price||[]).map(function(x){
         return x.name + (x.from ? " " + x.from.toLocaleString() + "만원~" : ""); }).join(" · "); }],
@@ -682,6 +719,6 @@ function PageCompare(){
     /* ⚠️ 중개자 고지 — 전자상거래법 제20조 제1항 */
     '<p class="sec-note">'+icon("info",15)+
       '적힌 값은 업체가 등록한 것이고, 저희가 확인하거나 보증하는 값이 아닙니다. '+
-      '인증은 저희가 서류로 확인한 항목만 붙습니다.</p>'+
+      '확인 배지는 저희가 서류로 본 항목만 붙습니다.</p>'+
   '</div></section>';
 }

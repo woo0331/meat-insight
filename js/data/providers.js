@@ -94,11 +94,45 @@ window.amProviderStats = function(p){
 
    ⚠️ 상태색(`--ok` 초록)이 아니라 **골드**입니다. 초록은 "좋다/나쁘다"
    를 말하는 색인데, 확인은 판정이 아니라 **확인했다는 표시**입니다. */
+/* ── 확인 배지 (2026-10-05 V2 §20) ───────────────────────────────
+   > "사업자 인증 · 대표자 인증 · 전화 인증 · 주소 확인 · 자격증 확인 ·
+   >  포트폴리오 확인 · 보험 확인 · STOREWAY 인증"
+
+   ⚠️⚠️ **플랫폼이 실제로 확인한 것만** 켭니다. 업체가 "확인했다" 고
+   말했다고 켜면 그건 지어낸 신뢰입니다 — 손님은 이 배지를 보고
+   수천만 원짜리 계약을 합니다.
+   ⚠️ **포트폴리오 확인은 `verified` 에 두지 않습니다** — 포트폴리오가
+   실제로 **몇 건 올라와 있는가**는 배열을 세면 나옵니다. 값으로 들고
+   있으면 포트폴리오가 0건인데 "확인" 이 켜져 있을 수 있습니다
+   (평점을 값으로 저장하지 않는 것과 같은 까닭입니다).
+   ⚠️ 이름은 **"확인"** 까지입니다. "인증" 은 저희가 자격을 준다는 말로
+   읽히는데, 저희가 하는 일은 **서류를 봤다**는 표시입니다.
+   ⚠️ 차례를 바꾸지 마세요 — 손님이 제일 먼저 보는 것이 사업자입니다. */
+window.AM_VERIFY = [
+  { key:"biz",       name:"사업자 확인",  what:"사업자등록증" },
+  { key:"owner",     name:"대표자 확인",  what:"대표자 신원" },
+  { key:"phone",     name:"전화 확인",    what:"연락 가능한 번호" },
+  { key:"addr",      name:"주소 확인",    what:"사업장 소재지" },
+  { key:"license",   name:"면허 확인",    what:"업종에 필요한 면허 · 자격" },
+  { key:"insurance", name:"보험 가입",    what:"영업배상책임보험 등" }
+];
+
+/* **우리가 서류로 확인한 것**만 — 거르개가 보는 것이 이쪽입니다 */
+window.amProviderVerified = function(p){
+  var v = (p && p.verified) || {};
+  /* ⚠️ 목록을 손으로 또 적지 마세요 — 위 한 곳에서 옵니다 */
+  return (window.AM_VERIFY || []).filter(function(x){ return v[x.key]; })
+    .map(function(x){ return x.name; });
+};
+
 window.amProviderBadges = function(p){
-  var v = (p && p.verified) || {}, out = [];
-  if(v.biz)       out.push("사업자 확인");
-  if(v.license)   out.push("면허 확인");
-  if(v.insurance) out.push("보험 가입");
+  var out = window.amProviderVerified(p);
+  /* ⚠️⚠️ 포트폴리오는 **센 값**이지 확인이 아닙니다. 처음에 "포트폴리오
+     확인" 으로 적었다가 "확인된 곳만" 거르개에 같이 걸렸습니다 —
+     사진을 올린 것과 저희가 서류를 본 것은 다른 일인데 한 낱말이
+     두 뜻으로 쓰인 것입니다. 건수를 그대로 냅니다. */
+  var n = ((p && p.portfolio) || []).length;
+  if(n) out.push("포트폴리오 " + n + "건");
   return out;
 };
 
@@ -134,6 +168,13 @@ window.amProviders = function(f){
        (p.industries||[]).indexOf(f.industry) < 0) return false;
     if(f.region   && (p.regions||[]).length &&
        (p.regions||[]).indexOf(f.region) < 0) return false;
+    /* ── 2026-10-05 V2 §11 의 거르개 ──────────────────────────────
+       ⚠️⚠️ **재 본 적 없는 값으로는 안 거릅니다.** 지시서가 적은
+       "평점 · 응답속도" 는 각각 후기 0건 · 재는 장치 없음이라,
+       거르개로 만들면 그 순간 아무도 안 걸리거나 지어낸 순서가 됩니다.
+       여기 있는 둘은 **우리가 실제로 들고 있는 사실**입니다. */
+    if(f.verified && !window.amProviderVerified(p).length) return false;
+    if(f.folio    && !((p.portfolio||[]).length)) return false;
     return true;
   });
 };

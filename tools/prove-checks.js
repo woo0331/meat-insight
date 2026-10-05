@@ -339,7 +339,39 @@ const CASES = [
       만들려면 테두리도 같이 없애야 합니다. */
    `const a = document.querySelectorAll(".mi-g a")[0];
     a.style.border = "none";
-    a.style.background = getComputedStyle(a.closest("section")).backgroundColor;`]
+    a.style.background = getComputedStyle(a.closest("section")).backgroundColor;`],
+
+  /* ══ 거르개 (2026-10-05 V2 §7 · §11) ════════════════════════════ */
+  /* "확인" 을 두 뜻으로 쓰던 그때 — 사진만 올린 업체가 "확인된 곳만"
+     에 같이 걸렸습니다 */
+  ["업체 거르개가 확인과 포트폴리오를 가른다",
+   `window.amProviderVerified = (function(real){
+      return function(p){
+        const out = real(p).slice();
+        if((((p||{}).portfolio)||[]).length) out.push("포트폴리오 확인");
+        return out;
+      };
+    })(window.amProviderVerified);`],
+  /* 위아래를 둘 다 닫던 그때 — 보증금 3,000 이 두 칸에 걸렸습니다 */
+  ["매물 거르개의 칸이 겹치지도 비지도 않는다",
+   `window.amInRange = function(val, opt){
+      if(val == null || !opt) return false;
+      const n = Number(val);
+      if(!isFinite(n)) return false;
+      if(opt.min != null && n < opt.min) return false;
+      if(opt.max != null && n >  opt.max) return false;
+      return true;
+    };`],
+  /* ⚠️ 이 검사는 **스스로 다시 그립니다** — DOM 을 건드려 두면
+     rerender 가 덮어 씁니다. 그리는 함수를 감싸야 합니다 (열한 번째
+     "되돌리기가 틀렸습니다"). */
+  ["거르개로 숨긴 건수를 밝힌다",
+   `window.PageProviderCat = (function(real){
+      return function(cat){
+        /* 숨긴 건수를 안 밝히던 그때 */
+        return real(cat).split('class="fil-off"').join('class="fil-off-gone"');
+      };
+    })(window.PageProviderCat);`]
 ];
 
 /* ══════════════════════════════════════════════════════════════════

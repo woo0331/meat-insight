@@ -15,18 +15,57 @@
    ⚠️ 메인과 여정 네 화면이 **같이** 씁니다. 두 곳에 적으면 서로
    달라집니다 — `StageCard()` 를 한 곳에 둔 것과 같은 까닭입니다.
    ⚠️ 카드가 **통째로** 눌립니다. 안에 또 링크를 넣지 마세요. */
-window.JourneyPick = function(current){
+/* ⚠️⚠️ **고르개 모드**(2026-10-06 2차 §3 · §4) — 메인에서는 카드를
+   눌러도 **화면을 떠나지 않습니다.** 상황을 고르면 주소에 `?j=` 가
+   실리고, 바로 아래 업종 구간과 맞춤 CTA 가 그 쪽으로 바뀝니다.
+   §4 가 "선택 결과를 유지한다 · URL query 또는 state 를 사용한다" 고
+   적은 자리입니다.
+   ⚠️ 여정 네 화면에서는 그대로 **링크**입니다 — 거기서는 이미 고른
+   뒤이고, 다른 여정으로 건너가는 자리입니다.
+   ⚠️ `data-keep` 이 없으면 맨 위로 올라가서 **무엇이 바뀌었는지 못
+   봅니다** (업종 거르개와 같은 까닭). */
+window.JourneyPick = function(current, pick){
   return '<ul class="jy-g">'+(window.AM_JOURNEYS||[]).map(function(j){
     var on = (j.key === current);
-    return '<li><a class="jy'+tn(j.tone)+(on?" on":"")+'" href="'+esc(j.to)+'"'+
-      (on ? ' aria-current="page"' : '')+'>'+
+    var to = pick ? jyPickTo(on ? "" : j.key) : j.to;
+    return '<li><a class="jy'+tn(j.tone)+(on?" on":"")+'" href="'+esc(to)+'"'+
+      (pick ? ' data-keep' : '')+
+      (on ? ' aria-current="'+(pick ? "true" : "page")+'"' : '')+'>'+
       '<span class="jy-i">'+icon(j.icon,24)+'</span>'+
       '<b>'+esc(j.name)+'</b>'+
       '<em class="jy-q">'+esc(j.q)+'</em>'+
       '<i class="jy-s">'+esc(j.sub)+'</i>'+
-      '<span class="jy-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
+      '<span class="jy-go" aria-hidden="true">'+
+        icon(pick ? (on ? "check" : "plus") : "arrow",16)+'</span>'+
     '</a></li>';
   }).join("")+'</ul>';
+};
+
+/* 메인에서 상황을 고를 때의 주소 — 업종(`?i=`)은 **지키고** 상황만
+   바꿉니다. ⚠️ 상황을 바꾸면 쪽(`?side=`)은 상황에서 다시 나오므로
+   주소에서 뺍니다 (둘이 어긋나면 아래 구간이 서로 다른 말을 합니다). */
+function jyPickTo(key){
+  var q = [], i = nowQS("i");
+  if(key) q.push("j=" + encodeURIComponent(key));
+  if(i)   q.push("i=" + encodeURIComponent(i));
+  return "/" + (q.length ? "?" + q.join("&") : "");
+}
+
+/* 고른 상황 — 메인의 여러 구간이 같이 읽습니다.
+   ⚠️ 없는 key 는 **안 고른 것**으로 칩니다 (주소를 손으로 고쳐도
+   화면이 깨지지 않아야 합니다). */
+window.amJourney = function(key){
+  var L = window.AM_JOURNEYS || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === key) return L[i];
+  return null;
+};
+
+/* 상황에서 쪽(창업/폐업)이 나옵니다 — `?side=` 를 따로 들고 다니지
+   않습니다. ⚠️ 운영 · 인수양도는 **중립**이라 한쪽으로 물들이지
+   않습니다 (`/stores` · `/assets` 와 같은 까닭입니다). */
+window.amJourneySide = function(key){
+  var j = amJourney(key);
+  return j && (j.side === "start" || j.side === "close") ? j.side : "";
 };
 
 /* 여정 고르개를 머리말과 같이 내는 구간 */
@@ -105,6 +144,17 @@ window.ProcessBand = function(o){
         '<div class="pcs-b">'+
           '<b class="pcs-t">'+esc(s.name)+'</b>'+
           '<p class="pcs-p">'+esc(s.lead)+'</p>'+
+          /* ⚠️ 꼭 확인할 것 (2026-10-06 2차 §5) — 걸음마다 **무엇을
+             해야 하는가**(lead) 다음에 **무엇을 확인해야 하는가**가
+             옵니다. 손님이 실제로 손해를 보는 자리가 거의 전부
+             여기입니다.
+             ⚠️⚠️ **금액 · 기한 숫자를 적지 마세요.** 업종 · 지역 ·
+             법 개정에 따라 갈리고, 적어 두면 틀린 날부터 거짓말이
+             됩니다 — "무엇을 어디에 확인하는가" 까지입니다.
+             ⚠️ `mark()` 를 안 거치는 칸이라 `**굵게**` 를 쓰면
+             별표가 글자로 찍힙니다 (이 저장소에서 13건 겪었습니다). */
+          (s.check ? '<p class="pcs-ck">'+icon("check",15)+
+             '<i>'+esc(s.check)+'</i></p>' : '')+
           '<div class="pcs-ls">'+StepLinks(s, ind)+'</div>'+
         '</div>'+
       '</li>';

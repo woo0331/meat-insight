@@ -1129,6 +1129,10 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .sec-gray  { background:var(--bg-gray); }
 .sec-ivory { background:var(--bg-ivory2); }
 .sec-start { background:var(--bg-mint); }
+/* 폐업 쪽 바탕 — ⚠️ 복숭아(`--bg-peach`)입니다. **빨강이 아닙니다.**
+   이 문서가 여러 곳에서 "폐업이 빨강으로 흘러가지 않을 것" 을 못박아
+   둔 그대로입니다 — 빨강은 "폐업은 나쁜 것" 이라는 말이 됩니다. */
+.sec-close { background:var(--bg-peach); }
 /* §15 — 가격은 Sky Tint 입니다. 바로 앞 매장 구간이 Mint 라 밝기는
    비슷하지만 **치우친 채널이 다릅니다** (민트 G>B>R · 하늘 B>G>R).
    사람 눈은 그 차이를 봅니다 — 검사도 그렇게 봅니다. */
@@ -2049,6 +2053,67 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   .jy:hover, .jy:hover .jy-go, .jy:hover .jy-i{ transform:none; }
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   맞춤 시작 CTA (2026-10-06 2차 §4 · §5)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️ 밝은 하늘 틴트 위의 한 판입니다. 어둡게 하지 마세요 — 메인의
+   어두운 면은 히어로 왼쪽 판과 입점 카드뿐입니다.
+   ⚠️ 글자 대비 AA(4.5)를 넘겨야 합니다. 설명줄은 --ink2 입니다. */
+.mst2{ padding:var(--s8) var(--s7); border-radius:var(--r-2xl);
+  border:1px solid var(--line); background:var(--bg-sky); }
+.mst2-k{ display:inline-flex; align-items:center; gap:6px;
+  padding:5px 12px; border-radius:var(--r-pill); background:#fff;
+  font-size:var(--t-cap); font-weight:800; letter-spacing:-.02em;
+  color:var(--navy); }
+.mst2-k svg{ flex:none; }
+.mst2-h{ margin-top:var(--s4); font-size:var(--t-2xl); font-weight:900;
+  letter-spacing:-.035em; line-height:1.3; color:var(--ink); }
+.mst2-p{ margin-top:var(--s3); font-size:var(--t-md); line-height:1.6;
+  color:var(--ink2); max-width:62ch; }
+/* 걸음 미리보기 — ⚠️ grid 칸에 글과 태그를 섞지 않습니다.
+   번호(b)와 이름(i)을 **둘 다 태그로** 감쌉니다 (이 저장소에서
+   네 번 깨진 자리입니다). */
+.mst2-s{ display:flex; flex-wrap:wrap; gap:var(--s2); margin-top:var(--s5); }
+.mst2-s > li{ display:inline-flex; align-items:center; gap:8px;
+  padding:8px 14px; border-radius:var(--r-pill); background:#fff;
+  border:1px solid var(--line); min-height:40px; }
+.mst2-s b{ font-size:var(--t-cap); font-weight:900; color:var(--navy);
+  letter-spacing:.02em; }
+.mst2-s i{ font-style:normal; font-size:var(--t-sm); font-weight:700;
+  color:var(--ink); }
+.mst2-more{ color:var(--ink2); font-weight:900; letter-spacing:.1em; }
+.mst2-cta{ display:flex; flex-wrap:wrap; gap:var(--s3); margin-top:var(--s6); }
+.mst2-wait{ background:var(--bg-ivory2); }
+
+/* 분야 칩 줄 (2026-10-06 2차 §18-10 · §18-11 · §18-12)
+   ⚠️⚠️ 카드가 아니라 **칩**입니다. 분류 스물다섯을 카드로 깔면
+   1440px 에서 화면 두 개가 되고 메인이 전화번호부가 됩니다.
+   ⚠️ 누르는 자리라 min-height 40px 이상입니다. */
+.cat-chips{ display:flex; flex-wrap:wrap; gap:var(--s2); }
+.cat-chips > li{ min-width:0; }
+.cat-chips a{ display:inline-flex; align-items:center; gap:7px;
+  min-height:44px; padding:10px 16px; border-radius:var(--r-pill);
+  border:1px solid var(--line); background:var(--surface);
+  font-size:var(--t-sm); font-weight:700; letter-spacing:-.02em;
+  color:var(--ink); transition:border-color .15s, color .15s; }
+.cat-chips svg{ flex:none; color:var(--navy); }
+@media (hover:hover){
+  .cat-chips a:hover{ border-color:var(--navy); color:var(--navy); }
+}
+@media (prefers-reduced-motion: reduce){ .cat-chips a{ transition:none; } }
+
+/* 브랜드 철학 (2026-10-06 2차 §17)
+   ⚠️ **장문의 회사소개가 아닙니다.** 한 화면 안에 끝납니다. */
+.mwhy-c{ max-width:720px; margin:0 auto; text-align:center; }
+.mwhy-c h2{ font-size:clamp(26px, 3vw, 40px); font-weight:900;
+  letter-spacing:-.04em; line-height:1.25; color:var(--navy); }
+.mwhy-p{ margin-top:var(--s5); font-size:var(--t-lg); color:var(--ink2); }
+.mwhy-l{ margin-top:var(--s5); display:flex; flex-direction:column;
+  gap:var(--s2); font-size:var(--t-lg); line-height:1.7; color:var(--ink2); }
+.mwhy-l b{ color:var(--ink); font-weight:800; }
+.mwhy-e{ margin-top:var(--s6); font-size:var(--t-xl); font-weight:800;
+  letter-spacing:-.03em; color:var(--ink); }
+
 /* ── 준비 과정 (§4 · §8) ────────────────────────────────────────
    ⚠️⚠️ 걸음 카드는 **통째로 눌리지 않습니다.** 안에 링크가 여럿이라
    (읽을 글 · 업체 · 도구) `<a>` 안의 `<a>` 가 되면 브라우저가 쪼갭니다. */
@@ -2068,6 +2133,16 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .pcs-t{ font-size:var(--t-md); font-weight:800; letter-spacing:-.03em;
   color:var(--ink); line-height:1.3; }
 .pcs-p{ font-size:var(--t-sm); color:var(--ink2); line-height:1.55; }
+/* 꼭 확인할 것 (2026-10-06 2차 §5) — 걸음마다 한 줄입니다.
+   ⚠️ grid 가 아니라 flex 입니다. grid 칸에 글과 태그를 섞으면
+   아이콘이 딴 칸으로 갑니다 (이 저장소에서 네 번 겪은 자리).
+   ⚠️ 글자는 --ink2(5.04)입니다. --ink3 은 이 옅은 바탕에서 묻힙니다. */
+.pcs-ck{ display:flex; gap:var(--s2); align-items:flex-start;
+  margin-top:var(--s1); padding:var(--s2) var(--s3);
+  background:var(--bg-sky); border-radius:var(--r-sm);
+  font-size:var(--t-cap); line-height:1.55; color:var(--ink2); }
+.pcs-ck svg{ flex:none; margin-top:2px; color:var(--navy); }
+.pcs-ck i{ font-style:normal; min-width:0; }
 .pcs-ls{ display:flex; flex-wrap:wrap; gap:var(--s2); margin-top:var(--s1); }
 /* ⚠️ 누르는 것은 40px 이상입니다 — 13px 글씨라 padding 만으로는
    짧은 이름에서 다시 낮아집니다. `min-height` 로 잡습니다. */
@@ -2333,6 +2408,12 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   font-weight:700; line-height:1.45; color:var(--ink); }
 .mh-sub{ margin:var(--s3) auto 0; max-width:62ch;
   font-size:var(--t-sm); line-height:1.7; color:var(--ink2); }
+/* §2 의 마지막 줄 — "내 상황만 고르시면" 이 아래 상황 카드를 가리킵니다.
+   ⚠️ 색은 --ink(11.42)입니다. --ink2 로 두면 그 줄이 설명에 묻힙니다. */
+.mh-sub b{ color:var(--ink); font-weight:800; }
+/* ⚠️ `#industry` 도 내려오는 자리입니다 — 맞춤 CTA 의 "업종 고르기" 가
+   여기로 옵니다. 헤더가 붙어 있어서 그만큼 비웁니다. */
+#industry{ scroll-margin-top:84px; }
 .mh-cta{ display:flex; flex-wrap:wrap; justify-content:center;
   gap:var(--s3); margin:var(--s5) 0 0; }
 /* ⚠️ 머리 띠에서 내려오는 자리 — 헤더가 붙어 있어서 그만큼 비웁니다 */

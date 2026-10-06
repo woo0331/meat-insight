@@ -35,7 +35,7 @@ function PageStartup(){
      걸립니다. 둘 다 둡니다 — 큰 그림을 보고 들어와 할 일을 봅니다. */
   ProcessBand({ key:"startup", kicker:"STARTUP PROCESS",
     title:"창업 준비, 무엇부터 하나요?",
-    lead:"열두 걸음입니다. 걸음마다 읽을 것 · 맡길 곳 · 계산할 것을 바로 열어 보실 수 있습니다.",
+    lead:amProcess("startup").length+"걸음입니다. 걸음마다 읽을 것 · 맡길 곳 · 계산할 것을 바로 열어 보실 수 있습니다.",
     note:"업종을 고르시면 걸음마다 그 업종에 맞는 장비 · 업체 · 글로 좁혀집니다." })+
   /* 업종을 아직 안 고르셨어도 **분야**는 같습니다 */
   StepBand(null)+
@@ -52,20 +52,29 @@ function PageStartupIndustry(ind){
   return PgHero({
     crumb: Crumb([["창업","/startup"],[ind.name]]),
     kicker:"START · " + ind.name,
-    h1raw:esc(ind.name)+" 창업,<br class=\"br-m\"> 필요한 건 이만큼입니다.",
-    lead:ind.lead,
+    /* ⚠️ 2026-10-06 2차 §5 — 상황과 업종을 고르고 도착하는 **맞춤 결과
+       화면**입니다. 머리말이 "무엇을 고르셨는지" 를 되읽어 주어야
+       손님이 "내 자리에 왔다" 를 압니다. */
+    h1raw:esc(ind.name)+" 창업을<br class=\"br-m\"> 준비하고 계시네요.",
+    lead:"지금부터 필요한 순서입니다. 걸음마다 꼭 확인할 것과 맡길 곳을 같이 보여 드립니다.",
     cta:'<a class="btn btn-b btn-lg" href="'+esc(quoteTo({industry:ind.key,side:"start"}))+'">'+
         '한 번에 견적 요청'+icon("arrow",18)+'</a>'+
         '<a class="btn btn-o btn-lg" href="/stores?i='+encodeURIComponent(ind.key)+'">'+
         ind.name+' 점포 보기</a>'
   })+
-  /* 장비를 제일 앞에 한 번 보여 줍니다 — 업종이 갈리는 것이 여기라
-     "이 사이트가 내 업종을 안다" 가 여기서 읽힙니다 (§12) */
-  (ind.equip && ind.equip.length ? EquipBand(ind) : "")+
+  /* ⚠️⚠️ **순서가 맨 앞입니다** (2026-10-06 2차 §5 — "단순 카드 나열이
+     아니라 실제 준비 순서가 되어야 한다"). 전에는 장비 구간이 먼저
+     였는데, 그러면 "무엇부터 하나" 로 들어오신 분이 **물건 목록**을
+     먼저 봅니다. 장비는 바로 아래에 그대로 둡니다 — 업종이 갈리는
+     것을 보여 주는 자리라 지우지 않습니다 (§1 · §12). */
   ProcessBand({ key:"startup", kicker:"STARTUP PROCESS",
     title:ind.name+" 창업, 무엇부터 하나요?",
-    lead:"열두 걸음입니다. 걸음마다 "+ind.name+"에 맞는 업체 · 장비 · 글로 바로 넘어갑니다.",
+    /* ⚠️ 걸음 수를 손으로 적지 마세요 — 열둘이던 때 적어 둔 "열두
+       걸음" 이 열넷이 된 뒤에도 그대로 남아 있었습니다. 세는 값입니다. */
+    lead:amProcess("startup").length+"걸음입니다. 걸음마다 "+ind.name+
+         "에 맞는 업체 · 장비 · 글로 바로 넘어갑니다.",
     industry:ind.key, tone:"sec-gray" })+
+  (ind.equip && ind.equip.length ? EquipBand(ind) : "")+
   StepBand(ind)+
   (fcat ? FranchiseHint(fcat, ind) : "")+
   BridgeFor(ind, "start")+
@@ -129,7 +138,7 @@ function PageClosure(){
      이해하실 수 있어야 합니다. */
   ProcessBand({ key:"closing", kicker:"CLOSING PROCESS",
     title:"정리, 무엇부터 하나요?",
-    lead:"열세 걸음입니다. 기한이 있는 것이 여럿이라 순서가 곧 돈입니다.",
+    lead:amProcess("closing").length+"걸음입니다. 기한이 있는 것이 여럿이라 순서가 곧 돈입니다.",
     tone:"sec-white",
     note:"통째로 넘길 수 있으면 철거비와 원상복구가 줄어듭니다 — 일곱째 걸음을 먼저 보셔도 됩니다." })+
   ClosureHelpBand()+
@@ -219,21 +228,26 @@ function PageClosureIndustry(ind){
   return PgHero({
     crumb: Crumb([["폐업","/closure"],[ind.name]]),
     kicker:"CLOSE · " + ind.name,
-    h1raw:esc(ind.name)+" 정리,<br class=\"br-m\"> 빠뜨리면 돈이 나갑니다.",
-    lead:"순서가 있는 일입니다. 계약 해지와 폐업신고에는 기한이 있고, 원상복구 범위는 " +
-         "계약서를 먼저 확인하셔야 합니다.",
+    /* ⚠️ §5 의 맞춤 결과 머리말. ⚠️⚠️ 폐업을 **실패로 말하지 않습니다**
+       — "잘 정리하는 것도 사업입니다" 까지입니다. */
+    h1raw:esc(ind.name)+" 정리를<br class=\"br-m\"> 준비하고 계시네요.",
+    lead:"순서가 있는 일입니다. 지금부터 필요한 차례와 걸음마다 꼭 확인할 것을 보여 드립니다.",
     cta:'<a class="btn btn-b btn-lg" href="'+esc(quoteTo({industry:ind.key,side:"close"}))+'">'+
         '한 번에 견적 요청'+icon("arrow",18)+'</a>'+
         '<a class="btn btn-o btn-lg" href="/assets?i='+encodeURIComponent(ind.key)+'">'+
         '시설 · 집기 내놓기</a>'
   })+
+  /* ⚠️⚠️ **순서가 맨 앞입니다** (§5). 전에는 시설 매각 · 희망 조건이
+     먼저였는데, 정리하시는 분이 제일 먼저 묻는 것은 "무엇부터 하나"
+     입니다. 아래 구간들은 그대로 둡니다 (§1). */
+  ProcessBand({ key:"closing", kicker:"CLOSING PROCESS",
+    title:ind.name+" 정리, 무엇부터 하나요?",
+    lead:amProcess("closing").length+"걸음입니다. 걸음마다 "+ind.name+
+         "에 맞는 업체 · 글로 바로 넘어갑니다.",
+    industry:ind.key, tone:"sec-gray" })+
   (ind.equip && ind.equip.length ? SellBand(ind) : "")+
   WantBand(ind)+
   BridgeFor(ind, "close")+
-  ProcessBand({ key:"closing", kicker:"CLOSING PROCESS",
-    title:ind.name+" 정리, 무엇부터 하나요?",
-    lead:"열세 걸음입니다. 걸음마다 "+ind.name+"에 맞는 업체 · 글로 바로 넘어갑니다.",
-    industry:ind.key, tone:"sec-gray" })+
   ReadBand({ side:"close", industry:ind.key,
              title:"정리할 때 자주 막히는 것" })+
   ClosureHelpBand();

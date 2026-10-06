@@ -2727,3 +2727,92 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .aq-m i{ font-style:normal; font-size:var(--t-cap); line-height:1.6; color:var(--ink2); }
 @media (max-width:1100px){ .aq-m{ grid-template-columns:repeat(3,1fr); } }
 @media (max-width:620px){ .aq-m{ grid-template-columns:1fr 1fr; } }
+
+/* ══════════════════════════════════════════════════════════════════
+   SECTION 10 — 매장 · 시설 · 장비 (2026-10-06 마무리 지시서 §5)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ 매물이 0건일 때 **"없습니다" 한 줄로 화면 하나를 비우지
+   않습니다.** 유용한 정보 → 체크리스트 → 지금 상태 → 다음 행동
+   차례이고, 매물이 들어오면 같은 자리에 카드가 섭니다. */
+.mk-kind{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s4);
+  margin:0 0 var(--s7); }
+.mk-kind > li{ min-width:0; }
+.mk-kind a{ display:flex; flex-direction:column; gap:var(--s2);
+  height:100%; padding:var(--s5); border:1px solid var(--line);
+  border-radius:var(--r-xl); background:var(--surface);
+  box-shadow:0 1px 2px rgba(15,27,45,.04);
+  transition:transform .2s, border-color .2s, box-shadow .2s; }
+.mk-kind b{ font-size:var(--t-md); font-weight:800; letter-spacing:-.03em;
+  color:var(--ink); }
+.mk-kind i{ font-style:normal; font-size:var(--t-cap); font-weight:600;
+  line-height:1.6; color:var(--ink2); }
+@media (hover:hover){
+  .mk-kind a:hover{ transform:translateY(-2px);
+    border-color:var(--ic-ink, var(--navy)); box-shadow:var(--shadow-card-h); }
+}
+@media (prefers-reduced-motion: reduce){
+  .mk-kind a{ transition:none; } .mk-kind a:hover{ transform:none; }
+}
+.mk-pre{ padding:var(--s7); border:1px solid var(--line);
+  border-radius:var(--r-2xl); background:var(--surface); }
+.mk-pre-h{ margin:0; font-size:var(--t-lg); font-weight:800;
+  letter-spacing:-.03em; color:var(--navy); }
+.mk-pre-p{ margin:var(--s2) 0 var(--s6); font-size:var(--t-sm);
+  color:var(--ink2); }
+.mk-pre-l{ display:grid; grid-template-columns:repeat(2,1fr);
+  gap:var(--s4) var(--s6); margin:0; padding:0; list-style:none; }
+.mk-pre-l > li{ display:flex; gap:var(--s3); min-width:0; }
+.mk-pre-n{ flex:0 0 auto; display:inline-flex; align-items:center;
+  justify-content:center; width:28px; height:28px; border-radius:var(--r-pill);
+  background:var(--bg-sky); color:var(--navy);
+  font-size:var(--t-cap); font-weight:800; }
+/* ⚠️ grid 칸에 맨글과 태그를 섞지 마세요 — 감싸개 안에서 세로로 쌓습니다 */
+.mk-pre-t{ display:flex; flex-direction:column; gap:4px; min-width:0; }
+.mk-pre-t > b{ font-size:var(--t-sm); font-weight:800; color:var(--ink); }
+.mk-pre-t > i{ font-style:normal; font-size:var(--t-cap); color:var(--ink2);
+  line-height:1.55; }
+.mk-pre-ls{ display:flex; flex-wrap:wrap; gap:var(--s2); margin-top:4px; }
+/* ⚠️ 0 을 숨기지 않습니다 — 다만 작게, 맨 아래입니다 */
+.mk-pre-n2{ display:flex; align-items:center; gap:6px;
+  margin:var(--s6) 0 0; font-size:var(--t-cap); font-weight:600;
+  color:var(--ink2); }
+.mk-pre-n2 svg{ flex:0 0 auto; color:var(--blue); }
+@media (max-width:900px){
+  .mk-kind{ grid-template-columns:repeat(2,1fr); }
+  .mk-pre-l{ grid-template-columns:1fr; }
+}
+@media (max-width:560px){ .mk-pre{ padding:var(--s5); } }
+
+/* ══════════════════════════════════════════════════════════════════
+   SECTION 12 — 입점 예시 카드 (2026-10-06 마무리 지시서 §7)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **"SAMPLE · 입점 화면 예시" 가 제일 먼저 읽혀야 합니다.**
+   지어낸 업체가 실제 업체로 읽히면 표시·광고의 공정화에 관한 법률
+   제3조입니다. 상태색(--warn)은 배지 바탕용이라 글자는 짙은 쪽입니다.
+   ⚠️ 평점 · 후기 · 거래수를 이 카드에 붙이지 마세요 (§7). */
+.mjn-smp{ margin:var(--s6) 0 0; padding:var(--s6);
+  border:1px dashed var(--line-2, var(--line)); border-radius:var(--r-2xl);
+  background:var(--bg-ivory2); }
+.mjn-smp-k{ display:inline-flex; align-items:center; gap:6px; margin:0;
+  padding:4px 10px; border-radius:var(--r-pill);
+  background:var(--warn-soft, var(--bg-sand)); color:var(--warn-dark, var(--ink));
+  font-size:var(--t-cap); font-weight:800; letter-spacing:.02em; }
+.mjn-smp-k svg{ flex:0 0 auto; }
+.mjn-smp-c{ margin:var(--s4) 0 0; padding:var(--s5);
+  border:1px solid var(--line); border-radius:var(--r-xl);
+  background:var(--surface); }
+.mjn-smp-n{ display:block; font-size:var(--t-md); font-weight:800;
+  letter-spacing:-.03em; color:var(--ink); }
+.mjn-smp-i{ margin:6px 0 var(--s4); font-size:var(--t-cap);
+  line-height:1.6; color:var(--ink2); }
+.mjn-smp-l{ display:grid; gap:var(--s2); margin:0; padding:0; list-style:none; }
+.mjn-smp-l > li{ display:grid; grid-template-columns:96px 1fr; gap:var(--s3);
+  font-size:var(--t-cap); line-height:1.6; }
+.mjn-smp-l b{ font-weight:800; color:var(--ink2); }
+.mjn-smp-l span{ color:var(--ink); }
+.mjn-smp-n2{ margin:var(--s4) 0 0; font-size:var(--t-cap);
+  line-height:1.6; color:var(--ink2); }
+@media (max-width:560px){
+  .mjn-smp{ padding:var(--s5); }
+  .mjn-smp-l > li{ grid-template-columns:1fr; gap:2px; }
+}

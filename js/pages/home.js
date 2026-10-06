@@ -228,7 +228,11 @@ function MainSearch(){
       '</span>'+
       '<button class="btn btn-pt" type="submit">'+icon("search",18)+'검색하기</button>'+
     '</form>'+
-    '<p class="msr-ch"><b>추천 검색어</b>'+MAIN_CHIPS.map(function(c){
+    /* ⚠️⚠️ **"인기" 도 "추천" 도 쓰지 않습니다** (2026-10-06 마무리
+       지시서 §3). 검색 기록을 모으지 않아 무엇이 인기인지 모르고,
+       "추천" 은 우리가 고른 차례라는 말이라 기준을 밝혀야 합니다.
+       이 칩은 **그 화면으로 바로 가는 길**이라 "바로가기" 입니다. */
+    '<p class="msr-ch"><b>바로가기</b>'+MAIN_CHIPS.map(function(c){
       return '<a href="'+esc(c.to)+'">'+esc(c.q)+'</a>'; }).join("")+'</p>'+
   '</div></div></div>';
 }
@@ -656,7 +660,9 @@ function MainFeature(){
   var nFr = (window.AM_FRANCHISES||[]).length;
   var L = [
     { k:"franchise", ic:"store", ph:"feat-franchise", kicker:"FRANCHISE", to:"/franchise",
-      h: nFr ? "추천 프랜차이즈<br> 브랜드" : "검토할 프랜차이즈<br> 브랜드",
+      /* ⚠️ 2026-10-06 §3 — 브랜드가 쌓여도 "추천" 이라고 쓰지 않습니다.
+         무엇을 근거로 추천하는지 밝힐 수 없으면 그건 광고입니다. */
+      h: "검토할 프랜차이즈<br> 브랜드",
       d:"창업비 · 가맹비는 정보공개서에 적힌 값만 올립니다.",
       cta:"프랜차이즈 보기" },
     { k:"store", ic:"pin", ph:"feat-store", kicker:"STORE", to:"/stores",
@@ -698,15 +704,25 @@ function MainFeature(){
    ⚠️ 이름 · 아이콘 · 링크는 전부 `catalog.js` 에서 옵니다 — 여기에
    적는 것은 **어느 분류를 앞에 낼지**와 한 줄 설명뿐입니다.
    ⚠️ 설명을 길게 넣지 마세요 (§13 — "너무 많은 Text를 넣지 않는다"). */
+/* ⚠️⚠️ **2026-10-06 마무리 지시서 §4 가 적은 열둘**입니다. 그중
+   `노무` 는 독립 분류가 아니라 `admin` 의 하위(`labor-agent`)라 한
+   장으로 묶었습니다 — 없는 분류 key 를 적으면 그 카드가 **조용히
+   빠집니다** (에러도 안 나고 화면도 멀쩡합니다).
+   ⚠️ 이름 · 아이콘 · 링크는 전부 `catalog.js` 에서 옵니다. 여기 적는
+   것은 **어느 분류를 앞에 낼지**와 한 줄 설명뿐입니다. */
 var MAIN_SVC = [
+  { k:"store",     d:"상가 · 점포 매물을 조건으로 찾습니다" },
+  { k:"area",      d:"상권 · 유동인구 · 경쟁점을 먼저 봅니다" },
   { k:"interior",  d:"공간의 가치를 높이는 전문 시공업체" },
   { k:"equip",     d:"업종별 필수 장비를 한곳에서" },
-  { k:"furniture", d:"업소용 가구부터 맞춤 제작까지" },
-  { k:"it",        d:"스마트한 매장 운영의 시작" },
-  { k:"admin",     d:"사업자등록부터 각종 인허가까지" },
+  { k:"it",        d:"POS · 키오스크 · CCTV · 인터넷" },
+  { k:"admin",     d:"사업자등록 · 인허가 · 세무 · 노무" },
+  { k:"staff",     d:"직원 채용과 교육, 인력 아웃소싱" },
   { k:"marketing", d:"브랜드를 성장시키는 전문가들" },
-  { k:"demolish",  d:"안전하고 빠른 철거 · 원상복구" },
-  { k:"transfer",  d:"좋은 매장을 다음 사장님에게" }
+  { k:"transfer",  d:"좋은 매장을 다음 사장님에게" },
+  { k:"asset",     d:"중고 시설 · 장비를 그대로 이어서" },
+  { k:"demolish",  d:"안전하고 빠른 철거 · 폐기물 처리" },
+  { k:"restore",   d:"계약서가 정한 범위까지 원상복구" }
 ];
 function MainServices(){
   var by = {}; (window.AM_CATS||[]).forEach(function(c){ by[c.key] = c; });
@@ -717,9 +733,23 @@ function MainServices(){
   if(!items.length) return "";
   return '<section class="sec sec-gray msvc"><div class="w">'+
     '<div class="sec-hd sec-hd-row"><div>'+
-      '<h2>사장님에게 필요한 서비스</h2>'+
-      '<p>가장 많이 쓰이는 분야부터 모았습니다.</p></div>'+
-      '<a class="sec-hd-all" href="/providers">전체 서비스 보기'+icon("arrow",16)+'</a>'+
+      /* ⚠️⚠️ **"많이 찾는 · 인기 · 추천 · BEST · TOP" 을 쓰지 마세요**
+         (2026-10-06 마무리 지시서 §2 · §3). 검색량 · 클릭 · 저장 ·
+         견적 요청을 **하나도 모으지 않습니다** — 재 본 적 없는 것을
+         적으면 표시·광고의 공정화에 관한 법률 제3조입니다.
+         ⚠️ "가장 많이 쓰이는" 도 같은 말이라 같이 물렀습니다.
+         ⚠️⚠️ 이용 데이터가 쌓이면 **이 구간을 고치지 말고 따로
+         만드세요** (§3) — 조회 · 클릭 · 저장 · 견적 요청 수를 세는
+         "많이 찾는 서비스" 는 별도 구간입니다. */
+      '<h2>사업에 필요한 서비스</h2>'+
+      '<p>창업부터 운영, 인수 · 양도, 폐업까지 필요한 서비스를 '+
+        '한곳에서 찾아보세요.</p></div>'+
+      /* ⚠️ 숫자는 **세는 값**입니다 (§4 — "숫자를 임의 하드코딩하지
+         않는다"). 분류를 늘리면 저절로 따라옵니다. */
+      '<a class="sec-hd-all" href="/providers">'+
+        ((window.AM_CATS||[]).reduce(function(n,c){
+          return n + ((c.items||[]).length); }, 0) || "")+
+        '개 전체 서비스 보기'+icon("arrow",16)+'</a>'+
     '</div>'+
     '<ul class="msvc-g">'+items.map(function(x){
       var ph = hasPhoto(x.ph);
@@ -893,19 +923,27 @@ function MainClosing(){
    ⚠️ **처음 오신 분이 설명 없이 쓰게 하는 것**이 목적입니다.
    ⚠️ **지킬 수 없는 약속을 적지 마세요** (절대 규칙 5) — 회신 시점은
    업체가 정하는 것이라 "몇 시간 안에" 를 적지 않습니다. */
+/* ⚠️ 2026-10-06 마무리 지시서 §6 의 **여섯**입니다. **설명을 길게
+   넣지 마세요** — 걸음마다 한 줄까지입니다. 길어지면 절차로 읽히고,
+   절차로 읽히면 귀찮아 보입니다.
+   ⚠️ `/about` · `/join` 의 **진행 셋**(`.how-*`)과 다른 것입니다 —
+   그 셋은 견적 받는 차례이고 여기는 사이트 쓰는 차례입니다. */
 var MAIN_HOW = [
-  { ic:"target",   t:"내 상황 고르기",   p:"창업 · 운영 · 인수 · 양도 · 폐업 가운데 하나." },
-  { ic:"pin",      t:"업종과 지역",      p:"고르시면 그 업종에 실제로 필요한 것만 남습니다." },
-  { ic:"book",     t:"정보와 비용 확인", p:"무엇이 금액을 가르는지부터 보시고 도구로 계산합니다." },
-  { ic:"compare",  t:"업체 비교",        p:"지역 · 전문분야 · 인증을 나란히 놓고 고릅니다." },
-  { ic:"doc",      t:"상담 · 견적 요청", p:"한 번만 적으시면 조건에 맞는 곳에 같이 전달합니다." }
+  { ic:"target",   t:"현재 상황 선택",        p:"창업 · 운영 · 인수 · 양도 · 폐업 가운데 하나." },
+  { ic:"grid",     t:"업종 선택",             p:"고르시면 그 업종에 필요한 것만 남습니다." },
+  { ic:"book",     t:"필요한 정보 확인",      p:"무엇을 해야 하는지 순서대로." },
+  { ic:"calc",     t:"비용 계산",             p:"도구에 직접 적어 숫자로 봅니다." },
+  { ic:"search",   t:"서비스 · 업체 탐색",    p:"분야와 지역으로 추립니다." },
+  { ic:"handover", t:"상담 · 견적 또는 인수인계", p:"한 번만 적으시면 같이 전달합니다." }
 ];
 function MainHow(){
   return '<section class="sec mhow"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">HOW IT WORKS</p>'+
-      '<h2>'+esc((window.AM_BRAND||{}).name || "")+' 이용방법</h2>'+
-      '<p>가입 없이, 다섯 걸음입니다.</p>'+
+      /* ⚠️ 이름은 `brand.js` 에서 옵니다 — 손으로 적지 마세요.
+         ⚠️ 조사는 `koWith()` 가 고릅니다. 걸음 수는 세는 값입니다. */
+      '<h2>'+esc(koWith(amBrand(),"은는"))+' 이렇게 사용하세요.</h2>'+
+      '<p>가입 없이, '+MAIN_HOW.length+'걸음입니다.</p>'+
     '</div>'+
     /* ⚠️⚠️ `.how-*` 는 `/about` · `/join` 의 **진행 셋**이 이미 씁니다 —
        그 이름으로 적었다가 두 화면을 통째로 깨뜨렸습니다. `.hiw-*` 입니다. */
@@ -968,20 +1006,73 @@ function MainFranchise(){
 /* ── ⑧ 바로 시작할 수 있는 매장 ───────────────────────────────────
    ⚠️ 평수 · 보증금 · 월세 · 권리금은 **올리신 사장님이 적은 값**이고
    우리가 확인하거나 보증하는 값이 아닙니다 — 카드가 그렇게 밝힙니다. */
+/* ── SECTION 10 — 매장 · 시설 · 장비 (2026-10-06 마무리 지시서 §5) ──
+   > "사업을 정리하면서 남는 매장과 시설, 장비와 집기가 새로운 사장님의
+   >  시작에 다시 활용될 수 있습니다."
+
+   ⚠️⚠️ **매물이 0건이어도 큰 EMPTY 를 만들지 않습니다** (§5 · §12).
+   "아직 올라온 매장이 없습니다" 를 화면 하나만큼 깔면 손님은 기능
+   하나가 아니라 **사이트 전체를 미완성**으로 읽습니다.
+   그렇다고 **있는 척하지도 않습니다** — 차례는 이렇습니다.
+     유용한 정보 → 체크리스트 → 지금 준비 상태(작게) → 다음 행동
+   ⚠️⚠️ **체크리스트를 손으로 적지 마세요.** `AM_PROCESS["acq-in"]` 이
+   이미 그 목록입니다 (권리금 · 매출 확인 · 현장 확인 · 임대차 승계가
+   전부 들어 있고, 걸음마다 **실제로 있는** 글 · 업체 · 계산기가
+   걸려 있습니다). 여기 또 적으면 두 곳이 어긋납니다.
+   ⚠️⚠️ **매물이 들어오면 코드를 한 줄도 안 고치고** 카드로 바뀝니다 —
+   아래 `L.length` 하나가 가릅니다 (§5 "자동으로 전환될 수 있는 구조"). */
+var MAIN_ASSET_KIND = [
+  { ic:"store", n:"매장",  d:"영업 중인 매장의 인수 · 양도", to:"/stores" },
+  { ic:"tool",  n:"시설",  d:"기존 인테리어와 시설 활용",    to:"/assets" },
+  { ic:"fridge",n:"장비",  d:"주방기기 · 냉장 · 냉동 · POS",  to:"/assets?s=kitchen-eq" },
+  { ic:"sofa",  n:"집기",  d:"테이블 · 의자 · 사업용 집기",   to:"/assets?s=furniture" }
+];
 function MainStores(){
-  var L = (window.AM_STORES||[]);
+  var L  = (window.AM_STORES||[]);
+  var nA = (window.AM_ASSETS||[]).length;
+  var kinds = '<ul class="mk-kind">'+MAIN_ASSET_KIND.map(function(k){
+    return '<li><a href="'+esc(k.to)+'">'+
+      '<span class="ic-t">'+icon(k.ic,24)+'</span>'+
+      '<b>'+esc(k.n)+'</b><i>'+esc(k.d)+'</i></a></li>'; }).join("")+'</ul>';
   var body = L.length
-    ? '<div class="mk-g">'+L.slice(0,6).map(function(s){ return StoreCard(s); }).join("")+'</div>'+
+    ? kinds+
+      '<div class="mk-g">'+L.slice(0,6).map(function(s2){ return StoreCard(s2); }).join("")+'</div>'+
       '<p class="row-cta row-mid"><a class="btn btn-nv" href="/stores">'+
         '매장 전체 보기'+icon("arrow",18)+'</a></p>'
-    : Empty({ sm:true, icon:"pin", title:"아직 올라온 매장이 없습니다",
-        text:"허위매물을 만들지 않습니다. 보고 연락하신 시간을 훔치는 일이라서요. "+
-             "정리하시는 사장님이 올리시면 그대로 보입니다.",
-        cta:'<a class="btn btn-st" href="/stores">매장 내놓기'+icon("arrow",18)+'</a>'+
-            '<a class="btn btn-o" href="/closure">폐업 준비부터 보기</a>' });
+    : kinds+ MainTakeoverGuide(nA);
+  /* ⚠️⚠️ **중립입니다** — 넘기시는 분과 받으시는 분이 같은 구간을
+     봅니다. 한쪽 색으로 칠하면 다른 쪽에게 "여긴 내 자리가 아니네" 가
+     됩니다 (`/stores` · `/assets` 를 중립으로 둔 것과 같은 까닭). */
   return MainBand({ bg:"sec-start", kicker:"TAKE OVER",
-    h:"새로 만들지 않아도 됩니다",
-    lead:"이미 준비된 매장에서 더 빨리 시작하실 수 있습니다.", body:body });
+    h:"사업의 자산도<br class=\"br-m\"> 다음 사장님에게 이어질 수 있습니다.",
+    lead:"사업을 정리하면서 남는 매장과 시설, 장비와 집기가 "+
+         "새로운 사장님의 시작에 다시 활용될 수 있습니다.", body:body });
+}
+/* 매물이 아직 없을 때 — **유용한 정보**가 그 자리를 채웁니다 (§5 · §12) */
+function MainTakeoverGuide(nAssets){
+  var steps = ((window.AM_PROCESS||{})["acq-in"] || []).slice(0, 5);
+  if(!steps.length) return "";
+  return '<div class="mk-pre">'+
+    '<h3 class="mk-pre-h">매장 인수를 알아보고 계신가요?</h3>'+
+    '<p class="mk-pre-p">매장을 인수하기 전 확인해야 할 정보부터 '+
+      '살펴보세요.</p>'+
+    '<ol class="mk-pre-l">'+steps.map(function(st, i){
+      return '<li><span class="mk-pre-n">'+("0"+(i+1)).slice(-2)+'</span>'+
+        '<span class="mk-pre-t"><b>'+esc(st.name)+'</b>'+
+          '<i>'+esc(st.lead)+'</i>'+
+          '<span class="mk-pre-ls">'+StepLinks(st, "")+'</span></span></li>';
+    }).join("")+'</ol>'+
+    /* ⚠️ **0 을 숨기지 않습니다** — 다만 작게, 맨 아래에 둡니다 (§5).
+       ⚠️ 숫자는 세는 값입니다. 자산이 들어와 있으면 그렇게 말합니다. */
+    '<p class="mk-pre-n2">'+icon("info",15)+
+      (nAssets
+        ? '인수 가능한 매장 정보를 준비하고 있습니다. 시설 · 장비는 '+
+          nAssets+'건 올라와 있습니다.'
+        : '인수 가능한 매장 정보를 준비하고 있습니다.')+'</p>'+
+    '<p class="row-cta row-mid">'+
+      '<a class="btn btn-nv" href="/transfer">인수 · 양도 알아보기'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-o" href="/stores">매장 내놓기</a></p>'+
+  '</div>';
 }
 
 /* ── ⑨ 가격 · 견적 데이터 ─────────────────────────────────────────
@@ -1232,21 +1323,67 @@ function MainReviews(){
    ⚠️ **성과를 지어내지 마세요.** "월 n건" 은 지금 0 입니다. 낼 수 있는
    것은 지금 사실인 것과 지키겠다는 약속까지입니다.
    ⚠️ 지시서 §12 — 첫 화면에 있던 "모집중 · 준비중" 은 여기로 모읍니다. */
+/* ── SECTION 12 — 파트너 입점 (2026-10-06 마무리 지시서 §7) ───────
+   ⚠️ 소비자 영역과 **시각적으로 구분**합니다 — 이 저장소에서 어두운
+   면을 쓸 수 있는 자리가 둘뿐이고 그중 하나가 이 카드(`.mjn-c`)입니다.
+   ⚠️⚠️ **지어낸 신뢰를 만들지 마세요** (§7) — 리뷰 · 평점 · 거래수 ·
+   프로젝트수 · 고객수 · 인증 · 추천 · 순위. 아래 예시 카드는 그래서
+   **구조만** 보여 줍니다 (업체명 · 한 줄 소개 · 전문 서비스 · 전문
+   업종 · 서비스 지역 · 포트폴리오 건수까지). 배지와 평점이 붙은 전체
+   미리보기는 **업체 사장님께 보여 드리는 `/sample`** 에 있습니다.
+   ⚠️⚠️ **"SAMPLE · 입점 화면 예시" 가 제일 먼저 읽혀야 합니다** —
+   지어낸 업체가 실제 업체로 읽히면 표시·광고의 공정화에 관한 법률
+   제3조입니다. 카드 자체는 **누를 수 없습니다.** */
+function mainSampleCard(){
+  if(window.AM_SAMPLE_ON === false) return "";
+  if((window.AM_PROVIDERS||[]).length) return "";   /* 업체가 들어오면 사라집니다 */
+  var p = (typeof amSample === "function") ? amSample("provider") : null;
+  if(!p) return "";
+  var subs = (p.subs||[]).map(function(k){
+    return (typeof amSubName === "function") ? amSubName(k) : k; }).filter(Boolean);
+  var inds = (p.industries||[]).map(function(k){
+    var i = (typeof amIndustry === "function") ? amIndustry(k) : null;
+    return i ? i.name : ""; }).filter(Boolean);
+  var regs = (p.regions||[]).map(function(k){
+    return (typeof amRegionName === "function") ? amRegionName(k) : ""; }).filter(Boolean);
+  var row = function(k, v){
+    return v ? '<li><b>'+esc(k)+'</b><span>'+esc(v)+'</span></li>' : ""; };
+  return '<div class="mjn-smp">'+
+    '<p class="mjn-smp-k">'+icon("info",14)+'SAMPLE · 입점 화면 예시</p>'+
+    '<div class="mjn-smp-c">'+
+      '<b class="mjn-smp-n">'+esc(p.name)+'</b>'+
+      '<p class="mjn-smp-i">'+esc(p.intro)+'</p>'+
+      '<ul class="mjn-smp-l">'+
+        row("전문 서비스", subs.join(" · "))+
+        row("전문 업종",   inds.join(" · "))+
+        row("서비스 지역", regs.concat(p.gu||[]).join(" · "))+
+        row("포트폴리오",  (p.portfolio||[]).length ? (p.portfolio||[]).length+"건" : "")+
+      '</ul>'+
+    '</div>'+
+    /* ⚠️ 평점 · 후기 · 거래수를 여기 붙이지 마세요 (§7). */
+    '<p class="mjn-smp-n2">실제 업체가 아닙니다. 등록하시면 이런 짜임새로 '+
+      '나갑니다 — 전체 미리보기는 업체 상세 예시에서 보실 수 있습니다.</p>'+
+  '</div>';
+}
 function MainJoin(){
   var cats = (window.AM_CATS||[]).filter(function(c){ return c.kind === "provider"; });
   return '<section class="sec mjn"><div class="w">'+
     '<div class="mjn-c">'+
       '<div class="mjn-t">'+
         '<p class="mjn-k">PARTNER</p>'+
-        '<h2>사장님을 찾는 업체인가요?</h2>'+
-        '<p>실제로 창업 · 폐업을 준비하시는 분들을 만나 보세요. '+
-          '기본 입점은 무료이고, 지금은 초기 파트너를 모집하고 있습니다.</p>'+
+        '<h2>사장님 고객을 만나고 계신가요?</h2>'+
+        /* ⚠️ 이름이 "파트너" 를 꾸미는 자리라 조사가 붙지 않습니다 —
+           koWith 를 쓰면 "인수인계가 파트너로" 가 됩니다. */
+        '<p>인테리어, 세무, 노무, 철거, 설비, POS, 마케팅 등 '+
+          '사업자를 대상으로 서비스를 제공한다면 '+
+          esc(amBrand())+' 파트너로 함께할 수 있습니다.</p>'+
         (cats.length ? '<ul class="mjn-l">'+cats.slice(0,10).map(function(c){
           return '<li>'+icon(c.icon,18)+esc(c.name)+'</li>'; }).join("")+'</ul>' : '')+
       '</div>'+
       '<p class="mjn-go"><a class="btn btn-w" href="/join">'+
-        '무료로 입점하기'+icon("arrow",18)+'</a></p>'+
+        '파트너 입점 알아보기'+icon("arrow",18)+'</a></p>'+
     '</div>'+
+    mainSampleCard()+
   '</div></section>';
 }
 

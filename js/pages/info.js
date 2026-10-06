@@ -191,8 +191,35 @@ function PageContent(c){
     h1:c.title, lead:c.lead, tight:true
   })+
   '<section class="sec sec-white"><div class="w read">'+
-    (c.body||[]).map(function(b){
-      return (b.h ? '<h2>'+esc(b.h)+'</h2>' : '')+
+    /* ── 세 줄 요약 (2026-10-06 2차 §14) ────────────────────────────
+       ⚠️⚠️ **글마다 사람이 적는 칸입니다.** 본문에서 기계로 뽑아
+       만들지 않습니다 — 법령 · 행정 내용을 줄여 적으면 뜻이 바뀌고,
+       그 순간 "근거 없는 법률 · 행정 정보를 임의 생성" 이 됩니다
+       (§14 · §24). 안 적힌 글에서는 **이 칸이 통째로 빠집니다.** */
+    ((c.sum||[]).length ? '<div class="rd-sum">'+
+      '<p class="rd-sum-h">'+icon("listck",16)+'세 줄 요약</p>'+
+      '<ul>'+c.sum.slice(0,3).map(function(t){
+        return '<li>'+mark(t)+'</li>'; }).join("")+'</ul>'+
+    '</div>' : '')+
+
+    /* ── 이 글에서 다루는 것 (§14) ──────────────────────────────────
+       ⚠️ **글 자신의 구간 제목**입니다 (지어내지 않습니다). 글 하나가
+       평균 네댓 구간이라, 들어오자마자 "내가 찾는 답이 여기 있나" 를
+       보고 그 자리로 바로 내려갈 수 있어야 합니다.
+       ⚠️ 구간이 둘 이하면 목차가 목차 노릇을 못 하니 안 냅니다. */
+    (function(){
+      var hs = (c.body||[]).map(function(b, i){ return b.h ? [i, b.h] : null; })
+                 .filter(Boolean);
+      if(hs.length < 3) return "";
+      return '<nav class="rd-toc" aria-label="이 글에서 다루는 것">'+
+        '<p class="rd-toc-h">이 글에서 다루는 것</p>'+
+        '<ol>'+hs.map(function(x){
+          return '<li><a href="#rd-'+x[0]+'">'+esc(x[1])+'</a></li>'; }).join("")+
+        '</ol></nav>';
+    })()+
+
+    (c.body||[]).map(function(b, bi){
+      return (b.h ? '<h2 id="rd-'+bi+'">'+esc(b.h)+'</h2>' : '')+
         /* ⚠️ 본문은 `mark()` 입니다 — `esc()` 를 먼저 통과시킨 뒤
            `**굵게**` 만 되살립니다. `esc()` 만 쓰면 별표가 글자로
            찍히고, 순서를 바꾸면 남이 넣은 태그가 돕니다. */
@@ -200,6 +227,17 @@ function PageContent(c){
         ((b.ul||[]).length ? '<ul>'+b.ul.map(function(t){
           return '<li>'+mark(t)+'</li>'; }).join("")+'</ul>' : '');
     }).join("")+
+    /* ── 확인할 것 (§14 의 체크리스트) ─────────────────────────────
+       ⚠️⚠️ **글마다 사람이 적는 칸입니다.** 본문의 목록을 그대로
+       옮겨 적는 것이 아니라, 그 글을 읽고 **실제로 손에 들고 확인할
+       것**만 추립니다. 안 적힌 글에서는 칸이 통째로 빠집니다.
+       ⚠️ 체크한 상태를 저장하지 않습니다 — 저장하는 것처럼 보이면
+       하지 않은 일을 했다고 말하는 것입니다 (절대 규칙 5). */
+    ((c.check||[]).length ? '<div class="rd-ck">'+
+      '<p class="rd-ck-h">'+icon("check",16)+'확인할 것</p>'+
+      '<ul>'+c.check.map(function(t){
+        return '<li>'+mark(t)+'</li>'; }).join("")+'</ul>'+
+    '</div>' : '')+
     /* ⚠️ 법령과 제도는 바뀝니다. **어디서 확인하는지**를 같이 답니다. */
     ((c.source||[]).length ? '<div class="src"><b>확인하는 곳</b><ul>'+
       c.source.map(function(s){

@@ -2122,6 +2122,62 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mst2-cta{ display:flex; flex-wrap:wrap; gap:var(--s3); margin-top:var(--s6); }
 .mst2-wait{ background:var(--bg-ivory2); }
 
+/* 글의 세 줄 요약 · 목차 · 확인할 것 (2026-10-06 2차 §14)
+   ⚠️ 본문보다 눈에 먼저 들어와야 하지만, 본문을 가리면 안 됩니다 —
+   밝은 틴트 한 판까지입니다. */
+.rd-sum{ margin-bottom:var(--s7); padding:var(--s6);
+  border-radius:var(--r-xl); background:var(--bg-sky);
+  border:1px solid var(--line); }
+.rd-sum-h{ display:flex; align-items:center; gap:6px;
+  font-size:var(--t-cap); font-weight:800; color:var(--navy); }
+/* ⚠️ `.read li{ list-style:disc }`(0,1,1)가 `.rd-sum ul`(0,1,0)을 이깁니다 —
+   그래서 점이 **두 개** 찍혔습니다 (찍어 보고 알았습니다). 리스트 자체를
+   더 구체적으로 눌러야 합니다. */
+.rd-sum ul{ display:grid; gap:var(--s3); margin-top:var(--s4);
+  list-style:none; padding:0; margin-bottom:0; }
+.read .rd-sum li{ list-style:none; }
+.rd-sum li{ position:relative; padding-left:var(--s5);
+  font-size:var(--t-md); line-height:1.7; color:var(--ink); }
+.rd-sum li::before{ content:""; position:absolute; left:0; top:11px;
+  width:6px; height:6px; border-radius:50%; background:var(--navy); }
+.rd-sum b{ font-weight:800; }
+
+/* 목차 — ⚠️ 누르는 자리라 40px 이상입니다 */
+.rd-toc{ margin-bottom:var(--s7); padding:var(--s5) var(--s6);
+  border:1px solid var(--line); border-radius:var(--r-xl);
+  background:var(--bg-2); }
+.rd-toc-h{ font-size:var(--t-cap); font-weight:800; color:var(--ink2); }
+.rd-toc ol{ display:flex; flex-wrap:wrap; gap:var(--s2) var(--s4);
+  margin-top:var(--s2); padding:0; list-style:none; counter-reset:toc;
+  margin-bottom:0; }
+.read .rd-toc li{ list-style:none; }
+.rd-toc li{ counter-increment:toc; }
+.rd-toc a{ display:inline-flex; align-items:center; gap:6px; min-height:40px;
+  font-size:var(--t-sm); font-weight:700; color:var(--navy); }
+.rd-toc a::before{ content:counter(toc,decimal-leading-zero);
+  font-size:var(--t-cap); font-weight:900; color:var(--ink3); }
+/* ⚠️ 목차를 누르면 제목이 헤더 밑으로 들어갑니다 — 그만큼 비웁니다 */
+.read h2[id]{ scroll-margin-top:84px; }
+
+/* 확인할 것 — ⚠️ 체크한 상태를 저장하지 않습니다. 저장하는 것처럼
+   보이는 네모 칸을 그리지 마세요 (절대 규칙 5). */
+.rd-ck{ margin:var(--s8) 0 var(--s7); padding:var(--s6);
+  border:1px solid var(--line); border-radius:var(--r-xl);
+  background:var(--surface); }
+.rd-ck-h{ display:flex; align-items:center; gap:6px;
+  font-size:var(--t-md); font-weight:800; color:var(--ink); }
+.rd-ck-h svg{ color:var(--navy); }
+.rd-ck ul{ display:grid; gap:var(--s2); margin-top:var(--s4);
+  list-style:none; padding:0; margin-bottom:0; }
+.read .rd-ck li{ list-style:none; }
+.rd-ck li{ position:relative; padding:var(--s3) var(--s3) var(--s3) var(--s7);
+  border-radius:var(--r); background:var(--bg-2);
+  font-size:var(--t-sm); line-height:1.65; color:var(--ink2); }
+.rd-ck li::before{ content:""; position:absolute; left:var(--s4); top:14px;
+  width:14px; height:14px; border:2px solid var(--line-strong, var(--line));
+  border-radius:4px; }
+.rd-ck b{ color:var(--ink); font-weight:800; }
+
 /* 업체가 제일 먼저 묻는 여섯 (2026-10-06 2차 §19) */
 .jn6{ display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--s4); }
 .jn6 > li{ display:flex; flex-direction:column; gap:var(--s3); min-width:0;

@@ -130,16 +130,21 @@ function PageProviderCat(cat){
         /* ⚠️ 차례의 기준을 밝힙니다 (약관 제6조 제4항) */
         '<p class="note">등록된 차례로 냅니다. 광고로 위에 올린 자리는 없습니다.</p>'+
         MoreBtn(list.length)
-      : Empty({
+      /* ⚠️⚠️ **2026-10-06 2차 §8** — "없습니다" 를 주인공에서 내렸습니다.
+         주인공은 **지금 바로 도움이 되는 것**이고, 0 은 아래 줄에서
+         세는 값으로 그대로 말합니다 (숨기지 않습니다). */
+      : EmptyGuide({
           icon:cat.icon,
-          title:"조건에 맞는 업체가 아직 없습니다",
-          text:"없는 업체를 지어내지 않습니다. 대신 견적 요청을 남기시면 "+
-               "저희가 조건에 맞는 곳을 찾아 연결해 드립니다.",
-          /* §18 — 빈 칸을 콘텐츠로. 그 분류에서 실제로 막히는 글을 같이 냅니다 */
-          reads: amContentsFor({ cat:cat.key, side:side, industry:ind, limit:3 }),
-          readTitle:"업체를 부르기 전에 보시면 견적이 정확해집니다",
+          title:cat.name+" 업체를 찾고 계신가요?",
+          text:"좋은 업체를 고르려면 가격보다 먼저 확인해야 할 것이 있습니다.",
+          /* ⚠️ 실제로 있는 글만입니다. 제목을 지어내면 가짜 링크입니다. */
+          reads: amContentsFor({ cat:cat.key, side:side, industry:ind, limit:4 }),
+          /* ⚠️ `EmptyGuide()` 가 `esc()` 를 겁니다 — 여기서 또 걸면
+             두 번 이스케이프되어 화면에 `&amp;` 가 찍힙니다. */
+          note:"이 분야에 등록된 "+amBrand()+" 파트너 업체는 지금 "+
+               all.length+"곳입니다. 조건을 남겨 두시면 등록되는 대로 연결해 드립니다.",
           cta:'<a class="btn btn-b" href="'+esc(quoteTo({cat:cat.key,sub:sub,industry:ind,region:reg,side:side}))+'">'+
-              '견적 요청하기'+icon("arrow",16)+'</a>'+
+              '원하는 조건 남기기'+icon("arrow",16)+'</a>'+
               '<a class="btn btn-o" href="/join">'+esc(cat.name)+' 업체라면 입점하기</a>'
         }))+
   '</div></section>'+

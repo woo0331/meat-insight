@@ -163,24 +163,84 @@ window.ProcessBand = function(o){
   '</div></section>';
 };
 
-/* ── 운영 중에 막히는 자리 (§6) ─────────────────────────────────── */
-function OpsGrid(ind){
-  var iq = ind ? ("i=" + encodeURIComponent(ind)) : "";
+/* ── 운영 중에 막히는 자리 (§6) ───────────────────────────────────
+   ⚠️⚠️ **2026-10-06 2차 §6** — 전에는 과제를 누르면 바로 그 분야
+   화면으로 갔습니다. §6 은 "문제를 선택하면 관련 **정보 · 도구 ·
+   업체** 3개를 같이 보여준다" 고 적었습니다. 지금은 `?op=` 가 실리고
+   바로 아래 한 판이 그 셋을 같이 냅니다 — 분야 화면으로 가는 길도
+   그 판 안에 그대로 있습니다 (길을 지우지 않았습니다).
+   ⚠️ `data-keep` 이 없으면 맨 위로 올라가서 무엇이 열렸는지 못 봅니다. */
+function opsKey(o){ return o.sub || ("c-" + o.cat); }
+function opsTo(o, ind){
+  var to = o.to, cat = o.cat && (typeof amCat === "function") ? amCat(o.cat) : null;
+  if(!to && cat){
+    var q = [];
+    if(o.sub) q.push("s=" + encodeURIComponent(o.sub));
+    if(ind)   q.push("i=" + encodeURIComponent(ind));
+    to = catTo(cat) + (q.length ? "?" + q.join("&") : "");
+  }
+  return to || "";
+}
+function OpsGrid(ind, cur){
   return '<ul class="ops-g">'+(window.AM_OPS||[]).map(function(o){
-    var to = o.to, cat = o.cat && (typeof amCat === "function") ? amCat(o.cat) : null;
-    if(!to && cat){
-      var q = [];
-      if(o.sub) q.push("s=" + encodeURIComponent(o.sub));
-      if(iq) q.push(iq);
-      to = catTo(cat) + (q.length ? "?" + q.join("&") : "");
-    }
-    if(!to) return "";
-    return '<li><a class="ops'+tn(o.tone)+'" href="'+esc(to)+'">'+
+    if(!opsTo(o, ind)) return "";
+    var k = opsKey(o), on = (k === cur);
+    var q = [];
+    if(!on) q.push("op=" + encodeURIComponent(k));
+    if(ind) q.push("i=" + encodeURIComponent(ind));
+    return '<li><a class="ops'+tn(o.tone)+(on?" on":"")+'" data-keep href="/operation'+
+      (q.length ? "?" + q.join("&") : "")+'"'+(on ? ' aria-current="true"' : '')+'>'+
       '<span class="ops-i">'+icon(o.icon,22)+'</span>'+
       '<b>'+esc(o.name)+'</b>'+
-      '<span class="ops-go" aria-hidden="true">'+icon("chev",15)+'</span>'+
+      '<span class="ops-go" aria-hidden="true">'+icon(on ? "check" : "chev",15)+'</span>'+
     '</a></li>';
   }).join("")+'</ul>';
+}
+
+/* 고른 과제 하나 — 정보 · 도구 · 업체 셋을 같이 냅니다 (§6).
+   ⚠️⚠️ **업체 수는 세는 값입니다** (`amProvidersInCat`). 지금 0곳이라
+   0 이라고 적힙니다 — 숨기지 않습니다 (절대 규칙 1 · 2).
+   ⚠️ 셋 중 비는 칸은 **줄째 뺍니다.** "준비 중" 을 찍지 않습니다. */
+function OpsPick(cur, ind){
+  var o = (window.AM_OPS||[]).filter(function(x){ return opsKey(x) === cur; })[0];
+  if(!o) return "";
+  var cat   = o.cat && window.amCat ? amCat(o.cat) : null;
+  var reads = window.amContentsFor ? amContentsFor({ cat:o.cat, limit:3 }) : [];
+  var tools = window.amToolsForCat ? amToolsForCat(o.cat) : [];
+  /* ⚠️ `amProvidersInCat()` 는 **수를 돌려줍니다** (배열이 아닙니다).
+     `.length` 를 붙였다가 화면에 "undefined곳" 이 찍혔습니다 —
+     자리표시자를 찍지 않는다는 절대 규칙 2 를 제가 어긴 자리입니다. */
+  var n     = (window.amProvidersInCat && cat) ? amProvidersInCat(o.cat) : 0;
+  var to    = opsTo(o, ind);
+
+  var box = function(ic, h, body, foot){
+    if(!body) return "";
+    return '<div class="opk-c"><p class="opk-h">'+icon(ic,17)+esc(h)+'</p>'+
+      body + (foot || "") + '</div>';
+  };
+  return '<div class="opk">'+
+    '<p class="opk-k">'+icon("check",16)+esc(o.name)+'</p>'+
+    '<div class="opk-g">'+
+      box("book","알아 두면 좋은 것",
+        reads.length ? '<ul class="opk-l">'+reads.map(function(c){
+          return '<li><a href="/content/'+esc(c.slug)+'">'+esc(c.title)+'</a></li>';
+        }).join("")+'</ul>' : "",
+        '<a class="opk-go" href="/content'+(o.cat ? "?side=start" : "")+'">정보 더 보기'+icon("arrow",14)+'</a>')+
+      box("calc","숫자로 확인하기",
+        tools.length ? '<ul class="opk-l">'+tools.map(function(t){
+          return '<li><a href="'+esc(t.to)+'">'+esc(t.name)+'</a></li>';
+        }).join("")+'</ul>' : "",
+        '<a class="opk-go" href="/tools">도구 전부 보기'+icon("arrow",14)+'</a>')+
+      box("users","맡길 곳 찾기",
+        '<p class="opk-n">'+esc(cat ? cat.name : o.name)+' 분야 등록 업체 <b>'+n+'곳</b></p>'+
+        (n ? "" : '<p class="opk-p">아직 모으는 중입니다. 조건을 남겨 두시면 '+
+              '업체가 등록되는 대로 연결해 드립니다.</p>'),
+        '<a class="opk-go" href="'+esc(to)+'">'+esc(cat ? (cat.name + " 보기") : "바로가기")+
+          icon("arrow",14)+'</a>'+
+        '<a class="opk-go" href="'+esc(quoteTo({ cat:o.cat, sub:o.sub,
+          industry: ind || "" }))+'">견적 요청'+icon("arrow",14)+'</a>')+
+    '</div>'+
+  '</div>';
 }
 
 /* 운영 쪽 글 — ⚠️ 운영은 창업 · 폐업 어느 쪽도 아니라 `side` 로는
@@ -210,10 +270,11 @@ function PageOperation(){
   '<section class="sec sec-white"><div class="w">'+
     '<div class="sec-hd">'+
       '<p class="eyebrow">무엇이 필요하세요?</p>'+
-      '<h2>지금 막히는 자리를 고르세요</h2>'+
-      '<p>고르시면 그 분야 업체와 정보로 바로 넘어갑니다.</p>'+
+      '<h2>운영 중 어떤 도움이 필요하세요?</h2>'+
+      '<p>고르시면 그 자리의 정보 · 계산기 · 업체를 한 번에 보여 드립니다.</p>'+
     '</div>'+
-    OpsGrid(ind ? ind.key : "")+
+    OpsGrid(ind ? ind.key : "", nowQS("op"))+
+    OpsPick(nowQS("op"), ind ? ind.key : "")+
   '</div></section>'+
   '<section class="sec sec-gray"><div class="w">'+
     '<div class="sec-hd">'+

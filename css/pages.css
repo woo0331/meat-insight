@@ -2114,6 +2114,38 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mwhy-e{ margin-top:var(--s6); font-size:var(--t-xl); font-weight:800;
   letter-spacing:-.03em; color:var(--ink); }
 
+/* 업체가 0곳인 자리 (2026-10-06 2차 §8)
+   ⚠️ 밝은 카드입니다. 어둡게 하면 "비었다" 가 더 크게 읽힙니다. */
+.emg{ padding:var(--s7); border:1px solid var(--line);
+  border-radius:var(--r-2xl); background:var(--surface); }
+.emg-h{ display:flex; gap:var(--s4); align-items:flex-start; }
+.emg-ic{ display:inline-flex; align-items:center; justify-content:center;
+  flex:none; width:52px; height:52px; border-radius:var(--r-lg);
+  background:var(--bg-sky); color:var(--navy); }
+.emg-h b{ display:block; font-size:var(--t-xl); font-weight:900;
+  letter-spacing:-.035em; line-height:1.3; color:var(--ink); }
+.emg-h p{ margin-top:var(--s2); font-size:var(--t-sm); line-height:1.6;
+  color:var(--ink2); }
+/* 읽을 것 넷 — ⚠️ 누르는 자리라 48px 이상입니다 */
+.emg-l{ display:grid; grid-template-columns:repeat(2, 1fr);
+  gap:var(--s2); margin-top:var(--s6); }
+.emg-l > li{ min-width:0; }
+.emg-l a{ display:flex; align-items:center; gap:var(--s2);
+  min-height:52px; padding:var(--s3) var(--s4);
+  border:1px solid var(--line); border-radius:var(--r-lg);
+  background:var(--bg-2); font-size:var(--t-cap); font-weight:700;
+  line-height:1.45; color:var(--ink); transition:border-color .15s; }
+.emg-l svg:first-child{ flex:none; color:var(--navy); }
+.emg-l svg:last-child{ flex:none; margin-left:auto; color:var(--ink3); }
+.emg-l span{ min-width:0; }
+@media (hover:hover){ .emg-l a:hover{ border-color:var(--navy); } }
+.emg-f{ margin-top:var(--s6); padding-top:var(--s5);
+  border-top:1px solid var(--line); }
+.emg-n{ font-size:var(--t-cap); line-height:1.6; color:var(--ink2); }
+.emg-cta{ display:flex; flex-wrap:wrap; gap:var(--s3); margin-top:var(--s4); }
+@media (max-width:720px){ .emg{ padding:var(--s6) var(--s5); }
+  .emg-l{ grid-template-columns:1fr; } }
+
 /* ── 준비 과정 (§4 · §8) ────────────────────────────────────────
    ⚠️⚠️ 걸음 카드는 **통째로 눌리지 않습니다.** 안에 링크가 여럿이라
    (읽을 글 · 업체 · 도구) `<a>` 안의 `<a>` 가 되면 브라우저가 쪼갭니다. */
@@ -2181,6 +2213,44 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 @media (prefers-reduced-motion: reduce){
   .ops{ transition:none; } .ops:hover{ transform:none; }
 }
+/* 고른 과제 — ⚠️ 어느 칸이 켜졌는지가 한눈에 보여야 합니다 */
+.ops.on{ border-color:var(--ic-ink, var(--navy)); border-width:2px;
+  padding:calc(var(--s4) - 1px) calc(var(--s8) - 1px)
+          calc(var(--s4) - 1px) calc(var(--s4) - 1px); }
+.ops.on .ops-go{ color:var(--ic-ink, var(--navy)); }
+
+/* 고른 과제의 정보 · 도구 · 업체 (2026-10-06 2차 §6)
+   ⚠️ 셋이 **같은 무게**입니다. 한 칸을 크게 하면 나머지가 곁다리가
+   됩니다 — §6 이 셋을 같이 보여 주라고 적은 까닭이 그것입니다. */
+.opk{ margin-top:var(--s6); padding:var(--s6);
+  border:1px solid var(--line); border-radius:var(--r-2xl);
+  background:var(--bg-sky); }
+.opk-k{ display:inline-flex; align-items:center; gap:6px;
+  padding:5px 12px; border-radius:var(--r-pill); background:#fff;
+  font-size:var(--t-cap); font-weight:800; color:var(--navy); }
+.opk-g{ display:grid; grid-template-columns:repeat(3, 1fr);
+  gap:var(--s4); margin-top:var(--s5); }
+.opk-c{ display:flex; flex-direction:column; gap:var(--s3); min-width:0;
+  padding:var(--s5); border-radius:var(--r-xl); background:#fff;
+  border:1px solid var(--line); }
+.opk-h{ display:flex; align-items:center; gap:7px;
+  font-size:var(--t-sm); font-weight:800; letter-spacing:-.02em;
+  color:var(--ink); }
+.opk-h svg{ flex:none; color:var(--navy); }
+.opk-l{ display:flex; flex-direction:column; gap:var(--s2); }
+.opk-l a{ display:block; min-height:40px; padding:9px 0;
+  font-size:var(--t-cap); line-height:1.5; font-weight:600;
+  color:var(--ink2); }
+@media (hover:hover){ .opk-l a:hover{ color:var(--navy); } }
+.opk-n{ font-size:var(--t-cap); color:var(--ink2); }
+.opk-n b{ color:var(--navy); font-weight:800; }
+.opk-p{ font-size:var(--t-cap); line-height:1.6; color:var(--ink2); }
+/* ⚠️ 누르는 자리라 40px 이상입니다 (padding 만으로 만들지 않습니다) */
+.opk-go{ display:inline-flex; align-items:center; gap:5px; min-height:40px;
+  margin-top:auto; font-size:var(--t-cap); font-weight:800;
+  letter-spacing:-.02em; color:var(--navy); }
+.opk-go + .opk-go{ margin-top:0; }
+@media (max-width:900px){ .opk-g{ grid-template-columns:1fr; } }
 
 /* ── 인수 / 양도 두 길 (§7) ─────────────────────────────────────
    ⚠️ 두 칸의 크기와 무게가 같아야 합니다 — 한쪽을 작게 만들면

@@ -629,6 +629,33 @@ async function proveAudit(pg){
       "  [지금 " + JSON.stringify(before) +
       " → 한 칸을 준비 중으로 하면 " + JSON.stringify(after).slice(0,50) + "]");
   }
+  /* 아이콘 자리가 비었음 — 타일 안의 svg 를 지워 봅니다.
+     없는 아이콘 key 를 적으면 icon() 이 **빈 문자열**을 돌려줘서
+     타일이 덩그러니 빕니다 (매장 구간의 "장비" 가 fridge 라는 없는
+     이름으로 몇 주 비어 있었습니다). 에러도 404 도 안 납니다. */
+  /* ⚠️ 되돌리기가 **지울 것이 있는 화면**이라야 합니다 — 처음에
+     /startup 을 적었는데 거기에는 .ic-t 도 .stg-i 도 없어서 아무것도
+     안 지워졌고, "검사가 안 잡는다" 로 보였습니다 (검사가 아니라
+     되돌리기가 틀린 것입니다 — 이 저장소에서 여러 번 겪었습니다).
+     지금 타일이 있는 화면은 / (45개) · /transfer (5) · /g/:stage (1)
+     입니다. /tools · /providers · /about · /startup 에는 없습니다. */
+  for(const u of ["/", "/transfer"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).ico;
+    await pg.evaluate(() => {
+      const e = document.querySelector("#view .ic-t svg, #view .stg-i svg");
+      if(e) e.remove();
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).ico;
+    const ok = before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 아이콘 자리가 비었음 · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → 타일에서 svg 를 지우면 " + JSON.stringify(after).slice(0,50) + "]");
+  }
+
   /* 별표(**)가 글자로 남음 — ⚠️ **자식 태그가 있는 칸**에 넣어서
      봅니다. 전에는 잎사귀만 보고 있어서, 약관·방침의 조문(p 안에
      번호 span 이 있습니다)에 남아 있던 별표를 통째로 놓쳤습니다.

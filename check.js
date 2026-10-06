@@ -237,7 +237,7 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[768,1024,"작�
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[] };
   /* ⚠️ **흰 글자가 흰 바탕에 앉는 일이 실제로 있었습니다.** 창업 다섯
      마디(.flow)는 어두운 구간에만 있던 것이라 글자색 기본이 흰색이고,
      밝은 쪽은 .sec-tone 안에서만 되돌려 놓았습니다. 그 구간을 순백으로
@@ -627,6 +627,18 @@ const AUDIT = `(() => {
     });
   }
 
+  /* ⚠️⚠️ **없는 아이콘 key 를 적으면 빈 칸이 그려집니다.**
+     icon() 은 모르는 이름에 **빈 문자열**을 돌려줍니다 — 에러도 안 나고
+     화면도 안 죽고, 그 타일만 덩그러니 빕니다. 매장 구간의 "장비"
+     카드가 그렇게 fridge 라는 없는 이름을 달고 몇 주 비어 있었습니다.
+     아이콘 타일(.ic-t)과 단계 아이콘(.stg-i) 안에 svg 가 없으면
+     그 자리가 빈 것입니다. */
+  document.querySelectorAll("#view .ic-t, #view .stg-i").forEach(e => {
+    if(e.querySelector("svg")) return;
+    const own = (e.parentElement || e);
+    out.ico.push((own.textContent || "").trim().slice(0, 14) || "(이름 없음)");
+  });
+
   out.links = [...document.querySelectorAll('a[href^="/"]')].map(a=>a.getAttribute("href"));
   return out;
 })()`;
@@ -669,7 +681,7 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
@@ -701,7 +713,8 @@ const AUDIT = `(() => {
       ["별표(**)가 글자로 남음", uniq(bad.star)],
       ["어두운 면이 15% 넘음",   uniq(bad.dark)],
       ["이웃한 두 구간이 붙어 보임", uniq(bad.tone)],
-      ["\"준비 중\" 자리표시자", uniq(bad.ph)]
+      ["\"준비 중\" 자리표시자", uniq(bad.ph)],
+      ["아이콘 자리가 비었음", uniq(bad.ico)]
     ];
     console.log("\n── " + vn + " (" + w + "px)");
     rows.forEach(([n,v]) => {
@@ -2061,11 +2074,14 @@ const AUDIT = `(() => {
     /* ⚠️ 2026-10-04 개편 — START/CLOSE 는 .ms-two 도 .mh2-c 도 아니라
        **히어로 두 판**(.hp2)이고, 검색은 헤더와 떠 있는 패널 둘입니다.
        ⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다 — 일곱 번째입니다 */
+    /* ⚠️ 2026-10-06 마무리 지시서 §1 로 차례가 열넷이 되면서 **큰 카드
+       셋(.mfeat-g)이 메인에서 내려왔습니다** — 지운 것이 아니라 05
+       서비스 열둘 · 10 매장 구간 · 푸터가 그 셋이 가리켰던 곳을 그대로
+       받습니다 (PageMain() 주석). 그래서 여기서도 뺐습니다. */
     const need = [[".hp2", "창업 / 폐업 두 판"], [".msr-f", "떠 있는 검색 패널"],
                   [".mstg-g", "사업 단계 여섯"], [".mi-g", "업종 고르기"],
                   [".mfit-tb", "업종별 필요한 것"], [".fit-g", "서비스 분야"],
-                  [".mfeat-g", "큰 카드 셋"], [".msvc-g", "주요 서비스"],
-                  [".mst-g", "범위 숫자"]];
+                  [".msvc-g", "주요 서비스"], [".mst-g", "범위 숫자"]];
     for(const q of need)
       if(!v.querySelector(q[0])) return q[1] + " 가 메인에 없습니다";
     if(!document.querySelector('.hd input[type="search"], .hd a[href="/search"]'))
@@ -2499,28 +2515,38 @@ const AUDIT = `(() => {
        ⚠️⚠️ 바로 위 줄에 백틱을 적었다가 문자열이 거기서 끝나
        "nav is not defined" 로 흐름 검사가 통째로 멈췄습니다
        (**열한 번째** escape 사고). 주석에 백틱을 쓰지 마세요. */
-    /* ⚠️⚠️ 2026-10-06 **2차 지시서 §18** 로 차례가 다시 짜였습니다 —
-       HERO → 상황 → 업종 → 맞춤 시작 → 많이 찾는 서비스 → 도구 →
-       업체 → 정보센터 → 인수↔인계 → 창업 분야 → 운영 → 폐업 분야 →
-       이용방법 → 입점 → 브랜드 철학. 지시서에 없던 구간은 지우지
-       않고 결이 맞는 자리에 끼웠습니다 (가치 · 숫자 · 고른 업종 ·
-       큰 카드 · 프랜차이즈 · 매장 · 폐업 가이드).
-       ⚠️ 사업 단계 여섯은 nav 요소라 이 셈에 안 들어갑니다. */
-    const want = ["mh","mjy","mi-g","mstart","mfit","mval","mnum",
-                  "msvc","mt-g","pv","minfo","mfeat","fr","mk","mbr",
-                  "mscat","mops","mcls","mccat","mhow","mjn","mwhy"];
+    /* ⚠️⚠️ 2026-10-06 **"계속 진행 및 최종 마무리 지시서" §1** 로
+       차례가 **열넷**이 됐습니다 — HERO → 상황 → 업종 → 맞춤 로드맵 →
+       핵심 서비스 → 도구 → 정보센터 → 인수↔인계 → 업체 찾기 →
+       매장 · 시설 · 장비 → 이용방법 → 파트너 입점 → 브랜드 스토리 →
+       Footer. 마지막 Footer 는 #view 밖이라 여기 셈은 **열셋**입니다.
+       ⚠️ 사업 단계 여섯은 nav 요소라 이 셈에 안 들어갑니다.
+       ⚠️⚠️ 메인에서 내려온 구간 일곱(가치 · 숫자 · 큰 카드 ·
+       프랜차이즈 · 창업 분야 · 운영 · 폐업 가이드 · 폐업 분야)은
+       **지운 것이 아닙니다** — 가치 · 숫자 · 왜 셋은 브랜드 스토리
+       (mval) 안으로 들어갔고, 나머지는 갈 곳이 남아 있습니다
+       (PageMain() 의 주석에 하나씩 적어 두었습니다). */
+    const want = ["mh","mjy","mi-g","mroad","msvc","mt-g","minfo","mbr",
+                  "pv","mk","mhow","mjn","mval"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
     /* ⚠️ 숫자 구간은 이제 **히어로 밖**입니다. 떼어 놓으면 바탕이 둘 다
        크림이라 "붙어 보임" 으로 잡혔었기 때문에 **흰 구간**으로 둡니다 —
        바로 아래 "이웃한 두 구간이 붙어 보이지 않는다" 가 그걸 봅니다. */
+    /* ⚠️ 범위 숫자 띠는 히어로 안이 아니라 **브랜드 스토리 안**입니다 —
+       히어로 끝에는 음수 margin 으로 걸쳐 둔 검색 패널이 있어서, 그
+       뒤에 띠를 붙이면 패널이 띠 위에 올라앉습니다. */
     if(document.querySelector(".mh .mst-g")) return "숫자가 아직 히어로 안에 있습니다";
+    if(!document.querySelector(".mval .mst-g")) return "범위 숫자가 브랜드 스토리 안에 없습니다";
     const got = S.map(function(e, i){
       const mark = ["mh","mjy","mhow","mbr","mjn"];
       for(const m of mark) if(e.classList.contains(m)) return m;
       /* 안쪽 표시로 무슨 구간인지 가립니다 */
       if(e.classList.contains("mnum")) return "mnum";
+      /* ⚠️ mroad 를 **.mfit-tb 보다 먼저** 봅니다 — 맞춤 로드맵 안에
+         그 토글이 들어 있어서, 뒤에 두면 "mfit" 으로 읽힙니다. */
+      if(e.classList.contains("mroad")) return "mroad";
       if(e.classList.contains("mval")) return "mval";
       if(e.classList.contains("mfeat")) return "mfeat";
       if(e.classList.contains("msvc")) return "msvc";

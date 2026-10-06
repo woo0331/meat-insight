@@ -321,9 +321,12 @@ var MAIN_VALUE = [
   { ic:"handover",t:"창업부터 폐업까지", d:"사업의 시작과 정리를 함께합니다." },
   { ic:"compare", t:"한곳에서 비교",    d:"여러 서비스를 한곳에서 찾아보세요." }
 ];
-function MainValue(){
-  return '<section class="sec sec-white mval"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
+/* ⚠️⚠️ **구간 껍데기는 아래 `MainStory()` 가 씁니다** (2026-10-06
+   마무리 지시서 §1 — 브랜드 스토리가 메인의 마지막 구간입니다).
+   여기는 **안쪽만** 돌려줍니다. `MainValue()` 는 되돌리실 때를 위해
+   남겨 두었습니다 — `PageMain()` 에 한 줄 넣으시면 그대로 돕니다. */
+function mainValueIn(){
+  return '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow mval-k">대한민국 사장님의 시작과 끝</p>'+
       /* ⚠️ 2026-10-06 에 **h1 이 히어로로 올라갔습니다** — 화면마다
          h1 은 딱 하나라 여기는 h2 입니다. 글은 그대로 둡니다. */
@@ -334,8 +337,11 @@ function MainValue(){
     '<ul class="mval-g">'+MAIN_VALUE.map(function(v){
       return '<li><span class="mval-i">'+icon(v.ic,24)+'</span>'+
         '<span class="mval-t"><b>'+esc(v.t)+'</b><i>'+esc(v.d)+'</i></span></li>';
-    }).join("")+'</ul>'+
-  '</div></section>';
+    }).join("")+'</ul>';
+}
+function MainValue(){
+  return '<section class="sec sec-white mval"><div class="w">'+
+    mainValueIn()+'</div></section>';
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -349,7 +355,7 @@ function MainValue(){
    ⚠️ **"이 숫자는 분야의 수입니다" 줄을 지우지 마세요.** 숫자만 크게
    띄우면 "업체가 183곳" 으로 읽힙니다. 폰에서 숨기지도 마세요.
    ⚠️ `n+` 꼴로 쓰지 마세요 — 센 값은 그냥 183 입니다. */
-function MainScale(){
+function mainScaleIn(){
   var ind = (window.AM_INDUSTRIES||[]).length;
   var cat = (window.AM_CATS||[]).length;
   var sub = (window.AM_CATS||[]).reduce(function(n,c){
@@ -363,14 +369,15 @@ function MainScale(){
     { n:cat, k:"SPECIALIZED FIELDS", u:"분야" },
     { n:sub, k:"SERVICES",          u:"서비스" }
   ];
-  /* ⚠️⚠️ **전에는 히어로 안에 붙은 띠였습니다.** 따로 떼면 바탕이 둘 다
-     크림이라 "이웃한 두 구간이 붙어 보임" 이 ΔE 0.00 으로 잡혔었습니다 —
-     그래서 이번에는 **흰 구간**으로 떼어 냅니다 (크림 ↔ 흰 ΔE 2.53).
-     지시서 §3 이 숫자를 독립 Section 으로 두라고 합니다.
+  /* ⚠️⚠️ **자리가 세 번 바뀌었습니다** — 히어로 안의 띠 → 흰 구간
+     하나(`.mnum`) → **브랜드 스토리 안의 띠**(2026-10-06 마무리 지시서
+     §1 의 차례에 독립 구간이 없습니다). 히어로에 돌려놓지 마세요 —
+     떠 있는 검색 패널이 음수 margin 으로 히어로 아래에 걸쳐 있어서,
+     그 뒤에 띠를 붙이면 패널이 띠 위에 올라앉습니다.
      ⚠️ 숫자를 키우되 **"분야의 수" 줄은 그대로** 둡니다 (§9) — 숫자만
-     크게 띄우면 "업체가 183곳" 으로 읽힙니다. */
-  return '<section class="sec sec-white mnum"><div class="w">'+
-    '<div class="mst-box">'+
+     크게 띄우면 "업체가 183곳" 으로 읽힙니다.
+     ⚠️ `check.js` 가 **히어로 안에 있지 않은지**도 같이 봅니다. */
+  return '<div class="mst-box">'+
       '<ul class="mst-g">'+rows.map(function(r){
         return '<li><b>'+r.n+'</b>'+
           '<span class="mst-k">'+esc(r.k)+'</span>'+
@@ -380,8 +387,12 @@ function MainScale(){
          폰에서도 숨기지 않습니다. */
       '<p class="mst-n">'+icon("info",16)+
         '<span>서비스 <b>분류 기준</b>이며 등록된 업체 수가 아닙니다.</span></p>'+
-    '</div>'+
-  '</div></section>';
+    '</div>';
+}
+function MainScale(){
+  var inner = mainScaleIn();
+  return inner ? '<section class="sec sec-white mnum"><div class="w">'+
+    inner+'</div></section>' : "";
 }
 
 /* ⚠️⚠️ **여기 있던 "START / CLOSE 큰 카드"(`.ms-two`)를 지웠습니다**
@@ -517,7 +528,10 @@ function mainPlanKey(jy){
        : jy.key === "closing" ? "closing"
        : jy.key === "acquisition" ? "acq-in" : "";
 }
-function MainStart(){
+/* ⚠️ 구간 껍데기는 아래 `MainRoadmap()` 가 씁니다 — 맞춤 준비 순서와
+   "필요한 모든 것" 은 **한 구간**입니다 (마무리 지시서 §1 의 04).
+   따로 두면 메인 구간이 하나 늘어 차례가 어긋납니다. */
+function mainStartIn(){
   var jy  = (typeof amJourney === "function") ? amJourney(nowQS("j")) : null;
   var ind = (nowQS("i") && window.amIndustry) ? amIndustry(nowQS("i")) : null;
 
@@ -525,8 +539,7 @@ function MainStart(){
   if(!jy || !ind){
     var miss = !jy ? "상황" : "업종";
     var to   = !jy ? "#journey" : "#industry";
-    return '<section class="sec sec-white mstart"><div class="w">'+
-      '<div class="mst2 mst2-wait">'+
+    return '<div class="mst2 mst2-wait">'+
         '<p class="mst2-k">'+icon("info",16)+'맞춤 준비 순서</p>'+
         /* ⚠️ "상황까지" 는 어색합니다 — 첫 걸음이라 "까지" 가 받을
            앞말이 없습니다. 고르신 것이 있을 때만 "까지" 입니다. */
@@ -537,15 +550,13 @@ function MainStart(){
                  : "위에서 지금 상황을 하나 고르시면 시작합니다.")+'</p>'+
         '<p class="mst2-cta"><a class="btn btn-b btn-lg" href="'+esc(to)+'">'+
           esc(miss)+' 고르기'+icon("arrow",18)+'</a></p>'+
-      '</div>'+
-    '</div></section>';
+    '</div>';
   }
 
   /* 둘 다 고르셨습니다 — 맞춤 결과로 */
   var steps = amProcess(mainPlanKey(jy)).slice(0, 3);
   var to    = mainPlanTo(jy, ind);
-  return '<section class="sec sec-white mstart"><div class="w">'+
-    '<div class="mst2">'+
+  return '<div class="mst2">'+
       '<p class="mst2-k">'+icon("check",16)+esc(ind.name)+' · '+esc(jy.name)+'</p>'+
       /* ⚠️ 또 조사입니다 — `창업` · `운영` · `폐업` 은 받침이 있어
          "을", `인수 · 양도` 는 받침이 없어 "를" 입니다. */
@@ -563,8 +574,11 @@ function MainStart(){
           side: jy.side === "close" ? "close" : jy.side === "start" ? "start" : "" }))+'">'+
           '필요한 것 견적 요청</a>'+
       '</p>'+
-    '</div>'+
-  '</div></section>';
+    '</div>';
+}
+function MainStart(){
+  return '<section class="sec sec-white mstart"><div class="w">'+
+    mainStartIn()+'</div></section>';
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -581,7 +595,10 @@ function MainStart(){
    ⚠️ 업종을 안 고르셔도 **비지 않습니다** — 그 쪽 분류 전부가 나옵니다.
    ⚠️ 토글은 기존 START/CLOSE 구조 그대로입니다 (§17). 새 개념이
    아니라 **보는 각도**만 바꾸는 것입니다. */
-function MainFit(){
+/* ⚠️ 여기도 **안쪽만** 돌려줍니다 — 위 `mainStartIn()` 과 한 구간
+   (`.mroad`)에 같이 들어갑니다. `MainFit()` 은 되돌리실 때를 위해
+   남겨 두었습니다. */
+function mainFitIn(){
   /* ⚠️ 쪽은 `mainSide()` 한 곳에서 옵니다 — 고른 상황이 있으면
      거기서 나옵니다. 여기서 `?side=` 를 따로 읽으면 상황은 폐업인데
      분류는 창업 것이 나옵니다. */
@@ -606,11 +623,15 @@ function MainFit(){
     ? esc(who) + (side==="close" ? " 정리에" : " 창업에") + " 필요한 모든 것"
     : (side==="close" ? "사업을 정리할 때 필요한 모든 것" : "창업할 때 필요한 모든 것");
 
-  return '<section class="sec sec-white"><div class="w">'+
-    /* ⚠️ 머리말에 업종 이름을 또 적지 않습니다 — 바로 아래 h2 가 이미
-       "카페 · 디저트 창업에 필요한 모든 것" 입니다. 여기는 **지금 어느
-       쪽을 보고 있는지**를 냅니다. */
-    '<div class="sec-hd sec-hd-row"><div>'+
+  /* ⚠️ 머리말에 업종 이름을 또 적지 않습니다 — 바로 아래 h2 가 이미
+     "카페 · 디저트 창업에 필요한 모든 것" 입니다. 여기는 **지금 어느
+     쪽을 보고 있는지**를 냅니다.
+     ⚠️⚠️ **`return` 뒤에 줄을 바꾸지 마세요.** 주석을 `return` 과 값
+     사이에 끼워 넣었더니 자바스크립트가 거기에 세미콜론을 넣어
+     `return;` 이 됐습니다 — 에러도 안 나고, 이 함수만 `undefined` 를
+     돌려줘서 메인에서 **분야 격자와 토글이 통째로 사라졌습니다.**
+     화면에는 "상황 고르기undefined" 가 찍혔습니다. */
+  return '<div class="sec-hd sec-hd-row"><div>'+
       '<p class="eyebrow">'+
         (side==="close" ? "CLOSE · 사업 정리" : "START · 창업 준비")+'</p>'+
       '<h2>'+h2+'</h2>'+
@@ -639,7 +660,30 @@ function MainFit(){
     '<ul class="fit-g">'+cats.map(function(c){
       return '<li>'+FitCard(c, key || "")+'</li>'; }).join("")+'</ul>'+
     '<p class="note note-mid">'+cats.length+'개 분야 전부입니다. '+
-      '숫자는 분야 안의 <b>세부 서비스 수</b>이고 등록된 업체 수가 아닙니다.</p>'+
+      '숫자는 분야 안의 <b>세부 서비스 수</b>이고 등록된 업체 수가 아닙니다.</p>';
+}
+function MainFit(){
+  var inner = mainFitIn();
+  return inner ? '<section class="sec sec-white"><div class="w">'+
+    inner+'</div></section>' : "";
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SECTION 04 — 맞춤 로드맵 (2026-10-06 마무리 지시서 §1)
+   ══════════════════════════════════════════════════════════════════
+   02 에서 고른 **상황**(`?j=`)과 03 에서 고른 **업종**(`?i=`)이 그대로
+   여기로 들어옵니다. 위는 "지금부터 할 순서", 아래는 "그 쪽에 필요한
+   분야 전부" 입니다 — 둘은 같은 질문의 답이라 **한 구간**입니다.
+
+   ⚠️⚠️ **다시 두 구간으로 쪼개지 마세요.** 지시서 §1 의 차례가
+   열넷(화면 열셋 + 푸터)이고 `check.js` 가 그 수를 셉니다.
+   ⚠️ 걸음과 분야를 여기 손으로 적지 마세요 — 순서는 `AM_PROCESS`,
+   분야 차례는 `amCatsFor()`, 하위는 `amCatItems()` 가 정합니다. */
+function MainRoadmap(){
+  var a = mainStartIn(), b = mainFitIn();
+  if(!a && !b) return "";
+  return '<section class="sec sec-white mroad" id="roadmap"><div class="w">'+
+    a+(a && b ? '<div class="mroad-hr"></div>' : "")+b+
   '</div></section>';
 }
 
@@ -979,7 +1023,15 @@ function MainProviders(){
              "업체가 들어올 때 그 조건으로 전달합니다.",
         cta:'<a class="btn btn-nv" href="/quote">조건 남기고 견적 요청'+icon("arrow",18)+'</a>'+
             '<a class="btn btn-o" href="/join">업체로 입점하기</a>' });
-  return MainBand({ bg:"sec-ivory", kicker:"PARTNERS", h:"사장님들이 찾는 업체",
+  /* ⚠️⚠️ **바탕이 아이보리가 아니라 옅은 회색입니다.** 마무리 지시서
+     §1 의 차례에서 바로 위가 **연결 구간(크림)** 인데, 크림 ↔ 아이보리2
+     는 ΔE **2.34** 로 기준(2.5) 아래라 **두 구간이 한 구간으로
+     읽힙니다** (이 저장소가 이미 겪은 쌍입니다). 크림 ↔ 회색은 3.55 ·
+     회색 ↔ 민트(아래 매장 구간)는 4 이상입니다 — 위아래를 같이 보고
+     고른 값입니다. ⚠️ `paintTones()` 는 이 쌍을 **못 밉니다**: 크림은
+     "warm" · 아이보리는 "ivory" 로 **묶음이 달라서** 겹치는 것으로
+     세지 않습니다. 바꾸시려면 ΔE 를 직접 재 보세요. */
+  return MainBand({ bg:"sec-gray", kicker:"PARTNERS", h:"사장님들이 찾는 업체",
     lead:"업종과 지역에 맞는 전문업체를 비교해 보세요.", body:body });
 }
 
@@ -1024,7 +1076,11 @@ function MainFranchise(){
 var MAIN_ASSET_KIND = [
   { ic:"store", n:"매장",  d:"영업 중인 매장의 인수 · 양도", to:"/stores" },
   { ic:"tool",  n:"시설",  d:"기존 인테리어와 시설 활용",    to:"/assets" },
-  { ic:"fridge",n:"장비",  d:"주방기기 · 냉장 · 냉동 · POS",  to:"/assets?s=kitchen-eq" },
+  /* ⚠️⚠️ **`fridge` 라는 아이콘은 없습니다.** `icon()` 은 모르는
+     이름에 빈 문자열을 돌려줘서, 이 타일이 **덩그러니 비어** 있었습니다
+     — 에러도 안 나고 전수 점검도 통과했습니다 (찍어 보고 알았습니다).
+     이제 "아이콘 자리가 비었음" 이 전 화면에서 봅니다. */
+  { ic:"snow",  n:"장비",  d:"주방기기 · 냉장 · 냉동 · POS",  to:"/assets?s=kitchen-eq" },
   { ic:"sofa",  n:"집기",  d:"테이블 · 의자 · 사업용 집기",   to:"/assets?s=furniture" }
 ];
 function MainStores(){
@@ -1235,10 +1291,11 @@ function MainOps(){
    ⚠️ **장문의 회사소개가 아닙니다.** 이름을 기억시키는 자리입니다 —
    §17 이 직접 그렇게 적었습니다. 길어지면 아무도 안 읽습니다.
    ⚠️ 이름은 `brand.js` 한 곳에서 옵니다. 조사는 `koWith()` 입니다. */
-function MainWhy(){
+/* ⚠️ 안쪽만 돌려줍니다 — 브랜드 스토리 구간(`MainStory()`) 안입니다.
+   `MainWhy()` 는 되돌리실 때를 위해 남겨 두었습니다. */
+function mainWhyIn(){
   var nm = amBrand();
-  return '<section class="sec sec-ivory mwhy"><div class="w">'+
-    '<div class="mwhy-c">'+
+  return '<div class="mwhy-c">'+
       '<p class="eyebrow">WHY</p>'+
       /* ⚠️ 여기는 조사를 **안 붙입니다.** "…인가요" 는 받침이 있든
          없든 꼴이 같습니다 ("책인가요" · "나무인가요") — `koWith()`
@@ -1252,7 +1309,30 @@ function MainWhy(){
         '<li>누군가는 <b>정리</b>합니다.</li>'+
       '</ul>'+
       '<p class="mwhy-e">'+esc(koWith(nm,"은는"))+' 그 모든 순간을 잇습니다.</p>'+
-    '</div>'+
+    '</div>';
+}
+function MainWhy(){
+  return '<section class="sec sec-ivory mwhy"><div class="w">'+
+    mainWhyIn()+'</div></section>';
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SECTION 13 — 브랜드 스토리 (2026-10-06 마무리 지시서 §1)
+   ══════════════════════════════════════════════════════════════════
+   메인의 **마지막 구간**입니다. 세 덩이가 한 구간에 들어갑니다 —
+     ① 이 사이트가 하는 일 한 문장 + 가치 넷   (`mainValueIn()`)
+     ② 우리가 다루는 **범위** 숫자 셋          (`mainScaleIn()`)
+     ③ 왜 이 이름인가                          (`mainWhyIn()`)
+
+   ⚠️⚠️ **②는 실적이 아니라 범위입니다.** 회원 수 · 거래액 · 만족도는
+   지금 전부 0 이고 적으면 표시 · 광고의 공정화에 관한 법률 제3조입니다.
+   숫자 셋은 `AM_INDUSTRIES` · `AM_CATS` 를 그 자리에서 세는 값이고,
+   "분류 기준이며 등록된 업체 수가 아닙니다" 줄을 **지우지 마세요.**
+   ⚠️ 셋을 다시 세 구간으로 떼지 마세요 — 지시서 §1 의 차례가
+   열넷(화면 열셋 + 푸터)입니다. */
+function MainStory(){
+  return '<section class="sec sec-ivory mval"><div class="w">'+
+    mainValueIn()+ mainScaleIn()+ mainWhyIn()+
   '</div></section>';
 }
 
@@ -1389,65 +1469,78 @@ function MainJoin(){
 
 /* ⚠️ **구간을 더하거나 차례를 바꾸시려면 지시서를 먼저 고치세요.**
    `check.js` 의 "메인 구간 차례가 지시서와 같다" 가 **구간 열셋**을
-   셉니다 — 분야 바로가기 열은 `<nav>` 라 그 셈에 안 들어가고, "히어로
-   에서 바로 찾고 바로 갈라진다" 가 열 칸으로 봅니다. */
+   셉니다 — 사업 단계 열은 `<nav>` 라 그 셈에 안 들어가고, "히어로
+   에서 바로 찾고 바로 갈라진다" 가 그 열을 따로 봅니다. */
 function PageMain(){
-  /* ⚠️⚠️ **2026-10-06 2차 지시서 §18 의 차례**입니다. 지시서가
-     "반드시 다음 순서를 기준으로 재배치한다" 고 적은 열여섯입니다.
+  /* ⚠️⚠️ **2026-10-06 "재설계 — 계속 진행 및 최종 마무리 지시서" §1 의
+     차례**입니다. **열넷**이고 마지막 Footer 는 `#view` 밖
+     (`chrome.js`)이라 여기서는 **열셋**입니다.
 
-       ①  HERO                       §2
-       ②  지금 어떤 상황이신가요      §3   ← 고르개가 됐습니다
-       ③  업종 선택                   §4
-       ④  맞춤 시작 CTA               §4 · §5  ← 새로
-       ⑤  많이 찾는 서비스            §18-5
-       ⑥  사장님 도구                 §15
-       ⑦  업체 찾기                   §8
-       ⑧  정보센터                    §13
-       ⑨  인수 ↔ 인계                 §16
-       ⑩  창업 전체 분야              §18-10 ← 새로
-       ⑪  운영 서비스                 §18-11 ← 새로
-       ⑫  폐업 전체 분야              §18-12 ← 새로
-       ⑬  이용방법                    §18-13
-       ⑭  파트너 입점                 §18-14
-       ⑮  브랜드 철학                 §17   ← 새로
-       ⑯  Footer                      (chrome.js)
+       01 HERO                .mh      머리 띠 + 두 판 + 떠 있는 검색 패널
+       02 지금 어떤 상황       .mjy     상황 넷 — 고르개 (`?j=`)
+       03 어떤 업종            .mi-g    업종 열넷 — 거르개 (`?i=`)
+       04 맞춤 로드맵          .mroad   ★ 02 + 03 의 결과 (순서 + 분야)
+       05 핵심 서비스 탐색     .msvc    대표 서비스 열둘
+       06 사장님 도구          .mt-g    계산기 열셋
+       07 사장님 정보센터      .minfo   글 예순 편
+       08 인수 ↔ 인계          .mbr     한 사장님의 끝이 다른 분의 시작
+       09 업체 찾기            PARTNERS
+       10 매장 · 시설 · 장비    TAKE OVER
+       11 이용방법             .mhow
+       12 파트너 입점          .mjn     + 입점 화면 예시 카드
+       13 브랜드 스토리        .mval    가치 넷 + 범위 숫자 + 왜 이 이름인가
+       14 Footer               ← `#view` 밖 (`chrome.js`)
 
-     ⚠️⚠️ **지시서에 없는 구간을 지우지 않았습니다** (§1 — "기존 기능을
-     삭제하거나 다시 만드는 작업이 아니다"). 들어갈 자리를 찾아
-     끼웠습니다 —
+     ⚠️⚠️ **사업 단계 여섯(`MainStage()`)은 `<section>` 이 아니라
+     `<nav>` 입니다** — 링크 목록이라 그게 맞고, 그래서 위 열셋 셈에
+     **들어가지 않습니다.** 지우면 `/g/:stage` **여섯 화면 중 다섯이
+     사이트 안에서 갈 길을 잃습니다** (검색 패널 탭이 `/g/transfer`
+     하나만 가리킵니다) — 색인은 되어 있는데 아무 데서도 안 걸리는
+     화면이 됩니다. 04 가 "내 상황의 순서" 라면 이 열은 "사업 전체의
+     흐름" 이라 바로 뒤가 제자리입니다.
 
-       · 브랜드 가치 넷 · 범위 숫자 → ① 바로 아래. 히어로가 말한
-         것을 숫자로 받는 자리라 떼면 히어로가 혼자 뜹니다.
-       · 고른 업종에 필요한 것(MainFit) → ④ 맞춤 CTA 바로 다음.
-         업종을 고르면 **그 자리에서** 바뀌는 것을 보여 주는 구간이라
-         업종 구간에서 멀어지면 안 됩니다 (§9).
-       · 사업 단계 여섯 → ⑤ 앞. 서비스로 들어가기 전의 큰 흐름입니다.
-       · 큰 카드 셋 · 프랜차이즈 · 매장 인수 → ⑨ 앞뒤. 셋 다 인수 ·
-         양도와 같은 결입니다.
-       · 폐업 가이드 → ⑫ 바로 앞. 같은 쪽 구간끼리 모읍니다.
+     ⚠️⚠️ **지시서 §1 — "특별한 이유가 없다면 DELETE 하지 않는다."**
+     차례를 열넷으로 맞추면서 메인에서 내려온 것은 **구간 일곱**이고,
+     함수는 **그대로 두었습니다** (되돌리실 일이 생기면 아래 한
+     줄입니다). 전부 갈 곳이 남아 있는지 하나씩 확인했습니다 —
 
-     ⚠️ **빠진 것 셋과 그 까닭** (함수는 남겨 두었습니다 — 되돌리실
-     일이 생기면 아래 한 줄입니다)
-       · `MainTwo()`     히어로가 바로 그 두 장이 됐습니다
-       · `MainPrice()`   견적 0건이라 늘 Empty 입니다
-       · `MainReviews()` 후기 0건. "실제 후기 확인" 은 지금 쓸 수
-                         없는 말입니다 (§24 — 가짜 후기 금지)
+       · `MainValue()` `MainScale()` `MainWhy()`
+                          → 셋 다 **13 브랜드 스토리 안으로 들어갔습니다**
+                            (`MainStory()`). 내용은 한 글자도 안 뺐습니다.
+       · `MainFeature()`  → 큰 카드 셋(프랜차이즈 · 점포 · 인테리어)이
+                            가리키던 곳은 05 서비스 열둘(인테리어) ·
+                            10 매장 구간 · 푸터 프랜차이즈가 받습니다
+       · `MainFranchise()`→ `/franchise` 는 **검색 패널 탭** · 푸터
+                            서비스 칸 · 04 로드맵 첫 걸음이 보냅니다
+       · `MainStartCats()` `MainCloseCats()`
+                          → 04 로드맵 아래가 **그 쪽 분야 전부**를
+                            냅니다 (토글로 창업 ↔ 정리). 거기에
+                            "전체보기" 로 `/startup` · `/closure` 도
+                            같이 있습니다
+       · `MainOps()`      → 운영 과제 열여섯은 `/operation` 이 그대로
+                            들고 있고, 02 상황 카드가 그리로 보냅니다
+       · `MainClosing()`  → 폐업 순서는 04 로드맵이 **상황별로** 냅니다
+                            (`?j=closing`). 히어로 오른쪽 판도 `/closure`
+                            입니다
+       · `MainPrice()` `MainReviews()` `MainTwo()`
+                          → 전부터 안 쓰는 셋입니다 (견적 0건 · 후기
+                            0건 · 히어로가 그 두 장이 됐습니다)
 
-     ⚠️⚠️ **가짜 신뢰 숫자를 넣지 마세요** (§24). 회원 수 · 거래건수 ·
+     ⚠️ 위를 메인에 **다시 끼워 넣지 마세요.** 지시서가 "메인에서 모든
+     기능을 볼 필요는 없다" 고 적었습니다 — 구간이 늘수록 "그래서
+     여기서 뭘 하지" 가 묻힙니다. 늘리시려면 지시서를 먼저 고치고
+     `check.js` 의 `want` 를 같이 고치세요.
+
+     ⚠️⚠️ **가짜 신뢰 숫자를 넣지 마세요.** 회원 수 · 거래건수 ·
      만족도 · 평점 · 시공건수는 지금 전부 0 이고, 적는 순간 표시 ·
-     광고의 공정화에 관한 법률 제3조입니다. ④ 의 숫자(업종 14 ·
+     광고의 공정화에 관한 법률 제3조입니다. 13 의 숫자(업종 14 ·
      분야 25 · 서비스 183)는 실적이 아니라 **우리가 다루는 범위**이고
      데이터를 그 자리에서 세는 값입니다 — 구간 안에 "등록된 업체 수가
      아닙니다" 를 ⓘ 로 같이 냅니다. 그 줄을 지우지 마세요. */
   return MainHero()+
-         MainJourney()+ MainIndustry()+ MainStart()+ MainFit()+
-         MainValue()+ MainScale()+
-         MainStage()+ MainServices()+
-         MainTools()+
-         MainProviders()+
-         MainContent()+
-         MainFeature()+ MainFranchise()+ MainStores()+ MainBridge()+
-         MainStartCats()+ MainOps()+ MainClosing()+ MainCloseCats()+
-         MainHow()+ MainJoin()+ MainWhy();
+         MainJourney()+ MainIndustry()+ MainRoadmap()+ MainStage()+
+         MainServices()+ MainTools()+ MainContent()+ MainBridge()+
+         MainProviders()+ MainStores()+ MainHow()+ MainJoin()+
+         MainStory();
 }
 

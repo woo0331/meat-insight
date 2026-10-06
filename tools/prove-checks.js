@@ -147,8 +147,16 @@ const CASES = [
   /* 걸음에서 갈 곳을 걷어내면 걸려야 합니다 */
   ["준비 과정의 걸음마다 갈 곳이 있다",
    `document.querySelectorAll(".pcs-ls").forEach(function(e){ e.innerHTML = ""; });`],
+  /* ⚠️ 2026-10-06 2차 §8 로 그 자리가 EmptyGuide(.emg)가 됐습니다 —
+     옛 클래스(.empty-rl)만 지우고 있어서 아무 일이 안 났습니다.
+     ⚠️⚠️ **되돌리기가 옛 생김새를 지우고 있으면 검사는 늘 통과합니다.**
+     화면을 고치면 되돌리기도 같이 보세요. */
   ["빈 칸이 읽을 것을 같이 낸다",
-   `document.querySelectorAll(".empty-rl").forEach(function(e){ e.remove(); });`],
+   `document.querySelectorAll(".emg-l, .empty-rl").forEach(function(e){ e.remove(); });`],
+  /* 몇 곳인지 말하는 줄을 지우면 걸려야 합니다 — 0 을 숨기는 것은
+     없는 회사를 광고하는 쪽으로 가는 첫 걸음입니다 (절대 규칙 1) */
+  ["빈 칸이 읽을 것을 같이 낸다",
+   `document.querySelectorAll(".emg-n").forEach(function(e){ e.textContent = ""; });`],
   /* 시간 제한을 걷어내면 걸려야 합니다 — 멈추면 영원히 "보내는 중…". */
   ["접수가 멈추면 끊고 적은 글을 돌려준다",
    `window.amSend = function(failId, body){

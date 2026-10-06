@@ -2429,8 +2429,16 @@ const AUDIT = `(() => {
        ⚠️⚠️ 바로 위 줄에 백틱을 적었다가 문자열이 거기서 끝나
        "nav is not defined" 로 흐름 검사가 통째로 멈췄습니다
        (**열한 번째** escape 사고). 주석에 백틱을 쓰지 마세요. */
-    const want = ["mh","mjy","mval","mnum","mi-g","mfit","msvc","mt-g",
-                  "pv","minfo","mfeat","fr","mk","mbr","mcls","mhow","mjn"];
+    /* ⚠️⚠️ 2026-10-06 **2차 지시서 §18** 로 차례가 다시 짜였습니다 —
+       HERO → 상황 → 업종 → 맞춤 시작 → 많이 찾는 서비스 → 도구 →
+       업체 → 정보센터 → 인수↔인계 → 창업 분야 → 운영 → 폐업 분야 →
+       이용방법 → 입점 → 브랜드 철학. 지시서에 없던 구간은 지우지
+       않고 결이 맞는 자리에 끼웠습니다 (가치 · 숫자 · 고른 업종 ·
+       큰 카드 · 프랜차이즈 · 매장 · 폐업 가이드).
+       ⚠️ 사업 단계 여섯은 nav 요소라 이 셈에 안 들어갑니다. */
+    const want = ["mh","mjy","mi-g","mstart","mfit","mval","mnum",
+                  "msvc","mt-g","pv","minfo","mfeat","fr","mk","mbr",
+                  "mscat","mops","mcls","mccat","mhow","mjn","mwhy"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
@@ -2448,6 +2456,11 @@ const AUDIT = `(() => {
       if(e.classList.contains("msvc")) return "msvc";
       if(e.classList.contains("minfo")) return "minfo";
       if(e.classList.contains("mcls"))  return "mcls";
+      if(e.classList.contains("mstart"))return "mstart";
+      if(e.classList.contains("mscat")) return "mscat";
+      if(e.classList.contains("mops"))  return "mops";
+      if(e.classList.contains("mccat")) return "mccat";
+      if(e.classList.contains("mwhy"))  return "mwhy";
       if(e.querySelector(".mfit-tb")) return "mfit";
       if(e.querySelector(".mi-g"))   return "mi-g";
       if(e.querySelector(".mt-g"))   return "mt-g";

@@ -260,8 +260,11 @@ function PageOperation(){
   var ind  = (typeof amIndustry === "function") ? amIndustry(nowQS("i")) : null;
   var reads = opsReads(6);
   return PgHero({
-    kicker:"OPERATION · 매장 운영",
-    h1raw:"운영하면서 필요한 것,<br class=\"br-m\"> 여기서 찾으세요.",
+    /* ⚠️ §5 — 업종을 고르고 오셨으면 되읽어 줍니다. */
+    kicker:"OPERATION · 매장 운영" + (ind ? " · " + ind.name : ""),
+    h1raw: ind
+      ? esc(ind.name)+" 운영 중에<br class=\"br-m\"> 필요한 것을 찾고 계시네요."
+      : "운영하면서 필요한 것,<br class=\"br-m\"> 여기서 찾으세요.",
     lead:"세무 · 노무 · 인력 · POS · 식자재 · 청소 · 마케팅까지. 문을 연 뒤에 생기는 일도 한곳에서 맡길 곳을 찾습니다.",
     cta:'<a class="btn btn-b btn-lg" href="'+esc(quoteTo({}))+'">'+
         '필요한 것 견적 요청'+icon("arrow",18)+'</a>'+
@@ -323,9 +326,17 @@ function PageAcquisition(){
   }
 
   return PgHero({
-    kicker:"TAKE OVER · 인수 · 양도",
-    h1raw:"한 사장님의 끝이<br class=\"br-m\"> 다른 사장님의 시작이 됩니다.",
-    lead:"있던 가게를 받으면 공사 기간과 초기 비용이 줄고, 넘기면 철거비와 원상복구가 줄어듭니다. 두 분이 같은 화면을 봅니다.",
+    /* ⚠️ 2026-10-06 2차 §5 — 업종을 고르고 오셨으면 머리말이 그것을
+       되읽어 줍니다. 안 그러면 "내 자리에 왔다" 가 안 읽힙니다.
+       ⚠️⚠️ **한쪽으로 물들이지 않습니다** — 넘기시는 분과 받으시는
+       분이 같은 화면을 봅니다 (`/stores` · `/assets` 와 같은 까닭). */
+    kicker:"TAKE OVER · 인수 · 양도" + (ind ? " · " + ind.name : ""),
+    h1raw: ind
+      ? esc(ind.name)+" 인수 · 양도를<br class=\"br-m\"> 보고 계시네요."
+      : "한 사장님의 끝이<br class=\"br-m\"> 다른 사장님의 시작이 됩니다.",
+    lead: ind
+      ? "받으시는 분과 넘기시는 분이 같은 화면을 봅니다. 아래에서 어느 쪽인지 고르시면 그 순서로 보여 드립니다."
+      : "있던 가게를 받으면 공사 기간과 초기 비용이 줄고, 넘기면 철거비와 원상복구가 줄어듭니다. 두 분이 같은 화면을 봅니다.",
     cta:'<a class="btn btn-b btn-lg" href="/stores'+esc(iq)+'">매장 매물 보기'+icon("arrow",18)+'</a>'+
         '<a class="btn btn-o btn-lg" href="/assets'+esc(iq)+'">시설 · 장비 보기</a>'
   })+

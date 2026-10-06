@@ -521,7 +521,7 @@ function MainStart(){
   if(!jy || !ind){
     var miss = !jy ? "상황" : "업종";
     var to   = !jy ? "#journey" : "#industry";
-    return '<section class="sec sec-white"><div class="w">'+
+    return '<section class="sec sec-white mstart"><div class="w">'+
       '<div class="mst2 mst2-wait">'+
         '<p class="mst2-k">'+icon("info",16)+'맞춤 준비 순서</p>'+
         /* ⚠️ "상황까지" 는 어색합니다 — 첫 걸음이라 "까지" 가 받을
@@ -540,7 +540,7 @@ function MainStart(){
   /* 둘 다 고르셨습니다 — 맞춤 결과로 */
   var steps = amProcess(mainPlanKey(jy)).slice(0, 3);
   var to    = mainPlanTo(jy, ind);
-  return '<section class="sec sec-white"><div class="w">'+
+  return '<section class="sec sec-white mstart"><div class="w">'+
     '<div class="mst2">'+
       '<p class="mst2-k">'+icon("check",16)+esc(ind.name)+' · '+esc(jy.name)+'</p>'+
       /* ⚠️ 또 조사입니다 — `창업` · `운영` · `폐업` 은 받침이 있어
@@ -1081,7 +1081,10 @@ function MainBridge(){
    ⚠️ 비면 구간째 빠집니다 (절대 규칙 2 — "준비 중" 을 찍지 않습니다). */
 function ChipBand(o){
   if(!o.items.length) return "";
-  return '<section class="sec '+esc(o.bg||"sec-white")+'"><div class="w">'+
+  /* ⚠️ `cls` 는 **검사가 구간 차례를 세는 표시**입니다 (`check.js` 의
+     "메인 구간 차례가 지시서와 같다"). 빼면 그 구간이 "?" 로 읽혀
+     차례 검사가 실패합니다. */
+  return '<section class="sec '+esc(o.bg||"sec-white")+' '+esc(o.cls||"")+'"><div class="w">'+
     '<div class="sec-hd sec-hd-row"><div>'+
       '<h2>'+esc(o.h)+'</h2>'+
       '<p>'+esc(o.lead)+'</p></div>'+
@@ -1104,13 +1107,13 @@ function sideChips(side){
 }
 function MainStartCats(){
   var L = sideChips("start");
-  return ChipBand({ bg:"sec-white", items:L, all:["/startup","창업 전체 보기"],
+  return ChipBand({ bg:"sec-white", cls:"mscat", items:L, all:["/startup","창업 전체 보기"],
     h:"창업에 필요한 분야 " + L.length,
     lead:"무엇을 찾아야 하는지 이미 아시면 여기서 바로 들어가세요." });
 }
 function MainCloseCats(){
   var L = sideChips("close");
-  return ChipBand({ bg:"sec-close", items:L, all:["/closure","폐업 전체 보기"],
+  return ChipBand({ bg:"sec-close", cls:"mccat", items:L, all:["/closure","폐업 전체 보기"],
     h:"폐업 · 정리에 필요한 분야 " + L.length,
     lead:"기한이 있는 것이 여럿입니다. 순서가 곧 돈입니다." });
 }
@@ -1125,7 +1128,7 @@ function MainOps(){
                                             : (iq ? "?" + iq.slice(1) : ""));
     return to ? { n:o.name, ic:o.icon, to:to } : null;
   }).filter(Boolean);
-  return ChipBand({ bg:"sec-gray", items:L, all:["/operation","운영 전체 보기"],
+  return ChipBand({ bg:"sec-gray", cls:"mops", items:L, all:["/operation","운영 전체 보기"],
     h:"운영하면서 필요한 것 " + L.length,
     lead:"문을 연 뒤에 생기는 일입니다. 막히는 자리마다 맡길 곳이 있습니다." });
 }

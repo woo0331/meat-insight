@@ -192,7 +192,8 @@ window.pcGo = function(catKey){
 /* ── /p/:id — 업체 상세 (§37) ──────────────────────────────────── */
 function PageProviderOne(p){
   var s = amProviderStats(p) || {};
-  var subs = (p.subs||[]).map(amSubName);
+  var subs = (p.subs||[]).map(amSubName).filter(Boolean);
+  var inds = (p.industries||[]).map(amIndustryName).filter(Boolean);
   /* ⚠️⚠️ **조건을 그대로 넘깁니다.** 전에 여기만 `quoteTo({})` 라,
      업체 상세에서 "무료 견적받기" 를 누르면 **빈 견적 화면**이 떴습니다 —
      분야 화면(`/providers/:cat`)에서는 분류 · 업종 · 지역이 다 따라가는데
@@ -244,8 +245,17 @@ function PageProviderOne(p){
         return '<li><span class="chip chip-flat">'+esc(g)+'</span></li>'; }).join("")+
       '</ul><p class="note">업체가 적어 준 범위입니다.</p></div>' : '')+
 
-    (subs.length ? '<div class="pv-sec"><h2>전문 서비스</h2>'+
+    (subs.length ? '<div class="pv-sec"><h2>이런 일을 합니다</h2>'+
       '<ul class="chip-g">'+subs.map(function(n){
+        return '<li><span class="chip chip-flat">'+esc(n)+'</span></li>'; }).join("")+
+      '</ul></div>' : '')+
+
+    /* ⚠️⚠️ **전문 업종도 적어 받아 놓고 안 쓰고 있었습니다** — `gu` 가
+       그랬던 것과 같은 자리입니다 (2026-10-06 2차 §11 이 "전문 업종"
+       을 따로 적었습니다). 카페 전문 업체인지 음식점 전문인지가
+       손님에게는 지역만큼 중요합니다. */
+    (inds.length ? '<div class="pv-sec"><h2>전문 업종</h2>'+
+      '<ul class="chip-g">'+inds.map(function(n){
         return '<li><span class="chip chip-flat">'+esc(n)+'</span></li>'; }).join("")+
       '</ul></div>' : '')+
 
@@ -266,6 +276,30 @@ function PageProviderOne(p){
           '<span>'+esc([amIndustryName(f.industry), amRegionName(f.region), f.year]
             .filter(Boolean).join(" · "))+'</span>'+
         '</div>'; }).join("")+'</div></div>' : '')+
+
+    /* ── A/S (2026-10-06 2차 §10 · §11) ──────────────────────────
+       ⚠️⚠️ **업체가 적은 값입니다.** 우리가 확인한 것이 아니라서
+       아래 한 줄로 그렇게 밝힙니다 — 확인 배지(`verified`)와 섞이면
+       "플랫폼이 A/S 를 보증한다" 로 읽히고, 그 순간 지키지 못할
+       약속이 됩니다 (절대 규칙 5). 비면 구간째 빠집니다. */
+    ((p.as && (p.as.period || p.as.what))
+      ? '<div class="pv-sec"><h2>A/S</h2>'+
+        '<ul class="pv-as">'+
+          (p.as.period ? '<li><b>기간</b><span>'+esc(p.as.period)+'</span></li>' : '')+
+          (p.as.what   ? '<li><b>범위</b><span>'+esc(p.as.what)+'</span></li>' : '')+
+        '</ul>'+
+        '<p class="note">업체가 적어 준 내용입니다. 계약서로 다시 확인하세요.</p></div>'
+      : '')+
+
+    /* ── 업체 FAQ (§11) — ⚠️ `**굵게**` 를 쓰지 마세요. `esc()` 만
+       거치는 칸이라 별표가 글자로 찍힙니다 (13건 겪은 자리).
+       ⚠️⚠️ 여기에 FAQPage 구조화 데이터를 달지 마세요 — `/faq` 가
+       이미 달고 있어서 같은 유형이 두 주소로 나갑니다. */
+    ((p.faq||[]).length ? '<div class="pv-sec"><h2>자주 묻는 것</h2>'+
+      '<ul class="pv-faq">'+p.faq.map(function(f){
+        return '<li><b>'+esc(f.q)+'</b><p>'+esc(f.a)+'</p></li>'; }).join("")+
+      '</ul>'+
+      '<p class="note">업체가 적어 준 내용입니다.</p></div>' : '')+
 
     ((p.reviews||[]).length ? ReviewBlock(p) : '')+
 
@@ -741,6 +775,10 @@ window.AgreeBox = function(id, what, why, how){
    (절대 규칙 5).
    ⚠️ 평점 · 후기 수는 **후기 배열에서 계산**합니다 (`amProviderStats`). */
 function PageCompare(){
+  /* ⚠️ 목록에서 담은 것은 `?cmp=` 이고, 이 화면으로 넘어올 때
+     `CmpBar()` 가 `?ids=` 로 바꿔 싣습니다. 두 이름이 다른 까닭은
+     목록에서는 **거르개와 같이 실리는 값**이고 여기서는 **이 화면의
+     전부**이기 때문입니다. 바꾸시려면 `CmpBar()` 도 같이 고치세요. */
   var ids = String(nowQS("ids") || "").split(",")
     .map(function(x){ return x.trim(); }).filter(Boolean).slice(0, AM_CMP_MAX);
   var ps = ids.map(function(id){ return amProvider(id); }).filter(Boolean);
@@ -774,8 +812,17 @@ function PageCompare(){
     ["가격 정보",   function(p){
       return (p.price||[]).map(function(x){
         return x.name + (x.from ? " " + x.from.toLocaleString() + "만원~" : ""); }).join(" · "); }],
+    /* A/S (2026-10-06 2차 §12) — ⚠️ 업체가 적은 값입니다. 아래 고지가
+       "저희가 확인하거나 보증하는 값이 아닙니다" 를 이미 말합니다. */
+    ["A/S",        function(p){
+      return p.as ? [p.as.period, p.as.what].filter(Boolean).join(" · ") : ""; }],
+    /* 후기 — ⚠️ **세는 값**입니다. 평점 줄과 따로 두는 까닭은, 평점은
+       없고 후기만 있는 경우가 없기 때문이 아니라 §12 가 둘을 나눠
+       적었기 때문입니다. 0건이면 줄째 빠집니다. */
+    ["후기",        function(p){ var n = (p.reviews||[]).length;
+      return n ? n + "건" : ""; }],
     ["시작한 해",   function(p){ return p.since ? String(p.since) : ""; }],
-    ["상담 가능 시간", function(p){ return p.consultHours || ""; }],
+    ["상담 방법",   function(p){ return p.consultHours ? ("상담 가능 " + p.consultHours) : ""; }],
     /* ⚠️ 재어 본 값이 없으면 이 줄은 안 나옵니다 */
     ["평균 응답",   function(p){
       return p.responseHours != null ? p.responseHours + "시간 안" : ""; }]

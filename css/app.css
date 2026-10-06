@@ -216,6 +216,11 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .btn-pt{ background:var(--point); color:#fff; border-color:var(--point); }
 .btn-pt:hover{ background:var(--point-dark); border-color:var(--point-dark); }
 .btn-lg{ min-height:56px; padding:0 var(--s7); font-size:var(--t-lg); }
+/* 작은 단추 — 카드 안에 단추가 둘 이상 들어가는 자리입니다 (업체 카드).
+   ⚠️⚠️ **누르는 자리는 40px 이상**입니다. 작게 보이게 하려고 높이를
+   더 내리지 마세요 — 작게 만드는 것은 높이가 아니라 글씨와 여백입니다.
+   ⚠️ 글씨도 12px 미만으로 내리지 않습니다 (--t-cap 13px 이 바닥). */
+.btn-sm{ min-height:40px; padding:0 var(--s5); font-size:var(--t-cap); }
 /* §5 hover — 2px 들리고 그림자. ⚠️ 크기를 키우지 마세요(zoom 금지 §21) */
 @media (hover:hover){
   .btn-st:hover, .btn-cl:hover, .btn-nv:hover, .btn-b:hover, .btn-pt:hover{

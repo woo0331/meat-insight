@@ -663,8 +663,45 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .pv-r em{ font-style:normal; color:var(--ink3); font-size:var(--t-cap); }
 .pv-r-none{ color:var(--ink3); font-size:var(--t-cap); }
 .pv-i{ font-size:var(--t-sm); color:var(--ink2); line-height:1.7; margin-top:2px; }
+/* 업체 이름 링크 — ⚠️ 카드가 더는 통째로 `<a>` 가 아닙니다 (단추 셋이
+   들어가면 링크 안의 링크가 됩니다). 이름 · 사진 · 단추가 각자 링크입니다. */
+.pv-nm{ display:inline-flex; min-height:40px; align-items:center; color:inherit; }
+@media (hover:hover){ .pv-nm:hover b{ color:var(--navy); } }
+/* 전문 서비스 — ⚠️ 넷까지만 냅니다. 전부 깔면 카드 높이가 제각각이 되고
+   그러면 한 줄에 선 카드들이 들쭉날쭉해집니다. */
+.pv-sv{ display:flex; flex-wrap:wrap; gap:5px; }
+.pv-sv span, .pv-sv em{ font-style:normal; font-size:var(--t-cap);
+  font-weight:700; color:var(--ink2); background:var(--surface);
+  border:1px solid var(--line); border-radius:var(--r-pill); padding:3px 9px; }
+.pv-sv em{ border-style:dashed; color:var(--ink3); }
+/* 있다/없다 표시 — ⚠️ 금액을 찍지 않습니다. 업체마다 단위가 달라
+   나란히 두면 견줄 수 없는 숫자가 됩니다. */
+.pv-mk{ display:flex; flex-wrap:wrap; gap:var(--s3); margin-top:2px; }
+.pv-mk span{ display:inline-flex; align-items:center; gap:4px;
+  font-size:var(--t-cap); color:var(--ink2); }
+.pv-mk svg{ flex:none; color:var(--navy); }
+/* 예시 딱지 — ⚠️ 작게 두지 마세요. 예시인 줄 모르고 전화하면
+   그 순간 없는 회사를 광고한 것이 됩니다 (절대 규칙 1). */
+.pv-smp{ font-style:normal; font-size:var(--t-cap); font-weight:900;
+  letter-spacing:.06em; color:#fff; background:var(--navy);
+  border-radius:var(--r-pill); padding:3px 10px; }
+.pv-act{ display:flex; flex-wrap:wrap; gap:var(--s2); margin-top:var(--s3); }
+.pv-act-x{ pointer-events:none; opacity:.72; }
 @media (max-width:1040px){ .pv-g{ grid-template-columns:1fr 1fr; } }
 @media (max-width:600px){ .pv-g{ grid-template-columns:1fr; } }
+
+/* A/S · 업체 FAQ (2026-10-06 2차 §10 · §11) */
+.pv-as{ display:grid; gap:var(--s2); }
+.pv-as li{ display:grid; grid-template-columns:72px 1fr; gap:var(--s3);
+  padding:var(--s4) var(--s5); background:var(--bg-2); border-radius:var(--r); }
+.pv-as b{ font-size:var(--t-cap); font-weight:800; color:var(--ink2); }
+.pv-as span{ font-size:var(--t-sm); color:var(--ink); line-height:1.6; }
+.pv-faq{ display:grid; gap:var(--s3); }
+.pv-faq li{ padding:var(--s5); background:var(--bg-2); border-radius:var(--r); }
+.pv-faq b{ display:block; font-size:var(--t-sm); font-weight:800;
+  color:var(--ink); line-height:1.5; }
+.pv-faq p{ margin-top:var(--s2); font-size:var(--t-sm); color:var(--ink2);
+  line-height:1.7; }
 
 .pv-one-m{ display:flex; gap:var(--s8); flex-wrap:wrap; padding-bottom:var(--s7);
   border-bottom:1px solid var(--line); margin-bottom:var(--s7); }

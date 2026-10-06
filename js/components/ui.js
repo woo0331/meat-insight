@@ -169,79 +169,137 @@ window.CatCard = function(c, industryKey){
    `amProviderStats()` 가 실제 후기·포트폴리오 배열에서 셉니다. 후기가
    없으면 그 자리는 **아예 안 나옵니다** — "평점 0.0" 은 평점이 아니고,
    별 다섯 개를 회색으로 그려 두는 것도 지어낸 신뢰입니다. */
+/* ── 업체 목록 카드 (2026-10-06 2차 §10) ───────────────────────────
+   업체가 등록되면 **한눈에 보여야 하는 것**을 §10 이 적었습니다 —
+   업체명 · 인증 표시 · 한 줄 소개 · 전문업종 · 전문서비스 · 지역 ·
+   대표 포트폴리오 · 가격정보 유무 · 인증 유무 · A/S 유무 · 단추 셋.
+
+   ⚠️⚠️ **카드가 통째로 `<a>` 이면 안 됩니다.** 단추가 셋이라
+   `<a>` 안의 `<a>` 가 되고, 브라우저가 그걸 쪼갭니다. 그래서 카드는
+   `<div>` 이고 **사진 · 이름 · 단추가 각자 링크**입니다.
+   ⚠️ 전에는 카드 한 장이 통째로 링크였습니다 — 그때 주석이 "여기에
+   또 `<a>` 를 넣을 수 없습니다" 라고 적고 있었는데, §10 이 단추 셋을
+   요구해서 **짜임새를 바꾼 것**입니다. 지우지 마세요.
+
+   ⚠️⚠️ **평점 · 후기 수 · 작업 수는 계산값입니다** (`amProviderStats`).
+   후기가 없으면 평점 자리가 아예 안 나옵니다 — "평점 0.0" 도 별
+   다섯 개 회색도 지어낸 신뢰입니다 (절대 규칙 1).
+   ⚠️ 가격 · A/S 는 **있다/없다만** 말합니다. 업체가 적은 값이라
+   우리가 확인한 사실이 아니고, 금액을 카드에 찍으면 비교할 수 없는
+   숫자가 나란히 섭니다. */
 window.ProviderCard = function(p){
   var s = amProviderStats(p) || {};
   /* ⚠️ 규칙은 `providers.js` 의 `amProviderBadges()` 한 곳입니다. */
   var badges = amProviderBadges(p);
+  var subs   = (p.subs||[]).map(amSubName).filter(Boolean);
+  var inds   = (p.industries||[]).map(amIndustryName).filter(Boolean);
+  var regs   = (p.regions||[]).map(amRegionName).filter(Boolean);
+  var folio  = (p.portfolio||[]);
+  var cover  = p.cover || (folio[0] && folio[0].after) || "";
 
   /* ⚠️⚠️ **예시 프로필은 링크가 아닙니다.** `/p/sample-provider` 라는
      화면을 만들면 지어낸 업체 페이지가 생기고 sitemap · 구글까지
      나갑니다 (절대 규칙 1). `/join` 의 "이렇게 보입니다" 구간에서만
-     쓰는 그림이라, 누를 수 없는 칸으로 냅니다 — 가짜 링크도 아니고
-     가짜 화면도 아닙니다. */
+     쓰는 그림이라, 누를 수 없는 칸으로 냅니다. 예시 상세는 따로
+     `/sample` 하나이고 NOINDEX 입니다. */
   var ex = !!p.sample;
-  return (ex ? '<div class="pv pv-ex">' : '<a class="pv" href="/p/'+esc(p.id)+'">')+
-    '<span class="pv-ph">'+(p.cover
-        ? '<img class="ph" src="'+esc(p.cover)+'" alt="'+esc(p.name)+' 작업 사진" loading="lazy" decoding="async">'
-        : '<span class="ph ph-none" aria-hidden="true"></span>')+'</span>'+
-    '<span class="pv-b">'+
-      '<span class="pv-t"><b>'+esc(p.name)+'</b>'+
-        /* ⚠️ 전에 `badges[0]` 만 찍어서, 사업자 확인이 있으면 보험 가입이
-           영영 안 보였습니다. 셋뿐이고 다 짧아서 전부 냅니다. */
+  var to = ex ? "/sample" : ("/p/" + encodeURIComponent(p.id));
+  var A  = function(cls, label, extra){
+    return '<a class="'+cls+'" href="'+esc(to)+'"'+(extra||"")+'>'+label+'</a>';
+  };
+  /* 있다/없다 표시 — ⚠️ 없는 것은 **줄째 뺍니다** (절대 규칙 2) */
+  var marks = [];
+  if((p.price||[]).length)  marks.push(["won","가격 안내 있음"]);
+  if(folio.length)          marks.push(["camera","포트폴리오 "+folio.length+"건"]);
+  if(p.as && (p.as.period || p.as.what)) marks.push(["shield","A/S 안내 있음"]);
+
+  return '<div class="pv'+(ex ? " pv-ex" : "")+'">'+
+    (ex
+      ? '<span class="pv-ph">'+(cover
+          ? '<img class="ph" src="'+esc(cover)+'" alt="'+esc(p.name)+' 작업 사진" loading="lazy" decoding="async">'
+          : '<span class="ph ph-none" aria-hidden="true"></span>')+'</span>'
+      : A("pv-ph", (cover
+          ? '<img class="ph" src="'+esc(cover)+'" alt="'+esc(p.name)+' 작업 사진" loading="lazy" decoding="async">'
+          : '<span class="ph ph-none" aria-hidden="true"></span>'), ' tabindex="-1" aria-hidden="true"'))+
+    '<div class="pv-b">'+
+      '<p class="pv-t">'+
+        (ex ? '<b>'+esc(p.name)+'</b>' : A("pv-nm", '<b>'+esc(p.name)+'</b>'))+
+        (ex ? '<em class="pv-smp">SAMPLE</em>' : '')+
         badges.map(function(bd){
           return '<em class="pv-vf">'+icon("check",13)+esc(bd)+'</em>'; }).join("")+
-      '</span>'+
-      '<span class="pv-m">'+
-        esc((p.regions||[]).map(function(k){ return amRegionName(k); }).filter(Boolean).join(" · ") || "지역 미등록")+
-        ((p.industries||[]).length ? ' · '+esc(p.industries.map(amIndustryName).join(" · ")) : '')+
-      '</span>'+
+      '</p>'+
+      '<p class="pv-m">'+
+        esc(regs.join(" · ") || "지역 미등록")+
+        (inds.length ? ' · '+esc(inds.join(" · ")) : '')+
+      '</p>'+
+      (subs.length ? '<p class="pv-sv">'+subs.slice(0,4).map(function(n){
+          return '<span>'+esc(n)+'</span>'; }).join("")+
+          (subs.length > 4 ? '<em>외 '+(subs.length-4)+'</em>' : '')+'</p>' : '')+
       (s.rating !== null && s.rating !== undefined
-        ? '<span class="pv-r">'+icon("star",14)+'<b>'+esc(String(s.rating))+'</b>'+
-          '<em>후기 '+s.reviews+'</em>'+(s.jobs ? '<em>작업 '+s.jobs+'</em>' : '')+'</span>'
-        : '<span class="pv-r pv-r-none">아직 후기가 없습니다</span>')+
-      (p.intro ? '<span class="pv-i">'+esc(p.intro)+'</span>' : '')+
-      /* ⚠️ 카드 전체가 `<a>` 라 여기에 또 `<a>` 를 넣을 수 없습니다
-         (링크 안의 링크). 누를 곳은 카드 한 장이고, 이 줄은 **누를 수
-         있다는 표시**입니다 — 차례는 사진 → 정보 → CTA (§22). */
-      '<span class="mk-go">'+(ex ? '업체 상세로' : '업체 보기')+icon("arrow",16)+'</span>'+
-    '</span>'+
-  (ex ? '</div>' : '</a>');
+        ? '<p class="pv-r">'+icon("star",14)+'<b>'+esc(String(s.rating))+'</b>'+
+          '<em>후기 '+s.reviews+'</em>'+(s.jobs ? '<em>작업 '+s.jobs+'</em>' : '')+'</p>'
+        : '<p class="pv-r pv-r-none">아직 후기가 없습니다</p>')+
+      (p.intro ? '<p class="pv-i">'+esc(p.intro)+'</p>' : '')+
+      (marks.length ? '<p class="pv-mk">'+marks.map(function(m){
+          return '<span>'+icon(m[0],14)+esc(m[1])+'</span>'; }).join("")+'</p>' : '')+
+      '<p class="pv-act">'+
+        (ex
+          ? '<span class="btn btn-o btn-sm pv-act-x">예시 화면입니다</span>'
+          : A("btn btn-b btn-sm", '상세보기')+
+            '<a class="btn btn-o btn-sm" href="'+esc(quoteTo({
+              sub:(p.subs||[])[0]||"", industry:(p.industries||[])[0]||"",
+              region:(p.regions||[])[0]||"" }))+'">견적 요청</a>')+
+      '</p>'+
+    '</div>'+
+  '</div>';
 };
 
-/* ── 업체 비교 (2026-10-05 V2 §14) ───────────────────────────────
-   > "사용자가 2~3개 업체를 선택해서 비교할 수 있게 설계한다."
+/* ── 업체 비교 담기 (2026-10-06 2차 §12 · V2 §14) ───────────────────
+   ⚠️⚠️ **이 셋이 아무 데도 없었습니다.** `ProviderPickCard()` 와
+   `CmpBar()` 가 `amCmpIds()` 를, `PageCompare()` 가 `AM_CMP_MAX` 를,
+   체크칸이 `cmpToggle()` 을 부르고 있었는데 **정의가 없었습니다.**
 
-   ⚠️⚠️ **고른 것은 주소(`?cmp=`)에 싣습니다.** localStorage 에 두면
-   뒤로 가기 · 새로고침에 살아남기는 해도 **링크로 보낼 수가 없습니다** —
-   "이 두 곳 중에 뭐가 나아?" 를 사장님이 가족에게 보내는 일이
-   이 기능의 절반입니다.
-   ⚠️ 카드가 통째로 `<a>` 라 체크칸을 **그 안에 넣을 수 없습니다**
-   (링크 안의 누름). 밖에 형제로 둡니다. */
+   업체가 0곳이라 `ProviderPickCard()` 가 **한 번도 안 돌아서** 아무도
+   못 봤습니다 — 첫 업체를 등록하는 날 `/providers/:cat` 이
+   `amCmpIds is not defined` 로 **통째로 죽을** 자리였습니다. 검사용
+   업체를 하나 끼워 넣고 그려 보다가 찾았습니다 (CLAUDE.md 가 적어 둔
+   "데이터가 0 이면 그 기능은 아무 검사도 안 받습니다" 그대로입니다).
+
+   ⚠️ 담은 것은 **주소(`?cmp=`)에 싣습니다.** localStorage 에 두면
+   링크로 보낼 수가 없고, 뒤로 가기 · 새로고침에 살아남지도 않습니다.
+   ⚠️ 성함 · 연락처는 담지 않습니다 — **업체 id 하나**뿐입니다. */
 window.AM_CMP_MAX = 3;
 
 window.amCmpIds = function(){
   return String(nowQS("cmp") || "").split(",")
-    .map(function(x){ return x.trim(); }).filter(Boolean).slice(0, AM_CMP_MAX);
+    .map(function(x){ return x.trim(); })
+    .filter(Boolean).slice(0, AM_CMP_MAX);
 };
+
+/* 담기 · 빼기 — ⚠️ **스크롤을 지킵니다.** 맨 위로 올라가면 방금 보던
+   카드를 잃고, 그러면 두 번째를 안 담습니다.
+   ⚠️ 켜 둔 거르개(`?i=` · `?r=` · `?s=` …)를 **전부 그대로 싣습니다** —
+   하나라도 빠지면 손님은 자기가 끈 줄 모르고 결과만 달라진 것을 봅니다. */
 window.cmpToggle = function(id){
   var ids = amCmpIds(), i = ids.indexOf(id);
   if(i >= 0) ids.splice(i, 1);
   else {
+    /* ⚠️ 넘치면 **조용히 버리지 않습니다** — 몇 곳까지인지 말합니다 */
     if(ids.length >= AM_CMP_MAX){
-      toast("비교는 " + AM_CMP_MAX + "곳까지입니다"); rerender(true); return;
+      toast(AM_CMP_MAX + "곳까지 나란히 놓을 수 있습니다. 하나를 빼고 담아 주세요.");
+      /* 체크칸이 이미 켜졌으므로 되돌려 둡니다 */
+      render();
+      return;
     }
     ids.push(id);
   }
-  /* 주소의 다른 조건(업종 · 지역 · 하위분류)은 그대로 둡니다 */
   var qs = new URLSearchParams(location.search);
-  if(ids.length) qs.set("cmp", ids.join(",")); else qs.delete("cmp");
+  if(ids.length) qs.set("cmp", ids.join(","));
+  else qs.delete("cmp");
   var q = qs.toString();
   go(nowPath() + (q ? "?" + q : ""), { keepScroll:true });
 };
 
-/* 비교에 담을 수 있는 업체 카드 — ⚠️ 목록 화면에서만 씁니다.
-   메인에서는 담는 칸을 내지 않습니다 (첫 화면에 기능을 늘어놓지
-   않습니다). */
 window.ProviderPickCard = function(p){
   var ids = amCmpIds(), on = ids.indexOf(p.id) >= 0;
   return '<div class="pv-w'+(on ? " on" : "")+'">'+

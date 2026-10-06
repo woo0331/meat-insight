@@ -113,6 +113,26 @@ window.AM_STORE_RANGES = [
     { k:"b", name:"1천~3천만원",   min:1000, max:3000 },
     { k:"c", name:"3천~5천만원",   min:3000, max:5000 },
     { k:"d", name:"5천만원 이상",   min:5000 }
+  ]},
+  /* ⚠️⚠️ **영업기간은 적힌 값이 아니라 센 값입니다.** 사장님이 적으시는
+     것은 문을 연 해(`since`) 하나이고, 기간은 올해에서 빼서 구합니다 —
+     그래서 `field` 가 아니라 `get` 입니다. 해가 바뀌면 저절로 한 살
+     먹고, 손으로 고칠 자리가 없습니다.
+     ⚠️ `since` 를 안 적은 매물은 **어느 칸에도 안 걸립니다** (위와 같은
+     까닭 — 모르는 것을 조건 건 손님에게 섞어 보내면 헛걸음입니다).
+     ⚠️ 올해 문을 연 가게는 0 이라 "1년 이하" 입니다. */
+  { key:"yr", name:"영업기간", unit:"년",
+    get:function(s){
+      var y = Number(s && s.since);
+      if(!isFinite(y) || !y) return null;
+      var n = new Date().getFullYear() - y;
+      return n < 0 ? null : n;          /* 앞날을 적은 것은 값이 아닙니다 */
+    }, opts:[
+    { k:"a", name:"1년 이하",   max:1 },
+    { k:"b", name:"1~3년",     min:1,  max:3 },
+    { k:"c", name:"3~5년",     min:3,  max:5 },
+    { k:"d", name:"5~10년",    min:5,  max:10 },
+    { k:"e", name:"10년 이상",  min:10 }
   ]}
 ];
 
@@ -160,7 +180,10 @@ window.amStores = function(f){
       if(!pick) return;
       var r = window.amStoreRange(g.key, pick);
       if(!r) return;                       /* 없는 key 는 안 겁니다 */
-      if(!window.amInRange(s[g.field], r.opt)) ok = false;
+      /* ⚠️ 묶음이 `get` 을 들고 있으면 **세는 값**입니다 (영업기간).
+         없으면 매물에 적힌 칸(`field`)을 그대로 봅니다. */
+      var val = g.get ? g.get(s) : s[g.field];
+      if(!window.amInRange(val, r.opt)) ok = false;
     });
     return ok;
   });

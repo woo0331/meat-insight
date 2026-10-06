@@ -404,6 +404,12 @@ const CASES = [
       };
     })(window.amProviderVerified);`],
   /* 위아래를 둘 다 닫던 그때 — 보증금 3,000 이 두 칸에 걸렸습니다 */
+  /* ⚠️ 영업기간 묶음을 통째로 빼 봅니다 — 데이터에서 빠지면 화면의
+     고르개도 같이 사라지므로 검사가 걸려야 합니다. */
+  ["영업기간 · 시설 포함으로 실제로 걸러진다",
+   `window.AM_STORE_RANGES = window.AM_STORE_RANGES.filter(function(g){
+      return g.key !== "yr"; });
+    window.rerender(true);`],
   ["매물 거르개의 칸이 겹치지도 비지도 않는다",
    `window.amInRange = function(val, opt){
       if(val == null || !opt) return false;
@@ -655,6 +661,36 @@ async function proveAudit(pg){
       "  [지금 " + JSON.stringify(before) +
       " → 타일에서 svg 를 지우면 " + JSON.stringify(after).slice(0,50) + "]");
   }
+
+  /* 고르개 딱지가 칸보다 긺 — 딱지를 길게 바꿔 봅니다. 이 저장소에서
+     세 번 당한 자리이고, 세 번 다 select 안이라 다른 검사에 안 걸렸습니다. */
+  /* ⚠️⚠️ **넓은 화면에서는 되돌려도 안 잡힙니다** — 거기서는 칸이
+     `width:auto` 라 딱지를 길게 하면 **칸이 같이 넓어집니다.** 잘리는
+     것은 폭이 좁아 칸이 묶일 때뿐이라, 폰 폭으로 재야 합니다.
+     (처음에 기본 폭으로 두었다가 "검사가 안 잡는다" 로 보였습니다 —
+     검사가 아니라 되돌리기가 틀린 자리입니다.) */
+  const vpWas = pg.viewportSize();
+  for(const u of ["/stores", "/assets"]){
+    await pg.setViewportSize({ width:360, height:900 });
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).sel;
+    await pg.evaluate(() => {
+      const e = document.querySelector("#view select.sel");
+      /* ⚠️ 칸이 `width:auto` 라 **조금 긴 정도로는 칸이 같이 넓어집니다.**
+         줄 폭(max-width:100%)을 넘겨야 잘립니다 — 넉넉히 깁니다. */
+      if(e && e.options[0]) e.options[0].textContent =
+        "아주 길고 긴 거르개 딱지 전체 — 칸보다 훨씬 더 긴 이름을 일부러 적습니다";
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).sel;
+    const ok = before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 고르개 딱지가 칸보다 긺 · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → 딱지를 길게 하면 " + JSON.stringify(after).slice(0,50) + "]");
+  }
+  if(vpWas) await pg.setViewportSize(vpWas);
 
   /* 별표(**)가 글자로 남음 — ⚠️ **자식 태그가 있는 칸**에 넣어서
      봅니다. 전에는 잎사귀만 보고 있어서, 약관·방침의 조문(p 안에

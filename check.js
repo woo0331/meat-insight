@@ -237,7 +237,7 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[768,1024,"작�
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[] };
   /* ⚠️ **흰 글자가 흰 바탕에 앉는 일이 실제로 있었습니다.** 창업 다섯
      마디(.flow)는 어두운 구간에만 있던 것이라 글자색 기본이 흰색이고,
      밝은 쪽은 .sec-tone 안에서만 되돌려 놓았습니다. 그 구간을 순백으로
@@ -633,6 +633,27 @@ const AUDIT = `(() => {
      카드가 그렇게 fridge 라는 없는 이름을 달고 몇 주 비어 있었습니다.
      아이콘 타일(.ic-t)과 단계 아이콘(.stg-i) 안에 svg 가 없으면
      그 자리가 빈 것입니다. */
+  /* ⚠️⚠️ **고르개 딱지가 칸보다 길면 조용히 잘립니다.** select 안의
+     글자는 **낱말 잘림 검사에도 가로 스크롤 검사에도 안 걸립니다** —
+     이 저장소에서 "양도 · 임대 전체" · "낱개 · 일괄 전체" · "영업기간
+     전체" **세 번** 그랬고 세 번 다 찍어 보고 알았습니다. 글자 폭을
+     재서 칸 안쪽과 견줍니다. */
+  document.querySelectorAll("#view select.sel").forEach(e => {
+    const o = e.options[e.selectedIndex];
+    if(!o || !e.offsetParent) return;
+    const cs = getComputedStyle(e);
+    const probe = document.createElement("span");
+    probe.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap;font:" + cs.font;
+    probe.textContent = o.textContent;
+    document.body.appendChild(probe);
+    const need = probe.getBoundingClientRect().width;
+    probe.remove();
+    const inner = e.getBoundingClientRect().width
+      - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    if(inner > 0 && need > inner)
+      out.sel.push(o.textContent.trim() + "|" + Math.round(need) + ">" + Math.round(inner));
+  });
+
   document.querySelectorAll("#view .ic-t, #view .stg-i").forEach(e => {
     if(e.querySelector("svg")) return;
     const own = (e.parentElement || e);
@@ -681,7 +702,7 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
@@ -714,7 +735,8 @@ const AUDIT = `(() => {
       ["어두운 면이 15% 넘음",   uniq(bad.dark)],
       ["이웃한 두 구간이 붙어 보임", uniq(bad.tone)],
       ["\"준비 중\" 자리표시자", uniq(bad.ph)],
-      ["아이콘 자리가 비었음", uniq(bad.ico)]
+      ["아이콘 자리가 비었음", uniq(bad.ico)],
+      ["고르개 딱지가 칸보다 긺", uniq(bad.sel)]
     ];
     console.log("\n── " + vn + " (" + w + "px)");
     rows.forEach(([n,v]) => {
@@ -2906,7 +2928,10 @@ const AUDIT = `(() => {
     const groups = (window.AM_STORE_RANGES||[]).map(function(g){
       return { name:g.name, opts:g.opts };
     }).concat([{ name:"시설 값", opts:window.AM_ASSET_PRICE||[] }]);
-    if(groups.length < 5) return "거르개 묶음이 모자랍니다 — " + groups.length;
+    /* ⚠️ 묶음 수를 같이 셉니다 — 하나가 조용히 빠져도 칸 검사는
+       남은 것만 보고 통과합니다. 지금 여섯입니다 (면적 · 보증금 ·
+       월세 · 영업기간 · 권리금 · 시설 값). */
+    if(groups.length < 6) return "거르개 묶음이 모자랍니다 — " + groups.length;
     for(const g of groups){
       if(!(g.opts||[]).length) return "거르개 묶음 " + g.name + "에 칸이 없습니다";
       /* 재 보는 값 — 경계와 그 바로 위아래 */
@@ -2931,6 +2956,50 @@ const AUDIT = `(() => {
       if(g.opts.some(function(o){ return window.amInRange(null, o); }))
         return "거르개 묶음 " + g.name + "에서 값을 안 적은 매물이 걸립니다";
     }
+    return true;`);
+
+  /* ⚠️⚠️ **영업기간과 시설 포함은 2026-10-05 V2 §7 의 남은 둘**입니다.
+     영업기간은 매물에 적힌 값이 아니라 문 연 해(`since`)에서 **세는
+     값**이라, 묶음이 `get` 을 들고 있습니다 — 거기만 다른 길이라
+     따로 봅니다. 시설 포함은 거르개 자체가 **데이터에는 있는데 화면에
+     칸이 없어서** 아무도 못 쓰고 있었습니다.
+     ⚠️ 매물이 0건이라 둘 다 **끼워 넣고** 봅니다. 저장소 데이터는
+     그대로 0건입니다 (절대 규칙 1). */
+  await f("영업기간 · 시설 포함으로 실제로 걸러진다", "/stores", `
+    const base = { kind:"transfer", industry:"cafe", region:"gyeonggi",
+                   gu:"안양시", pyeong:18, text:"검사 안에서만 삽니다.",
+                   at:"2026-10-02" };
+    const Y = new Date().getFullYear();
+    window.AM_STORES.push(
+      Object.assign({ id:"zz-y1", title:"오래된 가게", since:Y - 7,
+                      withEquip:true }, base),
+      /* ⚠️ **2년**입니다. 구간이 아래를 열고 위를 닫아서(min < n ≤ max)
+         딱 1년이면 "1~3년" 이 아니라 **"1년 이하"** 칸입니다 — 처음에
+         1년으로 적었다가 "1~3년에 아무것도 안 걸린다" 로 나왔고,
+         틀린 것은 코드가 아니라 **씨앗**이었습니다. */
+      Object.assign({ id:"zz-y2", title:"새 가게", since:Y - 2,
+                      withEquip:false }, base),
+      Object.assign({ id:"zz-y3", title:"안 적은 가게" }, base));
+    const ids = function(f){
+      return window.amStores(f).map(function(s){ return s.id; })
+        .filter(function(x){ return /^zz-y/.test(x); }).sort().join(",");
+    };
+    const all  = ids({});
+    const yr5  = ids({ yr:"d" });      /* 5~10년 */
+    const yr1  = ids({ yr:"b" });      /* 1~3년 */
+    const eq   = ids({ withEquip:true });
+    window.AM_STORES = window.AM_STORES.filter(function(x){ return !/^zz-y/.test(x.id); });
+    window.rerender(true);
+    if(all !== "zz-y1,zz-y2,zz-y3") return "끼워 넣은 셋이 다 안 나옵니다 — " + all;
+    if(yr5 !== "zz-y1") return "5~10년에 " + (yr5 || "아무것도") + " 가 걸립니다";
+    if(yr1 !== "zz-y2") return "1~3년에 " + (yr1 || "아무것도") + " 가 걸립니다";
+    /* ⚠️ 문 연 해를 안 적은 매물은 **어느 칸에도 안 걸려야** 합니다 */
+    if(yr5.indexOf("zz-y3") >= 0 || yr1.indexOf("zz-y3") >= 0)
+      return "영업기간을 안 적은 매물이 걸립니다";
+    if(eq !== "zz-y1") return "시설 포함에 " + (eq || "아무것도") + " 가 걸립니다";
+    /* 화면에 칸이 실제로 있어야 씁니다 — 데이터에만 있으면 아무도 못 씁니다 */
+    if(!document.getElementById("fil-yr")) return "영업기간 고르개가 화면에 없습니다";
+    if(!document.getElementById("fil-eq")) return "시설 포함 체크칸이 화면에 없습니다";
     return true;`);
 
   /* ⚠️⚠️ **거르개로 몇 건이 빠졌는지 밝혀야 합니다.** 안 밝히면 손님은

@@ -120,7 +120,87 @@ function adTrustees(){
   }catch(e){ return false; }
 }
 
-/* ── 2. 접수 하나 붙여 넣고 분류하기 ─────────────────────── */
+/* ── 2. 영업 시작 전에 남은 것 ───────────────────────────────
+   ⚠️⚠️ **여기 적는 것은 전부 세는 값입니다.** "아직 남았습니다" 를
+   손으로 적어 두면 채우신 날 고칠 자리가 하나 더 생기고, 그 자리를
+   잊으면 다 끝난 뒤에도 "남았습니다" 가 떠 있습니다 — 이 저장소가
+   CLAUDE.md 의 "아직 안 된 것" 표에서 실제로 그렇게 틀렸습니다
+   (접수처는 10-01 에 켰는데 표에는 몇 주 동안 "해야 할 일" 로
+   남아 있었습니다).
+   ⚠️ 운영자 화면이라 법 조문을 그대로 적습니다 (절대 규칙 3) —
+   손님 화면에는 안 나갑니다. */
+
+/* 전자상거래법 제10조가 **표시하라고 정한 칸**과 개인정보보호법
+   제31조의 보호책임자. ⚠️ 비어 있으면 화면에서 줄째 빠져서 **아무
+   말도 안 하고 사라집니다** — 그래서 여기서 셉니다. */
+var AD_BIZ_NEED = [
+  ["company",   "상호"],
+  ["ceo",       "대표자 성명"],
+  ["brn",       "사업자등록번호"],
+  ["mailOrder", "통신판매업 신고번호"],
+  ["address",   "사업장 주소"],
+  ["email",     "문의 이메일"],
+  ["privacyOfficer", "개인정보 보호책임자"]
+];
+
+function adReadyRow(done, title, body){
+  return '<li class="ad-rd '+(done ? "ad-rd-on" : "ad-rd-off")+'">'+
+    '<span class="ad-rd-m" aria-hidden="true">'+(done ? icon("check",16) : icon("alert",16))+'</span>'+
+    '<div><b class="ad-rd-t">'+esc(title)+'</b>'+body+'</div></li>';
+}
+
+function adReady(){
+  var box = $("ad-ready");
+  if(!box) return;
+  var L = [];
+
+  /* ① 사업자 정보 — 전자상거래법 제10조 */
+  var B = (typeof WOW_BIZ === "object" && WOW_BIZ) ? WOW_BIZ : {};
+  var miss = AD_BIZ_NEED.filter(function(r){
+    return !String(B[r[0]] || "").trim(); });
+  L.push(adReadyRow(!miss.length, "사업자 정보",
+    miss.length
+      ? '<p>아직 <b>'+miss.length+'칸</b>이 비어 있습니다 — '+
+        esc(miss.map(function(r){ return r[1]; }).join(" · "))+'.</p>'+
+        '<p class="ad-rd-n">비면 푸터 · 약관 · 방침에서 <b>줄째 빠집니다</b>'+
+        ' (자리표시자를 안 찍습니다). 영업을 시작하시면 '+
+        '<b>전자상거래법 제10조</b>가 표시하라고 정한 칸이라 반드시 채워야 '+
+        '합니다. <code>js/data/site.js</code> 의 <code>WOW_BIZ</code> 한 곳입니다.</p>'
+      : '<p>표시 의무 칸이 다 채워져 있습니다.</p>'));
+
+  /* ② 지원사업 "찾는 곳" 링크 — 눌러 보고 켜야 나갑니다 */
+  var W = window.AM_SUPPORT_WHERE || [];
+  if(W.length){
+    var hasUrl = W.filter(function(x){ return !!x.url; });
+    var off = hasUrl.filter(function(x){ return !x.checked; });
+    L.push(adReadyRow(!off.length, "지원사업 '찾는 곳' 링크",
+      off.length
+        ? '<p>주소가 적힌 <b>'+hasUrl.length+'곳</b> 가운데 <b>'+off.length+'곳</b>이 '+
+          '아직 안 켜져 있습니다. <b>한 번씩 눌러 보시고</b> 살아 있으면 '+
+          '<code>js/data/support.js</code> 에서 <code>checked:true</code> 로 '+
+          '바꾸세요 — 죽은 링크는 없는 것보다 나쁩니다.</p>'+
+          '<ul class="ad-rd-l">'+off.map(function(x){
+            return '<li><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+
+              esc(x.org)+icon("up",14)+'</a></li>'; }).join("")+'</ul>'+
+          '<p class="ad-rd-n">켜기 전에는 기관 이름과 찾는 말까지만 나갑니다 '+
+          '— 손님 화면이 비지는 않습니다.</p>'
+        : '<p>주소가 적힌 '+hasUrl.length+'곳을 전부 확인하셨습니다.</p>'));
+  }
+
+  /* ③ 약관 · 방침 — 사람이 봐야 하는 것이라 끝나는 날이 없습니다 */
+  L.push(adReadyRow(false, "약관 · 개인정보처리방침 확인",
+    '<p>두 문서는 <b>초안</b>입니다. 영업을 시작하시기 전에 변호사나 '+
+    '한국소비자원 표준약관과 대조해 확인하세요.</p>'+
+    '<p class="ad-rd-n">특히 약관 <b>제5조(회사의 지위)</b> — 통신판매중개자이고 '+
+    '거래 당사자가 아니라는 고지입니다. 빼면 <b>전자상거래법 제20조의2</b> 에 '+
+    '따라 연대책임을 집니다.</p>'));
+
+  box.innerHTML = '<ul class="ad-rds">'+L.join("")+'</ul>'+
+    '<p class="ad-note">접수가 실제로 되는지는 <b>위 1번 칸</b>이 '+
+    '실시간으로 말합니다.</p>';
+}
+
+/* ── 3. 접수 하나 붙여 넣고 분류하기 ─────────────────────── */
 
 /* 붙여 넣은 글에서 칸을 꺼냅니다. api/quote.js 가 만드는 줄 모양
    ("성함      홍길동") 과, 그냥 옮겨 적은 글 둘 다 받습니다.
@@ -406,7 +486,15 @@ function adInit(){
     '</section>'+
 
     '<section class="ad-s">'+
-      '<h2>2. 들어온 접수를 붙여 넣으세요</h2>'+
+      '<h2>2. 영업 시작 전에 남은 것</h2>'+
+      '<p class="ad-lead">사람이 직접 해야 하는 것만 모았습니다. '+
+        '<b>전부 세는 값</b>이라 채우시면 이 칸에서 저절로 사라집니다 — '+
+        '손으로 지울 자리가 없습니다.</p>'+
+      '<div id="ad-ready"></div>'+
+    '</section>'+
+
+    '<section class="ad-s">'+
+      '<h2>3. 들어온 접수를 붙여 넣으세요</h2>'+
       '<p class="ad-lead">슬랙이나 메일로 받은 접수를 그대로 붙여 넣으시면 '+
         '됩니다. <b>아무것도 서버로 보내지 않습니다</b> — 이 브라우저 안에서만 '+
         '돌고, 새로고침하면 사라집니다.</p>'+
@@ -421,7 +509,7 @@ function adInit(){
     '</section>'+
 
     '<section class="ad-s">'+
-      '<h2>3. 분류는 사람이 고릅니다</h2>'+
+      '<h2>4. 분류는 사람이 고릅니다</h2>'+
       /* ⚠️ 절대 규칙 5 — 하지 않은 일을 했다고 말하지 않습니다.
          자동분류를 하지 않으므로 "분석했습니다" 라고 쓰지 않습니다. */
       '<p class="ad-lead">읽어 오기를 누르면 <b>낱말이 겹치는 분류</b>를 먼저 '+
@@ -438,14 +526,14 @@ function adInit(){
     '</section>'+
 
     '<section class="ad-s">'+
-      '<h2>4. 보낼 글</h2>'+
+      '<h2>5. 보낼 글</h2>'+
       '<p class="ad-lead">고치셔도 됩니다. 복사해서 슬랙 · 메일 · 문자로 '+
         '보내시면 됩니다.</p>'+
       '<div id="ad-out"></div>'+
     '</section>'+
 
     '<section class="ad-s">'+
-      '<h2>5. 업체에 보낼 초대 글</h2>'+
+      '<h2>6. 업체에 보낼 초대 글</h2>'+
       /* ⚠️ 운영자 화면이라 여기에 법 얘기를 적습니다 (절대 규칙 3).
          손님 화면에는 안 나갑니다. */
       '<div class="notice-bad"><b>보내기 전에 — 정보통신망법 제50조</b>'+
@@ -468,6 +556,7 @@ function adInit(){
     '</section>';
 
   adHealth();
+  adReady();
   adDraw();
   adInviteDraw();
 }

@@ -18,10 +18,15 @@
 function PageStores(){
   var ind = nowQS("i"), reg = nowQS("r");
   var pk = nowQS("pk") === "1", kd = nowQS("kd");
+  /* 시설 · 집기를 그대로 인수할 수 있는 매장만 (2026-10-05 V2 §7).
+     ⚠️ `amStores()` 는 **적은 매물만** 집습니다 — 안 적은 것을
+     "포함" 으로 읽으면 보러 가신 분이 헛걸음합니다. */
+  var eq = nowQS("eq") === "1";
   var rng = {};
   (window.AM_STORE_RANGES||[]).forEach(function(g){ rng[g.key] = nowQS(g.key); });
   var base = { industry:ind||null, region:reg||null };
-  var f = { industry:ind||null, region:reg||null, parking:pk, kind:kd||null };
+  var f = { industry:ind||null, region:reg||null, parking:pk, kind:kd||null,
+            withEquip:eq };
   (window.AM_STORE_RANGES||[]).forEach(function(g){ if(rng[g.key]) f[g.key] = rng[g.key]; });
   var list = amStores(f);
   /* ⚠️ 지역 · 업종만 건 수 — 구간 거르개가 몇 건을 숨겼는지 밝히려고 */
@@ -29,7 +34,7 @@ function PageStores(){
   return PgHero({
     kicker:"점포 · 상가 · 매장 양도",
     h1raw:"자리부터 정합니다.",
-    lead:"지역 · 업종 · 평수 · 보증금 · 월세 · 권리금으로 찾습니다. 시설을 그대로 인수할 수 있는 매장도 함께 봅니다.",
+    lead:"지역 · 업종 · 평수 · 보증금 · 월세 · 권리금 · 영업기간으로 찾습니다. 시설을 그대로 인수할 수 있는 매장만 따로 보실 수도 있습니다.",
     tight:true,
     cta:'<a class="btn btn-o btn-lg" href="'+esc(quoteTo({side:"close"}))+'">내 매장 내놓기'+icon("arrow",18)+'</a>'
   })+
@@ -51,6 +56,7 @@ function PageStores(){
       '</select>'+
       (window.AM_STORE_RANGES||[]).map(function(g){
         return mkRangeSel(g, rng[g.key], "/stores"); }).join("")+
+      mkCk("eq", "시설 포함", eq, "/stores")+
       mkCk("pk", "주차 가능", pk, "/stores")+
       mkCount(list.length, all.length)+
     '</div>'+
@@ -134,7 +140,11 @@ function PageAssets(){
       IndustrySelect("fil-i", ind, "mkGo('/assets')")+
       RegionSelect("fil-r", reg, "mkGo('/assets')")+
       '<select class="sel" id="fil-dl" aria-label="거래 단위" onchange="mkGo(\'/assets\')">'+
-        '<option value="">낱개 · 일괄 전체</option>'+
+        /* ⚠️ 딱지를 길게 적으면 **360px 에서 잘립니다** — "낱개 · 일괄
+           전체" 가 97px 인데 칸이 90px 이었습니다. select 안이라 낱말
+           잘림 검사도 가로 스크롤 검사도 안 걸립니다 (재 봐야 압니다).
+           옆 칸들과 같은 "<무엇> 전체" 꼴로 맞춥니다. */
+        '<option value="">거래단위 전체</option>'+
         '<option value="single"'+(dl==="single"?" selected":"")+'>낱개로</option>'+
         '<option value="bulk"'+(dl==="bulk"?" selected":"")+'>묶음으로</option>'+
         '<option value="all"'+(dl==="all"?" selected":"")+'>시설 전체</option>'+
@@ -193,7 +203,11 @@ function AssetCard(a){
    살아남아야 "이 조건으로 본 것" 을 가족에게 보낼 수 있습니다.
    ⚠️ 칸 이름(`id`)이 곧 주소의 key 입니다 — `mkGo()` 가 한 곳에서
    읽어 모으기 때문에, 칸을 늘려도 거기만 고치면 됩니다. */
-var MK_KEYS = ["i","r","c","s","py","dp","rt","pm","pk","kd","dl","pr"];
+/* ⚠️ 구간 거르개 key(`py` · `dp` · `rt` · `pm` · **`yr`**)와 체크칸
+   (`pk` · **`eq`**)을 여기 안 적으면, 칩을 누르는 순간 **켜 둔
+   거르개가 조용히 꺼집니다** — 손님은 자기가 끈 줄 모르고 결과가
+   늘어난 것만 봅니다. */
+var MK_KEYS = ["i","r","c","s","py","dp","rt","pm","yr","pk","eq","kd","dl","pr"];
 
 window.mkGo = function(base){
   var q = [];

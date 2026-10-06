@@ -2265,7 +2265,7 @@ const AUDIT = `(() => {
       const href = a.getAttribute("href");
       if(a.hasAttribute("data-keep")){
         if(href !== "/?j=" + encodeURIComponent(j.key))
-          return j.name + " 고르개가 " + href + " 입니다";
+          return j.name + " 고르개 주소가 틀렸습니다 — " + href;
       } else if(href !== j.to){
         return j.name + " 이 " + href + " 로 갑니다";
       }

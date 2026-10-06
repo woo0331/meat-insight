@@ -40,6 +40,27 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* ══ 2026-10-06 2차 지시서 ══════════════════════════════════════ */
+  /* 여정 화면의 카드를 고르개로 바꾸면 걸려야 합니다 — 그렇게 되면
+     여정 네 화면에서 "눌러도 아무 데도 안 가는 카드" 가 됩니다.
+     ⚠️ 되돌리기는 **그려진 뒤에** 돕니다. DOM 을 직접 건드립니다. */
+  ["여정 카드가 실제로 그 여정 화면으로 간다",
+   `[].slice.call(document.querySelectorAll(".jy-g > li > a")).forEach(function(a){
+      a.setAttribute("data-keep", "");
+    });`],
+  /* 구간이 자기 톤을 숨기면 걸려야 합니다 — `.mjy` 가 꼭 그랬습니다
+     (클래스로는 아무 말도 안 하고 CSS 로만 회색) */
+  ["이웃한 두 구간이 붙어 보이지 않는다",
+   `(function(){
+      const S = document.querySelectorAll("#view > section");
+      if(S.length < 3) return;
+      /* 둘째를 첫째와 같은 색으로 — 클래스를 지우고 직접 칠합니다 */
+      const c = getComputedStyle(S[0]).backgroundColor;
+      S[1].className = S[1].className.replace(/sec-[a-z0-9]+/g, "");
+      S[1].style.background = c;
+      S[0].style.background = c;
+    })();`],
+
   /* ══ 도구 열셋 (2026-10-05 V2 §16) ══════════════════════════════ */
   /* 묶음을 떼면 걸려야 합니다 — 떼면 목록에서 조용히 빠집니다 */
   ["도구 열셋이 저마다 묶음과 갈 곳을 가진다",

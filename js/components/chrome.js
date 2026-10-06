@@ -91,20 +91,44 @@ function logoSub(){
   return (en && en !== (B.name || "")) ? en : "";
 }
 
+/* ── 로고 한 벌 (2026-10-06 2차 §22) ────────────────────────────────
+   ⚠️⚠️ **로고를 두 군데에 적지 마세요.** 전에는 헤더와 푸터가 각자
+   마크업을 들고 있어서, 로고를 바꾸면 **한쪽만 바뀌는** 자리였습니다.
+   지금은 이 함수 하나이고 헤더 · 푸터가 같이 부릅니다.
+
+   ⚠️ **그림 로고로 바꾸시려면 `brand.js` 의 `logo` 한 줄**입니다 —
+   `logo:"/img/logo.svg"` 로 적으면 헤더 · 푸터가 **한꺼번에** 바뀝니다.
+   비워 두면 지금처럼 글자 로고입니다. 임시로 복잡한 로고를 만들지
+   않습니다 (§22 — 향후 교체 예정).
+   ⚠️ 그림을 넣으실 때 `alt` 는 **브랜드 이름**입니다. 빈 alt 로 두면
+   읽어 주는 프로그램에서 로고 자리가 통째로 사라집니다.
+   ⚠️ 높이는 CSS(`.lg-img`)가 잡습니다 — 파일 크기에 기대지 마세요. */
+function Logo(where){
+  var B = window.AM_BRAND || {}, nm = brandName();
+  var mark = B.logo
+    ? '<img class="lg-img" src="'+esc(B.logo)+'" alt="'+esc(nm)+'" '+
+      'width="120" height="28">'
+    : "";
+  if(where === "ft"){
+    return '<a class="lg lg-ft" href="/">'+
+      (mark || '<b>'+esc(nm)+'</b><i>'+esc(brandSub())+'</i>')+'</a>';
+  }
+  /* 헤더 — 마크 타일 + 이름 + (이름과 다를 때만) 영문 작은 줄.
+     ⚠️ 작은 줄은 **로고 한 덩어리 안**입니다. 떼어서 따로 내면
+     그때부터 서로 다른 서비스 둘로 읽힙니다 (brand.js 의 `en`). */
+  return '<a class="lg hd-lg" href="/" aria-label="'+esc(nm)+' 홈">'+
+    (mark ? mark :
+      '<span class="hd-lg-i" aria-hidden="true">'+icon("home",20)+'</span>'+
+      '<span class="hd-lg-t"><b>'+esc(nm)+'</b>'+
+        (logoSub() ? '<i>'+esc(logoSub())+'</i>' : '')+'</span>')+
+  '</a>';
+}
+
 function Header(){
   /* ⚠️ 본문 바로가기는 `index.html` 에 이미 있습니다. 여기서 또 내면
      읽어 주는 프로그램에 같은 것이 두 번 들립니다. */
   return '<header class="hd"><div class="w-wide hd-in">'+
-    '<a class="lg hd-lg" href="/" aria-label="'+esc(brandName())+' 홈">'+
-      '<span class="hd-lg-i" aria-hidden="true">'+icon("home",20)+'</span>'+
-      /* ⚠️ 지시서 §2 — 로고 아래 작은 영문. `AM_BRAND.en` 한 곳에서
-         옵니다. 손으로 적지 마세요. */
-      /* ⚠️⚠️ 이름이 **영문 브랜드와 같아지면** 그 줄을 아예 뺍니다 —
-         안 그러면 "STOREWAY" 밑에 "STOREWAY" 가 한 번 더 찍힙니다
-         (2026-10-06 에 이름이 STOREWAY 가 되면서 실제로 그랬습니다).
-         이름이 다시 한글로 바뀌면 저절로 돌아옵니다. */
-      '<span class="hd-lg-t"><b>'+esc(brandName())+'</b>'+
-        (logoSub() ? '<i>'+esc(logoSub())+'</i>' : '')+'</span></a>'+
+    Logo() +
     '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
       AM_GNB.map(function(m){
         return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+esc(m.name)+'</a>';
@@ -236,8 +260,7 @@ function Footer(){
   return '<footer class="ft"><div class="w">'+
     '<div class="ft-g">'+
       '<div class="ft-b">'+
-        '<a class="lg lg-ft" href="/"><b>'+esc(brandName())+'</b>'+
-          '<i>'+esc(brandSub())+'</i></a>'+
+        Logo("ft") +
         '<p>'+esc((window.AM_BRAND||{}).slogan || "")+'<br> '+
           '창업에 필요한 모든 것, 폐업에 필요한 모든 것.</p>'+
         '<a class="btn btn-nv" href="/join">업체 입점하기'+icon("arrow",16)+'</a>'+

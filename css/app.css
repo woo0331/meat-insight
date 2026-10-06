@@ -84,6 +84,12 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 /* 로고 옆 태그라인 — ⚠️ 12px 미만 금지라 --t-cap(13px) 입니다 */
 .lg-ft i{ font-style:normal; font-size:var(--t-cap); letter-spacing:-.02em;
   color:var(--ink2); }
+/* 그림 로고 (2026-10-06 2차 §22) — `brand.js` 의 `logo` 를 채우면
+   헤더 · 푸터가 한꺼번에 이 모양으로 바뀝니다.
+   ⚠️ 높이를 여기서 잡습니다. 파일 크기에 기대면 기기마다 달라집니다.
+   ⚠️ 누르는 자리라 `.lg` 의 min-height 44px 는 그대로 둡니다. */
+.lg-img{ display:block; height:28px; width:auto; max-width:180px; }
+@media (max-width:600px){ .lg-img{ height:24px; } }
 
 .gnb{ display:flex; gap:var(--s5); flex:1 1 auto; min-width:0;
   justify-content:center; }

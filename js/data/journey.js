@@ -283,3 +283,34 @@ window.amJourneyCats = function(j){
   return out;
 };
 window.amProcess = function(key){ return (window.AM_PROCESS||{})[key] || []; };
+
+/* ── 분류 → 단계 → 여정 (2026-10-06 2차 §13) ───────────────────────
+   ⚠️⚠️ **새 분류를 만들지 않았습니다.** 이미 있는 두 묶음을 타고
+   올라갈 뿐입니다 —
+
+     글(`cat`) ──▶ 단계 여섯(`AM_STAGES[].cats`) ──▶ 여정 넷(`AM_JOURNEYS[].stages`)
+
+   그래서 글을 한 편 더 쓰면 저절로 그 여정에 붙고, 고쳐 쓸 자리가
+   없습니다. ⚠️ 전에 메인 정보센터 네 칸에 글 편수를 붙였다가 창업과
+   운영이 **둘 다 34편**으로 나왔습니다 — 그때는 글의 `side`(창업/폐업
+   둘)로 나누려 해서였습니다. 이 길로 재면 31 · 3 · 6 · 20 으로
+   갈립니다 (세는 값입니다).
+   ⚠️ 어느 묶음에도 안 걸리는 분류가 생기면 `null` 입니다 — 그 글은
+   탭에서 빠지지, 엉뚱한 탭에 들어가지 않습니다. */
+window.amJourneyOfCat = function(catKey){
+  if(!catKey) return null;
+  var stKey = null, L = window.AM_STAGES || [];
+  for(var i = 0; i < L.length; i++)
+    if((L[i].cats || []).indexOf(catKey) >= 0){ stKey = L[i].key; break; }
+  if(!stKey) return null;
+  var J = window.AM_JOURNEYS || [];
+  for(var k = 0; k < J.length; k++)
+    if((J[k].stages || []).indexOf(stKey) >= 0) return J[k].key;
+  return null;
+};
+window.amContentsByJourney = function(jyKey, limit){
+  var out = (window.AM_CONTENTS || []).filter(function(c){
+    return amJourneyOfCat(c.cat) === jyKey;
+  });
+  return limit ? out.slice(0, limit) : out;
+};

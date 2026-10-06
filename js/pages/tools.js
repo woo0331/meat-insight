@@ -67,6 +67,50 @@ function tlNext(label, href, key){
   tlRel(key);
 }
 
+/* ── 계산 뒤의 다음 걸음 (2026-10-06 2차 §15) ─────────────────────
+   > "계산 결과 화면마다 다음 행동을 연결한다."
+
+   셋을 냅니다 — **준비 순서 · 업체 · 가이드**. 결과 바로 아래라
+   숫자를 본 그 자리에서 다음으로 넘어갑니다.
+
+   ⚠️⚠️ **셋 다 실제로 있는 화면입니다** (가짜 링크는 절대 규칙 5).
+   가이드는 `amContentsFor()` 가 고른 **실제 글**이고, 없으면 그 칸이
+   빠집니다. 업체는 `rel` 의 첫 분야입니다 — `tools.js` 한 곳입니다.
+   ⚠️ 업종을 고르셨으면(`?i=`) 셋 다 그 업종으로 좁혀집니다. */
+function tlAfter(key){
+  var t = key && (window.amTool ? amTool(key) : null);
+  if(!t) return "";
+  var ind  = nowQS("i") || "";
+  var iq   = ind ? ("?i=" + encodeURIComponent(ind)) : "";
+  var indN = (ind && window.amIndustry) ? ((amIndustry(ind)||{}).name || "") : "";
+  var side = t.side === "close" ? "close" : "start";
+  var rel  = (t.rel || [])[0];
+  var cat  = rel && window.amCat ? amCat(rel.cat) : null;
+  var read = (window.amContentsFor
+    ? amContentsFor({ cat: rel ? rel.cat : "", side:side, industry:ind, limit:1 })
+    : [])[0];
+
+  var items = [];
+  /* ① 준비 순서 — 업종을 고르셨으면 그 업종 화면으로 */
+  items.push([ side === "close" ? "listck" : "seed",
+    (indN ? indN + " " : "") + (side === "close" ? "폐업 준비 체크하기" : "창업 준비 체크하기"),
+    (side === "close" ? "/closure" : "/startup") + (ind ? "/" + encodeURIComponent(ind) : "") ]);
+  /* ② 업체 — `rel` 의 첫 분야 */
+  if(cat) items.push([ "users", "필요한 업체 알아보기",
+    catTo(cat) + (rel.sub ? "?s=" + encodeURIComponent(rel.sub) + (ind ? "&i="+encodeURIComponent(ind) : "")
+                          : iq) ]);
+  /* ③ 가이드 — ⚠️ 없으면 이 칸을 **안 냅니다** */
+  if(read) items.push([ "book", read.title, "/content/" + read.slug ]);
+
+  return '<div class="tl-nx">'+
+    '<p class="tl-nx-h">'+icon("arrow",15)+'계산해 보셨으면, 다음은</p>'+
+    '<ul class="tl-nx-l">'+items.map(function(x){
+      return '<li><a href="'+esc(x[2])+'">'+icon(x[0],17)+
+        '<span>'+esc(x[1])+'</span>'+icon("chev",15)+'</a></li>';
+    }).join("")+'</ul>'+
+  '</div>';
+}
+
 /* ── 계산 결과 → 업체 (2026-10-05 V2 §17) ───────────────────────
    > "계산기 자체로 끝나면 안 된다. 정보 → 계산 → 업체 탐색 →
    >  상담/견적 이라는 전환 구조를 만든다."
@@ -146,6 +190,7 @@ function tlPage(o){
   '<section class="sec sec-white"><div class="w w-narrow">'+
     tlGroups(o.rows, v, o.key + "In", o.subs)+
     '<div class="tl-res" id="tl-res">'+o.res(v)+'</div>'+
+    tlAfter(o.key)+
     tlFoot(o.key + "Reset")+
   '</div></section>'+
   tlNext(o.next, o.nextTo || "/quote", o.key);
@@ -503,6 +548,7 @@ function PageToolCloseCost(){
     '<ul class="tl-l">'+(window.AM_CLOSE_IN||[]).map(function(r){
       return tlRow(r, v, "closecostIn"); }).join("")+'</ul>'+
     '<div class="tl-res" id="tl-res">'+CloseCostRes(v)+'</div>'+
+    tlAfter("closecost")+
     tlFoot("closecostReset")+
   '</div></section>'+
   tlNext("철거 · 원상복구 · 폐기물은 업체가 합니다", "/quote?side=close", "closecost");
@@ -599,6 +645,7 @@ function PageToolCost(){
           return tlRow(it, v, "costIn"); }).join("")+'</ul>';
     }).join("")+
     '<div class="tl-res" id="tl-res">'+CostRes(v)+'</div>'+
+    tlAfter("cost")+
     tlFoot("costReset")+
   '</div></section>'+
   tlNext("빠진 항목이 보이면 그 항목부터 견적을 받으세요", "/quote?side=start", "cost");
@@ -649,6 +696,7 @@ function PageToolFixed(){
     '<h2 class="tl-h">나눠 볼 기준</h2>'+
     '<ul class="tl-l">'+run.map(function(r){ return tlRow(r, v, "fixedIn"); }).join("")+'</ul>'+
     '<div class="tl-res" id="tl-res">'+FixedRes(v)+'</div>'+
+    tlAfter("fixed")+
     tlFoot("fixedReset")+
   '</div></section>'+
   tlNext("큰 칸부터 조건을 바꾸면 이번 달부터 바뀝니다", "/quote", "fixed");
@@ -744,6 +792,7 @@ function PageToolBep(){
     '<ul class="tl-l">'+(window.AM_BEP_RUN||[]).map(function(r){
       return tlRow(r, v, "bepIn"); }).join("")+'</ul>'+
     '<div class="tl-res" id="tl-res">'+BepRes(v)+'</div>'+
+    tlAfter("bep")+
     tlFoot("bepReset")+
   '</div></section>'+
   tlNext("고정비를 줄이는 쪽이 대개 더 빠릅니다", "/quote", "bep");
@@ -804,6 +853,7 @@ function PageToolLabor(){
           return tlRow(r, v, "laborIn"); }).join("")+'</ul>';
     }).join("")+
     '<div class="tl-res" id="tl-res">'+LaborRes(v)+'</div>'+
+    tlAfter("labor")+
     tlFoot("laborReset")+
   '</div></section>'+
   tlNext("사람을 쓰기 전에 확인할 것이 여럿입니다", "/providers/staff", "labor");
@@ -879,6 +929,7 @@ function PageToolVs(){
     '<h2 class="tl-h">하던 가게를 받을 때</h2>'+
     '<ul class="tl-l">'+tk.map(function(r){ return tlRow(r, v, "vsIn"); }).join("")+'</ul>'+
     '<div class="tl-res" id="tl-res">'+VsRes(v)+'</div>'+
+    tlAfter("vs")+
     tlFoot("vsReset")+
   '</div></section>'+
   '<section class="sec"><div class="w band-cta">'+
@@ -950,6 +1001,7 @@ function PageToolClose(){
         }).join("")+'</ul>';
     }).join("")+
     '<div class="tl-res" id="tl-res">'+CloseRes(v)+'</div>'+
+    tlAfter("close")+
     tlFoot("closeReset", "체크한 것은 이 브라우저에만 남습니다. 서버로 보내지 않습니다.")+
   '</div></section>'+
   tlNext("철거 · 원상복구 · 폐기물은 업체가 합니다", "/quote?side=close", "close");

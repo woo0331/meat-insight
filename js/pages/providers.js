@@ -469,6 +469,10 @@ function PageJoin(){
     lead:"하시는 일과 지역만 등록해 두시면, 조건이 맞는 요청만 보내 드립니다. 기본 입점은 무료입니다."
   })+
   JoinNow(subs)+
+  /* ⚠️ §19 — 업체 사장님이 제일 먼저 묻는 여섯입니다. 입점 설득
+     화면의 **맨 앞**이라야 합니다: 이 여섯에 답이 없으면 아래를
+     안 읽습니다. 글은 `join.js` 의 `AM_JOIN_SIX` 한 곳입니다. */
+  JoinSix()+
   JoinWhat()+
   /* ⚠️⚠️ V2 지시서 §26 이 "별도 파트너 페이지" 를 적었는데, 이 화면이
      이미 그 화면입니다 — 또 만들면 **같은 내용이 두 주소로** 나가고
@@ -498,6 +502,32 @@ var JOIN_WHERE = [
   { ic:"layers",   t:"사업 단계 화면",  p:"그 단계에 필요한 분야로 들어온 손님에게", to:"/g/build" },
   { ic:"doc",      t:"견적 요청",       p:"분야 · 지역이 맞는 요청을 나눠 받습니다", to:"/quote" }
 ];
+/* ── 업체가 제일 먼저 묻는 여섯 (2026-10-06 2차 §19) ───────────────
+   ⚠️⚠️ **성과를 지어내지 마세요.** "월 n건" · "n곳 입점" 은 지금 0 이고
+   적으면 표시광고법 제3조입니다. 답은 전부 지금 사실인 것까지입니다.
+   ⚠️ 링크 여섯은 전부 **실제로 있는 화면**입니다 — 이 화면은 영업
+   자료로 그대로 나갑니다 (§19). */
+function JoinSix(){
+  var L = (window.AM_JOIN_SIX || []);
+  if(!L.length) return "";
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">PARTNER Q&amp;A</p>'+
+      '<h2>입점하면 무엇이 달라지나요?</h2>'+
+      '<p>업체 사장님이 제일 먼저 묻는 여섯입니다. 지금 사실인 것만 적었습니다.</p>'+
+    '</div>'+
+    '<ul class="jn6">'+L.map(function(x){
+      return '<li>'+
+        '<p class="jn6-q">'+
+          '<span class="ic-t">'+icon(x.ic,22)+'</span>'+
+          '<b>'+esc(x.q)+'</b></p>'+
+        '<p class="jn6-a">'+esc(x.a)+'</p>'+
+        (x.to ? '<a class="jn6-go" href="'+esc(x.to)+'">'+esc(x.toN||"보기")+
+          icon("arrow",15)+'</a>' : '')+
+      '</li>'; }).join("")+'</ul>'+
+  '</div></section>';
+}
+
 function JoinShow(){
   var sp = (typeof amSample === "function") ? amSample("provider") : null;
   return '<section class="sec sec-white"><div class="w">'+

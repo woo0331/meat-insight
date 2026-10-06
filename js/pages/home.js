@@ -787,30 +787,77 @@ function MainJourney(){
    `start` · `close` 둘뿐이라 네 칸으로 나눌 수가 없습니다. 같은 수가
    두 번 찍히면 세는 값이 아니라 **지어낸 수**로 읽힙니다. 지금은
    **그 칸에서 다루는 말**을 냅니다 (§17 의 네 묶음 그대로). */
-var MAIN_INFO = [
-  { k:"창업",       ic:"rocket",   to:"/content?side=start",
-    d:"사업자등록 · 영업신고 · 상권분석 · 상가계약 · 권리금 · 창업비용" },
-  { k:"운영",       ic:"chart",    to:"/operation",
-    d:"세금 · 부가세 · 4대보험 · 직원관리 · 원가관리 · 마케팅 · 배달" },
-  { k:"인수 · 양도", ic:"handover", to:"/transfer",
-    d:"매장 인수 · 권리금 · 시설양도 · 임대차 승계 · 매출 확인" },
-  { k:"폐업",       ic:"boxes",    to:"/content?side=close",
-    d:"폐업신고 · 세금 · 직원정리 · 시설매각 · 철거 · 원상복구 · 보증금" }
-];
+/* ══════════════════════════════════════════════════════════════════
+   정보센터 (2026-10-06 2차 §13)
+   ══════════════════════════════════════════════════════════════════
+   > "단순 제목 리스트가 아니라 콘텐츠 카드로 보여준다."
+
+   탭 넷은 **여정 넷과 같은 축**입니다 — 새 분류를 만들지 않고
+   `amJourneyOfCat()` 이 분류 → 단계 → 여정으로 타고 올라갑니다.
+
+   ⚠️⚠️ **숫자는 전부 세는 값입니다.** 전에 네 칸에 글 편수를 붙였다가
+   창업과 운영이 **둘 다 34편**으로 나온 적이 있습니다 (그때는 글의
+   `side` 로 나눴습니다 — 창업/폐업 둘뿐이라 넷으로 갈 수가 없습니다).
+   같은 수가 두 번 찍히면 세는 값이 아니라 **지어낸 수**로 읽힙니다.
+   ⚠️ **읽는 시간은 글에 적힌 값**(`read`)입니다. 없으면 그 줄이
+   안 나옵니다 — 글자 수로 어림해 적으면 지어낸 수입니다.
+   ⚠️⚠️ **키워드 셋은 글의 실제 구간 제목**(`body[].h`)입니다.
+   "준비서류 · 신고순서 · 주의사항" 처럼 그럴듯한 말을 지어 붙이면
+   화면에 없는 것을 약속하는 것입니다 (절대 규칙 5). */
 function MainContent(){
-  var L = (window.AM_CONTENTS || []);
-  if(!L.length) return "";          /* 글이 없으면 구간째 뺍니다 */
-  return '<section class="sec sec-white minfo"><div class="w">'+
+  var all = (window.AM_CONTENTS || []);
+  if(!all.length) return "";          /* 글이 없으면 구간째 뺍니다 */
+  var J  = (window.AM_JOURNEYS || []);
+  var cur = nowQS("ic") || (J[0] && J[0].key) || "";
+  if(!amContentsByJourney(cur).length){
+    /* 고른 탭에 글이 없으면 **있는 탭**으로 보냅니다 — 빈 칸을
+       보여 주는 것보다 낫습니다 (절대 규칙 2). */
+    for(var i = 0; i < J.length; i++)
+      if(amContentsByJourney(J[i].key).length){ cur = J[i].key; break; }
+  }
+  var list = amContentsByJourney(cur, 4);
+  if(!list.length) return "";
+  var to = function(k){
+    var q = [];
+    if(nowQS("j")) q.push("j=" + encodeURIComponent(nowQS("j")));
+    if(nowQS("i")) q.push("i=" + encodeURIComponent(nowQS("i")));
+    q.push("ic=" + encodeURIComponent(k));
+    return "/?" + q.join("&") + "#info";
+  };
+  return '<section class="sec sec-white minfo" id="info"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">GUIDE</p>'+
-      '<h2>사장님 정보센터</h2>'+
-      /* ⚠️ `L.length` 는 **세는 값**입니다. 손으로 적지 마세요. */
-      '<p>지금 '+L.length+'편. 근거를 댈 수 있는 것만 적습니다.</p>'+
+      '<h2>사장님이 알아두면 돈과 시간을 아낄 수 있는 정보</h2>'+
+      /* ⚠️ `all.length` 는 **세는 값**입니다. 손으로 적지 마세요. */
+      '<p>지금 '+all.length+'편. 근거를 댈 수 있는 것만 적습니다.</p>'+
       '<a class="sec-more" href="/content">전체 정보 보기'+icon("arrow",16)+'</a>'+
     '</div>'+
-    '<ul class="info-g">'+MAIN_INFO.map(function(x){
-      return '<li><a href="'+esc(x.to)+'">'+
-        '<span class="ic-t">'+icon(x.ic,24)+'</span>'+
-        '<b>'+esc(x.k)+'</b><em>'+esc(x.d)+'</em></a></li>';
+    /* 탭 넷 — ⚠️ `data-keep` 이 없으면 맨 위로 올라가서 무엇이
+       바뀌었는지 못 봅니다. */
+    '<div class="info-tb" role="tablist" aria-label="정보 분야">'+
+      J.map(function(x){
+        var n = amContentsByJourney(x.key).length;
+        if(!n) return "";           /* 글이 없는 탭은 안 냅니다 */
+        var on = (x.key === cur);
+        return '<a class="info-t'+(on?" on":"")+'" href="'+esc(to(x.key))+'" data-keep'+
+          (on ? ' aria-current="true"' : '')+'>'+esc(x.name)+
+          '<em>'+n+'</em></a>';
+      }).join("")+
+    '</div>'+
+    '<ul class="info-cg">'+list.map(function(c){
+      /* 글이 실제로 다루는 것 — 구간 제목 셋입니다 (지어내지 않습니다) */
+      var keys = (c.body || []).map(function(b){ return b.h; })
+                   .filter(Boolean).slice(0, 3);
+      return '<li><a href="/content/'+esc(c.slug)+'">'+
+        '<span class="info-c-m">'+
+          /* ⚠️ `amCatName()` 은 없는 함수입니다 — 분류는 `amCat()` 으로
+             찾고 이름을 꺼냅니다. 없는 분류면 빈 칸입니다. */
+          esc((amCat(c.cat) || {}).name || "")+
+          (c.read ? '<em>예상 읽기 '+esc(String(c.read))+'분</em>' : '')+
+        '</span>'+
+        '<b>'+esc(c.title)+'</b>'+
+        (keys.length ? '<span class="info-c-k">'+esc(keys.join(" · "))+'</span>' : '')+
+        '<span class="info-c-go">자세히 보기'+icon("arrow",15)+'</span>'+
+      '</a></li>';
     }).join("")+'</ul>'+
   '</div></section>';
 }

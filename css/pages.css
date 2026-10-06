@@ -2122,6 +2122,79 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mst2-cta{ display:flex; flex-wrap:wrap; gap:var(--s3); margin-top:var(--s6); }
 .mst2-wait{ background:var(--bg-ivory2); }
 
+/* 업체가 제일 먼저 묻는 여섯 (2026-10-06 2차 §19) */
+.jn6{ display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--s4); }
+.jn6 > li{ display:flex; flex-direction:column; gap:var(--s3); min-width:0;
+  padding:var(--s6); border:1px solid var(--line); border-radius:var(--r-xl);
+  background:var(--surface); }
+/* ⚠️ grid 칸에 글과 태그를 섞지 않습니다 — 아이콘과 질문을 둘 다
+   태그로 감쌉니다 (이 저장소에서 네 번 깨진 자리). */
+.jn6-q{ display:flex; align-items:center; gap:var(--s3); }
+.jn6-q b{ font-size:var(--t-md); font-weight:800; letter-spacing:-.03em;
+  line-height:1.4; color:var(--ink); min-width:0; }
+.jn6-a{ font-size:var(--t-sm); line-height:1.75; color:var(--ink2); }
+.jn6-go{ display:inline-flex; align-items:center; gap:5px; min-height:40px;
+  margin-top:auto; font-size:var(--t-cap); font-weight:800; color:var(--navy); }
+@media (max-width:1040px){ .jn6{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:640px){ .jn6{ grid-template-columns:1fr; } }
+
+/* 계산 뒤의 다음 걸음 (2026-10-06 2차 §15)
+   ⚠️ 결과 칸 바로 아래입니다 — 숫자를 본 그 자리에서 넘어갑니다. */
+.tl-nx{ margin-top:var(--s5); padding:var(--s5);
+  border:1px solid var(--line); border-radius:var(--r-xl);
+  background:var(--surface); }
+.tl-nx-h{ display:flex; align-items:center; gap:6px;
+  font-size:var(--t-cap); font-weight:800; color:var(--navy); }
+.tl-nx-l{ display:grid; gap:var(--s2); margin-top:var(--s3); }
+.tl-nx-l a{ display:flex; align-items:center; gap:var(--s3);
+  min-height:52px; padding:var(--s3) var(--s4);
+  border:1px solid var(--line); border-radius:var(--r-lg);
+  background:var(--bg-2); font-size:var(--t-sm); font-weight:700;
+  line-height:1.45; color:var(--ink); transition:border-color .15s; }
+.tl-nx-l svg:first-child{ flex:none; color:var(--navy); }
+.tl-nx-l svg:last-child{ flex:none; margin-left:auto; color:var(--ink3); }
+.tl-nx-l span{ min-width:0; }
+@media (hover:hover){ .tl-nx-l a:hover{ border-color:var(--navy); } }
+
+/* 정보센터 탭 + 콘텐츠 카드 (2026-10-06 2차 §13)
+   ⚠️ 탭은 누르는 자리라 44px 이상입니다. */
+.info-tb{ display:flex; flex-wrap:wrap; gap:var(--s2); margin-bottom:var(--s6); }
+.info-t{ display:inline-flex; align-items:center; gap:7px; min-height:44px;
+  padding:0 var(--s5); border-radius:var(--r-pill);
+  border:1px solid var(--line); background:var(--surface);
+  font-size:var(--t-sm); font-weight:700; letter-spacing:-.02em;
+  color:var(--ink2); transition:background .15s, color .15s, border-color .15s; }
+.info-t em{ font-style:normal; font-size:var(--t-cap); font-weight:800;
+  color:var(--ink3); }
+/* 고른 탭 — ⚠️ 남색 바탕 + 흰 글자. 무엇이 켜졌는지가 한눈에 보여야
+   합니다. ⚠️ POINT RED 를 쓰지 마세요 — 그 색은 검색 CTA 한 자리입니다. */
+.info-t.on{ background:var(--navy); border-color:var(--navy); color:#fff; }
+.info-t.on em{ color:rgba(255,255,255,.78); }
+@media (hover:hover){ .info-t:hover{ border-color:var(--navy); color:var(--navy); }
+  .info-t.on:hover{ color:#fff; } }
+.info-cg{ display:grid; grid-template-columns:repeat(4, 1fr); gap:var(--s4); }
+.info-cg > li{ min-width:0; }
+.info-cg a{ display:flex; flex-direction:column; gap:var(--s2); height:100%;
+  padding:var(--s5); border:1px solid var(--line); border-radius:var(--r-xl);
+  background:var(--surface); transition:border-color .15s, box-shadow .2s; }
+/* ⚠️ grid 칸에 글과 태그를 섞지 않습니다 — 분류 이름과 읽는 시간을
+   둘 다 태그로 감쌉니다 (이 저장소에서 네 번 깨진 자리). */
+.info-c-m{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2);
+  font-size:var(--t-cap); font-weight:700; color:var(--navy); }
+.info-c-m em{ font-style:normal; font-weight:600; color:var(--ink3); }
+.info-cg b{ font-size:var(--t-md); font-weight:800; letter-spacing:-.03em;
+  line-height:1.4; color:var(--ink); }
+.info-c-k{ font-size:var(--t-cap); line-height:1.6; color:var(--ink2); }
+.info-c-go{ display:inline-flex; align-items:center; gap:5px; margin-top:auto;
+  padding-top:var(--s3); font-size:var(--t-cap); font-weight:800;
+  color:var(--navy); }
+@media (hover:hover){ .info-cg a:hover{ border-color:var(--navy);
+  box-shadow:var(--shadow-card-h); } }
+@media (max-width:1040px){ .info-cg{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:600px){ .info-cg{ grid-template-columns:1fr; } }
+/* ⚠️ 탭을 눌렀을 때 내려오는 자리 — 헤더가 붙어 있어서 그만큼 비웁니다 */
+#info{ scroll-margin-top:84px; }
+
 /* 분야 칩 줄 (2026-10-06 2차 §18-10 · §18-11 · §18-12)
    ⚠️⚠️ 카드가 아니라 **칩**입니다. 분류 스물다섯을 카드로 깔면
    1440px 에서 화면 두 개가 되고 메인이 전화번호부가 됩니다.

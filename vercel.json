@@ -4,7 +4,9 @@
   "redirects": [
     { "source": "/home", "destination": "/", "permanent": true },
     { "source": "/closing", "destination": "/closure", "permanent": true },
+    { "source": "/acquisition", "destination": "/transfer", "permanent": true },
     { "source": "/companies", "destination": "/providers", "permanent": true },
+    { "source": "/companies/sample-interior", "destination": "/sample", "permanent": true },
     { "source": "/companies/:cat", "destination": "/providers/:cat", "permanent": true },
     { "source": "/guides", "destination": "/content", "permanent": true },
     { "source": "/guides/:slug", "destination": "/content", "permanent": true },

@@ -52,23 +52,28 @@ var META = {
      자리가 그때마다 뒤늦게 발견됐습니다. 여기는 **메인의 검색 결과
      설명**이라 화면으로는 표가 안 나고 공유해 봐야 압니다.
      (brand.js 가 app.js 보다 먼저 실립니다 — index.html 의 차례입니다) */
-  "/":          ["창업부터 폐업까지 사장님에게 필요한 모든 것",
-                 "창업 준비부터 매장 운영, 업체 찾기, 프랜차이즈, 매장 · 시설, 폐업까지. " +
-                 "사장님에게 필요한 업체와 서비스를 한 곳에서 찾는 " +
-                 ((window.AM_BRAND || {}).name || "") + "."],
+  /* ⚠️ 2026-10-06 V2 확정 지시서 §2 가 적은 제목 · 설명입니다 */
+  "/":          ["창업부터 운영 · 양도 · 폐업까지 사장님의 모든 길",
+                 "창업, 매장 운영, 인수 · 양도, 폐업에 필요한 정보와 업체, 비용, " +
+                 "체크리스트를 한 곳에서 확인하세요."],
   "/startup":   ["창업 — 어떤 사업을 준비하세요?",
                  "업종만 고르시면 그 업종 창업에 실제로 필요한 것만 추려 드립니다. 점포 · 상권 · 인테리어 · 장비 · 가구 · POS · 공급 · 인허가 · 마케팅까지."],
   /* 2026-10-05 V2 지시서 §1 — 여정 넷. 창업 · 폐업은 이미 있던 주소이고
      운영 · 인수/양도 둘이 새로 생겼습니다 (§28 의 `/operation` ·
-     `/acquisition`). ⚠️ `/closing` · `/companies` · `/guides` 는
+     `/transfer`). ⚠️ `/closing` · `/companies` · `/guides` 는
      `vercel.json` 이 308 로 보냅니다 — 같은 내용을 두 주소로 내면
      구글이 둘 다 무시합니다. */
   "/operation": ["매장 운영 — 운영하면서 필요한 모든 것",
                  "세무 · 노무 · 직원 · POS · CCTV · 인터넷 · 식자재 · 소모품 · 청소 · 방역 · 시설보수 · 보험 · 법률 · 마케팅까지. 문을 연 뒤에 생기는 일을 맡길 곳을 한곳에서 찾습니다."],
-  "/acquisition":["매장 인수 · 양도 — 받는 쪽과 넘기는 쪽",
+  "/transfer":["매장 인수 · 양도 — 받는 쪽과 넘기는 쪽",
                  "있던 가게를 받으면 공사 기간과 초기 비용이 줄고, 넘기면 철거비와 원상복구가 줄어듭니다. 순서 · 권리금 · 시설 인수 범위 · 임대차 승계까지 짚어 드립니다."],
   "/closure":   ["폐업 — 사업을 어떻게 정리하세요?",
                  "매장 양도 · 시설 집기 처분 · 재고 · 철거 · 원상복구 · 폐기물 · 폐업신고 · 계약 해지까지, 정리에 필요한 곳을 한곳에서 찾습니다."],
+  /* ⚠️ 색인에서 빠지는 화면이라도 제목 · 설명은 적습니다 — 공유했을 때
+     카카오 · 슬랙 미리보기에 쓰입니다 */
+  "/sample":    ["업체 상세 예시 — 입점하면 이렇게 보입니다",
+                 "실제 업체가 아닌 예시 화면입니다. 입점 업체의 소개 · 전문분야 · " +
+                 "포트폴리오 · 확인 배지 · 후기가 어떤 짜임새로 나가는지 보실 수 있습니다."],
   "/providers": ["업체찾기",
                  "인테리어 · 철거 · 간판 · 주방설비 · POS · 세무 · 노무 · 청소까지. 지역과 업종에 맞는 업체를 비교하고 견적을 받으세요."],
   "/franchise": ["프랜차이즈",
@@ -133,7 +138,10 @@ var META = {
 /* 사람마다 내용이 다른 화면과 결과 화면은 검색에 올리지 않습니다 */
 /* ⚠️ `/compare` 는 고른 업체마다 내용이 달라지는 **결과 화면**이라
    색인에 올리지 않습니다 (`/search` 와 같은 까닭입니다). */
-var NOINDEX = ["/my","/search","/quote","/compare"];
+/* ⚠️⚠️ `/sample` 은 **지어낸 업체 화면**이라 반드시 색인에서 뺍니다 —
+   구글에 나가면 손님이 검색으로 들어와 전화를 겁니다 (절대 규칙 1).
+   업체 사장님께 "입점하면 이렇게 나갑니다" 를 보여 드리는 자리입니다. */
+var NOINDEX = ["/my","/search","/quote","/compare","/sample"];
 
 /* ⚠️⚠️ **업체 · 브랜드 상세의 설명을 등록값으로 만듭니다.**
    전에는 `pv.intro` 한 줄을 그대로 썼습니다 — 소개가 짧으면 검색 결과에
@@ -215,7 +223,7 @@ window.routeInfo = function(path){
     "/":          "main",
     "/startup":   "startup",
     "/operation": "operation",
-    "/acquisition":"acquisition",
+    "/transfer":"acquisition",
     "/closure":   "closure",
     "/providers": "providers",
     "/franchise": "franchise",
@@ -224,6 +232,7 @@ window.routeInfo = function(path){
     "/support":   "support",
     "/content":   "contents",
     "/quote":     "quote",
+    "/sample":    "sample",
     "/join":      "join",
     "/my":        "my",
     "/search":    "search",
@@ -496,6 +505,7 @@ function render(){
     case "startupIndustry": html = PageStartupIndustry(r.industry); break;
     case "closure":         html = PageClosure();                   break;
     case "closureIndustry": html = PageClosureIndustry(r.industry);  break;
+    case "sample":          html = PageSample();                    break;
     case "providers":       html = PageProviders();                 break;
     case "providerCat":     html = PageProviderCat(r.cat);          break;
     case "providerOne":     html = PageProviderOne(r.provider);     break;

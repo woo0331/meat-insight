@@ -57,13 +57,20 @@ window.AM_GNB = [
      지시서의 `커뮤니티` 는 백엔드가 있어야 하는 게시판이라 넣지
      않았고, `매장양도` 는 `/stores` 와 같은 화면입니다 — 그 화면의
      이름을 지시서 말투대로 **상가·점포**로 바꿨습니다. */
+  /* ⚠️⚠️ **2026-10-06 V2 확정 지시서 §23 의 일곱**입니다 — 사업의
+     생애주기 넷(창업 · 운영 · 인수·양도 · 폐업)이 앞에 서고, 그 다음이
+     업체찾기 · 정보센터 · 도구입니다. 전에는 창업 · 폐업 둘뿐이고 그
+     사이(운영 · 인수·양도)로 가는 길이 **메인에만** 있었습니다.
+     ⚠️ 빠진 셋(프랜차이즈 · 상가·점포 · 지원정보)은 **푸터와 여정
+     화면에 그대로 있습니다** — 길을 지운 것이 아니라 한 단계 안으로
+     옮겼습니다. 헤더는 일곱까지만 들어갑니다 (재 본 값, 아래 설명). */
   { to:"/startup",   name:"창업" },
+  { to:"/operation", name:"운영" },
+  { to:"/transfer",  name:"인수·양도" },
   { to:"/closure",   name:"폐업" },
   { to:"/providers", name:"업체찾기" },
-  { to:"/franchise", name:"프랜차이즈" },
-  { to:"/stores",    name:"상가·점포" },
-  { to:"/support",   name:"지원정보" },
-  { to:"/content",   name:"콘텐츠" }
+  { to:"/content",   name:"정보센터" },
+  { to:"/tools",     name:"도구" }
 ];
 
 /* 폰 아래 네비 — 다섯 칸을 넘기지 마세요. 손가락이 닿는 폭이 줄고
@@ -78,6 +85,11 @@ var MNAV = [
 
 function brandName(){ return (window.AM_BRAND || {}).name || ""; }
 function brandSub(){  return (window.AM_BRAND || {}).sub  || ""; }
+/* 로고 아래 작은 줄 — ⚠️ 이름과 **같으면 빈 문자열**입니다 */
+function logoSub(){
+  var B = window.AM_BRAND || {}, en = B.en || "";
+  return (en && en !== (B.name || "")) ? en : "";
+}
 
 function Header(){
   /* ⚠️ 본문 바로가기는 `index.html` 에 이미 있습니다. 여기서 또 내면
@@ -87,8 +99,12 @@ function Header(){
       '<span class="hd-lg-i" aria-hidden="true">'+icon("home",20)+'</span>'+
       /* ⚠️ 지시서 §2 — 로고 아래 작은 영문. `AM_BRAND.en` 한 곳에서
          옵니다. 손으로 적지 마세요. */
+      /* ⚠️⚠️ 이름이 **영문 브랜드와 같아지면** 그 줄을 아예 뺍니다 —
+         안 그러면 "STOREWAY" 밑에 "STOREWAY" 가 한 번 더 찍힙니다
+         (2026-10-06 에 이름이 STOREWAY 가 되면서 실제로 그랬습니다).
+         이름이 다시 한글로 바뀌면 저절로 돌아옵니다. */
       '<span class="hd-lg-t"><b>'+esc(brandName())+'</b>'+
-        '<i>'+esc((window.AM_BRAND||{}).en || brandSub())+'</i></span></a>'+
+        (logoSub() ? '<i>'+esc(logoSub())+'</i>' : '')+'</span></a>'+
     '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
       AM_GNB.map(function(m){
         return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+esc(m.name)+'</a>';
@@ -197,14 +213,20 @@ function Footer(){
      폐업지원)이 **첫 칸의 `폐업 · 정리` 안에 다 있습니다** — 바로 옆에
      같은 것을 두 번 내는 셈이라 **찾는 화면**으로 바꿨습니다.
      ⚠️ 창업 · 폐업 진입은 여기 그대로 있습니다 (헤더에도 있습니다). */
+  /* ⚠️ 2026-10-06 V2 확정 §24 — 첫 칸이 **여정 넷**입니다. 헤더와 같은
+     축이라야 "여기가 어디로 가는 곳인가" 가 한 번에 읽힙니다.
+     ⚠️ 이름 · 주소를 손으로 적지 마세요 — `journey.js` 에서 옵니다.
+     ⚠️ 사업 단계 여섯은 **둘째 칸**으로 내렸습니다 (지운 것이 아닙니다). */
+  var journeys = (window.AM_JOURNEYS || []).map(function(j){
+    return [j.to, j.name];
+  });
   var cols = [
+    ["서비스", journeys.concat([["/providers","업체찾기"],
+              ["/content","정보센터"],["/tools","사장님 도구"]])],
     ["사업 단계", stages],
-    ["찾기", [["/startup","창업 시작하기"],["/closure","폐업 시작하기"],
-              ["/providers","업체찾기"],["/franchise","프랜차이즈"],
-              ["/stores","상가 · 점포"],["/assets","시설 · 집기"]]],
-    ["서비스", [["/quote","견적 요청"],["/support","창업 · 폐업 지원"],
-              ["/content","창업 · 폐업 정보"],["/tools","사장님 도구"],
-              ["/join","업체 입점하기"]]]
+    ["찾기", [["/franchise","프랜차이즈"],["/stores","상가 · 점포"],
+              ["/assets","시설 · 집기"],["/support","창업 · 폐업 지원"],
+              ["/quote","견적 요청"],["/join","파트너 입점"]]]
   ];
   /* 시안의 맨 아랫줄 — ⚠️ "고객센터" 는 **없는 화면**이라 안 적습니다.
      대신 실제로 답이 있는 `/faq` 로 보냅니다 (절대 규칙 2 · 5). */

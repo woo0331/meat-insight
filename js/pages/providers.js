@@ -33,6 +33,32 @@ function PageProviders(){
   '<section class="sec"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">CLOSE</p><h2>폐업에 필요한 업체</h2></div>'+
     '<div class="cat-g cat-g4">'+cl.map(function(c){ return CatCard(c,""); }).join("")+'</div>'+
+  '</div></section>'+
+  SampleBand();
+}
+
+/* ⚠️⚠️ **업체가 0곳일 때만 냅니다** (2026-10-06 V2 확정 지시서 §13).
+   등록이 시작되면 이 구간은 **저절로 사라집니다** — 실제 업체 옆에
+   예시 카드가 서 있으면 어느 쪽이 진짜인지 흐려집니다.
+   ⚠️ 카드는 **눌리지 않습니다.** 자세히 보실 분은 아래 단추로 예시
+   화면(`/sample`, 색인 제외)으로 갑니다 — 지어낸 업체가 손님 동선에
+   섞이지 않게 **한 걸음 떨어뜨려** 둡니다 (절대 규칙 1).
+   ⚠️⚠️ 평점 · 시공 건수 · 후기 수를 **적는 칸이 없습니다.** 카드의
+   평점은 예시 후기 셋에서 계산한 값이고, "시공 300건" 같은 실적은
+   어디에도 안 적습니다 (§13 이 직접 금지). */
+function SampleBand(){
+  var p = amSample("provider");
+  if(!p || (window.AM_PROVIDERS||[]).length) return "";
+  return '<section class="sec sec-gray"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">SAMPLE</p>'+
+      '<h2>업체 카드는 이렇게 보입니다</h2>'+
+      '<p>아직 등록된 업체가 없습니다. 지어내지 않고, 대신 '+
+        '<b>입점하면 어떻게 나가는지</b>를 예시로 보여 드립니다.</p></div>'+
+    '<div class="smp-card">'+ProviderCard(p)+'</div>'+
+    '<p class="row-cta">'+
+      '<a class="btn btn-b btn-lg" href="/sample">업체 상세 예시 보기'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-o btn-lg" href="/join">업체로 입점하기</a>'+
+    '</p>'+
   '</div></section>';
 }
 
@@ -306,6 +332,66 @@ function ReviewBlock(p){
       '</li>';
     }).join("")+'</ul>'+
     '<p class="note">플랫폼을 통해 상담 · 계약하신 분의 후기를 먼저 보여 드립니다.</p></div>';
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   /sample — 업체 상세 **예시** 화면 (2026-10-06 V2 확정 지시서 §14)
+   ══════════════════════════════════════════════════════════════════
+   > "업체 영업을 시작하기 전에 반드시 필요한 화면이다 …
+   >  'STOREWAY에 입점하면 이렇게 노출됩니다' 라고 바로 보여 줄 수
+   >  있는 수준이어야 한다."
+
+   ⚠️⚠️ **색인에서 뺍니다** (`NOINDEX` · sitemap 제외). 지어낸 업체
+   화면이 구글에 나가면 손님이 검색으로 들어와 전화를 겁니다 — 그
+   순간 표시·광고의 공정화에 관한 법률 제3조이고, 보고 연락한 사람의
+   시간을 훔치는 일입니다 (절대 규칙 1). 이 화면은 **업체 사장님께
+   보여 드리는 자리**이지 손님 동선이 아닙니다.
+   ⚠️ 그래서 **맨 위와 맨 아래 두 곳**에 예시라고 적습니다 — 중간부터
+   보시는 분이 없게.
+   ⚠️⚠️ **없는 값을 지어내지 않습니다** (§14 "데이터가 없는 항목은
+   가짜 정보를 채우지 않는다"). 가격 · FAQ · A/S 는 **업체가 적는
+   칸**이라 여기서는 "입점 업체는 이 자리에 실제 정보가 표시됩니다"
+   까지만 냅니다. 평점은 아래 예시 후기 셋에서 **계산**합니다.
+   ⚠️ 생김새는 `PageProviderOne()` **그대로**입니다 — 두 벌로 만들면
+   실제 업체 화면을 고쳐도 영업용 화면만 옛날이 됩니다. */
+var SAMPLE_SLOTS = [
+  { t:"가격 정보",  d:"시공 단가 · 기본 공사비 · 추가 비용 기준" },
+  { t:"자주 묻는 것", d:"공사 기간 · 계약금 · 자재 변경 같은 업체별 답" },
+  { t:"A/S 정책",   d:"보증 기간과 범위, 하자 접수 방법" }
+];
+function SampleNote(where){
+  return '<div class="smp-note smp-'+esc(where)+'">'+icon("info",18)+
+    '<span><b>예시 화면입니다. 실제 업체가 아닙니다.</b> '+
+    esc(amBrand())+'에 입점하시면 업체 정보가 이런 짜임새로 나갑니다 — '+
+    '상호 · 후기 · 평점 · 사진은 전부 업체와 손님이 올린 것만 올라갑니다.</span></div>';
+}
+function PageSample(){
+  var p = amSample("provider");
+  /* ⚠️ 스위치가 꺼져 있으면 **화면째** 없습니다 (절대 규칙 2) */
+  if(!p) return PgHero({ kicker:"예시", h1:"예시 화면이 꺼져 있습니다",
+    lead:"관리자가 예시 프로필을 꺼 두었습니다.", tight:true })+
+    '<section class="sec sec-white"><div class="w">'+
+      Empty({ icon:"users", title:"지금은 볼 수 없습니다",
+        text:"실제 업체 목록은 업체찾기에서 보실 수 있습니다.",
+        cta:[["/providers","업체찾기"]] })+'</div></section>';
+  /* ⚠️ 바탕을 **회색**으로 둡니다 — 바로 아래 히어로가 흰색이라
+     흰색으로 두면 "이웃한 두 구간이 붙어 보임" 이 ΔE 0.00 으로
+     잡힙니다 (실제로 그렇게 잡혔습니다). */
+  return '<section class="sec sec-gray smp-top"><div class="w">'+
+      SampleNote("top")+'</div></section>'+
+    PageProviderOne(p)+
+    '<section class="sec sec-gray"><div class="w">'+
+      '<div class="sec-hd"><p class="eyebrow">PARTNER</p>'+
+        '<h2>입점하시면 이 자리가 채워집니다</h2>'+
+        '<p>아래는 업체가 직접 적는 칸입니다. 저희가 대신 적지 않습니다.</p></div>'+
+      '<ul class="smp-slot">'+SAMPLE_SLOTS.map(function(x){
+        return '<li><b>'+esc(x.t)+'</b><i>'+esc(x.d)+'</i>'+
+          '<em>입점 업체는 이 자리에 실제 정보가 표시됩니다.</em></li>';
+      }).join("")+'</ul>'+
+      '<p class="row-cta"><a class="btn btn-b btn-lg" href="/join">업체 입점 알아보기'+
+        icon("arrow",18)+'</a></p>'+
+    '</div></section>'+
+    '<section class="sec sec-white"><div class="w">'+SampleNote("bot")+'</div></section>';
 }
 
 /* ── /join — 업체 입점 (§39) ───────────────────────────────────── */

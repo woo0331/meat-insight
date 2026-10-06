@@ -43,7 +43,7 @@ window.AM_JOURNEYS = [
      한쪽 색으로 칠하면 다른 쪽에게 "여긴 내 자리가 아니네" 가 됩니다
      (`/stores` · `/assets` 를 중립으로 둔 것과 같은 까닭입니다). */
   { key:"acquisition", no:"03", name:"인수 · 양도", short:"인수·양도",
-    icon:"handover", tone:"t3", side:"both", to:"/acquisition",
+    icon:"handover", tone:"t3", side:"both", to:"/transfer",
     q:"매장을 인수하거나 넘기려고 합니다",
     lead:"한 사장님의 끝이 다른 사장님의 시작이 됩니다.",
     sub:"매장 매물 · 권리금 · 시설 인수 · 계약 · 승계",
@@ -73,6 +73,13 @@ window.AM_PROCESS = {
 
   /* 창업 — 지시서 §4 의 열두 걸음 */
   startup: [
+    /* ⚠️ 2026-10-06 V2 확정 지시서 §6 이 적은 열두 걸음을 맞췄습니다 —
+       맨 앞의 **아이템 · 업종 결정**과 아홉째 **세무 · 노무**가 빠져
+       있었습니다. 원래 있던 `POS · CCTV` · `식자재 · 거래처` 는 실제
+       걸음이라 그대로 두어 **열넷**입니다 (지시서의 열둘이 전부
+       들어 있습니다). */
+    { name:"아이템 · 업종 결정", lead:"무엇을 파는 가게인지부터 정합니다.",
+      cat:"item", read:"franchise-vs-dokrip", to2:"/franchise", to2n:"프랜차이즈 보기" },
     { name:"사업계획",        lead:"무엇을 얼마로 시작할지부터 정합니다.",
       cat:"item", tool:"cost", read:"franchise-vs-dokrip", to2:"/support", to2n:"자금 · 지원사업" },
     { name:"상권분석",        lead:"그 동네에 그 가게가 되는지 봅니다.",
@@ -91,6 +98,8 @@ window.AM_PROCESS = {
       cat:"it", read:"pos-kiosk-gyeyak" },
     { name:"식자재 · 거래처", lead:"단가보다 조건이 오래 갑니다.",
       cat:"supply", read:"georaecheo-cheot-gyeyak" },
+    { name:"세무 · 노무",     lead:"사업자등록 다음은 기장과 4대보험입니다.",
+      cat:"admin", sub:"tax-agent", tool:"hire", read:"sabeopja-deungrok" },
     { name:"직원 채용",       lead:"근로계약서와 4대보험이 첫날부터입니다.",
       cat:"staff", read:"cheot-jigwon" },
     { name:"마케팅",          lead:"열기 전에 알려야 열고 나서 옵니다.",
@@ -188,7 +197,21 @@ window.AM_OPS = [
   { name:"보험",             cat:"admin", sub:"insurance",   icon:"shield",    tone:"t6" },
   { name:"법률 · 분쟁",      cat:"law",                      icon:"scale",     tone:"t6" },
   { name:"계약 · 렌탈 점검", cat:"contract",                 icon:"filex",     tone:"t4" },
-  { name:"원가 · 매출 관리", to:"/tools",                    icon:"chart",     tone:"t5" }
+  { name:"원가 · 매출 관리", to:"/tools",                    icon:"chart",     tone:"t5" },
+  /* ⚠️ 2026-10-06 V2 확정 지시서 §7 이 적은 스물셋을 맞췄습니다 —
+     전기 · 수도 · 배관 · 가스 · 배달 · 리뷰관리 · 렌탈이 빠져 있었습니다.
+     ⚠️⚠️ 전부 `catalog.js` 에 **이미 있는 하위 분류 key** 입니다 —
+     새 분류를 만들지 않았습니다 (§0-6 · §0-7). 없는 key 를 적으면
+     `checkProcess()` 가 빌드를 멈춥니다. */
+  { name:"전기 · 설비",      cat:"interior", sub:"electric", icon:"plug",    tone:"t4" },
+  { name:"수도 · 배관",      cat:"interior", sub:"plumbing", icon:"tool",    tone:"t4" },
+  { name:"가스",             cat:"interior", sub:"gas",      icon:"fire",    tone:"t4" },
+  { name:"냉난방 · 공조",    cat:"interior", sub:"hvac",     icon:"snow",    tone:"t4" },
+  { name:"렌탈 · 정수기",    cat:"contract", sub:"rental",   icon:"refresh", tone:"t4" },
+  { name:"배달 · 포장",      cat:"marketing",sub:"open-mkt", icon:"truck",   tone:"t8",
+    tool:"delivery" },
+  { name:"리뷰 · 플레이스",  cat:"marketing",sub:"blog",     icon:"star",    tone:"t8" },
+  { name:"해충 방제",        cat:"clean",    sub:"pest",     icon:"shield",  tone:"t2" }
 ];
 
 /* ── 찾아 주는 것들 ─────────────────────────────────────────────── */

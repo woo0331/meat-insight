@@ -58,7 +58,7 @@ const PAGES = [
   /* 여정 넷 (2026-10-05 V2 §1) — 운영 · 인수/양도는 **새 화면**이라
      표본에 넣습니다. 창업 · 폐업은 이미 아래에 있습니다. */
   ["/operation",         "여정 — 매장 운영 (중립)"],
-  ["/acquisition",       "여정 — 인수 · 양도 (중립 · 두 길)"],
+  ["/transfer",       "여정 — 인수 · 양도 (중립 · 두 길)"],
   ["/startup",           "창업 진입 (업종 고르기)"],
   /* 업종 열넷을 다 넣으면 검사가 한참 길어집니다. **짜임새가 서로 다른
      것**을 고릅니다 — 장비가 제일 많은 것(cafe), 재고가 도는 것
@@ -71,6 +71,10 @@ const PAGES = [
   ["/closure/gym",       "헬스장 폐업"],
   ["/providers",         "업체찾기"],
   ["/compare",           "업체 비교 (0곳일 때)"],
+  /* 2026-10-06 V2 확정 §14 — 영업용 예시 화면. **색인에서 빠지지만**
+     대비 · 누름 크기 · 어두운 면은 똑같이 봐야 합니다 (업체 사장님께
+     보여 드리는 자리라 여기가 흉하면 입점을 안 하십니다). */
+  ["/sample",            "업체 상세 예시 (NOINDEX)"],
   /* 도구 열셋 — ⚠️ **짜임새가 서로 다른 것**을 고릅니다. 나머지는
      `tools/sweep-rest.js` 가 훑습니다 (전부 넣으면 검사가 두 배로 깁니다).
        target     나눗셈 + 경계(공헌이익률 1% 아래)
@@ -213,8 +217,15 @@ const PAGES = [
 /* ⚠️ **360px 을 같이 봅니다.** 폰은 390px 만 있는 것이 아닙니다 —
    갤럭시 계열이 360px 이고, 새 헤더가 거기서만 370px 로 넘쳐
    가로 스크롤이 났습니다. 390 만 재던 동안 통과하고 있었습니다. */
-const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],
-               [390,844,"모바일"],[360,800,"좁은 폰"]];
+/* ⚠️⚠️ **2026-10-06 V2 확정 지시서 §26 이 적은 여섯 폭**에 360 을
+   더해 일곱입니다. 360(갤럭시)은 지시서에 없지만 이 저장소에서
+   **거기서만 넘친 적**이 있어 뺄 수가 없습니다 — 헤더 CTA 글자가
+   길어졌을 때 390 은 통과하고 360 만 가로 스크롤이 났습니다.
+   ⚠️ 폭을 늘리면 전수 점검이 그만큼 길어집니다. 줄이지는 마세요 —
+   짧은 화면 · 좁은 화면이 늘 범인이었습니다. */
+const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[768,1024,"작은 태블릿"],
+               [430,932,"큰 폰"],[390,844,"모바일"],[375,812,"작은 폰"],
+               [360,800,"좁은 폰"]];
 
 /* 손님 화면에 있으면 안 되는 말 */
 /* ⚠️ 조사를 괄호로 때운 자리(은(는) · 을(를))도 여기서 걸립니다.
@@ -996,7 +1007,7 @@ const AUDIT = `(() => {
     };
     if(!find("손익분기", "/tools/bep")) return "'손익분기' 로 도구가 안 나옵니다";
     if(!find("창업비", "/tools/cost")) return "'창업비' 로 도구가 안 나옵니다";
-    if(!find("인수", "/acquisition")) return "'인수' 로 인수 · 양도 화면이 안 나옵니다";
+    if(!find("인수", "/transfer")) return "'인수' 로 인수 · 양도 화면이 안 나옵니다";
     if(!find("운영", "/operation")) return "'운영' 으로 매장 운영 화면이 안 나옵니다";
     /* 도구는 자기 묶음으로 갈립니다 */
     if(find("손익분기", "/tools/bep") !== "도구")
@@ -1432,9 +1443,18 @@ const AUDIT = `(() => {
        없어졌고(둘이 똑같이 중요합니다), 화면의 h1 은 **딱 하나**여야
        합니다. 지시서 §7 이 바로 이 문장을 Headline 으로 적어 두어서
        가치 구간의 h1 이 그 자리입니다. */
+    /* ⚠️ 2026-10-06 V2 확정 §3 으로 **h1 이 히어로 머리 띠로 올라갔고**
+       (서비스가 창업 · 폐업 둘이 아니라 네 여정이 됐습니다) 이 문장은
+       h2 가 됐습니다. 여기서 보는 것은 **그 두 낱말이 주인공인가**이지
+       태그가 아닙니다 — 대신 **화면의 h1 이 하나이고 히어로 것인지**를
+       같이 봅니다 (화면마다 h1 은 딱 하나여야 합니다). */
+    const h1s = document.querySelectorAll("#view h1");
+    if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
+    if(!h1s[0].closest(".mh")) return "h1 이 히어로에 없습니다";
     const h = document.querySelector(".mval-h");
     if(!h) return "브랜드 가치 구간의 제목이 없습니다";
-    if(h.tagName !== "H1") return "그 제목이 h1 이 아닙니다 (" + h.tagName + ")";
+    if(h.tagName !== "H1" && h.tagName !== "H2")
+      return "그 제목이 제목 태그가 아닙니다 (" + h.tagName + ")";
     const t = h.textContent.replace(/\\s+/g, "");
     if(t !== "창업에필요한모든것.폐업에필요한모든것.")
       return "제목이 " + h.textContent.trim() + "입니다";
@@ -1462,7 +1482,16 @@ const AUDIT = `(() => {
          나와 **1px 차이로** 실패했습니다. 재 보고 정한 값입니다 —
          여기서 잡아야 하는 것은 "히어로가 주저앉았나" 이지 몇 px 이
          아닙니다. */
-      const hh = document.querySelector(".mh").getBoundingClientRect().height;
+      /* ⚠️⚠️ **떠 있는 검색 패널은 빼고 잽니다.** 2026-10-06 에 히어로
+         위로 머리 띠가 올라오면서 구간 전체가 1,031px 이 됐는데, 그
+         가운데 280px 이 **일부러 다음 구간에 걸쳐 둔 패널**입니다
+         (음수 margin). 구간 전체를 재면 걸쳐 둔 만큼이 늘 "너무 길다"
+         로 잡힙니다 — 범위 숫자 띠를 뺀 것과 같은 까닭입니다.
+         재는 것은 머리 띠 위부터 **두 판의 아래까지**입니다. */
+      const mhEl = document.querySelector(".mh");
+      const twoEl = document.querySelector(".mh-two");
+      const hh = twoEl.getBoundingClientRect().bottom -
+                 mhEl.getBoundingClientRect().top;
       if(hh < 520) return "첫 화면이 " + Math.round(hh) + "px 입니다 — 주저앉았습니다";
       if(hh > 800) return "첫 화면이 " + Math.round(hh) + "px 입니다 — 너무 깁니다";
     }
@@ -2265,7 +2294,7 @@ const AUDIT = `(() => {
     if(cls.indexOf("side-") >= 0) return "운영 화면이 " + cls + " 로 물들었습니다";
     return true;`);
 
-  await f("인수 · 양도는 한쪽으로 물들지 않고 두 길이 같은 무게다", "/acquisition", `
+  await f("인수 · 양도는 한쪽으로 물들지 않고 두 길이 같은 무게다", "/transfer", `
     /* ⚠️⚠️ 넘기시는 분과 받으시는 분이 **같은 화면**을 봅니다.
        초록으로 칠하면 정리하시는 분에게, 주황으로 칠하면 인수하시는
        분에게 "여긴 내 자리가 아니네" 가 됩니다. */
@@ -2391,9 +2420,20 @@ const AUDIT = `(() => {
        "지금 무엇을 준비하고 계신가요"(여정 넷, §2)와 "이용방법
        다섯 걸음"(§25) 둘이 들어왔습니다. 나머지는 이미 있던 구간이
        그 자리를 맡습니다. */
-    const want = ["mh","mjy","mval","mnum","mi-g","mfit","mfeat","msvc","pv","fr","mk","mbr","mt-g","mhow","mjn"];
+    /* ⚠️⚠️ 2026-10-06 V2 확정 지시서 §21 로 **열여덟**이 됐습니다 —
+       차례가 통째로 바뀌었고(업종 → 서비스 → 단계 → 도구 → 업체 →
+       정보센터 → 매장 → 폐업), 정보센터(minfo)와 폐업 가이드(mcls)
+       둘이 들어왔습니다. **빠진 구간은 없습니다** — 자리만 옮겼습니다. */
+    /* ⚠️ **사업 단계 여섯은 nav 요소입니다** (구간이 아닙니다 — 링크
+       목록이라 그게 맞습니다). 그래서 이 셈에 안 들어갑니다.
+       ⚠️⚠️ 바로 위 줄에 백틱을 적었다가 문자열이 거기서 끝나
+       "nav is not defined" 로 흐름 검사가 통째로 멈췄습니다
+       (**열한 번째** escape 사고). 주석에 백틱을 쓰지 마세요. */
+    const want = ["mh","mjy","mval","mnum","mi-g","mfit","msvc","mt-g",
+                  "pv","minfo","mfeat","fr","mk","mbr","mcls","mhow","mjn"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
-    if(S.length !== 15) return "구간이 " + S.length + "개입니다 (열다섯이어야 합니다)";
+    if(S.length !== want.length)
+      return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
     /* ⚠️ 숫자 구간은 이제 **히어로 밖**입니다. 떼어 놓으면 바탕이 둘 다
        크림이라 "붙어 보임" 으로 잡혔었기 때문에 **흰 구간**으로 둡니다 —
        바로 아래 "이웃한 두 구간이 붙어 보이지 않는다" 가 그걸 봅니다. */
@@ -2406,6 +2446,8 @@ const AUDIT = `(() => {
       if(e.classList.contains("mval")) return "mval";
       if(e.classList.contains("mfeat")) return "mfeat";
       if(e.classList.contains("msvc")) return "msvc";
+      if(e.classList.contains("minfo")) return "minfo";
+      if(e.classList.contains("mcls"))  return "mcls";
       if(e.querySelector(".mfit-tb")) return "mfit";
       if(e.querySelector(".mi-g"))   return "mi-g";
       if(e.querySelector(".mt-g"))   return "mt-g";
@@ -2991,7 +3033,9 @@ const AUDIT = `(() => {
       const path = url.split("?")[0];
       /* ⚠️ 이 목록은 `js/app.js` 의 `NOINDEX` 와 **같아야 합니다** —
          한쪽만 늘리면 여기서 오탐이 납니다 (`/compare` 가 그랬습니다). */
-      if (["/my","/search","/quote","/compare"].indexOf(path) >= 0) continue;
+      /* ⚠️ `js/app.js` 의 `NOINDEX` 와 **같은 목록**이라야 합니다 —
+         한쪽만 늘리면 색인 안 하는 화면에 크롤러 본문을 요구합니다 */
+      if (["/my","/search","/quote","/compare","/sample"].indexOf(path) >= 0) continue;
       const res = await fetch(ROOT + path).catch(() => null);
       if (!res || !res.ok) { headBad.push(name + ": 파일이 없습니다"); continue; }
       const html = await res.text();

@@ -1185,9 +1185,14 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    한 판에 흰 글자를 얹기 위한 것이고 무게는 같습니다. */
 .mh{ position:relative; background:var(--bg-cream); padding:0; }
 .mh-two{ position:relative; display:flex; align-items:stretch; }
+/* ⚠️⚠️ **첫 화면은 680~760px 입니다** (10-04 §4 · 검사가 봅니다).
+   2026-10-06 에 히어로 위로 머리 띠가 올라오면서 첫 화면이 **1173px**
+   이 됐습니다 — 두 판이 접힌 자리 아래로 밀려났습니다. 머리 띠가
+   메시지를 맡았으니 두 판은 **갈라 주는 자리**로 낮춥니다.
+   ⚠️ 450 아래로는 내리지 마세요 — 사진이 띠처럼 보입니다. */
 .hp2{ position:relative; flex:1 1 50%; min-width:0; display:flex;
-  align-items:center; min-height:520px;
-  padding:var(--s10) 0 calc(var(--s10) + var(--s9)); }
+  align-items:center; min-height:386px;
+  padding:var(--s9) 0 calc(var(--s9) + var(--s8)); }
 /* 바탕 — 대각선으로 맞물립니다 (위 설명) */
 .hp2::before{ content:""; position:absolute; top:0; bottom:0; z-index:0; }
 /* ⚠️ 지금 사진은 **왼쪽에 따뜻한 나무 천장과 카운터, 가운데에 작업자,
@@ -2314,3 +2319,93 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    까닭입니다. */
 .fil-off{ display:block; font-style:normal; font-size:var(--t-cap);
   font-weight:400; color:var(--ink2); }
+
+/* ── 히어로 머리 띠 (2026-10-06 V2 확정 지시서 §3) ────────────────
+   ⚠️⚠️ 첫 화면에서 3~5초 안에 무엇을 하는 곳인지 읽혀야 합니다.
+   아래 두 판(창업 · 폐업)은 **그대로 두고** 그 위에 한 문장을 얹습니다.
+   ⚠️ 바탕은 크림입니다 — 바로 아래 두 판이 남색 · 샌드라 ΔE 가
+   넉넉합니다. 어두운 면을 늘리지 않으려고 **밝은 쪽**으로 둡니다. */
+.mh-top{ background:var(--bg-cream); padding:var(--s8) 0 var(--s7);
+  text-align:center; }
+.mh-h1{ margin:0; font-size:clamp(28px,4vw,46px); font-weight:800;
+  letter-spacing:-.035em; line-height:1.16; color:var(--navy); }
+.mh-lead{ margin:var(--s3) 0 0; font-size:clamp(16px,1.5vw,20px);
+  font-weight:700; line-height:1.45; color:var(--ink); }
+.mh-sub{ margin:var(--s3) auto 0; max-width:62ch;
+  font-size:var(--t-sm); line-height:1.7; color:var(--ink2); }
+.mh-cta{ display:flex; flex-wrap:wrap; justify-content:center;
+  gap:var(--s3); margin:var(--s5) 0 0; }
+/* ⚠️ 머리 띠에서 내려오는 자리 — 헤더가 붙어 있어서 그만큼 비웁니다 */
+#journey{ scroll-margin-top:84px; }
+@media (max-width:720px){
+  .mh-top{ padding:var(--s8) 0 var(--s7); }
+  .mh-cta .btn{ width:100%; }
+}
+
+/* ── 예시 업체 (2026-10-06 V2 확정 지시서 §13 · §14) ──────────────
+   ⚠️⚠️ **예시라는 말이 제일 먼저 읽혀야 합니다.** 지어낸 업체가
+   실제 업체로 읽히면 표시·광고의 공정화에 관한 법률 제3조입니다.
+   ⚠️ 상태색(`--warn`)은 **배지 바탕용**이라 글자는 짙은 쪽을 씁니다. */
+.smp-note{ display:flex; gap:var(--s3); align-items:flex-start;
+  padding:var(--s5) var(--s6); border-radius:var(--r-in);
+  background:var(--gold-bg); border:1px solid var(--gold-line);
+  color:var(--ink); font-size:var(--t-sm); line-height:1.7; }
+.smp-note svg{ flex:none; margin-top:2px; color:var(--gold-text); }
+.smp-top{ padding-bottom:0; }
+/* 예시 카드 한 장 — ⚠️ 가운데 한 장이라 **목록처럼 보이면 안 됩니다** */
+.smp-card{ max-width:400px; margin:0 auto; }
+.smp-slot{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s5);
+  list-style:none; margin:0; padding:0; }
+.smp-slot li{ display:flex; flex-direction:column; gap:var(--s2);
+  padding:var(--s6); border:1px dashed var(--line);
+  border-radius:var(--r-in); background:var(--surface); }
+.smp-slot b{ font-size:var(--t-lg); color:var(--navy); }
+.smp-slot i{ font-style:normal; font-size:var(--t-sm); color:var(--ink2); }
+.smp-slot em{ font-style:normal; font-size:var(--t-cap); color:var(--ink2);
+  padding-top:var(--s2); border-top:1px solid var(--line); }
+@media (max-width:900px){ .smp-slot{ grid-template-columns:1fr; } }
+
+/* ── 정보센터 · 폐업 가이드 (2026-10-06 V2 확정 §21-8 · §21-10) ───
+   ⚠️ 카드 넷은 **입구**입니다 — 글 제목을 늘어놓으면 블로그가 됩니다
+   (§54 "블로그형 사이트" 금지). 분류와 센 값까지만 냅니다. */
+.info-g{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s5);
+  list-style:none; margin:0; padding:0; }
+.info-g a{ display:flex; flex-direction:column; align-items:flex-start;
+  gap:var(--s3); min-height:var(--tap); padding:var(--s6);
+  border:1px solid var(--line); border-radius:var(--r-lg);
+  background:var(--surface); color:var(--ink); }
+.info-g a:hover{ border-color:var(--blue); }
+.info-g b{ font-size:var(--t-lg); color:var(--navy); }
+.info-g em{ font-style:normal; font-size:var(--t-cap); line-height:1.6; color:var(--ink2); }
+@media (max-width:860px){ .info-g{ grid-template-columns:1fr 1fr; } }
+
+/* ⚠️⚠️ 폐업 쪽은 **주황**입니다. 빨강으로 흘러가면 "폐업은 나쁜 것"
+   이라는 말이 됩니다 — 이 저장소가 여러 곳에 못박아 둔 자리입니다. */
+.cls-g{ display:grid; grid-template-columns:repeat(7,1fr); gap:var(--s3);
+  list-style:none; margin:0 0 var(--s7); padding:0; }
+.cls-g li{ display:flex; flex-direction:column; gap:var(--s2);
+  padding:var(--s5) var(--s4); border-radius:var(--r-in);
+  background:var(--close-soft); }
+/* ⚠️⚠️ `--close-dark` 는 옅은 주황 바탕에서 **3.66** 이라 AA(4.5)에
+   못 미칩니다 — 19px 굵은 글씨라 큰 글자 기준(3.0)으로 보면 통과지만
+   전수 점검은 **큰 쪽**을 따릅니다 (추천 검색어 칩에서 겪은 자리).
+   `--close-deep` 가 4.59 입니다. */
+.cls-g b{ font-size:var(--t-lg); font-weight:800; color:var(--close-deep); }
+.cls-g span{ font-size:var(--t-cap); font-weight:700; color:var(--ink); }
+.cls-more{ background:var(--bg-2) !important; justify-content:center; }
+.cls-more span{ color:var(--ink2); }
+@media (max-width:1100px){ .cls-g{ grid-template-columns:repeat(4,1fr); } }
+@media (max-width:620px){ .cls-g{ grid-template-columns:1fr 1fr; } }
+
+/* ── 인수 · 양도 메뉴 다섯 (2026-10-06 V2 확정 §8) ───────────────── */
+.aq-m{ display:grid; grid-template-columns:repeat(5,1fr); gap:var(--s4);
+  list-style:none; margin:var(--s7) 0 0; padding:0; }
+.aq-m a{ display:flex; flex-direction:column; gap:var(--s2);
+  min-height:var(--tap); padding:var(--s5);
+  border:1px solid var(--line); border-radius:var(--r-in);
+  background:var(--surface); color:var(--ink); }
+.aq-m a:hover{ border-color:var(--blue); }
+.aq-m b{ font-size:var(--t-base); color:var(--navy); }
+.aq-m i{ font-style:normal; font-size:var(--t-cap); line-height:1.6; color:var(--ink2); }
+@media (max-width:1100px){ .aq-m{ grid-template-columns:repeat(3,1fr); } }
+@media (max-width:620px){ .aq-m{ grid-template-columns:1fr 1fr; } }

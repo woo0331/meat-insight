@@ -194,7 +194,7 @@ function PageOperation(){
     lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." });
 }
 
-/* ── /acquisition — 인수 · 양도 ──────────────────────────────────
+/* ── /transfer — 인수 · 양도 ──────────────────────────────────
    ⚠️⚠️ **한쪽으로 물들이지 않습니다.** 넘기시는 분과 받으시는 분이
    같은 화면을 봅니다 (`/stores` · `/assets` 와 같은 까닭입니다). */
 function PageAcquisition(){
@@ -205,7 +205,7 @@ function PageAcquisition(){
   var nAsset = (typeof amAssets === "function") ? amAssets({}).length : 0;
 
   function tab(k, name, lead){
-    return '<a class="aq-t'+(t===k?" on":"")+'" href="/acquisition?t='+k+
+    return '<a class="aq-t'+(t===k?" on":"")+'" href="/transfer?t='+k+
       (ind ? "&i="+encodeURIComponent(ind.key) : "")+'"'+
       (t===k?' aria-current="page"':'')+'>'+
       '<b>'+esc(name)+'</b><em>'+esc(lead)+'</em></a>';
@@ -227,6 +227,21 @@ function PageAcquisition(){
       tab("in",  "매장을 인수합니다", "있던 가게를 받습니다")+
       tab("out", "매장을 넘깁니다",   "하던 가게를 넘깁니다")+
     '</div>'+
+    /* ⚠️ 2026-10-06 V2 확정 지시서 §8 의 다섯 메뉴입니다. 전부 **실제로
+       있는 화면**이고(가짜 링크는 절대 규칙 5), 매물이 0건이어도
+       가이드 · 체크리스트 · 계산기는 **오늘 바로 돌아갑니다** —
+       그래서 매물이 없어도 화면이 비어 보이지 않습니다. */
+    '<ul class="aq-m">'+[
+      ["/stores"+iq,     "store",    "매장 인수하기",   "상가 · 점포 · 권리금 매장"],
+      [quoteTo({cat:"transfer"}), "handover", "내 매장 양도하기", "조건을 적어 보내시면 올려 드립니다"],
+      ["/tools/premium", "gauge",    "권리금 알아보기", "몇 달이면 돌아오는지 따져 봅니다"],
+      ["/content?side=close", "book","인수 · 양도 가이드", "계약 전에 보셔야 하는 것"],
+      ["/tools/vs",      "scale",    "신규 vs 인수 비교", "새로 만드는 것과 받는 것"]
+    ].map(function(x){
+      return '<li><a href="'+esc(x[0])+'">'+
+        '<span class="ic-t">'+icon(x[1],22)+'</span>'+
+        '<b>'+esc(x[2])+'</b><i>'+esc(x[3])+'</i></a></li>';
+    }).join("")+'</ul>'+
   '</div></section>'+
   ProcessBand({ key: t === "out" ? "acq-out" : "acq-in",
     kicker: t === "out" ? "넘기는 순서" : "받는 순서",

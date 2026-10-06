@@ -81,10 +81,13 @@ function allRoutes(W){
      랜딩을 없애면서 그 화면이 `/` 가 됐습니다. 옛 주소는
      `vercel.json` 의 redirects 가 308 로 `/` 에 보냅니다 — 여기에
      다시 넣으면 **같은 내용이 두 주소로 나가고 구글이 둘 다 무시**합니다. */
-  const fixed = ["/", "/startup", "/operation", "/acquisition", "/closure",
+  const fixed = ["/", "/startup", "/operation", "/transfer", "/closure",
                  "/providers", "/franchise",
                  "/stores", "/assets", "/support", "/content",
                  "/quote", "/join", "/my", "/search", "/compare",
+                 /* ⚠️ `/sample` 은 NOINDEX 라 sitemap 에 안 들어갑니다 —
+                    HTML 은 만들어야 주소를 열 수 있어서 여기에 둡니다 */
+                 "/sample",
                  "/tools",
                  "/faq", "/about", "/terms", "/privacy"];
   /* 업종별 창업 · 폐업 — **검색에서 들어오는 제일 큰 문**입니다
@@ -652,7 +655,7 @@ function noscriptFor(W, r, route){
     });
     return L.join("");
   }
-  if(route === "/acquisition"){
+  if(route === "/transfer"){
     const nSt2 = (W.AM_STORES||[]).length, nAs2 = (W.AM_ASSETS||[]).length;
     h2("받을 때는 이 순서입니다");
     ul((W.AM_PROCESS||{})["acq-in"].map((x,i) => (i+1) + ". " + x.name + " — " + x.lead));

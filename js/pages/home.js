@@ -90,8 +90,37 @@ function MainHeroPane(o){
     '</div>'+
   '</article>';
 }
+/* ⚠️⚠️ **2026-10-06 V2 확정 지시서 §3** — 첫 화면에서 3~5초 안에
+   STOREWAY 가 무엇인지 읽혀야 합니다. 그때까지 히어로는 **창업 / 폐업
+   두 판**뿐이라 "창업이냐 폐업이냐" 까지만 말하고 있었는데, 이 서비스는
+   그 사이의 **운영 · 인수 · 양도**까지 잇는 곳입니다 (§2).
+   ⚠️ 두 판을 **지우지 않았습니다** (§0-1 · §0-8) — 그 위에 한 문장을
+   얹고, 두 판은 그대로 창업 · 폐업으로 갈라 주는 자리로 둡니다.
+   ⚠️⚠️ **h1 이 여기로 올라왔습니다.** 화면마다 h1 은 **딱 하나**라
+   아래 가치 구간은 h2 가 됩니다 — 첫 제목이 곧 h1 이라야 읽어 주는
+   프로그램과 검색엔진에도 차례가 맞습니다. */
+function MainHeroTop(){
+  return '<div class="mh-top"><div class="w">'+
+    '<h1 class="mh-h1">사장님의 시작부터 마지막까지</h1>'+
+    '<p class="mh-lead">창업 · 운영 · 인수 · 폐업에 필요한<br class="br-m"> '+
+      '정보와 업체를 한 곳에서.</p>'+
+    '<p class="mh-sub">상가부터 인테리어, 세무 · 노무, 마케팅, 매장 양도, '+
+      '철거까지<br class="br-m"> 사업에 필요한 과정을 '+esc(amBrand())+'에서 '+
+      '확인하세요.</p>'+
+    /* ⚠️ 둘 다 **실제로 있는 화면**입니다 (가짜 링크는 절대 규칙 5).
+       "내 상황에 맞게 시작하기" 는 바로 아래 여정 넷으로 내려갑니다 —
+       새 화면을 만들지 않고 이미 있는 구간을 가리킵니다. */
+    '<p class="mh-cta">'+
+      /* ⚠️ 행동색은 파랑 · 남색입니다. POINT RED 는 **검색 CTA 한
+         자리**뿐이라 여기 쓰지 않습니다 (10-04 §4). */
+      '<a class="btn btn-b btn-lg" href="#journey">내 상황에 맞게 시작하기'+
+        icon("arrow",18)+'</a>'+
+      '<a class="btn btn-o btn-lg" href="/providers">업체 찾아보기</a>'+
+    '</p>'+
+  '</div></div>';
+}
 function MainHero(){
-  return '<section class="mh"><div class="mh-two">'+
+  return '<section class="mh">'+ MainHeroTop() +'<div class="mh-two">'+
     /* ⚠️ 단추 색이 다른 것은 **바탕이 달라서**입니다 — 짙은 남색 위에는
        흰 단추, 밝은 샌드 위에는 짙은 주황 단추라야 글자가 읽힙니다
        (AA 4.5). 크기 · 글씨 · 자리는 둘이 똑같습니다. */
@@ -287,9 +316,10 @@ function MainValue(){
   return '<section class="sec sec-white mval"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow mval-k">대한민국 사장님의 시작과 끝</p>'+
-      /* 화면에 **딱 하나뿐인 h1** 입니다 (지시서 §7 의 Headline) */
-      '<h1 class="mval-h"><em class="mh-st">창업</em>에 필요한 모든 것. '+
-        '<em class="mh-cl">폐업</em>에 필요한 모든 것.</h1>'+
+      /* ⚠️ 2026-10-06 에 **h1 이 히어로로 올라갔습니다** — 화면마다
+         h1 은 딱 하나라 여기는 h2 입니다. 글은 그대로 둡니다. */
+      '<h2 class="mval-h"><em class="mh-st">창업</em>에 필요한 모든 것. '+
+        '<em class="mh-cl">폐업</em>에 필요한 모든 것.</h2>'+
       '<p>사업의 시작부터 정리까지, 사장님에게 필요한 업체와 서비스를 한 곳에서.</p>'+
     '</div>'+
     '<ul class="mval-g">'+MAIN_VALUE.map(function(v){
@@ -599,13 +629,79 @@ function MainBand(o){
    ⚠️ 생김새는 `JourneyPick()` **한 곳**입니다 (`js/pages/journey.js`) —
    메인과 여정 네 화면이 같이 씁니다. 두 곳에 적으면 서로 달라집니다. */
 function MainJourney(){
-  return '<section class="sec mjy"><div class="w">'+
+  /* ⚠️ `id` 는 히어로의 "내 상황에 맞게 시작하기" 가 내려오는 자리입니다 —
+     지우면 그 단추가 아무 데도 안 갑니다 (가짜 링크는 절대 규칙 5). */
+  return '<section class="sec mjy" id="journey"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">WHERE ARE YOU NOW</p>'+
       '<h2>지금 무엇을 준비하고 계신가요?</h2>'+
       '<p>고르시면 그 자리에서 필요한 정보 · 업체 · 도구만 추려 드립니다.</p>'+
     '</div>'+
     JourneyPick("")+
+  '</div></section>';
+}
+
+/* ── 사장님 정보센터 (2026-10-06 V2 확정 지시서 §21-8 · §17) ──────
+   ⚠️⚠️ **글을 써 놓고 목록에만 두면 없는 것과 같습니다.** 메인에서
+   정보센터로 가는 길이 푸터 한 줄뿐이었습니다 — 손님이 업체를 부르기
+   전에 "무엇을 확인해야 하나" 를 보는 자리가 이 사이트의 값어치인데,
+   첫 화면에 그 입구가 없었습니다.
+   ⚠️ 네 칸은 **여정 넷과 같은 축**입니다 (§17 이 적은 4대 카테고리) —
+   새 분류를 만들지 않고 `?side=` 거르개로 보냅니다.
+   ⚠️⚠️ **숫자는 세는 값입니다.** 손으로 적지 마세요 — 글을 한 편
+   더 쓰면 저절로 늘어납니다. 0 이면 그 칸이 숫자 없이 나갑니다. */
+/* ⚠️⚠️ **숫자를 네 칸에 다 붙이지 마세요.** 처음에 글 편수를 붙였다가
+   `운영` 과 `창업` 이 둘 다 34편으로 나왔습니다 — 글에 달린 쪽은
+   `start` · `close` 둘뿐이라 네 칸으로 나눌 수가 없습니다. 같은 수가
+   두 번 찍히면 세는 값이 아니라 **지어낸 수**로 읽힙니다. 지금은
+   **그 칸에서 다루는 말**을 냅니다 (§17 의 네 묶음 그대로). */
+var MAIN_INFO = [
+  { k:"창업",       ic:"rocket",   to:"/content?side=start",
+    d:"사업자등록 · 영업신고 · 상권분석 · 상가계약 · 권리금 · 창업비용" },
+  { k:"운영",       ic:"chart",    to:"/operation",
+    d:"세금 · 부가세 · 4대보험 · 직원관리 · 원가관리 · 마케팅 · 배달" },
+  { k:"인수 · 양도", ic:"handover", to:"/transfer",
+    d:"매장 인수 · 권리금 · 시설양도 · 임대차 승계 · 매출 확인" },
+  { k:"폐업",       ic:"boxes",    to:"/content?side=close",
+    d:"폐업신고 · 세금 · 직원정리 · 시설매각 · 철거 · 원상복구 · 보증금" }
+];
+function MainContent(){
+  var L = (window.AM_CONTENTS || []);
+  if(!L.length) return "";          /* 글이 없으면 구간째 뺍니다 */
+  return '<section class="sec sec-white minfo"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">GUIDE</p>'+
+      '<h2>사장님 정보센터</h2>'+
+      /* ⚠️ `L.length` 는 **세는 값**입니다. 손으로 적지 마세요. */
+      '<p>지금 '+L.length+'편. 근거를 댈 수 있는 것만 적습니다.</p>'+
+      '<a class="sec-more" href="/content">전체 정보 보기'+icon("arrow",16)+'</a>'+
+    '</div>'+
+    '<ul class="info-g">'+MAIN_INFO.map(function(x){
+      return '<li><a href="'+esc(x.to)+'">'+
+        '<span class="ic-t">'+icon(x.ic,24)+'</span>'+
+        '<b>'+esc(x.k)+'</b><em>'+esc(x.d)+'</em></a></li>';
+    }).join("")+'</ul>'+
+  '</div></section>';
+}
+
+/* ── 폐업 가이드 (§21-10) ─────────────────────────────────────────
+   ⚠️⚠️ **폐업을 실패로 말하지 않습니다** (§6) — "잘 정리하는 것도
+   사업입니다" 까지입니다. 빨강도 쓰지 않습니다 (주황 계열).
+   ⚠️ 걸음 수는 `AM_PROCESS.closing` 을 **그 자리에서 세는 값**입니다. */
+function MainClosing(){
+  var steps = ((window.AM_PROCESS||{}).closing || []);
+  if(!steps.length) return "";
+  return '<section class="sec mcls"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">CLOSE</p>'+
+      '<h2>폐업도 순서가 있습니다</h2>'+
+      '<p>놓치면 손해가 되는 절차를 처음부터 끝까지 짚어 드립니다. '+
+        '기한이 있는 것이 여럿입니다.</p></div>'+
+    '<ol class="cls-g">'+steps.slice(0,6).map(function(st, i){
+      return '<li><b>'+("0"+(i+1)).slice(-2)+'</b><span>'+esc(st.name)+'</span></li>';
+    }).join("")+'<li class="cls-more"><span>그 밖에 '+(steps.length-6)+'걸음</span></li></ol>'+
+    '<p class="row-cta">'+
+      '<a class="btn btn-cd btn-lg" href="/closure">폐업 준비 시작하기'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-o btn-lg" href="/tools/close">폐업 체크리스트</a>'+
+    '</p>'+
   '</div></section>';
 }
 
@@ -912,8 +1008,25 @@ function PageMain(){
        · `MainPrice()`   견적 0건이라 늘 Empty 이고 지시서에 없습니다
        · `MainReviews()` 후기 0건. §7 이 "실제 후기 확인" 을 지금
                          핵심 가치로 쓰지 말라고 적었습니다 */
-  return MainHero()+ MainJourney()+ MainStage()+ MainValue()+ MainScale()+
-         MainIndustry()+ MainFit()+ MainFeature()+ MainServices()+
-         MainProviders()+ MainFranchise()+ MainStores()+
-         MainBridge()+ MainTools()+ MainHow()+ MainJoin();
+  /* ⚠️⚠️ **2026-10-06 V2 확정 지시서 §21 의 차례**입니다. 빠진 구간은
+     없습니다 — 자리만 옮기고 둘(정보센터 · 폐업 가이드)을 더했습니다.
+
+       ① 히어로                      §21-1
+       ② 여정 넷                     §21-2
+       ③ 브랜드 가치 · ④ 범위 숫자    (지시서에는 없지만 지우지 않습니다)
+       ⑤ 업종 · ⑥ 고른 업종 결과      §21-3
+       ⑦ 많이 찾는 서비스             §21-4
+       ⑧ 사업 단계 여섯               §21-5
+       ⑨ 사장님 도구                  §21-6
+       ⑩ 업체 찾기                    §21-7
+       ⑪ 정보센터                     §21-8  ← 새로
+       ⑫ 큰 카드 셋 · ⑬ 프랜차이즈
+       ⑭ 매장 인수 · ⑮ 창업↔폐업      §21-9
+       ⑯ 폐업 가이드                  §21-10 ← 새로
+       ⑰ 이용방법 · ⑱ 입점            §21-11 · §21-12 */
+  return MainHero()+ MainJourney()+ MainValue()+ MainScale()+
+         MainIndustry()+ MainFit()+ MainServices()+ MainStage()+
+         MainTools()+ MainProviders()+ MainContent()+
+         MainFeature()+ MainFranchise()+ MainStores()+ MainBridge()+
+         MainClosing()+ MainHow()+ MainJoin();
 }

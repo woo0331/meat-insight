@@ -371,7 +371,22 @@ const CASES = [
         /* 숨긴 건수를 안 밝히던 그때 */
         return real(cat).split('class="fil-off"').join('class="fil-off-gone"');
       };
-    })(window.PageProviderCat);`]
+    })(window.PageProviderCat);`],
+
+  /* ══ 메인 카드 (2026-10-06) ═════════════════════════════════════ */
+  /* 아이콘을 손으로 적어 둔 표로 되돌리면 — 표에 없는 도구가 전부
+     같은 기본 아이콘이 됩니다 */
+  ["도구 카드 아이콘이 도구 데이터 것과 같고 저마다 다르다",
+   `document.querySelectorAll(".mt-g > li .ic-t").forEach(function(e, i){
+      if(i > 1) e.innerHTML = document.querySelector(".mt-g > li .ic-t").innerHTML;
+    });`],
+  /* 하위가 0인 분류의 lead 를 떼면 이름만 남습니다 */
+  ["분야 카드가 설명도 숫자도 없이 비지 않는다",
+   `document.querySelectorAll(".fit-g .fit").forEach(function(a){
+      const n = a.querySelector(".fit-n"), i = a.querySelector("i");
+      if(n) n.remove();
+      if(i) i.remove();
+    });`]
 ];
 
 /* ══════════════════════════════════════════════════════════════════

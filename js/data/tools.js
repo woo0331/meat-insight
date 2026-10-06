@@ -21,6 +21,10 @@
 /* 도구 목록 — ⚠️ 새 도구를 만들면 **여섯 군데**를 같이 고치세요:
    여기 · js/app.js(META · routeInfo · render) · build-pages.js(allRoutes ·
    noscriptFor) · check.js(PAGES) · 푸터 · 검색. */
+/* ⚠️⚠️ **아이콘이 겹치면 안 됩니다.** 열셋이 한 화면(메인 · /tools)에
+   같이 깔려서, 둘이 같은 그림이면 무엇이 무엇인지 흐려집니다 —
+   `target` 이 손익분기와 목표 매출에, `users` 가 인건비율과 직원
+   고용비용에 겹쳐 있었습니다. `check.js` 가 셉니다. */
 window.AM_TOOLS = [
   { key:"cost", grp:"시작하기 전",
      to:"/tools/cost",  icon:"won",    name:"창업비 정리표",
@@ -42,7 +46,7 @@ window.AM_TOOLS = [
     rel:[{cat:"admin",sub:"tax-agent"},{cat:"it"},{cat:"supply"},{cat:"clean"},
          {cat:"contract"}] },
   { key:"bep", grp:"얼마를 팔아야 하나",
-      to:"/tools/bep",   icon:"target", name:"손익분기 계산",
+      to:"/tools/bep",   icon:"chart",  name:"손익분기 계산",
     lead:"고정비를 공헌이익률로 나눕니다. 본전이 되는 매출이 얼마인지",
     ask:"월 고정비 · 변동비 비율", out:"본전 매출 · 하루 매출", time:"3분",
     side:"both",
@@ -60,7 +64,7 @@ window.AM_TOOLS = [
     side:"start",
     rel:[{cat:"store"},{cat:"transfer"},{cat:"asset"},{cat:"interior"}] },
   { key:"close", grp:"정리할 때",
-    to:"/tools/close", icon:"list",   name:"폐업 체크리스트",
+    to:"/tools/close", icon:"listck", name:"폐업 체크리스트",
     lead:"순서대로 짚어 가며 빠뜨린 것을 찾습니다. 기한이 있는 것이 여럿입니다",
     ask:"해당하는 것 체크", out:"남은 것 · 기한 있는 것", time:"5분",
     side:"close",
@@ -97,7 +101,7 @@ window.AM_TOOLS = [
     rel:[{cat:"store"},{cat:"area"},{cat:"law"}] },
 
   { key:"hire", grp:"얼마가 남나",
-    to:"/tools/hire", icon:"users", name:"직원 고용비용 계산",
+    to:"/tools/hire", icon:"coins", name:"직원 고용비용 계산",
     lead:"급여만이 아닙니다. 4대보험 · 퇴직충당 · 식대까지 더한 실제 비용",
     ask:"급여 · 사람 수 · 사업주 부담률", out:"1인 월 비용 · 전체 월 · 1년", time:"3분",
     side:"both",

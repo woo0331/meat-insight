@@ -785,12 +785,19 @@ function MainBridge(){
 }
 
 /* ── ⑪ 사장님 도구 ────────────────────────────────────────────────
-   ⚠️ 도구 목록은 `AM_TOOLS` 하나입니다 — 여기에 손으로 적지 마세요.
-   아이콘과 악센트만 여기서 붙입니다. */
-var MAIN_TOOL_IC = {
-  cost: { ic:"wallet",  c:"st" }, bep:   { ic:"chart",   c:"bl" },
-  labor:{ ic:"users",   c:"pu" }, fixed: { ic:"receipt", c:"tl" },
-  vs:   { ic:"compare", c:"gd" }, close: { ic:"listck",  c:"cl" }
+   ⚠️⚠️ **아이콘을 여기에 손으로 적지 마세요.** 도구마다 `icon` 이
+   `tools.js` 에 **이미 적혀 있는데**, 여기에 key → 아이콘 표를 따로
+   두고 있었습니다. 도구가 여섯에서 열셋이 되자 표에 없는 **일곱이
+   전부 같은 기본 아이콘(`gauge`)** 으로 나왔습니다 — 폰에서는 한 줄에
+   하나씩이라 같은 그림이 일곱 번 이어졌습니다. 에러도 안 나고 검사도
+   통과했습니다 (랜딩 미니카드 아이콘을 손으로 적었던 것과 **같은
+   사고**입니다). 이제 `t.icon` 을 그대로 씁니다.
+   ⚠️ 색만 여기서 붙입니다 — **묶음**(`AM_TOOL_GROUPS`)을 따릅니다.
+   색은 뜻입니다 (§27): 초록 시작 · 파랑 계산 · 청록 남는 돈 ·
+   주황 정리. 도구를 더해도 묶음만 맞으면 저절로 따라옵니다. */
+var MAIN_TOOL_TONE = {
+  "시작하기 전":"st", "얼마를 팔아야 하나":"bl",
+  "얼마가 남나":"tl", "정리할 때":"cl"
 };
 function MainTools(){
   var L = (window.AM_TOOLS||[]);
@@ -807,9 +814,9 @@ function MainTools(){
       '<p>창업과 운영, 정리에 필요한 숫자를 직접 재 보세요. '+
         '적으신 숫자는 이 브라우저에만 남습니다.</p></div>'+
     '<ul class="mt-g">'+L.map(function(t){
-      var m = MAIN_TOOL_IC[t.key] || { ic:"gauge", c:"bl" };
-      return '<li class="hv-'+m.c+'"><a href="/tools/'+esc(t.key)+'">'+
-        '<span class="ic-t">'+icon(m.ic,26)+'</span>'+
+      var tone = MAIN_TOOL_TONE[t.grp] || "bl";
+      return '<li class="hv-'+tone+'"><a href="/tools/'+esc(t.key)+'">'+
+        '<span class="ic-t">'+icon(t.icon,26)+'</span>'+
         '<b>'+esc(t.name)+'</b><i>'+esc(t.lead)+'</i></a></li>'; }).join("")+'</ul>'+
   '</div></section>';
 }

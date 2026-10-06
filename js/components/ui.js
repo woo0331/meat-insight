@@ -378,8 +378,16 @@ window.FitCard = function(c, industryKey){
          됩니다 (실제로 그렇게 짰다가 고쳤습니다). */
       '<b><span class="fit-nm">'+esc(c.name)+'</span>'+
         (all.length ? '<em class="fit-n">'+all.length+'</em>' : '')+'</b>'+
+      /* ⚠️⚠️ **빈 카드로 두지 마세요.** `시설 · 장비` 는 하위가
+         **업종에서 오는 분류**(`byIndustry`)라, 업종을 안 고르시면
+         셀 것이 0 입니다 — 열셋 중 한 장만 이름만 덩그러니 남아
+         "이 분야는 준비가 덜 됐나" 로 읽혔습니다 (찍어 보고 알았습니다).
+         그 자리에 `lead`("업종마다 다릅니다")를 냅니다 — 데이터에
+         **처음부터 적혀 있던 칸**이고, 업종을 고르시면 그 업종의
+         장비 이름으로 바뀝니다 (§9). 지어낸 숫자를 채우지 않습니다. */
       (some.length ? '<i>'+esc(some.join(" · "))+
-        (all.length > some.length ? ' 외 '+(all.length-some.length) : '')+'</i>' : '')+
+        (all.length > some.length ? ' 외 '+(all.length-some.length) : '')+'</i>'
+        : (c.lead ? '<i>'+esc(c.lead)+'</i>' : ''))+
     '</span>'+
   '</a>';
 };

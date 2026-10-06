@@ -2808,6 +2808,46 @@ const AUDIT = `(() => {
     if(txt.indexOf("2") < 0) return "숨긴 건수가 센 값이 아닙니다 — " + txt;
     return true;`);
 
+  /* ⚠️⚠️ **아이콘을 두 곳에 적지 마세요.** 도구마다 아이콘이
+     `tools.js` 에 이미 적혀 있는데 메인이 key → 아이콘 표를 **따로**
+     들고 있었습니다. 도구가 여섯에서 열셋이 되자 표에 없는 일곱이
+     전부 기본 아이콘 하나로 나왔고, 폰에서는 같은 그림이 일곱 번
+     이어졌습니다 — 에러도 안 나고 검사도 통과했습니다 (랜딩 미니카드
+     아이콘과 같은 사고). 화면이 그린 것을 데이터와 맞춰 봅니다. */
+  await f("도구 카드 아이콘이 도구 데이터 것과 같고 저마다 다르다", "/", `
+    const want = (window.AM_TOOLS||[]).map(function(t){ return t.icon; });
+    if(want.length < 2) return "도구가 없습니다";
+    if(want.some(function(x){ return !x; })) return "아이콘이 빈 도구가 있습니다";
+    const dup = want.filter(function(x, i){ return want.indexOf(x) !== i; });
+    if(dup.length) return "도구 둘이 같은 아이콘을 씁니다 — " + dup.join(",");
+    const cards = Array.from(document.querySelectorAll(".mt-g > li"));
+    if(cards.length !== want.length)
+      return "메인 도구 카드가 " + cards.length + "장인데 도구는 " + want.length + "개입니다";
+    /* 그려진 그림이 서로 다른가 — path 의 d 로 봅니다 */
+    const ds = cards.map(function(li){
+      return Array.from(li.querySelectorAll(".ic-t svg *"))
+        .map(function(e){ return e.getAttribute("d") || e.tagName + (e.getAttribute("cx")||""); })
+        .join("|");
+    });
+    const dd = ds.filter(function(x, i){ return ds.indexOf(x) !== i; });
+    if(dd.length) return "메인 도구 카드 " + dd.length + "장이 같은 그림입니다";
+    return true;`);
+
+  /* ⚠️⚠️ **빈 카드를 두지 마세요** (절대 규칙 2). 하위가 업종에서
+     오는 분류(`시설 · 장비`)는 업종을 안 고르면 셀 것이 0 이라,
+     열셋 중 한 장만 이름만 덩그러니 남았습니다 — "이 분야는 준비가
+     덜 됐나" 로 읽힙니다. 숫자를 지어내지 않고 `lead` 를 냅니다. */
+  await f("분야 카드가 설명도 숫자도 없이 비지 않는다", "/", `
+    const cards = Array.from(document.querySelectorAll(".fit-g .fit"));
+    if(cards.length < 5) return "분야 카드가 " + cards.length + "장뿐입니다";
+    const bare = cards.filter(function(a){
+      const n = a.querySelector(".fit-n");
+      const i = a.querySelector("i");
+      return !n && !(i && i.textContent.trim());
+    }).map(function(a){ return (a.querySelector(".fit-nm")||{}).textContent; });
+    if(bare.length) return "이름만 있는 카드가 있습니다 — " + bare.join(",");
+    return true;`);
+
   /* ⚠️⚠️ **브랜드 이름 뒤의 조사를 손으로 적으면 안 됩니다.**
      "ABOUTMEAT은 통신판매중개자이며" 로 박아 두었다가 이름이 "인수인계"
      가 되자 **"인수인계은"** 이 됐습니다 — 하필 전자상거래법 제20조

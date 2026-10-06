@@ -2375,16 +2375,30 @@ const AUDIT = `(() => {
        손님은 **사이트 전체를 미완성**으로 읽습니다. 기다리는 동안
        실제로 도움이 되는 글을 같이 냅니다.
        ⚠️ 업체가 등록되면 이 칸은 사라집니다 — 그때는 건너뜁니다. */
-    const em = document.querySelector("#view .empty");
-    if(!em) return true;
-    const rl = em.querySelector(".empty-rl a");
+    /* ⚠️⚠️ **2026-10-06 2차 §8 로 생김새가 바뀌었습니다.** 업체가 0곳인
+       자리는 Empty 가 아니라 EmptyGuide(.emg)를 씁니다 — "없습니다" 를
+       주인공에서 내린 짜임새입니다.
+       ⚠️ 그때 이 검사가 .empty 만 찾고 **없으면 그냥 통과**하고
+       있었습니다. 되돌려 보니 안 잡혀서 알았습니다 — 이 저장소에서
+       "통과만 하고 아무것도 안 잡는 검사" 를 네 번째로 만들 뻔했습니다. */
+    const em = document.querySelector("#view .emg") ||
+               document.querySelector("#view .empty");
+    if(!em) return true;              /* 업체가 등록되면 이 칸이 사라집니다 */
+    const guide = em.classList.contains("emg");
+    const rl = em.querySelector(guide ? ".emg-l a" : ".empty-rl a");
     if(!rl) return "빈 칸에 읽을 것이 하나도 없습니다";
     const h = rl.getAttribute("href") || "";
     if(h.indexOf("/content/") !== 0) return "빈 칸의 글 링크 주소가 이상합니다 — " + h;
     if(rl.getBoundingClientRect().height < 40) return "빈 칸의 글 링크가 40px 미만입니다";
-    /* ⚠️ 0 을 숨기지 않습니다 — 여전히 0 이라고 말해야 합니다 */
-    if((em.textContent||"").indexOf("아직 없습니다") < 0)
+    /* ⚠️⚠️ **0 을 숨기지 않습니다.** 주인공에서 내렸을 뿐, 몇 곳인지는
+       그대로 말해야 합니다 — 숨기는 순간 없는 회사를 광고하는 쪽으로
+       한 걸음 가는 것입니다 (절대 규칙 1). */
+    const t = em.textContent || "";
+    if(guide){
+      if(!/[0-9]+곳/.test(t)) return "몇 곳인지 말하는 줄이 사라졌습니다";
+    } else if(t.indexOf("아직 없습니다") < 0){
       return "0 이라고 말하는 줄이 사라졌습니다";
+    }
     return true;`);
 
   await f("단계 카드 여섯의 아이콘이 저마다 다르다", "/", `

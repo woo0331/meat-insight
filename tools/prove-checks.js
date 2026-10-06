@@ -358,9 +358,25 @@ const CASES = [
    /* ⚠️ 바탕만 같게 하면 안 잡힙니다 — **테두리가 있으면 카드로
       읽힌다**고 봐 주기 때문입니다. 그림자로만 보이는 상태를
       만들려면 테두리도 같이 없애야 합니다. */
+   /* ⚠️⚠️ 전에는 **구간(section)의 배경**을 칠했습니다. 2026-10-06 에
+      paintTones() 가 겹치는 톤을 밀면서 그 구간의 톤 클래스가 빠졌고,
+      구간 배경이 **투명**이 되자 카드까지 투명으로 칠해 아무것도
+      안 잡게 됐습니다 — 검사가 아니라 **되돌리기가 틀린** 열한 번째
+      자리입니다. 검사가 보는 것과 똑같이 "실제로 뒤에 보이는 면" 을
+      찾아서 칠합니다. */
    `const a = document.querySelectorAll(".mi-g a")[0];
+    const back = (function(el){
+      let e = el.parentElement;
+      while(e){
+        const c = getComputedStyle(e).backgroundColor;
+        if(c && c !== "rgba(0, 0, 0, 0)" && c !== "transparent") return c;
+        e = e.parentElement;
+      }
+      return getComputedStyle(document.body).backgroundColor;
+    })(a);
     a.style.border = "none";
-    a.style.background = getComputedStyle(a.closest("section")).backgroundColor;`],
+    a.style.boxShadow = "none";
+    a.style.background = back;`],
 
   /* ══ 거르개 (2026-10-05 V2 §7 · §11) ════════════════════════════ */
   /* "확인" 을 두 뜻으로 쓰던 그때 — 사진만 올린 업체가 "확인된 곳만"

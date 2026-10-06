@@ -763,7 +763,12 @@ function MainJourney(){
   /* ⚠️ `id` 는 히어로의 "내 상황에 맞게 시작하기" 가 내려오는 자리입니다 —
      지우면 그 단추가 아무 데도 안 갑니다 (가짜 링크는 절대 규칙 5). */
   var j = nowQS("j");
-  return '<section class="sec mjy" id="journey"><div class="w">'+
+  /* ⚠️⚠️ **톤 클래스를 반드시 답니다.** 전에는 `.mjy` 가 CSS 로만
+     회색이고 클래스로는 아무 말도 안 해서, `paintTones()` 가 이 구간을
+     "warm" 으로 읽고 **바로 아래 회색 구간과 겹치는 것을 못 밀었습니다**
+     (ΔE 0.00 — 전수 점검이 잡았습니다). 클래스가 실제 색과 달라지면
+     그 뒤 구간 전부의 리듬이 어긋납니다. */
+  return '<section class="sec sec-gray mjy" id="journey"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">WHERE ARE YOU NOW</p>'+
       '<h2>지금 어떤 상황이신가요?</h2>'+

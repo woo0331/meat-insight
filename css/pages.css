@@ -2050,7 +2050,8 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 /* ── 여정 넷 (§2) ───────────────────────────────────────────────
    ⚠️ 넷이 **같은 무게**여야 합니다. 창업만 크게 하면 운영 중이신
    사장님에게 "여긴 내 자리가 아니네" 가 됩니다. */
-.mjy{ background:var(--bg-gray); }
+/* ⚠️ 바탕은 `sec-gray` 클래스가 칠합니다 — 여기서 또 칠하면
+   `paintTones()` 가 못 보는 색이 생깁니다 (ΔE 0.00 을 겪은 자리). */
 .jy-g{ display:grid; grid-template-columns:repeat(4, 1fr); gap:var(--s4); }
 .jy-g > li{ min-width:0; }
 .jy{ position:relative; display:flex; flex-direction:column; gap:var(--s2);

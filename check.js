@@ -2253,7 +2253,22 @@ const AUDIT = `(() => {
       if(nm.trim() !== j.name) return i + "번째 카드가 '" + nm.trim() + "' 입니다 (" + j.name + ")";
       const q = (a.querySelector(".jy-q")||{}).textContent || "";
       if(q.trim() !== j.q) return j.name + " 의 질문이 데이터와 다릅니다";
-      if(a.getAttribute("href") !== j.to) return j.name + " 이 " + a.getAttribute("href") + " 로 갑니다";
+      /* ⚠️⚠️ **메인은 고르개입니다** (2026-10-06 2차 §3 · §4) — 카드를
+         눌러도 화면을 떠나지 않고 물음표 j 만 주소에 실립니다. 그래야
+         §4 가 말하는 "선택 후 바로 업종을 묻는다" 를 할 자리가 생깁니다.
+         검사를 느슨하게 한 것이 아닙니다 — **고르개면 고르개 꼴을,
+         링크면 링크 꼴을** 각각 정확히 봅니다. 여정 화면에서 실제
+         주소로 가는지는 바로 아래 검사가 따로 봅니다.
+         ⚠️⚠️ 이 주석에 백틱을 썼다가 문자열이 거기서 끝났습니다 —
+         이 저장소에서 **열두 번째** 같은 사고입니다. 주석에 백틱을
+         아예 쓰지 마세요. */
+      const href = a.getAttribute("href");
+      if(a.hasAttribute("data-keep")){
+        if(href !== "/?j=" + encodeURIComponent(j.key))
+          return j.name + " 고르개가 " + href + " 입니다";
+      } else if(href !== j.to){
+        return j.name + " 이 " + href + " 로 갑니다";
+      }
       if(a.querySelector("a")) return j.name + " 카드 안에 또 링크가 있습니다";
       const r = a.getBoundingClientRect();
       if(r.height < 40) return j.name + " 카드가 " + Math.round(r.height) + "px 입니다";
@@ -2262,6 +2277,24 @@ const AUDIT = `(() => {
       const d = sv.innerHTML.trim();
       if(seen.indexOf(d) >= 0) return j.name + " 이 같은 아이콘을 또 씁니다";
       seen.push(d);
+    }
+    return true;`);
+
+  /* ⚠️ 메인이 고르개가 되면서 **여정 화면에서** 링크 꼴을 봅니다.
+     거기서는 JourneyPick 이 data-keep 없이 진짜 링크를 냅니다 —
+     이 검사가 없으면 "눌러도 아무 데도 안 가는 카드" 를 아무도 못
+     잡습니다. */
+  await f("여정 카드가 실제로 그 여정 화면으로 간다", "/startup", `
+    const J = window.AM_JOURNEYS || [];
+    const cards = [].slice.call(document.querySelectorAll(".jy-g > li > a"));
+    if(cards.length !== J.length)
+      return "카드가 " + cards.length + "장입니다 (" + J.length + ")";
+    for(let i = 0; i < J.length; i++){
+      const a = cards[i], j = J[i];
+      if(a.hasAttribute("data-keep"))
+        return j.name + " 이 여정 화면에서도 고르개입니다 (링크라야 합니다)";
+      if(a.getAttribute("href") !== j.to)
+        return j.name + " 이 " + a.getAttribute("href") + " 로 갑니다";
     }
     return true;`);
 

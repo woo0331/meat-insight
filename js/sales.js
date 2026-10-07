@@ -1057,6 +1057,7 @@ function slJoinBox(){
        업체가 /join 에서 보낸 신청은 접수처(슬랙 · 메일)로 바로 가고, 이
        화면은 그걸 받아 볼 서버가 없습니다. 종 모양만 띄워 두면 직원이
        **오지 않을 알림을 기다립니다** — 어디로 오는지를 그대로 적습니다. */
+    slIntakeWarn("stage") +
     '<p class="sl-note-s">' + icon("alert", 16) +
       '업체가 보낸 입점신청은 <b>슬랙 · 메일(접수처)로 갑니다.</b> ' +
       '이 화면에 저절로 뜨지 않습니다 — 받아 보시면 여기서 자료를 눌러 ' +
@@ -1066,6 +1067,30 @@ function slJoinBox(){
 }
 
 function slJoinLink(){ return "storeway.co.kr/join"; }
+
+/* ⚠️⚠️ **이 작업대의 끝은 `/join` 입니다.** 거기가 접수를 못 받는 상태면,
+   직원이 전화로 설득해서 링크를 보내 드린 업체가 **다 적고 눌렀다가
+   실패**합니다 — 어렵게 만든 첫인상을 그 자리에서 잃습니다.
+   접수처(환경변수)가 비면 `WOW_BIZ.sosReady` 를 내리게 되어 있고,
+   그러면 여기가 저절로 켜집니다. **손으로 적는 상태가 아닙니다** —
+   접수처를 켜시면 이 경고가 저절로 사라집니다. */
+function slIntakeOff(){
+  return !(window.WOW_BIZ && WOW_BIZ.sosReady);
+}
+
+function slIntakeWarn(where){
+  if(!slIntakeOff()) return "";
+  return '<div class="sl-bad sl-bad-intake">' + icon("alert", 18) +
+    '<span><b>지금 입점신청을 받지 못합니다.</b> ' +
+    esc(slJoinLink()) + ' 가 <b>접수 잠김</b> 상태라, 링크를 보내 드려도 ' +
+    '업체가 다 적고 누르면 실패합니다. ' +
+    (where === "send"
+      ? '<b>먼저 접수처를 켜신 뒤에 보내세요</b> — 전화로 관심을 받아 두시고 ' +
+        '발송은 미루셔도 됩니다 (상태는 그대로 관심으로 남습니다).'
+      : '관리자 설정 1번 칸을 보시고, Vercel 환경변수에 ' +
+        'INTAKE_WEBHOOK_URL 을 넣고 다시 배포하세요.') +
+    '</span></div>';
+}
 
 function slJoinCard(c){
   var pct = slDocPct(c);
@@ -1401,6 +1426,7 @@ function slModal(){
   if(m.k === "warm"){
     var w = slInvite(c);
     return slModalWrap("입점 안내 보내기", c.name,
+      slIntakeWarn("send") +
       '<p class="sl-note-s">' + icon("alert", 16) +
         '<b>문자 · 카톡으로 보내시려면 통화에서 "문자로 주소 보내 드려도 ' +
         '될까요?" 를 먼저 물으셔야 합니다</b> — 정보통신망법 제50조의 ' +
@@ -1534,7 +1560,8 @@ window.slDraw = slDraw;
 /* 맨 위 줄 — 담당자와 **어디 저장되는지** (절대 규칙 5) */
 function slHead(){
   var rc = slRecallList().length;
-  return (SL_OK ? '' :
+  return slIntakeWarn("top") +
+  (SL_OK ? '' :
     '<div class="sl-bad">' + icon("alert", 18) +
       '<b>이 브라우저에 저장할 수 없습니다.</b> 비공개 모드이거나 브라우저가 ' +
       '저장을 막고 있습니다 — 지금 적으시는 것은 <b>새로고침하면 사라집니다.</b> ' +

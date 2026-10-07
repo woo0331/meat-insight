@@ -639,3 +639,8 @@ body.sl-locked{ overflow:hidden; }
    그 네비가 없고 대신 고정 단추(52px)가 있어서, 좁은 화면에서 알림이 그
    단추와 겹쳐 읽힙니다 — 여기서만 올립니다. */
 @media (max-width:760px){ .ad-body .toast{ bottom:72px; } }
+
+/* 접수가 잠겨 있을 때 — 이 작업대의 끝(`/join`)이 막혔다는 뜻이라
+   제일 먼저 읽혀야 합니다. 접수처를 켜면 저절로 사라집니다. */
+.sl-bad-intake{ margin-bottom:var(--s4); }
+.sl-bad-intake > span{ min-width:0; }

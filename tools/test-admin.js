@@ -250,6 +250,44 @@ function ok(name, cond, extra) {
     await ctx.close();
   }
 
+  /* ── 작업대의 끝(/join)이 막혔으면 **말해야** 합니다 ── */
+  console.log("\n접수가 잠겨 있으면 안내 보내기 전에 알린다");
+  {
+    const { ctx, pg, errs } = await fresh();
+    const on = async v => { await pg.evaluate(x => { WOW_BIZ.sosReady = x; slDraw(); }, v);
+      await pg.waitForTimeout(90); };
+
+    await on(false);
+    ok("맨 위에 경고가 뜬다", await pg.locator(".sl-bad-intake").count() >= 1);
+    ok("무엇이 막혔는지 적는다",
+      (await pg.locator(".sl-bad-intake").first().innerText()).includes("storeway.co.kr/join"));
+
+    await add(pg, "접수잠김확인", "031-707-7070", "interior", "gyeonggi");
+    await rowOf(pg, "접수잠김확인").locator("button:has-text('결과')").click();
+    await pg.waitForTimeout(70);
+    await pg.click(".sl-res-warm");
+    await pg.waitForTimeout(90);
+    const mod = await pg.locator(".sl-mod .sl-bad-intake").count();
+    ok("안내 보내기 판에도 뜬다", mod === 1);
+    ok("보내지 말고 미루라고 한다",
+      (await pg.locator(".sl-mod .sl-bad-intake").innerText()).includes("발송은 미루셔도"));
+    ok("그래도 관심 상태는 남는다",
+      await pg.evaluate(() => slDb().co[0].st) === "warm");
+    await pg.keyboard.press("Escape");
+    await pg.waitForTimeout(80);
+
+    /* 접수처를 켜면 **저절로** 사라져야 합니다 (손으로 적는 상태가 아닙니다) */
+    await on(true);
+    ok("접수를 켜면 경고가 저절로 사라진다", await pg.locator(".sl-bad-intake").count() === 0);
+    await pg.evaluate(() => { SL.modal = { k:"warm", id:slDb().co[0].id }; slDraw(); });
+    await pg.waitForTimeout(90);
+    ok("안내 판에서도 사라진다", await pg.locator(".sl-mod .sl-bad-intake").count() === 0);
+    ok("문구와 링크는 그대로 나온다",
+      (await pg.locator("#ad-t-sl-join").inputValue()) === "https://storeway.co.kr/join");
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
   /* ── 적은 글이 그대로 찍히지 않는가 (절대 규칙 4) ── */
   console.log("\n적은 글은 esc() 를 지난다");
   {

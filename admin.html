@@ -6,11 +6,14 @@
 <meta name="color-scheme" content="only light">
 <!-- ⚠️ 손님 화면이 아닙니다. 검색에 절대 올라가면 안 됩니다. -->
 <meta name="robots" content="noindex,nofollow,noarchive">
-<title>관리자 작업대 — <!--brand-->인수인계<!--/brand--></title>
+<title>영업관리 — <!--brand-->인수인계<!--/brand--></title>
 <link rel="icon" href="/icon-512.png">
 <!--
   ════════════════════════════════════════════════════════════════
-  관리자 작업대 (지시서 35번)
+  영업 · 입점 작업대 (2026-10-07 "원페이지 영업·입점 어드민" 지시서)
+
+  한 화면에서 **업체 찾기 → 등록 → 전화 → 결과 → 안내 → 재연락 →
+  입점**까지 끝냅니다. 직원에게 설명할 것이 그 한 줄뿐이어야 합니다.
 
   ⚠️ **이 파일은 middleware.js 가 서버에서 막습니다.** Vercel 환경변수
   ADMIN_PASSWORD 가 없으면 아예 열리지 않습니다(503). 비밀번호를 여기
@@ -22,7 +25,12 @@
 
   ⚠️ **build-pages.js 가 이 파일을 건드리지 않습니다.** 스윕은 주소
   폴더 안의 index.html 만 지웁니다. 여기에 손으로 적은 것이 사라질까
-  걱정하지 않으셔도 됩니다.
+  걱정하지 않으셔도 됩니다. (자산 주소의 ?v= 와 브랜드 이름 두 칸만
+  빌드가 갈아 끼웁니다.)
+
+  ⚠️⚠️ **접수 정리 · 환경변수 · 매물 등록 줄은 지우지 않았습니다** —
+  맨 아래 "관리자 설정" 안으로 접었습니다 (지시서 §29 · §41). 직원의
+  업무화면에서 안 보이게만 했고 기능은 그대로입니다.
   ════════════════════════════════════════════════════════════════
 -->
 <link rel="stylesheet" href="/css/tokens.css?v=c442724f">
@@ -35,34 +43,50 @@
 <header class="ad-hd">
   <div class="w ad-hd-in">
     <a class="lg" href="/" aria-label="홈">
-      <b><!--brand-->인수인계<!--/brand--></b><span>관리자 작업대</span></a>
-    <span class="ad-tag">저장하지 않습니다 · 브라우저 안에서만 돕니다</span>
+      <b><!--brand-->인수인계<!--/brand--></b><span>영업관리</span></a>
+    <span class="ad-tag">기록은 이 브라우저 안에만 남습니다 · 맨 아래에서 백업</span>
   </div>
 </header>
 
 <main class="w ad-main">
-  <h1 class="ad-h1">들어온 접수를 정리해서 내보내는 자리</h1>
-  <p class="ad-sub">지금은 <b>접수를 저장하는 곳이 없습니다.</b> 그래서 여기에
-    접수 목록은 없습니다 — 있는 척하면 그게 지어낸 화면입니다. 슬랙이나 메일로
-    받으신 것을 붙여 넣으시면, 보낼 글 세 가지를 만들어 드립니다.</p>
+  <h1 class="ad-h1">업체를 찾아 등록하고, 전화하고, 입점시키는 자리</h1>
 
-  <div id="ad"></div>
+  <!-- 영업 작업대 — js/sales.js 가 그립니다 -->
+  <div id="sl"></div>
 
-  <section class="ad-s ad-no">
-    <h2>이 화면이 하지 않는 것</h2>
-    <ul>
-      <li><b>접수를 저장하지 않습니다.</b> 서버도 DB 도 없습니다. 새로고침하면
-        붙여 넣으신 것이 사라집니다.</li>
-      <li><b>자동으로 분류하지 않습니다.</b> 낱말이 겹치는 분류를 먼저 보여 줄
-        뿐이고, 고르는 것은 사람입니다.</li>
-      <li><b>업체에 자동으로 보내지 않습니다.</b> 만들어진 글을 복사해서
-        사람이 보냅니다.</li>
-      <li><b>손님 성함 · 연락처를 업체 글에 넣지 않습니다.</b> 업체가 정해진
-        뒤에 상호를 알리고 다시 동의를 받아야 넘길 수 있습니다
-        (개인정보보호법 제17조).</li>
-    </ul>
-  </section>
+  <!-- ⚠️ 직원 업무화면에서 접어 둔 것 (§29). 기능은 그대로입니다. -->
+  <details class="ad-fold">
+    <summary><b>관리자 설정</b><span>접수 정리 · 환경변수 · 매물 등록 줄 · 영업 시작 전 점검</span></summary>
+
+    <p class="ad-sub">여기는 <b>대표가 보는 자리</b>입니다. 들어온 접수를 정리해
+      보낼 글을 만들고, 접수처 설정이 살아 있는지 봅니다. 지금은
+      <b>접수를 저장하는 곳이 없습니다</b> — 그래서 접수 목록은 없습니다.
+      있는 척하면 그게 지어낸 화면입니다.</p>
+
+    <div id="ad"></div>
+
+    <section class="ad-s ad-no">
+      <h2>이 화면이 하지 않는 것</h2>
+      <ul>
+        <li><b>손님 접수를 저장하지 않습니다.</b> 서버도 DB 도 없습니다. 새로고침하면
+          붙여 넣으신 것이 사라집니다. (영업 업체 목록은 다릅니다 — 그쪽은
+          <b>이 브라우저 안에</b> 남습니다.)</li>
+        <li><b>자동으로 분류하지 않습니다.</b> 낱말이 겹치는 분류를 먼저 보여 줄
+          뿐이고, 고르는 것은 사람입니다.</li>
+        <li><b>업체에 자동으로 보내지 않습니다.</b> 만들어진 글을 복사해서
+          사람이 보냅니다. 대량 발송 기능은 만들지 않았습니다.</li>
+        <li><b>손님 성함 · 연락처를 업체 글에 넣지 않습니다.</b> 업체가 정해진
+          뒤에 상호를 알리고 다시 동의를 받아야 넘길 수 있습니다
+          (개인정보보호법 제17조).</li>
+      </ul>
+    </section>
+  </details>
 </main>
+
+<!-- 떠 있는 판 (전화 · 안내 · 재연락) 이 들어가는 자리 -->
+<div id="sl-mod-root"></div>
+<!-- 모바일 아래 고정 단추 두 개 (§36) -->
+<div id="sl-sticky" class="sl-sticky"></div>
 
 <!-- 순서가 곧 의존 순서입니다 — 데이터 먼저, 도구 다음, 화면 마지막 -->
 <script src="/js/components/base.js?v=16b8381f"></script>
@@ -76,7 +100,15 @@
      providers.js 가 먼저여야 join.js 의 amProvidersInCat 이 셀 것이 있습니다. -->
 <script src="/js/data/providers.js?v=cba584c1"></script>
 <script src="/js/data/join.js?v=d47d8800"></script>
+<!-- ⚠️ "영업 시작 전에 남은 것" 칸이 지원사업 '찾는 곳' 링크를 셉니다 —
+     이 줄이 없으면 그 항목이 **조용히 통째로 빠집니다**. -->
+<script src="/js/data/support.js?v=18598c91"></script>
 <script src="/js/data/legal-privacy.js?v=4ed484d3"></script>
+<!-- ⚠️ 영업 카테고리는 catalog.js 의 분류를 묶어 보는 틀이라 **그 뒤**입니다 -->
+<script src="/js/data/sales.js?v=be579bae"></script>
+<!-- ⚠️ sales.js(화면)가 admin.js 의 초대 글 함수(adInvite · adInviteSms ·
+     adInviteCall · adCopy)를 그대로 씁니다 — 글을 두 벌로 만들지 않습니다. -->
 <script src="/js/admin.js?v=f84c8563"></script>
+<script src="/js/sales.js?v=92305a9f"></script>
 </body>
 </html>

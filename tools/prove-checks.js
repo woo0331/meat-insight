@@ -67,6 +67,25 @@ const CASES = [
       S[0].style.background = c;
     })();`],
 
+  /* ══ 매물 내놓기 (/sell) ═══════════════════════════════════════ */
+  /* 업종 · 지역을 안 막던 때로 돌려놓습니다 — 딱지에 별표만 붙여 두고
+     안 막으면 빈 채로 들어오고, 그 매물은 거르개에서 빠집니다.
+     ⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — 보내는 함수를 감쌉니다
+     (검사가 window.sellSend 를 그때 찾아 부르기 때문에 먹습니다). */
+  ["매물 내놓기: 업종 · 지역 없이는 안 보낸다",
+   `(function(){
+      const real = window.sellSend;
+      window.sellSend = function(ev){
+        document.getElementById("sl-ind").value = "cafe";
+        document.getElementById("sl-reg").value = "gyeonggi";
+        return real(ev);
+      };
+    })();`],
+  /* 무권리(0)가 빈 칸으로 떨어지던 꼴을 만들어 봅니다 — 적는 칸의
+     id 를 바꿔 놓으면 값을 못 읽어 그 칸이 통째로 빠집니다. */
+  ["매물 내놓기: 적은 조건이 매물 생김새로 나간다",
+   `document.getElementById("sl-pm").id = "sl-pm-deleted";`],
+
   /* ══ 도구 열셋 (2026-10-05 V2 §16) ══════════════════════════════ */
   /* 묶음을 떼면 걸려야 합니다 — 떼면 목록에서 조용히 빠집니다 */
   ["도구 열셋이 저마다 묶음과 갈 곳을 가진다",

@@ -1155,6 +1155,9 @@ const AUDIT = `(() => {
     document.getElementById("q-q").value    = "오래 적은 소중한 내용입니다";
     document.getElementById("q-name").value = "홍길동";
     document.getElementById("q-tel").value  = "010-1234-5678";
+    /* ⚠️ 지역은 **필수**입니다 — 안 고르면 보내기 전에 막혀서 이 검사가
+       아무것도 안 보게 됩니다 (틀린 것은 코드가 아니라 씨앗입니다). */
+    document.getElementById("q-reg").value  = "gyeonggi";
     document.getElementById("q-ag").checked = true;
     window.quoteSend({ preventDefault: function(){} });
     await new Promise(r => setTimeout(r, 200));
@@ -1357,6 +1360,51 @@ const AUDIT = `(() => {
     if(!body.detail || body.detail["업종"] !== "카페 · 디저트") return "업종이 안 실렸습니다";
     if(body.detail["평수"] !== "30") return "평수가 안 실렸습니다";
     return true;`);
+  /* ⚠️⚠️ **내놓는 길**입니다. 전에는 폼이 아예 없어서 "매장 내놓기" 가
+     목록 화면으로 갔습니다. 여기서 받는 칸이 market.js 의 생김새와
+     어긋나면, 받아 적을 때마다 사람이 맞춰 넣어야 합니다. */
+  await f("매물 내놓기: 업종 · 지역 없이는 안 보낸다", "/sell", `
+    let sent = false;
+    const o = window.fetch; window.fetch = function(){ sent = true; return o.apply(this, arguments); };
+    document.getElementById("sl-q").value    = "평촌 18평 카페입니다";
+    document.getElementById("sl-name").value = "홍길동";
+    document.getElementById("sl-tel").value  = "010-1234-5678";
+    document.getElementById("sl-ag").checked = true;
+    try{ window.sellSend({ preventDefault:function(){} }); }catch(e){}
+    await new Promise(r => setTimeout(r, 120));
+    window.fetch = o;
+    /* 지역 없는 매물은 거르개에서 빠지고 빌드가 멈춥니다 */
+    return sent ? "업종 · 지역 없이 보냈습니다" : true;`);
+
+  await f("매물 내놓기: 적은 조건이 매물 생김새로 나간다", "/sell", `
+    let body = null;
+    const o = window.fetch;
+    window.fetch = function(u, i){ try{ body = JSON.parse(i.body); }catch(e){}
+      return Promise.resolve({ ok:true, json:function(){ return Promise.resolve({}); } }); };
+    const set = function(id, v){ const e = document.getElementById(id);
+      if(e){ if(e.type === "checkbox") e.checked = !!v; else e.value = v; } };
+    set("sl-ind","cafe"); set("sl-reg","gyeonggi"); set("sl-gu","안양시");
+    set("sl-py","18"); set("sl-dep","3000"); set("sl-rent","180");
+    /* ⚠️ **0 은 값입니다** — "무권리" 는 0 을 적으신 것이지 안 적으신
+       것이 아닙니다. 빈 칸을 걸러낼 때 같이 떨어지면 안 됩니다. */
+    set("sl-pm","0"); set("sl-eq", true); set("sl-since","2019");
+    set("sl-q","평촌 18평 카페입니다"); set("sl-name","홍길동");
+    set("sl-tel","010-1234-5678"); set("sl-ag", true);
+    try{ window.sellSend({ preventDefault:function(){} }); }catch(e){}
+    await new Promise(r => setTimeout(r, 200));
+    window.fetch = o;
+    if(!body) return "보내지 않았습니다";
+    if(body.agree !== true) return "동의 표시가 안 실렸습니다";
+    const d = body.detail || {};
+    if(d["업종"] !== "카페 · 디저트") return "업종이 안 실렸습니다";
+    if(d["시군구"] !== "안양시")      return "시군구가 안 실렸습니다";
+    if(d["보증금"] !== "3000" || d["월세"] !== "180")
+      return "보증금 · 월세가 안 실렸습니다";
+    if(d["권리금"] !== "0") return "무권리(0)가 떨어졌습니다 — 0 은 값입니다";
+    if(!d["시설 포함"])     return "시설 포함이 안 실렸습니다";
+    if(d["시설 인수비"] !== undefined) return "안 적은 칸이 빈 값으로 나갑니다";
+    return true;`);
+
   await f("입점: 업체명이 없으면 안 보낸다", "/join", `
     let sent = false;
     const o = window.fetch; window.fetch = function(){ sent = true; return o.apply(this, arguments); };
@@ -1429,6 +1477,7 @@ const AUDIT = `(() => {
     document.getElementById("q-q").value    = "25평입니다";
     document.getElementById("q-name").value = "홍길동";
     document.getElementById("q-tel").value  = "010-1234-5678";
+    document.getElementById("q-reg").value  = "gyeonggi";   /* 필수 */
     document.getElementById("q-ag").checked = true;
     window.quoteSend({ preventDefault: function(){} });
     await new Promise(r => setTimeout(r, 350));

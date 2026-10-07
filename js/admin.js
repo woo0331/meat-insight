@@ -553,12 +553,29 @@ function adInit(){
           (window.AM_REGIONS||[]).map(function(r){ return [r.key, r.name]; }))+
       '</div>'+
       '<div id="ad-inv-out"></div>'+
+    '</section>'+
+
+    '<section class="ad-s">'+
+      '<h2>7. 매물 접수를 등록 줄로</h2>'+
+      '<p class="ad-lead">내놓기(<b>/sell</b>)로 들어온 접수를 그대로 붙여 '+
+        '넣으시면 <b>market.js 에 넣을 줄</b>을 만들어 드립니다. '+
+        '손으로 치면 업종 · 지역 key 와 장비 key(sub)에서 틀리는데, '+
+        '틀리면 <b>에러도 없이 그 매물만 안 뜨거나 빌드가 멈춥니다</b>. '+
+        '여기도 아무것도 저장하지 않습니다.</p>'+
+      '<textarea id="ad-mk-in" rows="10" spellcheck="false" '+
+        'placeholder="[견적] 홍길동 · 매장 내놓기&#10;성함      홍길동&#10;지역      경기&#10;&#10;── 요청 조건 ──&#10;  · 거래 방식 — 매장 양도&#10;  · 업종 — 카페 · 디저트&#10;…"></textarea>'+
+      '<div class="ad-acts">'+
+        '<button class="btn btn-b" type="button" onclick="adMkRead()">'+
+          icon("search",18)+'읽어 오기</button>'+
+      '</div>'+
+      '<div id="ad-mk-out"></div>'+
     '</section>';
 
   adHealth();
   adReady();
   adDraw();
   adInviteDraw();
+  adMkDraw();
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -766,3 +783,246 @@ function adSel(id, label, key, opts){
 }
 
 document.addEventListener("DOMContentLoaded", adInit);
+
+
+/* ════════════════════════════════════════════════════════════════════
+   7. 매물 접수를 **등록 줄**로 (2026-10-07)
+
+   `/sell` 로 들어온 접수를 사람이 `js/data/market.js` 에 옮겨 적어야
+   하는데, 그걸 손으로 치면 **조용히 깨지는 자리**가 둘 있습니다 —
+   자산의 `sub`(장비 key)와 `industry` · `region` key 입니다. 틀리면
+   에러도 안 나고 화면도 멀쩡한데 **그 매물만 안 뜨거나 빌드가
+   멈춥니다.** 여기서 골라 만들면 그 둘이 틀릴 수가 없습니다.
+
+   ⚠️⚠️ **아무것도 저장하지 않습니다.** 이 브라우저 안에서만 돌고
+   새로고침하면 사라집니다 (구간 3 과 같습니다).
+   ⚠️⚠️ **만든 줄에 성함 · 연락처를 넣지 않습니다.** 매물 하나가 곧
+   올리신 사장님의 개인정보가 됩니다 — 스키마에 그 칸이 없는 것이
+   맞고, 섞여 들어가면 아래 경고가 뜹니다.
+   ⚠️ **읽지 못한 칸은 비워 둡니다.** 지어내지 않습니다 (절대 규칙 1).
+   ════════════════════════════════════════════════════════════════════ */
+var AD_MK = { id:"", sub:"", raw:"", got:null };
+
+/* "  · 업종 — 카페 · 디저트" 꼴에서 값만 꺼냅니다.
+   ⚠️ 값에도 가운뎃점이 들어오므로 **첫 번째 긴 줄표**에서만 자릅니다. */
+function adMkVal(raw, label){
+  var lines = String(raw || "").split("\n");
+  for(var i = 0; i < lines.length; i++){
+    var ln = lines[i].replace(/^[\s·]+/, "").trim();
+    if(ln.indexOf(label) !== 0) continue;
+    var rest = ln.slice(label.length);
+    /* ⚠️ 줄 모양이 **둘**입니다 — 요청 조건은 "· 업종 — 카페",
+       머리쪽 칸은 "지역      경기" 처럼 공백으로만 떨어져 있습니다.
+       줄표만 보다가 지역을 통째로 못 읽었습니다.
+       ⚠️ 줄표가 있으면 **첫 줄표**에서 자릅니다 — "월 매출(사장님이
+       적으신 값)" 처럼 딱지 뒤에 괄호가 붙는 칸이 있어서, 공백부터
+       잘라 버리면 괄호가 값으로 딸려 옵니다. */
+    var cut = rest.indexOf("—");
+    var v;
+    if(cut >= 0) v = rest.slice(cut + 1).trim();
+    else if(/^[\s:]/.test(rest)) v = rest.replace(/^[\s:]+/, "").trim();
+    else continue;
+    if(v) return v;
+  }
+  return "";
+}
+/* 숫자만 (쉼표 · 단위를 떼고). ⚠️ **0 은 값입니다** — 못 찾은 것과
+   갈라야 해서 못 찾으면 null 입니다. */
+function adMkNum(raw, label){
+  var v = adMkVal(raw, label).replace(/[^0-9]/g, "");
+  return v === "" ? null : Number(v);
+}
+function adMkKeyOf(list, name, nameKey){
+  var hit = null;
+  (list || []).forEach(function(x){
+    if(!hit && x[nameKey || "name"] === name) hit = x.key;
+  });
+  return hit;
+}
+/* 설명 — "── 필요한 것 ──" 아래부터 다음 토막 전까지 */
+function adMkText(raw){
+  var lines = String(raw || "").split("\n");
+  var from = -1;
+  for(var i = 0; i < lines.length; i++)
+    if(lines[i].indexOf("필요한 것") >= 0 && lines[i].indexOf("──") >= 0){ from = i + 1; break; }
+  if(from < 0) return "";
+  var out = [];
+  for(var j = from; j < lines.length; j++){
+    if(lines[j].indexOf("──") >= 0) break;
+    out.push(lines[j]);
+  }
+  return out.join("\n").trim();
+}
+
+function adMkParse(raw){
+  var isAsset = raw.indexOf("시설 · 장비 내놓기") >= 0 ||
+                (!!adMkVal(raw, "품목") && !adMkVal(raw, "거래 방식"));
+  var indName = adMkVal(raw, "업종");
+  var regName = adMkVal(raw, "지역");
+  var g = {
+    asset: isAsset,
+    industry: adMkKeyOf(window.AM_INDUSTRIES, indName),
+    indName: indName,
+    region: adMkKeyOf(window.AM_REGIONS, regName),
+    regName: regName,
+    gu: adMkVal(raw, "시군구"),
+    text: adMkText(raw),
+    img: adMkVal(raw, "사진 주소"),
+    name: adMkVal(raw, "성함"),
+    tel: adMkVal(raw, "연락처")
+  };
+  if(isAsset){
+    g.item  = adMkVal(raw, "품목");
+    g.brand = adMkVal(raw, "제조사");
+    g.year  = adMkNum(raw, "연식");
+    g.count = adMkNum(raw, "수량");
+    g.price = adMkNum(raw, "희망가");
+    g.state = adMkVal(raw, "상태");
+    var dl = adMkVal(raw, "거래 단위");
+    g.deal = dl.indexOf("묶음") >= 0 ? "bulk" : dl.indexOf("전체") >= 0 ? "all" : "single";
+  }else{
+    g.kind    = adMkVal(raw, "거래 방식").indexOf("임대") >= 0 ? "lease" : "transfer";
+    g.pyeong  = adMkNum(raw, "평수");
+    g.deposit = adMkNum(raw, "보증금");
+    g.rent    = adMkNum(raw, "월세");
+    g.premium = adMkNum(raw, "권리금");
+    g.equipCost = adMkNum(raw, "시설 인수비");
+    g.since   = adMkNum(raw, "문 연 해");
+    g.wantAt  = adMkVal(raw, "넘기고 싶은 시점");
+    g.sales   = adMkNum(raw, "월 매출");
+    g.withEquip = !!adMkVal(raw, "시설 포함");
+  }
+  return g;
+}
+
+/* 오늘 날짜 — `at`(올린 날)입니다. 오래된 매물을 그대로 두면
+   허위매물과 같아져서 화면이 이 날짜를 냅니다. */
+function adMkToday(){
+  var d = new Date(), z = function(n){ return (n < 10 ? "0" : "") + n; };
+  return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate());
+}
+
+function adMkLine(g){
+  var q = function(v){ return '"' + String(v).split('"').join('\\"').split("\n").join("\\n") + '"'; };
+  var L = [];
+  var push = function(k, v){ if(v !== null && v !== undefined && v !== "") L.push("    " + k + ": " + v + ","); };
+  if(g.asset){
+    L.push("  {");
+    push("id", q(AD_MK.id || "여기에-주소가-될-id"));
+    push("cat", q("asset"));
+    push("sub", q(AD_MK.sub || "장비키를-골라-주세요"));
+    push("industry", q(g.industry || "업종키-없음"));
+    push("region", q(g.region || "지역키-없음"));
+    push("gu", g.gu ? q(g.gu) : null);
+    push("title", q(g.item || ""));
+    push("brand", g.brand ? q(g.brand) : null);
+    push("year", g.year);
+    push("count", g.count);
+    push("price", g.price);
+    push("nego", g.price === null ? "true" : "false");
+    push("deal", q(g.deal));
+    push("state", g.state ? q(g.state) : null);
+    push("text", q(g.text));
+    push("images", "[]");
+    push("at", q(adMkToday()));
+  }else{
+    var t = [g.gu, g.pyeong ? g.pyeong + "평" : "", g.indName,
+             g.kind === "lease" ? "임대" : "양도"].filter(Boolean).join(" ");
+    L.push("  {");
+    push("id", q(AD_MK.id || "여기에-주소가-될-id"));
+    push("kind", q(g.kind));
+    push("industry", q(g.industry || "업종키-없음"));
+    push("region", q(g.region || "지역키-없음"));
+    push("gu", g.gu ? q(g.gu) : null);
+    push("pyeong", g.pyeong);
+    push("deposit", g.deposit);
+    push("rent", g.rent);
+    push("premium", g.premium);
+    push("equipCost", g.equipCost);
+    push("sales", g.sales);
+    push("since", g.since);
+    push("wantAt", g.wantAt ? q(g.wantAt) : null);
+    push("withEquip", g.withEquip ? "true" : "false");
+    push("fc", "false");
+    push("title", q(t));
+    push("text", q(g.text));
+    push("images", "[]");
+    push("at", q(adMkToday()));
+  }
+  /* 마지막 쉼표를 뗍니다 */
+  if(L.length > 1) L[L.length - 1] = L[L.length - 1].replace(/,$/, "");
+  L.push("  }");
+  return (g.asset ? "/* js/data/market.js 의 AM_ASSETS 에 넣으세요 */\n"
+                  : "/* js/data/market.js 의 AM_STORES 에 넣으세요 */\n") +
+    L.join("\n");
+}
+
+/* ⚠️ **빌드를 멈추게 하는 것**을 먼저 말해 줍니다. 손으로 치면 여기서
+   틀리고, 틀리면 에러 없이 그 매물만 안 뜹니다. */
+function adMkWarn(g, line){
+  var w = [];
+  if(!AD_MK.id) w.push("id 를 적어 주세요 — 주소가 됩니다 (/s/… · /a/…)");
+  if(!g.industry) w.push("업종을 못 읽었습니다" + (g.indName ? " (" + g.indName + ")" : ""));
+  if(!g.region)   w.push("지역을 못 읽었습니다" + (g.regName ? " (" + g.regName + ")" : ""));
+  if(g.asset && !AD_MK.sub) w.push("장비 key(sub)를 골라 주세요 — 비거나 틀리면 빌드가 멈춥니다");
+  if(g.name && line.indexOf(g.name) >= 0) w.push("성함이 들어 있습니다 — 매물에 넣지 않습니다");
+  if(g.tel){
+    var d = g.tel.replace(/[^0-9]/g, "");
+    if(d.length >= 8 && line.replace(/[^0-9]/g, "").indexOf(d) >= 0)
+      w.push("연락처가 들어 있습니다 — 매물에 넣지 않습니다");
+  }
+  return w;
+}
+
+function adMkSubs(){
+  var g = AD_MK.got;
+  var out = [["", "장비 key 를 골라 주세요"]];
+  if(!g || !g.industry) return out;
+  (window.AM_INDUSTRIES || []).forEach(function(i){
+    if(i.key !== g.industry) return;
+    (i.equip || []).forEach(function(e){ out.push([e.key, e.name]); });
+  });
+  return out;
+}
+
+function adMkDraw(){
+  var box = $("ad-mk-out");
+  if(!box) return;
+  var g = AD_MK.got;
+  if(!g){ box.innerHTML = '<p class="ad-empty">접수를 붙여 넣고 ‘읽어 오기’ 를 누르세요.</p>'; return; }
+  var line = adMkLine(g);
+  var w = adMkWarn(g, line);
+  box.innerHTML =
+    '<div class="ad-g">'+
+      '<div class="ad-f"><label for="ad-mk-id">id <em>(주소가 됩니다)</em></label>'+
+        '<input id="ad-mk-id" type="text" autocomplete="off" value="'+esc(AD_MK.id)+'" '+
+          'placeholder="예: anyang-pyeongchon-cafe-18" '+
+          'oninput="adMkSet(\'id\', this.value)"></div>'+
+      (g.asset
+        ? '<div class="ad-f"><label for="ad-mk-sub">장비 key <em>(sub)</em></label>'+
+            '<select id="ad-mk-sub" onchange="adMkSet(\'sub\', this.value)">'+
+              adMkSubs().map(function(o){
+                return '<option value="'+esc(o[0])+'"'+(o[0]===AD_MK.sub?" selected":"")+'>'+
+                  esc(o[1])+'</option>'; }).join("")+
+            '</select></div>'
+        : '')+
+    '</div>'+
+    (w.length
+      ? '<p class="ad-vet">'+icon("alert",16)+esc(w.join(" · "))+'</p>' : '')+
+    adCard(g.asset ? "AM_ASSETS 에 넣을 줄" : "AM_STORES 에 넣을 줄", "mk", line)+
+    '<p class="ad-lead">넣고 <b>node build-pages.js</b> 하시면 '+
+      (g.asset ? '/a/' : '/s/')+'&lt;id&gt; 화면과 sitemap 이 같이 생깁니다. '+
+      '사진은 사장님이 주신 것만 <b>images</b> 에 넣으세요.</p>';
+}
+
+window.adMkSet = function(what, v){ AD_MK[what] = v; adMkDraw(); };
+window.adMkRead = function(){
+  var raw = ($("ad-mk-in") || {}).value || "";
+  if(!raw.trim()){ toast("매물 접수를 붙여 넣어 주세요."); return; }
+  AD_MK.raw = raw;
+  AD_MK.got = adMkParse(raw);
+  if(!AD_MK.id && AD_MK.got.industry)
+    AD_MK.id = AD_MK.got.industry + "-" + adMkToday().split("-").slice(0,2).join("") + "-1";
+  adMkDraw();
+  toast("읽었습니다. 못 읽은 칸은 비워 두었습니다 — 지어내지 않습니다.");
+};

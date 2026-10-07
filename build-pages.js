@@ -46,7 +46,11 @@ function loadApp(){
                    AM_PROVIDERS 에는 **안 들어갑니다** (§19) */
                 "js/data/sample.js","js/data/photos.js",
                 "js/data/legal-terms.js","js/data/legal-privacy.js",
-                "js/data/faq.js","js/data/tools.js","js/data/join.js"];
+                "js/data/faq.js","js/data/tools.js","js/data/join.js",
+                /* ⚠️ sales 는 catalog 의 분류 · 하위 key 를 **묶어 보는 틀**이라
+                   그 뒤입니다. 손님 화면은 안 읽습니다 — /admin 전용이지만
+                   분류 25 를 빠짐없이 나눠 가지는지 빌드가 봅니다 */
+                "js/data/sales.js"];
 
   /* ⚠️ 여기는 **glob 이 아니라 손으로 적은 목록**입니다. 새 데이터
      파일을 만들고 여기에 안 넣으면, 그 데이터를 쓰는 주소가 **에러
@@ -1350,6 +1354,53 @@ function checkColorSchemeCss(){
    ⚠️⚠️ 걸음에 적은 `cat` · `sub` · `read` · `tool` · `to` 가 하나라도
    없으면 **가짜 링크**입니다 (절대 규칙 5). 화면에서는 그냥 404 로
    열리고 에러도 안 나서, 손님이 눌러 봐야 압니다 — 여기서 멈춥니다. */
+/* ⚠️⚠️ 영업 카테고리 열넷이 **분류 스물다섯을 빠짐없이 한 번씩** 나눠
+   가지는지 (지시서 §6 — "중복 데이터를 만들지 않는다"). 빠지면 그 분류의
+   업체를 직원이 영업 카테고리로 **고를 수가 없고**, 겹치면 카테고리별
+   성과가 두 번 세어집니다. 둘 다 에러 없이 조용히 틀립니다.
+   ⚠️ 14 기타는 남은 것을 세는 값이라 여기서는 **셈에만** 들어갑니다. */
+function checkSales(W){
+  const G = W.AM_SALES_GROUPS || [];
+  if(!G.length) throw new Error("AM_SALES_GROUPS 가 비었습니다 — js/data/sales.js");
+
+  const cats = {};
+  (W.AM_CATS||[]).forEach(c => { cats[c.key] = c; });
+  const bad = [], cnt = {};
+
+  G.forEach(g => {
+    if(!g.key || !g.name || !g.no) bad.push("묶음에 key · name · no 가 있어야 합니다");
+    W.amSalesCats(g).forEach(k => {
+      cnt[k] = (cnt[k] || 0) + 1;
+      if(!cats[k]) bad.push(g.key + " — 없는 분류 " + k);
+    });
+    (g.subs||[]).forEach(p => {
+      const c = cats[p[0]];
+      if(!c) bad.push(g.key + " — 없는 분류 " + p[0]);
+      else if(!(c.items||[]).some(i => i.key === p[1]))
+        bad.push(g.key + " — " + p[0] + " 에 없는 하위 " + p[1]);
+    });
+  });
+
+  Object.keys(cats).forEach(k => {
+    if(!cnt[k]) bad.push("분류 " + k + " 가 어느 영업 카테고리에도 없습니다");
+    else if(cnt[k] > 1) bad.push("분류 " + k + " 가 " + cnt[k] + "곳에 들어 있습니다");
+  });
+
+  /* 상태 key 는 **직원 브라우저에 쌓인 기록**이 쓰는 값입니다 */
+  const need = ["new","recall","warm","sent","doc","review","done","no","bad"];
+  const has = new Set((W.AM_SALES_ST||[]).map(s => s.key));
+  need.forEach(k => { if(!has.has(k)) bad.push("AM_SALES_ST 에 " + k + " 가 없습니다"); });
+  (W.AM_SALES_RESULT||[]).forEach(r => {
+    if(!has.has(r.st)) bad.push("통화 결과 " + r.key + " 가 없는 상태 " + r.st + " 를 가리킵니다");
+  });
+
+  if(bad.length)
+    throw new Error("영업 카테고리(js/data/sales.js)가 분류와 어긋납니다:\n   · " +
+      bad.join("\n   · "));
+  console.log("   영업 카테고리 " + G.length + "개가 분류 " +
+    Object.keys(cats).length + "개를 빠짐없이 나눠 가집니다");
+}
+
 function checkProcess(W){
   const cats = {};
   (W.AM_CATS||[]).forEach(c => { cats[c.key] = c; });
@@ -1557,6 +1608,7 @@ checkColorSchemeCss();
 checkVercel();
 const W = loadApp();
 checkProcess(W);
+checkSales(W);
 checkProviders(W);
 checkMarketData(W);
 checkPhotos(W);

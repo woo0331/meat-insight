@@ -610,11 +610,17 @@ function adInviteN(catKey){
   return (c && window.amProvidersInCat) ? amProvidersInCat(c) : 0;
 }
 
-function adInvite(){
-  var c = AD.icat ? (window.amCat ? amCat(AD.icat) : null) : null;
+/* ⚠️⚠️ **분야 · 지역을 인자로 받습니다.** 6번 칸은 고르개(`AD.icat` ·
+   `AD.ireg`)에서 오고, 영업 작업대(`js/sales.js`)는 **업체 한 곳**의
+   카테고리 · 지역을 넘깁니다. 글을 두 벌로 만들면 한쪽만 고치게 되고,
+   그러면 화면에서 하는 말과 문자로 보내는 말이 달라집니다 (§30). */
+function adInvite(catKey, regKey){
+  var ic = (catKey === undefined ? AD.icat : catKey);
+  var ir = (regKey === undefined ? AD.ireg : regKey);
+  var c = ic ? (window.amCat ? amCat(ic) : null) : null;
   var catName = c ? c.name : "";
-  var reg = AD.ireg ? (window.amRegion ? (amRegion(AD.ireg) || {}).name : "") : "";
-  var n = AD.icat ? adInviteN(AD.icat) : (window.AM_PROVIDERS || []).length;
+  var reg = ir ? (window.amRegion ? (amRegion(ir) || {}).name : "") : "";
+  var n = ic ? adInviteN(ic) : (window.AM_PROVIDERS || []).length;
   var brand = (window.AM_BRAND || {}).name || "";
   var site = "https://storeway.co.kr/join";
   var B = window.WOW_BIZ || {};

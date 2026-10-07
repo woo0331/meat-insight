@@ -1132,7 +1132,7 @@ function MainTakeoverGuide(nAssets){
         : '인수 가능한 매장 정보를 준비하고 있습니다.')+'</p>'+
     '<p class="row-cta row-mid">'+
       '<a class="btn btn-nv" href="/transfer">인수 · 양도 알아보기'+icon("arrow",18)+'</a>'+
-      '<a class="btn btn-o" href="/stores">매장 내놓기</a></p>'+
+      '<a class="btn btn-o" href="/sell">매장 내놓기</a></p>'+
   '</div>';
 }
 

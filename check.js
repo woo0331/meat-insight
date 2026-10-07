@@ -100,6 +100,8 @@ const PAGES = [
   ["/support",           "자금 · 정부지원"],
   ["/content",           "창업 · 폐업 정보"],
   ["/quote",             "견적 요청"],
+  ["/sell",              "매물 내놓기 — 매장"],
+  ["/sell?t=asset",      "매물 내놓기 — 시설 · 장비"],
   ["/quote?c=interior&i=cafe&r=gyeonggi&side=start", "견적 요청 (조건 실려 옴)"],
   ["/join",              "업체 입점하기"],
   ["/my",                "MY"],

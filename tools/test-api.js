@@ -148,6 +148,54 @@ async function send(body){
     ok("Origin 없는 요청은 안 받는다", res.code === 403, "code=" + res.code);
   }
 
+  /* ⚠️⚠️ **매물 내놓기(/sell)는 칸이 많습니다.** 매장 항목이 열셋이라
+     `detailLines()` 의 상한(예전 12)에 **닿아 있었습니다** — 하나만
+     더해도 에러 없이 조용히 빠집니다. 열셋을 다 보내고 **마지막 칸까지**
+     본문에 있는지 봅니다. */
+  console.log("\n── 매물 내놓기 (매장)");
+  {
+    const { res, sent } = await send({
+      kind:"quote", service:"", serviceName:"매장 내놓기",
+      q:"평촌 18평 카페입니다. 주중 오후에 보실 수 있습니다.",
+      region:"경기", name:"홍길동", tel:"010-1234-5678",
+      detail:{ "거래 방식":"매장 양도", "업종":"카페 · 디저트", "시군구":"안양시",
+               "평수":"18", "보증금":"3000", "월세":"180", "권리금":"2000",
+               "시설 인수비":"1500", "시설 포함":"그대로 두고 갑니다",
+               "문 연 해":"2019", "넘기고 싶은 시점":"2026년 12월",
+               "월 매출(사장님이 적으신 값)":"1200",
+               "사진 주소":"https://example.com/a" },
+      agree:true });
+    ok("200 으로 받는다", res.code === 200, "code=" + res.code);
+    ok("무엇을 내놓는지가 제목에 간다", /\[견적\][\s\S]*매장 내놓기/.test(sent.text));
+    ok("거래 방식이 간다", /거래 방식 — 매장 양도/.test(sent.text), "본문에 없음");
+    ok("보증금 · 월세 · 권리금이 간다",
+       /보증금 — 3000/.test(sent.text) && /월세 — 180/.test(sent.text) &&
+       /권리금 — 2000/.test(sent.text), "본문에 없음");
+    /* ⚠️ 열셋째 칸 — 상한이 12 이던 때는 **여기서 조용히 빠졌습니다** */
+    ok("열셋째 칸(사진 주소)까지 간다",
+       /사진 주소 — https:\/\/example\.com\/a/.test(sent.text), "상한에 잘렸습니다");
+    ok("매출이 누구 값인지 같이 간다",
+       /월 매출\(사장님이 적으신 값\) — 1200/.test(sent.text), "본문에 없음");
+  }
+
+  console.log("\n── 매물 내놓기 (시설 · 장비)");
+  {
+    const { res, sent } = await send({
+      kind:"quote", service:"", serviceName:"시설 · 장비 내놓기",
+      q:"정기 점검 받아 왔습니다.", region:"경기",
+      name:"홍길동", tel:"010-1234-5678",
+      detail:{ "품목":"에스프레소 머신 2그룹", "거래 단위":"낱개",
+               "업종":"카페 · 디저트", "시군구":"안양시", "제조사":"La Marzocco",
+               "연식":"2021", "수량":"1", "희망가":"300",
+               "상태":"정기 점검 받아 왔습니다" },
+      agree:true });
+    ok("200 으로 받는다", res.code === 200, "code=" + res.code);
+    ok("품목이 간다", /품목 — 에스프레소 머신 2그룹/.test(sent.text), "본문에 없음");
+    ok("거래 단위가 간다", /거래 단위 — 낱개/.test(sent.text), "본문에 없음");
+    ok("제조사 · 연식이 간다",
+       /제조사 — La Marzocco/.test(sent.text) && /연식 — 2021/.test(sent.text), "본문에 없음");
+  }
+
   console.log("\n── 받을 곳이 없을 때");
   {
     for(const k of ["INTAKE_WEBHOOK_URL","ORDER_WEBHOOK_URL","SOS_WEBHOOK_URL",

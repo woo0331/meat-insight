@@ -124,19 +124,22 @@ window.IndustryGrid = function(baseTo, current){
 /* ── 지역 고르개 ─────────────────────────────────────────────────
    ⚠️ 지역은 매칭의 첫 번째 조건입니다. 인테리어 업체를 전국에서
    찾는 사람은 없습니다 (§44). */
-window.RegionSelect = function(id, val, onchange){
+/* ⚠️ `ph` 는 **폼에서 쓰는 첫 줄**입니다. 거르개에서는 "지역 전체" 가
+   맞지만 내놓기 · 견적 요청 같은 **적는 화면**에서는 "전체" 가 고른
+   것처럼 읽힙니다 — 기본값을 그대로 두어 거르개 화면은 안 바뀝니다. */
+window.RegionSelect = function(id, val, onchange, ph){
   return '<select class="sel" id="'+esc(id)+'"'+
     (onchange ? ' onchange="'+esc(onchange)+'"' : '')+
-    ' aria-label="지역"><option value="">지역 전체</option>'+
+    ' aria-label="지역"><option value="">'+esc(ph || "지역 전체")+'</option>'+
     (window.AM_REGIONS||[]).map(function(r){
       return '<option value="'+esc(r.key)+'"'+(r.key===val?" selected":"")+'>'+
         esc(r.name)+'</option>';
     }).join("")+'</select>';
 };
-window.IndustrySelect = function(id, val, onchange){
+window.IndustrySelect = function(id, val, onchange, ph){
   return '<select class="sel" id="'+esc(id)+'"'+
     (onchange ? ' onchange="'+esc(onchange)+'"' : '')+
-    ' aria-label="업종"><option value="">업종 전체</option>'+
+    ' aria-label="업종"><option value="">'+esc(ph || "업종 전체")+'</option>'+
     (window.AM_INDUSTRIES||[]).map(function(i){
       return '<option value="'+esc(i.key)+'"'+(i.key===val?" selected":"")+'>'+
         esc(i.name)+'</option>';

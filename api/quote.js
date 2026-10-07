@@ -38,7 +38,11 @@ const KINDS = { sos:1, quote:1, partner:1 };
    메일 제목·본문에 개행이 섞이면 헤더가 쪼개집니다. */
 function detailLines(d){
   if(!d || typeof d !== "object") return [];
-  return Object.keys(d).slice(0, 12).map(function(k){
+  /* ⚠️⚠️ **상한에 닿으면 뒤쪽 칸이 조용히 사라집니다.** 매물 내놓기
+     (/sell)의 매장 항목이 딱 열둘이라, 하나만 더해도 에러 없이
+     빠집니다 — 이 파일 머리말이 경고해 둔 "칸이 조용히 사라지는"
+     그 자리입니다. 스물로 둡니다 (메일 한 통이 길어질 뿐입니다). */
+  return Object.keys(d).slice(0, 20).map(function(k){
     const key = clean(k, 30), val = clean(d[k], 200);
     return (key && val) ? "  · " + key + " — " + val : null;
   }).filter(Boolean);

@@ -305,6 +305,18 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 /* 필수 표시(*) — 작고 굵어서 `--blue` 로는 대비 3.71 입니다 */
 .f-r label b{ color:var(--blue-600); }
 .f-2{ display:grid; grid-template-columns:1fr 1fr; gap:0 var(--s5); }
+/* 적는 칸 아래 한 줄 안내 — ⚠️ 흐린 색(--ink3)을 쓰지 마세요. 여기
+   들어가는 것이 "번지까지 적지 마세요" 처럼 **지키셔야 하는 말**이라,
+   읽히지 않으면 없는 것과 같습니다 (--ink2 는 밝은 바탕 아홉에서
+   최저 6.02). */
+.f-h{ display:block; margin-top:6px; font-size:var(--t-cap);
+  color:var(--ink2); line-height:1.6; font-weight:400; }
+/* 폼 안의 체크칸 — ⚠️ 누르는 자리는 **네모가 아니라 라벨**입니다.
+   20px 네모를 40px 로 키우는 것이 아니라 라벨이 48px 를 잡습니다
+   (전수 점검도 라벨을 잽니다). */
+.f-ck{ display:flex; align-items:center; gap:var(--s3);
+  min-height:var(--tap); cursor:pointer; margin-bottom:0; }
+.f-ck input{ width:20px; height:20px; flex:none; accent-color:var(--blue); }
 @media (max-width:560px){ .f-2{ grid-template-columns:1fr; } }
 input[type=text],input[type=tel],input[type=email],input:not([type]),textarea,.sel{
   display:block; width:100%; min-height:var(--tap);

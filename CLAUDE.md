@@ -174,7 +174,7 @@ api/_send.js            보내기 (웹훅 또는 이메일) · 출처 확인
 middleware.js           /admin 과 /api/admin-health 를 서버에서 막습니다
 admin.html · js/admin.js · css/admin.css   관리자 작업대
 api/admin-health.js     접수처 환경변수가 설정됐는지 — **값은 안 돌려줍니다**
-tools/test-api.js       접수 API 계약 검사 (27개)
+tools/test-api.js       접수 API 계약 검사 (37개)
 tools/fit-photos.js     원본을 자리 규격에 맞춰 줍니다 (img/raw → img)
 tools/check-photos.js   넣은 사진이 규격에 맞는가 (크기 · 비율 · 용량 · alt)
 tools/check-korean.js   조사가 낱말에서 떨어졌는지 ("서면 으로")
@@ -1598,7 +1598,7 @@ node build-pages.js      # 주소마다 HTML + sitemap.xml (없어진 것도 치
 /stores · /s/:id       점포 · 상가 · 매장 양도 (상세)
 /assets · /a/:id       시설 · 집기 · 재고 (상세)
 /support  /content · /content/:slug
-/quote  /join  /my  /search  /about  /terms  /privacy
+/quote  /sell  /join  /my  /search  /about  /terms  /privacy
 ```
 
 ⚠️ **한 화면에 주소 하나.** `/providers/:cat` 은 업체를 찾는 분류만,
@@ -1677,7 +1677,7 @@ Vercel → Settings → Environment Variables 에 넣으세요.
 에러도 안 나고 접수도 성공합니다. 받아 보는 사람만 이상해집니다.
 
 ```bash
-node tools/test-api.js   # 화면이 보낸 칸이 빠짐없이 나가는지 (27개)
+node tools/test-api.js   # 화면이 보낸 칸이 빠짐없이 나가는지 (37개)
 ```
 
 ⚠️ `node check.js` 는 이걸 **못 잡습니다.** 그쪽은 브라우저로 화면만
@@ -1981,6 +1981,42 @@ node build-pages.js      # /p/:id 화면과 sitemap 이 같이 생깁니다
 → "김○○". 그대로 올리면 그 자체가 개인정보이고, 상호와 붙으면 누구인지
 특정됩니다.
 
+## 내놓는 길은 `/sell` 입니다 (2026-10-07)
+
+⚠️⚠️ **전에는 내놓는 폼이 아예 없었습니다.** "매장 내놓기" 가 목록
+화면(`/stores`)으로, "내 시설 내놓기" 가 폐업 가이드(`/closure`)로
+갔습니다 — **막다른 길 넷**이었고, 내놓으시려는 사장님이 적을 자리가
+일반 견적 폼 하나뿐이라 평수 · 보증금 · 월세 · 권리금이 전부 줄글로
+들어왔습니다. 매물이 0건인 까닭 중 하나입니다.
+
+`/sell` 이 받는 칸은 **`market.js` 의 생김새 그대로**입니다 — 받은
+그대로 `AM_STORES` · `AM_ASSETS` 에 옮겨 적으면 됩니다.
+
+| 탭 | 받는 것 |
+|---|---|
+| 매장 · 점포 (`/sell`) | 거래방식 · 업종 · 지역 · 시군구 · 평수 · 보증금 · 월세 · 권리금 · 시설인수비 · 시설포함 · 문 연 해 · 넘기고 싶은 시점 · 월매출 · 사진 주소 |
+| 시설 · 장비 (`/sell?t=asset`) | 품목 · 거래단위 · 업종 · 지역 · 시군구 · 제조사 · 연식 · 수량 · 희망가 · 상태 · 사진 주소 |
+
+- ⚠️⚠️ **"바로 올라갑니다" 라고 하지 않습니다.** 접수는 저장되지 않고
+  밖으로 전달만 됩니다 — 사람이 확인하고 올립니다 (절대 규칙 5).
+  화면 **맨 위**에 "올리기 전에 한 번 연락드립니다" 가 있습니다.
+- ⚠️⚠️ **연락처 · 상호 · 번지 주소는 매물에 안 나갑니다.** 지역은
+  시 · 군 · 구까지입니다 — 적는 칸 아래에도 그렇게 적혀 있습니다.
+- ⚠️⚠️ **업종 · 지역을 반드시 막습니다.** 딱지에 `*` 만 붙여 두고 안
+  막으면 빈 채로 들어오고, 그 매물은 **거르개에서 빠지고
+  `checkMarketData()` 가 빌드를 멈춥니다.** `/quote` 도 지역이 `*` 인데
+  안 막고 있어서 같이 고쳤습니다 (지역이 매칭의 첫 조건입니다).
+- ⚠️⚠️ **`detail` 은 스물까지입니다** (`api/quote.js`). 매장 항목이
+  열셋이라 예전 상한 12 에 **닿아 있었습니다** — 하나만 더해도 에러
+  없이 빠집니다. `tools/test-api.js` 가 **열셋째 칸까지** 가는지
+  봅니다 (상한을 되돌려 실제로 걸리는 것을 확인했습니다).
+- ⚠️ 적는 화면의 고르개 첫 줄은 **"골라 주세요"** 입니다. 거르개의
+  "전체" 를 그대로 쓰면 고른 것처럼 읽힙니다 — `RegionSelect()` ·
+  `IndustrySelect()` 의 넷째 인자이고, **기본값은 그대로**라 거르개
+  화면은 안 바뀝니다.
+- ⚠️ 월 매출은 받되 **"사장님이 적으신 값"** 이라고 적는 자리에서 미리
+  말씀드리고, 올릴 때도 그렇게 밝힙니다.
+
 ## 매물 한 건을 등록하는 법 (사장님이 내놓으시면)
 
 > **§20 — 등록 기능이 따로 없습니다.** 접수(`/quote` · `/closure`)로
@@ -2239,7 +2275,7 @@ node build-pages.js      # /s/:id · /a/:id 화면과 sitemap 이 같이 생깁�
 
 ```bash
 node check.js          # 표본 화면 × 1440·1024·390·360px 전수 (playwright 필요)
-node tools/test-api.js # 접수 주소가 화면이 보낸 칸을 전달하는가 (27개)
+node tools/test-api.js # 접수 주소가 화면이 보낸 칸을 전달하는가 (37개)
 node build-pages.js    # 주소마다 HTML + sitemap
 node tools/shot.js "/|1440|home"   # 화면을 찍어 봅니다 (눈으로 볼 것)
 node tools/prove-checks.js         # 검사가 **실제로 잡는지**

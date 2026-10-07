@@ -1600,3 +1600,52 @@ sitemap.map(r=>'  <url><loc>'+ORIGIN+r+'</loc><lastmod>'+today+
 console.log("페이지 "+made+"개"+(skipped?" (건너뜀 "+skipped+")":"")+
             (removed?" · 치운 주소 "+removed+"개":"")+
             " · sitemap "+sitemap.length+"개 주소");
+
+/* ── 영업 나가기 전에 확인할 것 (2026-10-07) ────────────────────────
+   ⚠️⚠️ **빌드를 멈추지는 않습니다.** 사업자 정보 없이도 지금 사이트는
+   정상적으로 서고, 멈추면 손도 못 대게 됩니다. 대신 빌드할 때마다
+   **무엇이 비어 있는지** 적어 둡니다 — 업체를 받으러 나가시기 전에
+   이 줄이 비어 있어야 합니다.
+
+   왜 이 둘인가 —
+   ① 사업자 정보: 전자상거래법 제10조 제1항이 표시하도록 정한
+      항목입니다. 그리고 업체 사장님이 제일 먼저 하는 일이 푸터를
+      보는 것이라, 비어 있으면 그 자리에서 영업이 끝납니다.
+      ⚠️ 비면 화면은 **그 줄을 통째로 뺍니다** (절대 규칙 2) — 그래서
+      에러도 안 나고 화면도 멀쩡해 보입니다. 그게 이 경고가 필요한
+      까닭입니다.
+   ② sosReady 가 켜져 있는데 접수처가 없으면: 손님이 다 적고 눌렀을
+      때 503 입니다. site.js 가 "설정 전에 켜 두면 손님이 다 적고
+      눌렀는데 실패합니다" 라고 적어 둔 그 자리입니다.
+      ⚠️ 환경변수는 **Vercel 에만** 있어서 여기서는 못 봅니다 —
+      켜져 있다는 사실만 짚어 드립니다.
+   ⚠️ 이 경고를 없애려고 sosReady 를 끄지 마세요. 끄면 접수가 아예
+      안 되고, 그건 더 나쁩니다. */
+(function salesReady(){
+  var B = W.WOW_BIZ || {};
+  var need = [
+    ["company","상호"], ["ceo","대표자"], ["brn","사업자등록번호"],
+    ["mailOrder","통신판매업 신고번호"], ["address","사업장 주소"],
+    ["phone","전화"], ["email","이메일"],
+    ["privacyOfficer","개인정보 보호책임자"]
+  ].filter(function(x){ return !String(B[x[0]] || "").trim(); });
+
+  if(!need.length && !B.sosReady) return;      /* 둘 다 괜찮으면 조용히 */
+
+  var out = [];
+  if(need.length)
+    out.push("사업자 정보 " + need.length + "칸이 비어 있습니다 — " +
+             need.map(function(x){ return x[1]; }).join(" · ") +
+             "  (js/data/site.js · 전자상거래법 제10조)");
+  if(B.sosReady)
+    out.push("접수(sosReady)가 켜져 있습니다 — Vercel 환경변수가 " +
+             "실제로 들어가 있는지 확인하세요. 없으면 손님이 다 적고 " +
+             "눌렀을 때 503 입니다 (INTAKE_WEBHOOK_URL 또는 " +
+             "RESEND_API_KEY + INTAKE_EMAIL_TO · Production 체크)");
+  if(need.length && B.sosReady)
+    out.push("둘이 겹쳐 있습니다 — 지금 영업을 나가시면 업체가 " +
+             "신청을 누르고 실패하거나, 누구인지 모르는 회사로 보입니다.");
+
+  console.log("\n── 영업 나가기 전에");
+  out.forEach(function(t){ console.log("  ⚠️ " + t); });
+})();

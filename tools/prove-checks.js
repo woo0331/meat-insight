@@ -67,6 +67,24 @@ const CASES = [
       S[0].style.background = c;
     })();`],
 
+  /* 공고가 전부 /support 로 가는데 **주소만 보고** 걸러내던 꼴입니다 —
+     그러면 공고가 몇 건이든 검색에 한 건만 나옵니다. 공고가 0건이라
+     아무도 못 봤고 씨앗을 심고 돌려 보고 알았습니다.
+     ⚠️ 되돌리기는 `amSearch` 를 감쌉니다 — 검사가 그때 찾아 부릅니다. */
+  ["공고는 원문 링크가 있는 것만 낸다",
+   `(function(){
+      const real = window.amSearch;
+      window.amSearch = function(q){
+        const r = real(q);
+        (r.groups || []).forEach(function(g){
+          const seen = {};
+          g.rows = g.rows.filter(function(x){
+            if(seen[x.to]) return false; seen[x.to] = 1; return true; });
+        });
+        return r;
+      };
+    })();`],
+
   /* ══ 매물 내놓기 (/sell) ═══════════════════════════════════════ */
   /* 업종 · 지역을 안 막던 때로 돌려놓습니다 — 딱지에 별표만 붙여 두고
      안 막으면 빈 채로 들어오고, 그 매물은 거르개에서 빠집니다.

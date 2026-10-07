@@ -237,9 +237,16 @@ window.amSearch = function(q){
      뜨면 검색이 고장난 것처럼 보입니다. */
   var total = 0;
   var groups = Object.keys(G).map(function(k){
+    /* ⚠️⚠️ **같은 주소를 가리키는 서로 다른 줄이 있습니다.** 지원사업은
+       공고마다 상세 화면이 없어서 **전부 `/support`** 로 갑니다 — 주소만
+       보고 걸러내면 공고가 몇 건이든 **검색에 한 건만** 나옵니다.
+       공고가 0건이라 아무도 못 봤고, 씨앗을 심고 돌려 보고 알았습니다
+       (CLAUDE.md "데이터가 0 이면 그 기능은 아무 검사도 안 받습니다").
+       걸러내려던 것은 **같은 줄이 두 번** 나오는 것이라 이름까지 봅니다. */
     var seen = {};
     G[k].rows = G[k].rows.sort(function(a,b){ return b.s - a.s; })
-      .filter(function(r){ if(seen[r.to]) return false; seen[r.to] = 1; return true; })
+      .filter(function(r){ var id = r.name + "|" + r.to;
+        if(seen[id]) return false; seen[id] = 1; return true; })
       .slice(0, 12);
     total += G[k].rows.length;
     return G[k];

@@ -1230,6 +1230,8 @@ const AUDIT = `(() => {
     window.AM_SUPPORTS.push(
       { key:"zz-ok", side:"start", name:"검사용 공고 A", org:"기관",
         link:"https://example.com/", asOf:"2026-10-01" },
+      { key:"zz-ok2", side:"start", name:"검사용 공고 C", org:"기관",
+        link:"https://example.com/2", asOf:"2026-10-01" },
       { key:"zz-no", side:"start", name:"검사용 공고 B", org:"기관",
         asOf:"2026-10-01" });
     const got = window.amSupports().map(function(x){ return x.key; });
@@ -1241,6 +1243,11 @@ const AUDIT = `(() => {
     else if(got.indexOf("zz-no") >= 0) why = "원문 없는 공고가 나옵니다";
     else if(inSearch.indexOf("검사용 공고 A") < 0) why = "공고가 검색에 안 걸립니다";
     else if(inSearch.indexOf("검사용 공고 B") >= 0) why = "원문 없는 공고가 검색에만 나옵니다";
+    /* 공고는 상세 화면이 없어 전부 /support 로 갑니다 — 주소만 보고
+       걸러내면 몇 건이 있든 검색에 한 건만 나옵니다 (씨앗을 심고 돌려
+       보고 알았습니다). */
+    else if(inSearch.indexOf("검사용 공고 C") < 0)
+      why = "공고가 둘인데 검색에 하나만 나옵니다 — 같은 주소라고 걸러냈습니다";
     return why;`);
   await f("가격은 10건 이상 · 기준일 있는 것만 낸다", "/", `
     /* ⚠️ 칸 이름은 market.js 의 생김새 그대로 key 입니다 — 검사가

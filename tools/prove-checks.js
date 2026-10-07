@@ -386,7 +386,7 @@ const CASES = [
       안 잡게 됐습니다 — 검사가 아니라 **되돌리기가 틀린** 열한 번째
       자리입니다. 검사가 보는 것과 똑같이 "실제로 뒤에 보이는 면" 을
       찾아서 칠합니다. */
-   `const a = document.querySelectorAll(".ind-g a")[0];
+   `const a = document.querySelectorAll(".msvc-g > li > a")[0];
     const back = (function(el){
       let e = el.parentElement;
       while(e){

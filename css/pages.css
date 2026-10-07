@@ -1199,177 +1199,76 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .hv-tl{ --ic-ink:var(--teal);       --ic-bg:var(--teal-soft); }
 .hv-sl{ --ic-ink:var(--slate);      --ic-bg:var(--slate-soft); }
 /* ══════════════════════════════════════════════════════════════════
-   ① 히어로 — 창업 / 폐업 두 판 (2026-10-04 개편 지시서 §3 ~ §8)
+   02 HERO (2026-10-07 최종 전면개편 지시서 §9 ~ §11)
    ══════════════════════════════════════════════════════════════════
-   화면 너비를 통째로 쓰는 두 판이고, 가운데가 **대각선**으로
-   갈립니다 (§8 — 수직선 하나만 긋지 않습니다).
+   가운데 한 기둥에 제목 · 서브 · 카드 둘. 양옆 바깥은 사진입니다.
 
-   ⚠️⚠️ **두 판의 크기가 같습니다** (§3 — 50:50). `flex:1 1 50%` 둘이고
-   한쪽에 `flex-grow` 를 더하지 마세요 — 폐업 쪽을 좁히면 그게 "덜
-   중요한 것" 이라는 말입니다. `check.js` 가 폭과 높이를 1px 까지 잽니다.
+   ⚠️⚠️ **두 카드의 크기 · 무게가 같습니다.** `1fr 1fr` 이고 한쪽에
+   `flex-grow` 를 더하지 마세요 — 폐업 쪽을 좁히면 그게 "덜 중요한
+   것" 이라는 말입니다 (§46). `check.js` 가 폭과 높이를 잽니다.
+   ⚠️⚠️ **폐업을 BLACK / GRAY 로 칠하지 마세요** (§46). 창업 BLUE ·
+   폐업 ORANGE 이고, 둘 다 **밝은 카드**입니다.
+   ⚠️ **폰에서는 사진을 접습니다** (§51) — 선택지가 최대한 빨리
+   보여야 합니다. 사진 없이도 짜임새가 무너지지 않습니다. */
+.mh{ position:relative; background:var(--bg-cream); overflow:hidden;
+  padding:var(--s9) 0 var(--s10); }
+.mh-in{ position:relative; z-index:2; text-align:center; }
+.mh-h1{ font-size:var(--t-hero); font-weight:900; letter-spacing:-.035em;
+  line-height:1.26; color:var(--navy); }
+/* ⚠️ 강조는 **창업 파랑**입니다 (§9 시안) — 사이트 전체를 빨갛게
+   만들지 마세요. POINT RED 는 검색 CTA 한 자리뿐입니다. */
+.mh-h1 em, .mh-st{ font-style:normal; color:var(--start); }
+.mh-lead{ max-width:620px; margin:var(--s5) auto 0;
+  font-size:var(--t-md); line-height:1.75; color:var(--ink2); }
+.mh-two{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s5);
+  max-width:900px; margin:var(--s8) auto 0; text-align:left; }
 
-   ⚠️⚠️ **대각선은 ::before 와 사진 액자에만 겁니다** — 판 자체에
-   `clip-path` 를 걸면 글자와 단추도 같이 잘립니다. 두 판의 바탕이
-   가운데에서 44px 씩 서로의 영역으로 넘어가고, 넘어간 만큼을 반대로
-   잘라서 **딱 맞물립니다** (아래 수를 바꾸실 때는 둘을 같이).
-
-       왼쪽 바탕  right:-44px  +  오른쪽 아래를 88px 잘라냄
-       오른쪽 바탕 left:-44px  +  왼쪽 위를   88px 잘라냄
-
-   ⚠️ **사진이 0장입니다.** 있으면 사진 + 막이고, 없으면 판 자신의
-   바탕색이 자리를 지킵니다 — "이미지 준비 중" 을 찍지 않습니다
-   (절대 규칙 2). ⚠️⚠️ 사진이 들어오면 **어두운 막이 생깁니다** —
-   그때 어두운 면 15% 를 반드시 다시 재세요.
-
-   ⚠️ **폐업을 어둡거나 처연하게 만들지 마세요** (§7). 끝이 아니라
-   다음 시작이고, 두 판의 **밝기만 다릅니다**(남색 ↔ 샌드) — 그건
-   한 판에 흰 글자를 얹기 위한 것이고 무게는 같습니다. */
-.mh{ position:relative; background:var(--bg-cream); padding:0; }
-.mh-two{ position:relative; display:flex; align-items:stretch; }
-/* ⚠️⚠️ **첫 화면은 680~760px 입니다** (10-04 §4 · 검사가 봅니다).
-   2026-10-06 에 히어로 위로 머리 띠가 올라오면서 첫 화면이 **1173px**
-   이 됐습니다 — 두 판이 접힌 자리 아래로 밀려났습니다. 머리 띠가
-   메시지를 맡았으니 두 판은 **갈라 주는 자리**로 낮춥니다.
-   ⚠️ 450 아래로는 내리지 마세요 — 사진이 띠처럼 보입니다. */
-.hp2{ position:relative; flex:1 1 50%; min-width:0; display:flex;
-  align-items:center; min-height:386px;
-  padding:var(--s9) 0 calc(var(--s9) + var(--s8)); }
-/* 바탕 — 대각선으로 맞물립니다 (위 설명) */
-.hp2::before{ content:""; position:absolute; top:0; bottom:0; z-index:0; }
-/* ⚠️ 지금 사진은 **왼쪽에 따뜻한 나무 천장과 카운터, 가운데에 작업자,
-   오른쪽에 통창**입니다. 가로가 잘리는 폭(1280 아래 · 폰)에서는
-   왼쪽을 남겨야 천장과 카운터가 같이 보입니다 — 가운데로 두면
-   창문만 남습니다.
-   세로 45% 는 **바닥보다 천장 쪽**을 남깁니다 (2560px 처럼 액자가
-   사진보다 넓은 폭에서 위아래가 잘립니다). */
-.hp2-st{ --ph-pos:0% 45%; }
-.hp2-st::before{ left:0; right:-44px; background:var(--navy-dark);
-  clip-path:polygon(0 0, 100% 0, calc(100% - 88px) 100%, 0 100%); }
-/* ⚠️ 폐업 쪽 사진은 **작업자와 치우는 짐이 가운데**에 있습니다.
-   50% 로 두면 좁은 폭에서도 그 장면이 남습니다 — 오른쪽 끝(100%)으로
-   밀면 사다리와 자재만 남아 "정리하는 중" 이 안 읽힙니다.
-   1440 · 390 · 2560 에서 50% · 70% · 100% 를 나란히 찍어 보고
-   정했습니다. ⚠️ 기본값과 같은 값이지만 **일부러 적어 둡니다** —
-   사진을 바꿀 때 여기를 같이 보시라고요. */
-.hp2-cl{ --ph-pos:50% 50%; }
-/* ⚠️ Warm Sand 입니다 — 아홉 바탕 중 `--bg-sand`. 왼쪽이 짙은 남색이라
-   오른쪽은 **밝아야** 두 판이 갈립니다 (§5). */
-.hp2-cl::before{ left:-44px; right:0; background:var(--bg-sand);
-  clip-path:polygon(88px 0, 100% 0, 100% 100%, 0 100%); }
-/* 사진 액자도 **같은 대각선**을 씁니다 — 안 맞추면 사진이 네모로 남아
-   대각선이 사라집니다. ⚠️ `object-fit:cover` 를 반드시 주세요: `.ph` 는
-   `<img>` 라 기본값이 `fill` 이고, 안 주면 사진이 늘어납니다. */
-.hp2-ph{ position:absolute; top:0; bottom:0; margin:0; z-index:1; }
-.hp2-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0;
+/* 사진 — 바깥 기둥. ⚠️ `object-fit:cover` 를 반드시 주세요. 기본값이
+   `fill` 이라 안 주면 사진이 비율을 무시하고 늘어납니다. */
+.mh-ph{ position:absolute; inset:0; z-index:1; pointer-events:none; }
+.mh-ph > span{ position:absolute; top:0; bottom:0; width:27%;
+  display:block; overflow:hidden; }
+.mh-ph-l{ left:0; }
+.mh-ph-r{ right:0; }
+.mh-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0;
   object-position:var(--ph-pos, 50% 50%); }
-/* ⚠️⚠️ **액자 비율이 폭마다 크게 달라집니다** — 재 보니 1.09(360px) ~
-   2.66(980px 세로쌓임)입니다. 원본보다 액자가 좁으면 **좌우**가,
-   넓으면 **위아래**가 잘립니다. 그래서 어느 쪽을 남길지는 사진마다
-   다르고, 자리마다 `--ph-pos` 한 줄로 고릅니다.
-   ⚠️ 사진을 바꾸면 **이 값도 같이 보세요** — 안 보면 주인공이 잘린
-   채로 몇 주 갑니다 (찍어 봐야 압니다. 검사는 못 잡습니다). */
-.hp2-ph::after{ content:""; position:absolute; inset:0; }
-.hp2-st .hp2-ph{ left:0; right:-44px;
-  clip-path:polygon(0 0, 100% 0, calc(100% - 88px) 100%, 0 100%); }
-.hp2-cl .hp2-ph{ left:-44px; right:0;
-  clip-path:polygon(88px 0, 100% 0, 100% 100%, 0 100%); }
-/* 사진 위의 막 — 왼쪽은 짙은 남색(cool), 오른쪽은 웜 샌드(warm).
-   사진이 없으면 액자째 없어서 막도 없습니다. */
-.hp2-st .hp2-ph::after{ background:linear-gradient(100deg,
-  rgba(6,43,81,.92) 0%, rgba(6,43,81,.72) 58%, rgba(6,43,81,.54) 100%); }
-.hp2-cl .hp2-ph::after{ background:linear-gradient(100deg,
-  rgba(250,244,232,.94) 0%, rgba(250,244,232,.78) 58%, rgba(250,244,232,.60) 100%); }
+.mh-ph-l{ --ph-pos:0% 45%; }
+.mh-ph-r{ --ph-pos:100% 50%; }
+/* 안쪽 가장자리를 바탕색으로 녹입니다 — 글이 사진 위에 앉지 않습니다 */
+.mh-ph > span::after{ content:""; position:absolute; inset:0; }
+.mh-ph-l::after{ background:linear-gradient(90deg,
+  rgba(252,250,246,.42) 0%, rgba(252,250,246,.88) 54%, var(--bg-cream) 94%); }
+.mh-ph-r::after{ background:linear-gradient(270deg,
+  rgba(252,250,246,.42) 0%, rgba(252,250,246,.88) 54%, var(--bg-cream) 94%); }
 
-/* 글 — ⚠️ 폭과 자리를 본문 기둥(`.w`)에 맞춥니다. 안 맞추면 히어로
-   글만 좌우로 어긋나 보입니다. 가운데 56px 은 **대각선을 피하는
-   여백**이라 줄이지 마세요 — 줄이면 글자가 대각선에 올라앉습니다. */
-.hp2-b{ position:relative; z-index:2;
-  width:calc(100% - var(--pad)); max-width:calc(var(--w) / 2 - var(--pad)); }
-.hp2-st .hp2-b{ margin-left:auto;  padding-right:var(--s9); }
-.hp2-cl .hp2-b{ margin-right:auto; padding-left:var(--s9); }
+/* 선택 카드 둘 (§11) */
+.mhc{ position:relative; display:flex; flex-direction:column;
+  padding:var(--s7); border-radius:var(--r-xl); background:var(--surface);
+  border:1px solid var(--line); box-shadow:var(--shadow-soft); }
+.mhc-k{ align-self:flex-start; padding:5px 12px; border-radius:999px;
+  font-size:var(--t-cap); font-weight:800; letter-spacing:-.01em; }
+.mhc-st{ border-color:var(--line-mint); }
+.mhc-cl{ border-color:var(--line-peach); }
+.mhc-st .mhc-k{ background:var(--start-soft); color:var(--start-deep); }
+.mhc-cl .mhc-k{ background:var(--close-soft); color:var(--close-deep); }
+.mhc-h{ margin-top:var(--s4); font-size:var(--t-2xl); font-weight:900;
+  letter-spacing:-.03em; line-height:1.3; color:var(--navy); }
+.mhc-h i{ display:block; font-style:normal; font-size:var(--t-lg);
+  font-weight:800; color:var(--ink); }
+.mhc-d{ margin-top:var(--s4); font-size:var(--t-base); line-height:1.7;
+  color:var(--ink2); }
+.mhc-go{ margin-top:var(--s6); }
+.mhc-go .btn{ width:100%; justify-content:center; }
 
-.hp2-k{ font-size:var(--t-sm); font-weight:700; letter-spacing:-.01em; }
-.hp2-st .hp2-k{ color:rgba(255,255,255,.82); }
-.hp2-cl .hp2-k{ color:var(--ink2); }
-/* ⚠️ 두 글자(창업 · 폐업)가 주인공입니다 — 잔 요소를 더하지 마세요 */
-.hp2-h{ display:flex; align-items:flex-start; gap:10px; margin-top:var(--s4);
-  font-size:clamp(46px, 4.4vw, 68px); font-weight:900;
-  letter-spacing:-.04em; line-height:1.05; }
-.hp2-dot{ flex:0 0 auto; width:11px; height:11px; margin-top:.42em;
-  border-radius:var(--r-pill); }
-.hp2-st .hp2-h{ color:#fff; }
-.hp2-st .hp2-dot{ background:var(--start); }
-.hp2-cl .hp2-h{ color:var(--ink); }
-.hp2-cl .hp2-dot{ background:var(--close); }
-.hp2-d{ margin-top:var(--s5); font-size:var(--t-lg); font-weight:600;
-  line-height:1.6; }
-.hp2-st .hp2-d{ color:rgba(255,255,255,.88); }
-.hp2-cl .hp2-d{ color:var(--ink2); }
-.hp2-go{ margin-top:var(--s7); }
-
-/* 밝은 판 위의 CLOSE 단추 — ⚠️ 주황이지 빨강이 아닙니다 */
-.btn-cd{ background:var(--close-deep); color:#fff; border-color:var(--close-deep); }
-.btn-cd:hover{ filter:brightness(.94); color:#fff; }
-
-/* ══════════════════════════════════════════════════════════════════
-   ①-2 떠 있는 검색 패널 (2026-10-04 §9 ~ §12)
-   ══════════════════════════════════════════════════════════════════
-   히어로 사진 영역과 다음 구간 **사이에 걸칩니다** — 음수 margin 으로
-   올려 놓고, 그만큼 히어로 판의 아래 padding 에 미리 자리를 비워
-   두었습니다 (`.hp2` 의 `padding-bottom`). ⚠️ 한쪽만 고치면 글자가
-   패널 밑으로 들어갑니다.
-
-   ⚠️⚠️ **장식용이 아닙니다** (§11). 탭이 어디서 찾을지, 지역이 `?r=`,
-   적으신 말이 `?q=` 로 실제로 갑니다 — `mainFind()` 한 곳입니다. */
-.msr{ position:relative; z-index:5; margin-top:calc(var(--s9) * -1);
-  padding-bottom:var(--s9); }
-.msr-in{ background:#fff; border:1px solid var(--line);
-  border-radius:var(--r-2xl); box-shadow:var(--shadow-float);
-  padding:var(--s4) var(--s6) var(--s6); }
-/* 탭 — ⚠️ 누르는 칸입니다 (44px 이상) */
-.msr-tb{ display:flex; flex-wrap:wrap; gap:var(--s1);
-  border-bottom:1px solid var(--line); }
-.msr-t{ display:inline-flex; align-items:center; gap:7px; min-height:48px;
-  padding:0 var(--s4); margin-bottom:-1px; border-bottom:2.5px solid transparent;
-  font-size:var(--t-sm); color:var(--ink2); }
-.msr-t b{ font-weight:700; }
-.msr-t svg{ flex:0 0 auto; color:var(--ink3); }
-.msr-t:hover{ color:var(--ink); }
-/* 고른 탭 — ⚠️ 포인트 레드는 **고른 상태와 CTA** 까지입니다 (§4) */
-.msr-t.on{ color:var(--point-dark); border-bottom-color:var(--point); }
-.msr-t.on svg{ color:var(--point-dark); }
-/* 한 줄 — 지역 · 적는 칸 · 단추 */
-.msr-f{ display:flex; align-items:stretch; gap:var(--s3); margin-top:var(--s5); }
-.msr-rg, .msr-q{ position:relative; display:flex; align-items:center;
-  background:var(--bg-gray); border:1px solid var(--line);
-  border-radius:var(--r-in); }
-.msr-rg{ flex:0 0 190px; }
-.msr-q{ flex:1 1 auto; min-width:0; }
-.msr-rg-i, .msr-q-i{ display:inline-flex; align-items:center;
-  justify-content:center; flex:0 0 auto; width:44px; color:var(--ink3); }
-.msr-rg select, .msr-q input{ width:100%; min-width:0; min-height:56px;
-  padding:0 var(--s4) 0 0; border:0; background:transparent;
-  font-size:var(--t-md); font-weight:600; color:var(--ink); }
-.msr-rg select{ appearance:none; cursor:pointer; padding-right:var(--s7); }
-.msr-rg::after{ content:""; position:absolute; right:var(--s4); width:8px;
-  height:8px; border-right:2px solid var(--ink3); border-bottom:2px solid var(--ink3);
-  transform:rotate(45deg) translateY(-2px); pointer-events:none; }
-.msr-q input::placeholder{ color:var(--ink3); font-weight:500; }
-.msr-q input::-webkit-search-cancel-button{ cursor:pointer; }
-.msr-f .btn{ flex:0 0 auto; min-height:58px; padding:0 var(--s7);
-  font-size:var(--t-md); }
-/* 추천 검색어 — ⚠️ **"인기 검색어" 가 아닙니다.** 검색 기록을 모으지
-   않아서 무엇이 인기인지 우리는 모릅니다 (§12 · 절대 규칙 5). */
-.msr-ch{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2);
-  margin-top:var(--s4); }
-.msr-ch > b{ flex:0 0 auto; margin-right:var(--s1); font-size:var(--t-cap);
-  font-weight:800; color:var(--ink3); }
-.msr-ch > a{ display:inline-flex; align-items:center; min-height:40px;
-  padding:0 var(--s4); border:1px solid var(--line);
-  border-radius:var(--r-pill); background:#fff;
-  font-size:var(--t-cap); font-weight:600; color:var(--ink2); }
-.msr-ch > a:hover{ border-color:var(--point); color:var(--point-dark);
-  background:var(--point-soft); }
+@media (max-width:1180px){ .mh-ph{ display:none; } }
+@media (max-width:900px){
+  .mh{ padding:var(--s8) 0 var(--s9); }
+  .mh-two{ grid-template-columns:1fr; gap:var(--s4); }
+}
+@media (max-width:560px){
+  .mh{ padding:var(--s7) 0 var(--s8); }
+  .mhc{ padding:var(--s6); }
+}
 
 /* ══════════════════════════════════════════════════════════════════
    ①-3 사업 단계 여섯 (2026-10-04 카테고리 구조 개편 §5 · §8 · §9)
@@ -1466,426 +1365,99 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mstg-g-near{ grid-template-columns:repeat(2, 1fr); max-width:820px; }
 
 /* ══════════════════════════════════════════════════════════════════
-   ② 브랜드 가치 넷 (지시서 §7)
+   03 인수인계의 핵심 (2026-10-07 §14 ~ §17)
    ══════════════════════════════════════════════════════════════════
-   ⚠️⚠️ 이 구간의 h2 자리가 화면의 **h1** 입니다 — 히어로 두 장이
-   똑같이 중요해서 한쪽만 h1 으로 올릴 수가 없습니다. */
-.mval-k{ letter-spacing:.3em; }
-.mval-h{ margin-top:var(--s3); font-size:clamp(28px, 2.9vw, 42px);
-  font-weight:900; letter-spacing:-.03em; line-height:1.3; color:var(--navy); }
-.mval-h em{ font-style:normal; }
-/* ⚠️⚠️ 이 두 줄을 지우지 마세요 — 히어로 CSS 와 함께 지웠다가 제목의
-   "폐업" 이 남색이 됐습니다. 창업은 초록 · 폐업은 **주황**(빨강이
-   아닙니다)이고, 글자로 쓰는 색이라 **짙은 쪽**을 씁니다. */
-.mh-st{ color:var(--start-dark); }
-.mh-cl{ color:var(--close-dark); }
-.mval-g{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s6);
-  margin-top:var(--s8); }
-.mval-g > li{ display:flex; align-items:flex-start; gap:var(--s4); min-width:0; }
-.mval-i{ flex:0 0 auto; display:inline-flex; align-items:center;
-  justify-content:center; width:52px; height:52px; border-radius:var(--r-pill);
-  background:var(--bg-sky); color:var(--navy); }
-.mval-t{ display:grid; gap:4px; min-width:0; }
-.mval-t b{ font-size:var(--t-md); font-weight:800; color:var(--ink); }
-.mval-t i{ font-style:normal; font-size:var(--t-cap); color:var(--ink2);
-  line-height:1.55; }
-
-/* ══════════════════════════════════════════════════════════════════
-   ⑥ 큰 카드 셋 — 프랜차이즈 · 점포 · 인테리어 (지시서 §10 · §11)
-   ══════════════════════════════════════════════════════════════════
-   ⚠️ 사진이 들어오면 사진이 주인공이 되고 글은 막 위에 앉습니다.
-   0장이면 **옅은 바탕 + 큰 아이콘**으로 자리를 지킵니다 — "이미지
-   준비 중" 같은 자리표시자를 찍지 않습니다. */
-.mfeat-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s5); }
-.mfeat-c{ position:relative; overflow:hidden; display:flex;
-  min-height:300px; border-radius:var(--r-2xl); border:1px solid var(--line);
-  transition:transform .25s, box-shadow .25s; }
-.mfeat-c:hover{ transform:translateY(-4px); box-shadow:0 16px 34px rgba(15,43,68,.10); }
-.mfeat-ph{ position:absolute; inset:0; margin:0; z-index:0; }
-.mfeat-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0; }
-.mfeat-c::after{ content:""; position:absolute; inset:0; z-index:1;
-  background:linear-gradient(180deg, rgba(6,43,81,.30) 0%, rgba(6,43,81,.82) 100%); }
-.mfeat-noph::after{ content:none; }
-.mfeat-b{ position:relative; z-index:2; display:flex; flex-direction:column;
-  gap:6px; align-self:flex-end; padding:var(--s7) var(--s6) var(--s6); }
-.mfeat-k{ font-style:normal; font-size:var(--t-cap); font-weight:800;
-  letter-spacing:.18em; }
-.mfeat-h{ font-size:var(--t-2xl); font-weight:900; letter-spacing:-.02em;
-  line-height:1.3; }
-.mfeat-d{ font-style:normal; margin-top:4px; font-size:var(--t-cap);
-  line-height:1.6; }
-.mfeat-go{ display:inline-flex; align-items:center; gap:6px; align-self:flex-start;
-  min-height:40px; margin-top:var(--s4); padding:0 var(--s5);
-  border-radius:var(--r-pill); font-size:var(--t-cap); font-weight:800; }
-/* 사진이 있을 때 — 흰 글자 */
-.mfeat-c:not(.mfeat-noph) .mfeat-k{ color:var(--gold-on-dark); }
-.mfeat-c:not(.mfeat-noph) .mfeat-h,
-.mfeat-c:not(.mfeat-noph) .mfeat-d{ color:#fff; }
-.mfeat-c:not(.mfeat-noph) .mfeat-go{ background:#fff; color:var(--navy); }
-/* 사진이 0장일 때 — 옅은 바탕에 남색 글 (⚠️ 셋이 서로 다른 바탕) */
-.mfeat-noph .mfeat-k{ color:var(--ink3); }
-.mfeat-noph .mfeat-h{ color:var(--navy); }
-.mfeat-noph .mfeat-d{ color:var(--ink2); }
-.mfeat-noph .mfeat-go{ background:var(--navy); color:#fff; }
-.mfeat-noph.mfeat-franchise{ background:var(--bg-sky); }
-.mfeat-noph.mfeat-store{ background:var(--bg-ivory2); }
-.mfeat-noph.mfeat-interior{ background:var(--bg-sand); }
-.mfeat-ic{ position:absolute; right:-14px; top:-10px; z-index:1;
-  color:var(--navy); opacity:.08; pointer-events:none; }
-
-/* ══════════════════════════════════════════════════════════════════
-   ⑦ 주요 서비스 여덟 (지시서 §12 · §13)
-   ══════════════════════════════════════════════════════════════════
-   ⚠️ "지금 많이 찾는" 이 아닙니다 — 이용 데이터를 안 모읍니다. */
-.msvc-g{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s5); }
-.msvc-g a{ display:grid; gap:4px; height:100%; padding-bottom:var(--s4);
-  border-radius:var(--r-lg); overflow:hidden; background:var(--surface);
-  border:1px solid var(--line); transition:transform .25s, box-shadow .25s; }
-.msvc-g a:hover{ transform:translateY(-4px);
-  box-shadow:0 16px 34px rgba(15,43,68,.10); }
-.msvc-ph{ display:block; aspect-ratio:16/10; }
-.msvc-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0; }
-/* 사진이 0장이면 분류 아이콘이 자리를 지킵니다 */
-.msvc-ph-n{ display:flex; align-items:center; justify-content:center;
-  background:var(--ic-bg); color:var(--ic-ink); }
-.msvc-g b{ margin-top:var(--s4); padding:0 var(--s5);
-  font-size:var(--t-md); font-weight:800; color:var(--ink); }
-.msvc-g i{ font-style:normal; padding:0 var(--s5); font-size:var(--t-cap);
-  color:var(--ink2); line-height:1.55; }
-
-
-/* ══════════════════════════════════════════════════════════════════
-   ② 범위 숫자 띠 (§11)
-   ══════════════════════════════════════════════════════════════════
-   ⚠️ 히어로에 **붙는** 띠라 위 여백이 없습니다. 구간으로 떼어 놓으면
-   첫 화면이 길어져 START/CLOSE 가 밀립니다. */
-/* ⚠️ 2026-10-03 — 히어로 안의 얇은 띠에서 **자기 구간**으로 커졌습니다
-   (지시서 §3 · §8). 숫자가 "작은 정보" 가 아니라 **규모를 말하는
-   Brand Asset** 이 되는 것이 목표입니다. */
-.mnum{ padding-top:var(--s9); padding-bottom:var(--s9); }
-.mst-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s6);
-  padding:0; background:transparent; border:0; border-radius:0; box-shadow:none; }
-/* 시안(AFTER)처럼 **테두리 카드**에 담습니다 — 숫자가 "작은 정보" 가
-   아니라 규모를 말하는 한 덩어리로 읽히게. */
-.mst-box{ display:flex; align-items:center; justify-content:space-between;
-  gap:var(--s7); flex-wrap:wrap; padding:var(--s7) var(--s8);
-  background:var(--surface); border:1px solid var(--line);
-  border-radius:var(--r-2xl); box-shadow:var(--shadow-soft); }
-.mst-box > .mst-g{ flex:1 1 520px; }
-.mst-g > li{ display:grid; gap:4px; justify-items:center; text-align:center;
-  position:relative; }
-/* 영문은 장식입니다 — ⚠️ 한글 이름을 지우지 마세요.
-   ⚠️⚠️ **11.5px 로 두었다가 전수 점검에 네 폭 전부 걸렸습니다.**
-   12px 미만은 금지이고 제일 작은 단계가 `--t-cap` 13px 입니다 —
-   아래 네비가 11.5px 로 175건 걸렸던 것과 **똑같은 자리**입니다.
-   작아 보이게 하려면 크기가 아니라 **자간과 색**으로 합니다. */
-.mst-k{ font-size:var(--t-cap); font-weight:800; letter-spacing:.08em;
-  color:var(--ink3); }
-/* 칸 사이 얇은 금 — ⚠️ 테두리 상자로 묶으면 다시 "작은 정보" 가 됩니다 */
-.mst-g > li + li::before{ content:""; position:absolute; left:calc(var(--s6) / -2);
-  top:12%; bottom:12%; width:1px; background:var(--line); }
-.mst-g b{ font-size:var(--t-num); font-weight:900; letter-spacing:-.04em;
-  color:var(--navy); line-height:1; }
-.mst-g i{ font-style:normal; font-size:var(--t-base); font-weight:700;
-  color:var(--ink2); }
-@media (max-width:700px){
-  /* ⚠️ 폰에서도 **3열을 지킵니다** (지시서 §8) — 세로로 쌓으면 세 숫자가
-     한눈에 안 들어옵니다. 숫자만 줄입니다. */
-  .mst-g{ gap:var(--s4); }
-  .mst-g b{ font-size:var(--t-num-s); }
-  .mst-g i{ font-size:var(--t-cap); }
-  .mst-g > li + li::before{ left:calc(var(--s4) / -2); }
-}
-/* ⚠️ **이 줄을 숨기지 마세요.** 숫자만 띄우면 "업체가 183곳" 으로
-   읽힙니다 — 폰에서도 보입니다. */
-.mst-n{ display:flex; align-items:center; gap:7px; flex:0 1 auto;
-  margin:0; font-size:var(--t-cap); color:var(--ink2); }
-.mst-n svg{ flex:0 0 auto; color:var(--ink3); }
-.mst-n b{ color:var(--navy); }
-@media (max-width:900px){
-  .mst-box{ justify-content:center; padding:var(--s6) var(--s5); }
-  .mst-n{ justify-content:center; text-align:center; }
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   ③ START / CLOSE 큰 카드 (§13 ~ §16)
-   ══════════════════════════════════════════════════════════════════
-   ⚠️ **두 카드의 크기와 비율이 같아야 합니다** — 1fr 1fr 에
-   `align-items:stretch` 입니다. 폐업 쪽을 좁히면 그게 "덜 중요한 것"
-   이라는 말입니다. */
-.ms-two{ display:grid; gap:var(--s5); grid-template-columns:1fr 1fr;
-  align-items:stretch; }
-.ms{ display:flex; flex-direction:column; overflow:hidden;
-  border-radius:var(--r-2xl); box-shadow:var(--shadow-soft); }
-.ms-st{ background:var(--bg-mint); border:1px solid var(--line-mint);
-  --ic-ink:var(--start-dark); --ic-bg:#fff; }
-.ms-cl{ background:var(--bg-peach); border:1px solid var(--line-peach);
-  --ic-ink:var(--close-dark); --ic-bg:#fff; }
-/* §16 — 카드의 30~40%. ⚠️ 사진 위에 짙은 막을 씌우지 마세요. */
-.ms-ph .ph{ width:100%; aspect-ratio:16/7; object-fit:cover; display:block; }
-.ms-b{ display:flex; flex-direction:column; flex:1 1 auto; padding:var(--s7); }
-.ms-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.12em; }
-/* ⚠️ 15px 굵은 글씨라 민트 · 피치 위에서 `--start-dark` 는 3.69,
-   `--close-dark` 는 4.21 이었습니다. 한 단계 더 짙은 쪽으로 — 초록과
-   주황은 그대로입니다 (`check.js` 가 빨강으로 넘어가는지 봅니다). */
-.ms-st .ms-k{ color:var(--start-deep); }
-.ms-cl .ms-k{ color:var(--close-deep); }
-.ms-h{ margin-top:var(--s2); font-size:var(--t-3xl); font-weight:900;
-  letter-spacing:-.03em; color:var(--navy); }
-.ms-d{ margin-top:6px; font-size:var(--t-md); color:var(--ink2); }
-.ms-g{ display:grid; gap:var(--s3); grid-template-columns:repeat(3,1fr);
-  margin-top:var(--s5); }
-.ms-g > li > a{ display:grid; gap:8px; justify-items:center; text-align:center;
-  min-height:var(--tap); padding:var(--s4) 10px; background:var(--surface);
-  border-radius:16px; transition:transform .2s, box-shadow .2s; }
-.ms-g > li > a:hover{ transform:translateY(-3px);
-  box-shadow:0 14px 30px rgba(15,43,68,.10); }
-.ms-g b{ font-size:var(--t-cap); font-weight:700; color:var(--ink);
-  line-height:1.4; }
-.ms-more{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--s3);
-  justify-content:space-between; margin-top:auto; padding-top:var(--s5); }
-.ms-more a{ display:inline-flex; align-items:center; gap:6px;
-  min-height:var(--tap); font-size:var(--t-md); font-weight:800; }
-.ms-st .ms-more a{ color:var(--start-dark); }
-.ms-cl .ms-more a{ color:var(--close-dark); }
-.ms-more i{ font-style:normal; font-size:var(--t-cap); font-weight:700;
-  color:var(--ink2); }
-
-/* ══════════════════════════════════════════════════════════════════
-   ④ 업종 열넷 (§17 ~ §19)
-   ══════════════════════════════════════════════════════════════════
-   ⚠️ **카드는 흰색**이고 색은 아이콘 타일에만 들어갑니다. */
-.mi-g{ display:grid; gap:var(--s3); grid-template-columns:repeat(7,1fr); }
-.mi-g > li > a{ display:grid; gap:8px; justify-items:center; text-align:center;
-  min-height:var(--tap); padding:var(--s4) 6px; background:var(--surface);
-  border:1px solid var(--line); border-radius:18px;
-  transition:transform .25s, box-shadow .25s, border-color .25s; }
-.mi-g > li > a:hover{ transform:translateY(-4px);
-  box-shadow:0 16px 34px rgba(15,43,68,.10);
-  border-color:var(--ic-ink, var(--blue)); }
-.mi-g > li > a:hover .ic-t{ transform:scale(1.06); }
-.mi-g b{ font-size:var(--t-cap); font-weight:700; color:var(--ink);
-  line-height:1.4; }
-/* ⚠️ **색은 "내 업종이 어느 것인가" 를 말해 주지 못합니다.** 사진이 0장
-   이라 카드를 분류색 틴트로 갈라 두었는데, 틴트로 갈리는 것은 **서로
-   다르다**까지이고 미용실 사장님이 "헤어 · 바버 · 두피관리" 를 보고
-   자기 자리를 찾는 일은 글이 합니다. `industries.js` 의 `lead` 열넷을
-   그대로 냅니다 (`/startup` 의 `.ind-l` 과 같은 값).
-   ⚠️ `--ink3` 는 아이보리 위에서 4.63 이라 margin 이 얇습니다 —
-   틴트 열넷 위에 깔리는 글이라 `--ink2`(6.02) 를 씁니다. */
-.mi-l{ font-style:normal; font-size:var(--t-cap); font-weight:500;
-  color:var(--ink2); line-height:1.55; }
-
-/* ══════════════════════════════════════════════════════════════════
-   ⑤ 핵심 서비스 여덟 (§20)
-   ══════════════════════════════════════════════════════════════════ */
-.mv-g{ display:grid; gap:var(--s4); grid-template-columns:repeat(4,1fr); }
-.mv-g > li > a{ display:flex; align-items:center; gap:var(--s4);
-  min-height:var(--tap); padding:var(--s5); background:var(--surface);
-  border:1px solid var(--line); border-radius:20px;
-  transition:transform .25s, box-shadow .25s, border-color .25s; }
-.mv-g > li > a:hover{ transform:translateY(-3px);
-  box-shadow:0 16px 34px rgba(15,43,68,.09);
-  border-color:var(--ic-ink, var(--blue)); }
-.mv-t{ display:grid; gap:2px; min-width:0; flex:1 1 auto; }
-.mv-t b{ font-size:var(--t-md); font-weight:800; color:var(--ink); }
-.mv-t i{ font-style:normal; font-size:var(--t-cap); color:var(--ink2);
-  line-height:1.5; }
-.mv-go{ flex:0 0 auto; display:inline-flex; color:var(--ic-ink, var(--blue));
-  opacity:.45; transition:opacity .2s, transform .2s; }
-.mv-g > li > a:hover .mv-go{ opacity:1; transform:translateX(3px); }
-
-/* ── ⑨ 가격 ──────────────────────────────────────────────────────── */
-.hp-g{ display:grid; gap:var(--s4); grid-template-columns:repeat(3,1fr); }
-.hp-g > li{ display:grid; gap:6px; padding:var(--s5);
-  background:var(--surface); border:1px solid var(--line); border-radius:20px; }
-.hp-g b{ font-size:var(--t-md); font-weight:800; color:var(--ink); }
-.hp-g em{ font-style:normal; font-size:var(--t-2xl); font-weight:900;
-  color:var(--navy); letter-spacing:-.02em; }
-.hp-g i{ font-style:normal; font-size:var(--t-cap); color:var(--ink3); }
-
-/* ══════════════════════════════════════════════════════════════════
-   ⑩ 창업 ↔ 폐업 연결 (§22 · §23)
-   ══════════════════════════════════════════════════════════════════
-   ⚠️ 히어로 다음으로 기억에 남아야 하는 구간입니다.
-   ⚠️ **짙은 남색 바탕을 쓰지 마세요.** 대비는 바탕을 어둡게 해서가
-   아니라 **주황 → 남색 → 초록 악센트 차이**로 냅니다. */
-.mbr{ background:var(--bg-cream); }
-.mbr-g{ display:grid; gap:var(--s6); grid-template-columns:1fr auto 1fr;
-  align-items:stretch; }
-.mbr-c{ display:flex; flex-direction:column; gap:var(--s4);
-  padding:var(--s6); border-radius:var(--r-2xl); }
-.mbr-cl{ background:var(--bg-peach); --ic-ink:var(--close-dark); --ic-bg:#fff;
-  box-shadow:var(--shadow-soft), inset 0 0 0 1px var(--line-peach); }
-.mbr-st{ background:var(--bg-mint); --ic-ink:var(--start-dark); --ic-bg:#fff;
-  box-shadow:var(--shadow-soft), inset 0 0 0 1px var(--line-mint); }
-.mbr-k{ font-size:var(--t-sm); font-weight:800; font-style:italic;
+   ⚠️⚠️ **맞추는 것은 두 딱지의 윗머리이지 카드 높이가 아닙니다.**
+   `align-items:center` 로 두었다가 두 딱지가 49px 어긋나 화살표가
+   한 방향으로만 읽혔습니다 — 전수 점검은 통과했고 찍어 보고 알았습니다.
+   ⚠️ **두 칸의 무게가 같아야 합니다.** 이 구간이 하는 말이 그것입니다. */
+.mbr-g{ display:grid; grid-template-columns:1fr auto 1fr; gap:var(--s6);
+  align-items:start; margin-top:var(--s8); }
+.mbr-c{ padding:var(--s7); border-radius:var(--r-xl); background:var(--surface);
+  border:1px solid var(--line); box-shadow:var(--shadow-soft); }
+.mbr-cl{ border-color:var(--line-peach); }
+.mbr-st{ border-color:var(--line-mint); }
+.mbr-k{ font-size:var(--t-md); font-weight:800; letter-spacing:-.02em;
   color:var(--close-deep); }
 .mbr-k-st{ color:var(--start-deep); }
-/* ⚠️ `photoBox()` 를 쓰는 자리에는 반드시 `object-fit:cover` 를 주세요 —
-   기본값이 `fill` 이라 안 주면 사진이 비율을 무시하고 늘어납니다. */
-.mbr-p .ph{ width:100%; aspect-ratio:5/3; border-radius:var(--r-lg);
-  object-fit:cover; }
-.mbr-l{ display:grid; gap:var(--s3); }
-.mbr-l > li{ display:flex; align-items:center; gap:var(--s3); }
-.mbr-l b{ font-size:var(--t-md); font-weight:800; color:var(--ink); }
-.mbr-tx{ display:grid; gap:2px; min-width:0; }
-.mbr-tx i{ font-style:normal; font-size:var(--t-cap); color:var(--ink2);
-  line-height:1.5; }
-.mbr-m{ display:grid; gap:var(--s4); justify-items:center; align-self:center; }
-/* ⚠️⚠️ **시안(AFTER)은 이 구간을 통째로 어둡게** 했지만 그대로 하면
-   390px 에서 어두운 면이 **15.5%** 가 됩니다 (재 봤습니다 — 지금 5.2%
-   에 이 구간이 10.3% 를 더합니다). CLAUDE.md 가 "어두운 면은 입점
-   카드 하나" 라고 못박아 둔 것도 그 까닭입니다.
-   그래서 **가운데 연결부만** 짙게 가져왔습니다 — 시안이 기억에 남기려
-   한 것이 "주황 → 인수인계 → 초록" 의 한가운데이고, 이 원판은 1440px
-   에서 0.6% 밖에 안 됩니다. 밴드는 밝게 둡니다. */
-.mbr-logo{ display:grid; gap:3px; justify-items:center; text-align:center;
-  width:188px; height:188px; align-content:center; border-radius:999px;
-  background:var(--navy-dark); box-shadow:0 20px 44px rgba(6,43,81,.28); }
-.mbr-logo-i{ display:inline-flex; align-items:center; justify-content:center;
-  width:42px; height:42px; border-radius:13px; margin-bottom:4px;
-  background:rgba(255,255,255,.14); color:#fff; }
-/* ⚠️ 흰 글자가 올라앉는 면이라 **짙은 쪽**(`--navy-dark`)입니다 */
-.mbr-logo b{ font-size:var(--t-xl); font-weight:900; letter-spacing:-.01em;
-  color:#fff; }
-.mbr-logo i{ font-style:normal; font-size:var(--t-cap); color:rgba(255,255,255,.82);
-  padding:0 var(--s4); line-height:1.5; }
-.mbr-arw{ position:relative; width:100%; max-width:190px; height:10px; }
-.mbr-arw::before{ content:""; position:absolute; inset:3px 12px 3px 0;
-  border-radius:999px; }
-.mbr-arw::after{ content:""; position:absolute; right:0; top:50%;
-  margin-top:-7px; border:7px solid transparent; border-left-width:11px; }
-.mbr-arw-in::before{ background:linear-gradient(90deg,
-  rgba(243,107,56,.16), var(--close)); }
-.mbr-arw-in::after{ border-left-color:var(--close); }
-.mbr-arw-out::before{ background:linear-gradient(90deg,
-  var(--start), rgba(8,168,117,.16)); }
-.mbr-arw-out::after{ border-left-color:rgba(8,168,117,.22); }
+.mbr-l{ display:grid; gap:var(--s3); margin-top:var(--s5); }
+.mbr-l li{ display:flex; align-items:center; gap:10px;
+  font-size:var(--t-base); color:var(--ink); }
+.mbr-l svg{ flex:0 0 auto; color:var(--close-dark); }
+.mbr-l-st svg{ color:var(--start-dark); }
+.mbr-l b{ font-weight:700; }
 
-/* ── ⑪ 도구 ──────────────────────────────────────────────────────── */
-.mt-g{ display:grid; gap:var(--s4); grid-template-columns:repeat(3,1fr); }
-.mt-g > li > a{ display:grid; gap:8px; align-content:start;
-  min-height:var(--tap); padding:var(--s5);
-  background:var(--surface); border:1px solid var(--line);
-  border-radius:20px; transition:transform .25s, box-shadow .25s,
-  border-color .25s; }
-.mt-g > li > a:hover{ transform:translateY(-3px);
-  box-shadow:0 16px 34px rgba(15,43,68,.09);
-  border-color:var(--ic-ink, var(--blue)); }
-.mt-g b{ margin-top:6px; font-size:var(--t-md); font-weight:800; color:var(--ink); }
-.mt-g i{ font-style:normal; font-size:var(--t-cap); color:var(--ink2);
-  line-height:1.55; }
+.mbr-m{ display:flex; align-items:center; justify-content:center;
+  gap:var(--s3); padding-top:var(--s8); }
+.mbr-logo{ display:grid; justify-items:center; gap:6px; width:166px;
+  padding:var(--s5) var(--s4); border-radius:50%; aspect-ratio:1;
+  align-content:center; background:var(--surface);
+  border:1px solid var(--line); box-shadow:var(--shadow-soft); }
+.mbr-logo-i{ display:inline-flex; width:46px; height:46px; border-radius:14px;
+  align-items:center; justify-content:center;
+  background:var(--navy-soft); color:var(--navy); }
+.mbr-logo b{ font-size:var(--t-lg); font-weight:900; letter-spacing:-.03em;
+  color:var(--navy); }
+.mbr-logo i{ font-style:normal; font-size:var(--t-cap); line-height:1.5;
+  text-align:center; color:var(--ink2); }
+/* 흐름 화살표 — ⚠️ 주황 → 남색 → 파랑이 한눈에 읽혀야 합니다 */
+/* 흐름 화살표 — 주황이 들어오고 파랑이 나갑니다. 꼬리는 옅고 머리는
+   짙어서, 화살촉 없이도 방향이 읽힙니다. */
+.mbr-arw{ position:relative; display:block; width:40px; height:9px;
+  border-radius:999px 0 0 999px; }
+.mbr-arw::after{ content:""; position:absolute; top:50%; right:-7px;
+  width:0; height:0; transform:translateY(-50%);
+  border-top:9px solid transparent; border-bottom:9px solid transparent; }
+.mbr-arw-in{ background:linear-gradient(90deg,
+  rgba(243,107,56,.18), var(--close)); }
+.mbr-arw-in::after{ border-left:10px solid var(--close); }
+.mbr-arw-out{ background:linear-gradient(90deg,
+  rgba(37,99,235,.18), var(--start)); }
+.mbr-arw-out::after{ border-left:10px solid var(--start); }
 
-/* ── ⑫ 후기 ──────────────────────────────────────────────────────── */
-.hr-g{ display:grid; gap:var(--s4); grid-template-columns:repeat(3,1fr); }
-.hr-g > li{ display:grid; gap:var(--s3); align-content:start; padding:var(--s6);
-  background:var(--surface); border:1px solid var(--line); border-radius:20px; }
-.hr-q{ display:inline-flex; color:var(--blue); opacity:.5; }
-.hr-g p{ font-size:var(--t-md); color:var(--ink); line-height:1.7; }
-.hr-g i{ font-style:normal; font-size:var(--t-cap); color:var(--ink3); }
-
-/* ── ⑬ 업체 입점 ──────────────────────────────────────────────────
-   ⚠️ 이 화면에서 어두운 면은 이 카드 **한 장**까지입니다. */
-.mjn{ background:var(--surface); }
-.mjn-c{ display:grid; gap:var(--s6); grid-template-columns:1fr auto;
-  align-items:center; padding:var(--s8);
-  background:var(--navy-dark); border-radius:var(--r-3xl); color:#fff; }
-.mjn-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.12em;
-  color:var(--gold-on-dark); }
-.mjn-t h2{ margin-top:var(--s2); font-size:var(--t-3xl); font-weight:900;
-  letter-spacing:-.03em; color:#fff; }
-.mjn-t > p{ margin-top:var(--s3); font-size:var(--t-md); color:var(--on-dark);
-  max-width:56ch; line-height:1.7; }
-.mjn-l{ display:flex; flex-wrap:wrap; gap:8px; margin-top:var(--s5); }
-.mjn-l > li{ display:inline-flex; align-items:center; gap:6px;
-  padding:6px 12px; border-radius:999px;
-  border:1px solid var(--on-dark-line); font-size:var(--t-cap);
-  font-weight:700; color:var(--on-dark); }
-.mjn-l svg{ width:16px; height:16px; opacity:.8; }
-.mjn-go{ flex:0 0 auto; }
-
-/* ── 좁은 화면 ───────────────────────────────────────────────────── */
-@media (max-width:1180px){
-  .hp2{ min-height:480px; padding:var(--s9) 0 calc(var(--s9) * 2); }
-  .hp2-st .hp2-b{ padding-right:var(--s8); }
-  .hp2-cl .hp2-b{ padding-left:var(--s8); }
-  .mstg-g{ gap:var(--s3); }
-}
-/* ⚠️ 셋에서 둘로 — 700px 아래에서 3칸은 한 칸이 200px 밑으로 내려가
-   "매장 양도 · 양수" 가 아이콘 옆에서 두 줄이 됩니다 */
-@media (max-width:700px){
-  .mstg-g{ grid-template-columns:repeat(2,1fr); }
-  .msr-rg{ flex:0 0 164px; }
-  .mval-g{ grid-template-columns:repeat(2,1fr); }
-}
-@media (max-width:1100px){
-  .mi-g{ grid-template-columns:repeat(5,1fr); }
-  .mv-g{ grid-template-columns:repeat(2,1fr); }
-  .ms-g{ grid-template-columns:repeat(3,1fr); }
-  .msvc-g{ grid-template-columns:repeat(3,1fr); }
-}
 @media (max-width:980px){
-  /* §30 — 폰 차례: 제목 → 설명 → 검색 → START/CLOSE → 비주얼.
-     DOM 이 그 차례라 한 칸으로 쌓기만 하면 됩니다. */
-  /* 지시서 §24 — 폰에서는 창업/폐업을 **세로로 쌓습니다.** 나란히
-     두면 한 판이 180px 이라 제목도 단추도 안 들어갑니다.
-     ⚠️⚠️ 쌓으면 **대각선을 끕니다** — 위아래로 놓인 두 판 사이의
-     대각선은 가로로 누운 쐐기가 되어 어느 쪽 것인지 안 읽힙니다.
-     ⚠️ 두 판의 padding 을 다르게 주지 마세요 — 한쪽이 길어지면 그게
-     "덜 중요한 것" 이 됩니다. 패널 자리는 `.msr` 가 스스로 냅니다. */
-  .mh-two{ flex-direction:column; }
-  .hp2{ min-height:0; padding:var(--s9) 0; }
-  .hp2-st::before, .hp2-cl::before,
-  .hp2-st .hp2-ph, .hp2-cl .hp2-ph{ left:0; right:0; clip-path:none; }
-  .hp2-st .hp2-b, .hp2-cl .hp2-b{ width:100%; max-width:var(--w);
-    margin:0 auto; padding:0 var(--pad); }
-  /* 쌓이면 패널은 **걸치지 않습니다** — 위가 샌드 바탕이라 걸쳐 놓으면
-     패널 위쪽만 바탕이 달라 보입니다 */
-  .msr{ margin-top:0; padding-top:var(--s7); }
-  .ms-two{ grid-template-columns:1fr; }
-  .mfeat-g{ grid-template-columns:1fr; }
-  .mfeat-c{ min-height:220px; }
+  .mbr-g{ grid-template-columns:1fr; gap:var(--s4); }
+  .mbr-m{ padding-top:0; }
+  .mbr-logo{ width:148px; }
 }
-@media (max-width:900px){
-  .mbr-g{ grid-template-columns:1fr; }
-  .mbr-m{ padding:var(--s2) 0; }
-  .mbr-arw{ max-width:none; width:10px; height:44px; }
-  .mbr-arw::before{ inset:0 3px 12px 3px; }
-  .mbr-arw::after{ right:50%; top:auto; bottom:0; margin:0 -7px 0 0;
-    border:7px solid transparent; border-top-width:11px; }
-  .mbr-arw-in::after{ border-top-color:var(--close); border-left-color:transparent; }
-  .mbr-arw-out::after{ border-top-color:rgba(8,168,117,.22); border-left-color:transparent; }
-  .mbr-arw-in::before{ background:linear-gradient(180deg,
-    rgba(243,107,56,.16), var(--close)); }
-  .mbr-arw-out::before{ background:linear-gradient(180deg,
-    var(--start), rgba(8,168,117,.16)); }
-  .hp-g, .hr-g, .mt-g{ grid-template-columns:repeat(2,1fr); }
-  .mjn-c{ grid-template-columns:1fr; }
-}
-@media (max-width:760px){
-  .mi-g{ grid-template-columns:repeat(3,1fr); }
-  .mst{ padding-top:var(--s7); }
-  .mst-g{ padding:var(--s5) var(--s4); }
-  .msvc-g{ grid-template-columns:repeat(2,1fr); }
-  .mval-g{ grid-template-columns:1fr; gap:var(--s5); }
-}
+@media (max-width:560px){ .mbr-c{ padding:var(--s6); } }
+
+/* ══════════════════════════════════════════════════════════════════
+   04 핵심 서비스 여덟 (2026-10-07 §18 · §19)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️ 여덟 + "전체 서비스 보기" 한 칸입니다. 칸을 더하지 마세요 —
+   여기에서도 모든 서비스를 보여 주지 않습니다 (§18). */
+.msvc-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s4);
+  margin-top:var(--s8); }
+.msvc-g > li > a{ display:grid; justify-items:center; gap:6px; height:100%;
+  padding:var(--s6) var(--s4); border-radius:var(--r-lg);
+  background:var(--surface); border:1px solid var(--line);
+  text-align:center; transition:border-color .16s, transform .16s; }
+.msvc-g > li > a:hover{ border-color:var(--blue); transform:translateY(-2px); }
+.msvc-ic{ display:inline-flex; width:52px; height:52px; border-radius:16px;
+  align-items:center; justify-content:center;
+  background:var(--ic-bg); color:var(--ic-ink); }
+.msvc-g b{ margin-top:6px; font-size:var(--t-base); font-weight:800;
+  letter-spacing:-.02em; color:var(--navy); }
+.msvc-g i{ font-style:normal; font-size:var(--t-cap); line-height:1.6;
+  color:var(--ink2); }
+.msvc-all > a{ border-style:dashed; }
+.msvc-all .msvc-ic{ background:var(--blue-50); color:var(--blue-600); }
+@media (max-width:1040px){ .msvc-g{ grid-template-columns:repeat(3,1fr); } }
+@media (max-width:760px){ .msvc-g{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:420px){ .msvc-g{ grid-template-columns:repeat(2,1fr); gap:var(--s3); } }
+
+/* ══════════════════════════════════════════════════════════════════
+   05 마지막 CTA (2026-10-07 §20)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️ HERO 와 **같은 BLUE / ORANGE 구조**입니다. 두 단추의 크기 ·
+   글씨 · 자리가 같아야 합니다. */
+.mend .row-cta{ margin-top:var(--s7); }
+.mend .btn{ min-width:230px; justify-content:center; }
+@media (max-width:560px){ .mend .btn{ width:100%; min-width:0; } }
+
+/* 사업 단계 여섯 — 좁은 화면 (카드 생김새는 위 `stg` 블록입니다) */
 @media (max-width:560px){
-  /* 아이콘 + 이름뿐이라 폰에서도 셋이 들어갑니다 (지시서 §24) */
-  .mi-g{ grid-template-columns:repeat(3,1fr); }
-  .mv-g, .hp-g, .hr-g, .mt-g{ grid-template-columns:1fr; }
-  .ms-g{ grid-template-columns:repeat(2,1fr); }
-  .ms-b{ padding:var(--s6); }
-  .mjn-c{ padding:var(--s6); }
-  /* 숫자 셋을 한 줄에 두면 "183" 이 눌립니다 */
-  .mst-g{ grid-template-columns:1fr; gap:var(--s4); }
-  .hp2{ padding:var(--s8) 0; }
-  .hp2-go .btn{ width:100%; justify-content:center; }
-  /* ⚠️ 한 줄에 셋을 두면 적는 칸이 90px 이 됩니다 — 줄째 내립니다 */
-  .msr-in{ padding:var(--s3) var(--s4) var(--s5); }
-  .msr-f{ flex-wrap:wrap; gap:var(--s2); }
-  .msr-rg, .msr-q, .msr-f .btn{ flex:1 1 100%; }
-  .msr-t{ padding:0 var(--s3); }
   /* ⚠️ 폰에서 여섯을 한 줄로 넣지 않습니다 — 둘씩 세 줄입니다.
      가로 스크롤을 기본 구조로 만들지 마세요. */
   .mstg-g{ grid-template-columns:repeat(2,1fr); gap:var(--s2); }
@@ -1895,12 +1467,8 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   .stg-i{ width:40px; height:40px; }
   .stg-h b{ font-size:var(--t-md); }
   /* 사진 띠 — ⚠️ 폰에서는 **높이만 낮춥니다** (140 → 92px).
-     전에는 여기서 display:none 으로 접어 두어서 사진이 폰에서 하나도
-     안 나왔습니다. 사진은 카드가 무엇인지 한눈에 알려 주는 쪽인데,
-     정작 사진을 제일 가까이 보는 폰에서 그것을 지운 셈이었습니다.
-     ⚠️ 그렇다고 140px 을 그대로 두면 띠만 840px 이라 스크롤이
-     길어집니다 (§20). 92px 은 칸 폭(폰에서 165px 안팎)에 대해
-     가로로 1.8:1 이라 자리 규격(1.2~1.9) 안에 들어옵니다. */
+     전에는 display:none 으로 접어 두어 사진이 폰에서 하나도 안
+     나왔습니다 — 사진을 제일 가까이 보는 쪽이 폰입니다. */
   .stg-img{ height:92px; }
   .stg-img::after{ height:32px; }
   .stg-go{ width:30px; height:30px; right:var(--s3); bottom:var(--s3); }

@@ -477,3 +477,62 @@ function StepBand(ind){
     }).join("")+'</ol>'+
   '</div></section>';
 }
+
+/* ── /services — 전체 서비스 (2026-10-07 §19 · §58) ─────────────────
+   메인 §04 의 "전체 서비스 보기" 가 도착하는 자리입니다.
+
+   ⚠️⚠️ **새 분류를 만들지 않았습니다.** `lifecycle.js` 의 사업 단계
+   여섯과 `catalog.js` 의 분류 스물다섯을 그대로 펼칠 뿐이고, 카드를
+   누르면 원래 있던 분류 화면으로 갑니다. 메인에서 뺀 "사업 단계별
+   서비스" 와 "183개 서비스 나열" 이 **여기로 옮겨 온 것**입니다
+   (§58 — REMOVE FROM HOME 은 삭제가 아닙니다).
+   ⚠️ 숫자는 전부 **그 자리에서 세는 값**입니다. 분류를 늘리면 저절로
+   따라옵니다 — 손으로 적지 마세요. */
+function PageServices(){
+  var stages = (window.AM_STAGES || []);
+  var ind = nowQS("i");
+  var nCat = (window.AM_CATS || []).length;
+  var nSub = (window.AM_CATS || []).reduce(function(a, c){
+    return a + amCatItems(c, ind).length; }, 0);
+  return PgHero({
+    kicker:"ALL SERVICES",
+    h1raw:"사장님에게 필요한<br class=\"br-m\"> 서비스 전부",
+    lead:"창업 준비부터 폐업 · 정리까지 사업 단계 "+stages.length+"가지, 분야 "+
+         nCat+"가지, 세부 서비스 "+nSub+"가지입니다. "+
+         "지금 하실 단계만 보셔도 됩니다."
+  })+
+  '<section class="sec sec-white"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">사업의 흐름대로</p>'+
+      '<h2>어느 단계에 계신가요?</h2>'+
+      '<p>왼쪽에서 오른쪽으로 읽으면 그대로 사업의 흐름입니다.</p>'+
+    '</div>'+
+    '<ul class="mstg-g">'+stages.map(function(s){
+      return '<li>'+StageCard(s)+'</li>'; }).join("")+'</ul>'+
+  '</div></section>'+
+  /* 단계마다 그 안의 분야를 전부 폅니다 — 잘라 내지 않습니다 */
+  stages.map(function(st, i){
+    var cats = amStageCats(st);
+    if(!cats.length) return "";
+    return '<section class="sec'+(i % 2 ? " sec-gray" : "")+'"><div class="w">'+
+      '<div class="sec-hd sec-hd-row"><div>'+
+        '<p class="eyebrow">STEP '+esc(st.no)+'</p>'+
+        '<h2>'+esc(st.name)+'</h2>'+
+        '<p>'+esc(st.lead)+'</p></div>'+
+        '<a class="sec-hd-all" href="/g/'+esc(st.key)+'">이 단계 자세히'+
+          icon("arrow",16)+'</a>'+
+      '</div>'+
+      '<div class="cat-g cat-g4">'+
+        cats.map(function(c){ return CatCard(c, ind); }).join("")+
+      '</div>'+
+    '</div></section>';
+  }).join("")+
+  '<section class="sec sec-start"><div class="w band-cta">'+
+    '<div><p class="eyebrow">어디서부터 할지 모르겠다면</p>'+
+      '<h2>지금 상황부터 골라 보세요</h2>'+
+      '<p class="lead">창업인지 정리인지만 고르시면 필요한 순서부터 '+
+        '안내해 드립니다.</p></div>'+
+    '<a class="btn btn-st btn-lg" href="/startup">창업 준비하기'+icon("arrow",18)+'</a>'+
+    '<a class="btn btn-cl btn-lg" href="/closure">폐업·정리 준비하기'+icon("arrow",18)+'</a>'+
+  '</div></section>';
+}

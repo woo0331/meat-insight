@@ -65,12 +65,19 @@
   --navy-2:      #0E3159;
   --navy-3:      #17497E;
 
-  /* START — 창업 */
-  --start:       #08A875;
-  --start-dark:  #07865F;
-  --start-soft:  #EAF8F3;
+  /* START — 창업. ⚠️⚠️ 2026-10-07 전면개편 지시서 §46 으로 **초록에서
+     파랑**이 됐습니다 — "창업 BLUE : 새로운 시작 · 신뢰 · 활력".
+     ⚠️ 이름(`--start*`)은 그대로 둡니다. 이 저장소의 창업 쪽 강조는
+     거의 전부 이 네 변수를 거치기 때문에, 값만 바꾸면 단추 · 칩 ·
+     아이콘 타일 · 테두리가 한꺼번에 따라옵니다 (규칙을 수십 개
+     고치지 않습니다).
+     ⚠️ 옛 초록(#08A875)은 흰 바탕 대비가 3.0 이라 글자로 못 썼습니다.
+     지금 값은 5.17 이라 13px 글자에도 씁니다. */
+  --start:       #2563EB;
+  --start-dark:  #1D4ED8;
+  --start-soft:  #EFF4FE;
   /* 눌렀을 때 · 흰 글자를 얹는 자리에만 (마지막 CTA · 창업 쪽 버튼) */
-  --start-deep:  #056B4C;
+  --start-deep:  #1B3FA8;
 
   /* CLOSE — 폐업. ⚠️ 주황이지 빨강이 아닙니다 */
   --close:       #F36B38;
@@ -167,7 +174,10 @@
   --bg-cream:    #FCFAF6;   /* Warm Cream — 히어로 · 연결 구간 */
   --bg-ivory2:   #F8F5EE;   /* Warm Ivory — START/CLOSE 바탕 · 업체 · 후기 */
   --bg-gray:     #F5F7F9;   /* Soft Gray — 핵심 서비스 */
-  --bg-mint:     #ECF8F3;   /* Mint Tint — 창업 쪽 · 매장 인수 */
+  /* ⚠️ 이름은 mint 인데 값은 **옅은 파랑**입니다 (2026-10-07 §46 —
+     창업이 파랑이 됐습니다). 바꾸실 때 `--bg-sky` 와 ΔE 3.97 인 것을
+     같이 재세요 — 아홉 가지가 서로 ΔE 2.5 이상이라야 합니다. */
+  --bg-mint:     #E9F1FE;   /* 창업 쪽 · 매장 인수 */
   --bg-peach:    #FFF1EA;   /* Peach Tint — 폐업 쪽 */
   --bg-sky:      #EFF6FC;   /* Sky Tint — 가격 · 정보 */
   --bg-lav:      #F5F1FB;   /* Lavender Tint */
@@ -179,7 +189,7 @@
      재 보세요 — `check.js` 가 마지막 구간과 푸터도 비교합니다. */
   --bg-foot:     #EFEBE1;
   --line-sky:    #D9E8F6;
-  --line-mint:   #D6EEE4;
+  --line-mint:   #CFE0FB;
   --line-peach:  #F9DED1;
   /* 밝은 면 위의 카드 그림자 — ⚠️ 진하게 넣지 마세요 (§22 · §30) */
   --shadow-soft: 0 10px 35px rgba(15,43,68,.06);

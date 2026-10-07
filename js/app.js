@@ -55,9 +55,20 @@ var META = {
   /* ⚠️ 2026-10-06 2차 지시서 §21 이 적은 제목입니다 —
      amTitle() 과 합쳐지면 "인수인계 | 창업부터 폐업까지 사장님에게
      필요한 모든 것" 이 됩니다. */
-  "/":          ["창업부터 폐업까지 사장님에게 필요한 모든 것",
-                 "창업, 매장 운영, 인수 · 양도, 폐업에 필요한 정보와 업체, 비용, " +
-                 "체크리스트를 한 곳에서 확인하세요."],
+  /* ⚠️ 2026-10-07 최종 전면개편 지시서 §62 가 적은 제목 · 설명입니다 —
+     amTitle() 과 합쳐지면 "인수인계 | 사장님의 시작과 마지막을
+     연결합니다" 가 됩니다. */
+  "/":          ["사장님의 시작과 마지막을 연결합니다",
+                 "창업부터 매장 인수 · 양도, 폐업 · 정리까지. 사장님에게 필요한 " +
+                 /* ⚠️⚠️ **이름을 손으로 적지 마세요.** 이 저장소에서 이름이
+                    여섯 번 바뀌었고, 손으로 적어 둔 자리가 그때마다 뒤늦게
+                    발견됐습니다. 여기는 **메인의 검색 결과 설명**이라
+                    화면으로는 표가 안 나고 공유해 봐야 압니다.
+                    (brand.js 가 app.js 보다 먼저 실립니다) */
+                 "정보와 업체를 " + amBrand() + "에서 확인하세요."],
+  "/services":  ["전체 서비스 — 사업 단계별로 필요한 것 전부",
+                 "창업 준비 · 상가 입지 · 매장 만들기 · 운영 · 양도 양수 · 폐업 정리까지, " +
+                 "사업 단계마다 필요한 분야와 세부 서비스를 전부 모았습니다."],
   "/startup":   ["창업 — 어떤 사업을 준비하세요?",
                  "업종만 고르시면 그 업종 창업에 실제로 필요한 것만 추려 드립니다. 점포 · 상권 · 인테리어 · 장비 · 가구 · POS · 공급 · 인허가 · 마케팅까지."],
   /* 2026-10-05 V2 지시서 §1 — 여정 넷. 창업 · 폐업은 이미 있던 주소이고
@@ -227,6 +238,7 @@ window.routeInfo = function(path){
     "/operation": "operation",
     "/transfer":"acquisition",
     "/closure":   "closure",
+    "/services":  "services",
     "/providers": "providers",
     "/franchise": "franchise",
     "/stores":    "stores",
@@ -505,6 +517,7 @@ function render(){
   switch(r.view){
     case "main":            html = PageMain();                      break;
     case "stage":           html = PageStage(r.stage);              break;
+    case "services":        html = PageServices();                  break;
     case "startup":         html = PageStartup();                   break;
     case "operation":       html = PageOperation();                 break;
     case "acquisition":     html = PageAcquisition();               break;

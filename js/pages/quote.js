@@ -59,7 +59,8 @@ function PageQuote(){
 
       '<div class="f-2">'+
         '<div class="f-r"><label for="q-ind">업종</label>'+IndustrySelect("q-ind", ind)+'</div>'+
-        '<div class="f-r"><label for="q-reg">지역 <b>*</b></label>'+RegionSelect("q-reg", reg)+'</div>'+
+        '<div class="f-r"><label for="q-reg">지역 <b>*</b></label>'+
+          RegionSelect("q-reg", reg, "", "지역을 골라 주세요")+'</div>'+
       '</div>'+
       '<div class="f-2">'+
         '<div class="f-r"><label for="q-gu">시 · 군 · 구</label>'+
@@ -182,7 +183,10 @@ window.quoteSend = function(ev){
   /* ⚠️ **화면에서도 막습니다.** `required` 는 폼 제출을 막아 주지만
      이 함수를 직접 부르면 그냥 지나갑니다 — 서버가 400 을 돌려줘도
      그때는 이미 보낸 것입니다. */
-  var need = [["q-what","필요한 일"],["q-q","자세한 내용"],
+  /* ⚠️ **지역은 딱지에 `*` 가 붙어 있는데 안 막고 있었습니다.**
+     빈 채로 들어오면 어느 지역 업체에 돌릴지를 못 정합니다 — 지역이
+     매칭의 첫 번째 조건입니다 (§44). */
+  var need = [["q-what","필요한 일"],["q-reg","지역"],["q-q","자세한 내용"],
               ["q-name","성함"],["q-tel","연락처"]];
   for(var i=0;i<need.length;i++){
     if(!$(need[i][0]).value.trim()){

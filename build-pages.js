@@ -46,7 +46,11 @@ function loadApp(){
                    AM_PROVIDERS 에는 **안 들어갑니다** (§19) */
                 "js/data/sample.js","js/data/photos.js",
                 "js/data/legal-terms.js","js/data/legal-privacy.js",
-                "js/data/faq.js","js/data/tools.js","js/data/join.js"];
+                "js/data/faq.js","js/data/tools.js","js/data/join.js",
+                /* ⚠️ sales 는 catalog 의 분류 · 하위 key 를 **묶어 보는 틀**이라
+                   그 뒤입니다. 손님 화면은 안 읽습니다 — /admin 전용이지만
+                   분류 25 를 빠짐없이 나눠 가지는지 빌드가 봅니다 */
+                "js/data/sales.js"];
 
   /* ⚠️ 여기는 **glob 이 아니라 손으로 적은 목록**입니다. 새 데이터
      파일을 만들고 여기에 안 넣으면, 그 데이터를 쓰는 주소가 **에러
@@ -84,7 +88,7 @@ function allRoutes(W){
   const fixed = ["/", "/startup", "/operation", "/transfer", "/closure",
                  "/providers", "/franchise",
                  "/stores", "/assets", "/support", "/content",
-                 "/quote", "/join", "/my", "/search", "/compare",
+                 "/quote", "/sell", "/join", "/my", "/search", "/compare",
                  /* ⚠️ `/sample` 은 NOINDEX 라 sitemap 에 안 들어갑니다 —
                     HTML 은 만들어야 주소를 열 수 있어서 여기에 둡니다 */
                  "/sample",
@@ -321,6 +325,20 @@ function metaTags(h, r, route){
         '<meta property="og:site_name" content="'+esc(B.name||"")+'">');
   h = h.replace(/<meta property="og:image:alt"[^>]*>/,
         '<meta property="og:image:alt" content="'+esc(site)+'">');
+  /* ⚠️⚠️ **트위터 태그도 같이 갈아 끼웁니다** (2026-10-06 §11).
+     `twitter:card` 만 있고 제목 · 설명 · 그림이 없으면 플랫폼이
+     `og:*` 로 **돌아가 주기는 하지만**, 그건 플랫폼이 정하는 것이지
+     우리가 정한 것이 아닙니다 — 이름이 바뀌었을 때 어디가 옛 이름으로
+     나가는지 알 수 없어집니다. 명시해 둡니다. */
+  const tw = [["twitter:title", title], ["twitter:description", r.desc||""],
+              ["twitter:image", ORIGIN + "/og.jpg"]];
+  for(const [k, v] of tw){
+    const re = new RegExp('<meta name="' + k + '"[^>]*>');
+    const tag = '<meta name="' + k + '" content="' + esc(v) + '">';
+    h = re.test(h) ? h.replace(re, tag)
+                   : h.replace('<meta name="twitter:card"',
+                               tag + '\n<meta name="twitter:card"');
+  }
   return h;
 }
 
@@ -435,8 +453,19 @@ function noscriptFor(W, r, route){
 
      ⚠️ **화면과 같은 말이어야 합니다.** 크롤러가 읽는 것과 손님이
      보는 것이 다르면 그게 구글에 나가는 거짓말입니다. 아래는
-     `js/pages/home.js` 의 구간 차례를 그대로 따라갑니다.
-     ⚠️ 숫자는 전부 **세는 값**입니다. 손으로 적을 자리가 없습니다. */
+     `js/pages/home.js` 의 `PageMain()` 구간 차례(2026-10-06 마무리
+     지시서 §1 의 **열넷**)를 그대로 따라갑니다.
+     ⚠️ 숫자는 전부 **세는 값**입니다. 손으로 적을 자리가 없습니다.
+
+     ⚠️⚠️ **화면에 없는 구간을 여기 적지 마세요.** 전에 `MainPrice`
+     ("다른 사장님들은 얼마에 하셨을까?")와 `MainReviews`("실제
+     사장님들의 경험") 두 토막이 **화면에는 없는데 크롤러 본문에만**
+     남아 있었습니다. 2026-10-06 에 차례가 열넷으로 바뀌면서 메인에서
+     내려온 구간 일곱(큰 카드 셋 · 프랜차이즈 · 창업 분야 · 운영 ·
+     폐업 가이드 · 폐업 분야 · 범위 숫자)도 같은 자리입니다 — 범위
+     숫자와 가치 넷 · 왜 셋은 **브랜드 스토리(13)로 옮겼고**, 분야 두
+     목록은 **맞춤 로드맵(04)** 이 그 격자를 내는 자리라 거기 있습니다.
+     프랜차이즈 토막은 화면에서 내려왔으니 여기서도 뺐습니다. */
   if(route === "/"){
     /* ⚠️⚠️ **화면과 같은 말이어야 합니다.** 2026-10-07 전면개편으로
        메인 구간이 **넷**이 됐습니다 (§6) — 크롤러 본문도 같이 줄였습니다.
@@ -750,6 +779,28 @@ function noscriptFor(W, r, route){
       L.push("<h3>"+esc(i.name)+"</h3>");
       ul(i.equip.map(e => e.name).concat(i.stock||[]));
     });
+    return L.join("");
+  }
+  /* ⚠️ 화면(PageSell)과 **같은 말**이어야 합니다. 여기에만 더 적으면
+     그게 구글에 나가는 거짓말입니다 — 특히 "바로 올라갑니다" 처럼
+     하지 않는 일을 적지 마세요 (절대 규칙 5). */
+  if(route === "/sell"){
+    h2("매장 · 점포를 내놓으실 때 적는 것");
+    ul(["거래 방식 — 매장 양도 · 임대", "업종", "지역 (시 · 군 · 구까지)",
+        "평수", "보증금", "월세", "권리금 (무권리면 0)", "시설 인수비",
+        "시설을 그대로 두고 가시는지", "문 연 해", "넘기고 싶은 시점",
+        "월 매출 (적어 주시면 사장님이 적으신 값이라고 밝혀서 올립니다)"]);
+    h2("시설 · 장비를 내놓으실 때 적는 것");
+    ul(["무엇을 내놓으시는지", "거래 단위 — 낱개 · 묶음 · 시설 전체",
+        "업종", "지역 (시 · 군 · 구까지)", "제조사", "연식", "수량",
+        "희망가", "상태"]);
+    h2("올리기 전에 한 번 연락드립니다");
+    p("적어 주신 내용은 바로 올라가지 않습니다. 저희가 보고 빠진 것을 여쭌 "+
+      "다음에 올립니다. 연락처 · 상호 · 번지 주소는 매물에 나가지 않습니다 — "+
+      "지역은 시 · 군 · 구까지만 올리고, 보시려는 분께 연락처를 전하는 것은 "+
+      "사장님이 그때 다시 동의하셔야 합니다 (개인정보보호법 제17조).");
+    p("저희는 통신판매중개자이고 거래 당사자가 아닙니다. 적어 주신 값을 "+
+      "확인하거나 보증하지 않습니다 — 계약은 두 사장님이 직접 하십니다.");
     return L.join("");
   }
   if(route === "/support"){
@@ -1268,6 +1319,53 @@ function checkColorSchemeCss(){
    ⚠️⚠️ 걸음에 적은 `cat` · `sub` · `read` · `tool` · `to` 가 하나라도
    없으면 **가짜 링크**입니다 (절대 규칙 5). 화면에서는 그냥 404 로
    열리고 에러도 안 나서, 손님이 눌러 봐야 압니다 — 여기서 멈춥니다. */
+/* ⚠️⚠️ 영업 카테고리 열넷이 **분류 스물다섯을 빠짐없이 한 번씩** 나눠
+   가지는지 (지시서 §6 — "중복 데이터를 만들지 않는다"). 빠지면 그 분류의
+   업체를 직원이 영업 카테고리로 **고를 수가 없고**, 겹치면 카테고리별
+   성과가 두 번 세어집니다. 둘 다 에러 없이 조용히 틀립니다.
+   ⚠️ 14 기타는 남은 것을 세는 값이라 여기서는 **셈에만** 들어갑니다. */
+function checkSales(W){
+  const G = W.AM_SALES_GROUPS || [];
+  if(!G.length) throw new Error("AM_SALES_GROUPS 가 비었습니다 — js/data/sales.js");
+
+  const cats = {};
+  (W.AM_CATS||[]).forEach(c => { cats[c.key] = c; });
+  const bad = [], cnt = {};
+
+  G.forEach(g => {
+    if(!g.key || !g.name || !g.no) bad.push("묶음에 key · name · no 가 있어야 합니다");
+    W.amSalesCats(g).forEach(k => {
+      cnt[k] = (cnt[k] || 0) + 1;
+      if(!cats[k]) bad.push(g.key + " — 없는 분류 " + k);
+    });
+    (g.subs||[]).forEach(p => {
+      const c = cats[p[0]];
+      if(!c) bad.push(g.key + " — 없는 분류 " + p[0]);
+      else if(!(c.items||[]).some(i => i.key === p[1]))
+        bad.push(g.key + " — " + p[0] + " 에 없는 하위 " + p[1]);
+    });
+  });
+
+  Object.keys(cats).forEach(k => {
+    if(!cnt[k]) bad.push("분류 " + k + " 가 어느 영업 카테고리에도 없습니다");
+    else if(cnt[k] > 1) bad.push("분류 " + k + " 가 " + cnt[k] + "곳에 들어 있습니다");
+  });
+
+  /* 상태 key 는 **직원 브라우저에 쌓인 기록**이 쓰는 값입니다 */
+  const need = ["new","recall","warm","sent","doc","review","done","no","bad"];
+  const has = new Set((W.AM_SALES_ST||[]).map(s => s.key));
+  need.forEach(k => { if(!has.has(k)) bad.push("AM_SALES_ST 에 " + k + " 가 없습니다"); });
+  (W.AM_SALES_RESULT||[]).forEach(r => {
+    if(!has.has(r.st)) bad.push("통화 결과 " + r.key + " 가 없는 상태 " + r.st + " 를 가리킵니다");
+  });
+
+  if(bad.length)
+    throw new Error("영업 카테고리(js/data/sales.js)가 분류와 어긋납니다:\n   · " +
+      bad.join("\n   · "));
+  console.log("   영업 카테고리 " + G.length + "개가 분류 " +
+    Object.keys(cats).length + "개를 빠짐없이 나눠 가집니다");
+}
+
 function checkProcess(W){
   const cats = {};
   (W.AM_CATS||[]).forEach(c => { cats[c.key] = c; });
@@ -1475,6 +1573,7 @@ checkColorSchemeCss();
 checkVercel();
 const W = loadApp();
 checkProcess(W);
+checkSales(W);
 checkProviders(W);
 checkMarketData(W);
 checkPhotos(W);

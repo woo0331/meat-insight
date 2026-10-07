@@ -124,19 +124,22 @@ window.IndustryGrid = function(baseTo, current){
 /* ── 지역 고르개 ─────────────────────────────────────────────────
    ⚠️ 지역은 매칭의 첫 번째 조건입니다. 인테리어 업체를 전국에서
    찾는 사람은 없습니다 (§44). */
-window.RegionSelect = function(id, val, onchange){
+/* ⚠️ `ph` 는 **폼에서 쓰는 첫 줄**입니다. 거르개에서는 "지역 전체" 가
+   맞지만 내놓기 · 견적 요청 같은 **적는 화면**에서는 "전체" 가 고른
+   것처럼 읽힙니다 — 기본값을 그대로 두어 거르개 화면은 안 바뀝니다. */
+window.RegionSelect = function(id, val, onchange, ph){
   return '<select class="sel" id="'+esc(id)+'"'+
     (onchange ? ' onchange="'+esc(onchange)+'"' : '')+
-    ' aria-label="지역"><option value="">지역 전체</option>'+
+    ' aria-label="지역"><option value="">'+esc(ph || "지역 전체")+'</option>'+
     (window.AM_REGIONS||[]).map(function(r){
       return '<option value="'+esc(r.key)+'"'+(r.key===val?" selected":"")+'>'+
         esc(r.name)+'</option>';
     }).join("")+'</select>';
 };
-window.IndustrySelect = function(id, val, onchange){
+window.IndustrySelect = function(id, val, onchange, ph){
   return '<select class="sel" id="'+esc(id)+'"'+
     (onchange ? ' onchange="'+esc(onchange)+'"' : '')+
-    ' aria-label="업종"><option value="">업종 전체</option>'+
+    ' aria-label="업종"><option value="">'+esc(ph || "업종 전체")+'</option>'+
     (window.AM_INDUSTRIES||[]).map(function(i){
       return '<option value="'+esc(i.key)+'"'+(i.key===val?" selected":"")+'>'+
         esc(i.name)+'</option>';
@@ -213,14 +216,19 @@ window.ProviderCard = function(p){
   if(folio.length)          marks.push(["camera","포트폴리오 "+folio.length+"건"]);
   if(p.as && (p.as.period || p.as.what)) marks.push(["shield","A/S 안내 있음"]);
 
-  return '<div class="pv'+(ex ? " pv-ex" : "")+'">'+
-    (ex
-      ? '<span class="pv-ph">'+(cover
-          ? '<img class="ph" src="'+esc(cover)+'" alt="'+esc(p.name)+' 작업 사진" loading="lazy" decoding="async">'
-          : '<span class="ph ph-none" aria-hidden="true"></span>')+'</span>'
-      : A("pv-ph", (cover
-          ? '<img class="ph" src="'+esc(cover)+'" alt="'+esc(p.name)+' 작업 사진" loading="lazy" decoding="async">'
-          : '<span class="ph ph-none" aria-hidden="true"></span>'), ' tabindex="-1" aria-hidden="true"'))+
+  /* ⚠️⚠️ **사진이 없으면 액자를 아예 안 그립니다** (단계 카드와 같은
+     까닭). 전에는 빈 액자를 옅은 면으로 깔아 두었는데, 액자가 카드
+     높이의 **40%** 라 등록 초기처럼 **모두가 사진이 없을 때** 목록이
+     회색 덩어리 줄로 보입니다 — "이 업체들 준비가 덜 됐나" 로 읽히고,
+     그건 절대 규칙 2 가 막는 자리입니다. 사진이 들어오면 **코드를 한
+     줄도 안 고치고** 액자가 생깁니다. */
+  var ph = cover
+    ? '<img class="ph" src="'+esc(cover)+'" alt="'+esc(p.name)+' 작업 사진" loading="lazy" decoding="async">'
+    : "";
+  return '<div class="pv'+(ex ? " pv-ex" : "")+(ph ? "" : " nph")+'">'+
+    (!ph ? ""
+      : ex ? '<span class="pv-ph">'+ph+'</span>'
+           : A("pv-ph", ph, ' tabindex="-1" aria-hidden="true"'))+
     '<div class="pv-b">'+
       '<p class="pv-t">'+
         (ex ? '<b>'+esc(p.name)+'</b>' : A("pv-nm", '<b>'+esc(p.name)+'</b>'))+

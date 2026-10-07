@@ -227,8 +227,11 @@ function Footer(){
   var cols = [
     ["사장님 메뉴", (window.AM_GNB || []).map(function(m){ return [m.to, m.name]; })
                     .concat([["/services","전체 서비스"]])],
+    /* ⚠️ `/sell`(매장 · 시설 내놓기)을 빼지 마세요 — 정리하시는
+       사장님이 매물을 올리는 **유일한 입구**입니다. */
     ["더 찾기",   [["/operation","매장 운영"],["/franchise","프랜차이즈"],
                    ["/stores","상가 · 점포"],["/assets","시설 · 집기"],
+                   ["/sell","매장 · 시설 내놓기"],
                    ["/support","창업 · 폐업 지원"],["/tools","사장님 도구"]]],
     ["인수인계",  [["/about","플랫폼 소개"],["/join","파트너 입점"],
                    ["/quote","견적 요청"],["/faq","자주 묻는 것"],

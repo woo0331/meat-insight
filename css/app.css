@@ -305,6 +305,18 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 /* 필수 표시(*) — 작고 굵어서 `--blue` 로는 대비 3.71 입니다 */
 .f-r label b{ color:var(--blue-600); }
 .f-2{ display:grid; grid-template-columns:1fr 1fr; gap:0 var(--s5); }
+/* 적는 칸 아래 한 줄 안내 — ⚠️ 흐린 색(--ink3)을 쓰지 마세요. 여기
+   들어가는 것이 "번지까지 적지 마세요" 처럼 **지키셔야 하는 말**이라,
+   읽히지 않으면 없는 것과 같습니다 (--ink2 는 밝은 바탕 아홉에서
+   최저 6.02). */
+.f-h{ display:block; margin-top:6px; font-size:var(--t-cap);
+  color:var(--ink2); line-height:1.6; font-weight:400; }
+/* 폼 안의 체크칸 — ⚠️ 누르는 자리는 **네모가 아니라 라벨**입니다.
+   20px 네모를 40px 로 키우는 것이 아니라 라벨이 48px 를 잡습니다
+   (전수 점검도 라벨을 잽니다). */
+.f-ck{ display:flex; align-items:center; gap:var(--s3);
+  min-height:var(--tap); cursor:pointer; margin-bottom:0; }
+.f-ck input{ width:20px; height:20px; flex:none; accent-color:var(--blue); }
 @media (max-width:560px){ .f-2{ grid-template-columns:1fr; } }
 input[type=text],input[type=tel],input[type=email],input:not([type]),textarea,.sel{
   display:block; width:100%; min-height:var(--tap);
@@ -363,7 +375,16 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 /* ⚠️ 칸 수를 묶음 수에 맞추세요. `repeat(4,1fr)` 로 두고 묶음을
    다섯으로 늘리면 다섯째가 다음 줄로 혼자 떨어집니다. */
 /* 다섯 칸 → 셋. 시안(§13)의 차분한 한 판에 가깝게 */
-.ft-g{ display:grid; grid-template-columns:1.6fr repeat(3,1fr); gap:var(--s6); }
+/* ⚠️⚠️ **칸 수를 바꾸면 여기도 같이 고치세요.** 2026-10-06 마무리
+   지시서 §9 로 링크 칸이 셋 → **다섯**이 됐습니다. 숫자를 안 고치면
+   두 칸이 아래로 밀리고 **브랜드 칸 옆에 화면 절반짜리 빈 자리**가
+   남습니다 (에러도 안 나고 가로 스크롤도 안 납니다 — 찍어 보고
+   알았습니다). */
+/* ⚠️ 2026-10-07 §21 — 브랜드 칸 + 세 칸입니다 (전에는 다섯이었습니다).
+   ⚠️⚠️ 칸 수를 바꾸면 여기도 같이 고치세요 — 안 고치면 칸이 아래로
+   밀리고 브랜드 칸 옆에 화면 절반짜리 빈 자리가 남습니다. */
+.ft-g{ display:grid; grid-template-columns:1.5fr repeat(3,1fr);
+  gap:var(--s5) var(--s6); }
 .ft-b p{ margin:var(--s3) 0 var(--s4); line-height:1.8; color:var(--ink2);
   font-size:var(--t-sm); }
 .ft-col h4{ font-size:var(--t-base); margin-bottom:var(--s2); color:var(--navy); }
@@ -378,6 +399,12 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 .ft-biz{ margin-top:var(--s3); font-size:var(--t-cap); color:var(--ink2);
   display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5); }
 .ft-cp{ flex-basis:100%; margin-top:var(--s2); }
+@media (max-width:1280px){
+  /* 브랜드 칸이 자기 줄을 쓰고 링크 칸 다섯이 아래에 깔립니다 */
+  .ft-g{ grid-template-columns:repeat(4,1fr); }
+  .ft-b{ grid-column:1 / -1; }
+}
+@media (max-width:1020px){ .ft-g{ grid-template-columns:repeat(3,1fr); } }
 @media (max-width:900px){
   .ft-g{ grid-template-columns:1fr 1fr; gap:var(--s6); }
   .ft-b{ grid-column:1 / -1; }

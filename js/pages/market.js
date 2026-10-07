@@ -18,10 +18,15 @@
 function PageStores(){
   var ind = nowQS("i"), reg = nowQS("r");
   var pk = nowQS("pk") === "1", kd = nowQS("kd");
+  /* 시설 · 집기를 그대로 인수할 수 있는 매장만 (2026-10-05 V2 §7).
+     ⚠️ `amStores()` 는 **적은 매물만** 집습니다 — 안 적은 것을
+     "포함" 으로 읽으면 보러 가신 분이 헛걸음합니다. */
+  var eq = nowQS("eq") === "1";
   var rng = {};
   (window.AM_STORE_RANGES||[]).forEach(function(g){ rng[g.key] = nowQS(g.key); });
   var base = { industry:ind||null, region:reg||null };
-  var f = { industry:ind||null, region:reg||null, parking:pk, kind:kd||null };
+  var f = { industry:ind||null, region:reg||null, parking:pk, kind:kd||null,
+            withEquip:eq };
   (window.AM_STORE_RANGES||[]).forEach(function(g){ if(rng[g.key]) f[g.key] = rng[g.key]; });
   var list = amStores(f);
   /* ⚠️ 지역 · 업종만 건 수 — 구간 거르개가 몇 건을 숨겼는지 밝히려고 */
@@ -29,9 +34,9 @@ function PageStores(){
   return PgHero({
     kicker:"점포 · 상가 · 매장 양도",
     h1raw:"자리부터 정합니다.",
-    lead:"지역 · 업종 · 평수 · 보증금 · 월세 · 권리금으로 찾습니다. 시설을 그대로 인수할 수 있는 매장도 함께 봅니다.",
+    lead:"지역 · 업종 · 평수 · 보증금 · 월세 · 권리금 · 영업기간으로 찾습니다. 시설을 그대로 인수할 수 있는 매장만 따로 보실 수도 있습니다.",
     tight:true,
-    cta:'<a class="btn btn-o btn-lg" href="'+esc(quoteTo({side:"close"}))+'">내 매장 내놓기'+icon("arrow",18)+'</a>'
+    cta:'<a class="btn btn-o btn-lg" href="/sell">내 매장 내놓기'+icon("arrow",18)+'</a>'
   })+
   '<section class="sec sec-white"><div class="w">'+
     /* 거르개 — 2026-10-05 V2 §7.
@@ -51,6 +56,7 @@ function PageStores(){
       '</select>'+
       (window.AM_STORE_RANGES||[]).map(function(g){
         return mkRangeSel(g, rng[g.key], "/stores"); }).join("")+
+      mkCk("eq", "시설 포함", eq, "/stores")+
       mkCk("pk", "주차 가능", pk, "/stores")+
       mkCount(list.length, all.length)+
     '</div>'+
@@ -66,7 +72,7 @@ function PageStores(){
           readTitle:"자리를 보러 가시기 전에",
           cta:'<a class="btn btn-b" href="'+esc(quoteTo({side:"start",industry:ind,region:reg}))+'">'+
               '찾는 조건 남기기'+icon("arrow",16)+'</a>'+
-              '<a class="btn btn-o" href="/closure">내 매장 내놓기</a>'
+              '<a class="btn btn-o" href="/sell">내 매장 내놓기</a>'
         }))+
   '</div></section>'+
   BridgeNote()+
@@ -87,10 +93,12 @@ function StoreCard(s){
   if(s.deposit != null) m.push("보증 "+won(s.deposit)+"만");
   if(s.rent    != null) m.push("월 "+won(s.rent)+"만");
   if(s.premium != null) m.push("권리 "+won(s.premium)+"만");
-  return '<a class="mk" href="/s/'+esc(s.id)+'">'+
-    '<span class="mk-ph">'+((s.images||[]).length
-      ? '<img class="ph" src="'+esc(s.images[0])+'" alt="'+esc(s.title)+'" loading="lazy" decoding="async">'
-      : '<span class="ph ph-none" aria-hidden="true"></span>')+'</span>'+
+  /* ⚠️ 사진이 없으면 액자를 안 그립니다 (업체 카드와 같은 까닭) */
+  var ph = (s.images||[]).length
+    ? '<img class="ph" src="'+esc(s.images[0])+'" alt="'+esc(s.title)+'" loading="lazy" decoding="async">'
+    : "";
+  return '<a class="mk'+(ph ? "" : " nph")+'" href="/s/'+esc(s.id)+'">'+
+    (ph ? '<span class="mk-ph">'+ph+'</span>' : '')+
     '<span class="mk-b">'+
       (meta.length || s.withEquip
         ? '<span class="mk-m">'+esc(meta.join(" · "))+
@@ -115,7 +123,7 @@ function PageAssets(){
     h1raw:"한 사장님의 끝이<br class=\"br-m\"> <em>다른 사장님의 시작</em>이 됩니다.",
     lead:"정리하시는 사장님이 내놓은 주방장비 · 커피머신 · 가구 · POS · 운동기구 · 미용기기와 남은 재고입니다. 개별로도, 일괄로도, 시설 전체 인수로도 거래하실 수 있습니다.",
     tight:true,
-    cta:'<a class="btn btn-o btn-lg" href="/closure">내 시설 내놓기'+icon("arrow",18)+'</a>'
+    cta:'<a class="btn btn-o btn-lg" href="/sell?t=asset">내 시설 내놓기'+icon("arrow",18)+'</a>'
   })+
   '<section class="sec sec-white"><div class="w">'+
     (indObj && indObj.equip.length ? '<ul class="chip-g chip-g-fil">'+
@@ -134,7 +142,11 @@ function PageAssets(){
       IndustrySelect("fil-i", ind, "mkGo('/assets')")+
       RegionSelect("fil-r", reg, "mkGo('/assets')")+
       '<select class="sel" id="fil-dl" aria-label="거래 단위" onchange="mkGo(\'/assets\')">'+
-        '<option value="">낱개 · 일괄 전체</option>'+
+        /* ⚠️ 딱지를 길게 적으면 **360px 에서 잘립니다** — "낱개 · 일괄
+           전체" 가 97px 인데 칸이 90px 이었습니다. select 안이라 낱말
+           잘림 검사도 가로 스크롤 검사도 안 걸립니다 (재 봐야 압니다).
+           옆 칸들과 같은 "<무엇> 전체" 꼴로 맞춥니다. */
+        '<option value="">거래단위 전체</option>'+
         '<option value="single"'+(dl==="single"?" selected":"")+'>낱개로</option>'+
         '<option value="bulk"'+(dl==="bulk"?" selected":"")+'>묶음으로</option>'+
         '<option value="all"'+(dl==="all"?" selected":"")+'>시설 전체</option>'+
@@ -157,7 +169,7 @@ function PageAssets(){
                "찾으시는 것이 있으면 조건을 남겨 두시면 올라오는 대로 알려 드립니다.",
           reads: amContentsFor({ cat:"asset", side:"close", industry:ind, limit:3 }),
           readTitle:"장비를 사고 넘기기 전에",
-          cta:'<a class="btn btn-b" href="/closure">내 시설 내놓기'+icon("arrow",16)+'</a>'+
+          cta:'<a class="btn btn-b" href="/sell?t=asset">내 시설 내놓기'+icon("arrow",16)+'</a>'+
               '<a class="btn btn-o" href="'+esc(quoteTo({side:"start",industry:ind,region:reg}))+'">'+
               '찾는 조건 남기기</a>'
         }))+
@@ -173,10 +185,11 @@ function AssetCard(a){
   var m = [];
   m.push(a.price != null ? won(a.price)+"만원" : "가격 협의");
   if(a.year) m.push(a.year+"년식");
-  return '<a class="mk" href="/a/'+esc(a.id)+'">'+
-    '<span class="mk-ph">'+((a.images||[]).length
-      ? '<img class="ph" src="'+esc(a.images[0])+'" alt="'+esc(a.title)+'" loading="lazy" decoding="async">'
-      : '<span class="ph ph-none" aria-hidden="true"></span>')+'</span>'+
+  var ph = (a.images||[]).length
+    ? '<img class="ph" src="'+esc(a.images[0])+'" alt="'+esc(a.title)+'" loading="lazy" decoding="async">'
+    : "";
+  return '<a class="mk'+(ph ? "" : " nph")+'" href="/a/'+esc(a.id)+'">'+
+    (ph ? '<span class="mk-ph">'+ph+'</span>' : '')+
     '<span class="mk-b">'+
       (meta.length || deal
         ? '<span class="mk-m">'+esc(meta.join(" · "))+
@@ -193,7 +206,11 @@ function AssetCard(a){
    살아남아야 "이 조건으로 본 것" 을 가족에게 보낼 수 있습니다.
    ⚠️ 칸 이름(`id`)이 곧 주소의 key 입니다 — `mkGo()` 가 한 곳에서
    읽어 모으기 때문에, 칸을 늘려도 거기만 고치면 됩니다. */
-var MK_KEYS = ["i","r","c","s","py","dp","rt","pm","pk","kd","dl","pr"];
+/* ⚠️ 구간 거르개 key(`py` · `dp` · `rt` · `pm` · **`yr`**)와 체크칸
+   (`pk` · **`eq`**)을 여기 안 적으면, 칩을 누르는 순간 **켜 둔
+   거르개가 조용히 꺼집니다** — 손님은 자기가 끈 줄 모르고 결과가
+   늘어난 것만 봅니다. */
+var MK_KEYS = ["i","r","c","s","py","dp","rt","pm","yr","pk","eq","kd","dl","pr"];
 
 window.mkGo = function(base){
   var q = [];
@@ -434,3 +451,225 @@ function PageAssetOne(a){
     '<a class="btn btn-b" href="'+esc(q)+'">이 시설 문의하기</a>'+
   '</div>';
 }
+
+
+/* ══════════════════════════════════════════════════════════════════
+   매물 내놓기 (/sell) — **내놓는 길**입니다
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ 전에는 "매장 내놓기" 가 목록 화면(/stores)으로, "내 시설
+   내놓기" 가 폐업 가이드(/closure)로 갔습니다 — 셋 다 **막다른 길**
+   이었고, 내놓으시려는 사장님이 적을 자리가 일반 견적 폼 하나뿐이라
+   평수 · 보증금 · 월세 · 권리금이 전부 줄글로 들어왔습니다.
+   여기서 받는 칸은 market.js 의 생김새 그대로입니다 — 받은 그대로
+   AM_STORES · AM_ASSETS 에 옮겨 적으면 됩니다.
+
+   ⚠️⚠️ **바로 올라가지 않습니다.** 접수는 저장되지 않고 밖으로
+   전달만 됩니다 (api/quote.js). 사람이 확인하고 올립니다 — 화면에도
+   그렇게 적혀 있고, "올려 드립니다" 라고 단정하지 않습니다
+   (절대 규칙 5).
+   ⚠️⚠️ **연락처 · 상호 · 번지 주소는 매물에 안 나갑니다.** 지역은
+   시 · 군 · 구까지입니다. 성함과 연락처는 저희가 연락드리려고 받는
+   것이고, 보시려는 분께는 두 분이 동의하신 뒤에만 오갑니다
+   (개인정보보호법 제17조).
+   ⚠️ **첨부 칸을 만들지 마세요** — 파일을 받아 둘 곳이 없습니다.
+   사진은 주소로 받습니다 (견적 요청과 같습니다). */
+var SELL_TABS = [
+  { k:"store", name:"매장 · 점포", lead:"가게를 통째로 넘기거나 임대 놓습니다" },
+  { k:"asset", name:"시설 · 장비", lead:"쓰던 장비 · 집기 · 남은 재고를 넘깁니다" }
+];
+
+function sellTabs(t){
+  return '<nav class="chip-g chip-g-fil" aria-label="무엇을 내놓으시나요">'+
+    SELL_TABS.map(function(x){
+      return '<a class="chip'+(x.k === t ? " on" : "")+'" href="/sell?t='+x.k+'">'+
+        esc(x.name)+'</a>'; }).join("")+
+  '</nav>';
+}
+
+function PageSell(){
+  var t = nowQS("t") === "asset" ? "asset" : "store";
+  var ind = nowQS("i"), reg = nowQS("r");
+  var ready = !!(window.WOW_BIZ && WOW_BIZ.sosReady);
+  var isStore = t === "store";
+
+  var fields = isStore
+    ? '<div class="f-2">'+
+        '<div class="f-r"><label for="sl-kind">거래 방식 <b>*</b></label>'+
+          '<select class="sel" id="sl-kind">'+
+            '<option value="transfer">매장 양도 — 권리금을 받고 넘깁니다</option>'+
+            '<option value="lease">임대 — 보증금 · 월세로 내놓습니다</option>'+
+          '</select></div>'+
+        '<div class="f-r"><label for="sl-py">평수</label>'+
+          '<input id="sl-py" inputmode="numeric" placeholder="예: 18"></div>'+
+      '</div>'+
+      '<div class="f-2">'+
+        '<div class="f-r"><label for="sl-dep">보증금 (만원)</label>'+
+          '<input id="sl-dep" inputmode="numeric" placeholder="예: 3000"></div>'+
+        '<div class="f-r"><label for="sl-rent">월세 (만원)</label>'+
+          '<input id="sl-rent" inputmode="numeric" placeholder="예: 180"></div>'+
+      '</div>'+
+      '<div class="f-2">'+
+        /* ⚠️ 0 은 값입니다 — "무권리" 는 0 을 적으신 것이지 안 적으신
+           것이 아닙니다 (화면도 그렇게 가릅니다). */
+        '<div class="f-r"><label for="sl-pm">권리금 (만원)</label>'+
+          '<input id="sl-pm" inputmode="numeric" placeholder="무권리면 0을 적어 주세요"></div>'+
+        '<div class="f-r"><label for="sl-eqc">시설 인수비 (만원)</label>'+
+          '<input id="sl-eqc" inputmode="numeric" placeholder="따로 받으시면 적어 주세요"></div>'+
+      '</div>'+
+      '<div class="f-2">'+
+        '<div class="f-r"><label for="sl-since">문 연 해</label>'+
+          '<input id="sl-since" inputmode="numeric" placeholder="예: 2019"></div>'+
+        '<div class="f-r"><label for="sl-want">넘기고 싶은 시점</label>'+
+          '<input id="sl-want" placeholder="예: 2026년 12월 / 빠를수록"></div>'+
+      '</div>'+
+      '<div class="f-r"><label class="f-ck" for="sl-eq">'+
+        '<input type="checkbox" id="sl-eq"> 시설 · 장비를 그대로 두고 갑니다</label></div>'+
+      /* ⚠️⚠️ **매출은 확인할 방법이 없는 값**입니다. 받되, 올릴 때
+         "사장님이 적으신 값" 이라고 밝혀서 올립니다 — 적는 자리에서도
+         미리 말씀드립니다. */
+      '<div class="f-r"><label for="sl-sales">월 매출 (만원)</label>'+
+        '<input id="sl-sales" inputmode="numeric" placeholder="적어 주시면 그대로 올립니다 (선택)">'+
+        '<span class="f-h">저희가 확인하는 값이 아니라서, 화면에 '+
+          '&ldquo;사장님이 적으신 값&rdquo; 이라고 밝혀서 올립니다.</span></div>'
+    : '<div class="f-2">'+
+        '<div class="f-r"><label for="sl-item">무엇을 내놓으시나요 <b>*</b></label>'+
+          '<input id="sl-item" required placeholder="예: 에스프레소 머신 2그룹 / 4도어 냉장고"></div>'+
+        '<div class="f-r"><label for="sl-deal">거래 단위</label>'+
+          '<select class="sel" id="sl-deal">'+
+            '<option value="single">낱개로 팔겠습니다</option>'+
+            '<option value="bulk">묶음으로 넘기겠습니다</option>'+
+            '<option value="all">시설 전체를 한 번에</option>'+
+          '</select></div>'+
+      '</div>'+
+      '<div class="f-2">'+
+        '<div class="f-r"><label for="sl-brand">제조사</label>'+
+          '<input id="sl-brand" placeholder="예: La Marzocco"></div>'+
+        '<div class="f-r"><label for="sl-year">연식</label>'+
+          '<input id="sl-year" inputmode="numeric" placeholder="예: 2021"></div>'+
+      '</div>'+
+      '<div class="f-2">'+
+        '<div class="f-r"><label for="sl-cnt">수량</label>'+
+          '<input id="sl-cnt" inputmode="numeric" placeholder="예: 1"></div>'+
+        '<div class="f-r"><label for="sl-price">희망가 (만원)</label>'+
+          '<input id="sl-price" inputmode="numeric" placeholder="협의 가능하시면 비워 두세요"></div>'+
+      '</div>'+
+      '<div class="f-r"><label for="sl-state">상태</label>'+
+        '<input id="sl-state" placeholder="예: 정기 점검 받아 왔습니다 / 한 군데 찍힘"></div>';
+
+  return PgHero({
+    kicker:"매물 내놓기",
+    h1raw:"내놓으시는 것이<br class=\"br-m\"> 다음 사장님의 시작이 됩니다.",
+    lead:"매장 · 시설 · 장비를 내놓으실 수 있습니다. 적어 주신 조건 그대로 올리고, 보시려는 분의 문의를 전달합니다. 무료입니다.",
+    tight:true
+  })+
+  '<section class="sec sec-white"><div class="w form-wrap">'+
+    sellTabs(t)+
+    '<p class="note">'+esc(SELL_TABS.filter(function(x){
+      return x.k === t; })[0].lead)+'</p>'+
+
+    (ready ? "" :
+      '<div class="notice-bad"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
+        '<p>접수처 설정이 끝나면 바로 열립니다. 그동안에는 '+
+        '<a href="/stores">지금 나와 있는 매장</a>이나 '+
+        '<a href="/closure">폐업 · 정리에 필요한 것</a>을 먼저 '+
+        '보실 수 있습니다.</p></div>')+
+
+    /* ⚠️⚠️ **먼저 밝히는 것이 폼 아래가 아니라 위입니다.** */
+    '<div class="note-box">'+
+      '<b>올리기 전에 한 번 연락드립니다.</b>'+
+      '<p>적어 주신 내용은 바로 올라가지 않습니다. 저희가 보고 빠진 것을 '+
+      '여쭌 다음에 올립니다. <b>연락처 · 상호 · 번지 주소는 매물에 '+
+      '나가지 않습니다</b> — 지역은 시 · 군 · 구까지만 올리고, 보시려는 '+
+      '분께 연락처를 전하는 것은 사장님이 그때 다시 동의하셔야 합니다.</p>'+
+    '</div>'+
+
+    '<form id="sl-f" onsubmit="return sellSend(event)">'+
+      '<div class="f-2">'+
+        '<div class="f-r"><label for="sl-ind">업종 <b>*</b></label>'+
+          IndustrySelect("sl-ind", ind, "", "업종을 골라 주세요")+'</div>'+
+        '<div class="f-r"><label for="sl-reg">지역 <b>*</b></label>'+
+          RegionSelect("sl-reg", reg, "", "지역을 골라 주세요")+'</div>'+
+      '</div>'+
+      '<div class="f-r"><label for="sl-gu">시 · 군 · 구</label>'+
+        '<input id="sl-gu" autocomplete="address-level2" placeholder="예: 안양시">'+
+        '<span class="f-h">번지까지는 적지 마세요. 화면에는 시 · 군 · 구까지만 나갑니다.</span></div>'+
+
+      fields+
+
+      '<div class="f-r"><label for="sl-q">설명 <b>*</b></label>'+
+        '<textarea id="sl-q" rows="6" required '+
+          'placeholder="상태와 넘기시는 까닭, 보실 수 있는 시간을 적어 주세요. 양식이 없어도 됩니다."></textarea></div>'+
+      '<div class="f-r"><label for="sl-img">사진 주소</label>'+
+        '<input id="sl-img" placeholder="공유 링크가 있으면 붙여 주세요 (선택)">'+
+        '<span class="f-h">파일을 받아 둘 곳이 아직 없어서 주소로 받습니다.</span></div>'+
+
+      '<div class="f-2">'+
+        '<div class="f-r"><label for="sl-name">성함 <b>*</b></label>'+
+          '<input id="sl-name" required autocomplete="name"></div>'+
+        '<div class="f-r"><label for="sl-tel">연락처 <b>*</b></label>'+
+          '<input id="sl-tel" type="tel" required autocomplete="tel" '+
+            'placeholder="010-0000-0000"></div>'+
+      '</div>'+
+
+      AgreeBox("sl-ag","성함 · 연락처 · 업종 · 지역 · 적어 주신 매물 조건과 설명",
+               "매물 등록 확인과 문의 전달","등록을 내리신 날로부터 1년")+
+      '<div id="sl-fail"></div>'+
+      '<button class="btn btn-b btn-lg btn-full" type="submit"'+(ready?"":" disabled")+'>'+
+        (isStore ? "매장 내놓기" : "시설 · 장비 내놓기")+icon("arrow",18)+'</button>'+
+      '<p class="note note-mid">내리고 싶으시면 같은 연락처로 말씀해 주세요. '+
+        '오래된 매물을 그대로 두지 않습니다 — 올린 날짜를 화면에 같이 냅니다.</p>'+
+    '</form>'+
+  '</div></section>'+
+  ReadBand({ cat:"transfer", side:"close",
+             title:"넘기기 전에 알아 두면" });
+}
+
+/* ⚠️ **화면이 보내는 칸 = api/quote.js 가 읽는 칸.** 어긋나면 조용히
+   사라집니다 — node tools/test-api.js 로 같이 확인하세요.
+   ⚠️ detail 은 스물까지입니다 (매장이 열둘이라 상한에 닿아 있었습니다). */
+window.sellSend = function(ev){
+  ev.preventDefault();
+  var $ = function(id){ return document.getElementById(id); };
+  if(!$("sl-ag").checked){ toast("개인정보 수집 · 이용 동의가 필요합니다"); return false; }
+  var isStore = !$("sl-item");
+  /* ⚠️⚠️ **업종 · 지역은 반드시 받습니다.** 딱지에 `*` 만 붙여 두고
+     안 막으면 둘 다 빈 채로 들어옵니다 — 그 매물은 거르개에서 빠지고
+     (checkMarketData 가 빌드를 멈춥니다) 지역 없는 매물은 아무에게도
+     안 보입니다. 지역은 매칭의 첫 번째 조건입니다. */
+  var need = [["sl-ind","업종"],["sl-reg","지역"],
+              ["sl-q","설명"],["sl-name","성함"],["sl-tel","연락처"]];
+  if(!isStore) need.unshift(["sl-item","무엇을 내놓으시는지"]);
+  for(var i=0;i<need.length;i++){
+    if(!$(need[i][0]).value.trim()){
+      toast(need[i][1]+"을(를) 적어 주세요"); $(need[i][0]).focus(); return false; }
+  }
+  var v = function(id){ var e = $(id); return e ? e.value.trim() : ""; };
+  var ind = v("sl-ind"), reg = v("sl-reg");
+  var detail = isStore
+    ? { "거래 방식": $("sl-kind").value === "lease" ? "임대" : "매장 양도",
+        "업종": ind ? amIndustryName(ind) : "", "시군구": v("sl-gu"),
+        "평수": v("sl-py"), "보증금": v("sl-dep"), "월세": v("sl-rent"),
+        "권리금": v("sl-pm"), "시설 인수비": v("sl-eqc"),
+        "시설 포함": $("sl-eq").checked ? "그대로 두고 갑니다" : "",
+        "문 연 해": v("sl-since"), "넘기고 싶은 시점": v("sl-want"),
+        "월 매출(사장님이 적으신 값)": v("sl-sales"), "사진 주소": v("sl-img") }
+    : { "품목": v("sl-item"),
+        "거래 단위": { single:"낱개", bulk:"묶음", all:"시설 전체" }[$("sl-deal").value] || "",
+        "업종": ind ? amIndustryName(ind) : "", "시군구": v("sl-gu"),
+        "제조사": v("sl-brand"), "연식": v("sl-year"), "수량": v("sl-cnt"),
+        "희망가": v("sl-price"), "상태": v("sl-state"), "사진 주소": v("sl-img") };
+  /* 빈 칸은 보내지 않습니다 — 받아 보는 사람이 빈 줄을 세지 않게 */
+  Object.keys(detail).forEach(function(k){ if(!detail[k]) delete detail[k]; });
+
+  return amSend("sl-fail", {
+    kind: "quote",
+    name:  v("sl-name"),
+    tel:   v("sl-tel"),
+    region: reg ? amRegionName(reg) : "",
+    service: "", serviceName: isStore ? "매장 내놓기" : "시설 · 장비 내놓기",
+    q: v("sl-q"),
+    budget: "",
+    detail: detail,
+    agree: true
+  }, "sellSend");
+};

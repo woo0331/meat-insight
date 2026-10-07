@@ -613,9 +613,25 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .fil-ic{ display:inline-flex; color:var(--ink3); }
 .fil .sel{ width:auto; min-width:150px; }
 .fil-n{ margin-left:auto; font-size:var(--t-sm); font-weight:700; color:var(--ink2); }
+/* ⚠️⚠️ **폰에서 칸 폭을 42% 로 못박으면 긴 딱지가 잘립니다.**
+   업종 이름이 "사무 · 전문서비스" 까지 있어서 360px 에서 두 칸으로
+   나누면 어떤 수를 줘도 안 들어갑니다. 그래서 **칸이 제 글자 폭만큼**
+   잡고 모자라면 다음 줄로 내려가게 둡니다 — 짧은 둘은 한 줄에 같이
+   서고 긴 것만 한 줄을 씁니다.
+   ⚠️ 글씨를 줄여서 맞추지 마세요 (12px 미만 금지). */
 @media (max-width:560px){
-  .fil .sel{ flex:1 1 42%; min-width:0; }
+  .fil .sel{ flex:0 1 auto; width:auto; min-width:0; max-width:100%; }
   .fil-n{ flex-basis:100%; margin-left:0; }
+}
+/* ⚠️⚠️ **폰에서 거르개 딱지가 잘립니다.** 재 보니 "영업기간 전체" 가
+   390px 에서 1px, 360px 에서는 업종 · 보증금 · 권리금까지 3px 씩
+   모자랐습니다. select 안이라 **낱말 잘림 검사도 가로 스크롤 검사도
+   안 걸립니다** — 이 저장소에서 "양도 · 임대 전체" 가 "양도 · 임대 전"
+   으로 잘렸던 것과 같은 자리이고, 그때도 찍어 보고 알았습니다.
+   ⚠️ 글씨를 줄이지 않습니다 (12px 미만 금지). 화살표 자리를 줄입니다. */
+@media (max-width:430px){
+  .fil .sel{ padding-left:var(--s3); padding-right:var(--s7);
+    background-position:right var(--s2) center; }
 }
 
 /* ════════ 아무것도 없을 때 ═══════════════════════════════════════
@@ -625,6 +641,32 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   padding:var(--s10) var(--s6); background:var(--bg-2);
   border-radius:var(--r-2xl); }
 .sec-white .empty{ background:var(--bg-2); }
+/* ⚠️⚠️ `.empty` 의 기본 바탕 `--bg-2`(#F5F7F9)는 옅은 회색 구간
+   (`--bg-gray`)과 **완전히 같은 색**입니다 — 회색 구간에 빈 카드를
+   두면 카드가 통째로 사라집니다 ("카드가 구간 바탕과 같은 색이 아니다"
+   가 잡았습니다). 회색 구간에서는 §22 대로 **흰 카드**입니다.
+   ⚠️ 아이콘 원판도 같이 바꿉니다 — 흰 카드 위의 흰 원판은 안 보입니다. */
+.sec-gray .empty{ background:var(--surface); }
+.sec-gray .empty .empty-ic{ background:var(--bg-2); }
+
+/* ⚠️⚠️ **빈 카드만의 일이 아니었습니다.** 카드 일곱(`.cat` · `.ind` ·
+   `.pv` · `.fr` · `.fc` · `.mk` · `.help` · `.sp`)이 전부 바탕을
+   `--bg-2` 로 들고 있어서, 어느 구간이든 회색으로 칠하면 **그 구간의
+   카드가 통째로 사라집니다.** 업체 구간을 회색으로 옮기자 등록된
+   업체 카드(`.pv`)가 바로 그렇게 됐습니다 — 업체가 0곳일 때는 그
+   자리에 `.empty` 만 있어서 위 두 줄로 끝난 줄 알았습니다.
+   회색 구간에서는 §22 대로 **흰 카드**입니다.
+   ⚠️ 카드 안의 흰 칩도 같이 뒤집습니다 — 흰 카드 위의 흰 칩은 안
+   보입니다 (아이콘 원판을 뒤집은 것과 같은 까닭입니다).
+   ⚠️ `.cat:hover` 가 흰색이라 회색 구간에서는 hover 가 아무 일도 안
+   하는 것으로 보입니다 — 옆 카드들과 같은 `--blue-50` 로 받습니다. */
+.sec-gray .cat, .sec-gray .ind, .sec-gray .pv, .sec-gray .fr,
+.sec-gray .fc,  .sec-gray .mk,  .sec-gray .help, .sec-gray .sp{
+  background:var(--surface); }
+.sec-gray .cat:hover{ background:var(--blue-50); }
+.sec-gray .cat-s em, .sec-gray .cat-chips a, .sec-gray .pv-sv span,
+.sec-gray .pv-sv em, .sec-gray .pv-ck, .sec-gray .fr-m em,
+.sec-gray .mk-kind a, .sec-gray .mk-pre{ background:var(--bg-2); }
 .empty-ic{ display:inline-flex; align-items:center; justify-content:center;
   width:60px; height:60px; border-radius:var(--r-pill);
   background:var(--surface); color:var(--ink3); margin-bottom:var(--s2); }
@@ -638,6 +680,11 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .pv{ display:grid; grid-template-rows:auto 1fr; border-radius:var(--r-xl);
   overflow:hidden; background:var(--bg-2); transition:transform .15s, box-shadow .2s; }
 .pv:hover{ transform:translateY(-3px); box-shadow:var(--shadow-md); }
+/* ⚠️⚠️ **사진이 없는 카드는 칸이 하나입니다.** 카드가
+   `grid-template-rows:auto 1fr` 이라, 액자를 안 그리면 빈 둘째 칸이
+   카드 아래에 그대로 남습니다 — 빈 가짜요소가 칸 하나를 차지하는 것과
+   같은 자리입니다. 업체 · 프랜차이즈 · 매물 카드가 같이 씁니다. */
+.pv.nph, .fr.nph, .mk.nph{ grid-template-rows:1fr; }
 .pv-ph{ display:block; aspect-ratio:16/10; overflow:hidden; background:var(--line-soft); }
 .pv-ph .ph{ width:100%; height:100%; object-fit:cover; display:block; }
 .ph-none{ display:block; width:100%; height:100%; background:var(--line-soft); }
@@ -731,9 +778,16 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .rv-t{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; margin-bottom:var(--s2); }
 .rv-t > b{ display:inline-flex; align-items:center; gap:4px; }
 .rv-t svg{ color:var(--warn); }
+/* ⚠️⚠️ **후기 인증 배지도 상태색이 아니라 골드입니다.** 확인 배지
+   (.pv-vf)와 같은 까닭입니다 — 초록(--ok)은 "좋다/나쁘다" 를 말하는
+   색인데 인증은 판정이 아니라 **확인했다는 표시**라, 초록으로 두면
+   배지가 없는 후기가 "나쁘다" 로 읽힙니다. 게다가 --ok 를 --ok-bg
+   위에 얹으면 대비가 **3.06** 이라 13px 굵은 글씨가 AA(4.5)에 못
+   미칩니다 — 후기가 0건이라 한 번도 안 그려져서, 대비 검사가
+   잎사귀만 보던 동안 두 겹으로 숨어 있었습니다. */
 .rv-bd{ display:inline-flex; align-items:center; gap:3px; font-style:normal;
-  font-size:var(--t-cap); font-weight:700; color:var(--ok);
-  background:var(--ok-bg); border-radius:var(--r-pill); padding:3px 9px; }
+  font-size:var(--t-cap); font-weight:700; color:var(--gold-text);
+  background:var(--gold-bg); border-radius:var(--r-pill); padding:3px 9px; }
 .rv-at{ margin-left:auto; font-size:var(--t-cap); color:var(--ink3); }
 .rv p{ color:var(--ink2); line-height:1.8; }
 .rv-ax{ display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5); margin-top:var(--s3);
@@ -828,6 +882,12 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mk-sp li{ display:flex; align-items:baseline; justify-content:space-between;
   gap:var(--s4); padding:var(--s4) var(--s5);
   border-bottom:1px solid var(--line); }
+/* ⚠️⚠️ **칸 수가 홀수면 마지막 하나가 반쪽만 남습니다.** 두 칸
+   격자라 일곱 번째 줄이 왼쪽에만 서고, 밑줄도 거기서 끊겨 표가
+   깨진 것처럼 보입니다 — 걸음 여섯을 다섯 칸에 넣었을 때와 같은
+   자리입니다. 값이 없는 칸은 아예 안 넣으니(절대 규칙 2) 홀수는
+   매물마다 수시로 납니다. 마지막 하나는 두 칸을 다 씁니다. */
+.mk-sp li:last-child:nth-child(odd){ grid-column:1 / -1; }
 .mk-sp-l{ font-size:var(--t-cap); color:var(--ink2); }
 .mk-sp-v{ font-size:var(--t-base); font-weight:700; color:var(--ink);
   text-align:right; }
@@ -856,8 +916,13 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   background:var(--blue-50); color:var(--blue); }
 .help > b{ font-size:var(--t-lg); }
 .help-p{ font-size:var(--t-sm); color:var(--ink2); line-height:1.75; }
+/* ⚠️⚠️ **옅은 회색 카드 위의 15px 굵은 글씨는 짙은 쪽**입니다.
+   --blue 계열(창업 4.27 · 폐업 4.25)은 흰 바탕에서는 되는데 이 카드
+   바탕(--bg-2) 위에서는 AA(4.5)에 못 미칩니다 — 이 저장소에서
+   "--blue 를 굵은 작은 글씨 색으로" 로 겪은 자리가 **세 번째**입니다.
+   --blue-600 은 창업 6.08 · 폐업 4.75 · 중립 6.67 입니다. */
 .help-go{ display:inline-flex; align-items:center; gap:5px; margin-top:var(--s3);
-  font-size:var(--t-sm); font-weight:700; color:var(--blue); }
+  font-size:var(--t-sm); font-weight:700; color:var(--blue-600); }
 @media (max-width:900px){ .help-g{ grid-template-columns:1fr; } }
 
 .band-cta{ display:flex; align-items:center; justify-content:space-between;
@@ -2021,7 +2086,11 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    으로 한 구간처럼 읽힙니다 (전수 점검이 잡았습니다). 아래는 입점
    구간(흰색)이라 둘 다와 떨어지는 아이보리2 로 둡니다. */
 .mhow{ background:var(--bg-ivory2); }
-.hiw-g{ display:grid; grid-template-columns:repeat(5, 1fr); gap:var(--s3); }
+/* ⚠️ 걸음이 **여섯**입니다 (마무리 지시서 §6). 다섯 칸으로 두면
+   마지막 하나가 둘째 줄에 혼자 남아 "빠뜨린 칸" 으로 읽힙니다 —
+   찍어 보고 셋씩 두 줄로 고쳤습니다. 걸음 수를 바꾸시면 여기도
+   같이 보세요. */
+.hiw-g{ display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--s3); }
 .hiw{ display:flex; flex-direction:column; gap:var(--s2); min-width:0;
   padding:var(--s5) var(--s4); border:1px solid var(--line);
   border-radius:var(--r-xl); background:var(--surface); }

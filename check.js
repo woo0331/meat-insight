@@ -113,6 +113,8 @@ const PAGES = [
   ["/support",           "자금 · 정부지원"],
   ["/content",           "창업 · 폐업 정보"],
   ["/quote",             "견적 요청"],
+  ["/sell",              "매물 내놓기 — 매장"],
+  ["/sell?t=asset",      "매물 내놓기 — 시설 · 장비"],
   ["/quote?c=interior&i=cafe&r=gyeonggi&side=start", "견적 요청 (조건 실려 옴)"],
   ["/join",              "업체 입점하기"],
   ["/my",                "MY"],
@@ -250,7 +252,7 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[768,1024,"작�
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[] };
   /* ⚠️ **흰 글자가 흰 바탕에 앉는 일이 실제로 있었습니다.** 창업 다섯
      마디(.flow)는 어두운 구간에만 있던 것이라 글자색 기본이 흰색이고,
      밝은 쪽은 .sec-tone 안에서만 되돌려 놓았습니다. 그 구간을 순백으로
@@ -284,7 +286,29 @@ const AUDIT = `(() => {
     while(n && n !== document.documentElement){
       const cs = getComputedStyle(n);
       if(cs.backgroundImage && cs.backgroundImage !== "none") return null;
-      const c = rgb(cs.backgroundColor);
+      let c = rgb(cs.backgroundColor);
+      /* ⚠️⚠️ **가짜요소에 칠한 바탕도 읽습니다.** 히어로 왼쪽 판의
+         짙은 남색은 대각선 때문에 판 자신이 아니라 ::before 에
+         있습니다 — 안 읽으면 그 위의 **흰 글자가 "흰 바탕" 위로**
+         읽혀서 대비 1.04 로 잡힙니다 (전부 오탐이고, 진짜 사고는
+         그 더미에 묻힙니다). 어두운 면 검사는 이미 ::before 를
+         읽고 있었는데 대비 검사만 안 읽고 있었습니다.
+         ⚠️ **덮는 크기일 때만 봅니다** — 글머리 점(6x6)까지 바탕으로
+         세면 요약 칸의 남색 글씨가 남색 점 위에 앉은 것으로 읽힙니다
+         (실제로 그렇게 180건이 잡혔습니다). */
+      if(!c || c[3] < .999){
+        const box = n.getBoundingClientRect();
+        for(const pe of ["::before", "::after"]){
+          const ps = getComputedStyle(n, pe);
+          if(ps.content === "none") continue;
+          if(ps.backgroundImage && ps.backgroundImage !== "none") return null;
+          const pc = rgb(ps.backgroundColor);
+          if(!pc || pc[3] < .999) continue;
+          const pw = parseFloat(ps.width), ph = parseFloat(ps.height);
+          if(!(pw >= box.width * 0.8 && ph >= box.height * 0.8)) continue;
+          c = pc; break;
+        }
+      }
       if(c){
         if(c[3] >= .999){
           /* 불투명한 면을 만났습니다 — 위에 쌓인 것들을 여기에 얹습니다 */
@@ -346,8 +370,16 @@ const AUDIT = `(() => {
     if (ownTxt.indexOf("**") >= 0)
       out.star.push((e.className || e.tagName) + "|" + ownTxt.trim().slice(0, 24));
 
-    /* 3. 12px 미만 */
-    if (leaf) {
+    /* 3. 12px 미만
+       ⚠️⚠️ **"잎사귀" 만 보면 아이콘이 든 칸을 영영 못 봅니다.**
+       아래 대비 검사와 함께 leaf(자식이 하나도 없는 칸)만 재고
+       있었는데, 이 저장소의 배지 · 칩 · 단추는 **거의 전부 svg 아이콘
+       하나를 품고** 있습니다 — 확인 배지 · 후기 인증 배지 · "포트폴리오
+       2건" · 단추 글자가 **한 번도 안 재졌습니다.** 별표 검사가 똑같이
+       잎사귀만 보다가 약관 두 문서를 놓친 그 자리입니다.
+       이제 **칸이 직접 들고 있는 글자**가 있으면 잽니다 (부모가 자식
+       글자까지 중복으로 잡히지는 않습니다). */
+    if (leaf || ownTxt.trim()) {
       const f = parseFloat(c.fontSize);
       if (f < 12) out.small.push(e.className+"|"+f+"px|"+(e.textContent||"").trim().slice(0,14));
       /* 3-2. 글자가 바탕에 묻히는가 — **WCAG AA**
@@ -640,6 +672,39 @@ const AUDIT = `(() => {
     });
   }
 
+  /* ⚠️⚠️ **없는 아이콘 key 를 적으면 빈 칸이 그려집니다.**
+     icon() 은 모르는 이름에 **빈 문자열**을 돌려줍니다 — 에러도 안 나고
+     화면도 안 죽고, 그 타일만 덩그러니 빕니다. 매장 구간의 "장비"
+     카드가 그렇게 fridge 라는 없는 이름을 달고 몇 주 비어 있었습니다.
+     아이콘 타일(.ic-t)과 단계 아이콘(.stg-i) 안에 svg 가 없으면
+     그 자리가 빈 것입니다. */
+  /* ⚠️⚠️ **고르개 딱지가 칸보다 길면 조용히 잘립니다.** select 안의
+     글자는 **낱말 잘림 검사에도 가로 스크롤 검사에도 안 걸립니다** —
+     이 저장소에서 "양도 · 임대 전체" · "낱개 · 일괄 전체" · "영업기간
+     전체" **세 번** 그랬고 세 번 다 찍어 보고 알았습니다. 글자 폭을
+     재서 칸 안쪽과 견줍니다. */
+  document.querySelectorAll("#view select.sel").forEach(e => {
+    const o = e.options[e.selectedIndex];
+    if(!o || !e.offsetParent) return;
+    const cs = getComputedStyle(e);
+    const probe = document.createElement("span");
+    probe.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap;font:" + cs.font;
+    probe.textContent = o.textContent;
+    document.body.appendChild(probe);
+    const need = probe.getBoundingClientRect().width;
+    probe.remove();
+    const inner = e.getBoundingClientRect().width
+      - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    if(inner > 0 && need > inner)
+      out.sel.push(o.textContent.trim() + "|" + Math.round(need) + ">" + Math.round(inner));
+  });
+
+  document.querySelectorAll("#view .ic-t, #view .stg-i").forEach(e => {
+    if(e.querySelector("svg")) return;
+    const own = (e.parentElement || e);
+    out.ico.push((own.textContent || "").trim().slice(0, 14) || "(이름 없음)");
+  });
+
   out.links = [...document.querySelectorAll('a[href^="/"]')].map(a=>a.getAttribute("href"));
   return out;
 })()`;
@@ -682,7 +747,7 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
@@ -714,7 +779,9 @@ const AUDIT = `(() => {
       ["별표(**)가 글자로 남음", uniq(bad.star)],
       ["어두운 면이 15% 넘음",   uniq(bad.dark)],
       ["이웃한 두 구간이 붙어 보임", uniq(bad.tone)],
-      ["\"준비 중\" 자리표시자", uniq(bad.ph)]
+      ["\"준비 중\" 자리표시자", uniq(bad.ph)],
+      ["아이콘 자리가 비었음", uniq(bad.ico)],
+      ["고르개 딱지가 칸보다 긺", uniq(bad.sel)]
     ];
     console.log("\n── " + vn + " (" + w + "px)");
     rows.forEach(([n,v]) => {
@@ -1101,6 +1168,9 @@ const AUDIT = `(() => {
     document.getElementById("q-q").value    = "오래 적은 소중한 내용입니다";
     document.getElementById("q-name").value = "홍길동";
     document.getElementById("q-tel").value  = "010-1234-5678";
+    /* ⚠️ 지역은 **필수**입니다 — 안 고르면 보내기 전에 막혀서 이 검사가
+       아무것도 안 보게 됩니다 (틀린 것은 코드가 아니라 씨앗입니다). */
+    document.getElementById("q-reg").value  = "gyeonggi";
     document.getElementById("q-ag").checked = true;
     window.quoteSend({ preventDefault: function(){} });
     await new Promise(r => setTimeout(r, 200));
@@ -1171,13 +1241,15 @@ const AUDIT = `(() => {
     else if(inSearch.indexOf("검사용 공고 B") >= 0) why = "원문 없는 공고가 검색에만 나옵니다";
     return why;`);
   await f("가격은 10건 이상 · 기준일 있는 것만 낸다", "/", `
+    /* ⚠️ 칸 이름은 market.js 의 생김새 그대로 key 입니다 — 검사가
+       없는 칸(cat)으로 씨앗을 적어 두면 그걸 보고 베껴 쓰게 됩니다. */
     window.AM_QUOTE_STATS.push(
-      { cat:"zz-a", range:"평당 100~120만원", n:12, asOf:"2026-10-01" },
-      { cat:"zz-b", range:"평당 50~60만원",   n:9,  asOf:"2026-10-01" },
-      { cat:"zz-c", range:"평당 70~80만원",   n:30 });
-    const got = window.amQuoteStats().map(function(x){ return x.cat; });
+      { key:"zz-a", name:"검사용 A", range:"평당 100~120만원", n:12, asOf:"2026-10-01" },
+      { key:"zz-b", name:"검사용 B", range:"평당 50~60만원",   n:9,  asOf:"2026-10-01" },
+      { key:"zz-c", name:"검사용 C", range:"평당 70~80만원",   n:30 });
+    const got = window.amQuoteStats().map(function(x){ return x.key; });
     window.AM_QUOTE_STATS = window.AM_QUOTE_STATS.filter(function(x){
-      return String(x.cat).indexOf("zz-") !== 0; });
+      return String(x.key).indexOf("zz-") !== 0; });
     let why = true;
     if(got.indexOf("zz-a") < 0) why = "10건 넘는 것이 안 나옵니다";
     else if(got.indexOf("zz-b") >= 0) why = "9건짜리가 나옵니다 — 적은 표본으로 시세를 말합니다";
@@ -1301,6 +1373,51 @@ const AUDIT = `(() => {
     if(!body.detail || body.detail["업종"] !== "카페 · 디저트") return "업종이 안 실렸습니다";
     if(body.detail["평수"] !== "30") return "평수가 안 실렸습니다";
     return true;`);
+  /* ⚠️⚠️ **내놓는 길**입니다. 전에는 폼이 아예 없어서 "매장 내놓기" 가
+     목록 화면으로 갔습니다. 여기서 받는 칸이 market.js 의 생김새와
+     어긋나면, 받아 적을 때마다 사람이 맞춰 넣어야 합니다. */
+  await f("매물 내놓기: 업종 · 지역 없이는 안 보낸다", "/sell", `
+    let sent = false;
+    const o = window.fetch; window.fetch = function(){ sent = true; return o.apply(this, arguments); };
+    document.getElementById("sl-q").value    = "평촌 18평 카페입니다";
+    document.getElementById("sl-name").value = "홍길동";
+    document.getElementById("sl-tel").value  = "010-1234-5678";
+    document.getElementById("sl-ag").checked = true;
+    try{ window.sellSend({ preventDefault:function(){} }); }catch(e){}
+    await new Promise(r => setTimeout(r, 120));
+    window.fetch = o;
+    /* 지역 없는 매물은 거르개에서 빠지고 빌드가 멈춥니다 */
+    return sent ? "업종 · 지역 없이 보냈습니다" : true;`);
+
+  await f("매물 내놓기: 적은 조건이 매물 생김새로 나간다", "/sell", `
+    let body = null;
+    const o = window.fetch;
+    window.fetch = function(u, i){ try{ body = JSON.parse(i.body); }catch(e){}
+      return Promise.resolve({ ok:true, json:function(){ return Promise.resolve({}); } }); };
+    const set = function(id, v){ const e = document.getElementById(id);
+      if(e){ if(e.type === "checkbox") e.checked = !!v; else e.value = v; } };
+    set("sl-ind","cafe"); set("sl-reg","gyeonggi"); set("sl-gu","안양시");
+    set("sl-py","18"); set("sl-dep","3000"); set("sl-rent","180");
+    /* ⚠️ **0 은 값입니다** — "무권리" 는 0 을 적으신 것이지 안 적으신
+       것이 아닙니다. 빈 칸을 걸러낼 때 같이 떨어지면 안 됩니다. */
+    set("sl-pm","0"); set("sl-eq", true); set("sl-since","2019");
+    set("sl-q","평촌 18평 카페입니다"); set("sl-name","홍길동");
+    set("sl-tel","010-1234-5678"); set("sl-ag", true);
+    try{ window.sellSend({ preventDefault:function(){} }); }catch(e){}
+    await new Promise(r => setTimeout(r, 200));
+    window.fetch = o;
+    if(!body) return "보내지 않았습니다";
+    if(body.agree !== true) return "동의 표시가 안 실렸습니다";
+    const d = body.detail || {};
+    if(d["업종"] !== "카페 · 디저트") return "업종이 안 실렸습니다";
+    if(d["시군구"] !== "안양시")      return "시군구가 안 실렸습니다";
+    if(d["보증금"] !== "3000" || d["월세"] !== "180")
+      return "보증금 · 월세가 안 실렸습니다";
+    if(d["권리금"] !== "0") return "무권리(0)가 떨어졌습니다 — 0 은 값입니다";
+    if(!d["시설 포함"])     return "시설 포함이 안 실렸습니다";
+    if(d["시설 인수비"] !== undefined) return "안 적은 칸이 빈 값으로 나갑니다";
+    return true;`);
+
   await f("입점: 업체명이 없으면 안 보낸다", "/join", `
     let sent = false;
     const o = window.fetch; window.fetch = function(){ sent = true; return o.apply(this, arguments); };
@@ -1373,6 +1490,7 @@ const AUDIT = `(() => {
     document.getElementById("q-q").value    = "25평입니다";
     document.getElementById("q-name").value = "홍길동";
     document.getElementById("q-tel").value  = "010-1234-5678";
+    document.getElementById("q-reg").value  = "gyeonggi";   /* 필수 */
     document.getElementById("q-ag").checked = true;
     window.quoteSend({ preventDefault: function(){} });
     await new Promise(r => setTimeout(r, 350));
@@ -2454,6 +2572,29 @@ const AUDIT = `(() => {
     }
     if(dup.length) return "겹치는 업종 색이 " + dup.length + "개 있습니다 — " + dup[0];
     return true;`);
+  /* ⚠️⚠️ **근거 없는 인기 · 추천 표현을 막습니다** (2026-10-06 마무리
+     지시서 §3). 검색량 · 클릭 · 저장 · 견적 요청을 **하나도 모으지
+     않습니다** — 재 본 적 없는 것을 적으면 표시·광고의 공정화에 관한
+     법률 제3조입니다. 이 저장소에서 같은 자리를 여러 번 오갔습니다
+     (검색 칩의 "인기" · 서비스 구간의 "많이 찾는").
+     ⚠️ 이용 데이터가 쌓이면 **이 검사를 지우지 말고** 그 값을 세는
+     별도 구간을 만드세요 (§3). */
+  await f("근거 없는 인기 · 추천 표현이 없다", "/", `
+    /* ⚠️ "인기" 를 낱글자로 찾지 마세요 — **무인기기** 처럼 멀쩡한
+       낱말에 들어 있습니다 (업종 장비 목록에 실제로 있습니다). */
+    const BAD = ["많이 찾는", "인기순", "인기 검색어", "인기 서비스",
+                 "인기 업체", "인기 많은", "BEST", "사장님들이 선택",
+                 "가장 많이", "만족도가 높은", "검증된 업체",
+                 "추천 프랜차이즈", "추천 업체", "추천 검색어", "추천순"];
+    const v = document.getElementById("view");
+    if(!v) return "본문이 없습니다";
+    /* 푸터까지 봅니다 — 모든 화면이 같이 쓰는 자리입니다 */
+    const txt = v.textContent + " " + (document.querySelector("footer") || {}).textContent;
+    const hit = BAD.filter(function(w){ return txt.indexOf(w) >= 0; });
+    if(hit.length) return "근거 없는 표현이 있습니다 — " + hit.join(", ");
+    if(/\\b(TOP|Top)\\s*\\d/.test(txt)) return "순위 표기(TOP n)가 있습니다";
+    return true;`);
+
   await f("메인 구간 차례가 지시서와 같다", "/", `
     /* ⚠️⚠️ **2026-10-07 최종 전면개편 §6 — 넷입니다.**
        HERO → 인수인계 핵심 브랜드 구조 → 핵심 서비스 미리보기 →
@@ -2849,7 +2990,10 @@ const AUDIT = `(() => {
     const groups = (window.AM_STORE_RANGES||[]).map(function(g){
       return { name:g.name, opts:g.opts };
     }).concat([{ name:"시설 값", opts:window.AM_ASSET_PRICE||[] }]);
-    if(groups.length < 5) return "거르개 묶음이 모자랍니다 — " + groups.length;
+    /* ⚠️ 묶음 수를 같이 셉니다 — 하나가 조용히 빠져도 칸 검사는
+       남은 것만 보고 통과합니다. 지금 여섯입니다 (면적 · 보증금 ·
+       월세 · 영업기간 · 권리금 · 시설 값). */
+    if(groups.length < 6) return "거르개 묶음이 모자랍니다 — " + groups.length;
     for(const g of groups){
       if(!(g.opts||[]).length) return "거르개 묶음 " + g.name + "에 칸이 없습니다";
       /* 재 보는 값 — 경계와 그 바로 위아래 */
@@ -2876,12 +3020,67 @@ const AUDIT = `(() => {
     }
     return true;`);
 
+  /* ⚠️⚠️ **영업기간과 시설 포함은 2026-10-05 V2 §7 의 남은 둘**입니다.
+     영업기간은 매물에 적힌 값이 아니라 문 연 해(`since`)에서 **세는
+     값**이라, 묶음이 `get` 을 들고 있습니다 — 거기만 다른 길이라
+     따로 봅니다. 시설 포함은 거르개 자체가 **데이터에는 있는데 화면에
+     칸이 없어서** 아무도 못 쓰고 있었습니다.
+     ⚠️ 매물이 0건이라 둘 다 **끼워 넣고** 봅니다. 저장소 데이터는
+     그대로 0건입니다 (절대 규칙 1). */
+  await f("영업기간 · 시설 포함으로 실제로 걸러진다", "/stores", `
+    const base = { kind:"transfer", industry:"cafe", region:"gyeonggi",
+                   gu:"안양시", pyeong:18, text:"검사 안에서만 삽니다.",
+                   at:"2026-10-02" };
+    const Y = new Date().getFullYear();
+    window.AM_STORES.push(
+      Object.assign({ id:"zz-y1", title:"오래된 가게", since:Y - 7,
+                      withEquip:true }, base),
+      /* ⚠️ **2년**입니다. 구간이 아래를 열고 위를 닫아서(min < n ≤ max)
+         딱 1년이면 "1~3년" 이 아니라 **"1년 이하"** 칸입니다 — 처음에
+         1년으로 적었다가 "1~3년에 아무것도 안 걸린다" 로 나왔고,
+         틀린 것은 코드가 아니라 **씨앗**이었습니다. */
+      Object.assign({ id:"zz-y2", title:"새 가게", since:Y - 2,
+                      withEquip:false }, base),
+      Object.assign({ id:"zz-y3", title:"안 적은 가게" }, base));
+    const ids = function(f){
+      return window.amStores(f).map(function(s){ return s.id; })
+        .filter(function(x){ return /^zz-y/.test(x); }).sort().join(",");
+    };
+    const all  = ids({});
+    const yr5  = ids({ yr:"d" });      /* 5~10년 */
+    const yr1  = ids({ yr:"b" });      /* 1~3년 */
+    const eq   = ids({ withEquip:true });
+    window.AM_STORES = window.AM_STORES.filter(function(x){ return !/^zz-y/.test(x.id); });
+    window.rerender(true);
+    if(all !== "zz-y1,zz-y2,zz-y3") return "끼워 넣은 셋이 다 안 나옵니다 — " + all;
+    if(yr5 !== "zz-y1") return "5~10년에 " + (yr5 || "아무것도") + " 가 걸립니다";
+    if(yr1 !== "zz-y2") return "1~3년에 " + (yr1 || "아무것도") + " 가 걸립니다";
+    /* ⚠️ 문 연 해를 안 적은 매물은 **어느 칸에도 안 걸려야** 합니다 */
+    if(yr5.indexOf("zz-y3") >= 0 || yr1.indexOf("zz-y3") >= 0)
+      return "영업기간을 안 적은 매물이 걸립니다";
+    if(eq !== "zz-y1") return "시설 포함에 " + (eq || "아무것도") + " 가 걸립니다";
+    /* 화면에 칸이 실제로 있어야 씁니다 — 데이터에만 있으면 아무도 못 씁니다 */
+    if(!document.getElementById("fil-yr")) return "영업기간 고르개가 화면에 없습니다";
+    if(!document.getElementById("fil-eq")) return "시설 포함 체크칸이 화면에 없습니다";
+    return true;`);
+
   /* ⚠️⚠️ **거르개로 몇 건이 빠졌는지 밝혀야 합니다.** 안 밝히면 손님은
      그 분야에 원래 그만큼만 있는 줄 알고 나갑니다 — 0 을 0 이라고
      말하는 것과 같은 까닭입니다 (절대 규칙 2). */
   await f("거르개로 숨긴 건수를 밝힌다", "/providers/interior?v=1", `
     const base = { regions:["gyeonggi"], industries:["cafe"],
                    subs:["interior"], intro:"검사 안에서만 삽니다." };
+    /* ⚠️⚠️ **갯수를 그냥 세면 안 됩니다.** 진짜 업체가 한 곳이라도
+       등록되면 그 수가 섞여서 엉뚱하게 실패합니다 — 이 저장소에서
+       "업체는 자기 분야에만 나온다" 가 똑같이 그랬습니다. 끼워 넣기
+       전을 먼저 재고 **늘어난 값**만 봅니다. */
+    const count  = function(){
+      return document.querySelectorAll(".pv-g > .pv-w").length; };
+    const hidden = function(){
+      const e = document.querySelector(".fil-off");
+      const m = e && e.textContent.match(/\\d+/);
+      return m ? Number(m[0]) : 0; };
+    const n0 = count(), h0 = hidden();
     window.AM_PROVIDERS.push(
       Object.assign({ id:"zz-h1", name:"확인된 곳", verified:{ biz:true } }, base),
       Object.assign({ id:"zz-h2", name:"안된 곳 하나" }, base),
@@ -2891,15 +3090,15 @@ const AUDIT = `(() => {
     const ck  = document.getElementById("fil-v");
     const off = document.querySelector(".fil-off");
     const txt = off ? off.textContent : "";
-    const n   = document.querySelectorAll(".pv-g > .pv-w").length;
+    const n1  = count(), h1 = hidden();
     window.AM_PROVIDERS = window.AM_PROVIDERS.filter(function(p){
       return !/^zz-h/.test(p.id); });
     window.rerender(true);
     if(!ck) return "'확인된 곳만' 체크칸이 없습니다";
     if(!ck.checked) return "주소에 켜져 있는데 체크칸이 꺼져 있습니다";
-    if(n !== 1) return "거르개를 켰는데 " + n + "곳이 나옵니다";
+    if(n1 - n0 !== 1) return "확인된 곳 하나만 늘어야 하는데 " + (n1 - n0) + "곳 늘었습니다";
     if(!off) return "거르개로 두 곳이 빠졌는데 그 사실을 안 밝힙니다";
-    if(txt.indexOf("2") < 0) return "숨긴 건수가 센 값이 아닙니다 — " + txt;
+    if(h1 - h0 !== 2) return "숨긴 건수가 센 값이 아닙니다 — " + txt;
     return true;`);
 
   /* ⚠️⚠️ **아이콘을 두 곳에 적지 마세요.** 도구마다 아이콘이

@@ -101,6 +101,8 @@ var META = {
                  "창업비용 · 철거비 · 원상복구 범위 · 권리금 · 사업자등록 · 폐업신고처럼 실제로 막히는 것만 정리합니다."],
   "/quote":     ["견적 요청",
                  "한 번만 적으시면 조건에 맞는 업체들에 같이 전달합니다. 받으신 제안을 한 화면에서 비교하세요."],
+  "/sell":      ["매장 · 시설 내놓기",
+                 "정리하시는 매장과 쓰시던 시설 · 장비를 내놓으실 수 있습니다. 평수 · 보증금 · 월세 · 권리금 조건 그대로 올리고 문의를 전달합니다."],
   "/join":      ["업체 입점하기",
                  "창업과 폐업을 준비하는 사장님이 직접 찾아옵니다. 지역과 전문 분야가 맞는 요청만 받아 보세요. 기본 입점은 무료입니다."],
   "/my":        ["MY",
@@ -246,6 +248,7 @@ window.routeInfo = function(path){
     "/support":   "support",
     "/content":   "contents",
     "/quote":     "quote",
+    "/sell":      "sell",
     "/sample":    "sample",
     "/join":      "join",
     "/my":        "my",
@@ -540,6 +543,7 @@ function render(){
     case "contents":        html = PageContents();                  break;
     case "content":         html = PageContent(r.content);          break;
     case "quote":           html = PageQuote();                     break;
+    case "sell":            html = PageSell();                      break;
     case "join":            html = PageJoin();                      break;
     case "my":              html = PageMy();                        break;
     case "search":          html = PageSearch();                    break;

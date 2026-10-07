@@ -40,6 +40,12 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* ⚠️⚠️ 금지 표현을 한 자리에 넣어 보면 걸려야 합니다 (2026-10-06
+     마무리 지시서 §3). 이 저장소에서 "인기 검색어" → "추천 검색어" →
+     "바로가기" 로 두 번 옮겼고, 서비스 제목도 하루에 두 번 오갔습니다.
+     되돌아가는 것을 막는 것이 이 검사의 일입니다. */
+  ["근거 없는 인기 · 추천 표현이 없다",
+   `document.querySelector(".msvc h2").textContent = "사장님들이 많이 찾는 서비스";`],
   /* ══ 2026-10-06 2차 지시서 ══════════════════════════════════════ */
   /* 여정 화면의 카드를 고르개로 바꾸면 걸려야 합니다 — 그렇게 되면
      여정 네 화면에서 "눌러도 아무 데도 안 가는 카드" 가 됩니다.
@@ -60,6 +66,25 @@ const CASES = [
       S[1].style.background = c;
       S[0].style.background = c;
     })();`],
+
+  /* ══ 매물 내놓기 (/sell) ═══════════════════════════════════════ */
+  /* 업종 · 지역을 안 막던 때로 돌려놓습니다 — 딱지에 별표만 붙여 두고
+     안 막으면 빈 채로 들어오고, 그 매물은 거르개에서 빠집니다.
+     ⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — 보내는 함수를 감쌉니다
+     (검사가 window.sellSend 를 그때 찾아 부르기 때문에 먹습니다). */
+  ["매물 내놓기: 업종 · 지역 없이는 안 보낸다",
+   `(function(){
+      const real = window.sellSend;
+      window.sellSend = function(ev){
+        document.getElementById("sl-ind").value = "cafe";
+        document.getElementById("sl-reg").value = "gyeonggi";
+        return real(ev);
+      };
+    })();`],
+  /* 무권리(0)가 빈 칸으로 떨어지던 꼴을 만들어 봅니다 — 적는 칸의
+     id 를 바꿔 놓으면 값을 못 읽어 그 칸이 통째로 빠집니다. */
+  ["매물 내놓기: 적은 조건이 매물 생김새로 나간다",
+   `document.getElementById("sl-pm").id = "sl-pm-deleted";`],
 
   /* ══ 도구 열셋 (2026-10-05 V2 §16) ══════════════════════════════ */
   /* 묶음을 떼면 걸려야 합니다 — 떼면 목록에서 조용히 빠집니다 */
@@ -412,6 +437,12 @@ const CASES = [
       };
     })(window.amProviderVerified);`],
   /* 위아래를 둘 다 닫던 그때 — 보증금 3,000 이 두 칸에 걸렸습니다 */
+  /* ⚠️ 영업기간 묶음을 통째로 빼 봅니다 — 데이터에서 빠지면 화면의
+     고르개도 같이 사라지므로 검사가 걸려야 합니다. */
+  ["영업기간 · 시설 포함으로 실제로 걸러진다",
+   `window.AM_STORE_RANGES = window.AM_STORE_RANGES.filter(function(g){
+      return g.key !== "yr"; });
+    window.rerender(true);`],
   ["매물 거르개의 칸이 겹치지도 비지도 않는다",
    `window.amInRange = function(val, opt){
       if(val == null || !opt) return false;
@@ -617,6 +648,40 @@ async function proveAudit(pg){
       " → 옛 흐린 색으로 되돌리면 " + JSON.stringify(after).slice(0,60) + "]");
   }
 
+  /* ⚠️⚠️ **아이콘이 든 칸도 재는가** — 대비 검사가 오래도록
+     "잎사귀"(자식이 하나도 없는 칸)만 보고 있었습니다. 이 저장소의
+     배지 · 칩 · 단추는 거의 전부 svg 아이콘 하나를 품고 있어서
+     **한 번도 안 재졌습니다** (후기 인증 배지가 대비 3.06 으로 그
+     밑에 숨어 있었습니다). 아이콘이 든 칸의 글자색만 흐리게 바꿔
+     놓고 잡히는지 봅니다 — 잎사귀만 보던 때로 돌아가면 못 잡습니다.
+     ⚠️ 지울 것이 **실제로 있는** 화면을 고릅니다 (이 저장소에서
+     타일이 없는 화면에 되돌리기를 걸어 헛물을 켠 적이 있습니다). */
+  for(const u of ["/closure", "/startup"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).dim;
+    const n = await pg.evaluate(() => {
+      let k = 0;
+      document.querySelectorAll("#view *").forEach(function(e){
+        if(!e.querySelector("svg")) return;
+        const own = [].slice.call(e.childNodes)
+          .filter(function(x){ return x.nodeType === 3; })
+          .map(function(x){ return x.nodeValue; }).join("").trim();
+        if(!own) return;
+        e.style.color = "#E8E8E8";   /* 흰 바탕에서 대비 1.3 */
+        k++;
+      });
+      return k;
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).dim;
+    const ok = n > 0 && before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 아이콘이 든 칸도 대비를 잰다 · " + u +
+      "  [바꾼 칸 " + n + "개 · 지금 " + JSON.stringify(before).slice(0,30) +
+      " → 흐리게 하면 " + JSON.stringify(after).slice(0,60) + "]");
+  }
+
   /* "준비 중" 자리표시자 — 프랜차이즈 분류 칸을 원래대로 돌려놓습니다.
      열두 칸이 전부 "준비 중" 이었고, 세는 값(0개 브랜드)을 내야 할
      자리였습니다 (절대 규칙 2). */
@@ -636,6 +701,63 @@ async function proveAudit(pg){
       "  [지금 " + JSON.stringify(before) +
       " → 한 칸을 준비 중으로 하면 " + JSON.stringify(after).slice(0,50) + "]");
   }
+  /* 아이콘 자리가 비었음 — 타일 안의 svg 를 지워 봅니다.
+     없는 아이콘 key 를 적으면 icon() 이 **빈 문자열**을 돌려줘서
+     타일이 덩그러니 빕니다 (매장 구간의 "장비" 가 fridge 라는 없는
+     이름으로 몇 주 비어 있었습니다). 에러도 404 도 안 납니다. */
+  /* ⚠️ 되돌리기가 **지울 것이 있는 화면**이라야 합니다 — 처음에
+     /startup 을 적었는데 거기에는 .ic-t 도 .stg-i 도 없어서 아무것도
+     안 지워졌고, "검사가 안 잡는다" 로 보였습니다 (검사가 아니라
+     되돌리기가 틀린 것입니다 — 이 저장소에서 여러 번 겪었습니다).
+     지금 타일이 있는 화면은 / (45개) · /transfer (5) · /g/:stage (1)
+     입니다. /tools · /providers · /about · /startup 에는 없습니다. */
+  for(const u of ["/", "/transfer"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).ico;
+    await pg.evaluate(() => {
+      const e = document.querySelector("#view .ic-t svg, #view .stg-i svg");
+      if(e) e.remove();
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).ico;
+    const ok = before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 아이콘 자리가 비었음 · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → 타일에서 svg 를 지우면 " + JSON.stringify(after).slice(0,50) + "]");
+  }
+
+  /* 고르개 딱지가 칸보다 긺 — 딱지를 길게 바꿔 봅니다. 이 저장소에서
+     세 번 당한 자리이고, 세 번 다 select 안이라 다른 검사에 안 걸렸습니다. */
+  /* ⚠️⚠️ **넓은 화면에서는 되돌려도 안 잡힙니다** — 거기서는 칸이
+     `width:auto` 라 딱지를 길게 하면 **칸이 같이 넓어집니다.** 잘리는
+     것은 폭이 좁아 칸이 묶일 때뿐이라, 폰 폭으로 재야 합니다.
+     (처음에 기본 폭으로 두었다가 "검사가 안 잡는다" 로 보였습니다 —
+     검사가 아니라 되돌리기가 틀린 자리입니다.) */
+  const vpWas = pg.viewportSize();
+  for(const u of ["/stores", "/assets"]){
+    await pg.setViewportSize({ width:360, height:900 });
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).sel;
+    await pg.evaluate(() => {
+      const e = document.querySelector("#view select.sel");
+      /* ⚠️ 칸이 `width:auto` 라 **조금 긴 정도로는 칸이 같이 넓어집니다.**
+         줄 폭(max-width:100%)을 넘겨야 잘립니다 — 넉넉히 깁니다. */
+      if(e && e.options[0]) e.options[0].textContent =
+        "아주 길고 긴 거르개 딱지 전체 — 칸보다 훨씬 더 긴 이름을 일부러 적습니다";
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).sel;
+    const ok = before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 고르개 딱지가 칸보다 긺 · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → 딱지를 길게 하면 " + JSON.stringify(after).slice(0,50) + "]");
+  }
+  if(vpWas) await pg.setViewportSize(vpWas);
+
   /* 별표(**)가 글자로 남음 — ⚠️ **자식 태그가 있는 칸**에 넣어서
      봅니다. 전에는 잎사귀만 보고 있어서, 약관·방침의 조문(p 안에
      번호 span 이 있습니다)에 남아 있던 별표를 통째로 놓쳤습니다.

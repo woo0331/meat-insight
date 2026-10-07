@@ -133,6 +133,9 @@ function MainBridge(){
     '<div class="mbr-g">'+
       '<div class="mbr-c mbr-cl">'+
         '<p class="mbr-k">정리하는 사장님</p>'+
+        /* ⚠️ 사진은 **있으면** 들어갑니다 (§49). 0장이면 아무것도 안
+           그립니다 — "이미지 준비 중" 을 찍지 않습니다 (절대 규칙 2). */
+        (hasPhoto("flow-close") ? '<figure class="mbr-p">'+photoBox("flow-close")+'</figure>' : '')+
         '<ul class="mbr-l">'+MAIN_FLOW_CL.map(function(x){
           return '<li>'+icon("check",17)+'<b>'+esc(x.n)+'</b></li>'; }).join("")+'</ul>'+
       '</div>'+
@@ -148,6 +151,7 @@ function MainBridge(){
       '</div>'+
       '<div class="mbr-c mbr-st">'+
         '<p class="mbr-k mbr-k-st">시작하는 사장님</p>'+
+        (hasPhoto("flow-start") ? '<figure class="mbr-p">'+photoBox("flow-start")+'</figure>' : '')+
         '<ul class="mbr-l mbr-l-st">'+MAIN_FLOW_ST.map(function(x){
           return '<li>'+icon("check",17)+'<b>'+esc(x.n)+'</b></li>'; }).join("")+'</ul>'+
       '</div>'+

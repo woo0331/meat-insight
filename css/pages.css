@@ -1380,6 +1380,10 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mbr-k{ font-size:var(--t-md); font-weight:800; letter-spacing:-.02em;
   color:var(--close-deep); }
 .mbr-k-st{ color:var(--start-deep); }
+/* ⚠️⚠️ `photoBox()` 는 <img class="ph"> 라 기본값이 object-fit:fill
+   입니다 — 안 주면 사진이 비율을 무시하고 늘어납니다. */
+.mbr-p{ margin:var(--s5) 0 0; border-radius:var(--r-lg); overflow:hidden; }
+.mbr-p .ph{ width:100%; aspect-ratio:5/3; object-fit:cover; display:block; }
 .mbr-l{ display:grid; gap:var(--s3); margin-top:var(--s5); }
 .mbr-l li{ display:flex; align-items:center; gap:10px;
   font-size:var(--t-base); color:var(--ink); }

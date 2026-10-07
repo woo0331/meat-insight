@@ -24,25 +24,26 @@
    display:flex; flex-direction:column; justify-content:center;
    font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif;
    color:#102A43; word-break:keep-all; letter-spacing:-.01em;
-   /* 랜딩 히어로와 같은 바탕 — 웜 화이트에 좌 초록 · 우 주황 번짐 */
+   /* 히어로와 같은 바탕 — 웜 화이트에 좌 파랑 · 우 주황 번짐
+      (2026-10-07 §46 — 창업이 파랑이 됐습니다) */
    background:
-     radial-gradient(52% 70% at 2% 16%,  rgba(18,168,120,.16) 0%, rgba(18,168,120,0) 70%),
+     radial-gradient(52% 70% at 2% 16%,  rgba(37,99,235,.14) 0%, rgba(37,99,235,0) 70%),
      radial-gradient(52% 70% at 98% 16%, rgba(242,106,61,.16) 0%, rgba(242,106,61,0) 70%),
      linear-gradient(180deg, #FFFFFF 0%, #FBF8F2 100%);
  }
  /* 샴페인 골드는 이 한 줄까지입니다 (§21) */
  .k{ font-size:23px; font-weight:900; letter-spacing:.26em; color:#D5AA55; }
- h1{ margin:26px 0 0; font-size:96px; font-weight:900; line-height:1.06;
+ h1{ margin:26px 0 0; font-size:84px; font-weight:900; line-height:1.06;
      letter-spacing:-.045em; color:#123B68; }
  h1 em{ font-style:normal; }
  .st{ color:#1D4ED8; }   /* 창업 */
  .cl{ color:#D95128; }   /* 폐업 */
- p{ margin:26px 0 0; font-size:32px; font-weight:700; color:#102A43; }
+ p{ margin:26px 0 0; font-size:28px; font-weight:700; color:#102A43; }
  .pills{ margin-top:44px; display:flex; gap:16px; }
  .pill{ display:inline-flex; align-items:center; gap:10px;
         border-radius:16px; padding:18px 34px;
         font-size:26px; font-weight:800; color:#fff; }
- .pill-st{ background:#12A878; }
+ .pill-st{ background:#1D4ED8; }
  .pill-cl{ background:#F26A3D; }
  /* 브랜드는 아래 왼쪽 한 줄 — 제목이 주인공입니다 */
  .brand{ position:absolute; left:78px; bottom:56px;
@@ -51,7 +52,7 @@
  .brand span{ font-size:21px; color:#7B8794; }
  /* 아래 가장자리에 초록 → 주황 한 줄 */
  .edge{ position:absolute; left:0; right:0; bottom:0; height:8px;
-        background:linear-gradient(90deg,#12A878 0%,#123B68 52%,#F26A3D 100%); }
+        background:linear-gradient(90deg,#2563EB 0%,#123B68 52%,#F26A3D 100%); }
 </style>
 <div class="og" id="og">
   <div class="k">START &amp; CLOSE</div>
@@ -60,12 +61,12 @@
        옛말로 남아 있었습니다 — 공유 미리보기는 우리 손을 떠나 한참
        돌아다니므로 거기만 다른 말을 하면 오래 남습니다.
        ⚠️ 숫자는 넣지 마세요 (절대 규칙 1). -->
-  <h1><em class="st">창업</em>에 필요한 모든 것.<br>
-      <em class="cl">폐업</em>에 필요한 모든 것.</h1>
-  <p>시작부터 정리까지, 사장님에게 필요한 모든 것을 한곳에서.</p>
+  <h1>사장님의 <em class="st">시작과 마지막</em>을<br>
+      연결합니다.</h1>
+  <p>창업을 준비하는 순간부터, 사업을 정리하고 다음 사장님에게 넘기는 순간까지.</p>
   <div class="pills">
-    <span class="pill pill-st">창업 준비하기 →</span>
-    <span class="pill pill-cl">사업 정리하기 →</span>
+    <span class="pill pill-st">창업 시작하기 →</span>
+    <span class="pill pill-cl">폐업·정리 시작하기 →</span>
   </div>
   <div class="brand"><b id="og-brand"></b><span id="og-sub"></span></div>
   <div class="edge"></div>

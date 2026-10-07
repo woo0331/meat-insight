@@ -1461,12 +1461,12 @@ const AUDIT = `(() => {
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
     const h = h1s[0];
     if(!h.closest(".mh")) return "h1 이 히어로에 없습니다";
-    const t = h.textContent.replace(/\s+/g, "");
+    const t = h.textContent.replace(/\\s+/g, "");
     if(t !== "사장님의시작과마지막을연결합니다.")
       return "제목이 " + h.textContent.trim() + "입니다";
     if(!h.querySelector("em")) return "제목에 강조가 없습니다";
     const lead = document.querySelector(".mh-lead");
-    if(!lead || lead.textContent.replace(/\s+/g,"").indexOf("넘기는순간까지") < 0)
+    if(!lead || lead.textContent.replace(/\\s+/g,"").indexOf("넘기는순간까지") < 0)
       return "서브카피가 §9 의 것이 아닙니다";
     /* ⚠️ **불필요한 설명을 추가하지 않습니다** (§9) — 히어로 안에
        제목 · 서브 · 카드 둘 말고 다른 구간이 들어오면 걸립니다. */
@@ -1539,7 +1539,7 @@ const AUDIT = `(() => {
       const e = document.querySelector(q);
       if(!e) return null;
       const m = getComputedStyle(e, pseudo || null)[prop || "color"]
-        .match(/(\d+), ?(\d+), ?(\d+)/);
+        .match(/(\\d+), ?(\\d+), ?(\\d+)/);
       return m ? [+m[1], +m[2], +m[3]] : null;
     };
     /* 제목의 강조는 창업 파랑입니다 */
@@ -2205,7 +2205,7 @@ const AUDIT = `(() => {
 
   /* ══ 여정 넷 (2026-10-05 V2 지시서 §1 · §2 · §4 · §6 · §7 · §31) ══ */
 
-  await f("여정 넷이 단계 여섯을 빠짐없이 나눠 가진다", "/", `
+  await f("여정 넷이 단계 여섯을 빠짐없이 나눠 가진다", "/startup", `
     /* 지시서 §1 — 창업 준비 · 매장 운영 · 인수 양도 · 폐업 정리.
        ⚠️⚠️ **새 분류를 만든 것이 아닙니다.** 단계 여섯을 묶어 보는
        틀이라, 단계 하나가 두 여정에 들어가거나 빠지면 손님은 그
@@ -2242,9 +2242,13 @@ const AUDIT = `(() => {
          ⚠️⚠️ 이 주석에 백틱을 썼다가 문자열이 거기서 끝났습니다 —
          이 저장소에서 **열두 번째** 같은 사고입니다. 주석에 백틱을
          아예 쓰지 마세요. */
+      /* ⚠️ 2026-10-07 전면개편으로 메인에서 여정 고르개가 빠졌습니다
+         (§6 — 메인 첫 선택지는 창업 / 폐업 둘뿐입니다). 고르개 꼴은
+         남겨 둡니다 — 다른 화면에서 쓸 수 있고, 쓰면 꼴을 정확히
+         봐야 합니다. */
       const href = a.getAttribute("href");
       if(a.hasAttribute("data-keep")){
-        if(href !== "/?j=" + encodeURIComponent(j.key))
+        if(href.indexOf("j=" + encodeURIComponent(j.key)) < 0)
           return j.name + " 고르개 주소가 틀렸습니다 — " + href;
       } else if(href !== j.to){
         return j.name + " 이 " + href + " 로 갑니다";
@@ -2436,7 +2440,7 @@ const AUDIT = `(() => {
     const cards = [].slice.call(document.querySelectorAll(".ind-g > li > a"));
     if(cards.length !== (window.AM_INDUSTRIES || []).length)
       return "업종 카드가 " + cards.length + "개입니다";
-    const clear = /rgba\(0, 0, 0, 0\)|transparent/;
+    const clear = /rgba\\(0, 0, 0, 0\\)|transparent/;
     const seen = {}, dup = [];
     for(const t of cards){
       const cb = getComputedStyle(t).backgroundColor;

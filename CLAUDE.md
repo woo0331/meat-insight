@@ -1573,16 +1573,18 @@ node build-pages.js      # 주소마다 HTML + sitemap.xml (없어진 것도 치
 ### 주소 얼개 (§46)
 
 ```
-/                      **서비스 메인** — 구간 열둘 (랜딩은 없앴습니다)
+/                      **서비스 메인** — 구간 **넷** (2026-10-07 §6)
                        ⚠️ 옛 `/home` 은 vercel 이 308 로 여기 보냅니다
 /operation             **매장 운영** (여정 ②)
 /acquisition           **인수 · 양도** (여정 ③) — ?t=in|out
 /compare?ids=          업체 비교 (NOINDEX)
                        ⚠️ /closing · /companies · /guides · /partners 는 308
+/services              **전체 서비스** — 단계 여섯 · 분류 25 · 세부 183
 /g/:stage              **사업 단계 여섯** — startup · location · build
                        · operation · transfer · closing (분류를 묶어 봅니다)
-/startup · /startup/:industry      업종별 창업
-/closure · /closure/:industry      업종별 폐업
+/startup · /startup/:industry      창업 (?m=new|take · ?step=n)
+/closure · /closure/:industry      폐업 · 정리 (?s=transfer|assets|full|unsure
+                                   · ?d=ynyny · ?step=n)
 /providers · /providers/:cat       업체찾기 (?s= 하위분류 ?i= 업종 ?r= 지역)
 /p/:id                 업체 상세
 /c/:cat                정보 · 매물 성격의 분류

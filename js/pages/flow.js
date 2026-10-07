@@ -135,7 +135,13 @@ function PageStartupIndustry(ind){
     h1raw:esc(ind.name)+" 창업을<br class=\"br-m\"> 준비하고 계시네요.",
     lead:mode
       ? "지금부터 필요한 순서입니다. 걸음마다 꼭 확인할 것과 맡길 곳을 같이 보여 드립니다."
-      : "먼저 한 가지만 더 골라 주세요. 새로 만드는 것과 받는 것은 준비 순서가 다릅니다."
+      : "먼저 한 가지만 더 골라 주세요. 새로 만드는 것과 받는 것은 준비 순서가 다릅니다.",
+    /* ⚠️ 고른 업종이 **견적 요청까지 따라갑니다** — 여기서 끊으면
+       손님이 조건을 처음부터 다시 적습니다 (`check.js` 가 봅니다). */
+    cta:'<a class="btn btn-o btn-lg" href="'+esc(quoteTo({industry:ind.key,side:"start"}))+'">'+
+        '한 번에 견적 요청'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="/stores?i='+encodeURIComponent(ind.key)+'">'+
+        esc(ind.name)+' 점포 보기</a>'
   })+
   ModePick(ind)+
   (mode ? StartRoad(mode, ind) : "")+
@@ -396,7 +402,11 @@ function PageClosureIndustry(ind){
     h1raw:esc(ind.name)+" 정리를<br class=\"br-m\"> 준비하고 계시네요.",
     lead:sit
       ? "순서가 있는 일입니다. 걸음마다 꼭 확인할 것과 맡길 곳을 같이 보여 드립니다."
-      : "먼저 지금 상황만 골라 주세요. 넘기는 것과 정리하는 것은 순서가 다릅니다."
+      : "먼저 지금 상황만 골라 주세요. 넘기는 것과 정리하는 것은 순서가 다릅니다.",
+    cta:'<a class="btn btn-o btn-lg" href="'+esc(quoteTo({industry:ind.key,side:"close"}))+'">'+
+        '한 번에 견적 요청'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="/assets?i='+encodeURIComponent(ind.key)+'">'+
+        '시설 · 집기 내놓기</a>'
   })+
   SitPick(ind)+
   (sit ? CloseRoad(sit, ind) : "")+

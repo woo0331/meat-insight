@@ -271,7 +271,29 @@ const AUDIT = `(() => {
     while(n && n !== document.documentElement){
       const cs = getComputedStyle(n);
       if(cs.backgroundImage && cs.backgroundImage !== "none") return null;
-      const c = rgb(cs.backgroundColor);
+      let c = rgb(cs.backgroundColor);
+      /* ⚠️⚠️ **가짜요소에 칠한 바탕도 읽습니다.** 히어로 왼쪽 판의
+         짙은 남색은 대각선 때문에 판 자신이 아니라 ::before 에
+         있습니다 — 안 읽으면 그 위의 **흰 글자가 "흰 바탕" 위로**
+         읽혀서 대비 1.04 로 잡힙니다 (전부 오탐이고, 진짜 사고는
+         그 더미에 묻힙니다). 어두운 면 검사는 이미 ::before 를
+         읽고 있었는데 대비 검사만 안 읽고 있었습니다.
+         ⚠️ **덮는 크기일 때만 봅니다** — 글머리 점(6x6)까지 바탕으로
+         세면 요약 칸의 남색 글씨가 남색 점 위에 앉은 것으로 읽힙니다
+         (실제로 그렇게 180건이 잡혔습니다). */
+      if(!c || c[3] < .999){
+        const box = n.getBoundingClientRect();
+        for(const pe of ["::before", "::after"]){
+          const ps = getComputedStyle(n, pe);
+          if(ps.content === "none") continue;
+          if(ps.backgroundImage && ps.backgroundImage !== "none") return null;
+          const pc = rgb(ps.backgroundColor);
+          if(!pc || pc[3] < .999) continue;
+          const pw = parseFloat(ps.width), ph = parseFloat(ps.height);
+          if(!(pw >= box.width * 0.8 && ph >= box.height * 0.8)) continue;
+          c = pc; break;
+        }
+      }
       if(c){
         if(c[3] >= .999){
           /* 불투명한 면을 만났습니다 — 위에 쌓인 것들을 여기에 얹습니다 */

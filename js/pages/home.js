@@ -55,7 +55,10 @@
 function MainHeroCard(o){
   return '<article class="mhc mhc-'+o.cls+'">'+
     '<p class="mhc-k">'+esc(o.badge)+'</p>'+
-    '<h2 class="mhc-h">'+esc(o.title)+'<i>준비하고 있어요</i></h2>'+
+    /* ⚠️ 맨글 + block 태그를 한 칸에 섞지 마세요 — "문장 속 block"
+       으로 걸립니다. 둘 다 태그로 감쌉니다 (CLAUDE.md 의 grid 함정과
+       같은 자리입니다). */
+    '<h2 class="mhc-h"><b>'+esc(o.title)+'</b><i>준비하고 있어요</i></h2>'+
     '<p class="mhc-d">'+o.lead+'</p>'+
     '<p class="mhc-go"><a class="btn btn-lg '+esc(o.btn)+'" href="'+esc(o.to)+'">'+
       esc(o.cta)+icon("arrow",18)+'</a></p>'+

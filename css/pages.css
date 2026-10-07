@@ -1253,7 +1253,8 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mhc-cl .mhc-k{ background:var(--close-soft); color:var(--close-deep); }
 .mhc-h{ margin-top:var(--s4); font-size:var(--t-2xl); font-weight:900;
   letter-spacing:-.03em; line-height:1.3; color:var(--navy); }
-.mhc-h i{ display:block; font-style:normal; font-size:var(--t-lg);
+.mhc-h > b{ display:block; font-weight:900; }
+.mhc-h > i{ display:block; font-style:normal; font-size:var(--t-lg);
   font-weight:800; color:var(--ink); }
 .mhc-d{ margin-top:var(--s4); font-size:var(--t-base); line-height:1.7;
   color:var(--ink2); }

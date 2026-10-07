@@ -677,6 +677,11 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .pv{ display:grid; grid-template-rows:auto 1fr; border-radius:var(--r-xl);
   overflow:hidden; background:var(--bg-2); transition:transform .15s, box-shadow .2s; }
 .pv:hover{ transform:translateY(-3px); box-shadow:var(--shadow-md); }
+/* ⚠️⚠️ **사진이 없는 카드는 칸이 하나입니다.** 카드가
+   `grid-template-rows:auto 1fr` 이라, 액자를 안 그리면 빈 둘째 칸이
+   카드 아래에 그대로 남습니다 — 빈 가짜요소가 칸 하나를 차지하는 것과
+   같은 자리입니다. 업체 · 프랜차이즈 · 매물 카드가 같이 씁니다. */
+.pv.nph, .fr.nph, .mk.nph{ grid-template-rows:1fr; }
 .pv-ph{ display:block; aspect-ratio:16/10; overflow:hidden; background:var(--line-soft); }
 .pv-ph .ph{ width:100%; height:100%; object-fit:cover; display:block; }
 .ph-none{ display:block; width:100%; height:100%; background:var(--line-soft); }
@@ -770,9 +775,16 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .rv-t{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; margin-bottom:var(--s2); }
 .rv-t > b{ display:inline-flex; align-items:center; gap:4px; }
 .rv-t svg{ color:var(--warn); }
+/* ⚠️⚠️ **후기 인증 배지도 상태색이 아니라 골드입니다.** 확인 배지
+   (.pv-vf)와 같은 까닭입니다 — 초록(--ok)은 "좋다/나쁘다" 를 말하는
+   색인데 인증은 판정이 아니라 **확인했다는 표시**라, 초록으로 두면
+   배지가 없는 후기가 "나쁘다" 로 읽힙니다. 게다가 --ok 를 --ok-bg
+   위에 얹으면 대비가 **3.06** 이라 13px 굵은 글씨가 AA(4.5)에 못
+   미칩니다 — 후기가 0건이라 한 번도 안 그려져서, 대비 검사가
+   잎사귀만 보던 동안 두 겹으로 숨어 있었습니다. */
 .rv-bd{ display:inline-flex; align-items:center; gap:3px; font-style:normal;
-  font-size:var(--t-cap); font-weight:700; color:var(--ok);
-  background:var(--ok-bg); border-radius:var(--r-pill); padding:3px 9px; }
+  font-size:var(--t-cap); font-weight:700; color:var(--gold-text);
+  background:var(--gold-bg); border-radius:var(--r-pill); padding:3px 9px; }
 .rv-at{ margin-left:auto; font-size:var(--t-cap); color:var(--ink3); }
 .rv p{ color:var(--ink2); line-height:1.8; }
 .rv-ax{ display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5); margin-top:var(--s3);
@@ -867,6 +879,12 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mk-sp li{ display:flex; align-items:baseline; justify-content:space-between;
   gap:var(--s4); padding:var(--s4) var(--s5);
   border-bottom:1px solid var(--line); }
+/* ⚠️⚠️ **칸 수가 홀수면 마지막 하나가 반쪽만 남습니다.** 두 칸
+   격자라 일곱 번째 줄이 왼쪽에만 서고, 밑줄도 거기서 끊겨 표가
+   깨진 것처럼 보입니다 — 걸음 여섯을 다섯 칸에 넣었을 때와 같은
+   자리입니다. 값이 없는 칸은 아예 안 넣으니(절대 규칙 2) 홀수는
+   매물마다 수시로 납니다. 마지막 하나는 두 칸을 다 씁니다. */
+.mk-sp li:last-child:nth-child(odd){ grid-column:1 / -1; }
 .mk-sp-l{ font-size:var(--t-cap); color:var(--ink2); }
 .mk-sp-v{ font-size:var(--t-base); font-weight:700; color:var(--ink);
   text-align:right; }

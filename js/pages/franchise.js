@@ -82,10 +82,12 @@ function FranchiseCard(f){
   /* ⚠️⚠️ 출처 없는 금액은 **목록에서도** 안 찍습니다 — 손님은 상세를
      안 열어 보셔도 그만이고, 카드의 숫자를 들고 은행에 가십니다. */
   var c = amFranchiseCost(f) || {};
-  return '<a class="fr" href="/f/'+esc(f.slug)+'">'+
-    '<span class="fr-ph">'+(f.cover
-      ? '<img class="ph" src="'+esc(f.cover)+'" alt="'+esc(f.name)+' 매장 사진" loading="lazy" decoding="async">'
-      : '<span class="ph ph-none" aria-hidden="true"></span>')+'</span>'+
+  /* ⚠️ 사진이 없으면 액자를 안 그립니다 (업체 카드와 같은 까닭) */
+  var ph = f.cover
+    ? '<img class="ph" src="'+esc(f.cover)+'" alt="'+esc(f.name)+' 매장 사진" loading="lazy" decoding="async">'
+    : "";
+  return '<a class="fr'+(ph ? "" : " nph")+'" href="/f/'+esc(f.slug)+'">'+
+    (ph ? '<span class="fr-ph">'+ph+'</span>' : '')+
     '<span class="fr-b"><b>'+esc(f.name)+'</b>'+
       (f.intro ? '<span class="fr-i">'+esc(f.intro)+'</span>' : '')+
       '<span class="fr-m">'+

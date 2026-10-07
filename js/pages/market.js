@@ -93,10 +93,12 @@ function StoreCard(s){
   if(s.deposit != null) m.push("보증 "+won(s.deposit)+"만");
   if(s.rent    != null) m.push("월 "+won(s.rent)+"만");
   if(s.premium != null) m.push("권리 "+won(s.premium)+"만");
-  return '<a class="mk" href="/s/'+esc(s.id)+'">'+
-    '<span class="mk-ph">'+((s.images||[]).length
-      ? '<img class="ph" src="'+esc(s.images[0])+'" alt="'+esc(s.title)+'" loading="lazy" decoding="async">'
-      : '<span class="ph ph-none" aria-hidden="true"></span>')+'</span>'+
+  /* ⚠️ 사진이 없으면 액자를 안 그립니다 (업체 카드와 같은 까닭) */
+  var ph = (s.images||[]).length
+    ? '<img class="ph" src="'+esc(s.images[0])+'" alt="'+esc(s.title)+'" loading="lazy" decoding="async">'
+    : "";
+  return '<a class="mk'+(ph ? "" : " nph")+'" href="/s/'+esc(s.id)+'">'+
+    (ph ? '<span class="mk-ph">'+ph+'</span>' : '')+
     '<span class="mk-b">'+
       (meta.length || s.withEquip
         ? '<span class="mk-m">'+esc(meta.join(" · "))+
@@ -183,10 +185,11 @@ function AssetCard(a){
   var m = [];
   m.push(a.price != null ? won(a.price)+"만원" : "가격 협의");
   if(a.year) m.push(a.year+"년식");
-  return '<a class="mk" href="/a/'+esc(a.id)+'">'+
-    '<span class="mk-ph">'+((a.images||[]).length
-      ? '<img class="ph" src="'+esc(a.images[0])+'" alt="'+esc(a.title)+'" loading="lazy" decoding="async">'
-      : '<span class="ph ph-none" aria-hidden="true"></span>')+'</span>'+
+  var ph = (a.images||[]).length
+    ? '<img class="ph" src="'+esc(a.images[0])+'" alt="'+esc(a.title)+'" loading="lazy" decoding="async">'
+    : "";
+  return '<a class="mk'+(ph ? "" : " nph")+'" href="/a/'+esc(a.id)+'">'+
+    (ph ? '<span class="mk-ph">'+ph+'</span>' : '')+
     '<span class="mk-b">'+
       (meta.length || deal
         ? '<span class="mk-m">'+esc(meta.join(" · "))+

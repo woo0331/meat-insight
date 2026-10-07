@@ -333,8 +333,16 @@ const AUDIT = `(() => {
     if (ownTxt.indexOf("**") >= 0)
       out.star.push((e.className || e.tagName) + "|" + ownTxt.trim().slice(0, 24));
 
-    /* 3. 12px 미만 */
-    if (leaf) {
+    /* 3. 12px 미만
+       ⚠️⚠️ **"잎사귀" 만 보면 아이콘이 든 칸을 영영 못 봅니다.**
+       아래 대비 검사와 함께 leaf(자식이 하나도 없는 칸)만 재고
+       있었는데, 이 저장소의 배지 · 칩 · 단추는 **거의 전부 svg 아이콘
+       하나를 품고** 있습니다 — 확인 배지 · 후기 인증 배지 · "포트폴리오
+       2건" · 단추 글자가 **한 번도 안 재졌습니다.** 별표 검사가 똑같이
+       잎사귀만 보다가 약관 두 문서를 놓친 그 자리입니다.
+       이제 **칸이 직접 들고 있는 글자**가 있으면 잽니다 (부모가 자식
+       글자까지 중복으로 잡히지는 않습니다). */
+    if (leaf || ownTxt.trim()) {
       const f = parseFloat(c.fontSize);
       if (f < 12) out.small.push(e.className+"|"+f+"px|"+(e.textContent||"").trim().slice(0,14));
       /* 3-2. 글자가 바탕에 묻히는가 — **WCAG AA**

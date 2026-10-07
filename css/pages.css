@@ -645,6 +645,25 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    ⚠️ 아이콘 원판도 같이 바꿉니다 — 흰 카드 위의 흰 원판은 안 보입니다. */
 .sec-gray .empty{ background:var(--surface); }
 .sec-gray .empty .empty-ic{ background:var(--bg-2); }
+
+/* ⚠️⚠️ **빈 카드만의 일이 아니었습니다.** 카드 일곱(`.cat` · `.ind` ·
+   `.pv` · `.fr` · `.fc` · `.mk` · `.help` · `.sp`)이 전부 바탕을
+   `--bg-2` 로 들고 있어서, 어느 구간이든 회색으로 칠하면 **그 구간의
+   카드가 통째로 사라집니다.** 업체 구간을 회색으로 옮기자 등록된
+   업체 카드(`.pv`)가 바로 그렇게 됐습니다 — 업체가 0곳일 때는 그
+   자리에 `.empty` 만 있어서 위 두 줄로 끝난 줄 알았습니다.
+   회색 구간에서는 §22 대로 **흰 카드**입니다.
+   ⚠️ 카드 안의 흰 칩도 같이 뒤집습니다 — 흰 카드 위의 흰 칩은 안
+   보입니다 (아이콘 원판을 뒤집은 것과 같은 까닭입니다).
+   ⚠️ `.cat:hover` 가 흰색이라 회색 구간에서는 hover 가 아무 일도 안
+   하는 것으로 보입니다 — 옆 카드들과 같은 `--blue-50` 로 받습니다. */
+.sec-gray .cat, .sec-gray .ind, .sec-gray .pv, .sec-gray .fr,
+.sec-gray .fc,  .sec-gray .mk,  .sec-gray .help, .sec-gray .sp{
+  background:var(--surface); }
+.sec-gray .cat:hover{ background:var(--blue-50); }
+.sec-gray .cat-s em, .sec-gray .cat-chips a, .sec-gray .pv-sv span,
+.sec-gray .pv-sv em, .sec-gray .pv-ck, .sec-gray .fr-m em,
+.sec-gray .mk-kind a, .sec-gray .mk-pre{ background:var(--bg-2); }
 .empty-ic{ display:inline-flex; align-items:center; justify-content:center;
   width:60px; height:60px; border-radius:var(--r-pill);
   background:var(--surface); color:var(--ink3); margin-bottom:var(--s2); }

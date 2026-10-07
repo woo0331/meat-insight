@@ -3008,6 +3008,17 @@ const AUDIT = `(() => {
   await f("거르개로 숨긴 건수를 밝힌다", "/providers/interior?v=1", `
     const base = { regions:["gyeonggi"], industries:["cafe"],
                    subs:["interior"], intro:"검사 안에서만 삽니다." };
+    /* ⚠️⚠️ **갯수를 그냥 세면 안 됩니다.** 진짜 업체가 한 곳이라도
+       등록되면 그 수가 섞여서 엉뚱하게 실패합니다 — 이 저장소에서
+       "업체는 자기 분야에만 나온다" 가 똑같이 그랬습니다. 끼워 넣기
+       전을 먼저 재고 **늘어난 값**만 봅니다. */
+    const count  = function(){
+      return document.querySelectorAll(".pv-g > .pv-w").length; };
+    const hidden = function(){
+      const e = document.querySelector(".fil-off");
+      const m = e && e.textContent.match(/\\d+/);
+      return m ? Number(m[0]) : 0; };
+    const n0 = count(), h0 = hidden();
     window.AM_PROVIDERS.push(
       Object.assign({ id:"zz-h1", name:"확인된 곳", verified:{ biz:true } }, base),
       Object.assign({ id:"zz-h2", name:"안된 곳 하나" }, base),
@@ -3017,15 +3028,15 @@ const AUDIT = `(() => {
     const ck  = document.getElementById("fil-v");
     const off = document.querySelector(".fil-off");
     const txt = off ? off.textContent : "";
-    const n   = document.querySelectorAll(".pv-g > .pv-w").length;
+    const n1  = count(), h1 = hidden();
     window.AM_PROVIDERS = window.AM_PROVIDERS.filter(function(p){
       return !/^zz-h/.test(p.id); });
     window.rerender(true);
     if(!ck) return "'확인된 곳만' 체크칸이 없습니다";
     if(!ck.checked) return "주소에 켜져 있는데 체크칸이 꺼져 있습니다";
-    if(n !== 1) return "거르개를 켰는데 " + n + "곳이 나옵니다";
+    if(n1 - n0 !== 1) return "확인된 곳 하나만 늘어야 하는데 " + (n1 - n0) + "곳 늘었습니다";
     if(!off) return "거르개로 두 곳이 빠졌는데 그 사실을 안 밝힙니다";
-    if(txt.indexOf("2") < 0) return "숨긴 건수가 센 값이 아닙니다 — " + txt;
+    if(h1 - h0 !== 2) return "숨긴 건수가 센 값이 아닙니다 — " + txt;
     return true;`);
 
   /* ⚠️⚠️ **아이콘을 두 곳에 적지 마세요.** 도구마다 아이콘이

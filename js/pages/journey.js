@@ -86,6 +86,22 @@ window.JourneyBand = function(o){
    같은 걸음에서 정보를 읽을 수도, 업체를 찾을 수도, 도구를 쓸 수도
    있어야 합니다. `<a>` 안의 `<a>` 를 만들지 않으려고 카드 자체는
    링크가 아닙니다. */
+/* ⚠️ 주소에 이미 질의문자가 있으면 `?` 가 아니라 `&` 입니다 —
+   `/sell?t=asset` 처럼 탭을 들고 가는 자리가 있습니다. */
+function stepQ(to, iq){
+  if(!iq) return to;
+  return to + (to.indexOf("?") < 0 ? "?" : "&") + iq;
+}
+
+/* ⚠️ 바로가기 딱지를 "바로가기" 로만 두면 무엇으로 가는지 모릅니다.
+   ⚠️ `/sell` 은 탭마다 다른 일을 해서 둘을 따로 적습니다. */
+function stepToName(to){
+  var nm = { "/stores":"매장 매물", "/assets":"시설 · 장비",
+             "/support":"지원사업", "/quote":"접수하기",
+             "/sell":"매장 내놓기", "/sell?t=asset":"시설 · 장비 내놓기" };
+  return nm[to] || "바로가기";
+}
+
 function StepLinks(s, ind){
   var out = [], iq = ind ? ("i=" + encodeURIComponent(ind)) : "";
   var cat = s.cat && (typeof amCat === "function") ? amCat(s.cat) : null;
@@ -101,15 +117,13 @@ function StepLinks(s, ind){
   }
   if(s.to){
     var c2 = (typeof amCat === "function" && s.cat) ? amCat(s.cat) : null;
-    var nm = s.to === "/stores" ? "매장 매물" : s.to === "/assets" ? "시설 · 장비"
-           : s.to === "/support" ? "지원사업" : s.to === "/quote" ? "접수하기" : "바로가기";
     if(!c2 || catTo(c2) !== s.to)
-      out.push(['<a class="pcs-l" href="'+esc(s.to + (iq ? "?"+iq : ""))+'">'+
-        icon("arrow",15)+esc(nm)+'</a>', 2]);
+      out.push(['<a class="pcs-l" href="'+esc(stepQ(s.to, iq))+'">'+
+        icon("arrow",15)+esc(stepToName(s.to))+'</a>', 2]);
   }
   if(s.to2)
-    out.push(['<a class="pcs-l" href="'+esc(s.to2 + (iq ? "?"+iq : ""))+'">'+
-      icon("arrow",15)+esc(s.to2n || "바로가기")+'</a>', 2]);
+    out.push(['<a class="pcs-l" href="'+esc(stepQ(s.to2, iq))+'">'+
+      icon("arrow",15)+esc(s.to2n || stepToName(s.to2))+'</a>', 2]);
   if(s.read){
     var ct = (typeof amContent === "function") ? amContent(s.read) : null;
     if(ct) out.push(['<a class="pcs-l" href="/content/'+esc(ct.slug)+'">'+
@@ -481,7 +495,7 @@ function PageAcquisition(){
        그래서 매물이 없어도 화면이 비어 보이지 않습니다. */
     '<ul class="aq-m">'+[
       ["/stores"+iq,     "store",    "매장 인수하기",   "상가 · 점포 · 권리금 매장"],
-      [quoteTo({cat:"transfer"}), "handover", "내 매장 양도하기", "조건을 적어 보내시면 올려 드립니다"],
+      ["/sell"+iq,       "handover", "내 매장 양도하기", "조건을 적어 보내시면 올려 드립니다"],
       ["/tools/premium", "gauge",    "권리금 알아보기", "몇 달이면 돌아오는지 따져 봅니다"],
       ["/content?side=close", "book","인수 · 양도 가이드", "계약 전에 보셔야 하는 것"],
       ["/tools/vs",      "scale",    "신규 vs 인수 비교", "새로 만드는 것과 받는 것"]
@@ -524,7 +538,7 @@ function PageAcquisition(){
           text:"올라오는 대로 여기에 나옵니다. 그동안 인수 · 양도에서 자주 막히는 것부터 보셔도 됩니다.",
           reads: (typeof amContentsFor === "function")
             ? amContentsFor({ cat:"transfer", side:"both", limit:3 }) : [],
-          cta:'<a class="btn btn-b" href="'+esc(quoteTo({cat:"transfer"}))+'">'+
+          cta:'<a class="btn btn-b" href="/sell'+esc(iq)+'">'+
               '넘길 매장 접수하기'+icon("arrow",16)+'</a>'+
               '<a class="btn btn-o" href="/stores">매물 화면 보기</a>' }))+
   '</div></section>'+

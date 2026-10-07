@@ -405,7 +405,7 @@ function PageClosureIndustry(ind){
       : "먼저 지금 상황만 골라 주세요. 넘기는 것과 정리하는 것은 순서가 다릅니다.",
     cta:'<a class="btn btn-o btn-lg" href="'+esc(quoteTo({industry:ind.key,side:"close"}))+'">'+
         '한 번에 견적 요청'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-o btn-lg" href="/assets?i='+encodeURIComponent(ind.key)+'">'+
+        '<a class="btn btn-o btn-lg" href="/sell?t=asset&amp;i='+encodeURIComponent(ind.key)+'">'+
         '시설 · 집기 내놓기</a>'
   })+
   SitPick(ind)+
@@ -460,7 +460,7 @@ function BridgeFor(ind, side){
       '<h2>한 사장님의 끝이 다른 사장님의 시작이 됩니다</h2>'+
       '<p class="lead">점포 · 시설 · 집기 · 재고를 올려 두시면 같은 업종을 '+
         '준비하는 사장님에게 보입니다. 등록은 무료입니다.</p></div>'+
-    '<a class="btn btn-b btn-lg" href="/assets?i='+encodeURIComponent(ind.key)+'">'+
+    '<a class="btn btn-b btn-lg" href="/sell?t=asset&amp;i='+encodeURIComponent(ind.key)+'">'+
       '내놓기'+icon("arrow",18)+'</a>'+
   '</div></section>';
 }

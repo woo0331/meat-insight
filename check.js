@@ -1378,6 +1378,35 @@ const AUDIT = `(() => {
   /* ⚠️⚠️ **내놓는 길**입니다. 전에는 폼이 아예 없어서 "매장 내놓기" 가
      목록 화면으로 갔습니다. 여기서 받는 칸이 market.js 의 생김새와
      어긋나면, 받아 적을 때마다 사람이 맞춰 넣어야 합니다. */
+  /* 폼을 만들어 놓고 **그리로 가는 길**을 안 깐 적이 있습니다 — 로드맵의
+     걸음과 업종 화면이 일반 견적 폼 · 목록 화면으로 보내고 있었습니다. */
+  await f("내놓으시려는 자리에서 내놓는 폼으로 간다", "/closure", `
+    const sell = function(){ return [].slice.call(document.querySelectorAll("#view a"))
+      .map(function(a){ return a.getAttribute("href") || ""; })
+      .filter(function(h){ return h.indexOf("/sell") === 0; }); };
+    /* location.href 를 쓰지 마세요 — 실행 문맥이 날아갑니다 (go 로 넘깁니다).
+       ⚠️ 첫 화면도 여기서 넘깁니다 — 되돌리기를 되돌려 볼 때 검사 본문이
+       **두 번째로 돌 때도 같은 화면에서 시작**해야 합니다. */
+    const hop = async function(u){ window.go(u); await new Promise(r => setTimeout(r, 500)); };
+    await hop("/closure?s=assets&step=3");
+    let h = sell();
+    if(!h.length) return "시설 · 장비를 내놓는 걸음에서 /sell 로 가는 길이 없습니다";
+    if(!h.some(function(x){ return x.indexOf("/sell?t=asset") === 0; }))
+      return "시설 · 장비인데 매장 탭으로 보냅니다 — " + h.join(" ");
+    /* 질의문자를 ? 로 두 번 이으면 탭이 통째로 안 읽힙니다 */
+    if(h.some(function(x){ return x.split("?").length > 2; }))
+      return "질의문자를 ? 로 두 번 이었습니다 — " + h.join(" ");
+    await hop("/closure?s=transfer&step=5");
+    h = sell();
+    if(!h.length) return "매장을 등록하는 걸음에서 /sell 로 가는 길이 없습니다";
+    await hop("/transfer?t=out");
+    if(!sell().length) return "매장 양도 화면에서 /sell 로 가는 길이 없습니다";
+    await hop("/closure/cafe");
+    h = sell();
+    if(!h.some(function(x){ return x.indexOf("i=cafe") > 0; }))
+      return "업종 화면인데 업종이 안 따라갑니다 — " + h.join(" ");
+    return true;`);
+
   await f("매물 내놓기: 업종 · 지역 없이는 안 보낸다", "/sell", `
     let sent = false;
     const o = window.fetch; window.fetch = function(){ sent = true; return o.apply(this, arguments); };

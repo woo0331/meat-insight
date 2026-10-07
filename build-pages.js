@@ -1380,8 +1380,10 @@ function checkProcess(W){
       bad.push(where + " — " + o.cat + " 에 없는 하위 " + o.sub);
     if(o.read && !slugs.has(o.read)) bad.push(where + " — 없는 글 " + o.read);
     if(o.tool && !tools.has(o.tool)) bad.push(where + " — 없는 도구 " + o.tool);
+    /* ⚠️ 탭을 들고 가는 주소(`/sell?t=asset`)가 있어서 **경로만** 봅니다 —
+       질의문자는 그 화면이 읽습니다. 경로가 없으면 가짜 링크입니다. */
     [o.to, o.to2].forEach(t => {
-      if(t && !routes.has(t)) bad.push(where + " — 없는 주소 " + t); });
+      if(t && !routes.has(t.split("?")[0])) bad.push(where + " — 없는 주소 " + t); });
   };
   Object.keys(W.AM_PROCESS||{}).forEach(k =>
     (W.AM_PROCESS[k]||[]).forEach((st, i) => chk("AM_PROCESS."+k+"["+i+"] "+st.name, st)));

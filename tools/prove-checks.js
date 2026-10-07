@@ -81,6 +81,21 @@ const CASES = [
         return real(ev);
       };
     })();`],
+  /* 로드맵의 걸음이 일반 견적 폼으로 보내던 때로 돌려놓습니다.
+     ⚠️⚠️ 되돌리기는 **데이터 쪽**이라야 합니다 — 검사가 window.go() 로
+     네 화면을 돌며 **다시 그리기** 때문에, DOM 의 href 만 고쳐 놓으면
+     첫 hop 에서 되살아납니다 ("되돌리기가 틀린" 자리를 또 만들 뻔
+     했습니다). AM_PROCESS 를 고치면 그릴 때마다 따라옵니다. */
+  ["내놓으시려는 자리에서 내놓는 폼으로 간다",
+   `(function(){
+      const P = window.AM_PROCESS || {};
+      ["close-assets","close-transfer"].forEach(function(k){
+        (P[k] || []).forEach(function(st){
+          if(st.to && st.to.indexOf("/sell") === 0) st.to = "/quote";
+        });
+      });
+    })();`],
+
   /* 무권리(0)가 빈 칸으로 떨어지던 꼴을 만들어 봅니다 — 적는 칸의
      id 를 바꿔 놓으면 값을 못 읽어 그 칸이 통째로 빠집니다. */
   ["매물 내놓기: 적은 조건이 매물 생김새로 나간다",

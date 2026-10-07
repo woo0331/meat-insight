@@ -1193,13 +1193,15 @@ const AUDIT = `(() => {
     else if(inSearch.indexOf("검사용 공고 B") >= 0) why = "원문 없는 공고가 검색에만 나옵니다";
     return why;`);
   await f("가격은 10건 이상 · 기준일 있는 것만 낸다", "/", `
+    /* ⚠️ 칸 이름은 market.js 의 생김새 그대로 key 입니다 — 검사가
+       없는 칸(cat)으로 씨앗을 적어 두면 그걸 보고 베껴 쓰게 됩니다. */
     window.AM_QUOTE_STATS.push(
-      { cat:"zz-a", range:"평당 100~120만원", n:12, asOf:"2026-10-01" },
-      { cat:"zz-b", range:"평당 50~60만원",   n:9,  asOf:"2026-10-01" },
-      { cat:"zz-c", range:"평당 70~80만원",   n:30 });
-    const got = window.amQuoteStats().map(function(x){ return x.cat; });
+      { key:"zz-a", name:"검사용 A", range:"평당 100~120만원", n:12, asOf:"2026-10-01" },
+      { key:"zz-b", name:"검사용 B", range:"평당 50~60만원",   n:9,  asOf:"2026-10-01" },
+      { key:"zz-c", name:"검사용 C", range:"평당 70~80만원",   n:30 });
+    const got = window.amQuoteStats().map(function(x){ return x.key; });
     window.AM_QUOTE_STATS = window.AM_QUOTE_STATS.filter(function(x){
-      return String(x.cat).indexOf("zz-") !== 0; });
+      return String(x.key).indexOf("zz-") !== 0; });
     let why = true;
     if(got.indexOf("zz-a") < 0) why = "10건 넘는 것이 안 나옵니다";
     else if(got.indexOf("zz-b") >= 0) why = "9건짜리가 나옵니다 — 적은 표본으로 시세를 말합니다";

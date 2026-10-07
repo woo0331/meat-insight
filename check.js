@@ -1393,9 +1393,9 @@ const AUDIT = `(() => {
     if(!h.length) return "시설 · 장비를 내놓는 걸음에서 /sell 로 가는 길이 없습니다";
     if(!h.some(function(x){ return x.indexOf("/sell?t=asset") === 0; }))
       return "시설 · 장비인데 매장 탭으로 보냅니다 — " + h.join(" ");
-    /* 질의문자를 ? 로 두 번 이으면 탭이 통째로 안 읽힙니다 */
+    /* 질의문자를 물음표로 두 번 이으면 탭이 통째로 안 읽힙니다 */
     if(h.some(function(x){ return x.split("?").length > 2; }))
-      return "질의문자를 ? 로 두 번 이었습니다 — " + h.join(" ");
+      return "질의문자에 물음표를 두 번 붙였습니다 — " + h.join(" ");
     await hop("/closure?s=transfer&step=5");
     h = sell();
     if(!h.length) return "매장을 등록하는 걸음에서 /sell 로 가는 길이 없습니다";

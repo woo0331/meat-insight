@@ -1386,7 +1386,21 @@ function checkProcess(W){
       if(t && !routes.has(t.split("?")[0])) bad.push(where + " — 없는 주소 " + t); });
   };
   Object.keys(W.AM_PROCESS||{}).forEach(k =>
-    (W.AM_PROCESS[k]||[]).forEach((st, i) => chk("AM_PROCESS."+k+"["+i+"] "+st.name, st)));
+    (W.AM_PROCESS[k]||[]).forEach((st, i) => {
+      const where = "AM_PROCESS." + k + "[" + (i+1) + "] " + st.name;
+      chk(where, st);
+      /* ⚠️⚠️ 걸음 하나를 펼친 화면(§28)은 **값이 없는 칸을 아예 안
+         그립니다** — 그래서 빠뜨려도 화면이 멀쩡하고 아무도 못 봅니다.
+         실제로 `cost` 가 쉰일곱 중 다섯에만 있었습니다. 어느 걸음에나
+         있어야 하는 넷만 셉니다 (`cost` 는 적을 것이 없는 걸음이
+         있어서 세지 않습니다 — CLAUDE.md 가 그 여덟을 적어 둡니다). */
+      ["lead","check"].forEach(f => {
+        if(!st[f]) bad.push(where + " — " + f + " 가 비었습니다"); });
+      ["do","ck"].forEach(f => {
+        if(!(st[f]||[]).length) bad.push(where + " — " + f + " 가 비었습니다"); });
+      if(!st.cat && !st.to && !st.tool && !st.read)
+        bad.push(where + " — 갈 곳이 하나도 없습니다 (막다른 걸음입니다)");
+    }));
   (W.AM_OPS||[]).forEach((o, i) => chk("AM_OPS["+i+"] "+o.name, o));
   /* 계산 결과에서 업체로 가는 길 (V2 §17) */
   (W.AM_TOOLS||[]).forEach(t => (t.rel||[]).forEach((o, i) =>

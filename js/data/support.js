@@ -48,24 +48,31 @@ window.AM_SUPPORTS = [];
      checked:false  ⚠️ 눌러 보고 켜세요
    }
    ════════════════════════════════════════════════════════════════════ */
+/* ⚠️ **2026-10-07 — 사장님이 여섯 곳을 전부 눌러 보시고 켰습니다.**
+   주소가 적힌 것은 여섯이고 `지역신용보증재단` · `관할 구청` 둘은
+   **주소 자체가 없습니다** (시·도마다 달라서 한 주소로 못 적습니다) —
+   그 둘은 켤 것이 없어 꺼진 채가 맞습니다. 기관 이름과 찾는 말까지는
+   그대로 나갑니다.
+   ⚠️ 기관이 주소를 바꾸면 여기도 **다시 눌러 보고** 고치세요. 죽은
+   링크는 없는 것보다 나쁩니다 — "이 사이트도 관리 안 하는구나" 입니다. */
 window.AM_SUPPORT_WHERE = [
   { key:"bizinfo", side:"both",
     org:"기업마당 (중소벤처기업부)",
     what:"부처와 지자체의 지원사업 공고가 한곳에 모입니다. 제일 먼저 볼 곳입니다.",
     find:"지역과 업종으로 거른 뒤 '소상공인' 으로 다시 거릅니다",
-    url:"https://www.bizinfo.go.kr", checked:false },
+    url:"https://www.bizinfo.go.kr", checked:true },
 
   { key:"semas", side:"both",
     org:"소상공인시장진흥공단",
     what:"소상공인 정책자금 · 교육 · 컨설팅, 그리고 폐업하시는 분을 위한 사업까지 다룹니다.",
     find:"정리하시는 중이면 '폐업' 으로, 시작하시는 중이면 '창업' 으로 찾으십니다",
-    url:"https://www.semas.or.kr", checked:false },
+    url:"https://www.semas.or.kr", checked:true },
 
   { key:"kstartup", side:"start",
     org:"K-Startup (창업진흥원)",
     what:"창업 지원사업 공고가 모입니다. 업종보다 '창업 단계' 로 나뉘어 있습니다.",
     find:"예비창업 · 초기창업으로 나뉘니 지금 단계부터 고르십니다",
-    url:"https://www.k-startup.go.kr", checked:false },
+    url:"https://www.k-startup.go.kr", checked:true },
 
   { key:"sinbo", side:"start",
     org:"지역신용보증재단 (시 · 도별)",
@@ -84,19 +91,19 @@ window.AM_SUPPORT_WHERE = [
     org:"노란우산공제 (중소기업중앙회)",
     what:"매달 부어 두었다가 폐업하실 때 받는 공제입니다. 압류가 안 되고 소득공제도 됩니다.",
     find:"가입은 시작하실 때, 받는 것은 정리하실 때입니다",
-    url:"https://www.8899.or.kr", checked:false },
+    url:"https://www.8899.or.kr", checked:true },
 
   { key:"ei", side:"both",
     org:"고용보험 · 근로복지공단",
     what:"직원과 관련된 것 — 사회보험료 지원, 고용 유지, 직원이 그만둘 때의 절차.",
     find:"직원이 한 명이라도 있으면 폐업 전에 반드시 한 번 확인하십니다",
-    url:"https://www.ei.go.kr", checked:false },
+    url:"https://www.ei.go.kr", checked:true },
 
   { key:"hometax", side:"close",
     org:"국세청 홈택스 · 관할 세무서",
     what:"폐업 신고와 부가가치세 확정신고를 하는 곳입니다. 지원사업은 아니지만 기한이 있습니다.",
     find:"폐업일이 속한 달의 다음 달 25일까지 확정신고입니다 — 세무서에 먼저 물어보십니다",
-    url:"https://www.hometax.go.kr", checked:false }
+    url:"https://www.hometax.go.kr", checked:true }
 ];
 
 /* ⚠️ 링크는 **켜 둔 것만** 나갑니다. 끄여 있으면 기관 이름과 찾는

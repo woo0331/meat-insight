@@ -616,6 +616,40 @@ async function proveAudit(pg){
       " → 옛 흐린 색으로 되돌리면 " + JSON.stringify(after).slice(0,60) + "]");
   }
 
+  /* ⚠️⚠️ **아이콘이 든 칸도 재는가** — 대비 검사가 오래도록
+     "잎사귀"(자식이 하나도 없는 칸)만 보고 있었습니다. 이 저장소의
+     배지 · 칩 · 단추는 거의 전부 svg 아이콘 하나를 품고 있어서
+     **한 번도 안 재졌습니다** (후기 인증 배지가 대비 3.06 으로 그
+     밑에 숨어 있었습니다). 아이콘이 든 칸의 글자색만 흐리게 바꿔
+     놓고 잡히는지 봅니다 — 잎사귀만 보던 때로 돌아가면 못 잡습니다.
+     ⚠️ 지울 것이 **실제로 있는** 화면을 고릅니다 (이 저장소에서
+     타일이 없는 화면에 되돌리기를 걸어 헛물을 켠 적이 있습니다). */
+  for(const u of ["/closure", "/startup"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).dim;
+    const n = await pg.evaluate(() => {
+      let k = 0;
+      document.querySelectorAll("#view *").forEach(function(e){
+        if(!e.querySelector("svg")) return;
+        const own = [].slice.call(e.childNodes)
+          .filter(function(x){ return x.nodeType === 3; })
+          .map(function(x){ return x.nodeValue; }).join("").trim();
+        if(!own) return;
+        e.style.color = "#E8E8E8";   /* 흰 바탕에서 대비 1.3 */
+        k++;
+      });
+      return k;
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).dim;
+    const ok = n > 0 && before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 아이콘이 든 칸도 대비를 잰다 · " + u +
+      "  [바꾼 칸 " + n + "개 · 지금 " + JSON.stringify(before).slice(0,30) +
+      " → 흐리게 하면 " + JSON.stringify(after).slice(0,60) + "]");
+  }
+
   /* "준비 중" 자리표시자 — 프랜차이즈 분류 칸을 원래대로 돌려놓습니다.
      열두 칸이 전부 "준비 중" 이었고, 세는 값(0개 브랜드)을 내야 할
      자리였습니다 (절대 규칙 2). */

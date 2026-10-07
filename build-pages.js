@@ -586,6 +586,21 @@ function noscriptFor(W, r, route){
         h2(ind.name + (start ? " 창업에 필요한 장비" : " 정리할 시설 · 장비"));
         ul(ind.equip.map(e => e.name));
       }
+      if(start){
+        [["신규창업", "startup-new"], ["기존매장 인수", "startup-take"]].forEach(x => {
+          const pr = (W.AM_PROCESS||{})[x[1]] || [];
+          if(!pr.length) return;
+          h2(ind.name + " " + x[0] + " — 이 순서로 준비하세요");
+          ul(pr.map((y,i) => (i+1) + ". " + y.name + " — " + y.lead));
+        });
+      } else {
+        (W.AM_CLOSE_WANTS||[]).forEach(w => {
+          const pr = w.proc ? ((W.AM_PROCESS||{})[w.proc] || []) : [];
+          if(!pr.length) return;
+          h2(ind.name + " — " + w.name.replace(/[.?]$/, ""));
+          ul(pr.map((y,i) => (i+1) + ". " + y.name + " — " + y.lead));
+        });
+      }
       h2(ind.name + (start ? " 창업에 필요한 모든 것" : " 폐업에 필요한 모든 것"));
       cats.forEach(c => { L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc); ul(subNames(c)); });
       if(!start && (ind.stock||[]).length){ h2("재고 처분"); ul(ind.stock); }
@@ -648,9 +663,9 @@ function noscriptFor(W, r, route){
   if(route === "/transfer"){
     const nSt2 = (W.AM_STORES||[]).length, nAs2 = (W.AM_ASSETS||[]).length;
     h2("받을 때는 이 순서입니다");
-    ul((W.AM_PROCESS||{})["acq-in"].map((x,i) => (i+1) + ". " + x.name + " — " + x.lead));
+    ul(((W.AM_PROCESS||{})["startup-take"]||[]).map((x,i) => (i+1) + ". " + x.name + " — " + x.lead));
     h2("넘길 때는 이 순서입니다");
-    ul((W.AM_PROCESS||{})["acq-out"].map((x,i) => (i+1) + ". " + x.name + " — " + x.lead));
+    ul(((W.AM_PROCESS||{})["close-transfer"]||[]).map((x,i) => (i+1) + ". " + x.name + " — " + x.lead));
     h2("지금 올라온 것");
     /* ⚠️ 0 이면 0 이라고 적습니다 (절대 규칙 1) */
     p("매장 매물 " + nSt2 + "건 · 시설 · 장비 " + nAs2 + "건. " +
@@ -663,18 +678,43 @@ function noscriptFor(W, r, route){
 
   if(route === "/startup" || route === "/closure"){
     const start = route === "/startup";
-    /* 준비 과정 — 2026-10-05 V2 §4(창업 12걸음) · §8(폐업 13걸음) */
-    const pr = (W.AM_PROCESS||{})[start ? "startup" : "closing"] || [];
-    if(pr.length){
-      h2(start ? "창업 준비, 무엇부터 하나요?" : "폐업, 무엇부터 하나요?");
-      ul(pr.map((x,i) => (i+1) + ". " + x.name + " — " + x.lead));
+    /* ⚠️ 화면과 **같은 차례**입니다 (2026-10-07 §23 · §34) —
+       질문 → 선택 → 맞춤 로드맵. 로드맵이 둘 이상이라 전부 냅니다. */
+    if(start){
+      h2("어떤 업종을 준비하고 계세요?");
+      ul((W.AM_INDUSTRIES||[]).map(i => i.name + " — " + i.lead));
+      h2("어떻게 시작할 계획이세요?");
+      ul(["새로 창업하기 — 새로운 공간에서 처음부터 준비.",
+          "기존 매장 인수하기 — 기존 영업매장 또는 시설을 인수하여 시작."]);
+      [["신규창업", "startup-new"], ["기존매장 인수", "startup-take"]].forEach(x => {
+        const pr = (W.AM_PROCESS||{})[x[1]] || [];
+        if(!pr.length) return;
+        h2(x[0] + " — 이 순서로 준비하세요");
+        ul(pr.map((y,i) => (i+1) + ". " + y.name + " — " + y.lead));
+      });
+      h2("창업에 필요한 모든 것");
+      (W.AM_START_CATS||[]).forEach(c => {
+        L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc); ul(subNames(c)); });
+      return L.join("");
     }
-    h2("업종");
-    ul((W.AM_INDUSTRIES||[]).map(i => i.name + " — " + i.lead));
-    h2(start ? "창업에 필요한 모든 것" : "폐업에 필요한 모든 것");
-    (start ? (W.AM_START_CATS||[]) : (W.AM_CLOSE_CATS||[])).forEach(c => {
-      L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc); ul(subNames(c));
+    /* ⚠️⚠️ **폐업을 철거로 시작하지 않습니다** (§38) — 크롤러 본문의
+       차례도 화면과 같습니다. */
+    h2("폐업하기 전에, 넘길 수 있는 것부터 확인하세요.");
+    p("매장과 시설, 장비를 바로 철거하기 전에 다음 사장님에게 이어질 수 " +
+      "있는지 먼저 확인해보세요.");
+    h2("현재 어떤 상황이신가요?");
+    ul((W.AM_CLOSE_WANTS||[]).map(w => w.name + " — " + w.lead));
+    (W.AM_CLOSE_WANTS||[]).forEach(w => {
+      const pr = w.proc ? ((W.AM_PROCESS||{})[w.proc] || []) : [];
+      if(!pr.length) return;
+      h2(w.name.replace(/[.?]$/, "") + " — 이 순서로 준비하세요");
+      ul(pr.map((y,i) => (i+1) + ". " + y.name + " — " + y.lead));
     });
+    h2("업종마다 정리할 것이 다릅니다");
+    ul((W.AM_INDUSTRIES||[]).map(i => i.name + " — " + i.lead));
+    h2("폐업에 필요한 모든 것");
+    (W.AM_CLOSE_CATS||[]).forEach(c => {
+      L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc); ul(subNames(c)); });
     return L.join("");
   }
 

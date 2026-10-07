@@ -408,20 +408,71 @@ window.amStepCats = function(step, industryKey){
    나머지도 냅니다 — 숨기면 그 사장님에게는 그 기능이 없는 것이
    됩니다. `check.js` 가 봅니다.
    ════════════════════════════════════════════════════════════════════ */
+/* ⚠️⚠️ **2026-10-07 최종 전면개편 지시서 §34 의 네 가지**입니다.
+   전에는 "통째로 넘기고 싶어요 · 돈을 남기고 싶어요 · 빨리 정리하고
+   싶어요 · 모르겠어요" 였는데, 그건 **바람**을 묻는 것이라 로드맵으로
+   이어지지 않았습니다. 지금은 **상황**을 묻고 상황마다 로드맵이
+   하나씩 붙습니다 (`proc`).
+
+   ⚠️⚠️ **차례를 바꾸지 마세요.** 양도 → 시설·장비 → 완전폐업 순서가
+   §38 입니다 — 폐업을 철거로 시작하지 않습니다.
+   ⚠️ `proc` 이 비어 있는 것(`unsure`)은 **짧은 진단**으로 갑니다 (§39).
+   ⚠️ `cats` 는 아래 분야 묶음을 추릴 때 씁니다 — 잘라 내지 않고
+   **앞으로 당겨** 냅니다. */
 window.AM_CLOSE_WANTS = [
-  { key:"pass",  name:"가게를 통째로 넘기고 싶어요", icon:"key",
-    lead:"양도가 되면 철거비도 안 들고 권리금도 회수할 기회가 생깁니다",
-    cats:["transfer","contract","tax","labor"] },
-  { key:"money", name:"최대한 돈을 남기고 정리하고 싶어요", icon:"won",
+  { key:"transfer", name:"매장 전체를 넘기고 싶어요", icon:"key",
+    proc:"close-transfer",
+    lead:"양도가 되면 철거비도 안 들고 권리금을 회수할 기회가 생깁니다",
+    cats:["transfer","contract","tax","labor","law"] },
+  { key:"assets", name:"시설 · 장비를 정리하고 싶어요", icon:"boxes",
+    proc:"close-assets",
     lead:"버리는 것보다 넘기는 쪽이 낫습니다. 시설 · 집기 · 재고까지",
-    cats:["transfer","asset","stock","tax","support"] },
-  { key:"fast",  name:"최대한 빨리 정리하고 싶어요", icon:"clock",
-    lead:"임대 기간이 남아 있으면 하루가 돈입니다",
-    cats:["demolish","restore","waste","process","contract"] },
-  { key:"lost",  name:"무엇부터 해야 할지 모르겠어요", icon:"info",
-    lead:"순서대로 짚어 드립니다. 기한이 있는 것이 여럿입니다",
+    cats:["asset","stock","transfer","waste","demolish"] },
+  { key:"full", name:"완전히 폐업하려고 해요", icon:"box",
+    proc:"close-full",
+    lead:"순서와 기한이 있는 일이라 빠뜨리면 돈이 나갑니다",
+    cats:["process","tax","labor","contract","restore","demolish","waste"] },
+  { key:"unsure", name:"아직 어떻게 해야 할지 모르겠어요", icon:"info",
+    proc:"",
+    lead:"다섯 가지만 여쭤 보고 사장님 상황에 맞는 순서를 찾아 드립니다",
     cats:["process","tax","labor","contract","restore"] }
 ];
+
+/* ── 짧은 진단 (§39) ─────────────────────────────────────────────
+   ⚠️ **질문을 너무 많이 만들지 않습니다** (§39 이 직접 적었습니다).
+   다섯입니다. 답은 주소에 실립니다 (`?d=ynyny`) — 뒤로 가기 ·
+   새로고침 · 링크 공유에 살아남고, 아무것도 저장하지 않습니다. */
+window.AM_CLOSE_ASK = [
+  { key:"open",  q:"지금도 영업하고 계신가요?",
+    y:"영업 중",        n:"이미 닫았습니다" },
+  { key:"lease", q:"임대차 계약이 남아 있나요?",
+    y:"남아 있습니다",  n:"끝났거나 곧 끝납니다" },
+  { key:"pass",  q:"매장을 넘길 생각이 있으신가요?",
+    y:"있습니다",      n:"없습니다" },
+  { key:"asset", q:"시설 · 장비가 남아 있나요?",
+    y:"남아 있습니다",  n:"없습니다" },
+  { key:"staff", q:"직원이 있으신가요?",
+    y:"있습니다",      n:"없습니다" }
+];
+
+/* 답을 보고 어느 순서가 맞는지 고릅니다.
+   ⚠️ 판정이 아니라 **차례 고르기**입니다 — 고르지 않은 길도 아래에
+   그대로 두어, 사장님이 다른 쪽을 보실 수 있어야 합니다. */
+window.amCloseAdvice = function(ans){
+  var a = ans || {};
+  if(a.pass === "y" && a.lease === "y")
+    return { key:"transfer",
+      why:"임대차 계약이 남아 있고 넘기실 뜻이 있으시니, 매장 전체 양도부터 " +
+           "보시는 것이 낫습니다. 양도가 되면 철거비와 원상복구가 줄어듭니다." };
+  if(a.pass !== "y" && a.asset === "y" && a.lease !== "y")
+    return { key:"assets",
+      why:"계약이 얼마 남지 않았고 넘기실 뜻이 없으시니, 남은 시설 · 장비를 " +
+           "먼저 정리하는 쪽이 낫습니다. 버리기 전에 나갈 것부터 고릅니다." };
+  return { key:"full",
+    why:"정리하실 것이 여럿입니다. 양도 가능성부터 보고 시설 · 재고 · 행정을 " +
+         "거쳐 마지막에 철거 · 원상복구로 갑니다 — 이 차례를 지키시면 " +
+         "돌려받을 수 있는 것을 버리지 않습니다." };
+};
 
 window.amCloseWant = function(key){
   var r = (window.AM_CLOSE_WANTS||[]).filter(function(w){ return w.key === key; });

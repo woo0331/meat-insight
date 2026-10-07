@@ -131,28 +131,32 @@ window.ProcessBand = function(o){
   var steps = amProcess(o.key);
   if(!steps.length) return "";
   var ind = o.industry || "";
-  return '<section class="sec'+(o.tone ? " "+o.tone : " sec-white")+'"><div class="w">'+
+  var base = o.base || nowPath();
+  var keep = o.keep || "";
+  return '<section class="sec'+(o.tone ? " "+o.tone : " sec-white")+'" id="road"><div class="w">'+
     '<div class="sec-hd">'+
-      '<p class="eyebrow">'+esc(o.kicker || "PROCESS")+'</p>'+
-      '<h2>'+esc(o.title || "무엇부터 해야 하나요?")+'</h2>'+
-      '<p>'+esc(o.lead || "순서대로 짚어 드립니다. 걸음마다 필요한 정보 · 업체 · 도구를 바로 열어 보실 수 있습니다.")+'</p>'+
+      '<p class="eyebrow">'+esc(o.kicker || "ROADMAP")+'</p>'+
+      '<h2>'+esc(o.title || "이 순서로 준비하세요")+'</h2>'+
+      '<p>'+esc(o.lead || "걸음을 누르시면 그 걸음에 필요한 것만 모아서 보여 드립니다.")+'</p>'+
     '</div>'+
     '<ol class="pcs">'+steps.map(function(s, i){
       var no = (i + 1 < 10 ? "0" : "") + (i + 1);
-      return '<li class="pcs-i">'+
+      var on = (o.cur === i);
+      return '<li class="pcs-i'+(on ? " on" : "")+'">'+
         '<span class="pcs-n">'+no+'</span>'+
         '<div class="pcs-b">'+
-          '<b class="pcs-t">'+esc(s.name)+'</b>'+
+          /* ⚠️⚠️ 걸음 전체가 **눌립니다** (§27 — "각 단계는 클릭
+             가능"). 안에 또 링크를 넣으면 `<a>` 안의 `<a>` 가 되어
+             브라우저가 쪼갭니다 — 그래서 걸음 상세로 가는 링크는
+             제목 하나이고, 정보 · 업체 · 도구 링크는 **상세 화면**에
+             있습니다. */
+          '<a class="pcs-t" href="'+esc(base + "?" + (keep ? keep + "&" : "") +
+            "step=" + (i + 1))+'"'+(on ? ' aria-current="true"' : '')+'>'+
+            esc(s.name)+icon("chev",15)+'</a>'+
           '<p class="pcs-p">'+esc(s.lead)+'</p>'+
-          /* ⚠️ 꼭 확인할 것 (2026-10-06 2차 §5) — 걸음마다 **무엇을
-             해야 하는가**(lead) 다음에 **무엇을 확인해야 하는가**가
-             옵니다. 손님이 실제로 손해를 보는 자리가 거의 전부
-             여기입니다.
-             ⚠️⚠️ **금액 · 기한 숫자를 적지 마세요.** 업종 · 지역 ·
-             법 개정에 따라 갈리고, 적어 두면 틀린 날부터 거짓말이
-             됩니다 — "무엇을 어디에 확인하는가" 까지입니다.
-             ⚠️ `mark()` 를 안 거치는 칸이라 `**굵게**` 를 쓰면
-             별표가 글자로 찍힙니다 (이 저장소에서 13건 겪었습니다). */
+          /* ⚠️ 꼭 확인할 것 — 손님이 실제로 손해를 보는 자리가 거의
+             전부 여기입니다. ⚠️⚠️ **금액 · 기한 숫자를 적지 마세요.**
+             ⚠️ `mark()` 를 안 거치는 칸이라 별표를 쓰면 글자로 찍힙니다. */
           (s.check ? '<p class="pcs-ck">'+icon("check",15)+
              '<i>'+esc(s.check)+'</i></p>' : '')+
           '<div class="pcs-ls">'+StepLinks(s, ind)+'</div>'+
@@ -160,6 +164,128 @@ window.ProcessBand = function(o){
       '</li>';
     }).join("")+'</ol>'+
     (o.note ? '<p class="sec-note">'+icon("info",15)+esc(o.note)+'</p>' : '')+
+  '</div></section>';
+};
+
+/* ── 걸음 하나를 펼친 화면 (2026-10-07 §28 · §29 · §40) ─────────────
+   > "05 인테리어 클릭. 그때부터 인테리어에 필요한 정보만 보여준다."
+
+   차례는 지시서 §28 그대로입니다 —
+     지금 해야 할 일 → 꼭 확인할 것 → 체크리스트 → 비용을 가르는 것
+     → 꼭 알아야 할 정보 → 관련 계산기 → 관련 서비스 → 관련 업체
+     → 다음 단계
+
+   ⚠️⚠️ **새 콘텐츠를 지어내지 않습니다** (§30). 정보 글 · 계산기 ·
+   세부 서비스 · 업체는 전부 **이미 있는 데이터를 매핑**해서 냅니다 —
+   맞는 것이 없으면 그 칸은 **통째로 빠집니다** (절대 규칙 2).
+   ⚠️ **체크한 상태를 저장하지 않습니다.** 저장하는 것처럼 보이면
+   하지 않은 일을 했다고 말하는 것입니다 (절대 규칙 5).
+   ⚠️ 업체 수는 `amProvidersInCat()` 가 돌려주는 **수**입니다 —
+   배열이 아닙니다 (`.length` 를 붙였다가 "undefined곳" 이 찍혔습니다). */
+window.StepDetail = function(o){
+  var steps = amProcess(o.key);
+  var i = o.cur, s = steps[i];
+  if(!s) return "";
+  var ind  = o.industry || "";
+  var iq   = ind ? ("?i=" + encodeURIComponent(ind)) : "";
+  var base = o.base || nowPath();
+  var keep = o.keep || "";
+  var no   = (i + 1 < 10 ? "0" : "") + (i + 1);
+  var cat  = s.cat && (typeof amCat === "function") ? amCat(s.cat) : null;
+  var L    = [];
+
+  function box(t, body, cls){
+    if(!body) return "";
+    L.push('<div class="sd-b'+(cls ? " "+cls : "")+'"><h3>'+esc(t)+'</h3>'+body+'</div>');
+  }
+  function li(list){ return '<ul class="sd-l">'+list.map(function(x){
+    return '<li>'+esc(x)+'</li>'; }).join("")+'</ul>'; }
+
+  if((s.do||[]).length) box("지금 해야 할 일", li(s.do));
+  if(s.check) box("꼭 확인할 것",
+    '<p class="sd-ck">'+icon("alert",16)+'<span>'+esc(s.check)+'</span></p>');
+  if((s.ck||[]).length) box("체크리스트",
+    '<ul class="sd-ckl">'+s.ck.map(function(x){
+      return '<li>'+icon("check",15)+'<span>'+esc(x)+'</span></li>'; }).join("")+'</ul>'+
+    '<p class="sd-note">'+icon("info",14)+
+      '<span>체크한 상태는 저장하지 않습니다. 보시면서 확인하는 목록입니다.</span></p>');
+  if((s.cost||[]).length) box("비용을 가르는 것", li(s.cost)+
+    '<p class="sd-note">'+icon("info",14)+
+      '<span>금액은 지역 · 평수 · 업종에 따라 몇 배로 갈립니다. '+
+      '받으신 견적을 계산기에 적어 보세요.</span></p>');
+
+  /* 꼭 알아야 할 정보 — 이미 있는 글에서 가져옵니다 */
+  var reads = [], seen = {};
+  if(s.read && typeof amContent === "function"){
+    var c0 = amContent(s.read); if(c0){ reads.push(c0); seen[c0.slug] = 1; }
+  }
+  if(typeof amContentsFor === "function"){
+    amContentsFor({ cat:s.cat, industry:ind, limit:4 }).forEach(function(c){
+      if(!seen[c.slug] && reads.length < 3){ seen[c.slug] = 1; reads.push(c); }
+    });
+  }
+  if(reads.length) box("꼭 알아야 할 정보",
+    '<ul class="sd-rd">'+reads.map(function(c){
+      return '<li><a href="/content/'+esc(c.slug)+'">'+icon("book",16)+
+        '<span><b>'+esc(c.title)+'</b>'+
+        (c.lead ? '<i>'+esc(c.lead)+'</i>' : '')+'</span></a></li>'; }).join("")+'</ul>');
+
+  /* 관련 계산기 */
+  var tls = [], tseen = {};
+  (window.AM_TOOLS||[]).forEach(function(t){ if(t.key === s.tool){ tls.push(t); tseen[t.key]=1; } });
+  if(s.cat && typeof amToolsForCat === "function")
+    amToolsForCat(s.cat).forEach(function(t){
+      if(!tseen[t.key] && tls.length < 3){ tseen[t.key] = 1; tls.push(t); } });
+  if(tls.length) box("관련 계산기",
+    '<ul class="sd-tl">'+tls.map(function(t){
+      return '<li><a href="'+esc(t.to)+'">'+icon(t.icon || "calc",16)+
+        '<span><b>'+esc(t.name)+'</b><i>'+esc(t.lead)+'</i></span></a></li>'; }).join("")+'</ul>');
+
+  /* 관련 서비스 — 그 분류의 세부 서비스 (업종을 고르셨으면 그 업종 것) */
+  if(cat && typeof amCatItems === "function"){
+    var items = amCatItems(cat, ind).slice(0, 10);
+    if(items.length) box("관련 서비스",
+      '<ul class="chip-g">'+items.map(function(x){
+        var to = x.to || catTo(cat);
+        return '<li><a class="chip" href="'+esc(to)+
+          (to.indexOf("?") < 0 && ind ? "?i="+encodeURIComponent(ind) : "")+'">'+
+          esc(x.name)+'</a></li>'; }).join("")+'</ul>');
+  }
+
+  /* 관련 업체 — ⚠️ 0 이면 0 이라고 말합니다 (절대 규칙 1) */
+  if(cat && cat.kind === "provider"){
+    var n = (typeof amProvidersInCat === "function") ? amProvidersInCat(cat.key) : 0;
+    box("관련 업체",
+      '<p class="sd-pv">'+(n
+        ? esc(cat.name)+' 업체 '+n+'곳이 등록되어 있습니다.'
+        : esc(cat.name)+' 업체는 아직 등록된 곳이 없습니다. 지어내지 않습니다 — '+
+          '조건을 남겨 두시면 업체가 들어올 때 그 조건으로 전달합니다.')+'</p>'+
+      '<p class="row-cta row-left">'+
+        '<a class="btn btn-b" href="'+esc(catTo(cat) + iq)+'">'+
+          esc(cat.name)+' 업체 보기'+icon("arrow",16)+'</a>'+
+        '<a class="btn btn-o" href="'+esc(quoteTo({cat:cat.key, industry:ind}))+'">'+
+          '견적 요청하기</a>'+
+      '</p>');
+  }
+
+  /* 다음 단계 */
+  function go(j, label){
+    var t = steps[j]; if(!t) return "";
+    return '<a class="sd-nx-a" href="'+esc(base + "?" + (keep ? keep + "&" : "") +
+      "step=" + (j + 1))+'">'+
+      '<i>'+esc(label)+'</i><b>'+esc(t.name)+'</b></a>';
+  }
+  box("다음 단계", '<div class="sd-nx">'+ go(i-1, "앞 걸음") + go(i+1, "다음 걸음") +'</div>'+
+    '<p class="row-cta row-left"><a class="btn btn-o" href="'+
+      esc(base + (keep ? "?"+keep : "") + "#road")+'">전체 순서 보기</a></p>');
+
+  return '<section class="sec sec-white sd"><div class="w">'+
+    '<div class="sec-hd sd-hd">'+
+      '<p class="eyebrow">STEP '+esc(no)+' · '+esc(o.what || "준비 순서")+'</p>'+
+      '<h2>'+esc(s.name)+'</h2>'+
+      '<p>'+esc(s.lead)+'</p>'+
+    '</div>'+
+    '<div class="sd-g">'+L.join("")+'</div>'+
   '</div></section>';
 };
 
@@ -365,7 +491,17 @@ function PageAcquisition(){
         '<b>'+esc(x[2])+'</b><i>'+esc(x[3])+'</i></a></li>';
     }).join("")+'</ul>'+
   '</div></section>'+
-  ProcessBand({ key: t === "out" ? "acq-out" : "acq-in",
+  /* ⚠️⚠️ **2026-10-07 §4 — 로드맵을 따로 들고 있지 않습니다.**
+     전에는 `acq-in` · `acq-out` 두 벌이 따로 있었는데, 지시서가
+     "인수는 창업 안에서, 양도는 폐업 안에서 나온다" 고 정하면서
+     같은 순서를 **두 곳에 적는 꼴**이 됐습니다. 지금은 창업의
+     `startup-take`(열셋)와 폐업의 `close-transfer`(열)를 그대로
+     가져다 씁니다 — 한 곳만 고치면 세 화면이 같이 따라옵니다.
+     ⚠️ 걸음을 누르면 **원래 화면**(창업 · 폐업)의 걸음 상세로
+     갑니다. 같은 내용을 두 주소로 내지 않습니다. */
+  ProcessBand({ key: t === "out" ? "close-transfer" : "startup-take",
+    base: t === "out" ? "/closure" : "/startup",
+    keep: t === "out" ? "s=transfer" : "m=take",
     kicker: t === "out" ? "넘기는 순서" : "받는 순서",
     title:  t === "out" ? "넘길 때는 이 순서입니다" : "받을 때는 이 순서입니다",
     lead:   t === "out"

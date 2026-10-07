@@ -699,7 +699,9 @@ const AUDIT = `(() => {
       out.sel.push(o.textContent.trim() + "|" + Math.round(need) + ">" + Math.round(inner));
   });
 
-  document.querySelectorAll("#view .ic-t, #view .stg-i").forEach(e => {
+  /* ⚠️ 2026-10-07 로 메인의 서비스 타일이 .msvc-ic 가 됐습니다 —
+     여기 안 적으면 메인의 빈 아이콘을 영영 못 봅니다. */
+  document.querySelectorAll("#view .ic-t, #view .stg-i, #view .msvc-ic").forEach(e => {
     if(e.querySelector("svg")) return;
     const own = (e.parentElement || e);
     out.ico.push((own.textContent || "").trim().slice(0, 14) || "(이름 없음)");

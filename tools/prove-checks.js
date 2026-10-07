@@ -709,14 +709,15 @@ async function proveAudit(pg){
      /startup 을 적었는데 거기에는 .ic-t 도 .stg-i 도 없어서 아무것도
      안 지워졌고, "검사가 안 잡는다" 로 보였습니다 (검사가 아니라
      되돌리기가 틀린 것입니다 — 이 저장소에서 여러 번 겪었습니다).
-     지금 타일이 있는 화면은 / (45개) · /transfer (5) · /g/:stage (1)
-     입니다. /tools · /providers · /about · /startup 에는 없습니다. */
+     ⚠️ 2026-10-07 전면개편으로 메인의 타일이 `.msvc-ic` 가 됐습니다 —
+     `.ic-t` · `.stg-i` 만 지우면 메인에서는 **아무것도 안 지워집니다.**
+     선택자를 셋 다 둡니다. */
   for(const u of ["/", "/transfer"]){
     await pg.goto(ROOT + u, { waitUntil:"load" });
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).ico;
     await pg.evaluate(() => {
-      const e = document.querySelector("#view .ic-t svg, #view .stg-i svg");
+      const e = document.querySelector("#view .ic-t svg, #view .stg-i svg, #view .msvc-ic svg");
       if(e) e.remove();
     });
     await pg.waitForTimeout(60);

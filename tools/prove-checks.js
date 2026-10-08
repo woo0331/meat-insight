@@ -223,13 +223,18 @@ const CASES = [
      데이터와 같은가" 를 보는데, 데이터 쪽을 망가뜨리면 **둘 다 같이
      틀려서** 검사가 통과해 버립니다 (처음에 그렇게 짰다가 걸렸습니다).
      망가뜨릴 것은 **화면이 업종을 안 읽는 것** 쪽입니다. */
-  ["업종을 고르면 그 업종 차례로 펼쳐진다",
-   `const real = window.nowQS;
-    window.nowQS = function(k){ return k === "i" ? "" : real(k); };  /* 업종을 안 읽던 그때 */
+  /* ⚠️⚠️ **되돌리기는 데이터 쪽을 망가뜨려야 합니다.** 업종 차례에서
+     빠진 분류를 잘라 내던 그때를 되살립니다 — 잘라 내면 그 업종
+     사장님에게는 그 기능이 **아예 없는 것**이 됩니다. */
+  ["업종을 고르면 그 업종 것이 펼쳐진다",
+   `const real = window.amCatsFor;
+    window.amCatsFor = function(i, side){ return real(i, side).slice(0, 3); };
     window.rerender(true);`],
-  /* 토글이 주소에 상태를 안 싣던 그때. */
-  ["창업 · 정리 토글이 실제로 쪽을 바꾼다",
-   `document.querySelectorAll(".mfit-t").forEach(function(t){ t.setAttribute("href", "/"); });`],
+  /* 창업 쪽과 정리 쪽이 같은 분야를 내던 그때. */
+  ["같은 업종이어도 창업 쪽과 정리 쪽이 다르다",
+   `const real = window.amCatsFor;
+    window.amCatsFor = function(i, side){ return real(i, "start"); };
+    window.rerender(true);`],
   /* 조사를 손으로 적던 그때 — ⚠️ `koWith` 를 바꿔치기해서는 안 됩니다.
      그러면 **다시 그리지 않아** 화면 글자가 그대로라 엉뚱하게 통과/실패
      합니다 (처음에 그렇게 짰다가 "인수인계는 가 화면에 있습니다" 라는
@@ -265,18 +270,24 @@ const CASES = [
    `document.querySelector("#q-f .note-mid").textContent =
       "보내고 나면 이 브라우저에 요청 내용이 남아, 아래에서 비교하실 수 있습니다.";`],
   ["지어낸 실적 숫자가 메인에 없다",
-   `document.querySelector(".hp2-d").textContent = "입점 업체 1,200곳";`],
-  ["히어로 제목이 창업 · 폐업 두 낱말을 주인공으로 둔다",
-   `document.querySelector(".mval-h").textContent = "창업 플랫폼";`],
+   `document.querySelector(".hpk-d").textContent = "입점 업체 1,200곳";`],
+  ["히어로가 창업 · 폐업 두 갈래를 같은 무게로 낸다",
+   `document.querySelector("#view h1").textContent = "창업 플랫폼";`],
   /* ⚠️⚠️ 되돌리기는 **검사가 실제로 보는 것**을 망가뜨려야 합니다.
      검색 가는 길을 지울 때 입력칸만 지우고 돋보기를 남겼다가 "검사가
      안 잡는다" 로 보였던 적이 있습니다 — 검사가 아니라 되돌리기가
      틀렸던 것입니다. 여기서는 바로가기 하나를 가짜 링크로 만듭니다
      (지시서 §26 "버튼 → 실제 Link"). */
-  ["히어로에서 바로 찾고 바로 갈라진다",
-   `document.querySelector(".mstg-g > li > a").setAttribute("href", "#");`],
-  ["창업은 초록 · 폐업은 주황이고 빨강이 아니다",
-   `document.querySelector(".mval-h .mh-cl").style.color = "rgb(214,28,28)";`],
+  /* ⚠️⚠️ 되돌리기는 **검사가 실제로 보는 것**을 망가뜨려야 합니다.
+     검색 가는 길은 입력칸과 돋보기 **둘**이라, 한쪽만 지우면 "검사가
+     안 잡는다" 로 보입니다 — 둘 다 지웁니다 (이 저장소에서 겪었습니다). */
+  ["어느 화면에서나 검색으로 가는 길이 있고 메인이 두 갈래로 갈린다",
+   `document.querySelectorAll('.hd input[type=search], .hd a[href="/search"]')
+      .forEach(function(e){ e.remove(); });`],
+  /* ⚠️⚠️ **폐업이 빨강으로 넘어가던 그때.** 빨강은 "폐업은 나쁜 것"
+     이라는 말이 됩니다 — 이 저장소가 여러 곳에 못박아 둔 자리입니다. */
+  ["창업은 파랑 · 폐업은 주황이고 빨강이 아니다",
+   `document.querySelector(".hpk-cl .hpk-h1").style.color = "rgb(214,28,28)";`],
   ["연결 구간 두 딱지가 같은 높이에 앉는다",
    `document.querySelector(".mbr-g").style.alignItems = "center";
     document.querySelector(".mbr-cl .mbr-l").insertAdjacentHTML("beforeend",
@@ -294,21 +305,24 @@ const CASES = [
      다섯이 빠짐없이 나뉘는가)이 확인되지 않습니다. */
   ["사업 단계 여섯이 분류 스물다섯을 빠짐없이 나눠 가진다",
    `window.AM_STAGES[5].cats = window.AM_STAGES[5].cats.slice(1);`],
-  ["히어로 두 장의 크기가 같다",
-   `document.querySelector(".hp2-cl").style.flex = "1 1 70%";`],
+  ["히어로 선택 카드 둘의 크기가 같다",
+   `document.querySelector(".hpk-cl").style.width = "70%";`],
   /* ⚠️⚠️ **아이콘 칸(.stg-i)만 집어야 합니다.** 처음에
      ".mstg-g > li > a svg" 로 적었더니 **화살표까지** 걸려서
      [아이콘0, 화살표0, 아이콘1, …] 이 되고, 0번에 화살표를 넣는 바람에
      아이콘끼리는 여전히 달라 "검사가 안 잡는다" 로 나왔습니다 —
      검사가 아니라 되돌리기가 틀린 것이었습니다 (이 저장소에서 세 번째). */
-  ["단계 카드 여섯의 아이콘이 저마다 다르다",
-   `const sv = document.querySelectorAll(".mstg-g .stg-i svg");
+  /* ⚠️⚠️ **아이콘 칸만 집어야 합니다.** 예전에 카드 안의 svg 를 전부
+     집었더니 화살표까지 걸려서 "검사가 안 잡는다" 로 보였습니다 —
+     검사가 아니라 되돌리기가 틀린 것이었습니다 (세 번째). */
+  ["핵심 서비스 여덟의 아이콘이 비지 않고 저마다 다르다",
+   `const sv = document.querySelectorAll(".msvc-g > li > a .msvc-ph svg");
     sv[0].innerHTML = sv[1].innerHTML;`],
   ["업종 열넷이 저마다 다른 색을 쓴다",
    /* ⚠️ `.ic-t` 에 transition 이 걸려 있어서 그냥 바꾸면 **색이 번지는
       도중**에 재어 다른 값이 나옵니다 — 되돌리기가 헛돕니다. 끕니다. */
-   `const t = document.querySelectorAll(".mi-g > li > a");
-    const a0 = t[0].querySelector(".ic-t"), a1 = t[1].querySelector(".ic-t");
+   `const t = document.querySelectorAll(".ind-g > li > a");
+    const a0 = t[0].querySelector(".ind-ic"), a1 = t[1].querySelector(".ind-ic");
     t[1].style.transition = "none"; a1.style.transition = "none";
     t[1].style.background = getComputedStyle(t[0]).backgroundColor;
     a1.style.background = getComputedStyle(a0).backgroundColor;`],
@@ -397,7 +411,13 @@ const CASES = [
       안 잡게 됐습니다 — 검사가 아니라 **되돌리기가 틀린** 열한 번째
       자리입니다. 검사가 보는 것과 똑같이 "실제로 뒤에 보이는 면" 을
       찾아서 칠합니다. */
-   `const a = document.querySelectorAll(".mi-g a")[0];
+   /* ⚠️ 2026-10-08 — 메인에 `.mi-g`(업종 카드)가 없습니다. 지울 것이
+      **실제로 있는** 카드를 고릅니다 — 없는 것을 집으면 되돌리기가
+      터지거나 아무 일도 안 나서 "검사가 안 잡는다" 로 보입니다
+      (이 저장소에서 다섯 번 겪은 자리입니다). */
+   `const a = document.querySelector(".msvc-g > li > a") ||
+             document.querySelector(".mti-c") ||
+             document.querySelector(".hpk");
     const back = (function(el){
       let e = el.parentElement;
       while(e){
@@ -453,15 +473,23 @@ const CASES = [
   /* 아이콘을 손으로 적어 둔 표로 되돌리면 — 표에 없는 도구가 전부
      같은 기본 아이콘이 됩니다 */
   ["도구 카드 아이콘이 도구 데이터 것과 같고 저마다 다르다",
-   `document.querySelectorAll(".mt-g > li .ic-t").forEach(function(e, i){
-      if(i > 1) e.innerHTML = document.querySelector(".mt-g > li .ic-t").innerHTML;
+   /* ⚠️ /tools 의 아이콘 칸은 tl-c-ic 입니다 (ic-t 가 아닙니다) —
+      틀린 칸을 집으면 **아무 일도 안 나서** "검사가 안 잡는다" 로
+      보입니다. 검사가 아니라 되돌리기가 틀린 자리, 여덟 번째입니다. */
+   `document.querySelectorAll(".tl-g > li .tl-c-ic").forEach(function(e, i){
+      if(i > 1) e.innerHTML = document.querySelector(".tl-g > li .tl-c-ic").innerHTML;
     });`],
   /* 하위가 0인 분류의 lead 를 떼면 이름만 남습니다 */
   ["분야 카드가 설명도 숫자도 없이 비지 않는다",
-   `document.querySelectorAll(".fit-g .fit").forEach(function(a){
-      const n = a.querySelector(".fit-n"), i = a.querySelector("i");
-      if(n) n.remove();
-      if(i) i.remove();
+   /* ⚠️ 되돌리기는 **지울 것이 실제로 있는** 자리라야 합니다 — 지울
+      것이 없는 화면을 고르면 또 "검사가 안 잡는다" 로 보입니다
+      (이 저장소에서 네 번째). .stp-i 안의 이름(b) 말고 전부 지웁니다. */
+   `document.querySelectorAll(".stp-i").forEach(function(a){
+      [].slice.call(a.children).forEach(function(e){
+        if(e.tagName !== "B") e.remove();
+      });
+      [].slice.call(a.querySelectorAll("b")).slice(1)
+        .forEach(function(e){ e.remove(); });
     });`]
 ];
 
@@ -523,13 +551,38 @@ function proveEscapes(){
       return false;
     }
   }
+  /* ⚠️⚠️ **검사 본문이 실제로 돌 수 있는 코드인지 먼저 봅니다.**
+     `node --check check.js` 는 **문자열 안을 안 봅니다** — 본문이
+     문법적으로 깨져 있어도 통과하고, 그 검사만 조용히 안 돕니다.
+     실제로 겪은 것 둘 —
+       · 주석에 백틱 (열여섯 번)  → 문자열이 거기서 끝남
+       · 주석에 별표 뒤 빗금      → **블록 주석이 거기서 닫힘**
+         (굵게 표시로 적은 "별표별표빗금startup..." 이 그랬습니다)
+     둘 다 브라우저를 띄우기 전에 여기서 잡힙니다. */
+  {
+    const broke = [];
+    const re3 = /await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/g;
+    let m3;
+    while((m3 = re3.exec(src))){
+      let body; try { body = eval("`" + m3[3] + "`"); } catch(e){ continue; }
+      if(typeof body !== "string") continue;
+      try { new Function("return (async()=>{ " + body + " })()"); }
+      catch(e){ broke.push(m3[1] + "   — " + e.message); }
+    }
+    if(broke.length){
+      console.log("\n❌ 검사 본문이 문법적으로 깨졌습니다 (그 검사는 안 돕니다):");
+      broke.forEach(function(n){ console.log("   · " + n); });
+      console.log("   주석에 백틱, 그리고 별표 뒤 빗금을 쓰지 마세요.\n");
+      return false;
+    }
+  }
   if(bad.length){
     console.log("\n❌ 검사 본문에서 백슬래시가 먹었습니다:");
     bad.forEach(function(n){ console.log("   · " + n); });
     console.log("   두 겹으로 적으세요. 이 검사들은 아무것도 안 잡습니다.\n");
     return false;
   }
-  console.log("✅ 검사 본문의 정규식이 전부 살아 있습니다 (백슬래시 안 먹음)");
+  console.log("✅ 검사 본문이 전부 돌 수 있는 코드입니다 (백슬래시 · 백틱 · 주석 닫힘)");
   return true;
 }
 
@@ -782,7 +835,18 @@ async function proveAudit(pg){
     await pg.waitForTimeout(260);
     /* 먼저 멀쩡한 상태에서 통과하는지 */
     const before = await pg.evaluate("(async()=>{ " + g.body + " })()");
-    await pg.evaluate(breakJs);
+    /* ⚠️⚠️ **되돌리기가 터지면 그 한 건만 실패로 적고 넘어갑니다.**
+       전에는 여기서 그대로 던져서 **남은 되돌리기가 통째로 안 돌았고**,
+       터진 것이 어느 건인지도 안 나왔습니다 (SyntaxError 한 줄만
+       보고 범인을 찾느라 한참 걸렸습니다). */
+    try {
+      await pg.evaluate(breakJs);
+    } catch(e){
+      bad++;
+      console.log("❌ " + name + "  [되돌리기가 터졌습니다 — " +
+        String(e.message).split("\n")[0] + "]");
+      continue;
+    }
     await pg.waitForTimeout(80);
     const after = await pg.evaluate("(async()=>{ " + g.body + " })()");
     const ok = (before === true) && (after !== true);

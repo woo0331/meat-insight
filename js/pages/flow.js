@@ -67,13 +67,29 @@ function PageStartupIndustry(ind){
      였는데, 그러면 "무엇부터 하나" 로 들어오신 분이 **물건 목록**을
      먼저 봅니다. 장비는 바로 아래에 그대로 둡니다 — 업종이 갈리는
      것을 보여 주는 자리라 지우지 않습니다 (§1 · §12). */
-  ProcessBand({ key:"startup", kicker:"STARTUP PROCESS",
-    title:ind.name+" 창업, 무엇부터 하나요?",
-    /* ⚠️ 걸음 수를 손으로 적지 마세요 — 열둘이던 때 적어 둔 "열두
-       걸음" 이 열넷이 된 뒤에도 그대로 남아 있었습니다. 세는 값입니다. */
-    lead:amProcess("startup").length+"걸음입니다. 걸음마다 "+ind.name+
-         "에 맞는 업체 · 장비 · 글로 바로 넘어갑니다.",
-    industry:ind.key, tone:"sec-gray" })+
+  StartWayBand(ind)+
+  /* ⚠️⚠️ **2026-10-08 지시서 §13 STEP 02 · §15** — 같은 업종이어도
+     **새로 만드는 분과 있던 가게를 받는 분은 순서가 다릅니다.** 전에는
+     창업 화면이 신규 기준 하나뿐이라, 인수를 보고 계신 분은 상권부터
+     다시 읽어야 했습니다. 지금은 위에서 고르시면 **이 순서가 통째로
+     바뀝니다** (새 화면을 만들지 않고 AM_PROCESS 를 바꿔 끼웁니다).
+     ⚠️ 고르신 것은 주소(?how=)에 실립니다 — 뒤로 가기 · 새로고침 ·
+     링크 공유에 살아남습니다. */
+  (startWay() === "take"
+    ? ProcessBand({ key:"acq-in", kicker:"TAKE OVER PROCESS",
+        title:ind.name+" 매장 인수, 무엇부터 하나요?",
+        lead:amProcess("acq-in").length+"걸음입니다. 권리금과 시설이 같이 오는지, "+
+             "임대차가 승계되는지가 금액을 가릅니다.",
+        industry:ind.key, tone:"sec-gray",
+        note:"매물에 적힌 평수 · 보증금 · 월세 · 권리금 · 매출은 올리신 "+
+             "사장님이 적으신 값이고, 저희가 확인하거나 보증하는 값이 아닙니다." })
+    : ProcessBand({ key:"startup", kicker:"STARTUP PROCESS",
+        title:ind.name+" 창업, 무엇부터 하나요?",
+        /* ⚠️ 걸음 수를 손으로 적지 마세요 — 열둘이던 때 적어 둔 "열두
+           걸음" 이 열넷이 된 뒤에도 그대로 남아 있었습니다. 세는 값입니다. */
+        lead:amProcess("startup").length+"걸음입니다. 걸음마다 "+ind.name+
+             "에 맞는 업체 · 장비 · 글로 바로 넘어갑니다.",
+        industry:ind.key, tone:"sec-gray" }))+
   (ind.equip && ind.equip.length ? EquipBand(ind) : "")+
   StepBand(ind)+
   (fcat ? FranchiseHint(fcat, ind) : "")+
@@ -81,6 +97,51 @@ function PageStartupIndustry(ind){
   ReadBand({ side:"start", industry:ind.key,
              title:"창업에서 자주 막히는 것" })+
   StartupHelpBand();
+}
+
+/* ── 어떻게 시작할 계획이세요? (2026-10-08 §13 STEP 02) ───────────
+   ⚠️⚠️ **새 로드맵 데이터를 만들지 않았습니다.** 인수 쪽 여덟 걸음은
+   `AM_PROCESS["acq-in"]` 에 **이미 있던 것**이고 `/transfer?t=in` 이
+   같은 것을 씁니다 — 여기에 또 적으면 두 곳이 어긋납니다 (§22
+   콘텐츠 중복 방지).
+   ⚠️ 두 카드의 크기 · 무게가 같아야 합니다. 한쪽을 작게 만들면 그게
+   "덜 중요한 것" 이라는 말입니다.
+   ⚠️ 카드가 통째로 눌립니다 — 안에 또 링크를 넣지 마세요. */
+function startWay(){ return nowQS("how") === "take" ? "take" : "new"; }
+var START_WAYS = [
+  { k:"new",  ic:"seed",     n:"새로 창업하기",
+    d:"자리를 찾고 공사부터 시작합니다", s:"상권 · 입지부터 영업 시작까지" },
+  { k:"take", ic:"handover", n:"기존 매장 인수하기",
+    d:"하던 가게를 받아 이어서 엽니다", s:"매장 탐색부터 인계까지" }
+];
+function StartWayBand(ind){
+  var cur = startWay();
+  var base = "/startup/" + ind.key;
+  return '<section class="sec sec-white swt"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">어떻게 시작하세요?</p>'+
+      '<h2>새로 만드는 것과 받는 것은 순서가 다릅니다</h2>'+
+      '<p>고르시면 아래 준비 순서가 그에 맞게 바뀝니다.</p>'+
+    '</div>'+
+    '<div class="swt-g">'+START_WAYS.map(function(w){
+      var on = (w.k === cur);
+      /* ⚠️ 기본값(새로 창업)은 주소를 깨끗하게 둡니다 — 같은 내용이
+         두 주소로 나가면 구글이 둘 다 무시합니다. */
+      var to = (w.k === "new") ? base : (base + "?how=" + w.k);
+      return '<a class="swt-c'+(on ? " on" : "")+'" href="'+esc(to)+'"'+
+        (on ? ' aria-current="true"' : '')+'>'+
+        '<span class="ic-t">'+icon(w.ic,26)+'</span>'+
+        '<span class="swt-t"><b>'+esc(w.n)+'</b>'+
+          '<i>'+esc(w.d)+'</i><em>'+esc(w.s)+'</em></span>'+
+        '<span class="swt-k" aria-hidden="true">'+icon("arrow",18)+'</span></a>';
+    }).join("")+'</div>'+
+    (cur === "take"
+      ? '<p class="sec-note">'+icon("info",15)+
+        ' 인수하실 매장을 먼저 보시겠어요? '+
+        '<a href="/stores?i='+encodeURIComponent(ind.key)+'">'+esc(ind.name)+
+        ' 매장 매물</a> · <a href="/tools/vs">신규 vs 인수 비교</a></p>'
+      : '')+
+  '</div></section>';
 }
 
 /* 업종 전용 장비 (§12) */
@@ -118,10 +179,17 @@ function FranchiseHint(fcat, ind){
 /* ── /closure — 정리 방법 고르기 (§21) ──────────────────────────── */
 function PageClosure(){
   return PgHero({
-    kicker:"CLOSE · 폐업",
-    h1raw:"사업을 어떻게<br class=\"br-m\"> 정리하고 싶으세요?",
-    lead:"통째로 넘기실 수도 있고, 시설만 파실 수도 있습니다. 순서와 기한이 있는 일이라 " +
-         "빠뜨리면 돈이 나갑니다."
+    kicker:"CLOSE · 폐업 · 정리",
+    /* ⚠️⚠️ **2026-10-08 지시서 §16 의 첫 메시지 그대로입니다.**
+       "어떻게 정리하고 싶으세요" 는 이미 정리하기로 정하신 분께 묻는
+       말인데, 이 화면이 제일 먼저 할 일은 **넘길 수 있는 것이 있는지**
+       를 알려 드리는 것입니다 — 양도가 되면 철거비도 원상복구비도
+       안 드는 경우가 있습니다.
+       ⚠️ **폐업을 실패로 말하지 않습니다** (§6). "잘 정리하는 것도
+       사업입니다" 까지입니다 — 손실 · 실패를 적지 마세요. */
+    h1raw:"폐업하기 전에,<br class=\"br-m\"> 넘길 수 있는 것부터 확인하세요.",
+    lead:"매장과 시설, 장비를 바로 철거하기 전에 다음 사장님에게 이어질 수 " +
+         "있는지 먼저 확인해보세요. 순서와 기한이 있는 일이라 빠뜨리면 돈이 나갑니다."
   })+
   WantBand(null)+
   '<section class="sec"><div class="w">'+
@@ -197,7 +265,7 @@ function WantBand(ind){
   }
 
   var g = amCloseCatsFor(sel.key, i);
-  return pick +
+  return pick + (sel.key === "lost" ? CloseAsk(base) : "") +
   '<section class="sec"><div class="w">'+
     '<div class="sec-hd">'+
       '<p class="eyebrow">고르신 것에 맞춰</p>'+
@@ -224,6 +292,57 @@ function WantBand(ind){
 }
 
 /* ── /closure/:industry ─────────────────────────────────────────── */
+/* ── §20 간단 진단 — "아직 모르겠어요" 를 고르셨을 때 ──────────────
+   ⚠️⚠️ **질문 수를 최소화합니다** (지시서 §20). 넷입니다 — 다섯째부터는
+   설문이 되고, 이미 지쳐 계신 분께 숙제를 하나 더 드리는 것입니다.
+   ⚠️⚠️ **답을 안 하신 항목을 임의로 추정하지 않습니다** (§20). 아무것도
+   안 고르시면 단추가 "모르는 채로 순서대로 보기" 로만 갑니다.
+   ⚠️⚠️ **아무것도 저장하지 않습니다.** 서버로도 localStorage 로도 보내지
+   않고, 고르신 것은 그 자리에서 **갈 곳 하나를 고르는 데**만 씁니다 —
+   저장하는 것처럼 보이면 하지 않은 일을 했다고 말하는 것입니다
+   (절대 규칙 5). 화면에 그렇게 적혀 있습니다. 지우지 마세요.
+   ⚠️ 판정은 규칙 셋뿐이고 "AI 가 분석했습니다" 라고 하지 않습니다. */
+var CLOSE_ASK = [
+  { k:"open",  q:"지금도 영업 중이신가요?" },
+  { k:"hand",  q:"매장을 넘길 의향이 있으신가요?" },
+  { k:"equip", q:"쓸 만한 시설 · 장비가 남아 있나요?" },
+  { k:"lease", q:"임대차 계약이 아직 남아 있나요?" }
+];
+window.closeAskGo = function(base){
+  var on = {};
+  CLOSE_ASK.forEach(function(a){
+    var e = document.getElementById("ask-" + a.k);
+    on[a.k] = !!(e && e.checked);
+  });
+  /* 넘길 의향이 있고 아직 영업 중이면 **양도가 제일 먼저**입니다 —
+     양도가 되면 철거비도 원상복구도 안 드는 경우가 있습니다. */
+  var w = on.hand ? "pass" : (on.equip ? "money" : "fast");
+  go(base + "?w=" + encodeURIComponent(w));
+};
+function CloseAsk(base){
+  return '<section class="sec sec-white cask"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">짧게 네 가지만</p>'+
+      '<h2>지금 상황을 알려 주시면 순서를 맞춰 드립니다</h2>'+
+      '<p>해당하는 것만 체크하세요. 모르시는 것은 비워 두셔도 됩니다 — '+
+        '비운 칸을 저희가 추측하지 않습니다.</p>'+
+    '</div>'+
+    '<ul class="cask-l">'+CLOSE_ASK.map(function(a){
+      return '<li><label class="cask-i" for="ask-'+esc(a.k)+'">'+
+        '<input type="checkbox" id="ask-'+esc(a.k)+'">'+
+        '<span>'+esc(a.q)+'</span></label></li>';
+    }).join("")+'</ul>'+
+    '<p class="row-cta"><button type="button" class="btn btn-b btn-lg" '+
+      'onclick="closeAskGo(\''+esc(base)+'\')">맞는 순서 보기'+icon("arrow",18)+'</button></p>'+
+    /* ⚠️ 하지 않는 저장을 한다고 적지 않습니다 (절대 규칙 5) */
+    '<p class="sec-note">'+icon("lock",15)+
+      /* ⚠️ `**굵게**` 를 쓰지 마세요 — 이 자리는 mark() 를 안 거쳐서
+         별표가 **글자로 찍힙니다** (전수 점검이 잡습니다). */
+      ' 체크하신 내용은 <b>아무 데도 저장되지 않습니다.</b> 어느 순서를 '+
+      '먼저 보여 드릴지 고르는 데에만 씁니다.</p>'+
+  '</div></section>';
+}
+
 function PageClosureIndustry(ind){
   return PgHero({
     crumb: Crumb([["폐업","/closure"],[ind.name]]),
@@ -468,8 +587,18 @@ function StepBand(ind){
             (i ? '?i='+encodeURIComponent(i) : '')+'">'+
             '<span class="stp-i-ic">'+icon(c.icon,20)+'</span>'+
             '<b>'+esc(c.name)+'</b>'+
-            (items.length ? '<span class="stp-i-s">'+
-              items.map(function(x){ return esc(x.name); }).join(" · ")+'</span>' : '')+
+            /* ⚠️⚠️ **빈 카드를 두지 마세요** (절대 규칙 2). 하위가
+               업종에서 오는 분류(`시설 · 장비`)는 업종을 안 고르면 셀
+               것이 0 이라 **이름만 덩그러니** 남습니다 — "이 분야는
+               준비가 덜 됐나" 로 읽힙니다. 숫자를 지어내지 않고
+               데이터에 **처음부터 있던** `lead` 를 냅니다.
+               ⚠️ 메인의 분야 격자에서 똑같이 겪고 고쳤던 자리인데,
+               그 격자가 /startup 으로 옮겨 오면서 **같은 고장이 따라
+               왔습니다.** 전수 점검이 잡았습니다. */
+            '<span class="stp-i-s">'+
+              (items.length
+                ? items.map(function(x){ return esc(x.name); }).join(" · ")
+                : esc(c.lead || ""))+'</span>'+
             '<span class="stp-i-go" aria-hidden="true">'+icon("arrow",15)+'</span>'+
           '</a>';
         }).join("")+'</div>'+

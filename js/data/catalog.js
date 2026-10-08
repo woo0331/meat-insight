@@ -408,19 +408,30 @@ window.amStepCats = function(step, industryKey){
    나머지도 냅니다 — 숨기면 그 사장님에게는 그 기능이 없는 것이
    됩니다. `check.js` 가 봅니다.
    ════════════════════════════════════════════════════════════════════ */
+/* ⚠️⚠️ **2026-10-08 지시서 §16 STEP 01 의 넷으로 이름을 맞췄습니다.**
+   전에는 `돈을 남기고` · `빨리 정리` 처럼 **바라는 것**으로 물었는데,
+   지시서는 **지금 하려는 일**로 묻습니다 — 사장님이 답하기 쉬운 쪽은
+   뒤쪽이고(§20 "답변이 없는 항목을 임의로 추정하지 않는다"), 고른
+   결과가 §17 · §18 · §19 의 세 로드맵과 그대로 맞물립니다.
+
+   ⚠️⚠️ **key 를 바꾸지 마세요.** 주소(`?w=`)에 실려 밖으로 나간 링크가
+   그 값을 들고 있습니다 — 이름만 바꿉니다 (영업 상태 key 를 안 바꾸는
+   것과 같은 까닭입니다).
+   ⚠️ `cats` 는 **그 상황에서 먼저 볼 분류**입니다. 여기 없는 분류도
+   잘라 내지 않습니다 — `amCloseCatsFor()` 가 뒤에 붙여 줍니다. */
 window.AM_CLOSE_WANTS = [
-  { key:"pass",  name:"가게를 통째로 넘기고 싶어요", icon:"key",
+  { key:"pass",  name:"매장 전체를 넘기고 싶어요", icon:"key",
     lead:"양도가 되면 철거비도 안 들고 권리금도 회수할 기회가 생깁니다",
     cats:["transfer","contract","tax","labor"] },
-  { key:"money", name:"최대한 돈을 남기고 정리하고 싶어요", icon:"won",
+  { key:"money", name:"시설 · 장비를 정리하고 싶어요", icon:"won",
     lead:"버리는 것보다 넘기는 쪽이 낫습니다. 시설 · 집기 · 재고까지",
-    cats:["transfer","asset","stock","tax","support"] },
-  { key:"fast",  name:"최대한 빨리 정리하고 싶어요", icon:"clock",
-    lead:"임대 기간이 남아 있으면 하루가 돈입니다",
-    cats:["demolish","restore","waste","process","contract"] },
-  { key:"lost",  name:"무엇부터 해야 할지 모르겠어요", icon:"info",
-    lead:"순서대로 짚어 드립니다. 기한이 있는 것이 여럿입니다",
-    cats:["process","tax","labor","contract","restore"] }
+    cats:["asset","stock","transfer","tax","support"] },
+  { key:"fast",  name:"완전히 폐업하려고 해요", icon:"clock",
+    lead:"순서가 곧 돈입니다. 기한이 있는 것이 여럿입니다",
+    cats:["process","contract","tax","labor","demolish","restore","waste"] },
+  { key:"lost",  name:"아직 어떻게 해야 할지 모르겠어요", icon:"info",
+    lead:"넘길 수 있는 것부터 짚어 드립니다. 순서대로 보시면 됩니다",
+    cats:["transfer","process","tax","labor","contract"] }
 ];
 
 window.amCloseWant = function(key){

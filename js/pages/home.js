@@ -76,66 +76,99 @@
    ⚠️⚠️ **두 판의 크기 · 무게가 같아야 합니다** (§3 — 50:50).
    폐업 쪽을 좁히거나 가볍게 만들면 그게 "덜 중요한 것" 이라는 말입니다.
    ⚠️ **폐업을 부정적으로 쓰지 마세요** (§7) — 끝이 아니라 다음 시작. */
-function MainHeroPane(o){
+/* ══════════════════════════════════════════════════════════════════
+   ① HERO — 두 사장님의 사진 + 창업 / 폐업 선택 카드 둘
+   ══════════════════════════════════════════════════════════════════
+   **2026-10-08 "최종 디자인 통합 및 기능 완성 작업지시서" §5 · §6.**
+
+   ⚠️⚠️ **사진이 이 화면의 주인공입니다.** 2026-10-07 전면개편을 통째로
+   무른 까닭이 **이것 하나**였습니다 — 그때 히어로는 사진 두 장을 옅은
+   배경으로 깔고 그 위에 흰 카드를 얹는 꼴이라, 사장님이 보시기에
+   "이미지가 들어간" 화면이 아니었습니다. 그래서 여기서는 사진을
+   **띠로 꽉 채우고**(`.mh-ph`) 글은 그 **가운데 밝은 자리**에 둡니다.
+   ⚠️ 막(`::after`)을 짙게 하지 마세요 — 글자가 읽히는 선까지만입니다.
+
+   ⚠️⚠️ **사진 안에 글자를 합성하지 마세요** (지시서 §2-1 — "이미지
+   자체를 배경으로 넣어 웹페이지처럼 보이게 하는 방식은 금지").
+   제목 · 서브 · 배지 · 단추가 전부 HTML 이고 번역도 선택도 됩니다.
+
+   ⚠️ 사진이 0장이면 띠째 빠지고 크림 바탕이 자리를 지킵니다 —
+   "이미지 준비 중" 을 찍지 않습니다 (절대 규칙 2). */
+function MainHeroPhotos(){
+  var l = hasPhoto("hero-start"), r = hasPhoto("hero-close");
+  if(!l && !r) return "";
+  return '<div class="mh-ph" aria-hidden="true">'+
+    (l ? '<span class="mh-ph-l">'+photoBox("hero-start","",true)+'</span>' : '')+
+    (r ? '<span class="mh-ph-r">'+photoBox("hero-close","",true)+'</span>' : '')+
+  '</div>';
+}
+
+/* ⚠️⚠️ **창업은 블루 · 폐업은 오렌지입니다** (지시서 §24 · §6 · §12).
+   2026-09-30 지시서가 창업을 **초록**으로 못박아 두었던 자리인데,
+   2026-10-08 지시서가 메인 브랜드 컬러를 블루로 두고 창업을 거기에
+   맞췄습니다 — 시안에서도 창업 카드 · 창업 버튼 · 로고가 전부 한
+   파랑입니다. ⚠️ **폐업은 그대로 주황이고, 빨강으로 넘기지 마세요** —
+   빨강은 "폐업은 나쁜 것" 이라는 말이 됩니다 (이 저장소가 여러 곳에
+   못박아 둔 것입니다). `check.js` 가 폐업 쪽 색의 초록 성분을 봅니다.
+
+   ⚠️ **두 카드의 크기 · 무게가 같습니다.** 폐업 쪽을 좁히거나 흐리게
+   만들면 그게 "덜 중요한 것" 이라는 말입니다.
+   ⚠️ 사진 자리는 `side-start` · `side-close` 입니다 — 비어 있으면
+   아이콘이 자리를 지키고, 넣으시면 **코드를 한 줄도 안 고치고**
+   사진이 들어옵니다 (`js/data/photos.js` 에 한 줄). */
+var MAIN_PICK = [
+  { cls:"st", photo:"side-start", to:"/startup", ic:"seed",
+    badge:"새로운 시작", t1:"창업", t2:"준비하고 있어요",
+    lead:"업종에 맞는 준비 순서부터 필요한 업체와 정보까지 한 번에 찾아보세요.",
+    cta:"창업 시작하기" },
+  { cls:"cl", photo:"side-close", to:"/closure", ic:"box",
+    badge:"마무리와 새로운 연결", t1:"폐업 · 정리", t2:"준비하고 있어요",
+    lead:"넘길 수 있는 것부터, 폐업 절차와 철거 · 원상복구까지 필요한 순서대로 안내합니다.",
+    cta:"폐업 · 정리 시작하기" }
+];
+/* ⚠️⚠️ **카드 전체가 눌립니다** (지시서 §6). 그래서 안에 또 `<a>` 를
+   넣지 마세요 — `<a>` 안의 `<a>` 는 브라우저가 쪼개 버립니다. 아래
+   "창업 시작하기 →" 는 **표시**이지 따로 누르는 단추가 아닙니다. */
+function MainPickCard(o){
   var ph = hasPhoto(o.photo);
-  return '<article class="hp2 hp2-'+o.cls+(ph ? "" : " hp2-noph")+'">'+
-    (ph ? '<figure class="hp2-ph">'+photoBox(o.photo,"",true)+'</figure>' : '')+
-    '<div class="hp2-b">'+
-      '<p class="hp2-k">'+esc(o.kicker)+'</p>'+
-      '<h2 class="hp2-h">'+esc(o.title)+
-        '<em class="hp2-dot" aria-hidden="true"></em></h2>'+
-      '<p class="hp2-d">'+o.lead+'</p>'+
-      '<p class="hp2-go"><a class="btn btn-lg '+esc(o.btn)+'" href="'+esc(o.to)+'">'+
-        esc(o.cta)+icon("arrow",18)+'</a></p>'+
-    '</div>'+
-  '</article>';
+  return '<a class="hpk hpk-'+esc(o.cls)+'" href="'+esc(o.to)+'">'+
+    '<span class="hpk-b">'+
+      '<b class="hpk-bd">'+esc(o.badge)+'</b>'+
+      /* ⚠️ 두 줄을 **각자 태그로** 감쌉니다 — 맨글과 태그를 섞으면
+         grid 에서 칸이 갈리고, block 으로 피하면 "문장 속 block" 으로
+         걸립니다 (이 저장소에서 네 번 만든 버그). */
+      '<b class="hpk-h"><i class="hpk-h1">'+esc(o.t1)+'</i>'+
+        '<i class="hpk-h2">'+esc(o.t2)+'</i></b>'+
+      '<i class="hpk-d">'+esc(o.lead)+'</i>'+
+      '<span class="hpk-go"><em aria-hidden="true">'+icon("arrow",18)+'</em>'+
+        esc(o.cta)+'</span>'+
+    '</span>'+
+    /* ⚠️⚠️ **사진이 없으면 액자째 안 그립니다** (절대 규칙 2). 옅은
+       틴트 상자를 깔아 두면 카드 둘이 "준비 중" 으로 읽힙니다 —
+       단계 카드 여섯에서 이미 걷어낸 자리입니다. 사진을
+       `side-start` · `side-close` 에 넣으시면 **코드를 한 줄도 안
+       고치고** 시안처럼 액자가 생깁니다. */
+    (ph ? '<span class="hpk-ph" aria-hidden="true">'+photoBox(o.photo)+'</span>' : "")+
+  '</a>';
 }
-/* ⚠️⚠️ **2026-10-06 V2 확정 지시서 §3** — 첫 화면에서 3~5초 안에
-   STOREWAY 가 무엇인지 읽혀야 합니다. 그때까지 히어로는 **창업 / 폐업
-   두 판**뿐이라 "창업이냐 폐업이냐" 까지만 말하고 있었는데, 이 서비스는
-   그 사이의 **운영 · 인수 · 양도**까지 잇는 곳입니다 (§2).
-   ⚠️ 두 판을 **지우지 않았습니다** (§0-1 · §0-8) — 그 위에 한 문장을
-   얹고, 두 판은 그대로 창업 · 폐업으로 갈라 주는 자리로 둡니다.
-   ⚠️⚠️ **h1 이 여기로 올라왔습니다.** 화면마다 h1 은 **딱 하나**라
-   아래 가치 구간은 h2 가 됩니다 — 첫 제목이 곧 h1 이라야 읽어 주는
-   프로그램과 검색엔진에도 차례가 맞습니다. */
-function MainHeroTop(){
-  return '<div class="mh-top"><div class="w">'+
-    /* ⚠️ 2026-10-06 2차 §2 가 적은 네 줄 그대로입니다. 첫 방문자가
-       **무엇부터 해야 할지**를 마지막 줄이 말합니다 — 그 줄을
-       지우면 아래 상황 카드가 왜 있는지 안 읽힙니다.
-       ⚠️ `<br class="br-m">` 뒤에는 **띄어쓰기를 하나** 둡니다 —
-       좁아지면 이 줄바꿈이 사라지는데, 없으면 앞뒤 낱말이 붙습니다. */
-    '<h1 class="mh-h1">사장님의 시작부터 마지막까지</h1>'+
-    '<p class="mh-lead">창업 · 운영 · 인수 · 양도 · 폐업에<br class="br-m"> '+
-      '필요한 모든 것.</p>'+
-    '<p class="mh-sub">상가, 인테리어, 장비, 세무, 마케팅부터<br class="br-m"> '+
-      '매장 양도, 시설 처분, 철거와 원상복구까지.<br> '+
-      '<b>내 상황만 고르시면 필요한 순서대로 보여 드립니다.</b></p>'+
-    /* ⚠️ 둘 다 **실제로 있는 화면**입니다 (가짜 링크는 절대 규칙 5).
-       "내 상황에 맞게 시작하기" 는 바로 아래 여정 넷으로 내려갑니다 —
-       새 화면을 만들지 않고 이미 있는 구간을 가리킵니다. */
-    '<p class="mh-cta">'+
-      /* ⚠️ 행동색은 파랑 · 남색입니다. POINT RED 는 **검색 CTA 한
-         자리**뿐이라 여기 쓰지 않습니다 (10-04 §4). */
-      '<a class="btn btn-b btn-lg" href="#journey">내 상황에 맞게 시작하기'+
-        icon("arrow",18)+'</a>'+
-      '<a class="btn btn-o btn-lg" href="/providers">업체 찾아보기</a>'+
-    '</p>'+
-  '</div></div>';
-}
+
 function MainHero(){
-  return '<section class="mh">'+ MainHeroTop() +'<div class="mh-two">'+
-    /* ⚠️ 단추 색이 다른 것은 **바탕이 달라서**입니다 — 짙은 남색 위에는
-       흰 단추, 밝은 샌드 위에는 짙은 주황 단추라야 글자가 읽힙니다
-       (AA 4.5). 크기 · 글씨 · 자리는 둘이 똑같습니다. */
-    MainHeroPane({ cls:"st", photo:"hero-start", to:"/startup", btn:"btn-w",
-      kicker:"좋은 시작, 든든한 파트너와 함께", title:"창업",
-      lead:'사업을 시작하는 데<br> 필요한 모든 것', cta:"창업 서비스 찾기" })+
-    MainHeroPane({ cls:"cl", photo:"hero-close", to:"/closure", btn:"btn-cd",
-      kicker:"끝까지 책임지는, 새로운 시작을 위해", title:"폐업",
-      lead:'사업을 정리하는 데<br> 필요한 모든 것', cta:"폐업 서비스 찾기" })+
-  '</div>'+ MainSearch() +'</section>';
+  return '<section class="mh">'+
+    MainHeroPhotos()+
+    '<div class="mh-in"><div class="w">'+
+      /* ⚠️ 화면마다 h1 은 **딱 하나**입니다. 아래 구간들은 전부 h2 입니다. */
+      '<h1 class="mh-h1">사장님의 <em class="mh-pt">시작과 마지막</em>을'+
+        '<br class="br-m"> 연결합니다.</h1>'+
+      /* ⚠️ `<br class="br-m">` 뒤에는 **띄어쓰기를 하나** 둡니다 —
+         좁아지면 이 줄바꿈이 사라지는데, 없으면 앞뒤 낱말이 붙습니다. */
+      '<p class="mh-lead">창업을 준비하는 순간부터, 사업을 정리하고'+
+        '<br class="br-m"> 다음 사장님에게 넘기는 순간까지. '+
+        esc(brandName())+'가 함께합니다.</p>'+
+    '</div></div>'+
+    '<div class="mh-pick"><div class="w"><div class="mh-pick-g">'+
+      MAIN_PICK.map(MainPickCard).join("")+
+    '</div></div></div>'+
+  '</section>';
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -754,19 +787,27 @@ function MainFeature(){
    빠집니다** (에러도 안 나고 화면도 멀쩡합니다).
    ⚠️ 이름 · 아이콘 · 링크는 전부 `catalog.js` 에서 옵니다. 여기 적는
    것은 **어느 분류를 앞에 낼지**와 한 줄 설명뿐입니다. */
+/* ⚠️⚠️ **2026-10-08 지시서 §8 의 여덟**입니다 (전에는 §4 의 열둘).
+   시안이 가로 넷 × 두 줄이라 **여덟**이고, 나머지 열일곱 분야는
+   "전체 서비스 보기" 와 로드맵 걸음이 받습니다 — 길을 지운 것이
+   아니라 한 단계 안으로 옮겼습니다 (§23).
+
+   ⚠️ 시안의 `철거 · 원상복구` 는 저희 분류로는 **둘**입니다
+   (`demolish` · `restore`). 분류 이름을 손으로 바꾸면 등록된 업체 ·
+   글 · 매물이 조용히 어긋나므로, 한 장은 `demolish` 로 내고 설명에서
+   원상복구를 같이 말합니다 — `restore` 는 전체 서비스와 폐업
+   로드맵에 그대로 있습니다.
+   ⚠️ 없는 분류 key 를 적으면 그 카드가 **조용히 빠집니다** (에러도
+   안 나고 화면도 멀쩡합니다). */
 var MAIN_SVC = [
-  { k:"store",     d:"상가 · 점포 매물을 조건으로 찾습니다" },
-  { k:"area",      d:"상권 · 유동인구 · 경쟁점을 먼저 봅니다" },
-  { k:"interior",  d:"공간의 가치를 높이는 전문 시공업체" },
-  { k:"equip",     d:"업종별 필수 장비를 한곳에서" },
-  { k:"it",        d:"POS · 키오스크 · CCTV · 인터넷" },
-  { k:"admin",     d:"사업자등록 · 인허가 · 세무 · 노무" },
-  { k:"staff",     d:"직원 채용과 교육, 인력 아웃소싱" },
-  { k:"marketing", d:"브랜드를 성장시키는 전문가들" },
-  { k:"transfer",  d:"좋은 매장을 다음 사장님에게" },
-  { k:"asset",     d:"중고 시설 · 장비를 그대로 이어서" },
-  { k:"demolish",  d:"안전하고 빠른 철거 · 폐기물 처리" },
-  { k:"restore",   d:"계약서가 정한 범위까지 원상복구" }
+  { k:"store",     d:"상권 · 입지 · 권리금" },
+  { k:"interior",  d:"설비 · 전기 · 간판" },
+  { k:"equip",     d:"주방 · 냉난방 · 중고장비" },
+  { k:"it",        d:"POS · 키오스크 · CCTV" },
+  { k:"admin",     d:"기장 · 신고 · 인허가" },
+  { k:"marketing", d:"온라인 광고 · 브랜딩" },
+  { k:"demolish",  d:"폐기물 · 철거 · 원상복구" },
+  { k:"clean",     d:"매장 청소 · 해충 방제" }
 ];
 function MainServices(){
   var by = {}; (window.AM_CATS||[]).forEach(function(c){ by[c.key] = c; });
@@ -785,9 +826,13 @@ function MainServices(){
          ⚠️⚠️ 이용 데이터가 쌓이면 **이 구간을 고치지 말고 따로
          만드세요** (§3) — 조회 · 클릭 · 저장 · 견적 요청 수를 세는
          "많이 찾는 서비스" 는 별도 구간입니다. */
-      '<h2>사업에 필요한 서비스</h2>'+
-      '<p>창업부터 운영, 인수 · 양도, 폐업까지 필요한 서비스를 '+
-        '한곳에서 찾아보세요.</p></div>'+
+      /* 2026-10-08 지시서 §8 의 제목 · 설명 그대로입니다.
+         ⚠️⚠️ 시안 그림에는 "183개 서비스와 **검증된 업체**" 라고 적혀
+         있는데, **검증 기능이 없습니다** — 적는 순간 표시 · 광고의
+         공정화에 관한 법률 제3조입니다. 지시서 본문의 문장을 씁니다. */
+      '<h2>사장님에게 필요한<br class="br-m"> 모든 서비스를 한 곳에서</h2>'+
+      '<p>창업, 운영, 인수 · 양도, 폐업까지. 필요한 서비스와 정보를 '+
+        esc(amBrand())+'에서 확인하세요.</p></div>'+
       /* ⚠️ 숫자는 **세는 값**입니다 (§4 — "숫자를 임의 하드코딩하지
          않는다"). 분류를 늘리면 저절로 따라옵니다. */
       '<a class="sec-hd-all" href="/providers">'+
@@ -1097,17 +1142,28 @@ function MainStores(){
       '<b>'+esc(k.n)+'</b><i>'+esc(k.d)+'</i></a></li>'; }).join("")+'</ul>';
   var body = L.length
     ? kinds+
-      '<div class="mk-g">'+L.slice(0,6).map(function(s2){ return StoreCard(s2); }).join("")+'</div>'+
+      '<div class="mk-g">'+L.slice(0,3).map(function(s2){ return StoreCard(s2); }).join("")+'</div>'+
       '<p class="row-cta row-mid"><a class="btn btn-nv" href="/stores">'+
-        '매장 전체 보기'+icon("arrow",18)+'</a></p>'
+        '매장 인수 · 양도 보러가기'+icon("arrow",18)+'</a></p>'
     : kinds+ MainTakeoverGuide(nA);
-  /* ⚠️⚠️ **중립입니다** — 넘기시는 분과 받으시는 분이 같은 구간을
+  /* ⚠️⚠️ **매물이 0건이면 머리말도 바뀝니다** (2026-10-08 §10 · §26 ·
+     절대 규칙 1). 시안의 머리말은 **"지금 이런 매장이 새로운 사장님을
+     기다리고 있어요"** 인데, 매물이 0건인 상태에서 그 문장을 걸면
+     그 자체가 사실과 다릅니다 — 보고 들어오신 분께 아무것도 없습니다.
+     ⚠️⚠️ **가짜 매물 석 장으로 그 문장을 참으로 만들지 마세요.**
+     그게 허위매물이고 표시 · 광고의 공정화에 관한 법률 제3조입니다.
+     ⚠️ 매물이 한 건이라도 올라오면 **코드를 한 줄도 안 고치고**
+     시안의 머리말과 카드로 바뀝니다 (`L.length` 하나가 가릅니다).
+
+     ⚠️⚠️ **중립입니다** — 넘기시는 분과 받으시는 분이 같은 구간을
      봅니다. 한쪽 색으로 칠하면 다른 쪽에게 "여긴 내 자리가 아니네" 가
      됩니다 (`/stores` · `/assets` 를 중립으로 둔 것과 같은 까닭). */
   return MainBand({ bg:"sec-start", kicker:"TAKE OVER",
-    h:"사업의 자산도<br class=\"br-m\"> 다음 사장님에게 이어질 수 있습니다.",
-    lead:"사업을 정리하면서 남는 매장과 시설, 장비와 집기가 "+
-         "새로운 사장님의 시작에 다시 활용될 수 있습니다.", body:body });
+    h: L.length
+       ? "지금 이런 매장이<br class=\"br-m\"> 새로운 사장님을 기다리고 있어요"
+       : "사업의 자산도<br class=\"br-m\"> 다음 사장님에게 이어질 수 있습니다.",
+    lead:"정리하는 사장님의 매장과 시설, 장비가 "+
+         "새로운 사장님의 시작이 될 수 있습니다.", body:body });
 }
 /* 매물이 아직 없을 때 — **유용한 정보**가 그 자리를 채웁니다 (§5 · §12) */
 function MainTakeoverGuide(nAssets){
@@ -1166,29 +1222,48 @@ function MainPrice(){
    단계입니다 — 손실 · 실패라는 낱말을 쓰지 않습니다.
    ⚠️ 오른쪽에 왼쪽 자산을 그대로 다시 적지 마세요. 적는 것은 **그것이
    다음 사장님에게 무엇인지**입니다. */
-var MAIN_FLOW_CL = [
-  { ic:"store", n:"매장" }, { ic:"tool", n:"시설" },
-  { ic:"sofa",  n:"장비 · 가구" }, { ic:"boxes", n:"재고" }
-];
+/* ⚠️⚠️ **2026-10-08 지시서 §7 — "단순한 그림이 아니라 각 서비스로
+   연결할 수 있도록 설계한다."** 전에는 다섯 줄이 **글자뿐**이라
+   "매장 인수" 를 눌러도 아무 일이 안 났습니다. 지금은 줄마다 실제로
+   있는 화면으로 갑니다 (가짜 링크는 절대 규칙 5).
+
+   ⚠️ 왼쪽은 **분류 key** 로 적습니다 — 이름 · 아이콘 · 주소가 전부
+   `catalog.js` 에서 옵니다. 여기에 손으로 적지 마세요 (랜딩 미니카드를
+   손으로 적었다가 화면마다 아이콘이 달라졌던 자리입니다).
+   ⚠️ 오른쪽은 분류 이름이 아니라 **인수했을 때 좋아지는 것**이라
+   분류에서 가져올 것이 없습니다 — 그래서 여기 적습니다. */
+var MAIN_FLOW_CL = ["transfer", "asset", "stock", "labor", "contract"];
 var MAIN_FLOW_ST = [
-  { ic:"pin",   n:"매장 인수", d:"상권을 처음부터 다시 찾지 않아도 됩니다" },
-  { ic:"tool",  n:"시설 활용", d:"쓸 수 있는 것은 새로 사지 않아도 됩니다" },
-  { ic:"clock", n:"빠른 오픈", d:"공사 기간이 줄어 문을 빨리 엽니다" },
-  { ic:"wallet",n:"비용 절감", d:"처음부터 만드는 것보다 덜 듭니다" }
+  { ic:"pin",    n:"매장 인수",      to:"/stores",
+    d:"상권을 처음부터 다시 찾지 않아도 됩니다" },
+  { ic:"tool",   n:"기존 시설 활용",  to:"/assets",
+    d:"쓸 수 있는 것은 새로 사지 않아도 됩니다" },
+  { ic:"boxes",  n:"중고 장비 구매",  to:"/assets",
+    d:"같은 장비를 새것 값에 사지 않아도 됩니다" },
+  { ic:"wallet", n:"초기비용 절감",   to:"/tools/vs",
+    d:"신규와 인수를 나란히 놓고 따져 보세요" },
+  { ic:"clock",  n:"빠른 창업 준비",  to:"/transfer?t=in",
+    d:"공사 기간이 줄어 문을 빨리 엽니다" }
 ];
 function MainBridge(){
-  return '<section class="sec mbr"><div class="w">'+
+  var cls = MAIN_FLOW_CL.map(function(k){ return amCat(k); }).filter(Boolean);
+  return '<section class="sec sec-white mbr"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">START &amp; CLOSE</p>'+
       '<h2>한 사장님의 끝이<br class="br-m"> 다른 사장님의 시작이 됩니다.</h2>'+
-      '<p>버리는 것은 줄이고, 다음 사장님의 시작으로.</p>'+
+      /* ⚠️ `<br class="br-m">` 뒤에 띄어쓰기를 하나 둡니다 — 좁아지면
+         이 줄바꿈이 사라지는데, 없으면 앞뒤 낱말이 그대로 붙습니다. */
+      '<p>'+esc(amBrand())+'는 정리하는 사장님과 시작하는 사장님을 이어'+
+        '<br class="br-m"> 사장님의 다음을 함께하는 플랫폼입니다.</p>'+
     '</div>'+
     '<div class="mbr-g">'+
       '<div class="mbr-c mbr-cl">'+
         '<p class="mbr-k">정리하는 사장님</p>'+
         (hasPhoto("flow-close") ? '<figure class="mbr-p">'+photoBox("flow-close")+'</figure>' : '')+
-        '<ul class="mbr-l">'+MAIN_FLOW_CL.map(function(x){
-          return '<li><span class="ic-t">'+icon(x.ic,24)+'</span><b>'+esc(x.n)+'</b></li>';
+        '<ul class="mbr-l">'+cls.map(function(c){
+          return '<li><a href="'+esc(catTo(c))+'">'+
+            '<span class="ic-t">'+icon(c.icon,24)+'</span>'+
+            '<b>'+esc(c.name)+'</b></a></li>';
         }).join("")+'</ul>'+
       '</div>'+
       '<div class="mbr-m">'+
@@ -1196,30 +1271,24 @@ function MainBridge(){
         '<div class="mbr-logo">'+
           '<span class="mbr-logo-i">'+icon("home",26)+'</span>'+
           '<b>'+esc(amBrand())+'</b>'+
-          /* 시안 §31 — 짧고 한눈에. 길게 설명하지 않습니다. */
           '<i>버리는 것을 줄이고<br> 다음 사장님의 시작으로</i>'+
         '</div>'+
         '<span class="mbr-arw mbr-arw-out" aria-hidden="true"></span>'+
       '</div>'+
       '<div class="mbr-c mbr-st">'+
-        '<p class="mbr-k mbr-k-st">창업하는 사장님</p>'+
+        '<p class="mbr-k mbr-k-st">시작하는 사장님</p>'+
         (hasPhoto("flow-start") ? '<figure class="mbr-p">'+photoBox("flow-start")+'</figure>' : '')+
         '<ul class="mbr-l mbr-l-st">'+MAIN_FLOW_ST.map(function(x){
-          return '<li><span class="ic-t">'+icon(x.ic,24)+'</span>'+
-            '<span class="mbr-tx"><b>'+esc(x.n)+'</b><i>'+esc(x.d)+'</i></span></li>';
+          return '<li><a href="'+esc(x.to)+'">'+
+            '<span class="ic-t">'+icon(x.ic,24)+'</span>'+
+            '<span class="mbr-tx"><b>'+esc(x.n)+'</b><i>'+esc(x.d)+'</i></span></a></li>';
         }).join("")+'</ul>'+
       '</div>'+
     '</div>'+
-    /* ⚠️⚠️ **2026-10-06 2차 §16** — 전에는 아래에 단추 둘이 나란히
-       있어서, 넘기시는 분과 받으시는 분이 **어느 단추가 자기 것인지**
-       를 읽어야 했습니다. 지금은 각 칸 안에 그 칸 사람의 단추가
-       있습니다 (아래 줄은 그대로 둡니다 — 긴 화면에서 위 칸까지
-       올라가지 않아도 되는 자리입니다).
-       ⚠️ 한쪽을 크게 하거나 색을 세게 하지 마세요. 두 사람의 무게가
-       같아야 합니다 — 이 구간이 하는 말이 바로 그것입니다. */
+    /* ⚠️ 한쪽을 크게 하거나 색을 세게 하지 마세요 — 두 사람의 무게가
+       같아야 합니다. 이 구간이 하는 말이 바로 그것입니다. */
     '<p class="row-cta row-mid">'+
-      '<a class="btn btn-cl" href="'+esc(quoteTo({cat:"transfer"}))+'">'+
-        '내 매장 양도 준비하기'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-cl" href="/sell">내 매장 양도 준비하기'+icon("arrow",18)+'</a>'+
       '<a class="btn btn-st" href="/stores">인수 가능한 매장 보기'+icon("arrow",18)+'</a></p>'+
   '</div></section>';
 }
@@ -1378,6 +1447,76 @@ function MainTools(){
   '</div></section>';
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   ④ 계산도구 + 최신 정보 — 한 구간 안에 두 칸 (2026-10-08 §9)
+   ══════════════════════════════════════════════════════════════════
+   시안이 이 둘을 **나란히** 둡니다. 이 자리가 하는 말은 하나입니다 —
+   "여기는 소개 페이지가 아니라 **오늘 바로 쓸 수 있는 곳**이다."
+
+   ⚠️⚠️ **네 계산기와 세 글이 전부 실제로 있는 것**입니다. 없는
+   계산기를 그럴듯하게 만들지 않습니다 (§9 — "임의로 작동하는 것처럼
+   만들지 말고"). key 가 `AM_TOOLS` 에 없으면 그 칸은 **조용히
+   빠집니다** — 그래서 아래에서 걸러 냅니다.
+   ⚠️⚠️ **날짜 · 글쓴이를 지어내지 마세요** (§9 · §26). 시안의
+   `2024. 12. 10` 과 전문가 이름은 **디자인 예시**입니다. 저희 글에는
+   작성일 칸이 없고, 없는 것을 찍어 두면 그게 거짓입니다 — 대신
+   **분류**와 **예상 읽기 시간**을 냅니다 (둘 다 실제 값입니다). */
+var MAIN_CALC = ["cost", "premium", "rent", "closecost"];
+function mainCalcIn(){
+  var by = {}; (window.AM_TOOLS||[]).forEach(function(t){ by[t.key] = t; });
+  var L = MAIN_CALC.map(function(k){ return by[k]; }).filter(Boolean);
+  if(!L.length) return "";
+  return '<div class="mti-c mti-calc">'+
+    '<div class="mti-hd">'+
+      '<p class="eyebrow">CALCULATOR</p>'+
+      '<h2>사장님을 위한<br class="br-m"> 계산도구</h2>'+
+      '<p>창업과 폐업에 필요한 다양한 비용을 간편하게 계산해보세요. '+
+        '적으신 숫자는 이 브라우저에만 남습니다.</p>'+
+      '<a class="btn btn-o" href="/tools">계산도구 더보기'+icon("arrow",16)+'</a>'+
+    '</div>'+
+    /* ⚠️ 아이콘은 `tools.js` 의 `icon` 한 줄입니다. 여기에 key → 아이콘
+       표를 따로 두었다가 도구가 늘자 **일곱이 전부 같은 그림**으로
+       나온 적이 있습니다 — 손으로 적지 마세요. */
+    '<ul class="mti-g">'+L.map(function(t){
+      var tone = MAIN_TOOL_TONE[t.grp] || "bl";
+      return '<li class="hv-'+tone+'"><a href="/tools/'+esc(t.key)+'">'+
+        '<span class="ic-t">'+icon(t.icon,26)+'</span>'+
+        '<b>'+esc(t.name)+'</b></a></li>'; }).join("")+'</ul>'+
+  '</div>';
+}
+function mainReadIn(){
+  var all = (window.AM_CONTENTS || []);
+  if(!all.length) return "";
+  /* ⚠️ 셋입니다 (시안). 차례는 데이터 차례이고 "인기" 가 아닙니다 —
+     조회 · 클릭을 하나도 모으지 않습니다 (마무리 지시서 §3). */
+  var L = all.slice(0, 3);
+  return '<div class="mti-c mti-read">'+
+    '<div class="mti-hd">'+
+      '<p class="eyebrow">GUIDE</p>'+
+      '<h2>사장님을 위한<br class="br-m"> 최신 정보</h2>'+
+      '<p>창업, 운영, 폐업에 꼭 필요한 정보와 가이드를 확인해보세요. '+
+        '지금 '+all.length+'편이고 근거를 댈 수 있는 것만 적습니다.</p>'+
+      '<a class="btn btn-o" href="/content">정보센터 더보기'+icon("arrow",16)+'</a>'+
+    '</div>'+
+    /* ⚠️ 시안의 글 카드에는 썸네일이 있는데 **글마다 사진 자리를
+       만들지 않았습니다** — 쓸 수 있는 사진이 없고, 아무 사진이나
+       깔면 업종이 드러나 다른 업종 사장님께 "여긴 내 자리가 아니네"
+       가 됩니다. 빈 액자도 깔지 않습니다 (절대 규칙 2). */
+    '<ul class="mti-rg">'+L.map(function(c){
+      return '<li><a href="/content/'+esc(c.slug)+'">'+
+        '<span class="mti-r-m">'+esc((amCat(c.cat) || {}).name || "")+
+          (c.read ? '<em>예상 읽기 '+esc(String(c.read))+'분</em>' : '')+'</span>'+
+        '<b>'+esc(c.title)+'</b></a></li>'; }).join("")+'</ul>'+
+  '</div>';
+}
+function MainToolsInfo(){
+  var a = mainCalcIn(), b = mainReadIn();
+  if(!a && !b) return "";      /* 둘 다 없으면 구간째 뺍니다 */
+  return '<section class="sec sec-blue mti"><div class="w">'+
+    '<div class="mti-g2">'+ a + b +'</div>'+
+  '</div></section>';
+}
+
 /* ── ⑫ 후기 ───────────────────────────────────────────────────────
    ⚠️⚠️ **후기를 지어내지 마세요.** 평점도 후기 수도 값으로 들고 있지
    않습니다 — 후기는 **업체 안**(`p.reviews`)에 들어 있고 평점도 거기서
@@ -1450,25 +1589,77 @@ function mainSampleCard(){
       '나갑니다 — 전체 미리보기는 업체 상세 예시에서 보실 수 있습니다.</p>'+
   '</div>';
 }
+/* ══════════════════════════════════════════════════════════════════
+   ⑥ 파트너 입점 (2026-10-08 지시서 §11)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **실제 운영정책과 일치하는 혜택만 적습니다** (§11). 시안의
+   "사장님에게 직접 연결" 같은 말은 **고객을 반드시 연결해 준다**는
+   약속으로 읽히는데, 지금 요청이 0건이라 지킬 수 없습니다 (§11 이
+   직접 금지합니다 · 절대 규칙 5).
+   ⚠️⚠️ **그래서 세 칸을 `js/data/join.js` 의 `AM_JOIN_WHY` 에서
+   가져옵니다.** 거기 넷은 전부 **약관에 근거가 있는 약속**입니다
+   (제6조 제4항 · 제6조 제2항 · 제17조). 여기에 따로 적으면 화면에서
+   하는 말과 약관 · `/join` 이 서로 달라지고, 그때부터 채무입니다.
+   ⚠️ **"월 n건의 요청" · "n곳이 함께합니다" 를 적지 마세요** — 지금
+   0 이고, 업체는 등록하고 나서 바로 압니다.
+
+   ⚠️ 어두운 카드(`.mjn-c`)는 이 저장소에서 **어두운 배경을 쓸 수 있는
+   한 자리**입니다 (BRIGHT PREMIUM). 다른 구간에 쓰지 마세요. */
 function MainJoin(){
   var cats = (window.AM_CATS||[]).filter(function(c){ return c.kind === "provider"; });
+  var why  = (window.AM_JOIN_WHY || []).slice(0, 3);
   return '<section class="sec mjn"><div class="w">'+
     '<div class="mjn-c">'+
       '<div class="mjn-t">'+
         '<p class="mjn-k">PARTNER</p>'+
-        '<h2>사장님 고객을 만나고 계신가요?</h2>'+
         /* ⚠️ 이름이 "파트너" 를 꾸미는 자리라 조사가 붙지 않습니다 —
-           koWith 를 쓰면 "인수인계가 파트너로" 가 됩니다. */
-        '<p>인테리어, 세무, 노무, 철거, 설비, POS, 마케팅 등 '+
-          '사업자를 대상으로 서비스를 제공한다면 '+
-          esc(amBrand())+' 파트너로 함께할 수 있습니다.</p>'+
+           `koWith()` 를 쓰면 "인수인계가 파트너가" 가 됩니다. */
+        '<h2>'+esc(amBrand())+' 파트너가 되어주세요.</h2>'+
+        '<p>창업과 폐업을 준비하는 사장님들에게 전문 서비스를 소개할 '+
+          '파트너 업체를 모집합니다.</p>'+
         (cats.length ? '<ul class="mjn-l">'+cats.slice(0,10).map(function(c){
           return '<li>'+icon(c.icon,18)+esc(c.name)+'</li>'; }).join("")+'</ul>' : '')+
       '</div>'+
+      (why.length ? '<ul class="mjn-why">'+why.map(function(x){
+        return '<li><span class="mjn-why-i">'+icon(x.icon,22)+'</span>'+
+          '<b>'+esc(x.t)+'</b></li>'; }).join("")+'</ul>' : '')+
       '<p class="mjn-go"><a class="btn btn-w" href="/join">'+
-        '파트너 입점 알아보기'+icon("arrow",18)+'</a></p>'+
+        '파트너 입점하기'+icon("arrow",18)+'</a></p>'+
     '</div>'+
     mainSampleCard()+
+  '</div></section>';
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ⑦ 마지막 CTA (2026-10-08 지시서 §12)
+   ══════════════════════════════════════════════════════════════════
+   히어로와 **같은 행동**을 한 번 더, 더 간결하게 냅니다 — 여기까지
+   내려오신 분은 이미 다 보셨고 남은 것은 "그래서 어디로" 하나입니다.
+   ⚠️ 창업은 블루 · 폐업은 오렌지 (§12). 두 단추의 크기 · 글씨 ·
+   자리가 같아야 합니다 — 한쪽을 작게 하면 "덜 중요한 것" 이 됩니다.
+   ⚠️ 셋째 줄 셋은 **실제로 되는 것**만입니다 (가짜 링크는 절대 규칙 5). */
+var MAIN_LAST_HELP = [
+  { ic:"users", n:"업체 찾기",   d:"분야 · 지역으로 추립니다",   to:"/providers" },
+  { ic:"check", n:"체크리스트",  d:"걸음마다 꼭 확인할 것",      to:"/startup" },
+  { ic:"calc",  n:"계산도구",    d:"비용을 직접 재 보세요",      to:"/tools" }
+];
+function MainLast(){
+  return '<section class="sec sec-ivory mlast"><div class="w">'+
+    '<div class="mlast-in">'+
+      '<div class="mlast-t">'+
+        '<h2>어디서부터 시작해야 할지 모르겠다면?</h2>'+
+        '<p>지금 상황을 선택하면 필요한 순서부터 안내해 드립니다.<br class="br-m"> '+
+          '사장님의 시작과 마지막, '+esc(amBrand())+'가 함께합니다.</p>'+
+        '<p class="mlast-go">'+
+          '<a class="btn btn-b btn-lg" href="/startup">창업 준비하기'+icon("arrow",18)+'</a>'+
+          '<a class="btn btn-cl btn-lg" href="/closure">폐업 · 정리 준비하기'+icon("arrow",18)+'</a>'+
+        '</p>'+
+      '</div>'+
+      '<ul class="mlast-h">'+MAIN_LAST_HELP.map(function(x){
+        return '<li><a href="'+esc(x.to)+'">'+
+          '<span class="ic-t">'+icon(x.ic,24)+'</span>'+
+          '<b>'+esc(x.n)+'</b><i>'+esc(x.d)+'</i></a></li>'; }).join("")+'</ul>'+
+    '</div>'+
   '</div></section>';
 }
 
@@ -1477,75 +1668,56 @@ function MainJoin(){
    셉니다 — 사업 단계 열은 `<nav>` 라 그 셈에 안 들어가고, "히어로
    에서 바로 찾고 바로 갈라진다" 가 그 열을 따로 봅니다. */
 function PageMain(){
-  /* ⚠️⚠️ **2026-10-06 "재설계 — 계속 진행 및 최종 마무리 지시서" §1 의
-     차례**입니다. **열넷**이고 마지막 Footer 는 `#view` 밖
-     (`chrome.js`)이라 여기서는 **열셋**입니다.
+  /* ⚠️⚠️ **2026-10-08 "최종 디자인 통합 및 기능 완성 작업지시서" §3 의
+     차례**입니다 — 아홉이고 HEADER · FOOTER 는 `#view` 밖
+     (`chrome.js`)이라 여기서는 **일곱**입니다.
 
-       01 HERO                .mh      머리 띠 + 두 판 + 떠 있는 검색 패널
-       02 지금 어떤 상황       .mjy     상황 넷 — 고르개 (`?j=`)
-       03 어떤 업종            .mi-g    업종 열넷 — 거르개 (`?i=`)
-       04 맞춤 로드맵          .mroad   ★ 02 + 03 의 결과 (순서 + 분야)
-       05 핵심 서비스 탐색     .msvc    대표 서비스 열둘
-       06 사장님 도구          .mt-g    계산기 열셋
-       07 사장님 정보센터      .minfo   글 예순 편
-       08 인수 ↔ 인계          .mbr     한 사장님의 끝이 다른 분의 시작
-       09 업체 찾기            PARTNERS
-       10 매장 · 시설 · 장비    TAKE OVER
-       11 이용방법             .mhow
-       12 파트너 입점          .mjn     + 입점 화면 예시 카드
-       13 브랜드 스토리        .mval    가치 넷 + 범위 숫자 + 왜 이 이름인가
-       14 Footer               ← `#view` 밖 (`chrome.js`)
+       01 HERO                .mh     사진 띠 + 창업 / 폐업 선택 카드 둘
+       02 브랜드 연결          .mbr    정리하는 사장님 → 인수인계 → 시작하는 사장님
+       03 핵심 서비스 여덟      .msvc   + 전체 서비스 보기
+       04 계산도구 + 최신 정보  .mti    한 구간 두 칸
+       05 매장 · 시설 · 장비    TAKE OVER  매물 0건이면 안내 + 실제 CTA
+       06 파트너 입점          .mjn    + 입점 화면 예시 카드
+       07 마지막 CTA          .mlast  창업 / 폐업 한 번 더
 
-     ⚠️⚠️ **사업 단계 여섯(`MainStage()`)은 `<section>` 이 아니라
-     `<nav>` 입니다** — 링크 목록이라 그게 맞고, 그래서 위 열셋 셈에
-     **들어가지 않습니다.** 지우면 `/g/:stage` **여섯 화면 중 다섯이
-     사이트 안에서 갈 길을 잃습니다** (검색 패널 탭이 `/g/transfer`
-     하나만 가리킵니다) — 색인은 되어 있는데 아무 데서도 안 걸리는
-     화면이 됩니다. 04 가 "내 상황의 순서" 라면 이 열은 "사업 전체의
-     흐름" 이라 바로 뒤가 제자리입니다.
+     ⚠️⚠️ **지시서 §2-2 · §30-3 — "기존 기능을 임의로 삭제하지
+     않는다."** 메인에서 내려온 구간이 여섯인데 **함수는 하나도 안
+     지웠습니다** (되돌리실 일이 생기면 아래 한 줄입니다). 내려온
+     것마다 **갈 곳이 남아 있는지 하나씩 확인했습니다** —
 
-     ⚠️⚠️ **지시서 §1 — "특별한 이유가 없다면 DELETE 하지 않는다."**
-     차례를 열넷으로 맞추면서 메인에서 내려온 것은 **구간 일곱**이고,
-     함수는 **그대로 두었습니다** (되돌리실 일이 생기면 아래 한
-     줄입니다). 전부 갈 곳이 남아 있는지 하나씩 확인했습니다 —
+       · `MainJourney()`   상황 넷   → 헤더 `창업` · `폐업`, 07 마지막
+                                      CTA, 푸터 "사업 단계" 칸
+       · `MainIndustry()`  업종 열넷 → `/startup` · `/closure` 첫 화면이
+                                      그대로 업종 고르개입니다 (§13 STEP 01)
+       · `MainRoadmap()`   맞춤 순서 → `/startup/:업종` · `/closure` 가
+                                      그 화면입니다 (§13 STEP 03 · §16)
+       · `MainStage()`     단계 여섯 → ⚠️ **푸터 "사업 단계" 칸을 여섯으로
+                                      바꿔 두었습니다.** 안 바꾸면 `/g/:stage`
+                                      여섯 중 다섯이 사이트 안에서 갈 길을
+                                      잃습니다 (색인은 되어 있는데 아무
+                                      데서도 안 걸리는 화면이 됩니다)
+       · `MainSearch()`    검색 패널 → 헤더 통합검색이 **모든 화면**에서
+                                      받습니다. 탭 다섯이 가리키던 곳
+                                      (`/providers` · `/franchise` · `/stores` ·
+                                      `/g/transfer` · `/support`)은 03 서비스 ·
+                                      05 매장 구간 · 푸터에 전부 있습니다
+       · `MainHow()` `MainStory()` `MainProviders()` `MainTools()`
+         `MainContent()`             → 04 가 도구와 글을 같이 내고,
+                                      업체는 03 여덟 장이 분야별로 보냅니다.
+                                      `/about` 이 가치 · 범위 숫자 · 진행을
+                                      그대로 들고 있습니다
 
-       · `MainValue()` `MainScale()` `MainWhy()`
-                          → 셋 다 **13 브랜드 스토리 안으로 들어갔습니다**
-                            (`MainStory()`). 내용은 한 글자도 안 뺐습니다.
-       · `MainFeature()`  → 큰 카드 셋(프랜차이즈 · 점포 · 인테리어)이
-                            가리키던 곳은 05 서비스 열둘(인테리어) ·
-                            10 매장 구간 · 푸터 프랜차이즈가 받습니다
-       · `MainFranchise()`→ `/franchise` 는 **검색 패널 탭** · 푸터
-                            서비스 칸 · 04 로드맵 첫 걸음이 보냅니다
-       · `MainStartCats()` `MainCloseCats()`
-                          → 04 로드맵 아래가 **그 쪽 분야 전부**를
-                            냅니다 (토글로 창업 ↔ 정리). 거기에
-                            "전체보기" 로 `/startup` · `/closure` 도
-                            같이 있습니다
-       · `MainOps()`      → 운영 과제 열여섯은 `/operation` 이 그대로
-                            들고 있고, 02 상황 카드가 그리로 보냅니다
-       · `MainClosing()`  → 폐업 순서는 04 로드맵이 **상황별로** 냅니다
-                            (`?j=closing`). 히어로 오른쪽 판도 `/closure`
-                            입니다
-       · `MainPrice()` `MainReviews()` `MainTwo()`
-                          → 전부터 안 쓰는 셋입니다 (견적 0건 · 후기
-                            0건 · 히어로가 그 두 장이 됐습니다)
+     ⚠️ **다시 끼워 넣지 마세요.** 지시서 §30-1 · §30-2 가 "다시 비우지도
+     말고, 모든 업종과 서비스를 한꺼번에 나열하지도 말라" 고 적었습니다.
+     늘리시려면 **지시서를 먼저 고치고** `check.js` 의 `want` 를 같이
+     고치세요 (거기가 구간 차례를 셉니다).
 
-     ⚠️ 위를 메인에 **다시 끼워 넣지 마세요.** 지시서가 "메인에서 모든
-     기능을 볼 필요는 없다" 고 적었습니다 — 구간이 늘수록 "그래서
-     여기서 뭘 하지" 가 묻힙니다. 늘리시려면 지시서를 먼저 고치고
-     `check.js` 의 `want` 를 같이 고치세요.
-
-     ⚠️⚠️ **가짜 신뢰 숫자를 넣지 마세요.** 회원 수 · 거래건수 ·
-     만족도 · 평점 · 시공건수는 지금 전부 0 이고, 적는 순간 표시 ·
-     광고의 공정화에 관한 법률 제3조입니다. 13 의 숫자(업종 14 ·
-     분야 25 · 서비스 183)는 실적이 아니라 **우리가 다루는 범위**이고
-     데이터를 그 자리에서 세는 값입니다 — 구간 안에 "등록된 업체 수가
-     아닙니다" 를 ⓘ 로 같이 냅니다. 그 줄을 지우지 마세요. */
-  return MainHero()+
-         MainJourney()+ MainIndustry()+ MainRoadmap()+ MainStage()+
-         MainServices()+ MainTools()+ MainContent()+ MainBridge()+
-         MainProviders()+ MainStores()+ MainHow()+ MainJoin()+
-         MainStory();
+     ⚠️⚠️ **가짜 신뢰 숫자를 넣지 마세요** (§26 · 절대 규칙 1). 시안의
+     예시 매물 석 장 · `2024. 12. 10` 같은 날짜 · 회원 수 · 평점은 전부
+     **디자인 참고용**입니다. 매물이 0건이면 05 는 머리말까지 바꿔
+     사실대로 말하고, 글 카드에는 없는 작성일 대신 분류와 예상 읽기
+     시간(둘 다 실제 값)을 냅니다. */
+  return MainHero()+ MainBridge()+ MainServices()+ MainToolsInfo()+
+         MainStores()+ MainJoin()+ MainLast();
 }
 

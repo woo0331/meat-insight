@@ -89,12 +89,21 @@
    작은 글씨가 읽히지 않습니다.
    ⚠️ 헤더 · 푸터는 `#view` 밖이라 안 물듭니다. 거기까지 바뀌면
    화면마다 머리가 달라져 한 사이트로 안 읽힙니다. */
+/* ⚠️⚠️ **2026-10-08 지시서 §24 — 창업은 BLUE 입니다.** 전에는 여기서
+   `--blue` 를 **초록**으로 바꿔 창업 속화면 전체를 물들였습니다
+   (2026-09-30 지시서가 START=Green 으로 못박았던 것). 2026-10-08
+   시안이 메인 브랜드 컬러를 블루로 두고 창업을 거기에 맞췄고, 메인의
+   창업 카드 · 창업 단추 · 로고가 전부 한 파랑입니다 — 속화면만 초록이면
+   **같은 사이트로 안 읽힙니다.** 그래서 창업 쪽은 `--blue` 를 **안
+   바꿉니다**(기본 파랑 그대로).
+
+   ⚠️ **초록 토큰(`--start*`)은 지우지 않았습니다.** 창업 ↔ 폐업을
+   가르는 자리(여정 카드 · 걸음 번호 · 매장 구간 민트 바탕)가 여전히
+   쓰고 있고, 되돌리실 일이 생기면 아래 다섯 줄을 되살리면 됩니다.
+   ⚠️⚠️ **폐업은 그대로 주황입니다.** 빨강으로 넘기지 마세요 —
+   "폐업은 나쁜 것" 이라는 말이 됩니다 (검사가 초록 성분을 봅니다). */
 .side-start{
-  --blue:     var(--start-dark);
-  --blue-600: var(--start-deep);
-  --blue-400: var(--start);
-  --blue-50:  var(--start-soft);
-  --blue-100: #D7F0E6;
+  --blue-50:  var(--blue-soft);
 }
 .side-close{
   --blue:     var(--close-dark);
@@ -112,8 +121,8 @@
    칠하지 않습니다 (§2 면적 비율). */
 .side-start .pgh{
   background:
-    radial-gradient(60% 120% at 0% 0%, rgba(18,168,120,.13) 0%, rgba(18,168,120,0) 72%),
-    linear-gradient(180deg, #FFFFFF 0%, var(--start-soft) 100%); }
+    radial-gradient(60% 120% at 0% 0%, rgba(42,111,176,.13) 0%, rgba(42,111,176,0) 72%),
+    linear-gradient(180deg, #FFFFFF 0%, var(--blue-soft) 100%); }
 .side-close .pgh{
   background:
     radial-gradient(60% 120% at 0% 0%, rgba(242,106,61,.13) 0%, rgba(242,106,61,0) 72%),
@@ -1264,113 +1273,158 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .hv-tl{ --ic-ink:var(--teal);       --ic-bg:var(--teal-soft); }
 .hv-sl{ --ic-ink:var(--slate);      --ic-bg:var(--slate-soft); }
 /* ══════════════════════════════════════════════════════════════════
-   ① 히어로 — 창업 / 폐업 두 판 (2026-10-04 개편 지시서 §3 ~ §8)
+   ① HERO — 사진 띠 + 창업 / 폐업 선택 카드 둘
    ══════════════════════════════════════════════════════════════════
-   화면 너비를 통째로 쓰는 두 판이고, 가운데가 **대각선**으로
-   갈립니다 (§8 — 수직선 하나만 긋지 않습니다).
+   **2026-10-08 "최종 디자인 통합" 지시서 §5 · §6 · §24.**
 
-   ⚠️⚠️ **두 판의 크기가 같습니다** (§3 — 50:50). `flex:1 1 50%` 둘이고
-   한쪽에 `flex-grow` 를 더하지 마세요 — 폐업 쪽을 좁히면 그게 "덜
-   중요한 것" 이라는 말입니다. `check.js` 가 폭과 높이를 1px 까지 잽니다.
+       [사진 왼쪽]  사장님의 시작과 마지막을  [사진 오른쪽]   .mh-ph
+                    연결합니다.                              .mh-in
+         ┌ 창업 (블루) ┐   ┌ 폐업 (오렌지) ┐                 .mh-pick
 
-   ⚠️⚠️ **대각선은 ::before 와 사진 액자에만 겁니다** — 판 자체에
-   `clip-path` 를 걸면 글자와 단추도 같이 잘립니다. 두 판의 바탕이
-   가운데에서 44px 씩 서로의 영역으로 넘어가고, 넘어간 만큼을 반대로
-   잘라서 **딱 맞물립니다** (아래 수를 바꾸실 때는 둘을 같이).
+   ⚠️⚠️ **사진이 주인공입니다.** 2026-10-07 전면개편이 통째로 물린
+   까닭이 이것 하나였습니다 — 사진을 옅게 깔고 흰 카드를 얹으면
+   사장님이 보시기에 "이미지가 들어간" 화면이 아닙니다. 그래서 사진은
+   **좌우 끝까지 꽉 차고**, 글은 그 **가운데 밝은 자리**에 섭니다.
 
-       왼쪽 바탕  right:-44px  +  오른쪽 아래를 88px 잘라냄
-       오른쪽 바탕 left:-44px  +  왼쪽 위를   88px 잘라냄
+   ⚠️⚠️ **가운데가 밝아야 글이 읽힙니다.** 사진마다 안쪽으로 가면서
+   크림색으로 사라지는 막을 겁니다. 막을 짙게 하면 어두운 면이
+   늘고(한도 15%) 옅게 하면 글이 안 읽힙니다 — 바꾸실 때는
+   **찍어서 가운데 글자를 보세요.** 검사는 사진 위 글자를 못 잽니다.
 
-   ⚠️ **사진이 0장입니다.** 있으면 사진 + 막이고, 없으면 판 자신의
-   바탕색이 자리를 지킵니다 — "이미지 준비 중" 을 찍지 않습니다
-   (절대 규칙 2). ⚠️⚠️ 사진이 들어오면 **어두운 막이 생깁니다** —
-   그때 어두운 면 15% 를 반드시 다시 재세요.
-
-   ⚠️ **폐업을 어둡거나 처연하게 만들지 마세요** (§7). 끝이 아니라
-   다음 시작이고, 두 판의 **밝기만 다릅니다**(남색 ↔ 샌드) — 그건
-   한 판에 흰 글자를 얹기 위한 것이고 무게는 같습니다. */
-.mh{ position:relative; background:var(--bg-cream); padding:0; }
-.mh-two{ position:relative; display:flex; align-items:stretch; }
-/* ⚠️⚠️ **첫 화면은 680~760px 입니다** (10-04 §4 · 검사가 봅니다).
-   2026-10-06 에 히어로 위로 머리 띠가 올라오면서 첫 화면이 **1173px**
-   이 됐습니다 — 두 판이 접힌 자리 아래로 밀려났습니다. 머리 띠가
-   메시지를 맡았으니 두 판은 **갈라 주는 자리**로 낮춥니다.
-   ⚠️ 450 아래로는 내리지 마세요 — 사진이 띠처럼 보입니다. */
-.hp2{ position:relative; flex:1 1 50%; min-width:0; display:flex;
-  align-items:center; min-height:386px;
-  padding:var(--s9) 0 calc(var(--s9) + var(--s8)); }
-/* 바탕 — 대각선으로 맞물립니다 (위 설명) */
-.hp2::before{ content:""; position:absolute; top:0; bottom:0; z-index:0; }
-/* ⚠️ 지금 사진은 **왼쪽에 따뜻한 나무 천장과 카운터, 가운데에 작업자,
-   오른쪽에 통창**입니다. 가로가 잘리는 폭(1280 아래 · 폰)에서는
-   왼쪽을 남겨야 천장과 카운터가 같이 보입니다 — 가운데로 두면
-   창문만 남습니다.
-   세로 45% 는 **바닥보다 천장 쪽**을 남깁니다 (2560px 처럼 액자가
-   사진보다 넓은 폭에서 위아래가 잘립니다). */
-.hp2-st{ --ph-pos:0% 45%; }
-.hp2-st::before{ left:0; right:-44px; background:var(--navy-dark);
-  clip-path:polygon(0 0, 100% 0, calc(100% - 88px) 100%, 0 100%); }
-/* ⚠️ 폐업 쪽 사진은 **작업자와 치우는 짐이 가운데**에 있습니다.
-   50% 로 두면 좁은 폭에서도 그 장면이 남습니다 — 오른쪽 끝(100%)으로
-   밀면 사다리와 자재만 남아 "정리하는 중" 이 안 읽힙니다.
-   1440 · 390 · 2560 에서 50% · 70% · 100% 를 나란히 찍어 보고
-   정했습니다. ⚠️ 기본값과 같은 값이지만 **일부러 적어 둡니다** —
-   사진을 바꿀 때 여기를 같이 보시라고요. */
-.hp2-cl{ --ph-pos:50% 50%; }
-/* ⚠️ Warm Sand 입니다 — 아홉 바탕 중 `--bg-sand`. 왼쪽이 짙은 남색이라
-   오른쪽은 **밝아야** 두 판이 갈립니다 (§5). */
-.hp2-cl::before{ left:-44px; right:0; background:var(--bg-sand);
-  clip-path:polygon(88px 0, 100% 0, 100% 100%, 0 100%); }
-/* 사진 액자도 **같은 대각선**을 씁니다 — 안 맞추면 사진이 네모로 남아
-   대각선이 사라집니다. ⚠️ `object-fit:cover` 를 반드시 주세요: `.ph` 는
-   `<img>` 라 기본값이 `fill` 이고, 안 주면 사진이 늘어납니다. */
-.hp2-ph{ position:absolute; top:0; bottom:0; margin:0; z-index:1; }
-.hp2-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0;
+   ⚠️ 사진이 0장이면 띠가 통째로 안 그려지고 크림 바탕이 자리를
+   지킵니다 — "이미지 준비 중" 을 찍지 않습니다 (절대 규칙 2).
+   ⚠️⚠️ **사진에 글자를 합성하지 마세요** (§2-1). 제목 · 서브 · 배지 ·
+   단추가 전부 HTML 이라 고르기도 읽어 주기도 됩니다. */
+.mh{ position:relative; background:var(--bg-cream); padding:0;
+  overflow:hidden; }
+.mh-ph{ position:absolute; left:0; right:0; top:0; height:var(--mh-ph-h, 470px);
+  z-index:0; pointer-events:none; }
+.mh-ph-l, .mh-ph-r{ position:absolute; top:0; bottom:0; width:42%;
+  overflow:hidden; }
+.mh-ph-l{ left:0; }
+.mh-ph-r{ right:0; }
+/* ⚠️⚠️ **`object-fit:cover` 를 빼지 마세요.** `<img class="ph">` 의
+   기본값이 `fill` 이라 빼면 사진이 비율을 무시하고 늘어납니다 —
+   이 저장소에서 실제로 겪은 자리이고 `check.js` 가 규칙을 봅니다.
+   ⚠️ 어느 쪽을 남길지는 `--ph-pos` 한 줄입니다. 사진을 바꾸시면 이
+   값도 같이 보세요 — 안 보면 주인공이 잘린 채로 몇 주 갑니다. */
+.mh-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0;
   object-position:var(--ph-pos, 50% 50%); }
-/* ⚠️⚠️ **액자 비율이 폭마다 크게 달라집니다** — 재 보니 1.09(360px) ~
-   2.66(980px 세로쌓임)입니다. 원본보다 액자가 좁으면 **좌우**가,
-   넓으면 **위아래**가 잘립니다. 그래서 어느 쪽을 남길지는 사진마다
-   다르고, 자리마다 `--ph-pos` 한 줄로 고릅니다.
-   ⚠️ 사진을 바꾸면 **이 값도 같이 보세요** — 안 보면 주인공이 잘린
-   채로 몇 주 갑니다 (찍어 봐야 압니다. 검사는 못 잡습니다). */
-.hp2-ph::after{ content:""; position:absolute; inset:0; }
-.hp2-st .hp2-ph{ left:0; right:-44px;
-  clip-path:polygon(0 0, 100% 0, calc(100% - 88px) 100%, 0 100%); }
-.hp2-cl .hp2-ph{ left:-44px; right:0;
-  clip-path:polygon(88px 0, 100% 0, 100% 100%, 0 100%); }
-/* 사진 위의 막 — 왼쪽은 짙은 남색(cool), 오른쪽은 웜 샌드(warm).
-   사진이 없으면 액자째 없어서 막도 없습니다. */
-.hp2-st .hp2-ph::after{ background:linear-gradient(100deg,
-  rgba(6,43,81,.92) 0%, rgba(6,43,81,.72) 58%, rgba(6,43,81,.54) 100%); }
-.hp2-cl .hp2-ph::after{ background:linear-gradient(100deg,
-  rgba(250,244,232,.94) 0%, rgba(250,244,232,.78) 58%, rgba(250,244,232,.60) 100%); }
+.mh-ph-l{ --ph-pos:0% 45%; }
+.mh-ph-r{ --ph-pos:100% 50%; }
+.mh-ph-l::after, .mh-ph-r::after{ content:""; position:absolute; inset:0; }
+.mh-ph-l::after{ background:linear-gradient(90deg,
+  rgba(253,251,247,.16) 0%, rgba(253,251,247,.40) 44%,
+  rgba(253,251,247,.88) 80%, var(--bg-cream) 100%); }
+.mh-ph-r::after{ background:linear-gradient(270deg,
+  rgba(253,251,247,.16) 0%, rgba(253,251,247,.40) 44%,
+  rgba(253,251,247,.88) 80%, var(--bg-cream) 100%); }
+/* 띠 아래쪽을 크림으로 받아 카드가 얹히는 자리를 만듭니다 */
+.mh-ph::after{ content:""; position:absolute; left:0; right:0; bottom:0;
+  height:48%; background:linear-gradient(180deg,
+    rgba(253,251,247,0) 0%, rgba(253,251,247,.70) 48%, var(--bg-cream) 100%); }
 
-/* 글 — ⚠️ 폭과 자리를 본문 기둥(`.w`)에 맞춥니다. 안 맞추면 히어로
-   글만 좌우로 어긋나 보입니다. 가운데 56px 은 **대각선을 피하는
-   여백**이라 줄이지 마세요 — 줄이면 글자가 대각선에 올라앉습니다. */
-.hp2-b{ position:relative; z-index:2;
-  width:calc(100% - var(--pad)); max-width:calc(var(--w) / 2 - var(--pad)); }
-.hp2-st .hp2-b{ margin-left:auto;  padding-right:var(--s9); }
-.hp2-cl .hp2-b{ margin-right:auto; padding-left:var(--s9); }
+.mh-in{ position:relative; z-index:2; padding:var(--s10) 0 var(--s8);
+  text-align:center; }
+.mh-h1{ margin:0; font-size:clamp(30px,4.2vw,50px); font-weight:900;
+  letter-spacing:-.038em; line-height:1.18; color:var(--ink); }
+/* ⚠️ 시안의 포인트 — "시작과 마지막" 만 브랜드 블루입니다.
+   ⚠️ `--blue-600` 입니다. `--blue` 는 밝은 바탕에서 4.27 이라 AA(4.5)에
+   못 미칩니다 — 이 저장소에서 같은 자리에 세 번 빠졌습니다. */
+.mh-pt{ color:var(--blue-600); font-style:normal; }
+.mh-lead{ margin:var(--s5) auto 0; max-width:60ch;
+  font-size:clamp(15px,1.3vw,18px); font-weight:600; line-height:1.68;
+  color:var(--ink2); }
 
-.hp2-k{ font-size:var(--t-sm); font-weight:700; letter-spacing:-.01em; }
-.hp2-st .hp2-k{ color:rgba(255,255,255,.82); }
-.hp2-cl .hp2-k{ color:var(--ink2); }
-/* ⚠️ 두 글자(창업 · 폐업)가 주인공입니다 — 잔 요소를 더하지 마세요 */
-.hp2-h{ display:flex; align-items:flex-start; gap:10px; margin-top:var(--s4);
-  font-size:clamp(46px, 4.4vw, 68px); font-weight:900;
-  letter-spacing:-.04em; line-height:1.05; }
-.hp2-dot{ flex:0 0 auto; width:11px; height:11px; margin-top:.42em;
-  border-radius:var(--r-pill); }
-.hp2-st .hp2-h{ color:#fff; }
-.hp2-st .hp2-dot{ background:var(--start); }
-.hp2-cl .hp2-h{ color:var(--ink); }
-.hp2-cl .hp2-dot{ background:var(--close); }
-.hp2-d{ margin-top:var(--s5); font-size:var(--t-lg); font-weight:600;
-  line-height:1.6; }
-.hp2-st .hp2-d{ color:rgba(255,255,255,.88); }
-.hp2-cl .hp2-d{ color:var(--ink2); }
-.hp2-go{ margin-top:var(--s7); }
+/* ── 선택 카드 둘 (§6) ─────────────────────────────────────────────
+   ⚠️⚠️ **둘의 크기 · 무게가 같습니다** — `1fr 1fr` 이고 한쪽에
+   `flex-grow` 를 더하지 마세요. 폐업 쪽을 좁히거나 흐리게 만들면
+   그게 "덜 중요한 것" 이라는 말입니다 (검사가 1px 까지 잽니다).
+   ⚠️ **카드 전체가 눌립니다** — 안에 또 `<a>` 를 넣지 마세요. */
+.mh-pick{ position:relative; z-index:3; padding-bottom:var(--s10); }
+.mh-pick-g{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s5); }
+.hpk{ position:relative; display:flex; align-items:stretch; gap:var(--s4);
+  min-height:206px; padding:var(--s7);
+  background:#fff; border:1px solid var(--line);
+  border-radius:var(--r-2xl); box-shadow:var(--shadow-float);
+  color:var(--ink); text-decoration:none;
+  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
+/* ⚠️⚠️ **창업은 블루 · 폐업은 오렌지** (§24 · §6 · §12). 폐업을
+   빨강으로 넘기지 마세요 — "폐업은 나쁜 것" 이라는 말이 됩니다. */
+.hpk-st{ --pk:var(--blue-600); --pk-soft:var(--blue-50);
+  --pk-text:var(--blue-600); }
+/* ⚠️ 배지 글자는 **짙은 쪽**입니다 — `--close-dark` 를 옅은 복숭아
+   위에 얹으면 4.11 로 AA(4.5)에 못 미칩니다 (전수 점검이 잡았습니다).
+   면(화살표 원판)은 `--pk` 그대로 쓰고 **글자만** 짙게 씁니다. */
+.hpk-cl{ --pk:var(--close-dark); --pk-soft:var(--close-soft);
+  --pk-text:var(--close-deep); }
+.hpk:hover{ transform:translateY(-3px); box-shadow:var(--shadow-lg);
+  border-color:var(--pk); color:var(--ink); }
+.hpk-b{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column;
+  align-items:flex-start; }
+.hpk-bd{ display:inline-flex; align-items:center; min-height:28px;
+  padding:0 11px; border-radius:999px;
+  background:var(--pk-soft); color:var(--pk-text, var(--pk));
+  font-size:var(--t-cap); font-weight:800; letter-spacing:-.01em; }
+/* ⚠️⚠️ **맨글과 태그를 섞지 마세요.** 처음에 `<b>창업<i>준비하고
+   있어요</i></b>` 로 적었더니 전수 점검이 "문장 속 block" 으로
+   잡았습니다 — 이 저장소에서 `<b>` 를 block 으로 바꿔 피하려다 같은
+   자리에 걸린 적이 있습니다. **두 줄을 각자 태그로 감쌉니다.** */
+.hpk-h{ display:grid; gap:2px; margin-top:var(--s4);
+  font-size:clamp(21px,2.1vw,27px); font-weight:900;
+  letter-spacing:-.035em; line-height:1.22; }
+.hpk-h i{ font-style:normal; }
+.hpk-h1{ color:var(--pk-text, var(--pk)); }
+.hpk-h2{ color:var(--ink); }
+.hpk-d{ margin-top:var(--s3); font-style:normal;
+  font-size:var(--t-sm); line-height:1.65; color:var(--ink2); }
+.hpk-go{ display:inline-flex; align-items:center; gap:9px; margin-top:auto;
+  padding-top:var(--s5); font-size:var(--t-sm); font-weight:800;
+  color:var(--pk); }
+.hpk-go em{ display:inline-flex; align-items:center; justify-content:center;
+  flex:0 0 auto; width:34px; height:34px; border-radius:999px;
+  background:var(--pk); color:#fff; font-style:normal; }
+.hpk-ph{ flex:0 0 38%; max-width:210px; overflow:hidden;
+  border-radius:var(--r-xl); background:var(--pk-soft); }
+.hpk-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0; }
+/* ⚠️⚠️ **사진이 없을 때의 `.hpk-ph-n` 은 없앴습니다.** 옅은 틴트
+   상자를 깔아 두면 그게 빈 액자이고, 카드 둘이 "준비 중" 으로
+   읽힙니다 (절대 규칙 2). 지금은 글이 카드를 꽉 채웁니다. */
+
+@media (max-width:1100px){
+  .mh-ph-l, .mh-ph-r{ width:46%; }
+  .hpk-ph{ flex-basis:32%; }
+}
+/* ⚠️⚠️ 폰에서는 두 카드를 **세로로 쌓습니다** (§25). 가로로 두면 카드
+   폭이 160px 이라 제목이 낱말 가운데서 잘립니다. 모바일 첫 화면에서
+   창업 · 폐업 선택을 **찾기 어렵지 않게** 사진 띠를 같이 낮춥니다. */
+/* ⚠️⚠️ **좁은 화면에서는 사진을 글 "뒤" 가 아니라 "위" 에 둡니다.**
+   390px 에서 두 사진이 52% 씩이면 가운데 밝은 자리가 아예 없어져서,
+   서브 문장이 사진 위에 그대로 앉아 **안 읽혔습니다** (찍어 보고
+   알았습니다 — 사진 위 글자는 검사가 못 잽니다).
+   띠로 올리면 사진은 그대로 크게 보이고 글은 크림 바탕에 섭니다. */
+@media (max-width:900px){
+  .mh-ph{ position:relative; height:200px; }
+  .mh-ph-l, .mh-ph-r{ width:50%; }
+  /* 좌우 막은 가운데 이음새만 부드럽게 — 사진을 흐리지 않습니다 */
+  .mh-ph-l::after{ background:linear-gradient(90deg,
+    rgba(253,251,247,0) 72%, rgba(253,251,247,.55) 100%); }
+  .mh-ph-r::after{ background:linear-gradient(270deg,
+    rgba(253,251,247,0) 72%, rgba(253,251,247,.55) 100%); }
+  .mh-ph::after{ height:34%; background:linear-gradient(180deg,
+    rgba(253,251,247,0) 0%, var(--bg-cream) 100%); }
+  .mh-in{ padding:var(--s6) 0 var(--s7); }
+  .mh-pick{ padding-bottom:var(--s9); }
+  .mh-pick-g{ grid-template-columns:1fr; gap:var(--s4); }
+  .hpk{ min-height:0; padding:var(--s6); }
+  .hpk-ph{ flex-basis:34%; max-width:150px; }
+}
+@media (max-width:560px){
+  .mh-ph{ height:168px; }
+  .hpk{ gap:var(--s3); }
+  .hpk-ph{ flex-basis:30%; max-width:108px; }
+}
+
 
 /* 밝은 판 위의 CLOSE 단추 — ⚠️ 주황이지 빨강이 아닙니다 */
 .btn-cd{ background:var(--close-deep); color:#fff; border-color:var(--close-deep); }
@@ -1612,8 +1666,12 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   box-shadow:0 16px 34px rgba(15,43,68,.10); }
 .msvc-ph{ display:block; aspect-ratio:16/10; }
 .msvc-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0; }
-/* 사진이 0장이면 분류 아이콘이 자리를 지킵니다 */
+/* ⚠️ 사진이 0장이면 분류 아이콘이 자리를 지킵니다 (빈 액자가 아니라
+   **아이콘 면**입니다 — 분류색 틴트라 여덟이 색으로 갈립니다).
+   ⚠️ 2026-10-08 — 시안의 카드가 더 납작해서 비율을 낮췄습니다.
+   16/10 짜리 틴트 면이 여덟이면 그것만 화면 하나를 먹습니다. */
 .msvc-ph-n{ display:flex; align-items:center; justify-content:center;
+  aspect-ratio:auto; min-height:104px;
   background:var(--ic-bg); color:var(--ic-ink); }
 .msvc-g b{ margin-top:var(--s4); padding:0 var(--s5);
   font-size:var(--t-md); font-weight:800; color:var(--ink); }
@@ -1777,7 +1835,13 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    ⚠️ 히어로 다음으로 기억에 남아야 하는 구간입니다.
    ⚠️ **짙은 남색 바탕을 쓰지 마세요.** 대비는 바탕을 어둡게 해서가
    아니라 **주황 → 남색 → 초록 악센트 차이**로 냅니다. */
-.mbr{ background:var(--bg-cream); }
+/* ⚠️⚠️ **바탕을 여기서 칠하지 마세요 — 톤 클래스가 칠합니다.**
+   `.mbr{background:var(--bg-cream)}` 이 `.sec-white` 와 특정도가
+   같은데 **뒤에 있어서 이겼습니다** — 클래스로는 흰색이라고 해
+   놓고 실제로는 크림이라, 바로 위 히어로(크림)와 ΔE 0.00 으로
+   **한 구간처럼 읽혔습니다** (전수 점검이 잡았습니다).
+   ⚠️ `paintTones()` 는 **클래스를 보고** 톤을 가릅니다 — 클래스와
+   실제 색이 다르면 그 뒤 구간 전부의 리듬이 어긋납니다. */
 .mbr-g{ display:grid; gap:var(--s6); grid-template-columns:1fr auto 1fr;
   align-items:stretch; }
 .mbr-c{ display:flex; flex-direction:column; gap:var(--s4);
@@ -1793,8 +1857,18 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    기본값이 `fill` 이라 안 주면 사진이 비율을 무시하고 늘어납니다. */
 .mbr-p .ph{ width:100%; aspect-ratio:5/3; border-radius:var(--r-lg);
   object-fit:cover; }
-.mbr-l{ display:grid; gap:var(--s3); }
-.mbr-l > li{ display:flex; align-items:center; gap:var(--s3); }
+.mbr-l{ display:grid; gap:var(--s2); }
+/* ⚠️⚠️ **2026-10-08 §7 — 줄마다 실제 서비스로 갑니다.** 그래서 줄
+   전체가 `<a>` 이고, 누르는 것은 **40px 이상**이라야 합니다
+   (`--tap` 48px). `padding` 만으로 높이를 만들지 마세요 — 짧은
+   이름에서 다시 낮아집니다. `min-height` + `flex` 로 잡습니다. */
+.mbr-l > li{ display:flex; }
+.mbr-l > li > a{ flex:1 1 auto; min-width:0; min-height:var(--tap);
+  display:flex; align-items:center; gap:var(--s3);
+  padding:var(--s2) var(--s3); margin:0 calc(var(--s3) * -1);
+  border-radius:var(--r-lg); color:var(--ink); text-decoration:none;
+  transition:background .14s ease; }
+.mbr-l > li > a:hover{ background:rgba(255,255,255,.72); color:var(--ink); }
 .mbr-l b{ font-size:var(--t-md); font-weight:800; color:var(--ink); }
 .mbr-tx{ display:grid; gap:2px; min-width:0; }
 .mbr-tx i{ font-style:normal; font-size:var(--t-cap); color:var(--ink2);
@@ -1855,7 +1929,9 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 /* ── ⑬ 업체 입점 ──────────────────────────────────────────────────
    ⚠️ 이 화면에서 어두운 면은 이 카드 **한 장**까지입니다. */
 .mjn{ background:var(--surface); }
-.mjn-c{ display:grid; gap:var(--s6); grid-template-columns:1fr auto;
+/* ⚠️ 2026-10-08 §11 — 혜택 세 줄이 들어오면서 `1fr auto` 두 칸으로는
+   단추가 아래로 밀렸습니다. 지금은 왼쪽 글 / 오른쪽 혜택 + 단추입니다. */
+.mjn-c{ display:grid; gap:var(--s6) var(--s8); grid-template-columns:1.25fr 1fr;
   align-items:center; padding:var(--s8);
   background:var(--navy-dark); border-radius:var(--r-3xl); color:#fff; }
 .mjn-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.12em;
@@ -1870,7 +1946,25 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   border:1px solid var(--on-dark-line); font-size:var(--t-cap);
   font-weight:700; color:var(--on-dark); }
 .mjn-l svg{ width:16px; height:16px; opacity:.8; }
-.mjn-go{ flex:0 0 auto; }
+/* ⚠️⚠️ **혜택 세 줄은 `js/data/join.js` 의 `AM_JOIN_WHY` 에서
+   옵니다** — 여기에 손으로 적지 마세요. 그 넷은 전부 약관에 근거가
+   있는 약속이라, 두 곳이 다른 말을 하면 그때부터 채무입니다. */
+.mjn-why{ display:grid; gap:var(--s3); }
+.mjn-why > li{ display:flex; align-items:center; gap:var(--s3);
+  padding:var(--s4) var(--s5); border-radius:var(--r-lg);
+  background:rgba(255,255,255,.07); border:1px solid var(--on-dark-line); }
+/* ⚠️ 아이콘은 **아이콘**이라 대비 3.0 이면 됩니다. 옆 글자는 흰색입니다. */
+.mjn-why-i{ display:inline-flex; align-items:center; justify-content:center;
+  flex:0 0 auto; width:38px; height:38px; border-radius:var(--r-in);
+  background:rgba(255,255,255,.12); color:var(--gold-on-dark); }
+.mjn-why b{ font-size:var(--t-cap); font-weight:800; line-height:1.45;
+  color:#fff; }
+.mjn-go{ grid-column:2; margin:0; }
+.mjn-go .btn{ width:100%; justify-content:center; }
+@media (max-width:900px){
+  .mjn-c{ grid-template-columns:1fr; }
+  .mjn-go{ grid-column:1; }
+}
 
 /* ── 좁은 화면 ───────────────────────────────────────────────────── */
 @media (max-width:1180px){
@@ -2703,33 +2797,9 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .fil-off{ display:block; font-style:normal; font-size:var(--t-cap);
   font-weight:400; color:var(--ink2); }
 
-/* ── 히어로 머리 띠 (2026-10-06 V2 확정 지시서 §3) ────────────────
-   ⚠️⚠️ 첫 화면에서 3~5초 안에 무엇을 하는 곳인지 읽혀야 합니다.
-   아래 두 판(창업 · 폐업)은 **그대로 두고** 그 위에 한 문장을 얹습니다.
-   ⚠️ 바탕은 크림입니다 — 바로 아래 두 판이 남색 · 샌드라 ΔE 가
-   넉넉합니다. 어두운 면을 늘리지 않으려고 **밝은 쪽**으로 둡니다. */
-.mh-top{ background:var(--bg-cream); padding:var(--s8) 0 var(--s7);
-  text-align:center; }
-.mh-h1{ margin:0; font-size:clamp(28px,4vw,46px); font-weight:800;
-  letter-spacing:-.035em; line-height:1.16; color:var(--navy); }
-.mh-lead{ margin:var(--s3) 0 0; font-size:clamp(16px,1.5vw,20px);
-  font-weight:700; line-height:1.45; color:var(--ink); }
-.mh-sub{ margin:var(--s3) auto 0; max-width:62ch;
-  font-size:var(--t-sm); line-height:1.7; color:var(--ink2); }
-/* §2 의 마지막 줄 — "내 상황만 고르시면" 이 아래 상황 카드를 가리킵니다.
-   ⚠️ 색은 --ink(11.42)입니다. --ink2 로 두면 그 줄이 설명에 묻힙니다. */
-.mh-sub b{ color:var(--ink); font-weight:800; }
-/* ⚠️ `#industry` 도 내려오는 자리입니다 — 맞춤 CTA 의 "업종 고르기" 가
-   여기로 옵니다. 헤더가 붙어 있어서 그만큼 비웁니다. */
-#industry{ scroll-margin-top:84px; }
-.mh-cta{ display:flex; flex-wrap:wrap; justify-content:center;
-  gap:var(--s3); margin:var(--s5) 0 0; }
-/* ⚠️ 머리 띠에서 내려오는 자리 — 헤더가 붙어 있어서 그만큼 비웁니다 */
-#journey{ scroll-margin-top:84px; }
-@media (max-width:720px){
-  .mh-top{ padding:var(--s8) 0 var(--s7); }
-  .mh-cta .btn{ width:100%; }
-}
+/* ⚠️ 메인에서 **내려온 구간**이 쓰던 자리입니다. 함수는 그대로 살아
+   있어 되돌리실 수 있으니 남겨 둡니다 — 헤더가 붙어 있어서 그만큼 비웁니다. */
+#industry, #journey{ scroll-margin-top:84px; }
 
 /* ── 예시 업체 (2026-10-06 V2 확정 지시서 §13 · §14) ──────────────
    ⚠️⚠️ **예시라는 말이 제일 먼저 읽혀야 합니다.** 지어낸 업체가
@@ -2908,3 +2978,137 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    쓰면 그 auto 가 지워져 글이 왼쪽으로 붙습니다. */
 .mval > .w > .mst-box{ margin-top:var(--s8); }
 .mval > .w > .mwhy-c{ margin-top:var(--s9); }
+
+/* ══════════════════════════════════════════════════════════════════
+   ④ 계산도구 + 최신 정보 — 한 구간 두 칸 (2026-10-08 지시서 §9)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️ 이 자리가 하는 말은 "소개 페이지가 아니라 오늘 바로 쓸 수 있는
+   곳" 입니다. 그래서 둘을 **나란히** 둡니다 — 세로로 쌓으면 둘 다
+   그냥 목록이 되고 그 말이 안 읽힙니다.
+   ⚠️ 폰에서는 세로입니다 (§25). 440px 아래에서 두 칸으로 나누면
+   칸 안 글자 폭이 줄어 낱말 가운데서 잘립니다. */
+.mti-g2{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s7); }
+.mti-c{ display:flex; flex-direction:column; gap:var(--s6);
+  padding:var(--s7); background:#fff; border:1px solid var(--line);
+  border-radius:var(--r-2xl); box-shadow:var(--shadow-soft); }
+.mti-hd h2{ margin:var(--s2) 0 0; font-size:clamp(21px,2vw,27px);
+  font-weight:900; letter-spacing:-.035em; line-height:1.24; color:var(--ink); }
+.mti-hd p{ margin:var(--s3) 0 0; font-size:var(--t-sm); line-height:1.65;
+  color:var(--ink2); }
+.mti-hd .btn{ margin-top:var(--s5); }
+/* 계산기 넷 — 두 칸 격자 */
+.mti-g{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s3);
+  margin-top:auto; }
+.mti-g > li > a{ display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:var(--s3); min-height:124px; height:100%;
+  padding:var(--s5) var(--s3); text-align:center;
+  background:var(--bg-2); border:1px solid var(--line);
+  border-radius:var(--r-lg); color:var(--ink); text-decoration:none;
+  transition:transform .16s ease, border-color .16s ease; }
+.mti-g > li > a:hover{ transform:translateY(-3px); border-color:var(--blue-400);
+  color:var(--ink); }
+.mti-g b{ font-size:var(--t-cap); font-weight:800; line-height:1.4; }
+/* 글 셋 — 세로 목록 */
+.mti-rg{ display:grid; gap:var(--s3); margin-top:auto; }
+.mti-rg > li > a{ display:grid; gap:6px; min-height:var(--tap);
+  padding:var(--s4) var(--s5);
+  background:var(--bg-2); border:1px solid var(--line);
+  border-radius:var(--r-lg); color:var(--ink); text-decoration:none;
+  transition:border-color .16s ease, background .16s ease; }
+.mti-rg > li > a:hover{ border-color:var(--blue-400); background:#fff;
+  color:var(--ink); }
+/* ⚠️ grid 칸에 **맨글과 태그를 섞지 마세요** — `<em>` 이 딴 칸이
+   됩니다 (이 저장소에서 네 번 만든 버그). 둘 다 태그로 감쌌습니다. */
+.mti-r-m{ display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+  font-size:var(--t-cap); font-weight:800; color:var(--blue-600); }
+.mti-r-m em{ font-style:normal; font-weight:600; color:var(--ink3); }
+.mti-rg b{ font-size:var(--t-md); font-weight:800; line-height:1.45;
+  letter-spacing:-.02em; }
+@media (max-width:980px){
+  .mti-g2{ grid-template-columns:1fr; gap:var(--s5); }
+}
+@media (max-width:460px){
+  .mti-g{ grid-template-columns:1fr; }
+  .mti-g > li > a{ flex-direction:row; justify-content:flex-start;
+    min-height:var(--tap); text-align:left; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ⑦ 마지막 CTA (2026-10-08 지시서 §12)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️ 히어로와 **같은 행동**을 한 번 더, 더 간결하게. 여기까지
+   내려오신 분께 남은 것은 "그래서 어디로" 하나입니다.
+   ⚠️ 두 단추의 크기 · 글씨 · 자리가 같아야 합니다 — 한쪽을 작게
+   만들면 그게 "덜 중요한 것" 이라는 말입니다 (창업 블루 · 폐업 주황). */
+.mlast-in{ display:grid; grid-template-columns:1.3fr 1fr; gap:var(--s8);
+  align-items:center; }
+.mlast-t h2{ margin:0; font-size:clamp(23px,2.4vw,32px); font-weight:900;
+  letter-spacing:-.035em; line-height:1.26; color:var(--ink); }
+.mlast-t > p{ margin:var(--s4) 0 0; font-size:var(--t-md); line-height:1.7;
+  color:var(--ink2); }
+.mlast-go{ display:flex; flex-wrap:wrap; gap:var(--s3); margin:var(--s6) 0 0; }
+.mlast-h{ display:grid; gap:var(--s3); }
+.mlast-h > li > a{ display:flex; align-items:center; gap:var(--s4);
+  min-height:var(--tap); padding:var(--s4) var(--s5);
+  background:#fff; border:1px solid var(--line); border-radius:var(--r-lg);
+  color:var(--ink); text-decoration:none;
+  transition:border-color .16s ease, transform .16s ease; }
+.mlast-h > li > a:hover{ border-color:var(--blue-400);
+  transform:translateY(-2px); color:var(--ink); }
+/* ⚠️ grid 칸에 맨글과 태그를 섞지 마세요 — 둘 다 태그로 감쌌습니다 */
+.mlast-h b{ font-size:var(--t-sm); font-weight:800; }
+.mlast-h i{ display:block; margin-top:2px; font-style:normal;
+  font-size:var(--t-cap); color:var(--ink2); }
+.mlast-h .ic-t{ flex:0 0 auto; }
+@media (max-width:900px){
+  .mlast-in{ grid-template-columns:1fr; gap:var(--s6); }
+  .mlast-go .btn{ width:100%; justify-content:center; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   어떻게 시작하세요? — 새로 창업 / 기존 매장 인수 (2026-10-08 §13)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **클래스 이름이 `.how-*` 도 `.hiw-*` 도 아닙니다.** 둘 다 이미
+   /about · /join 의 "진행 셋" 과 메인 "이용방법" 이 쓰고 있어서,
+   같은 이름을 쓰면 **두 화면이 통째로 깨집니다** (이 저장소에서 `.lg`
+   로고 ↔ 약관, `.how-g` 로 두 번 겪었습니다).
+   ⚠️ 두 카드의 크기 · 무게가 같아야 합니다 (`1fr 1fr`). */
+.swt-g{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s4); }
+.swt-c{ display:flex; align-items:center; gap:var(--s4);
+  min-height:var(--tap); padding:var(--s5) var(--s6);
+  background:#fff; border:1px solid var(--line); border-radius:var(--r-xl);
+  color:var(--ink); text-decoration:none;
+  transition:border-color .16s ease, box-shadow .16s ease; }
+.swt-c:hover{ border-color:var(--blue-400); color:var(--ink);
+  box-shadow:var(--shadow-soft); }
+/* ⚠️ 고른 쪽이 한눈에 보여야 합니다 — 거르개는 무엇이 켜졌는지가
+   안 보이면 고른 줄 모르고 결과만 바뀐 것으로 읽힙니다. */
+.swt-c.on{ border-color:var(--blue); box-shadow:0 0 0 1px var(--blue) inset;
+  background:var(--blue-soft); }
+.swt-t{ flex:1 1 auto; min-width:0; display:grid; gap:2px; }
+.swt-t b{ font-size:var(--t-md); font-weight:800; }
+.swt-t i{ font-style:normal; font-size:var(--t-cap); color:var(--ink2); }
+.swt-t em{ font-style:normal; font-size:var(--t-cap); font-weight:700;
+  color:var(--blue-600); }
+.swt-k{ flex:0 0 auto; display:inline-flex; color:var(--ink3); }
+.swt-c.on .swt-k{ color:var(--blue-600); }
+@media (max-width:760px){
+  .swt-g{ grid-template-columns:1fr; }
+}
+
+/* ── §20 간단 진단 (폐업 · "아직 모르겠어요") ─────────────────────
+   ⚠️ 누르는 것은 40px 이상입니다 — 체크칸만이 아니라 **딱지까지**
+   한 덩어리로 눌려야 합니다 (label for). 체크칸 하나는 16px 이라
+   손가락이 안 닿습니다. */
+.cask-l{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s3); }
+.cask-i{ display:flex; align-items:center; gap:var(--s4);
+  min-height:var(--tap); padding:var(--s4) var(--s5);
+  background:#fff; border:1px solid var(--line); border-radius:var(--r-lg);
+  font-size:var(--t-sm); font-weight:700; color:var(--ink); cursor:pointer;
+  transition:border-color .14s ease; }
+.cask-i:hover{ border-color:var(--blue-400); }
+.cask-i input{ flex:0 0 auto; width:20px; height:20px; accent-color:var(--blue);
+  cursor:pointer; }
+.cask-i:has(input:checked){ border-color:var(--blue);
+  box-shadow:0 0 0 1px var(--blue) inset; background:var(--blue-soft); }
+@media (max-width:760px){ .cask-l{ grid-template-columns:1fr; } }

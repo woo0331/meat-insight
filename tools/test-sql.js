@@ -115,12 +115,13 @@ try{
   for(const f of ["db/test/00_stub_auth.sql",
                   "db/migrations/0001_init.sql",
                   "db/migrations/0002_schema_version.sql",
-                  "db/migrations/0003_confirm_fee.sql"]){
+                  "db/migrations/0003_confirm_fee.sql",
+                  "db/migrations/0004_move_state.sql"]){
     let e = "";
     try{ psqlFile(f); }catch(err){ e = String(err.stderr || err.message).split("\n").slice(0,3).join(" "); }
     ok(f.replace("db/", "") + " 가 돈다", e === "", e);
   }
-  ok("판 번호가 셋까지 들어온다", psql("select count(*) from schema_version") === "3",
+  ok("판 번호가 넷까지 들어온다", psql("select count(*) from schema_version") === "4",
      psql("select count(*) from schema_version"));
 
   /* ⚠️⚠️ db/README.md 가 돌려 보라고 적은 바로 그 쿼리입니다 */
@@ -390,6 +391,139 @@ try{
     ok("확정했던 액과 지금 액이 기록에 둘 다 남았다",
        psql("select (data->>'was')||'/'||(data->>'now') from audit_log where why='계약금액 절반 감액'")
          === "300000/150000");
+  }
+
+  console.log("\n── ⚠️⚠️ 상태를 바꾸는 문 하나 (§8) — move_state()");
+  {
+    const A  = "11111111-1111-1111-1111-111111111111";
+    const PV = "33333333-3333-3333-3333-333333333333";
+    const ST = "44444444-4444-4444-4444-444444444444";
+    const AD = "55555555-5555-5555-5555-555555555555";
+    const as = u => "set role authenticated; select become('" + u + "'); ";
+    /* 새 신청 하나 (검사용 DB 안에서만 삽니다) */
+    const R = "aaaaaaaa-0000-0000-0000-000000000009";
+    psql(`insert into request (id, no, user_id, side, name, tel, agree_at, state) values
+      ('${R}','SW-AAAA-0009','${A}','start','무','01099990000',now(),'new');`);
+    const mv = (u, to, ctx) =>
+      as(u) + "select move_state('" + R + "','" + to + "'," + (ctx || "'{}'::jsonb") + ")";
+
+    /* 길 자체가 없는 것 */
+    let r = denied(mv(AD, "signed"));
+    ok("갈 수 없는 길을 막는다", r.no && /갈 수 없는 길/.test(r.why || ""), r.why);
+    /* 역할이 모자란 것 — ⚠️ 길이 없는 것과 **갈라서** 말해 줍니다 */
+    r = denied(mv(PV, "check"));
+    ok("역할이 모자란 것과 길이 없는 것을 갈라서 말한다",
+       r.no && /으\)?로는 할 수 없습니다/.test(r.why || ""), r.why);
+    /* ⚠️⚠️ 돈 상태는 이 문으로 못 갑니다 (§9 가 증빙과 정책 사본을
+       더 받으라고 적었습니다).
+       ⚠️⚠️ **위험한 자리는 `done → fee_wait` 입니다** — 그 길은 표에
+       실제로 있어서, 이 막는 줄이 없으면 관리자가 **수수료를 확정하지
+       않고 정산 대기를 만들** 수 있습니다 (§13 가짜 정산).
+       처음에 `new → fee_wait` 으로 재 봤는데 그건 **길 표가 먼저
+       막아서** 엉뚱한 까닭으로 통과했습니다 — 되돌려 보고 알았습니다. */
+    {
+      const RD = "aaaaaaaa-0000-0000-0000-000000000011";
+      psql(`insert into request (id, no, user_id, side, name, tel, agree_at, state) values
+        ('${RD}','SW-AAAA-0011','${A}','start','차','01077770000',now(),'done');`);
+      const r2 = denied(as(AD) + "select move_state('" + RD + "','fee_wait'," +
+        `'{"proof":"x","feeId":"y"}'::jsonb)`);
+      ok("서비스 완료에서도 정산 대기로 못 넘긴다 (§13 가짜 정산)",
+         r2.no && /confirm_fee/.test(r2.why || ""), r2.why);
+      ok("그래서 수수료 없는 정산 대기가 만들어지지 않는다",
+         psql("select state from request where id='" + RD + "'") === "done");
+    }
+    r = denied(mv(AD, "fee_wait"));
+    ok("길 표에 없는 돈 상태도 막는다", r.no, r.why);
+
+    let a = allowed(mv(ST, "check"));
+    ok("직원은 정보 확인 중으로 옮길 수 있다", a.yes, a.why);
+    /* ⚠️⚠️ §8 — 기록이 **저절로** 남습니다 */
+    ok("감사 기록이 같이 남는다",
+       psql("select count(*) from audit_log where obj='request' and obj_id='" + R + "'") === "1");
+    ok("기록에 누가 · 어느 역할로 바꿨는지 남는다",
+       psql("select by_user::text||'/'||by_role from audit_log where obj_id='" + R + "'")
+         === ST + "/staff");
+
+    /* ⚠️⚠️ 배정 = 제3자 제공 (제17조 제2항) */
+    /* ⚠️ 둘을 갈라서 봅니다 — 처음에 `agree3rd` 를 **아예 안 넣고**
+       제17조 메시지를 기다렸는데, 빠진 칸 검사가 먼저 걸렸습니다
+       (둘 다 막는 것은 맞고 **씨앗이 틀렸습니다**). */
+    r = denied(mv(AD, "assigned", `'{"providerId":"pv-one"}'::jsonb`));
+    ok("동의 칸이 아예 없으면 배정하지 못한다",
+       r.no && /agree3rd/.test(r.why || ""), r.why);
+    r = denied(mv(AD, "assigned", `'{"providerId":"pv-one","agree3rd":false}'::jsonb`));
+    ok("동의를 안 하셨으면 배정하지 못한다 (제17조 제2항)",
+       r.no && /동의/.test(r.why || ""), r.why);
+    r = denied(mv(AD, "assigned", `'{"agree3rd":true}'::jsonb`));
+    ok("배정할 업체 없이 배정하지 못한다",
+       r.no && /빠졌습니다/.test(r.why || ""), r.why);
+    r = denied(mv(AD, "assigned", `'{"agree3rd":true,"providerId":"zzz"}'::jsonb`));
+    ok("없는 업체로 배정하지 못한다", r.no && /없는 업체/.test(r.why || ""), r.why);
+
+    a = allowed(mv(AD, "assigned", `'{"agree3rd":true,"providerId":"pv-one","why":"조건이 맞음"}'::jsonb`));
+    ok("재동의와 업체가 있으면 배정한다", a.yes, a.why);
+    ok("배정 줄이 같이 생긴다",
+       psql("select count(*) from assignment where request_id='" + R + "'") === "1");
+    /* ⚠️⚠️ 동의를 **시각으로** 남깁니다 — boolean 이면 "언제" 를 못 댑니다 */
+    ok("배정 줄에 제3자 제공 동의 시각이 남는다",
+       psql("select (agree3rd_at is not null) from assignment where request_id='" + R + "'") === "t");
+    ok("신청에도 동의 시각이 남는다",
+       psql("select (agree3rd_at is not null) from request where id='" + R + "'") === "t");
+    ok("기록에 사유가 남는다",
+       psql("select why from audit_log where obj_id='" + R + "' and to_state='assigned'") === "조건이 맞음");
+    /* ⚠️ 동의 자체가 기록의 data 에 남습니다 (why 는 따로) */
+    ok("기록의 data 에 동의와 업체가 남는다",
+       psql("select (data->>'agree3rd')||'/'||(data->>'providerId') from audit_log " +
+            "where obj_id='" + R + "' and to_state='assigned'") === "true/pv-one");
+
+    /* 업체 수락 · 거절 */
+    r = denied(as(AD) + "select answer_assignment('" + R + "',true,null)");
+    ok("관리자가 업체 대신 수락할 수 없다", r.no && /업체만/.test(r.why || ""), r.why);
+    a = allowed(as(PV) + "select answer_assignment('" + R + "',true,null)");
+    ok("배정받은 업체는 수락할 수 있다", a.yes && a.out === "accepted", a.out || a.why);
+    ok("배정 줄도 수락으로 바뀐다",
+       psql("select state from assignment where request_id='" + R + "'") === "accepted");
+
+    /* ⚠️ 거절은 **실패가 아니라 다시 확인**입니다 */
+    const R2 = "aaaaaaaa-0000-0000-0000-000000000010";
+    psql(`insert into request (id, no, user_id, side, name, tel, agree_at, state) values
+      ('${R2}','SW-AAAA-0010','${A}','start','자','01088880000',now(),'check');`);
+    allowed(as(AD) + "select move_state('" + R2 + "','assigned'," +
+      `'{"agree3rd":true,"providerId":"pv-one"}'::jsonb)`);
+    const no = allowed(as(PV) + "select answer_assignment('" + R2 + "',false,'지역을 못 갑니다')");
+    ok("업체가 거절하면 실패가 아니라 다시 확인으로 돌아간다",
+       no.yes && no.out === "check", no.out || no.why);
+    ok("거절 사유가 배정 줄에 남는다",
+       psql("select why from assignment where request_id='" + R2 + "'") === "지역을 못 갑니다");
+
+    /* 고객이 자기 건을 취소 — 사유가 반드시 */
+    r = denied(mv(A, "lost"));
+    ok("사유 없이 취소하지 못한다", r.no && /빠졌습니다/.test(r.why || ""), r.why);
+    a = allowed(mv(A, "lost", `'{"why":"다른 곳으로 결정"}'::jsonb`));
+    ok("사유를 적으면 고객이 취소할 수 있다", a.yes, a.why);
+
+    /* 끝난 건은 더 못 움직입니다 */
+    r = denied(mv(AD, "check"));
+    ok("취소된 건을 되살리는 길이 없다", r.no, r.why);
+  }
+
+  console.log("\n── 길 표가 화면과 같은가 (deal_move ↔ AM_DEAL_MOVE)");
+  {
+    global.window = global.window || {};
+    const W2 = {};
+    global.window = W2;
+    eval(fs.readFileSync(path.join(ROOT, "js/data/deal.js"), "utf8"));
+    const want = [];
+    for(const m of W2.AM_DEAL_MOVE)
+      for(const r of m[2])
+        want.push(m[0] + ">" + m[1] + ">" + r + ">" + (m[3] || []).join("+"));
+    const got = psql(
+      "select coalesce(string_agg(from_state||'>'||to_state||'>'||role||'>'||" +
+      "array_to_string(needs,'+'), ',' order by from_state, to_state, role), '') from deal_move")
+      .split(",").filter(Boolean);
+    ok("길의 수가 같다", got.length === want.length, got.length + " vs " + want.length);
+    const miss = want.filter(x => got.indexOf(x) < 0);
+    ok("길이 하나하나 같다", miss.length === 0, miss.slice(0, 5));
   }
 
   console.log("\n── 상태값이 화면과 같은가 (js/data/deal.js · fee.js)");

@@ -42,11 +42,12 @@ Supabase 대시보드 → **SQL Editor** 에서 **차례대로**, 한 파일씩.
 db/migrations/0001_init.sql            ← 표 · RLS · 트리거 · 권한
 db/migrations/0002_schema_version.sql  ← 판 번호
 db/migrations/0003_confirm_fee.sql     ← 수수료를 확정하는 문 하나
+db/migrations/0004_move_state.sql     ← 상태를 바꾸는 문 하나 + 길 표
 ```
 
 ⚠️⚠️ **이 셋은 실제 Postgres 에서 돌려 봤습니다** — `node tools/test-sql.js`
 가 임시 클러스터를 띄워 세우고, 제약 · 트리거 · RLS · 권한 · 감사 기록을
-68가지로 눌러 봅니다. 그 과정에서 **둘이 깨져 있었습니다** (권한이 한 줄도
+97가지로 눌러 봅니다. 그 과정에서 **둘이 깨져 있었습니다** (권한이 한 줄도
 없었고, 아무도 수수료를 확정할 수 없었습니다). 고친 채로 드립니다.
 
 ⚠️ **한 파일을 통째로 붙여 넣고 한 번에 돌리세요.** 중간을 잘라

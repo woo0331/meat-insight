@@ -1793,6 +1793,51 @@ function checkDealSql(W){
       throw new Error("표 " + t + " 에 RLS 가 안 켜져 있습니다 — " +
         "켜지 않으면 누구나 읽습니다 (§8 권한 분리)");
 
+  /* ⚠️⚠️ **상태를 바꾸는 길이 화면과 DB 에서 같은가** (0004_move_state.sql)
+     0004 는 `js/data/deal.js` 의 AM_DEAL_MOVE 를 **표로** 들고 있고
+     `move_state()` 가 그 표를 읽습니다. 한쪽만 고치면 화면은 "할 수
+     있다" 고 단추를 내는데 DB 가 거절하거나, 더 나쁘게 **화면이 안 내는
+     길로 DB 가 통과시킵니다.** 이 저장소가 "같은 규칙을 두 곳에 적어
+     어긋난" 사고를 여러 번 겪은 자리입니다. */
+  const mv = path.join(ROOT, "db", "migrations", "0004_move_state.sql");
+  if(!fs.existsSync(mv))
+    throw new Error("db/migrations/0004_move_state.sql 이 없습니다 — 상태 변경 문이 사라졌습니다");
+  const msql = fs.readFileSync(mv, "utf8");
+  {
+    /* insert … values ( … ) ; 안의 줄을 꺼냅니다 */
+    const seg = msql.split("insert into deal_move (from_state, to_state, role, needs) values")[1];
+    if(!seg) throw new Error("0004 에 deal_move 를 채우는 insert 가 없습니다");
+    const body = seg.split(/;\s*$|;\n/)[0];
+    const got = new Set();
+    const re = /\(\s*'([a-z_]+)'\s*,\s*'([a-z_]+)'\s*,\s*'([a-z_]+)'\s*,\s*([^)]*)\)/g;
+    let m;
+    while((m = re.exec(body))){
+      /* ⚠️ '{}' 는 **빈 배열**이라 값이 아닙니다 — 처음에 그것까지
+         값으로 읽어서 멀쩡한 표를 "다르다" 고 잡았습니다 (검사가 틀린 자리) */
+      const needs = (m[4].match(/'([^']+)'/g) || []).map(x => x.slice(1, -1))
+                      .filter(x => x !== "{}").join("+");
+      got.add(m[1] + ">" + m[2] + ">" + m[3] + ">" + needs);
+    }
+    const want = new Set();
+    for(const mo of (W.AM_DEAL_MOVE || [])){
+      const needs = (mo[3] || []).join("+");
+      for(const r of mo[2]) want.add(mo[0] + ">" + mo[1] + ">" + r + ">" + needs);
+    }
+    const miss = [...want].filter(x => !got.has(x));
+    const extra = [...got].filter(x => !want.has(x));
+    if(miss.length || extra.length)
+      throw new Error("상태를 바꾸는 길이 화면과 DB 에서 다릅니다" +
+        (miss.length  ? "\n   DB 에 없는 길: " + miss.slice(0, 6).join(" · ")  : "") +
+        (extra.length ? "\n   화면에 없는 길: " + extra.slice(0, 6).join(" · ") : "") +
+        "\n   → js/data/deal.js 를 고쳤으면 0004_move_state.sql 의 insert 도 같이 고치세요" +
+        " (손으로 적지 말고 AM_DEAL_MOVE 에서 뽑으세요)");
+  }
+  /* ⚠️ 돈이 걸린 상태로 이 문이 통과시키면 안 됩니다 (§9 가 증빙을
+     더 받으라고 적었습니다) */
+  if(!/fee_wait['",\s)]*.*fee_done|'fee_wait','fee_done'/.test(msql) ||
+     !/confirm_fee\(\) · mark_paid\(\) 로만/.test(msql))
+    throw new Error("0004 가 수수료·정산 상태를 막는 줄이 없습니다 (§9)");
+
   /* ⚠️⚠️ 감사 기록은 고치거나 지울 수 없어야 합니다 (§8) */
   if(/create policy[^;]*on audit_log for (all|update|delete)/i.test(sql))
     throw new Error("audit_log 에 고치거나 지울 수 있는 정책이 있습니다 — " +

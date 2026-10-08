@@ -380,10 +380,7 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
    두 칸이 아래로 밀리고 **브랜드 칸 옆에 화면 절반짜리 빈 자리**가
    남습니다 (에러도 안 나고 가로 스크롤도 안 납니다 — 찍어 보고
    알았습니다). */
-/* ⚠️ 2026-10-07 §21 — 브랜드 칸 + 세 칸입니다 (전에는 다섯이었습니다).
-   ⚠️⚠️ 칸 수를 바꾸면 여기도 같이 고치세요 — 안 고치면 칸이 아래로
-   밀리고 브랜드 칸 옆에 화면 절반짜리 빈 자리가 남습니다. */
-.ft-g{ display:grid; grid-template-columns:1.5fr repeat(3,1fr);
+.ft-g{ display:grid; grid-template-columns:1.5fr repeat(5,1fr);
   gap:var(--s5) var(--s6); }
 .ft-b p{ margin:var(--s3) 0 var(--s4); line-height:1.8; color:var(--ink2);
   font-size:var(--t-sm); }
@@ -401,7 +398,7 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 .ft-cp{ flex-basis:100%; margin-top:var(--s2); }
 @media (max-width:1280px){
   /* 브랜드 칸이 자기 줄을 쓰고 링크 칸 다섯이 아래에 깔립니다 */
-  .ft-g{ grid-template-columns:repeat(4,1fr); }
+  .ft-g{ grid-template-columns:repeat(5,1fr); }
   .ft-b{ grid-column:1 / -1; }
 }
 @media (max-width:1020px){ .ft-g{ grid-template-columns:repeat(3,1fr); } }

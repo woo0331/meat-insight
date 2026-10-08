@@ -16,135 +16,64 @@
    고르는 자리이고, 업체는 분류를 고른 다음에 나옵니다 (§54).
    ════════════════════════════════════════════════════════════════════ */
 
-/* ══════════════════════════════════════════════════════════════════
-   창업 — 질문 → 선택 → 맞춤 로드맵 (2026-10-07 §22 ~ §32)
-   ══════════════════════════════════════════════════════════════════
-   > "창업페이지부터는 정보가 많아져도 된다. 하지만 처음부터 모든
-   >  정보를 보여주지는 않는다. 항상 질문 → 선택 → 맞춤 결과." (§23)
-
-       STEP 01  어떤 업종을 준비하고 계세요?        /startup
-       STEP 02  어떻게 시작할 계획이세요?           /startup/:업종
-       STEP 03  맞춤 로드맵 (열셋)                  ?m=new | ?m=take
-       걸음 상세                                    ?step=5
-
-   ⚠️⚠️ **인수가 여기서 등장합니다** (§4). "기존 매장 인수" 는 창업
-   안의 선택지이지 메인의 첫 선택지가 아닙니다 — 그게 브랜드 이름의
-   뜻이고, 메인 첫 선택지는 창업 / 폐업·정리 둘뿐입니다 (§3).
-   ⚠️ **고르신 것은 주소에 실립니다** (`?m=` · `?step=` · `?i=`) —
-   뒤로 가기 · 새로고침 · 링크 공유에 살아남습니다. */
-var START_MODES = [
-  { key:"new",  proc:"startup-new",  icon:"seed",     tone:"t1",
-    name:"새로 창업하기",
-    lead:"새로운 공간에서 처음부터 준비." },
-  { key:"take", proc:"startup-take", icon:"handover", tone:"t3",
-    name:"기존 매장 인수하기",
-    lead:"기존 영업매장 또는 시설을 인수하여 시작." }
-];
-function startMode(){
-  var m = nowQS("m");
-  var r = START_MODES.filter(function(x){ return x.key === m; });
-  return r.length ? r[0] : null;
-}
-/* 지금 보고 있는 걸음 — 1부터 셉니다. 없는 번호면 0 입니다. */
-function stepNo(n){
-  var v = parseInt(nowQS("step"), 10);
-  return (v >= 1 && v <= n) ? v : 0;
-}
-
-/* STEP 02 — 어떻게 시작할 계획이세요? (§25) */
-function ModePick(ind){
-  var base = ind ? ("/startup/" + ind.key) : "/startup";
-  var cur  = startMode();
-  return '<section class="sec sec-white"><div class="w">'+
-    '<div class="sec-hd">'+
-      '<p class="eyebrow">STEP 02</p>'+
-      '<h2>'+(ind ? esc(ind.name)+'을 어떻게 시작할 계획이세요?'
-                  : '어떻게 시작할 계획이세요?')+'</h2>'+
-      '<p>고르시면 그 길에 맞는 준비 순서만 보여 드립니다.</p>'+
-    '</div>'+
-    '<ul class="pick-g">'+START_MODES.map(function(m){
-      var on = (cur && cur.key === m.key);
-      return '<li><a class="pick'+tn(m.tone)+(on ? " on" : "")+'" href="'+
-        esc(base + "?m=" + m.key)+'"'+(on ? ' aria-current="true"' : '')+'>'+
-        '<span class="pick-ic">'+icon(m.icon,26)+'</span>'+
-        '<b>'+esc(m.name)+'</b>'+
-        '<span class="pick-l">'+esc(m.lead)+'</span>'+
-        '<span class="pick-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
-      '</a></li>'; }).join("")+'</ul>'+
-  '</div></section>';
-}
-
-/* STEP 03 — 맞춤 로드맵, 그리고 걸음 하나 (§26 · §28 · §31) */
-function StartRoad(mode, ind){
-  var steps = amProcess(mode.proc);
-  var cur   = stepNo(steps.length);
-  var base  = ind ? ("/startup/" + ind.key) : "/startup";
-  var keep  = "m=" + mode.key;
-  var what  = mode.key === "new" ? "신규창업" : "기존매장 인수";
-  var who   = ind ? (ind.name + " ") : "";
-  var road  = ProcessBand({
-    key:mode.proc, kicker:"ROADMAP · " + what, tone:"sec-gray",
-    title:who + (mode.key === "new" ? "창업, 이 순서로 준비하세요"
-                                    : "매장 인수, 이 순서로 준비하세요"),
-    lead:steps.length + "걸음입니다. 걸음을 누르시면 그 걸음에 필요한 " +
-         "정보 · 체크리스트 · 계산기 · 업체만 모아서 보여 드립니다.",
-    industry:ind ? ind.key : "", base:base, keep:keep, cur:cur ? cur - 1 : -1,
-    note:ind ? "" : "업종을 고르시면 걸음마다 그 업종에 맞는 장비 · 업체 · 글로 좁혀집니다."
-  });
-  if(!cur) return road;
-  /* 걸음을 고르셨으면 **상세가 먼저**입니다 — 그 걸음에 필요한 것만
-     보여 주는 것이 §28 이고, 전체 순서는 그 아래에 그대로 둡니다. */
-  return StepDetail({ key:mode.proc, cur:cur - 1, industry:ind ? ind.key : "",
-                      base:base, keep:keep, what:what }) + road;
-}
-
-/* ── /startup — STEP 01 업종 (§24) ──────────────────────────────── */
+/* ── /startup — 업종 고르기 ─────────────────────────────────────── */
 function PageStartup(){
-  var mode = startMode();
   return PgHero({
-    kicker:"창업",
-    h1raw:"어떤 업종을<br class=\"br-m\"> 준비하고 계세요?",
-    lead:"업종을 선택하면 필요한 준비순서와 서비스만 골라서 보여드릴게요. " +
-         "가입 없이 무료입니다."
+    kicker:"START · 창업",
+    h1raw:"어떤 사업을<br class=\"br-m\"> 준비하고 계세요?",
+    lead:"업종만 고르시면 그 업종 창업에 실제로 필요한 것만 추려 드립니다. 가입 없이 무료입니다."
   })+
-  '<section class="sec sec-white" id="industry"><div class="w">'+
-    '<div class="sec-hd">'+
-      '<p class="eyebrow">STEP 01</p>'+
-      '<h2>업종을 골라 주세요</h2>'+
-      '<p>고르시면 그 업종 창업에 실제로 필요한 것만 추려 드립니다.</p>'+
-    '</div>'+
-    IndustryGrid("/startup", "")+
+  '<section class="sec sec-white"><div class="w">'+
+    IndustryGrid("/startup","")+
   '</div></section>'+
-  /* ⚠️ 업종을 안 고르셔도 길이 막히지 않습니다 — 방법만 고르셔도
-     순서는 같습니다 (업종은 걸음 안의 장비 · 업체를 좁힐 뿐입니다). */
-  ModePick(null)+
-  (mode ? StartRoad(mode, null) : "")+
+  /* ⚠️ **할 일 먼저, 분야는 그 다음**입니다. 분야 묶음을 먼저 내면
+     손님이 "인테리어 · 시공" 이라는 말을 모를 때 첫 화면이 전부 남의
+     말이 됩니다 (메인에서 분류 열 개를 걷어낸 것과 같은 까닭입니다).
+     준비 과정 열두 걸음 — 2026-10-05 V2 §4.
+     ⚠️ `StepBand()` 와 다른 것입니다. 저쪽은 **큰 흐름 넷**이고
+     이쪽은 **실제로 할 일 열둘**이라 걸음마다 정보 · 업체 · 도구가
+     걸립니다. 둘 다 둡니다 — 큰 그림을 보고 들어와 할 일을 봅니다. */
+  ProcessBand({ key:"startup", kicker:"STARTUP PROCESS",
+    title:"창업 준비, 무엇부터 하나요?",
+    lead:amProcess("startup").length+"걸음입니다. 걸음마다 읽을 것 · 맡길 곳 · 계산할 것을 바로 열어 보실 수 있습니다.",
+    note:"업종을 고르시면 걸음마다 그 업종에 맞는 장비 · 업체 · 글로 좁혀집니다." })+
+  /* 업종을 아직 안 고르셨어도 **분야**는 같습니다 */
+  StepBand(null)+
   StartupHelpBand()+
   JourneyBand({ current:"startup", tone:"sec-white",
     title:"다른 것도 준비하고 계신가요?",
     lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." });
 }
 
-/* ── /startup/:industry — STEP 02 · 03 ──────────────────────────── */
+/* ── /startup/:industry — 그 업종의 창업 전부 ────────────────────── */
 function PageStartupIndustry(ind){
-  var mode = startMode();
+  var cats = amCatsFor(ind.key, "start");
   var fcat = amFranchiseCat(ind.key);       /* 같은 key 면 그 분류로 보냅니다 */
   return PgHero({
     crumb: Crumb([["창업","/startup"],[ind.name]]),
-    kicker:"창업 · " + ind.name,
+    kicker:"START · " + ind.name,
+    /* ⚠️ 2026-10-06 2차 §5 — 상황과 업종을 고르고 도착하는 **맞춤 결과
+       화면**입니다. 머리말이 "무엇을 고르셨는지" 를 되읽어 주어야
+       손님이 "내 자리에 왔다" 를 압니다. */
     h1raw:esc(ind.name)+" 창업을<br class=\"br-m\"> 준비하고 계시네요.",
-    lead:mode
-      ? "지금부터 필요한 순서입니다. 걸음마다 꼭 확인할 것과 맡길 곳을 같이 보여 드립니다."
-      : "먼저 한 가지만 더 골라 주세요. 새로 만드는 것과 받는 것은 준비 순서가 다릅니다.",
-    /* ⚠️ 고른 업종이 **견적 요청까지 따라갑니다** — 여기서 끊으면
-       손님이 조건을 처음부터 다시 적습니다 (`check.js` 가 봅니다). */
-    cta:'<a class="btn btn-o btn-lg" href="'+esc(quoteTo({industry:ind.key,side:"start"}))+'">'+
+    lead:"지금부터 필요한 순서입니다. 걸음마다 꼭 확인할 것과 맡길 곳을 같이 보여 드립니다.",
+    cta:'<a class="btn btn-b btn-lg" href="'+esc(quoteTo({industry:ind.key,side:"start"}))+'">'+
         '한 번에 견적 요청'+icon("arrow",18)+'</a>'+
         '<a class="btn btn-o btn-lg" href="/stores?i='+encodeURIComponent(ind.key)+'">'+
-        esc(ind.name)+' 점포 보기</a>'
+        ind.name+' 점포 보기</a>'
   })+
-  ModePick(ind)+
-  (mode ? StartRoad(mode, ind) : "")+
+  /* ⚠️⚠️ **순서가 맨 앞입니다** (2026-10-06 2차 §5 — "단순 카드 나열이
+     아니라 실제 준비 순서가 되어야 한다"). 전에는 장비 구간이 먼저
+     였는데, 그러면 "무엇부터 하나" 로 들어오신 분이 **물건 목록**을
+     먼저 봅니다. 장비는 바로 아래에 그대로 둡니다 — 업종이 갈리는
+     것을 보여 주는 자리라 지우지 않습니다 (§1 · §12). */
+  ProcessBand({ key:"startup", kicker:"STARTUP PROCESS",
+    title:ind.name+" 창업, 무엇부터 하나요?",
+    /* ⚠️ 걸음 수를 손으로 적지 마세요 — 열둘이던 때 적어 둔 "열두
+       걸음" 이 열넷이 된 뒤에도 그대로 남아 있었습니다. 세는 값입니다. */
+    lead:amProcess("startup").length+"걸음입니다. 걸음마다 "+ind.name+
+         "에 맞는 업체 · 장비 · 글로 바로 넘어갑니다.",
+    industry:ind.key, tone:"sec-gray" })+
   (ind.equip && ind.equip.length ? EquipBand(ind) : "")+
   StepBand(ind)+
   (fcat ? FranchiseHint(fcat, ind) : "")+
@@ -186,149 +115,15 @@ function FranchiseHint(fcat, ind){
   '</div></section>';
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   폐업 · 정리 — 상황 → 맞춤 로드맵 (2026-10-07 §33 ~ §40)
-   ══════════════════════════════════════════════════════════════════
-   > "폐업하기 전에, 넘길 수 있는 것부터 확인하세요." (§33)
-   > **이것이 인수인계의 핵심 차별점입니다.**
-
-   ⚠️⚠️ **폐업을 철거로 시작하지 않습니다** (§38). 네 상황 카드의
-   차례도, 로드맵 안의 차례도 **양도 가능성 → 시설 · 장비 → 재고 →
-   행정 → 마지막에 철거 · 원상복구**입니다. 바꾸지 마세요.
-   ⚠️⚠️ **폐업을 실패로 말하지 않습니다** (§46). 손실 · 실패라는
-   낱말을 쓰지 않고, 색도 빨강이 아니라 주황입니다.
-   ⚠️ 고르신 상황은 주소(`?s=`)에, 진단 답은 `?d=` 에 실립니다 —
-   아무것도 저장하지 않습니다. */
-function closeSit(){
-  var k = nowQS("s");
-  return (window.amCloseWant ? amCloseWant(k) : null);
-}
-/* 진단 답 — `?d=ynyny` 한 글자씩. 아직 안 고른 자리는 `-` 입니다. */
-function closeAns(){
-  var raw = String(nowQS("d") || ""), out = {};
-  (window.AM_CLOSE_ASK || []).forEach(function(q, i){
-    var c = raw.charAt(i);
-    if(c === "y" || c === "n") out[q.key] = c;
-  });
-  return out;
-}
-function closeAnsStr(i, v){
-  var ask = (window.AM_CLOSE_ASK || []), raw = String(nowQS("d") || "");
-  var arr = ask.map(function(q, j){
-    var c = raw.charAt(j); return (c === "y" || c === "n") ? c : "-"; });
-  arr[i] = v;
-  return arr.join("");
-}
-
-/* STEP 01 — 현재 어떤 상황이신가요? (§34) */
-function SitPick(ind){
-  var wants = (window.AM_CLOSE_WANTS || []);
-  if(!wants.length) return "";
-  var base = ind ? ("/closure/" + ind.key) : "/closure";
-  var cur  = closeSit();
-  return '<section class="sec sec-white" id="sit"><div class="w">'+
-    '<div class="sec-hd">'+
-      '<p class="eyebrow">STEP 01</p>'+
-      '<h2>현재 어떤 상황이신가요?</h2>'+
-      '<p>고르시면 그 상황에 맞는 순서만 보여 드립니다. '+
-        '나머지도 아래에 그대로 있습니다.</p>'+
-    '</div>'+
-    '<ul class="pick-g pick-g4">'+wants.map(function(w){
-      var on = (cur && cur.key === w.key);
-      return '<li><a class="pick'+(on ? " on" : "")+'" href="'+
-        esc(base + "?s=" + encodeURIComponent(w.key))+'"'+
-        (on ? ' aria-current="true"' : '')+'>'+
-        '<span class="pick-ic">'+icon(w.icon,24)+'</span>'+
-        '<b>'+esc(w.name)+'</b>'+
-        '<span class="pick-l">'+esc(w.lead)+'</span>'+
-        '<span class="pick-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
-      '</a></li>'; }).join("")+'</ul>'+
-  '</div></section>';
-}
-
-/* 짧은 진단 (§39) — ⚠️ 아무것도 저장하지 않습니다 */
-function CloseAsk(ind){
-  var ask = (window.AM_CLOSE_ASK || []);
-  if(!ask.length) return "";
-  var base = ind ? ("/closure/" + ind.key) : "/closure";
-  var ans  = closeAns();
-  var done = ask.every(function(q){ return ans[q.key]; });
-  var adv  = done ? amCloseAdvice(ans) : null;
-  var pick = adv ? amCloseWant(adv.key) : null;
-
-  var body = '<ol class="ask-l">'+ask.map(function(q, i){
-    return '<li class="ask">'+
-      '<p class="ask-q"><span class="ask-n">'+(i+1)+'</span>'+esc(q.q)+'</p>'+
-      '<p class="ask-a">'+[["y", q.y],["n", q.n]].map(function(o){
-        var on = (ans[q.key] === o[0]);
-        return '<a class="ask-b'+(on ? " on" : "")+'" href="'+
-          esc(base + "?s=unsure&d=" + closeAnsStr(i, o[0]) + "#ask")+'" data-keep>'+
-          esc(o[1])+'</a>'; }).join("")+'</p>'+
-    '</li>'; }).join("")+'</ol>';
-
-  var out = '<section class="sec sec-gray" id="ask"><div class="w">'+
-    '<div class="sec-hd">'+
-      '<p class="eyebrow">짧은 진단</p>'+
-      '<h2>다섯 가지만 여쭤 보겠습니다</h2>'+
-      '<p>고르신 답은 주소에만 남고 저장하지 않습니다. '+
-        '언제든 다시 고르셔도 됩니다.</p>'+
-    '</div>'+ body +
-    (adv && pick
-      ? '<div class="ask-r">'+
-          '<p class="eyebrow">사장님 상황에서는</p>'+
-          '<h3>'+esc(pick.name.replace(/[.?]$/, ""))+'</h3>'+
-          '<p>'+esc(adv.why)+'</p>'+
-          '<p class="row-cta row-left">'+
-            '<a class="btn btn-cl" href="'+esc(base + "?s=" + pick.key)+'">'+
-              '이 순서로 보기'+icon("arrow",16)+'</a></p>'+
-        '</div>'
-      : '<p class="sec-note">'+icon("info",15)+
-        '다섯 가지에 전부 답해 주시면 맞는 순서를 찾아 드립니다.</p>')+
-  '</div></section>';
-  return out;
-}
-
-/* 고르신 상황의 로드맵 + 걸음 상세 */
-function CloseRoad(sit, ind){
-  if(!sit.proc) return CloseAsk(ind);
-  var steps = amProcess(sit.proc);
-  if(!steps.length) return "";
-  var cur  = stepNo(steps.length);
-  var base = ind ? ("/closure/" + ind.key) : "/closure";
-  var keep = "s=" + sit.key;
-  var who  = ind ? (ind.name + " ") : "";
-  var road = ProcessBand({
-    key:sit.proc, kicker:"ROADMAP · " + sit.name.replace(/[.?]$/, ""),
-    tone:"sec-gray",
-    title:who + (sit.key === "transfer" ? "매장을 넘기려면 이 순서로 준비하세요"
-            : sit.key === "assets" ? "시설 · 장비는 이 순서로 정리하세요"
-            : "정리, 이 순서로 하세요"),
-    lead:steps.length + "걸음입니다. 걸음을 누르시면 그 걸음에 필요한 " +
-         "정보 · 체크리스트 · 계산기 · 업체만 모아서 보여 드립니다.",
-    industry:ind ? ind.key : "", base:base, keep:keep, cur:cur ? cur - 1 : -1,
-    /* ⚠️ 이 줄을 지우지 마세요 — 폐업을 철거로 시작하지 않는 것이
-       이 플랫폼의 핵심 차별점입니다 (§33 · §38). */
-    note:sit.key === "full"
-      ? "철거는 맨 뒤입니다. 넘길 수 있는 것과 팔 수 있는 것을 먼저 고르면 나가는 돈이 줄어듭니다."
-      : ""
-  });
-  if(!cur) return road;
-  return StepDetail({ key:sit.proc, cur:cur - 1, industry:ind ? ind.key : "",
-                      base:base, keep:keep,
-                      what:sit.name.replace(/[.?]$/, "") }) + road;
-}
-
-/* ── /closure — STEP 01 상황 (§33 · §34) ────────────────────────── */
+/* ── /closure — 정리 방법 고르기 (§21) ──────────────────────────── */
 function PageClosure(){
-  var sit = closeSit();
   return PgHero({
-    kicker:"폐업 · 정리",
-    h1raw:"폐업하기 전에,<br class=\"br-m\"> 넘길 수 있는 것부터 확인하세요.",
-    lead:"매장과 시설, 장비를 바로 철거하기 전에 다음 사장님에게 이어질 수 " +
-         "있는지 먼저 확인해보세요."
+    kicker:"CLOSE · 폐업",
+    h1raw:"사업을 어떻게<br class=\"br-m\"> 정리하고 싶으세요?",
+    lead:"통째로 넘기실 수도 있고, 시설만 파실 수도 있습니다. 순서와 기한이 있는 일이라 " +
+         "빠뜨리면 돈이 나갑니다."
   })+
-  SitPick(null)+
-  (sit ? CloseRoad(sit, null) : "")+
+  WantBand(null)+
   '<section class="sec"><div class="w">'+
     '<div class="sec-hd">'+
       '<p class="eyebrow">업종을 고르시면</p>'+
@@ -337,25 +132,60 @@ function PageClosure(){
     '</div>'+
     IndustryGrid("/closure","")+
   '</div></section>'+
-  WantBand(null)+
+  /* 정리 열세 걸음 — 2026-10-05 V2 §8.
+     ⚠️ **폐업을 철거업체 연결 서비스로 만들지 않습니다** (§8). 손님이
+     "폐업하려면 뭘 해야 하지" 라고 생각했을 때 전체 절차를 여기서
+     이해하실 수 있어야 합니다. */
+  ProcessBand({ key:"closing", kicker:"CLOSING PROCESS",
+    title:"정리, 무엇부터 하나요?",
+    lead:amProcess("closing").length+"걸음입니다. 기한이 있는 것이 여럿이라 순서가 곧 돈입니다.",
+    tone:"sec-white",
+    note:"통째로 넘길 수 있으면 철거비와 원상복구가 줄어듭니다 — 일곱째 걸음을 먼저 보셔도 됩니다." })+
   ClosureHelpBand()+
-  JourneyBand({ current:"closing", tone:"sec-white",
+  JourneyBand({ current:"closing",
     title:"다른 것도 준비하고 계신가요?",
     lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." });
 }
 
-/* ── 고르신 상황에 맞는 **분야** (§44 — 183개를 한꺼번에 고르게
-   하지 않습니다) ───────────────────────────────────────────────
+/* ── 폐업은 목록이 아니라 **무엇을 원하시는가**부터 (§8) ──────────
+   폐업 화면에 들어오자마자 분류 열두 개를 늘어놓으면, 이미 지쳐
+   계신 분께 숙제를 하나 더 드리는 것입니다.
+
    ⚠️ **고르신 것에 없는 분류를 숨기지 마세요.** 추린 것 아래에
    나머지도 냅니다 — 숨기면 그 사장님에게는 그 기능이 없는 것이
    됩니다. `check.js` 가 개수를 셉니다. */
 function WantBand(ind){
-  var i   = ind ? ind.key : "";
-  var sel = closeSit();
+  var wants = (window.AM_CLOSE_WANTS || []);
+  if(!wants.length) return "";
+  var i    = ind ? ind.key : "";
+  var base = ind ? ("/closure/" + ind.key) : "/closure";
+  var now  = nowQS("w");
+  var sel  = (window.amCloseWant ? amCloseWant(now) : null);
+
+  var pick = '<section class="sec sec-white"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">먼저 한 가지만</p>'+
+      '<h2>어떻게 정리하고 싶으세요?</h2>'+
+      '<p>고르시면 그에 맞는 절차만 앞으로 꺼내 드립니다. '+
+        '나머지도 아래에 그대로 있습니다.</p>'+
+    '</div>'+
+    '<ul class="wnt-l">'+ wants.map(function(w){
+      var on = (sel && sel.key === w.key);
+      return '<li><a class="wnt'+(on?" on":"")+'" href="'+
+        esc(base + "?w=" + encodeURIComponent(w.key))+'"'+
+        (on ? ' aria-current="true"' : '')+'>'+
+        '<span class="wnt-ic">'+icon(w.icon,20)+'</span>'+
+        '<b>'+esc(w.name)+'</b>'+
+        '<span class="wnt-l-d">'+esc(w.lead)+'</span>'+
+      '</a></li>';
+    }).join("")+'</ul>'+
+  '</div></section>';
+
   if(!sel){
+    /* 아직 안 고르셨으면 분류 전부를 그대로 냅니다 — 고르는 것이
+       의무가 되면 안 됩니다 */
     var all = (window.amCatsFor ? amCatsFor(i, "close") : (window.AM_CLOSE_CATS||[]));
-    if(!all.length) return "";
-    return '<section class="sec sec-white"><div class="w">'+
+    return pick + '<section class="sec"><div class="w">'+
       '<div class="sec-hd">'+
         '<p class="eyebrow">고르지 않고 보셔도 됩니다</p>'+
         '<h2>정리에 필요한 것 전부</h2>'+
@@ -365,11 +195,13 @@ function WantBand(ind){
       '</div>'+
     '</div></section>';
   }
+
   var g = amCloseCatsFor(sel.key, i);
-  return '<section class="sec sec-white"><div class="w">'+
+  return pick +
+  '<section class="sec"><div class="w">'+
     '<div class="sec-hd">'+
-      '<p class="eyebrow">고르신 상황에 맞춰</p>'+
-      '<h2>'+esc(sel.name.replace(/[.?]$/, ""))+' — 이 분야들입니다</h2>'+
+      '<p class="eyebrow">고르신 것에 맞춰</p>'+
+      '<h2>'+esc(sel.name.replace(/[.?]$/, ""))+' — 이것부터입니다</h2>'+
       '<p>'+esc(sel.lead)+'</p>'+
     '</div>'+
     '<div class="cat-g cat-g4">'+
@@ -384,7 +216,7 @@ function WantBand(ind){
           g.rest.map(function(c){ return CatCard(c, i); }).join("")+
         '</div>'
       : "")+
-    '<div class="row-cta"><a class="btn btn-cl btn-lg" href="'+
+    '<div class="row-cta"><a class="btn btn-b btn-lg" href="'+
       esc(quoteTo({industry:i, side:"close"}))+'">'+
       '한 번에 견적 요청'+icon("arrow",18)+'</a>'+
       '<a class="btn btn-o btn-lg" href="/tools/close">폐업 체크리스트</a></div>'+
@@ -393,23 +225,26 @@ function WantBand(ind){
 
 /* ── /closure/:industry ─────────────────────────────────────────── */
 function PageClosureIndustry(ind){
-  var sit = closeSit();
   return PgHero({
-    crumb: Crumb([["폐업 · 정리","/closure"],[ind.name]]),
-    kicker:"폐업 · 정리 · " + ind.name,
-    /* ⚠️⚠️ 폐업을 **실패로 말하지 않습니다** — "잘 정리하는 것도
-       사업입니다" 까지입니다. */
+    crumb: Crumb([["폐업","/closure"],[ind.name]]),
+    kicker:"CLOSE · " + ind.name,
+    /* ⚠️ §5 의 맞춤 결과 머리말. ⚠️⚠️ 폐업을 **실패로 말하지 않습니다**
+       — "잘 정리하는 것도 사업입니다" 까지입니다. */
     h1raw:esc(ind.name)+" 정리를<br class=\"br-m\"> 준비하고 계시네요.",
-    lead:sit
-      ? "순서가 있는 일입니다. 걸음마다 꼭 확인할 것과 맡길 곳을 같이 보여 드립니다."
-      : "먼저 지금 상황만 골라 주세요. 넘기는 것과 정리하는 것은 순서가 다릅니다.",
-    cta:'<a class="btn btn-o btn-lg" href="'+esc(quoteTo({industry:ind.key,side:"close"}))+'">'+
+    lead:"순서가 있는 일입니다. 지금부터 필요한 차례와 걸음마다 꼭 확인할 것을 보여 드립니다.",
+    cta:'<a class="btn btn-b btn-lg" href="'+esc(quoteTo({industry:ind.key,side:"close"}))+'">'+
         '한 번에 견적 요청'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-o btn-lg" href="/sell?t=asset&amp;i='+encodeURIComponent(ind.key)+'">'+
+        '<a class="btn btn-o btn-lg" href="/assets?i='+encodeURIComponent(ind.key)+'">'+
         '시설 · 집기 내놓기</a>'
   })+
-  SitPick(ind)+
-  (sit ? CloseRoad(sit, ind) : "")+
+  /* ⚠️⚠️ **순서가 맨 앞입니다** (§5). 전에는 시설 매각 · 희망 조건이
+     먼저였는데, 정리하시는 분이 제일 먼저 묻는 것은 "무엇부터 하나"
+     입니다. 아래 구간들은 그대로 둡니다 (§1). */
+  ProcessBand({ key:"closing", kicker:"CLOSING PROCESS",
+    title:ind.name+" 정리, 무엇부터 하나요?",
+    lead:amProcess("closing").length+"걸음입니다. 걸음마다 "+ind.name+
+         "에 맞는 업체 · 글로 바로 넘어갑니다.",
+    industry:ind.key, tone:"sec-gray" })+
   (ind.equip && ind.equip.length ? SellBand(ind) : "")+
   WantBand(ind)+
   BridgeFor(ind, "close")+
@@ -460,7 +295,7 @@ function BridgeFor(ind, side){
       '<h2>한 사장님의 끝이 다른 사장님의 시작이 됩니다</h2>'+
       '<p class="lead">점포 · 시설 · 집기 · 재고를 올려 두시면 같은 업종을 '+
         '준비하는 사장님에게 보입니다. 등록은 무료입니다.</p></div>'+
-    '<a class="btn btn-b btn-lg" href="/sell?t=asset&amp;i='+encodeURIComponent(ind.key)+'">'+
+    '<a class="btn btn-b btn-lg" href="/assets?i='+encodeURIComponent(ind.key)+'">'+
       '내놓기'+icon("arrow",18)+'</a>'+
   '</div></section>';
 }
@@ -640,64 +475,5 @@ function StepBand(ind){
         }).join("")+'</div>'+
       '</li>';
     }).join("")+'</ol>'+
-  '</div></section>';
-}
-
-/* ── /services — 전체 서비스 (2026-10-07 §19 · §58) ─────────────────
-   메인 §04 의 "전체 서비스 보기" 가 도착하는 자리입니다.
-
-   ⚠️⚠️ **새 분류를 만들지 않았습니다.** `lifecycle.js` 의 사업 단계
-   여섯과 `catalog.js` 의 분류 스물다섯을 그대로 펼칠 뿐이고, 카드를
-   누르면 원래 있던 분류 화면으로 갑니다. 메인에서 뺀 "사업 단계별
-   서비스" 와 "183개 서비스 나열" 이 **여기로 옮겨 온 것**입니다
-   (§58 — REMOVE FROM HOME 은 삭제가 아닙니다).
-   ⚠️ 숫자는 전부 **그 자리에서 세는 값**입니다. 분류를 늘리면 저절로
-   따라옵니다 — 손으로 적지 마세요. */
-function PageServices(){
-  var stages = (window.AM_STAGES || []);
-  var ind = nowQS("i");
-  var nCat = (window.AM_CATS || []).length;
-  var nSub = (window.AM_CATS || []).reduce(function(a, c){
-    return a + amCatItems(c, ind).length; }, 0);
-  return PgHero({
-    kicker:"ALL SERVICES",
-    h1raw:"사장님에게 필요한<br class=\"br-m\"> 서비스 전부",
-    lead:"창업 준비부터 폐업 · 정리까지 사업 단계 "+stages.length+"가지, 분야 "+
-         nCat+"가지, 세부 서비스 "+nSub+"가지입니다. "+
-         "지금 하실 단계만 보셔도 됩니다."
-  })+
-  '<section class="sec sec-white"><div class="w">'+
-    '<div class="sec-hd">'+
-      '<p class="eyebrow">사업의 흐름대로</p>'+
-      '<h2>어느 단계에 계신가요?</h2>'+
-      '<p>왼쪽에서 오른쪽으로 읽으면 그대로 사업의 흐름입니다.</p>'+
-    '</div>'+
-    '<ul class="mstg-g">'+stages.map(function(s){
-      return '<li>'+StageCard(s)+'</li>'; }).join("")+'</ul>'+
-  '</div></section>'+
-  /* 단계마다 그 안의 분야를 전부 폅니다 — 잘라 내지 않습니다 */
-  stages.map(function(st, i){
-    var cats = amStageCats(st);
-    if(!cats.length) return "";
-    return '<section class="sec'+(i % 2 ? " sec-gray" : "")+'"><div class="w">'+
-      '<div class="sec-hd sec-hd-row"><div>'+
-        '<p class="eyebrow">STEP '+esc(st.no)+'</p>'+
-        '<h2>'+esc(st.name)+'</h2>'+
-        '<p>'+esc(st.lead)+'</p></div>'+
-        '<a class="sec-hd-all" href="/g/'+esc(st.key)+'">이 단계 자세히'+
-          icon("arrow",16)+'</a>'+
-      '</div>'+
-      '<div class="cat-g cat-g4">'+
-        cats.map(function(c){ return CatCard(c, ind); }).join("")+
-      '</div>'+
-    '</div></section>';
-  }).join("")+
-  '<section class="sec sec-start"><div class="w band-cta">'+
-    '<div><p class="eyebrow">어디서부터 할지 모르겠다면</p>'+
-      '<h2>지금 상황부터 골라 보세요</h2>'+
-      '<p class="lead">창업인지 정리인지만 고르시면 필요한 순서부터 '+
-        '안내해 드립니다.</p></div>'+
-    '<a class="btn btn-st btn-lg" href="/startup">창업 준비하기'+icon("arrow",18)+'</a>'+
-    '<a class="btn btn-cl btn-lg" href="/closure">폐업·정리 준비하기'+icon("arrow",18)+'</a>'+
   '</div></section>';
 }

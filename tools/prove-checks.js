@@ -67,24 +67,6 @@ const CASES = [
       S[0].style.background = c;
     })();`],
 
-  /* 공고가 전부 /support 로 가는데 **주소만 보고** 걸러내던 꼴입니다 —
-     그러면 공고가 몇 건이든 검색에 한 건만 나옵니다. 공고가 0건이라
-     아무도 못 봤고 씨앗을 심고 돌려 보고 알았습니다.
-     ⚠️ 되돌리기는 `amSearch` 를 감쌉니다 — 검사가 그때 찾아 부릅니다. */
-  ["공고는 원문 링크가 있는 것만 낸다",
-   `(function(){
-      const real = window.amSearch;
-      window.amSearch = function(q){
-        const r = real(q);
-        (r.groups || []).forEach(function(g){
-          const seen = {};
-          g.rows = g.rows.filter(function(x){
-            if(seen[x.to]) return false; seen[x.to] = 1; return true; });
-        });
-        return r;
-      };
-    })();`],
-
   /* ══ 매물 내놓기 (/sell) ═══════════════════════════════════════ */
   /* 업종 · 지역을 안 막던 때로 돌려놓습니다 — 딱지에 별표만 붙여 두고
      안 막으면 빈 채로 들어오고, 그 매물은 거르개에서 빠집니다.
@@ -99,21 +81,6 @@ const CASES = [
         return real(ev);
       };
     })();`],
-  /* 로드맵의 걸음이 일반 견적 폼으로 보내던 때로 돌려놓습니다.
-     ⚠️⚠️ 되돌리기는 **데이터 쪽**이라야 합니다 — 검사가 window.go() 로
-     네 화면을 돌며 **다시 그리기** 때문에, DOM 의 href 만 고쳐 놓으면
-     첫 hop 에서 되살아납니다 ("되돌리기가 틀린" 자리를 또 만들 뻔
-     했습니다). AM_PROCESS 를 고치면 그릴 때마다 따라옵니다. */
-  ["내놓으시려는 자리에서 내놓는 폼으로 간다",
-   `(function(){
-      const P = window.AM_PROCESS || {};
-      ["close-assets","close-transfer"].forEach(function(k){
-        (P[k] || []).forEach(function(st){
-          if(st.to && st.to.indexOf("/sell") === 0) st.to = "/quote";
-        });
-      });
-    })();`],
-
   /* 무권리(0)가 빈 칸으로 떨어지던 꼴을 만들어 봅니다 — 적는 칸의
      id 를 바꿔 놓으면 값을 못 읽어 그 칸이 통째로 빠집니다. */
   ["매물 내놓기: 적은 조건이 매물 생김새로 나간다",
@@ -257,22 +224,12 @@ const CASES = [
      틀려서** 검사가 통과해 버립니다 (처음에 그렇게 짰다가 걸렸습니다).
      망가뜨릴 것은 **화면이 업종을 안 읽는 것** 쪽입니다. */
   ["업종을 고르면 그 업종 차례로 펼쳐진다",
-   /* 업종 차례에서 빠진 분류를 **잘라 내던** 그때 — 그러면 그 업종
-      사장님에게는 그 기능이 아예 없는 것이 됩니다. */
-   `window.amCatsFor = (function(real){
-      return function(ind, side){ return real(ind, side).slice(0, 4); };
-    })(window.amCatsFor);
+   `const real = window.nowQS;
+    window.nowQS = function(k){ return k === "i" ? "" : real(k); };  /* 업종을 안 읽던 그때 */
     window.rerender(true);`],
-  /* 고르개를 만들어 놓고 결과가 안 바뀌던 그때 — 그러면 그건 장식입니다. */
-  ["시작 방법을 고르면 로드맵이 실제로 바뀐다",
-   `window.AM_PROCESS["startup-take"] =
-      window.AM_PROCESS["startup-new"].slice();`],
-  /* 체크한 상태를 저장하는 것처럼 보이게 만들면 걸려야 합니다
-     (절대 규칙 5 — 하지 않은 일을 했다고 말하지 않습니다). */
-  ["걸음을 누르면 그 걸음에 필요한 것만 펼쳐진다",
-   `document.querySelectorAll(".sd-ckl li svg").forEach(function(e){
-      e.outerHTML = '<input type="checkbox">';
-    });`],
+  /* 토글이 주소에 상태를 안 싣던 그때. */
+  ["창업 · 정리 토글이 실제로 쪽을 바꾼다",
+   `document.querySelectorAll(".mfit-t").forEach(function(t){ t.setAttribute("href", "/"); });`],
   /* 조사를 손으로 적던 그때 — ⚠️ `koWith` 를 바꿔치기해서는 안 됩니다.
      그러면 **다시 그리지 않아** 화면 글자가 그대로라 엉뚱하게 통과/실패
      합니다 (처음에 그렇게 짰다가 "인수인계는 가 화면에 있습니다" 라는
@@ -308,22 +265,18 @@ const CASES = [
    `document.querySelector("#q-f .note-mid").textContent =
       "보내고 나면 이 브라우저에 요청 내용이 남아, 아래에서 비교하실 수 있습니다.";`],
   ["지어낸 실적 숫자가 메인에 없다",
-   `document.querySelector(".mhc-d").textContent = "입점 업체 1,200곳";`],
-  ["히어로가 5초 안에 무엇을 하는 곳인지 말한다",
-   `document.querySelector(".mh-h1").textContent = "창업 플랫폼";`],
+   `document.querySelector(".hp2-d").textContent = "입점 업체 1,200곳";`],
+  ["히어로 제목이 창업 · 폐업 두 낱말을 주인공으로 둔다",
+   `document.querySelector(".mval-h").textContent = "창업 플랫폼";`],
   /* ⚠️⚠️ 되돌리기는 **검사가 실제로 보는 것**을 망가뜨려야 합니다.
      검색 가는 길을 지울 때 입력칸만 지우고 돋보기를 남겼다가 "검사가
      안 잡는다" 로 보였던 적이 있습니다 — 검사가 아니라 되돌리기가
      틀렸던 것입니다. 여기서는 바로가기 하나를 가짜 링크로 만듭니다
      (지시서 §26 "버튼 → 실제 Link"). */
-  /* 폐업 쪽을 좁히던 그때 — 그게 "덜 중요한 것" 이라는 말입니다 */
-  ["창업 · 폐업 두 갈래가 같은 무게로 갈린다",
-   `document.querySelector(".mhc-cl").style.width = "70%";`],
-  /* 폐업이 빨강으로 흘러가던 그때 — "폐업은 나쁜 것" 이 됩니다 */
-  ["창업은 파랑 · 폐업은 주황이고 빨강이 아니다",
-   `const b = document.querySelector(".mhc-cl .btn");
-    b.style.transition = "none";
-    b.style.background = "rgb(214,28,28)";`],
+  ["히어로에서 바로 찾고 바로 갈라진다",
+   `document.querySelector(".mstg-g > li > a").setAttribute("href", "#");`],
+  ["창업은 초록 · 폐업은 주황이고 빨강이 아니다",
+   `document.querySelector(".mval-h .mh-cl").style.color = "rgb(214,28,28)";`],
   ["연결 구간 두 딱지가 같은 높이에 앉는다",
    `document.querySelector(".mbr-g").style.alignItems = "center";
     document.querySelector(".mbr-cl .mbr-l").insertAdjacentHTML("beforeend",
@@ -333,7 +286,7 @@ const CASES = [
       let rules; try { rules = sh.cssRules; } catch(e){ continue; }
       if(!rules) continue;
       for(const r of rules)
-        if(r.selectorText === ".mh-ph .ph") r.style.objectFit = "fill";
+        if(r.selectorText === ".mbr-p .ph") r.style.objectFit = "fill";
     }`],
   /* 이름을 분류에 없는 것으로 바꿔 놓습니다 — 손으로 적으면 이렇게 됩니다 */
   /* ⚠️ 되돌리기는 **데이터 쪽**을 망가뜨려야 합니다 — 화면만 고치면
@@ -341,6 +294,8 @@ const CASES = [
      다섯이 빠짐없이 나뉘는가)이 확인되지 않습니다. */
   ["사업 단계 여섯이 분류 스물다섯을 빠짐없이 나눠 가진다",
    `window.AM_STAGES[5].cats = window.AM_STAGES[5].cats.slice(1);`],
+  ["히어로 두 장의 크기가 같다",
+   `document.querySelector(".hp2-cl").style.flex = "1 1 70%";`],
   /* ⚠️⚠️ **아이콘 칸(.stg-i)만 집어야 합니다.** 처음에
      ".mstg-g > li > a svg" 로 적었더니 **화살표까지** 걸려서
      [아이콘0, 화살표0, 아이콘1, …] 이 되고, 0번에 화살표를 넣는 바람에
@@ -352,16 +307,14 @@ const CASES = [
   ["업종 열넷이 저마다 다른 색을 쓴다",
    /* ⚠️ `.ic-t` 에 transition 이 걸려 있어서 그냥 바꾸면 **색이 번지는
       도중**에 재어 다른 값이 나옵니다 — 되돌리기가 헛돕니다. 끕니다. */
-   `const t = document.querySelectorAll(".ind-g > li > a");
-    const a0 = t[0].querySelector(".ind-ic"), a1 = t[1].querySelector(".ind-ic");
+   `const t = document.querySelectorAll(".mi-g > li > a");
+    const a0 = t[0].querySelector(".ic-t"), a1 = t[1].querySelector(".ic-t");
     t[1].style.transition = "none"; a1.style.transition = "none";
     t[1].style.background = getComputedStyle(t[0]).backgroundColor;
     a1.style.background = getComputedStyle(a0).backgroundColor;`],
-  /* ⚠️ 메인 구간은 넷입니다 — 차례를 섞으면 걸려야 하고, 내부로
-     옮긴 큰 정보 영역이 **돌아와도** 걸려야 합니다 (§6 · §13). */
   ["메인 구간 차례가 지시서와 같다",
    `const v = document.getElementById("view");
-    v.insertBefore(v.children[2], v.children[0]);`],
+    v.insertBefore(v.children[3], v.children[1]);`],
   /* ⚠️ 색을 **글자로 적지 마세요.** "[7] 을 민트로" 로 적어 두었더니
      구간 차례가 바뀌면서 그 자리가 원래 민트라 **되돌리기가 no-op** 이
      됐고, 검사가 멀쩡한데 "안 잡는다" 로 보였습니다. 이웃의 **실제
@@ -444,7 +397,7 @@ const CASES = [
       안 잡게 됐습니다 — 검사가 아니라 **되돌리기가 틀린** 열한 번째
       자리입니다. 검사가 보는 것과 똑같이 "실제로 뒤에 보이는 면" 을
       찾아서 칠합니다. */
-   `const a = document.querySelectorAll(".msvc-g > li > a")[0];
+   `const a = document.querySelectorAll(".mi-g a")[0];
     const back = (function(el){
       let e = el.parentElement;
       while(e){
@@ -500,14 +453,15 @@ const CASES = [
   /* 아이콘을 손으로 적어 둔 표로 되돌리면 — 표에 없는 도구가 전부
      같은 기본 아이콘이 됩니다 */
   ["도구 카드 아이콘이 도구 데이터 것과 같고 저마다 다르다",
-   `document.querySelectorAll(".tl-g > li svg").forEach(function(e, i){
-      if(i > 1) e.innerHTML = document.querySelector(".tl-g > li svg").innerHTML;
+   `document.querySelectorAll(".mt-g > li .ic-t").forEach(function(e, i){
+      if(i > 1) e.innerHTML = document.querySelector(".mt-g > li .ic-t").innerHTML;
     });`],
   /* 하위가 0인 분류의 lead 를 떼면 이름만 남습니다 */
   ["분야 카드가 설명도 숫자도 없이 비지 않는다",
-   `document.querySelectorAll(".stp-c .stp-i").forEach(function(a){
-      const s2 = a.querySelector(".stp-i-s");
-      if(s2) s2.remove();
+   `document.querySelectorAll(".fit-g .fit").forEach(function(a){
+      const n = a.querySelector(".fit-n"), i = a.querySelector("i");
+      if(n) n.remove();
+      if(i) i.remove();
     });`]
 ];
 
@@ -742,15 +696,14 @@ async function proveAudit(pg){
      /startup 을 적었는데 거기에는 .ic-t 도 .stg-i 도 없어서 아무것도
      안 지워졌고, "검사가 안 잡는다" 로 보였습니다 (검사가 아니라
      되돌리기가 틀린 것입니다 — 이 저장소에서 여러 번 겪었습니다).
-     ⚠️ 2026-10-07 전면개편으로 메인의 타일이 `.msvc-ic` 가 됐습니다 —
-     `.ic-t` · `.stg-i` 만 지우면 메인에서는 **아무것도 안 지워집니다.**
-     선택자를 셋 다 둡니다. */
+     지금 타일이 있는 화면은 / (45개) · /transfer (5) · /g/:stage (1)
+     입니다. /tools · /providers · /about · /startup 에는 없습니다. */
   for(const u of ["/", "/transfer"]){
     await pg.goto(ROOT + u, { waitUntil:"load" });
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).ico;
     await pg.evaluate(() => {
-      const e = document.querySelector("#view .ic-t svg, #view .stg-i svg, #view .msvc-ic svg");
+      const e = document.querySelector("#view .ic-t svg, #view .stg-i svg");
       if(e) e.remove();
     });
     await pg.waitForTimeout(60);

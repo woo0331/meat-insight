@@ -443,32 +443,6 @@ function FaqBand(){
   '</div></section>';
 }
 
-/* ── 왜 이 이름인가 (2026-10-07 §58 — 메인에서 옮겨 왔습니다) ──────
-   메인 구간이 넷으로 줄면서(§6) 브랜드 철학 구간이 여기로 왔습니다.
-   지운 것이 아닙니다 — `/about` 이 "무엇을 하고 무엇을 하지 않는가"
-   를 답하는 화면이라 이 글의 제자리이기도 합니다.
-
-   ⚠️ 여기는 조사를 **안 붙입니다.** "…인가요" 는 받침이 있든 없든
-   꼴이 같습니다 ("책인가요" · "나무인가요") — `koWith()` 를 넣었다가
-   "인수인계가인가요?" 가 됐습니다. */
-function WhyBand(){
-  var nm = amBrand();
-  return '<section class="sec sec-ivory mwhy"><div class="w">'+
-    '<div class="mwhy-c">'+
-      '<p class="eyebrow">WHY</p>'+
-      '<h2>왜 '+esc(nm)+'인가요?</h2>'+
-      '<p class="mwhy-p">사업은 시작하는 사람만 있는 것이 아닙니다.</p>'+
-      '<ul class="mwhy-l">'+
-        '<li>누군가는 <b>시작</b>하고,</li>'+
-        '<li>누군가는 <b>운영</b>하고,</li>'+
-        '<li>누군가는 다음 사람에게 <b>넘기고</b>,</li>'+
-        '<li>누군가는 <b>정리</b>합니다.</li>'+
-      '</ul>'+
-      '<p class="mwhy-e">'+esc(koWith(nm,"은는"))+' 그 모든 순간을 잇습니다.</p>'+
-    '</div>'+
-  '</div></section>';
-}
-
 function PageAbout(){
   var B = window.AM_BRAND || {};
   var yes = [
@@ -502,7 +476,6 @@ function PageAbout(){
     '<div><h2>하지 않는 일</h2><ul class="tick-l tick-x">'+no.map(function(t){
       return '<li>'+icon("x",16)+'<span>'+esc(t)+'</span></li>'; }).join("")+'</ul></div>'+
   '</div></section>'+
-  WhyBand()+
   TrustBar()+
   ScaleBand()+
   HowBand()+

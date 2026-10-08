@@ -644,3 +644,17 @@ body.sl-locked{ overflow:hidden; }
    제일 먼저 읽혀야 합니다. 접수처를 켜면 저절로 사라집니다. */
 .sl-bad-intake{ margin-bottom:var(--s4); }
 .sl-bad-intake > span{ min-width:0; }
+
+/* ── 8. 수익상품 상태 (§5) ──────────────────────────────────── */
+.ad-of{ display:grid; gap:10px; margin:14px 0; }
+.ad-of-r{ padding:13px 15px; background:#fff;
+          border:1px solid var(--line); border-radius:10px; }
+.ad-of-t{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.ad-of-t b{ font-size:15px; color:var(--navy); }
+/* ⚠️ 상태색(--warn)은 **배지 바탕용**입니다. 글자는 짙은 단계라야
+   AA 를 넘깁니다 — 입점완료 배지가 3.08 로 걸린 자리입니다. */
+.ad-of-s{ padding:3px 9px; border-radius:999px; font-size:13px; font-weight:700;
+          background:var(--warn-bg, #FFF4E5); color:var(--warn-dark, #8A5300); }
+.ad-of-s.ad-of-ok{ background:var(--start-soft, #EAF8F3); color:var(--start-deep, #06694A); }
+.ad-of-m{ margin:6px 0 0; font-size:13px; color:var(--ink2); }
+.ad-of-d{ margin:4px 0 0; font-size:13px; color:var(--ink2); }

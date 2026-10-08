@@ -60,6 +60,53 @@ async function send(body){
   return { res:res, sent:sentBody };
 }
 
+/* ── DB 가 설정된 것처럼 ────────────────────────────────────────
+   ⚠️ 진짜 Supabase 에 붙지 않습니다. fetch 를 가로채서, 찾기(GET)에는
+   미리 정한 줄을 돌려주고 넣기(POST)에는 성공/실패를 흉내냅니다.
+   ⚠️⚠️ 이 검사가 꼭 필요한 까닭 — DB 가 **없을 때** 오늘과 똑같이
+   도는지, **있을 때** 번호와 중복 검사가 실제로 도는지, 그리고
+   **저장이 실패했을 때** 손님에게 없는 번호를 주지 않는지. 셋 다
+   코드 한 줄 차이로 뒤집힙니다. */
+async function sendWithDb(body, opt){
+  opt = opt || {};
+  process.env.INTAKE_WEBHOOK_URL = "https://example.invalid/hook";
+  process.env.SUPABASE_URL = "https://x.supabase.co";
+  process.env.SUPABASE_SERVICE_KEY = "service-key-should-never-leak";
+  for(const f of ["quote.js", "_send.js", "_db.js", "_intake.js"])
+    delete require.cache[require.resolve(path.join(__dirname, "..", "api", f))];
+  const handler = require(QUOTE);
+
+  let hook = null, inserted = null, keySeen = "";
+  const realFetch = global.fetch;
+  global.fetch = async function(url, init){
+    const u = String(url);
+    if(/supabase/.test(u)){
+      /* 키가 헤더로 가는지 (본문으로 새면 안 됩니다) */
+      const h = (init && init.headers) || {};
+      keySeen = h.apikey || "";
+      if(init.method === "GET")
+        return { ok:true, status:200, headers:{ get(){ return ""; } },
+                 text: async()=> JSON.stringify(opt.rows || []) };
+      inserted = JSON.parse(init.body)[0];
+      if(opt.saveFails)
+        return { ok:false, status:500, headers:{ get(){ return ""; } },
+                 text: async()=> "boom" };
+      return { ok:true, status:201, headers:{ get(){ return ""; } },
+               text: async()=> JSON.stringify([inserted]) };
+    }
+    hook = JSON.parse(init.body);
+    return { ok:true, status:200, headers:{ get(){ return ""; } }, text: async()=> "" };
+  };
+  const res = fakeRes();
+  try{ await handler(fakeReq(body), res); }
+  finally{
+    global.fetch = realFetch;
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_KEY;
+  }
+  return { res:res, sent:hook, row:inserted, keySeen:keySeen };
+}
+
 (async () => {
   console.log("\n── 사장님 SOS");
   {
@@ -194,6 +241,125 @@ async function send(body){
     ok("거래 단위가 간다", /거래 단위 — 낱개/.test(sent.text), "본문에 없음");
     ok("제조사 · 연식이 간다",
        /제조사 — La Marzocco/.test(sent.text) && /연식 — 2021/.test(sent.text), "본문에 없음");
+  }
+
+  console.log("\n── ⚠️⚠️ DB 가 없으면 오늘과 똑같이 동작한다 (fail-closed)");
+  {
+    for(const k of ["SUPABASE_URL","SUPABASE_SERVICE_KEY"]) delete process.env[k];
+    const { res, sent } = await send({
+      kind:"quote", service:"duct", q:"확인 부탁드립니다",
+      name:"홍길동", tel:"010-1234-5678", agree:true });
+    ok("200 으로 받는다", res.code === 200, "code=" + res.code);
+    /* ⚠️⚠️ 저장을 안 했으니 접수번호를 주지 않습니다 — 번호를 주고
+       저장은 안 하면 손님이 그 번호로 물어봐도 아무것도 없습니다
+       (절대 규칙 5) */
+    ok("접수번호를 발급하지 않는다", res.body.no === undefined, res.body);
+    ok("슬랙 글에도 접수번호가 없다", !/접수번호/.test(sent.text));
+  }
+
+  console.log("\n── DB 가 있으면 접수번호가 생긴다 (§6)");
+  {
+    const { res, sent, row, keySeen } = await sendWithDb({
+      kind:"quote", service:"interior", serviceName:"인테리어", offerId:"interior-basic",
+      q:"20평 카페입니다", region:"경기", gu:"안양시", side:"start",
+      name:"홍길동", tel:"010-1234-5678", agree:true });
+    ok("200 으로 받는다", res.code === 200, "code=" + res.code);
+    ok("접수번호를 돌려준다", /^SW-[0-9A-Z]{4}-[0-9A-Z]{4}$/.test(res.body.no || ""), res.body);
+    ok("저장한 줄의 번호와 같다", row && row.no === res.body.no, row && row.no);
+    /* ⚠️ 직원이 전화하면서 제일 먼저 묻는 것이라 글 맨 위입니다 */
+    ok("슬랙 글 맨 위에 접수번호가 있다", /^접수번호 /.test(sent.text.split("\n\n")[1] || ""),
+       (sent.text || "").slice(0, 60));
+    ok("상태가 '신청 접수' 로 들어간다", row.state === "new", row.state);
+    /* ⚠️⚠️ 동의를 시각으로 남깁니다 */
+    ok("수집·이용 동의 시각이 들어간다", !!row.agree_at && !isNaN(Date.parse(row.agree_at)), row.agree_at);
+    /* ⚠️⚠️ 제17조 제2항 — 접수 단계에는 제3자 제공 동의가 없어야 합니다 */
+    ok("제3자 제공 동의는 비어 있다 (배정할 때 받습니다)",
+       row.agree3rd_at === undefined || row.agree3rd_at === null, row.agree3rd_at);
+    ok("업종·지역·시군구가 들어간다",
+       row.region === "경기" && row.gu === "안양시", row);
+    ok("상품 id 가 들어간다", row.offer_id === "interior-basic", row.offer_id);
+    /* ⚠️⚠️ 키는 헤더로만 갑니다 */
+    ok("키가 헤더로 간다", keySeen === "service-key-should-never-leak");
+    ok("⚠️ 키가 슬랙 글에 섞이지 않는다", !/service-key/.test(JSON.stringify(sent)));
+  }
+
+  console.log("\n── 업체 입점은 저장하지 않는다 (§7 에서 붙습니다)");
+  {
+    const { res, row } = await sendWithDb({
+      kind:"partner", company:"가나다 인테리어", serviceNames:["인테리어"],
+      name:"홍길동", tel:"010-1234-5678", agree:true });
+    ok("200 으로 받는다", res.code === 200, "code=" + res.code);
+    ok("신청 표에 넣지 않는다", row === null, row);
+    ok("접수번호를 주지 않는다", res.body.no === undefined, res.body);
+  }
+
+  console.log("\n── 중복 · 스팸 (§6)");
+  {
+    const now = new Date().toISOString();
+    const { res, sent } = await sendWithDb({
+      kind:"quote", service:"interior", offerId:"interior-basic",
+      q:"두 번 눌렀습니다", name:"홍길동", tel:"010-1234-5678", agree:true },
+      { rows:[{ no:"SW-AAAA-1111", tel:"01012345678",
+                offer_id:"interior-basic", cat:"interior", created_at:now }] });
+    /* 손님에게는 성공입니다 — 두 번 누른 것으로 에러를 보여 주면
+       같은 요청을 또 보냅니다 */
+    ok("중복이면 200 으로 받는다", res.code === 200, "code=" + res.code);
+    ok("먼저 받은 접수번호를 돌려준다", res.body.no === "SW-AAAA-1111", res.body);
+    ok("⚠️⚠️ 두 번 보내지 않는다", sent === null, sent);
+    ok("⚠️ 손님에게 '스팸' 이라고 하지 않는다", !/스팸/.test(JSON.stringify(res.body)));
+  }
+  {
+    const rows = [];
+    for(let i = 0; i < 5; i++)
+      rows.push({ no:"S"+i, tel:"01012345678", offer_id:"x"+i,
+                  created_at:new Date(Date.now() - i*60000).toISOString() });
+    const { res, sent } = await sendWithDb({
+      kind:"quote", service:"interior", offerId:"new-one",
+      q:"또 보냅니다", name:"홍길동", tel:"010-1234-5678", agree:true }, { rows:rows });
+    ok("너무 많으면 429 로 막는다", res.code === 429, "code=" + res.code);
+    ok("막을 때도 보내지 않는다", sent === null, sent);
+    ok("⚠️ 손님에게 '스팸' 이라고 하지 않는다", !/스팸/.test(JSON.stringify(res.body)));
+  }
+
+  console.log("\n── ⚠️⚠️ 저장이 실패하면 접수는 살리고 번호는 주지 않는다");
+  {
+    const { res, sent } = await sendWithDb({
+      kind:"quote", service:"interior", q:"저장이 안 되는 상황",
+      name:"홍길동", tel:"010-1234-5678", agree:true }, { saveFails:true });
+    /* ⚠️⚠️ 손님의 요청을 잃는 쪽이 더 나쁩니다 — 슬랙으로는 그대로 갑니다 */
+    ok("접수는 성공으로 받는다", res.code === 200, "code=" + res.code);
+    ok("슬랙으로는 그대로 간다", !!sent && /저장이 안 되는 상황/.test(sent.text));
+    ok("⚠️ 없는 접수번호를 주지 않는다", res.body.no === undefined, res.body);
+  }
+
+  console.log("\n── §6 서비스별 질문이 끝까지 가는가");
+  {
+    /* ⚠️⚠️ 이 검사가 있는 까닭 — `detail` 은 **스물까지**입니다.
+       넘으면 뒤쪽 칸이 **에러 없이** 빠지고, 받아 보는 사람만
+       "왜 철거 예정일이 없지?" 하게 됩니다 (/sell 에서 겪은 자리). */
+    const { sent } = await send({
+      kind:"quote", service:"interior", serviceName:"인테리어",
+      q:"20평 카페", name:"홍길동", tel:"010-1234-5678", agree:true,
+      detail:{ "상황":"창업 · 시작", "평수":"20",
+               "공사 범위":"전체 시공 · 전기", "지금 상태":"빈 상가 (골조만)",
+               "도면":"있습니다", "희망 착공일":"2027-02-01",
+               "오픈 예정일":"2027-03-01" } });
+    ok("서비스별 답이 그대로 간다", /공사 범위 — 전체 시공 · 전기/.test(sent.text), sent.text);
+    ok("날짜도 간다", /희망 착공일 — 2027-02-01/.test(sent.text));
+    ok("요청 조건 머리말 아래에 모입니다", /── 요청 조건 ──/.test(sent.text));
+  }
+  {
+    /* 상한 바로 아래 · 바로 위 — ⚠️ 경계값입니다 */
+    const mk = n => { const d = {}; for(let i = 1; i <= n; i++) d["칸" + i] = "값" + i; return d; };
+    let r = await send({ kind:"quote", service:"x", q:"a", name:"홍", tel:"010",
+                         agree:true, detail:mk(20) });
+    ok("스무 칸은 전부 간다 (경계)", /칸20 — 값20/.test(r.sent.text), "칸20 없음");
+    r = await send({ kind:"quote", service:"x", q:"a", name:"홍", tel:"010",
+                     agree:true, detail:mk(21) });
+    /* ⚠️ 넘으면 **조용히** 빠집니다 — 그래서 빌드의 checkReqForms() 가
+       서비스별 칸 수를 미리 셉니다 */
+    ok("스물한 칸째는 빠진다 (상한 · 그래서 빌드가 미리 셉니다)",
+       !/칸21/.test(r.sent.text));
   }
 
   console.log("\n── 받을 곳이 없을 때");

@@ -3115,3 +3115,39 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .cask-i:has(input:checked){ border-color:var(--blue);
   box-shadow:0 0 0 1px var(--blue) inset; background:var(--blue-soft); }
 @media (max-width:760px){ .cask-l{ grid-template-columns:1fr; } }
+
+/* ── 서비스별 질문 (/quote · 수익형 플랫폼 지시서 §6) ─────────────
+   ⚠️ 분류에 칸이 없으면 ReqFormBand() 가 빈 문자열이라 이 블록이
+   아예 안 그려집니다 — 빈 액자를 깔지 않습니다 (절대 규칙 2). */
+.rqf{ margin:0 0 var(--s5); padding:var(--s5);
+      background:var(--bg-sky); border:1px solid var(--line);
+      border-radius:var(--r-in); }
+.rqf > .f-r:last-child{ margin-bottom:0; }
+.rqf-h{ margin:0 0 var(--s4); font-size:var(--t-base);
+        font-weight:700; color:var(--navy); }
+/* ⚠️ 변수 뒤에 조사를 붙이지 않으려고 줄표로 받습니다 */
+.rqf-h i{ font-style:normal; font-weight:500; color:var(--ink2); }
+.rqf-l{ display:block; margin:0 0 6px; font-size:var(--t-cap);
+        font-weight:700; color:var(--ink); }
+/* ⚠️ `--gold` 로 쓰면 대비 1.82 입니다 — 단위는 흐린 쪽이지만 읽혀야 합니다 */
+.rqf-l i{ font-style:normal; font-weight:500; color:var(--ink2); }
+.rqf-c{ display:flex; flex-wrap:wrap; gap:8px; }
+/* ⚠️⚠️ 누르는 것은 40px 이상입니다 (--tap 은 48). padding 만으로
+   높이를 만들면 짧은 이름에서 다시 낮아지므로 min-height 로 잡습니다. */
+/* ⚠️⚠️ `.f-r label{display:block}`(0,2,0)가 `.rqf-k`(0,1,0)를 **이깁니다** —
+   그러면 flex 가 안 걸려 gap 이 0 이 되고 체크박스가 글자에 붙습니다.
+   이 저장소가 `.sec-hd p` ↔ `.eyebrow`, `.read li` ↔ `.rd-sum ul` 로
+   **두 번** 겪은 특정도 함정입니다. `.rqf-c` 를 앞에 붙여 (0,2,0)로
+   맞추고 뒤에 두어 이깁니다. ⚠️ 재서 확인했습니다 (gap 0 → 7px). */
+.rqf-c .rqf-k{ display:flex; align-items:center; gap:7px;
+        min-height:40px; padding:0 13px;
+        background:var(--surface); border:1px solid var(--line);
+        border-radius:999px; cursor:pointer;
+        font-size:var(--t-cap); color:var(--ink); }
+.rqf-c .rqf-k input{ width:17px; height:17px; margin:0; flex:none; accent-color:var(--blue); }
+.rqf-c .rqf-k:has(input:checked){ border-color:var(--blue);
+        background:var(--blue-50, var(--bg-sky)); font-weight:700; }
+.rqf-c .rqf-k:focus-within{ outline:2px solid var(--blue); outline-offset:2px; }
+/* ⚠️ 날짜 칸이 제 글자 폭(125px)만 잡아서 다른 칸(680px)과 따로 놀았습니다 —
+   재서 알았습니다. 폰에서는 누르는 자리가 작아 특히 나쁩니다. */
+.rqf input[type=date]{ width:100%; }

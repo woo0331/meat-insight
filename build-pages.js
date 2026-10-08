@@ -50,7 +50,18 @@ function loadApp(){
                 /* ⚠️ sales 는 catalog 의 분류 · 하위 key 를 **묶어 보는 틀**이라
                    그 뒤입니다. 손님 화면은 안 읽습니다 — /admin 전용이지만
                    분류 25 를 빠짐없이 나눠 가지는지 빌드가 봅니다 */
-                "js/data/sales.js"];
+                "js/data/sales.js",
+                /* ⚠️⚠️ deal · fee 는 2차(데이터 모델)에서 들어온 것입니다.
+                   **아직 화면이 읽지 않습니다** — 3차에서 신청·배정·계약
+                   화면이 붙습니다. 그런데도 여기 넣어 둔 까닭은, 빌드가
+                   checkDeal() · checkFee() · checkDealSql() 로 **지금부터**
+                   맞춰 보기 때문입니다. 이 저장소가 "만들어 놓고 안 쓰는
+                   칸" 으로 여러 번 겪은 것(gu · amStore() · withEquip ·
+                   푸터의 stages)과 다른 점은, 이 둘은 **검사가 보고
+                   있다**는 것입니다.
+                   ⚠️ fee 는 deal 의 상태를 가리키지 않고 거꾸로도
+                   아니어서 차례는 상관없습니다 */
+                "js/data/deal.js", "js/data/fee.js"];
 
   /* ⚠️ 여기는 **glob 이 아니라 손으로 적은 목록**입니다. 새 데이터
      파일을 만들고 여기에 안 넣으면, 그 데이터를 쓰는 주소가 **에러
@@ -1651,6 +1662,143 @@ function checkKeepUrls(routes, vj){
       ") — 적어 두시려면: node build-pages.js --keep-urls");
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   checkDeal — 신청 상태 열둘이 말이 되는가 (지시서 §8 · §13)
+
+   ⚠️⚠️ **이 검사가 막는 것은 디자인이 아니라 돈입니다.** 돈이 걸린
+   상태(fee_wait · fee_done)로 들어가는 길에 관리자 말고 누구든
+   끼어 있으면 **빌드가 멈춥니다.** 업체가 "계약했습니다" 를 누르면
+   수수료가 확정되는 길이 생기는 것을 영구히 막습니다 (§8 마지막
+   문장 · §13 "가짜 결제·정산 완료 상태 생성 금지").
+   ════════════════════════════════════════════════════════════════════ */
+function checkDeal(W){
+  const ST = W.AM_DEAL_ST || [], MV = W.AM_DEAL_MOVE || [], RO = W.AM_ROLES || [];
+  if(ST.length !== 12)
+    throw new Error("신청 상태가 " + ST.length + "개입니다 — 지시서 §8 은 열둘입니다");
+  const keys = ST.map(x => x.key), roles = RO.map(x => x.key);
+  if(new Set(keys).size !== keys.length)
+    throw new Error("신청 상태 key 가 겹칩니다");
+
+  for(const m of MV){
+    if(!keys.includes(m[0])) throw new Error("없는 상태에서 출발하는 길: " + m[0]);
+    if(!keys.includes(m[1])) throw new Error("없는 상태로 가는 길: " + m[1]);
+    for(const r of m[2])
+      if(!roles.includes(r)) throw new Error("없는 역할이 길에 적혀 있습니다: " + r);
+  }
+  for(const s of ST)
+    for(const r of s.who)
+      if(!roles.includes(r)) throw new Error("없는 역할이 상태 " + s.key + " 에: " + r);
+
+  /* 접수에서 모든 상태에 닿는가 — 닿지 않는 상태는 영원히 안 쓰이는
+     칸입니다 (푸터의 stages 가 그렇게 죽어 있었습니다) */
+  const seen = new Set(["new"]);
+  for(let grew = true; grew; ){
+    grew = false;
+    for(const m of MV) if(seen.has(m[0]) && !seen.has(m[1])){ seen.add(m[1]); grew = true; }
+  }
+  const un = keys.filter(k => !seen.has(k));
+  if(un.length)
+    throw new Error("접수에서 닿을 수 없는 상태: " + un.join(" · ") +
+      " — 아무 데서도 못 쓰는 상태입니다");
+
+  /* ⚠️⚠️ 돈 상태로 들어가는 길은 관리자 전용 */
+  const money = new Set(ST.filter(x => x.money).map(x => x.key));
+  if(!money.size) throw new Error("돈이 걸린 상태(money:true)가 하나도 없습니다 — §8 의 정산 둘이 빠졌습니다");
+  for(const m of MV){
+    if(!money.has(m[1])) continue;
+    if(m[2].length !== 1 || m[2][0] !== "admin")
+      throw new Error("수수료가 확정되는 길(" + m[0] + " → " + m[1] +
+        ")에 " + m[2].join(" · ") + " 가 끼어 있습니다 — 관리자 전용이어야 합니다 (§8 · §13)");
+  }
+  /* 계약 완료에서 정산으로 **바로 가는 길**이 없어야 합니다 */
+  for(const m of MV)
+    if(m[0] === "signed" && money.has(m[1]))
+      throw new Error("계약 완료에서 정산으로 바로 가는 길이 있습니다 — " +
+        "업체의 계약 완료 신고가 수수료를 확정하면 안 됩니다 (§8 마지막 문장)");
+  /* 돈 상태를 고객이 볼 수 있으면 안 됩니다 */
+  for(const s of ST)
+    if(s.money && s.who.includes("customer"))
+      throw new Error("고객이 정산 상태(" + s.key + ")를 봅니다 — 우리와 업체 사이의 일입니다");
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   checkFee — 수수료 틀이 §9 를 다 들고 있는가
+   ════════════════════════════════════════════════════════════════════ */
+function checkFee(W){
+  if((W.AM_FEE_TYPE || []).length !== 6)
+    throw new Error("수익모델이 " + (W.AM_FEE_TYPE || []).length +
+      "개입니다 — 지시서 §9 는 여섯입니다");
+  for(const g of [["AM_FEE_TYPE", 6], ["AM_FEE_VAT", 3], ["AM_FEE_WHEN", 4], ["AM_FEE_CYCLE", 3]]){
+    const L = W[g[0]] || [], k = L.map(x => x.key);
+    if(new Set(k).size !== k.length) throw new Error(g[0] + " 의 key 가 겹칩니다");
+    for(const x of L) if(!x.key || !x.name) throw new Error(g[0] + " 에 이름 없는 항목이 있습니다");
+  }
+  /* ⚠️ 쓸 만한 정책이 실제로 통과하는지 — 너무 넓게 막는 것도 고장입니다 */
+  const snap = W.amFeeSnap({ type:"rate", rate:3, vat:"add", when:"done", cycle:"monthly" });
+  const r = W.amFeeCalc(snap, { amount:10000000 });
+  if(!r.ok || r.fee !== 300000)
+    throw new Error("1,000만원 · 3% 가 30만원이 안 나옵니다 — " + (r.why || r.fee));
+  /* ⚠️⚠️ 계약금액이 없으면 **0 이 아니라 거절**이어야 합니다 */
+  if(W.amFeeCalc(snap, {}).ok)
+    throw new Error("계약금액 없이 수수료가 계산됩니다 — 0 원이 정산서에 올라갑니다 (§9)");
+  /* ⚠️⚠️ 사본이 아닌 정책으로 계산되면 §9 의 정책 유지가 깨집니다 */
+  if(W.amFeeCalc({ type:"rate", rate:3, vat:"add", when:"done", cycle:"monthly" },
+                 { amount:1000000 }).ok)
+    throw new Error("정책 사본이 아닌데 계산됩니다 — 요율을 고치면 지난 계약이 같이 바뀝니다 (§9)");
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   checkDealSql — **DB 의 값과 화면의 key 가 같은가**
+
+   ⚠️⚠️ 이 저장소가 가장 많이 겪은 종류의 사고를 막습니다 — 한쪽만
+   고치면 **에러 없이 조용히** 어긋나고, DB 가 화면이 보낸 상태를
+   거절하거나 (더 나쁘게) 화면이 DB 의 상태를 못 읽습니다.
+   업체 `subs` · 사진 키 · 도구 묶음에서 겪은 그 자리입니다.
+   ════════════════════════════════════════════════════════════════════ */
+function checkDealSql(W){
+  const f = path.join(ROOT, "db", "migrations", "0001_init.sql");
+  if(!fs.existsSync(f))
+    throw new Error("db/migrations/0001_init.sql 이 없습니다 — 상태값을 맞춰 볼 데가 없습니다");
+  const sql = fs.readFileSync(f, "utf8");
+
+  /* create type <이름> as enum ( '...' , '...' ) 안의 값들을 꺼냅니다 */
+  function enumOf(name){
+    const re = new RegExp("create\\s+type\\s+" + name + "\\s+as\\s+enum\\s*\\(([^)]*)\\)", "i");
+    const m = sql.match(re);
+    if(!m) throw new Error("0001_init.sql 에 " + name + " enum 이 없습니다");
+    return (m[1].match(/'([^']+)'/g) || []).map(x => x.slice(1, -1));
+  }
+  function same(what, a, b){
+    if(a.length !== b.length || a.some((x, i) => x !== b[i]))
+      /* ⚠️ 조사를 손으로 적지 않습니다 — what 이 "열둘" · "넷" · "여섯" ·
+         "기준" 으로 바뀌어서 '가/이' 가 둘 다 나옵니다. 줄표로 받습니다
+         (이 저장소가 "인수인계은" 으로 겪은 그 자리입니다) */
+      throw new Error(what + " — 화면과 DB 에서 다릅니다\n" +
+        "   화면: " + a.join(" · ") + "\n   DB  : " + b.join(" · ") +
+        "\n   → 한쪽만 고치면 에러 없이 조용히 어긋납니다. 둘을 같이 고치세요");
+  }
+  same("신청 상태 열둘",   (W.AM_DEAL_ST  || []).map(x => x.key), enumOf("deal_state"));
+  same("역할 넷",          (W.AM_ROLES    || []).map(x => x.key), enumOf("app_role"));
+  same("수익모델 여섯",     (W.AM_FEE_TYPE || []).map(x => x.key), enumOf("fee_type"));
+  same("부가세 처리 기준",  (W.AM_FEE_VAT  || []).map(x => x.key), enumOf("fee_vat"));
+  same("수수료 확정 조건",  (W.AM_FEE_WHEN || []).map(x => x.key), enumOf("fee_when"));
+  same("정산 주기",        (W.AM_FEE_CYCLE|| []).map(x => x.key), enumOf("fee_cycle"));
+
+  /* ⚠️⚠️ RLS 를 켜지 않은 표가 있으면 **누구나 남의 신청과 계약금액을
+     읽습니다.** Supabase 는 RLS 를 켜지 않은 표를 그대로 열어 줍니다. */
+  const tables = (sql.match(/create table (?:if not exists )?([a-z_]+)/g) || [])
+                   .map(x => x.replace(/.* /, ""));
+  for(const t of tables)
+    if(!new RegExp("alter table " + t + "\\s+enable row level security").test(sql))
+      throw new Error("표 " + t + " 에 RLS 가 안 켜져 있습니다 — " +
+        "켜지 않으면 누구나 읽습니다 (§8 권한 분리)");
+
+  /* ⚠️⚠️ 감사 기록은 고치거나 지울 수 없어야 합니다 (§8) */
+  if(/create policy[^;]*on audit_log for (all|update|delete)/i.test(sql))
+    throw new Error("audit_log 에 고치거나 지울 수 있는 정책이 있습니다 — " +
+      "고칠 수 있는 기록은 기록이 아닙니다 (§8)");
+}
+
 /* ── 실행 ─────────────────────────────────────────────────────── */
 checkCssVars();
 checkColorSchemeCss();
@@ -1658,6 +1806,9 @@ checkVercel();
 const W = loadApp();
 checkProcess(W);
 checkSales(W);
+checkDeal(W);
+checkFee(W);
+checkDealSql(W);
 checkProviders(W);
 checkMarketData(W);
 checkPhotos(W);

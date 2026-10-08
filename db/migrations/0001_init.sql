@@ -425,3 +425,48 @@ begin
 end $$;
 create trigger deal_money_guard_t before update on deal
   for each row execute function deal_money_guard();
+
+-- ════════════════════════════════════════════════════════════════════
+-- 권한 (GRANT) — ⚠️⚠️ **암묵적인 기본 설정에 기대지 않습니다**
+--
+-- Supabase 는 public 스키마의 새 표에 anon · authenticated ·
+-- service_role 권한을 **알아서** 붙여 줍니다. 돌려 보니 이 파일은
+-- GRANT 를 한 줄도 안 하고 있었고, 그러니까 **그 기본 설정에
+-- 조용히 기대고 있었습니다.** Supabase 가 그 기본값을 바꾸거나
+-- 다른 Postgres 에 세우면 그날 전부 안 됩니다 — 에러도 늦게
+-- 터지는 종류입니다. 그래서 명시합니다.
+--
+-- ⚠️⚠️ **RLS 와 GRANT 는 다른 자물쇠입니다.** GRANT 는 "그 표를
+-- 건드릴 수 있나", RLS 는 "그 표의 어느 줄을 건드릴 수 있나".
+-- 둘 다 걸어야 합니다 — GRANT 만 주고 RLS 를 안 켜면 전부 보이고,
+-- RLS 만 켜고 GRANT 를 안 주면 아무것도 안 됩니다.
+--
+-- ⚠️ anon(로그인 안 한 사람)에게는 **아무 권한도 주지 않습니다.**
+-- 공개 목록(업체 · 매물 · 글)은 빌드가 미리 만든 HTML 이 내보냅니다 —
+-- 로그인 전에 DB 를 볼 이유가 없습니다.
+-- ════════════════════════════════════════════════════════════════════
+grant usage on schema public to anon, authenticated, service_role;
+
+-- 로그인한 사람 — ⚠️ **읽기는 RLS 가 줄 단위로 좁힙니다**
+grant select on account, provider, offer, request, assignment,
+                deal, fee_policy, settlement, audit_log
+  to authenticated;
+
+-- ⚠️⚠️ **쓰기는 칸 단위로 줍니다.** 표째로 주면 업체가 자기 계약의
+-- `request_id` 를 다른 건으로 바꿔 끼울 수 있습니다 — RLS 는 줄은
+-- 막아도 **어느 칸을 고치는지는 못 막습니다.**
+grant update (state, why) on assignment to authenticated;
+grant update (amount, signed_at, done_at) on deal to authenticated;
+grant update (name, intro, regions, gu, industries, subs, since, consult_hours)
+  on provider to authenticated;
+-- ⚠️⚠️ deal 의 fee · fee_total · fee_snap · paid 는 **위에 없습니다.**
+-- 수수료와 입금액은 관리자만입니다 (§8 · §13). 트리거가 한 번 더
+-- 막지만, 애초에 권한을 주지 않는 것이 첫 번째 자물쇠입니다.
+-- ⚠️⚠️ provider 의 verified · listed · id 도 **위에 없습니다.**
+-- 업체가 확인 배지를 스스로 켜면 그건 지어낸 신뢰입니다 (절대 규칙 1).
+
+-- 서버 함수 (api/_db.js) — ⚠️⚠️ 이 키는 RLS 를 통째로 지나갑니다.
+-- 화면에 절대 내려보내지 마세요 (db/README.md).
+grant all on all tables    in schema public to service_role;
+grant all on all sequences in schema public to service_role;
+grant all on all functions in schema public to service_role;

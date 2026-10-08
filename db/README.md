@@ -39,9 +39,15 @@
 Supabase 대시보드 → **SQL Editor** 에서 **차례대로**, 한 파일씩.
 
 ```
-db/migrations/0001_init.sql            ← 표 · RLS · 트리거
+db/migrations/0001_init.sql            ← 표 · RLS · 트리거 · 권한
 db/migrations/0002_schema_version.sql  ← 판 번호
+db/migrations/0003_confirm_fee.sql     ← 수수료를 확정하는 문 하나
 ```
+
+⚠️⚠️ **이 셋은 실제 Postgres 에서 돌려 봤습니다** — `node tools/test-sql.js`
+가 임시 클러스터를 띄워 세우고, 제약 · 트리거 · RLS · 권한 · 감사 기록을
+68가지로 눌러 봅니다. 그 과정에서 **둘이 깨져 있었습니다** (권한이 한 줄도
+없었고, 아무도 수수료를 확정할 수 없었습니다). 고친 채로 드립니다.
 
 ⚠️ **한 파일을 통째로 붙여 넣고 한 번에 돌리세요.** 중간을 잘라
 돌리면 표는 생겼는데 RLS 가 안 켜진 상태로 남습니다 — 그러면 **누구나
@@ -60,6 +66,15 @@ select tablename from pg_tables t
 
 -- ③ 상태값이 열둘인가 (js/data/deal.js 와 같아야 합니다)
 select unnest(enum_range(null::deal_state));
+
+-- ④ ⚠️⚠️ 돈 칸에 로그인 사용자 쓰기 권한이 없는가 — 0건이어야 합니다
+select column_name from information_schema.column_privileges
+ where table_name='deal' and grantee='authenticated' and privilege_type='UPDATE'
+   and column_name in ('fee','fee_total','fee_snap','paid');
+
+-- ⑤ ⚠️⚠️ 감사 기록을 고치거나 지우는 정책이 없는가 — 0건이어야 합니다
+select policyname from pg_policies
+ where tablename='audit_log' and cmd in ('UPDATE','DELETE','ALL');
 ```
 
 ⚠️ ②가 한 줄이라도 나오면 **멈추고 그 표에 RLS 를 켜세요.**

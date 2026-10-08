@@ -271,9 +271,18 @@ window.amSend = function(failId, body, again){
     .then(function(x){
       if(!x.ok) throw new Error((x.j && x.j.error) || "보내지 못했습니다");
       var box = $(failId);
-      if(box) box.innerHTML = '<div class="notice-ok"><b>접수되었습니다.</b>'+
+      /* §6 "모든 신청에 고유 신청번호를 발급한다"
+         ⚠️⚠️ **번호가 없으면 줄째 뺍니다** (절대 규칙 2 · 5). 서버는
+         실제로 저장됐을 때만 번호를 돌려줍니다 — 없는 번호를 보여
+         주면 손님이 그 번호로 물어봤을 때 아무것도 없습니다.
+         ⚠️ `esc()` 를 거칩니다 (절대 규칙 4). */
+      var no = (x.j && x.j.no) ? String(x.j.no) : "";
+      var dup = !!(x.j && x.j.dup);
+      if(box) box.innerHTML = '<div class="notice-ok"><b>' +
+        (dup ? "이미 접수되었습니다." : "접수되었습니다.") + '</b>' +
+        (no ? '<p>접수번호 <b>' + esc(no) + '</b> — 문의하실 때 알려 주세요.</p>' : '') +
         '<p>적어 주신 연락처로 안내드리겠습니다. 회신 시점을 약속드리지는 않습니다.</p></div>';
-      toast("접수되었습니다");
+      toast(dup ? "이미 접수되었습니다" : "접수되었습니다");
       var f = box && box.closest("form"); if(f) f.reset();
       if(btn){ btn.disabled = false; btn.textContent = "다시 보내기"; }
     })

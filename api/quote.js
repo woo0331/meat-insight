@@ -30,6 +30,13 @@
    ════════════════════════════════════════════════════════════════════ */
 
 const { deliver, clean, why, fromOurPages } = require("./_send.js");
+/* ⚠️⚠️ 아래 둘은 **DB 가 설정되어 있을 때만** 일을 합니다. 설정 전에는
+   이 주소가 **오늘과 글자 하나 다르지 않게** 동작합니다 — 받아서 슬랙
+   으로 보내고 끝입니다. 반쯤 된 저장을 손님에게 보이지 않기 위해서고,
+   `api/_send.js` 가 받을 곳이 없을 때 503 을 돌려주는 것과 같은
+   규칙입니다 (fail-closed). */
+const { dbReady, dbInsert, dbSelect, dbWhy } = require("./_db.js");
+const { reqNo, telKey, intakeDup } = require("./_intake.js");
 
 const KINDS = { sos:1, quote:1, partner:1 };
 
@@ -119,6 +126,80 @@ module.exports = async function handler(req, res){
     return res.status(400).json({ error: "어떤 일인지 적어 주세요" });
   }
 
+  /* ════════════════════════════════════════════════════════════
+     §6 "모든 신청에 고유 신청번호를 발급한다"
+     §6 "중복 신청과 스팸을 방지한다"
+
+     ⚠️⚠️ **DB 가 없으면 접수번호를 발급하지 않습니다.** 번호를 내주고
+     저장은 안 하면, 손님이 그 번호로 물어봐도 아무것도 없습니다 —
+     그게 "하지 않은 일을 했다고 말하는 것" 입니다 (절대 규칙 5).
+     번호는 **실제로 저장된 뒤에만** 손님에게 갑니다.
+
+     ⚠️ 업체 입점(partner)은 신청이 아니라 **업체 등록**입니다. 다른
+     표로 가야 해서 지금은 전과 똑같이 슬랙으로만 보냅니다 (§7 업체
+     관리에서 붙습니다).
+     ════════════════════════════════════════════════════════════ */
+  let no = "";
+  if(kind !== "partner" && dbReady()){
+    /* 최근 한 시간, 같은 번호의 것만 가져옵니다
+       ⚠️ 손님이 보낸 값을 질의문자에 그대로 이어 붙이지 않습니다 */
+    const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const found = await dbSelect("request",
+      "?select=no,tel,offer_id,cat,created_at" +
+      "&tel=eq." + encodeURIComponent(telKey(q.tel)) +
+      "&created_at=gte." + encodeURIComponent(since) +
+      "&order=created_at.desc&limit=20");
+
+    /* ⚠️ DB 가 대답하지 않으면 **접수를 막지 않습니다.** 중복 검사는
+       편의이고, 그것 때문에 손님의 요청을 잃으면 더 나쁩니다.
+       대신 운영자에게 남깁니다 (절대 규칙 3). */
+    if(!found.ok) console.error("[site] 중복 검사를 못 했습니다 — " + dbWhy(found.why));
+    else {
+      const dup = intakeDup(new Date(), found.rows,
+        { tel:q.tel, offerId:clean(b.offerId, 60), cat:q.cat || q.service });
+      /* 같은 요청을 또 누른 것 — 두 번 보내지 않고 먼저 받은 번호를
+         그대로 돌려줍니다 (손님에게는 성공입니다) */
+      if(dup.dup){
+        console.warn("[site] 중복 접수 — " + dup.why);
+        return res.status(200).json({ ok:true, no:dup.no, dup:true, say:dup.say });
+      }
+      if(dup.spam){
+        console.warn("[site] 접수가 너무 많습니다 — " + dup.why);
+        /* ⚠️⚠️ 손님에게 "스팸" 이라고 하지 않습니다 (절대 규칙 3) */
+        return res.status(429).json({ error:dup.say });
+      }
+    }
+
+    /* 저장 — ⚠️ 저장이 실패하면 접수를 막지 않고 번호만 안 냅니다.
+       슬랙으로는 그대로 갑니다. 손님의 요청을 잃는 쪽이 더 나쁩니다. */
+    const cand = reqNo();
+    const row = {
+      no:        cand,
+      side:      clean(b.side, 20) || (kind === "sos" ? "ops" : "start"),
+      industry:  q.biz || clean(b.industry, 40) || null,
+      cat:       q.cat || q.service || null,
+      offer_id:  clean(b.offerId, 60) || null,
+      region:    q.region || null,
+      gu:        clean(b.gu, 40) || null,
+      want_at:   clean(b.wantAt, 40) || null,
+      body:      q.q || null,
+      detail:    (b.detail && typeof b.detail === "object") ? b.detail : {},
+      name:      q.name,
+      tel:       q.tel,
+      email:     q.email || null,
+      /* ⚠️⚠️ 동의를 **시각으로** 남깁니다. boolean 으로 두면 "언제
+         받았나" 를 못 대고, 그게 분쟁에서 받지 않은 것과 같아집니다. */
+      agree_at:  new Date().toISOString(),
+      /* ⚠️⚠️ 제3자 제공 재동의는 **여기서 받지 않습니다** (제17조 제2항).
+         어느 업체에 줄지 정해지지 않았으니까요 — 배정할 때 받습니다.
+         방침 제4조 제3항이 그렇게 적혀 있습니다. 비워 둡니다. */
+      state:     "new"
+    };
+    const saved = await dbInsert("request", row);
+    if(saved.ok) no = cand;
+    else console.error("[site] 접수를 저장하지 못했습니다 — " + dbWhy(saved.why));
+  }
+
   const head = kind === "sos" ? "[SOS]" : kind === "partner" ? "[파트너]" : "[견적]";
   const subject =
     kind === "partner"
@@ -130,6 +211,8 @@ module.exports = async function handler(req, res){
            : (q.serviceName ? " · " + q.serviceName : q.service ? " · " + q.service : ""));
 
   const L = [];
+  /* ⚠️ 제일 위에 둡니다 — 직원이 전화하면서 제일 먼저 묻는 것입니다 */
+  if(no) L.push("접수번호  " + no);
   if(kind === "partner") L.push("업체명    " + q.company);
   L.push("성함      " + q.name);
   L.push("연락처    " + q.tel);
@@ -172,5 +255,8 @@ module.exports = async function handler(req, res){
     console.error("[site] 요청을 전달하지 못했습니다 — " + why(kind, sent.why));
     return res.status(503).json({ error: "지금 접수하지 못했습니다" });
   }
-  res.status(200).json({ ok: true });
+  /* ⚠️ `no` 는 **실제로 저장됐을 때만** 들어갑니다. 화면은 있으면
+     보여 주고 없으면 안 보여 줍니다 (자리표시자를 찍지 않습니다 —
+     절대 규칙 2). */
+  res.status(200).json(no ? { ok: true, no: no } : { ok: true });
 };

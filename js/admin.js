@@ -569,6 +569,16 @@ function adInit(){
           icon("search",18)+'읽어 오기</button>'+
       '</div>'+
       '<div id="ad-mk-out"></div>'+
+    '</section>'+
+
+    '<section class="ad-s">'+
+      '<h2>8. 수익상품 — 지금 낼 수 있는 상태인가</h2>'+
+      '<p class="ad-lead">지시서 §5 가 <b>"실제 제휴사가 확보되지 않은 '+
+        '상품은 신청 가능 상품처럼 오인시키지 말라"</b>고 적었습니다. '+
+        '그래서 상품마다 <b>무엇이 남았는지</b>를 세어서 냅니다 — '+
+        '손으로 적는 값이 아니라 <b>업체 수에서 세는 값</b>이라 '+
+        '업체를 등록하시면 저절로 줄어듭니다.</p>'+
+      adOffers()+
     '</section>';
 
   adHealth();
@@ -1032,3 +1042,41 @@ window.adMkRead = function(){
   adMkDraw();
   toast("읽었습니다. 못 읽은 칸은 비워 두었습니다 — 지어내지 않습니다.");
 };
+
+/* ── 8. 수익상품 상태 (§5) ──────────────────────────────────────
+   ⚠️⚠️ **손님 화면이 아닙니다.** 여기 적는 것은 운영자가 해야 할
+   일이고, 손님에게는 그 상품이 **그 분야의 진짜 화면**으로만 보입니다
+   (절대 규칙 3).
+   ⚠️ "아직 남았습니다" 를 손으로 적지 마세요 — `amOfferTodo()` 가
+   세는 값입니다. 손으로 적으면 **다 끝난 뒤에도 남아 있습니다**
+   (CLAUDE.md 의 "아직 안 된 것" 표가 실제로 그랬습니다). */
+function adOffers(){
+  var L = window.AM_OFFERS || [];
+  if(!L.length) return '<p class="ad-lead">등록된 수익상품이 없습니다.</p>';
+  var live = L.filter(function(x){ return window.amOfferOpen(x); }).length;
+
+  return '<p class="ad-note">지금 <b>' + L.length + '개</b> 중 신청을 받는 상품 ' +
+      '<b>' + live + '개</b>' +
+      (live ? '' : ' — 업체가 등록되기 전에는 0개가 맞습니다') + '</p>' +
+    '<div class="ad-of">' + L.map(function(x){
+      var todo = window.amOfferTodo(x);
+      var n = (typeof amProvidersInCat === "function") ? amProvidersInCat(x.cat) : 0;
+      var cat = (typeof amCat === "function") ? amCat(x.cat) : null;
+      return '<div class="ad-of-r">' +
+        '<div class="ad-of-t"><b>' + esc(x.name) + '</b>' +
+          '<span class="ad-of-s' + (todo.length ? "" : " ad-of-ok") + '">' +
+            (todo.length ? "정보만" : "신청 받는 중") + '</span></div>' +
+        '<p class="ad-of-m">' + esc(cat ? cat.name : x.cat) +
+          ' · ' + esc(amOfferApplyName(x.apply)) +
+          ' · 업체 ' + n + '곳 · 수익모델 ' +
+          esc((window.amFeeType && amFeeType(x.fee) || {}).name || x.fee) + '</p>' +
+        (todo.length
+          ? '<p class="ad-of-d">남은 것 — ' + todo.map(esc).join(" · ") + '</p>'
+          : '') +
+        '<p class="ad-of-d">정산 기준 — ' + esc(x.feeNote) + '</p>' +
+      '</div>';
+    }).join("") + '</div>' +
+    '<p class="ad-note">⚠️ 업체가 0곳인 분야의 상품을 <b>신청 받는 중</b>으로 ' +
+      '켜면 <b>빌드가 멈춥니다</b> (손님이 다 적고 눌렀을 때 배정할 곳이 ' +
+      '없기 때문입니다 — §5 · 절대 규칙 5).</p>';
+}

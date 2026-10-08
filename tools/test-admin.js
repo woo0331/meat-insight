@@ -496,7 +496,24 @@ function ok(name, cond, extra) {
     await pg.click(".ad-fold > summary");
     await pg.waitForTimeout(250);
     ok("1번 접수 상태 칸", (await pg.locator("#ad h2").first().innerText()).includes("지금 접수가 되고 있나요"));
-    ok("일곱 칸이 그대로", await pg.locator("#ad > section").count() === 7);
+    /* ⚠️⚠️ **갯수를 그냥 세지 않습니다.** `=== 7` 로 적어 두었다가
+       8번 칸(수익상품)을 더하자 **멀쩡한 화면을 실패로** 잡았습니다 —
+       이 저장소가 "검사가 갯수를 그냥 셌음" 으로 **세 번** 겪은 자리입니다
+       (업체 분야 · 거르개 숨김 건수 · 감사 기록). 지키려는 것은
+       "옛 일곱이 살아 있는가" 이지 "전부 일곱인가" 가 아닙니다 (§29 KEEP). */
+    {
+      const heads = (await pg.locator("#ad > section h2").allInnerTexts())
+                      .map(t => t.replace(/\s+/g, " ").trim());
+      /* ⚠️ 씨앗을 화면의 **실제 제목**에서 가져왔습니다 — 처음에
+         "접수 붙여" 라고 적었는데 화면은 "들어온 접수를 붙여 넣으세요"
+         입니다. **코드가 아니라 씨앗이 틀렸습니다** (이 저장소에서 네 번째). */
+      const keep = ["지금 접수가 되고 있나요", "영업 시작 전에 남은 것",
+                    "들어온 접수를 붙여 넣으세요", "분류는 사람이 고릅니다",
+                    "보낼 글", "업체에 보낼 초대 글", "매물 접수를 등록 줄로"];
+      const miss = keep.filter(k => !heads.some(h => h.includes(k)));
+      ok("옛 일곱 칸이 그대로 있다 (§29 KEEP)", miss.length === 0, miss.join(" · "));
+      ok("칸이 일곱 이상이다", heads.length >= 7, heads.length);
+    }
     ok("2번 영업 시작 전 점검이 돈다", await pg.locator("#ad-ready .ad-rd").count() > 0);
 
     /* 3~5번 — 접수 붙여넣기 → 분류 → 보낼 글 셋 */

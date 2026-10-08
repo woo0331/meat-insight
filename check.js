@@ -1136,6 +1136,43 @@ const AUDIT = `(() => {
      나옵니다.** 지하 상가처럼 신호가 약한 곳에서 실제로 일어납니다.
      ⚠️ 검사에서는 20초를 기다릴 수 없어, **멈추는 fetch** 를 끼워 넣고
      시간 제한이 **걸려 있는지**(AbortController 를 쓰는지)를 봅니다. */
+  await f("서비스마다 다르게 묻는다", "/quote?c=interior", `
+    /* 지시서 6절 — 서비스 특성에 따라 질문을 다르게 표시한다.
+       ⚠️ 면적 · 업종 · 지역 · 예산은 공통 칸이라 또 묻지 않습니다. */
+    const box = document.querySelector(".rqf");
+    if(!box) return "인테리어인데 서비스별 질문이 없습니다";
+    const txt = box.innerText;
+    if(txt.indexOf("공사 범위") < 0) return "인테리어인데 공사 범위를 안 묻습니다";
+    for(const dup of ["업종", "예산"])
+      if(new RegExp("^\\s*" + dup + "\\s*$", "m").test(txt))
+        return "공통 칸(" + dup + ")을 또 묻습니다";
+    /* ⚠️ 누르는 것은 40px 이상 */
+    const small = [...box.querySelectorAll(".rqf-k")]
+      .filter(e => e.getBoundingClientRect().height < 40).length;
+    if(small) return "체크 칩 " + small + "개가 40px 미만입니다";
+    /* ⚠️ 날짜는 date 라야 합니다 — 손으로 적으면 "다음달 초" 가 들어옵니다 */
+    if(!box.querySelector('input[type=date]')) return "날짜 칸이 date 가 아닙니다";
+    return true;
+  `);
+
+  await f("칸이 없는 분류면 구간째 뺀다", "/quote", `
+    /* 절대 규칙 2 — 빈 머리말을 찍지 않습니다 */
+    if(document.querySelector(".rqf")) return "분류를 안 골랐는데 서비스별 질문이 나옵니다";
+    return true;
+  `);
+
+  await f("빈 칸을 접수에 담지 않는다", "/quote", `
+    /* ⚠️⚠️ DB 에 저장되면 "안 적으신 것" 과 "비워 두신 것" 을 구분할
+       수가 없습니다. 0 과 false 는 값입니다. */
+    if(typeof window.amDropEmpty !== "function") return "amDropEmpty 가 없습니다";
+    const o = window.amDropEmpty({ a:"", b:"  ", c:null, d:undefined, e:0, f:false, g:"값" });
+    if("a" in o || "b" in o || "c" in o || "d" in o) return "빈 칸이 남았습니다";
+    if(!("e" in o)) return "숫자 0 이 사라졌습니다 — 0 은 값입니다";
+    if(!("f" in o)) return "false 가 사라졌습니다 — false 는 값입니다";
+    if(!("g" in o)) return "멀쩡한 값이 사라졌습니다";
+    return true;
+  `);
+
   await f("접수가 멈추면 끊고 적은 글을 돌려준다", "/quote", `
     const src = String(window.amSend);
     if(src.indexOf("AbortController") < 0)

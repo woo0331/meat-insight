@@ -61,7 +61,12 @@ function loadApp(){
                    있다**는 것입니다.
                    ⚠️ fee 는 deal 의 상태를 가리키지 않고 거꾸로도
                    아니어서 차례는 상관없습니다 */
-                "js/data/deal.js", "js/data/fee.js"];
+                "js/data/deal.js", "js/data/fee.js",
+                /* ⚠️ offers 는 catalog 의 분류 · 하위 key 와 fee 의
+                   수익모델 key 를 그대로 쓰므로 **그 뒤**입니다 */
+                "js/data/offers.js",
+                /* ⚠️ reqforms 는 catalog 의 분류 key 를 씁니다 */
+                "js/data/reqforms.js"];
 
   /* ⚠️ 여기는 **glob 이 아니라 손으로 적은 목록**입니다. 새 데이터
      파일을 만들고 여기에 안 넣으면, 그 데이터를 쓰는 주소가 **에러
@@ -1844,6 +1849,130 @@ function checkDealSql(W){
       "고칠 수 있는 기록은 기록이 아닙니다 (§8)");
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   checkOffers — 수익상품이 가리키는 것이 **실제로 있는가** (§5)
+
+   ⚠️⚠️ **이 검사의 핵심은 마지막 줄입니다** — §5 가 "실제 제휴사가
+   확보되지 않은 상품은 신청 가능 상품처럼 오인시키지 말라" 고 적었고,
+   그것을 **손으로 지키지 않습니다.** 업체가 0곳인데 `status:"live"` 인
+   상품이 있으면 **빌드가 멈춥니다.**
+   ⚠️ 업체가 등록되면 그때 켜면 됩니다 — 그 전에는 켤 수가 없습니다.
+   ════════════════════════════════════════════════════════════════════ */
+function checkOffers(W){
+  const L = W.AM_OFFERS || [];
+  if(!L.length) throw new Error("수익상품이 하나도 없습니다 (§5)");
+
+  const cats  = new Map((W.AM_CATS || []).map(c => [c.key, c]));
+  const inds  = new Set((W.AM_INDUSTRIES || []).map(x => x.key));
+  const regs  = new Set((W.AM_REGIONS || []).map(x => x.key));
+  const fees  = new Set((W.AM_FEE_TYPE || []).map(x => x.key));
+  const apply = new Set((W.AM_OFFER_APPLY || []).map(x => x.key));
+  const cost  = new Set((W.AM_OFFER_COST || []).map(x => x.key));
+  const stat  = new Set((W.AM_OFFER_STATUS || []).map(x => x.key));
+  const routes = new Set(allRoutes(W));
+  const seen = new Set();
+
+  for(const x of L){
+    const at = "수익상품 " + (x.id || "(id 없음)");
+    if(!x.id || !x.name) throw new Error(at + " 에 id 나 이름이 없습니다");
+    if(seen.has(x.id)) throw new Error("수익상품 id 가 겹칩니다 — " + x.id);
+    seen.add(x.id);
+
+    const c = cats.get(x.cat);
+    if(!c) throw new Error(at + " 가 없는 분류를 가리킵니다 — " + x.cat);
+    /* ⚠️⚠️ 하위 key 는 **그 분류의 items** 안에 있어야 합니다. 업체
+       `subs` 에서 겪은 그 자리입니다 — 틀리면 에러 없이 조용히 안 걸립니다.
+       ⚠️ `equip` 처럼 하위가 **업종에서 오는** 분류는 items 가 비어
+       있어서, 그때는 sub 을 적지 않는 것이 맞습니다. */
+    if(x.sub){
+      const items = (c.items || []).map(i => i.key);
+      if(!items.length)
+        throw new Error(at + " 는 하위를 적을 수 없는 분류입니다 (하위가 업종에서 옵니다) — " + x.cat);
+      if(items.indexOf(x.sub) < 0)
+        throw new Error(at + " 의 하위 key 가 " + x.cat + " 에 없습니다 — " + x.sub +
+          "\n   있는 것: " + items.join(" · "));
+    }
+    for(const k of (x.industries || []))
+      if(!inds.has(k)) throw new Error(at + " 가 없는 업종을 가리킵니다 — " + k);
+    for(const k of (x.regions || []))
+      if(!regs.has(k)) throw new Error(at + " 가 없는 지역을 가리킵니다 — " + k);
+    if(!apply.has(x.apply)) throw new Error(at + " 의 신청 유형이 없습니다 — " + x.apply);
+    if(!cost.has(x.costWay)) throw new Error(at + " 의 비용 안내 방식이 없습니다 — " + x.costWay);
+    if(!stat.has(x.status)) throw new Error(at + " 의 노출 상태가 없습니다 — " + x.status);
+    /* ⚠️ 수익모델은 fee.js 의 key 라야 합니다 — 어긋나면 4차에서
+       수수료를 계산할 수가 없습니다 */
+    if(!fees.has(x.fee)) throw new Error(at + " 의 수익모델이 fee.js 에 없습니다 — " + x.fee);
+    if(!x.feeNote) throw new Error(at + " 에 정산 기준이 없습니다 (§9)");
+    /* ⚠️⚠️ `to` 는 **이미 있는 화면**이라야 합니다. 새 주소를 만들면
+       같은 내용이 두 주소로 나갑니다 (§22) — 가짜 링크는 절대 규칙 5 입니다. */
+    if(!x.to || !routes.has(String(x.to).split("?")[0]))
+      throw new Error(at + " 가 없는 주소를 가리킵니다 — " + x.to);
+    /* ⚠️ 금액을 적는 칸을 만들지 마세요 (프랜차이즈 창업비와 같은 까닭) */
+    for(const k of ["price", "from", "cost", "amount"])
+      if(x[k] != null)
+        throw new Error(at + " 에 금액 칸(" + k + ")이 있습니다 — 금액은 적지 않습니다 (§5)");
+  }
+
+  /* ⚠️⚠️ **§5 를 기계로 지키는 줄입니다.** 업체가 없는 분야의 상품을
+     "신청 받는 중" 으로 켜면, 손님이 다 적고 눌렀는데 배정할 곳이
+     없습니다 — 받아 두고 못 하는 것이 절대 규칙 5 입니다. */
+  const live = L.filter(x => x.status === "live");
+  for(const x of live){
+    const n = W.amProvidersInCat ? W.amProvidersInCat(x.cat) : 0;
+    if(!n)
+      throw new Error("수익상품 " + x.id + " 가 '신청 받는 중' 인데 " +
+        x.cat + " 분야에 등록된 업체가 0곳입니다 — 손님이 다 적고 눌렀을 때 " +
+        "배정할 곳이 없습니다 (§5 · 절대 규칙 5). 업체를 등록한 뒤 켜세요");
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   checkReqForms — 서비스별 질문이 **조용히 사라지지 않는가** (§6)
+
+   ⚠️⚠️ `api/quote.js` 의 `detail` 은 **스물까지**입니다. 공통 칸이
+   여섯을 쓰므로 서비스별 칸은 **열넷**까지이고, 넘으면 뒤쪽이
+   **에러 없이 접수에서 빠집니다** — `/sell` 의 매장 항목이 예전 상한
+   12 에 닿아 있던 그 자리입니다.
+   ════════════════════════════════════════════════════════════════════ */
+function checkReqForms(W){
+  const F = W.AM_REQ_FORMS || {};
+  const cats = new Map((W.AM_CATS || []).map(c => [c.key, c]));
+  const T = new Set(["text", "num", "date", "sel", "chk"]);
+  /* 공통 칸 여섯 (js/pages/quote.js 의 detail) + 여유 하나 */
+  const COMMON = 6, MAX = 20;
+
+  for(const k of Object.keys(F)){
+    if(!cats.has(k))
+      throw new Error("서비스별 질문이 없는 분류를 가리킵니다 — " + k);
+    const L = F[k];
+    if(!Array.isArray(L) || !L.length)
+      throw new Error("서비스별 질문이 비어 있습니다 — " + k + " (빈 묶음은 지우세요)");
+    if(COMMON + L.length > MAX)
+      throw new Error("서비스별 질문이 너무 많습니다 — " + k + " 가 " + L.length +
+        "칸입니다. 공통 " + COMMON + "칸과 합쳐 " + MAX + "칸을 넘으면 " +
+        "api/quote.js 에서 **뒤쪽 칸이 조용히 사라집니다** (최대 " +
+        (MAX - COMMON) + "칸)");
+    const seen = new Set();
+    for(const f of L){
+      if(!f.k) throw new Error(k + " 에 딱지 없는 칸이 있습니다");
+      /* ⚠️ 딱지가 그대로 `detail` 의 열쇠입니다 — 겹치면 하나가 덮습니다 */
+      if(seen.has(f.k)) throw new Error(k + " 에 같은 딱지가 둘입니다 — " + f.k);
+      seen.add(f.k);
+      if(!T.has(f.t)) throw new Error(k + " · " + f.k + " 의 종류가 이상합니다 — " + f.t);
+      if((f.t === "sel" || f.t === "chk") && !(f.opts || []).length)
+        throw new Error(k + " · " + f.k + " 에 보기가 없습니다");
+      /* ⚠️⚠️ 공통 칸과 **같은 것을 또 묻지 않습니다** — 같은 것을 두 번
+         묻는 폼은 거기서 닫힙니다 */
+      for(const dup of ["업종", "지역", "시군구", "평수", "예산", "면적"])
+        if(String(f.k).replace(/\s/g, "") === dup)
+          throw new Error(k + " 가 공통 칸(" + dup + ")을 또 묻습니다 (§6)");
+      /* ⚠️ 금액을 묻지 마세요 — 예산은 공통 칸에 있습니다 */
+      if(/금액|가격|비용|얼마/.test(f.k) && f.t === "num")
+        throw new Error(k + " · " + f.k + " — 금액을 묻지 않습니다 (예산은 공통 칸입니다)");
+    }
+  }
+}
+
 /* ── 실행 ─────────────────────────────────────────────────────── */
 checkCssVars();
 checkColorSchemeCss();
@@ -1854,6 +1983,8 @@ checkSales(W);
 checkDeal(W);
 checkFee(W);
 checkDealSql(W);
+checkOffers(W);
+checkReqForms(W);
 checkProviders(W);
 checkMarketData(W);
 checkPhotos(W);

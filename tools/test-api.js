@@ -332,6 +332,36 @@ async function sendWithDb(body, opt){
     ok("⚠️ 없는 접수번호를 주지 않는다", res.body.no === undefined, res.body);
   }
 
+  console.log("\n── §6 서비스별 질문이 끝까지 가는가");
+  {
+    /* ⚠️⚠️ 이 검사가 있는 까닭 — `detail` 은 **스물까지**입니다.
+       넘으면 뒤쪽 칸이 **에러 없이** 빠지고, 받아 보는 사람만
+       "왜 철거 예정일이 없지?" 하게 됩니다 (/sell 에서 겪은 자리). */
+    const { sent } = await send({
+      kind:"quote", service:"interior", serviceName:"인테리어",
+      q:"20평 카페", name:"홍길동", tel:"010-1234-5678", agree:true,
+      detail:{ "상황":"창업 · 시작", "평수":"20",
+               "공사 범위":"전체 시공 · 전기", "지금 상태":"빈 상가 (골조만)",
+               "도면":"있습니다", "희망 착공일":"2027-02-01",
+               "오픈 예정일":"2027-03-01" } });
+    ok("서비스별 답이 그대로 간다", /공사 범위 — 전체 시공 · 전기/.test(sent.text), sent.text);
+    ok("날짜도 간다", /희망 착공일 — 2027-02-01/.test(sent.text));
+    ok("요청 조건 머리말 아래에 모입니다", /── 요청 조건 ──/.test(sent.text));
+  }
+  {
+    /* 상한 바로 아래 · 바로 위 — ⚠️ 경계값입니다 */
+    const mk = n => { const d = {}; for(let i = 1; i <= n; i++) d["칸" + i] = "값" + i; return d; };
+    let r = await send({ kind:"quote", service:"x", q:"a", name:"홍", tel:"010",
+                         agree:true, detail:mk(20) });
+    ok("스무 칸은 전부 간다 (경계)", /칸20 — 값20/.test(r.sent.text), "칸20 없음");
+    r = await send({ kind:"quote", service:"x", q:"a", name:"홍", tel:"010",
+                     agree:true, detail:mk(21) });
+    /* ⚠️ 넘으면 **조용히** 빠집니다 — 그래서 빌드의 checkReqForms() 가
+       서비스별 칸 수를 미리 셉니다 */
+    ok("스물한 칸째는 빠진다 (상한 · 그래서 빌드가 미리 셉니다)",
+       !/칸21/.test(r.sent.text));
+  }
+
   console.log("\n── 받을 곳이 없을 때");
   {
     for(const k of ["INTAKE_WEBHOOK_URL","ORDER_WEBHOOK_URL","SOS_WEBHOOK_URL",

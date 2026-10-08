@@ -228,3 +228,21 @@ window.amDate = function(v){
   var m = String(v || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
   return m ? (m[1] + ". " + m[2] + ". " + m[3]) : "";
 };
+
+/* ── 빈 칸을 떨어냅니다 ─────────────────────────────────────────
+   ⚠️⚠️ **값이 없는 항목은 줄째 뺍니다** (절대 규칙 2). 접수의 `detail`
+   이 빈 문자열을 그대로 보내고 있었습니다 — 슬랙 글은 `detailLines()`
+   가 걸러서 멀쩡했지만, DB 에 저장되면 **"안 적으신 것" 과 "비워 두신
+   것" 을 구분할 수가 없습니다.**
+   ⚠️ `0` 과 `false` 는 값입니다 — 빈 문자열과 null·undefined 만 뺍니다
+   (권리금 "무권리" 에서 겪은 자리). */
+window.amDropEmpty = function(o){
+  var out = {}, k, v;
+  for(k in o) if(Object.prototype.hasOwnProperty.call(o, k)){
+    v = o[k];
+    if(v === null || v === undefined) continue;
+    if(typeof v === "string" && !v.trim()) continue;
+    out[k] = v;
+  }
+  return out;
+};

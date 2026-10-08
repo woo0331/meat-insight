@@ -19,6 +19,66 @@
 
 var QKEY = "am.quotes.v1";
 
+/* ── 서비스별 질문 (§6) ───────────────────────────────────────
+   ⚠️⚠️ **같은 것을 두 번 묻지 않습니다.** 면적 · 업종 · 지역 · 예산은
+   공통 칸이고, 여기는 그 서비스에서만 쓰는 것입니다 (`reqforms.js`).
+   ⚠️ 칸이 없는 분류면 **구간째 빠집니다** — 빈 머리말을 찍지 않습니다.
+   ⚠️⚠️ `detail` 상한(스물)은 `checkReqForms()` 가 빌드에서 셉니다. */
+function ReqFormBand(cat){
+  var L = (typeof amReqForm === "function") ? amReqForm(cat) : [];
+  if(!L.length) return "";
+  var c = cat ? amCat(cat) : null;
+  return '<div class="rqf">'+
+    '<p class="rqf-h">'+esc(c ? c.name : "이 서비스")+
+      ' <i>— 이것만 더 알려 주시면 견적이 훨씬 정확해집니다</i></p>'+
+    L.map(function(f, i){ return ReqFormRow(f, i); }).join("")+
+  '</div>';
+}
+
+function ReqFormRow(f, i){
+  var id = "rq" + i, lab = esc(f.k) + (f.unit ? ' <i>('+esc(f.unit)+')</i>' : "");
+  if(f.t === "chk")
+    return '<div class="f-r"><span class="rqf-l">'+lab+'</span>'+
+      '<div class="rqf-c">'+(f.opts || []).map(function(o, j){
+        return '<label class="rqf-k"><input type="checkbox" id="'+id+'-'+j+'" '+
+          'value="'+esc(o)+'" data-rq="'+i+'"><span>'+esc(o)+'</span></label>';
+      }).join("")+'</div></div>';
+  if(f.t === "sel")
+    return '<div class="f-r"><label for="'+id+'" class="rqf-l">'+lab+'</label>'+
+      '<select class="sel" id="'+id+'" data-rq="'+i+'">'+
+        '<option value="">골라 주세요</option>'+
+        (f.opts || []).map(function(o){
+          return '<option value="'+esc(o)+'">'+esc(o)+'</option>'; }).join("")+
+      '</select></div>';
+  /* ⚠️ 날짜는 date 입니다 — 손으로 적게 하면 "다음달 초" 가 들어오고
+     그건 일정이 아닙니다 */
+  var type = f.t === "date" ? ' type="date"' : (f.t === "num" ? ' inputmode="numeric"' : "");
+  return '<div class="f-r"><label for="'+id+'" class="rqf-l">'+lab+'</label>'+
+    '<input id="'+id+'"'+type+' data-rq="'+i+'"'+
+      (f.ph ? ' placeholder="'+esc(f.ph)+'"' : "")+'></div>';
+}
+
+/* 적으신 것을 `detail` 에 담습니다 — ⚠️ **빈 칸은 안 담습니다**
+   (절대 규칙 2 · 받아 보는 사람이 빈 줄을 읽지 않게) */
+function reqFormValues(cat){
+  var L = (typeof amReqForm === "function") ? amReqForm(cat) : [], out = {};
+  L.forEach(function(f, i){
+    var v = "";
+    if(f.t === "chk"){
+      var on = [];
+      document.querySelectorAll('[data-rq="'+i+'"]:checked').forEach(function(el){
+        on.push(el.value);
+      });
+      v = on.join(" · ");
+    }else{
+      var el = $("rq" + i);
+      v = el ? String(el.value || "").trim() : "";
+    }
+    if(v) out[f.k] = v;
+  });
+  return out;
+}
+
 function PageQuote(){
   var cat  = nowQS("c"), sub = nowQS("s");
   var ind  = nowQS("i"), reg = nowQS("r");
@@ -74,6 +134,10 @@ function PageQuote(){
         '<div class="f-r"><label for="q-when">희망 일정</label>'+
           '<input id="q-when" placeholder="예: 2027년 2월 오픈 / 이번 달 안"></div>'+
       '</div>'+
+
+      /* §6 — 서비스마다 다르게 묻습니다. ⚠️ 분류를 안 고르고 들어오면
+         구간째 빠집니다 (빈 머리말을 찍지 않습니다 · 절대 규칙 2). */
+      ReqFormBand(cat)+
 
       '<div class="f-r"><label for="q-q">자세한 내용 <b>*</b></label>'+
         '<textarea id="q-q" rows="6" required '+
@@ -201,14 +265,17 @@ window.quoteSend = function(ev){
     service: "", serviceName: $("q-what").value.trim(),
     q:      $("q-q").value.trim(),
     budget: $("q-bud").value.trim(),
-    detail: {
+    /* ⚠️⚠️ 공통 여섯 + 서비스별(§6). `api/quote.js` 가 **스물까지**
+       읽으므로 서비스별은 열넷이 상한이고, `checkReqForms()` 가
+       빌드에서 셉니다 — 넘으면 뒤쪽이 조용히 사라집니다. */
+    detail: amDropEmpty(Object.assign({
       "상황":  $("q-side").value === "close" ? "폐업 · 정리" : "창업 · 시작",
       "업종":  ind ? amIndustryName(ind) : "",
       "시군구": $("q-gu").value.trim(),
       "평수":  $("q-py").value.trim(),
       "일정":  $("q-when").value.trim(),
       "사진":  $("q-img").value.trim()
-    },
+    }, reqFormValues(nowQS("c")))),
     agree: true
   };
   return amSend("q-fail", body, "quoteSend");

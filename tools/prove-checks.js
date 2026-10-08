@@ -40,6 +40,24 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* ══ 2026-10-08 수익형 플랫폼 지시서 §6 ═══════════════════════ */
+  /* ⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — DOM 을 직접 건드립니다
+     (그리는 함수를 바꾸면 아무 일이 안 납니다 · 열 번째로 겪은 자리). */
+  ["서비스마다 다르게 묻는다",
+   `var b = document.querySelector(".rqf"); if(b) b.remove();`],
+  ["칸이 없는 분류면 구간째 뺀다",
+   `/* 분류를 안 고른 /quote 에 서비스별 구간을 억지로 만들어 둡니다 */
+    var d = document.createElement("div"); d.className = "rqf";
+    d.innerHTML = '<p class="rqf-h">억지로 넣은 구간</p>';
+    document.querySelector("#q-f").prepend(d);`],
+  ["빈 칸을 접수에 담지 않는다",
+   `/* 0 을 빈 것으로 보는 옛 꼴로 되돌립니다 — 권리금 "무권리" 가
+      사라지는 그 꼴입니다 */
+    window.amDropEmpty = function(o){
+      var out = {}, k;
+      for(k in o) if(o[k]) out[k] = o[k];
+      return out;
+    };`],
   /* ⚠️⚠️ 금지 표현을 한 자리에 넣어 보면 걸려야 합니다 (2026-10-06
      마무리 지시서 §3). 이 저장소에서 "인기 검색어" → "추천 검색어" →
      "바로가기" 로 두 번 옮겼고, 서비스 제목도 하루에 두 번 오갔습니다.

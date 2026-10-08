@@ -659,7 +659,12 @@ window.sellSend = function(ev){
         "제조사": v("sl-brand"), "연식": v("sl-year"), "수량": v("sl-cnt"),
         "희망가": v("sl-price"), "상태": v("sl-state"), "사진 주소": v("sl-img") };
   /* 빈 칸은 보내지 않습니다 — 받아 보는 사람이 빈 줄을 세지 않게 */
-  Object.keys(detail).forEach(function(k){ if(!detail[k]) delete detail[k]; });
+  /* ⚠️⚠️ 빈 칸을 떨어내는 규칙은 `amDropEmpty()` **한 곳**입니다
+     (`js/components/base.js`). 여기 따로 적혀 있던 것을 옮겼습니다 —
+     그쪽은 `!detail[k]` 라 **숫자 0 이면 사라집니다.** 지금은 값이
+     전부 문자열이라 "0" 이 살아남지만, 숫자를 담는 날 조용히
+     깨지는 꼴이었습니다 (권리금 "무권리" 에서 겪은 자리). */
+  detail = amDropEmpty(detail);
 
   return amSend("sl-fail", {
     kind: "quote",

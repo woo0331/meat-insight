@@ -28,9 +28,10 @@ function ok(name, cond, got){
 }
 
 /* 화면에서 온 것처럼 보이게 합니다 (api/_send.js 의 fromOurPages) */
-function fakeReq(body){
+function fakeReq(body, headers){
   return { method:"POST",
-           headers:{ origin:"https://storeway.co.kr", host:"storeway.co.kr" },
+           headers: Object.assign({ origin:"https://storeway.co.kr",
+                                    host:"storeway.co.kr" }, headers || {}),
            body: body };
 }
 function fakeRes(){
@@ -72,14 +73,26 @@ async function sendWithDb(body, opt){
   process.env.INTAKE_WEBHOOK_URL = "https://example.invalid/hook";
   process.env.SUPABASE_URL = "https://x.supabase.co";
   process.env.SUPABASE_SERVICE_KEY = "service-key-should-never-leak";
-  for(const f of ["quote.js", "_send.js", "_db.js", "_intake.js"])
+  for(const f of ["quote.js", "_send.js", "_db.js", "_intake.js", "_auth.js"])
     delete require.cache[require.resolve(path.join(__dirname, "..", "api", f))];
   const handler = require(QUOTE);
 
-  let hook = null, inserted = null, keySeen = "";
+  /* 로그인한 채로 접수하는 경우 (§10 — 신청을 그 계정에 이어 둡니다).
+     ⚠️ 토큰은 **헤더로만** 들어갑니다 — 본문의 userId 같은 칸을 믿으면
+     누구나 남의 계정에 신청을 꽂아 넣을 수 있습니다. */
+  if(opt.auth) process.env.SUPABASE_ANON_KEY = "anon-key";
+  let hook = null, inserted = null, keySeen = "", askedWho = 0;
   const realFetch = global.fetch;
   global.fetch = async function(url, init){
     const u = String(url);
+    if(/\/auth\/v1\/user/.test(u)){
+      askedWho++;
+      if(opt.auth === "bad")
+        return { ok:false, status:401, headers:{ get(){ return ""; } },
+                 text: async()=> JSON.stringify({ message:"bad jwt" }) };
+      return { ok:true, status:200, headers:{ get(){ return ""; } },
+               text: async()=> JSON.stringify({ id:"user-abc", email:"me@test" }) };
+    }
     if(/supabase/.test(u)){
       /* 키가 헤더로 가는지 (본문으로 새면 안 됩니다) */
       const h = (init && init.headers) || {};
@@ -98,13 +111,17 @@ async function sendWithDb(body, opt){
     return { ok:true, status:200, headers:{ get(){ return ""; } }, text: async()=> "" };
   };
   const res = fakeRes();
-  try{ await handler(fakeReq(body), res); }
+  try{
+    await handler(fakeReq(body,
+      opt.auth ? { authorization:"Bearer hdr.body.sig" } : null), res);
+  }
   finally{
     global.fetch = realFetch;
     delete process.env.SUPABASE_URL;
     delete process.env.SUPABASE_SERVICE_KEY;
+    delete process.env.SUPABASE_ANON_KEY;
   }
-  return { res:res, sent:hook, row:inserted, keySeen:keySeen };
+  return { res:res, sent:hook, row:inserted, keySeen:keySeen, askedWho:askedWho };
 }
 
 (async () => {
@@ -330,6 +347,60 @@ async function sendWithDb(body, opt){
     ok("접수는 성공으로 받는다", res.code === 200, "code=" + res.code);
     ok("슬랙으로는 그대로 간다", !!sent && /저장이 안 되는 상황/.test(sent.text));
     ok("⚠️ 없는 접수번호를 주지 않는다", res.body.no === undefined, res.body);
+  }
+
+  console.log("\n── 로그인한 채로 접수하면 그 계정에 이어 둔다 (§10)");
+  {
+    /* 로그인하지 않은 접수 — 지금까지와 같습니다 */
+    const off = await sendWithDb({
+      kind:"quote", service:"interior", serviceName:"인테리어",
+      q:"20평 카페입니다", region:"경기", gu:"안양시",
+      name:"홍길동", tel:"010-1234-5678", agree:true });
+    ok("로그인 없이 접수하면 user_id 가 비어 있다", off.row.user_id === null, off.row.user_id);
+    ok("로그인 없이 접수하면 누구인지 묻지도 않는다", off.askedWho === 0, off.askedWho);
+    ok("그래도 접수번호는 나온다", /^SW-/.test(off.res.body.no), off.res.body.no);
+
+    /* ⚠️⚠️ **토큰 없이 본문에 아이디만 적어 보내는 것** — 제일 위험한
+       자리입니다. 받아 적으면 아무나 남의 계정에 신청을 꽂아 넣고,
+       그 사람의 마이페이지에 남의 성함과 연락처가 올라갑니다.
+       (처음에는 이 경우를 안 넣어 두어서, 본문 값을 믿게 되돌려 봐도
+       검사가 통과했습니다 — **검사가 모자랐습니다.**) */
+    const spoof = await sendWithDb({
+      kind:"quote", service:"interior", serviceName:"인테리어",
+      q:"20평 카페입니다", region:"경기", gu:"안양시",
+      name:"홍길동", tel:"010-1234-5678", agree:true,
+      userId:"99999999-9999-9999-9999-999999999999",
+      user_id:"99999999-9999-9999-9999-999999999999" });
+    ok("토큰 없이 본문에 아이디만 적어 보내면 비워 둔다",
+       spoof.row.user_id === null, spoof.row.user_id);
+
+    /* 로그인하고 접수 — 신청이 그 계정에 이어집니다 */
+    const on = await sendWithDb({
+      kind:"quote", service:"interior", serviceName:"인테리어",
+      q:"20평 카페입니다", region:"경기", gu:"안양시",
+      name:"홍길동", tel:"010-1234-5678", agree:true,
+      /* ⚠️⚠️ 본문으로 보낸 아이디는 **아무 힘이 없어야** 합니다 */
+      userId:"99999999-9999-9999-9999-999999999999",
+      user_id:"99999999-9999-9999-9999-999999999999" }, { auth:true });
+    ok("로그인하면 신청이 그 계정에 이어진다", on.row.user_id === "user-abc", on.row.user_id);
+    ok("본문으로 보낸 아이디는 쓰지 않는다",
+       String(on.row.user_id).indexOf("9999") < 0, on.row.user_id);
+    ok("토큰이 오면 누구인지 묻는다", on.askedWho === 1, on.askedWho);
+    /* ⚠️ 제17조 제2항 — 접수 때는 제3자 제공 동의를 받지 않습니다.
+       로그인했다고 달라지지 않습니다. */
+    ok("로그인해도 제3자 제공 동의 칸은 비어 있다",
+       on.row.agree3rd_at === undefined, on.row.agree3rd_at);
+
+    /* ⚠️⚠️ 토큰이 만료됐어도 **접수를 잃지 않습니다** — 이어 두는 것은
+       거들기일 뿐이라, 로그인 때문에 요청이 사라지면 더 나쁩니다 */
+    const bad = await sendWithDb({
+      kind:"quote", service:"interior", serviceName:"인테리어",
+      q:"20평 카페입니다", region:"경기", gu:"안양시",
+      name:"홍길동", tel:"010-9999-0000", agree:true }, { auth:"bad" });
+    ok("토큰이 만료돼도 접수는 된다", bad.res.code === 200, bad.res);
+    ok("토큰이 만료되면 계정에 잇지 않고 비워 둔다", bad.row.user_id === null, bad.row.user_id);
+    ok("토큰이 만료돼도 접수번호는 나온다", /^SW-/.test(bad.res.body.no), bad.res.body.no);
+    ok("슬랙 글은 그대로 간다", !!bad.sent, bad.sent);
   }
 
   console.log("\n── §6 서비스별 질문이 끝까지 가는가");

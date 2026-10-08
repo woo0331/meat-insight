@@ -1973,6 +1973,111 @@ function checkReqForms(W){
   }
 }
 
+
+/* ════════════════════════════════════════════════════════════════════
+   checkClaimSql — **접수번호 글자가 서버와 DB 에서 같은가** (0005 · §10)
+
+   접수번호를 만드는 쪽은 `api/_intake.js` 의 A32 이고, 받아서 찾는
+   쪽은 `db/migrations/0005_account_claim.sql` 의 정규식입니다. 둘이
+   어긋나면 **멀쩡한 번호를 "없는 번호" 로 거절합니다** — 손님은 자기
+   번호를 잘못 적은 줄 알고 포기합니다.
+
+   ⚠️ 글자를 하나 더하거나 빼실 때 **두 곳을 같이** 고쳐야 합니다.
+   `deal.js` ↔ `deal_move` 표를 맞춰 보는 것과 같은 까닭입니다.
+   ════════════════════════════════════════════════════════════════════ */
+function checkClaimSql(){
+  const intake = path.join(ROOT, "api", "_intake.js");
+  const claim  = path.join(ROOT, "db", "migrations", "0005_account_claim.sql");
+  if(!fs.existsSync(claim)) return;          /* 아직 안 만드셨으면 넘어갑니다 */
+  const a32m = fs.readFileSync(intake, "utf8").match(/A32\s*=\s*"([^"]+)"/);
+  if(!a32m) throw new Error("api/_intake.js 에서 A32 를 못 찾았습니다 — 접수번호 글자를 맞춰 볼 데가 없습니다");
+  const A32 = a32m[1];
+
+  const sql = fs.readFileSync(claim, "utf8");
+  const clm = sql.match(/\^SW(\[[^\]]+\])\{8\}\$/);
+  if(!clm) throw new Error("0005_account_claim.sql 에서 접수번호 정규식을 못 찾았습니다");
+  const cls = new RegExp("^" + clm[1] + "$");
+
+  const missing = A32.split("").filter(c => !cls.test(c));
+  if(missing.length)
+    throw new Error("접수번호 글자 — 서버는 쓰는데 DB 가 안 받습니다: " + missing.join(" ") +
+      "\n   api/_intake.js 의 A32 와 0005_account_claim.sql 의 정규식을 같이 고치세요" +
+      "\n   → 그대로 두면 멀쩡한 번호를 \"없는 번호\" 로 거절합니다");
+
+  /* ⚠️⚠️ 반대도 봅니다 — 전화로 읽어 주는 번호라 I·L·O·U 를 일부러
+     뺐습니다. DB 가 그것을 받아 주면 0/O 를 헷갈려 적은 번호가 **남의
+     번호에 맞을** 수 있습니다. */
+  const extra = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".split("")
+    .filter(c => cls.test(c) && A32.indexOf(c) < 0);
+  if(extra.length)
+    throw new Error("접수번호 글자 — DB 가 더 받아 줍니다: " + extra.join(" ") +
+      "\n   전화로 읽어 주는 번호라 I·L·O·U 를 뺐습니다 (0/O · 1/I/L 혼동)" +
+      "\n   → 더 받아 주면 헷갈려 적은 번호가 남의 번호에 맞을 수 있습니다");
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   checkRpcArgs — **api/deal.js 의 인자 이름이 SQL 의 함수와 같은가**
+
+   ⚠️⚠️ 이 검사가 생긴 까닭 — `OK_ARG` 를 눈대중으로 적어 두었습니다
+   (`p_amount` · `p_paid_at` · `p_delta` · `p_reason`). 실제 함수는
+   `p_fee` · `p_vat` · `p_total` · `p_snap` · `p_new_fee` 입니다.
+   그대로 두면 수수료 확정이 **인자 없이** 불려서 거절당하고, 화면은
+   "처리하지 못했습니다" 만 냅니다 — 에러도 안 나고 빌드도 통과합니다.
+   업체 `subs` · 사진 키 · 도구 묶음 · `deal_move` 표에서 겪은 그
+   자리입니다.
+   ════════════════════════════════════════════════════════════════════ */
+function checkRpcArgs(){
+  const dealApi = path.join(ROOT, "api", "deal.js");
+  if(!fs.existsSync(dealApi)) return;
+  const src = fs.readFileSync(dealApi, "utf8");
+
+  function listOf(name){
+    const m = src.match(new RegExp("const\\s+" + name + "\\s*=\\s*\\{([\\s\\S]*?)\\n\\};"));
+    if(!m) throw new Error("api/deal.js 에서 " + name + " 을 못 찾았습니다");
+    /* ⚠️ 주석을 먼저 걷어냅니다 — 규칙을 설명하는 주석에 걸려 멀쩡한
+       코드를 실패로 잡은 적이 있습니다 (틀린 것은 검사였습니다) */
+    const body = m[1].replace(/\/\*[\s\S]*?\*\//g, " ");
+    return (body.match(/([A-Za-z_][A-Za-z0-9_]*)\s*:\s*1/g) || [])
+      .map(x => x.split(":")[0].trim());
+  }
+  const fns  = listOf("OK_FN");
+  const args = listOf("OK_ARG");
+
+  /* SQL 쪽 — 마이그레이션 전부에서 함수 정의를 모읍니다 */
+  const dir = path.join(ROOT, "db", "migrations");
+  if(!fs.existsSync(dir)) return;
+  const sql = fs.readdirSync(dir).filter(f => /\.sql$/.test(f) && !/_down\./.test(f))
+    .sort().map(f => fs.readFileSync(path.join(dir, f), "utf8")).join("\n");
+
+  const want = {};
+  fns.forEach(function(f){
+    const m = sql.match(new RegExp(
+      "create\\s+or\\s+replace\\s+function\\s+" + f + "\\s*\\(([\\s\\S]*?)\\)\\s*returns", "i"));
+    if(!m)
+      throw new Error("api/deal.js 가 허용한 " + f + " 가 db/migrations 에 없습니다\n" +
+        "   → 화면이 부르는데 DB 에 없으면 손님에게 \"처리하지 못했습니다\" 만 나갑니다");
+    /* 인자 이름만 (기본값 · 형은 버립니다) */
+    m[1].replace(/\/\*[\s\S]*?\*\//g, " ").split(",").forEach(function(part){
+      const n = part.trim().match(/^(p_[a-z0-9_]+)\b/);
+      if(n) want[n[1]] = f;
+    });
+  });
+
+  const missing = Object.keys(want).filter(k => args.indexOf(k) < 0);
+  if(missing.length)
+    throw new Error("api/deal.js 의 OK_ARG 에 빠진 인자가 있습니다: " +
+      missing.map(k => k + "(" + want[k] + ")").join(" · ") +
+      "\n   → 빠진 인자는 **조용히 안 넘어갑니다.** 함수가 인자 없이 불려 거절당하고," +
+      "\n     화면에는 \"처리하지 못했습니다\" 만 나갑니다 (에러도 안 납니다)");
+
+  const extra = args.filter(k => !want[k]);
+  if(extra.length)
+    throw new Error("api/deal.js 의 OK_ARG 에 **없는 함수의 인자**가 있습니다: " + extra.join(" · ") +
+      "\n   → 쓰지 않는 이름을 열어 두면, 나중에 같은 이름의 칸이 생길 때 그대로 넘어갑니다" +
+      "\n     (변경자는 토큰에서만 와야 합니다 — p_by 를 열어 두면 남의 이름으로 기록이 남습니다)");
+}
+
 /* ── 실행 ─────────────────────────────────────────────────────── */
 checkCssVars();
 checkColorSchemeCss();
@@ -1983,6 +2088,8 @@ checkSales(W);
 checkDeal(W);
 checkFee(W);
 checkDealSql(W);
+checkClaimSql();
+checkRpcArgs();
 checkOffers(W);
 checkReqForms(W);
 checkProviders(W);

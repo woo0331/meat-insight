@@ -37,6 +37,10 @@ const { deliver, clean, why, fromOurPages } = require("./_send.js");
    규칙입니다 (fail-closed). */
 const { dbReady, dbInsert, dbSelect, dbWhy } = require("./_db.js");
 const { reqNo, telKey, intakeDup } = require("./_intake.js");
+/* ⚠️ 로그인은 **거들기만** 합니다. 접수는 로그인 없이 들어오는 것이
+   맞습니다 — 견적 하나 받으려고 가입하게 만들면 거기서 닫힙니다.
+   토큰이 같이 왔을 때만 신청을 그 계정에 이어 둡니다 (§10). */
+const { authReady, bearer, session } = require("./_auth.js");
 
 const KINDS = { sos:1, quote:1, partner:1 };
 
@@ -170,11 +174,26 @@ module.exports = async function handler(req, res){
       }
     }
 
+    /* 로그인하고 넣으셨으면 그 계정에 바로 이어 둡니다 — 나중에
+       `claim_request` 로 번호와 연락처를 다시 적지 않아도 됩니다 (§10).
+       ⚠️⚠️ **요청이 보낸 아이디를 쓰지 않습니다.** 토큰을 Supabase 에
+       물어서 나온 값만 씁니다 — 아이디를 받아 적으면 누구나 남의
+       계정에 신청을 꽂아 넣을 수 있습니다.
+       ⚠️ 토큰이 없거나 만료됐으면 **그냥 비워 둡니다.** 접수는
+       그대로 됩니다 (로그인 때문에 요청을 잃지 않습니다). */
+    let uid = null;
+    if(authReady() && bearer(req)){
+      const who = await session(req);
+      if(who.ok) uid = who.sub;
+      else console.warn("[site] 로그인을 확인하지 못해 신청을 계정에 잇지 않았습니다 — " + who.why);
+    }
+
     /* 저장 — ⚠️ 저장이 실패하면 접수를 막지 않고 번호만 안 냅니다.
        슬랙으로는 그대로 갑니다. 손님의 요청을 잃는 쪽이 더 나쁩니다. */
     const cand = reqNo();
     const row = {
       no:        cand,
+      user_id:   uid,
       side:      clean(b.side, 20) || (kind === "sos" ? "ops" : "start"),
       industry:  q.biz || clean(b.industry, 40) || null,
       cat:       q.cat || q.service || null,

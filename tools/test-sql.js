@@ -116,12 +116,13 @@ try{
                   "db/migrations/0001_init.sql",
                   "db/migrations/0002_schema_version.sql",
                   "db/migrations/0003_confirm_fee.sql",
-                  "db/migrations/0004_move_state.sql"]){
+                  "db/migrations/0004_move_state.sql",
+                  "db/migrations/0005_account_claim.sql"]){
     let e = "";
     try{ psqlFile(f); }catch(err){ e = String(err.stderr || err.message).split("\n").slice(0,3).join(" "); }
     ok(f.replace("db/", "") + " 가 돈다", e === "", e);
   }
-  ok("판 번호가 넷까지 들어온다", psql("select count(*) from schema_version") === "4",
+  ok("판 번호가 다섯까지 들어온다", psql("select count(*) from schema_version") === "5",
      psql("select count(*) from schema_version"));
 
   /* ⚠️⚠️ db/README.md 가 돌려 보라고 적은 바로 그 쿼리입니다 */
@@ -160,7 +161,13 @@ try{
       ('22222222-2222-2222-2222-222222222222','customer',null),
       ('33333333-3333-3333-3333-333333333333','provider','pv-one'),
       ('44444444-4444-4444-4444-444444444444','staff',null),
-      ('55555555-5555-5555-5555-555555555555','admin',null);
+      ('55555555-5555-5555-5555-555555555555','admin',null)
+    /* ⚠️⚠️ 0005 의 트리거가 가입하는 순간 account 줄을 **이미** 만듭니다
+       (역할은 customer 로 박혀 있습니다). 그래서 역할을 올리는 것은
+       insert 가 아니라 **update** 입니다 — db/README.md 1-4 가 적어 둔
+       update account set role='admin' 그대로입니다. */
+    on conflict (id) do update set role = excluded.role,
+                                   provider_id = excluded.provider_id;
     insert into request (id, no, user_id, side, name, tel, agree_at, state) values
       ('aaaaaaaa-0000-0000-0000-000000000001','SW-AAAA-0001','11111111-1111-1111-1111-111111111111','start','갑','01011110000',now(),'done'),
       ('aaaaaaaa-0000-0000-0000-000000000002','SW-AAAA-0002','22222222-2222-2222-2222-222222222222','start','을','01022220000',now(),'new');
@@ -542,6 +549,110 @@ try{
        enumVals("app_role") === W.AM_ROLES.map(x => x.key).join(" "), enumVals("app_role"));
     ok("수익모델 여섯이 같다",
        enumVals("fee_type") === W.AM_FEE_TYPE.map(x => x.key).join(" "), enumVals("fee_type"));
+  }
+
+
+  console.log("\n── 0005 가입하면 줄이 생기는가 (역할은 못 고릅니다)");
+  {
+    const as = u => "set role authenticated; select become('" + u + "'); ";
+
+    /* 트리거가 account 줄을 만들었는가 — 씨앗이 auth.users 에 다섯을
+       넣었으니 다섯 줄이 있어야 합니다 */
+    ok("auth.users 다섯에 account 줄이 다 있다",
+       psql("select count(*) from account") === "5", psql("select count(*) from account"));
+
+    /* ⚠️⚠️ 가입할 때 역할을 **고를 수 없어야** 합니다. raw_user_meta_data
+       에 admin 을 적어 보냅니다 — 화면에서 보내는 값입니다. */
+    psql("insert into auth.users (id, email, raw_user_meta_data) values " +
+         "('66666666-6666-6666-6666-666666666666','evil@test'," +
+         "'{\"role\":\"admin\",\"name\":\"나쁜 사람\"}'::jsonb)");
+    const r6 = psql("select role::text from account where id='66666666-6666-6666-6666-666666666666'");
+    ok("가입하면서 역할을 admin 으로 적어 보내도 customer 다", r6 === "customer", r6);
+    const n6 = psql("select name from account where id='66666666-6666-6666-6666-666666666666'");
+    ok("이름은 받아 적는다", n6 === "나쁜 사람", n6);
+
+    /* 두 번 돌려도 안전한가 (마이그레이션을 다시 돌리는 일이 있습니다) */
+    let twice = "";
+    try{ psqlFile("db/migrations/0005_account_claim.sql"); }
+    catch(e){ twice = String(e.stderr || e.message).split("\n").slice(0,2).join(" "); }
+    ok("0005 를 두 번 돌려도 터지지 않는다", twice === "", twice);
+  }
+
+  console.log("\n── 0005 신청하신 분이 자기 배정을 보는가 (§10 · 제17조)");
+  {
+    const as = u => "set role authenticated; select become('" + u + "'); ";
+    const A = "11111111-1111-1111-1111-111111111111";   /* aaaa…0001 의 주인 */
+    const B = "22222222-2222-2222-2222-222222222222";   /* 남 */
+    const mine = allowed(as(A) + "select provider_id from assignment");
+    ok("내 배정의 업체가 보인다", mine.yes && mine.out === "pv-one", mine.out || mine.why);
+    const other = allowed(as(B) + "select count(*) from assignment");
+    ok("남의 배정은 안 보인다", other.yes && other.out === "0", other.out || other.why);
+
+    /* ⚠️⚠️ 배정은 보여도 **수수료 표와 계약은 그대로 안 보여야** 합니다 */
+    const f = allowed(as(A) + "select count(*) from fee_policy");
+    ok("고객에게 수수료 정책은 안 보인다", f.yes && f.out === "0", f.out || f.why);
+    const d = allowed(as(A) + "select count(*) from deal");
+    ok("고객에게 계약은 안 보인다", d.yes && d.out === "0", d.out || d.why);
+  }
+
+  console.log("\n── 0005 신청번호로 내 것으로 (claim_request · §10)");
+  {
+    const as = u => "set role authenticated; select become('" + u + "'); ";
+    const C = "66666666-6666-6666-6666-666666666666";   /* 방금 가입한 사람 */
+    const B = "22222222-2222-2222-2222-222222222222";
+
+    /* 로그인 없이 넣은 신청 하나 (user_id 가 비어 있습니다) */
+    psql("insert into request (id,no,side,name,tel,agree_at) values " +
+         "('bbbbbbbb-0000-0000-0000-000000000001','SW-ABCD-2345','start','병','031-000-1234',now())");
+
+    /* ⚠️⚠️ 번호만 맞고 연락처가 틀리면 안 됩니다 */
+    const wrongTel = denied(as(C) + "select claim_request('SW-ABCD-2345','01099998888')");
+    ok("번호는 맞고 연락처가 틀리면 거절한다", wrongTel.no, wrongTel.why);
+
+    /* ⚠️⚠️ 없는 번호와 틀린 연락처가 **같은 말**로 거절돼야 합니다 —
+       갈라 주면 번호가 있는지를 확인해 가며 긁을 수 있습니다 */
+    const noSuch = denied(as(C) + "select claim_request('SW-ZZZZ-9999','01099998888')");
+    ok("없는 번호도 거절한다", noSuch.no, noSuch.why);
+    ok("둘이 같은 말로 거절한다",
+       noSuch.no && wrongTel.no && noSuch.why === wrongTel.why,
+       [noSuch.why, wrongTel.why]);
+
+    /* 뺀 글자가 섞인 번호 */
+    const bad32 = denied(as(C) + "select claim_request('SW-ABIO-2345','0310001234')");
+    ok("I·L·O·U 가 섞인 번호를 받지 않는다", bad32.no, bad32.why);
+
+    /* ⚠️ 하이픈이 섞인 연락처는 **같은 번호**입니다 */
+    const beforeAudit = psql("select count(*) from audit_log");
+    const got = allowed(as(C) + "select claim_request('sw abcd 2345','031 000 1234')");
+    ok("소문자 · 띄어쓰기 · 하이픈이 섞여도 알아본다",
+       got.yes && got.out === "bbbbbbbb-0000-0000-0000-000000000001", got.out || got.why);
+    const owner = psql("select user_id::text from request where no='SW-ABCD-2345'");
+    ok("신청이 그 사람 것이 되었다", owner === C, owner);
+
+    /* §8 — 중요한 변경은 누가 언제. ⚠️ 갯수를 박아 두지 않고 **전을
+       재서 늘었는지**만 봅니다 (이 저장소가 두 번 겪은 자리입니다). */
+    const afterAudit = psql("select count(*) from audit_log");
+    ok("감사 기록이 한 줄 늘었다",
+       Number(afterAudit) === Number(beforeAudit) + 1, beforeAudit + " → " + afterAudit);
+
+    /* ⚠️⚠️ 이미 남의 것이 된 신청은 못 가져갑니다 */
+    const steal = denied(as(B) + "select claim_request('SW-ABCD-2345','0310001234')");
+    ok("남의 것이 된 신청은 못 가져간다", steal.no, steal.why);
+
+    /* 내가 이미 가진 것을 또 눌러도 터지지 않습니다 (두 번 누름) */
+    const again = allowed(as(C) + "select claim_request('SW-ABCD-2345','0310001234')");
+    ok("내 것을 또 눌러도 터지지 않는다", again.yes, again.why);
+
+    /* ⚠️ 로그인하지 않은 쪽(anon)에게는 **권한 자체가 없어야** 합니다 */
+    const anonCan = psql(
+      "select count(*) from information_schema.routine_privileges " +
+      "where routine_name='claim_request' and grantee='anon'");
+    ok("anon 에게 claim_request 권한이 없다", anonCan === "0", anonCan);
+
+    /* 로그인하지 않은 상태로 부르면 함수가 스스로 거절합니다 */
+    const noUid = denied("set role authenticated; select become(null); " +
+                         "select claim_request('SW-ABCD-2345','0310001234')");
+    ok("로그인 없이 부르면 거절한다", noUid.no, noUid.why);
   }
 
   console.log("\n── 되돌리기 파일이 실수로 안 돌아가는가");

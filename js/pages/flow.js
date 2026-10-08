@@ -200,15 +200,15 @@ function PageClosure(){
     '</div>'+
     IndustryGrid("/closure","")+
   '</div></section>'+
-  /* 정리 열세 걸음 — 2026-10-05 V2 §8.
-     ⚠️ **폐업을 철거업체 연결 서비스로 만들지 않습니다** (§8). 손님이
-     "폐업하려면 뭘 해야 하지" 라고 생각했을 때 전체 절차를 여기서
-     이해하실 수 있어야 합니다. */
-  ProcessBand({ key:"closing", kicker:"CLOSING PROCESS",
-    title:"정리, 무엇부터 하나요?",
-    lead:amProcess("closing").length+"걸음입니다. 기한이 있는 것이 여럿이라 순서가 곧 돈입니다.",
-    tone:"sec-white",
-    note:"통째로 넘길 수 있으면 철거비와 원상복구가 줄어듭니다 — 일곱째 걸음을 먼저 보셔도 됩니다." })+
+  /* ⚠️⚠️ **2026-10-08 지시서 §15 · §16 · §17 — 고르신 상황마다 순서가
+     다릅니다.** 전에는 어느 상황을 고르셔도 **같은 열세 걸음**이
+     나왔습니다 — 장비만 파시려는 분께 직원 정리와 폐업 신고부터
+     읽히는 꼴이었습니다.
+     ⚠️ **새 화면을 만들지 않았습니다** — `AM_PROCESS` 를 바꿔 끼웁니다.
+     ⚠️ **폐업을 철거업체 연결 서비스로 만들지 않습니다** (§17 — "폐업을
+     선택했다고 무조건 철거부터 안내하지 않는다"). 어느 길이든 양도
+     가능성을 먼저 짚습니다. */
+  ClosingProcess(null)+
   ClosureHelpBand()+
   JourneyBand({ current:"closing",
     title:"다른 것도 준비하고 계신가요?",
@@ -292,6 +292,62 @@ function WantBand(ind){
 }
 
 /* ── /closure/:industry ─────────────────────────────────────────── */
+/* ── 고르신 상황의 순서 (2026-10-08 §15 · §16 · §17) ──────────────
+   ⚠️⚠️ **`AM_PROCESS` 의 key 를 바꿔 끼울 뿐입니다** — 세 로드맵이
+   전부 `journey.js` 한 곳에 있고 `/transfer` 도 같은 것을 씁니다.
+   여기에 또 적으면 두 곳이 어긋납니다 (§19 콘텐츠 중복 방지).
+   ⚠️ 상황을 안 고르셨으면 **전체 절차(closing)** 가 기본입니다 —
+   고르는 것이 의무가 되면 안 됩니다. */
+var CLOSE_PROC = {
+  pass:  { key:"acq-out",   kicker:"TRANSFER PROCESS",
+           title:"매장을 넘길 때는 이 순서입니다",
+           lead:"통째로 넘기면 철거비와 원상복구가 줄어듭니다. 조건부터 정합니다.",
+           note:"매물에 적는 평수 · 보증금 · 월세 · 권리금 · 매출은 사장님이 적으신 값으로 나갑니다 — 저희가 확인하거나 보증하는 값이 아닙니다." },
+  money: { key:"asset-out", kicker:"ASSET PROCESS",
+           title:"시설 · 장비를 정리할 때는 이 순서입니다",
+           lead:"버리면 비용이고 넘기면 돈입니다. 무엇이 남는지부터 적습니다.",
+           note:"리스 · 할부 · 렌탈이 남은 장비는 내 것이 아닙니다 — 계약서부터 확인하세요." },
+  fast:  { key:"closing",   kicker:"CLOSING PROCESS",
+           title:"완전히 정리할 때는 이 순서입니다",
+           lead:"기한이 있는 것이 여럿이라 순서가 곧 돈입니다.",
+           note:"통째로 넘길 수 있으면 철거비와 원상복구가 줄어듭니다 — 일곱째 걸음을 먼저 보셔도 됩니다." }
+};
+/* ⚠️⚠️ **직원이 계시면 기한이 붙습니다** (§18 다섯째 질문의 답을
+   실제로 씁니다). 해고예고 · 퇴직금 · 4대보험 상실 신고는 전부
+   날짜가 정해져 있어서, 순서를 다 읽기 전에 지나가 버립니다.
+   ⚠️ **기한 숫자를 여기 적지 마세요** — 근속 기간 · 사업장 규모에
+   따라 갈리고, 적어 두면 틀린 날부터 거짓말입니다. 글과 업체로
+   보내는 데까지입니다.
+   ⚠️ 진단에서 "직원이 있다" 고 하셨을 때만 나옵니다 — 안 고르신
+   분께는 안 냅니다 (답을 추측하지 않습니다). */
+function StaffNote(){
+  if(nowQS("staff") !== "1") return "";
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="note-box">'+
+      '<b>직원이 계시면 기한부터 보세요.</b>'+
+      '<p>해고예고 · 퇴직금 · 4대보험 상실 신고는 날짜가 정해져 있습니다. '+
+        '아래 순서를 다 읽기 전에 먼저 확인하실 자리입니다.</p>'+
+      '<p class="row-cta">'+
+        '<a class="btn btn-b btn-sm" href="/content/pyeeop-jigwon-jeongri">'+
+          '정리할 때 직원 — 무엇을 언제'+icon("arrow",15)+'</a>'+
+        '<a class="btn btn-o btn-sm" href="/providers/labor">노무 전문가 찾기</a>'+
+      '</p>'+
+    '</div>'+
+  '</div></section>';
+}
+function ClosingProcess(ind){
+  var w = nowQS("w");
+  /* ⚠️ "아직 모르겠어요"(lost)는 **진단이 먼저**라 전체 절차를 냅니다 —
+     답하신 뒤에 위 셋 중 하나로 갑니다. */
+  var o = CLOSE_PROC[w] || CLOSE_PROC.fast;
+  var n = amProcess(o.key).length;
+  return StaffNote() + ProcessBand({ key:o.key, kicker:o.kicker, tone:"sec-white",
+    title:(ind ? ind.name + " — " : "") + o.title,
+    lead:n + "걸음입니다. " + o.lead,
+    industry: ind ? ind.key : "",
+    note:o.note });
+}
+
 /* ── §20 간단 진단 — "아직 모르겠어요" 를 고르셨을 때 ──────────────
    ⚠️⚠️ **질문 수를 최소화합니다** (지시서 §20). 넷입니다 — 다섯째부터는
    설문이 되고, 이미 지쳐 계신 분께 숙제를 하나 더 드리는 것입니다.
@@ -304,9 +360,12 @@ function WantBand(ind){
    ⚠️ 판정은 규칙 셋뿐이고 "AI 가 분석했습니다" 라고 하지 않습니다. */
 var CLOSE_ASK = [
   { k:"open",  q:"지금도 영업 중이신가요?" },
-  { k:"hand",  q:"매장을 넘길 의향이 있으신가요?" },
+  { k:"lease", q:"임대차 계약이 아직 남아 있나요?" },
+  { k:"hand",  q:"매장을 넘길 생각이 있으신가요?" },
   { k:"equip", q:"쓸 만한 시설 · 장비가 남아 있나요?" },
-  { k:"lease", q:"임대차 계약이 아직 남아 있나요?" }
+  /* ⚠️ 2026-10-08 §18 의 다섯째입니다. 직원이 있으면 해고예고 ·
+     퇴직금 · 상실 신고에 **기한**이 붙어서 순서가 달라집니다. */
+  { k:"staff", q:"직원이 있으신가요?" }
 ];
 window.closeAskGo = function(base){
   var on = {};
@@ -314,10 +373,15 @@ window.closeAskGo = function(base){
     var e = document.getElementById("ask-" + a.k);
     on[a.k] = !!(e && e.checked);
   });
-  /* 넘길 의향이 있고 아직 영업 중이면 **양도가 제일 먼저**입니다 —
-     양도가 되면 철거비도 원상복구도 안 드는 경우가 있습니다. */
+  /* ⚠️ 규칙은 둘뿐이고 "AI 가 분석했습니다" 라고 하지 않습니다
+     (절대 규칙 5). 넘길 생각이 있으면 **양도가 제일 먼저**입니다 —
+     양도가 되면 철거비도 원상복구도 안 드는 경우가 있습니다.
+     그 다음이 "쓸 만한 것이 남았는가" 이고, 둘 다 아니면 전체 절차. */
   var w = on.hand ? "pass" : (on.equip ? "money" : "fast");
-  go(base + "?w=" + encodeURIComponent(w));
+  /* ⚠️⚠️ **직원이 있으면 기한이 붙습니다** — 해고예고 · 퇴직금 ·
+     상실 신고. 순서를 바꾸지는 않고 그 걸음으로 바로 가는 길을
+     같이 냅니다 (`?w=` 와 함께 주소에 실립니다). */
+  go(base + "?w=" + encodeURIComponent(w) + (on.staff ? "&staff=1" : ""));
 };
 function CloseAsk(base){
   return '<section class="sec sec-white cask"><div class="w">'+
@@ -359,11 +423,9 @@ function PageClosureIndustry(ind){
   /* ⚠️⚠️ **순서가 맨 앞입니다** (§5). 전에는 시설 매각 · 희망 조건이
      먼저였는데, 정리하시는 분이 제일 먼저 묻는 것은 "무엇부터 하나"
      입니다. 아래 구간들은 그대로 둡니다 (§1). */
-  ProcessBand({ key:"closing", kicker:"CLOSING PROCESS",
-    title:ind.name+" 정리, 무엇부터 하나요?",
-    lead:amProcess("closing").length+"걸음입니다. 걸음마다 "+ind.name+
-         "에 맞는 업체 · 글로 바로 넘어갑니다.",
-    industry:ind.key, tone:"sec-gray" })+
+  /* ⚠️ 업종 화면에서도 **고르신 상황의 순서**를 냅니다 (§15 · §16 · §17) —
+     여기만 열세 걸음으로 두면 같은 사이트에서 두 가지 말을 합니다. */
+  ClosingProcess(ind)+
   (ind.equip && ind.equip.length ? SellBand(ind) : "")+
   WantBand(ind)+
   BridgeFor(ind, "close")+

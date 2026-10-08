@@ -1374,8 +1374,12 @@ function checkProcess(W){
       bad.push(where + " — " + o.cat + " 에 없는 하위 " + o.sub);
     if(o.read && !slugs.has(o.read)) bad.push(where + " — 없는 글 " + o.read);
     if(o.tool && !tools.has(o.tool)) bad.push(where + " — 없는 도구 " + o.tool);
+    /* ⚠️ 걸음의 주소에는 **질의문자가 붙을 수 있습니다**
+       (`/sell?t=asset`). 통째로 견주면 멀쩡한 주소가 "없는 주소" 로
+       걸립니다 — 경로만 떼어 봅니다. */
     [o.to, o.to2].forEach(t => {
-      if(t && !routes.has(t)) bad.push(where + " — 없는 주소 " + t); });
+      if(t && !routes.has(String(t).split("?")[0]))
+        bad.push(where + " — 없는 주소 " + t); });
   };
   Object.keys(W.AM_PROCESS||{}).forEach(k =>
     (W.AM_PROCESS[k]||[]).forEach((st, i) => chk("AM_PROCESS."+k+"["+i+"] "+st.name, st)));

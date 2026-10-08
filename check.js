@@ -1892,6 +1892,83 @@ const AUDIT = `(() => {
     if(shown !== all) return "화면 " + shown + "개 · 전체 " + all + "개 — 잘라 냈습니다";
     return true;`);
 
+  /* ⚠️⚠️ **2026-10-08 지시서 §15 · §16 · §17 — 고르신 상황마다 순서가
+     다릅니다.** 전에는 어느 상황을 고르셔도 같은 열세 걸음이 나왔고,
+     장비만 파시려는 분께 직원 정리와 폐업 신고부터 읽히는 꼴이었습니다.
+     ⚠️ 새 로드맵 데이터를 두 곳에 적지 않는지도 같이 봅니다 —
+     순서는 전부 AM_PROCESS 한 곳에서 옵니다. */
+  await f("고르신 상황마다 정리 순서가 다르다", "/closure?w=money", `
+    /* ⚠️⚠️ **이 검사는 화면을 옮겨 다닙니다.** prove-checks 는 되돌리기
+       뒤에 본문을 **다시 navigate 하지 않고** 돌리기 때문에, 자기 첫
+       주소로 스스로 돌아오지 않으면 두 번째 실행이 엉뚱한 화면에서
+       시작해 "되돌리기 전부터 실패" 로 보입니다 (이 저장소에서 겪은
+       자리입니다). 그래서 맨 앞에서 제자리로 갑니다. */
+    await go("/closure?w=money");
+    await new Promise(function(r){ setTimeout(r, 180); });
+    const P = window.AM_PROCESS || {};
+    for(const k of ["acq-out", "asset-out", "closing"])
+      if(!(P[k] || []).length) return k + " 로드맵이 없습니다";
+    const steps = function(){
+      return [].slice.call(document.querySelectorAll(".pcs > li .pcs-t"))
+        .map(function(e){ return e.textContent.trim(); });
+    };
+    const money = steps();
+    if(!money.length) return "정리 순서가 하나도 안 나옵니다";
+    const wantM = P["asset-out"].map(function(s){ return s.name; });
+    if(money.join("|") !== wantM.join("|"))
+      return "시설 · 장비 쪽 순서가 데이터와 다릅니다 — 화면 " + money.slice(0,2).join(" · ");
+    /* 양도 쪽으로 가면 **다른 순서**가 나와야 합니다 */
+    await go("/closure?w=pass");
+    await new Promise(function(r){ setTimeout(r, 180); });
+    const pass = steps();
+    const wantP = P["acq-out"].map(function(s){ return s.name; });
+    if(pass.join("|") !== wantP.join("|"))
+      return "양도 쪽 순서가 데이터와 다릅니다 — 화면 " + pass.slice(0,2).join(" · ");
+    if(pass.join("|") === money.join("|"))
+      return "상황을 바꿔도 순서가 그대로입니다";
+    /* 완전 폐업 쪽도 또 달라야 합니다 */
+    await go("/closure?w=fast");
+    await new Promise(function(r){ setTimeout(r, 180); });
+    const fast = steps();
+    if(fast.join("|") === pass.join("|") || fast.join("|") === money.join("|"))
+      return "완전 폐업 순서가 다른 상황과 같습니다";
+    /* ⚠️⚠️ **폐업을 선택했다고 철거부터 보여 주지 않습니다** (§17).
+       어느 길이든 양도 · 처분 가능성을 먼저 짚어야 합니다. */
+    const firstThree = fast.slice(0, 3).join(" ");
+    if(/철거|원상복구/.test(firstThree))
+      return "완전 폐업 첫 세 걸음이 철거부터입니다 — " + firstThree;
+    return true;`);
+
+  /* ⚠️⚠️ **§18 — 잘 모르겠다는 분께 묻는 질문 다섯**입니다.
+     ⚠️ 아무것도 저장하지 않고, **답을 안 하신 항목을 추측하지
+     않습니다.** 저장하는 것처럼 보이면 하지 않은 일을 했다고 말하는
+     것입니다 (절대 규칙 5). */
+  await f("모르겠다고 하시면 짧게 묻고 그 순서로 보낸다", "/closure?w=lost", `
+    /* ⚠️ 아래에서 단추를 눌러 화면을 옮깁니다 — 제자리로 먼저 옵니다
+       (위 검사와 같은 까닭). */
+    await go("/closure?w=lost");
+    await new Promise(function(r){ setTimeout(r, 180); });
+    const L = [].slice.call(document.querySelectorAll(".cask-l .cask-i"));
+    if(L.length !== 5) return "질문이 " + L.length + "개입니다 (다섯)";
+    for(const li of L){
+      if(!li.querySelector('input[type="checkbox"]')) return "체크칸이 없는 질문이 있습니다";
+      if(li.getBoundingClientRect().height < 40)
+        return "질문 칸이 " + Math.round(li.getBoundingClientRect().height) + "px 입니다";
+    }
+    /* ⚠️ 하지 않는 저장을 한다고 적지 않습니다 */
+    const t = document.querySelector(".cask").textContent;
+    if(t.indexOf("아무 데도 저장되지 않습니다") < 0)
+      return "저장하지 않는다는 줄이 없습니다";
+    if(/저장됩니다|기록됩니다|분석/.test(t))
+      return "하지 않는 일을 한다고 적었습니다";
+    /* 체크하고 누르면 그 상황으로 가야 합니다 — 넘길 생각이 있으면 양도 */
+    document.getElementById("ask-hand").checked = true;
+    document.querySelector(".cask .btn").click();
+    await new Promise(function(r){ setTimeout(r, 220); });
+    if(location.search.indexOf("w=pass") < 0)
+      return "넘길 생각이 있다고 했는데 " + location.search + " 로 갔습니다";
+    return true;`);
+
   /* ⑭ 샴페인 골드는 **악센트로만** (§21)
      ⚠️ 이 저장소에서 금빛을 넓게 썼다가 통째로 걷어낸 적이 있습니다 —
      고급스러움이 아니라 꾸민 티였습니다. 면으로 번지는 것을 막습니다. */
@@ -3070,12 +3147,42 @@ const AUDIT = `(() => {
       if(slugs.indexOf(h) < 0) return "없는 글을 가리킵니다 — " + h;
       if(a.getBoundingClientRect().height < 40) return "글 칸이 40px 아래입니다";
     }
-    /* ⚠️⚠️ **작성일 · 글쓴이를 지어내지 마세요** (§9 · §26). 시안의
-       "2024. 12. 10" 과 전문가 이름은 디자인 예시입니다 — 저희 글에는
-       그 칸이 없고, 없는 것을 찍어 두면 그게 거짓입니다. */
-    const t = (document.querySelector(".mti-read")||{}).textContent || "";
-    if(/20[0-9]{2}\s*[.\-]\s*[0-9]{1,2}\s*[.\-]\s*[0-9]{1,2}/.test(t))
-      return "글 카드에 작성일이 찍혀 있습니다 — 저희 글에는 그 칸이 없습니다";
+    /* ⚠️⚠️ **날짜는 지어낸 값이 아니라 데이터의 것이어야 합니다**
+       (2026-10-08 §8 "실제 게시일 또는 수정일" · §23). 시안의
+       "2024. 12. 10" 은 디자인 예시입니다 — 화면에 찍힌 날짜를
+       content.js 의 at 값과 **하나씩 맞춰 봅니다.**
+       ⚠️ 주석에 백틱을 쓰지 마세요 (열일곱 번째). */
+    for(const a of rs){
+      const sl = (a.getAttribute("href")||"").replace("/content/","");
+      const c = (window.AM_CONTENTS||[]).filter(function(x){ return x.slug === sl; })[0];
+      const em = a.querySelector(".mti-r-m em");
+      if(!c.at){ if(em) return sl + " 는 날짜가 없는데 화면에 찍혔습니다"; continue; }
+      if(!em) return sl + " 의 날짜가 안 나옵니다";
+      if(em.textContent.trim() !== window.amDate(c.at))
+        return sl + " 날짜가 어긋납니다 — 화면 " + em.textContent.trim() +
+               " · 데이터 " + window.amDate(c.at);
+    }
+    /* ⚠️⚠️ **"최신 정보" 라고 적었으면 실제로 최신이라야 합니다.**
+       올린 날 차례가 아니면 글을 새로 써도 화면이 안 바뀝니다.
+       ⚠️ 같은 날짜 안에서는 분류가 안 겹치게 고르므로, 보는 것은
+       "제일 늦은 날짜인가" 이지 데이터 차례가 아닙니다. */
+    const dates = (window.AM_CONTENTS||[]).map(function(c){ return String(c.at||""); })
+      .sort().reverse();
+    const top = dates[0];
+    const shown = rs.map(function(a){ return (a.getAttribute("href")||"").replace("/content/",""); });
+    const cats = [];
+    for(const sl of shown){
+      const c = (window.AM_CONTENTS||[]).filter(function(x){ return x.slug === sl; })[0];
+      if(String(c.at||"") !== top)
+        return "최신 날짜(" + top + ")가 아닌 글이 있습니다 — " + sl + " (" + c.at + ")";
+      cats.push(c.cat);
+    }
+    /* 같은 날짜 글이 넉넉하면 분류가 겹치지 않아야 합니다 */
+    const sameDay = (window.AM_CONTENTS||[]).filter(function(c){ return String(c.at||"") === top; });
+    const nCat = sameDay.map(function(c){ return c.cat; })
+      .filter(function(x, i, a){ return a.indexOf(x) === i; }).length;
+    if(nCat >= 3 && cats.filter(function(x, i, a){ return a.indexOf(x) === i; }).length < 3)
+      return "같은 날 글이 여러 분야인데 세 편이 같은 분야입니다 — " + cats.join(" · ");
     return true;`);
 
   /* ⚠️⚠️ **빈 카드를 두지 마세요** (절대 규칙 2). 하위가 업종에서

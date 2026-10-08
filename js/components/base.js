@@ -216,3 +216,15 @@ window.toast = function(msg){
   t.textContent = msg; t.classList.add("on");
   clearTimeout(TT); TT = setTimeout(function(){ t.classList.remove("on"); }, 2800);
 };
+
+/* ── 날짜 한 벌 ───────────────────────────────────────────────────
+   `2026-10-01` → `2026. 10. 01`.
+   ⚠️⚠️ **없는 날짜를 만들어 내지 않습니다.** 못 읽는 값이면 빈
+   문자열을 돌려주고, 쓰는 쪽은 그때 **칸째 뺍니다** (자리표시자를
+   찍지 않습니다 — 절대 규칙 2).
+   ⚠️ "오늘로부터 n일 전" 같은 상대 표기를 쓰지 마세요 — 캐시된
+   화면에서 틀린 날부터 거짓말이 됩니다. */
+window.amDate = function(v){
+  var m = String(v || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? (m[1] + ". " + m[2] + ". " + m[3]) : "";
+};

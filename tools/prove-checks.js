@@ -265,6 +265,16 @@ const CASES = [
   ["목록이 길어도 한 번에 다 그리지 않는다",
    `window.amShown = function(total){ return total; };  /* 다 그리던 그때 */
     window.MoreBtn  = function(){ return ""; };`],
+  /* ⚠️⚠️ 어느 상황을 고르셔도 **같은 열세 걸음**이 나오던 그때로
+     되돌리면 걸려야 합니다 (2026-10-08 §15 · §16 · §17).
+     ⚠️ 되돌리기는 **데이터 쪽**입니다 — 화면만 고치면 go() 로 넘어갈
+     때 다시 그려져서 원래대로 돌아옵니다. */
+  ["고르신 상황마다 정리 순서가 다르다",
+   `window.CLOSE_PROC.money = window.CLOSE_PROC.fast;
+    window.CLOSE_PROC.pass  = window.CLOSE_PROC.fast;`],
+  /* 질문을 하나 빼면 걸려야 합니다 (§18 은 다섯입니다). */
+  ["모르겠다고 하시면 짧게 묻고 그 순서로 보낸다",
+   `window.CLOSE_ASK.pop(); window.rerender(true);`],
   /* 하지 않는 저장을 한다고 적어 두면 걸려야 합니다 (절대 규칙 5). */
   ["견적: 요청을 저장한다는 말과 실제가 같다",
    `document.querySelector("#q-f .note-mid").textContent =

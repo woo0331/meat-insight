@@ -2875,7 +2875,10 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    ⚠️⚠️ 매물이 0건일 때 **"없습니다" 한 줄로 화면 하나를 비우지
    않습니다.** 유용한 정보 → 체크리스트 → 지금 상태 → 다음 행동
    차례이고, 매물이 들어오면 같은 자리에 카드가 섭니다. */
-.mk-kind{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s4);
+/* ⚠️ 2026-10-08 §9 — 넷에서 **셋**이 됐습니다 (받는 분 · 넘기는 분 ·
+   장비만 정리하는 분). 칸 수를 바꾸면 여기도 같이 고치세요 — 안
+   고치면 마지막 칸 옆에 빈 자리가 남습니다 (푸터에서 겪은 자리). */
+.mk-kind{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s4);
   margin:0 0 var(--s7); }
 .mk-kind > li{ min-width:0; }
 .mk-kind a{ display:flex; flex-direction:column; gap:var(--s2);

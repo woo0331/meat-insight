@@ -1123,15 +1123,22 @@ function MainFranchise(){
    걸려 있습니다). 여기 또 적으면 두 곳이 어긋납니다.
    ⚠️⚠️ **매물이 들어오면 코드를 한 줄도 안 고치고** 카드로 바뀝니다 —
    아래 `L.length` 하나가 가릅니다 (§5 "자동으로 전환될 수 있는 구조"). */
+/* ⚠️⚠️ **2026-10-08 지시서 §9 의 안내 셋**입니다 (전에는 매장 · 시설 ·
+   장비 · 집기 넷이었는데, 그건 **무엇이 거래되는가**이지 손님이
+   "나는 어느 쪽인가" 를 고르는 단위가 아니었습니다).
+   셋은 **받는 분 · 넘기는 분 · 장비만 정리하는 분**입니다 — 매물이
+   0건이어도 셋 다 **오늘 바로 갈 수 있는 화면**입니다.
+   ⚠️⚠️ **`fridge` 같은 없는 아이콘 key 를 적지 마세요.** `icon()` 은
+   모르는 이름에 빈 문자열을 돌려줘서 타일이 **덩그러니 비었습니다** —
+   에러도 404 도 없었고 찍어 보고 알았습니다. 지금은 "아이콘 자리가
+   비었음" 이 전 화면에서 봅니다. */
 var MAIN_ASSET_KIND = [
-  { ic:"store", n:"매장",  d:"영업 중인 매장의 인수 · 양도", to:"/stores" },
-  { ic:"tool",  n:"시설",  d:"기존 인테리어와 시설 활용",    to:"/assets" },
-  /* ⚠️⚠️ **`fridge` 라는 아이콘은 없습니다.** `icon()` 은 모르는
-     이름에 빈 문자열을 돌려줘서, 이 타일이 **덩그러니 비어** 있었습니다
-     — 에러도 안 나고 전수 점검도 통과했습니다 (찍어 보고 알았습니다).
-     이제 "아이콘 자리가 비었음" 이 전 화면에서 봅니다. */
-  { ic:"snow",  n:"장비",  d:"주방기기 · 냉장 · 냉동 · POS",  to:"/assets?s=kitchen-eq" },
-  { ic:"sofa",  n:"집기",  d:"테이블 · 의자 · 사업용 집기",   to:"/assets?s=furniture" }
+  { ic:"pin",      n:"매장 인수",      d:"상권을 처음부터 찾지 않아도 됩니다",
+    to:"/transfer?t=in" },
+  { ic:"handover", n:"매장 양도",      d:"넘기면 철거비와 원상복구가 줄어듭니다",
+    to:"/transfer?t=out" },
+  { ic:"boxes",    n:"시설 · 장비 정리", d:"버리면 비용이고 넘기면 돈입니다",
+    to:"/closure?w=money" }
 ];
 function MainStores(){
   var L  = (window.AM_STORES||[]);
@@ -1487,9 +1494,35 @@ function mainCalcIn(){
 function mainReadIn(){
   var all = (window.AM_CONTENTS || []);
   if(!all.length) return "";
-  /* ⚠️ 셋입니다 (시안). 차례는 데이터 차례이고 "인기" 가 아닙니다 —
-     조회 · 클릭을 하나도 모으지 않습니다 (마무리 지시서 §3). */
-  var L = all.slice(0, 3);
+  /* ⚠️⚠️ **"최신 정보" 라고 적었으면 실제로 최신이어야 합니다.**
+     전에는 데이터 차례 앞 셋을 냈는데, 그러면 글을 새로 써도 화면이
+     안 바뀌고 딱지만 "최신" 이었습니다 — 하지 않은 일을 했다고 말하는
+     쪽입니다 (절대 규칙 5). 올린 날(`at`)로 정렬합니다.
+     ⚠️ "인기" 가 아닙니다 — 조회 · 클릭을 하나도 모으지 않습니다
+     (마무리 지시서 §3). 정렬 기준은 **날짜 하나**입니다. */
+  var byDate = all.slice().sort(function(a, b){
+    return String(b.at || "").localeCompare(String(a.at || ""));
+  });
+  /* ⚠️ **날짜가 같을 때만** 분류가 안 겹치게 고릅니다. 기준은 그대로
+     날짜 하나이고(인기 · 조회가 아닙니다), 같은 날 올린 글 가운데
+     무엇을 앞에 둘지는 어차피 정해진 것이 없습니다 — 그 자리에서
+     세 편이 전부 같은 분류로 나오면 "이 사이트는 카페 얘기만 하나"
+     로 읽힙니다. 세 편을 못 채우면 겹쳐서라도 채웁니다. */
+  /* ⚠️ 분류만 보면 모자랍니다 — 같은 날 쓴 글이 **전부 카페 것**이라
+     분류는 셋인데 업종이 하나였습니다 (찍어 보고 알았습니다). 업종도
+     안 겹치게 봅니다. 업종이 안 붙은 글은 서로 안 겹치는 것으로 셉니다. */
+  var L = [], seenCat = {}, seenInd = {};
+  byDate.forEach(function(c){
+    if(L.length >= 3 || seenCat[c.cat]) return;
+    if(c.industry && seenInd[c.industry]) return;
+    seenCat[c.cat] = 1;
+    if(c.industry) seenInd[c.industry] = 1;
+    L.push(c);
+  });
+  byDate.forEach(function(c){
+    if(L.length >= 3 || L.indexOf(c) >= 0) return;
+    L.push(c);
+  });
   return '<div class="mti-c mti-read">'+
     '<div class="mti-hd">'+
       '<p class="eyebrow">GUIDE</p>'+
@@ -1504,8 +1537,13 @@ function mainReadIn(){
        가 됩니다. 빈 액자도 깔지 않습니다 (절대 규칙 2). */
     '<ul class="mti-rg">'+L.map(function(c){
       return '<li><a href="/content/'+esc(c.slug)+'">'+
+        /* ⚠️⚠️ **날짜는 지어낸 값이 아니라 `content.js` 의 `at`
+           입니다** — 글을 올린 날입니다. 시안의 "2024. 12. 10" 은
+           디자인 예시이고, 없는 날짜를 찍으면 그게 거짓입니다
+           (지시서 §23). 값이 없는 글은 **날짜 칸째 뺍니다**
+           (자리표시자를 찍지 않습니다 — 절대 규칙 2). */
         '<span class="mti-r-m">'+esc((amCat(c.cat) || {}).name || "")+
-          (c.read ? '<em>예상 읽기 '+esc(String(c.read))+'분</em>' : '')+'</span>'+
+          (c.at ? '<em>'+esc(amDate(c.at))+'</em>' : '')+'</span>'+
         '<b>'+esc(c.title)+'</b></a></li>'; }).join("")+'</ul>'+
   '</div>';
 }

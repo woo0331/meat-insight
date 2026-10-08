@@ -111,4 +111,88 @@ function dbWhy(reason){
     : "DB 가 응답하지 않거나 거절했습니다. (" + reason + ")";
 }
 
-module.exports = { dbReady, dbInsert, dbSelect, dbWhy, safeTable, DB_TIMEOUT };
+
+/* ════════════════════════════════════════════════════════════════════
+   그 사람의 토큰으로 읽고 부르기 (RLS 를 **거쳐서**)
+
+   ⚠️⚠️ 위의 call() 은 service key 라 RLS 를 통째로 지나갑니다 — 저장만
+   그렇게 합니다 (로그인하지 않은 접수를 넣는 자리). 손님 · 업체 ·
+   관리자가 **보는 것**은 전부 아래를 거칩니다. 그러면 "누가 무엇을 볼
+   수 있는가" 가 DB 한 곳(RLS)에만 있고, 화면과 서버에 두 번 적어
+   어긋나는 일이 없습니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ⚠️ 함수 이름을 손님이 보낸 값에서 받지 마세요. safeTable 과 같은
+   까닭이고, 글자를 씻는 것은 **둘째 자물쇠**입니다 — 첫째는 부르는
+   쪽의 허용 목록입니다 (api/deal.js). 둘이 서로 다른 말로 거절해야
+   어느 자물쇠가 걸렸는지 압니다. */
+function safeFn(f){
+  return String(f || "").toLowerCase().replace(/[^a-z_]/g, "").slice(0, 60);
+}
+
+function anonKey(){
+  const k = process.env.SUPABASE_ANON_KEY;
+  return (typeof k === "string" && k.trim()) ? k.trim() : "";
+}
+
+async function callAs(token, method, pathAndQuery, body, prefer){
+  /* ⚠️ 여기는 service key 가 **필요하지 않습니다** — 주소와 공개 키만
+     있으면 그 사람의 토큰으로 읽습니다. dbReady() 를 보면 안 됩니다. */
+  if(!base() || !anonKey()) return { ok:false, why:"nowhere" };
+  if(!token)                return { ok:false, why:"no token" };
+
+  const ctl = new AbortController();
+  const timer = setTimeout(function(){ ctl.abort(); }, DB_TIMEOUT);
+  try{
+    const r = await fetch(base() + "/rest/v1" + pathAndQuery, {
+      method: method,
+      signal: ctl.signal,
+      /* ⚠️⚠️ apikey 는 **공개 키**이고 authorization 은 **그 사람의
+         토큰**입니다. 여기에 service key 를 쓰면 RLS 가 통째로
+         꺼집니다 — 바꿔 쓰지 마세요. */
+      headers: Object.assign({
+        "apikey": anonKey(),
+        "authorization": "Bearer " + token,
+        "content-type": "application/json"
+      }, prefer ? { "prefer": prefer } : {}),
+      body: body === undefined ? undefined : JSON.stringify(body)
+    });
+    const text = await r.text().catch(function(){ return ""; });
+    if(!r.ok)
+      return { ok:false, status:r.status,
+               why:"db " + r.status + " " + text.slice(0, 300) };
+    let data = null;
+    if(text){ try{ data = JSON.parse(text); }catch(e){ data = null; } }
+    return { ok:true, data:data };
+  }catch(e){
+    const aborted = e && (e.name === "AbortError");
+    return { ok:false, timeout:aborted,
+             why:aborted ? "db timeout" : "db " + (e && e.message) };
+  }finally{
+    clearTimeout(timer);
+  }
+}
+
+/* 그 사람이 볼 수 있는 줄만 (RLS 가 가립니다) */
+async function dbSelectAs(token, table, query){
+  const t = safeTable(table);
+  if(!t) return { ok:false, why:"표 이름이 비었습니다" };
+  const r = await callAs(token, "GET", "/" + t + (query || ""));
+  if(!r.ok) return r;
+  return { ok:true, rows: Array.isArray(r.data) ? r.data : [] };
+}
+
+/* 상태를 바꾸는 문 (0003 · 0004 의 함수들).
+   ⚠️⚠️ **그 사람의 토큰으로** 불러야 auth.uid() 가 채워지고, 그래야
+   감사 기록에 **누가 바꿨는지**가 남습니다 — service key 로 부르면
+   auth.uid() 가 비어서 함수가 스스로 거절합니다 (0003 · 0004). */
+async function dbRpc(token, fn, args){
+  const f = safeFn(fn);
+  if(!f) return { ok:false, why:"함수 이름이 비었습니다" };
+  const r = await callAs(token, "POST", "/rpc/" + f, args || {});
+  if(!r.ok) return r;
+  return { ok:true, data:r.data };
+}
+
+module.exports = { dbReady, dbInsert, dbSelect, dbWhy, safeTable, DB_TIMEOUT,
+                   safeFn, dbSelectAs, dbRpc, callAs };

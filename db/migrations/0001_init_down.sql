@@ -11,6 +11,28 @@
 -- 주석을 푸세요.
 -- ════════════════════════════════════════════════════════════════════
 
+-- ── 0005 (가입하면 줄 만들기 · 신청번호로 가져오기) ──────────────
+-- ⚠️ 트리거를 먼저 떼야 합니다 — auth.users 에 붙어 있습니다
+-- drop trigger if exists on_auth_user_created on auth.users;
+-- drop function if exists handle_new_user();
+-- drop function if exists claim_request(text, text);
+-- drop policy   if exists assign_requester on assignment;
+-- drop function if exists is_my_request(uuid);
+
+-- ── 0004 (상태를 바꾸는 문) ──────────────────────────────────────
+-- drop function if exists answer_assignment(uuid, boolean, text);
+-- drop function if exists move_state(uuid, deal_state, jsonb);
+-- drop table    if exists deal_move;
+
+-- ── 0003 (수수료를 확정하는 문) ──────────────────────────────────
+-- drop function if exists clawback_fee(uuid, bigint, text);
+-- drop function if exists mark_paid(uuid, bigint, text);
+-- drop function if exists confirm_fee(uuid, bigint, bigint, bigint, jsonb, jsonb, text);
+
+-- ── 0002 ─────────────────────────────────────────────────────────
+-- drop table if exists schema_version;
+
+-- ── 0001 ─────────────────────────────────────────────────────────
 -- drop trigger if exists deal_money_guard_t on deal;
 -- drop trigger if exists provider_guard_t   on provider;
 -- drop function if exists deal_money_guard();

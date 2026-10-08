@@ -42,13 +42,19 @@ Supabase 대시보드 → **SQL Editor** 에서 **차례대로**, 한 파일씩.
 db/migrations/0001_init.sql            ← 표 · RLS · 트리거 · 권한
 db/migrations/0002_schema_version.sql  ← 판 번호
 db/migrations/0003_confirm_fee.sql     ← 수수료를 확정하는 문 하나
-db/migrations/0004_move_state.sql     ← 상태를 바꾸는 문 하나 + 길 표
+db/migrations/0004_move_state.sql      ← 상태를 바꾸는 문 하나 + 길 표
+db/migrations/0005_account_claim.sql   ← 가입하면 줄 만들기 + 신청번호로 가져오기
 ```
 
-⚠️⚠️ **이 셋은 실제 Postgres 에서 돌려 봤습니다** — `node tools/test-sql.js`
+⚠️⚠️ **다섯 다 실제 Postgres 에서 돌려 봤습니다** — `node tools/test-sql.js`
 가 임시 클러스터를 띄워 세우고, 제약 · 트리거 · RLS · 권한 · 감사 기록을
-97가지로 눌러 봅니다. 그 과정에서 **둘이 깨져 있었습니다** (권한이 한 줄도
-없었고, 아무도 수수료를 확정할 수 없었습니다). 고친 채로 드립니다.
+117가지로 눌러 봅니다. 그 과정에서 **셋이 깨져 있었습니다** (권한이 한 줄도
+없었고, 아무도 수수료를 확정할 수 없었고, 0005 의 정책이 **무한 재귀**였습니다).
+고친 채로 드립니다.
+
+⚠️⚠️ **0005 를 돌리면 가입하는 순간 `account` 줄이 저절로 생깁니다**
+(역할은 `customer` 로 박혀 있습니다). 그래서 역할을 올리실 때는
+`insert` 가 아니라 **`update`** 입니다 — 아래 1-4 그대로입니다.
 
 ⚠️ **한 파일을 통째로 붙여 넣고 한 번에 돌리세요.** 중간을 잘라
 돌리면 표는 생겼는데 RLS 가 안 켜진 상태로 남습니다 — 그러면 **누구나
@@ -57,7 +63,7 @@ db/migrations/0004_move_state.sql     ← 상태를 바꾸는 문 하나 + 길 �
 ### 1-3. 돌린 다음 반드시 확인할 것
 
 ```sql
--- ① 판 번호가 2 까지 들어왔는가
+-- ① 판 번호가 5 까지 들어왔는가
 select * from schema_version order by n;
 
 -- ② ⚠️⚠️ RLS 가 안 켜진 표가 하나라도 있는가 — 0건이어야 합니다
@@ -99,8 +105,15 @@ update account set role = 'admin' where id = '<내 user id>';
 | 이름 | 무엇 | 어디서 쓰나 |
 |---|---|---|
 | `SUPABASE_URL` | 프로젝트 주소 | 서버 함수 |
-| `SUPABASE_ANON_KEY` | 공개 키 | 화면 (RLS 가 지킵니다) |
+| `SUPABASE_ANON_KEY` | 공개 키 | 화면 **과 서버 함수** — 아래 ⚠️ |
 | `SUPABASE_SERVICE_KEY` | ⚠️⚠️ **모든 RLS 를 무시하는 키** | 서버 함수 **하나**만 |
+
+⚠️⚠️ **공개 키가 서버 함수에도 필요합니다.** `/api/session` · `/api/me` ·
+`/api/deal` 이 손님의 토큰이 누구인지 Supabase 에 물을 때, 그리고 그
+사람의 자료를 **RLS 를 거쳐** 읽을 때 씁니다 (`apikey` 는 공개 키,
+`authorization` 은 그 사람의 토큰). 공개 키가 없으면 그 셋이
+`auth:false` 로 닫히고 **화면은 그 구간째 안 그립니다** — 반쯤 된
+로그인을 손님에게 보이지 않습니다.
 
 ⚠️⚠️ **`SUPABASE_SERVICE_KEY` 를 화면에 내려보내지 마세요.** 그 키는
 RLS 를 통째로 지나갑니다 — 한 번 새면 손님 연락처와 계약금액 전부가

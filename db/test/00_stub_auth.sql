@@ -13,7 +13,13 @@ create schema if not exists auth;
 
 create table auth.users (
   id    uuid primary key default gen_random_uuid(),
-  email text
+  email text,
+  -- ⚠️ Supabase 의 auth.users 에 **있는** 칸입니다. 가입할 때 화면이
+  -- 보낸 값이 여기 담깁니다 — 0005 의 트리거가 이름만 꺼내 씁니다
+  -- (역할은 꺼내 쓰지 않습니다. 화면이 보낸 역할을 믿으면 누구나
+  -- 관리자가 됩니다). 이 칸이 없으면 트리거가 터지는 것을 검사에서
+  -- 실제로 확인했습니다 — **흉내는 Supabase 와 같아야** 합니다.
+  raw_user_meta_data jsonb
 );
 
 create or replace function auth.uid() returns uuid

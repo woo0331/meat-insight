@@ -1565,6 +1565,92 @@ function brandStatics(W){
   }
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   checkKeepUrls — **있던 주소가 사라지지 않았는가**
+
+   2026-10-08 사장님 지시 — "기존 ... API 및 기존 URL은 절대 임의로
+   삭제하거나 변경하지 마세요."
+
+   말로 지키지 않고 **빌드가 막습니다.** tools/urls.json 에 그때그때의
+   주소를 적어 두고, 빌드마다 지금 만들어지는 주소와 맞춰 봅니다.
+
+   ⚠️ 왜 필요한가 — 주소가 사라지는 것은 **화면으로 표가 안 납니다.**
+   이 저장소가 겪은 것 그대로입니다: 랜딩을 없애자 `/home` 을 가리키던
+   헤더 CTA · 푸터 · 밖으로 퍼진 링크가 전부 404 가 될 뻔했고,
+   리뉴얼로 구간이 내려올 때마다 `/g/:stage` 여섯이 길을 잃을 뻔했습니다.
+   156개 주소가 이미 색인되어 있어서, 하나가 조용히 빠지면 그 자리에서
+   들어오던 손님이 404 를 봅니다.
+
+   ── 규칙 ──────────────────────────────────────────────
+   · 적어 둔 주소가 **없어지면 멈춥니다**
+   · 적어 둔 리다이렉트가 **없어지거나 가는 곳이 바뀌면 멈춥니다**
+   · **늘어난 주소는 멈추지 않습니다** — 세어서 알려 주고, 적어 두라고
+     합니다 (늘리는 것은 지시 위반이 아닙니다)
+
+   ── 일부러 늘렸을 때 ──────────────────────────────────
+       node build-pages.js --keep-urls      ← 지금 주소로 다시 적습니다
+
+   ⚠️⚠️ **주소를 일부러 없애실 때는 적힌 줄을 지우기 전에
+   vercel.json 에 redirect 를 먼저 넣으세요.** 308 로 보내면 주소는
+   그대로 열리고 색인이 안 깨집니다 — `/closing` · `/companies` ·
+   `/guides` · `/partners` 가 그렇게 살아 있습니다.
+   ════════════════════════════════════════════════════════════════════ */
+function checkKeepUrls(routes, vj){
+  const file = path.join(ROOT, "tools", "urls.json");
+  const now  = Array.from(new Set(routes)).sort();
+  const reds = (vj.redirects || [])
+                 .map(r => [String(r.source), String(r.destination)])
+                 .sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
+
+  /* 다시 적어 달라고 하셨을 때 */
+  if(process.argv.includes("--keep-urls")){
+    fs.writeFileSync(file, JSON.stringify({
+      note: "있던 주소가 사라지지 않았는지 빌드가 맞춰 보는 목록입니다. 손으로 지우지 마세요 — build-pages.js 의 checkKeepUrls() 주석을 보세요.",
+      at: new Date().toISOString().slice(0, 10),
+      routes: now,
+      redirects: reds
+    }, null, 2) + "\n");
+    console.log("  ✎ tools/urls.json 을 다시 적었습니다 — 주소 " +
+                now.length + "개 · 리다이렉트 " + reds.length + "개");
+    return;
+  }
+
+  if(!fs.existsSync(file)){
+    throw new Error("tools/urls.json 이 없습니다 — " +
+      "node build-pages.js --keep-urls 로 한 번 만들어 주세요");
+  }
+
+  let kept;
+  try{ kept = JSON.parse(fs.readFileSync(file, "utf8")); }
+  catch(e){ throw new Error("tools/urls.json 을 읽지 못했습니다 — " + e.message); }
+
+  const have = new Set(now);
+  const gone = (kept.routes || []).filter(r => !have.has(r));
+  if(gone.length)
+    throw new Error("있던 주소 " + gone.length + "개가 사라졌습니다 — " +
+      gone.slice(0, 12).join(" · ") + (gone.length > 12 ? " …" : "") +
+      "\n  이미 색인된 주소입니다. 정말 없애시려면 vercel.json 에 redirect 를 " +
+      "먼저 넣고, 그 다음에 tools/urls.json 에서 그 줄을 지우세요 " +
+      "(allRoutes() 또는 데이터에서 빠진 것일 수도 있습니다)");
+
+  const nowRed = new Map(reds);
+  const badRed = [];
+  for(const [src, dst] of (kept.redirects || [])){
+    if(!nowRed.has(src))            badRed.push(src + " (없어짐)");
+    else if(nowRed.get(src) !== dst) badRed.push(src + " → " + nowRed.get(src) + " (전에는 " + dst + ")");
+  }
+  if(badRed.length)
+    throw new Error("옛 주소를 보내 주던 redirect 가 바뀌었습니다 — " +
+      badRed.join(" · ") + "\n  밖으로 퍼진 링크가 그 주소를 들고 있습니다 " +
+      "(vercel.json)");
+
+  const added = now.filter(r => !(kept.routes || []).includes(r));
+  if(added.length)
+    console.log("  ✎ 주소가 " + added.length + "개 늘었습니다 (" +
+      added.slice(0, 6).join(" · ") + (added.length > 6 ? " …" : "") +
+      ") — 적어 두시려면: node build-pages.js --keep-urls");
+}
+
 /* ── 실행 ─────────────────────────────────────────────────────── */
 checkCssVars();
 checkColorSchemeCss();
@@ -1583,6 +1669,7 @@ const WANT_SCRIPTS = (tpl.match(/<script[^>]+src="\/js\//g) || []).length;
 if(WANT_SCRIPTS < 10)
   throw new Error("index.html 의 스크립트가 " + WANT_SCRIPTS + "개뿐입니다 — 본보기가 이미 깨졌습니다");
 const routes = allRoutes(W);
+checkKeepUrls(routes, JSON.parse(fs.readFileSync(path.join(ROOT,"vercel.json"),"utf8")));
 
 let made = 0, skipped = 0;
 const sitemap = [];

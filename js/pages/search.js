@@ -136,7 +136,18 @@ window.amSearch = function(q){
   function push(g, name, sub, to, score){ if(score > 0) G[g].rows.push({name:name,sub:sub,to:to,s:score}); }
 
   (window.AM_INDUSTRIES||[]).forEach(function(i){
-    var s = amScore(i.name+" "+i.lead, words);
+    /* ⚠️⚠️ **세부 업종 말까지 읽습니다** (2026-10-09 지시서 PART 3).
+       전에는 이름과 짧은 줄만 봐서, 사장님들이 쓰는 업종 말 서른 중
+       **스물한 개가 0건**이었습니다 — 지시서 PART 2 4-4 가 이름까지
+       적은 "미용실"(우리 이름은 "미용 · 헤어")과 "소매업"(우리 이름은
+       "소매 · 편의점")이 거기 있었습니다. 자기 업종 이름을 치는 분이
+       0건을 보는 것이라 제일 나쁜 종류입니다.
+       ⚠️ 세부 업종은 `indgroups.js` 한 곳이고, 짧은 줄과 어긋나면
+       빌드가 멈춥니다 (checkIndGroups). */
+    var subs = (window.amIndSubs ? window.amIndSubs(i.key) : []).join(" ");
+    var s = amScore(i.name+" "+i.lead+" "+subs, words);
+    /* ⚠️ 아래 줄(`sub`)은 **짧은 줄**을 그대로 냅니다 — 세부 업종
+       스물넷을 다 깔면 결과 한 줄이 화면을 먹습니다. */
     push("industry", i.name+" 창업", i.lead, "/startup/"+i.key, s);
     push("industry", i.name+" 폐업", "정리에 필요한 것", "/closure/"+i.key, s ? s-0.5 : 0);
   });

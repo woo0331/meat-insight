@@ -24,7 +24,9 @@ function PageStartup(){
     lead:"업종만 고르시면 그 업종 창업에 실제로 필요한 것만 추려 드립니다. 가입 없이 무료입니다."
   })+
   '<section class="sec sec-white"><div class="w">'+
-    IndustryGrid("/startup","")+
+    /* 대분류 아홉으로 먼저 좁힐 수 있습니다 (지시서 PART 3) */
+    IndustryGroupChips("/startup", nowQS("g"))+
+    IndustryGrid("/startup","", nowQS("g"))+
   '</div></section>'+
   /* ⚠️ **할 일 먼저, 분야는 그 다음**입니다. 분야 묶음을 먼저 내면
      손님이 "인테리어 · 시공" 이라는 말을 모를 때 첫 화면이 전부 남의
@@ -198,7 +200,8 @@ function PageClosure(){
       '<h2>업종마다 정리할 것이 다릅니다</h2>'+
       '<p>헬스장은 운동기구와 락커가, 음식점은 주방과 닥트가 남습니다.</p>'+
     '</div>'+
-    IndustryGrid("/closure","")+
+    IndustryGroupChips("/closure", nowQS("g"))+
+    IndustryGrid("/closure","", nowQS("g"))+
   '</div></section>'+
   /* ⚠️⚠️ **2026-10-08 지시서 §15 · §16 · §17 — 고르신 상황마다 순서가
      다릅니다.** 전에는 어느 상황을 고르셔도 **같은 열세 걸음**이

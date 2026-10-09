@@ -26,6 +26,17 @@
    정산 기준                feeNote
    노출 상태                status
 
+   ⚠️⚠️ **`lead` 에 별표(굵게)를 쓰지 마세요.** 이 칸은 `mark()` 를
+   거치지 않고 `esc()` 만 지나가서 **별표가 글자로 찍힙니다** — 메인
+   카드에 실제로 `**무엇을 뜯는가**` 가 그대로 나왔습니다 (찍어 보고
+   알았습니다. 이 저장소가 글 머리말 · 구간 제목에서 이미 겪은 자리).
+   아이콘                  icon  ⚠️ **상품마다 달라야 합니다** — 메인
+                            여덟이 같은 그림을 두 번 쓰면 무엇이
+                            무엇인지 흐려집니다 (check.js 가 봅니다).
+                            이름은 `icon()` 이 아는 것만 (base.js) —
+                            모르는 이름은 **빈 문자열**이라 자리가
+                            덩그러니 빕니다 (전수 점검이 잡습니다).
+
    ⚠️⚠️ **§5 가 직접 적은 규칙** — "실제 제휴사가 확보되지 않은 상품은
    신청 가능 상품처럼 오인시키지 말고 '서비스 준비 중' 또는 일반 정보
    페이지로 처리한다."
@@ -71,61 +82,61 @@ window.AM_OFFER_STATUS = [
    ⚠️ `fee` 는 fee.js 의 AM_FEE_TYPE key 이고 **지금은 계획**입니다.
       실제 요율은 업체마다 `fee_policy` 에 적습니다 (§9). */
 window.AM_OFFERS = [
-  { id:"store-internet", name:"매장 인터넷", cat:"it", sub:"internet",
+  { id:"store-internet", icon:"globe", name:"매장 인터넷", cat:"it", sub:"internet",
     lead:"개통일을 맞추는 것이 전부입니다. 공사 일정과 함께 잡으세요.",
     apply:"install", consult:true, costWay:"quote",
     fee:"close", feeNote:"개통 확인 후 건당 정액", status:"info",
     to:"/providers/it" },
 
-  { id:"pos-card", name:"POS · 카드단말기", cat:"it", sub:"pos",
+  { id:"pos-card", icon:"receipt", name:"POS · 카드단말기", cat:"it", sub:"pos",
     lead:"카드 수수료와 단말기 비용은 다른 이야기입니다. 둘을 갈라서 보세요.",
     apply:"install", consult:true, costWay:"quote",
     fee:"close", feeNote:"설치 확인 후 건당 정액", status:"info",
     to:"/providers/it" },
 
-  { id:"cctv-security", name:"CCTV · 보안", cat:"it", sub:"cctv",
+  { id:"cctv-security", icon:"camera", name:"CCTV · 보안", cat:"it", sub:"cctv",
     lead:"대수와 저장 기간이 값을 가릅니다. 녹화 보관은 법에 걸리는 부분이 있습니다.",
     apply:"install", consult:true, costWay:"quote",
     fee:"close", feeNote:"설치 확인 후 건당 정액", status:"info",
     to:"/providers/it" },
 
-  { id:"water-ice-rental", name:"정수기 · 제빙기 렌탈", cat:"equip",
+  { id:"water-ice-rental", icon:"snow", name:"정수기 · 제빙기 렌탈", cat:"equip",
     lead:"사는 것과 빌리는 것의 차액은 계약 기간에서 갈립니다.",
     apply:"rental", consult:true, costWay:"quote",
     fee:"sub", feeNote:"계약 회차마다 정액", status:"info",
     to:"/providers/equip" },
 
-  { id:"kiosk-order", name:"키오스크 · 테이블오더", cat:"it", sub:"kiosk",
+  { id:"kiosk-order", icon:"monitor", name:"키오스크 · 테이블오더", cat:"it", sub:"kiosk",
     lead:"인건비를 줄이려는 것이라면 먼저 계산해 보세요.",
     apply:"install", consult:true, costWay:"tool",
     fee:"close", feeNote:"설치 확인 후 건당 정액", status:"info",
     to:"/providers/it" },
 
-  { id:"interior-sign", name:"인테리어 · 간판", cat:"interior", sub:"interior",
-    lead:"평수보다 **무엇을 뜯는가**가 금액을 가릅니다.",
+  { id:"interior-sign", icon:"roller", name:"인테리어 · 간판", cat:"interior", sub:"interior",
+    lead:"평수보다 무엇을 뜯는가가 금액을 가릅니다.",
     apply:"quote", consult:true, costWay:"quote",
     fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
     to:"/providers/interior" },
 
-  { id:"kitchen-equip", name:"주방 · 업소용 장비", cat:"equip",
-    lead:"새것과 중고의 차이는 값이 아니라 **수리와 부품**입니다.",
+  { id:"kitchen-equip", icon:"knife", name:"주방 · 업소용 장비", cat:"equip",
+    lead:"새것과 중고의 차이는 값이 아니라 수리와 부품입니다.",
     apply:"quote", consult:true, costWay:"quote",
     fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
     to:"/providers/equip" },
 
-  { id:"demolish-restore", name:"철거 · 원상복구", cat:"demolish", sub:"full",
+  { id:"demolish-restore", icon:"hammer", name:"철거 · 원상복구", cat:"demolish", sub:"full",
     lead:"원상복구 범위는 계약서에 적힌 대로입니다. 먼저 그것부터 확인하세요.",
     apply:"quote", consult:true, costWay:"quote",
     fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
     to:"/providers/demolish" },
 
-  { id:"clean-disinfect", name:"청소 · 방역", cat:"clean", sub:"move-in",
+  { id:"clean-disinfect", icon:"broom", name:"청소 · 방역", cat:"clean", sub:"move-in",
     lead:"문 열기 전 한 번과 정기로 받는 것은 다른 계약입니다.",
     apply:"quote", consult:false, costWay:"quote",
     fee:"lead", feeNote:"유효 문의 확인 후 건당 정액", status:"info",
     to:"/providers/clean" },
 
-  { id:"used-equip", name:"중고 시설 · 장비", cat:"asset",
+  { id:"used-equip", icon:"boxes", name:"중고 시설 · 장비", cat:"asset",
     lead:"정리하시는 사장님의 것이 시작하시는 사장님에게 갑니다.",
     apply:"dispose", consult:false, costWay:"quote",
     fee:"margin", feeNote:"판매가와 매입가의 차액", status:"info",

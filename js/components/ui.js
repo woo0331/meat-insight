@@ -110,8 +110,39 @@ window.Empty = function(o){
 
 /* ── 업종 고르기 ─────────────────────────────────────────────────
    §6 · §41 — 업종이 정해지면 그 뒤가 전부 달라집니다. */
-window.IndustryGrid = function(baseTo, current){
-  return '<ul class="ind-g">'+(window.AM_INDUSTRIES||[]).map(function(i){
+/* ⚠️⚠️ **대분류 아홉으로 거를 수 있습니다** (2026-10-09 지시서 PART 3 —
+   대분류 → 중분류 → 세부). 짜임새는 `/support` · `/content` ·
+   `/providers` 가 쓰는 **같은 `.chip-g-fil`** 입니다 — 화면마다 다른
+   거르개를 만들면 같은 사이트로 안 읽힙니다.
+
+   ⚠️ 고른 것은 **주소(`?g=`)에 실립니다** — 뒤로 가기 · 새로고침 ·
+   링크 공유에 살아남습니다 (이 저장소의 거르개 전부가 그렇습니다).
+   ⚠️ 업종이 하나도 없는 대분류는 `amIndGroups()` 가 **줄째 뺍니다.**
+   ⚠️ 칩이 아홉이라 폰에서 두 줄이 됩니다 — 열로 늘리지 마세요. */
+window.IndustryGroupChips = function(baseTo, g){
+  var G = (window.amIndGroups ? window.amIndGroups() : []);
+  if(G.length < 2) return "";
+  function url(k){ return baseTo + (k ? "?g=" + encodeURIComponent(k) : ""); }
+  return '<ul class="chip-g chip-g-fil">'+
+    '<li><a class="chip'+(g?"":" on")+'" href="'+esc(url(""))+'">업종 전체</a></li>'+
+    G.map(function(x){
+      return '<li><a class="chip'+(g===x.key?" on":"")+'" href="'+esc(url(x.key))+'">'+
+        /* ⚠️ 개수는 **세는 값**입니다. `/content` 의 분야 칩과 **같은
+           꼴**(이름 + 숫자)로 맞춥니다 — 태그로 감싸면 거기와 달라
+           보이고, 이 저장소는 칩 짜임새를 한 벌로 둡니다. */
+        esc(x.name)+' '+x.inds.length+'</a></li>';
+    }).join("")+'</ul>';
+};
+
+window.IndustryGrid = function(baseTo, current, g){
+  var list = (window.AM_INDUSTRIES||[]);
+  /* 고른 대분류가 있으면 그 안의 업종만. ⚠️ 없는 key 가 오면 **전부**를
+     냅니다 — 밖에서 퍼진 옛 링크가 빈 화면이 되지 않게 (거르개 규칙). */
+  if(g && window.amIndGroups){
+    var grp = window.amIndGroups().filter(function(x){ return x.key === g; })[0];
+    if(grp) list = grp.inds;
+  }
+  return '<ul class="ind-g">'+list.map(function(i){
     var on = (i.key === current);
     return '<li><a class="ind'+tn(i.tone)+(on?" on":"")+'" href="'+esc(baseTo+"/"+i.key)+'"'+
       (on?' aria-current="page"':'')+'>'+

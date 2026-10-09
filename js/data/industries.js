@@ -61,7 +61,12 @@ window.AM_INDUSTRIES = [
     closure:["transfer","asset","stock","demolish","restore","waste","tax","labor","contract","support"] },
 
   { key:"hair", name:"미용 · 헤어", icon:"scissors", tone:"t8",
-    lead:"헤어샵 · 바버샵 · 두피관리",
+    /* ⚠️⚠️ **"미용실" 이 맨 앞입니다.** 전에는 "헤어샵 · 바버샵 ·
+       두피관리" 였는데, 자기 가게를 **미용실**이라고 부르는 사장님이
+       화면에서 그 낱말을 한 번도 못 봤습니다 — 업종 이름도
+       "미용 · 헤어" 라서요. 지시서 PART 2 4-4 가 이름까지 적은
+       낱말입니다 (2026-10-09). */
+    lead:"미용실 · 헤어샵 · 바버샵 · 두피관리",
     equip:[
       { key:"salon-chair", name:"미용의자" },
       { key:"shampoo",     name:"샴푸대" },
@@ -109,7 +114,12 @@ window.AM_INDUSTRIES = [
     closure:["transfer","asset","demolish","restore","tax","labor","contract","support"] },
 
   { key:"pet", name:"반려동물", icon:"paw", tone:"t2",
-    lead:"펫샵 · 미용 · 호텔 · 유치원 · 동물병원",
+    /* ⚠️ 전에는 "펫샵 · 미용 · 호텔 · 유치원 · 동물병원" 이었습니다.
+       `미용` · `호텔` · `유치원` 은 이 사이트에서 **미용 · 헤어** ·
+       **숙박** · **학원**을 뜻하는 말이라, 검색이 반려동물로 보내면
+       엉뚱한 데로 가는 자리였습니다 — 애견을 붙여 갈랐습니다
+       (2026-10-09 · checkIndGroups 가 잡았습니다). */
+    lead:"펫샵 · 애견미용 · 애견호텔 · 동물병원",
     equip:[
       { key:"pet-groom", name:"미용장비" },
       { key:"cage",      name:"케이지 · 사육장" },

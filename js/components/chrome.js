@@ -87,7 +87,31 @@ window.AM_GNB = [
   { to:"/closure",   name:"폐업·정리" },
   { to:"/providers", name:"업체찾기" },
   { to:"/transfer",  name:"매장 인수·양도" },
-  { to:"/content",   name:"정보·도구" }
+  { to:"/content",   name:"정보·도구" },
+  /* ⚠️⚠️ **2026-10-09 지시서 PART 2 4-1 — 여섯째입니다.** 지시서의 아홉
+     중 다섯이 위에 있고, `파트너 입점` 과 `로그인·마이페이지` 는 헤더
+     **오른쪽**(업체 입점 · 내 기록)에 이미 있습니다. 빠진 것이
+     `서비스 신청` 하나였습니다.
+
+     ⚠️⚠️ **재 보고 넣었습니다.** 이 저장소는 "여섯으로 늘리지 마세요"
+     라고 적어 두었는데, 그 경고는 메뉴가 **일곱**이던 시절 값입니다.
+     다섯으로 줄어든 지금 다시 재 보니 여섯이 들어갑니다 —
+
+         폭      쓰는 폭 / 자리    줄   넘친 칸   가로 스크롤
+         1440    427 / 610        1      0        없음
+         1280    427 / 450        1      0        없음
+         1024    387 / 500        1      0        없음
+          980    352 / 456        1      0        없음
+          901    352 / 377        1      0        없음   ← 제일 좁습니다
+
+     ⚠️⚠️ **남는 폭이 95px 에서 25px 으로 줄었습니다** (901px 기준).
+     일곱으로 늘리거나 메뉴 이름을 길게 하면 그 자리에서 넘칩니다 —
+     넘치면 **가로 스크롤이 나는 것이 아니라** 메뉴가 헤더 오른쪽 위로
+     올라앉고, `.gnb` 가 `min-width:0` 이라 **전수 점검이 영원히
+     통과합니다.** 손대실 때는 위 표처럼 **재 보세요.**
+
+     ⚠️ `/quote` 는 실제로 있는 화면입니다 (견적 · 상담 신청). */
+  { to:"/quote",     name:"서비스 신청" }
 ];
 
 /* 폰 아래 네비 — 다섯 칸을 넘기지 마세요. 손가락이 닿는 폭이 줄고
@@ -187,6 +211,31 @@ function Header(){
   '</div></header>';
 }
 
+/* ⚠️⚠️ **헤더의 `서비스 신청` 이 보던 조건을 들고 갑니다.**
+   그러지 않으면 `/providers/interior?i=cafe&r=gyeonggi` 를 보던 분이
+   누를 때 **빈 견적 화면**이 떠서 처음부터 다시 적게 됩니다 — 이
+   저장소가 업체 상세의 `quoteTo({})` 로 이미 겪은 사고입니다.
+   전수 점검의 "분류 → 견적 요청으로 조건이 넘어간다" 가 잡았습니다.
+
+   ⚠️ 조건은 **지금 주소**에서만 읽습니다 (경로 + 질의문자) — 화면이
+   들고 있는 상태를 따로 읽으려 하면 화면마다 다른 코드가 됩니다.
+   ⚠️ `quoteTo()` 한 곳을 그대로 씁니다 (`js/components/ui.js`). */
+function gnbQuoteHref(){
+  if(!window.quoteTo) return "/quote";
+  var p = nowPath(), seg = p.split("/").filter(Boolean), o = {};
+  if(seg[0] === "providers" && seg[1]) o.cat = seg[1];
+  if(seg[0] === "c" && seg[1])         o.cat = seg[1];
+  if((seg[0] === "startup" || seg[0] === "closure") && seg[1]) o.industry = seg[1];
+  if(seg[0] === "startup") o.side = "start";
+  if(seg[0] === "closure") o.side = "close";
+  /* 주소에 실린 것이 더 셉니다 — 거르개로 고른 값이기 때문입니다 */
+  if(nowQS("i")) o.industry = nowQS("i");
+  if(nowQS("r")) o.region   = nowQS("r");
+  if(nowQS("s")) o.sub      = nowQS("s");
+  if(nowQS("c")) o.cat      = nowQS("c");
+  return window.quoteTo(o);
+}
+
 function paintGnb(){
   var g = $("gnb"); if(!g) return;
   var p = nowPath();
@@ -195,6 +244,9 @@ function paintGnb(){
     var on = (to === "/") ? (p === "/") : (p === to || p.indexOf(to + "/") === 0);
     a.classList.toggle("on", on);
     if(on) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current");
+    /* ⚠️ `data-to` 는 그대로 둡니다 — 지금 화면 표시가 그걸로 갈립니다.
+       바꾸는 것은 `href` 하나입니다. */
+    if(to === "/quote") a.setAttribute("href", gnbQuoteHref());
   });
 }
 

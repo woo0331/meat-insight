@@ -34,7 +34,11 @@ function loadApp(){
   /* ⚠️ **순서가 곧 의존 순서입니다** — 뒤의 파일이 앞의 것을 씁니다.
      guides.js 는 problems.js 의 key 를 그대로 쓰므로 그 뒤여야 합니다. */
   const DATA = ["js/data/korean.js","js/data/brand.js","js/data/site.js",
-                "js/data/regions.js","js/data/industries.js","js/data/catalog.js",
+                "js/data/regions.js","js/data/industries.js",
+                /* ⚠️ indgroups 는 업종 열넷 key 를 그대로 쓰므로 **그 뒤**입니다
+                   (2026-10-09 지시서 PART 3 — 대분류 아홉 + 세부 업종) */
+                "js/data/indgroups.js",
+                "js/data/catalog.js",
                 /* ⚠️ lifecycle 은 catalog 의 key 를 그대로 쓰므로 **그 뒤**입니다 */
                 "js/data/lifecycle.js",
                 /* ⚠️ journey 는 lifecycle 의 단계 key 와 catalog 의 분류 key 를
@@ -515,13 +519,23 @@ function noscriptFor(W, r, route){
        ⚠️⚠️ **"검증된 업체" 라고 쓰지 마세요.** 검증 기능이 없습니다 —
        시안 그림에 그 글자가 있지만 적는 순간 표시 · 광고의 공정화에
        관한 법률 제3조입니다 (화면에도 안 적혀 있습니다).
-       ⚠️ 여덟은 화면과 **같은 차례 · 같은 분류**입니다. */
+       ⚠️⚠️ **화면과 같은 여덟이라야 합니다.** 2026-10-09 지시서 PART 2
+       4-3 으로 이 구간이 **분류 여덟에서 상품 여덟**(매장 인터넷 ·
+       POS · CCTV · 렌탈 · 키오스크 · 인테리어 · 철거 · 주방장비)으로
+       바뀌었습니다 — 크롤러에게만 다른 것을 보여 주면 그게 구글에
+       나가는 거짓말입니다 (이 저장소가 MainPrice · MainReviews ·
+       프랜차이즈 토막으로 세 번 겪은 자리입니다).
+       ⚠️ 차례는 `js/pages/home.js` 의 `MAIN_OFFER8` 과 같습니다. */
     h2("사장님에게 필요한 모든 서비스를 한 곳에서");
     p("창업, 운영, 인수 · 양도, 폐업까지. 필요한 서비스와 정보를 " +
       B.name + "에서 확인하세요. 지금 다루는 세부 서비스는 " + nSub + "개입니다.");
-    ul(["store","interior","equip","it","admin","marketing","demolish","clean"]
-       .map(k => byCat[k]).filter(Boolean)
-       .map(c => c.name + " — " + (c.lead || subNames(c).slice(0,4).join(" · "))));
+    {
+      const byOf = {}; (W.AM_OFFERS||[]).forEach(o => { byOf[o.id] = o; });
+      ul(["store-internet","pos-card","cctv-security","water-ice-rental",
+          "kiosk-order","interior-sign","demolish-restore","kitchen-equip"]
+         .map(k => byOf[k]).filter(Boolean)
+         .map(o => o.name + " — " + o.lead));
+    }
 
     /* ── 04 계산도구 + 최신 정보 ────────────────────────────────
        ⚠️ 글의 **작성일 · 글쓴이를 적지 마세요** — 그런 칸이 없습니다
@@ -2078,11 +2092,77 @@ function checkRpcArgs(){
       "\n     (변경자는 토큰에서만 와야 합니다 — p_by 를 열어 두면 남의 이름으로 기록이 남습니다)");
 }
 
+
+/* ════════════════════════════════════════════════════════════════════
+   checkIndGroups — **업종 대분류가 업종 열넷을 빠짐없이 나눠 가지는가**
+                    (2026-10-09 지시서 PART 3)
+
+   `lifecycle.js`(단계 여섯 ↔ 분류 25) · `sales.js`(영업 카테고리 열넷
+   ↔ 분류 25)와 **같은 검사**입니다. 한 업종이 두 대분류에 들어가거나
+   어느 대분류에도 없으면, 화면에서는 **조용히 빠집니다** — 그 업종
+   사장님에게는 자기 자리가 아예 없는 것이 됩니다.
+
+   세부 업종도 같이 봅니다 —
+   ⚠️⚠️ **짧은 줄(`lead`)에 적은 말이 세부 목록에 없으면** 화면에는
+   보이는데 검색에서는 안 나옵니다. 실제로 `반려동물` 의 `미용` ·
+   `호텔` · `유치원` 셋이 그랬고, 그 셋은 이 사이트에서 **미용 · 헤어** ·
+   **숙박** · **학원**을 뜻하는 말이라 검색이 엉뚱한 데로 보낼
+   자리였습니다.
+   ════════════════════════════════════════════════════════════════════ */
+function checkIndGroups(W){
+  const G = W.AM_IND_GROUPS || [], S = W.AM_IND_SUBS || {};
+  const inds = (W.AM_INDUSTRIES || []).map(i => i.key);
+  if(!G.length) throw new Error("js/data/indgroups.js 의 AM_IND_GROUPS 가 비었습니다");
+
+  const used = [];
+  G.forEach(function(g){
+    if(!g.key || !g.name) throw new Error("업종 대분류에 key 나 이름이 없습니다");
+    if(!(g.inds || []).length)
+      throw new Error("업종 대분류 '" + g.name + "' 에 업종이 하나도 없습니다\n" +
+        "   → 빈 대분류는 자리표시자입니다 (절대 규칙 2). 받을 업종이 실제로 있을 때만 만드세요");
+    (g.inds || []).forEach(k => used.push(k));
+  });
+
+  const missing = inds.filter(k => used.indexOf(k) < 0);
+  if(missing.length)
+    throw new Error("업종 대분류에 안 들어간 업종이 있습니다: " + missing.join(" · ") +
+      "\n   → 그 업종 사장님에게는 화면에서 자기 자리가 조용히 사라집니다");
+
+  const dup = used.filter((k, i) => used.indexOf(k) !== i);
+  if(dup.length)
+    throw new Error("업종이 두 대분류에 들어 있습니다: " + dup.join(" · ") +
+      "\n   → 한 업종을 두 곳에 넣고 싶어지면, 그건 그 업종을 쪼갤 때입니다");
+
+  const ghost = used.filter(k => inds.indexOf(k) < 0);
+  if(ghost.length)
+    throw new Error("없는 업종 key 를 가리킵니다: " + ghost.join(" · ") +
+      "\n   → js/data/industries.js 의 key 와 맞추세요");
+
+  /* 세부 업종 — 업종마다 있어야 합니다 */
+  const noSub = inds.filter(k => !(S[k] || []).length);
+  if(noSub.length)
+    throw new Error("세부 업종이 비어 있는 업종이 있습니다: " + noSub.join(" · ") +
+      "\n   → 검색이 그 업종을 자기 이름으로만 찾습니다 (사장님이 쓰는 말로는 0건)");
+
+  /* ⚠️ 짧은 줄의 말이 세부 목록에 **반드시** 들어 있어야 합니다 */
+  const drift = [];
+  (W.AM_INDUSTRIES || []).forEach(function(i){
+    if(i.key === "etc") return;          /* 기타는 짧은 줄이 안내문입니다 */
+    String(i.lead || "").split("·").map(x => x.trim()).filter(Boolean).forEach(function(w){
+      if((S[i.key] || []).indexOf(w) < 0) drift.push(i.key + " → " + w);
+    });
+  });
+  if(drift.length)
+    throw new Error("짧은 줄(lead)에 있는데 세부 업종에 없는 말: " + drift.join(" · ") +
+      "\n   → 화면에는 보이는데 **검색에서는 0건**이 됩니다. 둘을 같이 고치세요");
+}
+
 /* ── 실행 ─────────────────────────────────────────────────────── */
 checkCssVars();
 checkColorSchemeCss();
 checkVercel();
 const W = loadApp();
+checkIndGroups(W);
 checkProcess(W);
 checkSales(W);
 checkDeal(W);

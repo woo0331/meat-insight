@@ -799,21 +799,35 @@ function MainFeature(){
    로드맵에 그대로 있습니다.
    ⚠️ 없는 분류 key 를 적으면 그 카드가 **조용히 빠집니다** (에러도
    안 나고 화면도 멀쩡합니다). */
-var MAIN_SVC = [
-  { k:"store",     d:"상권 · 입지 · 권리금" },
-  { k:"interior",  d:"설비 · 전기 · 간판" },
-  { k:"equip",     d:"주방 · 냉난방 · 중고장비" },
-  { k:"it",        d:"POS · 키오스크 · CCTV" },
-  { k:"admin",     d:"기장 · 신고 · 인허가" },
-  { k:"marketing", d:"온라인 광고 · 브랜딩" },
-  { k:"demolish",  d:"폐기물 · 철거 · 원상복구" },
-  { k:"clean",     d:"매장 청소 · 해충 방제" }
-];
+/* ⚠️⚠️ **2026-10-09 지시서 PART 2 4-3 — 여기는 분류가 아니라 상품입니다.**
+   전에는 `catalog.js` 의 **분류 여덟**(상가 · 인테리어 · 장비 · POS ·
+   행정 · 마케팅 · 철거 · 청소)을 냈습니다. 지시서가 적은 여덟은
+   **실제 신청 가능한 대표 서비스**입니다 —
+
+     매장 인터넷 · POS·카드단말기 · CCTV·보안 · 정수기·제빙기 렌탈 ·
+     키오스크·테이블오더 · 인테리어·간판 · 철거·원상복구 · 주방장비
+
+   그 여덟이 `js/data/offers.js` 에 **이미 그대로** 있었는데 메인에
+   한 번도 안 나오고 있었습니다 (3차에서 만들어 두고 화면에 안
+   붙였습니다 — 이 저장소의 "만들어 놓고 안 쓰는 칸" 입니다).
+
+   ⚠️⚠️ **"신청 가능" 처럼 표시하지 않습니다** (PART 2 4-3 · PART 5 9).
+   제휴사가 0곳이라 열 상품 전부 `status:"info"` 이고, 카드는 **그
+   분야의 진짜 화면**으로 보냅니다. 업체를 등록하셔야 `live` 가 될 수
+   있고, 0곳인데 켜면 **빌드가 멈춥니다** (checkOffers).
+
+   ⚠️ 아이콘은 `offers.js` 의 `icon` 한 줄입니다 — 여덟이 저마다 달라야
+   합니다 (`cat` 아이콘을 쓰면 넷이 전부 POS 그림이 됩니다). */
+var MAIN_OFFER8 = ["store-internet","pos-card","cctv-security","water-ice-rental",
+                   "kiosk-order","interior-sign","demolish-restore","kitchen-equip"];
 function MainServices(){
-  var by = {}; (window.AM_CATS||[]).forEach(function(c){ by[c.key] = c; });
-  var items = MAIN_SVC.map(function(x){
-    var c = by[x.k];
-    return c ? { c:c, d:x.d, ph:"svc-"+x.k } : null;
+  var by = {}; (window.AM_OFFERS||[]).forEach(function(o){ by[o.id] = o; });
+  var items = MAIN_OFFER8.map(function(id){
+    var o = by[id];
+    if(!o) return null;
+    /* ⚠️ 사진 자리는 상품 id 로 둡니다. 없으면 아이콘이 자리를
+       지킵니다 — 빈 액자를 깔지 않습니다 (절대 규칙 2). */
+    return { o:o, ph:"svc-" + id };
   }).filter(Boolean);
   if(!items.length) return "";
   return '<section class="sec sec-gray msvc"><div class="w">'+
@@ -842,12 +856,13 @@ function MainServices(){
     '</div>'+
     '<ul class="msvc-g">'+items.map(function(x){
       var ph = hasPhoto(x.ph);
-      /* ⚠️ 색은 `catalog.js` 의 `tone` 한 줄입니다 — 여기에 손으로
-         적지 마세요. 사진이 들어오면 사진이 그 자리를 덮습니다. */
-      return '<li class="tn-'+esc(x.c.tone||"t7")+'"><a href="'+esc(catTo(x.c))+'">'+
+      var cat = (window.amCat ? window.amCat(x.o.cat) : null);
+      /* ⚠️ 색은 그 상품이 속한 **분류의 `tone`** 입니다 (catalog.js 한 곳) —
+         여기에 손으로 적지 마세요. 사진이 들어오면 사진이 덮습니다. */
+      return '<li class="tn-'+esc((cat && cat.tone) || "t7")+'"><a href="'+esc(x.o.to)+'">'+
         '<span class="msvc-ph'+(ph ? "" : " msvc-ph-n")+'">'+
-          (ph ? photoBox(x.ph,"",true) : icon(x.c.icon,44))+'</span>'+
-        '<b>'+esc(x.c.name)+'</b><i>'+esc(x.d)+'</i></a></li>'; }).join("")+'</ul>'+
+          (ph ? photoBox(x.ph,"",true) : icon(x.o.icon,44))+'</span>'+
+        '<b>'+esc(x.o.name)+'</b><i>'+esc(x.o.lead)+'</i></a></li>'; }).join("")+'</ul>'+
   '</div></section>';
 }
 

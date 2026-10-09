@@ -25,6 +25,9 @@ const { authReady, bearer, session } = require("./_auth.js");
 const { dbSelectAs } = require("./_db.js");
 
 const LIMIT = 50;
+/* 감사 기록은 한 계약에 여러 줄이 쌓입니다 (확정 · 입금 · 환수) —
+   같은 수로 두면 환수 줄이 뒤로 밀려 합계가 조용히 모자랍니다. */
+const AUDIT_LIMIT = 200;
 
 /* ⚠️ 칸 목록을 역할마다 **손으로** 적습니다. `select=*` 로 두면 칸이
    하나 늘 때마다 조용히 같이 나갑니다. */
@@ -81,6 +84,24 @@ module.exports = async function handler(req, res){
       "&order=created_at.desc&limit=" + LIMIT);
     if(d.ok) out.deals = d.rows;
     else console.warn("[me] deal — " + d.why);
+  }
+
+  /* 환수 · 부분환불 — ⚠️⚠️ **`deal` 에는 안 남습니다.** 확정했던 액을
+     갈아 치우지 않으려고 차액을 **감사 기록**에 적습니다 (0003 의
+     clawback_fee). 그래서 §10 의 "환수액" 은 여기서 가져옵니다.
+     ⚠️ 관리자만입니다 — 업체에게는 자기 건의 기록이 보이지만 합계를
+     낼 자리가 아니고, 직원은 돈을 안 봅니다 (위 PICK 과 같은 선).
+     ⚠️⚠️ **거르는 일을 질의로 하지 않습니다.** jsonb 경로 거르개는
+     PostgREST 가 400 을 돌려주면 **에러 없이 숫자만 0** 이 됩니다 —
+     DB 가 아직 안 서서 눌러 볼 수가 없어, 확실히 되는 것(obj)만 걸고
+     차액이 적힌 줄은 화면이 고릅니다. 그래서 화면이 "이 줄에서 센
+     값" 이라고 밝힙니다. */
+  if(s.role === "admin"){
+    const c = await dbSelectAs(s.token, "audit_log",
+      "?select=" + encodeURIComponent("at,obj_id,data") +
+      "&obj=eq.deal&order=at.desc&limit=" + AUDIT_LIMIT);
+    if(c.ok) out.audits = c.rows;
+    else console.warn("[me] audit_log — " + c.why);
   }
 
   return res.status(200).json(out);

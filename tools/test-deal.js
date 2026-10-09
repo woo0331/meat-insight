@@ -219,5 +219,24 @@ console.log("\n── 없는 상태 · 제자리");
      W.amDealMoves("fee_done", "admin").length === 0, W.amDealMoves("fee_done", "admin"));
 }
 
+/* ── 계약까지 간 건 — 관리자 화면의 전환율이 이것을 씁니다 ──────────
+   ⚠️⚠️ 번호(`n`)만 보고 자르면 **취소(10)와 보류(11)** 가 `signed`(8)
+   보다 뒤라 같이 걸립니다. 그러면 "다음 달에 다시 연락주세요" 하신
+   건이 **계약으로 집계**되어 전환율이 조용히 부풀려집니다. */
+console.log("\n── 계약까지 간 건 (전환율의 분자)");
+{
+  const after = W.AM_DEAL_ST.filter(s => W.amDealAfterSign(s.key)).map(s => s.key);
+  ok("계약 완료부터 정산 완료까지가 계약입니다",
+     after.join(",") === "signed,done,fee_wait,fee_done", after);
+  ok("취소는 계약이 아니다",    W.amDealAfterSign("lost")  === false);
+  ok("보류는 계약이 아니다",    W.amDealAfterSign("hold")  === false);
+  ok("협의 중은 계약이 아니다", W.amDealAfterSign("nego")  === false);
+  ok("없는 상태는 계약이 아니다", W.amDealAfterSign("zzz") === false);
+  /* 옆길은 둘뿐입니다 — 하나 늘면 여기서 걸려 화면도 같이 보게 됩니다 */
+  ok("옆길(off)은 취소 · 보류 둘뿐이다",
+     W.AM_DEAL_ST.filter(s => s.off).map(s => s.key).join(",") === "lost,hold",
+     W.AM_DEAL_ST.filter(s => s.off).map(s => s.key));
+}
+
 console.log("\n" + (bad ? "❌ " + bad + "/" + ran + " 실패" : "✅ " + ran + "개 전부 통과") + "\n");
 process.exit(bad ? 1 : 0);

@@ -14,9 +14,21 @@
 var MKEY = "am.profile.v1";
 
 /* ══════════════════════════════════════════════════════════════════
-   내 신청 내역 — 2026-10-09 최종 통합 지시서 §11-1
+   내 신청 · 업체 대시보드 · 관리자 작업대 — 2026-10-09 지시서
+   §11-1 · §9-4 · §11-2
    ══════════════════════════════════════════════════════════════════
-   > "상담 신청 내역 · 계약 진행 현황 · 재신청 및 추가 서비스"
+   > §11-1 "상담 신청 내역 · 계약 진행 현황 · 재신청 및 추가 서비스"
+   > §9-4  "배정받은 상담 요청 · 견적 · 계약 · 정산 내역 확인"
+   > §11-2 "모든 통계는 실제 DB 데이터 기반으로 계산한다"
+
+   ⚠️⚠️ **새 주소를 만들지 않았습니다.** 역할마다 다른 화면이 아니라
+   **같은 `/my` 가 역할을 보고 다른 구간**을 냅니다 — `/dashboard` ·
+   `/partner` 를 따로 만들면 로그인 전에는 전부 빈 화면이고, 색인은
+   되는데 들어가면 아무것도 없는 주소가 셋 늘어납니다.
+
+   ⚠️⚠️ **역할로 막는 것이 아닙니다.** 무엇이 보이는가는 DB 의 RLS 와
+   `api/me.js` 의 칸 목록이 정합니다 — 화면은 **온 것을 보여 줄**
+   뿐입니다. 화면 코드로만 막으면 버그 하나에 남의 연락처가 섭니다.
 
    ⚠️⚠️ **로그인이 설정되기 전에는 이 구간을 아예 안 그립니다.**
    `/api/session` 이 `auth:false` 를 돌려주면 `.my-db` 가 빈 채로
@@ -45,25 +57,227 @@ window.myLoadDb = function(){
     .then(function(d){
       /* 로그인이 꺼져 있거나 안 하셨으면 구간째 없습니다 */
       if(!d || !d.auth || !d.signedIn) return;
-      var L = (d.requests || []);
-      box.innerHTML = '<div class="w">'+
-        '<div class="sec-hd">'+
-          '<p class="eyebrow">MY REQUEST</p>'+
-          '<h2>내가 넣은 신청</h2>'+
-          '<p>접수번호로 물어보실 수 있습니다. 진행 상태가 바뀌면 여기에 '+
-            '그대로 보입니다.</p>'+
-        '</div>'+
-        (L.length ? MyReqList(L) : Empty({
-          icon:"doc", title:"아직 넣으신 신청이 없습니다",
-          text:"필요한 일을 적어 보내시면 조건에 맞는 업체를 찾아 드립니다.",
-          cta:'<a class="btn btn-b" href="'+esc(quoteTo({}))+'">'+
-              '서비스 신청하기'+icon("arrow",17)+'</a>'
-        }))+
-      '</div>';
+      /* ⚠️⚠️ **역할은 서버가 토큰으로 읽어 온 값**입니다 (`api/_auth.js`).
+         화면이 고르는 것이 아니고, 여기서 고른다고 보이는 줄이 늘지도
+         않습니다 — 무엇이 오는지는 RLS 와 `api/me.js` 의 칸 목록이
+         정합니다. 여기서 하는 일은 **온 것을 어떻게 보여 줄지**까지입니다. */
+      var role = d.role || "customer";
+      var inner = role === "provider" ? MyPvBand(d)
+                : (role === "staff" || role === "admin") ? MyDeskBand(d)
+                : MyCustBand(d);
+      box.innerHTML = '<div class="w">' + inner + '</div>';
       box.hidden = false;
     })
     .catch(function(e){ console.warn("[my] 신청 내역을 못 불러왔습니다 — " + e); });
 };
+
+function myHd(k, h, p){
+  return '<div class="sec-hd"><p class="eyebrow">'+esc(k)+'</p><h2>'+esc(h)+'</h2>'+
+    (p ? '<p>'+esc(p)+'</p>' : '')+'</div>';
+}
+
+/* ── 고객 (§11-1) ───────────────────────────────────────────────── */
+function MyCustBand(d){
+  var L = d.requests || [];
+  return myHd("MY REQUEST", "내가 넣은 신청",
+    "접수번호로 물어보실 수 있습니다. 진행 상태가 바뀌면 여기에 그대로 보입니다.")+
+    (L.length ? MyReqList(L) : Empty({
+      icon:"doc", title:"아직 넣으신 신청이 없습니다",
+      text:"필요한 일을 적어 보내시면 조건에 맞는 업체를 찾아 드립니다.",
+      cta:'<a class="btn btn-b" href="'+esc(quoteTo({}))+'">'+
+          '서비스 신청하기'+icon("arrow",17)+'</a>'
+    }));
+}
+
+/* ── 업체 대시보드 (§9-4) ────────────────────────────────────────
+   ⚠️⚠️ **배정된 건만 옵니다.** 거르는 일은 화면이 아니라 DB 의 RLS
+   (`request_assigned`)가 합니다 — 화면에 버그가 하나 생겨도 남의
+   신청이 새지 않습니다.
+   ⚠️ 그래서 여기 성함 · 연락처가 있는 것이 맞습니다. **배정이 곧
+   제3자 제공이고 동의 시각이 `assignment.agree3rd_at` 에 남아
+   있습니다** (제17조 제2항) — 배정 전에는 줄 자체가 안 옵니다. */
+function MyPvBand(d){
+  var L = d.requests || [], DL = d.deals || [];
+  return myHd("PARTNER", "배정받은 신청",
+    "연결된 건만 보입니다. 성함과 연락처는 배정이 된 뒤에 함께 옵니다.")+
+    (L.length ? MyPvList(L) :
+      '<p class="lead">아직 배정된 신청이 없습니다. 배정되면 여기에 '+
+        '연락처와 함께 보입니다.</p>'+
+      '<div class="row-cta"><a class="btn btn-o" href="/join">'+
+        '입점 안내 다시 보기'+icon("arrow",16)+'</a></div>')+
+    MyDealBand(DL);
+}
+
+function MyPvList(L){
+  return '<ul class="myq-l">'+L.map(function(r){
+    var st  = (typeof amDealStName === "function") ? amDealStName(r.state) : r.state;
+    var cat = r.cat && typeof amCat === "function" ? amCat(r.cat) : null;
+    /* ⚠️ `tel:` 은 폰에서 실제로 걸립니다 — 장식이 아닙니다. 숫자만
+       남겨 거는 것은 `/admin` 영업 작업대와 같은 규칙입니다. */
+    var tel = (r.tel || "").replace(/[^0-9+]/g, "");
+    return '<li class="myq"><div class="myq-h">'+
+        '<b class="myq-no">'+esc(r.no || "")+'</b>'+
+        '<span class="myq-st myq-'+esc(myStTone(r.state))+'">'+esc(st)+'</span>'+
+      '</div>'+
+      '<p class="myq-m">'+myCond(r, cat)+'</p>'+
+      (r.name || tel
+        ? '<p class="myq-pv">'+icon("user",15)+esc(r.name || "")+
+          (tel ? '<a class="myq-tel" href="tel:'+esc(tel)+'">'+
+                 icon("phone",15)+esc(r.tel)+'</a>' : '')+'</p>'
+        : "")+
+      (r.body ? '<p class="myq-b">'+esc(String(r.body).slice(0, 160))+'</p>' : "")+
+    '</li>'; }).join("")+'</ul>';
+}
+
+function myCond(r, cat){
+  return [ (r.side === "close" ? "폐업 · 정리" : "창업"),
+    (cat ? cat.name : ""),
+    (r.industry && typeof amIndustryName === "function" ? amIndustryName(r.industry) : ""),
+    (r.region && typeof amRegionName === "function" ? amRegionName(r.region) : ""),
+    (r.gu || "")
+  ].filter(Boolean).map(esc).join(" · ");
+}
+
+/* ── 내 계약 · 수수료 ────────────────────────────────────────────
+   ⚠️⚠️ **고객에게는 이 구간이 아예 없습니다** — 우리와 업체 사이의
+   일인데 보여 주면 자기가 내는 돈으로 읽힙니다. `api/me.js` 가
+   고객에게는 계약을 **묻지도 않습니다.**
+   ⚠️ 수수료가 확정되기 전에는 그 줄을 아예 안 냅니다 (절대 규칙 2) —
+   "0원" 은 "아직 확정 전" 과 다른 말입니다. */
+function MyDealBand(DL){
+  if(!DL.length) return '<div class="my-next"><h2>내 계약</h2>'+
+    '<p class="lead">아직 계약된 건이 없습니다. 계약이 확인되면 '+
+      '여기에 금액과 수수료가 쌓입니다.</p></div>';
+
+  return '<div class="my-next"><h2>내 계약 '+DL.length+'건</h2>'+
+    '<ul class="myq-l">'+DL.map(function(x){
+      var rows = [];
+      if(x.amount != null) rows.push(["계약금액", won(x.amount)+"원"]);
+      if(x.fee != null){
+        rows.push(["수수료 확정", won(x.fee_total != null ? x.fee_total : x.fee)+"원"]);
+        var due = Math.max(0, Number(x.fee_total != null ? x.fee_total : x.fee) -
+                              Number(x.paid || 0));
+        rows.push([x.paid != null ? "입금" : "입금 대기", won(x.paid || 0)+"원"]);
+        if(due > 0) rows.push(["남은 금액", won(due)+"원"]);
+      }
+      return '<li class="myq"><div class="myq-h">'+
+          '<b class="myq-no">'+esc(String(x.id || "").slice(0, 8))+'</b>'+
+          '<span class="myq-st myq-'+(x.fee == null ? "on" :
+            (Number(x.paid||0) >= Number(x.fee_total != null ? x.fee_total : x.fee)
+              ? "ok" : "warn"))+'">'+
+            esc(x.fee == null ? "수수료 확정 전"
+               : (Number(x.paid||0) >= Number(x.fee_total != null ? x.fee_total : x.fee)
+                  ? "정산 완료" : "정산 대기"))+'</span>'+
+        '</div>'+
+        (rows.length ? '<dl class="myd-l">'+rows.map(function(a){
+          return '<div><dt>'+esc(a[0])+'</dt><dd>'+esc(a[1])+'</dd></div>'; }).join("")+'</dl>' : "")+
+      '</li>'; }).join("")+'</ul>'+
+    /* ⚠️ 수수료 정책은 계약마다 **사본**이 박혀 있습니다 — 요율을
+       고쳐도 지난 계약의 수수료는 그대로입니다 (§9). */
+    '<p class="sec-note">계약에 적용된 수수료는 그 계약을 맺을 때의 '+
+      '정책으로 계산되어 그대로 남습니다.</p>'+
+  '</div>';
+}
+
+/* ── 직원 · 관리자 작업대 (§11-2) ───────────────────────────────
+   ⚠️⚠️ **모든 숫자는 서버에서 온 줄을 그 자리에서 센 값**입니다.
+   저장해 둔 집계가 아니라서 손으로 고칠 자리가 없습니다 — 업체
+   평점을 값으로 저장하지 않는 것과 같은 까닭입니다.
+   ⚠️⚠️ **합계를 "전체" 라고 적지 마세요.** `api/me.js` 가 최근 것만
+   가져옵니다 — 몇 건에서 센 값인지 화면이 밝힙니다.
+   ⚠️ 목록에 성함 · 연락처가 없습니다 (`PICK.staff`). 전화하시려면
+   건을 열어야 합니다 — 화면 하나가 곧 유출이 되지 않게요. */
+function MyDeskBand(d){
+  var L  = d.requests || [], DL = d.deals || [], AU = d.audits || [];
+  var isAdmin = d.role === "admin";
+
+  return myHd("DESK", isAdmin ? "관리자 작업대" : "접수 현황",
+    "로그인한 계정의 권한으로 볼 수 있는 것만 나옵니다.")+
+    MyFunnel(L)+
+    (isAdmin ? MyFee(DL, AU) : "")+
+    '<p class="sec-note">여기 숫자는 최근 접수 '+L.length+'건'+
+      (isAdmin ? ' · 최근 계약 '+DL.length+'건' : '')+
+      '에서 센 값입니다. 전체 누적이 아닙니다.</p>'+
+    '<div class="row-cta"><a class="btn btn-o" href="/admin">'+
+      '영업 작업대 열기'+icon("arrow",16)+'</a></div>';
+}
+
+function MyFunnel(L){
+  if(!L.length) return '<p class="lead">아직 접수된 신청이 없습니다.</p>';
+
+  var ST = window.AM_DEAL_ST || [];
+  var n  = {};
+  L.forEach(function(r){ n[r.state] = (n[r.state] || 0) + 1; });
+
+  /* 계약 이후인가 — ⚠️⚠️ **`deal.js` 가 가릅니다** (`amDealAfterSign`).
+     여기서 번호만 보고 잘랐다가 **보류(11)와 취소(10)가 계약으로
+     집계**됐습니다 — 번호가 `signed`(8)보다 뒤인데 계약이 아닙니다.
+     전환율이 조용히 부풀려지는 종류라 **찍어 보고** 알았습니다. */
+  var deals = ST.filter(function(s){
+      return typeof amDealAfterSign === "function" && amDealAfterSign(s.key); })
+    .reduce(function(a, s){ return a + (n[s.key] || 0); }, 0);
+  var side = { start:0, close:0 };
+  L.forEach(function(r){ if(r.side === "close") side.close++; else side.start++; });
+
+  return '<ul class="myk-g">'+ST.filter(function(s){
+      /* 돈이 걸린 상태는 관리자 칸(아래)에서 금액과 같이 냅니다 */
+      return !s.money;
+    }).map(function(s){
+      var c = n[s.key] || 0;
+      return '<li class="myk'+(c ? "" : " myk-0")+'">'+
+        '<b>'+c+'</b><span>'+esc(s.name)+'</span></li>';
+    }).join("")+'</ul>'+
+    '<dl class="myd-l myd-l3">'+
+      '<div><dt>창업 쪽</dt><dd>'+side.start+'건</dd></div>'+
+      '<div><dt>폐업 · 정리 쪽</dt><dd>'+side.close+'건</dd></div>'+
+      /* ⚠️⚠️ **분모가 0 이면 비율을 안 냅니다** — "전환율 0%" 는 비율이
+         아닙니다 (`/admin` 의 `slPct()` 와 같은 규칙). 여기는 위에서
+         이미 0건을 걸러 냈으니 분모가 늘 1 이상입니다. */
+      '<div><dt>계약까지 간 비율</dt><dd>'+
+        Math.round(deals / L.length * 100)+'%</dd></div>'+
+    '</dl>';
+}
+
+function MyFee(DL, AU){
+  if(!DL.length) return '<div class="my-next"><h2>수수료 · 정산</h2>'+
+    '<p class="lead">아직 계약된 건이 없습니다. 계약이 확인되면 '+
+      '여기에 확정액 · 입금 · 미수금이 쌓입니다.</p></div>';
+
+  var num = function(v){ var x = Number(v); return isFinite(x) ? x : 0; };
+  var sum = function(k){ return DL.reduce(function(a, x){ return a + num(x[k]); }, 0); };
+  /* 미수금 — ⚠️⚠️ **확정된 건만** 셉니다. 확정 전인 건을 0 으로 더하면
+     받을 돈이 없는 것처럼 읽힙니다 (§10 미수금 관리). */
+  var due = DL.reduce(function(a, x){
+    if(x.fee == null) return a;
+    return a + Math.max(0, num(x.fee_total != null ? x.fee_total : x.fee) - num(x.paid));
+  }, 0);
+  /* 환수 — ⚠️⚠️ `deal` 이 아니라 **감사 기록**에서 옵니다. 확정했던 액을
+     갈아 치우지 않고 차액을 적기 때문입니다 (0003 clawback_fee).
+     ⚠️ 차액이 음수인 줄(올려 잡은 경우)은 환수가 아니라 더하지 않습니다. */
+  var back = AU.reduce(function(a, x){
+    var b = (x && x.data) ? Number(x.data.back) : NaN;
+    return a + (isFinite(b) && b > 0 ? b : 0);
+  }, 0);
+  var fixed = DL.filter(function(x){ return x.fee != null; }).length;
+
+  var rows = [
+    ["계약 "+DL.length+"건 금액", won(sum("amount"))+"원"],
+    ["수수료 확정 "+fixed+"건", won(sum("fee"))+"원"],
+    ["청구액 (부가세 포함)", won(sum("fee_total"))+"원"],
+    ["입금 확인", won(sum("paid"))+"원"],
+    ["미수금", won(due)+"원"]
+  ];
+  /* ⚠️ 환수가 0 이면 줄째 뺍니다 — 없던 일을 "0원" 으로 적어 두면
+     기록이 있는 것처럼 읽힙니다 (절대 규칙 2). */
+  if(back > 0) rows.push(["환수 · 부분환불", won(back)+"원"]);
+
+  return '<div class="my-next"><h2>수수료 · 정산</h2>'+
+    '<dl class="myd-l myd-l3 myd-big">'+rows.map(function(a){
+      return '<div><dt>'+esc(a[0])+'</dt><dd>'+esc(a[1])+'</dd></div>'; }).join("")+'</dl>'+
+    '<p class="sec-note">수수료는 관리자가 증빙을 보고 확정한 것만, '+
+      '정산 완료는 실제 입금이 확인된 것만 셉니다.</p>'+
+  '</div>';
+}
 
 /* ⚠️ 상태 딱지 색은 `deal.js` 의 쓰임을 따릅니다 — 끝난 것(end)은 회색,
    돈(money)은 고객에게 안 옵니다, 보류는 **주의(warn)** 입니다.
@@ -88,12 +302,7 @@ function MyReqList(L){
         '<b class="myq-no">'+esc(r.no || "")+'</b>'+
         '<span class="myq-st myq-'+esc(myStTone(r.state))+'">'+esc(st)+'</span>'+
       '</div>'+
-      '<p class="myq-m">'+
-        [ (r.side === "close" ? "폐업 · 정리" : "창업"),
-          (cat ? cat.name : ""),
-          (r.industry && typeof amIndustryName === "function" ? amIndustryName(r.industry) : ""),
-          (r.region && typeof amRegionName === "function" ? amRegionName(r.region) : "")
-        ].filter(Boolean).map(esc).join(" · ")+'</p>'+
+      '<p class="myq-m">'+myCond(r, cat)+'</p>'+
       /* ⚠️⚠️ 업체 상호는 **배정이 된 뒤에만** 나옵니다 — 그 전에 적으면
          정해지지도 않은 곳을 알려 주는 것입니다 (제17조 제2항). */
       (pv ? '<p class="myq-pv">'+icon("users",15)+esc(pv)+'</p>' : "")+

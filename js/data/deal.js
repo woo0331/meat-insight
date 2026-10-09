@@ -56,8 +56,12 @@ window.AM_DEAL_ST = [
     who:["customer","provider","staff","admin"] },
   { key:"done",     n:9,  name:"서비스 완료",       lead:"설치·이행이 끝났습니다.",
     who:["customer","provider","staff","admin"] },
+  /* ⚠️⚠️ `off` — **번호 순서의 옆길**입니다. 취소와 보류는 번호가
+     `signed`(8)보다 뒤인데 **계약이 아닙니다.** 번호만 보고 "계약까지
+     간 건" 을 세면 **보류가 계약으로 집계됩니다** — 관리자 화면의
+     전환율이 부풀려집니다 (찍어 보고 알았습니다). */
   { key:"lost",     n:10, name:"취소 · 실패",        lead:"이 건은 진행되지 않았습니다.",
-    who:["customer","provider","staff","admin"], end:true },
+    who:["customer","provider","staff","admin"], end:true, off:true },
   /* ⚠️⚠️ **보류는 끝이 아닙니다** (2026-10-09 최종 통합 지시서 §8-3 —
      "취소 · 실패 · 보류 상태를 별도로 관리한다"). `lost` 에는 `end:true` 가
      있고 여기에는 **없습니다** — 다시 돌아올 수 있어야 보류입니다.
@@ -67,7 +71,7 @@ window.AM_DEAL_ST = [
      돈이 얽혀 있어서 멈추는 것이 아니라 **취소 · 환수**입니다 (§10-3).
      길 표에 그 길을 적지 마세요. */
   { key:"hold",     n:11, name:"보류",              lead:"잠시 멈춰 두었습니다. 다시 진행하실 수 있습니다.",
-    who:["customer","provider","staff","admin"] },
+    who:["customer","provider","staff","admin"], off:true },
   /* ⚠️⚠️ 아래 둘은 **돈** 입니다. 고객 화면에 내지 않습니다 — 손님에게
      "정산" 은 우리와 업체 사이의 일이고, 보여 주면 자기 돈으로 읽힙니다. */
   { key:"fee_wait", n:12, name:"정산 대기",         lead:"수수료가 확정되어 정산을 기다립니다.",
@@ -144,6 +148,16 @@ window.amDealSt = function(key){
 window.amDealStName = function(key){
   var s = window.amDealSt(key);
   return s ? s.name : "";
+};
+
+/* 계약이 선 뒤인가 — ⚠️⚠️ **번호만 보고 자르지 마세요.** 취소(10)와
+   보류(11)가 `signed`(8)보다 번호가 뒤라 같이 걸립니다. 둘은 계약이
+   아니라 옆길(`off`)입니다. 관리자 화면의 "계약까지 간 비율" 이
+   이것을 씁니다 — 틀리면 숫자가 조용히 부풀려집니다. */
+window.amDealAfterSign = function(key){
+  var s = window.amDealSt(key), g = window.amDealSt("signed");
+  if(!s || !g || s.off) return false;
+  return s.n >= g.n;
 };
 
 /* 이 역할이 이 상태를 볼 수 있는가 (§8 "자신의 권한에 맞는 상태만 조회") */

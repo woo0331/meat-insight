@@ -375,6 +375,10 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
      !/fee|paid|amount/.test(decodeURIComponent(cust)), decodeURIComponent(cust));
   ok("고객에게는 계약을 묻지도 않는다",
      calls.every(c => !/\/rest\/v1\/deal/.test(c.url)), calls.map(c => c.url));
+  /* ⚠️ 환수는 **감사 기록**에 남습니다 (0003 clawback_fee) — 계약을 안
+     묻는 것만 보고 통과시키면 돈이 그쪽 길로 샐 수 있습니다. */
+  ok("고객에게는 환수 기록도 묻지 않는다",
+     calls.every(c => !/audit_log/.test(c.url)), calls.map(c => c.url));
   ok("고객 칸에 연결된 업체 상호가 있다 (제17조 재동의가 상호를 알려 드립니다)",
      /provider\(/.test(decodeURIComponent(cust)), decodeURIComponent(cust));
   ok("답에 키 · 토큰이 섞이지 않는다", !leaks(r), r.body);
@@ -389,6 +393,8 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
   const pv = decodeURIComponent(calls.filter(c => /\/rest\/v1\/request/.test(c.url))[0].url);
   ok("업체 칸에 연락처가 있다", /tel/.test(pv), pv);
   ok("업체에게는 계약을 묻는다", calls.some(c => /\/rest\/v1\/deal/.test(c.url)));
+  ok("업체에게는 환수 합계를 묻지 않는다 (자기 건 기록은 DB 가 보여 줍니다)",
+     calls.every(c => !/audit_log/.test(c.url)), calls.map(c => c.url));
 
   /* 직원 · 관리자 — ⚠️ 목록에 성함 · 연락처를 깔지 않습니다 */
   r = res();
@@ -399,16 +405,28 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
   const st = decodeURIComponent(calls.filter(c => /\/rest\/v1\/request/.test(c.url))[0].url);
   ok("직원 목록에 성함 · 연락처가 없다",
      !/(^|,)name(,|$)/.test(st) && !/(^|,)tel(,|$)/.test(st), st);
+  ok("직원은 계약 · 환수를 묻지 않는다",
+     calls.every(c => !/\/rest\/v1\/deal|audit_log/.test(c.url)), calls.map(c => c.url));
 
   r = res();
   mock([USER, [/\/rest\/v1\/account/, function(){
          return body(200, [{ role:"admin", provider_id:null, name:"관리자" }]); }],
         [/\/rest\/v1\/request/, function(){ return body(200, []); }],
-        [/\/rest\/v1\/deal/,    function(){ return body(200, []); }]]);
+        [/\/rest\/v1\/deal/,    function(){ return body(200, []); }],
+        [/audit_log/,            function(){ return body(200, []); }]]);
   await Hme(req({ headers:{ authorization:"Bearer " + TOK } }), r);
   const ad = decodeURIComponent(calls.filter(c => /\/rest\/v1\/request/.test(c.url))[0].url);
   ok("관리자 목록도 성함 · 연락처 없이 본다", ad === st, [ad, st]);
   ok("관리자에게는 계약을 묻는다", calls.some(c => /\/rest\/v1\/deal/.test(c.url)));
+  /* §10 미수금 · 환수액 — ⚠️⚠️ 환수는 `deal` 에 안 남습니다. 확정했던
+     액을 갈아 치우지 않으려고 **차액을 감사 기록**에 적기 때문입니다. */
+  const au = calls.filter(c => /audit_log/.test(c.url))[0];
+  ok("관리자에게만 환수 기록을 묻는다", !!au, calls.map(c => c.url));
+  ok("환수 기록도 계약(deal) 것만 묻는다",
+     !!au && /obj=eq\.deal/.test(au.url), au && au.url);
+  ok("환수 기록 칸에 성함 · 연락처가 없다",
+     !!au && !/name|tel|email/.test(decodeURIComponent(au.url)),
+     au && decodeURIComponent(au.url));
 
   /* 전부 그 사람의 토큰으로 */
   ok("읽기 전부 service key 를 쓰지 않는다", noSvcAnywhere(), calls.map(c => c.h));

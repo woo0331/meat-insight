@@ -3664,3 +3664,47 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .myq-pv{ display:flex; align-items:center; gap:6px; margin:0;
   font-size:var(--t-cap); font-weight:700; color:var(--ink); }
 .myq-pv svg{ flex:0 0 auto; color:var(--blue-600); }
+
+/* 배정된 건의 전화 — ⚠️ `tel:` 은 폰에서 **실제로 걸립니다.** 장식이
+   아니라 누르는 것이라 높이를 40px 이상으로 잡습니다 (padding 만으로
+   만들면 짧은 번호에서 다시 낮아집니다). */
+.myq-tel{ display:inline-flex; align-items:center; gap:6px;
+  min-height:40px; margin-left:auto; padding:0 12px;
+  border:1px solid var(--blue-100); border-radius:999px;
+  background:var(--blue-50); color:var(--blue-600);
+  font-size:var(--t-cap); font-weight:800; text-decoration:none; }
+.myq-tel:hover{ border-color:var(--blue); }
+.myq-b{ margin:0; padding:var(--s3) var(--s4);
+  background:var(--bg-2); border-radius:var(--r);
+  font-size:var(--t-cap); color:var(--ink2); line-height:1.65; }
+
+/* 값 줄 — ⚠️⚠️ `dt`/`dd` 를 한 칸에 넣지 않습니다. grid 칸에 글과
+   태그를 섞으면 안쪽 태그가 **딴 칸**이 됩니다 (이 저장소가 네 번
+   겪은 자리) — 쌍마다 `div` 로 감쌉니다. */
+.myd-l{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:var(--s3) var(--s5); margin:0; }
+.myd-l > div{ display:grid; gap:2px; }
+.myd-l dt{ font-size:var(--t-cap); color:var(--ink3); }
+.myd-l dd{ margin:0; font-size:var(--t-sm); font-weight:800; color:var(--navy); }
+.myd-big dd{ font-size:var(--t-md); }
+/* ⚠️ 값 줄 바로 뒤에 다음 머리말이 오면 붙어 보입니다 — 찍어 보고
+   알았습니다 (검사는 간격을 안 잽니다). */
+.myd-l + .my-next{ margin-top:var(--s7); }
+@media (min-width:760px){
+  .myd-l3{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+}
+
+/* 퍼널 — ⚠️⚠️ **센 값**입니다. 저장된 집계가 아니라 서버에서 온 줄을
+   그 자리에서 셉니다 (§11-2). 0 인 칸도 숨기지 않습니다 — 0 은
+   자리표시자가 아니라 사실이고, 숨기면 그 상태가 없는 줄 압니다. */
+.myk-g{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:var(--s3); margin:0 0 var(--s5); padding:0; list-style:none; }
+.myk{ display:grid; gap:2px; padding:var(--s4);
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-lg); text-align:center; }
+.myk b{ font-size:var(--t-lg); font-weight:800; color:var(--navy);
+  line-height:1.2; }
+.myk span{ font-size:var(--t-cap); color:var(--ink2); }
+.myk-0 b{ color:var(--ink3); }
+@media (min-width:620px){ .myk-g{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
+@media (min-width:980px){ .myk-g{ grid-template-columns:repeat(6, minmax(0,1fr)); } }

@@ -828,9 +828,24 @@ const AUDIT = `(() => {
     ["/startup/cafe", "업종별 장비가 그 업종 것으로 바뀜",
       () => document.body.textContent.indexOf("커피머신") >= 0
          && document.body.textContent.indexOf("미용의자") < 0],
+    /* ⚠️⚠️ **화면 글 전체에서 찾지 않습니다.** 전에는 body 를 통째로
+       봤는데, 2026-10-09 에 `수리 · 유지보수` 분류가 생기면서 그 하위의
+       **"커피머신 수리"** 가 걸려 멀줦한 화면을 실패로 잡았습니다.
+       이 저장소가 여러 번 겪은 "검사가 화면 글 전체에서 찾음" 입니다 —
+       보려는 것은 **시설 · 장비 카드가 업종 것을 내는가** 하나입니다. */
     ["/startup/hair", "다른 업종이면 다른 장비가 나옴",
-      () => document.body.textContent.indexOf("미용의자") >= 0
-         && document.body.textContent.indexOf("커피머신") < 0],
+      () => {
+        const cards = Array.prototype.slice.call(document.querySelectorAll(".stp-i"));
+        let hit = null;
+        for (const el of cards) {
+          const b = el.querySelector("b");
+          if (b && b.textContent.indexOf("시설") >= 0) { hit = el; break; }
+        }
+        if (!hit) return false;
+        const sub = hit.querySelector(".stp-i-s");
+        const t = sub ? sub.textContent : "";
+        return t.indexOf("미용의자") >= 0 && t.indexOf("커피머신") < 0;
+      }],
     ["/closure/gym", "폐업도 업종마다 다름",
       () => document.body.textContent.indexOf("운동기구") >= 0],
     ["/startup/nope-없는업종", "없는 업종은 404 로",

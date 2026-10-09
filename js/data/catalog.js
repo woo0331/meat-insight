@@ -147,16 +147,23 @@ window.AM_START_CATS = [
   { key:"repair", name:"수리 · 유지보수", icon:"tool", tone:"t12", kind:"provider",
     lead:"멈췄을 때 부르는 곳",
     desc:"장비가 멈추면 그날 장사가 안 됩니다. 지역 · 품목으로 찾습니다.",
+    /* ⚠️⚠️ **전업종 공통인 것을 앞에 둡니다.** 화면은 하위를 다섯까지만
+       미리 보여 주는데(`StepBand`), 냉장고 · 커피머신 같은 **업종이 드러나는
+       것**을 앞에 두었더니 **미용실 창업 화면에 "커피머신 수리" 가
+       떴습니다** — 전수 점검이 잡았습니다. 에어컨 · 전기배관 · 정기
+       점검 · 렌탈 · POS 는 어느 업종이든 쓸 일이 있습니다.
+       ⚠️ 전체 목록은 `/providers/repair` 에 그대로 있습니다 — 잘라 낸 것이
+       아니라 **차례만** 바꾸었습니다 (`amCatsFor()` 와 같은 생각). */
     items:[
-      { key:"fridge-fix", name:"냉장 · 냉동고 수리" },
-      { key:"coffee-fix", name:"커피머신 수리" },
-      { key:"ice-fix",    name:"제빙기 관리" },
       { key:"aircon-fix", name:"에어컨 수리" },
-      { key:"kitchen-fix",name:"주방설비 유지보수" },
       { key:"elec-fix",   name:"전기 · 배관 · 설비" },
-      { key:"it-fix",     name:"POS · CCTV 유지보수" },
       { key:"check-up",   name:"정기 시설 점검" },
-      { key:"rental-care",name:"렌탈 점검 · 관리" }
+      { key:"rental-care",name:"렌탈 점검 · 관리" },
+      { key:"it-fix",     name:"POS · CCTV 유지보수" },
+      { key:"fridge-fix", name:"냉장 · 냉동고 수리" },
+      { key:"kitchen-fix",name:"주방설비 유지보수" },
+      { key:"coffee-fix", name:"커피머신 수리" },
+      { key:"ice-fix",    name:"제빙기 관리" }
     ]},
 
   { key:"admin", name:"행정 · 전문가", icon:"briefcase", tone:"t3", kind:"provider",

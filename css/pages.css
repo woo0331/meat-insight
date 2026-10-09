@@ -102,8 +102,17 @@
    쓰고 있고, 되돌리실 일이 생기면 아래 다섯 줄을 되살리면 됩니다.
    ⚠️⚠️ **폐업은 그대로 주황입니다.** 빨강으로 넘기지 마세요 —
    "폐업은 나쁜 것" 이라는 말이 됩니다 (검사가 초록 성분을 봅니다). */
+/* ⚠️⚠️ **2026-10-09 지시서 §2 · §6 — 창업은 블루 · 폐업은 오렌지가
+   속화면 전체에 깔립니다.** 규칙을 수십 개 고치지 않습니다 — 이
+   저장소의 강조색은 거의 전부 `--blue` 를 거치기 때문에, 변수
+   **다섯**만 바꾸면 아이콘 타일 · 칩 · 버튼 · 머리말 · 포커스 테두리가
+   한꺼번에 따라옵니다.
+   ⚠️ `--bg-ivory2` 도 같이 바꿉니다 — 그래야 **구간 바탕**까지
+   쪽 색을 띱니다 (§6 "창업 로드맵은 블루 계열 · 폐업 로드맵은
+   오렌지 계열"). 이웃 바탕과 ΔE 를 재서 정했습니다 (최저 3.39). */
 .side-start{
   --blue-50:  var(--blue-soft);
+  --bg-ivory2: var(--bg-sky);
 }
 .side-close{
   --blue:     var(--close-dark);
@@ -111,6 +120,8 @@
   --blue-400: var(--close);
   --blue-50:  var(--close-soft);
   --blue-100: #FFE0D2;
+  --bg-ivory2: var(--bg-peach);
+  --bg-sky:    var(--bg-peach);
 }
 
 /* ════════ 화면 머리 — 모든 속화면이 같은 것을 씁니다 ═════════════ */
@@ -121,11 +132,11 @@
    칠하지 않습니다 (§2 면적 비율). */
 .side-start .pgh{
   background:
-    radial-gradient(60% 120% at 0% 0%, rgba(42,111,176,.13) 0%, rgba(42,111,176,0) 72%),
+    radial-gradient(60% 120% at 0% 0%, rgba(20,100,244,.14) 0%, rgba(20,100,244,0) 72%),
     linear-gradient(180deg, #FFFFFF 0%, var(--blue-soft) 100%); }
 .side-close .pgh{
   background:
-    radial-gradient(60% 120% at 0% 0%, rgba(242,106,61,.13) 0%, rgba(242,106,61,0) 72%),
+    radial-gradient(60% 120% at 0% 0%, rgba(255,103,43,.16) 0%, rgba(255,103,43,0) 72%),
     linear-gradient(180deg, #FFFFFF 0%, var(--close-soft) 100%); }
 .pgh-tight{ padding:var(--s9) 0 var(--s7); }
 .pg-h1{ font-size:var(--t-3xl); font-weight:900; letter-spacing:var(--tr-head); }
@@ -1350,6 +1361,24 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    `flex-grow` 를 더하지 마세요. 폐업 쪽을 좁히거나 흐리게 만들면
    그게 "덜 중요한 것" 이라는 말입니다 (검사가 1px 까지 잽니다).
    ⚠️ **카드 전체가 눌립니다** — 안에 또 `<a>` 를 넣지 마세요. */
+/* 히어로 검색창 (지시서 §4) — 헤더 통합검색과 **같은 함수**를 부릅니다.
+   ⚠️ 폰에서는 단추가 아래로 내려갑니다 — 한 줄에 셋을 두면 적는 칸이
+   90px 이 되어 무엇을 적는 칸인지 안 읽힙니다 (검색 패널에서 겪은 자리). */
+.mh-find{ display:flex; align-items:center; gap:var(--s3);
+  width:min(620px, 100%); margin:var(--s6) auto 0; padding:7px 7px 7px var(--s5);
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-pill); box-shadow:0 14px 36px rgba(16,42,86,.12); }
+.mh-find-i{ display:inline-flex; color:var(--blue-600); flex:0 0 auto; }
+.mh-find input{ flex:1 1 auto; min-width:0; height:46px; border:0; background:none;
+  font-size:var(--t-base); color:var(--ink); }
+.mh-find input::placeholder{ color:var(--ink3); }
+.mh-find input:focus{ outline:none; }
+.mh-find .btn{ flex:0 0 auto; }
+@media (max-width:560px){
+  .mh-find{ flex-wrap:wrap; border-radius:var(--r-xl); padding:var(--s4); }
+  .mh-find input{ width:100%; flex:1 1 140px; height:40px; }
+  .mh-find .btn{ width:100%; justify-content:center; }
+}
 .mh-pick{ position:relative; z-index:3; padding-bottom:var(--s10); }
 .mh-pick-g{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s5); }
 .hpk{ position:relative; display:flex; align-items:stretch; gap:var(--s4);
@@ -1673,38 +1702,41 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    ══════════════════════════════════════════════════════════════════
    ⚠️ "지금 많이 찾는" 이 아닙니다 — 이용 데이터를 안 모읍니다. */
 .msvc-g{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s5); }
-/* ⚠️ 시안의 카드는 **흰 바탕에 가운데 정렬**입니다 — 아이콘 · 이름 ·
-   한 줄이 한 기둥으로 읽혀야 여덟 장이 한눈에 들어옵니다. 색은
-   아이콘 타일에만 들어갑니다 (§22 — 카드는 흰색). */
-.msvc-g a{ display:grid; align-content:start; justify-items:center; gap:4px;
-  height:100%; padding:var(--s6) var(--s4) var(--s6);
-  text-align:center; border-radius:var(--r-lg); overflow:hidden;
+/* ⚠️⚠️ **카드가 `<div>` 입니다** — 안에 링크가 둘(분야 화면 · 견적
+   요청)이라서요. `<a>` 안의 `<a>` 는 브라우저가 쪼갭니다.
+   ⚠️ 색은 **아이콘과 CTA 에만** 들어갑니다 — 카드 면은 흰색입니다
+   (§22 "카드는 흰색 · 어두운 카드 · 글래스 카드 금지"). */
+.msvc-c{ display:flex; flex-direction:column; height:100%;
   background:var(--surface); border:1px solid var(--line);
-  transition:transform .25s, box-shadow .25s, border-color .25s; }
-.msvc-g a:hover{ transform:translateY(-4px); border-color:var(--blue-400);
-  box-shadow:0 16px 34px rgba(15,43,68,.10); }
-/* 사진이 들어오면 **위쪽 띠**가 됩니다 — 코드를 안 고칩니다 */
-.msvc-ph{ display:block; width:100%; aspect-ratio:16/10;
-  margin:calc(var(--s6) * -1) calc(var(--s4) * -1) var(--s4);
-  width:calc(100% + var(--s4) * 2); }
-.msvc-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0; }
-/* ⚠️ 사진이 0장이면 분류 아이콘이 자리를 지킵니다 (빈 액자가 아니라
-   **아이콘 타일**입니다 — 분류색 틴트라 여덟이 색으로 갈립니다).
-   ⚠️⚠️ 틴트 면을 16/10 으로 깔면 여덟 장만으로 화면 하나를 먹습니다 —
-   사진이 없을 때는 **타일**입니다. */
-.msvc-ph-n{ display:flex; align-items:center; justify-content:center;
-  width:72px; height:72px; margin:0 0 var(--s4); aspect-ratio:auto;
-  border-radius:var(--r-lg);
-  background:var(--ic-bg); color:var(--ic-ink); }
-.msvc-ph-n svg{ width:34px; height:34px; }
+  border-radius:var(--r-xl); overflow:hidden;
+  transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
+.msvc-c:hover{ transform:translateY(-4px); border-color:var(--ic-ink);
+  box-shadow:0 18px 38px rgba(16,42,86,.12); }
+.msvc-go{ display:grid; justify-items:center; align-content:start; gap:5px;
+  flex:1 1 auto; padding:var(--s6) var(--s4) var(--s5); text-align:center;
+  color:var(--ink); text-decoration:none; }
+.msvc-go:hover{ color:var(--ink); }
+/* 아이콘 원판 — 여덟 장이 **같은 크기 · 같은 모서리 · 같은 그림자**
+   입니다 (지시서 §3). 색만 분류색(`--ic-ink`/`--ic-bg`)에서 옵니다. */
+.msvc-c .ia-t{ --ia-1:var(--ic-ink); --ia-bg:var(--ic-bg);
+  margin-bottom:var(--s3); }
+@supports (color: color-mix(in srgb, red 50%, white)){
+  .msvc-c{ --ia-2: color-mix(in srgb, var(--ic-ink) 26%, #fff); }
+}
 .msvc-g b{ font-size:var(--t-md); font-weight:800; color:var(--ink);
   line-height:1.4; }
 .msvc-g i{ font-style:normal; font-size:var(--t-cap);
   color:var(--ink2); line-height:1.55; }
+/* 상담 · 견적 — **실제로 도는 링크**입니다 (§5) */
+.msvc-q{ display:flex; align-items:center; justify-content:center; gap:6px;
+  min-height:var(--tap); padding:0 var(--s4);
+  border-top:1px solid var(--line); background:var(--ic-bg);
+  font-size:var(--t-cap); font-weight:800; color:var(--ic-ink);
+  text-decoration:none; transition:background .18s ease, color .18s ease; }
+.msvc-q:hover{ background:var(--ic-ink); color:#fff; }
+.msvc-q:hover svg{ color:#fff; }
 /* ⚠️ 칸 수는 **아래 1100px · 760px 묶음**이 정합니다 — 여기 또 적으면
    뒤엣것이 이겨서 "안 먹는다" 가 됩니다 (이 저장소의 특정도 함정). */
-@media (max-width:460px){
-  .msvc-ph-n{ width:58px; height:58px; }
   .msvc-ph-n svg{ width:28px; height:28px; }
 }
 
@@ -1884,7 +1916,9 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   padding:var(--s6); border-radius:var(--r-2xl); }
 .mbr-cl{ background:var(--bg-peach); --ic-ink:var(--close-dark); --ic-bg:#fff;
   box-shadow:var(--shadow-soft), inset 0 0 0 1px var(--line-peach); }
-.mbr-st{ background:var(--bg-mint); --ic-ink:var(--start-dark); --ic-bg:#fff;
+/* ⚠️ 2026-10-09 §2 — 창업 쪽이 파랑이 되면서 이 판도 민트에서 라이트
+   블루로 옮겼습니다. 민트는 `/stores` 처럼 **중립 화면**에 남깁니다. */
+.mbr-st{ background:var(--bg-sky); --ic-ink:var(--start-dark); --ic-bg:#fff;
   box-shadow:var(--shadow-soft), inset 0 0 0 1px var(--line-mint); }
 .mbr-k{ font-size:var(--t-sm); font-weight:800; font-style:italic;
   color:var(--close-deep); }
@@ -3276,3 +3310,15 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .sask-r-ls{ display:flex; flex-wrap:wrap; gap:7px; margin-top:4px; }
 @media (max-width:900px){ .sask-g{ grid-template-columns:1fr 1fr; } }
 @media (max-width:560px){ .sask-g{ grid-template-columns:1fr; } }
+
+
+/* ══════════════════════════════════════════════════════════════════
+   분야 카드의 컬러 아이콘 (2026-10-09 지시서 §3 · §7)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️ `--ia-1` · `--ia-2` 두 변수로만 색이 들어옵니다. 분류색
+   (`--ic-ink` · `--ic-bg`)에서 받아 와서 **타일과 아이콘이 같은
+   집안 색**이 됩니다. */
+.cat-ic-a{ --ia-1:var(--ic-ink); }
+@supports (color: color-mix(in srgb, red 50%, white)){
+  .cat-ic-a{ --ia-2: color-mix(in srgb, var(--ic-ink) 26%, #fff); }
+}

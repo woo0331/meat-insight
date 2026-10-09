@@ -246,3 +246,148 @@ window.amDropEmpty = function(o){
   }
   return out;
 };
+
+/* ══════════════════════════════════════════════════════════════════
+   컬러 아이콘 한 벌 — `iconArt()` (2026-10-09 지시서 §3)
+   ══════════════════════════════════════════════════════════════════
+   > "핵심 서비스 카테고리에는 **컬러형 아이콘**을 적용한다 ·
+   >  POS · CCTV · 인터넷 · 렌탈 · 인테리어 · 철거의 차이를 **즉시
+   >  알아볼 수 있게** · Lucide 등 단순 선형 아이콘은 **보조 UI** 에."
+
+   ⚠️⚠️ **`icon()` 을 대신하는 것이 아닙니다.** 둘은 쓰는 자리가
+   다릅니다 —
+
+     icon()     선 1.8 · 단색 · 24 viewBox   → 보조 UI (버튼 · 칩 ·
+                                              목록 · 링크 · 배지)
+     iconArt()  두 톤 · 면 + 선 · 48 viewBox → **핵심 서비스 카드**
+                                              (한 화면에 여덟 장까지)
+
+   ⚠️ **이모지로 대체하지 마세요** (지시서 §3). 전부 여기서 그린
+   SVG 이고 외부에서 받아 온 것이 하나도 없습니다 — 저작권 · 라이선스가
+   `icon()` 과 똑같이 이 저장소 것입니다. 파일 요청도 없어서 성능은
+   인라인 SVG 그대로입니다 (내려받기 0건).
+
+   ⚠️⚠️ **색은 두 변수로만 들어옵니다** — `--ia-1`(진한 면 · 선)과
+   `--ia-2`(옅은 바탕 면). 쓰는 쪽에서 그 둘만 바꾸고 아이콘 안을
+   건드리지 마세요. `icon()` 이 `--ic-ink` · `--ic-bg` 둘로만 받는
+   것과 같은 규칙입니다.
+
+   ⚠️⚠️ **48px 에서 무엇인지 읽히는지 반드시 찍어서 보세요.** 이
+   저장소에서 24px 아이콘을 **일곱 개** 다시 그렸습니다 (악수가
+   우산으로, 롤러가 T 자로 읽혔습니다).
+   ⚠️ 한 화면에서 **두 가지가 같은 그림을 쓰지 않게** 하세요 —
+   `check.js` 가 핵심 서비스 여덟의 그림이 겹치면 잡습니다. */
+var IA = {
+  /* 상가 · 점포 — 차양 친 가게 정면 */
+  store: '<path class="a2" d="M8 20h32v20a3 3 0 0 1-3 3H11a3 3 0 0 1-3-3z"/>'+
+    '<path class="a1" d="M8 20h32v6H8z"/>'+
+    '<path class="a1" d="M7 8h34a2 2 0 0 1 1.9 1.4L45 17H3l2.1-7.6A2 2 0 0 1 7 8z"/>'+
+    '<path class="a1" d="M19 30h10a2 2 0 0 1 2 2v11H17V32a2 2 0 0 1 2-2z"/>'+
+    '<path class="aw" d="M13 10.5h5.5L17 17h-6zM24.5 10.5H30L31 17h-6.5zM27 34h2v4h-2z"/>',
+  /* 인테리어 · 시공 — 페인트 롤러 + 칠한 면 */
+  interior: '<path class="a2" d="M6 6h22v14H6z"/>'+
+    '<path class="a1" d="M6 6h22a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/>'+
+    '<path class="a1o" d="M30 13h7a4 4 0 0 1 4 4v4a4 4 0 0 1-4 4H27v4"/>'+
+    '<path class="a1" d="M22 27h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H22a2 2 0 0 1-2-2V29a2 2 0 0 1 2-2z"/>'+
+    '<path class="aw" d="M9 11h16v4H9z"/>',
+  /* 시설 · 장비 — 업소용 가스레인지 */
+  equip: '<path class="a2" d="M5 14h38v26a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z"/>'+
+    '<path class="a1" d="M8 10h32a3 3 0 0 1 3 3v9H5v-9a3 3 0 0 1 3-3z"/>'+
+    '<circle class="aw" cx="17" cy="16" r="4"/><circle class="aw" cx="31" cy="16" r="4"/>'+
+    '<path class="a1" d="M5 28h38v3H5z"/>'+
+    '<circle class="a1" cx="15" cy="37" r="3"/><circle class="a1" cx="24" cy="37" r="3"/>'+
+    '<circle class="a1" cx="33" cy="37" r="3"/>',
+  /* IT · 매장시스템 — 모니터 + 카드 */
+  it: '<path class="a2" d="M4 8h30v22H4z"/>'+
+    '<path class="a1" d="M7 6h24a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V10a4 4 0 0 1 4-4z"/>'+
+    '<path class="aw" d="M8 11h16v3H8zM8 17h11v3H8z"/>'+
+    '<path class="a1o" d="M19 30v6M12 36h14"/>'+
+    '<path class="a1" d="M28 25h14a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H28a3 3 0 0 1-3-3V28a3 3 0 0 1 3-3z"/>'+
+    '<path class="aw" d="M25 30h20v3H25zM29 36h6v2h-6z"/>',
+  /* 행정 · 전문가 — 서류 + 확인 도장 */
+  admin: '<path class="a2" d="M10 4h20l8 8v24H10z"/>'+
+    '<path class="a1" d="M12 3h16l9 9v20a3 3 0 0 1-3 3H12a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3z"/>'+
+    '<path class="aw" d="M14 13h12v3H14zM14 19h12v3H14zM14 25h7v3h-7z"/>'+
+    '<circle class="a1" cx="34" cy="34" r="10"/>'+
+    '<path class="awo" d="M29.5 34.3l3.2 3.2 6-6.4"/>',
+  /* 마케팅 · 디자인 — 확성기 + 음파 */
+  marketing: '<path class="a2" d="M4 18h10l16-9v26l-16-9H4z"/>'+
+    '<path class="a1" d="M6 17h8l16-9a2 2 0 0 1 3 1.7v28.6A2 2 0 0 1 30 40l-16-9H6a2 2 0 0 1-2-2V19a2 2 0 0 1 2-2z"/>'+
+    '<path class="a1" d="M14 31h6l2 11a2 2 0 0 1-2 2.3h-3a2 2 0 0 1-2-1.7z"/>'+
+    '<path class="a1o" d="M37 17a10 10 0 0 1 0 14M42 12a17 17 0 0 1 0 24"/>',
+  /* 철거 — 망치 + 부서진 벽 */
+  demolish: '<path class="a2" d="M4 31h40v12H4z"/>'+
+    '<path class="a1" d="M4 31h40v4H4z"/>'+
+    '<path class="a1o" d="M14 35v8M24 35v8M34 35v8M4 39h40"/>'+
+    '<path class="a1" d="M26 4l14 8a2 2 0 0 1 .8 2.7l-2.6 4.6a2 2 0 0 1-2.7.8l-14-8z"/>'+
+    '<path class="a1" d="M22.8 14.2l3.4 2-11.4 13a2.2 2.2 0 1 1-3.3-2.9z"/>',
+  /* 청소 · 방역 — 분무기 + 분사 */
+  clean: '<path class="a2" d="M12 19h18v24H12z"/>'+
+    '<path class="a1" d="M15 17h12a4 4 0 0 1 4 4v18a4 4 0 0 1-4 4H15a4 4 0 0 1-4-4V21a4 4 0 0 1 4-4z"/>'+
+    '<path class="aw" d="M13 25h16v6H13z"/>'+
+    '<path class="a1" d="M17 6h8v9h-8z"/>'+
+    '<path class="a1" d="M25 8h8l5-4 2 2-5 6h-10z"/>'+
+    '<path class="a1o" d="M38 17l4-1.5M38 23l4 1.5M40 20h4"/>',
+  /* 매장 인터넷 — 공유기 + 전파 */
+  net: '<path class="a2" d="M6 28h36v13H6z"/>'+
+    '<path class="a1" d="M9 27h30a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-6a4 4 0 0 1 4-4z"/>'+
+    '<circle class="aw" cx="14" cy="34" r="2.2"/><circle class="aw" cx="21" cy="34" r="2.2"/>'+
+    '<circle class="aw" cx="28" cy="34" r="2.2"/>'+
+    '<path class="a1o" d="M34 27V20"/>'+
+    '<path class="a1o" d="M16 15.5a15 15 0 0 1 21 0M22 21a7.5 7.5 0 0 1 9 0"/>',
+  /* POS · 카드단말기 — 단말기 + 영수증 */
+  pos: '<path class="a2" d="M10 12h28v31H10z"/>'+
+    '<path class="a1" d="M14 8h20a5 5 0 0 1 5 5v26a5 5 0 0 1-5 5H14a5 5 0 0 1-5-5V13a5 5 0 0 1 5-5z"/>'+
+    '<path class="aw" d="M14 13h20v8H14z"/>'+
+    '<circle class="aw" cx="19" cy="29" r="2.4"/><circle class="aw" cx="29" cy="29" r="2.4"/>'+
+    '<circle class="aw" cx="19" cy="37" r="2.4"/><circle class="aw" cx="29" cy="37" r="2.4"/>'+
+    '<path class="a1o" d="M39 11h5v8"/>',
+  /* CCTV · 보안 — 카메라 + 브래킷 */
+  cctv: '<path class="a2" d="M8 15l26-7 4 13-26 7z"/>'+
+    '<path class="a1" d="M9 13.5l24-6.5a2 2 0 0 1 2.5 1.4l2.6 9.6a2 2 0 0 1-1.4 2.5l-24 6.5a2 2 0 0 1-2.5-1.4L7.6 16a2 2 0 0 1 1.4-2.5z"/>'+
+    '<circle class="aw" cx="31" cy="14" r="3.4"/>'+
+    '<path class="a1" d="M38 10l7-2 2 7-7 2z"/>'+
+    '<path class="a1o" d="M14 28l5 7"/>'+
+    '<path class="a1" d="M22 33h7v10h-7z"/><path class="a1" d="M17 41h17v3H17z"/>',
+  /* 정수기 · 제빙기 렌탈 — 디스펜서 + 물방울 */
+  rental: '<path class="a2" d="M12 5h24v38H12z"/>'+
+    '<path class="a1" d="M16 4h16a5 5 0 0 1 5 5v30a5 5 0 0 1-5 5H16a5 5 0 0 1-5-5V9a5 5 0 0 1 5-5z"/>'+
+    '<path class="aw" d="M15 9h18v11H15z"/>'+
+    '<path class="aw" d="M22 24h4v4h-4z"/>'+
+    '<path class="aw" d="M24 30c2.7 3.3 4 5.2 4 6.8a4 4 0 0 1-8 0c0-1.6 1.3-3.5 4-6.8z"/>'+
+    '<path class="a1o" d="M19 44h10"/>',
+  /* 키오스크 · 테이블오더 — 세로 화면 + 누르는 손 */
+  kiosk: '<path class="a2" d="M8 4h22v38H8z"/>'+
+    '<path class="a1" d="M12 3h14a5 5 0 0 1 5 5v30a5 5 0 0 1-5 5H12a5 5 0 0 1-5-5V8a5 5 0 0 1 5-5z"/>'+
+    '<path class="aw" d="M11 9h16v12H11zM11 25h16v3H11zM11 31h10v3H11z"/>'+
+    '<path class="a1" d="M33 23a3 3 0 0 1 6 0v7l3 2.2c1.6 1.2 2 2.7 1.2 4.5l-2.2 4.8c-.7 1.5-1.8 2.2-3.4 2.2h-5.4c-1.3 0-2.3-.5-3.1-1.6l-4.3-5.8c-1-1.3-.7-2.9.6-3.8 1.3-.9 2.8-.6 3.8.5l1.8 2z"/>',
+  /* 간판 — 매달린 사인 */
+  sign: '<path class="a1" d="M5 3h4v42H5z"/>'+
+    '<path class="a1" d="M9 7h26v4H9z"/>'+
+    '<path class="a1o" d="M16 11v5M32 11v5"/>'+
+    '<path class="a2" d="M12 16h30v18H12z"/>'+
+    '<path class="a1" d="M15 15h22a4 4 0 0 1 4 4v12a4 4 0 0 1-4 4H15a4 4 0 0 1-4-4V19a4 4 0 0 1 4-4z"/>'+
+    '<path class="aw" d="M15 21h18v4H15zM15 28h11v3H15z"/>',
+  /* 주방 · 업소용 장비 — 냄비 + 김 */
+  kitchen: '<path class="a1o" d="M17 10c0-3.5 2-4.5 2-8M25 10c0-3.5 2-4.5 2-8M33 10c0-3.5 2-4.5 2-8"/>'+
+    '<path class="a2" d="M8 20h30v13a9 9 0 0 1-9 9H17a9 9 0 0 1-9-9z"/>'+
+    '<path class="a1" d="M8 22h30v11a9 9 0 0 1-9 9H17a9 9 0 0 1-9-9z"/>'+
+    '<path class="a1" d="M4 15h38a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2z"/>'+
+    '<path class="a1o" d="M38 26h4a3.5 3.5 0 0 1 0 7h-4"/>',
+  /* 원상복구 — 벽 + 되돌리는 화살 */
+  restore: '<path class="a2" d="M4 12h30v31H4z"/>'+
+    '<path class="a1" d="M4 12h30v7H4zM4 23h30v7H4zM4 34h30v7H4z"/>'+
+    '<path class="aw" d="M13 12h3v7h-3zM24 23h3v7h-3zM13 34h3v7h-3z"/>'+
+    '<path class="a1" d="M30 4l12 7-9 13-8-5z"/>'+
+    '<path class="a1o" d="M27 21.5L22 30"/>'
+};
+/* ⚠️ `size` 는 **44 이상**으로 주세요 — 두 톤 아이콘이라 그 아래에서는
+   면이 뭉개져 선형 아이콘보다 오히려 안 읽힙니다 (찍어서 재 봤습니다). */
+window.iconArt = function(name, size){
+  var d = IA[name]; if(!d) return "";
+  var s = size || 46;
+  return '<svg class="ia" width="'+s+'" height="'+s+'" viewBox="0 0 48 48" '+
+    'aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">'+
+    d+'</svg>';
+};
+window.hasIconArt = function(name){ return !!IA[name]; };

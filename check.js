@@ -1600,10 +1600,21 @@ const AUDIT = `(() => {
     const h1s = document.querySelectorAll("#view h1");
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
     if(!h1s[0].closest(".mh")) return "h1 이 히어로에 없습니다";
+    /* ⚠️ 2026-10-09 지시서 §4 가 카피를 직접 적었습니다 — 글자를
+       통째로 견주면 브랜드 이름이 바뀌는 날 또 걸립니다. 이름은
+       데이터에서 가져오고 **두 낱말이 다 있는지**를 봅니다. */
     const t = h1s[0].textContent.replace(/\\s+/g, "");
-    if(t !== "사장님의시작과마지막을연결합니다.")
-      return "제목이 " + h1s[0].textContent.trim() + "입니다";
-    if(!h1s[0].querySelector(".mh-pt")) return "'시작과 마지막' 강조가 없습니다";
+    const want1 = "사장님의시작부터마지막까지," + (window.amBrand ? amBrand() : "") + "가함께합니다.";
+    if(t !== want1) return "제목이 " + h1s[0].textContent.trim() + "입니다";
+    if(!h1s[0].querySelector(".mh-pt") || !h1s[0].querySelector(".mh-pt2"))
+      return "시작 · 마지막 두 색 강조가 없습니다";
+    /* ⚠️⚠️ 창업은 블루 · 폐업은 오렌지이고 **두 낱말의 크기 · 굵기가
+       같아야** 합니다 — 한쪽을 작게 하면 "덜 중요한 것" 이 됩니다. */
+    const w1 = getComputedStyle(h1s[0].querySelector(".mh-pt"));
+    const w2 = getComputedStyle(h1s[0].querySelector(".mh-pt2"));
+    if(w1.fontSize !== w2.fontSize || w1.fontWeight !== w2.fontWeight)
+      return "시작과 마지막의 무게가 다릅니다 — " + w1.fontSize + "/" + w1.fontWeight +
+             " vs " + w2.fontSize + "/" + w2.fontWeight;
     const px = parseFloat(getComputedStyle(h1s[0]).fontSize);
     if(innerWidth > 1200 && px < 38)
       return "제목이 " + Math.round(px) + "px 입니다 (히어로 Headline 입니다)";
@@ -2390,8 +2401,10 @@ const AUDIT = `(() => {
        그래서 사진이 없을 때도 규칙이 걸려 있는지만 봅니다. */
     /* ⚠️ 2026-10-08 — 히어로가 다시 짜이면서 자리 이름이 바뀌었습니다
        (.hp2-ph → .mh-ph .ph). 선택 카드 액자(.hpk-ph)도 같이 봅니다. */
+    /* ⚠️ 2026-10-09 §3 · §5 — 서비스 카드가 컬러 아이콘 원판이 되면서
+       사진 자리가 .msvc-ph 에서 원판 안으로 옮겨갔습니다. */
     const want = [".mh-ph .ph", ".hpk-ph .ph", ".mfeat-ph .ph",
-                  ".msvc-ph .ph", ".mbr-p .ph"];
+                  ".ia-t .ph", ".mbr-p .ph"];
     const bad = [];
     for(const q of want){
       let ok = false;
@@ -2629,19 +2642,24 @@ const AUDIT = `(() => {
        ⚠️⚠️ 2026-10-08 — 단계 열이 메인에서 내려와서 보는 자리를
        **핵심 서비스 여덟**으로 옮겼습니다. 단계 카드 생김새는
        /g/:stage 화면이 그대로 들고 있습니다. */
-    const cards = [].slice.call(document.querySelectorAll(".msvc-g > li > a"));
+    /* ⚠️ 2026-10-09 §5 — 카드에 링크가 둘(분야 · 견적)이 되면서
+       보는 자리를 li 로 옮겼습니다. 보는 것은 그대로입니다.
+       ⚠️ 주석에 백틱을 쓰지 마세요 — 문자열이 거기서 끝납니다. */
+    const cards = [].slice.call(document.querySelectorAll(".msvc-g > li"));
     if(cards.length !== 8) return "핵심 서비스가 " + cards.length + "개입니다 (여덟)";
     const seen = [];
     for(const a of cards){
       const sv = a.querySelector("svg");
       if(!sv || !sv.innerHTML.trim())
         return "'" + (a.textContent||"").trim().slice(0,12) + "' 칸에 아이콘이 없습니다";
+      /* 카드 안에 링크가 둘입니다 — 분야 화면과 상담 · 견적 */
+      if(!a.querySelector(".msvc-q[href]")) return "상담 · 견적 CTA 가 없습니다";
       /* ⚠️⚠️ 여덟에 같은 아이콘이 두 번 오면 무엇이 무엇인지 흐려집니다 */
       const d = sv.innerHTML.trim();
       if(seen.indexOf(d) >= 0)
         return "'" + (a.textContent||"").trim().slice(0,12) + "' 이 같은 아이콘을 또 씁니다";
       seen.push(d);
-      const h = a.getAttribute("href") || "";
+      const h = (a.querySelector("a[href]") || a).getAttribute("href") || "";
       /* ⚠️⚠️ **템플릿 문자열 안이라 백슬래시를 두 겹으로** 적어야
          합니다. 한 겹으로 적었더니 문자열이 백슬래시를 먹어서 정규식
          앞이 깨졌고 **SyntaxError 로 이 검사가 통째로 안 돌았습니다**

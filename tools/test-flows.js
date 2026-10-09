@@ -81,8 +81,13 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.mti-read .mti-rg > li:nth-child(1) > a');
  say((await url()).startsWith("/content/"),"메인 최신 정보 → 글 상세",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.msvc-g > li:nth-child(2) > a');
+ /* 2026-10-09 §5 — 카드에 링크가 둘이 되면서 분야 링크에 클래스가
+    붙었습니다 (.msvc-go). 상담 · 견적 CTA 도 같이 눌러 봅니다. */
+ await click('.msvc-g > li:nth-child(2) .msvc-go');
  say((await url()).startsWith("/providers/"),"핵심 서비스 → 업체찾기",await url());
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.msvc-g > li:nth-child(2) .msvc-q');
+ say((await url()).startsWith("/quote"),"핵심 서비스 → 상담 · 견적",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.mjn-go a');
  say((await url())==="/join","파트너 입점 → 신청 화면",await url());

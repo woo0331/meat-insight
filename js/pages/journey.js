@@ -131,7 +131,14 @@ window.ProcessBand = function(o){
   var steps = amProcess(o.key);
   if(!steps.length) return "";
   var ind = o.industry || "";
-  return '<section class="sec'+(o.tone ? " "+o.tone : " sec-white")+'"><div class="w">'+
+  /* ⚠️⚠️ 2026-10-09 지시서 §6 — **창업 로드맵은 블루 계열 · 폐업
+     로드맵은 오렌지 계열**입니다. `sec-ivory` 가 `.side-start` 안에서는
+     라이트 블루, `.side-close` 안에서는 라이트 오렌지로 칠해집니다
+     (`css/pages.css` 의 `--bg-ivory2` 한 줄) — 구간마다 바탕을 손으로
+     적지 않습니다.
+     ⚠️ `tone` 을 넘긴 쪽은 그대로 둡니다 — 같은 화면에 로드맵이 둘
+     이상 설 때 이웃이 겹치지 않게 하려고 넘기는 값입니다. */
+  return '<section class="sec'+(o.tone ? " "+o.tone : " sec-ivory")+'"><div class="w">'+
     '<div class="sec-hd">'+
       '<p class="eyebrow">'+esc(o.kicker || "PROCESS")+'</p>'+
       '<h2>'+esc(o.title || "무엇부터 해야 하나요?")+'</h2>'+

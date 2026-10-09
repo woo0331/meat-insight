@@ -188,7 +188,11 @@ window.CatCard = function(c, industryKey){
   var more  = amCatItems(c, industryKey).length - items.length;
   return '<a class="cat'+tn(c.tone)+'" href="'+esc(catTo(c))+
     (industryKey ? '?i='+encodeURIComponent(industryKey) : '')+'" data-rv>'+
-    '<span class="cat-ic">'+icon(c.icon,22)+'</span>'+
+    /* ⚠️ 2026-10-09 지시서 §3 · §7 — 분야 카드도 **컬러 아이콘**입니다.
+       `iconArt()` 에 같은 key 가 있으면 그것을, 없으면 선형 아이콘이
+       자리를 지킵니다 (빈 칸이 생기지 않습니다 · 절대 규칙 2). */
+    '<span class="cat-ic'+(hasIconArt(c.key) ? " cat-ic-a" : "")+'">'+
+      (hasIconArt(c.key) ? iconArt(c.key, 34) : icon(c.icon,22))+'</span>'+
     '<b>'+esc(c.name)+'</b>'+
     '<span class="cat-l">'+esc(c.lead)+'</span>'+
     (items.length ? '<span class="cat-s">'+items.map(function(i){

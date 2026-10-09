@@ -167,13 +167,28 @@ function MainHero(){
       /* ⚠️⚠️ 시작은 **블루**, 마지막은 **오렌지**입니다 (지시서 §24).
          두 낱말의 크기 · 굵기가 같아야 합니다 — 한쪽을 작게 하면
          그게 "덜 중요한 것" 이라는 말이 됩니다. */
-      '<h1 class="mh-h1">사장님의 <em class="mh-pt">시작</em>과'+
-        '<br class="br-m"> <em class="mh-pt2">마지막</em>을 연결합니다.</h1>'+
+      /* ⚠️ 2026-10-09 지시서 §4 가 적은 **그 카피 그대로**입니다.
+         시작은 블루 · 마지막은 오렌지 — 두 낱말의 크기 · 굵기가
+         같습니다 (한쪽을 작게 하면 "덜 중요한 것" 이 됩니다). */
+      '<h1 class="mh-h1">사장님의 <em class="mh-pt">시작</em>부터 '+
+        '<em class="mh-pt2">마지막</em>까지,<br class="br-m"> '+
+        esc(amBrand())+'가 함께합니다.</h1>'+
       /* ⚠️ `<br class="br-m">` 뒤에는 **띄어쓰기를 하나** 둡니다 —
          좁아지면 이 줄바꿈이 사라지는데, 없으면 앞뒤 낱말이 붙습니다. */
       '<p class="mh-lead">창업을 준비하는 순간부터, 사업을 정리하고'+
-        '<br class="br-m"> 다음 사장님에게 넘기는 순간까지. '+
-        esc(brandName())+'가 함께합니다.</p>'+
+        '<br class="br-m"> 다음 사장님에게 넘기는 순간까지 함께합니다.</p>'+
+      /* ⚠️⚠️ **장식용 검색창을 만들지 마세요** (지시서 §4 "업종 · 서비스
+         검색창" · 2026-10-04 §11). 이 칸은 헤더 통합검색과 **같은
+         `mainFind()`** 를 부릅니다 — 적으신 말이 있으면 `/search?q=`,
+         없으면 업체찾기로 갑니다. 쳐 보고 결과가 나오는 것을
+         확인했습니다. */
+      '<form class="mh-find" onsubmit="return mainFind(event)" role="search">'+
+        '<span class="mh-find-i" aria-hidden="true">'+icon("search",20)+'</span>'+
+        '<input id="msrQ" type="search" autocomplete="off" '+
+          'aria-label="업종 · 서비스 검색" '+
+          'placeholder="업종이나 서비스를 적어 보세요 — 카페 창업, 철거, POS">'+
+        '<button class="btn btn-b" type="submit">검색'+icon("arrow",17)+'</button>'+
+      '</form>'+
     '</div></div>'+
     '<div class="mh-pick"><div class="w"><div class="mh-pick-g">'+
       MAIN_PICK.map(MainPickCard).join("")+
@@ -829,6 +844,12 @@ function MainFeature(){
    안 나고 화면도 멀쩡합니다. `check.js` 가 여덟인지 셉니다. */
 var MAIN_SVC8 = ["store", "interior", "equip", "it",
                  "admin", "marketing", "demolish", "clean"];
+/* ⚠️⚠️ **컬러 아이콘은 분류 key 로 고릅니다** (2026-10-09 지시서 §3).
+   `iconArt()` 에 같은 이름이 있으면 그것을, 없으면 `icon()` 의 선형
+   아이콘이 자리를 지킵니다 — 비는 칸이 생기지 않습니다 (절대 규칙 2).
+   ⚠️ 여기에 아이콘 이름을 **따로 적지 마세요.** 분류 key 와 같은
+   이름으로 그려 두었습니다 (손으로 적은 표가 어긋났던 자리가 이
+   저장소에 둘 있습니다 — 랜딩 미니카드 · 도구 아이콘). */
 function MainServices(){
   var items = MAIN_SVC8.map(function(k){ return amCat(k); }).filter(Boolean);
   if(!items.length) return "";
@@ -836,10 +857,10 @@ function MainServices(){
     '<div class="sec-hd sec-hd-row"><div>'+
       /* ⚠️⚠️ **"많이 찾는 · 인기 · 추천 · BEST · TOP" 을 쓰지 마세요**
          (2026-10-06 마무리 지시서 §2 · §3). 검색량 · 클릭 · 저장 ·
-         견적 요청을 **하나도 모으지 않습니다** — 재 본 적 없는 것을
+         견적 요청을 하나도 모으지 않습니다 — 재 본 적 없는 것을
          적으면 표시 · 광고의 공정화에 관한 법률 제3조입니다.
-         ⚠️⚠️ 시안 그림에는 "183개 서비스와 **검증된 업체**" 라고 적혀
-         있는데 **검증 기능이 없습니다.** 지시서 본문의 문장을 씁니다. */
+         ⚠️⚠️ 시안의 "183개 서비스와 **검증된 업체**" 도 안 씁니다 —
+         검증 기능이 없습니다. */
       '<h2>사장님에게 필요한<br class="br-m"> 모든 서비스를 한 곳에서</h2>'+
       '<p>창업, 운영, 인수 · 양도, 폐업까지. 필요한 서비스와 정보를 '+
         esc(amBrand())+'에서 확인하세요.</p></div>'+
@@ -849,18 +870,38 @@ function MainServices(){
     '<ul class="msvc-g">'+items.map(function(c){
       var ph = hasPhoto("svc-" + c.key);
       /* ⚠️ 작은 줄은 **그 분류가 실제로 들고 있는 하위 서비스**에서
-         셋을 가져옵니다 (시안의 "상가 분석, 임대, 중개" 자리). 손으로
-         적으면 하위가 늘 때 어긋납니다.
-         ⚠️⚠️ **하위가 업종에서 오는 분류**(시설 · 장비)는 여기서 셀
+         셋을 가져옵니다. 손으로 적으면 하위가 늘 때 어긋납니다.
+         ⚠️⚠️ 하위가 **업종에서 오는 분류**(시설 · 장비)는 여기서 셀
          것이 0 이라 이름만 덩그러니 남습니다 — 그때는 데이터에
-         처음부터 있던 `lead` 를 냅니다 (절대 규칙 2 · 메인 분야
-         격자에서 겪은 자리). */
+         처음부터 있던 `lead` 를 냅니다 (절대 규칙 2). */
       var subs = (c.items || []).slice(0, 3).map(function(i){ return i.name; });
       var sub  = subs.length ? subs.join(", ") : (c.lead || "");
-      return '<li class="tn-'+esc(c.tone || "t7")+'"><a href="'+esc(catTo(c))+'">'+
-        '<span class="msvc-ph'+(ph ? "" : " msvc-ph-n")+'">'+
-          (ph ? photoBox("svc-" + c.key,"",true) : icon(c.icon,44))+'</span>'+
-        '<b>'+esc(c.name)+'</b><i>'+esc(sub)+'</i></a></li>'; }).join("")+'</ul>'+
+      /* ⚠️⚠️ **카드가 `<div>` 입니다** — 안에 링크가 둘이라서요.
+         `<a>` 안의 `<a>` 는 브라우저가 쪼개 버립니다 (업체 카드가
+         단추 셋 때문에 `<div>` 가 된 것과 같은 자리). */
+      return '<li class="tn-'+esc(c.tone || "t7")+'"><div class="msvc-c">'+
+        '<a class="msvc-go" href="'+esc(catTo(c))+'">'+
+          '<span class="ia-t">'+
+            (ph ? photoBox("svc-" + c.key,"",true)
+                : (hasIconArt(c.key) ? iconArt(c.key, 46) : icon(c.icon, 40)))+
+          '</span>'+
+          '<b>'+esc(c.name)+'</b><i>'+esc(sub)+'</i>'+
+        '</a>'+
+        /* ⚠️⚠️ **실제로 도는 CTA 입니다** (지시서 §5). `/quote?c=` 는
+           그 분류의 서비스별 질문까지 띄우는 진짜 화면이고, 가짜
+           링크를 만들면 절대 규칙 5 입니다. */
+        /* ⚠️ `amCatSide()` 는 **key** 를 받습니다. 객체를 넘기면 아무 데도
+           안 맞아서 전부 `close` 로 떨어집니다 — 인테리어 상담을 눌렀는데
+           폐업 폼이 뜨는 꼴이었고, `tools/test-flows.js` 가 잡았습니다. */
+        '<a class="msvc-q" href="'+esc(quoteTo({ cat:c.key, side:amCatSide(c.key) }))+'">'+
+          icon("chat",15)+'상담 · 견적 요청</a>'+
+      '</div></li>'; }).join("")+'</ul>'+
+    /* ⚠️ 제휴사가 0곳이라 "신청 가능" 이라고 적을 수 있는 서비스가
+       아직 없습니다 (지시서 §5 "실제 신청 가능한 서비스와 준비 중인
+       서비스를 구분"). 0 을 숨기지 않고 그대로 적습니다. */
+    '<p class="sec-note">'+icon("info",15)+
+      ' 지금은 <b>요청을 받아 업체를 찾아 드리는 단계</b>입니다. '+
+      '바로 신청 · 결제되는 상품은 아직 없습니다.</p>'+
   '</div></section>';
 }
 

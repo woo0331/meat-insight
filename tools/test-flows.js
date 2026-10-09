@@ -92,6 +92,87 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.mjn-go a');
  say((await url())==="/join","파트너 입점 → 신청 화면",await url());
 
+
+ /* ══════════════════════════════════════════════════════════════
+    §15 — 지시서가 "실제로 작동해야 한다" 고 적은 세 시나리오
+    ══════════════════════════════════════════════════════════════
+    ⚠️⚠️ 화면만 예쁘게 만들고 **끝이 막힌 길**을 남기지 않기 위한
+    검사입니다. 이 저장소에서 영업 작업대의 끝(`/join`)이 잠긴 폼이던
+    사고가 있었습니다 — 흐름을 만들면 그 흐름의 **끝이 열려 있는지**
+    까지 눌러 봐야 합니다. */
+ console.log("\n【6】 §15 세 시나리오 — 창업 · 운영 · 폐업");
+
+ /* ① 창업 고객 — 카페 창업 → 로드맵 → 매장 오픈 패키지 → 신청 */
+ await pg.goto(B+"/startup/cafe",{waitUntil:"networkidle"});
+ say((await txt()).indexOf("카페")>=0,"창업 ① 카페 창업 화면이 열린다");
+ const rmN=await pg.evaluate(()=>document.querySelectorAll(".pcs > li").length);
+ say(rmN>=8,"창업 ② 로드맵 걸음이 나온다","지금 "+rmN);
+ await pg.goto(B+"/startup",{waitUntil:"networkidle"});
+ const pkN=await pg.evaluate(()=>document.querySelectorAll(".pkg-g > li").length);
+ say(pkN>=1,"창업 ③ 창업 패키지가 나온다","지금 "+pkN);
+ /* 인터넷 · POS · CCTV 가 실제로 그 패키지 안에 있는가 */
+ const openHas=await pg.evaluate(()=>{
+   const c=document.querySelector('.pkg-c[data-pk="open"]');
+   if(!c) return "";
+   return [...c.querySelectorAll('input[type="checkbox"]')].map(x=>x.value).join(",");});
+ say(["store-internet","pos-card","cctv-security"].every(k=>openHas.indexOf(k)>=0),
+   "창업 ④ 매장 오픈 패키지에 인터넷 · POS · CCTV 가 들어 있다",openHas);
+ /* 둘을 빼면 링크가 **실제로 따라오는가** — 안 따라오면 고르신 것과
+    다른 것이 넘어갑니다 */
+ await pg.evaluate(()=>{
+   const c=document.querySelector('.pkg-c[data-pk="open"]');
+   const b=[...c.querySelectorAll('input[type="checkbox"]')];
+   b[3].checked=false; b[3].dispatchEvent(new Event("change",{bubbles:true}));
+   b[4].checked=false; b[4].dispatchEvent(new Event("change",{bubbles:true}));});
+ await pg.waitForTimeout(150);
+ const href3=await pg.evaluate(()=>document.getElementById("pkg-go-open").getAttribute("href"));
+ /* ⚠️ 쉼표는 encodeURIComponent 가 **%2C 로 감습니다** — 날것 쉼표로
+    기다렸다가 멀줦한 코드를 실패로 잡았습니다 — **검사가 틀렸습니다.**
+    푸는 쪽(nowQS)은 되돌려 읽으므로 둘 다 받습니다. */
+ const h3=decodeURIComponent(href3||"");
+ say(/o=store-internet,pos-card,cctv-security(&|$)/.test(h3),
+   "창업 ⑤ 체크를 뺀다 신청 링크가 따라온다",h3);
+ await click('#pkg-go-open');
+ say((await url()).startsWith("/quote"),"창업 ⑥ 패키지 → 신청 화면",await url());
+ const q3=await pg.evaluate(()=>document.querySelectorAll(".qof-l > li").length);
+ say(q3===3,"창업 ⑦ 신청 화면이 고른 상품 셋을 되읽는다","지금 "+q3);
+ const what=await pg.evaluate(()=>(document.getElementById("q-what")||{}).value||"");
+ say(what.indexOf("인터넷")>=0,"창업 ⑧ 필요한 일 칸이 미리 적혀 있다",what);
+
+ /* ② 운영 고객 — 음식점 운영 → 포장재 · 청소 · 수리 → 상담 신청 */
+ await pg.goto(B+"/operation?i=restaurant",{waitUntil:"networkidle"});
+ const og=await pg.evaluate(()=>document.querySelectorAll(".opsv-g > li").length);
+ say(og===6,"운영 ① 여섯 묶음이 나온다","지금 "+og);
+ const op=await pg.evaluate(()=>[...document.querySelectorAll(".opsv-pick b")].map(x=>x.textContent.trim()));
+ say(op.length>0 && /식자재|육류|수산/.test(op.slice(0,4).join(" ")),
+   "운영 ② 음식점 것이 먼저 나온다",op.slice(0,4).join(" · "));
+ await click('.opsv-g > li:nth-child(2) .opsv-l > li:nth-child(1) > a');
+ say((await url()).startsWith("/providers/supply"),"운영 ③ 소모품 · 포장재 → 업체찾기",await url());
+ await pg.goto(B+"/operation",{waitUntil:"networkidle"});
+ const runHas=await pg.evaluate(()=>{
+   const c=document.querySelector('.pkg-c[data-pk="run"]');
+   return c?[...c.querySelectorAll('input[type="checkbox"]')].map(x=>x.value).join(","):"";});
+ say(runHas.indexOf("equip-repair")>=0 && runHas.indexOf("regular-clean")>=0,
+   "운영 ④ 운영 패키지에 수리 · 정기청소가 들어 있다",runHas);
+ await click('#pkg-go-run');
+ say((await url()).startsWith("/quote"),"운영 ⑤ 패키지 → 신청 화면",await url());
+
+ /* ③ 폐업 고객 — 음식점 폐업 → 장비 매각 → 철거 · 원상복구 */
+ await pg.goto(B+"/closure/restaurant",{waitUntil:"networkidle"});
+ say((await txt()).indexOf("음식점")>=0,"폐업 ① 음식점 폐업 화면이 열린다");
+ await pg.goto(B+"/closure",{waitUntil:"networkidle"});
+ const clHas=await pg.evaluate(()=>{
+   const c=document.querySelector('.pkg-c[data-pk="close"]');
+   return c?[...c.querySelectorAll('.pkg-nm')].map(x=>x.textContent.trim()):[];});
+ say(clHas.length>=4,"폐업 ② 폐업 정리 패키지가 나온다",clHas.join(" · "));
+ /* ⚠️⚠️ **철거가 맨 앞이 아니어야 합니다** (§6-4) — 양도 · 매각이 먼저 */
+ const firstTwo=clHas.slice(0,2).join(" ");
+ say(!/철거|원상복구/.test(firstTwo),"폐업 ③ 철거가 맨 앞이 아니다",firstTwo);
+ await click('#pkg-go-close');
+ say((await url()).startsWith("/quote"),"폐업 ④ 패키지 → 신청 화면",await url());
+ const side=await pg.evaluate(()=>(document.getElementById("q-side")||{}).value||"");
+ say(side==="close","폐업 ⑤ 신청 화면이 폐업 쪽으로 열린다",side);
+
  console.log("\n【5】 콘솔 오류");
  say(errs.length===0,"JS 에러 없음",errs.join(" / "));
  console.log(bad?("\n❌ "+bad+"건 실패"):"\n✅ 흐름 전부 통과");

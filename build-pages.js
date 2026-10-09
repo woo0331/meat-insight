@@ -70,7 +70,12 @@ function loadApp(){
                    수익모델 key 를 그대로 쓰므로 **그 뒤**입니다 */
                 "js/data/offers.js",
                 /* ⚠️ reqforms 는 catalog 의 분류 key 를 씁니다 */
-                "js/data/reqforms.js"];
+                "js/data/reqforms.js",
+                /* ⚠️ opsvc 는 catalog 의 분류 · 하위 key 와 industries 의
+                   업종 key 를 가리킵니다 — 둘 다 위에 있습니다 */
+                "js/data/opsvc.js",
+                /* ⚠️ packages 는 offers 의 상품 id 를 가리킵니다 */
+                "js/data/packages.js"];
 
   /* ⚠️ 여기는 **glob 이 아니라 손으로 적은 목록**입니다. 새 데이터
      파일을 만들고 여기에 안 넣으면, 그 데이터를 쓰는 주소가 **에러
@@ -1872,6 +1877,131 @@ function checkDealSql(W){
    상품이 있으면 **빌드가 멈춥니다.**
    ⚠️ 업체가 등록되면 그때 켜면 됩니다 — 그 전에는 켤 수가 없습니다.
    ════════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════
+   운영 서비스관 여섯 묶음 (2026-10-09 최종 통합 지시서 §5-2 · §5-4)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ 묶음이 가리키는 분류 · 하위 key 가 하나라도 틀리면 그 서비스가
+   **에러 없이 조용히 빠집니다** — 업체 `subs` · 사진 키 · 도구 묶음에서
+   겪은 그 자리입니다. 그래서 빌드가 멈춥니다. */
+/* ⚠️⚠️ **아이콘 이름은 `icon()` 이 아는 것만** 쓸 수 있습니다.
+   모르는 이름을 적으면 `icon()` 이 **빈 문자열**을 돌려주고 타일이
+   덧그러니 빅니다 — 에러도 404 도 없었고 전수 점검도 통과했던 자리입니다
+   (`fridge` 로 겪었습니다). 빌드가 base.js 의 아이콘 목록을 읽어 넣습니다.
+   ⚠️ base.js 는 샌드박스에 안 실려서(화면 코드입니다) **글자로** 읽습니다.
+   ⚠️ 중쾄호 짝을 센다음 잔락니다 — 정규식으로 자르다가 다음 함수를 통째
+   삼킨 사고가 이 저장소에 있습니다. */
+const IC_NAMES = (() => {
+  const src = fs.readFileSync(path.join(ROOT, "js/components/base.js"), "utf8");
+  const i = src.indexOf("var IC = {");
+  if(i < 0) throw new Error("base.js 에서 아이콘 목록을 못 찾았습니다");
+  let d = 0, j = i + "var IC = ".length;
+  for(; j < src.length; j++){
+    if(src[j] === "{") d++;
+    else if(src[j] === "}"){ d--; if(!d){ j++; break; } }
+  }
+  const body = src.slice(i, j);
+  const out = new Set();
+  const re = new RegExp("(?:^|[{,\\s])[\"']?([a-z][a-z0-9-]*)[\"']?\\s*:\\s*[\"'`]", "g");
+  let m;
+  while((m = re.exec(body))) out.add(m[1]);
+  if(out.size < 40) throw new Error("아이콘 이름을 " + out.size + "개밖에 못 읽었습니다");
+  return out;
+})();
+
+function checkOpsvc(W){
+  const G = W.AM_OPSVC || [];
+  if(!G.length) throw new Error("js/data/opsvc.js 의 AM_OPSVC 가 비었습니다 (§5-2)");
+  if(G.length !== 6)
+    throw new Error("운영 서비스 묶음이 " + G.length + "개입니다 — §5-2 는 여섯(A~F)입니다");
+
+  const cats = new Map((W.AM_CATS || []).map(c => [c.key, c]));
+  const inds = new Set((W.AM_INDUSTRIES || []).map(x => x.key));
+  const keys = new Set(), tones = new Set(), nos = new Set();
+
+  const oneBad = (it, where) => {
+    if(!it || !it.cat) return where + " 에 분류가 빠진 칸이 있습니다";
+    const c = cats.get(it.cat);
+    if(!c) return where + " 가 없는 분류를 가리킵니다 — " + it.cat;
+    const subs = new Set((c.items || []).map(x => x.key));
+    if(!it.sub) return where + " 에 하위 서비스가 없습니다 — " + it.cat;
+    if(!subs.has(it.sub))
+      return where + " 가 없는 하위를 가리킵니다 — " + it.cat + " / " + it.sub;
+    return "";
+  };
+
+  for(const g of G){
+    if(!g.key || keys.has(g.key)) throw new Error("운영 묶음 key 가 비었거나 겹칩니다 — " + g.key);
+    keys.add(g.key);
+    if(!g.no || nos.has(g.no)) throw new Error("운영 묶음 번호가 비었거나 겹칩니다 — " + g.key);
+    nos.add(g.no);
+    if(!g.name || !g.lead) throw new Error("운영 묶음에 이름이나 한 줄이 없습니다 — " + g.key);
+    /* ⚠️ 여섯이 같은 색이면 무엇이 무엇인지 흐려집니다 */
+    if(g.tone){
+      if(tones.has(g.tone)) throw new Error("운영 묶음 색이 겹칩니다 — " + g.key + " · " + g.tone);
+      tones.add(g.tone);
+    }
+    /* ⚠️ 아이콘 이름이 틀리면 타일이 덩그러니 빕니다 (icon() 이 빈 문자열) */
+    if(!g.icon || !IC_NAMES.has(g.icon))
+      throw new Error("운영 묶음 아이콘이 없는 이름입니다 — " + g.key + " · " + g.icon);
+    if(!(g.items || []).length) throw new Error("운영 묶음이 비었습니다 — " + g.key);
+    for(const it of g.items){
+      const bad = oneBad(it, "운영 묶음 " + g.key);
+      if(bad) throw new Error(bad);
+    }
+  }
+
+  /* §5-4 업종별 차례 — 업종 key 와 하위 key 를 둘 다 봅니다 */
+  const BY = W.AM_OPSVC_BY_IND || {};
+  for(const ind of Object.keys(BY)){
+    if(!inds.has(ind))
+      throw new Error("운영 업종별 차례가 없는 업종을 가리킵니다 — " + ind);
+    for(const it of (BY[ind] || [])){
+      const bad = oneBad(it, "운영 업종별 차례(" + ind + ")");
+      if(bad) throw new Error(bad);
+    }
+  }
+  console.log("   운영 서비스 묶음 6개 · 업종별 차례 " +
+    Object.keys(BY).length + "개 업종이 실제 분류를 가리킵니다");
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   패키지 (§4-4 · §6-4)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **금액 칸을 만들지 마세요** — 상품마다 조건으로 몇 배씩 갈리고,
+   제휴사가 0곳이라 깎아 드릴 주체가 없습니다 (프랜차이즈 창업비와
+   같은 까닭 · 절대 규칙 1).
+   ⚠️⚠️ **"인기" 를 쓰지 마세요** — 신청 데이터를 모으지 않습니다. */
+function checkPackages(W){
+  const P = W.AM_PACKAGES || [];
+  if(!P.length) throw new Error("js/data/packages.js 의 AM_PACKAGES 가 비었습니다");
+  const offers = new Map((W.AM_OFFERS || []).map(o => [o.id, o]));
+  const keys = new Set();
+  const MONEY = ["price", "from", "cost", "amount", "discount", "sale"];
+  for(const p of P){
+    if(!p.key || keys.has(p.key)) throw new Error("패키지 key 가 비었거나 겹칩니다 — " + p.key);
+    keys.add(p.key);
+    if(!p.name || !p.lead) throw new Error("패키지에 이름이나 한 줄이 없습니다 — " + p.key);
+    if(["start", "close", "both"].indexOf(p.side) < 0)
+      throw new Error("패키지 side 가 start · close · both 가 아닙니다 — " + p.key);
+    if(!p.icon || !IC_NAMES.has(p.icon))
+      throw new Error("패키지 아이콘이 없는 이름입니다 — " + p.key + " · " + p.icon);
+    for(const m of MONEY)
+      if(p[m] != null) throw new Error("패키지에 금액 칸이 있습니다 — " + p.key + " · " + m);
+    if((p.items || []).length < 2)
+      throw new Error("패키지가 상품 둘 미만입니다 — " + p.key + " (묶을 것이 없습니다)");
+    const seen = new Set();
+    for(const id of p.items){
+      if(!offers.has(id)) throw new Error("패키지가 없는 상품을 가리킵니다 — " + p.key + " / " + id);
+      if(seen.has(id)) throw new Error("패키지 안에 같은 상품이 두 번 — " + p.key + " / " + id);
+      seen.add(id);
+    }
+    const bad = (p.name + " " + p.lead + " " + (p.desc || ""))
+      .match(/인기|추천|BEST|TOP|많이 찾는|할인|최저가/);
+    if(bad) throw new Error("패키지 글에 쓰면 안 되는 말이 있습니다 — " + p.key + " · " + bad[0]);
+  }
+  console.log("   패키지 " + P.length + "개가 실제 상품만 가리킵니다");
+}
+
 function checkOffers(W){
   const L = W.AM_OFFERS || [];
   if(!L.length) throw new Error("수익상품이 하나도 없습니다 (§5)");
@@ -1952,8 +2082,12 @@ function checkReqForms(W){
   const F = W.AM_REQ_FORMS || {};
   const cats = new Map((W.AM_CATS || []).map(c => [c.key, c]));
   const T = new Set(["text", "num", "date", "sel", "chk"]);
-  /* 공통 칸 여섯 (js/pages/quote.js 의 detail) + 여유 하나 */
-  const COMMON = 6, MAX = 20;
+  /* 공통 칸 (js/pages/quote.js 의 detail)
+     ⚠️⚠️ 2026-10-09 §4-4 로 **일곱**이 됐습니다 — 복수 상품을 묶어
+     신청하실 때 "신청 상품" 한 줄이 같이 나갑니다. 그만큼
+     서비스별 상한이 열넷 → **열셋**으로 줄었습니다.
+     ⚠️ 넘으면 `api/quote.js` 가 뒤쪽 칸을 **에러 없이** 버립니다. */
+  const COMMON = 7, MAX = 20;
 
   for(const k of Object.keys(F)){
     if(!cats.has(k))
@@ -2209,6 +2343,8 @@ checkDealSql(W);
 checkClaimSql();
 checkRpcArgs();
 checkOffers(W);
+checkOpsvc(W);
+checkPackages(W);
 checkReqForms(W);
 checkProviders(W);
 checkMarketData(W);

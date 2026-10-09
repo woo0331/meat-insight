@@ -410,6 +410,16 @@ window.quoteTo = function(o){
      안 읽으면 끊긴 것이고, 손님은 같은 것을 두 번 적게 됩니다. */
   if(o.bud)      q.push("bud="+encodeURIComponent(o.bud));
   if(o.when)     q.push("when="+encodeURIComponent(o.when));
+  /* ⚠️⚠️ 2026-10-09 §4-4 — **복수 상품을 한 번에** 신청하실 때
+     고르신 상품 id 를 주소에 실습니다. 주소에 실어야 뒤로 가기 ·
+     새로고침 · 링크 공유에 살아남습니다 (관심 업체 비교 `?cmp=` 와 같은
+     생각입니다).
+     ⚠️⚠️ **패키지 하나가 계약 하나가 아닙니다** — 상품마다 업체 배정 ·
+     계약 · 수수료가 따로 관리됩니다 (§4-4 가 직접 적은 규칙입니다).
+     화면이 그렇게 적고 있고, 접수도 상품 목록을 그대로 실어 보냅니다. */
+  if(o.offers && o.offers.length)
+    q.push("o="+encodeURIComponent([].concat(o.offers).join(",")));
+  if(o.pack)     q.push("pk="+encodeURIComponent(o.pack));
   return "/quote" + (q.length ? "?" + q.join("&") : "");
 };
 
@@ -536,4 +546,91 @@ window.FitCard = function(c, industryKey){
         : (c.lead ? '<i>'+esc(c.lead)+'</i>' : ''))+
     '</span>'+
   '</a>';
+};
+
+/* ══════════════════════════════════════════════════════════════════
+   패키지 구간 — 2026-10-09 최종 통합 지시서 §4-4 · §6-4
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **"인기 패키지" 라고 쓰지 마세요.** 신청 데이터를 하나도 모으지
+   않아 무엇이 많이 나가는지 **우리는 모릅니다** (마무리 지시서 §3).
+   머리말은 **묶어서 신청하기** 입니다.
+
+   ⚠️⚠️ **패키지 하나가 계약 하나가 아닙니다.** 상품마다 업체가 다르고
+   계약도 수수료도 따로입니다 — 구간 아래 한 줄이 그 말을 하고 있고,
+   지우면 지키지 못할 약속이 됩니다 (절대 규칙 5 · §4-4).
+
+   ⚠️ 금액을 적지 않습니다. 묶음 할인도 없습니다 — 제휴사가 0곳이라
+   깎아 드릴 수 있는 주체가 없습니다. */
+window.PackBand = function(side, tone){
+  var L = (typeof amPackagesFor === "function") ? amPackagesFor(side) : [];
+  if(!L.length) return "";
+  return '<section class="sec '+esc(tone || "sec-gray")+' pkg"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">ONE REQUEST</p>'+
+      '<h2>여러 개가 필요하시면<br class="br-m"> 묶어서 한 번에 신청하세요</h2>'+
+      '<p>일정이 서로 물려 있는 것들입니다. 따로 알아보시면 공사가 끝나고도 '+
+        '며칠을 더 기다리게 됩니다.</p>'+
+    '</div>'+
+    '<ul class="pkg-g">'+L.map(PackCard).join("")+'</ul>'+
+    /* ⚠️⚠️ 이 줄을 지우지 마세요 — §4-4 가 직접 정한 규칙입니다 */
+    '<p class="sec-note">'+icon("info",15)+
+      ' 묶어서 신청하셔도 <b>상품마다 업체와 계약은 따로</b>입니다. '+
+      '한 번만 적으시면 저희가 나눠서 연결해 드립니다.</p>'+
+  '</div></section>';
+};
+
+/* ⚠️⚠️ **카드가 `<div>` 입니다** — 안에 체크칸과 링크가 같이 들어갑니다.
+   `<a>` 안의 `<a>` 는 브라우저가 쪼갭니다. */
+window.PackCard = function(p){
+  var items = (typeof amPackageItems === "function") ? amPackageItems(p.key) : [];
+  if(!items.length) return "";
+  return '<li class="tn-'+esc(p.tone || "t7")+'"><div class="pkg-c" data-pk="'+esc(p.key)+'">'+
+    '<div class="pkg-h">'+
+      '<span class="ic-t">'+icon(p.icon, 24)+'</span>'+
+      '<div class="pkg-ht"><b>'+esc(p.name)+'</b><i>'+esc(p.lead)+'</i></div>'+
+    '</div>'+
+    '<p class="pkg-d">'+esc(p.desc || "")+'</p>'+
+    /* ⚠️ 체크칸은 **상품마다 하나**입니다. 기본은 전부 켜 두고 빼실 수
+       있게 합니다 — 묶음으로 보러 오신 분께 다시 다 고르게 하면
+       거기서 닫힙니다. */
+    '<ul class="pkg-l">'+items.map(function(o){
+      var id = "pk-"+p.key+"-"+o.id;
+      return '<li><label class="pkg-ck" for="'+esc(id)+'">'+
+        '<input type="checkbox" id="'+esc(id)+'" checked '+
+          'data-pkg="'+esc(p.key)+'" value="'+esc(o.id)+'" '+
+          'onchange="packSync(\'' + esc(p.key) + '\')">'+
+        '<span class="pkg-nm">'+esc(o.name)+'</span>'+
+      '</label></li>'; }).join("")+'</ul>'+
+    '<p class="pkg-go">'+
+      '<a class="btn btn-b" id="pkg-go-'+esc(p.key)+'" '+
+        'href="'+esc(quoteTo({ pack:p.key, offers:items.map(function(o){ return o.id; }),
+                               side:(p.side === "both" ? "" : p.side) }))+'">'+
+        /* ⚠️⚠️ 단추가 `display:inline-flex` · `gap` 이라 **맨글도 flex 칸**이
+           됩니다 — 숫자만 `<span>` 으로 두었더니 "6 개" 로 벌어졌습니다
+           (찍어 보고 알았습니다). 딱지 전체를 한 칸에 둡니다. */
+        '<span id="pkg-n-'+esc(p.key)+'">'+items.length+'개 묶어서 상담 신청</span>'+
+        icon("arrow",17)+'</a></p>'+
+  '</div></li>';
+};
+
+/* 체크를 바꾸면 **신청 링크가 바로 따라갑니다** — 눌렀을 때 고르신 것과
+   다른 것이 넘어가면 그게 제일 나쁩니다.
+   ⚠️ 하나도 안 고르시면 단추를 잠급니다 (빈 신청을 받지 않습니다). */
+window.packSync = function(key){
+  var box = document.querySelector('.pkg-c[data-pk="'+key+'"]');
+  var go  = document.getElementById("pkg-go-"+key);
+  var n   = document.getElementById("pkg-n-"+key);
+  if(!box || !go) return;
+  var on = [].slice.call(box.querySelectorAll('input[type="checkbox"]'))
+    .filter(function(c){ return c.checked; }).map(function(c){ return c.value; });
+  var p = (typeof amPackage === "function") ? amPackage(key) : null;
+  if(n) n.textContent = on.length + "개 묶어서 상담 신청";
+  if(!on.length){
+    go.setAttribute("aria-disabled", "true");
+    go.removeAttribute("href");
+  }else{
+    go.removeAttribute("aria-disabled");
+    go.setAttribute("href", quoteTo({ pack:key, offers:on,
+      side:(p && p.side !== "both") ? p.side : "" }));
+  }
 };

@@ -37,7 +37,7 @@ window.AM_START_CATS = [
       { key:"takeover",    name:"기존 매장 인수", to:"/stores" }
     ]},
 
-  { key:"store", name:"점포 · 상가", icon:"pin", tone:"t2", kind:"listing",
+  { key:"store", name:"점포 · 상가", icon:"pin", tone:"t5", kind:"listing",
     lead:"자리를 정합니다",
     desc:"지역 · 업종 · 평수 · 보증금 · 월세 · 권리금으로 찾습니다.",
     to:"/stores",
@@ -76,7 +76,7 @@ window.AM_START_CATS = [
       { key:"metal",    name:"철물" }
     ]},
 
-  { key:"equip", name:"시설 · 장비", icon:"tool", tone:"t7", kind:"provider",
+  { key:"equip", name:"시설 · 장비", icon:"tool", tone:"t13", kind:"provider",
     lead:"업종마다 다릅니다",
     desc:"고르신 업종에 필요한 장비만 보여 드립니다.",
     byIndustry:true,      /* ⚠️ 하위 분류가 업종에서 옵니다 (§12) */
@@ -108,21 +108,58 @@ window.AM_START_CATS = [
       { key:"internet",  name:"인터넷" },      { key:"phone",   name:"전화" },
       { key:"wifi",      name:"와이파이" },    { key:"booking", name:"예약시스템" },
       { key:"waiting",   name:"웨이팅" },      { key:"payment", name:"결제단말기" },
-      { key:"e-menu",    name:"전자메뉴판" },  { key:"security",name:"보안" }
+      { key:"e-menu",    name:"전자메뉴판" },  { key:"security",name:"보안" },
+      /* ⚠️ 2026-10-09 §5-2 D — 운영 솔루션 넷이 갈 곳이 없었습니다.
+         매장 안에서 도는 프로그램이라 `it` 이 맞는 자리입니다. */
+      { key:"inventory", name:"재고 관리" },  { key:"sales-mgmt",name:"매출 관리" },
+      { key:"hr-pay",    name:"근태 · 급여" }, { key:"acct-sw",  name:"회계 · 세무 프로그램" }
     ]},
 
   { key:"supply", name:"운영 공급업체", icon:"pkgck", tone:"t2", kind:"provider",
     lead:"매일 들어오는 것",
     desc:"거래처를 새로 뚫거나 바꾸실 때 조건을 비교합니다.",
+    /* ⚠️⚠️ 2026-10-09 최종 통합 지시서 §5-2 A · B — 운영 중인 사장님이
+       **매달 사는 것**이 여기 들어옵니다. 육류 · 수산 · 농산은 "식자재"
+       한 칸으로 묶여 있었는데, 거래처가 **서로 다른 업체**라 한 칸으로
+       두면 고기집 사장님께 채소 도매상이 갑니다.
+       ⚠️ key 를 바꾸지 않았습니다 — 더했습니다 (업체 `subs` · 상품 `sub` 이
+       그 값을 들고 있습니다). */
     items:[
-      { key:"ingredient",name:"식자재" },   { key:"beverage", name:"음료" },
+      { key:"ingredient",name:"식자재" },   { key:"meat",     name:"육류 · 축산물" },
+      { key:"seafood",   name:"수산물" },   { key:"produce",  name:"농산물" },
+      { key:"beverage",  name:"음료" },     { key:"coffee-bean",name:"커피 원두" },
+      { key:"bakery",    name:"베이커리 재료" },
       { key:"liquor",    name:"주류" },     { key:"material", name:"원재료" },
-      { key:"packaging", name:"포장재" },   { key:"consumable",name:"소모품" },
+      { key:"packaging", name:"포장재" },   { key:"delivery-box",name:"배달용기" },
+      { key:"disposable",name:"일회용품" }, { key:"consumable",name:"소모품" },
       { key:"uniform",   name:"유니폼" },   { key:"hygiene",  name:"위생용품" },
-      { key:"cleaning-sup",name:"청소용품" }
+      { key:"cleaning-sup",name:"청소용품" }, { key:"office-sup",name:"사무용품" }
     ]},
 
-  { key:"admin", name:"행정 · 전문가", icon:"briefcase", tone:"t7", kind:"provider",
+  /* ⚠️⚠️ **새 분류입니다** (2026-10-09 최종 통합 지시서 §5-2 C).
+     이 저장소는 묶음 틀(단계 여섯 · 여정 넷 · 영업 카테고리 열넷)을
+     만들 때 **분류를 새로 만들지 않는 것**을 규칙으로 삼아 왔습니다.
+     그런데 **장비 · 시설 수리**는 갈 곳이 없었습니다 — `equip` 은 사는 것,
+     `clean` 은 청소, `contract` 은 해지입니다. 냉장고가 멈춰서 오늘 고쳐야
+     하는 사장님이 들어올 자리가 사이트에 **한 곳도 없었습니다.**
+     ⚠️ 분류를 늘리면 `lifecycle.js`(단계 여섯)와 `sales.js`(영업 카테고리
+     열넷)에도 **같이 넣어야** 합니다 — 안 넣으면 빌드가 멈춥니다. */
+  { key:"repair", name:"수리 · 유지보수", icon:"tool", tone:"t12", kind:"provider",
+    lead:"멈췄을 때 부르는 곳",
+    desc:"장비가 멈추면 그날 장사가 안 됩니다. 지역 · 품목으로 찾습니다.",
+    items:[
+      { key:"fridge-fix", name:"냉장 · 냉동고 수리" },
+      { key:"coffee-fix", name:"커피머신 수리" },
+      { key:"ice-fix",    name:"제빙기 관리" },
+      { key:"aircon-fix", name:"에어컨 수리" },
+      { key:"kitchen-fix",name:"주방설비 유지보수" },
+      { key:"elec-fix",   name:"전기 · 배관 · 설비" },
+      { key:"it-fix",     name:"POS · CCTV 유지보수" },
+      { key:"check-up",   name:"정기 시설 점검" },
+      { key:"rental-care",name:"렌탈 점검 · 관리" }
+    ]},
+
+  { key:"admin", name:"행정 · 전문가", icon:"briefcase", tone:"t3", kind:"provider",
     lead:"서류와 자격",
     desc:"지역 · 전문분야 · 상담 가능 여부로 전문가를 찾습니다.",
     items:[
@@ -154,7 +191,9 @@ window.AM_START_CATS = [
       { key:"blog",     name:"블로그" },        { key:"place",    name:"플레이스 관리" },
       { key:"ad-agency",name:"광고대행" },      { key:"influencer",name:"인플루언서" },
       { key:"flyer",    name:"전단지" },        { key:"outdoor",  name:"옥외광고" },
-      { key:"open-mkt", name:"오픈 마케팅" }
+      { key:"open-mkt", name:"오픈 마케팅" },
+      /* ⚠️ 2026-10-09 §5-2 E — 문 열고 나서 계속 돈이 드는 둘입니다 */
+      { key:"review",   name:"리뷰 관리" },   { key:"crm",      name:"고객 관리" }
     ]},
 
   { key:"clean", name:"청소 · 방역 · 유지관리", icon:"sparkle", tone:"t2", kind:"provider",
@@ -222,7 +261,7 @@ window.AM_CLOSE_CATS = [
       { key:"material",  name:"원재료" },  { key:"etc-stock",name:"기타 재고" }
     ]},
 
-  { key:"demolish", name:"철거", icon:"hammer", tone:"t4", kind:"provider",
+  { key:"demolish", name:"철거", icon:"hammer", tone:"t9", kind:"provider",
     lead:"뜯어내는 일",
     desc:"지역 · 평수 · 업종 · 사진을 올리면 여러 곳에서 견적이 옵니다.",
     items:[
@@ -382,9 +421,15 @@ window.AM_START_STEPS = [
   { n:"04", key:"ready", name:"영업 준비", icon:"doc",
     lead:"서류와 시스템. 빠뜨리면 문을 못 엽니다",
     cats:["it","admin","staff"] },
+  /* ⚠️⚠️ `repair`(수리 · 유지보수)가 여기 들어왔습니다 — 2026-10-09
+     §5-2 C 로 분류를 늘렸는데 **단계에 안 넣었더니 창업 화면에서
+     조용히 사라졌습니다** (화면 13 · 분류 14). 전수 점검이 개수를
+     맞춰 보고 잡았고, 이 파일 맨 위 경고가 적어 둔 바로 그 사고입니다.
+     ⚠️ 05 가 맞는 자리입니다 — 머리말이 이미 "열고 나서가 진짜
+     시작입니다" 이고, 수리는 문을 열고 나서 부르는 곳입니다. */
   { n:"05", key:"open",  name:"손님 받기", icon:"megaphone",
     lead:"열고 나서가 진짜 시작입니다",
-    cats:["marketing","clean"] }
+    cats:["marketing","clean","repair"] }
 ];
 
 /* 그 업종의 그 단계에 들어가는 분류.

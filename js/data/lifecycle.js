@@ -63,7 +63,10 @@ window.AM_STAGES = [
     sub:"세무 · 노무 · 마케팅 · 청소 · 식자재 · 관리",
     /* ⚠️ 지시서 §17 — 창업과 폐업은 한 번이지만 **운영은 반복**입니다.
        부가 메뉴로 취급하지 마세요. */
-    cats:["marketing","clean","supply"] },
+    /* ⚠️ 2026-10-09 §5-2 C — 수리 · 유지보수가 여기로 들어왔습니다.
+       비워 두면 `check.js` 의 "단계 여섯이 분류를 빠짐없이 나눠 가진다" 가
+       잡습니다 — 그 분류가 사이트 안에서 길을 잃습니다. */
+    cats:["marketing","clean","supply","repair"] },
 
   { key:"transfer", no:"05", name:"매장 양도 · 양수", icon:"handover",  tone:"t3",
     side:"both",

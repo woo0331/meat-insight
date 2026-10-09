@@ -37,8 +37,11 @@ window.AM_SALES_GROUPS = [
     cats:["demolish", "restore"],
     find:["매장 철거", "부분 철거", "원상복구", "집기 철거", "폐기물 처리"] },
 
-  { key:"equip", no:"04", name:"시설 · 장비", prio:1,
-    cats:["equip", "furniture"],
+  /* ⚠️ 2026-10-09 §5-2 C — 수리 · 유지보수를 여기서 받습니다.
+     장비를 파는 곣과 고치는 곣이 같은 업체인 경우가 많아서, 직원이
+     전화를 걸 때 나뉘면 같은 곧에 두 번 겁니다. */
+  { key:"equip", no:"04", name:"시설 · 장비 · 수리", prio:1,
+    cats:["equip", "furniture", "repair"],
     find:["주방설비", "냉장 냉동장비", "업소용 장비", "중고 주방기기",
           "업소용 가구", "음향 영상"] },
 

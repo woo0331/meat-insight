@@ -43,9 +43,9 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 
-<link rel="stylesheet" href="/css/tokens.css?v=587de05e">
-<link rel="stylesheet" href="/css/app.css?v=54316575">
-<link rel="stylesheet" href="/css/pages.css?v=0d3e283d">
+<link rel="stylesheet" href="/css/tokens.css?v=9bdff6ae">
+<link rel="stylesheet" href="/css/app.css?v=587a8f2c">
+<link rel="stylesheet" href="/css/pages.css?v=6eb0355a">
 
 <!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
      마세요 — 다음에 돌릴 때 덮어써집니다. 내용은 js/data/faq.js 와
@@ -75,8 +75,8 @@
 <script defer src="/js/data/regions.js?v=149bea2a"></script>
 <script defer src="/js/data/industries.js?v=286cb6a1"></script>
 <script defer src="/js/data/indgroups.js?v=b3e090df"></script>
-<script defer src="/js/data/catalog.js?v=2ab6b01e"></script>
-<script defer src="/js/data/lifecycle.js?v=c41a8ad4"></script>
+<script defer src="/js/data/catalog.js?v=76456934"></script>
+<script defer src="/js/data/lifecycle.js?v=b35950bd"></script>
 <script defer src="/js/data/journey.js?v=496f712d"></script>
 <script defer src="/js/data/franchise.js?v=8dfc74f4"></script>
 <script defer src="/js/data/providers.js?v=cba584c1"></script>
@@ -93,18 +93,24 @@
 <!-- 서비스마다 다르게 묻는 칸 (2026-10-08 수익형 플랫폼 지시서 6절).
      catalog 의 분류 key 를 쓰므로 그 뒤입니다. -->
 <script defer src="/js/data/reqforms.js?v=cc3eab5b"></script>
+<!-- 운영 서비스관 여섯 묶음 (2026-10-09 최종 통합 지시서 §5).
+     ⚠️ catalog 의 분류 · 하위 key 를 가리키므로 **그 뒤**입니다. -->
+<script defer src="/js/data/opsvc.js?v=103d4abf"></script>
+<!-- 창업 · 폐업 패키지 (§4-4 · §6-4) — offers 의 상품 id 를 쓰므로 그 뒤 -->
+<script defer src="/js/data/offers.js?v=45719125"></script>
+<script defer src="/js/data/packages.js?v=3c1c4f58"></script>
 
 <script defer src="/js/components/base.js?v=785bf2ab"></script>
-<script defer src="/js/components/ui.js?v=bfce7067"></script>
-<script defer src="/js/components/chrome.js?v=b5363403"></script>
+<script defer src="/js/components/ui.js?v=bee16764"></script>
+<script defer src="/js/components/chrome.js?v=b651313f"></script>
 
-<script defer src="/js/pages/home.js?v=69bf7e48"></script>
-<script defer src="/js/pages/journey.js?v=b306d13a"></script>
-<script defer src="/js/pages/flow.js?v=a0e4c795"></script>
+<script defer src="/js/pages/home.js?v=519df32c"></script>
+<script defer src="/js/pages/journey.js?v=ca7ef7d9"></script>
+<script defer src="/js/pages/flow.js?v=f0d2d0f8"></script>
 <script defer src="/js/pages/providers.js?v=fe0224c0"></script>
 <script defer src="/js/pages/franchise.js?v=3f7a10c3"></script>
 <script defer src="/js/pages/market.js?v=eb595278"></script>
-<script defer src="/js/pages/quote.js?v=9529b582"></script>
+<script defer src="/js/pages/quote.js?v=980e646c"></script>
 <script defer src="/js/pages/info.js?v=851f68d9"></script>
 <script defer src="/js/pages/tools.js?v=6b08c921"></script>
 <script defer src="/js/pages/my.js?v=7c9fbfbf"></script>
@@ -117,7 +123,7 @@
 <!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가
      이 사이에 **크롤러가 읽을 본문**을 써 넣습니다. 메인은 원본이라
      shell() 이 손대지 않아서, 한동안 여기가 빈 칸으로 나갔습니다. -->
-<main id="view"><div class="pre w"><h1>소개</h1><p>무엇을 하고 무엇을 하지 않는지 적어 두었습니다. 저희는 중개자이고 거래 당사자가 아닙니다.</p><h2>하는 일</h2><ul><li>필요한 업체 · 전문가 · 프랜차이즈를 분류와 지역으로 찾아 드립니다.</li><li>한 번 적으신 내용을 조건이 맞는 여러 곳에 같이 전달합니다.</li><li>정리하시는 사장님의 점포 · 시설 · 집기를 시작하시는 사장님께 이어 드립니다.</li></ul><h2>하지 않는 일</h2><ul><li>직접 인테리어 · 철거 · 세무 · 마케팅을 하지 않습니다.</li><li>광고비를 받고 업체 순서를 바꾸지 않습니다.</li><li>등록된 적 없는 업체 · 브랜드 · 매물을 화면에 만들지 않습니다.</li><li>거래 당사자가 아닙니다.</li></ul><h2>우리가 다루는 범위</h2><p>업종 14 · 창업 13분야 · 폐업 12분야 · 세부 서비스 183. 이 숫자는 다루는 분야의 수이고, 등록된 업체 수나 거래 실적이 아닙니다.</p><h2>어떻게 진행되나</h2><ul><li>조건을 고릅니다 — 업종 · 지역 · 필요한 서비스. 가입하지 않으셔도 됩니다.</li><li>한 번만 적어 보냅니다 — 같은 내용을 업체마다 다시 적지 않으셔도 됩니다.</li><li>받으신 제안을 나란히 놓습니다 — 무엇이 포함됐는지가 같아야 비교가 뜻을 가집니다.</li></ul><h2>자주 묻는 것</h2><h3>돈이 드나요?</h3><p>찾고 비교하고 견적을 요청하는 것은 무료입니다. 상담료를 받지 않습니다. 공사비나 서비스 비용은 계약하신 업체에 직접 내십니다.</p><h3>견적은 언제 오나요?</h3><p>회신 시점을 약속드리지 않습니다. 업체마다 사정이 다르고, 저희가 업체 대신 지킬 수 없는 약속이기 때문입니다. 대신 요청하신 내용이 어느 업체에 전달됐는지는 알려 드립니다.</p><h3>제 연락처가 업체에 바로 넘어가나요?</h3><p>아닙니다. 요청서에서 받는 동의는 접수와 상담까지입니다. 업체에 성함과 연락처를 넘기는 것은 개인정보보호법 제17조의 제3자 제공이라, 업체가 정해지면 어느 업체인지 상호를 알려 드리고 그때 다시 동의를 받습니다.</p><h3>지금 등록된 업체가 몇 곳인가요?</h3><p>아직 모으는 중입니다. 없는 업체를 있는 것처럼 보여 드리지 않으려고, 조건에 맞는 곳이 없으면 화면에 없다고 그대로 적습니다. 그동안에도 견적 요청은 남기실 수 있고, 조건이 맞는 업체가 들어오는 대로 전달합니다.</p><h3>광고비를 낸 업체가 위에 오나요?</h3><p>일반 검색 결과는 지역과 전문 분야가 얼마나 맞는지를 기준으로 냅니다. 앞으로 추천 · 상단노출 같은 광고 상품이 생길 수 있는데, 그런 자리는 광고라고 화면에 표시해 일반 결과와 구분되게 합니다. 표시 없이 섞어 놓지 않습니다.</p><h3>업체와 문제가 생기면 책임져 주시나요?</h3><p>저희는 사장님과 업체를 이어 주는 통신판매중개자이고 거래 당사자가 아닙니다. 계약과 이행은 업체와 직접 하시는 것이라 그 책임은 업체에 있습니다. 다만 중개 과정에서 저희 잘못이 있으면 그 부분은 저희 책임입니다.</p></div></main>
+<main id="view"><div class="pre w"><h1>소개</h1><p>무엇을 하고 무엇을 하지 않는지 적어 두었습니다. 저희는 중개자이고 거래 당사자가 아닙니다.</p><h2>하는 일</h2><ul><li>필요한 업체 · 전문가 · 프랜차이즈를 분류와 지역으로 찾아 드립니다.</li><li>한 번 적으신 내용을 조건이 맞는 여러 곳에 같이 전달합니다.</li><li>정리하시는 사장님의 점포 · 시설 · 집기를 시작하시는 사장님께 이어 드립니다.</li></ul><h2>하지 않는 일</h2><ul><li>직접 인테리어 · 철거 · 세무 · 마케팅을 하지 않습니다.</li><li>광고비를 받고 업체 순서를 바꾸지 않습니다.</li><li>등록된 적 없는 업체 · 브랜드 · 매물을 화면에 만들지 않습니다.</li><li>거래 당사자가 아닙니다.</li></ul><h2>우리가 다루는 범위</h2><p>업종 14 · 창업 14분야 · 폐업 12분야 · 세부 서비스 206. 이 숫자는 다루는 분야의 수이고, 등록된 업체 수나 거래 실적이 아닙니다.</p><h2>어떻게 진행되나</h2><ul><li>조건을 고릅니다 — 업종 · 지역 · 필요한 서비스. 가입하지 않으셔도 됩니다.</li><li>한 번만 적어 보냅니다 — 같은 내용을 업체마다 다시 적지 않으셔도 됩니다.</li><li>받으신 제안을 나란히 놓습니다 — 무엇이 포함됐는지가 같아야 비교가 뜻을 가집니다.</li></ul><h2>자주 묻는 것</h2><h3>돈이 드나요?</h3><p>찾고 비교하고 견적을 요청하는 것은 무료입니다. 상담료를 받지 않습니다. 공사비나 서비스 비용은 계약하신 업체에 직접 내십니다.</p><h3>견적은 언제 오나요?</h3><p>회신 시점을 약속드리지 않습니다. 업체마다 사정이 다르고, 저희가 업체 대신 지킬 수 없는 약속이기 때문입니다. 대신 요청하신 내용이 어느 업체에 전달됐는지는 알려 드립니다.</p><h3>제 연락처가 업체에 바로 넘어가나요?</h3><p>아닙니다. 요청서에서 받는 동의는 접수와 상담까지입니다. 업체에 성함과 연락처를 넘기는 것은 개인정보보호법 제17조의 제3자 제공이라, 업체가 정해지면 어느 업체인지 상호를 알려 드리고 그때 다시 동의를 받습니다.</p><h3>지금 등록된 업체가 몇 곳인가요?</h3><p>아직 모으는 중입니다. 없는 업체를 있는 것처럼 보여 드리지 않으려고, 조건에 맞는 곳이 없으면 화면에 없다고 그대로 적습니다. 그동안에도 견적 요청은 남기실 수 있고, 조건이 맞는 업체가 들어오는 대로 전달합니다.</p><h3>광고비를 낸 업체가 위에 오나요?</h3><p>일반 검색 결과는 지역과 전문 분야가 얼마나 맞는지를 기준으로 냅니다. 앞으로 추천 · 상단노출 같은 광고 상품이 생길 수 있는데, 그런 자리는 광고라고 화면에 표시해 일반 결과와 구분되게 합니다. 표시 없이 섞어 놓지 않습니다.</p><h3>업체와 문제가 생기면 책임져 주시나요?</h3><p>저희는 사장님과 업체를 이어 주는 통신판매중개자이고 거래 당사자가 아닙니다. 계약과 이행은 업체와 직접 하시는 것이라 그 책임은 업체에 있습니다. 다만 중개 과정에서 저희 잘못이 있으면 그 부분은 저희 책임입니다.</p></div></main>
 <div id="chrome-b"></div>
 </body>
 </html>

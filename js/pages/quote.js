@@ -79,6 +79,47 @@ function reqFormValues(cat){
   return out;
 }
 
+/* ═════════════════════════════════════════════════════════════════
+   복수 상품 신청 (2026-10-09 최종 통합 지시서 §4-4)
+   ═════════════════════════════════════════════════════════════════
+   ⚠️ 주소의 `?o=` 가 상품 id 목록입니다. **없는 id 는 조용히
+   빠집니다** — 밖으로 나간 링크가 옛 id 를 들고 있을 수 있어서,
+   거기서 에러를 내면 손님은 아무 잘못도 안 하시고 깨진 화면을 봅니다. */
+function quoteOffers(){
+  var raw = nowQS("o");
+  if(!raw) return [];
+  return raw.split(",").map(function(id){
+    return (typeof amOffer === "function") ? amOffer(id.trim()) : null;
+  }).filter(Boolean);
+}
+
+/* 접수에 실을 한 줄 — ⚠️ 이름은 `offers.js` 에서 옵니다 */
+function quoteOfferNames(){
+  return quoteOffers().map(function(o){ return o.name; }).join(" · ");
+}
+
+/* 화면 맨 위에 고르신 것을 되읽어 드립니다.
+   ⚠️⚠️ **패키지 하나가 계약 하나가 아닙니다** (§4-4) — 그 줄을
+   지우지 마세요. 지금은 제휴사가 0곳이라 상품별로 **찾아서 연결**해
+   드리는 단계까지입니다. */
+function QuoteOfferBand(){
+  var L = quoteOffers();
+  if(!L.length) return "";
+  var pk = (typeof amPackage === "function") ? amPackage(nowQS("pk")) : null;
+  return '<div class="qof">'+
+    '<p class="qof-k">'+icon("listck",15)+
+      (pk ? esc(pk.name)+" — " : "")+'고르신 상품 '+L.length+'개</p>'+
+    '<ul class="qof-l">'+L.map(function(o){
+      return '<li>'+icon(o.icon || "check", 15)+esc(o.name)+'</li>'; }).join("")+'</ul>'+
+    /* ⚠️ 바깥 칸이 `display:flex` · `gap` 이라 **맨글과 `<b>` 가 제각각
+       flex 칸**이 됩니다 — "따로 입니다" 처럼 벌어졌습니다 (찍어 보고
+       알았습니다). 문장을 한 칸에 둡니다. */
+    '<p class="qof-n">'+icon("info",14)+
+      '<span>한 번만 적으시면 저희가 나눠서 연결해 드립니다 — '+
+      '<b>상품마다 업체와 계약은 따로</b>입니다.</span></p>'+
+  '</div>';
+}
+
 function PageQuote(){
   var cat  = nowQS("c"), sub = nowQS("s");
   var ind  = nowQS("i"), reg = nowQS("r");
@@ -94,7 +135,13 @@ function PageQuote(){
     subName = hit ? hit.name : "";
   }
   var ready = !!(window.WOW_BIZ && WOW_BIZ.sosReady);
-  var what = subName || (c ? c.name : "");
+  /* ⚠️⚠️ 묶어서 오셨으면 **고르신 것이 그대로 적혀 있어야** 합니다
+     (§4-4). 빈 칸이 뜨면 손님은 골라 놓은 것이 안 넘어왔다고 읽고
+     거기서 닫습니다 — 이 저장소가 "업체 상세의 견적 단추가 조건을 안
+     넘기더라" 로 겪은 자리입니다.
+     ⚠️ 자유 입력 칸이라 **고치실 수 있게** 미리 적어만 둡니다. */
+  var offNames = (typeof quoteOfferNames === "function") ? quoteOfferNames() : "";
+  var what = subName || (c ? c.name : "") || offNames;
 
   return PgHero({
     kicker:"견적 요청",
@@ -109,6 +156,7 @@ function PageQuote(){
         '<a href="/providers">업체찾기</a>에서 분야를 보시거나, '+
         '<a href="/content">창업 · 폐업 정보</a>에서 무엇을 확인해야 하는지 '+
         '먼저 보실 수 있습니다.</p></div>')+
+    QuoteOfferBand()+
 
     '<form id="q-f" onsubmit="return quoteSend(event)">'+
       '<div class="f-r"><label for="q-side">무엇 때문에 <b>*</b></label>'+
@@ -280,7 +328,13 @@ window.quoteSend = function(ev){
       "시군구": $("q-gu").value.trim(),
       "평수":  $("q-py").value.trim(),
       "일정":  $("q-when").value.trim(),
-      "사진":  $("q-img").value.trim()
+      "사진":  $("q-img").value.trim(),
+      /* ⚠️⚠️ 2026-10-09 §4-4 — 묶어서 신청하신 상품입니다.
+         받는 사람이 **어느 상품을 몇 개 신청하셨는지**를 못 보면
+         배정을 못 합니다 — 화면에서 고르게 해 두고 안 보내면 그게
+         이 저장소가 `gu` · `withEquip` 으로 겪은 "받아 놓고 안 읽는 칸" 입니다.
+         ⚠️ 상품이 없으면 `amDropEmpty()` 가 줄째 뺀니다. */
+      "신청 상품": quoteOfferNames()
     }, reqFormValues(nowQS("c")))),
     agree: true
   };

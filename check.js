@@ -2735,12 +2735,16 @@ const AUDIT = `(() => {
        ⚠️ 구간이 .sec 를 같이 답니다 — 첫 낱말만 보면 전부 "sec" 으로
        읽혀 이 검사가 아무것도 안 잡습니다. 우리 표시를 찾습니다.
        ⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다 (열세 번). */
-    const want = ["mh","mbr","msvc","mti","mk","mjn","mlast"];
+    /* ⚠️⚠️ 2026-10-09 최종 통합 리뉴얼 §3-3 의 차례입니다 — HEADER ·
+       FOOTER 는 #view 밖이라 여기서는 열하나입니다. mbr(인수 ↔ 인계)와
+       mlast(마지막 CTA)는 §3-3 목록에 없지만 §12 가 "기존 콘텐츠를 지워
+       빈 페이지처럼 만들지 않는다" 고 적어 그대로 두었습니다. */
+    const want = ["mh","msvc","mexp","pkg","mind","mti","mk","mbr","mopsv","mjn","mlast"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
     const got = S.map(function(e, i){
-      for(const m of ["mh","mbr","msvc","mti","mjn","mlast"])
+      for(const m of ["mh","mbr","msvc","mexp","pkg","mind","mti","mopsv","mjn","mlast"])
         if(e.classList.contains(m)) return m;
       const hd = (e.querySelector(".eyebrow") || {}).textContent || "";
       if(hd.indexOf("TAKE OVER") >= 0) return "mk";

@@ -140,7 +140,127 @@ window.AM_OFFERS = [
     lead:"정리하시는 사장님의 것이 시작하시는 사장님에게 갑니다.",
     apply:"dispose", consult:false, costWay:"quote",
     fee:"margin", feeNote:"판매가와 매입가의 차액", status:"info",
-    to:"/assets" }
+    to:"/assets" },
+
+  /* ══ 2026-10-09 최종 통합 지시서 — 창업 §4-3 나머지 ═════════
+     ⚠️ 지시서가 인테리어와 간판을 **따로** 적었습니다. 전에는 한 상품
+     (`interior-sign`)이었는데, 간판만 하시는 분과 공사 전체를 맡기시는
+     분은 **부르는 업체가 다릅니다.** 갈라 두었고 옛 id 는 남겨 두었습니다
+     (밖으로 나간 링크가 그 값을 들고 있을 수 있습니다). */
+  { id:"signage", icon:"sign", name:"간판 · 사인", cat:"interior", sub:"sign",
+    lead:"크기와 내달는 자리에 따라 구청 허가가 따로 필요할 수 있습니다.",
+    apply:"quote", consult:true, costWay:"quote",
+    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
+    to:"/providers/interior" },
+
+  { id:"hvac", icon:"snow", name:"냉난방 · 공조", cat:"interior", sub:"hvac",
+    lead:"평수보다 천장 높이와 주방 열이 용량을 가릅니다.",
+    apply:"quote", consult:true, costWay:"quote",
+    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
+    to:"/providers/interior" },
+
+  { id:"furniture-set", icon:"sofa", name:"가구 · 집기", cat:"furniture", sub:"biz-furn",
+    lead:"붙박이인지 떼어 옮길 수 있는지를 먼저 보세요 — 정리할 때 갈립니다.",
+    apply:"quote", consult:true, costWay:"quote",
+    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
+    to:"/providers/furniture" },
+
+  { id:"booking-order", icon:"calendar", name:"예약 · 주문 솔루션", cat:"it", sub:"booking",
+    lead:"예약과 주문은 다른 프로그램일 때가 많습니다. 묶을 수 있는지 보세요.",
+    apply:"install", consult:true, costWay:"quote",
+    fee:"close", feeNote:"개통 확인 후 건당 정액", status:"info",
+    to:"/providers/it" },
+
+  { id:"marketing-svc", icon:"megaphone", name:"오픈 마케팅", cat:"marketing", sub:"open-mkt",
+    lead:"문 열기 전에 해 두는 것과 열고 나서 하는 것이 다릅니다.",
+    apply:"quote", consult:true, costWay:"quote",
+    fee:"lead", feeNote:"유효 문의 확인 후 건당 정액", status:"info",
+    to:"/providers/marketing" },
+
+  /* ══ 운영 §5-2 · §5-3 ═════════════════════════════
+     ⚠️⚠️ **반복 구매를 직접 받지 않습니다** (§5-3). 직접 재고를 매입하거나
+     물류망을 만들지 않고, 공급업체와 제휴해 **연결**합니다. 그래서
+     수익모델이 `sub`(회차마다 정액)이고 주문 버튼이 아니라 상담 요청입니다.
+     ⚠️ 제휴 공급사가 0곳이라 전부 `status:"info"` 입니다 — 주문이 되는 것처럼
+     보이면 그것이 절대 규칙 5 입니다. */
+  { id:"food-supply", icon:"utensils", name:"식자재 거래처 연결", cat:"supply", sub:"ingredient",
+    lead:"품목마다 거래처가 다릅니다. 육류 · 수산 · 농산을 한 곳에서 받기는 어렵습니다.",
+    apply:"quote", consult:true, costWay:"quote",
+    fee:"sub", feeNote:"발주 회차마다 정액", status:"info",
+    to:"/providers/supply" },
+
+  { id:"consum-supply", icon:"boxes", name:"소모품 · 포장재 정기 공급", cat:"supply", sub:"packaging",
+    lead:"배달용기는 단가보다 최소 수량이 부담인 경우가 많습니다.",
+    apply:"quote", consult:true, costWay:"quote",
+    fee:"sub", feeNote:"발주 회차마다 정액", status:"info",
+    to:"/providers/supply" },
+
+  { id:"equip-repair", icon:"tool", name:"장비 수리 · 유지보수", cat:"repair", sub:"kitchen-fix",
+    lead:"멈춘 뒤에 부르면 그날 장사가 안 됩니다. 정기 점검을 같이 보세요.",
+    apply:"quote", consult:false, costWay:"quote",
+    fee:"lead", feeNote:"유효 문의 확인 후 건당 정액", status:"info",
+    to:"/providers/repair" },
+
+  { id:"regular-clean", icon:"broom", name:"정기 청소 · 방역", cat:"clean", sub:"regular",
+    lead:"한 번 받는 것과 주기로 받는 것은 다른 계약입니다.",
+    apply:"quote", consult:false, costWay:"quote",
+    fee:"sub", feeNote:"계약 회차마다 정액", status:"info",
+    to:"/providers/clean" },
+
+  { id:"place-mkt", icon:"pin", name:"플레이스 · 리뷰 관리", cat:"marketing", sub:"place",
+    lead:"검색해서 찾아오는 손님이 여기서 갈립니다.",
+    apply:"quote", consult:true, costWay:"quote",
+    fee:"sub", feeNote:"월 계약 회차마다 정액", status:"info",
+    to:"/providers/marketing" },
+
+  { id:"tax-labor", icon:"briefcase", name:"세무 · 노무 기장", cat:"admin", sub:"tax-agent",
+    lead:"직원이 생기면 노무가 같이 따라옵니다.",
+    apply:"quote", consult:true, costWay:"quote",
+    fee:"sub", feeNote:"월 기장 회차마다 정액", status:"info",
+    to:"/providers/admin" },
+
+  /* ══ 폐업 §6-3 ══════════════════════════════════
+     ⚠️⚠️ **철거를 먼저 권하지 않습니다** (§6-4). 양도 · 재판매 가능성을
+     먼저 안내합니다 — 넘기면 철거비도 원상복구도 줄어듭니다.
+     ⚠️⚠️ **폐기물 처리는 법정 허가가 필요합니다** (§6-3) — 허가를 확인한
+     업체만 연결합니다. 그것을 확인하기 전에는 live 로 바꾸지 마세요.
+     ⚠️⚠️ **권리금 거래 · 부동산 중개는 하지 않습니다** (§6-3) — 양도 · 인수는
+     정보와 준비까지이고 계약은 공인중개사의 일입니다. */
+  { id:"transfer-ready", icon:"handover", name:"매장 양도 준비", cat:"transfer", sub:"store-transfer",
+    lead:"넘기기 전에 임대차 승계와 시설 범위를 먼저 정리합니다.",
+    apply:"quote", consult:true, costWay:"quote",
+    fee:"lead", feeNote:"유효 문의 확인 후 건당 정액", status:"info",
+    to:"/stores" },
+
+  { id:"store-photo", icon:"camera", name:"매장 · 시설 촬영", cat:"marketing", sub:"photo",
+    lead:"사진 한 장이 보러 오시는 분의 수를 가릅니다.",
+    apply:"quote", consult:false, costWay:"quote",
+    fee:"close", feeNote:"촬영 완료 후 건당 정액", status:"info",
+    to:"/providers/marketing" },
+
+  { id:"stock-clear", icon:"boxes", name:"재고 처분", cat:"stock", sub:"goods",
+    lead:"반품이 되는 것부터 갈라 놓으세요 — 거래처와 먼저 얻습니다.",
+    apply:"dispose", consult:false, costWay:"quote",
+    fee:"margin", feeNote:"판매가와 매입가의 차액", status:"info",
+    to:"/assets" },
+
+  { id:"restore-work", icon:"restore", name:"원상복구", cat:"restore", sub:"shop-restore",
+    lead:"범위는 임대차 계약서에 적힐 대로입니다. 그것부터 확인하세요.",
+    apply:"quote", consult:true, costWay:"quote",
+    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
+    to:"/providers/restore" },
+
+  { id:"waste-disposal", icon:"trash", name:"폐기물 처리", cat:"waste", sub:"biz-waste",
+    lead:"사업장 폐기물은 허가받은 업체만 가져갈 수 있고 증빙이 남아야 합니다.",
+    apply:"quote", consult:true, costWay:"quote",
+    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
+    to:"/providers/waste" },
+
+  { id:"equip-move", icon:"truck", name:"장비 철거 · 이전", cat:"demolish", sub:"facility",
+    lead:"떼어서 옮기면 돈이고 부수면 비용입니다. 순서를 먼저 정하세요.",
+    apply:"quote", consult:true, costWay:"quote",
+    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
+    to:"/providers/demolish" }
 ];
 
 /* ── 읽기 ─────────────────────────────────────────────────── */

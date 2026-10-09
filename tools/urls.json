@@ -1,6 +1,6 @@
 {
   "note": "있던 주소가 사라지지 않았는지 빌드가 맞춰 보는 목록입니다. 손으로 지우지 마세요 — build-pages.js 의 checkKeepUrls() 주석을 보세요.",
-  "at": "2026-10-08",
+  "at": "2026-10-09",
   "routes": [
     "/",
     "/about",
@@ -121,6 +121,7 @@
     "/providers/labor",
     "/providers/law",
     "/providers/marketing",
+    "/providers/repair",
     "/providers/restore",
     "/providers/staff",
     "/providers/supply",

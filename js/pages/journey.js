@@ -263,6 +263,69 @@ function opsReads(limit){
 }
 
 /* ── /operation — 매장 운영 ─────────────────────────────────────── */
+/* ═════════════════════════════════════════════════════════════════
+   운영 서비스관 — 2026-10-09 최종 통합 지시서 §5
+   ═════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **운영에 대형 HERO 를 따로 만들지 마세요** (§2-1 이 직접
+   적었습니다). 메인의 주인공은 창업과 폐업 둘이고, 운영을 거기에
+   같은 크기로 두면 브랜드 구조가 흐려집니다. 이 구간은 `/operation`
+   안과 메인의 **한 구간**에만 섭니다.
+   ⚠️⚠️ **주문 버튼을 만들지 마세요** (§5-3). 제휴 공급사가 0곳이라
+   지금 할 수 있는 것은 **요청을 받아 업체를 찾아 드리는 것**까지입니다 —
+   "주문하기" 를 만드는 순간 안 한 일을 했다고 말하는 화면입니다. */
+
+/* 묶음 여섯 — 카드마다 하위 서비스를 칩으로 펼칩니다.
+   ⚠️ 칩은 **진짜 화면으로 갑니다** (`/providers/:cat?s=`) — 가짜 링크를
+   만들면 절대 규칙 5 입니다. */
+function OpsvcGrid(limitPerGroup){
+  var G = window.AM_OPSVC || [];
+  if(!G.length) return "";
+  var n = limitPerGroup || 4;
+  return '<ul class="opsv-g">'+G.map(function(g){
+    var items = (typeof amOpsvcItems === "function") ? amOpsvcItems(g.key) : [];
+    if(!items.length) return "";
+    var head = items[0];
+    return '<li class="tn-'+esc(g.tone || "t7")+'"><div class="opsv-c">'+
+      '<a class="opsv-go" href="'+esc(head.to)+'">'+
+        '<span class="opsv-hd">'+
+          '<span class="ic-t">'+icon(g.icon, 24)+'</span>'+
+          '<em class="opsv-no">'+esc(g.no)+'</em>'+
+        '</span>'+
+        '<span class="opsv-t"><b>'+esc(g.name)+'</b>'+
+          '<i>'+esc(g.desc || g.lead)+'</i></span>'+
+      '</a>'+
+      '<ul class="opsv-l">'+items.slice(0, n).map(function(o){
+        return '<li><a href="'+esc(o.to)+'">'+esc(o.name)+'</a></li>'; }).join("")+
+        (items.length > n
+          ? '<li class="opsv-more"><a href="'+esc(head.to)+'">+'+
+            (items.length - n)+'</a></li>' : "")+
+      '</ul>'+
+    '</div></li>'; }).join("")+'</ul>';
+}
+
+/* §5-4 — 업종을 고르셨으면 **그 업종 것이 먼저** 나옵니다.
+   ⚠️⚠️ 잘라 내는 것이 아니라 **차례를 바꾸는 것**입니다 — 잔 것은
+   아래 묶음 여섯에 그대로 있습니다 (`amCatsFor()` 와 같은 규칙).
+   ⚠️ 업종을 안 고르셨으면 **구간째 빠집니다** (절대 규칙 2). */
+function OpsvcForInd(ind){
+  if(!ind) return "";
+  var L = (typeof amOpsvcFor === "function") ? amOpsvcFor(ind.key, 10) : [];
+  if(!L.length) return "";
+  return '<section class="sec sec-blue"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">'+esc(ind.name)+' 운영</p>'+
+      '<h2>'+esc(koWith(ind.name, "은는"))+' 이런 것을 자주 찾으십니다</h2>'+
+      '<p>업종에 맞춰 차례를 바꿈 것이고, 나머지도 아래에 그대로 있습니다.</p>'+
+    '</div>'+
+    '<ul class="opsv-pick">'+L.map(function(o){
+      return '<li class="tn-'+esc(o.tone)+'"><a href="'+esc(o.to)+'">'+
+        '<span class="ic-t">'+icon(o.icon, 20)+'</span>'+
+        '<span class="opsv-pt"><b>'+esc(o.name)+'</b>'+
+          '<i>'+esc(o.catName)+'</i></span>'+
+      '</a></li>'; }).join("")+'</ul>'+
+  '</div></section>';
+}
+
 function PageOperation(){
   var ind  = (typeof amIndustry === "function") ? amIndustry(nowQS("i")) : null;
   var reads = opsReads(6);
@@ -277,6 +340,29 @@ function PageOperation(){
         '필요한 것 견적 요청'+icon("arrow",18)+'</a>'+
         '<a class="btn btn-o btn-lg" href="/tools">매출 · 원가 계산해 보기</a>'
   })+
+  /* §5-2 — 운영 서비스 여섯 묶음 (A~F). ⚠️ 묶음을 누르면
+     **그 분류의 진짜 화면**으로 갑니다 — `/opsvc/:group` 을 만들면
+     같은 내용이 두 주소로 나갑니다. */
+  /* ⚠️ 히어로(`.pgh`)가 흰색이라 여기도 흰색으로 두면 둘이 한 덯어리로
+     붙어 보입니다 — 아이보리2 로 한 칸 띄우고, 바로 아래 패키지가
+     회색이라 셋이 차례로 갈립니다 (ΔE 2.7 · 2.7). */
+  '<section class="sec sec-ivory opsv"><div class="w">'+
+    '<div class="sec-hd sec-hd-row"><div>'+
+      '<p class="eyebrow">OPERATION SERVICE</p>'+
+      '<h2>운영하면서 필요한 것,<br class="br-m"> 여섯 갈래로 모았습니다</h2>'+
+      '<p>식자재부터 수리 · 솔루션 · 마케팅까지. 문을 열고 나서 생기는 일을 '+
+        '한곳에서 맡길 곳을 찾습니다.</p></div>'+
+      '<a class="btn btn-o sec-hd-all" href="'+esc(quoteTo({}))+'">'+
+        '상담 신청하기'+icon("arrow",16)+'</a>'+
+    '</div>'+
+    OpsvcGrid(4)+
+    /* ⚠️ 제휴 공급사가 0곳인 것을 숨기지 않습니다 (§5-3 · 절대 규칙 5) */
+    '<p class="sec-note">'+icon("info",15)+
+      ' 지금은 <b>요청을 받아 업체를 찾아 드리는 단계</b>입니다. '+
+      '바로 주문 · 결제되는 상품은 아직 없습니다.</p>'+
+  '</div></section>'+
+  OpsvcForInd(ind)+
+  PackBand("both", "sec-gray")+
   '<section class="sec sec-white"><div class="w">'+
     '<div class="sec-hd">'+
       '<p class="eyebrow">무엇이 필요하세요?</p>'+

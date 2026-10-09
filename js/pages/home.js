@@ -133,7 +133,13 @@ function MainPickCard(o){
   var ph = hasPhoto(o.photo);
   return '<a class="hpk hpk-'+esc(o.cls)+'" href="'+esc(o.to)+'">'+
     '<span class="hpk-b">'+
-      '<b class="hpk-bd">'+esc(o.badge)+'</b>'+
+      /* ⚠️ 배지 옆에 **색 원판 아이콘**을 둡니다 — 글만 있는 카드는
+         둘이 한 덯어리로 읽힙니다. ⚠️ 아이콘은 `MAIN_PICK` 의 `ic` 한 줄이고
+         원판 색은 `--pk` 가 정합니다 — 화면에 색을 적지 마세요. */
+      '<span class="hpk-top">'+
+        '<span class="hpk-ic" aria-hidden="true">'+icon(o.ic, 26)+'</span>'+
+        '<b class="hpk-bd">'+esc(o.badge)+'</b>'+
+      '</span>'+
       /* ⚠️ 두 줄을 **각자 태그로** 감쌉니다 — 맨글과 태그를 섞으면
          grid 에서 칸이 갈리고, block 으로 피하면 "문장 속 block" 으로
          걸립니다 (이 저장소에서 네 번 만든 버그). */
@@ -850,6 +856,30 @@ var MAIN_SVC8 = ["store", "interior", "equip", "it",
    ⚠️ 여기에 아이콘 이름을 **따로 적지 마세요.** 분류 key 와 같은
    이름으로 그려 두었습니다 (손으로 적은 표가 어긋났던 자리가 이
    저장소에 둘 있습니다 — 랜딩 미니카드 · 도구 아이콘). */
+/* ── 우리가 다루는 범위 ────────────────────────────
+   ⚠️⚠️ **실적이 아니라 범위입니다.** 회원 수 · 거래액 · 만족도는
+   지금 0 이고 지어내면 절대 규칙 1 위반입니다. 여기 세 숫자는
+   `AM_INDUSTRIES` · `AM_CATS` 를 **그 자리에서 세는 값**이라
+   분류를 늘리면 저절로 따라옵니다 — 손으로 고쳐 쓸 자리가 없습니다.
+   ⚠️⚠️ **"업체 수가 아니다" 줄을 지우지 마세요.** 숫자만 크게 띄우면
+   "업체가 183곳" 으로 읽힙니다 (2026-10-03 지시서 §20).
+   ⚠️ **`n+` 꼴로 쓰지 마세요** — 부풀린 값입니다. 센 값은 그냥 183 입니다.
+   ⚠️ 데이터가 비면 **줄째 빠집니다** (절대 규칙 2). */
+function MainScopeStrip(){
+  var ind = (window.AM_INDUSTRIES || []).length;
+  var cat = (window.AM_CATS || []).length;
+  var sub = (window.AM_CATS || []).reduce(function(a, c){
+    return a + ((c.items || []).length); }, 0);
+  if(!ind || !cat || !sub) return "";
+  var n = [[ind, "업종"], [cat, "서비스 분야"], [sub, "세부 서비스"]];
+  return '<div class="msvc-sc">'+
+    '<ul class="msvc-sc-g">'+n.map(function(x){
+      return '<li><b>'+x[0]+'</b><i>'+esc(x[1])+'</i></li>'; }).join("")+'</ul>'+
+    '<p class="msvc-sc-n">'+icon("info",14)+
+      ' 서비스 <b>분류 기준</b>이며 등록된 업체 수가 아닙니다.</p>'+
+  '</div>';
+}
+
 function MainServices(){
   var items = MAIN_SVC8.map(function(k){ return amCat(k); }).filter(Boolean);
   if(!items.length) return "";
@@ -867,25 +897,35 @@ function MainServices(){
       '<a class="btn btn-o sec-hd-all" href="/providers">'+
         '전체 서비스 보기'+icon("arrow",16)+'</a>'+
     '</div>'+
-    '<ul class="msvc-g">'+items.map(function(c){
+    MainScopeStrip()+
+    '<ul class="msvc-g">'+items.map(function(c, ix){
       var ph = hasPhoto("svc-" + c.key);
-      /* ⚠️ 작은 줄은 **그 분류가 실제로 들고 있는 하위 서비스**에서
+      /* ⚠️⚠️ **시각적 위계** (2026-10-09 사장님 지시 4) — 여덟이
+         똑같은 크기로 깔려 있으면 무엇부터 볼지가 묻힙니다. 앞 둘은
+         넓게 가고 하위 서비스를 칩으로 펼칩니다.
+         ⚠️ 여덟 전부 같은 링크 · 같은 CTA 를 들고 있습니다 — 크기만
+         다릅니다. 줄이거나 빼지 않았습니다 (검사가 여덟을 셉니다). */
+      var big = ix < 2;
+      /* 작은 줄은 **그 분류가 실제로 들고 있는 하위 서비스**에서
          셋을 가져옵니다. 손으로 적으면 하위가 늘 때 어긋납니다.
          ⚠️⚠️ 하위가 **업종에서 오는 분류**(시설 · 장비)는 여기서 셀
-         것이 0 이라 이름만 덩그러니 남습니다 — 그때는 데이터에
+         것이 0 이라 이름만 덧그러니 남습니다 — 그때는 데이터에
          처음부터 있던 `lead` 를 냅니다 (절대 규칙 2). */
-      var subs = (c.items || []).slice(0, 3).map(function(i){ return i.name; });
+      var subs = (c.items || []).slice(0, 3).map(function(i2){ return i2.name; });
       var sub  = subs.length ? subs.join(", ") : (c.lead || "");
-      /* ⚠️⚠️ **카드가 `<div>` 입니다** — 안에 링크가 둘이라서요.
-         `<a>` 안의 `<a>` 는 브라우저가 쪼개 버립니다 (업체 카드가
-         단추 셋 때문에 `<div>` 가 된 것과 같은 자리). */
-      return '<li class="tn-'+esc(c.tone || "t7")+'"><div class="msvc-c">'+
+      /* 큰 카드에만 붙는 칩 줄 — **하위 서비스 이름 그대로**입니다
+         (`c.items`). 손으로 적지 마세요 — 하위가 늘면 어긋납니다. */
+      var chips = big ? (c.items || []).slice(0, 4).map(function(it){
+        return '<i>'+esc(it.name)+'</i>'; }).join("") : "";
+      return '<li class="tn-'+esc(c.tone || "t7")+(big?" msvc-big":"")+'">'+
+        '<div class="msvc-c">'+
         '<a class="msvc-go" href="'+esc(catTo(c))+'">'+
           '<span class="ia-t">'+
             (ph ? photoBox("svc-" + c.key,"",true)
-                : (hasIconArt(c.key) ? iconArt(c.key, 46) : icon(c.icon, 40)))+
+                : (hasIconArt(c.key) ? iconArt(c.key, big ? 60 : 46) : icon(c.icon, 40)))+
           '</span>'+
-          '<b>'+esc(c.name)+'</b><i>'+esc(sub)+'</i>'+
+          '<span class="msvc-tx"><b>'+esc(c.name)+'</b><i>'+esc(sub)+'</i>'+
+            (chips ? '<span class="msvc-chips">'+chips+'</span>' : "")+'</span>'+
         '</a>'+
         /* ⚠️⚠️ **실제로 도는 CTA 입니다** (지시서 §5). `/quote?c=` 는
            그 분류의 서비스별 질문까지 띄우는 진짜 화면이고, 가짜
@@ -1190,21 +1230,27 @@ function MainFranchise(){
    모르는 이름에 빈 문자열을 돌려줘서 타일이 **덩그러니 비었습니다** —
    에러도 404 도 없었고 찍어 보고 알았습니다. 지금은 "아이콘 자리가
    비었음" 이 전 화면에서 봅니다. */
+/* ⚠️⚠️ **이 구간은 중립입니다** — 넘기시는 분과 받으시는 분이 같은
+   화면을 봅니다. 그래서 세 칸의 색은 창업 블루도 폐업 오렌지도 아닌
+   **중립 분류색 셋**입니다 (시안 · 스틸 · 청록). 한쪽을 창업색으로
+   칠하면 다른 쪽에게 "여긴 내 자리가 아니네" 가 됩니다. */
 var MAIN_ASSET_KIND = [
-  { ic:"pin",      n:"매장 인수",      d:"상권을 처음부터 찾지 않아도 됩니다",
+  { ic:"pin",      tone:"t5",  n:"매장 인수",      d:"상권을 처음부터 찾지 않아도 됩니다",
     to:"/transfer?t=in" },
-  { ic:"handover", n:"매장 양도",      d:"넘기면 철거비와 원상복구가 줄어듭니다",
+  { ic:"handover", tone:"t13", n:"매장 양도",      d:"넘기면 철거비와 원상복구가 줄어듭니다",
     to:"/transfer?t=out" },
-  { ic:"boxes",    n:"시설 · 장비 정리", d:"버리면 비용이고 넘기면 돈입니다",
+  { ic:"boxes",    tone:"t12", n:"시설 · 장비 정리", d:"버리면 비용이고 넘기면 돈입니다",
     to:"/closure?w=money" }
 ];
 function MainStores(){
   var L  = (window.AM_STORES||[]);
   var nA = (window.AM_ASSETS||[]).length;
   var kinds = '<ul class="mk-kind">'+MAIN_ASSET_KIND.map(function(k){
-    return '<li><a href="'+esc(k.to)+'">'+
+    return '<li class="tn-'+esc(k.tone)+'"><a href="'+esc(k.to)+'">'+
       '<span class="ic-t">'+icon(k.ic,24)+'</span>'+
-      '<b>'+esc(k.n)+'</b><i>'+esc(k.d)+'</i></a></li>'; }).join("")+'</ul>';
+      '<span class="mk-kind-t"><b>'+esc(k.n)+'</b><i>'+esc(k.d)+'</i></span>'+
+      '<em class="mk-kind-a" aria-hidden="true">'+icon("arrow",16)+'</em>'+
+      '</a></li>'; }).join("")+'</ul>';
   var body = L.length
     ? kinds+
       '<div class="mk-g">'+L.slice(0,3).map(function(s2){ return StoreCard(s2); }).join("")+'</div>'+
@@ -1795,6 +1841,98 @@ function MainLast(){
    `check.js` 의 "메인 구간 차례가 지시서와 같다" 가 **구간 열셋**을
    셉니다 — 사업 단계 열은 `<nav>` 라 그 셈에 안 들어가고, "히어로
    에서 바로 찾고 바로 갈라진다" 가 그 열을 따로 봅니다. */
+/* ══════════════════════════════════════════════════════════════════
+   05 창업 · 운영 · 폐업별 서비스 탐색 (2026-10-09 최종 통합 §3-3 5)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **운영에 대형 HERO 를 만들지 않습니다** (§2-1). 메인의 주인공은
+   창업과 폐업 둘이고, 운영은 **여기 한 칸**과 아래 10 구간에서 받습니다.
+   ⚠️ 세 칸의 크기는 같지만 **색이 다릅니다** — 창업 블루 · 운영 틸 ·
+   폐업 오렌지 (§3-1). 운영 보조색이 창업 · 폐업을 침범하지 않게
+   면이 아니라 **띠와 아이콘**에만 씁니다. */
+var MAIN_EXPLORE = [
+  { key:"start", cls:"start", to:"/startup", ic:"seed",
+    k:"창업", n:"창업을 준비하고 있어요",
+    d:"업종을 고르시면 준비 순서와 필요한 업체가 한 번에 나옵니다.",
+    links:[["업종별 창업 절차","/startup"],["창업비 계산","/tools/cost"],
+           ["상가 · 점포 찾기","/stores"],["인테리어 · 시공","/providers/interior"]] },
+  { key:"run", cls:"run", to:"/operation", ic:"refresh",
+    k:"매장 운영", n:"지금 매장을 운영하고 있어요",
+    d:"식자재 · 수리 · 솔루션 · 마케팅까지 여섯 갈래로 모았습니다.",
+    links:[["식자재 · 원재료","/providers/supply"],["수리 · 유지보수","/providers/repair"],
+           ["POS · 매장시스템","/providers/it"],["마케팅 · 매출","/providers/marketing"]] },
+  { key:"close", cls:"close", to:"/closure", ic:"box",
+    k:"폐업 · 정리", n:"사업을 정리하려고 해요",
+    d:"넘길 수 있는 것부터 봅니다. 양도가 되면 철거비도 줄어듭니다.",
+    links:[["매장 양도 · 인수","/stores"],["시설 · 장비 정리","/assets"],
+           ["철거 · 원상복구","/providers/demolish"],["폐업 예상비용","/tools/closecost"]] }
+];
+function MainExplore(){
+  return '<section class="sec sec-gray mexp"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">WHERE ARE YOU NOW</p>'+
+      '<h2>지금 어느 자리에 계신가요?</h2>'+
+      '<p>고르시면 그 자리에서 필요한 정보와 서비스만 모아 보여 드립니다.</p>'+
+    '</div>'+
+    '<ul class="mexp-g">'+MAIN_EXPLORE.map(function(x){
+      return '<li><div class="mexp-c mexp-'+esc(x.cls)+'">'+
+        '<a class="mexp-go" href="'+esc(x.to)+'">'+
+          '<span class="mexp-ic">'+icon(x.ic,26)+'</span>'+
+          '<span class="mexp-t"><em>'+esc(x.k)+'</em>'+
+            '<b>'+esc(x.n)+'</b><i>'+esc(x.d)+'</i></span>'+
+        '</a>'+
+        /* ⚠️ 네 줄 전부 **실제로 있는 화면**입니다 — 가짜 링크를 만들면
+           절대 규칙 5 입니다 (check.js 가 메인의 모든 링크를 눌러 봅니다). */
+        '<ul class="mexp-l">'+x.links.map(function(l){
+          return '<li><a href="'+esc(l[1])+'">'+esc(l[0])+
+            icon("chev",14)+'</a></li>'; }).join("")+'</ul>'+
+      '</div></li>'; }).join("")+'</ul>'+
+  '</div></section>';
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   07 업종별 맞춤 서비스 (§3-3 7 · §7)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **업종을 고르면 아래가 실제로 바뀝니다** — 고르기만 하는 UI 를
+   만들지 않습니다 (2026-10-03 §9 가 직접 금지한 자리입니다).
+   고르신 업종은 `/startup/:업종` 으로 갑니다. */
+function MainIndustryBand(){
+  var L = (window.AM_INDUSTRIES || []);
+  if(!L.length) return "";
+  return '<section class="sec sec-white mind"><div class="w">'+
+    '<div class="sec-hd sec-hd-row"><div>'+
+      '<p class="eyebrow">BY INDUSTRY</p>'+
+      '<h2>업종마다 필요한 것이 다릅니다</h2>'+
+      '<p>업종을 고르시면 그 업종의 준비 순서 · 장비 · 거래처 · 업체로 '+
+        '좁혀 드립니다.</p></div>'+
+      '<a class="btn btn-o sec-hd-all" href="/startup">'+
+        '업종 전체 보기'+icon("arrow",16)+'</a>'+
+    '</div>'+
+    IndustryGrid("/startup", "")+
+  '</div></section>';
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   10 운영 중인 사장님 추천 서비스 (§3-3 10 · §5)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **"추천" 이라고 쓰지 마세요** — 이용 데이터를 모으지 않습니다
+   (마무리 지시서 §3 의 금지 표현). 머리말은 **운영 중이시라면** 입니다.
+   ⚠️ 여섯 묶음은 `/operation` 과 **같은 데이터**를 봅니다 — 두 곳에
+   적으면 어긋납니다. */
+function MainOpsvc(){
+  if(!(window.AM_OPSVC || []).length) return "";
+  return '<section class="sec sec-ivory mopsv"><div class="w">'+
+    '<div class="sec-hd sec-hd-row"><div>'+
+      '<p class="eyebrow">OPERATION</p>'+
+      '<h2>이미 운영 중이시라면</h2>'+
+      '<p>문을 열고 나서 생기는 일도 한곳에서 맡길 곳을 찾습니다. '+
+        '식자재 · 수리 · 솔루션 · 마케팅까지 여섯 갈래입니다.</p></div>'+
+      '<a class="btn btn-o sec-hd-all" href="/operation">'+
+        '운영 서비스 보기'+icon("arrow",16)+'</a>'+
+    '</div>'+
+    OpsvcGrid(3)+
+  '</div></section>';
+}
+
 function PageMain(){
   /* ⚠️⚠️ **2026-10-08 "최종 디자인 통합 및 기능 완성 작업지시서" §3 의
      차례**입니다 — 아홉이고 HEADER · FOOTER 는 `#view` 밖
@@ -1845,7 +1983,30 @@ function PageMain(){
      **디자인 참고용**입니다. 매물이 0건이면 05 는 머리말까지 바꿔
      사실대로 말하고, 글 카드에는 없는 작성일 대신 분류와 예상 읽기
      시간(둘 다 실제 값)을 냅니다. */
-  return MainHero()+ MainBridge()+ MainServices()+ MainToolsInfo()+
-         MainStores()+ MainJoin()+ MainLast();
+  /* ⚠️⚠️ **2026-10-09 최종 통합 리뉴얼 §3-3 의 열두 구간**입니다.
+     HEADER · FOOTER 는 `#view` 밖(`chrome.js`)이라 여기서는 **열하나**입니다.
+
+       §3-3 1  상단 내비게이션   → chrome.js (#view 밖)
+       §3-3 2  창업 · 폐업 HERO    → 01 .mh
+       §3-3 3  통합 검색          → 01 안의 .mh-find (헤더 검색과 **같은** mainFind)
+       §3-3 4  주요 서비스 상품    → 02 .msvc
+       §3-3 5  창업 · 운영 · 폐업 탐색 → 03 .mexp
+       §3-3 6  패키지            → 04 .pkg  ⚠️ "인기" 라고 쓰지 않습니다
+       §3-3 7  업종별 맞춤 서비스  → 05 .mind
+       §3-3 8  계산기 · 정보       → 06 .mti
+       §3-3 9  매장 인수 · 양도    → 07 TAKE OVER
+       —        인수 ↔ 인계 (보존)  → 08 .mbr   §12 "기존 콘텐츠를 지우지 않는다"
+       §3-3 10 운영 중인 사장님     → 09 .mopsv
+       §3-3 11 파트너 제휴        → 10 .mjn
+       —        마지막 CTA (보존)   → 11 .mlast
+       §3-3 12 푸터              → chrome.js (#view 밖)
+
+     ⚠️⚠️ **차례를 바꾸시려면 지시서를 먼저 고치고** `check.js` 의
+     "메인 구간 차례가 지시서와 같다" 가 세는 `want` 를 **같이** 고치세요.
+     ⚠️⚠️ **빈 화면으로 만들지 마세요** (§12). 여기서 내려온 구간은
+     함수를 하나도 안 지웠고, 갈 곳이 남아 있는지 하나씩 확인했습니다. */
+  return MainHero()+ MainServices()+ MainExplore()+ PackBand("", "sec-blue")+
+         MainIndustryBand()+ MainToolsInfo()+ MainStores()+ MainBridge()+
+         MainOpsvc()+ MainJoin()+ MainLast();
 }
 

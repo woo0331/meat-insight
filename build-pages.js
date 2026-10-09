@@ -1697,8 +1697,27 @@ function checkKeepUrls(routes, vj){
    ════════════════════════════════════════════════════════════════════ */
 function checkDeal(W){
   const ST = W.AM_DEAL_ST || [], MV = W.AM_DEAL_MOVE || [], RO = W.AM_ROLES || [];
-  if(ST.length !== 12)
-    throw new Error("신청 상태가 " + ST.length + "개입니다 — 지시서 §8 은 열둘입니다");
+  /* ⚠️⚠️ 2026-10-09 최종 통합 지시서 §8-3 으로 **열셋**이 됐습니다 —
+     "취소 · 실패 · **보류** 상태를 별도로 관리한다." */
+  if(ST.length !== 13)
+    throw new Error("신청 상태가 " + ST.length + "개입니다 — 지시서 §8-3 은 열셋입니다");
+  /* ⚠️⚠️ **보류는 끝이 아닙니다** — `end:true` 가 붙으면 돌아올 길이
+     막히고, 그런 보류는 이름만 다른 취소입니다. */
+  {
+    const h = ST.filter(x => x.key === "hold")[0];
+    if(!h) throw new Error("보류(hold) 상태가 없습니다 (§8-3)");
+    if(h.end) throw new Error("보류에 end:true 가 붙어 있습니다 — 다시 진행할 수 없는 보류는 취소입니다");
+    if(h.money) throw new Error("보류가 돈 상태로 잡혀 있습니다");
+    /* ⚠️⚠️ 계약 뒤로는 보류가 없습니다 — 돈이 얽히면 멈추는 것이
+       아니라 취소 · 환수입니다 (§10-3). */
+    for(const m of MV)
+      if(m[1] === "hold" && ["signed","done","fee_wait","fee_done"].includes(m[0]))
+        throw new Error("계약 뒤에 보류로 가는 길이 있습니다 — " + m[0] +
+          " → hold (돈이 얽힌 뒤는 취소 · 환수입니다 · §10-3)");
+    /* 보류에서 나가는 길이 없으면 거기서 건이 죽습니다 */
+    if(!MV.some(m => m[0] === "hold"))
+      throw new Error("보류에서 나가는 길이 없습니다 — 들어가면 못 나오는 상태입니다");
+  }
   const keys = ST.map(x => x.key), roles = RO.map(x => x.key);
   if(new Set(keys).size !== keys.length)
     throw new Error("신청 상태 key 가 겹칩니다");
@@ -1801,7 +1820,7 @@ function checkDealSql(W){
         "   화면: " + a.join(" · ") + "\n   DB  : " + b.join(" · ") +
         "\n   → 한쪽만 고치면 에러 없이 조용히 어긋납니다. 둘을 같이 고치세요");
   }
-  same("신청 상태 열둘",   (W.AM_DEAL_ST  || []).map(x => x.key), enumOf("deal_state"));
+  same("신청 상태 열셋",   (W.AM_DEAL_ST  || []).map(x => x.key), enumOf("deal_state"));
   same("역할 넷",          (W.AM_ROLES    || []).map(x => x.key), enumOf("app_role"));
   same("수익모델 여섯",     (W.AM_FEE_TYPE || []).map(x => x.key), enumOf("fee_type"));
   same("부가세 처리 기준",  (W.AM_FEE_VAT  || []).map(x => x.key), enumOf("fee_vat"));

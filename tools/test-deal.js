@@ -34,7 +34,42 @@ function ok(name, cond, got){
 const BY = { by:"u-1" };
 
 console.log("\n── 상태와 역할이 제대로 있는가");
-ok("상태가 열둘이다 (§8)", W.AM_DEAL_ST.length === 12, W.AM_DEAL_ST.length);
+ok("상태가 열셋이다 (§8-3 — 취소 · 실패 · 보류를 따로)", W.AM_DEAL_ST.length === 13, W.AM_DEAL_ST.length);
+
+/* ══ 보류 (2026-10-09 §8-3) ══════════════════════════════════════
+   ⚠️⚠️ 보류를 **끝 상태로 만들면** 이름만 다른 취소입니다 — "다음 달에
+   다시 연락 주세요" 하신 분의 건이 실패로 집계되고, 그러면 영업 숫자가
+   거짓말이 됩니다. */
+{
+  const h = W.AM_DEAL_ST.filter(s => s.key === "hold")[0];
+  ok("보류 상태가 있다", !!h);
+  ok("보류는 끝이 아니다 (다시 진행할 수 있다)", h && !h.end);
+  ok("보류는 돈 상태가 아니다", h && !h.money);
+  ok("보류에서 나가는 길이 있다", W.AM_DEAL_MOVE.some(m => m[0] === "hold"));
+  /* ⚠️⚠️ 계약 뒤로는 보류가 없습니다 — 돈이 얽히면 취소 · 환수입니다 */
+  const late = W.AM_DEAL_MOVE.filter(m =>
+    m[1] === "hold" && ["signed","done","fee_wait","fee_done"].indexOf(m[0]) >= 0);
+  ok("계약 뒤에 보류로 가는 길이 없다 (§10-3)", late.length === 0,
+     late.map(m => m[0] + "→hold").join(" · "));
+  /* ⚠️ 왜 멈췄는지가 안 남으면 다음 사람이 그 건을 못 다룹니다 */
+  const noWhy = W.AM_DEAL_MOVE.filter(m => m[1] === "hold" && (m[3] || []).indexOf("why") < 0);
+  ok("보류로 갈 때는 사유를 받는다", noWhy.length === 0,
+     noWhy.map(m => m[0] + "→hold").join(" · "));
+  /* ⚠️⚠️ 보류에서 돈 상태로 새지 않는지 */
+  const money = W.AM_DEAL_ST.filter(s => s.money).map(s => s.key);
+  const leak = W.AM_DEAL_MOVE.filter(m => m[0] === "hold" && money.indexOf(m[1]) >= 0);
+  ok("보류에서 정산으로 바로 가는 길이 없다", leak.length === 0,
+     leak.map(m => "hold→" + m[1]).join(" · "));
+  /* 실제로 옮겨 봅니다 — 규칙만 보고 통과시키면 아무것도 안 보는 검사입니다 */
+  const r1 = W.amDealMove("check", "hold", { role:"staff", by:"u1" });
+  ok("사유 없이 보류하지 못한다", !r1.ok, r1.why);
+  const r2 = W.amDealMove("check", "hold", { role:"staff", by:"u1", why:"다음 달에 다시" });
+  ok("사유를 적으면 보류된다", r2.ok, r2.why);
+  const r3 = W.amDealMove("hold", "check", { role:"staff", by:"u1" });
+  ok("보류에서 다시 확인으로 돌아온다", r3.ok, r3.why);
+  const r4 = W.amDealMove("signed", "hold", { role:"admin", by:"u1", why:"x" });
+  ok("계약 완료에서는 보류하지 못한다", !r4.ok, r4.why);
+}
 ok("역할이 넷이다", W.AM_ROLES.length === 4, W.AM_ROLES.length);
 {
   const keys = W.AM_DEAL_ST.map(s => s.key);

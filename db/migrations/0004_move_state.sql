@@ -80,7 +80,37 @@ insert into deal_move (from_state, to_state, role, needs) values
   ('done','fee_wait','admin',array['proof','feeId']::text[]),
   ('done','lost','admin',array['why']::text[]),
   ('fee_wait','fee_done','admin',array['paid']::text[]),
-  ('fee_wait','lost','admin',array['why']::text[]);
+  ('fee_wait','lost','admin',array['why']::text[]),
+  -- ══ 보류 (2026-10-09 §8-3) — ⚠️ 계약 전까지만. signed 부터는
+  --    돈이 얽혀 있어 멈추는 것이 아니라 취소 · 환수입니다.
+  ('new','hold','staff',array['why']::text[]),
+  ('new','hold','admin',array['why']::text[]),
+  ('new','hold','customer',array['why']::text[]),
+  ('check','hold','staff',array['why']::text[]),
+  ('check','hold','admin',array['why']::text[]),
+  ('check','hold','customer',array['why']::text[]),
+  ('assigned','hold','staff',array['why']::text[]),
+  ('assigned','hold','admin',array['why']::text[]),
+  ('assigned','hold','customer',array['why']::text[]),
+  ('accepted','hold','staff',array['why']::text[]),
+  ('accepted','hold','admin',array['why']::text[]),
+  ('accepted','hold','customer',array['why']::text[]),
+  ('consult','hold','staff',array['why']::text[]),
+  ('consult','hold','admin',array['why']::text[]),
+  ('consult','hold','customer',array['why']::text[]),
+  ('quoted','hold','staff',array['why']::text[]),
+  ('quoted','hold','admin',array['why']::text[]),
+  ('quoted','hold','customer',array['why']::text[]),
+  ('nego','hold','staff',array['why']::text[]),
+  ('nego','hold','admin',array['why']::text[]),
+  ('nego','hold','customer',array['why']::text[]),
+  -- 나가는 길은 둘 — 다시 확인하거나 접거나.
+  -- ⚠️ 보류에서 돈 상태로 가는 길은 **없습니다.**
+  ('hold','check','staff','{}'::text[]),
+  ('hold','check','admin','{}'::text[]),
+  ('hold','lost','staff',array['why']::text[]),
+  ('hold','lost','admin',array['why']::text[]),
+  ('hold','lost','customer',array['why']::text[]);
 
 -- ── 문 ───────────────────────────────────────────────────────────────
 -- ctx 에 담는 것 : {"why":"…","providerId":"pv-one","agree3rd":true}

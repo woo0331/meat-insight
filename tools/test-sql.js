@@ -112,17 +112,31 @@ try{
   start();
   psql("create database swtest", "postgres");
   console.log("\n── 마이그레이션이 실제로 돌아가는가");
-  for(const f of ["db/test/00_stub_auth.sql",
-                  "db/migrations/0001_init.sql",
+  /* ⚠️ 마이그레이션 목록은 한 고데입니다 — 아래 "판 번호" 검사가
+     이 길이를 그대로 씁니다 (수를 두 곳에 적으면 어긋납니다).
+     ⚠️ 첫 줄은 검사용 가짜 auth 라 판 번호에 안 들어갑니다. */
+  const MIGS = ["db/migrations/0001_init.sql",
                   "db/migrations/0002_schema_version.sql",
                   "db/migrations/0003_confirm_fee.sql",
                   "db/migrations/0004_move_state.sql",
-                  "db/migrations/0005_account_claim.sql"]){
+                  "db/migrations/0005_account_claim.sql",
+                  /* ⚠️⚠️ 0006 은 **따라잡기**용입니다 — 0001 · 0004 에 이미
+                     보류가 들어 있어서 여기서는 **아무 일도 안 나야** 맞습니다.
+                     돌려 보는 까닭은 두 번 돌려도 안전한지를 재보는 것입니다
+                     (add value if not exists · on conflict do nothing).
+                     ⚠️ 트랜잭션으로 감지 않습니다 — 감으면 새 enum 값을 같은
+                     트랜잭션에서 못 써서 터집니다. */
+                  "db/migrations/0006_hold_state.sql"];
+  for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ e = String(err.stderr || err.message).split("\n").slice(0,3).join(" "); }
     ok(f.replace("db/", "") + " 가 돈다", e === "", e);
   }
-  ok("판 번호가 다섯까지 들어온다", psql("select count(*) from schema_version") === "5",
+  /* ⚠️ 수를 손으로 적지 마세요 — 마이그레이션을 하나 더할 때마다 여기도
+     고쳐야 하고, 안 고치면 **멀줦한 것을 실패로** 잡습니다
+     (이 저장소가 "감사 기록을 갯수로 셈" 으로 겪은 자리). 돌린 파일 수를 씁니다. */
+  ok("판 번호가 돌린 만큼 들어온다",
+     psql("select count(*) from schema_version") === String(MIGS.length),
      psql("select count(*) from schema_version"));
 
   /* ⚠️⚠️ db/README.md 가 돌려 보라고 적은 바로 그 쿼리입니다 */
@@ -464,6 +478,50 @@ try{
     r = denied(mv(AD, "assigned", `'{"agree3rd":true}'::jsonb`));
     ok("배정할 업체 없이 배정하지 못한다",
        r.no && /빠졌습니다/.test(r.why || ""), r.why);
+
+    /* ══ 보류 (2026-10-09 §8-3) ══════════════════════════════════
+       ⚠️⚠️ 보류는 **끝이 아닙니다** — 다시 진행할 수 있어야 보류이고,
+       못 돌아오면 이름만 다른 취소입니다. 그래서 들어가는 것과
+       **나오는 것**을 둘 다 눌러 봅니다. */
+    {
+      const RH = "aaaaaaaa-0000-0000-0000-000000000012";
+      psql(`insert into request (id, no, user_id, side, name, tel, agree_at, state) values
+        ('${RH}','SW-AAAA-0012','${A}','start','카','01066660000',now(),'check');`);
+      const mvh = (u, to, ctx) =>
+        as(u) + "select move_state('" + RH + "','" + to + "'," + (ctx || "'{}'::jsonb") + ")";
+
+      /* ⚠️ 사유 없이 보류하면 왜 멈췄는지가 안 남습니다 (§8 기록) */
+      let h = denied(mvh(ST, "hold"));
+      ok("사유 없이 보류하지 못한다", h.no && /why/.test(h.why || ""), h.why);
+
+      h = allowed(mvh(ST, "hold", `'{"why":"사장님이 다음 달에 다시 보자고 하셨습니다"}'::jsonb`));
+      ok("사유를 적으면 보류할 수 있다", h.yes, h.why);
+      ok("상태가 보류로 바뀌었다",
+         psql("select state from request where id='" + RH + "'") === "hold");
+
+      /* ⚠️⚠️ **보류에서 돈 상태로 가는 길이 없어야 합니다** */
+      h = denied(mvh(AD, "fee_wait", `'{"proof":"x","feeId":"y"}'::jsonb`));
+      ok("보류에서 정산으로 넘어가지 못한다", h.no, h.why);
+      /* ⚠️ 멈췄던 자리로 바로 되돌아가지 않습니다 — 다시 확인부터 */
+      h = denied(mvh(ST, "assigned", `'{"providerId":"pv-one","agree3rd":true}'::jsonb`));
+      ok("보류에서 배정으로 바로 가지 못한다", h.no, h.why);
+
+      h = allowed(mvh(ST, "check"));
+      ok("보류에서 다시 확인으로 돌아온다 (끝이 아닙니다)", h.yes, h.why);
+      ok("상태가 다시 확인 중이다",
+         psql("select state from request where id='" + RH + "'") === "check");
+      /* ⚠️ 보류도 기록이 남습니다 — 들어갈 때 하나 · 나올 때 하나 */
+      ok("보류도 감사 기록이 남는다",
+         psql("select count(*) from audit_log where obj='request' and obj_id='" + RH + "'") === "2");
+
+      /* ⚠️⚠️ **계약 뒤로는 보류가 없습니다** (§10-3) */
+      const RS = "aaaaaaaa-0000-0000-0000-000000000013";
+      psql(`insert into request (id, no, user_id, side, name, tel, agree_at, state) values
+        ('${RS}','SW-AAAA-0013','${A}','start','타','01055550000',now(),'signed');`);
+      const hs = denied(as(AD) + "select move_state('" + RS + "','hold','{\"why\":\"x\"}'::jsonb)");
+      ok("계약 완료에서는 보류하지 못한다 (돈이 얽히면 취소 · 환수)",
+         hs.no && /갈 수 없는 길/.test(hs.why || ""), hs.why);
+    }
     r = denied(mv(AD, "assigned", `'{"agree3rd":true,"providerId":"zzz"}'::jsonb`));
     ok("없는 업체로 배정하지 못한다", r.no && /없는 업체/.test(r.why || ""), r.why);
 

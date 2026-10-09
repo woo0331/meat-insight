@@ -13,6 +13,93 @@
 
 var MKEY = "am.profile.v1";
 
+/* ══════════════════════════════════════════════════════════════════
+   내 신청 내역 — 2026-10-09 최종 통합 지시서 §11-1
+   ══════════════════════════════════════════════════════════════════
+   > "상담 신청 내역 · 계약 진행 현황 · 재신청 및 추가 서비스"
+
+   ⚠️⚠️ **로그인이 설정되기 전에는 이 구간을 아예 안 그립니다.**
+   `/api/session` 이 `auth:false` 를 돌려주면 `.my-db` 가 빈 채로
+   남고, 화면에는 아무것도 안 보입니다 — "로그인" 단추도, "준비 중"
+   자리표시자도 만들지 않습니다 (§30-7 · 절대 규칙 2 · 5).
+
+   ⚠️⚠️ **상태 이름을 화면에 적지 마세요.** `deal.js` 의 `AM_DEAL_ST`
+   에서 가져옵니다 — 두 곳에 적으면 상태를 하나 늘릴 때(이번 보류가
+   그랬습니다) 한쪽만 바뀌어 어긋납니다.
+
+   ⚠️ **고객에게 수수료 · 정산을 보여 주지 않습니다** (§11-1 · api/me.js
+   의 PICK 이 애초에 안 가져옵니다). 보여 주면 우리와 업체 사이의 돈을
+   자기가 내는 돈으로 읽습니다.
+   ⚠️ 서버가 안 되면 **조용히 비워 둡니다** — 손님은 아무 잘못도 하지
+   않았는데 빨간 에러를 보게 할 까닭이 없습니다 (운영자에게는
+   console.warn · 절대 규칙 3). */
+function MyDbBand(){
+  return '<section class="sec sec-blue my-db" id="my-db" hidden></section>';
+}
+
+window.myLoadDb = function(){
+  var box = document.getElementById("my-db");
+  if(!box || typeof fetch !== "function") return;
+  fetch("/api/me", { headers:{ "accept":"application/json" } })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      /* 로그인이 꺼져 있거나 안 하셨으면 구간째 없습니다 */
+      if(!d || !d.auth || !d.signedIn) return;
+      var L = (d.requests || []);
+      box.innerHTML = '<div class="w">'+
+        '<div class="sec-hd">'+
+          '<p class="eyebrow">MY REQUEST</p>'+
+          '<h2>내가 넣은 신청</h2>'+
+          '<p>접수번호로 물어보실 수 있습니다. 진행 상태가 바뀌면 여기에 '+
+            '그대로 보입니다.</p>'+
+        '</div>'+
+        (L.length ? MyReqList(L) : Empty({
+          icon:"doc", title:"아직 넣으신 신청이 없습니다",
+          text:"필요한 일을 적어 보내시면 조건에 맞는 업체를 찾아 드립니다.",
+          cta:'<a class="btn btn-b" href="'+esc(quoteTo({}))+'">'+
+              '서비스 신청하기'+icon("arrow",17)+'</a>'
+        }))+
+      '</div>';
+      box.hidden = false;
+    })
+    .catch(function(e){ console.warn("[my] 신청 내역을 못 불러왔습니다 — " + e); });
+};
+
+/* ⚠️ 상태 딱지 색은 `deal.js` 의 쓰임을 따릅니다 — 끝난 것(end)은 회색,
+   돈(money)은 고객에게 안 옵니다, 보류는 **주의(warn)** 입니다.
+   ⚠️⚠️ 보류를 실패와 같은 색으로 두지 마세요 — 멈춘 것과 접은 것은
+   다른 일이고, 같은 색이면 사장님이 끝난 줄 압니다. */
+function myStTone(key){
+  var s = (typeof amDealSt === "function") ? amDealSt(key) : null;
+  if(!s) return "gray";
+  if(s.key === "hold") return "warn";
+  if(s.key === "lost") return "gray";
+  if(s.end) return "ok";
+  return "on";
+}
+
+function MyReqList(L){
+  return '<ul class="myq-l">'+L.map(function(r){
+    var st = (typeof amDealStName === "function") ? amDealStName(r.state) : r.state;
+    var pv = (r.assignment && r.assignment.length && r.assignment[0].provider)
+               ? r.assignment[0].provider.name : "";
+    var cat = r.cat && typeof amCat === "function" ? amCat(r.cat) : null;
+    return '<li class="myq"><div class="myq-h">'+
+        '<b class="myq-no">'+esc(r.no || "")+'</b>'+
+        '<span class="myq-st myq-'+esc(myStTone(r.state))+'">'+esc(st)+'</span>'+
+      '</div>'+
+      '<p class="myq-m">'+
+        [ (r.side === "close" ? "폐업 · 정리" : "창업"),
+          (cat ? cat.name : ""),
+          (r.industry && typeof amIndustryName === "function" ? amIndustryName(r.industry) : ""),
+          (r.region && typeof amRegionName === "function" ? amRegionName(r.region) : "")
+        ].filter(Boolean).map(esc).join(" · ")+'</p>'+
+      /* ⚠️⚠️ 업체 상호는 **배정이 된 뒤에만** 나옵니다 — 그 전에 적으면
+         정해지지도 않은 곳을 알려 주는 것입니다 (제17조 제2항). */
+      (pv ? '<p class="myq-pv">'+icon("users",15)+esc(pv)+'</p>' : "")+
+    '</li>'; }).join("")+'</ul>';
+}
+
 function PageMy(){
   var p = amGet(MKEY, { side:"", industry:"", region:"", gu:"", pyeong:"", dday:"" });
   var qs = amGet("am.quotes.v1", []);
@@ -24,6 +111,13 @@ function PageMy(){
     lead:"이 브라우저에만 남습니다. 서버로 보내지 않습니다.",
     tight:true
   })+
+  /* ⚠️⚠️ §11-1 — 로그인이 설정되면 **여기에 신청 내역이
+     섭니다.** 지금은 `/api/session` 이 `auth:false` 라 구간이 빈 채로
+     숨어 있고 화면에는 아무것도 안 보입니다 — "로그인" 단추도
+     "준비 중" 자리표시도 만들지 않습니다 (§30-7 · 절대 규칙 2 · 5).
+     ⚠️ 위의 상황 · 업종 칸은 **이 브라우저 안**에만 남는 것이고,
+     이 구간은 **서버에 저장된 신청**입니다 — 둘은 다릅니다. */
+  MyDbBand()+
   '<section class="sec sec-white"><div class="w">'+
     '<div class="my-set">'+
       '<div class="f-r"><label for="my-side">상황</label>'+

@@ -21,9 +21,13 @@
 
 -- ── 상태값 ───────────────────────────────────────────────────────────
 -- ⚠️ 차례가 js/data/deal.js 의 AM_DEAL_ST 와 같습니다 (§8).
+-- ⚠️⚠️ 2026-10-09 §8-3 로 **'hold'(보류)** 가 들어왔습니다 — 열두→열셋.
+--    이 파일을 고친 까닭은 **아직 어느 DB 에도 안 돌렸기** 때문입니다.
+--    ⚠️ 혹시 이미 돌리셨다면 `0006_hold_state.sql` 이 따라잡습니다
+--    (add value if not exists · on conflict do nothing 으로 두 번 돌아도 안전).
 create type deal_state as enum (
   'new', 'check', 'assigned', 'accepted', 'consult', 'quoted',
-  'nego', 'signed', 'done', 'lost', 'fee_wait', 'fee_done'
+  'nego', 'signed', 'done', 'lost', 'hold', 'fee_wait', 'fee_done'
 );
 
 -- ⚠️ js/data/deal.js 의 AM_ROLES

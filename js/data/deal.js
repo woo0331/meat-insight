@@ -58,11 +58,21 @@ window.AM_DEAL_ST = [
     who:["customer","provider","staff","admin"] },
   { key:"lost",     n:10, name:"취소 · 실패",        lead:"이 건은 진행되지 않았습니다.",
     who:["customer","provider","staff","admin"], end:true },
+  /* ⚠️⚠️ **보류는 끝이 아닙니다** (2026-10-09 최종 통합 지시서 §8-3 —
+     "취소 · 실패 · 보류 상태를 별도로 관리한다"). `lost` 에는 `end:true` 가
+     있고 여기에는 **없습니다** — 다시 돌아올 수 있어야 보류입니다.
+     보류를 취소로 써 버리면 "다음 달에 다시 연락주세요" 라고 하신 분의
+     건이 **실패로 집계됩니다** — 영업 숫자가 거짓말이 됩니다.
+     ⚠️⚠️ **계약 뒤로는 보류가 없습니다.** `signed` · `done` · 정산 쌍은
+     돈이 얽혀 있어서 멈추는 것이 아니라 **취소 · 환수**입니다 (§10-3).
+     길 표에 그 길을 적지 마세요. */
+  { key:"hold",     n:11, name:"보류",              lead:"잠시 멈춰 두었습니다. 다시 진행하실 수 있습니다.",
+    who:["customer","provider","staff","admin"] },
   /* ⚠️⚠️ 아래 둘은 **돈** 입니다. 고객 화면에 내지 않습니다 — 손님에게
      "정산" 은 우리와 업체 사이의 일이고, 보여 주면 자기 돈으로 읽힙니다. */
-  { key:"fee_wait", n:11, name:"정산 대기",         lead:"수수료가 확정되어 정산을 기다립니다.",
+  { key:"fee_wait", n:12, name:"정산 대기",         lead:"수수료가 확정되어 정산을 기다립니다.",
     who:["provider","admin"], money:true },
-  { key:"fee_done", n:12, name:"정산 완료",         lead:"입금이 확인되었습니다.",
+  { key:"fee_done", n:13, name:"정산 완료",         lead:"입금이 확인되었습니다.",
     who:["provider","admin"], money:true, end:true }
 ];
 
@@ -102,7 +112,26 @@ window.AM_DEAL_MOVE = [
   /* ⚠️⚠️ **실제 입금액이 적혀 있어야만** 됩니다 (§13 가짜 정산 금지) */
   ["fee_wait", "fee_done", ["admin"],                    ["paid"]],
   /* 환수 · 취소 (§9 "취소·환불·환수 조건") */
-  ["fee_wait", "lost",     ["admin"],                    ["why"]]
+  ["fee_wait", "lost",     ["admin"],                    ["why"]],
+
+  /* ══ 보류 (§8-3) ═══════════════════════════════════
+     ⚠️⚠️ **계약 전까지만** 보류할 수 있습니다 — `signed` 부터는 돈이
+     얽혀 있어서 멈추는 것이 아니라 취소 · 환수입니다 (§10-3).
+     ⚠️ 왼에 **사유를 받습니다**(`why`) — 왜 멈췄는지가 안 남으면
+     다음 사람이 그 건을 어떻게 다루어야 할지 모릅니다 (§8 기록).
+     ⚠️⚠️ **보류에서 돈 상태로 가는 길이 없습니다.** 나가는 길은 둘
+     — 다시 확인(`check`)하거나 접는 것(`lost`)입니다. */
+  ["new",      "hold",     ["staff","admin","customer"], ["why"]],
+  ["check",    "hold",     ["staff","admin","customer"], ["why"]],
+  ["assigned", "hold",     ["staff","admin","customer"], ["why"]],
+  ["accepted", "hold",     ["staff","admin","customer"], ["why"]],
+  ["consult",  "hold",     ["staff","admin","customer"], ["why"]],
+  ["quoted",   "hold",     ["staff","admin","customer"], ["why"]],
+  ["nego",     "hold",     ["staff","admin","customer"], ["why"]],
+  /* 다시 진행 — ⚠️ 멈췄던 자리가 아니라 **다시 확인부터** 입니다.
+     몇 달 전 조건으로 그대로 이어 붙이면 업체도 가격도 바뎀 수 있습니다. */
+  ["hold",     "check",    ["staff","admin"]],
+  ["hold",     "lost",     ["staff","admin","customer"], ["why"]]
 ];
 
 /* ── 읽기 ─────────────────────────────────────────────────── */

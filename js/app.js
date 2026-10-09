@@ -571,6 +571,12 @@ function render(){
   paintMeta(r);
   paintChrome();
   initReveal();
+  /* ⚠️⚠️ §11-1 — 마이페이지만 서버에 한 번 묻습니다.
+     로그인이 꺼져 있으면 `/api/me` 가 `auth:false` 를 돌려주고 구간은
+     숨은 채로 남습니다 — 화면이 깨지지도, 가짜 단추가 생기지도
+     않습니다. ⚠️ 다른 화면에서는 묻지 않습니다 — 한 번씩 더 가는
+     요청은 그만큼 느려집니다. */
+  if(nowPath() === "/my" && typeof window.myLoadDb === "function") window.myLoadDb();
   if(!RT.keepScroll) window.scrollTo(0,0);
   RT.keepScroll = false;
 }

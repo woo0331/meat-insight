@@ -2163,6 +2163,44 @@ checkColorSchemeCss();
 checkVercel();
 const W = loadApp();
 checkIndGroups(W);
+
+/* ⚠️⚠️ **창업 진단의 걸음 번호가 로드맵과 맞는가** (2026-10-09 PART 4)
+   `AM_START_STAGE` 의 `at` 은 **그 로드맵에서 몇 번째 걸음인가**(1부터)
+   입니다. 걸음이 늘거나 줄면 어긋나는데 **에러도 안 나고 화면도
+   멀쩡합니다** — 엉뚱한 걸음부터 "지금부터 할 일" 이라고 말할 뿐입니다.
+   그래서 빌드가 매번 두 로드맵에 그 걸음이 실제로 있는지 봅니다. */
+function checkStartAsk(W){
+  const S = W.AM_START_STAGE || [];
+  if(!S.length) throw new Error("js/data/journey.js 의 AM_START_STAGE 가 비었습니다");
+  const seen = {};
+  S.forEach(function(x){
+    if(!x.k || !x.n) throw new Error("창업 진단 단계에 key 나 이름이 없습니다");
+    if(seen[x.k]) throw new Error("창업 진단 단계 key 가 겹칩니다 — " + x.k);
+    seen[x.k] = 1;
+    ["startup", "acq-in"].forEach(function(rk){
+      const L = (W.AM_PROCESS || {})[rk] || [];
+      const at = (x.at || {})[rk];
+      if(!at) throw new Error("창업 진단 '" + x.n + "' 에 " + rk + " 걸음 번호가 없습니다");
+      if(!(at >= 1 && at <= L.length))
+        throw new Error("창업 진단 '" + x.n + "' 의 " + rk + " 걸음 번호가 " + at +
+          " 인데 그 로드맵은 " + L.length + "걸음입니다\n" +
+          "   → 로드맵을 고치셨으면 AM_START_STAGE 의 at 도 같이 고치세요");
+    });
+  });
+  ["AM_START_BUD", "AM_START_WHEN"].forEach(function(n){
+    const L = W[n] || [];
+    if(!L.length) throw new Error("js/data/journey.js 의 " + n + " 가 비었습니다");
+    L.forEach(function(x){
+      if(!x.k || !x.n) throw new Error(n + " 에 key 나 이름이 없습니다");
+      /* ⚠️ 금액 구간은 사장님이 **스스로 고르시는 범위**입니다 — 저희가
+         재 본 값처럼 "평균" · "보통" 이라고 적지 마세요 (절대 규칙 1). */
+      if(/평균|보통|대부분/.test(x.n))
+        throw new Error(n + " 에 재 본 적 없는 말이 있습니다 — " + x.n);
+    });
+  });
+  console.log("   창업 진단 단계 " + S.length + "개가 두 로드맵과 맞습니다");
+}
+checkStartAsk(W);
 checkProcess(W);
 checkSales(W);
 checkDeal(W);

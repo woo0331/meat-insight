@@ -401,6 +401,11 @@ window.quoteTo = function(o){
   if(o.industry) q.push("i="+encodeURIComponent(o.industry));
   if(o.region)   q.push("r="+encodeURIComponent(o.region));
   if(o.side)     q.push("side="+encodeURIComponent(o.side));
+  /* ⚠️ 2026-10-09 PART 4 — 창업 진단에서 고르신 예산 · 일정을 그대로
+     들고 갑니다. 받는 쪽(`/quote`)이 **실제로 읽어서 칸에 적습니다** —
+     안 읽으면 끊긴 것이고, 손님은 같은 것을 두 번 적게 됩니다. */
+  if(o.bud)      q.push("bud="+encodeURIComponent(o.bud));
+  if(o.when)     q.push("when="+encodeURIComponent(o.when));
   return "/quote" + (q.length ? "?" + q.join("&") : "");
 };
 

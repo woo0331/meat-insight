@@ -1700,13 +1700,16 @@ const AUDIT = `(() => {
       return "폐업이 주황이 아닙니다 rgb(" + cl.join(",") + ")";
     /* ⚠️ 주황과 빨강의 경계 — 초록 성분이 확 내려가면 빨강입니다. */
     if(cl[1] < 55) return "폐업이 빨강으로 넘어갔습니다 rgb(" + cl.join(",") + ")";
-    /* 카드 안 동그란 화살표 — 면으로 쓰는 색이라 같이 봅니다 */
-    const sb = col(".hpk-st .hpk-go em", "backgroundColor");
-    const cb = col(".hpk-cl .hpk-go em", "backgroundColor");
-    if(!sb || !cb) return "선택 카드 화살표 색을 못 읽습니다";
-    if(!(sb[2] > sb[0] + 30)) return "창업 화살표가 파랑이 아닙니다 rgb(" + sb.join(",") + ")";
-    if(!(cb[0] > cb[1] + 40)) return "폐업 화살표가 주황이 아닙니다 rgb(" + cb.join(",") + ")";
-    if(cb[1] < 45) return "폐업 화살표가 빨강으로 넘어갔습니다 rgb(" + cb.join(",") + ")";
+    /* 카드 안 단추 — 면으로 쓰는 색이라 같이 봅니다
+       ⚠️ 2026-10-09 시안으로 색 면이 **동그란 화살표에서 단추 전체**로
+       옮겨갔습니다. 보는 것은 그대로 "카드의 행동 면이 파랑/주황인가"
+       이고, 면이 커져서 더 세게 봅니다. */
+    const sb = col(".hpk-st .hpk-go", "backgroundColor");
+    const cb = col(".hpk-cl .hpk-go", "backgroundColor");
+    if(!sb || !cb) return "선택 카드 단추 색을 못 읽습니다";
+    if(!(sb[2] > sb[0] + 30)) return "창업 단추가 파랑이 아닙니다 rgb(" + sb.join(",") + ")";
+    if(!(cb[0] > cb[1] + 40)) return "폐업 단추가 주황이 아닙니다 rgb(" + cb.join(",") + ")";
+    if(cb[1] < 45) return "폐업 단추가 빨강으로 넘어갔습니다 rgb(" + cb.join(",") + ")";
     /* ⚠️⚠️ **마지막 CTA 의 두 단추도 같은 규칙입니다** (§12). 여기에
        포인트 레드를 쓰면 안 됩니다 — 폐업이 빨강이 되는 순간 "폐업은
        나쁜 것" 이라는 말이 됩니다. */
@@ -2004,6 +2007,52 @@ const AUDIT = `(() => {
     await new Promise(function(r){ setTimeout(r, 220); });
     if(location.search.indexOf("w=pass") < 0)
       return "넘길 생각이 있다고 했는데 " + location.search + " 로 갔습니다";
+    return true;`);
+
+  /* 2026-10-09 PART 4 — 창업 진단 넷이 **실제로 화면을 바꾸는가**
+     ⚠️⚠️ 이 저장소는 "받아 놓고 안 읽는 칸" 을 네 번 만들었습니다
+     (gu · amStore · withEquip · 푸터의 stages). 넷 다 눌러 보고
+     아래가 바뀌는지 봅니다 — 주석에 백틱을 쓰지 마세요. */
+  await f("창업 진단 넷이 받아만 놓는 칸이 아니다",
+          "/startup/cafe?r=gyeonggi&b=3to5&st=area&when=m3", `
+    const sels = ["r","b","st","when"].map(function(k){
+      return document.getElementById("sask-" + k); });
+    if(sels.some(function(e){ return !e; })) return "진단 고르개 넷이 다 있지 않습니다";
+    const got = sels.map(function(e){ return e.value; }).join("|");
+    if(got !== "gyeonggi|3to5|area|m3")
+      return "주소의 값이 고르개에 안 실렸습니다 — " + got;
+    /* 결과 칸이 나와야 합니다 */
+    const box = document.querySelector(".sask-r");
+    if(!box) return "고르셨는데 결과 칸이 없습니다";
+    /* ⚠️⚠️ 첫 걸음이 **데이터의 그 걸음**이어야 합니다. 번호를 손으로
+       적어 두면 로드맵이 바뀌는 날 엉뚱한 걸음부터 안내합니다. */
+    const stg = (window.AM_START_STAGE||[]).filter(function(x){ return x.k === "area"; })[0];
+    if(!stg) return "AM_START_STAGE 에 area 가 없습니다";
+    const want = (window.AM_PROCESS||{}).startup[stg.at.startup - 1];
+    const first = box.querySelector(".sask-r-t > b");
+    if(!first || first.textContent.trim() !== want.name)
+      return "첫 걸음이 어긋납니다 — 화면 " + (first ? first.textContent.trim() : "없음") +
+             " · 데이터 " + want.name;
+    /* 고르신 것이 견적 요청으로 **그대로 넘어가야** 합니다 */
+    const q = box.querySelector('a[href^="/quote"]');
+    if(!q) return "견적 요청 단추가 없습니다";
+    const h = q.getAttribute("href") || "";
+    for(const k of ["i=cafe", "r=gyeonggi", "bud=", "when="])
+      if(h.indexOf(k) < 0) return "견적 링크에 " + k + " 가 빠졌습니다 — " + h;
+    /* 받는 쪽이 실제로 읽는지 — 안 읽으면 끊긴 것입니다 */
+    await go(h);
+    await new Promise(function(r){ setTimeout(r, 200); });
+    const bud = document.getElementById("q-bud"), wh = document.getElementById("q-when");
+    if(!bud || !bud.value) return "견적 폼의 예산 칸이 비었습니다";
+    if(!wh || !wh.value) return "견적 폼의 일정 칸이 비었습니다";
+    await go("/startup/cafe?r=gyeonggi&b=3to5&st=area&when=m3");
+    await new Promise(function(r){ setTimeout(r, 200); });
+    /* ⚠️ 하지 않는 저장을 한다고 적지 않습니다 (절대 규칙 5) */
+    const t = document.querySelector(".sask").textContent;
+    if(t.indexOf("아무 데도 저장되지 않습니다") < 0)
+      return "저장하지 않는다는 줄이 없습니다";
+    if(/저장됩니다|기록됩니다|AI 가 분석/.test(t))
+      return "하지 않는 일을 한다고 적었습니다";
     return true;`);
 
   /* ⑭ 샴페인 골드는 **악센트로만** (§21)
@@ -3192,7 +3241,7 @@ const AUDIT = `(() => {
     for(const a of rs){
       const sl = (a.getAttribute("href")||"").replace("/content/","");
       const c = (window.AM_CONTENTS||[]).filter(function(x){ return x.slug === sl; })[0];
-      const em = a.querySelector(".mti-r-m em");
+      const em = a.querySelector(".mti-r-d");
       if(!c.at){ if(em) return sl + " 는 날짜가 없는데 화면에 찍혔습니다"; continue; }
       if(!em) return sl + " 의 날짜가 안 나옵니다";
       if(em.textContent.trim() !== window.amDate(c.at))

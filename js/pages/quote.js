@@ -83,6 +83,10 @@ function PageQuote(){
   var cat  = nowQS("c"), sub = nowQS("s");
   var ind  = nowQS("i"), reg = nowQS("r");
   var side = nowQS("side") || "start";
+  /* ⚠️ 창업 진단(PART 4)에서 고르신 예산 · 일정입니다. 자유 입력 칸이라
+     **고치실 수 있게** 미리 적어만 둡니다 — 못 고치게 잠그면 "3천 ~
+     5천만원" 밖의 사정을 적을 자리가 없어집니다. */
+  var bud  = nowQS("bud"), when = nowQS("when");
   var c    = cat ? amCat(cat) : null;
   var subName = "";
   if(c){
@@ -130,9 +134,11 @@ function PageQuote(){
       '</div>'+
       '<div class="f-2">'+
         '<div class="f-r"><label for="q-bud">예산</label>'+
-          '<input id="q-bud" placeholder="예: 5,000만원 / 아직 모름"></div>'+
+          '<input id="q-bud" value="'+esc(bud||"")+'" '+
+            'placeholder="예: 5,000만원 / 아직 모름"></div>'+
         '<div class="f-r"><label for="q-when">희망 일정</label>'+
-          '<input id="q-when" placeholder="예: 2027년 2월 오픈 / 이번 달 안"></div>'+
+          '<input id="q-when" value="'+esc(when||"")+'" '+
+            'placeholder="예: 2027년 2월 오픈 / 이번 달 안"></div>'+
       '</div>'+
 
       /* §6 — 서비스마다 다르게 묻습니다. ⚠️ 분류를 안 고르고 들어오면

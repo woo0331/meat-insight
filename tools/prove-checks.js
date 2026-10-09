@@ -40,6 +40,13 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* ══ 2026-10-09 지시서 PART 4 — 창업 진단 넷 ═══════════════════ */
+  /* ⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — DOM 을 직접 건드립니다.
+     견적 링크에서 예산 · 일정을 떼면 "받아만 놓는 칸" 이 됩니다. */
+  ["창업 진단 넷이 받아만 놓는 칸이 아니다",
+   `var a = document.querySelector(".sask-r a[href^='/quote']");
+    if(a) a.setAttribute("href", a.getAttribute("href")
+      .replace(/&bud=[^&]*/, "").replace(/&when=[^&]*/, ""));`],
   /* ══ 2026-10-08 수익형 플랫폼 지시서 §6 ═══════════════════════ */
   /* ⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — DOM 을 직접 건드립니다
      (그리는 함수를 바꾸면 아무 일이 안 납니다 · 열 번째로 겪은 자리). */
@@ -297,8 +304,12 @@ const CASES = [
   ["견적: 요청을 저장한다는 말과 실제가 같다",
    `document.querySelector("#q-f .note-mid").textContent =
       "보내고 나면 이 브라우저에 요청 내용이 남아, 아래에서 비교하실 수 있습니다.";`],
+  /* ⚠️ 되돌리기가 **없는 요소**를 집으면 터지고, 그러면 "검사가 안
+     잡는다" 가 아니라 **되돌리기가 틀린** 것입니다 (이 저장소에서
+     아홉 번째). 2026-10-09 시안으로 히어로 카드의 `.hpk-d` 가 체크
+     셋(`.hpk-ck`)으로 바뀌었습니다 — 집는 자리를 같이 옮깁니다. */
   ["지어낸 실적 숫자가 메인에 없다",
-   `document.querySelector(".hpk-d").textContent = "입점 업체 1,200곳";`],
+   `document.querySelector(".hpk-ck > i").textContent = "입점 업체 1,200곳";`],
   ["히어로가 창업 · 폐업 두 갈래를 같은 무게로 낸다",
    `document.querySelector("#view h1").textContent = "창업 플랫폼";`],
   /* ⚠️⚠️ 되돌리기는 **검사가 실제로 보는 것**을 망가뜨려야 합니다.

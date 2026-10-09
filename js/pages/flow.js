@@ -70,6 +70,8 @@ function PageStartupIndustry(ind){
      먼저 봅니다. 장비는 바로 아래에 그대로 둡니다 — 업종이 갈리는
      것을 보여 주는 자리라 지우지 않습니다 (§1 · §12). */
   StartWayBand(ind)+
+  /* 2026-10-09 PART 4 — 묻는 것 넷 (지역 · 예산 · 준비 단계 · 개업 시기) */
+  StartAskBand(ind)+
   /* ⚠️⚠️ **2026-10-08 지시서 §13 STEP 02 · §15** — 같은 업종이어도
      **새로 만드는 분과 있던 가게를 받는 분은 순서가 다릅니다.** 전에는
      창업 화면이 신규 기준 하나뿐이라, 인수를 보고 계신 분은 상권부터
@@ -144,6 +146,118 @@ function StartWayBand(ind){
         ' 매장 매물</a> · <a href="/tools/vs">신규 vs 인수 비교</a></p>'
       : '')+
   '</div></section>';
+}
+
+/* ── 조건 넷 — 지역 · 예산 · 준비 단계 · 개업 시기 (2026-10-09 PART 4)
+   ══════════════════════════════════════════════════════════════════
+   PART 4 가 창업 쪽에 여섯 가지를 물으라고 적었습니다. 업종(`/startup`)과
+   신규 · 인수(`?how=`)는 이미 있고, 여기가 **나머지 넷**입니다.
+
+   ⚠️⚠️ **아무것도 저장하지 않습니다.** 고르신 것은 주소에만 실립니다 —
+   화면에 그렇게 적혀 있습니다. 지우지 마세요 (절대 규칙 5).
+   ⚠️⚠️ **받아 놓고 안 읽는 칸이 아닙니다.** 넷 다 아래를 바꿉니다 —
+   준비 단계는 **로드맵을 지금 걸음부터** 다시 내고, 나머지 셋은 견적
+   요청 · 점포 보기에 그대로 실려 갑니다. `gu` · `withEquip` 이 적어
+   받아 놓고 몇 달 죽어 있던 자리입니다.
+   ⚠️ **비워 두신 칸을 추측하지 않습니다** — 안 고르시면 그 줄이 안
+   나가고, 넷 다 비우셔도 화면은 그대로 돕니다. */
+function startAskVals(){
+  return { r:nowQS("r") || "", b:nowQS("b") || "",
+           st:nowQS("st") || "", when:nowQS("when") || "" };
+}
+window.startAskGo = function(base){
+  var v = {};
+  ["r","b","st","when"].forEach(function(k){
+    var e = document.getElementById("sask-" + k);
+    v[k] = e ? e.value : "";
+  });
+  var q = [];
+  /* ⚠️ 기본값(새로 창업)은 주소를 깨끗하게 둡니다 — 같은 내용이 두
+     주소로 나가면 구글이 둘 다 무시합니다. 고르신 것만 싣습니다. */
+  if(startWay() === "take") q.push("how=take");
+  ["r","b","st","when"].forEach(function(k){
+    if(v[k]) q.push(k + "=" + encodeURIComponent(v[k]));
+  });
+  go(base + (q.length ? "?" + q.join("&") : ""));
+};
+function startAskSel(id, list, cur, first){
+  var L = (window[list] || []);
+  return '<select class="sel" id="sask-'+esc(id)+'">'+
+    '<option value="">'+esc(first)+'</option>'+
+    L.map(function(x){
+      return '<option value="'+esc(x.k)+'"'+(x.k === cur ? " selected" : "")+'>'+
+        esc(x.n)+'</option>'; }).join("")+'</select>';
+}
+function StartAskBand(ind){
+  var v = startAskVals(), base = "/startup/" + ind.key;
+  return '<section class="sec sec-gray sask"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">조건을 좁히면</p>'+
+      '<h2>지금 상황을 알려 주시면 순서를 맞춰 드립니다</h2>'+
+      '<p>모르시는 것은 비워 두셔도 됩니다 — 비운 칸을 저희가 '+
+        '추측하지 않습니다.</p>'+
+    '</div>'+
+    '<div class="sask-g">'+
+      '<div class="f-r"><label for="sask-r">희망 지역</label>'+
+        RegionSelect("sask-r", v.r, "", "지역 전체")+'</div>'+
+      /* ⚠️ 딱지를 길게 적지 마세요 — `<select>` 안은 낱말 잘림 검사에도
+         가로 스크롤 검사에도 안 걸립니다 (이 저장소에서 세 번 겪었습니다). */
+      '<div class="f-r"><label for="sask-b">예산</label>'+
+        startAskSel("b", "AM_START_BUD", v.b, "예산 전체")+'</div>'+
+      '<div class="f-r"><label for="sask-st">준비 단계</label>'+
+        startAskSel("st", "AM_START_STAGE", v.st, "단계 전체")+'</div>'+
+      '<div class="f-r"><label for="sask-when">개업 시기</label>'+
+        startAskSel("when", "AM_START_WHEN", v.when, "시기 전체")+'</div>'+
+    '</div>'+
+    '<p class="row-cta"><button type="button" class="btn btn-b btn-lg" '+
+      'onclick="startAskGo(\'' + esc(base) + '\')">이 조건으로 보기'+
+      icon("arrow",18)+'</button></p>'+
+    /* ⚠️ 하지 않는 저장을 한다고 적지 않습니다 (절대 규칙 5) */
+    '<p class="sec-note">'+icon("lock",15)+
+      ' 고르신 것은 <b>아무 데도 저장되지 않습니다.</b> 주소에만 실려 '+
+      '아래 순서를 맞추고 견적 요청에 그대로 넘어갑니다.</p>'+
+    StartAskResult(ind, v)+
+  '</div></section>';
+}
+/* 고르신 것으로 **실제로 달라지는 것**을 그 자리에서 보여 줍니다 */
+function StartAskResult(ind, v){
+  var key  = (startWay() === "take") ? "acq-in" : "startup";
+  var L    = amProcess(key);
+  var stg  = window.amStartPick ? amStartPick("AM_START_STAGE", v.st) : null;
+  var bud  = window.amStartPick ? amStartPick("AM_START_BUD", v.b) : null;
+  var when = window.amStartPick ? amStartPick("AM_START_WHEN", v.when) : null;
+  var rn   = v.r ? amRegionName(v.r) : "";
+  if(!stg && !bud && !when && !rn) return "";
+  /* ⚠️ `at` 은 1부터입니다. 걸음이 줄면 빌드가 멈춥니다 (checkStartAsk) */
+  var at   = stg ? Math.max(0, (stg.at[key] || 1) - 1) : 0;
+  var next = L.slice(at, at + 3);
+  var q    = { industry:ind.key, side:"start" };
+  if(v.r) q.region = v.r;
+  if(bud) q.bud = bud.n;
+  if(when) q.when = when.n;
+  return '<div class="sask-r">'+
+    '<p class="sask-r-k">'+icon("check",16)+
+      esc([rn, (bud ? bud.n : ""), (stg ? stg.n : ""), (when ? when.n : "")]
+          .filter(Boolean).join(" · "))+'</p>'+
+    (next.length
+      ? '<h3 class="sask-r-h">'+(stg ? "지금부터 할 일" : "제일 먼저 할 일")+'</h3>'+
+        '<ol class="sask-r-l">'+next.map(function(st2, i){
+          return '<li><span class="sask-r-n">'+("0"+(at + i + 1)).slice(-2)+'</span>'+
+            '<span class="sask-r-t"><b>'+esc(st2.name)+'</b>'+
+              '<i>'+esc(st2.lead)+'</i>'+
+              '<span class="sask-r-ls">'+StepLinks(st2, ind.key)+'</span></span></li>';
+        }).join("")+'</ol>'
+      : '')+
+    '<p class="row-cta">'+
+      '<a class="btn btn-b" href="'+esc(quoteTo(q))+'">이 조건으로 견적 요청'+
+        icon("arrow",18)+'</a>'+
+      (v.r
+        ? '<a class="btn btn-o" href="/stores?i='+encodeURIComponent(ind.key)+
+          '&r='+encodeURIComponent(v.r)+'">'+esc(rn)+' '+esc(ind.name)+' 점포</a>'
+        : '')+
+      (bud ? '<a class="btn btn-o" href="/tools/cost">창업비 직접 재 보기</a>' : '')+
+    '</p>'+
+  '</div>';
 }
 
 /* 업종 전용 장비 (§12) */

@@ -169,23 +169,24 @@ window.WOW_PHOTO_SLOTS = [
      읽히는지 보세요. 0장이면 분류 아이콘이 그 자리를 지킵니다. */
   /* ⚠️ 2026-10-08 §8 — 메인 서비스 여덟이 바뀌면서 두 자리가
      늘었습니다. 자리를 늘리는 것은 **여기 한 곳**입니다. */
-  /* ⚠️⚠️ **2026-10-09 지시서 PART 2 4-3 — 자리 이름이 분류에서 상품으로
-     바뀌었습니다.** 메인 03 구간이 `catalog.js` 의 분류 여덟이 아니라
-     `offers.js` 의 **상품 여덟**을 내기 때문입니다. 키는
-     `svc-<상품 id>` 이고 `js/pages/home.js` 의 `MAIN_OFFER8` 과 같은
-     차례입니다 — 한 글자 틀리면 그 사진만 **조용히 안 나옵니다**
-     (빌드의 checkPhotos 가 막습니다).
+  /* ⚠️⚠️ **자리 이름은 분류 key 입니다** — `svc-<분류 key>` 이고
+     `js/pages/home.js` 의 `MAIN_SVC8` 과 같은 차례입니다. 한 글자
+     틀리면 그 사진만 **조용히 안 나옵니다** (빌드의 checkPhotos 가
+     막습니다).
+     ⚠️ 한 번 상품 id 로 바꿨다가 시안을 받고 되돌렸습니다 — 메인 03 은
+     상품이 아니라 **서비스 분류 여덟**입니다 (지시서 PART 5 가 "상품은
+     서비스 카테고리와 다르다" 고 적었습니다).
      ⚠️ 업종이 드러나는 사진은 안 됩니다 — 여기 들어가는 것은 업종이
      아니라 **서비스**입니다 (주방설비 사진이 고깃집으로 읽히면 미용실
      사장님에게 "여긴 내 자리가 아니네" 가 됩니다). */
-  { key:"svc-store-internet",   where:"상품 · 매장 인터넷",        min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"공유기 · 랜 시공. ⚠️ 통신사 로고가 보이면 안 됩니다" },
-  { key:"svc-pos-card",         where:"상품 · POS · 카드단말기",   min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"POS 화면 · 단말기. ⚠️ 상호 · 브랜드가 보이면 안 됩니다" },
-  { key:"svc-cctv-security",    where:"상품 · CCTV · 보안",        min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"카메라 설치. ⚠️ 알아볼 수 있는 얼굴은 동의가 따로 필요합니다" },
-  { key:"svc-water-ice-rental", where:"상품 · 정수기 · 제빙기",     min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"업소용 정수기 · 제빙기" },
-  { key:"svc-kiosk-order",      where:"상품 · 키오스크",           min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"키오스크 · 테이블오더 화면" },
-  { key:"svc-interior-sign",    where:"상품 · 인테리어 · 간판",     min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"시공 중인 상업공간" },
-  { key:"svc-demolish-restore", where:"상품 · 철거 · 원상복구",     min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"철거 · 원상복구 현장" },
-  { key:"svc-kitchen-equip",    where:"상품 · 주방 · 업소용 장비",  min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"업소용 장비. ⚠️ 한 업종으로 읽히지 않게" }
+  { key:"svc-store",     where:"서비스 · 상가 · 점포",     min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"빈 상가 · 상권 거리. ⚠️ 상호 · 간판이 읽히면 안 됩니다" },
+  { key:"svc-interior",  where:"서비스 · 인테리어 · 시공",  min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"시공 중인 상업공간 · 도면" },
+  { key:"svc-equip",     where:"서비스 · 시설 · 장비",     min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"업소용 장비. ⚠️ 한 업종으로 읽히지 않게" },
+  { key:"svc-it",        where:"서비스 · IT · 매장시스템",  min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"POS · 키오스크 · CCTV. ⚠️ 브랜드가 보이면 안 됩니다" },
+  { key:"svc-admin",     where:"서비스 · 행정 · 전문가",    min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"서류 · 상담 책상. ⚠️ 실제 서류 글자가 읽히면 안 됩니다" },
+  { key:"svc-marketing", where:"서비스 · 마케팅 · 디자인",  min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"디자인 작업 · 촬영" },
+  { key:"svc-demolish",  where:"서비스 · 철거",            min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"철거 · 원상복구 현장" },
+  { key:"svc-clean",     where:"서비스 · 청소 · 방역",      min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"청소 · 방역 장비" }
 ];
 
 

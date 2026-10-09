@@ -119,11 +119,11 @@ function MainHeroPhotos(){
 var MAIN_PICK = [
   { cls:"st", photo:"side-start", to:"/startup", ic:"seed",
     badge:"새로운 시작", t1:"창업", t2:"준비하고 있어요",
-    lead:"업종에 맞는 준비 순서부터 필요한 업체와 정보까지 한 번에 찾아보세요.",
+    checks:["업종별 맞춤 준비순서", "필요한 업체와 정보", "실제 사례와 가이드"],
     cta:"창업 시작하기" },
   { cls:"cl", photo:"side-close", to:"/closure", ic:"box",
     badge:"마무리와 새로운 연결", t1:"폐업 · 정리", t2:"준비하고 있어요",
-    lead:"넘길 수 있는 것부터, 폐업 절차와 철거 · 원상복구까지 필요한 순서대로 안내합니다.",
+    checks:["매장 양도 · 시설 정리", "폐업 절차와 세무 정리", "철거 · 원상복구까지"],
     cta:"폐업 · 정리 시작하기" }
 ];
 /* ⚠️⚠️ **카드 전체가 눌립니다** (지시서 §6). 그래서 안에 또 `<a>` 를
@@ -139,9 +139,13 @@ function MainPickCard(o){
          걸립니다 (이 저장소에서 네 번 만든 버그). */
       '<b class="hpk-h"><i class="hpk-h1">'+esc(o.t1)+'</i>'+
         '<i class="hpk-h2">'+esc(o.t2)+'</i></b>'+
-      '<i class="hpk-d">'+esc(o.lead)+'</i>'+
-      '<span class="hpk-go"><em aria-hidden="true">'+icon("arrow",18)+'</em>'+
-        esc(o.cta)+'</span>'+
+      /* ⚠️ 체크 셋은 **그 화면이 실제로 하는 일**입니다 (시안).
+         지어낸 성과 · 숫자가 아니라 /startup · /closure 가 지금 내고
+         있는 것이라, 하나씩 눌러서 맞는지 확인했습니다. */
+      '<span class="hpk-ck">'+(o.checks||[]).map(function(c){
+        return '<i>'+icon("check",15)+esc(c)+'</i>'; }).join("")+'</span>'+
+      '<span class="hpk-go">'+esc(o.cta)+
+        '<em aria-hidden="true">'+icon("arrow",17)+'</em></span>'+
     '</span>'+
     /* ⚠️⚠️ **사진이 없으면 액자째 안 그립니다** (절대 규칙 2). 옅은
        틴트 상자를 깔아 두면 카드 둘이 "준비 중" 으로 읽힙니다 —
@@ -157,8 +161,14 @@ function MainHero(){
     MainHeroPhotos()+
     '<div class="mh-in"><div class="w">'+
       /* ⚠️ 화면마다 h1 은 **딱 하나**입니다. 아래 구간들은 전부 h2 입니다. */
-      '<h1 class="mh-h1">사장님의 <em class="mh-pt">시작과 마지막</em>을'+
-        '<br class="br-m"> 연결합니다.</h1>'+
+      /* ⚠️ 머리말은 **약속이 아니라 이 플랫폼이 하는 일**입니다 —
+         숫자도 성과도 들어 있지 않습니다 (절대 규칙 1). */
+      '<p class="mh-k">당신의 오늘이, 누군가의 내일이 됩니다</p>'+
+      /* ⚠️⚠️ 시작은 **블루**, 마지막은 **오렌지**입니다 (지시서 §24).
+         두 낱말의 크기 · 굵기가 같아야 합니다 — 한쪽을 작게 하면
+         그게 "덜 중요한 것" 이라는 말이 됩니다. */
+      '<h1 class="mh-h1">사장님의 <em class="mh-pt">시작</em>과'+
+        '<br class="br-m"> <em class="mh-pt2">마지막</em>을 연결합니다.</h1>'+
       /* ⚠️ `<br class="br-m">` 뒤에는 **띄어쓰기를 하나** 둡니다 —
          좁아지면 이 줄바꿈이 사라지는데, 없으면 앞뒤 낱말이 붙습니다. */
       '<p class="mh-lead">창업을 준비하는 순간부터, 사업을 정리하고'+
@@ -799,70 +809,58 @@ function MainFeature(){
    로드맵에 그대로 있습니다.
    ⚠️ 없는 분류 key 를 적으면 그 카드가 **조용히 빠집니다** (에러도
    안 나고 화면도 멀쩡합니다). */
-/* ⚠️⚠️ **2026-10-09 지시서 PART 2 4-3 — 여기는 분류가 아니라 상품입니다.**
-   전에는 `catalog.js` 의 **분류 여덟**(상가 · 인테리어 · 장비 · POS ·
-   행정 · 마케팅 · 철거 · 청소)을 냈습니다. 지시서가 적은 여덟은
-   **실제 신청 가능한 대표 서비스**입니다 —
+/* ⚠️⚠️ **여기는 상품이 아니라 서비스 분류 여덟입니다** (2026-10-09 시안).
 
-     매장 인터넷 · POS·카드단말기 · CCTV·보안 · 정수기·제빙기 렌탈 ·
-     키오스크·테이블오더 · 인테리어·간판 · 철거·원상복구 · 주방장비
+   2026-10-09 지시서 PART 5 가 직접 **"상품은 서비스 카테고리와 다르다"**
+   고 적었습니다 — 상품(`js/data/offers.js` 열 가지)은 **돈을 버는
+   단위**이고, 손님이 메인에서 고르는 것은 **"내가 지금 필요한 일이
+   무엇인가"** 입니다. 시안의 여덟 장이 그래서 전부 분류입니다.
 
-   그 여덟이 `js/data/offers.js` 에 **이미 그대로** 있었는데 메인에
-   한 번도 안 나오고 있었습니다 (3차에서 만들어 두고 화면에 안
-   붙였습니다 — 이 저장소의 "만들어 놓고 안 쓰는 칸" 입니다).
+   ⚠️ 한 번 상품 여덟으로 바꿨다가 시안을 받고 되돌렸습니다. 상품은
+   지워지지 않았습니다 — `offers.js` 그대로이고 `/admin` 8번 칸이
+   무엇이 남았는지 셉니다. 공개 화면에 "신청 가능" 으로 내는 것은
+   제휴사가 생긴 뒤입니다 (0곳인데 `live` 면 빌드가 멈춥니다).
 
-   ⚠️⚠️ **"신청 가능" 처럼 표시하지 않습니다** (PART 2 4-3 · PART 5 9).
-   제휴사가 0곳이라 열 상품 전부 `status:"info"` 이고, 카드는 **그
-   분야의 진짜 화면**으로 보냅니다. 업체를 등록하셔야 `live` 가 될 수
-   있고, 0곳인데 켜면 **빌드가 멈춥니다** (checkOffers).
-
-   ⚠️ 아이콘은 `offers.js` 의 `icon` 한 줄입니다 — 여덟이 저마다 달라야
-   합니다 (`cat` 아이콘을 쓰면 넷이 전부 POS 그림이 됩니다). */
-var MAIN_OFFER8 = ["store-internet","pos-card","cctv-security","water-ice-rental",
-                   "kiosk-order","interior-sign","demolish-restore","kitchen-equip"];
+   ⚠️⚠️ **이름 · 아이콘 · 주소 · 색을 여기 적지 마세요.** 전부
+   `catalog.js` 에서 옵니다 — 여기 적는 것은 **어느 분류를 앞에 낼지**
+   그 여덟 줄뿐입니다 (랜딩 미니카드를 손으로 적었다가 화면마다
+   아이콘이 달라졌던 자리입니다).
+   ⚠️ 없는 분류 key 를 적으면 그 카드가 **조용히 빠집니다** — 에러도
+   안 나고 화면도 멀쩡합니다. `check.js` 가 여덟인지 셉니다. */
+var MAIN_SVC8 = ["store", "interior", "equip", "it",
+                 "admin", "marketing", "demolish", "clean"];
 function MainServices(){
-  var by = {}; (window.AM_OFFERS||[]).forEach(function(o){ by[o.id] = o; });
-  var items = MAIN_OFFER8.map(function(id){
-    var o = by[id];
-    if(!o) return null;
-    /* ⚠️ 사진 자리는 상품 id 로 둡니다. 없으면 아이콘이 자리를
-       지킵니다 — 빈 액자를 깔지 않습니다 (절대 규칙 2). */
-    return { o:o, ph:"svc-" + id };
-  }).filter(Boolean);
+  var items = MAIN_SVC8.map(function(k){ return amCat(k); }).filter(Boolean);
   if(!items.length) return "";
   return '<section class="sec sec-gray msvc"><div class="w">'+
     '<div class="sec-hd sec-hd-row"><div>'+
       /* ⚠️⚠️ **"많이 찾는 · 인기 · 추천 · BEST · TOP" 을 쓰지 마세요**
          (2026-10-06 마무리 지시서 §2 · §3). 검색량 · 클릭 · 저장 ·
          견적 요청을 **하나도 모으지 않습니다** — 재 본 적 없는 것을
-         적으면 표시·광고의 공정화에 관한 법률 제3조입니다.
-         ⚠️ "가장 많이 쓰이는" 도 같은 말이라 같이 물렀습니다.
-         ⚠️⚠️ 이용 데이터가 쌓이면 **이 구간을 고치지 말고 따로
-         만드세요** (§3) — 조회 · 클릭 · 저장 · 견적 요청 수를 세는
-         "많이 찾는 서비스" 는 별도 구간입니다. */
-      /* 2026-10-08 지시서 §8 의 제목 · 설명 그대로입니다.
+         적으면 표시 · 광고의 공정화에 관한 법률 제3조입니다.
          ⚠️⚠️ 시안 그림에는 "183개 서비스와 **검증된 업체**" 라고 적혀
-         있는데, **검증 기능이 없습니다** — 적는 순간 표시 · 광고의
-         공정화에 관한 법률 제3조입니다. 지시서 본문의 문장을 씁니다. */
+         있는데 **검증 기능이 없습니다.** 지시서 본문의 문장을 씁니다. */
       '<h2>사장님에게 필요한<br class="br-m"> 모든 서비스를 한 곳에서</h2>'+
       '<p>창업, 운영, 인수 · 양도, 폐업까지. 필요한 서비스와 정보를 '+
         esc(amBrand())+'에서 확인하세요.</p></div>'+
-      /* ⚠️ 숫자는 **세는 값**입니다 (§4 — "숫자를 임의 하드코딩하지
-         않는다"). 분류를 늘리면 저절로 따라옵니다. */
-      '<a class="sec-hd-all" href="/providers">'+
-        ((window.AM_CATS||[]).reduce(function(n,c){
-          return n + ((c.items||[]).length); }, 0) || "")+
-        '개 전체 서비스 보기'+icon("arrow",16)+'</a>'+
+      '<a class="btn btn-o sec-hd-all" href="/providers">'+
+        '전체 서비스 보기'+icon("arrow",16)+'</a>'+
     '</div>'+
-    '<ul class="msvc-g">'+items.map(function(x){
-      var ph = hasPhoto(x.ph);
-      var cat = (window.amCat ? window.amCat(x.o.cat) : null);
-      /* ⚠️ 색은 그 상품이 속한 **분류의 `tone`** 입니다 (catalog.js 한 곳) —
-         여기에 손으로 적지 마세요. 사진이 들어오면 사진이 덮습니다. */
-      return '<li class="tn-'+esc((cat && cat.tone) || "t7")+'"><a href="'+esc(x.o.to)+'">'+
+    '<ul class="msvc-g">'+items.map(function(c){
+      var ph = hasPhoto("svc-" + c.key);
+      /* ⚠️ 작은 줄은 **그 분류가 실제로 들고 있는 하위 서비스**에서
+         셋을 가져옵니다 (시안의 "상가 분석, 임대, 중개" 자리). 손으로
+         적으면 하위가 늘 때 어긋납니다.
+         ⚠️⚠️ **하위가 업종에서 오는 분류**(시설 · 장비)는 여기서 셀
+         것이 0 이라 이름만 덩그러니 남습니다 — 그때는 데이터에
+         처음부터 있던 `lead` 를 냅니다 (절대 규칙 2 · 메인 분야
+         격자에서 겪은 자리). */
+      var subs = (c.items || []).slice(0, 3).map(function(i){ return i.name; });
+      var sub  = subs.length ? subs.join(", ") : (c.lead || "");
+      return '<li class="tn-'+esc(c.tone || "t7")+'"><a href="'+esc(catTo(c))+'">'+
         '<span class="msvc-ph'+(ph ? "" : " msvc-ph-n")+'">'+
-          (ph ? photoBox(x.ph,"",true) : icon(x.o.icon,44))+'</span>'+
-        '<b>'+esc(x.o.name)+'</b><i>'+esc(x.o.lead)+'</i></a></li>'; }).join("")+'</ul>'+
+          (ph ? photoBox("svc-" + c.key,"",true) : icon(c.icon,44))+'</span>'+
+        '<b>'+esc(c.name)+'</b><i>'+esc(sub)+'</i></a></li>'; }).join("")+'</ul>'+
   '</div></section>';
 }
 
@@ -986,7 +984,11 @@ function MainContent(){
       /* 글이 실제로 다루는 것 — 구간 제목 셋입니다 (지어내지 않습니다) */
       var keys = (c.body || []).map(function(b){ return b.h; })
                    .filter(Boolean).slice(0, 3);
-      return '<li><a href="/content/'+esc(c.slug)+'">'+
+      /* ⚠️ 딱지 색은 그 글이 **어느 쪽 글인가**입니다 (창업 블루 ·
+         폐업 오렌지 · 양쪽은 중립). 글마다 `side` 가 데이터에 있어서
+         여기 적을 것이 없습니다. */
+      var sd = (c.side === "start" || c.side === "close") ? c.side : "both";
+      return '<li class="mti-r-'+sd+'"><a href="/content/'+esc(c.slug)+'">'+
         '<span class="info-c-m">'+
           /* ⚠️ `amCatName()` 은 없는 함수입니다 — 분류는 `amCat()` 으로
              찾고 이름을 꺼냅니다. 없는 분류면 빈 칸입니다. */
@@ -1270,8 +1272,10 @@ var MAIN_FLOW_ST = [
 function MainBridge(){
   var cls = MAIN_FLOW_CL.map(function(k){ return amCat(k); }).filter(Boolean);
   return '<section class="sec sec-white mbr"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
-      '<p class="eyebrow">START &amp; CLOSE</p>'+
+    '<div class="sec-hd mbr-hd">'+
+      /* ⚠️ 머리말을 영문에서 우리말로 바꿨습니다 (시안). 손님에게
+         먼저 보이는 글은 우리말 하나입니다. */
+      '<p class="eyebrow">'+esc(amBrand())+'가 만드는 새로운 연결</p>'+
       '<h2>한 사장님의 끝이<br class="br-m"> 다른 사장님의 시작이 됩니다.</h2>'+
       /* ⚠️ `<br class="br-m">` 뒤에 띄어쓰기를 하나 둡니다 — 좁아지면
          이 줄바꿈이 사라지는데, 없으면 앞뒤 낱말이 그대로 붙습니다. */
@@ -1490,20 +1494,25 @@ function mainCalcIn(){
   if(!L.length) return "";
   return '<div class="mti-c mti-calc">'+
     '<div class="mti-hd">'+
-      '<p class="eyebrow">CALCULATOR</p>'+
-      '<h2>사장님을 위한<br class="br-m"> 계산도구</h2>'+
+      '<div class="mti-top">'+
+        '<h2><span class="mti-n" aria-hidden="true">04</span>사장님을 위한 계산도구</h2>'+
+        '<a class="btn btn-o mti-all" href="/tools">계산도구 전체보기'+
+          icon("arrow",16)+'</a>'+
+      '</div>'+
       '<p>창업과 폐업에 필요한 다양한 비용을 간편하게 계산해보세요. '+
         '적으신 숫자는 이 브라우저에만 남습니다.</p>'+
-      '<a class="btn btn-o" href="/tools">계산도구 더보기'+icon("arrow",16)+'</a>'+
     '</div>'+
     /* ⚠️ 아이콘은 `tools.js` 의 `icon` 한 줄입니다. 여기에 key → 아이콘
        표를 따로 두었다가 도구가 늘자 **일곱이 전부 같은 그림**으로
        나온 적이 있습니다 — 손으로 적지 마세요. */
     '<ul class="mti-g">'+L.map(function(t){
       var tone = MAIN_TOOL_TONE[t.grp] || "bl";
+      /* ⚠️ 작은 줄은 `tools.js` 의 **`out`**(그 계산기가 내놓는 것)
+         입니다 — 손으로 적지 마세요. 도구를 고치면 같이 따라옵니다. */
       return '<li class="hv-'+tone+'"><a href="/tools/'+esc(t.key)+'">'+
         '<span class="ic-t">'+icon(t.icon,26)+'</span>'+
-        '<b>'+esc(t.name)+'</b></a></li>'; }).join("")+'</ul>'+
+        '<b>'+esc(t.name)+'</b>'+
+        (t.out ? '<i>'+esc(t.out)+'</i>' : '')+'</a></li>'; }).join("")+'</ul>'+
   '</div>';
 }
 function mainReadIn(){
@@ -1540,26 +1549,39 @@ function mainReadIn(){
   });
   return '<div class="mti-c mti-read">'+
     '<div class="mti-hd">'+
-      '<p class="eyebrow">GUIDE</p>'+
-      '<h2>사장님을 위한<br class="br-m"> 최신 정보</h2>'+
+      '<div class="mti-top">'+
+        '<h2><span class="mti-n" aria-hidden="true">05</span>사장님을 위한 최신 정보</h2>'+
+        '<a class="btn btn-o mti-all" href="/content">정보센터 더보기'+
+          icon("arrow",16)+'</a>'+
+      '</div>'+
       '<p>창업, 운영, 폐업에 꼭 필요한 정보와 가이드를 확인해보세요. '+
         '지금 '+all.length+'편이고 근거를 댈 수 있는 것만 적습니다.</p>'+
-      '<a class="btn btn-o" href="/content">정보센터 더보기'+icon("arrow",16)+'</a>'+
     '</div>'+
     /* ⚠️ 시안의 글 카드에는 썸네일이 있는데 **글마다 사진 자리를
        만들지 않았습니다** — 쓸 수 있는 사진이 없고, 아무 사진이나
        깔면 업종이 드러나 다른 업종 사장님께 "여긴 내 자리가 아니네"
        가 됩니다. 빈 액자도 깔지 않습니다 (절대 규칙 2). */
     '<ul class="mti-rg">'+L.map(function(c){
-      return '<li><a href="/content/'+esc(c.slug)+'">'+
+      /* ⚠️ 딱지 색은 그 글이 **어느 쪽 글인가**입니다 (창업 블루 ·
+         폐업 오렌지 · 양쪽은 중립). 글마다 `side` 가 데이터에 있어서
+         여기 적을 것이 없습니다. */
+      var sd = (c.side === "start" || c.side === "close") ? c.side : "both";
+      return '<li class="mti-r-'+sd+'"><a href="/content/'+esc(c.slug)+'">'+
         /* ⚠️⚠️ **날짜는 지어낸 값이 아니라 `content.js` 의 `at`
            입니다** — 글을 올린 날입니다. 시안의 "2024. 12. 10" 은
            디자인 예시이고, 없는 날짜를 찍으면 그게 거짓입니다
            (지시서 §23). 값이 없는 글은 **날짜 칸째 뺍니다**
            (자리표시자를 찍지 않습니다 — 절대 규칙 2). */
-        '<span class="mti-r-m">'+esc((amCat(c.cat) || {}).name || "")+
-          (c.at ? '<em>'+esc(amDate(c.at))+'</em>' : '')+'</span>'+
-        '<b>'+esc(c.title)+'</b></a></li>'; }).join("")+'</ul>'+
+        /* 분류 딱지 → 제목 → 날짜 (시안) */
+        '<span class="mti-r-m">'+esc((amCat(c.cat) || {}).name || "")+'</span>'+
+        '<b>'+esc(c.title)+'</b>'+
+        /* ⚠️⚠️ **날짜는 `content.js` 의 `at`** 입니다 — 시안의
+           "2024. 12. 10" 은 디자인 예시이고 없는 날짜를 찍으면 그게
+           거짓입니다. 값이 없는 글은 **칸째 뺍니다** (절대 규칙 2).
+           ⚠️ "n일 전" 같은 상대 표기를 쓰지 마세요 — 캐시된 화면에서
+           틀린 날부터 거짓말이 됩니다. */
+        (c.at ? '<em class="mti-r-d">'+esc(amDate(c.at))+'</em>' : '')+
+        '</a></li>'; }).join("")+'</ul>'+
   '</div>';
 }
 function MainToolsInfo(){
@@ -1659,8 +1681,12 @@ function mainSampleCard(){
    ⚠️ 어두운 카드(`.mjn-c`)는 이 저장소에서 **어두운 배경을 쓸 수 있는
    한 자리**입니다 (BRIGHT PREMIUM). 다른 구간에 쓰지 마세요. */
 function MainJoin(){
-  var cats = (window.AM_CATS||[]).filter(function(c){ return c.kind === "provider"; });
-  var why  = (window.AM_JOIN_WHY || []).slice(0, 3);
+  /* ⚠️⚠️ 혜택 셋을 **차례로 자르지 않습니다.** 약속 넷 가운데 어느
+     셋을 낼지는 `join.js` 의 `main` 번호가 정합니다 — 여기서 인덱스로
+     집으면 약속을 한 줄 더 쓰는 날 조용히 다른 것이 나옵니다. */
+  var why  = (window.AM_JOIN_WHY || []).filter(function(x){ return x.main; })
+                .sort(function(a, b){ return a.main - b.main; });
+  if(!why.length) why = (window.AM_JOIN_WHY || []).slice(0, 3);
   return '<section class="sec mjn"><div class="w">'+
     '<div class="mjn-c">'+
       '<div class="mjn-t">'+
@@ -1670,13 +1696,18 @@ function MainJoin(){
         '<h2>'+esc(amBrand())+' 파트너가 되어주세요.</h2>'+
         '<p>창업과 폐업을 준비하는 사장님들에게 전문 서비스를 소개할 '+
           '파트너 업체를 모집합니다.</p>'+
-        (cats.length ? '<ul class="mjn-l">'+cats.slice(0,10).map(function(c){
-          return '<li>'+icon(c.icon,18)+esc(c.name)+'</li>'; }).join("")+'</ul>' : '')+
+        /* ⚠️ 입점 분야 칩 줄은 뺐습니다 (시안). 분야는 `/join` 이
+           **세는 값과 함께** 내고 있고, 어두운 카드에 스물다섯을
+           깔면 혜택 셋이 묻힙니다. 줄만 뺀 것이고 `/join` 의 분야
+           구간은 그대로입니다. */
       '</div>'+
       (why.length ? '<ul class="mjn-why">'+why.map(function(x){
         return '<li><span class="mjn-why-i">'+icon(x.icon,22)+'</span>'+
-          '<b>'+esc(x.t)+'</b></li>'; }).join("")+'</ul>' : '')+
-      '<p class="mjn-go"><a class="btn btn-w" href="/join">'+
+          '<span class="mjn-why-t"><b>'+esc(x.t)+'</b>'+
+          (x.s ? '<i>'+esc(x.s)+'</i>' : '')+'</span></li>'; }).join("")+'</ul>' : '')+
+      /* ⚠️ 단추는 **파랑**입니다 (시안). 짙은 남색 위에 흰 글자라
+         대비를 재서 AA 를 넘기는지 확인했습니다. */
+      '<p class="mjn-go"><a class="btn btn-b btn-lg" href="/join">'+
         '파트너 입점하기'+icon("arrow",18)+'</a></p>'+
     '</div>'+
     mainSampleCard()+
@@ -1708,10 +1739,13 @@ function MainLast(){
           '<a class="btn btn-cl btn-lg" href="/closure">폐업 · 정리 준비하기'+icon("arrow",18)+'</a>'+
         '</p>'+
       '</div>'+
+      /* ⚠️ 시안에는 이 줄이 없지만 **지우지 않았습니다** — 2026-10-08
+         지시서 §3 의 07 구간이 "창업 / 폐업 한 번 더 + 도움 셋" 이고,
+         셋 다 실제로 되는 화면입니다. 단추 둘이 주인공이 되도록
+         얇은 한 줄로 내립니다. */
       '<ul class="mlast-h">'+MAIN_LAST_HELP.map(function(x){
-        return '<li><a href="'+esc(x.to)+'">'+
-          '<span class="ic-t">'+icon(x.ic,24)+'</span>'+
-          '<b>'+esc(x.n)+'</b><i>'+esc(x.d)+'</i></a></li>'; }).join("")+'</ul>'+
+        return '<li><a href="'+esc(x.to)+'">'+icon(x.ic,18)+
+          '<b>'+esc(x.n)+'</b></a></li>'; }).join("")+'</ul>'+
     '</div>'+
   '</div></section>';
 }

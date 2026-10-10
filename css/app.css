@@ -547,6 +547,14 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
    선택자를 **글자까지 그대로** 견주므로 `.ia-t .ph` 로 둡니다
    (앞에 다른 클래스를 붙이면 검사가 못 찾습니다). */
 .ia-t .ph{ width:100%; height:100%; object-fit:cover; border-radius:inherit; }
+
+/* ⚠️⚠️ webp · avif 분기를 감싸는 `<picture>` 입니다 (`photoBox()`).
+   `display:contents` 라 **레이아웃에서 사라지고** 안쪽 `<img class="ph">`
+   가 예전 그대로 섭니다 — `.ph` 를 가리키는 규칙이 열일곱 개라
+   감싸개가 상자 하나를 차지하면 그 열일곱이 전부 어긋납니다
+   (높이 100% 가 감싸개 기준이 되어 사진이 납작해집니다).
+   ⚠️ 대체 형식이 없으면 `<picture>` 자체가 안 나옵니다. */
+.ph-p{ display:contents; }
 @media (max-width:460px){
   .ia-t{ width:62px; height:62px; border-radius:18px; }
   .ia-t .ia{ width:38px; height:38px; }

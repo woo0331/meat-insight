@@ -13,9 +13,20 @@ window.tn = function(tone){ return tone ? (" tn-" + tone) : ""; };
 /* ── 화면 머리 ────────────────────────────────────────────────────
    ⚠️ **모든 화면이 같은 머리를 씁니다.** 화면마다 다른 디자인 언어를
    쓰지 않습니다 (§54). */
+/* ⚠️⚠️ **사진은 글 뒤에 깔지 않습니다** (§6 · §26). 1024px 위에서는
+   오른쪽 42% 판이고 그 아래에서는 글 밑의 띠라, 어느 폭에서도 글자가
+   사진 위에 앉지 않습니다 — 제목 · 설명 · 단추는 전부 HTML 입니다.
+   ⚠️ 사진이 없으면 **액자째 안 그립니다** (절대 규칙 2). "이미지 준비
+   중" 을 찍지 않습니다. */
 window.PgHero = function(o){
   o = o || {};
-  return '<section class="pgh'+(o.tight?" pgh-tight":"")+'"><div class="w">'+
+  var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);
+  return '<section class="pgh'+(o.tight?" pgh-tight":"")+(ph?" pgh-im-on":"")+'">'+
+    /* ⚠️ 자리 이름을 클래스로 같이 냅니다 — 어느 쪽을 남길지(`--ph-pos`)가
+       사진마다 다릅니다 (`css/pages.css`). */
+    (ph ? '<span class="pgh-im pgh-im-'+esc(o.photo)+'">'+
+          photoBox(o.photo, "", true)+'</span>' : '')+
+    '<div class="w">'+
     (o.crumb ? '<nav class="crumb" aria-label="현재 위치">'+o.crumb+'</nav>' : '')+
     (o.kicker ? '<p class="eyebrow">'+esc(o.kicker)+'</p>' : '')+
     '<h1 class="pg-h1">'+(o.h1raw || esc(o.h1||""))+'</h1>'+

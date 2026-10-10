@@ -92,6 +92,29 @@ window.WOW_PHOTO_SLOTS = [
     min:[1400,560], ratio:[1.3,2.6], maxKB:300, anchor:"center",
     note:"같은 공간이 정리되는 듯한 장면이면 가장 좋습니다. 밝은 샌드 막이 덮입니다. ⚠️ 실패한 장면이 아니라 다음을 준비하는 장면입니다 — 불 꺼진 가게 · 고개 숙인 사람 금지" },
 
+  /* ── 전문관 머리 사진 셋 (2026-10-10 이미지 지시서 §3) ───────────
+     `/startup` · `/closure` · `/operation` 의 화면 머리 오른쪽에
+     붙습니다. 1024px 위에서는 **오른쪽 42% 판**이고 그 아래에서는
+     글 밑의 **띠**가 됩니다 — 어느 폭에서도 글이 사진 위에 앉지
+     않습니다.
+     ⚠️⚠️ **사진 안에 글자 · 단추를 넣지 마세요** (§6 · §26). 제목 ·
+     설명 · 단추는 전부 HTML 입니다 — 사진에 박아 두면 폰에서 줄어들어
+     안 읽히고, 그려진 단추는 눌러도 아무 일이 안 납니다 (§30-7).
+     ⚠️ 왼쪽 22% 가 **부드럽게 사라집니다**(mask) — 주인공을 왼쪽 끝에
+     두지 마세요. */
+  { key:"hero-startup", sizes:"(max-width:1023px) 100vw, 42vw",
+    where:"창업 전문관(/startup) 머리 · 오른쪽 판",
+    min:[840,740], ratio:[0.85,1.5], maxKB:200, anchor:"right",
+    note:"새로 여는 밝은 상업공간 · 자연광. ⚠️ 상호 · 간판 · 로고가 읽히면 안 됩니다" },
+  { key:"hero-closure", sizes:"(max-width:1023px) 100vw, 42vw",
+    where:"폐업 · 정리 전문관(/closure) 머리 · 오른쪽 판",
+    min:[840,740], ratio:[0.85,1.5], maxKB:200, anchor:"right",
+    note:"정리 중인 매장 — 의자를 올리고 박스를 싸는 장면. ⚠️⚠️ 불 꺼진 가게 · 고개 숙인 사람 · 폐허 금지. 실패가 아니라 다음을 준비하는 장면입니다" },
+  { key:"hero-ops", sizes:"(max-width:1023px) 100vw, 42vw",
+    where:"운영 서비스관(/operation) 머리 · 오른쪽 판",
+    min:[840,740], ratio:[0.85,1.5], maxKB:200, anchor:"right",
+    note:"문을 연 매장에서 POS · 태블릿으로 일하는 장면. ⚠️ 실제 POS 상표 · 서비스 로고가 읽히면 안 됩니다" },
+
   /* ── 사업 단계 여섯 카드 (2026-10-04 §14 · §18 · §19) ──────────
      ⚠️⚠️ **지금 여섯 자리 다 비어 있습니다.** 급하게 저품질 스톡을
      끼워 넣지 않습니다 (§18) — 자리와 구조만 만들어 두었고, 사진이
@@ -165,8 +188,17 @@ window.WOW_PHOTO_SLOTS = [
      업종이 아니라 **서비스**입니다 — 주방설비 사진이 고깃집으로
      읽히면 미용실 사장님에게 "여긴 내 자리가 아니네" 가 됩니다.
      장비 · 공구 · 도면처럼 **일 자체**가 보이는 쪽이 안전합니다.
-     ⚠️ 작게 들어갑니다. 넣기 전에 160px 폭으로 줄여서 무엇인지
-     읽히는지 보세요. 0장이면 분류 아이콘이 그 자리를 지킵니다. */
+     ⚠️⚠️ **원판은 정사각형입니다 — 76 · 92 · 62px** (`.ia-t`). 가로로
+     긴 사진을 넣으면 `object-fit:cover` 가 **좌우를 잘라** 주인공이
+     사라집니다. 그래서 비율은 **1:1 언저리**이고, 최소 크기는 제일
+     큰 원판(92px)의 2.6배인 **240px** 입니다 (92×2 = 184 · 폰의
+     62×3 = 186 이 실제 최대입니다) — 2026-10-10 에 재서
+     고쳤습니다 (전에는 640×420 · 1.3~1.7 로 **가로 사진 규격**이라
+     넣는 족족 좌우가 잘렸을 자리입니다).
+     ⚠️ 92px 에서 무엇인지 읽히는지 **반드시 줄여서 보세요.** 물건
+     하나가 크게 들어간 쪽이 읽히고, 넓은 풍경은 뭉갭니다.
+     ⚠️ 0장이면 분류 컬러 아이콘이 그 자리를 지킵니다 (절대 규칙 2) —
+     자리마다 따로라 **여덟 중 몇 장만** 넣으셔도 됩니다. */
   /* ⚠️ 2026-10-08 §8 — 메인 서비스 여덟이 바뀌면서 두 자리가
      늘었습니다. 자리를 늘리는 것은 **여기 한 곳**입니다. */
   /* ⚠️⚠️ **자리 이름은 분류 key 입니다** — `svc-<분류 key>` 이고
@@ -179,14 +211,14 @@ window.WOW_PHOTO_SLOTS = [
      ⚠️ 업종이 드러나는 사진은 안 됩니다 — 여기 들어가는 것은 업종이
      아니라 **서비스**입니다 (주방설비 사진이 고깃집으로 읽히면 미용실
      사장님에게 "여긴 내 자리가 아니네" 가 됩니다). */
-  { key:"svc-store", sizes:"(max-width:900px) 20vw, 10vw",     where:"서비스 · 상가 · 점포",     min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"빈 상가 · 상권 거리. ⚠️ 상호 · 간판이 읽히면 안 됩니다" },
-  { key:"svc-interior", sizes:"(max-width:900px) 20vw, 10vw",  where:"서비스 · 인테리어 · 시공",  min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"시공 중인 상업공간 · 도면" },
-  { key:"svc-equip", sizes:"(max-width:900px) 20vw, 10vw",     where:"서비스 · 시설 · 장비",     min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"업소용 장비. ⚠️ 한 업종으로 읽히지 않게" },
-  { key:"svc-it", sizes:"(max-width:900px) 20vw, 10vw",        where:"서비스 · IT · 매장시스템",  min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"POS · 키오스크 · CCTV. ⚠️ 브랜드가 보이면 안 됩니다" },
-  { key:"svc-admin", sizes:"(max-width:900px) 20vw, 10vw",     where:"서비스 · 행정 · 전문가",    min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"서류 · 상담 책상. ⚠️ 실제 서류 글자가 읽히면 안 됩니다" },
-  { key:"svc-marketing", sizes:"(max-width:900px) 20vw, 10vw", where:"서비스 · 마케팅 · 디자인",  min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"디자인 작업 · 촬영" },
-  { key:"svc-demolish", sizes:"(max-width:900px) 20vw, 10vw",  where:"서비스 · 철거",            min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"철거 · 원상복구 현장" },
-  { key:"svc-clean", sizes:"(max-width:900px) 20vw, 10vw",     where:"서비스 · 청소 · 방역",      min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"청소 · 방역 장비" }
+  { key:"svc-store", sizes:"92px",     where:"서비스 · 상가 · 점포",     min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"빈 상가 · 상권 거리. ⚠️ 상호 · 간판이 읽히면 안 됩니다" },
+  { key:"svc-interior", sizes:"92px",  where:"서비스 · 인테리어 · 시공",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"시공 중인 상업공간 · 도면" },
+  { key:"svc-equip", sizes:"92px",     where:"서비스 · 시설 · 장비",     min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"업소용 장비. ⚠️ 한 업종으로 읽히지 않게" },
+  { key:"svc-it", sizes:"92px",        where:"서비스 · IT · 매장시스템",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"POS · 키오스크 · CCTV. ⚠️ 브랜드가 보이면 안 됩니다" },
+  { key:"svc-admin", sizes:"92px",     where:"서비스 · 행정 · 전문가",    min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"서류 · 상담 책상. ⚠️ 실제 서류 글자가 읽히면 안 됩니다" },
+  { key:"svc-marketing", sizes:"92px", where:"서비스 · 마케팅 · 디자인",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"디자인 작업 · 촬영" },
+  { key:"svc-demolish", sizes:"92px",  where:"서비스 · 철거",            min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"철거 · 원상복구 현장" },
+  { key:"svc-clean", sizes:"92px",     where:"서비스 · 청소 · 방역",      min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"청소 · 방역 장비" }
 ];
 
 
@@ -220,7 +252,38 @@ window.WOW_PHOTOS = {
     w:1702, h:756,
     webp:"/img/hero-close-sm.webp?v=0c461161 936w, /img/hero-close.webp?v=a9bcb267 1702w",
     jpg:"/img/hero-close-sm.jpg?v=14d773b3 936w, /img/hero-close.jpg?v=5011de99 1702w",
-    alt:"햇빛이 드는 상가 내부에서 작업자들이 마감재를 떼어 내고 정리하고 있습니다" }
+    alt:"햇빛이 드는 상가 내부에서 작업자들이 마감재를 떼어 내고 정리하고 있습니다" },
+  "hero-startup": { src:"/img/hero-startup.jpg?v=cafced7d",
+    w:978, h:941,
+    webp:"/img/hero-startup-sm.webp?v=7ebd4ab7 538w, /img/hero-startup.webp?v=1f776267 978w",
+    jpg:"/img/hero-startup-sm.jpg?v=3fd69ce9 538w, /img/hero-startup.jpg?v=cafced7d 978w",
+    alt:"갓 문을 연 카페 카운터에서 사장님이 태블릿을 들고 매장을 둘러보고 있습니다" },
+  "hero-closure": { src:"/img/hero-closure.jpg?v=5ed467e1",
+    w:869, h:941,
+    webp:"/img/hero-closure-sm.webp?v=2aca1ddb 478w, /img/hero-closure.webp?v=f89dbdaf 869w",
+    jpg:"/img/hero-closure-sm.jpg?v=f82fb7f1 478w, /img/hero-closure.jpg?v=5ed467e1 869w",
+    alt:"햇빛이 드는 매장에서 사장님이 의자를 테이블에 올리고 포장 상자를 정리하고 있습니다" },
+  "hero-ops": { src:"/img/hero-ops.jpg?v=4fd18720",
+    w:953, h:941,
+    webp:"/img/hero-ops-sm.webp?v=75ad6292 524w, /img/hero-ops.webp?v=34b13237 953w",
+    jpg:"/img/hero-ops-sm.jpg?v=3ec4c91c 524w, /img/hero-ops.jpg?v=4fd18720 953w",
+    alt:"문을 연 매장 카운터에서 사장님이 POS 화면을 보며 주문을 처리하고 있습니다" },
+  "svc-interior": { src:"/img/svc-interior.jpg?v=b42e5abd",
+    w:267, h:263,
+    webp:"/img/svc-interior.webp?v=ee373d5e 267w",
+    alt:"상업공간 인테리어 마감재 견본과 매장 평면도면이 작업대에 놓여 있습니다" },
+  "svc-equip": { src:"/img/svc-equip.jpg?v=57207420",
+    w:322, h:324,
+    webp:"/img/svc-equip.webp?v=dab4866d 322w",
+    alt:"업소용 주방의 스테인리스 가스레인지와 대형 조리 냄비들" },
+  "svc-it": { src:"/img/svc-it.jpg?v=a7e82576",
+    w:324, h:323,
+    webp:"/img/svc-it.webp?v=82788821 324w",
+    alt:"매장 천장에 설치된 CCTV 카메라 셋과 화면이 나뉜 관제 모니터" },
+  "svc-clean": { src:"/img/svc-clean.jpg?v=41582a26",
+    w:267, h:263,
+    webp:"/img/svc-clean.webp?v=a079a198 267w",
+    alt:"매장 청소에 쓰는 세정제 분무기와 밀대, 청소 카트" }
 };
 
 window.wowPhoto = function(key){

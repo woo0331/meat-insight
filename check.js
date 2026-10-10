@@ -2664,7 +2664,28 @@ const AUDIT = `(() => {
     if(cards.length !== 8) return "핵심 서비스가 " + cards.length + "개입니다 (여덟)";
     const seen = [];
     for(const a of cards){
-      const sv = a.querySelector("svg");
+      /* ⚠️⚠️ 2026-10-10 — 원판에 **사진이 들어올 수 있습니다** (svc-*).
+         전에는 li 안의 첫 svg 를 집었는데, 사진이 들어간 카드에서는
+         그게 상담 CTA 의 말풍선이라 **넷이 전부 같은 아이콘**으로
+         읽혀 엉뚱하게 실패했습니다. 보는 자리를 **원판 안**으로
+         좁히고, 사진이면 그림이 실제로 달렸는지 봅니다.
+         ⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다. */
+      const tile = a.querySelector(".ia-t");
+      if(!tile) return "'" + (a.textContent||"").trim().slice(0,12) + "' 칸에 원판이 없습니다";
+      const im = tile.querySelector("img.ph");
+      const sv = tile.querySelector("svg");
+      if(im){
+        if(!im.getAttribute("src")) return "원판 사진에 src 가 없습니다";
+        if(!(im.getAttribute("alt")||"").trim()) return "원판 사진에 alt 가 없습니다";
+        if(!im.naturalWidth) return "원판 사진이 안 불러와졌습니다 (" + im.getAttribute("src") + ")";
+        const h0 = (a.querySelector("a[href]") || a).getAttribute("href") || "";
+        /* ⚠️⚠️ **백슬래시를 두 겹으로** — 템플릿 문자열이 한 겹을
+           먹어서 정규식이 통째로 깨집니다 (열다섯 번째 escape 사고).
+           한 겹으로 적었다가 이 검사가 SyntaxError 로 안 돌았습니다. */
+        if(!/^\\/[a-z]/.test(h0)) return "핵심 서비스에 가짜 링크가 있습니다 (" + h0 + ")";
+        if(!a.querySelector(".msvc-q[href]")) return "상담 · 견적 CTA 가 없습니다";
+        continue;
+      }
       if(!sv || !sv.innerHTML.trim())
         return "'" + (a.textContent||"").trim().slice(0,12) + "' 칸에 아이콘이 없습니다";
       /* 카드 안에 링크가 둘입니다 — 분야 화면과 상담 · 견적 */

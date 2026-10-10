@@ -361,6 +361,14 @@ const CASES = [
   ["핵심 서비스 여덟의 아이콘이 비지 않고 저마다 다르다",
    `const sv = document.querySelectorAll(".msvc-g > li .ia-t svg");
     sv[0].innerHTML = sv[1].innerHTML;`],
+  /* ⚠️⚠️ 2026-10-10 — 원판에 **사진**이 들어올 수 있어서(svc-*) 검사에
+     갈래가 하나 늘었습니다. 그 갈래도 되돌려 봅니다 — 사진이 한 장도
+     없으면 아이콘 쪽을 비워서 같은 검사를 때립니다 (없는 요소를 집어
+     되돌리기가 터지는 것을 막습니다). */
+  ["핵심 서비스 여덟의 아이콘이 비지 않고 저마다 다르다",
+   `const im = document.querySelector(".msvc-g > li .ia-t img.ph");
+    if(im) im.setAttribute("alt", "");
+    else document.querySelector(".msvc-g > li .ia-t svg").innerHTML = "";`],
   ["업종 열넷이 저마다 다른 색을 쓴다",
    /* ⚠️ `.ic-t` 에 transition 이 걸려 있어서 그냥 바꾸면 **색이 번지는
       도중**에 재어 다른 값이 나옵니다 — 되돌리기가 헛돕니다. 끕니다. */

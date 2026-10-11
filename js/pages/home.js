@@ -894,10 +894,17 @@ function MainLast(){
           '드립니다.<br class="br-m"> 사장님의 시작과 마지막, '+
           esc(amBrand())+'가 함께합니다.</p>'+
         '<p class="mlast-go">'+
-          '<a class="btn btn-b btn-lg" href="/quote">'+
+          /* ⚠️⚠️ **창업은 파랑 · 폐업은 주황을 여기서도 지킵니다**
+             (2026-10-08 §24). 간소화하면서 둘을 테두리 단추로 바꿨다가
+             그 구분이 사라졌고 검사가 잡았습니다 — 검사가 아니라 제가
+             틀렸습니다. 주 행동(견적 · 상담)은 남색으로 올려 셋이
+             역할로 갈리게 했습니다.
+             ⚠️ 폐업을 빨강으로 넘기지 마세요 — "폐업은 나쁜 것" 이라는
+             말이 됩니다. */
+          '<a class="btn btn-nv btn-lg" href="/quote">'+
             '견적 · 상담 신청'+icon("arrow",18)+'</a>'+
-          '<a class="btn btn-o btn-lg" href="/startup">창업 준비하기</a>'+
-          '<a class="btn btn-o btn-lg" href="/closure">폐업 · 정리</a>'+
+          '<a class="btn btn-b btn-lg" href="/startup">창업 준비하기</a>'+
+          '<a class="btn btn-cl btn-lg" href="/closure">폐업 · 정리</a>'+
         '</p>'+
       '</div>'+
       /* ⚠️ 시안에는 이 줄이 없지만 **지우지 않았습니다** — 2026-10-08

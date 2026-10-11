@@ -94,12 +94,17 @@
 
    ⚠️ 사진이 0장이면 띠째 빠지고 크림 바탕이 자리를 지킵니다 —
    "이미지 준비 중" 을 찍지 않습니다 (절대 규칙 2). */
+/* ⚠️⚠️ **2026-10-11 최종 디자인 지시서 §3** — 사진이 **오른쪽 한 장**
+   입니다 (전에는 좌우 두 장). 왼쪽은 흰색 반투명 그라데이션이고 글이
+   거기 섭니다.
+   ⚠️ 사진이 없으면 띠를 **아예 안 그립니다** — 옅은 빈 액자를 깔면
+   그게 "준비 중" 으로 읽힙니다 (절대 규칙 2).
+   ⚠️ 남은 한 장(`hero-close`)은 06 상담 구간이 받습니다 — 자리를
+   잃은 사진이 없게 하려고 같이 옮겼습니다. */
 function MainHeroPhotos(){
-  var l = hasPhoto("hero-start"), r = hasPhoto("hero-close");
-  if(!l && !r) return "";
+  if(!hasPhoto("hero-start")) return "";
   return '<div class="mh-ph" aria-hidden="true">'+
-    (l ? '<span class="mh-ph-l">'+photoBox("hero-start","",true)+'</span>' : '')+
-    (r ? '<span class="mh-ph-r">'+photoBox("hero-close","",true)+'</span>' : '')+
+    '<span class="mh-ph-r">'+photoBox("hero-start","",true)+'</span>'+
   '</div>';
 }
 
@@ -165,29 +170,24 @@ function MainPickCard(o){
 function MainHero(){
   return '<section class="mh">'+
     MainHeroPhotos()+
-    '<div class="mh-in"><div class="w">'+
+    '<div class="mh-in"><div class="w"><div class="mh-tx">'+
       /* ⚠️ 화면마다 h1 은 **딱 하나**입니다. 아래 구간들은 전부 h2 입니다. */
-      /* ⚠️ 머리말은 **약속이 아니라 이 플랫폼이 하는 일**입니다 —
-         숫자도 성과도 들어 있지 않습니다 (절대 규칙 1). */
-      '<p class="mh-k">당신의 오늘이, 누군가의 내일이 됩니다</p>'+
-      /* ⚠️⚠️ 시작은 **블루**, 마지막은 **오렌지**입니다 (지시서 §24).
-         두 낱말의 크기 · 굵기가 같아야 합니다 — 한쪽을 작게 하면
-         그게 "덜 중요한 것" 이라는 말이 됩니다. */
-      /* ⚠️ 2026-10-09 지시서 §4 가 적은 **그 카피 그대로**입니다.
-         시작은 블루 · 마지막은 오렌지 — 두 낱말의 크기 · 굵기가
-         같습니다 (한쪽을 작게 하면 "덜 중요한 것" 이 됩니다). */
-      '<h1 class="mh-h1">사장님의 <em class="mh-pt">시작</em>부터 '+
-        '<em class="mh-pt2">마지막</em>까지,<br class="br-m"> '+
-        esc(amBrand())+'가 함께합니다.</h1>'+
+      /* ⚠️⚠️ **2026-10-11 지시서 §3 의 카피 그대로**입니다 — 다만
+         브랜드 이름은 `brand.js` 한 곳에서 옵니다. 지시서가 적은
+         "스토어웨이" 는 **주소**이고, 손님에게 보이는 이름은 하나
+         입니다 (2026-10-06 §2 · 2026-10-08 §4).
+         ⚠️ 조사를 손으로 적지 마세요 — 받침 있는 이름으로 바뀌면
+         "인수인계이" 가 됩니다. `koWith()` 가 고릅니다. */
+      '<h1 class="mh-h1">사장님의 <em class="mh-pt">모든 순간</em>,'+
+        '<br class="br-m"> '+esc(koWith(amBrand(), "이가"))+' 함께합니다.</h1>'+
       /* ⚠️ `<br class="br-m">` 뒤에는 **띄어쓰기를 하나** 둡니다 —
          좁아지면 이 줄바꿈이 사라지는데, 없으면 앞뒤 낱말이 붙습니다. */
-      '<p class="mh-lead">창업을 준비하는 순간부터, 사업을 정리하고'+
-        '<br class="br-m"> 다음 사장님에게 넘기는 순간까지 함께합니다.</p>'+
-      /* ⚠️⚠️ **장식용 검색창을 만들지 마세요** (지시서 §4 "업종 · 서비스
-         검색창" · 2026-10-04 §11). 이 칸은 헤더 통합검색과 **같은
+      '<p class="mh-lead">매장 창업, 운영, 양도양수, 폐업에 필요한'+
+        '<br class="br-m"> 모든 서비스를 한곳에서 쉽고 빠르게.</p>'+
+      /* ⚠️⚠️ **장식용 검색창을 만들지 마세요** (§3 "검색어 입력 시 실제
+         서비스 목록과 연결한다"). 이 칸은 헤더 통합검색과 **같은
          `mainFind()`** 를 부릅니다 — 적으신 말이 있으면 `/search?q=`,
-         없으면 업체찾기로 갑니다. 쳐 보고 결과가 나오는 것을
-         확인했습니다. */
+         없으면 업체찾기로 갑니다. */
       '<form class="mh-find" onsubmit="return mainFind(event)" role="search">'+
         '<span class="mh-find-i" aria-hidden="true">'+icon("search",20)+'</span>'+
         '<input id="msrQ" type="search" autocomplete="off" '+
@@ -195,11 +195,33 @@ function MainHero(){
           'placeholder="업종이나 서비스를 적어 보세요 — 카페 창업, 철거, POS">'+
         '<button class="btn btn-b" type="submit">검색'+icon("arrow",17)+'</button>'+
       '</form>'+
-    '</div></div>'+
-    '<div class="mh-pick"><div class="w"><div class="mh-pick-g">'+
-      MAIN_PICK.map(MainPickCard).join("")+
+      MainHeroChips()+
     '</div></div></div>'+
   '</section>';
+}
+
+/* ⚠️⚠️ **"인기 검색어" 라고 쓰지 마세요.** 지시서 §3 이 그 이름으로
+   적었지만 저희는 **검색 기록을 하나도 모으지 않아서** 무엇이 인기인지
+   모릅니다 (2026-10-06 마무리 지시서 §3 이 직접 금지한 말이고
+   `check.js` 가 그 낱말을 찾습니다). 딱지는 **바로가기**입니다.
+   ⚠️⚠️ **여덟 전부 쳐 보고 결과가 나오는 것을 확인했습니다.** 손님은
+   띄어쓰기를 안 하는데 분류 이름은 띄어 두어서, 전에 추천 네 개가
+   **전부 0건**이던 자리입니다 — 칩을 더하실 때는 반드시 쳐 보세요. */
+/* ⚠️⚠️ **쳐 보고 셋을 바꿨습니다.** 지시서 §3 의 여덟 가운데
+   `인력채용` 은 **0건**, `양도양수` 는 1건, `세무 · 회계` 는 1건
+   이었습니다 — 손님이 그 말을 치면 빈 화면을 봅니다. 뜻이 같고
+   결과가 나오는 말로 바꿨고, 괄호 안이 재 본 건수입니다. */
+var MAIN_CHIP8 = ["인테리어",   /* 11 */ "상권분석",  /*  3 */
+                  "매장 양도",  /* 27 */ "권리금",    /* 15 */
+                  "철거",       /* 24 */ "세무",      /* 21 */
+                  "마케팅",     /*  4 */ "직원 채용"  /* 14 */];
+function MainHeroChips(){
+  return '<ul class="mh-chip">'+
+    '<li class="mh-chip-k">바로가기</li>'+
+    MAIN_CHIP8.map(function(q){
+      return '<li><a class="chip" href="/search?q='+encodeURIComponent(q)+'">'+
+        esc(q)+'</a></li>';
+    }).join("")+'</ul>';
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -376,9 +398,10 @@ function MainHalls(){
     '<div class="sec-hd"><p class="eyebrow">SERVICE</p>'+
       /* ⚠️⚠️ "많이 찾는 · 인기 · 추천 · BEST · TOP" 을 쓰지 마세요 —
          이용 데이터를 하나도 모으지 않습니다 (마무리 지시서 §3). */
-      '<h2>어떤 준비를 하고 계신가요?</h2>'+
-      '<p>창업 · 운영 · 양도양수 · 폐업 네 갈래입니다. 고르시면 그 갈래에 '+
-        '필요한 서비스가 아래에 펼쳐집니다.</p></div>'+
+      /* ⚠️ 2026-10-11 최종 디자인 지시서 §4 의 문구입니다. */
+      '<h2>사업 단계에 맞는 서비스를 선택하세요</h2>'+
+      '<p>지금 어떤 단계에 계신가요? 필요한 서비스를 바로 '+
+        '찾아보세요.</p></div>'+
     /* ⚠️⚠️ **범위 숫자 띠를 여기서 빼지 마세요.** MainServices() 가
        메인에서 내려오면서 이 띠가 갈 곳을 잃습니다 — 그 안의
        "서비스 분류 기준이며 등록된 업체 수가 아닙니다" ⓘ 줄은
@@ -388,8 +411,12 @@ function MainHalls(){
     '<div class="hsv-box" data-keep>'+
       '<div class="hsv-hd">'+
         /* ⚠️ "에" 는 받침과 무관합니다 — koWith 를 쓰지 않습니다. */
+        /* ⚠️⚠️ 지시서 §5 는 "전문 업체와 연결됩니다" 라고 적었는데
+           **업체가 0곳**이라 확정으로 적으면 지킬 수 없는 약속입니다
+           (절대 규칙 1 · 5). 지금 사실인 데까지만 적고, 구간 아래
+           줄이 "요청을 받아 찾아 드리는 단계" 라고 그대로 말합니다. */
         '<h3><b class="hall-'+esc(cur.tone)+'">'+esc(cur.name)+'</b>'+
-          '에 필요한 서비스를 찾아보세요.</h3>'+
+          ' 단계에 필요한 대표 서비스입니다.</h3>'+
         '<a class="btn btn-o hsv-all" href="'+esc(cur.to)+'">'+
           '전체보기'+icon("arrow",16)+'</a>'+
       '</div>'+
@@ -678,33 +705,35 @@ var MAIN_TOOL_TONE = {
   "시작하기 전":"st", "얼마를 팔아야 하나":"bl",
   "얼마가 남나":"tl", "정리할 때":"cl"
 };
-var MAIN_CALC = ["cost", "premium", "rent", "closecost"];
+/* ⚠️⚠️ **2026-10-11 지시서 §6 이 적은 넷 그대로**입니다 —
+   창업비 · 손익분기점 · 권리금 · 폐업비용. 전에는 셋째가 `rent`
+   (임대료 비율)였습니다.
+   ⚠️ 없는 key 를 적으면 그 카드가 **조용히 빠집니다** (`filter`).
+   도구 주소는 `AM_TOOLS` 에서 옵니다 — 손으로 적지 마세요. */
+var MAIN_CALC = ["cost", "bep", "premium", "closecost"];
+/* ⚠️⚠️ **2026-10-11 지시서 §6** — 가로 카드 넷입니다. 카드마다
+   컬러 아이콘 · 이름 · 한 줄 · **오른쪽 아래 이동 단추**.
+   ⚠️ 아이콘은 `tools.js` 의 `icon` 한 줄입니다 — 여기에 key → 아이콘
+   표를 따로 두었다가 도구가 늘자 **일곱이 전부 같은 그림**으로 나온
+   적이 있습니다. 컬러 아이콘이 없는 이름은 선 아이콘이 자리를
+   지킵니다 (빈 칸이 생기지 않습니다).
+   ⚠️ 작은 줄은 `tools.js` 의 **`out`**(그 계산기가 내놓는 것)입니다.
+   ⚠️⚠️ **카드 전체가 눌립니다** — 안의 "계산하기" 는 표시이지 따로
+   누르는 단추가 아닙니다 (`<a>` 안의 `<a>` 는 브라우저가 쪼갭니다). */
 function mainCalcIn(){
   var by = {}; (window.AM_TOOLS||[]).forEach(function(t){ by[t.key] = t; });
   var L = MAIN_CALC.map(function(k){ return by[k]; }).filter(Boolean);
   if(!L.length) return "";
-  return '<div class="mti-c mti-calc">'+
-    '<div class="mti-hd">'+
-      '<div class="mti-top">'+
-        '<h2><span class="mti-n" aria-hidden="true">04</span>사장님을 위한 계산도구</h2>'+
-        '<a class="btn btn-o mti-all" href="/tools">계산도구 전체보기'+
-          icon("arrow",16)+'</a>'+
-      '</div>'+
-      '<p>창업과 폐업에 필요한 다양한 비용을 간편하게 계산해보세요. '+
-        '적으신 숫자는 이 브라우저에만 남습니다.</p>'+
-    '</div>'+
-    /* ⚠️ 아이콘은 `tools.js` 의 `icon` 한 줄입니다. 여기에 key → 아이콘
-       표를 따로 두었다가 도구가 늘자 **일곱이 전부 같은 그림**으로
-       나온 적이 있습니다 — 손으로 적지 마세요. */
-    '<ul class="mti-g">'+L.map(function(t){
-      var tone = MAIN_TOOL_TONE[t.grp] || "bl";
-      /* ⚠️ 작은 줄은 `tools.js` 의 **`out`**(그 계산기가 내놓는 것)
-         입니다 — 손으로 적지 마세요. 도구를 고치면 같이 따라옵니다. */
-      return '<li class="hv-'+tone+'"><a href="/tools/'+esc(t.key)+'">'+
-        '<span class="ic-t">'+icon(t.icon,26)+'</span>'+
-        '<b>'+esc(t.name)+'</b>'+
-        (t.out ? '<i>'+esc(t.out)+'</i>' : '')+'</a></li>'; }).join("")+'</ul>'+
-  '</div>';
+  return '<ul class="mcal-g">'+L.map(function(t){
+    var tone = MAIN_TOOL_TONE[t.grp] || "bl";
+    var art  = (typeof hasIconArt === "function" && hasIconArt(t.icon));
+    return '<li class="hv-'+tone+'"><a href="/tools/'+esc(t.key)+'">'+
+      '<span class="mcal-i ia-t" aria-hidden="true">'+
+        (art ? iconArt(t.icon, 44) : icon(t.icon, 28))+'</span>'+
+      '<b class="mcal-n">'+esc(t.name)+'</b>'+
+      (t.out ? '<i class="mcal-o">'+esc(t.out)+'</i>' : '')+
+      '<span class="mcal-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
+    '</a></li>'; }).join("")+'</ul>';
 }
 function mainReadIn(){
   var all = (window.AM_CONTENTS || []);
@@ -775,11 +804,31 @@ function mainReadIn(){
         '</a></li>'; }).join("")+'</ul>'+
   '</div>';
 }
+/* ⚠️⚠️ **2026-10-11 지시서 §1 — 04 는 계산도구만입니다.**
+   전에는 "계산도구 + 최신 정보" 두 칸이었는데, 지시서의 메인 차례에
+   최신 정보 구간이 없습니다. `mainReadIn()` 은 **지우지 않고 안
+   부릅니다** — 함수를 파일 사이로 옮기다 이 저장소에서 다섯 번
+   함수를 통째로 삼켰습니다 (되살리시려면 여기 한 줄입니다).
+   ⚠️ `/content` 로 가는 길은 푸터 `서비스` 칸과, 160개 화면의 글
+   잇기 구간(`ReadBand`)과 헤더 검색이 그대로 받습니다 — 재서
+   확인했습니다. */
 function MainToolsInfo(){
-  var a = mainCalcIn(), b = mainReadIn();
-  if(!a && !b) return "";      /* 둘 다 없으면 구간째 뺍니다 */
+  var a = mainCalcIn();
+  if(!a) return "";            /* 계산기가 없으면 구간째 뺍니다 */
   return '<section class="sec sec-blue mti"><div class="w">'+
-    '<div class="mti-g2">'+ a + b +'</div>'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">TOOLS</p>'+
+      '<h2>사장님의 사업에 필요한 계산도구</h2>'+
+      '<p>창업 · 운영 · 양도양수 · 폐업에 필요한 비용을 미리 계산해 '+
+        '보세요. 적으신 숫자는 이 브라우저에만 남습니다.</p>'+
+    '</div>'+
+    a+
+    /* ⚠️ 계산 결과는 **참고용 추정치**입니다 (§6). 이 줄을 지우지
+       마세요 — 사장님이 그 숫자를 보고 돈을 빌리러 가십니다. */
+    '<p class="note sec-note">적으신 조건으로 계산한 참고용 값입니다. '+
+      '실제 금액은 지역 · 평수 · 업종에 따라 달라집니다.</p>'+
+    '<p class="mcal-all"><a class="btn btn-o" href="/tools">'+
+      '계산도구 전체보기'+icon("arrow",16)+'</a></p>'+
   '</div></section>';
 }
 
@@ -880,40 +929,83 @@ var MAIN_LAST_HELP = [
   { ic:"book",  n:"정보 · 가이드", d:"막히는 자리마다 읽을 것",   to:"/content" },
   { ic:"calc",  n:"계산도구",    d:"비용을 직접 재 보세요",      to:"/tools" }
 ];
+/* ══════════════════════════════════════════════════════════════════
+   05 서비스 이용 절차 (2026-10-11 지시서 §7)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **클래스를 `.how-*` 도 `.hiw-*` 도 쓰지 마세요.** 둘 다 이미
+   `/about` 의 "진행 셋" 과 `/join` 의 "이용방법" 이 쓰고 있어서,
+   겹치면 **두 화면이 통째로 깨집니다** (이 저장소에서 `.lg` 로고 ↔
+   약관, `.how-g` 로 두 번 겪었습니다). 지금 것은 `.mstp-*` 입니다.
+
+   ⚠️⚠️ **지금 실제로 되는 것만 적습니다** (§7 "실제로 제공하지 않는
+   검증 · 보증 · 비교 기능을 확정적으로 안내하지 않는다").
+     · 업체가 0곳이라 "바로 연결됩니다" 가 아니라 **찾아 드립니다**
+     · 검증 기능이 없으므로 "검증된 업체" 를 쓰지 않습니다
+     · 받은 제안 비교는 `/quote` 에 실제로 있는 화면입니다
+   ⚠️ `/about` 의 진행은 **셋**이고 그대로 둡니다 — 거기는 "귀찮아
+   보이지 않게" 셋으로 줄여 둔 자리이고 검사가 개수를 셉니다. */
+/* ⚠️⚠️ **절차 넷은 `js/data/steps.js` 한 곳입니다.** 전에 여기
+   var 로 적었는데 `build-pages.js` 는 `js/pages/*` 를 읽지 않아서
+   **크롤러 본문에서만 구간이 조용히 빠졌습니다.** */
+function MainSteps(){
+  return '<section class="sec sec-white mstp"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">HOW IT WORKS</p>'+
+      '<h2>'+esc(amBrand())+'는 이렇게 진행됩니다</h2>'+
+      '<p>간단한 신청으로 분야에 맞는 업체를 찾아 드립니다.</p>'+
+    '</div>'+
+    '<ol class="mstp-g">'+(window.AM_STEPS||[]).map(function(x, i){
+      return '<li><span class="mstp-i" aria-hidden="true">'+icon(x.ic,24)+'</span>'+
+        '<b class="mstp-n">'+(i+1 < 10 ? "0" : "")+(i+1)+'</b>'+
+        '<b class="mstp-t">'+esc(x.n)+'</b>'+
+        '<i class="mstp-d">'+esc(x.d)+'</i></li>'; }).join("")+'</ol>'+
+    /* ⚠️ 업체가 0곳인 것을 숨기지 않습니다 (절대 규칙 1). */
+    '<p class="note sec-note">지금은 요청을 받아 업체를 찾아 드리는 '+
+      '단계입니다. 저희는 중개자이고 거래 당사자가 아닙니다.</p>'+
+  '</div></section>';
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   06 무료 견적 · 상담 신청 (2026-10-11 지시서 §8)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **메인에서 `/quote` 로 가는 길은 여기 하나**입니다.
+   ⚠️⚠️ **"상담 문의하기" 단추를 만들지 않았습니다.** 지시서 §8 이
+   "실제 운영 중인 문의 채널 또는 상담 페이지와 연결한다 · 동일한
+   신청 폼을 불필요하게 중복 생성하지 않는다" 고 적었는데, 지금
+   전화도 채팅도 없고 같은 폼을 하나 더 만드는 것은 §8 이 직접
+   금지한 것입니다. 둘째 단추는 **실제로 답이 있는 `/faq`** 입니다
+   (§0-8 "실제 기능이 없는 버튼을 만들지 않는다").
+   ⚠️ 상담 채널(번호 · 카카오 채널)을 여시면 그때 바꿔 답니다. */
 function MainLast(){
+  /* ⚠️⚠️ **`hero-close`(정리 현장)를 여기 넣지 마세요.** 뜯긴 벽과
+     폐자재가 "어떤 서비스가 필요하신가요?" 라는 권유 자리에 들어가면
+     그 구간이 통째로 폐업으로 읽힙니다 — 넣어서 찍어 보고 뺐습니다.
+     이 자리는 **밝은 매장에서 상담하는 장면**이고, 그런 사진이 들어올
+     때까지 비어 있습니다 (빈 액자를 깔지 않습니다 · 절대 규칙 2). */
+  var ph = hasPhoto("cta-consult");
   return '<section class="sec sec-ivory mlast"><div class="w">'+
-    '<div class="mlast-in">'+
+    '<div class="mlast-in'+(ph ? " mlast-ph" : "")+'">'+
       '<div class="mlast-t">'+
-        /* ⚠️⚠️ **2026-10-11 간소화 지시서 §2-E** — "견적 요청과 상담
-           신청을 **하나의 명확한 진입 영역**으로 통합한다 · 고객에게
-           불필요하게 여러 신청서를 반복 작성하게 하지 않는다."
-           메인에서 `/quote` 로 가는 길은 **여기 하나**입니다 (패키지
-           구간이 내려가면서 그 길이 없어졌습니다). */
         '<h2>어떤 서비스가 필요하신가요?</h2>'+
-        '<p>한 번만 적어 보내시면 분야에 맞는 업체를 찾아 연결해 '+
-          '드립니다.<br class="br-m"> 사장님의 시작과 마지막, '+
-          esc(amBrand())+'가 함께합니다.</p>'+
+        '<p>지금 바로 신청하시면 필요한 서비스를 찾으실 수 있도록'+
+          '<br class="br-m"> 도와드립니다. 한 번만 적어 보내시면 '+
+          '분야에 맞는 업체를 찾아 연결해 드립니다.</p>'+
         '<p class="mlast-go">'+
-          /* ⚠️⚠️ **창업은 파랑 · 폐업은 주황을 여기서도 지킵니다**
-             (2026-10-08 §24). 간소화하면서 둘을 테두리 단추로 바꿨다가
-             그 구분이 사라졌고 검사가 잡았습니다 — 검사가 아니라 제가
-             틀렸습니다. 주 행동(견적 · 상담)은 남색으로 올려 셋이
-             역할로 갈리게 했습니다.
-             ⚠️ 폐업을 빨강으로 넘기지 마세요 — "폐업은 나쁜 것" 이라는
-             말이 됩니다. */
           '<a class="btn btn-nv btn-lg" href="/quote">'+
-            '견적 · 상담 신청'+icon("arrow",18)+'</a>'+
-          '<a class="btn btn-b btn-lg" href="/startup">창업 준비하기</a>'+
-          '<a class="btn btn-cl btn-lg" href="/closure">폐업 · 정리</a>'+
+            '무료 견적 신청'+icon("arrow",18)+'</a>'+
+          '<a class="btn btn-o btn-lg" href="/faq">자주 묻는 질문</a>'+
         '</p>'+
+        /* ⚠️ 시안에는 이 줄이 없지만 **지우지 않았습니다** — 셋 다
+           실제로 되는 화면이고, 단추 둘이 주인공이 되도록 얇은 한
+           줄로 내립니다. */
+        '<ul class="mlast-h">'+MAIN_LAST_HELP.map(function(x){
+          return '<li><a href="'+esc(x.to)+'">'+icon(x.ic,18)+
+            '<b>'+esc(x.n)+'</b></a></li>'; }).join("")+'</ul>'+
       '</div>'+
-      /* ⚠️ 시안에는 이 줄이 없지만 **지우지 않았습니다** — 2026-10-08
-         지시서 §3 의 07 구간이 "창업 / 폐업 한 번 더 + 도움 셋" 이고,
-         셋 다 실제로 되는 화면입니다. 단추 둘이 주인공이 되도록
-         얇은 한 줄로 내립니다. */
-      '<ul class="mlast-h">'+MAIN_LAST_HELP.map(function(x){
-        return '<li><a href="'+esc(x.to)+'">'+icon(x.ic,18)+
-          '<b>'+esc(x.n)+'</b></a></li>'; }).join("")+'</ul>'+
+      /* ⚠️⚠️ **사진이 없으면 액자째 안 그립니다** (절대 규칙 2) —
+         옅은 빈 상자를 깔면 그게 "준비 중" 으로 읽힙니다.
+         ⚠️ `object-fit:cover` 를 빼지 마세요 (검사가 규칙을 봅니다). */
+      (ph ? '<div class="mlast-im">'+photoBox("cta-consult","",true)+'</div>' : '')+
     '</div>'+
   '</div></section>';
 }
@@ -1092,6 +1184,16 @@ function PageMain(){
 
      ⚠️ 늘리시려면 **지시서를 먼저 고치고** `check.js` 의 `want` 를
      같이 고치세요 (거기가 구간 차례를 셉니다). */
-  return MainHero()+ MainHalls()+ MainStores()+ MainToolsInfo()+ MainLast();
+  /* ⚠️⚠️ **2026-10-11 최종 디자인 지시서 §1 의 차례**입니다 —
+     01 히어로 · 02 전문관 넷 · 03 세부 서비스(02 와 한 구간) ·
+     04 계산도구 · 05 이용 절차 · 06 견적 · 상담 · 07 푸터(#view 밖).
+     ⚠️ `MainStores()`(매장 · 시설장비 전용 대형 이미지 구간)는
+     §1 · §11 이 **메인에서 빼라고 직접 적은** 것입니다 — 함수는
+     그대로 두었고(되살리시려면 여기 한 줄), 그 구간이 가리키던
+     `/stores` · `/sell` · `/assets` 는 **매장 양도양수 전문관**이
+     그대로 들고 있습니다 (재서 확인했습니다).
+     ⚠️ 차례를 바꾸시려면 지시서를 먼저 고치고 `check.js` 의 `want`
+     를 **같이** 고치세요. */
+  return MainHero()+ MainHalls()+ MainToolsInfo()+ MainSteps()+ MainLast();
 }
 

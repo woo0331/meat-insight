@@ -36,8 +36,13 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
 
  console.log("\n【1】 창업 → 업종 → 신규창업 → 로드맵 → 상세");
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.mh-pick .hpk-st');
- say((await url())==="/startup","메인 창업 카드 → /startup",await url());
+ /* ⚠️⚠️ **히어로의 창업 / 폐업 선택 카드가 없어졌습니다**
+    (2026-10-11 최종 디자인 지시서 §3 — 히어로는 카피 + 통합검색 +
+    바로가기 칩입니다). 메인에서 `/startup` 으로 가는 길은 전문관
+    카드를 고르고 **전체보기**이고, 그게 손님이 실제로 누르는 길입니다. */
+ await click('.mhall-c.hall-start');
+ await click('.hsv-all');
+ say((await url())==="/startup","메인 전문관 창업 준비 → /startup",await url());
  await click('.ind-g > li:nth-child(2) > a');
  say((await url()).startsWith("/startup/"),"업종 고르기 → /startup/:업종",await url());
  say((await txt()).indexOf("새로 만드는 것과 받는 것")>=0,"STEP 02 분기가 보인다");
@@ -72,14 +77,21 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
 
  console.log("\n【4】 계산기 · 정보 · 업체 · 입점");
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.mti-calc .mti-g > li:nth-child(1) > a');
+ /* ⚠️ 최종 디자인 지시서 §6 — 계산도구 구간이 `.mcal-g` 가 됐습니다 */
+ await click('.mcal-g > li:nth-child(1) > a');
  say((await url())==="/tools/cost","메인 계산도구 → 실제 계산기",await url());
  await pg.evaluate(()=>{const i=document.querySelector("#tl-f input");if(i){i.value="1000";i.dispatchEvent(new Event("input",{bubbles:true}));}});
  await pg.waitForTimeout(200);
  say((await pg.evaluate(()=>!!document.querySelector(".tl-res"))),"계산기 결과 칸이 돈다");
+ /* ⚠️⚠️ **"최신 정보" 구간이 메인에서 내려왔습니다** (최종 디자인
+    지시서 §1 — 메인은 일곱 구간이고 글 구간이 없습니다). 글 예순 편이
+    길을 잃지 않았는지 **남은 길**로 끝까지 눌러 봅니다 — 마지막 구간의
+    도움 줄과 푸터 `정보센터` 둘입니다. */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.mti-read .mti-rg > li:nth-child(1) > a');
- say((await url()).startsWith("/content/"),"메인 최신 정보 → 글 상세",await url());
+ await click('.mlast-h a[href="/content"]');
+ say((await url())==="/content","메인 도움 줄 → 정보센터",await url());
+ await click('.ct-l > li:nth-child(1) a');
+ say((await url()).startsWith("/content/"),"정보센터 → 글 상세",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  /* ⚠️ 2026-10-11 UI/UX 지시서 §2 — 분류 여덟(.msvc-g)이 **전문관
     넷**이 됐습니다. 끝이 막힌 길이 생기지 않았는지 눌러서 봅니다 —
@@ -97,11 +109,12 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.hsv-all');
  say((await url())==="/closure","전체보기 → 그 전문관 화면",await url());
  /* ⚠️ 2026-10-11 간소화 지시서 §2-F — 파트너 입점 구간이 메인에서
-    내려왔습니다 (헤더 [업체 입점] 과 푸터가 받습니다). 끝이 막히지
-    않았는지 **헤더에서** 눌러 봅니다. */
+    내려왔습니다. ⚠️⚠️ **최종 디자인 지시서 §2 로 헤더 CTA 도 "무료
+    견적 신청"(`/quote`) 이 됐습니다** — 업체 입점은 이제 **푸터**가
+    유일한 길입니다. 끝이 막히지 않았는지 거기서 눌러 봅니다. */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.hd a[href="/join"]');
- say((await url())==="/join","헤더 업체 입점 → 신청 화면",await url());
+ await click('.ft a[href="/join"]');
+ say((await url())==="/join","푸터 업체 입점 → 신청 화면",await url());
  /* §2-E — 메인에서 견적 · 상담으로 가는 길이 하나는 있어야 합니다 */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.mlast-go a[href="/quote"]');

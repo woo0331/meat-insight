@@ -1360,10 +1360,12 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   overflow:hidden; }
 .mh-ph{ position:absolute; left:0; right:0; top:0; height:var(--mh-ph-h, 470px);
   z-index:0; pointer-events:none; }
-.mh-ph-l, .mh-ph-r{ position:absolute; top:0; bottom:0; width:42%;
-  overflow:hidden; }
-.mh-ph-l{ left:0; }
-.mh-ph-r{ right:0; }
+/* ⚠️⚠️ **2026-10-11 §3 — 사진은 오른쪽 한 장**입니다. 왼쪽 판
+   (`.mh-ph-l`)은 지금 안 그립니다 — 규칙은 되돌리실 때를 위해
+   남겨 둡니다 (이 저장소가 내려온 디자인의 CSS 를 남겨 두는 까닭). */
+.mh-ph-l, .mh-ph-r{ position:absolute; top:0; bottom:0; overflow:hidden; }
+.mh-ph-l{ left:0; width:42%; }
+.mh-ph-r{ right:0; width:52%; }
 /* ⚠️⚠️ **`object-fit:cover` 를 빼지 마세요.** `<img class="ph">` 의
    기본값이 `fill` 이라 빼면 사진이 비율을 무시하고 늘어납니다 —
    이 저장소에서 실제로 겪은 자리이고 `check.js` 가 규칙을 봅니다.
@@ -1372,21 +1374,35 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mh-ph .ph{ width:100%; height:100%; object-fit:cover; border-radius:0;
   object-position:var(--ph-pos, 50% 50%); }
 .mh-ph-l{ --ph-pos:0% 45%; }
-.mh-ph-r{ --ph-pos:100% 50%; }
+/* ⚠️ 오른쪽 판이 넓어져서 **남길 쪽**이 바뀌었습니다 — 가운데를 쓰면
+   카운터가 잘립니다. 찍어 보고 정한 값입니다. */
+.mh-ph-r{ --ph-pos:40% 45%; }
 .mh-ph-l::after, .mh-ph-r::after{ content:""; position:absolute; inset:0; }
 .mh-ph-l::after{ background:linear-gradient(90deg,
   rgba(253,251,247,.16) 0%, rgba(253,251,247,.40) 44%,
   rgba(253,251,247,.88) 80%, var(--bg-cream) 100%); }
+/* ⚠️⚠️ **왼쪽이 밝아야 글이 읽힙니다** (§3 "왼쪽: 흰색 반투명
+   그라데이션"). 짙게 하면 어두운 면이 늘고(한도 15%) 옅게 하면 글이
+   사진 위에 앉습니다 — **검사는 사진 위 글자를 못 잽니다. 찍어서
+   눈으로 보세요.** */
 .mh-ph-r::after{ background:linear-gradient(270deg,
-  rgba(253,251,247,.16) 0%, rgba(253,251,247,.40) 44%,
-  rgba(253,251,247,.88) 80%, var(--bg-cream) 100%); }
+  rgba(253,251,247,0) 0%, rgba(253,251,247,.10) 26%,
+  rgba(253,251,247,.72) 62%, rgba(253,251,247,.97) 84%,
+  var(--bg-cream) 100%); }
 /* 띠 아래쪽을 크림으로 받아 카드가 얹히는 자리를 만듭니다 */
 .mh-ph::after{ content:""; position:absolute; left:0; right:0; bottom:0;
   height:48%; background:linear-gradient(180deg,
     rgba(253,251,247,0) 0%, rgba(253,251,247,.70) 48%, var(--bg-cream) 100%); }
 
-.mh-in{ position:relative; z-index:2; padding:var(--s10) 0 var(--s8);
-  text-align:center; }
+/* ⚠️⚠️ **글은 왼쪽**입니다 (§3). 가운데로 두면 오른쪽 사진 위에
+   얹혀서 폭마다 대비가 흔들립니다.
+   ⚠️ 글 폭을 **54%** 로 묶는 것은 사진 판과 겹치지 않게 하는
+   것입니다 — 올리면 긴 제목이 사진 밑으로 들어갑니다 (전문관 머리
+   사진에서 재 본 값과 같습니다). */
+.mh-in{ position:relative; z-index:2; padding:var(--s11) 0 var(--s10);
+  text-align:left; }
+.mh-tx{ max-width:54%; }
+@media (max-width:1024px){ .mh-tx{ max-width:none; } }
 .mh-h1{ margin:0; font-size:clamp(30px,4.2vw,50px); font-weight:900;
   letter-spacing:-.038em; line-height:1.18; color:var(--ink); }
 /* ⚠️ 시안의 포인트 — "시작과 마지막" 만 브랜드 블루입니다.
@@ -1411,7 +1427,7 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    으로 쓰면 대비가 3 아래라 안 읽힙니다. */
 .mh-pt{ color:var(--blue-600); font-style:normal; }
 .mh-pt2{ color:var(--close-dark); font-style:normal; }
-.mh-lead{ margin:var(--s5) auto 0; max-width:60ch;
+.mh-lead{ margin:var(--s5) 0 0; max-width:60ch;
   font-size:clamp(15px,1.3vw,18px); font-weight:600; line-height:1.68;
   color:var(--ink2); }
 
@@ -1424,7 +1440,7 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    ⚠️ 폰에서는 단추가 아래로 내려갑니다 — 한 줄에 셋을 두면 적는 칸이
    90px 이 되어 무엇을 적는 칸인지 안 읽힙니다 (검색 패널에서 겪은 자리). */
 .mh-find{ display:flex; align-items:center; gap:var(--s3);
-  width:min(620px, 100%); margin:var(--s6) auto 0; padding:7px 7px 7px var(--s5);
+  width:min(620px, 100%); margin:var(--s6) 0 0; padding:7px 7px 7px var(--s5);
   background:var(--surface); border:1px solid var(--line);
   border-radius:var(--r-pill); box-shadow:0 14px 36px rgba(16,42,86,.12); }
 .mh-find-i{ display:inline-flex; color:var(--blue-600); flex:0 0 auto; }
@@ -1550,12 +1566,18 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    띠로 올리면 사진은 그대로 크게 보이고 글은 크림 바탕에 섭니다. */
 @media (max-width:900px){
   .mh-ph{ position:relative; height:200px; }
+  /* ⚠️⚠️ **2026-10-11 §3 · §12** — 폰에서는 사진이 **글 위의 띠**이고
+     글이 먼저 보입니다 ("텍스트와 검색창이 이미지보다 우선"). 오른쪽
+     52% 로 두면 사진이 **오른쪽 위 조각**으로 남습니다 (찍어 보고
+     알았습니다). */
   .mh-ph-l, .mh-ph-r{ width:50%; }
+  .mh-ph-r{ width:100%; }
   /* 좌우 막은 가운데 이음새만 부드럽게 — 사진을 흐리지 않습니다 */
   .mh-ph-l::after{ background:linear-gradient(90deg,
     rgba(253,251,247,0) 72%, rgba(253,251,247,.55) 100%); }
-  .mh-ph-r::after{ background:linear-gradient(270deg,
-    rgba(253,251,247,0) 72%, rgba(253,251,247,.55) 100%); }
+  /* 띠일 때는 좌우 막을 끕니다 — 사진을 흐리지 않습니다 */
+  .mh-ph-r::after{ background:none; }
+  .mh-ph-r{ --ph-pos:50% 42%; }
   .mh-ph::after{ height:34%; background:linear-gradient(180deg,
     rgba(253,251,247,0) 0%, var(--bg-cream) 100%); }
   .mh-in{ padding:var(--s6) 0 var(--s7); }
@@ -4062,4 +4084,122 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   .svp-cost{ grid-template-columns:1fr; }
   .svp-flow > li{ padding:var(--s5); gap:4px var(--s4); }
   .svp-n{ width:32px; height:32px; border-radius:9px; }
+}
+
+
+/* ── 히어로 바로가기 칩 (2026-10-11 §3) ─────────────────────────
+   ⚠️⚠️ **"인기 검색어" 가 아닙니다.** 검색 기록을 모으지 않아서
+   무엇이 인기인지 모릅니다 — 딱지는 "바로가기" 입니다.
+   ⚠️ 여덟 전부 **쳐 보고 결과가 나오는 말**입니다 (js/pages/home.js
+   의 MAIN_CHIP8 에 건수가 적혀 있습니다).
+   ──────────────────────────────────────────────────────────── */
+.mh-chip{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2);
+  margin:var(--s5) 0 0; padding:0; list-style:none; }
+.mh-chip-k{ font-size:var(--t-cap); font-weight:800; color:var(--ink3);
+  letter-spacing:.02em; margin-right:4px; }
+/* ⚠️ 누름 44px 을 지킵니다 — 추천 칩을 40px 로 두었다가 지시서 기준
+   (44)에 걸린 적이 있습니다. 큰 쪽을 따릅니다. */
+.mh-chip .chip{ min-height:44px; background:rgba(255,255,255,.86);
+  border-color:var(--line); backdrop-filter:blur(2px); }
+@media (max-width:560px){
+  .mh-chip{ gap:6px; }
+  .mh-chip .chip{ min-height:40px; font-size:var(--t-cap); }
+}
+
+/* ── 04 계산도구 넷 (2026-10-11 §6) ────────────────────────────
+   ⚠️⚠️ **카드 전체가 눌립니다** — 안에 또 `<a>` 를 넣지 마세요.
+   오른쪽 아래 화살표는 표시이지 따로 누르는 단추가 아닙니다.
+   ⚠️ 바탕은 **연한 파스텔**입니다 (§6). 색은 `hv-*` 한 곳에서 오고
+   카드마다 색을 적지 않습니다.
+   ──────────────────────────────────────────────────────────── */
+.mcal-g{ display:grid; grid-template-columns:repeat(4, 1fr); gap:var(--s4);
+  margin:var(--s8) 0 0; padding:0; list-style:none; }
+.mcal-g > li{ min-width:0; }
+.mcal-g > li > a{ position:relative; display:grid; gap:6px; align-content:start;
+  min-height:188px; padding:var(--s6); border-radius:var(--r-xl);
+  background:var(--surface); border:1px solid var(--line);
+  box-shadow:var(--shadow-soft); color:var(--ink); text-decoration:none;
+  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
+.mcal-g > li > a:hover{ transform:translateY(-3px);
+  border-color:var(--ic-ink, var(--blue-600)); box-shadow:var(--shadow-float); }
+.mcal-i{ display:inline-flex; align-items:center; justify-content:center;
+  width:64px; height:64px; border-radius:18px; margin-bottom:4px;
+  background:var(--ic-bg, var(--blue-50)); color:var(--ic-ink, var(--blue-600)); }
+.mcal-n{ font-size:var(--t-md); font-weight:800; color:var(--navy); }
+.mcal-o{ font-style:normal; font-size:var(--t-sm); color:var(--ink2);
+  line-height:1.6; }
+/* 오른쪽 아래 이동 표시 (시안) */
+.mcal-go{ position:absolute; right:var(--s5); bottom:var(--s5);
+  display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:50%;
+  background:var(--ic-bg, var(--blue-50)); color:var(--ic-ink, var(--blue-600)); }
+.mcal-all{ margin:var(--s6) 0 0; text-align:center; }
+
+/* ── 05 이용 절차 넷 (2026-10-11 §7) ───────────────────────────
+   ⚠️ 클래스가 `.mstp-*` 입니다 — `.how-*`(/about 진행 셋) ·
+   `.hiw-*`(/join 이용방법)와 겹치면 두 화면이 통째로 깨집니다.
+   ──────────────────────────────────────────────────────────── */
+.mstp-g{ display:grid; grid-template-columns:repeat(4, 1fr); gap:var(--s4);
+  margin:var(--s8) 0 0; padding:0; list-style:none; counter-reset:none; }
+/* ⚠️ grid 칸에 맨글과 태그를 섞지 마세요 — 전부 태그입니다 */
+.mstp-g > li{ position:relative; display:grid; gap:6px; align-content:start;
+  min-width:0; padding:var(--s6); border-radius:var(--r-xl);
+  background:var(--bg-sky); border:1px solid var(--line-sky); }
+/* 단계 사이 화살표 (시안) — ⚠️ 마지막 칸 뒤에는 안 그립니다 */
+.mstp-g > li:not(:last-child)::after{ content:""; position:absolute;
+  right:calc(var(--s4) / -2 - 5px); top:50%; width:10px; height:10px;
+  margin-top:-5px; border-top:2px solid var(--line);
+  border-right:2px solid var(--line); transform:rotate(45deg); }
+.mstp-i{ display:inline-flex; align-items:center; justify-content:center;
+  width:50px; height:50px; border-radius:15px; margin-bottom:4px;
+  background:var(--surface); color:var(--blue-600);
+  border:1px solid var(--line-sky); }
+.mstp-n{ font-size:var(--t-cap); font-weight:900; color:var(--blue-600);
+  letter-spacing:.06em; }
+.mstp-t{ font-size:var(--t-md); font-weight:800; color:var(--navy); }
+.mstp-d{ font-style:normal; font-size:var(--t-sm); color:var(--ink2);
+  line-height:1.65; }
+
+/* ── 06 견적 · 상담 (2026-10-11 §8) ────────────────────────────
+   왼쪽 글 + 단추 둘 / 오른쪽 사진. ⚠️ 사진이 없으면 한 칸입니다.
+   ──────────────────────────────────────────────────────────── */
+.mlast-ph{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,.82fr);
+  gap:var(--s8); align-items:center; }
+.mlast-im{ border-radius:var(--r-2xl); overflow:hidden;
+  box-shadow:var(--shadow-float); aspect-ratio:4 / 3; }
+/* ⚠️⚠️ `object-fit:cover` 를 빼지 마세요 — `<img class="ph">` 의
+   기본값이 `fill` 이라 빼면 사진이 늘어납니다 (검사가 규칙을 봅니다). */
+.mlast-im .ph{ width:100%; height:100%; object-fit:cover;
+  object-position:var(--ph-pos, 50% 50%); }
+.mlast-im{ --ph-pos:50% 45%; }
+
+@media (max-width:1024px){
+  .mcal-g{ grid-template-columns:1fr 1fr; }
+  .mstp-g{ grid-template-columns:1fr 1fr; }
+  /* ⚠️ 두 칸이 되면 둘째 칸 오른쪽의 화살표가 허공을 가리킵니다 */
+  .mstp-g > li:nth-child(2n)::after{ display:none; }
+  .mlast-ph{ grid-template-columns:1fr; gap:var(--s7); }
+  .mlast-im{ aspect-ratio:16 / 9; }
+}
+@media (max-width:560px){
+  .mcal-g{ gap:var(--s3); }
+  .mcal-g > li > a{ min-height:0; padding:var(--s5); }
+  .mcal-i{ width:54px; height:54px; border-radius:15px; }
+  .mcal-go{ right:var(--s4); bottom:var(--s4); width:30px; height:30px; }
+  .mstp-g{ gap:var(--s3); }
+  .mstp-g > li{ padding:var(--s5); }
+  /* ⚠️ 폰에서는 화살표를 끕니다 — 칸 사이가 좁아 글자에 붙습니다 */
+  .mstp-g > li::after{ display:none; }
+}
+
+/* ⚠️ 06 은 **왼쪽 정렬**입니다 (§8 "왼쪽: 제목 · 설명 · 버튼 2개").
+   사진이 없을 때만 가운데로 돌아갑니다 — 한 칸일 때 왼쪽으로 몰면
+   넓은 화면에서 오른쪽이 통째로 비어 보입니다. */
+.mlast-ph .mlast-t{ text-align:left; }
+.mlast-ph .mlast-go,
+.mlast-ph .mlast-h{ justify-content:flex-start; }
+@media (max-width:1024px){
+  .mlast-ph .mlast-t{ text-align:center; }
+  .mlast-ph .mlast-go,
+  .mlast-ph .mlast-h{ justify-content:center; }
 }

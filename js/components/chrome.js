@@ -93,11 +93,19 @@ window.AM_GNB = [
      메인 02 서비스 카드 여덟 · 03 탐색 구간 · 푸터 `서비스` 칸 ·
      아래 네비 다섯 칸이 전부 `/providers` 로 보냅니다 (누르고 확인했습니다).
      ⚠️ 일곱으로 늘리지 마세요 — 901px 에서 남는 폭을 재서 정한 여섯입니다. */
-  { to:"/startup",   name:"창업" },
+  /* ⚠️⚠️ **2026-10-11 최종 디자인 지시서 §2 의 여섯**입니다.
+     여섯 전부 실제로 있는 화면입니다 (가짜 링크는 절대 규칙 5).
+     ⚠️ 지시서의 여섯째는 `고객센터` 인데 **그런 화면이 없습니다** —
+     전화도 채팅도 없는데 그 이름을 걸면 손님이 찾다가 못 찾습니다
+     (이 저장소가 푸터에서 못박아 둔 자리). 실제로 답이 있는
+     `/faq` 로 보내고 이름도 그대로 적습니다.
+     ⚠️ `/content`(정보센터)는 헤더에서 빠졌습니다 — 푸터 `서비스`
+     칸과, 160개 화면의 글 잇기 구간과 헤더 검색이 받습니다. */
+  { to:"/startup",   name:"창업 준비" },
   { to:"/operation", name:"매장 운영" },
+  { to:"/transfer",  name:"매장 양도양수" },
   { to:"/closure",   name:"폐업·정리" },
-  { to:"/transfer",  name:"매장 인수·양도" },
-  { to:"/content",   name:"정보·계산도구" },
+  { to:"/tools",     name:"계산도구" },
   /* ⚠️⚠️ **2026-10-09 지시서 PART 2 4-1 — 여섯째입니다.** 지시서의 아홉
      중 다섯이 위에 있고, `파트너 입점` 과 `로그인·마이페이지` 는 헤더
      **오른쪽**(업체 입점 · 내 기록)에 이미 있습니다. 빠진 것이
@@ -121,7 +129,7 @@ window.AM_GNB = [
      통과합니다.** 손대실 때는 위 표처럼 **재 보세요.**
 
      ⚠️ `/quote` 는 실제로 있는 화면입니다 (견적 · 상담 신청). */
-  { to:"/quote",     name:"서비스 신청" }
+  { to:"/faq",       name:"도움말" }
 ];
 
 /* 폰 아래 네비 — 다섯 칸을 넘기지 마세요. 손가락이 닿는 폭이 줄고
@@ -215,8 +223,16 @@ function Header(){
       '<a class="hd-txt" href="/my">'+icon("user",18)+'<span>내 기록</span></a>'+
       /* ⚠️ 폰에서는 "업체" 를 접습니다. 다 적어 두면 헤더가 360px 를
          넘겨 **가로 스크롤**이 생깁니다 (실제로 415px 였습니다). */
-      '<a class="btn btn-nv hd-cta" href="/join">'+
-        '<span class="hd-cta-w">업체 </span>입점'+icon("arrow",16)+'</a>'+
+      /* ⚠️⚠️ **2026-10-11 지시서 §2 — 오른쪽은 검색 · 무료 견적 신청 ·
+         로그인**입니다. 전에는 `업체 입점` 이 있었는데, 그 길은
+         **푸터 `파트너` 칸**이 161개 화면에서 그대로 받습니다 (재서
+         확인했습니다).
+         ⚠️ `data-to="/quote"` 를 지우지 마세요 — `paintGnb()` 가 그
+         표시를 보고 **보던 조건을 href 에 실어 줍니다.** 없으면
+         분류 화면에서 눌렀을 때 빈 견적 화면이 떠서 처음부터 다시
+         적게 됩니다 (업체 상세의 `quoteTo({})` 로 겪은 사고). */
+      '<a class="btn btn-nv hd-cta" href="/quote" data-to="/quote">'+
+        '<span class="hd-cta-w">무료 </span>견적 신청'+icon("arrow",16)+'</a>'+
     '</div>'+
   '</div></header>';
 }
@@ -247,8 +263,17 @@ function gnbQuoteHref(){
 }
 
 function paintGnb(){
-  var g = $("gnb"); if(!g) return;
   var p = nowPath();
+  /* ⚠️⚠️ **헤더 오른쪽 CTA 는 `#gnb` 밖입니다.** 2026-10-11 최종 디자인
+     §2 로 `업체 입점` 자리가 `무료 견적 신청`(`/quote`)이 되면서, 조건을
+     실어 주는 코드가 `#gnb` 안만 돌아 **그 단추만 조용히 빠졌습니다** —
+     `/providers/interior?i=cafe&r=gyeonggi` 를 보던 분이 누르면 **빈 견적
+     화면**이 떠서 처음부터 다시 적게 됩니다 (업체 상세의 `quoteTo({})`
+     로 이미 겪은 사고). 전수 점검의 "분류 → 견적 요청으로 조건이
+     넘어간다" 가 잡았습니다. 헤더 전체에서 그 표시를 찾습니다. */
+  els('a[data-to="/quote"]', document.querySelector(".hd") || document)
+    .forEach(function(a){ a.setAttribute("href", gnbQuoteHref()); });
+  var g = $("gnb"); if(!g) return;
   els("a", g).forEach(function(a){
     var to = a.getAttribute("data-to");
     var on = (to === "/") ? (p === "/") : (p === to || p.indexOf(to + "/") === 0);

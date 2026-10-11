@@ -323,8 +323,12 @@ const CASES = [
      잡는다" 가 아니라 **되돌리기가 틀린** 것입니다 (이 저장소에서
      아홉 번째). 2026-10-09 시안으로 히어로 카드의 `.hpk-d` 가 체크
      셋(`.hpk-ck`)으로 바뀌었습니다 — 집는 자리를 같이 옮깁니다. */
+  /* ⚠️ 2026-10-11 최종 디자인 §3 — 히어로의 체크 셋(.hpk-ck)이
+     없어졌습니다. **없는 요소를 집으면 되돌리기가 터지고**, 그러면
+     "검사가 안 잡는다" 가 아니라 되돌리기가 틀린 것입니다 (열 번째).
+     지금은 전문관 서비스 칸에 지어낸 수를 박아 봅니다. */
   ["지어낸 실적 숫자가 메인에 없다",
-   `document.querySelector(".hpk-ck > i").textContent = "입점 업체 1,200곳";`],
+   `document.querySelector(".hsv-g b").textContent = "입점 업체 1,200곳";`],
   ["히어로가 창업 · 폐업 두 갈래를 같은 무게로 낸다",
    `document.querySelector("#view h1").textContent = "창업 플랫폼";`],
   /* ⚠️⚠️ 되돌리기는 **검사가 실제로 보는 것**을 망가뜨려야 합니다.
@@ -340,8 +344,11 @@ const CASES = [
       .forEach(function(e){ e.remove(); });`],
   /* ⚠️⚠️ **폐업이 빨강으로 넘어가던 그때.** 빨강은 "폐업은 나쁜 것"
      이라는 말이 됩니다 — 이 저장소가 여러 곳에 못박아 둔 자리입니다. */
+  /* ⚠️ 검사가 보는 자리가 전문관 카드(.mhall-c.hall-close)의 **바탕**
+     으로 옮겨갔습니다 — 글자색을 칠하면 아무 일도 안 납니다. */
   ["창업은 파랑 · 폐업은 주황이고 빨강이 아니다",
-   `document.querySelector(".hpk-cl .hpk-h1").style.color = "rgb(214,28,28)";`],
+   `document.querySelector(".mhall-c.hall-close")
+      .style.background = "rgb(214,28,28)";`],
   /* ⚠️ 2026-10-11 간소화 §2 — 연결 구간이 메인에서 내려와 되돌릴
      요소가 없습니다. **없는 요소를 집으면 되돌리기가 터지고**, 그러면
      "검사가 안 잡는다" 로 보입니다 (이 저장소에서 아홉 번 겪은 자리).
@@ -360,8 +367,16 @@ const CASES = [
      다섯이 빠짐없이 나뉘는가)이 확인되지 않습니다. */
   ["사업 단계 여섯이 분류 스물다섯을 빠짐없이 나눠 가진다",
    `window.AM_STAGES[5].cats = window.AM_STAGES[5].cats.slice(1);`],
-  ["히어로 선택 카드 둘의 크기가 같다",
-   `document.querySelector(".hpk-cl").style.width = "70%";`],
+  /* ⚠️ 이 검사는 전에 되돌리기가 없었습니다 — 2026-10-11 에 글 셋이
+     내려오면서 다시 쓰면서 같이 넣었습니다 (되돌리기 없는 검사는
+     아무것도 증명하지 않습니다). */
+  ["메인 계산도구 넷이 실제로 있는 것이다",
+   `document.querySelector(".mcal-g > li").remove();`],
+  ["전문관 카드 넷의 크기가 같다",
+   `/* ⚠️ min-height 가 148px 로 걸려 있어 height 만 줄이면 아무 일도
+      안 납니다 — 폭을 줄입니다 (grid 의 stretch 를 덮습니다). */
+   const e4 = document.querySelectorAll(".mhall-c")[3];
+   e4.style.width = "70%"; e4.style.minHeight = "0"; e4.style.height = "80px";`],
   /* ⚠️⚠️ **아이콘 칸(.stg-i)만 집어야 합니다.** 처음에
      ".mstg-g > li > a svg" 로 적었더니 **화살표까지** 걸려서
      [아이콘0, 화살표0, 아이콘1, …] 이 되고, 0번에 화살표를 넣는 바람에
@@ -494,9 +509,12 @@ const CASES = [
       **실제로 있는** 카드를 고릅니다 — 없는 것을 집으면 되돌리기가
       터지거나 아무 일도 안 나서 "검사가 안 잡는다" 로 보입니다
       (이 저장소에서 다섯 번 겪은 자리입니다). */
-   `const a = document.querySelector(".msvc-g > li > a") ||
-             document.querySelector(".mti-c") ||
-             document.querySelector(".hpk");
+   /* ⚠️ 2026-10-11 최종 디자인 — .msvc-g · .mti-c · .hpk 가 전부
+      메인에서 내려왔습니다. 지금 있는 카드는 계산도구(.mcal-g > li) ·
+      절차(.mstp-g > li) · 전문관(.mhall-c) 입니다. */
+   `const a = document.querySelector(".mcal-g > li") ||
+             document.querySelector(".mstp-g > li") ||
+             document.querySelector(".mhall-c");
     const back = (function(el){
       let e = el.parentElement;
       while(e){
@@ -853,7 +871,12 @@ async function proveAudit(pg){
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).ico;
     await pg.evaluate(() => {
-      const e = document.querySelector("#view .ic-t svg, #view .stg-i svg");
+      /* ⚠️ 2026-10-11 — 메인의 타일이 .ia-t(계산도구) · .mhall-i ·
+         .mstp-i 로 바뀌었습니다. 집는 자리를 AUDIT 과 같이 넓힙니다 —
+         없는 요소를 집으면 아무 일도 안 나서 "검사가 안 잡는다" 로
+         보입니다 (검사가 아니라 되돌리기가 틀린 자리, 열 번째). */
+      const e = document.querySelector("#view .ic-t svg, #view .stg-i svg," +
+        " #view .ia-t svg, #view .mhall-i svg, #view .mstp-i svg");
       if(e) e.remove();
     });
     await pg.waitForTimeout(60);

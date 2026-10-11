@@ -281,7 +281,18 @@ window.WOW_PHOTO_SLOTS = [
     note:"정리하는 상업공간 · 넘기는 열쇠. ⚠️ 처연하면 안 됩니다 — 불 꺼진 가게 · 고개 숙인 사람 금지" },
   { key:"kind-asset", sizes:"(max-width:520px) 94vw, (max-width:600px) 480px, (max-width:900px) 47vw, (max-width:1280px) 31vw, 387px",
     where:"자산 카드 03 · 시설 · 장비 거래", min:[1120,840], ratio:[1.25,1.45], maxKB:140,
-    note:"업소용 시설 · 장비. ⚠️ 한 업종으로 읽히지 않게 (주방설비만 쓰면 고깃집으로 읽힙니다)" }
+    note:"업소용 시설 · 장비. ⚠️ 한 업종으로 읽히지 않게 (주방설비만 쓰면 고깃집으로 읽힙니다)" },
+
+  /* 메인 06 견적 · 상담 구간의 오른쪽 사진 (2026-10-11 지시서 §8)
+     ⚠️⚠️ **밝은 매장에서 상담하는 장면**이라야 합니다. 정리 · 철거
+     현장을 넣으면 "어떤 서비스가 필요하신가요?" 라는 권유 자리가
+     통째로 폐업으로 읽힙니다 — `hero-close` 를 넣어 보고 찍어서
+     뺐습니다.
+     ⚠️ 비어 있으면 **액자째 안 그립니다** (절대 규칙 2) — 글이 한
+     칸을 다 쓰고, 파일을 넣으시면 코드를 한 줄도 안 고치고 붙습니다. */
+  { key:"cta-consult", sizes:"(max-width:1024px) 92vw, 40vw",
+    where:"메인 06 · 견적 · 상담 신청 오른쪽", min:[1120,840], ratio:[1.25,1.45], maxKB:150,
+    note:"밝은 매장 · 상담하는 장면. ⚠️ 한 업종이 드러나면 안 됩니다. 정리 · 철거 현장 금지" }
 ];
 
 
@@ -361,7 +372,8 @@ window.WOW_PHOTOS = {
     w:1120, h:840,
     webp:"/img/kind-asset-sm.webp?v=d6f4fc74 560w, /img/kind-asset.webp?v=64cc0fe1 1120w",
     jpg:"/img/kind-asset-sm.jpg?v=428937df 560w, /img/kind-asset.jpg?v=449ec642 1120w",
-    alt:"스테인리스 조리대와 장비가 늘어선 상업용 주방" }
+    alt:"스테인리스 조리대와 장비가 늘어선 상업용 주방" },
+
 };
 
 window.wowPhoto = function(key){

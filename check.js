@@ -2367,7 +2367,8 @@ const AUDIT = `(() => {
        메인**인가" 입니다 — 그래서 찾는 표시도 지금 화면의 것으로
        바꿉니다 (내려온 구간은 PageMain 주석이 갈 곳을 적어 두었습니다). */
     const need = [[".mh-pick-g", "창업 / 폐업 선택 카드"],
-                  [".mbr-g", "브랜드 연결"],
+                  /* ⚠️ 2026-10-11 간소화 §2 — 브랜드 연결(.mbr-g)이 메인에서
+                     내려왔습니다 (TAKE OVER 와 네 주소가 겹쳤습니다). */
                   /* 2026-10-11 UI/UX 지시서 §2 — 분류 여덟이 전문관 넷이
                      됐습니다. 보는 것은 "서비스 목록이 메인에 있는가" 입니다 */
                   [".mhall-g", "전문관 넷"],
@@ -2441,9 +2442,12 @@ const AUDIT = `(() => {
        방향으로만 읽힙니다). 전수 점검은 통과했고 찍어 보고 알았습니다.
        ⚠️ **카드 높이까지 같기를 바라지 마세요** — 한 번 그렇게 맞췄다가
        사진이 한쪽에만 들어오자 반대쪽 타일이 세로 2:1 로 늘어났습니다. */
+    /* ⚠️ 2026-10-11 간소화 §2 로 이 구간이 메인에서 내려왔습니다.
+       **검사를 지우지 않았습니다** — 되살리시면 그날 다시 봅니다.
+       없으면 건너뜁니다 (없는 것을 "결함" 으로 잡으면 안 됩니다). */
     const a = document.querySelector(".mbr-cl");
     const b = document.querySelector(".mbr-st");
-    if(!a || !b) return "연결 구간 두 기둥 중 하나가 없습니다";
+    if(!a || !b) return true;
     /* 900px 아래에서는 세로로 쌓입니다 — 나란히 놓인 때만 봅니다 */
     if(innerWidth <= 900) return true;
     const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
@@ -2761,9 +2765,6 @@ const AUDIT = `(() => {
     if(!/등록된 업체 수가 아닙니다/.test(sc.textContent))
       return "범위 숫자 띠의 '등록된 업체 수가 아닙니다' 줄이 없습니다";
 
-    /* 브랜드 연결 구간의 줄도 아이콘이 비면 안 됩니다 */
-    for(const sv of document.querySelectorAll(".mbr-l svg"))
-      if(!sv.innerHTML.trim()) return "브랜드 연결 줄에 빈 아이콘이 있습니다";
     return true;`);
 
   await f("전문관을 고르면 그 전문관의 서비스가 나온다", "/?h=closure", `
@@ -2860,7 +2861,9 @@ const AUDIT = `(() => {
        않습니다" 라고 적어서, 함수는 home-retired.js 에 그대로 있고
        그 구간이 가리키던 열다섯 주소는 헤더 여섯 · 메인 02 서비스 여덟 ·
        09 운영 묶음 · 푸터 다섯 칸이 전부 받습니다 (링크 검사가 봅니다). */
-    const want = ["mh","mhall","pkg","mind","mti","mk","mbr","mopsv","mjn","mlast"];
+    /* ⚠️⚠️ 2026-10-11 간소화 지시서 §2 — A~F 다섯 구간 + 푸터입니다
+       (열에서 다섯으로. 줄인 것은 기능이 아니라 복잡성입니다). */
+    const want = ["mh","mhall","mk","mti","mlast"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
@@ -2896,17 +2899,21 @@ const AUDIT = `(() => {
      접는 규칙이 살아 있는가.
      ⚠️ ②③ 이 중요합니다 — 접는 규칙을 묶음 밖으로 내면 **넓은
      화면에서도 접히는데 단추는 안 보여** 펼칠 방법이 아예 없습니다. */
-  await f("폰에서 긴 묶음을 접어 둔다", "/", `
+  await f("폰에서 긴 묶음을 접어 둔다", "/startup", `
+    /* ⚠️ 2026-10-11 간소화 §2 — 패키지 구간이 메인에서 내려오고
+       창업 · 폐업 · 양도 화면에 남았습니다. 그래서 보는 화면을
+       옮겼습니다. 운영 묶음은 운영 화면에서 **안 접습니다**(그 화면의
+       본문이라 접으면 본문이 단추 뒤로 숨습니다) — 그 갈래는 뺐습니다.
+       ⚠️ 이 주석에 백틱을 쓰지 마세요 — 문자열이 거기서 끝납니다
+       (열두 번 겪었습니다). */
     const btn = document.querySelectorAll(".fld-b");
-    if(btn.length < 2) return "접기 단추가 " + btn.length + "개입니다";
+    if(!btn.length) return "접기 단추가 없습니다";
     if(getComputedStyle(btn[0]).display !== "none")
       return "넓은 화면에서 접기 단추가 보입니다";
     const pl = document.querySelector(".pkg-l.is-fold");
     if(!pl) return "패키지 목록에 접기 표시가 없습니다";
     if(getComputedStyle(pl).display === "none")
       return "넓은 화면에서 패키지 목록이 접혔습니다";
-    if(!document.querySelector(".opsv-g.is-fold > .fld-x"))
-      return "운영 묶음에 접을 칸 표시가 없습니다";
     let show = 0, shut = 0;
     for(const sh of document.styleSheets){
       let rules; try { rules = sh.cssRules; } catch(e){ continue; }
@@ -2916,13 +2923,11 @@ const AUDIT = `(() => {
         for(const q of (r.cssRules || [])){
           if(q.selectorText === ".fld-b" && q.style.display === "flex") show++;
           if(q.selectorText === ".pkg-l.is-fold" && q.style.display === "none") shut++;
-          if(q.selectorText === ".opsv-g.is-fold > .fld-x" &&
-             q.style.display === "none") shut++;
         }
       }
     }
     if(!show) return "900px 아래에서 접기 단추를 켜는 규칙이 없습니다";
-    if(shut < 2) return "900px 아래에서 접는 규칙이 " + shut + "개뿐입니다";
+    if(!shut) return "900px 아래에서 접는 규칙이 없습니다";
     return true;`);
   /* ⚠️⚠️ 2026-10-03 지시서의 **핵심**입니다 (§13 ~ §18) — "카페를 하고
      싶은데 뭐가 필요한지 모르겠다" 는 분이 업종 하나만 고르면 필요한

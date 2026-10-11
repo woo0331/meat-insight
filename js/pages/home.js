@@ -549,7 +549,13 @@ function MainStores(){
       '<div class="mk-g">'+L.slice(0,3).map(function(s2){ return StoreCard(s2); }).join("")+'</div>'+
       '<p class="row-cta row-mid"><a class="btn btn-nv" href="/stores">'+
         '매장 인수 · 양도 보러가기'+icon("arrow",18)+'</a></p>'
-    : kinds+ MainTakeoverGuide(nA);
+    /* ⚠️⚠️ **2026-10-11 간소화 지시서 §2-C — "이미지 카드 3개만
+       유지한다."** 매물이 0건일 때 깔던 인수 체크리스트 판
+       (MainTakeoverGuide · 1434px 중 800px)을 메인에서 내렸습니다.
+       ⚠️ **지운 것이 아닙니다** — 그 체크리스트는 AM_PROCESS["acq-in"]
+       이고 `/transfer?t=in` 이 여덟 걸음을 통째로 들고 있습니다
+       (흐름 검사가 눌러 봅니다). 함수도 그대로 있습니다. */
+    : kinds;
   /* ⚠️⚠️ **매물이 0건이면 머리말도 바뀝니다** (2026-10-08 §10 · §26 ·
      절대 규칙 1). 시안의 머리말은 **"지금 이런 매장이 새로운 사장님을
      기다리고 있어요"** 인데, 매물이 0건인 상태에서 그 문장을 걸면
@@ -866,21 +872,32 @@ function MainJoin(){
    ⚠️ 창업은 블루 · 폐업은 오렌지 (§12). 두 단추의 크기 · 글씨 ·
    자리가 같아야 합니다 — 한쪽을 작게 하면 "덜 중요한 것" 이 됩니다.
    ⚠️ 셋째 줄 셋은 **실제로 되는 것**만입니다 (가짜 링크는 절대 규칙 5). */
+/* ⚠️ 셋 다 실제로 있는 화면입니다. "체크리스트 → /startup" 은 바로
+   위 창업 단추와 **같은 데**라서 `/content`(글 예순 편)로 바꿨습니다 —
+   같은 구간 안에서 같은 주소로 가는 길을 둘 두지 않습니다 (§5). */
 var MAIN_LAST_HELP = [
   { ic:"users", n:"업체 찾기",   d:"분야 · 지역으로 추립니다",   to:"/providers" },
-  { ic:"check", n:"체크리스트",  d:"걸음마다 꼭 확인할 것",      to:"/startup" },
+  { ic:"book",  n:"정보 · 가이드", d:"막히는 자리마다 읽을 것",   to:"/content" },
   { ic:"calc",  n:"계산도구",    d:"비용을 직접 재 보세요",      to:"/tools" }
 ];
 function MainLast(){
   return '<section class="sec sec-ivory mlast"><div class="w">'+
     '<div class="mlast-in">'+
       '<div class="mlast-t">'+
-        '<h2>어디서부터 시작해야 할지 모르겠다면?</h2>'+
-        '<p>지금 상황을 선택하면 필요한 순서부터 안내해 드립니다.<br class="br-m"> '+
-          '사장님의 시작과 마지막, '+esc(amBrand())+'가 함께합니다.</p>'+
+        /* ⚠️⚠️ **2026-10-11 간소화 지시서 §2-E** — "견적 요청과 상담
+           신청을 **하나의 명확한 진입 영역**으로 통합한다 · 고객에게
+           불필요하게 여러 신청서를 반복 작성하게 하지 않는다."
+           메인에서 `/quote` 로 가는 길은 **여기 하나**입니다 (패키지
+           구간이 내려가면서 그 길이 없어졌습니다). */
+        '<h2>어떤 서비스가 필요하신가요?</h2>'+
+        '<p>한 번만 적어 보내시면 분야에 맞는 업체를 찾아 연결해 '+
+          '드립니다.<br class="br-m"> 사장님의 시작과 마지막, '+
+          esc(amBrand())+'가 함께합니다.</p>'+
         '<p class="mlast-go">'+
-          '<a class="btn btn-b btn-lg" href="/startup">창업 준비하기'+icon("arrow",18)+'</a>'+
-          '<a class="btn btn-cl btn-lg" href="/closure">폐업 · 정리 준비하기'+icon("arrow",18)+'</a>'+
+          '<a class="btn btn-b btn-lg" href="/quote">'+
+            '견적 · 상담 신청'+icon("arrow",18)+'</a>'+
+          '<a class="btn btn-o btn-lg" href="/startup">창업 준비하기</a>'+
+          '<a class="btn btn-o btn-lg" href="/closure">폐업 · 정리</a>'+
         '</p>'+
       '</div>'+
       /* ⚠️ 시안에는 이 줄이 없지만 **지우지 않았습니다** — 2026-10-08
@@ -1032,8 +1049,42 @@ function PageMain(){
      ⚠️⚠️ 사진 넷(`svc-interior` · `svc-equip` · `svc-it` · `svc-clean`)이
      그 구간에서만 쓰였습니다. `photos.js` 와 파일은 그대로라 되살리면
      바로 다시 붙습니다. */
-  return MainHero()+ MainHalls()+ PackBand("", "sec-blue")+
-         MainIndustryBand()+ MainToolsInfo()+ MainStores()+ MainBridge()+
-         MainOpsvc()+ MainJoin()+ MainLast();
+  /* ⚠️⚠️ **2026-10-11 "전체 사이트 간소화 및 중복 제거 작업지시서"
+     §2 — 메인은 A~F 다섯 구간 + 푸터입니다.**
+
+       A 히어로               .mh     핵심 메시지 + 통합검색 + 대표 단추
+       B 전문관 · 서비스 탐색   .mhall  넷 + 고른 전문관의 대표 서비스
+       C 매장 · 시설 장비 거래  TAKE OVER  이미지 카드 **셋만**
+       D 무료 사업 도구        .mti    계산기 넷 + 최신 정보
+       E 전문가 연결 · 상담     .mlast  견적 · 상담 신청 **하나로**
+       F 푸터                  .ft     `#view` 밖 (chrome.js)
+
+     ⚠️⚠️ **열에서 다섯으로 줄인 것은 "기능" 이 아니라 "복잡성"
+     입니다** (지시서 머리말). 함수는 **하나도 안 지웠습니다** —
+     아래 한 줄이면 돌아옵니다. 내려온 다섯마다 갈 곳이 남아 있는지
+     **재서** 확인했습니다 —
+
+       · PackBand()       패키지     → /quote 가 E 의 주 단추입니다.
+                                       패키지는 신청 화면 안에서
+                                       묶어 고르실 수 있습니다 (§3)
+       · MainIndustryBand() 업종 열넷 → /startup · /closure **첫 화면이
+                                       그대로 업종 고르개**입니다.
+                                       전문관 바로 아래 또 고르개를
+                                       두면 "같은 선택 영역의 반복"
+                                       입니다 (§5)
+       · MainBridge()     인수↔인계  → C 와 **네 주소가 겹쳤습니다**
+                                       (/stores · /assets · /transfer ·
+                                       /tools/vs). §5 "다른 섹션과
+                                       기능이 동일한 카드"
+       · MainOpsvc()      운영 묶음   → B 의 **매장 운영 전문관**이
+                                       그대로 받습니다 (겹친 주소
+                                       /providers/it · marketing)
+       · MainJoin()       파트너 입점 → §2-F "파트너 모집은 별도
+                                       페이지로 연결". 헤더 [업체 입점]
+                                       과 푸터가 이미 받습니다
+
+     ⚠️ 늘리시려면 **지시서를 먼저 고치고** `check.js` 의 `want` 를
+     같이 고치세요 (거기가 구간 차례를 셉니다). */
+  return MainHero()+ MainHalls()+ MainStores()+ MainToolsInfo()+ MainLast();
 }
 

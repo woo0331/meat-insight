@@ -96,9 +96,16 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.goto(B+"/?h=closure",{waitUntil:"networkidle"});
  await click('.hsv-all');
  say((await url())==="/closure","전체보기 → 그 전문관 화면",await url());
+ /* ⚠️ 2026-10-11 간소화 지시서 §2-F — 파트너 입점 구간이 메인에서
+    내려왔습니다 (헤더 [업체 입점] 과 푸터가 받습니다). 끝이 막히지
+    않았는지 **헤더에서** 눌러 봅니다. */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.mjn-go a');
- say((await url())==="/join","파트너 입점 → 신청 화면",await url());
+ await click('.hd a[href="/join"]');
+ say((await url())==="/join","헤더 업체 입점 → 신청 화면",await url());
+ /* §2-E — 메인에서 견적 · 상담으로 가는 길이 하나는 있어야 합니다 */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.mlast-go a[href="/quote"]');
+ say((await url()).startsWith("/quote"),"마지막 구간 → 견적 · 상담 신청",await url());
 
 
  /* ══════════════════════════════════════════════════════════════

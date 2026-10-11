@@ -342,10 +342,11 @@ const CASES = [
      이라는 말이 됩니다 — 이 저장소가 여러 곳에 못박아 둔 자리입니다. */
   ["창업은 파랑 · 폐업은 주황이고 빨강이 아니다",
    `document.querySelector(".hpk-cl .hpk-h1").style.color = "rgb(214,28,28)";`],
-  ["연결 구간 두 딱지가 같은 높이에 앉는다",
-   `document.querySelector(".mbr-g").style.alignItems = "center";
-    document.querySelector(".mbr-cl .mbr-l").insertAdjacentHTML("beforeend",
-      "<li style=height:120px>늘림</li>");`],
+  /* ⚠️ 2026-10-11 간소화 §2 — 연결 구간이 메인에서 내려와 되돌릴
+     요소가 없습니다. **없는 요소를 집으면 되돌리기가 터지고**, 그러면
+     "검사가 안 잡는다" 로 보입니다 (이 저장소에서 아홉 번 겪은 자리).
+     검사는 "없으면 건너뜀" 으로 남겨 두었으니 되살리시는 날 이 줄도
+     같이 되살리세요. */
   ["사진 자리가 비율을 무시하고 늘어나지 않는다",
    `for(const sh of document.styleSheets){
       let rules; try { rules = sh.cssRules; } catch(e){ continue; }

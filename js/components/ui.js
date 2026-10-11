@@ -559,6 +559,52 @@ window.FitCard = function(c, industryKey){
   '</a>';
 };
 
+/* ════════════════════════════════════════════════════════════════════
+   폰에서만 **접어 두기** (2026-10-11 사장님 지시 — "폰에서 접어두는거")
+
+   메인이 390px 에서 18,546px(20.6화면)이었습니다. 재 보니 여백 ·
+   머리말 · 줄 사이를 **전부 반으로 줄여도 1.8화면**뿐이고 82%가 카드
+   내용이라, 짧아지려면 **카드를 덜 내는** 길밖에 없었습니다.
+
+   ⚠️⚠️ **지우는 것이 아닙니다.** 한 번 더 누르면 그대로 나옵니다 —
+   §12("기존 콘텐츠를 지워 빈 페이지처럼 만들지 않는다")와 §30-2 를
+   지키면서 첫 화면에서 차지하는 자리만 줄입니다.
+   ⚠️ **넓은 화면은 한 픽셀도 안 바뀝니다** — 1440px 은 11,366px 이라
+   접을 까닭이 없습니다. CSS 의 `@media (max-width:900px)` 안에서만
+   접히고, 단추도 거기서만 보입니다.
+   ⚠️⚠️ **접힌 자리에 "준비 중" 을 찍지 않습니다** (절대 규칙 2) —
+   단추가 **몇 개가 있는지 세어서** 말합니다.
+   ⚠️ 접힌 것은 `display:none` 이라 읽어 주는 프로그램도 같이 건너
+   뜁니다 — `aria-expanded` 로 펼칠 수 있다는 것을 알립니다.
+   ⚠️⚠️ **크롤러 본문과는 상관이 없습니다** (`build-pages.js` 가 따로
+   씁니다) — 접어도 검색엔진이 보는 것은 그대로입니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 접는 단추. `id` 는 접히는 칸의 id 입니다.
+   ⚠️ 누르는 것은 40px 이상이라야 합니다 — `min-height` 로 잡습니다
+   (`padding` 만으로 만들면 짧은 이름에서 다시 낮아집니다). */
+window.FoldBtn = function(id, shut, open){
+  return '<button class="fld-b" type="button" aria-expanded="false" '+
+      'aria-controls="'+esc(id)+'" '+
+      'data-shut="'+esc(shut)+'" data-open="'+esc(open || "접기")+'" '+
+      'onclick="foldToggle(\''+esc(id)+'\',this)">'+
+    '<span>'+esc(shut)+'</span>'+ icon("chevd", 16) +'</button>';
+};
+
+/* ⚠️ 다시 그리지 않습니다 — DOM 을 바로 건드립니다. 여기서 화면을
+   다시 그리면 **방금 보던 자리를 잃고**(이 저장소가 "더 보기" 에서
+   `data-keep` 으로 겪은 자리), 패키지의 체크 상태까지 되돌아갑니다. */
+window.foldToggle = function(id, btn){
+  var el = document.getElementById(id);
+  if(!el || !btn) return;
+  var shut = el.classList.toggle("is-fold");      /* true = 다시 접힘 */
+  btn.setAttribute("aria-expanded", shut ? "false" : "true");
+  var t = btn.querySelector("span");
+  if(t) t.textContent = shut ? (btn.getAttribute("data-shut") || "더 보기")
+                             : (btn.getAttribute("data-open") || "접기");
+  btn.classList.toggle("is-open", !shut);
+};
+
 /* ══════════════════════════════════════════════════════════════════
    패키지 구간 — 2026-10-09 최종 통합 지시서 §4-4 · §6-4
    ══════════════════════════════════════════════════════════════════
@@ -604,7 +650,12 @@ window.PackCard = function(p){
     /* ⚠️ 체크칸은 **상품마다 하나**입니다. 기본은 전부 켜 두고 빼실 수
        있게 합니다 — 묶음으로 보러 오신 분께 다시 다 고르게 하면
        거기서 닫힙니다. */
-    '<ul class="pkg-l">'+items.map(function(o){
+    /* ⚠️⚠️ **폰에서는 상품 목록을 접습니다** (사장님 지시). 패키지 넷이
+       390px 에서 2,661px 였고 그 대부분이 이 체크 칸이었습니다 —
+       고르는 것(패키지 넷)과 누르는 것(상담 신청)은 **접지 않습니다.**
+       ⚠️ 단추의 숫자는 **그 자리에서 센 값**입니다. */
+    FoldBtn("pkg-l-"+p.key, "상품 " + items.length + "개 보기", "상품 접기")+
+    '<ul class="pkg-l is-fold" id="pkg-l-'+esc(p.key)+'">'+items.map(function(o){
       var id = "pk-"+p.key+"-"+o.id;
       return '<li><label class="pkg-ck" for="'+esc(id)+'">'+
         '<input type="checkbox" id="'+esc(id)+'" checked '+

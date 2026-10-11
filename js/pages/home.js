@@ -386,22 +386,59 @@ function MainBand(o){
   '</div></section>';
 }
 
+/* ⚠️⚠️ **2026-10-11 사장님 지시 — 이미지 중심으로 다시 짰습니다.**
+   > "이미지 중심의 고급스러운 디자인으로 변경 · 매장 인수하기 / 내 매장
+   >  양도하기 / 시설 · 장비 거래 · 고품질 이미지 · 마우스를 올리면
+   >  자연스럽게 확대 · PC 3열 · 모바일 반응형"
+
+   ⚠️⚠️ **사진은 아직 없습니다 — 그래서 아무 사진도 깔지 않았습니다.**
+   같은 지시서가 *"외부 참고 이미지를 무단 사용하지 말고 상업적 사용
+   권한이 확보된 이미지만 적용"* 이라고 적었고, 시안에 박힌 사진은
+   직접 찍은 것도 · 상업적 이용이 되는 무료 사진도 · 유료 스톡도
+   아닙니다 (이 저장소가 2026-10-06 에 단계 카드 여섯에서 같은 까닭으로
+   임시 그림을 걷어낸 자리입니다).
+
+   ⚠️ **자리는 만들어 두었습니다** — `photos.js` 의 `kind-take` ·
+   `kind-pass` · `kind-asset` 셋입니다. 권한이 확인된 파일을 `img/` 에
+   넣고 그 세 줄만 적으면 **코드를 한 줄도 안 고치고** 시안 그대로
+   됩니다 (비율 · 크기 · 용량을 셋이 같게 못박아 두었습니다 — 지시서
+   §5 "색감 · 크기 · 비율을 통일").
+
+   ⚠️⚠️ 그때까지는 **빈 회색 액자를 깔지 않습니다** (절대 규칙 2) —
+   브랜드 면(남색 → 청록)에 분류 아이콘을 크게 얹습니다. 셋이 같은
+   비율 · 같은 짜임새라 사진이 들어와도 자리가 안 흔들립니다.
+   ⚠️ 가는 곳 셋은 **전부 실제로 있는 화면**입니다 (지시서 §9 —
+   "실제 기능이 없는 메뉴는 작동하는 것처럼 표시하지 않습니다"). */
 var MAIN_ASSET_KIND = [
-  { ic:"pin",      tone:"t5",  n:"매장 인수",      d:"상권을 처음부터 찾지 않아도 됩니다",
-    to:"/transfer?t=in" },
-  { ic:"handover", tone:"t13", n:"매장 양도",      d:"넘기면 철거비와 원상복구가 줄어듭니다",
-    to:"/transfer?t=out" },
-  { ic:"boxes",    tone:"t12", n:"시설 · 장비 정리", d:"버리면 비용이고 넘기면 돈입니다",
-    to:"/closure?w=money" }
+  { ic:"pin",      tone:"t5",  ph:"kind-take",  n:"매장 인수하기",
+    d:"인수 가능한 매장을 찾아보세요.", to:"/stores" },
+  { ic:"handover", tone:"t13", ph:"kind-pass",  n:"내 매장 양도하기",
+    d:"내 매장을 등록하고 새로운 사장님을 만나보세요.", to:"/sell" },
+  { ic:"boxes",    tone:"t12", ph:"kind-asset", n:"시설 · 장비 거래",
+    d:"중고 시설과 장비를 구매하거나 판매할 수 있습니다.", to:"/assets" }
 ];
 function MainStores(){
   var L  = (window.AM_STORES||[]);
   var nA = (window.AM_ASSETS||[]).length;
+  /* ⚠️⚠️ **카드 전체가 눌립니다** — 안에 또 `<a>` 를 넣지 마세요.
+     오른쪽 아래 화살표는 **표시**이지 따로 누르는 단추가 아닙니다
+     (`<a>` 안의 `<a>` 는 브라우저가 쪼갭니다 · 검사가 봅니다).
+     ⚠️ 사진이 들어오면 `photoBox()` 가 `<picture>` 로 냅니다 —
+     `object-fit:cover` 는 CSS 에 있습니다 (안 주면 비율을 무시하고
+     늘어납니다 · `check.js` 가 규칙 자체를 봅니다). */
   var kinds = '<ul class="mk-kind">'+MAIN_ASSET_KIND.map(function(k){
-    return '<li class="tn-'+esc(k.tone)+'"><a href="'+esc(k.to)+'">'+
-      '<span class="ic-t">'+icon(k.ic,24)+'</span>'+
-      '<span class="mk-kind-t"><b>'+esc(k.n)+'</b><i>'+esc(k.d)+'</i></span>'+
-      '<em class="mk-kind-a" aria-hidden="true">'+icon("arrow",16)+'</em>'+
+    var has = (typeof hasPhoto === "function") && hasPhoto(k.ph);
+    return '<li class="tn-'+esc(k.tone)+'">'+
+      '<a class="mk-k" href="'+esc(k.to)+'">'+
+        '<span class="mk-k-ph'+(has ? "" : " mk-k-ph-n")+'">'+
+          (has ? photoBox(k.ph)
+               : '<span class="mk-k-ic" aria-hidden="true">'+icon(k.ic,56)+'</span>')+
+        '</span>'+
+        '<span class="mk-k-b">'+
+          '<span class="mk-k-chip" aria-hidden="true">'+icon(k.ic,22)+'</span>'+
+          '<span class="mk-k-t"><b>'+esc(k.n)+'</b><i>'+esc(k.d)+'</i></span>'+
+          '<em class="mk-k-a" aria-hidden="true">'+icon("arrow",18)+'</em>'+
+        '</span>'+
       '</a></li>'; }).join("")+'</ul>';
   var body = L.length
     ? kinds+
@@ -512,9 +549,18 @@ function MainBridge(){
     '</div>'+
     /* ⚠️ 한쪽을 크게 하거나 색을 세게 하지 마세요 — 두 사람의 무게가
        같아야 합니다. 이 구간이 하는 말이 바로 그것입니다. */
-    '<p class="row-cta row-mid">'+
-      '<a class="btn btn-cl" href="/sell">내 매장 양도 준비하기'+icon("arrow",18)+'</a>'+
-      '<a class="btn btn-st" href="/stores">인수 가능한 매장 보기'+icon("arrow",18)+'</a></p>'+
+    /* ⚠️⚠️ **아래 단추 두 개를 뺐습니다** (2026-10-11 사장님 지시 10 —
+       "다른 서비스 영역과 중복되는 부분이 없는지 확인합니다").
+       `내 매장 양도 준비하기`(/sell) · `인수 가능한 매장 보기`(/stores)는
+       **바로 위 구간의 사진 카드 두 장이 하는 말 그대로**였습니다 —
+       재 보니 한 화면 반 안에서 같은 두 주소로 가는 단추가 **넷**이었고
+       (사진 카드 둘 · 안내 상자 둘 · 여기 둘) 무엇부터 눌러야 할지가
+       묻혔습니다.
+       ⚠️⚠️ **길이 사라진 것이 아닙니다** — 메인에서 `/stores` 는 여덟
+       곳, `/sell` 은 다섯 곳에서 걸립니다 (재 봤습니다). 이 구간은
+       **말을 하는 자리**이고, 누르는 자리는 바로 위입니다.
+       ⚠️ 되살리시려면 이 주석 자리에 그 `<p class="row-cta">` 한 줄을
+       되돌리면 됩니다. */
   '</div></section>';
 }
 
@@ -748,53 +794,6 @@ function MainLast(){
    `check.js` 의 "메인 구간 차례가 지시서와 같다" 가 **구간 열셋**을
    셉니다 — 사업 단계 열은 `<nav>` 라 그 셈에 안 들어가고, "히어로
    에서 바로 찾고 바로 갈라진다" 가 그 열을 따로 봅니다. */
-/* ══════════════════════════════════════════════════════════════════
-   05 창업 · 운영 · 폐업별 서비스 탐색 (2026-10-09 최종 통합 §3-3 5)
-   ══════════════════════════════════════════════════════════════════
-   ⚠️⚠️ **운영에 대형 HERO 를 만들지 않습니다** (§2-1). 메인의 주인공은
-   창업과 폐업 둘이고, 운영은 **여기 한 칸**과 아래 10 구간에서 받습니다.
-   ⚠️ 세 칸의 크기는 같지만 **색이 다릅니다** — 창업 블루 · 운영 틸 ·
-   폐업 오렌지 (§3-1). 운영 보조색이 창업 · 폐업을 침범하지 않게
-   면이 아니라 **띠와 아이콘**에만 씁니다. */
-var MAIN_EXPLORE = [
-  { key:"start", cls:"start", to:"/startup", ic:"seed",
-    k:"창업", n:"창업을 준비하고 있어요",
-    d:"업종을 고르시면 준비 순서와 필요한 업체가 한 번에 나옵니다.",
-    links:[["업종별 창업 절차","/startup"],["창업비 계산","/tools/cost"],
-           ["상가 · 점포 찾기","/stores"],["인테리어 · 시공","/providers/interior"]] },
-  { key:"run", cls:"run", to:"/operation", ic:"refresh",
-    k:"매장 운영", n:"지금 매장을 운영하고 있어요",
-    d:"식자재 · 수리 · 솔루션 · 마케팅까지 여섯 갈래로 모았습니다.",
-    links:[["식자재 · 원재료","/providers/supply"],["수리 · 유지보수","/providers/repair"],
-           ["POS · 매장시스템","/providers/it"],["마케팅 · 매출","/providers/marketing"]] },
-  { key:"close", cls:"close", to:"/closure", ic:"box",
-    k:"폐업 · 정리", n:"사업을 정리하려고 해요",
-    d:"넘길 수 있는 것부터 봅니다. 양도가 되면 철거비도 줄어듭니다.",
-    links:[["매장 양도 · 인수","/stores"],["시설 · 장비 정리","/assets"],
-           ["철거 · 원상복구","/providers/demolish"],["폐업 예상비용","/tools/closecost"]] }
-];
-function MainExplore(){
-  return '<section class="sec sec-gray mexp"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
-      '<p class="eyebrow">WHERE ARE YOU NOW</p>'+
-      '<h2>지금 어느 자리에 계신가요?</h2>'+
-      '<p>고르시면 그 자리에서 필요한 정보와 서비스만 모아 보여 드립니다.</p>'+
-    '</div>'+
-    '<ul class="mexp-g">'+MAIN_EXPLORE.map(function(x){
-      return '<li><div class="mexp-c mexp-'+esc(x.cls)+'">'+
-        '<a class="mexp-go" href="'+esc(x.to)+'">'+
-          '<span class="mexp-ic">'+icon(x.ic,26)+'</span>'+
-          '<span class="mexp-t"><em>'+esc(x.k)+'</em>'+
-            '<b>'+esc(x.n)+'</b><i>'+esc(x.d)+'</i></span>'+
-        '</a>'+
-        /* ⚠️ 네 줄 전부 **실제로 있는 화면**입니다 — 가짜 링크를 만들면
-           절대 규칙 5 입니다 (check.js 가 메인의 모든 링크를 눌러 봅니다). */
-        '<ul class="mexp-l">'+x.links.map(function(l){
-          return '<li><a href="'+esc(l[1])+'">'+esc(l[0])+
-            icon("chev",14)+'</a></li>'; }).join("")+'</ul>'+
-      '</div></li>'; }).join("")+'</ul>'+
-  '</div></section>';
-}
 
 /* ══════════════════════════════════════════════════════════════════
    07 업종별 맞춤 서비스 (§3-3 7 · §7)
@@ -836,7 +835,7 @@ function MainOpsvc(){
       '<a class="btn btn-o sec-hd-all" href="/operation">'+
         '운영 서비스 보기'+icon("arrow",16)+'</a>'+
     '</div>'+
-    OpsvcGrid(3)+
+    OpsvcGrid(3, true)+
   '</div></section>';
 }
 
@@ -897,22 +896,31 @@ function PageMain(){
        §3-3 2  창업 · 폐업 HERO    → 01 .mh
        §3-3 3  통합 검색          → 01 안의 .mh-find (헤더 검색과 **같은** mainFind)
        §3-3 4  주요 서비스 상품    → 02 .msvc
-       §3-3 5  창업 · 운영 · 폐업 탐색 → 03 .mexp
-       §3-3 6  패키지            → 04 .pkg  ⚠️ "인기" 라고 쓰지 않습니다
-       §3-3 7  업종별 맞춤 서비스  → 05 .mind
-       §3-3 8  계산기 · 정보       → 06 .mti
-       §3-3 9  매장 인수 · 양도    → 07 TAKE OVER
-       —        인수 ↔ 인계 (보존)  → 08 .mbr   §12 "기존 콘텐츠를 지우지 않는다"
-       §3-3 10 운영 중인 사장님     → 09 .mopsv
-       §3-3 11 파트너 제휴        → 10 .mjn
-       —        마지막 CTA (보존)   → 11 .mlast
+       §3-3 5  창업 · 운영 · 폐업 탐색 → ⚠️⚠️ **2026-10-11 사장님 지시로
+                                   내렸습니다** ("지금 어느 자리에
+                                   계신가요?" 구간). 함수는
+                                   `home-retired.js` 에 그대로 있고,
+                                   그 구간이 가리키던 **주소 열셋이
+                                   전부 메인 안에서도 걸리는 것을 하나씩
+                                   세어 확인했습니다** (제일 적은 것이
+                                   1곳 · 제일 많은 것이 10곳) — 헤더 ·
+                                   02 서비스 여덟 · 06 매장 구간 ·
+                                   08 운영 묶음 · 푸터가 받습니다
+       §3-3 6  패키지            → 03 .pkg  ⚠️ "인기" 라고 쓰지 않습니다
+       §3-3 7  업종별 맞춤 서비스  → 04 .mind
+       §3-3 8  계산기 · 정보       → 05 .mti
+       §3-3 9  매장 인수 · 양도    → 06 TAKE OVER
+       —        인수 ↔ 인계 (보존)  → 07 .mbr   §12 "기존 콘텐츠를 지우지 않는다"
+       §3-3 10 운영 중인 사장님     → 08 .mopsv
+       §3-3 11 파트너 제휴        → 09 .mjn
+       —        마지막 CTA (보존)   → 10 .mlast
        §3-3 12 푸터              → chrome.js (#view 밖)
 
      ⚠️⚠️ **차례를 바꾸시려면 지시서를 먼저 고치고** `check.js` 의
      "메인 구간 차례가 지시서와 같다" 가 세는 `want` 를 **같이** 고치세요.
      ⚠️⚠️ **빈 화면으로 만들지 마세요** (§12). 여기서 내려온 구간은
      함수를 하나도 안 지웠고, 갈 곳이 남아 있는지 하나씩 확인했습니다. */
-  return MainHero()+ MainServices()+ MainExplore()+ PackBand("", "sec-blue")+
+  return MainHero()+ MainServices()+ PackBand("", "sec-blue")+
          MainIndustryBand()+ MainToolsInfo()+ MainStores()+ MainBridge()+
          MainOpsvc()+ MainJoin()+ MainLast();
 }

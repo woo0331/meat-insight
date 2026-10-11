@@ -1131,3 +1131,74 @@ function MainReviews(){
    ⚠️⚠️ **"SAMPLE · 입점 화면 예시" 가 제일 먼저 읽혀야 합니다** —
    지어낸 업체가 실제 업체로 읽히면 표시·광고의 공정화에 관한 법률
    제3조입니다. 카드 자체는 **누를 수 없습니다.** */
+
+
+/* ════════════════════════════════════════════════════════════════════
+   "지금 어느 자리에 계신가요?" — 2026-10-11 사장님 지시로 내렸습니다
+
+   > "'지금 어느 자리에 계신가요?' 섹션은 메인페이지에서 삭제합니다.
+   >  단, 해당 섹션의 창업 · 매장 운영 · 폐업 관련 기능과 연결 페이지는
+   >  삭제하지 않습니다."
+
+   ⚠️ 그래서 **함수를 지우지 않고 여기로 옮겼습니다.** 가리키던
+   **주소 열셋이 전부 메인 안에서도 걸리는 것**을 하나씩 세어
+   확인했습니다 (1440px 에서 렌더해서 `href` 를 셌습니다) —
+
+     /providers/supply 10곳 · /stores 8곳 · /startup 7곳 ·
+     /providers/it · /providers/marketing · /assets 6곳 ·
+     /closure · /providers/repair 5곳 · /operation 3곳 ·
+     /providers/interior · /providers/demolish · /tools/cost ·
+     /tools/closecost 1곳씩.
+
+   ⚠️ 1곳뿐인 넷은 **메인 02 서비스 카드**와 **05 계산도구 칸**이
+   하나씩 들고 있습니다 — 그 구간을 또 손대실 때는 이 넷이 길을 잃지
+   않는지 다시 세어 보세요.
+   ⚠️ 되살리시려면 맨 위 "되돌리는 법" 두 줄입니다.
+   ════════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════
+   05 창업 · 운영 · 폐업별 서비스 탐색 (2026-10-09 최종 통합 §3-3 5)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **운영에 대형 HERO 를 만들지 않습니다** (§2-1). 메인의 주인공은
+   창업과 폐업 둘이고, 운영은 **여기 한 칸**과 아래 10 구간에서 받습니다.
+   ⚠️ 세 칸의 크기는 같지만 **색이 다릅니다** — 창업 블루 · 운영 틸 ·
+   폐업 오렌지 (§3-1). 운영 보조색이 창업 · 폐업을 침범하지 않게
+   면이 아니라 **띠와 아이콘**에만 씁니다. */
+var MAIN_EXPLORE = [
+  { key:"start", cls:"start", to:"/startup", ic:"seed",
+    k:"창업", n:"창업을 준비하고 있어요",
+    d:"업종을 고르시면 준비 순서와 필요한 업체가 한 번에 나옵니다.",
+    links:[["업종별 창업 절차","/startup"],["창업비 계산","/tools/cost"],
+           ["상가 · 점포 찾기","/stores"],["인테리어 · 시공","/providers/interior"]] },
+  { key:"run", cls:"run", to:"/operation", ic:"refresh",
+    k:"매장 운영", n:"지금 매장을 운영하고 있어요",
+    d:"식자재 · 수리 · 솔루션 · 마케팅까지 여섯 갈래로 모았습니다.",
+    links:[["식자재 · 원재료","/providers/supply"],["수리 · 유지보수","/providers/repair"],
+           ["POS · 매장시스템","/providers/it"],["마케팅 · 매출","/providers/marketing"]] },
+  { key:"close", cls:"close", to:"/closure", ic:"box",
+    k:"폐업 · 정리", n:"사업을 정리하려고 해요",
+    d:"넘길 수 있는 것부터 봅니다. 양도가 되면 철거비도 줄어듭니다.",
+    links:[["매장 양도 · 인수","/stores"],["시설 · 장비 정리","/assets"],
+           ["철거 · 원상복구","/providers/demolish"],["폐업 예상비용","/tools/closecost"]] }
+];
+function MainExplore(){
+  return '<section class="sec sec-gray mexp"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">WHERE ARE YOU NOW</p>'+
+      '<h2>지금 어느 자리에 계신가요?</h2>'+
+      '<p>고르시면 그 자리에서 필요한 정보와 서비스만 모아 보여 드립니다.</p>'+
+    '</div>'+
+    '<ul class="mexp-g">'+MAIN_EXPLORE.map(function(x){
+      return '<li><div class="mexp-c mexp-'+esc(x.cls)+'">'+
+        '<a class="mexp-go" href="'+esc(x.to)+'">'+
+          '<span class="mexp-ic">'+icon(x.ic,26)+'</span>'+
+          '<span class="mexp-t"><em>'+esc(x.k)+'</em>'+
+            '<b>'+esc(x.n)+'</b><i>'+esc(x.d)+'</i></span>'+
+        '</a>'+
+        /* ⚠️ 네 줄 전부 **실제로 있는 화면**입니다 — 가짜 링크를 만들면
+           절대 규칙 5 입니다 (check.js 가 메인의 모든 링크를 눌러 봅니다). */
+        '<ul class="mexp-l">'+x.links.map(function(l){
+          return '<li><a href="'+esc(l[1])+'">'+esc(l[0])+
+            icon("chev",14)+'</a></li>'; }).join("")+'</ul>'+
+      '</div></li>'; }).join("")+'</ul>'+
+  '</div></section>';
+}

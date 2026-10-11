@@ -2465,7 +2465,8 @@ const AUDIT = `(() => {
        채우는 바탕**으로 나갔습니다 (.msvc-bg). .ia-t 쪽 규칙은
        그대로 둡니다 — 원판에 사진을 넣는 날 바로 걸리게. */
     const want = [".mh-ph .ph", ".hpk-ph .ph", ".mfeat-ph .ph",
-                  ".ia-t .ph", ".msvc-bg .ph", ".mbr-p .ph"];
+                  ".ia-t .ph", ".msvc-bg .ph", ".mbr-p .ph",
+                  ".mk-k-ph .ph"];
     const bad = [];
     for(const q of want){
       let ok = false;
@@ -2831,15 +2832,23 @@ const AUDIT = `(() => {
        읽혀 이 검사가 아무것도 안 잡습니다. 우리 표시를 찾습니다.
        ⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다 (열세 번). */
     /* ⚠️⚠️ 2026-10-09 최종 통합 리뉴얼 §3-3 의 차례입니다 — HEADER ·
-       FOOTER 는 #view 밖이라 여기서는 열하나입니다. mbr(인수 ↔ 인계)와
+       FOOTER 는 #view 밖이라 여기서는 **열**입니다. mbr(인수 ↔ 인계)와
        mlast(마지막 CTA)는 §3-3 목록에 없지만 §12 가 "기존 콘텐츠를 지워
-       빈 페이지처럼 만들지 않는다" 고 적어 그대로 두었습니다. */
-    const want = ["mh","msvc","mexp","pkg","mind","mti","mk","mbr","mopsv","mjn","mlast"];
+       빈 페이지처럼 만들지 않는다" 고 적어 그대로 두었습니다.
+       ⚠️⚠️ **2026-10-11 로 mexp(지금 어느 자리에 계신가요)가 열하나에서
+       빠졌습니다** — 사장님 지시 1 입니다. 지시가 이어서 "단, 해당
+       섹션의 창업 · 매장 운영 · 폐업 관련 기능과 연결 페이지는 삭제하지
+       않습니다" 라고 적어서, 함수는 home-retired.js 에 그대로 있고
+       그 구간이 가리키던 열다섯 주소는 헤더 여섯 · 메인 02 서비스 여덟 ·
+       09 운영 묶음 · 푸터 다섯 칸이 전부 받습니다 (링크 검사가 봅니다). */
+    const want = ["mh","msvc","pkg","mind","mti","mk","mbr","mopsv","mjn","mlast"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
     const got = S.map(function(e, i){
       for(const m of ["mh","mbr","msvc","mexp","pkg","mind","mti","mopsv","mjn","mlast"])
+        /* ⚠️ mexp 를 이 목록에서는 **빼지 않습니다** — 되살아나면
+           "차례가 … 입니다" 로 이름을 내야 합니다 ("?3" 이 아니라). */
         if(e.classList.contains(m)) return m;
       const hd = (e.querySelector(".eyebrow") || {}).textContent || "";
       if(hd.indexOf("TAKE OVER") >= 0) return "mk";
@@ -2854,6 +2863,46 @@ const AUDIT = `(() => {
        히어로 안에 되살리지 마세요: 히어로 끝은 선택 카드가 얹히는
        자리라 띠를 붙이면 카드 위로 올라앉습니다. */
     if(document.querySelector(".mh .mst-g")) return "숫자가 아직 히어로 안에 있습니다";
+    return true;`);
+  /* ⚠️⚠️ **2026-10-11 사장님 지시 — "폰에서 접어두는거 해줘."**
+     패키지 넷의 상품 목록과 운영 묶음 여섯이 좁은 화면에서 세로로
+     쌓이면서 그 둘만 화면 몇 개 높이가 됐습니다.
+
+     ⚠️⚠️ **이 검사는 1280px 에서 돕니다** — 흐름 검사는 폭이 하나라
+     접힌 모습을 직접 못 봅니다. 그래서 **규칙 자체**를 봅니다
+     (object-fit 검사와 같은 방식입니다). 보는 것은 넷입니다 —
+     ① 단추가 화면에 있고 ② 넓은 화면에서는 그 단추가 안 보이고
+     ③ 넓은 화면에서 목록이 접혀 있지 않고 ④ 900px 아래에서 켜고
+     접는 규칙이 살아 있는가.
+     ⚠️ ②③ 이 중요합니다 — 접는 규칙을 묶음 밖으로 내면 **넓은
+     화면에서도 접히는데 단추는 안 보여** 펼칠 방법이 아예 없습니다. */
+  await f("폰에서 긴 묶음을 접어 둔다", "/", `
+    const btn = document.querySelectorAll(".fld-b");
+    if(btn.length < 2) return "접기 단추가 " + btn.length + "개입니다";
+    if(getComputedStyle(btn[0]).display !== "none")
+      return "넓은 화면에서 접기 단추가 보입니다";
+    const pl = document.querySelector(".pkg-l.is-fold");
+    if(!pl) return "패키지 목록에 접기 표시가 없습니다";
+    if(getComputedStyle(pl).display === "none")
+      return "넓은 화면에서 패키지 목록이 접혔습니다";
+    if(!document.querySelector(".opsv-g.is-fold > .fld-x"))
+      return "운영 묶음에 접을 칸 표시가 없습니다";
+    let show = 0, shut = 0;
+    for(const sh of document.styleSheets){
+      let rules; try { rules = sh.cssRules; } catch(e){ continue; }
+      if(!rules) continue;
+      for(const r of rules){
+        if(!r.media || r.media.mediaText.indexOf("900px") < 0) continue;
+        for(const q of (r.cssRules || [])){
+          if(q.selectorText === ".fld-b" && q.style.display === "flex") show++;
+          if(q.selectorText === ".pkg-l.is-fold" && q.style.display === "none") shut++;
+          if(q.selectorText === ".opsv-g.is-fold > .fld-x" &&
+             q.style.display === "none") shut++;
+        }
+      }
+    }
+    if(!show) return "900px 아래에서 접기 단추를 켜는 규칙이 없습니다";
+    if(shut < 2) return "900px 아래에서 접는 규칙이 " + shut + "개뿐입니다";
     return true;`);
   /* ⚠️⚠️ 2026-10-03 지시서의 **핵심**입니다 (§13 ~ §18) — "카페를 하고
      싶은데 뭐가 필요한지 모르겠다" 는 분이 업종 하나만 고르면 필요한

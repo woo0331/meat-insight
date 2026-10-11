@@ -559,3 +559,51 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
   .ia-t{ width:62px; height:62px; border-radius:18px; }
   .ia-t .ia{ width:38px; height:38px; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   폰에서 접어두기 — `FoldBtn()` · `foldToggle()` (2026-10-11 사장님 지시)
+   ══════════════════════════════════════════════════════════════════
+   사장님 지시 — **"폰에서 접어두는거 해줘."** 패키지 넷의 상품 목록과
+   운영 묶음 여섯이 좁은 화면에서 세로로 쌓이면서 그 둘만 화면 몇 개
+   높이가 됐습니다. 접어 두고 **단추를 눌러 펼칩니다.**
+
+   ⚠️⚠️ **넓은 화면에서는 단추가 아예 없습니다.** 거기서는 두 칸 ·
+   세 칸으로 깔려서 접을 까닭이 없고, 단추를 내면 눌러야 보이는 것이
+   하나 늘어납니다. 그래서 `.fld-b` 는 **900px 아래에서만** 보입니다.
+
+   ⚠️⚠️ **`display:none` 으로 접는 것이 맞습니다** — 이 구간은 크롤러
+   본문(`build-pages.js`)이 따로 들고 있고, 숨기는 것은 **화면에서
+   접는 것**입니다. 크롤러에게 보여 주는 글을 숨기는 것이 아닙니다.
+   ⚠️ 그래서 **크롤러 본문을 여기에 맞춰 줄이지 마세요** — 접힌 것은
+   손님이 한 번 눌러 펼칠 수 있는 글이고, 크롤러 본문에서 빼면 그건
+   사이트에 없는 글이 됩니다.
+
+   ⚠️ **누르는 것은 40px 이상**입니다 (`--tap`). `padding` 만으로
+   키우면 짧은 이름에서 다시 낮아집니다 — `min-height` 로 잡습니다.
+   ⚠️ **12px 미만으로 내리지 마세요** — 제일 작은 단계가 13px 입니다
+   (아래 네비를 11.5px 로 뒀다가 전수 점검에 175건 걸린 자리). */
+.fld-b{ display:none; align-items:center; justify-content:center; gap:7px;
+  width:100%; min-height:var(--tap); padding:0 var(--s4);
+  border:1px solid var(--line); border-radius:var(--r-pill);
+  background:var(--surface); color:var(--navy);
+  font-family:inherit; font-size:var(--t-cap); font-weight:800;
+  letter-spacing:-.02em; cursor:pointer;
+  transition:background .2s, border-color .2s; }
+.fld-b svg{ flex:0 0 auto; transition:transform .2s; }
+/* 펼쳐진 동안에는 화살이 위를 봅니다 — 다시 접을 수 있다는 표시 */
+.fld-b.is-open svg{ transform:rotate(180deg); }
+.fld-b:hover{ background:var(--bg-sky); border-color:var(--blue); }
+.fld-row{ margin:var(--s4) 0 0; }
+@media (prefers-reduced-motion: reduce){
+  .fld-b, .fld-b svg{ transition:none; }
+}
+/* ⚠️⚠️ **접는 규칙은 이 한 묶음 안에만 둡니다.** 밖에 두면 넓은
+   화면에서도 접혀 버리는데, 거기는 단추가 안 보여서 **펼칠 방법이
+   아예 없습니다** (`display:none` 인 단추는 눌리지 않습니다). */
+@media (max-width:900px){
+  .fld-b{ display:flex; }
+  /* 패키지 — 상품 목록을 통째로 접습니다 */
+  .pkg-l.is-fold{ display:none; }
+  /* 운영 묶음 — 앞 둘만 두고 나머지를 접습니다 (`fld-x`) */
+  .opsv-g.is-fold > .fld-x{ display:none; }
+}

@@ -722,9 +722,18 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .sec-gray .fc,  .sec-gray .mk,  .sec-gray .help, .sec-gray .sp{
   background:var(--surface); }
 .sec-gray .cat:hover{ background:var(--blue-50); }
+/* ⚠️⚠️ **여기는 카드 "안" 의 작은 칩뿐입니다.** 흰 카드 위에서
+   `--bg-2` 로 떠 보이게 하는 것인데, `--bg-2`(#EFF3F9)는 `--bg-gray`
+   와 **완전히 같은 값**이라 **카드 자체**를 여기 적으면 회색 구간에서
+   통째로 사라집니다 (카드 여덟이 그렇게 걸린 적이 있습니다 — 위 줄).
+   ⚠️ 2026-10-11 — `.mk-kind a`(자산 카드)와 `.mk-pre`(안내 상자)가
+   **여기 적혀 있었습니다.** 둘 다 기본이 흰 카드라, 그 구간이 회색으로
+   밀리는 날 사라질 자리였습니다 (지금 `TAKE OVER` 는 `sec-start` 라
+   한 번도 안 드러났습니다). 뺐습니다 — 기본 흰색이 §22 가 원하는
+   것입니다. */
 .sec-gray .cat-s em, .sec-gray .cat-chips a, .sec-gray .pv-sv span,
-.sec-gray .pv-sv em, .sec-gray .pv-ck, .sec-gray .fr-m em,
-.sec-gray .mk-kind a, .sec-gray .mk-pre{ background:var(--bg-2); }
+.sec-gray .pv-sv em, .sec-gray .pv-ck, .sec-gray .fr-m em{
+  background:var(--bg-2); }
 .empty-ic{ display:inline-flex; align-items:center; justify-content:center;
   width:60px; height:60px; border-radius:var(--r-pill);
   background:var(--surface); color:var(--ink3); margin-bottom:var(--s2); }
@@ -3140,38 +3149,90 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 /* ⚠️ 2026-10-08 §9 — 넷에서 **셋**이 됐습니다 (받는 분 · 넘기는 분 ·
    장비만 정리하는 분). 칸 수를 바꾸면 여기도 같이 고치세요 — 안
    고치면 마지막 칸 옆에 빈 자리가 남습니다 (푸터에서 겪은 자리). */
-.mk-kind{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s4);
-  margin:0 0 var(--s7); }
+/* ⚠️⚠️ **2026-10-11 사장님 지시 — 아이콘 중심에서 사진 중심으로.**
+   "각 카드에는 실제 상업공간 및 장비를 촬영한 듯한 고품질 이미지를
+   적용합니다. 기존의 작은 아이콘 중심 디자인에서 벗어나 **이미지가
+   중심이 되도록** 제작합니다." 전에는 흰 카드에 30px 아이콘 하나가
+   오른쪽 위에 붙은 글 카드였습니다.
+
+   ⚠️⚠️ **사진이 없으면 빈 액자를 깔지 않습니다** (절대 규칙 2).
+   `.mk-k-ph-n` 이 브랜드 면(남색 → 청록)에 큰 아이콘을 얹어 **그 자체로
+   완성된 면**으로 섭니다 — 옅은 회색 액자를 반쯤 깔아 두면 카드 셋이
+   전부 "준비 중" 으로 읽힙니다 (단계 카드 여섯에서 겪은 자리).
+   사진이 들어오면 `hasPhoto()` 가 보고 **코드를 한 줄도 안 고치고**
+   액자로 바뀝니다 — 자리는 `kind-take` · `kind-pass` · `kind-asset`
+   이고 `js/data/photos.js` 에 있습니다.
+
+   ⚠️⚠️ **액자 비율은 셋 다 4:3 입니다** (지시 5 — 색감 · 크기 · 비율
+   통일). `aspect-ratio` 로 잡아서 사진의 원래 비율과 무관하게 세
+   카드의 액자 높이가 **1px 까지 같습니다** — 사진마다 높이가 다르면
+   셋이 한 벌로 안 읽힙니다.
+   ⚠️ `height` 로 잡지 마세요 — 칸 폭이 바뀌면 비율이 깨집니다. */
+.mk-kind{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s5);
+  margin:0 0 var(--s7); padding:0; list-style:none; }
 .mk-kind > li{ min-width:0; }
-.mk-kind a{ position:relative; display:flex; flex-direction:column; gap:var(--s2);
-  height:100%; padding:var(--s5) var(--s6) var(--s5) var(--s5);
-  border:1px solid var(--line);
-  border-radius:var(--r-xl); background:var(--surface);
-  box-shadow:0 1px 2px rgba(15,27,45,.04);
+.mk-k{ display:flex; flex-direction:column; height:100%; overflow:hidden;
+  border:1px solid var(--line); border-radius:var(--r-xl);
+  background:var(--surface); box-shadow:0 1px 2px rgba(15,27,45,.04);
   transition:transform .2s, border-color .2s, box-shadow .2s; }
-/* 왼쪽 세로 띄 — 세 칸이 한 덯어리로 읽히지 않게 갈라 줍니다 */
-.mk-kind a::before{ content:""; position:absolute; left:0; top:var(--s5);
-  bottom:var(--s5); width:4px; border-radius:0 4px 4px 0;
-  background:var(--ic-ink); }
-.mk-kind-t{ display:grid; gap:4px; min-width:0; }
-.mk-kind-a{ position:absolute; right:var(--s5); top:var(--s5);
-  display:inline-flex; align-items:center; justify-content:center;
-  width:30px; height:30px; border-radius:50%;
-  background:var(--ic-bg); color:var(--ic-ink); font-style:normal;
-  transition:background .2s, color .2s; }
-@media (hover:hover){
-  .mk-kind a:hover .mk-kind-a{ background:var(--ic-ink); color:#fff; }
-}
-.mk-kind b{ font-size:var(--t-md); font-weight:800; letter-spacing:-.03em;
+.mk-k-ph{ position:relative; display:block; overflow:hidden;
+  aspect-ratio:4 / 3; background:var(--navy-dark); }
+/* ⚠️⚠️ `<img class="ph">` 는 기본값이 object-fit:fill 이라 **안 주면
+   사진이 비율을 무시하고 늘어납니다.** check.js 가 이 선택자를
+   **글자까지 그대로** 찾습니다 — 앞에 다른 클래스를 붙이지 마세요. */
+.mk-k-ph .ph{ display:block; width:100%; height:100%; object-fit:cover;
+  transition:transform .5s cubic-bezier(.2,.6,.2,1); }
+/* 사진이 없을 때 — 빈 액자가 아니라 브랜드 면입니다 (네이비 → 청록)
+   ⚠️⚠️ **`background-color` 를 따로 선언합니다.** `background:` 한 줄에
+   그라디언트만 적으면 `getComputedStyle().backgroundColor` 가 **투명**
+   으로 읽혀서, 어두운 면 검사가 이 세 판을 **못 봅니다** — 이 저장소가
+   그라디언트와 히어로 `::before` 로 두 번 겪은 자리입니다.
+   ⚠️ 재 보니 문서 전체의 어두운 면이 **제일 많은 폭(600px)에서
+   10.1%** 입니다 (한도 15% · 1440px 은 5.7%). 액자가 커지면 여기가
+   먼저 올라가므로 **칸 폭을 바꾸실 때는 다시 재세요.**
+   ⚠️ 어두운 면이 하나 늘어난 것은 맞습니다. 밝은 틴트 상자를 깔면
+   그게 **빈 액자**이고 카드 셋이 "준비 중" 으로 읽혀서(단계 카드
+   여섯에서 겪은 자리) 그쪽을 안 골랐습니다 — 사진이 들어오면 이 면은
+   **사라집니다.** */
+.mk-k-ph-n{ background-color:var(--navy-dark);
+  background-image:
+    radial-gradient(120% 120% at 18% 14%, rgba(255,255,255,.16), transparent 62%),
+    linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 56%,
+                    var(--ops-deep) 100%); }
+.mk-k-ic{ position:absolute; inset:0; display:flex; align-items:center;
+  justify-content:center; color:rgba(255,255,255,.94);
+  transition:transform .5s cubic-bezier(.2,.6,.2,1); }
+.mk-k-b{ position:relative; display:flex; align-items:flex-start;
+  gap:var(--s3); padding:var(--s5); }
+.mk-k-chip{ flex:0 0 auto; display:inline-flex; align-items:center;
+  justify-content:center; width:38px; height:38px; border-radius:var(--r-sm);
+  background:var(--ic-bg); color:var(--ic-ink); }
+/* ⚠️ grid · flex 칸에 맨글과 태그를 섞지 마세요 — 감싸개 안에서 쌓습니다 */
+.mk-k-t{ display:flex; flex-direction:column; gap:4px; min-width:0;
+  flex:1 1 auto; }
+.mk-k-t > b{ font-size:var(--t-md); font-weight:800; letter-spacing:-.03em;
   color:var(--ink); }
-.mk-kind i{ font-style:normal; font-size:var(--t-cap); font-weight:600;
+.mk-k-t > i{ font-style:normal; font-size:var(--t-cap); font-weight:600;
   line-height:1.6; color:var(--ink2); }
+.mk-k-a{ flex:0 0 auto; display:inline-flex; align-items:center;
+  justify-content:center; width:30px; height:30px; margin-top:2px;
+  border-radius:50%; background:var(--ic-bg); color:var(--ic-ink);
+  font-style:normal; transition:background .2s, color .2s; }
+/* ⚠️ 지시 5 — "카드에 마우스를 올리면 자연스럽게 이미지가 확대되는
+   효과". 확대는 **액자 안의 사진**이고 카드가 커지는 것이 아닙니다
+   (카드가 커지면 옆 카드와 간격이 흔들립니다). `overflow:hidden` 이
+   액자에 있어서 넘친 부분이 잘립니다. */
 @media (hover:hover){
-  .mk-kind a:hover{ transform:translateY(-2px);
+  .mk-k:hover{ transform:translateY(-3px);
     border-color:var(--ic-ink, var(--navy)); box-shadow:var(--shadow-card-h); }
+  .mk-k:hover .mk-k-ph .ph{ transform:scale(1.06); }
+  .mk-k:hover .mk-k-ic{ transform:scale(1.06); }
+  .mk-k:hover .mk-k-a{ background:var(--ic-ink); color:#fff; }
 }
 @media (prefers-reduced-motion: reduce){
-  .mk-kind a{ transition:none; } .mk-kind a:hover{ transform:none; }
+  .mk-k, .mk-k-ph .ph, .mk-k-ic{ transition:none; }
+  .mk-k:hover{ transform:none; }
+  .mk-k:hover .mk-k-ph .ph, .mk-k:hover .mk-k-ic{ transform:none; }
 }
 .mk-pre{ padding:var(--s7); border:1px solid var(--line);
   border-radius:var(--r-2xl); background:var(--surface); }
@@ -3197,9 +3258,34 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   margin:var(--s6) 0 0; font-size:var(--t-cap); font-weight:600;
   color:var(--ink2); }
 .mk-pre-n2 svg{ flex:0 0 auto; color:var(--blue); }
-@media (max-width:900px){
-  .mk-kind{ grid-template-columns:repeat(2,1fr); }
-  .mk-pre-l{ grid-template-columns:1fr; }
+/* ⚠️ 지시 6 — "PC에서는 3열, 모바일에서는 화면 폭에 맞는 반응형". */
+/* ⚠️⚠️ **셋을 두 칸에 그냥 넣지 마세요.** 세 번째가 둘째 줄에 혼자
+   남아 그 옆이 통째로 빈 자리가 됩니다 — 768px 에서 찍어 보니
+   "빠뜨린 칸" 으로 읽혔습니다 (걸음 여섯을 다섯 칸 격자에 넣었다가
+   겪은 자리 · 푸터 칸 수에서도 겪었습니다). 세 번째는 **두 칸을
+   가로질러 눕힙니다** — 액자는 그대로 4:3 입니다.
+   ⚠️ `:nth-child(3)` 이라 **칸 수를 바꾸면 여기도 같이 고치세요**
+   (`MAIN_ASSET_KIND` 가 셋입니다). */
+@media (min-width:601px) and (max-width:900px){
+  .mk-kind{ grid-template-columns:repeat(2,1fr); gap:var(--s4); }
+  .mk-kind > li:nth-child(3){ grid-column:1 / -1; }
+  .mk-kind > li:nth-child(3) .mk-k{ flex-direction:row; align-items:stretch; }
+  .mk-kind > li:nth-child(3) .mk-k-ph{ flex:0 0 46%; }
+  .mk-kind > li:nth-child(3) .mk-k-b{ flex:1 1 auto; align-items:center; }
+}
+@media (max-width:900px){ .mk-pre-l{ grid-template-columns:1fr; } }
+/* ⚠️⚠️ **한 칸일 때 폭을 묶습니다.** 안 묶으면 600px 화면에서 액자가
+   558×419 짜리 셋이 되어 어두운 면이 **12.0%** 까지 올라갑니다 (한도
+   15%). 480 으로 묶으면 10% 아래이고, 390 · 360 짜리 폰은 원래 그보다
+   좁아서 **아무것도 안 바뀝니다** (재 보고 정한 값입니다). */
+@media (max-width:600px){
+  .mk-kind{ grid-template-columns:1fr; }
+  /* ⚠️⚠️ **`width:100%` 를 같이 주세요.** `margin-inline:auto` 만 주면
+     grid 가 `stretch` 를 끄고 칸이 **글자 폭(fit-content)** 으로
+     줄어듭니다 — 설명이 짧은 첫 칸만 290px 이 되어 셋의 **폭이 서로
+     달라졌습니다** (지시 5 가 금지한 바로 그것입니다. 재 보고
+     알았습니다 — 화면으로는 "대충 맞아" 보입니다). */
+  .mk-kind > li{ width:100%; max-width:480px; margin-inline:auto; }
 }
 @media (max-width:560px){ .mk-pre{ padding:var(--s5); } }
 
@@ -3649,8 +3735,13 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .qof-n svg{ flex:0 0 auto; color:var(--blue-600); }
 
 /* ══════════════════════════════════════════════════════════════════
-   메인 03 — 창업 · 운영 · 폐업별 서비스 탐색 (2026-10-09 §3-3 5)
+   (내려온 구간) 창업 · 운영 · 폐업별 서비스 탐색 — 2026-10-09 §3-3 5
    ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **2026-10-11 사장님 지시로 메인에서 내려왔습니다** ("지금 어느
+   자리에 계신가요?"). 그리는 함수는 `js/pages/home-retired.js` 에
+   그대로 있고 `index.html` 에는 안 실립니다 — **이 규칙들을 지우지
+   마세요.** 되살리실 때 CSS 부터 다시 써야 하면 그게 제일 비쌉니다
+   (랜딩을 지우면서 `.sec-hd-c h2` 두 줄을 같이 날릴 뻔한 자리입니다).
    ⚠️⚠️ **세 칸의 크기와 무게가 같습니다.** 운영을 작게 만들면 그게
    "덜 중요한 것" 이라는 말이고, 크게 만들면 §2-1 이 금지한 "운영
    대형 HERO" 가 됩니다.

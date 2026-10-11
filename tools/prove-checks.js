@@ -397,6 +397,19 @@ const CASES = [
   ["메인 구간 차례가 지시서와 같다",
    `const v = document.getElementById("view");
     v.insertBefore(v.children[3], v.children[1]);`],
+  /* ⚠️ 되돌리기는 **규칙 쪽**을 망가뜨려야 합니다 — 검사가 1280px 에서
+     돌아서 화면을 접어 봐도 아무 일이 안 납니다 (이 저장소가 "되돌리기가
+     없는 요소를 집음" 으로 여덟 번 겪은 자리입니다). */
+  ["폰에서 긴 묶음을 접어 둔다",
+   `for(const sh of document.styleSheets){
+      let rules; try { rules = sh.cssRules; } catch(e){ continue; }
+      if(!rules) continue;
+      for(const r of rules){
+        if(!r.media || r.media.mediaText.indexOf("900px") < 0) continue;
+        for(const q of (r.cssRules || []))
+          if(q.selectorText === ".pkg-l.is-fold") q.style.display = "grid";
+      }
+    }`],
   /* ⚠️ 색을 **글자로 적지 마세요.** "[7] 을 민트로" 로 적어 두었더니
      구간 차례가 바뀌면서 그 자리가 원래 민트라 **되돌리기가 no-op** 이
      됐고, 검사가 멀쩡한데 "안 잡는다" 로 보였습니다. 이웃의 **실제

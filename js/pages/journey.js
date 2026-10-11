@@ -277,15 +277,39 @@ function opsReads(limit){
 /* 묶음 여섯 — 카드마다 하위 서비스를 칩으로 펼칩니다.
    ⚠️ 칩은 **진짜 화면으로 갑니다** (`/providers/:cat?s=`) — 가짜 링크를
    만들면 절대 규칙 5 입니다. */
-function OpsvcGrid(limitPerGroup){
+function OpsvcGrid(limitPerGroup, fold){
   var G = window.AM_OPSVC || [];
   if(!G.length) return "";
   var n = limitPerGroup || 4;
-  return '<ul class="opsv-g">'+G.map(function(g){
+  /* ⚠️⚠️ **폰에서는 앞 둘만 펼쳐 둡니다** (2026-10-11 사장님 지시).
+     묶음 여섯이 390px 에서 2,092px 였습니다 — 지우는 것이 아니라
+     **한 번 더 누르면** 그대로 나옵니다 (§12). 넓은 화면은 그대로
+     여섯이 다 보입니다 (`@media (max-width:900px)` 안에서만 접힙니다).
+     ⚠️ §5-4 로 **업종 것이 앞에** 와 있어서, 접혀도 그 사장님께
+     맞는 묶음이 먼저 보입니다.
+
+     ⚠️⚠️ **`/operation` 에서는 접지 않습니다** — 그 화면은 이 여섯이
+     **본문**입니다. 지나가는 구간(메인)에서만 접고, 그 여섯을 보러
+     들어오신 자리에서 접으면 **자기 본문을 단추 뒤에 숨기는** 것이
+     됩니다. 그래서 접는 것은 부르는 쪽이 정합니다(`fold`). */
+  var SHOW = 2;
+  if(!fold) return '<ul class="opsv-g">'+opsvCards(G, n, -1)+'</ul>';
+  return '<ul class="opsv-g is-fold" id="opsv-g">'+opsvCards(G, n, SHOW)+'</ul>'+
+    (G.length > SHOW && typeof FoldBtn === "function"
+      ? '<p class="fld-row">'+FoldBtn("opsv-g",
+          "운영 묶음 " + (G.length - SHOW) + "개 더 보기", "접기")+'</p>'
+      : "");
+}
+/* ⚠️ 카드 생김새는 **여기 한 곳**입니다 — 두 곳에 적으면 메인과
+   `/operation` 이 서로 달라집니다 (이 저장소가 랜딩 미니카드 아이콘 ·
+   도구 아이콘 표로 두 번 겪은 자리입니다). */
+function opsvCards(G, n, showN){
+  return G.map(function(g, gi){
     var items = (typeof amOpsvcItems === "function") ? amOpsvcItems(g.key) : [];
     if(!items.length) return "";
     var head = items[0];
-    return '<li class="tn-'+esc(g.tone || "t7")+'"><div class="opsv-c">'+
+    return '<li class="tn-'+esc(g.tone || "t7")+
+      (showN >= 0 && gi >= showN ? " fld-x" : "")+'"><div class="opsv-c">'+
       '<a class="opsv-go" href="'+esc(head.to)+'">'+
         '<span class="opsv-hd">'+
           '<span class="ic-t">'+icon(g.icon, 24)+'</span>'+
@@ -300,7 +324,7 @@ function OpsvcGrid(limitPerGroup){
           ? '<li class="opsv-more"><a href="'+esc(head.to)+'">+'+
             (items.length - n)+'</a></li>' : "")+
       '</ul>'+
-    '</div></li>'; }).join("")+'</ul>';
+    '</div></li>'; }).join("");
 }
 
 /* §5-4 — 업종을 고르셨으면 **그 업종 것이 먼저** 나옵니다.

@@ -1123,6 +1123,42 @@ const AUDIT = `(() => {
     rerender(true);
     return why;`);
 
+  /* 2026-10-11 간소화 지시서 §6 — 서비스 상세의 공통 여섯 구조.
+     ①이름·설명 과 ⑥견적·상담은 전부터 있었고(머리 · 견적 배너),
+     ②③④⑤ 가 이번에 붙었습니다.
+     ⚠️⚠️ 글은 js/data/svcpage.js 한 곳입니다 — 화면과 데이터를
+     하나씩 맞춰 봅니다. 두 곳에 적으면 어긋납니다.
+     ⚠️ 구간이 사라지는 것은 에러도 가로 스크롤도 안 냅니다. */
+  await f("서비스 상세가 §6 의 여섯 구조를 갖춘다", "/providers/interior", `
+    const d = window.amSvcPage ? window.amSvcPage("interior") : null;
+    if(!d) return "svcpage 데이터를 못 읽습니다";
+    const bad = [];
+    /* ① 이름과 핵심 설명 — 머리입니다 */
+    const h1 = document.querySelector("#view h1");
+    if(!h1 || h1.textContent.indexOf("인테리어") < 0) bad.push("①이름");
+    if(!document.querySelector(".pg-lead, .pgh-lead")) bad.push("①설명");
+    /* ② ③ ④ ⑤ */
+    const q = function(sel){ return document.querySelectorAll(sel).length; };
+    if(q(".svp-when > li") !== d.when.length)
+      bad.push("②상황 화면 " + q(".svp-when > li") + " · 데이터 " + d.when.length);
+    if(q(".svp-flow > li") !== d.flow.length)
+      bad.push("③절차 화면 " + q(".svp-flow > li") + " · 데이터 " + d.flow.length);
+    if(q(".svp-cost > li") !== d.cost.length)
+      bad.push("④비용 화면 " + q(".svp-cost > li") + " · 데이터 " + d.cost.length);
+    if(q(".svp-when ~ * .faq-i, .faq-i") < d.faq.length) bad.push("⑤FAQ");
+    /* ⑥ 견적 · 상담 신청 — 실제로 /quote 로 갑니다 */
+    const cta = document.querySelector(".band-cta a[href^='/quote']");
+    if(!cta) bad.push("⑥견적 신청");
+    /* ⚠️⚠️ 금액을 적지 않습니다 — 지역 · 평수 · 업종에 따라 몇 배로
+       갈립니다 (절대 규칙 1). 빌드도 막지만 화면에서도 봅니다. */
+    const txt = [".svp-when", ".svp-flow", ".svp-cost"].map(function(sel){
+      const e = document.querySelector(sel); return e ? e.textContent : ""; }).join(" ");
+    if(/[0-9][0-9,.]*\\s*(억|천만|만\\s*원|원)/.test(txt)) bad.push("금액이 적혀 있음");
+    /* ⚠️ 별표가 글자로 새지 않았는지 — 이 칸은 mark() 를 안 거칩니다 */
+    const fa = document.querySelector(".faq-a");
+    if(fa && fa.textContent.indexOf("**") >= 0) bad.push("FAQ 답에 별표");
+    return bad.length ? bad.join(" · ") : true;`);
+
   await f("업체는 자기 분야에만 나온다", "/providers/interior", `
     window.AM_PROVIDERS.push({
       id:"zz-check", name:"검사용 업체", regions:["gyeonggi"],

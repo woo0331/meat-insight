@@ -62,6 +62,88 @@ function SampleBand(){
   '</div></section>';
 }
 
+/* ── §6 서비스 상세의 공통 네 구간 ────────────────────────────────
+   (2026-10-11 "간소화 및 중복 제거 작업지시서" §6)
+
+   ① 서비스명 · 핵심 설명 과 ⑥ 견적 · 상담 신청은 **이미 이 화면에
+   있습니다** — 머리(`PgHero`)와 아래 견적 배너입니다. 여기가 내는
+   것은 ② 필요한 상황 · ③ 범위와 절차 · ④ 비용 결정 요인 · ⑤ FAQ
+   넷뿐입니다.
+
+   ⚠️⚠️ **글은 `js/data/svcpage.js` 한 곳**입니다. 화면에 적으면
+   분류를 늘릴 때마다 여기를 고치게 되고, 그러면 두 곳이 어긋납니다.
+   ⚠️⚠️ **없는 분류는 빈 문자열입니다** — 구간이 아예 안 나오고
+   지금 화면과 글자 하나 다르지 않습니다 (절대 규칙 2 · §6 "실제
+   정보가 없는 영역을 억지로 채우지 않는다").
+   ⚠️ ③ 의 "제공 범위" 는 손으로 적지 않습니다 — 그 분류의 하위
+   서비스를 **그 자리에서 셉니다**. 하위가 업종에서 오는 분류
+   (`시설 · 장비`)는 업종을 골라야 수가 나와서, 0 이면 그 줄을 뺍니다.
+   ⚠️ FAQ 카드 바탕이 `--bg-2`(= `--bg-gray`) 라 **회색 구간에 두면
+   카드가 통째로 사라집니다** — 그래서 흰 구간입니다.
+   ──────────────────────────────────────────────────────────────── */
+function SvcPageBands(cat, items){
+  var d = (typeof amSvcPage === "function") ? amSvcPage(cat.key) : null;
+  if(!d) return "";
+  var out = "";
+
+  /* ② 이런 때 찾으십니다 */
+  if(d.when && d.when.length){
+    out += '<section class="sec sec-ivory"><div class="w">'+
+      '<div class="sec-hd"><p class="eyebrow">WHEN</p>'+
+        '<h2>'+esc(cat.name)+' 업체를 이런 때 찾으십니다</h2></div>'+
+      '<ul class="svp-when">'+ d.when.map(function(w){
+        return '<li>'+icon("check",18)+'<span>'+esc(w)+'</span></li>';
+      }).join("")+'</ul>'+
+    '</div></section>';
+  }
+
+  /* ③ 제공 범위 + 진행 절차 */
+  if(d.flow && d.flow.length){
+    out += '<section class="sec sec-white"><div class="w">'+
+      '<div class="sec-hd"><p class="eyebrow">HOW</p>'+
+        '<h2>어떻게 진행되나요</h2>'+
+        /* ⚠️ **세는 값**입니다 — 하위를 늘리면 저절로 따라옵니다 */
+        (items && items.length
+          ? '<p>'+esc(cat.name)+' 안에서 '+items.length+'가지 일을 맡는 업체를 찾으실 수 있습니다.</p>'
+          : '')+
+      '</div>'+
+      '<ol class="svp-flow">'+ d.flow.map(function(s, i){
+        return '<li><b class="svp-n">'+(i + 1 < 10 ? "0" : "")+(i + 1)+'</b>'+
+          '<b class="svp-fn">'+esc(s.n)+'</b>'+
+          '<i class="svp-fd">'+esc(s.d)+'</i></li>';
+      }).join("")+'</ol>'+
+    '</div></section>';
+  }
+
+  /* ④ 비용을 가르는 것 — ⚠️ 금액은 적지 않습니다 (빌드가 막습니다) */
+  if(d.cost && d.cost.length){
+    out += '<section class="sec sec-blue"><div class="w">'+
+      '<div class="sec-hd"><p class="eyebrow">COST</p>'+
+        '<h2>비용은 무엇으로 갈리나요</h2>'+
+        '<p>같은 평수라도 아래 조건에 따라 크게 달라집니다. '+
+          '그래서 금액을 미리 적어 두지 않고, 조건을 남기시면 업체가 '+
+          '그 조건으로 견적을 냅니다.</p></div>'+
+      '<ul class="svp-cost">'+ d.cost.map(function(x){
+        return '<li><b>'+esc(x.n)+'</b><i>'+esc(x.d)+'</i></li>';
+      }).join("")+'</ul>'+
+    '</div></section>';
+  }
+
+  /* ⑤ 자주 묻는 것 — ⚠️ `/faq` 의 FAQPage 구조화 데이터는 여기에
+     달지 않습니다. 같은 유형이 두 주소로 나가면 둘 다 묻힙니다. */
+  if(d.faq && d.faq.length){
+    out += '<section class="sec sec-white"><div class="w">'+
+      '<div class="sec-hd"><p class="eyebrow">FAQ</p>'+
+        '<h2>자주 묻는 것</h2></div>'+
+      '<ul class="faq-l">'+ d.faq.map(function(x){
+        return '<li class="faq-i"><b class="faq-q">'+esc(x.q)+'</b>'+
+          '<p class="faq-a">'+esc(x.a)+'</p></li>';
+      }).join("")+'</ul>'+
+    '</div></section>';
+  }
+  return out;
+}
+
 /* ── /providers/:cat — 그 분류의 업체 ───────────────────────────── */
 function PageProviderCat(cat){
   var sub = nowQS("s"), ind = nowQS("i"), reg = nowQS("r");
@@ -148,6 +230,10 @@ function PageProviderCat(cat){
               '<a class="btn btn-o" href="/join">'+esc(cat.name)+' 업체라면 입점하기</a>'
         }))+
   '</div></section>'+
+
+  /* § 6 의 ②③④⑤ — 업체 목록 다음, ⑥ 견적 배너 앞입니다.
+     ⚠⚠ 내용이 없는 분루는 민 문자열이고 화면은 지금과 같습니다. */
+  SvcPageBands(cat, items)+
 
   '<section class="sec"><div class="w band-cta">'+
     '<div><p class="eyebrow">한 번만 적으세요</p>'+

@@ -4003,3 +4003,63 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mhall-bg{ position:absolute; inset:0; z-index:-1; }
 .mhall-bg .ph{ display:block; width:100%; height:100%; object-fit:cover;
   opacity:.28; }
+
+/* ── §6 서비스 상세의 공통 네 구간 (2026-10-11 간소화 지시서) ──────
+   /providers/:cat 의 ② 필요한 상황 · ③ 범위와 절차 · ④ 비용 결정
+   요인 · ⑤ FAQ. ⑤ 는 `/faq` 와 **같은 `.faq-l`** 을 씁니다 — 두
+   벌로 만들면 두 화면의 생김새가 서로 달라집니다.
+   ⚠️ `.faq-i` 바탕이 `--bg-2`(= `--bg-gray`) 라 **회색 구간에 두면
+   카드가 통째로 사라집니다** (카드 일곱에서 겪은 자리).
+   ──────────────────────────────────────────────────────────────── */
+.svp-when{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s3);
+  margin:0; padding:0; list-style:none; }
+.svp-when > li{ display:flex; align-items:flex-start; gap:var(--s3);
+  min-width:0; padding:var(--s5) var(--s6); border-radius:var(--r-lg);
+  background:var(--surface); border:1px solid var(--line);
+  font-size:var(--t-md); font-weight:700; color:var(--ink); line-height:1.5; }
+.svp-when > li svg{ flex:0 0 auto; margin-top:2px; color:var(--blue-600); }
+
+.svp-flow{ display:grid; gap:var(--s3); margin:0; padding:0; list-style:none;
+  counter-reset:none; }
+/* ⚠️ grid 칸에 맨글과 태그를 섞지 마세요 — 전부 태그입니다 */
+.svp-flow > li{ display:grid; grid-template-columns:auto 1fr; gap:4px var(--s5);
+  align-items:start; min-width:0; padding:var(--s5) var(--s6);
+  border-radius:var(--r-lg); background:var(--surface);
+  border:1px solid var(--line); }
+.svp-n{ grid-row:1 / span 2; display:inline-flex; align-items:center;
+  justify-content:center; width:38px; height:38px; border-radius:11px;
+  background:var(--blue-50); color:var(--blue-600);
+  font-size:var(--t-sm); font-weight:900; }
+.svp-fn{ font-size:var(--t-md); font-weight:800; color:var(--ink); }
+.svp-fd{ font-style:normal; font-size:var(--t-sm); color:var(--ink2);
+  line-height:1.65; }
+
+.svp-cost{ display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--s3);
+  margin:0; padding:0; list-style:none; }
+.svp-cost > li{ display:grid; gap:6px; align-content:start; min-width:0;
+  padding:var(--s6); border-radius:var(--r-lg); background:var(--surface);
+  border:1px solid var(--line); box-shadow:var(--shadow-soft); }
+.svp-cost > li > b{ font-size:var(--t-md); font-weight:800; color:var(--navy); }
+.svp-cost > li > i{ font-style:normal; font-size:var(--t-sm); color:var(--ink2);
+  line-height:1.65; }
+
+/* ⚠️ 1024px 아래에서 두 칸으로 나누면 세 번째가 혼자 남습니다 —
+   비용 다섯은 셋 → 둘 → 하나로 갑니다 (걸음 여섯을 다섯 칸에 넣었다가
+   겪은 자리). */
+@media (max-width:1024px){
+  .svp-cost{ grid-template-columns:1fr 1fr; }
+}
+/* ⚠⚠ 두 칸일 때 갯수가 홀수면 **마지막 하나가 혼자** 남아
+   "빠뜨린 칸" 으로 읽힙니다 — 매물 조건표에서 같은 자리를
+   이미 겉었습니다. 그때만 두 칸을 씁니다 (한 칸일 때는 아무 일도
+   안 납니다). 비용 요인은 분류마다 갯수가 달라집니다. */
+@media (max-width:1024px){
+  .svp-cost > li:last-child:nth-child(odd),
+  .svp-when > li:last-child:nth-child(odd){ grid-column:1 / -1; }
+}
+@media (max-width:760px){
+  .svp-when{ grid-template-columns:1fr; }
+  .svp-cost{ grid-template-columns:1fr; }
+  .svp-flow > li{ padding:var(--s5); gap:4px var(--s4); }
+  .svp-n{ width:32px; height:32px; border-radius:9px; }
+}

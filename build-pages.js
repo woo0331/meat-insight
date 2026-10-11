@@ -78,7 +78,8 @@ function loadApp(){
                 "js/data/packages.js",
                 /* ⚠️ halls 는 catalog 의 분류 · 하위 key 를 가리킵니다
                    (2026-10-11 UI/UX 지시서 §2 · §4 — 전문관 넷) */
-                "js/data/halls.js"];
+                "js/data/halls.js",
+                "js/data/svcpage.js"];
 
   /* ⚠️ 여기는 **glob 이 아니라 손으로 적은 목록**입니다. 새 데이터
      파일을 만들고 여기에 안 넣으면, 그 데이터를 쓰는 주소가 **에러
@@ -719,6 +720,19 @@ function noscriptFor(W, r, route){
     if(c){
       h2(c.name + " — " + c.lead);
       ul(subNames(c));
+      /* §6 의 네 구간 — ⚠⚠ **화면에 나오는 분류에만** 올립니다.
+         화면에 없는 것을 크롤러에게만 보여 주면 그게 구글에
+         나가는 거짓말입니다 (이 지장소가 다섯 번 겪은 자리). */
+      const sp = (W.AM_SVCPAGE || {})[key];
+      if(sp){
+        if((sp.when||[]).length){ h2(c.name + " 업체를 이런 때 찾으십니다"); ul(sp.when); }
+        if((sp.flow||[]).length){ h2("어떻게 진행되나요");
+          ul(sp.flow.map(x => x.n + " — " + x.d)); }
+        if((sp.cost||[]).length){ h2("비용은 무엇으로 갈리나요");
+          ul(sp.cost.map(x => x.n + " — " + x.d)); }
+        if((sp.faq||[]).length){ h2("자주 묻는 것");
+          sp.faq.forEach(x => { L.push("<h3>"+esc(x.q)+"</h3>"); p(x.a); }); }
+      }
       h2("업종별로 찾기");
       ul((W.AM_INDUSTRIES||[]).map(i => i.name));
       h2("지역별로 찾기");
@@ -2157,6 +2171,83 @@ function checkHalls(W){
   }
 }
 
+/* ── §6 서비스 상세의 공통 네 구간 (2026-10-11 간소화 지시서) ──────
+   ⚠️⚠️ **금액을 적을 수 없게 막습니다.** ④ 의 이름이 "예상 비용
+   **또는** 비용 결정 요인" 인 까닭이고, 프랜차이즈 창업비를
+   정보공개서 값으로만 내는 것과 같은 규칙입니다 — 사장님이 그
+   숫자를 보고 수천만 원을 빌리러 가십니다.
+   ⚠️ 빈 배열도 막습니다. 칸을 열어 놓고 비우면 그게 자리표시자이고,
+   §6 이 "실제 정보가 없는 영역을 억지로 채우지 않는다" 라고 적은
+   것은 **구간째 빼라**는 말입니다 (절대 규칙 2).
+   ──────────────────────────────────────────────────────────────── */
+function checkSvcPage(W){
+  const P = W.AM_SVCPAGE || {};
+  const keys = Object.keys(P);
+  if(!keys.length)
+    throw new Error("js/data/svcpage.js 의 AM_SVCPAGE 가 비었습니다 (§6)");
+
+  const cats  = new Map((W.AM_CATS || []).map(c => [c.key, c]));
+  const paths = new Set(allRoutes(W));
+  /* 금액 · 요율 — 숫자 뒤에 돈 단위나 퍼센트가 붙은 것 */
+  const MONEY = /[0-9][0-9,.]*\s*(억|천만|백만|만\s*원|원|%)/;
+  /* 지킬 수 없는 약속 — check.js 의 `/join` 검사와 같은 목록입니다 */
+  const SAY = [[/보장/, "보장"], [/최저가/, "최저가"], [/무조건/, "무조건"],
+               [/[0-9]\s*시간\s*(안|내)/, "n시간 안에"],
+               [/당일\s*(연락|배정|시공)/, "당일"],
+               [/평균/, "평균"], [/시세/, "시세"]];
+
+  for(const k of keys){
+    const c = cats.get(k);
+    if(!c) throw new Error("js/data/svcpage.js 가 없는 분류를 가리킵니다 — " + k +
+      "\n   → js/data/catalog.js 의 분류 key 를 적으세요");
+    const dest = c.to ? c.to
+      : ((c.kind === "provider") ? "/providers/" + c.key : "/c/" + c.key);
+    if(!paths.has(String(dest).split("?")[0]))
+      throw new Error("\"" + k + "\" 는 화면이 없는 분류입니다 — " + dest);
+
+    const d = P[k] || {};
+    const got = ["when","flow","cost","faq"].filter(f => f in d);
+    if(!got.length)
+      throw new Error("\"" + k + "\" 에 네 구간(when · flow · cost · faq)이 하나도 없습니다");
+
+    for(const f of got){
+      const L = d[f];
+      if(!Array.isArray(L) || !L.length)
+        throw new Error("\"" + k + "\" 의 " + f + " 가 비었습니다 — " +
+          "칸을 열어 놓고 비우면 자리표시자입니다. 쓸 것이 없으면 그 칸을 **빼세요** (§6)");
+
+      L.forEach((x, i) => {
+        const at = "\"" + k + "\" 의 " + f + " " + (i + 1) + "번";
+        let txt;
+        if(f === "when"){
+          if(typeof x !== "string" || !x.trim())
+            throw new Error(at + " 이 비었습니다");
+          txt = x;
+        }else if(f === "faq"){
+          if(!x || !x.q || !x.a) throw new Error(at + " 에 질문이나 답이 없습니다");
+          /* ⚠️ 이 칸은 esc() 만 거쳐서 별표가 **글자로** 찍힙니다 */
+          if(/\*\*/.test(x.q + x.a))
+            throw new Error(at + " 에 별표(**)가 있습니다 — 이 칸은 mark() 를 안 거쳐서 " +
+              "별표가 글자로 찍힙니다");
+          txt = x.q + " " + x.a;
+        }else{
+          if(!x || !x.n || !x.d) throw new Error(at + " 에 이름이나 설명이 없습니다");
+          txt = x.n + " " + x.d;
+        }
+        if(MONEY.test(txt))
+          throw new Error(at + " 에 금액이나 요율이 있습니다 — " +
+            (txt.match(MONEY) || [""])[0].trim() +
+            "\n   → 지역 · 평수 · 업종에 따라 몇 배로 갈립니다. 적는 것은 " +
+            "**무엇이 비용을 가르는가**까지입니다 (절대 규칙 1)");
+        for(const q of SAY)
+          if(q[0].test(txt))
+            throw new Error(at + " 에 \"" + q[1] + "\" 가 있습니다 — " +
+              "지킬 수 없는 약속이거나 재 본 적 없는 값입니다 (약관 제8조)");
+      });
+    }
+  }
+}
+
 function checkOpsvc(W){
   const G = W.AM_OPSVC || [];
   if(!G.length) throw new Error("js/data/opsvc.js 의 AM_OPSVC 가 비었습니다 (§5-2)");
@@ -2649,6 +2740,7 @@ checkRetired();
 checkOffers(W);
 checkOpsvc(W);
 checkHalls(W);
+checkSvcPage(W);
 checkPackages(W);
 checkReqForms(W);
 checkProviders(W);

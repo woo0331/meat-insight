@@ -3771,3 +3771,24 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .myk-0 b{ color:var(--ink3); }
 @media (min-width:620px){ .myk-g{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
 @media (min-width:980px){ .myk-g{ grid-template-columns:repeat(6, minmax(0,1fr)); } }
+
+
+/* ════════ 로그인 칸 (2026-10-11 · 1차) ══════════════════════════════
+   ⚠️ 로그인이 설정되기 전에는 `.my-db` 가 통째로 hidden 이라 이 규칙이
+   하나도 안 걸립니다 — 화면에 한 픽셀도 안 나옵니다. */
+.my-in{ max-width:620px; }
+/* ⚠️ `.f-r label{display:block}`(0,2,0)이 여기 label 을 이깁니다 —
+   이 저장소가 `.rqf-k` 로 겪은 특정도 함정이라, 줄 짜임새는 label 이
+   아니라 **감싸개**(.my-in-r)로 잡습니다. */
+.my-in-r{ display:flex; gap:var(--s3); flex-wrap:wrap; align-items:flex-start; }
+.my-in-r input{ flex:1 1 240px; min-width:0; width:auto; }
+.my-in-r .btn{ flex:none; }
+/* ⚠️ 글자색은 짙은 쪽입니다 — `--ok`/`--bad` 는 **배지 바탕용**이라
+   글자로 쓰면 AA 에 못 미칩니다 (이 저장소가 세 번 겪은 자리). */
+.my-in-n{ margin:0; font-size:var(--t-cap); color:var(--ink2); min-height:20px; }
+.my-in-n.ok{ color:var(--start-deep); font-weight:700; }
+.my-in-n.bad{ color:var(--close-deep); font-weight:700; }
+/* ⚠️ 나가는 길을 반드시 같이 냅니다 — 가게 컴퓨터는 여러 사람이
+   씁니다. 들어올 길만 만들면 앞사람 계정이 그대로 남습니다. */
+.my-out{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap;
+  margin-top:var(--s7); font-size:var(--t-cap); color:var(--ink2); }

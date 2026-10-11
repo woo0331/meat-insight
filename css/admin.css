@@ -658,3 +658,103 @@ body.sl-locked{ overflow:hidden; }
 .ad-of-s.ad-of-ok{ background:var(--start-soft, #EAF8F3); color:var(--start-deep, #06694A); }
 .ad-of-m{ margin:6px 0 0; font-size:13px; color:var(--ink2); }
 .ad-of-d{ margin:4px 0 0; font-size:13px; color:var(--ink2); }
+
+/* ════════ 접수 · 배정 (2026-10-11 전면 감사 §6) ══════════════════
+   ⚠️⚠️ DB · 로그인이 설정되기 전에는 `#rq` 가 **빈 칸**이라 아래 규칙이
+   하나도 안 걸립니다 — 화면에 한 픽셀도 안 나옵니다 (절대 규칙 2).
+   ⚠️ 상태 딱지는 여기 없습니다 — `css/pages.css` 의 `.myq-st` 를
+   그대로 씁니다 (`/my` 와 같은 색이라야 한 시스템으로 읽힙니다). */
+/* ⚠️⚠️ **`.ad-main` 은 grid 입니다 — 칸의 기본 `min-width` 가 `auto`
+   라서 안쪽의 제일 안 쪼개지는 것보다 좁아지지 않습니다.** 360px 에서
+   문서 폭이 388px 이 되어 **가로 스크롤**이 났습니다 (역할 올리는 SQL
+   한 줄과 메일 칸이 범인이었습니다). 이 저장소가 헤더 `.gnb` 에서
+   같은 함정을 겪은 자리이고, 거기와 달리 여기는 **문서 폭이 실제로
+   늘어나** `audit-admin` 이 잡았습니다. */
+#rq{ min-width:0; }
+.rq-s{ border-color:var(--blue-100, #D6E6FA); min-width:0; }
+
+/* 로그인 칸 — ⚠️ `.f-r label{display:block}`(0,2,0)이 이 안의 label 을
+   이깁니다. 줄 짜임새는 label 이 아니라 **감싸개**로 잡습니다
+   (이 저장소가 `.rqf-k` 로 겪은 특정도 함정). */
+.rq-in{ max-width:620px; }
+.rq-in-r{ display:flex; gap:var(--s3, 10px); flex-wrap:wrap;
+          align-items:flex-start; }
+.rq-in-r input{ flex:1 1 240px; min-width:0; width:auto; }
+.rq-in-r .btn{ flex:none; }
+/* ⚠️ 글자색은 짙은 쪽입니다 — `--ok`/`--bad` 는 **배지 바탕용**이라
+   글자로 쓰면 AA 에 못 미칩니다 (이 저장소가 세 번 겪은 자리). */
+.rq-in-n{ margin:8px 0 0; font-size:13px; color:var(--ink2); min-height:20px; }
+.rq-in-n.ok{  color:var(--start-deep, #0C43AC); font-weight:700; }
+.rq-in-n.bad{ color:var(--close-deep, #C2431E); font-weight:700; }
+
+.rq-out{ display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+         margin:18px 0 0; font-size:13px; color:var(--ink2); }
+
+/* 역할 올리는 SQL — 운영자가 그대로 복사하는 자리입니다 */
+.rq-sql{ margin:8px 0; padding:11px 13px; overflow-x:auto; min-width:0;
+         max-width:100%;
+         background:var(--bg-2, #F5F7F9); border:1px solid var(--line);
+         border-radius:8px; font-family:ui-monospace,Menlo,Consolas,monospace;
+         font-size:13px; line-height:1.6; color:var(--ink); }
+
+.rq-fil{ margin:14px 0 16px; }
+.rq-g{ display:grid; gap:10px; }
+
+.rq-r{ background:#fff; border:1px solid var(--line); border-radius:10px; }
+.rq-r.on{ border-color:var(--blue, #1464F4); }
+
+/* ⚠️ 줄 전체가 눌립니다. `padding` 만으로 높이를 만들면 짧은 이름에서
+   다시 낮아집니다 — `min-height` 로 잡습니다 (40px 이상). */
+.rq-hd{ display:flex; align-items:center; justify-content:space-between;
+        gap:12px; flex-wrap:wrap; width:100%; min-height:52px;
+        padding:10px 15px; border:0; border-radius:10px;
+        background:transparent; text-align:left; cursor:pointer; }
+.rq-hd:hover{ background:var(--bg-2, #F5F7F9); }
+.rq-hd-l{ display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+          min-width:0; }
+.rq-hd-r{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+/* 접수번호는 직원이 전화로 읽어 주는 번호입니다 — 또렷하게 */
+.rq-no{ font-size:15px; font-weight:800; letter-spacing:.02em;
+        color:var(--navy); }
+.rq-m{ font-size:13px; color:var(--ink2); line-height:1.5; }
+.rq-d{ font-size:13px; font-style:normal; color:var(--ink3); }
+
+.rq-bd{ padding:4px 15px 16px; border-top:1px solid var(--line); }
+.rq-none{ margin:12px 0 0; font-size:13px; color:var(--ink2); }
+.rq-mv{ margin-top:12px; }
+.rq-mv .f-r{ max-width:520px; }
+.rq-a3{ margin-top:14px; }
+.rq-ck{ margin-top:10px; }
+
+/* 이미 보낸 업체 */
+.rq-as{ margin-top:16px; padding-top:14px; border-top:1px dashed var(--line); }
+.rq-as > b{ font-size:14px; color:var(--navy); }
+.rq-as ul{ margin:8px 0 0; padding-left:18px; }
+.rq-as li{ font-size:13px; color:var(--ink2); line-height:1.7; }
+.rq-as i{ font-style:normal; font-weight:700; color:var(--ink); }
+.rq-as em{ font-style:normal; color:var(--ink3); }
+
+.rq-note{ margin:14px 0 0; font-size:13px; color:var(--ink2); }
+
+/* 사업자 정보 — 빈 칸만 모은 줄 (전면 감사 §1 ⑥) */
+.ad-rd-cp{ margin-top:10px; }
+
+/* ── 9. 제휴업체 등록 줄 (전면 감사 §6) ───────────────────────── */
+.ad-pv-b{ margin:18px 0 0; padding:14px 15px;
+          background:var(--bg-2, #F5F7F9); border:1px solid var(--line);
+          border-radius:10px; }
+.ad-pv-b > b{ font-size:14px; color:var(--navy); }
+/* ⚠️ 체크칸이 서른 개를 넘는 칸입니다 — 한 줄에 하나씩 쌓으면 화면
+   하나를 통째로 먹습니다. 칸이 **제 글자 폭만큼** 잡고 모자라면 다음
+   줄로 내려가게 둡니다 (폭을 %로 못박으면 긴 이름이 잘립니다 — 이
+   저장소가 거르개 딱지에서 겪은 자리). */
+.ad-pv-chk{ display:flex; flex-wrap:wrap; gap:4px 14px; margin-top:10px; }
+.ad-pv-chk .f-ck{ margin:0; }
+.ad-pv-ls{ margin:18px 0 0; }
+.ad-pv-w{ margin:18px 0 0; }
+.ad-pv-w ul{ margin:8px 0 0; padding-left:18px; }
+.ad-pv-w li{ line-height:1.7; }
+.ad-pv-gu{ margin-top:14px; max-width:420px; }
+
+/* DB · 로그인 (전면 감사 1차 ①) — 1번 칸 안의 작은 머리말 */
+.ad-h3{ margin:22px 0 10px; font-size:15px; color:var(--navy); }

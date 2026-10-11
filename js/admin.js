@@ -102,8 +102,57 @@ function adHealthView(h){
       return '<li><span>'+esc(r[0])+'</span>'+
         '<em class="'+(r[1] ? "on" : "off")+'">'+(r[1] ? "설정됨" : "없음")+'</em></li>';
     }).join("")+'</ul>'+
+    adHealthDb(h)+
     '<p class="ad-note">값은 안 보여 드립니다 — 있는지 없는지만 봅니다. '+
       '환경변수를 넣은 뒤에는 <b>반드시 다시 배포</b>해야 반영됩니다.</p>';
+}
+
+/* ── DB · 로그인 (2026-10-11 전면 감사 1차 ①) ──────────────────
+   ⚠️⚠️ **접수 저장과 로그인을 갈라서** 봅니다. service key 만 넣고
+   anon key 를 빠뜨리면 접수번호는 나오는데 **로그인만 조용히
+   안 됩니다** — 화면은 `auth:false` 로 구간째 안 그려서 **아무
+   에러도 안 납니다.** 한 덩어리로 보면 어느 쪽이 빠졌는지 모릅니다.
+   ⚠️ 옛 답(`db` 가 없는 배포)에도 걸려 넘어지지 않게 합니다 — 환경
+   변수를 넣고 **다시 배포하기 전**에는 함수가 옛것입니다. */
+function adHealthDb(h){
+  if(!h || !h.db)
+    return '<p class="ad-note">DB · 로그인 상태는 이 배포에 아직 없습니다 — '+
+      '<b>다시 배포</b>하시면 여기에 나옵니다.</p>';
+  var d = h.db;
+  var rows = [
+    ["프로젝트 주소 (SUPABASE_URL)",      d.url],
+    ["공개 키 (SUPABASE_ANON_KEY)",       d.anonKey],
+    ["서버 키 (SUPABASE_SERVICE_KEY)",    d.svcKey]
+  ];
+  var msg;
+  if(d.store && d.auth)
+    msg = '<b>DB 와 로그인이 다 설정되어 있습니다.</b> 접수가 저장되고 '+
+      '접수번호가 나가며, <code>/my</code> 와 이 화면의 <b>접수 · 배정</b> 칸이 섭니다.';
+  else if(d.store && !d.auth)
+    msg = '<b>접수 저장은 되는데 로그인이 안 됩니다.</b> '+
+      '<code>SUPABASE_ANON_KEY</code> 가 빠졌습니다 — 그 키는 '+
+      '<b>새도 괜찮게 설계된 공개 키</b>이고, 무엇을 볼 수 있는지는 전부 '+
+      'RLS 가 정합니다. 넣고 <b>다시 배포</b>하세요.';
+  else if(!d.store && d.auth)
+    msg = '<b>로그인은 되는데 접수가 저장되지 않습니다.</b> '+
+      '<code>SUPABASE_SERVICE_KEY</code> 가 빠졌습니다 — 접수번호가 '+
+      '안 나가고, 손님은 번호 없이 끝납니다.';
+  else
+    msg = '<b>아직 설정되지 않았습니다.</b> 지금은 접수가 슬랙 · 메일로만 '+
+      '가고 번호가 없습니다. 화면도 로그인 칸을 <b>아예 안 그립니다</b> — '+
+      '작동하지 않는 단추를 만들지 않습니다.';
+
+  return '<h3 class="ad-h3">DB · 로그인</h3>'+
+    '<div class="ad-h '+(d.store && d.auth ? "ad-h-on" : "ad-h-off")+'">'+
+      '<p>'+msg+'</p></div>'+
+    '<ul class="ad-rows">'+rows.map(function(r){
+      return '<li><span>'+esc(r[0])+'</span>'+
+        '<em class="'+(r[1] ? "on" : "off")+'">'+(r[1] ? "설정됨" : "없음")+'</em></li>';
+    }).join("")+'</ul>'+
+    /* ⚠️⚠️ 서버 키가 화면으로 내려가면 RLS 가 통째로 꺼집니다 */
+    '<p class="ad-note">⚠️ <b>서버 키는 화면으로 내려가지 않습니다</b> — '+
+      '그 키는 RLS 를 통째로 지나갑니다. 화면이 받는 것은 '+
+      '<b>주소와 공개 키 둘뿐</b>입니다.</p>';
 }
 
 /* ⚠️ **호스팅(Vercel)은 접수처가 아닙니다.** 그 줄은 접수처를 붙이기
@@ -133,15 +182,39 @@ function adTrustees(){
 /* 전자상거래법 제10조가 **표시하라고 정한 칸**과 개인정보보호법
    제31조의 보호책임자. ⚠️ 비어 있으면 화면에서 줄째 빠져서 **아무
    말도 안 하고 사라집니다** — 그래서 여기서 셉니다. */
+/* ⚠️⚠️ **여덟 칸입니다** (2026-10-11 전면 감사 §1). 전에 일곱이었고
+   **전화번호가 빠져 있었습니다** — 전자상거래법 제10조 제1항이
+   "전화번호 · 전자우편주소" 를 **둘 다** 적으라고 정하고 있는데, 저희는
+   메일만 세고 있었습니다. 게다가 `phone` 이 비면 화면의 **전화 버튼이
+   통째로 안 나옵니다**(그게 맞습니다 — 자리표시자를 안 찍습니다). 그래서
+   비어 있어도 아무 표가 안 나고, 이 칸만이 그것을 말합니다.
+   ⚠️ `hours` 와 `privacyEmail` · `privacyPhone` 은 여기 없습니다 —
+   법이 정한 칸이 아니고, 뒤의 둘은 비면 `email` · `phone` 을 씁니다. */
 var AD_BIZ_NEED = [
   ["company",   "상호"],
   ["ceo",       "대표자 성명"],
   ["brn",       "사업자등록번호"],
   ["mailOrder", "통신판매업 신고번호"],
   ["address",   "사업장 주소"],
+  ["phone",     "전화번호"],
   ["email",     "문의 이메일"],
   ["privacyOfficer", "개인정보 보호책임자"]
 ];
+
+/* 비어 있는 칸만 모아 **그대로 붙여 넣을 줄**을 만듭니다.
+   ⚠️⚠️ **값을 지어내지 않습니다** (절대 규칙 1). 따옴표 사이는 비어
+   있고, 사장님이 적으셔야 합니다 — 예시 상호를 넣어 두면 그대로
+   커밋되어 **없는 회사의 사업자 정보**가 푸터 · 약관 · 방침에
+   나갑니다. 여기가 하는 일은 **키 이름을 틀리지 않게** 해 드리는
+   것까지입니다 (업종 · 지역 key 를 골라 만드는 7번 칸과 같은 까닭). */
+function adBizSnip(miss){
+  var w = 0;
+  miss.forEach(function(r){ if(r[0].length > w) w = r[0].length; });
+  return miss.map(function(r){
+    var pad = new Array(w - r[0].length + 1).join(" ");
+    return "  " + r[0] + ":" + pad + ' "",        // ' + r[1];
+  }).join("\n");
+}
 
 function adReadyRow(done, title, body){
   return '<li class="ad-rd '+(done ? "ad-rd-on" : "ad-rd-off")+'">'+
@@ -165,7 +238,19 @@ function adReady(){
         '<p class="ad-rd-n">비면 푸터 · 약관 · 방침에서 <b>줄째 빠집니다</b>'+
         ' (자리표시자를 안 찍습니다). 영업을 시작하시면 '+
         '<b>전자상거래법 제10조</b>가 표시하라고 정한 칸이라 반드시 채워야 '+
-        '합니다. <code>js/data/site.js</code> 의 <code>WOW_BIZ</code> 한 곳입니다.</p>'
+        '합니다. <code>js/data/site.js</code> 의 <code>WOW_BIZ</code> 한 곳입니다.</p>'+
+        /* 키 이름을 틀리지 않게 — ⚠️ 값은 비어 있습니다. 지어내지
+           않습니다 (절대 규칙 1). 틀린 키는 **에러도 없이 조용히**
+           안 읽힙니다. */
+        '<div class="ad-c-h ad-rd-cp"><b>빈 칸만 모은 줄</b>'+
+          '<button class="btn btn-o btn-sm" type="button" '+
+            'onclick="adCopy(\'biz\')">'+icon("doc",16)+'복사</button></div>'+
+        '<textarea id="ad-t-biz" rows="'+(miss.length + 1)+'" '+
+          'spellcheck="false">'+esc(adBizSnip(miss))+'</textarea>'+
+        '<p class="ad-rd-n">따옴표 사이에 값을 적어 '+
+          '<code>js/data/site.js</code> 의 같은 키를 바꾸시면 됩니다. '+
+          '<b>빈 채로 커밋하지 마세요</b> — 지어낸 값을 넣는 것보다는 '+
+          '비워 두는 것이 낫지만, 영업 전에는 둘 다 안 됩니다.</p>'
       : '<p>표시 의무 칸이 다 채워져 있습니다.</p>'));
 
   /* ② 지원사업 "찾는 곳" 링크 — 눌러 보고 켜야 나갑니다 */
@@ -579,6 +664,20 @@ function adInit(){
         '손으로 적는 값이 아니라 <b>업체 수에서 세는 값</b>이라 '+
         '업체를 등록하시면 저절로 줄어듭니다.</p>'+
       adOffers()+
+    '</section>'+
+
+    '<section class="ad-s">'+
+      '<h2>9. 제휴업체 등록 줄</h2>'+
+      '<p class="ad-lead">받아 온 업체를 적으시면 <b>넣을 줄 둘</b>을 '+
+        '만들어 드립니다 — <b>손님 화면</b>(정적 파일)과 <b>배정용 DB</b> '+
+        '입니다. 한쪽만 넣으면 <b>에러 없이 반쪽</b>입니다 — 화면에는 '+
+        '보이는데 배정이 안 되거나, 배정은 되는데 손님 화면에 없는 '+
+        '업체가 됩니다.</p>'+
+      '<p class="ad-lead">손으로 치면 <b>하위 분야 key</b> 에서 틀리는데, '+
+        '틀리면 그 업체만 조용히 안 뜨거나 빌드가 멈춥니다 — '+
+        '골라 만들면 틀릴 수가 없습니다. '+
+        '<b>여기도 아무것도 저장하지 않습니다.</b></p>'+
+      '<div id="ad-pv"></div>'+
     '</section>';
 
   adHealth();
@@ -586,6 +685,7 @@ function adInit(){
   adDraw();
   adInviteDraw();
   adMkDraw();
+  adPvDraw();
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -1079,4 +1179,277 @@ function adOffers(){
     '<p class="ad-note">⚠️ 업체가 0곳인 분야의 상품을 <b>신청 받는 중</b>으로 ' +
       '켜면 <b>빌드가 멈춥니다</b> (손님이 다 적고 눌렀을 때 배정할 곳이 ' +
       '없기 때문입니다 — §5 · 절대 규칙 5).</p>';
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   9. 제휴업체 등록 줄 (2026-10-11 전면 감사 §6 "제휴업체 등록")
+
+   ⚠️⚠️ **업체를 지어내지 않습니다** (절대 규칙 1). 이 칸이 하는 일은
+   사장님이 **실제로 받아 온 업체**를 적으실 때 **key 를 틀리지 않게**
+   해 드리는 것까지입니다 — 7번 칸(매물 등록 줄)과 같은 까닭입니다.
+
+   ⚠️⚠️ **두 곳에 넣어야 합니다.** 이 저장소에서 업체가 사는 곳이
+   **둘**이고 하는 일이 다릅니다 —
+
+     js/data/providers.js   손님 화면 (빌드가 미리 만든 정적 HTML)
+     DB 의 provider 표       배정 (move_state 가 "없는 업체입니다" 로 거절)
+
+   한쪽만 넣으면 **에러 없이 반쪽**입니다 — 화면에는 보이는데 배정이
+   안 되거나, 배정은 되는데 손님 화면에 없는 업체가 됩니다. 그래서 이
+   칸이 **줄 둘을 같이** 만듭니다.
+
+   ⚠️⚠️ **`subs` 는 분류 key 가 아니라 하위 분류 key 입니다.**
+   `interior` 처럼 둘 다 있는 이름이 있어서 손으로 적으면 틀립니다 —
+   틀리면 `checkProviders()` 가 빌드를 멈추고, 안 멈추는 경우에는 그
+   업체만 **조용히 안 뜹니다.** 여기서는 **골라서** 만들기 때문에
+   틀릴 수가 없습니다.
+
+   ⚠️ **`verified` 를 적는 칸을 만들지 않았습니다.** 확인 배지는
+   **플랫폼이 서류를 실제로 본 것만** 켭니다 — 등록 화면에 체크칸을
+   두면 "등록하면 저절로 다 켜지는구나" 가 됩니다. 켤 때는 서류를 보고
+   SQL · 파일에서 한 칸씩 켜세요.
+   ⚠️ **평점 · 후기 수 · 작업 수를 적는 칸이 없습니다** — `reviews` ·
+   `portfolio` 배열에서 **셉니다.** 값으로 저장하면 누군가 그 칸에
+   4.9 를 적어 넣을 수 있습니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+var AD_PV = { id:"", name:"", intro:"", since:"", hours:"",
+              cat:"", regs:{}, gus:"", inds:{}, subs:{}, listed:false };
+
+function adPvCats(){
+  return (window.AM_CATS || []).filter(function(c){ return c.kind === "provider"; });
+}
+
+/* ⚠️ `시설 · 장비`(equip)는 하위가 **업종에서** 옵니다 (`byIndustry`).
+   그 분류의 `items` 는 비어 있어서, 업종마다 적힌 장비를 전부 모아
+   냅니다 — 안 모으면 그 분류만 고르개가 **덩그러니 빕니다**. */
+function adPvSubs(catKey){
+  var c = window.amCat ? amCat(catKey) : null;
+  if(!c) return [];
+  if(!c.byIndustry) return c.items || [];
+  var seen = {}, out = [];
+  (window.AM_INDUSTRIES || []).forEach(function(ind){
+    (ind.equip || []).forEach(function(it){
+      if(seen[it.key]) return;
+      seen[it.key] = 1; out.push(it);
+    });
+  });
+  return out;
+}
+
+/* 고른 것 — ⚠️ **세는 값**입니다. 숫자를 손으로 적지 않습니다. */
+function adPvKeys(o){
+  return Object.keys(o || {}).filter(function(k){ return o[k]; });
+}
+
+/* ⚠️⚠️ **적는 칸에서는 다시 그리지 않습니다.** 칸을 통째로 다시
+   그리면 한 글자 칠 때마다 **커서가 칸에서 빠집니다** — 업체명을
+   "가" 까지만 치고 멈추는 꼴입니다. 4번 칸의 `adSet()` 이 결과 칸만
+   다시 쓰는 것과 같은 까닭이고, 체크칸도 같습니다 (스물 몇 개를
+   고르는 자리라 다시 그리면 맨 위로 올라갑니다).
+   ⚠️ 다시 그려야 하는 것은 **분야 고르개 하나**입니다 — 그 아래
+   하위 목록이 통째로 바뀝니다 (`adPvCat()`). */
+window.adPvSet = function(what, v){ AD_PV[what] = v; adPvOut(); };
+window.adPvTog = function(what, k, on){ AD_PV[what][k] = !!on; adPvOut(); };
+window.adPvCat = function(v){ AD_PV.cat = v; adPvDraw(); };
+
+/* 슬러그 — ⚠️ 주소가 됩니다 (`/p/<이 값>`). 한글을 넣으면 주소가
+   퍼센트 인코딩으로 길어지고 공유할 때 깨집니다. */
+function adPvSlugBad(v){
+  if(!v) return "주소가 될 값이라 반드시 적어야 합니다";
+  if(!/^[a-z0-9][a-z0-9-]*$/.test(v))
+    return "영문 소문자 · 숫자 · 붙임표만 쓰세요 (예: ganada-interior)";
+  return "";
+}
+
+function adPvArr(L){
+  return "[" + L.map(function(k){ return '"' + k + '"'; }).join(",") + "]";
+}
+function adPvSql(L){
+  return "'{" + L.map(function(k){ return '"' + k + '"'; }).join(",") + "}'";
+}
+/* ⚠️ SQL 에 들어가는 글입니다 — 작은따옴표를 두 번으로 바꿉니다.
+   업체 소개는 사장님이 붙여 넣는 글이라 따옴표가 섞입니다. */
+function adPvQ(v){ return "'" + String(v || "").replace(/'/g, "''") + "'"; }
+/* ⚠️ 자바스크립트 줄에 들어가는 글입니다 — 역슬래시와 큰따옴표. */
+function adPvJs(v){
+  return '"' + String(v || "").replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
+}
+
+function adPvLines(){
+  var regs = adPvKeys(AD_PV.regs), inds = adPvKeys(AD_PV.inds),
+      subs = adPvKeys(AD_PV.subs);
+  var gus = String(AD_PV.gus || "").split(/[,·]/)
+              .map(function(x){ return x.trim(); }).filter(Boolean);
+  var since = String(AD_PV.since || "").replace(/[^0-9]/g, "");
+
+  var js = "  { id:" + adPvJs(AD_PV.id) + ",\n" +
+    "    name:" + adPvJs(AD_PV.name) + ",\n" +
+    "    regions:" + adPvArr(regs) + ",\n" +
+    (gus.length ? "    gu:" + adPvArr(gus) + ",\n" : "") +
+    "    industries:" + adPvArr(inds) + ",\n" +
+    "    subs:" + adPvArr(subs) + ",\n" +
+    (AD_PV.intro ? "    intro:" + adPvJs(AD_PV.intro) + ",\n" : "") +
+    (since ? "    since:" + since + ",\n" : "") +
+    (AD_PV.hours ? "    consultHours:" + adPvJs(AD_PV.hours) + ",\n" : "") +
+    "    reviews:[], portfolio:[] }";
+
+  /* ⚠️⚠️ `on conflict` 로 두 번 돌려도 안전하게 합니다. 한 번 넣고
+     고치실 때 똑같은 줄을 다시 돌리게 되는데, 그때 "이미 있습니다"
+     로 멈추면 사장님이 지우고 다시 넣게 됩니다 — 지우면 그 업체에
+     붙은 배정 · 계약이 `on delete cascade` 로 **같이 지워집니다.**
+     ⚠️ `verified` · `listed` 는 **일부러 손대지 않습니다** — 서류를
+     보고 켜는 칸이라, 다시 돌릴 때 꺼지면 안 됩니다. */
+  var sql =
+    "insert into provider\n" +
+    "  (id, name, intro, regions, gu, industries, subs, since, consult_hours, listed)\n" +
+    "values (\n" +
+    "  " + adPvQ(AD_PV.id) + ",\n" +
+    "  " + adPvQ(AD_PV.name) + ",\n" +
+    "  " + (AD_PV.intro ? adPvQ(AD_PV.intro) : "null") + ",\n" +
+    "  " + adPvSql(regs) + ",\n" +
+    "  " + adPvSql(gus) + ",\n" +
+    "  " + adPvSql(inds) + ",\n" +
+    "  " + adPvSql(subs) + ",\n" +
+    "  " + (since ? since : "null") + ",\n" +
+    "  " + (AD_PV.hours ? adPvQ(AD_PV.hours) : "null") + ",\n" +
+    "  " + (AD_PV.listed ? "true" : "false") + "\n" +
+    ")\n" +
+    "on conflict (id) do update set\n" +
+    "  name = excluded.name,\n" +
+    "  intro = excluded.intro,\n" +
+    "  regions = excluded.regions,\n" +
+    "  gu = excluded.gu,\n" +
+    "  industries = excluded.industries,\n" +
+    "  subs = excluded.subs,\n" +
+    "  since = excluded.since,\n" +
+    "  consult_hours = excluded.consult_hours;";
+
+  return { js:js, sql:sql, regs:regs, inds:inds, subs:subs };
+}
+
+/* 빠진 것 — ⚠️ **막지 않고 보이게** 합니다 (업체 글의 PII 경고와 같은
+   방식). 막으면 다른 데로 우회해서 손으로 적습니다. */
+function adPvWarn(L){
+  var w = [];
+  var bad = adPvSlugBad(AD_PV.id);
+  if(bad) w.push("주소(id) — " + bad);
+  if(!String(AD_PV.name || "").trim()) w.push("업체명이 비어 있습니다");
+  if(!L.subs.length)
+    w.push("하는 일(하위 분야)이 비어 있습니다 — 비면 **아무 분류에도 " +
+           "안 걸립니다.** 지역 · 업종을 안 적은 것은 '전국 · 전업종' 으로 " +
+           "읽는 게 말이 되지만, 하는 일을 안 적은 것을 '전부 다 합니다' 로 " +
+           "읽으면 인테리어 업체가 세무 화면에 앉습니다 (빌드가 멈춥니다)");
+  if(!L.regs.length) w.push("지역이 비어 있습니다 — 지역이 매칭의 첫 조건입니다");
+  if(!L.inds.length) w.push("전문 업종이 비어 있습니다");
+  if(!w.length) return "";
+  return '<div class="notice-bad ad-pv-w"><b>아직 빠진 것</b><ul>'+
+    w.map(function(x){ return '<li>'+mark(x)+'</li>'; }).join("")+'</ul></div>';
+}
+
+function adPvOut(){
+  var box = $("ad-pv-out");
+  if(!box) return;
+  var L = adPvLines();
+  box.innerHTML = adPvWarn(L)+
+    adCard("① 손님 화면 — js/data/providers.js 의 AM_PROVIDERS 에 넣으세요",
+           "pvjs", L.js)+
+    '<p class="ad-note">넣으신 뒤 <code>node build-pages.js</code> 를 '+
+      '돌리면 <code>/p/'+esc(AD_PV.id || "…")+'</code> 화면과 sitemap 이 '+
+      '같이 생깁니다. ⚠️ <b>이것만 넣으면 배정이 안 됩니다</b> — 아래 '+
+      '②도 같이 돌리세요.</p>'+
+    adCard("② 배정용 — Supabase 의 SQL Editor 에서 돌리세요",
+           "pvsql", L.sql)+
+    '<p class="ad-note">⚠️ <b>listed</b> 는 DB 쪽 공개 여부입니다. '+
+      '꺼져 있어도 <b>직원 · 관리자에게는 배정 고르개에 보입니다</b> — '+
+      '손님 목록은 ①이 만든 정적 화면이 냅니다. '+
+      '⚠️ <b>verified</b>(확인 배지)는 이 줄이 손대지 않습니다 — '+
+      '서류를 실제로 보고 한 칸씩 켜세요.</p>';
+}
+
+function adPvChk(what, L, nameKey){
+  return '<div class="ad-pv-chk">'+ L.map(function(x){
+    var k = x.key, on = !!AD_PV[what][k];
+    return '<label class="f-ck"><input type="checkbox"'+(on ? " checked" : "")+
+      ' onchange="adPvTog(\''+what+'\',\''+esc(k)+'\',this.checked)">'+
+      '<span>'+esc(x[nameKey || "name"])+'</span></label>';
+  }).join("") +'</div>';
+}
+
+function adPvDraw(){
+  var box = $("ad-pv");
+  if(!box) return;
+  var subs = adPvSubs(AD_PV.cat);
+
+  box.innerHTML =
+    '<div class="ad-g">'+
+      '<div class="ad-f"><label for="ad-pv-nm">업체명 <em>(필수)</em></label>'+
+        '<input id="ad-pv-nm" type="text" autocomplete="off" placeholder="예: 가나다 인테리어"'+
+        ' value="'+esc(AD_PV.name)+'" oninput="adPvSet(\'name\',this.value)"></div>'+
+      '<div class="ad-f"><label for="ad-pv-id">주소가 될 값 <em>(필수 · 영문)</em></label>'+
+        '<input id="ad-pv-id" type="text" autocomplete="off" spellcheck="false"'+
+        ' placeholder="ganada-interior" value="'+esc(AD_PV.id)+'"'+
+        ' oninput="adPvSet(\'id\',this.value)"></div>'+
+      '<div class="ad-f"><label for="ad-pv-sc">문 연 해 <em>(선택)</em></label>'+
+        '<input id="ad-pv-sc" type="number" min="1900" max="2100" inputmode="numeric"'+
+        ' placeholder="2015" value="'+esc(AD_PV.since)+'"'+
+        ' oninput="adPvSet(\'since\',this.value)"></div>'+
+      '<div class="ad-f"><label for="ad-pv-hr">상담 가능 시간 <em>(선택)</em></label>'+
+        '<input id="ad-pv-hr" type="text" autocomplete="off"'+
+        ' placeholder="평일 09:00~18:00" value="'+esc(AD_PV.hours)+'"'+
+        ' oninput="adPvSet(\'hours\',this.value)"></div>'+
+    '</div>'+
+
+    '<div class="ad-f"><label for="ad-pv-in">한 줄 소개 <em>(선택 · 업체가 준 글만)</em></label>'+
+      '<input id="ad-pv-in" type="text" autocomplete="off"'+
+      ' placeholder="예: 카페 · 음식점 인테리어를 10년 해 왔습니다"'+
+      ' value="'+esc(AD_PV.intro)+'" oninput="adPvSet(\'intro\',this.value)"></div>'+
+
+    '<div class="ad-pv-b"><b>서비스 지역</b>'+
+      '<p class="ad-rd-n">지역이 매칭의 <b>첫 조건</b>입니다.</p>'+
+      adPvChk("regs", window.AM_REGIONS || [])+
+      /* ⚠️ 경기도는 넓습니다 — 안양 업체가 포천 손님에게 뜨면 둘 다
+         헛걸음입니다. `gu` 를 **적어 받아 놓고 안 읽던** 자리라
+         이 저장소가 한 번 겪었습니다. */
+      '<div class="ad-f ad-pv-gu"><label for="ad-pv-gu">시 · 군 · 구 '+
+        '<em>(선택 · 쉼표로 여럿)</em></label>'+
+        '<input id="ad-pv-gu" type="text" autocomplete="off"'+
+        ' placeholder="안양시, 군포시" value="'+esc(AD_PV.gus)+'"'+
+        ' oninput="adPvSet(\'gus\',this.value)"></div>'+
+    '</div>'+
+
+    '<div class="ad-pv-b"><b>전문 업종</b>'+
+      adPvChk("inds", window.AM_INDUSTRIES || [])+
+    '</div>'+
+
+    '<div class="ad-pv-b"><b>하는 일 — 하위 분야</b>'+
+      '<p class="ad-rd-n">⚠️ 분류가 아니라 <b>하위 분야</b>입니다 '+
+        '(<code>interior</code> 처럼 둘 다 있는 이름이 있어서 손으로 적으면 '+
+        '틀립니다). 분야를 고르면 그 아래가 나옵니다 — <b>여러 분야에 걸쳐</b> '+
+        '고르실 수 있고 고른 것은 그대로 쌓입니다.</p>'+
+      /* ⚠️ `adSel2()` 를 쓰지 않습니다 — 그 틀은 `onchange` 에
+         `adInviteSet` 을 **박아** 두어서, 여기 쓰면 6번 칸의 초대 글
+         상태가 같이 움직입니다 (한 객체에 두 화면을 섞는 자리). */
+      '<div class="ad-g"><div class="ad-f">'+
+        '<label for="ad-pv-cat">분야</label>'+
+        '<select id="ad-pv-cat" onchange="adPvCat(this.value)">'+
+          '<option value="">골라 주세요</option>'+
+          adPvCats().map(function(c){
+            return '<option value="'+esc(c.key)+'"'+
+              (AD_PV.cat === c.key ? " selected" : "")+'>'+esc(c.name)+'</option>';
+          }).join("")+
+        '</select>'+
+      '</div></div>'+
+      (subs.length ? adPvChk("subs", subs)
+        : '<p class="ad-rd-n">분야를 먼저 골라 주세요.</p>')+
+    '</div>'+
+
+    '<label class="f-ck ad-pv-ls"><input type="checkbox"'+
+      (AD_PV.listed ? " checked" : "")+
+      ' onchange="adPvSet(\'listed\',this.checked)">'+
+      '<span>DB 의 공개 목록에 바로 올립니다 (<code>listed</code>)</span></label>'+
+
+    '<div id="ad-pv-out"></div>';
+
+  adPvOut();
 }

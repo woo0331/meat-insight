@@ -246,6 +246,45 @@ window.AM_DEAL_NEED = {
   feeId:      "적용할 수수료 정책"
 };
 
+/* ── 배정 한 건의 상태 셋 (`assignment.state`) ────────────────────
+   ⚠️⚠️ **신청 상태 열셋과 다른 것입니다.** 이쪽은 "그 업체가 이 건에
+   어떻게 답했는가" 이고, 한 신청에 여러 줄이 생길 수 있습니다.
+   ⚠️⚠️ **화면에 key 를 그대로 찍지 마세요.** 이 저장소가 포트폴리오에
+   `gyeonggi` 를, 자산에 `espresso` 를 그대로 찍은 자리입니다 — 이름을
+   찾는 함수가 아예 없어서 났던 사고입니다.
+   ⚠️ **거절은 실패가 아닙니다** — 신청은 다시 확인(`check`)으로
+   돌아가고, 손님 쪽에서 보면 아직 진행 중인 건입니다.
+   ⚠️ key 는 `db/migrations/0001_init.sql` 의 `assignment.state` 이고,
+   `checkDealSql()` 이 SQL 이 실제로 쓰는 값과 맞춰 봅니다. */
+window.AM_ASSIGN_ST = [
+  { key:"sent",     name:"보냈습니다" },
+  { key:"accepted", name:"업체가 받았습니다" },
+  { key:"declined", name:"업체가 거절했습니다" }
+];
+window.amAssignName = function(key){
+  var L = window.AM_ASSIGN_ST, i;
+  for(i = 0; i < L.length; i++) if(L[i].key === key) return L[i].name;
+  return "";
+};
+
+/* 딱지 색 — ⚠️⚠️ **한 곳입니다.** `/my`(고객 · 업체)와 `/admin`(접수 ·
+   배정)이 같은 상태를 서로 다른 색으로 내면 같은 시스템으로 안 읽힙니다.
+   처음에 `js/pages/my.js` 안에 적어 두었다가, /admin 이 같은 딱지를
+   내면서 **두 벌이 될 자리**라 여기로 올렸습니다 (이 저장소가
+   `amCatTo`/`catTo` · 랜딩 아이콘 · 도구 아이콘 표로 겪은 자리).
+   ⚠️⚠️ **보류를 취소와 같은 색으로 두지 마세요.** 멈춘 것과 접은 것은
+   다른 일이고, 같은 색이면 사장님이 끝난 줄 압니다 (§8-3).
+   ⚠️ 쓰는 쪽은 `.myq-st .myq-<이 값>` 입니다 — 글자는 전부 짙은
+   단계라 AA 를 넘깁니다 (상태색은 배지 **바탕**용입니다). */
+window.amDealTone = function(key){
+  var s = window.amDealSt(key);
+  if(!s)                return "gray";
+  if(s.key === "hold")  return "warn";
+  if(s.key === "lost")  return "gray";
+  if(s.end)             return "ok";
+  return "on";
+};
+
 window.amRoleName = function(key){
   var L = window.AM_ROLES || [], i;
   for(i = 0; i < L.length; i++) if(L[i].key === key) return L[i].name;

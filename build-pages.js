@@ -1910,6 +1910,39 @@ function checkDealSql(W){
   same("수수료 확정 조건",  (W.AM_FEE_WHEN || []).map(x => x.key), enumOf("fee_when"));
   same("정산 주기",        (W.AM_FEE_CYCLE|| []).map(x => x.key), enumOf("fee_cycle"));
 
+  /* ⚠️⚠️ **배정 상태 셋**은 enum 이 아니라 `assignment.state` 의 text
+     입니다 — 그래서 SQL 이 **실제로 넣는 값**을 긁어서 맞춰 봅니다.
+     화면이 모르는 값이 오면 `amAssignName()` 이 빈 문자열을 돌려주고
+     그 줄이 **조용히 사라집니다** (이 저장소가 `gyeonggi` · `espresso`
+     로 겪은 자리). */
+  {
+    const mv = path.join(ROOT, "db", "migrations", "0004_move_state.sql");
+    const all = sql + (fs.existsSync(mv) ? fs.readFileSync(mv, "utf8") : "");
+    /* ⚠️⚠️ **`state = 'x'` 만 찾으면 모자랍니다.** 0004 의
+       `answer_assignment()` 는 `state = case when p_yes then 'accepted'
+       else 'declined' end` 꼴이라 **거기서 안 걸립니다** — 처음에 그렇게
+       적어 두고 되돌려 보니 **검사가 통과했습니다**(검사가 틀린 자리).
+       그래서 `assignment` 가 나온 **뒤 300자 안**의 `state =` 식을
+       통째로 잡고, 그 안의 따옴표 값을 전부 꺼냅니다. */
+    const used = new Set();
+    const re = /assignment[\s\S]{0,300}?\bstate\s*=\s*(case[\s\S]{0,200}?end|'[a-z_]+')/gi;
+    let m;
+    while((m = re.exec(all)) !== null)
+      (m[1].match(/'([a-z_]+)'/g) || []).forEach(function(x){ used.add(x.slice(1, -1)); });
+    /* 칸 선언에 적어 둔 것도 같이 봅니다 — `state text ... -- a | b | c` */
+    const dec = all.match(/\bstate\s+text[^\n]*--([^\n]*)/);
+    if(dec) (dec[1].match(/[a-z_]+/g) || []).forEach(function(x){ used.add(x); });
+    if(used.size < 2)
+      throw new Error("SQL 에서 배정 상태(assignment.state)를 " + used.size +
+        "개밖에 못 찾았습니다 — 찾는 꼴이 바뀌었는지 보세요");
+    const known = new Set((W.AM_ASSIGN_ST || []).map(x => x.key));
+    for(const v of used)
+      if(!known.has(v))
+        throw new Error("배정 상태 '" + v + "' 를 화면이 모릅니다 — " +
+          "js/data/deal.js 의 AM_ASSIGN_ST 에 넣으세요. " +
+          "모르면 그 줄이 에러 없이 조용히 사라집니다");
+  }
+
   /* ⚠️⚠️ RLS 를 켜지 않은 표가 있으면 **누구나 남의 신청과 계약금액을
      읽습니다.** Supabase 는 RLS 를 켜지 않은 표를 그대로 열어 줍니다. */
   const tables = (sql.match(/create table (?:if not exists )?([a-z_]+)/g) || [])

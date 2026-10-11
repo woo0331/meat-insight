@@ -16,7 +16,7 @@
    ⚠️ 역할은 **요청이 아니라 DB** 에서 읽습니다 — `api/_auth.js` 머리말.
    ════════════════════════════════════════════════════════════════════ */
 
-const { authReady, bearer, session } = require("./_auth.js");
+const { authReady, bearer, session, publicConf } = require("./_auth.js");
 
 module.exports = async function handler(req, res){
   if(req.method !== "GET"){
@@ -30,22 +30,28 @@ module.exports = async function handler(req, res){
   if(!authReady())
     return res.status(200).json({ auth:false, signedIn:false });
 
+  /* ⚠️⚠️ **공개 키만 나갑니다** (`publicConf()`). 화면이 Supabase Auth 를
+     직접 불러 매직링크를 받으려면 주소와 공개 키가 필요합니다 —
+     service key 는 여기로도 어디로도 안 나갑니다. */
+  const conf = publicConf();
+
   /* 토큰이 없으면 "설정은 됐고 아직 로그인 안 했다" 입니다.
      ⚠️ 이것은 에러가 아닙니다 — 401 로 돌려주면 화면이 깨진 것처럼
      보이고, 손님은 아무 잘못도 하지 않았습니다. */
   if(!bearer(req))
-    return res.status(200).json({ auth:true, signedIn:false });
+    return res.status(200).json({ auth:true, signedIn:false, conf:conf });
 
   const s = await session(req);
   if(!s.ok){
     /* 토큰이 만료되었거나 로그아웃된 것입니다. 까닭은 운영자용이라
        손님에게는 "로그인 안 됨" 까지만 (절대 규칙 3). */
     if(s.why && s.why !== "no token") console.warn("[session] " + s.why);
-    return res.status(200).json({ auth:true, signedIn:false });
+    return res.status(200).json({ auth:true, signedIn:false, conf:conf });
   }
 
   return res.status(200).json({
     auth:true, signedIn:true,
+    conf:conf,
     role:s.role,
     /* ⚠️ 업체 역할일 때만 나갑니다. 다른 역할에 붙여 두면 화면이
        "나는 업체다" 로 읽습니다. */

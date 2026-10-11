@@ -76,9 +76,22 @@ function res(){
   r.json = function(b){ r.body = b; return r; };
   return r;
 }
+/* 샜는가 — ⚠️⚠️ **`service key` 와 그 사람의 토큰은 어디에도** 나오면
+   안 됩니다. service key 는 RLS 를 통째로 지나가고, 토큰은 그 사람
+   자신입니다.
+   ⚠️ **anon key 는 다릅니다.** 그 키는 새도 괜찮게 설계된 **공개 키**
+   이고, 무엇을 볼 수 있는지는 전부 RLS 가 정합니다 — 화면이 매직링크를
+   보내려면 그 키가 필요해서 `/api/session` 이 `conf` 로 내려줍니다.
+   그래서 **`conf` 밖에 있으면 샌 것**으로 봅니다 (처음에 통째로 금지해
+   두었다가 `conf` 를 더하면서 걸렸습니다 — 그때 "검사가 틀렸다" 가
+   아니라 **기준이 거칠었습니다**). */
 function leaks(r){
-  const s = JSON.stringify(r.body || {});
-  return s.indexOf(SVC) >= 0 || s.indexOf(ANON) >= 0 || s.indexOf(TOK) >= 0;
+  const b = r.body || {};
+  const all = JSON.stringify(b);
+  if(all.indexOf(SVC) >= 0 || all.indexOf(TOK) >= 0) return true;
+  /* anon key — `conf` 를 뺀 나머지에서 찾습니다 */
+  const rest = Object.assign({}, b); delete rest.conf;
+  return JSON.stringify(rest).indexOf(ANON) >= 0;
 }
 
 /* 운영자용 글은 console.warn 으로 갑니다 — 손님 화면에 안 찍힙니다.
@@ -254,6 +267,36 @@ console.log("\n── /api/session");
     return body(200, [{ role:"provider", provider_id:"pv-one", name:"가나다" }]); }]]);
   await Hsession(req({ headers:{ authorization:"Bearer " + TOK } }), r);
   ok("업체면 업체 주소가 나간다", r.body.role === "provider" && r.body.provider === "pv-one", r.body);
+
+  /* ── 화면에 내려주는 설정 (2026-10-11 · 1차 로그인) ──────────────
+     화면이 매직링크를 보내려면 **주소와 공개 키**가 필요합니다.
+     ⚠️⚠️ 내려가는 것이 그 **둘뿐**인지 칸 이름으로 봅니다 — `conf` 에
+     칸이 하나 늘면 그 순간 같이 나갑니다 (`select=*` 를 안 쓰는 것과
+     같은 까닭입니다). */
+  r = res(); mock([USER, ACCT]);
+  await Hsession(req({ headers:{ authorization:"Bearer " + TOK } }), r);
+  ok("설정 뒤에는 화면이 쓸 주소 · 공개 키를 내려준다",
+     r.body.conf && r.body.conf.url && r.body.conf.anonKey === ANON, r.body.conf);
+  ok("conf 에 든 칸은 주소 · 공개 키 **둘뿐**이다",
+     Object.keys(r.body.conf || {}).sort().join(",") === "anonKey,url",
+     Object.keys(r.body.conf || {}));
+  ok("conf 에 service key 가 없다",
+     JSON.stringify(r.body.conf || {}).indexOf(SVC) < 0, r.body.conf);
+
+  /* ⚠️ 로그인 전에도 화면이 메일을 보내야 하니 **토큰이 없어도** 옵니다 */
+  r = res();
+  await Hsession(req(), r);
+  ok("토큰이 없어도 conf 는 온다 (로그인 메일을 보내려면 필요합니다)",
+     r.body.auth === true && r.body.signedIn === false &&
+     r.body.conf && r.body.conf.anonKey === ANON, r.body);
+
+  /* ⚠️⚠️ **설정 전에는 아무것도 내려가지 않습니다.** 화면은 `auth:false`
+     면 구간째 안 그립니다 — 거기에 주소가 섞여 나가면 안 됩니다. */
+  setEnv({});
+  r = res();
+  await Hsession(req(), r);
+  ok("설정 전에는 conf 도 없다", !r.body.conf, r.body);
+  envAll();
 }
 
 console.log("\n── /api/deal — 상태를 바꾸는 유일한 길");
@@ -381,6 +424,11 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
      calls.every(c => !/audit_log/.test(c.url)), calls.map(c => c.url));
   ok("고객 칸에 연결된 업체 상호가 있다 (제17조 재동의가 상호를 알려 드립니다)",
      /provider\(/.test(decodeURIComponent(cust)), decodeURIComponent(cust));
+  /* ⚠️⚠️ 배정 고르개(업체 목록)는 **직원 · 관리자만**입니다. 거기 오는
+     것은 `listed=false` 인 **아직 안 켠 업체까지**라, 고객 · 업체에게
+     내려가면 공개 전인 업체가 새는 것입니다. */
+  ok("고객에게는 업체 목록을 묻지 않는다",
+     calls.every(c => !/\/rest\/v1\/provider\b/.test(c.url)), calls.map(c => c.url));
   ok("답에 키 · 토큰이 섞이지 않는다", !leaks(r), r.body);
 
   /* 업체 — 연락처가 옵니다 (그게 배정입니다) + 계약 */
@@ -395,26 +443,44 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
   ok("업체에게는 계약을 묻는다", calls.some(c => /\/rest\/v1\/deal/.test(c.url)));
   ok("업체에게는 환수 합계를 묻지 않는다 (자기 건 기록은 DB 가 보여 줍니다)",
      calls.every(c => !/audit_log/.test(c.url)), calls.map(c => c.url));
+  ok("업체에게도 업체 목록을 묻지 않는다",
+     calls.every(c => !/\/rest\/v1\/provider\b/.test(c.url)), calls.map(c => c.url));
 
   /* 직원 · 관리자 — ⚠️ 목록에 성함 · 연락처를 깔지 않습니다 */
   r = res();
   mock([USER, [/\/rest\/v1\/account/, function(){
          return body(200, [{ role:"staff", provider_id:null, name:"직원" }]); }],
-        [/\/rest\/v1\/request/, function(){ return body(200, []); }]]);
+        [/\/rest\/v1\/request/, function(){ return body(200, []); }],
+        [/\/rest\/v1\/provider\b/, function(){
+          return body(200, [{ id:"pv-one", name:"가나다", listed:false }]); }]]);
   await Hme(req({ headers:{ authorization:"Bearer " + TOK } }), r);
   const st = decodeURIComponent(calls.filter(c => /\/rest\/v1\/request/.test(c.url))[0].url);
   ok("직원 목록에 성함 · 연락처가 없다",
      !/(^|,)name(,|$)/.test(st) && !/(^|,)tel(,|$)/.test(st), st);
   ok("직원은 계약 · 환수를 묻지 않는다",
      calls.every(c => !/\/rest\/v1\/deal|audit_log/.test(c.url)), calls.map(c => c.url));
+  /* 배정 고르개 — ⚠️ 업체가 0곳이면 0곳이라고 말하고 **등록하는 길**을
+     냅니다. 지어낸 업체를 끼워 넣지 않습니다 (절대 규칙 1). */
+  const pvq = calls.filter(c => /\/rest\/v1\/provider\b/.test(c.url));
+  ok("직원에게는 배정할 업체 목록을 준다 (§6 업체 수동 배정)",
+     pvq.length === 1 && Array.isArray(r.body.providers) &&
+     r.body.providers[0] && r.body.providers[0].id === "pv-one", r.body.providers);
+  /* ⚠️ `verified` 는 jsonb 라 통째로 따라 나옵니다 — 배정에 쓰는 값이
+     아니니 애초에 안 가져옵니다 (최소 수집). */
+  ok("업체 목록에 verified 를 묻지 않는다",
+     pvq.length === 1 && !/verified/.test(decodeURIComponent(pvq[0].url)),
+     pvq.length ? decodeURIComponent(pvq[0].url) : "");
 
   r = res();
   mock([USER, [/\/rest\/v1\/account/, function(){
          return body(200, [{ role:"admin", provider_id:null, name:"관리자" }]); }],
         [/\/rest\/v1\/request/, function(){ return body(200, []); }],
         [/\/rest\/v1\/deal/,    function(){ return body(200, []); }],
+        [/\/rest\/v1\/provider\b/, function(){ return body(200, []); }],
         [/audit_log/,            function(){ return body(200, []); }]]);
   await Hme(req({ headers:{ authorization:"Bearer " + TOK } }), r);
+  ok("관리자에게도 배정할 업체 목록을 준다",
+     calls.some(c => /\/rest\/v1\/provider\b/.test(c.url)), calls.map(c => c.url));
   const ad = decodeURIComponent(calls.filter(c => /\/rest\/v1\/request/.test(c.url))[0].url);
   ok("관리자 목록도 성함 · 연락처 없이 본다", ad === st, [ad, st]);
   ok("관리자에게는 계약을 묻는다", calls.some(c => /\/rest\/v1\/deal/.test(c.url)));
@@ -435,6 +501,56 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
   r = res();
   await Hme(req({ headers:{ authorization:"Bearer " + TOK } }), r);
   ok("설정 전에는 auth:false (에러가 아닙니다)", r.code === 200 && r.body.auth === false, r.body);
+}
+
+/* ── /api/admin-health — 있는지 없는지만 (전면 감사 1차 ①) ────────
+   ⚠️⚠️ 이 주소가 **값을 한 글자라도** 돌려주면 그걸로 끝입니다.
+   길이도 단서라 길이도 안 돌려줍니다. */
+console.log("\n── /api/admin-health — 값은 안 돌려준다");
+{
+  const Hhealth = require(path.join(ROOT, "api", "admin-health.js"));
+  const keep = process.env.ADMIN_PASSWORD;
+
+  envAll();
+  delete process.env.ADMIN_PASSWORD;
+  let r = res();
+  Hhealth(req({ method:"GET" }), r);
+  ok("관리자 잠금이 없으면 아무것도 안 알려 준다", r.code === 503, r.body);
+
+  process.env.ADMIN_PASSWORD = "pw-test";
+  r = res();
+  Hhealth(req({ method:"GET" }), r);
+  ok("DB · 로그인 상태를 같이 돌려준다",
+     r.body.db && r.body.db.store === true && r.body.db.auth === true, r.body.db);
+  /* ⚠️⚠️ 주소도 · 키도 · 길이도 안 나갑니다 */
+  const dump = JSON.stringify(r.body);
+  ok("주소 · 키가 한 글자도 안 나간다",
+     dump.indexOf(SVC) < 0 && dump.indexOf(ANON) < 0 && dump.indexOf(URL_) < 0, dump);
+  ok("길이도 안 알려 준다", !/length|len"/.test(dump), dump);
+  ok("캐시하지 않는다", r.headers["cache-control"] === "no-store", r.headers);
+
+  /* ⚠️⚠️ **저장과 로그인을 갈라서** 봅니다 — 한 덩어리로 보면 어느
+     쪽이 빠졌는지 모르고, 그 차이가 그대로 사장님이 겪는 증상입니다
+     (접수번호는 나오는데 로그인만 안 되는 꼴). */
+  setEnv({ SUPABASE_URL:URL_, SUPABASE_SERVICE_KEY:SVC });
+  r = res(); Hhealth(req({ method:"GET" }), r);
+  ok("공개 키만 빠지면 로그인만 꺼진다",
+     r.body.db.store === true && r.body.db.auth === false, r.body.db);
+
+  setEnv({ SUPABASE_URL:URL_, SUPABASE_ANON_KEY:ANON });
+  r = res(); Hhealth(req({ method:"GET" }), r);
+  ok("서버 키만 빠지면 저장만 꺼진다",
+     r.body.db.store === false && r.body.db.auth === true, r.body.db);
+
+  /* ⚠️ 공백만 있는 값은 **없는 것**입니다 — Vercel 에 빈 칸을
+     저장하면 "넣었다" 고 착각하게 됩니다. */
+  setEnv({ SUPABASE_URL:URL_, SUPABASE_ANON_KEY:"   ", SUPABASE_SERVICE_KEY:SVC });
+  r = res(); Hhealth(req({ method:"GET" }), r);
+  ok("공백만 있는 값은 없는 것으로 본다", r.body.db.auth === false, r.body.db);
+
+  if(keep === undefined) delete process.env.ADMIN_PASSWORD;
+  else process.env.ADMIN_PASSWORD = keep;
+  envAll();
 }
 
 console.log("\n── 시간 제한 (두 층이 같은 8초)");

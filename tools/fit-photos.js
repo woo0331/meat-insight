@@ -7,9 +7,17 @@
        img/raw/brand-scene.png
      그 다음에
 
-     node tools/fit-photos.js          # 맞춰서 img/ 에 jpg 로 냅니다
+     node tools/fit-photos.js          # 맞춰서 img/ 에 냅니다
      node tools/fit-photos.js --write  # photos.js 의 WOW_PHOTOS 까지 적어 줍니다
-     node tools/fit-photos.js --webp   # webp 로 (더 곱지만 옛 브라우저에서 안 뜹니다)
+
+   ⚠️⚠️ **한 자리에 네 파일**을 냅니다 (2026-10-10) —
+       hero-start.jpg      옛 브라우저까지 받는 바탕
+       hero-start.webp     읽을 수 있으면 이쪽 (보통 25~35% 작습니다)
+       hero-start-sm.jpg   폰용 작은 판
+       hero-start-sm.webp
+     화면은 `<picture>` 로 **읽을 수 있는 첫 줄**을 고르고, `srcset` 으로
+     제 폭에 맞는 판을 받습니다. 전에는 `--webp` 가 JPEG 를 **대체**해서
+     옛 사파리에서 사진이 그냥 안 떴습니다 — 지금은 둘 다 냅니다.
 
    ⚠️ **왜 필요한가** — 자리마다 최소 크기 · 비율 범위 · 용량 상한이
    따로 있고 자리가 열넷입니다. 손으로 맞추면 하나씩 어긋나고, 어긋난
@@ -31,6 +39,7 @@
    ════════════════════════════════════════════════════════════════════ */
 const { chromium } = require("/opt/node22/lib/node_modules/playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
+const crypto = require("crypto");
 
 const ROOT = process.cwd();
 const RAW  = path.join(ROOT, "img", "raw");
@@ -40,9 +49,37 @@ const WRITE = process.argv.includes("--write");
    없어서, WebP 를 못 읽는 브라우저(옛 사파리 등)에서는 **사진이 그냥 안
    나옵니다.** `tools/check-photos.js` 도 그래서 JPEG 를 권합니다.
    같은 용량에 더 곱게 넣고 싶으시면 `--webp` 를 붙이세요. */
-const WEBP  = process.argv.includes("--webp");
-const TYPE  = WEBP ? "image/webp" : "image/jpeg";
-const EXTO  = WEBP ? ".webp" : ".jpg";
+/* ⚠️⚠️ **AVIF 는 여기서 못 만듭니다.** 크로미움 canvas 에
+   `toDataURL("image/avif")` 를 시키면 **에러 없이 PNG 를 돌려줍니다** —
+   그대로 믿고 쓰면 `.avif` 이름을 단 PNG 가 올라가고, 브라우저가
+   내용을 보고 읽어 버려서 **화면은 멀쩡한데 용량만 커집니다.**
+   돌려 보고 확인했습니다 (141.0.7390.37). 그래서 아래 `sniff()` 가
+   **쓰기 전에 실제 바이트**를 봅니다.
+   ⚠️ `photoBox()` 는 avif 파일이 **있을 때만** 그 줄을 냅니다 —
+   나중에 인코더가 생기면 코드를 한 줄도 안 고치고 붙습니다. */
+/* ⚠️⚠️ **예산(`kb`)이 곧 용량입니다.** 품질을 이분탐색으로 **상한까지
+   끌어올리기** 때문에, 넉넉히 주면 webp 가 jpeg 만 해집니다 — 처음에
+   0.80 으로 두었더니 297KB 짜리가 webp 로 239KB(19% 절약)밖에 안
+   줄었습니다. 같은 눈에 webp 는 jpeg 의 60% 안팎이면 충분합니다.
+   ⚠️ 너무 조이면 이번에는 뭉갭니다 — 아래 값은 **찍어서 눈으로 보고**
+   정한 것이고, 바꾸시면 다시 보셔야 합니다. */
+const VARIANTS = [
+  { type:"image/jpeg", ext:".jpg",     scale:1,    kb:1    },
+  { type:"image/webp", ext:".webp",    scale:1,    kb:0.62 },
+  { type:"image/jpeg", ext:"-sm.jpg",  scale:0.55, kb:0.40 },
+  { type:"image/webp", ext:"-sm.webp", scale:0.55, kb:0.26 }
+];
+
+/* 쓰기 전에 **실제로 그 형식인지** 봅니다 (위 AVIF 사고) */
+function sniff(buf){
+  if(buf.length > 3 && buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) return "jpg";
+  if(buf.length > 12 && buf.toString("ascii", 0, 4) === "RIFF"
+                     && buf.toString("ascii", 8, 12) === "WEBP") return "webp";
+  if(buf.length > 12 && buf.toString("ascii", 4, 8) === "ftyp"
+                     && buf.toString("ascii", 8, 12).indexOf("avi") === 0) return "avif";
+  if(buf.length > 8 && buf[0] === 0x89 && buf.toString("ascii", 1, 4) === "PNG") return "png";
+  return "?";
+}
 
 /* 자리 목록은 js/data/photos.js 한 곳에서 옵니다 — 여기에 옮겨 적지
    않습니다. 자리를 늘리면 거기만 고치면 이 도구가 따라옵니다. */
@@ -155,29 +192,50 @@ const strays = fs.readdirSync(RAW).filter(f => {
           return c;
         };
         const bytes = (u) => Math.round((u.length - (u.indexOf(",") + 1)) * 3 / 4);
-        let w2 = W2, h2 = H2, best = null, tries = 0;
-        while(tries++ < 4){
-          const c = draw(w2, h2);
-          let lo = 0.40, hi = 0.94, pick = null;
-          for(let i = 0; i < 7; i++){
-            const q = (lo + hi) / 2;
-            const u = c.toDataURL(o.type, q);
-            if(bytes(u) <= o.maxKB * 1024){ pick = { u, q }; lo = q; } else hi = q;
+
+        /* 한 변형을 용량 상한 아래로 넣습니다 — 품질을 이분탐색하고,
+           그래도 안 되면 치수를 조금 줄여 다시 (최소 아래로는 안 갑니다). */
+        const fit = (type, w0, h0, capKB, floorW, floorH) => {
+          let w2 = w0, h2 = h0, tries = 0;
+          while(tries++ < 4){
+            const c = draw(w2, h2);
+            let lo = 0.40, hi = 0.94, pick = null;
+            for(let i = 0; i < 7; i++){
+              const q = (lo + hi) / 2;
+              const u = c.toDataURL(type, q);
+              if(bytes(u) <= capKB * 1024){ pick = { u, q }; lo = q; } else hi = q;
+            }
+            if(pick) return { data: pick.u.split(",")[1], mime: pick.u.slice(5, pick.u.indexOf(";")),
+                              w: w2, h: h2, q: Math.round(pick.q * 100),
+                              kb: Math.round(bytes(pick.u) / 1024) };
+            const nw = Math.round(w2 * 0.88), nh = Math.round(h2 * 0.88);
+            if(nw < floorW || nh < floorH) break;
+            w2 = nw; h2 = nh;
           }
-          if(pick){ best = { ...pick, w: w2, h: h2 }; break; }
-          /* 품질을 낮춰도 안 되면 치수를 줄입니다 — 다만 최소 아래로는
-             안 내려갑니다. 그건 규격을 못 맞춘 것이라 실패로 냅니다. */
-          const nw = Math.round(w2 * 0.88), nh = Math.round(h2 * 0.88);
-          if(nw < o.minW || nh < o.minH) break;
-          w2 = nw; h2 = nh;
+          return null;
+        };
+
+        const out = [];
+        for(const v of o.variants){
+          const small = v.scale < 1;
+          /* 작은 판은 **제 폭이 충분히 작을 때만** 만듭니다 — 큰 판과
+             거의 같은 크기면 파일만 둘이 되고 받는 양은 그대로입니다. */
+          let vw = Math.round(W2 * v.scale), vh = Math.round(H2 * v.scale);
+          if(small && (vw > W2 * 0.8 || vw < 360)) continue;
+          const floorW = small ? vw : o.minW, floorH = small ? vh : o.minH;
+          const r = fit(v.type, small ? vw : W2, small ? vh : H2,
+                        o.maxKB * v.kb, floorW, floorH);
+          if(!r){ if(!small) return { err: "용량 " + Math.round(o.maxKB * v.kb) +
+                                      "KB 안에 못 넣었습니다 (" + v.ext + ")" };
+                  continue; }
+          out.push({ ext: v.ext, want: v.type, ...r });
         }
-        if(!best) return { err: "용량 " + o.maxKB + "KB 안에 못 넣었습니다" };
-        return { data: best.u.split(",")[1], w: best.w, h: best.h,
-                 q: Math.round(best.q * 100), sw, sh, tooSmall,
-                 cropped: (cw !== sw || ch !== sh),
-                 kb: Math.round(bytes(best.u) / 1024) };
+        if(!out.length) return { err: "아무 변형도 못 만들었습니다" };
+        const full = out[0];
+        return { out, w: full.w, h: full.h, q: full.q, kb: full.kb, sw, sh, tooSmall,
+                 cropped: (cw !== sw || ch !== sh) };
       }, { url, minW: s.min[0], minH: s.min[1], rMin: s.ratio[0], rMax: s.ratio[1],
-           maxKB: s.maxKB, anchor: s.anchor || "center", type: TYPE });
+           maxKB: s.maxKB, anchor: s.anchor || "center", variants: VARIANTS });
     }catch(e){ fail.push([s, e.message]); continue; }
 
     if(r.err){ fail.push([s, r.err]); continue; }
@@ -186,8 +244,21 @@ const strays = fs.readdirSync(RAW).filter(f => {
         " — 최소 " + s.min[0] + "×" + s.min[1] + " 이 필요합니다 (키우면 뿌옇습니다)"]);
       continue;
     }
-    const outFile = path.join(OUT, s.key + EXTO);
-    fs.writeFileSync(outFile, Buffer.from(r.data, "base64"));
+    /* ⚠️⚠️ **바이트를 보고 씁니다.** 브라우저가 못 만드는 형식을
+       시키면 에러 없이 다른 형식을 돌려줍니다 (위 AVIF). 이름만
+       믿고 쓰면 `.webp` 안에 PNG 가 들어앉습니다. */
+    let wrote = 0, wrong = null;
+    for(const v of r.out){
+      const buf  = Buffer.from(v.data, "base64");
+      const want = v.ext.indexOf("webp") >= 0 ? "webp"
+                 : v.ext.indexOf("avif") >= 0 ? "avif" : "jpg";
+      const got  = sniff(buf);
+      if(got !== want){ wrong = v.ext + " 를 시켰는데 " + got + " 가 나왔습니다"; break; }
+      fs.writeFileSync(path.join(OUT, s.key + v.ext), buf);
+      wrote++;
+    }
+    if(wrong){ fail.push([s, wrong]); continue; }
+    r.wrote = wrote;
     done.push([s, r]);
   }
 
@@ -213,10 +284,60 @@ const strays = fs.readdirSync(RAW).filter(f => {
   /* ── photos.js 에 적기 ─────────────────────────────────────── */
   if(done.length){
     const prev = W.WOW_PHOTOS || {};
-    const lines = done.map(([s]) => {
+
+    /* 내용 값 — ⚠️⚠️ 이게 없으면 사진을 바꿔도 **손님 화면은 영영
+       옛날**입니다. `vercel.json` 이 그림에 1년 `immutable` 을 주고
+       있어서(주소가 안 바뀌면 다시 안 받습니다), 그 둘은 늘 같이
+       움직입니다 — `checkPhotos()` 가 빌드에서 그걸 강제합니다.
+       css · js 에 `stampAssets()` 가 하는 일과 같습니다. */
+    const stamp = (f) => crypto.createHash("sha1")
+      .update(fs.readFileSync(path.join(OUT, f))).digest("hex").slice(0, 8);
+    const url = (f) => "/img/" + f + "?v=" + stamp(f);
+
+    /* 한 형식의 srcset — 작은 판이 있으면 폭 서술자로 같이 냅니다 */
+    const setOf = (key, r, ext) => {
+      const parts = [];
+      const sm = r.out.filter(v => v.ext === "-sm" + ext)[0];
+      const fu = r.out.filter(v => v.ext === ext)[0];
+      if(sm) parts.push(url(key + "-sm" + ext) + " " + sm.w + "w");
+      if(fu) parts.push(url(key + ext) + " " + fu.w + "w");
+      return parts.join(", ");
+    };
+
+    const made = {};
+    done.forEach(([s, r]) => {
       const alt = (prev[s.key] && prev[s.key].alt) || "";
-      return '  "' + s.key + '": { src:"/img/' + s.key + EXTO + '",\n' +
-             '    alt:"' + String(alt).replace(/"/g, '\\"') + '" }';
+      const o = { src: url(s.key + ".jpg"), alt: alt, w: r.w, h: r.h };
+      const j = setOf(s.key, r, ".jpg"), wp = setOf(s.key, r, ".webp");
+      /* 한 줄짜리 srcset 은 안 냅니다 — src 와 똑같아서 받는 양이
+         그대로이고, 읽는 사람만 "반응형이구나" 로 잘못 압니다. */
+      if(j.indexOf(",")  > 0) o.jpg  = j;
+      if(wp) o.webp = wp;
+      made[s.key] = o;
+    });
+
+    /* ⚠️⚠️ **통째로 다시 쓰지 않습니다.** 전에는 원본이 `img/raw/` 에
+       있는 자리만 적고 나머지를 지웠습니다 — `hero-start` 만 새로
+       넣었더니 `hero-close` 줄이 조용히 사라졌고, 파일은 `img/` 에
+       그대로 있고 에러도 빌드도 멀쩡했습니다. 지금은 **파일이 아직
+       있는 옛 줄은 그대로 둡니다.** */
+    const kept = [];
+    Object.keys(prev).forEach(k => {
+      if(made[k]) return;
+      const f = String(prev[k].src || "").split("?")[0].replace(/^\/img\//, "");
+      if(f && fs.existsSync(path.join(OUT, f))){ made[k] = prev[k]; kept.push(k); }
+    });
+    if(kept.length) console.log("  · 그대로 둔 줄 " + kept.length + "개: " + kept.join(" · "));
+
+    const order = SLOTS.map(x => x.key).filter(k => made[k]);
+    const lines = order.map(k => {
+      const o = made[k];
+      const q = (v) => '"' + String(v).replace(/"/g, '\\"') + '"';
+      let t = '  ' + q(k) + ': { src:' + q(o.src) + ',\n';
+      if(o.w && o.h) t += '    w:' + o.w + ', h:' + o.h + ',\n';
+      if(o.webp)     t += '    webp:' + q(o.webp) + ',\n';
+      if(o.jpg)      t += '    jpg:' + q(o.jpg) + ',\n';
+      return t + '    alt:' + q(o.alt || "") + ' }';
     });
     const block = "window.WOW_PHOTOS = {\n" + lines.join(",\n") + "\n};";
     if(WRITE){
@@ -248,7 +369,7 @@ const strays = fs.readdirSync(RAW).filter(f => {
            삼켰던 자리라 그냥 믿지 않습니다. */
         const after = fs.readFileSync(p, "utf8");
         const keep = ["window.wowPhoto", "window.hasPhoto", "window.photoBox",
-                      "window.WOW_PHOTO_SLOTS"];
+                      "window.wowSlot", "window.WOW_PHOTO_SLOTS"];
         const lost = keep.filter(k => after.indexOf(k) < 0);
         if(lost.length){
           fs.writeFileSync(p, src);   /* 되돌립니다 */

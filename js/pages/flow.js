@@ -19,6 +19,7 @@
 /* ── /startup — 업종 고르기 ─────────────────────────────────────── */
 function PageStartup(){
   return PgHero({
+    photo:"hero-startup",
     kicker:"START · 창업",
     h1raw:"어떤 사업을<br class=\"br-m\"> 준비하고 계세요?",
     lead:"업종만 고르시면 그 업종 창업에 실제로 필요한 것만 추려 드립니다. 가입 없이 무료입니다."
@@ -305,6 +306,7 @@ function FranchiseHint(fcat, ind){
 /* ── /closure — 정리 방법 고르기 (§21) ──────────────────────────── */
 function PageClosure(){
   return PgHero({
+    photo:"hero-closure",
     kicker:"CLOSE · 폐업 · 정리",
     /* ⚠️⚠️ **2026-10-08 지시서 §16 의 첫 메시지 그대로입니다.**
        "어떻게 정리하고 싶으세요" 는 이미 정리하기로 정하신 분께 묻는

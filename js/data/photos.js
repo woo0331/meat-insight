@@ -85,12 +85,35 @@ window.WOW_PHOTO_SLOTS = [
      주인공을 거기 두지 마세요. */
   /* ⚠️ anchor 가 바깥쪽인 것은 **가운데가 대각선으로 깎이기** 때문입니다
      (2026-10-04). 가운데를 남기면 주인공이 잘려 나갑니다. */
-  { key:"hero-start", where:"히어로 왼쪽 판 (새로 여는 상업공간)",
+  { key:"hero-start", sizes:"(max-width:900px) 52vw, (max-width:1100px) 48vw, 44vw", where:"히어로 왼쪽 판 (새로 여는 상업공간)",
     min:[1400,560], ratio:[1.3,2.6], maxKB:300, anchor:"center",
     note:"실제 한국에서 운영될 법한 상업공간 · 자연광 · 고해상도. ⚠️ 위에 짙은 남색 막이 덮이고 글이 판 가운데 높이에 앉습니다 — 주인공을 거기 두지 마세요. ⚠️ 사진 안에 글자 · 상호 · 로고가 보이면 안 됩니다" },
-  { key:"hero-close", where:"히어로 오른쪽 판 (정리하는 상업공간)",
+  { key:"hero-close", sizes:"(max-width:900px) 52vw, (max-width:1100px) 48vw, 44vw", where:"히어로 오른쪽 판 (정리하는 상업공간)",
     min:[1400,560], ratio:[1.3,2.6], maxKB:300, anchor:"center",
     note:"같은 공간이 정리되는 듯한 장면이면 가장 좋습니다. 밝은 샌드 막이 덮입니다. ⚠️ 실패한 장면이 아니라 다음을 준비하는 장면입니다 — 불 꺼진 가게 · 고개 숙인 사람 금지" },
+
+  /* ── 전문관 머리 사진 셋 (2026-10-10 이미지 지시서 §3) ───────────
+     `/startup` · `/closure` · `/operation` 의 화면 머리 오른쪽에
+     붙습니다. 1024px 위에서는 **오른쪽 42% 판**이고 그 아래에서는
+     글 밑의 **띠**가 됩니다 — 어느 폭에서도 글이 사진 위에 앉지
+     않습니다.
+     ⚠️⚠️ **사진 안에 글자 · 단추를 넣지 마세요** (§6 · §26). 제목 ·
+     설명 · 단추는 전부 HTML 입니다 — 사진에 박아 두면 폰에서 줄어들어
+     안 읽히고, 그려진 단추는 눌러도 아무 일이 안 납니다 (§30-7).
+     ⚠️ 왼쪽 22% 가 **부드럽게 사라집니다**(mask) — 주인공을 왼쪽 끝에
+     두지 마세요. */
+  { key:"hero-startup", sizes:"(max-width:1023px) 100vw, 42vw",
+    where:"창업 전문관(/startup) 머리 · 오른쪽 판",
+    min:[840,740], ratio:[0.85,1.5], maxKB:200, anchor:"right",
+    note:"새로 여는 밝은 상업공간 · 자연광. ⚠️ 상호 · 간판 · 로고가 읽히면 안 됩니다" },
+  { key:"hero-closure", sizes:"(max-width:1023px) 100vw, 42vw",
+    where:"폐업 · 정리 전문관(/closure) 머리 · 오른쪽 판",
+    min:[840,740], ratio:[0.85,1.5], maxKB:200, anchor:"right",
+    note:"정리 중인 매장 — 의자를 올리고 박스를 싸는 장면. ⚠️⚠️ 불 꺼진 가게 · 고개 숙인 사람 · 폐허 금지. 실패가 아니라 다음을 준비하는 장면입니다" },
+  { key:"hero-ops", sizes:"(max-width:1023px) 100vw, 42vw",
+    where:"운영 서비스관(/operation) 머리 · 오른쪽 판",
+    min:[840,740], ratio:[0.85,1.5], maxKB:200, anchor:"right",
+    note:"문을 연 매장에서 POS · 태블릿으로 일하는 장면. ⚠️ 실제 POS 상표 · 서비스 로고가 읽히면 안 됩니다" },
 
   /* ── 사업 단계 여섯 카드 (2026-10-04 §14 · §18 · §19) ──────────
      ⚠️⚠️ **지금 여섯 자리 다 비어 있습니다.** 급하게 저품질 스톡을
@@ -112,52 +135,52 @@ window.WOW_PHOTO_SLOTS = [
      기준이 영영 사라집니다. 라이선스가 있는 원본을 `img/raw/` 에
      `category-*.jpg` 로 넣고 `node tools/fit-photos.js --write` 를
      돌리면 **화면은 한 줄도 안 고치고** 띠가 돌아옵니다. */
-  { key:"category-startup", where:"단계 카드 01 · 창업 준비",
+  { key:"category-startup", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"단계 카드 01 · 창업 준비",
     min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
     note:"사업계획서 · 노트 · 펜 · 노트북 · 밝은 상업공간. ⚠️ 커피컵처럼 한 업종이 떠오르는 사진에 기대지 마세요 — '준비한다' 는 느낌이 먼저입니다" },
-  { key:"category-location", where:"단계 카드 02 · 상가 · 입지",
+  { key:"category-location", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"단계 카드 02 · 상가 · 입지",
     min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
     note:"한국의 깔끔한 상업지역 · 상가 외관. ⚠️ 브랜드 로고 · 간판 글자가 보이면 안 되고, 해외 거리 느낌도 피합니다" },
-  { key:"category-build", where:"단계 카드 03 · 매장 만들기",
+  { key:"category-build", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"단계 카드 03 · 매장 만들기",
     min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
     note:"마감 · 조명 설치 · 가구 배치. ⚠️ 거친 건설현장이 아니라 **매장이 완성되어 가는 모습**입니다" },
-  { key:"category-operation", where:"단계 카드 04 · 매장 운영",
+  { key:"category-operation", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"단계 카드 04 · 매장 운영",
     min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
     note:"POS · 매출 관리 · 주문 관리. ⚠️ 실제 서비스 상표나 POS 브랜드 로고가 보이면 안 됩니다" },
-  { key:"category-transfer", where:"단계 카드 05 · 매장 양도 · 양수",
+  { key:"category-transfer", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"단계 카드 05 · 매장 양도 · 양수",
     min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
     note:"계약서 · 열쇠 · 깔끔한 상업공간. ⚠️ 악수 스톡사진 느낌은 피합니다 — 이 플랫폼의 핵심 차별화 자리라 고급스럽고 신뢰감 있게" },
-  { key:"category-closing", where:"단계 카드 06 · 폐업 · 정리",
+  { key:"category-closing", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"단계 카드 06 · 폐업 · 정리",
     min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
     note:"정리된 박스 · 집기 이동 · 전문 작업자의 정리. ⚠️⚠️ 폐허 · 쓰레기 더미 · 불 꺼진 매장 · 실패한 느낌 **절대 금지** — 폐업은 실패가 아니라 안전한 정리입니다" },
 
   /* ── START / CLOSE 큰 카드 (§16) ─────────────────────────────
      ⚠️ 카드 윗머리에 띠로 들어갑니다 (카드의 30~40%). 가로로 넓습니다.
      ⚠️ **짙은 막을 씌우지 않습니다** — 사진이 밝아야 합니다. */
-  { key:"side-start", where:"START 카드 머리 · 새로 오픈하는 매장",
+  { key:"side-start", sizes:"(max-width:900px) 28vw, 18vw", where:"START 카드 머리 · 새로 오픈하는 매장",
     min:[1200,530], ratio:[2.0,2.6], maxKB:180,
     note:"새롭게 오픈하는 밝은 매장. 가로로 길게 잘립니다" },
-  { key:"side-close", where:"CLOSE 카드 머리 · 깔끔하게 정리하는 매장",
+  { key:"side-close", sizes:"(max-width:900px) 28vw, 18vw", where:"CLOSE 카드 머리 · 깔끔하게 정리하는 매장",
     min:[1200,530], ratio:[2.0,2.6], maxKB:180,
     note:"깔끔하게 정리하는 매장. 어수선하거나 처연하면 안 됩니다" },
 
   /* ── 창업 ↔ 폐업 연결 구간 (§23) ──────────────────────────────
      ⚠️ 주황 카드와 초록 카드 안에 각각 한 장씩. 5:3 으로 잘립니다. */
-  { key:"flow-close", where:"연결 · 정리하는 사장님 쪽", min:[900,540],
+  { key:"flow-close", sizes:"(max-width:860px) 82vw, 30vw", where:"연결 · 정리하는 사장님 쪽", min:[900,540],
     ratio:[1.5,1.9], maxKB:180,
     note:"정리 중인 매장 · 시설. 차분하되 어둡지 않게" },
-  { key:"flow-start", where:"연결 · 이어받는 사장님 쪽", min:[900,540],
+  { key:"flow-start", sizes:"(max-width:860px) 82vw, 30vw", where:"연결 · 이어받는 사장님 쪽", min:[900,540],
     ratio:[1.5,1.9], maxKB:180,
     note:"이어받아 새로 여는 밝은 매장 내부" },
 
   /* ── 큰 카드 셋 (2026-10-03 리뉴얼 지시서 §11) ──────────────────
      ⚠️ 셋이 **서로 다른 사진**이어야 합니다. 같은 장면을 세 번 쓰면
      카드가 셋이 아니라 하나로 읽힙니다. */
-  { key:"feat-franchise", where:"큰 카드 · 프랜차이즈", min:[900,620],
+  { key:"feat-franchise", sizes:"(max-width:900px) 92vw, 36vw", where:"큰 카드 · 프랜차이즈", min:[900,620],
     ratio:[1.2,1.6], maxKB:200, note:"완성된 상업 매장 외관 또는 내부" },
-  { key:"feat-store", where:"큰 카드 · 점포 · 상가", min:[900,620],
+  { key:"feat-store", sizes:"(max-width:900px) 92vw, 36vw", where:"큰 카드 · 점포 · 상가", min:[900,620],
     ratio:[1.2,1.6], maxKB:200, note:"상가 · 점포 Exterior. 임대 안내가 붙은 빈 점포도 좋습니다" },
-  { key:"feat-interior", where:"큰 카드 · 인테리어", min:[900,620],
+  { key:"feat-interior", sizes:"(max-width:900px) 92vw, 36vw", where:"큰 카드 · 인테리어", min:[900,620],
     ratio:[1.2,1.6], maxKB:200, note:"상업공간 공사 중 또는 완성된 공간" },
 
   /* ── 주요 서비스 여덟 (지시서 §13 "실사 Thumbnail") ─────────────
@@ -165,8 +188,17 @@ window.WOW_PHOTO_SLOTS = [
      업종이 아니라 **서비스**입니다 — 주방설비 사진이 고깃집으로
      읽히면 미용실 사장님에게 "여긴 내 자리가 아니네" 가 됩니다.
      장비 · 공구 · 도면처럼 **일 자체**가 보이는 쪽이 안전합니다.
-     ⚠️ 작게 들어갑니다. 넣기 전에 160px 폭으로 줄여서 무엇인지
-     읽히는지 보세요. 0장이면 분류 아이콘이 그 자리를 지킵니다. */
+     ⚠️⚠️ **원판은 정사각형입니다 — 76 · 92 · 62px** (`.ia-t`). 가로로
+     긴 사진을 넣으면 `object-fit:cover` 가 **좌우를 잘라** 주인공이
+     사라집니다. 그래서 비율은 **1:1 언저리**이고, 최소 크기는 제일
+     큰 원판(92px)의 2.6배인 **240px** 입니다 (92×2 = 184 · 폰의
+     62×3 = 186 이 실제 최대입니다) — 2026-10-10 에 재서
+     고쳤습니다 (전에는 640×420 · 1.3~1.7 로 **가로 사진 규격**이라
+     넣는 족족 좌우가 잘렸을 자리입니다).
+     ⚠️ 92px 에서 무엇인지 읽히는지 **반드시 줄여서 보세요.** 물건
+     하나가 크게 들어간 쪽이 읽히고, 넓은 풍경은 뭉갭니다.
+     ⚠️ 0장이면 분류 컬러 아이콘이 그 자리를 지킵니다 (절대 규칙 2) —
+     자리마다 따로라 **여덟 중 몇 장만** 넣으셔도 됩니다. */
   /* ⚠️ 2026-10-08 §8 — 메인 서비스 여덟이 바뀌면서 두 자리가
      늘었습니다. 자리를 늘리는 것은 **여기 한 곳**입니다. */
   /* ⚠️⚠️ **자리 이름은 분류 key 입니다** — `svc-<분류 key>` 이고
@@ -179,14 +211,14 @@ window.WOW_PHOTO_SLOTS = [
      ⚠️ 업종이 드러나는 사진은 안 됩니다 — 여기 들어가는 것은 업종이
      아니라 **서비스**입니다 (주방설비 사진이 고깃집으로 읽히면 미용실
      사장님에게 "여긴 내 자리가 아니네" 가 됩니다). */
-  { key:"svc-store",     where:"서비스 · 상가 · 점포",     min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"빈 상가 · 상권 거리. ⚠️ 상호 · 간판이 읽히면 안 됩니다" },
-  { key:"svc-interior",  where:"서비스 · 인테리어 · 시공",  min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"시공 중인 상업공간 · 도면" },
-  { key:"svc-equip",     where:"서비스 · 시설 · 장비",     min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"업소용 장비. ⚠️ 한 업종으로 읽히지 않게" },
-  { key:"svc-it",        where:"서비스 · IT · 매장시스템",  min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"POS · 키오스크 · CCTV. ⚠️ 브랜드가 보이면 안 됩니다" },
-  { key:"svc-admin",     where:"서비스 · 행정 · 전문가",    min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"서류 · 상담 책상. ⚠️ 실제 서류 글자가 읽히면 안 됩니다" },
-  { key:"svc-marketing", where:"서비스 · 마케팅 · 디자인",  min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"디자인 작업 · 촬영" },
-  { key:"svc-demolish",  where:"서비스 · 철거",            min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"철거 · 원상복구 현장" },
-  { key:"svc-clean",     where:"서비스 · 청소 · 방역",      min:[640,420], ratio:[1.3,1.7], maxKB:120, note:"청소 · 방역 장비" }
+  { key:"svc-store", sizes:"92px",     where:"서비스 · 상가 · 점포",     min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"빈 상가 · 상권 거리. ⚠️ 상호 · 간판이 읽히면 안 됩니다" },
+  { key:"svc-interior", sizes:"92px",  where:"서비스 · 인테리어 · 시공",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"시공 중인 상업공간 · 도면" },
+  { key:"svc-equip", sizes:"92px",     where:"서비스 · 시설 · 장비",     min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"업소용 장비. ⚠️ 한 업종으로 읽히지 않게" },
+  { key:"svc-it", sizes:"92px",        where:"서비스 · IT · 매장시스템",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"POS · 키오스크 · CCTV. ⚠️ 브랜드가 보이면 안 됩니다" },
+  { key:"svc-admin", sizes:"92px",     where:"서비스 · 행정 · 전문가",    min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"서류 · 상담 책상. ⚠️ 실제 서류 글자가 읽히면 안 됩니다" },
+  { key:"svc-marketing", sizes:"92px", where:"서비스 · 마케팅 · 디자인",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"디자인 작업 · 촬영" },
+  { key:"svc-demolish", sizes:"92px",  where:"서비스 · 철거",            min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"철거 · 원상복구 현장" },
+  { key:"svc-clean", sizes:"92px",     where:"서비스 · 청소 · 방역",      min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"청소 · 방역 장비" }
 ];
 
 
@@ -211,10 +243,47 @@ window.WOW_PHOTO_SLOTS = [
    한쪽만 새로 넣으면 다른 쪽이 조용히 사라지니, 돌린 뒤에는 반드시
    이 칸을 되읽어 보세요 (실제로 hero-close 가 한 번 빠졌습니다). */
 window.WOW_PHOTOS = {
-  "hero-start": { src:"/img/hero-start.jpg",
+  "hero-start": { src:"/img/hero-start.jpg?v=43939c5f",
+    w:1701, h:756,
+    webp:"/img/hero-start-sm.webp?v=d10230c9 936w, /img/hero-start.webp?v=61230e9c 1701w",
+    jpg:"/img/hero-start-sm.jpg?v=7627d1c7 936w, /img/hero-start.jpg?v=43939c5f 1701w",
     alt:"큰 창으로 햇빛이 드는 상업공간에서 작업자들이 카운터와 조명을 설치하고 있습니다" },
-  "hero-close": { src:"/img/hero-close.jpg",
-    alt:"햇빛이 드는 상가 내부에서 작업자들이 마감재를 떼어 내고 정리하고 있습니다" }
+  "hero-close": { src:"/img/hero-close.jpg?v=5011de99",
+    w:1702, h:756,
+    webp:"/img/hero-close-sm.webp?v=0c461161 936w, /img/hero-close.webp?v=a9bcb267 1702w",
+    jpg:"/img/hero-close-sm.jpg?v=14d773b3 936w, /img/hero-close.jpg?v=5011de99 1702w",
+    alt:"햇빛이 드는 상가 내부에서 작업자들이 마감재를 떼어 내고 정리하고 있습니다" },
+  "hero-startup": { src:"/img/hero-startup.jpg?v=cafced7d",
+    w:978, h:941,
+    webp:"/img/hero-startup-sm.webp?v=7ebd4ab7 538w, /img/hero-startup.webp?v=1f776267 978w",
+    jpg:"/img/hero-startup-sm.jpg?v=3fd69ce9 538w, /img/hero-startup.jpg?v=cafced7d 978w",
+    alt:"갓 문을 연 카페 카운터에서 사장님이 태블릿을 들고 매장을 둘러보고 있습니다" },
+  "hero-closure": { src:"/img/hero-closure.jpg?v=5ed467e1",
+    w:869, h:941,
+    webp:"/img/hero-closure-sm.webp?v=2aca1ddb 478w, /img/hero-closure.webp?v=f89dbdaf 869w",
+    jpg:"/img/hero-closure-sm.jpg?v=f82fb7f1 478w, /img/hero-closure.jpg?v=5ed467e1 869w",
+    alt:"햇빛이 드는 매장에서 사장님이 의자를 테이블에 올리고 포장 상자를 정리하고 있습니다" },
+  "hero-ops": { src:"/img/hero-ops.jpg?v=4fd18720",
+    w:953, h:941,
+    webp:"/img/hero-ops-sm.webp?v=75ad6292 524w, /img/hero-ops.webp?v=34b13237 953w",
+    jpg:"/img/hero-ops-sm.jpg?v=3ec4c91c 524w, /img/hero-ops.jpg?v=4fd18720 953w",
+    alt:"문을 연 매장 카운터에서 사장님이 POS 화면을 보며 주문을 처리하고 있습니다" },
+  "svc-interior": { src:"/img/svc-interior.jpg?v=b42e5abd",
+    w:267, h:263,
+    webp:"/img/svc-interior.webp?v=ee373d5e 267w",
+    alt:"상업공간 인테리어 마감재 견본과 매장 평면도면이 작업대에 놓여 있습니다" },
+  "svc-equip": { src:"/img/svc-equip.jpg?v=57207420",
+    w:322, h:324,
+    webp:"/img/svc-equip.webp?v=dab4866d 322w",
+    alt:"업소용 주방의 스테인리스 가스레인지와 대형 조리 냄비들" },
+  "svc-it": { src:"/img/svc-it.jpg?v=a7e82576",
+    w:324, h:323,
+    webp:"/img/svc-it.webp?v=82788821 324w",
+    alt:"매장 천장에 설치된 CCTV 카메라 셋과 화면이 나뉜 관제 모니터" },
+  "svc-clean": { src:"/img/svc-clean.jpg?v=41582a26",
+    w:267, h:263,
+    webp:"/img/svc-clean.webp?v=a079a198 267w",
+    alt:"매장 청소에 쓰는 세정제 분무기와 밀대, 청소 카트" }
 };
 
 window.wowPhoto = function(key){
@@ -227,12 +296,48 @@ window.hasPhoto = function(key){ return !!wowPhoto(key); };
    첫 화면 사진에 `loading="lazy"` 를 걸면 제일 큰 그림이 늦게 떠서
    손님이 "느리다" 고 느낍니다. 반대로 아래쪽까지 eager 로 두면 첫
    화면이 아래 사진들을 다 기다립니다. */
+window.wowSlot = function(key){
+  var L = window.WOW_PHOTO_SLOTS || [], i;
+  for(i = 0; i < L.length; i++) if(L[i].key === key) return L[i];
+  return null;
+};
+
+/* ⚠️⚠️ **대체 형식이 없으면 예전과 글자 하나 다르지 않게** 냅니다.
+   `<picture>` 는 webp · avif 가 실제로 있을 때만 생깁니다 — 사진을
+   다시 만들기 전까지 화면이 바뀌지 않는다는 뜻입니다.
+   ⚠️ `sizes` 는 **자리**의 성질입니다 (히어로는 반쪽 화면, 서비스
+   카드는 네 칸) — 그래서 `WOW_PHOTO_SLOTS` 에 적혀 있습니다. 없으면
+   브라우저가 **화면 전체 폭**으로 보고 제일 큰 파일을 받습니다. */
 window.photoBox = function(key, cls, eager){
   var c = "ph" + (cls ? " " + cls : "");
   var p = wowPhoto(key);
   /* ⚠️ 없을 때 `alt` 를 단 빈 칸을 만들지 않습니다. 읽어 주는
      프로그램이 없는 사진을 설명하는 것은 없는 것보다 나쁩니다. */
   if(!p) return '<span class="' + c + ' ph-none" aria-hidden="true"></span>';
-  return '<img class="' + c + '" src="' + esc(p.src) + '" alt="' + esc(p.alt || "") + '"' +
+
+  var sl    = window.wowSlot(key) || {};
+  var sizes = p.sizes || sl.sizes || "";
+  var szAtt = sizes ? ' sizes="' + esc(sizes) + '"' : "";
+
+  /* ⚠️⚠️ `width` · `height` 를 적지 않으면 사진이 뜨는 순간 아래 글이
+     **밀려 내려갑니다**(레이아웃 이동). 읽던 줄을 놓치고, 누르려던
+     단추가 손가락 밑에서 움직입니다. 비율만 알려 주는 값이라
+     실제 표시 크기는 CSS 가 그대로 정합니다. */
+  var wh = (p.w && p.h) ? ' width="' + p.w + '" height="' + p.h + '"' : "";
+
+  var img = '<img class="' + c + '" src="' + esc(p.src) + '"' +
+    (p.jpg ? ' srcset="' + esc(p.jpg) + '"' + szAtt : "") + wh +
+    ' alt="' + esc(p.alt || "") + '"' +
     (eager ? ' fetchpriority="high"' : ' loading="lazy"') + ' decoding="async">';
+
+  /* 차례가 곧 우선순위입니다 — 브라우저는 **읽을 수 있는 첫 줄**을
+     고릅니다. 그래서 더 작게 눌리는 avif 가 앞입니다. */
+  var alt = "";
+  if(p.avif) alt += '<source type="image/avif" srcset="' + esc(p.avif) + '"' + szAtt + '>';
+  if(p.webp) alt += '<source type="image/webp" srcset="' + esc(p.webp) + '"' + szAtt + '>';
+
+  /* ⚠️⚠️ 감싸개는 `display:contents` 입니다 (`css/app.css` 의 `.ph-p`).
+     `.ph` 를 가리키는 규칙이 **열일곱** 개라, 감싸개가 레이아웃에
+     끼어들면 그 열일곱이 전부 어긋납니다. */
+  return alt ? '<picture class="ph-p">' + alt + img + '</picture>' : img;
 };

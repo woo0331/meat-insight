@@ -1150,18 +1150,101 @@ function checkCssVars(){
    화면에서 404 가 나는데 그것도 조용합니다. 빌드할 때마다 막습니다.
    ⚠️ 크기 · 비율 · 용량까지는 `node tools/check-photos.js` 가 봅니다 —
    여기서는 파일을 열지 않습니다(빌드가 느려집니다). */
+/* 쓰기 전에 **실제로 그 형식인지** 봅니다 — 이름만 믿지 않습니다.
+   크로미움은 못 만드는 형식을 시키면 **에러 없이 PNG** 를 돌려줍니다
+   (`tools/fit-photos.js` 의 같은 함수). */
+function sniffImg(buf){
+  if(buf.length > 3 && buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) return "jpg";
+  if(buf.length > 12 && buf.toString("ascii", 0, 4) === "RIFF"
+                     && buf.toString("ascii", 8, 12) === "WEBP") return "webp";
+  if(buf.length > 12 && buf.toString("ascii", 4, 8) === "ftyp"
+                     && buf.toString("ascii", 8, 12).indexOf("avi") === 0) return "avif";
+  if(buf.length > 8 && buf[0] === 0x89 && buf.toString("ascii", 1, 4) === "PNG") return "png";
+  return "?";
+}
+
+/* ⚠️⚠️ **사진은 "조용히 안 나오는" 쪽으로만 고장납니다.** 키를 한 글자
+   틀려도 · 파일이 없어도 · 형식이 달라도 에러도 404 도 안 나고 화면만
+   비어 보입니다. 그래서 빌드가 봅니다.
+
+   ⚠️⚠️ 2026-10-10 로 **내용 값(`?v=`)이 필수**가 됐습니다.
+   `vercel.json` 이 그림에 1년 `immutable` 을 주기 때문입니다 — 주소가
+   안 바뀌면 사진을 갈아도 **손님 브라우저는 영영 옛 사진**입니다.
+   사장님이 CSS 에서 **두 번** 물으셨던 그 사고입니다. 둘은 늘 같이
+   움직입니다: 캐시 규칙을 빼면 이 검사도 같이 빼야 합니다. */
 function checkPhotos(W){
-  const slots = new Set((W.WOW_PHOTO_SLOTS || []).map(s => s.key));
+  const SL = W.WOW_PHOTO_SLOTS || [];
+  const slots = new Set(SL.map(s => s.key));
   const bad = [];
+  const seen = new Map();          /* 파일 → 먼저 쓴 자리 (§3 중복 금지) */
+
+  /* "/img/a.jpg?v=1234abcd 800w, /img/b.jpg?v=… 1600w" 를 낱낱이 */
+  const urls = (v) => String(v || "").split(",").map(x => x.trim().split(/\s+/)[0])
+                        .filter(Boolean);
+
+  const one = (k, u, what, want) => {
+    if(u[0] !== "/"){
+      bad.push('"' + k + '" 의 ' + what + ' 경로가 / 로 시작하지 않습니다 — ' +
+        '깊은 주소에서 404 가 납니다: ' + u);
+      return;
+    }
+    const [file, q] = u.split("?");
+    const abs = path.join(ROOT, file.replace(/^\//, ""));
+    if(!fs.existsSync(abs)){ bad.push('"' + k + '" — 파일이 없습니다: ' + u); return; }
+
+    const buf = fs.readFileSync(abs);
+    const got = sniffImg(buf);
+    if(want && got !== want)
+      bad.push('"' + k + '" — ' + file + ' 는 이름이 ' + want + ' 인데 안은 ' + got +
+        ' 입니다 (브라우저가 못 만드는 형식을 시키면 조용히 다른 것을 돌려줍니다)');
+
+    const v = /(?:^|&)v=([0-9a-f]{8})$/.exec(q || "");
+    if(!v){
+      bad.push('"' + k + '" — ' + file + ' 에 내용 값(?v=)이 없습니다. ' +
+        'vercel.json 이 그림을 1년 immutable 로 주고 있어서, 값이 없으면 ' +
+        '사진을 바꿔도 손님 화면은 영영 옛날입니다 (node tools/fit-photos.js --write)');
+    }else{
+      const real = crypto.createHash("sha1").update(buf).digest("hex").slice(0, 8);
+      if(v[1] !== real)
+        bad.push('"' + k + '" — ' + file + ' 의 내용 값이 안 맞습니다 (' + v[1] +
+          ' → ' + real + '). 파일만 바꾸고 다시 안 적으면 옛 사진이 그대로 보입니다');
+    }
+
+    /* §3 "같은 이미지를 불필요하게 반복하지 않는다" — 한 파일이 두
+       자리에 쓰이면 화면 두 곳이 같은 그림입니다. 큰 카드 셋에서
+       이미 한 번 적어 둔 걱정입니다. */
+    const prev = seen.get(file);
+    if(prev && prev !== k)
+      bad.push('"' + k + '" 와 "' + prev + '" 가 **같은 파일**을 씁니다: ' + file +
+        ' — 한 화면에 같은 그림이 두 번 나옵니다 (지시서 §3)');
+    else if(!prev) seen.set(file, k);
+  };
+
   for(const [k, p] of Object.entries(W.WOW_PHOTOS || {})){
     if(!slots.has(k))
       bad.push('"' + k + '" 는 없는 자리입니다 (js/data/photos.js 의 WOW_PHOTO_SLOTS)');
     if(!p || !p.src){ bad.push('"' + k + '" 에 src 가 없습니다'); continue; }
-    if(p.src[0] !== "/")
-      bad.push('"' + k + '" 의 경로가 / 로 시작하지 않습니다 — 깊은 주소에서 404 가 납니다');
-    else if(!fs.existsSync(path.join(ROOT, p.src.replace(/^\//, ""))))
-      bad.push('"' + k + '" — 파일이 없습니다: ' + p.src);
+
+    one(k, p.src, "src", "jpg");
+    urls(p.jpg).forEach(u => one(k, u, "jpg srcset", "jpg"));
+    urls(p.webp).forEach(u => one(k, u, "webp srcset", "webp"));
+    urls(p.avif).forEach(u => one(k, u, "avif srcset", "avif"));
+
+    /* ⚠️ 비율을 안 적으면 사진이 뜨는 순간 아래 글이 밀려 내려갑니다 */
+    if(!p.w || !p.h)
+      bad.push('"' + k + '" 에 w · h 가 없습니다 — 사진이 뜰 때 아래 글이 밀립니다');
+
+    /* ⚠️ 대체 형식을 적어 두고 `sizes` 가 없으면 브라우저가 **화면 전체
+       폭**으로 보고 제일 큰 파일을 받습니다 — 폰에서 그게 제일 아픕니다. */
+    const sl = SL.filter(x => x.key === k)[0] || {};
+    if((p.jpg || p.webp || p.avif) && !(p.sizes || sl.sizes))
+      bad.push('"' + k + '" 자리에 sizes 가 없습니다 — 폰도 제일 큰 판을 받습니다 ' +
+        '(js/data/photos.js 의 WOW_PHOTO_SLOTS)');
+
+    if(!String(p.alt || "").trim())
+      bad.push('"' + k + '" 에 alt 가 비었습니다 — 읽어 주는 프로그램과 검색엔진이 보는 글입니다');
   }
+
   if(bad.length)
     throw new Error("사진 자리가 어긋났습니다 (그 사진은 **조용히 안 나옵니다**):\n   " +
       bad.join("\n   "));

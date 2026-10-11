@@ -100,8 +100,24 @@ Object.keys(PHOTOS).forEach(key => {
   if(p.src[0] !== "/")
     bad.push(tag + " 의 경로가 / 로 시작하지 않습니다 (" + p.src + ")");
 
-  const file = path.join(ROOT, p.src.replace(/^\//, ""));
+  /* ⚠️⚠️ 주소에 **내용 값**이 붙어 있습니다 (`?v=1a2b3c4d`) — 떼고
+     찾아야 합니다. 안 떼면 멀쩡한 사진을 "파일이 없습니다" 로 잡습니다.
+     그림에 1년 `immutable` 캐시를 주면서 같이 들어온 값입니다. */
+  const bare = (u) => String(u).split("?")[0];
+  const file = path.join(ROOT, bare(p.src).replace(/^\//, ""));
   if(!fs.existsSync(file)){ bad.push(tag + " — 파일이 없습니다: " + p.src); return; }
+
+  /* 같이 나가는 변형(webp · 작은 판)도 **쓰이는 파일**로 셉니다 —
+     안 그러면 아래 "안 쓰는 파일" 이 전부 그것들을 집습니다. */
+  ["jpg", "webp", "avif"].forEach(k => {
+    String(p[k] || "").split(",").forEach(part => {
+      const u = part.trim().split(/\s+/)[0];
+      if(!u) return;
+      const f2 = path.join(ROOT, bare(u).replace(/^\//, ""));
+      if(!fs.existsSync(f2)) bad.push(tag + " — " + k + " 변형 파일이 없습니다: " + u);
+      else used.add(path.relative(ROOT, f2));
+    });
+  });
   used.add(path.relative(ROOT, file));
 
   const buf = fs.readFileSync(file);

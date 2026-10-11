@@ -330,6 +330,7 @@ function PageOperation(){
   var ind  = (typeof amIndustry === "function") ? amIndustry(nowQS("i")) : null;
   var reads = opsReads(6);
   return PgHero({
+    photo:"hero-ops",
     /* ⚠️ §5 — 업종을 고르고 오셨으면 되읽어 줍니다. */
     kicker:"OPERATION · 매장 운영" + (ind ? " · " + ind.name : ""),
     h1raw: ind

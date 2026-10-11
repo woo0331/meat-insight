@@ -3994,3 +3994,12 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   .hsv{ padding:8px 2px; }
   .hsv b{ font-size:12px; }
 }
+
+/* 전문관 카드에 깔리는 사진 — ⚠️ 글이 그 위에 섭니다. 그라디언트가
+   이미 카드 바탕이라, 사진은 **그 아래**에서 질감만 내고 대비는
+   그라디언트가 지킵니다. 검사는 사진 위 대비를 못 재니 상한을
+   여기서 지킵니다. */
+.mhall-c{ isolation:isolate; }
+.mhall-bg{ position:absolute; inset:0; z-index:-1; }
+.mhall-bg .ph{ display:block; width:100%; height:100%; object-fit:cover;
+  opacity:.28; }

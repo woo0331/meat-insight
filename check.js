@@ -2467,9 +2467,12 @@ const AUDIT = `(() => {
     /* ⚠️ 2026-10-11 — 서비스 카드 사진이 원판 안에서 **카드 전체를
        채우는 바탕**으로 나갔습니다 (.msvc-bg). .ia-t 쪽 규칙은
        그대로 둡니다 — 원판에 사진을 넣는 날 바로 걸리게. */
+    /* ⚠️ 2026-10-11 — 전문관 카드 바탕(.mhall-bg)이 늘었습니다.
+       사진이 들어가는 자리를 만들면 **여기 넣으세요** — 안 넣으면
+       object-fit 이 빠져도 조용히 통과하고 사진이 늘어납니다. */
     const want = [".mh-ph .ph", ".hpk-ph .ph", ".mfeat-ph .ph",
                   ".ia-t .ph", ".msvc-bg .ph", ".mbr-p .ph",
-                  ".mk-k-ph .ph"];
+                  ".mk-k-ph .ph", ".mhall-bg .ph"];
     const bad = [];
     for(const q of want){
       let ok = false;

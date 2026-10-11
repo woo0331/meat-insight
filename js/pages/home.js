@@ -314,6 +314,16 @@ function MainScopeStrip(){
 
    ⚠️ 서비스 이름 · 주소 · 색은 전부 halls.js → catalog.js 에서
    옵니다. **화면에 적지 마세요** — 분류가 늘면 어긋납니다. */
+/* 전문관 카드에 깔 사진 — 사장님이 주신 넷을 뜻이 맞는 전문관에
+   붙였습니다. ⚠️ 사진이 없으면 그라디언트만 섭니다 (빈 액자를 깔지
+   않습니다 · 절대 규칙 2). */
+/* ⚠️ 뜻이 맞아야 합니다 — 처음에 폐업 카드에 **CCTV** 사진을
+   붙였다가 찍어 보고 고쳤습니다 (CCTV 는 IT · 보안이지 폐업이
+   아닙니다). 지금은 도면 → 창업 · POS/CCTV → 운영 · 주방장비 →
+   양도양수 · 청소용품 → 폐업 정리입니다. */
+var HALL_PH = { startup:"svc-interior", operation:"svc-it",
+                transfer:"svc-equip",  closure:"svc-clean" };
+
 function MainHalls(){
   var L = (window.AM_HALLS || []);
   if(!L.length) return "";
@@ -323,6 +333,13 @@ function MainHalls(){
     var on = (h.key === cur.key);
     return '<li><a class="mhall-c hall-'+esc(h.tone)+(on?" is-on":"")+'"'+
       ' href="/?h='+esc(h.key)+'" data-keep aria-current="'+(on?"true":"false")+'">'+
+      /* ⚠️ 사진이 있으면 카드 **바탕**으로 깔립니다 (글은 그 위 HTML).
+         사장님이 주신 넷이 267~324px 정사각이라 900px 이상 가로를
+         요구하는 다른 자리에는 늘리지 않고는 못 넣습니다 — 카드가
+         288×168 이라 여기가 제일 덜 늘리는 자리입니다. */
+      (HALL_PH[h.key] && hasPhoto(HALL_PH[h.key])
+        ? '<span class="mhall-bg" aria-hidden="true">'+photoBox(HALL_PH[h.key])+'</span>'
+        : '')+
       '<span class="mhall-i" aria-hidden="true">'+icon(h.ic, 30)+'</span>'+
       '<b>'+esc(h.name)+'</b>'+
       '<i>'+esc(h.lead)+'</i>'+

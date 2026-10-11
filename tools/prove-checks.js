@@ -361,13 +361,18 @@ const CASES = [
   ["핵심 서비스 여덟의 아이콘이 비지 않고 저마다 다르다",
    `const sv = document.querySelectorAll(".msvc-g > li .ia-t svg");
     sv[0].innerHTML = sv[1].innerHTML;`],
-  /* ⚠️⚠️ 2026-10-10 — 원판에 **사진**이 들어올 수 있어서(svc-*) 검사에
-     갈래가 하나 늘었습니다. 그 갈래도 되돌려 봅니다 — 사진이 한 장도
-     없으면 아이콘 쪽을 비워서 같은 검사를 때립니다 (없는 요소를 집어
-     되돌리기가 터지는 것을 막습니다). */
+  /* ⚠️⚠️ 2026-10-11 — 사진이 원판 밖으로 나가 **카드 전체를 채우는
+     바탕**이 됐습니다. 그 갈래 둘을 따로 되돌려 봅니다.
+     ⚠️ 사진이 한 장도 없으면 아이콘 쪽을 비워 같은 검사를 때립니다 —
+     **없는 요소를 집으면 되돌리기가 터지고**, 그러면 "검사가 안
+     잡는다" 로 보입니다 (이 저장소에서 여덟 번 겪은 자리). */
   ["핵심 서비스 여덟의 아이콘이 비지 않고 저마다 다르다",
-   `const im = document.querySelector(".msvc-g > li .ia-t img.ph");
-    if(im) im.setAttribute("alt", "");
+   `const im = document.querySelector(".msvc-g .msvc-ph-on .msvc-bg img.ph");
+    if(im) im.style.opacity = "0.6";
+    else document.querySelector(".msvc-g > li .ia-t svg").innerHTML = "";`],
+  ["핵심 서비스 여덟의 아이콘이 비지 않고 저마다 다르다",
+   `const go = document.querySelector(".msvc-g .msvc-ph-on .msvc-go");
+    if(go) go.style.position = "static";
     else document.querySelector(".msvc-g > li .ia-t svg").innerHTML = "";`],
   ["업종 열넷이 저마다 다른 색을 쓴다",
    /* ⚠️ `.ic-t` 에 transition 이 걸려 있어서 그냥 바꾸면 **색이 번지는

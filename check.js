@@ -2418,8 +2418,11 @@ const AUDIT = `(() => {
        (.hp2-ph → .mh-ph .ph). 선택 카드 액자(.hpk-ph)도 같이 봅니다. */
     /* ⚠️ 2026-10-09 §3 · §5 — 서비스 카드가 컬러 아이콘 원판이 되면서
        사진 자리가 .msvc-ph 에서 원판 안으로 옮겨갔습니다. */
+    /* ⚠️ 2026-10-11 — 서비스 카드 사진이 원판 안에서 **카드 전체를
+       채우는 바탕**으로 나갔습니다 (.msvc-bg). .ia-t 쪽 규칙은
+       그대로 둡니다 — 원판에 사진을 넣는 날 바로 걸리게. */
     const want = [".mh-ph .ph", ".hpk-ph .ph", ".mfeat-ph .ph",
-                  ".ia-t .ph", ".mbr-p .ph"];
+                  ".ia-t .ph", ".msvc-bg .ph", ".mbr-p .ph"];
     const bad = [];
     for(const q of want){
       let ok = false;
@@ -2664,28 +2667,17 @@ const AUDIT = `(() => {
     if(cards.length !== 8) return "핵심 서비스가 " + cards.length + "개입니다 (여덟)";
     const seen = [];
     for(const a of cards){
-      /* ⚠️⚠️ 2026-10-10 — 원판에 **사진이 들어올 수 있습니다** (svc-*).
-         전에는 li 안의 첫 svg 를 집었는데, 사진이 들어간 카드에서는
-         그게 상담 CTA 의 말풍선이라 **넷이 전부 같은 아이콘**으로
-         읽혀 엉뚱하게 실패했습니다. 보는 자리를 **원판 안**으로
-         좁히고, 사진이면 그림이 실제로 달렸는지 봅니다.
+      /* ⚠️⚠️ 2026-10-11 사장님 지시로 사진이 **원판 밖**으로 나갔습니다
+         (카드 전체를 채우는 바탕, .msvc-bg). 그래서 원판은 여덟 장 다
+         컬러 아이콘이고 여기서는 svg 만 봅니다 — 사진은 아래에서
+         따로 봅니다.
+         ⚠️ 보는 자리를 li 가 아니라 **원판 안**으로 좁혀 둡니다. li 의
+         첫 svg 를 집으면 사진 카드에서 상담 CTA 의 말풍선이 걸려
+         넷이 같은 아이콘으로 읽혔습니다 (2026-10-10 에 겪었습니다).
          ⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다. */
       const tile = a.querySelector(".ia-t");
       if(!tile) return "'" + (a.textContent||"").trim().slice(0,12) + "' 칸에 원판이 없습니다";
-      const im = tile.querySelector("img.ph");
       const sv = tile.querySelector("svg");
-      if(im){
-        if(!im.getAttribute("src")) return "원판 사진에 src 가 없습니다";
-        if(!(im.getAttribute("alt")||"").trim()) return "원판 사진에 alt 가 없습니다";
-        if(!im.naturalWidth) return "원판 사진이 안 불러와졌습니다 (" + im.getAttribute("src") + ")";
-        const h0 = (a.querySelector("a[href]") || a).getAttribute("href") || "";
-        /* ⚠️⚠️ **백슬래시를 두 겹으로** — 템플릿 문자열이 한 겹을
-           먹어서 정규식이 통째로 깨집니다 (열다섯 번째 escape 사고).
-           한 겹으로 적었다가 이 검사가 SyntaxError 로 안 돌았습니다. */
-        if(!/^\\/[a-z]/.test(h0)) return "핵심 서비스에 가짜 링크가 있습니다 (" + h0 + ")";
-        if(!a.querySelector(".msvc-q[href]")) return "상담 · 견적 CTA 가 없습니다";
-        continue;
-      }
       if(!sv || !sv.innerHTML.trim())
         return "'" + (a.textContent||"").trim().slice(0,12) + "' 칸에 아이콘이 없습니다";
       /* 카드 안에 링크가 둘입니다 — 분야 화면과 상담 · 견적 */
@@ -2703,6 +2695,30 @@ const AUDIT = `(() => {
          ⚠️⚠️ 그걸 설명하려고 주석에 백틱을 적었다가 문자열이 거기서
          끝났습니다 — **주석에는 백틱을 아예 쓰지 마세요** (열다섯 번째). */
       if(!/^\\/[a-z]/.test(h)) return "핵심 서비스에 가짜 링크가 있습니다 (" + h + ")";
+    }
+    /* ⚠️⚠️ **카드를 채우는 사진**(2026-10-11) — 그려졌는지 · 실제로
+       불러와졌는지 · 글을 덮지 않는지. 사진이 한 장도 없으면 이
+       묶음은 통째로 건너뜁니다 (절대 규칙 2 — 빈 액자를 안 깝니다). */
+    for(const card of document.querySelectorAll(".msvc-g .msvc-ph-on")){
+      const nm = (card.textContent||"").trim().slice(0,12);
+      const bg = card.querySelector(".msvc-bg");
+      if(!bg) return "'" + nm + "' 에 사진 바탕 층이 없습니다";
+      const im = bg.querySelector("img.ph");
+      if(!im) return "'" + nm + "' 사진 바탕이 비었습니다";
+      if(!im.naturalWidth) return "'" + nm + "' 사진이 안 불러와졌습니다 (" + im.getAttribute("src") + ")";
+      if(bg.getAttribute("aria-hidden") !== "true")
+        return "'" + nm + "' 사진 바탕이 읽어 주는 프로그램에 노출됩니다";
+      /* ⚠️⚠️ **글이 사진 위에 와야 합니다.** 빼면 바탕이 글을 덮어
+         카드가 통째로 안 읽힙니다 — absolute 라 나중 형제를 가립니다. */
+      const go = card.querySelector(".msvc-go");
+      if(!go || getComputedStyle(go).position === "static")
+        return "'" + nm + "' 의 글이 사진 위로 안 올라왔습니다";
+      /* ⚠️⚠️ **투명도를 올리면 글이 묻힙니다.** 검사는 사진 위 대비를
+         못 재니(computed 배경색만 읽습니다) 여기서 **상한**만 지킵니다 —
+         0.16 에서 재 보니 제일 빠듯한 자리가 4.83 이었습니다 (AA 4.5). */
+      const op = parseFloat(getComputedStyle(im).opacity || "1");
+      if(!(op > 0 && op <= 0.22))
+        return "'" + nm + "' 사진 투명도가 " + op + " 입니다 (0 < x <= 0.22)";
     }
     /* 브랜드 연결 구간의 줄도 아이콘이 비면 안 됩니다 */
     for(const sv of document.querySelectorAll(".mbr-l svg"))

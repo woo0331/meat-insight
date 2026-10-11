@@ -918,11 +918,23 @@ function MainServices(){
       var chips = big ? (c.items || []).slice(0, 4).map(function(it){
         return '<i>'+esc(it.name)+'</i>'; }).join("") : "";
       return '<li class="tn-'+esc(c.tone || "t7")+(big?" msvc-big":"")+'">'+
-        '<div class="msvc-c">'+
+        '<div class="msvc-c'+(ph?" msvc-ph-on":"")+'">'+
+        /* ⚠️⚠️ **2026-10-11 사장님 지시 — "저 네모 칸 안에 투명하게 다
+           채워져있게".** 전에는 사진이 76px 원판 **안**에 들어가서
+           동전만 했습니다. 지금은 **카드 전체를 옅게 채우는 바탕**이고
+           글 · 아이콘 · CTA 가 그 위에 섭니다.
+           ⚠️ 그래서 원판은 **여덟 장 다 컬러 아이콘**입니다 — 넷만
+           사진이면 한 줄에 두 가지 생김새가 섞입니다.
+           ⚠️⚠️ **글이 읽히는 선을 넘지 마세요.** 투명도는
+           `css/pages.css` 의 `--svc-ph-a` 한 곳이고, 올리면 13px
+           설명글이 사진 위에서 묻힙니다 (AA 4.5). 바꾸시면 **찍어서
+           글자 밑 픽셀을 재 보세요** — 검사는 사진 위 대비를 못 잽니다.
+           ⚠️ 장식이라 `aria-hidden` 입니다. 뜻은 아이콘과 글이 냅니다. */
+        (ph ? '<span class="msvc-bg" aria-hidden="true">'+
+              photoBox("svc-" + c.key, "", true)+'</span>' : '')+
         '<a class="msvc-go" href="'+esc(catTo(c))+'">'+
           '<span class="ia-t">'+
-            (ph ? photoBox("svc-" + c.key,"",true)
-                : (hasIconArt(c.key) ? iconArt(c.key, big ? 60 : 46) : icon(c.icon, 40)))+
+            (hasIconArt(c.key) ? iconArt(c.key, big ? 60 : 46) : icon(c.icon, 40))+
           '</span>'+
           '<span class="msvc-tx"><b>'+esc(c.name)+'</b><i>'+esc(sub)+'</i>'+
             (chips ? '<span class="msvc-chips">'+chips+'</span>' : "")+'</span>'+

@@ -1855,6 +1855,28 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   background:var(--ic-ink); opacity:.9; }
 .msvc-c:hover{ transform:translateY(-4px); border-color:var(--ic-ink);
   box-shadow:0 18px 38px rgba(16,42,86,.12); }
+
+/* ════════ 카드를 채우는 사진 (2026-10-11 사장님 지시) ═══════════════
+   "이렇게 조그만한 사진이 아니라 저 네모 칸 안에 투명하게 다
+   채워져있게." — 사진이 원판 안이 아니라 **카드 전체**를 채웁니다.
+   ⚠️⚠️ **투명도는 여기 한 줄입니다.** 올리면 13px 설명글이 사진 위에서
+   묻힙니다 (AA 4.5). 재서 정한 값이고, 바꾸시면 **찍어서 글자 밑
+   픽셀을 다시 재세요** — `check.js` 의 대비 검사는 computed 배경색만
+   읽어서 **사진 위 글자는 영원히 못 잽니다.**
+   ⚠️ 흰 면을 한 겹 더 깔아 **아래쪽(글이 제일 빽빽한 자리)을 더
+   밝게** 합니다 — 사진이 어두운 쪽이어도 제목과 설명이 삽니다. */
+.msvc-c{ --svc-ph-a:.16; }
+.msvc-bg{ position:absolute; inset:0; z-index:0; pointer-events:none; }
+.msvc-bg .ph{ width:100%; height:100%; object-fit:cover;
+  opacity:var(--svc-ph-a); }
+.msvc-bg::after{ content:""; position:absolute; inset:0;
+  background:linear-gradient(180deg,
+    rgba(255,255,255,.30) 0%, rgba(255,255,255,.62) 46%,
+    rgba(255,255,255,.80) 100%); }
+/* ⚠️ 글 · 아이콘 · CTA 가 사진 **위**에 섭니다. 빼면 사진이 글을
+   덮습니다 (`.msvc-bg` 가 absolute 라 나중 형제를 가립니다). */
+.msvc-ph-on .msvc-go,
+.msvc-ph-on .msvc-q{ position:relative; z-index:1; }
 .msvc-go{ display:grid; justify-items:center; align-content:start; gap:5px;
   flex:1 1 auto; padding:var(--s7) var(--s4) var(--s5); text-align:center;
   color:var(--ink); text-decoration:none; }

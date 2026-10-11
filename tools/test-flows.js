@@ -81,13 +81,21 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.mti-read .mti-rg > li:nth-child(1) > a');
  say((await url()).startsWith("/content/"),"메인 최신 정보 → 글 상세",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- /* 2026-10-09 §5 — 카드에 링크가 둘이 되면서 분야 링크에 클래스가
-    붙었습니다 (.msvc-go). 상담 · 견적 CTA 도 같이 눌러 봅니다. */
- await click('.msvc-g > li:nth-child(2) .msvc-go');
- say((await url()).startsWith("/providers/"),"핵심 서비스 → 업체찾기",await url());
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.msvc-g > li:nth-child(2) .msvc-q');
- say((await url()).startsWith("/quote"),"핵심 서비스 → 상담 · 견적",await url());
+ /* ⚠️ 2026-10-11 UI/UX 지시서 §2 — 분류 여덟(.msvc-g)이 **전문관
+    넷**이 됐습니다. 끝이 막힌 길이 생기지 않았는지 눌러서 봅니다 —
+    ① 전문관을 고르면 그 전문관 서비스가 나오고 ② 서비스 칸이 실제
+    화면으로 가고 ③ 전체보기가 그 전문관으로 갑니다. */
+ await click('.mhall-g > li:nth-child(4) > a');          /* 폐업 · 정리 */
+ say((await url()).indexOf("h=closure")>=0,"전문관을 고르면 주소에 실린다",await url());
+ say((await pg.evaluate(()=>{
+     const b=document.querySelector(".hsv-hd h3 b");
+     return b ? b.textContent : "";
+   }))==="폐업 · 정리","고른 전문관의 서비스로 바뀐다");
+ await click('.hsv-g > li:nth-child(2) > a');            /* 철거 */
+ say((await url()).startsWith("/providers/"),"전문관 서비스 → 업체찾기",await url());
+ await pg.goto(B+"/?h=closure",{waitUntil:"networkidle"});
+ await click('.hsv-all');
+ say((await url())==="/closure","전체보기 → 그 전문관 화면",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.mjn-go a');
  say((await url())==="/join","파트너 입점 → 신청 화면",await url());

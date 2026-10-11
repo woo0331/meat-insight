@@ -668,6 +668,11 @@ function PageCat(cat){
           '<a class="btn btn-o" href="/join">이 분야 업체라면 입점하기</a>'
     })+
   '</div></section>'+
+  /* §6 의 ②③④⑤ — 업체를 찾는 분류와 **같은 함수**입니다
+     (js/pages/providers.js 의 SvcPageBands).
+     ⚠️ 두 벌로 만들면 같은 구간이 화면마다 달라집니다.
+     ⚠️ 내용이 없는 분류는 빈 문자열이라 지금 화면과 같습니다. */
+  SvcPageBands(cat, items)+
   /* 여기서 막히신 분께 그 자리에서 답을 냅니다 — 맞는 글이 없으면
      구간째 빠집니다 */
   ReadBand({ cat:cat.key, side:side, industry:ind,

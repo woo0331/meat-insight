@@ -86,11 +86,17 @@ function SvcPageBands(cat, items){
   if(!d) return "";
   var out = "";
 
+  /* ⚠️⚠️ 업체를 찾는 분류와 **정보 성격 분류**(`/c/:cat`)는 머리말이
+     다릅니다 — 정보 화면에 "업체를 찾으십니다" 를 쓰면 그 화면에
+     없는 것을 말하는 것이 됩니다 (찍어 보고 알았습니다). */
+  var isPv = (cat.kind === "provider");
+
   /* ② 이런 때 찾으십니다 */
   if(d.when && d.when.length){
     out += '<section class="sec sec-ivory"><div class="w">'+
       '<div class="sec-hd"><p class="eyebrow">WHEN</p>'+
-        '<h2>'+esc(cat.name)+' 업체를 이런 때 찾으십니다</h2></div>'+
+        '<h2>'+(isPv ? esc(cat.name)+' 업체를 이런 때 찾으십니다'
+                     : '이런 때 보시면 됩니다')+'</h2></div>'+
       '<ul class="svp-when">'+ d.when.map(function(w){
         return '<li>'+icon("check",18)+'<span>'+esc(w)+'</span></li>';
       }).join("")+'</ul>'+
@@ -104,7 +110,8 @@ function SvcPageBands(cat, items){
         '<h2>어떻게 진행되나요</h2>'+
         /* ⚠️ **세는 값**입니다 — 하위를 늘리면 저절로 따라옵니다 */
         (items && items.length
-          ? '<p>'+esc(cat.name)+' 안에서 '+items.length+'가지 일을 맡는 업체를 찾으실 수 있습니다.</p>'
+          ? '<p>'+esc(cat.name)+' 안에서 '+items.length+'가지를 '+
+            (isPv ? '맡는 업체를 찾으실 수 있습니다.' : '다룹니다.')+'</p>'
           : '')+
       '</div>'+
       '<ol class="svp-flow">'+ d.flow.map(function(s, i){

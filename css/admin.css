@@ -845,3 +845,19 @@ body.sl-locked{ overflow:hidden; }
 
 /* DB · 로그인 (전면 감사 1차 ①) — 1번 칸 안의 작은 머리말 */
 .ad-h3{ margin:22px 0 10px; font-size:15px; color:var(--navy); }
+
+/* ── 10. 전문관 노출 순서 (2026-10-11 UI/UX 지시서 §5) ──────────────
+   ⚠️ 누르는 것은 **높이 40px 이상**입니다 — 가로로 긴 30px 단추도
+   누르기 어렵습니다 (audit-admin 이 높이로 잽니다). */
+.ad-hl-h{ margin:0 0 14px; padding:12px 14px;
+  border:1px solid var(--line); border-radius:12px; background:var(--surface); }
+.ad-hl-t{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.ad-hl-t b{ font-size:15px; font-weight:800; color:var(--ink); }
+.ad-hl-t i{ font-style:normal; font-size:var(--t-cap); color:var(--ink2); }
+.ad-hl-b{ margin-left:auto; display:flex; gap:6px; flex:0 0 auto; }
+.ad-hl-b .btn{ min-width:40px; min-height:40px; padding:0 10px;
+  display:inline-flex; align-items:center; justify-content:center; }
+.ad-hl-l{ margin:0; padding-left:20px; }
+.ad-hl-l li{ display:flex; align-items:center; gap:10px; padding:3px 0;
+  font-size:var(--t-cap); color:var(--ink); }
+.ad-hl-l li > span:first-child{ flex:1 1 auto; }

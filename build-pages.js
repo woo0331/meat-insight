@@ -75,7 +75,10 @@ function loadApp(){
                    업종 key 를 가리킵니다 — 둘 다 위에 있습니다 */
                 "js/data/opsvc.js",
                 /* ⚠️ packages 는 offers 의 상품 id 를 가리킵니다 */
-                "js/data/packages.js"];
+                "js/data/packages.js",
+                /* ⚠️ halls 는 catalog 의 분류 · 하위 key 를 가리킵니다
+                   (2026-10-11 UI/UX 지시서 §2 · §4 — 전문관 넷) */
+                "js/data/halls.js"];
 
   /* ⚠️ 여기는 **glob 이 아니라 손으로 적은 목록**입니다. 새 데이터
      파일을 만들고 여기에 안 넣으면, 그 데이터를 쓰는 주소가 **에러
@@ -533,16 +536,24 @@ function noscriptFor(W, r, route){
        적지 말고 거기 차례를 그대로 옮기세요.
        ⚠️ 카드의 작은 줄은 화면에서도 **그 분류의 하위 서비스 셋**이고,
        하위가 업종에서 오는 분류(시설 · 장비)만 `lead` 를 냅니다. */
-    h2("사장님에게 필요한 모든 서비스를 한 곳에서");
-    p("창업, 운영, 인수 · 양도, 폐업까지. 필요한 서비스와 정보를 " +
-      B.name + "에서 확인하세요. 지금 다루는 세부 서비스는 " + nSub + "개입니다.");
-    ul(["store","interior","equip","it",
-        "admin","marketing","demolish","clean"]
-       .map(k => byCat[k]).filter(Boolean)
-       .map(c => {
-         const sub = (c.items||[]).slice(0,3).map(i => i.name).join(", ");
-         return c.name + " — " + (sub || c.lead);
-       }));
+    /* ⚠️⚠️ **2026-10-11 UI/UX 지시서 §2 · §4 로 전문관 넷이 됐습니다.**
+       화면은 `MainHalls()` 이고 분류 여덟(`MainServices`)은 내려왔습니다 —
+       여기도 같이 고칩니다. 화면에서 내려온 구간이 크롤러 본문에 남아
+       있으면 그게 구글에 나가는 거짓말입니다.
+       ⚠️ 전문관마다 **개수가 다릅니다** (12 · 11 · 7 · 9) — 지시서 §4 가
+       "실제 서비스가 부족하면 억지로 12개를 채우지 않는다" 고 적었습니다.
+       세지 말고 데이터 길이를 그대로 씁니다. */
+    h2("어떤 준비를 하고 계신가요?");
+    p("창업 · 운영 · 양도양수 · 폐업 네 갈래입니다. 고르시면 그 갈래에 " +
+      /* ⚠️⚠️ **조사를 손으로 적지 마세요.** "인수인계이" 가 그대로
+         크롤러 본문에 나갔습니다 — 이 저장소가 푸터의 중개자 고지에서
+         "인수인계은" 으로 겪은 바로 그 자리입니다. */
+      "필요한 서비스가 펼쳐집니다. " + W.koWith(B.name, "이가") +
+      " 지금 다루는 세부 서비스는 " + nSub + "개입니다.");
+    for(const h of (W.AM_HALLS || [])){
+      p(h.name + " — " + h.lead);
+      ul((h.items||[]).map(it => it.n));
+    }
 
     /* ── 03 패키지 (§4-4 · §6-4) ────────────────────────────────
        ⚠️⚠️ **"인기 패키지" 라고 쓰지 마세요** — 신청 데이터를 하나도
@@ -2122,6 +2133,100 @@ const IC_NAMES = (() => {
   return out;
 })();
 
+/* ⚠️ 컬러 아이콘(`iconArt`) 이름도 같은 방식으로 셉니다 — 없는 이름을
+   적으면 타일이 덩그러니 빕니다 (iconArt 가 빈 문자열을 돌려줍니다).
+   ⚠️ 선형 아이콘(IC)과 **다른 목록**입니다. 섞지 마세요. */
+const IA_NAMES = (() => {
+  const src = fs.readFileSync(path.join(ROOT, "js/components/base.js"), "utf8");
+  const i = src.indexOf("var IA = {");
+  if(i < 0) throw new Error("base.js 에서 컬러 아이콘 목록을 못 찾았습니다");
+  let d = 0, j = i + "var IA = ".length;
+  for(; j < src.length; j++){
+    if(src[j] === "{") d++;
+    else if(src[j] === "}"){ d--; if(!d){ j++; break; } }
+  }
+  const out = new Set();
+  const re = new RegExp("(?:^|[{,\\s])[\"']?([a-z][a-z0-9-]*)[\"']?\\s*:\\s*[\"'`]", "g");
+  let m; const body = src.slice(i, j);
+  while((m = re.exec(body))) out.add(m[1]);
+  if(out.size < 10) throw new Error("컬러 아이콘 이름을 " + out.size + "개밖에 못 읽었습니다");
+  return out;
+})();
+
+/* ── 전문관 넷 (2026-10-11 UI/UX 지시서 §2 · §4 · §5) ───────────────
+   ⚠️⚠️ 막는 것 일곱 —
+     ① 없는 분류 · ② 없는 하위 · ③ 하위를 적을 수 없는 분류에 하위
+     ④ 없는 주소 · ⑤ 없는 컬러 아이콘
+     ⑥ **한 전문관 안에서 아이콘이 겹침** (열두 칸에 같은 그림 둘)
+     ⑦ **한 전문관 안에서 가는 곳이 겹침** (§5 중복 방지 —
+        손님은 둘이 다른 것인 줄 압니다)
+   전부 일부러 틀리게 해 보고 멈추는 것을 확인했습니다. */
+function checkHalls(W){
+  const H = W.AM_HALLS || [];
+  if(!H.length) throw new Error("js/data/halls.js 의 AM_HALLS 가 비었습니다 (§2)");
+  if(H.length !== 4)
+    throw new Error("전문관이 " + H.length + "개입니다 — 지시서 §2 는 넷입니다");
+
+  const cats  = new Map((W.AM_CATS || []).map(c => [c.key, c]));
+  const paths = new Set(allRoutes(W));
+  const seenKey = new Set(), seenTone = new Set();
+
+  /* 질의문자가 붙은 주소(`/assets?c=stock`)는 경로만 떼어 봅니다 —
+     checkProcess() 가 멀쩡한 주소를 "없는 주소" 로 잡았던 자리입니다 */
+  const okRoute = (u) => paths.has(String(u).split("?")[0].split("#")[0]);
+
+  for(const h of H){
+    if(!h.key || seenKey.has(h.key))
+      throw new Error("전문관 key 가 비었거나 겹칩니다 — " + h.key);
+    seenKey.add(h.key);
+    if(!h.name || !h.lead)
+      throw new Error("전문관에 이름이나 한 줄이 없습니다 — " + h.key);
+    if(!h.tone || seenTone.has(h.tone))
+      throw new Error("전문관 색이 비었거나 겹칩니다 — " + h.key + " · " + h.tone);
+    seenTone.add(h.tone);
+    if(!h.to || !okRoute(h.to))
+      throw new Error("전문관이 없는 주소를 가리킵니다 — " + h.key + " · " + h.to);
+    if(!h.ic || !IC_NAMES.has(h.ic))
+      throw new Error("전문관 아이콘이 없는 이름입니다 — " + h.key + " · " + h.ic);
+
+    const items = h.items || [];
+    if(!items.length) throw new Error("전문관이 비었습니다 — " + h.key);
+    const ias = new Set(), tos = new Set();
+
+    for(const it of items){
+      const at = "전문관 " + h.key + " 의 \"" + (it.n || "(이름 없음)") + "\"";
+      if(!it.n) throw new Error(at + " — 이름이 없습니다");
+      if(!it.ia || !IA_NAMES.has(it.ia))
+        throw new Error(at + " 가 없는 컬러 아이콘을 가리킵니다 — " + it.ia);
+      if(ias.has(it.ia))
+        throw new Error(at + " 의 아이콘이 같은 전문관 안에서 겹칩니다 — " + it.ia);
+      ias.add(it.ia);
+
+      let dest = it.to;
+      if(!dest){
+        const c = cats.get(it.cat);
+        if(!c) throw new Error(at + " 가 없는 분류를 가리킵니다 — " + it.cat);
+        if(it.sub){
+          if(c.byIndustry)
+            throw new Error(at + " — " + it.cat + " 는 하위가 업종에서 와서 하위를 적을 수 없습니다");
+          const subs = new Set((c.items || []).map(x => x.key));
+          if(!subs.has(it.sub))
+            throw new Error(at + " 가 없는 하위를 가리킵니다 — " + it.cat + " / " + it.sub);
+        }
+        const base = c.to ? c.to
+          : ((c.kind === "provider") ? "/providers/" + c.key : "/c/" + c.key);
+        dest = it.sub ? (base + (base.indexOf("?") < 0 ? "?" : "&") + "s=" + it.sub) : base;
+      }
+      if(!okRoute(dest))
+        throw new Error(at + " 가 없는 주소로 갑니다 — " + dest);
+      if(tos.has(dest))
+        throw new Error(at + " 가 같은 전문관 안의 다른 칸과 **같은 데로** 갑니다 — " + dest +
+          "\n   → 손님은 둘이 다른 것인 줄 압니다. 하나를 빼거나 하위(?s=)로 가르세요 (§5)");
+      tos.add(dest);
+    }
+  }
+}
+
 function checkOpsvc(W){
   const G = W.AM_OPSVC || [];
   if(!G.length) throw new Error("js/data/opsvc.js 의 AM_OPSVC 가 비었습니다 (§5-2)");
@@ -2613,6 +2718,7 @@ checkRpcArgs();
 checkRetired();
 checkOffers(W);
 checkOpsvc(W);
+checkHalls(W);
 checkPackages(W);
 checkReqForms(W);
 checkProviders(W);

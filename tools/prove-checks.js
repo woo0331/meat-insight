@@ -82,7 +82,10 @@ const CASES = [
      "바로가기" 로 두 번 옮겼고, 서비스 제목도 하루에 두 번 오갔습니다.
      되돌아가는 것을 막는 것이 이 검사의 일입니다. */
   ["근거 없는 인기 · 추천 표현이 없다",
-   `document.querySelector(".msvc h2").textContent = "사장님들이 많이 찾는 서비스";`],
+   /* ⚠️ 2026-10-11 — .msvc 가 전문관 구간(.mhall)으로 바뀌었습니다.
+      없는 요소를 집으면 되돌리기가 **터져서** "검사가 안 잡는다" 로
+      보입니다 — 이 저장소가 여덟 번 겪은 자리입니다. */
+   `document.querySelector(".mhall h2").textContent = "사장님들이 많이 찾는 서비스";`],
   /* ══ 2026-10-06 2차 지시서 ══════════════════════════════════════ */
   /* 여정 화면의 카드를 고르개로 바꾸면 걸려야 합니다 — 그렇게 되면
      여정 네 화면에서 "눌러도 아무 데도 안 가는 카드" 가 됩니다.
@@ -370,22 +373,16 @@ const CASES = [
      자리가 바뀌었습니다. **없는 요소를 집으면 되돌리기가 터지고**,
      그러면 "검사가 안 잡는다" 가 아니라 되돌리기가 틀린 것입니다
      (이 저장소에서 아홉 번 겪은 자리). */
-  ["핵심 서비스 여덟의 아이콘이 비지 않고 저마다 다르다",
-   `const sv = document.querySelectorAll(".msvc-g > li .ia-t svg");
-    sv[0].innerHTML = sv[1].innerHTML;`],
+
   /* ⚠️⚠️ 2026-10-11 — 사진이 원판 밖으로 나가 **카드 전체를 채우는
      바탕**이 됐습니다. 그 갈래 둘을 따로 되돌려 봅니다.
      ⚠️ 사진이 한 장도 없으면 아이콘 쪽을 비워 같은 검사를 때립니다 —
      **없는 요소를 집으면 되돌리기가 터지고**, 그러면 "검사가 안
      잡는다" 로 보입니다 (이 저장소에서 여덟 번 겪은 자리). */
-  ["핵심 서비스 여덟의 아이콘이 비지 않고 저마다 다르다",
-   `const im = document.querySelector(".msvc-g .msvc-ph-on .msvc-bg img.ph");
-    if(im) im.style.opacity = "0.6";
-    else document.querySelector(".msvc-g > li .ia-t svg").innerHTML = "";`],
-  ["핵심 서비스 여덟의 아이콘이 비지 않고 저마다 다르다",
-   `const go = document.querySelector(".msvc-g .msvc-ph-on .msvc-go");
-    if(go) go.style.position = "static";
-    else document.querySelector(".msvc-g > li .ia-t svg").innerHTML = "";`],
+
+  /* ⚠️ 2026-10-11 — "핵심 서비스 여덟" 검사가 "전문관 넷과 서비스
+     아이콘" 으로 바뀌면서 옛 되돌리기 셋을 뺐습니다 (.msvc-g 가
+     화면에 없어서 전부 터집니다). 새 되돌리기는 이 목록 맨 아래입니다. */
   ["업종 열넷이 저마다 다른 색을 쓴다",
    /* ⚠️ `.ic-t` 에 transition 이 걸려 있어서 그냥 바꾸면 **색이 번지는
       도중**에 재어 다른 값이 나옵니다 — 되돌리기가 헛돕니다. 끕니다. */
@@ -571,7 +568,19 @@ const CASES = [
       });
       [].slice.call(a.querySelectorAll("b")).slice(1)
         .forEach(function(e){ e.remove(); });
-    });`]
+    });`],
+  /* ══ 2026-10-11 UI/UX 지시서 — 전문관 넷 ═══════════════════════ */
+  /* 한 전문관 안에서 두 칸이 같은 아이콘을 쓰면 걸려야 합니다 —
+     열두 칸에 같은 그림이 둘이면 무엇이 무엇인지 흐려집니다.
+     ⚠️ 되돌리기는 **그려진 뒤에** 돕니다. DOM 을 직접 건드립니다. */
+  ["전문관 넷과 서비스 아이콘이 비지 않고 저마다 다르다",
+   `const t = [].slice.call(document.querySelectorAll(".hsv-g > li > a .hsv-i svg"));
+    t[1].innerHTML = t[0].innerHTML;`],
+  /* 고른 전문관이 표시되지 않으면 걸려야 합니다 — 거르개는 무엇이
+     켜졌는지 보이지 않으면 거르개가 아닙니다 */
+  ["전문관을 고르면 그 전문관의 서비스가 나온다",
+   `document.querySelector(".mhall-g .mhall-c.is-on").classList.remove("is-on");`],
+
 ];
 
 /* ══════════════════════════════════════════════════════════════════

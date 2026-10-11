@@ -294,6 +294,93 @@ function MainScopeStrip(){
   '</div>';
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   02 전문관 넷 + 서비스 탐색 (2026-10-11 UI/UX 지시서 §2 · §4 · §5)
+   ══════════════════════════════════════════════════════════════════
+   > §2 — "창업 준비(블루) · 매장 운영(민트) · 매장 양도양수(퍼플) ·
+   >  폐업 · 정리(오렌지) 넷을 밝고 세련된 카드형으로. PC 4열."
+   > §5 — "전문관 선택 시 해당 서비스 메뉴 표시 · 대표 서비스 우선 ·
+   >  전체보기에서 모든 서비스 · 기존 상세페이지와 연결."
+
+   ⚠️⚠️ **카드를 누르면 화면을 떠나지 않습니다.** 고른 전문관이
+   주소(?h=)에 실리고 아래 격자만 바뀝니다 — 뒤로 가기 · 새로고침 ·
+   링크 공유에 살아남습니다. 그 전문관 화면으로 아주 가는 길은
+   **전체보기** 단추입니다 (§5 의 두 가지는 다른 일입니다).
+   ⚠️ 카드와 격자는 data-keep 입니다 — 맨 위로 올라가 버리면 무엇이
+   바뀌었는지 못 봅니다.
+
+   ⚠️⚠️ **카드 전체가 눌립니다 — 안에 또 a 태그를 넣지 마세요.**
+   오른쪽의 화살표는 **표시**이지 따로 누르는 단추가 아닙니다.
+
+   ⚠️ 서비스 이름 · 주소 · 색은 전부 halls.js → catalog.js 에서
+   옵니다. **화면에 적지 마세요** — 분류가 늘면 어긋납니다. */
+function MainHalls(){
+  var L = (window.AM_HALLS || []);
+  if(!L.length) return "";
+  var cur = amHall(nowQS("h"));
+
+  var cards = '<ul class="mhall-g">'+L.map(function(h){
+    var on = (h.key === cur.key);
+    return '<li><a class="mhall-c hall-'+esc(h.tone)+(on?" is-on":"")+'"'+
+      ' href="/?h='+esc(h.key)+'" data-keep aria-current="'+(on?"true":"false")+'">'+
+      '<span class="mhall-i" aria-hidden="true">'+icon(h.ic, 30)+'</span>'+
+      '<b>'+esc(h.name)+'</b>'+
+      '<i>'+esc(h.lead)+'</i>'+
+      '<em class="mhall-a" aria-hidden="true">'+icon("arrow",18)+'</em>'+
+    '</a></li>'; }).join("")+'</ul>';
+
+  var tiles = '<ul class="hsv-g">'+(cur.items||[]).map(function(it){
+    var c    = it.cat ? amCat(it.cat) : null;
+    var tone = it.tone || (c && c.tone) || "t7";
+    /* ⚠️⚠️ **하위를 집어서 가리키는 칸에 분류의 하위 셋을 내면 안
+       됩니다.** `인허가 · 행정`(admin/permit) 아래에 "세무사, 노무사,
+       행정사" 가 찍혀서 그 칸이 무엇인지 **거짓으로** 읽혔습니다 —
+       찍어 보고 알았습니다. 하위를 가리키는 칸은 **어느 분류에
+       속하는지**를 내는 것이 맞습니다.
+       ⚠️ 하위가 업종에서 오는 분류(시설 · 장비)는 셀 것이 0 이라
+       데이터에 처음부터 있던 lead 를 냅니다 (절대 규칙 2 — 빈 줄을
+       두면 "이 분야는 준비가 덜 됐나" 로 읽힙니다). */
+    var sub;
+    if(!c)          sub = "";
+    else if(it.sub) sub = c.name;
+    else {
+      var subs = (c.items||[]).slice(0,3).map(function(x){ return x.name; });
+      sub = subs.length ? subs.join(", ") : (c.lead || "");
+    }
+    return '<li class="tn-'+esc(tone)+'">'+
+      '<a class="hsv" href="'+esc(amHallTo(it))+'">'+
+        '<span class="ia-t hsv-i" aria-hidden="true">'+
+          (hasIconArt(it.ia) ? iconArt(it.ia, 30) : icon("grid",26))+'</span>'+
+        '<b>'+esc(it.n)+'</b>'+
+        (sub ? '<i>'+esc(sub)+'</i>' : '')+
+      '</a></li>'; }).join("")+'</ul>';
+
+  return '<section class="sec sec-gray mhall"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">SERVICE</p>'+
+      /* ⚠️⚠️ "많이 찾는 · 인기 · 추천 · BEST · TOP" 을 쓰지 마세요 —
+         이용 데이터를 하나도 모으지 않습니다 (마무리 지시서 §3). */
+      '<h2>어떤 준비를 하고 계신가요?</h2>'+
+      '<p>창업 · 운영 · 양도양수 · 폐업 네 갈래입니다. 고르시면 그 갈래에 '+
+        '필요한 서비스가 아래에 펼쳐집니다.</p></div>'+
+    /* ⚠️⚠️ **범위 숫자 띠를 여기서 빼지 마세요.** MainServices() 가
+       메인에서 내려오면서 이 띠가 갈 곳을 잃습니다 — 그 안의
+       "서비스 분류 기준이며 등록된 업체 수가 아닙니다" ⓘ 줄은
+       지우면 안 되는 것이고 check.js 의 "규모감" 검사가 찾습니다. */
+    MainScopeStrip()+
+    cards+
+    '<div class="hsv-box" data-keep>'+
+      '<div class="hsv-hd">'+
+        /* ⚠️ "에" 는 받침과 무관합니다 — koWith 를 쓰지 않습니다. */
+        '<h3><b class="hall-'+esc(cur.tone)+'">'+esc(cur.name)+'</b>'+
+          '에 필요한 서비스를 찾아보세요.</h3>'+
+        '<a class="btn btn-o hsv-all" href="'+esc(cur.to)+'">'+
+          '전체보기'+icon("arrow",16)+'</a>'+
+      '</div>'+
+      tiles+
+    '</div>'+
+  '</div></section>';
+}
+
 function MainServices(){
   var items = MAIN_SVC8.map(function(k){ return amCat(k); }).filter(Boolean);
   if(!items.length) return "";
@@ -920,7 +1007,15 @@ function PageMain(){
      "메인 구간 차례가 지시서와 같다" 가 세는 `want` 를 **같이** 고치세요.
      ⚠️⚠️ **빈 화면으로 만들지 마세요** (§12). 여기서 내려온 구간은
      함수를 하나도 안 지웠고, 갈 곳이 남아 있는지 하나씩 확인했습니다. */
-  return MainHero()+ MainServices()+ PackBand("", "sec-blue")+
+  /* ⚠️⚠️ **2026-10-11 UI/UX 지시서 §6 — `MainServices()` 를 더 이상
+     부르지 않습니다.** 전문관 넷(`MainHalls`)이 같은 일을 더 넓게
+     합니다 (분류 여덟 → 네 갈래 × 대표 서비스 39). 둘을 같이 두면 한
+     화면에서 서비스 목록을 두 번 내는 꼴이고 메인이 그만큼 길어집니다.
+     ⚠️ **함수는 안 지웠습니다** — 되돌리시려면 아래 한 줄입니다.
+     ⚠️⚠️ 사진 넷(`svc-interior` · `svc-equip` · `svc-it` · `svc-clean`)이
+     그 구간에서만 쓰였습니다. `photos.js` 와 파일은 그대로라 되살리면
+     바로 다시 붙습니다. */
+  return MainHero()+ MainHalls()+ PackBand("", "sec-blue")+
          MainIndustryBand()+ MainToolsInfo()+ MainStores()+ MainBridge()+
          MainOpsvc()+ MainJoin()+ MainLast();
 }

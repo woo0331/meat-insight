@@ -678,6 +678,17 @@ function adInit(){
         '골라 만들면 틀릴 수가 없습니다. '+
         '<b>여기도 아무것도 저장하지 않습니다.</b></p>'+
       '<div id="ad-pv"></div>'+
+    '</section>'+
+
+    '<section class="ad-s">'+
+      '<h2>10. 전문관 노출 순서</h2>'+
+      '<p class="ad-lead">메인의 <b>전문관 넷</b>과 그 안의 서비스 차례를 '+
+        '눌러서 바꾸고, <b>붙여 넣을 줄</b>을 만들어 드립니다 '+
+        '(<code>js/data/halls.js</code>). ' +
+        '<b>여기서 저장하지 않습니다</b> — 저장할 서버가 없는데 저장되는 '+
+        '척하면 그게 거짓말입니다. 만든 줄을 붙여 넣고 '+
+        '<code>node build-pages.js</code> 하시면 반영됩니다.</p>'+
+      '<div id="ad-hl"></div>'+
     '</section>';
 
   adHealth();
@@ -686,6 +697,7 @@ function adInit(){
   adInviteDraw();
   adMkDraw();
   adPvDraw();
+  adHlDraw();
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -1452,4 +1464,110 @@ function adPvDraw(){
     '<div id="ad-pv-out"></div>';
 
   adPvOut();
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   10. 전문관 노출 순서 (2026-10-11 UI/UX 지시서 §5)
+
+   > §5 — "관리자에서 노출 순서 변경 가능하도록 설계."
+
+   ⚠️⚠️ **아무것도 저장하지 않습니다.** 백엔드가 없는데 "저장되었습니다"
+   라고 하면 그게 절대 규칙 5 입니다. 여기가 하는 일은 **눌러서 차례를
+   바꾸고, 그 차례대로 `js/data/halls.js` 에 붙여 넣을 줄을 만들어
+   주는 것**까지입니다 — 7번 매물 등록 줄 · 9번 제휴업체 등록 줄과
+   같은 방식입니다.
+
+   ⚠️ 손으로 차례를 옮기면 쉼표 · 중괄호에서 틀리고, 틀리면 빌드가
+   멈추거나(그나마 다행) 그 칸이 조용히 빠집니다.
+   ⚠️ 이름 · 주소 · 아이콘은 **건드리지 않습니다** — 차례만 바꿉니다.
+   ════════════════════════════════════════════════════════════════════ */
+var AD_HL = null;
+
+function adHlInit(){
+  if(AD_HL) return;
+  /* 원본을 복사해 둡니다 — 화면에서 AM_HALLS 를 직접 흔들면
+     되돌릴 수가 없습니다 */
+  AD_HL = (window.AM_HALLS || []).map(function(h){
+    return { key:h.key, name:h.name, items:(h.items||[]).map(function(i){ return i.n; }) };
+  });
+}
+
+function adHlMove(hi, ii, dir){
+  adHlInit();
+  var arr = (ii < 0) ? AD_HL : AD_HL[hi].items;
+  var at  = (ii < 0) ? hi : ii;
+  var to  = at + dir;
+  if(to < 0 || to >= arr.length) return;
+  var t = arr[at]; arr[at] = arr[to]; arr[to] = t;
+  adHlDraw();
+}
+
+function adHlDraw(){
+  var box = document.getElementById("ad-hl");
+  if(!box) return;
+  adHlInit();
+  if(!AD_HL.length){
+    box.innerHTML = '<p class="ad-lead">전문관 데이터가 없습니다 '+
+      '(js/data/halls.js 가 admin.html 에 실려 있는지 보세요).</p>';
+    return;
+  }
+  box.innerHTML = AD_HL.map(function(h, hi){
+    return '<div class="ad-hl-h">'+
+      '<div class="ad-hl-t">'+
+        '<b>'+esc(h.name)+'</b> <i>'+esc(h.key)+' · '+h.items.length+'개</i>'+
+        '<span class="ad-hl-b">'+
+          '<button class="btn btn-s" type="button" onclick="adHlMove('+hi+',-1,-1)">↑</button>'+
+          '<button class="btn btn-s" type="button" onclick="adHlMove('+hi+',-1,1)">↓</button>'+
+        '</span>'+
+      '</div>'+
+      '<ol class="ad-hl-l">'+h.items.map(function(n, ii){
+        return '<li><span>'+esc(n)+'</span>'+
+          '<span class="ad-hl-b">'+
+            '<button class="btn btn-s" type="button" onclick="adHlMove('+hi+','+ii+',-1)">↑</button>'+
+            '<button class="btn btn-s" type="button" onclick="adHlMove('+hi+','+ii+',1)">↓</button>'+
+          '</span></li>'; }).join("")+'</ol>'+
+    '</div>';
+  }).join("")+
+  '<div class="ad-acts">'+
+    '<button class="btn btn-b" type="button" onclick="adHlCopy()">'+
+      '붙여 넣을 줄 만들기</button>'+
+    '<button class="btn btn-o" type="button" onclick="AD_HL=null;adHlDraw()">'+
+      '처음 차례로</button>'+
+  '</div>'+
+  '<textarea id="ad-t-halls" rows="12" spellcheck="false" '+
+    'placeholder="차례를 바꾸신 뒤 단추를 누르시면 여기에 나옵니다"></textarea>';
+}
+
+/* ⚠️⚠️ **차례만 바꾼 줄을 만듭니다.** 원본 객체의 다른 칸(ia · cat ·
+   sub · to · tone)은 손대지 않고 그대로 옮겨 적습니다 — 여기서 새로
+   적으면 두 곳에 같은 규칙을 적는 셈이고 반드시 어긋납니다. */
+function adHlCopy(){
+  adHlInit();
+  var src = {};
+  (window.AM_HALLS || []).forEach(function(h){
+    var m = {}; (h.items||[]).forEach(function(i){ m[i.n] = i; });
+    src[h.key] = { h:h, byName:m };
+  });
+  var q = function(v){ return '"' + String(v).replace(/"/g, '\\"') + '"'; };
+  var out = "window.AM_HALLS = [\n" + AD_HL.map(function(hh){
+    var h = src[hh.key].h;
+    var lines = hh.items.map(function(n){
+      var it = src[hh.key].byName[n]; if(!it) return "";
+      var bits = ["n:" + q(it.n), "ia:" + q(it.ia)];
+      if(it.cat)  bits.push("cat:"  + q(it.cat));
+      if(it.sub)  bits.push("sub:"  + q(it.sub));
+      if(it.to)   bits.push("to:"   + q(it.to));
+      if(it.tone) bits.push("tone:" + q(it.tone));
+      return "      { " + bits.join(", ") + " }";
+    }).filter(Boolean).join(",\n");
+    return "  { key:" + q(h.key) + ", name:" + q(h.name) + ", lead:" + q(h.lead) + ",\n" +
+           "    tone:" + q(h.tone) + ", to:" + q(h.to) + ", ic:" + q(h.ic) + ",\n" +
+           "    items:[\n" + lines + "\n    ] }";
+  }).join(",\n\n") + "\n];";
+  var ta = document.getElementById("ad-t-halls");
+  if(!ta) return;
+  ta.value = out;
+  /* ⚠️ adCopy 는 **요소 id** 를 받습니다 (글이 아닙니다) — 규칙을
+     두 벌로 만들지 않습니다. */
+  adCopy("halls");
 }

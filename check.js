@@ -2368,7 +2368,10 @@ const AUDIT = `(() => {
        바꿉니다 (내려온 구간은 PageMain 주석이 갈 곳을 적어 두었습니다). */
     const need = [[".mh-pick-g", "창업 / 폐업 선택 카드"],
                   [".mbr-g", "브랜드 연결"],
-                  [".msvc-g", "핵심 서비스 여덟"],
+                  /* 2026-10-11 UI/UX 지시서 §2 — 분류 여덟이 전문관 넷이
+                     됐습니다. 보는 것은 "서비스 목록이 메인에 있는가" 입니다 */
+                  [".mhall-g", "전문관 넷"],
+                  [".hsv-g", "전문관 서비스 격자"],
                   [".mti-g2", "계산도구 + 최신 정보"],
                   [".mlast-go", "마지막 CTA"]];
     for(const q of need)
@@ -2696,78 +2699,91 @@ const AUDIT = `(() => {
     }
     return true;`);
 
-  await f("핵심 서비스 여덟의 아이콘이 비지 않고 저마다 다르다", "/", `
-    /* ⚠️ 아이콘이 비면 key 를 잘못 적은 것입니다 — icon() 이 모르는
-       이름에 **빈 문자열**을 돌려주어 조용히 빈 칸이 됩니다 (에러도
-       404 도 없고 전수 점검도 통과했던 자리입니다).
-       ⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다.
-       ⚠️⚠️ 2026-10-08 — 단계 열이 메인에서 내려와서 보는 자리를
-       **핵심 서비스 여덟**으로 옮겼습니다. 단계 카드 생김새는
-       /g/:stage 화면이 그대로 들고 있습니다. */
-    /* ⚠️ 2026-10-09 §5 — 카드에 링크가 둘(분야 · 견적)이 되면서
-       보는 자리를 li 로 옮겼습니다. 보는 것은 그대로입니다.
-       ⚠️ 주석에 백틱을 쓰지 마세요 — 문자열이 거기서 끝납니다. */
-    const cards = [].slice.call(document.querySelectorAll(".msvc-g > li"));
-    if(cards.length !== 8) return "핵심 서비스가 " + cards.length + "개입니다 (여덟)";
-    const seen = [];
+  await f("전문관 넷과 서비스 아이콘이 비지 않고 저마다 다르다", "/", `
+    /* ⚠️ 아이콘이 비면 key 를 잘못 적은 것입니다 — icon() · iconArt() 가
+       모르는 이름에 **빈 문자열**을 돌려주어 조용히 빈 칸이 됩니다
+       (에러도 404 도 없고 전수 점검도 통과했던 자리입니다).
+       ⚠️ 이 주석에 백틱을 쓰지 마세요 — 문자열이 거기서 끝납니다.
+       ⚠️⚠️ 2026-10-11 UI/UX 지시서 §2 · §4 로 **분류 여덟이 전문관
+       넷**이 됐습니다. 보는 것은 그대로입니다 — 빈 아이콘과 한 묶음
+       안의 중복, 그리고 가짜 링크입니다. */
+    const HS = (window.AM_HALLS || []);
+    if(!HS.length) return "전문관 데이터가 없습니다 (halls.js 가 안 실렸습니다)";
+
+    const cards = [].slice.call(document.querySelectorAll(".mhall-g > li > a"));
+    if(cards.length !== HS.length)
+      return "전문관 카드가 " + cards.length + "개입니다 (" + HS.length + ")";
+    const hSeen = [];
     for(const a of cards){
-      /* ⚠️⚠️ 2026-10-11 사장님 지시로 사진이 **원판 밖**으로 나갔습니다
-         (카드 전체를 채우는 바탕, .msvc-bg). 그래서 원판은 여덟 장 다
-         컬러 아이콘이고 여기서는 svg 만 봅니다 — 사진은 아래에서
-         따로 봅니다.
-         ⚠️ 보는 자리를 li 가 아니라 **원판 안**으로 좁혀 둡니다. li 의
-         첫 svg 를 집으면 사진 카드에서 상담 CTA 의 말풍선이 걸려
-         넷이 같은 아이콘으로 읽혔습니다 (2026-10-10 에 겪었습니다).
-         ⚠️ 이 주석에 백틱을 쓰면 문자열이 거기서 끝납니다. */
-      const tile = a.querySelector(".ia-t");
-      if(!tile) return "'" + (a.textContent||"").trim().slice(0,12) + "' 칸에 원판이 없습니다";
-      const sv = tile.querySelector("svg");
-      if(!sv || !sv.innerHTML.trim())
-        return "'" + (a.textContent||"").trim().slice(0,12) + "' 칸에 아이콘이 없습니다";
-      /* 카드 안에 링크가 둘입니다 — 분야 화면과 상담 · 견적 */
-      if(!a.querySelector(".msvc-q[href]")) return "상담 · 견적 CTA 가 없습니다";
-      /* ⚠️⚠️ 여덟에 같은 아이콘이 두 번 오면 무엇이 무엇인지 흐려집니다 */
-      const d = sv.innerHTML.trim();
-      if(seen.indexOf(d) >= 0)
-        return "'" + (a.textContent||"").trim().slice(0,12) + "' 이 같은 아이콘을 또 씁니다";
-      seen.push(d);
-      const h = (a.querySelector("a[href]") || a).getAttribute("href") || "";
-      /* ⚠️⚠️ **템플릿 문자열 안이라 백슬래시를 두 겹으로** 적어야
-         합니다. 한 겹으로 적었더니 문자열이 백슬래시를 먹어서 정규식
-         앞이 깨졌고 **SyntaxError 로 이 검사가 통째로 안 돌았습니다**
-         (이 저장소에서 열네 번째 escape 사고).
-         ⚠️⚠️ 그걸 설명하려고 주석에 백틱을 적었다가 문자열이 거기서
-         끝났습니다 — **주석에는 백틱을 아예 쓰지 마세요** (열다섯 번째). */
-      if(!/^\\/[a-z]/.test(h)) return "핵심 서비스에 가짜 링크가 있습니다 (" + h + ")";
+      /* ⚠️⚠️ 카드 전체가 눌립니다 — 안에 또 a 태그가 있으면 브라우저가
+         쪼갭니다 (이 저장소가 여러 번 겪은 자리입니다) */
+      if(a.querySelector("a")) return "전문관 카드 안에 링크가 또 있습니다";
+      const sv = a.querySelector(".mhall-i svg");
+      if(!sv || !sv.innerHTML.trim()) return "전문관 카드에 빈 아이콘이 있습니다";
+      const k = sv.innerHTML.trim();
+      if(hSeen.indexOf(k) >= 0) return "전문관 카드 아이콘이 겹칩니다";
+      hSeen.push(k);
     }
-    /* ⚠️⚠️ **카드를 채우는 사진**(2026-10-11) — 그려졌는지 · 실제로
-       불러와졌는지 · 글을 덮지 않는지. 사진이 한 장도 없으면 이
-       묶음은 통째로 건너뜁니다 (절대 규칙 2 — 빈 액자를 안 깝니다). */
-    for(const card of document.querySelectorAll(".msvc-g .msvc-ph-on")){
-      const nm = (card.textContent||"").trim().slice(0,12);
-      const bg = card.querySelector(".msvc-bg");
-      if(!bg) return "'" + nm + "' 에 사진 바탕 층이 없습니다";
-      const im = bg.querySelector("img.ph");
-      if(!im) return "'" + nm + "' 사진 바탕이 비었습니다";
-      if(!im.naturalWidth) return "'" + nm + "' 사진이 안 불러와졌습니다 (" + im.getAttribute("src") + ")";
-      if(bg.getAttribute("aria-hidden") !== "true")
-        return "'" + nm + "' 사진 바탕이 읽어 주는 프로그램에 노출됩니다";
-      /* ⚠️⚠️ **글이 사진 위에 와야 합니다.** 빼면 바탕이 글을 덮어
-         카드가 통째로 안 읽힙니다 — absolute 라 나중 형제를 가립니다. */
-      const go = card.querySelector(".msvc-go");
-      if(!go || getComputedStyle(go).position === "static")
-        return "'" + nm + "' 의 글이 사진 위로 안 올라왔습니다";
-      /* ⚠️⚠️ **투명도를 올리면 글이 묻힙니다.** 검사는 사진 위 대비를
-         못 재니(computed 배경색만 읽습니다) 여기서 **상한**만 지킵니다 —
-         0.16 에서 재 보니 제일 빠듯한 자리가 4.83 이었습니다 (AA 4.5). */
-      const op = parseFloat(getComputedStyle(im).opacity || "1");
-      if(!(op > 0 && op <= 0.22))
-        return "'" + nm + "' 사진 투명도 — " + op + " (0 < x <= 0.22)";
+
+    /* 고른 전문관의 서비스 격자 — 개수 · 빈 아이콘 · 같은 전문관 안
+       중복 · 가짜 링크를 봅니다. ⚠️ 개수는 **데이터에서 다시 세어**
+       맞춰 봅니다 (손으로 적으면 늘릴 때 어긋납니다). */
+    const cur = (window.amHall ? amHall(null) : HS[0]);
+    const tiles = [].slice.call(document.querySelectorAll(".hsv-g > li > a"));
+    if(tiles.length !== (cur.items || []).length)
+      return "서비스 칸이 " + tiles.length + "개입니다 (" +
+        (cur.items || []).length + "개여야 합니다)";
+    const tSeen = [];
+    for(const a of tiles){
+      const nm = (a.querySelector("b") || {}).textContent || "(이름 없음)";
+      const sv = a.querySelector(".hsv-i svg");
+      if(!sv || !sv.innerHTML.trim()) return "'" + nm + "' 에 빈 아이콘이 있습니다";
+      const k = sv.innerHTML.trim();
+      if(tSeen.indexOf(k) >= 0)
+        return "'" + nm + "' 의 아이콘이 같은 전문관 안에서 겹칩니다";
+      tSeen.push(k);
+      const h = a.getAttribute("href") || "";
+      if(!/^\\/[a-z]/.test(h))
+        return "'" + nm + "' 이 가짜 링크입니다 (" + h + ")";
     }
+
+    /* ⚠️⚠️ **범위 숫자 띠가 여기 있어야 합니다.** MainServices 가
+       내려오면서 갈 곳을 잃을 뻔한 자리입니다 — 그 안의 "등록된 업체
+       수가 아닙니다" 줄은 지우면 안 되는 것입니다. */
+    /* ⚠️ 클래스는 .msvc-sc 입니다 (옛 구간 이름이 남아 있습니다) —
+       처음에 .mst-box 로 적었다가 **검사가 틀렸습니다.** 선택자를
+       눈대중으로 적지 마세요. */
+    const sc = document.querySelector(".mhall .msvc-sc");
+    if(!sc) return "범위 숫자 띠가 전문관 구간에 없습니다";
+    if(!/등록된 업체 수가 아닙니다/.test(sc.textContent))
+      return "범위 숫자 띠의 '등록된 업체 수가 아닙니다' 줄이 없습니다";
+
     /* 브랜드 연결 구간의 줄도 아이콘이 비면 안 됩니다 */
     for(const sv of document.querySelectorAll(".mbr-l svg"))
       if(!sv.innerHTML.trim()) return "브랜드 연결 줄에 빈 아이콘이 있습니다";
     return true;`);
+
+  await f("전문관을 고르면 그 전문관의 서비스가 나온다", "/?h=closure", `
+    /* ⚠️⚠️ 지시서 §5 — "전문관 선택 시 해당 서비스 메뉴 표시."
+       고른 것이 주소에 실려야 뒤로 가기 · 새로고침 · 링크 공유에
+       살아남습니다. ⚠️ 주석에 백틱을 쓰지 마세요. */
+    const H = (window.AM_HALLS || []).filter(function(x){ return x.key === "closure"; })[0];
+    if(!H) return "폐업 전문관 데이터가 없습니다";
+    const on = document.querySelector(".mhall-g .mhall-c.is-on");
+    if(!on) return "고른 전문관이 표시되지 않습니다";
+    if((on.querySelector("b") || {}).textContent !== H.name)
+      return "주소의 전문관과 켜진 카드가 다릅니다";
+    const names = [].slice.call(document.querySelectorAll(".hsv-g > li > a > b"))
+      .map(function(e){ return e.textContent; });
+    const want = (H.items || []).map(function(i){ return i.n; });
+    if(names.join("|") !== want.join("|"))
+      return "폐업 전문관의 서비스가 데이터와 다릅니다 — " + names.join(", ");
+    /* 전체보기는 그 전문관 화면으로 갑니다 (고르기와 다른 일입니다) */
+    const all = document.querySelector(".hsv-all");
+    if(!all || all.getAttribute("href") !== H.to)
+      return "전체보기가 " + H.to + " 로 가지 않습니다";
+    return true;`);
+
   await f("업종 열넷이 저마다 다른 색을 쓴다", "/startup", `
     /* ⚠️ 지시서 §19 — "사이트에 컬러가 살아있어야 한다." 전에는 분류색이
        여덟뿐이라 t7 이 넷 · t8 · t2 · t5 · t1 이 둘씩 겹쳤습니다.
@@ -2841,14 +2857,15 @@ const AUDIT = `(() => {
        않습니다" 라고 적어서, 함수는 home-retired.js 에 그대로 있고
        그 구간이 가리키던 열다섯 주소는 헤더 여섯 · 메인 02 서비스 여덟 ·
        09 운영 묶음 · 푸터 다섯 칸이 전부 받습니다 (링크 검사가 봅니다). */
-    const want = ["mh","msvc","pkg","mind","mti","mk","mbr","mopsv","mjn","mlast"];
+    const want = ["mh","mhall","pkg","mind","mti","mk","mbr","mopsv","mjn","mlast"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
     const got = S.map(function(e, i){
-      for(const m of ["mh","mbr","msvc","mexp","pkg","mind","mti","mopsv","mjn","mlast"])
-        /* ⚠️ mexp 를 이 목록에서는 **빼지 않습니다** — 되살아나면
-           "차례가 … 입니다" 로 이름을 내야 합니다 ("?3" 이 아니라). */
+      /* ⚠️ 2026-10-11 — mhall 이 들어왔습니다. msvc · mexp 는 **빼지
+         않습니다** — 되살아나면 "차례가 … 입니다" 로 이름을 내야
+         합니다 ("?3" 이 아니라). */
+      for(const m of ["mh","mbr","mhall","msvc","mexp","pkg","mind","mti","mopsv","mjn","mlast"])
         if(e.classList.contains(m)) return m;
       const hd = (e.querySelector(".eyebrow") || {}).textContent || "";
       if(hd.indexOf("TAKE OVER") >= 0) return "mk";
@@ -3545,8 +3562,10 @@ const AUDIT = `(() => {
     /* ⚠️ 2026-10-08 — 메인이 다시 짜이면서 카드 종류가 바뀌었습니다.
        새 카드를 만들면 **여기 넣으세요** — 빠뜨리면 구간 바탕과 같은
        색이 되어도 조용히 통과합니다. */
+    /* ⚠️ 2026-10-11 — .msvc-g 가 전문관 넷(.mhall-c)과 서비스 격자의
+       흰 판(.hsv-box)으로 바뀌었습니다. 새 카드를 만들면 여기 넣으세요. */
     const sel = ".cat,.ind,.pv,.fr,.fc,.mk,.help,.sp,.empty," +
-                ".hpk,.mti-c,.msvc-g a,.mlast-h > li > a,.swt-c," +
+                ".hpk,.mti-c,.hsv-box,.mlast-h > li > a,.swt-c," +
                 ".ms-g a,.mv-g a,.mh-fc > li,.hb-g a,.hb-b";
     const bad = [];
     /* ⚠️⚠️ **비교 대상은 구간이 아니라 "실제로 뒤에 보이는 면"입니다.**

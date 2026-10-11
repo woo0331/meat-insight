@@ -258,14 +258,28 @@ window.WOW_PHOTO_SLOTS = [
      ⚠️ 비율 범위를 좁게(1.25~1.45) 둔 것도 지시 5 때문입니다 —
      넓히면 셋의 잘리는 양이 서로 달라집니다.
      ⚠️ `sizes` 도 그 표에서 나온 값입니다 — 없으면 브라우저가 화면
-     전체 폭으로 보고 제일 큰 판을 받습니다 (폰에서 제일 아픕니다). */
-  { key:"kind-take", sizes:"(max-width:520px) 94vw, (max-width:600px) 480px, (max-width:900px) 47vw, (max-width:1280px) 31vw, 387px",
+     전체 폭으로 보고 제일 큰 판을 받습니다 (폰에서 제일 아픕니다).
+
+     ⚠️⚠️ **2026-10-11 — 셋 다 `temp:true` 입니다.** 사장님이 주신
+     사진이 채팅을 거치며 390px 로 줄어 들어왔습니다 (원본이 아닙니다).
+     그대로 가자고 하셔서 넣었지만, **최소 크기는 1120×840 그대로
+     두었습니다** — `temp` 가 하는 일은 규격을 낮추는 것이 아니라
+     `tools/check-photos.js` 가 돌 때마다 "임시 그림입니다" 를 ⚠️ 줄에
+     띄우는 것입니다. 지금은 레티나 폰에서 액자가 696px 을 원하는데
+     원본이 390px 이라 **또렷하지 않습니다.**
+     ⚠️ 원본(1120×840 이상)이 오면 `img/raw/kind-*.jpg` 에 넣고
+     `node tools/fit-photos.js --write` 를 돌린 뒤 **이 `temp:true` 세
+     개를 지우세요.** 지우는 것을 잊으면 경고가 영영 뜹니다.
+     ⚠️ `fit-photos` 는 작은 원본을 **거절합니다**(키운 것은 규격을
+     맞춘 것이 아니라 뿌옇게 만든 것이라서요) — 그래서 지금 세 장은
+     그 도구를 거치지 않고 만들었습니다. */
+  { key:"kind-take", temp:true, sizes:"(max-width:520px) 94vw, (max-width:600px) 480px, (max-width:900px) 47vw, (max-width:1280px) 31vw, 387px",
     where:"자산 카드 01 · 매장 인수하기", min:[1120,840], ratio:[1.25,1.45], maxKB:140,
     note:"문 여는 상업공간 · 빈 점포 내부. ⚠️ 상호 · 간판 · 업종이 읽히면 안 됩니다" },
-  { key:"kind-pass", sizes:"(max-width:520px) 94vw, (max-width:600px) 480px, (max-width:900px) 47vw, (max-width:1280px) 31vw, 387px",
+  { key:"kind-pass", temp:true, sizes:"(max-width:520px) 94vw, (max-width:600px) 480px, (max-width:900px) 47vw, (max-width:1280px) 31vw, 387px",
     where:"자산 카드 02 · 내 매장 양도하기", min:[1120,840], ratio:[1.25,1.45], maxKB:140,
     note:"정리하는 상업공간 · 넘기는 열쇠. ⚠️ 처연하면 안 됩니다 — 불 꺼진 가게 · 고개 숙인 사람 금지" },
-  { key:"kind-asset", sizes:"(max-width:520px) 94vw, (max-width:600px) 480px, (max-width:900px) 47vw, (max-width:1280px) 31vw, 387px",
+  { key:"kind-asset", temp:true, sizes:"(max-width:520px) 94vw, (max-width:600px) 480px, (max-width:900px) 47vw, (max-width:1280px) 31vw, 387px",
     where:"자산 카드 03 · 시설 · 장비 거래", min:[1120,840], ratio:[1.25,1.45], maxKB:140,
     note:"업소용 시설 · 장비. ⚠️ 한 업종으로 읽히지 않게 (주방설비만 쓰면 고깃집으로 읽힙니다)" }
 ];
@@ -332,7 +346,22 @@ window.WOW_PHOTOS = {
   "svc-clean": { src:"/img/svc-clean.jpg?v=41582a26",
     w:267, h:263,
     webp:"/img/svc-clean.webp?v=a079a198 267w",
-    alt:"매장 청소에 쓰는 세정제 분무기와 밀대, 청소 카트" }
+    alt:"매장 청소에 쓰는 세정제 분무기와 밀대, 청소 카트" },
+  "kind-take": { src:"/img/kind-take.jpg?v=3c715972",
+    w:390, h:293,
+    webp:"/img/kind-take.webp?v=b053f369 390w",
+    jpg:"/img/kind-take.jpg?v=3c715972 390w",
+    alt:"큰 통창으로 햇빛이 드는 빈 상업공간 내부" },
+  "kind-pass": { src:"/img/kind-pass.jpg?v=188b2136",
+    w:389, h:292,
+    webp:"/img/kind-pass.webp?v=8ca39af2 389w",
+    jpg:"/img/kind-pass.jpg?v=188b2136 389w",
+    alt:"따뜻한 조명이 켜진 매장 카운터와 좌석" },
+  "kind-asset": { src:"/img/kind-asset.jpg?v=77f01a46",
+    w:388, h:291,
+    webp:"/img/kind-asset.webp?v=10579a53 388w",
+    jpg:"/img/kind-asset.jpg?v=77f01a46 388w",
+    alt:"스테인리스 조리대와 장비가 늘어선 상업용 주방" }
 };
 
 window.wowPhoto = function(key){

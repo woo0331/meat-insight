@@ -38,7 +38,9 @@
    그려도 살아남아야 하니 상태로 들고, 칸은 그 값을 되읽습니다. */
 var RQ = { asked:false, on:false, signedIn:false, role:"", name:"",
            rows:null, provs:[], fil:"", open:"", to:"", busy:false,
-           ctx:{} };
+           ctx:{},
+           /* 2차 — 계약 · 수수료 정책 · 한 건의 이력 */
+           deals:[], fees:[], hist:null, histOf:"", money:"", mctx:{} };
 
 /* ── 그리기 ──────────────────────────────────────────────────────── */
 
@@ -49,11 +51,22 @@ function rqDraw(){
   /* ⚠️⚠️ 로그인이 설정되기 전에는 **아무것도** 안 그립니다 */
   if(!RQ.asked || !RQ.on){ root.innerHTML = ""; return; }
 
+  /* ⚠️⚠️ **구간마다 제 클래스(`rq-s-*`)를 답니다.** 넷이 전부 `#rq`
+     안에 있고 줄도 `.rq-r` 로 같아서, 이름이 없으면 검사가 **어느
+     구간의 줄인지 못 가립니다** — 실제로 구간을 늘리자마자 1차 검사
+     둘이 접수 줄 대신 업체 줄까지 세어 틀렸습니다. 이 저장소가
+     "검사가 nth-child 로 구간을 세다가 조용히 엉뚱한 구간을 봤다"
+     로 겪은 자리입니다. 지우지 마세요.
+     ⚠️⚠️ 구간마다 **스스로 역할을 봅니다** (`""` 를 돌려줍니다) —
+     여기서 역할을 또 보면 같은 규칙이 두 곳에 적히고, 한쪽만 고치는
+     날이 옵니다. ⚠️ 무엇이 보이는가를 정하는 것은 화면이 아니라
+     **RLS 와 `api/me.js` 의 칸 목록**입니다 — 화면은 온 것을 냅니다. */
   root.innerHTML =
-    '<section class="ad-s rq-s">'+
+    '<section class="ad-s rq-s rq-s-rq">'+
       '<h2>접수 · 배정</h2>'+
       rqBody()+
-    '</section>';
+    '</section>'+
+    (RQ.signedIn ? rqMoney() + rqFees() + rqProvs() : "");
 }
 
 function rqBody(){
@@ -192,13 +205,17 @@ function rqRow(r){
         (day ? '<em class="rq-d">'+esc(day)+'</em>' : '')+
       '</span>'+
     '</button>'+
-    (open ? '<div class="rq-bd">'+ rqMove(r) + rqAsg(r) +'</div>' : '')+
+    (open ? '<div class="rq-bd">'+ rqMove(r) + rqAsg(r) + rqHistRow(r) +'</div>' : '')+
   '</article>';
 }
 
 window.rqOpen = function(id){
   RQ.open = (RQ.open === id) ? "" : id;
   RQ.to = ""; RQ.ctx = {};
+  /* ⚠️ 이력도 같이 닫습니다 — 안 닫으면 다른 줄을 펼쳤을 때 **남의
+     건의 이력**이 그 줄 아래에 그대로 남습니다 (사유에 사정이
+     적히는 자리라 더 그렇습니다). */
+  RQ.histOf = ""; RQ.hist = null;
   rqDraw();
 };
 
@@ -435,6 +452,10 @@ function rqLoad(){
       RQ.role  = d.role || RQ.role;
       RQ.rows  = d.requests || [];
       RQ.provs = d.providers || [];
+      /* ⚠️ 역할에 따라 **애초에 안 오는** 칸입니다 (api/me.js 의 PICK).
+         화면이 없는 것을 숨기는 것이 아니라 서버가 안 보냅니다. */
+      RQ.deals = d.deals || [];
+      RQ.fees  = d.fees  || [];
       rqDraw();
     })
     .catch(function(e){
@@ -459,3 +480,618 @@ function rqBoot(){
 if(document.readyState === "loading")
   document.addEventListener("DOMContentLoaded", rqBoot);
 else rqBoot();
+
+/* ════════════════════════════════════════════════════════════════════
+   2차 — 계약 성과 · 수수료 확정 · 정산 · 미수금 (전면 감사 §6 의 5·7)
+
+   ⚠️⚠️ **여기가 0003 이 만들어 둔 문 셋을 처음 부르는 자리입니다.**
+   `confirm_fee` · `mark_paid` · `clawback_fee` 가 DB 에 서 있었는데
+   누르는 자리가 없었습니다 — 1차에서 `move_state` 가 그랬던 것과
+   같은 "만들어 놓고 안 쓰는 칸" 입니다.
+
+   ⚠️⚠️ **숫자를 화면이 지어내지 않습니다.** 수수료는 `amFeeCalc()` 가
+   정책 사본과 계약금액으로 **계산**하고, 화면은 그 결과를 보여 준 뒤
+   **그대로** 서버에 넘깁니다. 손으로 적는 칸을 두면 정책과 어긋난
+   청구서가 나가고, 그때는 어느 쪽이 맞는지 아무도 모릅니다.
+
+   ⚠️ **관리자만 보입니다.** 돈은 `api/me.js` 가 관리자에게만 보냅니다 —
+   화면이 숨기는 것이 아니라 **서버가 안 보냅니다** (버그 하나에 남의
+   계약금액이 서지 않게).
+   ════════════════════════════════════════════════════════════════════ */
+
+function rqMoney(){
+  if(RQ.role !== "admin") return "";
+  var D = RQ.deals || [];
+
+  /* ⚠️ 합계는 **그 자리에서 세는 값**입니다. 숫자로 들고 있으면
+     누군가 그 칸을 고칠 수 있고 기록과 어긋나기 시작합니다. */
+  var sum = { amount:0, fee:0, paid:0, due:0, n:D.length, wait:0 };
+  D.forEach(function(d){
+    sum.amount += Number(d.amount || 0);
+    sum.fee    += Number(d.fee || 0);
+    sum.paid   += Number(d.paid || 0);
+    /* 미수금 — ⚠️ **확정된 것 중 아직 안 들어온 것**입니다.
+       확정 전인 건을 미수금에 넣으면 받을 돈이 부풀려집니다. */
+    if(d.fee != null) sum.due += Number(d.fee_total || d.fee || 0) - Number(d.paid || 0);
+    if(d.fee == null) sum.wait++;
+  });
+
+  return '<section class="ad-s rq-s rq-s-mn">'+
+    '<h2>계약 · 수수료 · 정산</h2>'+
+    (!D.length
+      ? '<p class="ad-empty">아직 계약이 없습니다. '+
+        '신청을 <b>계약 완료</b>로 옮기시면 여기에 쌓입니다.</p>'
+      : '<div class="rq-kpi">'+
+          rqKpi("계약", sum.n + "건", won(sum.amount) + "원")+
+          rqKpi("확정 수수료", won(sum.fee) + "원",
+                sum.wait ? "확정 전 " + sum.wait + "건" : "")+
+          rqKpi("입금", won(sum.paid) + "원", "")+
+          rqKpi("미수금", won(sum.due) + "원", "확정 - 입금")+
+        '</div>'+
+        '<div class="rq-g">'+ D.map(rqDealRow).join("") +'</div>'+
+        /* ⚠️⚠️ **"전체" 라고 적지 않습니다** — api/me.js 가 최근 것만
+           가져옵니다 (전체 누적이라고 적으면 그게 틀린 숫자입니다). */
+        '<p class="rq-note">위 숫자는 <b>최근 '+D.length+'건에서 센 값</b>입니다. '+
+          '전체 누적이 아닙니다.</p>')+
+  '</section>';
+}
+
+function rqKpi(t, v, s){
+  return '<div class="rq-k"><span>'+esc(t)+'</span><b>'+esc(v)+'</b>'+
+    (s ? '<em>'+esc(s)+'</em>' : '')+'</div>';
+}
+
+function rqDealRow(d){
+  var r    = d.request || {};
+  var open = RQ.money === d.id;
+  var st   = (window.amDealSt && amDealSt(r.state)) || null;
+  var tone = window.amDealTone ? amDealTone(r.state) : "gray";
+
+  return '<article class="rq-r'+(open ? " on" : "")+'">'+
+    '<button class="rq-hd" type="button" onclick="rqMoneyOpen(\''+esc(d.id)+'\')">'+
+      '<span class="rq-hd-l">'+
+        (r.no ? '<b class="rq-no">'+esc(r.no)+'</b>' : '')+
+        '<span class="rq-m">'+esc(rqPvName(d.provider_id) || d.provider_id || "")+
+          ' · 계약 '+esc(won(d.amount))+'원</span>'+
+      '</span>'+
+      '<span class="rq-hd-r">'+
+        '<i class="myq-st myq-'+esc(tone)+'">'+esc(st ? st.name : r.state || "")+'</i>'+
+        '<em class="rq-d">'+esc(d.fee == null ? "수수료 확정 전"
+          : (d.paid == null ? "입금 대기" : "입금 " + won(d.paid) + "원"))+'</em>'+
+      '</span>'+
+    '</button>'+
+    (open ? '<div class="rq-bd">'+ rqDealBody(d) +'</div>' : '')+
+  '</article>';
+}
+
+window.rqMoneyOpen = function(id){
+  RQ.money = (RQ.money === id) ? "" : id;
+  RQ.mctx = {};
+  rqDraw();
+};
+/* ⚠️ 적을 때마다 다시 그리지 않습니다 — 커서가 칸에서 빠집니다 */
+window.rqMctx = function(k, v){ RQ.mctx[k] = v; };
+
+/* ── 계약 한 건 ─────────────────────────────────────────────────── */
+function rqDealBody(d){
+  /* §9 가 **각각 구분해 저장**하라고 한 넷을 그대로 넷으로 냅니다 —
+     합치면 "얼마를 확정했다가 얼마를 받았는가" 가 사라집니다. */
+  var rows = [
+    ["계약금액",     d.amount   == null ? "" : won(d.amount) + "원"],
+    ["수수료(공급가)", d.fee      == null ? "" : won(d.fee) + "원"],
+    ["부가세",       d.fee_vat  == null ? "" : won(d.fee_vat) + "원"],
+    ["청구액",       d.fee_total == null ? "" : won(d.fee_total) + "원"],
+    ["실제 입금액",   d.paid     == null ? "" : won(d.paid) + "원"],
+    ["계약일",       amDate(String(d.signed_at || "").slice(0, 10))],
+    ["완료일",       amDate(String(d.done_at   || "").slice(0, 10))],
+    ["확정일",       amDate(String(d.fee_at    || "").slice(0, 10))]
+  /* ⚠️ 값이 없는 칸은 **줄째 뺍니다** (절대 규칙 2) */
+  ].filter(function(x){ return x[1]; });
+
+  return '<dl class="rq-sp">'+ rows.map(function(x){
+      return '<dt>'+esc(x[0])+'</dt><dd>'+esc(x[1])+'</dd>';
+    }).join("") +'</dl>'+
+    (d.fee == null ? rqFeeForm(d)
+      : d.paid == null ? rqPaidForm(d)
+      : rqClawForm(d));
+}
+
+/* ── ① 수수료 확정 (§9 "관리자의 최종 승인") ─────────────────────── */
+function rqFeeForm(d){
+  var P = (RQ.fees || []).filter(function(f){
+    return f.provider_id === d.provider_id && f.active !== false;
+  });
+  if(!P.length)
+    return '<div class="notice-bad">'+
+      '<b>이 업체의 수수료 정책이 없습니다</b>'+
+      '<p>아래 <b>수수료 정책</b> 칸에서 먼저 만드세요. 정책 없이 금액만 '+
+      '적는 길을 두지 않았습니다 — 정책과 어긋난 청구서가 나가면 '+
+      '어느 쪽이 맞는지 아무도 모릅니다 (§9).</p>'+
+    '</div>';
+
+  var pick = RQ.mctx.feeId || P[0].id;
+  var pol  = window.amFeeFromDb(P.filter(function(f){ return f.id === pick; })[0] || P[0]);
+  /* ⚠️⚠️ 숫자는 **계산값**입니다 — 손으로 적는 칸을 두지 않았습니다 */
+  var calc = window.amFeeCalc(window.amFeeSnap(pol), {
+    amount: Number(d.amount || 0),
+    sell:   Number(d.amount || 0),
+    cost:   0,
+    times:  1,
+    at:     String(d.done_at || "").slice(0, 10) || undefined
+  });
+
+  return '<div class="rq-mv">'+
+    '<div class="f-r">'+
+      '<label for="rq-fp">적용할 수수료 정책</label>'+
+      '<select id="rq-fp" class="sel" onchange="rqFeePick(this.value)">'+
+        P.map(function(f){
+          var t = window.amFeeType(f.type);
+          return '<option value="'+esc(f.id)+'"'+(f.id === pick ? " selected" : "")+'>'+
+            esc((t ? t.name : f.type) +
+                (f.rate ? " · " + f.rate + "%" : "") +
+                (f.flat ? " · " + won(f.flat) + "원" : ""))+'</option>';
+        }).join("")+
+      '</select>'+
+      '<p class="f-h">⚠️ 고르신 정책은 계약에 <b>사본으로</b> 박힙니다 — '+
+        '나중에 요율을 고쳐도 <b>이 계약의 수수료는 안 바뀝니다</b> (§9).</p>'+
+    '</div>'+
+    (calc.ok
+      ? '<div class="rq-calc">'+
+          '<b>'+esc(won(calc.fee))+'원</b>'+
+          '<span>+ 부가세 '+esc(won(calc.vat))+'원 = 청구 '+esc(won(calc.total))+'원</span>'+
+          (calc.clamped ? '<em>'+(calc.clamped === "min" ? "최소" : "최대")+
+            ' 수수료가 적용됐습니다</em>' : '')+
+        '</div>'
+      /* ⚠️⚠️ 계산이 안 되면 **0원을 내놓지 않고** 까닭을 적습니다 */
+      : '<div class="notice-bad"><b>이 정책으로는 계산되지 않습니다</b>'+
+        '<p>'+esc(calc.why)+'</p></div>')+
+    '<div class="f-r">'+
+      '<label for="rq-proof">계약 완료 증빙</label>'+
+      '<input id="rq-proof" type="text" autocomplete="off" '+
+        'oninput="rqMctx(\'proof\',this.value)" '+
+        'value="'+esc(RQ.mctx.proof || "")+'" '+
+        'placeholder="예: 세금계산서 2026-10-11 · 계약서 사본 받음">'+
+      '<p class="f-h">§9 — 증빙 없이는 확정되지 않습니다. '+
+        '⚠️ 사진 · 파일은 아직 받아 둘 자리가 없어 <b>무엇을 봤는지</b>만 적습니다.</p>'+
+    '</div>'+
+    '<div class="f-r">'+
+      '<label for="rq-fwhy">사유 <em>(선택)</em></label>'+
+      '<input id="rq-fwhy" type="text" autocomplete="off" '+
+        'oninput="rqMctx(\'why\',this.value)" value="'+esc(RQ.mctx.why || "")+'">'+
+    '</div>'+
+    '<div class="ad-acts">'+
+      '<button class="btn btn-b" type="button"'+
+        ((RQ.busy || !calc.ok) ? " disabled" : "")+
+        ' onclick="rqFeeGo(\''+esc(d.id)+'\')">'+icon("check",18)+
+        '수수료 확정</button>'+
+    '</div>'+
+  '</div>';
+}
+
+window.rqFeePick = function(v){ RQ.mctx.feeId = v; rqDraw(); };
+
+window.rqFeeGo = function(id){
+  if(RQ.busy) return;
+  var d = (RQ.deals || []).filter(function(x){ return x.id === id; })[0];
+  if(!d) return;
+  var P = (RQ.fees || []).filter(function(f){
+    return f.provider_id === d.provider_id && f.active !== false;
+  });
+  var pick = RQ.mctx.feeId || (P[0] && P[0].id);
+  var pol  = window.amFeeFromDb(P.filter(function(f){ return f.id === pick; })[0]);
+  if(!pol){ toast("적용할 정책을 골라 주세요"); return; }
+  /* ⚠️⚠️ **사본을 만들어 보냅니다** — 정책을 가리키게만 두면 요율을
+     고친 날 지난 계약의 수수료가 같이 바뀝니다 (§9). */
+  var snap = window.amFeeSnap(pol);
+  var calc = window.amFeeCalc(snap, {
+    amount: Number(d.amount || 0), sell: Number(d.amount || 0), cost: 0, times: 1,
+    at: String(d.done_at || "").slice(0, 10) || undefined
+  });
+  if(!calc.ok){ toast(calc.why); return; }
+  var proof = String(RQ.mctx.proof || "").trim();
+  if(!proof){ toast("계약 완료 증빙을 적어 주세요"); return; }
+
+  rqCall("confirm_fee", {
+    p_deal:id, p_fee:calc.fee, p_vat:calc.vat, p_total:calc.total,
+    p_snap:snap, p_proof:{ note:proof, at:new Date().toISOString() },
+    p_why: String(RQ.mctx.why || "").trim() || null
+  }, "수수료를 확정했습니다");
+};
+
+/* ── ② 입금 확인 (§9 · §13 가짜 정산 금지) ───────────────────────── */
+function rqPaidForm(d){
+  var due = Number(d.fee_total || d.fee || 0);
+  return '<div class="rq-mv">'+
+    '<div class="f-r">'+
+      '<label for="rq-paid">실제 입금액 (원)</label>'+
+      '<input id="rq-paid" type="number" min="0" step="1" inputmode="numeric" '+
+        'oninput="rqMctx(\'paid\',this.value)" '+
+        'value="'+esc(RQ.mctx.paid == null ? String(due) : RQ.mctx.paid)+'">'+
+      '<p class="f-h">청구액은 '+esc(won(due))+'원입니다. '+
+        '⚠️ <b>실제로 들어온 금액</b>을 적으세요 — 청구액을 그대로 적으면 '+
+        '그게 가짜 정산입니다 (§13).</p>'+
+    '</div>'+
+    '<div class="f-r">'+
+      '<label for="rq-pwhy">사유 <em>(선택)</em></label>'+
+      '<input id="rq-pwhy" type="text" autocomplete="off" '+
+        'oninput="rqMctx(\'why\',this.value)" value="'+esc(RQ.mctx.why || "")+'">'+
+    '</div>'+
+    '<div class="ad-acts">'+
+      '<button class="btn btn-b" type="button"'+(RQ.busy ? " disabled" : "")+
+        ' onclick="rqPaidGo(\''+esc(d.id)+'\')">'+icon("check",18)+
+        '입금 확인</button>'+
+    '</div>'+
+  '</div>';
+}
+
+window.rqPaidGo = function(id){
+  if(RQ.busy) return;
+  var v = RQ.mctx.paid;
+  if(v === undefined || v === null || v === ""){ toast("실제 입금액을 적어 주세요"); return; }
+  /* ⚠️ `0` 은 값입니다 — 부분환불 뒤 0원이 될 수 있습니다 */
+  rqCall("mark_paid", { p_deal:id, p_paid:Number(v),
+    p_why: String(RQ.mctx.why || "").trim() || null }, "입금을 확인했습니다");
+};
+
+/* ── ③ 환수 · 부분환불 (§9) ──────────────────────────────────────── */
+function rqClawForm(d){
+  return '<div class="rq-mv">'+
+    /* ⚠️ 붉은 상자(`notice-bad`)가 아닙니다 — 정산이 끝난 것은
+       **잘못된 일이 아닌데** 붉게 두면 운영자가 "뭔가 틀렸나" 로
+       읽습니다. 찍어 보고 알았습니다. */
+    '<div class="note-box">'+
+      '<b>이 건은 정산이 끝났습니다</b>'+
+      '<p>계약이 취소되거나 금액이 줄었으면 <b>환수</b>로 고칩니다. '+
+      '⚠️ 확정했던 액을 <b>갈아 치우지 않고</b> 차액을 기록으로 남깁니다 — '+
+      '갈아 치우면 "얼마를 확정했다가 얼마를 돌려받았는가" 가 사라집니다.</p>'+
+    '</div>'+
+    '<div class="f-r">'+
+      '<label for="rq-nfee">고쳐 적을 수수료 (원)</label>'+
+      '<input id="rq-nfee" type="number" min="0" step="1" inputmode="numeric" '+
+        'oninput="rqMctx(\'newFee\',this.value)" '+
+        'value="'+esc(RQ.mctx.newFee == null ? "" : RQ.mctx.newFee)+'" '+
+        'placeholder="'+esc(String(d.fee || 0))+'">'+
+    '</div>'+
+    '<div class="f-r">'+
+      '<label for="rq-cwhy">환수 사유 <em>(필수)</em></label>'+
+      '<input id="rq-cwhy" type="text" autocomplete="off" '+
+        'oninput="rqMctx(\'why\',this.value)" value="'+esc(RQ.mctx.why || "")+'" '+
+        'placeholder="예: 계약 일부 취소 — 2026-10-20">'+
+    '</div>'+
+    '<div class="ad-acts">'+
+      '<button class="btn btn-o" type="button"'+(RQ.busy ? " disabled" : "")+
+        ' onclick="rqClawGo(\''+esc(d.id)+'\')">'+icon("refresh",18)+
+        '환수 기록</button>'+
+    '</div>'+
+  '</div>';
+}
+
+window.rqClawGo = function(id){
+  if(RQ.busy) return;
+  var v = RQ.mctx.newFee, why = String(RQ.mctx.why || "").trim();
+  if(v === undefined || v === null || v === ""){ toast("고쳐 적을 수수료를 적어 주세요"); return; }
+  if(!why){ toast("환수 사유를 적어 주세요"); return; }
+  rqCall("clawback_fee", { p_deal:id, p_new_fee:Number(v), p_why:why }, "환수를 기록했습니다");
+};
+
+/* ── 부르기 한 곳 ────────────────────────────────────────────────
+   ⚠️⚠️ **DB 가 거절한 그 말**을 그대로 보여 줍니다 — "서비스 완료
+   상태에서만 …" 처럼 무엇을 하면 되는지가 거기 적혀 있습니다. */
+function rqCall(fn, args, say){
+  RQ.busy = true; rqDraw();
+  fetch("/api/deal", {
+    method:"POST",
+    headers: Object.assign(
+      { "content-type":"application/json", accept:"application/json" },
+      window.amAuthHeaders()),
+    body: JSON.stringify({ fn:fn, args:args })
+  }).then(function(r){
+    return r.json().then(function(d){ return { ok:r.ok, d:d }; });
+  }).then(function(x){
+    RQ.busy = false;
+    if(!x.ok){ toast((x.d && x.d.error) || "처리하지 못했습니다"); rqDraw(); return; }
+    toast(say);
+    RQ.money = ""; RQ.mctx = {}; RQ.open = ""; RQ.to = ""; RQ.ctx = {};
+    rqLoad();
+  }).catch(function(e){
+    RQ.busy = false;
+    try{ console.warn("[rq] " + fn + " — " + e); }catch(_){}
+    toast("연결이 끊겼습니다. 잠시 뒤 다시 눌러 주세요");
+    rqDraw();
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   2차 — 수수료 정책 (전면 감사 §6 의 6 · §9)
+
+   ⚠️⚠️ **정책을 고쳐도 지난 계약은 안 바뀝니다.** 계약에 `fee_snap`
+   으로 사본이 박히기 때문입니다 — 그래서 마음 놓고 고칠 수 있고,
+   그것이 §9 가 요구한 것입니다.
+   ⚠️ **지우지 않고 끕니다.** 지난 계약이 그 정책의 사본을 들고 있고,
+   기록에서 "그때 무엇을 썼는가" 가 사라지면 안 됩니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+function rqFees(){
+  if(RQ.role !== "admin") return "";
+  var F = RQ.fees || [], P = RQ.provs || [];
+
+  return '<section class="ad-s rq-s rq-s-fee">'+
+    '<h2>수수료 정책</h2>'+
+    '<p class="ad-lead">업체마다 · 상품마다 따로 둘 수 있습니다. '+
+      '<b>고친 정책은 지난 계약에 영향을 주지 않습니다</b> — 계약에는 '+
+      '그때의 <b>사본</b>이 박혀 있습니다 (§9).</p>'+
+    (!P.length
+      /* ⚠️ 0 은 에러가 아니라 **지금 사실**입니다 — 이 저장소가
+         Empty 를 붉게 칠하지 않는 것과 같은 까닭입니다 */
+      ? '<div class="note-box"><b>등록된 업체가 0곳입니다</b>'+
+        '<p>정책은 업체에 붙는 것이라 업체를 먼저 등록하셔야 합니다.</p></div>'
+      : (F.length
+          ? '<div class="rq-g">'+ F.map(rqFeeRow).join("") +'</div>'
+          : '<p class="ad-empty">아직 정책이 없습니다. 아래에서 만드세요.</p>')+
+        rqFeeNew())+
+  '</section>';
+}
+
+function rqFeeRow(f){
+  var t = window.amFeeType(f.type);
+  var bits = [
+    f.rate ? f.rate + "%" : "",
+    f.flat ? won(f.flat) + "원" : "",
+    f.min_fee ? "최소 " + won(f.min_fee) + "원" : "",
+    f.max_fee ? "최대 " + won(f.max_fee) + "원" : "",
+    rqName(window.AM_FEE_VAT, f.vat),
+    rqName(window.AM_FEE_WHEN, f.confirm_when),
+    rqName(window.AM_FEE_CYCLE, f.cycle)
+  /* ⚠️ 값이 없는 칸은 줄째 뺍니다 (절대 규칙 2) */
+  ].filter(Boolean).join(" · ");
+
+  return '<article class="rq-r">'+
+    '<div class="rq-hd rq-hd-s">'+
+      '<span class="rq-hd-l">'+
+        '<b class="rq-no">'+esc(rqPvName(f.provider_id) || f.provider_id)+'</b>'+
+        '<span class="rq-m">'+esc((t ? t.name : f.type) + " · " + bits)+'</span>'+
+      '</span>'+
+      '<span class="rq-hd-r">'+
+        '<i class="myq-st myq-'+(f.active === false ? "gray" : "on")+'">'+
+          (f.active === false ? "꺼짐" : "켜짐")+'</i>'+
+        '<button class="btn btn-o btn-sm" type="button" '+
+          'onclick="rqFeeToggle(\''+esc(f.id)+'\','+(f.active === false)+')">'+
+          (f.active === false ? "켜기" : "끄기")+'</button>'+
+      '</span>'+
+    '</div>'+
+  '</article>';
+}
+
+function rqName(L, k){
+  var i, A = L || [];
+  for(i = 0; i < A.length; i++) if(A[i].key === k) return A[i].name;
+  return "";
+}
+
+window.rqFeeToggle = function(id, on){
+  rqCall("set_fee_policy_active", { p_id:id, p_active:!!on,
+    p_why: on ? "다시 켬" : "끔" }, on ? "켰습니다" : "껐습니다");
+};
+
+/* 새 정책 — ⚠️ 고르개로만 만듭니다. 수익모델 · 부가세 · 확정 조건 ·
+   정산 주기는 전부 `js/data/fee.js` 에서 오고 **DB 의 enum 과 같은
+   값인지는 빌드가 봅니다** (checkDealSql). */
+function rqFeeNew(){
+  var N = RQ.mctx || {};
+  var t = window.amFeeType(N.ftype || "rate");
+  var needFlat = t && (t.key === "lead" || t.key === "close" ||
+                       t.key === "sub"  || t.key === "base_rate");
+  var needRate = t && (t.key === "rate" || t.key === "base_rate");
+
+  return '<details class="rq-new"><summary><b>새 정책 만들기</b></summary>'+
+    '<div class="ad-g">'+
+      rqSel("rq-fn-pv", "업체", "fpv",
+        (RQ.provs || []).map(function(p){ return [p.id, p.name]; }))+
+      rqSel("rq-fn-t", "수익모델", "ftype",
+        (window.AM_FEE_TYPE || []).map(function(x){ return [x.key, x.name]; }), N.ftype || "rate")+
+      rqSel("rq-fn-v", "부가세", "fvat",
+        (window.AM_FEE_VAT || []).map(function(x){ return [x.key, x.name]; }), N.fvat || "add")+
+      rqSel("rq-fn-w", "확정 조건", "fwhen",
+        (window.AM_FEE_WHEN || []).map(function(x){ return [x.key, x.name]; }), N.fwhen || "done")+
+      rqSel("rq-fn-c", "정산 주기", "fcycle",
+        (window.AM_FEE_CYCLE || []).map(function(x){ return [x.key, x.name]; }), N.fcycle || "monthly")+
+    '</div>'+
+    '<div class="ad-g">'+
+      (needRate ? rqNum("rq-fn-r", "요율 (%)", "frate", "3") : "")+
+      (needFlat ? rqNum("rq-fn-f", "정액 (원)", "fflat", "50000") : "")+
+      rqNum("rq-fn-min", "최소 수수료 (원 · 선택)", "fmin", "")+
+      rqNum("rq-fn-max", "최대 수수료 (원 · 선택)", "fmax", "")+
+    '</div>'+
+    '<div class="ad-f"><label for="rq-fn-rr">환불 · 환수 조건 <em>(선택)</em></label>'+
+      '<input id="rq-fn-rr" type="text" autocomplete="off" '+
+      'oninput="rqMctx(\'frefund\',this.value)" value="'+esc(N.frefund || "")+'" '+
+      'placeholder="예: 계약 취소 시 전액 환수 · 금액 변경 시 차액 정산"></div>'+
+    '<p class="ad-rd-n">⚠️ 요율은 <b>0 초과 100 이하</b>이고 최소 ≤ 최대라야 '+
+      '합니다 — 화면에서 한 번, DB 제약이 한 번 더 막습니다.</p>'+
+    '<div class="ad-acts">'+
+      '<button class="btn btn-b" type="button"'+(RQ.busy ? " disabled" : "")+
+        ' onclick="rqFeeSave()">'+icon("plus",18)+'정책 만들기</button>'+
+    '</div>'+
+  '</details>';
+}
+
+function rqSel(id, label, key, opts, cur){
+  return '<div class="ad-f"><label for="'+id+'">'+esc(label)+'</label>'+
+    '<select id="'+id+'" onchange="rqMctxDraw(\''+key+'\',this.value)">'+
+      opts.map(function(o){
+        return '<option value="'+esc(o[0])+'"'+
+          ((cur || RQ.mctx[key]) === o[0] ? " selected" : "")+'>'+esc(o[1])+'</option>';
+      }).join("")+
+    '</select></div>';
+}
+function rqNum(id, label, key, ph){
+  return '<div class="ad-f"><label for="'+id+'">'+esc(label)+'</label>'+
+    '<input id="'+id+'" type="number" min="0" step="any" inputmode="numeric" '+
+    'oninput="rqMctx(\''+key+'\',this.value)" value="'+esc(RQ.mctx[key] || "")+'" '+
+    'placeholder="'+esc(ph)+'"></div>';
+}
+/* ⚠️ 수익모델을 바꾸면 **적는 칸이 바뀝니다** — 그때만 다시 그립니다
+   (적는 칸에서 다시 그리면 커서가 빠집니다). */
+window.rqMctxDraw = function(k, v){ RQ.mctx[k] = v; rqDraw(); };
+
+window.rqFeeSave = function(){
+  if(RQ.busy) return;
+  var N = RQ.mctx || {};
+  var pv = N.fpv || ((RQ.provs || [])[0] || {}).id;
+  if(!pv){ toast("업체를 골라 주세요"); return; }
+  var pol = {
+    type: N.ftype || "rate",
+    vat:  N.fvat  || "add",
+    when: N.fwhen || "done",
+    cycle:N.fcycle|| "monthly",
+    /* ⚠️ `0` 은 값입니다 — 빈 칸만 null 로 둡니다 */
+    rate: N.frate === "" || N.frate == null ? null : Number(N.frate),
+    flat: N.fflat === "" || N.fflat == null ? null : Number(N.fflat),
+    min:  N.fmin  === "" || N.fmin  == null ? null : Number(N.fmin),
+    max:  N.fmax  === "" || N.fmax  == null ? null : Number(N.fmax)
+  };
+  /* ⚠️⚠️ **저장하기 전에** 봅니다 — 저장된 뒤에 틀린 것을 찾으면 그
+     정책으로 이미 계산된 건이 생깁니다 (fee.js 머리말). */
+  var bad = window.amFeeBadPolicy(pol);
+  if(bad){ toast(bad); return; }
+
+  rqCall("save_fee_policy", {
+    p_provider: pv,
+    p_data: {
+      type:pol.type, vat:pol.vat, confirmWhen:pol.when, cycle:pol.cycle,
+      rate:pol.rate, flat:pol.flat, minFee:pol.min, maxFee:pol.max,
+      refundRule: String(N.frefund || "").trim() || null
+    },
+    p_why: "새 정책"
+  }, "정책을 만들었습니다");
+};
+
+
+/* ════════════════════════════════════════════════════════════════════
+   2차 — 업체 승인 (전면 감사 §6 의 3 · §7)
+
+   ⚠️⚠️ **등록과 승인이 다른 문입니다.** 직원이 등록하고 **관리자가**
+   공개합니다 — 한 사람이 등록하고 자기가 켜면 교차 확인이 없습니다
+   (계약을 따는 사람과 수수료를 확정하는 사람을 가른 것과 같은 까닭).
+   ⚠️⚠️ **확인 배지는 서류를 실제로 본 것만** 켭니다. 업체가 "확인했다"
+   고 말했다고 켜면 그건 지어낸 신뢰입니다 (절대 규칙 1 · 표시 · 광고의
+   공정화에 관한 법률 제3조).
+   ════════════════════════════════════════════════════════════════════ */
+
+function rqProvs(){
+  if(RQ.role !== "staff" && RQ.role !== "admin") return "";
+  var P = RQ.provs || [];
+  var off = P.filter(function(p){ return !p.listed; }).length;
+
+  return '<section class="ad-s rq-s rq-s-pv">'+
+    '<h2>업체 · 공개 승인</h2>'+
+    (!P.length
+      ? '<p class="ad-empty">DB 에 등록된 업체가 없습니다. '+
+        '아래 <b>관리자 설정</b> 의 9번 칸에서 등록 줄을 만드세요.</p>'
+      : '<p class="ad-lead">'+
+          (off ? '<b>'+off+'곳</b>이 아직 공개 전입니다. ' : '')+
+          '공개 전인 업체도 <b>배정 고르개에는 보입니다</b> — '+
+          '손님 목록에만 안 나옵니다.'+
+          (RQ.role === "admin" ? ''
+            : ' ⚠️ 공개를 켜는 것은 <b>관리자만</b> 할 수 있습니다.')+
+        '</p>'+
+        '<div class="rq-g">'+ P.map(rqProvRow).join("") +'</div>')+
+  '</section>';
+}
+
+function rqProvRow(p){
+  var subs = (p.subs || []).length, regs = (p.regions || []).length;
+  return '<article class="rq-r">'+
+    '<div class="rq-hd rq-hd-s">'+
+      '<span class="rq-hd-l">'+
+        '<b class="rq-no">'+esc(p.name)+'</b>'+
+        '<span class="rq-m">'+
+          esc([subs ? "하는 일 " + subs : "", regs ? "지역 " + regs : "",
+               (p.industries || []).length ? "업종 " + p.industries.length : ""]
+              .filter(Boolean).join(" · "))+'</span>'+
+      '</span>'+
+      '<span class="rq-hd-r">'+
+        '<i class="myq-st myq-'+(p.listed ? "ok" : "gray")+'">'+
+          (p.listed ? "공개" : "공개 전")+'</i>'+
+        (RQ.role === "admin"
+          ? '<button class="btn '+(p.listed ? "btn-o" : "btn-b")+' btn-sm" type="button" '+
+            'onclick="rqProvGo(\''+esc(p.id)+'\','+(!p.listed)+')">'+
+            (p.listed ? "내리기" : "공개하기")+'</button>'
+          : '')+
+      '</span>'+
+    '</div>'+
+  '</article>';
+}
+
+window.rqProvGo = function(id, on){
+  /* ⚠️ 내리는 것은 되돌릴 수 있지만 손님 화면에서 바로 사라집니다 —
+     한 번 물어봅니다 (지우는 단추와 같은 규칙). */
+  if(!on && !confirm("이 업체를 손님 목록에서 내릴까요?")) return;
+  rqCall("approve_provider", { p_id:id, p_listed:!!on,
+    p_why: on ? "공개" : "내림" }, on ? "공개했습니다" : "내렸습니다");
+};
+
+
+/* ════════════════════════════════════════════════════════════════════
+   2차 — 신청 한 건의 이력 (전면 감사 §6 의 8 · §8)
+
+   ⚠️⚠️ **목록에 다 붙이지 않습니다.** 신청 쉰 건의 이력을 통째로
+   내리면 사유에 적힌 사정까지 한 화면에 깔립니다 — 화면 하나가 곧
+   유출입니다. **연 건 하나만** 가져옵니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 펼친 줄 안의 **이력 단추 + 이력**. ⚠️ 단추를 따로 두는 까닭 —
+   목록에 이력을 다 붙이면 쉰 건의 사유가 한 화면에 깔립니다. 누른
+   건 하나만 서버에 묻습니다 (`api/me.js` 의 `?r=`). */
+function rqHistRow(r){
+  var on = RQ.histOf === r.id;
+  return '<div class="rq-hist-b">'+
+      '<button class="btn btn-o btn-sm" type="button" '+
+        'onclick="rqHistGo(\''+esc(r.id)+'\')">'+icon("clock",18)+
+        (on ? '이력 닫기' : '이력 보기')+'</button>'+
+    '</div>'+ rqHist(r);
+}
+
+function rqHist(r){
+  if(RQ.histOf !== r.id) return '';
+  if(RQ.hist === null)
+    return '<div class="rq-as"><b>이력</b><p class="rq-none">불러오는 중…</p></div>';
+  if(!RQ.hist.length)
+    return '<div class="rq-as"><b>이력</b><p class="rq-none">기록이 없습니다.</p></div>';
+
+  return '<div class="rq-as rq-hist"><b>이력</b><ol>'+
+    RQ.hist.map(function(h){
+      var d = amDate(String(h.at || "").slice(0, 10));
+      var to = window.amDealStName ? amDealStName(h.to_state) : h.to_state;
+      var fr = window.amDealStName ? amDealStName(h.from_state) : h.from_state;
+      return '<li>'+
+        (d ? '<em>'+esc(d)+'</em>' : '')+
+        '<span>'+esc((fr ? fr + " → " : "") + (to || ""))+'</span>'+
+        /* ⚠️ 가운뎃점으로 가릅니다 — 띄어쓰기만 두었더니 "정보 확인 중
+           직원" 으로 읽혀 상태 이름의 일부처럼 보였습니다 (찍어 보고
+           알았습니다). 상태 이름에 띄어쓰기가 들어 있어서 그렇습니다. */
+        (h.by_role ? ' <i>· '+esc(window.amRoleName ? amRoleName(h.by_role) : h.by_role)+'</i>' : '')+
+        (h.why ? '<p>'+esc(h.why)+'</p>' : '')+
+      '</li>';
+    }).join("") +'</ol>'+
+    '<p class="rq-none">⚠️ 기록은 <b>고치거나 지울 수 없습니다</b> — '+
+      '고칠 수 있는 기록은 기록이 아닙니다 (§8).</p>'+
+  '</div>';
+}
+
+window.rqHistGo = function(id){
+  if(RQ.histOf === id){ RQ.histOf = ""; RQ.hist = null; rqDraw(); return; }
+  RQ.histOf = id; RQ.hist = null; rqDraw();
+  fetch("/api/me?r=" + encodeURIComponent(id), { headers: Object.assign(
+    { accept:"application/json" }, window.amAuthHeaders()) })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if(RQ.histOf !== id) return;          /* 그 사이에 닫으셨으면 버립니다 */
+      RQ.hist = (d && d.history) || [];
+      rqDraw();
+    })
+    .catch(function(e){
+      try{ console.warn("[rq] 이력 — " + e); }catch(_){}
+      if(RQ.histOf === id){ RQ.hist = []; rqDraw(); }
+    });
+};

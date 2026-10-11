@@ -57,6 +57,18 @@ function mock(routes){
 function aborter(){
   const e = new Error("aborted"); e.name = "AbortError"; return e;
 }
+/* rpc 호출의 본문 — ⚠️⚠️ **"마지막 호출" 로 집지 마세요.** 2차에서
+   상태 변경 뒤에 **운영자 알림**(웹훅)이 한 번 더 나가면서, 마지막
+   호출이 rpc 가 아닌 날이 옵니다. 주소로 집습니다. */
+function rpcBody(fn){
+  const c = calls.filter(function(x){ return x.url.indexOf("/rpc/" + fn) >= 0; });
+  return c.length ? JSON.parse(c[c.length - 1].opt.body || "{}") : null;
+}
+/* 알림으로 나간 것 (웹훅) */
+function hookCalls(){
+  return calls.filter(function(x){ return x.url.indexOf("hooks.example") >= 0; });
+}
+
 /* 어느 호출에도 service key 가 섞이지 않았는가 */
 function noSvcAnywhere(){
   return calls.every(function(c){
@@ -344,7 +356,7 @@ console.log("\n── /api/deal — 상태를 바꾸는 유일한 길");
     body:{ fn:"move_state",
            args:{ p_request:"r-1", p_to:"assigned", p_ctx:{ agree3rd:true },
                   p_by:"55555555-5555-5555-5555-555555555555", role:"admin" } } }), r);
-  const sent = JSON.parse(calls[calls.length - 1].opt.body || "{}");
+  const sent = rpcBody("move_state");
   ok("정해 둔 인자는 넘어간다", sent.p_request === "r-1" && sent.p_to === "assigned", sent);
   ok("p_by 를 섞어 보내도 안 넘어간다", sent.p_by === undefined, sent);
   ok("role 을 섞어 보내도 안 넘어간다", sent.role === undefined, sent);
@@ -376,7 +388,7 @@ console.log("\n── /api/deal — 상태를 바꾸는 유일한 길");
     body:{ fn:"confirm_fee", args:{ p_deal:"d-1", p_fee:300000, p_vat:30000,
       p_total:330000, p_snap:{ type:"rate", rate:3 }, p_proof:{ kind:"계약서" },
       p_why:"증빙 확인" } } }), r);
-  const fee = JSON.parse(calls[calls.length - 1].opt.body || "{}");
+  const fee = rpcBody("confirm_fee");
   ok("수수료 확정의 인자 일곱이 다 넘어간다",
      fee.p_deal === "d-1" && fee.p_fee === 300000 && fee.p_vat === 30000 &&
      fee.p_total === 330000 && !!fee.p_snap && !!fee.p_proof && fee.p_why === "증빙 확인", fee);
@@ -387,14 +399,103 @@ console.log("\n── /api/deal — 상태를 바꾸는 유일한 길");
         [/\/rpc\/clawback_fee/, function(){ return body(200, -50000); }]]);
   await Hdeal(req({ method:"POST", headers:{ authorization:"Bearer " + TOK },
     body:{ fn:"clawback_fee", args:{ p_deal:"d-1", p_new_fee:250000, p_why:"부분환불" } } }), r);
-  const cb = JSON.parse(calls[calls.length - 1].opt.body || "{}");
+  const cb = rpcBody("clawback_fee");
   ok("환수의 인자 셋이 다 넘어간다",
      cb.p_deal === "d-1" && cb.p_new_fee === 250000 && cb.p_why === "부분환불", cb);
 
   /* 허용 목록 여섯이 그대로 있는가 */
   const src = require("fs").readFileSync(path.join(ROOT, "api", "deal.js"), "utf8");
-  ["move_state","answer_assignment","claim_request","confirm_fee","mark_paid","clawback_fee"]
+  ["move_state","answer_assignment","claim_request","confirm_fee","mark_paid","clawback_fee",
+   /* 0007 (2차) — ⚠️ 표를 열지 않고 **문을 늘렸습니다** */
+   "save_provider","approve_provider","save_fee_policy","set_fee_policy_active"]
     .forEach(function(f){ ok("허용 목록에 " + f + " 가 있다", src.indexOf(f + ":1") >= 0); });
+}
+
+console.log("\n── /api/deal — 상태가 바뀌면 운영자에게 한 줄 (2차 10)");
+{
+  /* ⚠️⚠️ **손님에게 보내지 않습니다.** 문자 · 카톡 · 알림톡은
+     정보통신망법 제50조의 **사전 수신동의**가 먼저이고, 지금 그 동의를
+     받는 자리도 받아 둔 기록도 없습니다. */
+  const HOOK = "https://hooks.example/deal";
+  const okHook = [/hooks\.example/, function(){ return body(200, { ok:true }); }];
+  const ADMIN = [/\/rest\/v1\/account/, function(){
+    return body(200, [{ role:"admin", provider_id:null, name:"관리자" }]); }];
+
+  envAll();
+  process.env.INTAKE_WEBHOOK_URL = HOOK;
+
+  let r = res();
+  mock([USER, ADMIN, [/\/rpc\/confirm_fee/, function(){ return body(200, null); }], okHook]);
+  await Hdeal(req({ method:"POST", headers:{ authorization:"Bearer " + TOK },
+    body:{ fn:"confirm_fee", args:{ p_deal:"d-1", p_fee:300000, p_vat:30000,
+      p_total:330000, p_snap:{ type:"rate", rate:3 },
+      p_proof:{ note:"세금계산서 받음" },
+      p_why:"김사장님이 다음 달에 쓰신다고 하셔서 확인했습니다" } } }), r);
+
+  ok("상태 변경은 그대로 성공한다", r.code === 200 && r.body.ok === true, r.body);
+  const hk = hookCalls();
+  ok("운영자에게 한 줄 나간다", hk.length === 1, hk.length);
+
+  const sentTxt = hk.length ? String(hk[0].opt.body || "") : "";
+  /* ⚠️⚠️ **개인정보를 한 글자도 싣지 않습니다** (제3조 제1항 · 제26조).
+     사유(`why`)도 안 보냅니다 — 사람이 손으로 적는 칸이라 성함이
+     들어올 수 있고, 그러면 그 순간 새 수탁 범위가 됩니다. */
+  ok("사유를 싣지 않는다 (손으로 적는 칸이라 성함이 들어옵니다)",
+     sentTxt.indexOf("김사장") < 0 && sentTxt.indexOf("다음 달에") < 0, sentTxt.slice(0, 200));
+  ok("증빙 글도 싣지 않는다",
+     sentTxt.indexOf("세금계산서") < 0, sentTxt.slice(0, 200));
+  /* ⚠️ 함수 이름을 그대로 내보내지 않습니다 — 읽고 무슨 일인지
+     알 수 있어야 합니다 */
+  ok("무슨 일인지 사람 말로 적는다",
+     sentTxt.indexOf("수수료를 확정했습니다") >= 0, sentTxt.slice(0, 200));
+  ok("누가 바꿨는지 역할이 간다", sentTxt.indexOf("admin") >= 0, sentTxt.slice(0, 200));
+  ok("금액은 간다 (개인정보가 아닙니다)",
+     sentTxt.indexOf("300000") >= 0, sentTxt.slice(0, 300));
+  ok("가서 보라고 적는다",
+     sentTxt.indexOf("/admin") >= 0, sentTxt.slice(-200));
+  /* ⚠️ 알림에도 키가 섞이면 안 됩니다 */
+  ok("알림에 키 · 토큰이 섞이지 않는다",
+     sentTxt.indexOf(SVC) < 0 && sentTxt.indexOf(TOK) < 0, sentTxt.slice(0, 200));
+
+  /* ⚠️⚠️ **거절당하면 안 보냅니다** — "바뀌었구나" 로 읽힙니다 */
+  r = res();
+  mock([USER, ADMIN, [/\/rpc\/move_state/, function(){
+    return body(400, { code:"P0001", message:"갈 수 없는 길입니다 — new → done" }); }], okHook]);
+  await Hdeal(req({ method:"POST", headers:{ authorization:"Bearer " + TOK },
+                    body:{ fn:"move_state", args:{ p_request:"r-1", p_to:"done" } } }), r);
+  ok("거절당하면 알림을 안 보낸다", hookCalls().length === 0, hookCalls().length);
+
+  /* ⚠️⚠️ **알림이 실패해도 상태 변경을 되돌리지 않습니다.** 상태는
+     이미 DB 에 적혔고, 여기서 에러를 돌려주면 운영자가 다시 누릅니다 —
+     두 번째는 "갈 수 없는 길" 로 거절당해서 더 헷갈립니다. */
+  r = res();
+  mock([USER, ADMIN, [/\/rpc\/move_state/, function(){ return body(200, "hold"); }],
+        [/hooks\.example/, function(){ throw new Error("webhook down"); }]]);
+  await Hdeal(req({ method:"POST", headers:{ authorization:"Bearer " + TOK },
+                    body:{ fn:"move_state", args:{ p_request:"r-1", p_to:"hold" } } }), r);
+  ok("알림이 터져도 상태 변경은 성공이다", r.code === 200 && r.body.ok === true, r.body);
+
+  /* ⚠️ 받을 곳이 없으면 **조용히 지나갑니다** — 알림은 거들기이고,
+     그것 때문에 상태 변경을 잃으면 더 나쁩니다 */
+  delete process.env.INTAKE_WEBHOOK_URL;
+  r = res();
+  mock([USER, ADMIN, [/\/rpc\/move_state/, function(){ return body(200, "hold"); }]]);
+  await Hdeal(req({ method:"POST", headers:{ authorization:"Bearer " + TOK },
+                    body:{ fn:"move_state", args:{ p_request:"r-1", p_to:"hold" } } }), r);
+  ok("받을 곳이 없어도 상태 변경은 성공이다", r.code === 200 && r.body.ok === true, r.body);
+  ok("받을 곳이 없으면 아무 데도 안 두드린다",
+     calls.every(c => c.url.indexOf("hooks.example") < 0), calls.map(c => c.url));
+
+  /* ⚠️ 알림에 실을 것도 **허용 목록**입니다 — 인자가 하나 늘 때마다
+     조용히 같이 나가지 않게 */
+  const src = require("fs").readFileSync(path.join(ROOT, "api", "deal.js"), "utf8");
+  ok("실을 것을 허용 목록으로 둔다", /SAY_ARG\s*=/.test(src));
+  ok("사유 · 증빙은 그 목록에 없다",
+     !/p_why\s*:/.test(src.slice(src.indexOf("SAY_ARG"), src.indexOf("NOTE_TIMEOUT"))) &&
+     !/p_proof\s*:/.test(src.slice(src.indexOf("SAY_ARG"), src.indexOf("NOTE_TIMEOUT"))),
+     src.slice(src.indexOf("SAY_ARG"), src.indexOf("NOTE_TIMEOUT")));
+
+  setEnv({});
 }
 
 console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가");
@@ -496,6 +597,66 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
 
   /* 전부 그 사람의 토큰으로 */
   ok("읽기 전부 service key 를 쓰지 않는다", noSvcAnywhere(), calls.map(c => c.h));
+
+  /* ══ 2026-10-11 2차 — 수수료 정책 · 계약 · 이력 ═══════════════════ */
+  /* ⚠️⚠️ 요율은 **관리자만**입니다 — 업체에게 남의 요율이 보이면 안
+     되고, 직원은 돈을 안 봅니다 (PICK 과 같은 선). */
+  ok("관리자에게는 수수료 정책을 준다",
+     calls.some(c => /fee_policy/.test(c.url)), calls.map(c => c.url));
+  /* ⚠️ 계약 한 줄만 보면 **어느 건인지** 모릅니다 — 신청을 붙입니다.
+     ⚠️⚠️ 그래도 성함 · 연락처는 안 붙입니다 (목록 하나가 곧 유출). */
+  {
+    const dq = decodeURIComponent(calls.filter(c => /\/rest\/v1\/deal/.test(c.url))[0].url);
+    ok("계약에 어느 신청인지가 붙는다", /request\(/.test(dq), dq);
+    /* ⚠️⚠️ 처음에 `request(…)` 안을 **걷어내고** 봤습니다 — 그러면
+       정작 연락처가 샐 수 있는 자리를 안 보는 검사가 됩니다. 되돌려
+       보니 `request(…,name,tel)` 을 그대로 통과시켰습니다
+       (**검사가 틀린 자리** · 이 저장소가 여러 번 겪었습니다).
+       붙인 것까지 **통째로** 봅니다. */
+    ok("계약 목록에 성함 · 연락처가 없다",
+       !/\bname\b|\btel\b|\bemail\b/.test(dq), dq);
+  }
+
+  /* 직원 · 업체 · 고객에게는 **묻지도 않습니다** */
+  for(const [who, acct] of [
+    ["직원",  { role:"staff",    provider_id:null,   name:"직원" }],
+    ["업체",  { role:"provider", provider_id:"pv-one", name:"가나다" }],
+    ["고객",  { role:"customer", provider_id:null,   name:"갑" }]
+  ]){
+    r = res();
+    mock([USER, [/\/rest\/v1\/account/, function(){ return body(200, [acct]); }],
+          [/\/rest\/v1\/request/,  function(){ return body(200, []); }],
+          [/\/rest\/v1\/provider\b/, function(){ return body(200, []); }],
+          [/\/rest\/v1\/deal/,     function(){ return body(200, []); }],
+          [/fee_policy/,             function(){ return body(200, []); }]]);
+    await Hme(req({ headers:{ authorization:"Bearer " + TOK } }), r);
+    ok(who + "에게는 수수료 정책을 묻지 않는다",
+       calls.every(c => !/fee_policy/.test(c.url)), calls.map(c => c.url));
+  }
+
+  /* ── 신청 한 건의 이력 (§6 "신청 및 변경 이력") ──────────────────
+     ⚠️⚠️ **목록에 다 붙이지 않습니다** — 사유에 사정이 적히는 글이라
+     쉰 건을 통째로 내리면 화면 하나가 곧 유출입니다. */
+  const RID = "11111111-2222-3333-4444-555555555555";
+  r = res();
+  mock([USER, ACCT, [/\/rest\/v1\/request/, function(){ return body(200, []); }],
+        [/audit_log/, function(){ return body(200, [{ at:"x", to_state:"check" }]); }]]);
+  await Hme(req({ headers:{ authorization:"Bearer " + TOK }, query:{ r:RID } }), r);
+  {
+    const hq = calls.filter(c => /audit_log/.test(c.url))[0];
+    ok("한 건을 물으면 그 건의 이력만 가져온다",
+       hq && decodeURIComponent(hq.url).indexOf("obj_id=eq." + RID) >= 0,
+       hq ? decodeURIComponent(hq.url) : "안 불렀습니다");
+    ok("이력 질의에 성함 · 연락처가 없다",
+       hq && !/name|tel/.test(decodeURIComponent(hq.url)), hq && hq.url);
+    ok("이력이 답에 담긴다", Array.isArray(r.body.history), r.body.history);
+  }
+  /* ⚠️ 주소에서 온 글자가 그대로 질의에 들어가는 자리입니다 */
+  r = res(); mock([USER, ACCT]);
+  await Hme(req({ headers:{ authorization:"Bearer " + TOK },
+                  query:{ r:"' or 1=1 --" } }), r);
+  ok("uuid 꼴이 아니면 묻지 않고 거절한다",
+     r.code === 400 && calls.every(c => !/audit_log/.test(c.url)), r.body);
 
   setEnv({});
   r = res();

@@ -126,7 +126,9 @@ try{
                      (add value if not exists · on conflict do nothing).
                      ⚠️ 트랜잭션으로 감지 않습니다 — 감으면 새 enum 값을 같은
                      트랜잭션에서 못 써서 터집니다. */
-                  "db/migrations/0006_hold_state.sql"];
+                  "db/migrations/0006_hold_state.sql",
+                  /* 2차 — 계약 줄 · 업체 등록/승인 · 수수료 정책 */
+                  "db/migrations/0007_deal_provider_fee.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ e = String(err.stderr || err.message).split("\n").slice(0,3).join(" "); }
@@ -711,6 +713,248 @@ try{
     const noUid = denied("set role authenticated; select become(null); " +
                          "select claim_request('SW-ABCD-2345','0310001234')");
     ok("로그인 없이 부르면 거절한다", noUid.no, noUid.why);
+  }
+
+  /* ══ 0007 — 2차 "수익을 기록한다" ════════════════════════════════
+     ⚠️⚠️ **0003 이 만든 문에 길이 없었습니다.** `confirm_fee(p_deal …)`
+     는 `deal` 한 줄을 받아야 하는데 그 줄을 만드는 길이 없었습니다 —
+     상태는 "계약 완료" 인데 `deal` 표는 비어서 **확정할 대상이
+     없었습니다.** 여기서는 신청 하나를 **접수부터 정산 완료까지**
+     끝까지 밀어 봅니다. */
+  console.log("\n── ⚠️⚠️ 0007 계약 줄이 생기는가 — 끝까지 밀어 봅니다");
+  {
+    const A  = "11111111-1111-1111-1111-111111111111";
+    const PV = "33333333-3333-3333-3333-333333333333";
+    const ST = "44444444-4444-4444-4444-444444444444";
+    const AD = "55555555-5555-5555-5555-555555555555";
+    const as = u => "set role authenticated; select become('" + u + "'); ";
+    const R = "aaaaaaaa-0000-0000-0000-000000000021";
+    psql(`insert into request (id, no, user_id, side, name, tel, agree_at, state) values
+      ('${R}','SW-AAAA-0021','${A}','start','파','01021210000',now(),'new');`);
+    const mv = (u, to, ctx) =>
+      as(u) + "select move_state('" + R + "','" + to + "'," + (ctx || "'{}'::jsonb") + ")";
+
+    /* 접수 → 확인 → 배정(제17조) → 수락 → 상담 → 견적 → 협의 */
+    psql(mv(ST, "check"));
+    psql(mv(ST, "assigned", `'{"providerId":"pv-one","agree3rd":true}'::jsonb`));
+    psql(as(PV) + "select answer_assignment('" + R + "', true)");
+    psql(mv(PV, "consult"));
+    psql(mv(PV, "quoted"));
+    psql(mv(PV, "nego"));
+    ok("협의까지 왔다", psql("select state from request where id='" + R + "'") === "nego");
+    /* ⚠️ 여기까지는 계약 줄이 **없어야** 합니다 */
+    ok("계약 전에는 계약 줄이 없다",
+       psql("select count(*) from deal where request_id='" + R + "'") === "0");
+
+    /* 계약금액 없이 계약 완료 — 길 표의 needs 가 막습니다 */
+    let r = denied(mv(AD, "signed"));
+    ok("계약금액 없이는 계약 완료가 안 된다",
+       r.no && /같이 적어야/.test(r.why || ""), r.why);
+
+    let a = allowed(mv(AD, "signed", `'{"amount":10000000}'::jsonb`));
+    ok("계약 완료로 갈 수 있다", a.yes, a.why);
+    /* ⚠️⚠️ **이 줄이 0007 의 전부입니다** — 없으면 수수료를 확정할
+       대상이 영영 생기지 않습니다. */
+    ok("계약 완료에 계약 줄이 같이 생긴다",
+       psql("select count(*) from deal where request_id='" + R + "'") === "1");
+    ok("계약금액 · 업체 · 계약 시각이 적힌다",
+       psql(`select amount::text||'/'||provider_id||'/'||(signed_at is not null)::text
+               from deal where request_id='` + R + "'") === "10000000/pv-one/true");
+
+    /* ⚠️ 수락한 업체로 붙었는가 — 지어내지 않습니다 */
+    psql(mv(PV, "done"));
+    ok("서비스 완료 시각이 적힌다",
+       psql("select (done_at is not null)::text from deal where request_id='" + R + "'") === "true");
+
+    const D = psql("select id::text from deal where request_id='" + R + "'");
+
+    /* ⚠️⚠️ 수수료 확정 — 증빙 · 정책 사본이 없으면 거절 (§9) */
+    r = denied(as(AD) + "select confirm_fee('" + D + "',300000,30000,330000," +
+      `'{"type":"rate","rate":3}'::jsonb, null)`);
+    ok("증빙 없이는 수수료를 확정할 수 없다",
+       r.no && /증빙/.test(r.why || ""), r.why);
+    /* ⚠️ 업체는 자기 수수료를 확정할 수 없습니다 (§8 교차 확인) */
+    r = denied(as(PV) + "select confirm_fee('" + D + "',300000,30000,330000," +
+      `'{"type":"rate","rate":3}'::jsonb,'{"by":"세금계산서"}'::jsonb)`);
+    ok("업체는 자기 수수료를 확정할 수 없다",
+       r.no && /관리자만/.test(r.why || ""), r.why);
+
+    a = allowed(as(AD) + "select confirm_fee('" + D + "',300000,30000,330000," +
+      `'{"type":"rate","rate":3}'::jsonb,'{"by":"세금계산서"}'::jsonb,'3% 적용')`);
+    ok("관리자는 수수료를 확정할 수 있다", a.yes, a.why);
+    ok("정산 대기로 넘어간다",
+       psql("select state from request where id='" + R + "'") === "fee_wait");
+    /* ⚠️⚠️ 확정했으면 **누가 언제** 가 반드시 같이 있습니다 (제약) */
+    ok("확정자 · 확정 시각이 같이 적힌다",
+       psql("select (fee_by is not null and fee_at is not null)::text from deal where id='" + D + "'")
+         === "true");
+
+    /* ⚠️⚠️ 입금 확인 */
+    a = allowed(as(AD) + "select mark_paid('" + D + "',330000,'입금 확인')");
+    ok("입금을 확인하면 정산 완료가 된다",
+       a.yes && psql("select state from request where id='" + R + "'") === "fee_done", a.why);
+
+    /* ⚠️⚠️ 환수는 갈아 치우지 않고 **차액을 기록**합니다 */
+    a = allowed(as(AD) + "select clawback_fee('" + D + "',100000,'부분 환불')");
+    ok("환수하면 차액이 돌아온다", a.yes && a.out === "200000", a.why || a.out);
+    ok("환수 기록이 남는다",
+       psql(`select (data->>'back') from audit_log
+              where obj='deal' and obj_id='` + D + "' order by at desc limit 1") === "200000");
+
+    /* ⚠️⚠️ 한 신청에 계약은 **하나**입니다 — 두 줄이 생기면 수수료를
+       어느 줄에 확정할지 갈립니다 */
+    r = denied(`insert into deal (request_id, provider_id, amount)
+                values ('` + R + "','pv-two',1)");
+    ok("한 신청에 계약 줄이 둘 생기지 않는다", r.no, r.why);
+  }
+
+  console.log("\n── ⚠️⚠️ 0007 계약 줄을 아무 업체로나 만들지 않는가");
+  {
+    const A  = "11111111-1111-1111-1111-111111111111";
+    const AD = "55555555-5555-5555-5555-555555555555";
+    const as = u => "set role authenticated; select become('" + u + "'); ";
+    /* 배정이 **하나도 없는** 건 — 지어내지 않고 거절해야 합니다 */
+    const R2 = "aaaaaaaa-0000-0000-0000-000000000022";
+    psql(`insert into request (id, no, user_id, side, name, tel, agree_at, state) values
+      ('${R2}','SW-AAAA-0022','${A}','start','하','01022230000',now(),'nego');`);
+    let r = denied(as(AD) + "select move_state('" + R2 + "','signed','{\"amount\":100}'::jsonb)");
+    ok("배정이 없으면 계약을 지어내지 않는다",
+       r.no && /배정된 업체가 없어/.test(r.why || ""), r.why);
+    ok("그래서 상태도 안 바뀐다",
+       psql("select state from request where id='" + R2 + "'") === "nego");
+
+    /* 배정이 **둘**인데 아무도 수락 안 한 건 — 고르라고 해야 합니다 */
+    psql(`insert into assignment (request_id, provider_id, agree3rd_at) values
+      ('${R2}','pv-one',now()),('${R2}','pv-two',now());`);
+    r = denied(as(AD) + "select move_state('" + R2 + "','signed','{\"amount\":100}'::jsonb)");
+    ok("배정이 여럿이면 어느 업체인지 고르라고 한다",
+       r.no && /골라 주세요/.test(r.why || ""), r.why);
+    /* 배정 안 된 업체를 적어 보면 거절 */
+    r = denied(as(AD) + "select move_state('" + R2 +
+      "','signed','{\"amount\":100,\"providerId\":\"pv-none\"}'::jsonb)");
+    ok("배정되지 않은 업체로는 계약을 못 만든다",
+       r.no && /배정되지 않은/.test(r.why || ""), r.why);
+    /* 골라 주면 됩니다 */
+    const a = allowed(as(AD) + "select move_state('" + R2 +
+      "','signed','{\"amount\":100,\"providerId\":\"pv-two\"}'::jsonb)");
+    ok("골라 주면 그 업체로 계약이 생긴다",
+       a.yes && psql("select provider_id from deal where request_id='" + R2 + "'") === "pv-two", a.why);
+  }
+
+  console.log("\n── ⚠️⚠️ 0007 업체 등록 · 승인 (§6 · §7)");
+  {
+    const A  = "11111111-1111-1111-1111-111111111111";
+    const PV = "33333333-3333-3333-3333-333333333333";
+    const ST = "44444444-4444-4444-4444-444444444444";
+    const AD = "55555555-5555-5555-5555-555555555555";
+    const as = u => "set role authenticated; select become('" + u + "'); ";
+    const D  = `'{"subs":["interior"],"regions":["gyeonggi"],"industries":["cafe"]}'::jsonb`;
+
+    /* ⚠️⚠️ 표에 insert 권한을 주지 않았습니다 — 문으로만 들어갑니다 */
+    let r = denied(as(AD) + "insert into provider (id,name) values ('x-direct','직접')");
+    ok("표에 직접 넣는 길이 없다 (문으로만)", r.no, r.why);
+
+    r = denied(as(PV) + "select save_provider('x-one','가','" + "" + "'::jsonb)".replace("''::jsonb","{}'::jsonb"));
+    ok("업체 자신은 다른 업체를 등록할 수 없다", r.no, r.why);
+
+    /* 주소가 될 값 — 한글 · 대문자 · 밑줄은 거절 */
+    r = denied(as(ST) + "select save_provider('가나다','가나다'," + D + ")");
+    ok("주소에 한글을 못 쓴다", r.no && /영문 소문자/.test(r.why || ""), r.why);
+    r = denied(as(ST) + "select save_provider('X_One','가나다'," + D + ")");
+    ok("주소에 대문자 · 밑줄을 못 쓴다", r.no && /영문 소문자/.test(r.why || ""), r.why);
+    /* ⚠️⚠️ 하는 일이 비면 아무 분류에도 안 걸립니다 */
+    r = denied(as(ST) + "select save_provider('x-one','가나다','{}'::jsonb)");
+    ok("하는 일이 비면 거절한다", r.no && /하는 일/.test(r.why || ""), r.why);
+
+    let a = allowed(as(ST) + "select save_provider('x-one','가나다 인테리어'," + D + ",'영업에서 받아 옴')");
+    ok("직원은 업체를 등록할 수 있다", a.yes, a.why);
+    ok("등록 기록이 남는다",
+       psql("select to_state from audit_log where obj='provider' and obj_id='x-one' order by at desc limit 1")
+         === "created");
+    /* ⚠️⚠️ **등록만으로는 공개되지 않습니다** — 승인이 따로입니다 */
+    ok("등록만으로는 공개되지 않는다 (listed=false)",
+       psql("select listed::text from provider where id='x-one'") === "false");
+    ok("등록만으로는 확인 배지가 안 켜진다",
+       psql("select verified::text from provider where id='x-one'") === "{}");
+
+    /* 다시 부르면 고쳐집니다 (두 줄이 안 생깁니다) */
+    a = allowed(as(ST) + "select save_provider('x-one','가나다 인테리어(이전)'," + D + ")");
+    ok("다시 부르면 고쳐진다 (줄이 둘 안 생긴다)",
+       a.yes && psql("select count(*) from provider where id='x-one'") === "1", a.why);
+
+    /* ⚠️⚠️ 승인은 **관리자만** — 직원이 자기가 등록하고 자기가 켜면
+       교차 확인이 없습니다 */
+    r = denied(as(ST) + "select approve_provider('x-one', true)");
+    ok("직원은 공개 · 확인 배지를 못 켠다", r.no && /관리자만/.test(r.why || ""), r.why);
+    r = denied(as(PV) + "select approve_provider('pv-one', true)");
+    ok("업체 자신도 못 켠다", r.no && /관리자만/.test(r.why || ""), r.why);
+
+    a = allowed(as(AD) + `select approve_provider('x-one', true, '{"biz":true}'::jsonb, '서류 확인')`);
+    ok("관리자는 공개하고 배지를 켤 수 있다",
+       a.yes && psql("select listed::text||'/'||(verified->>'biz') from provider where id='x-one'")
+         === "true/true", a.why);
+    ok("승인 기록이 남는다",
+       psql(`select from_state||'→'||to_state from audit_log
+              where obj='provider' and obj_id='x-one' order by at desc limit 1`) === "hidden→listed");
+    /* ⚠️ null 은 "안 건드림" 입니다 — false 와 갈라 봅니다 */
+    a = allowed(as(AD) + "select approve_provider('x-one', null, null, '아무것도 안 바꿈')");
+    ok("null 은 안 건드린다 (false 와 다릅니다)",
+       a.yes && psql("select listed::text from provider where id='x-one'") === "true", a.why);
+    a = allowed(as(AD) + "select approve_provider('x-one', false, null, '내림')");
+    ok("false 는 실제로 내린다",
+       a.yes && psql("select listed::text from provider where id='x-one'") === "false", a.why);
+  }
+
+  console.log("\n── ⚠️⚠️ 0007 수수료 정책 (§6 · §9)");
+  {
+    const ST = "44444444-4444-4444-4444-444444444444";
+    const AD = "55555555-5555-5555-5555-555555555555";
+    const as = u => "set role authenticated; select become('" + u + "'); ";
+
+    let r = denied(as(ST) + `select save_fee_policy('pv-one','{"type":"rate","rate":3}'::jsonb)`);
+    ok("정책은 직원이 못 만든다", r.no && /관리자만/.test(r.why || ""), r.why);
+    r = denied(as(AD) + `select save_fee_policy('pv-none','{"type":"rate","rate":3}'::jsonb)`);
+    ok("없는 업체에는 정책을 못 만든다", r.no && /없는 업체/.test(r.why || ""), r.why);
+    /* ⚠️ 제약은 0001 이 들고 있습니다 — 여기서 또 적지 않고 **그것이
+       실제로 막는지**만 봅니다 */
+    r = denied(as(AD) + `select save_fee_policy('pv-one','{"type":"rate","rate":200}'::jsonb)`);
+    ok("요율 100% 넘는 정책은 제약이 막는다",
+       r.no && /fee_rate_range/.test(r.why || ""), r.why);
+    r = denied(as(AD) + `select save_fee_policy('pv-one','{"type":"rate","rate":3,"minFee":500000,"maxFee":100000}'::jsonb)`);
+    ok("최소가 최대보다 큰 정책은 제약이 막는다",
+       r.no && /fee_minmax/.test(r.why || ""), r.why);
+
+    /* ⚠️ 갯수를 **그냥 세지 않습니다** — 앞 블록이 이미 pv-one 에
+       정책을 하나 심어 두었습니다. 처음에 `=== "1"` 로 적었다가
+       멀쩡한 코드를 "틀렸다" 고 했습니다 (**검사가 틀린 자리** ·
+       이 저장소가 감사 기록 · 업체 수로 세 번 겪었습니다).
+       **전을 재고 늘어난 값**만 봅니다. */
+    const was = Number(psql("select count(*) from fee_policy where provider_id='pv-one'"));
+    const a = allowed(as(AD) +
+      `select save_fee_policy('pv-one','{"type":"rate","rate":3,"minFee":10000,"vat":"add","cycle":"monthly"}'::jsonb, null, '표준 3%')`);
+    ok("관리자는 정책을 만들 수 있다", a.yes && /^[0-9a-f-]{36}$/.test(a.out), a.why || a.out);
+    const FP = a.out;
+    ok("정책 기록이 남는다",
+       psql("select to_state from audit_log where obj='fee_policy' and obj_id='" + FP + "'")
+         === "created");
+    ok("처음에는 켜져 있다",
+       psql("select active::text from fee_policy where id='" + FP + "'") === "true");
+
+    /* 고치기 — 새 줄이 안 생겨야 합니다 */
+    const b = allowed(as(AD) +
+      `select save_fee_policy('pv-one','{"type":"rate","rate":5}'::jsonb,'` + FP + "'::uuid,'5% 로')");
+    const now = Number(psql("select count(*) from fee_policy where provider_id='pv-one'"));
+    ok("만들면 하나 늘고 · 고치면 안 는다",
+       b.yes && now === was + 1, b.why || (was + " → " + now));
+    ok("고친 값이 들어간다",
+       psql("select rate::text from fee_policy where id='" + FP + "'") === "5.0000");
+
+    /* ⚠️ 지우지 않고 **끕니다** — 지난 계약이 사본을 들고 있습니다 */
+    const c = allowed(as(AD) + "select set_fee_policy_active('" + FP + "', false, '요율 개편')");
+    ok("정책은 지우지 않고 끈다",
+       c.yes && psql("select active::text from fee_policy where id='" + FP + "'") === "false", c.why);
+    const d = denied(as(ST) + "select set_fee_policy_active('" + FP + "', true)");
+    ok("끄고 켜는 것도 관리자만", d.no && /관리자만/.test(d.why || ""), d.why);
   }
 
   console.log("\n── 되돌리기 파일이 실수로 안 돌아가는가");

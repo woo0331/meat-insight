@@ -677,7 +677,7 @@ function ok(name, cond, extra) {
       body: JSON.stringify({ auth:true, signedIn:true, role:"admin",
                              name:"관리자", provider:null, conf:CONF }) }));
 
-    await pg.route("**/api/me", r => r.fulfill({ status:200,
+    await pg.route("**/api/me**", r => r.fulfill({ status:200,
       contentType:"application/json", body: JSON.stringify({
         auth:true, signedIn:true, role:"admin",
         requests:[
@@ -708,33 +708,33 @@ function ok(name, cond, extra) {
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
     await pg.waitForTimeout(500);
 
-    ok("접수 줄이 나온다", (await pg.locator("#rq .rq-r").count()) === 2);
+    ok("접수 줄이 나온다", (await pg.locator("#rq .rq-s-rq .rq-r").count()) === 2);
     /* ⚠️ 상태 이름 · 색은 `js/data/deal.js` 한 곳에서 옵니다 — 이 줄이
        영어로 나오면 admin.html 에 deal.js 를 안 실은 것입니다 */
     ok("상태 이름이 한글로 나온다 (deal.js 를 읽습니다)",
-       (await pg.locator("#rq .rq-r >> nth=0 >> .myq-st").textContent()) === "정보 확인 중");
+       (await pg.locator("#rq .rq-s-rq .rq-r >> nth=0 >> .myq-st").textContent()) === "정보 확인 중");
     /* ⚠️⚠️ 보류를 취소와 같은 색으로 두지 않습니다 (§8-3) */
-    const c0 = await pg.locator("#rq .rq-r >> nth=0 >> .myq-st").getAttribute("class");
-    const c1 = await pg.locator("#rq .rq-r >> nth=1 >> .myq-st").getAttribute("class");
+    const c0 = await pg.locator("#rq .rq-s-rq .rq-r >> nth=0 >> .myq-st").getAttribute("class");
+    const c1 = await pg.locator("#rq .rq-s-rq .rq-r >> nth=1 >> .myq-st").getAttribute("class");
     ok("보류는 진행 중과 다른 색이다", c0 !== c1, c0 + " / " + c1);
     ok("접수번호가 보인다",
-       (await pg.locator("#rq .rq-no").first().textContent()) === "SW-AB12-CD34");
+       (await pg.locator("#rq .rq-s-rq .rq-no").first().textContent()) === "SW-AB12-CD34");
     /* ⚠️⚠️ 목록 하나가 곧 유출인 자리입니다 */
-    const listTxt = await pg.locator("#rq").textContent();
+    const listTxt = await pg.locator("#rq .rq-s-rq").textContent();
     ok("목록에 성함 · 연락처가 없다",
        !/010-|@/.test(listTxt) && listTxt.includes("성함 · 연락처가 없습니다"));
     ok("상태 칩의 숫자가 센 값이다",
-       (await pg.locator("#rq .rq-fil .chip").first().textContent()).includes("전체 2"));
+       (await pg.locator("#rq .rq-s-rq .rq-fil .chip").first().textContent()).includes("전체 2"));
 
     /* 거르개 */
-    await pg.locator("#rq .rq-fil .chip", { hasText:"보류" }).click();
+    await pg.locator("#rq .rq-s-rq .rq-fil .chip", { hasText:"보류" }).click();
     await pg.waitForTimeout(200);
-    ok("상태로 거를 수 있다", (await pg.locator("#rq .rq-r").count()) === 1);
-    await pg.locator("#rq .rq-fil .chip", { hasText:"전체" }).click();
+    ok("상태로 거를 수 있다", (await pg.locator("#rq .rq-s-rq .rq-r").count()) === 1);
+    await pg.locator("#rq .rq-s-rq .rq-fil .chip", { hasText:"전체" }).click();
     await pg.waitForTimeout(200);
 
     /* ── 배정 (§6 업체 수동 배정 · 제17조) ───────────────────── */
-    await pg.locator("#rq .rq-r .rq-hd").first().click();
+    await pg.locator("#rq .rq-s-rq .rq-r .rq-hd").first().click();
     await pg.waitForTimeout(200);
     const dests = await pg.locator("#rq-to option").allTextContents();
     ok("갈 수 있는 길만 나온다", dests.includes("업체 배정") && dests.includes("보류"), dests.join(","));
@@ -745,7 +745,7 @@ function ok(name, cond, extra) {
 
     await pg.selectOption("#rq-to", "assigned");
     await pg.waitForTimeout(200);
-    const a3 = await pg.locator("#rq .rq-a3").textContent();
+    const a3 = await pg.locator("#rq .rq-s-rq .rq-a3").textContent();
     ok("제17조 안내가 먼저 뜬다",
        a3.includes("제17조") && a3.includes("상호를 알려 드리고"), a3.slice(0, 80));
     ok("배정할 업체 고르개가 있다", (await pg.locator("#rq-pv option").count()) === 2);
@@ -754,7 +754,7 @@ function ok(name, cond, extra) {
 
     /* ⚠️ 동의를 안 켜고 눌러 봅니다 — 거절하는 **그 말**이 나와야 합니다 */
     await pg.selectOption("#rq-pv", "pv-one");
-    await pg.locator("#rq .rq-mv button", { hasText:"이 상태로 바꾸기" }).click();
+    await pg.locator("#rq .rq-s-rq .rq-mv button", { hasText:"이 상태로 바꾸기" }).click();
     await pg.waitForTimeout(400);
     ok("동의 없이 보내면 agree3rd 가 안 실린다",
        sent && !((sent.args.p_ctx || {}).agree3rd), JSON.stringify(sent && sent.args));
@@ -764,7 +764,7 @@ function ok(name, cond, extra) {
 
     /* 동의를 켜고 다시 */
     await pg.locator("#rq-a3").check();
-    await pg.locator("#rq .rq-mv button", { hasText:"이 상태로 바꾸기" }).click();
+    await pg.locator("#rq .rq-s-rq .rq-mv button", { hasText:"이 상태로 바꾸기" }).click();
     await pg.waitForTimeout(500);
     ok("move_state 를 부른다", sent && sent.fn === "move_state", JSON.stringify(sent));
     ok("정해 둔 인자만 보낸다",
@@ -777,18 +777,357 @@ function ok(name, cond, extra) {
        sent.args.p_request === "11111111-1111-1111-1111-111111111111", sent.args.p_request);
 
     /* ── 보류 — ⚠️ 사유를 받습니다 (§8 기록) ──────────────────── */
-    await pg.locator("#rq .rq-r .rq-hd").first().click();
+    await pg.locator("#rq .rq-s-rq .rq-r .rq-hd").first().click();
     await pg.waitForTimeout(200);
     await pg.selectOption("#rq-to", "hold");
     await pg.waitForTimeout(200);
     ok("보류는 사유 칸을 낸다", (await pg.locator("#rq-why").count()) === 1);
     await pg.fill("#rq-why", "다음 달에 다시 연락 달라고 하셨습니다");
-    await pg.locator("#rq .rq-mv button", { hasText:"이 상태로 바꾸기" }).click();
+    await pg.locator("#rq .rq-s-rq .rq-mv button", { hasText:"이 상태로 바꾸기" }).click();
     await pg.waitForTimeout(400);
     ok("사유가 같이 간다",
        sent.args.p_to === "hold" &&
        sent.args.p_ctx.why === "다음 달에 다시 연락 달라고 하셨습니다",
        JSON.stringify(sent.args));
+
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
+  /* ══ 2차 — 계약 · 수수료 확정 · 정산 · 정책 · 승인 · 이력 ═══════
+     전면 감사 §6 의 5·6·7·8 · §9 · §13.
+
+     ⚠️⚠️ **Supabase 를 세울 수가 없어 두 주소를 가로챕니다.** 서버
+     쪽 자물쇠(confirm_fee 가 증빙 없이 거절하는 것 · 입금이 확정보다
+     먼저일 수 없는 것 · 관리자만인 것)는 `tools/test-sql.js` 가
+     **실제 Postgres 에서** 눌러 봅니다. 여기서 보는 것은 **화면이
+     무엇을 보내는가**입니다 — 특히 §9 가 요구한 "계약금액 · 요율 ·
+     확정액 · 입금액을 각각" 과 "정책 사본" 이 실제로 실리는지. */
+  console.log("\n2차 — 계약 · 수수료 · 정산 · 정책 · 승인 · 이력");
+  {
+    const { pg, ctx, errs } = await fresh(1440, 1600);
+    let sent = null, meAsk = [];
+    const CONF = { url:"https://proj.supabase.co", anonKey:"ANON-TEST" };
+
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"admin",
+                             name:"관리자", provider:null, conf:CONF }) }));
+
+    /* 계약 셋 — ① 확정 전 ② 확정됐고 입금 전 ③ 입금까지 끝 */
+    const DEALS = [
+      { id:"d1", request_id:"11111111-1111-1111-1111-111111111111",
+        provider_id:"pv-one", amount:10000000,
+        fee:null, fee_vat:null, fee_total:null, paid:null,
+        signed_at:"2026-10-05T02:00:00+00:00",
+        done_at:"2026-10-09T02:00:00+00:00", fee_at:null, fee_snap:null,
+        created_at:"2026-10-05T02:00:00+00:00",
+        request:{ no:"SW-AB12-CD34", side:"start", cat:"interior",
+                  industry:"cafe", region:"gyeonggi", gu:"안양시", state:"done" } },
+      { id:"d2", request_id:"22222222-2222-2222-2222-222222222222",
+        provider_id:"pv-one", amount:5000000,
+        fee:150000, fee_vat:15000, fee_total:165000, paid:null,
+        signed_at:"2026-10-01T02:00:00+00:00",
+        done_at:"2026-10-03T02:00:00+00:00",
+        fee_at:"2026-10-04T02:00:00+00:00",
+        fee_snap:{ type:"rate", rate:3, vat:"add" },
+        created_at:"2026-10-01T02:00:00+00:00",
+        request:{ no:"SW-EF56-GH78", side:"close", cat:"demolish",
+                  industry:"restaurant", region:"seoul", gu:"", state:"fee_wait" } },
+      { id:"d3", request_id:"33333333-3333-3333-3333-333333333333",
+        provider_id:"pv-two", amount:2000000,
+        fee:60000, fee_vat:6000, fee_total:66000, paid:66000,
+        signed_at:"2026-09-20T02:00:00+00:00",
+        done_at:"2026-09-22T02:00:00+00:00",
+        fee_at:"2026-09-23T02:00:00+00:00",
+        fee_snap:{ type:"rate", rate:3, vat:"add" },
+        created_at:"2026-09-20T02:00:00+00:00",
+        request:{ no:"SW-IJ90-KL12", side:"start", cat:"equip",
+                  industry:"cafe", region:"seoul", gu:"", state:"fee_done" } }
+    ];
+
+    await pg.route("**/api/me**", r => {
+      const u = new URL(r.request().url());
+      const one = u.searchParams.get("r") || "";
+      meAsk.push(one);
+      /* ⚠️ 이력은 **연 건 하나만** 옵니다 (api/me.js 의 `?r=`) */
+      const hist = one ? [
+        { at:"2026-10-05T02:00:00+00:00", by_role:"staff", obj:"request",
+          from_state:"new", to_state:"check", why:null },
+        { at:"2026-10-06T02:00:00+00:00", by_role:"admin", obj:"request",
+          from_state:"check", to_state:"assigned",
+          why:"안양 업체로 배정했습니다" }
+      ] : undefined;
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({
+          auth:true, signedIn:true, role:"admin",
+          requests:[
+            { id:"11111111-1111-1111-1111-111111111111", no:"SW-AB12-CD34",
+              side:"start", cat:"interior", industry:"cafe",
+              region:"gyeonggi", gu:"안양시", state:"check",
+              created_at:"2026-10-11T02:00:00+00:00", assignment:[] }
+          ],
+          providers:[
+            { id:"pv-one", name:"가나다 인테리어", regions:["gyeonggi"],
+              gu:["안양시"], industries:["cafe"], subs:["interior","design"],
+              listed:false },
+            { id:"pv-two", name:"라마바 철거", regions:["seoul"], gu:[],
+              industries:["restaurant"], subs:["demolish"], listed:true }
+          ],
+          deals: DEALS,
+          fees:[
+            { id:"f1", provider_id:"pv-one", offer_id:null, type:"rate",
+              flat:null, rate:3, min_fee:null, max_fee:null, vat:"add",
+              confirm_when:"done", cycle:"monthly", refund_rule:null,
+              from_date:null, to_date:null, active:true,
+              created_at:"2026-10-01T02:00:00+00:00" }
+          ],
+          audits:[], history:hist }) });
+    });
+
+    await pg.route("**/api/deal", r => {
+      sent = JSON.parse(r.request().postData() || "{}");
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ ok:true }) });
+    });
+
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(600);
+
+    /* ── 숫자 넷 (§9 — 각각 구분) ────────────────────────────── */
+    const kpi = await pg.locator("#rq .rq-s-mn .rq-k").allTextContents();
+    ok("계약 구간의 숫자가 넷이다", kpi.length === 4, kpi.join(" | "));
+    /* ⚠️⚠️ **칸 하나를 집어서 그 값만** 봅니다. 처음에 네 칸을 이어
+       붙인 글에서 `includes("165,000")` 로 찾았는데, 미수금이
+       **10,165,000** 으로 틀려도 그 안에 "165,000" 이 들어 있어서
+       **통과했습니다** — 되돌려 보고 알았습니다. 이 저장소가 "검사가
+       화면 글 전체에서 찾았다" 로 두 번 겪은 자리입니다. */
+    const kv = {};
+    for(const k of await pg.locator("#rq .rq-s-mn .rq-k").all())
+      kv[(await k.locator("span").textContent()).trim()] =
+        (await k.locator("b").textContent()).trim();
+    /* ⚠️ 합계는 그 자리에서 센 값입니다 — 10,000,000 + 5,000,000 + 2,000,000 */
+    ok("계약금액 합계가 센 값이다", kv["계약"] === "3건" &&
+       kpi.join(" ").includes("17,000,000원"), JSON.stringify(kv));
+    ok("확정 수수료 합계가 센 값이다",
+       kv["확정 수수료"] === "210,000원", JSON.stringify(kv));
+    /* 미수금 = (165,000 + 66,000) - 66,000 = 165,000 */
+    ok("미수금은 확정 - 입금이다",
+       kv["미수금"] === "165,000원", JSON.stringify(kv));
+    /* ⚠️⚠️ 확정 전인 건(계약금액 1,000만원)이 미수금에 섞이면 받을 돈이
+       **열 배로** 부풀려집니다 — 위 칸 하나를 집어서 그것을 봅니다. */
+    ok("확정 전인 건을 미수금에 안 넣는다",
+       kv["미수금"] === "165,000원" &&
+       kpi.join(" ").includes("확정 전 1건"), JSON.stringify(kv));
+    /* ⚠️⚠️ 최근 것만 가져오므로 "전체" 라고 적지 않습니다 */
+    const moneyTxt = await pg.locator("#rq .rq-s-mn").textContent();
+    ok("전체 누적이 아니라고 밝힌다",
+       moneyTxt.includes("전체 누적이 아닙니다"), moneyTxt.slice(-120));
+
+    /* ── ① 수수료 확정 ──────────────────────────────────────── */
+    await pg.locator("#rq .rq-s-mn .rq-hd", { hasText:"SW-AB12-CD34" }).click();
+    await pg.waitForTimeout(300);
+    const sp = await pg.locator("#rq .rq-s-mn .rq-sp").textContent();
+    ok("§9 의 넷을 따로 낸다 (계약금액 · 수수료 · 청구 · 입금)",
+       sp.includes("계약금액") && sp.includes("10,000,000"), sp.slice(0, 120));
+    /* ⚠️ 값이 없는 칸은 줄째 뺍니다 (절대 규칙 2) */
+    ok("값이 없는 칸은 줄째 뺀다",
+       !sp.includes("실제 입금액") && !sp.includes("확정일"), sp);
+    ok("적용할 정책 고르개가 있다", (await pg.locator("#rq-fp option").count()) === 1);
+    const calc = await pg.locator("#rq .rq-s-mn .rq-calc").textContent();
+    /* 10,000,000 × 3% = 300,000 · 부가세 별도 30,000 · 청구 330,000 */
+    ok("수수료가 계산값으로 나온다",
+       calc.includes("300,000") && calc.includes("30,000") && calc.includes("330,000"),
+       calc);
+    /* ⚠️⚠️ 손으로 적는 칸을 두지 않았습니다 — 정책과 어긋난 청구서가
+       나가면 어느 쪽이 맞는지 아무도 모릅니다 (§9) */
+    ok("수수료를 손으로 적는 칸이 없다",
+       (await pg.locator("#rq .rq-s-mn .rq-mv input[type=number]").count()) === 0);
+    ok("사본으로 박힌다고 적혀 있다",
+       (await pg.locator("#rq .rq-s-mn .rq-mv").textContent()).includes("사본으로"));
+
+    /* ⚠️ 증빙 없이 눌러 봅니다 — §9 가 요구한 자리입니다 */
+    sent = null;
+    await pg.locator("#rq .rq-s-mn .rq-mv button", { hasText:"수수료 확정" }).click();
+    await pg.waitForTimeout(300);
+    ok("증빙 없이는 안 보낸다", sent === null, JSON.stringify(sent));
+    ok("무엇이 모자란지 말해 준다",
+       (await pg.locator("#toast").textContent()).includes("증빙"),
+       await pg.locator("#toast").textContent());
+
+    await pg.fill("#rq-proof", "세금계산서 2026-10-11 · 계약서 사본 받음");
+    await pg.locator("#rq .rq-s-mn .rq-mv button", { hasText:"수수료 확정" }).click();
+    await pg.waitForTimeout(500);
+    ok("confirm_fee 를 부른다", sent && sent.fn === "confirm_fee", JSON.stringify(sent));
+    ok("계산값을 그대로 보낸다",
+       sent && sent.args.p_fee === 300000 && sent.args.p_vat === 30000 &&
+       sent.args.p_total === 330000, JSON.stringify(sent && sent.args));
+    /* ⚠️⚠️ §9 — 정책을 가리키게만 두면 요율을 고친 날 지난 계약이 바뀝니다 */
+    ok("정책 사본이 같이 간다",
+       sent && sent.args.p_snap && sent.args.p_snap.rate === 3 &&
+       sent.args.p_snap.snapAt, JSON.stringify(sent && sent.args.p_snap));
+    ok("증빙이 같이 간다",
+       sent && sent.args.p_proof &&
+       /세금계산서/.test(sent.args.p_proof.note), JSON.stringify(sent && sent.args.p_proof));
+    /* ⚠️ `api/deal.js` 의 OK_ARG 에 없는 이름을 보내면 서버가 통째로
+       거절합니다 — 화면이 먼저 안 보내는지 봅니다 */
+    ok("정해 둔 인자만 보낸다",
+       sent && Object.keys(sent.args).sort().join(",") ===
+         "p_deal,p_fee,p_proof,p_snap,p_total,p_vat,p_why",
+       JSON.stringify(sent && Object.keys(sent.args).sort()));
+
+    /* ── ② 입금 확인 (§13 가짜 정산 금지) ───────────────────── */
+    await pg.locator("#rq .rq-s-mn .rq-hd", { hasText:"SW-EF56-GH78" }).click();
+    await pg.waitForTimeout(300);
+    const pf = await pg.locator("#rq .rq-s-mn .rq-mv").textContent();
+    ok("청구액을 그대로 적지 말라고 적혀 있다",
+       pf.includes("실제로 들어온 금액") && pf.includes("가짜 정산"), pf.slice(0, 160));
+    sent = null;
+    await pg.fill("#rq-paid", "100000");
+    await pg.locator("#rq .rq-s-mn .rq-mv button", { hasText:"입금 확인" }).click();
+    await pg.waitForTimeout(400);
+    ok("mark_paid 를 부른다 (덜 들어온 금액 그대로)",
+       sent && sent.fn === "mark_paid" && sent.args.p_paid === 100000,
+       JSON.stringify(sent));
+
+    /* ── ③ 환수 (§9 — 갈아 치우지 않습니다) ─────────────────── */
+    await pg.locator("#rq .rq-s-mn .rq-hd", { hasText:"SW-IJ90-KL12" }).click();
+    await pg.waitForTimeout(300);
+    ok("확정액을 갈아 치우지 않는다고 적혀 있다",
+       (await pg.locator("#rq .rq-s-mn .rq-mv").textContent()).includes("갈아 치우지 않고"));
+    sent = null;
+    await pg.fill("#rq-nfee", "30000");
+    await pg.locator("#rq .rq-s-mn .rq-mv button", { hasText:"환수 기록" }).click();
+    await pg.waitForTimeout(300);
+    ok("사유 없이는 환수를 안 보낸다", sent === null, JSON.stringify(sent));
+    await pg.fill("#rq-cwhy", "계약 일부 취소 — 2026-10-20");
+    await pg.locator("#rq .rq-s-mn .rq-mv button", { hasText:"환수 기록" }).click();
+    await pg.waitForTimeout(400);
+    ok("clawback_fee 를 사유와 함께 부른다",
+       sent && sent.fn === "clawback_fee" && sent.args.p_new_fee === 30000 &&
+       /일부 취소/.test(sent.args.p_why), JSON.stringify(sent));
+
+    /* ── 수수료 정책 ────────────────────────────────────────── */
+    const fs2 = await pg.locator("#rq .rq-s-fee");
+    const fsTxt = await fs2.textContent();
+    ok("정책 줄이 나온다", (await fs2.locator(".rq-r").count()) === 1);
+    ok("요율 · 부가세 · 확정 조건이 데이터 이름으로 나온다",
+       fsTxt.includes("3%") && fsTxt.includes("부가세 별도") &&
+       fsTxt.includes("이행 완료 확인 후"), fsTxt.slice(0, 220));
+    /* ⚠️⚠️ 고친 정책이 지난 계약에 영향을 안 준다고 **그 자리에서** 밝힙니다 */
+    ok("지난 계약에 영향을 주지 않는다고 밝힌다",
+       fsTxt.includes("지난 계약에 영향을 주지 않습니다"), fsTxt.slice(0, 200));
+    /* ⚠️ 지우지 않고 **끕니다** — 지난 계약이 그 사본을 들고 있습니다 */
+    ok("지우는 단추가 없고 끄는 단추가 있다",
+       !/지우기|삭제/.test(fsTxt) && fsTxt.includes("끄기"), fsTxt.slice(-200));
+    sent = null;
+    await fs2.locator("button", { hasText:"끄기" }).click();
+    await pg.waitForTimeout(400);
+    ok("set_fee_policy_active 로 끈다",
+       sent && sent.fn === "set_fee_policy_active" && sent.args.p_active === false,
+       JSON.stringify(sent));
+
+    /* 새 정책 — ⚠️ 저장하기 전에 봅니다 (fee.js 의 amFeeBadPolicy) */
+    await pg.locator("#rq .rq-s-fee .rq-new summary").click();
+    await pg.waitForTimeout(250);
+    sent = null;
+    await pg.fill("#rq-fn-r", "0");
+    await pg.locator("#rq .rq-s-fee button", { hasText:"정책 만들기" }).click();
+    await pg.waitForTimeout(300);
+    ok("요율 0 은 저장하기 전에 막는다", sent === null, JSON.stringify(sent));
+    await pg.fill("#rq-fn-r", "5");
+    await pg.locator("#rq .rq-s-fee button", { hasText:"정책 만들기" }).click();
+    await pg.waitForTimeout(400);
+    ok("save_fee_policy 를 부른다",
+       sent && sent.fn === "save_fee_policy" && sent.args.p_provider === "pv-one" &&
+       sent.args.p_data.rate === 5, JSON.stringify(sent));
+    /* ⚠️⚠️ 칸 이름이 두 벌입니다 — DB 는 `confirm_when`, fee.js 는 `when` */
+    ok("DB 가 읽는 이름으로 보낸다 (confirmWhen · minFee)",
+       sent && "confirmWhen" in sent.args.p_data && !("when" in sent.args.p_data),
+       JSON.stringify(sent && Object.keys(sent.args.p_data)));
+
+    /* ── 업체 공개 승인 (§7) ────────────────────────────────── */
+    const ps = await pg.locator("#rq .rq-s-pv");
+    const psTxt = await ps.textContent();
+    ok("업체 줄이 나온다", (await ps.locator(".rq-r").count()) === 2);
+    ok("공개 전인 곳을 센다", psTxt.includes("1곳"), psTxt.slice(0, 160));
+    /* ⚠️ 공개 전인 업체도 배정 고르개에는 보입니다 — 그렇다고 적습니다 */
+    ok("공개 전에도 배정은 된다고 밝힌다",
+       psTxt.includes("배정 고르개에는 보입니다"), psTxt.slice(0, 200));
+    /* ⚠️⚠️ 확인 배지를 화면에서 켜는 칸을 두지 않았습니다 (절대 규칙 1) */
+    ok("확인 배지를 켜는 칸이 없다",
+       !/확인 배지|사업자 확인|보험 가입/.test(psTxt), psTxt.slice(0, 300));
+    sent = null;
+    await ps.locator("button", { hasText:"공개하기" }).click();
+    await pg.waitForTimeout(400);
+    ok("approve_provider 로 공개한다",
+       sent && sent.fn === "approve_provider" && sent.args.p_id === "pv-one" &&
+       sent.args.p_listed === true, JSON.stringify(sent));
+
+    /* ── 이력 (§8) ──────────────────────────────────────────── */
+    /* ⚠️⚠️ 목록에는 안 붙습니다 — 쉰 건의 사유가 한 화면에 깔리면
+       화면 하나가 곧 유출입니다. 여기까지 `?r=` 이 한 번도 안 가야 합니다. */
+    ok("목록을 불러올 때는 이력을 안 묻는다",
+       meAsk.every(x => x === ""), JSON.stringify(meAsk));
+    await pg.locator("#rq .rq-s-rq .rq-hd", { hasText:"SW-AB12-CD34" }).click();
+    await pg.waitForTimeout(300);
+    await pg.locator("#rq .rq-s-rq button", { hasText:"이력 보기" }).click();
+    await pg.waitForTimeout(500);
+    ok("연 건 하나만 묻는다",
+       meAsk.filter(x => x).length === 1 &&
+       meAsk.filter(x => x)[0] === "11111111-1111-1111-1111-111111111111",
+       JSON.stringify(meAsk));
+    const hv = await pg.locator("#rq .rq-s-rq .rq-hist").textContent();
+    ok("누가 · 언제 · 왜가 보인다",
+       hv.includes("관리자") && /2026\. 10\. 0[56]/.test(hv) &&
+       hv.includes("안양 업체로 배정했습니다"), hv.slice(0, 220));
+    ok("상태 이름이 한글로 나온다",
+       hv.includes("정보 확인 중") && hv.includes("업체 배정"), hv.slice(0, 220));
+    ok("고칠 수 없는 기록이라고 밝힌다",
+       hv.includes("고치거나 지울 수 없습니다"), hv.slice(-120));
+
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
+  /* ══ 직원 계정 — ⚠️⚠️ 등록과 승인은 **다른 문**입니다 (§7) ══════
+     한 사람이 등록하고 자기가 공개하면 교차 확인이 없습니다 (계약을
+     따는 사람과 수수료를 확정하는 사람을 가른 것과 같은 까닭).
+     ⚠️ 막는 것은 화면이 아니라 **DB 의 `approve_provider()`** 입니다 —
+     여기서 보는 것은 **누르면 늘 실패하는 단추를 안 내는가**(§30-7)
+     이고, 서버 쪽은 `tools/test-sql.js` 가 실제로 눌러 봅니다. */
+  console.log("\n직원 계정 — 돈과 승인은 안 보입니다");
+  {
+    const { pg, ctx, errs } = await fresh(1440, 1200);
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"staff",
+        name:"직원", provider:null,
+        conf:{ url:"https://proj.supabase.co", anonKey:"ANON-TEST" } }) }));
+    /* ⚠️⚠️ 돈은 **서버가 안 보냅니다** (api/me.js 의 PICK · deals ·
+       fees 를 관리자에게만). 화면이 숨기는 것이 아니라서, 직원에게는
+       그 칸이 애초에 안 옵니다 — 그대로 흉내 냅니다. */
+    await pg.route("**/api/me**", r => r.fulfill({ status:200,
+      contentType:"application/json", body: JSON.stringify({
+        auth:true, signedIn:true, role:"staff",
+        requests:[], providers:[
+          { id:"pv-one", name:"가나다 인테리어", regions:["gyeonggi"],
+            gu:["안양시"], industries:["cafe"], subs:["interior"], listed:false }
+        ] }) }));
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(500);
+
+    ok("직원에게는 계약 · 수수료 구간이 아예 없다",
+       (await pg.locator("#rq .rq-s-mn").count()) === 0);
+    ok("직원에게는 수수료 정책 구간이 아예 없다",
+       (await pg.locator("#rq .rq-s-fee").count()) === 0);
+    /* ⚠️ 업체 구간은 **보입니다** — 배정에 쓰는 목록이니까요 */
+    ok("업체 구간은 보인다", (await pg.locator("#rq .rq-s-pv .rq-r").count()) === 1);
+    const pv = await pg.locator("#rq .rq-s-pv").textContent();
+    ok("직원에게는 공개 단추를 안 낸다",
+       (await pg.locator("#rq .rq-s-pv button").count()) === 0, pv.slice(0, 200));
+    ok("공개는 관리자만이라고 적혀 있다",
+       pv.includes("관리자만"), pv.slice(0, 200));
 
     ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
     await ctx.close();
@@ -822,7 +1161,7 @@ function ok(name, cond, extra) {
       body: JSON.stringify({ auth:true, signedIn:true, role:"customer",
                              name:"갑", provider:null,
                              conf:{ url:"https://p.supabase.co", anonKey:"A" } }) }));
-    await pg.route("**/api/me", r => r.fulfill({ status:500, body:"no" }));
+    await pg.route("**/api/me**", r => r.fulfill({ status:500, body:"no" }));
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
     await pg.waitForTimeout(400);
     const t = await pg.locator("#rq").textContent();

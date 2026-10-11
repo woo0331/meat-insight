@@ -203,5 +203,37 @@ console.log("\n── 실제 입금액은 계산이 건드리지 않는다 (§9 
   ok("계산 결과에 입금액 칸이 없다", r.ok && r.paid === undefined, Object.keys(r));
 }
 
+console.log("\n── ⚠️⚠️ DB 한 줄을 읽는 모양으로 바꾸는가 (0007 · amFeeFromDb)");
+{
+  /* ⚠️⚠️ **칸 이름이 두 벌입니다** — DB 는 confirm_when · min_fee ·
+     max_fee · from_date · to_date, 이 파일은 when · min · max ·
+     from · to (when 과 from 이 SQL 예약어라 갈렸습니다). 한 곳이라도
+     안 바꾸면 `amFeeBadPolicy()` 가 영영 "확정 조건을 골라 주세요"
+     라고 하고, 관리자는 다 골랐는데 왜 안 되는지 모릅니다. */
+  const row = {
+    id:"f-1", provider_id:"pv-one", offer_id:null, type:"rate",
+    flat:null, rate:"3.0000", min_fee:"10000", max_fee:null,
+    vat:"add", confirm_when:"done", cycle:"monthly",
+    refund_rule:null, from_date:null, to_date:null, active:true
+  };
+  const p = W.amFeeFromDb(row);
+  ok("확정 조건 · 최소 · 최대 이름이 바뀐다",
+     p.when === "done" && p.min === 10000 && p.max === null, p);
+  /* ⚠️ PostgREST 는 numeric · bigint 를 **문자열로** 줍니다 — 그대로
+     두면 `num()` 이 null 로 보고 "정액을 적어 주세요" 가 됩니다. */
+  ok("숫자가 문자열로 와도 숫자로 바꾼다", p.rate === 3 && typeof p.rate === "number", p.rate);
+  /* ⚠️ 바꾼 뒤 **실제로 통과하는지**까지 봅니다 — 이름만 바꿔 놓고
+     쓸 수 없으면 바꾼 것이 아닙니다 */
+  ok("바꾼 정책이 검사를 통과한다", W.amFeeBadPolicy(p) === "", W.amFeeBadPolicy(p));
+  const r = W.amFeeCalc(W.amFeeSnap(p), { amount:10000000 });
+  ok("바꾼 정책으로 실제 계산이 된다", r.ok && r.fee === 300000, r);
+
+  /* ⚠️ `0` 은 값입니다 — 빈 칸과 가릅니다 (무권리에서 겪은 자리) */
+  const z = W.amFeeFromDb({ type:"lead", flat:"0", vat:"add",
+                            confirm_when:"lead_ok", cycle:"now" });
+  ok("정액 0 원을 빈 칸으로 보지 않는다", z.flat === 0, z.flat);
+  ok("없는 줄에는 null 을 돌려준다", W.amFeeFromDb(null) === null);
+}
+
 console.log("\n" + (bad ? "❌ " + bad + "/" + ran + " 실패" : "✅ " + ran + "개 전부 통과") + "\n");
 process.exit(bad ? 1 : 0);

@@ -83,6 +83,45 @@ window.amFeeSnap = function(policy, at){
   return o;
 };
 
+/* ── DB 한 줄 → 이 파일이 읽는 모양 (0007) ───────────────────────
+   ⚠️⚠️ **칸 이름이 두 벌입니다.** DB 는 `confirm_when` · `min_fee` ·
+   `max_fee` · `from_date` · `to_date` 이고 이 파일은 `when` · `min` ·
+   `max` · `from` · `to` 입니다 — `when` 과 `from` 은 SQL 예약어라
+   칸 이름으로 쓸 수 없어서 갈렸습니다.
+   ⚠️⚠️ **그 바꾸는 일을 화면마다 적지 마세요.** 한 곳만 빠뜨리면
+   `amFeeBadPolicy()` 가 영영 "수수료 확정 조건을 골라 주세요" 라고
+   하고, 관리자는 다 골랐는데 왜 안 되는지 모릅니다 — 이 저장소가
+   `amCatTo`/`catTo` · 랜딩 아이콘으로 겪은 "같은 규칙을 두 곳에"
+   입니다. 여기 하나입니다.
+   ⚠️ 숫자 칸은 PostgREST 가 문자열로 줄 수 있어 **숫자로 바꿉니다**
+   (`num()` 은 문자열을 null 로 봅니다 — 그러면 "정액 수수료를 적어
+   주세요" 가 됩니다). `0` 은 값이라 그대로 둡니다. */
+window.amFeeFromDb = function(row){
+  if(!row || typeof row !== "object") return null;
+  function n(v){
+    if(v === null || v === undefined || v === "") return null;
+    var x = Number(v);
+    return isFinite(x) ? x : null;
+  }
+  return {
+    id:      row.id,
+    provider: row.provider_id,
+    offer:   row.offer_id || "",
+    type:    row.type,
+    flat:    n(row.flat),
+    rate:    n(row.rate),
+    min:     n(row.min_fee),
+    max:     n(row.max_fee),
+    vat:     row.vat,
+    when:    row.confirm_when,
+    cycle:   row.cycle,
+    refund:  row.refund_rule || "",
+    from:    row.from_date || null,
+    to:      row.to_date   || null,
+    active:  row.active !== false
+  };
+};
+
 window.amFeeType = function(key){
   var L = window.AM_FEE_TYPE || [], i;
   for(i = 0; i < L.length; i++) if(L[i].key === key) return L[i];

@@ -226,9 +226,53 @@ const ME = { auth:true, signedIn:true, role:"admin",
       assignment:[{ provider_id:"pv-one", state:"sent",
                     created_at:"2026-10-10T03:00:00+00:00" }] }
   ],
-  providers:[{ id:"pv-one", name:"가나다 인테리어", listed:false },
-             { id:"pv-two", name:"마바사 철거", listed:true }],
-  deals:[], audits:[] };
+  providers:[{ id:"pv-one", name:"가나다 인테리어", regions:["gyeonggi"],
+               gu:["안양시"], industries:["cafe"], subs:["interior"],
+               listed:false },
+             { id:"pv-two", name:"마바사 철거", regions:["seoul"], gu:[],
+               industries:["restaurant"], subs:["demolish"], listed:true }],
+  /* ⚠️⚠️ 계약 · 정책이 없으면 2차 구간 둘이 **빈 상태로만** 그려져서,
+     숫자 칸 · 계산값 상자 · 정책 줄의 대비와 누름 크기를 **영원히 못
+     봅니다** — 업체가 0곳이라 확인 배지 대비 1.99 가 한 번도 안
+     재졌던 그 자리입니다. 셋을 넣어 세 꼴을 다 그립니다
+     (확정 전 · 입금 전 · 정산 끝). */
+  deals:[
+    { id:"d1", request_id:"11111111-1111-1111-1111-111111111111",
+      provider_id:"pv-one", amount:10000000, fee:null, fee_vat:null,
+      fee_total:null, paid:null, signed_at:"2026-10-05T02:00:00+00:00",
+      done_at:"2026-10-09T02:00:00+00:00", fee_at:null, fee_snap:null,
+      created_at:"2026-10-05T02:00:00+00:00",
+      request:{ no:"SW-AB12-CD34", side:"start", cat:"interior",
+                industry:"cafe", region:"gyeonggi", gu:"안양시", state:"done" } },
+    { id:"d2", request_id:"22222222-2222-2222-2222-222222222222",
+      provider_id:"pv-one", amount:5000000, fee:150000, fee_vat:15000,
+      fee_total:165000, paid:null, signed_at:"2026-10-01T02:00:00+00:00",
+      done_at:"2026-10-03T02:00:00+00:00", fee_at:"2026-10-04T02:00:00+00:00",
+      fee_snap:{ type:"rate", rate:3, vat:"add" },
+      created_at:"2026-10-01T02:00:00+00:00",
+      request:{ no:"SW-EF56-GH78", side:"close", cat:"demolish",
+                industry:"restaurant", region:"seoul", gu:"", state:"fee_wait" } },
+    { id:"d3", request_id:"33333333-3333-3333-3333-333333333333",
+      provider_id:"pv-two", amount:2000000, fee:60000, fee_vat:6000,
+      fee_total:66000, paid:66000, signed_at:"2026-09-20T02:00:00+00:00",
+      done_at:"2026-09-22T02:00:00+00:00", fee_at:"2026-09-23T02:00:00+00:00",
+      fee_snap:{ type:"rate", rate:3, vat:"add" },
+      created_at:"2026-09-20T02:00:00+00:00",
+      request:{ no:"SW-IJ90-KL12", side:"start", cat:"equip",
+                industry:"cafe", region:"seoul", gu:"", state:"fee_done" } }
+  ],
+  fees:[
+    { id:"f1", provider_id:"pv-one", offer_id:null, type:"rate", flat:null,
+      rate:3, min_fee:null, max_fee:null, vat:"add", confirm_when:"done",
+      cycle:"monthly", refund_rule:null, from_date:null, to_date:null,
+      active:true, created_at:"2026-10-01T02:00:00+00:00" },
+    /* ⚠️ 꺼진 정책도 한 줄 — 회색 딱지의 대비를 같이 잽니다 */
+    { id:"f2", provider_id:"pv-two", offer_id:null, type:"close", flat:50000,
+      rate:null, min_fee:null, max_fee:null, vat:"free", confirm_when:"signed",
+      cycle:"now", refund_rule:null, from_date:null, to_date:null,
+      active:false, created_at:"2026-09-01T02:00:00+00:00" }
+  ],
+  audits:[] };
 
 function SESS(sess, me){
   return async pg => {
@@ -236,8 +280,19 @@ function SESS(sess, me){
       contentType:"application/json",
       body: JSON.stringify(Object.assign(
         { conf:{ url:"https://p.supabase.co", anonKey:"ANON-TEST" } }, sess)) }));
-    if(me) await pg.route("**/api/me", r => r.fulfill({ status:200,
-      contentType:"application/json", body: JSON.stringify(me) }));
+    /* ⚠️ 뒤에 별표 둘이 없는 api/me 꼴은 `?r=`(이력)이 붙으면
+       **안 맞습니다** — 그러면
+       이력 상태가 가짜 서버로 가서 그려지지 않고, 그 칸의 대비를
+       영원히 못 봅니다. */
+    if(me) await pg.route("**/api/me**", r => r.fulfill({ status:200,
+      contentType:"application/json", body: JSON.stringify(
+        Object.assign({}, me, { history:[
+          { at:"2026-10-05T02:00:00+00:00", by_role:"staff", obj:"request",
+            from_state:"new", to_state:"check", why:null },
+          { at:"2026-10-06T02:00:00+00:00", by_role:"admin", obj:"request",
+            from_state:"check", to_state:"assigned",
+            why:"안양 업체로 배정했습니다" }
+        ] })) }));
   };
 }
 
@@ -277,6 +332,36 @@ function SESS(sess, me){
         await pg.selectOption("#rq-to", "assigned");
         await pg.waitForTimeout(150);
       }, SESS(ADMIN, ME)],
+    /* ── 2차 (전면 감사 §6 의 5·6·7·8) ────────────────────────
+       ⚠️⚠️ 돈 쪽 세 꼴을 **다 펼쳐 봅니다.** 확정 · 입금 · 환수가
+       서로 다른 폼이라, 하나만 보면 나머지 둘의 대비 · 누름 크기를
+       못 봅니다. */
+    ["수수료 확정 판", async pg => {
+        await pg.locator("#rq .rq-s-mn .rq-hd", { hasText:"SW-AB12-CD34" }).click();
+        await pg.waitForTimeout(200);
+      }, SESS(ADMIN, ME)],
+    ["입금 판", async pg => {
+        await pg.locator("#rq .rq-s-mn .rq-hd", { hasText:"SW-EF56-GH78" }).click();
+        await pg.waitForTimeout(200);
+      }, SESS(ADMIN, ME)],
+    ["환수 판", async pg => {
+        await pg.locator("#rq .rq-s-mn .rq-hd", { hasText:"SW-IJ90-KL12" }).click();
+        await pg.waitForTimeout(200);
+      }, SESS(ADMIN, ME)],
+    ["새 정책 판", async pg => {
+        await pg.locator("#rq .rq-s-fee .rq-new summary").click();
+        await pg.waitForTimeout(200);
+      }, SESS(ADMIN, ME)],
+    ["이력 판", async pg => {
+        await pg.locator("#rq .rq-s-rq .rq-hd").first().click();
+        await pg.waitForTimeout(150);
+        await pg.locator("#rq .rq-s-rq button", { hasText:"이력 보기" }).click();
+        await pg.waitForTimeout(300);
+      }, SESS(ADMIN, ME)],
+    /* ⚠️ 직원 — 돈 구간이 **안 와서** 안 그려지는 쪽입니다 */
+    ["직원", async pg => {},
+      SESS({ auth:true, signedIn:true, role:"staff", name:"직원" },
+           Object.assign({}, ME, { role:"staff", deals:undefined, fees:undefined }))],
     ["권한 없음", async pg => {},
       SESS({ auth:true, signedIn:true, role:"customer", name:"갑" })]
   ].filter((_, i) => !FAST || i === 0 || i === 2);

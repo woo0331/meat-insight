@@ -33,6 +33,12 @@ const AUDIT_LIMIT = 200;
    (목록을 조용히 자르지 말고 그때 고치세요). */
 const PROV_LIMIT = 200;
 
+/* 수수료 정책 — 업체마다 여럿일 수 있습니다 (상품별 · 기간별) */
+const FEE_LIMIT = 200;
+/* 신청 **한 건**의 이력. ⚠️ 한 건이 쉰 번 넘게 바뀌면 그건 이 숫자를
+   올릴 때가 아니라 **그 건을 들여다볼 때**입니다. */
+const HIST_LIMIT = 100;
+
 /* ⚠️ 칸 목록을 역할마다 **손으로** 적습니다. `select=*` 로 두면 칸이
    하나 늘 때마다 조용히 같이 나갑니다. */
 const PICK = {
@@ -54,6 +60,14 @@ module.exports = async function handler(req, res){
   }
   /* ⚠️ 사람마다 다른 답입니다 — 캐시되면 남의 신청이 내 화면에 옵니다 */
   res.setHeader("cache-control", "no-store");
+
+  /* ⚠️⚠️ **주소에서 온 글자는 묻기 전에 거릅니다.** 그대로 질의에
+     들어가는 자리이고, 늦게 거르면 못 쓸 값으로 DB 를 세 번 두드린
+     뒤에 거절하게 됩니다 (표 이름을 소문자와 밑줄만 남기는 것과 같은
+     까닭). ⚠️ `r` 은 신청 **한 건**의 이력을 물을 때만 옵니다. */
+  const one = String((req.query && req.query.r) || "").trim();
+  if(one && !/^[0-9a-fA-F-]{36}$/.test(one))
+    return res.status(400).json({ error:"신청 번호를 읽을 수 없습니다" });
 
   if(!authReady())      return res.status(200).json({ auth:false, signedIn:false });
   if(!bearer(req))      return res.status(200).json({ auth:true, signedIn:false });
@@ -84,7 +98,12 @@ module.exports = async function handler(req, res){
     const d = await dbSelectAs(s.token, "deal",
       "?select=" + encodeURIComponent(
         "id,request_id,provider_id,amount,fee,fee_vat,fee_total,paid,paid_at," +
-        "signed_at,done_at,fee_at,created_at") +
+        "signed_at,done_at,fee_at,fee_snap,created_at," +
+        /* ⚠️ 계약 한 줄만 보면 **어느 건인지** 모릅니다 — 관리자가
+           수수료를 확정할 때 보는 것은 "누구의 무슨 일" 입니다.
+           ⚠️⚠️ 성함 · 연락처는 **안 가져옵니다** (목록 하나가 곧
+           유출인 자리 · PICK.staff 와 같은 선). */
+        "request(no,side,cat,industry,region,gu,state)") +
       "&order=created_at.desc&limit=" + LIMIT);
     if(d.ok) out.deals = d.rows;
     else console.warn("[me] deal — " + d.why);
@@ -122,6 +141,34 @@ module.exports = async function handler(req, res){
       "&obj=eq.deal&order=at.desc&limit=" + AUDIT_LIMIT);
     if(c.ok) out.audits = c.rows;
     else console.warn("[me] audit_log — " + c.why);
+  }
+
+  /* ── 수수료 정책 (§6 "수수료 정책 등록" · 0007) ──────────────────
+     ⚠️⚠️ **관리자만**입니다. 업체에게 남의 요율이 보이면 안 되고,
+     직원은 돈을 안 봅니다 (위 PICK 과 같은 선). RLS 의 `fee_mine` 이
+     업체에게 자기 것만 주지만, **안 묻는 쪽이 한 겹 더 안전합니다.** */
+  if(s.role === "admin"){
+    const f = await dbSelectAs(s.token, "fee_policy",
+      "?select=" + encodeURIComponent(
+        "id,provider_id,offer_id,type,flat,rate,min_fee,max_fee,vat," +
+        "confirm_when,cycle,refund_rule,from_date,to_date,active,created_at") +
+      "&order=created_at.desc&limit=" + FEE_LIMIT);
+    if(f.ok) out.fees = f.rows;
+    else console.warn("[me] fee_policy — " + f.why);
+  }
+
+  /* ── 신청 한 건의 이력 (§6 "신청 및 변경 이력" · §8) ──────────────
+     ⚠️⚠️ **목록에 다 붙이지 않습니다.** 신청 쉰 건의 이력을 통째로
+     내리면 화면 하나가 곧 유출이고(사유에 사정이 적힙니다), 받는 양도
+     몇 배가 됩니다. **연 건 하나만** 가져옵니다.
+     ⚠️ 거르는 일은 RLS 가 합니다 — `audit_read` 가 자기 것만 줍니다. */
+  if(one){
+    const h = await dbSelectAs(s.token, "audit_log",
+      "?select=" + encodeURIComponent("at,by_role,obj,from_state,to_state,why") +
+      "&obj=eq.request&obj_id=eq." + encodeURIComponent(one) +
+      "&order=at.asc&limit=" + HIST_LIMIT);
+    if(h.ok) out.history = h.rows;
+    else console.warn("[me] audit_log(request) — " + h.why);
   }
 
   return res.status(200).json(out);

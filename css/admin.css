@@ -736,6 +736,93 @@ body.sl-locked{ overflow:hidden; }
 
 .rq-note{ margin:14px 0 0; font-size:13px; color:var(--ink2); }
 
+/* ── 2차 — 계약 · 수수료 · 정산 (전면 감사 §6 의 5·6·7·8) ─────────
+   ⚠️ 색 · 글씨는 새로 정하지 않았습니다 — 위 `.rq-*` 와 `.myq-st` 를
+   그대로 씁니다. 같은 작업대 안에서 구간마다 생김새가 달라지면 한
+   화면으로 안 읽힙니다. */
+
+/* 숫자 넷 — ⚠️ 폭을 %로 못박지 않습니다. 금액은 자릿수가 들쭉날쭉해서
+   (1,200,000 과 0) 칸을 고정하면 긴 쪽이 줄바꿈으로 터집니다. */
+.rq-kpi{ display:grid; gap:10px; margin:14px 0 16px;
+         grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); }
+.rq-k{ padding:12px 14px; background:var(--bg-2, #F5F7F9);
+       border:1px solid var(--line); border-radius:10px; }
+.rq-k > span{ display:block; font-size:13px; color:var(--ink2); }
+.rq-k > b{ display:block; margin-top:4px; font-size:19px; font-weight:800;
+           color:var(--navy); line-height:1.3; }
+/* ⚠️ 흐린 글자(`--ink3`)는 옅은 회색 바탕에서 대비가 모자랍니다 —
+   이 저장소가 푸터에서 겪은 자리라 `--ink2` 입니다. */
+.rq-k > em{ display:block; margin-top:3px; font-size:13px; font-style:normal;
+            color:var(--ink2); }
+
+/* §9 의 넷을 넷으로 내는 표 — ⚠️ 값이 없는 칸은 화면이 **줄째
+   뺍니다**(절대 규칙 2). 그래서 칸 수가 홀수일 수 있어, 한 줄에 둘을
+   깔되 마지막 하나가 남아도 어긋나지 않게 딱지 폭만 고정합니다. */
+.rq-sp{ display:grid; gap:0 14px; margin:12px 0 0;
+        grid-template-columns:auto 1fr; }
+.rq-sp dt{ padding:7px 0; font-size:13px; color:var(--ink2);
+           border-top:1px solid var(--line); }
+.rq-sp dd{ margin:0; padding:7px 0; font-size:14px; font-weight:700;
+           color:var(--ink); border-top:1px solid var(--line);
+           font-variant-numeric:tabular-nums; }
+.rq-sp dt:first-of-type, .rq-sp dd:first-of-type{ border-top:0; }
+
+/* 계산값 — ⚠️⚠️ **적는 칸이 아닙니다.** 손으로 적는 칸을 두면 정책과
+   어긋난 청구서가 나갑니다 (§9). 그래서 상자로 내고 입력처럼 보이지
+   않게 둡니다. */
+.rq-calc{ margin:14px 0; padding:13px 15px;
+          background:var(--bg-sky, #EFF6FC);
+          border:1px solid var(--blue-100, #D6E6FA); border-radius:10px; }
+.rq-calc > b{ font-size:21px; font-weight:800; color:var(--navy);
+              font-variant-numeric:tabular-nums; }
+.rq-calc > span{ display:block; margin-top:4px; font-size:13px;
+                 color:var(--ink2); }
+.rq-calc > em{ display:block; margin-top:6px; font-size:13px;
+               font-style:normal; font-weight:700;
+               color:var(--warn-dark, #8A5A00); }
+
+/* 새 정책 만들기 — 접어 둡니다 (평소에 여는 칸이 아닙니다) */
+.rq-new{ margin:16px 0 0; padding:14px 15px;
+         background:var(--bg-2, #F5F7F9); border:1px solid var(--line);
+         border-radius:10px; }
+/* ⚠️ 누르는 것은 40px 이상입니다 — `padding` 만으로 만들면 짧은
+   이름에서 다시 낮아져서 `min-height` 로 잡습니다. */
+.rq-new > summary{ display:flex; align-items:center; min-height:40px;
+                   font-size:14px; color:var(--navy); cursor:pointer; }
+.rq-new > summary b{ font-weight:800; }
+.rq-new .ad-g{ margin-top:12px; }
+
+/* 안 눌리는 줄 — 정책 · 업체는 펼치는 것이 아니라 **단추가 붙은
+   줄**입니다. ⚠️ `.rq-hd` 는 `<button>` 용이라 hover 가 깔려 있는데,
+   여기는 `<div>` 라 눌리는 것처럼 보이면 안 됩니다. */
+.rq-hd-s{ cursor:default; }
+.rq-hd-s:hover{ background:transparent; }
+
+/* 이력 (§8) — ⚠️ 고치거나 지울 수 없는 기록이라 **시간 순서**가
+   그대로 보여야 합니다 */
+/* ⚠️⚠️ **숫자 칸이 `css/app.css` 의 기본 꼴을 못 받습니다** —
+   338줄의 선택자에 `input[type=number]` 가 없어서, 테두리도 padding 도
+   `width:100%` 도 안 걸리고 **브라우저 기본 꼴**로 섭니다. 390px 에서
+   옆 글자 칸은 꽉 차는데 금액 칸만 200px 이라 따로 놀았습니다 (찍어
+   보고 알았습니다 — 이 저장소가 날짜 칸에서 겪은 자리와 같습니다).
+   ⚠️ 여기서만 고칩니다. `css/app.css` 를 고치면 손님 화면까지 가는데
+   거기서는 숫자 칸을 안 씁니다 (`/tools` 계산기는 글자 칸입니다). */
+.rq-s input[type=number]{
+  width:100%; padding:11px 13px;
+  background:#fff; border:1px solid var(--line); border-radius:10px;
+  font:inherit; font-size:15px; color:var(--ink); }
+.rq-s input[type=number]:focus{ outline:0; border-color:var(--blue);
+  box-shadow:0 0 0 3px var(--blue-100, #D6E6FA); }
+
+.rq-hist-b{ margin-top:14px; }
+.rq-hist ol{ margin:10px 0 0; padding-left:18px; }
+.rq-hist li{ margin:0 0 8px; font-size:13px; color:var(--ink2);
+             line-height:1.7; }
+.rq-hist li > span{ font-weight:700; color:var(--ink); }
+.rq-hist li > em{ margin-right:6px; font-style:normal; color:var(--ink2); }
+.rq-hist li > i{ font-style:normal; color:var(--ink2); }
+.rq-hist li > p{ margin:2px 0 0; color:var(--ink2); }
+
 /* 사업자 정보 — 빈 칸만 모은 줄 (전면 감사 §1 ⑥) */
 .ad-rd-cp{ margin-top:10px; }
 

@@ -696,11 +696,14 @@ function ok(name, cond, extra) {
     await pg.route("**/api/deal", r => {
       sent = JSON.parse(r.request().postData() || "{}");
       const c = (sent.args || {}).p_ctx || {};
-      /* ⚠️⚠️ 제17조 제2항 — 재동의 없이는 배정하지 않습니다.
-         `move_state()` 가 돌려주는 **그 말**입니다. */
-      if(sent.args.p_to === "assigned" && c.agree3rd !== true)
+      /* ⚠️⚠️ **화면이 알 수 없는 거절**입니다 — 그 업체가 DB 에 있는지는
+         서버만 압니다. 화면 앞단(`amDealMove()`)이 걸러 낼 수 없는
+         자리라, "DB 가 거절한 그 말이 그대로 손님에게 간다" 를 여기서
+         봅니다 (3차에서 앞단이 생기면서 제17조 쪽은 보내기 전에
+         막히게 됐습니다 — 그건 바로 아래에서 따로 봅니다). */
+      if(sent.args.p_to === "assigned" && c.providerId === "pv-gone")
         return r.fulfill({ status:400, contentType:"application/json",
-          body: JSON.stringify({ error:"업체에 연락처를 전달하는 별도 동의를 받지 못했습니다" }) });
+          body: JSON.stringify({ error:"없는 업체입니다 — pv-gone" }) });
       return r.fulfill({ status:200, contentType:"application/json",
         body: JSON.stringify({ ok:true, data:sent.args.p_to }) });
     });
@@ -752,14 +755,20 @@ function ok(name, cond, extra) {
     ok("공개 전인 업체도 보이고 그렇다고 적힌다",
        (await pg.locator("#rq-pv").textContent()).includes("아직 공개 전"));
 
-    /* ⚠️ 동의를 안 켜고 눌러 봅니다 — 거절하는 **그 말**이 나와야 합니다 */
+    /* ⚠️⚠️ 동의를 안 켜고 눌러 봅니다. **보내기 전에** 막혀야 합니다 —
+       3차에서 `amDealMove()` 를 화면에 붙였습니다 (그전에는 검사에서만
+       돌았습니다). ⚠️ 이것은 **자물쇠가 아니라 왕복 한 번을 아끼는
+       것**입니다 — 실제로 막는 것은 DB 의 `move_state()` 이고
+       `tools/test-sql.js` 가 거기를 실제 Postgres 에서 눌러 봅니다. */
+    sent = null;
     await pg.selectOption("#rq-pv", "pv-one");
     await pg.locator("#rq .rq-s-rq .rq-mv button", { hasText:"이 상태로 바꾸기" }).click();
     await pg.waitForTimeout(400);
-    ok("동의 없이 보내면 agree3rd 가 안 실린다",
-       sent && !((sent.args.p_ctx || {}).agree3rd), JSON.stringify(sent && sent.args));
-    ok("거절한 그 말을 그대로 보여 준다",
-       (await pg.locator("#toast").textContent()).includes("별도 동의를 받지 못했습니다"),
+    ok("동의 없이는 보내지도 않는다", sent === null, JSON.stringify(sent));
+    /* ⚠️ DB 는 `agree3rd` 처럼 **key 로** 거절합니다 — 화면은
+       `AM_DEAL_NEED` 의 사람이 읽는 이름으로 바꿔 냅니다 */
+    ok("무엇이 모자란지 사람 말로 알려 준다",
+       (await pg.locator("#toast").textContent()).includes("제3자 제공 동의"),
        await pg.locator("#toast").textContent());
 
     /* 동의를 켜고 다시 */
@@ -775,6 +784,29 @@ function ok(name, cond, extra) {
        JSON.stringify(sent.args.p_ctx));
     ok("신청 id 가 간다 (번호가 아니라 id)",
        sent.args.p_request === "11111111-1111-1111-1111-111111111111", sent.args.p_request);
+
+    /* ⚠️⚠️ **DB 가 거절한 그 말이 그대로** 와야 합니다 — "무엇을 하면
+       되는지" 가 거기 적혀 있습니다. 화면 앞단이 모르는 거절로 봅니다. */
+    await pg.locator("#rq .rq-s-rq .rq-r .rq-hd").first().click();
+    await pg.waitForTimeout(200);
+    await pg.selectOption("#rq-to", "assigned");
+    await pg.waitForTimeout(200);
+    await pg.locator("#rq-a3").check();
+    await pg.evaluate(() => {
+      const o = document.createElement("option");
+      o.value = "pv-gone"; o.textContent = "없어진 업체";
+      document.getElementById("rq-pv").appendChild(o);
+    });
+    await pg.selectOption("#rq-pv", "pv-gone");
+    await pg.locator("#rq .rq-s-rq .rq-mv button", { hasText:"이 상태로 바꾸기" }).click();
+    await pg.waitForTimeout(400);
+    ok("DB 가 거절한 그 말을 그대로 보여 준다",
+       (await pg.locator("#toast").textContent()).includes("없는 업체입니다"),
+       await pg.locator("#toast").textContent());
+    /* ⚠️ 거절당하면 줄이 **펼쳐진 채로** 남습니다 (적으신 것을 지키려고).
+       다음 검사가 "펼친다" 로 시작하니 여기서 닫아 둡니다. */
+    await pg.locator("#rq .rq-s-rq .rq-r .rq-hd").first().click();
+    await pg.waitForTimeout(200);
 
     /* ── 보류 — ⚠️ 사유를 받습니다 (§8 기록) ──────────────────── */
     await pg.locator("#rq .rq-s-rq .rq-r .rq-hd").first().click();
@@ -997,6 +1029,21 @@ function ok(name, cond, extra) {
        (await pg.locator("#rq .rq-s-mn .rq-mv").textContent()).includes("갈아 치우지 않고"));
     sent = null;
     await pg.fill("#rq-nfee", "30000");
+    await pg.waitForTimeout(250);
+    /* ⚠️⚠️ **얼마가 돌아오는지 숫자로 보여 줍니다** (3차 · §9 의 12).
+       `amFeeClawback()` 이 차액을 계산하는데 그전에는 **검사에서만
+       돌았고**, 운영자는 "60,000 을 30,000 으로" 까지만 적고 30,000원이
+       환수된다는 것을 못 본 채 눌렀습니다. */
+    /* ⚠️ 없을 때 `textContent()` 로 바로 읽으면 **30초를 기다렸다가
+       타임아웃**으로 터지고, 어느 검사가 틀렸는지도 안 나옵니다 —
+       이 저장소가 2차에서 겪은 자리입니다. 먼저 세어 봅니다. */
+    const cwN = await pg.locator("#rq .rq-s-mn .rq-calc").count();
+    const cw  = cwN ? await pg.locator("#rq .rq-s-mn .rq-calc").textContent() : "";
+    ok("환수액을 숫자로 보여 준다",
+       cwN === 1 && cw.includes("30,000") && /돌려|환수/.test(cw), cwN + " · " + cw);
+    /* ⚠️ 확정했던 액을 갈아 치우지 않는다는 것이 **그 자리에** 적힙니다 */
+    ok("확정했던 액이 남는다고 그 자리에서 밝힌다",
+       cw.includes("60,000") && cw.includes("그대로 남습니다"), cw);
     await pg.locator("#rq .rq-s-mn .rq-mv button", { hasText:"환수 기록" }).click();
     await pg.waitForTimeout(300);
     ok("사유 없이는 환수를 안 보낸다", sent === null, JSON.stringify(sent));

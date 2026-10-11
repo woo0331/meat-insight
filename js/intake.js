@@ -411,6 +411,19 @@ window.rqGo = function(id){
     ctx[k] = (k === "amount" || k === "paid") ? Number(v) : v;
   }
 
+  /* ⚠️⚠️ **보내기 전에 한 번 봅니다** (3차 · §9 의 12). `amDealMove()` 가
+     `AM_DEAL_MOVE` 로 같은 판단을 하는데 **검사에서만 돌고 화면은 한 번도
+     안 부르고 있었습니다** — 검사 61개가 초록인데 그 길을 아무도 안
+     지나가는 자리였습니다 (이 저장소의 "만들어 놓고 안 쓰는 칸").
+     ⚠️ **자물쇠가 아닙니다.** 막는 것은 DB 의 `move_state()` 이고
+     (화면 코드로만 막으면 버그 하나에 뚫립니다), 여기는 **왕복을 한
+     번 아끼고 같은 말로 먼저 알려 주는** 것까지입니다.
+     ⚠️ 두 곳이 어긋날 수는 없습니다 — `checkDealSql()` 이 `deal.js` 의
+     길 표와 DB 의 `deal_move` 를 빌드마다 맞춰 봅니다. */
+  var pre = window.amDealMove && window.amDealMove(row && row.state, to,
+    Object.assign({ role: RQ.role, by: "me" }, ctx));
+  if(pre && !pre.ok){ toast(pre.why); return; }
+
   RQ.busy = true; rqDraw();
   fetch("/api/deal", {
     method:"POST",
@@ -748,10 +761,17 @@ function rqClawForm(d){
     '<div class="f-r">'+
       '<label for="rq-nfee">고쳐 적을 수수료 (원)</label>'+
       '<input id="rq-nfee" type="number" min="0" step="1" inputmode="numeric" '+
-        'oninput="rqMctx(\'newFee\',this.value)" '+
+        'oninput="rqMctxDraw(\'newFee\',this.value)" '+
         'value="'+esc(RQ.mctx.newFee == null ? "" : RQ.mctx.newFee)+'" '+
         'placeholder="'+esc(String(d.fee || 0))+'">'+
     '</div>'+
+    /* ⚠️⚠️ **얼마가 돌아오는지 보여 주고 보냅니다** (3차 · §9 의 12).
+       `amFeeClawback()` 이 차액을 계산하는데 **검사에서만 돌고
+       있었습니다** — 운영자는 "30만원을 3만원으로" 까지만 적고
+       **27만원이 환수된다는 것을 숫자로 못 보고** 눌렀습니다.
+       ⚠️ 이것도 자물쇠가 아닙니다 — 실제로 적는 것은 DB 의
+       `clawback_fee()` 이고, 여기는 **눌리기 전에 보여 주는** 것입니다. */
+    rqClawPreview(d)+
     '<div class="f-r">'+
       '<label for="rq-cwhy">환수 사유 <em>(필수)</em></label>'+
       '<input id="rq-cwhy" type="text" autocomplete="off" '+
@@ -764,6 +784,27 @@ function rqClawForm(d){
         '환수 기록</button>'+
     '</div>'+
   '</div>';
+}
+
+function rqClawPreview(d){
+  var v = RQ.mctx.newFee;
+  if(v === undefined || v === null || v === "") return "";
+  var r = window.amFeeClawback && window.amFeeClawback(
+    d.fee_snap || { type:"flat", flat:Number(v) }, Number(d.fee || 0),
+    { amount:Number(d.amount || 0), sell:Number(d.amount || 0),
+      cost:0, times:1, fixed:Number(v) });
+  /* ⚠️ 계산이 안 되면 **0원을 내놓지 않고** 차액만 그대로 보여 줍니다
+     (사본이 없는 옛 계약도 있습니다) */
+  var was  = Number(d.fee || 0), now = Number(v);
+  var back = (r && r.ok) ? r.back : (was - now);
+  if(!isFinite(back)) return "";
+  return '<div class="rq-calc">'+
+      '<b>'+esc(won(Math.abs(back)))+'원</b>'+
+      '<span>'+esc(won(was))+'원 확정 → '+esc(won(now))+'원 · '+
+        (back >= 0 ? '돌려드릴 금액' : '더 청구할 금액')+'</span>'+
+      /* ⚠️ 확정했던 액은 **그대로 남습니다** — 차액만 기록입니다 */
+      '<em>확정했던 '+esc(won(was))+'원은 기록에 그대로 남습니다</em>'+
+    '</div>';
 }
 
 window.rqClawGo = function(id){

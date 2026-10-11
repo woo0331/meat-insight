@@ -2378,6 +2378,60 @@ function checkRpcArgs(){
    **숙박** · **학원**을 뜻하는 말이라 검색이 엉뚱한 데로 보낼
    자리였습니다.
    ════════════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════════════
+   내려온 구간을 **살아 있는 쪽이 부르지 않는가** (3차 · §9 의 11)
+
+   `js/pages/home-retired.js` 는 `index.html` 에 **안 실립니다** —
+   메인에서 내려온 구간 서른일곱 덩이(75KB 원본 · 23KB gzip)가 161개
+   화면 전부에 실리고 있어서 떼어 둔 것입니다.
+
+   ⚠️⚠️ **살아 있는 쪽이 거기 것을 부르면 그 순간 화면이 깨집니다** —
+   안 실리는 파일이라 `is not defined` 이고, 빌드도 전수 점검도
+   "메인은 멀쩡" 으로 통과할 수 있습니다 (그 구간을 되살릴 때만
+   불리는 길이면 평소에는 안 터집니다). 그래서 **글자로** 봅니다.
+   ⚠️ 거꾸로(내려온 쪽이 살아 있는 쪽을 부르는 것)는 정상입니다.
+   ════════════════════════════════════════════════════════════════════ */
+function checkRetired(){
+  const ret = path.join(ROOT, "js", "pages", "home-retired.js");
+  if(!fs.existsSync(ret)) return;          /* 되살려서 합치셨으면 넘어갑니다 */
+
+  /* ⚠️ 주석을 먼저 걷어냅니다 — 이 저장소가 "검사가 자기 설명 주석에
+     걸려 멀쩡한 코드를 실패로 잡았다" 로 겪은 자리입니다. */
+  const bare = s => s.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/[^\n]*/g, "$1 ");
+
+  const src   = bare(fs.readFileSync(ret, "utf8"));
+  const names = [];
+  const re = /(?:^|\n)(?:function ([A-Za-z0-9_]+)\(|(?:var|const|let) ([A-Za-z0-9_]+)\s*=)/g;
+  let m; while((m = re.exec(src))) names.push(m[1] || m[2]);
+  if(!names.length) throw new Error("home-retired.js 에서 덩이를 하나도 못 찾았습니다 — 검사가 틀렸습니다");
+
+  /* `index.html` 이 싣는 것만 봅니다 — 안 싣는 파일끼리는 서로 불러도 됩니다 */
+  const tplSrc = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+  const shipped = (tplSrc.match(/src="\/(js\/[^"?]+)/g) || [])
+    .map(x => x.slice(6)).filter(f => f !== "js/pages/home-retired.js");
+
+  const bad = [];
+  shipped.forEach(function(f){
+    const full = path.join(ROOT, f);
+    if(!fs.existsSync(full)) return;
+    const t = bare(fs.readFileSync(full, "utf8"));
+    names.forEach(function(n){
+      if(new RegExp("\\b" + n + "\\b").test(t)) bad.push(f + " → " + n);
+    });
+  });
+  if(bad.length)
+    throw new Error("손님이 받는 코드가 **안 실리는** home-retired.js 의 것을 "+
+      "부릅니다 — 그대로 두면 화면이 is not defined 로 깨집니다:\n  " +
+      bad.join("\n  "));
+
+  /* ⚠️ 싣고 있으면 떼어 둔 뜻이 없어집니다 — 되살리셨다면 일부러인지 알려만 줍니다 */
+  if(/home-retired\.js/.test(tplSrc))
+    console.log("   ⚠️ home-retired.js 를 index.html 이 싣고 있습니다 — "+
+      "되살리신 것이면 맞습니다 (받는 양이 23KB gzip 늘어납니다)");
+  else
+    console.log("   내려온 구간 " + names.length + "덩이가 손님에게 안 나갑니다");
+}
+
 function checkIndGroups(W){
   const G = W.AM_IND_GROUPS || [], S = W.AM_IND_SUBS || {};
   const inds = (W.AM_INDUSTRIES || []).map(i => i.key);
@@ -2477,6 +2531,7 @@ checkFee(W);
 checkDealSql(W);
 checkClaimSql();
 checkRpcArgs();
+checkRetired();
 checkOffers(W);
 checkOpsvc(W);
 checkPackages(W);

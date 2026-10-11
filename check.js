@@ -1489,6 +1489,49 @@ const AUDIT = `(() => {
     if(document.getElementById("view").textContent.indexOf("카페") < 0)
       return "화면에 안 비칩니다";
     return true;`);
+  /* 2026-10-11 1차 — 로그인.
+     ⚠️⚠️ 로그인이 설정되기 전에는 **한 픽셀도** 안 나와야 합니다.
+     "로그인" 단추를 미리 만들면 §30-7(클릭해도 작동하지 않는 버튼)이고,
+     이 저장소가 헤더에서 "로그인" 을 뺀 까닭 그대로입니다.
+     전수 점검은 로컬 정적 서버라 /api/session 이 아예 없습니다 —
+     화면은 그것을 "설정 안 됨" 으로 읽습니다. */
+  await f("MY: 로그인이 설정되기 전에는 아무것도 안 낸다", "/my", `
+    const box = document.getElementById("my-db");
+    if(!box) return "my-db 구간이 없어졌습니다";
+    if(!box.hidden) return "hidden 이 풀렸습니다";
+    if(box.innerHTML.trim()) return "안이 비어 있지 않습니다";
+    if(box.getBoundingClientRect().height > 0) return "자리를 차지합니다";
+    const t = document.getElementById("view").textContent;
+    if(t.indexOf("로그인") >= 0) return "로그인이라는 말이 화면에 있습니다";
+    if(t.indexOf("준비 중") >= 0) return "준비 중 자리표시자가 있습니다";
+    return true;`);
+  /* ⚠️⚠️ 토큰이 있으면 **반드시 보내야** 합니다. 처음에 /api/me 를
+     머리 없이 부르고 있어서, 로그인해도 영영 signedIn:false 였습니다 —
+     에러도 안 나고 화면도 멀쩡했습니다 (구간이 그냥 안 보일 뿐). */
+  await f("MY: 토큰이 있으면 Authorization 을 보낸다", "/my", `
+    try{ localStorage.setItem("am.auth.v1", JSON.stringify({
+      access_token:"TOK-TEST", refresh_token:"R", at: Date.now() + 3600000 })); }
+    catch(e){ return true; }
+    const seen = [];
+    const real = window.fetch;
+    window.fetch = function(u, o){
+      seen.push({ u:String(u), h:(o && o.headers) || {} });
+      return Promise.resolve({ ok:true, json: () => Promise.resolve(
+        { auth:true, signedIn:false }) });
+    };
+    try{
+      if(typeof window.amAuthHeaders !== "function") return "auth.js 를 안 읽었습니다";
+      window.myLoadDb();
+      await new Promise(r => setTimeout(r, 300));
+      const me = seen.filter(x => x.u.indexOf("/api/me") >= 0)[0];
+      if(!me) return "/api/me 를 안 불렀습니다";
+      const a = me.h.authorization || me.h.Authorization || "";
+      if(a.indexOf("TOK-TEST") < 0) return "Authorization 을 안 보냈습니다";
+    } finally {
+      window.fetch = real;
+      try{ localStorage.removeItem("am.auth.v1"); }catch(e){}
+    }
+    return true;`);
   await f("MY: 성함 · 연락처를 담지 않는다", "/quote", `
     let dump = "";
     try{ for(let i=0;i<localStorage.length;i++){
@@ -2718,7 +2761,7 @@ const AUDIT = `(() => {
          0.16 에서 재 보니 제일 빠듯한 자리가 4.83 이었습니다 (AA 4.5). */
       const op = parseFloat(getComputedStyle(im).opacity || "1");
       if(!(op > 0 && op <= 0.22))
-        return "'" + nm + "' 사진 투명도가 " + op + " 입니다 (0 < x <= 0.22)";
+        return "'" + nm + "' 사진 투명도 — " + op + " (0 < x <= 0.22)";
     }
     /* 브랜드 연결 구간의 줄도 아이콘이 비면 안 됩니다 */
     for(const sv of document.querySelectorAll(".mbr-l svg"))

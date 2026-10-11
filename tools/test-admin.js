@@ -552,6 +552,290 @@ function ok(name, cond, extra) {
     await ctx.close();
   }
 
+  /* ══ 2026-10-11 전면 감사 §6 ════════════════════════════════════
+     ⚠️⚠️ **`check.js` 가 /admin 을 못 봅니다** (middleware 가 막아서).
+     여기가 유일한 자리입니다. */
+  console.log("\n접수 · 배정 — DB 가 없으면 한 픽셀도 안 그린다");
+  {
+    const { pg, ctx, errs } = await fresh(1440, 1000);
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(400);
+
+    /* 로컬 정적 서버에는 `/api/session` 이 없습니다 — 화면은 그것을
+       "로그인이 설정되지 않았다" 로 읽고 **구간째 안 그립니다.**
+       ⚠️ 여기서 "준비 중" 이나 로그인 단추가 나오면 그게 §30-7 입니다. */
+    const rqHtml = (await pg.locator("#rq").innerHTML()).trim();
+    ok("#rq 가 비어 있다 (auth:false)", rqHtml === "", rqHtml.slice(0, 80));
+    const rqBox = await pg.locator("#rq").boundingBox();
+    ok("#rq 가 자리를 차지하지 않는다", !rqBox || rqBox.height === 0,
+       rqBox ? "h=" + rqBox.height : "none");
+    ok("'준비 중' 자리표시자가 없다",
+       !(await pg.locator("#rq").textContent()).includes("준비"));
+
+    /* ── 9번 제휴업체 등록 줄 ──────────────────────────────────
+       ⚠️ 여기 적는 업체는 **테스트 브라우저 안에서만** 삽니다 —
+       저장소 데이터(js/data/providers.js)는 그대로 0곳입니다
+       (절대 규칙 1). */
+    /* ⚠️ 9번은 접힌 "관리자 설정" 안입니다 (§29) — 펼쳐야 보입니다 */
+    await pg.click(".ad-fold > summary");
+    await pg.waitForTimeout(200);
+    const pvB = pg.locator("#ad-pv");
+    ok("9번 칸이 있다", (await pvB.count()) === 1);
+
+    /* 아무것도 안 적었을 때 — ⚠️ 빠진 것을 **보여 줍니다** */
+    const warn0 = await pg.locator("#ad-pv-out .ad-pv-w").textContent();
+    ok("빈 채로는 빠진 것을 말한다",
+       warn0.includes("업체명") && warn0.includes("하는 일"), warn0.slice(0, 120));
+    ok("하위 분야가 비면 까닭까지 말한다",
+       warn0.includes("아무 분류에도"), warn0.slice(0, 200));
+
+    await pg.fill("#ad-pv-nm", "가나다 인테리어");
+    await pg.fill("#ad-pv-id", "GANADA_1");
+    await pg.waitForTimeout(150);
+    ok("주소에 한글 · 대문자 · 밑줄을 못 쓰게 한다",
+       (await pg.locator("#ad-pv-out .ad-pv-w").textContent()).includes("영문 소문자"));
+
+    /* ⚠️⚠️ **한 글자씩 칠 때 칸에서 커서가 빠지면 안 됩니다.** 적는
+       칸에서 화면을 통째로 다시 그리면 "가" 까지만 치고 멈춥니다 —
+       `pg.fill()` 은 값을 한 번에 넣어서 **이 사고를 못 잡습니다.** */
+    await pg.fill("#ad-pv-id", "");
+    await pg.click("#ad-pv-id");
+    await pg.type("#ad-pv-id", "ganada-interior", { delay:12 });
+    ok("한 글자씩 쳐도 칸에서 커서가 안 빠진다",
+       (await pg.evaluate(() => document.activeElement && document.activeElement.id)) === "ad-pv-id" &&
+       (await pg.locator("#ad-pv-id").inputValue()) === "ganada-interior",
+       await pg.locator("#ad-pv-id").inputValue());
+    await pg.fill("#ad-pv-sc", "2015");
+    /* ⚠️ 경기도는 넓습니다 — `gu` 는 적어 받아 놓고 안 읽던 칸입니다 */
+    await pg.fill("#ad-pv-gu", "안양시, 군포시");
+    await pg.fill("#ad-pv-in", "카페 인테리어를 10년 해 왔습니다");
+    await pg.locator("#ad-pv .ad-pv-b", { hasText:"서비스 지역" })
+            .locator("label", { hasText:"경기" }).first()
+            .locator("input").check();
+    await pg.locator("#ad-pv .ad-pv-b", { hasText:"전문 업종" })
+            .locator("label", { hasText:"카페" }).first()
+            .locator("input").check();
+    /* ⚠️⚠️ 분류가 아니라 **하위 분야**를 고르는 자리입니다 —
+       `interior` 는 **둘 다 있는 이름**이라 손으로 적으면 틀립니다. */
+    await pg.selectOption("#ad-pv-cat", "interior");
+    await pg.waitForTimeout(150);
+    await pg.locator("#ad-pv .ad-pv-b", { hasText:"하는 일" })
+            .locator("label", { hasText:"전기" }).first()
+            .locator("input").check();
+    await pg.waitForTimeout(200);
+
+    const js  = await pg.locator("#ad-t-pvjs").inputValue();
+    const sql = await pg.locator("#ad-t-pvsql").inputValue();
+    /* ⚠️ 쉼표 뒤 빈칸까지 통째로 견주지 않습니다 — 값만 봅니다
+       (이 저장소가 7번 칸에서 세 번 겪은 자리). */
+    ok("① 손님 화면 줄이 나온다",
+       /id:\s*"ganada-interior"/.test(js) && /subs:\s*\["electric"\]/.test(js), js.slice(0, 160));
+    ok("지역 · 업종 key 가 맞다",
+       /regions:\s*\["gyeonggi"\]/.test(js) && /industries:\s*\["cafe"\]/.test(js), js.slice(0, 200));
+  ok("시 · 군 · 구가 쉼표로 갈려 들어간다",
+     /gu:\s*\["안양시","군포시"\]/.test(js), js.slice(0, 260));
+    /* ⚠️ 평점 · 후기 수를 적는 칸이 없습니다 — 배열에서 셉니다 */
+    ok("평점 · 후기 수를 적는 칸이 없다",
+       !/rating|reviewN|jobs/.test(js) && /reviews:\[\]/.test(js), js);
+    ok("② 배정용 SQL 이 같이 나온다",
+       /insert into provider/.test(sql) && /'\{"electric"\}'/.test(sql), sql.slice(0, 200));
+    /* ⚠️⚠️ 두 번 돌려도 안전해야 합니다. 지우고 다시 넣으면 그 업체에
+       붙은 배정 · 계약이 cascade 로 같이 지워집니다. */
+    ok("두 번 돌려도 안전하다 (on conflict)", /on conflict \(id\) do update/.test(sql));
+    /* ⚠️ 확인 배지는 서류를 보고 켜는 칸입니다 — 이 줄이 손대면
+       다시 돌릴 때 꺼집니다 */
+    ok("verified 를 건드리지 않는다", !/verified/.test(sql), sql);
+    ok("빠진 것 경고가 사라졌다", (await pg.locator("#ad-pv-out .ad-pv-w").count()) === 0);
+
+    /* ⚠️ `시설 · 장비` 는 하위가 **업종에서** 옵니다 — 그 분류의
+       `items` 가 비어 있어서 안 모으면 고르개가 덩그러니 빕니다. */
+    await pg.selectOption("#ad-pv-cat", "equip");
+    await pg.waitForTimeout(150);
+    const eq = await pg.locator("#ad-pv .ad-pv-b", { hasText:"하는 일" })
+                       .locator(".ad-pv-chk label").count();
+    ok("시설 · 장비도 하위 고르개가 빈 칸이 아니다", eq > 10, "label=" + eq);
+
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
+  /* ══ 로그인한 채로 — 목록 · 상태 변경 · 배정 (전면 감사 §6) ═════
+     ⚠️⚠️ **Supabase 를 세울 수가 없어서 세 주소를 가로챕니다.** 서버
+     쪽(move_state 의 자물쇠)은 `tools/test-deal.js` 와
+     `tools/test-sql.js` 가 실제로 눌러 보고, 여기서 보는 것은
+     **화면이 무엇을 보내고 무엇을 보여 주는가**입니다.
+     ⚠️ 가로채는 쪽도 `move_state` 와 **같은 말로** 거절합니다 — 다른
+     말로 거절하면 화면이 엉뚱한 안내를 해도 통과합니다. */
+  console.log("\n로그인하면 — 접수 목록 · 상태 변경 · 배정");
+  {
+    const { pg, ctx, errs } = await fresh(1440, 1200);
+    let sent = null;
+    const CONF = { url:"https://proj.supabase.co", anonKey:"ANON-TEST" };
+
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"admin",
+                             name:"관리자", provider:null, conf:CONF }) }));
+
+    await pg.route("**/api/me", r => r.fulfill({ status:200,
+      contentType:"application/json", body: JSON.stringify({
+        auth:true, signedIn:true, role:"admin",
+        requests:[
+          { id:"11111111-1111-1111-1111-111111111111", no:"SW-AB12-CD34",
+            side:"start", cat:"interior", industry:"cafe",
+            region:"gyeonggi", gu:"안양시", state:"check",
+            created_at:"2026-10-11T02:00:00+00:00", assignment:[] },
+          { id:"22222222-2222-2222-2222-222222222222", no:"SW-EF56-GH78",
+            side:"close", cat:"demolish", industry:"restaurant",
+            region:"seoul", gu:"", state:"hold",
+            created_at:"2026-10-10T02:00:00+00:00", assignment:[] }
+        ],
+        providers:[{ id:"pv-one", name:"가나다 인테리어", listed:false }],
+        deals:[], audits:[] }) }));
+
+    await pg.route("**/api/deal", r => {
+      sent = JSON.parse(r.request().postData() || "{}");
+      const c = (sent.args || {}).p_ctx || {};
+      /* ⚠️⚠️ 제17조 제2항 — 재동의 없이는 배정하지 않습니다.
+         `move_state()` 가 돌려주는 **그 말**입니다. */
+      if(sent.args.p_to === "assigned" && c.agree3rd !== true)
+        return r.fulfill({ status:400, contentType:"application/json",
+          body: JSON.stringify({ error:"업체에 연락처를 전달하는 별도 동의를 받지 못했습니다" }) });
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ ok:true, data:sent.args.p_to }) });
+    });
+
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(500);
+
+    ok("접수 줄이 나온다", (await pg.locator("#rq .rq-r").count()) === 2);
+    /* ⚠️ 상태 이름 · 색은 `js/data/deal.js` 한 곳에서 옵니다 — 이 줄이
+       영어로 나오면 admin.html 에 deal.js 를 안 실은 것입니다 */
+    ok("상태 이름이 한글로 나온다 (deal.js 를 읽습니다)",
+       (await pg.locator("#rq .rq-r >> nth=0 >> .myq-st").textContent()) === "정보 확인 중");
+    /* ⚠️⚠️ 보류를 취소와 같은 색으로 두지 않습니다 (§8-3) */
+    const c0 = await pg.locator("#rq .rq-r >> nth=0 >> .myq-st").getAttribute("class");
+    const c1 = await pg.locator("#rq .rq-r >> nth=1 >> .myq-st").getAttribute("class");
+    ok("보류는 진행 중과 다른 색이다", c0 !== c1, c0 + " / " + c1);
+    ok("접수번호가 보인다",
+       (await pg.locator("#rq .rq-no").first().textContent()) === "SW-AB12-CD34");
+    /* ⚠️⚠️ 목록 하나가 곧 유출인 자리입니다 */
+    const listTxt = await pg.locator("#rq").textContent();
+    ok("목록에 성함 · 연락처가 없다",
+       !/010-|@/.test(listTxt) && listTxt.includes("성함 · 연락처가 없습니다"));
+    ok("상태 칩의 숫자가 센 값이다",
+       (await pg.locator("#rq .rq-fil .chip").first().textContent()).includes("전체 2"));
+
+    /* 거르개 */
+    await pg.locator("#rq .rq-fil .chip", { hasText:"보류" }).click();
+    await pg.waitForTimeout(200);
+    ok("상태로 거를 수 있다", (await pg.locator("#rq .rq-r").count()) === 1);
+    await pg.locator("#rq .rq-fil .chip", { hasText:"전체" }).click();
+    await pg.waitForTimeout(200);
+
+    /* ── 배정 (§6 업체 수동 배정 · 제17조) ───────────────────── */
+    await pg.locator("#rq .rq-r .rq-hd").first().click();
+    await pg.waitForTimeout(200);
+    const dests = await pg.locator("#rq-to option").allTextContents();
+    ok("갈 수 있는 길만 나온다", dests.includes("업체 배정") && dests.includes("보류"), dests.join(","));
+    /* ⚠️⚠️ 돈 쪽은 `move_state()` 가 스스로 거절하는 길이라 **단추를
+       아예 안 냅니다** — 누르면 늘 실패하는 단추가 §30-7 입니다. */
+    ok("정산 쪽 길은 아예 안 낸다",
+       !dests.some(x => /정산/.test(x)), dests.join(","));
+
+    await pg.selectOption("#rq-to", "assigned");
+    await pg.waitForTimeout(200);
+    const a3 = await pg.locator("#rq .rq-a3").textContent();
+    ok("제17조 안내가 먼저 뜬다",
+       a3.includes("제17조") && a3.includes("상호를 알려 드리고"), a3.slice(0, 80));
+    ok("배정할 업체 고르개가 있다", (await pg.locator("#rq-pv option").count()) === 2);
+    ok("공개 전인 업체도 보이고 그렇다고 적힌다",
+       (await pg.locator("#rq-pv").textContent()).includes("아직 공개 전"));
+
+    /* ⚠️ 동의를 안 켜고 눌러 봅니다 — 거절하는 **그 말**이 나와야 합니다 */
+    await pg.selectOption("#rq-pv", "pv-one");
+    await pg.locator("#rq .rq-mv button", { hasText:"이 상태로 바꾸기" }).click();
+    await pg.waitForTimeout(400);
+    ok("동의 없이 보내면 agree3rd 가 안 실린다",
+       sent && !((sent.args.p_ctx || {}).agree3rd), JSON.stringify(sent && sent.args));
+    ok("거절한 그 말을 그대로 보여 준다",
+       (await pg.locator("#toast").textContent()).includes("별도 동의를 받지 못했습니다"),
+       await pg.locator("#toast").textContent());
+
+    /* 동의를 켜고 다시 */
+    await pg.locator("#rq-a3").check();
+    await pg.locator("#rq .rq-mv button", { hasText:"이 상태로 바꾸기" }).click();
+    await pg.waitForTimeout(500);
+    ok("move_state 를 부른다", sent && sent.fn === "move_state", JSON.stringify(sent));
+    ok("정해 둔 인자만 보낸다",
+       sent && Object.keys(sent.args).sort().join(",") === "p_ctx,p_request,p_to",
+       JSON.stringify(sent && Object.keys(sent.args)));
+    ok("업체와 동의가 같이 간다",
+       sent.args.p_ctx.providerId === "pv-one" && sent.args.p_ctx.agree3rd === true,
+       JSON.stringify(sent.args.p_ctx));
+    ok("신청 id 가 간다 (번호가 아니라 id)",
+       sent.args.p_request === "11111111-1111-1111-1111-111111111111", sent.args.p_request);
+
+    /* ── 보류 — ⚠️ 사유를 받습니다 (§8 기록) ──────────────────── */
+    await pg.locator("#rq .rq-r .rq-hd").first().click();
+    await pg.waitForTimeout(200);
+    await pg.selectOption("#rq-to", "hold");
+    await pg.waitForTimeout(200);
+    ok("보류는 사유 칸을 낸다", (await pg.locator("#rq-why").count()) === 1);
+    await pg.fill("#rq-why", "다음 달에 다시 연락 달라고 하셨습니다");
+    await pg.locator("#rq .rq-mv button", { hasText:"이 상태로 바꾸기" }).click();
+    await pg.waitForTimeout(400);
+    ok("사유가 같이 간다",
+       sent.args.p_to === "hold" &&
+       sent.args.p_ctx.why === "다음 달에 다시 연락 달라고 하셨습니다",
+       JSON.stringify(sent.args));
+
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
+  /* ══ 로그인 전 · 권한이 모자랄 때 ═══════════════════════════════ */
+  console.log("\n로그인 전 · 권한이 모자랄 때");
+  {
+    const { pg, ctx, errs } = await fresh(1440, 1000);
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:false,
+        conf:{ url:"https://proj.supabase.co", anonKey:"ANON-TEST" } }) }));
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(400);
+    ok("로그인 칸이 나온다", (await pg.locator("#rq-em").count()) === 1);
+    /* ⚠️ 비밀번호를 받지 않습니다 */
+    ok("비밀번호 칸이 없다", (await pg.locator("#rq input[type=password]").count()) === 0);
+    ok("메일 칸이 자동완성을 받는다",
+       (await pg.locator("#rq-em").getAttribute("autocomplete")) === "email");
+    /* ⚠️ 누르는 것은 40px 이상 — `check.js` 와 같은 규칙입니다 */
+    const b = await pg.locator("#rq .rq-in button").boundingBox();
+    ok("링크 받기 단추가 40px 이상이다", b && b.height >= 40, b && b.height);
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+  {
+    const { pg, ctx, errs } = await fresh(1440, 1000);
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"customer",
+                             name:"갑", provider:null,
+                             conf:{ url:"https://p.supabase.co", anonKey:"A" } }) }));
+    await pg.route("**/api/me", r => r.fulfill({ status:500, body:"no" }));
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(400);
+    const t = await pg.locator("#rq").textContent();
+    ok("고객 계정에는 접수를 안 보여 준다", t.includes("권한이 없습니다"), t.slice(0, 60));
+    /* ⚠️⚠️ 역할을 화면에서 올릴 수 있게 만들지 않았습니다 */
+    ok("역할 올리기는 SQL 로만 — 단추가 없다",
+       t.includes("update account set role") &&
+       (await pg.locator("#rq button:has-text('관리자로')").count()) === 0);
+    ok("접수를 묻지도 않는다", (await pg.locator("#rq .rq-r").count()) === 0);
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
   await br.close();
   srv.close();
   console.log("\n" + (fail ? "❌" : "✅") + " 통과 " + pass + " · 실패 " + fail);

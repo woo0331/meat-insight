@@ -49,13 +49,35 @@ function MyDbBand(){
   return '<section class="sec sec-blue my-db" id="my-db" hidden></section>';
 }
 
+/* ⚠️⚠️ **2026-10-11 — 토큰을 안 보내고 있었습니다.** `/api/me` 는
+   `Authorization: Bearer …` 로 누구인지 가리는데 여기서 안 붙여서,
+   로그인이 서는 날에도 **영원히 `signedIn:false`** 가 돌아올 자리
+   였습니다. 에러도 안 나고 화면도 멀쩡합니다 — 구간이 그냥 안
+   보일 뿐입니다 (이 저장소가 "만들어 놓고 안 쓰는 칸" 으로 여러 번
+   겪은 그 꼴). `amAuthHeaders()` 가 토큰이 없으면 **빈 객체**를
+   돌려주므로, 로그인 전 동작은 전과 한 글자도 다르지 않습니다. */
 window.myLoadDb = function(){
   var box = document.getElementById("my-db");
   if(!box || typeof fetch !== "function") return;
-  fetch("/api/me", { headers:{ "accept":"application/json" } })
+  var hd = (typeof amAuthHeaders === "function") ? amAuthHeaders() : {};
+  /* 먼저 로그인 상태를 확인합니다 — 매직링크로 돌아온 해시를 받아
+     치우는 일도 거기서 합니다 (`amAuthAsk`). */
+  var pre = (typeof amAuthAsk === "function") ? amAuthAsk() : Promise.resolve(null);
+  pre.then(function(){
+    hd = (typeof amAuthHeaders === "function") ? amAuthHeaders() : {};
+    return fetch("/api/me", { headers: Object.assign(
+      { "accept":"application/json" }, hd) });
+  })
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(d){
-      /* 로그인이 꺼져 있거나 안 하셨으면 구간째 없습니다 */
+      /* ⚠️ 설정은 됐는데 아직 로그인 안 하셨으면 **로그인 칸**을 냅니다.
+         설정 자체가 꺼져 있으면(`auth:false`) 구간째 없습니다 —
+         작동하지 않는 단추를 만들지 않습니다 (§30-7). */
+      if(d && d.auth && !d.signedIn){
+        box.innerHTML = '<div class="w">' + MySignInBand() + '</div>';
+        box.hidden = false;
+        return;
+      }
       if(!d || !d.auth || !d.signedIn) return;
       /* ⚠️⚠️ **역할은 서버가 토큰으로 읽어 온 값**입니다 (`api/_auth.js`).
          화면이 고르는 것이 아니고, 여기서 고른다고 보이는 줄이 늘지도
@@ -65,10 +87,65 @@ window.myLoadDb = function(){
       var inner = role === "provider" ? MyPvBand(d)
                 : (role === "staff" || role === "admin") ? MyDeskBand(d)
                 : MyCustBand(d);
-      box.innerHTML = '<div class="w">' + inner + '</div>';
+      /* ⚠️ 나가는 길을 반드시 같이 냅니다 — 가게 컴퓨터는 여러 사람이
+         씁니다. 들어올 길만 만들면 앞사람 계정이 그대로 남습니다. */
+      box.innerHTML = '<div class="w">' + inner +
+        '<p class="my-out">' + esc(d.name || "") +
+          (d.name ? " · " : "") +
+          '<button class="btn btn-o" type="button" onclick="mySignOut()">나가기</button>' +
+        '</p></div>';
       box.hidden = false;
     })
     .catch(function(e){ console.warn("[my] 신청 내역을 못 불러왔습니다 — " + e); });
+};
+
+/* ── 로그인 칸 ───────────────────────────────────────────────────
+   ⚠️⚠️ **비밀번호를 받지 않습니다.** 매직링크 하나입니다 — 손님이
+   40~60대 사장님이라 "메일로 온 링크를 누르면 끝" 이 제일 적게
+   막히고, 비밀번호를 받는 순간 저장 · 재설정 · 유출 대비가 전부
+   따라옵니다.
+   ⚠️ **지킬 수 없는 약속을 적지 마세요.** "바로 로그인됩니다" 가
+   아니라 메일이 가는 데까지가 우리가 아는 전부입니다. */
+function MySignInBand(){
+  return myHd("MY", "로그인하고 신청 내역 보기",
+    "메일 주소를 적으시면 로그인 링크를 보내 드립니다. 비밀번호는 없습니다.")+
+    /* ⚠️ 폼 클래스는 이 저장소 것을 그대로 씁니다 — `.f-r` 과 맨
+       `<input type=email>` 입니다. 새 이름을 지어내면 그 줄만 스타일이
+       안 먹고 에러도 안 납니다 (`.f-i` · `.f-l` 로 한 번 겪었습니다). */
+    '<form class="my-in" onsubmit="return mySignIn(event)">'+
+      '<div class="f-r">'+
+        '<label for="my-em">메일 주소</label>'+
+        '<div class="my-in-r">'+
+          '<input id="my-em" type="email" name="email" required '+
+            'autocomplete="email" placeholder="example@email.com">'+
+          '<button class="btn btn-b" type="submit">로그인 링크 받기</button>'+
+        '</div>'+
+        '<span class="f-h">비밀번호는 없습니다. 메일로 온 링크를 누르면 로그인됩니다.</span>'+
+      '</div>'+
+      '<p class="my-in-n" id="my-in-n" role="status"></p>'+
+    '</form>';
+}
+
+window.mySignIn = function(ev){
+  if(ev && ev.preventDefault) ev.preventDefault();
+  var em = document.getElementById("my-em");
+  var note = document.getElementById("my-in-n");
+  var btn = ev && ev.target ? ev.target.querySelector("button") : null;
+  if(!em || typeof amAuthSend !== "function") return false;
+  if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
+  if(note) note.textContent = "";
+  amAuthSend(em.value).then(function(r){
+    if(btn){ btn.disabled = false; btn.textContent = "로그인 링크 받기"; }
+    if(note) note.textContent = r.say;
+    if(note) note.className = "my-in-n" + (r.ok ? " ok" : " bad");
+  });
+  return false;
+};
+
+/* 나가기 — ⚠️ 누르면 **이 브라우저에서는 반드시** 지웁니다 */
+window.mySignOut = function(){
+  if(typeof amAuthOut !== "function") return;
+  amAuthOut().then(function(){ window.location.reload(); });
 };
 
 function myHd(k, h, p){
@@ -283,13 +360,11 @@ function MyFee(DL, AU){
    돈(money)은 고객에게 안 옵니다, 보류는 **주의(warn)** 입니다.
    ⚠️⚠️ 보류를 실패와 같은 색으로 두지 마세요 — 멈춘 것과 접은 것은
    다른 일이고, 같은 색이면 사장님이 끝난 줄 압니다. */
+/* ⚠️⚠️ **색을 여기 적지 않습니다.** `js/data/deal.js` 의 `amDealTone()`
+   한 곳입니다 — `/admin` 의 접수 목록이 같은 딱지를 내므로, 여기 적어
+   두면 두 화면이 같은 상태를 다른 색으로 냅니다. */
 function myStTone(key){
-  var s = (typeof amDealSt === "function") ? amDealSt(key) : null;
-  if(!s) return "gray";
-  if(s.key === "hold") return "warn";
-  if(s.key === "lost") return "gray";
-  if(s.end) return "ok";
-  return "on";
+  return (typeof amDealTone === "function") ? amDealTone(key) : "gray";
 }
 
 function MyReqList(L){

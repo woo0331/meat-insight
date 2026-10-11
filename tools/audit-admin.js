@@ -208,6 +208,39 @@ const AUDIT = () => {
   return bad;
 };
 
+/* ── 접수 · 배정 칸을 그려 놓고 재기 위한 가로채기 ─────────────
+   ⚠️ 여기서 만드는 신청 · 업체는 **테스트 브라우저 안에서만** 삽니다.
+   저장소 데이터(js/data/providers.js)는 그대로 0곳입니다. */
+const ADMIN = { auth:true, signedIn:true, role:"admin", name:"관리자",
+                provider:null,
+                conf:{ url:"https://p.supabase.co", anonKey:"ANON-TEST" } };
+const ME = { auth:true, signedIn:true, role:"admin",
+  requests:[
+    { id:"11111111-1111-1111-1111-111111111111", no:"SW-AB12-CD34",
+      side:"start", cat:"interior", industry:"cafe", region:"gyeonggi",
+      gu:"안양시", state:"check", created_at:"2026-10-11T02:00:00+00:00",
+      assignment:[] },
+    { id:"22222222-2222-2222-2222-222222222222", no:"SW-EF56-GH78",
+      side:"close", cat:"demolish", industry:"restaurant", region:"seoul",
+      gu:"", state:"hold", created_at:"2026-10-10T02:00:00+00:00",
+      assignment:[{ provider_id:"pv-one", state:"sent",
+                    created_at:"2026-10-10T03:00:00+00:00" }] }
+  ],
+  providers:[{ id:"pv-one", name:"가나다 인테리어", listed:false },
+             { id:"pv-two", name:"마바사 철거", listed:true }],
+  deals:[], audits:[] };
+
+function SESS(sess, me){
+  return async pg => {
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify(Object.assign(
+        { conf:{ url:"https://p.supabase.co", anonKey:"ANON-TEST" } }, sess)) }));
+    if(me) await pg.route("**/api/me", r => r.fulfill({ status:200,
+      contentType:"application/json", body: JSON.stringify(me) }));
+  };
+}
+
 (async () => {
   await new Promise(r => srv.listen(0, r));
   const base = "http://127.0.0.1:" + srv.address().port;
@@ -229,17 +262,35 @@ const AUDIT = () => {
     ["사유 판", async pg => { await pg.evaluate(() => { SL.modal = { k:"why", id:"qa1" }; slDraw(); }); }],
     ["보관함", async pg => { await pg.evaluate(() => { SL.modal = { k:"arch", id:"" }; slDraw(); }); }],
     ["관리자 설정", async pg => { await pg.click(".ad-fold > summary"); await pg.waitForTimeout(200); }],
-    ["이번달 실적", async pg => { await pg.click(".sl-st .sl-chip:has-text('이번달')"); }]
+    ["이번달 실적", async pg => { await pg.click(".sl-st .sl-chip:has-text('이번달')"); }],
+    /* ⚠️⚠️ 접수 · 배정 칸(2026-10-11 전면 감사 §6)은 `/api/session` 이
+       없으면 **한 픽셀도 안 그려집니다** — 그러면 이 검사가 그 칸의
+       대비 · 누름 크기를 **영원히 못 봅니다** (업체가 0곳이라 확인
+       배지 대비 1.99 가 한 번도 안 재졌던 그 자리). 그래서 세 상태를
+       가로채서 그려 놓고 잽니다. 가로채는 것은 **주소뿐**이고 저장소
+       데이터는 그대로 0곳입니다 (절대 규칙 1). */
+    ["로그인 칸", async pg => {}, SESS({ auth:true, signedIn:false })],
+    ["접수 목록", async pg => {}, SESS(ADMIN, ME)],
+    ["배정 판", async pg => {
+        await pg.locator("#rq .rq-r .rq-hd").first().click();
+        await pg.waitForTimeout(150);
+        await pg.selectOption("#rq-to", "assigned");
+        await pg.waitForTimeout(150);
+      }, SESS(ADMIN, ME)],
+    ["권한 없음", async pg => {},
+      SESS({ auth:true, signedIn:true, role:"customer", name:"갑" })]
   ].filter((_, i) => !FAST || i === 0 || i === 2);
 
   for (const w of WIDTHS) {
-    for (const [sname, setup] of STATES) {
+    for (const [sname, setup, pre] of STATES) {
       const ctx = await br.newContext({ viewport:{ width:w, height:900 } });
       await ctx.addInitScript(d => {
         localStorage.setItem("am.sales.v1", JSON.stringify(d));
       }, SEED);
       const pg = await ctx.newPage();
+      if (pre) await pre(pg);
       await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+      await pg.waitForTimeout(250);
       await setup(pg);
       await pg.waitForTimeout(150);
       const bad = await pg.evaluate(AUDIT);
@@ -259,6 +310,9 @@ const AUDIT = () => {
     u.slice(0, 14).forEach(v => console.log("   · " + v));
     if (u.length > 14) console.log("   … 외 " + (u.length - 14) + "건");
   });
-  console.log(n ? "\n합계 " + n + "건" : "\n✅ 일곱 폭 × 아홉 상태 전부 통과");
+  /* ⚠️ 폭 · 상태 개수를 손으로 적지 않습니다 — 이 저장소가 "흐름 52개"
+     라고 적힌 채 56개를 돌리고 있던 자리입니다. 세어서 냅니다. */
+  console.log(n ? "\n합계 " + n + "건"
+    : "\n✅ " + WIDTHS.length + "폭 × " + STATES.length + "상태 전부 통과");
   process.exit(n ? 1 : 0);
 })();

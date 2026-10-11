@@ -28,6 +28,10 @@ const LIMIT = 50;
 /* 감사 기록은 한 계약에 여러 줄이 쌓입니다 (확정 · 입금 · 환수) —
    같은 수로 두면 환수 줄이 뒤로 밀려 합계가 조용히 모자랍니다. */
 const AUDIT_LIMIT = 200;
+/* 배정할 업체를 고르는 목록이라 신청보다 넉넉합니다 — 지금 0곳이고,
+   ⚠️ 여기가 모자라기 시작하면 고르개가 아니라 **검색**이 필요한 때입니다
+   (목록을 조용히 자르지 말고 그때 고치세요). */
+const PROV_LIMIT = 200;
 
 /* ⚠️ 칸 목록을 역할마다 **손으로** 적습니다. `select=*` 로 두면 칸이
    하나 늘 때마다 조용히 같이 나갑니다. */
@@ -84,6 +88,22 @@ module.exports = async function handler(req, res){
       "&order=created_at.desc&limit=" + LIMIT);
     if(d.ok) out.deals = d.rows;
     else console.warn("[me] deal — " + d.why);
+  }
+
+  /* 배정할 업체 목록 — 직원 · 관리자만입니다 (§6 "업체 수동 배정").
+     ⚠️⚠️ **고객 · 업체에게는 묻지도 않습니다.** 공개 목록은 빌드가 미리
+     만든 HTML 이 내보내니(`/providers`) 로그인해서 DB 로 볼 이유가 없고,
+     여기 오는 것은 `listed=false` 인 **아직 안 켠 업체까지**입니다
+     (`provider_public` 정책이 직원 · 관리자에게만 그것을 열어 둡니다).
+     ⚠️ `verified` 를 안 가져옵니다 — 배정에 쓰는 값이 아니고 jsonb 라
+     통째로 따라 나옵니다 (최소 수집). */
+  if(role === "staff"){
+    const p = await dbSelectAs(s.token, "provider",
+      "?select=" + encodeURIComponent(
+        "id,name,regions,gu,industries,subs,listed") +
+      "&order=name.asc&limit=" + PROV_LIMIT);
+    if(p.ok) out.providers = p.rows;
+    else console.warn("[me] provider — " + p.why);
   }
 
   /* 환수 · 부분환불 — ⚠️⚠️ **`deal` 에는 안 남습니다.** 확정했던 액을

@@ -64,6 +64,23 @@ module.exports = function handler(req, res){
   var kinds = { sos: ready("sos"), quote: ready("quote"), partner: ready("partner") };
   var allReady = kinds.sos && kinds.quote && kinds.partner;
 
+  /* ── DB · 로그인 (2026-10-11 전면 감사 1차 ①) ──────────────────
+     ⚠️⚠️ **여기도 true/false 뿐입니다.** 주소도 · 키도 · 길이도 안
+     돌려줍니다 — 길이도 단서입니다.
+     ⚠️ 이 칸이 생긴 까닭: 환경변수를 넣고 **다시 배포하지 않으면**
+     떠 있는 함수에 값이 안 들어갑니다. 그러면 화면은 `auth:false` 로
+     조용히 닫히고, 사장님은 "넣었는데 왜 안 되지" 를 혼자 겪습니다.
+     ⚠️ `store` 와 `auth` 를 **갈라서** 봅니다 — service key 만 넣고
+     anon key 를 빠뜨리면 접수는 저장되는데 **로그인만 안 됩니다.**
+     한 덩어리로 보면 어느 쪽이 빠졌는지 알 수가 없습니다. */
+  var db = {
+    url:     has("SUPABASE_URL"),
+    anonKey: has("SUPABASE_ANON_KEY"),
+    svcKey:  has("SUPABASE_SERVICE_KEY")
+  };
+  db.store = db.url && db.svcKey;    /* 접수 저장 · 접수번호 (api/_db.js) */
+  db.auth  = db.url && db.anonKey;   /* 로그인 · 마이페이지 (api/_auth.js) */
+
   /* 캐시하면 다시 배포한 뒤에도 옛 답이 나옵니다 — 그게 제일 헷갈립니다 */
   res.setHeader("cache-control", "no-store");
   res.setHeader("x-robots-tag", "noindex");
@@ -73,6 +90,7 @@ module.exports = function handler(req, res){
     byKind: byKind,
     kinds: kinds,
     allReady: allReady,
+    db: db,
     /* 어느 환경에서 도는 중인지. Production 아닌 곳에서만 되는 일이
        실제로 생깁니다 (CLAUDE.md 의 경고). */
     env: process.env.VERCEL_ENV || "unknown"

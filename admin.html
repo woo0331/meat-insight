@@ -35,8 +35,8 @@
 -->
 <link rel="stylesheet" href="/css/tokens.css?v=9bdff6ae">
 <link rel="stylesheet" href="/css/app.css?v=c479986c">
-<link rel="stylesheet" href="/css/pages.css?v=f8921da4">
-<link rel="stylesheet" href="/css/admin.css?v=3614ba3f">
+<link rel="stylesheet" href="/css/pages.css?v=91e2d254">
+<link rel="stylesheet" href="/css/admin.css?v=872d4aa1">
 </head>
 <body class="ad-body">
 
@@ -50,6 +50,11 @@
 
 <main class="w ad-main">
   <h1 class="ad-h1">업체를 찾아 등록하고, 전화하고, 입점시키는 자리</h1>
+
+  <!-- ⚠️⚠️ 접수 · 배정 — js/intake.js 가 그립니다.
+       DB · 로그인이 설정되기 전에는 **한 픽셀도 안 나옵니다**
+       (/api/session 이 auth:false). "준비 중" 자리표시자도 안 찍습니다. -->
+  <div id="rq"></div>
 
   <!-- 영업 작업대 — js/sales.js 가 그립니다 -->
   <div id="sl"></div>
@@ -111,7 +116,15 @@
 <script src="/js/data/offers.js?v=45719125"></script>
 <!-- ⚠️ sales.js(화면)가 admin.js 의 초대 글 함수(adInvite · adInviteSms ·
      adInviteCall · adCopy)를 그대로 씁니다 — 글을 두 벌로 만들지 않습니다. -->
-<script src="/js/admin.js?v=e3f08b08"></script>
+<!-- ⚠️⚠️ 신청 상태 열셋 · 역할 넷 · 옮길 수 있는 길 — /admin 의 접수
+     목록이 상태 이름과 색을 여기서 가져옵니다. 이 줄이 없으면 딱지가
+     전부 회색이 되고 상태가 영어로 나옵니다 (에러는 안 납니다). -->
+<script src="/js/data/deal.js?v=c996a16b"></script>
+<!-- 로그인 — ⚠️ admin.html 은 ui.js 를 안 읽으므로 auth.js 가 저장을
+     스스로 들고 있습니다 (amGet/amSet 에 의존하지 않습니다). -->
+<script src="/js/auth.js?v=a50dfe92"></script>
+<script src="/js/intake.js?v=ecd467cf"></script>
+<script src="/js/admin.js?v=2d03678a"></script>
 <script src="/js/sales.js?v=92305a9f"></script>
 </body>
 </html>

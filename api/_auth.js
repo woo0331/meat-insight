@@ -132,5 +132,24 @@ function authWhy(reason){
     : "로그인을 확인하지 못했습니다. (" + reason + ")";
 }
 
+/* ── 화면이 로그인하려면 **공개 설정 둘**이 필요합니다 ──────────────
+   Supabase Auth 는 브라우저가 직접 부릅니다 (매직링크를 받는 자리).
+   그러려면 프로젝트 주소와 **공개 키**를 알아야 합니다.
+
+   ⚠️⚠️ **여기서 나가는 것은 `SUPABASE_ANON_KEY` 뿐입니다.** 그 키는
+   새도 괜찮게 설계된 공개 키이고, 무엇을 볼 수 있는지는 전부 RLS 가
+   정합니다. **`SUPABASE_SERVICE_KEY` 는 절대 나가면 안 됩니다** — 그
+   키는 RLS 를 통째로 지나가서, 한 번 새면 손님 연락처와 계약금액
+   전부가 새는 것과 같습니다.
+   ⚠️ 그래서 이 함수는 **두 칸만** 돌려줍니다. 객체를 통째로 넘기지
+   마세요 — 칸이 하나 늘면 조용히 같이 나갑니다 (`api/me.js` 의
+   `select=*` 를 쓰지 않는 것과 같은 까닭).
+   ⚠️ `tools/test-auth.js` 가 **답 어디에도 service key 가 없는지**
+   봅니다. */
+function publicConf(){
+  if(!authReady()) return null;
+  return { url: base(), anonKey: env("SUPABASE_ANON_KEY") };
+}
+
 module.exports = { authReady, bearer, whoami, roleOf, session, authWhy,
-                   AUTH_TIMEOUT };
+                   publicConf, AUTH_TIMEOUT };

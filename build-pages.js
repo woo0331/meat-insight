@@ -2729,7 +2729,55 @@ function checkMigDocs(W){
     throw new Error("세우는 차례(db/README.md)가 실제 마이그레이션과 어긋납니다:\n  " +
       bad.join("\n  ") + "\n   → 세우는 것은 사장님이 손으로 하시는 일이라 그 문서가 유일한 길잡이입니다");
 
-  console.log("   마이그레이션 " + migs.length + "개가 README \u00b7 test-sql 과 같습니다 (판 " + top + ")");
+  /* ⚠️⚠️ db/verify.sql 의 기대값도 같이 봅니다 — 사장님이 돌린 DB 가
+     저장소와 같은지 재는 유일한 길이고, 기대값이 낡으면 **멀쩡한 DB 를
+     "고쳐야 합니다" 로** 잡거나 **깨진 DB 를 통과**시킵니다.
+
+     ⚠️ 처음에 정규식으로 `'7' want` 를 찾다가 파일의 **공백이 둘**이라
+     멀쩡한 파일을 실패로 잡았습니다 (검사가 틀린 자리). 지금은 그
+     묶음(`from v_xxx`)이 적힌 **줄**에 그 숫자가 있는지만 봅니다. */
+  const vf = path.join(ROOT, "db", "verify.sql");
+  /* ⚠️⚠️ 없으면 **멈춥니다.** 처음에 "있으면 본다" 로 적었다가
+     파일을 지워 보니 조용히 통과했습니다 — README 가 "이것을 붙여
+     넣으세요" 라고 가리키고 있는데 파일이 없으면 그게 깨진 안내입니다. */
+  if(doc.indexOf("verify.sql") >= 0 && !fs.existsSync(vf))
+    throw new Error("db/README.md 가 db/verify.sql 을 가리키는데 그 파일이 없습니다 — "+
+      "사장님이 돌린 DB 를 확인할 길이 사라집니다");
+  if(fs.existsSync(vf)){
+    const vs  = fs.readFileSync(vf, "utf8");
+    const nSt = (W.AM_DEAL_ST || []).length;
+    let nMv = 0; (W.AM_DEAL_MOVE || []).forEach(m => { nMv += (m[2] || []).length; });
+    const vbad = [];
+    const rowWant = src => {              /* 'from v_xxx' 가 있는 줄의 기대값 */
+      /* ⚠️ "select 가 같은 줄에 있는지" 로 걸렀다가 틀렸습니다 — 딱지를
+         여러 줄로 쓰는 행이 있어서 기대값과 select 가 다른 줄입니다. */
+      const line = vs.split("\n").filter(l => l.indexOf("from " + src) >= 0)[0];
+      if(!line) return null;
+      const m = line.match(/'([0-9]+)'[^']*$/);
+      return m ? Number(m[1]) : null;
+    };
+    const want = (label, src, n) => {
+      if(!n) return;
+      const got = rowWant(src);
+      if(got === null) vbad.push("db/verify.sql 에 " + src + " 줄이 없습니다 (" + label + ")");
+      else if(got !== n) vbad.push("db/verify.sql " + label + " 기대값이 " + got + "입니다 — " + n + "이라야 합니다");
+    };
+    want("\u2460 판 번호", "v_ver",  top);
+    want("\u2463 상태",    "v_st",   nSt);
+    want("\u2465 길",      "v_move", nMv);
+    /* ⚠️ 있는 것을 세야 합니다 — 기대 목록을 세면 전부 없어도 통과합니다
+       (실제로 그렇게 적었다가 되돌려 보고 알았습니다). */
+    if(/v_fn as \(\s*select count\(\*\)::int n/.test(vs))
+      vbad.push("db/verify.sql \u2466 이 기대 목록을 세고 있습니다 — "+
+        "함수가 전부 없어도 통과합니다 (count(*) filter (where exists …) 로)");
+    if(vbad.length)
+      throw new Error("세우고 확인하는 검사(db/verify.sql)가 저장소와 어긋납니다:\n  " +
+        vbad.join("\n  "));
+    if(doc.indexOf("verify.sql") < 0)
+      console.log("   \u26a0\ufe0f db/README.md 가 verify.sql 을 가리키지 않습니다");
+  }
+
+  console.log("   마이그레이션 " + migs.length + "개가 README \u00b7 test-sql \u00b7 verify 와 같습니다 (판 " + top + ")");
 }
 
 function checkIndGroups(W){

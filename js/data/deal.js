@@ -290,3 +290,49 @@ window.amRoleName = function(key){
   for(i = 0; i < L.length; i++) if(L[i].key === key) return L[i].name;
   return key;
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   견적 상태 넷 (0008 · 최종 통합 지시서 §4 · §6)
+
+   ⚠️⚠️ **`db/migrations/0008_quote.sql` 의 check 와 같아야 합니다.**
+   `build-pages.js` 의 `checkQuoteSql()` 이 빌드마다 맞춰 봅니다 —
+   한쪽만 고치면 화면이 모르는 상태가 와서 딱지가 **빈 칸**이 되거나,
+   화면이 내는 값을 DB 가 거절합니다 (이 저장소가 배정 상태 ·
+   `deal_move` 로 겪은 자리).
+
+   ⚠️ `passed`(고르지 않음)와 `withdrawn`(업체가 거둠)을 **한 가지로
+   묶지 마세요.** 앞은 고객이 다른 곳을 고른 것이고 뒤는 업체가 말을
+   거둔 것입니다 — 같은 말로 덮으면 "왜 이 견적이 없어졌나" 를 아무도
+   못 댑니다. 그래서 거둔 견적은 고객 화면에 아예 안 보이고(RLS),
+   고르지 않은 견적은 그대로 보입니다.
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_QUOTE_ST = [
+  { key:"open",      name:"받은 견적",   tone:"on"   },
+  { key:"chosen",    name:"고른 견적",   tone:"ok"   },
+  { key:"passed",    name:"고르지 않음", tone:"gray" },
+  { key:"withdrawn", name:"업체가 거둠", tone:"gray" }
+];
+window.amQuoteSt = function(key){
+  var L = window.AM_QUOTE_ST, i;
+  for(i = 0; i < L.length; i++) if(L[i].key === key) return L[i];
+  return null;
+};
+window.amQuoteName = function(key){
+  var s = window.amQuoteSt(key);
+  return s ? s.name : "";
+};
+window.amQuoteTone = function(key){
+  var s = window.amQuoteSt(key);
+  return s ? s.tone : "gray";
+};
+
+/* 부가세 표기 — ⚠️ 금액만 적어 두면 둘을 견줄 수가 없습니다
+   (한 곳은 별도, 한 곳은 포함이면 실제로 내는 돈이 10% 다릅니다).
+   ⚠️⚠️ **여기서 세금을 계산하지 않습니다** — 요율을 박아 두면 바뀌는
+   날부터 거짓말입니다 (이 저장소가 4대보험에서 적어 둔 그 규칙).
+   적는 것은 **업체가 어떻게 적었는가**까지입니다. */
+window.amQuoteVat = function(key){
+  if(key === "incl") return "부가세 포함";
+  if(key === "free") return "면세";
+  return "부가세 별도";
+};

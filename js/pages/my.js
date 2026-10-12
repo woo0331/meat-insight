@@ -83,21 +83,40 @@ window.myLoadDb = function(){
          화면이 고르는 것이 아니고, 여기서 고른다고 보이는 줄이 늘지도
          않습니다 — 무엇이 오는지는 RLS 와 `api/me.js` 의 칸 목록이
          정합니다. 여기서 하는 일은 **온 것을 어떻게 보여 줄지**까지입니다. */
-      var role = d.role || "customer";
-      var inner = role === "provider" ? MyPvBand(d)
-                : (role === "staff" || role === "admin") ? MyDeskBand(d)
-                : MyCustBand(d);
-      /* ⚠️ 나가는 길을 반드시 같이 냅니다 — 가게 컴퓨터는 여러 사람이
-         씁니다. 들어올 길만 만들면 앞사람 계정이 그대로 남습니다. */
-      box.innerHTML = '<div class="w">' + inner +
-        '<p class="my-out">' + esc(d.name || "") +
-          (d.name ? " · " : "") +
-          '<button class="btn btn-o" type="button" onclick="mySignOut()">나가기</button>' +
-        '</p></div>';
-      box.hidden = false;
+      myDbPaint(d);
     })
     .catch(function(e){ console.warn("[my] 신청 내역을 못 불러왔습니다 — " + e); });
 };
+
+/* ⚠️⚠️ **그린 것을 다시 그릴 수 있어야 합니다.** 견적을 내고 · 거두고 ·
+   고르는 자리가 생기면서 "눌렀더니 바뀐 것을 그 자리에서 보여 주는"
+   일이 필요해졌습니다. 그래서 그리는 일을 떼어 두고, 온 것을 `MYQ.d` 에
+   들고 있습니다 — ⚠️ **서버에서 온 것이 진실입니다.** 화면이 들고 있는
+   값으로 상태를 추측하지 않고, 바꾼 뒤에는 `myLoadDb()` 로 다시 묻습니다
+   (`/admin` 의 `rqLoad()` 와 같은 규칙).
+   ⚠️ 적다가 거절당해도 **적으신 것이 날아가지 않게** `MYQ.draft` 에
+   들고 있습니다 (이 저장소가 배정 화면에서 고른 업체가 빈 칸으로
+   돌아간 것을 겪은 자리입니다). */
+var MYQ = { d:null, open:"", draft:{}, busy:false };
+
+function myDbPaint(d){
+  var box = document.getElementById("my-db");
+  if(!box) return;
+  if(d) MYQ.d = d; else d = MYQ.d;
+  if(!d) return;
+  var role = d.role || "customer";
+  var inner = role === "provider" ? MyPvBand(d)
+            : (role === "staff" || role === "admin") ? MyDeskBand(d)
+            : MyCustBand(d);
+  /* ⚠️ 나가는 길을 반드시 같이 냅니다 — 가게 컴퓨터는 여러 사람이
+     씁니다. 들어올 길만 만들면 앞사람 계정이 그대로 남습니다. */
+  box.innerHTML = '<div class="w">' + inner +
+    '<p class="my-out">' + esc(d.name || "") +
+      (d.name ? " · " : "") +
+      '<button class="btn btn-o" type="button" onclick="mySignOut()">나가기</button>' +
+    '</p></div>';
+  box.hidden = false;
+}
 
 /* ── 로그인 칸 ───────────────────────────────────────────────────
    ⚠️⚠️ **비밀번호를 받지 않습니다.** 매직링크 하나입니다 — 손님이
@@ -158,7 +177,7 @@ function MyCustBand(d){
   var L = d.requests || [];
   return myHd("MY REQUEST", "내가 넣은 신청",
     "접수번호로 물어보실 수 있습니다. 진행 상태가 바뀌면 여기에 그대로 보입니다.")+
-    (L.length ? MyReqList(L) : Empty({
+    (L.length ? MyReqList(L, d) : Empty({
       icon:"doc", title:"아직 넣으신 신청이 없습니다",
       text:"필요한 일을 적어 보내시면 조건에 맞는 업체를 찾아 드립니다.",
       cta:'<a class="btn btn-b" href="'+esc(quoteTo({}))+'">'+
@@ -177,7 +196,7 @@ function MyPvBand(d){
   var L = d.requests || [], DL = d.deals || [];
   return myHd("PARTNER", "배정받은 신청",
     "연결된 건만 보입니다. 성함과 연락처는 배정이 된 뒤에 함께 옵니다.")+
-    (L.length ? MyPvList(L) :
+    (L.length ? MyPvList(L, d) :
       '<p class="lead">아직 배정된 신청이 없습니다. 배정되면 여기에 '+
         '연락처와 함께 보입니다.</p>'+
       '<div class="row-cta"><a class="btn btn-o" href="/join">'+
@@ -185,7 +204,7 @@ function MyPvBand(d){
     MyDealBand(DL);
 }
 
-function MyPvList(L){
+function MyPvList(L, d){
   return '<ul class="myq-l">'+L.map(function(r){
     var st  = (typeof amDealStName === "function") ? amDealStName(r.state) : r.state;
     var cat = r.cat && typeof amCat === "function" ? amCat(r.cat) : null;
@@ -203,6 +222,10 @@ function MyPvList(L){
                  icon("phone",15)+esc(r.tel)+'</a>' : '')+'</p>'
         : "")+
       (r.body ? '<p class="myq-b">'+esc(String(r.body).slice(0, 160))+'</p>' : "")+
+      /* ⚠️⚠️ **견적을 내는 자리가 여기입니다** (§4). 전에는 상태만
+         `quoted` 로 바뀌고 **금액이 아무 데도 안 남아서**, 고객은
+         전화로 들은 금액을 기억해야 했습니다. */
+      (d ? MyQuoteMine(d, r) : "")+
     '</li>'; }).join("")+'</ul>';
 }
 
@@ -367,7 +390,7 @@ function myStTone(key){
   return (typeof amDealTone === "function") ? amDealTone(key) : "gray";
 }
 
-function MyReqList(L){
+function MyReqList(L, d){
   return '<ul class="myq-l">'+L.map(function(r){
     var st = (typeof amDealStName === "function") ? amDealStName(r.state) : r.state;
     var pv = (r.assignment && r.assignment.length && r.assignment[0].provider)
@@ -381,7 +404,295 @@ function MyReqList(L){
       /* ⚠️⚠️ 업체 상호는 **배정이 된 뒤에만** 나옵니다 — 그 전에 적으면
          정해지지도 않은 곳을 알려 주는 것입니다 (제17조 제2항). */
       (pv ? '<p class="myq-pv">'+icon("users",15)+esc(pv)+'</p>' : "")+
+      /* ⚠️⚠️ **받은 견적을 여기에 냅니다** (§6). 신청 줄 안에 두는
+         까닭은 "무슨 일의 견적인가" 가 바로 위에 있어야 하기
+         때문입니다 — 따로 떼면 접수번호를 들고 두 목록을 왕복합니다. */
+      (d ? MyQuoteCompare(d, r) : "")+
     '</li>'; }).join("")+'</ul>';
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   견적 — 업체가 내고 · 고객이 고릅니다 (0008 · 최종 통합 지시서 §4 · §6)
+
+   ⚠️⚠️ **`/compare` 와 다른 화면입니다.** 그쪽은 **업체**를 나란히 놓고
+   (분야 · 지역 · 배지), 여기는 **제출된 견적**을 나란히 놓습니다
+   (금액 · 범위 · 기간 · A/S). 이름이 겹쳐서 "이미 있다" 로 읽히기 쉬운
+   자리이고, 실제로 감사 보고서가 그렇게 세다가 1차의 가장 큰 일을
+   통째로 빠뜨릴 뻔했습니다.
+
+   ⚠️⚠️ **새 주소를 만들지 않았습니다.** `/my` 가 역할을 보고 다른 것을
+   냅니다 — 로그인 전에는 구간째 안 보이니 `/quotes` 를 만들면 색인은
+   되는데 들어가면 빈 화면인 주소가 하나 늘어납니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 그 신청의 견적만 — ⚠️ 거르는 일을 화면이 **또** 하지 않습니다.
+   무엇이 오는지는 RLS 가 정하고(거둔 견적은 고객에게 아예 안 옵니다),
+   여기서는 신청별로 나눠 담을 뿐입니다. */
+function myqOf(d, rid){
+  return (d.quotes || []).filter(function(q){ return q.request_id === rid; });
+}
+
+/* 한 견적의 값 줄 — ⚠️⚠️ **값이 없는 칸은 아예 안 넣습니다** (절대 규칙 2).
+   CSS 로 숨기면 빈 상자가 칸 하나를 차지합니다 (매물 조건표에서 겪은
+   자리). ⚠️ `0` 은 값입니다 — "무상 · 서비스" 를 0 으로 적을 수 있어서
+   `!= null` 로 봅니다. */
+function myqSpecs(q){
+  var rows = [];
+  if(q.amount != null)
+    rows.push(["견적 금액", won(q.amount)+"원 · "+
+      ((typeof amQuoteVat === "function") ? amQuoteVat(q.vat) : "")]);
+  if(q.days)      rows.push(["예상 소요", q.days+"일"]);
+  if(q.start_on)  rows.push(["시작 가능", amDate(q.start_on)]);
+  if(q.valid_to)  rows.push(["견적 유효", amDate(q.valid_to)+"까지"]);
+  if(!rows.length) return "";
+  return '<dl class="myd-l">'+rows.map(function(r){
+    return '<div><dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd></div>';
+  }).join("")+'</dl>';
+}
+
+/* 글로 적힌 것 — 범위 · 별도 · A/S · 메모.
+   ⚠️⚠️ **업체가 적은 글입니다** — `esc()` 를 반드시 거칩니다 (절대 규칙 4). */
+function myqText(q){
+  var L = [["포함", q.scope], ["별도", q.excludes],
+           ["A/S · 보증", q.warranty], ["메모", q.note]];
+  return L.filter(function(r){ return r[1]; }).map(function(r){
+    return '<p class="myq-b"><b>'+esc(r[0])+'</b> '+esc(String(r[1]))+'</p>';
+  }).join("");
+}
+
+/* ── 고객: 받은 견적을 나란히 (§6) ───────────────────────────────
+   ⚠️⚠️ **금액순으로 줄 세우지 않습니다.** 포함 범위가 서로 달라서
+   금액만으로는 견줄 수 없고, 줄을 세우면 그 순서가 곧 추천이 됩니다 —
+   이 저장소가 `featured` 를 만들지 않는 것과 같은 까닭입니다
+   (약관 제6조 제4항 · "최저가" 는 금지 문구).
+   ⚠️ **"가장 저렴한" 딱지를 붙이지 마세요.** 범위가 적은 견적이 늘
+   싸 보이고, 그걸 고른 사장님은 나중에 별도 비용을 또 냅니다. */
+function MyQuoteCompare(d, r){
+  var L = myqOf(d, r.id);
+  if(!L.length) return "";
+  var got = L.filter(function(q){ return q.state === "chosen"; })[0];
+  return '<div class="myqt">'+
+    '<p class="myqt-h">'+icon("doc",15)+'받은 견적 '+L.length+'건'+
+      (got ? '' : ' <i>— 하나를 고르시면 업체에 전달됩니다</i>')+'</p>'+
+    '<ul class="myqt-l">'+L.map(function(q){
+      var pv = (q.provider && q.provider.name) || q.provider_id;
+      var tone = (typeof amQuoteTone === "function") ? amQuoteTone(q.state) : "gray";
+      return '<li class="myqt-c'+(q.state === "chosen" ? " is-got" : "")+'">'+
+        '<div class="myq-h">'+
+          '<b class="myqt-pv">'+esc(pv)+'</b>'+
+          '<span class="myq-st myq-'+esc(tone)+'">'+
+            esc((typeof amQuoteName === "function") ? amQuoteName(q.state) : q.state)+
+          '</span>'+
+        '</div>'+
+        myqSpecs(q)+myqText(q)+
+        /* ⚠️ 이미 고른 뒤에는 단추를 아예 안 냅니다 — 누를 때마다
+           거절당하는 단추를 만들지 않습니다 (§30-7). */
+        (!got
+          ? '<div class="row-cta"><button class="btn btn-b" type="button"'+
+              ' onclick="myqPick(\''+esc(r.id)+'\',\''+esc(q.provider_id)+'\')"'+
+              (MYQ.busy ? ' disabled' : '')+'>'+
+              '이 견적으로 하겠습니다'+icon("check",16)+'</button></div>'
+          : "")+
+      '</li>';
+    }).join("")+'</ul>'+
+    /* ⚠️⚠️ **고른 것이 곧 계약이 아닙니다.** 조건을 더 맞춰 봐야 하는
+       일이고, 계약은 업체와 적으신 뒤에 담당자가 기록합니다 — 여기서
+       "계약되었습니다" 라고 하면 하지 않은 일을 했다고 말하는 것입니다. */
+    '<p class="myqt-n">등록된 차례로 냅니다. 금액순으로 줄 세우지 않습니다 — '+
+      '포함 범위가 서로 달라 금액만으로는 견줄 수 없습니다. '+
+      '고르셔도 바로 계약이 되는 것은 아니고, 업체와 조건을 맞추신 뒤에 '+
+      '계약으로 넘어갑니다.</p>'+
+  '</div>';
+}
+
+window.myqPick = function(rid, pv){
+  if(MYQ.busy) return;
+  MYQ.busy = true; myDbPaint();
+  myqCall("choose_quote", { p_request:rid, p_provider:pv },
+          "이 견적으로 하겠다고 전달했습니다");
+};
+
+/* ── 업체: 견적을 냅니다 · 고칩니다 · 거둡니다 (§4) ───────────────
+   ⚠️⚠️ **낼 수 있는 상태가 아니면 폼을 안 냅니다.** 배정을 수락한 뒤 ·
+   상담을 시작한 뒤부터이고 계약 뒤에는 못 냅니다 — DB 가 거절하는 길에
+   단추를 내면 누를 때마다 실패합니다 (§30-7).
+   ⚠️ 막는 것은 여기가 아니라 `submit_quote()` 입니다. 여기는 **먼저
+   알려 주는** 것까지입니다 (`/admin` 이 `amDealMove()` 를 먼저 보는 것과
+   같은 규칙). */
+var MYQ_OK = { consult:1, quoted:1, nego:1 };
+
+function MyQuoteMine(d, r){
+  var mine = myqOf(d, r.id)[0] || null;
+  var can  = MYQ_OK[r.state] === 1;
+  var open = MYQ.open === r.id;
+
+  /* 아직 낼 수 없는 상태 — ⚠️ "준비 중" 을 찍지 않고 **무엇을 하면
+     되는지**를 적습니다 (절대 규칙 2 · 3). */
+  if(!mine && !can)
+    return '<p class="myqt-n">'+esc(
+      r.state === "assigned" ? "배정을 수락하시면 견적을 낼 수 있습니다"
+      : r.state === "accepted" ? "상담을 시작하시면 견적을 낼 수 있습니다"
+      : "지금 상태에서는 견적을 낼 수 없습니다")+'</p>';
+
+  return '<div class="myqt">'+
+    (mine
+      ? '<p class="myqt-h">'+icon("doc",15)+'내가 낸 견적'+
+          '<span class="myq-st myq-'+esc((typeof amQuoteTone === "function")
+            ? amQuoteTone(mine.state) : "gray")+'">'+
+            esc((typeof amQuoteName === "function")
+              ? amQuoteName(mine.state) : mine.state)+'</span></p>'+
+        myqSpecs(mine)+myqText(mine)
+      : '<p class="myqt-h">'+icon("doc",15)+'견적 내기</p>')+
+    (open ? MyQuoteForm(r, mine) : MyQuoteBtns(r, mine, can))+
+  '</div>';
+}
+
+function MyQuoteBtns(r, mine, can){
+  var b = [];
+  /* ⚠️⚠️ 고객이 고른 견적은 고칠 수도 거둘 수도 없습니다 — 고치면
+     고객이 고른 것과 다른 금액이 되고, 그건 조용히 말을 바꾸는
+     일입니다. DB 도 거절하므로 **단추를 아예 안 냅니다.** */
+  if(mine && mine.state === "chosen")
+    return '<p class="myqt-n">고객이 이 견적을 골랐습니다. 바꿀 일이 '+
+      '있으면 담당자에게 알려 주세요.</p>';
+  if(can)
+    b.push('<button class="btn btn-b" type="button" onclick="myqOpen(\''+esc(r.id)+'\')">'+(mine ? "견적 고치기" : "견적 내기")+
+      icon("arrow",16)+'</button>');
+  if(mine && mine.state === "open")
+    b.push('<button class="btn btn-o" type="button" onclick="myqDrop(\''+esc(r.id)+'\')"'+(MYQ.busy ? ' disabled' : '')+'>견적 거두기</button>');
+  return b.length ? '<div class="row-cta">'+b.join("")+'</div>' : "";
+}
+
+/* 적는 칸 — ⚠️ 폼 클래스는 이 저장소 것(`.f-r`)을 그대로 씁니다.
+   새 이름을 지어내면 그 줄만 스타일이 안 먹고 에러도 안 납니다. */
+function myqRow(id, lab, html, hint){
+  return '<div class="f-r"><label for="'+esc(id)+'">'+esc(lab)+'</label>'+
+    html+(hint ? '<span class="f-h">'+esc(hint)+'</span>' : '')+'</div>';
+}
+function myqIn(id, k, v, extra){
+  return '<input id="'+esc(id)+'" value="'+esc(v == null ? "" : String(v))+'" '+
+    (extra || "")+' oninput="myqSet(\''+esc(k)+'\',this.value)">';
+}
+
+function MyQuoteForm(r, mine){
+  var g = function(k, fb){
+    var v = MYQ.draft[k];
+    return v === undefined ? (fb == null ? "" : fb) : v;
+  };
+  var vat = g("vat", (mine && mine.vat) || "add");
+  return '<div class="myqt-f">'+
+    myqRow("myq-amt", "견적 금액 (원) *",
+      myqIn("myq-amt", "amount", g("amount", mine && mine.amount),
+            'type="number" min="0" step="1000" inputmode="numeric"'),
+      "⚠️ 이 금액이 고객 화면에 그대로 나갑니다. 0 원은 '무상' 으로 읽힙니다")+
+    myqRow("myq-vat", "부가세",
+      '<select id="myq-vat" onchange="myqSet(\'vat\',this.value)">'+
+        ["add","incl","free"].map(function(k){
+          return '<option value="'+k+'"'+(vat === k ? ' selected' : '')+'>'+
+            esc((typeof amQuoteVat === "function") ? amQuoteVat(k) : k)+'</option>';
+        }).join("")+'</select>',
+      "별도인지 포함인지가 없으면 고객이 두 견적을 견줄 수 없습니다")+
+    myqRow("myq-sc", "이 금액에 포함되는 것 *",
+      '<textarea id="myq-sc" rows="3" oninput="myqSet(\'scope\',this.value)">'+
+        esc(g("scope", mine && mine.scope))+'</textarea>',
+      "범위 없는 견적은 금액만 적힌 종이입니다")+
+    myqRow("myq-ex", "별도로 드는 것",
+      '<textarea id="myq-ex" rows="2" oninput="myqSet(\'excludes\',this.value)">'+
+        esc(g("excludes", mine && mine.excludes))+'</textarea>',
+      "나중에 또 받게 되는 비용을 미리 적어 두면 분쟁이 줄어듭니다")+
+    myqRow("myq-dy", "예상 소요일",
+      myqIn("myq-dy", "days", g("days", mine && mine.days),
+            'type="number" min="1" step="1" inputmode="numeric"'))+
+    /* ⚠️ 날짜는 `date` 입니다 — 손으로 적게 하면 "다음달 초" 가
+       들어오고 그건 일정이 아닙니다 (서비스별 질문에서 정한 규칙). */
+    myqRow("myq-st", "시작 가능일",
+      myqIn("myq-st", "startOn", g("startOn", mine && mine.start_on), 'type="date"'))+
+    myqRow("myq-vt", "견적 유효기간",
+      myqIn("myq-vt", "validTo", g("validTo", mine && mine.valid_to), 'type="date"'))+
+    myqRow("myq-ws", "A/S · 보증",
+      '<textarea id="myq-ws" rows="2" oninput="myqSet(\'warranty\',this.value)">'+
+        esc(g("warranty", mine && mine.warranty))+'</textarea>')+
+    myqRow("myq-nt", "메모",
+      '<textarea id="myq-nt" rows="2" oninput="myqSet(\'note\',this.value)">'+
+        esc(g("note", mine && mine.note))+'</textarea>')+
+    '<div class="row-cta">'+
+      '<button class="btn btn-b" type="button" onclick="myqSend(\''+esc(r.id)+'\')"'+(MYQ.busy ? ' disabled' : '')+'>'+
+        (MYQ.busy ? "보내는 중…" : (mine ? "고친 견적 보내기" : "견적 보내기"))+'</button>'+
+      '<button class="btn btn-o" type="button" onclick="myqOpen(\'\')">그만두기</button>'+
+    '</div>'+
+  '</div>';
+}
+
+window.myqOpen = function(id){
+  MYQ.open = id || ""; MYQ.draft = {}; myDbPaint();
+};
+window.myqSet = function(k, v){ MYQ.draft[k] = v; };
+
+/* ⚠️⚠️ **빈 칸을 보내지 않습니다** — `amDropEmpty()` 한 곳입니다.
+   DB 에 저장되면 "안 적으신 것" 과 "비워 두신 것" 을 구분할 수가
+   없습니다. ⚠️ `0` 은 값입니다 (무상 · 서비스). */
+window.myqSend = function(rid){
+  if(MYQ.busy) return;
+  var d = MYQ.draft, mine = (MYQ.d ? myqOf(MYQ.d, rid)[0] : null) || {};
+  var amt = d.amount !== undefined ? d.amount : mine.amount;
+  var sc  = d.scope  !== undefined ? d.scope  : mine.scope;
+  /* 먼저 알려 줍니다 — ⚠️ 자물쇠는 `submit_quote()` 입니다 */
+  if(amt === "" || amt === null || amt === undefined){
+    toast("견적 금액을 적어 주세요"); return;
+  }
+  if(!String(sc || "").trim()){
+    toast("이 금액에 무엇이 포함되는지 적어 주세요"); return;
+  }
+  var data = amDropEmpty({
+    amount: Number(amt),
+    vat:      d.vat      !== undefined ? d.vat      : mine.vat,
+    scope:    String(sc).trim(),
+    excludes: d.excludes !== undefined ? d.excludes : mine.excludes,
+    days:     d.days     !== undefined ? d.days     : mine.days,
+    startOn:  d.startOn  !== undefined ? d.startOn  : mine.start_on,
+    validTo:  d.validTo  !== undefined ? d.validTo  : mine.valid_to,
+    warranty: d.warranty !== undefined ? d.warranty : mine.warranty,
+    note:     d.note     !== undefined ? d.note     : mine.note
+  });
+  MYQ.busy = true; myDbPaint();
+  myqCall("submit_quote", { p_request:rid, p_data:data }, "견적을 보냈습니다");
+};
+
+window.myqDrop = function(rid){
+  if(MYQ.busy) return;
+  /* ⚠️ 되돌릴 수 없으니 한 번 물어봅니다 (localStorage 지우기와 같은 규칙) */
+  if(typeof confirm === "function" &&
+     !confirm("낸 견적을 거두시겠습니까? 고객 화면에서 사라집니다.")) return;
+  MYQ.busy = true; myDbPaint();
+  myqCall("withdraw_quote", { p_request:rid }, "견적을 거뒀습니다");
+};
+
+/* 한 곳에서 보냅니다 — ⚠️⚠️ **DB 가 거절한 그 말을 그대로** 냅니다.
+   "상담을 시작한 뒤에 견적을 내 주세요" 처럼 **무엇을 하면 되는지**가
+   거기 적혀 있습니다 (운영자 글은 섞지 않습니다 · 절대 규칙 3). */
+function myqCall(fn, args, say){
+  fetch("/api/deal", {
+    method:"POST",
+    headers: Object.assign({ "content-type":"application/json",
+      accept:"application/json" },
+      (typeof amAuthHeaders === "function") ? amAuthHeaders() : {}),
+    body: JSON.stringify({ fn:fn, args:args })
+  }).then(function(r){
+    return r.json().then(function(j){ return { ok:r.ok, j:j }; });
+  }).then(function(x){
+    MYQ.busy = false;
+    if(!x.ok){ toast((x.j && x.j.error) || "처리하지 못했습니다"); myDbPaint(); return; }
+    toast(say);
+    MYQ.open = ""; MYQ.draft = {};
+    /* ⚠️ 바뀐 뒤에는 **다시 묻습니다.** 화면이 들고 있는 값으로
+       추측하면 서버가 같이 바꾼 것(상태 · 다른 견적)을 못 봅니다. */
+    window.myLoadDb();
+  }).catch(function(e){
+    MYQ.busy = false;
+    try{ console.warn("[my] " + fn + " — " + e); }catch(_){}
+    toast("연결이 끊겼습니다. 잠시 뒤 다시 눌러 주세요");
+    myDbPaint();
+  });
 }
 
 function PageMy(){

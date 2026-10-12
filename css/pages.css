@@ -3896,6 +3896,60 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 @media (min-width:980px){ .myk-g{ grid-template-columns:repeat(6, minmax(0,1fr)); } }
 
 
+/* ════════ 견적 — 내고 · 비교하고 · 고릅니다 (0008 · §4 · §6) ════════
+   ⚠️⚠️ 로그인이 설정되기 전에는 `.my-db` 가 통째로 hidden 이라 이 규칙이
+   아무 데도 안 걸립니다 — 빈 카드도 "준비 중" 도 만들지 않습니다.
+   ⚠️ 신청 카드(`.myq`) **안쪽**에 섭니다. 그래서 바탕을 흰색이 아니라
+   옅은 면으로 둡니다 — 흰 카드 안의 흰 카드는 그림자로만 보입니다
+   (이 저장소가 "카드가 구간 바탕과 같은 색" 으로 겪은 자리). */
+.myqt{ display:grid; gap:var(--s3); margin-top:var(--s2);
+  padding:var(--s4); background:var(--bg-2);
+  border:1px solid var(--line); border-radius:var(--r-lg); }
+.myqt-h{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin:0;
+  font-size:var(--t-sm); font-weight:800; color:var(--navy); }
+.myqt-h svg{ flex:0 0 auto; color:var(--blue-600); }
+/* ⚠️ 안내는 **덜 세게** — 주인공은 금액과 범위입니다 */
+.myqt-h i{ font-style:normal; font-weight:600; color:var(--ink2); }
+.myqt-n{ margin:0; font-size:var(--t-cap); color:var(--ink2); line-height:1.65; }
+
+/* 받은 견적 — ⚠️⚠️ **금액순으로 줄 세우지 않습니다** (js/pages/my.js 의
+   주석과 같은 규칙). 포함 범위가 달라 금액만으로는 견줄 수 없고, 줄을
+   세우면 그 순서가 곧 추천이 됩니다 (약관 제6조 제4항). */
+/* ⚠️ **나란히 놓는 것**이 §6 이 적은 일입니다 — 넓은 화면에서는 두
+   칸으로 둡니다 (값 줄의 자리가 같아서 눈이 가로로 견줍니다).
+   ⚠️⚠️ 980px 아래에서는 한 칸입니다 — 더 좁게 나누면 "철거 · 폐기물
+   처리" 같은 범위 글이 낱말 가운데서 잘립니다 (재 보고 정한 값). */
+.myqt-l{ display:grid; gap:var(--s3); margin:0; padding:0; list-style:none; }
+@media (min-width:980px){ .myqt-l{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
+.myqt-c{ display:grid; gap:var(--s3); padding:var(--s4);
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r); }
+/* 고른 견적 — ⚠️ 색으로만 말하지 않습니다. 딱지(`.myq-st`)가 글자로
+   "고른 견적" 이라고 적고, 테두리는 그 보조입니다. */
+.myqt-c.is-got{ border-color:var(--start); box-shadow:var(--shadow-soft); }
+.myqt-pv{ font-size:var(--t-sm); font-weight:800; color:var(--navy); }
+/* ⚠️ 두 카드의 높이가 다를 때 **단추를 바닥에 맞춥니다.** 높이가
+   제각각이면 같은 단추가 다른 것으로 읽힙니다 (연결 구간에서 두 딱지가
+   49px 어긋나 화살표가 한 방향으로만 읽혔던 자리 — 찍어 보고 알았습니다). */
+.myqt-c .row-cta{ margin-top:auto; }
+
+/* 적는 칸 — ⚠️ 폼 규칙은 `css/app.css` 의 `.f-r` 이 이미 들고 있습니다.
+   여기서는 칸 사이 간격만 봅니다 (두 벌로 적으면 어긋납니다). */
+.myqt-f{ display:grid; gap:var(--s4); }
+.myqt-f .f-r{ margin:0; }
+/* ⚠️⚠️ **숫자 칸을 빼먹지 마세요.** `css/app.css` 의 선택자에
+   `input[type=number]` 가 없어서 금액 칸만 브라우저 기본 꼴로 서는
+   사고를 `/admin` 에서 겪었습니다 — 거기서 재서 고친 자리입니다. */
+.myqt-f input[type=number], .myqt-f input[type=date], .myqt-f textarea,
+.myqt-f select{ width:100%; }
+.myqt-f textarea{ resize:vertical; }
+/* ⚠️⚠️ **두 칸으로 나누지 않았습니다.** `nth-child` 로 "이 칸은 한
+   줄" 을 적어 보니 칸 하나가 짝 없이 남아 **옆이 통째로 빈 자리**가
+   됐습니다 (걸음 여섯을 다섯 칸 격자에 넣었다가 겪은 자리 — 찍어 보고
+   알았습니다). 한 칸으로 두고 **폭만 묶습니다** — 1440px 에서 적는
+   칸이 1,200px 이 되면 글이 가로로 늘어져 읽기 어렵습니다. */
+.myqt-f{ max-width:720px; }
+
 /* ════════ 로그인 칸 (2026-10-11 · 1차) ══════════════════════════════
    ⚠️ 로그인이 설정되기 전에는 `.my-db` 가 통째로 hidden 이라 이 규칙이
    하나도 안 걸립니다 — 화면에 한 픽셀도 안 나옵니다. */

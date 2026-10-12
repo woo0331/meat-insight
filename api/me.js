@@ -35,18 +35,28 @@ const PROV_LIMIT = 200;
 
 /* 수수료 정책 — 업체마다 여럿일 수 있습니다 (상품별 · 기간별) */
 const FEE_LIMIT = 200;
+/* 견적 — 신청 하나에 여럿 오고(배정한 업체마다 하나) 신청은 LIMIT 건
+   입니다. ⚠️ 모자라면 숫자를 올리는 것이 아니라 **신청별로 묻는 때**입니다
+   (이력을 연 건 하나만 묻는 것과 같은 까닭). */
+const QUOTE_LIMIT = 300;
 /* 신청 **한 건**의 이력. ⚠️ 한 건이 쉰 번 넘게 바뀌면 그건 이 숫자를
    올릴 때가 아니라 **그 건을 들여다볼 때**입니다. */
 const HIST_LIMIT = 100;
 
 /* ⚠️ 칸 목록을 역할마다 **손으로** 적습니다. `select=*` 로 두면 칸이
    하나 늘 때마다 조용히 같이 나갑니다. */
+/* ⚠️⚠️ **`id` 를 빠뜨리면 견적이 통째로 안 보입니다.** 견적은
+   `request_id` 로 신청에 붙는데, 고객 · 업체 칸에 `id` 가 없어서
+   화면이 **짝을 못 맞췄습니다** — 에러도 안 나고 구간이 그냥 안
+   그려집니다 (이 저장소가 "조용히 안 나오는" 으로 여러 번 겪은 꼴).
+   ⚠️ 자기 신청의 id 입니다 — RLS 가 이미 자기 줄만 주고, 이력
+   (`?r=`)도 같은 RLS 를 거칩니다. */
 const PICK = {
   customer:
-    "no,side,cat,industry,region,gu,state,want_at,created_at," +
+    "id,no,side,cat,industry,region,gu,state,want_at,created_at," +
     "assignment(state,created_at,provider(id,name))",
   provider:
-    "no,side,cat,industry,region,gu,state,want_at,body,detail,created_at," +
+    "id,no,side,cat,industry,region,gu,state,want_at,body,detail,created_at," +
     "name,tel,email,assignment(state,why,created_at)",
   staff:
     "id,no,side,cat,industry,region,gu,state,created_at," +
@@ -155,6 +165,35 @@ module.exports = async function handler(req, res){
       "&order=created_at.desc&limit=" + FEE_LIMIT);
     if(f.ok) out.fees = f.rows;
     else console.warn("[me] fee_policy — " + f.why);
+  }
+
+  /* ── 견적 (§4 · §6 · 0008) ───────────────────────────────────────
+     ⚠️⚠️ **칸을 역할마다 손으로 적습니다** (위 PICK 과 같은 선).
+     `select=*` 로 두면 칸이 하나 늘 때마다 조용히 같이 나갑니다.
+
+     고객 ─ 비교에 쓰는 것 + **업체 상호**. 거둔 견적은 애초에 오지
+            않습니다 (0008 의 `quote_requester` 정책이 걸러 줍니다) —
+            업체가 거둔 금액으로 기대를 하면 그건 업체가 하지 않은
+            약속입니다 (절대 규칙 5).
+     업체 ─ 내가 낸 것. ⚠️ 고치려면 지금 적힌 값이 화면에 있어야
+            합니다 (안 주면 빈 폼에 처음부터 다시 적습니다 — 업체
+            상세의 `quoteTo({})` 로 겪은 자리).
+     직원 · 관리자 ─ 같은 칸. ⚠️ 성함 · 연락처는 `request` 쪽에서도
+            안 가져옵니다 (PICK.staff 와 같은 선).
+
+     ⚠️ 돈이 걸린 값이지만 **수수료가 아닙니다.** 견적 금액은 고객이
+     업체에 내는 돈이고, 수수료는 업체가 우리에게 내는 돈입니다 —
+     고객에게 수수료를 안 보여 주는 규칙과 어긋나지 않습니다. */
+  {
+    const qp = "id,request_id,provider_id,amount,vat,scope,excludes,days," +
+               "start_on,warranty,valid_to,note,state,chosen_at," +
+               "created_at,updated_at";
+    const qq = await dbSelectAs(s.token, "quote",
+      "?select=" + encodeURIComponent(
+        s.role === "customer" ? qp + ",provider(id,name)" : qp) +
+      "&order=created_at.desc&limit=" + QUOTE_LIMIT);
+    if(qq.ok) out.quotes = qq.rows;
+    else console.warn("[me] quote — " + qq.why);
   }
 
   /* ── 신청 한 건의 이력 (§6 "신청 및 변경 이력" · §8) ──────────────

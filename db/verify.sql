@@ -8,7 +8,7 @@
 --     몇 번 돌려도 안전하고, 운영 중에 돌려도 됩니다.
 --
 --  ⚠️⚠️ 기대값은 전부 **저장소에서 센 값**입니다 (눈대중이 아닙니다) —
---     판 7 · 표 11 · 상태 13 · 역할 4 · 길 70 · 함수 16 · 트리거 3.
+--     판 8 · 표 12 · 상태 13 · 역할 4 · 길 70 · 함수 19 · 트리거 3.
 --     저장소를 고치면 이 파일도 같이 고치세요.
 --
 --  ⚠️⚠️ `tools/test-sql.js` 는 **가짜 auth 스키마**로 돌립니다
@@ -27,7 +27,7 @@ v_tab as (
   select count(*)::int n from information_schema.tables
    where table_schema = 'public'
      and table_name in ('account','assignment','audit_log','deal','deal_move',
-                        'fee_policy','offer','provider','request',
+                        'fee_policy','offer','provider','quote','request',
                         'schema_version','settlement')
 ),
 /* ③ ⚠️⚠️ RLS 가 안 켜진 표 — 0 이어야 합니다.
@@ -73,7 +73,9 @@ v_fn as (
                  ('answer_assignment'),('claim_request'),('save_provider'),
                  ('approve_provider'),('save_fee_policy'),('set_fee_policy_active'),
                  ('my_role'),('my_provider'),('is_my_request'),('handle_new_user'),
-                 ('provider_guard'),('deal_money_guard')) w(f)
+                 ('provider_guard'),('deal_money_guard'),
+                 /* 0008 — 견적 (§4 · §6) */
+                 ('submit_quote'),('withdraw_quote'),('choose_quote')) w(f)
 ),
 /* ⑧ ⚠️⚠️ 가입 트리거가 **auth.users 에** 걸렸는가 (진짜 Supabase 전용).
       이게 없으면 가입해도 account 줄이 안 생겨서, 로그인은 되는데
@@ -120,15 +122,15 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (0001~0007)'             t, v_ver.n::text   got, '7'  want from v_ver
-  union all select  2, '표 (public)',              v_tab.n::text,  '11' from v_tab
+  select 1 i, '판 번호 (0001~0008)'             t, v_ver.n::text   got, '8'  want from v_ver
+  union all select  2, '표 (public)',              v_tab.n::text,  '12' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||
                        case when v_st.has_hold then 'O' else 'X' end || ')',
                        v_st.n::text, '13' from v_st
   union all select  5, '역할',                     v_role.n::text, '4'  from v_role
   union all select  6, '갈 수 있는 길 (deal_move)', v_move.n::text, '70' from v_move
-  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '16' from v_fn
+  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '19' from v_fn
   union all select  8, '⚠️ 가입 트리거 (auth.users)', v_trg.n::text, '1' from v_trg
   union all select  9, '⚠️ auth.uid()',            v_uid.n::text,  '1'  from v_uid
   union all select 10, '⚠️ 돈 칸 쓰기 권한: ' || v_money.who, v_money.n::text, '0' from v_money

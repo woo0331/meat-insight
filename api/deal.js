@@ -17,6 +17,9 @@
      approve_provider   공개 · 확인 배지 ⚠️ 관리자만 — 등록과 **다른 문**
      save_fee_policy    수수료 정책   ⚠️ 관리자만 (§6 · §9)
      set_fee_policy_active  정책 끄기 · 켜기 ⚠️ 관리자만
+     submit_quote       견적 제출 · 수정 ⚠️ 배정을 수락한 업체만 (0008)
+     withdraw_quote     견적 철회       ⚠️ 낸 업체만
+     choose_quote       고객이 견적을 고름 (고객 · 직원 · 관리자)
 
    ⚠️⚠️ **그 사람의 토큰으로 부릅니다.** service key 로 부르면
    `auth.uid()` 가 비어서 함수가 스스로 거절합니다 — 그렇게 설계한
@@ -48,7 +51,12 @@ const OK_FN = {
      `authenticated` 에게 insert 를 한 줄도 주지 않습니다 — 표를 열면
      기록 없이 지나가는 길이 하나 생깁니다 (§8). */
   save_provider:1, approve_provider:1,
-  save_fee_policy:1, set_fee_policy_active:1
+  save_fee_policy:1, set_fee_policy_active:1,
+  /* 2026-10-12 (0008) — 업체 견적 제출 · 수정 · 철회 + 고객의 선택.
+     ⚠️⚠️ **상태를 바꾸는 것은 여기가 아닙니다.** `submit_quote` 가
+     상담 중인 건을 `quoted` 로 넘길 때도 **DB 안에서 move_state() 를
+     부릅니다** — 문이 하나라서 기록이 한 곳에만 남습니다 (§8). */
+  submit_quote:1, withdraw_quote:1, choose_quote:1
 };
 
 /* 보낼 수 있는 인자 — 이름까지 정해 둡니다. ⚠️ 통째로 넘기면 손님이
@@ -131,7 +139,10 @@ const FN_SAY = {
   save_provider:         "업체를 등록 · 수정했습니다",
   approve_provider:      "업체 공개 상태를 바꿨습니다",
   save_fee_policy:       "수수료 정책을 저장했습니다",
-  set_fee_policy_active: "수수료 정책을 켜거나 껐습니다"
+  set_fee_policy_active: "수수료 정책을 켜거나 껐습니다",
+  submit_quote:          "업체가 견적을 냈습니다",
+  withdraw_quote:        "업체가 견적을 거뒀습니다",
+  choose_quote:          "고객이 견적을 골랐습니다"
 };
 
 /* 알림에 실어도 되는 것 — ⚠️⚠️ **허용 목록입니다.** 인자가 하나

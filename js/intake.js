@@ -205,7 +205,7 @@ function rqRow(r){
         (day ? '<em class="rq-d">'+esc(day)+'</em>' : '')+
       '</span>'+
     '</button>'+
-    (open ? '<div class="rq-bd">'+ rqMove(r) + rqAsg(r) + rqHistRow(r) +'</div>' : '')+
+    (open ? '<div class="rq-bd">'+ rqMove(r) + rqAsg(r) + rqQuotes(r) + rqHistRow(r) +'</div>' : '')+
   '</article>';
 }
 
@@ -469,6 +469,11 @@ function rqLoad(){
          화면이 없는 것을 숨기는 것이 아니라 서버가 안 보냅니다. */
       RQ.deals = d.deals || [];
       RQ.fees  = d.fees  || [];
+      /* ⚠️⚠️ **받아만 놓지 않습니다.** 업체가 낸 견적을 직원이 못 보면
+         상태를 넘겨 주면서 "얼마에 어떤 범위로 냈는지" 를 전화로 다시
+         물어야 합니다 — 이 저장소가 "만들어 놓고 안 쓰는 칸" 으로 여러
+         번 겪은 자리라, 펼친 줄에서 그대로 냅니다 (0008 · §4 · §6). */
+      RQ.quotes = d.quotes || [];
       rqDraw();
     })
     .catch(function(e){
@@ -1084,6 +1089,40 @@ window.rqProvGo = function(id, on){
 /* 펼친 줄 안의 **이력 단추 + 이력**. ⚠️ 단추를 따로 두는 까닭 —
    목록에 이력을 다 붙이면 쉰 건의 사유가 한 화면에 깔립니다. 누른
    건 하나만 서버에 묻습니다 (`api/me.js` 의 `?r=`). */
+
+/* ── 업체가 낸 견적 (0008 · §4 · §6) ───────────────────────────────
+   ⚠️⚠️ **고르는 자리가 아닙니다.** 고르는 것은 고객이고(`/my`), 여기는
+   직원이 **무엇이 와 있는지 보는** 자리입니다. 전화로 들은 선택을 대신
+   적는 길(`choose_quote`)은 고객 화면과 같은 문이라 여기 단추를 또
+   만들지 않았습니다 — 두 곳에 두면 "누가 골랐는가" 가 흐려집니다.
+   ⚠️ 값이 없는 칸은 아예 안 넣습니다 (절대 규칙 2). `0` 은 값입니다. */
+function rqQuotes(r){
+  var L = (RQ.quotes || []).filter(function(q){ return q.request_id === r.id; });
+  if(!L.length) return "";
+  return '<div class="rq-s"><h4>받은 견적 '+L.length+'건</h4>'+
+    '<ul class="rq-q">'+L.map(function(q){
+      var bits = [];
+      if(q.amount != null)
+        bits.push(won(q.amount)+"원 · "+
+          (typeof amQuoteVat === "function" ? amQuoteVat(q.vat) : ""));
+      if(q.days)     bits.push(q.days+"일");
+      if(q.start_on) bits.push(amDate(q.start_on)+" 시작");
+      return '<li><div class="rq-q-h">'+
+          '<b>'+esc(q.provider_id)+'</b>'+
+          /* ⚠️ 딱지는 `css/pages.css` 의 `.myq-st` 를 그대로 씁니다 —
+             `/my` 와 색이 같아야 한 시스템으로 읽힙니다 (admin.css 가
+             적어 둔 그대로입니다). 새 이름을 지으면 그 줄만 스타일이
+             안 먹고 에러도 안 납니다. */
+          '<i class="myq-st myq-'+esc(typeof amQuoteTone === "function"
+            ? amQuoteTone(q.state) : "gray")+'">'+
+            esc(typeof amQuoteName === "function" ? amQuoteName(q.state) : q.state)+
+          '</i></div>'+
+        (bits.length ? '<p class="rq-q-m">'+esc(bits.join(" · "))+'</p>' : "")+
+        (q.scope ? '<p class="rq-q-s">'+esc(String(q.scope))+'</p>' : "")+
+      '</li>';
+    }).join("")+'</ul></div>';
+}
+
 function rqHistRow(r){
   var on = RQ.histOf === r.id;
   return '<div class="rq-hist-b">'+

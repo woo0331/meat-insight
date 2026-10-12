@@ -530,6 +530,23 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
      내려가면 공개 전인 업체가 새는 것입니다. */
   ok("고객에게는 업체 목록을 묻지 않는다",
      calls.every(c => !/\/rest\/v1\/provider\b/.test(c.url)), calls.map(c => c.url));
+  /* ── 견적 (0008 · §6) ──────────────────────────────────────────
+     ⚠️⚠️ **견적 금액은 수수료가 아닙니다.** 견적은 고객이 업체에 내는
+     돈이라 고객이 봐야 하고, 수수료는 업체가 우리에게 내는 돈이라 고객이
+     보면 안 됩니다 — 둘을 한 낱말로 묶으면 비교 화면이 통째로 막힙니다. */
+  /* ⚠️⚠️ **`id` 가 없으면 견적이 통째로 안 보입니다.** 견적은
+     `request_id` 로 신청에 붙는데 신청 칸에 `id` 가 없으면 화면이 짝을
+     못 맞춥니다 — 에러도 안 나고 구간이 그냥 안 그려집니다. 실제로
+     그렇게 적어 두었다가 **찍어 보고** 알았습니다. */
+  ok("고객 칸에 신청 id 가 있다 (견적이 거기 붙습니다)",
+     /(^|,|=)id(,|$)/.test(decodeURIComponent(cust).split("select=")[1] || ""), cust);
+  const cq = calls.filter(c => /\/rest\/v1\/quote/.test(c.url))[0];
+  ok("고객에게는 견적을 묻는다 (§6 비교)", !!cq, calls.map(c => c.url));
+  const cqu = cq ? decodeURIComponent(cq.url) : "";
+  ok("고객 견적 칸에 업체 상호가 있다 (누구의 견적인지)",
+     /provider\(/.test(cqu), cqu);
+  ok("고객 견적 칸에 비교에 쓰는 것이 다 있다",
+     /amount/.test(cqu) && /scope/.test(cqu) && /warranty/.test(cqu), cqu);
   ok("답에 키 · 토큰이 섞이지 않는다", !leaks(r), r.body);
 
   /* 업체 — 연락처가 옵니다 (그게 배정입니다) + 계약 */
@@ -546,6 +563,16 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
      calls.every(c => !/audit_log/.test(c.url)), calls.map(c => c.url));
   ok("업체에게도 업체 목록을 묻지 않는다",
      calls.every(c => !/\/rest\/v1\/provider\b/.test(c.url)), calls.map(c => c.url));
+  /* ⚠️ 업체도 **지금 적힌 값**이 와야 고칠 수 있습니다 — 안 주면 빈 폼에
+     처음부터 다시 적습니다 (업체 상세의 quoteTo({}) 로 겪은 자리). */
+  ok("업체 칸에도 신청 id 가 있다",
+     /(^|,|=)id(,|$)/.test(pv.split("select=")[1] || ""), pv);
+  const pq = calls.filter(c => /\/rest\/v1\/quote/.test(c.url))[0];
+  ok("업체에게도 견적을 묻는다 (고치려면 지금 값이 있어야 합니다)",
+     !!pq, calls.map(c => c.url));
+  ok("업체 견적 칸에는 업체 상호를 붙이지 않는다 (자기 것입니다)",
+     pq && !/provider\(/.test(decodeURIComponent(pq.url)),
+     pq && decodeURIComponent(pq.url));
 
   /* 직원 · 관리자 — ⚠️ 목록에 성함 · 연락처를 깔지 않습니다 */
   r = res();

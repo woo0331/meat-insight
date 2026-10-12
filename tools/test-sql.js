@@ -128,7 +128,11 @@ try{
                      트랜잭션에서 못 써서 터집니다. */
                   "db/migrations/0006_hold_state.sql",
                   /* 2차 — 계약 줄 · 업체 등록/승인 · 수수료 정책 */
-                  "db/migrations/0007_deal_provider_fee.sql"];
+                  "db/migrations/0007_deal_provider_fee.sql",
+                  /* 0008 — 견적 제출 · 수정 · 철회 + 고객의 선택 (§4 · §6).
+                     ⚠️ 새 표(quote)와 문 셋입니다 — 아래 블록이 끝까지
+                     눌러 봅니다. */
+                  "db/migrations/0008_quote.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ e = String(err.stderr || err.message).split("\n").slice(0,3).join(" "); }
@@ -955,6 +959,202 @@ try{
        c.yes && psql("select active::text from fee_policy where id='" + FP + "'") === "false", c.why);
     const d = denied(as(ST) + "select set_fee_policy_active('" + FP + "', true)");
     ok("끄고 켜는 것도 관리자만", d.no && /관리자만/.test(d.why || ""), d.why);
+  }
+
+  /* ══ 0008 — 견적 제출 · 수정 · 철회 + 고객의 선택 (§4 · §6) ════════
+     ⚠️⚠️ 상태 열셋에 `quoted`(견적 전달)는 처음부터 있었는데 **금액이
+     아무 데도 안 남았습니다** — "냈다" 는 사실뿐이라 고객은 전화로 들은
+     금액을 기억해야 했고, 둘을 나란히 놓고 고를 자리가 없었습니다.
+     여기서는 견적을 **내고 · 고치고 · 거두고 · 고르는** 길을 끝까지
+     눌러 봅니다. */
+  console.log("\n── ⚠️⚠️ 0008 견적 — 내고 · 고치고 · 고릅니다");
+  {
+    const A   = "11111111-1111-1111-1111-111111111111";
+    const B   = "22222222-2222-2222-2222-222222222222";
+    const PV  = "33333333-3333-3333-3333-333333333333";
+    const PV2 = "66666666-6666-6666-6666-666666666666";
+    const ST  = "44444444-4444-4444-4444-444444444444";
+    const AD  = "55555555-5555-5555-5555-555555555555";
+    const as  = u => "set role authenticated; select become('" + u + "'); ";
+    const R   = "aaaaaaaa-0000-0000-0000-000000000031";
+
+    /* 업체 계정 하나를 더 만듭니다 — 비교는 **둘 이상**이라야 뜻이
+       있습니다 (하나만 두면 "나머지는 passed" 를 못 재 봅니다). */
+    psql(`insert into auth.users (id, email) values ('${PV2}','pv2@test')
+            on conflict (id) do nothing;
+          insert into account (id, role, provider_id) values ('${PV2}','provider','pv-two')
+            on conflict (id) do update set role='provider', provider_id='pv-two';
+          insert into request (id, no, user_id, side, name, tel, agree_at, state) values
+            ('${R}','SW-AAAA-0031','${A}','start','견','01031310000',now(),'new');`);
+    const mv = (u, to, ctx) =>
+      as(u) + "select move_state('" + R + "','" + to + "'," + (ctx || "'{}'::jsonb") + ")";
+    const sub = (u, data) =>
+      as(u) + "select submit_quote('" + R + "'," + data + ")";
+
+    /* 배정 전에는 못 냅니다 */
+    let r = denied(sub(PV, `'{"amount":1000000,"scope":"철거 전체"}'::jsonb`));
+    ok("배정 전에는 견적을 못 낸다", r.no && /배정되지 않았습니다/.test(r.why || ""), r.why);
+
+    psql(mv(ST, "check"));
+    psql(mv(ST, "assigned", `'{"providerId":"pv-one","agree3rd":true}'::jsonb`));
+    /* 수락 전에는 못 냅니다 — ⚠️ 배정만 받고 답을 안 한 곳이 금액을
+       내면 고객은 그 업체가 받아들인 줄 압니다 */
+    r = denied(sub(PV, `'{"amount":1000000,"scope":"철거 전체"}'::jsonb`));
+    ok("수락 전에는 견적을 못 낸다", r.no && /수락/.test(r.why || ""), r.why);
+
+    psql(as(PV) + "select answer_assignment('" + R + "', true)");
+    /* 상담 전에도 못 냅니다 — 길 표의 차례가 그렇습니다 */
+    r = denied(sub(PV, `'{"amount":1000000,"scope":"철거 전체"}'::jsonb`));
+    ok("상담 전에는 견적을 못 낸다", r.no && /상담/.test(r.why || ""), r.why);
+
+    psql(mv(PV, "consult"));
+
+    /* ⚠️⚠️ 금액을 안 적었으면 **0원으로 적어 두지 않고 거절**합니다 */
+    r = denied(sub(PV, `'{"scope":"철거 전체"}'::jsonb`));
+    ok("금액 없이는 거절한다", r.no && /금액/.test(r.why || ""), r.why);
+    /* 범위 없는 견적은 금액만 적힌 종이입니다 */
+    r = denied(sub(PV, `'{"amount":1000000}'::jsonb`));
+    ok("포함 범위 없이는 거절한다", r.no && /포함/.test(r.why || ""), r.why);
+    r = denied(sub(PV, `'{"amount":-1,"scope":"철거"}'::jsonb`));
+    ok("음수 금액은 거절한다", r.no, r.why);
+    /* ⚠️⚠️ **거절하는 말이 사람 말이라야 합니다** — `api/deal.js` 가 DB 의
+       거절 글을 **그대로** 손님에게 보여 주기 때문입니다. 형변환에 맡기면
+       `invalid input value for enum fee_vat: "x"` 가 그대로 나갑니다. */
+    r = denied(sub(PV, `'{"amount":1,"scope":"철거","vat":"zzz"}'::jsonb`));
+    ok("모르는 부가세 값은 사람 말로 거절한다",
+       r.no && /골라 주세요/.test(r.why || ""), r.why);
+    r = denied(sub(PV, `'{"amount":1,"scope":"철거","startOn":"다음달 초"}'::jsonb`));
+    ok("날짜가 아닌 글은 사람 말로 거절한다",
+       r.no && /날짜를 다시/.test(r.why || ""), r.why);
+    r = denied(sub(PV, `'{"amount":1,"scope":"철거","days":0}'::jsonb`));
+    ok("소요일 0 은 거절한다", r.no && /하루 이상/.test(r.why || ""), r.why);
+
+    /* 직원은 대신 못 냅니다 — 업체가 적은 금액이 아니게 됩니다 */
+    r = denied(sub(ST, `'{"amount":1000000,"scope":"철거"}'::jsonb`));
+    ok("직원은 견적을 대신 못 낸다", r.no && /업체만/.test(r.why || ""), r.why);
+    r = denied(sub(A, `'{"amount":1000000,"scope":"철거"}'::jsonb`));
+    ok("고객은 견적을 못 낸다", r.no, r.why);
+
+    /* ⚠️⚠️ 상담 중에 내면 **상태도 같이** 넘어갑니다 (move_state 로) */
+    let a = allowed(sub(PV, `'{"amount":1200000,"vat":"add","scope":"철거 · 폐기물 처리",
+      "excludes":"석면 해체","days":5,"startOn":"2026-11-02","warranty":"하자 1년",
+      "validTo":"2026-11-30","note":"현장 확인 뒤 조정될 수 있습니다"}'::jsonb`));
+    ok("상담 중이면 견적을 낼 수 있다", a.yes, a.why);
+    ok("견적을 내면 상태가 견적 전달로 같이 간다",
+       psql("select state from request where id='" + R + "'") === "quoted");
+    ok("견적 줄이 하나 생긴다",
+       psql("select count(*) from quote where request_id='" + R + "'") === "1");
+    ok("적은 값이 그대로 들어간다",
+       psql(`select amount::text||'/'||vat::text||'/'||days::text||'/'||state
+               from quote where request_id='` + R + "' and provider_id='pv-one'")
+         === "1200000/add/5/open");
+    /* ⚠️ 상태를 바꾼 것도 **move_state 가** 기록을 남깁니다 */
+    ok("견적 기록과 상태 기록이 둘 다 남는다",
+       psql("select count(*) from audit_log where obj='quote'") !== "0" &&
+       psql("select count(*) from audit_log where obj='request' and to_state='quoted'") !== "0");
+
+    /* 고치면 줄이 안 늘고 값만 바뀝니다 */
+    a = allowed(sub(PV, `'{"amount":1100000,"scope":"철거 · 폐기물 처리 · 청소"}'::jsonb`));
+    ok("견적을 고칠 수 있다", a.yes, a.why);
+    ok("고쳐도 줄이 안 는다",
+       psql("select count(*) from quote where request_id='" + R + "'") === "1");
+    ok("고친 금액이 들어간다",
+       psql("select amount::text from quote where request_id='" + R +
+            "' and provider_id='pv-one'") === "1100000");
+
+    /* ⚠️⚠️ **거절한 업체가 금액을 내면 안 됩니다.** 위의 "수락 전에는"
+       은 상태가 `assigned` 라 **상태 검사가 먼저** 막습니다 — 그러니까
+       수락 확인 줄을 빼도 그 검사는 다른 까닭으로 걸립니다. 겹겹이
+       막아 둔 것이 검사를 속이는 자리라(이 저장소가 0003 에서 겪었습니다)
+       **상담 중인데 거절한 곳**으로 따로 재 봅니다. */
+    psql(`insert into assignment (request_id, provider_id, state, agree3rd_at)
+          values ('${R}','pv-two','declined', now())
+          on conflict (request_id, provider_id) do update set state='declined';`);
+    r = denied(sub(PV2, `'{"amount":1,"scope":"x"}'::jsonb`));
+    ok("거절한 업체는 상담 중에도 견적을 못 낸다",
+       r.no && /수락/.test(r.why || ""), r.why);
+
+    /* ⚠️ `0` 은 값입니다 — "무상 · 서비스" 를 0 으로 적을 수 있습니다 */
+    psql(`update assignment set state='accepted'
+           where request_id='${R}' and provider_id='pv-two';`);
+    a = allowed(sub(PV2, `'{"amount":0,"scope":"첫 현장은 무상으로 봐 드립니다"}'::jsonb`));
+    ok("0 원도 값이다 (무상)", a.yes, a.why);
+    ok("견적이 둘이 된다",
+       psql("select count(*) from quote where request_id='" + R + "'") === "2");
+
+    /* ── 고객이 고릅니다 ───────────────────────────────────────── */
+    r = denied(as(B) + "select choose_quote('" + R + "','pv-one')");
+    ok("남의 신청 견적은 못 고른다", r.no, r.why);
+    a = allowed(as(A) + "select choose_quote('" + R + "','pv-one','범위가 더 넓어서')");
+    ok("고객은 견적을 고를 수 있다", a.yes, a.why);
+    ok("고른 것만 chosen 이고 나머지는 passed",
+       psql(`select string_agg(provider_id||':'||state, ' ' order by provider_id)
+               from quote where request_id='` + R + "'")
+         === "pv-one:chosen pv-two:passed");
+    ok("고른 시각이 적힌다",
+       psql("select (chosen_at is not null)::text from quote where request_id='" + R +
+            "' and provider_id='pv-one'") === "true");
+    /* 두 번 눌러도 터지지 않습니다 */
+    a = allowed(as(A) + "select choose_quote('" + R + "','pv-one')");
+    ok("두 번 골라도 터지지 않는다", a.yes, a.why);
+
+    /* ⚠️⚠️ 고른 견적은 못 고치고 못 거둡니다 — 조용히 말을 바꾸는 일입니다 */
+    r = denied(sub(PV, `'{"amount":9900000,"scope":"철거"}'::jsonb`));
+    ok("고객이 고른 견적은 못 고친다", r.no && /고른 견적/.test(r.why || ""), r.why);
+    r = denied(as(PV) + "select withdraw_quote('" + R + "')");
+    ok("고객이 고른 견적은 못 거둔다", r.no && /고른 견적/.test(r.why || ""), r.why);
+
+    /* ── 거두기 ────────────────────────────────────────────────── */
+    a = allowed(as(PV2) + "select withdraw_quote('" + R + "','일정이 안 맞습니다')");
+    ok("낸 업체는 견적을 거둘 수 있다", a.yes, a.why);
+    ok("거둔 견적은 지우지 않고 상태만 바꾼다",
+       psql("select state from quote where request_id='" + R + "' and provider_id='pv-two'")
+         === "withdrawn");
+    r = denied(as(PV2) + "select withdraw_quote('" + R + "')");
+    ok("두 번 거두면 거절한다", r.no, r.why);
+    r = denied(as(PV) + "select withdraw_quote('aaaaaaaa-0000-0000-0000-000000000002')");
+    ok("낸 적 없는 견적은 못 거둔다", r.no, r.why);
+
+    /* ⚠️⚠️ **거둔 견적은 고객에게 아예 안 보입니다** (RLS).
+       업체가 거둔 금액으로 기대를 하면 그건 업체가 하지 않은 약속입니다. */
+    ok("고객에게 거둔 견적은 안 보인다",
+       psql(as(A) + "select count(*) from quote where request_id='" + R + "'") === "1",
+       psql(as(A) + "select count(*) from quote where request_id='" + R + "'"));
+    ok("업체는 자기가 거둔 것도 본다",
+       psql(as(PV2) + "select count(*) from quote") === "1");
+    ok("업체에게 남의 견적은 안 보인다",
+       psql(as(PV2) + "select count(*) from quote where provider_id='pv-one'") === "0");
+    ok("고객 B 에게는 이 신청의 견적이 하나도 안 보인다",
+       psql(as(B) + "select count(*) from quote where request_id='" + R + "'") === "0");
+    ok("직원은 전부 본다",
+       psql(as(ST) + "select count(*) from quote where request_id='" + R + "'") === "2");
+
+    /* ⚠️⚠️ **표를 열지 않았습니다** — 문만 엽니다 (§8) */
+    const wr = psql(
+      "select count(*) from information_schema.column_privileges " +
+      "where table_name='quote' and grantee='authenticated' " +
+      "and privilege_type in ('INSERT','UPDATE','DELETE')");
+    ok("quote 표에 쓰기 권한이 없다 (문만 엽니다)", wr === "0", wr);
+    const an = psql(
+      "select count(*) from information_schema.table_privileges " +
+      "where table_name='quote' and grantee='anon'");
+    ok("anon 에게 quote 권한이 없다", an === "0", an);
+    const anf = psql(
+      "select count(*) from information_schema.routine_privileges " +
+      "where routine_name in ('submit_quote','withdraw_quote','choose_quote') " +
+      "and grantee='anon'");
+    ok("anon 에게 견적 문 권한이 없다", anf === "0", anf);
+    /* 로그인 없이 부르면 함수가 스스로 거절합니다 */
+    r = denied("set role authenticated; select become(null); " +
+               "select submit_quote('" + R + `','{"amount":1,"scope":"x"}'::jsonb)`);
+    ok("로그인 없이 견적을 못 낸다", r.no, r.why);
+
+    /* ⚠️⚠️ 계약 뒤에는 못 냅니다 — 계약금액이 이미 기록에 적혔는데
+       견적을 고치면 "무엇을 보고 계약했나" 가 어긋납니다 (§9) */
+    psql(mv(PV, "nego"));
+    psql(mv(AD, "signed", `'{"amount":1100000,"providerId":"pv-one"}'::jsonb`));
+    r = denied(as(PV2) + "select submit_quote('" + R + `','{"amount":5,"scope":"x"}'::jsonb)`);
+    ok("계약 뒤에는 견적을 못 낸다", r.no && /견적을 낼 수 없습니다/.test(r.why || ""), r.why);
   }
 
   console.log("\n── 되돌리기 파일이 실수로 안 돌아가는가");

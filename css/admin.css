@@ -861,3 +861,23 @@ body.sl-locked{ overflow:hidden; }
 .ad-hl-l li{ display:flex; align-items:center; gap:10px; padding:3px 0;
   font-size:var(--t-cap); color:var(--ink); }
 .ad-hl-l li > span:first-child{ flex:1 1 auto; }
+
+/* ════════ 받은 견적 (0008 · §4 · §6) ════════════════════════════════
+   ⚠️ 상태 딱지는 `css/pages.css` 의 `.myq-st` 를 그대로 씁니다 — `/my`
+   와 같은 색이라야 한 시스템으로 읽힙니다 (위 §6 주석과 같은 규칙).
+   ⚠️⚠️ **고르는 단추를 여기 만들지 마세요.** 고르는 것은 고객이고,
+   여기는 직원이 무엇이 와 있는지 보는 자리입니다 — 두 곳에 두면
+   "누가 골랐는가" 가 흐려집니다 (js/intake.js 의 주석과 같은 말). */
+.rq-q{ display:grid; gap:var(--s3, 10px); margin:0; padding:0; list-style:none; }
+.rq-q > li{ display:grid; gap:4px; padding:var(--s3, 10px) var(--s4, 14px);
+  background:var(--surface, #fff); border:1px solid var(--line, #E4E8EE);
+  border-radius:var(--r, 10px); min-width:0; }
+.rq-q-h{ display:flex; align-items:center; justify-content:space-between;
+  gap:var(--s3, 10px); flex-wrap:wrap; }
+.rq-q-h b{ font-size:14px; font-weight:800; color:var(--navy, #102A56); }
+/* 금액 줄은 **결정에 쓰는 값**이라 또렷하게 */
+.rq-q-m{ margin:0; font-size:14px; font-weight:800; color:var(--navy, #102A56); }
+/* ⚠️ 업체가 적은 글입니다 — 길어도 가로로 안 밀리게 둡니다
+   (`.ad-main` 이 grid 라 안쪽이 안 쪼개지면 문서 폭이 늘어납니다) */
+.rq-q-s{ margin:0; font-size:13px; color:var(--ink2, #46516A);
+  line-height:1.6; overflow-wrap:anywhere; }

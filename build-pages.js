@@ -2503,6 +2503,75 @@ function checkReqForms(W){
    ⚠️ 글자를 하나 더하거나 빼실 때 **두 곳을 같이** 고쳐야 합니다.
    `deal.js` ↔ `deal_move` 표를 맞춰 보는 것과 같은 까닭입니다.
    ════════════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════════════
+   checkQuoteSql — **견적 표가 화면과 같은 말을 하는가** (0008 · §4 · §6)
+
+   ⚠️⚠️ 이 저장소가 **같은 규칙을 두 곳에 적어** 겪은 사고의 목록이
+   깁니다 (업체 `subs` · 사진 키 · 도구 묶음 · `deal_move` · 접수번호
+   글자 · `OK_ARG` 인자 이름). 견적도 그 자리입니다 — 상태 이름이
+   어긋나면 딱지가 **빈 칸**이 되거나, 화면이 내는 값을 DB 가
+   거절하는데 둘 다 **에러 없이** 일어납니다.
+
+   그리고 이 표는 **돈이 적히는 표**라 둘을 더 봅니다 —
+     ① RLS 가 켜져 있는가 (안 켜면 Supabase 가 그대로 열어 줍니다)
+     ② 쓰기 권한(insert · update · delete)을 주지 않았는가
+        (주면 기록 없이 지나가는 길이 하나 생깁니다 — §8)
+   ════════════════════════════════════════════════════════════════════ */
+function checkQuoteSql(W){
+  const f = path.join(ROOT, "db", "migrations", "0008_quote.sql");
+  if(!fs.existsSync(f))
+    throw new Error("db/migrations/0008_quote.sql 이 없습니다 — " +
+      "견적 상태를 맞춰 볼 데가 없습니다");
+  const sql = fs.readFileSync(f, "utf8");
+
+  /* ① 상태 넷 — check 제약의 값과 AM_QUOTE_ST 가 같아야 합니다.
+     ⚠️ 주석을 먼저 걷어냅니다 — 규칙을 설명하는 주석에 걸려 멀쩡한
+     코드를 실패로 잡은 적이 있습니다 (틀린 것은 검사였습니다). */
+  const bare = sql.replace(/--[^\n]*/g, " ");
+  const m = bare.match(/state\s+in\s*\(([^)]*)\)/i);
+  if(!m)
+    throw new Error("0008_quote.sql 에서 견적 상태 check 를 못 찾았습니다 — " +
+      "찾는 꼴이 바뀌었는지 보세요");
+  const db = (m[1].match(/'([a-z_]+)'/g) || []).map(x => x.slice(1, -1)).sort();
+  const js = (W.AM_QUOTE_ST || []).map(x => x.key).slice().sort();
+  if(db.length !== js.length || db.some((x, i) => x !== js[i]))
+    throw new Error("견적 상태 — 화면과 DB 에서 다릅니다\n" +
+      "   화면: " + js.join(" · ") + "\n   DB  : " + db.join(" · ") +
+      "\n   → 한쪽만 고치면 딱지가 빈 칸이 되거나 DB 가 거절합니다 " +
+      "(둘 다 에러 없이 일어납니다)");
+
+  /* ② RLS — ⚠️⚠️ checkDealSql 의 표 훑기는 **0001 만** 읽습니다.
+     새 표를 다른 판에 만들면 그 검사에 안 걸립니다 — 여기서 봅니다. */
+  if(!/alter\s+table\s+quote\s+enable\s+row\s+level\s+security/i.test(bare))
+    throw new Error("표 quote 에 RLS 가 안 켜져 있습니다 — " +
+      "켜지 않으면 누구나 남의 견적 금액을 읽습니다 (§8 권한 분리)");
+
+  /* ③ 쓰기 권한 — ⚠️⚠️ **문만 엽니다.** `grant insert`·`update`·`delete`
+     가 있으면 기록 없이 견적을 바꾸는 길이 하나 생깁니다. */
+  const w = bare.match(/grant\s+(insert|update|delete)[^;]*\bon\s+quote\b/i);
+  if(w)
+    throw new Error("quote 표에 쓰기 권한(" + w[1] + ")을 줬습니다 — " +
+      "문(submit_quote · withdraw_quote · choose_quote)만 열어야 합니다. " +
+      "표를 열면 감사 기록 없이 지나가는 길이 생깁니다 (§8)");
+
+  /* ④ 금액을 안 적었을 때 **0원으로 넘기지 않는가** — 이 저장소가
+     손익분기 85조원 · 권리금 25,000년에서 배운 자리입니다. 견적은
+     화면이 아니라 **고객이 보고 돈을 내는 숫자**라 더 그렇습니다. */
+  if(!/견적 금액을 적어 주세요/.test(sql))
+    throw new Error("submit_quote 가 금액 없이 넘어갈 수 있습니다 — " +
+      "0원을 적어 두지 않고 거절해야 합니다 (절대 규칙 5)");
+
+  /* ⑤ 상태는 **move_state 로만** — ⚠️⚠️ `submit_quote` 가 `request` 의
+     state 를 직접 쓰면 감사 기록이 한쪽에만 남습니다 (§8). 문이 하나인
+     까닭이고, 이 저장소가 "겹겹이 막아 둔 것이 검사를 속인다" 로
+     겪은 자리라 **글자로** 봅니다. */
+  if(/update\s+request\s+set[^;]*\bstate\b/i.test(bare))
+    throw new Error("0008 이 request.state 를 직접 씁니다 — " +
+      "상태의 문은 move_state() 하나입니다 (§8 기록). " +
+      "perform move_state(…) 로 부르세요");
+}
+
+
 function checkClaimSql(){
   const intake = path.join(ROOT, "api", "_intake.js");
   const claim  = path.join(ROOT, "db", "migrations", "0005_account_claim.sql");
@@ -2878,6 +2947,7 @@ checkDeal(W);
 checkFee(W);
 checkDealSql(W);
 checkClaimSql();
+checkQuoteSql(W);
 checkRpcArgs();
 checkRetired();
 checkMigDocs(W);

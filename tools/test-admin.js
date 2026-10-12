@@ -691,6 +691,15 @@ function ok(name, cond, extra) {
             created_at:"2026-10-10T02:00:00+00:00", assignment:[] }
         ],
         providers:[{ id:"pv-one", name:"가나다 인테리어", listed:false }],
+        /* 업체가 낸 견적 — ⚠️⚠️ **받아만 놓지 않는지** 봅니다 (0008).
+           서버가 보내는데 화면이 안 그리면 직원은 금액을 전화로 다시
+           물어야 합니다 (이 저장소의 "만들어 놓고 안 쓰는 칸"). */
+        quotes:[
+          { id:"q1", request_id:"11111111-1111-1111-1111-111111111111",
+            provider_id:"pv-one", amount:1200000, vat:"add",
+            scope:"철거 · 폐기물 처리", days:5, start_on:"2026-11-02",
+            state:"open", created_at:"2026-10-11T03:00:00+00:00" }
+        ],
         deals:[], audits:[] }) }));
 
     await pg.route("**/api/deal", r => {
@@ -741,6 +750,32 @@ function ok(name, cond, extra) {
     await pg.waitForTimeout(200);
     const dests = await pg.locator("#rq-to option").allTextContents();
     ok("갈 수 있는 길만 나온다", dests.includes("업체 배정") && dests.includes("보류"), dests.join(","));
+
+    /* ── 업체가 낸 견적 (0008 · §4 · §6) ──────────────────────
+       ⚠️⚠️ **서버가 보내는데 화면이 안 그리면** 직원은 금액과 범위를
+       전화로 다시 물어야 합니다 — 이 저장소가 `gu` · `amStore()` ·
+       `withEquip` · 푸터의 `stages` 로 겪은 "받아만 놓는 칸" 입니다. */
+    /* ⚠️⚠️ **먼저 세고** 글을 읽습니다. `textContent()` 를 바로 부르면
+       없을 때 30초 타임아웃으로 터지고 **어느 검사가 틀렸는지도 안
+       나옵니다** — 되돌려 보다가 그대로 당했습니다 (2차에서 환수
+       미리보기로 겪은 자리). */
+    const qn = await pg.locator("#rq .rq-s-rq .rq-q > li").count();
+    ok("펼친 줄에 받은 견적이 나온다", qn === 1, qn);
+    const qTxt = qn ? await pg.locator("#rq .rq-s-rq .rq-q").textContent() : "";
+    ok("견적 금액 · 부가세 처리가 같이 나온다",
+       /1,200,000원/.test(qTxt) && /부가세 별도/.test(qTxt), qTxt);
+    ok("포함 범위가 나온다 (금액만으로는 못 견줍니다)",
+       /철거 · 폐기물 처리/.test(qTxt), qTxt);
+    /* ⚠️ 상태 딱지는 `/my` 와 **같은 클래스**입니다 — 다른 색이면 한
+       시스템으로 안 읽힙니다 (css/admin.css 가 적어 둔 그대로). */
+    ok("견적 딱지가 /my 와 같은 클래스를 쓴다",
+       (await pg.locator("#rq .rq-s-rq .rq-q .myq-st").count()) === 1);
+    ok("견적 금액 줄이 또렷한 글씨다 (결정에 쓰는 값)",
+       qn ? (await pg.locator("#rq .rq-s-rq .rq-q-m").count()) === 1 : false);
+    /* ⚠️⚠️ **고르는 단추를 여기 만들지 않습니다** — 고르는 것은
+       고객이고, 두 곳에 두면 "누가 골랐는가" 가 흐려집니다. */
+    ok("직원 화면에는 고르는 단추가 없다",
+       !/하겠습니다|고르기/.test(qTxt), qTxt);
     /* ⚠️⚠️ 돈 쪽은 `move_state()` 가 스스로 거절하는 길이라 **단추를
        아예 안 냅니다** — 누르면 늘 실패하는 단추가 §30-7 입니다. */
     ok("정산 쪽 길은 아예 안 낸다",

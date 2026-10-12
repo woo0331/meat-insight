@@ -411,8 +411,19 @@ function Footer(){
           '창업에 필요한 모든 것, 폐업에 필요한 모든 것.</p>'+
         '<a class="btn btn-nv" href="/join">업체 입점하기'+icon("arrow",16)+'</a>'+
       '</div>'+
+      /* ⚠️⚠️ **머리말을 단추로 감쌉니다 — 폰에서 접기 위해서입니다.**
+         링크 스물셋이 세로로 쌓이면 푸터가 **1,317px**(폰 화면 1.5개)이
+         되고, 머리말 다섯 덩이가 줄줄이 지나가 **"푸터가 다섯 번
+         반복된다"** 로 읽힙니다 (사장님이 그렇게 보셨습니다).
+         ⚠️ 링크를 **하나도 안 뺍니다** — 푸터에서 빼면 메인을 뺀
+         160개 화면에서 그리로 가는 길이 사라집니다. DOM 에 그대로
+         있고 접기만 합니다 (크롤러 · 링크 검사도 그대로 봅니다).
+         ⚠️ `<button>` 은 `<h4>` **안**입니다 — 반대로 넣으면 버튼의
+         내용 모델(phrasing)을 어깁니다. */
       cols.map(function(c){
-        return '<div class="ft-col"><h4>'+esc(c[0])+'</h4><ul>'+
+        return '<div class="ft-col"><h4><button type="button" class="ft-fold" '+
+          'aria-expanded="true" onclick="ftFold(this)">'+
+          '<span>'+esc(c[0])+'</span>'+icon("chevd",16)+'</button></h4><ul>'+
           c[1].map(function(l){
             return '<li><a href="'+esc(l[0])+'">'+esc(l[1])+'</a></li>';
           }).join("")+'</ul></div>';
@@ -458,10 +469,31 @@ function paintBiz(){
 /* 화면을 그릴 때마다 헤더·네비 표시를 맞춥니다 */
 window.paintChrome = function(){ paintGnb(); paintMnav(); paintBiz(); };
 
+/* ⚠️⚠️ **`ui.js` 의 `FoldBtn` 을 쓰지 않습니다.** `admin.html` 은
+   `ui.js` 를 안 읽어서, 거기 기대면 그 화면에서만 **에러 없이 조용히**
+   안 돕니다 (`amGet`/`amSet` 으로 겪은 자리입니다). 여기 둡니다. */
+window.ftFold = function(btn){
+  var col = btn.closest(".ft-col"); if(!col) return;
+  var shut = col.classList.toggle("is-fold");
+  btn.setAttribute("aria-expanded", shut ? "false" : "true");
+};
+
 window.mountChrome = function(){
   var t = $("chrome-t"), b = $("chrome-b");
   if(t) t.innerHTML = Header();
   if(b) b.innerHTML = Footer() + MobileNav();
+  /* ⚠️⚠️ **접는 것은 좁은 폭에서만**이고, 펼치는 규칙은 CSS 의
+     `@media (max-width:900px)` **안**에 있습니다 — 넓혔을 때 저절로
+     펼쳐집니다. 그 규칙을 미디어 쿼리 밖으로 내면 넓은 화면에서
+     접힌 채 **펼칠 방법이 없어집니다** (이 저장소가 적어 둔 자리).
+     ⚠️ JS 가 안 돌면 `is-fold` 가 안 붙어 **전부 펼쳐진 채**입니다 —
+     지금과 같은 모습이라 안전합니다. */
+  if(b && window.innerWidth <= 900)
+    els(".ft-col", b).forEach(function(c){
+      c.classList.add("is-fold");
+      var f = c.querySelector(".ft-fold");
+      if(f) f.setAttribute("aria-expanded", "false");
+    });
   paintChrome();
 };
 

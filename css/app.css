@@ -409,7 +409,18 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
   gap:var(--s5) var(--s6); }
 .ft-b p{ margin:var(--s3) 0 var(--s4); line-height:1.8; color:var(--ink2);
   font-size:var(--t-sm); }
-.ft-col h4{ font-size:var(--t-base); margin-bottom:var(--s2); color:var(--navy); }
+.ft-col h4{ font-size:var(--t-base); margin:0; color:var(--navy); }
+.ft-col > ul{ margin-top:var(--s2); }
+/* 머리말을 감싼 단추 — 넓은 화면에서는 **그냥 머리말로 보입니다.**
+   ⚠️ 40px 아래로 내리지 마세요. 누름 검사가 `<button>` 을 전부 재는데
+   여기는 넓은 화면에서도 버튼이라 그대로 걸립니다 (숨기지 않습니다 —
+   숨기면 폰에서 펼칠 자리가 없어집니다). */
+.ft-fold{ display:flex; align-items:center; justify-content:space-between;
+  gap:var(--s2); width:100%; min-height:40px; padding:0; border:0;
+  background:none; color:inherit; font:inherit; text-align:left;
+  cursor:default; }
+.ft-fold svg{ display:none; flex:none; color:var(--ink3);
+  transition:transform .15s ease; }
 .ft-col a{ display:inline-flex; align-items:center; min-height:40px;
   color:var(--ink2); font-size:var(--t-sm); }
 .ft-col a:hover{ color:var(--navy); }
@@ -428,10 +439,24 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 }
 @media (max-width:1020px){ .ft-g{ grid-template-columns:repeat(3,1fr); } }
 @media (max-width:900px){
-  .ft-g{ grid-template-columns:1fr 1fr; gap:var(--s6); }
-  .ft-b{ grid-column:1 / -1; }
+  /* ⚠️⚠️ **한 칸입니다.** 두 칸으로 두면 링크 스물셋이 2열로 쌓여
+     푸터가 1,317px(폰 화면 1.5개)이 되고, 머리말 다섯이 줄줄이
+     지나가 "푸터가 다섯 번 반복" 으로 읽힙니다. 접으면 한 칸이
+     오히려 짧고 읽기도 쉽습니다. */
+  .ft-g{ grid-template-columns:1fr; gap:0; }
+  .ft-b{ grid-column:1 / -1; margin-bottom:var(--s5); }
+  /* ⚠️⚠️ **접는 규칙은 반드시 이 미디어 쿼리 안에 둡니다.** 밖으로
+     내면 넓은 화면에서 접힌 채 **펼칠 방법이 없어집니다** (이
+     저장소가 패키지 · 운영 묶음에서 겪고 적어 둔 자리입니다). */
+  .ft-col{ border-top:1px solid var(--line); }
+  .ft-fold{ min-height:var(--tap); cursor:pointer; }
+  .ft-fold svg{ display:block; }
+  .ft-col.is-fold > ul{ display:none; }
+  .ft-col.is-fold .ft-fold svg{ transform:rotate(-90deg); }
+  .ft-col:not(.is-fold) > ul{ padding-bottom:var(--s3); }
 }
-@media (max-width:560px){ .ft-g{ grid-template-columns:1fr 1fr; } }
+/* 넓은 화면에서는 머리말이라 누를 것이 없습니다 */
+@media (min-width:901px){ .ft-fold{ pointer-events:none; } }
 
 /* 시안의 맨 아랫줄 — 소개 · FAQ · 약관 · 방침.
    ⚠️ 누르는 것은 40px 이상입니다. 한 줄로 눕혀도 높이는 지킵니다. */

@@ -2667,6 +2667,71 @@ function checkRetired(){
     console.log("   내려온 구간 " + names.length + "덩이가 손님에게 안 나갑니다");
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   checkMigDocs() — 돌려야 하는 마이그레이션이 **세 곳에서 같은가**
+
+   ⚠️⚠️ **이 검사가 생긴 까닭 — db/README.md 가 낡아 있었습니다.**
+   0006 · 0007 을 만들고 README 의 "세우는 차례" 를 안 고쳐서, 목록이
+   0005 까지였고 확인 질의도 "판 번호가 5 까지" · "상태값이 열둘" 이었습니다.
+   그 문서를 그대로 따라 돌리시면 **0007 이 빠집니다** — 0003 이 만든
+   수수료 확정 문이 고칠 `deal` 줄을 만드는 길이 바로 0007 이라, 상태는
+   "계약 완료" 인데 확정할 대상이 없습니다. 에러도 안 나고 빌드도
+   통과했습니다. 세우는 것은 **사장님이 손으로** 하시는 일이라 이 문서가
+   유일한 길잡이입니다.
+
+   ⚠️ 보는 것은 셋입니다 — 파일 · README 목록 · test-sql.js 의 MIGS.
+   같은 목록을 세 곳에 적는 꼴이라, 이 저장소가 amCatTo/catTo ·
+   deal.js↔deal_move 로 겪은 그 자리입니다.
+   ════════════════════════════════════════════════════════════════════ */
+function checkMigDocs(W){
+  const dir = path.join(ROOT, "db", "migrations");
+  if(!fs.existsSync(dir)) return;
+
+  /* _down 은 되돌리기용이라 돌리는 목록이 아닙니다 */
+  const migs = fs.readdirSync(dir)
+    .filter(f => /^[0-9]{4}_.+\.sql$/.test(f) && !/_down\.sql$/.test(f)).sort();
+  if(!migs.length) throw new Error("db/migrations 에 마이그레이션이 없습니다 — 검사가 틀렸습니다");
+
+  const rd = path.join(ROOT, "db", "README.md");
+  if(!fs.existsSync(rd)) throw new Error("db/README.md 가 없습니다 — 세우는 차례가 사라졌습니다");
+  const doc = fs.readFileSync(rd, "utf8");
+
+  const ts = path.join(ROOT, "tools", "test-sql.js");
+  const tsq = fs.existsSync(ts) ? fs.readFileSync(ts, "utf8") : "";
+
+  const bad = [];
+  migs.forEach(function(f){
+    if(doc.indexOf(f) < 0)
+      bad.push(f + " → db/README.md 의 세우는 차례에 없습니다 (사장님이 그 문서만 보고 돌리십니다)");
+    if(tsq && tsq.indexOf(f) < 0)
+      bad.push(f + " → tools/test-sql.js 의 MIGS 에 없습니다 (실제 Postgres 로 한 번도 안 돌려 봤습니다)");
+  });
+
+  /* ⚠️ 판 번호는 **파일이 스스로 적는 값**을 읽습니다 — 세어서 짐작하지 않습니다 */
+  let top = 0;
+  migs.forEach(function(f){
+    const m = fs.readFileSync(path.join(dir, f), "utf8")
+      .match(/insert\s+into\s+schema_version[\s\S]{0,200}?values\s*\(\s*([0-9]+)/i);
+    if(m) top = Math.max(top, Number(m[1]));
+  });
+  if(top && doc.indexOf("**" + top + " 까지**") < 0)
+    bad.push("db/README.md 의 확인 질의 \u2460 가 '판 번호가 **" + top + " 까지**' 가 아닙니다 " +
+      "— 돌리고도 빠진 것을 못 알아차립니다");
+
+  /* ⚠️ 상태 수는 deal.js 에서 셉니다 (checkDealSql 이 SQL 과 맞춰 둔 값) */
+  const n = (W.AM_DEAL_ST || []).length;
+  const KO = {12:"열둘", 13:"열셋", 14:"열넷", 15:"열다섯"};
+  if(n && KO[n] && doc.indexOf("**" + KO[n] + "**") < 0)
+    bad.push("db/README.md 의 확인 질의 \u2462 가 '상태값이 **" + KO[n] + "**' 가 아닙니다 " +
+      "— deal.js 는 " + n + "개입니다");
+
+  if(bad.length)
+    throw new Error("세우는 차례(db/README.md)가 실제 마이그레이션과 어긋납니다:\n  " +
+      bad.join("\n  ") + "\n   → 세우는 것은 사장님이 손으로 하시는 일이라 그 문서가 유일한 길잡이입니다");
+
+  console.log("   마이그레이션 " + migs.length + "개가 README \u00b7 test-sql 과 같습니다 (판 " + top + ")");
+}
+
 function checkIndGroups(W){
   const G = W.AM_IND_GROUPS || [], S = W.AM_IND_SUBS || {};
   const inds = (W.AM_INDUSTRIES || []).map(i => i.key);
@@ -2767,6 +2832,7 @@ checkDealSql(W);
 checkClaimSql();
 checkRpcArgs();
 checkRetired();
+checkMigDocs(W);
 checkOffers(W);
 checkOpsvc(W);
 checkHalls(W);

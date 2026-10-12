@@ -44,9 +44,20 @@ db/migrations/0002_schema_version.sql  ← 판 번호
 db/migrations/0003_confirm_fee.sql     ← 수수료를 확정하는 문 하나
 db/migrations/0004_move_state.sql      ← 상태를 바꾸는 문 하나 + 길 표
 db/migrations/0005_account_claim.sql   ← 가입하면 줄 만들기 + 신청번호로 가져오기
+db/migrations/0006_hold_state.sql      ← 보류(hold) 따라잡기 — 새 DB 에서는 아무 일도 안 합니다
+db/migrations/0007_deal_provider_fee.sql ← ⚠️⚠️ 계약 줄을 만드는 길 + 업체 등록 · 승인 · 정책
 ```
 
-⚠️⚠️ **다섯 다 실제 Postgres 에서 돌려 봤습니다** — `node tools/test-sql.js`
+⚠️⚠️ **0007 을 빠뜨리지 마세요.** 0003 이 수수료를 확정하는 문을
+만들었는데 **그 문이 고칠 `deal` 줄을 만드는 길이 없었습니다** — 0007 이
+그 길입니다. 안 돌리면 상태는 `계약 완료` 인데 `deal` 표가 비어 있어서
+**수수료를 확정할 대상이 없습니다.** 업체 등록 · 공개 승인 · 수수료 정책
+저장도 전부 이 파일의 문으로 지나갑니다.
+
+⚠️ **0001_init_down.sql 은 돌리지 마세요.** 되돌리기용이고, 통째로
+주석 처리되어 있습니다 (실수로 붙여 넣어도 아무 일이 안 납니다).
+
+⚠️⚠️ **일곱 다 실제 Postgres 에서 돌려 봤습니다** — `node tools/test-sql.js`
 가 임시 클러스터를 띄워 세우고, 제약 · 트리거 · RLS · 권한 · 감사 기록을
 117가지로 눌러 봅니다. 그 과정에서 **셋이 깨져 있었습니다** (권한이 한 줄도
 없었고, 아무도 수수료를 확정할 수 없었고, 0005 의 정책이 **무한 재귀**였습니다).
@@ -63,7 +74,7 @@ db/migrations/0005_account_claim.sql   ← 가입하면 줄 만들기 + 신청�
 ### 1-3. 돌린 다음 반드시 확인할 것
 
 ```sql
--- ① 판 번호가 5 까지 들어왔는가
+-- ① ⚠️ 판 번호가 **7 까지** 들어왔는가 (일곱 줄이어야 합니다)
 select * from schema_version order by n;
 
 -- ② ⚠️⚠️ RLS 가 안 켜진 표가 하나라도 있는가 — 0건이어야 합니다
@@ -71,7 +82,8 @@ select tablename from pg_tables t
   join pg_class c on c.relname = t.tablename
  where t.schemaname = 'public' and c.relrowsecurity = false;
 
--- ③ 상태값이 열둘인가 (js/data/deal.js 와 같아야 합니다)
+-- ③ 상태값이 **열셋**인가 — 보류(hold)가 들어 있어야 합니다
+--    (js/data/deal.js 의 AM_DEAL_ST 와 같아야 합니다)
 select unnest(enum_range(null::deal_state));
 
 -- ④ ⚠️⚠️ 돈 칸에 로그인 사용자 쓰기 권한이 없는가 — 0건이어야 합니다
@@ -226,7 +238,7 @@ pg_restore -d "$NEW_DB_URL" --clean --if-exists backup-….dump
 
 | 무엇 | 어디 |
 |---|---|
-| 상태 열둘 · 역할 넷 · 수익모델 여섯이 **화면과 DB 에서 같다** | `build-pages.js` 의 `checkDealSql()` — 다르면 **빌드가 멈춥니다** |
+| 상태 열셋 · 역할 넷 · 수익모델 여섯이 **화면과 DB 에서 같다** | `build-pages.js` 의 `checkDealSql()` — 다르면 **빌드가 멈춥니다** |
 | 표마다 **RLS 가 켜져 있다** | 같은 검사 (SQL 파일 기준) |
 | 감사 기록을 **고치거나 지울 수 없다** | 같은 검사 + RLS 에 update·delete 정책이 없음 |
 | 수수료 확정이 **관리자 전용이다** | `checkDeal()` · `deal_money_guard()` 트리거 |

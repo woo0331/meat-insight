@@ -3385,7 +3385,7 @@ redirect 가 사라지거나 달라짐    → 빌드가 멈춥니다
 ```bash
 node check.js          # 표본 화면 × 1440·1024·390·360px 전수 (playwright 필요)
 node tools/test-api.js # 접수 주소가 화면이 보낸 칸을 전달하는가 (81개)
-node tools/test-sql.js # ⚠️⚠️ **DB 스키마를 실제 Postgres 에서** (117개 · psql 필요)
+node tools/test-sql.js # ⚠️⚠️ **DB 스키마를 실제 Postgres 에서** (176개 · psql 필요)
 node tools/test-intake.js # ⚠️⚠️ **접수번호 · 중복 · DB 층** (42개)
 node tools/test-fee.js # ⚠️⚠️ **수수료 계산** — 경계값 바로 아래까지 (55개)
 node tools/test-deal.js # ⚠️⚠️ **상태 열셋** — 못 갈 길로 안 가는가 (61개)
@@ -3741,7 +3741,7 @@ node --check check.js              # ⚠️ check.js 를 고쳤으면 **이걸�
 | 로그인 상태 알려 주기 | `api/session.js` | 같은 검사 |
 | 내가 볼 수 있는 신청 · 계약 | `api/me.js` | 같은 검사 |
 | 상태를 바꾸는 유일한 길 | `api/deal.js` | 같은 검사 |
-| 가입하면 줄 만들기 + 신청번호로 가져오기 | `db/migrations/0005_account_claim.sql` | `tools/test-sql.js` **117개** |
+| 가입하면 줄 만들기 + 신청번호로 가져오기 | `db/migrations/0005_account_claim.sql` | `tools/test-sql.js` **176개** |
 | 로그인한 채로 접수하면 계정에 이어 두기 | `api/quote.js` | `tools/test-api.js` **81개** |
 | 인자 이름이 SQL 과 같은가 | `build-pages.js` 의 `checkRpcArgs()` | 빌드마다 |
 | 접수번호 글자가 서버와 DB 에서 같은가 | 같은 파일의 `checkClaimSql()` | 빌드마다 |

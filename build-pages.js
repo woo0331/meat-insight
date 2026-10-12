@@ -2714,8 +2714,8 @@ function checkMigDocs(W){
       .match(/insert\s+into\s+schema_version[\s\S]{0,200}?values\s*\(\s*([0-9]+)/i);
     if(m) top = Math.max(top, Number(m[1]));
   });
-  if(top && doc.indexOf("**" + top + " 까지**") < 0)
-    bad.push("db/README.md 의 확인 질의 \u2460 가 '판 번호가 **" + top + " 까지**' 가 아닙니다 " +
+  if(top && doc.indexOf("**" + top + "까지**") < 0)
+    bad.push("db/README.md 의 확인 질의 \u2460 가 '판 번호가 **" + top + "까지**' 가 아닙니다 " +
       "— 돌리고도 빠진 것을 못 알아차립니다");
 
   /* ⚠️ 상태 수는 deal.js 에서 셉니다 (checkDealSql 이 SQL 과 맞춰 둔 값) */

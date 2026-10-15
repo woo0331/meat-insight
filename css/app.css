@@ -270,7 +270,11 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .w > .sec-note:last-child{ padding-bottom:0; }
 .sec-white{ background:var(--surface); }
 .sec-hd{ margin-bottom:var(--s8); position:relative; }
-.sec-hd h2{ font-size:var(--t-3xl); }
+/* ⚠️ `h1` 이 같이 걸려 있습니다 — 2026-10-13 §4 로 히어로의 소개
+   문구가 빠지면서 메인의 h1 이 **전문관 구간 머리말**로 옮겨
+   왔습니다. 크기는 h2 와 같아야 합니다 (구간 머리말이라 생김새가
+   달라지면 그 구간만 따로 놉니다). */
+.sec-hd h1, .sec-hd h2{ font-size:var(--t-3xl); }
 .sec-hd p{ margin-top:var(--s3); color:var(--ink2); font-size:var(--t-lg); max-width:62ch; }
 /* ⚠️ **머리말도 `<p>` 입니다.** `.sec-hd p`(0,1,1)가 `.eyebrow`(0,1,0)를
    이겨서, 구간 머리말이 **사이트 전체에서 회색으로 죽어 있었습니다** —

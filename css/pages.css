@@ -4308,3 +4308,99 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   .mlast-ph .mlast-go,
   .mlast-ph .mlast-h{ justify-content:center; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   01 HERO — 창업 · 폐업 **가로 2분할** (2026-10-13 §4 · §5)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **폰에서도 좌우 50:50 입니다.** §5 가 "세로로 쌓는다는 지시는
+   완전히 폐기한다" 고 직접 적었습니다 — `grid-template-columns` 를
+   한 칸으로 바꾸지 마세요. 가로 스크롤 · 슬라이드도 금지입니다.
+
+   ⚠️⚠️ **막(scrim)에 `background-color` 를 주지 않았습니다.** 이
+   저장소는 "그라디언트만 적으면 어두운 면 검사가 못 본다" 를 경고로
+   적어 두었는데, 그건 **사진이 없는 면**(`.mk-k-ph-n`) 이야기입니다.
+   여기는 면이 아니라 **사진**이고, 보이는 픽셀의 대부분이 햇빛 드는
+   밝은 실내입니다 — 짙은 색을 선언하면 있지도 않은 어두운 면을
+   세게 됩니다. ⚠️ 사진을 어두운 것으로 바꾸시면 그때 다시 재세요.  */
+.mh{ position:relative; background:var(--bg-cream); padding:0; }
+.mh2{ display:grid; grid-template-columns:1fr 1fr; gap:0; }
+
+/* ⚠️ 두 판의 **높이가 같습니다** (§4). `min-height` 를 한쪽만 고치지
+   마세요 — 한쪽이 낮아지면 그게 "덜 중요한 것" 이라는 말입니다. */
+.mh2-p{ position:relative; isolation:isolate; overflow:hidden;
+  display:flex; align-items:flex-end;
+  min-height:clamp(380px, 32vw, 500px); }
+/* 사진이 없을 때 자리를 지키는 **밝은** 바탕입니다 — 아래 막이
+   글자 자리를 짙게 덮어 주어 흰 글자가 그대로 읽힙니다 */
+.mh2-st{ background:var(--bg-sky); }
+.mh2-cl{ background:var(--bg-peach); }
+
+.mh2-ph{ position:absolute; inset:0; z-index:0; }
+/* ⚠️ `photoBox()` 를 쓰는 자리에는 `object-fit:cover` 를 주세요 —
+   `<img class="ph">` 의 기본값이 `fill` 이라 안 주면 늘어납니다 */
+.mh2-ph .ph{ width:100%; height:100%; object-fit:cover;
+  object-position:var(--ph-pos, 50% 50%); }
+/* ⚠️⚠️ 어느 쪽을 남길지는 이 한 줄입니다. 반쪽짜리 세로 액자라
+   **가로가 많이 잘립니다** — 사진을 바꾸시면 찍어서 다시 보세요
+   (검사는 주인공이 잘렸는지 못 잽니다). */
+.mh2-st{ --ph-pos:34% 46%; }
+.mh2-cl{ --ph-pos:46% 48%; }
+
+.mh2-p::after{ content:""; position:absolute; left:0; right:0; bottom:0;
+  height:72%; z-index:1; pointer-events:none;
+  background:linear-gradient(180deg,
+    rgba(48,36,30,0) 0%, rgba(48,36,30,.46) 42%,
+    rgba(48,36,30,.80) 74%, rgba(48,36,30,.92) 100%); }
+
+.mh2-tx{ position:relative; z-index:2; display:block;
+  width:100%; padding:var(--s8) var(--s7) var(--s7);
+  color:#fff; }
+.mh2-k{ display:block; font-style:normal;
+  font-size:var(--t-cap); font-weight:700; letter-spacing:-.01em;
+  margin-bottom:var(--s3); }
+.mh2-st .mh2-k{ color:var(--gold); }
+.mh2-cl .mh2-k{ color:#EFC3A6; }
+.mh2-t{ display:block; font-size:clamp(34px, 3.6vw, 56px);
+  font-weight:900; letter-spacing:-.045em; line-height:1.05;
+  text-shadow:0 2px 14px rgba(30,20,14,.34); }
+.mh2-d, .mh2-dm{ display:block; font-style:normal; margin-top:var(--s4);
+  font-size:var(--t-base); font-weight:600; line-height:1.55;
+  color:rgba(255,255,255,.93); }
+/* 폰 전용 문구는 넓은 화면에서 안 냅니다 (§5 — 같은 말을 두 번 하지
+   않습니다). 아래 좁은 폭에서 서로 바뀝니다. */
+.mh2-dm{ display:none; }
+
+/* ── 1024px 아래 ── 두 판은 그대로 가로입니다 */
+@media (max-width:1024px){
+  .mh2-p{ min-height:clamp(320px, 38vw, 420px); }
+  .mh2-tx{ padding:var(--s7) var(--s6) var(--s6); }
+}
+
+/* ── 900px 아래 (폰) ── ⚠️⚠️ **여기서도 가로 2분할입니다** (§5) */
+@media (max-width:900px){
+  /* §5 권장 — 360px 230~260 · 390px 240~280 · 430px 260~300.
+     62vw 로 두면 360→223(하한 230) · 390→242 · 430→267 입니다. */
+  .mh2-p{ min-height:clamp(230px, 62vw, 300px); }
+  .mh2-tx{ padding:var(--s5) var(--s4) var(--s4); }
+  /* 긴 머리글은 반쪽 폭에서 석 줄이 되어 사진을 덮습니다 — 뺍니다 */
+  .mh2-k{ display:none; }
+  .mh2-t{ font-size:clamp(26px, 7.4vw, 36px); letter-spacing:-.04em; }
+  .mh2-d{ display:none; }
+  /* ⚠️ **13px 아래로 내리지 마세요** — 제일 작은 단계가 --t-cap 입니다
+     (아래 네비를 11.5px 로 두었다가 전수 점검에 175건 걸린 자리). */
+  .mh2-dm{ display:block; margin-top:var(--s3);
+    font-size:var(--t-cap); font-weight:600; line-height:1.5; }
+  .mh2-p::after{ height:80%;
+    background:linear-gradient(180deg,
+      rgba(48,36,30,0) 0%, rgba(48,36,30,.54) 38%,
+      rgba(48,36,30,.86) 72%, rgba(48,36,30,.94) 100%); }
+  /* 반쪽 폭이 더 좁아져서 가로가 많이 잘립니다 — 주인공 쪽을 남깁니다.
+     ⚠️ 창업은 **나무 카운터와 작업자**가 사진 왼쪽 셋째쯤에 있어서
+     값을 올리면 창문만 남습니다 (390px 에서 찍어 보고 내렸습니다). */
+  .mh2-st{ --ph-pos:26% 44%; }
+  .mh2-cl{ --ph-pos:44% 46%; }
+}
+@media (max-width:420px){
+  .mh2-tx{ padding:var(--s4) 12px 12px; }
+  .mh2-t{ letter-spacing:-.05em; }
+}

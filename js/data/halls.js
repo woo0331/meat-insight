@@ -47,12 +47,12 @@ window.AM_HALLS = [
     tone:"start", to:"/startup", ic:"seed",
     items:[
       /* ── §7 의 여섯 ── */
-      { n:"상권 · 입지",   ia:"mappin",    cat:"area" },
-      { n:"인테리어",      ia:"interior",  cat:"interior" },
-      { n:"주방 · 설비",   ia:"kitchen",   cat:"equip" },
-      { n:"인허가 · 행정", ia:"permit",    cat:"admin", sub:"permit" },
-      { n:"세무 · 회계",   ia:"tax",       cat:"admin", sub:"tax-agent" },
-      { n:"창업 자금",     ia:"money",     cat:"fund" },
+      { n:"상권 · 입지",   ia:"mappin",    cat:"area", tone:"sv1" },
+      { n:"인테리어",      ia:"interior",  cat:"interior", tone:"sv2" },
+      { n:"주방 · 설비",   ia:"kitchen",   cat:"equip", tone:"sv3" },
+      { n:"인허가 · 행정", ia:"permit",    cat:"admin", sub:"permit", tone:"sv4" },
+      { n:"세무 · 회계",   ia:"tax",       cat:"admin", sub:"tax-agent", tone:"sv5" },
+      { n:"창업 자금",     ia:"money",     cat:"fund", tone:"sv6" },
       /* ── 아래는 메인에 안 나옵니다 (전문관 화면 · /providers 가 받습니다) ── */
       { n:"창업 아이템",   ia:"bulb",      cat:"item" },
       { n:"직원 채용",     ia:"staff",     cat:"staff" },

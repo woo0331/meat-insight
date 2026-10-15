@@ -485,6 +485,9 @@ function toneGroup(e){
      됐습니다. 여기 안 적으면 "warm" 으로 읽혀 크림 구간과 겹쳐도
      못 밉니다 — `.mjy` 가 꼭 그렇게 숨어 있었습니다. */
   if(c.indexOf(" sec-close ") >= 0) return "peach";
+  /* 2026-10-15 §7 · §8 — 계산도구 라벤더 · 이용 방법 피치 */
+  if(c.indexOf(" sec-calc ")  >= 0) return "lav";
+  if(c.indexOf(" sec-step ")  >= 0) return "step";
   /* 크림과 "바탕 안 준 구간" 은 같은 묶음입니다 (ΔE 0.35) */
   return "warm";
 }

@@ -1157,6 +1157,13 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 /* ════════ 분류색 — 아이콘 타일 · 배지 · 칩에만 ═══════════════════
    ⚠️ 구간 배경 · 카드 전체 · 버튼에 쓰지 마세요. 브랜드는 파랑 하나입니다.
    ⚠️ 되돌림 값을 빼지 마세요 — tone 이 안 붙은 자리는 파랑이어야 합니다. */
+/* 2026-10-15 §6 — 대표 서비스 여섯 전용 */
+.tn-sv1{ --ic-ink:var(--sv1-ink); --ic-bg:var(--sv1-bg); }
+.tn-sv2{ --ic-ink:var(--sv2-ink); --ic-bg:var(--sv2-bg); }
+.tn-sv3{ --ic-ink:var(--sv3-ink); --ic-bg:var(--sv3-bg); }
+.tn-sv4{ --ic-ink:var(--sv4-ink); --ic-bg:var(--sv4-bg); }
+.tn-sv5{ --ic-ink:var(--sv5-ink); --ic-bg:var(--sv5-bg); }
+.tn-sv6{ --ic-ink:var(--sv6-ink); --ic-bg:var(--sv6-bg); }
 .tn-t1{ --ic-ink:var(--tn1-ink); --ic-bg:var(--tn1-bg); }
 .tn-t2{ --ic-ink:var(--tn2-ink); --ic-bg:var(--tn2-bg); }
 .tn-t3{ --ic-ink:var(--tn3-ink); --ic-bg:var(--tn3-bg); }
@@ -1338,6 +1345,15 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    비슷하지만 **치우친 채널이 다릅니다** (민트 G>B>R · 하늘 B>G>R).
    사람 눈은 그 차이를 봅니다 — 검사도 그렇게 봅니다. */
 .sec-blue  { background:var(--bg-sky); }
+/* 2026-10-15 §7 · §8 — 계산도구는 라벤더, 이용 방법은 피치입니다.
+   ⚠️⚠️ **둘이 서로, 그리고 이웃과 뚜렷이 달라야 합니다** (§8 "계산도구의
+   라벤더 배경과 명확히 구분"). 색차는 `check.js` 가 ΔE 2.5 로 봅니다 —
+   재 보니 라벤더 ↔ 피치 ΔE 10.9 · 라벤더 ↔ 베이지 7.1 입니다.
+   ⚠️ 새 톤을 만들면 `js/app.js` 의 `toneGroup()` 에 **반드시** 한 줄
+   넣으세요 — 안 넣으면 "warm" 으로 읽혀 크림 구간과 겹쳐도 못 밉니다
+   (`.mjy` 가 꼭 그렇게 숨어 있었습니다). */
+.sec-calc  { background:var(--bg-calc); }
+.sec-step  { background:var(--bg-step); }
 
 /* ── 아이콘 타일 (§7 · §28) ────────────────────────────────────────
    ⚠️⚠️ **아이콘 크기 · 컨테이너 · 선 굵기 · 모서리를 한 곳에서 정합니다.**
@@ -4073,30 +4089,37 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    으로 칠해지고 있었습니다 (검사가 "창업 전문관이 파랑이 아닙니다
    rgb(128,96,71)" 로 잡았습니다). 창업 = 블루는 지시서가 여러 곳에
    못박은 규칙이라 창업 토큰으로 되돌립니다. */
-.hall-start{ --hall-ink:var(--start-dark);
-  background:linear-gradient(145deg,var(--start) 0%,var(--start-deep) 100%);
-  color:var(--start); }
-/* ⚠️⚠️ **첫 멈춤에 옅은 쪽을 두지 마세요.** 카드 왼쪽 위가 제일
-   밝은데 **제목이 거기 앉습니다** — 재 보니 운영 4.13 · 폐업 2.91 로
-   둘 다 AA(4.5) 미달이었습니다 (`--ops` · `--close` 는 이 문서가
-   "면 · 테두리 · 아이콘 전용" 이라고 적어 둔 색입니다). 짙은 단계로
-   시작합니다. ⚠️ 바꾸시면 **네 장 다 다시 재세요.** */
-.hall-ops{   --hall-ink:var(--ops-dark);
-  background:linear-gradient(145deg,var(--ops-dark) 0%,var(--ops-deep) 100%);
-  color:var(--ops); }
-.hall-pass{  --hall-ink:var(--pass-dark);
-  background:linear-gradient(145deg,var(--pass) 0%,var(--pass-deep) 100%);
-  color:var(--pass); }
-.hall-close{ --hall-ink:var(--close-deep);
-  background:linear-gradient(145deg,var(--close-dark) 0%,var(--close-deep) 100%);
-  color:var(--close); }
+/* ⚠️⚠️ **2026-10-15 §2 의 영역별 색입니다** — 사이트 전체 토큰
+   (--start · --ops · --pass · --close)과 **따로** 둡니다. 그쪽은
+   속화면까지 물들이는 색이고, 여기는 §2 가 "영역별 색상" 으로 적은
+   전문관 카드 한 자리입니다. 둘을 묶으면 창업 속화면이 통째로
+   #0868C9 가 되어 베이지 · 브라운 기본과 싸웁니다.
+   ⚠️⚠️ **첫 멈춤에 옅은 쪽을 두지 마세요.** 카드 왼쪽 위가 제일
+   밝은데 **제목이 거기 앉습니다** — 2026-10-13 에 운영 4.13 · 폐업
+   2.91 로 둘 다 AA 미달이었던 자리입니다. 지금 흰 글자 대비는
+   블루 5.47 · 그린 5.41 · 퍼플 8.37 · 오렌지레드 4.68 입니다.
+   ⚠️ 바꾸시면 **네 장 다 다시 재세요.** */
+.hall-start{ --hall-ink:var(--hall-blue-d);
+  background:linear-gradient(145deg,var(--hall-blue) 0%,var(--hall-blue-d) 100%);
+  color:var(--hall-blue); }
+.hall-ops{   --hall-ink:var(--hall-green-d);
+  background:linear-gradient(145deg,var(--hall-green) 0%,var(--hall-green-d) 100%);
+  color:var(--hall-green); }
+.hall-pass{  --hall-ink:var(--hall-purple-d);
+  background:linear-gradient(145deg,var(--hall-purple) 0%,var(--hall-purple-d) 100%);
+  color:var(--hall-purple); }
+.hall-close{ --hall-ink:var(--hall-red-d);
+  background:linear-gradient(145deg,var(--hall-red) 0%,var(--hall-red-d) 100%);
+  color:var(--hall-red); }
 .mhall-c.hall-start, .mhall-c.hall-ops,
 .mhall-c.hall-pass,  .mhall-c.hall-close{ color:#fff; }
-/* 머리말 속 전문관 이름 — 면이 아니라 **글자**라 짙은 단계입니다 */
-.hsv-hd b.hall-start{ background:none; color:var(--start-dark); }
-.hsv-hd b.hall-ops{   background:none; color:var(--ops-dark); }
-.hsv-hd b.hall-pass{  background:none; color:var(--pass-dark); }
-.hsv-hd b.hall-close{ background:none; color:var(--close-deep); }
+/* 머리말 속 전문관 이름 — 면이 아니라 **글자**라 짙은 단계입니다.
+   ⚠️ 베이지 구간(#F6F0E7) 위에서 오렌지레드 기본값은 4.17 로 AA
+   미달입니다 — -d 쪽이 6.14 입니다. 재 보고 정했습니다. */
+.hsv-hd b.hall-start{ background:none; color:var(--hall-blue-d); }
+.hsv-hd b.hall-ops{   background:none; color:var(--hall-green-d); }
+.hsv-hd b.hall-pass{  background:none; color:var(--hall-purple-d); }
+.hsv-hd b.hall-close{ background:none; color:var(--hall-red-d); }
 
 /* ── 고른 전문관의 서비스 ── */
 .hsv-box{ margin-top:var(--s5); padding:var(--s6);
@@ -4172,8 +4195,17 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    자리라, 사진이 밝아지면 그만큼 대비가 떨어집니다 (AA 4.5). 밝기는
    사진이 아니라 **흰 아이콘 타일**이 냅니다 — 올리고 싶어지면 먼저
    `.mhall-c b` 대비부터 재세요. */
+/* ⚠️⚠️ **2026-10-15 §5 — "밝은 카페 사진 · 하단은 선명한 그라데이션".**
+   사진을 위쪽에서 더 보이게 하고 **아래로 갈수록 지웁니다** — 제목과
+   한 줄 설명이 카드의 50~88% 자리에 앉기 때문입니다 (재 봤습니다).
+   ⚠️ 그래서 opacity 만 올리면 안 됩니다. 올리면 글자가 사진 위에
+   앉아 대비가 떨어집니다 — mask 로 **글 자리에서는 사진을 지웁니다.**
+   ⚠️ 바꾸시면 `.mhall-c b` 의 흰 글자 대비를 **픽셀로 다시 재세요**
+   (검사는 사진 위 글자를 영원히 못 잽니다). */
+.mhall-bg{ -webkit-mask-image:linear-gradient(180deg,#000 0,#000 22%,rgba(0,0,0,.18) 46%,transparent 78%);
+           mask-image:linear-gradient(180deg,#000 0,#000 22%,rgba(0,0,0,.18) 46%,transparent 78%); }
 .mhall-bg .ph{ display:block; width:100%; height:100%; object-fit:cover;
-  opacity:.22; }
+  opacity:.44; }
 
 /* ── §6 서비스 상세의 공통 네 구간 (2026-10-11 간소화 지시서) ──────
    /providers/:cat 의 ② 필요한 상황 · ③ 범위와 절차 · ④ 비용 결정
@@ -4277,12 +4309,26 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
 .mcal-g > li > a:hover{ transform:translateY(-3px);
   border-color:var(--ic-ink, var(--blue-600)); box-shadow:var(--shadow-float); }
+/* ⚠️⚠️ **색은 `--ia-1` · `--ia-2` 두 변수로만 들어옵니다.** `color`
+   만 바꾸면 컬러 아이콘(`iconArt`)은 **제 기본값(브라운)으로 그대로
+   섭니다** — 타일 바탕만 색이 바뀌고 그림은 갈색이라 "색이 안 먹었다"
+   로 보입니다 (찍어 보고 알았습니다). 서비스 타일(`.hsv`)이 이미
+   그렇게 이어 주고 있었는데 여기만 빠져 있었습니다. */
 .mcal-i{ display:inline-flex; align-items:center; justify-content:center;
   width:56px; height:56px; border-radius:16px; margin-bottom:2px;
-  background:var(--ic-bg, var(--blue-50)); color:var(--ic-ink, var(--blue-600)); }
+  background:var(--ic-bg, var(--blue-50)); color:var(--ic-ink, var(--blue-600));
+  --ia-1:var(--ic-ink, var(--blue-600)); --ia-bg:var(--ic-bg); }
+@supports (color: color-mix(in srgb, #000 10%, #fff)){
+  .mcal-i{ --ia-2:color-mix(in srgb, var(--ic-ink, var(--blue-600)) 34%, #fff); }
+}
 .mcal-n{ font-size:var(--t-md); font-weight:800; color:var(--navy); }
 .mcal-o{ font-style:normal; font-size:var(--t-sm); color:var(--ink2);
   line-height:1.6; padding-right:42px; }
+/* ⚠️ 2026-10-15 §7 — "카드 테두리 연한 라벤더 · 이동 화살표는
+   오렌지 포인트". 라벤더 구간 안에서만입니다 (다른 구간의 같은
+   카드까지 물들이면 그 구간이 따라 바뀝니다). */
+.sec-calc .mcal-g > li > a{ border-color:#E0D8FA; }
+.sec-calc .mcal-go{ color:#F06423; background:#FFEDE2; }
 /* 오른쪽 아래 이동 표시 (시안) */
 .mcal-go{ position:absolute; right:var(--s4); bottom:var(--s4);
   display:inline-flex; align-items:center; justify-content:center;
@@ -4297,20 +4343,34 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mstp-g{ display:grid; grid-template-columns:repeat(4, 1fr); gap:var(--s4);
   margin:var(--s8) 0 0; padding:0; list-style:none; counter-reset:none; }
 /* ⚠️ grid 칸에 맨글과 태그를 섞지 마세요 — 전부 태그입니다 */
+/* ⚠️⚠️ **2026-10-15 §8 — 카드가 배경에 묻히지 않게 흰색입니다.**
+   구간 바탕이 피치(#FFF0DE)라 전처럼 하늘 틴트를 쓰면 둘이 섞여
+   카드가 안 보입니다 (ΔE 를 재 보면 4.9 — 카드로 읽히기엔 모자랍니다).
+   §2 의 "카드 배경 #FFFFFF" 그대로입니다. */
 .mstp-g > li{ position:relative; display:grid; gap:6px; align-content:start;
   min-width:0; padding:var(--s6); border-radius:var(--r-xl);
-  background:var(--bg-sky); border:1px solid var(--line-sky); }
-/* 단계 사이 화살표 (시안) — ⚠️ 마지막 칸 뒤에는 안 그립니다 */
+  background:var(--surface); border:1px solid #F3DCBE; }
+/* 단계 사이 화살표 (시안) — ⚠️ 마지막 칸 뒤에는 안 그립니다.
+   ⚠️ §8 "연결 화살표는 오렌지" — 흐린 선으로 두면 네 칸이 그냥
+   나란한 상자로 읽혀 **절차**로 안 보입니다. */
 .mstp-g > li:not(:last-child)::after{ content:""; position:absolute;
   right:calc(var(--s4) / -2 - 5px); top:50%; width:10px; height:10px;
-  margin-top:-5px; border-top:2px solid var(--line);
-  border-right:2px solid var(--line); transform:rotate(45deg); }
+  margin-top:-5px; border-top:2.5px solid var(--step-pt);
+  border-right:2.5px solid var(--step-pt); transform:rotate(45deg); }
+/* ⚠️ §8 "아이콘은 오렌지 또는 테라코타" */
 .mstp-i{ display:inline-flex; align-items:center; justify-content:center;
   width:50px; height:50px; border-radius:15px; margin-bottom:4px;
-  background:var(--surface); color:var(--blue-600);
-  border:1px solid var(--line-sky); }
-.mstp-n{ font-size:var(--t-cap); font-weight:900; color:var(--blue-600);
-  letter-spacing:.06em; }
+  background:#FFF0E2; color:var(--step-ink);
+  border:1px solid #FBDCC2; }
+/* ⚠️⚠️ **번호는 선명한 오렌지 원형입니다** (§8 · 시안). 글자로만 두면
+   "01" 이 설명글처럼 읽혀 차례가 안 보입니다.
+   ⚠️ 흰 글자를 얹는 면이라 **--step-pt(#F06423)가 아니라 --step-ink**
+   입니다 — 재 보니 #F06423 위 흰 글자는 3.03 으로 AA 미달이고
+   #C04A12 는 5.21 입니다. */
+.mstp-n{ display:inline-flex; align-items:center; justify-content:center;
+  width:30px; height:30px; border-radius:50%;
+  font-size:12px; font-weight:900; letter-spacing:.02em;
+  background:var(--step-ink); color:#fff; }
 .mstp-t{ font-size:var(--t-md); font-weight:800; color:var(--navy); }
 .mstp-d{ font-style:normal; font-size:var(--t-sm); color:var(--ink2);
   line-height:1.65; }
@@ -4382,98 +4442,138 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mh{ position:relative; background:var(--bg-cream); padding:0; }
 .mh2{ display:grid; grid-template-columns:1fr 1fr; gap:0; }
 
-/* ⚠️ 두 판의 **높이가 같습니다** (§4). `min-height` 를 한쪽만 고치지
-   마세요 — 한쪽이 낮아지면 그게 "덜 중요한 것" 이라는 말입니다. */
+/* ⚠️ 두 판의 **높이가 같습니다** (2026-10-15 §4-3). 한쪽만 고치지
+   마세요 — 한쪽이 낮아지면 그게 "덜 중요한 것" 이라는 말입니다.
+   ⚠️⚠️ 높이를 키우면 **어두운 면이 같이 큽니다** (아래 글 칸).
+   재 보고 정한 값입니다 — 1440px 에서 판 374px 입니다. */
 .mh2-p{ position:relative; isolation:isolate; overflow:hidden;
-  display:flex; align-items:flex-end;
-  min-height:clamp(380px, 32vw, 500px); }
-/* 사진이 없을 때 자리를 지키는 **밝은** 바탕입니다 — 아래 막이
-   글자 자리를 짙게 덮어 주어 흰 글자가 그대로 읽힙니다 */
+  display:flex; align-items:stretch;
+  min-height:clamp(330px, 26vw, 420px); }
+/* 사진이 없을 때 자리를 지키는 바탕 — 색 면이 글자 자리를 덮으므로
+   글은 사진이 있든 없든 그대로 읽힙니다 */
 .mh2-st{ background:var(--bg-sky); }
-.mh2-cl{ background:var(--bg-peach); }
+/* ⚠️⚠️ **사진이 없을 때의 바탕을 짙게 두지 마세요.** 짙은 색을
+   선언하면 검사가 **판 전체**(1440px 에서 720x374)를 어두운 면으로
+   세어 첫 화면이 32.9% 가 됩니다 — 사진이 덮고 있어 눈에는 안
+   보이는데 숫자만 터집니다 (재 보고 알았습니다). 글은 아래 색 면
+   위에 서므로 여기는 밝아도 됩니다. */
+.mh2-cl{ background:#F7EDEE; }
 
 .mh2-ph{ position:absolute; inset:0; z-index:0; }
-/* ⚠️ `photoBox()` 를 쓰는 자리에는 `object-fit:cover` 를 주세요 —
-   `<img class="ph">` 의 기본값이 `fill` 이라 안 주면 늘어납니다 */
+/* ⚠️ photoBox() 를 쓰는 자리에는 object-fit:cover 를 주세요 —
+   img.ph 의 기본값이 fill 이라 안 주면 늘어납니다 */
 .mh2-ph .ph{ width:100%; height:100%; object-fit:cover;
   object-position:var(--ph-pos, 50% 50%); }
-/* ⚠️⚠️ 어느 쪽을 남길지는 이 한 줄입니다. 반쪽짜리 세로 액자라
-   **가로가 많이 잘립니다** — 사진을 바꾸시면 찍어서 다시 보세요
-   (검사는 주인공이 잘렸는지 못 잽니다). */
-.mh2-st{ --ph-pos:34% 46%; }
-.mh2-cl{ --ph-pos:46% 48%; }
+/* ⚠️⚠️ 어느 쪽을 남길지는 이 한 줄입니다. 글이 왼쪽 색 면 위에
+   앉으므로 **사진의 주인공은 오른쪽**에 와야 합니다 — 사진을
+   바꾸시면 찍어서 다시 보세요 (검사는 주인공이 잘렸는지 못 잽니다). */
+.mh2-st{ --ph-pos:62% 46%; }
+.mh2-cl{ --ph-pos:58% 48%; }
 
-.mh2-p::after{ content:""; position:absolute; left:0; right:0; bottom:0;
-  height:72%; z-index:1; pointer-events:none;
-  background:linear-gradient(180deg,
-    rgba(48,36,30,0) 0%, rgba(48,36,30,.46) 42%,
-    rgba(48,36,30,.80) 74%, rgba(48,36,30,.92) 100%); }
+/* ══ 글이 앉는 색 면 (2026-10-15 §4-1 · §4-2) ════════════════════
+   ⚠️⚠️ **색은 글 칸(.mh2-tx) 자신이 듭니다 — 형제 칸에 두지 마세요.**
+   처음에 사진 위에 색 면을 형제로 깔았더니, 대비 검사가 글의 **조상**
+   에서만 바탕을 찾기 때문에 뒤의 밝은 바탕을 읽어 폐업 제목이
+   **1.15** 로 잡혔습니다. 눈에는 멀쩡한데 숫자는 거짓이었습니다 —
+   검사가 틀린 것이 아니라, 옆 칸이 칠한 색을 알 길이 없는 것입니다.
+   지금은 글자 뒤를 **실제로 그 칸이** 칠합니다 (흰 글자 5.95 · 검은
+   글자 15.6).
 
-.mh2-tx{ position:relative; z-index:2; display:block;
-  width:100%; padding:var(--s8) var(--s7) var(--s7);
-  color:#fff; }
-/* ⚠️⚠️ **머리말에 제 바탕(알약)을 줍니다 — 재 보고 넣었습니다.**
-   글 덩이가 아래에 붙어 있어서 이 줄은 막의 **위쪽 38~43% 자리**에
-   앉습니다. 거기 막은 아직 0.46 밖에 안 되어서, 사진 위에서 금빛
-   13px 굵은 글씨가 **대비 1.52~1.90** 이었습니다 (한도 4.5).
-   ⚠️ 막을 통째로 짙게 하면 맞출 수는 있는데 사진이 절반 가까이
-   어두워집니다 — 이 히어로는 **사진이 주인공**이라(§5) 그 대신
-   이 줄만 알약으로 받쳤습니다.
-   ⚠️⚠️ **알파를 .80 아래로 내리지 마세요.** 사진의 제일 밝은 픽셀이
-   흰색(255)일 때까지 견주었고, .80 에서 금빛 4.57 · 복숭아 5.2 로
-   간신히 AA 를 넘깁니다. 내리면 밝은 사진에서 바로 미달입니다.
-   ⚠️⚠️ **검사(check.js)는 이 자리를 영원히 못 잽니다** — 위에 막이
-   그라디언트로 덮여 있어 대비 검사가 "잴 수 없음" 으로 건너뜁니다.
-   사진을 바꾸시면 픽셀로 재세요 (scratchpad 의 hero-aa.js). */
-.mh2-k{ display:inline-block; font-style:normal;
+   ⚠️⚠️ **이 칸의 넓이가 곧 "어두운 면" 입니다.** 검사는 사진 픽셀이
+   아니라 **선언된 바탕색의 상자**를 셉니다 — 폐업 쪽 버건디를
+   넓히면 그만큼 한도(15%)에 가까워집니다. 재 본 값 —
+
+     1440px   판 720x374 · 면 52% → 140,000px²  = 첫 화면의 10.8%
+     1024px   판 512x374 · 면 58% →  99,500px²  =        10.8%
+      390px   아래로 내려가 높이 62%            =         8.3%
+
+   ⚠️ 넓이나 히어로 높이를 올리시려면 **먼저 재세요.**
+   ⚠️⚠️ **사진으로 녹아드는 것은 ::after 한 겹**입니다. 바탕 자체를
+   그라디언트로 주면 검사가 투명으로 읽어 **어두운 면을 아예 못
+   셉니다** — 이 저장소가 그라디언트와 가짜요소로 두 번 겪은 자리라,
+   세는 쪽은 넉넉하게(솔리드 상자) 두고 꼬리만 흐립니다. */
+.mh2-tx{ position:relative; z-index:2;
+  display:flex; flex-direction:column; justify-content:center;
+  align-self:stretch; width:52%;
+  padding:var(--s7) var(--s6) var(--s7) var(--s7); }
+.mh2-st .mh2-tx{ --mh-fade:#FFFFFF; background-color:#FFFFFF; color:#29231F; }
+/* ⚠️⚠️ **딥 버건디입니다** (2026-10-15 §2 · §4-2). 이 저장소가 오래
+   "폐업은 주황이지 빨강이 아니다" 로 두었던 자리를 사장님 지시로
+   바꿨습니다 — 지킬 것은 그대로입니다: 두 판의 크기 · 무게가 같고,
+   폐업 쪽 글에서 실패 · 손실을 말하지 않습니다. 전문관 카드와
+   단추는 **그대로 주황**이고 검사가 그쪽을 계속 봅니다. */
+.mh2-cl .mh2-tx{ --mh-fade:#650B25; background-color:#650B25; color:#fff; }
+/* 사진으로 녹아드는 꼬리 — ⚠️ 글자를 덮지 않게 칸 **밖**입니다 */
+.mh2-tx::after{ content:""; position:absolute; top:0; bottom:0; left:100%;
+  width:30%; pointer-events:none;
+  background:linear-gradient(90deg, var(--mh-fade) 0%, transparent 100%); }
+
+.mh2-k{ display:block; font-style:normal;
   font-size:var(--t-cap); font-weight:700; letter-spacing:-.01em;
-  margin-bottom:var(--s4); padding:5px 12px 6px;
-  /* ⚠️⚠️ **알약(999px)으로 두지 마세요.** 높이가 33px 이라 양 끝이
-     반지름 16.5px 로 둥글게 깎이는데 글자가 12px 에서 시작해서,
-     **첫 글자가 깎인 자리(=사진)에 걸쳤습니다** — 재 보니 그 자리가
-     제일 밝은 픽셀이었습니다. 9px 이면 글자가 전부 바탕 위에 섭니다. */
-  border-radius:9px; background:rgba(40,29,23,.80); }
-.mh2-st .mh2-k{ color:var(--gold); }
-.mh2-cl .mh2-k{ color:#EFC3A6; }
-.mh2-t{ display:block; font-size:clamp(34px, 3.6vw, 56px);
-  font-weight:900; letter-spacing:-.045em; line-height:1.05;
-  text-shadow:0 2px 14px rgba(30,20,14,.34); }
-.mh2-d, .mh2-dm{ display:block; font-style:normal; margin-top:var(--s4);
-  font-size:var(--t-base); font-weight:600; line-height:1.55;
-  color:rgba(255,255,255,.93); }
-/* 폰 전용 문구는 넓은 화면에서 안 냅니다 (§5 — 같은 말을 두 번 하지
+  line-height:1.45; margin-bottom:var(--s3); }
+.mh2-st .mh2-k{ color:#65594F; }
+.mh2-cl .mh2-k{ color:rgba(255,255,255,.82); }
+
+/* 제목 아래 짧은 장식선 (§4-1 골드 · §4-2 코랄) — 시안의 붓자국
+   자리입니다. ⚠️ 가짜요소를 content:"" 로 두면 상자가 하나 생깁니다 */
+.mh2-t{ display:block; position:relative; padding-bottom:14px;
+  font-size:clamp(38px, 4vw, 64px);
+  font-weight:900; letter-spacing:-.05em; line-height:1.02; }
+.mh2-t::after{ content:""; position:absolute; left:0; bottom:0;
+  width:clamp(52px, 5.2vw, 86px); height:7px; border-radius:4px; }
+.mh2-st .mh2-t::after{ background:#F2B01E; }
+.mh2-cl .mh2-t::after{ background:#F2607A; }
+
+.mh2-d, .mh2-dm{ display:block; font-style:normal; margin-top:var(--s5);
+  font-size:var(--t-base); font-weight:600; line-height:1.55; }
+.mh2-st .mh2-d, .mh2-st .mh2-dm{ color:#4A4038; }
+.mh2-cl .mh2-d, .mh2-cl .mh2-dm{ color:rgba(255,255,255,.90); }
+/* 폰 전용 문구는 넓은 화면에서 안 냅니다 (같은 말을 두 번 하지
    않습니다). 아래 좁은 폭에서 서로 바뀝니다. */
 .mh2-dm{ display:none; }
 
 /* ── 1024px 아래 ── 두 판은 그대로 가로입니다 */
 @media (max-width:1024px){
-  .mh2-p{ min-height:clamp(320px, 38vw, 420px); }
-  .mh2-tx{ padding:var(--s7) var(--s6) var(--s6); }
+  .mh2-p{ min-height:clamp(320px, 34vw, 400px); }
+  .mh2-tx{ width:58%; }
+  .mh2-tx{ padding:var(--s6) var(--s5) var(--s6) var(--s6); }
 }
 
-/* ── 900px 아래 (폰) ── ⚠️⚠️ **여기서도 가로 2분할입니다** (§5) */
+/* ── 900px 아래 (폰) ── ⚠️⚠️ **여기서도 가로 2분할입니다** (§4-4)
+   ⚠️⚠️ **색 면이 옆이 아니라 아래로 갑니다.** 390px 에서 반쪽은
+   195px 뿐이라, 왼쪽에 색 면을 두면 사진이 보일 자리가 80px 도 안
+   남아 **사진이 통째로 뭉갭니다.** 위가 사진 · 아래가 색 면이면
+   사진의 주인공도 보이고 글도 색 위에 섭니다 (§4-4 "이미지의 주요
+   피사체가 보이도록 모바일 전용 크롭"). 찍어 보고 정했습니다. */
 @media (max-width:900px){
-  /* §5 권장 — 360px 230~260 · 390px 240~280 · 430px 260~300.
-     62vw 로 두면 360→223(하한 230) · 390→242 · 430→267 입니다. */
-  .mh2-p{ min-height:clamp(230px, 62vw, 300px); }
-  .mh2-tx{ padding:var(--s5) var(--s4) var(--s4); }
+  /* §4-4 — 두 판이 한 화면에 같이 보여야 합니다. 360px 223 ·
+     390px 242 · 430px 267 입니다. */
+  .mh2-p{ min-height:clamp(230px, 62vw, 300px); align-items:flex-end; }
+  /* ⚠️⚠️ **높이를 글 덩이보다 낮추지 마세요.** 46% 로 두었더니
+     390px 에서 "창업" 제목이 흰 면을 벗어나 **사진 위에 앉아** 거의
+     안 읽혔습니다 (찍어 보고 알았습니다 — 검사는 사진 위 글자를
+     영원히 못 잽니다). 재 본 값: 390px 에서 판 242px · 글 덩이
+     131px → 62% 라야 제목까지 색 면 위에 섭니다. */
+  .mh2-tx{ width:100%; align-self:flex-end; min-height:62%;
+    justify-content:flex-end; padding:var(--s4) var(--s4) var(--s4); }
+  /* 꼬리가 옆이 아니라 **위**로 갑니다 (아래가 색 면입니다) */
+  .mh2-tx::after{ left:0; right:0; top:auto; bottom:100%; width:auto; height:22px;
+    background:linear-gradient(0deg, var(--mh-fade) 0%, transparent 100%); }
   /* 긴 머리글은 반쪽 폭에서 석 줄이 되어 사진을 덮습니다 — 뺍니다 */
   .mh2-k{ display:none; }
-  .mh2-t{ font-size:clamp(26px, 7.4vw, 36px); letter-spacing:-.04em; }
+  .mh2-t{ font-size:clamp(26px, 7.4vw, 36px); letter-spacing:-.04em;
+    padding-bottom:10px; }
+  .mh2-t::after{ width:34px; height:5px; }
   .mh2-d{ display:none; }
   /* ⚠️ **13px 아래로 내리지 마세요** — 제일 작은 단계가 --t-cap 입니다
      (아래 네비를 11.5px 로 두었다가 전수 점검에 175건 걸린 자리). */
   .mh2-dm{ display:block; margin-top:var(--s3);
     font-size:var(--t-cap); font-weight:600; line-height:1.5; }
-  .mh2-p::after{ height:80%;
-    background:linear-gradient(180deg,
-      rgba(48,36,30,0) 0%, rgba(48,36,30,.54) 38%,
-      rgba(48,36,30,.86) 72%, rgba(48,36,30,.94) 100%); }
   /* 반쪽 폭이 더 좁아져서 가로가 많이 잘립니다 — 주인공 쪽을 남깁니다.
      ⚠️ 창업은 **나무 카운터와 작업자**가 사진 왼쪽 셋째쯤에 있어서
      값을 올리면 창문만 남습니다 (390px 에서 찍어 보고 내렸습니다). */
-  .mh2-st{ --ph-pos:26% 44%; }
-  .mh2-cl{ --ph-pos:44% 46%; }
+  .mh2-st{ --ph-pos:30% 40%; }
+  .mh2-cl{ --ph-pos:46% 42%; }
 }
 @media (max-width:420px){
   .mh2-tx{ padding:var(--s4) 12px 12px; }
@@ -4493,7 +4593,11 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    남깁니다.** 아이콘까지 한 색으로 만들면 여섯이 전부 같은 그림으로
    읽혀 "서비스의 차이를 즉시 알아볼 수 있게" (2026-10-09 §3)가
    깨집니다. 한 번 그렇게 만들었다가 찍어 보고 되돌린 자리입니다. */
-.hsv-i{ background:var(--bg-sand); }
+/* ⚠️⚠️ **2026-10-15 §6 로 되돌렸습니다.** 2026-10-13 §7 이 "베이지 ·
+   크림 계열" 이라 타일 바탕을 샌드 하나로 묶었는데, 이번 §6 이
+   "기존의 작고 흐릿한 베이지 · 브라운 단색 아이콘은 사용하지
+   않는다 · 밝은 파스텔 배경 + 선명한 컬러 아이콘" 으로 뒤집었습니다.
+   바탕은 이제 `tn-*` 이 정합니다 — 여기서 덮지 마세요. */
 .hsv b{ color:var(--ink); }
 
 /* ⚠️ 모바일 2~3열 (§7). 전에는 4열이었습니다 — 여섯이니 3열이면

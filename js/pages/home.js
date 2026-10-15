@@ -782,6 +782,12 @@ function MainBridge(){
   '</div></section>';
 }
 
+/* ⚠️⚠️ 2026-10-15 §7 — "아이콘은 블루 · 그린 · 오렌지 · 핑크로
+   구분". 묶음(`grp`)으로 고르면 **창업비와 권리금이 둘 다 "시작하기
+   전"** 이라 같은 색이 됩니다 — 그래서 도구 key 로 답니다.
+   ⚠️ 색은 §6 의 여섯 쌍을 그대로 씁니다 (새 토큰을 또 만들면 같은
+   색이 두 이름으로 삽니다). */
+var MAIN_CALC_TONE = { cost:"sv1", bep:"sv3", premium:"sv2", closecost:"sv5" };
 var MAIN_TOOL_TONE = {
   "시작하기 전":"st", "얼마를 팔아야 하나":"bl",
   "얼마가 남나":"tl", "정리할 때":"cl"
@@ -806,9 +812,10 @@ function mainCalcIn(){
   var L = MAIN_CALC.map(function(k){ return by[k]; }).filter(Boolean);
   if(!L.length) return "";
   return '<ul class="mcal-g">'+L.map(function(t){
-    var tone = MAIN_TOOL_TONE[t.grp] || "bl";
+    var tone = MAIN_CALC_TONE[t.key] || MAIN_TOOL_TONE[t.grp] || "bl";
     var art  = (typeof hasIconArt === "function" && hasIconArt(t.icon));
-    return '<li class="hv-'+tone+'"><a href="/tools/'+esc(t.key)+'">'+
+    return '<li class="'+(MAIN_CALC_TONE[t.key] ? "tn-" : "hv-")+tone+'">'+
+      '<a href="/tools/'+esc(t.key)+'">'+
       '<span class="mcal-i ia-t" aria-hidden="true">'+
         (art ? iconArt(t.icon, 44) : icon(t.icon, 28))+'</span>'+
       '<b class="mcal-n">'+esc(t.name)+'</b>'+
@@ -896,7 +903,7 @@ function mainReadIn(){
 function MainToolsInfo(){
   var a = mainCalcIn();
   if(!a) return "";            /* 계산기가 없으면 구간째 뺍니다 */
-  return '<section class="sec sec-blue mti"><div class="w">'+
+  return '<section class="sec sec-calc mti"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">TOOLS</p>'+
       /* ⚠️ 2026-10-13 §9 의 문구입니다. */
@@ -1035,7 +1042,7 @@ var MAIN_LAST_HELP = [
    var 로 적었는데 `build-pages.js` 는 `js/pages/*` 를 읽지 않아서
    **크롤러 본문에서만 구간이 조용히 빠졌습니다.** */
 function MainSteps(){
-  return '<section class="sec sec-white mstp"><div class="w">'+
+  return '<section class="sec sec-step mstp"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">HOW IT WORKS</p>'+
       /* ⚠️ 2026-10-13 §10 의 문구입니다. ⚠️ 브랜드 이름을 빼면서

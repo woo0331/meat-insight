@@ -18,12 +18,17 @@
      check.js 의 "404 가 본 사이트와 같은 색을 쓴다" 가 잡습니다. */
   :root{
     color-scheme: only light;   /* ⚠️ 자동 다크모드 반전 끄기 — css/tokens.css 와 같은 줄입니다 */
-    --navy:#123B68; --navy-dark:#092B50; --bg:#FDFBF7; --surface:#fff;
+    --navy:#382820; --navy-dark:#30241E; --bg:#FFFCF7; --surface:#fff;
     /* ⚠️ 이 화면은 라우터 밖이라 `css/tokens.css` 를 **안 읽습니다** —
        색을 바꾸면 여기도 같이 고쳐야 합니다. 2026-10-01 에 글자 세 단계를
        읽히는 값으로 내리면서 여기만 옛 값(--ink3 #7B8794, 대비 3.66)이
-       남아 있었습니다. */
-    --ink:#102F50; --ink2:#4A596A; --ink3:#5F6A76; --line:#E5EAF0;
+       남아 있었습니다.
+       ⚠️⚠️ **2026-10-13 §2 에서 또 그랬습니다.** 팔레트가 베이지 ·
+       브라운으로 통째로 바뀌었는데 여기만 **옛 블루**(--navy #123B68 ·
+       --ink #102F50)로 남아 있어서, 404 화면 하나만 다른 사이트로
+       보였습니다. 토큰을 고치실 때는 **여기 · manifest.json ·
+       index.html 의 theme-color** 를 같이 보세요. */
+    --ink:#30241E; --ink2:#584F46; --ink3:#675E55; --line:#E9DED1;
     --font:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,
            "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
   }
@@ -62,7 +67,7 @@
 </head>
 <body>
   <header class="hd">
-    <a href="/"><b><!--brand-->인수인계<!--/brand--></b><span>창업 · 폐업 전문 플랫폼</span></a>
+    <a href="/"><b><!--brand-->인수인계<!--/brand--></b><span>사장님의 다음을 함께하는 플랫폼</span></a>
   </header>
 
   <main>
@@ -76,7 +81,7 @@
       <a class="btn" href="/closure">폐업 시작하기</a>
     </div>
 
-    <h2>많이 찾으시는 것</h2>
+    <h2>바로 가기</h2>
     <ul>
       <li><a href="/providers">업체찾기</a></li>
       <li><a href="/franchise">프랜차이즈</a></li>

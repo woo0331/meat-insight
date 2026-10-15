@@ -37,15 +37,24 @@
    그게 절대 규칙 5 입니다.
    ════════════════════════════════════════════════════════════════════ */
 window.AM_HALLS = [
+  /* ⚠️⚠️ **메인에 나오는 것은 앞 여섯**입니다 (2026-10-13 §7).
+     나머지는 **지우지 않았습니다** — §14 가 "UI에서 제거하는 것과 실제
+     데이터 삭제는 구분한다" 고 적었고, 뒤에 남은 칸들은 전문관 화면과
+     `/providers` 가 그대로 받습니다 (재서 확인했습니다).
+     ⚠️ 차례를 바꾸시면 **메인에 나오는 여섯이 바뀝니다** — 지시서를
+     먼저 고치세요. `MainHalls()` 가 `slice(0,6)` 합니다. */
   { key:"startup", name:"창업 준비", lead:"새로운 시작을 위한 모든 서비스",
     tone:"start", to:"/startup", ic:"seed",
     items:[
-      { n:"창업 아이템",   ia:"bulb",      cat:"item" },
+      /* ── §7 의 여섯 ── */
       { n:"상권 · 입지",   ia:"mappin",    cat:"area" },
-      { n:"창업 자금",     ia:"money",     cat:"fund" },
-      { n:"인허가 · 행정", ia:"permit",    cat:"admin", sub:"permit" },
-      { n:"인테리어 · 시공",ia:"interior",  cat:"interior" },
+      { n:"인테리어",      ia:"interior",  cat:"interior" },
       { n:"주방 · 설비",   ia:"kitchen",   cat:"equip" },
+      { n:"인허가 · 행정", ia:"permit",    cat:"admin", sub:"permit" },
+      { n:"세무 · 회계",   ia:"tax",       cat:"admin", sub:"tax-agent" },
+      { n:"창업 자금",     ia:"money",     cat:"fund" },
+      /* ── 아래는 메인에 안 나옵니다 (전문관 화면 · /providers 가 받습니다) ── */
+      { n:"창업 아이템",   ia:"bulb",      cat:"item" },
       { n:"직원 채용",     ia:"staff",     cat:"staff" },
       { n:"창업비 계산",   ia:"calc",      to:"/tools/cost", tone:"t6" },
       { n:"상가 · 매물",   ia:"store",     cat:"store" },
@@ -57,43 +66,55 @@ window.AM_HALLS = [
   { key:"operation", name:"매장 운영", lead:"지금 더 잘되는 매장 관리 서비스",
     tone:"ops", to:"/operation", ic:"store",
     items:[
-      { n:"식자재 · 원재료",ia:"supply",    cat:"supply", sub:"ingredient" },
-      { n:"POS · 결제",   ia:"pos",       cat:"it",     sub:"pos" },
+      /* ── §7 의 여섯 ── */
       { n:"마케팅 · 홍보", ia:"marketing", cat:"marketing" },
       { n:"세무 · 회계",   ia:"tax",       cat:"admin",  sub:"tax-agent" },
-      { n:"인사 · 노무",   ia:"staff",     cat:"admin",  sub:"labor-agent" },
-      { n:"수리 · 보수",   ia:"repair",    cat:"repair" },
+      { n:"직원 · 노무",   ia:"staff",     cat:"admin",  sub:"labor-agent" },
+      { n:"매장 수리",     ia:"repair",    cat:"repair" },
+      { n:"POS · 결제",   ia:"pos",       cat:"it",     sub:"pos" },
+      /* ⚠️ `fund` 는 창업 자금과 **같은 분류**입니다 — 운영 쪽에서는
+         운전자금 · 정책자금으로 읽히라고 이름만 다르게 냅니다. 분류를
+         새로 만들면 등록된 데이터가 조용히 어긋납니다. */
+      { n:"운영 자금",     ia:"money",     cat:"fund" },
+      /* ── 아래는 메인에 안 나옵니다 ── */
+      { n:"식자재 · 원재료",ia:"supply",    cat:"supply", sub:"ingredient" },
       { n:"매출 관리",     ia:"chart",     cat:"it",     sub:"sales-mgmt" },
       { n:"보험",         ia:"shield",    cat:"admin",  sub:"insurance" },
       { n:"리모델링",      ia:"interior",  cat:"interior" },
-      { n:"위생 관리",     ia:"clean",     cat:"clean" },
-      { n:"정책 자금",     ia:"money",     cat:"fund" }
+      { n:"위생 관리",     ia:"clean",     cat:"clean" }
     ] },
 
   { key:"transfer", name:"매장 양도양수", lead:"매장 인수 · 양도부터 권리금까지",
     tone:"pass", to:"/transfer", ic:"handover",
     items:[
-      { n:"매장 인수하기",  ia:"store",    to:"/stores",  tone:"t5" },
-      { n:"내 매장 양도하기",ia:"handover", to:"/sell",    tone:"t13" },
-      { n:"권리금 계산",    ia:"calc",     to:"/tools/premium", tone:"t6" },
-      { n:"계약 · 절차",    ia:"contract", cat:"admin", sub:"legal" },
-      { n:"시설 · 장비 거래",ia:"equip",    to:"/assets",  tone:"t12" },
-      { n:"인수 점검",      ia:"permit",   to:"/transfer?t=in", tone:"t4" },
-      { n:"전문가 상담",    ia:"admin",    cat:"admin" }
+      /* ── §7 의 여섯 ── */
+      { n:"매장 인수",     ia:"store",    to:"/stores",  tone:"t5" },
+      { n:"매장 양도",     ia:"handover", to:"/sell",    tone:"t13" },
+      { n:"권리금 정보",   ia:"calc",     to:"/tools/premium", tone:"t6" },
+      { n:"계약 · 행정",   ia:"contract", cat:"admin", sub:"legal" },
+      { n:"시설 · 장비 인계",ia:"equip",   to:"/assets",  tone:"t12" },
+      { n:"양도양수 상담", ia:"admin",    cat:"admin" },
+      /* ── 아래는 메인에 안 나옵니다 ── */
+      { n:"인수 점검",      ia:"permit",   to:"/transfer?t=in", tone:"t4" }
     ] },
 
   { key:"closure", name:"폐업 · 정리", lead:"깔끔한 마무리를 위한 정리 서비스",
     tone:"close", to:"/closure", ic:"boxes",
     items:[
+      /* ── §7 의 여섯 ── */
       { n:"폐업 신고",     ia:"permit",   cat:"tax",  sub:"close-report" },
-      { n:"철거",         ia:"demolish", cat:"demolish" },
+      /* ⚠️ §7 이 둘을 **한 칸**으로 적었습니다. 가는 곳은 철거이고,
+         원상복구는 **아래에 제 칸이 그대로 있습니다** (폐업 전문관
+         화면 · /providers 에서도 걸립니다 — 재서 확인했습니다). */
+      { n:"철거 · 원상복구",ia:"demolish", cat:"demolish" },
+      { n:"시설 · 장비 처분",ia:"equip",   to:"/assets?c=asset", tone:"t12" },
+      { n:"재고 정리",     ia:"supply",   to:"/assets?c=stock", tone:"t2" },
+      { n:"세금 정산",     ia:"tax",      cat:"tax" },
+      { n:"지원제도 안내", ia:"money",    cat:"support" },
+      /* ── 아래는 메인에 안 나옵니다 ── */
       { n:"원상복구",      ia:"restore",  cat:"restore" },
-      { n:"재고 처분",     ia:"supply",   to:"/assets?c=stock", tone:"t2" },
-      { n:"장비 매각",     ia:"equip",    to:"/assets?c=asset", tone:"t12" },
-      { n:"지원금 안내",   ia:"money",    cat:"support" },
       { n:"임대차 정리",   ia:"contract", cat:"law",  sub:"lease" },
-      { n:"폐업비 계산",   ia:"calc",     to:"/tools/closecost", tone:"t6" },
-      { n:"세무 정리",     ia:"tax",      cat:"tax" }
+      { n:"폐업비 계산",   ia:"calc",     to:"/tools/closecost", tone:"t6" }
     ] }
 ];
 

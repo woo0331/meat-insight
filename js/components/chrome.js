@@ -213,6 +213,15 @@ function Header(){
       '</form>'+
       '<a class="hd-ic hd-ic-s" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
       '<span class="hd-sep" aria-hidden="true"></span>'+
+      /* ⚠️⚠️ **로그인은 설정됐을 때만 나옵니다** (2026-10-13 §3).
+         지시서가 "로그인 또는 내 계정" 을 적었는데, `/api/session` 이
+         `auth:false` 인 동안 그 단추를 내면 **눌러도 아무 일이 안
+         납니다** — §0-7(클릭해도 작동하지 않는 버튼)이고 이 저장소가
+         헤더에서 "로그인" 을 네 번 빼 온 까닭입니다.
+         그래서 **빈 칸으로 두고** `hdAuthPaint()` 가 켜졌을 때만
+         채웁니다. Vercel 에 환경변수가 들어가는 날 **코드를 한 줄도
+         안 고치고** 나타납니다 (`/my` 의 `.my-db` 와 같은 방식). */
+      '<span class="hd-auth" id="hdAuth" hidden></span>'+
       /* ⚠️ **"로그인" 이라고 적지 마세요.** 시안 §2 에는 로그인이
          있지만 지금 백엔드가 없어서 로그인이라는 기능 자체가
          없습니다 — 눌러도 로그인 화면이 없으면 그건 고장난 것으로
@@ -233,8 +242,65 @@ function Header(){
          적게 됩니다 (업체 상세의 `quoteTo({})` 로 겪은 사고). */
       '<a class="btn btn-nv hd-cta" href="/quote" data-to="/quote">'+
         '<span class="hd-cta-w">무료 </span>견적 신청'+icon("arrow",16)+'</a>'+
+      /* ⚠️⚠️ **폰 햄버거** (§3 — "모바일에서는 간결한 로고, 견적 신청
+         진입 버튼, 햄버거 메뉴를 우선 배치한다").
+         900px 아래에서는 `.gnb` 가 통째로 접혀서, 그 전까지 **매장
+         운영 · 매장 양도양수 · 계산도구 · 도움말 넷은 푸터까지
+         내려가야** 닿았습니다 (아래 네비 다섯 칸은 홈 · 창업 · 폐업 ·
+         업체찾기 · MY 라 그 넷이 없습니다). 재서 확인한 구멍입니다.
+         ⚠️ 아래 네비를 대신하는 것이 아닙니다 — 그쪽은 자주 쓰는
+         다섯, 이쪽은 **헤더 메뉴 전부**입니다. */
+      '<button class="hd-ic hd-mb" type="button" id="hdMb" aria-label="메뉴"'+
+        ' aria-expanded="false" aria-controls="hdMenu" onclick="hdMenu()">'+
+        icon("menu",22)+'</button>'+
     '</div>'+
+    HeaderDrawer()+
   '</div></header>';
+}
+
+/* ⚠️ 서랍은 **헤더 메뉴와 같은 목록**(`AM_GNB`)에서 옵니다 — 손으로
+   적으면 메뉴를 하나 늘릴 때 한쪽만 고치게 되고, 그러면 폰에서만
+   조용히 빠집니다 (이 저장소가 아이콘 표 · 랜딩 미니카드로 겪은
+   자리입니다). */
+function HeaderDrawer(){
+  return '<div class="hd-dw" id="hdMenu" hidden>'+
+    '<nav class="hd-dw-g" aria-label="전체 메뉴">'+
+      AM_GNB.map(function(m){
+        return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+
+          esc(m.name)+icon("arrow",16)+'</a>';
+      }).join("")+
+      '<a href="/my">'+esc("내 기록")+icon("arrow",16)+'</a>'+
+      '<a href="/join">'+esc("파트너 입점")+icon("arrow",16)+'</a>'+
+    '</nav>'+
+  '</div>';
+}
+
+/* 열고 닫기. ⚠️ 주소가 바뀌면 `paintGnb()` 가 닫습니다 — 안 닫으면
+   눌러서 넘어간 화면 위에 서랍이 그대로 덮여 있습니다. */
+window.hdMenu = function(open){
+  var dw = document.getElementById("hdMenu"),
+      bt = document.getElementById("hdMb");
+  if(!dw || !bt) return;
+  var on = (open === undefined) ? dw.hasAttribute("hidden") : !!open;
+  if(on) dw.removeAttribute("hidden"); else dw.setAttribute("hidden","");
+  bt.setAttribute("aria-expanded", on ? "true" : "false");
+};
+
+/* ⚠️⚠️ **로그인이 설정되기 전에는 아무것도 안 그립니다** (§0-7 ·
+   절대 규칙 2 · 5). `auth:false` 면 `hidden` 인 채로 둡니다 —
+   "준비 중" 도 적지 않습니다. */
+function hdAuthPaint(){
+  var box = document.getElementById("hdAuth");
+  if(!box || typeof window.amAuthAsk !== "function") return;
+  window.amAuthAsk().then(function(a){
+    if(!a || !a.on){ box.setAttribute("hidden",""); box.innerHTML = ""; return; }
+    box.removeAttribute("hidden");
+    box.innerHTML = a.signedIn
+      ? '<a class="hd-txt" href="/my">'+icon("user",18)+
+          '<span>'+esc("내 계정")+'</span></a>'
+      : '<a class="hd-txt" href="/my">'+icon("user",18)+
+          '<span>'+esc("로그인")+'</span></a>';
+  });
 }
 
 /* ⚠️⚠️ **헤더의 `서비스 신청` 이 보던 조건을 들고 갑니다.**
@@ -264,6 +330,18 @@ function gnbQuoteHref(){
 
 function paintGnb(){
   var p = nowPath();
+  /* ⚠️⚠️ **메인의 헤더 검색만 접습니다** (2026-10-13 §3 — "기존
+     메인페이지 상단 검색 아이콘은 제거한다. 다만 기존 검색 기능
+     자체는 삭제하지 않고 필요한 서비스 페이지에서 계속 사용할 수
+     있도록 유지한다").
+     ⚠️ **헤더에서 통째로 빼지 마세요** — 160개 화면에서 검색이
+     사라집니다. 접는 것은 `/` 한 곳뿐이고, 그래서 `check.js` 의
+     "어느 화면에서나 검색으로 가는 길이 있다" 도 메인만 빼고 봅니다. */
+  var hd = document.querySelector(".hd");
+  if(hd) hd.classList.toggle("is-home", p === "/");
+  /* 주소가 바뀌면 폰 서랍을 닫습니다 — 안 닫으면 넘어간 화면 위에
+     그대로 덮여 있습니다. */
+  if(typeof window.hdMenu === "function") window.hdMenu(false);
   /* ⚠️⚠️ **헤더 오른쪽 CTA 는 `#gnb` 밖입니다.** 2026-10-11 최종 디자인
      §2 로 `업체 입점` 자리가 `무료 견적 신청`(`/quote`)이 되면서, 조건을
      실어 주는 코드가 `#gnb` 안만 돌아 **그 단추만 조용히 빠졌습니다** —
@@ -495,6 +573,9 @@ window.mountChrome = function(){
       if(f) f.setAttribute("aria-expanded", "false");
     });
   paintChrome();
+  /* ⚠️ 로그인 칸은 한 번만 묻습니다 (`amAuthAsk()` 가 스스로 캐시합니다) —
+     화면을 옮길 때마다 `/api/session` 을 때리지 않습니다. */
+  hdAuthPaint();
 };
 
 /* 헤더 통합검색 — ⚠️ 빈 채로 보내면 `/search` 가 빈 화면입니다. */

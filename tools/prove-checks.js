@@ -85,7 +85,13 @@ const CASES = [
    /* ⚠️ 2026-10-11 — .msvc 가 전문관 구간(.mhall)으로 바뀌었습니다.
       없는 요소를 집으면 되돌리기가 **터져서** "검사가 안 잡는다" 로
       보입니다 — 이 저장소가 여덟 번 겪은 자리입니다. */
-   `document.querySelector(".mhall h2").textContent = "사장님들이 많이 찾는 서비스";`],
+   /* ⚠️ 2026-10-13 §6 — 전문관 구간 머리말이 **h1** 이 됐습니다
+      (히어로 두 판이 같은 무게라 h1 을 올릴 수 없어서입니다).
+      h2 를 집으면 null 이라 되돌리기가 터집니다 — 아홉 번째. */
+   `(document.querySelector(".mhall h1") ||
+     document.querySelector(".mhall h2") ||
+     document.querySelector("#view h1")).textContent =
+       "사장님들이 많이 찾는 서비스";`],
   /* ══ 2026-10-06 2차 지시서 ══════════════════════════════════════ */
   /* 여정 화면의 카드를 고르개로 바꾸면 걸려야 합니다 — 그렇게 되면
      여정 네 화면에서 "눌러도 아무 데도 안 가는 카드" 가 됩니다.
@@ -329,8 +335,13 @@ const CASES = [
      지금은 전문관 서비스 칸에 지어낸 수를 박아 봅니다. */
   ["지어낸 실적 숫자가 메인에 없다",
    `document.querySelector(".hsv-g b").textContent = "입점 업체 1,200곳";`],
+  /* ⚠️⚠️ **2026-10-13 §5 — 히어로에는 h1 이 없습니다.** 전에는 h1
+     글자를 바꿔 되돌렸는데, 지금 검사가 보는 것은 **두 판의 크기 ·
+     무게**입니다 (한쪽을 좁히면 그게 "덜 중요한 것" 이라는 말입니다).
+     글자를 바꾸면 아무 일도 안 나서 "검사가 안 잡는다" 로 보입니다 —
+     검사가 아니라 되돌리기가 틀린 자리, 열 번째입니다. */
   ["히어로가 창업 · 폐업 두 갈래를 같은 무게로 낸다",
-   `document.querySelector("#view h1").textContent = "창업 플랫폼";`],
+   `document.querySelector(".mh2").style.gridTemplateColumns = "2fr 1fr";`],
   /* ⚠️⚠️ 되돌리기는 **검사가 실제로 보는 것**을 망가뜨려야 합니다.
      검색 가는 길을 지울 때 입력칸만 지우고 돋보기를 남겼다가 "검사가
      안 잡는다" 로 보였던 적이 있습니다 — 검사가 아니라 되돌리기가
@@ -339,9 +350,12 @@ const CASES = [
   /* ⚠️⚠️ 되돌리기는 **검사가 실제로 보는 것**을 망가뜨려야 합니다.
      검색 가는 길은 입력칸과 돋보기 **둘**이라, 한쪽만 지우면 "검사가
      안 잡는다" 로 보입니다 — 둘 다 지웁니다 (이 저장소에서 겪었습니다). */
+  /* ⚠️⚠️ **2026-10-13 §3 으로 뒤집혔습니다** — 메인 헤더에서는 검색이
+     **없어야** 합니다. 그래서 지우는 되돌리기는 이제 아무 일도 안
+     납니다 (오히려 통과합니다). 되살려 놓아야 걸립니다 — 접는 것은
+     .is-home 한 클래스뿐입니다. */
   ["어느 화면에서나 검색으로 가는 길이 있고 메인이 두 갈래로 갈린다",
-   `document.querySelectorAll('.hd input[type=search], .hd a[href="/search"]')
-      .forEach(function(e){ e.remove(); });`],
+   `document.querySelector(".hd").classList.remove("is-home");`],
   /* ⚠️⚠️ **폐업이 빨강으로 넘어가던 그때.** 빨강은 "폐업은 나쁜 것"
      이라는 말이 됩니다 — 이 저장소가 여러 곳에 못박아 둔 자리입니다. */
   /* ⚠️ 검사가 보는 자리가 전문관 카드(.mhall-c.hall-close)의 **바탕**
@@ -452,6 +466,12 @@ const CASES = [
   ["어느 화면에서나 검색으로 가는 길이 있다",
    `document.querySelectorAll('.hd a[href="/search"], .hd .hd-s')
       .forEach(function(e){ e.remove(); });`],
+  /* ⚠️⚠️ **골드 검사에 되돌리기가 없었습니다.** 2026-10-13 §2 로
+     행동색이 브라운이 되자 그 검사가 "파랑이 아닙니다" 로 걸렸는데,
+     되돌리기가 없어서 **고친 뒤 실제로 잡는지 아무도 못 봤을**
+     자리였습니다. 금색을 실제로 칠해 봅니다. */
+  ["골드가 버튼 · 링크의 행동색을 빼앗지 않는다",
+   `document.querySelector(".btn-b").style.background = "#D5B998";`],
   ["헤더가 거의 불투명해서 밑의 글자가 안 비친다",
    `document.querySelector(".hd").style.background = "rgba(255,255,255,.5)";`],
   ["입점 화면이 업체 0곳을 0 이라고 말한다",
@@ -718,20 +738,57 @@ const AUDIT = eval("`" + src.match(/const AUDIT = `([\s\S]*?)`;\n/)[1] + "`");
 
 async function proveAudit(pg){
   let bad = 0;
+
+  /* ① 본문(푸터 제외) 어두운 면 — 구간 하나를 짙게 칠해 봅니다.
+     ⚠️⚠️ **전에는 푸터를 어둡게 해서 쟀습니다.** 2026-10-13 지시서
+     §12 로 푸터가 **이미 짙은 에스프레소**가 되었고, ① 은 푸터를
+     분자에서 빼서 재기 때문에 그 되돌리기는 **아무 일도 안 나서**
+     "검사가 안 잡는다" 로 보였을 것입니다 — 이 저장소가 여러 번
+     겪은 "되돌리기가 틀린" 자리입니다. 지울 것이 아니라 **본문을**
+     어둡게 해야 합니다. */
   for(const u of ["/search", "/tools", "/my"]){
     await pg.goto(ROOT + u, { waitUntil:"load" });
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).dark;
     await pg.evaluate(() => {
-      const f = document.querySelector("footer.ft");
-      if(f) f.style.background = "#062B51"; });
+      /* ⚠️ 구간이 없는 화면도 있어서 #view 자신을 받침으로 둡니다 */
+      const s = [...document.querySelectorAll("#view > section")];
+      const t = s.length ? s[s.length-1] : document.getElementById("view");
+      if(t) t.style.background = "#241B15";
+    });
     await pg.waitForTimeout(60);
     const after = (await pg.evaluate(AUDIT)).dark;
-    const ok = before.length === 0 && after.length > 0;
+    const ok = before.length === 0 && after.some(x => x.indexOf("본문") >= 0);
     if(!ok) bad++;
-    console.log((ok ? "✅" : "❌") + " 어두운 면이 15% 넘음 · " + u +
+    console.log((ok ? "✅" : "❌") + " 어두운 면 ① 본문 15% 넘음 · " + u +
       "  [지금 " + JSON.stringify(before) +
-      " → 푸터를 다시 어둡게 하면 " + JSON.stringify(after).slice(0,50) + "]");
+      " → 본문 구간을 짙게 하면 " + JSON.stringify(after).slice(0,60) + "]");
+  }
+
+  /* ② 첫 화면 어두운 면 — **#view 의 min-height 를 걷어냅니다.**
+     지시서 §12 의 짙은 푸터를 첫 화면에서 막아 주는 줄이 그것
+     하나이니, 그것을 지우면 이 검사가 잡아야 합니다.
+     ⚠️ 짧은 화면에서만 납니다 — /startup 같은 긴 화면은 min-height 가
+     없어도 푸터가 첫 화면에 오지 않습니다 (되돌리기가 틀릴 자리). */
+  /* ⚠️ compare 화면은 **안 씁니다** — 문서가 1,949px 이라 min-height 가
+     없어도 푸터가 첫 화면에 안 옵니다. 되돌리기가 헛돌면 "검사가 안
+     잡는다" 로 보입니다 (검사가 아니라 되돌리기가 틀린 자리). 이
+     검사가 지키는 것은 **제일 짧은 화면**이라 /search 가 맞습니다. */
+  for(const u of ["/search"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).dark;
+    await pg.evaluate(() => {
+      const v = document.getElementById("view");
+      if(v) v.style.minHeight = "0px";
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).dark;
+    const ok = before.length === 0 && after.some(x => x.indexOf("첫 화면") >= 0);
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 어두운 면 ② 첫 화면 15% 넘음 · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → min-height 를 떼면 " + JSON.stringify(after).slice(0,60) + "]");
   }
 
   /* 이웃한 두 구간이 붙어 보임 — 둘째 구간을 첫째와 같은 색으로

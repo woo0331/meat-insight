@@ -68,9 +68,12 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
    ⚠️ 투명도는 .96 까지입니다. 더 투명하게 두면 `backdrop-filter` 가
    뒤를 흐릴 뿐 지우지 않아서, 밑으로 지나가는 글자가 메뉴와 겹쳐
    읽힙니다 — 한 번 겪었습니다. */
+/* ⚠️ 2026-10-13 §3 — 헤더 배경은 **아이보리 · 크림 화이트**입니다
+   (전에는 순백 96%). 글자는 딥 브라운(`--ink` 계열)이고 견적 단추만
+   에스프레소로 채웁니다. */
 .hd{ position:sticky; top:0; z-index:50;
-  background:rgba(255,255,255,.96); backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--line-soft); }
+  background:rgba(255,252,247,.96); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line); }
 .sc .hd{ box-shadow:0 1px 0 var(--line), 0 6px 20px -14px rgba(15,27,45,.35); }
 .hd-in{ display:flex; align-items:center; gap:var(--s6); height:var(--hdr-h); }
 
@@ -567,10 +570,10 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
    전부 같은 색**으로 섭니다 (찍어 보고 알았습니다). 기본값은 쓰는
    자리에 `var(--ia-1, …)` 로 둡니다. */
 .ia{ display:block; flex:0 0 auto; }
-.ia .a1{  fill:var(--ia-1, #1464F4); }
-.ia .a2{  fill:var(--ia-2, #D6E6FF); }
+.ia .a1{  fill:var(--ia-1, #806047); }
+.ia .a2{  fill:var(--ia-2, #EDE0CF); }
 .ia .aw{  fill:#fff; }
-.ia .a1o{ fill:none; stroke:var(--ia-1, #1464F4); stroke-width:2.8; }
+.ia .a1o{ fill:none; stroke:var(--ia-1, #806047); stroke-width:2.8; }
 .ia .awo{ fill:none; stroke:#fff; stroke-width:2.6; }
 /* 아이콘이 앉는 원판 — 크기 · 그림자 · 바탕 모양이 여덟 장 모두
    같아야 합니다 (지시서 §3 "동일한 크기 · 스타일 · 그림자 · 배경"). */
@@ -644,3 +647,105 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
   /* 운영 묶음 — 앞 둘만 두고 나머지를 접습니다 (`fld-x`) */
   .opsv-g.is-fold > .fld-x{ display:none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   헤더 — 2026-10-13 §3
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ⚠️⚠️ **메인에서만 검색을 접습니다** (§3). 헤더에서 통째로 빼면
+   160개 화면에서 검색이 사라집니다 — `paintGnb()` 가 `/` 일 때만
+   `.is-home` 을 붙입니다. */
+.hd.is-home .hd-s, .hd.is-home .hd-ic-s{ display:none; }
+/* 검색이 접히면 구분선도 같이 접습니다 (혼자 떠 있는 선이 됩니다) */
+.hd.is-home .hd-sep{ display:none; }
+
+/* 로그인 칸 — 켜지기 전에는 `hidden` 이라 **한 픽셀도 안 보입니다** */
+.hd-auth{ display:inline-flex; align-items:center; }
+.hd-auth[hidden]{ display:none; }
+
+/* ── 폰 햄버거 (§3) ───────────────────────────────────────────── */
+/* 넓은 화면에서는 `.gnb` 가 그대로 보이니 접습니다 */
+.hd-mb{ display:none; border:0; background:none; cursor:pointer; }
+.hd-dw{ display:none; }
+
+@media (max-width:900px){
+  /* ⚠️ `.gnb` 가 이 폭에서 통째로 접힙니다 — 그 자리를 서랍이 받습니다 */
+  .hd-mb{ display:inline-flex; }
+  .hd-dw{ display:block; position:absolute; left:0; right:0; top:100%;
+    background:var(--bg-cream); border-bottom:1px solid var(--line);
+    box-shadow:0 12px 24px -16px rgba(48,36,30,.45); }
+  .hd-dw[hidden]{ display:none; }
+  .hd-dw-g{ display:grid; grid-template-columns:1fr 1fr;
+    gap:0; padding:var(--s3) var(--s4) var(--s5); }
+  /* ⚠️ 누름은 **높이 40px 이상**입니다 (`--tap` 은 48px). `padding`
+     만으로 만들면 짧은 이름에서 다시 낮아집니다. */
+  .hd-dw-g a{ display:flex; align-items:center; justify-content:space-between;
+    gap:var(--s2); min-height:var(--tap); padding:0 var(--s3);
+    font-size:var(--t-sm); font-weight:700; color:var(--ink);
+    border-bottom:1px solid var(--line-soft); }
+  .hd-dw-g a svg{ flex:0 0 auto; color:var(--ink3); }
+  .hd-dw-g a:hover{ color:var(--blue-600); }
+  /* 헤더가 `position:sticky` 라 서랍이 그 안에서 떠야 합니다 */
+  .hd{ position:sticky; }
+  .hd .w-wide{ position:relative; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   푸터 — 짙은 에스프레소 (2026-10-13 §12)
+   ══════════════════════════════════════════════════════════════════
+   §12 — "푸터 배경은 에스프레소 브라운 #30241E. 텍스트는 밝은 아이보리."
+
+   ⚠️⚠️ **이 저장소는 한 번 반대로 갔던 자리입니다.** 2026-10-01 에
+   푸터가 짙은 남색이었는데 높이가 547px 이라 **짧은 화면에서는 그
+   하나가 화면의 절반**이었습니다 (`/search` 43.9% · `/tools` 30.7% ·
+   `/my` 27.6%). 그래서 밝게 바꿨고, 지금 지시서가 다시 짙게 하라고
+   적었습니다.
+   ⚠️ **그때와 다른 점**은 10-12 에 **좁은 폭에서 푸터를 접어 둔 것**
+   입니다 (1,291 → 721px). 그래도 어두운 면은 늘어나니, 바꾼 뒤
+   화면마다 다시 재서 숫자로 적어 두었습니다 — 아래 절을 보세요.
+   ⚠️ 되돌리시려면 이 블록만 지우면 `--bg-foot` 를 밝은 값으로 되돌릴
+   때 그대로 밝아집니다.
+
+   ⚠️⚠️ **흐린 글자를 쓰지 마세요.** 짙은 바탕에서는 `--ink2` · `--ink3`
+   가 **거의 안 보입니다** (어두운 바탕용이 아닙니다). 어두운 면 위
+   글자는 `--on-dark` 계열입니다 — 밝은 푸터 시절 규칙을 그대로 두면
+   대비 1.x 가 됩니다. */
+/* ⚠️⚠️ **선택자를 위와 똑같이 적습니다.** 처음에 `.ft a`(0,1,1) 로
+   적었는데 원래 규칙이 `.ft-col a`(0,2,0) 라 **이기지 못했고**, 재
+   보니 푸터 링크 대비가 **4.33** 으로 AA 미달이었습니다 — 이 저장소가
+   `.sec-hd p` ↔ `.eyebrow`, `.read li` ↔ `.rd-sum ul` 로 겪은 특정도
+   함정입니다. 화면으로는 "대충 밝아" 보였고 **재서** 알았습니다. */
+.ft{ color:rgba(255,252,247,.86); border-top:0; }
+.ft-col a{ color:rgba(255,252,247,.86); }
+.ft-b p{ color:rgba(255,252,247,.78); }
+.ft-biz, .ft-role{ color:rgba(255,252,247,.78); }
+/* 칸 머리말 — 밝은 아이보리 (남색은 짙은 바탕에서 안 보입니다) */
+.ft-col h4, .ft-fold{ color:#FFFCF7; }
+.ft-col a:hover, .ft-tail a:hover{ color:#FFFFFF; }
+.ft-fold svg{ color:rgba(255,252,247,.66); }
+.ft-tail a{ color:rgba(255,252,247,.82); }
+/* 선 — 바탕이 짙어서 밝은 쪽으로 뒤집습니다 */
+.ft-role, .ft-tail{ border-color:rgba(255,252,247,.16); }
+.ft-col a{ border-color:rgba(255,252,247,.10); }
+/* 로고 — 짙은 바탕 위에서는 밝은 글자입니다.
+   ⚠️ 클래스가 `.lg-ft` 이고 안쪽이 `b`(이름) · `i`(서브문구)입니다 —
+   `.lg-t` 는 **헤더 쪽**(`.hd-lg-t`)이라 여기에 적으면 아무 일도 안
+   납니다. 처음에 그렇게 적었고, 찍어 보니 푸터 로고가 거의 안
+   보였습니다. */
+.ft .lg-ft b{ color:#FFFCF7; }
+.ft .lg-ft i, .ft .lg span{ color:rgba(255,252,247,.68); }
+/* 입점 단추 — 짙은 바탕 위라 **밝은 면 + 짙은 글자**로 뒤집습니다
+   (남색 채움은 바탕에 묻힙니다) */
+.ft .btn-nv{ background:#FFFCF7; color:var(--ink); border-color:#FFFCF7; }
+.ft .btn-nv:hover{ background:#FFFFFF; color:var(--ink); }
+
+/* ⚠️⚠️ 짧은 화면에서 푸터가 **첫 화면으로 올라오지 않게** 합니다.
+   재 보고 넣은 줄입니다 — 푸터를 짙게 바꾸자 `/search` 첫 화면의
+   어두운 면이 **20.3 ~ 32.6%** 였습니다 (다른 화면은 전부 5.2% 아래).
+   2026-10-01 에 푸터를 밝게 바꾼 까닭이 바로 이것이었고(짧은 화면에서
+   푸터 하나가 화면의 절반), 지시서 §12 가 다시 짙게 하라고 적었으니
+   **푸터가 첫 화면에 안 올라오게** 막는 쪽으로 풀었습니다.
+   ⚠️ `--hdr-h` 를 빼는 것은 헤더가 sticky 라 흐름에서 자리를 차지하기
+   때문입니다 — 안 빼면 본문이 한 화면보다 길어져 짧은 화면마다
+   빈 자리가 생깁니다. */
+#view{ min-height:calc(100vh - var(--hdr-h)); }

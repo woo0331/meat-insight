@@ -110,8 +110,21 @@
    ⚠️ `--bg-ivory2` 도 같이 바꿉니다 — 그래야 **구간 바탕**까지
    쪽 색을 띱니다 (§6 "창업 로드맵은 블루 계열 · 폐업 로드맵은
    오렌지 계열"). 이웃 바탕과 ΔE 를 재서 정했습니다 (최저 3.39). */
+/* ⚠️⚠️ **창업 쪽도 --blue 를 다시 정의해야 합니다** (2026-10-13 §13).
+   전에는 --blue 가 **브랜드 블루**였고 창업이 그 기본값을 그대로 쓰면
+   맞았습니다. 그런데 §2 로 팔레트가 베이지 · 브라운이 되면서
+   --blue 가 **브라운(#806047)** 이 됐습니다 — 그날부터 창업 속화면이
+   통째로 브라운으로 섰습니다 (폐업만 주황이라 두 쪽이 서로 다른
+   기준으로 서 있었습니다. 전문관 카드에서도 같은 자리를 겪었습니다).
+   ⚠️ 규칙을 수십 개 고치지 마세요 — 이 저장소의 강조색은 거의 전부
+   --blue 를 거칩니다. 변수 다섯만 바꾸면 아이콘 타일 · 칩 · 단추 ·
+   머리말 · 포커스 테두리가 한꺼번에 따라옵니다. */
 .side-start{
-  --blue-50:  var(--blue-soft);
+  --blue:     var(--start-dark);
+  --blue-600: var(--start-deep);
+  --blue-400: var(--start);
+  --blue-50:  var(--start-soft);
+  --blue-100: #D7E2EC;
   --bg-ivory2: var(--bg-sky);
 }
 .side-close{
@@ -130,13 +143,22 @@
 /* ⚠️ 속화면 머리가 밋밋한 흰 판이면 랜딩과 **다른 사이트**로 읽힙니다.
    랜딩 히어로와 같은 식으로 한쪽에만 옅게 번지게 둡니다 — 면으로
    칠하지 않습니다 (§2 면적 비율). */
+/* ⚠️⚠️ **값을 여기 직접 적지 마세요.** 전에는 rgba(20,100,244) ·
+   rgba(255,103,43) 로 **옛 팔레트의 하드코딩**이 남아 있었습니다 —
+   §2 로 토큰을 전부 갈았는데 이 두 줄만 옛 파랑 · 옛 주황으로
+   번지고 있었습니다 (이 저장소가 금빛에서 세 자리를 놓쳤던 그
+   자리입니다). 토큰의 rgb 채널을 따로 들고 씁니다. */
+.side-start{ --pgh-tint: 72,105,135; }    /* = --start  #486987 */
+.side-close{ --pgh-tint: 173,99,63; }     /* = --close  #AD633F */
 .side-start .pgh{
   background:
-    radial-gradient(60% 120% at 0% 0%, rgba(20,100,244,.14) 0%, rgba(20,100,244,0) 72%),
-    linear-gradient(180deg, #FFFFFF 0%, var(--blue-soft) 100%); }
+    radial-gradient(60% 120% at 0% 0%,
+      rgba(var(--pgh-tint),.16) 0%, rgba(var(--pgh-tint),0) 72%),
+    linear-gradient(180deg, #FFFFFF 0%, var(--start-soft) 100%); }
 .side-close .pgh{
   background:
-    radial-gradient(60% 120% at 0% 0%, rgba(255,103,43,.16) 0%, rgba(255,103,43,0) 72%),
+    radial-gradient(60% 120% at 0% 0%,
+      rgba(var(--pgh-tint),.18) 0%, rgba(var(--pgh-tint),0) 72%),
     linear-gradient(180deg, #FFFFFF 0%, var(--close-soft) 100%); }
 .pgh-tight{ padding:var(--s9) 0 var(--s7); }
 
@@ -2177,12 +2199,19 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   border-radius:999px; }
 .mbr-arw::after{ content:""; position:absolute; right:0; top:50%;
   margin-top:-7px; border:7px solid transparent; border-left-width:11px; }
+/* ⚠️⚠️ **옛 팔레트 하드코딩이 남아 있던 자리입니다** (2026-10-13 §13).
+   rgba(8,168,117) 은 **옛 창업 초록**(#08A875), rgba(243,107,56) 은
+   **옛 폐업 주황**(#F36B38) 입니다 — §2 로 토큰을 전부 갈았는데 이
+   네 줄만 옛 색으로 번지고 있었습니다. 지금 값은 --start(#486987) ·
+   --close(#AD633F) 의 채널입니다.
+   ⚠️ rgba() 안에는 var() 로 색을 통째로 못 넣습니다 — 바꾸실 때는
+   토큰과 **같이** 고치세요. */
 .mbr-arw-in::before{ background:linear-gradient(90deg,
-  rgba(243,107,56,.16), var(--close)); }
+  rgba(173,99,63,.16), var(--close)); }
 .mbr-arw-in::after{ border-left-color:var(--close); }
 .mbr-arw-out::before{ background:linear-gradient(90deg,
-  var(--start), rgba(8,168,117,.16)); }
-.mbr-arw-out::after{ border-left-color:rgba(8,168,117,.22); }
+  var(--start), rgba(72,105,135,.16)); }
+.mbr-arw-out::after{ border-left-color:rgba(72,105,135,.22); }
 
 /* ── ⑪ 도구 ──────────────────────────────────────────────────────── */
 .mt-g{ display:grid; gap:var(--s4); grid-template-columns:repeat(3,1fr); }
@@ -2301,11 +2330,11 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   .mbr-arw::after{ right:50%; top:auto; bottom:0; margin:0 -7px 0 0;
     border:7px solid transparent; border-top-width:11px; }
   .mbr-arw-in::after{ border-top-color:var(--close); border-left-color:transparent; }
-  .mbr-arw-out::after{ border-top-color:rgba(8,168,117,.22); border-left-color:transparent; }
+  .mbr-arw-out::after{ border-top-color:rgba(72,105,135,.22); border-left-color:transparent; }
   .mbr-arw-in::before{ background:linear-gradient(180deg,
-    rgba(243,107,56,.16), var(--close)); }
+    rgba(173,99,63,.16), var(--close)); }
   .mbr-arw-out::before{ background:linear-gradient(180deg,
-    var(--start), rgba(8,168,117,.16)); }
+    var(--start), rgba(72,105,135,.16)); }
   .hp-g, .hr-g, .mt-g{ grid-template-columns:repeat(2,1fr); }
   .mjn-c{ grid-template-columns:1fr; }
 }
@@ -4029,9 +4058,16 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 
 /* 전문관 네 색 — 면에만 씁니다 (글자는 흰색이라 짙은 쪽을 깔아야
    AA 를 넘깁니다) */
-.hall-start{ --hall-ink:var(--blue-600);
-  background:linear-gradient(145deg,var(--blue) 0%,var(--start-deep) 100%);
-  color:var(--blue); }
+/* ⚠️⚠️ **창업 전문관은 --start 계열입니다 (--blue 가 아닙니다).**
+   2026-10-13 §2 로 팔레트가 베이지 · 브라운이 되면서 --blue 가
+   **브라운(#806047)** 이 됐습니다 — 전에는 그게 브랜드 블루라
+   여기 그대로 써도 맞았는데, 그날 이후로는 창업 카드가 **브라운**
+   으로 칠해지고 있었습니다 (검사가 "창업 전문관이 파랑이 아닙니다
+   rgb(128,96,71)" 로 잡았습니다). 창업 = 블루는 지시서가 여러 곳에
+   못박은 규칙이라 창업 토큰으로 되돌립니다. */
+.hall-start{ --hall-ink:var(--start-dark);
+  background:linear-gradient(145deg,var(--start) 0%,var(--start-deep) 100%);
+  color:var(--start); }
 /* ⚠️⚠️ **첫 멈춤에 옅은 쪽을 두지 마세요.** 카드 왼쪽 위가 제일
    밝은데 **제목이 거기 앉습니다** — 재 보니 운영 4.13 · 폐업 2.91 로
    둘 다 AA(4.5) 미달이었습니다 (`--ops` · `--close` 는 이 문서가
@@ -4049,7 +4085,7 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mhall-c.hall-start, .mhall-c.hall-ops,
 .mhall-c.hall-pass,  .mhall-c.hall-close{ color:#fff; }
 /* 머리말 속 전문관 이름 — 면이 아니라 **글자**라 짙은 단계입니다 */
-.hsv-hd b.hall-start{ background:none; color:var(--blue-600); }
+.hsv-hd b.hall-start{ background:none; color:var(--start-dark); }
 .hsv-hd b.hall-ops{   background:none; color:var(--ops-dark); }
 .hsv-hd b.hall-pass{  background:none; color:var(--pass-dark); }
 .hsv-hd b.hall-close{ background:none; color:var(--close-deep); }
@@ -4220,21 +4256,27 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mcal-g{ display:grid; grid-template-columns:repeat(4, 1fr); gap:var(--s4);
   margin:var(--s8) 0 0; padding:0; list-style:none; }
 .mcal-g > li{ min-width:0; }
+/* ⚠️ **높이를 내용이 정하게 둡니다** (2026-10-13 §9 — 카드 높이를
+   줄여 균형을 맞춥니다). 전에는 min-height 188px 이라 아이콘 64px +
+   두 줄을 넣고도 **28px 이 늘 빈 자리**였습니다 — 재서 156 으로
+   내렸습니다 (아이콘 56 + 제목 + 설명 두 줄 + 패딩이 꽉 찹니다).
+   ⚠️ 더 내리지 마세요 — 오른쪽 아래 이동 표시(34px)가 설명 줄과
+   겹칩니다. 그래서 .mcal-o 가 오른쪽을 비워 둡니다. */
 .mcal-g > li > a{ position:relative; display:grid; gap:6px; align-content:start;
-  min-height:188px; padding:var(--s6); border-radius:var(--r-xl);
+  min-height:156px; padding:var(--s5); border-radius:var(--r-xl);
   background:var(--surface); border:1px solid var(--line);
   box-shadow:var(--shadow-soft); color:var(--ink); text-decoration:none;
   transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
 .mcal-g > li > a:hover{ transform:translateY(-3px);
   border-color:var(--ic-ink, var(--blue-600)); box-shadow:var(--shadow-float); }
 .mcal-i{ display:inline-flex; align-items:center; justify-content:center;
-  width:64px; height:64px; border-radius:18px; margin-bottom:4px;
+  width:56px; height:56px; border-radius:16px; margin-bottom:2px;
   background:var(--ic-bg, var(--blue-50)); color:var(--ic-ink, var(--blue-600)); }
 .mcal-n{ font-size:var(--t-md); font-weight:800; color:var(--navy); }
 .mcal-o{ font-style:normal; font-size:var(--t-sm); color:var(--ink2);
-  line-height:1.6; }
+  line-height:1.6; padding-right:42px; }
 /* 오른쪽 아래 이동 표시 (시안) */
-.mcal-go{ position:absolute; right:var(--s5); bottom:var(--s5);
+.mcal-go{ position:absolute; right:var(--s4); bottom:var(--s4);
   display:inline-flex; align-items:center; justify-content:center;
   width:34px; height:34px; border-radius:50%;
   background:var(--ic-bg, var(--blue-50)); color:var(--ic-ink, var(--blue-600)); }
@@ -4289,8 +4331,15 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 @media (max-width:560px){
   .mcal-g{ gap:var(--s3); }
   .mcal-g > li > a{ min-height:0; padding:var(--s5); }
-  .mcal-i{ width:54px; height:54px; border-radius:15px; }
-  .mcal-go{ right:var(--s4); bottom:var(--s4); width:30px; height:30px; }
+  .mcal-i{ width:50px; height:50px; border-radius:14px; }
+  /* ⚠️⚠️ **좁은 폭에서는 이동 표시를 뺍니다.** 칸이 좁아지면 그
+     표시를 피하려고 비워 둔 42px 이 설명을 **세 줄로** 밀어서, 카드가
+     오히려 164 → 185px 로 **커졌습니다** (재서 알았습니다 — §9 가
+     줄이라고 한 자리입니다). 그 동그라미는 **표시이지 따로 누르는
+     단추가 아니고**(카드 전체가 링크입니다) 폰에서는 누를 일도
+     없습니다. 뺄 때 비워 둔 자리도 같이 돌려줍니다. */
+  .mcal-go{ display:none; }
+  .mcal-o{ padding-right:0; }
   .mstp-g{ gap:var(--s3); }
   .mstp-g > li{ padding:var(--s5); }
   /* ⚠️ 폰에서는 화살표를 끕니다 — 칸 사이가 좁아 글자에 붙습니다 */
@@ -4355,9 +4404,27 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .mh2-tx{ position:relative; z-index:2; display:block;
   width:100%; padding:var(--s8) var(--s7) var(--s7);
   color:#fff; }
-.mh2-k{ display:block; font-style:normal;
+/* ⚠️⚠️ **머리말에 제 바탕(알약)을 줍니다 — 재 보고 넣었습니다.**
+   글 덩이가 아래에 붙어 있어서 이 줄은 막의 **위쪽 38~43% 자리**에
+   앉습니다. 거기 막은 아직 0.46 밖에 안 되어서, 사진 위에서 금빛
+   13px 굵은 글씨가 **대비 1.52~1.90** 이었습니다 (한도 4.5).
+   ⚠️ 막을 통째로 짙게 하면 맞출 수는 있는데 사진이 절반 가까이
+   어두워집니다 — 이 히어로는 **사진이 주인공**이라(§5) 그 대신
+   이 줄만 알약으로 받쳤습니다.
+   ⚠️⚠️ **알파를 .80 아래로 내리지 마세요.** 사진의 제일 밝은 픽셀이
+   흰색(255)일 때까지 견주었고, .80 에서 금빛 4.57 · 복숭아 5.2 로
+   간신히 AA 를 넘깁니다. 내리면 밝은 사진에서 바로 미달입니다.
+   ⚠️⚠️ **검사(check.js)는 이 자리를 영원히 못 잽니다** — 위에 막이
+   그라디언트로 덮여 있어 대비 검사가 "잴 수 없음" 으로 건너뜁니다.
+   사진을 바꾸시면 픽셀로 재세요 (scratchpad 의 hero-aa.js). */
+.mh2-k{ display:inline-block; font-style:normal;
   font-size:var(--t-cap); font-weight:700; letter-spacing:-.01em;
-  margin-bottom:var(--s3); }
+  margin-bottom:var(--s4); padding:5px 12px 6px;
+  /* ⚠️⚠️ **알약(999px)으로 두지 마세요.** 높이가 33px 이라 양 끝이
+     반지름 16.5px 로 둥글게 깎이는데 글자가 12px 에서 시작해서,
+     **첫 글자가 깎인 자리(=사진)에 걸쳤습니다** — 재 보니 그 자리가
+     제일 밝은 픽셀이었습니다. 9px 이면 글자가 전부 바탕 위에 섭니다. */
+  border-radius:9px; background:rgba(40,29,23,.80); }
 .mh2-st .mh2-k{ color:var(--gold); }
 .mh2-cl .mh2-k{ color:#EFC3A6; }
 .mh2-t{ display:block; font-size:clamp(34px, 3.6vw, 56px);
@@ -4404,3 +4471,33 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   .mh2-tx{ padding:var(--s4) 12px 12px; }
   .mh2-t{ letter-spacing:-.05em; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   전문관 대표 서비스 — 2026-10-13 §7
+   ══════════════════════════════════════════════════════════════════
+   §7 — "베이지 · 크림 계열 배경 · 딥 브라운 텍스트 · 밝고 직관적인
+   아이콘 · 카드 높이와 간격 통일 · PC 6열 · 모바일 2~3열."
+
+   ⚠️⚠️ **타일 바탕을 분류색으로 알록달록하게 두지 않습니다.** §1 이
+   "전문관 포인트 컬러는 전문관 카드의 오버레이와 선택 표시 등에만
+   사용하고 전체 사이트의 기본 색상은 베이지 · 브라운으로 통일한다"
+   고 적었습니다 — 바탕은 샌드 하나로 묶고, **아이콘 색은 분류별로
+   남깁니다.** 아이콘까지 한 색으로 만들면 여섯이 전부 같은 그림으로
+   읽혀 "서비스의 차이를 즉시 알아볼 수 있게" (2026-10-09 §3)가
+   깨집니다. 한 번 그렇게 만들었다가 찍어 보고 되돌린 자리입니다. */
+.hsv-i{ background:var(--bg-sand); }
+.hsv b{ color:var(--ink); }
+
+/* ⚠️ 모바일 2~3열 (§7). 전에는 4열이었습니다 — 여섯이니 3열이면
+   **두 줄로 딱 떨어집니다.** ⚠️ 2열로 내리면 타일이 커져서 이 구간만
+   한 화면을 더 먹습니다 (§6 — 메인이 길어지지 않도록). */
+@media (max-width:640px){
+  .hsv-g{ grid-template-columns:repeat(3,1fr); gap:var(--s4) 6px; }
+}
+
+/* 전체 서비스 보기 — §7 의 마지막 줄 */
+.hsv-more{ margin:var(--s5) 0 0; text-align:center; }
+.hsv-more a{ display:inline-flex; align-items:center; gap:6px;
+  min-height:var(--tap); padding:0 var(--s5);
+  font-size:var(--t-sm); font-weight:800; color:var(--blue-600); }
+.hsv-more a:hover{ color:var(--ink); }

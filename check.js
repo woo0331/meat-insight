@@ -274,6 +274,26 @@ const AUDIT = `(() => {
       const cs = getComputedStyle(n);
       if(cs.backgroundImage && cs.backgroundImage !== "none") return null;
       let c = rgb(cs.backgroundColor);
+      /* ⚠️⚠️ **덮는 가짜요소에 그라디언트가 있으면 잴 수 없습니다.**
+         2026-10-13 히어로는 사진 위에 글이 앉고, 짙게 덮는 막이
+         .mh2-p 의 ::after 에 그라디언트로 있습니다. 판 자신에게는
+         사진이 없을 때를 위한 **밝은 바탕색**이 있어서, 아래 가짜요소
+         읽기가 c[3] < .999 일 때만 돌다 보니 여기서 그 밝은 색을
+         그대로 집었습니다 — 흰 글자가 "하늘색 바탕 위" 로 읽혀 대비
+         **1.61** 이 나왔습니다. 전부 오탐이고, 진짜 사고가 그 더미에
+         묻힙니다 (그라디언트 · 히어로 ::before 로 두 번 겪은 자리).
+         ⚠️ 바로 윗줄이 **자기 바탕 이미지**에 대해 이미 이렇게 하고
+         있습니다 — 가짜요소만 빠져 있었습니다.
+         ⚠️⚠️ 그래서 **사진 위 글자는 검사가 영원히 못 잽니다** —
+         찍어서 픽셀로 재세요 (CLAUDE.md 가 적어 둔 그대로입니다). */
+      for(const pe of ["::before", "::after"]){
+        const ps = getComputedStyle(n, pe);
+        if(ps.content === "none") continue;
+        if(!ps.backgroundImage || ps.backgroundImage === "none") continue;
+        const box = n.getBoundingClientRect();
+        const pw = parseFloat(ps.width), ph = parseFloat(ps.height);
+        if(pw >= box.width * 0.8 && ph >= box.height * 0.6) return null;
+      }
       /* ⚠️⚠️ **가짜요소에 칠한 바탕도 읽습니다.** 히어로 왼쪽 판의
          짙은 남색은 대각선 때문에 판 자신이 아니라 ::before 에
          있습니다 — 안 읽으면 그 위의 **흰 글자가 "흰 바탕" 위로**
@@ -543,7 +563,28 @@ const AUDIT = `(() => {
       return lum(c) < 0.09;
     };
     const dk = e => dk1(e) || dk1(e, "::before") || dk1(e, "::after");
-    let area = 0; const seen = [], big = [];
+    /* ⚠️⚠️ **가짜요소는 제 크기만큼만 셉니다.** 안 그러면 글머리
+       점(6x6)이 300x116 짜리 줄을 통째로 "어두운 면" 으로 만듭니다 —
+       정보 글 화면이 첫 화면 28% 로 잡혔고, 점 세 개가 범인이었습니다.
+       이 저장소가 **대비 검사**에서 똑같이 겪고(180건) 거기는 "덮는
+       크기일 때만" 으로 고쳐 두었는데, 어두운 면 검사만 그 규칙이
+       빠져 있었습니다.
+       ⚠️ 히어로처럼 **판을 덮는** 가짜요소는 그대로 다 셉니다 (크기가
+       판만 하니까요) — 2026-10-04 에 그것 때문에 넣은 규칙이라
+       빼면 안 됩니다. */
+    const dkArea = (e, rect) => {
+      if(dk1(e)) return rect.width * rect.height;
+      for(const pe of ["::before", "::after"]){
+        if(!dk1(e, pe)) continue;
+        const ps = getComputedStyle(e, pe);
+        const pw = parseFloat(ps.width), ph = parseFloat(ps.height);
+        /* auto 면 크기를 알 수 없으니 칸 전체로 봅니다 (안전한 쪽) */
+        if(!isFinite(pw) || !isFinite(ph)) return rect.width * rect.height;
+        return Math.min(pw, rect.width) * Math.min(ph, rect.height);
+      }
+      return 0;
+    };
+    let area = 0, ftArea = 0; const seen = [], big = [];
     document.querySelectorAll("body *").forEach(e => {
       const cs = getComputedStyle(e);
       if(cs.display === "none" || cs.visibility === "hidden") return;
@@ -552,17 +593,69 @@ const AUDIT = `(() => {
       for(const q of seen) if(q.contains(e)) return;
       seen.push(e);
       const r = e.getBoundingClientRect();
-      area += r.width * r.height;
-      big.push([r.width * r.height,
-        (e.className || e.tagName).toString().split(" ")[0]]);
+      const ar = dkArea(e, r);
+      if(!ar) return;
+      area += ar;
+      /* ⚠️ 푸터 안에 있는 것을 **따로 쌓습니다** — ① 에서 분모가 아니라
+         분자에서 뺄 것이기 때문입니다 (푸터도 문서의 한 부분이고,
+         빼는 것은 "어두운 면" 이지 "높이" 가 아닙니다). */
+      const inFt = !!e.closest(".ft");
+      if(inFt) ftArea += ar;
+      big.push([ar, (e.className || e.tagName).toString().split(" ")[0], inFt]);
     });
     const total = W * document.documentElement.scrollHeight;
-    const pct = total ? area / total * 100 : 0;
+    /* ⚠️⚠️ **2026-10-13 — 재는 자리가 둘이 됐습니다.** 지시서 §12 가
+       푸터를 다시 **짙은 에스프레소(#30241E)** 로 두라고 적었습니다.
+       문서 전으로 재면 짧은 화면이 36~49% 가 되는데(재 봤습니다),
+       그것은 **지시대로 넣었기 때문**이지 사고가 아닙니다. 그렇다고
+       한도를 50% 로 올리면 **본문에 어두운 면이 기어들어와도 아무도
+       안 보는** 것이 됩니다 — 그래서 한도는 **둘 다 15% 그대로** 두고
+       재는 자리를 갈랐습니다.
+
+         ① **본문**(푸터 제외) · 문서 전으로  — 재 보니 제일 높은 것 2.0%
+         ② **첫 화면**(푸터 포함 · fixed 포함) · 한 장  — 제일 높은 것 5.2%
+
+       ⚠️⚠️ ② 가 2026-10-01 사고를 막는 짜짜한 자물쇠입니다 — 그때
+       사장님이 보시고 물으신 것은 "문서의 몇 퍼센트" 가 아니라
+       **화면이 어둡다**는 것이었습니다. 그래서 §12 를 넣으면서
+       #view 에 min-height 를 주어 **푸터가 첫 화면에 안 올라오게**
+       만들었습니다 (/search 가 32.6% → 3.9%).
+       ⚠️ 푸터를 다시 밝혀야 하면 --bg-foot 한 줄과 css/app.css 맨
+       뒤의 푸터 블록만 건드리면 됩니다 — 이 검사는 그대로 둡니다. */
+    const pct = total ? (area - ftArea) / total * 100 : 0;
     /* ⚠️ **넓은 것부터** 적습니다. DOM 차례대로 적었더니 건너뛰기 링크와
        로고 타일이 먼저 나와서, 정작 범인인 푸터가 안 보였습니다. */
     if(pct > 15)
-      out.dark.push(pct.toFixed(1) + "% — " + big.sort((x,y) => y[0] - x[0])
+      out.dark.push("본문 " + pct.toFixed(1) + "% — " + big
+        .filter(x => !x[2]).sort((x,y) => y[0] - x[0])
         .slice(0,3).map(x => x[1]).join(" · "));
+
+    /* ② 첫 화면 한 장 — 푸터도 고정 헤더·네비도 세어서 잽니다 (첫
+       화면에서는 색깔로 실제로 보이니까요). */
+    {
+      const VH = window.innerHeight;
+      let a1 = 0; const s1 = [], b1 = [];
+      document.querySelectorAll("body *").forEach(e => {
+        const cs = getComputedStyle(e);
+        if(cs.display === "none" || cs.visibility === "hidden") return;
+        if(!dk(e)) return;
+        for(const q of s1) if(q.contains(e)) return;
+        s1.push(e);
+        const r = e.getBoundingClientRect();
+        const t = Math.max(0, r.top), b = Math.min(VH, r.bottom);
+        if(b <= t) return;
+        /* 첫 화면에 걸친 만큼만 — 가짜요소는 제 크기만큼입니다 */
+        const full = dkArea(e, r);
+        if(!full) return;
+        const ar = full * ((b - t) / (r.height || 1));
+        a1 += ar;
+        b1.push([ar, (e.className || e.tagName).toString().split(" ")[0]]);
+      });
+      const p1 = VH ? a1 / (W * VH) * 100 : 0;
+      if(p1 > 15)
+        out.dark.push("첫 화면 " + p1.toFixed(1) + "% — " + b1
+          .sort((x,y) => y[0] - x[0]).slice(0,3).map(x => x[1]).join(" · "));
+    }
   }
 
   /* ⚠️⚠️ **이웃한 두 구간이 붙어 보이는지도 화면마다 봅니다.**
@@ -1693,63 +1786,95 @@ const AUDIT = `(() => {
      설명 · 검색창 · 숫자를 하나씩 더하다 보면 두 낱말이 조용히
      작아지는데, 그걸 막는 것이 목적입니다. */
   await f("히어로가 창업 · 폐업 두 갈래를 같은 무게로 낸다", "/", `
-    /* ⚠️⚠️ **2026-10-08 지시서 §5 · §6 으로 히어로가 다시 짜였습니다.**
-       사진 띠가 좌우를 꽉 채우고, 가운데 밝은 자리에 h1 이 서고, 그
-       아래 선택 카드 둘이 얹힙니다. 전에는 두 판(.hp2)이었습니다.
-       ⚠️ 화면마다 h1 은 **딱 하나**이고 그것이 히어로 것이어야 합니다. */
+    /* ⚠️⚠️ **2026-10-13 지시서 §5 · §6 으로 히어로가 다시 짜였습니다.**
+       창업 · 폐업 **가로 2분할** 두 판이고, 판마다 사진이 꽉 차고
+       그 위에 머리말 · 제목 · 설명이 앉습니다. 전에는 사진 띠 +
+       통합검색 + 바로가기 칩이었습니다 (전부 내려왔습니다).
+
+       ⚠️⚠️ **h1 은 히어로에 없습니다.** 두 판이 똑같이 중요해서 한쪽만
+       h1 으로 올릴 수가 없고, 화면마다 h1 은 딱 하나여야 합니다 —
+       h1 은 바로 아래 전문관 구간의 "지금, 어떤 단계이신가요?" 입니다
+       (2026-10-04 두 판 시절과 같은 까닭입니다). */
     const h1s = document.querySelectorAll("#view h1");
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
-    if(!h1s[0].closest(".mh")) return "h1 이 히어로에 없습니다";
-    /* ⚠️ 2026-10-09 지시서 §4 가 카피를 직접 적었습니다 — 글자를
-       통째로 견주면 브랜드 이름이 바뀌는 날 또 걸립니다. 이름은
-       데이터에서 가져오고 **두 낱말이 다 있는지**를 봅니다. */
-    /* ⚠️⚠️ 2026-10-11 최종 디자인 지시서 §3 의 카피입니다 — 글자를
-       통째로 견주면 이름이 바뀌는 날 또 걸립니다. 이름은 데이터에서
-       가져오고 조사는 koWith() 가 고릅니다. */
-    const t = h1s[0].textContent.replace(/\\s+/g, "");
-    const nm = (window.amBrand ? amBrand() : "");
-    const jo = (window.koWith ? koWith(nm, "이가") : nm + "가");
-    const want1 = "사장님의모든순간," + jo.replace(/\\s+/g, "") + "함께합니다.";
-    if(t !== want1) return "제목이 " + h1s[0].textContent.trim() + "입니다";
-    /* ⚠️ §3 — "핵심 단어는 선명한 블루" 입니다 (강조는 하나). */
-    const pt = h1s[0].querySelector(".mh-pt");
-    if(!pt) return "핵심 단어 강조가 없습니다";
-    const pc = getComputedStyle(pt).color.match(/[0-9.]+/g).map(Number);
-    if(!(pc[2] > pc[0] + 40 && pc[2] > pc[1] + 20))
-      return "핵심 단어가 파랑이 아닙니다 — " + getComputedStyle(pt).color;
-    const px = parseFloat(getComputedStyle(h1s[0]).fontSize);
-    if(innerWidth > 1200 && px < 38)
-      return "제목이 " + Math.round(px) + "px 입니다 (히어로 Headline 입니다)";
+    if(h1s[0].closest(".mh"))
+      return "h1 이 히어로에 있습니다 — 두 판이 같은 무게라 한쪽만 올릴 수 없습니다";
+
+    const ps = [].slice.call(document.querySelectorAll(".mh2 > .mh2-p"));
+    if(ps.length !== 2) return "히어로 판이 " + ps.length + "개입니다";
+
+    /* ⚠️⚠️ **두 판의 크기 · 무게가 같아야 합니다** (§5 — 50:50).
+       한쪽을 좁히거나 작게 만들면 그게 "덜 중요한 것" 이라는 말입니다.
+       1px 까지 잽니다. */
+    const r0 = ps[0].getBoundingClientRect(), r1 = ps[1].getBoundingClientRect();
+    if(Math.abs(r0.width - r1.width) > 1)
+      return "두 판의 폭이 다릅니다 — " + Math.round(r0.width) + " vs " + Math.round(r1.width);
+    if(Math.abs(r0.height - r1.height) > 1)
+      return "두 판의 높이가 다릅니다 — " + Math.round(r0.height) + " vs " + Math.round(r1.height);
+
+    /* 제목 둘도 크기 · 굵기가 같아야 합니다 */
+    const t0 = ps[0].querySelector(".mh2-t"), t1 = ps[1].querySelector(".mh2-t");
+    if(!t0 || !t1) return "판 제목이 없습니다";
+    const c0 = getComputedStyle(t0), c1 = getComputedStyle(t1);
+    if(c0.fontSize !== c1.fontSize || c0.fontWeight !== c1.fontWeight)
+      return "두 제목의 크기 · 굵기가 다릅니다 — " + c0.fontSize + "/" + c0.fontWeight +
+             " vs " + c1.fontSize + "/" + c1.fontWeight;
+    if(t0.textContent.trim() !== "창업" || t1.textContent.trim() !== "폐업")
+      return "판 제목이 창업 · 폐업이 아닙니다 — " +
+             t0.textContent.trim() + " · " + t1.textContent.trim();
+
+    /* ⚠️⚠️ **§5 — 링크 · 클릭 금지 · hover 이동 금지 · pointer 커서 금지.**
+       이 두 판은 **보여 주는 자리**이지 누르는 자리가 아닙니다. 누르게
+       만들면 손님이 눌러 보고 아무 일도 안 나서 고장으로 읽힙니다
+       (지시서가 직접 적은 금지입니다). */
+    for(const p of ps){
+      if(p.tagName === "A" || p.closest("a")) return "히어로 판이 링크입니다";
+      if(p.querySelector("a")) return "히어로 판 안에 링크가 있습니다";
+      if(p.getAttribute("onclick")) return "히어로 판에 onclick 이 있습니다";
+      if(getComputedStyle(p).cursor === "pointer") return "히어로 판 커서가 pointer 입니다";
+    }
+
+    /* ⚠️⚠️ **모바일도 가로 2분할입니다** — 지시서 §5 가 "절대 세로
+       배치로 변경하지 않는다" 고 적었습니다. 검사는 폭 하나에서 도니
+       **규칙 자체**를 봅니다 (폰에서 접기 검사와 같은 방식). */
+    const cols = [];
+    for(const sh of document.styleSheets){
+      let rs; try { rs = sh.cssRules; } catch(e) { continue; }
+      for(const r of rs || []){
+        if(r.type === 4){
+          for(const r2 of r.cssRules || [])
+            if(r2.selectorText === ".mh2" && r2.style.gridTemplateColumns)
+              cols.push([r.conditionText, r2.style.gridTemplateColumns]);
+        } else if(r.selectorText === ".mh2" && r.style.gridTemplateColumns){
+          cols.push(["기본", r.style.gridTemplateColumns]);
+        }
+      }
+    }
+    if(!cols.length) return "히어로 두 판의 칸 규칙을 못 찾았습니다";
+    /* ⚠️ **칸 수를 세야 합니다.** 처음에 글자로 1fr 을 찾았더니
+       "1fr 1fr" 안에서도 맞아서 멀쩡한 규칙을 실패로 잡았습니다 —
+       틀린 것은 CSS 가 아니라 검사였습니다. */
+    for(const c of cols){
+      const n = c[1].trim().split(" ").filter(Boolean).length;
+      if(n < 2)
+        return "좁은 폭에서 히어로가 세로로 쌓입니다 (§5 금지) — 조건 " +
+               c[0] + ", 칸 " + n + "개 (" + c[1] + ")";
+    }
+
     /* ⚠️⚠️ **사진이 주인공입니다.** 2026-10-07 전면개편이 물린 까닭이
        이것 하나라, 사진이 있는데 안 그려지면 여기서 잡습니다. */
-    /* ⚠️⚠️ **사진이 주인공입니다.** 2026-10-07 전면개편이 물린 까닭이
-       이것 하나입니다. 2026-10-11 §3 으로 사진이 **오른쪽 한 장**이
-       됐습니다 (전에는 좌우 두 장). */
     if(window.hasPhoto && hasPhoto("hero-start") &&
-       !document.querySelector(".mh-ph-r .ph"))
-      return "히어로 사진이 있는데 안 그려졌습니다";
-    /* ⚠️⚠️ **장식용 검색창을 만들지 마세요** (§3). 적는 칸과 단추가
-       실제로 있어야 하고, 아래 바로가기 칩은 **"인기 검색어" 가
-       아닙니다** — 검색 기록을 모으지 않습니다. */
-    if(!document.querySelector(".mh-find input") ||
-       !document.querySelector(".mh-find button"))
-      return "히어로 검색창이 없습니다";
-    const chips = [].slice.call(document.querySelectorAll(".mh-chip .chip"));
-    if(chips.length < 6) return "바로가기 칩이 " + chips.length + "개입니다";
-    for(const c of chips){
-      if(c.getAttribute("href").indexOf("/search?q=") !== 0)
-        return "칩이 검색으로 안 갑니다 — " + c.getAttribute("href");
-      if(c.getBoundingClientRect().height < 40)
-        return "칩이 " + Math.round(c.getBoundingClientRect().height) + "px 입니다";
-    }
-    const kw = (document.querySelector(".mh-chip") || {}).textContent || "";
-    if(/인기|많이\\s*찾는|추천/.test(kw))
-      return "바로가기 딱지에 근거 없는 말이 있습니다 — " + kw.slice(0, 20);
-    /* §3 — 데스크톱 첫 화면이 주저앉지도, 너무 길지도 않아야 합니다. */
+       !ps[0].querySelector(".mh2-ph .ph"))
+      return "창업 판 사진이 있는데 안 그려졌습니다";
+    if(window.hasPhoto && hasPhoto("hero-close") &&
+       !ps[1].querySelector(".mh2-ph .ph"))
+      return "폐업 판 사진이 있는데 안 그려졌습니다";
+
+    /* §5 — 첫 화면이 주저앉지도, 너무 길지도 않아야 합니다. */
     if(innerWidth > 1200){
       const hh = document.querySelector(".mh").getBoundingClientRect().height;
-      if(hh < 440) return "첫 화면이 " + Math.round(hh) + "px 입니다 — 주저앉았습니다";
-      if(hh > 900) return "첫 화면이 " + Math.round(hh) + "px 입니다 — 너무 깁니다";
+      if(hh < 320) return "히어로가 " + Math.round(hh) + "px 입니다 — 주저앉았습니다";
+      if(hh > 760) return "히어로가 " + Math.round(hh) + "px 입니다 — 너무 깁니다";
     }
     return true;`);
   await f("어느 화면에서나 검색으로 가는 길이 있고 메인이 두 갈래로 갈린다", "/", `
@@ -1767,7 +1892,13 @@ const AUDIT = `(() => {
       const r = e.getBoundingClientRect();
       return (getComputedStyle(e).display !== "none" && r.height >= 24) ? r.height : 0;
     };
-    if(!vis(q) && !vis(ic)) return "헤더에 검색으로 가는 길이 없습니다";
+    /* ⚠️⚠️ **2026-10-13 §3 으로 뒤집혔습니다** — "기존 메인페이지 상단
+       검색 아이콘은 제거한다. 다만 기존 검색 기능 자체는 삭제하지 않고
+       필요한 서비스 페이지에서 계속 사용할 수 있도록 유지한다."
+       그래서 **메인에서는 없어야 하고**, 나머지 화면에 그대로 있는지는
+       바로 아래 검사가 따로 봅니다. 둘을 한 검사로 묶지 마세요 —
+       한쪽만 보면 "헤더에서 통째로 빼기" 가 그냥 통과합니다. */
+    if(vis(q) || vis(ic)) return "메인 헤더에 검색이 아직 있습니다 (§3)";
     /* ⚠️ 패널 탭이 가리키던 다섯 곳이 길을 잃지 않았는지 — 메인이나
        푸터 어디에든 있어야 합니다 (지시서 §2-2 "기능 삭제 금지"). */
     const miss = ["/providers","/franchise","/stores","/support","/tools"]
@@ -1780,6 +1911,20 @@ const AUDIT = `(() => {
     const st6 = (window.AM_STAGES || []).map(function(s2){ return "/g/" + s2.key; })
       .filter(function(u){ return !document.querySelector('a[href="' + u + '"]'); });
     if(st6.length) return "사업 단계가 사이트 안에서 길을 잃었습니다: " + st6.join(" · ");
+    return true;`);
+  /* ⚠️⚠️ **메인을 뺀 화면에는 헤더 검색이 그대로 있어야 합니다**
+     (2026-10-13 §3 — 기능 자체는 삭제하지 않습니다). 메인에서 접는
+     것은 `.is-home` 한 클래스뿐이고, 헤더에서 통째로 빼면 **160개
+     화면에서 검색이 사라집니다** — 위 검사와 짝입니다. */
+  await f("메인을 뺀 화면에는 헤더 검색이 그대로 있다", "/startup", `
+    const q = document.querySelector('.hd input[type="search"]');
+    const ic = document.querySelector('.hd a[href="/search"]');
+    const vis = function(e){
+      if(!e) return 0;
+      const r = e.getBoundingClientRect();
+      return (getComputedStyle(e).display !== "none" && r.height >= 24) ? r.height : 0;
+    };
+    if(!vis(q) && !vis(ic)) return "속화면 헤더에도 검색이 없습니다";
     return true;`);
   /* ⚠️⚠️ **규칙이 두 번 뒤집혔습니다.**
        ① 처음에는 "창업과 폐업을 색으로 가르지 않는다" 였습니다 —
@@ -1803,10 +1948,18 @@ const AUDIT = `(() => {
         .match(/(\\d+), ?(\\d+), ?(\\d+)/);
       return m ? [+m[1], +m[2], +m[3]] : null;
     };
-    /* 히어로 제목의 포인트 — 브랜드 블루 */
-    const pt = col(".mh-h1 .mh-pt");
-    if(!pt) return "히어로 제목 포인트 색을 못 읽습니다";
-    if(!(pt[2] > pt[0] + 30)) return "제목 포인트가 파랑이 아닙니다 rgb(" + pt.join(",") + ")";
+    /* ⚠️⚠️ **2026-10-13 §5 — 히어로가 사진 2분할이 됐습니다.**
+       전에는 h1 안의 한 낱말을 파랑으로 강조했는데(.mh-pt), 지금
+       히어로에는 h1 도 강조 낱말도 없습니다 (두 판이 같은 무게라
+       한쪽만 올릴 수 없습니다). 그 대신 **두 판 자신의 바탕**이
+       창업 = 차가운 쪽 · 폐업 = 따뜻한 쪽으로 갈립니다 — 사진이
+       없을 때 드러나는 색이고, 지시서의 창업 블루 · 폐업 오렌지가
+       히어로에서 지켜지는지를 그걸로 봅니다. */
+    const hst = col(".mh2-st", "backgroundColor");
+    const hcl = col(".mh2-cl", "backgroundColor");
+    if(!hst || !hcl) return "히어로 두 판의 바탕색을 못 읽습니다";
+    if(!(hst[2] >= hst[0])) return "창업 판이 차가운 쪽이 아닙니다 rgb(" + hst.join(",") + ")";
+    if(!(hcl[0] > hcl[2])) return "폐업 판이 따뜻한 쪽이 아닙니다 rgb(" + hcl.join(",") + ")";
     /* ⚠️⚠️ **2026-10-11 §4 — 보는 자리가 전문관 카드로 옮겨갔습니다.**
        히어로의 창업 / 폐업 선택 카드는 §11 이 "중복" 으로 빼라고 적은
        것이라 없어졌고, 창업 블루 · 폐업 오렌지는 이제 **02 전문관
@@ -2218,20 +2371,45 @@ const AUDIT = `(() => {
     return bad.length ? "면으로 쓴 곳: " + bad.slice(0, 3).join(" · ") : true;`);
   await f("골드가 버튼 · 링크의 행동색을 빼앗지 않는다", "/quote", `
     /* ⚠️ 행동색은 **하나**여야 손님이 "누를 것" 을 배웁니다.
-       버튼이 금색이 되면 그 규칙이 깨집니다. */
+       버튼이 금색이 되면 그 규칙이 깨집니다.
+       ⚠️⚠️ **2026-10-13 §2 로 행동색이 브라운이 됐습니다.** 전에는
+       "빨강 성분이 파랑보다 크면 실패" 로 봤는데, 그건 행동색이
+       **블루**이던 시절의 증거였습니다 — 팔레트가 베이지 · 브라운이
+       되자 멀쩡한 버튼이 "파랑이 아닙니다" 로 걸렸습니다. 여기서
+       지켜야 하는 것은 **파랑**이 아니라 "금색이 아닐 것" 과
+       "흰 글자가 읽힐 것" 입니다. 그 둘을 직접 봅니다. */
     const b1 = document.querySelector(".btn-b");
     if(!b1) return "기본 버튼이 없습니다";
-    const bg = getComputedStyle(b1).backgroundColor;
+    const cs = getComputedStyle(b1);
+    const bg = cs.backgroundColor;
     const m = bg.match(/rgba?\\((\\d+), ?(\\d+), ?(\\d+)/);
     if(!m) return "버튼 바탕을 못 읽습니다";
-    const r = +m[1], b = +m[3];
-    if(r > b) return "기본 버튼이 파랑이 아닙니다 — " + bg;
+    const c = [+m[1], +m[2], +m[3]];
+    /* 샴페인 골드(#D5B998 계열) — 밝고 따뜻하고 r>g>b 입니다.
+       행동색이 그 자리에 오면 "악센트 네 자리" 규칙이 깨집니다. */
+    const lin = function(x){ x /= 255;
+      return x <= .03928 ? x/12.92 : Math.pow((x+.055)/1.055, 2.4); };
+    const L = .2126*lin(c[0]) + .7152*lin(c[1]) + .0722*lin(c[2]);
+    if(c[0] > c[1] && c[1] > c[2] && L > 0.35)
+      return "기본 버튼이 금색 쪽입니다 — " + bg;
+    /* 흰 글자를 얹는 면이라 AA(4.5)를 넘겨야 합니다 */
+    const fg = (cs.color.match(/rgba?\\((\\d+), ?(\\d+), ?(\\d+)/) || []).slice(1).map(Number);
+    if(fg.length === 3){
+      const Lf = .2126*lin(fg[0]) + .7152*lin(fg[1]) + .0722*lin(fg[2]);
+      const cr = (Math.max(L, Lf) + .05) / (Math.min(L, Lf) + .05);
+      if(cr < 4.5) return "기본 버튼 글자 대비가 " + cr.toFixed(2) + " 입니다";
+    }
     return true;`);
   /* ⚠️ 검색은 **히어로의 대형 검색창**(§6)과 헤더 아이콘 둘입니다.
      히어로 쪽은 위의 "히어로에서 바로 찾고 바로 갈라진다" 가 봅니다. */
-  await f("어느 화면에서나 검색으로 가는 길이 있다", "/", `
+  await f("어느 화면에서나 검색으로 가는 길이 있다", "/providers", `
     /* ⚠️ 2026-10-03 — 넓은 화면에서는 **입력칸**, 좁은 화면에서는
-       **돋보기 단추**입니다 (지시서 §2). 둘 중 하나는 늘 보여야 합니다. */
+       **돋보기 단추**입니다 (지시서 §2). 둘 중 하나는 늘 보여야 합니다.
+       ⚠️⚠️ **보는 화면을 / 에서 /providers 로 옮겼습니다** —
+       2026-10-13 §3 이 "기존 메인페이지 상단 검색 아이콘은 제거한다"
+       고 적었습니다. 메인에서 없어야 하는 것은 위 검사가 보고, 여기는
+       **나머지 화면에 그대로 있는가**를 봅니다 (§3 이 같은 문장에서
+       "검색 기능 자체는 삭제하지 않는다" 고 적었습니다). */
     const vis = function(e){
       if(!e) return null;
       const r = e.getBoundingClientRect();
@@ -2445,8 +2623,13 @@ const AUDIT = `(() => {
        여전히 "/ 가 실제 서비스 메인인가" 라서, 찾는 표시만 지금 화면의
        것으로 옮깁니다 — 히어로의 통합검색 · 바로가기 · 계산도구 ·
        이용 절차 · 마지막 CTA 입니다. */
-    const need = [[".mh-find", "히어로 통합검색"],
-                  [".mh-chip", "히어로 바로가기"],
+    /* ⚠️⚠️ **2026-10-13 §5 로 히어로가 사진 2분할이 됐습니다** —
+       히어로 안의 통합검색(.mh-find)과 바로가기 칩(.mh-chip)이
+       내려왔습니다. 검색은 §3 대로 **메인에서만** 접힌 것이고 기능은
+       그대로입니다 (헤더 짝 검사 둘이 봅니다). 보는 것은 여전히
+       "/ 가 중간 소개 화면이 아니라 실제 서비스 메인인가" 라서,
+       찾는 표시를 지금 화면의 것으로 옮깁니다. */
+    const need = [[".mh2", "히어로 창업 · 폐업 2분할"],
                   /* ⚠️ 2026-10-11 간소화 §2 — 브랜드 연결(.mbr-g)이 메인에서
                      내려왔습니다 (TAKE OVER 와 네 주소가 겹쳤습니다). */
                   /* 2026-10-11 UI/UX 지시서 §2 — 분류 여덟이 전문관 넷이
@@ -2458,8 +2641,10 @@ const AUDIT = `(() => {
                   [".mlast-go", "마지막 CTA"]];
     for(const q of need)
       if(!v.querySelector(q[0])) return q[1] + " 가 메인에 없습니다";
-    if(!document.querySelector('.hd input[type="search"], .hd a[href="/search"]'))
-      return "검색으로 가는 길이 없습니다";
+    /* ⚠️⚠️ **메인에서는 헤더 검색을 찾지 않습니다** (2026-10-13 §3 —
+       "기존 메인페이지 상단 검색 아이콘은 제거한다"). 기능이 살아
+       있는지는 /providers 에서 보는 짝 검사가 봅니다 — 여기서 같이
+       보면 §3 과 정면으로 부딪칩니다. */
     /* ⚠️ 게이트웨이로 보내는 길이 남아 있으면 안 됩니다 (§29) */
     const gate = [].slice.call(document.querySelectorAll('a[href="/home"]'));
     if(gate.length)
@@ -2831,9 +3016,16 @@ const AUDIT = `(() => {
        맞춰 봅니다 (손으로 적으면 늘릴 때 어긋납니다). */
     const cur = (window.amHall ? amHall(null) : HS[0]);
     const tiles = [].slice.call(document.querySelectorAll(".hsv-g > li > a"));
-    if(tiles.length !== (cur.items || []).length)
-      return "서비스 칸이 " + tiles.length + "개입니다 (" +
-        (cur.items || []).length + "개여야 합니다)";
+    /* ⚠️⚠️ **2026-10-13 §7 — 메인은 전문관마다 여섯만 냅니다.**
+       전에는 들고 있는 것을 전부 냈습니다 (12 · 11 · 7 · 9). 개수는
+       home.js 의 HALL_SHOW 한 곳이고 여기서 그것을 읽습니다 — 두 곳에
+       적으면 늘릴 때 조용히 어긋납니다.
+       ⚠️ 나머지 칸은 **지운 것이 아닙니다** — 구간 아래 전체 보기와
+       전문관 화면이 받습니다. 그 길이 있는지도 아래에서 봅니다. */
+    const want = Math.min((cur.items || []).length,
+      (typeof HALL_SHOW === "number" ? HALL_SHOW : 6));
+    if(tiles.length !== want)
+      return "서비스 칸이 " + tiles.length + "개입니다 (" + want + "개여야 합니다)";
     const tSeen = [];
     for(const a of tiles){
       const nm = (a.querySelector("b") || {}).textContent || "(이름 없음)";
@@ -2873,7 +3065,12 @@ const AUDIT = `(() => {
       return "주소의 전문관과 켜진 카드가 다릅니다";
     const names = [].slice.call(document.querySelectorAll(".hsv-g > li > a > b"))
       .map(function(e){ return e.textContent; });
-    const want = (H.items || []).map(function(i){ return i.n; });
+    /* ⚠️⚠️ **메인은 앞 여섯만 냅니다** (2026-10-13 §7 · HALL_SHOW).
+       전부를 기다리면 지금 화면에서 바로 실패합니다 — 데이터가
+       줄어든 것이 아니라 **메인이 덜 내는 것**이고, 나머지는 바로
+       아래 전체보기와 전문관 화면이 받습니다. */
+    const n = (typeof HALL_SHOW === "number" ? HALL_SHOW : 6);
+    const want = (H.items || []).slice(0, n).map(function(i){ return i.n; });
     if(names.join("|") !== want.join("|"))
       return "폐업 전문관의 서비스가 데이터와 다릅니다 — " + names.join(", ");
     /* 전체보기는 그 전문관 화면으로 갑니다 (고르기와 다른 일입니다) */

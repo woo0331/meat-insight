@@ -208,6 +208,11 @@ var MAIN_SPLIT = [
    한쪽을 좁히거나 흐리게 만들면 그게 "덜 중요한 것" 이라는 말입니다.
    ⚠️⚠️ 폐업 쪽을 처연하게 만들지 마세요 — 끝이 아니라 **다음 시작**
    입니다 (이 저장소가 여러 곳에 못박아 둔 것입니다). */
+/* 메인 전문관 구간이 전문관마다 내는 서비스 수 (2026-10-13 §7).
+   ⚠️ 나머지는 지우지 않았습니다 — 전문관 화면과 /providers 가
+   그대로 들고 있고, 구간 아래 '전체 서비스 보기' 가 보냅니다. */
+var HALL_SHOW = 6;
+
 function MainSplitPanel(o){
   var ph = hasPhoto(o.photo);
   function lines(arr, cls){
@@ -375,8 +380,21 @@ function MainScopeStrip(){
    붙였다가 찍어 보고 고쳤습니다 (CCTV 는 IT · 보안이지 폐업이
    아닙니다). 지금은 도면 → 창업 · POS/CCTV → 운영 · 주방장비 →
    양도양수 · 청소용품 → 폐업 정리입니다. */
-var HALL_PH = { startup:"svc-interior", operation:"svc-it",
-                transfer:"svc-equip",  closure:"svc-clean" };
+/* ⚠️⚠️ **2026-10-13 §6 — "실제 상업공간 사진"** 으로 바꿨습니다.
+   전에는 사장님이 주신 콜라주에서 잘라낸 **물건 사진**(도면 · CCTV ·
+   냄비 · 청소용품)이었는데, §6 이 창업=밝은 매장 · 운영=운영 중인
+   매장 · 양도양수=매장 인계 장면 · 폐업=철거 · 정리 장면이라고
+   적었습니다. 넷 다 **이미 들고 있는 사진**이라 새로 산 것이
+   없습니다 (저작권 · 초상권 · §54 AI 이미지 금지).
+   ⚠️ 같은 자리를 **두 곳에서** 씁니다 — `/startup` · `/operation` ·
+   `/closure` 의 머리 사진과 같은 그림입니다. 그래도 됩니다: 금지된
+   것은 "두 **자리**가 같은 파일을 가리키는 것"(`checkPhotos()`)이지
+   한 자리를 두 화면에서 쓰는 것이 아닙니다. 오히려 전문관과 그
+   전문관 화면이 같은 그림이라 한 덩어리로 읽힙니다.
+   ⚠️ 풀려난 `svc-interior` · `svc-it` · `svc-equip` · `svc-clean` 은
+   자리에 그대로 남습니다 — `MainServices()` 를 되살리면 바로 붙습니다. */
+var HALL_PH = { startup:"hero-startup", operation:"hero-ops",
+                transfer:"kind-pass",   closure:"hero-closure" };
 
 function MainHalls(){
   var L = (window.AM_HALLS || []);
@@ -400,7 +418,18 @@ function MainHalls(){
       '<em class="mhall-a" aria-hidden="true">'+icon("arrow",18)+'</em>'+
     '</a></li>'; }).join("")+'</ul>';
 
-  var tiles = '<ul class="hsv-g">'+(cur.items||[]).map(function(it){
+  /* ⚠️⚠️ **개수는 HALL_SHOW 한 곳입니다.** 손으로 두 곳에 적으면
+     check.js 의 "서비스 칸이 n개입니다" 가 어긋납니다 — 이 저장소가
+     흐름 검사 개수 · 감사 기록 갯수로 두 번 겪은 자리입니다.
+     ⚠️⚠️ **메인에는 전문관마다 여섯만** 냅니다 (2026-10-13 §7).
+     전에는 들고 있는 것을 전부 냈는데(12 · 11 · 7 · 9), 지시서가 네
+     전문관을 **여섯으로 맞추라**고 적었습니다 — 칸 수가 제각각이면
+     어느 전문관이 "덜 준비된 곳" 으로 읽힙니다.
+     ⚠️ **데이터를 지우지 않았습니다** (§14 — UI 에서 빼는 것과 데이터
+     삭제는 다릅니다). 뒤에 남은 칸들이 어디서 걸리는지 재서
+     확인했습니다 — 전문관 화면(`/startup` 등)과 `/providers` 입니다.
+     ⚠️ 차례는 `js/data/halls.js` 가 정합니다. 여기서 고르지 마세요. */
+  var tiles = '<ul class="hsv-g">'+(cur.items||[]).slice(0, HALL_SHOW).map(function(it){
     var c    = it.cat ? amCat(it.cat) : null;
     var tone = it.tone || (c && c.tone) || "t7";
     /* ⚠️⚠️ **하위를 집어서 가리키는 칸에 분류의 하위 셋을 내면 안
@@ -461,6 +490,13 @@ function MainHalls(){
           '전체보기'+icon("arrow",16)+'</a>'+
       '</div>'+
       tiles+
+      /* ⚠️ §7 — "마지막에 '전체 서비스 보기'를 제공한다. 기존 서비스
+         상세페이지로 연결한다." 위 `전체보기` 는 **그 전문관**으로,
+         이 줄은 **분류 스물여섯 전부**로 갑니다 — 둘은 다른 곳입니다.
+         ⚠️ 메인에 여섯만 내기로 했으니(§7) 나머지로 가는 길이 여기
+         하나는 있어야 합니다. 지우지 마세요. */
+      '<p class="hsv-more"><a href="/providers">전체 서비스 보기'+
+        icon("arrow",16)+'</a></p>'+
     '</div>'+
   '</div></section>';
 }
@@ -858,7 +894,8 @@ function MainToolsInfo(){
   return '<section class="sec sec-blue mti"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">TOOLS</p>'+
-      '<h2>사장님의 사업에 필요한 계산도구</h2>'+
+      /* ⚠️ 2026-10-13 §9 의 문구입니다. */
+      '<h2>사업에 필요한 계산도구를 이용해 보세요.</h2>'+
       '<p>창업 · 운영 · 양도양수 · 폐업에 필요한 비용을 미리 계산해 '+
         '보세요. 적으신 숫자는 이 브라우저에만 남습니다.</p>'+
     '</div>'+
@@ -996,7 +1033,9 @@ function MainSteps(){
   return '<section class="sec sec-white mstp"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">HOW IT WORKS</p>'+
-      '<h2>'+esc(amBrand())+'는 이렇게 진행됩니다</h2>'+
+      /* ⚠️ 2026-10-13 §10 의 문구입니다. ⚠️ 브랜드 이름을 빼면서
+         조사 문제도 같이 없어졌습니다 — 이름이 바뀌어도 안 깨집니다. */
+      '<h2>이용 방법은 간단합니다.</h2>'+
       '<p>간단한 신청으로 분야에 맞는 업체를 찾아 드립니다.</p>'+
     '</div>'+
     '<ol class="mstp-g">'+(window.AM_STEPS||[]).map(function(x, i){
@@ -1035,8 +1074,9 @@ function MainLast(){
         /* ⚠️ 한 줄입니다. 전에는 "지금 바로 신청하시면 … 도와드립니다"
            와 "한 번만 적어 보내시면 … 연결해 드립니다" 가 **같은 말을
            두 번** 하고 있었습니다 (품질 개선 §5 중복 안내 축소). */
-        '<p>한 번만 적어 보내시면 분야에 맞는 업체를'+
-          '<br class="br-m"> 찾아 연결해 드립니다.</p>'+
+        /* ⚠️ 2026-10-13 §11 의 문구입니다. */
+        '<p>질문만 남겨주시면 사장님의 상황에 맞는 서비스를 안내하고'+
+          '<br class="br-m"> 필요한 업체 연결을 도와드립니다.</p>'+
         '<p class="mlast-go">'+
           '<a class="btn btn-nv btn-lg" href="/quote">'+
             '무료 견적 신청'+icon("arrow",18)+'</a>'+

@@ -701,7 +701,7 @@ body.sl-locked{ overflow:hidden; }
 .rq-g{ display:grid; gap:10px; }
 
 .rq-r{ background:#fff; border:1px solid var(--line); border-radius:10px; }
-.rq-r.on{ border-color:var(--blue, #1464F4); }
+.rq-r.on{ border-color:var(--blue, #806047); }
 
 /* ⚠️ 줄 전체가 눌립니다. `padding` 만으로 높이를 만들면 짧은 이름에서
    다시 낮아집니다 — `min-height` 로 잡습니다 (40px 이상). */
@@ -874,9 +874,9 @@ body.sl-locked{ overflow:hidden; }
   border-radius:var(--r, 10px); min-width:0; }
 .rq-q-h{ display:flex; align-items:center; justify-content:space-between;
   gap:var(--s3, 10px); flex-wrap:wrap; }
-.rq-q-h b{ font-size:14px; font-weight:800; color:var(--navy, #102A56); }
+.rq-q-h b{ font-size:14px; font-weight:800; color:var(--navy, #382820); }
 /* 금액 줄은 **결정에 쓰는 값**이라 또렷하게 */
-.rq-q-m{ margin:0; font-size:14px; font-weight:800; color:var(--navy, #102A56); }
+.rq-q-m{ margin:0; font-size:14px; font-weight:800; color:var(--navy, #382820); }
 /* ⚠️ 업체가 적은 글입니다 — 길어도 가로로 안 밀리게 둡니다
    (`.ad-main` 이 grid 라 안쪽이 안 쪼개지면 문서 폭이 늘어납니다) */
 .rq-q-s{ margin:0; font-size:13px; color:var(--ink2, #46516A);

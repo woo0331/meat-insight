@@ -85,8 +85,10 @@
    붙입니다.
 
    ⚠️ **글자로 쓰는 색은 짙은 쪽(`--start-dark` · `--close-dark`)입니다.**
-   `--start`(#12A878) 를 흰 바탕의 글자색으로 쓰면 대비가 3.0 이라
-   작은 글씨가 읽히지 않습니다.
+   옅은 `--start` 를 흰 바탕의 글자색으로 쓰면 작은 글씨가 읽히지
+   않습니다 — 2026-10-13 값(#486987)은 4.75 로 겨우 넘고, 그 전
+   초록(#12A878)일 때는 3.0 이었습니다. ⚠️ **값을 여기 적어 두면
+   팔레트를 바꾼 날 거짓말이 됩니다** — 토큰을 보세요.
    ⚠️ 헤더 · 푸터는 `#view` 밖이라 안 물듭니다. 거기까지 바뀌면
    화면마다 머리가 달라져 한 사이트로 안 읽힙니다. */
 /* ⚠️⚠️ **2026-10-08 지시서 §24 — 창업은 BLUE 입니다.** 전에는 여기서
@@ -1190,6 +1192,11 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   color:var(--ink2); line-height:1.85; margin-bottom:var(--s8); }
 .lg-toc{ display:grid; gap:2px; padding:var(--s5) var(--s6);
   background:var(--bg-2); border-radius:var(--r-lg); margin-bottom:var(--s9); }
+/* 목차 머리말 — **h2 이지만 조문 제목(21.75px)보다 작게** 둡니다.
+   차례(h1 → h2)는 뼈대이고 크기는 생김새라, 둘을 같이 맞출 필요가
+   없습니다. 전에 h3 일 때의 값 그대로입니다. */
+.lg-toc h2{ margin:0 0 4px; font-size:var(--t-md); font-weight:800;
+  color:var(--ink); }
 .lg-toc a{ display:flex; align-items:center; min-height:40px;
   font-size:var(--t-sm); color:var(--ink2); }
 .lg-toc a:hover{ color:var(--blue); }
@@ -1445,8 +1452,9 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   background:linear-gradient(135deg, var(--blue) 0%, var(--close) 100%); }
 /* ⚠️⚠️ 시작은 블루 · 마지막은 오렌지 (지시서 §24). 두 낱말의 크기 ·
    굵기가 같습니다 — 한쪽을 작게 하면 "덜 중요한 것" 이 됩니다.
-   ⚠️ 오렌지는 **짙은 쪽**입니다. `--close`(#F36B38)를 흰 바탕 글자색
-   으로 쓰면 대비가 3 아래라 안 읽힙니다. */
+   ⚠️ 오렌지는 **짙은 쪽**입니다. 옅은 `--close` 를 흰 바탕 글자색으로
+   쓰면 대비가 모자랍니다 (2026-10-13 값 #AD633F 는 3.74 · 그 전
+   #F36B38 은 3.01). 글자는 `--close-dark` · `--close-deep` 입니다. */
 .mh-pt{ color:var(--blue-600); font-style:normal; }
 .mh-pt2{ color:var(--close-dark); font-style:normal; }
 .mh-lead{ margin:var(--s5) 0 0; max-width:60ch;
@@ -4096,7 +4104,7 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   border-radius:var(--r-xl); box-shadow:var(--shadow-soft); }
 .hsv-hd{ display:flex; align-items:center; justify-content:space-between;
   gap:var(--s4); margin-bottom:var(--s5); }
-.hsv-hd h3{ margin:0; font-size:var(--t-xl); font-weight:800;
+.hsv-hd h2, .hsv-hd h3{ margin:0; font-size:var(--t-xl); font-weight:800;
   letter-spacing:-.03em; color:var(--ink); }
 .hsv-all{ flex:0 0 auto; }
 .hsv-g{ display:grid; grid-template-columns:repeat(6,1fr); gap:var(--s4) var(--s3);

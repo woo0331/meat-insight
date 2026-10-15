@@ -100,7 +100,9 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.mhall-g > li:nth-child(4) > a');          /* 폐업 · 정리 */
  say((await url()).indexOf("h=closure")>=0,"전문관을 고르면 주소에 실린다",await url());
  say((await pg.evaluate(()=>{
-     const b=document.querySelector(".hsv-hd h3 b");
+     /* ⚠️ 2026-10-13 — 이 머리말이 **h3 → h2** 가 됐습니다 (h1 바로
+        아래 단계라 차례를 건너뛰고 있었습니다). 둘 다 받습니다. */
+     const b=document.querySelector(".hsv-hd h2 b, .hsv-hd h3 b");
      return b ? b.textContent : "";
    }))==="폐업 · 정리","고른 전문관의 서비스로 바뀐다");
  await click('.hsv-g > li:nth-child(2) > a');            /* 철거 */

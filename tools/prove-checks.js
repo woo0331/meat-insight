@@ -791,6 +791,31 @@ async function proveAudit(pg){
       " → min-height 를 떼면 " + JSON.stringify(after).slice(0,60) + "]");
   }
 
+  /* 제목 차례를 건너뜀 — h2 하나를 h3 으로 바꿔 놓고 봅니다.
+     ⚠️ **고쳐 놓고 되돌리기를 안 넣으면** 그 검사가 실제로 잡는지
+     아무도 못 봅니다 (골드 검사가 그렇게 비어 있었습니다). */
+  for(const u of ["/", "/terms", "/startup"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).hord;
+    const did = await pg.evaluate(() => {
+      const v = document.getElementById("view");
+      const h2 = v && v.querySelector("h2");
+      if(!h2) return false;
+      const h3 = document.createElement("h3");
+      h3.innerHTML = h2.innerHTML;
+      h2.replaceWith(h3);
+      return true;
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).hord;
+    const ok = did && before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 제목 차례를 건너뜀 · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → h2 하나를 h3 으로 바꾸면 " + JSON.stringify(after).slice(0,60) + "]");
+  }
+
   /* 이웃한 두 구간이 붙어 보임 — 둘째 구간을 첫째와 같은 색으로
      돌려놓고 잡히는지 봅니다. ⚠️ 바탕을 **안 준** 구간도 봐야 합니다 —
      처음에 투명이라고 건너뛰었다가 업종 화면의 두 쌍을 놓쳤습니다. */

@@ -34,7 +34,12 @@ function circled(n){
 
 /* 목차 — 조가 많아 스크롤이 깁니다. 눌러서 바로 갑니다. */
 function legalToc(arts){
-  return '<nav class="lg-toc" aria-label="목차"><h3>목차</h3><ol>'+
+  /* ⚠️⚠️ **h2 입니다 (h3 이 아닙니다).** 목차는 h1(문서 제목) 바로
+     아래 단계인데 h3 으로 두어서, 약관 · 방침 두 화면에서 제목 차례가
+     **1 → 3 으로 건너뛰었습니다** — 읽어 주는 프로그램을 쓰는 분이
+     문서의 뼈대를 잃습니다. 재서 알았습니다 (전수 점검은 h1 개수만
+     봅니다). 생김새는 `.lg-toc h2` 가 그대로 지킵니다. */
+  return '<nav class="lg-toc" aria-label="목차"><h2>목차</h2><ol>'+
     arts.map(function(a,i){
       return '<li><a href="#lg-'+i+'" onclick="lgJump(event,'+i+')">'+esc(a[0])+'</a></li>';
     }).join("")+'</ol></nav>';

@@ -239,7 +239,7 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[768,1024,"작�
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[], hord:[] };
   /* ⚠️ **흰 글자가 흰 바탕에 앉는 일이 실제로 있었습니다.** 창업 다섯
      마디(.flow)는 어두운 구간에만 있던 것이라 글자색 기본이 흰색이고,
      밝은 쪽은 .sec-tone 안에서만 되돌려 놓았습니다. 그 구간을 순백으로
@@ -542,6 +542,25 @@ const AUDIT = `(() => {
     if (h1.length !== 1)
       out.h1.push(h1.length === 0 ? "제목(h1)이 없습니다" : "제목(h1)이 "+h1.length+"개입니다");
   }
+  /* 9-2. **제목 차례를 건너뛰지 않는가** (h1 → h3 금지)
+     ⚠️⚠️ 읽어 주는 프로그램을 쓰는 분은 제목으로 화면의 뼈대를
+     잡습니다. h2 를 건너뛰고 h3 이 나오면 그 뼈대가 끊깁니다.
+     ⚠️ 위의 h1 검사는 **개수만** 봅니다 — 차례는 아무도 안 보고
+     있었고, 재 보니 메인과 약관 · 방침 **세 화면**이 1 → 3 으로
+     건너뛰고 있었습니다 (목차 · 전문관 서비스 머리말).
+     ⚠️ 404.html 은 #view 가 없어 main 에서 셉니다 (h1 검사와 같습니다). */
+  {
+    const root = document.getElementById("view") || document.querySelector("main") || document.body;
+    const hs = [...root.querySelectorAll("h1,h2,h3,h4,h5,h6")]
+      .filter(vis).map(e => +e.tagName[1]);
+    for(let i = 1; i < hs.length; i++)
+      if(hs[i] - hs[i-1] > 1){
+        out.hord.push("h" + hs[i-1] + " 다음에 h" + hs[i] + " — [" + hs.join(" ") + "]");
+        break;
+      }
+    if(hs.length && hs[0] !== 1 && !out.hord.length)
+      out.hord.push("첫 제목이 h" + hs[0] + "입니다 — [" + hs.join(" ") + "]");
+  }
   out.over = document.documentElement.scrollWidth > W + 1;
 
   /* ⚠️⚠️ **어두운 면을 화면마다 잽니다** (2026-10-01 §1 — 밝은 면 80% 이상).
@@ -833,7 +852,7 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[], hord:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
@@ -863,6 +882,7 @@ const AUDIT = `(() => {
       ["개발자 말 노출",     uniq(bad.bad)],
       ["구간 머리말이 회색으로 죽음", uniq(bad.eye)],
       ["별표(**)가 글자로 남음", uniq(bad.star)],
+      ["제목 차례를 건너뜀",     uniq(bad.hord)],
       ["어두운 면이 15% 넘음",   uniq(bad.dark)],
       ["이웃한 두 구간이 붙어 보임", uniq(bad.tone)],
       ["\"준비 중\" 자리표시자", uniq(bad.ph)],
@@ -2397,7 +2417,7 @@ const AUDIT = `(() => {
     if(fg.length === 3){
       const Lf = .2126*lin(fg[0]) + .7152*lin(fg[1]) + .0722*lin(fg[2]);
       const cr = (Math.max(L, Lf) + .05) / (Math.min(L, Lf) + .05);
-      if(cr < 4.5) return "기본 버튼 글자 대비가 " + cr.toFixed(2) + " 입니다";
+      if(cr < 4.5) return "기본 버튼 글자 대비가 " + cr.toFixed(2) + "입니다";
     }
     return true;`);
   /* ⚠️ 검색은 **히어로의 대형 검색창**(§6)과 헤더 아이콘 둘입니다.

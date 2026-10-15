@@ -20,38 +20,49 @@
  html,body{ margin:0; padding:0; background:#fff; }
  .og{
    position:relative; width:1200px; height:630px; overflow:hidden;
-   box-sizing:border-box; padding:72px 78px;
+   box-sizing:border-box;
+   /* ⚠️ **아래 패딩이 브랜드 줄 자리입니다.** 브랜드는 absolute 로
+      bottom:56px 에 붙는데, 가운데 정렬된 본문이 거기까지 내려와서
+      알약과 **9px** 밖에 안 떨어졌습니다 (재서 알았습니다). 아래를
+      넉넉히 비워 두면 본문이 그만큼 올라갑니다. */
+   padding:64px 78px 126px;
    display:flex; flex-direction:column; justify-content:center;
    font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif;
-   color:#102A43; word-break:keep-all; letter-spacing:-.01em;
-   /* 랜딩 히어로와 같은 바탕 — 웜 화이트에 좌 초록 · 우 주황 번짐 */
+   color:#30241E; word-break:keep-all; letter-spacing:-.01em;
+   /* 히어로와 같은 바탕 — 아이보리에 좌 창업 · 우 폐업 번짐.
+      ⚠️⚠️ **여기 값은 css/tokens.css 를 못 읽습니다.** 2026-10-13 에
+      팔레트를 베이지 · 브라운으로 바꿨는데 이 파일만 옛 초록 ·
+      옛 주황 · 옛 남색으로 남아 있었습니다 — 404.html 과 같은
+      자리입니다. **색을 바꾸면 여기도 같이 고치세요.** */
    background:
-     radial-gradient(52% 70% at 2% 16%,  rgba(18,168,120,.16) 0%, rgba(18,168,120,0) 70%),
-     radial-gradient(52% 70% at 98% 16%, rgba(242,106,61,.16) 0%, rgba(242,106,61,0) 70%),
-     linear-gradient(180deg, #FFFFFF 0%, #FBF8F2 100%);
+     radial-gradient(52% 70% at 2% 16%,  rgba(72,105,135,.16) 0%, rgba(72,105,135,0) 70%),
+     radial-gradient(52% 70% at 98% 16%, rgba(173,99,63,.16) 0%, rgba(173,99,63,0) 70%),
+     linear-gradient(180deg, #FFFFFF 0%, #FFFCF7 100%);
  }
  /* 샴페인 골드는 이 한 줄까지입니다 (§21) */
- .k{ font-size:23px; font-weight:900; letter-spacing:.26em; color:#D5AA55; }
+ /* ⚠️ 금빛 **글자**는 --gold-text(#7A5633) 입니다 — --gold 는 면 전용이라
+    밝은 바탕에서 대비 1.54 입니다 (옛 #D5AA55 도 같은 까닭으로 안 됩니다) */
+ .k{ font-size:23px; font-weight:900; letter-spacing:.26em; color:#7A5633; }
  h1{ margin:26px 0 0; font-size:96px; font-weight:900; line-height:1.06;
-     letter-spacing:-.045em; color:#123B68; }
+     letter-spacing:-.045em; color:#382820; }
  h1 em{ font-style:normal; }
- .st{ color:#07865F; }   /* 창업 */
- .cl{ color:#D95128; }   /* 폐업 */
- p{ margin:26px 0 0; font-size:32px; font-weight:700; color:#102A43; }
+ .st{ color:#3A5572; }   /* 창업 — --start-dark (7.54) */
+ .cl{ color:#8A4A2A; }   /* 폐업 — --close-deep (6.63) */
+ p{ margin:26px 0 0; font-size:32px; font-weight:700; color:#30241E; }
  .pills{ margin-top:44px; display:flex; gap:16px; }
  .pill{ display:inline-flex; align-items:center; gap:10px;
         border-radius:16px; padding:18px 34px;
         font-size:26px; font-weight:800; color:#fff; }
- .pill-st{ background:#12A878; }
- .pill-cl{ background:#F26A3D; }
+ .pill-st{ background:#486987; }   /* 흰 글자 5.76 */
+ .pill-cl{ background:#9A5633; }   /* 흰 글자 5.60 */
  /* 브랜드는 아래 왼쪽 한 줄 — 제목이 주인공입니다 */
  .brand{ position:absolute; left:78px; bottom:56px;
          display:flex; align-items:baseline; gap:14px; }
- .brand b{ font-size:28px; font-weight:900; letter-spacing:-.03em; color:#102A43; }
- .brand span{ font-size:21px; color:#7B8794; }
- /* 아래 가장자리에 초록 → 주황 한 줄 */
+ .brand b{ font-size:28px; font-weight:900; letter-spacing:-.03em; color:#30241E; }
+ .brand span{ font-size:21px; color:#675E55; }
+ /* 아래 가장자리에 창업 → 에스프레소 → 폐업 한 줄 */
  .edge{ position:absolute; left:0; right:0; bottom:0; height:8px;
-        background:linear-gradient(90deg,#12A878 0%,#123B68 52%,#F26A3D 100%); }
+        background:linear-gradient(90deg,#486987 0%,#382820 52%,#9A5633 100%); }
 </style>
 <div class="og" id="og">
   <div class="k">START &amp; CLOSE</div>

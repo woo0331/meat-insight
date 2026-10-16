@@ -900,11 +900,59 @@ function mainReadIn(){
    ⚠️ `/content` 로 가는 길은 푸터 `서비스` 칸과, 160개 화면의 글
    잇기 구간(`ReadBand`)과 헤더 검색이 그대로 받습니다 — 재서
    확인했습니다. */
+/* ── 계산도구 구간 오른쪽 일러스트 (2026-10-15 §7) ──────────────────
+   ⚠️⚠️ **받아 온 그림이 아니라 여기서 그린 SVG 입니다.** 이미지
+   지시서 §4 가 "사용 권한이 확인된 이미지" 만 허용하고 §54 가 AI
+   이미지 남발을 막아서, `iconArt()` 열여섯 장을 그린 것과 **같은
+   방식**으로 그렸습니다 — 저작권이 `icon()` 과 같고 인라인이라
+   **내려받기 0건**입니다.
+
+   ⚠️ 색은 CSS 가 칠합니다 (`.c1` 진한 면 · `.c2` 옅은 면 · `.c3`
+   포인트 · `.cw` 흰색). 여기에 색을 박으면 구간 바탕이 바뀔 때
+   따로 놉니다 — `iconArt()` 가 `--ia-1` · `--ia-2` 두 변수로만
+   받는 것과 같은 규칙입니다.
+
+   ⚠️⚠️ **글자를 그리지 마세요.** 숫자나 통화 기호를 그려 넣으면
+   읽어 주는 프로그램이 못 읽고 번역도 안 됩니다 — 그래서 화면
+   숫자는 전부 HTML 이고 여기는 `aria-hidden` 입니다.
+
+   ⚠️ 1180px 아래에서는 CSS 가 **아예 안 그립니다** (아래 참고) —
+   가운데 제목 옆에 설 자리가 없고, 폰에서 메인만 길어집니다. */
+function mainCalcArt(){
+  return '<div class="mcal-ill" aria-hidden="true">'+
+    '<svg viewBox="0 0 200 200" width="100%" height="100%" fill="none">'+
+      '<circle class="c2" cx="100" cy="102" r="92"/>'+
+      /* 뒤에 뜬 작은 그래프 카드 — "계산한 값이 숫자로 나온다" */
+      '<rect class="cw" x="116" y="20" width="64" height="52" rx="9"/>'+
+      '<rect class="c3" x="127" y="48" width="10" height="13" rx="3"/>'+
+      '<rect class="c3" x="143" y="39" width="10" height="22" rx="3"/>'+
+      '<rect class="c3" x="159" y="30" width="10" height="31" rx="3"/>'+
+      /* 계산기 본체 */
+      '<rect class="c1" x="42" y="48" width="96" height="134" rx="14"/>'+
+      '<rect class="cw" x="56" y="64" width="68" height="30" rx="7"/>'+
+      '<rect class="c3" x="64" y="76" width="30" height="7" rx="3.5"/>'+
+      '<rect class="c3" x="100" y="76" width="16" height="7" rx="3.5"/>'+
+      /* 자판 — 세 줄 · 오른쪽 한 칸은 길게 (= 키) */
+      '<rect class="cw" x="56" y="106" width="18" height="16" rx="5"/>'+
+      '<rect class="cw" x="81" y="106" width="18" height="16" rx="5"/>'+
+      '<rect class="c3" x="106" y="106" width="18" height="16" rx="5"/>'+
+      '<rect class="cw" x="56" y="130" width="18" height="16" rx="5"/>'+
+      '<rect class="cw" x="81" y="130" width="18" height="16" rx="5"/>'+
+      '<rect class="c3" x="106" y="130" width="18" height="40" rx="5"/>'+
+      '<rect class="cw" x="56" y="154" width="43" height="16" rx="5"/>'+
+      /* 동전 둘 — "얼마가 드는가" */
+      '<ellipse class="c3" cx="44" cy="176" rx="26" ry="9"/>'+
+      '<ellipse class="cw" cx="44" cy="172" rx="26" ry="9"/>'+
+      '<ellipse class="c3" cx="44" cy="172" rx="11" ry="4"/>'+
+    '</svg></div>';
+}
+
 function MainToolsInfo(){
   var a = mainCalcIn();
   if(!a) return "";            /* 계산기가 없으면 구간째 뺍니다 */
   return '<section class="sec sec-calc mti"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
+    '<div class="sec-hd sec-hd-c mcal-hd">'+
+      mainCalcArt()+
       '<p class="eyebrow">TOOLS</p>'+
       /* ⚠️ 2026-10-13 §9 의 문구입니다. */
       '<h2>사업에 필요한 계산도구를 이용해 보세요.</h2>'+

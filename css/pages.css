@@ -4293,6 +4293,41 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    ⚠️ 바탕은 **연한 파스텔**입니다 (§6). 색은 `hv-*` 한 곳에서 오고
    카드마다 색을 적지 않습니다.
    ──────────────────────────────────────────────────────────── */
+/* ── 계산도구 구간 오른쪽 일러스트 (2026-10-15 §7) ──────────────────
+   ⚠️⚠️ **가운데 제목을 건드리지 않습니다.** 2026-10-13 §9 로 이 구간
+   머리말이 `sec-hd-c`(가운데)가 됐는데, 일러스트를 넣겠다고 두 칸
+   격자로 바꾸면 제목이 왼쪽으로 가서 **그 지시서를 되돌리는 것**이
+   됩니다. 그래서 `absolute` 로 **머리말 오른쪽 빈자리**에만 섭니다.
+
+   ⚠️⚠️ **1180px 아래에서는 안 그립니다** (`display:none`). 재 본 값 —
+   제목 오른쪽에 남는 폭이 1440px 에서 272px · 1280px 에서 236px ·
+   1180px 에서 198px 이고, 그 아래로는 제목과 겹칩니다. 폭을 바꾸시면
+   **재 보고** 이 수를 같이 고치세요.
+
+   ⚠️ 색은 네 가지뿐입니다 — 진한 면 · 옅은 면 · 포인트 · 흰색.
+   구간 바탕(`--bg-calc` 라벤더) 위에서 고른 값이라, 바탕을 바꾸시면
+   여기도 같이 봐야 합니다.
+   ⚠️ `pointer-events:none` — 장식이라 누르는 자리를 뺏으면 안 됩니다
+   (바로 아래가 계산기 카드 넷입니다). */
+.mcal-hd{ position:relative; }
+.mcal-ill{ display:none; }
+@media (min-width:1180px){
+  .mcal-ill{ display:block; position:absolute; right:0; top:50%;
+    width:168px; height:168px; transform:translateY(-50%);
+    pointer-events:none; }
+}
+@media (min-width:1360px){ .mcal-ill{ width:188px; height:188px; } }
+/* ⚠️⚠️ **에스프레소(`--ink`)로 두지 마세요.** 처음에 그 색으로 그렸더니
+   188px 짜리 **거의 검은 덩어리**가 라벤더 구간 가운데에 앉아, 이 사이트가
+   지키는 BRIGHT PREMIUM 과 정면으로 부딪혔습니다 (찍어 보고 알았습니다).
+   ⚠️ 어두운 면 검사는 이것을 **못 잡습니다** — svg 의 `fill` 은
+   `backgroundColor` 가 아니라서 세는 쪽에 안 걸립니다. 눈으로 봐야 합니다.
+   지금은 구간 바탕(라벤더)과 한 식구인 짙은 보라입니다. */
+.mcal-ill .c1{ fill:#4C3A86; }
+.mcal-ill .c2{ fill:#E1D8FA; }      /* 라벤더 구간 위에서 한 단계 짙은 면 */
+.mcal-ill .c3{ fill:#8B6FD4; }      /* 포인트 퍼플 — 구간 바탕과 한 쌍 */
+.mcal-ill .cw{ fill:#FFFFFF; }
+
 .mcal-g{ display:grid; grid-template-columns:repeat(4, 1fr); gap:var(--s4);
   margin:var(--s8) 0 0; padding:0; list-style:none; }
 .mcal-g > li{ min-width:0; }

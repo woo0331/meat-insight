@@ -333,15 +333,22 @@ const CASES = [
      없어졌습니다. **없는 요소를 집으면 되돌리기가 터지고**, 그러면
      "검사가 안 잡는다" 가 아니라 되돌리기가 틀린 것입니다 (열 번째).
      지금은 전문관 서비스 칸에 지어낸 수를 박아 봅니다. */
+  /* ⚠️ 2026-10-16 §3 — 전문관 서비스 격자(.hsv-g)가 메인에서
+     내려왔습니다. **없는 요소를 집으면 되돌리기가 터지고**, 그러면
+     "검사가 안 잡는다" 가 아니라 되돌리기가 틀린 것입니다 (열한 번째).
+     지금은 진입 카드의 대표 서비스 칸에 지어낸 수를 박아 봅니다. */
   ["지어낸 실적 숫자가 메인에 없다",
-   `document.querySelector(".hsv-g b").textContent = "입점 업체 1,200곳";`],
+   `document.querySelector(".bent-it > i").textContent = "입점 업체 1,200곳";`],
   /* ⚠️⚠️ **2026-10-13 §5 — 히어로에는 h1 이 없습니다.** 전에는 h1
      글자를 바꿔 되돌렸는데, 지금 검사가 보는 것은 **두 판의 크기 ·
      무게**입니다 (한쪽을 좁히면 그게 "덜 중요한 것" 이라는 말입니다).
      글자를 바꾸면 아무 일도 안 나서 "검사가 안 잡는다" 로 보입니다 —
      검사가 아니라 되돌리기가 틀린 자리, 열 번째입니다. */
-  ["히어로가 창업 · 폐업 두 갈래를 같은 무게로 낸다",
-   `document.querySelector(".mh2").style.gridTemplateColumns = "2fr 1fr";`],
+  /* ⚠️⚠️ **2026-10-16 §3-2 — 히어로가 브랜드 히어로 하나가 됐습니다.**
+     검사가 보는 것은 h1 하나 · 사진 · 높이 · 두 단추입니다 — 사진을
+     지워서 "사진이 있는데 안 그려졌다" 를 만듭니다. */
+  ["히어로가 브랜드 메시지와 두 길을 낸다",
+   `document.querySelector(".bhero-ph .ph").remove();`],
   /* ⚠️⚠️ 되돌리기는 **검사가 실제로 보는 것**을 망가뜨려야 합니다.
      검색 가는 길을 지울 때 입력칸만 지우고 돋보기를 남겼다가 "검사가
      안 잡는다" 로 보였던 적이 있습니다 — 검사가 아니라 되돌리기가
@@ -364,9 +371,12 @@ const CASES = [
      이라는 말이 됩니다 — 이 저장소가 여러 곳에 못박아 둔 자리입니다. */
   /* ⚠️ 검사가 보는 자리가 전문관 카드(.mhall-c.hall-close)의 **바탕**
      으로 옮겨갔습니다 — 글자색을 칠하면 아무 일도 안 납니다. */
-  ["창업은 파랑 · 폐업은 주황이고 빨강이 아니다",
-   `document.querySelector(".mhall-c.hall-close")
-      .style.background = "rgb(214,28,28)";`],
+  /* ⚠️ 2026-10-16 §2-1 — 셋이 **서로 달라야** 합니다. 폐업 카드를
+     창업과 같은 색으로 칠해 "색이 겹칩니다" 를 만듭니다. */
+  ["전문관 셋이 저마다의 색으로 갈린다",
+   `const st = getComputedStyle(
+      document.querySelector(".bent-c.ent-startup > a")).backgroundColor;
+    document.querySelector(".bent-c.ent-closure > a").style.background = st;`],
   /* ⚠️ 2026-10-11 간소화 §2 — 연결 구간이 메인에서 내려와 되돌릴
      요소가 없습니다. **없는 요소를 집으면 되돌리기가 터지고**, 그러면
      "검사가 안 잡는다" 로 보입니다 (이 저장소에서 아홉 번 겪은 자리).
@@ -388,13 +398,15 @@ const CASES = [
   /* ⚠️ 이 검사는 전에 되돌리기가 없었습니다 — 2026-10-11 에 글 셋이
      내려오면서 다시 쓰면서 같이 넣었습니다 (되돌리기 없는 검사는
      아무것도 증명하지 않습니다). */
-  ["메인 계산도구 넷이 실제로 있는 것이다",
-   `document.querySelector(".mcal-g > li").remove();`],
-  ["전문관 카드 넷의 크기가 같다",
-   `/* ⚠️ min-height 가 148px 로 걸려 있어 height 만 줄이면 아무 일도
-      안 납니다 — 폭을 줄입니다 (grid 의 stretch 를 덮습니다). */
-   const e4 = document.querySelectorAll(".mhall-c")[3];
-   e4.style.width = "70%"; e4.style.minHeight = "0"; e4.style.height = "80px";`],
+  /* ⚠️ 2026-10-16 §3 — 계산도구 구간이 메인에서 내려와 검사가
+     /tools 로 옮겨갔습니다. 거기서 없는 계산기를 가리키게 만듭니다. */
+  ["계산도구가 실제로 있는 것이고 저마다 다르다",
+   `document.querySelector('#view a[href^="/tools/"]')
+      .setAttribute("href", "/tools/zzz-없는계산기");`],
+  /* ⚠️ grid 의 stretch 를 덮어야 합니다 — 폭과 높이를 같이 줄입니다. */
+  ["진입 카드 셋의 크기가 같다",
+   `const e3 = document.querySelectorAll(".bent-c")[2];
+   e3.style.width = "70%"; e3.style.minHeight = "0"; e3.style.height = "80px";`],
   /* ⚠️⚠️ **아이콘 칸(.stg-i)만 집어야 합니다.** 처음에
      ".mstg-g > li > a svg" 로 적었더니 **화살표까지** 걸려서
      [아이콘0, 화살표0, 아이콘1, …] 이 되고, 0번에 화살표를 넣는 바람에
@@ -458,12 +470,15 @@ const CASES = [
   ["메인(/)이 중간 소개 화면이 아니다",
    `document.querySelector("#view").insertAdjacentHTML("afterbegin",
       "<section class=lh>랜딩이 돌아옴</section>");`],
-  ["어두운 면이 화면의 15% 를 넘지 않는다",
-   /* ⚠️ 구간 **하나**로는 모자랍니다 — 메인이 9,600px 이라 한 구간은
-      7% 밖에 안 됩니다. 어두운 테마로 되돌아가는 것을 재현하려면
-      위쪽 여섯 구간을 통째로 어둡게 해야 합니다. */
-   `[...document.querySelectorAll("#view > section")].slice(0, 6)
-      .forEach(function(e){ e.style.background = "#0B1220"; });`],
+  /* ⚠️⚠️ 2026-10-16 §2-1 — 메인은 **지시대로 다크**입니다. 그래서
+     되돌리기도 뒤집혔습니다: 구간 하나를 **밝게** 해서 "다크가 아닌
+     구간" 을 만듭니다 (전에는 어둡게 하는 쪽이었습니다). */
+  ["메인은 다크이고 그 다크가 메인 밖으로 안 샌다",
+   `document.querySelectorAll("#view > section")[2]
+      .style.background = "#FFFFFF";`],
+  /* 짝 검사 — 속화면에 다크 표시가 새면 걸려야 합니다 */
+  ["속화면은 그대로 밝다 (다크는 메인 한 화면뿐)",
+   `document.documentElement.classList.add("dkh");`],
   /* ⚠️ 길이 **둘**입니다 (넓은 화면은 입력칸, 좁은 화면은 돋보기).
      하나만 지우면 다른 하나가 남아서 되돌리기가 헛돕니다 — 실제로
      돋보기만 지웠다가 "검사가 안 잡는다" 로 보였습니다. */
@@ -536,9 +551,12 @@ const CASES = [
    /* ⚠️ 2026-10-11 최종 디자인 — .msvc-g · .mti-c · .hpk 가 전부
       메인에서 내려왔습니다. 지금 있는 카드는 계산도구(.mcal-g > li) ·
       절차(.mstp-g > li) · 전문관(.mhall-c) 입니다. */
-   `const a = document.querySelector(".mcal-g > li") ||
-             document.querySelector(".mstp-g > li") ||
-             document.querySelector(".mhall-c");
+   /* ⚠️ 2026-10-16 §3 — 지금 메인에 있는 카드는 진입(.bent-c > a) ·
+      까닭(.bwhy-c) · 절차(.bstep-c) · 배너(.bban-c > a) 입니다.
+      **없는 요소를 집으면 되돌리기가 터집니다** (열한 번째). */
+   `const a = document.querySelector(".bwhy-c") ||
+             document.querySelector(".bstep-c") ||
+             document.querySelector(".bent-c > a");
     const back = (function(el){
       let e = el.parentElement;
       while(e){
@@ -616,13 +634,15 @@ const CASES = [
   /* 한 전문관 안에서 두 칸이 같은 아이콘을 쓰면 걸려야 합니다 —
      열두 칸에 같은 그림이 둘이면 무엇이 무엇인지 흐려집니다.
      ⚠️ 되돌리기는 **그려진 뒤에** 돕니다. DOM 을 직접 건드립니다. */
-  ["전문관 넷과 서비스 아이콘이 비지 않고 저마다 다르다",
-   `const t = [].slice.call(document.querySelectorAll(".hsv-g > li > a .hsv-i svg"));
+  ["메인 아이콘이 비지 않고 한 묶음 안에서 겹치지 않는다",
+   `const t = [].slice.call(document.querySelectorAll("#view .bwhy-i svg"));
     t[1].innerHTML = t[0].innerHTML;`],
   /* 고른 전문관이 표시되지 않으면 걸려야 합니다 — 거르개는 무엇이
      켜졌는지 보이지 않으면 거르개가 아닙니다 */
-  ["전문관을 고르면 그 전문관의 서비스가 나온다",
-   `document.querySelector(".mhall-g .mhall-c.is-on").classList.remove("is-on");`],
+  /* ⚠️ 2026-10-16 §3-4 — 양도양수가 가로형 배너가 됐습니다. 세 길
+     가운데 하나를 지워 "길이 배너에 없습니다" 를 만듭니다. */
+  ["양도양수 배너가 인수 · 양도 · 전문관 세 길을 낸다",
+   `document.querySelector('.bpass a[href="/sell"]').remove();`],
 
   /* 2026-10-11 간소화 지시서 §6 — 네 구간 중 하나가 조용히 빠지면
      걸려야 합니다. ⚠️ 되돌리기는 **그려진 뒤에** 도니 DOM 을 직접
@@ -961,8 +981,14 @@ async function proveAudit(pg){
          .mstp-i 로 바뀌었습니다. 집는 자리를 AUDIT 과 같이 넓힙니다 —
          없는 요소를 집으면 아무 일도 안 나서 "검사가 안 잡는다" 로
          보입니다 (검사가 아니라 되돌리기가 틀린 자리, 열 번째). */
+      /* ⚠️ 2026-10-16 §3 — 메인의 타일이 .bent-i · .bwhy-i · .bban-i ·
+         .bstep-i 로 바뀌었습니다. 집는 자리를 AUDIT 과 같이 넓힙니다 —
+         없는 요소를 집으면 아무 일도 안 나서 "검사가 안 잡는다" 로
+         보입니다 (검사가 아니라 되돌리기가 틀린 자리, 열한 번째). */
       const e = document.querySelector("#view .ic-t svg, #view .stg-i svg," +
-        " #view .ia-t svg, #view .mhall-i svg, #view .mstp-i svg");
+        " #view .ia-t svg, #view .mhall-i svg, #view .mstp-i svg," +
+        " #view .bent-i svg, #view .bwhy-i svg, #view .bban-i svg," +
+        " #view .bstep-i svg");
       if(e) e.remove();
     });
     await pg.waitForTimeout(60);
@@ -972,6 +998,33 @@ async function proveAudit(pg){
     console.log((ok ? "✅" : "❌") + " 아이콘 자리가 비었음 · " + u +
       "  [지금 " + JSON.stringify(before) +
       " → 타일에서 svg 를 지우면 " + JSON.stringify(after).slice(0,50) + "]");
+  }
+
+  /* 헤더 메뉴가 오른쪽 위로 올라앉음 — 2026-10-16 §4 로 메뉴가 여덟이
+     되면서 넣은 검사입니다.
+     ⚠️⚠️ **이것은 어느 검사도 안 보던 자리입니다.** 메뉴가 쓸 수 있는
+     폭을 넘기면 가로 스크롤이 나는 것이 아니라 메뉴가 헤더 오른쪽 위로
+     올라앉습니다 — gnb 가 min-width:0 이라 문서 폭이 그대로여서
+     "가로 스크롤" 도 "낱말 잘림" 도 영원히 통과합니다.
+     ⚠️ 되돌리기는 메뉴가 **보이는 폭**에서 해야 합니다 (1100px 아래는
+     통째로 접히고 햄버거 서랍이 받습니다). */
+  for(const u of ["/"]){
+    await pg.setViewportSize({ width:1440, height:900 });
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).hdfit;
+    await pg.evaluate(() => {
+      document.querySelectorAll(".hd .gnb a").forEach(function(a){
+        a.textContent = a.textContent + " 아주아주 긴 메뉴 이름";
+      });
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).hdfit;
+    const ok = before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 헤더 메뉴가 오른쪽 위로 올라앉음 · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → 메뉴 이름을 길게 하면 " + JSON.stringify(after).slice(0,70) + "]");
   }
 
   /* 고르개 딱지가 칸보다 긺 — 딱지를 길게 바꿔 봅니다. 이 저장소에서

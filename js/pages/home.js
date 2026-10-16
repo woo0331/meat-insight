@@ -1341,6 +1341,323 @@ function PageMain(){
      그대로 들고 있습니다 (재서 확인했습니다).
      ⚠️ 차례를 바꾸시려면 지시서를 먼저 고치고 `check.js` 의 `want`
      를 **같이** 고치세요. */
-  return MainHero()+ MainHalls()+ MainToolsInfo()+ MainSteps()+ MainLast();
+  /* ⚠️⚠️ **2026-10-16 "최종 홈페이지 리뉴얼" §3 의 아홉 영역**입니다 —
+     헤더 · 푸터가 `#view` 밖이라 여기가 내놓는 것은 **일곱**입니다.
+     차례는 §3 이 "순서 변경 금지" 로 못박았습니다.
+
+       ② .bhero  ③ .bent  ④ .bpass  ⑤ .bwhy  ⑥ .bstep  ⑦ .bban  ⑧ .bcta
+
+     ⚠️⚠️ **앞 지시서의 다섯을 지우지 않았습니다** (§0-1 · §0-5).
+     되살리시려면 아래 줄을 그대로 되돌리면 됩니다 —
+       return MainHero()+ MainHalls()+ MainToolsInfo()+ MainSteps()+ MainLast();
+     ⚠️ 내려온 구간이 가리키던 곳은 전부 남아 있습니다 — 전문관 넷은
+     ③ 과 ④ 가, 계산도구는 헤더 `계산기` 와 푸터 서비스 칸이, 최신
+     정보 글은 헤더 `이용 가이드` 와 푸터 정보센터가 받습니다.
+     ⚠️ 차례를 바꾸시려면 지시서를 먼저 고치고 `check.js` 의 `want` ·
+     `build-pages.js` 의 크롤러 본문을 **같이** 고치세요. */
+  return HomeHero()+ HomeEnter()+ HomePass()+ HomeWhy()+
+         HomeSteps()+ HomeBanners()+ HomeCta();
 }
 
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-10-16 "최종 홈페이지 리뉴얼 및 서비스 구조 통합 개발 지시서"
+   §3 — 메인페이지 **아홉 영역** (차례 변경 금지)
+   ══════════════════════════════════════════════════════════════════
+   ① 헤더                        chrome.js · #view 밖
+   ② 메인 브랜드 히어로           .bhero
+   ③ 창업 · 운영 · 폐업 진입 카드  .bent
+   ④ 매장 양도양수 가로형 배너     .bpass
+   ⑤ 스토어웨이가 선택받는 이유    .bwhy
+   ⑥ 이용 방법 5단계              .bstep
+   ⑦ 배너 둘                     .bban
+   ⑧ 하단 견적 신청 유도 + 푸터    .bcta + chrome.js
+   ⑨ 법적 고지 · 접근 경로        푸터 (.ft-role · 사업자 정보 · 칸 다섯)
+
+   그래서 #view 안은 **일곱**입니다 — check.js 의 want 와 같아야 합니다.
+
+   ⚠️⚠️ **메인이 통째로 다크입니다** (§2-1). `index.html` 의
+   html 태그에 dkh 가 있어서 **첫 그림부터** 다크이고, 하위 화면에서는
+   빌드가 떼어 냅니다 (shell()). 속화면 본문은 그대로 밝습니다.
+
+   ⚠️⚠️ **내려온 구간을 지우지 않았습니다** (§0-1 · §0-5). 앞 지시서의
+   MainHero · MainHalls · MainToolsInfo · MainSteps · MainLast 와 그
+   앞의 구간 함수들이 **전부 그대로** 있고 PageMain() 이 안 부를
+   뿐입니다 — 되살리시려면 아래 PageMain() 한 줄입니다.
+   ⚠️ 내려온 것마다 갈 곳이 남아 있는지 재서 확인했습니다 —
+     · 전문관 대표 서비스 격자 → ③ 카드가 전문관 네 화면으로 보냅니다
+     · 계산도구 넷            → 헤더 `계산기` · 푸터 서비스 칸
+     · 최신 정보 글           → 헤더 `이용 가이드` · 푸터 정보센터 ·
+                                160개 화면의 글 잇기 구간
+   ⚠️⚠️ **메인에 긴 서비스 목록 · 업체 샘플 · 반복 상담 배너 · 통계
+   카드 · 중복 계산도구 목록을 더하지 마세요** (§3 이 직접 금지).
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ③ 진입 카드 셋 — ⚠️ **넷이 아니라 셋**입니다 (§3-3). 매장 양도양수는
+   바로 아래 ④ 가 가로형 배너로 따로 받습니다 (§3-4).
+   ⚠️ 이름 · 주소 · 대표 서비스는 js/data/halls.js 에서 옵니다 — 여기
+   적는 것은 **사진 자리 · 아이콘 · 한 줄**뿐입니다. 손으로 적으면
+   전문관을 고칠 때 한쪽만 바뀝니다 (이 저장소가 아이콘 표로 겪은 자리).
+   ⚠️⚠️ 사진 셋은 **사장님이 주신 것**입니다 (권한이 확인된 넉 장 중
+   셋) — 자리 이름을 한 글자 틀리면 조용히 안 나옵니다. */
+var HOME_ENTER = [
+  { key:"startup",   no:"01", ia:"bulb",
+    lead:"아이디어부터 오픈까지",
+    d:"업종을 고르시면 그 업종에 필요한 준비 순서와 서비스가 펼쳐집니다.",
+    ph:"hero-startup" },
+  { key:"operation", no:"02", ia:"store",
+    lead:"지금 더 잘되는 매장으로",
+    d:"식자재 · 수리 · 마케팅 · 세무까지, 문을 연 뒤에 필요한 것들입니다.",
+    ph:"hero-ops" },
+  { key:"closure",   no:"03", ia:"restore",
+    lead:"마무리도 든든하게",
+    d:"넘길 수 있는 것부터 확인하고 철거 · 원상복구 · 세금까지 순서대로.",
+    ph:"hero-closure" }
+];
+
+/* ⑤ 선택받는 이유 넷 — ⚠️⚠️ **넷 다 근거가 있는 말**입니다.
+   ⚠️⚠️ **"검증된 업체" · "믿을 수 있는 업체" 를 적지 마세요.** 검증
+   기능이 없습니다 — 시안에 그 문구가 있지만 적는 순간 표시 · 광고의
+   공정화에 관한 법률 제3조이고 §0-7 입니다.
+   ⚠️ 숫자는 손으로 적지 않습니다 — MainScopeStrip() 이 그 자리에서
+   세고 "분류 기준이며 등록된 업체 수가 아니다" 를 같이 냅니다. */
+var HOME_WHY = [
+  { ia:"supply",   n:"창업부터 폐업까지 한곳에서",
+    d:"매장을 열고 · 운영하고 · 넘기고 · 정리하는 일을 한 줄로 이어 "+
+      "두었습니다. 단계마다 무엇이 필요한지부터 보여 드립니다." },
+  /* 약관 제5조 (전자상거래법 제20조 제1항) */
+  { ia:"handover", n:"저희는 중개자입니다",
+    d:"인테리어 · 철거 · 세무를 직접 하지 않습니다. 사장님과 업체를 "+
+      "잇는 일만 하고, 거래 당사자가 아닙니다." },
+  { ia:"calc",     n:"한 번만 적으시면 됩니다",
+    d:"업종 · 지역 · 조건을 한 번 적어 보내시면 그 분야 업체를 찾아 "+
+      "전달합니다. 가입도 필요 없고 신청은 무료입니다." },
+  /* 약관 제6조 제4항 · js/data/join.js 의 약속과 같은 말이어야 합니다 */
+  { ia:"shield",   n:"광고로 위에 올린 자리가 없습니다",
+    d:"업체는 등록된 차례로 냅니다. 유료 광고 상품이 생기면 그 자리에 "+
+      "광고라고 표시합니다." }
+];
+
+/* ⑦ 배너 둘 (§3-7)
+   ⚠️⚠️ **시안의 광고 배너를 그대로 만들지 않았습니다.** 시안은 업체
+   이름이 붙은 추천 광고 둘인데 **광고주가 0곳**이고 광고 데이터 모델
+   자체가 없습니다 — 지어내면 §0-7 이고 표시 · 광고의 공정화에 관한
+   법률 제3조입니다.
+   그래서 **자리와 짜임새는 지시서대로 둘**로 두고, 안에는 **실제로
+   열리는 저희 분야 화면**을 넣었습니다. "추천" · "인기" · "광고"
+   딱지는 붙이지 않습니다 (근거 없는 표현 금지).
+   ⚠️ 광고 상품을 실제로 파시게 되면 **그 칸에 "광고" 를 표시해서**
+   바꿔 끼우면 됩니다 (약관 제6조 제4항 · 지금 이 줄도 같이 고치세요). */
+var HOME_BAN = [
+  { n:"매장을 만드는 일", lead:"인테리어 · 시공", ia:"interior", tone:"start",
+    d:"도면 · 철거 · 전기 · 간판까지 한 분야에서 보고 비교하실 수 있습니다.",
+    to:"/providers/interior", ph:"svc-interior" },
+  { n:"매장을 돌아가게 하는 일", lead:"POS · CCTV · 매장시스템", ia:"pos", tone:"ops",
+    d:"결제 · 주문 · 보안 · 네트워크를 한 분야에서 보고 비교하실 수 있습니다.",
+    to:"/providers/it", ph:"svc-it" }
+];
+
+/* ── ② 메인 브랜드 히어로 (§3-2) ─────────────────────────────────
+   ⚠️⚠️ **h1 은 화면에 하나**입니다. 히어로의 이 h1 이 그것이고,
+   아래 구간은 전부 h2 입니다 (제목 차례를 건너뛰면 읽어 주는
+   프로그램이 뼈대를 못 잡습니다 — 전수 점검이 봅니다).
+   ⚠️ 브랜드 이름은 brand.js 에서 오고 **조사는 koWith() 가 고릅니다** —
+   손으로 적으면 이름이 바뀔 때 "인수인계은" 이 됩니다 (푸터의 중개자
+   고지에서 실제로 겪은 자리).
+   ⚠️⚠️ **검색창을 여기에 또 만들지 마세요** (§0-5 중복 금지). 통합검색
+   은 헤더에 있고 161개 화면 전부에서 같은 mainFind() 를 부릅니다.
+   ⚠️ 사진은 글 **뒤**에 깔리고 위에 짙은 막이 덮입니다 — 사진 위
+   글자는 전수 점검이 못 잽니다. 바꾸시면 픽셀로 재 보세요. */
+function HomeHero(){
+  var B = window.AM_BRAND || {};
+  var nm = (window.amBrand ? amBrand() : (B.name || ""));
+  var with_ = (window.koWith ? koWith(nm, "이가") : nm + "가");
+  return '<section class="bhero">'+
+    '<span class="bhero-ph" aria-hidden="true">'+
+      photoBox("hero-start", "", true)+'</span>'+
+    '<div class="w bhero-in">'+
+      '<p class="bhero-k">창업 · 운영 · 양도양수 · 폐업</p>'+
+      '<h1>사장님의 시작부터 마지막까지,<br class="br-m"> '+
+        '<em>'+esc(with_)+'</em> 함께합니다.</h1>'+
+      '<p class="bhero-s">매장을 열고 · 운영하고 · 넘기고 · 정리하는 데 '+
+        '필요한 서비스를 한곳에서 찾고, 비교하고, 연결해 드립니다.</p>'+
+      '<div class="bhero-go">'+
+        '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
+          '무료 견적 신청'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-gh btn-lg" href="/startup">서비스 둘러보기</a>'+
+      '</div>'+
+    '</div>'+
+  '</section>';
+}
+
+/* ── ③ 창업 · 운영 · 폐업 진입 카드 셋 (§3-3) ────────────────────
+   ⚠️⚠️ **카드 전체가 하나의 <a> 입니다** — 안에 또 <a> 를 넣지 마세요
+   (브라우저가 쪼갭니다). "서비스 보기 →" 는 **표시**이지 따로 누르는
+   단추가 아닙니다.
+   ⚠️ <ul> 의 자식은 <li> 라야 합니다.
+   ⚠️⚠️ **grid 칸에 맨글과 태그를 섞지 마세요** — 안쪽을 전부 태그로
+   감쌉니다 (이 저장소가 네 번 겪은 자리). */
+function HomeEnter(){
+  var H = window.AM_HALLS || [];
+  var cards = HOME_ENTER.map(function(x){
+    var h = null, i;
+    for(i = 0; i < H.length; i++) if(H[i].key === x.key) h = H[i];
+    if(!h) return "";
+    /* 대표 서비스 셋 — 전문관이 실제로 들고 있는 것에서 앞 셋입니다.
+       ⚠️ 손으로 적지 마세요 (두 곳에 적으면 어긋납니다). */
+    var it = (h.items || []).slice(0, 3).map(function(s){
+      return '<i>'+esc(s.n)+'</i>'; }).join("");
+    var ph = hasPhoto(x.ph)
+      ? '<span class="bent-ph" aria-hidden="true">'+photoBox(x.ph)+'</span>' : "";
+    return '<li class="bent-c ent-'+esc(x.key)+'">'+
+      '<a href="'+esc(h.to)+'">'+ ph +
+        '<span class="bent-tx">'+
+          '<i class="bent-no">'+esc(x.no)+'</i>'+
+          '<span class="bent-i" aria-hidden="true">'+iconArt(x.ia, 44)+'</span>'+
+          '<b>'+esc(h.name)+'</b>'+
+          '<em>'+esc(x.lead)+'</em>'+
+          '<span class="bent-d">'+esc(x.d)+'</span>'+
+          (it ? '<span class="bent-it">'+it+'</span>' : "")+
+          '<span class="bent-go">'+esc(h.name)+' 서비스 보기'+icon("arrow",16)+'</span>'+
+        '</span>'+
+      '</a>'+
+    '</li>';
+  }).join("");
+  if(!cards) return "";
+  return '<section class="bent">'+
+    '<div class="w">'+
+      '<div class="sec-hd sec-hd-c">'+
+        '<p class="eyebrow">SERVICE</p>'+
+        '<h2>지금, 어떤 단계이신가요?</h2>'+
+        '<p>단계를 고르시면 그 단계에 필요한 서비스만 모아서 보여 드립니다.</p>'+
+      '</div>'+
+      '<ul class="bent-g">'+cards+'</ul>'+
+    '</div>'+
+  '</section>';
+}
+
+/* ── ④ 매장 양도양수 가로형 진입 배너 (§3-4) ─────────────────────
+   ⚠️⚠️ **매물이 0건입니다.** 그래서 "인수 가능한 매장 n건" 처럼 세는
+   말이나 카드를 내지 않고, 단추 이름도 **알아보기**까지입니다 —
+   "매물 보기" 로 적으면 있는 것처럼 읽힙니다 (절대 규칙 1 · 5).
+   한 건이라도 올라오면 /stores 가 **코드를 한 줄도 안 고치고** 카드를
+   냅니다.
+   ⚠️ 양도양수는 **넘기시는 분과 받으시는 분이 같은 화면**을 봅니다 —
+   한쪽 색으로 칠하지 않습니다 (브라운 · 크림). */
+function HomePass(){
+  var H = window.AM_HALLS || [], h = null, i;
+  for(i = 0; i < H.length; i++) if(H[i].key === "transfer") h = H[i];
+  if(!h) return "";
+  var ph = hasPhoto("kind-pass")
+    ? '<span class="bpass-ph" aria-hidden="true">'+photoBox("kind-pass")+'</span>' : "";
+  return '<section class="bpass">'+
+    '<div class="w bpass-c">'+ ph +
+      '<div class="bpass-tx">'+
+        '<p class="bpass-k">'+esc(h.name)+'</p>'+
+        '<h2>한 사장님의 마지막이 다른 사장님의 시작이 됩니다.</h2>'+
+        '<p>권리금 · 시설 · 임대차를 함께 놓고 봅니다. 넘기시는 분과 '+
+          '받으시는 분이 같은 화면을 보십니다.</p>'+
+        '<div class="bpass-go">'+
+          '<a class="btn btn-cr" href="/stores">매장 인수 알아보기</a>'+
+          '<a class="btn btn-gh" href="/sell">내 매장 양도하기</a>'+
+          '<a class="bpass-more" href="'+esc(h.to)+'">'+
+            esc(h.name)+' 전문관'+icon("arrow",16)+'</a>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+  '</section>';
+}
+
+/* ── ⑤ 스토어웨이가 선택받는 이유 (§3-5) ─────────────────────────── */
+function HomeWhy(){
+  return '<section class="bwhy">'+
+    '<div class="w">'+
+      '<div class="sec-hd sec-hd-c">'+
+        '<p class="eyebrow">WHY</p>'+
+        '<h2>이곳에서 찾으시면 되는 까닭</h2>'+
+      '</div>'+
+      '<ul class="bwhy-g">'+HOME_WHY.map(function(x){
+        return '<li class="bwhy-c">'+
+          '<span class="bwhy-i" aria-hidden="true">'+iconArt(x.ia, 46)+'</span>'+
+          '<b>'+esc(x.n)+'</b>'+
+          '<p>'+esc(x.d)+'</p>'+
+        '</li>'; }).join("")+'</ul>'+
+      /* ⚠️⚠️ **이 띠를 지우지 마세요.** 세는 값 셋과 "서비스 분류
+         기준이며 등록된 업체 수가 아니다" 가 같이 나갑니다 — 숫자만
+         크게 띄우면 "업체가 206곳" 으로 읽힙니다 (절대 규칙 1). */
+      MainScopeStrip()+
+    '</div>'+
+  '</section>';
+}
+
+/* ── ⑥ 이용 방법 5단계 (§3-6) ────────────────────────────────────
+   ⚠️ 걸음과 설명은 js/data/steps.js 한 곳입니다 (크롤러 본문도 같은
+   데서 읽습니다 — js/pages 안에 두면 크롤러에서 빠집니다).
+   ⚠️⚠️ ③ 의 "연락처 전달 동의를 그때 다시 받습니다" 를 지우지
+   마세요 — 개인정보보호법 제17조 제2항입니다. */
+function HomeSteps(){
+  var L = window.AM_STEPS || [];
+  if(!L.length) return "";
+  return '<section class="bstep">'+
+    '<div class="w">'+
+      '<div class="sec-hd sec-hd-c">'+
+        '<p class="eyebrow">HOW IT WORKS</p>'+
+        '<h2>이용 방법은 간단합니다.</h2>'+
+        '<p>신청은 무료이고 가입이 필요 없습니다.</p>'+
+      '</div>'+
+      '<ol class="bstep-g">'+L.map(function(x, i){
+        return '<li class="bstep-c">'+
+          '<span class="bstep-n">'+("0"+(i+1))+'</span>'+
+          '<span class="bstep-i" aria-hidden="true">'+icon(x.ic, 24)+'</span>'+
+          '<b>'+esc(x.n)+'</b>'+
+          '<p>'+esc(x.d)+'</p>'+
+        '</li>'; }).join("")+'</ol>'+
+      /* ⚠️ 지킬 수 없는 약속을 적지 마세요 — 업체 회신 시점은 업체가
+         정합니다 (약관 제8조와 같은 말이어야 합니다). */
+      '<p class="bstep-n2">'+icon("info",14)+
+        ' 업체 회신 시점은 업체가 정합니다 — 저희가 보장하지 않습니다.</p>'+
+    '</div>'+
+  '</section>';
+}
+
+/* ── ⑦ 배너 둘 (§3-7) ───────────────────────────────────────────── */
+function HomeBanners(){
+  var cards = HOME_BAN.map(function(x){
+    var ph = hasPhoto(x.ph)
+      ? '<span class="bban-ph" aria-hidden="true">'+photoBox(x.ph)+'</span>'
+      : '<span class="bban-i" aria-hidden="true">'+iconArt(x.ia, 48)+'</span>';
+    return '<li class="bban-c ban-'+esc(x.tone)+'">'+
+      '<a href="'+esc(x.to)+'">'+ ph +
+        '<span class="bban-tx">'+
+          '<i>'+esc(x.lead)+'</i>'+
+          '<b>'+esc(x.n)+'</b>'+
+          '<em>'+esc(x.d)+'</em>'+
+          '<span class="bban-go">자세히 보기'+icon("arrow",16)+'</span>'+
+        '</span>'+
+      '</a>'+
+    '</li>';
+  }).join("");
+  if(!cards) return "";
+  return '<section class="bban"><div class="w">'+
+    '<ul class="bban-g">'+cards+'</ul>'+
+  '</div></section>';
+}
+
+/* ── ⑧ 하단 견적 신청 유도 (§3-8) ────────────────────────────────
+   ⚠️⚠️ **메인에서 /quote 로 가는 길은 헤더 CTA 와 히어로 · 여기 셋**
+   입니다. 이 단추를 빼면 스크롤을 끝까지 내린 분이 갈 곳이 없어집니다.
+   ⚠️ 둘째 단추는 /faq 입니다 — 전화도 채팅도 없어서 "상담 전화" 를
+   만들면 눌러도 아무 일이 안 납니다 (§0-8). */
+function HomeCta(){
+  return '<section class="bcta"><div class="w bcta-c">'+
+    '<p class="eyebrow">FREE ESTIMATE</p>'+
+    '<h2>어떤 서비스가 필요하신가요?</h2>'+
+    '<p>업종 · 지역 · 조건을 한 번만 적어 보내시면, 그 분야 업체를 찾아 '+
+      '연결해 드립니다. 신청은 무료이고 가입이 필요 없습니다.</p>'+
+    '<div class="bcta-go">'+
+      '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
+        '무료 견적 신청'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-gh btn-lg" href="/faq">자주 묻는 질문</a>'+
+    '</div>'+
+  '</div></section>';
+}

@@ -75,7 +75,10 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
   background:rgba(255,252,247,.96); backdrop-filter:blur(12px);
   border-bottom:1px solid var(--line); }
 .sc .hd{ box-shadow:0 1px 0 var(--line), 0 6px 20px -14px rgba(15,27,45,.35); }
-.hd-in{ display:flex; align-items:center; gap:var(--s6); height:var(--hdr-h); }
+/* ⚠️ 간격이 24 → 20 입니다 (2026-10-16 §4). 메뉴가 여덟이 되어
+   1441px 이상에서 남는 폭이 13px 뿐이었고, 두 간격에서 8px 을
+   돌려받았습니다. 더 줄이면 로고와 메뉴가 붙어 읽힙니다. */
+.hd-in{ display:flex; align-items:center; gap:var(--s5); height:var(--hdr-h); }
 
 .lg{ display:flex; flex-direction:column; justify-content:center; flex:none;
   min-height:44px; line-height:1.15; }
@@ -94,7 +97,7 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .lg-img{ display:block; height:28px; width:auto; max-width:180px; }
 @media (max-width:600px){ .lg-img{ height:24px; } }
 
-.gnb{ display:flex; gap:var(--s5); flex:1 1 auto; min-width:0;
+.gnb{ display:flex; gap:var(--s4); flex:1 1 auto; min-width:0;
   justify-content:center; }
 .gnb a{ display:inline-flex; align-items:center; min-height:40px;
   font-size:var(--t-sm); font-weight:700; color:var(--ink2); white-space:nowrap; }
@@ -109,7 +112,7 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
    되면서 큰 검색창이 들어갈 자리가 없어졌는데, 지우지 않고 여기로
    올렸습니다 — 모든 화면에서 쓸 수 있게 된 쪽이 낫습니다.
    ⚠️ 높이를 40px 아래로 내리지 마세요 (누르는 칸입니다). */
-.hd-s{ flex:0 1 280px; display:flex; align-items:center; gap:8px;
+.hd-s{ flex:0 1 240px; display:flex; align-items:center; gap:8px;
   min-width:0; height:42px; padding:0 var(--s4);
   background:var(--bg-2); border:1px solid var(--line); border-radius:var(--r-pill); }
 .hd-s:focus-within{ border-color:var(--blue); background:var(--surface); }
@@ -123,7 +126,15 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .hd-txt, .hd-cta{ white-space:nowrap; }
 /* 넓은 화면에서는 입력칸이 있으니 돋보기 단추는 접습니다 */
 .hd-ic-s{ display:none; }
-@media (max-width:1180px){
+/* ⚠️⚠️ **2026-10-16 §4 — 1340px 으로 올렸습니다** (전에는 1180).
+   메뉴가 여덟이 되어 1181~1340px 에서 입력칸(257px)과 **동시에**
+   들어가지 않습니다 — 거기서 입력칸을 두면 메뉴 한두 칸이 헤더
+   오른쪽 위로 **올라앉고**, `.gnb` 가 `min-width:0` 이라 전수 점검이
+   영원히 통과합니다.
+   ⚠️ 검색이 사라지는 것이 아닙니다 — 돋보기(`.hd-ic-s`)가 `/search`
+   로 갑니다. `check.js` 의 "어느 화면에서나 검색으로 가는 길이 있다"
+   가 **둘 중 하나는 늘 40px 이상**인지 봅니다. */
+@media (max-width:1440px){
   .hd-s{ display:none; }
   .hd-ic-s{ display:inline-flex; }
 }
@@ -144,7 +155,10 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
    단계가 `--t-cap` 13px 입니다 (아래 네비가 11.5px 로 175건 걸렸던 자리). */
 @media (max-width:1340px){ .hd-in{ gap:var(--s5); } .gnb{ gap:var(--s4); }
   .gnb a{ font-size:var(--t-cap); } }
-@media (max-width:1040px){ .lg span{ display:none; } .gnb{ gap:var(--s3); } }
+/* ⚠️ 로고 아래 서브문구도 1340px 부터 접습니다 (전에는 1040) —
+   메뉴 여덟에 58px 을 돌려줍니다. 이름은 그대로 남습니다. */
+@media (max-width:1440px){ .lg span{ display:none; } }
+@media (max-width:1040px){ .gnb{ gap:var(--s3); } }
 /* ⚠️ 메뉴가 접히기 **바로 전**(901~980px)이 제일 좁습니다 — 일곱이
    381px 를 쓰는데 그 폭에서는 378px 만 남아서, 메뉴 마지막 칸이 헤더
    오른쪽 위로 올라앉습니다. 글씨를 한 단계(13px) 내려서 비웁니다.
@@ -163,18 +177,33 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
    올라앉고, `.gnb` 가 `min-width:0` 이라 **전수 점검이 영원히
    통과합니다.** 자간을 조금 더 좁혀 29px 을 벌어 둡니다.
    ⚠️ 12px 미만으로 내리지 마세요 — 크기가 아니라 자간입니다. */
+/* ⚠️ 메뉴가 보이는 제일 좁은 구간(1101~1180px)에서 자간을 좁힙니다 —
+   **12px 미만으로 내리지 마세요** (제일 작은 단계가 --t-cap 13px).
+   ⚠️ 980 · 940 짜리 옛 규칙은 지금 메뉴가 접히는 폭(1100) 아래라
+   돌지 않지만, 되살리실 때를 위해 남겨 둡니다. */
+@media (max-width:1180px){ .gnb a{ letter-spacing:-.04em; } }
 @media (max-width:980px){ .gnb a{ font-size:var(--t-cap); letter-spacing:-.035em; } }
 @media (max-width:940px){ .gnb{ gap:var(--s2); } .gnb a{ letter-spacing:-.05em; } }
 /* 로고 아래 영문 한 줄 — 좁아지면 접습니다 (브랜드 이름만 남습니다) */
-@media (max-width:1040px){ .hd-lg-t i{ display:none; } }
+@media (max-width:1440px){ .hd-lg-t i{ display:none; } }
 /* 검색과 "내 기록" 사이의 가느다란 가름선 (§2) */
 .hd-sep{ flex:0 0 auto; width:1px; height:22px; background:var(--line); }
 @media (max-width:900px){ .hd-sep{ display:none; } }
 /* §22 — 폰에서는 헤더를 단순하게. 메뉴는 아래 네비가 맡습니다.
    ⚠️ **입점 CTA 는 폰에서도 둡니다** (§39). 업체가 모이지 않으면 이
    플랫폼은 아무것도 아니고, 업체 사장님도 폰으로 들어옵니다. */
+/* ⚠️⚠️ **2026-10-16 §4 로 메뉴가 여덟이 되면서 1100px 에서 접습니다**
+   (전에는 900px). 여섯일 때도 901px 에서 남는 폭이 **30px** 뿐이었고,
+   여덟은 1100px 아래에서 들어가지 않습니다 — 넘치면 **가로 스크롤이
+   나는 것이 아니라** 메뉴가 헤더 오른쪽(검색 · 내 기록 · 견적) 위로
+   올라앉고, `.gnb` 가 `min-width:0` 이라 **전수 점검이 영원히
+   통과합니다.**
+   ⚠️⚠️ **햄버거 서랍도 같은 폭으로 올렸습니다** (아래). 한쪽만 올리면
+   1001~1100px 에서 메뉴가 **아무것도 없게** 됩니다 — 이 저장소가
+   `display:none` 을 1040 으로 올렸다가 겪은 자리입니다. */
+@media (max-width:1100px){ .gnb{ display:none; } }
 @media (max-width:900px){
-  .gnb, .hd-txt{ display:none; }
+  .hd-txt{ display:none; }
   .hd-in{ justify-content:space-between; gap:var(--s3); }
   .hd-cta{ min-height:40px; padding:0 var(--s4); }
 }
@@ -538,10 +567,13 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
    화면마다 잡습니다 — 자간을 좁혀서 맞춥니다. */
 .hd-lg-t i{ font-style:normal; font-size:var(--t-cap); letter-spacing:-.03em;
   color:var(--ink3); white-space:nowrap; }
-@media (max-width:1040px){ .hd-lg-t i{ display:none; } }
+@media (max-width:1440px){ .hd-lg-t i{ display:none; } }
 /* 폰에서 헤더가 한 줄에 들어가게 — ⚠️ 접는 것은 글자뿐이고 CTA 자체를
    숨기지는 않습니다. 이 버튼이 서비스로 들어가는 유일한 문입니다. */
-@media (max-width:560px){ .hd-cta-w{ display:none; } }
+/* ⚠️ 1340px 아래에서는 CTA 가 "견적 신청" 입니다 — 메뉴 여덟에
+   41px 을 돌려주려고 재서 올렸습니다 (전에는 560px). 뜻은 그대로이고
+   `/quote` 화면 맨 위가 무료라고 적고 있습니다. */
+@media (max-width:1440px){ .hd-cta-w{ display:none; } }
 /* ⚠️ 폰은 390px 만 있는 것이 아닙니다 — 갤럭시 계열이 360px 이고,
    거기서 헤더가 370px 로 **가로 스크롤**이 났습니다. 전수 점검은
    390 · 1024 · 1440 만 재서 못 잡습니다. 좁아지면 여백과 글씨를
@@ -671,8 +703,10 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 .hd-mb{ display:none; border:0; background:none; cursor:pointer; }
 .hd-dw{ display:none; }
 
-@media (max-width:900px){
-  /* ⚠️ `.gnb` 가 이 폭에서 통째로 접힙니다 — 그 자리를 서랍이 받습니다 */
+@media (max-width:1100px){
+  /* ⚠️ `.gnb` 가 이 폭에서 통째로 접힙니다 — 그 자리를 서랍이 받습니다.
+     ⚠️⚠️ **`.gnb` 와 같은 폭이라야 합니다** (2026-10-16 §4 · 여덟 메뉴).
+     한쪽만 바꾸면 메뉴가 없는 폭 구간이 생기거나 둘이 같이 보입니다. */
   .hd-mb{ display:inline-flex; }
   .hd-dw{ display:block; position:absolute; left:0; right:0; top:100%;
     background:var(--bg-cream); border-bottom:1px solid var(--line);
@@ -752,3 +786,71 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
    때문입니다 — 안 빼면 본문이 한 화면보다 길어져 짧은 화면마다
    빈 자리가 생깁니다. */
 #view{ min-height:calc(100vh - var(--hdr-h)); }
+
+/* ════════════════════════════════════════════════════════════════════
+   헤더가 **다크**입니다 (2026-10-16 "최종 홈페이지 리뉴얼" §2-1)
+
+   > §2-1 — "헤더 · 푸터 #1D1511."
+
+   ⚠️⚠️ **헤더는 `#view` 밖이라 161개 화면이 같이 씁니다.** 그래서
+   다크가 되는 것은 **머리와 꼬리**이고 속화면 본문은 그대로 밝습니다
+   (BRIGHT PREMIUM) — 메인만 본문까지 다크입니다 (`html.dkh`).
+   ⚠️⚠️ **흐린 글자(`--ink2` · `--ink3`)를 쓰지 마세요.** 짙은 바탕용이
+   아닙니다 — 푸터를 짙게 바꿀 때 `.ft a`(0,1,1)가 `.ft-col a`(0,2,0)에
+   져서 링크 대비가 4.33 이었던 자리입니다. **선택자를 원래 규칙과
+   똑같이** 적습니다.
+   ⚠️ 재 본 값(#1D1511 바탕) — 흰 17.99 · 보조 #E8DDD1 13.44 ·
+   크림 #FFF8EF 17.07 · 포인트 #D99647 7.20. 전부 AA 한참 위입니다.
+   ⚠️ 되돌리시려면 이 블록만 지우고 `--bg-foot` 를 밝은 값으로.
+   ════════════════════════════════════════════════════════════════════ */
+.hd{ background:rgba(29,21,17,.96); border-bottom:1px solid var(--dk-line); }
+.sc .hd{ box-shadow:0 1px 0 var(--dk-line), 0 10px 26px -16px rgba(0,0,0,.8); }
+.lg b{ color:var(--on-dk); }
+.lg span{ color:var(--on-dk2); }
+.hd-lg-t b{ color:var(--on-dk); }
+.hd-lg-t i{ color:var(--on-dk2); }
+.gnb a{ color:var(--on-dk2); }
+.gnb a:hover{ color:var(--acc); }
+.gnb a.on{ color:var(--acc); }
+.hd-ic{ color:var(--on-dk2); }
+.hd-ic:hover{ background:rgba(238,219,193,.12); color:var(--cream); }
+.hd-txt{ color:var(--on-dk2); }
+.hd-txt:hover{ color:var(--cream); }
+.hd-sep{ background:var(--dk-line); }
+/* 통합검색 — 짙은 바탕 위라 면을 **밝은 쪽으로 옅게** 깝니다.
+   ⚠️ 흰 면을 깔면 헤더에 흰 알약이 떠서 머리가 두 층으로 읽힙니다. */
+.hd-s{ background:rgba(238,219,193,.10); border-color:var(--dk-line2); }
+.hd-s:focus-within{ background:rgba(238,219,193,.16); border-color:var(--acc); }
+.hd-s-i{ color:var(--on-dk2); }
+.hd-s input{ color:var(--cream); }
+.hd-s input::placeholder{ color:rgba(232,221,209,.70); }
+/* 무료 견적 신청 — §4 가 오른쪽에 둔 **하나뿐인 채운 단추**입니다.
+   ⚠️ 골드 면에 **짙은 글자**입니다 (흰 글자는 #D99647 위에서 2.2) —
+   #1D1511 글자로 7.20 입니다. */
+.hd-cta{ background:var(--acc); border-color:var(--acc); color:#1D1511; font-weight:800; }
+.hd-cta:hover{ background:#E9A95D; border-color:#E9A95D; color:#1D1511; }
+/* 햄버거 · 서랍도 같이 뒤집습니다 (900px 아래에서 메뉴가 거기로 갑니다).
+   ⚠️⚠️ **선택자를 원래 규칙과 똑같이** 적습니다 — 서랍 규칙이
+   `@media (max-width:900px)` 안의 `.hd-dw-g a`(0,2,0)라, `.hd-dw a`
+   (0,1,1)로 적으면 **hover 색만 조용히 안 먹습니다.** 미디어 안이라
+   이쪽도 같은 폭으로 감쌉니다 (밖에 두면 넓은 화면의 `display:none`
+   과 섞여 읽기 어려워집니다). */
+.hd-mb{ color:var(--on-dk2); }
+@media (max-width:1100px){
+  .hd-dw{ background:var(--dk-chrome); border-bottom:1px solid var(--dk-line); }
+  .hd-dw-g a{ color:var(--on-dk2); border-bottom-color:var(--dk-line); }
+  .hd-dw-g a svg{ color:rgba(232,221,209,.72); }
+  .hd-dw-g a:hover{ color:var(--acc); }
+}
+/* 아래 네비도 머리 · 꼬리와 같은 식구입니다 (`#view` 밖 · 폰 전용).
+   ⚠️⚠️ 머리와 꼬리가 다크인데 여기만 흰 띠로 두면 **폰 화면 아래에
+   흰 선이 떠서** 한 사이트로 안 읽힙니다 — 메인이 통째로 다크라
+   더 그렇습니다.
+   ⚠️ 선택자를 원래와 똑같이 미디어 안에 둡니다 (`.mnav a` 가
+   `@media` 안이라, 밖에 적으면 색만 조용히 안 먹습니다).
+   ⚠️ 재 본 값(#1D1511 바탕) — 보조 #E8DDD1 13.44 · 포인트 7.20. */
+@media (max-width:900px){
+  .mnav{ background:var(--dk-chrome); border-top:1px solid var(--dk-line); }
+  .mnav a{ color:var(--on-dk2); }
+  .mnav a.on{ color:var(--acc); }
+}

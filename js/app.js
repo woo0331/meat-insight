@@ -493,6 +493,12 @@ function toneGroup(e){
 }
 function paintTones(){
   var v = $("view"); if(!v) return;
+  /* ⚠️⚠️ **메인은 통째로 다크라 번갈아 칠하지 않습니다** (2026-10-16 §2-1).
+     이 함수는 이웃한 두 구간이 같은 묶음이면 뒤엣것을 **다음 바탕으로
+     밉니다** — 다크 구간은 톤 클래스가 없어서 전부 "warm" 으로 읽히고,
+     그러면 다크 사이에 `sec-white` · `sec-gray` 가 끼어 **흰 띠**가
+     생깁니다. 에러도 안 나고 가로 스크롤도 안 나서 찍어 봐야 압니다. */
+  if(document.documentElement.classList.contains("dkh")) return;
   var sec = [].slice.call(v.children).filter(function(e){
     return e.tagName === "SECTION"; });
   for(var i = 1; i < sec.length; i++){
@@ -569,6 +575,12 @@ function render(){
      정의합니다 — 강조색이 전부 그 변수를 거치기 때문입니다 (css/pages.css).
      ⚠️ 헤더 · 푸터는 `#view` 밖이라 그대로 남습니다. 거기까지 물들면
      화면마다 머리가 바뀌어 한 사이트로 안 읽힙니다. */
+  /* ⚠️⚠️ **메인만 본문까지 다크입니다** (2026-10-16 §2-1). 머리와
+     꼬리는 161개 화면 전부 다크이고, 속화면 본문은 그대로 밝습니다
+     (BRIGHT PREMIUM). `index.html` 의 html 태그가 이 클래스를 들고
+     있어서 **첫 그림부터** 다크이고, 여기서는 이동할 때만 맞춥니다.
+     ⚠️ 빌드가 하위 화면에서 이 클래스를 **떼어 냅니다** (shell()). */
+  document.documentElement.classList.toggle("dkh", nowPath() === "/");
   $("view").className = sideOf(r);
   $("view").innerHTML = html;
   paintTones();

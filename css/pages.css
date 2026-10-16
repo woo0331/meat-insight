@@ -4673,3 +4673,270 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   min-height:var(--tap); padding:0 var(--s5);
   font-size:var(--t-sm); font-weight:800; color:var(--blue-600); }
 .hsv-more a:hover{ color:var(--ink); }
+
+/* ════════════════════════════════════════════════════════════════════
+   2026-10-16 "최종 홈페이지 리뉴얼" §2 · §3 — 다크 브라운 메인
+
+   ⚠️⚠️ **메인 한 화면만 다크입니다.** html 태그의 dkh 가 그 표시이고
+   index.html 이 들고 있어서 **첫 그림부터** 다크입니다. 하위 화면에서는
+   빌드가 떼어 냅니다 (build-pages.js 의 shell()) — 안 떼면 속화면
+   160개가 통째로 다크가 되고 BRIGHT PREMIUM 이 무너집니다.
+
+   ⚠️⚠️ **여기 쓰는 색은 tokens.css 의 --dk-* · --cream · --sand ·
+   --acc · --on-dk · --on-dk2 뿐입니다.** 밝은 토큰(--ink · --ink2 ·
+   --ink3 · --line)을 다크 위에 쓰면 대비가 1.x 가 됩니다 — 푸터를
+   짙게 바꿀 때 실제로 겪은 자리입니다.
+
+   ⚠️ 구간 바탕은 세 가지를 번갈아 칩니다 (§21 리듬). ΔE 를 재서 정한
+   차례입니다 — bg↔card 6.69 · card↔esp 3.16 · bg↔esp 9.84 ·
+   esp↔푸터 11.45 (전부 기준 2.5 위).
+   ════════════════════════════════════════════════════════════════════ */
+html.dkh, html.dkh body{ background:var(--dk-bg); }
+html.dkh #view{ color:var(--on-dk2); }
+html.dkh #view h1, html.dkh #view h2, html.dkh #view h3,
+html.dkh #view h4, html.dkh #view b, html.dkh #view strong{ color:var(--on-dk); }
+/* ⚠️⚠️ **p · li · em · span 에 color:inherit 를 걸지 마세요.** 한 번
+   걸었다가 (1,1,2) 라 .bhero-in h1 em(0,1,2)을 이겨서 **히어로의 금빛
+   낱말이 흰색**이 됐습니다 — 색은 원래 물려받으니 그 규칙은 필요도
+   없었습니다. 찍어 보고 알았습니다. */
+/* 구간 머리말 — 밝은 화면에서는 브라운이지만 다크 위에서는 골드입니다
+   (--gold-text 는 밝은 바탕용이라 여기서 1.5 밖에 안 됩니다) */
+html.dkh #view .eyebrow, html.dkh #view .sec-hd > .eyebrow{ color:var(--acc); }
+html.dkh #view .sec-hd p{ color:var(--on-dk2); }
+/* 크롤러 본문(자바스크립트 전의 글)도 같은 바탕 위에 섭니다 */
+html.dkh #view .pre{ color:var(--on-dk2); padding:var(--s9) 0; }
+
+/* 다크 위 단추 둘 — ⚠️ 골드 면에는 **짙은 글자**입니다 (흰 글자는
+   #D99647 위에서 2.2). #1D1511 글자로 7.20 입니다. */
+.btn-ac{ background:var(--acc); color:#1D1511; border-color:var(--acc); font-weight:800; }
+.btn-ac:hover{ background:#E9A95D; border-color:#E9A95D; color:#1D1511; }
+.btn-cr{ background:var(--cream); color:var(--dk-esp); border-color:var(--cream); font-weight:800; }
+.btn-cr:hover{ background:#FFFFFF; border-color:#FFFFFF; color:var(--dk-esp); }
+
+/* ── ② 메인 브랜드 히어로 ───────────────────────────────────────── */
+.bhero{ position:relative; background-color:var(--dk-bg); overflow:hidden;
+  display:flex; align-items:center; min-height:600px; }
+.bhero-ph{ position:absolute; inset:0; display:block; }
+.bhero-ph .ph{ width:100%; height:100%; object-fit:cover; opacity:.42; }
+/* ⚠️⚠️ **막을 옅게 하지 마세요.** 글이 사진 위에 앉습니다 — 왼쪽은
+   거의 불투명하고 오른쪽으로 갈수록 사진이 드러납니다. 바꾸시면
+   픽셀로 재 보세요 (전수 점검은 사진 위 글자를 못 잽니다). */
+.bhero-ph::after{ content:""; position:absolute; inset:0;
+  background:linear-gradient(100deg, rgba(32,24,19,.96) 0%,
+    rgba(32,24,19,.92) 38%, rgba(32,24,19,.60) 72%, rgba(32,24,19,.42) 100%); }
+.bhero-in{ position:relative; z-index:1; padding:var(--s10) 0; }
+/* ⚠️ 한글 머리말에 자간을 크게 주지 마세요 — 띄어쓰기가 **두 칸**
+   으로 보입니다 ("매장  양도양수"). 영문 eyebrow(.1em)와 다릅니다. */
+.bhero-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.06em;
+  color:var(--acc); text-transform:none; }
+.bhero-in h1{ margin-top:var(--s4);
+  font-size:clamp(32px, 4.4vw, 60px); font-weight:900; line-height:1.24;
+  letter-spacing:-.035em; max-width:20ch; }
+.bhero-in h1 em{ font-style:normal; color:var(--acc); }
+.bhero-s{ margin-top:var(--s5); font-size:var(--t-lg); line-height:1.8;
+  color:var(--on-dk2); max-width:46ch; }
+.bhero-go{ display:flex; flex-wrap:wrap; gap:var(--s3); margin-top:var(--s8); }
+
+/* ── ③ 창업 · 운영 · 폐업 진입 카드 셋 ──────────────────────────── */
+.bent{ background-color:var(--dk-card); padding:var(--sec-y) 0; }
+.bent-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s5);
+  list-style:none; margin:0; padding:0; }
+.bent-c > a{ display:flex; flex-direction:column; height:100%;
+  border:1px solid var(--dk-line); border-radius:var(--r-lg);
+  overflow:hidden; background:var(--dk-bg); color:inherit;
+  transition:transform .18s, border-color .18s, box-shadow .18s; }
+.bent-c > a:hover{ transform:translateY(-4px); border-color:var(--dk-line2);
+  box-shadow:var(--dk-shadow); }
+.bent-ph{ display:block; position:relative; aspect-ratio:16/10; overflow:hidden; }
+.bent-ph .ph{ width:100%; height:100%; object-fit:cover; }
+/* 사진 아래쪽을 카드 면으로 녹입니다 — 제목이 그 위에 앉지 않게
+   제목은 사진 **밖**에 있습니다 (사진 위 글자는 못 잽니다) */
+/* ⚠️ 카드 면이 셋(브라운 · 그린 · 버건디)이라 **검정으로 녹이면**
+   아래쪽에 회색 띠가 생깁니다. 면 색은 카드가 들고 있으니 여기는
+   투명 → 검정 그림자만 옅게 겁니다. */
+.bent-ph::after{ content:""; position:absolute; inset:0;
+  background:linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.42) 100%); }
+.bent-tx{ display:flex; flex-direction:column; gap:var(--s2);
+  padding:var(--s6) var(--s6) var(--s7); flex:1 1 auto; position:relative; }
+.bent-no{ font-style:normal; font-size:var(--t-cap); font-weight:800;
+  letter-spacing:.14em; color:var(--acc); }
+.bent-i{ display:inline-flex; margin:var(--s1) 0 var(--s2); }
+.bent-tx > b{ font-size:var(--t-2xl); font-weight:900; letter-spacing:-.03em; }
+.bent-tx > em{ font-style:normal; font-size:var(--t-base); font-weight:700;
+  color:var(--sand); }
+.bent-d{ display:block; margin-top:var(--s2); font-size:var(--t-sm);
+  line-height:1.8; color:var(--on-dk2); }
+.bent-it{ display:flex; flex-wrap:wrap; gap:6px; margin-top:var(--s4); }
+.bent-it > i{ font-style:normal; font-size:var(--t-cap); font-weight:700;
+  padding:5px 10px; border-radius:var(--r-pill);
+  background:rgba(238,219,193,.10); border:1px solid var(--dk-line);
+  color:var(--sand); }
+.bent-go{ display:inline-flex; align-items:center; gap:6px;
+  margin-top:auto; padding-top:var(--s5); min-height:40px;
+  font-size:var(--t-sm); font-weight:800; color:var(--acc); }
+.bent-c > a:hover .bent-go{ color:#E9A95D; }
+/* 전문관 색은 **카드 위쪽 띠**로만 냅니다 (§2-1 "세 전문관의 색상
+   구분은 반드시 유지한다"). 카드 면을 네 색으로 칠하면 다크 메인이
+   알록달록해져서 프리미엄이 무너집니다. */
+.bent-c > a{ border-top-width:3px; }
+.ent-startup   > a{ background:var(--ent-start); border-top-color:var(--ent-start-ln); }
+.ent-operation > a{ background:var(--ent-ops);   border-top-color:var(--ent-ops-ln); }
+.ent-closure   > a{ background:var(--ent-close); border-top-color:var(--ent-close-ln); }
+.ent-startup   .bent-i{ --ia-1:var(--ent-start-ac); --ia-2:rgba(217,150,71,.30); }
+.ent-operation .bent-i{ --ia-1:var(--ent-ops-ac);   --ia-2:rgba(111,184,160,.30); }
+.ent-closure   .bent-i{ --ia-1:var(--ent-close-ac); --ia-2:rgba(212,112,127,.30); }
+.ent-startup   .bent-no, .ent-startup   .bent-go{ color:var(--ent-start-ac); }
+.ent-operation .bent-no, .ent-operation .bent-go{ color:var(--ent-ops-ac); }
+.ent-closure   .bent-no, .ent-closure   .bent-go{ color:var(--ent-close-ac); }
+.ent-startup   .bent-tx > em{ color:#E9BE8C; }
+.ent-operation .bent-tx > em{ color:#A9D6C8; }
+.ent-closure   .bent-tx > em{ color:#EBB0B9; }
+
+/* ── ④ 매장 양도양수 가로형 배너 ────────────────────────────────── */
+.bpass{ background-color:var(--dk-esp); padding:var(--sec-y) 0; }
+.bpass-c{ display:grid; grid-template-columns:minmax(0,42%) minmax(0,1fr);
+  gap:var(--s9); align-items:center; }
+.bpass-ph{ display:block; position:relative; aspect-ratio:4/3;
+  border-radius:var(--r-lg); overflow:hidden; border:1px solid var(--dk-line); }
+.bpass-ph .ph{ width:100%; height:100%; object-fit:cover; }
+.bpass-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.04em;
+  color:var(--sand); }
+.bpass-tx h2{ margin-top:var(--s3); font-size:var(--t-3xl); font-weight:900;
+  letter-spacing:-.03em; line-height:1.34; }
+.bpass-tx > p{ margin-top:var(--s4); font-size:var(--t-lg); line-height:1.8;
+  color:var(--on-dk2); max-width:52ch; }
+.bpass-go{ display:flex; flex-wrap:wrap; align-items:center;
+  gap:var(--s3); margin-top:var(--s7); }
+.bpass-more{ display:inline-flex; align-items:center; gap:6px;
+  min-height:40px; padding:0 var(--s2);
+  font-size:var(--t-sm); font-weight:800; color:var(--acc); }
+.bpass-more:hover{ color:#E9A95D; }
+
+/* ── ⑤ 선택받는 이유 넷 ─────────────────────────────────────────── */
+.bwhy{ background-color:var(--dk-bg); padding:var(--sec-y) 0; }
+.bwhy-g{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s5);
+  list-style:none; margin:0; padding:0; }
+.bwhy-c{ display:flex; flex-direction:column; gap:var(--s3);
+  padding:var(--s7) var(--s6);
+  background:var(--dk-card); border:1px solid var(--dk-line);
+  border-radius:var(--r-lg); }
+.bwhy-i{ display:inline-flex; --ia-1:var(--acc); --ia-2:rgba(217,150,71,.28); }
+.bwhy-c > b{ font-size:var(--t-lg); font-weight:900; letter-spacing:-.025em;
+  line-height:1.45; }
+.bwhy-c > p{ font-size:var(--t-sm); line-height:1.85; color:var(--on-dk2); }
+/* 범위 숫자 띠 — 밝은 화면용 규칙이 있어 다크에서 색만 뒤집습니다 */
+/* ⚠️⚠️ **바탕을 같이 뒤집어야 합니다.** 밝은 화면용 규칙이
+   background:var(--surface)(흰색)를 들고 있어서, 다크 메인 한가운데에
+   **흰 알약**이 떠 있었습니다 — 게다가 ⓘ 줄이 흰 글자라 거의 안
+   보였습니다. 찍어 보고 알았습니다 (검사는 이것을 못 잡습니다). */
+html.dkh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
+  background:var(--dk-card); border-color:var(--dk-line);
+  box-shadow:none; }
+html.dkh #view .msvc-sc-n svg{ color:var(--acc); }
+html.dkh #view .msvc-sc-g > li > b{ color:var(--acc); }
+html.dkh #view .msvc-sc-g > li > i{ color:var(--on-dk2); }
+html.dkh #view .msvc-sc-n{ color:var(--on-dk2); }
+html.dkh #view .msvc-sc-n b{ color:var(--cream); }
+
+/* ── ⑥ 이용 방법 5단계 ──────────────────────────────────────────── */
+.bstep{ background-color:var(--dk-card); padding:var(--sec-y) 0; }
+.bstep-g{ display:grid; grid-template-columns:repeat(5,1fr); gap:var(--s4);
+  list-style:none; margin:0; padding:0; counter-reset:none; }
+.bstep-c{ display:flex; flex-direction:column; gap:var(--s2);
+  padding:var(--s6) var(--s5) var(--s6);
+  background:var(--dk-bg); border:1px solid var(--dk-line);
+  border-radius:var(--r-lg); }
+.bstep-n{ font-size:var(--t-num-s); font-weight:900; line-height:1;
+  letter-spacing:-.04em; color:rgba(217,150,71,.52); }
+.bstep-i{ display:inline-flex; margin:var(--s2) 0 var(--s1);
+  width:40px; height:40px; align-items:center; justify-content:center;
+  border-radius:var(--r-pill); background:rgba(217,150,71,.14);
+  color:var(--acc); }
+.bstep-c > b{ font-size:var(--t-base); font-weight:900; letter-spacing:-.02em; }
+.bstep-c > p{ font-size:var(--t-cap); line-height:1.8; color:var(--on-dk2); }
+.bstep-n2{ display:flex; align-items:center; gap:6px; margin-top:var(--s6);
+  font-size:var(--t-cap); color:var(--on-dk2); }
+.bstep-n2 svg{ flex:none; color:var(--acc); }
+
+/* ── ⑦ 배너 둘 ──────────────────────────────────────────────────── */
+.bban{ background-color:var(--dk-bg); padding:0 0 var(--sec-y); }
+.bban-g{ display:grid; grid-template-columns:repeat(2,1fr); gap:var(--s5);
+  list-style:none; margin:0; padding:0; }
+.bban-c > a{ display:flex; align-items:center; gap:var(--s6); height:100%;
+  padding:var(--s6); border-radius:var(--r-lg);
+  border:1px solid var(--dk-line); background:var(--dk-card); color:inherit;
+  transition:border-color .18s, transform .18s; }
+.bban-c > a:hover{ border-color:var(--dk-line2); transform:translateY(-3px); }
+.bban-ph{ display:block; flex:none; width:104px; height:104px;
+  border-radius:var(--r); overflow:hidden; }
+.bban-ph .ph{ width:100%; height:100%; object-fit:cover; }
+.bban-i{ display:inline-flex; flex:none; width:104px; height:104px;
+  align-items:center; justify-content:center; border-radius:var(--r);
+  background:rgba(238,219,193,.08); }
+.bban-tx{ display:flex; flex-direction:column; gap:4px; min-width:0; }
+.bban-tx > i{ font-style:normal; font-size:var(--t-cap); font-weight:800;
+  letter-spacing:.04em; color:var(--acc); }
+.bban-tx > b{ font-size:var(--t-xl); font-weight:900; letter-spacing:-.03em; }
+.bban-tx > em{ font-style:normal; font-size:var(--t-sm); line-height:1.75;
+  color:var(--on-dk2); }
+.bban-go{ display:inline-flex; align-items:center; gap:6px; min-height:40px;
+  font-size:var(--t-sm); font-weight:800; color:var(--sand); }
+.bban-c > a:hover .bban-go{ color:var(--cream); }
+.ban-start .bban-i{ --ia-1:var(--ent-start-ac); --ia-2:rgba(217,150,71,.30); }
+.ban-ops   .bban-i{ --ia-1:var(--ent-ops-ac);   --ia-2:rgba(111,184,160,.30); }
+.ban-ops   .bban-tx > i{ color:var(--ent-ops-ac); }
+
+/* ── ⑧ 하단 견적 신청 유도 ──────────────────────────────────────── */
+.bcta{ background-color:var(--dk-esp); padding:var(--sec-y) 0; }
+.bcta-c{ text-align:center; }
+.bcta-c h2{ margin-top:var(--s3); font-size:var(--t-3xl); font-weight:900;
+  letter-spacing:-.03em; }
+.bcta-c > p{ margin:var(--s4) auto 0; font-size:var(--t-lg); line-height:1.8;
+  color:var(--on-dk2); max-width:58ch; }
+.bcta-go{ display:flex; flex-wrap:wrap; justify-content:center;
+  gap:var(--s3); margin-top:var(--s8); }
+
+/* ── 좁은 폭 ─────────────────────────────────────────────────────
+   ⚠️ 폰에서 칸을 한 줄씩 쌓으면 메인이 그만큼 길어집니다. 재서
+   정한 칸 수입니다 — 1024 위 셋 · 그 아래 둘 · 600 아래 하나. */
+@media (max-width:1100px){
+  .bent-g{ gap:var(--s4); }
+  .bwhy-g{ grid-template-columns:repeat(2,1fr); }
+  .bstep-g{ grid-template-columns:repeat(3,1fr); }
+}
+@media (max-width:900px){
+  .bhero{ min-height:0; }
+  .bhero-in{ padding:var(--s9) 0 var(--s10); }
+  .bhero-ph::after{ background:linear-gradient(180deg,
+    rgba(32,24,19,.72) 0%, rgba(32,24,19,.90) 46%, rgba(32,24,19,.97) 100%); }
+  .bent-g{ grid-template-columns:repeat(2,1fr); }
+  /* ⚠️⚠️ 셋을 두 칸에 그냥 넣으면 **세 번째가 혼자 남고 그 옆이
+     통째로 빈 자리**가 됩니다 (걸음 여섯을 다섯 칸에 넣었다가 겪은
+     자리) — 세 번째가 두 칸을 가로질러 눕습니다.
+     ⚠️ 칸 수를 바꾸면 이 nth-child 도 같이 고치세요. */
+  .bent-c:nth-child(3){ grid-column:1 / -1; }
+  .bent-c:nth-child(3) > a{ flex-direction:row; align-items:stretch; }
+  .bent-c:nth-child(3) .bent-ph{ flex:0 0 40%; aspect-ratio:auto; }
+  .bpass-c{ grid-template-columns:1fr; gap:var(--s6); }
+  /* ⚠️ 쌓이면 사진이 거의 화면 너비라 4:3 으로 두면 768px 에서 544px
+     입니다 — 배너 하나가 화면 두 개 높이를 먹습니다. 재서 16:10 으로
+     낮췄습니다 (726×454). */
+  .bpass-ph{ aspect-ratio:16/10; }
+  .bban-g{ grid-template-columns:1fr; }
+}
+@media (max-width:600px){
+  .bent-g{ grid-template-columns:1fr; }
+  .bent-c:nth-child(3) > a{ flex-direction:column; }
+  .bent-c:nth-child(3) .bent-ph{ flex:none; aspect-ratio:16/10; }
+  .bwhy-g{ grid-template-columns:1fr; }
+  .bstep-g{ grid-template-columns:repeat(2,1fr); }
+  .bban-c > a{ gap:var(--s4); padding:var(--s5); }
+  .bban-ph, .bban-i{ width:76px; height:76px; }
+}
+@media (max-width:420px){
+  .bstep-g{ grid-template-columns:1fr; }
+  .bstep-c{ flex-direction:row; flex-wrap:wrap; align-items:center;
+    gap:var(--s2) var(--s4); padding:var(--s5); }
+  .bstep-c > b{ flex:1 1 auto; }
+  .bstep-c > p{ flex:1 1 100%; }
+}

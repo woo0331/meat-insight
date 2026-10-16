@@ -578,7 +578,10 @@ function noscriptFor(W, r, route){
     const byT = {}; (W.AM_TOOLS||[]).forEach(t => { byT[t.key] = t; });
     const calc = ["cost","bep","premium","closecost"].map(k => byT[k]).filter(Boolean);
     if(calc.length){
-      h2("사장님의 사업에 필요한 계산도구");
+      /* ⚠️⚠️ **화면의 h2 와 글자까지 같아야 합니다** (js/pages/home.js 의 MainToolsInfo).
+         머리말을 고치시면 여기도 같이 고치세요 — 크롤러에게만 다른 제목을
+         보여 주면 그게 구글에 나가는 거짓말입니다. */
+      h2("사업에 필요한 계산도구를 이용해 보세요.");
       p("창업 · 운영 · 양도양수 · 폐업에 필요한 비용을 미리 계산해 " +
         "보세요. 적으신 숫자는 이 브라우저에만 남습니다. 계산한 값은 " +
         "참고용이고 실제 금액은 지역 · 평수 · 업종에 따라 달라집니다.");
@@ -599,7 +602,9 @@ function noscriptFor(W, r, route){
     /* ── 04 서비스 이용 절차 (§7) ───────────────────────────────── */
     const steps = (W.AM_STEPS || []);
     if(steps.length){
-      h2(W.koWith(B.name, "은는") + " 이렇게 진행됩니다");
+      /* ⚠️⚠️ **화면의 h2 와 글자까지 같아야 합니다** (같은 함수).
+         전에는 여기만 "…는 이렇게 진행됩니다" 로 남아 있었습니다. */
+      h2("이용 방법은 간단합니다.");
       p("간단한 신청으로 분야에 맞는 업체를 찾아 드립니다. 지금은 " +
         "요청을 받아 업체를 찾아 드리는 단계입니다. 저희는 중개자이고 " +
         "거래 당사자가 아닙니다.");
@@ -3083,6 +3088,42 @@ for(const root of roots){
   const d = path.join(ROOT, root);
   if(fs.existsSync(d) && fs.statSync(d).isDirectory()) sweep(d);
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   checkMainH2() — 메인 크롤러 본문의 머리말이 **화면과 같은가**
+
+   ⚠️⚠️ **2026-10-16 — 둘이 어긋나 있었습니다.** 화면은
+   "사업에 필요한 계산도구를 이용해 보세요." · "이용 방법은
+   간단합니다." 인데 크롤러에게만 예날 머리말을 보내고 있었습니다 —
+   이 저장소가 같은 결로 **여덟 번** 겪은 자리입니다.
+
+   ⚠️⚠️ **`check.js` 는 이것을 영원히 못 잡습니다** — 전수 점검은
+   브라우저가 그린 화면만 보는데, 크롤러 본문은 자바스크립트가 돌면
+   덮입니다. 그래서 빌드가 **글자로** 봅니다 (`checkRetired()` 와 같은 방식).
+
+   ⚠️ 보는 것은 **메인 하나**입니다. 업종 · 도구 화면의 크롤러
+   머리말("적는 항목" · "음식점 창업에 필요한 장비" …)은 **요약하는
+   제목**이고 그 아래 내용은 전부 실제 데이터라 거짓이 아니라 줄임입니다.
+   글자까지 맞추기로 한 것은 메인뿐입니다.
+   ═══════════════════════════════════════════════════════════════════ */
+function checkMainH2(){
+  const src = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+  const a = src.indexOf("<!-- crawl:start -->"), b = src.indexOf("<!-- crawl:end -->");
+  if(a < 0 || b < 0) throw new Error("index.html 에서 crawl 표시를 못 찾았습니다");
+  const body = src.slice(a, b);
+  const hs = [...body.matchAll(/<h2>([\s\S]*?)<\/h2>/g)]
+               .map(m => m[1].replace(/<[^>]*>/g, "").trim()).filter(Boolean);
+  if(hs.length < 3)
+    throw new Error("메인 크롤러 본문에서 h2 를 "+hs.length+"개밖에 못 찾았습니다 — 검사가 틀렸거나 구간이 빠졌습니다");
+  const home = fs.readFileSync(path.join(ROOT, "js", "pages", "home.js"), "utf8");
+  const bad = hs.filter(t => home.indexOf(t) < 0);
+  if(bad.length)
+    throw new Error("메인 크롤러 본문의 머리말이 화면에 없습니다 — "+
+      "크롤러에게만 다른 제목을 보내면 그게 구글에 나가는 거짓말입니다 "+
+      "(js/pages/home.js 에 그 글자가 없습니다):\n  " + bad.join("\n  "));
+  console.log("   메인 크롤러 머리말 " + hs.length + "개가 화면과 글자까지 같습니다");
+}
+checkMainH2();
 
 /* ── sitemap ──────────────────────────────────────────────────── */
 const today = new Date().toISOString().slice(0,10);

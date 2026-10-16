@@ -3090,6 +3090,40 @@ for(const root of roots){
 }
 
 /* ════════════════════════════════════════════════════════════════════
+   checkOgPalette() — 공유 미리보기가 **지금 팔레트**를 쓰고 있는가
+
+   ⚠️⚠️ **2026-10-16 — 또 어긋나 있었습니다.** 10-15 시안 1:1 로
+   글자색 셋(`--ink` · `--ink2` · `--ink3`)을 바꿨는데 `tools/og.html` 은
+   그 전 값(`#675E55`)을 들고 있었습니다 — 거기는 `css/tokens.css` 를
+   **못 읽는 자리**라 사람이 같이 고쳐야 하고, 이 저장소가 404 · manifest ·
+   middleware · 관리자 글로 **여러 번** 격은 그 자리입니다.
+
+   ⚠️ 공유 미리보기는 **화면으로 표가 안 납니다** — 카카오톡에 붙여
+   봐야 알고, 한 번 퍼지면 캐시에 한참 남습니다.
+
+   ⚠️ **주석을 먼저 걷어냅니다.** og.html 은 올바른 값을 설명하려고
+   주석에 **예날 색**(`#D5AA55`)을 적어 두었습니다 — 그대로 찾으면 멀줦한
+   파일을 실패로 잡습니다 (이 저장소가 `select=*` 로 겪은 자리).
+   ═══════════════════════════════════════════════════════════════════ */
+function checkOgPalette(){
+  const f = path.join(ROOT, "tools", "og.html");
+  if(!fs.existsSync(f)) throw new Error("tools/og.html 이 없습니다 — 공유 미리보기를 다시 찍을 길이 없어집니다");
+  const bare = fs.readFileSync(f, "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ");
+  const tok = fs.readFileSync(path.join(ROOT, "css", "tokens.css"), "utf8").toUpperCase();
+  const hex = [...new Set((bare.match(/#[0-9A-Fa-f]{6}/g) || []).map(x => x.toUpperCase()))];
+  if(!hex.length) throw new Error("tools/og.html 에서 색을 하나도 못 찾았습니다 — 검사가 틀렸습니다");
+  const bad = hex.filter(h => tok.indexOf(h) < 0);
+  if(bad.length)
+    throw new Error("공유 미리보기(tools/og.html)가 **토큰에 없는 색**을 씁니다 — "+
+      "팔레트를 바꾸셨으면 거기도 같이 고치고 `node tools/og.js` 로 "+
+      "다시 찍으세요:\n  " + bad.join("\n  "));
+  console.log("   공유 미리보기 색 " + hex.length + "가지가 전부 토큰에 있습니다");
+}
+checkOgPalette();
+
+/* ════════════════════════════════════════════════════════════════════
    checkMainH2() — 메인 크롤러 본문의 머리말이 **화면과 같은가**
 
    ⚠️⚠️ **2026-10-16 — 둘이 어긋나 있었습니다.** 화면은

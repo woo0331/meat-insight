@@ -335,6 +335,10 @@ function PageStoreOne(s){
   if(s.fc)                  tags.push("프랜차이즈 매장");
   /* ⚠️ 조건을 견적 화면까지 그대로 넘깁니다 — 업체 상세에서 `quoteTo({})`
      로 두어 빈 화면이 떴던 것과 같은 자리입니다. */
+  /* ⚠️ 같은 가게에서 나온 시설 · 장비. 장비 상세의 `same` 과 **같은 규칙**
+     입니다 — 두 곳에 다르게 적으면 한쪽에만 나오는 매물이 생깁니다. */
+  var mine = (window.AM_ASSETS || []).filter(function(x){
+    return x.storeId === s.id; });
   var q = quoteTo({ cat:"store", side:"start", industry:s.industry, region:s.region });
   return PgHero({
     crumb: Crumb([["매장 인수","/stores"],[s.title]]),
@@ -368,6 +372,19 @@ function PageStoreOne(s){
       '<p class="mk-text">'+esc(s.text)+'</p></div>' : '')+
 
     mkGallery(s.images, s.title + " 매장 사진")+
+
+    /* 이 가게에서 같이 나온 시설 · 장비 — ⚠️⚠️ `storeId` 를 **장비 쪽에서만**
+       읽고 있었습니다. 묶는 규칙은 같은데 길이 한 방향뿐이라, 매장을 보고
+       계신 분은 "시설도 같이 넘기시나" 를 알 수가 없었습니다 (시설 인수비
+       칸만 숫자로 보입니다). `gu` · `amStore()` · `withEquip` 과 같은
+       **반쪽만 읽던 칸**입니다.
+       ⚠️ 0건이면 구간째 뺍니다 (절대 규칙 2). */
+    (mine.length ? '<div class="pv-sec"><h2>이 가게에서 같이 나온 시설 · 장비</h2>'+
+      '<div class="mk-g">'+mine.slice(0, 6).map(AssetCard).join("")+'</div>'+
+      (mine.length > 6
+        ? '<p class="note">'+esc(mine.length)+'건 가운데 여섯만 냅니다.</p>' : '')+
+      '<p class="note">한 가게를 정리하면서 같이 나온 것입니다. 매장과 함께 '+
+      '일괄로도 상담하실 수 있습니다.</p></div>' : '')+
 
     (s.at ? '<p class="note">'+esc(s.at)+'에 올라왔습니다.</p>' : '')+
 

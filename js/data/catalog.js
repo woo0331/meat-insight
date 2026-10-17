@@ -40,6 +40,16 @@ window.AM_START_CATS = [
   { key:"store", name:"점포 · 상가", icon:"pin", tone:"t5", kind:"listing",
     lead:"자리를 정합니다",
     desc:"지역 · 업종 · 평수 · 보증금 · 월세 · 권리금으로 찾습니다.",
+    /* ⚠️ `kw` 는 **검색에만** 쓰는 다른 말입니다 — 화면에는 안 나옵니다.
+       손님이 치는 말과 저희 분류 이름이 달라서 **0건이던 말**을 적습니다
+       (2026-10-17 에 188낱말을 쳐 보고 찾았습니다). 아래 분류들의 `kw`
+       가 전부 같은 규칙입니다.
+       ⚠️⚠️ **없는 서비스를 적는 칸이 아닙니다** — 그 분류가 실제로
+       다루는 것을 가리키는 **다른 말**만 적습니다 (절대 규칙 1).
+       그래서 `소방안전관리자`(선임 대행)는 일부러 안 넣었습니다.
+       ⚠️ **더한 뒤에는 쳐 보고 어디로 가는지 확인하세요** — 걸리기만
+       하고 엉뚱한 데로 가면 더 나쁩니다. */
+    kw:"점포임대 상가임대 점포매매 가게임대 가게자리",
     to:"/stores",
     items:[
       { key:"shop",        name:"상가" },
@@ -66,6 +76,7 @@ window.AM_START_CATS = [
   { key:"interior", name:"인테리어 · 시공", icon:"roller", tone:"t4", kind:"provider",
     lead:"가게를 만듭니다",
     desc:"지역 · 업종 · 평수 · 예산으로 업체를 비교하고 견적을 받습니다.",
+    kw:"간판제작 간판공사 소방시설 소방공사 에어컨설치 냉난방공사 타일 타일공사 바닥공사 유리공사 샤시 셔터 목공 철거후시공",
     items:[
       { key:"interior", name:"인테리어" }, { key:"design",  name:"설계" },
       { key:"electric", name:"전기" },     { key:"plumbing",name:"배관" },
@@ -102,6 +113,11 @@ window.AM_START_CATS = [
   { key:"it", name:"IT · 매장시스템", icon:"monitor", tone:"t1", kind:"provider",
     lead:"주문받고 결제하고 지키는 것",
     desc:"POS · 키오스크 · CCTV · 통신까지 한 번에 비교합니다.",
+    /* ⚠️ `kw` 는 **검색에만** 쓰는 다른 말입니다 — 화면에는 안
+       나옵니다. 하위가 "POS" 라 **"포스기"** 를 치면 0건이었습니다
+       (사장님이 실제로 쓰는 말입니다). 같은 것을 가리키는 다른 말만
+       적습니다 — 없는 서비스를 적는 칸이 아닙니다 (절대 규칙 1). */
+    kw:"포스기 포스 카드단말기 단말기 시시티비 씨씨티비",
     items:[
       { key:"pos",       name:"POS" },        { key:"kiosk",   name:"키오스크" },
       { key:"table-order",name:"테이블오더" }, { key:"cctv",    name:"CCTV" },
@@ -118,6 +134,7 @@ window.AM_START_CATS = [
   { key:"supply", name:"운영 공급업체", icon:"pkgck", tone:"t2", kind:"provider",
     lead:"매일 들어오는 것",
     desc:"거래처를 새로 뚫거나 바꾸실 때 조건을 비교합니다.",
+    kw:"포장용기 포장지 배달용기 일회용컵 식자재납품",
     /* ⚠️⚠️ 2026-10-09 최종 통합 지시서 §5-2 A · B — 운영 중인 사장님이
        **매달 사는 것**이 여기 들어옵니다. 육류 · 수산 · 농산은 "식자재"
        한 칸으로 묶여 있었는데, 거래처가 **서로 다른 업체**라 한 칸으로
@@ -190,6 +207,7 @@ window.AM_START_CATS = [
   { key:"marketing", name:"마케팅 · 디자인", icon:"megaphone", tone:"t8", kind:"provider",
     lead:"알리는 일",
     desc:"브랜딩부터 오픈 마케팅까지 맡길 곳을 비교합니다.",
+    kw:"현수막 배너 블로그마케팅 인스타마케팅 인스타그램 네이버플레이스 바이럴 온라인광고",
     items:[
       { key:"naming",   name:"브랜드 네이밍" }, { key:"logo",     name:"로고" },
       { key:"bici",     name:"BI · CI" },       { key:"menu-design",name:"메뉴판" },
@@ -239,6 +257,7 @@ window.AM_CLOSE_CATS = [
   { key:"transfer", name:"매장 양도", icon:"handover", tone:"t1", kind:"listing",
     lead:"가게를 통째로 넘기기",
     desc:"점포 · 권리금 · 시설을 포함해 넘기실 수 있습니다.",
+    kw:"권리금계산 권리금산정 가게넘기기 점포양도 매장매매",
     to:"/stores",
     items:[
       { key:"store-transfer",name:"점포 양도" },   { key:"premium",  name:"권리금" },
@@ -249,6 +268,7 @@ window.AM_CLOSE_CATS = [
   { key:"asset", name:"시설 · 집기 처분", icon:"sofa", tone:"t3", kind:"listing",
     lead:"쓰던 장비와 집기",
     desc:"개별 판매 · 일괄 판매 · 시설 전체 인수까지 됩니다.",
+    kw:"중고주방 중고주방기기 중고장비 장비매각 집기매각",
     to:"/assets",
     items:[
       { key:"kitchen-eq",name:"주방장비" },  { key:"fridge",  name:"냉장 · 냉동" },
@@ -280,6 +300,7 @@ window.AM_CLOSE_CATS = [
   { key:"restore", name:"원상복구", icon:"roller", tone:"t5", kind:"provider",
     lead:"임대차가 끝나기 전에",
     desc:"어디까지 복구해야 하는지부터 확인하고 견적을 받습니다.",
+    kw:"원상복구비용 복구공사 철거후복구 벽복구 바닥복구",
     items:[
       { key:"shop-restore",name:"상가 원상복구" }, { key:"electric",name:"전기" },
       { key:"plumbing",    name:"배관" },          { key:"gas",     name:"가스" },
@@ -299,6 +320,7 @@ window.AM_CLOSE_CATS = [
   { key:"tax", name:"폐업 세무 · 행정", icon:"calc", tone:"t7", kind:"provider",
     lead:"신고하고 정리하는 일",
     desc:"기한을 놓치면 가산세가 붙습니다. 전문가와 확인하세요.",
+    kw:"폐업신고서 폐업신고절차 부가세신고 폐업세금",
     items:[
       { key:"close-report",name:"폐업신고" },     { key:"vat",     name:"부가세" },
       { key:"income-tax",  name:"종합소득세" },   { key:"biz-reg", name:"사업자등록 정리" },
@@ -308,6 +330,7 @@ window.AM_CLOSE_CATS = [
   { key:"labor", name:"직원 · 노무", icon:"users", tone:"t5", kind:"provider",
     lead:"같이 일하던 사람",
     desc:"퇴직금과 4대보험 정리는 순서가 있습니다.",
+    kw:"4대보험료 사대보험 퇴직금계산 해고예고수당",
     items:[
       { key:"resign",   name:"직원 퇴직" },   { key:"severance",name:"퇴직금" },
       { key:"insurance4",name:"4대보험" },    { key:"contract-end",name:"근로계약 종료" },
@@ -328,6 +351,7 @@ window.AM_CLOSE_CATS = [
   { key:"law", name:"법률 · 채무", icon:"scale", tone:"t6", kind:"provider",
     lead:"다툼이 생겼을 때",
     desc:"저희가 대리하지 않습니다 — 자격 있는 전문가를 연결합니다.",
+    kw:"제소전화해 명도소송 보증금반환 임대차분쟁",
     items:[
       { key:"lease",    name:"임대차" },   { key:"receivable",name:"미수금" },
       { key:"debt",     name:"채권 · 채무" }, { key:"dispute", name:"계약분쟁" },

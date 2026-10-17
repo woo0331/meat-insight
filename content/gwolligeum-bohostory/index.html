@@ -44,8 +44,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 
 <link rel="stylesheet" href="/css/tokens.css?v=92ad47b8">
-<link rel="stylesheet" href="/css/app.css?v=bcafb8fb">
-<link rel="stylesheet" href="/css/pages.css?v=88ebcecb">
+<link rel="stylesheet" href="/css/app.css?v=fe25d44f">
+<link rel="stylesheet" href="/css/pages.css?v=a595f4e6">
 
 <!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
      마세요 — 다음에 돌릴 때 덮어써집니다. 내용은 js/data/faq.js 와
@@ -109,30 +109,37 @@
 <script defer src="/js/data/offers.js?v=45719125"></script>
 <script defer src="/js/data/packages.js?v=3c1c4f58"></script>
 <script defer src="/js/data/halls.js?v=f92c1d92"></script>
+<!-- 고를 수 있는 서비스 (2026-10-17 창업 준비 전문관 §12 · §2-B).
+     ⚠️ halls 와 reqforms 의 값을 읽으므로 **그 뒤**입니다. -->
+<script defer src="/js/data/svcpick.js?v=93fb8f4e"></script>
 <script defer src="/js/data/svcpage.js?v=bb4d6168"></script>
 <script defer src="/js/data/steps.js?v=7cf9b3ba"></script>
 
-<script defer src="/js/components/base.js?v=8c6ee685"></script>
-<script defer src="/js/components/ui.js?v=c9ed7c46"></script>
+<script defer src="/js/components/base.js?v=7e49ed05"></script>
+<script defer src="/js/components/ui.js?v=c0f9b011"></script>
+<!-- 선택한 서비스 (2026-10-17 창업 준비 전문관 §3 · §4-1).
+     ⚠️ ui.js 의 amGet/amSet 과 svcpick.js 를 읽으므로 **그 뒤**입니다.
+     ⚠️⚠️ 담는 것은 서비스 id 뿐입니다 — 성함 · 연락처를 담지 않습니다. -->
+<script defer src="/js/pick.js?v=2e206647"></script>
 <!-- 로그인 (Supabase Auth) — ⚠️ 설정 전에는 /api/session 이 auth:false 라
      화면이 그 구간째 안 그립니다. 아무것에도 의존하지 않습니다. -->
 <script defer src="/js/auth.js?v=a50dfe92"></script>
 <script defer src="/js/components/chrome.js?v=bf4d6282"></script>
 
 <script defer src="/js/pages/home.js?v=3431a776"></script>
-<script defer src="/js/pages/journey.js?v=f87b71c5"></script>
-<script defer src="/js/pages/flow.js?v=45ec30ba"></script>
+<script defer src="/js/pages/journey.js?v=d2bf113b"></script>
+<script defer src="/js/pages/flow.js?v=8cec4a6a"></script>
 <script defer src="/js/pages/providers.js?v=df086bd1"></script>
 <script defer src="/js/pages/franchise.js?v=3f7a10c3"></script>
 <script defer src="/js/pages/market.js?v=33f13210"></script>
-<script defer src="/js/pages/quote.js?v=980e646c"></script>
+<script defer src="/js/pages/quote.js?v=a617bc09"></script>
 <script defer src="/js/pages/info.js?v=851f68d9"></script>
 <script defer src="/js/pages/tools.js?v=6b08c921"></script>
 <script defer src="/js/pages/my.js?v=e64e59ca"></script>
 <script defer src="/js/pages/search.js?v=e1086fbf"></script>
 <script defer src="/js/pages/legal.js?v=273e11c2"></script>
 
-<script defer src="/js/app.js?v=23d260fb"></script>
+<script defer src="/js/app.js?v=d5dbd156"></script>
 
 <div id="chrome-t"></div>
 <!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가

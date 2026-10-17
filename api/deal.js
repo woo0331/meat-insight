@@ -56,7 +56,13 @@ const OK_FN = {
      ⚠️⚠️ **상태를 바꾸는 것은 여기가 아닙니다.** `submit_quote` 가
      상담 중인 건을 `quoted` 로 넘길 때도 **DB 안에서 move_state() 를
      부릅니다** — 문이 하나라서 기록이 한 곳에만 남습니다 (§8). */
-  submit_quote:1, withdraw_quote:1, choose_quote:1
+  submit_quote:1, withdraw_quote:1, choose_quote:1,
+  /* 2026-10-17 (0009) — 신청 하나에 서비스 여러 개 · **항목별 배정** (§7).
+     ⚠️⚠️ `save_request_items` 는 **여기 없습니다** — 로그인 전에 들어오는
+     접수가 service key 로 부르는 길이고, 이 주소는 그 사람의 토큰으로만
+     부릅니다. 여기 넣으면 로그인한 누구나 남의 신청에 항목을 꽂아
+     넣습니다. */
+  assign_item:1, move_item_state:1
 };
 
 /* 보낼 수 있는 인자 — 이름까지 정해 둡니다. ⚠️ 통째로 넘기면 손님이
@@ -83,7 +89,10 @@ const OK_ARG = {
   p_id:1, p_name:1, p_data:1,                          /* save_provider */
   p_listed:1, p_verified:1,                            /* approve_provider */
   p_provider:1,                                        /* save_fee_policy */
-  p_active:1                                           /* set_fee_policy_active */
+  p_active:1,                                          /* set_fee_policy_active */
+  /* 0009 — ⚠️ `p_agree3rd` 를 빼지 마세요. 그 칸이 안 가면 DB 가
+     제17조로 거절하고, 화면에는 "처리하지 못했습니다" 만 나갑니다. */
+  p_item:1, p_agree3rd:1                               /* assign_item · move_item_state */
 };
 
 function pickArgs(a){
@@ -140,6 +149,8 @@ const FN_SAY = {
   approve_provider:      "업체 공개 상태를 바꿨습니다",
   save_fee_policy:       "수수료 정책을 저장했습니다",
   set_fee_policy_active: "수수료 정책을 켜거나 껐습니다",
+  assign_item:           "서비스 항목을 업체에 배정했습니다",
+  move_item_state:       "서비스 항목의 상태가 바뀌었습니다",
   submit_quote:          "업체가 견적을 냈습니다",
   withdraw_quote:        "업체가 견적을 거뒀습니다",
   choose_quote:          "고객이 견적을 골랐습니다"

@@ -1257,6 +1257,116 @@ function ok(name, cond, extra) {
     await ctx.close();
   }
 
+  /* ════════════════════════════════════════════════════════════════
+     2026-10-17 §6 · §7 — 신청 하나에 서비스 여러 개 · 항목별 배정
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n신청 서비스 항목 — 서비스마다 다른 업체에 (§7)");
+  {
+    const { pg, ctx, errs } = await fresh(1440, 1400);
+    let sent = null;
+    const R = "11111111-1111-1111-1111-111111111111";
+
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"admin",
+        name:"관리자", provider:null,
+        conf:{ url:"https://proj.supabase.co", anonKey:"ANON-TEST" } }) }));
+
+    await pg.route("**/api/me**", r => r.fulfill({ status:200,
+      contentType:"application/json", body: JSON.stringify({
+        auth:true, signedIn:true, role:"admin",
+        requests:[
+          { id:R, no:"SW-AB12-CD34", side:"start", cat:"interior",
+            industry:"cafe", region:"gyeonggi", gu:"안양시", state:"check",
+            created_at:"2026-10-17T02:00:00+00:00", assignment:[],
+            request_item:[
+              { id:"it-1", service_id:"interior", state:"new",
+                detail:{ "공사 범위":"전체 시공" }, assignment:[] },
+              { id:"it-2", service_id:"equip", state:"assigned",
+                detail:{}, assignment:[{ provider_id:"pv-one", state:"sent" }] },
+              /* ⚠️ 내려간 분류의 옛 항목 — 이름을 모르면 key 를 냅니다 */
+              { id:"it-3", service_id:"없어진분류", state:"new",
+                detail:{}, assignment:[] }
+            ] },
+          /* ⚠️ 항목이 없는 옛 접수 — 구간째 빠져야 합니다 (절대 규칙 2) */
+          { id:"22222222-2222-2222-2222-222222222222", no:"SW-EF56-GH78",
+            side:"close", cat:"demolish", industry:"restaurant",
+            region:"seoul", gu:"", state:"new",
+            created_at:"2026-10-16T02:00:00+00:00", assignment:[] }
+        ],
+        providers:[{ id:"pv-one", name:"가나다 인테리어", listed:true },
+                   { id:"pv-two", name:"라마바 설비", listed:false }],
+        quotes:[], deals:[], fees:[] }) }));
+
+    await pg.route("**/api/deal", r => {
+      sent = JSON.parse(r.request().postData() || "{}");
+      return r.fulfill({ status:200, contentType:"application/json",
+                         body: JSON.stringify({ ok:true }) });
+    });
+
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(400);
+    await pg.locator("#rq .rq-r").first().locator(".rq-hd").click();
+    await pg.waitForTimeout(250);
+
+    ok("항목 구간이 나온다", (await pg.locator("#rq .rq-it").count()) === 1);
+    ok("항목 셋이 줄로 나온다", (await pg.locator("#rq .rq-it-i").count()) === 3);
+    const names = await pg.locator("#rq .rq-it-n").allTextContents();
+    /* ⚠️⚠️ 이름은 catalog.js 에서 읽습니다 — key 를 그대로 찍으면
+       이 저장소가 `gyeonggi` · `espresso` 로 겪은 자리입니다 */
+    ok("서비스 이름을 분류에서 읽는다",
+       names[0] === "인테리어 · 시공" && names[1] === "시설 · 장비", names.join(" / "));
+    /* ⚠️ 내려간 분류는 **key 를 그대로** 냅니다 (지난 신청은 보존 · §12) */
+    ok("모르는 분류는 key 를 그대로 낸다", names[2] === "없어진분류", names[2]);
+    ok("이미 배정된 항목은 업체가 보인다",
+       (await pg.locator("#rq .rq-it-pv").first().textContent()).includes("가나다"),
+       await pg.locator("#rq .rq-it-pv").first().textContent());
+
+    /* ── 항목 하나를 열고 배정 ─────────────────────────────────── */
+    await pg.locator("#rq .rq-it-b").first().click();
+    await pg.waitForTimeout(200);
+    ok("적어 주신 서비스별 답이 보인다",
+       (await pg.locator("#rq .rq-it-d").textContent()).includes("전체 시공"));
+    ok("업체 고르개가 둘이다 (공개 전도 보입니다)",
+       (await pg.locator("#rq-ipv-it-1 option").count()) === 3);
+
+    /* ⚠️⚠️ 동의 없이 누르면 **보내지도 않습니다** */
+    sent = null;
+    await pg.locator("#rq .rq-it-f .btn").click();
+    await pg.waitForTimeout(150);
+    ok("업체를 안 고르면 안 보낸다", sent === null);
+
+    await pg.selectOption("#rq-ipv-it-1", "pv-two");
+    sent = null;
+    await pg.locator("#rq .rq-it-f .btn").click();
+    await pg.waitForTimeout(150);
+    ok("제17조 동의를 안 켜면 안 보낸다 (제3자 제공)", sent === null);
+
+    await pg.check("#rq-iag-it-1");
+    await pg.locator("#rq .rq-it-f .btn").click();
+    await pg.waitForTimeout(250);
+    ok("동의를 켜면 assign_item 을 부른다",
+       sent && sent.fn === "assign_item", sent && sent.fn);
+    ok("항목 id 와 업체가 그대로 간다",
+       sent && sent.args.p_item === "it-1" && sent.args.p_provider === "pv-two",
+       sent && JSON.stringify(sent.args));
+    ok("동의 시각을 남기라고 보낸다", sent && sent.args.p_agree3rd === true);
+    /* ⚠️⚠️ **이 길이 요구한 것만** 보냅니다 — 들고 있던 다른 값이
+       섞이면 받지도 않은 동의가 엉뚱한 기록에 남습니다 */
+    ok("요구한 셋만 보낸다",
+       sent && Object.keys(sent.args).sort().join(",") ===
+         "p_agree3rd,p_item,p_provider", sent && Object.keys(sent.args).join(","));
+
+    /* ── 항목이 없는 옛 접수 ───────────────────────────────────── */
+    await pg.locator("#rq .rq-r").nth(1).locator(".rq-hd").click();
+    await pg.waitForTimeout(250);
+    ok("항목이 없는 건은 구간째 뺀다 (절대 규칙 2)",
+       (await pg.locator("#rq .rq-r").nth(1).locator(".rq-it").count()) === 0);
+
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
   await br.close();
   srv.close();
   console.log("\n" + (fail ? "❌" : "✅") + " 통과 " + pass + " · 실패 " + fail);

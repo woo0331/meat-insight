@@ -35,7 +35,11 @@ const { deliver, clean, why, fromOurPages } = require("./_send.js");
    으로 보내고 끝입니다. 반쯤 된 저장을 손님에게 보이지 않기 위해서고,
    `api/_send.js` 가 받을 곳이 없을 때 503 을 돌려주는 것과 같은
    규칙입니다 (fail-closed). */
-const { dbReady, dbInsert, dbSelect, dbWhy } = require("./_db.js");
+const { dbReady, dbInsert, dbSelect, dbWhy, dbCallService } = require("./_db.js");
+/* ⚠️⚠️ **빌드가 적어 주는 목록입니다** (`build-pages.js` 의
+   `writeSvcList()`). 손으로 고치지 마세요 — 분류를 늘리면 저절로
+   따라옵니다. 없는 서비스 id 를 거르는 자리입니다 (§8). */
+const SERVICES = require("./_services.js");
 const { reqNo, telKey, intakeDup } = require("./_intake.js");
 /* ⚠️ 로그인은 **거들기만** 합니다. 접수는 로그인 없이 들어오는 것이
    맞습니다 — 견적 하나 받으려고 가입하게 만들면 거기서 닫힙니다.
@@ -43,6 +47,57 @@ const { reqNo, telKey, intakeDup } = require("./_intake.js");
 const { authReady, bearer, session } = require("./_auth.js");
 
 const KINDS = { sos:1, quote:1, partner:1 };
+
+/* ── 신청 서비스 항목 (2026-10-17 §5-4 · §6 · §8) ─────────────────
+   > §8 — "서버 측 필수값 검증 · **잘못된 서비스 ID 차단**"
+
+   ⚠️⚠️ **없는 서비스는 통째로 거절하지 않고 그 항목만 뺍니다.** 밖으로
+   퍼진 옛 링크가 지워진 분류를 들고 있을 수 있는데, 거기서 400 을
+   돌려주면 손님은 아무 잘못도 안 하시고 "접수되지 않았습니다" 를
+   봅니다 — 나머지 서비스는 멀쩡합니다 (접수를 잃는 쪽이 더 나쁩니다).
+   ⚠️ 운영자에게는 남깁니다 (절대 규칙 3 — 손님 화면에는 안 적습니다).
+
+   ⚠️⚠️ **스물까지입니다.** 분류가 스물여섯이라 그보다 많이 올 수가
+   없는데, 요청을 손으로 만들면 얼마든지 보낼 수 있습니다 — 한 신청에
+   항목 천 개가 들어오면 DB 와 슬랙 글이 같이 터집니다 (§8 "비정상적인
+   대량 요청 방지"). */
+function readItems(raw){
+  if(!Array.isArray(raw)) return { items:[], bad:[] };
+  const seen = {}, items = [], bad = [];
+  for(const it of raw.slice(0, 20)){
+    if(!it || typeof it !== "object") continue;
+    const id = clean(it.id, 60);
+    if(!id) continue;
+    if(seen[id]) continue;                       /* §3-2 중복 금지 */
+    if(SERVICES.indexOf(id) < 0){ bad.push(id); continue; }
+    seen[id] = 1;
+    /* ⚠️ 항목의 `detail` 도 스물까지입니다 — 서비스마다 질문이 최대
+       다섯인데, 손으로 만든 요청을 막는 자리입니다. */
+    const d = {};
+    if(it.detail && typeof it.detail === "object"){
+      for(const k of Object.keys(it.detail).slice(0, 20)){
+        const key = clean(k, 30), val = clean(it.detail[k], 200);
+        if(key && val) d[key] = val;
+      }
+    }
+    items.push({ id:id, detail:d });
+  }
+  return { items:items, bad:bad };
+}
+
+/* 받아 보는 사람이 읽는 줄 — ⚠️ 기계가 읽는 것은 `items` 이고 둘은
+   같은 것을 가리킵니다 (한쪽만 고치면 어긋납니다). */
+function itemLines(items){
+  if(!items.length) return [];
+  const L = ["", "신청 서비스 " + items.length + "개"];
+  items.forEach(function(it, i){
+    L.push("  " + (i + 1) + ") " + it.id);
+    Object.keys(it.detail).forEach(function(k){
+      L.push("     · " + k + " — " + it.detail[k]);
+    });
+  });
+  return L;
+}
 
 /* 서비스별 요청서의 추가 답(js/data/reqforms.js)을 사람이 읽을 줄로.
    ⚠️ 칸 이름과 값 둘 다 씻습니다 — 여기 들어온 것은 손님이 보낸 것이고,
@@ -101,6 +156,11 @@ module.exports = async function handler(req, res){
     q.q           = clean(b.q, 4000);
     q.budget      = clean(b.budget, 40);
     q.detail      = detailLines(b.detail);   /* 서비스마다 다른 답 */
+    /* 2026-10-17 §5-4 — 신청 서비스 항목 (여러 개를 한 신청으로) */
+    const got     = readItems(b.items);
+    q.items       = got.items;
+    if(got.bad.length)
+      console.warn("[site] 없는 서비스 id 를 빼고 접수했습니다 — " + got.bad.join(", "));
     /* 해결 가이드에서 고르신 "업체에 물어볼 것".
        ⚠️ 이건 사장님이 업체에게 **대신 물어봐 달라고 맡기신 것**입니다.
        빠뜨리면 요청은 성공하는데 정작 물어볼 것이 사라집니다. */
@@ -149,7 +209,7 @@ module.exports = async function handler(req, res){
        ⚠️ 손님이 보낸 값을 질의문자에 그대로 이어 붙이지 않습니다 */
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const found = await dbSelect("request",
-      "?select=no,tel,offer_id,cat,created_at" +
+      "?select=no,tel,offer_id,cat,idem,created_at" +
       "&tel=eq." + encodeURIComponent(telKey(q.tel)) +
       "&created_at=gte." + encodeURIComponent(since) +
       "&order=created_at.desc&limit=20");
@@ -160,7 +220,11 @@ module.exports = async function handler(req, res){
     if(!found.ok) console.error("[site] 중복 검사를 못 했습니다 — " + dbWhy(found.why));
     else {
       const dup = intakeDup(new Date(), found.rows,
-        { tel:q.tel, offerId:clean(b.offerId, 60), cat:q.cat || q.service });
+        { tel:q.tel, offerId:clean(b.offerId, 60), cat:q.cat || q.service,
+          /* §8 "재시도 요청의 중복 접수를 방지하기 위한 멱등성 처리"
+             ⚠️⚠️ 같은 열쇠가 오면 **시각과 상관없이** 같은 접수입니다 —
+             끊긴 요청을 다시 누르신 것이지 새 신청이 아닙니다. */
+          idem:clean(b.idem, 80) });
       /* 같은 요청을 또 누른 것 — 두 번 보내지 않고 먼저 받은 번호를
          그대로 돌려줍니다 (손님에게는 성공입니다) */
       if(dup.dup){
@@ -212,10 +276,28 @@ module.exports = async function handler(req, res){
       /* ⚠️⚠️ 제3자 제공 재동의는 **여기서 받지 않습니다** (제17조 제2항).
          어느 업체에 줄지 정해지지 않았으니까요 — 배정할 때 받습니다.
          방침 제4조 제3항이 그렇게 적혀 있습니다. 비워 둡니다. */
+      /* §8 멱등 — 끊겨서 다시 누르신 것을 알아보는 열쇠입니다 */
+      idem:      clean(b.idem, 80) || null,
       state:     "new"
     };
     const saved = await dbInsert("request", row);
-    if(saved.ok) no = cand;
+    if(saved.ok){
+      no = cand;
+      /* ⚠️⚠️ **항목은 함수로 적습니다** — `save_request_items()` 가
+         신청서와 항목을 **한 트랜잭션**으로 묶습니다 (§8 "신청서 저장과
+         서비스 항목 저장이 중간에 실패하여 불완전한 신청이 생성되지
+         않도록"). 여기서 줄마다 insert 하면 중간에 끊긴 신청이 생깁니다.
+         ⚠️ 항목 저장이 실패해도 **접수는 그대로 둡니다** — 번호는 이미
+         나갔고, 슬랙 글에 항목이 그대로 적혀 있어 사람이 보고 처리할
+         수 있습니다. 손님의 요청을 잃는 쪽이 더 나쁩니다. */
+      if(q.items.length){
+        const it = await dbCallService("save_request_items",
+          { p_request: saved.row && saved.row.id, p_items: q.items });
+        if(!it.ok)
+          console.error("[site] 신청 서비스 항목을 저장하지 못했습니다 — " +
+            dbWhy(it.why) + " (접수번호 " + cand + ")");
+      }
+    }
     else console.error("[site] 접수를 저장하지 못했습니다 — " + dbWhy(saved.why));
   }
 
@@ -256,6 +338,11 @@ module.exports = async function handler(req, res){
       L.push("── 요청 조건 ──");
       q.detail.forEach(function(x){ L.push(x); });
     }
+    /* ⚠️⚠️ 2026-10-17 §7 — **서비스마다 다른 업체에 배정**하시려면
+       받아 보는 사람이 항목을 항목으로 봐야 합니다. 이름이 이어 붙은
+       한 줄로는 나눌 수가 없습니다 (그게 이번에 고친 자리입니다). */
+    if(q.items && q.items.length)
+      itemLines(q.items).forEach(function(x){ L.push(x); });
     L.push("");
     L.push(kind === "sos" ? "── 적어 주신 상황 ──" : "── 필요한 것 ──");
     L.push(q.q);

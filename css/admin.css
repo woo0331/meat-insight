@@ -881,3 +881,33 @@ body.sl-locked{ overflow:hidden; }
    (`.ad-main` 이 grid 라 안쪽이 안 쪼개지면 문서 폭이 늘어납니다) */
 .rq-q-s{ margin:0; font-size:13px; color:var(--ink2, #46516A);
   line-height:1.6; overflow-wrap:anywhere; }
+
+/* ── 신청 서비스 항목 — 2026-10-17 §6 · §7 ─────────────────────────
+   ⚠️⚠️ **구간에 제 클래스를 답니다** (`rq-it`). `#rq` 안의 구간이
+   전부 `.rq-r` 로 같아서, 이름이 없으면 검사가 어느 구간의 줄인지
+   못 가립니다 — 이 저장소가 2차에서 겪은 자리입니다. */
+.rq-it{ margin:0 0 var(--s5); padding:var(--s4);
+  background:var(--bg-sky); border:1px solid var(--line);
+  border-radius:var(--r-lg); }
+.rq-it-h{ display:block; margin:0 0 var(--s3);
+  font-size:var(--t-base); font-weight:800; color:var(--ink); }
+.rq-it-l{ display:grid; gap:var(--s2); list-style:none; padding:0; margin:0; }
+.rq-it-i{ background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r); overflow:hidden; }
+.rq-it-i.on{ border-color:var(--blue); }
+/* ⚠️ 누름 44px 이상 — 직원이 매일 쓰는 화면입니다 */
+.rq-it-b{ display:flex; align-items:center; justify-content:space-between;
+  gap:var(--s3); width:100%; min-height:48px; padding:var(--s2) var(--s3);
+  border:0; background:transparent; cursor:pointer; text-align:left; }
+.rq-it-n{ font-size:var(--t-base); font-weight:700; color:var(--ink); }
+.rq-it-pv{ display:flex; align-items:center; gap:6px;
+  margin:0; padding:0 var(--s3) var(--s2);
+  font-size:var(--t-sm); color:var(--blue-600); }
+.rq-it-f{ padding:var(--s3); border-top:1px solid var(--line); }
+.rq-it-d{ display:grid; grid-template-columns:auto 1fr; gap:4px var(--s3);
+  margin:0 0 var(--s3); font-size:var(--t-sm); }
+.rq-it-d dt{ font-weight:700; color:var(--ink2); }
+.rq-it-d dd{ margin:0; color:var(--ink); }
+.rq-ag{ display:flex; gap:var(--s2); align-items:flex-start;
+  margin:var(--s3) 0; font-size:var(--t-sm); color:var(--ink2); }
+.rq-ag input{ width:20px; height:20px; margin:1px 0 0; flex:none; }

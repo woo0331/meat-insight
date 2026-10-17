@@ -91,6 +91,19 @@ async function dbInsert(table, row){
   return { ok:true, row: Array.isArray(r.data) ? r.data[0] : r.data };
 }
 
+/* service key 로 함수를 부릅니다 (로그인 없이 들어온 접수용).
+   ⚠️⚠️ **읽기 · 상태 바꾸기에는 쓰지 마세요.** 그쪽은 반드시 그 사람의
+   토큰(`dbRpc`)으로 가야 RLS 를 거칩니다 — service key 는 RLS 를 통째로
+   지나갑니다. 여기로 가도 되는 것은 **접수가 자기 신청에 항목을 적는
+   것**뿐이고, 그건 로그인 전이라 누구의 토큰도 없습니다.
+   ⚠️ 함수 이름은 **부르는 쪽의 허용 목록**이 첫째 자물쇠이고 `safeFn()`
+   이 둘째입니다 — 둘이 다른 말로 거절해야 어느 쪽이 걸렸는지 압니다. */
+async function dbCallService(fn, args){
+  const f = safeFn(fn);
+  if(!f) return { ok:false, why:"함수 이름이 비었습니다" };
+  return await call("POST", "/rpc/" + f, args || {});
+}
+
 /* 찾아보기 — query 는 PostgREST 질의문자입니다 (예: "?tel=eq.0101234")
    ⚠️ 손님이 보낸 값을 그대로 이어 붙이지 마세요. 부르는 쪽에서
    encodeURIComponent 를 거칩니다. */
@@ -195,4 +208,4 @@ async function dbRpc(token, fn, args){
 }
 
 module.exports = { dbReady, dbInsert, dbSelect, dbWhy, safeTable, DB_TIMEOUT,
-                   safeFn, dbSelectAs, dbRpc, callAs };
+                   safeFn, dbSelectAs, dbRpc, callAs, dbCallService };

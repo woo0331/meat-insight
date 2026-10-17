@@ -40,7 +40,11 @@ var RQ = { asked:false, on:false, signedIn:false, role:"", name:"",
            rows:null, provs:[], fil:"", open:"", to:"", busy:false,
            ctx:{},
            /* 2차 — 계약 · 수수료 정책 · 한 건의 이력 */
-           deals:[], fees:[], hist:null, histOf:"", money:"", mctx:{} };
+           deals:[], fees:[], hist:null, histOf:"", money:"", mctx:{},
+           /* 2026-10-17 §7 — 펼친 **서비스 항목**과 거기 적은 것.
+              ⚠️ `ctx`(신청 전체)와 **갈라 둡니다** — 섞으면 항목을
+              배정하다 만 값이 신청 전체 배정에 실려 나갑니다. */
+           itemOf:"", ictx:{} };
 
 /* ── 그리기 ──────────────────────────────────────────────────────── */
 
@@ -205,7 +209,8 @@ function rqRow(r){
         (day ? '<em class="rq-d">'+esc(day)+'</em>' : '')+
       '</span>'+
     '</button>'+
-    (open ? '<div class="rq-bd">'+ rqMove(r) + rqAsg(r) + rqQuotes(r) + rqHistRow(r) +'</div>' : '')+
+    (open ? '<div class="rq-bd">'+ rqItems(r) + rqMove(r) + rqAsg(r) +
+              rqQuotes(r) + rqHistRow(r) +'</div>' : '')+
   '</article>';
 }
 
@@ -216,6 +221,9 @@ window.rqOpen = function(id){
      건의 이력**이 그 줄 아래에 그대로 남습니다 (사유에 사정이
      적히는 자리라 더 그렇습니다). */
   RQ.histOf = ""; RQ.hist = null;
+  /* ⚠️ 항목도 같이 닫습니다 — 안 닫으면 다른 건을 펼쳤을 때 **남의
+     건의 항목 폼**이 열린 채로 남습니다 (배정 단추가 거기 있습니다). */
+  RQ.itemOf = ""; RQ.ictx = {};
   rqDraw();
 };
 
@@ -360,6 +368,112 @@ function rqPvField(){
     '<p class="f-h">고르개는 '+P.length+'곳입니다 — 세는 값입니다.</p>'+
   '</div>';
 }
+
+/* ── 신청 서비스 항목 (2026-10-17 §6 · §7) ───────────────────────
+   > §7 — "각 서비스 항목은 독립적으로 배정 및 관리한다 ·
+   >  인테리어 → 인테리어 업체 A · 주방설비 → 주방설비 업체 B"
+
+   ⚠️⚠️ **항목이 0개면 구간째 뺍니다** (절대 규칙 2). 옛 접수와
+   `/sell` · `/closure` 는 아직 항목을 안 보내서, 그 건은 전과 똑같이
+   신청 전체로 배정합니다 (아래 `rqMove()`).
+   ⚠️ 서비스 이름은 `catalog.js` 에서 읽습니다 — 저장된 것은 key 이고,
+   이름을 바꾸셔도 지난 신청이 따라옵니다 (§6). */
+function rqItems(r){
+  var L = r.request_item || [];
+  if(!L.length) return "";
+  return '<div class="rq-it">'+
+    '<b class="rq-it-h">신청 서비스 '+esc(L.length)+'개 — 서비스마다 따로 배정하세요</b>'+
+    '<ul class="rq-it-l">'+L.map(rqItemRow).join("")+'</ul>'+
+    '<p class="f-h">서비스마다 다른 업체에 보낼 수 있습니다. '+
+      '배정은 <b>제3자 제공</b>이라 서비스마다 동의를 따로 기록합니다 '+
+      '(개인정보보호법 제17조 제2항).</p>'+
+  '</div>';
+}
+
+function rqItemRow(it){
+  var open = RQ.itemOf === it.id;
+  var st   = (window.amDealSt && amDealSt(it.state)) || null;
+  var A    = it.assignment || [];
+  /* ⚠️ 적힌 답도 같이 냅니다 — 업체에 물어볼 것이 거기 있습니다 */
+  var d    = it.detail && typeof it.detail === "object" ? it.detail : {};
+  var keys = Object.keys(d);
+  return '<li class="rq-it-i'+(open ? " on" : "")+'">'+
+    '<button class="rq-it-b" type="button" onclick="rqItemOpen(\''+esc(it.id)+'\')">'+
+      '<span class="rq-it-n">'+esc(rqSvcName(it.service_id))+'</span>'+
+      '<i class="myq-st myq-'+esc(window.amDealTone ? amDealTone(it.state) : "gray")+
+        '">'+esc(st ? st.name : it.state)+'</i>'+
+    '</button>'+
+    (A.length
+      ? '<p class="rq-it-pv">'+icon("check",14)+' '+
+          esc(A.map(function(a){ return rqPvName(a.provider_id) || a.provider_id; })
+               .join(" · "))+'</p>'
+      : '')+
+    (open ? rqItemForm(it, keys, d) : "")+
+  '</li>';
+}
+
+/* ⚠️ 이름을 모르면 **key 를 그대로 냅니다** — 분류가 내려가도 지난
+   신청은 남아야 하고(§12), 빈 줄보다 key 가 낫습니다 (운영자 화면). */
+function rqSvcName(k){
+  var c = (window.AM_CATS || []).filter(function(x){ return x.key === k; })[0];
+  return c ? c.name : k;
+}
+
+window.rqItemOpen = function(id){
+  RQ.itemOf = (RQ.itemOf === id) ? "" : id;
+  RQ.ictx = {};
+  rqDraw();
+};
+window.rqIctx = function(k, v){ RQ.ictx[k] = v; };
+
+function rqItemForm(it, keys, d){
+  var P = RQ.provs || [];
+  return '<div class="rq-it-f">'+
+    (keys.length
+      ? '<dl class="rq-it-d">'+keys.map(function(k){
+          return '<dt>'+esc(k)+'</dt><dd>'+esc(d[k])+'</dd>'; }).join("")+'</dl>'
+      : '')+
+    (P.length
+      ? '<div class="f-r"><label for="rq-ipv-'+esc(it.id)+'">이 서비스를 맡길 업체</label>'+
+          '<select id="rq-ipv-'+esc(it.id)+'" class="sel" '+
+            'onchange="rqIctx(\'providerId\',this.value)">'+
+            '<option value="">골라 주세요</option>'+
+            P.map(function(p){
+              return '<option value="'+esc(p.id)+'"'+
+                (RQ.ictx.providerId === p.id ? " selected" : "")+'>'+esc(p.name)+
+                (p.listed ? "" : " (아직 공개 전)")+'</option>';
+            }).join("")+
+          '</select></div>'+
+        /* ⚠️⚠️ 제17조 안내가 **고르개 아래 · 단추 위**입니다. 체크를
+           켜야 `p_agree3rd` 가 실리고, 안 켜면 DB 가 그 말 그대로
+           거절합니다 (화면 코드로만 막지 않습니다). */
+        '<label class="rq-ag" for="rq-iag-'+esc(it.id)+'">'+
+          '<input type="checkbox" id="rq-iag-'+esc(it.id)+'" '+
+            'onchange="rqIctx(\'agree3rd\',this.checked)">'+
+          '<span>이 서비스의 성함 · 연락처를 위 업체에 넘기는 데 대해 '+
+            '<b>상호를 알려 드리고 다시 동의를 받았습니다</b> '+
+            '(개인정보보호법 제17조 제2항).</span>'+
+        '</label>'+
+        '<div class="row-cta">'+
+          '<button class="btn btn-b" type="button" '+
+            'onclick="rqItemGo(\''+esc(it.id)+'\')">이 서비스 배정하기</button>'+
+        '</div>'
+      : '<p class="f-h">등록된 업체가 0곳이라 배정할 곳이 없습니다.</p>')+
+  '</div>';
+}
+
+/* ⚠️⚠️ **화면이 막는 것이 아닙니다.** 막는 것은 DB 의 `assign_item()`
+   이고(화면 코드로만 막으면 버그 하나에 뚫립니다), 여기는 **왕복 한
+   번을 아끼고 먼저 알려 주는** 것까지입니다. */
+window.rqItemGo = function(id){
+  if(RQ.busy) return;
+  if(!RQ.ictx.providerId){ toast("배정할 업체를 골라 주세요"); return; }
+  if(RQ.ictx.agree3rd !== true){
+    toast("제3자 제공 동의를 받으셨는지 확인해 주세요"); return; }
+  rqCall("assign_item",
+    { p_item:id, p_provider:RQ.ictx.providerId, p_agree3rd:true },
+    "배정했습니다");
+};
 
 /* 이미 배정된 곳 — ⚠️ 상호를 알려 드려야 제17조 재동의가 성립합니다 */
 function rqAsg(r){
@@ -838,6 +952,7 @@ function rqCall(fn, args, say){
     if(!x.ok){ toast((x.d && x.d.error) || "처리하지 못했습니다"); rqDraw(); return; }
     toast(say);
     RQ.money = ""; RQ.mctx = {}; RQ.open = ""; RQ.to = ""; RQ.ctx = {};
+    RQ.itemOf = ""; RQ.ictx = {};
     rqLoad();
   }).catch(function(e){
     RQ.busy = false;

@@ -81,7 +81,7 @@ async function sendWithDb(body, opt){
      ⚠️ 토큰은 **헤더로만** 들어갑니다 — 본문의 userId 같은 칸을 믿으면
      누구나 남의 계정에 신청을 꽂아 넣을 수 있습니다. */
   if(opt.auth) process.env.SUPABASE_ANON_KEY = "anon-key";
-  let hook = null, inserted = null, keySeen = "", askedWho = 0;
+  let hook = null, inserted = null, keySeen = "", askedWho = 0, rpc = null;
   const realFetch = global.fetch;
   global.fetch = async function(url, init){
     const u = String(url);
@@ -100,6 +100,18 @@ async function sendWithDb(body, opt){
       if(init.method === "GET")
         return { ok:true, status:200, headers:{ get(){ return ""; } },
                  text: async()=> JSON.stringify(opt.rows || []) };
+      /* ⚠️⚠️ **함수 호출과 insert 를 갈라서** 받습니다. 전에는 둘 다
+         `JSON.parse(body)[0]` 으로 읽어서, 항목을 적는 `/rpc/` 호출이
+         저장된 줄을 **덮어썼습니다** — 멀쩡한 접수가 "안 저장됐다" 로
+         보입니다. 자리를 따로 둡니다. */
+      if(/\/rpc\//.test(u)){
+        rpc = { fn:u.split("/rpc/")[1], args:JSON.parse(init.body) };
+        if(opt.itemsFail)
+          return { ok:false, status:500, headers:{ get(){ return ""; } },
+                   text: async()=> "items boom" };
+        return { ok:true, status:200, headers:{ get(){ return ""; } },
+                 text: async()=> "0" };
+      }
       inserted = JSON.parse(init.body)[0];
       if(opt.saveFails)
         return { ok:false, status:500, headers:{ get(){ return ""; } },
@@ -121,7 +133,7 @@ async function sendWithDb(body, opt){
     delete process.env.SUPABASE_SERVICE_KEY;
     delete process.env.SUPABASE_ANON_KEY;
   }
-  return { res:res, sent:hook, row:inserted, keySeen:keySeen, askedWho:askedWho };
+  return { res:res, sent:hook, row:inserted, keySeen:keySeen, askedWho:askedWho, rpc:rpc };
 }
 
 (async () => {
@@ -431,6 +443,75 @@ async function sendWithDb(body, opt){
        서비스별 칸 수를 미리 셉니다 */
     ok("스물한 칸째는 빠진다 (상한 · 그래서 빌드가 미리 셉니다)",
        !/칸21/.test(r.sent.text));
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     2026-10-17 창업 준비 전문관 §5-4 · §6 · §8
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️ 신청 하나에 서비스 여러 개 (§5-4 · §6)");
+  {
+    const { res, sent, row, rpc } = await sendWithDb({
+      kind:"quote", serviceName:"인테리어 · 주방", q:"20평 카페입니다",
+      region:"경기", gu:"안양시", side:"start", cat:"interior",
+      items:[{ id:"interior", detail:{ "공사 범위":"전체 시공" } },
+             { id:"equip",    detail:{} },
+             { id:"marketing",detail:{ "필요한 것":"네이버 플레이스" } }],
+      idem:"abc123", name:"홍길동", tel:"010-1234-5678", agree:true });
+    ok("200 으로 받는다", res.code === 200, "code=" + res.code);
+    ok("항목을 함수로 적는다 (트랜잭션 · §8)",
+       rpc && rpc.fn === "save_request_items", rpc && rpc.fn);
+    ok("항목 셋이 그대로 간다",
+       rpc && rpc.args.p_items.length === 3, rpc && rpc.args.p_items);
+    ok("서비스별 답이 항목에 담긴다",
+       rpc && rpc.args.p_items[0].detail["공사 범위"] === "전체 시공",
+       rpc && rpc.args.p_items[0]);
+    ok("저장된 신청 id 로 적는다",
+       rpc && rpc.args.p_request === (row && row.id), rpc && rpc.args.p_request);
+    /* ⚠️⚠️ 받아 보는 사람이 **항목을 항목으로** 봐야 서비스마다 다른
+       업체에 돌릴 수 있습니다 (§7) */
+    ok("슬랙 글에 항목이 줄로 들어간다",
+       /신청 서비스 3개/.test(sent.text) && /1\) interior/.test(sent.text),
+       (sent.text || "").slice(-300));
+    ok("멱등 열쇠가 저장된다 (§8)", row && row.idem === "abc123", row && row.idem);
+  }
+
+  console.log("\n── ⚠️⚠️ 없는 서비스 id 는 거른다 (§8)");
+  {
+    const { res, rpc } = await sendWithDb({
+      kind:"quote", serviceName:"뭐든", q:"내용", region:"경기", side:"start",
+      items:[{ id:"interior" }, { id:"없는것" }, { id:"<script>" }, { id:"interior" }],
+      name:"홍", tel:"010-1234-5678", agree:true });
+    /* ⚠️⚠️ **통째로 거절하지 않습니다** — 옛 링크가 지워진 분류를 들고
+       있을 수 있고, 나머지 서비스는 멀쩡합니다 (접수를 잃는 쪽이 더
+       나쁩니다). */
+    ok("접수는 그대로 된다", res.code === 200, "code=" + res.code);
+    ok("없는 id 는 빠진다", rpc && rpc.args.p_items.length === 1, rpc && rpc.args.p_items);
+    ok("남은 것은 멀쩡한 것뿐", rpc && rpc.args.p_items[0].id === "interior");
+  }
+
+  console.log("\n── ⚠️⚠️ 항목 저장이 실패해도 접수는 살린다");
+  {
+    const { res, sent } = await sendWithDb({
+      kind:"quote", serviceName:"인테리어", q:"내용", region:"경기", side:"start",
+      items:[{ id:"interior" }],
+      name:"홍", tel:"010-1234-5678", agree:true }, { itemsFail:true });
+    ok("200 으로 받는다", res.code === 200, "code=" + res.code);
+    /* 번호는 이미 나갔고, 슬랙 글에 항목이 그대로 있어 사람이 봅니다 */
+    ok("접수번호는 그대로 준다", /^SW-/.test(res.body.no || ""), res.body);
+    ok("슬랙으로는 그대로 간다", /신청 서비스 1개/.test(sent.text));
+  }
+
+  console.log("\n── ⚠️⚠️ 항목이 비정상으로 많아도 받아내지 않는다 (§8)");
+  {
+    const many = [];
+    for(let i = 0; i < 500; i++) many.push({ id:"interior" });
+    const { res, rpc } = await sendWithDb({
+      kind:"quote", serviceName:"많이", q:"내용", region:"경기", side:"start",
+      items:many, name:"홍", tel:"010-1234-5678", agree:true });
+    ok("200 으로 받는다", res.code === 200, "code=" + res.code);
+    /* 같은 id 는 하나로 모이고, 상한이 스물입니다 */
+    ok("항목이 하나로 모인다 (중복 금지)",
+       rpc && rpc.args.p_items.length === 1, rpc && rpc.args.p_items.length);
   }
 
   console.log("\n── 받을 곳이 없을 때");

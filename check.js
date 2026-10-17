@@ -2383,6 +2383,131 @@ const AUDIT = `(() => {
       return "하지 않는 일을 한다고 적었습니다";
     return true;`);
 
+  /* ════════════════════════════════════════════════════════════════
+     2026-10-17 창업 준비 전문관 — 고르고 · 담기고 · 한 번에 신청
+     ════════════════════════════════════════════════════════════════
+     ⚠️⚠️ 이 저장소가 "만들어 놓고 안 쓰는 칸" 으로 여러 번 겪은
+     자리라, **끊기면 잡히게** 둡니다 — 고른 것이 바구니에 안 쌓이거나,
+     바구니가 신청 화면으로 안 넘어가거나, 넘어가도 칸에 안 적히면
+     손님은 같은 것을 두 번 적고 거기서 닫습니다.
+     ⚠️ 주석에 백틱을 쓰지 마세요. */
+  await f("창업 준비가 §2 의 여섯 영역이다", "/startup", `
+    const want = ["pgh", "stB", "pkb", "stI", "pkp", "stD", "stF"];
+    const got = [].slice.call(document.querySelectorAll("#view > section"))
+      .map(function(s){
+        const hit = want.filter(function(w){ return s.classList.contains(w); })[0];
+        return hit || (s.className.indexOf("pgh") >= 0 ? "pgh" : "?");
+      });
+    for(const w of ["stB", "pkb", "stD", "stF"])
+      if(got.indexOf(w) < 0) return "구간이 빠졌습니다 — " + w + " · 지금 " + got.join(" ");
+    if(got.indexOf("stB") > got.indexOf("pkb"))
+      return "고르는 자리가 확인 자리보다 뒤에 있습니다 — " + got.join(" ");
+    if(got.indexOf("pkb") > got.indexOf("stF"))
+      return "확인 자리가 신청 자리보다 뒤에 있습니다 — " + got.join(" ");
+    return true;`);
+
+  await f("서비스를 여러 개 고르면 한 신청으로 간다", "/startup", `
+    try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
+    const cards = document.querySelectorAll(".stB [data-pick]");
+    if(cards.length < 6) return "대표 서비스가 여섯이 아닙니다 — " + cards.length;
+    /* ① 셋을 고릅니다 */
+    const ids = ["interior", "equip", "marketing"];
+    for(const id of ids){
+      const el = document.querySelector('[data-pick="' + id + '"]');
+      if(!el) return "고르개에 " + id + " 가 없습니다";
+      el.click();
+    }
+    const n = document.querySelector("[data-pick-n]");
+    if(!n || n.textContent !== "3") return "개수가 3 이 아닙니다 — " + (n && n.textContent);
+    /* ② **색만으로 표시하지 않습니다** (§3-1 · §14) */
+    const one = document.querySelector('[data-pick="interior"]');
+    if(!one.checked) return "체크 표시가 안 켜졌습니다";
+    if(!one.closest(".pk-c").classList.contains("is-on"))
+      return "고른 카드에 표시가 안 붙었습니다";
+    /* ③ 바구니에 쌓이고 하단 띠가 섭니다 */
+    if(document.querySelectorAll("#pk-list > li").length !== 3)
+      return "바구니에 셋이 안 쌓였습니다";
+    const bar = document.getElementById("pk-bar");
+    if(!bar || bar.hidden) return "하단 띠가 안 보입니다";
+    /* ④ 단추 글씨에 **개수**가 들어갑니다 (§9-2) */
+    /* ⚠️⚠️ 이름을 go 로 두지 마세요 — 화면을 옮기는 go() 를 가려서
+       아래 await go(...) 가 "함수가 아닙니다" 로 터집니다.
+       ⚠️ 주석에 백틱을 아예 쓰지 마세요 (검사 본문이 템플릿 문자열이라
+       거기서 끊깁니다 — 이 저장소에서 스물세 번째입니다). */
+    const goBtn = document.getElementById("pk-bar-go");
+    const t = goBtn.querySelector("span").textContent;
+    if(t.indexOf("3개") < 0) return "단추에 개수가 안 적혔습니다 — " + t;
+    /* ⑤ 화면을 옮겨도 살아남습니다 (§3-2) */
+    await go("/providers/interior");
+    await new Promise(function(r){ setTimeout(r, 150); });
+    await go("/startup");
+    await new Promise(function(r){ setTimeout(r, 200); });
+    const n2 = document.querySelector("[data-pick-n]");
+    if(!n2 || n2.textContent !== "3")
+      return "화면을 옮겼다 오니 선택이 사라졌습니다 — " + (n2 && n2.textContent);
+    /* ⑥ 신청 화면이 **그대로 되읽습니다** — 끊기면 두 번 적게 됩니다 */
+    const href = document.getElementById("pk-bar-go").getAttribute("href");
+    await go(href);
+    await new Promise(function(r){ setTimeout(r, 250); });
+    if(document.querySelectorAll("#q-svl > li").length !== 3)
+      return "신청 화면이 고른 셋을 안 읽었습니다";
+    const what = document.getElementById("q-what");
+    if(!what || !what.value) return "필요한 일 칸이 비었습니다";
+    /* ⑦ 서비스마다 다른 질문이 **따로** 열립니다 (§5-3) */
+    const asks = [].slice.call(document.querySelectorAll(".rqf"))
+      .map(function(e){ return e.getAttribute("data-svc"); });
+    for(const id of ids)
+      if(asks.indexOf(id) < 0) return "서비스별 질문이 빠졌습니다 — " + id;
+    /* ⑧ 칸 이름이 서비스마다 갈려 있어야 합니다 — 겹치면 뒤엣것이
+       앞엣것의 값을 덮어씁니다 (에러도 안 나고 화면도 멀쩡합니다) */
+    const keys = [].slice.call(document.querySelectorAll("[data-rq]"))
+      .map(function(e){ return e.getAttribute("data-rq"); });
+    if(keys.some(function(k){ return k.indexOf(":") < 0; }))
+      return "서비스별 질문의 칸 이름에 서비스가 안 붙었습니다";
+    /* ⑨ 하나를 빼면 신청 화면에서도 빠집니다 (§9-4) */
+    const before = document.querySelectorAll("#q-svl > li").length;
+    document.querySelector('#q-svl button[onclick*="equip"]').click();
+    await new Promise(function(r){ setTimeout(r, 250); });
+    const after = document.querySelectorAll("#q-svl > li").length;
+    if(after !== before - 1) return "빼도 줄이 안 줄었습니다 — " + before + " → " + after;
+    try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
+    return true;`);
+
+  /* §4 — ⚠️⚠️ **임시저장과 접수를 갈라서 말하는가.** 저장만 했는데
+     접수된 것처럼 보이면 사장님이 기다리십니다 (절대 규칙 5). */
+  await f("임시저장이 접수가 아니라고 말한다", "/quote?side=start", `
+    try{ localStorage.removeItem("am.draft.v1"); }catch(e){}
+    const box = document.querySelector(".q-draft");
+    if(!box) return "임시저장 칸이 없습니다";
+    const t = box.textContent;
+    if(t.indexOf("접수되지 않습니다") < 0)
+      return "저장만으로는 접수되지 않는다는 줄이 없습니다";
+    /* §4-1 — 무엇이 남고 무엇이 안 남는지 적어야 합니다 */
+    if(t.indexOf("성함 · 연락처") < 0 || t.indexOf("저장하지 않습니다") < 0)
+      return "무엇을 저장하지 않는지 적혀 있지 않습니다";
+    /* ⚠️⚠️ **개인정보를 담지 않습니다.** 적고 저장해 보고, 저장된
+       것에 성함 · 연락처가 섞이는지 봅니다. */
+    document.getElementById("q-gu").value = "안양시";
+    document.getElementById("q-name").value = "홍길동";
+    document.getElementById("q-tel").value = "010-1234-5678";
+    document.getElementById("q-q").value = "저는 010-9999-8888 입니다";
+    window.quoteDraftSave();
+    const raw = localStorage.getItem("am.draft.v1") || "";
+    if(raw.indexOf("안양시") < 0) return "조건이 저장되지 않았습니다";
+    if(raw.indexOf("홍길동") >= 0 || raw.indexOf("1234-5678") >= 0)
+      return "성함 · 연락처가 브라우저에 저장됐습니다";
+    if(raw.indexOf("9999-8888") >= 0)
+      return "자세한 내용이 브라우저에 저장됐습니다";
+    /* §4-3 — 마지막 저장 시각이 보여야 합니다 */
+    const when = document.getElementById("q-draft-when");
+    if(!when || when.textContent.indexOf("마지막 저장") < 0)
+      return "마지막 저장 시각이 안 나옵니다";
+    /* 불러오기 · 지우기 단추가 그때서야 나옵니다 */
+    if(document.getElementById("q-draft-load").hidden)
+      return "저장한 뒤에도 불러오기 단추가 안 나옵니다";
+    try{ localStorage.removeItem("am.draft.v1"); }catch(e){}
+    return true;`);
+
   /* ⑭ 샴페인 골드는 **악센트로만** (§21)
      ⚠️ 이 저장소에서 금빛을 넓게 썼다가 통째로 걷어낸 적이 있습니다 —
      고급스러움이 아니라 꾸민 티였습니다. 면으로 번지는 것을 막습니다. */
@@ -2900,7 +3025,14 @@ const AUDIT = `(() => {
     return true;`);
   /* ══ 여정 넷 (2026-10-05 V2 지시서 §1 · §2 · §4 · §6 · §7 · §31) ══ */
 
-  await f("여정 넷이 단계 여섯을 빠짐없이 나눠 가진다", "/startup", `
+  await f("여정 넷이 단계 여섯을 빠짐없이 나눠 가진다", "/operation", `
+    /* ⚠️⚠️ **2026-10-17 창업 준비 §2 로 보는 화면을 옮겼습니다.**
+       여정 넷 구간이 창업 준비 화면에서 내려왔습니다 (§2 가 여섯
+       영역을 적었고, 그 자리에서 고르는 것은 **서비스**입니다).
+       구간은 **지운 것이 아니라** 운영 · 양도양수 · 폐업 화면과
+       푸터 첫 칸이 그대로 들고 있습니다 — 거기서 봅니다.
+       ⚠️ 검사를 지우지 마세요. 여정 ↔ 단계 짝은 데이터 규칙이라
+       화면이 어디 있든 지켜져야 합니다. */
     /* 지시서 §1 — 창업 준비 · 매장 운영 · 인수 양도 · 폐업 정리.
        ⚠️⚠️ **새 분류를 만든 것이 아닙니다.** 단계 여섯을 묶어 보는
        틀이라, 단계 하나가 두 여정에 들어가거나 빠지면 손님은 그
@@ -2959,7 +3091,8 @@ const AUDIT = `(() => {
      거기서는 JourneyPick 이 data-keep 없이 진짜 링크를 냅니다 —
      이 검사가 없으면 "눌러도 아무 데도 안 가는 카드" 를 아무도 못
      잡습니다. */
-  await f("여정 카드가 실제로 그 여정 화면으로 간다", "/startup", `
+  await f("여정 카드가 실제로 그 여정 화면으로 간다", "/operation", `
+    /* ⚠️ 위와 같은 까닭으로 화면을 옮겼습니다 (2026-10-17 §2). */
     const J = window.AM_JOURNEYS || [];
     const cards = [].slice.call(document.querySelectorAll(".jy-g > li > a"));
     if(cards.length !== J.length)
@@ -3025,7 +3158,12 @@ const AUDIT = `(() => {
       return "적힌 값이 누구 것인지 밝히는 줄이 없습니다";
     return true;`);
 
-  await f("준비 과정의 걸음마다 갈 곳이 있다", "/startup", `
+  await f("준비 과정의 걸음마다 갈 곳이 있다", "/startup/cafe", `
+    /* ⚠️⚠️ **2026-10-17 창업 준비 §2-D 로 화면을 옮겼습니다.**
+       창업 준비 화면의 로드맵은 **접혀 있습니다** ("원하는 경우에만
+       펼쳐보게 한다") — 접힌 것은 높이가 0 이라 단추 크기를 잴 수가
+       없습니다. 업종 화면은 펼쳐진 채라 거기서 봅니다.
+       ⚠️ 걸음 데이터는 같은 AM_PROCESS.startup 입니다. */
     /* 지시서 §4 — 걸음마다 정보 · 업체 · 도구를 연결합니다.
        ⚠️ 걸음만 적어 두고 갈 데가 없으면 그건 **읽을거리**이지
        플랫폼이 아닙니다. */
@@ -3296,7 +3434,13 @@ const AUDIT = `(() => {
      접는 규칙이 살아 있는가.
      ⚠️ ②③ 이 중요합니다 — 접는 규칙을 묶음 밖으로 내면 **넓은
      화면에서도 접히는데 단추는 안 보여** 펼칠 방법이 아예 없습니다. */
-  await f("폰에서 긴 묶음을 접어 둔다", "/startup", `
+  await f("폰에서 긴 묶음을 접어 둔다", "/closure", `
+    /* ⚠️⚠️ **2026-10-17 창업 준비 §2 로 화면을 옮겼습니다.** 까닭이
+       둘입니다 — ① 패키지 구간이 창업 준비 화면에서 "담기" 로
+       바뀌어 pkg-l 이 없습니다 ② 거기에는 **모든 폭에서 접히는
+       단추**(fld-all)가 있어서 "넓은 화면에서 접기 단추가 보입니다"
+       가 당연히 걸립니다 (그쪽은 단추가 보여야 펼칠 수 있습니다).
+       폐업 화면은 전과 똑같은 패키지라 그대로 봅니다. */
     /* ⚠️ 2026-10-11 간소화 §2 — 패키지 구간이 메인에서 내려오고
        창업 · 폐업 · 양도 화면에 남았습니다. 그래서 보는 화면을
        옮겼습니다. 운영 묶음은 운영 화면에서 **안 접습니다**(그 화면의
@@ -3846,7 +3990,10 @@ const AUDIT = `(() => {
      오는 분류(`시설 · 장비`)는 업종을 안 고르면 셀 것이 0 이라,
      열셋 중 한 장만 이름만 덩그러니 남았습니다 — "이 분야는 준비가
      덜 됐나" 로 읽힙니다. 숫자를 지어내지 않고 `lead` 를 냅니다. */
-  await f("분야 카드가 설명도 숫자도 없이 비지 않는다", "/startup", `
+  await f("분야 카드가 설명도 숫자도 없이 비지 않는다", "/startup/cafe", `
+    /* ⚠️⚠️ **2026-10-17 창업 준비 §2 로 화면을 옮겼습니다.** 분야
+       묶음(StepBand)이 창업 준비 화면에서 내려오고 **업종 화면에
+       그대로 남았습니다** — 지운 것이 아닙니다 (§15). */
     /* ⚠️ 2026-10-08 — 분야 격자가 메인에서 내려와 창업 화면의
        "분야로 찾기"(.stp-i)가 그 자리입니다. 지키는 것은 그대로입니다. */
     const cards = Array.from(document.querySelectorAll(".stp-i"));

@@ -52,6 +52,33 @@ const CASES = [
      에러도 안 나고 화면도 멀쩡해서 **구간이 그냥 안 보일 뿐**입니다. */
   ["MY: 토큰이 있으면 Authorization 을 보낸다",
    `window.amAuthHeaders = function(){ return {}; };`],
+  /* ══ 2026-10-17 창업 준비 전문관 — 고르고 · 담기고 · 한 번에 ═══
+     ⚠️⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — 그리는 함수를 바꿔치기
+     하면 화면은 그대로라 "검사가 안 잡는다" 로 보입니다 (이 저장소가
+     열 번 겪은 자리). DOM 을 직접 건드립니다.
+     ⚠️ 집을 요소가 **실제로 있는 화면**에서 해야 합니다 — 없는 것을
+     집으면 되돌리기가 터지고, 그것도 "안 잡는다" 로 보입니다. */
+
+  /* ① 구간 하나를 빼 봅니다 (§2 여섯 영역) */
+  ["창업 준비가 §2 의 여섯 영역이다",
+   `var b = document.querySelector(".stB");
+    if(b && b.parentNode) b.parentNode.removeChild(b);`],
+
+  /* ② ⚠️⚠️ **색만으로 선택을 표시**해 봅니다 (§3-1 · §14 가 금지).
+     체크 표시를 지우면 색을 못 가리는 분께 상태가 안 보입니다. */
+  ["서비스를 여러 개 고르면 한 신청으로 간다",
+   `var old = window.pickPaint;
+    window.pickPaint = function(){
+      old();
+      [].slice.call(document.querySelectorAll("[data-pick]")).forEach(function(e){
+        e.checked = false; });
+    };`],
+
+  /* ③ ⚠️⚠️ **저장만 했는데 접수된 것처럼** 적어 봅니다 (§4 · 절대 규칙 5) */
+  ["임시저장이 접수가 아니라고 말한다",
+   `var p = document.querySelector(".q-draft .q-draft-t span");
+    if(p) p.innerHTML = "<b>지금 적은 조건을 저장해 두실 수 있습니다.</b>";`],
+
   /* ══ 2026-10-09 지시서 PART 4 — 창업 진단 넷 ═══════════════════ */
   /* ⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — DOM 을 직접 건드립니다.
      견적 링크에서 예산 · 일정을 떼면 "받아만 놓는 칸" 이 됩니다. */

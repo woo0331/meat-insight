@@ -379,7 +379,14 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
   min-height:var(--tap); cursor:pointer; margin-bottom:0; }
 .f-ck input{ width:20px; height:20px; flex:none; accent-color:var(--blue); }
 @media (max-width:560px){ .f-2{ grid-template-columns:1fr; } }
-input[type=text],input[type=tel],input[type=email],input:not([type]),textarea,.sel{
+/* ⚠️⚠️ **`date` · `number` 를 빼지 마세요.** 이 저장소가 세 번
+   겪은 자리입니다 — 선택자에 없으면 그 칸만 **브라우저 기본 꼴**로
+   서서 높이가 21px 이 되고(누름 40px 미만), 테두리도 `width:100%` 도
+   안 걸립니다. 그때마다 `.rq-s` · `.myqt-f` · `.rqf` 에 따로 덧대었는데,
+   새 폼을 만들 때마다 또 덧대야 하는 자리였습니다 (2026-10-17 에
+   견적 폼의 날짜 칸이 21px 인 것을 재서 뿌리를 고쳤습니다). */
+input[type=text],input[type=tel],input[type=email],input[type=date],
+input[type=number],input:not([type]),textarea,.sel{
   display:block; width:100%; min-height:var(--tap);
   padding:12px var(--s5); border:1px solid var(--line); border-radius:var(--r-in);
   background:var(--bg-2); color:var(--ink); font:inherit; }

@@ -16,46 +16,176 @@
    고르는 자리이고, 업체는 분류를 고른 다음에 나옵니다 (§54).
    ════════════════════════════════════════════════════════════════════ */
 
-/* ── /startup — 업종 고르기 ─────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════
+   /startup — 창업 준비 전문관 (2026-10-17 지시서 §2)
+
+   §2 가 화면을 **여섯 영역**으로 못박았습니다 —
+     A 창업 준비 소개            `.stA`
+     B 필요한 서비스 선택         `.stB`   ← 가장 중요한 영역 (§3)
+     C 선택한 서비스 확인         `.pkb`   (PickBasket)
+     D 창업 준비 체크리스트       `.stD`   (펼쳐야 보입니다)
+     E 창업 가이드               `.stE`   (카드 넷 + 전체 보기)
+     F 견적 신청                 `.stF`
+   그 사이에 **업종별 자세히**(기존 보존)와 **함께 하시는 것들**(§11
+   추천)이 들어갑니다.
+
+   ⚠️⚠️ **구간 차례를 바꾸시려면 지시서를 먼저 고치세요.**
+   `check.js` 의 "창업 준비가 §2 의 여섯 영역이다" 가 셉니다.
+
+   ⚠️⚠️ **기존 기능을 지우지 않았습니다** (§15). 업종 고르개 열넷 ·
+   로드맵 14걸음 · 패키지 · 분야 묶음 · 도움 셋 · 여정 넷이 전부
+   그대로 있습니다 — **자리와 포장만** 바뀌었습니다.
+   ⚠️ 그 가운데 `StepBand` · `JourneyBand` 는 **`/startup/:업종` 이
+   그대로 들고 있습니다.** 여기서 내린 까닭은 §2 가 여섯 영역을
+   적었고 §11 이 "동일한 설명을 여러 번 반복하지 않는다" 고 적었기
+   때문입니다 — 지운 것이 아닙니다.
+   ════════════════════════════════════════════════════════════════════ */
 function PageStartup(){
+  var ind = nowQS("i");                      /* 업종을 고르셨으면 그 차례로 */
+  var top = amPickTop("startup", ind), rest = amPickRest("startup", ind);
+  return StartIntro(ind) + StartPickBand(top, rest) + PickBasket() +
+    StartIndustryBand() + PackPickBand("start") + StartChecklist(ind) +
+    StartGuideBand(ind) + StartApplyBand() + PickBar();
+}
+
+/* ── A. 창업 준비 소개 (§2-A) ─────────────────────────────────────
+   > "간단한 제목 · 한 줄 설명 · 바로 서비스 선택으로 이동하는 버튼 ·
+   >  무엇을 선택해야 할지 모르는 고객을 위한 도움 요청."
+   > "긴 브랜드 소개와 불필요한 대형 배너는 제거한다."
+
+   ⚠️ 단추 둘 다 **실제로 갑니다** — 하나는 바로 아래 고르개로,
+   하나는 신청 화면으로. §9-2 대로 **무엇이 일어나는지**를 적습니다
+   ("진행하기" 가 아닙니다).
+   ⚠️⚠️ 두 번째 단추는 **빈손으로 가도 되는 길**입니다. 무엇이
+   필요한지 모르시는 분께 "먼저 고르고 오세요" 라고 하면 거기서
+   닫습니다 — 상황만 적으시면 저희가 찾아 드립니다. */
+function StartIntro(ind){
   return PgHero({
     photo:"hero-startup",
-    kicker:"START · 창업",
-    h1raw:"어떤 사업을<br class=\"br-m\"> 준비하고 계세요?",
-    lead:"업종만 고르시면 그 업종 창업에 실제로 필요한 것만 추려 드립니다. 가입 없이 무료입니다."
-  })+
-  '<section class="sec sec-white"><div class="w">'+
-    /* 대분류 아홉으로 먼저 좁힐 수 있습니다 (지시서 PART 3) */
-    IndustryGroupChips("/startup", nowQS("g"))+
-    IndustryGrid("/startup","", nowQS("g"))+
-  '</div></section>'+
-  /* ⚠️ **할 일 먼저, 분야는 그 다음**입니다. 분야 묶음을 먼저 내면
-     손님이 "인테리어 · 시공" 이라는 말을 모를 때 첫 화면이 전부 남의
-     말이 됩니다 (메인에서 분류 열 개를 걷어낸 것과 같은 까닭입니다).
-     준비 과정 열두 걸음 — 2026-10-05 V2 §4.
-     ⚠️ `StepBand()` 와 다른 것입니다. 저쪽은 **큰 흐름 넷**이고
-     이쪽은 **실제로 할 일 열둘**이라 걸음마다 정보 · 업체 · 도구가
-     걸립니다. 둘 다 둡니다 — 큰 그림을 보고 들어와 할 일을 봅니다. */
-  ProcessBand({ key:"startup", kicker:"STARTUP PROCESS",
-    title:"창업 준비, 무엇부터 하나요?",
-    lead:amProcess("startup").length+"걸음입니다. 걸음마다 읽을 것 · 맡길 곳 · 계산할 것을 바로 열어 보실 수 있습니다.",
-    note:"업종을 고르시면 걸음마다 그 업종에 맞는 장비 · 업체 · 글로 좁혀집니다." })+
-  /* ⚠️⚠️ 2026-10-09 §4-4 — 창업 패키지. 로드맵을 보신 뒤에 둡니다 —
-     무엇을 해야 하는지 모르시는 분께 상품 목록부터 내밀면 그게
-     전화번호부입니다 (메인에서 분류 열 개를 걷어낸 것과 같은 까닭).
-     ⚠️ 패키지 하나가 계약 하나가 아닙니다 — 구간 아래 한 줄이 그렇게
-     적고 있고 지우지 말아야 합니다. */
-  /* ⚠️⚠️ 바탕을 `sec-blue` 로 두었다가 **바로 위 로드맵(sec-ivory)과
-     ΔE 0.00** 으로 한 구간처럼 읽혔습니다 — `.side-start` 가 `--bg-ivory2` 를
-     `--bg-sky` 로 바꿔 끼우기 때문입니다. 클래스가 달라서 `paintTones()` 는
-     둘을 다른 묶음으로 읽고 **안 밀어 줍니다.** 전수 점검이 잡았습니다. */
-  PackBand("start", "sec-gray")+
-  /* 업종을 아직 안 고르셨어도 **분야**는 같습니다 */
-  StepBand(null)+
-  StartupHelpBand()+
-  JourneyBand({ current:"startup", tone:"sec-white",
-    title:"다른 것도 준비하고 계신가요?",
-    lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." });
+    kicker:"START · 창업 준비",
+    h1raw:"창업에 필요한 것,<br class=\"br-m\"> 여기서 한 번에 고르세요.",
+    lead:"필요한 서비스를 여러 개 고르시고 한 번만 적어 보내시면 됩니다. "+
+         "가입 없이 무료입니다.",
+    cta:'<a class="btn btn-b btn-lg" href="#pick">'+
+        '필요한 서비스 고르기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="'+esc(quoteTo({ side:"start",
+           industry:ind || "" }))+'">무엇이 필요한지 모르겠어요</a>'
+  });
+}
+
+/* ── B. 필요한 서비스 선택 (§2-B · §3) ───────────────────────────
+   > "기본적으로 대표 서비스 6개를 큰 카드로 보여준다. 그 아래
+   >  '전체 서비스 보기' 버튼을 배치한다. 전체 서비스 보기에는 기존
+   >  DB에 등록된 창업 관련 서비스를 모두 포함한다."
+
+   ⚠️⚠️ **여섯으로 제한하지 않았습니다.** 접어 둔 곳에 창업 쪽 분류가
+   **빠짐없이** 들어 있고, 개수는 그 자리에서 센 값입니다 (손으로
+   적으면 분류를 늘릴 때 어긋납니다).
+   ⚠️ 업종을 고르셨으면 **그 업종 차례**로 나옵니다 — 이 저장소에서
+   업종이 갈리는 두 자리 가운데 하나(`amCatsFor()`)입니다. */
+function StartPickBand(top, rest){
+  return '<section class="sec sec-white stB" id="pick"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">STEP 01</p>'+
+      '<h2>필요한 서비스를 골라 주세요</h2>'+
+      '<p><b>여러 개를 함께 고르실 수 있습니다.</b> 고르신 것은 '+
+        '아래에 모이고, 한 번만 적어 보내시면 됩니다.</p>'+
+    '</div>'+
+    '<ul class="pk-g">'+top.map(PickCard).join("")+'</ul>'+
+    (rest.length
+      ? FoldAll("st-rest", "전체 서비스 보기 ("+rest.length+"개 더)", "접기")+
+        '<ul class="pk-g pk-g2 is-fold-all" id="st-rest">'+rest.map(PickCard).join("")+'</ul>'
+      : "")+
+  '</div></section>';
+}
+
+/* ── 업종별로 자세히 (기존 보존 · §15) ────────────────────────────
+   ⚠️⚠️ **지우면 `/startup/:업종` 열넷으로 가는 길이 없어집니다.**
+   그 화면들은 색인되어 있고, 업종별 로드맵 · 장비 · 글이 전부
+   거기 있습니다. §2 가 적지 않았다고 빼면 안 되는 자리입니다
+   (§15 "기존 기능은 존재 여부를 확인하고 반드시 유지한다").
+   ⚠️ 접어 둡니다 — 서비스 고르기가 주인공이고, 업종은 **더 보고
+   싶은 분**이 누르는 자리입니다. */
+function StartIndustryBand(){
+  return '<section class="sec sec-ivory stI"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">업종별로 자세히</p>'+
+      '<h2>업종이 정해지셨나요?</h2>'+
+      '<p>업종을 고르시면 그 업종 창업의 준비 순서 · 필요한 장비 · '+
+        '자주 막히는 것을 따로 보여 드립니다.</p>'+
+    '</div>'+
+    FoldAll("st-ind", "업종 고르기 ("+(window.AM_INDUSTRIES||[]).length+"개)", "접기")+
+    '<div class="is-fold-all" id="st-ind">'+
+      IndustryGroupChips("/startup", nowQS("g"))+
+      IndustryGrid("/startup","", nowQS("g"))+
+    '</div>'+
+  '</div></section>';
+}
+
+/* ── D. 창업 준비 체크리스트 (§2-D) ───────────────────────────────
+   > "기존 체크리스트 기능을 유지하되, 고객이 원하는 경우에만
+   >  펼쳐보게 한다. 서비스 견적 신청과 체크리스트를 혼동시키지
+   >  않는다."
+
+   ⚠️⚠️ **로드맵 14걸음이 그 체크리스트입니다** (`AM_PROCESS.startup`).
+   걸음마다 "꼭 확인할 것" 이 붙어 있고 열넷 전부 있습니다 — 여기
+   새로 적으면 두 곳이 어긋납니다.
+   ⚠️ 구간 머리말이 **"신청" 이라는 말을 쓰지 않습니다** — 지시서가
+   혼동을 금지한 자리입니다. */
+function StartChecklist(ind){
+  var n = amProcess("startup").length;
+  return '<section class="sec sec-white stD"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">창업 준비 체크리스트</p>'+
+      '<h2>무엇부터 해야 하는지 보고 싶으신가요?</h2>'+
+      '<p>'+n+'걸음입니다. 걸음마다 꼭 확인할 것과 읽어 두면 좋은 글이 '+
+        '같이 있습니다. <b>여기는 읽는 자리이고 신청은 아래에서 합니다.</b></p>'+
+    '</div>'+
+    FoldAll("st-road", "준비 순서 "+n+"걸음 보기", "접기")+
+    '<div class="is-fold-all" id="st-road">'+
+      ProcessBand({ key:"startup", bare:true, industry:ind || "" })+
+    '</div>'+
+  '</div></section>';
+}
+
+/* ── E. 창업 가이드 (§2-E) ────────────────────────────────────────
+   > "가이드는 카드 3~4개 정도만 먼저 노출하고 전체 보기로 연결한다.
+   >  동일한 서비스 설명을 페이지 곳곳에 반복하지 않는다."
+   ⚠️ 맞는 글이 없으면 **구간째 빠집니다** (절대 규칙 2) — `ReadBand`
+   가 빈 목록에 `""` 를 돌려줍니다. */
+function StartGuideBand(ind){
+  return ReadBand({ side:"start", industry:ind || "", limit:4,
+                    title:"창업 전에 알아 두면 좋은 것" });
+}
+
+/* ── F. 견적 신청 (§2-F) ──────────────────────────────────────────
+   > "신청 버튼은 명확하고 크고 쉽게 찾을 수 있어야 한다."
+   ⚠️⚠️ 단추 글씨에 **개수**가 들어갑니다 (§9-2) — `pickPaint()` 가
+   고르실 때마다 고쳐 적습니다. 안 고치면 "고른 것과 넘어가는 것이
+   다릅니다" 가 되고 그게 제일 나쁩니다.
+   ⚠️ 하나도 안 고르셔도 **막지 않습니다** — 상황만 적으시는 분이
+   있고, 그분을 막으면 거기서 닫습니다. */
+function StartApplyBand(){
+  var n = (typeof amPickCount === "function") ? amPickCount() : 0;
+  return '<section class="sec sec-cream stF"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">STEP 02</p>'+
+      '<h2>고르셨으면 한 번만 적어 보내세요</h2>'+
+      '<p>같은 내용을 업체마다 다시 적지 않으셔도 됩니다. '+
+        '지역과 연락처만 적어 주시면 서비스마다 업체를 찾아 '+
+        '연결해 드립니다. 무료입니다.</p>'+
+    '</div>'+
+    '<div class="row-cta">'+
+      '<a class="btn btn-b btn-lg" data-pick-go href="'+esc(amPickQuoteTo())+'">'+
+        '<span>'+(n ? "선택한 "+n+"개 서비스 견적 신청하기" : "견적 신청하기")+
+        '</span>'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-o btn-lg" href="/faq">자주 묻는 질문</a>'+
+    '</div>'+
+    /* ⚠️ 지킬 수 없는 약속을 적지 마세요 — 회신 시점은 업체가 정합니다 */
+    '<p class="sec-note">'+icon("info",15)+
+      ' 접수 뒤 담당자가 내용을 보고 연락드립니다. 회신 시점을 '+
+      '약속드리지는 않습니다.</p>'+
+  '</div></section>';
 }
 
 /* ── /startup/:industry — 그 업종의 창업 전부 ────────────────────── */

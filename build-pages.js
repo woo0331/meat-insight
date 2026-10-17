@@ -79,6 +79,9 @@ function loadApp(){
                 /* ⚠️ halls 는 catalog 의 분류 · 하위 key 를 가리킵니다
                    (2026-10-11 UI/UX 지시서 §2 · §4 — 전문관 넷) */
                 "js/data/halls.js",
+                /* ⚠️ svcpick 은 halls 의 칸과 reqforms 의 분류 key 를
+                   읽습니다 — 둘 다 위에 있습니다 (2026-10-17 §12) */
+                "js/data/svcpick.js",
                 "js/data/svcpage.js",
                 /* 이용 절차 넷 — 메인 05 구간과 크롤러 본문이 같이 읽습니다 */
                 "js/data/steps.js"];
@@ -2202,6 +2205,51 @@ function checkHalls(W){
   }
 }
 
+/* ── §12 고를 수 있는 서비스 (2026-10-17 창업 준비 전문관) ─────────
+   ⚠️⚠️ **대표 여섯이 실제로 고를 수 있는 서비스인지** 봅니다. 없는 id 를
+   적으면 그 칸이 **조용히 빠지고** 대표가 다섯이 됩니다 — 화면으로는
+   "원래 다섯인가" 로 보여서 아무도 모릅니다 (halls 의 아이콘 · 업체
+   subs · 사진 키로 겪은 그 자리).
+   ⚠️ 쉬운 이름(§9-3)도 **없는 id 에 적어 두면** 영영 안 쓰입니다. */
+function checkSvcPick(W){
+  const TOP  = W.AM_PICK_TOP  || {};
+  const EASY = W.AM_PICK_EASY || {};
+  if(!Object.keys(TOP).length)
+    throw new Error("js/data/svcpick.js 의 AM_PICK_TOP 이 비었습니다 (§2-B)");
+
+  /* 전문관마다 고를 수 있는 서비스를 모아 둡니다 */
+  const ok = new Set();
+  for(const h of (W.AM_HALLS || []))
+    for(const s of W.amPickAll(h.key)) ok.add(s.id);
+
+  for(const hall of Object.keys(TOP)){
+    const ids = TOP[hall] || [];
+    /* ⚠️ 지시서 §2-B 가 여섯을 적었습니다. 바꾸시려면 지시서를 먼저. */
+    if(ids.length !== 6)
+      throw new Error("대표 서비스가 " + ids.length + "개입니다 (" + hall +
+        ") — 지시서 §2-B 는 여섯입니다");
+    const seen = new Set();
+    for(const id of ids){
+      if(seen.has(id))
+        throw new Error("대표 서비스가 겹칩니다 — " + hall + " · " + id);
+      seen.add(id);
+      if(!W.amPickAll(hall).some(s => s.id === id))
+        throw new Error("대표 서비스 \"" + id + "\" 를 " + hall +
+          " 전문관에서 고를 수 없습니다" +
+          "\n   → js/data/halls.js 의 그 전문관 칸에 분류(cat)로 있어야 합니다");
+    }
+  }
+
+  for(const id of Object.keys(EASY)){
+    if(!EASY[id])
+      throw new Error("쉬운 이름이 비었습니다 — " + id +
+        "\n   → 적을 말이 없으면 칸째 빼세요 (원래 이름이 그대로 나옵니다)");
+    if(!ok.has(id))
+      throw new Error("쉬운 이름이 고를 수 없는 서비스를 가리킵니다 — " + id +
+        "\n   → 영영 안 쓰이는 줄입니다 (AM_PICK_EASY)");
+  }
+}
+
 /* ── §6 서비스 상세의 공통 네 구간 (2026-10-11 간소화 지시서) ──────
    ⚠️⚠️ **금액을 적을 수 없게 막습니다.** ④ 의 이름이 "예상 비용
    **또는** 비용 결정 요인" 인 까닭이고, 프랜차이즈 창업비를
@@ -2994,6 +3042,34 @@ checkMigDocs(W);
 checkOffers(W);
 checkOpsvc(W);
 checkHalls(W);
+checkSvcPick(W);
+writeSvcList(W);
+
+/* ⚠️⚠️ **서버가 "없는 서비스" 를 걸러낼 수 있게 목록을 내려놓습니다**
+   (2026-10-17 창업 준비 §8 "잘못된 서비스 ID 차단").
+
+   `api/quote.js` 는 브라우저가 아니라 Vercel 함수라 `catalog.js` 를
+   읽을 수가 없습니다 (`window` 가 없고, 런타임에 파일을 읽으면
+   번들에 안 들어갈 수 있습니다). 그래서 **빌드가 적어 줍니다.**
+
+   ⚠️ 손으로 고치지 마세요 — 빌드가 돌 때마다 다시 씁니다. 분류를
+   늘리면 저절로 따라오고, 고친 것을 커밋 안 하면 `ship.js --ci` 의
+   "빌드 결과가 커밋과 같은가" 가 잡습니다.
+   ⚠️⚠️ **내려놓는 것은 key 뿐입니다** — 이름 · 설명을 같이 쓰면 이름을
+   바꿀 때마다 이 파일이 바뀌고, 서버는 이름을 쓸 일이 없습니다. */
+function writeSvcList(W){
+  const keys = (W.AM_CATS || []).map(c => c.key).filter(Boolean).sort();
+  if(!keys.length) throw new Error("AM_CATS 가 비어 서비스 목록을 못 만듭니다");
+  const out =
+    "/* ⚠️⚠️ **빌드가 만드는 파일입니다 — 손으로 고치지 마세요.**\n" +
+    "   `node build-pages.js` 가 `js/data/catalog.js` 의 분류 key 를 그대로\n" +
+    "   적습니다 (2026-10-17 창업 준비 §8 \"잘못된 서비스 ID 차단\").\n" +
+    "   `api/quote.js` 가 신청 항목의 id 를 이 목록으로 거릅니다. */\n" +
+    "module.exports = " + JSON.stringify(keys) + ";\n";
+  const at = path.join(ROOT, "api/_services.js");
+  const was = fs.existsSync(at) ? fs.readFileSync(at, "utf8") : "";
+  if(was !== out){ fs.writeFileSync(at, out); console.log("   서비스 목록을 다시 적었습니다 — api/_services.js (" + keys.length + ")"); }
+}
 checkSvcPage(W);
 checkSteps(W);
 checkPackages(W);

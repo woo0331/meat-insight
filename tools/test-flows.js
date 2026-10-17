@@ -45,6 +45,15 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     카드 전체가 하나의 링크라 카드를 그대로 누릅니다. */
  await click('.bent-c.ent-startup > a');
  say((await url())==="/startup","메인 진입 카드 창업 준비 → /startup",await url());
+ /* ⚠️⚠️ **2026-10-17 창업 준비 §2 로 업종 고르개가 접혔습니다.**
+    주인공이 **서비스 고르기**(§2-B)이고, 고르는 격자 둘이 나란히 있으면
+    "같은 선택 영역의 반복" 입니다 (§11). 길은 그대로이고 **한 번 더
+    누릅니다** — 단추에 "업종 고르기 (14개)" 라고 적혀 있습니다.
+    ⚠️ `/startup/:업종` 열넷은 색인되어 있어서 **지우면 안 되는 길**
+    입니다 (§15). 그래서 여기서 끝까지 눌러 봅니다. */
+ await click('button[aria-controls="st-ind"]');
+ say(await pg.evaluate(()=>getComputedStyle(document.getElementById("st-ind")).display)!=="none",
+     "업종 고르개가 펼쳐진다");
  await click('.ind-g > li:nth-child(2) > a');
  say((await url()).startsWith("/startup/"),"업종 고르기 → /startup/:업종",await url());
  say((await txt()).indexOf("새로 만드는 것과 받는 것")>=0,"STEP 02 분기가 보인다");
@@ -167,35 +176,50 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  say((await txt()).indexOf("카페")>=0,"창업 ① 카페 창업 화면이 열린다");
  const rmN=await pg.evaluate(()=>document.querySelectorAll(".pcs > li").length);
  say(rmN>=8,"창업 ② 로드맵 걸음이 나온다","지금 "+rmN);
+ /* ⚠️⚠️ **2026-10-17 창업 준비 §11 로 패키지가 "담기" 가 됐습니다.**
+    전에는 패키지 카드마다 **제 신청 단추**가 있어서, 서비스 고르개와
+    합치면 "신청" 단추가 둘이었습니다 — 이번 지시서가 없애려는 것이
+    그 헷갈림입니다 (§0 "무엇을 눌러야 하는지 즉시 알 수 있어야 한다").
+    지금은 **위 선택에 담기만** 하고 신청은 한 자리에서 합니다.
+    ⚠️ `PackBand()` 와 `packages.js` 는 한 글자도 안 건드렸습니다 —
+    `/closure` · `/transfer` 가 전과 똑같이 씁니다 (§15). 【3】 이 그쪽을
+    끝까지 눌러 봅니다. */
  await pg.goto(B+"/startup",{waitUntil:"networkidle"});
- const pkN=await pg.evaluate(()=>document.querySelectorAll(".pkg-g > li").length);
- say(pkN>=1,"창업 ③ 창업 패키지가 나온다","지금 "+pkN);
- /* 인터넷 · POS · CCTV 가 실제로 그 패키지 안에 있는가 */
- const openHas=await pg.evaluate(()=>{
-   const c=document.querySelector('.pkg-c[data-pk="open"]');
-   if(!c) return "";
-   return [...c.querySelectorAll('input[type="checkbox"]')].map(x=>x.value).join(",");});
- say(["store-internet","pos-card","cctv-security"].every(k=>openHas.indexOf(k)>=0),
-   "창업 ④ 매장 오픈 패키지에 인터넷 · POS · CCTV 가 들어 있다",openHas);
- /* 둘을 빼면 링크가 **실제로 따라오는가** — 안 따라오면 고르신 것과
-    다른 것이 넘어갑니다 */
+ await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+ await pg.reload({waitUntil:"networkidle"});
+ const pkN=await pg.evaluate(()=>document.querySelectorAll(".pkp-g > li").length);
+ say(pkN>=1,"창업 ③ 창업 묶음이 나온다","지금 "+pkN);
+ /* 묶음이 **분류로** 담깁니다 — 상품 다섯이 분류 둘일 수 있습니다
+    (인터넷 · POS · CCTV · 키오스크가 전부 it). 잃는 것은 없습니다 —
+    신청 화면의 it 질문이 그 넷을 그대로 묻습니다. */
+ const willAdd=await pg.evaluate(()=>{
+   const c=[...document.querySelectorAll(".pkp-c")]
+     .filter(x=>x.textContent.indexOf("매장 오픈")>=0)[0];
+   return c ? (c.querySelector(".pkp-l")||{}).textContent||"" : "";});
+ say(willAdd.indexOf("POS")>=0 || willAdd.indexOf("주방")>=0,
+   "창업 ④ 매장 오픈 묶음에 무엇이 담기는지 이름으로 적혀 있다",willAdd);
  await pg.evaluate(()=>{
-   const c=document.querySelector('.pkg-c[data-pk="open"]');
-   const b=[...c.querySelectorAll('input[type="checkbox"]')];
-   b[3].checked=false; b[3].dispatchEvent(new Event("change",{bubbles:true}));
-   b[4].checked=false; b[4].dispatchEvent(new Event("change",{bubbles:true}));});
- await pg.waitForTimeout(150);
- const href3=await pg.evaluate(()=>document.getElementById("pkg-go-open").getAttribute("href"));
- /* ⚠️ 쉼표는 encodeURIComponent 가 **%2C 로 감습니다** — 날것 쉼표로
-    기다렸다가 멀줦한 코드를 실패로 잡았습니다 — **검사가 틀렸습니다.**
-    푸는 쪽(nowQS)은 되돌려 읽으므로 둘 다 받습니다. */
- const h3=decodeURIComponent(href3||"");
- say(/o=store-internet,pos-card,cctv-security(&|$)/.test(h3),
-   "창업 ⑤ 체크를 뺀다 신청 링크가 따라온다",h3);
- await click('#pkg-go-open');
- say((await url()).startsWith("/quote"),"창업 ⑥ 패키지 → 신청 화면",await url());
- const q3=await pg.evaluate(()=>document.querySelectorAll(".qof-l > li").length);
- say(q3===3,"창업 ⑦ 신청 화면이 고른 상품 셋을 되읽는다","지금 "+q3);
+   const c=[...document.querySelectorAll(".pkp-c")]
+     .filter(x=>x.textContent.indexOf("매장 오픈")>=0)[0];
+   c.querySelector("button").click();});
+ await pg.waitForTimeout(250);
+ const addedN=await pg.evaluate(()=>document.querySelector("[data-pick-n]").textContent);
+ say(+addedN>=2,"창업 ⑤ 묶음을 누르면 선택에 담긴다","지금 "+addedN);
+ /* ⚠️ 두 번 눌러도 안 늘어납니다 (§3-2 중복 선택 방지) */
+ await pg.evaluate(()=>{
+   const c=[...document.querySelectorAll(".pkp-c")]
+     .filter(x=>x.textContent.indexOf("매장 오픈")>=0)[0];
+   c.querySelector("button").click();});
+ await pg.waitForTimeout(250);
+ say(await pg.evaluate(()=>document.querySelector("[data-pick-n]").textContent)===addedN,
+   "창업 ⑤-b 두 번 눌러도 안 늘어난다");
+ await click("#pk-bar-go");
+ say((await url()).startsWith("/quote"),"창업 ⑥ 담은 것 → 신청 화면",await url());
+ /* ⚠️ 보는 자리가 바뀌었습니다 — 상품 줄(`.qof-l`)이 아니라 **서비스
+    줄**(`#q-svl`)입니다. 창업 쪽은 상품 id 가 아니라 **분류 key** 로
+    담기기 때문입니다 (§6 "서비스 ID는 기존 서비스 데이터의 고유 ID"). */
+ const q3=await pg.evaluate(()=>document.querySelectorAll("#q-svl > li").length);
+ say(q3===2,"창업 ⑦ 신청 화면이 담은 둘을 되읽는다","지금 "+q3);
  const what=await pg.evaluate(()=>(document.getElementById("q-what")||{}).value||"");
  say(what.indexOf("인터넷")>=0,"창업 ⑧ 필요한 일 칸이 미리 적혀 있다",what);
 
@@ -232,6 +256,162 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  say((await url()).startsWith("/quote"),"폐업 ④ 패키지 → 신청 화면",await url());
  const side=await pg.evaluate(()=>(document.getElementById("q-side")||{}).value||"");
  say(side==="close","폐업 ⑤ 신청 화면이 폐업 쪽으로 열린다",side);
+
+ /* ════════════════════════════════════════════════════════════════
+    【7】 2026-10-17 창업 준비 전문관 §16 — 시나리오 A ~ E
+    ════════════════════════════════════════════════════════════════
+    ⚠️⚠️ **실제로 눌러 봅니다.** 지시서가 "테스트할 수 없는 항목은
+    완료로 표시하지 않는다" 고 적었습니다. 여기서 재는 것은 화면까지
+    이고, DB 저장 · 관리자 접수는 `tools/test-sql.js`(246개) ·
+    `tools/test-api.js`(96개) · `tools/test-admin.js`(253개)가 봅니다. */
+ console.log("\n【7】 §16 시나리오 A ~ E — 고르고 · 담기고 · 한 번에");
+
+ /* ── A. 단일 서비스 ─────────────────────────────────────────── */
+ await pg.goto(B+"/startup",{waitUntil:"networkidle"});
+ await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+ await pg.reload({waitUntil:"networkidle"});
+ await click('[data-pick="interior"]');
+ say(await pg.evaluate(()=>document.querySelector("[data-pick-n]").textContent)==="1",
+     "A① 인테리어 하나를 고르면 1 로 센다");
+ await click("#pk-bar-go");
+ say(/^\/quote/.test(await url()),"A② 신청 화면으로 간다",await url());
+ say(await pg.evaluate(()=>document.querySelectorAll("#q-svl > li").length)===1,
+     "A③ 고른 하나가 그대로 적혀 있다");
+ await pg.selectOption("#q-reg","gyeonggi");
+ await pg.fill("#q-name","홍길동"); await pg.fill("#q-tel","010-1234-5678");
+ await pg.fill("#q-q","20평 카페 인테리어입니다");
+ await pg.check("#q-ag");
+ /* ⚠️ 실제로 보내지는 않습니다 — 접수처가 꺼져 있고, 켜져 있어도
+    운영자에게 시험 접수를 보내면 안 됩니다. **보낼 몸통**을 재 봅니다. */
+ const bodyA = await pg.evaluate(()=>{
+   let got=null; const real=window.amSend;
+   window.amSend=(id,b)=>{ got=b; return false; };
+   window.quoteSend(new Event("submit"));
+   window.amSend=real; return got;
+ });
+ say(!!bodyA && bodyA.items && bodyA.items.length===1 && bodyA.items[0].id==="interior",
+     "A④ 항목 하나로 보낸다", bodyA && JSON.stringify(bodyA.items));
+ say(!!bodyA && bodyA.agree===true && !!bodyA.idem,
+     "A⑤ 동의와 멱등 열쇠가 실린다");
+
+ /* ── B. 복수 서비스 — 하나의 신청서 ──────────────────────────── */
+ await pg.goto(B+"/startup",{waitUntil:"networkidle"});
+ await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+ await pg.reload({waitUntil:"networkidle"});
+ for(const id of ["interior","equip","it"]){
+   /* ⚠️⚠️ **있는지가 아니라 보이는지**를 봐야 합니다. 접힌 목록도
+      DOM 에는 그대로 있어서, 있는지만 보면 펼치는 단추를 안 누르고
+      "안 보이는 것을 누르려다" 30초 뒤에 터집니다 (재서 알았습니다). */
+   const seen=await pg.evaluate(k=>{
+     const e=document.querySelector('[data-pick="'+k+'"]');
+     return !!e && e.getBoundingClientRect().width > 0; },id);
+   if(!seen) await click('button[aria-controls="st-rest"]');
+   await click('[data-pick="'+id+'"]');
+ }
+ say(await pg.evaluate(()=>document.querySelectorAll("#pk-list > li").length)===3,
+     "B① 셋이 한 바구니에 담긴다");
+ await click("#pk-bar-go");
+ say(await pg.evaluate(()=>document.querySelectorAll("#q-svl > li").length)===3,
+     "B② 신청 화면이 셋을 되읽는다");
+ /* ⚠️⚠️ **공통 정보는 한 번만** (§5-4) — 성함 · 연락처 칸이 하나여야 합니다 */
+ say(await pg.evaluate(()=>document.querySelectorAll("#q-name").length)===1 &&
+     await pg.evaluate(()=>document.querySelectorAll("#q-tel").length)===1,
+     "B③ 공통 칸은 한 벌뿐이다 (같은 것을 세 번 안 묻습니다)");
+ say(await pg.evaluate(()=>document.querySelectorAll(".rqf").length)===3,
+     "B④ 서비스마다 다른 질문만 따로 열린다");
+ await pg.selectOption("#q-reg","gyeonggi");
+ await pg.fill("#q-name","홍길동"); await pg.fill("#q-tel","010-1234-5678");
+ await pg.fill("#q-q","카페 하나 엽니다"); await pg.check("#q-ag");
+ const bodyB = await pg.evaluate(()=>{
+   let got=null; const real=window.amSend;
+   window.amSend=(id,b)=>{ got=b; return false; };
+   window.quoteSend(new Event("submit"));
+   window.amSend=real; return got;
+ });
+ say(!!bodyB && bodyB.items.length===3,"B⑤ 신청서 하나에 항목 셋으로 간다",
+     bodyB && bodyB.items.length);
+ say(!!bodyB && bodyB.items.map(x=>x.id).join(",")==="interior,equip,it",
+     "B⑥ 항목 id 가 분류 key 다 (이름이 아닙니다)",
+     bodyB && bodyB.items.map(x=>x.id).join(","));
+
+ /* ── C. 임시저장 → 이동 → 복구 → 수정 ────────────────────────── */
+ await pg.fill("#q-gu","안양시"); await pg.fill("#q-py","20");
+ await pg.evaluate(()=>window.quoteDraftSave());
+ say(await pg.evaluate(()=>!!localStorage.getItem("am.draft.v1")),"C① 조건이 저장된다");
+ /* ⚠️⚠️ **성함 · 연락처 · 자세한 내용은 안 담깁니다** (§4-1) */
+ const raw = await pg.evaluate(()=>localStorage.getItem("am.draft.v1")||"");
+ say(raw.indexOf("홍길동")<0 && raw.indexOf("1234-5678")<0 && raw.indexOf("카페 하나")<0,
+     "C② 개인정보는 브라우저에 안 담긴다");
+ await pg.goto(B+"/content",{waitUntil:"networkidle"});
+ await pg.goto(B+"/quote?side=start",{waitUntil:"networkidle"});
+ say(await pg.evaluate(()=>document.querySelectorAll("#q-svl > li").length)===3,
+     "C③ 다시 와도 고른 셋이 살아 있다");
+ await pg.evaluate(()=>window.quoteDraftLoad());
+ say(await pg.evaluate(()=>document.getElementById("q-gu").value)==="안양시",
+     "C④ 저장한 조건을 불러온다");
+ await pg.fill("#q-gu","군포시");
+ say(await pg.evaluate(()=>document.getElementById("q-gu").value)==="군포시",
+     "C⑤ 불러온 뒤에도 고칠 수 있다");
+ await pg.evaluate(()=>window.quoteDraftDel&&0);   /* confirm 이 떠서 직접 지웁니다 */
+ await pg.evaluate(()=>{ try{ localStorage.removeItem("am.draft.v1"); }catch(e){} });
+
+ /* ── D. 오류 대응 ────────────────────────────────────────────── */
+ await pg.goto(B+"/quote?side=start&sv=interior",{waitUntil:"networkidle"});
+ const miss = await pg.evaluate(()=>{
+   let got="sent"; const real=window.amSend;
+   window.amSend=()=>{ got="sent"; return false; };
+   document.getElementById("q-ag").checked=true;
+   got="blocked"; window.quoteSend(new Event("submit"));
+   window.amSend=real; return got;
+ });
+ say(miss==="blocked","D① 필수값이 비면 안 보낸다");
+ /* ⚠️ 잘못된 연락처 (§8) */
+ await pg.selectOption("#q-reg","gyeonggi");
+ await pg.fill("#q-name","홍"); await pg.fill("#q-tel","123");
+ await pg.fill("#q-q","내용"); await pg.check("#q-ag");
+ const badTel = await pg.evaluate(()=>{
+   let sent=false; const real=window.amSend;
+   window.amSend=()=>{ sent=true; return false; };
+   window.quoteSend(new Event("submit"));
+   window.amSend=real; return sent;
+ });
+ say(badTel===false,"D② 잘못된 연락처를 막는다");
+ /* ⚠️⚠️ **연속 클릭** — 같은 신청서면 멱등 열쇠가 같아야 합니다 */
+ await pg.fill("#q-tel","010-1234-5678");
+ const twice = await pg.evaluate(()=>{
+   const out=[]; const real=window.amSend;
+   window.amSend=(id,b)=>{ out.push(b.idem); return false; };
+   window.quoteSend(new Event("submit"));
+   window.quoteSend(new Event("submit"));
+   window.amSend=real; return out;
+ });
+ say(twice.length===2 && twice[0]===twice[1] && !!twice[0],
+     "D③ 두 번 눌러도 같은 멱등 열쇠다 (중복 접수 방지)", twice.join(" / "));
+ /* ⚠️ 뒤로 가기 — 적은 값이 남아 있어야 합니다 (§9-4) */
+ await pg.goto(B+"/startup",{waitUntil:"networkidle"});
+ await pg.goBack({waitUntil:"networkidle"});
+ say(await pg.evaluate(()=>document.querySelectorAll("#q-svl > li").length)>=1,
+     "D④ 뒤로 와도 고른 것이 남아 있다");
+
+ /* ── E. 처음 오신 분이 설명 없이 할 수 있는가 ─────────────────── */
+ await pg.goto(B+"/startup",{waitUntil:"networkidle"});
+ await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+ await pg.reload({waitUntil:"networkidle"});
+ const t = await txt();
+ say(t.indexOf("여러 개를 함께 고르실 수 있습니다")>=0,
+     "E① 여러 개를 고를 수 있다고 적혀 있다");
+ say(t.indexOf("고르기만 하면")>=0 && t.indexOf("접수됩니다")>=0,
+     "E② 고르는 것과 신청하는 것을 갈라서 말한다");
+ /* ⚠️ 단추 글씨에 **무엇이 일어나는지**가 적혀 있어야 합니다 (§9-2) */
+ await click('[data-pick="interior"]');
+ await click('[data-pick="equip"]');
+ const go2t = await pg.evaluate(()=>document.querySelector("#pk-bar-go span").textContent);
+ say(/선택한 2개 서비스 견적 신청하기/.test(go2t),"E③ 단추에 개수와 할 일이 적힌다",go2t);
+ /* 잘못 고른 것을 뺄 수 있는가 */
+ await click('#pk-list button[onclick*="equip"]');
+ say(await pg.evaluate(()=>document.querySelector("[data-pick-n]").textContent)==="1",
+     "E④ 잘못 고른 것을 뺄 수 있다");
+ await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
 
  console.log("\n【5】 콘솔 오류");
  say(errs.length===0,"JS 에러 없음",errs.join(" / "));

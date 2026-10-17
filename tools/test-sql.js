@@ -132,10 +132,18 @@ try{
                   /* 0008 — 견적 제출 · 수정 · 철회 + 고객의 선택 (§4 · §6).
                      ⚠️ 새 표(quote)와 문 셋입니다 — 아래 블록이 끝까지
                      눌러 봅니다. */
-                  "db/migrations/0008_quote.sql"];
+                  "db/migrations/0008_quote.sql",
+                  /* ⚠️ 0009 — 신청 하나에 서비스 여러 개 (2026-10-17 §6 · §7).
+                     `request_item` 과 항목별 배정이 여기 있습니다. */
+                  "db/migrations/0009_request_item.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
-    try{ psqlFile(f); }catch(err){ e = String(err.stderr || err.message).split("\n").slice(0,3).join(" "); }
+    try{ psqlFile(f); }catch(err){ /* ⚠️⚠️ NOTICE 가 먼저 쏟아져서 앞 세 줄만 보면 **진짜
+         까닭이 안 보입니다** — 0009 에서 실제로 그랬습니다. ERROR 줄을
+         먼저 찾고, 없을 때만 앞쪽을 냅니다. */
+      const all = String(err.stderr || err.message).split("\n");
+      const hit = all.filter(x => /ERROR|치명|FATAL/.test(x));
+      e = (hit.length ? hit : all.filter(Boolean).slice(0,3)).join(" "); }
     ok(f.replace("db/", "") + " 가 돈다", e === "", e);
   }
   /* ⚠️ 수를 손으로 적지 마세요 — 마이그레이션을 하나 더할 때마다 여기도
@@ -1155,6 +1163,146 @@ try{
     psql(mv(AD, "signed", `'{"amount":1100000,"providerId":"pv-one"}'::jsonb`));
     r = denied(as(PV2) + "select submit_quote('" + R + `','{"amount":5,"scope":"x"}'::jsonb)`);
     ok("계약 뒤에는 견적을 못 낸다", r.no && /견적을 낼 수 없습니다/.test(r.why || ""), r.why);
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     0009 — 신청 하나에 서비스 여러 개 (2026-10-17 §6 · §7)
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️ 0009 신청 항목 — 서비스마다 다른 업체에 배정");
+  {
+    const A   = "11111111-1111-1111-1111-111111111111";
+    const B   = "22222222-2222-2222-2222-222222222222";
+    const PV  = "33333333-3333-3333-3333-333333333333";   /* pv-one */
+    const PV2 = "66666666-6666-6666-6666-666666666666";   /* pv-two */
+    const ST  = "44444444-4444-4444-4444-444444444444";
+    const AD  = "55555555-5555-5555-5555-555555555555";
+    const as  = u => "set role authenticated; select become('" + u + "'); ";
+    const R   = "aaaaaaaa-0000-0000-0000-000000000041";
+
+    psql(`insert into request (id, no, user_id, side, name, tel, agree_at, state) values
+            ('${R}','SW-AAAA-0041','${A}','start','항','01041410000',now(),'new');`);
+
+    /* ── ③ 접수가 항목을 적습니다 (한 트랜잭션 · 멱등) ───────────── */
+    const items = `'[{"id":"interior","detail":{"공사 범위":"전체 시공"}},
+                     {"id":"equip","detail":{}},
+                     {"id":"marketing","detail":{}}]'::jsonb`;
+    psql(`select save_request_items('${R}', ${items})`);
+    ok("항목 셋이 들어갔다",
+       psql(`select count(*) from request_item where request_id='${R}'`) === "3");
+    ok("서비스별 답이 항목에 담긴다",
+       psql(`select detail->>'공사 범위' from request_item
+              where request_id='${R}' and service_id='interior'`) === "전체 시공");
+
+    /* ⚠️⚠️ §8 멱등 — 재시도가 줄을 늘리면 안 됩니다 */
+    psql(`select save_request_items('${R}', ${items})`);
+    ok("두 번 불러도 줄이 안 늘어난다 (멱등 · §8)",
+       psql(`select count(*) from request_item where request_id='${R}'`) === "3");
+
+    /* ⚠️ 같은 서비스를 두 번 담지 않습니다 (§3-2) */
+    const dup = denied(`insert into request_item (request_id, service_id)
+                        values ('${R}','interior')`);
+    ok("같은 서비스를 두 번 담지 못한다", dup.no && /request_item_once|duplicate/i.test(dup.why), dup.why);
+
+    /* ⚠️ 빈 id 는 건너뛰고 나머지는 살립니다 — 접수를 잃는 쪽이 더 나쁩니다 */
+    const R2 = "aaaaaaaa-0000-0000-0000-000000000042";
+    psql(`insert into request (id, no, user_id, side, name, tel, agree_at, state) values
+            ('${R2}','SW-AAAA-0042','${A}','start','빈','01042420000',now(),'new');
+          select save_request_items('${R2}', '[{"id":""},{"id":"clean"}]'::jsonb);`);
+    ok("빈 id 는 건너뛰고 나머지는 담는다",
+       psql(`select count(*) from request_item where request_id='${R2}'`) === "1");
+
+    const I1 = psql(`select id from request_item where request_id='${R}' and service_id='interior'`);
+    const I2 = psql(`select id from request_item where request_id='${R}' and service_id='equip'`);
+
+    /* ── ④ 배정 = 제3자 제공 (제17조 제2항) ──────────────────────── */
+    const asg = (u, item, pv, ag) =>
+      as(u) + `select assign_item('${item}','${pv}',${ag})`;
+
+    const noAg = denied(asg(AD, I1, "pv-one", "false"));
+    ok("동의 없이 배정하지 못한다 (제17조)", noAg.no && /제3자/.test(noAg.why), noAg.why);
+
+    const byCust = denied(asg(A, I1, "pv-one", "true"));
+    ok("고객은 배정하지 못한다", byCust.no && /직원|관리자/.test(byCust.why), byCust.why);
+
+    const noPv = denied(asg(AD, I1, "없는업체", "true"));
+    ok("없는 업체로 배정하지 못한다", noPv.no && /등록된 업체/.test(noPv.why), noPv.why);
+
+    /* ⚠️⚠️ 여기가 §7 의 핵심입니다 — **항목마다 다른 업체** */
+    psql(asg(ST, I1, "pv-one", "true"));
+    psql(asg(AD, I2, "pv-two", "true"));
+    ok("항목마다 다른 업체가 배정된다 (§7)",
+       psql(`select string_agg(ri.service_id || '→' || a.provider_id, ' ' order by ri.service_id)
+               from assignment a join request_item ri on ri.id = a.item_id
+              where ri.request_id='${R}'`) === "equip→pv-two interior→pv-one");
+    ok("배정하면 항목 상태가 assigned 가 된다",
+       psql(`select state from request_item where id='${I1}'`) === "assigned");
+    ok("신청 쪽 제3자 동의 시각도 남는다",
+       psql(`select agree3rd_at is not null from request where id='${R}'`) === "t");
+    ok("배정이 감사 기록에 남는다 (§8)",
+       psql(`select count(*) from audit_log
+              where obj='request_item' and obj_id='${I1}' and to_state='assigned'`) === "1");
+
+    /* 같은 업체를 같은 항목에 두 번 — 줄이 안 늘어납니다 */
+    psql(asg(AD, I1, "pv-one", "true"));
+    ok("같은 항목에 같은 업체를 두 번 배정해도 줄이 하나",
+       psql(`select count(*) from assignment where item_id='${I1}'`) === "1");
+
+    /* ── ⑤ 항목 상태 ─────────────────────────────────────────────── */
+    const mvi = (u, item, to) => as(u) + `select move_item_state('${item}','${to}')`;
+
+    /* ⚠️⚠️ 돈이 걸린 상태로는 **여기서** 못 갑니다 (§13 가짜 정산) */
+    const money = denied(mvi(AD, I1, "fee_wait"));
+    ok("항목에서 수수료 상태로 못 간다", money.no && /수수료는 계약/.test(money.why), money.why);
+
+    /* ⚠️ 배정은 ④ 로만 — 제17조 동의를 받는 자리가 하나라야 합니다 */
+    const viaMove = denied(mvi(AD, I2, "assigned"));
+    ok("배정은 move_item_state 로 못 한다", viaMove.no && /assign_item/.test(viaMove.why), viaMove.why);
+
+    /* ⚠️ 길 표(deal_move)를 그대로 봅니다 */
+    const noWay = denied(mvi(AD, I1, "signed"));
+    ok("길 표에 없는 길로 못 간다", noWay.no && /갈 수 없는 길/.test(noWay.why), noWay.why);
+
+    psql(mvi(PV, I1, "accepted"));
+    ok("업체가 수락하면 항목만 바뀐다",
+       psql(`select state from request_item where id='${I1}'`) === "accepted" &&
+       psql(`select state from request_item where id='${I2}'`) === "assigned");
+    ok("항목 상태 변경이 감사 기록에 남는다",
+       psql(`select count(*) from audit_log
+              where obj='request_item' and obj_id='${I1}' and to_state='accepted'`) === "1");
+
+    /* ── RLS — 누가 어느 항목을 보는가 ───────────────────────────── */
+    const see = (u, sql) => psql(as(u) + sql);
+    ok("신청하신 분은 자기 항목 셋을 본다",
+       see(A, `select count(*) from request_item where request_id='${R}'`) === "3");
+    ok("남의 항목은 하나도 안 보인다",
+       see(B, `select count(*) from request_item where request_id='${R}'`) === "0");
+    /* ⚠️⚠️ 업체는 **배정된 항목만** — 같은 신청의 다른 서비스는 안 보입니다 */
+    ok("업체는 배정된 항목만 본다 (제17조)",
+       see(PV, `select string_agg(service_id,' ') from request_item where request_id='${R}'`) === "interior");
+    ok("직원은 전부 본다",
+       see(ST, `select count(*) from request_item where request_id='${R}'`) === "3");
+
+    /* ── ⓪ 멱등 열쇠 (§8) ───────────────────────────────────────── */
+    psql(`insert into request (no, side, name, tel, agree_at, idem) values
+            ('SW-AAAA-0051','start','멱','01051510000',now(),'idem-abc');`);
+    const twice = denied(`insert into request (no, side, name, tel, agree_at, idem) values
+            ('SW-AAAA-0052','start','멱','01051510000',now(),'idem-abc')`);
+    ok("같은 멱등 열쇠로 두 번 못 넣는다 (§8)",
+       twice.no && /request_idem_once|duplicate/i.test(twice.why), twice.why);
+    psql(`insert into request (no, side, name, tel, agree_at) values
+            ('SW-AAAA-0053','start','널','01053530000',now());
+          insert into request (no, side, name, tel, agree_at) values
+            ('SW-AAAA-0054','start','널','01053530000',now());`);
+    ok("열쇠가 없는 접수는 여러 번 들어간다 (옛 화면)",
+       psql(`select count(*) from request where tel='01053530000'`) === "2");
+
+    /* ⚠️⚠️ 표를 열지 않았습니다 — 문으로만 바뀝니다 (§8) */
+    const wr = denied(as(AD) + `update request_item set state='lost' where id='${I1}'`);
+    ok("request_item 에 쓰기 권한이 없다 (문만 엽니다)", wr.no, wr.why);
+    const anon = denied("set role anon; select count(*) from request_item");
+    ok("anon 에게 request_item 권한이 없다", anon.no, anon.why);
+    const anonFn = denied(`set role anon; select assign_item('${I1}','pv-one',true)`);
+    ok("anon 에게 배정 문 권한이 없다", anonFn.no, anonFn.why);
   }
 
   console.log("\n── 되돌리기 파일이 실수로 안 돌아가는가");

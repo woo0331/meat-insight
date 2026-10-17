@@ -594,6 +594,15 @@ function render(){
      않습니다. ⚠️ 다른 화면에서는 묻지 않습니다 — 한 번씩 더 가는
      요청은 그만큼 느려집니다. */
   if(nowPath() === "/my" && typeof window.myLoadDb === "function") window.myLoadDb();
+  /* 고르신 서비스 — 하단 띠 높이를 재서 본문을 그만큼 비우고, 단추
+     글씨의 개수를 맞춥니다 (2026-10-17 창업 준비 §3-3).
+     ⚠️ 어느 화면에서나 부릅니다 — 띠가 없는 화면에서는 아무 일도 안
+     하고, 띠가 있는 화면에서만 높이를 잽니다. 화면마다 조건을 적으면
+     새 화면을 만들 때 한쪽만 고치게 됩니다. */
+  if(typeof window.pickPaint === "function") window.pickPaint();
+  /* 임시저장 — 마지막 저장 시각과 단추 두 개의 보임 여부 (§4-3) */
+  if(nowPath() === "/quote" && typeof window.quoteDraftPaint === "function")
+    window.quoteDraftPaint();
   if(!RT.keepScroll) window.scrollTo(0,0);
   RT.keepScroll = false;
 }

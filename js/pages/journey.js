@@ -138,13 +138,12 @@ window.ProcessBand = function(o){
      적지 않습니다.
      ⚠️ `tone` 을 넘긴 쪽은 그대로 둡니다 — 같은 화면에 로드맵이 둘
      이상 설 때 이웃이 겹치지 않게 하려고 넘기는 값입니다. */
-  return '<section class="sec'+(o.tone ? " "+o.tone : " sec-ivory")+'"><div class="w">'+
-    '<div class="sec-hd">'+
-      '<p class="eyebrow">'+esc(o.kicker || "PROCESS")+'</p>'+
-      '<h2>'+esc(o.title || "무엇부터 해야 하나요?")+'</h2>'+
-      '<p>'+esc(o.lead || "순서대로 짚어 드립니다. 걸음마다 필요한 정보 · 업체 · 도구를 바로 열어 보실 수 있습니다.")+'</p>'+
-    '</div>'+
-    '<ol class="pcs">'+steps.map(function(s, i){
+  /* ⚠️ `bare:true` 는 **구간 껍데기 없이 걸음만** 돌려줍니다
+     (2026-10-17 창업 준비 §2-D — 접어 두는 자리에 씁니다).
+     ⚠️⚠️ `<section>` 안에 `<section>` 을 넣으면 위아래 여백이 두 겹이
+     되고 바탕이 한 번 더 깔려 구간이 둘로 읽힙니다 — 그래서 껍데기를
+     빼는 쪽입니다. 부르는 쪽이 제 머리말을 답니다. */
+  var body = '<ol class="pcs">'+steps.map(function(s, i){
       var no = (i + 1 < 10 ? "0" : "") + (i + 1);
       return '<li class="pcs-i">'+
         '<span class="pcs-n">'+no+'</span>'+
@@ -166,7 +165,17 @@ window.ProcessBand = function(o){
         '</div>'+
       '</li>';
     }).join("")+'</ol>'+
-    (o.note ? '<p class="sec-note">'+icon("info",15)+esc(o.note)+'</p>' : '')+
+    (o.note ? '<p class="sec-note">'+icon("info",15)+esc(o.note)+'</p>' : '');
+
+  if(o.bare) return body;
+
+  return '<section class="sec'+(o.tone ? " "+o.tone : " sec-ivory")+'"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">'+esc(o.kicker || "PROCESS")+'</p>'+
+      '<h2>'+esc(o.title || "무엇부터 해야 하나요?")+'</h2>'+
+      '<p>'+esc(o.lead || "순서대로 짚어 드립니다. 걸음마다 필요한 정보 · 업체 · 도구를 바로 열어 보실 수 있습니다.")+'</p>'+
+    '</div>'+
+    body+
   '</div></section>';
 };
 

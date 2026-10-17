@@ -3645,12 +3645,14 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
    이 저장소가 `.sec-hd p` ↔ `.eyebrow`, `.read li` ↔ `.rd-sum ul` 로
    **두 번** 겪은 특정도 함정입니다. `.rqf-c` 를 앞에 붙여 (0,2,0)로
    맞추고 뒤에 두어 이깁니다. ⚠️ 재서 확인했습니다 (gap 0 → 7px). */
+/* ⚠️ 44px — §9-2 "최소 터치 영역 44×44px". 40px 은 이 저장소의
+   하한이고 이번 지시서가 더 높게 잡았습니다 (고령층 손가락). */
 .rqf-c .rqf-k{ display:flex; align-items:center; gap:7px;
-        min-height:40px; padding:0 13px;
+        min-height:44px; padding:0 14px;
         background:var(--surface); border:1px solid var(--line);
         border-radius:999px; cursor:pointer;
         font-size:var(--t-cap); color:var(--ink); }
-.rqf-c .rqf-k input{ width:17px; height:17px; margin:0; flex:none; accent-color:var(--blue); }
+.rqf-c .rqf-k input{ width:20px; height:20px; margin:0; flex:none; accent-color:var(--blue); }
 .rqf-c .rqf-k:has(input:checked){ border-color:var(--blue);
         background:var(--blue-50, var(--bg-sky)); font-weight:700; }
 .rqf-c .rqf-k:focus-within{ outline:2px solid var(--blue); outline-offset:2px; }
@@ -5096,4 +5098,248 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
   .bstep-c > b{ flex:1 1 auto; }
   .bstep-c > p{ flex:1 1 100%; }
   .bcal-g{ grid-template-columns:1fr; }
+}
+
+/* ════════ 선택한 서비스 — 2026-10-17 창업 준비 전문관 §3 · §9 ═══════
+   ⚠️⚠️ **맨 뒤에 둡니다.** 같은 규칙 안에 끼워 넣으면 뒤에 오는
+   선언이 이기고, 되돌려 볼 때 "검사가 안 잡는다" 로 보입니다.
+   ⚠️ 글씨 크기는 §9-1 입니다 — 카드 제목 18px · 본문 16px 이상 ·
+   단추 16px 이상. **줄이지 마세요.** 손님이 40~60대 사장님입니다. */
+
+/* ── 고르는 카드 (§3-1) ──────────────────────────────────────────── */
+.pk-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s4);
+  list-style:none; padding:0; margin:0; }
+.pk-g > li{ display:flex; }
+
+/* ⚠️⚠️ **`<label>` 이 통째로 눌립니다** — 안에 링크를 넣지 마세요.
+   ⚠️ 높이를 `padding` 만으로 만들지 않습니다 — 이름이 짧은 카드에서
+   다시 낮아집니다 (이 저장소가 여러 번 겪은 자리). */
+.pk-c{ flex:1; display:grid; grid-template-columns:56px 1fr auto;
+  align-items:center; gap:var(--s3); min-height:92px;
+  padding:var(--s4) var(--s4); cursor:pointer;
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-lg); box-shadow:var(--shadow-soft);
+  transition:border-color .14s, background .14s, box-shadow .14s; }
+.pk-c:hover{ border-color:var(--blue-400); box-shadow:var(--shadow); }
+
+/* ⚠️⚠️ **색만으로 표시하지 않습니다** (§3-1 · §14) — 셋이 같이
+   바뀝니다: ① 체크 표시(브라우저가 그립니다) ② 테두리 두 겹
+   ③ 짙은 바탕. 하나만 두면 색을 못 가리는 분께 상태가 안 보입니다.
+
+   ⚠️⚠️ **골드 · 브라운입니다** (§10 "선택 상태는 골드·브라운으로
+   강조"). 창업 쪽 블루(`--blue`)를 쓰지 않는 까닭은, 그 색이 이
+   저장소에서 **"창업 쪽" 이라는 뜻**을 들고 있기 때문입니다 — 고름은
+   창업이냐 폐업이냐가 아니라 **눌렸느냐**라서 쪽 색과 갈라 둡니다.
+   ⚠️ 테두리는 `--acc-dark`(#B9752C · 흰 바탕 4.52)입니다. `--acc`
+   (#D99B4C)는 2.14 라 **테두리만으로는 안 보입니다** — 이 저장소가
+   "금색은 면 · 선 전용" 이라고 적어 둔 그 자리입니다. */
+.pk-c.is-on{ border-color:var(--acc-dark);
+  box-shadow:inset 0 0 0 1px var(--acc-dark);
+  background:var(--sand); }
+
+/* ⚠️⚠️ **칸 자리를 못박습니다.** grid 는 DOM 차례대로 칸을 채우는데,
+   체크칸이 접근성 때문에 `<label>` 안 맨 앞에 있어서 그대로 두면
+   **[체크][아이콘][글]** 이 됩니다 — 그림이 가운데로 밀려 카드가
+   어수선해집니다 (찍어 보고 알았습니다). 읽는 차례는 그림 → 이름 →
+   눌림이라 그렇게 세웁니다. */
+.pk-i{ grid-column:1; width:56px; height:56px; }
+.pk-t{ grid-column:2; display:grid; gap:2px; min-width:0; }
+.pk-ck{ grid-column:3; }
+/* §9-1 — 카드 제목 18px. ⚠️ 좁은 폭에서도 줄이지 않습니다. */
+.pk-t b{ font-size:18px; font-weight:800; color:var(--ink); line-height:1.3; }
+.pk-t i{ font-style:normal; font-size:var(--t-sm); color:var(--ink3); }
+
+/* ⚠️⚠️ 누름 44px 이상 (§9-2). 체크칸 자체는 작아도 `<label>` 전체가
+   92px 이라 누르는 자리는 넉넉합니다 — 그래도 체크칸만 조준하시는
+   분을 위해 24px 로 둡니다. */
+.pk-ck{ width:26px; height:26px; margin:0; flex:none; cursor:pointer;
+  /* ⚠️ `align-self` 를 주지 않으면 칸 꼭대기에 붙습니다 — 아이콘 ·
+     글과 눈높이가 안 맞아 "덜 그려진 칸" 으로 읽힙니다 (찍어서 알았습니다) */
+  /* ⚠️ 체크 바탕이 `--acc-dark` 라야 안의 흰 ✓ 가 보입니다 (4.52).
+     `--acc` 로 두면 2.14 라 체크가 바탕에 묻힙니다. */
+  align-self:center; accent-color:var(--acc-dark); }
+
+@media (max-width:1024px){ .pk-g{ grid-template-columns:repeat(2,1fr); } }
+/* §13 — 폰에서 1~2열. 2열을 지키되 카드 안을 세로로 쌓습니다 */
+@media (max-width:620px){
+  .pk-c{ grid-template-columns:1fr auto; grid-template-rows:auto auto;
+    align-items:start; min-height:104px; padding:var(--s3); gap:var(--s2); }
+  /* ⚠️ 46px 아래로 내리지 마세요 — 두 톤 아이콘이라 그 아래에서는
+     면이 뭉개져 선형 아이콘보다 오히려 안 읽힙니다 */
+  .pk-i{ grid-column:1; width:46px; height:46px; }
+  .pk-ck{ grid-column:2; }
+  .pk-t{ grid-column:1 / -1; }
+}
+@media (max-width:380px){ .pk-g{ grid-template-columns:1fr; } }
+
+/* ── C. 선택한 서비스 확인 (§2-C) ─────────────────────────────────── */
+.pkb-box{ max-width:760px; margin:0 auto; padding:var(--s5);
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-lg); box-shadow:var(--shadow-soft); }
+.pkb-zero{ display:flex; align-items:center; gap:var(--s2); margin:0;
+  font-size:var(--t-base); color:var(--ink2); }
+.pkb-zero svg{ flex:none; color:var(--blue-600); }
+
+.pkb-l{ display:flex; flex-wrap:wrap; gap:var(--s2); list-style:none;
+  padding:0; margin:0 0 var(--s4); }
+/* ⚠️ 고른 카드와 **같은 식구**입니다 — 위에서 고른 것이 아래 칩으로
+   내려오는 것이라, 색이 다르면 다른 것으로 읽힙니다 (§10). */
+.pkb-l > li{ display:inline-flex; align-items:center; gap:6px;
+  min-height:48px; padding:0 2px 0 var(--s4);
+  background:var(--sand); border:1px solid var(--acc-dark);
+  border-radius:999px; }
+/* ⚠️ 글자는 `--gold-text`(#7A5633) 입니다 — 샌드 위에서 4.9 입니다.
+   `--acc` 로 쓰면 1.7 이라 안 읽힙니다. */
+.pk-r-n{ font-size:var(--t-base); font-weight:700; color:var(--gold-text); }
+/* ⚠️⚠️ **44px 입니다** (§9-2). 36px 으로 두었다가 일곱 폭에서 전부
+   걸렸습니다 — 재서 알았습니다. 칩이 48px 라야 안에 들어갑니다. */
+.pk-r-x{ display:grid; place-items:center; width:44px; height:44px;
+  border:0; border-radius:999px; background:transparent; cursor:pointer;
+  color:var(--ink3); }
+.pk-r-x:hover{ background:var(--bg-sand); color:var(--ink); }
+
+.pkb-go{ display:flex; flex-wrap:wrap; gap:var(--s3); }
+.pkb-go .btn{ font-size:16px; }
+@media (max-width:620px){
+  .pkb-box{ padding:var(--s4); }
+  .pkb-go{ display:grid; }
+  .pkb-go .btn{ width:100%; }
+}
+
+/* ── 폰 · PC 하단 고정 띠 (§3-3) ──────────────────────────────────
+   ⚠️⚠️ **본문과 동의 영역을 가리지 않습니다** — `pickPad()` 가 띠
+   높이를 재서 `--pk-bar-h` 에 넣고 아래 규칙이 그만큼 비웁니다.
+   재서 넣지 않으면 마지막 단추가 띠 밑으로 들어가 **누를 수가
+   없습니다** (§3-3 이 직접 적은 규칙입니다). */
+.pk-bar{ position:fixed; left:0; right:0; bottom:0; z-index:55;
+  display:flex; align-items:center; justify-content:center; gap:var(--s4);
+  padding:var(--s3) var(--s4);
+  background:var(--surface); border-top:1px solid var(--line);
+  box-shadow:0 -6px 20px rgba(41,35,31,.10); }
+.pk-bar[hidden]{ display:none; }
+.pk-bar-t{ margin:0; font-size:var(--t-base); font-weight:700; color:var(--ink2); }
+.pk-bar-t b{ color:var(--blue-600); }
+/* §9-2 — 주요 버튼 높이 48~56px · 글씨 16px 이상 */
+.pk-bar .btn{ min-height:52px; font-size:16px; }
+
+#view{ padding-bottom:var(--pk-bar-h, 0); }
+@media (max-width:900px){
+  .pk-bar{ bottom:var(--mnav-h); }
+  .pk-bar{ display:grid; gap:var(--s2); }
+  .pk-bar-t{ text-align:center; font-size:var(--t-sm); }
+  .pk-bar .btn{ width:100%; }
+}
+
+/* 전체 서비스 보기 — 접은 목록은 대표 위 간격만 띄웁니다 */
+.pk-g2{ margin-top:var(--s4); }
+/* ⚠️ `FoldBtn` 은 가운데에 둡니다 — 대표 여섯 바로 아래라, 왼쪽에
+   붙으면 카드 줄과 어긋나 보입니다 */
+.stB .fld-b, .stI .fld-b, .stD .fld-b{ margin:var(--s5) auto 0; }
+
+/* ── 함께 하시는 것들 (§11 추천) ──────────────────────────────── */
+.pkp-g{ display:grid; grid-template-columns:repeat(2,1fr); gap:var(--s4);
+  list-style:none; padding:0; margin:0; }
+.pkp-g > li{ display:flex; }
+.pkp-c{ flex:1; display:grid; gap:var(--s2); align-content:start;
+  padding:var(--s5); background:var(--surface);
+  border:1px solid var(--line); border-radius:var(--r-lg);
+  box-shadow:var(--shadow-soft); }
+.pkp-n{ font-size:var(--t-lg); font-weight:800; color:var(--ink); }
+.pkp-d{ margin:0; font-size:var(--t-base); color:var(--ink2); }
+/* 담기면 무엇이 들어오는지 **이름으로** 보여 줍니다 — 숫자만 적으면
+   무엇이 담기는지 모르고 누르게 됩니다 */
+.pkp-l{ margin:0; font-size:var(--t-sm); font-weight:700; color:var(--blue-600); }
+.pkp-c .btn{ justify-self:start; margin-top:var(--s2);
+  min-height:48px; font-size:16px; }
+@media (max-width:760px){
+  .pkp-g{ grid-template-columns:1fr; }
+  .pkp-c{ padding:var(--s4); }
+  .pkp-c .btn{ justify-self:stretch; width:100%; }
+}
+
+
+/* ⚠️⚠️ **모든 폭에서 접히는 쪽** (2026-10-17 창업 준비 §2-B · §2-D).
+   `css/app.css` 의 `is-fold` 는 **폰 전용**입니다 — 넓은 화면에서는
+   단추가 `display:none` 이라 접어 두면 펼칠 방법이 없습니다. 이쪽은
+   단추도 같이 살려 두어서 어느 폭에서나 펼칠 수 있습니다.
+   ⚠️⚠️ **`css/pages.css` 맨 뒤라야 합니다.** `.is-fold-all`(0,1,0)과
+   `.pk-g{display:grid}`(0,1,0)은 특정도가 같아서 **뒤에 오는 쪽이
+   이깁니다** — app.css 에 두었더니 접혀야 할 목록이 그대로 펼쳐져
+   있었습니다 (찍어 보고 알았습니다). */
+.fld-b.fld-all{ display:flex; }
+.is-fold-all{ display:none; }
+
+/* ════════ 견적 신청 네 걸음 — 2026-10-17 §5-1 · §9 ════════════════
+   ⚠️⚠️ **한 화면에 네 걸음**입니다. 화면을 넷으로 쪼개지 않은 까닭 —
+   쪼개면 ① 뒤로 가기에서 적으신 것이 날아가고 ② 새로고침에 사라지고
+   ③ "어디까지 적었나" 를 손님이 들고 있어야 합니다. 번호를 크게
+   붙여 **지금 어디인지는 보이게** 하고, 값은 한 폼에 그대로 둡니다
+   (§9-4 "뒤로 가도 입력값 유지"). */
+.qs{ margin:0 0 var(--s7); padding:var(--s5);
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-lg); box-shadow:var(--shadow-soft); }
+.qs:last-child{ margin-bottom:0; }
+.qs-h{ display:grid; grid-template-columns:auto 1fr; gap:var(--s3);
+  align-items:center; margin:0 0 var(--s5); }
+/* ⚠️ 번호는 **면 위 흰 글자**입니다 — `--blue` 는 흰 글자 대비가
+   넉넉하고, 옅은 쪽(`--blue-400`)으로 두면 숫자가 묻힙니다. */
+.qs-no{ display:grid; place-items:center; width:44px; height:44px;
+  border-radius:999px; background:var(--blue); color:#fff;
+  font-size:var(--t-lg); font-weight:800; }
+.qs-h b{ display:block; font-size:var(--t-xl); font-weight:800; color:var(--ink);
+  line-height:1.3; }
+.qs-h i{ display:block; margin-top:3px; font-style:normal;
+  font-size:var(--t-base); color:var(--ink2); }
+
+/* 고르신 서비스 — 바구니 칩과 **같은 식구**입니다 (§10) */
+.qs-l{ display:flex; flex-wrap:wrap; gap:var(--s2); list-style:none;
+  padding:0; margin:0 0 var(--s4); }
+.qs-l > li{ display:inline-flex; align-items:center; gap:6px;
+  min-height:48px; padding:0 2px 0 var(--s4);
+  background:var(--sand); border:1px solid var(--acc-dark);
+  border-radius:999px; }
+.qs-n{ font-size:var(--t-base); font-weight:700; color:var(--gold-text); }
+/* ⚠️ 44px — 바구니의 지우기 단추와 같은 까닭입니다 (§9-2) */
+.qs-x{ display:grid; place-items:center; width:44px; height:44px;
+  border:0; border-radius:999px; background:transparent; cursor:pointer;
+  color:var(--ink3); }
+.qs-x:hover{ background:var(--bg-sand); color:var(--ink); }
+.qs-zero{ display:flex; align-items:center; gap:var(--s2);
+  margin:0 0 var(--s4); font-size:var(--t-base); color:var(--ink2); }
+.qs-zero svg{ flex:none; color:var(--blue-600); }
+.qs-go{ margin:0; }
+.qs-go .btn{ min-height:48px; font-size:16px; }
+
+/* 서비스별 질문 묶음 — 서비스가 여럿이면 묶음도 여럿입니다 */
+.rqf-all{ display:grid; gap:var(--s5); margin:var(--s5) 0 0; }
+
+/* ── 임시저장 (§4-3) ─────────────────────────────────────────────
+   ⚠️⚠️ **접수 단추와 생김새를 다르게** 둡니다. 저장과 접수가 같아
+   보이면 저장만 하고 "신청했다" 고 아시게 됩니다 — §4 가 직접 금지한
+   자리입니다. 저장 쪽은 테두리 단추이고 접수는 꽉 찬 단추입니다. */
+.q-draft{ margin:var(--s5) 0 0; padding:var(--s4);
+  background:var(--bg-sky); border:1px dashed var(--line-2, var(--line));
+  border-radius:var(--r-lg); }
+.q-draft-t{ display:flex; align-items:flex-start; gap:var(--s2);
+  margin:0 0 var(--s3); font-size:var(--t-base); color:var(--ink2); }
+.q-draft-t svg{ flex:none; margin-top:2px; color:var(--blue-600); }
+.q-draft-b{ display:flex; flex-wrap:wrap; gap:var(--s2); }
+.q-draft-b .btn{ min-height:44px; font-size:var(--t-sm); }
+/* ⚠️⚠️ **hidden 만으로는 안 숨습니다.** 브라우저 기본값
+   [hidden]{display:none} 보다 .btn{display:inline-flex} 가 **뒤에
+   오고 특정도도 높아서** 이깁니다 — 저장해 둔 것이 없는데 "불러오기 ·
+   지우기" 단추가 그대로 보였습니다 (DOM 은 hidden=true 였고, **찍어
+   보고** 알았습니다). .pk-bar[hidden] · .hd-auth[hidden] 과 같은
+   자리입니다. */
+.q-draft-b .btn[hidden]{ display:none; }
+.q-draft-w{ margin:var(--s3) 0 0; font-size:var(--t-sm);
+  font-weight:700; color:var(--ink2); }
+
+@media (max-width:620px){
+  .qs{ padding:var(--s4); }
+  .qs-no{ width:38px; height:38px; font-size:var(--t-md); }
+  .qs-h b{ font-size:var(--t-lg); }
+  .q-draft-b{ display:grid; }
+  .q-draft-b .btn{ width:100%; }
+  .qs-go .btn{ width:100%; }
 }

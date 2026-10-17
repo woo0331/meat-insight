@@ -93,6 +93,32 @@ function ago(min){ return new Date(NOW - min * 60000).toISOString(); }
   ok("무엇인지 둘 다 없으면 중복으로 보지 않는다", noWhat.ok === true, noWhat);
 }
 
+/* ── 멱등 열쇠 (2026-10-17 창업 준비 §8) ────────────────────────────
+   ⚠️⚠️ **끊겨서 다시 누르신 것과 새 신청을 가릅니다.** 전에는 "같은
+   분류 · 10분 안" 으로만 봐서, 서비스를 여러 개 고르셨거나(분류가
+   달라집니다) 10분이 지난 재시도는 **두 번 접수**됐습니다. */
+console.log("\n── ⚠️⚠️ 멱등 열쇠 (§8 재시도의 중복 접수 방지)");
+{
+  const old = { no:"SW-AAAA-0001", tel:"01012345678", idem:"key-1",
+                cat:"interior", created_at:new Date(NOW - 60 * 60 * 1000).toISOString() };
+  const again = I.intakeDup(NOW, [old], { tel:"010-1234-5678", idem:"key-1", cat:"equip" });
+  ok("같은 열쇠면 분류가 달라도 재시도로 본다", again.dup === true, again);
+  ok("먼저 받은 번호를 그대로 돌려준다", again.no === "SW-AAAA-0001", again.no);
+  /* ⚠️ 손님에게 "스팸" 이라고 하지 않습니다 (절대 규칙 3) */
+  ok("손님에게는 '이미 접수되었습니다' 까지", /이미 접수/.test(again.say || ""), again.say);
+
+  const other = I.intakeDup(NOW, [old], { tel:"010-1234-5678", idem:"key-2", cat:"equip" });
+  ok("열쇠가 다르면 새 신청이다", !other.dup, other);
+
+  /* ⚠️⚠️ **한 시간이 지나도 같은 열쇠는 같은 신청입니다** — 10분 창은
+     열쇠가 없을 때 쓰는 보조 규칙입니다 */
+  const noKey = I.intakeDup(NOW, [old], { tel:"010-1234-5678", cat:"interior" });
+  ok("열쇠가 없으면 10분 창으로만 본다 (한 시간 전은 새 신청)", !noKey.dup, noKey);
+
+  const blank = I.intakeDup(NOW, [old], { tel:"010-1234-5678", idem:"   ", cat:"equip" });
+  ok("빈 열쇠는 없는 것으로 본다", !blank.dup, blank);
+}
+
 console.log("\n── 스팸 (§6 \"스팸을 방지\")");
 {
   function many(n, min){

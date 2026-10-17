@@ -51,16 +51,29 @@ const HIST_LIMIT = 100;
    그려집니다 (이 저장소가 "조용히 안 나오는" 으로 여러 번 겪은 꼴).
    ⚠️ 자기 신청의 id 입니다 — RLS 가 이미 자기 줄만 주고, 이력
    (`?r=`)도 같은 RLS 를 거칩니다. */
+/* ⚠️⚠️ 2026-10-17 §6 · §7 — **신청 서비스 항목**을 같이 가져옵니다.
+   항목이 안 오면 관리자가 "인테리어 → A · 주방 → B" 를 할 자리가 화면에
+   없습니다 (그게 이번에 고친 자리입니다).
+   ⚠️ 항목의 배정도 같이 묻습니다 — 어느 항목에 누가 붙었는지를 화면이
+   한 번에 그려야 합니다. RLS 가 **볼 수 있는 줄만** 돌려줍니다. */
+const ITEMS_C = "request_item(id,service_id,state)";
+const ITEMS_S = "request_item(id,service_id,state,detail," +
+                "assignment(provider_id,state,created_at))";
+
 const PICK = {
   customer:
     "id,no,side,cat,industry,region,gu,state,want_at,created_at," +
-    "assignment(state,created_at,provider(id,name))",
+    "assignment(state,created_at,provider(id,name))," + ITEMS_C,
+  /* ⚠️ 업체에게는 **배정된 항목만** 갑니다 (RLS 의 `item_provider`) —
+     같은 신청에 담긴 다른 서비스는 안 보입니다 (제17조). */
   provider:
     "id,no,side,cat,industry,region,gu,state,want_at,body,detail,created_at," +
-    "name,tel,email,assignment(state,why,created_at)",
+    "name,tel,email,assignment(state,why,created_at)," + ITEMS_C,
+  /* ⚠️⚠️ 목록에 **성함 · 연락처가 없습니다** — 화면 하나가 곧 유출인
+     자리입니다. 전화하려면 건을 열어야 합니다. */
   staff:
     "id,no,side,cat,industry,region,gu,state,created_at," +
-    "assignment(provider_id,state,created_at)"
+    "assignment(provider_id,state,created_at)," + ITEMS_S
 };
 
 module.exports = async function handler(req, res){

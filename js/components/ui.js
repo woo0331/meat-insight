@@ -591,13 +591,29 @@ window.FoldBtn = function(id, shut, open){
     '<span>'+esc(shut)+'</span>'+ icon("chevd", 16) +'</button>';
 };
 
+/* ⚠️⚠️ **모든 폭에서 접히는 쪽** (2026-10-17 창업 준비 §2-B · §2-D).
+   위 `FoldBtn` 은 **폰에서만** 접습니다 — 넓은 화면에서는 단추가
+   `display:none` 이라 접어 두면 **펼칠 방법이 아예 없습니다.**
+   §2-B 의 "전체 서비스 보기" 와 §2-D 의 "원하는 경우에만 펼쳐보게" 는
+   폭과 상관없이 접혀야 해서 갈라 두었습니다.
+   ⚠️ 접는 클래스가 `is-fold-all` 로 **다릅니다** — 같은 이름을 쓰면
+   폰에서 두 규칙이 겹쳐 패키지 · 푸터까지 같이 움직입니다. */
+window.FoldAll = function(id, shut, open){
+  return '<button class="fld-b fld-all" type="button" aria-expanded="false" '+
+      'aria-controls="'+esc(id)+'" '+
+      'data-shut="'+esc(shut)+'" data-open="'+esc(open || "접기")+'" '+
+      'onclick="foldToggle(\''+esc(id)+'\',this,\'is-fold-all\')">'+
+    '<span>'+esc(shut)+'</span>'+ icon("chevd", 16) +'</button>';
+};
+
 /* ⚠️ 다시 그리지 않습니다 — DOM 을 바로 건드립니다. 여기서 화면을
    다시 그리면 **방금 보던 자리를 잃고**(이 저장소가 "더 보기" 에서
    `data-keep` 으로 겪은 자리), 패키지의 체크 상태까지 되돌아갑니다. */
-window.foldToggle = function(id, btn){
+window.foldToggle = function(id, btn, cls){
+  cls = cls || "is-fold";
   var el = document.getElementById(id);
   if(!el || !btn) return;
-  var shut = el.classList.toggle("is-fold");      /* true = 다시 접힘 */
+  var shut = el.classList.toggle(cls);      /* true = 다시 접힘 */
   btn.setAttribute("aria-expanded", shut ? "false" : "true");
   var t = btn.querySelector("span");
   if(t) t.textContent = shut ? (btn.getAttribute("data-shut") || "더 보기")

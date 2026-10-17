@@ -603,19 +603,22 @@ const AUDIT = `(() => {
       }
       return 0;
     };
-    /* ⚠️⚠️ **2026-10-16 §2-1 — 메인은 지시서가 통째로 다크로 정했습니다.**
-       그 화면에서 ① ② 를 재면 90% 가 넘는데, 그건 **지시대로 넣었기
-       때문**이지 사고가 아닙니다. 그렇다고 한도를 올리면 속화면에
-       어두운 면이 기어들어와도 아무도 안 보는 것이 됩니다 — 그래서
-       한도는 둘 다 15% 그대로 두고 **메인에서만 건너뜁니다.**
-       ⚠️⚠️ 대신 **다크가 메인 밖으로 새지 않는지**를 봅니다. 메인의
-       표시(html 의 dkh)는 빌드가 하위 화면에서 떼어 내는데, 그게
-       새면 속화면 160개가 통째로 다크가 되고 BRIGHT PREMIUM 이
-       무너집니다 — 화면으로는 "예쁘네" 로 보여서 더 위험합니다. */
-    const dkHome = document.documentElement.classList.contains("dkh");
-    if(dkHome && location.pathname !== "/")
-      out.dark.push("메인 밖인데 다크 표시(dkh)가 붙어 있습니다 — " + location.pathname);
-    if(!dkHome){
+    /* ⚠️⚠️ **메인은 ① ② 를 재지 않습니다.** 2026-10-17 §3-2 · §6 이
+       **진입 카드 셋의 면**(창업 브라운 · 운영 딥그린 · 폐업 버건디)과
+       **양도양수 배너 · 하단 CTA** 를 다크로 못박았습니다 — 그 다섯을
+       세면 문서로 45% 가 나오는데, 그건 **지시대로 넣었기 때문**이지
+       사고가 아닙니다. 그렇다고 한도를 올리면 속화면에 어두운 면이
+       기어들어와도 아무도 안 보는 것이 됩니다 — 그래서 한도는 둘 다
+       15% 그대로 두고 **메인에서만 건너뜁니다.**
+       ⚠️⚠️ 대신 아래 짝 검사 둘이 봅니다 — "메인 구간 바탕은 밝다"
+       (§3-2 가 선택받는 이유 · 이용 방법 · 계산도구를 직접 적었습니다)
+       와 "속화면은 그대로 밝다". 메인의 표시(html 의 ivh)는 빌드가
+       하위 화면에서 떼어 내는데, 그게 새면 속화면 160개가 메인 바탕을
+       쓰게 되고 구간 리듬(ΔE 2.5)이 한꺼번에 어긋납니다. */
+    const ivHome = document.documentElement.classList.contains("ivh");
+    if(ivHome && location.pathname !== "/")
+      out.dark.push("메인 밖인데 메인 표시(ivh)가 붙어 있습니다 — " + location.pathname);
+    if(!ivHome){
     let area = 0, ftArea = 0; const seen = [], big = [];
     document.querySelectorAll("body *").forEach(e => {
       const cs = getComputedStyle(e);
@@ -868,7 +871,7 @@ const AUDIT = `(() => {
   document.querySelectorAll("#view .ic-t, #view .stg-i, #view .ia-t," +
                             " #view .mhall-i, #view .mstp-i," +
                             " #view .bent-i, #view .bwhy-i, #view .bban-i," +
-                            " #view .bstep-i").forEach(e => {
+                            " #view .bstep-i, #view .bcal-i").forEach(e => {
     if(e.querySelector("svg")) return;
     const own = (e.parentElement || e);
     out.ico.push((own.textContent || "").trim().slice(0, 14) || "(이름 없음)");
@@ -1866,57 +1869,54 @@ const AUDIT = `(() => {
     if(t.indexOf("거래 당사자가 아닙니다") < 0) return "중개자 지위가 없습니다";
     return true;`);
 
-  /* ⑧ 메인 Split Hero — 첫 화면의 주인공은 **두 낱말**입니다 (§2)
+  /* ⑧ 메인 첫 화면 — **헤더 바로 아래가 진입 카드 셋**입니다 (§4)
      ⚠️ 이건 "보기 좋은가" 를 재는 검사가 아닙니다. 나중에 여기에
-     설명 · 검색창 · 숫자를 하나씩 더하다 보면 두 낱말이 조용히
-     작아지는데, 그걸 막는 것이 목적입니다. */
-  await f("히어로가 브랜드 메시지와 두 길을 낸다", "/", `
-    /* ⚠️⚠️ **2026-10-16 "최종 홈페이지 리뉴얼" §3-2 로 히어로가 다시
-       짜였습니다.** 전에는 창업 · 폐업 **가로 2분할** 두 판이었는데,
-       §3 이 ② 를 "메인 브랜드 히어로" 하나로 정하고 창업 · 운영 ·
-       폐업은 ③ 의 진입 카드 셋이 받습니다.
-       ⚠️ 두 판 함수(MainHero · MainSplitPanel)와 .mh2 CSS 는 **지우지
-       않았습니다** — 되살리시면 그날 그 검사를 되돌리면 됩니다.
+     큰 배너 · 설명 · 검색창을 하나씩 더하다 보면 카드가 첫 화면
+     아래로 밀려나는데, 그걸 막는 것이 목적입니다. */
+  await f("메인은 헤더 바로 아래가 진입 카드 셋이다", "/", `
+    /* ⚠️⚠️ **2026-10-17 §4 가 히어로를 메인에서 빼라고 적었습니다** —
+       "기존의 큰 브랜드 히어로 배너는 삭제한다 · 메인페이지에 접속하면
+       헤더 바로 아래에 3개 전문관 카드가 나타나야 한다."
+       ⚠️ HomeHero 함수와 .bhero CSS 는 **지우지 않았습니다** —
+       되살리시면 그날 이 검사를 되돌리면 됩니다.
 
-       여기서 지키는 것은 넷입니다 —
-         ① 화면의 h1 이 **하나**이고 그것이 히어로에 있을 것
-         ② 사진이 있으면 실제로 그려질 것 (사진이 주인공입니다)
-         ③ 히어로가 주저앉지도 너무 길지도 않을 것
-         ④ 두 단추가 **실제로 있는 화면**으로 갈 것 */
+       여기서 지키는 것은 다섯입니다 —
+         ① 히어로가 메인에 **없을** 것 (§4)
+         ② 첫 구간이 진입 카드 셋일 것
+         ③ 화면의 h1 이 **하나**이고 그것이 그 구간에 있을 것
+         ④ 머리말이 짧을 것 (다시 히어로가 되면 §4 를 어깁니다)
+         ⑤ 사진이 있으면 실제로 그려질 것 */
+    const v = document.getElementById("view");
+    if(v.querySelector(".bhero")) return "브랜드 히어로가 메인에 다시 생겼습니다 (§4)";
+    const secs = [].slice.call(v.querySelectorAll("#view > section"));
+    if(!secs.length) return "메인에 구간이 없습니다";
+    if(!secs[0].classList.contains("bent"))
+      return "첫 구간이 진입 카드 셋이 아닙니다 — " +
+             (secs[0].className || "").split(" ")[0];
+
     const h1s = document.querySelectorAll("#view h1");
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
-    const hero = document.querySelector(".bhero");
-    if(!hero) return "브랜드 히어로가 없습니다";
-    if(!h1s[0].closest(".bhero")) return "h1 이 히어로에 없습니다";
+    if(!h1s[0].closest(".bent")) return "h1 이 진입 카드 구간에 없습니다";
 
-    /* ⚠️⚠️ **브랜드 이름을 글자로 박아 두지 않습니다.** 이 저장소는
-       이름이 여섯 번 바뀌었습니다 — 데이터에서 가져와 맞춰 봅니다. */
-    const nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
-    if(nm && h1s[0].textContent.indexOf(nm) < 0)
-      return "히어로 제목에 브랜드 이름이 없습니다";
-    const em = h1s[0].querySelector("em");
-    if(!em) return "히어로 제목의 강조 낱말이 없습니다";
-
-    if(window.hasPhoto && hasPhoto("hero-start") && !hero.querySelector(".bhero-ph .ph"))
-      return "히어로 사진이 있는데 안 그려졌습니다";
-
+    /* ④ 머리말이 짧은가 — 카드가 첫 화면에 들어와야 합니다 (§4).
+       ⚠️ 넓은 화면에서만 봅니다 (좁아지면 글이 줄을 더 씁니다). */
     if(innerWidth > 1200){
-      const hh = hero.getBoundingClientRect().height;
-      if(hh < 420) return "히어로가 " + Math.round(hh) + "px 입니다 — 주저앉았습니다";
-      if(hh > 900) return "히어로가 " + Math.round(hh) + "px 입니다 — 너무 깁니다";
+      const hd = secs[0].querySelector(".sec-hd");
+      if(!hd) return "진입 카드 구간에 머리말이 없습니다";
+      const hh = hd.getBoundingClientRect().height;
+      if(hh > 260) return "머리말이 " + Math.round(hh) + "px 입니다 — 히어로가 됐습니다 (§4)";
+      const top = secs[0].querySelector(".bent-c").getBoundingClientRect().top;
+      if(top > innerHeight)
+        return "진입 카드가 첫 화면 밖(" + Math.round(top) + "px)에 있습니다 (§4)";
     }
 
-    /* ⚠️ 단추 둘은 **실제로 있는 화면**이라야 합니다 (절대 규칙 5) */
-    const gos = [].slice.call(hero.querySelectorAll(".bhero-go a"));
-    if(gos.length < 2) return "히어로 단추가 " + gos.length + "개입니다";
-    for(const a of gos){
-      const h = a.getAttribute("href") || "";
-      if(!h || h === "#") return "히어로에 가짜 링크가 있습니다";
-      if(a.getBoundingClientRect().height < 40)
-        return "히어로 단추가 40px 미만입니다";
+    /* ⑤ 사진 셋 — 자리가 채워져 있으면 실제로 그려져야 합니다 */
+    const EN = (window.HOME_ENTER || []);
+    for(const x of EN){
+      if(window.hasPhoto && hasPhoto(x.ph) &&
+         !document.querySelector(".ent-" + x.key + " .bent-ph .ph"))
+        return x.key + " 카드 사진이 있는데 안 그려졌습니다";
     }
-    if(!hero.querySelector('.bhero-go a[href^="/quote"]'))
-      return "히어로에서 견적 신청으로 가는 길이 없습니다";
     return true;`);
   await f("어느 화면에서나 검색으로 가는 길이 있고 메인이 두 갈래로 갈린다", "/", `
     /* ⚠️⚠️ **2026-10-08 — 떠 있는 검색 패널이 메인에서 내려왔습니다**
@@ -1943,10 +1943,11 @@ const AUDIT = `(() => {
        ⚠️ 히어로 안에 검색창을 다시 넣지 마세요 (§3) — 같은 일을 하는
        입구가 한 화면에 둘이면 어느 쪽을 쓸지가 흐려집니다. */
     if(!vis(q) && !vis(ic)) return "메인 헤더에 검색이 없습니다 (§3)";
-    /* ⚠️ 2026-10-16 §3-2 — 히어로가 .bhero 로 다시 짜였습니다.
-       같은 일을 하는 입구가 한 화면에 둘이면 어느 쪽을 쓸지 흐려집니다. */
-    if(document.querySelector(".bhero input[type=search], .mh input[type=search]"))
-      return "히어로 안에 검색창이 생겼습니다 (§0-5 중복)";
+    /* ⚠️ 2026-10-17 §4 로 히어로가 메인에서 빠졌습니다. 검색으로 가는
+       길은 **헤더 하나**이고, 메인 본문에 또 만들면 같은 일을 하는
+       입구가 한 화면에 둘이 됩니다 (어느 쪽을 쓸지 흐려집니다). */
+    if(document.querySelector("#view input[type=search]"))
+      return "메인 본문에 검색창이 생겼습니다 (중복)";
     /* ⚠️ 패널 탭이 가리키던 다섯 곳이 길을 잃지 않았는지 — 메인이나
        푸터 어디에든 있어야 합니다 (지시서 §2-2 "기능 삭제 금지"). */
     const miss = ["/providers","/franchise","/stores","/support","/tools"]
@@ -2672,12 +2673,17 @@ const AUDIT = `(() => {
        ⚠️ 앞 지시서의 표시(.mh2 · .mhall-g · .hsv-g · .mcal-g ·
        .mstp-g · .mlast-go)는 **함수를 안 지웠으니** 되살리실 수
        있습니다 — 그날 여기에 다시 넣으세요. */
-    const need = [[".bhero-go", "브랜드 히어로"],
-                  [".bent-g",   "창업 · 운영 · 폐업 진입 카드"],
+    /* ⚠️⚠️ **2026-10-17 §4 — 히어로가 빠지고 계산도구 · 이용 가이드 ·
+       견적 안내 카드가 들어왔습니다.** .bhero-go 는 함수를 안 지웠으니
+       되살리실 수 있습니다 — 그날 여기에 다시 넣으세요. */
+    const need = [[".bent-g",   "창업 · 운영 · 폐업 진입 카드"],
                   [".bpass-go", "매장 양도양수 배너"],
-                  [".bwhy-g",   "선택받는 이유"],
+                  [".bwhy-g",   "선택받는 이유 넷"],
+                  [".bqc",      "견적 신청 안내 카드"],
                   [".bstep-g",  "이용 방법 5단계"],
-                  [".bban-g",   "배너 둘"],
+                  [".bban-g",   "서비스 배너 둘"],
+                  [".bcal-g",   "계산도구 넷"],
+                  [".bgd-g",    "이용 가이드"],
                   [".bcta-go",  "하단 견적 신청"]];
     for(const q of need)
       if(!v.querySelector(q[0])) return q[1] + " 가 메인에 없습니다";
@@ -2690,56 +2696,76 @@ const AUDIT = `(() => {
     if(gate.length)
       return "아직 /home 으로 보내는 링크가 " + gate.length + "개 있습니다";
     return true;`);
-  await f("메인은 다크이고 그 다크가 메인 밖으로 안 샌다", "/", `
-    /* ⚠️⚠️ **2026-10-16 §2-1 이 메인을 통째로 다크로 정했습니다** —
-       메인 #201813 · 헤더 · 푸터 #1D1511 · 보조 카드 #30231C.
-       전에 여기 있던 검사는 "메인 본문의 어두운 면이 15% 를 넘지
-       않는가" 였는데, 지시가 그것을 뒤집었습니다.
-       ⚠️⚠️ **한도를 올려서 넘기지 않았습니다.** 속화면 160개는 그대로
-       BRIGHT PREMIUM 이고, 화면마다 도는 AUDIT 이 거기서 15% 를 계속
-       봅니다 (메인에서만 건너뜁니다). 여기서는 **다크가 메인 안에만
-       머무는지**를 봅니다 — 아래 짝 검사가 속화면 쪽입니다.
-       ⚠️ 둘을 한 검사로 묶지 마세요. 한쪽만 보면 "전부 다크로 바꾸기"
-       가 그냥 통과합니다. */
-    if(!document.documentElement.classList.contains("dkh"))
-      return "메인에 다크 표시(dkh)가 없습니다";
+  await f("메인 구간 바탕은 밝고 그 표시가 메인 밖으로 안 샌다", "/", `
+    /* ⚠️⚠️ **2026-10-17 §3-2 가 하루 앞의 다크 메인을 뒤집었습니다** —
+       "전체적으로 어두운 배경이 반복되어 화면이 무겁고, 서비스 탐색에
+       필요한 정보의 가독성이 떨어진다 … 사이트 전체를 검정 또는 다크
+       브라운으로 채우지 않는다. **특히 스토어웨이가 선택받는 이유,
+       이용 방법, 계산도구는 밝은 배경을 유지한다.**"
+       ⚠️⚠️ **다크로 남는 자리는 지시서가 정한 것들**입니다 — 진입 카드
+       셋의 면(§6) · 양도양수 배너(§7) · 하단 CTA(§14) · 헤더 · 푸터.
+       그래서 화면마다 도는 AUDIT 의 어두운 면 ① ② 는 메인에서
+       건너뛰고, 여기가 그 자리를 받습니다.
+       ⚠️ 둘을 한 검사로 묶지 마세요 — 아래 짝 검사가 속화면 쪽이고,
+       한쪽만 보면 "전부 다크로 바꾸기" 가 그냥 통과합니다. */
+    if(!document.documentElement.classList.contains("ivh"))
+      return "메인에 메인 표시(ivh)가 없습니다";
     const lum = function(c){
       const g = function(x){ x /= 255;
         return x <= .03928 ? x/12.92 : Math.pow((x+.055)/1.055, 2.4); };
       return .2126*g(c[0]) + .7152*g(c[1]) + .0722*g(c[2]);
     };
-    const bodyL = (function(){
-      const m = getComputedStyle(document.body).backgroundColor
-        .match(/(\\d+), ?(\\d+), ?(\\d+)/);
+    const bgL = function(e){
+      const m = getComputedStyle(e).backgroundColor.match(/(\\d+), ?(\\d+), ?(\\d+)/);
       return m ? lum([+m[1], +m[2], +m[3]]) : null;
-    })();
+    };
+    const bodyL = bgL(document.body);
     if(bodyL === null) return "메인 바탕색을 못 읽습니다";
-    if(bodyL > 0.09) return "메인 바탕이 다크가 아닙니다";
+    if(bodyL < 0.6) return "메인 바탕이 밝지 않습니다 (§3-2)";
 
     /* ⚠️⚠️ **밝은 톤 클래스가 끼어들면 안 됩니다.** paintTones() 는
        이웃한 두 구간이 같은 묶음이면 뒤엣것을 다음 바탕으로 미는데,
-       다크 구간은 톤 클래스가 없어서 전부 같은 묶음으로 읽힙니다 —
-       막지 않으면 다크 사이에 흰 띠가 생깁니다. 에러도 안 나고 가로
-       스크롤도 안 나서 찍어 봐야 아는 종류입니다. */
+       메인 구간은 톤 클래스가 없어서 전부 같은 묶음으로 읽힙니다 —
+       막지 않으면 아이보리 · 베이지 차례 사이에 엉뚱한 띠가 생깁니다.
+       에러도 안 나고 가로 스크롤도 안 나서 찍어 봐야 아는 종류입니다. */
     const lit = document.querySelectorAll("#view .sec-white, #view .sec-gray");
-    if(lit.length) return "다크 메인에 밝은 톤 구간이 " + lit.length + "개 끼었습니다";
+    if(lit.length) return "메인에 톤 클래스가 " + lit.length + "개 끼었습니다";
 
-    /* 구간마다 바탕이 실제로 어두운가 (한 구간만 밝으면 바로 보입니다) */
     const secs = [].slice.call(document.querySelectorAll("#view > section"));
-    if(secs.length !== 7) return "메인 구간이 " + secs.length + "개입니다 (일곱이어야 합니다)";
-    for(const e of secs){
-      const m = getComputedStyle(e).backgroundColor.match(/(\\d+), ?(\\d+), ?(\\d+)/);
-      if(!m) return (e.className || "").split(" ")[0] + " 의 바탕을 못 읽습니다";
-      if(lum([+m[1], +m[2], +m[3]]) > 0.09)
-        return (e.className || "").split(" ")[0] + " 구간이 다크가 아닙니다";
+    if(secs.length !== 8) return "메인 구간이 " + secs.length + "개입니다 (여덟이어야 합니다)";
+
+    /* ⚠️⚠️ **§3-2 가 이름까지 적은 셋**은 반드시 밝아야 합니다 */
+    for(const q of [[".bwhy","선택받는 이유"], [".bstep","이용 방법"],
+                    [".bcal","계산도구"]]){
+      const e = document.querySelector(q[0]);
+      if(!e) return q[1] + " 구간이 없습니다";
+      const L = bgL(e);
+      if(L === null || L < 0.6)
+        return q[1] + " 구간이 밝지 않습니다 (§3-2 가 이름까지 적은 자리입니다)";
     }
+
+    /* ⚠️⚠️ **"사이트 전체를 다크로 채우지 않는다"** — 구간 바탕의
+       **면적**으로 봅니다. 다크로 둘 수 있는 것은 §6 · §7 · §14 가
+       정한 셋까지이고, 그게 절반을 넘으면 다시 다크 메인입니다. */
+    let litA = 0, dkA = 0;
+    for(const e of secs){
+      const r = e.getBoundingClientRect();
+      const a = Math.max(0, r.width) * Math.max(0, r.height);
+      const L = bgL(e);
+      if(L === null) return (e.className || "").split(" ")[0] + " 의 바탕을 못 읽습니다";
+      if(L < 0.6) dkA += a; else litA += a;
+    }
+    if(!(litA + dkA)) return "구간 면적을 못 읽습니다";
+    const pct = litA / (litA + dkA) * 100;
+    if(pct < 60)
+      return "메인 구간 바탕에서 밝은 면이 " + pct.toFixed(1) + "% 입니다 (60% 이상이어야 합니다 · §3-2)";
     return true;`);
-  await f("속화면은 그대로 밝다 (다크는 메인 한 화면뿐)", "/startup", `
-    /* ⚠️⚠️ **위 검사와 짝입니다.** 빌드가 하위 화면에서 dkh 를 떼어
-       내는데(shell()), 그게 새면 160개가 통째로 다크가 됩니다 —
-       화면으로는 "예쁘네" 로 보여서 더 위험합니다. */
-    if(document.documentElement.classList.contains("dkh"))
-      return "속화면에 다크 표시(dkh)가 붙어 있습니다";
+  await f("속화면은 그대로 밝고 메인 표시가 안 묻었다", "/startup", `
+    /* ⚠️⚠️ **위 검사와 짝입니다.** 빌드가 하위 화면에서 ivh 를 떼어
+       내는데(shell()), 그게 새면 160개가 메인 바탕을 쓰게 되고 구간
+       리듬(ΔE 2.5)이 한꺼번에 어긋납니다. */
+    if(document.documentElement.classList.contains("ivh"))
+      return "속화면에 메인 표시(ivh)가 붙어 있습니다";
     const m = getComputedStyle(document.body).backgroundColor
       .match(/(\\d+), ?(\\d+), ?(\\d+)/);
     if(!m) return "속화면 바탕색을 못 읽습니다";
@@ -2801,7 +2827,7 @@ const AUDIT = `(() => {
     const want = [".mh-ph .ph", ".mlast-im .ph", ".mfeat-ph .ph",
                   ".ia-t .ph", ".msvc-bg .ph", ".mbr-p .ph",
                   ".mk-k-ph .ph", ".mhall-bg .ph",
-                  ".bhero-ph .ph", ".bent-ph .ph",
+                  ".bent-ph .ph",
                   ".bpass-ph .ph", ".bban-ph .ph"];
     const bad = [];
     for(const q of want){
@@ -3060,7 +3086,8 @@ const AUDIT = `(() => {
        옮겨갔습니다. 보는 것은 그대로입니다 — 빈 아이콘과 한 묶음 안의
        중복, 그리고 가짜 링크입니다. */
     const groups = [[".bent-i", "진입 카드"], [".bwhy-i", "선택 까닭"],
-                    [".bstep-i", "이용 방법"], [".bban-i", "배너"]];
+                    [".bstep-i", "이용 방법"], [".bban-i", "배너"],
+                    [".bcal-i", "계산도구"]];
     for(const g of groups){
       const L = [].slice.call(document.querySelectorAll("#view " + g[0]));
       if(!L.length && g[0] === ".bban-i") continue;   /* 배너는 사진이 오면 아이콘이 빠집니다 */
@@ -3081,24 +3108,38 @@ const AUDIT = `(() => {
       .filter(function(h){ return !h || h === "#" || h.indexOf("javascript:") === 0; });
     if(bad.length) return "메인에 가짜 링크가 " + bad.length + "개 있습니다";
 
-    /* ⚠️⚠️ **대표 서비스는 전문관 데이터에서 옵니다** — 손으로 적으면
-       전문관을 고칠 때 한쪽만 바뀝니다. 카드마다 그 전문관이 실제로
-       들고 있는 앞 셋인지 맞춰 봅니다. */
+    /* ⚠️⚠️ **대표 서비스 다섯은 전문관 데이터에서 옵니다** (§6) —
+       HOME_ENTER 가 **이름만** 들고 있고 아이콘 · 글자 · 개수는
+       halls.js 것입니다. 손으로 적으면 전문관을 고칠 때 한쪽만
+       바뀝니다 (이 저장소가 아이콘 표로 겪은 자리).
+       ⚠️ 이름이 어긋나면 그 칸이 **조용히 빠집니다** — 다섯인지까지
+       같이 봅니다. */
     const HS = (window.AM_HALLS || []);
     if(!HS.length) return "전문관 데이터가 없습니다 (halls.js 가 안 실렸습니다)";
+    const EN = (window.HOME_ENTER || []);
+    if(EN.length !== 3) return "HOME_ENTER 가 " + EN.length + "개입니다";
     const cards = [].slice.call(document.querySelectorAll(".bent-c"));
-    for(const c of cards){
+    for(let i = 0; i < cards.length; i++){
+      const c = cards[i];
       const to = (c.querySelector("a") || {}).getAttribute
         ? c.querySelector("a").getAttribute("href") : "";
       let h = null;
       for(const x of HS) if(x.to === to) h = x;
       if(!h) return "진입 카드가 전문관으로 안 갑니다 — " + to;
-      const want = (h.items || []).slice(0, 3).map(function(x){ return x.n; });
-      const got = [].slice.call(c.querySelectorAll(".bent-it > i"))
+      const en = EN.filter(function(x){ return x.key === h.key; })[0];
+      if(!en) return h.name + " 카드가 HOME_ENTER 에 없습니다";
+      /* 이름이 실제로 그 전문관 칸에 있는지 (없으면 조용히 빠집니다) */
+      const names = (h.items || []).map(function(x){ return x.n; });
+      const lost = (en.sv || []).filter(function(n){ return names.indexOf(n) < 0; });
+      if(lost.length)
+        return h.name + " 의 대표 서비스 이름이 전문관에 없습니다 — " + lost.join(" · ");
+      const got = [].slice.call(c.querySelectorAll(".bent-sv > i"))
         .map(function(e){ return e.textContent.trim(); });
-      if(want.join("|") !== got.join("|"))
+      if(got.length !== 5)
+        return h.name + " 의 대표 서비스가 " + got.length + "개입니다 (다섯이어야 합니다)";
+      if((en.sv || []).join("|") !== got.join("|"))
         return h.name + " 의 대표 서비스가 데이터와 다릅니다 — " +
-               got.join(" · ") + " vs " + want.join(" · ");
+               got.join(" · ") + " vs " + (en.sv || []).join(" · ");
     }
     return true;`);
 
@@ -3208,11 +3249,14 @@ const AUDIT = `(() => {
        05 이용 절차 · 06 견적 · 상담 + 07 푸터(#view 밖).
        ⚠️ mk(매장 · 시설장비 전용 대형 이미지 구간)는 §1 · §11 이
        **메인에서 빼라고 직접 적은** 것입니다. */
-    /* ⚠️⚠️ **2026-10-16 "최종 홈페이지 리뉴얼" §3 — 아홉 영역**입니다.
-       ① 헤더와 ⑧ 뒷부분 · ⑨ 는 푸터(#view 밖)라 여기서는 **일곱**입니다.
-       §3 이 "순서 변경 금지" 로 못박았습니다 — 바꾸시려면 지시서를
-       먼저 고치고 build-pages.js 의 크롤러 본문도 같이 고치세요. */
-    const want = ["bhero","bent","bpass","bwhy","bstep","bban","bcta"];
+    /* ⚠️⚠️ **2026-10-17 "메인페이지 최종 디자인 리뉴얼" §4 — 열한
+       덩이**입니다. ① 헤더와 ⑪ 푸터는 #view 밖이라 여기서는
+       **여덟**입니다. 바꾸시려면 지시서를 먼저 고치고
+       build-pages.js 의 크롤러 본문도 같이 고치세요.
+       ⚠️⚠️ **히어로(bhero)가 빠졌습니다** — §4 가 "기존의 큰 브랜드
+       히어로 배너는 삭제한다" 고 직접 적었습니다. 함수는 안 지웠으니
+       되살리실 수 있습니다 (그날 여기 앞에 다시 넣으세요). */
+    const want = ["bent","bpass","bwhy","bstep","bban","bcal","bgd","bcta"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
@@ -3222,9 +3266,9 @@ const AUDIT = `(() => {
          합니다 ("?3" 이 아니라). */
       /* ⚠️ 앞 지시서의 이름들을 **빼지 않습니다** — 되살아나면
          "차례가 … 입니다" 로 이름을 내야 합니다 ("?3" 이 아니라). */
-      for(const m of ["bhero","bent","bpass","bwhy","bstep","bban","bcta",
-                      "mh","mbr","mhall","msvc","mexp","pkg","mind","mti",
-                      "mstp","mopsv","mjn","mlast"])
+      for(const m of ["bent","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
+                      "bhero","mh","mbr","mhall","msvc","mexp","pkg","mind",
+                      "mti","mstp","mopsv","mjn","mlast"])
         if(e.classList.contains(m)) return m;
       const hd = (e.querySelector(".eyebrow") || {}).textContent || "";
       if(hd.indexOf("TAKE OVER") >= 0) return "mk";
@@ -3914,6 +3958,7 @@ const AUDIT = `(() => {
        절차 카드(.bstep-c) · 배너(.bban-c > a)가 생겼습니다. */
     const sel = ".cat,.ind,.pv,.fr,.fc,.mk,.help,.sp,.empty," +
                 ".bent-c > a,.bwhy-c,.bstep-c,.bban-c > a," +
+                ".bcal-c > a,.bgd-c > a,.bqc," +
                 ".mhall-c,.mcal-g > li,.mstp-g > li," +
                 ".mti-c,.hsv-box,.mlast-h > li > a,.swt-c," +
                 ".ms-g a,.mv-g a,.mh-fc > li,.hb-g a,.hb-b";

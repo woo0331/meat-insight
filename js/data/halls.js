@@ -112,6 +112,11 @@ window.AM_HALLS = [
       { n:"세금 정산",     ia:"tax",      cat:"tax" },
       { n:"지원제도 안내", ia:"money",    cat:"support" },
       /* ── 아래는 메인에 안 나옵니다 ── */
+      /* ⚠️ 2026-10-17 §6 이 폐업 카드의 대표 서비스 다섯에 **폐기물
+         처리**를 적었습니다. `waste` 는 전부터 있던 분류이고(단계 06),
+         새 분류를 만든 것이 아닙니다. 앞 여섯 뒤에 두어서 **전문관
+         화면의 여섯은 그대로**입니다. */
+      { n:"폐기물 처리",   ia:"trash",    cat:"waste" },
       { n:"원상복구",      ia:"restore",  cat:"restore" },
       { n:"임대차 정리",   ia:"contract", cat:"law",  sub:"lease" },
       { n:"폐업비 계산",   ia:"calc",     to:"/tools/closecost", tone:"t6" }

@@ -137,10 +137,20 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.bcta-go a[href="/quote"]');
  say((await url()).startsWith("/quote"),"마지막 구간 → 견적 · 상담 신청",await url());
- /* ⚠️ 히어로에서도 한 번 — 첫 화면에서 바로 신청할 수 있어야 합니다 */
+ /* ⚠️ 2026-10-17 §9 — 히어로가 빠지고 **견적 신청 안내 카드**가
+    그 자리를 받았습니다 (선택받는 이유 구간 오른쪽). 첫 화면에서
+    멀지 않은 데서 바로 신청할 수 있어야 합니다. */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bhero-go a[href="/quote"]');
- say((await url()).startsWith("/quote"),"히어로 → 견적 · 상담 신청",await url());
+ await click('.bqc a[href="/quote"]');
+ say((await url()).startsWith("/quote"),"견적 안내 카드 → 견적 · 상담 신청",await url());
+ /* ⚠️ §12 — 계산도구 넷이 실제로 열려야 합니다 */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.bcal-g > li:nth-child(1) > a');
+ say((await url()).startsWith("/tools/"),"계산도구 카드 → 계산기",await url());
+ /* ⚠️ §13 — 이용 가이드가 실제 글로 열려야 합니다 */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.bgd-g > li:nth-child(1) > a');
+ say((await url()).startsWith("/content/"),"이용 가이드 카드 → 글",await url());
 
 
  /* ══════════════════════════════════════════════════════════════

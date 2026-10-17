@@ -788,22 +788,26 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 #view{ min-height:calc(100vh - var(--hdr-h)); }
 
 /* ════════════════════════════════════════════════════════════════════
-   헤더가 **다크**입니다 (2026-10-16 "최종 홈페이지 리뉴얼" §2-1)
+   헤더가 **다크**입니다 (2026-10-17 "메인페이지 최종 디자인 리뉴얼" §3-2)
 
-   > §2-1 — "헤더 · 푸터 #1D1511."
+   > §3-2 — "헤더 · 푸터 #241B17."
+
+   ⚠️⚠️ **2026-10-17 로 본문이 다시 밝아졌습니다** — 다크로 남는 것은
+   머리와 꼬리뿐입니다. 메인도 본문은 웜 아이보리입니다 (`html.ivh`).
 
    ⚠️⚠️ **헤더는 `#view` 밖이라 161개 화면이 같이 씁니다.** 그래서
    다크가 되는 것은 **머리와 꼬리**이고 속화면 본문은 그대로 밝습니다
-   (BRIGHT PREMIUM) — 메인만 본문까지 다크입니다 (`html.dkh`).
+   (BRIGHT PREMIUM). 메인 본문도 밝습니다 — 지시서가 "사이트 전체를
+   검정 또는 다크 브라운으로 채우지 않는다" 고 직접 적었습니다.
    ⚠️⚠️ **흐린 글자(`--ink2` · `--ink3`)를 쓰지 마세요.** 짙은 바탕용이
    아닙니다 — 푸터를 짙게 바꿀 때 `.ft a`(0,1,1)가 `.ft-col a`(0,2,0)에
    져서 링크 대비가 4.33 이었던 자리입니다. **선택자를 원래 규칙과
    똑같이** 적습니다.
-   ⚠️ 재 본 값(#1D1511 바탕) — 흰 17.99 · 보조 #E8DDD1 13.44 ·
-   크림 #FFF8EF 17.07 · 포인트 #D99647 7.20. 전부 AA 한참 위입니다.
+   ⚠️ 재 본 값(#241B17 바탕) — 흰 16.88 · 보조 #E8DDD1 13.10 ·
+   크림 #FFFDF9 16.61 · 포인트 #D99B4C 7.03. 전부 AA 한참 위입니다.
    ⚠️ 되돌리시려면 이 블록만 지우고 `--bg-foot` 를 밝은 값으로.
    ════════════════════════════════════════════════════════════════════ */
-.hd{ background:rgba(29,21,17,.96); border-bottom:1px solid var(--dk-line); }
+.hd{ background:rgba(36,27,23,.96); border-bottom:1px solid var(--dk-line); }
 .sc .hd{ box-shadow:0 1px 0 var(--dk-line), 0 10px 26px -16px rgba(0,0,0,.8); }
 .lg b{ color:var(--on-dk); }
 .lg span{ color:var(--on-dk2); }
@@ -813,22 +817,22 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 .gnb a:hover{ color:var(--acc); }
 .gnb a.on{ color:var(--acc); }
 .hd-ic{ color:var(--on-dk2); }
-.hd-ic:hover{ background:rgba(238,219,193,.12); color:var(--cream); }
+.hd-ic:hover{ background:rgba(237,225,210,.12); color:var(--cream); }
 .hd-txt{ color:var(--on-dk2); }
 .hd-txt:hover{ color:var(--cream); }
 .hd-sep{ background:var(--dk-line); }
 /* 통합검색 — 짙은 바탕 위라 면을 **밝은 쪽으로 옅게** 깝니다.
    ⚠️ 흰 면을 깔면 헤더에 흰 알약이 떠서 머리가 두 층으로 읽힙니다. */
-.hd-s{ background:rgba(238,219,193,.10); border-color:var(--dk-line2); }
-.hd-s:focus-within{ background:rgba(238,219,193,.16); border-color:var(--acc); }
+.hd-s{ background:rgba(237,225,210,.10); border-color:var(--dk-line2); }
+.hd-s:focus-within{ background:rgba(237,225,210,.16); border-color:var(--acc); }
 .hd-s-i{ color:var(--on-dk2); }
 .hd-s input{ color:var(--cream); }
 .hd-s input::placeholder{ color:rgba(232,221,209,.70); }
 /* 무료 견적 신청 — §4 가 오른쪽에 둔 **하나뿐인 채운 단추**입니다.
    ⚠️ 골드 면에 **짙은 글자**입니다 (흰 글자는 #D99647 위에서 2.2) —
-   #1D1511 글자로 7.20 입니다. */
-.hd-cta{ background:var(--acc); border-color:var(--acc); color:#1D1511; font-weight:800; }
-.hd-cta:hover{ background:#E9A95D; border-color:#E9A95D; color:#1D1511; }
+   #241B17 글자로 7.03 입니다. */
+.hd-cta{ background:var(--acc); border-color:var(--acc); color:#241B17; font-weight:800; }
+.hd-cta:hover{ background:#E9A95D; border-color:#E9A95D; color:#241B17; }
 /* 햄버거 · 서랍도 같이 뒤집습니다 (900px 아래에서 메뉴가 거기로 갑니다).
    ⚠️⚠️ **선택자를 원래 규칙과 똑같이** 적습니다 — 서랍 규칙이
    `@media (max-width:900px)` 안의 `.hd-dw-g a`(0,2,0)라, `.hd-dw a`
@@ -844,11 +848,10 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 }
 /* 아래 네비도 머리 · 꼬리와 같은 식구입니다 (`#view` 밖 · 폰 전용).
    ⚠️⚠️ 머리와 꼬리가 다크인데 여기만 흰 띠로 두면 **폰 화면 아래에
-   흰 선이 떠서** 한 사이트로 안 읽힙니다 — 메인이 통째로 다크라
-   더 그렇습니다.
+   흰 선이 떠서** 한 사이트로 안 읽힙니다.
    ⚠️ 선택자를 원래와 똑같이 미디어 안에 둡니다 (`.mnav a` 가
    `@media` 안이라, 밖에 적으면 색만 조용히 안 먹습니다).
-   ⚠️ 재 본 값(#1D1511 바탕) — 보조 #E8DDD1 13.44 · 포인트 7.20. */
+   ⚠️ 재 본 값(#241B17 바탕) — 보조 #E8DDD1 13.10 · 포인트 7.03. */
 @media (max-width:900px){
   .mnav{ background:var(--dk-chrome); border-top:1px solid var(--dk-line); }
   .mnav a{ color:var(--on-dk2); }

@@ -135,7 +135,12 @@ try{
                   "db/migrations/0008_quote.sql",
                   /* ⚠️ 0009 — 신청 하나에 서비스 여러 개 (2026-10-17 §6 · §7).
                      `request_item` 과 항목별 배정이 여기 있습니다. */
-                  "db/migrations/0009_request_item.sql"];
+                  "db/migrations/0009_request_item.sql",
+                  /* ⚠️ 0010 — 회원 계정에 남는 임시저장 · 체크리스트
+                     (2026-10-18 §6-2 · §9) */
+                  "db/migrations/0010_user_state.sql",
+                  /* ⚠️ 0011 — 신청에 붙는 사진 · 서류 (2026-10-18 §7-3 · §15) */
+                  "db/migrations/0011_request_photo.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ /* ⚠️⚠️ NOTICE 가 먼저 쏟아져서 앞 세 줄만 보면 **진짜
@@ -1303,6 +1308,250 @@ try{
     ok("anon 에게 request_item 권한이 없다", anon.no, anon.why);
     const anonFn = denied(`set role anon; select assign_item('${I1}','pv-one',true)`);
     ok("anon 에게 배정 문 권한이 없다", anonFn.no, anonFn.why);
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     0010 — 회원 계정에 남는 임시저장 · 체크리스트 (2026-10-18 §6-2 · §9)
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️ 0010 회원 메모장 — 자기 줄만 · 담을 수 있는 칸만");
+  {
+    const A  = "11111111-1111-1111-1111-111111111111";
+    const B  = "22222222-2222-2222-2222-222222222222";
+    const AD = "55555555-5555-5555-5555-555555555555";
+    const as = u => "set role authenticated; select become('" + u + "'); ";
+
+    /* ── ③ 저장하는 문 ──────────────────────────────────────────── */
+    psql(as(A) + `select save_user_state(
+            '["interior","repair/aircon-fix"]'::jsonb,
+            '{"q-ind":"cafe","q-reg":"gyeonggi"}'::jsonb,
+            '["sales","tax"]'::jsonb)`);
+    ok("저장하면 줄이 하나 생긴다",
+       psql(`select count(*) from user_state where account_id='${A}'`) === "1");
+    ok("고른 서비스가 그대로 들어간다",
+       psql(`select pick->>1 from user_state where account_id='${A}'`) === "repair/aircon-fix");
+
+    /* ⚠️⚠️ **안 보낸 칸은 그대로 둡니다** — 한 화면의 자동저장이 다른
+       화면이 적어 둔 것을 쓸어 버리면 안 됩니다 */
+    psql(as(A) + `select save_user_state('["clean"]'::jsonb, null, null)`);
+    ok("안 보낸 칸은 그대로 남는다 (조건)",
+       psql(`select draft->>'q-ind' from user_state where account_id='${A}'`) === "cafe");
+    ok("안 보낸 칸은 그대로 남는다 (체크)",
+       psql(`select jsonb_array_length(checks) from user_state where account_id='${A}'`) === "2");
+    ok("보낸 칸은 바뀐다",
+       psql(`select jsonb_array_length(pick) from user_state where account_id='${A}'`) === "1");
+
+    /* ⚠️ 비우는 것은 `[]` 로 보냅니다 (null 과 다릅니다) */
+    psql(as(A) + `select save_user_state('[]'::jsonb, null, null)`);
+    ok("빈 배열로 보내면 비워진다",
+       psql(`select jsonb_array_length(pick) from user_state where account_id='${A}'`) === "0");
+
+    /* ── ② ⚠️⚠️ 담을 수 있는 칸을 DB 가 정합니다 ────────────────── */
+    let r = denied(as(A) + `select save_user_state(null,'{"q-name":"홍길동"}'::jsonb,null)`);
+    ok("조건 밖의 칸(성함)은 거절한다",
+       r.no && /저장할 수 없는 칸입니다/.test(r.why || ""), r.why);
+    r = denied(as(A) + `select save_user_state(null,'{"q-tel":"010-1234-5678"}'::jsonb,null)`);
+    ok("조건 밖의 칸(연락처)은 거절한다",
+       r.no && /저장할 수 없는 칸입니다/.test(r.why || ""), r.why);
+    /* ⚠️ 거절하는 말에 **값을 싣지 않습니다** — 성함이 로그에 남으면 안 됩니다 */
+    ok("거절하는 말에 값이 안 실린다", !/홍길동|1234-5678/.test(r.why || ""), r.why);
+    r = denied(as(A) + `select save_user_state(null,'{"q-ind":123}'::jsonb,null)`);
+    ok("글자가 아닌 값은 거절한다",
+       r.no && /저장할 수 없는 값입니다/.test(r.why || ""), r.why);
+    r = denied(as(A) + `select save_user_state(null,'{"q-ind":"` + "가".repeat(121) + `"}'::jsonb,null)`);
+    ok("너무 긴 값은 거절한다", r.no && /너무 깁니다/.test(r.why || ""), r.why);
+    r = denied(as(A) + `select save_user_state('[{"a":1}]'::jsonb,null,null)`);
+    ok("서비스 id 가 글자가 아니면 거절한다",
+       r.no && /서비스 id/.test(r.why || ""), r.why);
+    r = denied(as(A) + `select save_user_state(null,null,'[""]'::jsonb)`);
+    ok("빈 체크 항목은 거절한다", r.no && /체크 항목/.test(r.why || ""), r.why);
+
+    /* ⚠️ 상한 — 자동저장으로 들어오는 줄이라 막아 둡니다 (§15) */
+    const many = "[" + Array.from({length:61}, (_,i) => '"x' + i + '"').join(",") + "]";
+    r = denied(as(A) + `select save_user_state('${many}'::jsonb,null,null)`);
+    ok("예순을 넘기면 거절한다 (상한)",
+       r.no && /user_state_pick_cap|상한|check/i.test(r.why || ""), r.why);
+
+    /* ── ⚠️⚠️ 자기 줄만 봅니다 ──────────────────────────────────── */
+    psql(as(B) + `select save_user_state('["demolish"]'::jsonb,null,null)`);
+    ok("남의 메모장은 안 보인다",
+       psql(as(B) + `select count(*) from user_state`) === "1");
+    ok("자기 것만 보인다",
+       psql(as(B) + `select pick->>0 from user_state`) === "demolish");
+    /* ⚠️ 관리자에게도 **열지 않았습니다** — 남의 메모장을 보는 것은
+       운영에 필요한 일이 아닙니다 */
+    ok("관리자에게도 남의 메모장이 안 보인다",
+       psql(as(AD) + `select count(*) from user_state`) === "0");
+
+    /* ── ⚠️⚠️ 표를 열지 않았습니다 — 문으로만 바뀝니다 (§8) ──────── */
+    r = denied(as(A) + `update user_state set pick='["x"]'::jsonb where account_id='${A}'`);
+    ok("user_state 에 쓰기 권한이 없다 (문만 엽니다)", r.no, r.why);
+    r = denied(as(B) + `update user_state set pick='["x"]'::jsonb where account_id='${A}'`);
+    ok("남의 줄도 못 고친다", r.no, r.why);
+    r = denied(as(A) + `delete from user_state where account_id='${A}'`);
+    ok("표에서 바로 못 지운다", r.no, r.why);
+    r = denied("set role anon; select count(*) from user_state");
+    ok("anon 에게 user_state 권한이 없다", r.no, r.why);
+    r = denied("set role anon; select save_user_state('[]'::jsonb,null,null)");
+    ok("anon 에게 저장 문 권한이 없다", r.no, r.why);
+
+    /* ⚠️ 로그인 없이(변경자를 모르는 채) 저장하지 못합니다 */
+    r = denied("set role authenticated; select become(null::uuid); select save_user_state('[]'::jsonb,null,null)");
+    ok("로그인 없이 못 저장한다", r.no && /로그인이 필요합니다/.test(r.why || ""), r.why);
+
+    /* ── ④ 지우는 길 ──────────────────────────────────────────── */
+    psql(as(A) + `select clear_user_state()`);
+    ok("지우면 줄이 없어진다",
+       psql(`select count(*) from user_state where account_id='${A}'`) === "0");
+    ok("남의 줄은 안 지워진다",
+       psql(`select count(*) from user_state where account_id='${B}'`) === "1");
+
+    /* ⚠️⚠️ **감사 기록을 남기지 않습니다** — 자동저장이라 체크 한 번에
+       줄 하나씩 쌓이면 정작 돈 기록이 그 더미에 묻힙니다. 전을 재고
+       **안 늘어났는지**만 봅니다 (갯수를 적어 두면 검사를 하나 더할
+       때마다 어긋납니다 — 이 저장소가 두 번 겪은 자리). */
+    const before = psql(`select count(*) from audit_log`);
+    psql(as(B) + `select save_user_state('["clean"]'::jsonb,null,null)`);
+    psql(as(B) + `select clear_user_state()`);
+    ok("메모장은 감사 기록을 남기지 않는다",
+       psql(`select count(*) from audit_log`) === before);
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     0011 — 신청에 붙는 사진 · 서류 (2026-10-18 §7-3 · §15)
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️ 0011 사진 — 번호 + 연락처가 맞아야 자리를 줍니다");
+  {
+    const A   = "11111111-1111-1111-1111-111111111111";
+    const B   = "22222222-2222-2222-2222-222222222222";
+    const PV  = "33333333-3333-3333-3333-333333333333";   /* pv-one */
+    const PV2 = "66666666-6666-6666-6666-666666666666";   /* pv-two */
+    const ST  = "44444444-4444-4444-4444-444444444444";
+    const AD  = "55555555-5555-5555-5555-555555555555";
+    const as  = u => "set role authenticated; select become('" + u + "'); ";
+    const R   = "aaaaaaaa-0000-0000-0000-000000000061";
+    const NO  = "SW-AAAA-0061";
+
+    psql(`insert into request (id, no, user_id, side, name, tel, agree_at, state) values
+            ('${R}','${NO}','${A}','ops','사','031-061-0000',now(),'new');`);
+    /* ⚠️⚠️ **`bytes || 100000` 으로 적지 마세요.** `0` 이 거짓이라
+       "빈 파일은 거절한다" 가 **10만 바이트를 보내고** 통과해 버립니다 —
+       게다가 그 줄이 실제로 들어가서 뒤의 개수 검사까지 어긋났습니다.
+       **틀린 것은 코드가 아니라 씨앗**이었습니다 (이 저장소가 "무권리
+       0" · 영업기간 경계값으로 여러 번 겪은 자리). */
+    const slot = (no, tel, mime, bytes) =>
+      `select claim_photo_slot('${no}','${tel}','${mime === undefined ? "image/jpeg" : mime}',` +
+      (bytes === undefined ? 100000 : bytes) + ")";
+
+    /* ── ⚠️⚠️ 번호만으로는 안 됩니다 ───────────────────────────── */
+    let r = denied(slot(NO, "01000000000"));
+    ok("연락처가 틀리면 자리를 안 준다",
+       r.no && /신청번호와 연락처를 확인해 주세요/.test(r.why || ""), r.why);
+    const why1 = r.why;
+    r = denied(slot("SW-ZZZZ-9999", "031-061-0000"));
+    ok("없는 번호도 자리를 안 준다", r.no, r.why);
+    /* ⚠️⚠️ **틀린 까닭을 갈라서 말하지 않습니다** — 갈라 주면 번호가
+       있는지를 확인해 가며 긁을 수 있습니다 (claim_request 와 같은 규칙) */
+    ok("틀린 까닭을 갈라서 말하지 않는다",
+       String(why1).indexOf("신청번호와 연락처를 확인해 주세요") >= 0 &&
+       String(r.why).indexOf("신청번호와 연락처를 확인해 주세요") >= 0, [why1, r.why]);
+
+    /* ⚠️ 숫자만 남겨 견줍니다 (031-061-0000 과 0310610000 은 같은 번호) */
+    const got = psql(slot(NO, "0310610000"));
+    ok("하이픈이 없어도 같은 번호로 본다", /"path"/.test(got), got);
+    ok("경로가 신청 아래에 생긴다", /req\//.test(got) && got.indexOf(R) >= 0, got);
+    /* ⚠️⚠️ 경로에 **번호 · 연락처가 안 들어갑니다** */
+    ok("경로에 번호 · 연락처가 없다",
+       got.indexOf("SW-") < 0 && got.indexOf("0610000") < 0, got);
+    ok("사진 줄이 하나 생긴다",
+       psql(`select count(*) from request_photo where request_id='${R}'`) === "1");
+
+    /* ── 형식 · 크기 ────────────────────────────────────────────── */
+    r = denied(slot(NO, "0310610000", "image/gif"));
+    ok("GIF 는 거절한다", r.no && /JPG/.test(r.why || ""), r.why);
+    r = denied(slot(NO, "0310610000", "text/html"));
+    ok("HTML 은 거절한다", r.no, r.why);
+    r = denied(slot(NO, "0310610000", "image/jpeg", 8388609));
+    ok("8MB 를 넘기면 거절한다", r.no && /8MB/.test(r.why || ""), r.why);
+    r = denied(slot(NO, "0310610000", "image/jpeg", 0));
+    ok("빈 파일은 거절한다", r.no, r.why);
+    /* ⚠️ 경계 **바로 아래**도 넣어 봅니다 (이 저장소의 규칙) */
+    psql(slot(NO, "0310610000", "application/pdf", 8388608));
+    ok("딱 8MB 는 들어간다",
+       psql(`select count(*) from request_photo where request_id='${R}'`) === "2");
+
+    /* ── ⚠️ 다섯까지 (§15 악용 방어) ────────────────────────────── */
+    psql(slot(NO, "0310610000")); psql(slot(NO, "0310610000")); psql(slot(NO, "0310610000"));
+    r = denied(slot(NO, "0310610000"));
+    ok("여섯 장째는 거절한다", r.no && /다섯 장까지/.test(r.why || ""), r.why);
+    ok("다섯 장에서 멈춘다",
+       psql(`select count(*) from request_photo where request_id='${R}'`) === "5");
+
+    /* §8 — 기록이 남습니다. ⚠️ 번호 · 연락처 · 경로는 안 싣습니다 */
+    const au = psql(`select data::text from audit_log
+                      where obj='request' and obj_id='${R}'
+                        and why='사진을 올렸습니다' order by at desc limit 1`);
+    ok("사진을 올린 것이 기록에 남는다", /mime/.test(au), au);
+    ok("기록에 번호 · 연락처 · 경로가 없다",
+       au.indexOf("SW-") < 0 && au.indexOf("0610000") < 0 && au.indexOf("req/") < 0, au);
+
+    /* ── ⚠️⚠️ 누가 볼 수 있는가 ─────────────────────────────────── */
+    const P1 = psql(`select id from request_photo where request_id='${R}' limit 1`);
+    ok("신청하신 분은 자기 사진을 본다",
+       psql(as(A) + `select count(*) from request_photo`) === "5");
+    ok("남의 사진은 하나도 안 보인다",
+       psql(as(B) + `select count(*) from request_photo`) === "0");
+    /* ⚠️⚠️ **배정되지 않은 업체에게는 안 보입니다** — 남의 가게 내부
+       사진입니다 (제17조) */
+    ok("배정 전에는 업체에게 안 보인다",
+       psql(as(PV) + `select count(*) from request_photo`) === "0");
+    psql(as(ST) + `select move_state('${R}','check','{}'::jsonb)`);
+    psql(as(ST) + `select move_state('${R}','assigned',
+            '{"providerId":"pv-one","agree3rd":true}'::jsonb)`);
+    ok("배정된 업체는 본다 (그게 배정입니다)",
+       psql(as(PV) + `select count(*) from request_photo`) === "5");
+    ok("배정 안 된 다른 업체는 못 본다",
+       psql(as(PV2) + `select count(*) from request_photo`) === "0");
+    ok("직원은 본다", psql(as(ST) + `select count(*) from request_photo`) === "5");
+
+    /* ── ⚠️⚠️ 표를 열지 않았습니다 — 문으로만 바뀝니다 (§8) ──────── */
+    r = denied(as(A) + `insert into request_photo (request_id, path, mime, bytes)
+                        values ('${R}','req/x.jpg','image/jpeg',100)`);
+    ok("request_photo 에 쓰기 권한이 없다 (문만 엽니다)", r.no, r.why);
+    r = denied(as(A) + `delete from request_photo where id='${P1}'`);
+    ok("표에서 바로 못 지운다", r.no, r.why);
+    r = denied("set role anon; select count(*) from request_photo");
+    ok("anon 에게 request_photo 권한이 없다", r.no, r.why);
+    /* ⚠️⚠️ **자리를 내주는 문은 service key 전용입니다** — 로그인한
+       누구나 부를 수 있으면 남의 신청에 꽂습니다 */
+    /* ⚠️⚠️ **어느 자물쇠가 걸렸는지 봅니다.** 처음에 "막히기만 하면
+       통과" 로 적었더니, `authenticated` 에게 권한을 **줘 보고도**
+       검사가 통과했습니다 — 그때는 **다섯 장 상한**이 먼저 막아서
+       엉뚱한 까닭으로 거절된 것이었습니다. 이 저장소가 0003 에서
+       "겹겹이 막아 둔 것이 검사를 속인다" 로 겪은 자리 그대로입니다.
+       지금은 **권한 에러인지**까지 맞춰 봅니다. */
+    r = denied(as(A) + slot(NO, "0310610000"));
+    ok("로그인 사용자는 자리 문을 못 부른다 (권한 자체가 없습니다)",
+       r.no && /permission denied|권한/i.test(r.why || ""), r.why);
+    r = denied("set role anon; " + slot(NO, "0310610000"));
+    ok("anon 도 자리 문을 못 부른다 (권한 자체가 없습니다)",
+       r.no && /permission denied|권한/i.test(r.why || ""), r.why);
+
+    /* ── ③ 빼기 ───────────────────────────────────────────────── */
+    r = denied(as(PV) + `select drop_photo('${P1}')`);
+    ok("업체는 사진을 못 뺀다 (남이 올린 자료입니다)",
+       r.no && /권한이 없습니다/.test(r.why || ""), r.why);
+    r = denied(as(B) + `select drop_photo('${P1}')`);
+    ok("남의 사진을 못 뺀다", r.no, r.why);
+    psql(as(A) + `select drop_photo('${P1}')`);
+    ok("올리신 분은 뺀다",
+       psql(`select count(*) from request_photo where request_id='${R}'`) === "4");
+    const au2 = psql(`select count(*) from audit_log
+                       where obj_id='${R}' and why='사진을 뺐습니다'`);
+    ok("뺀 것도 기록에 남는다 (§8)", au2 === "1", au2);
+    psql(as(AD) + `select drop_photo(
+            (select id from request_photo where request_id='${R}' limit 1))`);
+    ok("관리자도 뺀다",
+       psql(`select count(*) from request_photo where request_id='${R}'`) === "3");
   }
 
   console.log("\n── 되돌리기 파일이 실수로 안 돌아가는가");

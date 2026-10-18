@@ -18,17 +18,24 @@
 -- ════════════════════════════════════════════════════════════════════
 
 with
-/* ① 판 번호 — 일곱 줄이어야 합니다 (0001~0007) */
+/* ① 판 번호 — 열한 줄이어야 합니다 (0001~0011) */
 v_ver as (
   select count(*)::int n from schema_version
 ),
-/* ② 표 — 열하나 전부 있어야 합니다 */
+/* ② 표 — 열넷 전부 있어야 합니다
+      ⚠️⚠️ **2026-10-18 — `request_item` 이 목록에서 부주고 있었습니다.**
+      0009 로 표가 열셋이 됐고 기대값만 13 으로 올려서, **제대로
+      돌린 DB 가 12/13 ❌ 로** 나왔습니다 — 멀짱한 DB 를 "고쳐야
+      합니다" 로 잡는 쌍이고, 이것이 사장님이 돌린 DB 를 재는
+      유일한 길이라 제일 나쁜 종류입니다. 지금은 `checkMigDocs()` 가
+      **목록 수와 기대값이 같은지**를 바로 봅니다. */
 v_tab as (
   select count(*)::int n from information_schema.tables
    where table_schema = 'public'
      and table_name in ('account','assignment','audit_log','deal','deal_move',
                         'fee_policy','offer','provider','quote','request',
-                        'schema_version','settlement')
+                        'request_item','request_photo','schema_version',
+                        'settlement','user_state')
 ),
 /* ③ ⚠️⚠️ RLS 가 안 켜진 표 — 0 이어야 합니다.
       안 켜진 표는 누구나 남의 신청과 계약금액을 읽습니다. */
@@ -54,7 +61,7 @@ v_role as (
 v_move as (
   select count(*)::int n from deal_move
 ),
-/* ⑦ 문(함수) — 열여섯 */
+/* ⑦ 문(함수) — 스물여덟 */
 /*    ⚠️⚠️ **있는 것을 셉니다 — 기대 목록을 세지 마세요.** 처음에
       `count(*)` 로 적었다가 **values 열여섯 줄을 세고** 있었습니다 —
       함수가 열여섯 개 다 없어도 16/16 ✅ 였습니다. 되돌려 보고
@@ -78,7 +85,12 @@ v_fn as (
                  ('submit_quote'),('withdraw_quote'),('choose_quote'),
                  /* 0009 — 신청 하나에 서비스 여러 개 (2026-10-17 §6 · §7) */
                  ('save_request_items'),('assign_item'),('move_item_state'),
-                 ('is_my_item')) w(f)
+                 ('is_my_item'),
+                 /* 0010 — 회원 임사정장 · 체크리스트 (2026-10-18 §6-2 · §9) */
+                 ('save_user_state'),('clear_user_state'),
+                 ('user_state_guard'),
+                 /* 0011 — 사진 · 서류 (2026-10-18 §7-3 · §15) */
+                 ('claim_photo_slot'),('drop_photo')) w(f)
 ),
 /* ⑧ ⚠️⚠️ 가입 트리거가 **auth.users 에** 걸렸는가 (진짜 Supabase 전용).
       이게 없으면 가입해도 account 줄이 안 생겨서, 로그인은 되는데
@@ -125,15 +137,15 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (0001~0009)'             t, v_ver.n::text   got, '9'  want from v_ver
-  union all select  2, '표 (public)',              v_tab.n::text,  '13' from v_tab
+  select 1 i, '판 번호 (0001~0011)'            t, v_ver.n::text   got, '11' want from v_ver
+  union all select  2, '표 (public)',              v_tab.n::text,  '15' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||
                        case when v_st.has_hold then 'O' else 'X' end || ')',
                        v_st.n::text, '13' from v_st
   union all select  5, '역할',                     v_role.n::text, '4'  from v_role
   union all select  6, '갈 수 있는 길 (deal_move)', v_move.n::text, '70' from v_move
-  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '23' from v_fn
+  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '28' from v_fn
   union all select  8, '⚠️ 가입 트리거 (auth.users)', v_trg.n::text, '1' from v_trg
   union all select  9, '⚠️ auth.uid()',            v_uid.n::text,  '1'  from v_uid
   union all select 10, '⚠️ 돈 칸 쓰기 권한: ' || v_money.who, v_money.n::text, '0' from v_money

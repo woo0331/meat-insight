@@ -99,6 +99,35 @@ const CASES = [
    `var n = document.querySelector(".opsck .sec-note");
     if(n) n.textContent = "체크해 두시면 담당자가 확인합니다.";`],
 
+  /* ④ §5 — ⚠️⚠️ **0개인데 눌리는 단추**를 만들어 봅니다. 비활성을
+     풀어 놓으면 아무것도 안 고른 채로 신청 화면까지 가서, 거기서
+     무엇을 적어야 하는지를 손님이 들고 있어야 합니다. */
+  ["0개면 신청 단추가 안 눌리고 까닭이 보인다",
+   `var b = document.getElementById("pk-go-off");
+    if(b){ b.disabled = false; b.hidden = false; }
+    var a = document.getElementById("pk-go-on");
+    if(a) a.hidden = false;`],
+
+  /* ⑤ §6-2 · §9 — ⚠️⚠️ **꺼져 있는데 서버로 보내게** 만들어 봅니다.
+     로그인이 `auth:false` 인데 매 화면 왕복이 생기면, 손님은 아무것도
+     못 얻은 채로 그만큼 느려집니다. */
+  ["로그인이 꺼져 있으면 계정 저장을 묻지 않는다",
+   `window.amStateTouch = function(){
+      fetch("/api/deal", { method:"POST",
+        headers:{ "content-type":"application/json" },
+        body: JSON.stringify({ fn:"save_user_state", args:{} }) });
+    };`],
+
+  /* ⑥ §7-3 — ⚠️⚠️ **설정 전인데 사진 칸을 내게** 만들어 봅니다.
+     올릴 데가 없는 칸은 고르고 눌렀다가 실패하는 길입니다. */
+  ["버킷이 설정되기 전에는 사진 칸이 안 나온다",
+   `window.amPhotoAfter = function(box){
+      var w = document.createElement("div");
+      w.className = "phup";
+      w.textContent = "사진 고르기";
+      box.appendChild(w);
+    };`],
+
   /* ══ 2026-10-09 지시서 PART 4 — 창업 진단 넷 ═══════════════════ */
   /* ⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — DOM 을 직접 건드립니다.
      견적 링크에서 예산 · 일정을 떼면 "받아만 놓는 칸" 이 됩니다. */

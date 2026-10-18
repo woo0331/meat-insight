@@ -5179,6 +5179,12 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
 .pkb-zero{ display:flex; align-items:center; gap:var(--s2); margin:0;
   font-size:var(--t-base); color:var(--ink2); }
 .pkb-zero svg{ flex:none; color:var(--blue-600); }
+/* ⚠️⚠️ **`display:flex` 가 `[hidden]` 을 이깁니다.** 이 줄이 없어서
+   서비스를 고른 뒤에도 "아직 고르신 서비스가 없습니다" 가 바구니
+   **위에 그대로 남아** 있었습니다 — 고른 칩과 그 글이 한 상자 안에
+   같이 서 있어서 무엇이 맞는 말인지 알 수가 없습니다. 에러도 가로
+   스크롤도 안 나고 **찍어 보고** 알았습니다. */
+.pkb-zero[hidden]{ display:none; }
 
 .pkb-l{ display:flex; flex-wrap:wrap; gap:var(--s2); list-style:none;
   padding:0; margin:0 0 var(--s4); }
@@ -5200,6 +5206,28 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
 
 .pkb-go{ display:flex; flex-wrap:wrap; gap:var(--s3); }
 .pkb-go .btn{ font-size:16px; }
+/* ⚠️⚠️ **`[hidden]` 을 따로 적어야 합니다.** `.btn` 이
+   `display:inline-flex` 라 브라우저 기본 `[hidden]{display:none}` 을
+   **이깁니다** — 0개인데 "견적 신청하기" 와 "전부 해제" 가 비활성
+   단추 옆에 같이 서 있었습니다. 에러도 가로 스크롤도 안 나고
+   **찍어 보고** 알았습니다 (이 저장소가 `.opg-n[hidden]` ·
+   `.pkb-l > li[hidden]` 에 같은 줄을 둔 까닭입니다). */
+.pkb-go .btn[hidden]{ display:none; }
+/* §5 — 0개일 때의 까닭 줄. 비활성 단추 바로 아래에 섭니다.
+   16px (§13 "본문 16px 이상") · --ink2 (아이보리 위 8.33) */
+.pkb-why{ display:grid; gap:var(--s3); justify-items:start;
+  margin:var(--s3) 0 0; }
+/* ⚠️ display:grid 라 브라우저 기본 [hidden] 을 이깁니다 — 같이
+   적어야 가려집니다 (.pkb-zero 에서 겪은 그 자리). */
+.pkb-why[hidden]{ display:none; }
+.pkb-why p{ margin:0; font-size:16px; line-height:1.65; color:var(--ink2); }
+/* ⚠️⚠️ **문장 속 링크가 아니라 단추**입니다 — 문장 안에 박으면
+   높이가 19px 이라 누름 40px 에 걸립니다 (실제로 걸렸습니다). */
+.pkb-why .btn{ font-size:16px; }
+@media (max-width:620px){
+  .pkb-why{ justify-items:stretch; }
+  .pkb-why .btn{ width:100%; }
+}
 @media (max-width:620px){
   .pkb-box{ padding:var(--s4); }
   .pkb-go{ display:grid; }
@@ -5313,7 +5341,15 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
 .opg-t{ display:grid; gap:2px; min-width:0; }
 /* §13 — 카드 제목 18px */
 .opg-t b{ font-size:18px; font-weight:800; color:var(--ink); line-height:1.3; }
-.opg-t i{ font-style:normal; font-size:var(--t-sm); color:var(--ink3); }
+/* §13 "모든 본본 통해하여 16px 이상" — 카드 한 줄 설명도
+   16px 입니다. ⚠️ 상담 상대가 40~60대 사장님이라 이 줄이
+   무엇을 다루는 믶음인지를 말하는 자리입니다 — 14.5px 로
+   두었다가 올렸습니다. ⚠️⚠️ **올리면 줄바꿈이 는니다** —
+   360 · 390px 에서 재보고 정한 것이고, 이름을 길게 적으시면
+   다시 재어 봐야 합니다. 색은 --ink2 (휘 카드 위 8.33) 입니다 —
+   16px 이 되면 --ink3 는 이 줄에서 너무 연해 보였습니다. */
+.opg-t i{ font-style:normal; font-size:16px; line-height:1.45;
+  color:var(--ink2); }
 /* §5-2 — 색만으로 표시하지 않습니다. 몇 개 골랐는지 **글**로 냅니다. */
 .opg-n{ display:inline-flex; align-items:center; min-height:28px;
   padding:0 10px; border-radius:999px;
@@ -5365,8 +5401,14 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
   .opg-g{ grid-template-columns:1fr; }
 }
 @media (max-width:620px){
-  .opg-h{ grid-template-columns:46px 1fr auto; min-height:76px;
+  /* ⚠️ 여기도 칸이 **넷**이어야 합니다 — 셋으로 두면 고르심
+     믶음에서 닱지가 셋째 칸을 지해주고 **화사표가 다음 줄로**
+     내려갑니다 (넓은 폭에서 제일 봉 자리입니다). */
+  .opg-h{ grid-template-columns:46px 1fr auto auto; min-height:76px;
     padding:var(--s3); gap:var(--s2); }
+  /* 360px 에서 닱지 · 화사표까지 들어가게 줄이는 것들 */
+  .opg-t i{ font-size:16px; }
+  .opg-x{ width:26px; height:26px; }
   /* ⚠️ 46px 아래로 내리지 마세요 — 두 톤 아이콘이 뭉개집니다 */
   .opg-i{ width:46px; height:46px; }
   .opg-p{ padding:0 var(--s3) var(--s3); }
@@ -5515,4 +5557,56 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
   .q-draft-b{ display:grid; }
   .q-draft-b .btn{ width:100%; }
   .qs-go .btn{ width:100%; }
+}
+
+/* ── §7-3 사진 · 서류 붙이기 (접수 완료 안내 안) ──────────────────
+   ⚠️⚠️ 버킷이 설정되기 전에는 이 덩이가 **아예 안 그려집니다**
+   (js/photo.js 머리말) — 빈 액자도 "준비 중" 도 없습니다.
+   ⚠️ `.notice-ok` 안에 섭니다. 바탕이 이미 옅은 초록이라 카드를
+   또 깔지 않고 **위에 선 하나**로 구분합니다. */
+.phup{ margin:var(--s4) 0 0; padding:var(--s4) 0 0;
+  border-top:1px solid var(--line); }
+.phup-t{ display:flex; gap:var(--s2); margin:0 0 var(--s3);
+  font-size:16px; line-height:1.6; color:var(--ink2); }
+.phup-t svg{ flex:none; margin-top:3px; color:var(--blue-600); }
+/* ⚠️⚠️ **누르는 것은 `<label>` 입니다** — `<input type=file>` 은 숨기고
+   라벨이 48px 를 잡습니다. 파일 칸의 기본 단추는 브라우저마다 크기와
+   글자가 달라서 폰에서 20px 로 서기도 합니다. */
+.phup-i{ position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+.phup-b{ display:inline-flex; align-items:center; justify-content:center;
+  gap:8px; min-height:var(--tap); padding:0 var(--s4); cursor:pointer;
+  font-size:16px; font-weight:800; color:#fff; background:var(--blue-600);
+  border-radius:var(--r); }
+.phup-b:hover{ background:var(--navy); }
+/* ⚠️⚠️ **키보드로 왔을 때 보여야 합니다.** 파일 칸을 숨겨 두었으니
+   포커스는 그 칸에 가는데 보이는 것은 라벨입니다 — `:has()` 로 라벨에
+   테두리를 옮깁니다 (이 저장소가 `.opg-c:has(.pk-ck:checked)` 로 쓰는
+   방식). 안 옮기면 키보드로는 **어디 있는지 알 수가 없습니다.** */
+/* ⚠️ 저장소의 포커스는 `:focus-visible{ outline:2px solid var(--blue) }`
+   입니다 — 같은 꼴로 맞춥니다 (혼자 다른 모양이면 키보드로 다니실 때
+   무엇이 포커스인지 매번 다시 읽어야 합니다). */
+.phup:has(.phup-i:focus-visible) .phup-b{
+  outline:2px solid var(--blue); outline-offset:3px; }
+.phup-l{ display:grid; gap:6px; list-style:none; padding:0;
+  margin:var(--s3) 0 0; }
+.phup-l:empty{ display:none; }
+.phup-l > li{ display:grid; grid-template-columns:1fr auto auto;
+  align-items:center; gap:var(--s2); min-height:44px;
+  padding:0 var(--s3); background:var(--surface);
+  border:1px solid var(--line); border-radius:var(--r-sm); }
+.phup-n{ font-size:var(--t-sm); color:var(--ink); min-width:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.phup-s{ font-style:normal; font-size:var(--t-cap); color:var(--ink3);
+  white-space:nowrap; }
+.phup-st{ font-size:var(--t-cap); font-weight:800; color:var(--ink2);
+  white-space:nowrap; }
+/* ⚠️ 상태색은 **짙은 단계**입니다 — `--ok` · `--bad` 는 배지 바탕용이고
+   글자로 쓰면 AA 에 못 미칩니다 (이 저장소가 세 번 겪은 자리) */
+.phup-l > li.is-ok  .phup-st{ color:var(--start-deep); }
+/* ⚠️ `--bad` 를 글자로 쓰는 것은 **흰 카드 위**라서입니다 (4.83) —
+   옅은 틴트 위로 옮기면 다시 재세요 */
+.phup-l > li.is-bad .phup-st{ color:var(--bad); }
+@media (max-width:620px){
+  .phup-b{ width:100%; }
 }

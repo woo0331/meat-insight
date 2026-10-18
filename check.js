@@ -2607,6 +2607,112 @@ const AUDIT = `(() => {
     try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
     return true;`);
 
+  /* §5 — ⚠️⚠️ **0개면 신청하지 못하게 하고 그 자리에서 까닭을 말합니다.**
+     ⚠️ 단추를 숨기지 않습니다 — 숨기면 신청이라는 걸음이 있는지조차
+     안 보여서 이 화면이 어디로 가는 길인지를 못 알아봅니다.
+     ⚠️⚠️ **모르시는 분의 길은 닫지 않습니다** — 까닭 줄 안에 고르지
+     않고도 바로 상담으로 갈 수 있는 링크가 있어야 합니다. */
+  await f("0개면 신청 단추가 안 눌리고 까닭이 보인다", "/operation", `
+    try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
+    const on = document.getElementById("pk-go-on");
+    const off = document.getElementById("pk-go-off");
+    const why = document.getElementById("pk-go-why");
+    if(!on || !off || !why) return "신청 단추나 까닭 줄이 없습니다";
+    if(!on.hidden) return "0개인데 눌리는 신청 단추가 섭니다";
+    if(off.hidden) return "0개인데 비활성 단추도 없습니다 (숨기면 안 됩니다)";
+    if(!off.disabled) return "단추가 비활성이 아닙니다";
+    if(off.offsetHeight < 40)
+      return "비활성 단추가 안 보이거나 너무 낮습니다 — " + off.offsetHeight;
+    if(why.hidden || !why.textContent.trim())
+      return "왜 못 누르는지 말해 주는 줄이 없습니다";
+    const door = why.querySelector("a");
+    if(!door || door.getAttribute("href").indexOf("/quote") < 0)
+      return "고르지 않고 상담하는 길이 없습니다";
+    const head = document.querySelector(".opg-c .opg-h");
+    head.click();
+    await new Promise(function(r){ setTimeout(r, 120); });
+    document.querySelector(".opg-c .opg-p [data-pick]").click();
+    await new Promise(function(r){ setTimeout(r, 150); });
+    if(on.hidden) return "골랐는데 신청 단추가 여전히 안 나옵니다";
+    if(!off.hidden) return "골랐는데 비활성 단추가 같이 섭니다";
+    if(!why.hidden) return "골랐는데 까닭 줄이 남아 있습니다";
+    /* ⚠️⚠️ **hidden 이 실제로 가리는지**까지 봅니다. display:flex 인
+       칸은 브라우저 기본 [hidden] 을 이겨서, 고른 뒤에도 "아직
+       고르신 서비스가 없습니다" 가 바구니 위에 그대로 남아 있었습니다
+       (찍어 보고 알았습니다). 속성만 보면 영원히 통과합니다.
+       ⚠️ 주석에 백틱을 쓰지 마세요 — 이 문자열이 거기서 끝납니다
+       (스물세 번째입니다). */
+    const zero = document.getElementById("pk-zero");
+    if(zero && zero.offsetParent !== null)
+      return "골랐는데 '아직 고르신 서비스가 없습니다' 가 그대로 보입니다";
+    if(off.offsetParent !== null) return "골랐는데 비활성 단추가 그려져 있습니다";
+    if(on.offsetParent === null) return "골랐는데 신청 단추가 안 그려집니다";
+    try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
+    return true;`);
+
+  /* §6-2 · §9 — ⚠️⚠️ **로그인이 꺼져 있는 동안 계정 저장은 아무 일도
+     안 합니다.** 이 저장소의 규칙 그대로입니다 — 로그인이 `auth:false`
+     이면 화면에 단추도 · 안내도 · "준비 중" 도 안 내고, 서버로 요청도
+     **한 번도 안 보냅니다** (지금 운영 사이트가 그 상태입니다).
+     ⚠️ 보내기 시작하면 매 화면마다 왕복이 하나 늘고, 그러면 손님은
+     아무것도 못 얻은 채로 그만큼 느려집니다. */
+  await f("로그인이 꺼져 있으면 계정 저장을 묻지 않는다", "/operation", `
+    if(typeof amStateTouch !== "function") return "계정 저장 층이 없습니다";
+    if(typeof amStateOn !== "function") return "계정 저장 상태를 묻는 함수가 없습니다";
+    if(amStateOn()) return "로그인이 꺼져 있는데 계정에 저장했다고 말합니다";
+    /* ⚠️ 나가는 요청을 세어 봅니다 — 꺼져 있으면 0 이어야 합니다 */
+    const seen = [];
+    const real = window.fetch;
+    window.fetch = function(u){
+      seen.push(String(u));
+      return real.apply(window, arguments);
+    };
+    try{
+      amStateTouch("pick");
+      amStateTouch("checks");
+      await new Promise(function(r){ setTimeout(r, 1600); });
+    }finally{ window.fetch = real; }
+    const hit = seen.filter(function(u){
+      return u.indexOf("/api/deal") >= 0 || u.indexOf("/api/me") >= 0;
+    });
+    if(hit.length) return "꺼져 있는데 서버로 보냈습니다 — " + hit.join(" · ");
+    /* ⚠️⚠️ 그래도 **브라우저 저장은 그대로 돕니다** — 이것이 지금
+       손님이 쓰는 길입니다 */
+    try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
+    const head = document.querySelector(".opg-c .opg-h");
+    head.click();
+    await new Promise(function(r){ setTimeout(r, 120); });
+    document.querySelector(".opg-c .opg-p [data-pick]").click();
+    await new Promise(function(r){ setTimeout(r, 150); });
+    if(amPickCount() !== 1) return "브라우저 저장이 안 됩니다 — " + amPickCount();
+    try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
+    return true;`);
+
+  /* §7-3 · §15 — ⚠️⚠️ **버킷이 설정되기 전에는 사진 칸이 아예 안
+     나옵니다.** 올릴 데가 없는데 칸을 내면 손님이 고르고 눌렀다가
+     실패합니다 — 이 저장소가 "클릭해도 작동하지 않는 버튼" 을 금지로
+     두고 로그인에서도 같은 방식을 쓴 그 자리입니다 (절대 규칙 2 · 5).
+     ⚠️ 지금 운영 사이트가 그 상태입니다 (`INTAKE_BUCKET` 없음). */
+  await f("버킷이 설정되기 전에는 사진 칸이 안 나온다", "/quote?side=ops", `
+    if(typeof amPhotoAfter !== "function") return "사진 붙이는 층이 없습니다";
+    const box = document.createElement("div");
+    box.id = "zz-ph";
+    document.querySelector("#view").appendChild(box);
+    amPhotoAfter(box, "SW-AAAA-0001", "010-1111-2222");
+    await new Promise(function(r){ setTimeout(r, 700); });
+    const on = box.querySelector(".phup");
+    box.remove();
+    if(on) return "설정 전인데 사진 칸이 그려졌습니다";
+    /* ⚠️ 번호가 없으면(저장 안 된 접수) 그려지지 않는 것도 같이 */
+    const b2 = document.createElement("div");
+    document.querySelector("#view").appendChild(b2);
+    amPhotoAfter(b2, "", "010-1111-2222");
+    await new Promise(function(r){ setTimeout(r, 300); });
+    const on2 = b2.querySelector(".phup");
+    b2.remove();
+    if(on2) return "접수번호가 없는데 사진 칸이 그려졌습니다";
+    return true;`);
+
   /* §9 — ⚠️⚠️ **체크리스트 완료와 견적 신청은 다른 기능입니다.**
      체크해 두신 것이 저희에게 가는 것처럼 보이면 사장님이 기다리십니다
      (절대 규칙 5). */
@@ -2614,8 +2720,11 @@ const AUDIT = `(() => {
     try{ localStorage.removeItem("am.opsck.v1"); }catch(e){}
     const sec = document.querySelector(".opsck");
     if(!sec) return "체크리스트 구간이 없습니다";
-    if(sec.textContent.indexOf("저희에게 오지 않습니다") < 0)
-      return "체크가 저희에게 오지 않는다는 줄이 없습니다";
+    /* ⚠️ 2026-10-18 — 로그인하신 분은 계정에도 남습니다 (§9). 그래서
+       "저희에게 오지 않습니다" 가 아니라 **"신청이 아닙니다"** 를
+       봅니다 — 지켜야 하는 뜻은 그쪽입니다 (체크 ≠ 견적 신청). */
+    if(sec.textContent.indexOf("신청이 아닙니다") < 0)
+      return "체크가 신청이 아니라는 줄이 없습니다";
     const top = sec.querySelectorAll(".ock-l:not(.is-fold-all) > li");
     if(top.length !== 6) return "대표가 여섯이 아닙니다 — " + top.length;
     /* 완료 체크 · 진행률 (§9) */

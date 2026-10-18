@@ -50,9 +50,14 @@ window.amPickGet = function(){
 /* ⚠️ 저장한 시각을 같이 둡니다 — §4-3 "마지막 저장 시각" 과 §4-1
    "브라우저 저장 정보의 유지 범위" 를 화면에 적는 데 씁니다. */
 window.amPickSet = function(ids){
-  if(!ids || !ids.length){ amDel(PKEY); return []; }
-  amSet(PKEY, { ids:ids, at:Date.now() });
-  return ids;
+  if(!ids || !ids.length) amDel(PKEY);
+  else amSet(PKEY, { ids:ids, at:Date.now() });
+  /* ⚠️ 로그인하고 들어와 계시면 계정에도 남깁니다 (§6-2). 꺼져 있으면
+     `amStateTouch()` 가 **아무 일도 안 합니다** — 이 줄 하나로 두 쪽이
+     갈립니다. ⚠️⚠️ 비우는 것(`[]`)도 올립니다: 안 올리면 다른 기기에서
+     지운 것이 **다음에 열 때 되살아납니다.** */
+  if(typeof amStateTouch === "function") amStateTouch("pick");
+  return ids || [];
 };
 
 window.amPickAt = function(){
@@ -139,6 +144,17 @@ window.pickPaint = function(){
   if(zero) zero.hidden = n > 0;
   var some = document.getElementById("pk-some");
   if(some) some.hidden = n === 0;
+  /* §5 — 0개면 비활성 단추 · 1개 이상이면 실제 링크. ⚠️ 넷을 **같이**
+     뒤집습니다 (링크 · 비활성 단추 · 전부 해제 · 까닭) — 하나만
+     빠뜨리면 "못 누르는 단추 옆에 누를 수 있는 단추" 가 섭니다. */
+  ["pk-go-on", "pk-go-clr"].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.hidden = n === 0;
+  });
+  ["pk-go-off", "pk-go-why"].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.hidden = n > 0;
+  });
 
   /* ③ ④ 폰 하단 띠 · 단추 */
   var bar = document.getElementById("pk-bar");
@@ -286,19 +302,49 @@ window.PickBasket = function(side){
         '위에서 필요한 것을 눌러 주세요 — 여러 개를 함께 고르실 수 있습니다.</p>'+
       '<div id="pk-some"'+(n ? "" : " hidden")+'>'+
         '<ul class="pkb-l" id="pk-list">'+pickRows()+'</ul>'+
-        '<div class="pkb-go">'+
-          '<a class="btn btn-b btn-lg" data-pick-go="'+esc(side || "start")+'"'+
-            ' href="'+esc(amPickQuoteTo(side))+'">'+
-            '<span>선택한 '+n+'개 서비스 견적 신청하기</span>'+icon("arrow",18)+'</a>'+
-          '<button class="btn btn-o" type="button" onclick="pickClear()">전부 해제</button>'+
-        '</div>'+
+      '</div>'+
+      /* §5 — 0개면 **비활성 단추와 까닭**입니다 (숨기지 않습니다).
+         ⚠️⚠️ 숨겨 두었더니 신청이라는 걸음이 **있는지조차** 안
+         보였습니다. 지금은 단추가 자리를 지키고 왜 아직 못 누르는지를
+         그 자리에서 말합니다 — 그러면 위로 올라가 고르십니다.
+         ⚠️ 태그를 JS 로 바꿔 끼우지 않습니다 (`<a>` ↔ `<button>`).
+         둘을 같이 내고 `hidden` 으로 가릅니다 — 바꿔 끼우면 포커스와
+         `aria-describedby` 가 끊깁니다. */
+      '<div class="pkb-go">'+
+        '<a class="btn btn-b btn-lg" id="pk-go-on"'+(n ? "" : " hidden")+
+          ' data-pick-go="'+esc(side || "start")+'"'+
+          ' href="'+esc(amPickQuoteTo(side))+'">'+
+          '<span>선택한 '+n+'개 서비스 견적 신청하기</span>'+icon("arrow",18)+'</a>'+
+        '<button class="btn btn-b btn-lg" id="pk-go-off" type="button" disabled'+
+          (n ? " hidden" : "")+' aria-describedby="pk-go-why">'+
+          '<span>서비스를 먼저 골라 주세요</span>'+'</button>'+
+        '<button class="btn btn-o" type="button" id="pk-go-clr"'+(n ? "" : " hidden")+
+          ' onclick="pickClear()">전부 해제</button>'+
+      '</div>'+
+      /* ⚠️⚠️ **문장 한가운데 링크를 박지 마세요.** 처음에 "바로 상담을
+         신청" 을 문장 속 링크로 두었더니 높이가 **19px** 이라 누름
+         40px 에 걸렸습니다 (전수 점검이 잡았습니다) — CLAUDE.md 가
+         "문단 끝에 버튼으로 내놓으세요" 라고 적어 둔 그 자리입니다.
+         ⚠️ 그래서 0개일 때 단추가 둘입니다 — 못 누르는 쪽(먼저
+         고르세요)과 **누를 수 있는 쪽**(모르시면 바로 상담). 그게
+         지금 손님 앞에 실제로 있는 두 갈래입니다. */
+      '<div class="pkb-why" id="pk-go-why"'+(n ? " hidden" : "")+'>'+
+        '<p>위에서 필요한 것을 하나라도 고르시면 신청하실 수 있습니다. '+
+          '<b>무엇이 필요한지 모르시겠으면</b> 고르지 않고 바로 '+
+          '상담을 신청하셔도 됩니다.</p>'+
+        '<a class="btn btn-o" href="'+esc(amPickQuoteTo(side))+'">'+
+          '고르지 않고 바로 상담 신청하기</a>'+
       '</div>'+
     '</div>'+
     /* §3-3 · 절대 규칙 5 — 고르는 것과 신청하는 것을 갈라서 말합니다 */
     '<p class="sec-note">'+icon("info",15)+
       ' 고르기만 하면 저희에게 아무것도 오지 않습니다. '+
       '<b>아래 신청하기를 누르셔야</b> 접수됩니다. '+
-      '선택한 내용은 이 브라우저에만 남고 서버로 보내지 않습니다.</p>'+
+      /* ⚠️⚠️ **"이 브라우저에만" 이라고 적지 마세요.** 2026-10-18 로
+         로그인하신 분은 **계정에도** 남습니다 (§6-2) — 그대로 두면
+         그 줄이 그분께 거짓이 됩니다 (체크리스트 안내와 같은 자리). */
+      '선택한 내용은 이 브라우저에 남고, <b>로그인하신 경우</b> '+
+      '계정에도 남아 다른 기기에서 이어집니다.</p>'+
   '</div></section>';
 };
 

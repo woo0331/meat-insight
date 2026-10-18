@@ -427,8 +427,13 @@ function ockGet(){
 function ockSet(keys){
   try{
     localStorage.setItem(OCK_KEY, JSON.stringify({ done:keys, at:Date.now() }));
-    return true;
   }catch(e){ OCK_OK = false; return false; }
+  /* §9 — 로그인하고 들어와 계시면 **계정에도** 남깁니다. 로그인이
+     꺼져 있으면 `amStateTouch()` 가 아무 일도 안 합니다
+     (js/state.js 머리말). ⚠️ 브라우저에 적는 것이 **먼저**입니다 —
+     서버 왕복이 실패해도 체크는 남아야 합니다. */
+  if(typeof amStateTouch === "function") amStateTouch("checks");
+  return true;
 }
 
 window.opsCheckToggle = function(key, el){
@@ -449,6 +454,11 @@ window.opsCheckClear = function(){
   if(!ockGet().length) return;
   if(!confirm("체크해 두신 것을 전부 지웁니다. 되돌릴 수 없습니다.")) return;
   try{ localStorage.removeItem(OCK_KEY); }catch(e){ OCK_OK = false; }
+  /* ⚠️⚠️ **계정 쪽도 같이 지웁니다** — 한쪽만 지우면 다음에 열 때
+     서버 것이 내려와 지운 체크가 되살아납니다.
+     ⚠️ 체크만 비웁니다 — 통째로 지우면 적어 두신 조건과 고르신
+     서비스까지 계정에서 날아갑니다. */
+  if(typeof amStateDrop === "function") amStateDrop("checks");
   opsCheckPaint();
   toast("지웠습니다");
 };
@@ -548,9 +558,16 @@ function OpsCheckBand(){
             rest.map(OpsCheckRow).join("")+'</ul>'
         : "")+
     '</div>'+
-    /* 절대 규칙 5 — 체크는 저희에게 오지 않습니다 */
+    /* 절대 규칙 5 — 체크는 신청이 아닙니다.
+       ⚠️⚠️ **"이 브라우저에만" 이라고 적지 마세요.** 2026-10-18 로
+       로그인하신 분은 계정에도 남습니다 (§9) — 그대로 두면 그 줄이
+       그분께 거짓이 됩니다. 반대로 "저희에게 안 옵니다" 는 저장되는
+       순간 말이 흐려지니, 지켜야 하는 뜻 그대로 **"신청이 아닙니다"**
+       로 적습니다. */
     '<p class="sec-note">'+icon("info",15)+
-      ' 체크해 두신 것은 <b>이 브라우저에만</b> 남고 저희에게 오지 않습니다. '+
+      ' 체크해 두신 것은 <b>신청이 아닙니다</b> — 저희 직원에게 '+
+      '일로 가지 않습니다. 이 브라우저에 남고, <b>로그인하신 경우</b> '+
+      '계정에도 남아 다른 기기에서 이어집니다. '+
       '맡기실 것이 있으면 위에서 고르고 신청해 주세요.</p>'+
   '</div></section>';
 }

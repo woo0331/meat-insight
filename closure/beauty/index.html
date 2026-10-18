@@ -45,7 +45,7 @@
 
 <link rel="stylesheet" href="/css/tokens.css?v=92ad47b8">
 <link rel="stylesheet" href="/css/app.css?v=fe25d44f">
-<link rel="stylesheet" href="/css/pages.css?v=c0dc0ac7">
+<link rel="stylesheet" href="/css/pages.css?v=b3dbb9a0">
 
 <!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
      마세요 — 다음에 돌릴 때 덮어써집니다. 내용은 js/data/faq.js 와
@@ -124,26 +124,30 @@
 <!-- 선택한 서비스 (2026-10-17 창업 준비 전문관 §3 · §4-1).
      ⚠️ ui.js 의 amGet/amSet 과 svcpick.js 를 읽으므로 **그 뒤**입니다.
      ⚠️⚠️ 담는 것은 서비스 id 뿐입니다 — 성함 · 연락처를 담지 않습니다. -->
-<script defer src="/js/pick.js?v=09e9fcf9"></script>
+<script defer src="/js/pick.js?v=92708f6c"></script>
 <!-- 로그인 (Supabase Auth) — ⚠️ 설정 전에는 /api/session 이 auth:false 라
      화면이 그 구간째 안 그립니다. 아무것에도 의존하지 않습니다. -->
 <script defer src="/js/auth.js?v=a50dfe92"></script>
+<!-- ⚠️ auth.js 다음입니다 — 로그인 상태를 보고 켜집니다.
+     꺼져 있으면 fetch 를 한 번도 안 보냅니다 (js/state.js 머리말) -->
+<script defer src="/js/state.js?v=f2dfc500"></script>
+<script defer src="/js/photo.js?v=e5b184ae"></script>
 <script defer src="/js/components/chrome.js?v=bf4d6282"></script>
 
 <script defer src="/js/pages/home.js?v=3431a776"></script>
-<script defer src="/js/pages/journey.js?v=ff746fde"></script>
+<script defer src="/js/pages/journey.js?v=d1c18897"></script>
 <script defer src="/js/pages/flow.js?v=8cec4a6a"></script>
 <script defer src="/js/pages/providers.js?v=df086bd1"></script>
 <script defer src="/js/pages/franchise.js?v=3f7a10c3"></script>
 <script defer src="/js/pages/market.js?v=33f13210"></script>
-<script defer src="/js/pages/quote.js?v=3fbbc0f9"></script>
+<script defer src="/js/pages/quote.js?v=f03ba051"></script>
 <script defer src="/js/pages/info.js?v=851f68d9"></script>
 <script defer src="/js/pages/tools.js?v=6b08c921"></script>
 <script defer src="/js/pages/my.js?v=e64e59ca"></script>
 <script defer src="/js/pages/search.js?v=e1086fbf"></script>
 <script defer src="/js/pages/legal.js?v=273e11c2"></script>
 
-<script defer src="/js/app.js?v=d5dbd156"></script>
+<script defer src="/js/app.js?v=8ef98332"></script>
 
 <div id="chrome-t"></div>
 <!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가

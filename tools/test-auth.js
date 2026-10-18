@@ -691,6 +691,230 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
   ok("설정 전에는 auth:false (에러가 아닙니다)", r.code === 200 && r.body.auth === false, r.body);
 }
 
+/* ── 회원 메모장 (0010 · 2026-10-18 §6-2 · §9) ────────────────────
+   ⚠️⚠️ **`?s=1` 은 메모장만 묻습니다.** 고르신 서비스 · 조건 · 체크는
+   화면을 열 때마다 맞춰 봐야 하는 값인데, 거기서 `/api/me` 를 그냥
+   부르면 신청 쉰 건 · 견적 삼백 건이 같이 내려옵니다 — 쓰지도 않는
+   개인정보를 화면까지 끌고 오는 것입니다 (최소 수집). */
+console.log("\n── /api/me?s=1 — 메모장만 (0010)");
+{
+  envAll();
+  let r = res();
+  mock([USER, ACCT, [/\/rest\/v1\/user_state/, function(){
+    return body(200, [{ pick:["interior"], draft:{ "q-ind":"cafe" },
+                        checks:["sales"], updated_at:"2026-10-18T00:00:00Z" }]); }]]);
+  await Hme(req({ query:{ s:"1" }, headers:{ authorization:"Bearer " + TOK } }), r);
+  ok("?s=1 이 메모장을 돌려준다",
+     r.code === 200 && r.body.state && r.body.state.pick[0] === "interior", r.body);
+  /* ⚠️⚠️ **무거운 질의를 하나도 안 보냅니다** */
+  ok("?s=1 은 신청 · 견적 · 계약을 묻지 않는다",
+     calls.every(c => !/\/rest\/v1\/(request|quote|deal|provider|audit_log|fee_policy)\b/.test(c.url)),
+     calls.map(c => c.url));
+  ok("그 사람의 토큰으로 읽는다 (service key 가 아닙니다)",
+     noSvcAnywhere(), calls.map(c => c.h));
+  ok("메모장도 select=* 가 아니다",
+     (calls.filter(c => /user_state/.test(c.url))[0].url || "").indexOf("*") < 0,
+     calls.filter(c => /user_state/.test(c.url))[0].url);
+  ok("답에 키 · 토큰이 섞이지 않는다", !leaks(r), r.body);
+
+  /* ⚠️ 줄이 없으면 **빈 값**입니다 — 404 가 아닙니다 (절대 규칙 2) */
+  r = res();
+  mock([USER, ACCT, [/\/rest\/v1\/user_state/, function(){ return body(200, []); }]]);
+  await Hme(req({ query:{ s:"1" }, headers:{ authorization:"Bearer " + TOK } }), r);
+  ok("아직 저장한 것이 없으면 빈 값 (에러가 아닙니다)",
+     r.code === 200 && r.body.state === null, r.body);
+
+  /* ⚠️⚠️ **못 읽어도 나머지를 막지 않습니다** — 메모장은 거들기입니다 */
+  r = res();
+  mock([USER, ACCT,
+        [/\/rest\/v1\/user_state/, function(){ return body(500, { message:"x" }); }],
+        [/\/rest\/v1\/request/, function(){ return body(200, []); }],
+        [/\/rest\/v1\/quote/,   function(){ return body(200, []); }]]);
+  await Hme(req({ headers:{ authorization:"Bearer " + TOK } }), r);
+  ok("메모장을 못 읽어도 신청 내역은 나온다",
+     r.code === 200 && Array.isArray(r.body.requests), r.body);
+
+  /* 로그인 전에는 ?s=1 도 닫힙니다 */
+  r = res();
+  mock([]);
+  await Hme(req({ query:{ s:"1" } }), r);
+  ok("토큰이 없으면 ?s=1 도 signedIn:false",
+     r.code === 200 && r.body.signedIn === false && r.body.state === undefined, r.body);
+}
+
+/* ── 저장하는 문 (0010) ───────────────────────────────────────────
+   ⚠️⚠️ **자동저장이라 알림을 보내지 않습니다.** `FN_SAY` 에 넣으면
+   체크 한 번에 슬랙 한 줄이고, 정작 돈 쪽 알림이 그 더미에 묻힙니다. */
+console.log("\n── /api/deal — 회원 메모장 저장 (0010)");
+{
+  envAll();
+  /* ⚠️⚠️ **`setEnv()` 로 웹훅을 넣지 마세요.** 그 함수는 SUPABASE_* 세
+     칸만 다루고 **나머지를 지웁니다** — 넣었더니 `authReady()` 가 거짓이
+     되어 "아직 처리할 수 없습니다" 가 돌아왔고, 저는 코드를 의심했습니다.
+     **틀린 것은 검사였습니다** (이 저장소의 단골). 직접 넣습니다. */
+  process.env.INTAKE_WEBHOOK_URL = "https://hook.test/x";
+  let r = res();
+  mock([USER, ACCT, [/\/rest\/v1\/rpc\/save_user_state/, function(){
+    return body(200, "2026-10-18T00:00:00Z"); }],
+    [/hook\.test/, function(){ return body(200, {}); }]]);
+  await Hdeal(req({ method:"POST", headers:{ authorization:"Bearer " + TOK },
+    body:{ fn:"save_user_state", args:{ p_pick:["interior"], p_by:"남의 이름",
+           q_name:"홍길동" } } }), r);
+  ok("메모장 저장이 허용 목록에 있다", r.code === 200 && r.body.ok === true, r.body);
+  /* ⚠️ `rpcBody()` 는 **이미 파싱한 객체**를 돌려줍니다 — 또
+     `JSON.parse` 하면 "[object Object]" 로 터집니다 (검사가 틀린 자리) */
+  const sent = rpcBody("save_user_state") || {};
+  ok("보낸 인자만 넘어간다", sent.p_pick && sent.p_pick[0] === "interior", sent);
+  /* ⚠️⚠️ **변경자는 토큰에서만** 옵니다 — `p_by` 를 섞어 보내도 안 갑니다 */
+  ok("허용 목록에 없는 인자는 걸러진다",
+     sent.p_by === undefined && sent.q_name === undefined, sent);
+  ok("저장도 그 사람의 토큰으로 부른다", noSvcAnywhere(), calls.map(c => c.h));
+  /* ⚠️⚠️ 자동저장이라 운영자 알림을 **보내지 않습니다** */
+  ok("메모장 저장은 운영자 알림을 보내지 않는다",
+     calls.every(c => !/hook\.test/.test(c.url)), calls.map(c => c.url));
+  ok("답에 키 · 토큰이 섞이지 않는다", !leaks(r), r.body);
+
+  /* 지우는 길 */
+  r = res();
+  mock([USER, ACCT, [/\/rest\/v1\/rpc\/clear_user_state/, function(){
+    return body(200, null); }], [/hook\.test/, function(){ return body(200, {}); }]]);
+  await Hdeal(req({ method:"POST", headers:{ authorization:"Bearer " + TOK },
+    body:{ fn:"clear_user_state", args:{} } }), r);
+  ok("지우는 문도 허용 목록에 있다", r.code === 200 && r.body.ok === true, r.body);
+  ok("지우기도 운영자 알림을 보내지 않는다",
+     calls.every(c => !/hook\.test/.test(c.url)), calls.map(c => c.url));
+  delete process.env.INTAKE_WEBHOOK_URL;
+}
+/* ── /api/upload — 신청에 붙는 사진 (0011 · 2026-10-18 §7-3 · §15) ─
+   ⚠️⚠️ **파일이 이 주소를 지나가지 않습니다.** 서명된 주소 하나를
+   내주고 화면이 그 주소로 바로 올립니다 — 그래서 여기서 볼 것은
+   ① 설정 전에는 아무것도 안 한다 ② 못 쓸 값으로 DB 를 안 두드린다
+   ③ service key 가 한 글자도 안 내려간다 ④ 보는 길은 RLS 를 거친다
+   입니다. */
+console.log("\n── /api/upload — 사진 (0011)");
+{
+  const Hup = require(path.join(ROOT, "api", "upload.js"));
+  const BK  = "intake";
+  /* ⚠️ 설정 전 — 버킷이 없습니다 */
+  envAll();
+  delete process.env.INTAKE_BUCKET;
+  let r = res();
+  mock([]);
+  await Hup(req({ method:"GET" }), r);
+  ok("버킷이 없으면 up:false (에러가 아닙니다)",
+     r.code === 200 && r.body.up === false, r.body);
+  ok("설정 여부만 돌려준다 (버킷 이름도 주소도 아닙니다)",
+     Object.keys(r.body).join(",") === "up", r.body);
+
+  r = res();
+  await Hup(req({ method:"POST", body:{ no:"SW-AAAA-0001", tel:"01011112222",
+    mime:"image/jpeg", bytes:1000 } }), r);
+  ok("버킷이 없으면 올리지 못한다고 말한다", r.code === 503, r.body);
+  ok("설정이 안 됐다는 운영자 말을 손님에게 안 찍는다",
+     !/BUCKET|SUPABASE|env/i.test(JSON.stringify(r.body)), r.body);
+
+  /* ── 설정 뒤 ──────────────────────────────────────────────────── */
+  process.env.INTAKE_BUCKET = BK;
+  r = res();
+  mock([]);
+  await Hup(req({ method:"GET" }), r);
+  ok("버킷이 있으면 up:true", r.code === 200 && r.body.up === true, r.body);
+  ok("설정 여부를 묻는데 DB 를 두드리지 않는다", calls.length === 0, calls.map(c => c.url));
+
+  /* ⚠️⚠️ **못 쓸 값으로 DB 를 두드리지 않습니다** */
+  r = res();
+  mock([[/rpc\/claim_photo_slot/, function(){ return body(200, { path:"req/x/y.jpg" }); }]]);
+  await Hup(req({ method:"POST", body:{ no:"SW-AAAA-0001", tel:"01011112222",
+    mime:"image/gif", bytes:1000 } }), r);
+  ok("받지 않는 형식은 거절한다", r.code === 400, r.body);
+  ok("거절할 값으로 DB 를 두드리지 않는다", calls.length === 0, calls.map(c => c.url));
+
+  r = res(); mock([]);
+  await Hup(req({ method:"POST", body:{ no:"SW-AAAA-0001", tel:"01011112222",
+    mime:"image/jpeg", bytes:8388609 } }), r);
+  ok("8MB 를 넘기면 거절한다", r.code === 400 && /8MB/.test(r.body.error), r.body);
+  ok("크기로 거절할 때도 DB 를 안 두드린다", calls.length === 0, calls.map(c => c.url));
+
+  r = res(); mock([]);
+  await Hup(req({ method:"POST", body:{ mime:"image/jpeg", bytes:1000 } }), r);
+  ok("번호 · 연락처가 없으면 거절한다", r.code === 400, r.body);
+
+  /* ── 자리를 받고 서명된 올리기 주소 ──────────────────────────── */
+  r = res();
+  mock([[/rpc\/claim_photo_slot/, function(){ return body(200, { path:"req/r-1/abc.jpg" }); }],
+        [/\/storage\/v1\/object\/upload\/sign\//, function(){
+           return body(200, { url:"/object/upload/sign/intake/req/r-1/abc.jpg?token=TT" }); }]]);
+  await Hup(req({ method:"POST", body:{ no:"SW-AAAA-0001", tel:"010-1111-2222",
+    mime:"image/jpeg", bytes:1000 } }), r);
+  ok("자리를 받으면 서명된 올리기 주소를 돌려준다",
+     r.code === 200 && r.body.ok === true && /token=TT/.test(r.body.url || ""), r.body);
+  ok("버킷 경로가 주소에 들어간다", /\/intake\//.test(r.body.url || ""), r.body);
+  /* ⚠️⚠️ **service key 는 한 글자도 안 내려갑니다** */
+  ok("답에 키 · 토큰이 섞이지 않는다", !leaks(r), r.body);
+  ok("service key 는 머리로만 간다",
+     calls.every(c => JSON.stringify(c.opt && c.opt.body || "").indexOf(SVC) < 0),
+     calls.map(c => c.opt && c.opt.body));
+  /* ⚠️ 자리를 내주는 문은 **service key 로** 부릅니다 (올리시는 분은
+     로그인하지 않은 상태라 누구의 토큰도 없습니다) */
+  const cl = calls.filter(c => /claim_photo_slot/.test(c.url))[0];
+  ok("자리 문은 service key 로 부른다 (로그인 전입니다)",
+     cl && String(cl.h && cl.h.authorization || "").indexOf(SVC) >= 0, cl && cl.h);
+
+  /* ⚠️⚠️ DB 가 거절한 **그 말**을 그대로 보여 줍니다 */
+  r = res();
+  mock([[/rpc\/claim_photo_slot/, function(){
+    return body(400, { message:"사진은 다섯 장까지 올리실 수 있습니다" }); }]]);
+  await Hup(req({ method:"POST", body:{ no:"SW-AAAA-0001", tel:"01011112222",
+    mime:"image/jpeg", bytes:1000 } }), r);
+  ok("DB 가 거절한 그 말이 그대로 온다",
+     r.code === 400 && /다섯 장까지/.test(r.body.error), r.body);
+  ok("운영자 글(주소 · 상태코드)은 섞이지 않는다",
+     !/supabase|rest\/v1|400/.test(JSON.stringify(r.body)), r.body);
+
+  /* ── 보는 길 (?p=) — ⚠️⚠️ 볼 수 있는지는 RLS 가 정합니다 ───────── */
+  r = res(); mock([]);
+  await Hup(req({ method:"GET", query:{ p:"not-a-uuid" } }), r);
+  ok("사진 id 꼴이 아니면 묻지 않고 거절한다", r.code === 400, r.body);
+
+  r = res(); mock([]);
+  await Hup(req({ method:"GET", query:{ p:"11111111-1111-1111-1111-111111111111" } }), r);
+  ok("토큰이 없으면 보기 주소를 안 준다", r.code === 401, r.body);
+
+  r = res();
+  mock([USER, ACCT, [/\/rest\/v1\/request_photo/, function(){ return body(200, []); }]]);
+  await Hup(req({ method:"GET", query:{ p:"11111111-1111-1111-1111-111111111111" },
+    headers:{ authorization:"Bearer " + TOK } }), r);
+  ok("안 보이는 사진은 못 찾는다고만 말한다",
+     r.code === 404 && !/권한|RLS/.test(r.body.error || ""), r.body);
+  ok("볼 수 있는지는 그 사람의 토큰으로 읽는다", noSvcAnywhere(), calls.map(c => c.h));
+
+  r = res();
+  mock([USER, ACCT,
+        [/\/rest\/v1\/request_photo/, function(){
+          return body(200, [{ id:"p-1", path:"req/r-1/abc.jpg",
+                              mime:"image/jpeg", bytes:1000 }]); }],
+        [/\/storage\/v1\/object\/sign\//, function(){
+          return body(200, { signedURL:"/object/sign/intake/req/r-1/abc.jpg?token=SS" }); }]]);
+  await Hup(req({ method:"GET", query:{ p:"11111111-1111-1111-1111-111111111111" },
+    headers:{ authorization:"Bearer " + TOK } }), r);
+  ok("볼 수 있으면 서명된 보기 주소를 준다",
+     r.code === 200 && /token=SS/.test(r.body.url || ""), r.body);
+  /* ⚠️⚠️ **경로를 내려보내지 않습니다** — 그 글자만으로 버킷을
+     두드려 볼 수 있는 길이 생깁니다 */
+  ok("답에 버킷 안의 경로가 날것으로 안 나간다",
+     Object.keys(r.body).indexOf("path") < 0, r.body);
+  ok("답에 키 · 토큰이 섞이지 않는다", !leaks(r), r.body);
+  /* ⚠️ 보기 주소는 **그 사람의 토큰으로 읽은 뒤**에만 만듭니다 */
+  ok("읽기는 그 사람의 토큰 · 서명은 service key",
+     calls.filter(c => /request_photo/.test(c.url))
+       .every(c => String(c.h && c.h.authorization || "").indexOf(SVC) < 0),
+     calls.map(c => c.h));
+
+  r = res(); mock([]);
+  await Hup(req({ method:"PUT" }), r);
+  ok("PUT 은 받지 않는다", r.code === 405, r.body);
+  delete process.env.INTAKE_BUCKET;
+}
 /* ── /api/admin-health — 있는지 없는지만 (전면 감사 1차 ①) ────────
    ⚠️⚠️ 이 주소가 **값을 한 글자라도** 돌려주면 그걸로 끝입니다.
    길이도 단서라 길이도 안 돌려줍니다. */

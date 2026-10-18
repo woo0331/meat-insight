@@ -62,7 +62,15 @@ const OK_FN = {
      접수가 service key 로 부르는 길이고, 이 주소는 그 사람의 토큰으로만
      부릅니다. 여기 넣으면 로그인한 누구나 남의 신청에 항목을 꽂아
      넣습니다. */
-  assign_item:1, move_item_state:1
+  assign_item:1, move_item_state:1,
+  /* 2026-10-18 (0010) — 회원 계정에 남는 임시저장 · 체크리스트 (§6-2 · §9).
+     ⚠️⚠️ **`FN_SAY` 에 넣지 마세요.** 이 둘은 **자동저장**으로 불립니다 —
+     운영자에게 알림을 보내면 체크 한 번에 슬랙 한 줄이고, 정작 돈 쪽
+     알림이 그 더미에 묻힙니다. `notify()` 는 `FN_SAY` 에 없는 이름을
+     **조용히 지나갑니다** (그게 여기서 맞는 동작입니다).
+     ⚠️ 계정을 인자로 받지 않습니다 — DB 함수가 `auth.uid()` 에만
+     씁니다 (변경자는 토큰에서만 옵니다). */
+  save_user_state:1, clear_user_state:1
 };
 
 /* 보낼 수 있는 인자 — 이름까지 정해 둡니다. ⚠️ 통째로 넘기면 손님이
@@ -92,7 +100,10 @@ const OK_ARG = {
   p_active:1,                                          /* set_fee_policy_active */
   /* 0009 — ⚠️ `p_agree3rd` 를 빼지 마세요. 그 칸이 안 가면 DB 가
      제17조로 거절하고, 화면에는 "처리하지 못했습니다" 만 나갑니다. */
-  p_item:1, p_agree3rd:1                               /* assign_item · move_item_state */
+  p_item:1, p_agree3rd:1,                              /* assign_item · move_item_state */
+  /* 0010 — ⚠️ 셋 중 **보낸 것만** 바뀝니다 (안 보낸 칸은 DB 가 그대로
+     둡니다). 비우시려면 `[]` · `{}` 를 보내세요 — null 은 "안 바꿈" 입니다. */
+  p_pick:1, p_draft:1, p_checks:1                      /* save_user_state */
 };
 
 function pickArgs(a){

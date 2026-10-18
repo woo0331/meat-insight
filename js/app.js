@@ -600,6 +600,13 @@ function render(){
      하고, 띠가 있는 화면에서만 높이를 잽니다. 화면마다 조건을 적으면
      새 화면을 만들 때 한쪽만 고치게 됩니다. */
   if(typeof window.pickPaint === "function") window.pickPaint();
+  /* ⚠️⚠️ **회원 계정에 남은 것과 한 번 맞춰 봅니다** (2026-10-18 §6-2 · §9).
+     로그인이 꺼져 있거나 안 들어와 계시면 `amStateSync()` 가 **fetch 를
+     한 번도 안 보내고** 그대로 끝납니다 — 지금 운영 사이트가 그
+     상태이고, 화면은 오늘과 글자 하나 다르지 않습니다.
+     ⚠️ 스스로 한 번만 묻습니다 (`AM_ST.asked`) — 화면을 옮길 때마다
+     다시 묻지 않습니다. */
+  if(typeof window.amStateSync === "function") window.amStateSync();
   /* 임시저장 — 마지막 저장 시각과 단추 두 개의 보임 여부 (§4-3) */
   if(nowPath() === "/quote" && typeof window.quoteDraftPaint === "function")
     window.quoteDraftPaint();

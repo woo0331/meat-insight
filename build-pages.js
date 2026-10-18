@@ -3138,6 +3138,46 @@ function checkMigDocs(W){
     want("\u2460 판 번호", "v_ver",  top);
     want("\u2463 상태",    "v_st",   nSt);
     want("\u2465 길",      "v_move", nMv);
+
+    /* ⚠️⚠️ **목록과 기대값이 같은지 봅니다** (2026-10-18).
+       `v_tab` 이 표 **열둘**을 세면서 기대값만 13 이었습니다 — 0009 로
+       `request_item` 이 늘었는데 목록에 안 넣고 숫자만 올려서,
+       **제대로 돌린 DB 가 12/13 ❌** 로 나왔습니다. 멀쩡한 DB 를
+       "고쳐야 합니다" 로 잡는 쪽이라, 사장님이 돌린 DB 를 재는 유일한
+       길에서 제일 나쁜 종류입니다. 세는 쪽과 기대하는 쪽이 **같은
+       파일 안**에 있으니 여기서 맞춰 봅니다. */
+    const blockOf = (name, end) => {
+      const i = vs.indexOf(name + " as (");
+      if(i < 0) return "";
+      const j = vs.indexOf(end, i);
+      return j < 0 ? "" : vs.slice(i, j);
+    };
+    const selfWant = (label, src, end, re) => {
+      const blk = blockOf(src, end);
+      if(!blk) return;
+      /* 주석을 먼저 걷어냅니다 — 규칙을 설명하는 글에 걸려 멀쩡한
+         파일을 실패로 잡은 적이 있습니다 (검사가 틀린 자리) */
+      const n = (blk.replace(/\/\*[\s\S]*?\*\//g, " ").match(re) || []).length;
+      const got = rowWant(src);
+      if(!n) return;
+      if(got !== n)
+        vbad.push("db/verify.sql " + label + " 가 " + n + "개를 세면서 기대값은 " +
+          got + "입니다 — 세는 목록과 기대값이 어긋나면 **멀쩡한 DB 를 ❌ 로** 잡습니다");
+    };
+    /* 표 — `table_name in ('a','b',…)` 안의 이름만 셉니다 */
+    (() => {
+      const blk = blockOf("v_tab", "\n),");
+      if(!blk) return;
+      const m = blk.match(/table_name\s+in\s*\(([\s\S]*?)\)/);
+      if(!m) return;
+      const n = (m[1].match(/'[a-z_]+'/g) || []).length;
+      const got = rowWant("v_tab");
+      if(n && got !== n)
+        vbad.push("db/verify.sql \u2461 표 가 " + n + "개를 세면서 기대값은 " + got +
+          "입니다 — 0009 의 request_item 이 그렇게 빠져 있었습니다");
+    })();
+    /* 문(함수) — `('name')` 꼴만 셉니다 */
+    selfWant("\u2466 문(함수)", "v_fn", ") w(f)", /\('[a-z_]+'\)/g);
     /* ⚠️ 있는 것을 세야 합니다 — 기대 목록을 세면 전부 없어도 통과합니다
        (실제로 그렇게 적었다가 되돌려 보고 알았습니다). */
     if(/v_fn as \(\s*select count\(\*\)::int n/.test(vs))
@@ -3254,7 +3294,61 @@ checkClaimSql();
 checkQuoteSql(W);
 checkRpcArgs();
 checkRetired();
+/* ════════════════════════════════════════════════════════════════════
+   checkPhotoSql() — **받는 형식과 크기가 서버와 DB 에서 같은가**
+                     (2026-10-18 §7-3 · §15)
+
+   ⚠️⚠️ 한쪽만 고치면 **에러 없이 조용히** 어긋납니다 — 서버가 받아
+   놓고 DB 가 거절하면 손님에게는 "지금 올리지 못했습니다" 만 나가고,
+   거꾸로면 DB 가 받아 버립니다. 이 저장소가 접수번호 글자(`A32` ↔
+   0005 의 정규식) · 상태 key(`deal.js` ↔ enum) · RPC 인자 이름으로
+   **세 번** 겪은 자리입니다.
+   ════════════════════════════════════════════════════════════════════ */
+function checkPhotoSql(){
+  const api = path.join(ROOT, "api", "upload.js");
+  const sql = path.join(ROOT, "db", "migrations", "0011_request_photo.sql");
+  if(!fs.existsSync(api) || !fs.existsSync(sql)) return;
+  /* ⚠️ 주석을 먼저 걷어냅니다 — 규칙을 설명하는 글에 걸려 멀쩡한
+     코드를 실패로 잡은 적이 있습니다 (틀린 것은 검사였습니다) */
+  const js = fs.readFileSync(api, "utf8").replace(/\/\*[\s\S]*?\*\//g, " ");
+  const sq = fs.readFileSync(sql, "utf8").replace(/^\s*--.*$/gm, " ");
+
+  const jsMime = (js.match(/const\s+OK_MIME\s*=\s*\[([^\]]*)\]/) || [])[1] || "";
+  const api1 = (jsMime.match(/'[^']+'|"[^"]+"/g) || []).map(x => x.slice(1, -1)).sort();
+  const sqMime = (sq.match(/constraint\s+photo_mime_ok[\s\S]*?\(([\s\S]*?)\)\s*,/) || [])[1] || "";
+  const db1 = (sqMime.match(/'[^']+'/g) || []).map(x => x.slice(1, -1)).sort();
+  if(!api1.length || !db1.length)
+    throw new Error("사진 형식 목록을 못 읽었습니다 — 검사가 틀렸습니다 " +
+      "(api/upload.js 의 OK_MIME · 0011 의 photo_mime_ok)");
+  if(api1.join("|") !== db1.join("|"))
+    throw new Error("받는 사진 형식이 서버와 DB 에서 다릅니다:\n" +
+      "   api/upload.js → " + api1.join(" · ") + "\n" +
+      "   0011 (DB)     → " + db1.join(" · ") +
+      "\n   → 한쪽만 고치면 **에러 없이 조용히** 어긋납니다 (서버가 받고 DB 가 거절)");
+
+  const jsMax = Number((js.match(/MAX_BYTES\s*=\s*([0-9]+)/) || [])[1] || 0);
+  const dbMax = Number((sq.match(/bytes\s*<=\s*([0-9]+)/) || [])[1] || 0);
+  if(!jsMax || !dbMax) throw new Error("사진 크기 상한을 못 읽었습니다 — 검사가 틀렸습니다");
+  if(jsMax !== dbMax)
+    throw new Error("사진 크기 상한이 서버(" + jsMax + ")와 DB(" + dbMax + ")에서 다릅니다");
+  /* ⚠️⚠️ 함수 안의 상한도 같아야 합니다 — CHECK 만 맞춰 두고 함수에서
+     다른 수를 쓰면, 거절하는 **말**이 틀린 수를 적습니다. */
+  const fnMax = (sq.match(/p_bytes\s*>\s*([0-9]+)/) || [])[1];
+  if(fnMax && Number(fnMax) !== dbMax)
+    throw new Error("0011 의 함수 상한(" + fnMax + ")이 CHECK(" + dbMax + ")와 다릅니다");
+
+  /* ⚠️⚠️ **service key 가 화면으로 내려가지 않는가** — 이 주소가
+     돌려주는 것은 그 경로 하나에만 쓰는 서명된 주소까지입니다. */
+  if(/SERVICE_KEY[\s\S]{0,120}res\.status/.test(js) ||
+     /json\([^)]*SERVICE_KEY/.test(js))
+    throw new Error("api/upload.js 가 service key 를 답에 실을 수 있습니다 — " +
+      "그 키는 RLS 를 통째로 지나갑니다");
+
+  console.log("   사진 형식 " + api1.length + "가지 \u00b7 상한 " +
+    Math.round(dbMax / 1048576) + "MB 가 서버와 DB 에서 같습니다");
+}
 checkMigDocs(W);
+checkPhotoSql();
 checkOffers(W);
 checkOpsvc(W);
 checkHalls(W);

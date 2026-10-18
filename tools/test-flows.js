@@ -265,7 +265,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  const ock=await pg.evaluate(()=>
    document.querySelectorAll(".ock-l:not(.is-fold-all) > li").length);
  say(ock===6,"운영 ⑦ 체크리스트 대표 여섯 (§9)","지금 "+ock);
- say((await txt()).indexOf("저희에게 오지 않습니다")>=0,
+ say((await txt()).indexOf("신청이 아닙니다")>=0,
    "운영 ⑧ 체크는 신청이 아니라고 적혀 있다 (§9 · 절대 규칙 5)");
  const ogo=await pg.evaluate(()=>{
    const a=document.getElementById("pk-bar-go");

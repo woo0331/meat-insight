@@ -56,24 +56,37 @@ const HIST_LIMIT = 100;
    없습니다 (그게 이번에 고친 자리입니다).
    ⚠️ 항목의 배정도 같이 묻습니다 — 어느 항목에 누가 붙었는지를 화면이
    한 번에 그려야 합니다. RLS 가 **볼 수 있는 줄만** 돌려줍니다. */
+/* ⚠️⚠️ 2026-10-18 §7-3 — **사진은 경로를 내려보내지 않습니다.** 보는
+   길은 `/api/upload?p=<id>` 하나이고, 거기서 **그때그때 서명된 주소**를
+   만듭니다 (버킷은 비공개입니다). 경로를 내려보내면 그 글자만으로
+   버킷을 두드려 볼 수 있는 길이 생깁니다. */
+const PHOTOS = "request_photo(id,mime,bytes,created_at)";
+
 const ITEMS_C = "request_item(id,service_id,state)";
 const ITEMS_S = "request_item(id,service_id,state,detail," +
                 "assignment(provider_id,state,created_at))";
 
+/* ── 회원 계정에 남는 임시저장 · 체크리스트 (0010 · 2026-10-18 §6-2 · §9)
+   ⚠️ 역할과 무관합니다 — **자기 줄 하나**이고 RLS 의 `state_mine` 이
+   그것만 줍니다. 그래서 칸을 역할마다 가르지 않습니다.
+   ⚠️ `account_id` 를 안 가져옵니다 — 자기 줄인 것이 이미 정해져 있어
+   화면이 쓸 일이 없습니다 (최소 수집). */
+const STATE_PICK = "pick,draft,checks,updated_at";
+
 const PICK = {
   customer:
     "id,no,side,cat,industry,region,gu,state,want_at,created_at," +
-    "assignment(state,created_at,provider(id,name))," + ITEMS_C,
+    "assignment(state,created_at,provider(id,name))," + ITEMS_C + "," + PHOTOS,
   /* ⚠️ 업체에게는 **배정된 항목만** 갑니다 (RLS 의 `item_provider`) —
      같은 신청에 담긴 다른 서비스는 안 보입니다 (제17조). */
   provider:
     "id,no,side,cat,industry,region,gu,state,want_at,body,detail,created_at," +
-    "name,tel,email,assignment(state,why,created_at)," + ITEMS_C,
+    "name,tel,email,assignment(state,why,created_at)," + ITEMS_C + "," + PHOTOS,
   /* ⚠️⚠️ 목록에 **성함 · 연락처가 없습니다** — 화면 하나가 곧 유출인
      자리입니다. 전화하려면 건을 열어야 합니다. */
   staff:
     "id,no,side,cat,industry,region,gu,state,created_at," +
-    "assignment(provider_id,state,created_at)," + ITEMS_S
+    "assignment(provider_id,state,created_at)," + ITEMS_S + "," + PHOTOS
 };
 
 module.exports = async function handler(req, res){
@@ -92,6 +105,14 @@ module.exports = async function handler(req, res){
   if(one && !/^[0-9a-fA-F-]{36}$/.test(one))
     return res.status(400).json({ error:"신청 번호를 읽을 수 없습니다" });
 
+  /* ⚠️⚠️ **`?s=1` 은 메모장만 묻습니다.** 고르신 서비스 · 적어 두신
+     조건 · 체크해 두신 항목은 `/startup` · `/operation` · `/quote` 가
+     **화면을 열 때마다** 맞춰 봐야 하는 값인데, 거기서 이 주소를
+     그냥 부르면 신청 쉰 건 · 견적 삼백 건이 같이 내려옵니다 — 쓰지도
+     않는 개인정보를 화면까지 끌고 오는 것이고 받는 양도 몇 배입니다.
+     ⚠️ **새 주소를 만들지 않았습니다** — 질의문자 하나입니다. */
+  const onlyState = String((req.query && req.query.s) || "") === "1";
+
   if(!authReady())      return res.status(200).json({ auth:false, signedIn:false });
   if(!bearer(req))      return res.status(200).json({ auth:true, signedIn:false });
 
@@ -99,6 +120,24 @@ module.exports = async function handler(req, res){
   if(!s.ok){
     if(s.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
     return res.status(200).json({ auth:true, signedIn:false });
+  }
+
+  /* ── 메모장 (0010) ────────────────────────────────────────────────
+     ⚠️ 줄이 없으면 **빈 값**입니다 (404 가 아닙니다) — 아직 아무것도
+     저장하지 않으신 분이고, 그건 잘못된 일이 아닙니다 (절대 규칙 2).
+     ⚠️ 못 읽어도 **나머지를 막지 않습니다** — 메모장은 거들기이고,
+     그것 때문에 신청 내역이 안 보이면 더 나쁩니다. */
+  async function readState(){
+    const st = await dbSelectAs(s.token, "user_state",
+      "?select=" + encodeURIComponent(STATE_PICK) + "&limit=1");
+    if(!st.ok){ console.warn("[me] user_state — " + st.why); return null; }
+    return (st.rows && st.rows[0]) || null;
+  }
+
+  if(onlyState){
+    const st = await readState();
+    return res.status(200).json({
+      auth:true, signedIn:true, role:s.role, state: st });
   }
 
   const role = s.role === "admin" ? "staff" : s.role;
@@ -114,6 +153,8 @@ module.exports = async function handler(req, res){
   }
 
   const out = { auth:true, signedIn:true, role:s.role, requests:q.rows };
+  /* 마이페이지가 "저장해 두신 것" 을 같이 냅니다 (§6-2 · §9) */
+  out.state = await readState();
 
   /* 업체 · 관리자만 계약을 봅니다. ⚠️ 고객에게는 **묻지도 않습니다** —
      RLS 가 어차피 빈 목록을 주지만, 안 묻는 쪽이 한 겹 더 안전합니다. */

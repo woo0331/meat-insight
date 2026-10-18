@@ -279,7 +279,16 @@ window.quoteDraftSave = function(){
   /* 고르신 서비스는 이미 `am.pick.v1` 에 있습니다 — 여기 또 담지
      않습니다 (두 곳에 있으면 어긋납니다). */
   amSet(DKEY, { f:d, at:Date.now() });
+  /* §6-2 — 로그인하고 들어와 계시면 **계정에도** 남깁니다. 꺼져 있으면
+     `amStateTouch()` 가 아무 일도 안 합니다 (js/state.js 머리말).
+     ⚠️⚠️ 올라가는 것은 **이 여덟 칸까지**이고 0010 의 트리거가 그 밖의
+     칸을 거절합니다 — 성함 · 연락처는 화면 버그로도 안 올라갑니다. */
+  if(typeof amStateTouch === "function") amStateTouch("draft");
   quoteDraftPaint();
+  /* ⚠️⚠️ **"계정에 저장했습니다" 라고 먼저 말하지 않습니다** (§15 ·
+     절대 규칙 5). 서버 왕복은 뒤에 끝나고 실패할 수도 있어서, 지금
+     확실한 것(이 브라우저)만 말합니다 — 계정에 올라간 것은
+     `quoteDraftPaint()` 가 **올라간 뒤에** 적습니다. */
   toast("적으신 조건을 이 브라우저에 저장했습니다");
 };
 
@@ -295,7 +304,13 @@ window.quoteDraftLoad = function(){
 
 window.quoteDraftDel = function(){
   if(!confirm("저장해 두신 조건을 지웁니다. 되돌릴 수 없습니다.")) return;
-  amDel(DKEY); quoteDraftPaint(); toast("지웠습니다");
+  amDel(DKEY);
+  /* ⚠️⚠️ **계정 쪽도 같이 지웁니다.** 한쪽만 지우면 다음에 열 때
+     서버 것이 내려와 **지운 것이 되살아납니다.**
+     ⚠️ `amStateClear()` 가 아니라 `amStateDrop("draft")` 입니다 —
+     통째로 지우면 **고르신 서비스까지** 계정에서 날아갑니다. */
+  if(typeof amStateDrop === "function") amStateDrop("draft");
+  quoteDraftPaint(); toast("지웠습니다");
 };
 
 /* ⚠️ 마지막 저장 시각을 **절대 표기**로 냅니다 (§4-3). "3분 전" 같은
@@ -313,7 +328,11 @@ window.quoteDraftPaint = function(){
   var el = $("q-draft-when");
   if(!el) return;
   var w = quoteDraftWhen();
-  el.textContent = w ? ("마지막 저장 " + w) : "아직 저장해 두신 것이 없습니다";
+  /* §6-2 — 계정에도 올라갔으면 그렇게 적습니다. ⚠️ `amStateOn()` 은
+     **실제로 올린 적이 있을 때만** 참입니다 (절대 규칙 5). */
+  var acct = (typeof amStateOn === "function" && amStateOn())
+    ? " \u00b7 로그인한 계정에도 저장됨" : "";
+  el.textContent = w ? ("마지막 저장 " + w + acct) : "아직 저장해 두신 것이 없습니다";
   var del = $("q-draft-del"); if(del) del.hidden = !w;
   var ld  = $("q-draft-load"); if(ld) ld.hidden = !w;
 };
@@ -337,7 +356,8 @@ function QuoteDraftBox(){
     '<p class="note">저장되는 것은 <b>상황 · 필요한 일 · 업종 · 지역 · '+
       '시군구 · 평수 · 예산 · 일정</b>까지입니다. '+
       '<b>성함 · 연락처 · 자세한 내용 · 사진 주소는 저장하지 않습니다.</b> '+
-      '이 브라우저에만 남고 서버로 보내지 않으며, 위 단추로 지우시거나 '+
+      '이 브라우저에 남고, <b>로그인하신 경우에만</b> 같은 여덟 칸이 '+
+      '계정에도 올라가 다른 기기에서 이어집니다. 위 단추로 지우시거나 '+
       '브라우저 기록을 지우시면 함께 사라집니다.</p>'+
   '</div>';
 }
@@ -718,6 +738,12 @@ window.amSend = function(failId, body, again, done){
         (dup ? "이미 접수되었습니다." : "접수되었습니다.") + '</b>' +
         (no ? '<p>접수번호 <b>' + esc(no) + '</b> — 문의하실 때 알려 주세요.</p>' : '') +
         '<p>적어 주신 연락처로 안내드리겠습니다. 회신 시점을 약속드리지는 않습니다.</p></div>';
+      /* §7-3 — ⚠️⚠️ **접수한 뒤에** 사진 칸이 붙습니다. 번호가
+         없으면(저장 안 된 접수) · 버킷이 설정되기 전이면 **아예 안
+         그려집니다** (js/photo.js 머리말). ⚠️ 연락처는 **보내신 몸통
+         에서** 가져옵니다 — 폼은 바로 아래에서 비워집니다. */
+      if(no && box && typeof amPhotoAfter === "function")
+        amPhotoAfter(box, no, (body && body.tel) || "");
       toast(dup ? "이미 접수되었습니다" : "접수되었습니다");
       var f = box && box.closest("form"); if(f) f.reset();
       /* §4-3 "최종 제출 후 중복 임시 신청 정리" — 보낸 뒤에 치웁니다.

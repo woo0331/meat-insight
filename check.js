@@ -2406,6 +2406,64 @@ const AUDIT = `(() => {
       return "확인 자리가 신청 자리보다 뒤에 있습니다 — " + got.join(" ");
     return true;`);
 
+  /* ════════════════════════════════════════════════════════════════
+     2026-10-18 전체 점검 §3 — 네 전문관이 **같은 프레임**이다
+     ════════════════════════════════════════════════════════════════
+     > §3 — "창업 준비 · 매장 운영 · 매장 양도양수 · 폐업 정리 네 개
+     >  전문관의 레이아웃과 흐름을 통일한다 · 공통 전문관 레이아웃
+     >  컴포넌트를 활용한다."
+
+     ⚠️⚠️ **넷을 나란히 재지 않으면 어긋나는 것을 아무도 못 봅니다.**
+     이 검사를 넣기 전에 재 보니 폐업과 양도양수에는 **고르는 체크칸이
+     0개**였고(신청 단추는 있는데 고를 자리가 없었습니다), 창업에는
+     계산도구 구간과 다른 전문관 줄이 **없었습니다** — 전문관을 하나씩
+     고칠 때마다 다른 셋이 조용히 뒤처지던 자리입니다.
+     ⚠️ 주석에 백틱을 쓰지 마세요. */
+  const HALL_FRAME = `
+    /* ① 소개 */
+    if(!document.querySelector(".pgh")) return "소개(머리)가 없습니다";
+    /* ② 서비스 선택 — 고를 수 있는 칸이 실제로 있어야 합니다 */
+    const cks = document.querySelectorAll("#view [data-pick]");
+    if(!cks.length) return "고르는 체크칸이 0개입니다";
+    /* ⚠️⚠️ **고르는 자리는 하나입니다** (§2 · §5) — 구간 둘로 흩어지면
+       손님은 어디서 골라야 하는지를 먼저 풀어야 합니다. */
+    const secs = {};
+    [].slice.call(cks).forEach(function(c){
+      const s = c.closest("section");
+      if(s) secs[s.className] = 1;
+    });
+    if(Object.keys(secs).length > 1)
+      return "고르는 자리가 " + Object.keys(secs).length + "곳입니다 — " + Object.keys(secs).join(" / ");
+    /* ③ 선택 확인 — 개수가 글로 보여야 합니다 (색만으로 표시 금지) */
+    if(!document.querySelector(".pkb [data-pick-n]")) return "선택 확인 자리가 없습니다";
+    /* ④ 통합 견적 신청 — 바구니에서 신청으로 가는 길 + 폰 고정 띠 */
+    if(!document.querySelector(".pkb a[href*='/quote']")) return "바구니에 신청 단추가 없습니다";
+    const bar = document.getElementById("pk-bar-go");
+    if(!bar) return "폰 고정 띠가 없습니다";
+    /* ⚠️⚠️ **쪽(side)이 그 전문관의 것이라야 합니다.** DB 는 넷을
+       받는데(0001 — start | ops | transfer | close) 화면이 다른 값을
+       실어 보내면, 배정하는 직원이 엉뚱한 업체를 찾습니다 — 이
+       저장소가 ops 와 transfer 로 **두 번** 겪은 자리입니다. */
+    const want = WANT_SIDE;
+    if((bar.getAttribute("href") || "").indexOf("side=" + want) < 0)
+      return "신청 주소의 쪽이 " + want + " 가 아닙니다 — " + bar.getAttribute("href");
+    /* ⑤ 체크리스트 · 절차 */
+    if(!document.querySelector(".stD, .opsck")) return "체크리스트(절차)가 없습니다";
+    /* ⑥ 가이드 */
+    if(!document.querySelector(".rd-l")) return "가이드 글 줄이 없습니다";
+    /* ⑦ 계산도구 */
+    const cal = document.querySelectorAll(".sec-calc a[href^='/tools/']");
+    if(!cal.length) return "계산도구 구간이 없습니다";
+    /* ⑧ 다른 전문관 */
+    if(!document.querySelector(".jyb")) return "다른 전문관으로 가는 줄이 없습니다";
+    return true;`;
+
+  for(const [url, side] of [["/startup","start"], ["/operation","ops"],
+                            ["/transfer","transfer"], ["/closure","close"]]){
+    await f("전문관 공통 여덟 — " + url, url,
+      "const WANT_SIDE = " + JSON.stringify(side) + ";" + HALL_FRAME);
+  }
+
   await f("서비스를 여러 개 고르면 한 신청으로 간다", "/startup", `
     try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
     const cards = document.querySelectorAll(".stB [data-pick]");
@@ -3676,40 +3734,52 @@ const AUDIT = `(() => {
      ⚠️ ②③ 이 중요합니다 — 접는 규칙을 묶음 밖으로 내면 **넓은
      화면에서도 접히는데 단추는 안 보여** 펼칠 방법이 아예 없습니다. */
   await f("폰에서 긴 묶음을 접어 둔다", "/closure", `
-    /* ⚠️⚠️ **2026-10-17 창업 준비 §2 로 화면을 옮겼습니다.** 까닭이
-       둘입니다 — ① 패키지 구간이 창업 준비 화면에서 "담기" 로
-       바뀌어 pkg-l 이 없습니다 ② 거기에는 **모든 폭에서 접히는
-       단추**(fld-all)가 있어서 "넓은 화면에서 접기 단추가 보입니다"
+    /* ⚠️⚠️ **보는 자리를 패키지에서 푸터로 옮겼습니다** (2026-10-18).
+       까닭 — 2026-10-18 전체 점검 §3 으로 폐업 · 창업 · 양도양수의
+       패키지가 "신청" 에서 "위 선택에 담기" 로 바뀌면서
+       pkg-l 을 내는 화면이 하나도 안 남았습니다. 그대로 두면 이
+       검사는 영영 실패이거나, 고치려고 전문관에 모든 폭에서 접히는
+       단추(fld-all)를 보게 하면 "넓은 화면에서 접기 단추가 보입니다"
        가 당연히 걸립니다 (그쪽은 단추가 보여야 펼칠 수 있습니다).
-       폐업 화면은 전과 똑같은 패키지라 그대로 봅니다. */
-    /* ⚠️ 2026-10-11 간소화 §2 — 패키지 구간이 메인에서 내려오고
-       창업 · 폐업 · 양도 화면에 남았습니다. 그래서 보는 화면을
-       옮겼습니다. 운영 묶음은 운영 화면에서 **안 접습니다**(그 화면의
-       본문이라 접으면 본문이 단추 뒤로 숨습니다) — 그 갈래는 뺐습니다.
+       ⚠️⚠️ **지금 폰에서만 접히는 자리는 푸터 한 곳이고, 그건 161개
+       화면 전부에 있습니다** — 2026-10-12 §1 에서 다섯 덩이로 쌓이던
+       것을 −43% 로 줄인 자리라 되돌아가면 바로 아픕니다.
+       ⚠️ 패키지 · 운영 묶음 규칙은 **CSS 에 그대로 있는지**만 같이
+       봅니다 — 그 구간을 되살리는 날 조용히 안 접히면 안 됩니다.
        ⚠️ 이 주석에 백틱을 쓰지 마세요 — 문자열이 거기서 끝납니다
        (열두 번 겪었습니다). */
-    const btn = document.querySelectorAll(".fld-b");
-    if(!btn.length) return "접기 단추가 없습니다";
-    if(getComputedStyle(btn[0]).display !== "none")
-      return "넓은 화면에서 접기 단추가 보입니다";
-    const pl = document.querySelector(".pkg-l.is-fold");
-    if(!pl) return "패키지 목록에 접기 표시가 없습니다";
-    if(getComputedStyle(pl).display === "none")
-      return "넓은 화면에서 패키지 목록이 접혔습니다";
-    let show = 0, shut = 0;
+    /* ⚠️⚠️ 푸터 머리말은 **넓은 화면에서도 단추**입니다 (숨기면 폰에서
+       펼칠 자리가 없어집니다) — 접힌다는 표시를 내는 것은 그 안의
+       화살표라, 재는 자리가 단추가 아니라 **화살표**입니다. */
+    const btn = document.querySelectorAll(".ft-fold");
+    if(!btn.length) return "푸터에 접기 단추가 없습니다";
+    const arw = btn[0].querySelector("svg");
+    if(!arw) return "푸터 접기 화살표가 없습니다";
+    if(getComputedStyle(arw).display !== "none")
+      return "넓은 화면에서 푸터 접기 화살표가 보입니다";
+    const col = document.querySelector(".ft-col > ul");
+    if(!col) return "푸터 칸이 없습니다";
+    if(getComputedStyle(col).display === "none")
+      return "넓은 화면에서 푸터 칸이 접혔습니다";
+    let show = 0, shut = 0, keep = 0;
     for(const sh of document.styleSheets){
       let rules; try { rules = sh.cssRules; } catch(e){ continue; }
       if(!rules) continue;
       for(const r of rules){
         if(!r.media || r.media.mediaText.indexOf("900px") < 0) continue;
         for(const q of (r.cssRules || [])){
-          if(q.selectorText === ".fld-b" && q.style.display === "flex") show++;
-          if(q.selectorText === ".pkg-l.is-fold" && q.style.display === "none") shut++;
+          const sel = q.selectorText || "";
+          if(sel === ".ft-fold svg" && q.style.display && q.style.display !== "none") show++;
+          if(sel === ".ft-col.is-fold > ul" && q.style.display === "none") shut++;
+          /* 되살릴 구간의 규칙도 그대로 있는가 */
+          if(sel === ".pkg-l.is-fold" && q.style.display === "none") keep++;
+          if(sel === ".opsv-g.is-fold > .fld-x" && q.style.display === "none") keep++;
         }
       }
     }
-    if(!show) return "900px 아래에서 접기 단추를 켜는 규칙이 없습니다";
-    if(!shut) return "900px 아래에서 접는 규칙이 없습니다";
+    if(!show) return "900px 아래에서 푸터 접기 단추를 켜는 규칙이 없습니다";
+    if(!shut) return "900px 아래에서 푸터 칸을 접는 규칙이 없습니다";
+    if(keep < 2) return "되살릴 구간(패키지 · 운영 묶음)의 접는 규칙이 사라졌습니다 — " + keep;
     return true;`);
   /* ⚠️⚠️ 2026-10-03 지시서의 **핵심**입니다 (§13 ~ §18) — "카페를 하고
      싶은데 뭐가 필요한지 모르겠다" 는 분이 업종 하나만 고르면 필요한

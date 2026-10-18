@@ -621,32 +621,16 @@ function OpsGuideBand(){
 var OPS_CALC = ["bep", "target", "labor", "margin"];
 var OPS_CALC_TONE = { bep:"sv3", target:"sv1", labor:"sv4", margin:"sv6" };
 
+/* ⚠️⚠️ **공통 조각이 `HallCalcBand()` 로 올라갔습니다**
+   (`js/components/ui.js`). 2026-10-18 전체 점검 지시서 §3 이 네
+   전문관에 **같은 공통 레이아웃 여덟**을 요구해서, 계산도구 구간을
+   전문관마다 베껴 쓰지 않고 한 곳에서 만듭니다 — 베껴 두면 한쪽만
+   고치게 되고, 이 저장소가 `amCatTo`/`catTo` · 랜딩 아이콘 표로
+   겪은 자리입니다.
+   ⚠️ 여기 남는 것은 **운영이 어느 계산기를 내는가**뿐입니다. */
 function OpsCalcBand(){
-  var by = {}; (window.AM_TOOLS || []).forEach(function(t){ by[t.key] = t; });
-  var L = OPS_CALC.map(function(k){ return by[k]; }).filter(Boolean);
-  if(!L.length) return "";
-  return '<section class="sec sec-calc opsc"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
-      '<p class="eyebrow">무료 계산도구</p>'+
-      '<h2>숫자를 먼저 보고 정하세요</h2>'+
-      '<p>가입 없이 바로 쓰실 수 있습니다. 적으신 값은 저장하지 않습니다.</p>'+
-    '</div>'+
-    '<ul class="mcal-g">'+L.map(function(t){
-      var tone = OPS_CALC_TONE[t.key] || "sv1";
-      var art  = (typeof hasIconArt === "function" && hasIconArt(t.icon));
-      return '<li class="tn-'+esc(tone)+'">'+
-        '<a href="/tools/'+esc(t.key)+'">'+
-        '<span class="mcal-i ia-t" aria-hidden="true">'+
-          (art ? iconArt(t.icon, 44) : icon(t.icon, 28))+'</span>'+
-        '<b class="mcal-n">'+esc(t.name)+'</b>'+
-        (t.out ? '<i class="mcal-o">'+esc(t.out)+'</i>' : '')+
-        '<span class="mcal-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
-      '</a></li>'; }).join("")+'</ul>'+
-    '<div class="row-cta">'+
-      '<a class="btn btn-o" href="/tools">계산도구 전부 보기'+icon("arrow",16)+'</a>'+
-      '<a class="btn btn-o" href="/faq">자주 묻는 질문</a>'+
-    '</div>'+
-  '</div></section>';
+  return HallCalcBand({ keys:OPS_CALC, tones:OPS_CALC_TONE, cls:"opsc",
+    title:"숫자를 먼저 보고 정하세요" });
 }
 
 function PageOperation(){
@@ -670,37 +654,58 @@ function PageOperation(){
 
 /* ── /transfer — 인수 · 양도 ──────────────────────────────────
    ⚠️⚠️ **한쪽으로 물들이지 않습니다.** 넘기시는 분과 받으시는 분이
-   같은 화면을 봅니다 (`/stores` · `/assets` 와 같은 까닭입니다). */
-function PageAcquisition(){
-  var t    = (nowQS("t") === "out") ? "out" : "in";
-  var ind  = (typeof amIndustry === "function") ? amIndustry(nowQS("i")) : null;
-  var iq   = ind ? ("?i=" + encodeURIComponent(ind.key)) : "";
-  var nStore = (typeof amStores === "function") ? amStores({}).length : 0;
-  var nAsset = (typeof amAssets === "function") ? amAssets({}).length : 0;
+   같은 화면을 봅니다 (`/stores` · `/assets` 와 같은 까닭입니다).
 
-  function tab(k, name, lead){
-    return '<a class="aq-t'+(t===k?" on":"")+'" href="/transfer?t='+k+
-      (ind ? "&i="+encodeURIComponent(ind.key) : "")+'"'+
-      (t===k?' aria-current="page"':'')+'>'+
-      '<b>'+esc(name)+'</b><em>'+esc(lead)+'</em></a>';
-  }
+   ⚠️⚠️ **2026-10-18 전체 점검 §3 — 공통 프레임이 됐습니다.** 재 보니
+   이 화면에는 **고르는 체크칸이 0개**였고, 신청으로 가는 단추가
+   `aq-m` 메뉴 안의 `quoteTo({cat:"transfer"})` 와 빈 매물 자리의
+   접수 단추 **둘**이었는데 둘 다 **고르신 것을 들고 가지 못했습니다**
+   (고를 자리가 없었으니까요). 지금은 ① 고르는 자리 ② 선택 확인
+   ③ 신청 단추가 셋 다 **한 자리씩**입니다.
 
+   ⚠️ **매물 탐색과 인수 / 양도 탭은 그대로 둡니다** — §3 이 "매장
+   양도양수처럼 성격이 다른 전문관은 매물 탐색과 거래 절차를 고려하여
+   필요한 구조를 별도로 유지할 수 있다" 고 적었습니다. 받으시는 분과
+   넘기시는 분은 **순서가 다르고**, 그 둘을 한 줄로 묶으면 어느 쪽
+   순서인지가 묻힙니다.
+
+   ⚠️⚠️ §13 — **공인중개업무로 읽히게 만들지 마세요.** 저희가 하는
+   일은 조건을 받아 업체 · 다음 사장님을 **찾아 드리는 것**까지이고,
+   매물에 적힌 값은 올리신 사장님이 적으신 값입니다 (`mkRole()` ·
+   약관 제5조 · 전자상거래법 제20조 제1항). */
+var AQ_CALC      = ["premium", "vs", "rent"];
+var AQ_CALC_TONE = { premium:"t13", vs:"sv2", rent:"sv3" };
+
+/* A. 소개 — ⚠️⚠️ 주 단추가 **고르러 가는 자리**입니다. 전에는
+   `/stores`(매물 목록)였는데 매물이 0건이라 주 단추를 누르면 빈
+   화면이 먼저 나왔습니다 — 매물 보기는 보조로 내리고, 매물이
+   올라오면 그 자리가 다시 주인공이 되도록 구간은 그대로 둡니다. */
+function AcqIntro(ind, iq){
   return PgHero({
     /* ⚠️ 2026-10-06 2차 §5 — 업종을 고르고 오셨으면 머리말이 그것을
-       되읽어 줍니다. 안 그러면 "내 자리에 왔다" 가 안 읽힙니다.
-       ⚠️⚠️ **한쪽으로 물들이지 않습니다** — 넘기시는 분과 받으시는
-       분이 같은 화면을 봅니다 (`/stores` · `/assets` 와 같은 까닭). */
+       되읽어 줍니다. 안 그러면 "내 자리에 왔다" 가 안 읽힙니다. */
     kicker:"TAKE OVER · 인수 · 양도" + (ind ? " · " + ind.name : ""),
+    photo:"kind-pass",
     h1raw: ind
       ? esc(ind.name)+" 인수 · 양도를<br class=\"br-m\"> 보고 계시네요."
       : "한 사장님의 끝이<br class=\"br-m\"> 다른 사장님의 시작이 됩니다.",
     lead: ind
       ? "받으시는 분과 넘기시는 분이 같은 화면을 봅니다. 아래에서 어느 쪽인지 고르시면 그 순서로 보여 드립니다."
       : "있던 가게를 받으면 공사 기간과 초기 비용이 줄고, 넘기면 철거비와 원상복구가 줄어듭니다. 두 분이 같은 화면을 봅니다.",
-    cta:'<a class="btn btn-b btn-lg" href="/stores'+esc(iq)+'">매장 매물 보기'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-o btn-lg" href="/assets'+esc(iq)+'">시설 · 장비 보기</a>'
-  })+
-  '<section class="sec sec-white"><div class="w">'+
+    cta:'<a class="btn btn-b btn-lg" href="#pick">필요한 서비스 고르기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="/stores'+esc(iq)+'">매장 매물 보기</a>'
+  });
+}
+
+/* B. 어느 쪽이세요 — 탭 + 메뉴 다섯 (그대로) */
+function AcqWhich(t, ind, iq){
+  function tab(k, name, lead){
+    return '<a class="aq-t'+(t===k?" on":"")+'" href="/transfer?t='+k+
+      (ind ? "&i="+encodeURIComponent(ind.key) : "")+'"'+
+      (t===k?' aria-current="page"':'')+'>'+
+      '<b>'+esc(name)+'</b><em>'+esc(lead)+'</em></a>';
+  }
+  return '<section class="sec sec-white"><div class="w">'+
     '<div class="sec-hd">'+
       '<p class="eyebrow">어느 쪽이세요?</p>'+
       '<h2>받으시는 분과 넘기시는 분은 순서가 다릅니다</h2>'+
@@ -712,10 +717,14 @@ function PageAcquisition(){
     /* ⚠️ 2026-10-06 V2 확정 지시서 §8 의 다섯 메뉴입니다. 전부 **실제로
        있는 화면**이고(가짜 링크는 절대 규칙 5), 매물이 0건이어도
        가이드 · 체크리스트 · 계산기는 **오늘 바로 돌아갑니다** —
-       그래서 매물이 없어도 화면이 비어 보이지 않습니다. */
+       그래서 매물이 없어도 화면이 비어 보이지 않습니다.
+       ⚠️⚠️ **"내 매장 양도하기" 가 여기서 신청으로 바로 가지 않습니다.**
+       전에는 `quoteTo({cat:"transfer"})` 였는데, 그러면 이 화면에
+       신청 단추가 둘이 되고 **고르신 것을 들고 가지 못합니다** (§2 —
+       "신청 버튼 위치가 명확하지 않다"). 고르는 자리로 보냅니다. */
     '<ul class="aq-m">'+[
       ["/stores"+iq,     "store",    "매장 인수하기",   "상가 · 점포 · 권리금 매장"],
-      [quoteTo({cat:"transfer"}), "handover", "내 매장 양도하기", "조건을 적어 보내시면 올려 드립니다"],
+      ["#pick",          "handover", "내 매장 양도하기", "넘길 때 필요한 것부터 고르세요"],
       ["/tools/premium", "gauge",    "권리금 알아보기", "몇 달이면 돌아오는지 따져 봅니다"],
       ["/content?side=close", "book","인수 · 양도 가이드", "계약 전에 보셔야 하는 것"],
       ["/tools/vs",      "scale",    "신규 vs 인수 비교", "새로 만드는 것과 받는 것"]
@@ -724,18 +733,43 @@ function PageAcquisition(){
         '<span class="ic-t">'+icon(x[1],22)+'</span>'+
         '<b>'+esc(x[2])+'</b><i>'+esc(x[3])+'</i></a></li>';
     }).join("")+'</ul>'+
-  '</div></section>'+
-  ProcessBand({ key: t === "out" ? "acq-out" : "acq-in",
-    kicker: t === "out" ? "넘기는 순서" : "받는 순서",
-    title:  t === "out" ? "넘길 때는 이 순서입니다" : "받을 때는 이 순서입니다",
-    lead:   t === "out"
-      ? "통째로 넘기면 철거와 원상복구를 안 하셔도 되는 경우가 있습니다. 조건부터 정합니다."
-      : "권리금과 시설이 같이 오는지, 임대차가 승계되는지가 금액을 가릅니다.",
-    industry: ind ? ind.key : "", tone:"sec-gray",
-    note: t === "out"
-      ? "매물 등록 기능은 따로 없습니다. 접수로 적어 보내 주시면 사람이 확인하고 올려 드립니다."
-      : "매물에 적힌 평수 · 보증금 · 월세 · 권리금 · 매출은 올리신 사장님이 적으신 값이고, 저희가 확인하거나 보증하는 값이 아닙니다." })+
-  '<section class="sec"><div class="w">'+
+  '</div></section>';
+}
+
+/* E. 거래 절차 — ⚠️⚠️ **접어 둡니다.** 열 걸음(받는 쪽) · 일곱
+   걸음(넘기는 쪽)이 펼쳐진 채로 있으면 390px 에서 그 구간 하나가
+   화면 서넛이고, 그만큼 **위의 고르는 자리와 아래 매물이 멀어집니다.**
+   ⚠️ 접힌 것도 DOM 에 그대로 있어서 크롤러 · 링크 검사 · 색인이 한
+   글자도 안 바뀝니다 (폐업 로드맵과 같은 방식). */
+function AcqProcess(t, ind){
+  var key = (t === "out") ? "acq-out" : "acq-in";
+  var n   = ((window.AM_PROCESS || {})[key] || []).length;
+  return '<section class="sec sec-gray stD"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">'+(t === "out" ? "넘기는 순서" : "받는 순서")+'</p>'+
+      '<h2>'+esc((ind ? ind.name + " — " : "")+
+        (t === "out" ? "넘길 때는 이 순서입니다" : "받을 때는 이 순서입니다"))+'</h2>'+
+      '<p>'+esc(n + "걸음입니다. " + (t === "out"
+        ? "통째로 넘기면 철거와 원상복구를 안 하셔도 되는 경우가 있습니다. 조건부터 정합니다."
+        : "권리금과 시설이 같이 오는지, 임대차가 승계되는지가 금액을 가릅니다."))+' '+
+        '<b>여기는 읽는 자리이고 신청은 위에서 합니다.</b></p>'+
+    '</div>'+
+    FoldAll("aq-road", (t === "out" ? "넘기는 순서 " : "받는 순서 ")+n+"걸음 보기", "접기")+
+    '<div class="is-fold-all" id="aq-road">'+
+      ProcessBand({ key:key, bare:true, industry: ind ? ind.key : "",
+        note: t === "out"
+          ? "매물 등록 기능은 따로 없습니다. 접수로 적어 보내 주시면 사람이 확인하고 올려 드립니다."
+          : "매물에 적힌 평수 · 보증금 · 월세 · 권리금 · 매출은 올리신 사장님이 적으신 값이고, 저희가 확인하거나 보증하는 값이 아닙니다." })+
+    '</div>'+
+  '</div></section>';
+}
+
+/* F. 지금 올라온 것 — ⚠️ 0건이면 **0 이라고 말합니다** (절대 규칙 1).
+   한 건이라도 올라오면 코드를 한 줄도 안 고치고 단추가 섭니다. */
+function AcqMarket(ind, iq){
+  var nStore = (typeof amStores === "function") ? amStores({}).length : 0;
+  var nAsset = (typeof amAssets === "function") ? amAssets({}).length : 0;
+  return '<section class="sec"><div class="w">'+
     '<div class="sec-hd">'+
       '<p class="eyebrow">지금 올라온 것</p>'+
       '<h2>매장 매물 '+nStore+'건 · 시설 · 장비 '+nAsset+'건</h2>'+
@@ -744,17 +778,45 @@ function PageAcquisition(){
     (nStore || nAsset
       ? '<div class="row-cta"><a class="btn btn-b" href="/stores'+esc(iq)+'">매장 매물 보기'+icon("arrow",16)+'</a>'+
         '<a class="btn btn-o" href="/assets'+esc(iq)+'">시설 · 장비 보기</a></div>'
+      /* ⚠️⚠️ 빈 자리의 단추를 **고르는 자리**로 보냅니다. 전에는 여기서
+         바로 접수로 가서, 이 화면에 신청 단추가 셋이 되고 그중 둘이
+         고르신 것을 안 들고 갔습니다. */
       : Empty({ icon:"store", title:"아직 올라온 매물이 없습니다",
           text:"올라오는 대로 여기에 나옵니다. 그동안 인수 · 양도에서 자주 막히는 것부터 보셔도 됩니다.",
           reads: (typeof amContentsFor === "function")
             ? amContentsFor({ cat:"transfer", side:"both", limit:3 }) : [],
-          cta:'<a class="btn btn-b" href="'+esc(quoteTo({cat:"transfer"}))+'">'+
-              '넘길 매장 접수하기'+icon("arrow",16)+'</a>'+
+          cta:'<a class="btn btn-b" href="#pick">넘길 때 필요한 것 고르기'+icon("arrow",16)+'</a>'+
               '<a class="btn btn-o" href="/stores">매물 화면 보기</a>' }))+
-  '</div></section>'+
-  ReadBand({ cat:"transfer", side:"both", limit:3,
-             title:"인수 · 양도에서 자주 막히는 것" })+
-  JourneyBand({ current:"acquisition", tone:"sec-white",
-    title:"다른 것도 준비하고 계신가요?",
-    lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." });
+  '</div></section>';
 }
+
+function PageAcquisition(){
+  var t    = (nowQS("t") === "out") ? "out" : "in";
+  var ind  = (typeof amIndustry === "function") ? amIndustry(nowQS("i")) : null;
+  var iq   = ind ? ("?i=" + encodeURIComponent(ind.key)) : "";
+
+  /* §3 공통 여덟 — ① 소개 ② 서비스 선택 ③ 선택 확인 ④ 통합 견적
+     신청(③ 안) ⑤ 체크리스트(= 거래 절차) ⑥ 가이드 ⑦ 계산도구
+     ⑧ 다른 전문관. 여기에 이 전문관만의 **탭 · 메뉴 · 매물 탐색**이
+     더 붙습니다 (§3 이 허용한 자리).
+     ⚠️⚠️ **`side` 는 `transfer` 입니다.** DB 가 처음부터 받는 값인데
+     (0001 — start | ops | transfer | close) 신청 화면에 그 선택지가
+     없어서, 양도양수로 들어온 분이 **"창업"** 으로 접수됐습니다 —
+     `ops` 하나를 고치고도 같은 자리에 그대로 남아 있었습니다. */
+  return AcqIntro(ind, iq) +
+    AcqWhich(t, ind, iq) +
+    PickGroupBand("transfer", "transfer") +
+    PickBasket("transfer") +
+    AcqProcess(t, ind) +
+    AcqMarket(ind, iq) +
+    ReadBand({ cat:"transfer", side:"both", limit:3,
+               title:"인수 · 양도에서 자주 막히는 것" }) +
+    HallCalcBand({ keys:AQ_CALC, tones:AQ_CALC_TONE,
+      title:"받기 전 · 넘기기 전에 숫자부터 보세요",
+      lead:"권리금이 몇 달이면 돌아오는지, 새로 만드는 것과 받는 것이 얼마나 다른지 따져 보실 수 있습니다. 적으신 값은 저장하지 않습니다." }) +
+    JourneyBand({ current:"acquisition", tone:"sec-white",
+      title:"다른 것도 준비하고 계신가요?",
+      lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." }) +
+    PickBar("transfer");
+}
+

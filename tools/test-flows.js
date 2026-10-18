@@ -281,17 +281,33 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.goto(B+"/closure/restaurant",{waitUntil:"networkidle"});
  say((await txt()).indexOf("음식점")>=0,"폐업 ① 음식점 폐업 화면이 열린다");
  await pg.goto(B+"/closure",{waitUntil:"networkidle"});
- const clHas=await pg.evaluate(()=>{
-   const c=document.querySelector('.pkg-c[data-pk="close"]');
-   return c?[...c.querySelectorAll('.pkg-nm')].map(x=>x.textContent.trim()):[];});
- say(clHas.length>=4,"폐업 ② 폐업 정리 패키지가 나온다",clHas.join(" · "));
+ await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+ await pg.reload({waitUntil:"networkidle"});
+ /* ⚠️⚠️ **2026-10-18 전체 점검 §3 으로 폐업이 공통 프레임이 됐습니다.**
+    패키지가 "신청" 에서 **"위 선택에 담기"** 로 바뀌었습니다 — 한
+    화면에 신청 단추가 둘이면 어디서 보내는지가 묻힙니다 (§2 · §5).
+    그래서 재는 자리가 `.pkg-*`(옛 패키지 카드) 에서 `.pkp-*`(담는
+    카드)로 옮겨졌습니다 — **검사가 틀린 것이 아니라 화면이 바뀐
+    것**입니다. 지키는 것(철거가 맨 앞이 아니다)은 그대로입니다. */
+ const clHas=await pg.evaluate(()=>
+   [...document.querySelectorAll(".pkp-g .pkp-n")].map(x=>x.textContent.trim()));
+ say(clHas.length>=1,"폐업 ② 폐업 정리 묶음이 나온다",clHas.join(" · "));
  /* ⚠️⚠️ **철거가 맨 앞이 아니어야 합니다** (§6-4) — 양도 · 매각이 먼저 */
- const firstTwo=clHas.slice(0,2).join(" ");
- say(!/철거|원상복구/.test(firstTwo),"폐업 ③ 철거가 맨 앞이 아니다",firstTwo);
- await click('#pkg-go-close');
- say((await url()).startsWith("/quote"),"폐업 ④ 패키지 → 신청 화면",await url());
+ const clFirst=await pg.evaluate(()=>{
+   const l=document.querySelector(".pkp-g .pkp-l");
+   return l?l.textContent.trim():"";});
+ say(!/^\s*(철거|원상복구)/.test(clFirst),"폐업 ③ 철거가 맨 앞이 아니다",clFirst);
+ /* ④ 담으면 위 선택에 쌓입니다 (신청 단추는 바구니 하나뿐입니다) */
+ await click('.pkp-g button');
+ const clN=await pg.evaluate(()=>(document.querySelector("[data-pick-n]")||{}).textContent||"");
+ say(Number(clN)>0,"폐업 ④ 묶음을 누르면 위 선택에 담긴다","지금 "+clN);
+ const clGo=await pg.getAttribute("#pk-bar-go","href");
+ say((clGo||"").indexOf("side=close")>=0,"폐업 ⑤ 신청 주소가 폐업 쪽이다",clGo);
+ await click("#pk-bar-go");
+ say((await url()).startsWith("/quote"),"폐업 ⑥ 신청 화면으로 간다",await url());
  const side=await pg.evaluate(()=>(document.getElementById("q-side")||{}).value||"");
- say(side==="close","폐업 ⑤ 신청 화면이 폐업 쪽으로 열린다",side);
+ say(side==="close","폐업 ⑦ 신청 화면이 폐업 쪽으로 열린다",side);
+ await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
 
  /* ════════════════════════════════════════════════════════════════
     【7】 2026-10-17 창업 준비 전문관 §16 — 시나리오 A ~ E
@@ -448,6 +464,127 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  say(await pg.evaluate(()=>document.querySelector("[data-pick-n]").textContent)==="1",
      "E④ 잘못 고른 것을 뺄 수 있다");
  await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+
+ /* ════════════════════════════════════════════════════════════════
+    【8】 2026-10-18 전체 점검 §20 — 시나리오 A ~ D · H
+    ════════════════════════════════════════════════════════════════
+    > §20 — "실제 구현되어 있지 않은 기능은 테스트 성공으로 처리하지
+    >  않는다."
+
+    ⚠️⚠️ **E · F · G 는 여기서 돌리지 않습니다.** 셋 다 로그인이
+    필요한데 `/api/session` 이 `auth:false` 라 화면이 그 구간째 안
+    그립니다 — 돌려서 "통과" 로 적으면 그게 하지 않은 일을 했다고
+    말하는 것입니다 (절대 규칙 5). 서버층과 DB 는 `tools/test-auth.js`
+    (189개) · `tools/test-sql.js` · `tools/test-admin.js` 가 봅니다.
+    ⚠️ 주석에 백틱을 쓰지 마세요. */
+ console.log("\n【8】 §20 시나리오 A ~ D · H — 네 전문관을 같은 차례로");
+
+ /* 전문관 넷을 **같은 순서로** 눌러 봅니다 — 고르기 → 담기기 →
+    한 번에 신청 → 신청 화면이 그 쪽으로 열리는가 → 항목이 그대로
+    실리는가. ⚠️ 하나라도 다르면 §3 프레임 통일이 깨진 것입니다. */
+ const HALLS = [
+   ["A", "창업 준비",     "/startup",   "start",    3],
+   ["B", "매장 운영",     "/operation", "ops",      4],
+   ["C", "폐업 정리",     "/closure",   "close",    3],
+   ["D", "양도양수",      "/transfer",  "transfer", 2]
+ ];
+ for(const [no, name, path, side, want] of HALLS){
+   await pg.goto(B+path,{waitUntil:"networkidle"});
+   await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+   await pg.reload({waitUntil:"networkidle"});
+   /* ① 묶음을 펼쳐 보이는 체크칸을 모읍니다
+      ⚠️⚠️ **있는지가 아니라 보이는지**입니다 — 접힌 목록도 DOM 에는
+      그대로 있어서, 있는지만 보면 안 보이는 것을 누르려다 터집니다. */
+   await pg.evaluate(()=>{
+     document.querySelectorAll('.opg-g [aria-expanded="false"]')
+       .forEach(function(b){ try{ b.click(); }catch(e){} });
+   });
+   await pg.waitForTimeout(260);
+   const ck = await pg.$$("#view input.pk-ck:visible");
+   say(ck.length >= want, no+"① "+name+" — 고를 수 있는 칸이 "+want+"개 이상", ck.length+"개");
+   for(let i = 0; i < want && i < ck.length; i++) await ck[i].click();
+   await pg.waitForTimeout(160);
+   const n = await pg.evaluate(()=>(document.querySelector("[data-pick-n]")||{}).textContent||"");
+   say(n === String(want), no+"② 고른 "+want+"개를 그대로 센다", n);
+   /* ② 한 번에 신청 — 폰 고정 띠의 주소에 쪽과 고른 것이 실립니다 */
+   const href = await pg.getAttribute("#pk-bar-go","href");
+   say((href||"").indexOf("side="+side) >= 0, no+"③ 신청 주소의 쪽이 "+side+" 다", href);
+   await click("#pk-bar-go");
+   say(/^\/quote/.test(await url()), no+"④ 신청 화면으로 간다", await url());
+   const got = await pg.evaluate(()=>({
+     side: (document.getElementById("q-side")||{}).value||"",
+     n: document.querySelectorAll("#q-svl > li").length
+   }));
+   say(got.side === side, no+"⑤ 신청 화면이 "+side+" 쪽으로 열린다", got.side);
+   say(got.n === want, no+"⑥ 고른 "+want+"개가 그대로 적혀 있다", String(got.n));
+   /* ③ 보낼 몸통 — ⚠️ 실제로 보내지 않습니다 (운영자에게 시험 접수가
+      갑니다). 항목이 하나로 묶여 가는지와 상황 칸이 맞는지를 봅니다. */
+   await pg.selectOption("#q-reg","gyeonggi");
+   await pg.fill("#q-name","홍길동"); await pg.fill("#q-tel","010-1234-5678");
+   await pg.fill("#q-q","검사용 내용입니다");
+   await pg.check("#q-ag");
+   const body = await pg.evaluate(()=>{
+     let got=null; const real=window.amSend;
+     window.amSend=(id,b)=>{ got=b; return false; };
+     window.quoteSend(new Event("submit"));
+     window.amSend=real; return got;
+   });
+   say(!!body && body.items && body.items.length === want,
+       no+"⑦ 한 신청서에 항목 "+want+"개로 간다",
+       body && body.items ? body.items.length+"개" : "안 보냈습니다");
+   say(!!body && body.side === side, no+"⑧ 보낼 쪽이 "+side+" 다", body && body.side);
+   /* ⚠️⚠️ **접수 글의 "상황" 칸** — 전에 close 가 아니면 전부
+      "창업 · 시작" 이라 운영 · 양도양수가 창업으로 나갔습니다.
+      받아 보는 직원이 그것을 보고 엉뚱한 업체를 찾습니다. */
+   const says = body && body.detail && body.detail["상황"];
+   const WANT_SAY = { start:"창업 · 시작", ops:"운영",
+                      transfer:"인수 · 양도", close:"폐업 · 정리" };
+   say(says === WANT_SAY[side],
+       no+"⑨ 접수 글의 상황 칸이 "+WANT_SAY[side]+" 다", says);
+   await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+ }
+
+ /* ── H. 모바일 — 390px 에서 넷을 다시 ────────────────────────── */
+ await pg.setViewportSize({ width:390, height:844 });
+ for(const [no, name, path, side, want] of HALLS){
+   await pg.goto(B+path,{waitUntil:"networkidle"});
+   await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+   await pg.reload({waitUntil:"networkidle"});
+   await pg.evaluate(()=>{
+     document.querySelectorAll('.opg-g [aria-expanded="false"]')
+       .forEach(function(b){ try{ b.click(); }catch(e){} });
+   });
+   await pg.waitForTimeout(260);
+   const ck = await pg.$$("#view input.pk-ck:visible");
+   if(ck.length) await ck[0].click();
+   await pg.waitForTimeout(200);
+   /* ⚠️⚠️ **고정 띠가 실제로 보이는지**를 봅니다. 이 저장소는
+      display:flex 인 칸에 hidden 을 걸어 **속성은 붙었는데 안
+      가려지는** 사고를 겪었습니다.
+      ⚠️⚠️ **`offsetParent` 로 보지 마세요.** 이 띠는
+      `position:fixed` 라 보이든 안 보이든 **늘 null** 입니다 —
+      그걸로 재서 넷 다 "안 보입니다" 가 나왔고 **검사가
+      틀렸습니다.** 그릴 상자가 있는지(`getClientRects`)와
+      display 를 같이 봅니다. */
+   const bar = await pg.evaluate(()=>{
+     const b=document.getElementById("pk-bar");
+     if(!b) return "없음";
+     const cs=getComputedStyle(b);
+     if(cs.display==="none" || cs.visibility==="hidden" || !b.getClientRects().length)
+       return "안 보입니다 (display " + cs.display + ")";
+     const r=b.getBoundingClientRect();
+     if(r.bottom <= 0 || r.top >= innerHeight) return "화면 밖입니다";
+     return Math.round(r.height) >= 40 ? "보입니다 h"+Math.round(r.height) : "너무 낮습니다 h"+Math.round(r.height);
+   });
+   say(/^보입니다/.test(bar), "H "+name+" — 폰에서 고정 띠가 보인다", bar);
+   /* 가로 스크롤 */
+   const over = await pg.evaluate(()=>document.documentElement.scrollWidth - document.documentElement.clientWidth);
+   say(over <= 0, "H "+name+" — 390px 에서 가로 스크롤이 없다", over+"px");
+   await click("#pk-bar-go");
+   say(/^\/quote/.test(await url()), "H "+name+" — 폰에서 신청까지 간다", await url());
+   await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+ }
+ await pg.setViewportSize({ width:1280, height:900 });
 
  console.log("\n【5】 콘솔 오류");
  say(errs.length===0,"JS 에러 없음",errs.join(" / "));

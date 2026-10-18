@@ -375,6 +375,139 @@ window.AM_PICK_GROUP = {
       any:"admin/insurance",
       subs:["admin/insurance","admin/legal","admin/admin-agent","admin/certify",
             "fund/policy-fund","fund/gov-program"] }
+  ],
+
+  /* ── 폐업 · 정리 여덟 (2026-10-18 전체 점검 지시서 §3 · §12) ──────
+     > §12 — "폐업 서비스는 철거 · 원상복구 · 집기 매각 · 폐기물 ·
+     >  세무정리 · 신고 등으로 구분한다. 동일한 작업이 중복 신청되지
+     >  않도록 한다."
+
+     ⚠️⚠️ **차례가 뜻입니다.** 넘기기 → 팔기 → 재고 → 철거 →
+     원상복구 → 폐기물 → 신고 → 계약 해지. 2026-10-08 §17 이
+     "폐업을 선택했다고 무조건 철거부터 안내하지 않는다" 고 적어서,
+     **돈이 되는 쪽 셋이 먼저**입니다 — 양도가 되면 철거비도
+     원상복구도 안 드는 경우가 있습니다.
+
+     ⚠️⚠️ **`demolish/waste`(폐기물)를 대표 목록에서 뺐습니다.** 바로
+     아래 여섯째 묶음이 **폐기물 버리기** 전부를 들고 있어서, 그대로
+     두면 한 화면에 "폐기물" 체크칸이 둘이 됩니다 — §12-3 이 적은
+     "집기 매각과 폐기물 처리 구분" 이 그 자리입니다. ⚠️ **지운 것이
+     아닙니다** — `catalog.js` 에 그대로 있고 `/c/demolish` 화면과
+     전체 서비스 보기(분류 단위)에서 그대로 걸립니다.
+
+     ⚠️ `asset/*`(팔기)와 `waste/*`(버리기)에 **같은 이름이 둘**
+     있습니다 (`가구` · `업소용 장비`). 지우면 안 됩니다 — 하나는
+     돈을 받는 일이고 하나는 돈을 내는 일입니다. 묶음 이름이
+     **"팔기" 와 "버리기"** 로 갈라 주는 자리입니다. */
+  closure: [
+    { key:"pass",   name:"매장 넘기기",          ia:"handover", tone:"t13",
+      lead:"권리금 · 인수자 찾기까지",
+      any:"transfer",
+      subs:["transfer/store-transfer","transfer/premium","transfer/equip-transfer",
+            "transfer/find-buyer","transfer/fc-transfer"] },
+
+    { key:"sell",   name:"시설 · 장비 팔기",      ia:"money",    tone:"t12",
+      lead:"주방장비 · 냉장고 · 가구를 돈으로",
+      any:"asset",
+      subs:["asset/kitchen-eq","asset/fridge","asset/espresso","asset/furniture",
+            "asset/pos","asset/kiosk","asset/fitness","asset/salon-eq","asset/biz-eq"] },
+
+    { key:"stock",  name:"남은 재고 정리",        ia:"supply",   tone:"t2",
+      lead:"식자재 · 상품 · 포장재",
+      any:"stock",
+      subs:["stock/ingredient","stock/goods","stock/packaging","stock/consumable",
+            "stock/material","stock/etc-stock"] },
+
+    { key:"demo",   name:"철거",                 ia:"demolish", tone:"sv4",
+      lead:"전체 · 부분 · 주방 · 간판",
+      any:"demolish",
+      subs:["demolish/full","demolish/partial","demolish/kitchen",
+            "demolish/sign","demolish/facility"] },
+
+    { key:"back",   name:"원상복구",             ia:"restore",  tone:"sv1",
+      lead:"빌려 쓰기 전 상태로 돌려놓기",
+      any:"restore",
+      subs:["restore/shop-restore","restore/electric","restore/plumbing","restore/gas",
+            "restore/floor","restore/wall","restore/ceiling","restore/sign"] },
+
+    { key:"waste",  name:"폐기물 버리기",         ia:"trash",    tone:"t7",
+      lead:"사업장 폐기물 · 대형 · 전자제품",
+      any:"waste",
+      subs:["waste/biz-waste","waste/bulky","waste/furniture","waste/electronics",
+            "waste/biz-eq","waste/recycle"] },
+
+    { key:"report", name:"폐업 신고 · 세금",      ia:"tax",      tone:"sv5",
+      lead:"신고 · 부가세 · 인허가 정리",
+      any:"tax",
+      subs:["tax/close-report","tax/vat","tax/income-tax","tax/biz-reg",
+            "tax/permit","tax/consult"] },
+
+    /* ⚠️ 묶음이 분류를 넘어갑니다 (`contract` + `labor`) — 사장님에게는
+       "달마다 나가는 것을 끊고 직원을 정리하는" 한 가지 일입니다.
+       `opsvc.js` 의 묶음 F 가 이미 그렇게 하고 있어 새 성질이 아닙니다. */
+    { key:"end",    name:"계약 해지 · 직원 정리",  ia:"contract", tone:"sv3",
+      lead:"인터넷 · 렌탈 · 보험 · 퇴직금",
+      any:"contract",
+      subs:["contract/internet","contract/phone","contract/pos","contract/kiosk",
+            "contract/rental","contract/water","contract/cctv","contract/security",
+            "contract/insurance","labor/resign","labor/severance","labor/insurance4",
+            "labor/contract-end","labor/consult"] }
+  ],
+
+  /* ── 매장 양도양수 여섯 (§3 · §13) ───────────────────────────────
+     > §3 — "매장 양도양수처럼 성격이 다른 전문관은 매물 탐색과 거래
+     >  절차를 고려하여 필요한 구조를 별도로 유지할 수 있다."
+     > §4 — "실제 서비스가 부족한 경우 억지로 12개를 채우지 않는다."
+
+     ⚠️⚠️ **여덟으로 안 늘렸습니다.** 양도양수에서 실제로 돈이 드는
+     일이 여섯입니다 — 넘기기 · 계약 · 시설 인계 · 재고 인계 ·
+     시스템 승계 · 인수 전 점검. 억지로 둘을 더하면 가짜 칸입니다.
+     ⚠️ 매물 탐색(`/stores` · `/assets`)과 인수 · 양도 **절차**는
+     전과 똑같이 그 화면에 남아 있습니다 — 고르는 자리가 하나 늘어난
+     것이고 있던 것이 내려간 것이 아닙니다.
+
+     ⚠️⚠️ **`asset/*` 가 폐업 쪽과 같은 하위입니다.** 폐업에서는
+     "팔기" 이고 여기서는 "인계" 입니다 — 같은 장비를 넘기는 일인데
+     돈을 받는 쪽과 받아 가는 쪽이 다릅니다. 분류를 새로 만들면
+     업체 · 매물 · 글이 쓰는 key 가 어긋납니다. */
+  transfer: [
+    { key:"pass",   name:"내 매장 넘기기",        ia:"handover", tone:"t13",
+      lead:"권리금 · 인수자 찾기까지",
+      any:"transfer",
+      subs:["transfer/store-transfer","transfer/premium","transfer/equip-transfer",
+            "transfer/find-buyer","transfer/fc-transfer"] },
+
+    { key:"deal",   name:"계약 · 임대차 검토",    ia:"contract", tone:"t6",
+      lead:"계약서 · 임대차 승계 · 분쟁",
+      any:"admin/legal",
+      subs:["admin/legal","admin/admin-agent","admin/certify",
+            "law/lease","law/dispute","law/consult"] },
+
+    { key:"asset",  name:"시설 · 장비 인계",      ia:"equip",    tone:"t12",
+      lead:"주방장비 · 냉장고 · 가구",
+      any:"asset",
+      subs:["asset/kitchen-eq","asset/fridge","asset/espresso","asset/furniture",
+            "asset/pos","asset/kiosk","asset/fitness","asset/salon-eq","asset/biz-eq"] },
+
+    { key:"stock",  name:"재고 인계",            ia:"supply",   tone:"t2",
+      lead:"식자재 · 상품 · 포장재",
+      any:"stock",
+      subs:["stock/ingredient","stock/goods","stock/packaging","stock/consumable",
+            "stock/material","stock/etc-stock"] },
+
+    { key:"sys",    name:"POS · 인터넷 승계",     ia:"pos",      tone:"sv2",
+      lead:"명의 변경 · 재설치 · 교체",
+      any:"it",
+      subs:["it/pos","it/payment","it/kiosk","it/cctv","it/internet","it/phone"] },
+
+    /* ⚠️ 인수하시는 분이 제일 먼저 묻는 것이 "지금 쓸 수 있나" 입니다.
+       `repair/check-up`(정기 시설 점검)이 그 자리이고, 손볼 것이
+       나오면 `interior/*` 가 받습니다. */
+    { key:"fix",    name:"인수 전 점검 · 손볼 것", ia:"repair",   tone:"sv3",
+      lead:"시설 점검 · 부분 공사 · 간판 교체",
+      any:"repair",
+      subs:["repair/check-up","repair/elec-fix","repair/kitchen-fix","repair/it-fix",
+            "interior/interior","interior/sign","interior/paint","interior/floor"] }
   ]
 };
 
@@ -437,6 +570,13 @@ window.amPickHallCats = function(hallKey){
       (g.items || []).forEach(function(o){ add(o.cat); });
     });
     (window.AM_OPS || []).forEach(function(o){ add(o.cat); });
+  }
+  /* ⚠️⚠️ 폐업은 **목록이 처음부터 있습니다** — `AM_CLOSE_CATS` 열둘이
+     그 쪽 분류 전부이고, 업종 화면 · 메인 거르개가 몇 달째 그것을
+     쓰고 있습니다. 손으로 다시 적으면 분류를 늘릴 때 조용히 어긋납니다
+     (운영은 그런 목록이 없어서 위처럼 모아 오는 것입니다). */
+  if(hallKey === "closure"){
+    (window.AM_CLOSE_CATS || []).forEach(function(c){ add(c.key || c); });
   }
   return out;
 };

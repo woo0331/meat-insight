@@ -40,12 +40,36 @@
    적었고 §11 이 "동일한 설명을 여러 번 반복하지 않는다" 고 적었기
    때문입니다 — 지운 것이 아닙니다.
    ════════════════════════════════════════════════════════════════════ */
+/* 창업 쪽 계산기 넷 — `tools.js` 의 **"시작하기 전"** 묶음 그대로
+   입니다. ⚠️ 없는 key 를 적으면 `HallCalcBand()` 가 그 카드를 조용히
+   뺍니다 (가짜 카드를 깔지 않습니다). */
+var START_CALC      = ["cost", "vs", "premium", "rent"];
+var START_CALC_TONE = { cost:"sv1", vs:"sv2", premium:"t13", rent:"sv3" };
+
 function PageStartup(){
   var ind = nowQS("i");                      /* 업종을 고르셨으면 그 차례로 */
   var top = amPickTop("startup", ind), rest = amPickRest("startup", ind);
+  /* §3 공통 여덟 — ① 소개 ② 서비스 선택 ③ 선택 확인 ④ 통합 견적 신청
+     ⑤ 체크리스트 ⑥ 가이드 ⑦ 계산도구 ⑧ 다른 전문관.
+     ⚠️⚠️ **⑦ 과 ⑧ 이 창업에만 없었습니다** (2026-10-18 전체 점검에서
+     네 전문관을 나란히 재서 찾았습니다). 계산기는 창업 쪽이 제일
+     많은데(창업비 · 신규vs인수 · 권리금 · 임대료 비율) 정작 그 화면에
+     가는 길이 헤더와 푸터뿐이었고, 다른 전문관으로 넘어가는 줄이
+     없어서 **운영 · 양도양수 · 폐업으로 가려면 헤더로 돌아가야**
+     했습니다. 둘 다 이미 있던 공통 조각입니다 — 새로 만든 것이
+     아닙니다. */
   return StartIntro(ind) + StartPickBand(top, rest) + PickBasket() +
     StartIndustryBand() + PackPickBand("start") + StartChecklist(ind) +
-    StartGuideBand(ind) + StartApplyBand() + PickBar();
+    StartGuideBand(ind) +
+    HallCalcBand({ keys:START_CALC, tones:START_CALC_TONE,
+      title:"시작하기 전에 숫자부터 보세요",
+      lead:"얼마가 드는지 · 새로 만드는 것과 받는 것이 어떻게 다른지 "+
+           "따져 보실 수 있습니다. 적으신 값은 저장하지 않습니다." }) +
+    StartApplyBand() +
+    JourneyBand({ current:"startup", tone:"sec-white",
+      title:"다른 것도 준비하고 계신가요?",
+      lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." }) +
+    PickBar();
 }
 
 /* ── A. 창업 준비 소개 (§2-A) ─────────────────────────────────────
@@ -435,49 +459,97 @@ function FranchiseHint(fcat, ind){
 
 /* ── /closure — 정리 방법 고르기 (§21) ──────────────────────────── */
 function PageClosure(){
+  /* ⚠️⚠️ 2026-10-18 전체 점검 지시서 §3 · §12 — 네 전문관이 **같은
+     공통 레이아웃**을 씁니다. 재 보니 폐업에 **고르는 체크칸이
+     0개**였습니다 (전부 링크였습니다) — 창업 · 운영은 둘 다 있었고
+     폐업과 양도양수만 빠져 있었습니다.
+
+     §12 권장 구조 그대로 —
+       ① 소개 ② 필요한 폐업 서비스 선택 ③ 선택 확인 + 통합 신청
+       ④ 함께 하시는 것 ⑤ 절차 가이드 ⑥ 업종별 ⑦ 체크리스트 · 비용
+       ⑧ 도움 ⑨ 다른 전문관
+
+     ⚠️⚠️ **있던 것을 지우지 않았습니다** (§0-3 · §0-4). 상황 네 갈래
+     (`?w=`)와 상황별 로드맵 · 업종 고르개 열넷 · 분류 열두 카드가
+     전부 그대로이고, 길어진 만큼 **접었습니다** — 접힌 것도 DOM 에
+     그대로 있어서 크롤러 · 링크 검사 · 색인이 안 바뀝니다 (재서
+     확인했습니다).
+     ⚠️ 390px 에서 12,713px(폰 화면 열넷)이었습니다 — §12-4 가 적은
+     "폐업 절차의 과도한 길이" 가 그 숫자입니다. */
+  return ClosureIntro()+
+    WantBand(null)+
+    PickGroupBand("closure", "close")+
+    PickBasket("close")+
+    PackPickBand("close")+
+    ClosingProcess(null)+
+    ClosureIndustryBand()+
+    /* ⑥ 가이드 — ⚠️⚠️ **이 구간이 폐업에만 없었습니다.** 창업 · 운영 ·
+       양도양수는 전부 글 카드를 내는데 폐업은 도움 카드 셋(`.help`)만
+       있었습니다. 그 셋은 화면으로 보내는 길이고 **읽을 글이
+       아닙니다** — 전수 점검의 "전문관 공통 여덟" 이 잡았습니다.
+       ⚠️ 맞는 글이 없으면 `ReadBand()` 가 구간째 뺍니다 (절대 규칙 2). */
+    ReadBand({ side:"close", limit:4,
+               title:"정리하기 전에 알아 두면 좋은 것" })+
+    HallCalcBand({ keys:CLOSE_CALC, tones:CLOSE_CALC_TONE,
+      title:"정리하기 전에 숫자부터 보세요",
+      lead:"빠뜨린 것과 들 돈을 먼저 보실 수 있습니다. 적으신 값은 저장하지 않습니다." })+
+    ClosureHelpBand()+
+    JourneyBand({ current:"closing",
+      title:"다른 것도 준비하고 계신가요?",
+      lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." })+
+    PickBar("close");
+}
+
+/* ⚠️ 폐업 쪽 계산기 — `AM_TOOLS` 의 "정리할 때" 둘(체크리스트 ·
+   예상비용)과 권리금입니다. §12 권장 구조의 ⑤ 폐업 체크리스트와
+   ⑦ 폐업 비용 계산기가 이 구간 한 곳에서 같이 섭니다.
+   ⚠️⚠️ **넷으로 채우지 않았습니다** — 폐업에서 실제로 쓰는 것이
+   셋입니다 (`/tools` 의 "정리할 때" 묶음이 둘이고 권리금이 양도와
+   걸칩니다). 억지로 하나 더 넣으면 안 쓰는 칸입니다. */
+var CLOSE_CALC      = ["close", "closecost", "premium"];
+var CLOSE_CALC_TONE = { close:"sv4", closecost:"sv5", premium:"t13" };
+
+/* ── A. 폐업 · 정리 소개 ──────────────────────────────────────────
+   ⚠️⚠️ **2026-10-08 지시서 §16 의 첫 메시지 그대로입니다.** "어떻게
+   정리하고 싶으세요" 는 이미 정리하기로 정하신 분께 묻는 말인데, 이
+   화면이 제일 먼저 할 일은 **넘길 수 있는 것이 있는지**를 알려 드리는
+   것입니다 — 양도가 되면 철거비도 원상복구비도 안 드는 경우가 있습니다.
+   ⚠️ **폐업을 실패로 말하지 않습니다** (§6). "잘 정리하는 것도
+   사업입니다" 까지입니다 — 손실 · 실패를 적지 마세요.
+   ⚠️ 단추 둘은 창업 · 운영과 **같은 꼴**입니다 (§3 통일) — 하나는
+   바로 아래 고르개로, 하나는 **빈손으로 가도 되는 길**입니다. */
+function ClosureIntro(){
   return PgHero({
     photo:"hero-closure",
     kicker:"CLOSE · 폐업 · 정리",
-    /* ⚠️⚠️ **2026-10-08 지시서 §16 의 첫 메시지 그대로입니다.**
-       "어떻게 정리하고 싶으세요" 는 이미 정리하기로 정하신 분께 묻는
-       말인데, 이 화면이 제일 먼저 할 일은 **넘길 수 있는 것이 있는지**
-       를 알려 드리는 것입니다 — 양도가 되면 철거비도 원상복구비도
-       안 드는 경우가 있습니다.
-       ⚠️ **폐업을 실패로 말하지 않습니다** (§6). "잘 정리하는 것도
-       사업입니다" 까지입니다 — 손실 · 실패를 적지 마세요. */
     h1raw:"폐업하기 전에,<br class=\"br-m\"> 넘길 수 있는 것부터 확인하세요.",
     lead:"매장과 시설, 장비를 바로 철거하기 전에 다음 사장님에게 이어질 수 " +
-         "있는지 먼저 확인해보세요. 순서와 기한이 있는 일이라 빠뜨리면 돈이 나갑니다."
-  })+
-  WantBand(null)+
-  '<section class="sec"><div class="w">'+
-    '<div class="sec-hd">'+
-      '<p class="eyebrow">업종을 고르시면</p>'+
+         "있는지 먼저 확인해보세요. 순서와 기한이 있는 일이라 빠뜨리면 돈이 나갑니다.",
+    cta:'<a class="btn btn-b btn-lg" href="#pick">'+
+        '필요한 서비스 고르기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="'+esc(quoteTo({ side:"close" }))+'">'+
+        '무엇이 필요한지 모르겠어요</a>'
+  });
+}
+
+/* ── 업종별로 자세히 (기존 보존 · §0-3) ───────────────────────────
+   ⚠️⚠️ **지우면 `/closure/:업종` 열넷으로 가는 길이 없어집니다.**
+   그 화면들은 색인되어 있고 업종별 정리 목록이 전부 거기 있습니다.
+   ⚠️ 접어 둡니다 — 서비스 고르기가 주인공이고, 업종은 **더 보고
+   싶은 분**이 누르는 자리입니다 (창업 쪽과 같은 꼴입니다). */
+function ClosureIndustryBand(){
+  return '<section class="sec sec-white stI"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">업종별로 자세히</p>'+
       '<h2>업종마다 정리할 것이 다릅니다</h2>'+
       '<p>헬스장은 운동기구와 락커가, 음식점은 주방과 닥트가 남습니다.</p>'+
     '</div>'+
-    IndustryGroupChips("/closure", nowQS("g"))+
-    IndustryGrid("/closure","", nowQS("g"))+
-  '</div></section>'+
-  /* ⚠️⚠️ **2026-10-08 지시서 §15 · §16 · §17 — 고르신 상황마다 순서가
-     다릅니다.** 전에는 어느 상황을 고르셔도 **같은 열세 걸음**이
-     나왔습니다 — 장비만 파시려는 분께 직원 정리와 폐업 신고부터
-     읽히는 꼴이었습니다.
-     ⚠️ **새 화면을 만들지 않았습니다** — `AM_PROCESS` 를 바꿔 끼웁니다.
-     ⚠️ **폐업을 철거업체 연결 서비스로 만들지 않습니다** (§17 — "폐업을
-     선택했다고 무조건 철거부터 안내하지 않는다"). 어느 길이든 양도
-     가능성을 먼저 짚습니다. */
-  ClosingProcess(null)+
-  /* ⚠️⚠️ 2026-10-09 §6-4 — 폐업 정리 패키지. **로드맵 뒤**입니다 —
-     양도 가능성을 먼저 보시게 하고 그 다음에 처분 · 철거입니다.
-     패키지 안의 차례도 같습니다 (양도 → 매각 → 재고 → 철거 → 청소). */
-  /* ⚠️ 위와 같은 까닭 — `.side-close` 안에서는 `sec-ivory` 가 복숭아라
-     `sec-close` 와 같은 색이 됩니다. */
-  PackBand("close", "sec-gray")+
-  ClosureHelpBand()+
-  JourneyBand({ current:"closing",
-    title:"다른 것도 준비하고 계신가요?",
-    lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." });
+    FoldAll("cl-ind", "업종 고르기 ("+(window.AM_INDUSTRIES||[]).length+"개)", "접기")+
+    '<div class="is-fold-all" id="cl-ind">'+
+      IndustryGroupChips("/closure", nowQS("g"))+
+      IndustryGrid("/closure","", nowQS("g"))+
+    '</div>'+
+  '</div></section>';
 }
 
 /* ── 폐업은 목록이 아니라 **무엇을 원하시는가**부터 (§8) ──────────
@@ -518,12 +590,23 @@ function WantBand(ind){
     /* 아직 안 고르셨으면 분류 전부를 그대로 냅니다 — 고르는 것이
        의무가 되면 안 됩니다 */
     var all = (window.amCatsFor ? amCatsFor(i, "close") : (window.AM_CLOSE_CATS||[]));
+    /* ⚠️⚠️ **접었습니다** (2026-10-18 §5 · §12-4). 바로 아래에 고르는
+       자리(`PickGroupBand`)가 생겨서, 펼쳐 둔 채로 두면 **같은 서비스
+       선택 영역이 한 화면에 둘**이 됩니다 — §5 가 직접 금지한 자리이고
+       손님은 어느 쪽에서 골라야 하는지 모릅니다.
+       ⚠️ **지운 것이 아닙니다** — 분류 화면(`/c/:cat` · `/stores` ·
+       `/assets` · `/support`) 열둘로 가는 길이 여기뿐인 분야가 있어서,
+       접힌 채로 DOM 에 그대로 둡니다 (크롤러 · 링크 검사 · 색인이
+       안 바뀝니다 — 재서 확인했습니다). */
     return pick + '<section class="sec"><div class="w">'+
-      '<div class="sec-hd">'+
-        '<p class="eyebrow">고르지 않고 보셔도 됩니다</p>'+
+      '<div class="sec-hd sec-hd-c">'+
+        '<p class="eyebrow">분야별로 자세히</p>'+
         '<h2>정리에 필요한 것 전부</h2>'+
+        '<p>어느 분야에 무엇이 있는지 먼저 보고 싶으시면 펼쳐 보세요. '+
+          '고르시는 것은 아래에서 하시면 됩니다.</p>'+
       '</div>'+
-      '<div class="cat-g cat-g4">'+
+      FoldAll("cl-all", "분야 "+all.length+"개 펼쳐 보기", "접기")+
+      '<div class="cat-g cat-g4 is-fold-all" id="cl-all">'+
         all.map(function(c){ return CatCard(c, i); }).join("")+
       '</div>'+
     '</div></section>';
@@ -540,19 +623,26 @@ function WantBand(ind){
     '<div class="cat-g cat-g4">'+
       g.hit.map(function(c){ return CatCard(c, i); }).join("")+
     '</div>'+
+    /* ⚠️ 나머지도 **접어서** 그대로 둡니다 — 숨기면 그 사장님에게는
+       그 기능이 없는 것이 됩니다 (§0-3). */
     (g.rest.length
-      ? '<div class="sec-hd sec-hd-sub">'+
+      ? '<div class="sec-hd sec-hd-sub sec-hd-c">'+
           '<h2 class="pg-h2">나머지도 그대로 있습니다</h2>'+
           '<p>해당 없으면 건너뛰셔도 됩니다.</p>'+
         '</div>'+
-        '<div class="cat-g cat-g4">'+
+        FoldAll("cl-rest", "나머지 "+g.rest.length+"개 보기", "접기")+
+        '<div class="cat-g cat-g4 is-fold-all" id="cl-rest">'+
           g.rest.map(function(c){ return CatCard(c, i); }).join("")+
         '</div>'
       : "")+
-    '<div class="row-cta"><a class="btn btn-b btn-lg" href="'+
-      esc(quoteTo({industry:i, side:"close"}))+'">'+
-      '한 번에 견적 요청'+icon("arrow",18)+'</a>'+
-      '<a class="btn btn-o btn-lg" href="/tools/close">폐업 체크리스트</a></div>'+
+    /* ⚠️⚠️ **신청 단추를 여기서 뺐습니다** (§5 · §6). 바로 아래
+       바구니(`PickBasket`)가 **신청 단추를 들고 있는 유일한 자리**
+       입니다 — 둘을 두면 ① 어느 쪽을 눌러야 하는지 모르고 ② 여기
+       단추는 **고르신 것을 안 들고 갑니다** (`quoteTo` 는 분류 하나
+       뿐입니다). 운영 전문관에서 신청 단추가 셋이었던 것을 하나로
+       줄인 것과 같은 자리입니다.
+       ⚠️ 체크리스트 단추도 뺐습니다 — 아래 계산도구 구간이 받습니다
+       (한 화면에 같은 데로 가는 단추를 둘 두지 않습니다). */
   '</div></section>';
 }
 
@@ -606,11 +696,31 @@ function ClosingProcess(ind){
      답하신 뒤에 위 셋 중 하나로 갑니다. */
   var o = CLOSE_PROC[w] || CLOSE_PROC.fast;
   var n = amProcess(o.key).length;
-  return StaffNote() + ProcessBand({ key:o.key, kicker:o.kicker, tone:"sec-white",
-    title:(ind ? ind.name + " — " : "") + o.title,
-    lead:n + "걸음입니다. " + o.lead,
-    industry: ind ? ind.key : "",
-    note:o.note });
+  /* ⚠️⚠️ **접었습니다** (2026-10-18 §12-4). 열세 걸음에 걸음마다 꼭
+     확인할 것과 링크가 붙어서, 펼쳐 둔 채로는 이 구간 하나가 폰에서
+     화면 넷이었습니다 — 390px 문서가 12,713px(화면 열넷)이던 까닭의
+     절반이 여기입니다.
+     ⚠️⚠️ **걸음을 지우지 않았습니다** — 접힌 것도 DOM 에 그대로 있어
+     크롤러 · 링크 검사 · 색인이 안 바뀝니다. 창업 준비의 체크리스트
+     (`StartChecklist`)가 쓰는 것과 **같은 꼴**입니다 (§3 통일).
+     ⚠️ `StaffNote()` 는 **접지 않습니다** — 직원이 있으시면 기한이
+     붙는 일이라, 펼치지 않아도 보여야 합니다.
+     ⚠️ 머리말에 "읽는 자리이고 신청은 아래에서" 를 적습니다 — 위
+     바구니가 신청 단추를 들고 있는 유일한 자리입니다 (§5 · §6). */
+  return StaffNote() +
+    '<section class="sec sec-white stD"><div class="w">'+
+      '<div class="sec-hd sec-hd-c">'+
+        '<p class="eyebrow">'+esc(o.kicker)+'</p>'+
+        '<h2>'+esc((ind ? ind.name + " — " : "") + o.title)+'</h2>'+
+        '<p>'+esc(n + "걸음입니다. " + o.lead)+' '+
+          '<b>여기는 읽는 자리이고 신청은 위에서 합니다.</b></p>'+
+      '</div>'+
+      FoldAll("cl-road", "정리 순서 "+n+"걸음 보기", "접기")+
+      '<div class="is-fold-all" id="cl-road">'+
+        ProcessBand({ key:o.key, bare:true, industry: ind ? ind.key : "",
+                      note:o.note })+
+      '</div>'+
+    '</div></section>';
 }
 
 /* ── §20 간단 진단 — "아직 모르겠어요" 를 고르셨을 때 ──────────────
@@ -758,7 +868,11 @@ function ClosureHelpBand(){
   return '<section class="sec sec-white"><div class="w help-g">'+
     HelpCard("list","순서를 모르겠다면","폐업 절차와 필요서류, 기한이 있는 것부터 정리했습니다.","/c/process","폐업 절차 보기")+
     HelpCard("badge","지원을 받으실 수 있는지","철거비 지원처럼 조건만 맞으면 신청할 수 있는 것이 있습니다.","/support","폐업지원 보기")+
-    HelpCard("doc","여러 곳 견적을 한 번에","한 번만 적으시면 철거 · 원상복구 · 폐기물 업체에 같이 전달합니다.","/quote","견적 요청하기")+
+    /* ⚠️⚠️ **이 카드를 `/quote` 로 바로 보내지 마세요.** 고르신 것을
+       안 들고 가서, 손님은 위에서 고른 것이 사라진 빈 신청 화면을
+       봅니다 — 한 화면에 신청으로 가는 길이 둘이면 어느 쪽이 맞는지도
+       흐려집니다 (§2 · §5). 고르는 자리로 보냅니다. */
+    HelpCard("doc","여러 곳 견적을 한 번에","한 번만 적으시면 철거 · 원상복구 · 폐기물 업체에 같이 전달합니다.","#pick","필요한 것 고르기")+
   '</div></section>';
 }
 function HelpCard(ic, t, p, to, label){

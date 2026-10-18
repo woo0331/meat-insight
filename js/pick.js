@@ -451,9 +451,42 @@ function pickQOf(s){
 
 /* 세부 한 줄 — ⚠️ `<label>` 이 통째로 눌립니다 (높이는 `min-height`
    로 48px). 안에 링크를 넣지 마세요. */
-function PickSubRow(s, note, g){
+/* ⚠️⚠️ **읽어 주는 프로그램에는 이름이 저마다 달라야 합니다.**
+   눈으로 보면 어느 카드 안인지 보이지만, 체크칸을 하나씩 훑으면
+   카드가 안 읽힙니다 — 2026-10-18 전체 점검에서 **두 가지**가
+   걸렸습니다.
+
+   | 무엇 | 어디 |
+   |---|---|
+   | "어떤 것이 필요한지 모르겠어요" 가 묶음마다 **같은 이름** | 네 전문관 전부 |
+   | `가구` · `POS` · `키오스크` · `업소용 장비` 가 **묶음마다 다른 뜻** | 폐업 · 양도양수 |
+
+   뒤엣것은 같은 하위 이름이 **파는 것 · 버리는 것 · 해지하는 것 ·
+   승계하는 것**으로 갈리는 자리입니다 (`asset/pos` · `contract/pos` ·
+   `it/pos`) — 분류가 다르니 가는 업체도 다릅니다. 겹치는 이름에만
+   묶음 이름을 앞에 붙입니다. ⚠️ **보이는 글은 그대로입니다** (전부
+   붙이면 읽어 주는 글만 길어집니다). */
+function pickDupLabels(G){
+  var n = {}, dup = {};
+  (G || []).forEach(function(g){
+    (g.subs || []).forEach(function(s){
+      var k = amPickLabel(s);
+      n[k] = (n[k] || 0) + 1;
+      if(n[k] > 1) dup[k] = 1;
+    });
+  });
+  return dup;
+}
+
+function PickSubRow(s, note, g, dup){
   var on = amPickHas(s.id);
   var id = "pks-" + s.id.replace(/[^a-z0-9]/gi, "-");
+  /* 읽어 주는 이름 — 겹치는 것과 "모르겠어요" 에만 묶음 이름을 답니다 */
+  var aria = "";
+  if(g){
+    if(note) aria = g.name + " — " + note;
+    else if(dup && dup[amPickLabel(s)]) aria = g.name + " — " + amPickLabel(s);
+  }
   /* ⚠️⚠️ **찾는 글이 둘입니다.** 처음에 묶음 이름을 세부 글에 **섞어**
      두었더니 "에어컨" 하나에 수리 아홉 · 청소 일곱이 **전부** 걸렸습니다
      (묶음 설명에 "에어컨" 이 들어 있어서입니다) — 찾는 것이 아니라 묶음을
@@ -467,6 +500,7 @@ function PickSubRow(s, note, g){
       '" for="'+esc(id)+'">'+
       '<input type="checkbox" id="'+esc(id)+'" class="pk-ck"'+
         ' data-pick="'+esc(s.id)+'"'+(on ? " checked" : "")+
+        (aria ? ' aria-label="'+esc(aria)+'"' : "")+
         ' onchange="pickToggle(\''+esc(s.id)+'\', this)">'+
       '<span class="pks-n"><b>'+esc(note || amPickLabel(s))+'</b>'+
         (note ? '<i>상담하면서 정하겠습니다</i>'
@@ -475,13 +509,17 @@ function PickSubRow(s, note, g){
     '</label></li>';
 }
 
-window.PickGroupCard = function(g){
+/* ⚠️ `G.map(PickGroupCard)` 가 **세 번째 인자로 목록 전체**를 줍니다 —
+   그래서 겹치는 이름을 여기서 셀 수 있습니다 (묶음 밖에서 따로 넘기면
+   부르는 자리가 둘이 되고 한쪽만 고치게 됩니다). */
+window.PickGroupCard = function(g, i, all){
   var pid = "opg-p-" + g.key;
+  var dup = pickDupLabels(all || [g]);
   /* 고르신 것이 있으면 **처음부터 펼칩니다** */
   var open = g.ids.some(amPickHas);
   var art = (typeof hasIconArt === "function" && g.ia && hasIconArt(g.ia))
     ? iconArt(g.ia, 52) : icon("check", 26);
-  var subs = g.subs.map(function(s){ return PickSubRow(s, "", g); }).join("");
+  var subs = g.subs.map(function(s){ return PickSubRow(s, "", g, dup); }).join("");
   return '<li class="tn-'+esc(g.tone)+'"><div class="opg-c">'+
     '<button class="opg-h'+(open ? " is-open" : "")+'" type="button"'+
       ' aria-expanded="'+(open ? "true" : "false")+'" aria-controls="'+esc(pid)+'"'+
@@ -494,7 +532,7 @@ window.PickGroupCard = function(g){
     '</button>'+
     '<div class="opg-p" id="'+esc(pid)+'"'+(open ? "" : " hidden")+'>'+
       '<ul class="opg-l">'+subs+
-        PickSubRow(g.any, "어떤 것이 필요한지 모르겠어요", g)+'</ul>'+
+        PickSubRow(g.any, "어떤 것이 필요한지 모르겠어요", g, dup)+'</ul>'+
       /* §4-4 "자세히 보기" — ⚠️ 머리 단추 **밖**입니다 (단추 안의
          링크는 브라우저가 쪼갭니다). */
       '<p class="opg-go"><a href="'+esc(g.any.to)+'">'+

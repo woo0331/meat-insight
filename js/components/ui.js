@@ -712,3 +712,51 @@ window.packSync = function(key){
       side:(p && p.side !== "both") ? p.side : "" }));
   }
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   전문관 공통 — 계산도구 구간  (2026-10-18 전체 점검 지시서 §3)
+
+   > §3 — "공통 레이아웃 … ⑦ 관련 계산도구 … 공통 전문관 레이아웃
+   >  컴포넌트를 활용한다."
+
+   ⚠️⚠️ **전문관마다 베껴 쓰지 마세요.** 네 전문관이 같은 생김새를
+   써야 하는데 네 곳에 적어 두면 한쪽만 고치게 됩니다 — 이 저장소가
+   `amCatTo`/`catTo` · 랜딩 아이콘 표 · 메인 도구 아이콘 표로 **세 번**
+   겪은 자리입니다. 전문관이 넘기는 것은 **어느 계산기를 낼지**와
+   머리말까지입니다.
+
+   ⚠️ 없는 도구 key 는 **조용히 빠집니다** (절대 규칙 2) — 도구를
+   내려놓으면 그 칸만 없어지고 구간은 그대로 섭니다. 하나도 못 찾으면
+   구간째 빠집니다 (빈 머리말을 찍지 않습니다).
+   ⚠️ `tones` 를 안 주면 넷이 **같은 색**입니다. 전문관마다 도구가
+   달라서 색을 데이터에 둘 수가 없습니다 (도구 하나가 묶음 둘에 걸칩니다).
+   ════════════════════════════════════════════════════════════════════ */
+window.HallCalcBand = function(o){
+  o = o || {};
+  var by = {}; (window.AM_TOOLS || []).forEach(function(t){ by[t.key] = t; });
+  var L = (o.keys || []).map(function(k){ return by[k]; }).filter(Boolean);
+  if(!L.length) return "";
+  var tones = o.tones || {};
+  return '<section class="sec sec-calc'+(o.cls ? " "+esc(o.cls) : "")+'"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">'+esc(o.kicker || "무료 계산도구")+'</p>'+
+      '<h2>'+esc(o.title || "숫자를 먼저 보고 정하세요")+'</h2>'+
+      '<p>'+esc(o.lead ||
+        "가입 없이 바로 쓰실 수 있습니다. 적으신 값은 저장하지 않습니다.")+'</p>'+
+    '</div>'+
+    '<ul class="mcal-g">'+L.map(function(t){
+      var art = (typeof hasIconArt === "function" && hasIconArt(t.icon));
+      return '<li class="tn-'+esc(tones[t.key] || "sv1")+'">'+
+        '<a href="/tools/'+esc(t.key)+'">'+
+        '<span class="mcal-i ia-t" aria-hidden="true">'+
+          (art ? iconArt(t.icon, 44) : icon(t.icon, 28))+'</span>'+
+        '<b class="mcal-n">'+esc(t.name)+'</b>'+
+        (t.out ? '<i class="mcal-o">'+esc(t.out)+'</i>' : '')+
+        '<span class="mcal-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
+      '</a></li>'; }).join("")+'</ul>'+
+    '<div class="row-cta">'+
+      '<a class="btn btn-o" href="/tools">계산도구 전부 보기'+icon("arrow",16)+'</a>'+
+      '<a class="btn btn-o" href="/faq">자주 묻는 질문</a>'+
+    '</div>'+
+  '</div></section>';
+};

@@ -336,3 +336,42 @@ window.amQuoteVat = function(key){
   if(key === "free") return "면세";
   return "부가세 별도";
 };
+
+/* ── 쪽(side) 이름 넷 ────────────────────────────────────────────
+   > `db/migrations/0001_init.sql` 133줄 — `side` 는
+   > **start | ops | transfer | close** 넷입니다.
+
+   ⚠️⚠️ **세 곳이 이것을 손으로 적고 있었고 셋 다 틀렸습니다.**
+   2026-10-18 전체 점검에서 재서 찾았습니다 —
+
+   | 어디 | 어떻게 틀렸나 |
+   |---|---|
+   | 신청 화면의 고르개 | `transfer` 선택지가 **없었습니다** |
+   | 접수 글의 "상황" 칸 | `close` 가 아니면 전부 **"창업 · 시작"** |
+   | 관리자 접수 목록 | `ops` · `transfer` 가 **빈 칸** |
+
+   운영 중인 사장님이 "창업" 으로, 양도양수가 "창업" 으로 접수되면
+   배정하는 직원이 그것을 보고 **엉뚱한 업체**를 찾습니다 — 2026-10-18
+   에 `ops` 하나를 고치고도 `transfer` 가 같은 자리에 남아 있었습니다.
+   ⚠️ **이제 이름은 여기 한 곳입니다.** 화면에 적지 마세요. */
+window.AM_SIDES = [
+  { key:"start",    name:"창업 · 시작",   short:"창업",   pick:"/startup#pick",
+    say:"창업 — 시작하려고 합니다" },
+  { key:"ops",      name:"운영",          short:"운영",   pick:"/operation#pick",
+    say:"운영 — 장사하면서 필요합니다" },
+  { key:"transfer", name:"인수 · 양도",   short:"양도양수", pick:"/transfer#pick",
+    say:"인수 · 양도 — 매장을 받거나 넘깁니다" },
+  { key:"close",    name:"폐업 · 정리",   short:"폐업",   pick:"/closure#pick",
+    say:"폐업 — 정리하려고 합니다" }
+];
+window.amSide = function(key){
+  var L = window.AM_SIDES, i;
+  for(i = 0; i < L.length; i++) if(L[i].key === key) return L[i];
+  return null;
+};
+/* ⚠️ 모르는 값에는 **빈 문자열**입니다 — 자리표시자를 찍지 않습니다
+   (절대 규칙 2). 옛 접수에 없는 값이 들어 있을 수 있습니다. */
+window.amSideName = function(key){
+  var s = window.amSide(key);
+  return s ? s.name : "";
+};

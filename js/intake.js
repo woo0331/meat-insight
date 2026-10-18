@@ -233,7 +233,18 @@ window.rqCtx = function(k, v){ RQ.ctx[k] = v; };
 
 /* 이름 — ⚠️ 전부 데이터에서 가져옵니다. 화면에 적어 두면 분류를
    늘릴 때마다 여기가 조용히 틀립니다. */
-function rqSideName(v){ return v === "start" ? "창업" : v === "close" ? "폐업 · 정리" : ""; }
+/* ⚠️⚠️ **`ops` 와 `transfer` 가 빈 칸이었습니다.** DB 는 넷을 받는데
+   (0001 — start | ops | transfer | close) 여기가 둘만 적고 있어서,
+   운영 · 양도양수 접수는 목록에서 **쪽이 안 보였습니다** — 무엇 때문에
+   온 신청인지 모르는 채로 배정하게 됩니다. 이름은 `AM_SIDES`
+   (`js/data/deal.js`) 한 곳입니다. */
+/* ⚠️ 목록의 메타줄은 ` · ` 로 이어 붙이는 자리라 **짧은 이름**입니다
+   ("폐업 · 정리 · 음식점 · 경기" 가 되면 어디까지가 쪽인지 안
+   읽힙니다). 펼친 안쪽은 긴 이름(`amSideName`)을 씁니다. */
+function rqSideName(v){
+  var s = (typeof amSide === "function") ? amSide(v) : null;
+  return s ? s.short : "";
+}
 function rqCatName(k){
   var L = window.AM_CATS || [], i;
   for(i = 0; i < L.length; i++) if(L[i].key === k) return L[i].name;

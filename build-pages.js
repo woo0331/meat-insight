@@ -2311,7 +2311,15 @@ function checkSvcPick(W){
 function checkPickGroup(W){
   const G = W.AM_PICK_GROUP || {};
   /* 지시서가 적은 묶음 개수 — ⚠️ 바꾸시려면 지시서를 먼저 고치세요 */
-  const WANT = { operation: 8 };              /* 2026-10-18 §4-2 */
+  /* 2026-10-18 §4-2 (운영) · 전체 점검 지시서 §3 · §12 · §13 (나머지)
+     ⚠️⚠️ **창업은 여기 없습니다** — 그쪽은 묶음이 아니라 `AM_PICK_TOP`
+     의 대표 여섯이고 `checkSvcPick()` 이 셉니다 (고르는 단위가
+     분류라서입니다). 묶음을 안 쓰는 전문관을 WANT 에 적으면 빌드가
+     "AM_PICK_GROUP 에 startup 이 없습니다" 로 멈춥니다.
+     ⚠️ 양도양수가 **여섯**인 까닭 — §4 가 "실제 서비스가 부족한
+     경우 억지로 채우지 않는다" 고 적었습니다. 늘리시려면 지시서를
+     먼저 고치세요. */
+  const WANT = { operation: 8, closure: 8, transfer: 6 };
   const OFF  = new Set(W.AM_PICK_OFF || []);
 
   for(const hall of Object.keys(WANT))

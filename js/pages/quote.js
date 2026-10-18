@@ -207,9 +207,14 @@ function quoteServices(){
    로 운영 쪽(`side=ops`)도 같은 고르개를 쓰게 되면서, 운영 중인
    사장님이 "서비스 더 고르기" 를 누르면 **창업 준비 화면**으로
    갔습니다 — 고르던 자리를 잃습니다. 쪽을 보고 보냅니다. */
+/* ⚠️⚠️ **네 쪽의 이름과 돌아갈 자리는 `js/data/deal.js` 한 곳입니다**
+   (`AM_SIDES`). 전에 여기서 손으로 적고 있었고 `transfer` 가
+   빠져 있어서, 양도양수에서 고르고 오신 분이 "서비스 더 고르기" 를
+   누르면 **창업 고르개**로 갔습니다 — 고르신 것은 그대로 있는데
+   화면이 다른 전문관이라 자기가 어디 있는지를 잃습니다. */
 function quotePickBack(side){
-  return (side === "ops") ? "/operation#pick"
-       : (side === "close") ? "/closure" : "/startup#pick";
+  var s = (typeof amSide === "function") ? amSide(side) : null;
+  return (s && s.pick) ? s.pick : "/startup#pick";
 }
 
 function QuoteSvcStep(list, side){
@@ -424,9 +429,15 @@ function PageQuote(){
                  채로 접수됐습니다 — 배정하는 직원이 그것을 보고
                  **창업 업체**를 찾습니다. 받아 놓고 안 쓰던 값입니다.
                  ⚠️ 기본값은 그대로 창업입니다 (`side` 가 없을 때). */
-              '<option value="start"'+(side==="start"||!side?" selected":"")+'>창업 — 시작하려고 합니다</option>'+
-              '<option value="ops"'+(side==="ops"?" selected":"")+'>운영 — 장사하면서 필요합니다</option>'+
-              '<option value="close"'+(side==="close"?" selected":"")+'>폐업 — 정리하려고 합니다</option>'+
+              /* ⚠️⚠️ **넷을 손으로 적지 마세요.** `ops` 가 빠져서 운영
+                 중인 사장님이 "창업" 으로 접수되는 사고를 고치고도
+                 `transfer` 가 **같은 자리에 그대로** 남아 있었습니다 —
+                 지금은 `AM_SIDES`(deal.js)를 세어서 냅니다. */
+              (window.AM_SIDES || []).map(function(s){
+                return '<option value="'+esc(s.key)+'"'+
+                  ((side === s.key || (!side && s.key === "start")) ? " selected" : "")+
+                  '>'+esc(s.say)+'</option>';
+              }).join("")+
             '</select></div>'+
         '</div>'+
       '</div>'+
@@ -621,7 +632,11 @@ window.quoteSend = function(ev){
     idem: quoteIdem(),
     /* ⚠️⚠️ 공통 여섯 + 신청 상품. `api/quote.js` 가 **스물까지** 읽습니다. */
     detail: amDropEmpty({
-      "상황":  $("q-side").value === "close" ? "폐업 · 정리" : "창업 · 시작",
+      /* ⚠️⚠️ **둘로 가르지 마세요.** 전에 "close 가 아니면 창업" 이라
+         적혀 있어서, 운영 · 양도양수 접수가 슬랙 글에 **"창업 · 시작"**
+         으로 나갔습니다 — 받아 보는 직원이 그것을 보고 창업 업체를
+         찾습니다. 이름은 `AM_SIDES` 한 곳입니다. */
+      "상황":  amSideName($("q-side").value),
       "업종":  ind ? amIndustryName(ind) : "",
       "시군구": $("q-gu").value.trim(),
       "평수":  $("q-py").value.trim(),

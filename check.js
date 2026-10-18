@@ -2419,7 +2419,16 @@ const AUDIT = `(() => {
      계산도구 구간과 다른 전문관 줄이 **없었습니다** — 전문관을 하나씩
      고칠 때마다 다른 셋이 조용히 뒤처지던 자리입니다.
      ⚠️ 주석에 백틱을 쓰지 마세요. */
-  const HALL_FRAME = `
+  /* ⚠️⚠️ **넷을 반복문으로 돌리지 마세요.** `tools/prove-checks.js` 는
+     검사를 `await f("이름", "주소", 백틱)` **글자로** 찾습니다 — 이름을
+     만들어 넘기면 검사 자체는 도는데 **되돌려 보는 쪽이 못 찾아서**,
+     "통과만 하고 아무것도 안 잡는 검사" 와 같아집니다 (실제로 그렇게
+     적었다가 ship 이 막았습니다).
+     ⚠️⚠️ **그래서 본문이 넷 다 글자까지 같습니다.** 한쪽만 고치면
+     `build-pages.js` 의 checkHallFrame() 이 **빌드를 멈춥니다** —
+     다른 것은 첫 줄의 WANT_SIDE 하나뿐입니다. */
+  await f("전문관 공통 여덟 — /startup", "/startup", `
+    const WANT_SIDE = "start";
     /* ① 소개 */
     if(!document.querySelector(".pgh")) return "소개(머리)가 없습니다";
     /* ② 서비스 선택 — 고를 수 있는 칸이 실제로 있어야 합니다 */
@@ -2444,9 +2453,8 @@ const AUDIT = `(() => {
        받는데(0001 — start | ops | transfer | close) 화면이 다른 값을
        실어 보내면, 배정하는 직원이 엉뚱한 업체를 찾습니다 — 이
        저장소가 ops 와 transfer 로 **두 번** 겪은 자리입니다. */
-    const want = WANT_SIDE;
-    if((bar.getAttribute("href") || "").indexOf("side=" + want) < 0)
-      return "신청 주소의 쪽이 " + want + " 가 아닙니다 — " + bar.getAttribute("href");
+    if((bar.getAttribute("href") || "").indexOf("side=" + WANT_SIDE) < 0)
+      return "신청 주소의 쪽이 " + WANT_SIDE + " 가 아닙니다 — " + bar.getAttribute("href");
     /* ⑤ 체크리스트 · 절차 */
     if(!document.querySelector(".stD, .opsck")) return "체크리스트(절차)가 없습니다";
     /* ⑥ 가이드 */
@@ -2456,13 +2464,124 @@ const AUDIT = `(() => {
     if(!cal.length) return "계산도구 구간이 없습니다";
     /* ⑧ 다른 전문관 */
     if(!document.querySelector(".jyb")) return "다른 전문관으로 가는 줄이 없습니다";
-    return true;`;
+    return true;`);
 
-  for(const [url, side] of [["/startup","start"], ["/operation","ops"],
-                            ["/transfer","transfer"], ["/closure","close"]]){
-    await f("전문관 공통 여덟 — " + url, url,
-      "const WANT_SIDE = " + JSON.stringify(side) + ";" + HALL_FRAME);
-  }
+  await f("전문관 공통 여덟 — /operation", "/operation", `
+    const WANT_SIDE = "ops";
+    /* ① 소개 */
+    if(!document.querySelector(".pgh")) return "소개(머리)가 없습니다";
+    /* ② 서비스 선택 — 고를 수 있는 칸이 실제로 있어야 합니다 */
+    const cks = document.querySelectorAll("#view [data-pick]");
+    if(!cks.length) return "고르는 체크칸이 0개입니다";
+    /* ⚠️⚠️ **고르는 자리는 하나입니다** (§2 · §5) — 구간 둘로 흩어지면
+       손님은 어디서 골라야 하는지를 먼저 풀어야 합니다. */
+    const secs = {};
+    [].slice.call(cks).forEach(function(c){
+      const s = c.closest("section");
+      if(s) secs[s.className] = 1;
+    });
+    if(Object.keys(secs).length > 1)
+      return "고르는 자리가 " + Object.keys(secs).length + "곳입니다 — " + Object.keys(secs).join(" / ");
+    /* ③ 선택 확인 — 개수가 글로 보여야 합니다 (색만으로 표시 금지) */
+    if(!document.querySelector(".pkb [data-pick-n]")) return "선택 확인 자리가 없습니다";
+    /* ④ 통합 견적 신청 — 바구니에서 신청으로 가는 길 + 폰 고정 띠 */
+    if(!document.querySelector(".pkb a[href*='/quote']")) return "바구니에 신청 단추가 없습니다";
+    const bar = document.getElementById("pk-bar-go");
+    if(!bar) return "폰 고정 띠가 없습니다";
+    /* ⚠️⚠️ **쪽(side)이 그 전문관의 것이라야 합니다.** DB 는 넷을
+       받는데(0001 — start | ops | transfer | close) 화면이 다른 값을
+       실어 보내면, 배정하는 직원이 엉뚱한 업체를 찾습니다 — 이
+       저장소가 ops 와 transfer 로 **두 번** 겪은 자리입니다. */
+    if((bar.getAttribute("href") || "").indexOf("side=" + WANT_SIDE) < 0)
+      return "신청 주소의 쪽이 " + WANT_SIDE + " 가 아닙니다 — " + bar.getAttribute("href");
+    /* ⑤ 체크리스트 · 절차 */
+    if(!document.querySelector(".stD, .opsck")) return "체크리스트(절차)가 없습니다";
+    /* ⑥ 가이드 */
+    if(!document.querySelector(".rd-l")) return "가이드 글 줄이 없습니다";
+    /* ⑦ 계산도구 */
+    const cal = document.querySelectorAll(".sec-calc a[href^='/tools/']");
+    if(!cal.length) return "계산도구 구간이 없습니다";
+    /* ⑧ 다른 전문관 */
+    if(!document.querySelector(".jyb")) return "다른 전문관으로 가는 줄이 없습니다";
+    return true;`);
+
+  await f("전문관 공통 여덟 — /transfer", "/transfer", `
+    const WANT_SIDE = "transfer";
+    /* ① 소개 */
+    if(!document.querySelector(".pgh")) return "소개(머리)가 없습니다";
+    /* ② 서비스 선택 — 고를 수 있는 칸이 실제로 있어야 합니다 */
+    const cks = document.querySelectorAll("#view [data-pick]");
+    if(!cks.length) return "고르는 체크칸이 0개입니다";
+    /* ⚠️⚠️ **고르는 자리는 하나입니다** (§2 · §5) — 구간 둘로 흩어지면
+       손님은 어디서 골라야 하는지를 먼저 풀어야 합니다. */
+    const secs = {};
+    [].slice.call(cks).forEach(function(c){
+      const s = c.closest("section");
+      if(s) secs[s.className] = 1;
+    });
+    if(Object.keys(secs).length > 1)
+      return "고르는 자리가 " + Object.keys(secs).length + "곳입니다 — " + Object.keys(secs).join(" / ");
+    /* ③ 선택 확인 — 개수가 글로 보여야 합니다 (색만으로 표시 금지) */
+    if(!document.querySelector(".pkb [data-pick-n]")) return "선택 확인 자리가 없습니다";
+    /* ④ 통합 견적 신청 — 바구니에서 신청으로 가는 길 + 폰 고정 띠 */
+    if(!document.querySelector(".pkb a[href*='/quote']")) return "바구니에 신청 단추가 없습니다";
+    const bar = document.getElementById("pk-bar-go");
+    if(!bar) return "폰 고정 띠가 없습니다";
+    /* ⚠️⚠️ **쪽(side)이 그 전문관의 것이라야 합니다.** DB 는 넷을
+       받는데(0001 — start | ops | transfer | close) 화면이 다른 값을
+       실어 보내면, 배정하는 직원이 엉뚱한 업체를 찾습니다 — 이
+       저장소가 ops 와 transfer 로 **두 번** 겪은 자리입니다. */
+    if((bar.getAttribute("href") || "").indexOf("side=" + WANT_SIDE) < 0)
+      return "신청 주소의 쪽이 " + WANT_SIDE + " 가 아닙니다 — " + bar.getAttribute("href");
+    /* ⑤ 체크리스트 · 절차 */
+    if(!document.querySelector(".stD, .opsck")) return "체크리스트(절차)가 없습니다";
+    /* ⑥ 가이드 */
+    if(!document.querySelector(".rd-l")) return "가이드 글 줄이 없습니다";
+    /* ⑦ 계산도구 */
+    const cal = document.querySelectorAll(".sec-calc a[href^='/tools/']");
+    if(!cal.length) return "계산도구 구간이 없습니다";
+    /* ⑧ 다른 전문관 */
+    if(!document.querySelector(".jyb")) return "다른 전문관으로 가는 줄이 없습니다";
+    return true;`);
+
+  await f("전문관 공통 여덟 — /closure", "/closure", `
+    const WANT_SIDE = "close";
+    /* ① 소개 */
+    if(!document.querySelector(".pgh")) return "소개(머리)가 없습니다";
+    /* ② 서비스 선택 — 고를 수 있는 칸이 실제로 있어야 합니다 */
+    const cks = document.querySelectorAll("#view [data-pick]");
+    if(!cks.length) return "고르는 체크칸이 0개입니다";
+    /* ⚠️⚠️ **고르는 자리는 하나입니다** (§2 · §5) — 구간 둘로 흩어지면
+       손님은 어디서 골라야 하는지를 먼저 풀어야 합니다. */
+    const secs = {};
+    [].slice.call(cks).forEach(function(c){
+      const s = c.closest("section");
+      if(s) secs[s.className] = 1;
+    });
+    if(Object.keys(secs).length > 1)
+      return "고르는 자리가 " + Object.keys(secs).length + "곳입니다 — " + Object.keys(secs).join(" / ");
+    /* ③ 선택 확인 — 개수가 글로 보여야 합니다 (색만으로 표시 금지) */
+    if(!document.querySelector(".pkb [data-pick-n]")) return "선택 확인 자리가 없습니다";
+    /* ④ 통합 견적 신청 — 바구니에서 신청으로 가는 길 + 폰 고정 띠 */
+    if(!document.querySelector(".pkb a[href*='/quote']")) return "바구니에 신청 단추가 없습니다";
+    const bar = document.getElementById("pk-bar-go");
+    if(!bar) return "폰 고정 띠가 없습니다";
+    /* ⚠️⚠️ **쪽(side)이 그 전문관의 것이라야 합니다.** DB 는 넷을
+       받는데(0001 — start | ops | transfer | close) 화면이 다른 값을
+       실어 보내면, 배정하는 직원이 엉뚱한 업체를 찾습니다 — 이
+       저장소가 ops 와 transfer 로 **두 번** 겪은 자리입니다. */
+    if((bar.getAttribute("href") || "").indexOf("side=" + WANT_SIDE) < 0)
+      return "신청 주소의 쪽이 " + WANT_SIDE + " 가 아닙니다 — " + bar.getAttribute("href");
+    /* ⑤ 체크리스트 · 절차 */
+    if(!document.querySelector(".stD, .opsck")) return "체크리스트(절차)가 없습니다";
+    /* ⑥ 가이드 */
+    if(!document.querySelector(".rd-l")) return "가이드 글 줄이 없습니다";
+    /* ⑦ 계산도구 */
+    const cal = document.querySelectorAll(".sec-calc a[href^='/tools/']");
+    if(!cal.length) return "계산도구 구간이 없습니다";
+    /* ⑧ 다른 전문관 */
+    if(!document.querySelector(".jyb")) return "다른 전문관으로 가는 줄이 없습니다";
+    return true;`);
 
   await f("서비스를 여러 개 고르면 한 신청으로 간다", "/startup", `
     try{ localStorage.removeItem("am.pick.v1"); }catch(e){}

@@ -3302,6 +3302,64 @@ checkClaimSql();
 checkQuoteSql(W);
 checkRpcArgs();
 checkRetired();
+
+/* ════════════════════════════════════════════════════════════════════
+   checkHallFrame() — **전문관 넷의 공통 검사가 글자까지 같은가**
+                      (2026-10-18 전체 점검 §3)
+
+   ⚠️⚠️ `check.js` 의 "전문관 공통 여덟" 은 **넷을 글자로 적어 둡니다.**
+   반복문으로 이름을 만들면 `tools/prove-checks.js` 가 검사를
+   `await f("이름", "주소", 백틱)` 글자로 찾기 때문에 **못 찾고**,
+   그러면 검사는 도는데 **되돌려 보는 쪽이 닿지 못해** "통과만 하고
+   아무것도 안 잡는 검사" 와 같아집니다 (실제로 그렇게 적었다가
+   ship 이 막았습니다).
+
+   ⚠️⚠️ 글자로 넷을 적으면 이번에는 **한쪽만 고치는** 사고가 납니다 —
+   이 저장소가 `amCatTo`/`catTo` · 랜딩 아이콘 표 · `deal.js`↔`deal_move`
+   로 여러 번 겪은 자리입니다. 그래서 넷의 본문이 **첫 줄(WANT_SIDE)을
+   빼고 글자까지 같은지** 빌드가 셉니다. */
+function checkHallFrame(){
+  const src = fs.readFileSync("check.js", "utf8");
+  const got = [];
+  const re = /await f\("전문관 공통 여덟 — ([^"]+)", "([^"]*)", `([\s\S]*?)`\);/g;
+  let m;
+  while((m = re.exec(src))) got.push({ name:m[1], url:m[2], body:m[3] });
+
+  if(got.length !== 4)
+    die("전문관 공통 검사가 넷이 아닙니다 — " + got.length +
+        "개 (check.js · 반복문으로 만들면 prove-checks 가 못 찾습니다)");
+
+  const want = ["/startup", "/operation", "/transfer", "/closure"];
+  want.forEach(function(u){
+    if(!got.some(function(g){ return g.url === u; }))
+      die("전문관 공통 검사에 " + u + " 가 빠졌습니다 (check.js)");
+  });
+
+  /* 첫 줄이 WANT_SIDE 하나이고, 그 아래가 넷 다 같은가 */
+  const sides = {};
+  const rest = got.map(function(g){
+    const L = g.body.replace(/^\n/, "").split("\n");
+    const first = L[0].trim();
+    const sm = first.match(/^const WANT_SIDE = "([a-z]+)";$/);
+    if(!sm) die("전문관 공통 검사 " + g.url + " 의 첫 줄이 WANT_SIDE 가 아닙니다 — " + first);
+    if(sides[sm[1]]) die("전문관 공통 검사에 같은 쪽이 둘입니다 — " + sm[1]);
+    sides[sm[1]] = 1;
+    if(g.url !== g.name) die("전문관 공통 검사의 이름과 주소가 다릅니다 — " + g.name + " / " + g.url);
+    return L.slice(1).join("\n");
+  });
+  /* ⚠️ 화면이 받는 값 넷과 같아야 합니다 (0001 — start | ops | transfer | close) */
+  ["start", "ops", "transfer", "close"].forEach(function(k){
+    if(!sides[k]) die("전문관 공통 검사에 쪽 " + k + " 가 빠졌습니다");
+  });
+  rest.forEach(function(b, i){
+    if(b !== rest[0])
+      die("전문관 공통 검사 " + got[i].url + " 의 본문이 " + got[0].url +
+          " 과 다릅니다 — 넷은 WANT_SIDE 말고는 글자까지 같아야 합니다");
+  });
+  console.log("   전문관 공통 검사 4개가 글자까지 같습니다 (" +
+    Object.keys(sides).join(" · ") + ")");
+}
+checkHallFrame();
 /* ════════════════════════════════════════════════════════════════════
    checkPhotoSql() — **받는 형식과 크기가 서버와 DB 에서 같은가**
                      (2026-10-18 §7-3 · §15)

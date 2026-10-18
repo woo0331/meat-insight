@@ -34,19 +34,38 @@ var QKEY = "am.quotes.v1";
    **스물까지** 읽는데, 서비스 다섯에 질문 다섯이면 스물다섯입니다 —
    뒤쪽이 에러 없이 사라집니다. 서비스별 답은 `items[].detail` 로
    **따로** 갑니다 (§6 QuoteRequestItem). */
-function SvcAskBand(list){
-  var withAsk = list.filter(function(s){ return s.ask; });
-  if(!withAsk.length) return "";
-  return '<div class="rqf-all">'+withAsk.map(ReqFormBand).join("")+'</div>';
+/* ⚠️⚠️ **분류로 묶습니다** (2026-10-18 운영 §7-4). 운영 쪽은 하위를
+   고르셔서 `repair/aircon-fix` 와 `repair/fridge-fix` 가 같이 올 수
+   있는데, 질문은 **분류 단위**(`reqforms.js`)라 서비스마다 그리면
+   **같은 질문이 두 번** 나옵니다 — §7-4 가 "공통 정보는 한 번만
+   입력한다" 고 적은 그 자리이고, `/quote` 가 없애려는 헷갈림입니다.
+   ⚠️ 머리말에는 그 분류에서 고르신 것을 **전부** 적습니다 — 안 적으면
+   "에어컨 수리 질문인가 냉장고 질문인가" 가 안 보입니다. */
+function askGroups(list){
+  var seen = {}, out = [];
+  list.forEach(function(s){
+    if(!s.ask) return;
+    if(seen[s.cat]){ seen[s.cat].push(s); return; }
+    seen[s.cat] = [s];
+    out.push(s.cat);
+  });
+  return out.map(function(cat){ return { cat:cat, svs:seen[cat] }; });
 }
 
-function ReqFormBand(sv){
-  var L = (typeof amReqForm === "function") ? amReqForm(sv.cat) : [];
+function SvcAskBand(list){
+  var G = askGroups(list);
+  if(!G.length) return "";
+  return '<div class="rqf-all">'+G.map(ReqFormBand).join("")+'</div>';
+}
+
+function ReqFormBand(g){
+  var L = (typeof amReqForm === "function") ? amReqForm(g.cat) : [];
   if(!L.length) return "";
-  return '<div class="rqf" data-svc="'+esc(sv.id)+'">'+
-    '<p class="rqf-h">'+esc(amPickLabel(sv))+
+  var names = g.svs.map(amPickLabel).join(" · ");
+  return '<div class="rqf" data-svc="'+esc(g.cat)+'">'+
+    '<p class="rqf-h">'+esc(names)+
       ' <i>— 이것만 더 알려 주시면 견적이 훨씬 정확해집니다</i></p>'+
-    L.map(function(f, i){ return ReqFormRow(sv.id, f, i); }).join("")+
+    L.map(function(f, i){ return ReqFormRow(g.cat, f, i); }).join("")+
   '</div>';
 }
 
@@ -80,7 +99,10 @@ function ReqFormRow(svId, f, i){
 function reqFormValues(sv){
   var L = (typeof amReqForm === "function") ? amReqForm(sv.cat) : [], out = {};
   L.forEach(function(f, i){
-    var key = sv.id + ":" + i, v = "";
+    /* ⚠️ 칸 이름이 **분류**로 묶여 있습니다 (`askGroups()`) — 여기서
+       `sv.id` 로 찾으면 하위를 고르신 분의 답을 **한 글자도 못
+       읽습니다** (에러도 안 나고 접수는 성공합니다). */
+    var key = sv.cat + ":" + i, v = "";
     var els = document.querySelectorAll('[data-rq="'+key+'"]');
     if(f.t === "chk"){
       var on = [];
@@ -181,7 +203,16 @@ function quoteServices(){
    ⚠️⚠️ 하나도 안 고르셔도 **막지 않습니다.** 무엇이 필요한지 모르셔서
    오신 분이 있고, 그분께 "먼저 고르고 오세요" 라고 하면 거기서
    닫습니다 — 상황만 적으시면 저희가 찾아 드립니다. */
-function QuoteSvcStep(list){
+/* ⚠⚠ **돌아가는 길이 `/startup` 으로 박혀 있었습니다.** 2026-10-18
+   로 운영 쪽(`side=ops`)도 같은 고르개를 쓰게 되면서, 운영 중인
+   사장님이 "서비스 더 고르기" 를 누르면 **창업 준비 화면**으로
+   갔습니다 — 고르던 자리를 잃습니다. 쪽을 보고 보냅니다. */
+function quotePickBack(side){
+  return (side === "ops") ? "/operation#pick"
+       : (side === "close") ? "/closure" : "/startup#pick";
+}
+
+function QuoteSvcStep(list, side){
   return '<div class="qs" id="qs-svc">'+
     QStepHd("01", "어떤 서비스가 필요하신가요?",
       list.length ? "고르신 서비스입니다. 빼실 수 있고, 더 고르실 수도 있습니다."
@@ -194,7 +225,7 @@ function QuoteSvcStep(list){
         }).join("")+'</ul>'
       : '<p class="qs-zero">'+icon("info",16)+
         ' 고르신 서비스가 없습니다. 그대로 보내셔도 됩니다.</p>')+
-    '<p class="qs-go"><a class="btn btn-o" href="/startup#pick">'+
+    '<p class="qs-go"><a class="btn btn-o" href="'+esc(quotePickBack(side))+'">'+
       (list.length ? "서비스 더 고르기" : "서비스 고르러 가기")+icon("arrow",16)+'</a></p>'+
   '</div>';
 }
@@ -351,7 +382,7 @@ function PageQuote(){
     QuoteOfferBand()+
 
     '<form id="q-f" onsubmit="return quoteSend(event)">'+
-      QuoteSvcStep(list)+
+      QuoteSvcStep(list, side)+
 
       /* ── STEP 02 지역 (§5-1 2단계) ───────────────────────────── */
       '<div class="qs">'+
@@ -367,7 +398,14 @@ function PageQuote(){
           '<div class="f-r"><label for="q-ind">업종</label>'+IndustrySelect("q-ind", ind)+'</div>'+
           '<div class="f-r"><label for="q-side">무엇 때문에 <b>*</b></label>'+
             '<select class="sel" id="q-side">'+
-              '<option value="start"'+(side!=="close"?" selected":"")+'>창업 — 시작하려고 합니다</option>'+
+              /* ⚠⚠ **운영이 없었습니다.** DB 는 처음부터 `ops` 를
+                 받는데(0001 — start | ops | transfer | close) 화면에
+                 그 선택지가 없어서, 운영 중인 사장님이 "창업" 을 고른
+                 채로 접수됐습니다 — 배정하는 직원이 그것을 보고
+                 **창업 업체**를 찾습니다. 받아 놓고 안 쓰던 값입니다.
+                 ⚠️ 기본값은 그대로 창업입니다 (`side` 가 없을 때). */
+              '<option value="start"'+(side==="start"||!side?" selected":"")+'>창업 — 시작하려고 합니다</option>'+
+              '<option value="ops"'+(side==="ops"?" selected":"")+'>운영 — 장사하면서 필요합니다</option>'+
               '<option value="close"'+(side==="close"?" selected":"")+'>폐업 — 정리하려고 합니다</option>'+
             '</select></div>'+
         '</div>'+

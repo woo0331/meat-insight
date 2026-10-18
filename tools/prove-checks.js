@@ -79,6 +79,26 @@ const CASES = [
    `var p = document.querySelector(".q-draft .q-draft-t span");
     if(p) p.innerHTML = "<b>지금 적은 조건을 저장해 두실 수 있습니다.</b>";`],
 
+  /* ══ 2026-10-18 매장 운영 전문관 2차 ═══════════════════════════ */
+
+  /* ① 고르는 자리를 **둘**로 만들어 봅니다 (§2 가 "하나" 라고 적었습니다) */
+  ["매장 운영이 §2 의 일곱 영역이다",
+   `var s = document.querySelector(".pkb-sel");
+    if(s && s.parentNode) s.parentNode.insertBefore(s.cloneNode(true), s);`],
+
+  /* ② ⚠️⚠️ **대표 카드 머리에 체크칸을 달아 봅니다** (§4-4 가 금지한
+     혼동 — 머리와 세부가 둘 다 담기면 하나를 골랐다고 생각하는데
+     접수에는 둘이 실립니다) */
+  ["운영은 세부까지 고르고 한 신청으로 간다",
+   `var h = document.querySelector(".opg-h");
+    if(h){ var i = document.createElement("input");
+      i.type = "checkbox"; h.appendChild(i); }`],
+
+  /* ③ ⚠️⚠️ **체크가 저희에게 가는 것처럼** 적어 봅니다 (§9 · 절대 규칙 5) */
+  ["운영 체크리스트가 신청이 아니라고 말한다",
+   `var n = document.querySelector(".opsck .sec-note");
+    if(n) n.textContent = "체크해 두시면 담당자가 확인합니다.";`],
+
   /* ══ 2026-10-09 지시서 PART 4 — 창업 진단 넷 ═══════════════════ */
   /* ⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — DOM 을 직접 건드립니다.
      견적 링크에서 예산 · 일정을 떼면 "받아만 놓는 칸" 이 됩니다. */

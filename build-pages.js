@@ -83,6 +83,9 @@ function loadApp(){
                    읽습니다 — 둘 다 위에 있습니다 (2026-10-17 §12) */
                 "js/data/svcpick.js",
                 "js/data/svcpage.js",
+                /* ⚠️ opscheck 은 svcpick 의 id · tools 의 key · content 의
+                   slug 를 가리킵니다 — 셋 다 위에 있습니다 (2026-10-18 §9) */
+                "js/data/opscheck.js",
                 /* 이용 절차 넷 — 메인 05 구간과 크롤러 본문이 같이 읽습니다 */
                 "js/data/steps.js"];
 
@@ -2131,6 +2134,19 @@ const IA_NAMES = (() => {
   return out;
 })();
 
+/* ⚠️ 틴트 이름(`tn-*`)도 CSS 에서 읽어 셉니다 — 없는 이름을 적으면
+   아이콘 타일이 **색 없이** 섭니다 (규칙이 아예 없으니 `--ic-ink` 가
+   물려받은 값으로 남습니다). 에러도 안 나고 화면도 멀쩡해 보입니다. */
+const TONE_NAMES = (() => {
+  const src = fs.readFileSync(path.join(ROOT, "css/pages.css"), "utf8");
+  const out = new Set();
+  const re = new RegExp("^\\.tn-([a-z0-9]+)", "gm");
+  let m;
+  while((m = re.exec(src))) out.add(m[1]);
+  if(out.size < 14) throw new Error("틴트 이름을 " + out.size + "개밖에 못 읽었습니다");
+  return out;
+})();
+
 /* ── 전문관 넷 (2026-10-11 UI/UX 지시서 §2 · §4 · §5) ───────────────
    ⚠️⚠️ 막는 것 일곱 —
      ① 없는 분류 · ② 없는 하위 · ③ 하위를 적을 수 없는 분류에 하위
@@ -2217,17 +2233,41 @@ function checkSvcPick(W){
   if(!Object.keys(TOP).length)
     throw new Error("js/data/svcpick.js 의 AM_PICK_TOP 이 비었습니다 (§2-B)");
 
-  /* 전문관마다 고를 수 있는 서비스를 모아 둡니다 */
+  /* ⚠️⚠️ **지시서가 적은 대표 개수는 전문관마다 다릅니다.**
+     창업 준비는 여섯(2026-10-17 §2-B), 매장 운영은 여덟(2026-10-18
+     §4-2)입니다. 여기 하나로 박아 두었다가 운영 쪽을 붙이자 **멀쩡한
+     여덟이 "여섯이 아닙니다" 로** 빌드를 멈췄습니다 — 전문관을 더하면
+     지시서를 먼저 고치고 이 줄을 같이 고치세요. */
+  const TOP_N = { startup: 6 };
+
+  /* 전문관마다 고를 수 있는 서비스를 모아 둡니다.
+     ⚠⚠ **하위까지 모읍니다.** 2026-10-18 운영 §4-4 로 고르는 단위가
+     `분류/하위`(`repair/aircon-fix`)까지 내려왔습니다 — 분류만 모으면
+     그 쉬운 이름들이 전부 "고를 수 없는 서비스" 로 잡혀 멀쩡한 줄이
+     빌드를 멈춥니다.
+     ⚠️ 운영 쪽은 `AM_PICK_SIDE` 에 없어서 `amPickAll()` 이 빈 배열을
+     돌려줍니다 — `amPickHallCats()` 가 그 자리입니다. */
   const ok = new Set();
-  for(const h of (W.AM_HALLS || []))
-    for(const s of W.amPickAll(h.key)) ok.add(s.id);
+  const addCat = (s) => {
+    if(!s || !s.id) return;
+    ok.add(s.id);
+    if(s.sub) return;                        /* 하위는 더 내려갈 것이 없습니다 */
+    for(const sub of W.amPickSubs(s.id)) ok.add(sub.id);
+  };
+  for(const h of (W.AM_HALLS || [])){
+    for(const s of W.amPickAll(h.key)) addCat(s);
+    for(const s of W.amPickHallCats(h.key)) addCat(s);
+  }
 
   for(const hall of Object.keys(TOP)){
     const ids = TOP[hall] || [];
-    /* ⚠️ 지시서 §2-B 가 여섯을 적었습니다. 바꾸시려면 지시서를 먼저. */
-    if(ids.length !== 6)
+    const want = TOP_N[hall];
+    if(!want)
+      throw new Error("\"" + hall + "\" 전문관의 대표 개수가 지시서에 없습니다" +
+        "\n   → build-pages.js 의 TOP_N 에 적으세요 (지시서를 먼저 고치고)");
+    if(ids.length !== want)
       throw new Error("대표 서비스가 " + ids.length + "개입니다 (" + hall +
-        ") — 지시서 §2-B 는 여섯입니다");
+        ") — 지시서는 " + want + "입니다");
     const seen = new Set();
     for(const id of ids){
       if(seen.has(id))
@@ -2247,6 +2287,182 @@ function checkSvcPick(W){
     if(!ok.has(id))
       throw new Error("쉬운 이름이 고를 수 없는 서비스를 가리킵니다 — " + id +
         "\n   → 영영 안 쓰이는 줄입니다 (AM_PICK_EASY)");
+  }
+}
+
+/* ── §4 운영 대표 여덟 + 세부 펼침 (2026-10-18 매장 운영 2차) ──────
+   > §4-4 — "대표 카테고리 선택과 실제 서비스 선택을 혼동하지 않도록 한다."
+
+   ⚠️⚠️ 막는 것 아홉 —
+     ① 묶음 개수가 지시서와 다름 · ② 묶음 key 가 비었거나 겹침
+     ③ 없는 컬러 아이콘 · ④ **한 전문관 안에서 아이콘이 겹침**
+        (여덟 칸에 같은 그림 둘이면 손님이 가를 수가 없습니다)
+     ⑤ 없는 틴트 이름 · ⑥ 틴트 겹침
+     ⑦ **없는 id**(`any` · `subs`) — 그냥 두면 `amPickGroups()` 가
+        조용히 빼서 "원래 일곱인가" 로 보입니다
+     ⑧ **세부가 두 묶음에 들어감** 또는 `any` 가 겹침 — 같은 서비스를
+        두 자리에서 고르게 되고, 그게 §2 가 없애려는 그 혼동입니다
+     ⑨ **내려놓은 서비스**(`AM_PICK_OFF`)를 아직 가리킴 — 고르개에
+        안 나와야 하는 것을 대표로 내는 꼴입니다
+   ⚠️ `subs` 는 **전부 `분류/하위` 꼴**이라야 합니다. 분류를 섞으면
+   "에어컨 수리" 자리에 "수리 · 유지보수 전체" 가 끼어서, 고르신 것과
+   접수에 실리는 것이 달라집니다.
+   ──────────────────────────────────────────────────────────────── */
+function checkPickGroup(W){
+  const G = W.AM_PICK_GROUP || {};
+  /* 지시서가 적은 묶음 개수 — ⚠️ 바꾸시려면 지시서를 먼저 고치세요 */
+  const WANT = { operation: 8 };              /* 2026-10-18 §4-2 */
+  const OFF  = new Set(W.AM_PICK_OFF || []);
+
+  for(const hall of Object.keys(WANT))
+    if(!(G[hall] || []).length)
+      throw new Error("js/data/svcpick.js 의 AM_PICK_GROUP 에 \"" + hall +
+        "\" 가 없습니다 (§4-2)");
+
+  for(const hall of Object.keys(G)){
+    const gs   = G[hall] || [];
+    const want = WANT[hall];
+    if(!want)
+      throw new Error("\"" + hall + "\" 묶음 개수가 지시서에 없습니다" +
+        "\n   → build-pages.js 의 WANT 에 적으세요 (지시서를 먼저 고치고)");
+    if(gs.length !== want)
+      throw new Error("대표 묶음이 " + gs.length + "개입니다 (" + hall +
+        ") — 지시서는 " + want + "입니다");
+
+    /* 전체 서비스 보기가 들고 있는 분류 — 묶음이 가리키는 분류가
+       여기 빠지면 "대표로는 고르는데 전체 목록에는 없는" 꼴입니다 */
+    const hallCats = new Set(W.amPickHallCats(hall).map(s => s.id));
+    const keys = new Set(), ias = new Set(), tones = new Set();
+    const anys = new Set(), subs = new Map();
+
+    for(const g of gs){
+      const at = "운영 대표 \"" + (g.name || g.key || "(이름 없음)") + "\"";
+      if(!g.key || keys.has(g.key))
+        throw new Error(at + " 의 key 가 비었거나 겹칩니다 — " + g.key);
+      keys.add(g.key);
+      if(!g.name || !g.lead)
+        throw new Error(at + " 에 쉬운 이름이나 한 줄이 없습니다 (§4-4)");
+      if(!g.ia || !IA_NAMES.has(g.ia))
+        throw new Error(at + " 의 컬러 아이콘이 없는 이름입니다 — " + g.ia +
+          "\n   → js/components/base.js 의 IA 에 있어야 합니다");
+      if(ias.has(g.ia))
+        throw new Error(at + " 의 아이콘이 같은 전문관의 다른 묶음과 겹칩니다 — " +
+          g.ia + "\n   → 여덟 칸에 같은 그림이 둘이면 손님이 가를 수 없습니다");
+      ias.add(g.ia);
+      if(!g.tone || !TONE_NAMES.has(g.tone))
+        throw new Error(at + " 의 틴트가 없는 이름입니다 — " + g.tone +
+          "\n   → css/pages.css 의 .tn-* 에 있어야 합니다");
+      if(tones.has(g.tone))
+        throw new Error(at + " 의 틴트가 다른 묶음과 겹칩니다 — " + g.tone);
+      tones.add(g.tone);
+
+      /* ⚠️ "모르겠어요" 가 담는 것 — 없으면 그 단추가 아무 일도 안 합니다 */
+      const any = W.amPickOne(g.any);
+      if(!any)
+        throw new Error(at + " 의 any 가 없는 서비스입니다 — " + g.any +
+          "\n   → js/data/catalog.js 의 분류 또는 `분류/하위` 여야 합니다");
+      if(OFF.has(g.any))
+        throw new Error(at + " 의 any 가 내려놓은 서비스입니다 — " + g.any +
+          "\n   → AM_PICK_OFF 에 있는 것은 고르개에 안 나와야 합니다 (§12)");
+      if(anys.has(g.any))
+        throw new Error(at + " 의 any 가 다른 묶음과 겹칩니다 — " + g.any +
+          "\n   → 여덟 중 둘이 같은 칸이 됩니다 (§4-4 혼동 방지)");
+      anys.add(g.any);
+      if(!hallCats.has(any.sub ? W.amPickSplit(g.any).cat : any.id))
+        throw new Error(at + " 의 any 가 전체 서비스 목록에 없는 분류입니다 — " +
+          g.any + "\n   → amPickHallCats(\"" + hall + "\") 가 받아야 합니다");
+
+      const list = g.subs || [];
+      if(!list.length)
+        throw new Error(at + " 에 세부 선택지가 없습니다 (§4-4)");
+      for(const id of list){
+        const where = at + " 의 세부 \"" + id + "\"";
+        if(String(id).indexOf("/") < 0)
+          throw new Error(where + " 가 분류입니다 — `분류/하위` 꼴이어야 합니다" +
+            "\n   → 분류를 섞으면 고르신 것과 접수에 실리는 것이 달라집니다");
+        if(!W.amPickOne(id))
+          throw new Error(where + " 는 없는 서비스입니다" +
+            "\n   → js/data/catalog.js 의 그 분류 하위(items)에 있어야 합니다");
+        if(OFF.has(id))
+          throw new Error(where + " 는 내려놓은 서비스입니다 (AM_PICK_OFF · §12)");
+        if(subs.has(id))
+          throw new Error(where + " 가 \"" + subs.get(id) + "\" 묶음에도 있습니다" +
+            "\n   → 같은 서비스를 두 자리에서 고르게 됩니다 (§2 선택 영역은 하나)");
+        subs.set(id, g.name || g.key);
+        const cat = W.amPickSplit(id).cat;
+        if(!hallCats.has(cat))
+          throw new Error(where + " 의 분류가 전체 서비스 목록에 없습니다 — " + cat);
+      }
+    }
+
+    /* ⚠️⚠️ **내려온 구간이 가리키던 분류를 빠짐없이 받는가** (§0 · §2).
+       §2 가 선택 영역을 하나로 줄이라고 적었는데, 그러면 내려온 구간
+       (운영 서비스관 여섯 · 운영 과제 스물넷)이 가리키던 분류가 갈 곳이
+       없어집니다 — 그건 §0 의 "기존 서비스 데이터" 보존을 어기는 것입니다.
+       ⚠️ `amPickHallCats()` 가 그 둘에서 모으기 때문에 보통은 저절로
+       맞지만, **없는 key 를 적거나 내려놓은 분류를 아직 가리키면**
+       조용히 빠집니다 — 그것을 여기서 잡습니다. */
+    if(hall === "operation"){
+      const need = new Map();
+      for(const g of (W.AM_OPSVC || []))
+        for(const o of (g.items || [])) need.set(o.cat, "운영 서비스관 " + g.name);
+      /* ⚠️ 분류가 없는 과제가 하나 있습니다 — "원가 · 매출 관리" 는
+         분류가 아니라 `/tools` 로 바로 갑니다. 거기까지 세면 멀쩡한
+         데이터를 "분류 undefined" 로 잡습니다 (제 검사가 그랬습니다). */
+      for(const o of (W.AM_OPS || []))
+        if(o.cat) need.set(o.cat, "운영 과제 \"" + o.name + "\"");
+      for(const [cat, from] of need)
+        if(!hallCats.has(cat))
+          throw new Error(from + " 가 가리키는 분류 \"" + cat +
+            "\" 를 운영 전체 서비스 목록이 못 받습니다" +
+            "\n   → 내려온 구간이 가리키던 분류는 빠짐없이 받아야 합니다 (§0 · §2)");
+    }
+  }
+}
+
+/* ── §9 운영 체크리스트 (2026-10-18 매장 운영 2차) ────────────────
+   ⚠️⚠️ 막는 것 일곱 —
+     ① 대표가 여섯이 아님 (지시서 §9) · ② key 가 비었거나 겹침
+     ③ 이름 · 설명이 없음
+     ④ **없는 서비스 id** — 맡길 곳 단추가 아무 데도 안 갑니다
+     ⑤ **없는 계산도구 key** (§11 "없는 계산도구를 클릭 가능한 가짜
+        카드로 표시하지 않는다")
+     ⑥ **없는 글 slug** — 가짜 링크입니다 (절대 규칙 5)
+     ⑦ **기한 숫자 · 요율** — 과세 유형과 업종에 따라 갈려서 적어 두면
+        틀린 날부터 거짓말입니다 (손익분기 85조원과 같은 자리)
+   ──────────────────────────────────────────────────────────────── */
+function checkOpsCheck(W){
+  const L = W.AM_OPS_CHECK || [];
+  if(!L.length) throw new Error("js/data/opscheck.js 의 AM_OPS_CHECK 가 비었습니다 (§9)");
+  const top = L.filter(o => o.top).length;
+  if(top !== 6)
+    throw new Error("운영 체크리스트 대표가 " + top + "개입니다 — 지시서 §9 는 여섯입니다");
+
+  const tools = new Set((W.AM_TOOLS || []).map(t => t.key));
+  const slugs = new Set((W.AM_CONTENTS || []).map(c => c.slug));
+  /* 기한 · 요율 — 숫자 뒤에 날 · 개월 · 퍼센트가 붙은 것 */
+  const WHEN = /[0-9][0-9,.]*\s*(일\s*(안|내|까지)|개월|퍼센트|%)/;
+  const seen = new Set();
+
+  for(const o of L){
+    const at = "운영 체크리스트 \"" + (o.name || o.key || "(이름 없음)") + "\"";
+    if(!o.key || seen.has(o.key))
+      throw new Error(at + " 의 key 가 비었거나 겹칩니다 — " + o.key);
+    seen.add(o.key);
+    if(!o.name || !o.lead)
+      throw new Error(at + " 에 이름이나 설명이 없습니다");
+    if(WHEN.test(o.lead))
+      throw new Error(at + " 의 설명에 기한이나 요율이 적혀 있습니다" +
+        "\n   → 과세 유형 · 업종 · 사업장 규모에 따라 갈립니다. 적는 것은" +
+        " **무엇을 확인해야 하는가**와 **어디서 확인하나**까지입니다");
+    if(o.cat && !W.amPickOne(o.cat))
+      throw new Error(at + " 가 없는 서비스를 가리킵니다 — " + o.cat +
+        "\n   → svcpick 의 id(`분류` 또는 `분류/하위`)여야 합니다");
+    if(o.tool && !tools.has(o.tool))
+      throw new Error(at + " 가 없는 계산도구를 가리킵니다 — " + o.tool +
+        "\n   → §11 이 금지한 **가짜 카드**가 됩니다 (js/data/tools.js)");
+    if(o.read && !slugs.has(o.read))
+      throw new Error(at + " 가 없는 글을 가리킵니다 — " + o.read);
   }
 }
 
@@ -3043,6 +3259,13 @@ checkOffers(W);
 checkOpsvc(W);
 checkHalls(W);
 checkSvcPick(W);
+checkPickGroup(W);
+checkOpsCheck(W);
+for(const hall of Object.keys(W.AM_PICK_GROUP || {})){
+  const gs = W.amPickGroups(hall);
+  console.log("   " + hall + " 대표 " + gs.length + "묶음 · 세부 " +
+    gs.reduce((n, g) => n + g.subs.length, 0) + "개가 실제 서비스를 가리킵니다");
+}
 writeSvcList(W);
 
 /* ⚠️⚠️ **서버가 "없는 서비스" 를 걸러낼 수 있게 목록을 내려놓습니다**
@@ -3058,17 +3281,37 @@ writeSvcList(W);
    ⚠️⚠️ **내려놓는 것은 key 뿐입니다** — 이름 · 설명을 같이 쓰면 이름을
    바꿀 때마다 이 파일이 바뀌고, 서버는 이름을 쓸 일이 없습니다. */
 function writeSvcList(W){
-  const keys = (W.AM_CATS || []).map(c => c.key).filter(Boolean).sort();
-  if(!keys.length) throw new Error("AM_CATS 가 비어 서비스 목록을 못 만듭니다");
+  const cats = (W.AM_CATS || []).map(c => c.key).filter(Boolean);
+  if(!cats.length) throw new Error("AM_CATS 가 비어 서비스 목록을 못 만듭니다");
+  /* ⚠️⚠️ **2026-10-18 운영 §4-4 로 하위 쌍까지 적습니다.** 운영 쪽은
+     "에어컨 수리" 처럼 **하위**를 고르셔서 id 가 `repair/aircon-fix`
+     꼴로 옵니다 — 분류만 적어 두면 서버가 그 전부를 "없는 서비스" 로
+     버리고, 손님 화면에는 접수 성공이 뜨는데 **항목이 하나도 안
+     저장됩니다** (§15 "서비스 ID 유효성 검증").
+     ⚠️ `byIndustry` 분류(시설 · 장비)는 하위가 업종에서 와서
+     `amAllSubs()` 가 모든 업종 것을 합쳐 돌려줍니다. */
+  const keys = cats.slice();
+  (W.AM_CATS || []).forEach(c => {
+    const subs = (typeof W.amAllSubs === "function") ? W.amAllSubs(c) : (c.items || []);
+    (subs || []).forEach(s => {
+      if(!s || !s.key) return;
+      /* ⚠️ key 에 `/` 가 섞이면 `amPickSplit()` 의 꼴이 깨집니다 */
+      if(String(c.key).indexOf("/") >= 0 || String(s.key).indexOf("/") >= 0)
+        throw new Error("분류 · 하위 key 에 '/' 를 쓰지 마세요 — " + c.key + " / " + s.key);
+      keys.push(c.key + "/" + s.key);
+    });
+  });
+  const uniq = [...new Set(keys)].sort();
   const out =
     "/* ⚠️⚠️ **빌드가 만드는 파일입니다 — 손으로 고치지 마세요.**\n" +
-    "   `node build-pages.js` 가 `js/data/catalog.js` 의 분류 key 를 그대로\n" +
-    "   적습니다 (2026-10-17 창업 준비 §8 \"잘못된 서비스 ID 차단\").\n" +
+    "   `node build-pages.js` 가 `js/data/catalog.js` 의 분류 key 와\n" +
+    "   **하위 쌍**(`분류/하위`)을 그대로 적습니다 (2026-10-17 창업 준비\n" +
+    "   §8 \"잘못된 서비스 ID 차단\" · 2026-10-18 운영 §4-4 하위 선택).\n" +
     "   `api/quote.js` 가 신청 항목의 id 를 이 목록으로 거릅니다. */\n" +
-    "module.exports = " + JSON.stringify(keys) + ";\n";
+    "module.exports = " + JSON.stringify(uniq) + ";\n";
   const at = path.join(ROOT, "api/_services.js");
   const was = fs.existsSync(at) ? fs.readFileSync(at, "utf8") : "";
-  if(was !== out){ fs.writeFileSync(at, out); console.log("   서비스 목록을 다시 적었습니다 — api/_services.js (" + keys.length + ")"); }
+  if(was !== out){ fs.writeFileSync(at, out); console.log("   서비스 목록을 다시 적었습니다 — api/_services.js (" + uniq.length + ")"); }
 }
 checkSvcPage(W);
 checkSteps(W);

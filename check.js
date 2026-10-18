@@ -2508,6 +2508,134 @@ const AUDIT = `(() => {
     try{ localStorage.removeItem("am.draft.v1"); }catch(e){}
     return true;`);
 
+
+  /* ════════════════════════════════════════════════════════════════
+     2026-10-18 매장 운영 전문관 2차 — 고르는 자리가 **하나**인가
+     ════════════════════════════════════════════════════════════════
+     ⚠️⚠️ 전에는 `/operation` 에 **고르는 칸이 하나도 없었습니다.**
+     운영 서비스관 여섯 · 업종별 차례 · 운영 과제 스물넷 · 패키지가
+     같은 분류를 네 군데서 냈는데 전부 **링크**였습니다 — 복수 선택이
+     "안 되는" 것이 아니라 **없었습니다** (재서 알았습니다).
+     ⚠️ 주석에 백틱을 쓰지 마세요. */
+  await f("매장 운영이 §2 의 일곱 영역이다", "/operation", `
+    const secs = document.querySelectorAll("#view > section");
+    if(secs.length !== 7) return "구간이 일곱이 아닙니다 — " + secs.length;
+    /* 고르는 자리는 **하나**입니다 (§2) */
+    const sel = document.querySelectorAll(".pkb-sel");
+    if(sel.length !== 1) return "서비스를 고르는 구간이 " + sel.length + "개입니다";
+    const must = [[".opg-c", "대표 묶음"], [".pkb-box", "선택 확인"],
+                  [".ock-l", "체크리스트"], [".mcal-g", "계산도구"]];
+    for(const m of must)
+      if(!document.querySelector(m[0])) return "구간이 빠졌습니다 — " + m[1];
+    /* 신청 단추는 **선택 확인 구간**이 들고 있습니다 (§1 — 전에는
+       셋이었고 둘은 조건을 안 들고 갔습니다) */
+    const go = document.querySelectorAll("[data-pick-go]");
+    if(go.length !== 1) return "신청 단추가 " + go.length + "개입니다";
+    if(go[0].getAttribute("data-pick-go") !== "ops")
+      return "신청 단추가 운영 쪽이 아닙니다 — " + go[0].getAttribute("data-pick-go");
+    return true;`);
+
+  await f("운영은 세부까지 고르고 한 신청으로 간다", "/operation", `
+    try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
+    const groups = document.querySelectorAll(".opg-c");
+    if(groups.length !== 8) return "대표 묶음이 여덟이 아닙니다 — " + groups.length;
+    /* ① 대표 카드 자신은 **체크칸이 아닙니다** (§4-4 혼동 방지) */
+    const head = groups[0].querySelector(".opg-h");
+    if(head.querySelector("input")) return "대표 카드 머리에 체크칸이 있습니다";
+    /* ② 누르면 세부가 펼쳐집니다 */
+    head.click();
+    await new Promise(function(r){ setTimeout(r, 120); });
+    const panel = groups[0].querySelector(".opg-p");
+    if(panel.hidden) return "눌러도 세부가 안 펼쳐집니다";
+    if(head.getAttribute("aria-expanded") !== "true")
+      return "펼쳤는데 aria-expanded 가 안 바뀝니다";
+    /* ③ 세부가 **분류가 아니라 하위**입니다 — 분류를 섞으면 고르신
+       것과 접수에 실리는 것이 달라집니다 */
+    const subs = [].slice.call(panel.querySelectorAll("[data-pick]"))
+      .map(function(e){ return e.getAttribute("data-pick"); });
+    const any = subs[subs.length - 1];
+    for(const id of subs.slice(0, -1))
+      if(id.indexOf("/") < 0) return "세부에 분류가 섞였습니다 — " + id;
+    /* ④ 세부 둘을 고릅니다 */
+    const box = panel.querySelectorAll("[data-pick]");
+    box[0].click(); box[1].click();
+    await new Promise(function(r){ setTimeout(r, 150); });
+    const n = document.querySelector("[data-pick-n]");
+    if(!n || n.textContent !== "2") return "개수가 2 가 아닙니다 — " + (n && n.textContent);
+    /* ⑤ **색만으로 표시하지 않습니다** (§5-2) — 묶음 머리에 몇 개를
+       골랐는지 **글**로 나옵니다 */
+    const tag = groups[0].querySelector(".opg-n");
+    if(tag.hidden) return "묶음 머리의 개수 딱지가 안 나옵니다";
+    if(tag.textContent.indexOf("2개") < 0)
+      return "개수 딱지가 글로 안 적혔습니다 — " + tag.textContent;
+    /* ⑥ 다른 묶음에서도 고릅니다 (카드 둘에 걸친 선택 · §5-1) */
+    const h2 = groups[3].querySelector(".opg-h");
+    h2.click();
+    await new Promise(function(r){ setTimeout(r, 120); });
+    groups[3].querySelector("[data-pick]").click();
+    await new Promise(function(r){ setTimeout(r, 150); });
+    if(document.querySelectorAll("#pk-list > li").length !== 3)
+      return "카드 둘에 걸쳐 고른 셋이 안 쌓였습니다";
+    /* ⑦ 찾기 — 묶음 이름으로도 찾습니다 (§4-5) */
+    const q = document.getElementById("pkf-q");
+    if(!q) return "찾는 칸이 없습니다";
+    q.value = "에어컨";
+    q.dispatchEvent(new Event("input"));
+    await new Promise(function(r){ setTimeout(r, 150); });
+    const hit = document.querySelectorAll("#pkb-find [data-pick-q]:not([hidden])");
+    if(!hit.length) return "에어컨으로 찾았는데 아무것도 안 나옵니다";
+    if(hit.length > 6)
+      return "찾기가 너무 넓습니다 — " + hit.length + "줄 (묶음 글이 세부 글에 섞였습니다)";
+    q.value = "";
+    q.dispatchEvent(new Event("input"));
+    await new Promise(function(r){ setTimeout(r, 120); });
+    /* ⑧ 신청 화면이 그대로 되읽고 **운영 쪽**으로 섭니다 (§7) */
+    const href = document.getElementById("pk-bar-go").getAttribute("href");
+    if(href.indexOf("side=ops") < 0) return "신청 주소가 운영 쪽이 아닙니다 — " + href;
+    await go(href);
+    await new Promise(function(r){ setTimeout(r, 250); });
+    if(document.querySelectorAll("#q-svl > li").length !== 3)
+      return "신청 화면이 고른 셋을 안 읽었습니다";
+    const side = document.getElementById("q-side");
+    if(!side || side.value !== "ops")
+      return "무엇 때문에 칸이 운영이 아닙니다 — " + (side && side.value);
+    /* ⑨ 돌아가는 길이 **운영**입니다 (창업으로 보내면 고르던 자리를
+       잃습니다) */
+    const back = document.querySelector(".qs-go a");
+    if(!back || back.getAttribute("href").indexOf("/operation") < 0)
+      return "더 고르기가 운영으로 안 갑니다 — " + (back && back.getAttribute("href"));
+    try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
+    return true;`);
+
+  /* §9 — ⚠️⚠️ **체크리스트 완료와 견적 신청은 다른 기능입니다.**
+     체크해 두신 것이 저희에게 가는 것처럼 보이면 사장님이 기다리십니다
+     (절대 규칙 5). */
+  await f("운영 체크리스트가 신청이 아니라고 말한다", "/operation", `
+    try{ localStorage.removeItem("am.opsck.v1"); }catch(e){}
+    const sec = document.querySelector(".opsck");
+    if(!sec) return "체크리스트 구간이 없습니다";
+    if(sec.textContent.indexOf("저희에게 오지 않습니다") < 0)
+      return "체크가 저희에게 오지 않는다는 줄이 없습니다";
+    const top = sec.querySelectorAll(".ock-l:not(.is-fold-all) > li");
+    if(top.length !== 6) return "대표가 여섯이 아닙니다 — " + top.length;
+    /* 완료 체크 · 진행률 (§9) */
+    const one = sec.querySelector("[data-ock]");
+    one.click();
+    await new Promise(function(r){ setTimeout(r, 150); });
+    const num = document.getElementById("ock-n");
+    if(!num || num.textContent.indexOf("1 /") !== 0)
+      return "진행률이 안 올라갑니다 — " + (num && num.textContent);
+    const bar = document.getElementById("ock-bar");
+    if(!bar || !bar.style.width || bar.style.width === "0%")
+      return "진행률 띠가 안 찼습니다";
+    /* 해제도 됩니다 */
+    one.click();
+    await new Promise(function(r){ setTimeout(r, 150); });
+    if(document.getElementById("ock-n").textContent.indexOf("0 /") !== 0)
+      return "해제가 안 됩니다";
+    try{ localStorage.removeItem("am.opsck.v1"); }catch(e){}
+    return true;`);
+
   /* ⑭ 샴페인 골드는 **악센트로만** (§21)
      ⚠️ 이 저장소에서 금빛을 넓게 썼다가 통째로 걷어낸 적이 있습니다 —
      고급스러움이 아니라 꾸민 티였습니다. 면으로 번지는 것을 막습니다. */
@@ -3112,23 +3240,27 @@ const AUDIT = `(() => {
        합니다 — 없는 것을 적으면 가짜 링크입니다 (절대 규칙 5). */
     const L = window.AM_OPS || [];
     if(L.length < 10) return "운영 과제가 " + L.length + "개뿐입니다";
-    const cards = [].slice.call(document.querySelectorAll(".ops-g > li > a"));
-    if(cards.length !== L.length)
-      return "화면에 " + cards.length + "칸인데 데이터는 " + L.length + "개입니다";
-    for(let i = 0; i < L.length; i++){
-      const o = L[i], a = cards[i];
-      const nm = (a.querySelector("b")||{}).textContent || "";
-      if(nm.trim() !== o.name) return i + "번째가 '" + nm.trim() + "' 입니다 (" + o.name + ")";
-      const href = a.getAttribute("href") || "";
-      if(!href || href === "#") return o.name + " 이 아무 데도 안 갑니다";
-      if(o.cat){
-        const c = window.amCat(o.cat);
-        if(!c) return o.name + " 이 없는 분류 " + o.cat + " 을 가리킵니다";
-        if(o.sub && !(c.items||[]).some(function(x){ return x.key === o.sub; }))
-          return o.name + " 의 하위 " + o.sub + " 가 " + o.cat + " 에 없습니다";
-      }
-      if(a.getBoundingClientRect().height < 40)
-        return o.name + " 칸이 40px 미만입니다";
+    /* ⚠️⚠️ **2026-10-18 로 보는 자리가 바뀌었습니다.** 운영 과제
+       스물넷이 카드로 깔려 있었는데, §2 가 "서비스를 실제로 선택하는
+       영역은 페이지에서 하나만" 으로 정하면서 내려왔습니다 — 데이터는
+       그대로이고 이제 **전체 서비스 보기**가 그 분류를 받습니다.
+       검사가 틀린 것이 아니라 화면이 바뀐 것이라 같이 옮깁니다.
+       ⚠️ 그래도 지켜야 하는 둘은 그대로입니다 — ① key 가 실제로
+       있는가 ② 그 분류로 가는 길이 화면에 남아 있는가. */
+    const reach = {};
+    [].slice.call(document.querySelectorAll("#view [data-pick]"))
+      .forEach(function(e){
+        reach[String(e.getAttribute("data-pick")).split("/")[0]] = 1; });
+    if(Object.keys(reach).length < 10)
+      return "고를 수 있는 분야가 " + Object.keys(reach).length + "개뿐입니다";
+    for(const o of L){
+      if(!o.cat) continue;             /* 분류가 없는 과제 하나 (/tools) */
+      const c = window.amCat(o.cat);
+      if(!c) return o.name + " 이 없는 분류 " + o.cat + " 을 가리킵니다";
+      if(o.sub && !(c.items||[]).some(function(x){ return x.key === o.sub; }))
+        return o.name + " 의 하위 " + o.sub + " 가 " + o.cat + " 에 없습니다";
+      if(!reach[o.cat])
+        return o.name + " 이 가리키는 " + o.cat + " 로 가는 길이 화면에 없습니다";
     }
     /* ⚠️ 운영 화면은 **중립**입니다 — 창업도 폐업도 아닙니다 */
     const cls = document.getElementById("view").className;

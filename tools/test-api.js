@@ -489,6 +489,34 @@ async function sendWithDb(body, opt){
     ok("남은 것은 멀쩡한 것뿐", rpc && rpc.args.p_items[0].id === "interior");
   }
 
+  console.log("\n── ⚠️⚠️ 하위까지 내려간 id (2026-10-18 운영 §4-4 · §15)");
+  {
+    /* 운영 쪽은 고르는 단위가 **`분류/하위`** 입니다. 서버가 그것을
+       모르면 **고르신 것이 통째로 빠지고** 접수에는 아무 항목도 안
+       남습니다 — `api/_services.js` 를 빌드가 하위까지 적습니다. */
+    const { res, rpc, row } = await sendWithDb({
+      kind:"quote", serviceName:"뭐든", q:"내용", region:"경기", side:"ops",
+      items:[{ id:"repair/aircon-fix", detail:{ "고장난 것":"에어컨" } },
+             { id:"admin/tax-agent" },
+             { id:"repair/없는것" },
+             { id:"repair/aircon-fix/x" }],
+      name:"홍", tel:"010-1234-5678", agree:true });
+    ok("접수는 그대로 된다", res.code === 200, "code=" + res.code);
+    ok("하위 id 둘이 남는다", rpc && rpc.args.p_items.length === 2,
+       rpc && rpc.args.p_items);
+    ok("없는 하위는 빠진다",
+       rpc && !rpc.args.p_items.some(x => String(x.id).indexOf("없는것") >= 0));
+    ok("서비스별 답이 같이 간다",
+       rpc && rpc.args.p_items[0].detail["고장난 것"] === "에어컨",
+       rpc && rpc.args.p_items[0]);
+    /* ⚠️⚠️ DB 는 처음부터 `ops` 를 받습니다 (0001 — start | ops |
+       transfer | close). 화면에 그 선택지가 없어서 운영 중인 사장님이
+       **"창업" 으로 접수**되던 자리입니다 — 배정하는 직원이 그것을
+       보고 창업 업체를 찾습니다. */
+    ok("운영 쪽(side=ops)이 저장 줄에 그대로 실린다",
+       row && row.side === "ops", row && row.side);
+  }
+
   console.log("\n── ⚠️⚠️ 항목 저장이 실패해도 접수는 살린다");
   {
     const { res, sent } = await sendWithDb({

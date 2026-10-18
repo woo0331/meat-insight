@@ -35,7 +35,7 @@
 -->
 <link rel="stylesheet" href="/css/tokens.css?v=92ad47b8">
 <link rel="stylesheet" href="/css/app.css?v=fe25d44f">
-<link rel="stylesheet" href="/css/pages.css?v=a595f4e6">
+<link rel="stylesheet" href="/css/pages.css?v=c0dc0ac7">
 <link rel="stylesheet" href="/css/admin.css?v=ae266266">
 </head>
 <body class="ad-body">
@@ -111,6 +111,12 @@
 <script src="/js/data/legal-privacy.js?v=fd463baa"></script>
 <!-- ⚠️ 영업 카테고리는 catalog.js 의 분류를 묶어 보는 틀이라 **그 뒤**입니다 -->
 <script src="/js/data/sales.js?v=494fff90"></script>
+<!-- ⚠️⚠️ 신청 항목의 서비스 이름 — 2026-10-18 운영 §4-4 로 항목 id 가
+     `repair/aircon-fix` 꼴로 올 수 있습니다. 이 줄이 없으면 `rqSvcName()`
+     이 분류만 보고 **key 를 그대로 찍어서**, 관리자가 "repair/aircon-fix"
+     를 보고 업체를 고르게 됩니다 (포트폴리오에 `gyeonggi` 가 그대로
+     찍혔던 자리와 같습니다). ⚠️ catalog · industries 뒤여야 합니다. -->
+<script src="/js/data/svcpick.js?v=f2389aa2"></script>
 <!-- 수익상품 (수익형 플랫폼 지시서 5절) — catalog · fee 뒤입니다 -->
 <script src="/js/data/fee.js?v=ed6c6f19"></script>
 <script src="/js/data/offers.js?v=45719125"></script>
@@ -124,7 +130,7 @@
 <!-- 로그인 — ⚠️ admin.html 은 ui.js 를 안 읽으므로 auth.js 가 저장을
      스스로 들고 있습니다 (amGet/amSet 에 의존하지 않습니다). -->
 <script src="/js/auth.js?v=a50dfe92"></script>
-<script src="/js/intake.js?v=508b2e70"></script>
+<script src="/js/intake.js?v=56f04d0b"></script>
 <script src="/js/admin.js?v=7b1ae0bb"></script>
 <script src="/js/sales.js?v=92305a9f"></script>
 </body>

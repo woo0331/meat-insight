@@ -114,6 +114,19 @@ window.pickPaint = function(){
     if(card) card.classList.toggle("is-on", on);
   });
 
+  /* ①b 뭆음 여듯의 "n개 선택" 닱지 (§5-2 — 색만으로
+     표시하지 않습니다). ⚠️ 뭆음을 안 펼치시고도 거기서
+     몇 개를 골랐는지가 보여야 합니다 — 안 보이면 펼칠 까닭이
+     없어집니다. */
+  [].slice.call(document.querySelectorAll("[data-pick-g]")).forEach(function(el){
+    var want = (el.getAttribute("data-pick-g") || "").split(",");
+    var k = 0;
+    want.forEach(function(id){ if(id && ids.indexOf(id) >= 0) k++; });
+    el.hidden = !k;
+    var t = el.querySelector("i");
+    if(t) t.textContent = k + "개 선택";
+  });
+
   /* ② 개수 — 여러 자리에 같은 수가 나옵니다 (바구니 · 머리말 · 단추) */
   [].slice.call(document.querySelectorAll("[data-pick-n]")).forEach(function(el){
     el.textContent = String(n);
@@ -133,7 +146,7 @@ window.pickPaint = function(){
     bar.hidden = n === 0;
     var go = document.getElementById("pk-bar-go");
     if(go){
-      go.setAttribute("href", amPickQuoteTo());
+      go.setAttribute("href", amPickQuoteTo(go.getAttribute("data-side")));
       /* §9-2 — 단추 문구에 **실제 동작과 개수**를 적습니다.
          "진행하기" 가 아니라 "선택한 4개 서비스 견적 신청하기". */
       var t = go.querySelector("span");
@@ -147,8 +160,10 @@ window.pickPaint = function(){
      `pickPad()` 는 띠가 없으면 0 을 넣습니다. */
   pickPad();
   /* 본문 안의 신청 단추들도 같이 */
+  /* ⚠️ 쪽은 `data-pick-go` 의 **값**으로 옵니다
+     (`data-pick-go="ops"`). 빈 값이면 `start` 입니다. */
   [].slice.call(document.querySelectorAll("[data-pick-go]")).forEach(function(a){
-    a.setAttribute("href", amPickQuoteTo());
+    a.setAttribute("href", amPickQuoteTo(a.getAttribute("data-pick-go")));
     var t = a.querySelector("span");
     if(t) t.textContent = n ? ("선택한 " + n + "개 서비스 견적 신청하기")
                             : "견적 신청하기";
@@ -169,9 +184,15 @@ function pickPad(){
    새로고침 · 링크 공유**에 살아남습니다 (관심 업체 `?cmp=` 와 같은
    생각입니다). 저장된 것과 주소를 둘 다 두는 까닭은, 링크로 받은
    분에게는 저장된 것이 없기 때문입니다. */
-window.amPickQuoteTo = function(){
+window.amPickQuoteTo = function(side){
   var ids = amPickGet();
-  var q = ["side=start"];
+  /* ⚠⚠ **쪽(side)을 넘기세요.** 전에 "start" 로 박혀 있었는데,
+     2026-10-18 로 **운영 중인 사장님**도 같은 고르개를 쓰게 되면서
+     그분들이 신청 화면에서 "창업 — 시작하려고 합니다" 를 고른 채로
+     접수되는 꼴이었습니다. DB 는 처음부터 `ops` 를 받습니다
+     (`db/migrations/0001_init.sql` — start | ops | transfer | close).
+     ⚠️ 기본값은 `start` 그대로입니다 — 창업 쪽은 한 글자도 안 바뀝니다. */
+  var q = ["side=" + encodeURIComponent(side || "start")];
   if(ids.length) q.push("sv=" + encodeURIComponent(ids.join(",")));
   return "/quote?" + q.join("&");
 };
@@ -189,7 +210,10 @@ window.PickCard = function(s){
   var id = "pk-" + s.id.replace(/[^a-z0-9]/gi, "-");
   var art = (typeof hasIconArt === "function" && s.ia && hasIconArt(s.ia))
     ? iconArt(s.ia, 48) : icon(s.icon || "check", 26);
-  return '<li class="tn-'+esc(s.tone)+'">'+
+  /* ⚠️ `data-pick-q` 는 §4-5 검색이 보는 글입니다 — 쉬운 이름 · 원래
+     이름 · 분류 이름을 **띄어쓰기를 지운 채** 같이 넣습니다 (손님은
+     "에어컨수리" 처럼 붙여 치십니다). */
+  return '<li class="tn-'+esc(s.tone)+'" data-pick-q="'+esc(pickQOf(s))+'">'+
     '<label class="pk-c'+(on ? " is-on" : "")+'" for="'+esc(id)+'">'+
       /* ⚠️⚠️ **체크칸을 숨기지 마세요.** 브라우저가 그려 주는 체크
          표시가 ① 눌림을 글자 아닌 **모양**으로 보여 주고 ② 키보드
@@ -224,11 +248,12 @@ function pickRows(){
    화면마다 따라다니는데, 신청 화면(`/quote`)에서는 **동의 영역을
    가리는 것**이 되고 거기서는 이미 신청 중이라 쓸모가 없습니다
    (§3-3). 그래서 부르는 화면만 냅니다. */
-window.PickBar = function(){
+window.PickBar = function(side){
   var n = amPickCount();
   return '<div class="pk-bar" id="pk-bar"'+(n ? "" : " hidden")+'>'+
     '<p class="pk-bar-t">선택한 서비스 <b data-pick-n>'+n+'</b>개</p>'+
-    '<a class="btn btn-b" id="pk-bar-go" href="'+esc(amPickQuoteTo())+'">'+
+    '<a class="btn btn-b" id="pk-bar-go" data-side="'+esc(side || "start")+'"'+
+      ' href="'+esc(amPickQuoteTo(side))+'">'+
       '<span>선택한 '+n+'개 서비스 견적 신청하기</span>'+icon("arrow",17)+'</a>'+
   '</div>';
 };
@@ -246,7 +271,7 @@ window.PickBar = function(){
 
    ⚠️⚠️ **"고르기만 하면 접수되지 않습니다" 를 지우지 마세요** —
    절대 규칙 5 입니다. */
-window.PickBasket = function(){
+window.PickBasket = function(side){
   var n = amPickCount();
   return '<section class="sec sec-white pkb"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
@@ -262,7 +287,8 @@ window.PickBasket = function(){
       '<div id="pk-some"'+(n ? "" : " hidden")+'>'+
         '<ul class="pkb-l" id="pk-list">'+pickRows()+'</ul>'+
         '<div class="pkb-go">'+
-          '<a class="btn btn-b btn-lg" data-pick-go href="'+esc(amPickQuoteTo())+'">'+
+          '<a class="btn btn-b btn-lg" data-pick-go="'+esc(side || "start")+'"'+
+            ' href="'+esc(amPickQuoteTo(side))+'">'+
             '<span>선택한 '+n+'개 서비스 견적 신청하기</span>'+icon("arrow",18)+'</a>'+
           '<button class="btn btn-o" type="button" onclick="pickClear()">전부 해제</button>'+
         '</div>'+
@@ -342,4 +368,222 @@ window.pickAddPack = function(key){
   amPickSet(ids);
   pickPaint();
   toast(add ? (add + "개를 선택에 담았습니다") : "이미 전부 고르신 것입니다");
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   대표 묶음 + 세부 펼침 — 2026-10-18 "매장 운영 전문관 2차" §4-4
+
+   > §4-4 — "대표 서비스 카드를 누르면 해당 분야의 세부 서비스가
+   >  펼쳐지도록 한다 · 세부 서비스를 선택하면 신청 목록에 추가한다 ·
+   >  **대표 카테고리 선택과 실제 서비스 선택을 혼동하지 않도록 한다.**"
+
+   ⚠️⚠️ **대표 카드 자신은 체크칸이 아닙니다.** 머리는 **펼치는
+   단추**이고, 담기는 것은 펼친 안의 체크칸뿐입니다 — 머리에도 체크를
+   달면 "광고·홍보" 와 "플레이스" 가 둘 다 담겨서, 손님은 하나를
+   골랐다고 생각하는데 접수에는 둘이 실립니다. 그게 §4-4 가 말한
+   그 혼동입니다.
+   ⚠️ 분야 전체로 받고 싶으신 분은 펼친 **맨 아래 칸**("어떤 것이
+   필요한지 모르겠어요")을 고르십니다 — 지시서 §4-4 의 예시 목록이
+   그 칸으로 끝나는 까닭입니다.
+
+   ⚠️⚠️ **펼친 상태를 저장하지 않습니다.** 고르신 것은 저장되고(그래서
+   다시 와도 체크가 그대로입니다), 펼침은 화면의 일입니다 — 고르신
+   것이 있는 묶음은 **처음부터 펼쳐서** 냅니다.
+   ⚠️ 펼치지 않은 묶음의 체크칸도 **DOM 에 그대로 있습니다** (`hidden`
+   으로 가립니다). 그래서 `pickPaint()` 가 접힌 것까지 맞춰 주고,
+   §4-5 검색도 안을 들여다볼 수 있습니다. 그리지 않으면 검색이
+   "에어컨" 을 영영 못 찾습니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 검색이 보는 글 — ⚠️ **띄어쓰기를 지웁니다.** 손님은 "에어컨수리"
+   처럼 붙여 치시는데, 저희 이름은 "에어컨 수리" 로 띄어 있습니다
+   (메인 추천 검색어가 전부 0건이던 그 자리입니다). */
+function pickQOf(s){
+  var t = [s.easy || "", s.name || "", s.desc || ""].join(" ");
+  return (t + " " + t.replace(/\s+/g, "")).toLowerCase();
+}
+
+/* 세부 한 줄 — ⚠️ `<label>` 이 통째로 눌립니다 (높이는 `min-height`
+   로 48px). 안에 링크를 넣지 마세요. */
+function PickSubRow(s, note, g){
+  var on = amPickHas(s.id);
+  var id = "pks-" + s.id.replace(/[^a-z0-9]/gi, "-");
+  /* ⚠️⚠️ **찾는 글이 둘입니다.** 처음에 묶음 이름을 세부 글에 **섞어**
+     두었더니 "에어컨" 하나에 수리 아홉 · 청소 일곱이 **전부** 걸렸습니다
+     (묶음 설명에 "에어컨" 이 들어 있어서입니다) — 찾는 것이 아니라 묶음을
+     통째로 펴 주는 꼴입니다. 반대로 안 섞으면 "세금" 이 **0건** 입니다
+     (묶음은 "세금 · 회계" 인데 세부는 "세무사 · 회계 프로그램").
+     그래서 **두 번 봅니다** — 세부 글로 먼저 찾고, 하나도 없을 때만
+     묶음 글로 찾습니다 (`pickFind()`). 둘 다 재 보고 정했습니다. */
+  return '<li data-pick-q="'+esc(pickQOf(s))+'"'+
+    (g ? ' data-pick-gq="'+esc(pickQOf({ easy:g.name, name:g.lead }))+'"' : "")+'>'+
+    '<label class="pks-r'+(note ? " pks-any" : "")+(on ? " is-on" : "")+
+      '" for="'+esc(id)+'">'+
+      '<input type="checkbox" id="'+esc(id)+'" class="pk-ck"'+
+        ' data-pick="'+esc(s.id)+'"'+(on ? " checked" : "")+
+        ' onchange="pickToggle(\''+esc(s.id)+'\', this)">'+
+      '<span class="pks-n"><b>'+esc(note || amPickLabel(s))+'</b>'+
+        (note ? '<i>상담하면서 정하겠습니다</i>'
+              : (s.easy && s.easy !== s.name ? '<i>'+esc(s.name)+'</i>' : ""))+
+      '</span>'+
+    '</label></li>';
+}
+
+window.PickGroupCard = function(g){
+  var pid = "opg-p-" + g.key;
+  /* 고르신 것이 있으면 **처음부터 펼칩니다** */
+  var open = g.ids.some(amPickHas);
+  var art = (typeof hasIconArt === "function" && g.ia && hasIconArt(g.ia))
+    ? iconArt(g.ia, 52) : icon("check", 26);
+  var subs = g.subs.map(function(s){ return PickSubRow(s, "", g); }).join("");
+  return '<li class="tn-'+esc(g.tone)+'"><div class="opg-c">'+
+    '<button class="opg-h'+(open ? " is-open" : "")+'" type="button"'+
+      ' aria-expanded="'+(open ? "true" : "false")+'" aria-controls="'+esc(pid)+'"'+
+      ' onclick="pickGroupToggle(\''+esc(g.key)+'\', this)">'+
+      '<span class="opg-i ia-t">'+art+'</span>'+
+      '<span class="opg-t"><b>'+esc(g.name)+'</b><i>'+esc(g.lead)+'</i></span>'+
+      /* §5-2 — 색만으로 표시하지 않습니다. 몇 개 골랐는지 글로 냅니다. */
+      '<span class="opg-n" data-pick-g="'+esc(g.ids.join(","))+'" hidden><i></i></span>'+
+      '<span class="opg-x" aria-hidden="true">'+icon("chevd",18)+'</span>'+
+    '</button>'+
+    '<div class="opg-p" id="'+esc(pid)+'"'+(open ? "" : " hidden")+'>'+
+      '<ul class="opg-l">'+subs+
+        PickSubRow(g.any, "어떤 것이 필요한지 모르겠어요", g)+'</ul>'+
+      /* §4-4 "자세히 보기" — ⚠️ 머리 단추 **밖**입니다 (단추 안의
+         링크는 브라우저가 쪼갭니다). */
+      '<p class="opg-go"><a href="'+esc(g.any.to)+'">'+
+        esc(g.name)+' 자세히 보기'+icon("arrow",15)+'</a></p>'+
+    '</div>'+
+  '</div></li>';
+};
+
+/* ⚠️ 다시 그리지 않습니다 — 고르신 체크가 되돌아가고 보던 자리를
+   잃습니다 (`foldToggle()` 과 같은 규칙). */
+window.pickGroupToggle = function(key, btn){
+  var p = document.getElementById("opg-p-" + key);
+  if(!p || !btn) return;
+  var open = p.hidden;
+  p.hidden = !open;
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+  btn.classList.toggle("is-open", open);
+};
+
+/* ── §4-5 찾기 ────────────────────────────────────────────────────
+   > §4-5 — "검색 또는 간단한 필터를 제공한다 · **복잡한 다중 필터는
+   >  만들지 않는다.**"
+
+   그래서 적는 칸 **하나**입니다. 분야 · 지역 · 가격 거르개를 만들지
+   않았습니다 — 어르신이 세 칸을 고르고 나서야 결과를 보는 화면이
+   됩니다.
+
+   ⚠️⚠️ **대표 묶음 안과 전체 목록을 같이 뒤집니다.** 둘을 따로 두면
+   "에어컨" 을 쳤을 때 전체 목록에는 `수리 · 유지보수` 만 나오고
+   정작 "에어컨 수리" 는 접힌 묶음 안에 숨어 있습니다. */
+window.pickFind = function(q){
+  q = String(q || "").trim().toLowerCase().replace(/\s+/g, "");
+  var rows = [].slice.call(document.querySelectorAll("#pkb-find [data-pick-q]"));
+  /* ① 세부 글로 먼저 셉니다 */
+  var hit = 0;
+  rows.forEach(function(el){
+    if(q && (el.getAttribute("data-pick-q") || "").indexOf(q) >= 0) hit++;
+  });
+  /* ② 하나도 없을 때만 묶음 글로 (바로 위 PickSubRow 주석) */
+  var useG = !!q && !hit;
+  rows.forEach(function(el){
+    var t = useG ? (el.getAttribute("data-pick-gq") || "")
+                 : (el.getAttribute("data-pick-q") || "");
+    var on = !q || t.indexOf(q) >= 0;
+    el.hidden = !on;
+    if(on && q && useG) hit++;
+  });
+
+  /* 묶음은 **맞는 것이 있으면 펼칩니다.** 비우면 원래대로 —
+     고르신 것이 있는 묶음만 열려 있습니다. */
+  [].slice.call(document.querySelectorAll(".opg-c")).forEach(function(c){
+    var p = c.querySelector(".opg-p"), b = c.querySelector(".opg-h");
+    if(!p || !b) return;
+    var any = [].slice.call(p.querySelectorAll("[data-pick-q]"))
+      .some(function(el){ return !el.hidden; });
+    var picked = [].slice.call(p.querySelectorAll("[data-pick]"))
+      .some(function(el){ return el.checked; });
+    var open = q ? any : picked;
+    p.hidden = !open;
+    b.setAttribute("aria-expanded", open ? "true" : "false");
+    b.classList.toggle("is-open", open);
+    /* 맞는 것이 하나도 없는 묶음은 **칸째 숨깁니다** — 머리만 남겨
+       두면 "여기 있나" 하고 눌러 보게 됩니다 */
+    var li = c.parentElement;
+    if(li) li.hidden = !!q && !any;
+  });
+
+  /* 전체 목록(접힘)은 맞는 것이 있으면 **열어 둡니다** — 안 열면
+     검색이 찾았다고만 하고 아무것도 안 보입니다 */
+  if(q) pickFoldOpen("pkb-rest");
+
+  var r = document.getElementById("pkb-r");
+  if(r){
+    r.hidden = !q;
+    r.textContent = hit ? (hit + "개 찾았습니다")
+      : "찾으시는 말로는 나오지 않습니다 — 아래 전체 목록에서 골라 보세요.";
+    r.classList.toggle("is-zero", !hit);
+  }
+};
+
+/* 접힌 칸을 열어 둡니다 (단추 글자 · aria 까지) */
+function pickFoldOpen(id){
+  var el = document.getElementById(id);
+  if(!el || !el.classList.contains("is-fold-all")) return;
+  var btn = document.querySelector('[aria-controls="' + id + '"]');
+  if(btn) foldToggle(id, btn, "is-fold-all");
+  else el.classList.remove("is-fold-all");
+}
+
+/* ── B. 필요한 서비스 선택 (§2-B · §4) ───────────────────────────
+   ⚠️⚠️ **이 화면에서 서비스를 고르는 자리는 여기 하나입니다** (§2 —
+   "서비스를 실제로 선택하는 영역은 페이지에서 하나만 운영한다").
+   전에 `/operation` 은 운영 서비스관 여섯 · 업종별 차례 · 운영 과제
+   스물넷 · 패키지가 **같은 분류를 네 군데서** 내고 있었고, 그중
+   **어느 것도 고를 수 없었습니다** (전부 링크였습니다). */
+window.PickGroupBand = function(hallKey, side){
+  var G = (typeof amPickGroups === "function") ? amPickGroups(hallKey) : [];
+  if(!G.length) return "";
+  /* 전체 목록 — 묶음이 이미 가리키는 분류는 뺍니다 (§4-5 "나머지") */
+  var inG = {};
+  G.forEach(function(g){
+    g.ids.forEach(function(id){ inG[amPickSplit(id).cat] = 1; });
+  });
+  var rest = ((typeof amPickHallCats === "function") ? amPickHallCats(hallKey) : [])
+    .filter(function(s){ return !inG[s.id]; });
+
+  return '<section class="sec sec-ivory pkb-sel" id="pick"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">필요한 서비스 선택</p>'+
+      '<h2>무엇이 필요하신가요?</h2>'+
+      '<p>칸을 누르면 아래에 쌓입니다. <b>여러 개를 함께</b> 고르실 수 있고, '+
+        '한 번만 적어 보내시면 서비스마다 업체를 찾아 드립니다.</p>'+
+    '</div>'+
+
+    '<div id="pkb-find">'+
+      /* §4-5 — 적는 칸 하나 */
+      '<div class="pkf">'+
+        '<label class="pkf-l" for="pkf-q">찾으시는 것을 적어 보세요</label>'+
+        '<span class="pkf-w">'+icon("search",18)+
+          '<input class="pkf-i" id="pkf-q" type="search" autocomplete="off"'+
+            ' placeholder="예: 에어컨, 세금, 포스, 전단지"'+
+            ' oninput="pickFind(this.value)">'+
+        '</span>'+
+        '<p class="pkf-r" id="pkb-r" hidden></p>'+
+      '</div>'+
+
+      '<ul class="opg-g">'+G.map(PickGroupCard).join("")+'</ul>'+
+
+      (rest.length
+        ? '<div class="pkb-rest-w">'+
+            FoldAll("pkb-rest", "이 밖의 서비스도 보기 ("+rest.length+"개)", "접기")+
+            '<ul class="pk-g pk-g2 is-fold-all" id="pkb-rest">'+
+              rest.map(PickCard).join("")+'</ul>'+
+          '</div>'
+        : "")+
+    '</div>'+
+  '</div></section>';
 };

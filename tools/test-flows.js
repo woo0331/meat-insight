@@ -223,23 +223,59 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  const what=await pg.evaluate(()=>(document.getElementById("q-what")||{}).value||"");
  say(what.indexOf("인터넷")>=0,"창업 ⑧ 필요한 일 칸이 미리 적혀 있다",what);
 
- /* ② 운영 고객 — 음식점 운영 → 포장재 · 청소 · 수리 → 상담 신청 */
- await pg.goto(B+"/operation?i=restaurant",{waitUntil:"networkidle"});
- const og=await pg.evaluate(()=>document.querySelectorAll(".opsv-g > li").length);
- say(og===6,"운영 ① 여섯 묶음이 나온다","지금 "+og);
- const op=await pg.evaluate(()=>[...document.querySelectorAll(".opsv-pick b")].map(x=>x.textContent.trim()));
- say(op.length>0 && /식자재|육류|수산/.test(op.slice(0,4).join(" ")),
-   "운영 ② 음식점 것이 먼저 나온다",op.slice(0,4).join(" · "));
- await click('.opsv-g > li:nth-child(2) .opsv-l > li:nth-child(1) > a');
- say((await url()).startsWith("/providers/supply"),"운영 ③ 소모품 · 포장재 → 업체찾기",await url());
+ /* ② 운영 고객 — 2026-10-18 "매장 운영 전문관 2차" §16 시나리오 A~D
+    ⚠️⚠️ **보는 자리가 통째로 바뀌었습니다.** 전에는 운영 서비스관
+    여섯 묶음 · 업종별 차례 · 패키지를 눌러 봤는데, §2 가 "서비스를
+    실제로 선택하는 영역은 페이지에서 하나만" 으로 정하면서 그 셋이
+    내려왔습니다 — 검사가 틀린 것이 아니라 **화면이 바뀐 것**이라
+    같이 옮깁니다 (이 저장소의 규칙입니다).
+    ⚠️ 내려온 구간이 가리키던 분류는 대표 여덟 + 전체 서비스 보기가
+    빠짐없이 받습니다 — `checkPickGroup()` 이 빌드마다 셉니다. */
  await pg.goto(B+"/operation",{waitUntil:"networkidle"});
- const runHas=await pg.evaluate(()=>{
-   const c=document.querySelector('.pkg-c[data-pk="run"]');
-   return c?[...c.querySelectorAll('input[type="checkbox"]')].map(x=>x.value).join(","):"";});
- say(runHas.indexOf("equip-repair")>=0 && runHas.indexOf("regular-clean")>=0,
-   "운영 ④ 운영 패키지에 수리 · 정기청소가 들어 있다",runHas);
- await click('#pkg-go-run');
- say((await url()).startsWith("/quote"),"운영 ⑤ 패키지 → 신청 화면",await url());
+ await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+ await pg.reload({waitUntil:"networkidle"});
+ const osec=await pg.evaluate(()=>document.querySelectorAll("#view > section").length);
+ say(osec===7,"운영 ① 일곱 영역이다 (§2)","지금 "+osec);
+ const ogr=await pg.evaluate(()=>document.querySelectorAll(".opg-c").length);
+ say(ogr===8,"운영 ② 대표 여덟이 나온다 (§4-2)","지금 "+ogr);
+ await click(".opg-h");
+ const osub=await pg.evaluate(()=>
+   document.querySelectorAll(".opg-p:not([hidden]) .pks-r").length);
+ say(osub>0,"운영 ③ 카드를 누르면 세부가 펼쳐진다 (§4-4)","지금 "+osub);
+ await pg.evaluate(()=>{
+   const b=[...document.querySelectorAll(".opg-p:not([hidden]) input[data-pick]")];
+   b[0].click(); b[1].click(); });
+ await pg.waitForTimeout(220);
+ await click(".opg-g > li:nth-child(4) .opg-h");
+ await pg.evaluate(()=>{
+   const c=document.querySelectorAll(".opg-c")[3];
+   c.querySelector("input[data-pick]").click(); });
+ await pg.waitForTimeout(220);
+ const on3=await pg.evaluate(()=>document.querySelectorAll("#pk-list > li").length);
+ say(on3===3,"운영 ④ 카드 둘에 걸쳐 셋을 고른다 (§5-1)","지금 "+on3);
+ await pg.reload({waitUntil:"networkidle"});
+ const on3b=await pg.evaluate(()=>document.querySelectorAll("#pk-list > li").length);
+ say(on3b===3,"운영 ⑤ 새로고침해도 고른 것이 남는다 (§5-3)","지금 "+on3b);
+ await pg.evaluate(()=>{ const i=document.getElementById("pkf-q");
+   i.value="세금"; i.dispatchEvent(new Event("input")); });
+ await pg.waitForTimeout(220);
+ const fnd=await pg.evaluate(()=>
+   document.querySelectorAll("#pkb-find [data-pick-q]:not([hidden])").length);
+ say(fnd>0,"운영 ⑥ '세금' 으로 찾으면 나온다 (§4-5)","지금 "+fnd);
+ const ock=await pg.evaluate(()=>
+   document.querySelectorAll(".ock-l:not(.is-fold-all) > li").length);
+ say(ock===6,"운영 ⑦ 체크리스트 대표 여섯 (§9)","지금 "+ock);
+ say((await txt()).indexOf("저희에게 오지 않습니다")>=0,
+   "운영 ⑧ 체크는 신청이 아니라고 적혀 있다 (§9 · 절대 규칙 5)");
+ const ogo=await pg.evaluate(()=>{
+   const a=document.getElementById("pk-bar-go");
+   return a?a.getAttribute("href"):""; });
+ say(ogo.indexOf("side=ops")>=0,"운영 ⑨ 신청 주소가 운영 쪽이다 (§7)",ogo);
+ await pg.goto(B+ogo,{waitUntil:"networkidle"});
+ const oq=await pg.evaluate(()=>document.querySelectorAll("#q-svl > li").length);
+ say(oq===3,"운영 ⑩ 신청 화면이 고른 셋을 되읽는다 (§7-2)","지금 "+oq);
+ const oside=await pg.evaluate(()=>(document.getElementById("q-side")||{}).value||"");
+ say(oside==="ops","운영 ⑪ 무엇 때문에 = 운영 (§7-2)",oside);
 
  /* ③ 폐업 고객 — 음식점 폐업 → 장비 매각 → 철거 · 원상복구 */
  await pg.goto(B+"/closure/restaurant",{waitUntil:"networkidle"});

@@ -359,80 +359,296 @@ function OpsvcForInd(ind){
   '</div></section>';
 }
 
-function PageOperation(){
-  var ind  = (typeof amIndustry === "function") ? amIndustry(nowQS("i")) : null;
-  var reads = opsReads(6);
+/* ════════════════════════════════════════════════════════════════════
+   /operation — 2026-10-18 "매장 운영 전문관 2차" §2 일곱 영역
+
+   > §2 — "서비스를 실제로 선택하는 영역은 **페이지에서 하나만**
+   >  운영한다."
+
+   ⚠️⚠️ **전에는 고르는 자리가 없었습니다.** 운영 서비스관 여섯 ·
+   업종별 차례 · 운영 과제 스물넷 · 패키지가 **같은 분류를 네 군데서**
+   냈는데 전부 **링크**였습니다 — `[data-pick]` 이 0개였습니다
+   (`docs/OPERATION_HALL_AUDIT.md` 에 재서 적었습니다). 그래서
+   §1 의 "복수 선택이 실제로 동작하는지 확인" 은 고칠 것이 아니라
+   **만들 것**이었습니다.
+
+   ⚠️⚠️ **내려온 구간의 함수를 지우지 않았습니다** (§0-6 · §0-8).
+   `OpsvcGrid` · `OpsvcForInd` · `OpsGrid` · `OpsPick` · `PackBand` ·
+   `IndustryGrid` 가 그대로 있고 **부르지만 않습니다** — 되돌리실 일이
+   생기면 `PageOperation()` 한 줄입니다.
+   ⚠️ 내려온 것마다 **갈 곳이 남아 있는지** 하나씩 재서 확인했습니다 —
+   여섯 묶음과 과제 스물넷이 가리키던 분류는 **대표 여덟 + 전체 서비스
+   보기**가 빠짐없이 받습니다 (`checkPickGroup()` 이 빌드마다 셉니다).
+   패키지는 `/quote` 와 `/closure` · `/transfer` 가, 업종 고르개는
+   `/startup` · `/closure` 첫 화면이 그대로 들고 있습니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── A. 소개 (§3) ─────────────────────────────────────────────────
+   ⚠️ 단추 둘 다 **실제로 갑니다** — 하나는 바로 아래 고르개로,
+   하나는 신청 화면으로. §3 이 적은 글자 그대로입니다.
+   ⚠️⚠️ 두 번째는 **빈손으로 가도 되는 길**입니다. 무엇이 필요한지
+   모르시는 분께 "먼저 고르고 오세요" 라고 하면 거기서 닫습니다. */
+function OpsIntro(ind){
   return PgHero({
     photo:"hero-ops",
-    /* ⚠️ §5 — 업종을 고르고 오셨으면 되읽어 줍니다. */
     kicker:"OPERATION · 매장 운영" + (ind ? " · " + ind.name : ""),
-    h1raw: ind
-      ? esc(ind.name)+" 운영 중에<br class=\"br-m\"> 필요한 것을 찾고 계시네요."
-      : "운영하면서 필요한 것,<br class=\"br-m\"> 여기서 찾으세요.",
-    lead:"세무 · 노무 · 인력 · POS · 식자재 · 청소 · 마케팅까지. 문을 연 뒤에 생기는 일도 한곳에서 맡길 곳을 찾습니다.",
-    cta:'<a class="btn btn-b btn-lg" href="'+esc(quoteTo({}))+'">'+
-        '필요한 것 견적 요청'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-o btn-lg" href="/tools">매출 · 원가 계산해 보기</a>'
-  })+
-  /* §5-2 — 운영 서비스 여섯 묶음 (A~F). ⚠️ 묶음을 누르면
-     **그 분류의 진짜 화면**으로 갑니다 — `/opsvc/:group` 을 만들면
-     같은 내용이 두 주소로 나갑니다. */
-  /* ⚠️ 히어로(`.pgh`)가 흰색이라 여기도 흰색으로 두면 둘이 한 덯어리로
-     붙어 보입니다 — 아이보리2 로 한 칸 띄우고, 바로 아래 패키지가
-     회색이라 셋이 차례로 갈립니다 (ΔE 2.7 · 2.7). */
-  '<section class="sec sec-ivory opsv"><div class="w">'+
-    '<div class="sec-hd sec-hd-row"><div>'+
-      '<p class="eyebrow">OPERATION SERVICE</p>'+
-      '<h2>운영하면서 필요한 것,<br class="br-m"> 여섯 갈래로 모았습니다</h2>'+
-      '<p>식자재부터 수리 · 솔루션 · 마케팅까지. 문을 열고 나서 생기는 일을 '+
-        '한곳에서 맡길 곳을 찾습니다.</p></div>'+
-      '<a class="btn btn-o sec-hd-all" href="'+esc(quoteTo({}))+'">'+
-        '상담 신청하기'+icon("arrow",16)+'</a>'+
+    h1raw:"매장 운영,<br class=\"br-m\"> 무엇을 도와드릴까요?",
+    lead:"광고 · 홍보, 세금, 직원 채용, 매장 수리까지. "+
+         "필요한 서비스를 선택하고 한 번에 신청하세요.",
+    cta:'<a class="btn btn-b btn-lg" href="#pick">'+
+        '필요한 서비스 선택하기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="'+esc(quoteTo({ side:"ops",
+           industry:(ind ? ind.key : "") }))+'">무엇이 필요한지 모르겠어요</a>'
+  });
+}
+
+/* ── D. 운영 체크리스트 (§9) ──────────────────────────────────────
+   > §9 — "완료 체크 · 해제 · 진행률 표시 · 회원별 저장 ·
+   >  **체크리스트 완료와 견적 신청은 서로 다른 기능으로 유지한다.**"
+
+   ⚠️⚠️ **회원별 저장은 못 했습니다** — 로그인이 `auth:false` 라
+   그 길이 없습니다. 지금은 **이 브라우저**에 남고, 화면이 그렇게
+   적습니다 (절대 규칙 5 · 있는 척하지 않습니다).
+   ⚠️⚠️ **저장이 막힌 브라우저에서는 성공했다고 말하지 않습니다**
+   (§15 "저장 실패 시 성공 메시지 금지"). 사파리 비공개 모드에서
+   `localStorage` 가 던지는데, `amSet()` 은 그것을 **삼킵니다** —
+   그래서 여기서 직접 try/catch 하고 붉은 줄로 알립니다 (영업
+   작업대의 `SL_OK` 와 같은 방식입니다). */
+var OCK_KEY = "am.opsck.v1";
+var OCK_OK  = true;
+
+function ockGet(){
+  try{
+    var raw = localStorage.getItem(OCK_KEY);
+    var d = raw ? JSON.parse(raw) : null;
+    return (d && d.done) ? d.done : [];
+  }catch(e){ OCK_OK = false; return []; }
+}
+function ockSet(keys){
+  try{
+    localStorage.setItem(OCK_KEY, JSON.stringify({ done:keys, at:Date.now() }));
+    return true;
+  }catch(e){ OCK_OK = false; return false; }
+}
+
+window.opsCheckToggle = function(key, el){
+  var done = ockGet(), i = done.indexOf(key);
+  var on = el ? !!el.checked : (i < 0);
+  if(on && i < 0) done.push(key);
+  if(!on && i >= 0) done.splice(i, 1);
+  /* ⚠️ 저장이 안 되면 **체크를 되돌립니다.** 그냥 두면 화면에는
+     켜져 있는데 다시 오면 꺼져 있어서, 손님은 저장된 줄 압니다. */
+  if(!ockSet(done)){
+    if(el) el.checked = !on;
+    toast("이 브라우저에 저장할 수 없어서 체크가 남지 않습니다");
+  }
+  opsCheckPaint();
+};
+
+window.opsCheckClear = function(){
+  if(!ockGet().length) return;
+  if(!confirm("체크해 두신 것을 전부 지웁니다. 되돌릴 수 없습니다.")) return;
+  try{ localStorage.removeItem(OCK_KEY); }catch(e){ OCK_OK = false; }
+  opsCheckPaint();
+  toast("지웠습니다");
+};
+
+/* ⚠️ 체크리스트에서 바로 고르개로 — **실제로 담고** 그 자리로
+   올려 드립니다. "맡길 곳" 이라고만 적어 두고 아무 일도 안 하면
+   그게 §30-7 입니다. */
+window.opsCheckPick = function(id){
+  if(typeof amPickGet !== "function") return;
+  var ids = amPickGet();
+  var add = ids.indexOf(id) < 0;
+  if(add){ ids.push(id); amPickSet(ids); pickPaint(); }
+  var s = amPickOne(id);
+  toast(add ? ((s ? amPickLabel(s) : "서비스") + " 를 선택에 담았습니다")
+            : "이미 고르신 것입니다");
+  var sec = document.getElementById("pick");
+  if(sec) sec.scrollIntoView({ behavior:"smooth", block:"start" });
+};
+
+/* ⚠️ 다시 그리지 않습니다 — DOM 을 바로 고칩니다 */
+window.opsCheckPaint = function(){
+  var done = ockGet();
+  var all = (window.AM_OPS_CHECK || []).length;
+  [].slice.call(document.querySelectorAll("[data-ock]")).forEach(function(el){
+    var on = done.indexOf(el.getAttribute("data-ock")) >= 0;
+    if(el.checked !== on) el.checked = on;
+    var row = el.closest(".ock-r");
+    if(row) row.classList.toggle("is-on", on);
+  });
+  var n = done.filter(function(k){ return !!amOpsCheckOne(k); }).length;
+  var t = document.getElementById("ock-n");
+  if(t) t.textContent = n + " / " + all;
+  var bar = document.getElementById("ock-bar");
+  if(bar){
+    var pct = all ? Math.round(n / all * 100) : 0;
+    bar.style.width = pct + "%";
+    bar.parentElement.setAttribute("aria-valuenow", String(pct));
+  }
+  var x = document.getElementById("ock-x");
+  if(x) x.hidden = !n;
+  var warn = document.getElementById("ock-warn");
+  if(warn) warn.hidden = OCK_OK;
+};
+
+function OpsCheckRow(o){
+  var id = "ock-" + o.key;
+  var go = [];
+  if(o.cat)
+    go.push('<button class="ock-go" type="button" onclick="opsCheckPick(\''+
+      esc(o.cat)+'\')">맡길 곳 고르기'+icon("plus",14)+'</button>');
+  if(o.tool)
+    go.push('<a class="ock-go" href="/tools/'+esc(o.tool)+'">계산해 보기</a>');
+  if(o.read)
+    go.push('<a class="ock-go" href="/content/'+esc(o.read)+'">읽어 두기</a>');
+  return '<li>'+
+    '<label class="ock-r" for="'+esc(id)+'">'+
+      '<input type="checkbox" class="pk-ck" id="'+esc(id)+'"'+
+        ' data-ock="'+esc(o.key)+'"'+
+        ' onchange="opsCheckToggle(\''+esc(o.key)+'\', this)">'+
+      '<span class="ock-t"><b>'+esc(o.name)+'</b><i>'+esc(o.lead)+'</i></span>'+
+    '</label>'+
+    /* ⚠️ 단추들은 `<label>` **밖**입니다 — 안에 두면 누를 때마다
+       체크가 같이 켜집니다 (`<a>` 안의 `<a>` 와 같은 자리). */
+    (go.length ? '<p class="ock-gos">'+go.join("")+'</p>' : "")+
+  '</li>';
+}
+
+function OpsCheckBand(){
+  var top = (typeof amOpsCheckTop === "function") ? amOpsCheckTop() : [];
+  var rest = (typeof amOpsCheckRest === "function") ? amOpsCheckRest() : [];
+  if(!top.length) return "";
+  var all = top.length + rest.length;
+  return '<section class="sec sec-white opsck"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">운영 체크리스트</p>'+
+      '<h2>이번 달, 빠뜨린 것이 없는지 보세요</h2>'+
+      '<p>확인한 것을 눌러 두시면 이 브라우저에 남습니다. '+
+        '<b>여기는 확인하는 자리이고 신청은 위에서 합니다.</b></p>'+
     '</div>'+
-    OpsvcGrid(4)+
-    /* ⚠️ 제휴 공급사가 0곳인 것을 숨기지 않습니다 (§5-3 · 절대 규칙 5) */
+    '<div class="ock-box">'+
+      '<p class="ock-sum">'+
+        '<b id="ock-n">0 / '+all+'</b><span>확인했습니다</span>'+
+        '<span class="ock-track" role="progressbar" aria-label="확인한 항목"'+
+          ' aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">'+
+          '<i id="ock-bar"></i></span>'+
+        '<button class="btn btn-o btn-sm" type="button" id="ock-x" hidden'+
+          ' onclick="opsCheckClear()">체크 지우기</button>'+
+      '</p>'+
+      /* §15 — 저장이 막힌 브라우저에서 "저장했습니다" 라고 하지 않습니다 */
+      '<p class="ock-warn" id="ock-warn" hidden>'+icon("warn",15)+
+        ' 이 브라우저는 저장을 막아 두어서 체크가 남지 않습니다 '+
+        '(비공개 모드일 수 있습니다).</p>'+
+      '<ul class="ock-l">'+top.map(OpsCheckRow).join("")+'</ul>'+
+      (rest.length
+        ? FoldAll("ock-rest", "전체 보기 ("+rest.length+"개 더)", "접기")+
+          '<ul class="ock-l is-fold-all" id="ock-rest">'+
+            rest.map(OpsCheckRow).join("")+'</ul>'
+        : "")+
+    '</div>'+
+    /* 절대 규칙 5 — 체크는 저희에게 오지 않습니다 */
     '<p class="sec-note">'+icon("info",15)+
-      ' 지금은 <b>요청을 받아 업체를 찾아 드리는 단계</b>입니다. '+
-      '바로 주문 · 결제되는 상품은 아직 없습니다.</p>'+
-  '</div></section>'+
-  OpsvcForInd(ind)+
-  PackBand("both", "sec-gray")+
-  '<section class="sec sec-white"><div class="w">'+
-    '<div class="sec-hd">'+
-      '<p class="eyebrow">무엇이 필요하세요?</p>'+
-      '<h2>운영 중 어떤 도움이 필요하세요?</h2>'+
-      '<p>고르시면 그 자리의 정보 · 계산기 · 업체를 한 번에 보여 드립니다.</p>'+
-    '</div>'+
-    OpsGrid(ind ? ind.key : "", nowQS("op"))+
-    OpsPick(nowQS("op"), ind ? ind.key : "")+
-  '</div></section>'+
-  '<section class="sec sec-gray"><div class="w">'+
-    '<div class="sec-hd">'+
-      '<p class="eyebrow">업종을 고르시면</p>'+
-      '<h2>업종마다 쓰는 것이 다릅니다</h2>'+
-      '<p>고르시면 장비 · 거래처 · 업체가 그 업종 것으로 좁혀집니다.</p>'+
-    '</div>'+
-    IndustryGrid("/startup","")+
-  '</div></section>'+
-  (reads.length ? '<section class="sec"><div class="w">'+
-    '<div class="sec-hd">'+
-      '<p class="eyebrow">먼저 읽어 두시면</p>'+
+      ' 체크해 두신 것은 <b>이 브라우저에만</b> 남고 저희에게 오지 않습니다. '+
+      '맡기실 것이 있으면 위에서 고르고 신청해 주세요.</p>'+
+  '</div></section>';
+}
+
+/* ── E. 가이드 (§10) ──────────────────────────────────────────────
+   > §10 — "가이드는 3개 정도만 노출하고 전체 보기로 연결한다 ·
+   >  **가상의 게시글이나 허위 조회수를 만들지 않는다.**"
+
+   ⚠️⚠️ **조회수 · 인기 · 추천을 적지 않습니다.** 조회도 클릭도 하나도
+   모으지 않아서 무엇이 많이 읽혔는지 **우리는 모릅니다**. 내는 것은
+   분류 · 읽는 시간(둘 다 실제 값)까지입니다.
+   ⚠️ 글을 고르는 규칙은 `opsReads()` **한 곳**입니다 — 운영 과제가
+   가리키는 분류의 글입니다 (`ReadBand` 의 쪽 기준보다 이쪽이 운영
+   화면에 맞습니다. 두 곳에 적으면 어긋납니다).
+   ⚠️ 맞는 글이 없으면 **구간째 빠집니다** (절대 규칙 2). */
+function OpsGuideBand(){
+  var L = opsReads(3);
+  if(!L.length) return "";
+  return '<section class="sec sec-ivory"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">운영 가이드</p>'+
       '<h2>운영하면서 자주 막히는 것</h2>'+
+      '<p>업체를 부르기 전에 읽어 두면 묻는 것이 달라집니다.</p>'+
     '</div>'+
-    '<ul class="rd-l">'+reads.map(function(c){
+    '<ul class="rd-l">'+L.map(function(c){
       return '<li><a href="/content/'+esc(c.slug)+'">'+
-        '<span class="rd-m">'+esc(c.side === "close" ? "폐업" : "창업")+
+        /* ⚠⚠ `amCatName()` 은 **없는 함수**입니다 (이 저장소에 그렇게
+           적어 둔 경고가 있고 저는 거기 그대로 빠졌습니다) — 분류는
+           `amCat()` 으로 찾습니다. */
+        '<span class="rd-m">'+esc((amCat(c.cat) || {}).name || "")+
           (c.read ? ' · '+esc(String(c.read))+'분' : '')+'</span>'+
         '<b>'+esc(c.title)+'</b>'+
         '<span class="rd-p">'+esc(c.lead)+'</span>'+
         '<span class="rd-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
-      '</a></li>';
-    }).join("")+'</ul>'+
-    '<div class="row-cta"><a class="btn btn-o" href="/content">정보 전부 보기'+icon("arrow",16)+'</a></div>'+
-  '</div></section>' : "")+
-  JourneyBand({ current:"operation", tone:"sec-white",
-    title:"다른 것도 준비하고 계신가요?",
-    lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." });
+      '</a></li>'; }).join("")+'</ul>'+
+    '<div class="row-cta"><a class="btn btn-o" href="/content">'+
+      '정보 전부 보기'+icon("arrow",16)+'</a></div>'+
+  '</div></section>';
+}
+
+/* ── F. 계산도구 (§11) ────────────────────────────────────────────
+   > §11 — "운영 중 가장 자주 쓰이는 계산도구를 우선 배치한다 ·
+   >  **없는 계산도구를 클릭 가능한 가짜 카드로 표시하지 않는다.**"
+
+   ⚠️⚠️ 넷은 **실제로 있는 도구**입니다 (`/tools/bep` · `/tools/target` ·
+   `/tools/labor` · `/tools/margin`). 없는 key 를 적으면 그 카드가
+   조용히 빠지고, `checkOpsCheck()` · `checkProcess()` 와 같은 방식으로
+   빌드가 막습니다.
+   ⚠️ §11 의 "매출 · 순이익" 은 **목표 매출 계산**(`target`)입니다 —
+   따로 만들지 않았습니다 (서로 뒤집은 값은 한 도구입니다). */
+var OPS_CALC = ["bep", "target", "labor", "margin"];
+var OPS_CALC_TONE = { bep:"sv3", target:"sv1", labor:"sv4", margin:"sv6" };
+
+function OpsCalcBand(){
+  var by = {}; (window.AM_TOOLS || []).forEach(function(t){ by[t.key] = t; });
+  var L = OPS_CALC.map(function(k){ return by[k]; }).filter(Boolean);
+  if(!L.length) return "";
+  return '<section class="sec sec-calc opsc"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">무료 계산도구</p>'+
+      '<h2>숫자를 먼저 보고 정하세요</h2>'+
+      '<p>가입 없이 바로 쓰실 수 있습니다. 적으신 값은 저장하지 않습니다.</p>'+
+    '</div>'+
+    '<ul class="mcal-g">'+L.map(function(t){
+      var tone = OPS_CALC_TONE[t.key] || "sv1";
+      var art  = (typeof hasIconArt === "function" && hasIconArt(t.icon));
+      return '<li class="tn-'+esc(tone)+'">'+
+        '<a href="/tools/'+esc(t.key)+'">'+
+        '<span class="mcal-i ia-t" aria-hidden="true">'+
+          (art ? iconArt(t.icon, 44) : icon(t.icon, 28))+'</span>'+
+        '<b class="mcal-n">'+esc(t.name)+'</b>'+
+        (t.out ? '<i class="mcal-o">'+esc(t.out)+'</i>' : '')+
+        '<span class="mcal-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
+      '</a></li>'; }).join("")+'</ul>'+
+    '<div class="row-cta">'+
+      '<a class="btn btn-o" href="/tools">계산도구 전부 보기'+icon("arrow",16)+'</a>'+
+      '<a class="btn btn-o" href="/faq">자주 묻는 질문</a>'+
+    '</div>'+
+  '</div></section>';
+}
+
+function PageOperation(){
+  var ind = (typeof amIndustry === "function") ? amIndustry(nowQS("i")) : null;
+  /* §2 일곱 영역 — ① 소개 ② 필요한 서비스 선택 ③ 선택 확인 + 통합
+     견적 신청 ④ 체크리스트 ⑤ 가이드 ⑥ 계산도구 · 도움 ⑦ 다른 전문관.
+     ⚠️⚠️ ③ 이 **신청 단추를 들고 있는 유일한 자리**입니다 — §1 이
+     적은 "신청 버튼 위치가 명확하지 않다" 가 그 자리를 셋으로 두었던
+     까닭입니다 (둘은 조건을 안 들고 가는 `quoteTo({})` 였습니다). */
+  return OpsIntro(ind) +
+    PickGroupBand("operation", "ops") +
+    PickBasket("ops") +
+    OpsCheckBand() +
+    OpsGuideBand() +
+    OpsCalcBand() +
+    JourneyBand({ current:"operation", tone:"sec-white",
+      title:"다른 것도 준비하고 계신가요?",
+      lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." }) +
+    PickBar("ops");
 }
 
 /* ── /transfer — 인수 · 양도 ──────────────────────────────────

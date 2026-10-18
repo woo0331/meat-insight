@@ -414,7 +414,16 @@ function rqItemRow(it){
 
 /* ⚠️ 이름을 모르면 **key 를 그대로 냅니다** — 분류가 내려가도 지난
    신청은 남아야 하고(§12), 빈 줄보다 key 가 낫습니다 (운영자 화면). */
+/* ⚠️⚠️ **하위 id(`repair/aircon-fix`)도 읽습니다** (2026-10-18 운영
+   §4-4). 분류만 보면 운영 쪽 항목이 전부 **key 그대로** 찍혀서,
+   관리자가 "repair/aircon-fix" 를 보고 업체를 고르게 됩니다 — 이
+   저장소가 포트폴리오에 `gyeonggi` 를 그대로 찍었던 자리와 같습니다.
+   ⚠️ 모르는 key 는 **그대로 냅니다** — 내려놓은 분류를 가리키는 지난
+   신청을 읽어야 하고, 거기서 빈 칸을 내면 무엇에 대한 신청인지
+   아무도 모릅니다 (§12 · 절대 규칙 2). */
 function rqSvcName(k){
+  var one = (typeof amPickOne === "function") ? amPickOne(k) : null;
+  if(one) return one.sub ? (one.desc + " · " + one.name) : one.name;
   var c = (window.AM_CATS || []).filter(function(x){ return x.key === k; })[0];
   return c ? c.name : k;
 }

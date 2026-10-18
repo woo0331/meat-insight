@@ -184,6 +184,15 @@ const PAGES = [
   ["/content/samusil-jeongri-bojeunggeum", "정보 — 사무실 보증금"],
   ["/content/onlain-tongsinpanmae-singo", "정보 — 통신판매업 신고"],
   ["/content/onlain-jeongri-juhun",     "정보 — 온라인 판매 정리"],
+  /* 운영 — 수리 · 유지보수 (2026-10-18) — 업종이 안 붙은 전 업종 글입니다.
+     ⚠️ **여섯 다 넣습니다.** PAGES 에 없으면 그 화면은 아무 검사도
+     안 받습니다 (크롤러 본문 · 대비 · 누름 크기 · 어두운 면). */
+  ["/content/suri-gyeonjeok-gareuneun-geot", "정보 — 수리 견적"],
+  ["/content/naengjang-naengdong-meomchum",  "정보 — 냉장 · 냉동 멈춤"],
+  ["/content/eeokeon-gwanri-gojang",         "정보 — 에어컨 관리"],
+  ["/content/jeonggi-jeomgeom-gyeyak",       "정보 — 정기 점검 계약"],
+  ["/content/jeongi-baegwan-nusu",           "정보 — 전기 · 배관 · 누수"],
+  ["/content/keopimeosin-jebinggi-mul",      "정보 — 커피머신 · 제빙기"],
   ["/about",             "소개"],
   ["/terms",             "이용약관"],
   ["/privacy",           "개인정보처리방침"],

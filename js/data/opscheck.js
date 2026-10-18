@@ -48,7 +48,7 @@ window.AM_OPS_CHECK = [
   { key:"equip",  top:true,  name:"매장 설비 점검",
     lead:"냉장 · 냉동 · 에어컨 · 주방기기를 마지막으로 보신 때가 언제인가요. "+
          "멈춘 다음에 부르면 그날 장사가 쉽니다.",
-    cat:"repair/check-up" },
+    cat:"repair/check-up", read:"jeonggi-jeomgeom-gyeyak" },
 
   { key:"clean",  top:true,  name:"위생 · 청소 점검",
     lead:"주방 후드 · 배수 · 에어컨 내부처럼 눈에 안 보이는 데가 "+
@@ -74,7 +74,7 @@ window.AM_OPS_CHECK = [
   { key:"safety", name:"소방 · 전기 안전 점검",
     lead:"소화기 압력 · 비상구 · 분전반 상태를 보셨나요. 업종과 면적에 "+
          "따라 해야 하는 점검이 따로 있습니다.",
-    cat:"repair/elec-fix" },
+    cat:"repair/elec-fix", read:"jeongi-baegwan-nusu" },
 
   { key:"review", name:"리뷰 · 평판 확인",
     lead:"지도와 배달앱에 달린 글을 보고 계신가요. 답을 안 달면 "+

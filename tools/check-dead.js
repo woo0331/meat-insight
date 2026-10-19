@@ -1,0 +1,117 @@
+/* ══════════════════════════════════════════════════════════════════
+   손님이 받는데 **아무도 안 부르는 덩이**를 셉니다 (2026-10-19)
+   ══════════════════════════════════════════════════════════════════
+   메인이 지시서마다 다시 짜이면서 내려온 구간의 함수가 화면 파일에
+   그대로 남고, 그게 167개 화면 전부에 실립니다. 2026-10-11 에 서른일곱,
+   2026-10-19 에 서른넷을 그렇게 찾았습니다.
+
+   node tools/check-dead.js                 모든 화면 파일
+   node tools/check-dead.js js/pages/home.js  한 파일만
+
+   ⚠️⚠️ **이 도구는 "지워라" 가 아니라 "재 봐라" 입니다.** 내려보낼 때는
+   `js/pages/home-retired.js` 처럼 **옮기고** index.html 에서 빼세요 —
+   지우면 되살릴 수가 없습니다 (여러 지시서가 삭제를 금지했습니다).
+
+   ⚠️⚠️ 세는 코드가 **두 번 거짓말을 했습니다** —
+     ① `index.html` 의 스크립트만 훑어서 `PageMain`(라우터가 js/app.js
+        에서 부릅니다)과 `StageCard`(js/pages/flow.js)가 "안 쓰임" 으로
+        나왔습니다. 그대로 믿었으면 메인이 통째로 안 그려집니다.
+     ② 주석과 문자열을 안 걷어내면 **반대로** 죽은 덩이가 전부
+        "쓰임" 으로 나옵니다 — 이 저장소는 주석에 함수 이름을 잔뜩
+        적습니다.
+   그래서 js 폴더 전부 + build-pages.js + check.js + tools 까지 훑고,
+   **주석과 문자열을 걷어낸 사본**에서 셉니다.
+   ══════════════════════════════════════════════════════════════════ */
+const fs = require("fs"), path = require("path");
+
+/* 주석과 문자열을 공백으로 바꿉니다 (줄 수는 안 맞아도 됩니다 — 세기만 합니다) */
+function strip(s){
+  let o = "", i = 0, n = s.length;
+  while(i < n){
+    const c = s[i], d = s[i + 1];
+    if(c === "/" && d === "/"){ while(i < n && s[i] !== "\n") i++; continue; }
+    if(c === "/" && d === "*"){ i += 2; while(i < n && !(s[i] === "*" && s[i + 1] === "/")) i++; i += 2; continue; }
+    if(c === '"' || c === "'" || c === "`"){
+      const q = c; o += " "; i++;
+      while(i < n && s[i] !== q){ if(s[i] === "\\") i++; i++; }
+      i++; continue;
+    }
+    o += c; i++;
+  }
+  return o;
+}
+
+const ALL = [];
+(function walk(d){
+  for(const f of fs.readdirSync(d, { withFileTypes:true })){
+    const p = path.join(d, f.name);
+    if(f.isDirectory()){ if(f.name !== "node_modules") walk(p); }
+    else if(f.name.endsWith(".js")) ALL.push(p);
+  }
+})("js");
+for(const f of ["build-pages.js", "check.js"]) if(fs.existsSync(f)) ALL.push(f);
+if(fs.existsSync("tools"))
+  for(const f of fs.readdirSync("tools")) if(f.endsWith(".js")) ALL.push("tools/" + f);
+
+const BODY = {};
+for(const p of ALL) BODY[p] = strip(fs.readFileSync(p, "utf8"));
+
+/* 손님이 받는 파일 — index.html 에 적힌 것만 */
+const SHIP = new Set();
+if(fs.existsSync("index.html")){
+  const h = fs.readFileSync("index.html", "utf8");
+  let m, re = /<script[^>]*src="\/([^"?]+)/g;
+  while((m = re.exec(h))) SHIP.add(m[1]);
+}
+
+/* ── 재서 "그냥 두기로" 한 자리 ──────────────────────────────────
+   ⚠️⚠️ 여기에 적는 것은 **재 본 값과 까닭**입니다. 귀찮아서 적지
+   마세요 — 적는 순간 그 덩이는 아무도 다시 안 봅니다. */
+const KNOWN = {
+  "js/pages/journey.js": {
+    names: ["OpsGrid", "OpsPick", "OpsvcForInd"],
+    why: "2026-10-18 운영 개편으로 PageOperation() 이 안 부릅니다. "
+       + "재 보니 3.8KB(약 1KB gzip)뿐이라, 파일을 가르는 값이 더 "
+       + "큽니다 — 이 저장소는 함수를 파일 사이로 옮기다 다섯 번 "
+       + "통째로 삼켰습니다. 되살리기는 PageOperation() 한 줄입니다."
+  }
+};
+
+const targets = process.argv.length > 2
+  ? process.argv.slice(2)
+  : ALL.filter(p => p.startsWith("js/") && SHIP.has(p));
+
+let bad = 0;
+for(const T of targets){
+  if(!BODY[T]){ console.log("?? " + T + " — 그런 파일이 없습니다"); bad++; continue; }
+  const defs = [];
+  BODY[T].split("\n").forEach(function(ln){
+    const m = /^function\s+([A-Za-z_$][\w$]*)\s*\(/.exec(ln) || /^var\s+([A-Za-z_$][\w$]*)\s*=/.exec(ln);
+    if(m) defs.push(m[1]);
+  });
+  const dead = [];
+  for(const nm of defs){
+    const re = new RegExp("\\b" + nm.replace(/\$/g, "\\$") + "\\b", "g");
+    let used = 0;
+    for(const p of ALL){
+      const hits = (BODY[p].match(re) || []).length;
+      /* 자기 파일에서는 선언 줄 하나를 뺍니다 */
+      used += (p === T ? Math.max(0, hits - 1) : hits);
+    }
+    if(!used) dead.push(nm);
+  }
+  const k = KNOWN[T];
+  const left = k ? dead.filter(n => k.names.indexOf(n) < 0) : dead;
+  const kept = k ? dead.filter(n => k.names.indexOf(n) >= 0) : [];
+  const mark = left.length ? "⚠️" : "✅";
+  console.log(mark + " " + T + " — 최상위 " + defs.length + "개 · 아무 데서도 안 쓰임 " + dead.length + "개"
+    + (left.length ? "\n     ⚠️ " + left.join(" · ") : "")
+    + (kept.length ? "\n     (재서 그냥 둔 것 — " + kept.join(" · ") + ")" : ""));
+  if(left.length) bad++;
+}
+if(bad){
+  console.log("\n⚠️ 안 쓰는 덩이가 있습니다 — 지우지 말고 `*-retired.js` 로 옮기고");
+  console.log("   index.html 에서 빼세요. 되살리기 두 줄을 그 파일 맨 위에 적습니다.");
+  console.log("   옮긴 뒤 `node build-pages.js` 의 checkRetired() 가 살아 있는 쪽에서");
+  console.log("   부르는 데가 없는지 봅니다.");
+}

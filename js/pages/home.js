@@ -542,7 +542,21 @@ function PageMain(){
    (표시 · 광고의 공정화에 관한 법률 제3조 · §0 이 직접 금지).
    ══════════════════════════════════════════════════════════════════ */
 
-/* ② 진입 카드 셋 (§6)
+/* ② 진입 카드 **넷** (2026-10-20 시안 1)
+   ⚠️⚠️ **시안의 카드는 간결합니다** — 사진 + 이름 + 한 줄 +
+   [바로가기] 까지입니다. 전에는 설명과 대표 서비스 아이콘 다섯이
+   붙어 넷이 한 화면을 거의 다 먹었습니다.
+   ⚠️⚠️ **아이콘 줄을 뗼 때 길이 끊기는지 재 봤습니다** — 메인에서
+   사라지는 것은 `/sell` 과 `/providers/admin?s=legal` 둘뿐이고, **둘 다
+   카드가 바로 가는 `/transfer` 안에 있습니다** (그 화면의 메뉴 다섯이
+   냅니다 — `tools/test-flows.js` 가 눌러 봅니다). `/stores` · `/assets` ·
+   `/tools/premium` 은 푸터 · 본문에 그대로 있습니다.
+   ⚠️ 이름 · 주소는 js/data/halls.js 에서 옵니다 — 여기 적는 것은
+   **사진 자리 · 아이콘 · 번호 · 한 줄**뿐이고, 이름은 halls.js 의 칸을
+   찾는 열쇠로만 씁니다.
+   ⚠️⚠️ **안 읽는 칸을 남기지 않았습니다** — 설명(`d`)과 대표 서비스
+   목록(`sv`)을 같이 뗨습니다. 남겨 두면 `gu` · `withEquip` 처럼
+   "받아 놓고 안 읽는 칸" 이 됩니다.
    ⚠️ 이름 · 주소 · 대표 서비스 다섯은 js/data/halls.js 에서 옵니다 —
    여기 적는 것은 **사진 자리 · 아이콘 · 번호 · 한 줄 · 서비스 이름
    다섯**뿐이고, 이름은 **halls.js 의 칸을 찾는 열쇠**로만 씁니다.
@@ -551,34 +565,14 @@ function PageMain(){
    ⚠️⚠️ 사진 셋은 **사장님이 주신 것**입니다 (권한이 확인된 넉 장 중
    셋) — 자리 이름을 한 글자 틀리면 조용히 안 나옵니다. */
 var HOME_ENTER = [
-  { key:"startup",   no:"01", ia:"bulb",
-    lead:"아이디어부터 오픈까지",
-    d:"업종을 고르시면 그 업종에 필요한 준비 순서와 서비스가 펼쳐집니다.",
-    ph:"hero-startup",
-    sv:["상권 · 입지","인테리어","주방 · 설비","인허가 · 행정","창업 자금"] },
-  { key:"operation", no:"02", ia:"store",
-    lead:"지금 더 잘되는 매장으로",
-    d:"식자재 · 수리 · 마케팅 · 세무까지, 문을 연 뒤에 필요한 것들입니다.",
-    ph:"hero-ops",
-    sv:["마케팅 · 홍보","세무 · 회계","직원 · 노무","매장 수리","POS · 결제"] },
-  /* ⚠️⚠️ **2026-10-20 시안 1 — 넷째 카드로 올라왔습니다.**
-     전에는 아래 가로형 배너(`.bpass`)가 혼자 받고 있었는데,
-     시안이 **넷을 나란히** 놓습니다 — 양도양수를 다른 걸음으로
-     내리면 "이건 내 일이 아니구나" 로 읽힙니다.
-     ⚠️ 배너가 들고 있던 **길 일곱이 하나도 안 없어졌습니다** —
-     아이콘 다섯이 카드 바깥에서 **진짜 링크**가 됐습니다 (아래
-     `HomeEnter()`). `HomePass()` 함수는 지우지 않았습니다 —
-     되살리실 일이 생기면 `PageMain()` 한 줄입니다. */
-  { key:"transfer",  no:"03", ia:"handover",
-    lead:"넘기고 받는 모든 것",
-    d:"권리금 · 시설 · 임대차를 함께 놓고 봅니다. 넘기시는 분과 받으시는 분이 같은 화면을 보십니다.",
-    ph:"kind-pass",
-    sv:["매장 인수","매장 양도","권리금 정보","시설 · 장비 인계","계약 · 행정"] },
-  { key:"closure",   no:"04", ia:"restore",
-    lead:"마무리도 든든하게",
-    d:"넘길 수 있는 것부터 확인하고 철거 · 원상복구 · 세금까지 순서대로.",
-    ph:"hero-closure",
-    sv:["철거 · 원상복구","폐기물 처리","세금 정산","폐업 신고","시설 · 장비 처분"] }
+  { key:"startup",   no:"01", ia:"bulb", lead:"아이디어부터 오픈까지", ph:"hero-startup" },
+  { key:"operation", no:"02", ia:"store", lead:"지금 더 잘되는 매장으로", ph:"hero-ops" },
+  /* ⚠️⚠️ 양도양수는 전에 가로형 배너(.bpass)가 혼자 받고 있었는데,
+     시안이 **넷을 나란히** 놓습니다 — 다른 걸음으로 내리면 "이건 내
+     일이 아니구나" 로 읽힙니다. `HomePass()` 함수는 지우지
+     않았습니다 — 되살리실 일이 생기면 `PageMain()` 한 줄입니다. */
+  { key:"transfer",  no:"03", ia:"handover", lead:"넘기고 받는 모든 것", ph:"kind-pass" },
+  { key:"closure",   no:"04", ia:"restore", lead:"마무리도 든든하게", ph:"hero-closure" }
 ];
 
 /* ③ 양도양수 배너의 오른쪽 아이콘 다섯 (§7)
@@ -658,23 +652,6 @@ function HomeEnter(){
     var ph = hasPhoto(x.ph)
       ? '<span class="bent-ph" aria-hidden="true">'+photoBox(x.ph)+no+'</span>' : "";
     /* 대표 서비스 다섯 — ⚠️ 아이콘과 이름이 **halls.js 것**입니다 */
-    /* 대표 서비스 다섯 — ⚠️⚠️ **장식이 아니라 길입니다.**
-       2026-10-20 시안 1 로 양도양수 배너가 카드로 들어오면서,
-       그 배너가 들고 있던 `/sell` · `/providers/admin?s=legal` 같은
-       주소가 **메인에서 사라질** 자리였습니다 — 재서
-       확인했습니다. 그래서 카드 본문 `<a>` **밖**에 두고
-       한 칸씩 실제로 가는 링크로 만들었습니다.
-       ⚠️⚠️ **`<a>` 안에 `<a>` 를 넣지 마세요** — 브라우저가
-       쪼개니다. 그래서 카드가 `<li>` 안에 `<a>` 하나 + `<ul>`
-       하나입니다 (`.bpass` 가 일곱을 가른 것과 같은 방식). */
-    var sv = (x.sv || []).map(function(n){
-      var it = homeHallItem(h, n);
-      if(!it) return "";
-      var to = (typeof amHallTo === "function") ? amHallTo(it) : "";
-      if(!to) return "";
-      return '<li><a href="'+esc(to)+'">'+iconArt(it.ia, 44)+
-        '<span>'+esc(it.n)+'</span></a></li>';
-    }).filter(Boolean).join("");
     return '<li class="bent-c ent-'+esc(x.key)+'">'+
       '<a href="'+esc(h.to)+'">'+ ph +
         '<span class="bent-tx">'+
@@ -682,11 +659,9 @@ function HomeEnter(){
           '<span class="bent-i" aria-hidden="true">'+iconArt(x.ia, 44)+'</span>'+
           '<b>'+esc(h.name)+'</b>'+
           '<em>'+esc(x.lead)+'</em>'+
-          '<span class="bent-d">'+esc(x.d)+'</span>'+
-          '<span class="bent-go">자세히 보기'+icon("arrow",16)+'</span>'+
+          '<span class="bent-go">바로가기'+icon("arrow",16)+'</span>'+
         '</span>'+
       '</a>'+
-      (sv ? '<ul class="bent-sv">'+sv+'</ul>' : "")+
     '</li>';
   }).join("");
   if(!cards) return "";

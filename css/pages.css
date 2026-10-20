@@ -6015,3 +6015,34 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
 .bent-sv > li > a > span{ font-size:12px; line-height:1.32; }
 .bent-sv{ padding-left:4px; padding-right:4px; }
 .bent-sv > li > a{ padding:6px 1px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   진입 카드를 시안대로 간결하게 (2026-10-20 시안 1 · 확대본)
+   ══════════════════════════════════════════════════════════════════
+   사진 + 이름 + 한 줄 + [바로가기] 까지입니다. 설명과 대표 서비스
+   아이콘 다섯은 카드에서 내렸습니다 — 넷이 한 화면을 거의 다 먹었고,
+   시안의 카드는 그 둘이 없습니다.
+   ⚠️⚠️ **아이콘 줄을 뗄 때 길이 끊기는지 재 봤습니다** — 메인에서
+   사라지는 것은 /sell 과 /providers/admin?s=legal 둘뿐이고, 둘 다
+   카드가 바로 가는 /transfer 안에 있습니다 (그 화면의 메뉴 다섯이
+   냅니다). /stores · /assets · /tools/premium 은 푸터 · 본문에
+   그대로 있습니다.
+   ⚠️ "바로가기" 는 **표시**이지 따로 누르는 단추가 아닙니다 — 카드
+   전체가 하나의 a 입니다 (안에 또 a 를 넣으면 브라우저가 쪼갭니다). */
+.bent-ph{ aspect-ratio:4/3; }
+.bent-tx{ padding:var(--s5) var(--s5) var(--s5); gap:4px; }
+.bent-i{ margin:0 0 4px; }
+.bent-tx > b{ font-size:var(--t-xl); }
+.bent-tx > em{ font-size:var(--t-sm); font-weight:700; }
+/* 시안의 알약 단추 — 카드 바닥에 붙습니다 */
+.bent-go{ align-self:flex-start; margin-top:var(--s4); padding:9px 16px;
+  min-height:40px; border-radius:var(--r-pill);
+  background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.26);
+  font-size:var(--t-cap); font-weight:800; }
+.bent-c > a:hover .bent-go{ background:rgba(255,255,255,.22); }
+@media (max-width:768px){
+  /* 폰에서는 가로로 눕습니다 — 사진이 왼쪽, 글이 오른쪽 */
+  .bent-ph{ aspect-ratio:auto; }
+  .bent-tx{ padding:var(--s4) var(--s5); }
+  .bent-go{ margin-top:var(--s2); padding:7px 13px; min-height:36px; }
+}

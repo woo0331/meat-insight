@@ -3925,24 +3925,18 @@ const AUDIT = `(() => {
       if(!h) return "진입 카드가 전문관으로 안 갑니다 — " + to;
       const en = EN.filter(function(x){ return x.key === h.key; })[0];
       if(!en) return h.name + " 카드가 HOME_ENTER 에 없습니다";
-      /* 이름이 실제로 그 전문관 칸에 있는지 (없으면 조용히 빠집니다) */
-      const names = (h.items || []).map(function(x){ return x.n; });
-      const lost = (en.sv || []).filter(function(n){ return names.indexOf(n) < 0; });
-      if(lost.length)
-        return h.name + " 의 대표 서비스 이름이 전문관에 없습니다 — " + lost.join(" · ");
-      /* ⚠️ 대표 서비스 칸이 **진짜 링크**가 되면서 i 가 li 로
-         바뀜습니다 (시안 1 — 배너가 들고 있던 주소를 받았습니다). */
-      const got = [].slice.call(c.querySelectorAll(".bent-sv > li"))
-        .map(function(e){ return e.textContent.trim(); });
-      if(got.length !== 5)
-        return h.name + " 의 대표 서비스가 " + got.length + "개입니다 (다섯이어야 합니다)";
-      if((en.sv || []).join("|") !== got.join("|"))
-        return h.name + " 의 대표 서비스가 데이터와 다릅니다 — " +
-               got.join(" · ") + " vs " + (en.sv || []).join(" · ");
+      /* ⚠️ 2026-10-20 시안 1(확대본) — 카드가 **사진 + 이름 + 한 줄 +
+         [바로가기]** 까지로 간결해졌습니다 — 대표 서비스 아이콘 다섯은
+         카드에서 내렸습니다. 그 줄이 들고 있던 길은 카드가 바로 가는
+         전문관 화면이 받습니다 (아래 검사가 거기서 직접 봅니다). */
+      if(c.querySelector(".bent-sv"))
+        return h.name + " 카드에 대표 서비스 줄이 아직 있습니다";
+      if(!c.querySelector(".bent-go"))
+        return h.name + " 카드에 바로가기 표시가 없습니다";
     }
     return true;`);
 
-  await f("양도양수 배너가 인수 · 양도 · 전문관 세 길을 낸다", "/", `
+  await f("양도양수가 인수 · 양도 · 전문관 세 길을 낸다", "/", `
     /* ⚠️⚠️ **2026-10-16 §3-4 — 매장 양도양수가 가로형 진입 배너**가
        됐습니다. 전에는 메인에서 전문관을 골라 서비스를 펼치는 구간이
        있었는데, §3 의 아홉 영역에 그 자리가 없습니다 — 함수(MainHalls)는
@@ -3954,18 +3948,21 @@ const AUDIT = `(() => {
     const H = (window.AM_HALLS || []).filter(function(x){ return x.key === "transfer"; })[0];
     if(!H) return "양도양수 전문관 데이터가 없습니다";
     /* ⚠️⚠️ 2026-10-20 시안 1 — 가로형 배너(.bpass)가 **진입 카드
-       넷째**로 올라갔습니다. 지키는 것은 바뀜 없습니다 — 배너가
-       들고 있던 길이 **하나도 안 사라졌는가**입니다. 배너를
-       되살리실 때는 여기 선택자를 .bpass 로 돌려 놓으세요. */
-    const sec = document.querySelector(".bent-c.ent-transfer");
-    if(!sec) return "양도양수 진입 카드가 없습니다";
+       넷째**로 올라갔고, 같은 날 확대본으로 그 카드가 사진 + 이름 +
+       바로가기까지로 간결해졌습니다. 지키는 것은 바뀜 없습니다 —
+       배너가 들고 있던 **세 길이 하나도 안 사라졌는가**입니다.
+       ⚠️⚠️ 재는 자리를 #view 안으로 두지 마세요. /sell 은 카드가
+       간결해지면서 **푸터 서비스 칸**이 받았고, 푸터는 #view 밖입니다 —
+       안으로 좁히면 멀쩡한 길을 "없다" 고 잡습니다 (실제로 그랬습니다).
+       ⚠️ 누름 크기는 여기서 안 잽니다 — 화면마다 도는 AUDIT 이
+       167개 화면 전부에서 재고 있고, 여기서 또 재면 카드 · 글 줄의
+       평범한 링크까지 걸려 진짜 사고가 그 더미에 묻힙니다.
+       ⚠️ 주석에 백틱을 쓰지 마세요. */
     for(const u of ["/stores", "/sell", H.to])
-      if(!sec.querySelector('a[href="' + u + '"]'))
-        return u + " 로 가는 길이 양도양수 카드에 없습니다";
-    /* ⚠️ 누르는 것은 40px 이상입니다 */
-    for(const a of [].slice.call(sec.querySelectorAll("a")))
-      if(a.getBoundingClientRect().height < 40)
-        return "양도양수 카드의 누름이 40px 아래입니다 — " + a.textContent.trim();
+      if(!document.querySelector('a[href="' + u + '"]'))
+        return u + " 로 가는 길이 메인에 없습니다";
+    const sec = document.getElementById("view");
+    if(!sec) return "화면이 없습니다";
     /* ⚠️⚠️ **매물이 0건인데 "몇 건" 처럼 말하면 안 됩니다** (절대 규칙 1) */
     const t = sec.textContent;
     if(/[0-9][0-9,]*\\s*(건|곳|개)\\s*(의|가|을)?\\s*(매물|매장|점포)/.test(t))

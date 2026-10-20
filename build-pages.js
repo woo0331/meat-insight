@@ -553,28 +553,30 @@ function noscriptFor(W, r, route){
       " · 서비스 분야 " + nCat + " · 세부 서비스 " + nSub + "개입니다. " +
       "이 숫자는 서비스 분류 기준이며 등록된 업체 수가 아닙니다.");
 
-    /* ── ② 창업 · 운영 · 폐업 진입 카드 셋 (§6) ──────────────────
+    /* ── ② 진입 카드 **넷** (2026-10-20 시안 1) ─────────────────
        ⚠️⚠️ **화면의 머리말과 글자까지 같아야 합니다** (HomeEnter).
-       ⚠️ 넷이 아니라 **셋**입니다 — 매장 양도양수는 ③ 이 받습니다. */
+       ⚠️ 양도양수가 가로형 배너에서 **넷째 카드**로 올라왔습니다 —
+       화면이 넷인데 크롤러에게 셋을 보여 주면 그게 구글에 나가는
+       거짓말입니다 (이 저장소가 열 번 겪은 자리). */
     h2("필요한 서비스를 한곳에서 찾으세요.");
-    p("창업 준비 · 매장 운영 · 폐업 정리 — 단계를 고르시면 그 단계에 " +
-      "필요한 서비스만 모아서 보여 드립니다.");
-    for(const k of ["startup","operation","closure"]){
+    p("창업 준비 · 매장 운영 · 매장 양도양수 · 폐업 정리 — 단계를 " +
+      "고르시면 그 단계에 필요한 서비스만 모아서 보여 드립니다.");
+    for(const k of ["startup","operation","transfer","closure"]){
       const h = byH[k]; if(!h) continue;
       p(h.name + " — " + h.lead);
       ul((h.items||[]).map(it => it.n));
     }
 
-    /* ── ③ 매장 양도양수 가로형 배너 (§7) ────────────────────────
-       ⚠️⚠️ **매물이 0건입니다** — "몇 건" 처럼 말하지 않습니다. */
-    const hp = byH["transfer"];
-    if(hp){
-      h2("한 사장님의 마지막이 다른 사장님의 시작이 됩니다.");
-      p("권리금 · 시설 · 임대차를 함께 놓고 봅니다. 넘기시는 분과 " +
-        "받으시는 분이 같은 화면을 보십니다. " + hp.name + " 바로가기 · " +
-        "매장 인수 알아보기.");
-      ul((hp.items||[]).map(it => it.n));
-    }
+    /* ── ③ 직접 서비스 찾기 여섯 (2026-10-20 시안 1) ────────────
+       ⚠️⚠️ 숫자는 **세는 값**입니다 — 시안의 누적 이용 사장님 ·
+       맞춤 가이드 수는 지금 0 이라 적으면 없는 실적을 광고하는
+       것입니다 (절대 규칙 1). 바로 위 ① 에서 이미 세어서 적었습니다. */
+    h2("직접 서비스를 찾아보세요.");
+    p("무엇이 필요한지 이미 정해져 있으시면 여기서 바로 가세요.");
+    ul(["interior","equip","it","admin","staff","clean"].map(k => {
+      const c = (W.AM_CATS||[]).filter(x => x.key === k)[0];
+      return c ? (c.name + " — " + c.lead) : "";
+    }).filter(Boolean));
 
     /* ── ④ 선택받는 이유 넷 + ⑤ 견적 신청 안내 (§8 · §9) ─────────
        ⚠️⚠️ **"검증된 업체" 라고 쓰지 마세요.** 검증 기능이 없습니다 —
@@ -663,6 +665,11 @@ function noscriptFor(W, r, route){
     return L.join("");
   }
   if(route === "/tools"){
+    /* ⚠️ 화면에 목적별 탭(2026-10-20 시안 7)이 섬니다 — 크롤러에게
+       안 보여 주면 둘이 다른 것을 내보내는 셌입니다. */
+    h2("언제 쓰는 계산기인가");
+    ul((W.AM_JOURNEYS||[]).map(j => j.name + " " +
+      (W.AM_TOOLS||[]).filter(t => (t.jy||[]).indexOf(j.key) >= 0).length + "개"));
     h2("무료로 쓰실 수 있는 계산기");
     (W.AM_TOOLS||[]).forEach(t => {
       L.push("<h3>"+esc(t.name)+"</h3>");
@@ -848,6 +855,13 @@ function noscriptFor(W, r, route){
   }
 
   if(route === "/providers"){
+    /* ⚠️ 화면(2026-10-20 시안 6)과 **같은 말**이어야 합니다 — 화면에
+       거르개 다섯이 섰는데 크롤러에게 안 보여 주면 둘이 다른 것을
+       내보내는 셈입니다 (이 저장소가 메인에서 열 번 겪은 자리). */
+    h2("이런 조건으로 찾습니다");
+    ul(["지역","업종","서비스 분야","사업 단계","확인 상태"]);
+    p("평점 · 응답속도 · 가격대로는 거르지 않습니다 — 재는 장치도 "+
+      "후기도 없어서 거르개로 만들면 지어낸 기준이 됩니다.");
     (W.AM_CATS||[]).filter(c => c.kind === "provider").forEach(c => {
       L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc); ul(subNames(c));
     });
@@ -1584,6 +1598,26 @@ function checkProcess(W){
     else if(tg.indexOf(t.grp) < 0)
       bad.push("AM_TOOLS." + t.key + " — AM_TOOL_GROUPS 에 없는 묶음 " + t.grp);
   });
+  /* ⚠️⚠️ 목적별 탭(2026-10-20 시안 7) — `jy` 가 없거나 없는
+     여정을 가리키면 그 도구가 **탭에서 조용히 빠집니다**이고,
+     아무 도구도 안 들어 있는 여정은 **고르면 0개가 나오는 막다른
+     길**입니다 (업체 찾기의 빈 여정을 고르개에서 뺀 것과 같은 꺼리). */
+  const jyk = (W.AM_JOURNEYS||[]).map(x => x.key);
+  const jyUse = [];
+  (W.AM_TOOLS||[]).forEach(t => {
+    const L = t.jy || [];
+    if(!L.length) bad.push("AM_TOOLS." + t.key + " — 목적(jy)이 없습니다");
+    L.forEach(k => {
+      if(jyk.indexOf(k) < 0)
+        bad.push("AM_TOOLS." + t.key + " — 없는 여정 " + k);
+      else jyUse.push(k);
+    });
+  });
+  jyk.forEach(k => {
+    if(jyUse.indexOf(k) < 0)
+      bad.push("계산도구 목적별 탭 — 여정 " + k + " 에 들어가는 도구가 0개입니다");
+  });
+
   /* 여정 넷이 단계 여섯을 빠짐없이 한 번씩 나눠 가지는가 */
   const stages = (W.AM_STAGES||[]).map(x => x.key);
   const used = [];

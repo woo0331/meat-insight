@@ -619,8 +619,12 @@ function PageToolCloseCost(){
 
 /* ════════ 도구 모음 ═════════════════════════════════════════════ */
 function PageTools(){
-  var list = (window.amTools ? amTools() : []);
-  if(!list.length) return PgHero({ kicker:"사장님 도구", h1:"사장님 도구", tight:true });
+  var all = (window.amTools ? amTools() : []);
+  if(!all.length) return PgHero({ kicker:"사장님 도구", h1:"사장님 도구", tight:true });
+  var JY = (window.AM_JOURNEYS || []);
+  var jy = nowQS("j");
+  if(jy && !JY.some(function(x){ return x.key === jy; })) jy = "";
+  var list = jy ? all.filter(function(t){ return (t.jy||[]).indexOf(jy) >= 0; }) : all;
   return PgHero({
     kicker:"사장님 도구",
     h1raw:"숫자를 넣어 보면<br class=\"br-m\"> 정해집니다.",
@@ -633,7 +637,24 @@ function PageTools(){
      열셋이 됐습니다). 평평한 열셋은 다섯 줄이라 "무엇부터 누를까" 가
      묻힙니다 — 사장님이 던지는 질문으로 묶습니다.
      ⚠️ 묶음 차례는 `tools.js` 의 `AM_TOOL_GROUPS` 한 곳입니다. */
+  /* ── 목적별 탭 (2026-10-20 시안 7) ────────────────
+     ⚠️⚠️ **고르신 탭은 주소에 실립니다**(`?j=`) — 뒤로 가기 ·
+     새로고침 · 링크 공유에 살아남습니다.
+     ⚠️⚠️ **기본값은 전체입니다.** 한 탭을 골라 두면 열셋 중
+     여덟이 첫 화면에서 **없는 것**이 됩니다.
+     ⚠️ `canonical` 은 `nowPath()` 라 질의문자가 빠집니다 — 같은
+     내용이 `?j=` 로 두 번 나가지 않습니다. */
   '<section class="sec sec-white"><div class="w">'+
+    '<ul class="chip-g chip-g-fil tl-tab">'+
+      '<li><a class="chip'+(jy?"":" on")+'" href="/tools">전체 '+
+        (window.AM_TOOLS||[]).length+'</a></li>'+
+      JY.map(function(x){
+        var k = (window.AM_TOOLS||[]).filter(function(t){
+          return (t.jy||[]).indexOf(x.key) >= 0; }).length;
+        return '<li><a class="chip'+(jy===x.key?" on":"")+'" href="/tools?j='+
+          encodeURIComponent(x.key)+'">'+esc(x.name)+' '+k+'</a></li>';
+      }).join("")+
+    '</ul>'+
     (window.AM_TOOL_GROUPS||[]).map(function(g){
       var mine = list.filter(function(t){ return t.grp === g; });
       if(!mine.length) return "";        /* 빈 묶음은 줄째 뺍니다 */

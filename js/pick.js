@@ -119,8 +119,8 @@ window.pickPaint = function(){
     if(card) card.classList.toggle("is-on", on);
   });
 
-  /* ①b 뭆음 여듯의 "n개 선택" 닱지 (§5-2 — 색만으로
-     표시하지 않습니다). ⚠️ 뭆음을 안 펼치시고도 거기서
+  /* ①b 묶음 여덟의 "n개 선택" 딱지 (§5-2 — 색만으로
+     표시하지 않습니다). ⚠️ 묶음을 안 펼치시고도 거기서
      몇 개를 골랐는지가 보여야 합니다 — 안 보이면 펼칠 까닭이
      없어집니다. */
   [].slice.call(document.querySelectorAll("[data-pick-g]")).forEach(function(el){
@@ -156,19 +156,34 @@ window.pickPaint = function(){
     if(e) e.hidden = n > 0;
   });
 
-  /* ③ ④ 폰 하단 띠 · 단추 */
+  /* ③ 오른쪽 고정 패널 (2026-10-20 시안 2 · 3)
+     ⚠️⚠️ **id 를 바구니와 같게 짓지 마세요.** 둘은 한 화면에
+     같이 서기 때문에 `pk-list` 를 그대로 쓰면 `getElementById()`
+     가 **먼저 나오는 하나**만 집어 나머지는 영영 안 바뀝니다 —
+     이 저장소가 `st-ind` 로 겪은 그 자리입니다. */
+  var ab = document.getElementById("pka-list");
+  if(ab) ab.innerHTML = pickRows();
+  var az = document.getElementById("pka-zero");
+  if(az) az.hidden = n > 0;
+  ["pka-go", "pka-clr"].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.hidden = n === 0;
+  });
+
+  /* ④ ⑤ 떠 있는 단추 — 폰의 하단 띠과 넓은 화면의 오른쪽 패널.
+     ⚠️ 둘은 **같은 것**이고 자리만 다릅니다 — 주소도 글자도 한
+     줄에서 맞춥니다. 따로 적으면 한쪽만 다른 말을 합니다. */
   var bar = document.getElementById("pk-bar");
-  if(bar){
-    bar.hidden = n === 0;
-    var go = document.getElementById("pk-bar-go");
-    if(go){
-      go.setAttribute("href", amPickQuoteTo(go.getAttribute("data-side")));
-      /* §9-2 — 단추 문구에 **실제 동작과 개수**를 적습니다.
-         "진행하기" 가 아니라 "선택한 4개 서비스 견적 신청하기". */
-      var t = go.querySelector("span");
-      if(t) t.textContent = "선택한 " + n + "개 서비스 견적 신청하기";
-    }
-  }
+  if(bar) bar.hidden = n === 0;
+  ["pk-bar-go", "pka-go"].forEach(function(id){
+    var go = document.getElementById(id);
+    if(!go) return;
+    go.setAttribute("href", amPickQuoteTo(go.getAttribute("data-side")));
+    /* §9-2 — 단추 문구에 **실제 동작과 개수**를 적습니다.
+       "진행하기" 가 아니라 "선택한 4개 서비스 견적 신청하기". */
+    var t = go.querySelector("span");
+    if(t) t.textContent = "선택한 " + n + "개 서비스 견적 신청하기";
+  });
   /* ⚠️⚠️ **띠가 없는 화면에서도 부릅니다.** `if(bar)` 안에 두었더니,
      고르신 뒤에 띠가 없는 화면(`/about` 등)으로 가면 `--pk-bar-h` 가
      **77px 로 남아** 모든 화면 아래에 빈 자리가 생겼습니다 — 에러도
@@ -270,6 +285,42 @@ function pickRows(){
    화면마다 따라다니는데, 신청 화면(`/quote`)에서는 **동의 영역을
    가리는 것**이 되고 거기서는 이미 신청 중이라 쓸모가 없습니다
    (§3-3). 그래서 부르는 화면만 냅니다. */
+/* ── 오른쪽 고정 패널 (2026-10-20 시안 2 · 3) ─────────
+   시안이 고르는 격자 **오른쪽에** "선택한 서비스 2개" 판을
+   붙였습니다. 고르신 것이 눈에서 안 벗어나야 여러 개를 고르시게
+   됩니다 — 폰에서 하단 고정 띠가 하던 일을 넓은 화면에서 이것이
+   받습니다.
+
+   ⚠️⚠️ **1100px 위에서만 낵니다.** 그 아래에서는 격자가 좁아져
+   칸 안 글자가 낱말 가운데서 잘립니다 — 그쪽은 하단 고정
+   띠(`#pk-bar`)가 그대로 받습니다.
+   ⚠️ 아래 바구니(`PickBasket`)를 없앤 것이 아닙니다 — 거기가
+   "고르기만 하면 접수되지 않습니다" 를 말하는 자리이고(절대 규칙 5),
+   패널은 **고르는 동안 보이는 요약**입니다. */
+window.PickAside = function(side){
+  var n = amPickCount();
+  return '<aside class="pks-side" aria-label="선택한 서비스">'+
+    '<div class="pks-box">'+
+      '<p class="pks-t">선택한 서비스 <b data-pick-n>'+n+'</b>개</p>'+
+      '<p class="pks-zero" id="pka-zero"'+(n ? " hidden" : "")+'>'+
+        '왼쪽에서 필요한 것을 누르시면 여기에 쌓입니다.</p>'+
+      '<ul class="pks-l" id="pka-list">'+pickRows()+'</ul>'+
+      /* ⚠️⚠️ **`data-pick-go` 가 아니라 `data-side` 입니다.**
+         이것은 폰의 하단 고정 띠와 **같은 떠 있는 단추**이고 둘은
+         서로 접혀 동시에 안 보입니다 — 본문의 신청 단추와 같은
+         표시를 달면 검사가 "신청 단추가 둘" 로 읽습니다 (실제로
+         그렇게 걸렸습니다). 주소는 `pickPaint()` 가 띠와 같은
+         줄에서 맞춥니다 — 둘 다 `amPickQuoteTo()` 입니다. */
+      '<a class="btn btn-b" id="pka-go"'+(n ? "" : " hidden")+
+        ' data-side="'+esc(side || "start")+'"'+
+        ' href="'+esc(amPickQuoteTo(side))+'">'+
+        '<span>선택한 '+n+'개 서비스 견적 신청하기</span>'+icon("arrow",16)+'</a>'+
+      '<button class="btn btn-o pks-clr" type="button" id="pka-clr"'+
+        (n ? "" : " hidden")+' onclick="pickClear()">전부 해제</button>'+
+    '</div>'+
+  '</aside>';
+};
+
 window.PickBar = function(side){
   var n = amPickCount();
   return '<div class="pk-bar" id="pk-bar"'+(n ? "" : " hidden")+'>'+
@@ -680,6 +731,10 @@ window.PickGroupBand = function(hallKey, side){
         '한 번만 적어 보내시면 서비스마다 업체를 찾아 드립니다.</p>'+
     '</div>'+
 
+    /* ── 두 칸 (2026-10-20 시안 3) — 왼쪽 고르기 · 오른쪽 요약
+       ⚠️ `#pkb-find` 는 `pickFind()` 가 보는 울타리입니다 — 이름을
+       바꾸면 찾기가 조용히 아무것도 못 찾습니다. */
+    '<div class="pks-g"><div class="pks-main">'+
     '<div id="pkb-find">'+
       /* §4-5 — 적는 칸 하나 */
       '<div class="pkf">'+
@@ -720,5 +775,6 @@ window.PickGroupBand = function(hallKey, side){
           '</div>'
         : "")+
     '</div>'+
+    '</div>'+PickAside(side)+'</div>'+
   '</div></section>';
 };

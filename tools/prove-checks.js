@@ -467,7 +467,10 @@ const CASES = [
   /* ⚠️ 2026-10-17 §6 — 대표 서비스 칸이 .bent-sv 가 됐고 안에 아이콘
      이 들어 있습니다. svg 를 지우지 않게 **이름 칸(span)만** 집습니다. */
   ["지어낸 실적 숫자가 메인에 없다",
-   `document.querySelector(".bent-sv > i > span").textContent = "입점 업체 1,200곳";`],
+   /* ⚠️ 2026-10-20 시안 1 — 대표 서비스 칸이 **진짜 링크**가 되면서
+      `i` 가 `li > a` 로 바뀜습니다. 선택자를 안 고치면 되돌리기가
+      터져 "검사가 안 잡는다" 로 보입니다 (열두 번째). */
+   `document.querySelector(".bent-sv > li > a > span").textContent = "입점 업체 1,200곳";`],
   /* ⚠️⚠️ **2026-10-13 §5 — 히어로에는 h1 이 없습니다.** 전에는 h1
      글자를 바꿔 되돌렸는데, 지금 검사가 보는 것은 **두 판의 크기 ·
      무게**입니다 (한쪽을 좁히면 그게 "덜 중요한 것" 이라는 말입니다).
@@ -774,8 +777,36 @@ const CASES = [
      켜졌는지 보이지 않으면 거르개가 아닙니다 */
   /* ⚠️ 2026-10-16 §3-4 — 양도양수가 가로형 배너가 됐습니다. 세 길
      가운데 하나를 지워 "길이 배너에 없습니다" 를 만듭니다. */
+  /* ── 2026-10-20 시안 6 · 2·3 · 7 ────────────────────── */
+  /* 업체 찾기 검색을 **장식**으로 바꿉니다 — 칸은 그대로 있고
+     아무것도 안 거릅니다. 이게 지시서가 직접 금지한 꼴입니다. */
+  ["업체 찾기 검색이 실제로 거르고 거르개가 주소에 실린다",
+   `window.pvFind = function(){};`],
+  /* 거르개를 분야 링크에서 떼 봅니다 — 들어가자마자 지역과 업종이
+     조용히 풀리는 꼴입니다. */
+  ["업체 찾기에서 고른 조건이 분야 화면까지 따라간다",
+   `[].slice.call(document.querySelectorAll("#pv-g > li a")).forEach(function(a){
+      a.setAttribute("href", (a.getAttribute("href")||"").split("?")[0]); });`],
+  /* 선택 패널을 **고정에서 풀어** 봅니다 — 규칙 자체를 건드립니다
+     (검사가 CSS 규칙을 읽기 때문에 DOM 만 고쳐서는 아무 일도 안 납니다). */
+  ["전문관에 선택 패널이 붙고 넓은 화면에서 따라온다",
+   `for(const sh of document.styleSheets){
+      let rs; try { rs = sh.cssRules; } catch(e) { continue; }
+      for(const r of rs){
+        if(r.type !== 4) continue;
+        if((r.conditionText || "").indexOf("min-width: 1100px") < 0) continue;
+        for(const x of r.cssRules)
+          if(x.selectorText === ".pks-side") x.style.position = "static";
+      }
+    }`],
+  /* 탭 숫자를 손으로 박아 봅니다 — 센 값이 아니게 되면 걸려야 합니다 */
+  ["계산도구 목적별 탭이 센 값이고 실제로 거른다",
+   `document.querySelector('.tl-tab a[href="/tools?j=startup"]').textContent = "창업 준비 99";`],
+
+  /* ⚠️ 2026-10-20 시안 1 — 가로형 배너가 **넷째 진입 카드**로
+     올라갔습니다. 세 길 가운데 하나를 지워 봅니다. */
   ["양도양수 배너가 인수 · 양도 · 전문관 세 길을 낸다",
-   `document.querySelector('.bpass a[href="/sell"]').remove();`],
+   `document.querySelector('.bent-c.ent-transfer a[href="/sell"]').remove();`],
 
   /* 2026-10-11 간소화 지시서 §6 — 네 구간 중 하나가 조용히 빠지면
      걸려야 합니다. ⚠️ 되돌리기는 **그려진 뒤에** 도니 DOM 을 직접

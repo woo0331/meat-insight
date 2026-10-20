@@ -25,8 +25,18 @@
    같이 깔려서, 둘이 같은 그림이면 무엇이 무엇인지 흐려집니다 —
    `target` 이 손익분기와 목표 매출에, `users` 가 인건비율과 직원
    고용비용에 겹쳐 있었습니다. `check.js` 가 셉니다. */
+/* ⚠️⚠️ **`jy` 는 목적별 탭(2026-10-20 시안 7)이 보는 칸입니다.**
+   `js/data/journey.js` 의 여정 key 넷(startup · operation ·
+   acquisition · closing)이고, **한 도구가 여럿에 들어갈 수 있습니다** —
+   고정비는 창업 때도 운영 때도 두드리는 것이라 한쪽에만 두면 다른
+   쪽 탭에서 **없는 것**이 됩니다.
+   ⚠️⚠️ **빈 탭을 만들지 마세요.** 고르면 0개가 나오는 탭은 막다른
+   길입니다 — `checkToolJy()` 가 빌드를 멈춥니다 (없는 여정 key ·
+   빈 `jy` · 아무 도구도 없는 여정).
+   ⚠️ `grp`(사장님이 던지는 질문 넷)는 **그대로 둡니다** — 탭은
+   "언제 쓰는가", 묶음은 "무엇을 묻는가" 라 다른 축입니다. */
 window.AM_TOOLS = [
-  { key:"cost", grp:"시작하기 전",
+  { key:"cost", grp:"시작하기 전", jy:["startup"],
      to:"/tools/cost",  icon:"won",    name:"창업비 정리표",
     lead:"빠뜨리기 쉬운 항목을 늘어놓고, 받으신 견적을 적으면 합계가 나옵니다",
     ask:"항목별로 받은 견적", out:"합계 · 아직 안 받은 칸", time:"5분",
@@ -38,32 +48,32 @@ window.AM_TOOLS = [
        ⚠️ `cat` 은 `catalog.js` 의 분류 key, `sub` 는 그 하위 key 입니다 —
        없는 것을 적으면 빌드가 멈춥니다 (`checkProcess()`). */
     rel:[{cat:"interior"},{cat:"equip"},{cat:"furniture"},{cat:"it"},{cat:"admin"}] },
-  { key:"fixed", grp:"얼마를 팔아야 하나",
+  { key:"fixed", grp:"얼마를 팔아야 하나", jy:["operation","startup"],
     to:"/tools/fixed", icon:"calendar", name:"월 고정비 계산",
     lead:"팔리든 안 팔리든 나가는 돈. 하루에 얼마를 벌어야 하는지까지",
     ask:"임차료 · 인건비 · 공과금", out:"월 고정비 · 하루치", time:"2분",
     side:"both",
     rel:[{cat:"admin",sub:"tax-agent"},{cat:"it"},{cat:"supply"},{cat:"clean"},
          {cat:"contract"}] },
-  { key:"bep", grp:"얼마를 팔아야 하나",
+  { key:"bep", grp:"얼마를 팔아야 하나", jy:["operation","startup"],
       to:"/tools/bep",   icon:"chart",  name:"손익분기 계산",
     lead:"고정비를 공헌이익률로 나눕니다. 본전이 되는 매출이 얼마인지",
     ask:"월 고정비 · 변동비 비율", out:"본전 매출 · 하루 매출", time:"3분",
     side:"both",
     rel:[{cat:"marketing"},{cat:"supply"},{cat:"admin",sub:"tax-agent"}] },
-  { key:"labor", grp:"얼마가 남나",
+  { key:"labor", grp:"얼마가 남나", jy:["operation"],
     to:"/tools/labor", icon:"users",  name:"인건비율 계산",
     lead:"매출 대비 인건비. 사장 인건비를 넣을지는 사장님이 고르십니다",
     ask:"월 매출 · 인건비 합계", out:"인건비율 · 1인당 매출", time:"1분",
     side:"both",
     rel:[{cat:"staff"},{cat:"admin",sub:"labor-agent"}] },
-  { key:"vs", grp:"시작하기 전",
+  { key:"vs", grp:"시작하기 전", jy:["startup","acquisition"],
        to:"/tools/vs",    icon:"scale",  name:"신규 창업 vs 매장 인수",
     lead:"새로 만드는 것과 하던 가게를 받는 것. 들어가는 돈과 시간을 나란히",
     ask:"양쪽에 드는 돈 · 기간", out:"초기 비용 차이 · 회수 기준", time:"4분",
     side:"start",
     rel:[{cat:"store"},{cat:"transfer"},{cat:"asset"},{cat:"interior"}] },
-  { key:"close", grp:"정리할 때",
+  { key:"close", grp:"정리할 때", jy:["closing"],
     to:"/tools/close", icon:"listck", name:"폐업 체크리스트",
     lead:"순서대로 짚어 가며 빠뜨린 것을 찾습니다. 기한이 있는 것이 여럿입니다",
     ask:"해당하는 것 체크", out:"남은 것 · 기한 있는 것", time:"5분",
@@ -79,49 +89,49 @@ window.AM_TOOLS = [
        · 원가율 + 마진           → 원가율 · 마진 (한쪽을 알면 다른 쪽)
        · 폐업 예상비용 + 철거비 + 시설매각 → 폐업 예상비용
          (나가는 돈 − 돌아오는 돈. 셋을 따로 두면 **차액**을 못 봅니다) */
-  { key:"target", grp:"얼마를 팔아야 하나",
+  { key:"target", grp:"얼마를 팔아야 하나", jy:["operation"],
     to:"/tools/target", icon:"target", name:"목표 매출 계산",
     lead:"가져가고 싶은 돈을 적으면 그러려면 얼마를 팔아야 하는지",
     ask:"목표 순이익 · 고정비 · 변동비율", out:"필요한 월 매출 · 하루 매출", time:"3분",
     side:"both",
     rel:[{cat:"marketing"},{cat:"supply"},{cat:"admin",sub:"tax-agent"}] },
 
-  { key:"premium", grp:"시작하기 전",
+  { key:"premium", grp:"시작하기 전", jy:["acquisition","startup"],
     to:"/tools/premium", icon:"handover", name:"권리금 따져보기",
     lead:"달라는 권리금이 몇 달이면 돌아오는지. 시설값과 영업권을 갈라 봅니다",
     ask:"권리금 · 시설값 · 월 순이익", out:"회수 개월 · 영업권 몫", time:"2분",
     side:"start",
     rel:[{cat:"transfer"},{cat:"store"},{cat:"asset"},{cat:"law"}] },
 
-  { key:"rent", grp:"시작하기 전",
+  { key:"rent", grp:"시작하기 전", jy:["startup","operation"],
     to:"/tools/rent", icon:"building", name:"임대료 비율 계산",
     lead:"매출에서 임차료가 몇 %인지. 권리금까지 달마다 나눠 보면 더 큽니다",
     ask:"월 매출 · 월세 · 관리비", out:"임차료 비율 · 권리금 포함 비율", time:"2분",
     side:"both",
     rel:[{cat:"store"},{cat:"area"},{cat:"law"}] },
 
-  { key:"hire", grp:"얼마가 남나",
+  { key:"hire", grp:"얼마가 남나", jy:["operation","startup"],
     to:"/tools/hire", icon:"coins", name:"직원 고용비용 계산",
     lead:"급여만이 아닙니다. 4대보험 · 퇴직충당 · 식대까지 더한 실제 비용",
     ask:"급여 · 사람 수 · 사업주 부담률", out:"1인 월 비용 · 전체 월 · 1년", time:"3분",
     side:"both",
     rel:[{cat:"staff"},{cat:"admin",sub:"labor-agent"}] },
 
-  { key:"delivery", grp:"얼마가 남나",
+  { key:"delivery", grp:"얼마가 남나", jy:["operation"],
     to:"/tools/delivery", icon:"truck", name:"배달 한 건 남는 돈",
     lead:"중개 · 결제 수수료와 배달비 · 포장재 · 재료비를 빼면 얼마가 남는지",
     ask:"판매가 · 수수료율 · 배달비", out:"한 건 남는 돈 · 남는 비율", time:"3분",
     side:"both",
     rel:[{cat:"supply"},{cat:"marketing"},{cat:"it",sub:"pos"}] },
 
-  { key:"margin", grp:"얼마가 남나",
+  { key:"margin", grp:"얼마가 남나", jy:["operation"],
     to:"/tools/margin", icon:"percent", name:"원가율 · 마진 계산",
     lead:"판매가와 원가를 넣으면 원가율과 한 개 남는 돈이 같이 나옵니다",
     ask:"판매가 · 재료비 · 그 외 변동비", out:"원가율 · 개당 남는 돈", time:"1분",
     side:"both",
     rel:[{cat:"supply"},{cat:"marketing"}] },
 
-  { key:"closecost", grp:"정리할 때",
+  { key:"closecost", grp:"정리할 때", jy:["closing"],
     to:"/tools/closecost", icon:"wallet", name:"폐업 예상비용",
     lead:"나가는 돈과 돌아오는 돈을 같이 놓습니다. 중요한 것은 그 차액입니다",
     ask:"철거 · 원상복구 · 위약금 / 보증금 · 시설 매각", out:"실제 부담 또는 남는 돈", time:"5분",

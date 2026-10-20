@@ -2154,6 +2154,101 @@ const AUDIT = `(() => {
     cks[0].dispatchEvent(new Event("change", { bubbles:true }));
     return true;`);
 
+  /* ── 2026-10-20 시안 6 · 2·3 · 7 ─────────────────────── */
+
+  /* ⚠️⚠️ **작동하지 않는 검색창과 거르개를 만들지 않습니다.**
+     여기가 그걸 지킵니다 — 칸이 있는지가 아니라 **실제로 걸러지는지**를
+     눌러 봅니다. ⚠️ 주석에 백틱을 쓰지 마세요. */
+  await f("업체 찾기 검색이 실제로 거르고 거르개가 주소에 실린다", "/providers", `
+    const q = document.getElementById("pv-q");
+    if(!q) return "찾기 칸이 없습니다";
+    const vis = function(){
+      return [].slice.call(document.querySelectorAll("#pv-g > li"))
+        .filter(function(e){ return e.offsetParent; }).length; };
+    const all = vis();
+    if(all < 5) return "분야 카드가 " + all + "개입니다";
+    q.value = "간판"; q.dispatchEvent(new Event("input", {bubbles:true}));
+    const hit = vis();
+    if(hit === 0) return "간판으로 찾으면 0개입니다";
+    if(hit >= all) return "찾기가 아무것도 거르지 않습니다";
+    q.value = "zzzzz"; q.dispatchEvent(new Event("input", {bubbles:true}));
+    if(vis() !== 0) return "없는 말인데 카드가 남습니다";
+    const r = document.getElementById("pv-r");
+    if(!r || r.hidden) return "0건일 때 까닭을 안 말합니다";
+    q.value = ""; q.dispatchEvent(new Event("input", {bubbles:true}));
+    /* 거르개 다섯이 전부 있고, 고르면 분야 카드 링크까지 따라갑니다 */
+    for(const id of ["pv-r2", "pv-i", "pv-s", "pv-j", "pv-v"])
+      if(!document.getElementById(id)) return id + " 거르개가 없습니다";
+    return true;`);
+
+  await f("업체 찾기에서 고른 조건이 분야 화면까지 따라간다",
+          "/providers?i=cafe&r=gyeonggi&v=1", `
+    const a = document.querySelector("#pv-g > li a");
+    if(!a) return "분야 카드가 없습니다";
+    const h = a.getAttribute("href") || "";
+    for(const k of ["i=cafe", "r=gyeonggi", "v=1"])
+      if(h.indexOf(k) < 0) return k + " 가 분야 링크에 안 실렸습니다 — " + h;
+    return true;`);
+
+  /* 시안 2 · 3 — 넓은 화면에서 고르신 것이 눈에서 안 벗어나야 합니다.
+     ⚠️ 흐름 검사는 폭이 하나라 **규칙 자체**를 봅니다 (object-fit 검사와
+     같은 방식) — 1100px 아래에서는 하단 고정 띠가 받습니다. */
+  await f("전문관에 선택 패널이 붙고 넓은 화면에서 따라온다", "/operation", `
+    const a = document.querySelector(".pks-side");
+    if(!a) return "선택 패널이 없습니다";
+    if(!document.querySelector(".pks-g .pks-main"))
+      return "두 칸 틀이 없습니다";
+    if(document.querySelectorAll("#pka-list").length !== 1)
+      return "패널 목록 id 가 " + document.querySelectorAll("#pka-list").length + "개입니다";
+    if(document.querySelectorAll("#pk-list").length !== 1)
+      return "바구니 목록 id 가 겹침니다";
+    let sticky = false, wide = false;
+    for(const sh of document.styleSheets){
+      let rs; try { rs = sh.cssRules; } catch(e) { continue; }
+      for(const r of rs){
+        if(r.type !== 4) continue;
+        if((r.conditionText || "").indexOf("min-width: 1100px") < 0) continue;
+        wide = true;
+        for(const x of r.cssRules)
+          if(x.selectorText === ".pks-side" &&
+             (x.style.position || "").indexOf("sticky") >= 0) sticky = true;
+      }
+    }
+    if(!wide) return "1100px 규칙이 없습니다";
+    if(!sticky) return "넓은 화면에서 패널이 따라오지 않습니다 (sticky 가 아닙니다)";
+    /* 고르면 패널에도 같이 쌓여야 합니다 */
+    const cb = document.querySelector("input[data-pick]");
+    if(!cb) return "고를 칸이 없습니다";
+    cb.click();
+    if(document.querySelectorAll("#pka-list li").length !== 1)
+      return "고랐는데 패널에 안 쌓입니다";
+    const go = document.getElementById("pka-go");
+    if(!go || go.hidden) return "고랐는데 패널 신청 단추가 안 나옵니다";
+    cb.click();
+    return true;`);
+
+  /* 시안 7 — 목적별 탭. ⚠️ 고른 탭은 **주소에 실려야** 뒤로 가기 ·
+     새로고침 · 링크 공유에 살아남습니다. */
+  await f("계산도구 목적별 탭이 센 값이고 실제로 거른다", "/tools?j=closing", `
+    const T = window.AM_TOOLS || [];
+    const tabs = [].slice.call(document.querySelectorAll(".tl-tab .chip"));
+    if(tabs.length < 2) return "탭이 " + tabs.length + "개입니다";
+    const on = document.querySelector(".tl-tab .chip.on");
+    if(!on) return "고른 탭이 표시되지 않습니다";
+    const want = T.filter(function(t){ return (t.jy||[]).indexOf("closing") >= 0; }).length;
+    const got = document.querySelectorAll(".tl-g li").length;
+    if(got !== want) return "폐업 탭에 " + got + "개가 나옵니다 (" + want + "개여야 합니다)";
+    /* 탭마다 숫자가 센 값인가 — 손으로 적으면 도구를 늘렸을 때 어긋납니다 */
+    for(const x of (window.AM_JOURNEYS || [])){
+      const k = T.filter(function(t){ return (t.jy||[]).indexOf(x.key) >= 0; }).length;
+      if(!k) return "여정 " + x.key + " 에 들어가는 도구가 0개입니다";
+      const a = document.querySelector('.tl-tab a[href="/tools?j=' + x.key + '"]');
+      if(!a) return x.key + " 탭이 없습니다";
+      if(a.textContent.indexOf(String(k)) < 0)
+        return x.key + " 탭 숫자가 센 값과 다릅니다 — " + a.textContent.trim();
+    }
+    return true;`);
+
   await f("FAQ 가 접혔다 펴진다", "/faq", `
     const qs = [].slice.call(document.querySelectorAll(".faq-q"));
     if(!qs.length) return "질문이 없습니다";
@@ -2839,7 +2934,16 @@ const AUDIT = `(() => {
     for(const m of must)
       if(!document.querySelector(m[0])) return "구간이 빠졌습니다 — " + m[1];
     /* 신청 단추는 **선택 확인 구간**이 들고 있습니다 (§1 — 전에는
-       셋이었고 둘은 조건을 안 들고 갔습니다) */
+       셋이었고 둘은 조건을 안 들고 갔습니다)
+       ⚠️⚠️ **떠 있는 단추는 여기 안 세집니다** — 폰의 하단 고정
+       띠과 넓은 화면의 오른쪽 선택 패널은 폭마다 자리만 다른
+       **한 가지 떠 있는 단추**이고, 둘은 서로 접혀 동시에 보이지
+       않습니다 (CSS 가 가릅니다). 그래서 둘 다 data-side 를 달고,
+       여기서 세는 data-pick-go 는 **본문의 선택 확인 구간
+       하나**입니다. §1 이 막으려던 것은 "조건을 안 들고 가는
+       신청 단추가 여럿" 이고, 떠 있는 단추는 amPickQuoteTo() 로
+       **같은 주소**를 들고 갑니다.
+       ⚠️ 이 주석에 백틱을 쓰지 마세요 — 바로 알았습니다. */
     const go = document.querySelectorAll("[data-pick-go]");
     if(go.length !== 1) return "신청 단추가 " + go.length + "개입니다";
     if(go[0].getAttribute("data-pick-go") !== "ops")
@@ -3350,7 +3454,7 @@ const AUDIT = `(() => {
        견적 안내 카드가 들어왔습니다.** .bhero-go 는 함수를 안 지웠으니
        되살리실 수 있습니다 — 그날 여기에 다시 넣으세요. */
     const need = [[".bent-g",   "창업 · 운영 · 폐업 진입 카드"],
-                  [".bpass-go", "매장 양도양수 배너"],
+                  [".bdir-g",   "직접 서비스 찾기 여섯"],
                   [".bwhy-g",   "선택받는 이유 넷"],
                   [".bqc",      "견적 신청 안내 카드"],
                   [".bstep-g",  "이용 방법 5단계"],
@@ -3549,8 +3653,11 @@ const AUDIT = `(() => {
        진입 카드 셋**(10-16 §3-3). 규칙이 바뀐 것이 아니라 재는 자리가
        바뀐 것입니다.
        ⚠️ 나란히 놓인 때만 봅니다 (좁아지면 줄이 갈립니다). */
+    /* ⚠️ 2026-10-20 시안 1 — 양도양수가 가로형 배너에서 카드로
+       올라와 **넷**입니다. 규칙이 바뀐 것이 아니라 재는 자리가
+       바뀵 것입니다 — 넷의 크기와 무게가 같아야 합니다. */
     const L = [].slice.call(document.querySelectorAll(".bent-c"));
-    if(L.length !== 3) return "진입 카드가 " + L.length + "개입니다";
+    if(L.length !== 4) return "진입 카드가 " + L.length + "개입니다";
     if(innerWidth <= 900) return true;
     const R = L.map(function(e){ return e.getBoundingClientRect(); });
     if(Math.max.apply(null, R.map(function(r){ return r.top; })) -
@@ -3807,7 +3914,7 @@ const AUDIT = `(() => {
     const HS = (window.AM_HALLS || []);
     if(!HS.length) return "전문관 데이터가 없습니다 (halls.js 가 안 실렸습니다)";
     const EN = (window.HOME_ENTER || []);
-    if(EN.length !== 3) return "HOME_ENTER 가 " + EN.length + "개입니다";
+    if(EN.length !== 4) return "HOME_ENTER 가 " + EN.length + "개입니다";
     const cards = [].slice.call(document.querySelectorAll(".bent-c"));
     for(let i = 0; i < cards.length; i++){
       const c = cards[i];
@@ -3823,7 +3930,9 @@ const AUDIT = `(() => {
       const lost = (en.sv || []).filter(function(n){ return names.indexOf(n) < 0; });
       if(lost.length)
         return h.name + " 의 대표 서비스 이름이 전문관에 없습니다 — " + lost.join(" · ");
-      const got = [].slice.call(c.querySelectorAll(".bent-sv > i"))
+      /* ⚠️ 대표 서비스 칸이 **진짜 링크**가 되면서 i 가 li 로
+         바뀜습니다 (시안 1 — 배너가 들고 있던 주소를 받았습니다). */
+      const got = [].slice.call(c.querySelectorAll(".bent-sv > li"))
         .map(function(e){ return e.textContent.trim(); });
       if(got.length !== 5)
         return h.name + " 의 대표 서비스가 " + got.length + "개입니다 (다섯이어야 합니다)";
@@ -3844,15 +3953,19 @@ const AUDIT = `(() => {
        ⚠️ 주석에 백틱을 쓰지 마세요. */
     const H = (window.AM_HALLS || []).filter(function(x){ return x.key === "transfer"; })[0];
     if(!H) return "양도양수 전문관 데이터가 없습니다";
-    const sec = document.querySelector(".bpass");
-    if(!sec) return "양도양수 배너가 없습니다";
+    /* ⚠️⚠️ 2026-10-20 시안 1 — 가로형 배너(.bpass)가 **진입 카드
+       넷째**로 올라갔습니다. 지키는 것은 바뀜 없습니다 — 배너가
+       들고 있던 길이 **하나도 안 사라졌는가**입니다. 배너를
+       되살리실 때는 여기 선택자를 .bpass 로 돌려 놓으세요. */
+    const sec = document.querySelector(".bent-c.ent-transfer");
+    if(!sec) return "양도양수 진입 카드가 없습니다";
     for(const u of ["/stores", "/sell", H.to])
       if(!sec.querySelector('a[href="' + u + '"]'))
-        return u + " 로 가는 길이 배너에 없습니다";
+        return u + " 로 가는 길이 양도양수 카드에 없습니다";
     /* ⚠️ 누르는 것은 40px 이상입니다 */
     for(const a of [].slice.call(sec.querySelectorAll("a")))
       if(a.getBoundingClientRect().height < 40)
-        return "양도양수 배너의 누름이 40px 아래입니다 — " + a.textContent.trim();
+        return "양도양수 카드의 누름이 40px 아래입니다 — " + a.textContent.trim();
     /* ⚠️⚠️ **매물이 0건인데 "몇 건" 처럼 말하면 안 됩니다** (절대 규칙 1) */
     const t = sec.textContent;
     if(/[0-9][0-9,]*\\s*(건|곳|개)\\s*(의|가|을)?\\s*(매물|매장|점포)/.test(t))
@@ -3946,7 +4059,7 @@ const AUDIT = `(() => {
        ⚠️⚠️ **히어로(bhero)가 빠졌습니다** — §4 가 "기존의 큰 브랜드
        히어로 배너는 삭제한다" 고 직접 적었습니다. 함수는 안 지웠으니
        되살리실 수 있습니다 (그날 여기 앞에 다시 넣으세요). */
-    const want = ["bent","bpass","bwhy","bstep","bban","bcal","bgd","bcta"];
+    const want = ["bent","bdir","bwhy","bstep","bban","bcal","bgd","bcta"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
@@ -3956,7 +4069,7 @@ const AUDIT = `(() => {
          합니다 ("?3" 이 아니라). */
       /* ⚠️ 앞 지시서의 이름들을 **빼지 않습니다** — 되살아나면
          "차례가 … 입니다" 로 이름을 내야 합니다 ("?3" 이 아니라). */
-      for(const m of ["bent","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
+      for(const m of ["bent","bdir","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
                       "bhero","mh","mbr","mhall","msvc","mexp","pkg","mind",
                       "mti","mstp","mopsv","mjn","mlast"])
         if(e.classList.contains(m)) return m;

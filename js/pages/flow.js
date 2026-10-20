@@ -157,6 +157,8 @@ function StartPickBand(top, rest, ind){
        "레이아웃과 흐름을 통일" 이라고 적은 자리입니다).
        ⚠️ `#pkb-find` 는 `pickFind()` 가 보는 울타리입니다 — 이름을
        바꾸면 검색이 조용히 아무것도 못 찾습니다. */
+    /* ── 두 칸 (2026-10-20 시안 2) — 왼쪽 고르기 · 오른쪽 요약 */
+    '<div class="pks-g"><div class="pks-main">'+
     '<div id="pkb-find">'+
       '<div class="pkf">'+
         '<label class="pkf-l" for="pkf-q">찾으시는 것을 적어 보세요</label>'+
@@ -173,6 +175,7 @@ function StartPickBand(top, rest, ind){
         '<ul class="pk-g pk-g2 is-fold-all" id="st-rest">'+rest.map(PickCard).join("")+'</ul>'
       : "")+
     '</div>'+
+    '</div>'+PickAside("start")+'</div>'+
   '</div></section>';
 }
 

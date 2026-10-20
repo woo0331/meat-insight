@@ -13,26 +13,164 @@
    것이고, 연락은 견적·상담을 통해서 이어집니다.
    ════════════════════════════════════════════════════════════════════ */
 
-/* ── /providers — 분류 고르기 ───────────────────────────────────── */
+/* ── /providers — 업체 찾기 (2026-10-20 시안 6) ──────────────────
+   시안: 위에 검색창, 그 아래 거르개 다섯, 그 아래 분야 아이콘 격자.
+
+   ⚠️⚠️ **작동하지 않는 검색창과 거르개를 만들지 않습니다.** 시안의
+   다섯 가운데 `견적 유형` 과 `정렬` 은 **우리가 들고 있지 않은 값**
+   입니다 — 견적 방식을 받는 칸이 스키마에 없고, 정렬은 평점 ·
+   응답속도 · 거래수가 전부 0건이라 **기준을 밝힐 수 없는 순서**가
+   됩니다 (약관 제6조 제4항 · 절대 규칙 1). 그 두 자리에 **실제로
+   거르는 것** 둘을 넣었습니다 — `분야`(여정 넷)와 `확인 상태`
+   (서류로 확인한 사실 · 센 값). 나머지 셋(지역 · 업종 · 서비스)은
+   시안 그대로입니다.
+   ⚠️ 고르신 것은 **주소에 실리고**(`?i=` · `?r=` · `?j=` · `?v=1`)
+   분야 카드의 링크에도 그대로 따라갑니다 — 들어가서 다시 고르게
+   하면 거기서 닫힙니다. */
+
+function pvCats(){
+  return (window.AM_CATS||[]).filter(function(c){ return c.kind === "provider"; });
+}
+
+/* 검색감 — 분류 이름 · 한 줄 · **검색 전용 다른 말**(`kw`) · 하위 서비스.
+   ⚠️ 손님은 분류 이름("인테리어 · 시공")을 모르고 하려는 일("간판")을
+   칩니다 — `kw` 와 하위 이름을 같이 봐야 걸립니다. */
+function pvQOf(c){
+  var subs = (amCatItems(c, "") || []).map(function(i){ return i.name; }).join(" ");
+  return (c.name+" "+(c.lead||"")+" "+(c.kw||"")+" "+subs)
+    .toLowerCase().replace(/\s+/g, "");
+}
+
+function pvUrl(i, r, j, v){
+  var q = [];
+  if(i) q.push("i="+encodeURIComponent(i));
+  if(r) q.push("r="+encodeURIComponent(r));
+  if(j) q.push("j="+encodeURIComponent(j));
+  if(v) q.push(v === "f" ? "f=1" : "v=1");
+  return "/providers"+(q.length ? "?"+q.join("&") : "");
+}
+
+/* 검색은 **그 자리에서 거릅니다** — 화면을 떠나지 않습니다. */
+window.pvFind = function(q){
+  q = String(q || "").trim().toLowerCase().replace(/\s+/g, "");
+  var rows = [].slice.call(document.querySelectorAll("#pv-g > li[data-pv-q]"));
+  var hit = 0;
+  rows.forEach(function(el){
+    var on = !q || (el.getAttribute("data-pv-q") || "").indexOf(q) >= 0;
+    el.hidden = !on;
+    if(on) hit++;
+  });
+  var n = document.getElementById("pv-n");
+  if(n) n.textContent = hit + "개 분야";
+  var r = document.getElementById("pv-r");
+  if(r){
+    r.hidden = !q;
+    r.textContent = hit ? (hit + "개 분야를 찾았습니다")
+      : "찾으시는 말로는 나오지 않습니다 — 아래 거르개에서 골라 보세요.";
+    r.className = "pkf-r" + (q && !hit ? " is-zero" : "");
+  }
+};
+
+window.pvGo = function(){
+  var i = $("pv-i"), r = $("pv-r2"), j = $("pv-j"), v = $("pv-v");
+  go(pvUrl(i && i.value, r && r.value, j && j.value, v && v.value));
+};
+
+/* 서비스(분야) 고르개 — 고르시면 **그 분야 화면으로 바로** 갑니다.
+   ⚠️ 고르신 지역 · 업종 · 확인 상태를 같이 들고 갑니다. */
+window.pvSvcGo = function(sel){
+  if(!sel || !sel.value) return;
+  var i = $("pv-i"), r = $("pv-r2"), v = $("pv-v");
+  var q = [];
+  if(i && i.value) q.push("i="+encodeURIComponent(i.value));
+  if(r && r.value) q.push("r="+encodeURIComponent(r.value));
+  if(v && v.value) q.push(v.value === "f" ? "f=1" : "v=1");
+  go("/providers/"+sel.value+(q.length ? "?"+q.join("&") : ""));
+};
+
 function PageProviders(){
-  var pcats = AM_CATS.filter(function(c){ return c.kind === "provider"; });
-  var st = pcats.filter(function(c){ return amCatSide(c.key) === "start"; });
-  var cl = pcats.filter(function(c){ return amCatSide(c.key) === "close"; });
+  var ind = nowQS("i"), reg = nowQS("r"), jy = nowQS("j");
+  var v   = nowQS("v") === "1" ? "v" : (nowQS("f") === "1" ? "f" : "");
+  var JY  = (window.AM_JOURNEYS || []);
+  var all = pvCats();
+
+  /* ⚠️ **빈 여정은 고르개에 안 냅니다** — 고르면 0개가 나오는 칸은
+     막다른 길입니다 (지금 인수 · 양도에는 업체를 받는 분류가 없고,
+     그쪽은 매물 화면 `/stores` · `/assets` 가 받습니다). */
+  var jys = JY.filter(function(x){
+    return all.some(function(c){ return amJourneyOfCat(c.key) === x.key; });
+  });
+  if(jy && !jys.some(function(x){ return x.key === jy; })) jy = "";
+
+  var list = jy ? all.filter(function(c){ return amJourneyOfCat(c.key) === jy; }) : all;
+  /* 분야 카드가 들고 갈 거르개 — 지역 · 확인 상태 (업종은 CatCard 가 싣습니다) */
+  var carry = [];
+  if(reg) carry.push("r="+encodeURIComponent(reg));
+  if(v)   carry.push(v === "f" ? "f=1" : "v=1");
+  var qs = carry.join("&");
+
   return PgHero({
     kicker:"업체찾기",
-    h1raw:"어떤 일을 맡기시나요?",
-    lead:"분류를 고르시면 지역과 업종에 맞는 업체를 비교하실 수 있습니다. " +
+    h1raw:"원하는 조건으로<br class=\"br-m\"> 업체를 찾아보세요.",
+    lead:"지역과 업종을 고르시면 그 조건이 분야 화면까지 그대로 따라갑니다. "+
          "한 번 적으신 내용으로 여러 곳에 견적을 요청하실 수 있습니다.",
-    cta:'<a class="btn btn-b btn-lg" href="/quote">견적부터 요청하기'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-o btn-lg" href="/join">업체 입점하기</a>'
+    cta:'<a class="btn btn-b btn-lg" href="'+esc(quoteTo({industry:ind, region:reg}))+'">'+
+        '견적부터 요청하기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="/join">업체 입점하기</a>',
+    tight:true
   })+
   '<section class="sec sec-white"><div class="w">'+
-    '<div class="sec-hd"><p class="eyebrow">START</p><h2>창업에 필요한 업체</h2></div>'+
-    '<div class="cat-g cat-g4">'+st.map(function(c){ return CatCard(c,""); }).join("")+'</div>'+
-  '</div></section>'+
-  '<section class="sec"><div class="w">'+
-    '<div class="sec-hd"><p class="eyebrow">CLOSE</p><h2>폐업에 필요한 업체</h2></div>'+
-    '<div class="cat-g cat-g4">'+cl.map(function(c){ return CatCard(c,""); }).join("")+'</div>'+
+
+    /* ① 검색 — ⚠️ 장식이 아닙니다. `pvFind()` 가 분류 이름 · 검색
+       전용 다른 말 · 하위 서비스를 보고 그 자리에서 거릅니다. */
+    '<div class="pkf pv-find">'+
+      '<label class="pkf-l" for="pv-q">어떤 일을 맡기시나요?</label>'+
+      '<span class="pkf-w">'+icon("search",18)+
+        '<input class="pkf-i" id="pv-q" type="search" autocomplete="off"'+
+          ' placeholder="서비스 검색 (예: 인테리어, 철거, POS)"'+
+          ' oninput="pvFind(this.value)">'+
+      '</span>'+
+      '<p class="pkf-r" id="pv-r" hidden></p>'+
+    '</div>'+
+
+    /* ② 거르개 다섯 */
+    '<div class="fil pv-fil">'+
+      '<span class="fil-ic" aria-hidden="true">'+icon("sliders",18)+'</span>'+
+      RegionSelect("pv-r2", reg, "pvGo()")+
+      IndustrySelect("pv-i", ind, "pvGo()")+
+      '<select class="sel" id="pv-s" aria-label="서비스" onchange="pvSvcGo(this)">'+
+        '<option value="">서비스 전체</option>'+
+        all.map(function(c){
+          return '<option value="'+esc(c.key)+'">'+esc(c.name)+'</option>';
+        }).join("")+
+      '</select>'+
+      '<select class="sel" id="pv-j" aria-label="분야" onchange="pvGo()">'+
+        '<option value="">분야 전체</option>'+
+        jys.map(function(x){
+          return '<option value="'+esc(x.key)+'"'+(jy===x.key?" selected":"")+'>'+
+            esc(x.name)+'</option>';
+        }).join("")+
+      '</select>'+
+      /* ⚠️⚠️ **재 본 적 없는 값으로는 안 거릅니다.** 아래 둘은 저희가
+         서류로 확인한 사실과 센 값입니다 — 평점 · 응답속도 · 가격대는
+         재는 장치도 후기도 0건이라 거르개로 만들지 않았습니다. */
+      '<select class="sel" id="pv-v" aria-label="확인 상태" onchange="pvGo()">'+
+        '<option value="">확인 상태 전체</option>'+
+        '<option value="v"'+(v==="v"?" selected":"")+'>확인된 곳만</option>'+
+        '<option value="f"'+(v==="f"?" selected":"")+'>포트폴리오 있는 곳만</option>'+
+      '</select>'+
+      '<span class="fil-n" id="pv-n">'+list.length+'개 분야</span>'+
+    '</div>'+
+
+    /* ③ 분야 아이콘 격자 */
+    '<ul class="cat-g cat-g4 pvc-g" id="pv-g">'+
+      list.map(function(c){
+        return '<li data-pv-q="'+esc(pvQOf(c))+'">'+CatCard(c, ind, qs)+'</li>';
+      }).join("")+
+    '</ul>'+
+    /* ⚠️ 차례의 기준을 밝힙니다 (약관 제6조 제4항) — 지우지 마세요. */
+    '<p class="note note-mid">분야는 정해진 차례로 냅니다. '+
+      '광고로 위에 올린 자리는 없습니다.</p>'+
   '</div></section>'+
   SampleBand();
 }

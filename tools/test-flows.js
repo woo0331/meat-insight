@@ -33,6 +33,21 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  const txt=()=>pg.evaluate(()=>document.getElementById("view").textContent);
  const url=()=>pg.evaluate(()=>location.pathname+location.search);
  const click=async(sel)=>{ await pg.click(sel); await pg.waitForTimeout(260); };
+ /* ⚠️⚠️ **신청 단추가 폭마다 다른 자리에 있습니다** (2026-10-20
+    시안 2 · 3). 1100px 위에서는 오른쪽 고정 패널(`#pka-go`)이고,
+    그 아래에서는 하단 고정 띠(`#pk-bar-go`)입니다 — 둘을 동시에
+    내면 한 화면에 같은 단추가 둘입니다. **보이는 쪽**을 고릅니다. */
+ const pickGoSel=async()=>pg.evaluate(()=>{
+   const vis=e=>e&&!e.hidden&&e.getClientRects().length>0&&
+     getComputedStyle(e).display!=="none";
+   if(vis(document.getElementById("pka-go")))    return "#pka-go";
+   if(vis(document.getElementById("pk-bar-go"))) return "#pk-bar-go";
+   return "#pk-go-on";
+ });
+ const pickGo=async()=>{ await click(await pickGoSel()); };
+ const pickGoAttr=async(a)=>pg.getAttribute(await pickGoSel(), a);
+ const pickGoTxt=async()=>pg.evaluate(sel=>
+   (document.querySelector(sel+" span")||{}).textContent||"", await pickGoSel());
 
  console.log("\n【1】 창업 → 업종 → 신규창업 → 로드맵 → 상세");
  await pg.goto(B+"/",{waitUntil:"networkidle"});
@@ -125,7 +140,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.bent-c.ent-operation > a');
  say((await url())==="/operation","메인 진입 카드 매장 운영 → /operation",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bpass a[href="/transfer"]');
+ await click('.bent-c.ent-transfer a[href="/transfer"]');
  say((await url())==="/transfer","양도양수 배너 → 전문관",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.bban-c:nth-child(1) > a');
@@ -213,7 +228,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.waitForTimeout(250);
  say(await pg.evaluate(()=>document.querySelector("[data-pick-n]").textContent)===addedN,
    "창업 ⑤-b 두 번 눌러도 안 늘어난다");
- await click("#pk-bar-go");
+ await pickGo();
  say((await url()).startsWith("/quote"),"창업 ⑥ 담은 것 → 신청 화면",await url());
  /* ⚠️ 보는 자리가 바뀌었습니다 — 상품 줄(`.qof-l`)이 아니라 **서비스
     줄**(`#q-svl`)입니다. 창업 쪽은 상품 id 가 아니라 **분류 key** 로
@@ -267,9 +282,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  say(ock===6,"운영 ⑦ 체크리스트 대표 여섯 (§9)","지금 "+ock);
  say((await txt()).indexOf("신청이 아닙니다")>=0,
    "운영 ⑧ 체크는 신청이 아니라고 적혀 있다 (§9 · 절대 규칙 5)");
- const ogo=await pg.evaluate(()=>{
-   const a=document.getElementById("pk-bar-go");
-   return a?a.getAttribute("href"):""; });
+ const ogo=await pickGoAttr("href");
  say(ogo.indexOf("side=ops")>=0,"운영 ⑨ 신청 주소가 운영 쪽이다 (§7)",ogo);
  await pg.goto(B+ogo,{waitUntil:"networkidle"});
  const oq=await pg.evaluate(()=>document.querySelectorAll("#q-svl > li").length);
@@ -301,9 +314,9 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.pkp-g button');
  const clN=await pg.evaluate(()=>(document.querySelector("[data-pick-n]")||{}).textContent||"");
  say(Number(clN)>0,"폐업 ④ 묶음을 누르면 위 선택에 담긴다","지금 "+clN);
- const clGo=await pg.getAttribute("#pk-bar-go","href");
+ const clGo=await pickGoAttr("href");
  say((clGo||"").indexOf("side=close")>=0,"폐업 ⑤ 신청 주소가 폐업 쪽이다",clGo);
- await click("#pk-bar-go");
+ await pickGo();
  say((await url()).startsWith("/quote"),"폐업 ⑥ 신청 화면으로 간다",await url());
  const side=await pg.evaluate(()=>(document.getElementById("q-side")||{}).value||"");
  say(side==="close","폐업 ⑦ 신청 화면이 폐업 쪽으로 열린다",side);
@@ -325,7 +338,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('[data-pick="interior"]');
  say(await pg.evaluate(()=>document.querySelector("[data-pick-n]").textContent)==="1",
      "A① 인테리어 하나를 고르면 1 로 센다");
- await click("#pk-bar-go");
+ await pickGo();
  say(/^\/quote/.test(await url()),"A② 신청 화면으로 간다",await url());
  say(await pg.evaluate(()=>document.querySelectorAll("#q-svl > li").length)===1,
      "A③ 고른 하나가 그대로 적혀 있다");
@@ -362,7 +375,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  }
  say(await pg.evaluate(()=>document.querySelectorAll("#pk-list > li").length)===3,
      "B① 셋이 한 바구니에 담긴다");
- await click("#pk-bar-go");
+ await pickGo();
  say(await pg.evaluate(()=>document.querySelectorAll("#q-svl > li").length)===3,
      "B② 신청 화면이 셋을 되읽는다");
  /* ⚠️⚠️ **공통 정보는 한 번만** (§5-4) — 성함 · 연락처 칸이 하나여야 합니다 */
@@ -457,7 +470,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  /* ⚠️ 단추 글씨에 **무엇이 일어나는지**가 적혀 있어야 합니다 (§9-2) */
  await click('[data-pick="interior"]');
  await click('[data-pick="equip"]');
- const go2t = await pg.evaluate(()=>document.querySelector("#pk-bar-go span").textContent);
+ const go2t = await pickGoTxt();
  say(/선택한 2개 서비스 견적 신청하기/.test(go2t),"E③ 단추에 개수와 할 일이 적힌다",go2t);
  /* 잘못 고른 것을 뺄 수 있는가 */
  await click('#pk-list button[onclick*="equip"]');
@@ -507,9 +520,9 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    const n = await pg.evaluate(()=>(document.querySelector("[data-pick-n]")||{}).textContent||"");
    say(n === String(want), no+"② 고른 "+want+"개를 그대로 센다", n);
    /* ② 한 번에 신청 — 폰 고정 띠의 주소에 쪽과 고른 것이 실립니다 */
-   const href = await pg.getAttribute("#pk-bar-go","href");
+   const href = await pickGoAttr("href");
    say((href||"").indexOf("side="+side) >= 0, no+"③ 신청 주소의 쪽이 "+side+" 다", href);
-   await click("#pk-bar-go");
+   await pickGo();
    say(/^\/quote/.test(await url()), no+"④ 신청 화면으로 간다", await url());
    const got = await pg.evaluate(()=>({
      side: (document.getElementById("q-side")||{}).value||"",
@@ -580,7 +593,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    /* 가로 스크롤 */
    const over = await pg.evaluate(()=>document.documentElement.scrollWidth - document.documentElement.clientWidth);
    say(over <= 0, "H "+name+" — 390px 에서 가로 스크롤이 없다", over+"px");
-   await click("#pk-bar-go");
+   await pickGo();
    say(/^\/quote/.test(await url()), "H "+name+" — 폰에서 신청까지 간다", await url());
    await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
  }

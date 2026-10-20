@@ -194,11 +194,20 @@ window.catTo = function(c){
   if(c.to) return c.to;
   return (c.kind === "provider") ? ("/providers/" + c.key) : ("/c/" + c.key);
 };
-window.CatCard = function(c, industryKey){
+window.CatCard = function(c, industryKey, qs){
   var items = amCatItems(c, industryKey).slice(0, 5);
   var more  = amCatItems(c, industryKey).length - items.length;
-  return '<a class="cat'+tn(c.tone)+'" href="'+esc(catTo(c))+
-    (industryKey ? '?i='+encodeURIComponent(industryKey) : '')+'" data-rv>'+
+  /* ⚠️⚠️ **고르신 거르개를 링크에 그대로 싣습니다** (2026-10-20 시안 6).
+     안 실으면 업체 찾기에서 지역 · 업종을 고르고 분야로 들어간 순간
+     그 둘이 조용히 풀립니다 — 손님은 자기가 푼 줄 모르고 결과가
+     늘어난 것만 봅니다 (매물 거르개에서 겪은 자리).
+     ⚠️ `catTo()` 가 이미 질의문자를 들고 오는 분류가 있어서
+     (`/assets?c=stock`) 물음표인지 앰퍼샌드인지를 보고 붙입니다. */
+  var base = catTo(c), qa = [];
+  if(industryKey) qa.push('i='+encodeURIComponent(industryKey));
+  if(qs) qa.push(qs);
+  var href = base + (qa.length ? (base.indexOf("?") >= 0 ? "&" : "?")+qa.join("&") : "");
+  return '<a class="cat'+tn(c.tone)+'" href="'+esc(href)+'" data-rv>'+
     /* ⚠️ 2026-10-09 지시서 §3 · §7 — 분야 카드도 **컬러 아이콘**입니다.
        `iconArt()` 에 같은 key 가 있으면 그것을, 없으면 선형 아이콘이
        자리를 지킵니다 (빈 칸이 생기지 않습니다 · 절대 규칙 2). */

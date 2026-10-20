@@ -491,7 +491,12 @@ function PageMain(){
      정보 글은 헤더 `이용 가이드` 와 푸터 정보센터가 받습니다.
      ⚠️ 차례를 바꾸시려면 지시서를 먼저 고치고 `check.js` 의 `want` ·
      `build-pages.js` 의 크롤러 본문을 **같이** 고치세요. */
-  return HomeEnter()+ HomePass()+ HomeWhy()+ HomeSteps()+
+  /* ⚠️⚠️ 2026-10-20 시안 1 — `HomePass()` 를 더 안 부릅니다.
+     양도양수가 **진입 카드 넷째**로 올라갔고, 그 배너가 들고
+     있던 길 일곱이 카드 안쪽과 바깥 아이콘 다섯으로 올겨졌습니다
+     (재서 확인했습니다). ⚠️ 함수는 지우지 않았습니다 — 되살리실
+     일이 생기면 이 줄에 `HomePass()+` 를 다시 넣으시면 됩니다. */
+  return HomeEnter()+ HomeDirect()+ HomeWhy()+ HomeSteps()+
          HomeBanners()+ HomeCalc()+ HomeGuide()+ HomeCta();
 }
 
@@ -556,7 +561,20 @@ var HOME_ENTER = [
     d:"식자재 · 수리 · 마케팅 · 세무까지, 문을 연 뒤에 필요한 것들입니다.",
     ph:"hero-ops",
     sv:["마케팅 · 홍보","세무 · 회계","직원 · 노무","매장 수리","POS · 결제"] },
-  { key:"closure",   no:"03", ia:"restore",
+  /* ⚠️⚠️ **2026-10-20 시안 1 — 넷째 카드로 올라왔습니다.**
+     전에는 아래 가로형 배너(`.bpass`)가 혼자 받고 있었는데,
+     시안이 **넷을 나란히** 놓습니다 — 양도양수를 다른 걸음으로
+     내리면 "이건 내 일이 아니구나" 로 읽힙니다.
+     ⚠️ 배너가 들고 있던 **길 일곱이 하나도 안 없어졌습니다** —
+     아이콘 다섯이 카드 바깥에서 **진짜 링크**가 됐습니다 (아래
+     `HomeEnter()`). `HomePass()` 함수는 지우지 않았습니다 —
+     되살리실 일이 생기면 `PageMain()` 한 줄입니다. */
+  { key:"transfer",  no:"03", ia:"handover",
+    lead:"넘기고 받는 모든 것",
+    d:"권리금 · 시설 · 임대차를 함께 놓고 봅니다. 넘기시는 분과 받으시는 분이 같은 화면을 보십니다.",
+    ph:"kind-pass",
+    sv:["매장 인수","매장 양도","권리금 정보","시설 · 장비 인계","계약 · 행정"] },
+  { key:"closure",   no:"04", ia:"restore",
     lead:"마무리도 든든하게",
     d:"넘길 수 있는 것부터 확인하고 철거 · 원상복구 · 세금까지 순서대로.",
     ph:"hero-closure",
@@ -640,10 +658,22 @@ function HomeEnter(){
     var ph = hasPhoto(x.ph)
       ? '<span class="bent-ph" aria-hidden="true">'+photoBox(x.ph)+no+'</span>' : "";
     /* 대표 서비스 다섯 — ⚠️ 아이콘과 이름이 **halls.js 것**입니다 */
+    /* 대표 서비스 다섯 — ⚠️⚠️ **장식이 아니라 길입니다.**
+       2026-10-20 시안 1 로 양도양수 배너가 카드로 들어오면서,
+       그 배너가 들고 있던 `/sell` · `/providers/admin?s=legal` 같은
+       주소가 **메인에서 사라질** 자리였습니다 — 재서
+       확인했습니다. 그래서 카드 본문 `<a>` **밖**에 두고
+       한 칸씩 실제로 가는 링크로 만들었습니다.
+       ⚠️⚠️ **`<a>` 안에 `<a>` 를 넣지 마세요** — 브라우저가
+       쪼개니다. 그래서 카드가 `<li>` 안에 `<a>` 하나 + `<ul>`
+       하나입니다 (`.bpass` 가 일곱을 가른 것과 같은 방식). */
     var sv = (x.sv || []).map(function(n){
       var it = homeHallItem(h, n);
       if(!it) return "";
-      return '<i>'+iconArt(it.ia, 44)+'<span>'+esc(it.n)+'</span></i>';
+      var to = (typeof amHallTo === "function") ? amHallTo(it) : "";
+      if(!to) return "";
+      return '<li><a href="'+esc(to)+'">'+iconArt(it.ia, 44)+
+        '<span>'+esc(it.n)+'</span></a></li>';
     }).filter(Boolean).join("");
     return '<li class="bent-c ent-'+esc(x.key)+'">'+
       '<a href="'+esc(h.to)+'">'+ ph +
@@ -655,8 +685,8 @@ function HomeEnter(){
           '<span class="bent-d">'+esc(x.d)+'</span>'+
           '<span class="bent-go">자세히 보기'+icon("arrow",16)+'</span>'+
         '</span>'+
-        (sv ? '<span class="bent-sv">'+sv+'</span>' : "")+
       '</a>'+
+      (sv ? '<ul class="bent-sv">'+sv+'</ul>' : "")+
     '</li>';
   }).join("");
   if(!cards) return "";
@@ -665,12 +695,63 @@ function HomeEnter(){
       '<div class="sec-hd sec-hd-c">'+
         '<p class="eyebrow">SERVICE</p>'+
         '<h1>필요한 서비스를 한곳에서 찾으세요.</h1>'+
-        '<p>창업 준비 · 매장 운영 · 폐업 정리 — 단계를 고르시면 그 '+
-          '단계에 필요한 서비스만 모아서 보여 드립니다.</p>'+
+        '<p>창업 준비 · 매장 운영 · 매장 양도양수 · 폐업 정리 — '+
+          '단계를 고르시면 그 단계에 필요한 서비스만 모아서 보여 드립니다.</p>'+
       '</div>'+
       '<ul class="bent-g">'+cards+'</ul>'+
     '</div>'+
   '</section>';
+}
+
+/* ── ③ 직접 서비스 찾기 여섯 + 범위 숫자 (2026-10-20 시안 1) ───
+   시안: 4카드 아래에 "직접 서비스를 찾아보세요" 아이콘 여섯과
+   숫자 셋.
+
+   ⚠️⚠️ **시안의 숫자 셋을 그대로 쓰지 않았습니다.**
+   `누적 이용 사장님 2,300` · `맞춤 가이드 1,000+` 는 지금 회원도
+   이용 기록도 0 이라 적는 순간 **없는 실적을 광고**하는 것이고
+   표시 · 광고의 공정화에 관한 법률 제3조입니다 (절대 규칙 1 ·
+   작업지시서가 직접 금지한 항목). **같은 자리 · 같은 모양**에
+   저희가 실제로 **세는 값**을 냅니다 — 업종 · 서비스 분야 · 세부
+   서비스 셋이고, 바로 아래 ⓘ 줄이 "등록된 업체 수가 아니다" 라고
+   밝힙니다. ⚠️ **그 줄을 지우지 마세요.**
+   ⚠️ 이용 데이터가 쌓이면 여기를 고치지 말고 **따로** 내세요 —
+   "범위" 와 "실적" 은 다른 말입니다.
+
+   ⚠️ 여섯은 전부 **실제로 열리는 분야 화면**입니다
+   (`/providers/:분류`). 이름 · 아이콘은 `catalog.js` 에서 오고
+   여기 적는 것은 **어느 분류를 앞에 낼지** 뿐입니다. */
+var HOME_DIRECT = ["interior", "equip", "it", "admin", "staff", "clean"];
+
+function HomeDirect(){
+  var C = window.AM_CATS || [];
+  var cards = HOME_DIRECT.map(function(k){
+    var c = null, i;
+    for(i = 0; i < C.length; i++) if(C[i].key === k) c = C[i];
+    if(!c) return "";
+    var to = (typeof catTo === "function") ? catTo(c) : ("/providers/" + c.key);
+    /* ⚠️ 색은 `catalog.js` 의 `tone` 한 줄입니다 — 안 붙이면 여섯이
+       전부 같은 브라운으로 서서 "서비스가 색으로 갈리지" 않습니다
+       (메인 업종 열넷에서 겪은 자리). */
+    return '<li><a class="bdir-c'+tn(c.tone)+'" href="'+esc(to)+'">'+
+      '<span class="bdir-i">'+
+        (hasIconArt(c.key) ? iconArt(c.key, 44) : icon(c.icon, 26))+'</span>'+
+      '<b>'+esc(c.name)+'</b>'+
+    '</a></li>';
+  }).filter(Boolean).join("");
+  if(!cards) return "";
+  return '<section class="sec sec-ivory bdir"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<h2>직접 서비스를 찾아보세요.</h2>'+
+      '<p>무엇이 필요한지 이미 정해져 있으시면 여기서 바로 가세요.</p>'+
+    '</div>'+
+    '<ul class="bdir-g">'+cards+'</ul>'+
+    '<p class="row-cta row-mid">'+
+      '<a class="btn btn-o" href="/providers">전체 서비스 보기'+icon("arrow",16)+'</a>'+
+    '</p>'+
+    /* ⚠️ 숫자는 손으로 적지 않습니다 — 그 자리에서 셉니다 */
+    MainScopeStrip()+
+  '</div></section>';
 }
 
 /* ── ③ 매장 양도양수 가로형 배너 (§7) ────────────────────────────
@@ -747,10 +828,13 @@ function HomeWhy(){
           '</li>'; }).join("")+'</ul>'+
         HomeQuoteCard()+
       '</div>'+
-      /* ⚠️⚠️ **이 띠를 지우지 마세요.** 세는 값 셋과 "서비스 분류
-         기준이며 등록된 업체 수가 아니다" 가 같이 나갑니다 — 숫자만
-         크게 띄우면 "업체가 206곳" 으로 읽힙니다 (절대 규칙 1). */
-      MainScopeStrip()+
+      /* ⚠️⚠️ **띠를 지우지 않았습니다 — 옮겼습니다.**
+         2026-10-20 시안 1 이 숫자 셋을 **직접 서비스 찾기 바로
+         아래**에 둡니다 — `HomeDirect()` 가 들고 있습니다. 두 자리에
+         두면 한 화면에 **같은 숫자가 두 번** 나옵니다 (재서
+         알았습니다). ⚠️ 그쪽에서도 세는 값 셋과 "서비스 분류
+         기준이며 등록된 업체 수가 아니다" 가 같이 나갑니다 — 그
+         줄을 지우지 마세요 (절대 규칙 1). */
     '</div>'+
   '</section>';
 }

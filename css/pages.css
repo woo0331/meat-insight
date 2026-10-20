@@ -4751,7 +4751,7 @@ html.ivh #view .pre{ color:var(--hm-ink2); padding:var(--s9) 0; }
    아이콘 다섯은 **표시**이지 따로 누르는 단추가 아닙니다.
    ⚠️ ul 의 자식은 li 라야 합니다. */
 .bent{ background-color:var(--hm-bg); padding:var(--s8) 0 var(--sec-y); }
-.bent-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s5);
+.bent-g{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s5);
   list-style:none; margin:0; padding:0; }
 .bent-c > a{ display:flex; flex-direction:column; height:100%;
   border-radius:var(--r-lg); overflow:hidden; color:var(--on-dk);
@@ -5875,3 +5875,143 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
 }
 .tl-est svg{ flex:none; margin-top:2px; color:var(--ink3); }
 .tl-est b{ color:var(--ink); }
+
+/* ══════════════════════════════════════════════════════════════════
+   업체 찾기 — 검색 + 거르개 다섯 + 분야 격자 (2026-10-20 시안 6)
+   ══════════════════════════════════════════════════════════════════ */
+.pv-find{ margin:0 auto var(--s5); }
+/* ⚠️⚠️ **`[hidden]` 을 같이 눌러 둡니다.** `display:grid` 를 주는 규칙이
+   브라우저 기본 `[hidden]{display:none}` 을 **이깁니다** — 안 눌러 두면
+   검색으로 걸러도 속성만 붙고 카드가 그대로 보입니다 (이 저장소가
+   `.opg-n[hidden]` · 바구니 빈 줄로 겪은 자리). */
+.pvc-g > li{ display:grid; }
+.pvc-g > li[hidden]{ display:none; }
+
+/* ══════════════════════════════════════════════════════════════════
+   선택 패널 — 오른쪽 고정 (2026-10-20 시안 2 · 3)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **1100px 위에서만 두 칸입니다.** 그 아래에서는 왼쪽 칸이
+   좁아져 카드 안 낱말이 가운데서 잘립니다 (이 저장소가 큰 카드 안
+   작은 카드 넷으로 겪은 자리) — 좁은 폭은 하단 고정 띠가 받습니다. */
+.pks-side{ display:none; }
+@media (min-width:1100px){
+  .pks-g{ display:grid; grid-template-columns:minmax(0,1fr) 304px;
+    gap:var(--s7); align-items:start; }
+  .pks-main{ min-width:0; }
+  .pks-side{ display:block; position:sticky; top:96px; }
+  /* ⚠️⚠️ 오른쪽 패널이 있으면 **하단 고정 띠를 접습니다** — 한 화면에
+     같은 신청 단추가 둘이면 어느 것이 진짜인지 흐려집니다.
+     ⚠️ `:has()` 를 못 읽는 브라우저에서는 띠가 그대로 남습니다 —
+     오늘과 같은 모습이라 안전합니다 (기능이 사라지지 않습니다). */
+  body:has(.pks-side) .pk-bar{ display:none; }
+}
+.pks-box{ display:grid; gap:var(--s3);
+  padding:var(--s5); border-radius:var(--r-xl);
+  background:var(--surface); border:1px solid var(--line);
+  box-shadow:var(--shadow-soft); }
+.pks-t{ margin:0; font-size:var(--t-base); font-weight:800; color:var(--ink); }
+.pks-t b{ color:var(--blue-600); }
+.pks-zero{ margin:0; font-size:var(--t-cap); color:var(--ink3); line-height:1.6; }
+.pks-zero[hidden]{ display:none; }
+.pks-l{ display:grid; gap:6px; margin:0; padding:0; list-style:none;
+  max-height:46vh; overflow:auto; }
+.pks-l li{ display:flex; align-items:center; gap:var(--s2);
+  padding:7px var(--s2) 7px var(--s3); border-radius:var(--r);
+  background:var(--bg-2); }
+.pks-l .pk-r-n{ flex:1; min-width:0; font-size:var(--t-cap); color:var(--ink);
+  line-height:1.45; }
+.pks-box .btn{ width:100%; }
+.pks-clr{ min-height:40px; font-size:var(--t-cap); }
+.pks-box .btn[hidden]{ display:none; }
+
+/* 계산도구 목적별 탭 (2026-10-20 시안 7) — 글 목록 · 지원사업과
+   **같은 칩 거르개**를 씁니다 (화면마다 다른 거르개를 만들면 한
+   사이트로 안 읽힙니다). 여기서는 아래 여백만 더합니다. */
+.tl-tab{ margin-bottom:var(--s7); }
+
+/* ══════════════════════════════════════════════════════════════════
+   메인 — 진입 카드 넷 · 직접 서비스 찾기 여섯 (2026-10-20 시안 1)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **대표 서비스 다섯이 `<a>` 밖으로 나왔습니다** — 장식이 아니라
+   길이라서요 (양도양수 배너가 들고 있던 주소가 그리로 옮겨 왔습니다).
+   그래서 카드 한 장이 `<a>` 하나 + `<ul>` 하나이고, 둘을 세로로
+   붙여 **한 장처럼** 보이게 합니다. */
+.bent-c{ display:flex; flex-direction:column; }
+.bent-c > a{ flex:1; }
+.bent-sv > li{ display:flex; }
+.bent-sv > li > a{ flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:flex-start; gap:4px;
+  min-height:var(--tap); padding:6px 2px; border-radius:var(--r);
+  text-align:center; color:inherit; }
+.bent-sv > li > a:hover{ background:rgba(255,255,255,.14); }
+.bent-sv > li > a > .ia{ flex:none; }
+
+/* ③ 직접 서비스를 찾아보세요 — 여섯 */
+.bdir-g{ display:grid; grid-template-columns:repeat(6,1fr); gap:var(--s4);
+  margin:0 0 var(--s6); padding:0; list-style:none; }
+.bdir-c{ display:grid; justify-items:center; align-content:start; gap:var(--s2);
+  padding:var(--s5) var(--s3); min-height:var(--tap);
+  border-radius:var(--r-xl); background:var(--surface);
+  border:1px solid var(--line); text-align:center;
+  transition:transform .15s, box-shadow .2s, border-color .15s; }
+.bdir-c:hover{ transform:translateY(-3px); box-shadow:var(--shadow-md);
+  border-color:var(--acc-dark); }
+.bdir-i{ display:inline-flex; align-items:center; justify-content:center;
+  width:58px; height:58px; border-radius:18px;
+  background:var(--ic-bg, var(--blue-50)); color:var(--ic-ink, var(--blue)); }
+.bdir-c > b{ font-size:var(--t-sm); font-weight:800; color:var(--ink);
+  line-height:1.4; }
+/* ⚠️⚠️ **범위를 묶어 적습니다.** 이 블록이 파일 맨 뒤라
+   `max-width:1100` 만 적으면 **더 좁은 폭의 규칙까지 이깁니다** —
+   360px 에서 칸 둘이 남아 문서 폭이 382px 가 됐습니다 (재서
+   알았습니다). 이 저장소가 특정도 · 차례로 여러 번 겪은 자리입니다. */
+@media (max-width:1100px) and (min-width:769px){
+  .bent-g{ grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width:768px){ .bent-g{ grid-template-columns:1fr; } }
+/* ⚠️ 위 900px 규칙이 **셋째를 두 칸에 걸쳐** 놓습니다 — 카드가
+   넷이 된 지금은 그러면 격자가 깨집니다. */
+@media (max-width:900px){ .bent-c:nth-child(3){ grid-column:auto; } }
+/* ⚠️⚠️ **폰에서 아이콘 다섯을 숨기지 않습니다.** 768px 아래
+   규칙이 `.bent-sv{display:none}` 이었는데, 그때는 그게 **표시**였고
+   지금은 **진짜 링크**입니다 — 숨기면 폰에서 `/sell` · `/assets` ·
+   `/tools/premium` · `/providers/admin?s=legal` 로 가는 길이 사라집니다. */
+@media (max-width:768px){
+  .bent-sv{ display:grid; grid-template-columns:repeat(5,1fr); gap:0;
+    padding:var(--s2) 4px var(--s3); }
+  .bent-sv > li > a{ gap:2px; padding:4px 1px; }
+  .bent-sv > li > a > span{ font-size:11.5px; line-height:1.3; }
+}
+@media (max-width:900px){ .bdir-g{ grid-template-columns:repeat(3,1fr); } }
+@media (max-width:560px){
+  .bdir-g{ grid-template-columns:repeat(2,1fr); gap:var(--s3); }
+  .bdir-c{ padding:var(--s4) var(--s2); }
+  .bdir-i{ width:50px; height:50px; border-radius:16px; }
+}
+
+/* ── 넷째 진입 카드 — 매장 양도양수 (2026-10-20 시안 1) ──────────
+   ⚠️⚠️ **이 블록이 없으면 카드가 흰 면에 흐린 글자로 섭니다** —
+   `.ent-transfer` 에 면 색이 없으면 `> a` 가 바탕을 안 받아서,
+   흰 글자로 적힌 제목과 설명이 크림 바탕 위에 앉습니다 (대비 1.1).
+   찍어 보고 알았습니다 — 가로 스크롤도 에러도 안 납니다. */
+.ent-transfer > a{ background:linear-gradient(165deg,
+  var(--ent-pass-d) 0%, var(--ent-pass) 62%, var(--ent-pass-d) 100%); }
+.ent-transfer .bent-ph::after{ background:linear-gradient(180deg,
+  rgba(43,21,64,.34) 0%, rgba(43,21,64,.62) 58%, rgba(43,21,64,.96) 100%); }
+.ent-transfer .bent-no{ background:var(--ent-pass-d); color:var(--ent-pass-ac); }
+.ent-transfer .bent-i{ --ia-1:var(--ent-pass-ac); --ia-2:rgba(215,189,240,.30); }
+.ent-transfer .bent-tx > em, .ent-transfer .bent-go{ color:var(--ent-pass-ac); }
+
+/* ⚠️⚠️ **카드 넷의 높이를 1px 까지 맞춥니다.** 글이 짧은 카드가
+   혼자 낮으면 "덜 준비된 것" 으로 읽힙니다 (두 판의 무게가 같아야
+   한다는 이 저장소의 규칙과 같은 자리). 아이콘 줄이 `<a>` 밖으로
+   나오면서 `<a>` 가 안 늘어나 실제로 그랬습니다 — 찍어 보고
+   알았습니다. */
+.bent-g{ align-items:stretch; }
+.bent-c > a{ flex:1 1 auto; }
+/* ⚠️ 아이콘 다섯의 이름이 **낱말 가운데서 잘렸습니다** ("인테리 어").
+   칸이 좁아 `overflow-wrap:anywhere` 안전판이 먼저 걸린 것이라,
+   글씨를 12px 로 내리고(12px 미만 금지) 여백을 줄여 자리를 냅니다. */
+.bent-sv > li > a > span{ font-size:12px; line-height:1.32; }
+.bent-sv{ padding-left:4px; padding-right:4px; }
+.bent-sv > li > a{ padding:6px 1px; }

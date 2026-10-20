@@ -107,36 +107,101 @@ function SupportWhere(side){
    ⚠️ **없는 칸은 안 냅니다.** 글이 없는 분류는 칩이 아예 안 나옵니다
    (절대 규칙 2). 개수는 전부 그 자리에서 **세는 값**이라 손으로 적을
    자리가 없습니다. */
-function ctUrl(side, cat){
-  var q = [];
-  if(side) q.push("side="+encodeURIComponent(side));
-  if(cat)  q.push("cat="+encodeURIComponent(cat));
-  return "/content" + (q.length ? "?"+q.join("&") : "");
+/* ⚠️⚠️ **거르개가 `?side=` 에서 `?j=`(여정 넷)로 바뀌었습니다**
+   (2026-10-20 지시서 PART 10-2 — "전체 · 창업 · 운영 · 양도·양수 ·
+   폐업"). 글의 `side` 는 **창업 · 폐업 · 양쪽 셋**뿐이라 다섯 탭을
+   만들 수가 없습니다 — 늘리면 `sideOf()` · `/support` · `/providers`
+   거르개 · 검사의 세 칸 셈이 전부 같이 가야 합니다.
+
+   그래서 **이미 있던 길**을 씁니다 — `amJourneyOfCat()` 이 글의
+   분류(`cat`)를 타고 단계 여섯 → 여정 넷으로 올라갑니다. 재 보니
+   창업 31 · 운영 9 · 양도양수 6 · 폐업 20 으로 **빠짐없이** 갈리고,
+   전부 **세는 값**입니다 (손으로 적을 자리가 없습니다).
+
+   ⚠️ **옛 링크(`?side=`)가 안 깨집니다** — `start`→창업 준비 ·
+   `close`→폐업 · 정리로 받습니다. 사이트 안에도 `/content?side=close`
+   를 가리키는 자리가 있습니다.
+   ⚠️ 여정으로 가르면 `side:"both"` 인 글이 **한 자리로** 갑니다 —
+   권리금 글(`cat:"transfer"`)은 창업에도 폐업에도 아닌 **양도양수**
+   입니다. 그게 더 맞습니다. */
+function ctUrl(j, cat, q){
+  var p = [];
+  if(j)   p.push("j="+encodeURIComponent(j));
+  if(cat) p.push("cat="+encodeURIComponent(cat));
+  if(q)   p.push("q="+encodeURIComponent(q));
+  return "/content" + (p.length ? "?"+p.join("&") : "");
 }
 
+/* 글 하나를 찾을 수 있게 만드는 글 (PART 10-3) — ⚠️ **본문은 안
+   넣습니다.** 예순여섯 편의 본문을 속성에 넣으면 HTML 이 몇 배가
+   되는데, 지시서가 적은 것은 "제목과 주요 키워드" 입니다. 본문
+   전체 검색은 **헤더 통합검색**이 이미 하고 있습니다. */
+function ctQOf(c){
+  var t = [c.title || "", c.lead || "",
+    (window.amCat && amCat(c.cat) ? amCat(c.cat).name : ""),
+    (c.industry && window.amIndustryName ? amIndustryName(c.industry) : ""),
+    (c.sum || []).join(" ")].join(" ");
+  return (t + " " + t.replace(/\s+/g, "")).toLowerCase();
+}
+
+/* ⚠️⚠️ **다시 그리지 않습니다** — 적는 칸에서 화면을 다시 그리면
+   커서가 칸에서 빠집니다 (관리자 업체 등록에서 겪은 자리).
+   DOM 을 바로 고칩니다. */
+window.ctFind = function(q){
+  q = String(q || "").trim().toLowerCase().replace(/\s+/g, "");
+  var rows = [].slice.call(document.querySelectorAll(".ct-l > li[data-ct-q]"));
+  var hit = 0;
+  rows.forEach(function(el){
+    var on = !q || (el.getAttribute("data-ct-q") || "").indexOf(q) >= 0;
+    el.hidden = !on;
+    if(on && q) hit++;
+  });
+  var r = document.getElementById("ct-r");
+  if(r){
+    r.hidden = !q;
+    r.textContent = hit ? (hit + "편 찾았습니다")
+      : "찾으시는 말로는 나오지 않습니다 — 위 분류에서 골라 보세요.";
+  }
+};
+
 function PageContents(){
-  var side = nowQS("side"); if(side !== "start" && side !== "close") side = "";
-  var cat  = nowQS("cat");
+  var JY = (window.AM_JOURNEYS || []);
+  var j  = nowQS("j");
+  /* 옛 링크(`?side=`)를 받습니다 — 밖으로 나간 주소가 안 깨집니다 */
+  if(!j){
+    var sd = nowQS("side");
+    if(sd === "start") j = "startup";
+    else if(sd === "close") j = "closing";
+  }
+  if(j && !JY.some(function(x){ return x.key === j; })) j = "";
+  var cat = nowQS("cat");
+  var q   = nowQS("q") || "";
 
   var all = amContents({});
-  /* 쪽으로 먼저 거릅니다. "both" 인 글은 양쪽에 다 나옵니다 */
-  var bySide = all.filter(function(c){
-    return !side || c.side === side || c.side === "both"; });
-  /* 그 쪽에서 글이 있는 분류만 칩으로 냅니다 */
+  var jOf = function(c){
+    return (typeof amJourneyOfCat === "function") ? amJourneyOfCat(c.cat) : null; };
+  var byJ = j ? all.filter(function(c){ return jOf(c) === j; }) : all;
+  /* 그 여정에서 글이 있는 분류만 칩으로 냅니다 */
   var cats = (window.AM_CATS||[]).filter(function(k){
-    return bySide.some(function(c){ return c.cat === k.key; }); });
+    return byJ.some(function(c){ return c.cat === k.key; }); });
   if(cat && !cats.some(function(k){ return k.key === cat; })) cat = "";
-  var list = cat ? bySide.filter(function(c){ return c.cat === cat; }) : bySide;
+  var list = cat ? byJ.filter(function(c){ return c.cat === cat; }) : byJ;
 
-  var nStart = all.filter(function(c){ return c.side !== "close"; }).length;
-  var nClose = all.filter(function(c){ return c.side !== "start"; }).length;
+  var nOf = function(k){
+    return all.filter(function(c){ return jOf(c) === k; }).length; };
   var cnt = function(k){
-    return bySide.filter(function(c){ return c.cat === k; }).length; };
+    return byJ.filter(function(c){ return c.cat === k; }).length; };
 
+  /* ⚠️ 딱지는 **여정 이름**입니다 — 탭이 "양도양수" 인데 카드가
+     "창업 · 폐업" 이라고 적혀 있으면 서로 다른 말을 합니다.
+     여정을 못 찾는 글은 그 칸을 **아예 안 냅니다** (절대 규칙 2). */
   var card = function(c){
-    return '<li><a href="/content/'+esc(c.slug)+'">'+
-      '<span class="ct-m">'+esc(c.side==="close"?"폐업":c.side==="both"?"창업 · 폐업":"창업")+
-        (c.industry?' · '+esc(amIndustryName(c.industry)):'')+
+    var jk = jOf(c);
+    var jn = "";
+    JY.forEach(function(x){ if(x.key === jk) jn = x.name; });
+    return '<li data-ct-q="'+esc(ctQOf(c))+'"><a href="/content/'+esc(c.slug)+'">'+
+      '<span class="ct-m">'+(jn ? esc(jn) : "")+
+        (c.industry?(jn?' · ':'')+esc(amIndustryName(c.industry)):'')+
         (c.read?' · '+esc(String(c.read))+'분':'')+'</span>'+
       '<b>'+esc(c.title)+'</b>'+
       '<span class="ct-p">'+esc(c.lead)+'</span></a></li>';
@@ -149,25 +214,40 @@ function PageContents(){
     tight:true
   })+
   '<section class="sec sec-white"><div class="w">'+
+    /* ── 탭 다섯 (PART 10-2) — 전부 **세는 값**입니다 ─────────── */
     '<ul class="chip-g chip-g-fil">'+
-      '<li><a class="chip'+(side?"":" on")+'" href="'+esc(ctUrl("",""))+'">'+
+      '<li><a class="chip'+(j?"":" on")+'" href="'+esc(ctUrl("",""))+'">'+
         '전체 '+all.length+'</a></li>'+
-      '<li><a class="chip'+(side==="start"?" on":"")+'" href="'+esc(ctUrl("start",""))+'">'+
-        '창업 '+nStart+'</a></li>'+
-      '<li><a class="chip'+(side==="close"?" on":"")+'" href="'+esc(ctUrl("close",""))+'">'+
-        '폐업 '+nClose+'</a></li>'+
+      JY.map(function(x){
+        return '<li><a class="chip'+(j===x.key?" on":"")+'" href="'+
+          esc(ctUrl(x.key,""))+'">'+esc(x.name)+' '+nOf(x.key)+'</a></li>';
+      }).join("")+
     '</ul>'+
+    /* ── 찾기 (PART 10-3) ──────────────────────────────────────
+       ⚠️⚠️ **작동하지 않는 검색창은 추가하지 않는다** (PART 10-3 이
+       직접 적었습니다). 이 칸은 `ctFind()` 로 실제로 거릅니다 —
+       제목 · 머리말 · 분야 · 업종 · 세 줄 요약을 봅니다. 본문 전체는
+       헤더 통합검색이 색인합니다. */
+    '<div class="pkf ct-find">'+
+      '<label class="pkf-l" for="ct-q">제목이나 낱말로 찾아보세요</label>'+
+      '<span class="pkf-w">'+icon("search",18)+
+        '<input class="pkf-i" id="ct-q" type="search" autocomplete="off"'+
+          ' value="'+esc(q)+'" placeholder="예: 권리금, 원상복구, 폐업신고"'+
+          ' oninput="ctFind(this.value)">'+
+      '</span>'+
+      '<p class="pkf-r" id="ct-r" hidden></p>'+
+    '</div>'+
     /* ⚠️ **분야 칩은 쪽을 고른 뒤에만 냅니다.** 25개를 다 깔면 폰에서
        화면 하나를 통째로 먹고 글이 한 편도 안 보입니다 (실제로 그랬습니다).
        이 사이트가 원래 하는 일이 "창업이냐 폐업이냐" 를 먼저 묻는
        것이라 차례도 그쪽이 맞습니다. */
-    ((side || cat) && cats.length > 1
+    ((j || cat) && cats.length > 1
       ? '<ul class="chip-g chip-g-fil ct-f2">'+
-          '<li><a class="chip chip-2'+(cat?"":" on")+'" href="'+esc(ctUrl(side,""))+'">'+
+          '<li><a class="chip chip-2'+(cat?"":" on")+'" href="'+esc(ctUrl(j,""))+'">'+
             '분야 전체</a></li>'+
           cats.map(function(k){
             return '<li><a class="chip chip-2'+(cat===k.key?" on":"")+'" href="'+
-              esc(ctUrl(side, k.key))+'">'+esc(k.name)+' '+cnt(k.key)+'</a></li>';
+              esc(ctUrl(j, k.key))+'">'+esc(k.name)+' '+cnt(k.key)+'</a></li>';
           }).join("")+
         '</ul>'
       : '')+
@@ -499,8 +579,27 @@ function PageAbout(){
    발췌로 내는데, 발췌에 FAQPage 를 달면 화면에 없는 질문이 구조화
    데이터로 나가거나 같은 FAQ 가 두 주소로 중복됩니다.
    ════════════════════════════════════════════════════════════════════ */
+/* ⚠️ 다시 그리지 않습니다 — 펼친 것이 닫히고 보던 자리를 잃습니다
+   (`pickGroupToggle()` 과 같은 규칙). DOM 을 바로 고칩니다.
+   ⚠️⚠️ **`aria-expanded` 를 같이 뒤집습니다** — 색과 화살표만
+   바꾸면 읽어 주는 프로그램에는 늘 접힌 것으로 들립니다. */
+window.faqToggle = function(btn){
+  if(!btn) return;
+  var p = document.getElementById(btn.getAttribute("aria-controls"));
+  if(!p) return;
+  var open = p.hidden;
+  p.hidden = !open;
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+  btn.classList.toggle("is-open", open);
+};
+
 function PageFaq(){
   var f = (window.amFaq ? amFaq() : []);
+  var sel  = nowQS("c") || "";
+  var nOf  = function(k){
+    return f.filter(function(x){ return (x.cat || "etc") === k; }).length; };
+  var cats = (window.AM_FAQ_CATS || []).filter(function(k){ return nOf(k.key) > 0; });
+  if(sel && !cats.some(function(k){ return k.key === sel; })) sel = "";
   /* ⚠️ 비어도 **빈 화면으로 두지 않습니다** (절대 규칙 2). */
   if(!f.length) return PgHero({ kicker:"자주 묻는 것", h1:"자주 묻는 것", tight:true })+
     '<section class="sec"><div class="w w-narrow">'+
@@ -521,11 +620,37 @@ function PageFaq(){
     lead:"약속드릴 수 없는 것은 약속드리지 않고, 아직 없는 것은 없다고 적었습니다.",
     tight:true
   })+
+  /* ── 카테고리 + 아코디언 (2026-10-20 지시서 PART 11) ───────────
+     ⚠️⚠️ **질문과 답을 DOM 에서 빼지 않습니다.** 접기만 합니다 —
+     이 화면은 **FAQPage 구조화 데이터**와 짝이고, 구글은 구조화
+     데이터가 화면 내용과 같아야 한다고 못 박아 두었습니다. 빼면
+     "화면에 없는 질문" 이 되어 리치 결과가 통째로 막힙니다
+     (`check.js` 가 하나씩 맞춰 봅니다).
+     ⚠️⚠️ **카테고리는 `?c=` 로 거릅니다** — 거르면 그 질문들만
+     남는데, 그래도 **고르지 않은 것이 기본**이라 전부 보입니다.
+     ⚠️ 비어 있는 카테고리는 칩을 아예 안 냅니다 (절대 규칙 2). */
   '<section class="sec"><div class="w w-narrow">'+
-    '<ul class="faq-l">'+ f.map(function(x){
-      return '<li class="faq-i">'+
-        '<b class="faq-q">'+esc(x.q)+'</b>'+
-        '<p class="faq-a">'+esc(x.a)+'</p>'+
+    (cats.length > 1
+      ? '<ul class="chip-g chip-g-fil">'+
+          '<li><a class="chip'+(sel?"":" on")+'" href="/faq">전체 '+f.length+'</a></li>'+
+          cats.map(function(k){
+            return '<li><a class="chip'+(sel===k.key?" on":"")+'" href="'+
+              esc("/faq?c="+encodeURIComponent(k.key))+'">'+
+              esc(k.name)+' '+nOf(k.key)+'</a></li>';
+          }).join("")+
+        '</ul>'
+      : "")+
+    '<ul class="faq-l">'+ f.map(function(x, i){
+      var id  = "faq-a-" + i;
+      var on  = !sel || (x.cat || "etc") === sel;
+      /* ⚠️ 거르개로 가린 것도 **DOM 에 그대로** 둡니다 (위 주석) */
+      return '<li class="faq-i"'+(on ? "" : " hidden")+'>'+
+        '<button class="faq-q" type="button" aria-expanded="false"'+
+          ' aria-controls="'+esc(id)+'" onclick="faqToggle(this)">'+
+          '<span>'+esc(x.q)+'</span>'+
+          '<span class="faq-x" aria-hidden="true">'+icon("chevd",18)+'</span>'+
+        '</button>'+
+        '<p class="faq-a" id="'+esc(id)+'" hidden>'+esc(x.a)+'</p>'+
       '</li>';
     }).join("")+'</ul>'+
     /* ⚠️ 막다른 길로 두지 않습니다 — 여기까지 읽으신 분께 지금

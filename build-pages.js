@@ -2399,6 +2399,37 @@ function checkSvcPick(W){
    "에어컨 수리" 자리에 "수리 · 유지보수 전체" 가 끼어서, 고르신 것과
    접수에 실리는 것이 달라집니다.
    ──────────────────────────────────────────────────────────────── */
+/* ── FAQ 카테고리 (2026-10-20 지시서 PART 11-2) ───────────────────
+   ⚠️⚠️ 막는 것 셋 — ① 없는 카테고리 key ② key 가 겹침
+   ③ 카테고리 목록이 비었는데 문답에 `cat` 이 붙어 있음.
+   ①을 그냥 두면 그 문답이 **`기타` 로 조용히 떨어지는데**, `기타` 에
+   아무것도 없으면 칩이 안 나와서 **어느 칩으로도 안 걸립니다** —
+   전체 탭에서만 보이고 아무도 모릅니다. */
+function checkFaq(W){
+  const CATS = W.AM_FAQ_CATS || [];
+  const FQ   = W.AM_FAQ || [];
+  if(!FQ.length) return;
+  if(!CATS.length)
+    throw new Error("js/data/faq.js 의 AM_FAQ_CATS 가 비었습니다 (PART 11-2)");
+  const ok = new Set();
+  for(const c of CATS){
+    if(!c.key || !c.name)
+      throw new Error("FAQ 카테고리에 key 나 이름이 없습니다");
+    if(ok.has(c.key))
+      throw new Error("FAQ 카테고리 key 가 겹칩니다 — " + c.key);
+    ok.add(c.key);
+  }
+  if(!ok.has("etc"))
+    throw new Error("FAQ 카테고리에 `etc`(기타)가 없습니다" +
+      "\n   → cat 을 안 적은 문답이 갈 곳입니다");
+  for(const x of FQ){
+    if(x.cat && !ok.has(x.cat))
+      throw new Error("FAQ 문답이 없는 카테고리를 가리킵니다 — \"" + x.cat +
+        "\"\n   → " + String(x.q).slice(0, 24) +
+        "\n   → 그냥 두면 `기타` 로 떨어지고, 기타가 비어 있으면 어느 칩으로도 안 걸립니다");
+  }
+}
+
 function checkPickGroup(W){
   const G = W.AM_PICK_GROUP || {};
   /* 지시서가 적은 묶음 개수 — ⚠️ 바꾸시려면 지시서를 먼저 고치세요 */
@@ -3511,6 +3542,7 @@ checkOpsvc(W);
 checkHalls(W);
 checkSvcPick(W);
 checkPickGroup(W);
+checkFaq(W);
 checkOpsCheck(W);
 for(const hall of Object.keys(W.AM_PICK_GROUP || {})){
   const gs = W.amPickGroups(hall);

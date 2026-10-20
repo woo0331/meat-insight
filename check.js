@@ -2108,6 +2108,84 @@ const AUDIT = `(() => {
     for(let i = 0; i < q.length; i++)
       if(lq.indexOf(q[i]) < 0) return "화면에만 있는 질문: " + q[i];
     return true;`);
+  /* 2026-10-20 PART 11-3 — "기본적으로 답변 접힘 · 질문 클릭 시
+     펼침 · 다시 클릭 시 닫힘 · 키보드 접근 가능".
+     ⚠️⚠️ **질문과 답을 DOM 에서 빼면 안 됩니다** — 바로 위 검사가
+     FAQPage 구조화 데이터와 하나씩 맞춰 봅니다. 접기만 합니다. */
+  /* 2026-10-20 PART 9-2 · 9-3 — "계산 결과 화면에서 관련 서비스를
+     추천한다" · "계산 결과는 **추정치**이며 실제 견적과 다를 수
+     있음을 표시한다".
+     ⚠️⚠️ **보내기만 하는 링크가 아니라 그 자리에서 고를 수 있어야**
+     합니다 — 분야 화면으로 보내면 거기서 또 고르셔야 해서 계산 →
+     신청이 한 줄로 안 이어집니다. */
+  await f("계산 결과에서 서비스를 바로 고를 수 있다", "/tools/cost", `
+    if(!document.querySelector(".tl-est"))
+      return "추정치라는 줄이 없습니다 (PART 9-3)";
+    const cks = [].slice.call(document.querySelectorAll("#pick .pk-ck"));
+    if(cks.length < 2) return "고를 칸이 " + cks.length + "개입니다";
+    const t = (window.amTool ? amTool("cost") : null);
+    const rel = (t && t.rel) || [];
+    if(cks.length !== rel.length)
+      return "화면 " + cks.length + "개 · 데이터 " + rel.length + "개 — 손으로 적었습니다";
+    const was = (window.amPickCount ? amPickCount() : 0);
+    cks[0].checked = true;
+    cks[0].dispatchEvent(new Event("change", { bubbles:true }));
+    if((window.amPickCount ? amPickCount() : 0) !== was + 1)
+      return "고르는데 바구니에 안 담깁니다";
+    const go = document.getElementById("pk-go-on");
+    if(!go || go.hidden) return "신청으로 가는 길이 안 나옵니다";
+    if(go.getAttribute("href").indexOf("/quote") !== 0)
+      return "신청 링크가 " + go.getAttribute("href") + " 입니다";
+    cks[0].checked = false;
+    cks[0].dispatchEvent(new Event("change", { bubbles:true }));
+    return true;`);
+
+  await f("FAQ 가 접혔다 펴진다", "/faq", `
+    const qs = [].slice.call(document.querySelectorAll(".faq-q"));
+    if(!qs.length) return "질문이 없습니다";
+    const open = function(){
+      return document.querySelectorAll(".faq-a:not([hidden])").length; };
+    if(open() !== 0) return "처음부터 답이 " + open() + "개 펼쳐져 있습니다";
+    const b = qs[0];
+    if(b.tagName !== "BUTTON") return "질문이 단추가 아닙니다 (키보드로 못 엽니다)";
+    if(b.getAttribute("aria-expanded") !== "false")
+      return "aria-expanded 가 false 가 아닙니다";
+    if(!b.getAttribute("aria-controls")) return "aria-controls 가 없습니다";
+    if(b.getBoundingClientRect().height < 40)
+      return "질문 단추 높이가 " + Math.round(b.getBoundingClientRect().height) + "px 입니다";
+    b.click();
+    if(open() !== 1) return "눌렀는데 " + open() + "개 펼쳐집니다";
+    if(b.getAttribute("aria-expanded") !== "true")
+      return "펼쳤는데 aria-expanded 가 안 바뀝니다";
+    b.click();
+    if(open() !== 0) return "다시 눌렀는데 안 닫힙니다";
+    return true;`);
+
+  /* PART 11-2 — 카테고리. ⚠️ **비어 있는 카테고리는 안 냅니다**
+     (절대 규칙 2) — 눌러 보면 아무것도 없는 칩이 생깁니다. */
+  await f("FAQ 카테고리가 센 값이고 빈 칸이 없다", "/faq", `
+    const F = window.AM_FAQ || [];
+    const C = window.AM_FAQ_CATS || [];
+    if(!C.length) return "카테고리 목록이 없습니다";
+    const n = function(k){
+      return F.filter(function(x){ return (x.cat || "etc") === k; }).length; };
+    const want = C.filter(function(k){ return n(k.key) > 0; });
+    const chips = [].slice.call(document.querySelectorAll(".chip-g-fil .chip"));
+    if(chips.length !== want.length + 1)
+      return "칩이 " + chips.length + "개입니다 (전체 + " + want.length + " 라야 합니다)";
+    for(let i = 0; i < want.length; i++){
+      const got = parseInt((chips[i + 1].textContent.match(/[0-9]+/) || [-1])[0], 10);
+      if(got !== n(want[i].key))
+        return chips[i + 1].textContent.trim() + " · 실제 " + n(want[i].key) + "입니다";
+    }
+    /* 문답이 하나도 안 빠집니다 — 어느 칩에도 안 걸리는 것이 있으면
+       전체 탭에서만 보이고 아무도 못 찾습니다 */
+    let sum = 0;
+    want.forEach(function(k){ sum += n(k.key); });
+    if(sum !== F.length)
+      return "카테고리를 더하면 " + sum + "개인데 문답은 " + F.length + "개입니다";
+    return true;`);
+
   await f("FAQ 에 지킬 수 없는 약속이 없다", "/faq", `
     const t = document.getElementById("view").textContent;
     const bad = [];
@@ -2220,21 +2298,54 @@ const AUDIT = `(() => {
     return true;`);
   /* ⚠️ 거르개 숫자를 손으로 적으면 글을 더할 때마다 어긋납니다. 화면의
      세 칸을 **데이터에서 다시 세어** 맞춰 봅니다 (절대 규칙 1). */
+  /* 2026-10-20 PART 10-2 — 탭이 쪽(창업 · 폐업) 둘에서 **여정 넷 +
+     전체 다섯**이 됐습니다. 숫자는 전부 그 자리에서 세는 값이라야
+     합니다 (손으로 적으면 글을 한 편 쓸 때마다 어긋납니다). */
   await f("글 목록 거르개 숫자가 센 값이다", "/content", `
     const chips = [].slice.call(document.querySelectorAll(".chip-g-fil .chip"));
-    if(chips.length < 3) return "거르개가 없습니다";
+    const JY = window.AM_JOURNEYS || [];
+    if(chips.length !== 1 + JY.length)
+      return "탭이 " + chips.length + "개입니다 (전체 + 여정 " + JY.length + " 라야 합니다)";
     const all = window.AM_CONTENTS || [];
-    const want = [all.length,
-      all.filter(function(c){ return c.side !== "close"; }).length,
-      all.filter(function(c){ return c.side !== "start"; }).length];
-    for(let i = 0; i < 3; i++){
+    const want = [all.length].concat(JY.map(function(x){
+      return all.filter(function(c){ return amJourneyOfCat(c.cat) === x.key; }).length; }));
+    for(let i = 0; i < want.length; i++){
       const got = parseInt((chips[i].textContent.match(/[0-9]+/) || [-1])[0], 10);
       if(got !== want[i])
         return chips[i].textContent.trim() + " · 실제 " + want[i] + "입니다";
     }
+    /* 여정 넷을 더하면 전체와 같아야 합니다 — 어디에도 안 걸리는
+       글이 생기면 그 글은 탭에서 영영 안 보입니다 */
+    let sum = 0;
+    for(let i = 1; i < want.length; i++) sum += want[i];
+    if(sum !== all.length)
+      return "여정 넷을 더하면 " + sum + "편인데 전체는 " + all.length + "편입니다";
     /* 눌러서 실제로 걸러지는가 */
     const n = document.querySelectorAll(".ct-l > li").length;
     if(n !== all.length) return "전체인데 " + n + "편만 나옵니다";
+    return true;`);
+
+  /* PART 10-3 — "실제 검색 기능을 구현한다 · **작동하지 않는 검색창은
+     추가하지 않는다.**" 적는 칸이 있는지가 아니라 **실제로 거르는지**
+     를 봅니다. */
+  await f("가이드 검색이 실제로 거른다", "/content", `
+    const q = document.getElementById("ct-q");
+    if(!q) return "찾는 칸이 없습니다";
+    const vis = function(){
+      return document.querySelectorAll(".ct-l > li:not([hidden])").length; };
+    const all = vis();
+    if(!all) return "글이 한 편도 안 나옵니다";
+    q.value = "권리금";
+    q.dispatchEvent(new Event("input", { bubbles:true }));
+    const hit = vis();
+    if(hit === 0) return "권리금을 쳤는데 0편입니다";
+    if(hit >= all) return "쳐도 " + hit + "편 그대로입니다 — 안 걸립니다";
+    const r = document.getElementById("ct-r");
+    if(!r || r.hidden || !/[0-9]/.test(r.textContent))
+      return "몇 편 찾았는지 안 알려 줍니다";
+    q.value = "";
+    q.dispatchEvent(new Event("input", { bubbles:true }));
+    if(vis() !== all) return "비웠는데 안 돌아옵니다";
     return true;`);
 
   /* ⑬ 창업 = 과정 (§7) · 폐업 = 무엇을 원하시는가 (§8)

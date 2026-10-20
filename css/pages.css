@@ -5838,3 +5838,40 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
   .clp-g{ grid-template-columns:1fr; }
   .clp-c{ min-height:0; }
 }
+
+/* 가이드 찾기 칸 (2026-10-20 PART 10-3) — 전문관 고르개의 `.pkf` 를
+   그대로 씁니다 (화면마다 다른 찾기 칸을 만들면 한 사이트로 안
+   읽힙니다). 여기서는 위아래 여백만 더합니다. */
+.ct-find{ margin:18px auto 22px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   FAQ 아코디언 (2026-10-20 PART 11-3)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **맨 뒤에 둡니다.** `.faq-q{display:block}` 이 위(638줄대)에
+   있고 특정도가 같아서, 앞에 적으면 `display:flex` 가 집니다 —
+   이 저장소가 `.f-r label` ↔ `.rqf-k` 로 겪은 자리입니다.
+   ⚠️ 질문은 `<button>` 입니다 — 누르는 것이라 높이 48px 이고,
+   브라우저가 주는 포커스 테두리를 그대로 씁니다. */
+.faq-q{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  width:100%; min-height:var(--tap); padding:0;
+  background:none; border:0; cursor:pointer; text-align:left;
+  font-size:var(--t-lg); font-weight:700; color:var(--ink);
+  font-family:inherit; line-height:1.45;
+}
+.faq-x{ flex:none; display:flex; color:var(--ink3); transition:transform .18s; }
+.faq-q.is-open .faq-x{ transform:rotate(180deg); }
+.faq-q:hover{ color:var(--blue-600); }
+/* ⚠️ `[hidden]` 을 CSS 로 한 번 더 눌러 둡니다 — `display` 를 주는
+   규칙이 브라우저 기본값을 이기는 자리가 이 저장소에 있었습니다
+   (`.opg-n[hidden]` 과 같은 까닭). */
+.faq-a[hidden], .faq-i[hidden]{ display:none; }
+
+/* 계산 결과가 추정치임을 밝히는 줄 (2026-10-20 PART 9-3) —
+   ⚠️ 지우지 마세요. 사장님이 이 숫자를 들고 은행에 가십니다. */
+.tl-est{
+  display:flex; align-items:flex-start; gap:7px;
+  margin:12px 0 0; font-size:var(--t-cap); color:var(--ink2); line-height:1.6;
+}
+.tl-est svg{ flex:none; margin-top:2px; color:var(--ink3); }
+.tl-est b{ color:var(--ink); }

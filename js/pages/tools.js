@@ -64,7 +64,13 @@ function tlNext(label, href, key){
     '<div><p class="eyebrow">다음으로</p><h2>'+esc(label)+'</h2></div>'+
     '<a class="btn btn-b btn-lg" href="'+esc(href)+'">견적 요청하기'+icon("arrow",18)+'</a>'+
   '</div></section>'+
-  tlRel(key);
+  /* ⚠️⚠️ **열세 도구가 전부 이 자리를 지납니다.** 도구마다 따로
+     붙이면 하나를 빠뜨려도 아무도 모릅니다 (실제로 `tlPage()` 쪽에만
+     붙였다가 일곱 도구에서 안 나오는 것을 재서 알았습니다). */
+  tlRelPick(key)+
+  /* ⚠️ 폰 하단 고정 띠 — 고르신 것이 0개면 `PickBar()` 가 스스로
+     안 그립니다 (못 누르는 단추를 고정 띠에 두지 않습니다). */
+  ((typeof PickBar === "function") ? PickBar(tlSideOf(key)) : "");
 }
 
 /* ── 계산 뒤의 다음 걸음 (2026-10-06 2차 §15) ─────────────────────
@@ -102,7 +108,15 @@ function tlAfter(key){
   /* ③ 가이드 — ⚠️ 없으면 이 칸을 **안 냅니다** */
   if(read) items.push([ "book", read.title, "/content/" + read.slug ]);
 
-  return '<div class="tl-nx">'+
+  /* ⚠️⚠️ **추정치라고 그 자리에서 말합니다** (2026-10-20 지시서
+     PART 9-3 — "계산 결과는 추정치이며 실제 견적과 다를 수 있음을
+     표시한다"). 이 줄이 없으면 사장님이 이 숫자를 들고 은행에
+     가십니다 — 프랜차이즈 창업비에서 못박아 둔 자리와 같은
+     성질입니다. 지우지 마세요. */
+  return '<p class="tl-est">'+icon("info",15)+
+      '적으신 값으로 계산한 <b>추정치</b>입니다. 실제 견적은 '+
+      '현장 · 평수 · 자재 · 시기에 따라 다릅니다.</p>'+
+    '<div class="tl-nx">'+
     '<p class="tl-nx-h">'+icon("arrow",15)+'계산해 보셨으면, 다음은</p>'+
     '<ul class="tl-nx-l">'+items.map(function(x){
       return '<li><a href="'+esc(x[2])+'">'+icon(x[0],17)+
@@ -118,6 +132,42 @@ function tlAfter(key){
    ⚠️ 어느 분야로 보낼지는 `tools.js` 의 `rel` 한 곳입니다 — 화면에
    적으면 도구를 늘릴 때마다 두 곳을 고치게 됩니다.
    ⚠️ 없는 분류 · 하위를 적으면 **빌드가 멈춥니다** (`checkProcess()`). */
+/* ── 계산 결과 → 서비스 **선택** (2026-10-20 지시서 PART 9-2) ────
+   > "계산 결과 화면에서 관련 서비스를 추천한다 … 창업비용 계산
+   >  결과: 인테리어 견적 · 설비 견적 · 인터넷 설치 · POS 설치"
+
+   ⚠️⚠️ **전에는 분야 화면으로 보내기만 했습니다** (`tlRel()`).
+   거기서 또 고르셔야 해서, 계산 → 신청이 한 줄로 안 이어졌습니다.
+   지금은 **그 자리에서 고르실 수 있고** 고르신 것은 다른 전문관 ·
+   신청 화면과 **같은 바구니**(`am.pick.v1`)에 들어갑니다.
+
+   ⚠️ 어느 분야를 낼지는 여전히 `tools.js` 의 `rel` 한 곳입니다 —
+   화면에 적으면 도구를 늘릴 때마다 두 곳을 고치게 됩니다.
+   ⚠️ 없는 분류 · 하위를 적으면 빌드가 멈춥니다 (`checkProcess()`).
+   ⚠️ `rel` 이 비면 **구간째 뺍니다** (절대 규칙 2). */
+function tlSideOf(key){
+  var t = key && (window.amTool ? amTool(key) : null);
+  return (t && t.side === "close") ? "close" : "start";
+}
+function tlRelPick(key){
+  if(typeof PickCard !== "function" || typeof amPickOne !== "function") return "";
+  var t   = key && (window.amTool ? amTool(key) : null);
+  var rel = (t && t.rel) || [];
+  var L = rel.map(function(r){
+    return amPickOne(r.sub ? (r.cat + "/" + r.sub) : r.cat); }).filter(Boolean);
+  if(!L.length) return "";
+  return '<section class="sec sec-ivory" id="pick"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">계산해 보셨으면</p>'+
+      '<h2>이 계산에 걸리는 서비스입니다</h2>'+
+      '<p>필요한 것을 고르시면 <b>한 번만 적어 보내시면 됩니다.</b> '+
+        '고르신 것은 다른 화면에서도 그대로 남습니다.</p>'+
+    '</div>'+
+    '<ul class="pk-g">'+L.map(PickCard).join("")+'</ul>'+
+  '</div></section>'+
+  ((typeof PickBasket === "function") ? PickBasket(tlSideOf(key)) : "");
+}
+
 function tlRel(key){
   var t = key && (window.amTool ? amTool(key) : null);
   var rel = (t && t.rel) || [];

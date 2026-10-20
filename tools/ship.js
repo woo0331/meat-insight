@@ -50,8 +50,26 @@ const el = () => {
   return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
 };
 const line = () => console.log("─".repeat(66));
-const say  = s => console.log(s);
-const head = s => { console.log(""); line(); console.log(s); line(); };
+/* ⚠️⚠️ **CI 에서 떨어졌을 때 까닭을 읽을 수 있게** 적어 둡니다
+   (2026-10-20 에 겪었습니다). GitHub 의 일감 로그는 blob 저장소에서
+   오고, 이 저장소에서 쓰는 gh 는 그 호스트에 **안 닿습니다** — 그래서
+   CI 가 빨간데 "exit code 1" 밖에 안 보이고, 실제 까닭(`sitemap.xml`
+   한 줄 차이)을 찾는 데 한참 걸렸습니다. GitHub 이 주는
+   `GITHUB_STEP_SUMMARY` 는 API 로 읽히니 거기에 같이 적습니다.
+   ⚠️ 비밀은 안 적습니다 — 여기 흘러드는 것은 검사 출력뿐이고,
+   사전 점검이 비밀이 섞인 커밋 자체를 먼저 막습니다. */
+const SUMPATH = process.env.GITHUB_STEP_SUMMARY || "";
+const SUMBUF  = [];
+const sum = s => { if (SUMPATH) SUMBUF.push(String(s)); };
+if (SUMPATH) process.on("exit", function(){
+  try {
+    require("fs").appendFileSync(SUMPATH,
+      "\n```\n" + SUMBUF.slice(-400).join("\n") + "\n```\n");
+  } catch (e) { /* 요약을 못 적는 것으로 배포를 막지는 않습니다 */ }
+});
+
+const say  = s => { console.log(s); sum(s); };
+const head = s => { console.log(""); line(); console.log(s); line(); sum(""); sum(s); };
 
 /* ⚠️ tools/test-sql.js 는 initdb 를 PATH 와 **박아 둔 경로 넷**에서
    찾습니다 (16 · 15 · 14 · /usr/local/pgsql). 판이 올라가면 그 목록에서

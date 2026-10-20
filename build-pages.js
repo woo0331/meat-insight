@@ -3687,7 +3687,33 @@ function checkMainH2(){
 checkMainH2();
 
 /* ── sitemap ──────────────────────────────────────────────────── */
-const today = new Date().toISOString().slice(0,10);
+/* ⚠️⚠️ **빌드한 날을 여기 적지 마세요** (2026-10-20 에 겪었습니다).
+   전에는 `lastmod` 와 머리 주석에 **오늘 날짜**를 넣었습니다. 그러면
+   두 가지가 같이 깨집니다 —
+
+     ① 구글에게 **163개 주소가 전부 오늘 바뀌었다**고 말합니다. 빌드할
+        때마다 그렇습니다 — 글 한 편을 고쳐도 163개가 다 바뀐 것으로
+        나가니, 구글은 믿을 수 없는 `lastmod` 를 **그냥 무시합니다.**
+        "n일 전" 같은 상대 표기를 쓰지 않는 것과 같은 까닭입니다.
+     ② **빌드가 날마다 다른 결과를 냅니다.** 그래서 `tools/ship.js --ci`
+        의 "빌드 결과가 커밋과 같은가" 가 **자정을 넘긴 밀기마다**
+        떨어집니다 — 코드는 멀쩡한데 CI 만 빨갛고, 로그에 까닭이
+        안 남습니다 (`sitemap.xml` 한 줄 차이라 화면으로는 표가 안
+        납니다). 실제로 그 바람에 배포가 한 번 막혔습니다.
+
+   그래서 **적을 수 있는 날짜가 있는 곳에만** 적습니다 — 글
+   예순여섯 편의 `at`(실제로 올린 날)입니다. 나머지 주소는
+   `lastmod` 를 **아예 안 냅니다** (sitemaps.org 에서 선택 항목이고,
+   없는 것이 틀린 것보다 낫습니다).
+
+   ⚠️ 날짜를 다시 넣고 싶어지면 **빌드가 날마다 같은 결과를 내는지**
+   먼저 보세요. HEAD 커밋 날짜도 안 됩니다 — 빌드하고 커밋하면
+   커밋 날짜가 바뀌어서, 그 커밋을 다시 빌드하면 또 달라집니다. */
+const ctAt = {};
+(W.AM_CONTENTS || []).forEach(function(c){
+  if(c && c.slug && /^\d{4}-\d{2}-\d{2}$/.test(String(c.at || "")))
+    ctAt["/content/" + c.slug] = c.at;
+});
 /* ⚠️ **앞 서비스에서 남은 줄이었습니다** — `/sos` · `/check` · `/start` ·
    `/lab` 은 지금 하나도 없는 주소라, 메인 말고는 전부 0.6 으로 나가고
    있었습니다 (`robots.txt` 에서 겪은 것과 같은 꼴입니다).
@@ -3711,11 +3737,34 @@ const prio = r => {
 };
 fs.writeFileSync(path.join(ROOT,"sitemap.xml"),
 '<?xml version="1.0" encoding="UTF-8"?>\n'+
-'<!-- build-pages.js 가 만듭니다 ('+today+'). 손으로 고치지 마세요. -->\n'+
+'<!-- build-pages.js 가 만듭니다. 손으로 고치지 마세요. -->\n'+
 '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+
-sitemap.map(r=>'  <url><loc>'+ORIGIN+r+'</loc><lastmod>'+today+
-  '</lastmod><priority>'+prio(r)+'</priority></url>').join("\n")+
+sitemap.map(r=>'  <url><loc>'+ORIGIN+r+'</loc>'+
+  (ctAt[r] ? '<lastmod>'+ctAt[r]+'</lastmod>' : '')+
+  '<priority>'+prio(r)+'</priority></url>').join("\n")+
 '\n</urlset>\n');
+
+/* ⚠️⚠️ **sitemap 에 "오늘" 이 다시 끼어들면 빌드를 멈춥니다**
+   (2026-10-20 — 그 바람에 배포가 한 번 막혔습니다).
+   `lastmod` 에 적힐 수 있는 것은 **글의 실제 `at`** 뿐입니다. 빌드한
+   날을 넣으면 ① 구글에게 163개가 다 오늘 바뀌었다고 말하고 ② 빌드가
+   날마다 다른 결과를 내서 `ship.js --ci` 가 자정을 넘긴 밀기마다
+   떨어집니다 — 화면으로는 표가 안 나고 CI 로그에도 까닭이 안 남습니다. */
+function checkSitemapDates(){
+  const xml = fs.readFileSync(path.join(ROOT, "sitemap.xml"), "utf8");
+  const ok  = new Set(Object.keys(ctAt).map(k => ctAt[k]));
+  const bad = [];
+  let m, re = /<lastmod>([^<]*)<\/lastmod>/g;
+  while((m = re.exec(xml))) if(!ok.has(m[1])) bad.push(m[1]);
+  if(bad.length)
+    throw new Error("sitemap 의 lastmod 에 글의 실제 날짜가 아닌 것이 "+
+      "있습니다 — 빌드한 날을 넣으면 빌드가 날마다 다른 결과를 내고 "+
+      "`ship.js --ci` 가 자정을 넘긴 밀기마다 떨어집니다:\n  " +
+      [...new Set(bad)].join(" , "));
+  const n = (xml.match(/<lastmod>/g) || []).length;
+  console.log("   sitemap 의 lastmod " + n + "개가 전부 글의 실제 올린 날입니다");
+}
+checkSitemapDates();
 
 console.log("페이지 "+made+"개"+(skipped?" (건너뜀 "+skipped+")":"")+
             (removed?" · 치운 주소 "+removed+"개":"")+

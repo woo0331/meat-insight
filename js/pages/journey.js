@@ -722,13 +722,26 @@ function AcqWhich(t, ind, iq){
        전에는 `quoteTo({cat:"transfer"})` 였는데, 그러면 이 화면에
        신청 단추가 둘이 되고 **고르신 것을 들고 가지 못합니다** (§2 —
        "신청 버튼 위치가 명확하지 않다"). 고르는 자리로 보냅니다. */
-    '<ul class="aq-m">'+[
-      ["/stores"+iq,     "store",    "매장 인수하기",   "상가 · 점포 · 권리금 매장"],
-      ["#pick",          "handover", "내 매장 양도하기", "넘길 때 필요한 것부터 고르세요"],
-      ["/tools/premium", "gauge",    "권리금 알아보기", "몇 달이면 돌아오는지 따져 봅니다"],
-      ["/content?side=close", "book","인수 · 양도 가이드", "계약 전에 보셔야 하는 것"],
-      ["/tools/vs",      "scale",    "신규 vs 인수 비교", "새로 만드는 것과 받는 것"]
-    ].map(function(x){
+    /* ⚠️⚠️ **메뉴가 경로를 따릅니다** (2026-10-20 지시서 PART 7-3 —
+       "양도인 경로를 선택하면 양도인 관련 콘텐츠를 우선 표시한다").
+       전에는 어느 쪽을 고르셔도 **같은 다섯**이었습니다 — 넘기시려는
+       분께 "매장 인수하기" 가, 받으시려는 분께 "내 매장 양도하기" 가
+       먼저 보이는 꼴이었습니다 (재서 알았습니다).
+       ⚠️ 열 줄 전부 **실제로 있는 화면**입니다 (가짜 링크는 절대
+       규칙 5). 넘어가는 길은 위의 탭이 그대로 들고 있습니다. */
+    '<ul class="aq-m">'+(t === "out" ? [
+      ["/sell",          "handover", "내 매장 내놓기",   "평수 · 보증금 · 권리금을 적어 보내시면 됩니다"],
+      ["#pick",          "check",    "넘길 때 필요한 것", "시설 인계 · 계약 · 세무를 골라 보세요"],
+      ["/tools/premium", "gauge",    "권리금 알아보기",  "몇 달이면 돌아오는지 따져 봅니다"],
+      ["/sell?t=asset",  "boxes",    "시설 · 장비만 내놓기", "매장은 두고 장비만 넘기실 때"],
+      ["/content?side=close", "book","양도 가이드",      "넘기기 전에 보셔야 하는 것"]
+    ] : [
+      ["/stores"+iq,     "store",    "매장 인수하기",    "상가 · 점포 · 권리금 매장"],
+      ["#pick",          "check",    "인수할 때 필요한 것", "점검 · 임대차 검토 · 승계를 골라 보세요"],
+      ["/tools/premium", "gauge",    "권리금 알아보기",  "몇 달이면 돌아오는지 따져 봅니다"],
+      ["/tools/vs",      "scale",    "신규 vs 인수 비교", "새로 만드는 것과 받는 것"],
+      ["/content?side=close", "book","인수 가이드",      "계약 전에 보셔야 하는 것"]
+    ]).map(function(x){
       return '<li><a href="'+esc(x[0])+'">'+
         '<span class="ic-t">'+icon(x[1],22)+'</span>'+
         '<b>'+esc(x[2])+'</b><i>'+esc(x[3])+'</i></a></li>';
@@ -766,15 +779,32 @@ function AcqProcess(t, ind){
 
 /* F. 지금 올라온 것 — ⚠️ 0건이면 **0 이라고 말합니다** (절대 규칙 1).
    한 건이라도 올라오면 코드를 한 줄도 안 고치고 단추가 섭니다. */
-function AcqMarket(ind, iq){
+function AcqMarket(t, ind, iq){
   var nStore = (typeof amStores === "function") ? amStores({}).length : 0;
   var nAsset = (typeof amAssets === "function") ? amAssets({}).length : 0;
+  /* ⚠️⚠️ **넘기시는 분께는 "올라온 매물" 이 할 일이 아닙니다** —
+     내놓으시는 자리(`/sell`)가 할 일입니다 (PART 7-2 양도인 ·
+     "매장 기본 정보"). 머리말과 단추만 갈리고 **건수는 둘 다 사실
+     그대로**입니다 (절대 규칙 1 — 0건이면 0건이라고 적습니다). */
+  var out = (t === "out");
   return '<section class="sec"><div class="w">'+
     '<div class="sec-hd">'+
-      '<p class="eyebrow">지금 올라온 것</p>'+
-      '<h2>매장 매물 '+nStore+'건 · 시설 · 장비 '+nAsset+'건</h2>'+
-      '<p>등록된 차례로 냅니다. 광고로 위에 올린 자리는 없습니다.</p>'+
+      '<p class="eyebrow">'+(out ? "내놓으시려면" : "지금 올라온 것")+'</p>'+
+      '<h2>'+(out
+        ? "한 번만 적어 보내시면 저희가 올려 드립니다"
+        : "매장 매물 "+nStore+"건 · 시설 · 장비 "+nAsset+"건")+'</h2>'+
+      '<p>'+(out
+        ? "평수 · 보증금 · 월세 · 권리금을 적는 칸이 따로 있습니다. "+
+          "올리기 전에 한 번 연락드립니다. 지금 올라온 매물은 "+
+          nStore+"건 · 시설 · 장비 "+nAsset+"건입니다."
+        : "등록된 차례로 냅니다. 광고로 위에 올린 자리는 없습니다.")+'</p>'+
     '</div>'+
+    (out
+      ? '<div class="row-cta">'+
+          '<a class="btn btn-b" href="/sell">내 매장 내놓기'+icon("arrow",16)+'</a>'+
+          '<a class="btn btn-o" href="/sell?t=asset">시설 · 장비만 내놓기</a>'+
+        '</div>'
+      :
     (nStore || nAsset
       ? '<div class="row-cta"><a class="btn btn-b" href="/stores'+esc(iq)+'">매장 매물 보기'+icon("arrow",16)+'</a>'+
         '<a class="btn btn-o" href="/assets'+esc(iq)+'">시설 · 장비 보기</a></div>'
@@ -785,8 +815,8 @@ function AcqMarket(ind, iq){
           text:"올라오는 대로 여기에 나옵니다. 그동안 인수 · 양도에서 자주 막히는 것부터 보셔도 됩니다.",
           reads: (typeof amContentsFor === "function")
             ? amContentsFor({ cat:"transfer", side:"both", limit:3 }) : [],
-          cta:'<a class="btn btn-b" href="#pick">넘길 때 필요한 것 고르기'+icon("arrow",16)+'</a>'+
-              '<a class="btn btn-o" href="/stores">매물 화면 보기</a>' }))+
+          cta:'<a class="btn btn-b" href="#pick">인수할 때 필요한 것 고르기'+icon("arrow",16)+'</a>'+
+              '<a class="btn btn-o" href="/stores">매물 화면 보기</a>' })))+
   '</div></section>';
 }
 
@@ -803,12 +833,16 @@ function PageAcquisition(){
      (0001 — start | ops | transfer | close) 신청 화면에 그 선택지가
      없어서, 양도양수로 들어온 분이 **"창업"** 으로 접수됐습니다 —
      `ops` 하나를 고치고도 같은 자리에 그대로 남아 있었습니다. */
+  /* ⚠️⚠️ **차례가 경로를 따릅니다** (PART 7-3). 받으시는 분은
+     **매장을 먼저 보시고** 고르시고(PART 7-2 양수인 — "매장 탐색" 이
+     첫 항목), 넘기시는 분은 **넘길 때 필요한 것을 먼저 고르시고**
+     내놓으십니다. 지우거나 더한 구간은 없습니다 — 차례만 바뀝니다. */
+  var sel = PickGroupBand("transfer", "transfer") + PickBasket("transfer");
+  var mkt = AcqMarket(t, ind, iq);
   return AcqIntro(ind, iq) +
     AcqWhich(t, ind, iq) +
-    PickGroupBand("transfer", "transfer") +
-    PickBasket("transfer") +
+    (t === "in" ? mkt + sel : sel + mkt) +
     AcqProcess(t, ind) +
-    AcqMarket(ind, iq) +
     ReadBand({ cat:"transfer", side:"both", limit:3,
                title:"인수 · 양도에서 자주 막히는 것" }) +
     HallCalcBand({ keys:AQ_CALC, tones:AQ_CALC_TONE,

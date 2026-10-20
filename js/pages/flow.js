@@ -534,12 +534,29 @@ function PageClosure(){
      확인했습니다).
      ⚠️ 390px 에서 12,713px(폰 화면 열넷)이었습니다 — §12-4 가 적은
      "폐업 절차의 과도한 길이" 가 그 숫자입니다. */
+  /* ── 두 가지 이용 경로 (2026-10-20 지시서 PART 6-2 · 6-3) ──────
+     > PART 6-2 — "A. 폐업 전체 절차 안내받기 / B. 필요한 서비스만 찾기"
+     > PART 6-1 — "폐업을 준비하는 고객이 **복잡한 절차에 압도되지
+     >  않도록** 한다."
+
+     ⚠️⚠️ **막는 길이 아닙니다** (PART 2-2 "불필요한 중간 단계 강제
+     금지"). 안 고르셔도 아래가 전부 그대로 있고, 고르시면 **차례만**
+     바뀝니다 — 고르신 것은 주소(`?p=`)에 실려 뒤로 가기 · 새로고침 ·
+     링크 공유에 살아남습니다.
+     ⚠️⚠️ **상황 네 갈래(`?w=`)를 두 경로로 바꾼 것이 아닙니다.**
+     그건 "전체 절차" 안쪽의 더 가는 갈래이고 밖으로 나간 링크가
+     그 값을 들고 있습니다 — `WantBand()` 그대로입니다. 다만 경로
+     카드 바로 아래 또 고르개를 두면 **같은 선택 영역이 둘**이 되어
+     (PART 16-3), 기본 차례에서는 절차 쪽으로 내려갑니다. */
+  var path  = nowQS("p") === "all" ? "all" : (nowQS("p") === "pick" ? "pick" : "");
+  /* A — 전체 절차 안내 (상황 고르기 + 단계별 순서) */
+  var guide = WantBand(null) + ClosingProcess(null);
+  /* B — 필요한 서비스만 고르고 바로 신청 */
+  var sel   = PickGroupBand("closure", "close") + PickBasket("close") +
+              PackPickBand("close");
   return ClosureIntro()+
-    WantBand(null)+
-    PickGroupBand("closure", "close")+
-    PickBasket("close")+
-    PackPickBand("close")+
-    ClosingProcess(null)+
+    ClosurePathBand(path)+
+    (path === "all" ? guide + sel : sel + guide)+
     ClosureIndustryBand()+
     /* ⑥ 가이드 — ⚠️⚠️ **이 구간이 폐업에만 없었습니다.** 창업 · 운영 ·
        양도양수는 전부 글 카드를 내는데 폐업은 도움 카드 셋(`.help`)만
@@ -588,6 +605,48 @@ function ClosureIntro(){
         '<a class="btn btn-o btn-lg" href="'+esc(quoteTo({ side:"close" }))+'">'+
         '무엇이 필요한지 모르겠어요</a>'
   });
+}
+
+/* ── 두 가지 이용 경로 카드 (PART 6-2) ───────────────────────────
+   ⚠️ 카드 전체가 눌립니다 — 안에 또 `<a>` 를 넣지 마세요
+   (`<a>` 안의 `<a>` 는 브라우저가 쪼갭니다).
+   ⚠️ 고르신 것이 보여야 합니다 — 색만이 아니라 `aria-current` 로도
+   냅니다 (읽어 주는 프로그램이 읽습니다). */
+var CLOSE_PATHS = [
+  { key:"all",  ic:"listck",
+    name:"폐업 전체 절차 안내받기",
+    lead:"처음 정리하십니다. 임대차 · 원상복구 · 집기 처분 · 직원 · "+
+         "세무 · 철거를 순서대로 짚어 드립니다." },
+  { key:"pick", ic:"check",
+    name:"필요한 서비스만 찾기",
+    lead:"무엇이 필요한지 이미 아십니다. 바로 고르시고 한 번에 "+
+         "견적을 받으십니다." }
+];
+function ClosurePathBand(path){
+  /* ⚠️ 바로 아래 서비스 선택(`pkb-sel`)이 `sec-ivory` 라 여기도
+     아이보리면 **두 구간이 한 구간으로 읽힙니다** (찍어 보고
+     알았습니다). 바탕은 톤 클래스가 칠합니다 — 함수 안에서 직접
+     칠하지 마세요. */
+  return '<section class="sec sec-white clp"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">어느 쪽이 가까우신가요?</p>'+
+      '<h2>어떻게 도와드릴까요?</h2>'+
+      '<p>고르시면 그 차례로 보여 드립니다. '+
+        '<b>안 고르셔도 아래에 전부 그대로 있습니다.</b></p>'+
+    '</div>'+
+    '<ul class="clp-g">'+ CLOSE_PATHS.map(function(p){
+      var on = (path === p.key);
+      return '<li><a class="clp-c'+(on ? " on" : "")+'" href="'+
+        esc("/closure?p=" + p.key + (p.key === "pick" ? "#pick" : ""))+'"'+
+        (on ? ' aria-current="true"' : '')+'>'+
+        '<span class="clp-i">'+icon(p.ic, 24)+'</span>'+
+        '<b>'+esc(p.name)+'</b>'+
+        '<i>'+esc(p.lead)+'</i>'+
+        '<span class="clp-go">'+(on ? "보고 계십니다" : "이쪽으로 보기")+
+          icon("arrow",15)+'</span>'+
+      '</a></li>';
+    }).join("")+'</ul>'+
+  '</div></section>';
 }
 
 /* ── 업종별로 자세히 (기존 보존 · §0-3) ───────────────────────────

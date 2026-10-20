@@ -5804,3 +5804,37 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
   margin:10px 0 0; text-align:center;
   font-size:var(--t-cap); color:var(--ink3);
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   폐업 — 두 가지 이용 경로 (2026-10-20 PART 6-2)
+   ══════════════════════════════════════════════════════════════════ */
+.clp-g{
+  list-style:none; margin:0; padding:0;
+  display:grid; gap:16px; grid-template-columns:1fr 1fr;
+}
+/* ⚠️ 카드 전체가 하나의 `<a>` 입니다 — 안에 또 링크를 넣지 마세요. */
+.clp-c{
+  display:flex; flex-direction:column; gap:8px;
+  min-height:168px; padding:22px 24px;
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-lg); box-shadow:var(--shadow-soft);
+  text-decoration:none; transition:border-color .15s, box-shadow .15s;
+}
+.clp-c:hover{ border-color:var(--blue); box-shadow:var(--shadow); }
+.clp-c.on{ border-color:var(--blue); border-width:2px; padding:21px 23px; }
+.clp-i{
+  display:flex; align-items:center; justify-content:center;
+  width:46px; height:46px; border-radius:var(--r);
+  background:var(--blue-50); color:var(--blue-600);
+}
+.clp-c b{ font-size:var(--t-lg); color:var(--ink); line-height:1.35; }
+.clp-c i{ font-style:normal; font-size:var(--t-sm); color:var(--ink2); line-height:1.6; }
+/* ⚠️ 표시이지 따로 누르는 단추가 아닙니다 (카드가 통째로 링크입니다). */
+.clp-go{
+  margin-top:auto; display:inline-flex; align-items:center; gap:5px;
+  font-size:var(--t-cap); font-weight:700; color:var(--blue-600);
+}
+@media (max-width:760px){
+  .clp-g{ grid-template-columns:1fr; }
+  .clp-c{ min-height:0; }
+}

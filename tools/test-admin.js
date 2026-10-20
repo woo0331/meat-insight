@@ -1367,6 +1367,74 @@ function ok(name, cond, extra) {
     await ctx.close();
   }
 
+  /* == 1번 칸 — 사진 첨부(INTAKE_BUCKET)까지 갈라서 말하는가 =======
+     2026-10-20. 전에는 이 칸이 버킷을 **아예 안 봤습니다** — 사진
+     칸이 안 뜰 때 "왜 안 뜨는지" 를 아무 데서도 말하지 않았고,
+     사장님은 "넣었는데 왜 안 되지" 를 혼자 겪습니다. store 와 auth 를
+     가른 것과 같은 까닭으로 photo 를 따로 봅니다.
+     ⚠️ 로컬에는 Vercel 함수가 없어서 가로챕니다 — 여기서 보는 것은
+     **화면이 무엇을 말하는가**이고, 값 자체는 api/admin-health.js 가
+     고릅니다 (upReady() 와 같은 규칙). */
+  console.log("\n1번 칸 — DB · 로그인 · 사진 첨부");
+  {
+    const { pg, ctx, errs } = await fresh(1440, 1000);
+    const health = d => ({ ok:true, common:{ webhook:true, resend:false,
+      mailTo:false, mailFrom:false },
+      byKind:{ sos:{webhook:false,mailTo:false}, quote:{webhook:false,mailTo:false},
+               partner:{webhook:false,mailTo:false} },
+      kinds:{ sos:true, quote:true, partner:true }, allReady:true,
+      db:d, env:"production" });
+    async function show(d){
+      await pg.route("**/api/admin-health", r => r.fulfill({ status:200,
+        contentType:"application/json", body: JSON.stringify(health(d)) }));
+      await pg.reload({ waitUntil:"networkidle" });
+      await pg.waitForTimeout(200);
+      /* ⚠️ 1번 칸은 **접힌 관리자 설정 안**입니다 — `innerText()` 는
+         안 보이는 칸에서 빈 문자열을 돌려줍니다 (그러면 검사가
+         "아무 말도 안 한다" 로 떨어지는데, 틀린 것은 재는 쪽입니다). */
+      return (await pg.locator("#ad-health").textContent()) || "";
+    }
+
+    let t = await show({ url:true, anonKey:true, svcKey:true, bucket:false,
+                         store:true, auth:true, photo:false });
+    ok("버킷이 없으면 그 줄을 낸다", /INTAKE_BUCKET/.test(t), t.slice(0, 120));
+    ok("버킷이 없으면 꺼져 있다고 말한다", /아직 꺼져 있습니다/.test(t));
+    /* ⚠️ DB 가 켜진 것과 사진이 켜진 것을 **한 덩어리로** 말하면
+       어느 쪽이 빠졌는지 모릅니다 */
+    ok("그래도 DB · 로그인은 켜졌다고 말한다",
+       /다 설정되어 있습니다/.test(t));
+
+    t = await show({ url:true, anonKey:true, svcKey:true, bucket:true,
+                     store:true, auth:true, photo:true });
+    ok("버킷이 있으면 켜졌다고 말한다", /켜져 있습니다/.test(t));
+    /* ⚠️⚠️ 서명된 올리기 주소는 **그 자체로** 크기와 형식을 막지
+       않습니다 — 버킷에도 같은 상한을 걸라고 말해야 합니다 */
+    ok("비공개 · 8MB · 형식을 같이 걸라고 말한다",
+       /비공개/.test(t) && /8MB/.test(t), t.slice(0, 200));
+
+    /* ⚠️ 옛 배포(이 칸이 없는 답)에서는 **줄째 뺍니다** — 안 빼면
+       "없음" 이라고 말해 놓고 실제로는 못 보고 있는 것입니다 */
+    t = await show({ url:true, anonKey:true, svcKey:true,
+                     store:true, auth:true });
+    ok("옛 배포에서는 버킷 줄을 아예 안 낸다", !/INTAKE_BUCKET/.test(t));
+
+    /* ⚠️⚠️ **값은 한 글자도 안 찍습니다.** 서버가 실수로 값을 같이
+       보내 와도 화면이 그것을 그리면 안 됩니다 — 버킷 이름만으로도
+       두드려 볼 수 있습니다 (api/upload.js 가 답에 경로를 안 싣는
+       것과 같은 까닭). 그래서 **값을 섞어 보내** 봅니다.
+       ⚠️ `SUPABASE_ANON_KEY` 같은 **딱지**는 나와야 맞습니다 — 그건
+       이름이지 값이 아닙니다 (처음에 딱지까지 금지했다가 멀쩡한
+       화면을 실패로 잡았습니다). */
+    t = await show({ url:"https://proj.supabase.co", anonKey:"eyJhbGciOi.TEST",
+                     svcKey:"eyJhbGciOi.SECRET", bucket:"intake-secret-name",
+                     store:true, auth:true, photo:true });
+    ok("값을 섞어 보내도 화면에 안 찍는다",
+       !/eyJ|supabase\.co|intake-secret-name/i.test(t), t.slice(0, 200));
+
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
   await br.close();
   srv.close();
   console.log("\n" + (fail ? "❌" : "✅") + " 통과 " + pass + " · 실패 " + fail);

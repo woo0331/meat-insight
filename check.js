@@ -248,7 +248,7 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[768,1024,"작�
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[], hord:[], hdfit:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[], hord:[], hdfit:[], chrome:[] };
   /* ⚠️ **흰 글자가 흰 바탕에 앉는 일이 실제로 있었습니다.** 창업 다섯
      마디(.flow)는 어두운 구간에만 있던 것이라 글자색 기본이 흰색이고,
      밝은 쪽은 .sec-tone 안에서만 되돌려 놓았습니다. 그 구간을 순백으로
@@ -872,6 +872,45 @@ const AUDIT = `(() => {
       out.hdfit.push("메뉴가 " + Object.keys(rows).length + "줄입니다");
   })();
 
+  /* ⚠️⚠️ **머리 · 푸터 · 아래 네비는 화면마다 딱 하나입니다** (2026-10-20).
+     mountChrome() 은 한 번만 돌고 innerHTML 로 **갈아 끼웁니다** —
+     그런데 그걸 보는 검사가 **하나도 없었습니다.** 라우터를 고치다
+     덧붙이기로 바뀌거나 구간 함수가 푸터를 또 그리면 **에러도 안 나고
+     가로 스크롤도 안 나면서** 두 벌이 됩니다.
+     ⚠️⚠️ 푸터를 가르는 **가로줄도 셉니다 — 하나여야 합니다.**
+     2026-10-20 에 ft-tail 과 ft-role 이 border-top 을 하나씩 들고
+     있어서, 푸터 **하나**가 화면에서는 가로줄로 갈린 덩이 셋
+     (칸 다섯 → 통합검색·내 기록 → 중개 고지)으로 보였습니다. 사장님이
+     "푸터가 세 번 반복된다" 고 하신 것이 그것이고, 늘어난 것은 DOM 이
+     아니라 **가로줄**이었습니다.
+     ⚠️ 폰에서 ft-col 다섯이 긋는 줄은 **접는 목록의 칸막이**라
+     세지 않습니다 — 그래서 .ft .w 의 **바로 아래 자식**만 봅니다.
+     ⚠️⚠️ **주석에 백틱을 쓰지 마세요** — 이 검사 본문은 템플릿
+     문자열이라 거기서 끊깁니다 (이 저장소가 스물세 번 겪었습니다). */
+  (function(){
+    /* ⚠️⚠️ **라우터 밖 화면은 건너뜁니다.** 404.html 은 혼자 뜨는
+       화면이라 chrome-t · chrome-b 가 아예 없고 머리도 푸터도 아래
+       네비도 **없는 것이 맞습니다** (제 토큰을 따로 들고 있는 그
+       화면입니다). 그걸 모르고 "0개입니다" 로 잡았습니다 — 코드가
+       아니라 **검사가 틀린** 자리입니다.
+       ⚠️ 붙는 자리(chrome-b)는 mountChrome 뒤에도 남습니다. 그래서
+       **라우터 화면에서 푸터가 0개가 되는 것**은 그대로 잡습니다. */
+    if(!document.getElementById("chrome-b")) return;
+    [[".ft","푸터"], [".hd","헤더"], [".mnav","아래 네비"]].forEach(function(p){
+      const n = document.querySelectorAll(p[0]).length;
+      if(n !== 1) out.chrome.push(p[1] + "가 " + n + "개입니다");
+    });
+    const w = document.querySelector(".ft > .w");
+    if(!w) return;
+    let rules = 0;
+    [].slice.call(w.children).forEach(function(e){
+      const cs = getComputedStyle(e);
+      if(parseFloat(cs.borderTopWidth) > 0 && cs.borderTopStyle !== "none") rules++;
+    });
+    if(rules !== 1)
+      out.chrome.push("푸터를 가르는 가로줄이 " + rules + "개입니다 (하나여야 합니다)");
+  })();
+
   /* ⚠️⚠️ **새 아이콘 타일을 만들면 여기 넣으세요.** 빠뜨리면 없는
      아이콘 이름을 적어도 조용히 통과합니다 — 매장 구간의 "장비" 가
      fridge 라는 없는 이름으로 몇 주 비어 있던 자리입니다.
@@ -928,7 +967,7 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[], hord:[], hdfit:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[], hord:[], hdfit:[], chrome:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
@@ -964,7 +1003,8 @@ const AUDIT = `(() => {
       ["\"준비 중\" 자리표시자", uniq(bad.ph)],
       ["아이콘 자리가 비었음", uniq(bad.ico)],
       ["고르개 딱지가 칸보다 긺", uniq(bad.sel)],
-      ["헤더 메뉴가 오른쪽 위로 올라앉음", uniq(bad.hdfit)]
+      ["헤더 메뉴가 오른쪽 위로 올라앉음", uniq(bad.hdfit)],
+      ["머리 · 푸터 · 아래 네비가 하나가 아님", uniq(bad.chrome)]
     ];
     console.log("\n── " + vn + " (" + w + "px)");
     rows.forEach(([n,v]) => {

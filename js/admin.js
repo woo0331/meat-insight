@@ -124,6 +124,12 @@ function adHealthDb(h){
     ["공개 키 (SUPABASE_ANON_KEY)",       d.anonKey],
     ["서버 키 (SUPABASE_SERVICE_KEY)",    d.svcKey]
   ];
+  /* ⚠️ 2026-10-20 — 사진 첨부는 **버킷이 따로** 필요합니다.
+     ⚠️⚠️ 옛 배포(이 칸이 없는 답)에서는 줄째 뺍니다 — 안 빼면
+     "없음" 이라고 말해 놓고 실제로는 **못 보고 있는 것**입니다
+     (아래 `db` 자체가 없을 때 줄째 빼는 것과 같은 규칙). */
+  if(typeof d.bucket !== "undefined")
+    rows.push(["사진 버킷 (INTAKE_BUCKET)", d.bucket]);
   var msg;
   if(d.store && d.auth)
     msg = '<b>DB 와 로그인이 다 설정되어 있습니다.</b> 접수가 저장되고 '+
@@ -142,9 +148,29 @@ function adHealthDb(h){
       '가고 번호가 없습니다. 화면도 로그인 칸을 <b>아예 안 그립니다</b> — '+
       '작동하지 않는 단추를 만들지 않습니다.';
 
+  /* 사진 첨부는 DB 와 **따로** 말합니다 — 둘을 한 줄로 묶으면 어느
+     쪽이 빠졌는지 모릅니다 (store 와 auth 를 가른 것과 같은 까닭). */
+  var ph = "";
+  if(typeof d.bucket !== "undefined"){
+    if(d.photo)
+      ph = '<p class="ad-note">사진 · 서류 첨부가 <b>켜져 있습니다.</b> '+
+        '⚠️ 버킷이 <b>비공개</b>인지, <b>8MB · jpeg · png · webp · pdf</b> '+
+        '상한이 버킷에도 걸려 있는지 한 번 보세요 — 서명된 올리기 주소는 '+
+        '그 자체로 크기와 형식을 막지 않습니다.';
+    else if(d.store)
+      ph = '<p class="ad-note">사진 · 서류 첨부는 <b>아직 꺼져 있습니다</b> — '+
+        '<code>INTAKE_BUCKET</code> 이 없습니다. 접수 완료 안내에 사진 칸이 '+
+        '<b>아예 안 나옵니다</b> (못 올리는데 올리는 척하지 않습니다).';
+    else
+      ph = '<p class="ad-note">사진 · 서류 첨부는 <b>DB 가 먼저</b>입니다 — '+
+        '저장이 켜진 다음에 <code>INTAKE_BUCKET</code> 을 넣으세요.';
+    ph += ' 만드는 법은 <code>docs/GO-LIVE.md</code> 2번입니다.</p>';
+  }
+
   return '<h3 class="ad-h3">DB · 로그인</h3>'+
     '<div class="ad-h '+(d.store && d.auth ? "ad-h-on" : "ad-h-off")+'">'+
       '<p>'+msg+'</p></div>'+
+    ph+
     '<ul class="ad-rows">'+rows.map(function(r){
       return '<li><span>'+esc(r[0])+'</span>'+
         '<em class="'+(r[1] ? "on" : "off")+'">'+(r[1] ? "설정됨" : "없음")+'</em></li>';

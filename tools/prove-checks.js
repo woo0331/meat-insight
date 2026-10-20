@@ -930,6 +930,48 @@ const AUDIT = eval("`" + src.match(/const AUDIT = `([\s\S]*?)`;\n/)[1] + "`");
 async function proveAudit(pg){
   let bad = 0;
 
+  /* ⓪ 머리 · 푸터 · 아래 네비가 하나가 아님 (2026-10-20).
+     되돌리기 **둘**입니다 —
+       ① 푸터를 한 벌 더 그려 봅니다 (렌더링 구조가 덧붙이기로 바뀐 꼴)
+       ② 맨 아랫줄에 가로줄을 하나 더 그어 봅니다 (푸터 하나가 덩이
+          둘로 갈려 "반복" 으로 읽히던 그 꼴)
+     ⚠️ 하나로 묶지 마세요 — ① 만 보면 "줄이 늘어나는 것" 을, ② 만
+     보면 "푸터가 두 벌이 되는 것" 을 영원히 놓칩니다. */
+  {
+    await pg.goto(ROOT + "/", { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).chrome;
+
+    await pg.evaluate(() => {
+      const ft = document.querySelector(".ft");
+      if(ft) ft.parentNode.appendChild(ft.cloneNode(true));
+    });
+    await pg.waitForTimeout(60);
+    const dup = (await pg.evaluate(AUDIT)).chrome;
+    const ok1 = before.length === 0 && dup.some(x => x.indexOf("푸터가 2개") >= 0);
+    if(!ok1) bad++;
+    console.log((ok1 ? "✅" : "❌") + " 머리 · 푸터 · 아래 네비가 하나가 아님 ① 푸터 두 벌" +
+      "  [지금 " + JSON.stringify(before) + " → 한 벌 더 그리면 " +
+      JSON.stringify(dup).slice(0,70) + "]");
+
+    /* 되돌려 놓고 ② */
+    await pg.goto(ROOT + "/", { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    await pg.evaluate(() => {
+      /* `.ft-tail` 이 제 가로줄을 다시 들고 있던 꼴 — 다만 그것은
+         `.ft-end` **안**이라 안 세집니다. 세는 자리(`.ft .w` 의 바로
+         아래 자식)에 긋습니다. */
+      const g = document.querySelector(".ft > .w > .ft-g");
+      if(g) g.style.borderTop = "1px solid #888";
+    });
+    await pg.waitForTimeout(60);
+    const two = (await pg.evaluate(AUDIT)).chrome;
+    const ok2 = two.some(x => x.indexOf("가로줄이 2개") >= 0);
+    if(!ok2) bad++;
+    console.log((ok2 ? "✅" : "❌") + " 머리 · 푸터 · 아래 네비가 하나가 아님 ② 가로줄 둘" +
+      "  [가로줄을 하나 더 그으면 " + JSON.stringify(two).slice(0,70) + "]");
+  }
+
   /* ① 본문(푸터 제외) 어두운 면 — 구간 하나를 짙게 칠해 봅니다.
      ⚠️⚠️ **전에는 푸터를 어둡게 해서 쟀습니다.** 2026-10-13 지시서
      §12 로 푸터가 **이미 짙은 에스프레소**가 되었고, ① 은 푸터를

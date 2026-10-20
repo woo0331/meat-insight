@@ -76,10 +76,18 @@ module.exports = function handler(req, res){
   var db = {
     url:     has("SUPABASE_URL"),
     anonKey: has("SUPABASE_ANON_KEY"),
-    svcKey:  has("SUPABASE_SERVICE_KEY")
+    svcKey:  has("SUPABASE_SERVICE_KEY"),
+    /* ⚠️ 2026-10-20 — 버킷 이름도 **있는지만** 봅니다. 이름 자체는
+       안 돌려줍니다: 그 글자만으로 버킷을 두드려 볼 수 있습니다
+       (api/upload.js 가 답에 버킷 경로를 안 싣는 것과 같은 까닭). */
+    bucket:  has("INTAKE_BUCKET")
   };
   db.store = db.url && db.svcKey;    /* 접수 저장 · 접수번호 (api/_db.js) */
   db.auth  = db.url && db.anonKey;   /* 로그인 · 마이페이지 (api/_auth.js) */
+  /* 사진 · 서류 첨부 — api/upload.js 의 upReady() 와 **같은 규칙**입니다
+     (dbReady() && bucket()). 두 곳이 어긋나면 화면에는 칸이 없는데
+     이 칸만 "됩니다" 라고 말합니다. */
+  db.photo = db.store && db.bucket;
 
   /* 캐시하면 다시 배포한 뒤에도 옛 답이 나옵니다 — 그게 제일 헷갈립니다 */
   res.setHeader("cache-control", "no-store");

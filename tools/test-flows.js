@@ -586,6 +586,151 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  }
  await pg.setViewportSize({ width:1280, height:900 });
 
+ /* ══════════════════════════════════════════════════════════════
+    【9】 2026-10-20 지시서 PART 18 — 시나리오 열
+    ══════════════════════════════════════════════════════════════
+    ⚠️⚠️ **보내지는 않습니다.** 접수처가 켜져 있어도 운영자에게
+    시험 접수를 보내면 안 됩니다 — 고르고 · 담기고 · 신청 화면이
+    되읽는 데까지 봅니다.
+    ⚠️ 시나리오 10(관리자)은 로그인이 꺼져 있어 **여기서 못 봅니다** —
+    `tools/test-admin.js` 가 가짜 서버로 봅니다. 테스트했다고
+    보고하지 않습니다 (PART 18 "실제 테스트가 불가능한 항목은
+    테스트했다고 보고하지 않는다"). */
+ console.log("\n【9】 PART 18 시나리오");
+ await pg.setViewportSize({ width:1440, height:900 });
+ const pickN = () => pg.evaluate(()=>{
+   try{ var o = JSON.parse(localStorage.getItem("am.pick.v1")||"{}");
+        return (o.ids||[]).length; }catch(e){ return -1; } });
+ const clear = () => pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+
+ /* 시나리오 1 — 창업에서 카페를 고르고 둘을 담아 신청까지 */
+ await clear();
+ await pg.goto(B+"/startup?i=cafe",{waitUntil:"networkidle"});
+ await pg.waitForTimeout(400);
+ const s1h = await pg.evaluate(()=>{
+   const h = document.querySelector(".stB h2");
+   return h ? h.textContent.trim() : ""; });
+ say(/카페/.test(s1h), "1 창업 — 업종을 고르면 그 업종 것이 앞에 선다", s1h);
+ let cks = await pg.$$(".stB .pk-g .pk-ck");
+ if(cks.length > 1){ await cks[0].check(); await cks[1].check(); }
+ await pg.waitForTimeout(350);
+ say(await pickN() === 2, "1 창업 — 둘이 담긴다", String(await pickN()));
+ await pg.goto(B+"/quote",{waitUntil:"networkidle"});
+ await pg.waitForTimeout(600);
+ const s1q = await pg.evaluate(()=>
+   document.querySelectorAll("#rq-pick li, .qp-c, .rq-sv li").length);
+ say(/^\/quote/.test(await url()), "1 창업 — 신청 화면까지 간다", await url());
+
+ /* 시나리오 2 — 운영에서 하나만 */
+ await clear();
+ await pg.goto(B+"/operation",{waitUntil:"networkidle"});
+ await pg.waitForTimeout(400);
+ const o1 = await pg.$$(".pkq .pk-ck");
+ say(o1.length === 6, "2 운영 — 첫 화면에 빠른 선택 여섯이 보인다", o1.length+"개");
+ if(o1.length) await o1[0].check();
+ await pg.waitForTimeout(350);
+ say(await pickN() === 1, "2 운영 — 하나만 담긴다", String(await pickN()));
+
+ /* 시나리오 3 — 폐업에서 둘, 그리고 두 경로 */
+ await clear();
+ await pg.goto(B+"/closure",{waitUntil:"networkidle"});
+ await pg.waitForTimeout(400);
+ const cp = await pg.evaluate(()=>document.querySelectorAll(".clp-c").length);
+ say(cp === 2, "3 폐업 — 이용 경로 둘을 먼저 고르게 한다", cp+"개");
+ const c1 = await pg.$$(".pkq .pk-ck");
+ if(c1.length > 1){ await c1[0].check(); await c1[1].check(); }
+ await pg.waitForTimeout(350);
+ say(await pickN() === 2, "3 폐업 — 둘이 담긴다", String(await pickN()));
+ await pg.goto(B+"/closure?p=all",{waitUntil:"networkidle"});
+ await pg.waitForTimeout(400);
+ const allFirst = await pg.evaluate(()=>{
+   const ss = [].slice.call(document.querySelectorAll("#view > section"));
+   const i = ss.findIndex(x=>x.querySelector(".wnt"));
+   const j = ss.findIndex(x=>x.classList.contains("pkb-sel"));
+   return (i >= 0 && j >= 0) ? (i < j) : false; });
+ say(allFirst, "3 폐업 — 전체 절차를 고르면 절차가 먼저 온다");
+
+ /* 시나리오 4 — 양도양수 두 경로 */
+ for(const [q, want, no] of [["", "매장 인수하기", "/sell"],
+                             ["?t=out", "내 매장 내놓기", "/stores"]]){
+   await pg.goto(B+"/transfer"+q,{waitUntil:"networkidle"});
+   await pg.waitForTimeout(400);
+   const m = await pg.evaluate(()=>
+     [].slice.call(document.querySelectorAll(".aq-m b")).map(b=>b.textContent.trim()));
+   say(m[0] === want, "4 양도양수"+(q||"(인수)")+" — 그 쪽 메뉴가 먼저 온다", m.join(" · "));
+ }
+
+ /* 시나리오 5 — 전문관을 옮겨도 선택이 남는다 */
+ await clear();
+ await pg.goto(B+"/startup",{waitUntil:"networkidle"});
+ await pg.waitForTimeout(400);
+ cks = await pg.$$(".stB .pk-g .pk-ck");
+ if(cks.length) await cks[0].check();
+ await pg.waitForTimeout(300);
+ const n5 = await pickN();
+ for(const r of ["/operation","/closure","/transfer","/tools/cost"]){
+   await pg.goto(B+r,{waitUntil:"networkidle"});
+   await pg.waitForTimeout(350);
+   say(await pickN() === n5, "5 "+r+" 로 옮겨도 선택이 남는다", String(await pickN()));
+ }
+
+ /* 시나리오 6 — 새로고침 · 뒤로 가기 */
+ await pg.reload({waitUntil:"networkidle"});
+ await pg.waitForTimeout(350);
+ say(await pickN() === n5, "6 새로고침 뒤에도 남는다", String(await pickN()));
+ await pg.goBack({waitUntil:"networkidle"});
+ await pg.waitForTimeout(350);
+ say(await pickN() === n5, "6 뒤로 가도 남는다", String(await pickN()));
+
+ /* 시나리오 7 — 계산도구에서 관련 서비스로 */
+ await clear();
+ await pg.goto(B+"/tools/cost",{waitUntil:"networkidle"});
+ await pg.waitForTimeout(400);
+ const est = await pg.evaluate(()=>!!document.querySelector(".tl-est"));
+ say(est, "7 계산도구 — 추정치라고 적는다");
+ const t1 = await pg.$$("#pick .pk-ck");
+ say(t1.length > 1, "7 계산도구 — 결과 아래에서 바로 고를 수 있다", t1.length+"개");
+ if(t1.length) await t1[0].check();
+ await pg.waitForTimeout(350);
+ say(await pickN() === 1, "7 계산도구 — 같은 바구니에 담긴다", String(await pickN()));
+
+ /* 시나리오 8 — 가이드 검색 · FAQ 아코디언 */
+ await pg.goto(B+"/content",{waitUntil:"networkidle"});
+ await pg.waitForTimeout(400);
+ const tabs = await pg.evaluate(()=>document.querySelectorAll(".chip-g-fil .chip").length);
+ say(tabs === 5, "8 가이드 — 탭이 다섯이다", tabs+"개");
+ await pg.fill("#ct-q", "권리금");
+ await pg.waitForTimeout(300);
+ const cf = await pg.evaluate(()=>({
+   v: document.querySelectorAll(".ct-l > li:not([hidden])").length,
+   a: document.querySelectorAll(".ct-l > li").length }));
+ say(cf.v > 0 && cf.v < cf.a, "8 가이드 — 검색이 실제로 거른다", cf.v+"/"+cf.a);
+ await pg.goto(B+"/faq",{waitUntil:"networkidle"});
+ await pg.waitForTimeout(400);
+ say(await pg.evaluate(()=>document.querySelectorAll(".faq-a:not([hidden])").length) === 0,
+     "8 FAQ — 처음에는 답이 접혀 있다");
+ await click(".faq-q");
+ say(await pg.evaluate(()=>document.querySelectorAll(".faq-a:not([hidden])").length) === 1,
+     "8 FAQ — 누르면 하나가 펴진다");
+
+ /* 시나리오 9 — 폰에서 고정 띠로 신청까지 (【8】 이 네 전문관에서
+    이미 봅니다 — 여기서는 계산도구에서 넘어온 길을 봅니다) */
+ await pg.setViewportSize({ width:390, height:844 });
+ await pg.goto(B+"/tools/cost",{waitUntil:"networkidle"});
+ await pg.waitForTimeout(400);
+ const bar9 = await pg.evaluate(()=>{
+   const b = document.getElementById("pk-bar");
+   if(!b) return "없음";
+   const cs = getComputedStyle(b);
+   if(cs.display === "none" || !b.getClientRects().length) return "안 보입니다";
+   return "보입니다"; });
+ say(bar9 === "보입니다", "9 폰 — 계산도구에서도 고정 띠가 보인다", bar9);
+ const over9 = await pg.evaluate(()=>
+   document.documentElement.scrollWidth - document.documentElement.clientWidth);
+ say(over9 <= 0, "9 폰 — 계산도구에 가로 스크롤이 없다", over9+"px");
+ await clear();
+ await pg.setViewportSize({ width:1280, height:900 });
+
  console.log("\n【5】 콘솔 오류");
  say(errs.length===0,"JS 에러 없음",errs.join(" / "));
  console.log(bad?("\n❌ "+bad+"건 실패"):"\n✅ 흐름 전부 통과");

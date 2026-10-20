@@ -1231,14 +1231,28 @@ const AUDIT = `(() => {
        ⚠️ 어느 분야로 보낼지는 tools.js 의 rel 한 곳입니다. */
     const t = window.amTool ? amTool("cost") : null;
     if(!t || !(t.rel||[]).length) return "창업비 계산기에 이어지는 분야가 없습니다";
-    const L = [].slice.call(document.querySelectorAll("#view .ops-g > li > a"));
+    /* ⚠️⚠️ 2026-10-20 PART 9-2 로 이 자리가 링크에서 고르는 칸이
+       됐습니다 (tlRel → tlRelPick). 보내기만 하면 거기서 또 고르셔야
+       해서 계산 → 신청이 한 줄로 안 이어졌습니다. 지켜야 하는 것은
+       계산기가 막다른 길이 아닐 것이라, 둘을 봅니다 — ① 그 자리에서
+       고를 수 있는가 ② 업체 화면으로 가는 길이 남아 있는가
+       (tlAfter 의 "필요한 업체 알아보기").
+       ⚠️ 주석에 백틱을 쓰지 마세요 — 검사 본문이 템플릿 문자열이라
+       거기서 끊깁니다 (이 저장소가 스물네 번 겪었습니다). */
+    const L = [].slice.call(document.querySelectorAll("#view #pick .pk-ck"));
     if(L.length !== t.rel.length)
-      return "화면에 " + L.length + "칸인데 데이터는 " + t.rel.length + "개입니다";
-    for(const a of L){
-      const h = a.getAttribute("href") || "";
-      if(!h || h === "#") return "가짜 링크가 있습니다";
-      if(a.getBoundingClientRect().height < 40) return "40px 미만 칸이 있습니다";
+      return "고를 칸이 " + L.length + "개인데 데이터는 " + t.rel.length + "개입니다";
+    for(const c of L){
+      const lab = c.closest("label");
+      if(!lab) return "체크칸이 라벨 밖에 있습니다";
+      if(lab.getBoundingClientRect().height < 40) return "40px 미만 칸이 있습니다";
     }
+    const go = [].slice.call(document.querySelectorAll("#view .tl-nx-l a"))
+      .map(function(a){ return a.getAttribute("href") || ""; });
+    if(!go.some(function(h){
+      return h.indexOf("/providers/") === 0 || h.indexOf("/c/") === 0; }))
+      return "업체 화면으로 가는 길이 없습니다";
+    for(const h of go) if(!h || h === "#") return "가짜 링크가 있습니다";
     /* 도구마다 이어지는 분야가 **다 있어야** 합니다 */
     for(const x of (window.AM_TOOLS||[])){
       if(!(x.rel||[]).length) return x.name + " 에 이어지는 분야가 없습니다";
@@ -2135,7 +2149,7 @@ const AUDIT = `(() => {
     const go = document.getElementById("pk-go-on");
     if(!go || go.hidden) return "신청으로 가는 길이 안 나옵니다";
     if(go.getAttribute("href").indexOf("/quote") !== 0)
-      return "신청 링크가 " + go.getAttribute("href") + " 입니다";
+      return "신청 링크가 " + go.getAttribute("href") + "입니다";
     cks[0].checked = false;
     cks[0].dispatchEvent(new Event("change", { bubbles:true }));
     return true;`);

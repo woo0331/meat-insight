@@ -40,6 +40,41 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* ══ 2026-10-20 전체 고도화 — 되돌리기 다섯 ═══════════════════
+     ⚠️⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — 그리는 함수를 바꿔치기
+     하면 화면은 그대로라 "검사가 안 잡는다" 로 보입니다. DOM 을
+     직접 건드리고, **집을 요소가 실제로 있는 화면**에서 합니다. */
+
+  /* PART 10-2 — 탭 숫자를 손으로 적으면 글을 한 편 쓸 때마다
+     어긋납니다. 하나를 엉뚱한 수로 바꿔 봅니다. */
+  ["글 목록 거르개 숫자가 센 값이다",
+   `var c = document.querySelectorAll(".chip-g-fil .chip")[1];
+    if(c) c.textContent = "창업 준비 999";`],
+
+  /* PART 10-3 — "작동하지 않는 검색창은 추가하지 않는다."
+     칸은 두고 **거르는 일만** 없애 봅니다. */
+  ["가이드 검색이 실제로 거른다",
+   `window.ctFind = function(){};`],
+
+  /* PART 11-3 — 답이 처음부터 펼쳐져 있으면 아코디언이 아닙니다. */
+  ["FAQ 가 접혔다 펴진다",
+   `[].slice.call(document.querySelectorAll(".faq-a")).forEach(function(e){
+      e.hidden = false; });`],
+
+  /* PART 11-2 — 비어 있는 카테고리 칩을 하나 끼워 넣어 봅니다
+     (눌러 보면 아무것도 없는 칸입니다 · 절대 규칙 2). */
+  ["FAQ 카테고리가 센 값이고 빈 칸이 없다",
+   `var ul = document.querySelector(".chip-g-fil");
+    if(ul){ var li = document.createElement("li");
+      li.innerHTML = '<a class="chip" href="/faq?c=etc">기타 0</a>';
+      ul.appendChild(li); }`],
+
+  /* PART 9-2 — 그 자리에서 고를 수 있어야 합니다. 체크칸을 **링크로**
+     되돌려 봅니다 (전에 그랬던 꼴입니다). */
+  ["계산 결과에서 서비스를 바로 고를 수 있다",
+   `[].slice.call(document.querySelectorAll("#pick .pk-ck")).forEach(function(e){
+      if(e.parentNode) e.parentNode.removeChild(e); });`],
+
   /* ══ 2026-10-11 전면 감사 1차 — 로그인 ═════════════════════════
      ⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — 그려 두고 DOM 을 건드립니다.
      "로그인이 설정되기 전에는 아무것도 안 낸다" 를 어기는 가장 흔한

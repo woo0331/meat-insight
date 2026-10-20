@@ -131,10 +131,17 @@ function StartPickBand(top, rest, ind){
        서비스 카드가 밀려납니다. 고르개 한 칸이고, 네이티브 피커라
        어르신도 익숙합니다 (PART 14-2). */
     '<div class="stB-ind">'+
-      '<label class="stB-ind-l" for="st-ind">업종을 고르시면 그 업종에 '+
+      '<label class="stB-ind-l" for="st-indsel">업종을 고르시면 그 업종에 '+
         '흔히 필요한 것부터 보여 드립니다</label>'+
       '<div class="stB-ind-r">'+
-        IndustrySelect("st-ind", ind || "", "startIndGo()", "업종을 고르지 않음")+
+        /* ⚠️⚠️ **id 를 `st-ind` 로 짓지 마세요.** 바로 아래 "업종별로
+           자세히" 의 펼침 목록이 그 id 를 쓰고 있어서, 겹치면
+           `getElementById()` 가 **먼저 나오는 이 고르개**를 집고
+           펼침 단추의 `aria-controls` 도 엉뚱한 데를 가리킵니다 —
+           실제로 그렇게 만들었다가 흐름 검사가 잡았습니다. 이
+           저장소가 `.lg` · `.how-g` · `.pkg-*` 로 겪은 **클래스
+           이름 겹침과 같은 사고**이고, id 는 더 조용합니다. */
+        IndustrySelect("st-indsel", ind || "", "startIndGo()", "업종을 고르지 않음")+
         '<span class="stB-ind-n">선택하지 않아도 됩니다</span>'+
       '</div>'+
     '</div>'+
@@ -176,7 +183,7 @@ function StartPickBand(top, rest, ind){
    바로 아래가 무엇으로 바뀌었는지 못 보십니다 — 이 저장소가 메인
    업종 거르개에서 `data-keep` 으로 지켜 둔 그 규칙입니다. */
 window.startIndGo = function(){
-  var sel = document.getElementById("st-ind");
+  var sel = document.getElementById("st-indsel");
   var v   = sel ? sel.value : "";
   go("/startup" + (v ? "?i=" + encodeURIComponent(v) : ""), { keepScroll:true });
 };

@@ -70,6 +70,71 @@ window.AM_PICK_TOP = {
   startup: ["area", "interior", "equip", "admin", "fund", "marketing"]
 };
 
+/* ── 업종별 추천 (2026-10-20 지시서 PART 4-4) ─────────────────────
+   > "예를 들어 카페 창업 선택 시 … 추천한다 · 추천 서비스는 기존
+   >  서비스 분류 체계에 연결한다 · **업종별 추천은 초기에는 명시적인
+   >  규칙 기반으로 구현한다** · 실제 데이터가 없는 상태에서 AI가
+   >  분석한 것처럼 표시하지 않는다."
+
+   ⚠️⚠️ **`amPickTop(전문관, 업종)` 이 업종을 한 글자도 안 읽고
+   있었습니다.** 인자로는 받는데 대표 목록이 `AM_PICK_TOP.startup` 의
+   박아 둔 여섯이라, 카페를 고르셔도 미용실을 고르셔도 **결과가
+   똑같았습니다** — `gu` · `amStore()` · `withEquip` · 푸터의
+   `stages` 로 겪은 "받아 놓고 안 읽는 칸" 입니다. 재서 알았습니다.
+
+   ⚠️⚠️ **`industries.js` 의 `startup` 차례로 대신할 수 없습니다.**
+   재 보니 **앞 여섯이 업종 열넷 전부 같습니다**
+   (item · store · area · interior · equip · furniture) — 그 차례가
+   가르는 것은 뒤쪽 멤버십(카페는 `supply`, 헬스는 `staff`)과
+   `amCatItems()`(시설 · 장비 하위)입니다. 그래서 **무엇을 앞에
+   낼지는 따로** 적습니다.
+
+   ⚠️⚠️ **새 분류를 만든 것이 아닙니다.** 전부 `catalog.js` 의 분류
+   key 이고, 그 업종의 `startup` 목록 **안에 있는 것만** 적습니다 —
+   없는 것을 추천하면 고르개에서 조용히 빠집니다 (`checkPickInd()` 가
+   빌드를 멈춥니다).
+
+   ⚠️⚠️ **"인기" · "많이 찾는" 이라고 쓰지 마세요.** 조회 · 클릭 ·
+   신청을 하나도 모으지 않아 무엇이 많이 나가는지 **우리는
+   모릅니다.** 이것은 **저희가 추려 둔 순서**이고 화면에 그렇게
+   적습니다. "AI 가 분석했습니다" 도 아닙니다 (절대 규칙 5).
+
+   ⚠️ **고객이 빼고 더할 수 있습니다** — 추천도 그냥 체크칸이라
+   끄시면 되고, 아래 "전체 서비스 보기" 에 나머지가 전부 있습니다
+   (PART 4-4 가 요구한 것입니다).
+
+   ⚠️ `기타`(etc)에는 적지 않았습니다 — 그건 업종이 아니라 **받는
+   그릇**이라, 거기에 추천을 적으면 어느 사장님에게도 안 맞습니다
+   (업종 글을 `etc` 에 쓰지 않는 것과 같은 까닭). 적지 않은 업종은
+   `AM_PICK_TOP` 의 기본 여섯이 그대로 섭니다. */
+window.AM_PICK_IND = {
+  startup: {
+    /* 주방 공사와 설비가 값을 가르고, 인허가(식품위생)가 먼저입니다 */
+    restaurant: ["interior", "equip", "admin", "it", "staff", "supply"],
+    cafe:       ["interior", "equip", "it", "admin", "marketing", "area"],
+    /* 주점은 업종 구분(일반 · 단란 · 유흥)이 먼저라 행정이 앞입니다 */
+    bar:        ["admin", "interior", "equip", "it", "area", "marketing"],
+    /* 미용은 샴푸대 · 배수 공사와 사람이 핵심입니다 */
+    hair:       ["interior", "equip", "staff", "admin", "marketing", "area"],
+    beauty:     ["interior", "equip", "admin", "marketing", "it", "area"],
+    /* 헬스는 기구 하중 · 소음과 회원 관리가 갈립니다 */
+    gym:        ["area", "interior", "equip", "staff", "it", "marketing"],
+    /* 학원은 학원이냐 교습소냐(행정)와 자리가 먼저입니다 */
+    academy:    ["admin", "area", "interior", "staff", "marketing", "it"],
+    pet:        ["admin", "interior", "equip", "supply", "marketing", "area"],
+    /* 소매는 자리와 공급 · 담배 · 주류 같은 별도 허가가 갈립니다 */
+    retail:     ["area", "store", "admin", "supply", "it", "interior"],
+    /* 무인은 기계와 결제 · 영상이 사업의 거의 전부입니다 */
+    unmanned:   ["equip", "it", "area", "interior", "admin", "clean"],
+    /* 숙박은 업종이 갈리고 소방이 따라옵니다 */
+    stay:       ["admin", "interior", "equip", "staff", "it", "marketing"],
+    /* 사무 · 전문서비스는 설비보다 계약과 사람입니다 */
+    office:     ["store", "area", "interior", "furniture", "it", "admin"],
+    /* 온라인은 점포 · 상권이 아예 없습니다 (그 업종 목록에도 없습니다) */
+    online:     ["it", "admin", "marketing", "supply", "interior", "fund"]
+  }
+};
+
 /* ── 쉬운 표시 이름 (§9-3) ───────────────────────────────────────
    > "전문용어보다 일상적인 표현을 먼저 사용한다."
 
@@ -82,10 +147,72 @@ window.AM_PICK_TOP = {
        뒤는 떼어 옮겨 중고로 팝니다.
    ⚠️ 적을 말이 없으면 **칸째 비웁니다** — 억지로 풀어 쓰면 뜻이
    달라집니다. 그때는 원래 이름이 그대로 나옵니다 (절대 규칙 2). */
+/* ── 빠른 선택 여섯 (2026-10-20 지시서 PART 5-3 · 6-2-B · 2-2 A) ──
+   > PART 2-2 A — "필요한 서비스를 이미 아는 고객은 업종이나 복잡한
+   >  질문을 거치지 않고 **서비스를 바로 선택할 수 있어야 한다.**"
+
+   ⚠️⚠️ **재 보니 첫 화면에 고를 수 있는 칸이 0개였습니다.** 묶음
+   여덟(여섯)이 전부 접힌 채 서서, 운영은 그 아래 **운영 체크리스트**
+   칸이 먼저 보이고 폐업 · 양도양수는 **보이는 칸이 하나도** 없었습니다
+   (창업만 대표 여섯이 보였습니다). 지시서가 세 전문관의 "주요 서비스
+   빠른 선택" 을 직접 적은 까닭이 그것입니다.
+
+   ⚠️⚠️ **같은 칸이 묶음 안에도 있습니다.** 그건 고장이 아닙니다 —
+   `pickPaint()` 가 화면의 **모든 `[data-pick]`** 을 저장된 값에 맞추기
+   때문에, 어느 쪽에서 고르셔도 둘이 같이 켜지고 바구니에는 한 번만
+   들어갑니다 (`amPickGet()` 이 중복을 걸러 냅니다). 묶음에서 빼면
+   "분야별로 보기" 가 그 분야의 전부가 아니게 됩니다.
+
+   ⚠️⚠️ **폐업은 철거를 맨 앞에 두지 않았습니다.** 이 저장소가 여러
+   곳에 못박아 둔 그대로입니다 — 양도 · 처분이 되면 철거비도
+   원상복구비도 줄어듭니다. 넘기기 · 팔기가 먼저입니다.
+
+   ⚠️ **"인기" · "많이 찾는" 이 아닙니다.** 이용 데이터를 하나도 모으지
+   않습니다 — 지시서가 적은 목록이고 화면에도 그렇게 적습니다.
+
+   ⚠️⚠️ **전부 `분류/하위` 꼴입니다 — 분류를 적지 마세요.** 분류를
+   적으면 바로 아래 묶음 머리와 **글자까지 같은 칸**이 되어, 한 화면에
+   같은 것이 두 번 나옵니다 (PART 16-12 "동일 서비스 중복 노출").
+   찍어 보고 알았습니다 — "매장 양도 / 시설 · 집기 처분 / 철거 /
+   원상복구 / 폐기물 · 수거" 여섯이 바로 밑 묶음 여섯과 1:1 이었습니다.
+   `checkSvcPick()` 이 분류를 적으면 빌드를 멈춥니다. */
+window.AM_PICK_QUICK = {
+  /* PART 5-3 — 인터넷·통신 / POS·결제 / 매장 수리 / 직원 채용 /
+     식자재·물품 / 세무·회계 */
+  operation: ["it/internet", "it/pos", "repair/aircon-fix", "staff/fulltime",
+              "supply/consumable", "admin/tax-agent"],
+  /* PART 6-2-B — 철거·원상복구 / 폐기물 처리 / 집기 매각 / 폐업 세무.
+     ⚠️⚠️ **철거를 맨 앞에 두지 않았습니다** — 양도 · 처분이 되면
+     철거비도 원상복구비도 줄어듭니다 (이 저장소가 여러 곳에 못박아
+     둔 그대로입니다). */
+  closure:   ["transfer/store-transfer", "asset/furniture", "demolish/full",
+              "restore/shop-restore", "waste/biz-waste", "tax/close-report"],
+  /* PART 7-2 — 넘기시는 분과 받으시는 분이 **같이** 쓰는 여섯입니다
+     (한쪽 것만 내면 다른 쪽이 "여긴 내 자리가 아니네" 가 됩니다). */
+  transfer:  ["transfer/store-transfer", "transfer/premium", "law/lease",
+              "repair/check-up", "it/pos", "asset/furniture"]
+};
+
+/* 빠른 선택을 한 벌로 — ⚠️ **없는 id 는 걸러 냅니다** (밖으로 나간
+   링크가 옛 id 를 들고 있을 수 있습니다). 빌드는 `checkSvcPick()` 이
+   멈춥니다. */
+window.amPickQuick = function(hallKey){
+  return ((window.AM_PICK_QUICK || {})[hallKey] || [])
+    .map(window.amPickOne).filter(Boolean);
+};
+
 window.AM_PICK_EASY = {
   "area":      "가게 자리 알아보기",
   "interior":  "가게 인테리어",
-  "equip":     "주방 기계 · 설비",
+  /* ⚠️⚠️ **업종이 드러나는 말을 쓰지 마세요** (2026-10-20 에 재서
+     찾았습니다). 여기 "주방 기계 · 설비" 라고 적혀 있었는데, 이 칸은
+     업종 열넷 **전부**에 나옵니다 — 미용실 · 헬스장 · 학원 · 사무실
+     사장님께는 남의 말이고, 이 저장소가 사진 · 썸네일 · 팔레트에서
+     여러 번 못박아 둔 "한 업종이 떠오르면 안 된다" 와 정면으로
+     어긋납니다. 업종별 장비는 `amCatItems()` 가 그 업종 것으로
+     바꿔 줍니다 (이 이름이 아니라 그쪽이 업종을 가릅니다).
+     ⚠️ `checkSvcPick()` 이 업종 낱말을 찾아 빌드를 멈춥니다. */
+  "equip":     "매장 기계 · 설비",
   "admin":     "사업자 등록 · 허가",
   "fund":      "창업 자금 · 대출",
   "marketing": "마케팅 · 홍보",
@@ -93,7 +220,7 @@ window.AM_PICK_EASY = {
   "store":     "가게 자리 찾기",
   "furniture": "매장 가구 · 집기",
   "it":        "POS · 인터넷 · CCTV",
-  "supply":    "식자재 · 소모품",
+  "supply":    "재료 · 소모품 들이기",
   "repair":    "기계 고치기 · 점검",
   "staff":     "직원 구하기",
   "clean":     "청소 · 방역"
@@ -242,14 +369,30 @@ window.amPickAll = function(hallKey, industryKey){
    멈춥니다 (`checkSvcPick()`). */
 window.amPickTop = function(hallKey, industryKey){
   var all = window.amPickAll(hallKey, industryKey);
-  return ((window.AM_PICK_TOP || {})[hallKey] || []).map(function(id){
+  return window.amPickTopIds(hallKey, industryKey).map(function(id){
     return all.filter(function(s){ return s.id === id; })[0];
   }).filter(Boolean);
 };
 
+/* 어느 여섯을 앞에 낼지 — ⚠️⚠️ **업종을 고르셨으면 그 업종 것**입니다
+   (PART 4-4). 적어 두지 않은 업종은 기본 여섯이 그대로 섭니다.
+   ⚠️ `amPickTop()` 과 `amPickRest()` 가 **둘 다 이것을 부릅니다** —
+   한쪽만 고치면 추천이 대표에도 나오고 "전체 서비스 보기" 에도
+   또 나와서, 같은 칸이 한 화면에 둘이 됩니다 (§3-2 중복 방지). */
+window.amPickTopIds = function(hallKey, industryKey){
+  var byInd = ((window.AM_PICK_IND || {})[hallKey] || {})[industryKey || ""];
+  return byInd || ((window.AM_PICK_TOP || {})[hallKey] || []);
+};
+
+/* 업종 추천을 쓰고 있는가 — 화면이 머리말을 바꾸는 데만 씁니다.
+   ⚠️ 추천이 **기본 여섯과 같아도** 참입니다 (업종을 고르셨으니까요). */
+window.amPickIndOn = function(hallKey, industryKey){
+  return !!((window.AM_PICK_IND || {})[hallKey] || {})[industryKey || ""];
+};
+
 /* 대표 여섯을 뺀 나머지 (§2-B "전체 서비스 보기") */
 window.amPickRest = function(hallKey, industryKey){
-  var ids = (window.AM_PICK_TOP || {})[hallKey] || [];
+  var ids = window.amPickTopIds(hallKey, industryKey);
   return window.amPickAll(hallKey, industryKey).filter(function(s){
     return ids.indexOf(s.id) < 0; });
 };

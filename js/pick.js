@@ -241,9 +241,15 @@ window.PickCard = function(s){
         ' data-pick="'+esc(s.id)+'"'+(on ? " checked" : "")+
         ' onchange="pickToggle(\''+esc(s.id)+'\', this)">'+
       '<span class="pk-i ia-t">'+art+'</span>'+
+      /* ⚠️⚠️ **하위는 어느 분야 것인지를 같이 냅니다.** "가구" ·
+         "폐업신고" 처럼 이름만 있으면 어느 분야인지 안 보이고,
+         바구니에서 섞이면 더 그렇습니다 — `PickSubRow()` 가 겹치는
+         이름에만 묶음을 붙이는 것과 같은 까닭입니다. 찍어 보고
+         알았습니다 (빠른 선택 여섯이 전부 이름 한 낱말이었습니다). */
       '<span class="pk-t">'+
         '<b>'+esc(amPickLabel(s))+'</b>'+
-        (s.easy && s.easy !== s.name ? '<i>'+esc(s.name)+'</i>' : "")+
+        (s.easy && s.easy !== s.name ? '<i>'+esc(s.name)+'</i>'
+          : (s.sub && s.desc ? '<i>'+esc(s.desc)+'</i>' : ""))+
       '</span>'+
     '</label>'+
   '</li>';
@@ -445,8 +451,24 @@ window.pickAddPack = function(key){
    처럼 붙여 치시는데, 저희 이름은 "에어컨 수리" 로 띄어 있습니다
    (메인 추천 검색어가 전부 0건이던 그 자리입니다). */
 function pickQOf(s){
-  var t = [s.easy || "", s.name || "", s.desc || ""].join(" ");
-  return (t + " " + t.replace(/\s+/g, "")).toLowerCase();
+  var t = [s.easy || "", s.name || "", s.desc || ""];
+  /* ⚠️⚠️ **분류 카드는 검색 전용 다른 말(`kw`)과 하위 이름까지
+     같이 넣습니다.** 2026-10-20 에 재 보니 창업 고르개에서
+     "간판" · "세금" · "포스" 가 전부 **0건**이었습니다 — 거기는
+     고르는 단위가 분류 열넷이라 그 낱말이 이름에 없었습니다.
+     손님은 분류 이름("인테리어 · 시공")을 모르고 **하려는 일**
+     ("간판")을 칩니다. `kw` 는 `catalog.js` 가 이미 들고 있던
+     칸이고(포스기 · 간판제작 …), 하위 이름은 그 분류가 실제로
+     다루는 것입니다 — **지어낸 말이 아닙니다.**
+     ⚠️ 하위 카드는 더 내려갈 것이 없어 건너뜁니다. */
+  if(!s.sub){
+    var c = (typeof amCat === "function") ? amCat(s.cat) : null;
+    if(c && c.kw) t.push(c.kw);
+    if(typeof amPickSubs === "function")
+      amPickSubs(s.id).forEach(function(x){ t.push(x.easy || ""); t.push(x.name || ""); });
+  }
+  var j = t.join(" ");
+  return (j + " " + j.replace(/\s+/g, "")).toLowerCase();
 }
 
 /* 세부 한 줄 — ⚠️ `<label>` 이 통째로 눌립니다 (높이는 `min-height`
@@ -601,8 +623,13 @@ window.pickFind = function(q){
   });
 
   /* 전체 목록(접힘)은 맞는 것이 있으면 **열어 둡니다** — 안 열면
-     검색이 찾았다고만 하고 아무것도 안 보입니다 */
-  if(q) pickFoldOpen("pkb-rest");
+     검색이 찾았다고만 하고 아무것도 안 보입니다.
+     ⚠️⚠️ **id 를 박지 않습니다.** 전문관마다 접힌 목록의 id 가 다르고
+     (`pkb-rest` · `st-rest`), 하나만 적어 두면 **다른 전문관에서는
+     검색이 찾았다고만 하고 아무것도 안 열립니다** — 에러도 안 나고
+     화면도 멀쩡합니다. 안에 있는 것을 전부 엽니다. */
+  if(q) [].slice.call(document.querySelectorAll("#pkb-find .is-fold-all[id]"))
+    .forEach(function(el){ pickFoldOpen(el.id); });
 
   var r = document.getElementById("pkb-r");
   if(r){
@@ -638,6 +665,12 @@ window.PickGroupBand = function(hallKey, side){
   });
   var rest = ((typeof amPickHallCats === "function") ? amPickHallCats(hallKey) : [])
     .filter(function(s){ return !inG[s.id]; });
+  /* ⚠️⚠️ **빠른 선택은 묶음에서 빼지 않습니다.** 빼면 "분야별로 보기"
+     가 그 분야의 전부가 아니게 됩니다. 같은 칸이 두 자리에 보여도
+     `pickPaint()` 가 화면의 **모든 `[data-pick]`** 을 맞추기 때문에
+     둘이 같이 켜지고, 바구니에는 한 번만 들어갑니다
+     (`amPickGet()` 이 중복을 걸러 냅니다). 눌러서 확인했습니다. */
+  var quick = (typeof amPickQuick === "function") ? amPickQuick(hallKey) : [];
 
   return '<section class="sec sec-ivory pkb-sel" id="pick"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
@@ -658,6 +691,24 @@ window.PickGroupBand = function(hallKey, side){
         '</span>'+
         '<p class="pkf-r" id="pkb-r" hidden></p>'+
       '</div>'+
+
+      /* ── 빠른 선택 여섯 (PART 2-2 A · 5-3 · 6-2-B) ───────────
+         ⚠️⚠️ **재 보니 첫 화면에 고를 수 있는 칸이 0개였습니다** —
+         묶음이 전부 접힌 채 서서, 운영은 그 아래 **운영 체크리스트**
+         칸이 먼저 보이고 폐업 · 양도양수는 보이는 칸이 하나도
+         없었습니다. 필요한 것을 이미 아시는 분이 **묶음을 먼저
+         펼쳐야** 고를 수 있는 꼴이었습니다.
+         ⚠️ 없으면 줄째 뺍니다 (절대 규칙 2 — 빈 머리말을 찍지
+         않습니다). */
+      (quick.length
+        ? '<div class="pkq">'+
+            '<p class="pkq-l">필요한 것이 정해져 있으시면 여기서 '+
+              '바로 고르세요</p>'+
+            '<ul class="pk-g pk-g-q">'+quick.map(PickCard).join("")+'</ul>'+
+            '<p class="pkq-n">여기 없는 것은 아래 분야별 목록에 '+
+              '전부 있습니다.</p>'+
+          '</div>'
+        : "")+
 
       '<ul class="opg-g">'+G.map(PickGroupCard).join("")+'</ul>'+
 

@@ -58,7 +58,7 @@ function PageStartup(){
      없어서 **운영 · 양도양수 · 폐업으로 가려면 헤더로 돌아가야**
      했습니다. 둘 다 이미 있던 공통 조각입니다 — 새로 만든 것이
      아닙니다. */
-  return StartIntro(ind) + StartPickBand(top, rest) + PickBasket() +
+  return StartIntro(ind) + StartPickBand(top, rest, ind) + PickBasket() +
     StartIndustryBand() + PackPickBand("start") + StartChecklist(ind) +
     StartGuideBand(ind) +
     HallCalcBand({ keys:START_CALC, tones:START_CALC_TONE,
@@ -107,21 +107,79 @@ function StartIntro(ind){
    적으면 분류를 늘릴 때 어긋납니다).
    ⚠️ 업종을 고르셨으면 **그 업종 차례**로 나옵니다 — 이 저장소에서
    업종이 갈리는 두 자리 가운데 하나(`amCatsFor()`)입니다. */
-function StartPickBand(top, rest){
+function StartPickBand(top, rest, ind){
+  /* ⚠️⚠️ **업종은 선택사항입니다** (PART 4-3). 안 고르셔도 서비스
+     고르기와 견적 신청이 그대로 됩니다 — 고르면 **그 업종에 흔히
+     필요한 것부터** 앞에 섭니다 (PART 4-4).
+     ⚠️⚠️ **"인기" · "많이 찾는" 이라고 쓰지 마세요.** 조회 · 클릭 ·
+     신청을 하나도 모으지 않아 무엇이 많이 나가는지 **우리는
+     모릅니다.** "AI 가 분석했습니다" 도 아닙니다 — 저희가 추려 둔
+     순서이고 화면이 그대로 적습니다 (절대 규칙 5). */
+  var on   = (typeof amPickIndOn === "function") && amPickIndOn("startup", ind);
+  var indN = (ind && typeof amIndustryName === "function") ? amIndustryName(ind) : "";
   return '<section class="sec sec-white stB" id="pick"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">STEP 01</p>'+
-      '<h2>필요한 서비스를 골라 주세요</h2>'+
+      '<h2>'+(on && indN
+        ? esc(indN)+' 창업에 필요한 것'
+        : '필요한 서비스를 골라 주세요')+'</h2>'+
       '<p><b>여러 개를 함께 고르실 수 있습니다.</b> 고르신 것은 '+
         '아래에 모이고, 한 번만 적어 보내시면 됩니다.</p>'+
     '</div>'+
+    /* ── 업종 고르개 (PART 4-2 ②) ───────────────────────────────
+       ⚠️ 칩 열넷을 깔지 않았습니다 — 폰에서 화면 하나를 먹고 그만큼
+       서비스 카드가 밀려납니다. 고르개 한 칸이고, 네이티브 피커라
+       어르신도 익숙합니다 (PART 14-2). */
+    '<div class="stB-ind">'+
+      '<label class="stB-ind-l" for="st-ind">업종을 고르시면 그 업종에 '+
+        '흔히 필요한 것부터 보여 드립니다</label>'+
+      '<div class="stB-ind-r">'+
+        IndustrySelect("st-ind", ind || "", "startIndGo()", "업종을 고르지 않음")+
+        '<span class="stB-ind-n">선택하지 않아도 됩니다</span>'+
+      '</div>'+
+    '</div>'+
+    (on && indN
+      ? '<p class="stB-why">'+esc(indN)+' 창업에 흔히 필요한 순서로 '+
+        '저희가 추려 둔 것입니다. <b>이용 통계가 아닙니다</b> — 필요 없는 '+
+        '것은 그냥 끄시고, 빠진 것은 아래 전체 서비스에서 더 고르시면 됩니다.</p>'
+      : "")+
+    /* ── 찾기 칸 (PART 3 통일) ─────────────────────────────────
+       ⚠️⚠️ **창업에만 없었습니다.** 운영 · 폐업 · 양도양수는
+       `PickGroupBand()` 안에 실제로 도는 찾기 칸이 있는데 창업만
+       빠져 있어서, 네 전문관의 흐름이 서로 달랐습니다 (PART 3 이
+       "레이아웃과 흐름을 통일" 이라고 적은 자리입니다).
+       ⚠️ `#pkb-find` 는 `pickFind()` 가 보는 울타리입니다 — 이름을
+       바꾸면 검색이 조용히 아무것도 못 찾습니다. */
+    '<div id="pkb-find">'+
+      '<div class="pkf">'+
+        '<label class="pkf-l" for="pkf-q">찾으시는 것을 적어 보세요</label>'+
+        '<span class="pkf-w">'+icon("search",18)+
+          '<input class="pkf-i" id="pkf-q" type="search" autocomplete="off"'+
+            ' placeholder="예: 인테리어, 간판, 세금, 포스"'+
+            ' oninput="pickFind(this.value)">'+
+        '</span>'+
+        '<p class="pkf-r" id="pkb-r" hidden></p>'+
+      '</div>'+
     '<ul class="pk-g">'+top.map(PickCard).join("")+'</ul>'+
     (rest.length
       ? FoldAll("st-rest", "전체 서비스 보기 ("+rest.length+"개 더)", "접기")+
         '<ul class="pk-g pk-g2 is-fold-all" id="st-rest">'+rest.map(PickCard).join("")+'</ul>'
       : "")+
+    '</div>'+
   '</div></section>';
 }
+
+/* 업종을 고르면 — ⚠️⚠️ **고르신 서비스를 지우지 않습니다.** 주소만
+   바뀌고 `am.pick.v1` 은 그대로라, 업종을 바꿔 보셔도 바구니가
+   비지 않습니다 (재서 확인했습니다).
+   ⚠️⚠️ **스크롤을 지킵니다** (`keepScroll`). 맨 위로 올라가 버리면
+   바로 아래가 무엇으로 바뀌었는지 못 보십니다 — 이 저장소가 메인
+   업종 거르개에서 `data-keep` 으로 지켜 둔 그 규칙입니다. */
+window.startIndGo = function(){
+  var sel = document.getElementById("st-ind");
+  var v   = sel ? sel.value : "";
+  go("/startup" + (v ? "?i=" + encodeURIComponent(v) : ""), { keepScroll:true });
+};
 
 /* ── 업종별로 자세히 (기존 보존 · §15) ────────────────────────────
    ⚠️⚠️ **지우면 `/startup/:업종` 열넷으로 가는 길이 없어집니다.**

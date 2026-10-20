@@ -5752,3 +5752,55 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
      되거나 자리 계산(--pk-bar-h)이 어긋납니다. */
   .bcta{ padding:var(--s7) 0; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   창업 준비 — 업종 고르개 + 업종 추천 안내 (2026-10-20 PART 4-2 · 4-4)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **맨 뒤에 둡니다.** 같은 특정도의 규칙이 앞에 있으면 뒤가
+   이깁니다 — 이 저장소가 `.f-r label` ↔ `.rqf-k`, `.ft a` ↔
+   `.ft-col a`, `.is-fold-all` ↔ `.pk-g` 로 네 번 겪은 자리입니다. */
+.stB-ind{
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+  gap:10px 16px; margin:0 0 18px;
+  padding:14px 18px; border:1px solid var(--line); border-radius:var(--r-in);
+  /* ⚠️⚠️ 새 색을 만들지 않았습니다 (PART 15-2). `--bg-ivory2` 를 쓰는
+     까닭은 **쪽 색을 저절로 따라가기 때문**입니다 — `.side-start` ·
+     `.side-close` 가 이 토큰을 다시 정의해서, 창업 화면에서는 블루
+     틴트 · 폐업 화면에서는 오렌지 틴트로 섭니다 (2026-10-09 §6).
+     `--bg-sky` 처럼 한쪽 색을 박아 두면 폐업 쪽에 그대로 가져다 쓸 때
+     그 칸만 차갑게 떠 보입니다. */
+  background:var(--bg-ivory2);
+}
+.stB-ind-l{ font-size:var(--t-sm); font-weight:700; color:var(--ink); margin:0; }
+.stB-ind-r{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+/* ⚠️ 누르는 것은 40px 이상입니다 — `padding` 만으로 만들면 짧은
+   이름에서 다시 낮아집니다 (`min-height` 로 잡습니다). */
+.stB-ind .sel{ min-height:44px; min-width:200px; }
+.stB-ind-n{ font-size:var(--t-cap); color:var(--ink3); }
+/* 업종 추천임을 밝히는 줄 — ⚠️ **지우지 마세요.** 이용 통계가 아니라
+   저희가 추려 둔 순서라는 것을 그 자리에서 말합니다 (절대 규칙 5). */
+.stB-why{
+  max-width:720px; margin:0 auto 20px; text-align:center;
+  font-size:var(--t-sm); color:var(--ink2); line-height:1.65;
+}
+.stB-why b{ color:var(--ink); }
+@media (max-width:640px){
+  .stB-ind{ flex-direction:column; align-items:stretch; text-align:center; }
+  .stB-ind-r{ justify-content:center; }
+  .stB-ind .sel{ width:100%; min-width:0; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   빠른 선택 여섯 (2026-10-20 PART 2-2 A · 5-3 · 6-2-B)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️ 묶음(`.opg-g`) **위**에 섭니다 — 묶음이 전부 접힌 채라 이 줄이
+   없으면 첫 화면에 고를 수 있는 칸이 하나도 없습니다. */
+.pkq{ margin:0 0 22px; }
+.pkq-l{
+  margin:0 0 12px; text-align:center;
+  font-size:var(--t-sm); font-weight:700; color:var(--ink);
+}
+.pkq-n{
+  margin:10px 0 0; text-align:center;
+  font-size:var(--t-cap); color:var(--ink3);
+}

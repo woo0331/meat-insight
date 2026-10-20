@@ -2280,6 +2280,12 @@ function checkSvcPick(W){
     }
   }
 
+  /* ⚠️⚠️ **업종이 드러나는 말을 쓰지 마세요.** 쉬운 이름은 업종 열넷
+     **전부**에 같은 글자로 나옵니다 — 2026-10-20 에 재 보니 `equip` 이
+     "주방 기계 · 설비" 라, 미용실 · 헬스장 · 학원 · 사무실 사장님께는
+     남의 말이었습니다. 업종을 가르는 것은 이 이름이 아니라
+     `amCatItems()`(그 업종의 장비 하위)입니다. */
+  const INDWORD = /주방|미용|헤어|네일|헬스|학원|교습|카페|음식점|식당|반려|애견|무인|숙박|모텔|주점|술집|편의점/;
   for(const id of Object.keys(EASY)){
     if(!EASY[id])
       throw new Error("쉬운 이름이 비었습니다 — " + id +
@@ -2287,6 +2293,91 @@ function checkSvcPick(W){
     if(!ok.has(id))
       throw new Error("쉬운 이름이 고를 수 없는 서비스를 가리킵니다 — " + id +
         "\n   → 영영 안 쓰이는 줄입니다 (AM_PICK_EASY)");
+    if(INDWORD.test(EASY[id]))
+      throw new Error("쉬운 이름에 업종이 드러나는 말이 있습니다 — " + id +
+        " → \"" + EASY[id] + "\"" +
+        "\n   → 업종 열넷 전부에 같은 글자로 나옵니다. 업종별 차이는" +
+        " amCatItems() 가 냅니다 (AM_PICK_EASY)");
+  }
+
+  /* ── 업종별 추천 (2026-10-20 PART 4-4) ────────────────────────
+     ⚠️⚠️ 막는 것 여섯 —
+       ① 없는 전문관 · ② 없는 업종 key · ③ 개수가 지시서와 다름
+       ④ 추천이 겹침 · ⑤ 그 전문관에서 고를 수 없는 id
+       ⑥ **그 업종 목록에 없는 분류를 추천** — 카페에 `staff` 를
+          적으면 그 업종 차례에 없는 것을 앞에 내는 꼴입니다
+     ⚠️ `기타`(etc)에 적는 것도 막습니다 — 받는 그릇이라 추천이
+     어느 사장님에게도 안 맞습니다. */
+  /* ── 빠른 선택 여섯 (2026-10-20 PART 2-2 A) ──────────────────
+     ⚠️⚠️ 막는 것 넷 — ① 개수 ② 겹침 ③ 없는 id ④ **내려놓은 서비스**.
+     ③ 을 그냥 두면 `amPickQuick()` 이 **조용히 빼서** 다섯 칸이 되고,
+     첫 화면에 고를 칸이 모자란 그 고장이 그대로 돌아옵니다. */
+  const QUICK = W.AM_PICK_QUICK || {};
+  const OFF   = new Set(W.AM_PICK_OFF || []);
+  for(const hall of Object.keys(QUICK)){
+    const ids = QUICK[hall] || [];
+    if(ids.length !== 6)
+      throw new Error("빠른 선택이 " + ids.length + "개입니다 (" + hall +
+        ") — 여섯이라야 합니다 (PART 5-3 · 6-2-B)");
+    const seen = new Set();
+    for(const id of ids){
+      if(seen.has(id))
+        throw new Error("빠른 선택이 겹칩니다 — " + hall + " · " + id);
+      seen.add(id);
+      if(OFF.has(id) || OFF.has(id.split("/")[0]))
+        throw new Error("내려놓은 서비스를 빠른 선택에 적었습니다 — " + id +
+          "\n   → AM_PICK_OFF 에 있는 것은 고르개에 안 나와야 합니다");
+      if(!W.amPickOne(id))
+        throw new Error("빠른 선택 \"" + id + "\" 가 없는 서비스입니다 (" +
+          hall + ")\n   → `분류/하위` 꼴이라야 합니다" +
+          " (그냥 두면 조용히 빠져 다섯 칸이 됩니다)");
+      /* ⚠️⚠️ **분류를 적으면 바로 아래 묶음 머리와 같은 칸이 됩니다** —
+         한 화면에 같은 것이 두 번 나옵니다 (PART 16-12). 찍어 보고
+         알았습니다. */
+      if(id.indexOf("/") < 0)
+        throw new Error("빠른 선택에 분류를 적었습니다 — " + hall + " · " + id +
+          "\n   → 바로 아래 묶음 머리와 같은 칸이 됩니다 (PART 16-12)" +
+          "\n   → `분류/하위` 꼴로 적으세요 (예: " + id + "/…)");
+    }
+  }
+
+  const IND  = W.AM_PICK_IND || {};
+  const INDS = new Map((W.AM_INDUSTRIES || []).map(i => [i.key, i]));
+  for(const hall of Object.keys(IND)){
+    const side = (W.AM_PICK_SIDE || {})[hall];
+    if(!side)
+      throw new Error("AM_PICK_IND 에 \"" + hall + "\" 전문관이 있는데 " +
+        "AM_PICK_SIDE 에는 없습니다 — amPickAll() 이 빈 배열을 돌려줍니다");
+    const can = new Set(W.amPickAll(hall).map(s => s.id));
+    const want = TOP_N[hall];
+    for(const ind of Object.keys(IND[hall])){
+      if(ind === "etc")
+        throw new Error("업종 추천을 `기타`(etc)에 적었습니다 — 그건 업종이 " +
+          "아니라 받는 그릇입니다 (적지 않으면 기본 여섯이 섭니다)");
+      const it = INDS.get(ind);
+      if(!it)
+        throw new Error("없는 업종에 추천을 적었습니다 — " + ind +
+          "\n   → js/data/industries.js 의 key 입니다");
+      const ids = IND[hall][ind] || [];
+      if(want && ids.length !== want)
+        throw new Error("업종 추천이 " + ids.length + "개입니다 (" + hall +
+          " · " + ind + ") — 지시서는 " + want + "입니다");
+      const seen = new Set();
+      const mine = new Set([].concat(it[side === "close" ? "closure" : "startup"] || []));
+      for(const id of ids){
+        if(seen.has(id))
+          throw new Error("업종 추천이 겹칩니다 — " + ind + " · " + id);
+        seen.add(id);
+        if(!can.has(id))
+          throw new Error("업종 추천 \"" + id + "\" 를 " + hall +
+            " 전문관에서 고를 수 없습니다 (" + ind + ")");
+        if(!mine.has(id))
+          throw new Error("업종 추천 \"" + id + "\" 가 " + it.name +
+            " 업종 목록에 없습니다" +
+            "\n   → js/data/industries.js 의 그 업종 " +
+            (side === "close" ? "closure" : "startup") + " 차례에 있어야 합니다");
+      }
+    }
   }
 }
 

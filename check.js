@@ -3269,7 +3269,13 @@ const AUDIT = `(() => {
     /* ⚠️ "더 보기" 는 그대로 스크롤을 지켜야 합니다 — 그쪽은 scrollTo 를
        안 부르는 길이라, 이 한 줄과 서로 다른 자리입니다. */
     const keep = document.querySelector("[data-keep]");
-    if(keep && keep.getAttribute("href") && !/^\//.test(keep.getAttribute("href")))
+    /* ⚠️⚠️ **여기에 정규식을 쓰지 마세요.** 검사 본문은 템플릿
+       문자열이라 백슬래시를 한 겹으로 적으면 **먹어서 정규식 앞이
+       깨집니다** — 처음에 그렇게 적었다가 "Unexpected token '.'" 로
+       그 검사가 통째로 안 돌고 prove-checks 가 배포를 막았습니다
+       (이 저장소의 열다섯 번째 escape 사고). indexOf 로 집습니다. */
+    const kh = keep ? (keep.getAttribute("href") || "") : "";
+    if(kh && kh.indexOf("/") !== 0)
       return "더 보기 링크가 사이트 안 주소가 아닙니다";
     return true;`);
 

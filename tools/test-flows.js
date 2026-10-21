@@ -744,6 +744,59 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await clear();
  await pg.setViewportSize({ width:1280, height:900 });
 
+ /* ══════════════════════════════════════════════════════════════
+    【10】 새로고침하면 맨 위에서 시작합니다 (2026-10-21 사장님 지시)
+
+    ⚠️⚠️ **전수 점검은 이걸 못 봅니다** — 한 화면 안에서 도는 검사라
+    다시 띄울 수가 없습니다. 거기서 보는 것은 "그 한 줄이 살아 있는가"
+    까지이고, **실제로 내려가서 새로고침해 보는 것**은 여기입니다.
+    ══════════════════════════════════════════════════════════════ */
+ console.log("\n【10】 새로고침하면 맨 위");
+ await pg.goto(B+"/startup",{waitUntil:"networkidle"});
+ await pg.waitForTimeout(300);
+ const tall = await pg.evaluate(()=>document.documentElement.scrollHeight);
+ say(tall > 2000, "내려갈 만큼 긴 화면이다", tall+"px");
+ await pg.evaluate(()=>window.scrollTo(0, 1500));
+ await pg.waitForTimeout(200);
+ const before = await pg.evaluate(()=>Math.round(window.scrollY));
+ say(before > 1000, "일단 내려가 있다", before+"px");
+ await pg.reload({waitUntil:"networkidle"});
+ /* ⚠️ 복원은 load **뒤에** 비동기로 일어납니다 — 바로 재면 0 이
+    나왔다가 그 뒤에 내려갈 수 있습니다. 넉넉히 기다린 뒤 잽니다
+    (끄지 않은 상태에서 1500 으로 돌아오는 것을 확인했습니다). */
+ await pg.waitForTimeout(900);
+ const after = await pg.evaluate(()=>Math.round(window.scrollY));
+ say(after === 0, "새로고침하면 맨 위에서 시작한다", after+"px");
+ /* ⚠️⚠️ **"더 보기" 는 그대로 스크롤을 지킵니다** — 목록을 늘리는
+    것인데 맨 위로 올라가면 방금 보던 자리를 잃고, 그러면 한 번 더
+    안 누릅니다. 위 한 줄이 이쪽까지 끌고 가면 안 됩니다.
+
+    ⚠️ 지금은 **화면에 "더 보기" 가 하나도 없습니다** — 업체 0곳 ·
+    매물 0건이라 24장을 넘는 목록이 없습니다. 그래서 링크를 찾아
+    누르는 꼴로 적으면 **늘 건너뛰는 검사**가 되고, 그건 검사가
+    아닙니다 (이 저장소가 "통과만 하고 아무것도 안 보는 검사" 로
+    여러 번 겪은 자리). 링크가 지나는 **그 길**(go 의 keepScroll)을
+    직접 눌러 봅니다 — 첫 매물이 올라오는 날 쓰는 길과 같습니다. */
+ await pg.goto(B+"/content",{waitUntil:"networkidle"});
+ await pg.waitForTimeout(300);
+ await pg.evaluate(()=>window.scrollTo(0, 1200));
+ await pg.waitForTimeout(200);
+ const keepBefore = await pg.evaluate(()=>Math.round(window.scrollY));
+ await pg.evaluate(()=>go(location.pathname+"?n=48", { keepScroll:true }));
+ await pg.waitForTimeout(400);
+ const keepAfter = await pg.evaluate(()=>Math.round(window.scrollY));
+ say(keepBefore > 600 && Math.abs(keepAfter - keepBefore) < 80,
+     "더 보기 길(keepScroll)은 그대로 스크롤을 지킨다",
+     keepBefore+"px → "+keepAfter+"px");
+ /* ⚠️ 반대로 평범한 링크는 맨 위로 올라가야 합니다 — 둘이 같아지면
+    목록을 늘릴 때마다 보던 자리를 잃습니다 */
+ await pg.evaluate(()=>window.scrollTo(0, 1200));
+ await pg.waitForTimeout(200);
+ await pg.evaluate(()=>go("/faq"));
+ await pg.waitForTimeout(400);
+ const plain = await pg.evaluate(()=>Math.round(window.scrollY));
+ say(plain === 0, "평범한 링크는 맨 위로 올라간다", plain+"px");
+
  console.log("\n【5】 콘솔 오류");
  say(errs.length===0,"JS 에러 없음",errs.join(" / "));
  console.log(bad?("\n❌ "+bad+"건 실패"):"\n✅ 흐름 전부 통과");

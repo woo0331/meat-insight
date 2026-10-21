@@ -666,6 +666,28 @@ function setMeta(attr, key, val){
   el.setAttribute("content", val || "");
 }
 
+/* ⚠️⚠️ **새로고침하면 맨 위에서 시작합니다** (2026-10-21 사장님 지시)
+
+   브라우저 기본값(`history.scrollRestoration = "auto"`)은 새로고침할 때
+   **전에 보던 자리로 되돌려 놓습니다.** 그래서 F5 를 눌러도 화면이
+   중간에서 떴습니다 — 라우터는 이미 맨 위로 올리는데(`render()` 의
+   `scrollTo(0,0)`) 브라우저가 **그 뒤에** 다시 내려놓기 때문입니다
+   (복원은 load 뒤에 비동기로 일어납니다).
+
+   ⚠️ 이 줄을 DOMContentLoaded 안에 넣지 마세요 — 거기보다 **앞**이라야
+   복원을 막습니다. 스크립트가 `defer` 라 문서를 다 읽은 뒤에 돌고,
+   그때 끄면 아직 복원 전입니다.
+
+   ⚠️ **"더 보기"(`data-keep`)는 영향이 없습니다** — 그쪽은 애초에
+   `scrollTo` 를 안 부릅니다 (목록을 늘리는 것인데 맨 위로 올라가면
+   방금 보던 자리를 잃습니다).
+   ⚠️ **뒤로 가기도 전부터 맨 위였습니다** — `popstate` 가 `render()` 를
+   부르고 거기서 `scrollTo(0,0)` 합니다. 그래서 브라우저의 되돌려 놓기는
+   **라우터와 싸우기만** 하고 얻는 것이 없었습니다. */
+try{
+  if("scrollRestoration" in history) history.scrollRestoration = "manual";
+}catch(e){}
+
 /* ── 시작 ──────────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", function(){
   mountChrome();

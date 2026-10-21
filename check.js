@@ -3252,6 +3252,27 @@ const AUDIT = `(() => {
     return true;`);
   /* ⚠️ 검색은 **히어로의 대형 검색창**(§6)과 헤더 아이콘 둘입니다.
      히어로 쪽은 위의 "히어로에서 바로 찾고 바로 갈라진다" 가 봅니다. */
+  /* 2026-10-21 사장님 지시 — "새로고침하면 맨 상단 페이지로 올라가는
+     기능을 만들어줘".
+
+     ⚠️⚠️ **브라우저가 되돌려 놓는 것을 끈 것**입니다. 기본값(auto)은
+     새로고침할 때 전에 보던 자리로 내려놓는데, 라우터는 이미 맨 위로
+     올리고 있어서(render 의 scrollTo) 둘이 싸우기만 했습니다.
+     ⚠️ 여기서 보는 것은 **그 한 줄이 살아 있는가**까지입니다 — 실제로
+     내려가서 새로고침해 보는 것은 tools/test-flows.js 가 합니다
+     (전수 점검은 한 화면 안에서 도는 검사라 다시 띄울 수가 없습니다). */
+  await f("새로고침하면 맨 위에서 시작한다", "/providers", `
+    if(!("scrollRestoration" in history))
+      return true;                      /* 아주 옛 브라우저 — 끌 것이 없습니다 */
+    if(history.scrollRestoration !== "manual")
+      return "브라우저가 스크롤을 되돌려 놓습니다 — " + history.scrollRestoration;
+    /* ⚠️ "더 보기" 는 그대로 스크롤을 지켜야 합니다 — 그쪽은 scrollTo 를
+       안 부르는 길이라, 이 한 줄과 서로 다른 자리입니다. */
+    const keep = document.querySelector("[data-keep]");
+    if(keep && keep.getAttribute("href") && !/^\//.test(keep.getAttribute("href")))
+      return "더 보기 링크가 사이트 안 주소가 아닙니다";
+    return true;`);
+
   await f("어느 화면에서나 검색으로 가는 길이 있다", "/providers", `
     /* ⚠️ 2026-10-03 — 넓은 화면에서는 **입력칸**, 좁은 화면에서는
        **돋보기 단추**입니다 (지시서 §2). 둘 중 하나는 늘 보여야 합니다.

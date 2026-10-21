@@ -729,6 +729,160 @@ const ADM_DEAL = [
     await ctx.close();
   }
 
+  /* ══ ⑩ 매직링크 — 화면 쪽 (js/auth.js) ═══════════════════════════
+     ⚠️⚠️ **여기도 검사가 0건이었습니다.** tools/test-auth.js(189)는
+     서버층(api/_auth.js · session · me · deal)을 보고, 브라우저 쪽은
+     아무도 안 보고 있었습니다 — 토큰이 주소창에 남는가 · 메일이
+     있는지 없는지를 갈라서 말하는가 · 만료되면 새로 받는가가 전부
+     그 안입니다. */
+  console.log("\n⑩ 매직링크 — 토큰이 주소창에 남지 않습니다");
+  {
+    const ctx = await br.newContext({ viewport:{ width:1440, height:900 } });
+    const pg = await ctx.newPage();
+    const errs = [], hit = [];
+    pg.on("pageerror", e => errs.push(String(e)));
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"customer",
+        conf:{ url:"https://zz.supabase.co", anonKey:"ZZ-ANON" } }) }));
+    await pg.route("**/api/me**", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"customer",
+        requests:[], quotes:[], state:null }) }));
+    await pg.route("https://zz.supabase.co/**", r => {
+      hit.push({ u:r.request().url(), h:r.request().headers() });
+      r.fulfill({ status:200, contentType:"application/json", body:"{}" });
+    });
+    /* 매직링크가 돌아온 꼴 그대로 */
+    await pg.goto(base + "/my#access_token=ZZTOKEN&refresh_token=ZZREF" +
+      "&expires_in=3600&token_type=bearer", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(500);
+    /* ⚠️⚠️ 안 지우면 주소창에 토큰이 남아 어깨너머로 보이고,
+       공유하면 그대로 넘어갑니다 */
+    const loc = await pg.evaluate(() => ({ h:location.hash, p:location.pathname }));
+    ok("해시를 바로 지운다 (주소창에 토큰이 안 남는다)",
+        loc.h === "" && loc.p === "/my", JSON.stringify(loc));
+    ok("토큰을 이 브라우저에 담았다", await pg.evaluate(() => {
+      try { return JSON.parse(localStorage.getItem("am.auth.v1")).access_token === "ZZTOKEN"; }
+      catch (e) { return false; } }));
+    /* 유효기간을 **시각**으로 바꿔 둡니다 — 숫자로 들고 있으면
+       새로고침할 때마다 다시 세야 합니다 */
+    ok("유효기간을 시각으로 바꿔 둔다", await pg.evaluate(() => {
+      try { const t = JSON.parse(localStorage.getItem("am.auth.v1"));
+            return t.at > Date.now() + 3000000; } catch (e) { return false; } }));
+    ok("보낼 때 토큰을 머리에 붙인다", await pg.evaluate(() =>
+      (amAuthHeaders().authorization || "") === "Bearer ZZTOKEN"));
+    /* 나가기 — ⚠️ 서버에 알리는 것이 실패해도 이 브라우저에서는 지웁니다 */
+    await pg.evaluate(() => amAuthOut());
+    await pg.waitForTimeout(300);
+    ok("나가면 이 브라우저에서 반드시 지운다",
+        (await pg.evaluate(() => localStorage.getItem("am.auth.v1"))) === null);
+    ok("JS 에러 0", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
+  console.log("\n⑩-2 만료된 토큰은 조용히 새로 받습니다 · 로그아웃도 서버에");
+  {
+    const ctx = await br.newContext({ viewport:{ width:1440, height:900 } });
+    const pg = await ctx.newPage();
+    const errs = [], hit = [];
+    pg.on("pageerror", e => errs.push(String(e)));
+    let first = true;
+    await pg.route("**/api/session", r => {
+      /* 처음 한 번은 "들어와 있지 않다" 로 — 화면이 새로 받아 다시 묻습니다 */
+      const body = first
+        ? { auth:true, signedIn:false,
+            conf:{ url:"https://zz.supabase.co", anonKey:"ZZ-ANON" } }
+        : { auth:true, signedIn:true, role:"customer",
+            conf:{ url:"https://zz.supabase.co", anonKey:"ZZ-ANON" } };
+      first = false;
+      r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify(body) });
+    });
+    await pg.route("**/api/me**", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"customer",
+        requests:[], quotes:[], state:null }) }));
+    await pg.route("https://zz.supabase.co/**", r => {
+      hit.push({ u:r.request().url(), h:r.request().headers(),
+                 b:r.request().postData() || "" });
+      r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ access_token:"NEW", refresh_token:"NEWREF",
+          expires_in:3600 }) });
+    });
+    /* 만료된 토큰을 들고 들어옵니다 */
+    await pg.addInitScript("try{localStorage.setItem('am.auth.v1'," +
+      "JSON.stringify({access_token:'OLD',refresh_token:'ZZREF'," +
+      "at:Date.now()-1000}))}catch(e){}");
+    await pg.goto(base + "/my", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(600);
+    const ref = hit.filter(x => x.u.indexOf("grant_type=refresh_token") >= 0);
+    ok("만료되면 새로 받는다", ref.length === 1, JSON.stringify(hit.map(x => x.u)));
+    /* ⚠️⚠️ **화면에 내려가는 것은 주소와 공개 키 둘뿐입니다** — service
+       key 는 RLS 를 통째로 지나갑니다 (api/_auth.js 의 publicConf). */
+    ok("공개 키를 apikey 로 보낸다 (service key 가 아님)",
+        ref.length === 1 && ref[0].h.apikey === "ZZ-ANON", JSON.stringify(ref[0] && ref[0].h));
+    ok("새 토큰으로 갈아 끼운다", await pg.evaluate(() => {
+      try { return JSON.parse(localStorage.getItem("am.auth.v1")).access_token === "NEW"; }
+      catch (e) { return false; } }));
+    ok("JS 에러 0", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
+  console.log("\n⑩-3 메일이 있는지 없는지를 갈라서 말하지 않습니다");
+  {
+    const ctx = await br.newContext({ viewport:{ width:1440, height:900 } });
+    const pg = await ctx.newPage();
+    const errs = [], otp = [];
+    pg.on("pageerror", e => errs.push(String(e)));
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:false,
+        conf:{ url:"https://zz.supabase.co", anonKey:"ZZ-ANON" } }) }));
+    await pg.route("**/api/me**", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:false }) }));
+    await pg.route("https://zz.supabase.co/**", r => {
+      otp.push({ u:r.request().url(), b:r.request().postData() || "" });
+      r.fulfill({ status:200, contentType:"application/json", body:"{}" });
+    });
+    await pg.goto(base + "/my", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(400);
+    /* 가입된 메일 · 없는 메일 — 둘 다 **같은 말**이라야 합니다. 갈라
+       주면 어느 메일이 가입돼 있는지 확인해 가며 긁을 수 있습니다
+       (claim_request 가 틀린 까닭을 안 가르는 것과 같은 규칙). */
+    const say = async (em) => {
+      await pg.fill("#my-em", em);
+      await pg.click(".my-in button[type=submit]");
+      await pg.waitForTimeout(400);
+      return pg.evaluate(() => document.getElementById("my-in-n").textContent);
+    };
+    const a = await say("there@example.com");
+    const b = await say("nobody@example.com");
+    ok("보냈다고 말한다", a.includes("보냈습니다"), a);
+    ok("가입 여부를 갈라서 말하지 않는다", a === b, a + " / " + b);
+    /* ⚠️ 못 보냈으면 보냈다고 말하지 않습니다 (절대 규칙 5) */
+    ok("메일 꼴이 아니면 보내지 않는다", await (async () => {
+      const n0 = otp.length;
+      const s = await pg.evaluate(() => {
+        document.getElementById("my-em").removeAttribute("type");
+        document.getElementById("my-em").value = "zzz";
+        return null; });
+      await pg.click(".my-in button[type=submit]");
+      await pg.waitForTimeout(300);
+      const t = await pg.evaluate(() =>
+        document.getElementById("my-in-n").textContent);
+      return otp.length === n0 && t.includes("확인해 주세요");
+    })());
+    /* ⚠️⚠️ 돌아올 자리를 같이 보냅니다 — Supabase 쪽 Redirect URLs 에
+       그 주소가 없으면 링크가 기본 주소로 갑니다 */
+    ok("돌아올 자리를 같이 보낸다",
+        otp.length >= 1 && otp[0].b.indexOf("email_redirect_to") >= 0,
+        otp[0] && otp[0].b);
+    ok("JS 에러 0", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
   await br.close(); srv.close();
   console.log("\n" + (fail ? "❌" : "✅") + " 통과 " + pass + " · 실패 " + fail);
   process.exit(fail ? 1 : 0);

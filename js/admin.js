@@ -114,6 +114,67 @@ function adHealthView(h){
    에러도 안 납니다.** 한 덩어리로 보면 어느 쪽이 빠졌는지 모릅니다.
    ⚠️ 옛 답(`db` 가 없는 배포)에도 걸려 넘어지지 않게 합니다 — 환경
    변수를 넣고 **다시 배포하기 전**에는 함수가 옛것입니다. */
+/* ── DB 가 **몇 번째 판**인가 (2026-10-21) ─────────────────────
+   ⚠️⚠️ **환경변수가 들어간 것과 DB 가 준비된 것은 다른 일입니다.**
+   키를 다 넣어도 `0008`~`0011` 을 안 돌리셨으면 견적도 · 항목별
+   배정도 · 사진도 안 되는데, 이 칸은 그동안 "다 설정되어 있습니다"
+   라고 했습니다 — 그걸 아는 길이 Supabase 를 열고 `db/verify.sql` 을
+   붙여 넣는 것 하나였습니다.
+   ⚠️⚠️ **남은 파일 이름을 손으로 적지 마세요.** 빌드가
+   `db/migrations` 를 읽어 `api/_migrations.js` 에 적고 서버가 셉니다 —
+   마이그레이션을 늘리면 저절로 따라옵니다.
+   ⚠️ **못 읽은 것을 "안 돌렸습니다" 로 적지 않습니다** — 멀쩡한 DB 를
+   고치러 가시게 됩니다. */
+function adHealthMig(d){
+  var m = d && d.mig;
+  if(!m) return "";                 /* 옛 배포이거나 저장이 꺼져 있습니다 */
+  if(!m.known)
+    return '<p class="ad-note">지금 DB 가 <b>몇 번째 판인지 읽지 못했습니다.</b> '+
+      '<code>db/verify.sql</code> 을 Supabase SQL Editor 에 붙여 넣어 보세요 '+
+      '(<code>docs/GO-LIVE.md</code> 1번).</p>';
+  if(m.at >= m.want)
+    return '<div class="ad-h ad-h-on"><p><b>DB 가 저장소와 같은 판입니다 '+
+      '(판 '+esc(String(m.at))+').</b> 마이그레이션은 더 돌리실 것이 없습니다.'+
+      (m.at > m.want ? ' ⚠️ DB 가 저장소보다 앞섭니다 — 배포가 옛것이거나 '+
+        '저장소에 없는 SQL 을 돌리신 것입니다.' : '')+'</p></div>';
+  return '<div class="ad-h ad-h-off"><p><b>마이그레이션이 '+
+    esc(String(m.want - m.at))+'개 남았습니다</b> — 지금 판 '+
+    esc(String(m.at))+' · 저장소는 판 '+esc(String(m.want))+'. '+
+    '안 돌리시면 <b>견적 · 항목별 배정 · 회원 저장 · 사진</b>이 '+
+    '조용히 안 됩니다 (에러가 안 납니다).</p>'+
+    '<ul class="ad-rows">'+m.left.map(function(f){
+      return '<li><span>db/migrations/'+esc(f)+'</span><em class="off">남음</em></li>';
+    }).join("")+'</ul>'+
+    '<p class="ad-note">Supabase → SQL Editor 에 <b>통째로</b> 붙여 넣고 '+
+    '<b>번호 차례대로</b> Run 하세요. 끝나면 <code>db/verify.sql</code> 로 '+
+    '열세 줄이 ✅ 인지 보세요 (<code>docs/GO-LIVE.md</code> 1번).</p></div>';
+}
+
+/* ── 버킷이 **실제로** 비공개이고 상한이 걸려 있는가 ───────────
+   ⚠️⚠️ 서명된 올리기 주소는 그 자체로 크기·형식을 막지 않습니다 —
+   서버와 DB 가 보는 것은 "적어 보낸 값" 이고 **마지막으로 막는 것이
+   버킷 설정**입니다 (GO-LIVE §2). 이름이 환경변수에 있는 것과 버킷이
+   제대로 선 것은 다른 일입니다. */
+function adHealthBucket(d){
+  var b = d && d.bucketCheck;
+  if(!b || !b.known)
+    return '⚠️ 버킷이 <b>비공개</b>인지, <b>8MB · jpeg · png · webp · pdf</b> '+
+      '상한이 버킷에도 걸려 있는지 <b>직접</b> 보세요 — 여기서 읽지 못했습니다.';
+  if(!b.found)
+    return '⚠️⚠️ <b>그 이름의 버킷을 찾지 못했습니다.</b> '+
+      '<code>INTAKE_BUCKET</code> 에 적힌 이름과 Supabase → Storage 의 '+
+      '버킷 이름이 같은지 보세요.';
+  var bad = [];
+  if(!b.priv) bad.push('<b>공개 버킷입니다</b> — 경로를 아는 누구나 사장님들이 '+
+    '올린 사진을 봅니다. Storage → 그 버킷 → <b>Public 을 끄세요.</b>');
+  if(!b.size) bad.push('<b>크기 상한이 안 걸려 있거나 8MB 보다 헐겁습니다.</b>');
+  if(!b.mime) bad.push('<b>허용 형식이 넷과 다릅니다</b> — '+
+    'image/jpeg · image/png · image/webp · application/pdf');
+  if(!bad.length)
+    return '버킷도 <b>비공개 · 8MB · 형식 넷</b>으로 맞게 서 있습니다.';
+  return '⚠️⚠️ 버킷 설정에 손보실 것이 있습니다 — <br>· '+bad.join('<br>· ');
+}
+
 function adHealthDb(h){
   if(!h || !h.db)
     return '<p class="ad-note">DB · 로그인 상태는 이 배포에 아직 없습니다 — '+
@@ -154,9 +215,7 @@ function adHealthDb(h){
   if(typeof d.bucket !== "undefined"){
     if(d.photo)
       ph = '<p class="ad-note">사진 · 서류 첨부가 <b>켜져 있습니다.</b> '+
-        '⚠️ 버킷이 <b>비공개</b>인지, <b>8MB · jpeg · png · webp · pdf</b> '+
-        '상한이 버킷에도 걸려 있는지 한 번 보세요 — 서명된 올리기 주소는 '+
-        '그 자체로 크기와 형식을 막지 않습니다.';
+        adHealthBucket(d);
     else if(d.store)
       ph = '<p class="ad-note">사진 · 서류 첨부는 <b>아직 꺼져 있습니다</b> — '+
         '<code>INTAKE_BUCKET</code> 이 없습니다. 접수 완료 안내에 사진 칸이 '+
@@ -170,6 +229,8 @@ function adHealthDb(h){
   return '<h3 class="ad-h3">DB · 로그인</h3>'+
     '<div class="ad-h '+(d.store && d.auth ? "ad-h-on" : "ad-h-off")+'">'+
       '<p>'+msg+'</p></div>'+
+    /* ⚠️ 키가 다 들어가도 **마이그레이션이 남아 있으면** 반쯤 됩니다 */
+    adHealthMig(d)+
     ph+
     '<ul class="ad-rows">'+rows.map(function(r){
       return '<li><span>'+esc(r[0])+'</span>'+

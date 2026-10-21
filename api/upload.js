@@ -198,3 +198,11 @@ module.exports = async function handler(req, res){
      service key 도 · 버킷 설정도 내려가지 않습니다. */
   return res.status(200).json({ ok:true, url:sg.url });
 };
+
+/* ⚠️⚠️ **관리자 점검이 같은 값을 읽습니다 — 두 곳에 적지 마세요.**
+   `api/admin-health.js` 가 버킷 설정(크기 상한 · 허용 형식)이 여기와
+   같은지 봅니다. 여기서 늘리고 버킷을 안 고치면 **마지막 자물쇠만
+   헐거워지는데** 화면으로는 표가 안 납니다 (GO-LIVE §2). */
+module.exports.OK_MIME   = OK_MIME;
+module.exports.MAX_BYTES = MAX_BYTES;
+module.exports.bucket    = bucket;

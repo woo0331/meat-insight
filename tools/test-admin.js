@@ -1431,6 +1431,65 @@ function ok(name, cond, extra) {
     ok("값을 섞어 보내도 화면에 안 찍는다",
        !/eyJ|supabase\.co|intake-secret-name/i.test(t), t.slice(0, 200));
 
+    /* == 판 번호 — 키가 다 들어가도 마이그레이션이 남아 있으면 ====
+       2026-10-21. ⚠️⚠️ 환경변수가 들어간 것과 DB 가 준비된 것은 다른
+       일입니다. 이 칸은 그동안 키만 보고 "다 설정되어 있습니다" 라고
+       했는데, `0008`~`0011` 을 안 돌리셨으면 **견적도 · 항목별 배정도 ·
+       회원 저장도 · 사진도 조용히 안 됩니다** (에러가 안 납니다). */
+    const DB_ON = { url:true, anonKey:true, svcKey:true, bucket:true,
+                    store:true, auth:true, photo:true };
+    t = await show(Object.assign({}, DB_ON, { mig:{ known:true, want:11, at:8,
+      left:["0009_request_item.sql","0010_user_state.sql","0011_request_photo.sql"] } }));
+    ok("덜 돌렸으면 몇 개 남았는지 말한다", /3개 남았습니다/.test(t), t.slice(0, 300));
+    /* ⚠️ 어느 파일인지 **이름으로** 말해야 사장님이 바로 돌리십니다 */
+    ok("남은 파일 이름을 그대로 낸다",
+       /0009_request_item\.sql/.test(t) && /0011_request_photo\.sql/.test(t));
+    ok("무엇이 안 되는지 같이 말한다", /견적/.test(t) && /사진/.test(t));
+
+    t = await show(Object.assign({}, DB_ON,
+      { mig:{ known:true, want:11, at:11, left:[] } }));
+    ok("다 돌렸으면 더 돌릴 것이 없다고 말한다",
+       /같은 판입니다/.test(t) && !/남았습니다/.test(t), t.slice(0, 300));
+
+    /* ⚠️⚠️ **못 읽은 것을 "안 돌렸습니다" 로 적지 않습니다** — 멀쩡한
+       DB 를 고치러 가시게 됩니다 */
+    t = await show(Object.assign({}, DB_ON,
+      { mig:{ known:false, want:11, at:null, left:[] } }));
+    ok("못 읽으면 모른다고만 한다",
+       /읽지 못했습니다/.test(t) && !/남았습니다/.test(t), t.slice(0, 300));
+
+    /* ⚠️ 옛 배포(이 칸이 없는 답)에서는 **줄째 뺍니다** */
+    t = await show(DB_ON);
+    ok("옛 배포에서는 판 번호 줄을 아예 안 낸다", !/판 /.test(t), t.slice(0, 300));
+
+    /* == 버킷이 실제로 비공개이고 상한이 걸려 있는가 ================
+       ⚠️⚠️ 이름이 환경변수에 있는 것과 버킷이 제대로 선 것은 다른
+       일입니다 — 서명된 올리기 주소는 그 자체로 크기·형식을 막지
+       않아서 **마지막으로 막는 것이 버킷 설정**입니다. */
+    t = await show(Object.assign({}, DB_ON, { bucketCheck:{ known:true,
+      found:true, priv:true, size:true, mime:true } }));
+    ok("버킷이 맞으면 맞다고 말한다", /맞게 서 있습니다/.test(t), t.slice(0, 300));
+
+    t = await show(Object.assign({}, DB_ON, { bucketCheck:{ known:true,
+      found:true, priv:false, size:true, mime:true } }));
+    ok("공개 버킷이면 그렇게 말한다", /공개 버킷입니다/.test(t), t.slice(0, 300));
+    ok("끄는 법까지 말한다", /Public/.test(t));
+
+    t = await show(Object.assign({}, DB_ON, { bucketCheck:{ known:true,
+      found:false, priv:false, size:false, mime:false } }));
+    ok("버킷을 못 찾으면 이름을 보라고 한다",
+       /찾지 못했습니다/.test(t) && /INTAKE_BUCKET/.test(t), t.slice(0, 300));
+
+    t = await show(Object.assign({}, DB_ON, { bucketCheck:{ known:false,
+      found:false, priv:false, size:false, mime:false } }));
+    ok("못 읽으면 직접 보라고 한다", /직접/.test(t), t.slice(0, 300));
+
+    /* ⚠️⚠️ 값을 섞어 보내도 화면에 안 찍습니다 (버킷 이름 포함) */
+    t = await show(Object.assign({}, DB_ON, { bucket:"intake-secret-name",
+      bucketCheck:{ known:true, found:true, priv:true, size:true, mime:true,
+                    name:"intake-secret-name" } }));
+    ok("판 · 버킷 칸에도 값을 안 찍는다", !/intake-secret-name/.test(t), t.slice(0, 300));
+
     ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
     await ctx.close();
   }

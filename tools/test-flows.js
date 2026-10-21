@@ -488,7 +488,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     필요한데 `/api/session` 이 `auth:false` 라 화면이 그 구간째 안
     그립니다 — 돌려서 "통과" 로 적으면 그게 하지 않은 일을 했다고
     말하는 것입니다 (절대 규칙 5). 서버층과 DB 는 `tools/test-auth.js`
-    (189개) · `tools/test-sql.js` · `tools/test-admin.js` 가 봅니다.
+    (202개) · `tools/test-sql.js` · `tools/test-admin.js` 가 봅니다.
     ⚠️ 주석에 백틱을 쓰지 마세요. */
  console.log("\n【8】 §20 시나리오 A ~ D · H — 네 전문관을 같은 차례로");
 

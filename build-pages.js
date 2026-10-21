@@ -3232,6 +3232,31 @@ function checkMigDocs(W){
     .filter(f => /^[0-9]{4}_.+\.sql$/.test(f) && !/_down\.sql$/.test(f)).sort();
   if(!migs.length) throw new Error("db/migrations 에 마이그레이션이 없습니다 — 검사가 틀렸습니다");
 
+  /* ⚠️⚠️ **빌드가 적어 준 목록을 실제로 읽고 있는가.**
+     `api/_migrations.js` 를 만들어 두기만 하고 아무도 안 읽으면,
+     `/admin` 1번 칸이 "다 설정되어 있습니다" 라고 말하는 동안
+     마이그레이션이 남아 있어도 **아무 데서도 안 나옵니다** — 이
+     저장소가 `gu` · `amStore()` · `withEquip` · 푸터의 `stages` 로
+     네 번 겪은 "만들어 놓고 안 쓰는 칸" 입니다. */
+  /* ⚠️⚠️ **"있는가" 가 아니라 "부르는가" 를 셉니다.** 처음에 이름이
+     파일에 있는지만 봤는데, 부르는 줄을 빼도 **함수 정의가 그 이름을
+     들고 있어서** 그냥 통과했습니다 — 되돌려 보고 알았습니다 (이
+     저장소가 "엉뚱한 까닭으로 통과" 로 여러 번 겪은 자리). 정의 한 번 +
+     부르는 자리 한 번이라 **둘 이상**이라야 합니다. */
+  [["api/admin-health.js", "_migrations.js", 1,
+    "빌드가 적어 준 마이그레이션 목록을 안 읽습니다"],
+   ["js/admin.js", "adHealthMig", 2,
+    "/admin 1번 칸이 판 번호를 안 냅니다"],
+   ["js/admin.js", "adHealthBucket", 2,
+    "/admin 1번 칸이 버킷 설정을 안 봅니다"]].forEach(function(w){
+    const f = path.join(ROOT, w[0]);
+    if(!fs.existsSync(f)) return;
+    const n = fs.readFileSync(f, "utf8").split(w[1]).length - 1;
+    if(n < w[2])
+      throw new Error(w[0] + " 가 " + w[1] + " 를 안 부릅니다 (" + n + "번) — " + w[3] +
+        " (키를 다 넣어도 DB 가 덜 서 있으면 조용히 반쯤 됩니다)");
+  });
+
   const rd = path.join(ROOT, "db", "README.md");
   if(!fs.existsSync(rd)) throw new Error("db/README.md 가 없습니다 — 세우는 차례가 사라졌습니다");
   const doc = fs.readFileSync(rd, "utf8");
@@ -3587,6 +3612,7 @@ for(const hall of Object.keys(W.AM_PICK_GROUP || {})){
     gs.reduce((n, g) => n + g.subs.length, 0) + "개가 실제 서비스를 가리킵니다");
 }
 writeSvcList(W);
+writeMigList();
 
 /* ⚠️⚠️ **서버가 "없는 서비스" 를 걸러낼 수 있게 목록을 내려놓습니다**
    (2026-10-17 창업 준비 §8 "잘못된 서비스 ID 차단").
@@ -3600,6 +3626,72 @@ writeSvcList(W);
    "빌드 결과가 커밋과 같은가" 가 잡습니다.
    ⚠️⚠️ **내려놓는 것은 key 뿐입니다** — 이름 · 설명을 같이 쓰면 이름을
    바꿀 때마다 이 파일이 바뀌고, 서버는 이름을 쓸 일이 없습니다. */
+/* ⚠️⚠️ **빌드가 마이그레이션 목록을 서버에 내려놓습니다** (2026-10-21).
+
+   `/admin` 1번 칸은 그동안 **환경변수가 들어갔는지**만 말했습니다 —
+   키가 다 들어가 있어도 `0008`~`0011` 을 안 돌리셨으면 화면은
+   "됩니다" 라고 하는데 실제로는 견적도 항목도 사진도 안 됩니다.
+   그걸 아는 길이 Supabase 를 열고 `db/verify.sql` 을 붙여 넣는 것
+   하나였습니다.
+
+   이제 `api/admin-health.js` 가 `schema_version` 을 읽어 **지금 몇
+   번째 판인지**와 **남은 파일 이름**을 말합니다. 그 기대값을 손으로
+   적으면 마이그레이션을 늘릴 때마다 어긋나므로(이 저장소가
+   `db/verify.sql` 에서 겪은 자리) **여기서 폴더를 읽어 적습니다.**
+
+   ⚠️ 판 번호는 **파일이 스스로 적는 값**(`insert into schema_version`)
+   입니다 — 파일 이름 앞 네 자리로 짐작하지 않습니다. 둘이 어긋나면
+   빌드가 멈춥니다.
+   ⚠️ `_down.sql` 은 되돌리기용이라 돌리는 목록이 아닙니다.
+   ⚠️ 손으로 고치지 마세요 — 빌드가 돌 때마다 다시 씁니다. */
+function writeMigList(){
+  const dir = path.join(ROOT, "db", "migrations");
+  if(!fs.existsSync(dir)) throw new Error("db/migrations 가 없습니다");
+  const files = fs.readdirSync(dir)
+    .filter(f => /^[0-9]{4}_.+\.sql$/.test(f) && !/_down\.sql$/.test(f)).sort();
+  if(!files.length) throw new Error("db/migrations 에 마이그레이션이 없습니다");
+
+  /* ⚠️⚠️ **한 파일이 자기 번호만 적는 것이 아닙니다.** `0001_init.sql`
+     에는 insert 가 없고 `0002` 가 1 과 2 를 같이 적습니다 (판 번호 표를
+     거기서 만들기 때문입니다). 그래서 **모든 파일에서 쌍을 모아** 놓고
+     파일마다 제 번호가 그 안에 있는지 봅니다 — 파일 하나만 보면
+     0001 에서 멈춥니다 (실제로 그렇게 적었다가 빌드가 멈췄습니다). */
+  const said = {};
+  files.forEach(function(f){
+    const sql = fs.readFileSync(path.join(dir, f), "utf8");
+    const blocks = sql.match(/insert\s+into\s+schema_version[\s\S]*?;/gi) || [];
+    blocks.forEach(function(b){
+      const re = /\(\s*([0-9]+)\s*,\s*'([^']+)'/g;
+      let m;
+      while((m = re.exec(b))) said[Number(m[1])] = m[2];
+    });
+  });
+
+  const rows = files.map(function(f){
+    const n    = Number(f.slice(0, 4));
+    const want = f.replace(/\.sql$/, "");
+    if(said[n] !== want)
+      throw new Error(f + " 의 판 번호가 schema_version 에 안 적혀 있습니다 — " +
+        "적힌 값 " + JSON.stringify(said[n] || null) + " · 기대 " +
+        JSON.stringify(want) + ". 돌리고도 몇 번째인지 알 수가 없습니다");
+    return [n, f];
+  }).sort((a, b) => a[0] - b[0]);
+
+  const out =
+    "/* ⚠️⚠️ **빌드가 만드는 파일입니다 — 손으로 고치지 마세요.**\n" +
+    "   `node build-pages.js` 가 `db/migrations` 를 읽어 적습니다.\n" +
+    "   `api/admin-health.js` 가 이것과 DB 의 `schema_version` 을 맞추어\n" +
+    "   **남은 파일 이름**을 관리자 화면에 알려 줍니다. */\n" +
+    "module.exports = " + JSON.stringify(rows) + ";\n";
+  const at = path.join(ROOT, "api/_migrations.js");
+  const was = fs.existsSync(at) ? fs.readFileSync(at, "utf8") : "";
+  if(was !== out){
+    fs.writeFileSync(at, out);
+    console.log("   마이그레이션 목록을 다시 적었습니다 — api/_migrations.js (판 " +
+      rows[rows.length - 1][0] + ")");
+  }
+}
+
 function writeSvcList(W){
   const cats = (W.AM_CATS || []).map(c => c.key).filter(Boolean);
   if(!cats.length) throw new Error("AM_CATS 가 비어 서비스 목록을 못 만듭니다");

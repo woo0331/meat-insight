@@ -28,7 +28,89 @@ function has(name){
   return typeof v === "string" && v.trim().length > 0;
 }
 
-module.exports = function handler(req, res){
+/* ⚠️⚠️ **빌드가 적어 준 목록입니다** (`db/migrations` 를 읽습니다).
+   손으로 적으면 마이그레이션을 늘릴 때마다 어긋나고, 그러면 이 칸이
+   **다 돌린 DB 를 "덜 돌렸습니다" 로** 잡거나 그 반대가 됩니다. */
+var MIGS = [];
+try { MIGS = require("./_migrations.js"); } catch(e){ MIGS = []; }
+
+/* 사진 상한은 `api/upload.js` 한 곳입니다 — 두 곳에 적으면 늘린 날
+   한쪽만 바뀝니다. */
+var UP = {};
+try { UP = require("./upload.js"); } catch(e){ UP = {}; }
+
+/* 짧게 끊고 물어봅니다. ⚠️ 여기서 오래 기다리면 관리자 첫 화면이
+   통째로 늦어집니다 — 못 읽으면 "모름" 으로 두고 넘어갑니다. */
+var PROBE_MS = 4000;
+
+async function ask(pathAndQuery){
+  var url = String(process.env.SUPABASE_URL || "").trim().replace(/\/+$/, "");
+  var key = String(process.env.SUPABASE_SERVICE_KEY || "").trim();
+  if(!url || !key) return null;
+  var ctl = new AbortController();
+  var t = setTimeout(function(){ ctl.abort(); }, PROBE_MS);
+  try{
+    var r = await fetch(url + pathAndQuery, {
+      signal: ctl.signal,
+      headers: { apikey: key, authorization: "Bearer " + key }
+    });
+    if(!r.ok) return null;
+    /* ⚠️ `r.json()` 이 아니라 **글로 받아 풉니다** — `api/_db.js` 와 같은
+       방식입니다. 본문이 JSON 이 아닐 때 던지는 자리를 한 곳으로
+       모으고, 검사의 가짜 fetch 도 `text()` 를 씁니다. */
+    var t = await r.text();
+    try { return JSON.parse(t); } catch(e){ return null; }
+  }catch(e){
+    return null;      /* ⚠️ 까닭을 화면에 싣지 않습니다 — 주소가 섞여 나옵니다 */
+  }finally{ clearTimeout(t); }
+}
+
+/* 지금 DB 가 몇 번째 판인가 · 무엇이 남았는가.
+   ⚠️ 판 번호와 파일 이름은 **공개 저장소에 그대로 있는 값**이라
+   돌려줘도 새는 것이 없습니다. 그 밖에는 아무것도 안 싣습니다. */
+async function migState(){
+  var top = MIGS.length ? MIGS[MIGS.length - 1][0] : 0;
+  if(!top) return { known:false, want:0, at:null, left:[] };
+  var rows = await ask("/rest/v1/schema_version?select=n&order=n.desc&limit=1");
+  if(!Array.isArray(rows))
+    return { known:false, want:top, at:null, left:[] };   /* 못 읽었습니다 */
+  var at = rows.length ? Number(rows[0].n) : 0;
+  return {
+    known: true, want: top, at: at,
+    left: MIGS.filter(function(m){ return m[0] > at; }).map(function(m){ return m[1]; })
+  };
+}
+
+/* 버킷이 **실제로** 비공개이고 상한이 걸려 있는가.
+   ⚠️⚠️ 이름이 환경변수에 있는 것과 버킷이 제대로 선 것은 다른 일입니다 —
+   서명된 올리기 주소는 그 자체로 크기·형식을 막지 않아서, **마지막으로
+   막는 것이 버킷 설정**입니다 (GO-LIVE §2).
+   ⚠️ 버킷 이름도 · 설정값도 안 돌려줍니다. true/false 뿐입니다. */
+async function bucketState(){
+  var name = typeof UP.bucket === "function" ? UP.bucket() : "";
+  if(!name) return { known:false, found:false, priv:false, size:false, mime:false };
+  var b = await ask("/storage/v1/bucket/" + encodeURIComponent(name));
+  if(!b || typeof b !== "object" || !b.name)
+    return { known:false, found:false, priv:false, size:false, mime:false };
+
+  var max  = Number(UP.MAX_BYTES || 0);
+  var want = (UP.OK_MIME || []).slice().sort().join(",");
+  var got  = Array.isArray(b.allowed_mime_types)
+    ? b.allowed_mime_types.map(function(x){ return String(x).toLowerCase(); }).sort().join(",")
+    : "";
+  var lim  = Number(b.file_size_limit);
+
+  return {
+    known: true,
+    found: true,
+    priv:  b.public === false,
+    /* 걸려 있고 · 우리 상한보다 헐겁지 않아야 합니다 */
+    size:  !!(lim > 0 && max > 0 && lim <= max),
+    mime:  !!(got && want && got === want)
+  };
+}
+
+module.exports = async function handler(req, res){
   if(req.method !== "GET"){
     res.setHeader("Allow", "GET");
     return res.status(405).json({ error: "GET 으로 보내 주세요" });
@@ -88,6 +170,19 @@ module.exports = function handler(req, res){
      (dbReady() && bucket()). 두 곳이 어긋나면 화면에는 칸이 없는데
      이 칸만 "됩니다" 라고 말합니다. */
   db.photo = db.store && db.bucket;
+
+  /* ── 실제로 돌아간 판 번호 · 버킷 설정 (2026-10-21) ──────────────
+     ⚠️⚠️ **환경변수가 들어간 것과 DB 가 준비된 것은 다른 일입니다.**
+     키를 다 넣어도 `0008`~`0011` 을 안 돌리셨으면 견적도 · 항목별
+     배정도 · 사진도 안 되는데, 이 칸은 그동안 "됩니다" 라고 했습니다 —
+     그걸 아는 길이 Supabase 를 열고 `db/verify.sql` 을 붙여 넣는 것
+     하나였습니다. 이제 여기서 **세어서** 말합니다.
+     ⚠️ 둘 다 **못 읽으면 "모름"** 입니다 (`known:false`) — 못 읽은 것을
+     "안 됩니다" 로 적으면 멀쩡한 DB 를 고치러 가십니다. */
+  if(db.store){
+    try{ db.mig = await migState(); }catch(e){}
+    if(db.bucket){ try{ db.bucketCheck = await bucketState(); }catch(e){} }
+  }
 
   /* 캐시하면 다시 배포한 뒤에도 옛 답이 나옵니다 — 그게 제일 헷갈립니다 */
   res.setHeader("cache-control", "no-store");

@@ -923,15 +923,35 @@ console.log("\n── /api/admin-health — 값은 안 돌려준다");
   const Hhealth = require(path.join(ROOT, "api", "admin-health.js"));
   const keep = process.env.ADMIN_PASSWORD;
 
-  envAll();
+  /* ⚠️⚠️ **이 주소는 2026-10-21 로 async 가 됐습니다** — DB 를 두드려
+     판 번호와 버킷 설정을 읽습니다. `await` 없이 부르면 `r.body` 가
+     아직 null 이라 **검사가 터집니다** (실제로 그랬습니다). */
+  const MIGS_ALL = require(path.join(ROOT, "api", "_migrations.js"));
+  const TOP = MIGS_ALL[MIGS_ALL.length - 1][0];
+  /* 판 번호 · 버킷을 어떻게 돌려줄지 — 갈래마다 바꿔 끼웁니다 */
+  let svN = TOP, bucketRow = { name:"intake", public:false,
+    file_size_limit:8388608,
+    allowed_mime_types:["image/jpeg","image/png","image/webp","application/pdf"] };
+  function healthMock(){
+    mock([
+      [/schema_version/, function(){ return body(200, svN === null ? [] : [{ n:svN }]); }],
+      [/\/storage\/v1\/bucket\//, function(){
+        return bucketRow === null ? body(404, {}) : body(200, bucketRow); }]
+    ]);
+  }
+
+  envAll(); healthMock();
   delete process.env.ADMIN_PASSWORD;
   let r = res();
-  Hhealth(req({ method:"GET" }), r);
+  await Hhealth(req({ method:"GET" }), r);
   ok("관리자 잠금이 없으면 아무것도 안 알려 준다", r.code === 503, r.body);
+  ok("잠금이 없으면 DB 를 두드리지도 않는다", calls.length === 0, calls.map(c => c.url));
 
   process.env.ADMIN_PASSWORD = "pw-test";
+  process.env.INTAKE_BUCKET  = "intake";
+  healthMock();
   r = res();
-  Hhealth(req({ method:"GET" }), r);
+  await Hhealth(req({ method:"GET" }), r);
   ok("DB · 로그인 상태를 같이 돌려준다",
      r.body.db && r.body.db.store === true && r.body.db.auth === true, r.body.db);
   /* ⚠️⚠️ 주소도 · 키도 · 길이도 안 나갑니다 */
@@ -945,20 +965,115 @@ console.log("\n── /api/admin-health — 값은 안 돌려준다");
      쪽이 빠졌는지 모르고, 그 차이가 그대로 사장님이 겪는 증상입니다
      (접수번호는 나오는데 로그인만 안 되는 꼴). */
   setEnv({ SUPABASE_URL:URL_, SUPABASE_SERVICE_KEY:SVC });
-  r = res(); Hhealth(req({ method:"GET" }), r);
+  healthMock(); r = res(); await Hhealth(req({ method:"GET" }), r);
   ok("공개 키만 빠지면 로그인만 꺼진다",
      r.body.db.store === true && r.body.db.auth === false, r.body.db);
 
   setEnv({ SUPABASE_URL:URL_, SUPABASE_ANON_KEY:ANON });
-  r = res(); Hhealth(req({ method:"GET" }), r);
+  healthMock(); r = res(); await Hhealth(req({ method:"GET" }), r);
   ok("서버 키만 빠지면 저장만 꺼진다",
      r.body.db.store === false && r.body.db.auth === true, r.body.db);
 
   /* ⚠️ 공백만 있는 값은 **없는 것**입니다 — Vercel 에 빈 칸을
      저장하면 "넣었다" 고 착각하게 됩니다. */
   setEnv({ SUPABASE_URL:URL_, SUPABASE_ANON_KEY:"   ", SUPABASE_SERVICE_KEY:SVC });
-  r = res(); Hhealth(req({ method:"GET" }), r);
+  healthMock(); r = res(); await Hhealth(req({ method:"GET" }), r);
   ok("공백만 있는 값은 없는 것으로 본다", r.body.db.auth === false, r.body.db);
+
+  /* ── 지금 DB 가 몇 번째 판인가 (2026-10-21) ────────────────────
+     ⚠️⚠️ 키를 다 넣어도 마이그레이션이 남아 있으면 **견적도 · 항목별
+     배정도 · 사진도 조용히 안 됩니다.** 그동안 이 칸은 "다 설정되어
+     있습니다" 라고만 했습니다. */
+  envAll(); process.env.INTAKE_BUCKET = "intake";
+  svN = TOP; healthMock();
+  r = res(); await Hhealth(req({ method:"GET" }), r);
+  ok("다 돌렸으면 남은 것이 없다",
+     r.body.db.mig && r.body.db.mig.known === true &&
+     r.body.db.mig.at === TOP && r.body.db.mig.left.length === 0, r.body.db.mig);
+  /* ⚠️⚠️ **기대값을 손으로 적지 않습니다** — 빌드가 db/migrations 를
+     읽어 적은 목록에서 셉니다. 마이그레이션을 늘리면 저절로 따라옵니다. */
+  ok("저장소의 판 번호를 손으로 안 적는다", r.body.db.mig.want === TOP, r.body.db.mig);
+
+  svN = TOP - 3; healthMock();
+  r = res(); await Hhealth(req({ method:"GET" }), r);
+  ok("덜 돌렸으면 남은 파일 이름을 낸다",
+     r.body.db.mig.left.length === 3 &&
+     r.body.db.mig.left.every(f => /^[0-9]{4}_.+\.sql$/.test(f)), r.body.db.mig);
+
+  /* ⚠️⚠️ **못 읽은 것을 "안 돌렸습니다" 로 적지 않습니다** — 멀쩡한
+     DB 를 고치러 가시게 됩니다 (알림이 실패해도 상태를 안 되돌리는
+     것과 같은 규칙: 모르는 것은 모른다고 합니다). */
+  mock([[/schema_version/, function(){ return body(500, {}); }],
+        [/\/storage\/v1\/bucket\//, function(){ return body(200, bucketRow); }]]);
+  r = res(); await Hhealth(req({ method:"GET" }), r);
+  ok("못 읽으면 모른다고 한다",
+     r.body.db.mig.known === false && r.body.db.mig.at === null, r.body.db.mig);
+
+  /* 저장이 꺼져 있으면 두드리지 않습니다 — 두드릴 키가 없습니다 */
+  setEnv({ SUPABASE_URL:URL_, SUPABASE_ANON_KEY:ANON });
+  healthMock();
+  r = res(); await Hhealth(req({ method:"GET" }), r);
+  ok("저장이 꺼져 있으면 DB 를 두드리지 않는다",
+     !r.body.db.mig && calls.length === 0, calls.map(c => c.url));
+
+  /* ── 버킷이 실제로 비공개이고 상한이 걸려 있는가 ──────────────
+     ⚠️⚠️ 서명된 올리기 주소는 **그 자체로** 크기·형식을 막지 않습니다 —
+     마지막으로 막는 것이 버킷 설정입니다. 이름이 환경변수에 있는 것과
+     버킷이 제대로 선 것은 다른 일입니다. */
+  envAll(); process.env.INTAKE_BUCKET = "intake";
+  bucketRow = { name:"intake", public:false, file_size_limit:8388608,
+    allowed_mime_types:["image/jpeg","image/png","image/webp","application/pdf"] };
+  svN = TOP; healthMock();
+  r = res(); await Hhealth(req({ method:"GET" }), r);
+  ok("맞게 선 버킷은 넷 다 참",
+     r.body.db.bucketCheck && r.body.db.bucketCheck.found &&
+     r.body.db.bucketCheck.priv && r.body.db.bucketCheck.size &&
+     r.body.db.bucketCheck.mime, r.body.db.bucketCheck);
+
+  bucketRow = { name:"intake", public:true, file_size_limit:8388608,
+    allowed_mime_types:["image/jpeg","image/png","image/webp","application/pdf"] };
+  healthMock(); r = res(); await Hhealth(req({ method:"GET" }), r);
+  ok("공개 버킷이면 잡는다", r.body.db.bucketCheck.priv === false, r.body.db.bucketCheck);
+
+  bucketRow = { name:"intake", public:false, file_size_limit:null,
+    allowed_mime_types:null };
+  healthMock(); r = res(); await Hhealth(req({ method:"GET" }), r);
+  ok("상한이 안 걸려 있으면 잡는다",
+     r.body.db.bucketCheck.size === false && r.body.db.bucketCheck.mime === false,
+     r.body.db.bucketCheck);
+
+  /* ⚠️ 우리 상한보다 **헐거운** 것도 잡습니다 — 8MB 를 넘겨 받는
+     버킷이면 마지막 자물쇠가 풀린 것입니다 */
+  bucketRow = { name:"intake", public:false, file_size_limit:52428800,
+    allowed_mime_types:["image/jpeg","image/png","image/webp","application/pdf"] };
+  healthMock(); r = res(); await Hhealth(req({ method:"GET" }), r);
+  ok("8MB 보다 헐거우면 잡는다", r.body.db.bucketCheck.size === false,
+     r.body.db.bucketCheck);
+
+  /* ⚠️ 형식이 **하나라도 더** 있으면 다릅니다 (gif 를 받으면 안 됩니다) */
+  bucketRow = { name:"intake", public:false, file_size_limit:8388608,
+    allowed_mime_types:["image/jpeg","image/png","image/webp","application/pdf","image/gif"] };
+  healthMock(); r = res(); await Hhealth(req({ method:"GET" }), r);
+  ok("형식이 하나라도 더 있으면 잡는다", r.body.db.bucketCheck.mime === false,
+     r.body.db.bucketCheck);
+
+  bucketRow = null; healthMock();
+  r = res(); await Hhealth(req({ method:"GET" }), r);
+  ok("그 이름의 버킷이 없으면 못 찾았다고 한다",
+     r.body.db.bucketCheck.found === false, r.body.db.bucketCheck);
+
+  /* ⚠️⚠️ 버킷 **이름도 · 설정값도** 안 나갑니다 — 그 글자만으로
+     버킷을 두드려 볼 수 있습니다 (api/upload.js 가 답에 버킷 경로를
+     안 싣는 것과 같은 까닭). */
+  bucketRow = { name:"intake-secret", public:false, file_size_limit:8388608,
+    allowed_mime_types:["image/jpeg","image/png","image/webp","application/pdf"] };
+  process.env.INTAKE_BUCKET = "intake-secret";
+  healthMock(); r = res(); await Hhealth(req({ method:"GET" }), r);
+  ok("버킷 이름이 답에 안 나간다",
+     JSON.stringify(r.body).indexOf("intake-secret") < 0, r.body.db);
+  delete process.env.INTAKE_BUCKET;
+  bucketRow = { name:"intake", public:false, file_size_limit:8388608,
+    allowed_mime_types:["image/jpeg","image/png","image/webp","application/pdf"] };
 
   if(keep === undefined) delete process.env.ADMIN_PASSWORD;
   else process.env.ADMIN_PASSWORD = keep;

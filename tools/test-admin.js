@@ -1469,11 +1469,26 @@ function ok(name, cond, extra) {
     t = await show(Object.assign({}, DB_ON, { bucketCheck:{ known:true,
       found:true, priv:true, size:true, mime:true } }));
     ok("버킷이 맞으면 맞다고 말한다", /맞게 서 있습니다/.test(t), t.slice(0, 300));
+    /* ⚠️ 멀쩡한 것을 경고 상자로 내면 그 상자가 곧 안 읽힙니다 */
+    ok("맞으면 경고 상자를 안 낸다", await pg.evaluate(() => {
+      const el = [...document.querySelectorAll("#ad-health .ad-h-off")]
+        .find(x => /버킷/.test(x.textContent || ""));
+      return !el;
+    }));
 
     t = await show(Object.assign({}, DB_ON, { bucketCheck:{ known:true,
       found:true, priv:false, size:true, mime:true } }));
     ok("공개 버킷이면 그렇게 말한다", /공개 버킷입니다/.test(t), t.slice(0, 300));
     ok("끄는 법까지 말한다", /Public/.test(t));
+    /* ⚠️⚠️ **흐린 작은 글씨로 적을 일이 아닙니다.** 찍어 보니 그 말이
+       회색 안내문에 섞여 바로 위 마이그레이션 상자보다 **덜 급해
+       보였습니다** — 실제로는 사장님들이 올린 사진이 경로만 알면 다
+       보이는 상태입니다. 손볼 것이 있으면 **상자**로 냅니다. */
+    ok("손볼 것이 있으면 상자로 낸다", await pg.evaluate(() => {
+      const el = [...document.querySelectorAll("#ad-health .ad-h-off")]
+        .find(x => /공개 버킷입니다/.test(x.textContent || ""));
+      return !!el;
+    }));
 
     t = await show(Object.assign({}, DB_ON, { bucketCheck:{ known:true,
       found:false, priv:false, size:false, mime:false } }));

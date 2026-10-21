@@ -214,8 +214,7 @@ function adHealthDb(h){
   var ph = "";
   if(typeof d.bucket !== "undefined"){
     if(d.photo)
-      ph = '<p class="ad-note">사진 · 서류 첨부가 <b>켜져 있습니다.</b> '+
-        adHealthBucket(d);
+      ph = '<p class="ad-note">사진 · 서류 첨부가 <b>켜져 있습니다.</b>';
     else if(d.store)
       ph = '<p class="ad-note">사진 · 서류 첨부는 <b>아직 꺼져 있습니다</b> — '+
         '<code>INTAKE_BUCKET</code> 이 없습니다. 접수 완료 안내에 사진 칸이 '+
@@ -224,6 +223,21 @@ function adHealthDb(h){
       ph = '<p class="ad-note">사진 · 서류 첨부는 <b>DB 가 먼저</b>입니다 — '+
         '저장이 켜진 다음에 <code>INTAKE_BUCKET</code> 을 넣으세요.';
     ph += ' 만드는 법은 <code>docs/GO-LIVE.md</code> 2번입니다.</p>';
+    /* ⚠️⚠️ **공개 버킷은 흐린 작은 글씨로 적을 일이 아닙니다.**
+       찍어 보니 "공개 버킷입니다" 가 회색 안내문에 섞여, 바로 위
+       분홍 상자(마이그레이션)보다 **덜 급해 보였습니다** — 실제로는
+       사장님들이 올린 사진이 경로만 알면 다 보이는 상태입니다.
+       손볼 것이 있으면 **상자로** 냅니다 (판 번호 칸과 같은 꼴).
+       ⚠️ 그리고 안내 문장을 **버킷 결과 앞**으로 옮겼습니다 — 뒤에
+       붙이니 마지막 줄이 "…application/pdf 만드는 법은 …" 으로
+       한 줄에 이어 붙었습니다 (찍어 보고 알았습니다). */
+    if(d.photo){
+      var b = d.bucketCheck;
+      var bad = !!(b && b.known && (!b.found || !b.priv || !b.size || !b.mime));
+      ph += bad
+        ? '<div class="ad-h ad-h-off"><p>'+adHealthBucket(d)+'</p></div>'
+        : '<p class="ad-note">'+adHealthBucket(d)+'</p>';
+    }
   }
 
   return '<h3 class="ad-h3">DB · 로그인</h3>'+

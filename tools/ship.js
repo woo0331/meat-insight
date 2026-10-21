@@ -226,6 +226,11 @@ const STEPS = [
   { n: "DB 스키마 (psql)",     c: ["node", ["tools/test-sql.js"]],                fast: true, skip2: true },
   { n: "손님이 누르는 길",     c: ["node", ["tools/test-flows.js"]] },
   { n: "/admin 업무 시나리오", c: ["node", ["tools/test-admin.js"]] },
+  /* ⚠️⚠️ 로그인 뒤 화면은 **전수 점검이 안 봅니다** — check.js 가 /my 에서
+     보는 것은 "로그인이 설정되기 전에는 아무것도 안 낸다" 하나이고, 그건
+     절반입니다. 역할 넷이 각자 무엇을 보는가(특히 고객에게 수수료가 안
+     보이는가)와 회원 계정 저장의 합치기 규칙은 여기서 봅니다. */
+  { n: "/my · 회원 계정 저장",  c: ["node", ["tools/test-my.js"]] },
   { n: "표본 밖 화면",         c: ["node", ["tools/sweep-rest.js"]] },
   { n: "/admin 전수 점검",     c: ["node", ["tools/audit-admin.js"]] },
   { n: "검사가 실제로 잡는가", c: ["node", ["tools/prove-checks.js"]] },

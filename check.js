@@ -1952,38 +1952,40 @@ const AUDIT = `(() => {
      ⚠️ 이건 "보기 좋은가" 를 재는 검사가 아닙니다. 나중에 여기에
      큰 배너 · 설명 · 검색창을 하나씩 더하다 보면 카드가 첫 화면
      아래로 밀려나는데, 그걸 막는 것이 목적입니다. */
-  await f("메인은 히어로 다음이 진입 카드 넷이고 번호가 01~04 다", "/", `
-    /* ⚠️⚠️ **2026-10-22 사장님 시안으로 히어로가 돌아왔습니다.**
-       2026-10-17 §4 가 "기존의 큰 브랜드 히어로 배너는 삭제한다" 고
-       적어 한 번 뺐던 자리입니다 — 되살리시면 그날 이 검사를 뒤집으면
-       된다고 적어 두었고, 그날이 왔습니다.
+  await f("메인은 헤더 바로 아래가 진입 카드 넷이고 번호가 01~04 다", "/", `
+    /* ⚠️⚠️ **2026-10-22 "최상단 디자인 최종 변경" §2 — 히어로가 다시
+       빠졌습니다.** "기존 상단 대형 히어로(카페 사진)를 제거하고 4개
+       전문관 카드를 최상단 콘텐츠로 한다." 이 검사는 10-17 에 한 번
+       그 모양이었고, 10-22 시안으로 히어로가 돌아왔다가, 같은 날
+       최상단 지시서로 다시 빠졌습니다 — **되살리시면 그날 (1) 과 (3)
+       을 뒤집으세요** (첫 구간이 bhero · h1 이 bhero 안).
 
-       여기서 지키는 것은 다섯입니다 —
-         (1) 첫 구간이 히어로일 것
-         (2) 둘째가 진입 카드 넷일 것
-         (3) 화면의 h1 이 **하나**이고 그것이 히어로에 있을 것
-         (4) **번호가 01~04 로 이어질 것**
-         (5) 사진이 있으면 실제로 그려질 것
+       여기서 지키는 것은 넷입니다 —
+         (1) **첫 구간이 진입 카드 넷**일 것 (헤더 바로 아래)
+         (2) 화면의 h1 이 **하나**이고 그것이 진입 카드 구간에 있을 것
+         (3) **번호가 01~04 로 이어질 것**
+         (4) 사진이 있으면 실제로 그려질 것
 
-       ⚠️⚠️ (4) 는 사장님이 실제로 걸린 자리입니다. 양도양수를 큰 카드
+       ⚠️ 이건 "보기 좋은가" 를 재는 검사가 아닙니다 — 나중에 여기에
+       큰 배너 · 설명 · 검색창을 하나씩 더하다 보면 카드가 첫 화면
+       아래로 밀려나는데, (1) 이 그걸 막습니다.
+
+       ⚠️⚠️ (3) 은 사장님이 실제로 걸린 자리입니다. 양도양수를 큰 카드
        셋 아래 가로 배너로 내렸더니 번호가 01·02·03 에서 끝나 **04 가
        빠진 것처럼** 읽혔습니다 — 이 저장소가 "다른 걸음으로 내리면
        이건 내 일이 아니구나로 읽힌다" 고 적어 둔 그 자리입니다. */
     const v = document.getElementById("view");
     const secs = [].slice.call(v.querySelectorAll("#view > section"));
     if(!secs.length) return "메인에 구간이 없습니다";
-    if(!secs[0].classList.contains("bhero"))
-      return "첫 구간이 히어로가 아닙니다 — " +
+    if(!secs[0].classList.contains("bent"))
+      return "첫 구간이 진입 카드가 아닙니다 — " +
              (secs[0].className || "").split(" ")[0];
-    if(!secs[1] || !secs[1].classList.contains("bent"))
-      return "둘째 구간이 진입 카드가 아닙니다 — " +
-             ((secs[1] || {}).className || "").split(" ")[0];
 
     const h1s = document.querySelectorAll("#view h1");
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
-    if(!h1s[0].closest(".bhero")) return "h1 이 히어로에 없습니다";
+    if(!h1s[0].closest(".bent")) return "h1 이 진입 카드 구간에 없습니다";
 
-    /* (4) 번호가 빠짐없이 이어지는가 — 넷이 같은 무게로 섭니다 */
+    /* (3) 번호가 빠짐없이 이어지는가 — 넷이 같은 무게로 섭니다 */
     const nos = [].slice.call(v.querySelectorAll(".bent-no"))
       .map(function(e){ return (e.textContent || "").trim(); });
     const want = (window.HOME_ENTER || []).map(function(x){ return x.no; });
@@ -1992,7 +1994,7 @@ const AUDIT = `(() => {
       return "진입 카드 번호가 [" + nos.join(" ") + "] 입니다 — [" +
              want.join(" ") + "] 라야 차례가 안 끊깁니다";
 
-    /* (5) 사진 — 자리가 채워져 있으면 실제로 그려져야 합니다 */
+    /* (4) 사진 — 자리가 채워져 있으면 실제로 그려져야 합니다 */
     const EN = (window.HOME_ENTER || []);
     for(const x of EN){
       if(window.hasPhoto && hasPhoto(x.ph) &&
@@ -3541,7 +3543,6 @@ const AUDIT = `(() => {
        되살리실 수 있습니다 — 그날 여기에 다시 넣으세요. */
     const need = [[".bent-g",   "창업 · 운영 · 폐업 진입 카드"],
                   [".bdir-g",   "직접 서비스 찾기 여덟"],
-                  [".bhero-go", "히어로의 무료 견적 신청"],
                   [".bwhy-g",   "선택받는 이유 넷"],
                   [".bqc",      "견적 신청 안내 카드"],
                   [".bstep-g",  "이용 방법 5단계"],
@@ -3594,8 +3595,15 @@ const AUDIT = `(() => {
     const lit = document.querySelectorAll("#view .sec-white, #view .sec-gray");
     if(lit.length) return "메인에 톤 클래스가 " + lit.length + "개 끼었습니다";
 
+    /* ⚠️⚠️ **구간 수를 여기서 세지 않습니다.** 전에 여덟을 박아
+       두었다가 2026-10-22 §2 로 히어로가 빠져 일곱이 되자, 이 검사가
+       **되돌리기 전에도 후에도 같은 말로 떨어져** 되돌리기를 통째로
+       가렸습니다 (prove-checks 가 "안 잡습니다" 로 잡았습니다).
+       개수를 두 곳에 적으면 어긋납니다 — 세는 것은 차례 검사
+       ("메인 구간 차례가 지시서와 같다") 한 곳입니다.
+       여기가 보는 것은 **바탕이 밝은가**뿐입니다. */
     const secs = [].slice.call(document.querySelectorAll("#view > section"));
-    if(secs.length !== 8) return "메인 구간이 " + secs.length + "개입니다 (여덟이어야 합니다)";
+    if(!secs.length) return "메인에 구간이 없습니다";
 
     /* ⚠️⚠️ **§3-2 가 이름까지 적은 셋**은 반드시 밝아야 합니다 */
     for(const q of [[".bwhy","선택받는 이유"], [".bstep","이용 방법"],
@@ -4149,7 +4157,11 @@ const AUDIT = `(() => {
        고치세요 (이 저장소가 열 번 겪은 자리입니다).
        ⚠️ 이 글은 템플릿 문자열 안입니다 — 주석에 백틱을 쓰면 문자열이
        거기서 끊깁니다 (스물다섯 번째로 또 겪었습니다). */
-    const want = ["bhero","bent","bdir","bcal","bwhy","bstep","bgd","bcta"];
+    /* ⚠️⚠️ **2026-10-22 "최상단 디자인 최종 변경" §2 — 히어로(bhero)가
+       다시 빠지고 진입 카드 넷이 최상단이 됐습니다.** 함수는 지우지
+       않았으니 되살리실 수 있습니다 — 그날 여기 앞에 bhero 를 다시
+       넣으세요. */
+    const want = ["bent","bdir","bcal","bwhy","bstep","bgd","bcta"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";

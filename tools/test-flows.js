@@ -148,10 +148,15 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     함수는 안 지웠으니 되살리시면 여기에 .bban-c 를 다시 넣으세요. */
  await click('.bdir-c:nth-child(1)');
  say((await url()).startsWith("/providers/"),"직접 찾기 → 분야 화면",await url());
- /* ⚠️ 히어로의 무료 견적 신청 — 메인에서 신청으로 가는 첫 길입니다 */
+ /* ⚠️⚠️ **2026-10-22 §2 — 히어로가 메인에서 다시 빠졌습니다.**
+    그래서 `.bhero-go` 를 누를 수 없습니다 (없는 요소를 집으면
+    타임아웃으로 터지고 뒤 블록이 통째로 안 돕니다). 메인에서 신청으로
+    가는 **늘 보이는 길**은 헤더 CTA 이고, 그건 160개 화면 전부에
+    있습니다 — 그쪽을 눌러 봅니다. 히어로를 되살리시면 그날 여기에
+    `.bhero-go` 를 다시 넣으세요. */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bhero-go a[href^="/quote"]');
- say((await url()).startsWith("/quote"),"히어로 → 견적 신청",await url());
+ await click('.hd .hd-cta');
+ say((await url()).startsWith("/quote"),"헤더 견적 신청 → 신청 화면",await url());
  /* ⚠️ 업체찾기로 가는 길도 헤더에 있어야 합니다 (메뉴에서 빠지면
     160개 화면에서 길이 끊깁니다) */
  await pg.goto(B+"/",{waitUntil:"networkidle"});

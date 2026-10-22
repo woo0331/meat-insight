@@ -45,6 +45,13 @@ var RQ = { asked:false, on:false, signedIn:false, role:"", name:"",
               ⚠️ `ctx`(신청 전체)와 **갈라 둡니다** — 섞으면 항목을
               배정하다 만 값이 신청 전체 배정에 실려 나갑니다. */
            itemOf:"", ictx:{} ,
+           /* 2026-10-22 오픈 전 전수검사 P2 ⑲㉑ — 고르개의 검색말과
+              "무엇에 맞는 업체인가"(조건). ⚠️⚠️ **고르개마다 따로**
+              입니다 — 신청 전체 고르개와 서비스 항목 고르개가 한
+              화면에 같이 서는데, 한 칸으로 두면 한쪽에 친 말이
+              다른 쪽까지 거릅니다 (`ctx` ↔ `ictx` 와 같은 까닭).
+              ⚠️ 아무 데도 저장하지 않습니다 — 화면을 떠나면 사라집니다. */
+           pvq:{}, pvw:{},
            /* 2026-10-22 오픈 전 전수검사 P0 ③⑤ — 담당자와 연락처.
               ⚠️⚠️ **연락처는 열어 본 건 하나만** 들고 있습니다
               (`conOf`). 쉰 건을 들고 있으면 화면 하나가 곧 유출이고,
@@ -445,7 +452,7 @@ function rqMove(r){
         }).join("")+
       '</select>'+
     '</div>'+
-    (sel ? rqNeed(sel) +
+    (sel ? rqNeed(sel, r) +
       '<div class="ad-acts">'+
         '<button class="btn btn-b" type="button"'+(RQ.busy ? " disabled" : "")+
           ' onclick="rqGo(\''+esc(r.id)+'\')">'+icon("check",18)+
@@ -457,7 +464,7 @@ function rqMove(r){
 window.rqSetTo = function(v){ RQ.to = v; rqDraw(); };
 
 /* 같이 적어야 하는 것 — ⚠️ 목록은 `AM_DEAL_MOVE` 의 넷째 칸입니다 */
-function rqNeed(m){
+function rqNeed(m, r){
   var need = m[3] || [], out = "";
 
   if(need.indexOf("why") >= 0)
@@ -482,7 +489,7 @@ function rqNeed(m){
         '증빙을 보고 관리자가 따로 확정합니다 (§8 마지막 문장).</p>'+
     '</div>';
 
-  if(need.indexOf("providerId") >= 0) out += rqPvField();
+  if(need.indexOf("providerId") >= 0) out += rqPvField(r);
 
   /* ⚠️⚠️ 제17조 제2항 — 접수 단계의 동의에는 제3자 제공이 **포함되지
      않습니다**. 방침 제4조 제3항이 그렇게 적혀 있습니다. */
@@ -525,12 +532,179 @@ function rqPvOpt(p, cur){
   '</option>';
 }
 
-/* 고를 수 있는 업체가 몇 곳인가 — ⚠️ **세는 값**입니다 */
-function rqPvOnN(){
-  return (RQ.provs || []).filter(function(p){ return p.assignable !== false; }).length;
+/* 고를 수 있는 업체가 몇 곳인가 — ⚠️ **세는 값**입니다.
+   ⚠️ 2026-10-22 P2 ㉑ 로 **검색까지 거친 수**를 세야 해서 `rqPvNote()`
+   안으로 들어갔습니다 — 두 곳에서 세면 화면에 적힌 수와 고르개에
+   담긴 수가 어긋납니다. */
+
+/* ── 조건에 맞는 업체 추리기 (2026-10-22 P2 ⑲) ──────────────────
+   > 감사 보고서 §5 ⑲ — "자동 매칭. 지시서가 **수동 우선**을 적었고,
+   >  '응답률 · 평가' 로는 고를 수 없습니다 — 재는 장치도 후기도 0건이라
+   >  그걸로 순위를 매기면 **지어낸 기준**입니다."
+
+   ⚠️⚠️ **자동으로 배정하지 않습니다.** 하는 일은 고르개의 차례를
+   바꾸는 것까지이고, 고르는 것도 제17조 동의를 받는 것도 사람입니다.
+   저절로 넘기면 동의를 받은 사람이 아무도 없게 됩니다.
+
+   ⚠️⚠️ **보는 것은 넷뿐입니다** — 분야(하는 일) · 지역 · 업종 ·
+   배정 가능. 평점 · 후기 수 · 응답속도 · 거래 수를 **쓰지 않습니다**:
+   후기가 0건이고 응답 시각을 재는 장치가 없어서, 그 값으로 줄을
+   세우면 그 순서가 곧 **지어낸 추천**입니다 (절대 규칙 1 · 약관
+   제6조 제4항 "광고 순서의 기준을 밝힌다").
+
+   ⚠️ 지역 · 업종을 **안 적은 업체는 맞는 것으로 봅니다** — 안 적은
+   것을 "전국 · 전업종" 으로 읽는 게 말이 됩니다. 반대로 **하는
+   일(`subs`)을 안 적은 업체는 어느 조건에도 안 맞습니다** (그걸
+   "전부 다 합니다" 로 읽으면 인테리어 업체가 세무 화면에 앉습니다 —
+   `amProviderInCat()` 과 같은 규칙입니다). */
+function rqPvFit(p, w){
+  if(!w) return false;
+  if(p.assignable === false) return false;
+  var subs = p.subs || [];
+  if(w.sub){
+    if(subs.indexOf(w.sub) < 0) return false;
+  }else if(w.cat){
+    /* ⚠️ 규칙은 `amProviderInCat()` **한 곳**입니다 — 여기 또 적으면
+       업체찾기 화면과 어긋납니다 (`amCatTo`/`catTo` 로 겪은 자리). */
+    var c = (typeof amCat === "function") ? amCat(w.cat) : null;
+    if(!c || typeof amProviderInCat !== "function") return false;
+    if(!amProviderInCat(p, c)) return false;
+  }
+  var R = p.regions || [];
+  if(w.region && R.length && R.indexOf(w.region) < 0) return false;
+  var I = p.industries || [];
+  if(w.industry && I.length && I.indexOf(w.industry) < 0) return false;
+  return true;
 }
 
-function rqPvField(){
+/* 조건을 사람 말로 — ⚠️ 무엇을 보고 추렸는지 **화면에 적습니다.**
+   안 적으면 그 차례가 "저희가 추천한 것" 으로 읽힙니다. */
+function rqPvWhy(w){
+  var L = [];
+  if(w && (w.sub || w.cat)) L.push("하는 일");
+  if(w && w.region) L.push(
+    (typeof amRegionName === "function" ? amRegionName(w.region) : w.region) || "지역");
+  if(w && w.industry) L.push(
+    (typeof amIndustryName === "function" ? amIndustryName(w.industry) : w.industry) || "업종");
+  return L;
+}
+
+/* ── 검색 (2026-10-22 P2 ㉑) ─────────────────────────────────────
+   > 감사 보고서 §5 ㉑ — "지금 고르개가 200곳까지 담습니다. 모자라기
+   >  시작하는 때가 검색이 필요한 때입니다."
+
+   ⚠️⚠️ **목록을 조용히 자르지 않습니다.** 거른 만큼 몇 곳이 빠졌는지
+   그 자리에서 밝힙니다 (`/stores` 거르개와 같은 규칙) — 안 밝히면
+   직원은 그 분야에 원래 그만큼만 있는 줄 알고 넘어갑니다.
+   ⚠️ 보는 것은 **업체명 · 지역 이름 · 업종 이름 · 하는 일 이름**입니다.
+   직원은 업체 id(`ganada-interior`)를 모르고 상호를 칩니다. */
+function rqPvHit(p, q){
+  if(!q) return true;
+  var hay = [p.name || "", p.id || ""];
+  (p.regions || []).forEach(function(k){
+    hay.push(k);
+    if(typeof amRegionName === "function") hay.push(amRegionName(k) || ""); });
+  (p.gu || []).forEach(function(g){ hay.push(g); });
+  (p.industries || []).forEach(function(k){
+    hay.push(k);
+    if(typeof amIndustryName === "function") hay.push(amIndustryName(k) || ""); });
+  (p.subs || []).forEach(function(k){
+    hay.push(k);
+    var one = (typeof amSubName === "function") ? amSubName(k) : "";
+    if(one) hay.push(one); });
+  return hay.join(" ").toLowerCase().replace(/\s+/g, "")
+    .indexOf(String(q).toLowerCase().replace(/\s+/g, "")) >= 0;
+}
+
+/* 고르개 한 벌 — 검색 칸 + 추천/그 밖 두 묶음 + 센 줄.
+   ⚠️⚠️ **두 고르개가 이 함수 하나를 씁니다** (신청 전체 · 서비스 항목).
+   ⚠️ `key` 가 곧 select 의 id 입니다 — 한 화면에 둘이 서니 겹치면
+   `getElementById()` 가 먼저 나오는 하나만 집습니다 (`st-ind` 로
+   겪은 자리). */
+function rqPvBox(key, want, cur, onch){
+  RQ.pvw[key] = want || null;
+  return '<div class="rq-pvb" id="'+esc(key)+'-box">'+
+    rqPvIn(key)+
+    '<div class="f-r">'+
+      '<label for="'+esc(key)+'">'+
+        (want && want.item ? "이 서비스를 맡길 업체" : "배정할 업체")+'</label>'+
+      '<select id="'+esc(key)+'" class="sel" onchange="'+onch+'">'+
+        rqPvOpts(key, cur)+
+      '</select>'+
+      '<p class="f-h" id="'+esc(key)+'-n">'+rqPvNote(key, cur)+'</p>'+
+    '</div>'+
+  '</div>';
+}
+
+function rqPvIn(key){
+  var q = RQ.pvq[key] || "";
+  return '<div class="f-r rq-pvq">'+
+    '<label for="'+esc(key)+'-q">업체 찾기</label>'+
+    '<input id="'+esc(key)+'-q" class="in" type="search" '+
+      'value="'+esc(q)+'" placeholder="상호 · 지역 · 업종 · 하는 일" '+
+      'oninput="rqPvQ(\''+esc(key)+'\',this.value)">'+
+  '</div>';
+}
+
+/* ⚠️⚠️ **고른 것이 걸러져 사라지지 않게** 합니다. 검색으로 좁힌 뒤
+   고르개가 다시 그려질 때 고른 업체가 목록에서 빠지면, select 는
+   **첫 칸으로 돌아가고** 직원은 자기가 고른 줄 압니다 — 그대로
+   배정하면 엉뚱한 업체에 성함 · 연락처가 갑니다 (제17조). */
+function rqPvOpts(key, cur){
+  var P   = RQ.provs || [], w = RQ.pvw[key], q = RQ.pvq[key] || "";
+  var L   = P.filter(function(p){ return rqPvHit(p, q) || p.id === cur; });
+  var fit = w ? L.filter(function(p){ return rqPvFit(p, w); }) : [];
+  var rest= L.filter(function(p){ return fit.indexOf(p) < 0; });
+  var o = '<option value="">골라 주세요</option>';
+  if(fit.length)
+    o += '<optgroup label="조건에 맞는 곳 '+fit.length+'곳">'+
+      fit.map(function(p){ return rqPvOpt(p, cur); }).join("")+'</optgroup>';
+  if(rest.length)
+    o += '<optgroup label="'+(fit.length ? "그 밖 " : "")+rest.length+'곳">'+
+      rest.map(function(p){ return rqPvOpt(p, cur); }).join("")+'</optgroup>';
+  return o;
+}
+
+function rqPvNote(key, cur){
+  var P = RQ.provs || [], w = RQ.pvw[key], q = RQ.pvq[key] || "";
+  var L = P.filter(function(p){ return rqPvHit(p, q); });
+  /* ⚠️⚠️ 고른 곳은 걸러도 남겨 두기 때문에, **센 줄이 고르개보다 하나
+     적게** 나오는 때가 있습니다 — 그대로 두면 "1곳" 이라고 적어 놓고
+     둘이 보이는 꼴입니다. 그 한 곳을 적어서 갈라 줍니다. */
+  var kept = !!cur && !L.some(function(p){ return p.id === cur; }) &&
+             P.some(function(p){ return p.id === cur; });
+  var on = L.filter(function(p){ return p.assignable !== false; }).length;
+  var fit= w ? L.filter(function(p){ return rqPvFit(p, w); }).length : 0;
+  var why= rqPvWhy(w);
+  var t = "";
+  if(q) t += '찾으신 말에 '+L.length+'곳이 걸렸습니다 (등록 '+P.length+'곳) — '+
+    (P.length - L.length)+'곳은 검색으로 빠졌습니다. '+
+    (kept ? '<b>고르신 곳은 찾으신 말과 안 맞아도 그대로 둡니다.</b> ' : '');
+  else  t += '고를 수 있는 업체는 '+on+'곳입니다 (등록 '+P.length+'곳). ';
+  if(why.length)
+    t += '<b>'+esc(why.join(" · "))+'</b>이 맞는 곳 '+fit+'곳을 위에 모았습니다 — '+
+      '추천이 아니라 <b>조건이 맞는 것</b>이고, 평점 · 응답속도로 줄을 세우지 '+
+      '않습니다 (재는 장치가 없습니다). 고르는 것은 사람입니다.';
+  if(on < L.length)
+    t += ' ⚠️ <b>'+(L.length - on)+'곳</b>은 <b>배정 가능</b>이 꺼져 있습니다 — '+
+      '제휴 계약을 확인하고 아래 <b>업체 · 공개 승인</b> 에서 켜 주세요. '+
+      '켜기 전에 배정하면 그 순간 성함 · 연락처가 그 업체로 넘어갑니다 '+
+      '(개인정보보호법 제17조).';
+  return t;
+}
+
+/* ⚠️⚠️ **적는 칸에서는 다시 그리지 않습니다.** `rqDraw()` 를 부르면
+   한 글자 칠 때마다 칸이 새로 그려져 **커서가 빠집니다** — 업체 빠른
+   등록에서 겪은 자리입니다. 고르개와 센 줄 **둘만** 바꿔 끼웁니다. */
+window.rqPvQ = function(key, v){
+  RQ.pvq[key] = v;
+  var sel = document.getElementById(key), n = document.getElementById(key + "-n");
+  var cur = sel ? sel.value : "";
+  if(sel) sel.innerHTML = rqPvOpts(key, cur);
+  if(n)   n.innerHTML   = rqPvNote(key, cur);
+};
+
+function rqPvField(r){
   var P = RQ.provs || [];
   if(!P.length)
     return '<div class="notice-bad">'+
@@ -541,23 +715,17 @@ function rqPvField(){
       '(<b>listed</b> 가 꺼져 있어도 직원 · 관리자에게는 보입니다).</p>'+
     '</div>';
 
-  var on = rqPvOnN();
-  return '<div class="f-r">'+
-    '<label for="rq-pv">배정할 업체</label>'+
-    '<select id="rq-pv" class="sel" onchange="rqCtx(\'providerId\',this.value)">'+
-      '<option value="">골라 주세요</option>'+
-      P.map(function(p){ return rqPvOpt(p, RQ.ctx.providerId); }).join("")+
-    '</select>'+
-    '<p class="f-h">고를 수 있는 업체는 '+on+'곳입니다 (등록 '+P.length+'곳) — '+
-      '세는 값입니다.'+
-      (on < P.length
-        ? ' ⚠️ <b>'+(P.length - on)+'곳</b>은 <b>배정 가능</b>이 꺼져 있습니다 — '+
-          '제휴 계약을 확인하고 아래 <b>업체 · 공개 승인</b> 에서 켜 주세요. '+
-          '켜기 전에 배정하면 그 순간 성함 · 연락처가 그 업체로 넘어갑니다 '+
-          '(개인정보보호법 제17조).'
-        : '')+
-    '</p>'+
-  '</div>';
+  return rqPvBox("rq-pv", rqWant(r), RQ.ctx.providerId,
+                 "rqCtx('providerId',this.value)");
+}
+
+/* 이 신청이 무엇에 대한 것인가 — ⚠️ **목록이 주는 칸만** 봅니다
+   (`PICK.staff` 의 `cat` · `industry` · `region`). 성함 · 연락처는
+   목록에 애초에 안 옵니다. */
+function rqWant(r){
+  if(!r) return null;
+  return { cat:r.cat || "", region:r.region || "",
+           industry:r.industry || "" };
 }
 
 /* ── 신청 서비스 항목 (2026-10-17 §6 · §7) ───────────────────────
@@ -574,14 +742,14 @@ function rqItems(r){
   if(!L.length) return "";
   return '<div class="rq-it">'+
     '<b class="rq-it-h">신청 서비스 '+esc(L.length)+'개 — 서비스마다 따로 배정하세요</b>'+
-    '<ul class="rq-it-l">'+L.map(rqItemRow).join("")+'</ul>'+
+    '<ul class="rq-it-l">'+L.map(function(it){ return rqItemRow(it, r); }).join("")+'</ul>'+
     '<p class="f-h">서비스마다 다른 업체에 보낼 수 있습니다. '+
       '배정은 <b>제3자 제공</b>이라 서비스마다 동의를 따로 기록합니다 '+
       '(개인정보보호법 제17조 제2항).</p>'+
   '</div>';
 }
 
-function rqItemRow(it){
+function rqItemRow(it, r){
   var open = RQ.itemOf === it.id;
   var st   = (window.amDealSt && amDealSt(it.state)) || null;
   var A    = it.assignment || [];
@@ -599,7 +767,7 @@ function rqItemRow(it){
           esc(A.map(function(a){ return rqPvName(a.provider_id) || a.provider_id; })
                .join(" · "))+'</p>'
       : '')+
-    (open ? rqItemForm(it, keys, d) : "")+
+    (open ? rqItemForm(it, keys, d, r) : "")+
   '</li>';
 }
 
@@ -626,7 +794,24 @@ window.rqItemOpen = function(id){
 };
 window.rqIctx = function(k, v){ RQ.ictx[k] = v; };
 
-function rqItemForm(it, keys, d){
+/* 항목 하나의 조건 — ⚠️ `service_id` 가 `분류/하위` 꼴일 수 있습니다
+   (2026-10-18 운영 §4-4). 하위까지 적힌 것은 **하위로** 맞춥니다 —
+   "에어컨 수리" 를 고르셨는데 "수리 전체" 로 넓히면 커피머신만 하는
+   업체가 위로 올라옵니다. */
+function rqItemWant(it, r){
+  var id = String((it && it.service_id) || ""), i = id.indexOf("/");
+  /* ⚠️⚠️ 고르개의 id 는 `분류/하위` 인데 **업체의 `subs` 는 하위
+     key 만** 들고 있습니다 (`aircon-fix`). 통째로 견주면 어느 업체도
+     안 맞아서 "조건에 맞는 곳 0곳" 이 늘 나옵니다 — 업체 `subs` 를
+     분류 key 로 적었다가 조용히 안 뜨던 자리의 반대쪽입니다. */
+  return { item:true,
+           cat: i > 0 ? id.slice(0, i) : id,
+           sub: i > 0 ? id.slice(i + 1) : "",
+           region:   (r && r.region) || "",
+           industry: (r && r.industry) || "" };
+}
+
+function rqItemForm(it, keys, d, r){
   var P = RQ.provs || [];
   return '<div class="rq-it-f">'+
     (keys.length
@@ -634,12 +819,13 @@ function rqItemForm(it, keys, d){
           return '<dt>'+esc(k)+'</dt><dd>'+esc(d[k])+'</dd>'; }).join("")+'</dl>'
       : '')+
     (P.length
-      ? '<div class="f-r"><label for="rq-ipv-'+esc(it.id)+'">이 서비스를 맡길 업체</label>'+
-          '<select id="rq-ipv-'+esc(it.id)+'" class="sel" '+
-            'onchange="rqIctx(\'providerId\',this.value)">'+
-            '<option value="">골라 주세요</option>'+
-            P.map(function(p){ return rqPvOpt(p, RQ.ictx.providerId); }).join("")+
-          '</select></div>'+
+      /* ⚠️⚠️ 조건은 **그 서비스 것**입니다 (신청 전체의 `cat` 이 아니라
+         항목의 `service_id`). 신청 하나에 인테리어와 주방설비가 같이
+         담기는데, 신청 전체 분류로 추리면 **두 항목이 같은 업체를
+         위에 올립니다** — §7 이 "서비스마다 독립적으로 배정" 이라고
+         적은 까닭입니다. */
+      ? rqPvBox("rq-ipv-" + it.id, rqItemWant(it, r), RQ.ictx.providerId,
+                "rqIctx('providerId',this.value)")+
         /* ⚠️⚠️ 제17조 안내가 **고르개 아래 · 단추 위**입니다. 체크를
            켜야 `p_agree3rd` 가 실리고, 안 켜면 DB 가 그 말 그대로
            거절합니다 (화면 코드로만 막지 않습니다). */

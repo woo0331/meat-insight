@@ -38,7 +38,8 @@
 
 const { authReady, session, authWhy } = require("./_auth.js");
 const { dbRpc, dbWhy } = require("./_db.js");
-const { deliver, clean } = require("./_send.js");
+const { deliver, clean, customerStep } = require("./_send.js");
+const { dbSelect } = require("./_db.js");
 
 /* ⚠️⚠️ 여기 없는 이름은 **부르지 않습니다.** 손님이 보낸 글자가 곧
    함수 이름이 되는 자리라, 목록을 두지 않으면 DB 의 아무 함수나
@@ -51,6 +52,12 @@ const OK_FN = {
      `authenticated` 에게 insert 를 한 줄도 주지 않습니다 — 표를 열면
      기록 없이 지나가는 길이 하나 생깁니다 (§8). */
   save_provider:1, approve_provider:1,
+  /* 2026-10-22 P2 ⑳ (0014) — **업체가 자기 줄만** 고치는 문.
+     ⚠️⚠️ `save_provider` 와 **다른 문**입니다 — 이쪽은 상호 · 하는 일 ·
+     확인 배지 · 공개 · 배정 가능을 **아예 안 씁니다** (승인 대상).
+     ⚠️ 업체 id 를 인자로 받지 않습니다 — 토큰으로 본 `my_provider()`
+     하나만 고칩니다 (요청이 보낸 id 를 믿으면 남의 업체를 덮습니다). */
+  save_provider_self:1,
   save_fee_policy:1, set_fee_policy_active:1,
   /* 2026-10-12 (0008) — 업체 견적 제출 · 수정 · 철회 + 고객의 선택.
      ⚠️⚠️ **상태를 바꾸는 것은 여기가 아닙니다.** `submit_quote` 가
@@ -109,7 +116,7 @@ const OK_ARG = {
      다섯을 그렇게 적었다가 틀렸고, 그러면 함수가 **인자 없이 불려**
      거절당하는데 화면에는 "처리하지 못했습니다" 만 나갑니다.
      `checkRpcArgs()` 가 SQL 의 정의와 **양쪽으로** 맞춰 봅니다. */
-  p_id:1, p_name:1, p_data:1,                          /* save_provider */
+  p_id:1, p_name:1, p_data:1,                          /* save_provider · save_provider_self */
   p_listed:1, p_verified:1,                            /* approve_provider */
   p_provider:1,                                        /* save_fee_policy */
   p_active:1,                                          /* set_fee_policy_active */
@@ -189,6 +196,11 @@ const FN_SAY = {
   withdraw_quote:        "업체가 견적을 거뒀습니다",
   choose_quote:          "고객이 견적을 골랐습니다",
   set_owner:             "담당자가 바뀌었습니다",
+  /* 2026-10-22 P2 ⑳ — ⚠️ 업체가 **자기 소개를 고친 것**은 알립니다
+     (공개 목록에 나가는 글이라 운영자가 한 번 볼 까닭이 있습니다).
+     ⚠️⚠️ 고친 **내용**은 안 싣습니다 — `SAY_ARG` 에 `p_data` 가
+     없어서 "바뀌었다" 까지만 갑니다 (가서 보세요). */
+  save_provider_self:    "업체가 자기 정보를 고쳤습니다",
   /* ⚠️ `save_provider_contact` 는 **FN_SAY 에 넣지 않았습니다** —
      담당자 이름 · 직통 번호를 적는 자리라, 알림이 그 변경을 알리면
      운영자 채널에 "어느 업체의 담당자가 바뀌었다" 가 쌓이고 그
@@ -214,6 +226,64 @@ const SAY_ARG = {
      찍어 보고 뺐습니다). */
   p_from:"정산 시작일", p_hold:"보류"
 };
+
+/* ── 고객 진행 안내 (2026-10-22 오픈 전 전수검사 P2 ⑱) ───────────
+   어느 길이 **손님에게 알릴 일**인가 — 둘뿐입니다.
+
+   ⚠️⚠️ **고객이 스스로 한 일은 안 알립니다.** `choose_quote`(고객이
+   고름)를 넣으면 자기가 방금 누른 것을 메일로 다시 받습니다.
+   ⚠️⚠️ **받으시겠다고 하신 분에게만** 보냅니다 (`notify_ok`).
+   ⚠️ 상호도 금액도 싣지 않습니다 — `_send.js` 의 `customerStep()`.
+   ⚠️⚠️ **실패해도 상태 변경을 되돌리지 않습니다.** 상태는 이미 DB 에
+   적혔고, 에러를 돌려주면 운영자가 다시 누르는데 두 번째는 "갈 수
+   없는 길" 로 거절당해서 더 헷갈립니다 (운영자 알림과 같은 판단). */
+const STEP_FN = {
+  /* move_state 는 **가는 상태**를 봅니다 (p_to) */
+  move_state:  null,
+  assign_item: "assigned",
+  submit_quote:"quoted"
+};
+
+async function stepMail(fn, args){
+  try{
+    if(!(fn in STEP_FN)) return;
+    let kind = STEP_FN[fn];
+    if(fn === "move_state"){
+      const to = String(args.p_to || "");
+      if(to !== "assigned" && to !== "quoted") return;
+      kind = to;
+    }
+    if(!kind) return;
+
+    /* 어느 신청인가 — 길마다 인자가 다릅니다 */
+    let q = "";
+    if(args.p_request) q = "?select=" + encodeURIComponent("no,email,notify_ok") +
+      "&id=eq." + encodeURIComponent(String(args.p_request)) + "&limit=1";
+    else if(args.p_item) q = "?select=" + encodeURIComponent("request(no,email,notify_ok)") +
+      "&id=eq." + encodeURIComponent(String(args.p_item)) + "&limit=1";
+    /* ⚠️ `submit_quote` 와 `move_state` 는 `p_request`, `assign_item` 은
+       `p_item` 입니다 (0008 · 0009). 둘 다 없으면 **조용히 지나갑니다** —
+       보낼 곳을 모르는데 추측하지 않습니다. */
+    if(!q) return;
+
+    /* ⚠️⚠️ **service key 로 읽습니다.** 부른 사람의 토큰으로 읽으면
+       업체가 부른 길(`submit_quote`)에서 그 업체의 권한으로 메일
+       주소를 읽는 셈이고, 역할마다 되는지 안 되는지가 갈립니다.
+       ⚠️ 읽은 것을 **답에 한 글자도 싣지 않습니다** — 메일로만 갑니다
+       (`api/me.js` 가 직원 목록에서 메일을 빼 둔 것과 같은 선). */
+    const t = args.p_item ? "request_item" : "request";
+    const got = await dbSelect(t, q);
+    if(!got.ok) return;
+    const row = (got.rows || [])[0] || {};
+    const rq  = args.p_item ? (row.request || {}) : row;
+    /* ⚠️⚠️ 안 고르신 분에게는 **안 보냅니다** (fail-closed) */
+    if(rq.notify_ok !== true || !rq.email) return;
+    await customerStep(rq.email, rq.no, kind);
+  }catch(e){
+    /* ⚠️ 운영자에게만 남깁니다 — 손님은 아무 잘못도 안 했습니다 */
+    try{ console.warn("[deal] step mail — " + (e && e.message)); }catch(_){}
+  }
+}
 
 const NOTE_TIMEOUT = 5000;
 
@@ -292,6 +362,7 @@ module.exports = async function handler(req, res){
      응답을 돌려준 뒤 프로세스를 멈춰서, 기다리지 않으면 알림이
      **조용히 사라집니다.** 실패는 위에서 삼킵니다. */
   await notify(fn, pickArgs(b.args), s.role);
+  await stepMail(fn, pickArgs(b.args));
 
   return res.status(200).json({ ok:true, data:r.data === undefined ? null : r.data });
 };

@@ -807,11 +807,20 @@ body.sl-locked{ overflow:hidden; }
    보고 알았습니다 — 이 저장소가 날짜 칸에서 겪은 자리와 같습니다).
    ⚠️ 여기서만 고칩니다. `css/app.css` 를 고치면 손님 화면까지 가는데
    거기서는 숫자 칸을 안 씁니다 (`/tools` 계산기는 글자 칸입니다). */
-.rq-s input[type=number]{
-  width:100%; padding:11px 13px;
+/* ⚠️⚠️ 2026-10-22 P2 ㉑ — **`type=search` 도 같은 자리**입니다. 업체
+   검색 칸을 넣고 찍어 보니 테두리가 실오라기 같고 높이가 **24px** 로
+   서서, 바로 아래 고르개와 따로 놀았습니다 (누름 40px 에도 못
+   미칩니다). 숫자 · 날짜에 이어 **세 번째**로 같은 자리에 빠졌습니다 —
+   새 꼴의 칸을 쓰실 때는 **찍어서 재 보세요.** */
+.rq-s input[type=number],
+.rq-s input[type=search]{
+  width:100%; min-height:44px; padding:11px 13px;
   background:#fff; border:1px solid var(--line); border-radius:10px;
-  font:inherit; font-size:15px; color:var(--ink); }
-.rq-s input[type=number]:focus{ outline:0; border-color:var(--blue);
+  font:inherit; font-size:15px; color:var(--ink);
+  /* ⚠️ 사파리가 `type=search` 를 제 꼴(둥근 알약 · 취소 단추)로 그립니다 */
+  appearance:none; -webkit-appearance:none; }
+.rq-s input[type=number]:focus,
+.rq-s input[type=search]:focus{ outline:0; border-color:var(--blue);
   box-shadow:0 0 0 3px var(--blue-100, #D6E6FA); }
 
 .rq-hist-b{ margin-top:14px; }
@@ -944,3 +953,14 @@ body.sl-locked{ overflow:hidden; }
    업체 줄 안쪽이라는 것이 보여야 합니다. */
 .rq-con-f{ background:var(--bg-sky); }
 .rq-con-f .f-h{ margin:12px 0 0; }
+
+/* ── 배정 고르개의 업체 검색 (2026-10-22 전수검사 P2 ㉑) ──────────
+   ⚠️⚠️ **고르개와 검색 칸을 갈라 보이게** 묶습니다. 붙여 두면 쳐 넣는
+   칸이 고르개의 한 줄처럼 읽혀서, 직원이 거기에 업체명을 치고 그대로
+   배정 단추를 누릅니다 (고른 것이 없는데요).
+   ⚠️ 검색은 **거드는 것**입니다 — 안 치면 전과 똑같이 전부 나옵니다. */
+.rq-pvb{ display:block; padding:var(--s3); margin:0 0 var(--s3);
+  border:1px solid var(--line); border-radius:var(--r-in);
+  background:var(--bg-sky); }
+.rq-pvb .f-r:last-child{ margin-bottom:0; }
+.rq-pvq input{ width:100%; }

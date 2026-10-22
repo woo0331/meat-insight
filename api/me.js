@@ -201,6 +201,32 @@ module.exports = async function handler(req, res){
     else console.warn("[me] deal — " + d.why);
   }
 
+  /* 내 업체 한 줄 (2026-10-22 P2 ⑳ · 업체 계정만)
+     ⚠️⚠️ **고치는 화면이 그것을 되읽어야** 합니다 — 지금 적힌 값을
+     모르면 소개를 고치려는 분이 처음부터 다시 적습니다.
+     ⚠️ `provider_public` 정책에 `id = my_provider()` 가 있어서 공개
+     전(`listed=false`)이어도 **자기 줄은** 보입니다.
+     ⚠️⚠️ `verified` 를 **같이 가져옵니다** — 업체 화면이 "무엇이
+     확인됐는가" 를 내는데, 그건 **못 고치는 칸**이라고 그 자리에서
+     말해 주어야 합니다 (안 보여 주면 "왜 안 켜지나" 를 물으러 옵니다). */
+  if(s.role === "provider"){
+    const mine = await dbSelectAs(s.token, "provider",
+      "?select=" + encodeURIComponent(
+        "id,name,intro,regions,gu,industries,subs,since,consult_hours," +
+        "verified,listed,assignable") +
+      "&id=eq." + encodeURIComponent(s.provider_id || "") + "&limit=1");
+    if(mine.ok) out.mine = (mine.rows || [])[0] || null;
+    else console.warn("[me] provider(mine) — " + mine.why);
+
+    /* 담당자 — ⚠️ `provider_contact_self` 가 자기 줄만 엽니다 (0013).
+       ⚠️ `updated_by` 는 안 가져옵니다 (화면이 쓰지 않습니다 · 최소 수집). */
+    const mc = await dbSelectAs(s.token, "provider_contact",
+      "?select=" + encodeURIComponent("provider_id,name,tel,email,memo,updated_at") +
+      "&provider_id=eq." + encodeURIComponent(s.provider_id || "") + "&limit=1");
+    if(mc.ok) out.myContact = (mc.rows || [])[0] || null;
+    else console.warn("[me] provider_contact(mine) — " + mc.why);
+  }
+
   /* 배정할 업체 목록 — 직원 · 관리자만입니다 (§6 "업체 수동 배정").
      ⚠️⚠️ **고객 · 업체에게는 묻지도 않습니다.** 공개 목록은 빌드가 미리
      만든 HTML 이 내보내니(`/providers`) 로그인해서 DB 로 볼 이유가 없고,

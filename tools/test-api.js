@@ -306,10 +306,37 @@ async function sendWithDb(body, opt){
        row.agree3rd_at === undefined || row.agree3rd_at === null, row.agree3rd_at);
     ok("업종·지역·시군구가 들어간다",
        row.region === "경기" && row.gu === "안양시", row);
+    /* ⑱ 진행 안내 (2026-10-22 P2) — ⚠️⚠️ **기본은 꺼짐**입니다.
+       안 고르신 것을 "받겠다" 로 읽으면 동의 없이 보내는 것입니다. */
+    ok("진행 안내는 기본으로 꺼져 있다",
+       row.notify_ok === false && row.notify_at === null,
+       JSON.stringify([row.notify_ok, row.notify_at]));
     ok("상품 id 가 들어간다", row.offer_id === "interior-basic", row.offer_id);
     /* ⚠️⚠️ 키는 헤더로만 갑니다 */
     ok("키가 헤더로 간다", keySeen === "service-key-should-never-leak");
     ok("⚠️ 키가 슬랙 글에 섞이지 않는다", !/service-key/.test(JSON.stringify(sent)));
+  }
+
+  console.log("\n── ⑱ 진행 안내를 고르시면 시각이 같이 들어간다 (P2)");
+  {
+    const { row } = await sendWithDb({
+      kind:"quote", service:"interior", serviceName:"인테리어",
+      q:"20평 카페입니다", region:"경기", side:"start",
+      name:"홍길동", tel:"010-1234-5678", agree:true, notify:true });
+    ok("켜면 true 로 들어간다", row.notify_ok === true, row.notify_ok);
+    /* ⚠️⚠️ **동의했다면 시각이 있어야** 합니다 — boolean 하나로 두면
+       "언제 받았나" 를 못 대고, 그건 받지 않은 것과 같습니다
+       (DB 의 request_notify_at_ok 가 한 번 더 막습니다). */
+    ok("받은 시각이 같이 들어간다",
+       !!row.notify_at && !isNaN(Date.parse(row.notify_at)), row.notify_at);
+    /* ⚠️⚠️ 문자열 "false" · "0" 도 참이라 `!!b.notify` 로 두면 켜집니다 */
+    const a = await sendWithDb({
+      kind:"quote", service:"interior", serviceName:"인테리어",
+      q:"20평", region:"경기", side:"start",
+      name:"홍길동", tel:"010-1234-5678", agree:true, notify:"false" });
+    ok("\"false\" 라는 글자로는 안 켜진다",
+       a.row.notify_ok === false && a.row.notify_at === null,
+       JSON.stringify([a.row.notify_ok, a.row.notify_at]));
   }
 
   console.log("\n── 업체 입점은 저장하지 않는다 (§7 에서 붙습니다)");

@@ -6161,3 +6161,27 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
    body 색이 비쳐 바로 아래 진입 카드 구간과 **ΔE 0.00** 이 되어 두
    구간이 한 구간으로 읽힙니다 (전수 점검이 잡았습니다). */
 .bhero{ background:var(--surface); }
+
+/* ── 내 업체 정보 (2026-10-22 전수검사 P2 ⑳) ─────────────────────
+   ⚠️⚠️ **못 고치는 넷을 "고장난 칸" 으로 보이게 하지 마세요.** 적는
+   칸처럼 생긴 회색 칸을 두면 눌러 보고 "왜 안 되나" 가 됩니다 —
+   테두리 없는 **설명 목록**으로 내고 바로 아래 한 줄이 까닭을
+   말합니다 (매물 조건표와 같은 짜임새). */
+.my-pv{ margin:0 0 var(--s6); }
+.my-pv-fix{ display:grid; grid-template-columns:auto 1fr;
+  gap:8px var(--s4); margin:0 0 var(--s3); font-size:var(--t-base); }
+.my-pv-fix dt{ font-weight:700; color:var(--ink2); white-space:nowrap; }
+.my-pv-fix dd{ margin:0; color:var(--ink);
+  word-break:keep-all; overflow-wrap:anywhere; }
+.my-pv-h{ margin:var(--s6) 0 var(--s2); font-size:var(--t-lg);
+  font-weight:800; color:var(--navy); }
+/* ⚠️⚠️ 여럿 고르는 칸에 **단일 고르개의 화살표를 그리지 마세요.**
+   `.sel` 이 `appearance:none` + 배경 화살표라, 그대로 두면 목록 칸
+   오른쪽에 **누를 수 없는 ⌄** 가 떠서 "펼치는 칸인가" 로 읽힙니다
+   (찍어 보고 알았습니다). 그리고 그 화살표 자리(`padding-right`)만큼
+   이름이 잘립니다.
+   ⚠️ 위아래 여백을 0 으로 두어야 줄이 **반 토막으로 잘리지 않습니다** —
+   `size` 가 센 줄 수에 여백이 더해져 일곱째 줄이 반쯤 보였습니다. */
+.my-pv select[multiple]{ appearance:auto; width:100%; height:auto;
+  min-height:0; padding:0; background-image:none; cursor:default; }
+.my-pv select[multiple] option{ padding:7px var(--s4); }

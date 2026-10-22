@@ -1720,7 +1720,11 @@ function ok(name, cond, extra) {
             /* ⚠️⚠️ **구두 합의 단계 업체** — 계약 전에 배정되면 그 순간
                성함 · 연락처가 그 업체로 넘어갑니다 (제17조 제2항). */
             { id:"pv-new", name:"무촌철거", listed:true, assignable:false,
-              subs:["demolish"], regions:["seoul"], gu:[], industries:[] }
+              subs:["demolish"], regions:["seoul"], gu:[], industries:[] },
+            /* 조건(하는 일 · 지역 · 업종)이 **다 맞는** 곳 — P2 ⑲ */
+            { id:"pv-fit", name:"서울 철거산업", listed:true, assignable:true,
+              subs:["demolish","waste"], regions:["seoul"], gu:["강남구"],
+              industries:["restaurant"] }
           ],
           quotes:[], deals:[], audits:[],
           /* 연락처는 **`?c=1` 로 물을 때만** 옵니다 */
@@ -1810,9 +1814,82 @@ function ok(name, cond, extra) {
     ok("왜 못 고르는지 적는다", !!noAsg && /배정 가능 꺼짐/.test(noAsg.t), noAsg);
     const okAsg = opts.filter(o => o.v === "pv-ok")[0];
     ok("켜진 업체는 그대로 고를 수 있다", !!okAsg && okAsg.off === false, okAsg);
-    const pvTxt = await pg.locator("#rq .rq-s-rq .f-h").last().textContent();
-    ok("고를 수 있는 곳이 몇 곳인지 센다", /1곳/.test(pvTxt), pvTxt);
+    /* ⚠️ 센 줄을 `.f-h` 의 마지막으로 집지 않습니다 — 고르개가 늘면
+       조용히 엉뚱한 줄을 봅니다 (`nth-child` 로 구간을 세다 겪은 자리). */
+    const pvTxt = await pg.locator("#rq-pv-n").textContent();
+    ok("고를 수 있는 곳이 몇 곳인지 센다",
+       /2곳/.test(pvTxt) && /등록 3곳/.test(pvTxt), pvTxt);
     ok("제17조를 그 자리에서 알려 준다", /제17조/.test(pvTxt), pvTxt);
+
+    /* ── 조건에 맞는 업체 추천 (P2 ⑲) ─────────────────────────
+       ⚠️⚠️ 지금 펼친 건은 **철거 · 서울 · 음식점**입니다 — 조건이 다
+       맞는 곳은 `pv-fit` 하나이고, `pv-new` 는 조건은 맞지만 **배정
+       가능이 꺼져** 있어 추천에 안 올라갑니다 (켜기 전에 배정하면
+       그 순간 제17조). */
+    const grp = await pg.locator("#rq-pv optgroup").evaluateAll(
+      els => els.map(e => ({ l:e.label,
+                             v:[].map.call(e.children, c => c.value) })));
+    ok("조건에 맞는 곳을 위에 모은다",
+       grp.length === 2 && /조건에 맞는 곳 1곳/.test(grp[0].l) &&
+       grp[0].v.join() === "pv-fit", JSON.stringify(grp));
+    ok("배정 가능이 꺼진 곳은 추천에 안 올린다",
+       !!grp[1] && grp[1].v.indexOf("pv-new") >= 0, JSON.stringify(grp));
+    ok("무엇을 보고 추렸는지 적는다",
+       /하는 일/.test(pvTxt) && /서울/.test(pvTxt) && /음식점/.test(pvTxt), pvTxt);
+    /* ⚠️⚠️ **추천이 아니라 조건**이라고 적습니다. 평점 · 응답속도로 줄을
+       세우면 그 순서가 곧 지어낸 추천입니다 (절대 규칙 1). */
+    ok("평점 · 응답속도로 세우지 않는다고 적는다",
+       /평점/.test(pvTxt) && /재는 장치가 없습니다/.test(pvTxt), pvTxt);
+    ok("고르는 것은 사람이라고 적는다", /고르는 것은 사람/.test(pvTxt), pvTxt);
+    /* 저절로 고르지 않습니다 — 추천이 하나뿐일 때도 빈 칸입니다 */
+    ok("저절로 골라 두지 않는다",
+       (await pg.locator("#rq-pv").inputValue()) === "", "자동 선택");
+
+    /* ── 업체 검색 (P2 ㉑) ─────────────────────────────────────
+       ⚠️ 직원은 업체 id 를 모르고 **상호**를 칩니다. 지역 이름 ·
+       업종 이름 · 하는 일 이름으로도 걸려야 합니다. */
+    ok("검색 칸이 있다", (await pg.locator("#rq-pv-q").count()) === 1);
+    await pg.locator("#rq-pv-q").fill("무촌");
+    await pg.waitForTimeout(250);
+    let vs = await pg.locator("#rq-pv option").evaluateAll(
+      els => els.map(e => e.value).filter(Boolean));
+    ok("상호로 좁혀진다", vs.join() === "pv-new", vs.join());
+    const n2 = await pg.locator("#rq-pv-n").textContent();
+    ok("몇 곳이 검색으로 빠졌는지 밝힌다",
+       /1곳이 걸렸습니다/.test(n2) && /2곳은 검색으로 빠졌습니다/.test(n2), n2);
+    /* ⚠️⚠️ 커서가 칸에 **그대로** 있어야 합니다 — 다시 그리면 한 글자
+       칠 때마다 빠집니다 (업체 빠른 등록에서 겪은 자리). */
+    ok("치는 칸에서 커서가 빠지지 않는다",
+       (await pg.evaluate(() => document.activeElement &&
+                                document.activeElement.id)) === "rq-pv-q");
+    await pg.locator("#rq-pv-q").fill("강남구");
+    await pg.waitForTimeout(250);
+    vs = await pg.locator("#rq-pv option").evaluateAll(
+      els => els.map(e => e.value).filter(Boolean));
+    ok("시 · 군 · 구로도 걸린다", vs.join() === "pv-fit", vs.join());
+    await pg.locator("#rq-pv-q").fill("음식점");
+    await pg.waitForTimeout(250);
+    vs = await pg.locator("#rq-pv option").evaluateAll(
+      els => els.map(e => e.value).filter(Boolean));
+    ok("업종 이름으로도 걸린다", vs.join() === "pv-fit", vs.join());
+    /* ⚠️⚠️ **고른 것이 걸러져 사라지지 않습니다** — 사라지면 select 가
+       첫 칸으로 돌아가고 직원은 자기가 고른 줄 압니다. */
+    await pg.locator("#rq-pv").selectOption("pv-fit");
+    await pg.locator("#rq-pv-q").fill("무촌");
+    await pg.waitForTimeout(250);
+    vs = await pg.locator("#rq-pv option").evaluateAll(
+      els => els.map(e => e.value).filter(Boolean));
+    ok("고른 업체는 걸러도 남는다", vs.indexOf("pv-fit") >= 0, vs.join());
+    ok("고른 것이 그대로 남아 있다",
+       (await pg.locator("#rq-pv").inputValue()) === "pv-fit");
+    /* ⚠️⚠️ 센 줄과 고르개가 **다른 수**를 말하면 안 됩니다 — "1곳이
+       걸렸습니다" 라고 적어 놓고 둘이 보이는 꼴입니다. */
+    ok("남겨 둔 곳을 센 줄이 밝힌다",
+       /고르신 곳은 찾으신 말과 안 맞아도 그대로 둡니다/
+         .test(await pg.locator("#rq-pv-n").textContent()),
+       await pg.locator("#rq-pv-n").textContent());
+    await pg.locator("#rq-pv-q").fill("");
+    await pg.waitForTimeout(250);
 
     /* 업체 구간 — 딱지와 단추 */
     const pvRow = pg.locator("#rq .rq-s-pv .rq-r").filter({ hasText:"무촌철거" });

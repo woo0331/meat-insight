@@ -154,7 +154,8 @@ try{
                      0001 의 GRANT 가 표째라 거기 직통 번호를 넣으면
                      로그인한 손님 전부가 읽습니다. 아래 블록이 그것을
                      눌러 봅니다 (고객 토큰으로 0줄). */
-                  "db/migrations/0013_provider_contact_settlement.sql"];
+                  "db/migrations/0013_provider_contact_settlement.sql",
+                  "db/migrations/0014_provider_self_notify.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ /* ⚠️⚠️ NOTICE 가 먼저 쏟아져서 앞 세 줄만 보면 **진짜
@@ -275,20 +276,137 @@ try{
     ok("정산 기간이 뒤집히면 막는다", r.no, r.why);
   }
 
-  console.log("\n── 트리거 — 업체가 스스로 못 켜는 것 (절대 규칙 1)");
+  console.log("\n── 업체 표를 바로 고치는 길이 없다 (0014 · 절대 규칙 1)");
   {
     const asPv = "set role authenticated; select become('33333333-3333-3333-3333-333333333333'); ";
-    let r = denied(asPv + "update provider set verified = '{\"biz\":true}' where id='pv-one'");
-    ok("업체가 확인 배지를 스스로 못 켠다", r.no, r.why);
+    /* ⚠️⚠️ **0014 로 권한을 걷었습니다.** 0001 은 `grant update (name,
+       intro, …, subs, …) on provider to authenticated` 로 칸 단위
+       쓰기를 열어 두었는데, 그 길에는 **감사 기록이 없고** `name` 과
+       `subs` 까지 열려 있었습니다 (하는 일을 스스로 넓히면 철거만
+       하는 곳이 세무 화면에 앉습니다). 지금은 문 하나로 모읍니다. */
+    let r = denied(asPv + "update provider set intro = 'x' where id='pv-one'");
+    ok("표를 바로 고치는 길이 없다", r.no && /permission denied/.test(r.why), r.why);
+    r = denied(asPv + "update provider set subs = '{tax}' where id='pv-one'");
+    ok("하는 일(subs)도 바로 못 바꾼다", r.no, r.why);
+
+    /* ⚠️⚠️ **트리거를 "권한이 없어서" 통과시키지 않습니다.** 위 셋이
+       `permission denied` 로 막히니, 트리거가 제 일을 하는지는 **권한을
+       잠깐 돌려주고** 봐야 압니다 — 0003 에서 "엉뚱한 자물쇠가 먼저
+       막아 검사를 속인" 그 자리입니다. 에러 **글까지** 맞춰 봅니다. */
+    const back = "grant update (name, verified, listed, id) on provider to authenticated; ";
+    psql(back);
+    r = denied(asPv + "update provider set verified = '{\"biz\":true}' where id='pv-one'");
+    ok("업체가 확인 배지를 스스로 못 켠다 (트리거)",
+       r.no && /확인 배지는 플랫폼이/.test(r.why), r.why);
     r = denied(asPv + "update provider set listed = false where id='pv-one'");
-    ok("업체가 공개 여부를 못 바꾼다", r.no, r.why);
+    ok("업체가 공개 여부를 못 바꾼다 (트리거)",
+       r.no && /공개 여부는 관리자가/.test(r.why), r.why);
     r = denied(asPv + "update provider set id = 'pv-new' where id='pv-one'");
-    ok("업체가 주소(id)를 못 바꾼다 (이미 색인된 주소)", r.no, r.why);
-    const a = allowed(asPv + "update provider set name = '가나다 인테리어' where id='pv-one'");
-    ok("업체가 자기 이름은 바꿀 수 있다", a.yes, a.why);
+    ok("업체가 주소(id)를 못 바꾼다 (트리거)",
+       r.no && /색인된 주소/.test(r.why), r.why);
     r = denied(asPv + "update provider set name = 'x' where id='pv-two'");
-    ok("업체가 **남의** 정보를 못 바꾼다 (RLS)", r.no || psql("select name from provider where id='pv-two'") === "라마바",
+    ok("업체가 **남의** 정보를 못 바꾼다 (RLS)",
+       r.no || psql("select name from provider where id='pv-two'") === "라마바",
        psql("select name from provider where id='pv-two'"));
+    psql("revoke update on provider from authenticated;");
+    /* 되돌려 놓았는지 그 자리에서 확인합니다 — 안 하면 뒤 검사가
+       열린 권한 위에서 돕니다 (검사가 스스로 거짓이 됩니다). */
+    r = denied(asPv + "update provider set name = 'y' where id='pv-one'");
+    ok("권한을 다시 걷었다", r.no && /permission denied/.test(r.why), r.why);
+  }
+
+  console.log("\n── ⑳ 업체가 스스로 고치는 문 (0014)");
+  {
+    const PV = "33333333-3333-3333-3333-333333333333";
+    const ST = "44444444-4444-4444-4444-444444444444";
+    const A  = "11111111-1111-1111-1111-111111111111";
+    /* ⚠️⚠️ `psql()` 은 에러에 **던집니다.** 직접 부르면 검사가 도중에
+       멈추고 어느 줄이 틀렸는지도 안 나옵니다 — 위의 `allowed()` ·
+       `denied()` 를 그대로 씁니다. */
+    const asU = u => "set role authenticated; select become('" + u + "'); ";
+    function callOk(u, sql){ return allowed(asU(u) + sql); }
+    function callNo(u, sql){ return denied(asU(u) + sql); }
+
+    let a = callOk(PV, "select save_provider_self('{\"intro\":\"안양에서 12년 했습니다\",\"regions\":[\"gyeonggi\"],\"gu\":[\"안양시\"],\"industries\":[\"cafe\"],\"since\":2014,\"consultHours\":\"평일 09~18\"}'::jsonb, '소개 고침')");
+    ok("업체가 자기 소개를 고친다", a.yes, a.why);
+    ok("실제로 적혔다",
+       psql("select intro from provider where id='pv-one'") === "안양에서 12년 했습니다",
+       psql("select intro, since, consult_hours from provider where id='pv-one'"));
+    ok("지역 · 업종 · 문 연 해도 같이 적힌다",
+       psql("select regions[1] || '|' || industries[1] || '|' || since from provider where id='pv-one'")
+         === "gyeonggi|cafe|2014",
+       psql("select regions, industries, since from provider where id='pv-one'"));
+    /* ⚠️⚠️ **상호 · 하는 일 · 확인 배지 · 공개 · 배정 가능은 이 문이
+       아예 안 씁니다** — 보내도 조용히 무시됩니다 (승인 대상입니다). */
+    psql("update provider set name='가나다 인테리어', subs='{interior}', listed=true where id='pv-one'");
+    callOk(PV, "select save_provider_self('{\"intro\":\"다시\",\"name\":\"내가 바꾼 상호\",\"subs\":[\"tax\"],\"listed\":false,\"assignable\":true,\"verified\":{\"biz\":true}}'::jsonb, null)");
+    ok("⚠️⚠️ 상호를 보내도 안 바뀐다",
+       psql("select name from provider where id='pv-one'") === "가나다 인테리어",
+       psql("select name from provider where id='pv-one'"));
+    ok("⚠️⚠️ 하는 일(subs)을 보내도 안 바뀐다",
+       psql("select subs[1] from provider where id='pv-one'") === "interior",
+       psql("select subs from provider where id='pv-one'"));
+    ok("⚠️⚠️ 공개 · 확인 배지도 안 바뀐다",
+       psql("select listed::text || '|' || (verified = '{}')::text from provider where id='pv-one'")
+         === "true|true",
+       psql("select listed, verified from provider where id='pv-one'"));
+    /* 감사 기록 — §8. ⚠️ 같은 트랜잭션이라 기록이 실패하면 수정도 안 됩니다 */
+    ok("고친 것이 기록에 남는다 (§8)",
+       Number(psql("select count(*) from audit_log where obj='provider' and to_state='self-updated'")) >= 2,
+       psql("select count(*) from audit_log where to_state='self-updated'"));
+    /* ⚠️⚠️ 직원 · 고객은 이 문을 못 씁니다 — `my_provider()` 가 없습니다 */
+    let r = callNo(ST, "select save_provider_self('{}'::jsonb, null)");
+    ok("직원은 이 문을 못 쓴다", r.no && /업체 계정으로/.test(r.why), r.why);
+    r = callNo(A, "select save_provider_self('{}'::jsonb, null)");
+    ok("고객은 이 문을 못 쓴다", r.no && /업체 계정으로/.test(r.why), r.why);
+
+    /* ── 담당자를 업체가 적는 길 (0014) ─────────────────────── */
+    a = callOk(PV, "select save_provider_contact('pv-one','{\"name\":\"박실장\",\"tel\":\"010-2222-3333\"}'::jsonb,'담당자 바뀜')");
+    ok("업체가 자기 담당자를 적는다", a.yes, a.why);
+    ok("적힌 담당자가 보인다",
+       psql("select name from provider_contact where provider_id='pv-one'") === "박실장",
+       psql("select name, tel from provider_contact where provider_id='pv-one'"));
+    /* ⚠️⚠️ **요청이 보낸 id 를 믿지 않습니다** — 남의 업체 담당자를
+       덮어쓰는 길이 열립니다. */
+    r = callNo(PV, "select save_provider_contact('pv-two','{\"name\":\"침입\"}'::jsonb,null)");
+    ok("⚠️⚠️ 업체가 남의 담당자를 못 적는다", r.no && /내 업체의 담당자만/.test(r.why), r.why);
+    ok("남의 줄이 안 바뀌었다",
+       psql("select count(*) from provider_contact where provider_id='pv-two'") === "0");
+    /* ⚠️ 감사 기록에 번호를 안 싣습니다 (고칠 수 없는 기록이라 그 자체가 보관) */
+    ok("⚠️⚠️ 기록에 연락처를 안 싣는다",
+       !/010-2222/.test(psql("select coalesce(data::text,'') || coalesce(why,'') from audit_log where obj='provider_contact' order by at desc limit 1")),
+       psql("select data from audit_log where obj='provider_contact' order by at desc limit 1"));
+    r = callNo(A, "select save_provider_contact('pv-one','{\"name\":\"x\"}'::jsonb,null)");
+    ok("고객은 담당자를 못 적는다", r.no && /업체 · 직원 · 관리자만/.test(r.why), r.why);
+  }
+
+  console.log("\n── ⑱ 진행 안내 받기 (0014)");
+  {
+    /* ⚠️⚠️ 기본값 **꺼짐**입니다 (fail-closed). 안 고르신 것을
+       "받겠다" 로 읽으면 그게 동의 없이 보내는 것입니다. */
+    ok("기본은 꺼져 있다",
+       psql("select count(*) from request where notify_ok = false") ===
+       psql("select count(*) from request"),
+       psql("select notify_ok, notify_at from request limit 3"));
+    /* ⚠️⚠️ **동의했다면 시각이 있어야 합니다** — true 만 들어오면
+       "언제 받았나" 를 못 대고, 그건 받지 않은 것과 같습니다. */
+    let r = denied("update request set notify_ok = true where no = 'SW-AAAA-0001'");
+    ok("시각 없이 켜면 막는다",
+       r.no && /request_notify_at_ok/.test(r.why), r.why);
+    /* ⚠️⚠️ **0줄을 고쳐도 UPDATE 는 성공입니다** — 없는 번호를 쓰면
+       검사가 거짓으로 통과합니다 (씨앗이 틀렸던 자리). 실제로 켜졌는지
+       값을 되읽어 봅니다. */
+    const a = allowed("update request set notify_ok = true, notify_at = now() where no = 'SW-AAAA-0001'");
+    ok("시각과 같이 켜면 된다",
+       a.yes && psql("select notify_ok from request where no='SW-AAAA-0001'") === "t",
+       a.why + " / " + psql("select notify_ok, notify_at from request where no='SW-AAAA-0001'"));
+    /* ⚠️ 끄는 것은 시각이 남아 있어도 됩니다 — 받은 적이 있다는 기록입니다 */
+    const b = allowed("update request set notify_ok = false where no = 'SW-AAAA-0001'");
+    ok("끄는 것은 그대로 된다", b.yes, b.why);
+    /* ⚠️⚠️ 로그인한 사람에게 **쓰기 권한을 주지 않았습니다** */
+    r = denied("set role authenticated; select become('11111111-1111-1111-1111-111111111111'); " +
+               "update request set notify_ok = true, notify_at = now() where no = 'SW-AAAA-0001'");
+    ok("고객이 직접 못 켠다 (권한 없음)", r.no, r.why);
   }
 
   console.log("\n── ⚠️⚠️ RLS — 남의 것이 안 보이는가 (§8)");
@@ -1702,6 +1820,12 @@ try{
     r = denied(as(ST) + `select save_provider_contact('pv-one','{"email":"abc"}'::jsonb)`);
     ok("메일 꼴을 본다", r.no && /메일 주소/.test(r.why || ""), r.why);
 
+    /* ⚠️⚠️ **갯수를 그냥 세지 않습니다.** 앞 블록(⑳)이 같은 표에 이미
+       한 줄을 적어서, `=== "1"` 로 두면 검사를 하나 더할 때마다
+       조용히 틀립니다 — 이 저장소가 감사 기록을 갯수로 세다 **세 번**
+       겪은 자리입니다. 전을 재고 **늘어난 값**만 봅니다. */
+    const telWas = Number(psql(`select count(*) from audit_log
+            where obj='provider_contact' and data::text like '%tel%'`));
     psql(as(ST) + `select save_provider_contact('pv-one',
             '{"name":"김담당","tel":"010-1111-2222","email":"a@b.com","memo":"오전에 연락"}'::jsonb,
             '업체에서 받아 왔습니다')`);
@@ -1729,8 +1853,9 @@ try{
                 or coalesce(data::text,'') like '%010-1111%'
                 or coalesce(why,'')  like '%010-1111%')`) === "0");
     ok("채워진 칸 이름만 남는다",
-       psql(`select count(*) from audit_log where obj='provider_contact'
-              and data::text like '%tel%'`) === "1");
+       Number(psql(`select count(*) from audit_log where obj='provider_contact'
+              and data::text like '%tel%'`)) === telWas + 1,
+       "전 " + telWas);
 
     r = denied(as(ST) + `insert into provider_contact (provider_id, name)
                            values ('pv-two','직접')`);
@@ -1867,6 +1992,30 @@ try{
        psql(as(A) + "select count(*) from settlement") === "0");
     ok("업체는 남의 정산을 못 본다 (pv-one 은 0건)",
        psql(as(PV) + "select count(*) from settlement where provider_id='pv-set'") === "0");
+  }
+
+  console.log("\n── 0014 를 두 번 돌려도 안전한가");
+  {
+    /* ⚠️⚠️ 사장님이 **손으로** 붙여 넣으십니다 — 한 번 더 누르셨을 때
+       터지면 그 자리에서 멈춰 버립니다. `alter type … add value` 를
+       트랜잭션으로 감싸면 안 되는 0006 과 짝이 되는 자리입니다. */
+    const a = allowed("select 1");   /* 연결 확인 */
+    ok("DB 가 살아 있다", a.yes, a.why);
+    let again = { yes:true };
+    try{ psqlFile("db/migrations/0014_provider_self_notify.sql"); }
+    catch(e){ again = { yes:false,
+      why:String((e.stderr || e.stdout || e.message)).split("\n")
+            .filter(x => /^ERROR/.test(x))[0] || "알 수 없음" }; }
+    ok("0014 를 두 번 돌려도 터지지 않는다", again.yes, again.why);
+    /* ⚠️ 판 번호가 **두 줄로 늘지 않습니다** (on conflict do nothing) */
+    ok("판 번호가 한 줄 그대로다",
+       psql("select count(*) from schema_version where n = 14") === "1",
+       psql("select count(*) from schema_version where n = 14"));
+    /* ⚠️⚠️ 두 번째 실행이 권한을 **되살리지 않습니다** */
+    const r = denied("set role authenticated; " +
+      "select become('33333333-3333-3333-3333-333333333333'); " +
+      "update provider set intro = 'x' where id='pv-one'");
+    ok("두 번 돌려도 표가 닫힌 채다", r.no && /permission denied/.test(r.why), r.why);
   }
 
   console.log("\n── 되돌리기 파일이 실수로 안 돌아가는가");

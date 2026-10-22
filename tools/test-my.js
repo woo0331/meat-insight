@@ -463,6 +463,140 @@ const ADM_DEAL = [
     await ctx.close();
   }
 
+  /* ══ ④-3 업체가 스스로 고치는 화면 (2026-10-22 P2 ⑳) ═══════════ */
+  console.log("\n④-3 업체 — 내 업체 정보를 스스로 고칩니다");
+  {
+    const MINE = { id:"ganada-interior", name:"가나다 인테리어",
+      intro:"안양에서 12년 했습니다",
+      regions:["gyeonggi"], gu:["안양시","군포시"], industries:["cafe"],
+      subs:["interior","design"], since:2014, consult_hours:"평일 09~18",
+      verified:{ biz:true }, listed:true, assignable:true };
+    const CON = { provider_id:"ganada-interior", name:"박실장",
+      tel:"010-2222-3333", email:"park@test.invalid", memo:"오전에 연락" };
+    const { ctx, pg, errs, sent } = await openMy(
+      { auth:true, signedIn:true, role:"provider" },
+      { auth:true, signedIn:true, role:"provider",
+        requests:PV_RQ, quotes:[], deals:[], mine:MINE, myContact:CON });
+    /* ⚠️ `sent` 는 **글자 배열**입니다 (`deal:<fn>:<args json>`) —
+       함수로 부르면 터지고 어느 검사가 틀렸는지도 안 나옵니다. */
+    const lastDeal = function(){
+      const L = sent.filter(function(x){ return x.indexOf("deal:") === 0; });
+      if(!L.length) return null;
+      const x = L[L.length - 1], i = x.indexOf(":", 5);
+      try{ return { fn:x.slice(5, i), args:JSON.parse(x.slice(i + 1)) }; }
+      catch(e){ return { fn:x.slice(5, i), args:{} }; }
+    };
+    const t = await dbTxt(pg);
+    ok("내 업체 정보 구간이 있다", (await n(pg, ".my-pv")) === 1);
+    /* ⚠️⚠️ 지금 적힌 값을 **되읽어야** 합니다 — 모르면 소개를 고치려는
+       분이 처음부터 다시 적습니다. */
+    ok("지금 적힌 소개가 칸에 들어 있다",
+        (await pg.inputValue("#pvs-intro")) === "안양에서 12년 했습니다");
+    ok("시군구가 쉼표로 들어 있다",
+        (await pg.inputValue("#pvs-gu")) === "안양시, 군포시");
+    ok("문 연 해 · 상담 시간이 들어 있다",
+        (await pg.inputValue("#pvs-since")) === "2014" &&
+        (await pg.inputValue("#pvs-hrs")) === "평일 09~18");
+    ok("고른 지역 · 업종이 켜져 있다", await pg.evaluate(() => {
+      const r = [].filter.call(document.getElementById("pvs-reg").options,
+                               o => o.selected).map(o => o.value);
+      const i = [].filter.call(document.getElementById("pvs-ind").options,
+                               o => o.selected).map(o => o.value);
+      return r.join() === "gyeonggi" && i.join() === "cafe";
+    }));
+    /* ⚠️⚠️ **못 고치는 넷** — 적는 칸이 아예 없어야 합니다 (있으면
+       눌러 보고 "왜 안 되나" 가 됩니다). */
+    /* ⚠️ `.my-pv input[id*=name]` 로 집으면 **담당자 성함 칸**(#pvc-name)
+       까지 걸립니다 — 멀쩡한 화면을 실패로 잡았습니다 (검사가 틀린
+       자리). 업체 정보 **폼 안**만 봅니다. */
+    ok("상호 · 하는 일 · 공개 · 확인은 보여만 준다",
+        (await n(pg, ".my-pv-fix dt")) === 4 &&
+        (await n(pg, ".my-pv form:nth-of-type(1) [id*=name]")) === 0 &&
+        (await n(pg, ".my-pv form:nth-of-type(1) [id*=subs]")) === 0 &&
+        (await n(pg, ".my-pv form:nth-of-type(1) [id*=listed]")) === 0);
+    ok("그 넷이 왜 회색인지 적는다",
+        !!t && t.includes("위 넷은 여기서 못 고칩니다"));
+    ok("확인된 것을 보여 준다", !!t && t.includes("사업자"), t && t.slice(0, 80));
+    /* ⚠️⚠️ 담당자는 **손님에게 안 보인다**고 그 자리에서 말합니다 */
+    ok("담당자 칸에 지금 값이 들어 있다",
+        (await pg.inputValue("#pvc-name")) === "박실장" &&
+        (await pg.inputValue("#pvc-tel")) === "010-2222-3333");
+    ok("담당자가 손님에게 안 보인다고 적는다",
+        !!t && t.includes("손님에게는 보이지 않습니다"));
+
+    /* ── 저장 — 보내는 몸통을 잽니다 ─────────────────────────── */
+    await pg.fill("#pvs-intro", "열두 해 했습니다");
+    await pg.fill("#pvs-gu", " 안양시 ,, 수원시 ");
+    await pg.click(".my-pv form:nth-of-type(1) button");
+    await pg.waitForTimeout(400);
+    let b = lastDeal();
+    ok("save_provider_self 로 간다", !!b && b.fn === "save_provider_self", b);
+    /* ⚠️⚠️ **업체 id 를 안 보냅니다** — 토큰으로 본 my_provider() 하나만
+       고칩니다 (보낸 id 를 믿으면 남의 업체를 덮습니다). */
+    ok("업체 id 를 안 보낸다",
+        !!b && b.args.p_id === undefined && b.args.p_provider === undefined, b);
+    ok("고친 소개가 실린다",
+        !!b && b.args.p_data.intro === "열두 해 했습니다", b && b.args);
+    /* ⚠️ 쉼표의 **빈 토막**을 버립니다 — 빈 문자열이 들어가면 거르개에서
+       아무것도 안 걸리는 값이 하나 섞입니다. */
+    ok("시군구의 빈 토막을 버린다",
+        !!b && b.args.p_data.gu.join("|") === "안양시|수원시", b && b.args.p_data.gu);
+    /* ⚠️⚠️ **여럿 고르는 칸은 `.value` 가 첫 하나뿐**입니다 — 그대로
+       쓰면 지역이 늘 한 곳이 됩니다. */
+    await pg.selectOption("#pvs-reg", ["gyeonggi", "seoul"]);
+    await pg.click(".my-pv form:nth-of-type(1) button");
+    await pg.waitForTimeout(400);
+    b = lastDeal();
+    ok("여럿 고른 지역이 다 실린다",
+        !!b && b.args.p_data.regions.length === 2, b && b.args.p_data.regions);
+    /* ⚠️⚠️ 승인 대상 칸을 **보내지 않습니다** */
+    ok("상호 · 하는 일 · 공개를 안 보낸다", !!b &&
+        b.args.p_data.name === undefined && b.args.p_data.subs === undefined &&
+        b.args.p_data.listed === undefined &&
+        b.args.p_data.verified === undefined &&
+        b.args.p_data.assignable === undefined, b && b.args.p_data);
+
+    /* 담당자 — ⚠️ 업체 id 를 보내지만 DB 가 my_provider() 와 맞춰 봅니다 */
+    await pg.fill("#pvc-name", "최실장");
+    await pg.click(".my-pv form:nth-of-type(2) button");
+    await pg.waitForTimeout(400);
+    b = lastDeal();
+    ok("담당자는 save_provider_contact 로 간다",
+        !!b && b.fn === "save_provider_contact" &&
+        b.args.p_provider === "ganada-interior", b);
+    ok("고친 담당자 성함이 실린다",
+        !!b && b.args.p_data.name === "최실장", b && b.args.p_data);
+    /* ⚠️⚠️ 메일 꼴을 **화면에서도** 봅니다. `type="email"` 은 폼 제출을
+       막아 주지만 **함수를 직접 부르면 그냥 지나갑니다** — 이 저장소의
+       접수 폼과 같은 규칙입니다. 그래서 단추를 누르는 것이 아니라
+       그 길로 들어가 봅니다 (단추는 브라우저가 먼저 막습니다). */
+    await pg.fill("#pvc-mail", "abc");
+    const before = sent.length;
+    await pg.evaluate(() => window.myPvCon({ preventDefault:function(){},
+                                             target:document.querySelector(".my-pv form:nth-of-type(2)") }));
+    await pg.waitForTimeout(300);
+    ok("메일 꼴이 이상하면 안 보낸다",
+        /메일 주소를 확인/.test(await pg.textContent("#pvc-n")) &&
+        sent.length === before,
+        await pg.textContent("#pvc-n"));
+    ok("JS 에러 0", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
+  /* ⚠️⚠️ 업체 줄이 안 오면 **구간째 뺍니다** (절대 규칙 2) */
+  console.log("\n④-4 업체 — 내 업체 줄이 안 오면 구간째 뺍니다");
+  {
+    const { ctx, pg, errs } = await openMy(
+      { auth:true, signedIn:true, role:"provider" },
+      { auth:true, signedIn:true, role:"provider",
+        requests:[], quotes:[], deals:[], mine:null });
+    ok("내 업체 정보 구간이 아예 없다", (await n(pg, ".my-pv")) === 0);
+    const t = await dbTxt(pg);
+    ok("자리표시자를 안 찍는다", !!t && !/내 업체 정보/.test(t), t && t.slice(0, 80));
+    ok("JS 에러 0", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
   /* 고객이 고른 견적 — ⚠️ 조용히 말을 바꾸는 일을 막습니다 */
   console.log("\n④-2 업체 — 고객이 고른 견적은 못 고칩니다");
   {

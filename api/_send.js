@@ -197,4 +197,67 @@ function fromOurPages(req){
   catch(e){ return false; }
 }
 
-module.exports = { deliver, customerAck, clean, won, why, fromOurPages };
+/* ── 진행 안내 (2026-10-22 오픈 전 전수검사 P2 ⑱) ─────────────────
+   배정 · 견적 도착을 **받으시겠다고 하신 분에게만** 보냅니다.
+
+   ⚠️⚠️ **상호도 금액도 싣지 않습니다.** 운영자 알림을 "가서 보세요"
+   까지로 둔 것과 같은 까닭입니다 — 메일 주소를 한 글자 잘못 적으신
+   경우 그 메일이 남에게 갑니다. 거기에 어느 업체가 얼마를 냈는지까지
+   적혀 있으면 그건 유출입니다. 번호와 "들어와서 보세요" 까지입니다.
+   ⚠️⚠️ **광고를 섞지 마세요.** 한 줄만 권유를 넣으면 그때부터 광고성
+   정보이고 사전 수신동의가 먼저입니다 (정보통신망법 제50조).
+   ⚠️⚠️ **회신 시점을 약속하지 않습니다** (약관 제8조).
+   ⚠️ 끄는 길을 본문에 적습니다 — 로그인 없이 들어오는 접수라 수신거부
+   토큰이 없습니다. */
+const STEP_SAY = {
+  assigned: { s:"연결할 업체가 정해졌습니다",
+              l:"연결할 업체가 정해졌습니다." },
+  quoted:   { s:"견적이 도착했습니다",
+              l:"업체가 보낸 견적이 도착했습니다." }
+};
+
+async function customerStep(to, no, kind){
+  const key  = process.env.RESEND_API_KEY;
+  const from = process.env.CUSTOMER_EMAIL_FROM;
+  const addr = clean(to, 120);
+  const say  = STEP_SAY[kind];
+  /* ⚠️ 하나라도 없으면 **아무 일도 안 합니다** (fail-closed) — 접수는
+     그대로 됩니다. 지금 운영이 그 상태입니다. */
+  if(!key || !from || !addr || addr.indexOf("@") < 1 || !say)
+    return { ok:false, why:"off" };
+
+  const L = [];
+  L.push(say.l);
+  L.push("");
+  /* ⚠️ 번호가 없으면 **줄째 뺍니다** (절대 규칙 2) */
+  if(no){
+    L.push("접수번호  " + clean(no, 20));
+    L.push("");
+  }
+  L.push("내 기록에서 확인하실 수 있습니다 —");
+  L.push("https://storeway.co.kr/my");
+  /* ⚠️ 로그인하신 적이 없어도 볼 수 있는 길을 같이 적습니다 */
+  if(no) L.push("로그인하신 적이 없으시면 그 화면에서 접수번호와 연락처로 가져오실 수 있습니다.");
+  L.push("");
+  L.push("업체에 연락처를 전달할 때는 어느 업체인지 알려 드리고 그때 다시 여쭙습니다.");
+  L.push("");
+  L.push("이 메일은 신청하신 건의 진행 안내이며 광고가 아닙니다.");
+  L.push("받지 않으시려면 이 메일에 회신해 주시면 바로 멈춥니다.");
+
+  try{
+    const r = await fetch("https://api.resend.com/emails", {
+      method:"POST",
+      headers:{ "content-type":"application/json", authorization:"Bearer " + key },
+      body: JSON.stringify({
+        /* ⚠️⚠️ **한 사람에게만** 보냅니다 (쉼표를 그대로 넘기지 않습니다) */
+        from: from, to: [addr],
+        subject: "[진행] " + say.s + (no ? " (" + clean(no, 20) + ")" : ""),
+        text: L.join("\n")
+      })
+    });
+    if(r.ok) return { ok:true };
+    return { ok:false, why:"resend " + r.status };
+  }catch(e){ return { ok:false, why:"resend " + (e && e.message) }; }
+}
+
+module.exports = { deliver, customerAck, customerStep, clean, won, why, fromOurPages };

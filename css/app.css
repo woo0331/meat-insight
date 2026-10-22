@@ -899,3 +899,15 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
    전수 점검의 "어느 화면에서나 검색으로 가는 길이 있다" 가 그 폭을
    잽니다. */
 @media (max-width:340px){ .hd-ic-s{ display:none; } }
+
+/* ── 진행 안내 받기 (선택 · 2026-10-22 전수검사 P2 ⑱) ─────────────
+   ⚠️⚠️ **동의 상자와 갈라 보이게** 둡니다. 한 상자에 묶으면 "이것도
+   켜야 접수되나" 로 읽히고, 그렇게 받은 동의는 받은 것이 아닙니다
+   (제15조 동의는 필수 · 이것은 선택).
+   ⚠️ 그래서 `.agree` 안이 아니라 **그 아래 제 칸**입니다. */
+.q-nt{ margin:var(--s3) 0 0; padding:var(--s3) var(--s4);
+  border:1px solid var(--line); border-radius:var(--r-in);
+  background:var(--bg-2); font-size:var(--t-cap); color:var(--ink2); }
+.q-nt span{ padding-top:2px; }
+.q-nt input{ margin-top:2px; }
+.q-nt b{ color:var(--ink); }

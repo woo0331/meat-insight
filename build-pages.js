@@ -3719,8 +3719,66 @@ function checkPhotoSql(){
   console.log("   사진 형식 " + api1.length + "가지 \u00b7 상한 " +
     Math.round(dbMax / 1048576) + "MB 가 서버와 DB 에서 같습니다");
 }
+/* ── 업체가 스스로 고치는 문 (2026-10-22 P2 ⑳ · 0014) ────────────
+   ⚠️⚠️ 이 문이 **승인 대상 칸**을 건드리면 업체가 상호 · 하는 일 ·
+   확인 배지 · 공개 · 배정 가능을 스스로 바꿉니다. 하는 일(`subs`)을
+   넓히면 철거만 하는 곳이 세무 화면에 앉고(`amProviderInCat()`),
+   확인 배지를 스스로 켜면 그건 지어낸 신뢰입니다 (절대 규칙 1 ·
+   표시 · 광고의 공정화에 관한 법률 제3조).
+   ⚠️ **표의 update 권한이 걷혀 있는지**도 같이 봅니다 — 문만 만들고
+   표를 열어 두면 기록 없이 지나가는 길이 그대로 남습니다 (§8). */
+function checkProviderSelfSql(){
+  const f = path.join(ROOT, "db", "migrations", "0014_provider_self_notify.sql");
+  const d = path.join(ROOT, "api", "deal.js");
+  if(!fs.existsSync(f) || !fs.existsSync(d)) return;
+  /* ⚠️ 주석을 먼저 걷어냅니다 — 규칙을 **설명하는 글**에 걸려 멀쩡한
+     코드를 실패로 잡은 적이 있습니다 (틀린 것은 검사였습니다). */
+  const sq = fs.readFileSync(f, "utf8").replace(/^\s*--.*$/gm, " ");
+  const js = fs.readFileSync(d, "utf8").replace(/\/\*[\s\S]*?\*\//g, " ");
+
+  /* 함수 본문만 떼어 봅니다 — 파일 안의 다른 함수(담당자)가 섞이면
+     엉뚱한 줄을 봅니다. */
+  const i = sq.indexOf("function save_provider_self");
+  if(i < 0) throw new Error("0014 에 save_provider_self 가 없습니다 — 검사가 틀렸습니다");
+  const body = sq.slice(i, sq.indexOf("$$;", i) + 3);
+  if(!/update\s+provider\s+set/.test(body))
+    throw new Error("save_provider_self 가 provider 를 안 고칩니다 — 검사가 틀렸습니다");
+  ["name", "subs", "verified", "listed", "assignable"].forEach(function(col){
+    /* `set …, name = …` 꼴만 봅니다 (where 절의 id 는 아닙니다) */
+    if(new RegExp("(set|,)\\s*" + col + "\\s*=").test(body))
+      throw new Error("⚠️⚠️ save_provider_self 가 승인 대상 칸(" + col + ")을 " +
+        "고칩니다 — 업체가 스스로 바꾸면 안 되는 것입니다 " +
+        "(상호 · 하는 일은 제휴 계약, 확인 · 공개 · 배정 가능은 관리자)");
+  });
+  if(!/my_provider\(\)/.test(body))
+    throw new Error("save_provider_self 가 my_provider() 를 안 봅니다 — " +
+      "요청이 보낸 업체 id 를 믿으면 남의 업체를 덮습니다");
+  if(!/insert\s+into\s+audit_log/.test(body))
+    throw new Error("save_provider_self 가 감사 기록을 안 남깁니다 (§8)");
+
+  if(!/revoke\s+update\s+on\s+provider\s+from\s+authenticated/.test(sq))
+    throw new Error("0014 가 provider 표의 update 권한을 안 걷었습니다 — " +
+      "문을 만들어도 표가 열려 있으면 기록 없이 지나갈 길이 남습니다 (§8)");
+
+  /* 서버가 그 문을 허용 목록에 들고 있는가 — 없으면 화면이 눌러도
+     "허용되지 않은 동작입니다" 입니다 (작동하지 않는 버튼). */
+  const ok = (js.match(/const\s+OK_FN\s*=\s*\{([\s\S]*?)\}/) || [])[1] || "";
+  if(ok.indexOf("save_provider_self") < 0)
+    throw new Error("api/deal.js 의 OK_FN 에 save_provider_self 가 없습니다");
+
+  /* 진행 안내 — ⚠️⚠️ 동의했다면 **시각**이 있어야 합니다 */
+  if(!/notify_ok\s+boolean\s+not\s+null\s+default\s+false/.test(sq))
+    throw new Error("0014 의 notify_ok 기본값이 false 가 아닙니다 — " +
+      "안 고르신 것을 '받겠다' 로 읽으면 동의 없이 보내는 것입니다");
+  if(!/notify_ok\s*=\s*false\s+or\s+notify_at\s+is\s+not\s+null/.test(sq))
+    throw new Error("0014 에 notify_at 제약이 없습니다 — " +
+      "true 만 들어오면 '언제 받았나' 를 못 댑니다 (받지 않은 것과 같습니다)");
+
+  console.log("   업체가 스스로 고치는 문이 승인 대상 칸을 안 건드립니다 (0014)");
+}
 checkMigDocs(W);
 checkPhotoSql();
+checkProviderSelfSql();
 checkOffers(W);
 checkOfferSql(W);
 checkOpsvc(W);

@@ -292,7 +292,8 @@ window.myClaim = function(ev){
    있습니다** (제17조 제2항) — 배정 전에는 줄 자체가 안 옵니다. */
 function MyPvBand(d){
   var L = d.requests || [], DL = d.deals || [];
-  return myHd("PARTNER", "배정받은 신청",
+  return MyPvSelf(d)+
+    myHd("PARTNER", "배정받은 신청",
     "연결된 건만 보입니다. 성함과 연락처는 배정이 된 뒤에 함께 옵니다.")+
     (L.length ? MyPvList(L, d) :
       '<p class="lead">아직 배정된 신청이 없습니다. 배정되면 여기에 '+
@@ -300,6 +301,233 @@ function MyPvBand(d){
       '<div class="row-cta"><a class="btn btn-o" href="/join">'+
         '입점 안내 다시 보기'+icon("arrow",16)+'</a></div>')+
     MyDealBand(DL);
+}
+
+/* ── 내 업체 정보 (2026-10-22 오픈 전 전수검사 P2 ⑳) ──────────────
+   > 감사 보고서 §5 ⑳ — "업체가 **스스로 등록 · 수정**하는 화면.
+   >  지금은 직원이 /admin 9번 칸에서 적습니다."
+
+   ⚠️⚠️ **고칠 수 있는 것과 못 하는 것을 그 자리에서 가릅니다.**
+   소개 · 지역 · 시군구 · 업종 · 문 연 해 · 상담 시간은 업체 것이고,
+   **상호 · 하는 일(분야) · 확인 배지 · 공개 여부 · 배정 가능**은
+   승인 대상입니다 — 하는 일을 스스로 넓히면 철거만 하는 곳이 세무
+   화면에 앉고(`amProviderInCat()`), 확인 배지를 스스로 켜면 그건
+   지어낸 신뢰입니다 (절대 규칙 1 · 표시 · 광고의 공정화에 관한 법률
+   제3조). 못 고치는 것도 **보여는 줍니다** — 안 보여 주면 "왜 안
+   켜지나" 를 물으러 오시고, 그 답이 화면에 없습니다.
+
+   ⚠️⚠️ **막는 것은 DB 입니다** (`save_provider_self()` 가 그 칸을
+   아예 안 쓰고, 0014 가 표의 update 권한을 걷었습니다). 화면은
+   거드는 것까지입니다 — 화면 코드로만 막으면 버그 하나에 뚫립니다. */
+function MyPvSelf(d){
+  var m = d.mine;
+  /* ⚠️ 줄이 안 오면 **구간째 뺍니다** (절대 규칙 2). 업체 계정인데
+     `provider_id` 가 안 꽂힌 경우라, 자리표시자를 찍는 대신
+     배정받은 신청 쪽만 그립니다. */
+  if(!m) return "";
+  var c = d.myContact || {};
+  var V = (typeof AM_VERIFY !== "undefined" && AM_VERIFY) || [];
+  var on = V.filter(function(v){ return m.verified && m.verified[v.key]; });
+  return myHd("MY COMPANY", "내 업체 정보",
+    "손님에게 보이는 글입니다. 고치시면 바로 반영됩니다.")+
+    '<div class="my-pv">'+
+      '<dl class="my-pv-fix">'+
+        '<dt>상호</dt><dd>'+esc(m.name || "")+'</dd>'+
+        '<dt>하는 일</dt><dd>'+
+          esc((m.subs || []).map(function(k){
+            return (typeof amSubName === "function") ? (amSubName(k) || k) : k;
+          }).join(" · ") || "아직 없습니다")+'</dd>'+
+        '<dt>공개</dt><dd>'+(m.listed ? "공개 중" : "아직 공개 전")+'</dd>'+
+        '<dt>확인된 것</dt><dd>'+
+          (on.length ? esc(on.map(function(v){ return v.name; }).join(" · "))
+                     : "아직 없습니다")+'</dd>'+
+      '</dl>'+
+      /* ⚠️⚠️ 이 줄을 지우지 마세요 — 왜 그 넷이 회색인지가 여기에만
+         적혀 있습니다. 없으면 "칸이 고장났다" 로 읽힙니다. */
+      '<p class="f-h">위 넷은 여기서 못 고칩니다. <b>상호</b>와 '+
+        '<b>하는 일</b>은 제휴 계약에 적힌 것이고, <b>공개</b>와 '+
+        '<b>확인</b>은 저희가 서류를 보고 켭니다 — 바꾸실 일이 있으면 '+
+        '담당 직원에게 말씀해 주세요.</p>'+
+
+      '<form class="my-in" onsubmit="return myPvSave(event)">'+
+        '<div class="f-r">'+
+          '<label for="pvs-intro">업체 소개</label>'+
+          '<textarea id="pvs-intro" rows="3" maxlength="400" '+
+            'placeholder="어떤 일을 얼마나 해 오셨는지 적어 주세요">'+
+            esc(m.intro || "")+'</textarea>'+
+          '<span class="f-h">손님이 업체찾기에서 먼저 읽는 글입니다. '+
+            '⚠️ 지어낸 실적 · 평점 · "검증된" 같은 말은 적지 마세요 '+
+            '(표시 · 광고의 공정화에 관한 법률 제3조).</span>'+
+        '</div>'+
+        '<div class="f-r">'+
+          '<label for="pvs-reg">서비스 지역</label>'+
+          '<select id="pvs-reg" class="sel" multiple size="6">'+
+            (typeof AM_REGIONS !== "undefined" ? AM_REGIONS : []).map(function(r){
+              return '<option value="'+esc(r.key)+'"'+
+                ((m.regions || []).indexOf(r.key) >= 0 ? " selected" : "")+'>'+
+                esc(r.name)+'</option>'; }).join("")+
+          '</select>'+
+          '<span class="f-h">여럿 고르실 수 있습니다. '+
+            '⚠️ <b>비워 두면 전국</b>으로 읽습니다 — 안 가는 곳까지 '+
+            '요청이 가면 서로 헛걸음입니다.</span>'+
+        '</div>'+
+        '<div class="f-r">'+
+          '<label for="pvs-gu">시 · 군 · 구</label>'+
+          '<input id="pvs-gu" type="text" maxlength="200" '+
+            'value="'+esc((m.gu || []).join(", "))+'" '+
+            'placeholder="안양시, 군포시">'+
+          '<span class="f-h">쉼표로 나눠 적어 주세요. 경기도처럼 넓은 '+
+            '곳은 이것이 있어야 가까운 요청만 갑니다.</span>'+
+        '</div>'+
+        '<div class="f-r">'+
+          '<label for="pvs-ind">잘하시는 업종</label>'+
+          '<select id="pvs-ind" class="sel" multiple size="6">'+
+            (typeof AM_INDUSTRIES !== "undefined" ? AM_INDUSTRIES : []).map(function(i){
+              return '<option value="'+esc(i.key)+'"'+
+                ((m.industries || []).indexOf(i.key) >= 0 ? " selected" : "")+'>'+
+                esc(i.name)+'</option>'; }).join("")+
+          '</select>'+
+          '<span class="f-h">비워 두면 전업종으로 읽습니다.</span>'+
+        '</div>'+
+        '<div class="f-r">'+
+          '<label for="pvs-since">문 연 해</label>'+
+          '<input id="pvs-since" type="number" min="1900" max="2100" step="1" '+
+            'inputmode="numeric" value="'+esc(m.since == null ? "" : m.since)+'" '+
+            'placeholder="2015">'+
+          /* ⚠️ "몇 년 했다" 는 **센 값**입니다 — 적는 칸이 아닙니다 */
+          '<span class="f-h">연수는 이 해에서 저희가 셉니다.</span>'+
+        '</div>'+
+        '<div class="f-r">'+
+          '<label for="pvs-hrs">상담 가능 시간</label>'+
+          '<input id="pvs-hrs" type="text" maxlength="60" '+
+            'value="'+esc(m.consult_hours || "")+'" '+
+            'placeholder="평일 09:00~18:00">'+
+        '</div>'+
+        '<div class="my-in-r">'+
+          '<button class="btn btn-b" type="submit">업체 정보 저장</button>'+
+        '</div>'+
+        '<p class="my-in-n" id="pvs-n" role="status"></p>'+
+      '</form>'+
+
+      '<h3 class="my-pv-h">연락 담당자</h3>'+
+      /* ⚠️⚠️ **손님에게 안 보입니다.** 저희 직원이 배정할 때 전화하는
+         자리이고, `provider_contact` 는 고객 정책이 아예 없습니다. */
+      '<p class="f-h">저희 직원이 배정할 때 연락하는 곳입니다 — '+
+        '<b>손님에게는 보이지 않습니다.</b> 사람이 바뀌면 여기서 '+
+        '고쳐 주세요.</p>'+
+      '<form class="my-in" onsubmit="return myPvCon(event)">'+
+        '<div class="f-r">'+
+          '<label for="pvc-name">담당자 성함</label>'+
+          '<input id="pvc-name" type="text" maxlength="40" '+
+            'autocomplete="name" value="'+esc(c.name || "")+'">'+
+        '</div>'+
+        '<div class="f-r">'+
+          '<label for="pvc-tel">직통 번호</label>'+
+          '<input id="pvc-tel" type="tel" maxlength="30" '+
+            'autocomplete="tel" value="'+esc(c.tel || "")+'" '+
+            'placeholder="010-0000-0000">'+
+        '</div>'+
+        '<div class="f-r">'+
+          '<label for="pvc-mail">메일</label>'+
+          '<input id="pvc-mail" type="email" maxlength="80" '+
+            'autocomplete="email" value="'+esc(c.email || "")+'">'+
+        '</div>'+
+        '<div class="f-r">'+
+          '<label for="pvc-memo">언제 연락하면 좋은지</label>'+
+          '<input id="pvc-memo" type="text" maxlength="100" '+
+            'value="'+esc(c.memo || "")+'" placeholder="오전에 연락 주세요">'+
+        '</div>'+
+        '<div class="my-in-r">'+
+          '<button class="btn btn-o" type="submit">담당자 저장</button>'+
+        '</div>'+
+        /* ⚠️ 넷을 다 비우고 저장하면 줄째 지웁니다 (빈 줄을 안 남깁니다) */
+        '<p class="f-h">넷을 다 비우고 저장하시면 담당자 칸을 '+
+          '지웁니다.</p>'+
+        '<p class="my-in-n" id="pvc-n" role="status"></p>'+
+      '</form>'+
+    '</div>';
+}
+
+/* 여러 개 고르는 칸에서 고른 것만 — ⚠️ `multiple` 은 `.value` 가
+   **첫 하나**뿐입니다 (그대로 쓰면 지역이 늘 한 곳이 됩니다). */
+function myPvSel(id){
+  var el = document.getElementById(id), out = [], i;
+  if(!el) return out;
+  for(i = 0; i < el.options.length; i++)
+    if(el.options[i].selected) out.push(el.options[i].value);
+  return out;
+}
+
+window.myPvSave = function(ev){
+  if(ev && ev.preventDefault) ev.preventDefault();
+  var g = function(id){ var e = document.getElementById(id);
+                        return e ? String(e.value).trim() : ""; };
+  /* ⚠️ 쉼표로 적은 시군구 — 빈 토막을 버립니다 (빈 문자열을 보내면
+     거르개에서 아무것도 안 걸리는 값이 하나 들어갑니다). */
+  var gu = g("pvs-gu").split(",").map(function(x){ return x.trim(); })
+             .filter(Boolean);
+  myPvCall("save_provider_self",
+    { p_data:{ intro:g("pvs-intro"), regions:myPvSel("pvs-reg"),
+               gu:gu, industries:myPvSel("pvs-ind"),
+               since:g("pvs-since"), consultHours:g("pvs-hrs") },
+      p_why:"업체가 직접 고쳤습니다" },
+    "pvs-n", ev, "업체 정보 저장");
+  return false;
+};
+
+window.myPvCon = function(ev){
+  if(ev && ev.preventDefault) ev.preventDefault();
+  var g = function(id){ var e = document.getElementById(id);
+                        return e ? String(e.value).trim() : ""; };
+  var mail = g("pvc-mail");
+  /* ⚠️ 꼴만 봅니다 — 보낼 수 있는지는 받는 쪽이 압니다 (DB 도 한 번 더) */
+  if(mail && mail.indexOf("@") < 1){
+    var n = document.getElementById("pvc-n");
+    if(n){ n.textContent = "메일 주소를 확인해 주세요"; n.className = "my-in-n bad"; }
+    return false;
+  }
+  myPvCall("save_provider_contact",
+    /* ⚠️⚠️ 업체 id 를 보내지만 **DB 가 `my_provider()` 와 맞춰 봅니다** —
+       요청이 보낸 값으로 남의 업체를 덮을 수 없습니다 (0014). */
+    { p_provider:(MYQ.d && MYQ.d.mine && MYQ.d.mine.id) || "",
+      p_data:{ name:g("pvc-name"), tel:g("pvc-tel"),
+               email:mail, memo:g("pvc-memo") },
+      p_why:"업체가 직접 적었습니다" },
+    "pvc-n", ev, "담당자 저장");
+  return false;
+};
+
+/* ⚠️⚠️ **거절한 말을 그대로** 냅니다 (절대 규칙 3 — 운영자 글을 섞지
+   않습니다). 그리고 **적으신 것을 지우지 않습니다** — 실패했을 때
+   비우면 다시 적어야 합니다. */
+function myPvCall(fn, args, noteId, ev, label){
+  var note = document.getElementById(noteId);
+  var btn  = ev && ev.target ? ev.target.querySelector("button") : null;
+  if(btn){ btn.disabled = true; btn.textContent = "저장하는 중…"; }
+  if(note){ note.textContent = ""; note.className = "my-in-n"; }
+  fetch("/api/deal", {
+    method:"POST",
+    headers: Object.assign({ "content-type":"application/json",
+      accept:"application/json" },
+      (typeof amAuthHeaders === "function") ? amAuthHeaders() : {}),
+    body: JSON.stringify({ fn:fn, args:args })
+  }).then(function(r){
+    return r.json().then(function(j){ return { ok:r.ok, j:j }; });
+  }).then(function(x){
+    if(btn){ btn.disabled = false; btn.textContent = label; }
+    if(!x.ok){
+      if(note){ note.textContent = (x.j && x.j.error) || "저장하지 못했습니다";
+                note.className = "my-in-n bad"; }
+      return;
+    }
+    if(note){ note.textContent = "저장했습니다."; note.className = "my-in-n ok"; }
+    window.myLoadDb();
+  }).catch(function(e){
+    if(btn){ btn.disabled = false; btn.textContent = label; }
+    try{ console.warn("[my] " + fn + " — " + e); }catch(_){}
+    if(note){ note.textContent = "연결이 끊겼습니다. 잠시 뒤 다시 눌러 주세요";
+              note.className = "my-in-n bad"; }
+  });
 }
 
 function MyPvList(L, d){

@@ -525,6 +525,46 @@ console.log("\n── /api/deal — 상태가 바뀌면 운영자에게 한 줄 
      !/p_owner\s*:/.test(src.slice(src.indexOf("SAY_ARG"), src.indexOf("NOTE_TIMEOUT"))),
      src.slice(src.indexOf("SAY_ARG"), src.indexOf("NOTE_TIMEOUT")));
 
+  /* ── ⑱ 고객 진행 안내 (2026-10-22 P2) ─────────────────────────
+     ⚠️ 주석을 먼저 걷어냅니다 — 규칙을 설명하는 글에 걸려 멀쩡한
+     코드를 실패로 잡은 적이 있습니다 (틀린 것은 검사였습니다). */
+  const bare = src.replace(/\/\*[\s\S]*?\*\//g, " ");
+  const step = bare.slice(bare.indexOf("const STEP_FN"), bare.indexOf("const NOTE_TIMEOUT"));
+  ok("배정 · 견적 도착만 알린다",
+     /assign_item\s*:\s*"assigned"/.test(step) &&
+     /submit_quote\s*:\s*"quoted"/.test(step), step.slice(0, 200));
+  /* ⚠️⚠️ **고객이 스스로 한 일은 안 알립니다** — 자기가 방금 누른
+     것을 메일로 다시 받습니다. */
+  ok("고객이 고른 것은 안 알린다", !/choose_quote\s*:/.test(step), step.slice(0, 200));
+  /* ⚠️⚠️ **받으시겠다고 하신 분에게만** (fail-closed) */
+  ok("notify_ok 가 true 일 때만 보낸다",
+     /notify_ok\s*!==\s*true/.test(step), step);
+  ok("메일 주소가 없으면 안 보낸다", /!rq\.email/.test(step), step);
+  /* ⚠️⚠️ 읽은 것을 **답에 한 글자도 싣지 않습니다** */
+  ok("읽은 메일 주소를 답에 안 싣는다",
+     !/json\([^)]*email/.test(bare) && !/res\.status\([^)]*\)\.json\([^)]*rq\./.test(bare));
+  /* ⚠️⚠️ **실패해도 상태 변경을 되돌리지 않습니다** — 상태는 이미
+     DB 에 적혔고, 에러를 돌려주면 운영자가 다시 누르는데 두 번째는
+     "갈 수 없는 길" 로 거절당해서 더 헷갈립니다. */
+  ok("메일이 터져도 상태 변경을 되돌리지 않는다",
+     /stepMail[\s\S]{0,400}?catch/.test(step) || /catch/.test(step), step.slice(-200));
+  /* ⚠️⚠️ 진행 안내에 **상호 · 금액 · 광고를 싣지 않습니다** */
+  const sendSrc = require("fs").readFileSync(path.join(ROOT, "api", "_send.js"), "utf8");
+  const cs = sendSrc.slice(sendSrc.indexOf("const STEP_SAY"))
+                    .replace(/\/\*[\s\S]*?\*\//g, " ");
+  ok("진행 안내에 상호 · 금액을 안 싣는다",
+     !/provider|상호|amount|금액|fee/.test(cs.slice(0, cs.indexOf("fetch"))), cs.slice(0, 300));
+  ok("광고가 아니라고 적는다", /광고가 아닙니다/.test(cs), cs.slice(0, 300));
+  ok("끄는 길을 적는다", /회신/.test(cs), cs.slice(0, 300));
+  /* ⚠️⚠️ **한 사람에게만** 보냅니다 (쉼표를 그대로 넘기지 않습니다) */
+  ok("한 사람에게만 보낸다", /to:\s*\[addr\]/.test(cs), cs.slice(0, 400));
+  /* ⚠️ 보내는 주소가 없으면 **아무 일도 안 합니다** (fail-closed) */
+  ok("보내는 주소가 없으면 안 보낸다",
+     /!key \|\| !from/.test(cs), cs.slice(0, 400));
+  /* ⚠️⚠️ **회신 시점을 약속하지 않습니다** (약관 제8조) */
+  ok("회신 시점을 약속하지 않는다",
+     !/시간 안에|당일|24시간|보장/.test(cs), cs.slice(0, 600));
+
   setEnv({});
 }
 
@@ -591,8 +631,22 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
   ok("업체에게는 계약을 묻는다", calls.some(c => /\/rest\/v1\/deal/.test(c.url)));
   ok("업체에게는 환수 합계를 묻지 않는다 (자기 건 기록은 DB 가 보여 줍니다)",
      calls.every(c => !/audit_log/.test(c.url)), calls.map(c => c.url));
-  ok("업체에게도 업체 목록을 묻지 않는다",
-     calls.every(c => !/\/rest\/v1\/provider\b/.test(c.url)), calls.map(c => c.url));
+  /* ⚠️⚠️ 2026-10-22 P2 ⑳ — **자기 줄 하나는 묻습니다** (고치는 화면이
+     지금 적힌 값을 되읽어야 합니다). 묻지 말아야 하는 것은 **배정
+     고르개용 목록**입니다 — 그쪽은 `listed=false` 인 아직 안 켠 업체까지
+     옵니다. 그래서 "안 묻는가" 가 아니라 **`id=eq.` 로 좁혔는가**를
+     봅니다 (한 줄만 오는지는 `limit=1` 이 말합니다). */
+  const pvCalls = calls.filter(c => /\/rest\/v1\/provider\?/.test(c.url))
+                       .map(c => decodeURIComponent(c.url));
+  ok("업체에게는 업체 **목록**을 안 준다 (자기 줄 하나만)",
+     pvCalls.length === 1 && /id=eq\./.test(pvCalls[0]) &&
+     /limit=1/.test(pvCalls[0]) && !/order=name/.test(pvCalls[0]),
+     pvCalls.join(" | "));
+  /* ⚠️⚠️ **확인 배지는 같이 줍니다** — 업체 화면이 "무엇이 확인됐는가" 를
+     내는데 그건 **못 고치는 칸**이라고 그 자리에서 말해야 합니다. */
+  ok("업체에게 확인 배지 · 공개 상태를 같이 준다",
+     pvCalls.length === 1 && /verified/.test(pvCalls[0]) &&
+     /listed/.test(pvCalls[0]), pvCalls.join(" | "));
   /* ⚠️ 업체도 **지금 적힌 값**이 와야 고칠 수 있습니다 — 안 주면 빈 폼에
      처음부터 다시 적습니다 (업체 상세의 quoteTo({}) 로 겪은 자리). */
   ok("업체 칸에도 신청 id 가 있다",
@@ -724,6 +778,18 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
     if(who === "직원")
       ok("직원에게는 업체 담당자를 준다 (배정하고 전화합니다)",
          calls.some(c => /provider_contact/.test(c.url)), calls.map(c => c.url));
+    else if(who === "업체"){
+      /* ⚠️⚠️ 2026-10-22 P2 ⑳ — 업체는 **자기 담당자**를 고칠 수 있어야
+         합니다 (사람이 바뀌면 그 자리에서). 그래서 묻기는 하는데
+         **`provider_id=eq.` 로 좁혀서** 묻습니다 — 안 좁히면 RLS 가
+         자기 줄만 주더라도 **질의가 전부를 달라고 하는 꼴**이고,
+         정책 한 줄이 느슨해지는 날 그대로 다 옵니다. */
+      const mc = calls.filter(c => /provider_contact/.test(c.url))
+                      .map(c => decodeURIComponent(c.url));
+      ok("업체에게는 자기 담당자만 묻는다",
+         mc.length === 1 && /provider_id=eq\./.test(mc[0]) && /limit=1/.test(mc[0]),
+         mc.join(" | "));
+    }
     else
       ok(who + "에게는 업체 담당자를 묻지 않는다",
          calls.every(c => !/provider_contact/.test(c.url)), calls.map(c => c.url));

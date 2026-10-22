@@ -273,6 +273,15 @@ module.exports = async function handler(req, res){
       /* ⚠️⚠️ 동의를 **시각으로** 남깁니다. boolean 으로 두면 "언제
          받았나" 를 못 대고, 그게 분쟁에서 받지 않은 것과 같아집니다. */
       agree_at:  new Date().toISOString(),
+      /* ⑱ 진행 안내 (2026-10-22 P2) — **선택**이고 기본은 꺼짐입니다.
+         ⚠️⚠️ 안 고르신 것을 "받겠다" 로 읽으면 그게 동의 없이 보내는
+         것입니다 — `=== true` 로만 켭니다 (문자열 "false" 도 참이라
+         `!!b.notify` 로 두면 켜집니다).
+         ⚠️⚠️ **동의했다면 시각이 같이** 갑니다 — boolean 하나로 두면
+         "언제 받았나" 를 못 대고, 그건 받지 않은 것과 같습니다
+         (DB 의 `request_notify_at_ok` 가 한 번 더 막습니다). */
+      notify_ok: b.notify === true,
+      notify_at: b.notify === true ? new Date().toISOString() : null,
       /* ⚠️⚠️ 제3자 제공 재동의는 **여기서 받지 않습니다** (제17조 제2항).
          어느 업체에 줄지 정해지지 않았으니까요 — 배정할 때 받습니다.
          방침 제4조 제3항이 그렇게 적혀 있습니다. 비워 둡니다. */

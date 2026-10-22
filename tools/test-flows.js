@@ -370,6 +370,38 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      "A④ 항목 하나로 보낸다", bodyA && JSON.stringify(bodyA.items));
  say(!!bodyA && bodyA.agree===true && !!bodyA.idem,
      "A⑤ 동의와 멱등 열쇠가 실린다");
+ /* ⑱ 진행 안내 (2026-10-22 P2) — ⚠️⚠️ **선택**이고 기본은 꺼짐입니다.
+    안 고르셔도 접수는 그대로 되고, 안 고른 것이 `false` 로 갑니다. */
+ say(!!bodyA && bodyA.notify===false,
+     "A-알림① 안 고르면 꺼진 채로 간다", bodyA && bodyA.notify);
+ say(await pg.evaluate(()=>{
+       const el=document.getElementById("q-nt");
+       return !!el && el.required!==true && !el.checked;
+     }), "A-알림② 칸이 선택이고 기본으로 꺼져 있다");
+ /* ⚠️⚠️ 접수 동의(제15조)와 **다른 칸**이어야 합니다 — 한 상자에 묶으면
+    "이것도 켜야 접수되나" 가 되고, 그렇게 받은 동의는 받은 것이
+    아닙니다. */
+ say(await pg.evaluate(()=>{
+       const el=document.getElementById("q-nt");
+       return !!el && !el.closest(".agree");
+     }), "A-알림③ 접수 동의 상자 안에 들어 있지 않다");
+ /* ⚠️⚠️ 광고를 섞지 않습니다 (정보통신망법 제50조) */
+ say(await pg.evaluate(()=>{
+       const el=document.getElementById("q-nt");
+       const t=el?el.parentElement.textContent:"";
+       return /광고는 보내지 않/.test(t) && /회신/.test(t) &&
+              !/시간 안에|당일|보장/.test(t);
+     }), "A-알림④ 광고를 안 보낸다고 적고 끄는 길을 적는다");
+ await pg.check("#q-nt");
+ const bodyN = await pg.evaluate(()=>{
+   let got=null; const real=window.amSend;
+   window.amSend=(id,b)=>{ got=b; return false; };
+   window.quoteSend(new Event("submit"));
+   window.amSend=real; return got;
+ });
+ say(!!bodyN && bodyN.notify===true, "A-알림⑤ 고르면 켜진 채로 간다",
+     bodyN && bodyN.notify);
+ await pg.uncheck("#q-nt");
 
  /* ── B. 복수 서비스 — 하나의 신청서 ──────────────────────────── */
  await pg.goto(B+"/startup",{waitUntil:"networkidle"});

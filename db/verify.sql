@@ -8,7 +8,7 @@
 --     몇 번 돌려도 안전하고, 운영 중에 돌려도 됩니다.
 --
 --  ⚠️⚠️ 기대값은 전부 **저장소에서 센 값**입니다 (눈대중이 아닙니다) —
---     판 13 · 표 16 · 상태 13 · 역할 4 · 길 70 · 함수 34 · 트리거 3.
+--     판 14 · 표 16 · 상태 13 · 역할 4 · 길 70 · 함수 35 · 트리거 3.
 --     저장소를 고치면 이 파일도 같이 고치세요.
 --
 --  ⚠️⚠️ `tools/test-sql.js` 는 **가짜 auth 스키마**로 돌립니다
@@ -18,7 +18,7 @@
 -- ════════════════════════════════════════════════════════════════════
 
 with
-/* ① 판 번호 — 열세 줄이어야 합니다 (0001~0013) */
+/* ① 판 번호 — 열네 줄이어야 합니다 (0001~0014) */
 v_ver as (
   select count(*)::int n from schema_version
 ),
@@ -104,7 +104,9 @@ v_fn as (
                  ('assignment_assignable'),
                  /* 0013 — 업체 담당자 · 기간별 정산 (2026-10-22 P1 ⑬⑭) */
                  ('save_provider_contact'),('build_settlement'),
-                 ('hold_settlement')) w(f)
+                 ('hold_settlement'),
+                 /* 0014 — 업체가 스스로 고치는 문 (2026-10-22 P2 ⑳) */
+                 ('save_provider_self')) w(f)
 ),
 /* ⑧ ⚠️⚠️ 가입 트리거가 **auth.users 에** 걸렸는가 (진짜 Supabase 전용).
       이게 없으면 가입해도 account 줄이 안 생겨서, 로그인은 되는데
@@ -151,7 +153,7 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (0001~0013)'            t, v_ver.n::text   got, '13' want from v_ver
+  select 1 i, '판 번호 (0001~0014)'            t, v_ver.n::text   got, '14' want from v_ver
   union all select  2, '표 (public)',              v_tab.n::text,  '16' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||
@@ -159,7 +161,7 @@ rows as (
                        v_st.n::text, '13' from v_st
   union all select  5, '역할',                     v_role.n::text, '4'  from v_role
   union all select  6, '갈 수 있는 길 (deal_move)', v_move.n::text, '70' from v_move
-  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '34' from v_fn
+  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '35' from v_fn
   union all select  8, '⚠️ 가입 트리거 (auth.users)', v_trg.n::text, '1' from v_trg
   union all select  9, '⚠️ auth.uid()',            v_uid.n::text,  '1'  from v_uid
   union all select 10, '⚠️ 돈 칸 쓰기 권한: ' || v_money.who, v_money.n::text, '0' from v_money

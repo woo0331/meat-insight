@@ -491,6 +491,7 @@ function PageQuote(){
         QStepHd("04", "확인하고 보내기", "")+
         AgreeBox("q-ag","성함 · 연락처 · 업종 · 지역 · 평수 · 예산 · 일정 · 적어 주신 내용",
                  "견적 요청 접수와 상담 안내","접수일로부터 1년")+
+        QNotifyBox()+
         '<div id="q-fail"></div>'+
         '<button class="btn btn-b btn-lg btn-full" type="submit"'+(ready?"":" disabled")+'>'+
           '<span id="q-go-t">'+(list.length
@@ -573,6 +574,29 @@ window.qcClear = function(){
 /* ── 보내기 ─────────────────────────────────────────────────────
    ⚠️ **화면이 보내는 칸 = `api/quote.js` 가 읽는 칸.** 어긋나면
    조용히 사라집니다. `node tools/test-api.js` 로 같이 확인하세요. */
+/* ── 진행 안내 받기 (2026-10-22 오픈 전 전수검사 P2 ⑱) ───────────
+   > 감사 보고서 §5 ⑱ — "고객에게 **상태 변경 알림**. 광고성이 섞이기
+   >  쉬워 제50조 사전 수신동의를 받는 자리부터 필요합니다."
+
+   ⚠️⚠️ **필수가 아닙니다.** 접수 동의(제15조)와 **다른 칸**이고, 안
+   고르셔도 접수는 그대로 됩니다 — 한 상자에 묶으면 "이것도 켜야
+   접수되나" 가 되고, 그렇게 받은 동의는 받은 것이 아닙니다.
+   ⚠️⚠️ **광고를 섞지 않습니다.** 배정 · 견적 도착까지이고, 권유를 한
+   줄이라도 넣으면 그때부터 광고성 정보입니다 (정보통신망법 제50조).
+   ⚠️ 끄는 길을 **메일 안에** 적습니다 — 로그인 없이 들어오는 접수라
+   수신거부 토큰이 없고, 지금 규모에서는 회신이 가장 정직합니다.
+   ⚠️⚠️ **"몇 시간 안에" 를 적지 마세요** — 업체 회신 시점은 우리가
+   지킬 수 있는 약속이 아닙니다 (약관 제8조). */
+function QNotifyBox(){
+  return '<label class="agree-l q-nt" for="q-nt">'+
+    '<input type="checkbox" id="q-nt">'+
+    '<span><b>진행 상황을 메일로 알려 주세요</b> (선택) — '+
+      '업체가 정해졌을 때와 견적이 도착했을 때만 보냅니다. '+
+      '광고는 보내지 않고, 받지 않으시려면 그 메일에 회신해 주시면 '+
+      '바로 멈춥니다.</span>'+
+  '</label>';
+}
+
 window.quoteSend = function(ev){
   ev.preventDefault();
   if(!$("q-ag").checked){ toast("개인정보 수집 · 이용 동의가 필요합니다"); return false; }
@@ -648,7 +672,12 @@ window.quoteSend = function(ev){
       "신청 서비스": list.map(amPickLabel).join(" · "),
       "신청 상품": quoteOfferNames()
     }),
-    agree: true
+    agree: true,
+    /* ⑱ 진행 안내 (2026-10-22 P2) — ⚠️⚠️ **선택**입니다. 안 고르시면
+       `false` 가 그대로 가고 서버가 꺼진 채로 저장합니다 (fail-closed).
+       ⚠️ 칸이 없는 화면에서도 터지지 않게 `$()` 를 바로 안 믿습니다. */
+    notify: !!(document.getElementById("q-nt") &&
+               document.getElementById("q-nt").checked)
   };
   return amSend("q-fail", body, "quoteSend", quoteAfterSend);
 };

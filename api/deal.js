@@ -70,7 +70,13 @@ const OK_FN = {
      **조용히 지나갑니다** (그게 여기서 맞는 동작입니다).
      ⚠️ 계정을 인자로 받지 않습니다 — DB 함수가 `auth.uid()` 에만
      씁니다 (변경자는 토큰에서만 옵니다). */
-  save_user_state:1, clear_user_state:1
+  save_user_state:1, clear_user_state:1,
+  /* 2026-10-22 (0012) — 담당자 · 연락처 열람 이력 (오픈 전 전수검사 P0 ③⑤).
+     ⚠️⚠️ note_request_open 은 **FN_SAY 에 넣지 마세요.** 관리자가 전화를
+     걸려고 연락처를 열 때마다 불립니다 — 알림을 보내면 하루에 수십 줄이고
+     정작 돈 쪽 알림이 그 더미에 묻힙니다 (save_user_state 와 같은 까닭).
+     열람 이력은 audit_log 에 그대로 남습니다 (제29조 접속기록). */
+  set_owner:1, note_request_open:1
 };
 
 /* 보낼 수 있는 인자 — 이름까지 정해 둡니다. ⚠️ 통째로 넘기면 손님이
@@ -101,6 +107,9 @@ const OK_ARG = {
   /* 0009 — ⚠️ `p_agree3rd` 를 빼지 마세요. 그 칸이 안 가면 DB 가
      제17조로 거절하고, 화면에는 "처리하지 못했습니다" 만 나갑니다. */
   p_item:1, p_agree3rd:1,                              /* assign_item · move_item_state */
+  /* 0012 — ⚠️ p_owner 는 **직원 · 관리자 계정**이라야 합니다 (DB 가 봅니다).
+     p_assignable 은 listed 와 다른 플래그입니다 — "배정해도 되는가" 입니다. */
+  p_owner:1, p_assignable:1,                           /* set_owner · approve_provider */
   /* 0010 — ⚠️ 셋 중 **보낸 것만** 바뀝니다 (안 보낸 칸은 DB 가 그대로
      둡니다). 비우시려면 `[]` · `{}` 를 보내세요 — null 은 "안 바꿈" 입니다. */
   p_pick:1, p_draft:1, p_checks:1                      /* save_user_state */
@@ -164,7 +173,8 @@ const FN_SAY = {
   move_item_state:       "서비스 항목의 상태가 바뀌었습니다",
   submit_quote:          "업체가 견적을 냈습니다",
   withdraw_quote:        "업체가 견적을 거뒀습니다",
-  choose_quote:          "고객이 견적을 골랐습니다"
+  choose_quote:          "고객이 견적을 골랐습니다",
+  set_owner:             "담당자가 바뀌었습니다"
 };
 
 /* 알림에 실어도 되는 것 — ⚠️⚠️ **허용 목록입니다.** 인자가 하나
@@ -173,7 +183,10 @@ const FN_SAY = {
 const SAY_ARG = {
   p_request:"신청",  p_deal:"계약",   p_id:"대상",  p_provider:"업체",
   p_to:"바뀐 상태",  p_fee:"수수료",  p_total:"청구액", p_paid:"입금액",
-  p_new_fee:"고친 수수료", p_yes:"수락", p_listed:"공개", p_active:"켜짐"
+  p_new_fee:"고친 수수료", p_yes:"수락", p_listed:"공개", p_active:"켜짐",
+  /* ⚠️ p_owner(담당자 계정 id)는 **안 싣습니다** — 알림은 "가서 보세요"
+     까지이고, 누가 맡았는지는 작업대와 audit_log 에 있습니다. */
+  p_assignable:"배정 가능"
 };
 
 const NOTE_TIMEOUT = 5000;

@@ -911,3 +911,29 @@ body.sl-locked{ overflow:hidden; }
 .rq-ag{ display:flex; gap:var(--s2); align-items:flex-start;
   margin:var(--s3) 0; font-size:var(--t-sm); color:var(--ink2); }
 .rq-ag input{ width:20px; height:20px; margin:1px 0 0; flex:none; }
+
+/* ── 담당자 · 연락처 — 2026-10-22 오픈 전 전수검사 P0 ③⑤ ───────────
+   ⚠️⚠️ **구간에 제 클래스를 답니다** (`rq-own-b` · `rq-con-b`). `#rq`
+   안의 구간이 전부 `.rq-s` 로 같아서, 이름이 없으면 검사가 어느
+   구간인지 못 가립니다 — 이 저장소가 2차에서 겪은 자리입니다. */
+.rq-own{ font-size:var(--t-cap); font-weight:700; color:var(--ink2);
+  white-space:nowrap; }
+/* ⚠️ 내 건은 색으로만 가르지 않습니다 — 굵기도 같이 올립니다 */
+.rq-own.on{ color:var(--blue-600); font-weight:800; }
+.rq-own-b{ margin:0 0 var(--s4); }
+.rq-con-b{ margin:0 0 var(--s4); padding:var(--s4);
+  background:var(--bg-sky); border:1px solid var(--line);
+  border-radius:var(--r-lg); }
+.rq-con{ display:grid; grid-template-columns:auto 1fr; gap:6px var(--s3);
+  margin:0 0 var(--s3); font-size:var(--t-base); }
+.rq-con dt{ font-weight:700; color:var(--ink2); white-space:nowrap; }
+.rq-con dd{ margin:0; color:var(--ink); word-break:keep-all;
+  overflow-wrap:anywhere; }
+/* ⚠️ 전화 링크는 **누름 44px 이상**입니다 — 직원이 폰으로도 누릅니다.
+   ⚠️ 문장 속 링크가 아니라 **한 칸을 차지하는 것**으로 둡니다
+   (문장 한가운데 링크는 높이가 16px 이라 누르기 어렵습니다). */
+.rq-tel{ display:inline-flex; align-items:center; min-height:44px;
+  padding:0 var(--s2); margin:-2px 0 0 -4px;
+  font-size:var(--t-lg); font-weight:800; color:var(--blue-600);
+  text-decoration:none; }
+.rq-tel:hover{ text-decoration:underline; }

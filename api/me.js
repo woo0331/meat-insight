@@ -22,7 +22,7 @@
    ════════════════════════════════════════════════════════════════════ */
 
 const { authReady, bearer, session } = require("./_auth.js");
-const { dbSelectAs } = require("./_db.js");
+const { dbSelectAs, dbRpc } = require("./_db.js");
 
 const LIMIT = 50;
 /* 감사 기록은 한 계약에 여러 줄이 쌓입니다 (확정 · 입금 · 환수) —
@@ -42,6 +42,9 @@ const QUOTE_LIMIT = 300;
 /* 신청 **한 건**의 이력. ⚠️ 한 건이 쉰 번 넘게 바뀌면 그건 이 숫자를
    올릴 때가 아니라 **그 건을 들여다볼 때**입니다. */
 const HIST_LIMIT = 100;
+/* 담당자로 둘 수 있는 직원 · 관리자. ⚠️ 모자라기 시작하면 숫자를
+   올리는 것이 아니라 **검색**이 필요한 때입니다 (업체 고르개와 같은 선). */
+const STAFF_LIMIT = 100;
 
 /* ⚠️ 칸 목록을 역할마다 **손으로** 적습니다. `select=*` 로 두면 칸이
    하나 늘 때마다 조용히 같이 나갑니다. */
@@ -85,9 +88,25 @@ const PICK = {
   /* ⚠️⚠️ 목록에 **성함 · 연락처가 없습니다** — 화면 하나가 곧 유출인
      자리입니다. 전화하려면 건을 열어야 합니다. */
   staff:
-    "id,no,side,cat,industry,region,gu,state,created_at," +
+    /* ⚠️⚠️ 2026-10-22 (0012) — **owner_id** 는 "이 건을 지금 누가
+       맡았나" 입니다. `audit_log.by_user`(누가 바꿨나)와 다른 것이고,
+       없으면 직원이 둘이 되는 날 **같은 건에 두 사람이 전화**합니다.
+       ⚠️ 담당자의 **성함은 여기로 안 옵니다** — 화면이 직원 목록
+       (아래 out.staff)에서 id 로 찾습니다 (최소 수집). */
+    "id,no,side,cat,industry,region,gu,state,owner_id,created_at," +
     "assignment(provider_id,state,created_at)," + ITEMS_S + "," + PHOTOS
 };
+
+/* 신청 **한 건**의 연락처 (2026-10-22 P0 ③ · 직원 · 관리자만)
+   ⚠️⚠️ **목록에는 없고 여기에만 있습니다.** 목록 하나가 곧 유출인
+   자리라 쉰 건의 성함 · 번호를 깔지 않습니다 — 그런데 **여는 길도
+   없어서** 관리자가 슬랙을 보고 전화하고 있었습니다 (작업대에서
+   상태를 바꾸는 일과 전화하는 일이 다른 창에 있었습니다).
+   ⚠️ 열면 `note_request_open()` 이 **열람 이력을 남깁니다**
+   (개인정보보호법 제29조 접속기록). 기록이 남으면 "필요할 때만
+   여는" 것이 지켜집니다. */
+const ONE_CONTACT = "id,no,name,tel,email,body,detail,want_at,owner_id," +
+                    "side,cat,industry,region,gu,state,created_at";
 
 module.exports = async function handler(req, res){
   if(req.method !== "GET"){
@@ -112,6 +131,12 @@ module.exports = async function handler(req, res){
      않는 개인정보를 화면까지 끌고 오는 것이고 받는 양도 몇 배입니다.
      ⚠️ **새 주소를 만들지 않았습니다** — 질의문자 하나입니다. */
   const onlyState = String((req.query && req.query.s) || "") === "1";
+
+  /* ⚠️⚠️ **연락처는 따로 물어야 나옵니다** (`?r=<id>&c=1`). 줄을 펼칠
+     때마다 주면 ① 열람 이력이 "펼친 횟수" 가 되어 뜻이 없어지고
+     ② 쓸 일 없는 개인정보가 화면까지 따라옵니다. 전화를 걸려고
+     **일부러 누르는 자리**라야 기록이 뜻을 가집니다. */
+  const wantContact = String((req.query && req.query.c) || "") === "1";
 
   if(!authReady())      return res.status(200).json({ auth:false, signedIn:false });
   if(!bearer(req))      return res.status(200).json({ auth:true, signedIn:false });
@@ -152,7 +177,10 @@ module.exports = async function handler(req, res){
     return res.status(502).json({ error:"지금 불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요" });
   }
 
-  const out = { auth:true, signedIn:true, role:s.role, requests:q.rows };
+  /* ⚠️ `me` 는 **자기 계정 id** 입니다 — 담당자를 "내가 맡기" 로 둘 때와
+     "내 건만" 을 거를 때 화면이 자기 id 를 알아야 합니다. 남의 것이
+     아니라 자기 것이라 보내도 되는 값입니다 (토큰에서 왔습니다). */
+  const out = { auth:true, signedIn:true, role:s.role, me:s.sub, requests:q.rows };
   /* 마이페이지가 "저장해 두신 것" 을 같이 냅니다 (§6-2 · §9) */
   out.state = await readState();
 
@@ -183,10 +211,26 @@ module.exports = async function handler(req, res){
   if(role === "staff"){
     const p = await dbSelectAs(s.token, "provider",
       "?select=" + encodeURIComponent(
-        "id,name,regions,gu,industries,subs,listed") +
+        /* ⚠️⚠️ 2026-10-22 (0012) — **`assignable` 을 같이 가져옵니다.**
+           `listed`(손님 목록에 보이는가)와 다른 것이고, 안 가져오면
+           화면이 배정 고르개에서 **잠글 수가 없습니다** — 구두 합의
+           단계 업체에 배정되면 그 순간 제17조입니다. */
+        "id,name,regions,gu,industries,subs,listed,assignable") +
       "&order=name.asc&limit=" + PROV_LIMIT);
     if(p.ok) out.providers = p.rows;
     else console.warn("[me] provider — " + p.why);
+
+    /* 담당자 고르개 (2026-10-22 P0 ⑤) — 직원 · 관리자 계정만입니다.
+       ⚠️⚠️ **고객 계정은 애초에 안 옵니다** — 0012 의 `account_staff`
+       정책이 `role in ('staff','admin')` 으로 묶어 두었습니다. 화면
+       코드로만 거르면 버그 하나에 고객 성함 목록이 섭니다.
+       ⚠️ 이름이 없는 계정도 그대로 옵니다 — 화면이 메일 대신 id 앞
+       토막을 보여 줍니다 (지어내지 않습니다). */
+    const st = await dbSelectAs(s.token, "account",
+      "?select=" + encodeURIComponent("id,name,role") +
+      "&role=in.(staff,admin)&order=name.asc&limit=" + STAFF_LIMIT);
+    if(st.ok) out.staff = st.rows;
+    else console.warn("[me] account(staff) — " + st.why);
   }
 
   /* 환수 · 부분환불 — ⚠️⚠️ **`deal` 에는 안 남습니다.** 확정했던 액을
@@ -262,6 +306,31 @@ module.exports = async function handler(req, res){
       "&order=at.asc&limit=" + HIST_LIMIT);
     if(h.ok) out.history = h.rows;
     else console.warn("[me] audit_log(request) — " + h.why);
+  }
+
+  /* ── 신청 한 건의 연락처 (2026-10-22 P0 ③) ──────────────────────
+     ⚠️⚠️ **직원 · 관리자만**입니다. 고객 · 업체는 자기 쪽 칸에서 이미
+     받고 있어서(PICK.customer · PICK.provider) 또 줄 까닭이 없습니다 —
+     여기서 역할을 안 보면 업체가 `?c=1` 로 **배정 안 된 건의** 연락처를
+     긁는 길이 열립니다 (RLS 가 줄은 막지만 묻지 않는 쪽이 한 겹 더
+     안전합니다 · PICK 을 역할마다 손으로 적는 것과 같은 선).
+     ⚠️ 거르는 일은 RLS 가 합니다 — `request_staff` 가 직원 · 관리자에게
+     줄을 열어 둡니다. */
+  if(one && wantContact && role === "staff"){
+    const c1 = await dbSelectAs(s.token, "request",
+      "?select=" + encodeURIComponent(ONE_CONTACT) +
+      "&id=eq." + encodeURIComponent(one) + "&limit=1");
+    if(c1.ok && c1.rows && c1.rows[0]){
+      out.contact = c1.rows[0];
+      /* ⚠️⚠️ **기록을 먼저 남기고 주는 것이 아닙니다** — 기록이 실패해도
+         연락처는 돌려줍니다. 전화를 걸어야 하는 사람을 기록 때문에
+         막으면 손님이 기다립니다 (중복 검사가 실패해도 접수를 막지
+         않는 것과 같은 판단). 대신 운영자에게 남깁니다 (절대 규칙 3). */
+      const lg = await dbRpc(s.token, "note_request_open",
+        { p_request: one, p_why: "작업대에서 연락처를 열었습니다" });
+      if(!lg.ok) console.warn("[me] note_request_open — " + lg.why);
+    }
+    else if(!c1.ok) console.warn("[me] request(contact) — " + c1.why);
   }
 
   return res.status(200).json(out);

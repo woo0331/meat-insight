@@ -18,7 +18,7 @@
 -- ════════════════════════════════════════════════════════════════════
 
 with
-/* ① 판 번호 — 열한 줄이어야 합니다 (0001~0011) */
+/* ① 판 번호 — 열두 줄이어야 합니다 (0001~0012) */
 v_ver as (
   select count(*)::int n from schema_version
 ),
@@ -61,7 +61,7 @@ v_role as (
 v_move as (
   select count(*)::int n from deal_move
 ),
-/* ⑦ 문(함수) — 스물여덟 */
+/* ⑦ 문(함수) — 서른하나 */
 /*    ⚠️⚠️ **있는 것을 셉니다 — 기대 목록을 세지 마세요.** 처음에
       `count(*)` 로 적었다가 **values 열여섯 줄을 세고** 있었습니다 —
       함수가 열여섯 개 다 없어도 16/16 ✅ 였습니다. 되돌려 보고
@@ -90,7 +90,10 @@ v_fn as (
                  ('save_user_state'),('clear_user_state'),
                  ('user_state_guard'),
                  /* 0011 — 사진 · 서류 (2026-10-18 §7-3 · §15) */
-                 ('claim_photo_slot'),('drop_photo')) w(f)
+                 ('claim_photo_slot'),('drop_photo'),
+                 /* 0012 — 담당자 · 연락처 열람 이력 (2026-10-22 P0 ③⑤) */
+                 ('set_owner'),('note_request_open'),
+                 ('assignment_assignable')) w(f)
 ),
 /* ⑧ ⚠️⚠️ 가입 트리거가 **auth.users 에** 걸렸는가 (진짜 Supabase 전용).
       이게 없으면 가입해도 account 줄이 안 생겨서, 로그인은 되는데
@@ -137,7 +140,7 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (0001~0011)'            t, v_ver.n::text   got, '11' want from v_ver
+  select 1 i, '판 번호 (0001~0012)'            t, v_ver.n::text   got, '12' want from v_ver
   union all select  2, '표 (public)',              v_tab.n::text,  '15' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||
@@ -145,7 +148,7 @@ rows as (
                        v_st.n::text, '13' from v_st
   union all select  5, '역할',                     v_role.n::text, '4'  from v_role
   union all select  6, '갈 수 있는 길 (deal_move)', v_move.n::text, '70' from v_move
-  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '28' from v_fn
+  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '31' from v_fn
   union all select  8, '⚠️ 가입 트리거 (auth.users)', v_trg.n::text, '1' from v_trg
   union all select  9, '⚠️ auth.uid()',            v_uid.n::text,  '1'  from v_uid
   union all select 10, '⚠️ 돈 칸 쓰기 권한: ' || v_money.who, v_money.n::text, '0' from v_money

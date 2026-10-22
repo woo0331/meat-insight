@@ -1509,6 +1509,166 @@ function ok(name, cond, extra) {
     await ctx.close();
   }
 
+  /* ════════════════════════════════════════════════════════════════
+     2026-10-22 오픈 전 전수검사 P0 ③④⑤ — 담당자 · 연락처 · 배정 가능
+
+     ⚠️⚠️ **`check.js` 는 `/admin` 을 영원히 못 봅니다** (middleware 가
+     막습니다). 이 세 가지가 깨지면 작업대에서 상담 연결이 안 되는데
+     아무 검사도 안 잡는 자리라 여기서 눌러 봅니다.
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️ 담당자 · 연락처 · 배정 가능 (P0 ③④⑤)");
+  {
+    const { pg, ctx, errs } = await fresh(1440, 1400);
+    let sent = null, conAsk = 0;
+    const ME = "44444444-4444-4444-4444-444444444444";
+    const R1 = "11111111-1111-1111-1111-111111111111";
+    const R2 = "22222222-2222-2222-2222-222222222222";
+
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"admin",
+                             name:"관리자", provider:null,
+                             conf:{ url:"https://proj.supabase.co", anonKey:"A" } }) }));
+
+    await pg.route("**/api/me**", r => {
+      const u = new URL(r.request().url());
+      const one = u.searchParams.get("r") || "";
+      const wantC = u.searchParams.get("c") === "1";
+      if(wantC) conAsk++;
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({
+          auth:true, signedIn:true, role:"admin", me:ME,
+          requests:[
+            { id:R1, no:"SW-AB12-CD34", side:"start", cat:"interior",
+              industry:"cafe", region:"gyeonggi", gu:"안양시", state:"check",
+              owner_id:ME, created_at:"2026-10-11T02:00:00+00:00", assignment:[] },
+            { id:R2, no:"SW-EF56-GH78", side:"close", cat:"demolish",
+              industry:"restaurant", region:"seoul", gu:"", state:"check",
+              owner_id:null, created_at:"2026-10-10T02:00:00+00:00", assignment:[] }
+          ],
+          staff:[{ id:ME, name:"김직원", role:"staff" },
+                 { id:"55555555-5555-5555-5555-555555555555", name:"관리자", role:"admin" }],
+          providers:[
+            { id:"pv-ok",  name:"가나다 인테리어", listed:true,  assignable:true,
+              subs:["interior"], regions:["gyeonggi"], gu:[], industries:[] },
+            /* ⚠️⚠️ **구두 합의 단계 업체** — 계약 전에 배정되면 그 순간
+               성함 · 연락처가 그 업체로 넘어갑니다 (제17조 제2항). */
+            { id:"pv-new", name:"무촌철거", listed:true, assignable:false,
+              subs:["demolish"], regions:["seoul"], gu:[], industries:[] }
+          ],
+          quotes:[], deals:[], audits:[],
+          /* 연락처는 **`?c=1` 로 물을 때만** 옵니다 */
+          contact: (one && wantC)
+            ? { id:one, no:"SW-AB12-CD34", name:"최사장", tel:"010-7777-0000",
+                email:"owner@test.invalid", body:"주방 공사 견적이 필요합니다",
+                detail:{ "평수":"18평" }, owner_id:ME }
+            : undefined,
+          history: one ? [] : undefined }) });
+    });
+
+    await pg.route("**/api/deal", r => {
+      sent = JSON.parse(r.request().postData() || "{}");
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ ok:true }) });
+    });
+
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(500);
+
+    /* ── 담당자 (P0 ⑤) ──────────────────────────────────────── */
+    const own = await pg.locator("#rq .rq-s-rq .rq-r >> nth=0 >> .rq-own").textContent();
+    ok("목록 줄에 담당자가 보인다", own === "김직원", own);
+    const own2 = await pg.locator("#rq .rq-s-rq .rq-r >> nth=1 >> .rq-own").textContent();
+    /* ⚠️ 비워 두면 "아직 아무도" 와 "칸이 없는 화면" 을 못 가립니다 */
+    ok("담당자가 없으면 없다고 적는다", own2 === "담당자 없음", own2);
+    ok("내 건만 거르는 칩이 있다",
+       (await pg.locator("#rq .rq-s-rq .rq-fil .chip", { hasText:"내 건" }).count()) === 1);
+    await pg.locator("#rq .rq-s-rq .rq-fil .chip", { hasText:"내 건" }).click();
+    await pg.waitForTimeout(200);
+    ok("내 건만 걸러진다", (await pg.locator("#rq .rq-s-rq .rq-r").count()) === 1);
+    await pg.locator("#rq .rq-s-rq .rq-fil .chip", { hasText:"전체" }).click();
+    await pg.waitForTimeout(200);
+
+    /* 담당자 없는 건을 펼쳐 "내가 맡기" */
+    await pg.locator("#rq .rq-s-rq .rq-r >> nth=1 >> .rq-hd").click();
+    await pg.waitForTimeout(200);
+    ok("펼치면 담당자 고르개가 있다",
+       (await pg.locator("#rq .rq-own-b select").count()) === 1);
+    sent = null;
+    await pg.locator("#rq .rq-own-b button", { hasText:"내가 맡기" }).click();
+    await pg.waitForTimeout(400);
+    ok("내가 맡기가 set_owner 를 부른다",
+       !!sent && sent.fn === "set_owner" && sent.args.p_owner === ME, sent);
+    ok("어느 건인지 같이 보낸다", !!sent && sent.args.p_request === R2, sent);
+
+    /* ── 연락처 (P0 ③) ──────────────────────────────────────── */
+    await pg.locator("#rq .rq-s-rq .rq-r >> nth=0 >> .rq-hd").click();
+    await pg.waitForTimeout(300);
+    /* ⚠️⚠️ **펼치기만 해서는 안 옵니다** — 줄마다 주면 열람 이력이
+       "펼친 횟수" 가 되어 뜻이 없어지고, 쓸 일 없는 개인정보가 화면까지
+       따라옵니다. */
+    let txt = await pg.locator("#rq .rq-con-b").textContent();
+    ok("펼치기만 해서는 연락처가 안 나온다", !/010-7777/.test(txt), txt.slice(0, 120));
+    ok("열면 기록이 남는다고 미리 알려 준다", /기록에 남습니다/.test(txt), txt.slice(0, 160));
+    const before = conAsk;
+    await pg.locator("#rq .rq-con-b button", { hasText:"연락처 보기" }).click();
+    await pg.waitForTimeout(500);
+    txt = await pg.locator("#rq .rq-con-b").textContent();
+    ok("눌러야 연락처가 온다", /010-7777-0000/.test(txt) && /최사장/.test(txt), txt.slice(0, 200));
+    ok("?c=1 로 물었다", conAsk === before + 1, conAsk + " / " + before);
+    ok("요청 내용도 같이 온다", /주방 공사 견적/.test(txt), txt.slice(0, 240));
+    ok("적어 주신 조건도 온다", /18평/.test(txt), txt.slice(0, 240));
+    /* ⚠️ 전화는 **누름 44px 이상**이고 숫자만 넣습니다 */
+    const tel = await pg.locator("#rq .rq-con-b .rq-tel").getAttribute("href");
+    ok("전화 링크에 숫자만 넣는다", tel === "tel:01077770000", tel);
+    const th = await pg.locator("#rq .rq-con-b .rq-tel").evaluate(
+      el => Math.round(el.getBoundingClientRect().height));
+    ok("전화 링크가 44px 이상이다", th >= 44, th);
+    /* ⚠️ 업체에 넘기는 것은 배정이고 그때 다시 동의받습니다 (제17조) */
+    ok("제17조 안내가 같이 있다", /제17조/.test(txt), txt.slice(-200));
+
+    /* ⚠️⚠️ **다른 줄을 펼치면 치웁니다** — 안 치우면 남의 성함 · 번호가
+       그 줄 아래에 그대로 남습니다 (이력에서 겪은 자리). */
+    await pg.locator("#rq .rq-s-rq .rq-r >> nth=1 >> .rq-hd").click();
+    await pg.waitForTimeout(300);
+    txt = await pg.locator("#rq .rq-con-b").textContent();
+    ok("다른 건을 펼치면 연락처를 치운다", !/010-7777/.test(txt), txt.slice(0, 120));
+
+    /* ── 배정 가능 (P0 ④) ───────────────────────────────────── */
+    await pg.locator("#rq-to").selectOption("assigned");
+    await pg.waitForTimeout(300);
+    const opts = await pg.locator("#rq-pv option").evaluateAll(
+      els => els.map(e => ({ v:e.value, t:e.textContent, off:e.disabled })));
+    const noAsg = opts.filter(o => o.v === "pv-new")[0];
+    ok("배정 가능이 꺼진 업체는 고를 수 없다", !!noAsg && noAsg.off === true, noAsg);
+    ok("왜 못 고르는지 적는다", !!noAsg && /배정 가능 꺼짐/.test(noAsg.t), noAsg);
+    const okAsg = opts.filter(o => o.v === "pv-ok")[0];
+    ok("켜진 업체는 그대로 고를 수 있다", !!okAsg && okAsg.off === false, okAsg);
+    const pvTxt = await pg.locator("#rq .rq-s-rq .f-h").last().textContent();
+    ok("고를 수 있는 곳이 몇 곳인지 센다", /1곳/.test(pvTxt), pvTxt);
+    ok("제17조를 그 자리에서 알려 준다", /제17조/.test(pvTxt), pvTxt);
+
+    /* 업체 구간 — 딱지와 단추 */
+    const pvRow = pg.locator("#rq .rq-s-pv .rq-r").filter({ hasText:"무촌철거" });
+    ok("업체 줄에 배정 불가 딱지가 있다",
+       (await pvRow.locator(".myq-st", { hasText:"배정 불가" }).count()) === 1);
+    ok("공개와 배정 가능이 다른 것이라고 적는다",
+       /<b>공개<\/b>는 손님 목록|공개.*손님 목록/.test(
+         await pg.locator("#rq .rq-s-pv").innerHTML()));
+    /* ⚠️⚠️ 켤 때 한 번 물어봅니다 — 구두 합의만으로 켜면 계약 전에
+       손님 연락처가 넘어갑니다. */
+    pg.once("dialog", d => d.accept());
+    sent = null;
+    await pvRow.locator("button", { hasText:"배정 가능으로" }).click();
+    await pg.waitForTimeout(400);
+    ok("켜면 approve_provider 로 간다",
+       !!sent && sent.fn === "approve_provider" && sent.args.p_assignable === true, sent);
+    ok("왜 켰는지도 같이 보낸다", !!sent && /계약/.test(sent.args.p_why || ""), sent);
+
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
   await br.close();
   srv.close();
   console.log("\n" + (fail ? "❌" : "✅") + " 통과 " + pass + " · 실패 " + fail);

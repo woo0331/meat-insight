@@ -44,7 +44,12 @@ var RQ = { asked:false, on:false, signedIn:false, role:"", name:"",
            /* 2026-10-17 §7 — 펼친 **서비스 항목**과 거기 적은 것.
               ⚠️ `ctx`(신청 전체)와 **갈라 둡니다** — 섞으면 항목을
               배정하다 만 값이 신청 전체 배정에 실려 나갑니다. */
-           itemOf:"", ictx:{} };
+           itemOf:"", ictx:{} ,
+           /* 2026-10-22 오픈 전 전수검사 P0 ③⑤ — 담당자와 연락처.
+              ⚠️⚠️ **연락처는 열어 본 건 하나만** 들고 있습니다
+              (`conOf`). 쉰 건을 들고 있으면 화면 하나가 곧 유출이고,
+              열 때마다 열람 이력이 남는 뜻도 없어집니다. */
+           staff:[], mine:false, conOf:"", con:null, conBusy:false };
 
 /* ── 그리기 ──────────────────────────────────────────────────────── */
 
@@ -156,6 +161,7 @@ function rqList(){
       '손님이 견적 요청을 넣으시면 여기에 쌓입니다.</p>' + rqOutRow();
 
   var shown = RQ.fil ? L.filter(function(r){ return r.state === RQ.fil; }) : L;
+  if(RQ.mine) shown = shown.filter(rqIsMine);
 
   return '<p class="ad-lead">'+
       '<b>목록에는 성함 · 연락처가 없습니다</b> — 가져오지 않습니다. '+
@@ -172,9 +178,16 @@ function rqList(){
 function rqChips(L){
   var n = {}, i;
   for(i = 0; i < L.length; i++) n[L[i].state] = (n[L[i].state] || 0) + 1;
+  /* ⚠️⚠️ **담당자를 정해 두고 "내 건만" 을 못 보면 담당자가 뜻이
+     없습니다** — 직원이 둘이 되는 날 서로 남의 건까지 훑습니다.
+     ⚠️ 거르는 것은 화면 안에서입니다 (이미 받아 둔 목록을 좁힙니다) —
+     서버에 또 묻지 않습니다. */
+  var meN = L.filter(rqIsMine).length;
   var out = '<div class="chip-g chip-g-fil rq-fil">'+
-    '<button class="chip'+(RQ.fil ? "" : " on")+'" type="button" '+
-      'onclick="rqFil(\'\')">전체 '+L.length+'</button>';
+    '<button class="chip'+(!RQ.fil && !RQ.mine ? " on" : "")+'" type="button" '+
+      'onclick="rqFil(\'\')">전체 '+L.length+'</button>'+
+    (RQ.me ? '<button class="chip'+(RQ.mine ? " on" : "")+'" type="button" '+
+      'onclick="rqMineGo()">내 건 '+meN+'</button>' : '');
   (window.AM_DEAL_ST || []).forEach(function(s){
     if(!n[s.key]) return;
     out += '<button class="chip'+(RQ.fil === s.key ? " on" : "")+'" type="button" '+
@@ -183,7 +196,133 @@ function rqChips(L){
   return out + '</div>';
 }
 
-window.rqFil = function(k){ RQ.fil = k; RQ.open = ""; RQ.to = ""; rqDraw(); };
+window.rqFil = function(k){ RQ.fil = k; RQ.mine = false; RQ.open = ""; RQ.to = ""; rqDraw(); };
+window.rqMineGo = function(){ RQ.mine = !RQ.mine; RQ.fil = ""; RQ.open = ""; rqDraw(); };
+function rqIsMine(r){ return !!(RQ.me && r.owner_id === RQ.me); }
+
+/* 담당자 성함 — ⚠️ 신청 줄에는 **id 만** 옵니다 (최소 수집). 성함은
+   직원 목록에서 찾고, 없으면 id 앞 토막을 냅니다 — **지어내지
+   않습니다** (절대 규칙 1 · "이름 없음" 도 사실입니다). */
+function rqStaffName(id){
+  var L = RQ.staff || [], i;
+  for(i = 0; i < L.length; i++) if(L[i].id === id)
+    return (L[i].name || "").trim() || ("직원 " + String(id).slice(0, 4));
+  return "직원 " + String(id || "").slice(0, 4);
+}
+
+/* ── 담당자 배정 (2026-10-22 P0 ⑤) ───────────────────────────────
+   ⚠️⚠️ **`audit_log.by_user` 와 다른 것입니다.** 그쪽은 "누가 바꿨나"
+   (지난 일)이고 이것은 "지금 누가 맡고 있나" 입니다. 없으면 직원이
+   둘이 되는 날 **같은 건에 두 사람이 전화**합니다.
+   ⚠️ 비울 수 있습니다 — 잘못 정한 날 되돌릴 길이 없으면 그 건이
+   영영 남의 것이 됩니다. */
+function rqOwnerRow(r){
+  var L = RQ.staff || [];
+  return '<div class="rq-s rq-own-b"><h4>담당자</h4>'+
+    (!L.length
+      ? '<p class="f-h">직원 계정이 아직 없습니다. '+
+        '관리자가 <code>update account set role=\'staff\' where id=\'…\'</code> 로 '+
+        '올려 주시면 여기 고르개에 나옵니다.</p>'
+      : '<div class="f-r">'+
+          '<label for="rq-own-'+esc(r.id)+'">이 건을 맡은 사람</label>'+
+          '<select id="rq-own-'+esc(r.id)+'" class="sel" '+
+            'onchange="rqOwnerGo(\''+esc(r.id)+'\',this.value)">'+
+            '<option value="">담당자 없음</option>'+
+            L.map(function(a){
+              return '<option value="'+esc(a.id)+'"'+
+                (r.owner_id === a.id ? " selected" : "")+'>'+
+                esc((a.name || "").trim() || ("직원 " + String(a.id).slice(0,4)))+
+                (a.role === "admin" ? " (관리자)" : "")+'</option>';
+            }).join("")+
+          '</select>'+
+          '<p class="f-h">바꾸면 <b>누가 · 언제</b>가 기록에 같이 남습니다. '+
+            '고객에게는 안 보입니다.</p>'+
+        '</div>'+
+        (RQ.me && r.owner_id !== RQ.me
+          ? '<button class="btn btn-o btn-sm" type="button" '+
+            'onclick="rqOwnerGo(\''+esc(r.id)+'\',\''+esc(RQ.me)+'\')">내가 맡기</button>'
+          : ''))+
+  '</div>';
+}
+
+window.rqOwnerGo = function(id, who){
+  rqCall("set_owner", { p_request:id, p_owner: who || null,
+    p_why: who ? "담당자 배정" : "담당자 해제" },
+    who ? "담당자를 정했습니다" : "담당자를 비웠습니다");
+};
+
+/* ── 연락처 · 요청 내용 (2026-10-22 P0 ③) ────────────────────────
+   ⚠️⚠️ **목록에는 없고 여기서 눌러야 옵니다.** 쉰 건의 성함 · 번호를
+   깔아 두면 화면 하나가 곧 유출입니다 — 그런데 **여는 길도 없어서**
+   관리자가 슬랙을 보고 전화하고 있었습니다 (작업대에서 상태를 바꾸는
+   일과 전화하는 일이 다른 창에 있었습니다).
+   ⚠️⚠️ **열면 열람 이력이 남습니다** (0012 의 `note_request_open` ·
+   개인정보보호법 제29조 접속기록). 기록이 남으면 "필요할 때만 여는"
+   것이 지켜집니다 — 이력 구간에 `contact:open` 으로 보입니다.
+   ⚠️ 한 건만 들고 있습니다 — 다른 줄을 펼치면 치웁니다. */
+function rqContactRow(r){
+  var mine = RQ.conOf === r.id, c = mine ? RQ.con : null;
+  return '<div class="rq-s rq-con-b"><h4>연락처 · 요청 내용</h4>'+
+    (!c
+      ? '<p class="f-h">전화를 걸어야 할 때만 여세요 — '+
+          '<b>열어 본 것이 기록에 남습니다</b> (제29조 접속기록).</p>'+
+        '<button class="btn btn-b" type="button"'+
+          (RQ.conBusy ? " disabled" : "")+
+          ' onclick="rqContactGo(\''+esc(r.id)+'\')">'+
+          (RQ.conBusy && mine ? "불러오는 중…" : "연락처 보기")+'</button>'
+      : '<dl class="rq-con">'+
+          rqConItem("성함", c.name)+
+          /* ⚠️ 번호에서 **숫자만** 남겨 `tel:` 을 만듭니다 — 하이픈이
+             섞인 채로 넣으면 기기마다 못 거는 데가 있습니다. */
+          (c.tel ? '<dt>연락처</dt><dd><a class="rq-tel" href="tel:'+
+             esc(String(c.tel).replace(/[^0-9+]/g, ""))+'">'+esc(c.tel)+'</a></dd>' : '')+
+          rqConItem("이메일", c.email)+
+          rqConItem("넘기고 싶은 시점", c.want_at)+
+          rqConItem("필요한 것", c.body)+
+          rqConDetail(c.detail)+
+        '</dl>'+
+        '<p class="f-h">⚠️ 업체에 넘기는 것은 <b>배정</b>이고, 그때 상호를 '+
+          '알리고 <b>제3자 제공 동의</b>를 다시 받습니다 (제17조 제2항).</p>')+
+  '</div>';
+}
+
+function rqConItem(k, v){
+  /* ⚠️ 값이 없는 칸은 **줄째 뺍니다** (절대 규칙 2) */
+  if(v == null || String(v).trim() === "") return "";
+  return '<dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd>';
+}
+
+/* 적어 주신 조건 — ⚠️ 칸 이름도 손님이 보낸 글이라 `esc()` 를 거칩니다 */
+function rqConDetail(d){
+  if(!d || typeof d !== "object") return "";
+  var K = Object.keys(d).filter(function(k){
+    return d[k] != null && String(d[k]).trim() !== ""; });
+  if(!K.length) return "";
+  return K.map(function(k){
+    return '<dt>'+esc(k)+'</dt><dd>'+esc(d[k])+'</dd>'; }).join("");
+}
+
+window.rqContactGo = function(id){
+  if(RQ.conBusy) return;
+  RQ.conBusy = true; RQ.conOf = id; RQ.con = null; rqDraw();
+  fetch("/api/me?c=1&r=" + encodeURIComponent(id), {
+    headers: Object.assign({ accept:"application/json" }, window.amAuthHeaders()) })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      RQ.conBusy = false;
+      /* ⚠️ 못 가져오면 **조용히 비웁니다** — 운영자에게만 남깁니다
+         (절대 규칙 3). 다시 누르면 다시 묻습니다. */
+      if(!d || !d.contact){ RQ.conOf = ""; toast("연락처를 불러오지 못했습니다"); }
+      else { RQ.con = d.contact; if(d.history) RQ.hist = d.history; }
+      rqDraw();
+    })
+    .catch(function(e){
+      RQ.conBusy = false; RQ.conOf = "";
+      try{ console.warn("[rq] contact — " + e); }catch(_){}
+      toast("연결이 끊겼습니다. 잠시 뒤 다시 눌러 주세요");
+      rqDraw();
+    });
+};
 
 function rqRow(r){
   var st   = (window.amDealSt && amDealSt(r.state)) || null;
@@ -206,10 +345,16 @@ function rqRow(r){
            다른 색으로 나옵니다. */
         '<i class="myq-st myq-'+esc(window.amDealTone ? amDealTone(r.state) : "gray")+
           '">'+esc(st ? st.name : r.state)+'</i>'+
+        /* ⚠️ 담당자가 없으면 **"없음" 을 찍습니다** — 비워 두면 "아직
+           아무도 안 맡은 건" 과 "담당자 칸이 없는 화면" 을 못 가립니다.
+           ⚠️ 성함은 직원 목록에서 찾습니다 (신청 줄에는 id 만 옵니다). */
+        '<i class="rq-own'+(rqIsMine(r) ? " on" : "")+'">'+
+          esc(r.owner_id ? rqStaffName(r.owner_id) : "담당자 없음")+'</i>'+
         (day ? '<em class="rq-d">'+esc(day)+'</em>' : '')+
       '</span>'+
     '</button>'+
-    (open ? '<div class="rq-bd">'+ rqItems(r) + rqMove(r) + rqAsg(r) +
+    (open ? '<div class="rq-bd">'+ rqOwnerRow(r) + rqContactRow(r) +
+              rqItems(r) + rqMove(r) + rqAsg(r) +
               rqQuotes(r) + rqHistRow(r) +'</div>' : '')+
   '</article>';
 }
@@ -224,6 +369,10 @@ window.rqOpen = function(id){
   /* ⚠️ 항목도 같이 닫습니다 — 안 닫으면 다른 건을 펼쳤을 때 **남의
      건의 항목 폼**이 열린 채로 남습니다 (배정 단추가 거기 있습니다). */
   RQ.itemOf = ""; RQ.ictx = {};
+  /* ⚠️⚠️ **연락처도 같이 치웁니다** — 안 치우면 다른 건을 펼쳤을 때
+     **남의 성함 · 번호**가 그 줄 아래에 그대로 남습니다 (이력에서
+     겪은 자리와 같습니다). */
+  RQ.conOf = ""; RQ.con = null;
   rqDraw();
 };
 
@@ -355,6 +504,28 @@ function rqNeed(m){
    ⚠️⚠️ **없는 업체를 지어내지 않습니다** (절대 규칙 1). 0곳이면 0곳이라고
    말하고 **등록하는 길**을 같이 냅니다 (절대 규칙 2 — 막다른 길로 두지
    않습니다). */
+/* 배정 고르개의 한 칸 — ⚠️⚠️ **두 고르개가 같은 규칙을 씁니다**
+   (신청 전체 배정 · 서비스 항목 배정). 두 곳에 적으면 한쪽만 고치는
+   날이 옵니다.
+   ⚠️⚠️ **배정 가능이 꺼진 업체는 고를 수 없게 잠급니다** (0012).
+   숨기지 않는 까닭 — 숨기면 "왜 그 업체가 목록에 없지" 가 되고,
+   **왜 못 고르는지**를 그 자리에서 알려 주는 쪽이 낫습니다.
+   ⚠️ 잠그는 것은 거드는 것이고 **막는 것은 DB 의 트리거**입니다
+   (화면 코드로만 막으면 버그 하나에 뚫립니다). */
+function rqPvOpt(p, cur){
+  var on = p.assignable !== false;
+  return '<option value="'+esc(p.id)+'"'+
+    (cur === p.id ? " selected" : "")+(on ? "" : " disabled")+'>'+
+    esc(p.name)+
+    (on ? (p.listed ? "" : " (아직 공개 전)") : " — 배정 가능 꺼짐")+
+  '</option>';
+}
+
+/* 고를 수 있는 업체가 몇 곳인가 — ⚠️ **세는 값**입니다 */
+function rqPvOnN(){
+  return (RQ.provs || []).filter(function(p){ return p.assignable !== false; }).length;
+}
+
 function rqPvField(){
   var P = RQ.provs || [];
   if(!P.length)
@@ -366,17 +537,22 @@ function rqPvField(){
       '(<b>listed</b> 가 꺼져 있어도 직원 · 관리자에게는 보입니다).</p>'+
     '</div>';
 
+  var on = rqPvOnN();
   return '<div class="f-r">'+
     '<label for="rq-pv">배정할 업체</label>'+
     '<select id="rq-pv" class="sel" onchange="rqCtx(\'providerId\',this.value)">'+
       '<option value="">골라 주세요</option>'+
-      P.map(function(p){
-        return '<option value="'+esc(p.id)+'"'+
-          (RQ.ctx.providerId === p.id ? " selected" : "")+'>'+esc(p.name)+
-          (p.listed ? "" : " (아직 공개 전)")+'</option>';
-      }).join("")+
+      P.map(function(p){ return rqPvOpt(p, RQ.ctx.providerId); }).join("")+
     '</select>'+
-    '<p class="f-h">고르개는 '+P.length+'곳입니다 — 세는 값입니다.</p>'+
+    '<p class="f-h">고를 수 있는 업체는 '+on+'곳입니다 (등록 '+P.length+'곳) — '+
+      '세는 값입니다.'+
+      (on < P.length
+        ? ' ⚠️ <b>'+(P.length - on)+'곳</b>은 <b>배정 가능</b>이 꺼져 있습니다 — '+
+          '제휴 계약을 확인하고 아래 <b>업체 · 공개 승인</b> 에서 켜 주세요. '+
+          '켜기 전에 배정하면 그 순간 성함 · 연락처가 그 업체로 넘어갑니다 '+
+          '(개인정보보호법 제17조).'
+        : '')+
+    '</p>'+
   '</div>';
 }
 
@@ -458,11 +634,7 @@ function rqItemForm(it, keys, d){
           '<select id="rq-ipv-'+esc(it.id)+'" class="sel" '+
             'onchange="rqIctx(\'providerId\',this.value)">'+
             '<option value="">골라 주세요</option>'+
-            P.map(function(p){
-              return '<option value="'+esc(p.id)+'"'+
-                (RQ.ictx.providerId === p.id ? " selected" : "")+'>'+esc(p.name)+
-                (p.listed ? "" : " (아직 공개 전)")+'</option>';
-            }).join("")+
+            P.map(function(p){ return rqPvOpt(p, RQ.ictx.providerId); }).join("")+
           '</select></div>'+
         /* ⚠️⚠️ 제17조 안내가 **고르개 아래 · 단추 위**입니다. 체크를
            켜야 `p_agree3rd` 가 실리고, 안 켜면 DB 가 그 말 그대로
@@ -608,6 +780,10 @@ function rqLoad(){
          물어야 합니다 — 이 저장소가 "만들어 놓고 안 쓰는 칸" 으로 여러
          번 겪은 자리라, 펼친 줄에서 그대로 냅니다 (0008 · §4 · §6). */
       RQ.quotes = d.quotes || [];
+      /* 담당자 고르개 (P0 ⑤) — ⚠️ 직원 · 관리자 계정만 옵니다
+         (0012 의 `account_staff` 정책). 화면이 거르는 것이 아닙니다. */
+      RQ.staff  = d.staff  || [];
+      RQ.me     = d.me || "";
       rqDraw();
     })
     .catch(function(e){
@@ -1163,6 +1339,9 @@ function rqProvs(){
   if(RQ.role !== "staff" && RQ.role !== "admin") return "";
   var P = RQ.provs || [];
   var off = P.filter(function(p){ return !p.listed; }).length;
+  /* ⚠️⚠️ **공개와 배정 가능은 다른 것입니다** — 공개는 손님에게 보이는가,
+     배정 가능은 신청을 넘겨도 되는가(계약이 되어 있는가)입니다. */
+  var noAsg = P.filter(function(p){ return p.assignable === false; }).length;
 
   return '<section class="ad-s rq-s rq-s-pv">'+
     '<h2>업체 · 공개 승인</h2>'+
@@ -1173,9 +1352,15 @@ function rqProvs(){
           (off ? '<b>'+off+'곳</b>이 아직 공개 전입니다. ' : '')+
           '공개 전인 업체도 <b>배정 고르개에는 보입니다</b> — '+
           '손님 목록에만 안 나옵니다.'+
+          (noAsg ? ' <b>'+noAsg+'곳</b>은 <b>배정 가능</b>이 꺼져 있어 '+
+            '배정 고르개에서 잠겨 있습니다 — 제휴 계약을 확인하고 켜 주세요.' : '')+
           (RQ.role === "admin" ? ''
-            : ' ⚠️ 공개를 켜는 것은 <b>관리자만</b> 할 수 있습니다.')+
+            : ' ⚠️ 공개 · 배정 가능을 켜는 것은 <b>관리자만</b> 할 수 있습니다.')+
         '</p>'+
+        '<p class="f-h">⚠️ <b>공개</b>는 손님 목록에 보이는가이고, '+
+          '<b>배정 가능</b>은 신청을 넘겨도 되는가입니다 — 둘은 다릅니다. '+
+          '구두 합의 단계에서 배정되면 그 순간 성함 · 연락처가 그 업체로 '+
+          '넘어갑니다 (개인정보보호법 제17조 제2항).</p>'+
         '<div class="rq-g">'+ P.map(rqProvRow).join("") +'</div>')+
   '</section>';
 }
@@ -1194,15 +1379,34 @@ function rqProvRow(p){
       '<span class="rq-hd-r">'+
         '<i class="myq-st myq-'+(p.listed ? "ok" : "gray")+'">'+
           (p.listed ? "공개" : "공개 전")+'</i>'+
+        /* ⚠️ 꺼진 것을 **회색이 아니라 주황**으로 냅니다 — 회색이면
+           "그냥 아직" 으로 읽히는데, 이건 배정이 막혀 있다는 뜻입니다. */
+        '<i class="myq-st myq-'+(p.assignable === false ? "warn" : "ok")+'">'+
+          (p.assignable === false ? "배정 불가" : "배정 가능")+'</i>'+
         (RQ.role === "admin"
           ? '<button class="btn '+(p.listed ? "btn-o" : "btn-b")+' btn-sm" type="button" '+
             'onclick="rqProvGo(\''+esc(p.id)+'\','+(!p.listed)+')">'+
-            (p.listed ? "내리기" : "공개하기")+'</button>'
+            (p.listed ? "내리기" : "공개하기")+'</button>'+
+            '<button class="btn '+(p.assignable === false ? "btn-b" : "btn-o")+' btn-sm" type="button" '+
+            'onclick="rqAsgGo(\''+esc(p.id)+'\','+(p.assignable === false)+')">'+
+            (p.assignable === false ? "배정 가능으로" : "배정 막기")+'</button>'
           : '')+
       '</span>'+
     '</div>'+
   '</article>';
 }
+
+/* ⚠️⚠️ **켜는 것은 "계약서를 봤다" 는 뜻입니다.** 구두 합의만으로
+   켜면 계약 전에 손님의 성함 · 연락처가 그 업체로 넘어갑니다
+   (개인정보보호법 제17조 제2항) — 그래서 켤 때 한 번 물어봅니다. */
+window.rqAsgGo = function(id, on){
+  if(on && !confirm("제휴 계약을 확인하셨습니까?\n켜면 이 업체에 신청을 배정할 수 있고, " +
+                    "배정하면 손님의 성함 · 연락처가 그 업체로 넘어갑니다."))
+    return;
+  rqCall("approve_provider", { p_id:id, p_assignable:!!on,
+    p_why: on ? "배정 가능 (계약 확인)" : "배정 막음" },
+    on ? "배정 가능으로 켰습니다" : "배정을 막았습니다");
+};
 
 window.rqProvGo = function(id, on){
   /* ⚠️ 내리는 것은 되돌릴 수 있지만 손님 화면에서 바로 사라집니다 —

@@ -542,6 +542,98 @@ async function sendWithDb(body, opt){
        rpc && rpc.args.p_items.length === 1, rpc && rpc.args.p_items.length);
   }
 
+  console.log("\n── ⚠️⚠️ 손님에게 가는 접수 완료 안내 (2026-10-22 P0 ⑥)");
+  {
+    /* 보낸 것을 가려 봅니다 — 운영자(웹훅)와 손님(Resend) 둘입니다 */
+    async function sendAck(body, env){
+      process.env.INTAKE_WEBHOOK_URL = "https://example.invalid/hook";
+      for(const k of ["RESEND_API_KEY","CUSTOMER_EMAIL_FROM"]) delete process.env[k];
+      Object.keys(env || {}).forEach(k => { process.env[k] = env[k]; });
+      for(const f of ["quote.js", "_send.js"])
+        delete require.cache[require.resolve(path.join(__dirname, "..", "api", f))];
+      const handler = require(QUOTE);
+      let mail = null, hook = null;
+      const realFetch = global.fetch;
+      global.fetch = async function(url, init){
+        const u = String(url);
+        if(/api\.resend\.com/.test(u)) mail = JSON.parse(init.body);
+        else hook = JSON.parse(init.body);
+        return { ok:true, status:200, headers:{ get(){ return ""; } }, text: async()=> "" };
+      };
+      const res = fakeRes();
+      try{ await handler(fakeReq(body), res); }
+      finally{ global.fetch = realFetch; }
+      return { res:res, mail:mail, hook:hook };
+    }
+
+    const QQ = { kind:"quote", service:"interior", q:"주방 공사",
+                 name:"최사장", tel:"010-7777-0000", email:"owner@test.invalid",
+                 agree:true };
+
+    /* ⚠️⚠️ **설정 전에는 아무 일도 안 합니다** (fail-closed) — 접수는
+       그대로 되고 안내만 안 갑니다. 지금 운영이 그 상태입니다. */
+    let g = await sendAck(QQ);
+    ok("보낼 곳이 없으면 안내를 안 보낸다", g.mail === null, g.mail);
+    ok("그래도 접수는 성공이다", g.res.code === 200, "code=" + g.res.code);
+
+    /* 켜면 손님에게 갑니다 */
+    g = await sendAck(QQ, { RESEND_API_KEY:"re_x", CUSTOMER_EMAIL_FROM:"hi@storeway.co.kr" });
+    ok("켜면 손님 메일로 간다", !!g.mail && g.mail.to[0] === "owner@test.invalid", g.mail);
+    /* ⚠️⚠️ **한 사람에게만** — 쉼표를 그대로 넘기면 손님이 적은 글로
+       여러 곳에 보내는 길이 열립니다. */
+    g = await sendAck(Object.assign({}, QQ, { email:"a@test.invalid,b@test.invalid" }),
+                      { RESEND_API_KEY:"re_x", CUSTOMER_EMAIL_FROM:"hi@storeway.co.kr" });
+    ok("여러 주소로 쪼개 보내지 않는다", !!g.mail && g.mail.to.length === 1, g.mail);
+
+    /* ⚠️⚠️ **"업체에 전달했습니다" 라고 하지 않습니다** — 배정은 나중에
+       하고 그때 상호를 알리고 제3자 제공 동의를 다시 받습니다 (제17조). */
+    g = await sendAck(QQ, { RESEND_API_KEY:"re_x", CUSTOMER_EMAIL_FROM:"hi@storeway.co.kr" });
+    const txt = (g.mail && g.mail.text) || "";
+    ok("업체에 넘겼다고 하지 않는다",
+       txt.indexOf("업체에 연락처를 전달하는 것은 아직") >= 0 &&
+       !/업체에 전달했습니다|업체에 넘겼습니다/.test(txt), txt);
+    /* ⚠️ 회신 시점을 약속하지 않습니다 (약관 제8조 · 절대 규칙 5) */
+    ok("회신 시점을 약속하지 않는다",
+       !/시간 안에|당일 연락|24시간|보장/.test(txt), txt);
+    /* ⚠️ 광고를 섞지 않습니다 — 섞는 순간 제50조 사전동의가 먼저입니다 */
+    ok("광고가 아니라고 적는다", txt.indexOf("광고가 아닙니다") >= 0, txt);
+    /* ⚠️⚠️ DB 가 없으면 접수번호가 없습니다 — **없는 번호를 적지
+       않습니다** (절대 규칙 2 · 5). */
+    ok("번호가 없으면 번호 줄을 안 적는다", txt.indexOf("접수번호") < 0, txt);
+
+    /* 업체 입점에는 안 보냅니다 — 신청이 아니라 업체 등록입니다 */
+    g = await sendAck({ kind:"partner", company:"가나다", services:["인테리어"],
+                        name:"대표", tel:"010-0000-0000", email:"pv@test.invalid",
+                        agree:true },
+                      { RESEND_API_KEY:"re_x", CUSTOMER_EMAIL_FROM:"hi@storeway.co.kr" });
+    ok("업체 입점에는 안내를 안 보낸다", g.mail === null, g.mail);
+
+    /* 메일을 안 적으셨으면 보낼 곳이 없습니다 */
+    g = await sendAck(Object.assign({}, QQ, { email:"" }),
+                      { RESEND_API_KEY:"re_x", CUSTOMER_EMAIL_FROM:"hi@storeway.co.kr" });
+    ok("메일을 안 적으셨으면 안 보낸다", g.mail === null, g.mail);
+
+    /* ⚠️⚠️ **안내가 실패해도 접수는 성공입니다** */
+    process.env.INTAKE_WEBHOOK_URL = "https://example.invalid/hook";
+    process.env.RESEND_API_KEY = "re_x";
+    process.env.CUSTOMER_EMAIL_FROM = "hi@storeway.co.kr";
+    for(const f of ["quote.js", "_send.js"])
+      delete require.cache[require.resolve(path.join(__dirname, "..", "api", f))];
+    {
+      const handler = require(QUOTE);
+      const realFetch = global.fetch;
+      global.fetch = async function(url){
+        if(/api\.resend\.com/.test(String(url))) throw new Error("mail down");
+        return { ok:true, status:200, headers:{ get(){ return ""; } }, text: async()=> "" };
+      };
+      const res = fakeRes();
+      try{ await handler(fakeReq(QQ), res); }
+      finally{ global.fetch = realFetch; }
+      ok("안내가 터져도 접수는 성공이다", res.code === 200 && res.body.ok === true, res.body);
+    }
+    for(const k of ["RESEND_API_KEY","CUSTOMER_EMAIL_FROM"]) delete process.env[k];
+  }
+
   console.log("\n── 받을 곳이 없을 때");
   {
     for(const k of ["INTAKE_WEBHOOK_URL","ORDER_WEBHOOK_URL","SOS_WEBHOOK_URL",

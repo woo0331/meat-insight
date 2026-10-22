@@ -495,6 +495,27 @@ console.log("\n── /api/deal — 상태가 바뀌면 운영자에게 한 줄 
      !/p_proof\s*:/.test(src.slice(src.indexOf("SAY_ARG"), src.indexOf("NOTE_TIMEOUT"))),
      src.slice(src.indexOf("SAY_ARG"), src.indexOf("NOTE_TIMEOUT")));
 
+  /* ── 0012 (P0 \u2462\u2464) ─────────────────────────────────────────
+     ⚠️⚠️ **연락처 열람은 알림을 보내지 않습니다.** 관리자가 전화를
+     걸려고 열 때마다 불리는 자리라, 알림을 보내면 하루에 수십 줄이고
+     정작 돈 쪽 알림이 그 더미에 묻힙니다 (save_user_state 와 같은
+     까닭 — `notify()` 는 FN_SAY 에 없는 이름을 조용히 지나갑니다). */
+  /* ⚠️⚠️ **선언부터 자르고 주석을 걷어냅니다.** 처음에
+     `indexOf("FN_SAY")` 로 잘랐더니 **그 규칙을 설명하는 주석**(OK_FN
+     위의 "FN_SAY 에 넣지 마세요")이 먼저 나와서, 멀쩡한 코드를 실패로
+     잡았습니다 — 이 저장소가 "검사가 주석에 걸림" 으로 여러 번 겪은
+     자리이고 틀린 것은 검사였습니다. */
+  const say = src.slice(src.indexOf("const FN_SAY"), src.indexOf("const SAY_ARG"))
+                 .replace(/\/\*[\s\S]*?\*\//g, " ");
+  ok("연락처 열람은 알림을 안 보낸다 (FN_SAY 에 없다)",
+     !/note_request_open\s*:/.test(say), say);
+  ok("담당자 바뀜은 알림을 보낸다 (FN_SAY 에 있다)",
+     /set_owner\s*:/.test(say), say);
+  /* ⚠️ 담당자 계정 id 는 알림에 안 싣습니다 — "가서 보세요" 까지입니다 */
+  ok("알림에 담당자 계정 id 를 안 싣는다",
+     !/p_owner\s*:/.test(src.slice(src.indexOf("SAY_ARG"), src.indexOf("NOTE_TIMEOUT"))),
+     src.slice(src.indexOf("SAY_ARG"), src.indexOf("NOTE_TIMEOUT")));
+
   setEnv({});
 }
 
@@ -791,6 +812,132 @@ console.log("\n── /api/deal — 회원 메모장 저장 (0010)");
    ① 설정 전에는 아무것도 안 한다 ② 못 쓸 값으로 DB 를 안 두드린다
    ③ service key 가 한 글자도 안 내려간다 ④ 보는 길은 RLS 를 거친다
    입니다. */
+console.log("\n── /api/me?r=&c=1 — 신청 한 건의 연락처 (0012 · P0 ③)");
+{
+  envAll();
+  const STAFF = [USER, [/\/rest\/v1\/account/, function(){
+    return body(200, [{ role:"staff", provider_id:null, name:"직원" }]); }]];
+  const RID = "11111111-2222-3333-4444-555555555555";
+  const ONE = [/\/rest\/v1\/request\?select=[^&]*&id=eq\./, function(){
+    return body(200, [{ id:RID, no:"SW-AAAA-0001", name:"최사장",
+                        tel:"010-7777-0000", body:"주방 수리" }]); }];
+
+  /* 직원 — 열면 옵니다 + **열람 이력이 남습니다** */
+  let r = res();
+  mock(STAFF.concat([
+    ONE,
+    [/\/rest\/v1\/request/,  function(){ return body(200, []); }],
+    [/\/rest\/v1\/provider/, function(){ return body(200, []); }],
+    [/\/rest\/v1\/quote/,    function(){ return body(200, []); }],
+    [/\/rest\/v1\/audit_log/,function(){ return body(200, []); }],
+    [/\/rpc\/note_request_open/, function(){ return body(200, null); }]]));
+  await Hme(req({ query:{ r:RID, c:"1" }, headers:{ authorization:"Bearer " + TOK } }), r);
+  ok("직원이 열면 연락처가 온다",
+     r.code === 200 && r.body.contact && r.body.contact.tel === "010-7777-0000", r.body);
+  /* ⚠️⚠️ 기록이 안 남으면 "필요할 때만 여는" 것이 지켜지지 않습니다
+     (개인정보보호법 제29조 접속기록). */
+  ok("열어 본 것을 기록으로 남긴다 (note_request_open)",
+     calls.some(c => /\/rpc\/note_request_open/.test(c.url)), calls.map(c => c.url));
+  ok("연락처도 그 사람의 토큰으로 읽는다 (service key 가 아닙니다)",
+     noSvcAnywhere(), calls.map(c => c.h));
+  ok("연락처 칸도 select=* 가 아니다",
+     (calls.filter(c => /&id=eq\./.test(c.url))[0].url || "").indexOf("*") < 0,
+     calls.filter(c => /&id=eq\./.test(c.url))[0].url);
+  ok("답에 키 · 토큰이 섞이지 않는다", !leaks(r), r.body);
+
+  /* ⚠️⚠️ **`?c=1` 없이는 안 옵니다** — 줄을 펼칠 때마다 주면 열람
+     이력이 "펼친 횟수" 가 되어 뜻이 없어집니다. */
+  r = res();
+  mock(STAFF.concat([
+    ONE,
+    [/\/rest\/v1\/request/,  function(){ return body(200, []); }],
+    [/\/rest\/v1\/provider/, function(){ return body(200, []); }],
+    [/\/rest\/v1\/quote/,    function(){ return body(200, []); }],
+    [/\/rest\/v1\/audit_log/,function(){ return body(200, []); }]]));
+  await Hme(req({ query:{ r:RID }, headers:{ authorization:"Bearer " + TOK } }), r);
+  ok("?c=1 없이는 연락처가 안 온다",
+     r.body.contact === undefined, r.body.contact);
+  ok("?c=1 없이는 열람 기록도 안 남는다",
+     calls.every(c => !/\/rpc\/note_request_open/.test(c.url)), calls.map(c => c.url));
+
+  /* ⚠️⚠️ **업체에게는 안 줍니다.** RLS 가 줄은 막지만, 여기서 역할을
+     안 보면 배정 안 된 건의 연락처를 긁는 길이 열립니다 (묻지 않는
+     쪽이 한 겹 더 안전합니다 · PICK 을 역할마다 적는 것과 같은 선). */
+  r = res();
+  mock([USER, [/\/rest\/v1\/account/, function(){
+         return body(200, [{ role:"provider", provider_id:"pv-one", name:"가" }]); }],
+        ONE,
+        [/\/rest\/v1\/request/, function(){ return body(200, []); }],
+        [/\/rest\/v1\/deal/,    function(){ return body(200, []); }],
+        [/\/rest\/v1\/quote/,   function(){ return body(200, []); }],
+        [/\/rest\/v1\/audit_log/,function(){ return body(200, []); }]]);
+  await Hme(req({ query:{ r:RID, c:"1" }, headers:{ authorization:"Bearer " + TOK } }), r);
+  ok("업체에게는 ?c=1 로도 연락처를 안 준다",
+     r.body.contact === undefined, r.body.contact);
+
+  /* 고객도 같습니다 — 자기 칸에서 이미 받습니다 */
+  r = res();
+  mock([USER, ACCT, ONE,
+        [/\/rest\/v1\/request/, function(){ return body(200, []); }],
+        [/\/rest\/v1\/quote/,   function(){ return body(200, []); }],
+        [/\/rest\/v1\/audit_log/,function(){ return body(200, []); }]]);
+  await Hme(req({ query:{ r:RID, c:"1" }, headers:{ authorization:"Bearer " + TOK } }), r);
+  ok("고객에게는 ?c=1 갈래가 돌지 않는다",
+     r.body.contact === undefined, r.body.contact);
+
+  /* ⚠️ 기록이 실패해도 **연락처는 줍니다** — 전화를 걸어야 하는
+     사람을 기록 때문에 막으면 손님이 기다립니다. */
+  r = res();
+  mock(STAFF.concat([
+    ONE,
+    [/\/rest\/v1\/request/,  function(){ return body(200, []); }],
+    [/\/rest\/v1\/provider/, function(){ return body(200, []); }],
+    [/\/rest\/v1\/quote/,    function(){ return body(200, []); }],
+    [/\/rest\/v1\/audit_log/,function(){ return body(200, []); }],
+    [/\/rpc\/note_request_open/, function(){ return body(500, { message:"x" }); }]]));
+  await Hme(req({ query:{ r:RID, c:"1" }, headers:{ authorization:"Bearer " + TOK } }), r);
+  ok("기록이 실패해도 연락처는 온다",
+     r.code === 200 && r.body.contact && r.body.contact.name === "최사장", r.body);
+
+  /* ── 담당자 (P0 ⑤) ─────────────────────────────────────────── */
+  r = res();
+  mock(STAFF.concat([
+    [/\/rest\/v1\/request/,  function(){ return body(200, [{ id:RID, owner_id:null }]); }],
+    [/\/rest\/v1\/provider/, function(){ return body(200, []); }],
+    [/\/rest\/v1\/account\?select=.*role=in/, function(){
+      return body(200, [{ id:"44444444-4444-4444-4444-444444444444",
+                          name:"직원", role:"staff" }]); }],
+    [/\/rest\/v1\/quote/,    function(){ return body(200, []); }],
+    [/\/rest\/v1\/audit_log/,function(){ return body(200, []); }]]));
+  await Hme(req({ headers:{ authorization:"Bearer " + TOK } }), r);
+  const sq = calls.filter(c => /\/rest\/v1\/account\?select=/.test(c.url) && /role=in/.test(c.url))[0];
+  ok("직원에게 담당자 고르개(직원 목록)를 준다", !!sq, calls.map(c => c.url));
+  /* ⚠️⚠️ **고객 계정이 섞이면 성함 목록이 새는 것입니다** */
+  ok("직원 목록은 staff · admin 만 묻는다",
+     !!sq && /role=in\.\(staff,admin\)/.test(decodeURIComponent(sq.url)),
+     sq && decodeURIComponent(sq.url));
+  const stq = decodeURIComponent(calls.filter(c => /\/rest\/v1\/request\?select=/.test(c.url))[0].url);
+  ok("직원 신청 칸에 담당자(owner_id)가 있다", /owner_id/.test(stq), stq);
+  /* ⚠️ 목록에는 여전히 성함 · 연락처가 없어야 합니다 */
+  ok("직원 목록 칸에는 성함 · 연락처가 없다",
+     !/(^|,)name(,|$)/.test(stq.split("select=")[1] || "") &&
+     !/(^|,)tel(,|$)/.test(stq.split("select=")[1] || ""), stq);
+  ok("답에 자기 계정 id 가 온다 (내 건만 거르기 · 내가 맡기)",
+     typeof r.body.me === "string" && r.body.me.length > 0, r.body.me);
+  /* ⚠️⚠️ 배정 고르개를 **잠그려면** assignable 이 와야 합니다 */
+  const pvq = decodeURIComponent(calls.filter(c => /\/rest\/v1\/provider\?select=/.test(c.url))[0].url);
+  ok("업체 목록에 배정 가능 여부가 온다", /assignable/.test(pvq), pvq);
+
+  /* 고객에게는 직원 목록을 묻지 않습니다 */
+  r = res();
+  mock([USER, ACCT,
+        [/\/rest\/v1\/request/, function(){ return body(200, []); }],
+        [/\/rest\/v1\/quote/,   function(){ return body(200, []); }]]);
+  await Hme(req({ headers:{ authorization:"Bearer " + TOK } }), r);
+  ok("고객에게는 직원 목록을 묻지 않는다",
+     calls.every(c => !/role=in/.test(c.url)), calls.map(c => c.url));
+}
+
 console.log("\n── /api/upload — 사진 (0011)");
 {
   const Hup = require(path.join(ROOT, "api", "upload.js"));

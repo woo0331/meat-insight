@@ -2843,6 +2843,54 @@ function checkPackages(W){
   console.log("   패키지 " + P.length + "개가 실제 상품만 가리킵니다");
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   수익상품이 **DB 와 같은가** (2026-10-22 오픈 전 전수검사 P0 ⑦)
+
+   ⚠️⚠️ `offer` 표가 **비어 있었습니다.** js/data/offers.js 에 스물일곱이
+   있는데 DB 에는 한 줄도 넣는 코드가 없었고, 그래서 —
+     · `fee_policy.offer_id` 가 offer(id) 를 가리켜 **상품별 요율을
+       못 걸고** 업체 전체 정책만 걸렸습니다.
+     · `request.offer_id` 도 같은 FK 라, 화면이 offerId 를 보내기
+       시작하는 날 **그 접수의 저장이 통째로 실패**합니다.
+
+   ⚠️⚠️ 한쪽만 고치면 **조용히 어긋납니다** — 그래서 빌드가 양쪽을
+   맞춰 봅니다 (`deal.js` ↔ `deal_move` 를 지키는 것과 같은 방식).
+   ⚠️ 보는 것은 **id 와 이름**까지입니다. lead · 적용 방식은 글이라
+   한 글자 다를 수 있고, 거기까지 묶으면 글을 고칠 때마다 빌드가
+   멈춥니다 — 지켜야 하는 것은 **줄이 빠짐없이 있는가** 입니다.
+   ════════════════════════════════════════════════════════════════════ */
+function checkOfferSql(W){
+  const L = W.AM_OFFERS || [];
+  if(!L.length) return;
+  const f = path.join(ROOT, "db", "migrations", "0012_owner_assignable_offer.sql");
+  if(!fs.existsSync(f))
+    throw new Error("db/migrations/0012_owner_assignable_offer.sql 이 없습니다 — "+
+      "수익상품이 DB 에 들어가는 길이 사라집니다 (offer 표가 비면 상품별 수수료 정책을 못 만듭니다)");
+  /* 주석을 먼저 걷어냅니다 — 규칙을 설명하는 글에 걸려 멀쩡한 파일을
+     실패로 잡은 적이 있습니다 (select=* 로 겪은 자리) */
+  const sql = fs.readFileSync(f, "utf8").replace(/--[^\n]*/g, " ");
+  const bad = [];
+  L.forEach(function(o){
+    const q = "('" + o.id + "', '" + String(o.name).replace(/'/g, "''") + "'";
+    if(sql.indexOf(q) < 0)
+      bad.push(o.id + " (" + o.name + ")");
+  });
+  if(bad.length)
+    throw new Error("수익상품이 db/migrations/0012 의 offer 줄과 어긋납니다: " +
+      bad.join(" · ") +
+      "\n   → offer 표에 없는 상품은 `fee_policy.offer_id` 로 요율을 걸 수 없고," +
+      "\n     `request.offer_id` 로 보내는 날 **접수 저장이 FK 로 통째로 실패**합니다" +
+      "\n   → 줄 만드는 법: node -e 로 AM_OFFERS 를 돌려 insert 줄을 뽑아 0012 에 넣으세요");
+  /* 거꾸로 — SQL 에만 있는 줄 (지운 상품이 DB 에 남아 있는 것) */
+  const ids = {}; L.forEach(o => { ids[o.id] = 1; });
+  const extra = (sql.match(/\n  \('([a-z0-9-]+)'/g) || [])
+    .map(x => x.replace(/[^a-z0-9-]/g, "")).filter(k => k && !ids[k]);
+  if(extra.length)
+    throw new Error("db/migrations/0012 에 offers.js 에 없는 상품이 있습니다: " +
+      extra.join(" · ") + "\n   → 상품을 내리실 때는 offers.js 와 0012 를 **같이** 고치세요");
+  console.log("   수익상품 " + L.length + "개가 offer 표(0012)와 같습니다");
+}
+
 function checkOffers(W){
   const L = W.AM_OFFERS || [];
   if(!L.length) throw new Error("수익상품이 하나도 없습니다 (§5)");
@@ -3110,13 +3158,21 @@ function checkRpcArgs(){
 
   const want = {};
   fns.forEach(function(f){
-    const m = sql.match(new RegExp(
-      "create\\s+or\\s+replace\\s+function\\s+" + f + "\\s*\\(([\\s\\S]*?)\\)\\s*returns", "i"));
-    if(!m)
+    /* ⚠️⚠️ **마지막 정의를 봅니다 — 첫 정의가 아닙니다.** 뒤 번호의
+       마이그레이션이 같은 함수를 다시 적을 수 있고(0012 의
+       approve_provider 가 인자를 하나 늘렸습니다), 그때 DB 에 남는 것은
+       **마지막 것**입니다. 첫 것을 보면 늘어난 인자를 "없는 함수의
+       인자" 로 잡아 **멀쩡한 코드에서 빌드가 멈춥니다** — 실제로 그랬고,
+       틀린 것은 검사였습니다. */
+    const re = new RegExp(
+      "create\\s+or\\s+replace\\s+function\\s+" + f + "\\s*\\(([\\s\\S]*?)\\)\\s*returns", "gi");
+    let m, last = null;
+    while((m = re.exec(sql))) last = m[1];
+    if(last === null)
       throw new Error("api/deal.js 가 허용한 " + f + " 가 db/migrations 에 없습니다\n" +
         "   → 화면이 부르는데 DB 에 없으면 손님에게 \"처리하지 못했습니다\" 만 나갑니다");
     /* 인자 이름만 (기본값 · 형은 버립니다) */
-    m[1].replace(/\/\*[\s\S]*?\*\//g, " ").split(",").forEach(function(part){
+    last.replace(/\/\*[\s\S]*?\*\//g, " ").split(",").forEach(function(part){
       const n = part.trim().match(/^(p_[a-z0-9_]+)\b/);
       if(n) want[n[1]] = f;
     });
@@ -3603,6 +3659,7 @@ function checkPhotoSql(){
 checkMigDocs(W);
 checkPhotoSql();
 checkOffers(W);
+checkOfferSql(W);
 checkOpsvc(W);
 checkHalls(W);
 checkSvcPick(W);

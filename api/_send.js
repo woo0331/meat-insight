@@ -77,6 +77,85 @@ async function deliver(kind, payload, subject, text){
   return { ok:false, why: errs.join(" / ") || "unknown" };
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   손님에게 보내는 **접수 완료 안내** (2026-10-22 오픈 전 전수검사 P0 ⑥)
+
+   ⚠️⚠️ **지금까지 손님에게 가는 것이 하나도 없었습니다.** 접수 사실을
+   아는 길이 그 화면의 "접수되었습니다" 한 번뿐이고, 창을 닫으면
+   접수번호도 사라졌습니다 — 문의하실 때 댈 번호가 없어집니다.
+
+   ⚠️⚠️ **문자 · 알림톡이 아니라 메일입니다.** 문자는 발송사 계약과
+   발신번호 사전등록이 먼저이고, 그 둘은 사장님이 하실 일입니다.
+   메일은 이미 들어와 있는 `RESEND_API_KEY` 길을 그대로 씁니다.
+
+   ⚠️⚠️ **보낼 곳이 설정되기 전에는 아무 일도 안 합니다** (fail-closed) —
+   접수는 그대로 되고 **안내만 안 갑니다.** 안내 때문에 접수를 잃는
+   쪽이 더 나쁩니다 (중복 검사가 실패해도 접수를 막지 않는 것과 같은
+   판단). 그래서 이 함수는 **실패를 던지지 않습니다.**
+
+   ⚠️⚠️ **켜시는 날 방침의 수탁자를 같은 날 고치세요** (개인정보보호법
+   제26조). 손님의 **메일 주소**가 Resend 로 갑니다 — 미국 회사라
+   국가도 적습니다 (제28조의8). `js/data/legal-privacy.js` 의
+   `trustees` 한 줄입니다. 환경변수 · 준비 상태값 · 방침 수탁자 셋은
+   **늘 같이 움직입니다** (접수처에서 세 번 겪은 자리).
+
+   ⚠️ **광고가 아닙니다.** 신청하신 건의 접수 사실과 접수번호를
+   알려 드리는 거래 정보라, 정보통신망법 제50조의 광고성 정보
+   사전동의와 다른 건입니다. ⚠️ 그래서 이 글에 **다른 서비스 권유를
+   섞지 마세요** — 섞는 순간 광고가 되고 그때는 사전동의가 먼저입니다.
+
+   ⚠️⚠️ **"업체에 전달했습니다" 라고 하지 않습니다.** 배정은 관리자가
+   확인하고 나중에 하는 일이고, 그때 **상호를 알리고 제3자 제공
+   동의를 다시** 받습니다 (제17조 제2항).
+   ⚠️ **회신 시점도 약속하지 않습니다** (약관 제8조 · 절대 규칙 5).
+   ════════════════════════════════════════════════════════════════════ */
+async function customerAck(to, no){
+  const key  = process.env.RESEND_API_KEY;
+  /* ⚠️ 보내는 주소를 **따로** 둡니다. 운영자에게 보내던 주소를 그대로
+     쓰면 손님에게 가는 메일의 From 이 내부 주소가 됩니다 — 답장이
+     아무도 안 보는 곳으로 갑니다. 없으면 **안 보냅니다.** */
+  const from = process.env.CUSTOMER_EMAIL_FROM;
+  const addr = clean(to, 120);
+  /* ⚠️ 꼴만 봅니다 — 보낼 수 있는지는 받는 쪽이 압니다 */
+  if(!key || !from || !addr || addr.indexOf("@") < 1) return { ok:false, why:"off" };
+
+  const L = [];
+  L.push("신청이 접수되었습니다.");
+  L.push("");
+  /* ⚠️⚠️ 번호는 **실제로 저장된 뒤에만** 옵니다 (api/quote.js). 없으면
+     줄째 뺍니다 — 없는 번호를 적으면 그 번호로 물어봤을 때 아무것도
+     없습니다 (절대 규칙 2 · 5). */
+  if(no){
+    L.push("접수번호  " + clean(no, 20));
+    L.push("문의하실 때 이 번호를 알려 주시면 빠릅니다.");
+    L.push("");
+  }
+  L.push("담당자가 내용을 확인한 뒤 적어 주신 연락처로 연락드립니다.");
+  L.push("회신 시점을 약속드리지는 않습니다.");
+  L.push("");
+  L.push("업체에 연락처를 전달하는 것은 아직 하지 않았습니다 —");
+  L.push("연결할 업체가 정해지면 상호를 알려 드리고 그때 다시 여쭙습니다.");
+  L.push("");
+  L.push("이 메일은 신청하신 건의 접수 안내이며 광고가 아닙니다.");
+
+  try{
+    const r = await fetch("https://api.resend.com/emails", {
+      method:"POST",
+      headers:{ "content-type":"application/json", authorization:"Bearer " + key },
+      body: JSON.stringify({
+        from: from,
+        /* ⚠️⚠️ **한 사람에게만** 보냅니다. 쉼표를 그대로 넘기면 손님이
+           적은 글로 여러 곳에 보내는 길이 열립니다. */
+        to: [addr],
+        subject: "[접수] 신청이 접수되었습니다" + (no ? " (" + clean(no, 20) + ")" : ""),
+        text: L.join("\n")
+      })
+    });
+    if(r.ok) return { ok:true };
+    return { ok:false, why:"resend " + r.status };
+  }catch(e){ return { ok:false, why:"resend " + (e && e.message) }; }
+}
+
 /* 줄바꿈·제어문자를 지우고 길이를 자릅니다 — 메일 제목에 개행이
    들어가면 헤더가 쪼개집니다 */
 function clean(s, max){
@@ -118,4 +197,4 @@ function fromOurPages(req){
   catch(e){ return false; }
 }
 
-module.exports = { deliver, clean, won, why, fromOurPages };
+module.exports = { deliver, customerAck, clean, won, why, fromOurPages };

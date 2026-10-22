@@ -495,8 +495,11 @@ window.AM_PICK_GROUP = {
     { key:"pos",    name:"POS · 인터넷 · 카드 단말기", ia:"pos",   tone:"sv2",
       lead:"설치 · 교체 · 통신",
       any:"it",
+      /* ⚠️ 2026-10-22 — `it/rental`(정수기 · 렌탈)을 더했습니다. 가입 쪽에
+         자리가 없어서 운영 과제가 **해지 쪽**을 가리키고 있던 자리입니다. */
       subs:["it/pos","it/payment","it/kiosk","it/table-order","it/cctv",
-            "it/internet","it/phone","it/wifi","it/booking","it/waiting"] },
+            "it/internet","it/phone","it/wifi","it/booking","it/waiting",
+            "it/rental"] },
 
     { key:"goods",  name:"식자재 · 매장 물품",     ia:"supply",    tone:"sv6",
       lead:"거래처 · 포장재 · 소모품",

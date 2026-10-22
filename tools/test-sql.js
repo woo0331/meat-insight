@@ -140,7 +140,14 @@ try{
                      (2026-10-18 §6-2 · §9) */
                   "db/migrations/0010_user_state.sql",
                   /* ⚠️ 0011 — 신청에 붙는 사진 · 서류 (2026-10-18 §7-3 · §15) */
-                  "db/migrations/0011_request_photo.sql"];
+                  "db/migrations/0011_request_photo.sql",
+                  /* ⚠️ 0012 — 담당자 · 배정 가능 여부 · 열람 이력 · 수익상품
+                     (2026-10-22 오픈 전 전수검사 P0 ③④⑤⑦).
+                     ⚠️⚠️ **배정 트리거가 여기서 생깁니다** — 아래 씨앗의
+                     업체에 assignable 을 켜 두지 않으면 **그 뒤의 모든
+                     배정 검사가 "아직 배정할 수 없는 업체" 로** 떨어집니다
+                     (검사가 아니라 씨앗이 틀린 것이 됩니다). */
+                  "db/migrations/0012_owner_assignable_offer.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ /* ⚠️⚠️ NOTICE 가 먼저 쏟아져서 앞 세 줄만 보면 **진짜
@@ -188,7 +195,13 @@ try{
       ('33333333-3333-3333-3333-333333333333','pv@test'),
       ('44444444-4444-4444-4444-444444444444','staff@test'),
       ('55555555-5555-5555-5555-555555555555','admin@test');
-    insert into provider (id, name, listed) values ('pv-one','가나다','t'),('pv-two','라마바','t');
+    /* ⚠️⚠️ **assignable 을 켜 둡니다** (0012). 안 켜면 배정 트리거가
+       막아서 **아래 배정 · 계약 · 수수료 검사가 통째로** "아직 배정할 수
+       없는 업체" 로 떨어집니다 — 그건 코드가 아니라 **씨앗이 틀린**
+       것입니다 (이 저장소가 영업기간 · 가격 씨앗에서 겪은 자리).
+       ⚠️ 꺼진 쪽은 아래 "배정 가능으로 켜지 않은 업체" 블록이 따로 세웁니다. */
+    insert into provider (id, name, listed, assignable) values
+      ('pv-one','가나다','t','t'),('pv-two','라마바','t','t');
     insert into account (id, role, provider_id) values
       ('11111111-1111-1111-1111-111111111111','customer',null),
       ('22222222-2222-2222-2222-222222222222','customer',null),
@@ -1552,6 +1565,117 @@ try{
             (select id from request_photo where request_id='${R}' limit 1))`);
     ok("관리자도 뺀다",
        psql(`select count(*) from request_photo where request_id='${R}'`) === "3");
+  }
+
+  console.log("\n── ⚠️⚠️ 0012 담당자 · 배정 가능 · 열람 이력 · 수익상품");
+  {
+    const as = u => "set role authenticated; select become('" + u + "'); ";
+    const A  = "11111111-1111-1111-1111-111111111111";
+    const ST = "44444444-4444-4444-4444-444444444444";
+    const AD = "55555555-5555-5555-5555-555555555555";
+    const R  = "aaaaaaaa-0000-0000-0000-000000000120";
+    psql(`insert into request (id, no, side, name, tel, agree_at, state) values
+            ('${R}','SW-AAAA-0120','start','최사장','01077770000',now(),'check')
+          on conflict (id) do nothing;`);
+
+    /* ══ 배정 가능 여부 — listed 와 다른 플래그 ═══════════════════
+       ⚠️⚠️ 구두 제휴 합의 단계에서 배정되면 그 순간 성함 · 연락처가
+       그 업체로 넘어갑니다 (제17조). 기본값이 false 여야 맞습니다. */
+    psql(`insert into provider (id, name, listed, subs) values
+            ('pv-new','새업체','t','{interior}') on conflict (id) do nothing;`);
+    ok("등록만 하면 배정 가능이 꺼져 있다 (fail-closed)",
+       psql("select assignable from provider where id='pv-new'") === "f");
+
+    let r = denied(as(AD) + `select move_state('${R}','assigned',
+              '{"providerId":"pv-new","agree3rd":true}'::jsonb)`);
+    /* ⚠️⚠️ **에러 글까지 맞춰 봅니다.** "막히기만 하면 통과" 로 적으면
+       엉뚱한 자물쇠(동의 · 길 표)가 먼저 막아도 초록이 됩니다 — 이
+       저장소가 0003 에서 겪은 자리입니다. */
+    ok("배정 가능으로 켜지 않은 업체에는 배정하지 못한다",
+       r.no && /배정할 수 없는 업체/.test(r.why || ""), r.why);
+
+    r = denied(as(ST) + "select approve_provider('pv-new', null, null, null, true)");
+    ok("배정 가능은 직원이 못 켠다 (관리자만)",
+       r.no && /관리자만/.test(r.why || ""), r.why);
+
+    psql(as(AD) + "select approve_provider('pv-new', null, null, '계약서 확인', true)");
+    ok("관리자가 켜면 켜진다",
+       psql("select assignable from provider where id='pv-new'") === "t");
+    ok("켠 것이 기록에 남는다 (§8)",
+       psql(`select count(*) from audit_log where obj='provider'
+              and obj_id='pv-new' and why='계약서 확인'`) === "1");
+    psql(as(AD) + `select move_state('${R}','assigned',
+            '{"providerId":"pv-new","agree3rd":true}'::jsonb)`);
+    ok("켜면 배정된다",
+       psql(`select count(*) from assignment
+              where request_id='${R}' and provider_id='pv-new'`) === "1");
+
+    /* ⚠️ 자리로 부르던 옛 호출(네 번째가 사유)이 그대로 돌아야 합니다 —
+       새 인자를 가운데 끼우면 거기서 터집니다 (실제로 넷이 걸렸습니다). */
+    psql(as(AD) + "select approve_provider('pv-new', true, null, '옛 자리 호출')");
+    ok("옛 자리 호출(네 인자)이 그대로 돈다",
+       psql("select listed from provider where id='pv-new'") === "t");
+
+    /* ══ 담당자 — audit_log.by_user 와 다른 것입니다 ════════════ */
+    r = denied(as(A) + `select set_owner('${R}','${ST}')`);
+    ok("고객은 담당자를 못 정한다",
+       r.no && /직원 · 관리자만/.test(r.why || ""), r.why);
+    r = denied(as(ST) + `select set_owner('${R}','${A}')`);
+    ok("고객 계정을 담당자로 못 둔다",
+       r.no && /직원 · 관리자 계정이 아닙니다/.test(r.why || ""), r.why);
+
+    psql(as(ST) + `select set_owner('${R}','${ST}','내가 맡습니다')`);
+    ok("직원이 자기를 담당자로 둔다",
+       psql(`select owner_id from request where id='${R}'`) === ST);
+    ok("담당자 바뀜이 기록에 남는다 (§8)",
+       psql(`select count(*) from audit_log where obj='request'
+              and obj_id='${R}' and to_state='owner:set'`) === "1");
+    /* ⚠️ 비울 수 있어야 합니다 — 담당을 잘못 정한 날 되돌릴 길이 없으면
+       그 건이 영영 남의 것입니다. */
+    psql(as(AD) + `select set_owner('${R}', null, '다시 배정')`);
+    ok("담당자를 비울 수 있다",
+       psql(`select coalesce(owner_id::text,'-') from request where id='${R}'`) === "-");
+
+    /* ⚠️⚠️ 직원이 **직원 목록**을 볼 수 있어야 담당자 고르개가 찹니다 */
+    ok("직원이 직원 · 관리자 계정을 본다 (담당자 고르개)",
+       Number(psql(as(ST) + "select count(*) from account where role in ('staff','admin')")) >= 2);
+    ok("직원에게 고객 계정은 안 보인다",
+       psql(as(ST) + "select count(*) from account where role='customer'") === "0");
+
+    /* ══ 연락처 열람 이력 (제29조 접속기록) ════════════════════ */
+    r = denied(as(A) + `select note_request_open('${R}')`);
+    ok("고객은 열람 기록을 못 남긴다",
+       r.no && /직원 · 관리자만/.test(r.why || ""), r.why);
+    psql(as(ST) + `select note_request_open('${R}','전화하려고 열었습니다')`);
+    ok("열어 본 것이 기록에 남는다",
+       psql(`select count(*) from audit_log where obj_id='${R}'
+              and to_state='contact:open'`) === "1");
+    /* ⚠️⚠️ **성함도 번호도 기록에 안 적습니다** — 기록은 못 지우는
+       것이라, 열람 이력에 연락처를 박으면 그 자체가 또 하나의 보관입니다. */
+    ok("열람 기록에 성함 · 번호가 없다",
+       psql(`select count(*) from audit_log where obj_id='${R}'
+              and to_state='contact:open'
+              and (coalesce(why,'') like '%최사장%' or coalesce(data::text,'') like '%0107777%')`) === "0");
+    /* 표에 직접 쓰는 길이 없어야 문이 뜻을 가집니다 */
+    r = denied(as(ST) + `insert into audit_log (by_user, obj, obj_id) values ('${ST}','request','${R}')`);
+    ok("기록을 직접 넣는 길이 없다 (문으로만)", r.no, r.why);
+
+    /* ══ 수익상품 — offer 표가 비어 있었습니다 ══════════════════ */
+    ok("수익상품이 offer 표에 들어 있다",
+       Number(psql("select count(*) from offer")) === 27);
+    ok("전부 info 다 (제휴사 0곳인데 live 면 신청 가능으로 읽힙니다)",
+       psql("select count(*) from offer where status <> 'info'") === "0");
+    /* ⚠️⚠️ 이 FK 가 비어 있어서 **상품별 요율을 못 걸고 있었습니다** */
+    psql(as(AD) + `select save_fee_policy('pv-new',
+            '{"type":"rate","rate":"3","offerId":"pos-card"}'::jsonb)`);
+    ok("상품별 수수료 정책을 걸 수 있다",
+       psql("select count(*) from fee_policy where offer_id='pos-card'") === "1");
+    /* 다시 돌려도 사장님이 켜 둔 status 를 안 되돌립니다 */
+    psql("update offer set status='live' where id='pos-card'");
+    psqlFile("db/migrations/0012_owner_assignable_offer.sql");
+    ok("다시 돌려도 켜 둔 status 를 안 되돌린다",
+       psql("select status from offer where id='pos-card'") === "live");
+    psql("update offer set status='info' where id='pos-card'");
   }
 
   console.log("\n── 되돌리기 파일이 실수로 안 돌아가는가");

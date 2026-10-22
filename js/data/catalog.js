@@ -117,7 +117,7 @@ window.AM_START_CATS = [
        나옵니다. 하위가 "POS" 라 **"포스기"** 를 치면 0건이었습니다
        (사장님이 실제로 쓰는 말입니다). 같은 것을 가리키는 다른 말만
        적습니다 — 없는 서비스를 적는 칸이 아닙니다 (절대 규칙 1). */
-    kw:"포스기 포스 카드단말기 단말기 시시티비 씨씨티비",
+    kw:"포스기 포스 카드단말기 단말기 시시티비 씨씨티비 정수기 제빙기 공기청정기 렌탈 렌털 비데",
     items:[
       { key:"pos",       name:"POS" },        { key:"kiosk",   name:"키오스크" },
       { key:"table-order",name:"테이블오더" }, { key:"cctv",    name:"CCTV" },
@@ -128,7 +128,15 @@ window.AM_START_CATS = [
       /* ⚠️ 2026-10-09 §5-2 D — 운영 솔루션 넷이 갈 곳이 없었습니다.
          매장 안에서 도는 프로그램이라 `it` 이 맞는 자리입니다. */
       { key:"inventory", name:"재고 관리" },  { key:"sales-mgmt",name:"매출 관리" },
-      { key:"hr-pay",    name:"근태 · 급여" }, { key:"acct-sw",  name:"회계 · 세무 프로그램" }
+      { key:"hr-pay",    name:"근태 · 급여" }, { key:"acct-sw",  name:"회계 · 세무 프로그램" },
+      /* ⚠️⚠️ 2026-10-22 — **가입 쪽에 렌탈이 없었습니다.** 있던 것은
+         `contract/rental`(해지)과 `repair/rental-care`(점검)뿐이라,
+         운영 과제 "렌탈 · 정수기" 가 **해지 쪽**을 가리키고 있었습니다
+         (방향이 반대입니다). 자영업 거의 전부가 쓰는 것이고 수익상품
+         `water-ice-rental` 도 이미 있어서, **가입 쪽 자리**를 만듭니다.
+         ⚠️ 분류를 늘린 것이 아니라 **하위 한 줄을 더한 것**입니다 —
+         업체 `subs` · 매물 `sub` · 글 `cat` 이 쓰는 key 는 그대로입니다. */
+      { key:"rental",    name:"정수기 · 렌탈" }
     ]},
 
   { key:"supply", name:"운영 공급업체", icon:"pkgck", tone:"t2", kind:"provider",

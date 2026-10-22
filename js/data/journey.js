@@ -293,7 +293,11 @@ window.AM_OPS = [
   { name:"식자재 · 거래처",  cat:"supply",                   icon:"truck",     tone:"t2" },
   { name:"소모품 · 포장재",  cat:"supply",sub:"packaging",   icon:"pkgck",     tone:"t2" },
   { name:"청소 · 방역",      cat:"clean",                    icon:"sparkle",   tone:"t2" },
-  { name:"시설 보수 · 관리", cat:"clean", sub:"facility",    icon:"tool",      tone:"t4" },
+  /* ⚠️⚠️ 2026-10-22 — **청소 쪽을 가리키고 있었습니다** (clean/facility).
+     2026-10-09 에 `repair`(수리 · 유지보수) 분류가 새로 생겼는데 이 줄이
+     그대로 남아서, 냉장고가 멈춴 사장님이 **청소 업체 화면**으로
+     갔습니다. 분류 전체를 가리킵니다 — 아홉 하위가 다 보입니다. */
+  { name:"시설 보수 · 관리", cat:"repair",                   icon:"tool",      tone:"t4" },
   { name:"마케팅 · 광고",    cat:"marketing",                icon:"megaphone", tone:"t8" },
   { name:"SNS · 플레이스",   cat:"marketing", sub:"place",   icon:"chat",      tone:"t8" },
   { name:"보험",             cat:"admin", sub:"insurance",   icon:"shield",    tone:"t6" },
@@ -309,10 +313,26 @@ window.AM_OPS = [
   { name:"수도 · 배관",      cat:"interior", sub:"plumbing", icon:"tool",    tone:"t4" },
   { name:"가스",             cat:"interior", sub:"gas",      icon:"fire",    tone:"t4" },
   { name:"냉난방 · 공조",    cat:"interior", sub:"hvac",     icon:"snow",    tone:"t4" },
-  { name:"렌탈 · 정수기",    cat:"contract", sub:"rental",   icon:"refresh", tone:"t4" },
-  { name:"배달 · 포장",      cat:"marketing",sub:"open-mkt", icon:"truck",   tone:"t8",
+  /* ⚠️⚠️ 2026-10-22 — **계약 해지 쪽을 가리키고 있었습니다**
+     (contract/rental). `contract` 는 폐업 때 **끊는** 분류라, 운영 중에
+     정수기를 **새로 놓으려는** 사장님이 "해지" 로 갔습니다 — 방향이
+     반대입니다. 가입 쪽에 자리가 없어서 `it/rental` 을 같이 만들었습니다
+     (catalog.js · 아정당이 바로 받는 서비스입니다).
+     ⚠️ 끊는 쪽은 위 "계약 · 렌탈 점검"(contract)이 그대로 받습니다. */
+  { name:"렌탈 · 정수기",    cat:"it",       sub:"rental",   icon:"refresh", tone:"t4" },
+  /* ⚠️⚠️ 2026-10-22 — **오픈 마케팅을 가리키고 있었습니다**
+     (marketing/open-mkt). 배달 용기 · 포장재는 마케팅이 아니라 공급
+     입니다. ⚠️ **배달 대행 계약 자체는 아직 서비스가 없습니다** —
+     그건 늘릴 것으로 보고서에 적어 두었습니다 (지어낸 연결을 만들지
+     않습니다). 계산기(배달 한 건)는 그대로 붙습니다. */
+  { name:"배달 · 포장",      cat:"supply",   sub:"delivery-box", icon:"truck", tone:"t2",
     tool:"delivery" },
-  { name:"리뷰 · 플레이스",  cat:"marketing",sub:"blog",     icon:"star",    tone:"t8" },
+  /* ⚠️⚠️ 2026-10-22 — **블로그를 가리키고 있었습니다**
+     (marketing/blog). `marketing/review`(리뷰 관리)가 따로 있는데
+     거기가 아니었고, 게다가 바로 위 "SNS · 플레이스" 가 이미
+     `marketing/place` 라 **플레이스를 두 번** 가리켰습니다. 이름에서도
+     플레이스를 뺐습니다. */
+  { name:"리뷰 관리",        cat:"marketing",sub:"review",   icon:"star",    tone:"t8" },
   { name:"해충 방제",        cat:"clean",    sub:"pest",     icon:"shield",  tone:"t2" }
 ];
 

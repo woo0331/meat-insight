@@ -45,7 +45,7 @@
 
 <link rel="stylesheet" href="/css/tokens.css?v=337d02b4">
 <link rel="stylesheet" href="/css/app.css?v=7df2a3c7">
-<link rel="stylesheet" href="/css/pages.css?v=0851946a">
+<link rel="stylesheet" href="/css/pages.css?v=ae68c154">
 
 <!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
      마세요 — 다음에 돌릴 때 덮어써집니다. 내용은 js/data/faq.js 와
@@ -53,7 +53,7 @@
 <!-- ld:start -->
 <!-- ld:end -->
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"업체찾기","item":"https://storeway.co.kr/providers"},{"@type":"ListItem","position":2,"name":"운영 공급업체","item":"https://storeway.co.kr/providers/supply"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"운영 공급업체","itemListElement":[{"@type":"ListItem","position":1,"name":"식자재"},{"@type":"ListItem","position":2,"name":"육류 · 축산물"},{"@type":"ListItem","position":3,"name":"수산물"},{"@type":"ListItem","position":4,"name":"농산물"},{"@type":"ListItem","position":5,"name":"음료"},{"@type":"ListItem","position":6,"name":"커피 원두"},{"@type":"ListItem","position":7,"name":"베이커리 재료"},{"@type":"ListItem","position":8,"name":"주류"},{"@type":"ListItem","position":9,"name":"원재료"},{"@type":"ListItem","position":10,"name":"포장재"},{"@type":"ListItem","position":11,"name":"배달용기"},{"@type":"ListItem","position":12,"name":"일회용품"},{"@type":"ListItem","position":13,"name":"소모품"},{"@type":"ListItem","position":14,"name":"유니폼"},{"@type":"ListItem","position":15,"name":"위생용품"},{"@type":"ListItem","position":16,"name":"청소용품"},{"@type":"ListItem","position":17,"name":"사무용품"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"운영 공급업체","itemListElement":[{"@type":"ListItem","position":1,"name":"식자재"},{"@type":"ListItem","position":2,"name":"육류 · 축산물"},{"@type":"ListItem","position":3,"name":"수산물"},{"@type":"ListItem","position":4,"name":"농산물"},{"@type":"ListItem","position":5,"name":"음료"},{"@type":"ListItem","position":6,"name":"커피 원두"},{"@type":"ListItem","position":7,"name":"베이커리 재료"},{"@type":"ListItem","position":8,"name":"주류"},{"@type":"ListItem","position":9,"name":"원재료"},{"@type":"ListItem","position":10,"name":"포장재"},{"@type":"ListItem","position":11,"name":"배달용기"},{"@type":"ListItem","position":12,"name":"배달 대행"},{"@type":"ListItem","position":13,"name":"일회용품"},{"@type":"ListItem","position":14,"name":"소모품"},{"@type":"ListItem","position":15,"name":"유니폼"},{"@type":"ListItem","position":16,"name":"위생용품"},{"@type":"ListItem","position":17,"name":"청소용품"},{"@type":"ListItem","position":18,"name":"사무용품"}]}</script>
 </head>
 <body>
 <a class="skip" href="#view">본문 바로가기</a>
@@ -77,7 +77,7 @@
 <script defer src="/js/data/regions.js?v=149bea2a"></script>
 <script defer src="/js/data/industries.js?v=286cb6a1"></script>
 <script defer src="/js/data/indgroups.js?v=36b0eb0f"></script>
-<script defer src="/js/data/catalog.js?v=5ad06ee0"></script>
+<script defer src="/js/data/catalog.js?v=655a5013"></script>
 <script defer src="/js/data/lifecycle.js?v=b35950bd"></script>
 <script defer src="/js/data/journey.js?v=200e4967"></script>
 <script defer src="/js/data/franchise.js?v=8dfc74f4"></script>
@@ -94,7 +94,7 @@
 <script defer src="/js/data/join.js?v=40d5209a"></script>
 <!-- 서비스마다 다르게 묻는 칸 (2026-10-08 수익형 플랫폼 지시서 6절).
      catalog 의 분류 key 를 쓰므로 그 뒤입니다. -->
-<script defer src="/js/data/reqforms.js?v=22134365"></script>
+<script defer src="/js/data/reqforms.js?v=5703a761"></script>
 <!-- ⚠️⚠️ 신청 상태 열셋 (2026-10-09 §8-3 — 보류 포함).
      전에는 일부러 안 실었습니다 ("화면이 아직 안 읽습니다") —
      이제 `/my` 의 신청 내역이 상태 이름과 색을 **여기서** 가져옵니다.
@@ -111,13 +111,13 @@
 <script defer src="/js/data/halls.js?v=f92c1d92"></script>
 <!-- 고를 수 있는 서비스 (2026-10-17 창업 준비 전문관 §12 · §2-B).
      ⚠️ halls 와 reqforms 의 값을 읽으므로 **그 뒤**입니다. -->
-<script defer src="/js/data/svcpick.js?v=e800ec1e"></script>
+<script defer src="/js/data/svcpick.js?v=530565b3"></script>
 <script defer src="/js/data/svcpage.js?v=bb4d6168"></script>
 <script defer src="/js/data/steps.js?v=7cf9b3ba"></script>
 <!-- ⚠️⚠️ 운영 체크리스트 (2026-10-18 §9) — svcpick 의 id · tools 의 key ·
      content 의 slug 를 가리킵니다. ⚠️ 이 줄이 없으면 `/operation` 의
      체크리스트 구간이 **조용히 통째로 빠집니다** (에러는 안 납니다). -->
-<script defer src="/js/data/opscheck.js?v=bc82379d"></script>
+<script defer src="/js/data/opscheck.js?v=c92ed6dd"></script>
 
 <script defer src="/js/components/base.js?v=7e49ed05"></script>
 <script defer src="/js/components/ui.js?v=09930dcf"></script>
@@ -143,7 +143,7 @@
 <script defer src="/js/pages/quote.js?v=9344acf2"></script>
 <script defer src="/js/pages/info.js?v=eca9251b"></script>
 <script defer src="/js/pages/tools.js?v=c871f207"></script>
-<script defer src="/js/pages/my.js?v=e64e59ca"></script>
+<script defer src="/js/pages/my.js?v=d362ad61"></script>
 <script defer src="/js/pages/search.js?v=e1086fbf"></script>
 <script defer src="/js/pages/legal.js?v=273e11c2"></script>
 
@@ -153,7 +153,7 @@
 <!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가
      이 사이에 **크롤러가 읽을 본문**을 써 넣습니다. 메인은 원본이라
      shell() 이 손대지 않아서, 한동안 여기가 빈 칸으로 나갔습니다. -->
-<main id="view"><div class="pre w"><h1>운영 공급업체 업체찾기</h1><p>거래처를 새로 뚫거나 바꾸실 때 조건을 비교합니다. 식자재 · 육류 · 축산물 · 수산물 · 농산물 · 음료 · 커피 원두 전문업체를 지역과 업종으로 비교하실 수 있습니다.</p><h2>운영 공급업체 — 매일 들어오는 것</h2><ul><li>식자재</li><li>육류 · 축산물</li><li>수산물</li><li>농산물</li><li>음료</li><li>커피 원두</li><li>베이커리 재료</li><li>주류</li><li>원재료</li><li>포장재</li><li>배달용기</li><li>일회용품</li><li>소모품</li><li>유니폼</li><li>위생용품</li><li>청소용품</li><li>사무용품</li></ul><h2>운영 공급업체 업체를 이런 때 찾으십니다</h2><ul><li>문을 열기 전에 거래처를 정할 때</li><li>지금 받는 조건보다 나은 곳을 찾을 때</li><li>배송 주기나 최소 주문량이 안 맞을 때</li><li>포장재 · 일회용품을 한곳에서 받고 싶을 때</li></ul><h2>어떻게 진행되나요</h2><ul><li>쓰는 품목과 양 적기 — 한 주에 얼마나 쓰는지를 품목별로 적어야 견적을 받을 수 있습니다.</li><li>업체 후보 받기 — 한 곳만 보면 비교가 안 됩니다. 같은 조건으로 여러 곳에 묻습니다.</li><li>견본과 단가표 보기 — 품목별로 나눠 적힌 단가표라야 견줄 수 있습니다. 한 줄로 묶인 금액은 무엇이 빠졌는지 알 수 없습니다.</li><li>배송 조건 확인 — 배송 요일 · 시간 · 최소 주문량이 매장 운영과 맞아야 합니다.</li><li>시범 거래 — 몇 주 받아 보고 품질이 들쭉날쭉한지 봅니다.</li><li>결제 조건 정리 — 선결제인지 월 정산인지, 반품과 누락은 어떻게 처리하는지 적어 둡니다.</li></ul><h2>비용은 무엇으로 갈리나요</h2><ul><li>주문량과 주기 — 한 번에 많이 받으면 내려가지만 보관할 자리와 회전율이 받쳐 줘야 합니다.</li><li>배송 조건 — 거리 · 배송 횟수 · 최소 주문량이 단가에 들어가 있습니다.</li><li>품목의 등급과 규격 — 같은 이름이라도 등급과 손질 상태에 따라 다릅니다.</li><li>결제 조건 — 선결제인지 여신인지에 따라 조건이 달라집니다.</li><li>보관 조건 — 냉장 · 냉동이 필요하면 배송 방식부터 달라집니다.</li></ul><h2>자주 묻는 것</h2><h3>거래처를 한 곳으로 묶는 쪽이 나은가요?</h3><p>묶으면 관리가 편하고 나누면 품목별로 조건을 맞출 수 있습니다. 한 곳이 끊겼을 때 대신 받을 데가 있는지를 같이 보세요.</p><h3>단가는 계약하면 고정인가요?</h3><p>농수축산물은 시기에 따라 움직입니다. 어떤 품목이 고정이고 어떤 품목이 변동인지 계약서에 나눠 적어 두세요.</p><h3>최소 주문량이 부담됩니다</h3><p>보관 공간과 회전율을 보고 정하세요. 남아서 버리면 단가가 낮은 의미가 없습니다.</p><h2>업종별로 찾기</h2><ul><li>음식점</li><li>카페 · 디저트</li><li>주점 · 바</li><li>미용 · 헤어</li><li>네일 · 뷰티</li><li>헬스 · PT</li><li>학원 · 교육</li><li>반려동물</li><li>소매 · 편의점</li><li>무인매장</li><li>숙박</li><li>사무 · 전문서비스</li><li>온라인 · 판매</li><li>기타</li></ul><h2>지역별로 찾기</h2><ul><li>서울</li><li>경기</li><li>인천</li><li>부산</li><li>대구</li><li>대전</li><li>광주</li><li>울산</li><li>세종</li><li>강원</li><li>충북</li><li>충남</li><li>전북</li><li>전남</li><li>경북</li><li>경남</li><li>제주</li></ul></div></main>
+<main id="view"><div class="pre w"><h1>운영 공급업체 업체찾기</h1><p>거래처를 새로 뚫거나 바꾸실 때 조건을 비교합니다. 식자재 · 육류 · 축산물 · 수산물 · 농산물 · 음료 · 커피 원두 전문업체를 지역과 업종으로 비교하실 수 있습니다.</p><h2>운영 공급업체 — 매일 들어오는 것</h2><ul><li>식자재</li><li>육류 · 축산물</li><li>수산물</li><li>농산물</li><li>음료</li><li>커피 원두</li><li>베이커리 재료</li><li>주류</li><li>원재료</li><li>포장재</li><li>배달용기</li><li>배달 대행</li><li>일회용품</li><li>소모품</li><li>유니폼</li><li>위생용품</li><li>청소용품</li><li>사무용품</li></ul><h2>운영 공급업체 업체를 이런 때 찾으십니다</h2><ul><li>문을 열기 전에 거래처를 정할 때</li><li>지금 받는 조건보다 나은 곳을 찾을 때</li><li>배송 주기나 최소 주문량이 안 맞을 때</li><li>포장재 · 일회용품을 한곳에서 받고 싶을 때</li></ul><h2>어떻게 진행되나요</h2><ul><li>쓰는 품목과 양 적기 — 한 주에 얼마나 쓰는지를 품목별로 적어야 견적을 받을 수 있습니다.</li><li>업체 후보 받기 — 한 곳만 보면 비교가 안 됩니다. 같은 조건으로 여러 곳에 묻습니다.</li><li>견본과 단가표 보기 — 품목별로 나눠 적힌 단가표라야 견줄 수 있습니다. 한 줄로 묶인 금액은 무엇이 빠졌는지 알 수 없습니다.</li><li>배송 조건 확인 — 배송 요일 · 시간 · 최소 주문량이 매장 운영과 맞아야 합니다.</li><li>시범 거래 — 몇 주 받아 보고 품질이 들쭉날쭉한지 봅니다.</li><li>결제 조건 정리 — 선결제인지 월 정산인지, 반품과 누락은 어떻게 처리하는지 적어 둡니다.</li></ul><h2>비용은 무엇으로 갈리나요</h2><ul><li>주문량과 주기 — 한 번에 많이 받으면 내려가지만 보관할 자리와 회전율이 받쳐 줘야 합니다.</li><li>배송 조건 — 거리 · 배송 횟수 · 최소 주문량이 단가에 들어가 있습니다.</li><li>품목의 등급과 규격 — 같은 이름이라도 등급과 손질 상태에 따라 다릅니다.</li><li>결제 조건 — 선결제인지 여신인지에 따라 조건이 달라집니다.</li><li>보관 조건 — 냉장 · 냉동이 필요하면 배송 방식부터 달라집니다.</li></ul><h2>자주 묻는 것</h2><h3>거래처를 한 곳으로 묶는 쪽이 나은가요?</h3><p>묶으면 관리가 편하고 나누면 품목별로 조건을 맞출 수 있습니다. 한 곳이 끊겼을 때 대신 받을 데가 있는지를 같이 보세요.</p><h3>단가는 계약하면 고정인가요?</h3><p>농수축산물은 시기에 따라 움직입니다. 어떤 품목이 고정이고 어떤 품목이 변동인지 계약서에 나눠 적어 두세요.</p><h3>최소 주문량이 부담됩니다</h3><p>보관 공간과 회전율을 보고 정하세요. 남아서 버리면 단가가 낮은 의미가 없습니다.</p><h2>업종별로 찾기</h2><ul><li>음식점</li><li>카페 · 디저트</li><li>주점 · 바</li><li>미용 · 헤어</li><li>네일 · 뷰티</li><li>헬스 · PT</li><li>학원 · 교육</li><li>반려동물</li><li>소매 · 편의점</li><li>무인매장</li><li>숙박</li><li>사무 · 전문서비스</li><li>온라인 · 판매</li><li>기타</li></ul><h2>지역별로 찾기</h2><ul><li>서울</li><li>경기</li><li>인천</li><li>부산</li><li>대구</li><li>대전</li><li>광주</li><li>울산</li><li>세종</li><li>강원</li><li>충북</li><li>충남</li><li>전북</li><li>전남</li><li>경북</li><li>경남</li><li>제주</li></ul></div></main>
 <div id="chrome-b"></div>
 </body>
 </html>

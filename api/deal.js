@@ -71,6 +71,15 @@ const OK_FN = {
      ⚠️ 계정을 인자로 받지 않습니다 — DB 함수가 `auth.uid()` 에만
      씁니다 (변경자는 토큰에서만 옵니다). */
   save_user_state:1, clear_user_state:1,
+  /* 2026-10-22 (0013) — 업체 담당자 · 기간별 정산 (전수검사 P1 ⑬⑭).
+     ⚠️⚠️ 담당자는 **별도 표**(`provider_contact`)입니다 — `provider` 에
+     넣으면 `grant select on provider to authenticated` 가 표째라
+     로그인한 손님 전부가 직통 번호를 봅니다 (RLS 는 줄은 막아도 칸은
+     못 막습니다).
+     ⚠️⚠️ `settlement` 를 **'paid' 로 만드는 문이 없습니다** — 입금은
+     건별 `mark_paid()` 가 진실이고 `build_settlement()` 이 세어서
+     정합니다 (§13 가짜 정산 금지). */
+  save_provider_contact:1, build_settlement:1, hold_settlement:1,
   /* 2026-10-22 (0012) — 담당자 · 연락처 열람 이력 (오픈 전 전수검사 P0 ③⑤).
      ⚠️⚠️ note_request_open 은 **FN_SAY 에 넣지 마세요.** 관리자가 전화를
      걸려고 연락처를 열 때마다 불립니다 — 알림을 보내면 하루에 수십 줄이고
@@ -112,7 +121,12 @@ const OK_ARG = {
   p_owner:1, p_assignable:1,                           /* set_owner · approve_provider */
   /* 0010 — ⚠️ 셋 중 **보낸 것만** 바뀝니다 (안 보낸 칸은 DB 가 그대로
      둡니다). 비우시려면 `[]` · `{}` 를 보내세요 — null 은 "안 바꿈" 입니다. */
-  p_pick:1, p_draft:1, p_checks:1                      /* save_user_state */
+  p_pick:1, p_draft:1, p_checks:1,                     /* save_user_state */
+  /* 0013 — ⚠️ `p_from` · `p_to` 가 **정산 기간**입니다. `p_to` 는
+     `move_state` 의 "바뀔 상태" 와 **같은 이름을 나눠 씁니다** (위에
+     이미 있습니다) — DB 가 자기 함수의 인자 꼴로 받으니 섞이지
+     않습니다. `checkRpcArgs()` 가 양쪽으로 맞춰 봅니다. */
+  p_from:1, p_hold:1                                   /* build_settlement · hold_settlement */
 };
 
 function pickArgs(a){
@@ -174,7 +188,14 @@ const FN_SAY = {
   submit_quote:          "업체가 견적을 냈습니다",
   withdraw_quote:        "업체가 견적을 거뒀습니다",
   choose_quote:          "고객이 견적을 골랐습니다",
-  set_owner:             "담당자가 바뀌었습니다"
+  set_owner:             "담당자가 바뀌었습니다",
+  /* ⚠️ `save_provider_contact` 는 **FN_SAY 에 넣지 않았습니다** —
+     담당자 이름 · 직통 번호를 적는 자리라, 알림이 그 변경을 알리면
+     운영자 채널에 "어느 업체의 담당자가 바뀌었다" 가 쌓이고 그
+     채널은 수탁 범위가 또 늘어납니다 (제26조). 작업대와 audit_log 에
+     그대로 있습니다. */
+  build_settlement:      "기간 정산을 집계했습니다",
+  hold_settlement:       "정산을 보류하거나 풀었습니다"
 };
 
 /* 알림에 실어도 되는 것 — ⚠️⚠️ **허용 목록입니다.** 인자가 하나
@@ -186,7 +207,12 @@ const SAY_ARG = {
   p_new_fee:"고친 수수료", p_yes:"수락", p_listed:"공개", p_active:"켜짐",
   /* ⚠️ p_owner(담당자 계정 id)는 **안 싣습니다** — 알림은 "가서 보세요"
      까지이고, 누가 맡았는지는 작업대와 audit_log 에 있습니다. */
-  p_assignable:"배정 가능"
+  p_assignable:"배정 가능",
+  /* ⚠️ `p_from` 만 싣습니다 — 기간의 시작이 어느 달인지가 보이면
+     됩니다 (`p_to` 는 위에서 "바뀐 상태" 로 이미 쓰고 있어서, 정산
+     쪽에서도 실으면 **알림 글이 "바뀐 상태 2026-10-31" 로** 나갑니다.
+     찍어 보고 뺐습니다). */
+  p_from:"정산 시작일", p_hold:"보류"
 };
 
 const NOTE_TIMEOUT = 5000;

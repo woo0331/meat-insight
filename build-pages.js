@@ -2267,6 +2267,7 @@ function checkHalls(W){
 function checkSvcPick(W){
   const TOP  = W.AM_PICK_TOP  || {};
   const EASY = W.AM_PICK_EASY || {};
+  const OFF  = new Set(W.AM_PICK_OFF || []);
   if(!Object.keys(TOP).length)
     throw new Error("js/data/svcpick.js 의 AM_PICK_TOP 이 비었습니다 (§2-B)");
 
@@ -2327,7 +2328,15 @@ function checkSvcPick(W){
     if(!EASY[id])
       throw new Error("쉬운 이름이 비었습니다 — " + id +
         "\n   → 적을 말이 없으면 칸째 빼세요 (원래 이름이 그대로 나옵니다)");
-    if(!ok.has(id))
+    /* ⚠️⚠️ **내려놓은 서비스(`AM_PICK_OFF`)의 쉬운 이름은 그대로
+       둡니다.** 고르개에만 안 나오고 `amPickOne()` 은 여전히 찾습니다 —
+       지난 신청 기록이 그 분류를 가리키고 있어서, 여기서 지우면
+       `/my` 와 `/admin` 에 **옛 접수의 서비스 이름**이 분류 이름으로
+       돌아갑니다 (§12 "과거 신청 기록은 보존한다"). 2026-10-22 에
+       `item` · `store` 를 내릴 때 이 검사가 멀쩡한 줄을 잡았습니다 —
+       **검사가 더 좁았던** 자리입니다. */
+    const offCat = OFF.has(id) || OFF.has(String(id).split("/")[0]);
+    if(!ok.has(id) && !(offCat && W.amPickOne(id)))
       throw new Error("쉬운 이름이 고를 수 없는 서비스를 가리킵니다 — " + id +
         "\n   → 영영 안 쓰이는 줄입니다 (AM_PICK_EASY)");
     if(INDWORD.test(EASY[id]))
@@ -2335,6 +2344,61 @@ function checkSvcPick(W){
         " → \"" + EASY[id] + "\"" +
         "\n   → 업종 열넷 전부에 같은 글자로 나옵니다. 업종별 차이는" +
         " amCatItems() 가 냅니다 (AM_PICK_EASY)");
+  }
+
+  /* ── ⚠️⚠️ 내려놓은 서비스 (2026-10-22 전수검사 P1-12) ─────────
+     `AM_PICK_OFF` 는 **고르개에서만** 빼는 것입니다 (지난 신청 기록이
+     그 분류를 가리키고 있어서 `amPickOne()` 은 여전히 찾아야 합니다).
+     막는 것 둘 —
+       ① **없는 것을 적어 두기** — 분류를 지우고 여기만 남으면 영영
+          안 쓰이는 줄이고, 누군가 "뺐구나" 로 읽습니다
+       ② **진짜 화면이 없는 것을 빼기** — 고르개에서 빼면 그 서비스로
+          가는 길이 **그 분류의 진짜 화면 하나**가 됩니다. 그 화면이
+          없으면 서비스가 통째로 사라집니다 (절대 규칙 2) */
+  for(const id of (W.AM_PICK_OFF || [])){
+    if(!W.amPickOne(id))
+      throw new Error("내려놓은 서비스가 없는 것을 가리킵니다 — " + id +
+        "\n   → 분류를 지우지 말고 AM_PICK_OFF 에만 적으세요" +
+        " (지난 신청 기록이 그 key 를 들고 있습니다 · §12)");
+  }
+  /* ⚠️⚠️ **② 를 따로 안 막습니다 — 이미 막혀 있습니다.** "내려놓은
+     분류로 갈 화면이 있는가" 를 재는 가드를 한 번 썼다가 되돌려 보니
+     `checkHalls()` 와 `checkSvcPage()` 가 **먼저** 잡았습니다 —
+     분류 **전부**에 대해 이미 보고 있는 것이라, 제 가드는 영원히 안
+     걸립니다. 안 걸리는 가드를 두면 "막고 있다" 고 믿게 되는데 실제로
+     막는 것은 다른 줄입니다 (이 저장소가 "겹겹이 막아 둔 것이 검사를
+     속인다" 로 겪은 자리) — 그래서 지웠습니다. */
+
+  /* ── ⚠️⚠️ 하위가 겹치지 않는가 (2026-10-22 전수검사 P1-15) ─────
+     `시설 · 장비` 는 하위가 **업종에서** 옵니다 (`amAllSubs()`). 거기서
+     같은 key 를 업종마다 **다른 이름**으로 적어 두면 고르개에 **같은
+     `data-pick` id 를 가진 체크칸이 두 번** 그려집니다 — 하나를
+     누르면 둘이 같이 켜지는데 바구니에는 한 번만 담겨서, 손님이
+     보기에 "왜 두 개가 켜지지" 입니다. 2026-10-22 에 다섯이 그랬고
+     **화면으로는 그냥 목록이 길어 보였습니다.**
+     ⚠️ 이름이 겹치는 것도 같이 봅니다 — 글자가 똑같은 칸이 둘이면
+     어느 쪽을 눌러야 하는지가 안 읽힙니다 (띄어쓰기만 다른 것도
+     같은 것으로 봅니다).
+     ⚠️ **되돌려 본 결과를 그대로 적습니다** — 이름 겹침은 보통
+     분류(`c.items`)에서만 걸립니다. `시설 · 장비` 쪽은 `amAllSubs()`
+     가 이름으로도 먼저 걸러서 여기까지 안 옵니다 (그쪽에서 걸리는
+     것은 **id 겹침**입니다). 둘을 한 줄로 묶지 마세요 — 묶으면
+     어느 쪽이 막고 있는지 알 수 없게 됩니다. */
+  for(const c of (W.AM_CATS || [])){
+    const subs = W.amPickSubs(c.key) || [];
+    const sid = new Set(), snm = new Set();
+    for(const sub of subs){
+      if(sid.has(sub.id))
+        throw new Error("고르개에 같은 서비스가 둘입니다 — " + sub.id +
+          "\n   → 같은 key 를 업종마다 다른 이름으로 적어 두면" +
+          " amAllSubs() 가 둘을 냅니다 (하나를 누르면 둘이 켜집니다)");
+      sid.add(sub.id);
+      const nm = String(sub.easy || sub.name || "").replace(/\s/g, "");
+      if(nm && snm.has(nm))
+        throw new Error("고르개에 같은 이름이 둘입니다 — " + c.key + " · " + nm +
+          "\n   → 글자가 똑같은 칸이 둘이면 어느 쪽인지 안 읽힙니다");
+      if(nm) snm.add(nm);
+    }
   }
 
   /* ── 업종별 추천 (2026-10-20 PART 4-4) ────────────────────────
@@ -2350,7 +2414,6 @@ function checkSvcPick(W){
      ③ 을 그냥 두면 `amPickQuick()` 이 **조용히 빼서** 다섯 칸이 되고,
      첫 화면에 고를 칸이 모자란 그 고장이 그대로 돌아옵니다. */
   const QUICK = W.AM_PICK_QUICK || {};
-  const OFF   = new Set(W.AM_PICK_OFF || []);
   for(const hall of Object.keys(QUICK)){
     const ids = QUICK[hall] || [];
     if(ids.length !== 6)

@@ -49,7 +49,11 @@ var RQ = { asked:false, on:false, signedIn:false, role:"", name:"",
               ⚠️⚠️ **연락처는 열어 본 건 하나만** 들고 있습니다
               (`conOf`). 쉰 건을 들고 있으면 화면 하나가 곧 유출이고,
               열 때마다 열람 이력이 남는 뜻도 없어집니다. */
-           staff:[], mine:false, conOf:"", con:null, conBusy:false };
+           staff:[], mine:false, conOf:"", con:null, conBusy:false,
+           /* 2026-10-22 전수검사 P1 ⑬⑭ — 업체 담당자와 기간별 정산.
+              ⚠️ `pvOf` 는 담당자 칸을 **펼친 업체 하나**입니다 —
+              스물을 한꺼번에 펼쳐 두면 직통 번호가 한 화면에 깔립니다. */
+           contacts:[], settles:[], pvOf:"", pctx:{}, sctx:{} };
 
 /* ── 그리기 ──────────────────────────────────────────────────────── */
 
@@ -75,7 +79,7 @@ function rqDraw(){
       '<h2>접수 · 배정</h2>'+
       rqBody()+
     '</section>'+
-    (RQ.signedIn ? rqMoney() + rqFees() + rqProvs() : "");
+    (RQ.signedIn ? rqMoney() + rqFees() + rqSettles() + rqProvs() : "");
 }
 
 function rqBody(){
@@ -784,6 +788,11 @@ function rqLoad(){
          (0012 의 `account_staff` 정책). 화면이 거르는 것이 아닙니다. */
       RQ.staff  = d.staff  || [];
       RQ.me     = d.me || "";
+      /* 업체 담당자 · 기간별 정산 (P1 ⑬⑭) — ⚠️ 담당자는 직원 ·
+         관리자에게만, 정산은 **관리자에게만** 옵니다 (api/me.js).
+         화면이 숨기는 것이 아니라 서버가 안 보냅니다. */
+      RQ.contacts = d.contacts || [];
+      RQ.settles  = d.settles  || [];
       rqDraw();
     })
     .catch(function(e){
@@ -1149,6 +1158,7 @@ function rqCall(fn, args, say){
     toast(say);
     RQ.money = ""; RQ.mctx = {}; RQ.open = ""; RQ.to = ""; RQ.ctx = {};
     RQ.itemOf = ""; RQ.ictx = {};
+    RQ.pvOf = ""; RQ.pctx = {};
     rqLoad();
   }).catch(function(e){
     RQ.busy = false;
@@ -1325,6 +1335,143 @@ window.rqFeeSave = function(){
 
 
 /* ════════════════════════════════════════════════════════════════════
+   기간별 정산 (2026-10-22 전수검사 P1 ⑭ · §9 · §12 · 0013)
+
+   `settlement` 표는 0001 부터 있었고 **아무 함수도 안 썼습니다** —
+   `amStore()` · `gu` · `withEquip` 과 같은 "만들어 놓고 안 쓰는 칸"
+   의 제일 비싼 판이었습니다.
+
+   ⚠️⚠️ **'입금' 으로 만드는 단추가 없습니다.** 입금의 진실은 건별
+   `mark_paid()` 이고 `build_settlement()` 이 그걸 **세어서** 정합니다 —
+   여기에 단추를 두면 §13 이 금지한 "가짜 정산" 의 길이 하나 더
+   생깁니다. 사람이 누를 수 있는 것은 **보류 · 보류 풀기**뿐입니다.
+   ⚠️⚠️ **`total` 은 그 시점의 사본**입니다 (정책 사본과 같은 까닭) —
+   나중에 요율이나 계약금액이 바뀌어도 이미 보낸 청구서가 따라
+   바뀌면 안 됩니다. 그래서 화면이 **언제 센 값인가**를 같이 냅니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+function rqSettles(){
+  /* ⚠️ 관리자만입니다 — 직원은 돈을 안 봅니다 (api/me.js 와 같은 선).
+     화면이 거르는 것이 아니라 **서버가 안 보냅니다.** */
+  if(RQ.role !== "admin") return "";
+  var S = RQ.settles || [];
+  var wait = S.filter(function(x){ return x.state === "wait"; }).length;
+  var hold = S.filter(function(x){ return x.state === "hold"; }).length;
+
+  return '<section class="ad-s rq-s rq-s-set">'+
+    '<h2>기간별 정산</h2>'+
+    '<p class="ad-lead">'+
+      (S.length
+        ? '정산 <b>'+S.length+'건</b>'+
+          (wait ? ' · 입금 대기 <b>'+wait+'건</b>' : '')+
+          (hold ? ' · 보류 <b>'+hold+'건</b>' : '')
+        : '아직 집계한 정산이 없습니다.')+
+      ' 업체와 기간을 고르고 <b>집계하기</b>를 누르면 '+
+      '<b>그 기간에 확정된 수수료</b>를 세어 청구서 한 줄을 만듭니다.</p>'+
+    '<p class="f-h">⚠️ <b>확정된 것만</b> 셉니다 — 확정 전인 건을 '+
+      '계약금액으로 섞으면 받을 돈이 열 배로 부풀려집니다. '+
+      '⚠️⚠️ <b>입금은 손으로 두지 않습니다</b> — 건별 입금 확인을 '+
+      '하시면 다시 집계할 때 저절로 바뀝니다.</p>'+
+    rqSetNew()+
+    (S.length ? '<div class="rq-g">'+ S.map(rqSetRow).join("") +'</div>' : "")+
+  '</section>';
+}
+
+window.rqSctx = function(k, v){ RQ.sctx[k] = v; };
+
+function rqSetNew(){
+  var N = RQ.sctx || {};
+  var P = RQ.provs || [];
+  return '<details class="rq-new"><summary><b>기간 정산 집계하기</b></summary>'+
+    (!P.length
+      ? '<p class="ad-empty">DB 에 등록된 업체가 없습니다.</p>'
+      : '<div class="ad-g">'+
+        '<div class="ad-f"><label for="rq-st-pv">업체</label>'+
+          '<select id="rq-st-pv" onchange="rqSctx(\'spv\',this.value)">'+
+            P.map(function(p){
+              return '<option value="'+esc(p.id)+'"'+
+                (N.spv === p.id ? " selected" : "")+'>'+esc(p.name)+'</option>';
+            }).join("")+
+          '</select></div>'+
+        '<div class="ad-f"><label for="rq-st-f">시작일</label>'+
+          '<input id="rq-st-f" type="date" '+
+          'oninput="rqSctx(\'sfrom\',this.value)" value="'+esc(N.sfrom || "")+'"></div>'+
+        '<div class="ad-f"><label for="rq-st-t">끝일</label>'+
+          '<input id="rq-st-t" type="date" '+
+          'oninput="rqSctx(\'sto\',this.value)" value="'+esc(N.sto || "")+'"></div>'+
+      '</div>'+
+      '<p class="ad-rd-n">⚠️ 같은 업체 · 같은 기간을 다시 집계하면 '+
+        '<b>그 줄을 덮습니다</b> (줄이 늘지 않습니다). '+
+        '보류로 세워 둔 줄은 <b>안 풀립니다</b>.</p>'+
+      '<div class="ad-acts">'+
+        '<button class="btn btn-b" type="button"'+(RQ.busy ? " disabled" : "")+
+          ' onclick="rqSetGo()">'+icon("calc",18)+'집계하기</button>'+
+      '</div>')+
+  '</details>';
+}
+
+window.rqSetGo = function(){
+  if(RQ.busy) return;
+  var N = RQ.sctx || {};
+  var pv = N.spv || ((RQ.provs || [])[0] || {}).id;
+  if(!pv){ toast("업체를 골라 주세요"); return; }
+  /* ⚠️ 화면에서 먼저 봅니다 — DB 도 막지만, 왕복 한 번을 아끼고
+     사람 말로 알려 드립니다 (amDealMove 를 앞단에 둔 것과 같은 까닭). */
+  if(!N.sfrom || !N.sto){ toast("기간을 골라 주세요"); return; }
+  if(N.sfrom > N.sto){ toast("기간이 거꾸로입니다"); return; }
+  rqCall("build_settlement", {
+    p_provider: pv, p_from: N.sfrom, p_to: N.sto, p_why: "기간 정산 집계"
+  }, "정산을 집계했습니다");
+};
+
+function rqSetRow(x){
+  var st = x.state === "paid" ? ["ok","입금"]
+         : x.state === "hold" ? ["warn","보류"] : ["on","입금 대기"];
+  return '<article class="rq-r">'+
+    '<div class="rq-hd rq-hd-s">'+
+      '<span class="rq-hd-l">'+
+        '<b class="rq-no">'+esc(rqPvName(x.provider_id))+'</b>'+
+        '<span class="rq-m">'+
+          esc(String(x.from_date || "").slice(0,10)+' ~ '+
+              String(x.to_date || "").slice(0,10))+
+          ' · 청구 '+esc(won(x.total) + "원")+
+          /* ⚠️⚠️ **언제 센 값인가**를 같이 냅니다 — 사본이라 지금의
+             계약 상태와 다를 수 있습니다. */
+          (x.approved_at ? ' · 집계 '+esc(String(x.approved_at).slice(0,10)) : '')+
+        '</span>'+
+      '</span>'+
+      '<span class="rq-hd-r">'+
+        '<i class="myq-st myq-'+st[0]+'">'+st[1]+'</i>'+
+        (x.state === "paid"
+          /* ⚠️ 입금으로 집계된 줄에는 **보류 단추를 안 냅니다** — DB 가
+             거절하는 길이라, 내면 누를 때마다 실패하는 단추입니다. */
+          ? ''
+          : '<button class="btn '+(x.state === "hold" ? "btn-b" : "btn-o")+' btn-sm" '+
+            'type="button" onclick="rqSetHold(\''+esc(x.id)+'\','+
+            (x.state !== "hold")+')">'+
+            (x.state === "hold" ? "보류 풀기" : "보류")+'</button>')+
+      '</span>'+
+    '</div>'+
+  '</article>';
+}
+
+/* ⚠️ **사유 없는 보류는 다음 사람이 어떻게 다룰지 모릅니다** (§8) —
+   DB 도 거절하지만 여기서 먼저 받습니다. */
+window.rqSetHold = function(id, on){
+  if(RQ.busy) return;
+  var why = "";
+  if(on){
+    why = String(prompt("보류하는 까닭을 적어 주세요 (기록에 남습니다)") || "").trim();
+    if(!why){ toast("보류 사유를 적어 주세요"); return; }
+  } else {
+    why = String(prompt("보류를 푸는 까닭을 적어 주세요 (선택)") || "").trim();
+  }
+  rqCall("hold_settlement", { p_id:id, p_hold:!!on, p_why: why || null },
+    on ? "보류했습니다" : "보류를 풀었습니다");
+};
+
+
+/* ════════════════════════════════════════════════════════════════════
    2차 — 업체 승인 (전면 감사 §6 의 3 · §7)
 
    ⚠️⚠️ **등록과 승인이 다른 문입니다.** 직원이 등록하고 **관리자가**
@@ -1342,6 +1489,9 @@ function rqProvs(){
   /* ⚠️⚠️ **공개와 배정 가능은 다른 것입니다** — 공개는 손님에게 보이는가,
      배정 가능은 신청을 넘겨도 되는가(계약이 되어 있는가)입니다. */
   var noAsg = P.filter(function(p){ return p.assignable === false; }).length;
+  /* ⚠️ **세는 값**입니다 — 담당자를 적어 둔 곳이 몇인지 손으로 적으면
+     채운 뒤에도 그 수가 남습니다 (adReady() 와 같은 까닭). */
+  var noCon = P.filter(function(p){ return !rqPvCon(p.id); }).length;
 
   return '<section class="ad-s rq-s rq-s-pv">'+
     '<h2>업체 · 공개 승인</h2>'+
@@ -1354,6 +1504,8 @@ function rqProvs(){
           '손님 목록에만 안 나옵니다.'+
           (noAsg ? ' <b>'+noAsg+'곳</b>은 <b>배정 가능</b>이 꺼져 있어 '+
             '배정 고르개에서 잠겨 있습니다 — 제휴 계약을 확인하고 켜 주세요.' : '')+
+          (noCon ? ' <b>'+noCon+'곳</b>은 <b>담당자</b>가 안 적혀 있어 '+
+            '배정하고 걸 곳이 대표번호뿐입니다.' : '')+
           (RQ.role === "admin" ? ''
             : ' ⚠️ 공개 · 배정 가능을 켜는 것은 <b>관리자만</b> 할 수 있습니다.')+
         '</p>'+
@@ -1367,6 +1519,7 @@ function rqProvs(){
 
 function rqProvRow(p){
   var subs = (p.subs || []).length, regs = (p.regions || []).length;
+  var c = rqPvCon(p.id);
   return '<article class="rq-r">'+
     '<div class="rq-hd rq-hd-s">'+
       '<span class="rq-hd-l">'+
@@ -1391,10 +1544,96 @@ function rqProvRow(p){
             'onclick="rqAsgGo(\''+esc(p.id)+'\','+(p.assignable === false)+')">'+
             (p.assignable === false ? "배정 가능으로" : "배정 막기")+'</button>'
           : '')+
+        '<button class="btn btn-o btn-sm" type="button" aria-expanded="'+
+          (RQ.pvOf === p.id ? "true" : "false")+'" '+
+          'onclick="rqPvConOpen(\''+esc(p.id)+'\')">'+
+          (c ? "담당자 보기" : "담당자 적기")+'</button>'+
       '</span>'+
     '</div>'+
+    (RQ.pvOf === p.id ? rqPvConForm(p, c) : "")+
   '</article>';
 }
+
+/* ── 업체 담당자 (2026-10-22 전수검사 P1 ⑬) ──────────────────────
+   배정하고 **전화할 사람**입니다. 지금은 걸 곳이 업체 대표번호뿐이라,
+   현장에 있는 담당자에게 닿는 데 하루가 갑니다.
+
+   ⚠️⚠️ **`provider` 가 아니라 별도 표입니다** (`provider_contact`).
+   0001 의 `grant select on provider to authenticated` 가 **표째**라,
+   거기 직통 번호를 넣으면 `listed=true` 인 줄을 **로그인한 손님
+   전부가** 읽습니다 — RLS 는 줄은 막아도 칸은 못 막습니다.
+   ⚠️ **한 번에 한 업체만 펼칩니다** — 스물을 한꺼번에 펼쳐 두면
+   직통 번호가 한 화면에 깔립니다 (목록에 고객 연락처를 안 깔는
+   것과 같은 선).
+   ⚠️⚠️ **감사 기록에 이름 · 번호가 안 갑니다** — 기록은 못 지우는
+   것이라, 거기 번호를 박으면 그 자체가 또 하나의 보관입니다.
+   ────────────────────────────────────────────────────────────── */
+function rqPvCon(id){
+  return (RQ.contacts || []).filter(function(c){ return c.provider_id === id; })[0] || null;
+}
+
+window.rqPvConOpen = function(id){
+  RQ.pvOf = (RQ.pvOf === id) ? "" : id;
+  /* ⚠️ 펼칠 때 **그 업체 값으로 칸을 채웁니다** — 비워 두고 저장하면
+     문이 "넷이 다 비었다" 로 읽어 줄째 지웁니다 (실제로 그랬습니다). */
+  if(RQ.pvOf){
+    var c = rqPvCon(id) || {};
+    RQ.pctx = { pname:c.name || "", ptel:c.tel || "",
+                pmail:c.email || "", pmemo:c.memo || "" };
+  } else RQ.pctx = {};
+  rqDraw();
+};
+
+window.rqPctx = function(k, v){ RQ.pctx[k] = v; };
+
+function rqPvConForm(p, c){
+  var N = RQ.pctx || {};
+  return '<div class="rq-bd rq-con-f">'+
+    '<p class="f-h">⚠️ 이 칸은 <b>직원 · 관리자에게만</b> 보입니다 — '+
+      '손님 화면에는 한 글자도 안 나갑니다. '+
+      (c ? '마지막으로 고친 날 '+esc(String(c.updated_at || "").slice(0,10))
+         : '아직 적어 둔 담당자가 없습니다')+'</p>'+
+    '<div class="ad-g">'+
+      '<div class="ad-f"><label for="rq-pc-n">담당자 이름</label>'+
+        '<input id="rq-pc-n" type="text" autocomplete="off" '+
+        'oninput="rqPctx(\'pname\',this.value)" value="'+esc(N.pname || "")+'" '+
+        'placeholder="예: 김과장"></div>'+
+      '<div class="ad-f"><label for="rq-pc-t">직통 · 휴대폰</label>'+
+        '<input id="rq-pc-t" type="tel" autocomplete="off" inputmode="tel" '+
+        'oninput="rqPctx(\'ptel\',this.value)" value="'+esc(N.ptel || "")+'" '+
+        'placeholder="예: 010-0000-0000"></div>'+
+      '<div class="ad-f"><label for="rq-pc-m">메일</label>'+
+        '<input id="rq-pc-m" type="email" autocomplete="off" '+
+        'oninput="rqPctx(\'pmail\',this.value)" value="'+esc(N.pmail || "")+'" '+
+        'placeholder="선택"></div>'+
+    '</div>'+
+    '<div class="ad-f"><label for="rq-pc-o">메모 <em>(선택)</em></label>'+
+      '<input id="rq-pc-o" type="text" autocomplete="off" '+
+      'oninput="rqPctx(\'pmemo\',this.value)" value="'+esc(N.pmemo || "")+'" '+
+      'placeholder="예: 오전에만 통화 가능 · 현장에 있을 때가 많습니다"></div>'+
+    (N.ptel ? '<p class="ad-rd-n">'+
+      '<a class="rq-tel" href="tel:'+esc(String(N.ptel).replace(/[^0-9+]/g,""))+'">'+
+      icon("phone",18)+esc(N.ptel)+'</a></p>' : "")+
+    '<p class="ad-rd-n">⚠️ 넷을 다 비워서 저장하면 <b>줄째 지웁니다</b> '+
+      '(담당자가 그만두셨을 때). 바뀐 것은 기록에 남지만 '+
+      '<b>이름과 번호는 기록에 안 적습니다</b>.</p>'+
+    '<div class="ad-acts">'+
+      '<button class="btn btn-b" type="button"'+(RQ.busy ? " disabled" : "")+
+        ' onclick="rqPvConSave(\''+esc(p.id)+'\')">'+icon("check",18)+'담당자 저장</button>'+
+    '</div>'+
+  '</div>';
+}
+
+window.rqPvConSave = function(id){
+  if(RQ.busy) return;
+  var N = RQ.pctx || {};
+  rqCall("save_provider_contact", {
+    p_provider: id,
+    p_data: { name: String(N.pname || "").trim(), tel: String(N.ptel || "").trim(),
+              email: String(N.pmail || "").trim(), memo: String(N.pmemo || "").trim() },
+    p_why: "업체에서 받아 왔습니다"
+  }, "담당자를 저장했습니다");
+};
 
 /* ⚠️⚠️ **켜는 것은 "계약서를 봤다" 는 뜻입니다.** 구두 합의만으로
    켜면 계약 전에 손님의 성함 · 연락처가 그 업체로 넘어갑니다

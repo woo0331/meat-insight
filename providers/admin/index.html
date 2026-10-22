@@ -45,7 +45,7 @@
 
 <link rel="stylesheet" href="/css/tokens.css?v=337d02b4">
 <link rel="stylesheet" href="/css/app.css?v=7df2a3c7">
-<link rel="stylesheet" href="/css/pages.css?v=0851946a">
+<link rel="stylesheet" href="/css/pages.css?v=ae68c154">
 
 <!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
      마세요 — 다음에 돌릴 때 덮어써집니다. 내용은 js/data/faq.js 와
@@ -53,7 +53,7 @@
 <!-- ld:start -->
 <!-- ld:end -->
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"업체찾기","item":"https://storeway.co.kr/providers"},{"@type":"ListItem","position":2,"name":"행정 · 전문가","item":"https://storeway.co.kr/providers/admin"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"행정 · 전문가","itemListElement":[{"@type":"ListItem","position":1,"name":"세무사"},{"@type":"ListItem","position":2,"name":"노무사"},{"@type":"ListItem","position":3,"name":"행정사"},{"@type":"ListItem","position":4,"name":"법무 · 법률"},{"@type":"ListItem","position":5,"name":"보험"},{"@type":"ListItem","position":6,"name":"사업자등록"},{"@type":"ListItem","position":7,"name":"인허가"},{"@type":"ListItem","position":8,"name":"위생교육"},{"@type":"ListItem","position":9,"name":"인증"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"행정 · 전문가","itemListElement":[{"@type":"ListItem","position":1,"name":"세무사"},{"@type":"ListItem","position":2,"name":"노무사"},{"@type":"ListItem","position":3,"name":"행정사"},{"@type":"ListItem","position":4,"name":"법무 · 법률"},{"@type":"ListItem","position":5,"name":"보험"},{"@type":"ListItem","position":6,"name":"사업자등록"},{"@type":"ListItem","position":7,"name":"저작권 · 상표"},{"@type":"ListItem","position":8,"name":"인허가"},{"@type":"ListItem","position":9,"name":"위생교육"},{"@type":"ListItem","position":10,"name":"인증"}]}</script>
 </head>
 <body>
 <a class="skip" href="#view">본문 바로가기</a>
@@ -77,7 +77,7 @@
 <script defer src="/js/data/regions.js?v=149bea2a"></script>
 <script defer src="/js/data/industries.js?v=286cb6a1"></script>
 <script defer src="/js/data/indgroups.js?v=36b0eb0f"></script>
-<script defer src="/js/data/catalog.js?v=5ad06ee0"></script>
+<script defer src="/js/data/catalog.js?v=655a5013"></script>
 <script defer src="/js/data/lifecycle.js?v=b35950bd"></script>
 <script defer src="/js/data/journey.js?v=200e4967"></script>
 <script defer src="/js/data/franchise.js?v=8dfc74f4"></script>
@@ -94,7 +94,7 @@
 <script defer src="/js/data/join.js?v=40d5209a"></script>
 <!-- 서비스마다 다르게 묻는 칸 (2026-10-08 수익형 플랫폼 지시서 6절).
      catalog 의 분류 key 를 쓰므로 그 뒤입니다. -->
-<script defer src="/js/data/reqforms.js?v=22134365"></script>
+<script defer src="/js/data/reqforms.js?v=5703a761"></script>
 <!-- ⚠️⚠️ 신청 상태 열셋 (2026-10-09 §8-3 — 보류 포함).
      전에는 일부러 안 실었습니다 ("화면이 아직 안 읽습니다") —
      이제 `/my` 의 신청 내역이 상태 이름과 색을 **여기서** 가져옵니다.
@@ -111,13 +111,13 @@
 <script defer src="/js/data/halls.js?v=f92c1d92"></script>
 <!-- 고를 수 있는 서비스 (2026-10-17 창업 준비 전문관 §12 · §2-B).
      ⚠️ halls 와 reqforms 의 값을 읽으므로 **그 뒤**입니다. -->
-<script defer src="/js/data/svcpick.js?v=e800ec1e"></script>
+<script defer src="/js/data/svcpick.js?v=530565b3"></script>
 <script defer src="/js/data/svcpage.js?v=bb4d6168"></script>
 <script defer src="/js/data/steps.js?v=7cf9b3ba"></script>
 <!-- ⚠️⚠️ 운영 체크리스트 (2026-10-18 §9) — svcpick 의 id · tools 의 key ·
      content 의 slug 를 가리킵니다. ⚠️ 이 줄이 없으면 `/operation` 의
      체크리스트 구간이 **조용히 통째로 빠집니다** (에러는 안 납니다). -->
-<script defer src="/js/data/opscheck.js?v=bc82379d"></script>
+<script defer src="/js/data/opscheck.js?v=c92ed6dd"></script>
 
 <script defer src="/js/components/base.js?v=7e49ed05"></script>
 <script defer src="/js/components/ui.js?v=09930dcf"></script>
@@ -143,7 +143,7 @@
 <script defer src="/js/pages/quote.js?v=9344acf2"></script>
 <script defer src="/js/pages/info.js?v=eca9251b"></script>
 <script defer src="/js/pages/tools.js?v=c871f207"></script>
-<script defer src="/js/pages/my.js?v=e64e59ca"></script>
+<script defer src="/js/pages/my.js?v=d362ad61"></script>
 <script defer src="/js/pages/search.js?v=e1086fbf"></script>
 <script defer src="/js/pages/legal.js?v=273e11c2"></script>
 
@@ -153,7 +153,7 @@
 <!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가
      이 사이에 **크롤러가 읽을 본문**을 써 넣습니다. 메인은 원본이라
      shell() 이 손대지 않아서, 한동안 여기가 빈 칸으로 나갔습니다. -->
-<main id="view"><div class="pre w"><h1>행정 · 전문가 업체찾기</h1><p>지역 · 전문분야 · 상담 가능 여부로 전문가를 찾습니다. 세무사 · 노무사 · 행정사 · 법무 · 법률 · 보험 · 사업자등록 전문업체를 지역과 업종으로 비교하실 수 있습니다.</p><h2>행정 · 전문가 — 서류와 자격</h2><ul><li>세무사</li><li>노무사</li><li>행정사</li><li>법무 · 법률</li><li>보험</li><li>사업자등록</li><li>인허가</li><li>위생교육</li><li>인증</li></ul><h2>행정 · 전문가 업체를 이런 때 찾으십니다</h2><ul><li>사업자등록과 인허가를 처음 할 때</li><li>업종에 필요한 면허와 교육을 확인할 때</li><li>세무 · 노무를 맡길 곳을 찾을 때</li><li>계약서를 검토받고 싶을 때</li></ul><h2>어떻게 진행되나요</h2><ul><li>업종에 필요한 인허가 확인 — 업종마다 신고 · 등록 · 허가로 갈리고 근거 법이 다릅니다. 관할 구청에 건물 주소로 확인합니다.</li><li>교육과 건강진단 — 업종에 따라 위생교육 이수와 건강진단결과서가 신고보다 먼저입니다.</li><li>영업 신고 · 등록 · 허가 — 시설 기준을 갖춘 뒤에 받습니다. 공사가 끝나야 되는 것이 섞여 있습니다.</li><li>사업자등록 — 업종에 따라 영업신고증이 있어야 사업자등록이 되는 순서가 있습니다.</li><li>세무 · 노무 체계 잡기 — 증빙을 모으는 방식과 급여 처리 방식을 처음에 정해 두면 나중이 편합니다.</li><li>정기 신고 일정 확인 — 부가세 · 원천세 · 종합소득세가 각각 다른 때에 옵니다.</li></ul><h2>비용은 무엇으로 갈리나요</h2><ul><li>업종과 인허가 종류 — 신고로 끝나는 업종과 허가를 받아야 하는 업종은 준비 서류부터 다릅니다.</li><li>시설 기준 충족 여부 — 기준에 모자라면 공사가 따라옵니다.</li><li>기장이냐 신고 대행이냐 — 매달 맡기는 것과 신고 때만 맡기는 것은 다른 일입니다.</li><li>사업장 수와 직원 수 — 처리할 건수가 늘면 달라집니다.</li><li>일정 — 급하게 맞추면 올라갑니다.</li></ul><h2>자주 묻는 것</h2><h3>사업자등록이 먼저인가요, 인허가가 먼저인가요?</h3><p>업종에 따라 다릅니다. 음식점처럼 영업신고증이 있어야 사업자등록이 되는 경우가 있어, 업종이 정해지면 관할 구청에 순서를 먼저 확인하세요.</p><h3>세무사는 꼭 있어야 하나요?</h3><p>의무는 아닙니다. 다만 부가세 · 원천세 · 종합소득세 일정이 겹치고 업종별로 챙길 것이 달라서, 직접 하실 때는 증빙 관리와 일정을 같이 준비하셔야 합니다.</p><h3>간이과세와 일반과세 중 어느 쪽인가요?</h3><p>매출 규모 · 업종 · 세금계산서 발급이 필요한지로 갈립니다. 기준이 바뀌기도 해서 홈택스나 세무서에 지금 기준을 확인하시는 것이 정확합니다.</p><h3>노무사는 언제 필요한가요?</h3><p>직원을 쓰기 시작할 때입니다. 근로계약서 · 4대보험 · 근무시간 기록이 나중에 분쟁이 생겼을 때 그대로 증거가 됩니다.</p><h2>업종별로 찾기</h2><ul><li>음식점</li><li>카페 · 디저트</li><li>주점 · 바</li><li>미용 · 헤어</li><li>네일 · 뷰티</li><li>헬스 · PT</li><li>학원 · 교육</li><li>반려동물</li><li>소매 · 편의점</li><li>무인매장</li><li>숙박</li><li>사무 · 전문서비스</li><li>온라인 · 판매</li><li>기타</li></ul><h2>지역별로 찾기</h2><ul><li>서울</li><li>경기</li><li>인천</li><li>부산</li><li>대구</li><li>대전</li><li>광주</li><li>울산</li><li>세종</li><li>강원</li><li>충북</li><li>충남</li><li>전북</li><li>전남</li><li>경북</li><li>경남</li><li>제주</li></ul></div></main>
+<main id="view"><div class="pre w"><h1>행정 · 전문가 업체찾기</h1><p>지역 · 전문분야 · 상담 가능 여부로 전문가를 찾습니다. 세무사 · 노무사 · 행정사 · 법무 · 법률 · 보험 · 사업자등록 전문업체를 지역과 업종으로 비교하실 수 있습니다.</p><h2>행정 · 전문가 — 서류와 자격</h2><ul><li>세무사</li><li>노무사</li><li>행정사</li><li>법무 · 법률</li><li>보험</li><li>사업자등록</li><li>저작권 · 상표</li><li>인허가</li><li>위생교육</li><li>인증</li></ul><h2>행정 · 전문가 업체를 이런 때 찾으십니다</h2><ul><li>사업자등록과 인허가를 처음 할 때</li><li>업종에 필요한 면허와 교육을 확인할 때</li><li>세무 · 노무를 맡길 곳을 찾을 때</li><li>계약서를 검토받고 싶을 때</li></ul><h2>어떻게 진행되나요</h2><ul><li>업종에 필요한 인허가 확인 — 업종마다 신고 · 등록 · 허가로 갈리고 근거 법이 다릅니다. 관할 구청에 건물 주소로 확인합니다.</li><li>교육과 건강진단 — 업종에 따라 위생교육 이수와 건강진단결과서가 신고보다 먼저입니다.</li><li>영업 신고 · 등록 · 허가 — 시설 기준을 갖춘 뒤에 받습니다. 공사가 끝나야 되는 것이 섞여 있습니다.</li><li>사업자등록 — 업종에 따라 영업신고증이 있어야 사업자등록이 되는 순서가 있습니다.</li><li>세무 · 노무 체계 잡기 — 증빙을 모으는 방식과 급여 처리 방식을 처음에 정해 두면 나중이 편합니다.</li><li>정기 신고 일정 확인 — 부가세 · 원천세 · 종합소득세가 각각 다른 때에 옵니다.</li></ul><h2>비용은 무엇으로 갈리나요</h2><ul><li>업종과 인허가 종류 — 신고로 끝나는 업종과 허가를 받아야 하는 업종은 준비 서류부터 다릅니다.</li><li>시설 기준 충족 여부 — 기준에 모자라면 공사가 따라옵니다.</li><li>기장이냐 신고 대행이냐 — 매달 맡기는 것과 신고 때만 맡기는 것은 다른 일입니다.</li><li>사업장 수와 직원 수 — 처리할 건수가 늘면 달라집니다.</li><li>일정 — 급하게 맞추면 올라갑니다.</li></ul><h2>자주 묻는 것</h2><h3>사업자등록이 먼저인가요, 인허가가 먼저인가요?</h3><p>업종에 따라 다릅니다. 음식점처럼 영업신고증이 있어야 사업자등록이 되는 경우가 있어, 업종이 정해지면 관할 구청에 순서를 먼저 확인하세요.</p><h3>세무사는 꼭 있어야 하나요?</h3><p>의무는 아닙니다. 다만 부가세 · 원천세 · 종합소득세 일정이 겹치고 업종별로 챙길 것이 달라서, 직접 하실 때는 증빙 관리와 일정을 같이 준비하셔야 합니다.</p><h3>간이과세와 일반과세 중 어느 쪽인가요?</h3><p>매출 규모 · 업종 · 세금계산서 발급이 필요한지로 갈립니다. 기준이 바뀌기도 해서 홈택스나 세무서에 지금 기준을 확인하시는 것이 정확합니다.</p><h3>노무사는 언제 필요한가요?</h3><p>직원을 쓰기 시작할 때입니다. 근로계약서 · 4대보험 · 근무시간 기록이 나중에 분쟁이 생겼을 때 그대로 증거가 됩니다.</p><h2>업종별로 찾기</h2><ul><li>음식점</li><li>카페 · 디저트</li><li>주점 · 바</li><li>미용 · 헤어</li><li>네일 · 뷰티</li><li>헬스 · PT</li><li>학원 · 교육</li><li>반려동물</li><li>소매 · 편의점</li><li>무인매장</li><li>숙박</li><li>사무 · 전문서비스</li><li>온라인 · 판매</li><li>기타</li></ul><h2>지역별로 찾기</h2><ul><li>서울</li><li>경기</li><li>인천</li><li>부산</li><li>대구</li><li>대전</li><li>광주</li><li>울산</li><li>세종</li><li>강원</li><li>충북</li><li>충남</li><li>전북</li><li>전남</li><li>경북</li><li>경남</li><li>제주</li></ul></div></main>
 <div id="chrome-b"></div>
 </body>
 </html>

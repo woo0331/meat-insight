@@ -142,7 +142,7 @@ window.AM_START_CATS = [
   { key:"supply", name:"운영 공급업체", icon:"pkgck", tone:"t2", kind:"provider",
     lead:"매일 들어오는 것",
     desc:"거래처를 새로 뚫거나 바꾸실 때 조건을 비교합니다.",
-    kw:"포장용기 포장지 배달용기 일회용컵 식자재납품",
+    kw:"포장용기 포장지 배달용기 일회용컵 식자재납품 배달대행 배달기사 라이더 배송",
     /* ⚠️⚠️ 2026-10-09 최종 통합 지시서 §5-2 A · B — 운영 중인 사장님이
        **매달 사는 것**이 여기 들어옵니다. 육류 · 수산 · 농산은 "식자재"
        한 칸으로 묶여 있었는데, 거래처가 **서로 다른 업체**라 한 칸으로
@@ -156,6 +156,12 @@ window.AM_START_CATS = [
       { key:"bakery",    name:"베이커리 재료" },
       { key:"liquor",    name:"주류" },     { key:"material", name:"원재료" },
       { key:"packaging", name:"포장재" },   { key:"delivery-box",name:"배달용기" },
+      /* ⚠️ 2026-10-22 전수검사 P1-16 — "배달대행" 이 검색에서 **0건**
+         이었습니다. 배달용기는 있는데 **배달을 맡기는 일**이 없어서,
+         매일 쓰는 외주인데 들어올 자리가 없었습니다. ⚠️ 분류를 늘린
+         것이 아니라 하위를 더한 것입니다 (업체 `subs` · 상품 `sub` 이
+         그 key 를 들고 있습니다). */
+      { key:"delivery-agent",name:"배달 대행" },
       { key:"disposable",name:"일회용품" }, { key:"consumable",name:"소모품" },
       { key:"uniform",   name:"유니폼" },   { key:"hygiene",  name:"위생용품" },
       { key:"cleaning-sup",name:"청소용품" }, { key:"office-sup",name:"사무용품" }
@@ -171,6 +177,7 @@ window.AM_START_CATS = [
      열넷)에도 **같이 넣어야** 합니다 — 안 넣으면 빌드가 멈춥니다. */
   { key:"repair", name:"수리 · 유지보수", icon:"tool", tone:"t12", kind:"provider",
     lead:"멈췄을 때 부르는 곳",
+    kw:"소방점검 전기안전점검 가스점검 법정점검 안전점검 고장 수리기사 AS",
     desc:"장비가 멈추면 그날 장사가 안 됩니다. 지역 · 품목으로 찾습니다.",
     /* ⚠️⚠️ **전업종 공통인 것을 앞에 둡니다.** 화면은 하위를 다섯까지만
        미리 보여 주는데(`StepBand`), 냉장고 · 커피머신 같은 **업종이 드러나는
@@ -183,6 +190,14 @@ window.AM_START_CATS = [
       { key:"aircon-fix", name:"에어컨 수리" },
       { key:"elec-fix",   name:"전기 · 배관 · 설비" },
       { key:"check-up",   name:"정기 시설 점검" },
+      /* ⚠️⚠️ 2026-10-22 전수검사 P1-16 — **법으로 하게 되어 있는 점검**은
+         위의 "정기 시설 점검"(스스로 맡기는 것)과 다른 일입니다. 안
+         받으면 과태료가 나오고, 사고가 나면 그때 책임이 갈립니다.
+         ⚠️⚠️ **대상 · 주기 · 과태료 숫자를 적지 마세요** — 업종 · 면적 ·
+         설비에 따라 갈립니다 (`AM_OPS_CHECK` 와 같은 규칙). 적는 것은
+         **그런 점검이 있다**는 것까지이고, 대상인지는 관할 소방서 ·
+         한국전기안전공사 · 도시가스사가 정합니다. */
+      { key:"legal-check",name:"법정 점검 (소방 · 전기 · 가스)" },
       { key:"rental-care",name:"렌탈 점검 · 관리" },
       { key:"it-fix",     name:"POS · CCTV 유지보수" },
       { key:"fridge-fix", name:"냉장 · 냉동고 수리" },
@@ -198,12 +213,19 @@ window.AM_START_CATS = [
        "세금" 이 0건이던 자리입니다 (하위는 "세무사" 라 안 걸렸습니다).
        ⚠️⚠️ **여기 적는 것은 이 분류가 실제로 다루는 것까지입니다** —
        없는 서비스를 적으면 걸리기만 하고 엉뚱한 데로 보냅니다. */
-    kw:"세금 세무 회계 장부 기장 노무 4대보험 인허가 허가 영업신고 보험 법률",
+    kw:"세금 세무 회계 장부 기장 노무 4대보험 인허가 허가 영업신고 보험 법률 저작권 공연권료 음악저작권 상표 상표출원",
     desc:"지역 · 전문분야 · 상담 가능 여부로 전문가를 찾습니다.",
     items:[
       { key:"tax-agent", name:"세무사" },     { key:"labor-agent",name:"노무사" },
       { key:"admin-agent",name:"행정사" },    { key:"legal",     name:"법무 · 법률" },
       { key:"insurance", name:"보험" },       { key:"biz-reg",   name:"사업자등록" },
+      /* ⚠️ 2026-10-22 전수검사 P1-16 — "저작권" · "공연권료" 가 검색에서
+         **0건**이었습니다. 매장에서 음악을 틀면 공연권료가 붙고(저작권법
+         제29조 제2항 단서 · 시행령 제11조), 간판 이름을 지키려면 상표를
+         내야 합니다 — 둘 다 자영업자가 실제로 겪는 일인데 들어올 자리가
+         없었습니다. ⚠️ **요율 · 면적 기준 숫자를 적지 마세요** — 업종 ·
+         면적으로 갈리고 해마다 바뀝니다. */
+      { key:"copyright",  name:"저작권 · 상표" },
       { key:"permit",    name:"인허가" },     { key:"hygiene-edu",name:"위생교육" },
       { key:"certify",   name:"인증" }
     ]},
@@ -308,7 +330,14 @@ window.AM_CLOSE_CATS = [
     items:[
       { key:"full",     name:"전체철거" },  { key:"partial", name:"부분철거" },
       { key:"kitchen",  name:"주방철거" },  { key:"sign",    name:"간판철거" },
-      { key:"facility", name:"시설철거" },  { key:"waste",   name:"폐기물" }
+      { key:"facility", name:"시설철거" },
+      /* ⚠️⚠️ **`waste` 분류와 이름을 갈라 둡니다** (2026-10-22 전수검사 P1-15).
+         여기 것은 **철거하며 나오는 것**이라 철거업체가 같이 싣고 가고,
+         `waste` 분류는 **따로 부르는 수거**입니다 (남은 짐 · 가구 · 전자
+         제품). 둘 다 "폐기물" 이면 폐업 전문관 한 화면에 같은 이름이
+         둘이고, 어느 쪽을 골라야 하는지가 안 읽힙니다 — `pickDupLabels()`
+         는 **글자가 똑같을 때만** 묶음 이름을 붙여서 이것을 못 잡습니다. */
+      { key:"waste",   name:"철거 폐기물" }
     ]},
 
   { key:"restore", name:"원상복구", icon:"roller", tone:"t5", kind:"provider",
@@ -553,11 +582,23 @@ window.amCloseCatsFor = function(wantKey, industryKey){
 window.amAllSubs = function(cat){
   if(!cat) return [];
   if(!cat.byIndustry) return (cat.items || []).slice();
-  var seen = {}, out = [];
+  /* ⚠️⚠️ **key 와 이름을 둘 다 봅니다** (2026-10-22 전수검사 P1-15).
+     전에는 **이름만** 보고 걸렀습니다 — 그래서 같은 key 를 업종마다
+     **다른 이름**으로 적어 둔 다섯(`sound` · `showcase` · `desk` ·
+     `pc` · `shelf`)이 **둘씩** 들어갔고, 고르개에서 **같은
+     `data-pick` id 를 가진 체크칸이 두 번** 그려졌습니다 — 하나를
+     누르면 둘이 같이 켜지는데 바구니에는 한 번만 담겨서, 손님이
+     보기에 "왜 두 개가 켜지지" 입니다 (§3-2 중복 방지).
+     ⚠️ key 로만 걸러도 안 됩니다 — **다른 key 를 같은 이름**으로 적어
+     두면 글자가 똑같은 칸이 둘이 됩니다.
+     ⚠️ 먼저 나온 이름을 남깁니다 (`AM_INDUSTRIES` 차례) — 그 key 로
+     저장된 지난 신청이 그 이름으로 읽혀야 합니다. */
+  var byKey = {}, byName = {}, out = [];
   (window.AM_INDUSTRIES || []).forEach(function(i){
     (i.equip || []).forEach(function(e){
-      if(seen[e.name]) return;
-      seen[e.name] = 1; out.push(e);
+      if(!e || !e.key) return;
+      if(byKey[e.key] || byName[e.name]) return;
+      byKey[e.key] = 1; byName[e.name] = 1; out.push(e);
     });
   });
   return out;

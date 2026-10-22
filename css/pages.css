@@ -4020,6 +4020,33 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .my-in-n{ margin:0; font-size:var(--t-cap); color:var(--ink2); min-height:20px; }
 .my-in-n.ok{ color:var(--start-deep); font-weight:700; }
 .my-in-n.bad{ color:var(--close-deep); font-weight:700; }
+
+/* ════════ 로그인 전에 넣은 신청 가져오기 (2026-10-22 P1 ⑩) ══════════
+   ⚠️ 접힌 채로 섭니다 — 모든 손님의 일이 아니고, 펼치지 않으면
+   신청 목록이 그만큼 위로 올라옵니다.
+   ⚠️⚠️ 여는 단추(summary)는 **누름 48px 이상**이라야 합니다 —
+   `padding` 만으로 만들면 짧은 이름에서 다시 낮아집니다. */
+.my-claim{ margin:var(--s6) 0 0; padding:var(--s4) var(--s5);
+  background:var(--bg-ivory2); border:1px solid var(--line);
+  border-radius:var(--r-in); }
+.my-claim > summary{ display:flex; align-items:center;
+  min-height:var(--tap); cursor:pointer; color:var(--ink);
+  font-size:var(--t-base); }
+.my-claim > summary b{ font-weight:800; }
+/* ⚠️⚠️ **`display:flex` 가 기본 삼각형을 없앱니다.** 찍어 보니 "로그인
+   전에 넣은 신청이 있으세요?" 가 **그냥 글자**로 보여서, 눌러서 펼치는
+   것인 줄 알 길이 없었습니다 — 손님이 40~60대 사장님이라 더 그렇습니다.
+   `/admin` 의 `.ad-fold` 와 같은 방식으로 **열기 · 접기** 를 답니다.
+   ⚠️ 웹킷은 `::-webkit-details-marker` 를 따로 꺼야 합니다. */
+.my-claim > summary::-webkit-details-marker{ display:none; }
+.my-claim > summary::after{ content:"열기"; margin-left:auto;
+  font-size:var(--t-cap); font-weight:700; color:var(--blue-600); }
+.my-claim[open] > summary::after{ content:"접기"; }
+.my-claim-p{ margin:var(--s3) 0 var(--s4); color:var(--ink2);
+  font-size:var(--t-cap); line-height:1.65; }
+/* ⚠️ 신청번호 칸은 **제 글자 폭만** 잡으면 안 됩니다 — `SW-AB12-CD34`
+   가 들어갈 폭이 필요하고, 좁은 폭에서는 꽉 차야 합니다. */
+.my-claim .my-in input{ width:100%; }
 /* ⚠️ 나가는 길을 반드시 같이 냅니다 — 가게 컴퓨터는 여러 사람이
    씁니다. 들어올 길만 만들면 앞사람 계정이 그대로 남습니다. */
 .my-out{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap;

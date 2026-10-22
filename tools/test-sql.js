@@ -147,7 +147,14 @@ try{
                      업체에 assignable 을 켜 두지 않으면 **그 뒤의 모든
                      배정 검사가 "아직 배정할 수 없는 업체" 로** 떨어집니다
                      (검사가 아니라 씨앗이 틀린 것이 됩니다). */
-                  "db/migrations/0012_owner_assignable_offer.sql"];
+                  "db/migrations/0012_owner_assignable_offer.sql",
+                  /* ⚠️ 0013 — 업체 담당자(별도 표) + 기간별 정산
+                     (2026-10-22 전수검사 P1 ⑬⑭).
+                     ⚠️⚠️ 담당자를 `provider` 가 아니라 **따로** 둔 까닭 —
+                     0001 의 GRANT 가 표째라 거기 직통 번호를 넣으면
+                     로그인한 손님 전부가 읽습니다. 아래 블록이 그것을
+                     눌러 봅니다 (고객 토큰으로 0줄). */
+                  "db/migrations/0013_provider_contact_settlement.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ /* ⚠️⚠️ NOTICE 가 먼저 쏟아져서 앞 세 줄만 보면 **진짜
@@ -1676,6 +1683,190 @@ try{
     ok("다시 돌려도 켜 둔 status 를 안 되돌린다",
        psql("select status from offer where id='pos-card'") === "live");
     psql("update offer set status='info' where id='pos-card'");
+  }
+
+  console.log("\n── ⚠️⚠️ 0013 업체 담당자(별도 표) · 기간별 정산");
+  {
+    const as = u => "set role authenticated; select become('" + u + "'); ";
+    const A  = "11111111-1111-1111-1111-111111111111";
+    const PV = "33333333-3333-3333-3333-333333333333";   /* pv-one */
+    const ST = "44444444-4444-4444-4444-444444444444";
+    const AD = "55555555-5555-5555-5555-555555555555";
+
+    /* ══ ⑬ 업체 담당자 ══════════════════════════════════════════ */
+    let r = denied(as(A) + `select save_provider_contact('pv-one','{"name":"김담당"}'::jsonb)`);
+    ok("고객은 업체 담당자를 못 적는다",
+       r.no && /직원 · 관리자만/.test(r.why || ""), r.why);
+    r = denied(as(ST) + `select save_provider_contact('zz-none','{"name":"x"}'::jsonb)`);
+    ok("없는 업체는 거절한다", r.no && /없는 업체/.test(r.why || ""), r.why);
+    r = denied(as(ST) + `select save_provider_contact('pv-one','{"email":"abc"}'::jsonb)`);
+    ok("메일 꼴을 본다", r.no && /메일 주소/.test(r.why || ""), r.why);
+
+    psql(as(ST) + `select save_provider_contact('pv-one',
+            '{"name":"김담당","tel":"010-1111-2222","email":"a@b.com","memo":"오전에 연락"}'::jsonb,
+            '업체에서 받아 왔습니다')`);
+    ok("직원이 담당자를 적는다",
+       psql("select count(*) from provider_contact where provider_id='pv-one'") === "1");
+    ok("직통 번호가 들어 있다",
+       psql("select tel from provider_contact where provider_id='pv-one'") === "010-1111-2222");
+
+    /* ⚠️⚠️ **이것이 이 표를 따로 만든 까닭입니다.** `provider` 에 넣으면
+       0001 의 `grant select on provider to authenticated` 가 표째라
+       `listed=true` 인 줄을 **로그인한 손님 전부가** 읽습니다 — RLS 는
+       줄은 막아도 칸은 못 막습니다. */
+    ok("⚠️⚠️ 고객에게는 한 줄도 안 보인다",
+       psql(as(A) + "select count(*) from provider_contact") === "0");
+    ok("업체는 자기 것만 본다",
+       psql(as(PV) + "select count(*) from provider_contact") === "1");
+    ok("직원은 본다",
+       Number(psql(as(ST) + "select count(*) from provider_contact")) >= 1);
+
+    /* ⚠️⚠️ 감사 기록은 **못 지우는 것**이라, 거기에 번호를 박으면 그
+       자체가 또 하나의 보관입니다 (`note_request_open` 과 같은 규칙). */
+    ok("⚠️⚠️ 감사 기록에 이름 · 번호가 없다",
+       psql(`select count(*) from audit_log where obj='provider_contact'
+              and (coalesce(data::text,'') like '%김담당%'
+                or coalesce(data::text,'') like '%010-1111%'
+                or coalesce(why,'')  like '%010-1111%')`) === "0");
+    ok("채워진 칸 이름만 남는다",
+       psql(`select count(*) from audit_log where obj='provider_contact'
+              and data::text like '%tel%'`) === "1");
+
+    r = denied(as(ST) + `insert into provider_contact (provider_id, name)
+                           values ('pv-two','직접')`);
+    ok("표에 직접 쓰는 길이 없다 (문으로만)", r.no, r.why);
+
+    /* ⚠️ 넷이 다 비면 **빈 줄을 안 남깁니다** (절대 규칙 2) */
+    psql(as(ST) + `select save_provider_contact('pv-one','{}'::jsonb,'담당자가 그만두셨습니다')`);
+    ok("넷이 비면 줄째 지운다",
+       psql("select count(*) from provider_contact where provider_id='pv-one'") === "0");
+    ok("지운 것도 기록에 남는다 (§8)",
+       psql(`select count(*) from audit_log where obj='provider_contact'
+              and to_state='cleared'`) === "1");
+
+    /* ══ ⑭ 기간별 정산 ═════════════════════════════════════════
+       ⚠️⚠️ **업체를 새로 만듭니다.** 앞 블록들이 `pv-one` 에
+       `confirm_fee()` 를 불러 두었고 그 `fee_at` 은 **now()** 입니다 —
+       오늘이 10월이라 "10월 정산" 에 그것까지 섞여서 합이 안 맞았습니다.
+       **코드가 아니라 씨앗이 틀린** 자리입니다 (이 저장소의 단골). */
+    psql(`insert into provider (id, name, listed, assignable, subs) values
+            ('pv-set','정산업체','t','t','{interior}')
+          on conflict (id) do nothing;`);
+
+    /* ⚠️⚠️ 확정 전인 계약(9,900만원)을 **계약금액으로** 섞으면 받을 돈이
+       열 배로 부풀려집니다 — 미수금에서 겪은 그 자리입니다. */
+    const mk = (n, when, fee, tot, paid, pAt) =>
+      `insert into request (id, no, side, name, tel, agree_at, state) values
+         ('aaaaaaaa-0000-0000-0000-00000000013${n}','SW-SET-013${n}',
+          'start','ㄱ','0101111000${n}',now(),'done') on conflict (id) do nothing;
+       insert into deal (request_id, provider_id, amount, fee, fee_total,
+                         fee_by, fee_at, paid, paid_at) values
+         ('aaaaaaaa-0000-0000-0000-00000000013${n}','pv-set',10000000,
+          ${fee},${tot},'${AD}',${when},${paid},${pAt})
+       on conflict (request_id) do nothing;`;
+    psql(mk(1, "'2026-10-05'", 300000, 330000, 330000, "'2026-10-07'"));
+    psql(mk(2, "'2026-10-20'", 600000, 660000, "null", "null"));
+    psql(mk(3, "'2026-11-10'", 400000, 440000, 440000, "'2026-11-12'"));
+    psql(mk(4, "'2026-12-03'", 200000, 220000, "null", "null"));
+    /* 확정 전 — fee 가 없으면 **세지 않습니다** */
+    psql(`insert into request (id, no, side, name, tel, agree_at, state) values
+            ('aaaaaaaa-0000-0000-0000-000000000139','SW-SET-0139',
+             'start','ㅁ','01011110009',now(),'done') on conflict (id) do nothing;
+          insert into deal (request_id, provider_id, amount) values
+            ('aaaaaaaa-0000-0000-0000-000000000139','pv-set',99000000)
+          on conflict (request_id) do nothing;`);
+
+    r = denied(as(ST) + `select build_settlement('pv-set','2026-10-01','2026-10-31')`);
+    ok("직원은 정산을 못 만든다",
+       r.no && /관리자만/.test(r.why || ""), r.why);
+    r = denied(as(AD) + `select build_settlement('pv-set','2026-10-31','2026-10-01')`);
+    ok("기간이 거꾸로면 거절한다",
+       r.no && /거꾸로/.test(r.why || ""), r.why);
+    r = denied(as(AD) + `select build_settlement('zz-none','2026-10-01','2026-10-31')`);
+    ok("없는 업체는 거절한다 (정산)", r.no && /없는 업체/.test(r.why || ""), r.why);
+    /* ⚠️ "0원 청구서" 는 청구서가 아닙니다 (절대 규칙 2) */
+    r = denied(as(AD) + `select build_settlement('pv-set','2026-01-01','2026-01-31')`);
+    ok("⚠️ 셀 것이 없으면 0원 정산을 안 만든다",
+       r.no && /확정된 수수료가 없습니다/.test(r.why || ""), r.why);
+
+    const SID = psql(as(AD) +
+      `select build_settlement('pv-set','2026-10-01','2026-10-31','10월 정산')`);
+    ok("확정된 것만 더한다 (330,000 + 660,000)",
+       psql(`select total from settlement where id='${SID}'`) === "990000");
+    ok("⚠️⚠️ 확정 전인 계약금액(9,900만원)을 안 섞는다",
+       Number(psql(`select total from settlement where id='${SID}'`)) < 99000000);
+    ok("들어온 돈이 모자라면 대기다",
+       psql(`select state from settlement where id='${SID}'`) === "wait");
+    ok("집계가 기록에 남는다 (§8)",
+       psql(`select count(*) from audit_log where obj='settlement'
+              and obj_id='${SID}'`) === "1");
+
+    /* 11월은 확정 440,000 · 입금 440,000 이라 **세어 보면** 입금입니다 */
+    const S11 = psql(as(AD) +
+      `select build_settlement('pv-set','2026-11-01','2026-11-30','11월')`);
+    ok("입금이 차면 집계가 입금으로 바뀐다",
+       psql(`select state from settlement where id='${S11}'`) === "paid");
+    ok("입금일이 같이 적힌다",
+       psql(`select count(*) from settlement where id='${S11}'
+              and paid_at is not null`) === "1");
+
+    /* ⚠️⚠️ **관리자도 표를 직접 못 고칩니다** — GRANT 가 읽기만입니다.
+       여기가 열려 있으면 "가짜 정산" 의 길이 하나 생깁니다 (§13). */
+    r = denied(as(AD) + `update settlement set state='paid' where id='${SID}'`);
+    ok("⚠️⚠️ 관리자도 정산을 직접 'paid' 로 못 고친다", r.no, r.why);
+
+    /* 입금이 실제로 들어오면(건별 mark_paid) **다시 세어서** 바뀝니다.
+       ⚠️ `set role authenticated` 없이 become 만 하면 관리자 신분으로
+       상위 권한이라, 돈 칸 트리거를 지나면서 씨앗을 고칠 수 있습니다. */
+    psql(`select become('${AD}'); update deal set paid=660000,
+            paid_at='2026-10-25' where request_id='aaaaaaaa-0000-0000-0000-000000000132'`);
+    psql(as(AD) + `select build_settlement('pv-set','2026-10-01','2026-10-31','다시')`);
+    ok("건별 입금이 차면 10월도 입금이 된다",
+       psql(`select state from settlement where id='${SID}'`) === "paid");
+    ok("같은 기간을 다시 세면 덮는다 (줄이 하나)",
+       psql(`select count(*) from settlement where provider_id='pv-set'
+              and from_date='2026-10-01' and to_date='2026-10-31'`) === "1");
+
+    /* ⚠️ 들어온 돈을 보류로 덮지 않습니다 — 기록을 거짓으로 만듭니다 */
+    r = denied(as(AD) + `select hold_settlement('${SID}',true,'증빙 확인 중')`);
+    ok("⚠️ 입금으로 집계된 정산은 보류로 못 바꾼다",
+       r.no && /이미 입금/.test(r.why || ""), r.why);
+
+    /* 12월 — 입금 0 이라 대기이고, 여기서 보류를 눌러 봅니다 */
+    const S12 = psql(as(AD) +
+      `select build_settlement('pv-set','2026-12-01','2026-12-31','12월')`);
+    r = denied(as(ST) + `select hold_settlement('${S12}',true,'x')`);
+    ok("직원은 보류를 못 한다", r.no && /관리자만/.test(r.why || ""), r.why);
+    r = denied(as(AD) + `select hold_settlement('${S12}',true)`);
+    ok("사유 없는 보류는 거절한다", r.no && /사유/.test(r.why || ""), r.why);
+    psql(as(AD) + `select hold_settlement('${S12}',true,'증빙을 더 받기로 했습니다')`);
+    ok("보류가 된다", psql(`select state from settlement where id='${S12}'`) === "hold");
+    ok("보류가 기록에 남는다 (§8)",
+       psql(`select count(*) from audit_log where obj='settlement'
+              and obj_id='${S12}' and to_state='hold'`) === "1");
+    /* ⚠️⚠️ 사람이 세워 둔 것을 다시 세면서 풀어 버리면 왜 멈췄는지가
+       사라집니다 */
+    psql(as(AD) + `select build_settlement('pv-set','2026-12-01','2026-12-31','다시')`);
+    ok("⚠️⚠️ 다시 세도 보류를 안 풀어 버린다",
+       psql(`select state from settlement where id='${S12}'`) === "hold");
+    psql(as(AD) + `select hold_settlement('${S12}',false,'증빙을 받았습니다')`);
+    ok("보류를 풀면 대기로 돌아온다",
+       psql(`select state from settlement where id='${S12}'`) === "wait");
+
+    /* ⚠️⚠️ **손으로 'paid' 로 가는 문이 없는지**를 글자로도 봅니다 —
+       나중에 "편해서" 그 문을 하나 만드는 날 §13 이 무너집니다. */
+    const sql13 = fs.readFileSync(
+      path.join(ROOT, "db/migrations/0013_provider_contact_settlement.sql"), "utf8");
+    const holdFn = sql13.slice(sql13.indexOf("function hold_settlement"));
+    ok("⚠️⚠️ 보류 문이 'paid' 를 쓰지 않는다",
+       !/case when p_hold then 'hold' else 'paid'/.test(holdFn) &&
+       !/state\s*=\s*'paid'/.test(holdFn));
+
+    /* 업체는 자기 정산만 봅니다 (settle_mine) */
+    ok("고객에게는 정산이 안 보인다",
+       psql(as(A) + "select count(*) from settlement") === "0");
+    ok("업체는 남의 정산을 못 본다 (pv-one 은 0건)",
+       psql(as(PV) + "select count(*) from settlement where provider_id='pv-set'") === "0");
   }
 
   console.log("\n── 되돌리기 파일이 실수로 안 돌아가는가");

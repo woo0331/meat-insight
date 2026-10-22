@@ -937,3 +937,10 @@ body.sl-locked{ overflow:hidden; }
   font-size:var(--t-lg); font-weight:800; color:var(--blue-600);
   text-decoration:none; }
 .rq-tel:hover{ text-decoration:underline; }
+
+/* ── 업체 담당자 적는 칸 (2026-10-22 전수검사 P1 ⑬) ───────────────
+   ⚠️ 직원 · 관리자에게만 보이는 칸입니다. `.rq-bd` 가 이미 위 테두리와
+   여백을 들고 있어서 여기서는 **바탕만** 구분합니다 — 펼친 것이
+   업체 줄 안쪽이라는 것이 보여야 합니다. */
+.rq-con-f{ background:var(--bg-sky); }
+.rq-con-f .f-h{ margin:12px 0 0; }

@@ -294,6 +294,110 @@ const ADM_DEAL = [
     await ctx.close();
   }
 
+  /* ══ ③-3 로그인 전에 넣은 신청 가져오기 (2026-10-22 P1 ⑩) ═══════
+     ⚠️⚠️ 서버 · DB 는 2026-10-08 에 완성됐고 **화면이 0** 이었습니다 —
+     로그인 전에 넣은 신청을 영영 못 보는 상태였습니다. */
+  console.log("\n③-3 고객 — 로그인 전에 넣은 신청 가져오기 (P1 ⑩)");
+  {
+    const { ctx, pg, errs, sent } = await openMy(
+      { auth:true, signedIn:true, role:"customer" },
+      { auth:true, signedIn:true, role:"customer",
+        requests:CUST_RQ, quotes:CUST_Q, state:null });
+    ok("가져오기 칸이 있다", (await n(pg, ".my-claim")) === 1);
+    /* ⚠️ 접힌 채로 섭니다 — 모든 손님의 일이 아니고, 펼치지 않으면
+       신청 목록이 그만큼 위로 올라옵니다 */
+    ok("접힌 채로 선다",
+        (await pg.evaluate(() => !document.querySelector(".my-claim").open)) === true);
+    const sum = await pg.locator(".my-claim > summary");
+    const sb = await sum.boundingBox();
+    ok("여는 단추가 48px 이상이다", sb && sb.height >= 48, sb && sb.height);
+    await sum.click();
+    await pg.waitForTimeout(160);
+    /* ⚠️⚠️ **둘 다** 받습니다 — 번호만으로는 남의 신청이 열립니다 */
+    ok("신청번호와 연락처 둘을 받는다",
+        (await n(pg, "#my-cno")) === 1 && (await n(pg, "#my-ctel")) === 1);
+    ok("번호 칸이 required 다",
+        (await pg.getAttribute("#my-cno", "required")) !== null &&
+        (await pg.getAttribute("#my-ctel", "required")) !== null);
+    /* ⚠️ 폰에서 숫자 자판이 뜨게 */
+    ok("연락처 칸이 tel 이다",
+        (await pg.getAttribute("#my-ctel", "type")) === "tel" &&
+        (await pg.getAttribute("#my-ctel", "autocomplete")) === "tel");
+    const ct = await pg.locator(".my-claim").textContent();
+    ok("둘이 다 맞아야 한다고 적는다", ct.includes("둘이 다 맞아야"), ct.slice(0, 220));
+
+    /* 비워 두고 누르면 **보내지 않습니다** (required 를 지나쳐도) */
+    const before = sent.filter(x => x.indexOf("deal:") === 0).length;
+    await pg.evaluate(() => window.myClaim({ preventDefault(){}, target:
+      document.querySelector(".my-claim form") }));
+    await pg.waitForTimeout(200);
+    ok("비워 두고 부르면 보내지 않는다",
+        sent.filter(x => x.indexOf("deal:") === 0).length === before,
+        sent.filter(x => x.indexOf("deal:") === 0).join(" | "));
+    ok("무엇이 모자란지 그 자리에서 말한다",
+        (await pg.textContent("#my-cn")).indexOf("둘 다") >= 0,
+        await pg.textContent("#my-cn"));
+
+    /* 적고 누르면 `claim_request` 로 갑니다 */
+    await pg.fill("#my-cno", "sw ab12 cd34");
+    await pg.fill("#my-ctel", "010-7777-0000");
+    await pg.locator(".my-claim form button[type=submit]").click();
+    await pg.waitForTimeout(320);
+    const call = sent.filter(x => x.indexOf("deal:claim_request:") === 0)[0];
+    ok("claim_request 로 간다", !!call, sent.join(" | "));
+    /* ⚠️ 번호는 `SW` 머리까지 그대로 보냅니다 — 줄표 · 띄어쓰기 ·
+       소문자는 서버(`reqNoClean()`)와 DB 가 알아봅니다 */
+    ok("적으신 그대로 보낸다 (씻는 일은 서버가 합니다)",
+        !!call && call.indexOf("sw ab12 cd34") > 0 &&
+        call.indexOf("010-7777-0000") > 0, call);
+    ok("가져온 뒤 다시 묻는다",
+        sent.filter(x => x.indexOf("me:") === 0).length >= 2,
+        sent.filter(x => x.indexOf("me:") === 0).join(" | "));
+    ok("JS 에러 0", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
+  /* ⚠️⚠️ **틀린 까닭을 갈라서 말하지 않습니다** — "그런 번호는 없습니다"
+     와 "연락처가 다릅니다" 를 갈라 주면 번호가 있는지를 확인해 가며
+     긁을 수 있습니다. DB 가 한 가지 말로만 거절하고(0005), 화면은
+     **그 말을 그대로** 냅니다 (운영자 글을 섞지 않습니다 · 절대 규칙 3). */
+  console.log("\n③-4 가져오기가 거절당하면");
+  {
+    const ctx = await br.newContext({ viewport:{ width:1440, height:900 } });
+    const pg = await ctx.newPage();
+    const errs = [];
+    pg.on("pageerror", e => errs.push(String(e)));
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json", body: JSON.stringify(
+        { auth:true, signedIn:true, role:"customer" }) }));
+    await pg.route("**/api/me**", r => r.fulfill({ status:200,
+      contentType:"application/json", body: JSON.stringify(
+        { auth:true, signedIn:true, role:"customer", requests:[], quotes:[],
+          state:null }) }));
+    await pg.route("**/api/deal", r => r.fulfill({ status:400,
+      contentType:"application/json", body: JSON.stringify(
+        { error:"신청번호와 연락처가 맞지 않습니다" }) }));
+    await pg.goto(base + "/my", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(420);
+    await pg.locator(".my-claim > summary").click();
+    await pg.fill("#my-cno", "SW-ZZZZ-ZZZZ");
+    await pg.fill("#my-ctel", "010-0000-0000");
+    await pg.locator(".my-claim form button[type=submit]").click();
+    await pg.waitForTimeout(320);
+    const note = await pg.textContent("#my-cn");
+    ok("DB 가 거절한 그 말을 그대로 낸다",
+        note.indexOf("신청번호와 연락처가 맞지 않습니다") >= 0, note);
+    /* ⚠️⚠️ **어느 쪽이 틀렸는지 알려 주지 않습니다** */
+    ok("번호가 있는지 없는지를 갈라 말하지 않는다",
+        note.indexOf("없는 번호") < 0 && note.indexOf("연락처가 다") < 0, note);
+    ok("단추가 다시 눌릴 수 있게 돌아온다",
+        (await pg.getAttribute(".my-claim form button[type=submit]", "disabled")) === null);
+    ok("적으신 것이 날아가지 않는다",
+        (await pg.inputValue("#my-cno")) === "SW-ZZZZ-ZZZZ");
+    ok("JS 에러 0", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
   /* 이미 고른 뒤 — ⚠️ 누를 때마다 거절당하는 단추를 만들지 않습니다 */
   console.log("\n③-2 고객 — 이미 고른 뒤");
   {

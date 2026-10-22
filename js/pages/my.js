@@ -182,8 +182,106 @@ function MyCustBand(d){
       text:"필요한 일을 적어 보내시면 조건에 맞는 업체를 찾아 드립니다.",
       cta:'<a class="btn btn-b" href="'+esc(quoteTo({}))+'">'+
           '서비스 신청하기'+icon("arrow",17)+'</a>'
-    }));
+    }))+
+    MyClaimBand();
 }
+
+/* ── 로그인 전에 넣은 신청을 내 것으로 (2026-10-22 P1 ⑩ · §10) ──
+   접수는 **로그인 없이** 들어오는 것이 맞습니다 — 견적 하나 받으려고
+   가입하게 만들면 거기서 닫힙니다. 그래서 나중에 가입하신 분이
+   **신청번호와 연락처로** 가져갑니다 (`claim_request` · 0005).
+
+   ⚠️⚠️ **서버와 DB 는 2026-10-08 에 완성됐고 화면이 0 이었습니다** —
+   `grep claim_request js/` 가 주석 한 줄만 맞혔습니다. 그래서 로그인
+   전에 넣은 신청을 **영영 못 보는** 상태였습니다 (`amStore()` ·
+   `gu` · `withEquip` · 푸터의 `stages` 와 같은 "만들어 놓고 안 쓰는
+   칸" 입니다).
+
+   ⚠️⚠️ **번호만으로는 안 됩니다.** 번호를 손에 넣은 사람이 남의
+   성함 · 연락처 · 요청 내용을 다 봅니다 — **둘 다** 맞아야 합니다.
+   ⚠️⚠️ **틀린 까닭을 갈라서 말하지 않습니다.** "그런 번호는 없습니다"
+   와 "연락처가 다릅니다" 를 갈라 주면 번호가 있는지를 확인해 가며
+   긁을 수 있습니다 — DB 가 **한 가지 말로만** 거절하고(검사가 둘이
+   같은 말인지 봅니다) 화면은 **그 말을 그대로** 냅니다.
+   ⚠️ 번호는 `SW` 머리까지 그대로 적으시면 되고, 줄표 · 띄어쓰기 ·
+   소문자는 서버가 알아봅니다 (`reqNoClean()` 과 같은 규칙). */
+function MyClaimBand(){
+  return '<details class="my-claim">'+
+    '<summary><b>로그인 전에 넣은 신청이 있으세요?</b></summary>'+
+    '<p class="my-claim-p">접수하실 때 받으신 <b>신청번호</b>와 그때 적어 '+
+      '주신 <b>연락처</b>를 적으시면 이 계정으로 가져옵니다. '+
+      '⚠️ 둘이 다 맞아야 합니다 — 번호만으로는 남의 신청이 열리면 안 되니까요.</p>'+
+    '<form class="my-in" onsubmit="return myClaim(event)">'+
+      '<div class="f-r">'+
+        '<label for="my-cno">신청번호</label>'+
+        '<input id="my-cno" type="text" name="no" required '+
+          'autocomplete="off" inputmode="text" spellcheck="false" '+
+          'placeholder="SW-AB12-CD34">'+
+        '<span class="f-h">줄표와 띄어쓰기는 있어도 없어도 됩니다.</span>'+
+      '</div>'+
+      '<div class="f-r">'+
+        '<label for="my-ctel">연락처</label>'+
+        '<input id="my-ctel" type="tel" name="tel" required '+
+          'autocomplete="tel" inputmode="tel" placeholder="010-0000-0000">'+
+        '<span class="f-h">접수하실 때 적어 주신 번호입니다.</span>'+
+      '</div>'+
+      '<div class="my-in-r">'+
+        '<button class="btn btn-b" type="submit">내 신청으로 가져오기</button>'+
+      '</div>'+
+      '<p class="my-in-n" id="my-cn" role="status"></p>'+
+    '</form>'+
+  '</details>';
+}
+
+window.myClaim = function(ev){
+  if(ev && ev.preventDefault) ev.preventDefault();
+  var no  = document.getElementById("my-cno");
+  var tel = document.getElementById("my-ctel");
+  var note = document.getElementById("my-cn");
+  var btn = ev && ev.target ? ev.target.querySelector("button") : null;
+  if(!no || !tel) return false;
+  /* ⚠️ 화면에서도 비었는지 봅니다 — `required` 는 폼 제출을 막아 주지만
+     이 함수를 직접 부르면 그냥 지나갑니다 (이 저장소의 접수 폼과 같은
+     규칙입니다). */
+  if(!String(no.value).trim() || !String(tel.value).trim()){
+    if(note){ note.textContent = "신청번호와 연락처를 둘 다 적어 주세요";
+              note.className = "my-in-n bad"; }
+    return false;
+  }
+  if(btn){ btn.disabled = true; btn.textContent = "확인하는 중…"; }
+  if(note){ note.textContent = ""; note.className = "my-in-n"; }
+  fetch("/api/deal", {
+    method:"POST",
+    headers: Object.assign({ "content-type":"application/json",
+      accept:"application/json" },
+      (typeof amAuthHeaders === "function") ? amAuthHeaders() : {}),
+    body: JSON.stringify({ fn:"claim_request",
+      args:{ p_no:String(no.value).trim(), p_tel:String(tel.value).trim() } })
+  }).then(function(r){
+    return r.json().then(function(j){ return { ok:r.ok, j:j }; });
+  }).then(function(x){
+    if(btn){ btn.disabled = false; btn.textContent = "내 신청으로 가져오기"; }
+    if(!x.ok){
+      /* ⚠️⚠️ **DB 가 거절한 그 말을 그대로** 냅니다 — 운영자 글을
+         섞지 않습니다 (절대 규칙 3). 그 말은 틀린 까닭을 **가르지
+         않습니다** (번호가 있는지를 긁을 수 없게). */
+      if(note){ note.textContent = (x.j && x.j.error) || "가져오지 못했습니다";
+                note.className = "my-in-n bad"; }
+      return;
+    }
+    if(note){ note.textContent = "가져왔습니다. 아래 목록에 들어왔습니다.";
+              note.className = "my-in-n ok"; }
+    no.value = ""; tel.value = "";
+    /* ⚠️ 바뀐 뒤에는 **다시 묻습니다** (myqCall 과 같은 규칙) */
+    window.myLoadDb();
+  }).catch(function(e){
+    if(btn){ btn.disabled = false; btn.textContent = "내 신청으로 가져오기"; }
+    try{ console.warn("[my] claim_request — " + e); }catch(_){}
+    if(note){ note.textContent = "연결이 끊겼습니다. 잠시 뒤 다시 눌러 주세요";
+              note.className = "my-in-n bad"; }
+  });
+  return false;
+};
 
 /* ── 업체 대시보드 (§9-4) ────────────────────────────────────────
    ⚠️⚠️ **배정된 건만 옵니다.** 거르는 일은 화면이 아니라 DB 의 RLS

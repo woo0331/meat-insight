@@ -231,6 +231,24 @@ module.exports = async function handler(req, res){
       "&role=in.(staff,admin)&order=name.asc&limit=" + STAFF_LIMIT);
     if(st.ok) out.staff = st.rows;
     else console.warn("[me] account(staff) — " + st.why);
+
+    /* 업체 담당자 (2026-10-22 P1 ⑬ · 0013) — 배정하고 **전화할 사람**.
+       ⚠️⚠️ **`provider` 가 아니라 별도 표입니다.** 0001 의 GRANT 가
+       `grant select on provider to authenticated` 로 표째라, 거기에
+       직통 번호를 넣으면 `listed=true` 인 줄을 **로그인한 손님 전부가**
+       읽습니다 (RLS 는 줄은 막아도 칸은 못 막습니다).
+       ⚠️ 고객 연락처처럼 **한 번 더 눌러 받게 하지 않았습니다** —
+       그쪽은 접수하신 분의 개인정보라 열람 이력이 뜻을 가지는데,
+       이것은 업체가 **영업용으로 준 연락처**이고 `/admin` 영업
+       작업대가 이미 같은 성격의 값을 그대로 들고 있습니다. 대신
+       직원 · 관리자 밖으로는 한 글자도 안 나갑니다 (0013 의 RLS 에
+       고객 정책이 **아예 없습니다**).
+       ⚠️ `updated_by` 를 안 가져옵니다 — 화면이 쓰지 않습니다 (최소 수집). */
+    const pc = await dbSelectAs(s.token, "provider_contact",
+      "?select=" + encodeURIComponent("provider_id,name,tel,email,memo,updated_at") +
+      "&order=updated_at.desc&limit=" + PROV_LIMIT);
+    if(pc.ok) out.contacts = pc.rows;
+    else console.warn("[me] provider_contact — " + pc.why);
   }
 
   /* 환수 · 부분환불 — ⚠️⚠️ **`deal` 에는 안 남습니다.** 확정했던 액을
@@ -263,6 +281,23 @@ module.exports = async function handler(req, res){
       "&order=created_at.desc&limit=" + FEE_LIMIT);
     if(f.ok) out.fees = f.rows;
     else console.warn("[me] fee_policy — " + f.why);
+  }
+
+  /* ── 기간별 정산 (§9 · §12 · 0013) ───────────────────────────────
+     ⚠️⚠️ **관리자만**입니다. 업체에게는 `settle_mine` 정책이 자기 것만
+     주지만, 여기서 **묻지 않는 쪽이 한 겹 더 안전합니다** (수수료
+     정책과 같은 선). 직원은 돈을 안 봅니다.
+     ⚠️⚠️ `state` 를 그대로 믿지 마세요 — 입금의 진실은 건별
+     `deal.paid` 이고, 이 줄은 `build_settlement()` 이 **그 시점에
+     세어 둔 사본**입니다 (정책 사본과 같은 까닭). 화면이 "언제 센
+     값인가"(`approved_at`)를 같이 냅니다. */
+  if(s.role === "admin"){
+    const se = await dbSelectAs(s.token, "settlement",
+      "?select=" + encodeURIComponent(
+        "id,provider_id,from_date,to_date,total,state,approved_at,paid_at,created_at") +
+      "&order=from_date.desc&limit=" + FEE_LIMIT);
+    if(se.ok) out.settles = se.rows;
+    else console.warn("[me] settlement — " + se.why);
   }
 
   /* ── 견적 (§4 · §6 · 0008) ───────────────────────────────────────

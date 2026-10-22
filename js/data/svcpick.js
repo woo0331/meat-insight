@@ -36,7 +36,7 @@
                       전문관마다 따로입니다
    상위 카테고리      분류 key 자신
    노출 순서          catalog.js 의 AM_START_CATS 차례 · 대표는 아래
-   활성 상태          AM_PICK_OFF 에 적으면 목록에서 빠집니다 (지금 없음)
+   활성 상태          AM_PICK_OFF 에 적으면 목록에서 빠집니다 (지금 넷)
    견적 신청 가능     분류 전부 — `/quote?c=<분류>` 가 이미 받습니다
    추가 입력 항목     reqforms.js 의 `AM_REQ_FORMS[분류]`
 
@@ -55,8 +55,39 @@ window.AM_PICK_SIDE = { startup:"start", closure:"close" };
 /* 내려놓은 서비스 (§12 활성 상태) — ⚠️ **지우지 말고 여기에 적으세요.**
    지난 신청 기록은 그 분류를 가리키고 있어서, 분류를 지우면 그 기록이
    무엇에 대한 것인지 읽을 수 없게 됩니다 (§12 "서비스가 비활성화되어도
-   과거 신청 기록은 보존한다"). */
-window.AM_PICK_OFF = [];
+   과거 신청 기록은 보존한다").
+
+   ── ⚠️⚠️ 2026-10-22 전수검사 P1-12 — **정보 · 매물 분류 넷** ─────
+   넷을 고르개에서 뺐습니다. 까닭은 하나입니다 — **하위가 업체가 하는
+   일이 아닙니다.**
+
+     item    프랜차이즈 · 개인창업 · 소자본 …   전부 **읽을 거리**
+     store   상가 · 점포 · 권리금 매장 …        **매물**이지 서비스가 아님
+     process 체크리스트 · 절차 · 필요서류 …     전부 **정보**
+     support 정부 폐업지원 · 철거비 지원 …      **기관이 심사하는 일**
+
+   고르개에 두면 손님이 다 적고 보내시는데 **배정할 곳이 없습니다** —
+   그게 "클릭해도 작동하지 않는 버튼" 과 같은 자리입니다 (절대 규칙 5).
+
+   ⚠️⚠️ **길이 사라진 것이 아닙니다.** 넷 다 **진짜 화면**이 따로
+   있고 거기로 가는 길은 그대로입니다 —
+     item → `/c/item` · store → `/stores` · process → `/c/process` ·
+     support → `/support`
+   전문관 카드의 대표 서비스(`halls.js`)는 **링크**라 그대로 걸립니다
+   (`AM_PICK_OFF` 는 고르개만 봅니다). 재서 확인했습니다.
+
+   ⚠️⚠️ **`fund`(자금 · 정부지원)는 일부러 안 뺐습니다.** 2026-10-17
+   창업 준비 지시서 §2-B 가 대표 여섯에 **"창업 자금" 을 이름까지
+   적었고**, 하위도 섞여 있습니다 — 정책자금 · 보증은 기관 일이지만
+   **금융 제휴 · 보험 · 결제**는 제휴사가 붙을 수 있는 자리입니다
+   (지금 0곳인 것과 구조적으로 불가능한 것은 다릅니다). 빼시려면
+   **지시서를 먼저 고치세요.**
+
+   ⚠️ 여기에 적으면 `checkPickGroup()` · `checkPickInd()` ·
+   `checkSvcPick()` 이 **대표 · 추천 · 빠른 선택에 남아 있는 것을
+   빌드에서 막습니다** — 한쪽만 고치면 "대표로는 고르는데 전체
+   목록에는 없는" 꼴이 됩니다. */
+window.AM_PICK_OFF = ["item", "store", "process", "support"];
 
 /* ── 대표 여섯 (§2-B) ─────────────────────────────────────────────
    ⚠️⚠️ **`halls.js` 의 차례를 쓰지 않는 까닭** — 메인이 그 앞 여섯을
@@ -123,13 +154,18 @@ window.AM_PICK_IND = {
     academy:    ["admin", "area", "interior", "staff", "marketing", "it"],
     pet:        ["admin", "interior", "equip", "supply", "marketing", "area"],
     /* 소매는 자리와 공급 · 담배 · 주류 같은 별도 허가가 갈립니다 */
-    retail:     ["area", "store", "admin", "supply", "it", "interior"],
+    /* ⚠️ 2026-10-22 P1-12 — `store`(매물)를 고르개에서 내려서
+       진열 집기(`furniture`)로 바꿨습니다. 자리를 찾는 일은 `area`
+       (상권 · 입지)가 받고, 매물은 `/stores` 가 그대로 받습니다. */
+    retail:     ["area", "furniture", "admin", "supply", "it", "interior"],
     /* 무인은 기계와 결제 · 영상이 사업의 거의 전부입니다 */
     unmanned:   ["equip", "it", "area", "interior", "admin", "clean"],
     /* 숙박은 업종이 갈리고 소방이 따라옵니다 */
     stay:       ["admin", "interior", "equip", "staff", "it", "marketing"],
     /* 사무 · 전문서비스는 설비보다 계약과 사람입니다 */
-    office:     ["store", "area", "interior", "furniture", "it", "admin"],
+    /* ⚠️ 2026-10-22 P1-12 — 위와 같은 까닭. 사무 · 전문서비스는
+       허가보다 **계약과 고객**이라 마케팅을 앞에 둡니다. */
+    office:     ["area", "interior", "furniture", "it", "admin", "marketing"],
     /* 온라인은 점포 · 상권이 아예 없습니다 (그 업종 목록에도 없습니다) */
     online:     ["it", "admin", "marketing", "supply", "interior", "fund"]
   }

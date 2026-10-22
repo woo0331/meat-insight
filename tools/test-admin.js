@@ -1172,6 +1172,160 @@ function ok(name, cond, extra) {
     await ctx.close();
   }
 
+  /* ══ 2026-10-22 전수검사 P1 ⑬⑭ — 업체 담당자 · 기간별 정산 ════
+     ⚠️⚠️ 담당자는 `provider` 가 아니라 **별도 표**입니다. 0001 의
+     `grant select on provider to authenticated` 가 표째라, 거기 직통
+     번호를 넣으면 로그인한 손님 전부가 읽습니다 — 서버 쪽은
+     `tools/test-sql.js` 가 실제 Postgres 로 눌러 보고, 여기서 보는
+     것은 **화면이 무엇을 보내는가**입니다.
+     ⚠️⚠️ 정산에 **'입금' 단추가 없어야** 합니다 — 입금은 건별
+     `mark_paid()` 가 진실이고, 여기 단추를 두면 §13 이 금지한
+     "가짜 정산" 의 길이 하나 더 생깁니다. */
+  console.log("\nP1 ⑬⑭ — 업체 담당자 · 기간별 정산");
+  {
+    const { pg, ctx, errs } = await fresh(1440, 1600);
+    let sent = null;
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"admin",
+        name:"관리자", provider:null,
+        conf:{ url:"https://proj.supabase.co", anonKey:"ANON-TEST" } }) }));
+    await pg.route("**/api/me**", r => r.fulfill({ status:200,
+      contentType:"application/json", body: JSON.stringify({
+        auth:true, signedIn:true, role:"admin", requests:[], deals:[],
+        providers:[
+          { id:"pv-one", name:"가나다 인테리어", regions:["gyeonggi"],
+            gu:["안양시"], industries:["cafe"], subs:["interior"],
+            listed:true, assignable:true },
+          { id:"pv-two", name:"라마바 철거", regions:["seoul"], gu:[],
+            industries:["restaurant"], subs:["demolish"],
+            listed:true, assignable:true }
+        ],
+        /* pv-one 만 담당자가 있습니다 — 세는 값이 맞는지 봅니다 */
+        contacts:[
+          { provider_id:"pv-one", name:"김과장", tel:"010-1111-2222",
+            email:"a@b.com", memo:"오전에만 통화 가능",
+            updated_at:"2026-10-20T02:00:00+00:00" }
+        ],
+        settles:[
+          { id:"s1", provider_id:"pv-one", from_date:"2026-10-01",
+            to_date:"2026-10-31", total:990000, state:"wait",
+            approved_at:"2026-10-22T02:00:00+00:00", paid_at:null,
+            created_at:"2026-10-22T02:00:00+00:00" },
+          { id:"s2", provider_id:"pv-two", from_date:"2026-09-01",
+            to_date:"2026-09-30", total:66000, state:"paid",
+            approved_at:"2026-10-01T02:00:00+00:00",
+            paid_at:"2026-10-01T02:00:00+00:00",
+            created_at:"2026-10-01T02:00:00+00:00" }
+        ],
+        fees:[], audits:[], quotes:[] }) }));
+    await pg.route("**/api/deal", r => {
+      sent = JSON.parse(r.request().postData() || "{}");
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ ok:true }) });
+    });
+
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForSelector("#rq .rq-s-pv", { timeout:8000 });
+
+    /* ── ⑬ 담당자 ────────────────────────────────────────────── */
+    const pvTx = await pg.locator("#rq .rq-s-pv").textContent();
+    ok("담당자가 없는 곳이 몇인지 센다", /1곳<?.*담당자/.test(pvTx) ||
+       pvTx.includes("1곳은 담당자"), pvTx.slice(0, 220));
+    ok("담당자가 있는 곳은 '보기' 로 낸다",
+       (await pg.locator("#rq .rq-s-pv button:has-text(\"담당자 보기\")").count()) === 1);
+    ok("없는 곳은 '적기' 로 낸다",
+       (await pg.locator("#rq .rq-s-pv button:has-text(\"담당자 적기\")").count()) === 1);
+    /* ⚠️ 펼치기 전에는 **직통 번호가 화면에 없습니다** — 스물을
+       펼쳐 두면 번호가 한 화면에 깔립니다 */
+    ok("⚠️ 펼치기 전에는 직통 번호가 안 보인다",
+       !pvTx.includes("010-1111-2222"), pvTx.slice(0, 200));
+
+    await pg.locator("#rq .rq-s-pv button:has-text(\"담당자 보기\")").click();
+    await pg.waitForSelector("#rq .rq-con-f", { timeout:5000 });
+    ok("한 번에 한 업체만 펼친다",
+       (await pg.locator("#rq .rq-con-f").count()) === 1);
+    ok("펼치면 적어 둔 값이 칸에 채워진다",
+       (await pg.inputValue("#rq-pc-n")) === "김과장" &&
+       (await pg.inputValue("#rq-pc-t")) === "010-1111-2222");
+    const conTx = await pg.locator("#rq .rq-con-f").textContent();
+    ok("손님에게 안 나간다고 적는다", conTx.includes("직원 · 관리자에게만"));
+    ok("기록에 이름 · 번호가 안 간다고 적는다",
+       conTx.includes("기록에 안 적습니다"), conTx.slice(0, 220));
+    /* ⚠️ 전화 링크는 **숫자만** · 누름 44px 이상 */
+    const tel = await pg.locator("#rq .rq-con-f a.rq-tel").first();
+    ok("전화 링크가 숫자만 담는다",
+       (await tel.getAttribute("href")) === "tel:01011112222");
+    const tb = await tel.boundingBox();
+    ok("전화 링크가 44px 이상이다", tb && tb.height >= 44, tb && tb.height);
+
+    sent = null;
+    await pg.fill("#rq-pc-n", "박부장");
+    await pg.locator("#rq .rq-con-f button:has-text(\"담당자 저장\")").click();
+    await pg.waitForTimeout(260);
+    ok("저장이 save_provider_contact 로 간다",
+       sent && sent.fn === "save_provider_contact", sent && sent.fn);
+    ok("어느 업체인지 같이 보낸다",
+       sent && sent.args && sent.args.p_provider === "pv-one");
+    ok("고친 이름이 실린다",
+       sent && sent.args && sent.args.p_data && sent.args.p_data.name === "박부장",
+       sent && JSON.stringify(sent.args && sent.args.p_data));
+
+    /* ── ⑭ 기간별 정산 ──────────────────────────────────────── */
+    ok("정산 구간이 있다", (await pg.locator("#rq .rq-s-set").count()) === 1);
+    ok("정산 줄이 둘이다",
+       (await pg.locator("#rq .rq-s-set .rq-r").count()) === 2);
+    const stTx = await pg.locator("#rq .rq-s-set").textContent();
+    ok("입금 대기를 센다", stTx.includes("입금 대기"), stTx.slice(0, 200));
+    ok("확정된 것만 센다고 적는다", stTx.includes("확정된 것만"));
+    ok("입금을 손으로 두지 않는다고 적는다",
+       stTx.includes("손으로 두지 않습니다"), stTx.slice(0, 300));
+    ok("청구액을 세 자리로 낸다", stTx.includes("990,000원"), stTx.slice(0, 260));
+    ok("언제 센 값인지 같이 낸다", stTx.includes("집계 2026-10-22"), stTx.slice(0, 260));
+    /* ⚠️⚠️ **'입금' 으로 만드는 단추가 없어야 합니다** (§13) */
+    ok("⚠️⚠️ 입금으로 만드는 단추가 없다",
+       (await pg.locator("#rq .rq-s-set button:has-text(\"입금\")").count()) === 0);
+    /* ⚠️ 입금으로 집계된 줄에는 **보류 단추를 안 냅니다** — DB 가
+       거절하는 길이라 내면 누를 때마다 실패하는 단추입니다 (§30-7) */
+    ok("⚠️ 입금된 줄에는 보류 단추가 없다",
+       (await pg.locator("#rq .rq-s-set button:has-text(\"보류\")").count()) === 1);
+
+    sent = null;
+    pg.once("dialog", d => d.accept("증빙을 더 받기로 했습니다"));
+    await pg.locator("#rq .rq-s-set button:has-text(\"보류\")").click();
+    await pg.waitForTimeout(260);
+    ok("보류가 hold_settlement 로 간다",
+       sent && sent.fn === "hold_settlement", sent && sent.fn);
+    ok("사유가 같이 간다",
+       sent && sent.args && sent.args.p_hold === true &&
+       sent.args.p_why === "증빙을 더 받기로 했습니다",
+       sent && JSON.stringify(sent.args));
+
+    /* 집계하기 — ⚠️ 화면이 먼저 보고 거절합니다 (왕복 한 번을 아낍니다) */
+    await pg.locator("#rq .rq-s-set .rq-new > summary").click();
+    await pg.fill("#rq-st-f", "2026-11-30");
+    await pg.fill("#rq-st-t", "2026-11-01");
+    sent = null;
+    await pg.locator("#rq .rq-s-set button:has-text(\"집계하기\")").click();
+    await pg.waitForTimeout(260);
+    ok("기간이 거꾸로면 보내지 않는다", sent === null, sent && sent.fn);
+    await pg.fill("#rq-st-f", "2026-11-01");
+    await pg.fill("#rq-st-t", "2026-11-30");
+    await pg.locator("#rq .rq-s-set button:has-text(\"집계하기\")").click();
+    await pg.waitForTimeout(260);
+    ok("집계가 build_settlement 로 간다",
+       sent && sent.fn === "build_settlement", sent && sent.fn);
+    ok("업체와 기간이 같이 간다",
+       sent && sent.args && sent.args.p_provider === "pv-one" &&
+       sent.args.p_from === "2026-11-01" && sent.args.p_to === "2026-11-30",
+       sent && JSON.stringify(sent.args));
+
+    ok("가로 스크롤 없음",
+       (await pg.evaluate(() => document.documentElement.scrollWidth)) <= 1440 + 1);
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
   /* ══ 직원 계정 — ⚠️⚠️ 등록과 승인은 **다른 문**입니다 (§7) ══════
      한 사람이 등록하고 자기가 공개하면 교차 확인이 없습니다 (계약을
      따는 사람과 수수료를 확정하는 사람을 가른 것과 같은 까닭).
@@ -1206,8 +1360,20 @@ function ok(name, cond, extra) {
     /* ⚠️ 업체 구간은 **보입니다** — 배정에 쓰는 목록이니까요 */
     ok("업체 구간은 보인다", (await pg.locator("#rq .rq-s-pv .rq-r").count()) === 1);
     const pv = await pg.locator("#rq .rq-s-pv").textContent();
+    /* ⚠️⚠️ **단추를 통째로 세지 마세요.** 2026-10-22 P1 ⑬ 으로 담당자
+       적는 단추가 늘었고 그건 **직원도 할 수 있는 일**입니다 (0013 의
+       `save_provider_contact` 가 staff · admin) — 통째로 세면 멀쩡한
+       단추가 늘 때마다 걸립니다. 보는 것은 **공개 · 배정 가능**
+       단추가 없는가입니다. */
     ok("직원에게는 공개 단추를 안 낸다",
-       (await pg.locator("#rq .rq-s-pv button").count()) === 0, pv.slice(0, 200));
+       (await pg.locator("#rq .rq-s-pv button:has-text(\"공개하기\")").count()) === 0 &&
+       (await pg.locator("#rq .rq-s-pv button:has-text(\"내리기\")").count()) === 0 &&
+       (await pg.locator("#rq .rq-s-pv button:has-text(\"배정\")").count()) === 0,
+       pv.slice(0, 200));
+    /* ⚠️ 담당자는 직원도 적을 수 있어야 합니다 — 배정하고 전화하는
+       사람이 직원입니다 (P1 ⑬) */
+    ok("직원은 담당자를 적을 수 있다",
+       (await pg.locator("#rq .rq-s-pv button:has-text(\"담당자\")").count()) === 1);
     ok("공개는 관리자만이라고 적혀 있다",
        pv.includes("관리자만"), pv.slice(0, 200));
 

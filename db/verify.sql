@@ -8,7 +8,7 @@
 --     몇 번 돌려도 안전하고, 운영 중에 돌려도 됩니다.
 --
 --  ⚠️⚠️ 기대값은 전부 **저장소에서 센 값**입니다 (눈대중이 아닙니다) —
---     판 8 · 표 12 · 상태 13 · 역할 4 · 길 70 · 함수 19 · 트리거 3.
+--     판 13 · 표 16 · 상태 13 · 역할 4 · 길 70 · 함수 34 · 트리거 3.
 --     저장소를 고치면 이 파일도 같이 고치세요.
 --
 --  ⚠️⚠️ `tools/test-sql.js` 는 **가짜 auth 스키마**로 돌립니다
@@ -18,7 +18,7 @@
 -- ════════════════════════════════════════════════════════════════════
 
 with
-/* ① 판 번호 — 열두 줄이어야 합니다 (0001~0012) */
+/* ① 판 번호 — 열세 줄이어야 합니다 (0001~0013) */
 v_ver as (
   select count(*)::int n from schema_version
 ),
@@ -35,7 +35,15 @@ v_tab as (
      and table_name in ('account','assignment','audit_log','deal','deal_move',
                         'fee_policy','offer','provider','quote','request',
                         'request_item','request_photo','schema_version',
-                        'settlement','user_state')
+                        'settlement','user_state',
+                        'provider_contact')
+   /* ⚠️ 0013 의 provider_contact 를 provider 에 안 넣은 까닭 —
+      0001 의 grant select on provider to authenticated 가 표째라,
+      거기 직통 번호를 넣으면 로그인한 손님 전부가 읽습니다.
+      ⚠️⚠️ 이 목록의 괄호 안에는 **소괄호를 쓰지 마세요** —
+      checkMigDocs 가 in 다음 괄호를 글자로 잘라 세기 때문에
+      주석의 소괄호에서 멈추고 **멀쩡한 목록을 15개로** 셉니다.
+      2026-10-22 에 그렇게 걸렸습니다. */
 ),
 /* ③ ⚠️⚠️ RLS 가 안 켜진 표 — 0 이어야 합니다.
       안 켜진 표는 누구나 남의 신청과 계약금액을 읽습니다. */
@@ -93,7 +101,10 @@ v_fn as (
                  ('claim_photo_slot'),('drop_photo'),
                  /* 0012 — 담당자 · 연락처 열람 이력 (2026-10-22 P0 ③⑤) */
                  ('set_owner'),('note_request_open'),
-                 ('assignment_assignable')) w(f)
+                 ('assignment_assignable'),
+                 /* 0013 — 업체 담당자 · 기간별 정산 (2026-10-22 P1 ⑬⑭) */
+                 ('save_provider_contact'),('build_settlement'),
+                 ('hold_settlement')) w(f)
 ),
 /* ⑧ ⚠️⚠️ 가입 트리거가 **auth.users 에** 걸렸는가 (진짜 Supabase 전용).
       이게 없으면 가입해도 account 줄이 안 생겨서, 로그인은 되는데
@@ -140,15 +151,15 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (0001~0012)'            t, v_ver.n::text   got, '12' want from v_ver
-  union all select  2, '표 (public)',              v_tab.n::text,  '15' from v_tab
+  select 1 i, '판 번호 (0001~0013)'            t, v_ver.n::text   got, '13' want from v_ver
+  union all select  2, '표 (public)',              v_tab.n::text,  '16' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||
                        case when v_st.has_hold then 'O' else 'X' end || ')',
                        v_st.n::text, '13' from v_st
   union all select  5, '역할',                     v_role.n::text, '4'  from v_role
   union all select  6, '갈 수 있는 길 (deal_move)', v_move.n::text, '70' from v_move
-  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '31' from v_fn
+  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '34' from v_fn
   union all select  8, '⚠️ 가입 트리거 (auth.users)', v_trg.n::text, '1' from v_trg
   union all select  9, '⚠️ auth.uid()',            v_uid.n::text,  '1'  from v_uid
   union all select 10, '⚠️ 돈 칸 쓰기 권한: ' || v_money.who, v_money.n::text, '0' from v_money

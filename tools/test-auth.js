@@ -509,6 +509,15 @@ console.log("\n── /api/deal — 상태가 바뀌면 운영자에게 한 줄 
                  .replace(/\/\*[\s\S]*?\*\//g, " ");
   ok("연락처 열람은 알림을 안 보낸다 (FN_SAY 에 없다)",
      !/note_request_open\s*:/.test(say), say);
+  /* ⚠️⚠️ 2026-10-22 P1 ⑬ — **담당자 저장도 알림을 안 보냅니다.**
+     "어느 업체의 담당자가 바뀌었다" 가 운영자 채널에 쌓이면 그
+     채널의 수탁 범위가 또 늘어납니다 (제26조). 작업대와 audit_log 에
+     그대로 있습니다. */
+  ok("업체 담당자 저장은 알림을 안 보낸다 (FN_SAY 에 없다)",
+     !/save_provider_contact\s*:/.test(say), say);
+  /* ⚠️ 정산은 **돈 쪽**이라 보냅니다 — 다만 "가서 보세요" 까지입니다 */
+  ok("정산 집계 · 보류는 알림을 보낸다",
+     /build_settlement\s*:/.test(say) && /hold_settlement\s*:/.test(say), say);
   ok("담당자 바뀜은 알림을 보낸다 (FN_SAY 에 있다)",
      /set_owner\s*:/.test(say), say);
   /* ⚠️ 담당자 계정 id 는 알림에 안 싣습니다 — "가서 보세요" 까지입니다 */
@@ -665,6 +674,29 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
        !/\bname\b|\btel\b|\bemail\b/.test(dq), dq);
   }
 
+  /* ══ 2026-10-22 P1 ⑬⑭ — 업체 담당자 · 기간별 정산 (0013) ════════
+     ⚠️⚠️ 담당자는 **별도 표**(`provider_contact`)입니다. `provider` 에
+     넣으면 0001 의 `grant select on provider to authenticated` 가
+     표째라, `listed=true` 인 줄을 **로그인한 손님 전부가** 읽습니다 —
+     RLS 는 줄은 막아도 칸은 못 막습니다. */
+  ok("관리자에게는 업체 담당자를 준다",
+     calls.some(c => /provider_contact/.test(c.url)), calls.map(c => c.url));
+  ok("관리자에게는 기간별 정산을 준다",
+     calls.some(c => /\/rest\/v1\/settlement/.test(c.url)), calls.map(c => c.url));
+  {
+    const pc = calls.filter(c => /provider_contact/.test(c.url))[0];
+    /* ⚠️ `select=*` 로 두면 칸이 하나 늘 때마다 조용히 같이 나갑니다 */
+    ok("담당자 질의가 select=* 가 아니다",
+       !!pc && !/select=\*/.test(decodeURIComponent(pc.url)), pc && pc.url);
+    /* ⚠️ 화면이 안 쓰는 칸은 안 가져옵니다 (최소 수집) */
+    ok("담당자 질의가 updated_by 를 안 가져온다",
+       !!pc && !/updated_by/.test(decodeURIComponent(pc.url)),
+       pc && decodeURIComponent(pc.url));
+    const st = calls.filter(c => /\/rest\/v1\/settlement/.test(c.url))[0];
+    ok("정산 질의가 select=* 가 아니다",
+       !!st && !/select=\*/.test(decodeURIComponent(st.url)), st && st.url);
+  }
+
   /* 직원 · 업체 · 고객에게는 **묻지도 않습니다** */
   for(const [who, acct] of [
     ["직원",  { role:"staff",    provider_id:null,   name:"직원" }],
@@ -674,12 +706,27 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
     r = res();
     mock([USER, [/\/rest\/v1\/account/, function(){ return body(200, [acct]); }],
           [/\/rest\/v1\/request/,  function(){ return body(200, []); }],
+          [/provider_contact/,       function(){ return body(200, []); }],
           [/\/rest\/v1\/provider\b/, function(){ return body(200, []); }],
           [/\/rest\/v1\/deal/,     function(){ return body(200, []); }],
+          [/\/rest\/v1\/settlement/, function(){ return body(200, []); }],
           [/fee_policy/,             function(){ return body(200, []); }]]);
     await Hme(req({ headers:{ authorization:"Bearer " + TOK } }), r);
     ok(who + "에게는 수수료 정책을 묻지 않는다",
        calls.every(c => !/fee_policy/.test(c.url)), calls.map(c => c.url));
+    /* ⚠️⚠️ **정산은 관리자만**입니다 — 업체에게는 `settle_mine` 정책이
+       자기 것만 주지만, **묻지 않는 쪽이 한 겹 더 안전합니다**
+       (수수료 정책과 같은 선). */
+    ok(who + "에게는 기간별 정산을 묻지 않는다",
+       calls.every(c => !/\/rest\/v1\/settlement/.test(c.url)), calls.map(c => c.url));
+    /* ⚠️ 담당자는 **직원에게는 줍니다** — 배정하고 전화하는 사람이
+       직원입니다. 업체 · 고객에게는 묻지 않습니다. */
+    if(who === "직원")
+      ok("직원에게는 업체 담당자를 준다 (배정하고 전화합니다)",
+         calls.some(c => /provider_contact/.test(c.url)), calls.map(c => c.url));
+    else
+      ok(who + "에게는 업체 담당자를 묻지 않는다",
+         calls.every(c => !/provider_contact/.test(c.url)), calls.map(c => c.url));
   }
 
   /* ── 신청 한 건의 이력 (§6 "신청 및 변경 이력") ──────────────────

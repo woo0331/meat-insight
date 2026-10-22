@@ -74,7 +74,11 @@ window.AM_OPS_CHECK = [
   { key:"safety", name:"소방 · 전기 안전 점검",
     lead:"소화기 압력 · 비상구 · 분전반 상태를 보셨나요. 업종과 면적에 "+
          "따라 해야 하는 점검이 따로 있습니다.",
-    cat:"repair/elec-fix", read:"jeongi-baegwan-nusu" },
+    /* ⚠️⚠️ 2026-10-22 전수검사 P1-16 — 전에는 `repair/elec-fix`
+       (전기 · 배관 · 설비)를 가리켰습니다. 그건 **고장을 고치는 일**
+       이고 이 항목은 **법으로 하게 되어 있는 점검**입니다 — 맡길 곳이
+       다릅니다 (P0-8 의 운영 과제 오분류 넷과 같은 자리). */
+    cat:"repair/legal-check", read:"jeongi-baegwan-nusu" },
 
   { key:"review", name:"리뷰 · 평판 확인",
     lead:"지도와 배달앱에 달린 글을 보고 계신가요. 답을 안 달면 "+

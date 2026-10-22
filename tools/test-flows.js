@@ -143,8 +143,15 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.bent-c.ent-transfer a[href="/transfer"]');
  say((await url())==="/transfer","양도양수 배너 → 전문관",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bban-c:nth-child(1) > a');
- say((await url()).startsWith("/providers/"),"배너 → 분야 화면",await url());
+ /* ⚠️⚠️ **2026-10-22 — 서비스 배너 둘이 메인에서 내려왔습니다**
+    (사장님 시안). 그 길은 ③ 직접 서비스 찾기 여덟이 그대로 받습니다 —
+    함수는 안 지웠으니 되살리시면 여기에 .bban-c 를 다시 넣으세요. */
+ await click('.bdir-c:nth-child(1)');
+ say((await url()).startsWith("/providers/"),"직접 찾기 → 분야 화면",await url());
+ /* ⚠️ 히어로의 무료 견적 신청 — 메인에서 신청으로 가는 첫 길입니다 */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.bhero-go a[href^="/quote"]');
+ say((await url()).startsWith("/quote"),"히어로 → 견적 신청",await url());
  /* ⚠️ 업체찾기로 가는 길도 헤더에 있어야 합니다 (메뉴에서 빠지면
     160개 화면에서 길이 끊깁니다) */
  await pg.goto(B+"/",{waitUntil:"networkidle"});

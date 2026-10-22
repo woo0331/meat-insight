@@ -188,11 +188,11 @@ window.AM_GNB = [
 /* 폰 아래 네비 — 다섯 칸을 넘기지 마세요. 손가락이 닿는 폭이 줄고
    무엇이 중요한지가 안 보입니다. */
 var MNAV = [
-  { to:"/",          name:"홈",     icon:"home" },
-  { to:"/startup",   name:"창업",   icon:"seed" },
-  { to:"/closure",   name:"폐업",   icon:"box" },
-  { to:"/providers", name:"업체찾기", icon:"search" },
-  { to:"/my",        name:"MY",     icon:"user" }
+  { to:"/",          name:"홈",       icon:"home" },
+  { to:"/providers", name:"서비스",    icon:"grid" },
+  { to:"/tools",     name:"계산도구",  icon:"calc" },
+  { to:"/content",   name:"가이드",    icon:"book" },
+  { to:"/my",        name:"마이",      icon:"user" }
 ];
 
 function brandName(){ return (window.AM_BRAND || {}).name || ""; }
@@ -435,11 +435,10 @@ function MobileNav(){
    그때 제일 가까운 칸을 켜 둡니다. 아무것도 안 켜져 있으면 손님은
    자기가 어디 있는지 모릅니다. */
 var MNAV_NEAR = [
-  [/^\/(startup|franchise|support)/, "/startup"],
-  [/^\/closure/,                     "/closure"],
-  [/^\/(providers|p|c|quote|join)/,  "/providers"],
-  [/^\/(stores|assets)/,             "/providers"],
-  [/^\/(my|search|content)/,         "/my"]
+  [/^\/tools/,                                   "/tools"],
+  [/^\/(content|faq|about|support)/,             "/content"],
+  [/^\/(my|search|compare)/,                     "/my"],
+  [/^\/(providers|p\/|c\/|g\/|quote|join|franchise|sell|stores|assets|s\/|a\/|startup|operation|transfer|closure)/, "/providers"]
 ];
 function paintMnav(){
   var n = $("mnav"); if(!n) return;

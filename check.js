@@ -1046,8 +1046,24 @@ const AUDIT = `(() => {
       () => !!document.querySelector('.mnav a.on[data-to="/providers"]')],
     ["/",          "아래 네비 홈",
       () => !!document.querySelector('.mnav a.on[data-to="/"]')],
-    ["/closure/gym", "아래 네비 폐업",
-      () => !!document.querySelector('.mnav a.on[data-to="/closure"]')],
+    /* ⚠️⚠️ **2026-10-22 — 아래 네비 다섯이 바뀌었습니다** (사장님
+       시안): 홈 · 서비스 · 계산도구 · 가이드 · 마이. 전에는 창업 ·
+       폐업 칸이 있어 /closure/gym 이 "폐업" 으로 켜졌는데, 지금은
+       전문관 넷이 **서비스**(/providers)로 켜집니다 — 그 넷은
+       서비스를 고르는 화면이라 거짓이 아닙니다.
+       ⚠️ 여기서 지키는 것은 "칸 이름" 이 아니라 **속화면에서도
+       아무것도 안 켜지지 않는 것**입니다 (코드 주석이 적어 둔 그대로 —
+       아무것도 안 켜져 있으면 손님은 자기가 어디 있는지 모릅니다).
+       전에는 /operation · /transfer · /tools · /faq · /sell ·
+       /about **여섯이 안 켜지고** 있었습니다. */
+    ["/closure/gym", "아래 네비 서비스",
+      () => !!document.querySelector('.mnav a.on[data-to="/providers"]')],
+    ["/operation",   "아래 네비가 안 비어 있음",
+      () => !!document.querySelector('.mnav a.on')],
+    ["/tools/cost",  "아래 네비 계산도구",
+      () => !!document.querySelector('.mnav a.on[data-to="/tools"]')],
+    ["/faq",         "아래 네비 가이드",
+      () => !!document.querySelector('.mnav a.on[data-to="/content"]')],
     /* 주소에 실린 조건이 화면에 그대로 반영되는가 — 끊기면 손님은
        같은 것을 두 번 적게 되고 거기서 닫습니다. */
     ["/quote?c=interior&s=duct&i=cafe&r=gyeonggi&side=start",
@@ -1936,44 +1952,47 @@ const AUDIT = `(() => {
      ⚠️ 이건 "보기 좋은가" 를 재는 검사가 아닙니다. 나중에 여기에
      큰 배너 · 설명 · 검색창을 하나씩 더하다 보면 카드가 첫 화면
      아래로 밀려나는데, 그걸 막는 것이 목적입니다. */
-  await f("메인은 헤더 바로 아래가 진입 카드 셋이다", "/", `
-    /* ⚠️⚠️ **2026-10-17 §4 가 히어로를 메인에서 빼라고 적었습니다** —
-       "기존의 큰 브랜드 히어로 배너는 삭제한다 · 메인페이지에 접속하면
-       헤더 바로 아래에 3개 전문관 카드가 나타나야 한다."
-       ⚠️ HomeHero 함수와 .bhero CSS 는 **지우지 않았습니다** —
-       되살리시면 그날 이 검사를 되돌리면 됩니다.
+  await f("메인은 히어로 다음이 진입 카드 넷이고 번호가 01~04 다", "/", `
+    /* ⚠️⚠️ **2026-10-22 사장님 시안으로 히어로가 돌아왔습니다.**
+       2026-10-17 §4 가 "기존의 큰 브랜드 히어로 배너는 삭제한다" 고
+       적어 한 번 뺐던 자리입니다 — 되살리시면 그날 이 검사를 뒤집으면
+       된다고 적어 두었고, 그날이 왔습니다.
 
        여기서 지키는 것은 다섯입니다 —
-         ① 히어로가 메인에 **없을** 것 (§4)
-         ② 첫 구간이 진입 카드 셋일 것
-         ③ 화면의 h1 이 **하나**이고 그것이 그 구간에 있을 것
-         ④ 머리말이 짧을 것 (다시 히어로가 되면 §4 를 어깁니다)
-         ⑤ 사진이 있으면 실제로 그려질 것 */
+         (1) 첫 구간이 히어로일 것
+         (2) 둘째가 진입 카드 넷일 것
+         (3) 화면의 h1 이 **하나**이고 그것이 히어로에 있을 것
+         (4) **번호가 01~04 로 이어질 것**
+         (5) 사진이 있으면 실제로 그려질 것
+
+       ⚠️⚠️ (4) 는 사장님이 실제로 걸린 자리입니다. 양도양수를 큰 카드
+       셋 아래 가로 배너로 내렸더니 번호가 01·02·03 에서 끝나 **04 가
+       빠진 것처럼** 읽혔습니다 — 이 저장소가 "다른 걸음으로 내리면
+       이건 내 일이 아니구나로 읽힌다" 고 적어 둔 그 자리입니다. */
     const v = document.getElementById("view");
-    if(v.querySelector(".bhero")) return "브랜드 히어로가 메인에 다시 생겼습니다 (§4)";
     const secs = [].slice.call(v.querySelectorAll("#view > section"));
     if(!secs.length) return "메인에 구간이 없습니다";
-    if(!secs[0].classList.contains("bent"))
-      return "첫 구간이 진입 카드 셋이 아닙니다 — " +
+    if(!secs[0].classList.contains("bhero"))
+      return "첫 구간이 히어로가 아닙니다 — " +
              (secs[0].className || "").split(" ")[0];
+    if(!secs[1] || !secs[1].classList.contains("bent"))
+      return "둘째 구간이 진입 카드가 아닙니다 — " +
+             ((secs[1] || {}).className || "").split(" ")[0];
 
     const h1s = document.querySelectorAll("#view h1");
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
-    if(!h1s[0].closest(".bent")) return "h1 이 진입 카드 구간에 없습니다";
+    if(!h1s[0].closest(".bhero")) return "h1 이 히어로에 없습니다";
 
-    /* ④ 머리말이 짧은가 — 카드가 첫 화면에 들어와야 합니다 (§4).
-       ⚠️ 넓은 화면에서만 봅니다 (좁아지면 글이 줄을 더 씁니다). */
-    if(innerWidth > 1200){
-      const hd = secs[0].querySelector(".sec-hd");
-      if(!hd) return "진입 카드 구간에 머리말이 없습니다";
-      const hh = hd.getBoundingClientRect().height;
-      if(hh > 260) return "머리말이 " + Math.round(hh) + "px 입니다 — 히어로가 됐습니다 (§4)";
-      const top = secs[0].querySelector(".bent-c").getBoundingClientRect().top;
-      if(top > innerHeight)
-        return "진입 카드가 첫 화면 밖(" + Math.round(top) + "px)에 있습니다 (§4)";
-    }
+    /* (4) 번호가 빠짐없이 이어지는가 — 넷이 같은 무게로 섭니다 */
+    const nos = [].slice.call(v.querySelectorAll(".bent-no"))
+      .map(function(e){ return (e.textContent || "").trim(); });
+    const want = (window.HOME_ENTER || []).map(function(x){ return x.no; });
+    if(!want.length) return "HOME_ENTER 를 못 읽습니다";
+    if(nos.join(",") !== want.join(","))
+      return "진입 카드 번호가 [" + nos.join(" ") + "] 입니다 — [" +
+             want.join(" ") + "] 라야 차례가 안 끊깁니다";
 
-    /* ⑤ 사진 셋 — 자리가 채워져 있으면 실제로 그려져야 합니다 */
+    /* (5) 사진 — 자리가 채워져 있으면 실제로 그려져야 합니다 */
     const EN = (window.HOME_ENTER || []);
     for(const x of EN){
       if(window.hasPhoto && hasPhoto(x.ph) &&
@@ -3521,11 +3540,11 @@ const AUDIT = `(() => {
        견적 안내 카드가 들어왔습니다.** .bhero-go 는 함수를 안 지웠으니
        되살리실 수 있습니다 — 그날 여기에 다시 넣으세요. */
     const need = [[".bent-g",   "창업 · 운영 · 폐업 진입 카드"],
-                  [".bdir-g",   "직접 서비스 찾기 여섯"],
+                  [".bdir-g",   "직접 서비스 찾기 여덟"],
+                  [".bhero-go", "히어로의 무료 견적 신청"],
                   [".bwhy-g",   "선택받는 이유 넷"],
                   [".bqc",      "견적 신청 안내 카드"],
                   [".bstep-g",  "이용 방법 5단계"],
-                  [".bban-g",   "서비스 배너 둘"],
                   [".bcal-g",   "계산도구 넷"],
                   [".bgd-g",    "이용 가이드"],
                   [".bcta-go",  "하단 견적 신청"]];
@@ -4123,7 +4142,14 @@ const AUDIT = `(() => {
        ⚠️⚠️ **히어로(bhero)가 빠졌습니다** — §4 가 "기존의 큰 브랜드
        히어로 배너는 삭제한다" 고 직접 적었습니다. 함수는 안 지웠으니
        되살리실 수 있습니다 (그날 여기 앞에 다시 넣으세요). */
-    const want = ["bent","bdir","bwhy","bstep","bban","bcal","bgd","bcta"];
+    /* ⚠️⚠️ **2026-10-22 — 히어로가 돌아오고 서비스 배너 둘이
+       내려왔습니다** (사장님 시안). HomeBanners 함수와 .bban CSS 는
+       지우지 않았습니다 — 되살리시면 그날 여기에 bban 을 다시
+       넣으세요. 그리고 **build-pages.js 의 크롤러 본문도 같이**
+       고치세요 (이 저장소가 열 번 겪은 자리입니다).
+       ⚠️ 이 글은 템플릿 문자열 안입니다 — 주석에 백틱을 쓰면 문자열이
+       거기서 끊깁니다 (스물다섯 번째로 또 겪었습니다). */
+    const want = ["bhero","bent","bdir","bcal","bwhy","bstep","bgd","bcta"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";

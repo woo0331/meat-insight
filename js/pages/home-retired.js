@@ -1886,15 +1886,17 @@ function HomeHero(){
     '<span class="bhero-ph" aria-hidden="true">'+
       photoBox("hero-start", "", true)+'</span>'+
     '<div class="w bhero-in">'+
-      '<p class="bhero-k">창업 · 운영 · 양도양수 · 폐업</p>'+
-      '<h1>사장님의 시작부터 마지막까지,<br class="br-m"> '+
-        '<em>'+esc(with_)+'</em> 함께합니다.</h1>'+
-      '<p class="bhero-s">매장을 열고 · 운영하고 · 넘기고 · 정리하는 데 '+
-        '필요한 서비스를 한곳에서 찾고, 비교하고, 연결해 드립니다.</p>'+
+      '<p class="bhero-k">사장님의 시작부터 다음까지</p>'+
+      /* ⚠️⚠️ **여기를 br 로 쪼개지 마세요.** checkMainH2() 가 크롤러
+         본문의 머리말을 **소스에서 글자로** 찾는데, 중간에 태그가
+         끼면 못 찾아 빌드가 멈춥니다. 줄바꿈은 keep-all 이 합니다. */
+      '<h1>필요한 서비스를 한곳에서 찾으세요.</h1>'+
+      '<p class="bhero-s">창업 준비 · 매장 운영 · 매장 양도양수 · 폐업 '+
+        '정리까지, '+esc(with_)+' 사장님께 필요한 서비스를 쉽게 '+
+        '연결해 드립니다.</p>'+
       '<div class="bhero-go">'+
         '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
-          '무료 견적 신청'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-gh btn-lg" href="/startup">서비스 둘러보기</a>'+
+          '무료 견적 신청하기'+icon("arrow",18)+'</a>'+
       '</div>'+
     '</div>'+
   '</section>';

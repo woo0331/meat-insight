@@ -496,8 +496,8 @@ function PageMain(){
      있던 길 일곱이 카드 안쪽과 바깥 아이콘 다섯으로 올겨졌습니다
      (재서 확인했습니다). ⚠️ 함수는 지우지 않았습니다 — 되살리실
      일이 생기면 이 줄에 `HomePass()+` 를 다시 넣으시면 됩니다. */
-  return HomeEnter()+ HomeDirect()+ HomeWhy()+ HomeSteps()+
-         HomeBanners()+ HomeCalc()+ HomeGuide()+ HomeCta();
+  return HomeHero()+ HomeEnter()+ HomeDirect()+
+         HomeCalc()+ HomeWhy()+ HomeSteps()+ HomeGuide()+ HomeCta();
 }
 
 
@@ -571,6 +571,12 @@ var HOME_ENTER = [
      시안이 **넷을 나란히** 놓습니다 — 다른 걸음으로 내리면 "이건 내
      일이 아니구나" 로 읽힙니다. `HomePass()` 함수는 지우지
      않았습니다 — 되살리실 일이 생기면 `PageMain()` 한 줄입니다. */
+  /* ⚠️⚠️ **셋 + 가로 배너로 내리지 마세요.** 시안이 그렇게 그려
+     있어 한 번 그렇게 만들었다가 물렀습니다 — 번호가 01·02·03 에서
+     끝나 **04 가 빠진 것처럼** 읽혔고(사장님이 바로 물으셨습니다),
+     그건 이 저장소가 "다른 걸음으로 내리면 이건 내 일이 아니구나로
+     읽힌다" 고 적어 둔 그 자리입니다. 넷은 **같은 크기 · 같은 무게**
+     입니다. */
   { key:"transfer",  no:"03", ia:"handover", lead:"넘기고 받는 모든 것", ph:"kind-pass" },
   { key:"closure",   no:"04", ia:"restore", lead:"마무리도 든든하게", ph:"hero-closure" }
 ];
@@ -669,9 +675,8 @@ function HomeEnter(){
     '<div class="w">'+
       '<div class="sec-hd sec-hd-c">'+
         '<p class="eyebrow">SERVICE</p>'+
-        '<h1>필요한 서비스를 한곳에서 찾으세요.</h1>'+
-        '<p>창업 준비 · 매장 운영 · 매장 양도양수 · 폐업 정리 — '+
-          '단계를 고르시면 그 단계에 필요한 서비스만 모아서 보여 드립니다.</p>'+
+        '<h2>지금 어느 단계이신가요?</h2>'+
+        '<p>단계를 고르시면 그 단계에 필요한 서비스만 모아서 보여 드립니다.</p>'+
       '</div>'+
       '<ul class="bent-g">'+cards+'</ul>'+
     '</div>'+
@@ -696,7 +701,8 @@ function HomeEnter(){
    ⚠️ 여섯은 전부 **실제로 열리는 분야 화면**입니다
    (`/providers/:분류`). 이름 · 아이콘은 `catalog.js` 에서 오고
    여기 적는 것은 **어느 분류를 앞에 낼지** 뿐입니다. */
-var HOME_DIRECT = ["interior", "equip", "it", "admin", "staff", "clean"];
+var HOME_DIRECT = ["interior", "equip", "it", "admin",
+                   "staff", "marketing", "demolish", "restore"];
 
 function HomeDirect(){
   var C = window.AM_CATS || [];

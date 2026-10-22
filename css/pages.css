@@ -6046,3 +6046,92 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
   .bent-tx{ padding:var(--s4) var(--s5); }
   .bent-go{ margin-top:var(--s2); padding:7px 13px; min-height:36px; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   [모바일 시안] 빈 바구니를 폰에서만 압축합니다 (757 → 약 300px)
+   ⚠️ 구간을 없애는 것이 아닙니다 — 고르면 원래대로 펼쳐집니다.
+   ⚠️ 넓은 화면은 한 픽셀도 안 바뀝니다.
+   ════════════════════════════════════════════════════════════════════ */
+@media (max-width:900px){
+  .pkb:has(#pk-zero:not([hidden])){ padding-top:22px; padding-bottom:22px; }
+  .pkb:has(#pk-zero:not([hidden])) .sec-hd{ margin-bottom:12px; }
+  .pkb:has(#pk-zero:not([hidden])) .sec-hd > p:not(.eyebrow){ display:none; }
+  .pkb:has(#pk-zero:not([hidden])) .sec-hd h2{ font-size:19px; }
+  .pkb:has(#pk-zero:not([hidden])) .pkb-box{ padding:14px; }
+  .pkb:has(#pk-zero:not([hidden])) .pkb-why p{ display:none; }
+  .pkb:has(#pk-zero:not([hidden])) .pkb-why{ margin-top:10px; }
+  .pkb:has(#pk-zero:not([hidden])) .sec-note{ margin-top:12px; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   [모바일 시안] 사장님 시안대로 — 메인 아홉 덩이
+   ⚠️ 시안 그림 그대로 못 넣은 것 셋은 CLAUDE.md 에 적었습니다
+      (사진 속 손글씨 · 히어로 캐러셀 · 글 카드 썸네일).
+   ════════════════════════════════════════════════════════════════════ */
+@media (max-width:900px){
+  /* ① 진입 카드 셋 — 가로형, 사진은 오른쪽 */
+  .bent-g{ grid-template-columns:1fr; gap:12px; }
+  .bent-c > a{ min-height:124px; }
+
+  /* ② 계산도구 — 폰에서는 한 줄 배너로 접습니다 */
+  .bcal .sec-hd > p:not(.eyebrow){ display:none; }
+  .bcal .sec-hd{ margin-bottom:14px; }
+  .bcal-g{ grid-template-columns:1fr 1fr; gap:10px; }
+  .bcal-c > a{ min-height:0; padding:14px 12px; }
+  .bcal-c em, .bcal-c .bcal-go{ display:none; }
+
+  /* ③ 이용 가이드 — 가로 스와이프 (문서 폭은 그대로) */
+  .bgd-g{
+    display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch; padding-bottom:6px;
+    margin-inline:calc(var(--pad) * -1); padding-inline:var(--pad);
+  }
+  .bgd-g::-webkit-scrollbar{ display:none; }
+  .bgd-g > li{ flex:0 0 76%; scroll-snap-align:start; }
+
+  /* ④ 직접 찾기 여덟 — 4열 두 줄
+     ⚠️ `1fr` 은 기본 `min-width:auto` 라 안쪽보다 못 좁아집니다 —
+     320px 에서 8px 넘쳤습니다. `minmax(0,1fr)` 로 잡습니다. */
+  .bdir-c{ min-width:0; }
+}
+
+@media (max-width:900px){
+
+  /* ⑥ 까닭 넷 — 시안대로 2열.
+     ⚠️ 380px 아래에서는 한 칸으로 둡니다 — 재 보니 2열이 오히려
+     **더 길어집니다**(320px 에서 +837px · 글이 더 접힙니다). */
+  .bwhy-c{ min-width:0; }
+
+  /* ⑦ 이용 방법 — 번호를 왼쪽에 붙이고 여백을 줄입니다
+     ⚠️ 설명을 숨기지 마세요 — 03 의 "연락처 전달 동의를 그때 다시
+     받습니다" 가 개인정보보호법 제17조 제2항 고지입니다. */
+  .bstep-g > li{ padding:12px 14px; }
+}
+
+@media (min-width:380px) and (max-width:900px){
+  .bwhy-g{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+}
+
+/* ⚠️⚠️ **아이콘 여덟을 4열로 까는 것은 375px 부터입니다.**
+   360px 에서는 칸이 74px 이라 `IT · 매장시스템` 이 **낱말 가운데서
+   3줄로 쪼개집니다** (전수 점검이 잡았습니다). 그 아래는 전부터 있던
+   2열 규칙(max-width:560px)이 그대로 받습니다 — 칸이 156px 이라
+   여덟 이름이 전부 한 줄입니다.
+   ⚠️ `1fr` 은 기본 min-width:auto 라 안쪽보다 못 좁아집니다 —
+   320px 에서 8px 넘쳤던 자리입니다. minmax(0,1fr) 로 잡습니다. */
+@media (min-width:375px) and (max-width:900px){
+  .bdir-g{ grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+  /* ⚠️⚠️ **375px 에서 칸이 77px 입니다** — 기본 14.5px 으로는
+     `IT · 매장시스템` 이 낱말 가운데서 3줄로 쪼개집니다. 13px 으로
+     내리고 양 옆 여백을 줄여 벌었습니다 (12px 미만은 금지).
+     ⚠️ **경계값을 재는 폭에 딱 맞추지 마세요** — 전수 점검이 보는
+     일곱 폭에 375 가 있는데 `min-width:375px` 로 잡아 두고 390 만
+     재 보고 통과한 줄 알았습니다 (칼날 위에 둔 자리입니다). */
+  .bdir-c{ padding:14px 4px; }
+  .bdir-c > b{ font-size:var(--t-cap); letter-spacing:-.02em; }
+}
+
+/* ⚠️⚠️ **히어로가 자기 바탕을 들고 있어야 합니다.** 투명으로 두면
+   body 색이 비쳐 바로 아래 진입 카드 구간과 **ΔE 0.00** 이 되어 두
+   구간이 한 구간으로 읽힙니다 (전수 점검이 잡았습니다). */
+.bhero{ background:var(--surface); }

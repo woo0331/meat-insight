@@ -28,18 +28,25 @@
    — 0 은 "한 곳도 없다" 는 뜻이고 그것도 숫자입니다.
    ════════════════════════════════════════════════════════════════════ */
 
+/* ⚠️⚠️ `ind` 는 **업종 key 를 가리키는 것**입니다 (`industries.js`).
+   새 분류도 새 주소도 아닙니다 — 브랜드가 0개일 때 열두 화면이
+   전부 **같은 글 셋**을 내고 있어서(299자 · 거의 같은 본문 열둘)
+   그 업종의 글을 내려고 달았습니다.
+   ⚠️ `etc` 에는 **일부러 안 달았습니다** — 그건 업종이 아니라
+   받는 그릇이라, 거기에 업종 글을 붙이면 어느 사장님에게도
+   안 맞는 글이 됩니다 (이 저장소의 오래된 규칙). */
 window.AM_FRANCHISE_CATS = [
-  { key:"food",     name:"외식",        icon:"utensils", tone:"t1" },
-  { key:"cafe",     name:"카페 · 디저트", icon:"cup",     tone:"t2" },
-  { key:"bar",      name:"주점",        icon:"glass",    tone:"t8" },
-  { key:"retail",   name:"소매",        icon:"cart",     tone:"t5" },
-  { key:"service",  name:"서비스",      icon:"hand",     tone:"t7" },
-  { key:"academy",  name:"교육",        icon:"book",     tone:"t7" },
-  { key:"beauty",   name:"뷰티",        icon:"sparkle",  tone:"t8" },
-  { key:"gym",      name:"헬스",        icon:"dumbbell", tone:"t5" },
-  { key:"pet",      name:"반려동물",     icon:"paw",      tone:"t4" },
-  { key:"unmanned", name:"무인",        icon:"robot",    tone:"t5" },
-  { key:"stay",     name:"숙박",        icon:"bed",      tone:"t7" },
+  { key:"food",     name:"외식",        icon:"utensils", tone:"t1", ind:"restaurant" },
+  { key:"cafe",     name:"카페 · 디저트", icon:"cup",     tone:"t2", ind:"cafe" },
+  { key:"bar",      name:"주점",        icon:"glass",    tone:"t8", ind:"bar" },
+  { key:"retail",   name:"소매",        icon:"cart",     tone:"t5", ind:"retail" },
+  { key:"service",  name:"서비스",      icon:"hand",     tone:"t7", ind:"office" },
+  { key:"academy",  name:"교육",        icon:"book",     tone:"t7", ind:"academy" },
+  { key:"beauty",   name:"뷰티",        icon:"sparkle",  tone:"t8", ind:"beauty" },
+  { key:"gym",      name:"헬스",        icon:"dumbbell", tone:"t5", ind:"gym" },
+  { key:"pet",      name:"반려동물",     icon:"paw",      tone:"t4", ind:"pet" },
+  { key:"unmanned", name:"무인",        icon:"robot",    tone:"t5", ind:"unmanned" },
+  { key:"stay",     name:"숙박",        icon:"bed",      tone:"t7", ind:"stay" },
   { key:"etc",      name:"기타",        icon:"plus",     tone:"t3" }
 ];
 

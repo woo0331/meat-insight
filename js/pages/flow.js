@@ -169,6 +169,30 @@ function StartPickBand(top, rest, ind){
         '</span>'+
         '<p class="pkf-r" id="pkb-r" hidden></p>'+
       '</div>'+
+    /* ── 빠른 선택 여섯 (2026-10-24) ──────────────────
+       ⚠⚠ **창업만 이 줄이 없었습니다.** 재 보니 운영 82칸 · 폐업
+       74칸 · 양도양수 52칸은 **하위까지** 고를 수 있는데 창업은
+       **분류 열두 칸뿐**이라, "간판" · "세금" · "포스" 를 찾아 오신
+       분이 찾기로는 걸리는데 **고를 칸이 없어서** 분류를 눌러야
+       했습니다 (PART 3 "네 전문관의 흐름을 통일").
+       ⚠️ 생김새 · 클래스는 `PickGroupBand()` 와 **같습니다** — 다른
+       이름을 주면 네 전문관이 또 서로 달라집니다.
+       ⚠⚠ **분류 대표 여섯에서 빼지 않습니다.** 같은 칸이 두 자리에
+       보여도 `pickPaint()` 가 화면의 **모든 `[data-pick]`** 을
+       맞춰서 둘이 같이 켜지고 바구니에는 한 번만 들어갑니다.
+       ⚠️ 없으면 줄째 뺍니다 (절대 규칙 2). */
+    (function(){
+      var q = (typeof amPickQuick === "function") ? amPickQuick("startup") : [];
+      return q.length
+        ? '<div class="pkq">'+
+            '<p class="pkq-l">필요한 것이 정해져 있으시면 여기서 '+
+              '바로 고르세요</p>'+
+            '<ul class="pk-g pk-g-q">'+q.map(PickCard).join("")+'</ul>'+
+            '<p class="pkq-n">여기 없는 것은 아래 분야별 목록에 '+
+              '전부 있습니다.</p>'+
+          '</div>'
+        : "";
+    })()+
     '<ul class="pk-g">'+top.map(PickCard).join("")+'</ul>'+
     (rest.length
       ? FoldAll("st-rest", "전체 서비스 보기 ("+rest.length+"개 더)", "접기")+

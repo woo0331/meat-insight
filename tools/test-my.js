@@ -226,6 +226,14 @@ const ADM_DEAL = [
        그 하나를 state.js 것으로 잡아 멀쩡한 코드를 실패로 냈습니다. */
     ok("state.js 가 /api/me?s=1 을 안 부른다",
         !sent.some(x => x.indexOf("me:?s=1") >= 0), sent.join(" | "));
+    /* ⚠️⚠️ 세션 묻기는 **화면마다 한 번**입니다. 부르는 쪽이 셋
+       (헤더 chrome.js · 메모장 state.js · 이 화면 my.js)인데
+       `amAuthAsk()` 의 `asked` 깃발이 답이 온 뒤에 켜져서, 같은 틱에
+       셋이 다 빠져나가고 있었습니다 — 재 보니 2~3번이었습니다.
+       DB 를 켜시면 그만큼이 그대로 Supabase 호출이 됩니다. */
+    ok("/api/session 을 한 번만 부른다",
+        sent.filter(x => x === "session").length === 1,
+        sent.filter(x => x === "session").length + "번 · " + sent.join(" | "));
     ok("JS 에러 0", errs.length === 0, errs.join(" | "));
     await ctx.close();
   }

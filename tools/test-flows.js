@@ -841,6 +841,65 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  const plain = await pg.evaluate(()=>Math.round(window.scrollY));
  say(plain === 0, "평범한 링크는 맨 위로 올라간다", plain+"px");
 
+ /* ══ 【11】 2026-10-24 1단계 보고서 — 고친 것이 그대로 있는가 ══ */
+ console.log("\n【11】 1단계 개선");
+
+ /* ① 뒤로 가기는 **보던 자리로** — 고르개가 폰에서 8,000px 이 넘는데
+    신청 화면에 갔다 오면 맨 위였습니다 (아홉 화면을 다시 내려감).
+    ⚠️ 새로고침은 그대로 맨 위입니다 — 위 【10】 이 그걸 봅니다. */
+ await pg.setViewportSize({ width:390, height:900 });
+ await pg.goto(B+"/startup",{waitUntil:"load"}); await pg.waitForTimeout(500);
+ await pg.evaluate(()=>window.scrollTo(0, 2500)); await pg.waitForTimeout(200);
+ await pg.evaluate(()=>go("/quote")); await pg.waitForTimeout(500);
+ await pg.goBack(); await pg.waitForTimeout(600);
+ const backY = await pg.evaluate(()=>Math.round(window.scrollY));
+ say(Math.abs(backY-2500) < 80, "뒤로 가기는 보던 자리로 돌아간다", backY+"px (2500 이라야)");
+
+ /* ② /join — 히어로에서 신청 폼으로 **바로** 갑니다.
+    ⚠️ 이 화면은 영업 작업대의 종착점입니다. 폼이 문서 11,000px 쯤에
+    있어서, 내려가지 않고 갈 길이 없으면 거기서 통화가 버려집니다. */
+ await pg.goto(B+"/join",{waitUntil:"load"}); await pg.waitForTimeout(500);
+ const jn = await pg.evaluate(()=>{
+   const q=s=>document.querySelector(s);
+   const cta=[...document.querySelectorAll(".pgh .btn")].map(b=>b.getAttribute("href")||"");
+   const chips=[...document.querySelectorAll(".join-cat .chip")];
+   return { cta, form:!!q("#join-form"), fields:!!q("#join-fields"),
+     fold:!!q(".jn-fold-w .fld-b"),
+     chipAll:chips.length, chipVis:chips.filter(c=>c.offsetParent).length,
+     names:[...document.querySelectorAll(".join-cat > b")].filter(b=>b.offsetParent).length,
+     faqOpen:document.querySelectorAll(".faq-a:not([hidden])").length,
+     faqAll:document.querySelectorAll(".faq-a").length };
+ });
+ say(jn.cta.indexOf("#join-form")>=0 && jn.form,
+     "/join 히어로에서 신청 폼으로 바로 간다", jn.cta.join(" "));
+ say(jn.fold && jn.chipVis===0 && jn.chipAll>50,
+     "입점 분야 칩이 접혀 있다 (DOM 에는 그대로)", "보임 "+jn.chipVis+"/"+jn.chipAll);
+ say(jn.names>=10, "접혀도 분야 이름은 보인다", jn.names+"개");
+ say(jn.faqOpen===0 && jn.faqAll>0,
+     "/join FAQ 가 아코디언이다", jn.faqOpen+"/"+jn.faqAll);
+ await pg.click(".jn-fold-w .fld-b"); await pg.waitForTimeout(250);
+ const open = await pg.evaluate(()=>[...document.querySelectorAll(".join-cat .chip")].filter(c=>c.offsetParent).length);
+ say(open>50, "눌러서 펼치면 칩이 나온다", open+"개");
+
+ /* ③ 신청 폼 — 지역도 브라우저가 막습니다 (딱지에 * 가 있습니다) */
+ await pg.goto(B+"/quote",{waitUntil:"load"}); await pg.waitForTimeout(500);
+ const rq = await pg.evaluate(()=>{
+   const e=document.getElementById("q-reg");
+   return { req: e ? e.required : null,
+     star: !!(document.querySelector("label[for=q-reg] b")) };
+ });
+ say(rq.req === true && rq.star, "지역 칸이 * 이고 required 다", JSON.stringify(rq));
+
+ /* ④ 전문관 넷의 첫 단추가 **같은 말**입니다 */
+ const words = [];
+ for(const u of ["/startup","/operation","/transfer","/closure"]){
+   await pg.goto(B+u,{waitUntil:"load"}); await pg.waitForTimeout(350);
+   words.push(await pg.evaluate(()=>{
+     const b=document.querySelector(".pgh .btn-b, .pgh .btn");
+     return b ? b.innerText.replace(/\s+/g," ").trim() : "(없음)"; }));
+ }
+ say(new Set(words).size === 1, "전문관 넷의 첫 단추가 같은 말이다", words.join(" | "));
+
  console.log("\n【5】 콘솔 오류");
  say(errs.length===0,"JS 에러 없음",errs.join(" / "));
  console.log(bad?("\n❌ "+bad+"건 실패"):"\n✅ 흐름 전부 통과");

@@ -415,7 +415,7 @@ function PageQuote(){
           "지역이 업체를 고르는 첫 번째 조건입니다.")+
         '<div class="f-2">'+
           '<div class="f-r"><label for="q-reg">지역 <b>*</b></label>'+
-            RegionSelect("q-reg", reg, "", "지역을 골라 주세요")+'</div>'+
+            RegionSelect("q-reg", reg, "", "지역을 골라 주세요", true)+'</div>'+
           '<div class="f-r"><label for="q-gu">시 · 군 · 구</label>'+
             '<input id="q-gu" autocomplete="address-level2" placeholder="예: 안양시"></div>'+
         '</div>'+

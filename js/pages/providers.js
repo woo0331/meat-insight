@@ -697,7 +697,14 @@ function PageJoin(){
   return PgHero({
     kicker:"업체 · 전문가 · 프랜차이즈 본사",
     h1raw:"창업과 폐업을 준비하는<br class=\"br-m\"> 사장님이 직접 찾아옵니다.",
-    lead:"하시는 일과 지역만 등록해 두시면, 조건이 맞는 요청만 보내 드립니다. 기본 입점은 무료입니다."
+    lead:"하시는 일과 지역만 등록해 두시면, 조건이 맞는 요청만 보내 드립니다. 기본 입점은 무료입니다.",
+    /* ⚠️⚠️ **이 화면은 영업 작업대의 종착점입니다.** 직원이 전화로
+       설득해서 보낸 링크가 여기인데, 재 보니 폰에서 적는 칸까지가
+       **3,721px(4.1화면)** 였습니다 — 거기서 닫히면 그 통화가
+       버려집니다. 내려가지 않고도 바로 갈 수 있게 둡니다.
+       ⚠️ 아래 글을 하나도 안 지웠습니다 — 길을 하나 더한 것입니다. */
+    cta:'<a class="btn btn-b btn-lg" href="#join-form">입점 신청하기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="#join-fields">어떤 분야를 찾나요</a>'
   })+
   JoinNow(subs)+
   /* ⚠️ §19 — 업체 사장님이 제일 먼저 묻는 여섯입니다. 입점 설득
@@ -920,11 +927,17 @@ function JoinHow(){
    냅니다 — 어느 분야든 자기 일이 여기 있다는 것만 알면 됩니다. */
 function JoinFields(subs){
   if(!subs.length) return "";
-  return '<section class="sec sec-white"><div class="w">'+
+  /* ⚠️⚠️ **접어 둡니다** (2026-10-24). 칩이 128개여서 폰에서
+     이 구간 하나가 **3,177px(3.5화면)** 였습니다 — 그만큼 신청
+     폼이 아래로 밀립니다. ⚠️ **지우는 것이 아닙니다** — DOM 에
+     그대로 있어서 크롤러 본문도 검색도 한 글자 안 바뀝니다.
+     ⚠️ 분야 **이름과 지금 몇 곤인지**는 접힌 채로도 보입니다 —
+     업체 사장님이 알아야 하는 것은 "내 일이 여기 있나" 까지입니다. */
+  return '<section class="sec sec-white" id="join-fields"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">이런 곳을 찾고 있습니다</p>'+
       '<h2>입점 분야</h2>'+
       '<p>여기 없는 분야도 적어 주시면 분류를 만들어 드립니다.</p></div>'+
-    '<div class="join-g">'+subs.map(function(g){
+    '<div class="join-g is-fold-chips" id="jn-fields-g">'+subs.map(function(g){
       var show = g.items.slice(0, 6), more = g.items.length - show.length;
       var n = window.amProvidersInCat ? amProvidersInCat(g.cat) : 0;
       return '<div class="join-cat"><b>'+esc(g.cat.name)+
@@ -937,6 +950,13 @@ function JoinFields(subs){
         (more > 0 ? '<li><span class="chip chip-flat chip-more">외 '+more+'</span></li>' : '')+
         '</ul></div>';
     }).join("")+'</div>'+
+    /* ⚠️⚠️ **단추는 하나입니다.** 분야마다 달았더니 열일곡 개가
+       제 높이를 먹어 줄어든 만큼을 되돌려 받았습니다 (재 보고 고쳤습니다).
+       ⚠️ 접혀도 **분야 이름과 지금 몇 곤인지**는 그대로 보입니다 —
+       업체 사장님이 알아야 하는 것은 "내 일이 여기 있나" 까지입니다. */
+    '<div class="jn-fold-w">'+
+      FoldAll("jn-fields-g", "분야마다 하는 일 보기", "접기", "is-fold-chips")+
+    '</div>'+
   '</div></section>';
 }
 
@@ -949,16 +969,27 @@ function JoinFaq(){
   return '<section class="sec"><div class="w w-narrow">'+
     '<div class="sec-hd"><p class="eyebrow">업체가 자주 묻는 것</p>'+
       '<h2>먼저 궁금해하시는 것들</h2></div>'+
-    '<ul class="faq-l">'+ f.map(function(x){
-      return '<li class="faq-i"><b class="faq-q">'+esc(x.q)+'</b>'+
-        '<p class="faq-a">'+esc(x.a)+'</p></li>';
+    /* ⚠️ 아코디언 — `/faq` 와 **같은 `faqToggle`** 을 그대로
+       씁니다 (글을 두 벌로 만들면 한쪽만 고치게 됩니다).
+       ⚠️⚠️ **질문과 답을 DOM 에서 뺀 것이 아닙니다** — 접기만 합니다.
+       ⚠️ 여기에 FAQPage 구조화 데이터를 달지 마세요 (위 주석). */
+    '<ul class="faq-l">'+ f.map(function(x, i){
+      var id = "jn-faq-" + i;
+      return '<li class="faq-i">'+
+        '<button class="faq-q" type="button" aria-expanded="false"'+
+          ' aria-controls="'+esc(id)+'" onclick="faqToggle(this)">'+
+          '<span>'+esc(x.q)+'</span>'+
+          '<span class="faq-x" aria-hidden="true">'+icon("chevd",18)+'</span>'+
+        '</button>'+
+        '<p class="faq-a" id="'+esc(id)+'" hidden>'+esc(x.a)+'</p>'+
+      '</li>';
     }).join("")+'</ul>'+
   '</div></section>';
 }
 
 /* ── ⑦ 신청 폼 ─────────────────────────────────────────────────── */
 function JoinForm(ready){
-  return '<section class="sec sec-white"><div class="w form-wrap">'+
+  return '<section class="sec sec-white" id="join-form"><div class="w form-wrap">'+
     '<h2 class="pg-h2">입점 신청</h2>'+
     (ready ? "" :
       /* ⚠️ **"접수하지 못한다" 는 말을 폼 위에 둡니다.** 다 적고 누른

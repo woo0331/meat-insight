@@ -396,7 +396,8 @@ function OpsIntro(ind){
     lead:"광고 · 홍보, 세금, 직원 채용, 매장 수리까지. "+
          "필요한 서비스를 선택하고 한 번에 신청하세요.",
     cta:'<a class="btn btn-b btn-lg" href="#pick">'+
-        '필요한 서비스 선택하기'+icon("arrow",18)+'</a>'+
+        /* ⚠️ 넷이 같은 말이어야 합니다 — 여기만 "선택하기" 였습니다 */
+        '필요한 서비스 고르기'+icon("arrow",18)+'</a>'+
         '<a class="btn btn-o btn-lg" href="'+esc(quoteTo({ side:"ops",
            industry:(ind ? ind.key : "") }))+'">무엇이 필요한지 모르겠어요</a>'
   });

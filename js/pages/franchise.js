@@ -51,7 +51,8 @@ function PageFranchiseCat(fc){
     crumb: Crumb([["프랜차이즈","/franchise"],[fc.name]]),
     kicker:"프랜차이즈",
     h1:fc.name + " 프랜차이즈",
-    lead:"창업비 · 가맹비 · 권장 평수 · 모집지역을 나란히 놓고 보십시오.",
+    lead:"창업비 · 가맹비 · 권장 평수 · 모집지역을 나란히 놓고 보십시오." +
+      (fc.ind ? " " + amIndustryName(fc.ind) + " 쪽 글도 아래에 같이 냅니다." : ""),
     tight:true
   })+
   '<section class="sec sec-white"><div class="w">'+
@@ -66,8 +67,21 @@ function PageFranchiseCat(fc){
           /* ⚠️ `Empty()` 가 이미 `esc()` 를 거칩니다 — 두 번 거치면 `&amp;` 가 글자로 찍힙니다 */
           title:fc.name+" 브랜드가 아직 없습니다",
           text:"본사가 직접 등록한 값만 올립니다. 등록을 원하시면 무료로 시작하실 수 있습니다.",
-          reads: amContentsFor({ cat:"item", side:"start", limit:3 }),
-          readTitle:"브랜드를 고르기 전에 보시면",
+          /* ⚠️⚠️ **열두 화면이 서로 거의 같았습니다** (2026-10-24 재서
+             찾았습니다 — 전부 299자 · 같은 글 셋). 브랜드가 0개라 그
+             자리가 전부 Empty 인데, 거기 붙는 글까지 같으면 어느 분야를
+             보시는 것인지가 화면에서 안 보이고, 검색엔진에게도 거의
+             같은 화면 열둘이 색인됩니다.
+             ⚠️ **글을 새로 쓴 것이 아닙니다** — 이미 있는 예순여섯 편에서
+             그 업종 것을 골라 내고, 없으면 지금처럼 공통 글이 나옵니다. */
+          reads: (function(){
+            var r = fc.ind
+              ? amContentsFor({ side:"start", industry:fc.ind, limit:3 }) : [];
+            return r.length ? r : amContentsFor({ cat:"item", side:"start", limit:3 });
+          })(),
+          readTitle: fc.ind
+            ? amIndustryName(fc.ind) + " 창업을 보고 계시면"
+            : "브랜드를 고르기 전에 보시면",
           cta:'<a class="btn btn-b" href="/join">브랜드 등록하기'+icon("arrow",16)+'</a>'+
               '<a class="btn btn-o" href="/startup">개인창업으로 보기</a>'
         }))+

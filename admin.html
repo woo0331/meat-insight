@@ -33,10 +33,10 @@
   업무화면에서 안 보이게만 했고 기능은 그대로입니다.
   ════════════════════════════════════════════════════════════════
 -->
-<link rel="stylesheet" href="/css/tokens.css?v=337d02b4">
-<link rel="stylesheet" href="/css/app.css?v=5af35274">
-<link rel="stylesheet" href="/css/pages.css?v=902c22fb">
-<link rel="stylesheet" href="/css/admin.css?v=440457fd">
+<link rel="stylesheet" href="/dist/css/tokens.css?v=102a64e2">
+<link rel="stylesheet" href="/dist/css/app.css?v=1f7b4ba1">
+<link rel="stylesheet" href="/dist/css/pages.css?v=0487d482">
+<link rel="stylesheet" href="/dist/css/admin.css?v=ac24ba4e">
 </head>
 <body class="ad-body">
 
@@ -94,44 +94,44 @@
 <div id="sl-sticky" class="sl-sticky"></div>
 
 <!-- 순서가 곧 의존 순서입니다 — 데이터 먼저, 도구 다음, 화면 마지막 -->
-<script src="/js/components/base.js?v=7e49ed05"></script>
-<script src="/js/data/korean.js?v=c5c3addd"></script>
-<script src="/js/data/site.js?v=ba1ea9eb"></script>
-<script src="/js/data/brand.js?v=0a718dc7"></script>
-<script src="/js/data/regions.js?v=149bea2a"></script>
-<script src="/js/data/industries.js?v=286cb6a1"></script>
-<script src="/js/data/catalog.js?v=655a5013"></script>
+<script src="/dist/js/components/base.js?v=d71df76e"></script>
+<script src="/dist/js/data/korean.js?v=122651cb"></script>
+<script src="/dist/js/data/site.js?v=9f0b10d4"></script>
+<script src="/dist/js/data/brand.js?v=ae3cefff"></script>
+<script src="/dist/js/data/regions.js?v=b7a0090c"></script>
+<script src="/dist/js/data/industries.js?v=103f2861"></script>
+<script src="/dist/js/data/catalog.js?v=f337e757"></script>
 <!-- ⚠️ 초대 글이 "이 분야에 지금 몇 곳" 을 세려면 이 둘이 필요합니다.
      providers.js 가 먼저여야 join.js 의 amProvidersInCat 이 셀 것이 있습니다. -->
-<script src="/js/data/providers.js?v=cba584c1"></script>
-<script src="/js/data/join.js?v=40d5209a"></script>
+<script src="/dist/js/data/providers.js?v=c1a9448a"></script>
+<script src="/dist/js/data/join.js?v=7b6f178a"></script>
 <!-- ⚠️ "영업 시작 전에 남은 것" 칸이 지원사업 '찾는 곳' 링크를 셉니다 —
      이 줄이 없으면 그 항목이 **조용히 통째로 빠집니다**. -->
-<script src="/js/data/support.js?v=18598c91"></script>
-<script src="/js/data/legal-privacy.js?v=fd463baa"></script>
+<script src="/dist/js/data/support.js?v=5e72524d"></script>
+<script src="/dist/js/data/legal-privacy.js?v=b0fac9af"></script>
 <!-- ⚠️ 영업 카테고리는 catalog.js 의 분류를 묶어 보는 틀이라 **그 뒤**입니다 -->
-<script src="/js/data/sales.js?v=494fff90"></script>
+<script src="/dist/js/data/sales.js?v=0a97f67b"></script>
 <!-- ⚠️⚠️ 신청 항목의 서비스 이름 — 2026-10-18 운영 §4-4 로 항목 id 가
      `repair/aircon-fix` 꼴로 올 수 있습니다. 이 줄이 없으면 `rqSvcName()`
      이 분류만 보고 **key 를 그대로 찍어서**, 관리자가 "repair/aircon-fix"
      를 보고 업체를 고르게 됩니다 (포트폴리오에 `gyeonggi` 가 그대로
      찍혔던 자리와 같습니다). ⚠️ catalog · industries 뒤여야 합니다. -->
-<script src="/js/data/svcpick.js?v=530565b3"></script>
+<script src="/dist/js/data/svcpick.js?v=7a704162"></script>
 <!-- 수익상품 (수익형 플랫폼 지시서 5절) — catalog · fee 뒤입니다 -->
-<script src="/js/data/fee.js?v=ed6c6f19"></script>
-<script src="/js/data/offers.js?v=45719125"></script>
+<script src="/dist/js/data/fee.js?v=952e65ef"></script>
+<script src="/dist/js/data/offers.js?v=92a08469"></script>
 <!-- ⚠️ sales.js(화면)가 admin.js 의 초대 글 함수(adInvite · adInviteSms ·
      adInviteCall · adCopy)를 그대로 씁니다 — 글을 두 벌로 만들지 않습니다. -->
 <!-- ⚠️⚠️ 신청 상태 열셋 · 역할 넷 · 옮길 수 있는 길 — /admin 의 접수
      목록이 상태 이름과 색을 여기서 가져옵니다. 이 줄이 없으면 딱지가
      전부 회색이 되고 상태가 영어로 나옵니다 (에러는 안 납니다). -->
-<script src="/js/data/deal.js?v=813b45a4"></script>
-<script defer src="/js/data/halls.js?v=f92c1d92"></script>
+<script src="/dist/js/data/deal.js?v=90e208c7"></script>
+<script defer src="/dist/js/data/halls.js?v=fe423aff"></script>
 <!-- 로그인 — ⚠️ admin.html 은 ui.js 를 안 읽으므로 auth.js 가 저장을
      스스로 들고 있습니다 (amGet/amSet 에 의존하지 않습니다). -->
-<script src="/js/auth.js?v=a50dfe92"></script>
-<script src="/js/intake.js?v=cdccdc03"></script>
-<script src="/js/admin.js?v=f3074528"></script>
-<script src="/js/sales.js?v=92305a9f"></script>
+<script src="/dist/js/auth.js?v=f37a0e06"></script>
+<script src="/dist/js/intake.js?v=de471b91"></script>
+<script src="/dist/js/admin.js?v=c74bb6f4"></script>
+<script src="/dist/js/sales.js?v=c0610327"></script>
 </body>
 </html>

@@ -105,8 +105,13 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .gnb a.on{ color:var(--navy); }
 
 .hd-r{ display:flex; align-items:center; gap:var(--s4); flex:none; }
+/* ⚠️ **44px 입니다** (2026-10-24). 40 은 전수 점검 기준은 넘기지만
+   이 저장소가 "추천 검색어 칩 40px" 에서 **큰 쪽(44)을 따른다**고
+   정해 둔 값입니다. 폰에서는 이미 44 였고 PC 만 40 이었습니다.
+   ⚠️ 헤더 폭이 칸당 4px 늑니다 — 1441px 이상 남는 폭이 88px 이라
+   들어갑니다 (재 봤습니다). 메뉴를 늘리실 때는 다시 재세요. */
 .hd-ic{ display:inline-flex; align-items:center; justify-content:center;
-  width:40px; height:40px; border-radius:var(--r); color:var(--ink2); }
+  width:44px; height:44px; border-radius:var(--r); color:var(--ink2); }
 .hd-ic:hover{ background:var(--bg-2); color:var(--ink); }
 /* ⚠️⚠️ 시안 §2 의 **통합검색**입니다. 히어로가 START/CLOSE 두 장이
    되면서 큰 검색창이 들어갈 자리가 없어졌는데, 지우지 않고 여기로

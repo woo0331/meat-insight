@@ -169,9 +169,14 @@ window.IndustryGrid = function(baseTo, current, g){
 /* ⚠️ `ph` 는 **폼에서 쓰는 첫 줄**입니다. 거르개에서는 "지역 전체" 가
    맞지만 내놓기 · 견적 요청 같은 **적는 화면**에서는 "전체" 가 고른
    것처럼 읽힙니다 — 기본값을 그대로 두어 거르개 화면은 안 바뀝니다. */
-window.RegionSelect = function(id, val, onchange, ph){
+/* ⚠️ 다섯째 칸 `req` — 딱지에 `*` 를 붙였으면 **브라우저도
+   막게** 합니다. 전에는 `/quote` 의 지역만 JS 가 막아서, 나머지
+   넷은 브라우저가 먼저 잡는데 지역만 한 걸음 늦었습니다.
+   ⚠️ 거르개 화면은 그대로입니다 — 기본값이 `false` 라 안 넣으면
+   아무 것도 안 바뀝니다. */
+window.RegionSelect = function(id, val, onchange, ph, req){
   return '<select class="sel" id="'+esc(id)+'"'+
-    (onchange ? ' onchange="'+esc(onchange)+'"' : '')+
+    (onchange ? ' onchange="'+esc(onchange)+'"' : '')+ (req ? " required" : "")+
     ' aria-label="지역"><option value="">'+esc(ph || "지역 전체")+'</option>'+
     (window.AM_REGIONS||[]).map(function(r){
       return '<option value="'+esc(r.key)+'"'+(r.key===val?" selected":"")+'>'+
@@ -607,11 +612,17 @@ window.FoldBtn = function(id, shut, open){
    폭과 상관없이 접혀야 해서 갈라 두었습니다.
    ⚠️ 접는 클래스가 `is-fold-all` 로 **다릅니다** — 같은 이름을 쓰면
    폰에서 두 규칙이 겹쳐 패키지 · 푸터까지 같이 움직입니다. */
-window.FoldAll = function(id, shut, open){
+/* ⚠️⚠️ 네째 칸(`cls`)은 **접을 때 붙일 클래스**입니다. 기본값
+   `is-fold-all` 은 `display:none` 이라 **그 칸을 통째로** 감춥니다 —
+   안에 있는 일부만 감추려면 제 클래스를 넘기세요.
+   그걸 모르고 `/join` 의 분야 격자에 기본값을 썼다가 **구간이
+   통째로 사라졌습니다** (재 보고 알았습니다). */
+window.FoldAll = function(id, shut, open, cls){
+  cls = cls || "is-fold-all";
   return '<button class="fld-b fld-all" type="button" aria-expanded="false" '+
       'aria-controls="'+esc(id)+'" '+
       'data-shut="'+esc(shut)+'" data-open="'+esc(open || "접기")+'" '+
-      'onclick="foldToggle(\''+esc(id)+'\',this,\'is-fold-all\')">'+
+      'onclick="foldToggle(\''+esc(id)+'\',this,\''+esc(cls)+'\')">'+
     '<span>'+esc(shut)+'</span>'+ icon("chevd", 16) +'</button>';
 };
 

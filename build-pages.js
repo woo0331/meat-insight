@@ -873,7 +873,38 @@ function noscriptFor(W, r, route){
     return L.join("");
   }
 
-  if(route === "/franchise" || /^\/franchise\//.test(route)){
+  /* 프랜차이즈 **분류 하나** — ⚠️⚠️ /franchise 와 **같은 본문을 내지
+     마세요.** 열두 화면이 글자까지 같아서 구글이 중복으로 보고 전부
+     무시합니다 (2026-10-24 재 보니 233자 열둘이 거의 같았습니다).
+     ⚠️ 화면(PageFranchiseCat)과 **같은 말**이어야 합니다 — 브랜드가
+     0개라 화면이 내는 것은 분류 이름 · 확인하실 것 · **그 업종의 글**
+     입니다. 여기에만 더 적으면 그게 구글에 나가는 거짓말입니다. */
+  const mfc = /^\/franchise\/([a-z0-9-]+)$/.exec(route);
+  if(mfc){
+    const fc = (W.AM_FRANCHISE_CATS||[]).filter(x => x.key === mfc[1])[0];
+    if(fc){
+      const nFr = (W.AM_FRANCHISES||[]).filter(f => f.cat === fc.key).length;
+      h2(fc.name + " 프랜차이즈 브랜드");
+      p(nFr
+        ? fc.name + " 쪽으로 등록된 브랜드 " + nFr + "개입니다. 총 예상 "
+          + "창업비 · 가맹비 · 권장 평수 · 모집지역을 나란히 놓고 보십시오."
+        : fc.name + " 쪽으로 등록된 브랜드는 아직 없습니다. 본사가 직접 "
+          + "등록하고 정보공개서로 확인한 값만 올립니다.");
+      h2("브랜드마다 확인하실 것");
+      ul(["총 예상 창업비","가맹비","교육비","보증금","인테리어비","설비비",
+          "권장 평수","가맹점 수","본사 지원","모집지역","정보공개서"]);
+      /* ⚠️ 그 업종 글이 없으면 **구간째 뺍니다** (절대 규칙 2) */
+      const frd = fc.ind && W.amContentsFor
+        ? W.amContentsFor({ side:"start", industry:fc.ind, limit:3 }) : [];
+      if(frd.length){
+        h2((W.amIndustryName ? W.amIndustryName(fc.ind) : fc.name) + " 창업을 보고 계시면");
+        ul(frd.map(x => x.title));
+      }
+    }
+    return L.join("");
+  }
+
+  if(route === "/franchise"){
     h2("프랜차이즈 분류");
     ul((W.AM_FRANCHISE_CATS||[]).map(c => c.name));
     h2("브랜드마다 확인하실 것");
@@ -1424,9 +1455,54 @@ function checkVercel(){
    빌드가 제자리에서 고치는 파일이라, 안 떼면 두 번 붙습니다.
    ⚠️ 파일을 그냥 열어도(`file://`) 질의만 붙은 것이라 그대로 열립니다. */
 const ASSET_V = {};
+/* ════════ 배포본 자산 — 주석을 뗀 사본 (dist/) ══════════════════
+   ⚠️⚠️ **소스는 한 글자도 안 건드립니다.** `css/pages.css` 는 그대로
+   두고, 주석을 뗀 사본을 `dist/css/pages.css` 로 만들어 화면이 그쪽을
+   가리키게 합니다 (HTML 167개를 만들어 커밋하는 것과 같은 성격입니다).
+
+   ⚠️ 왜 — 재 본 값입니다 (2026-10-24). 메인이 싣는 것만 세었습니다.
+     css 셋  gzip 124KB → 39KB     js 51개  gzip 483KB → 283KB
+     합계    gzip 607KB → 322KB (−47%)
+   주석은 이 저장소에서 같은 사고를 두 번 안 내게 해 주는 자산입니다.
+   지우자는 말이 아니라 **손님에게까지 보낼 까닭이 없다**는 말입니다.
+
+   ⚠️⚠️ 떼는 일은 tools/strip-comments.js 가 **글자를 하나씩 읽어서**
+   합니다 (정규식이 아닙니다 — 이 저장소가 그걸로 열여덟 번 당했습니다).
+   떼고 나서 js 는 다시 파싱해 보고, css 는 중괄호 차이를 견줍니다.
+   진짜 그물은 check.js 입니다 — 167개 화면을 **뗀 것으로** 띄웁니다. */
+const DIST = "dist";
+const STRIP = require(path.join(ROOT, "tools", "strip-comments.js"));
+
+const DIST_MADE = new Set();
+function makeDist(p){                       /* p = "/css/pages.css" */
+  if(DIST_MADE.has(p)) return;
+  const src = path.join(ROOT, p.replace(/^\//, ""));
+  let txt;
+  try { txt = fs.readFileSync(src, "utf8"); }
+  catch(e){ throw new Error("자산 파일이 없습니다: " + p + " — 주소를 잘못 적으셨나요?"); }
+  const out = /\.css$/.test(p) ? STRIP.stripCss(txt) : STRIP.stripJs(txt);
+
+  /* ⚠️⚠️ 떼고 나서 **반드시 다시 봅니다.** 여기서 안 막으면 깨진
+     파일이 그대로 손님에게 나갑니다. */
+  if(/\.js$/.test(p)){
+    try { new Function(out); }
+    catch(e){ throw new Error("주석을 뗀 뒤 파싱이 안 됩니다: " + p + " — " + e.message); }
+  } else {
+    const d = x => (x.split("{").length - 1) - (x.split("}").length - 1);
+    if(d(txt) !== d(out))
+      throw new Error("주석을 뗀 뒤 중괄호 짝이 달라졌습니다: " + p);
+  }
+  const to = path.join(ROOT, DIST, p.replace(/^\//, ""));
+  fs.mkdirSync(path.dirname(to), { recursive:true });
+  const was = fs.existsSync(to) ? fs.readFileSync(to, "utf8") : null;
+  if(was !== out) fs.writeFileSync(to, out);
+  DIST_MADE.add(p);
+}
+
 function assetVer(p){
   if(ASSET_V[p] !== undefined) return ASSET_V[p];
-  const f = path.join(ROOT, p.replace(/^\//, ""));
+  makeDist(p);
+  const f = path.join(ROOT, DIST, p.replace(/^\//, ""));
   let v = "";
   try {
     v = crypto.createHash("sha1").update(fs.readFileSync(f)).digest("hex").slice(0, 8);
@@ -1435,17 +1511,37 @@ function assetVer(p){
   }
   return (ASSET_V[p] = v);
 }
+/* ⚠️ 이미 `/dist/...` 로 바뀐 것도 받습니다 — index.html 은 빌드가
+   **제자리에서** 고치는 파일이라 두 번 지나갑니다. */
 function stampAssets(html){
   return html.replace(
-    /((?:href|src)=")(\/(?:css|js)\/[^"?]+\.(?:css|js))(?:\?v=[0-9a-f]+)?(")/g,
-    function(_, a, p, b){ return a + p + "?v=" + assetVer(p) + b; });
+    /((?:href|src)=")(?:\/dist)?(\/(?:css|js)\/[^"?]+\.(?:css|js))(?:\?v=[0-9a-f]+)?(")/g,
+    function(_, a, p, b){ return a + "/" + DIST + p + "?v=" + assetVer(p) + b; });
 }
 /* ⚠️ 붙이고 나서 **빠진 것이 없는지 셉니다.** 새 CSS 나 JS 를 넣고
    여기 정규식에 안 걸리면 그 파일만 조용히 캐시에 묶입니다. */
 function checkStamped(html, where){
-  const bare = (html.match(/(?:href|src)="\/(?:css|js)\/[^"]+\.(?:css|js)"/g) || []);
+  const bare = (html.match(/(?:href|src)="(?:\/dist)?\/(?:css|js)\/[^"]+\.(?:css|js)"/g) || []);
   if(bare.length)
     throw new Error(where + " 에 캐시 값이 안 붙은 자산이 있습니다: " + bare.join(" "));
+  /* ⚠️⚠️ **소스 자리를 그대로 가리키면 주석이 같이 나갑니다.** */
+  const raw = (html.match(/(?:href|src)="\/(?:css|js)\/[^"]+\.(?:css|js)\?v=/g) || []);
+  if(raw.length)
+    throw new Error(where + " 가 배포본(" + DIST + "/) 이 아니라 소스 자산을 가리킵니다: " + raw.join(" "));
+}
+/* ⚠️ 안 쓰는 배포본은 치웁니다 — 안 치우면 지운 파일이 서버에 남습니다 */
+function sweepDist(){
+  const root = path.join(ROOT, DIST);
+  if(!fs.existsSync(root)) return 0;
+  let gone = 0;
+  const walk = d => fs.readdirSync(d, { withFileTypes:true }).forEach(e => {
+    const f = path.join(d, e.name);
+    if(e.isDirectory()){ walk(f); try { fs.rmdirSync(f); } catch(_){} return; }
+    const rel = "/" + path.relative(root, f).split(path.sep).join("/");
+    if(!DIST_MADE.has(rel)){ fs.unlinkSync(f); gone++; }
+  });
+  walk(root);
+  return gone;
 }
 
 /* ⚠️⚠️ **브라우저가 색을 뒤집는 것을 막는 한 줄이 살아 있는지 봅니다.**
@@ -1478,7 +1574,7 @@ function checkStamped(html, where){
    ⚠️ 표시(`<main id="view">` · `crawl:start`)를 **글자로 적지 마세요.**
    꼭 적어야 하면 띄어 쓰거나 다른 말로 풀어 쓰세요. */
 function checkAlive(html, where, want){
-  const n = (html.match(/<script[^>]+src="\/js\//g) || []).length;
+  const n = (html.match(/<script[^>]+src="(?:\/dist)?\/js\//g) || []).length;
   if(n !== want)
     throw new Error(where + " 에 스크립트가 " + n + "개입니다 (본보기는 " + want + "개) — "
       + "끼워 넣는 코드가 삼켰을 수 있습니다. 화면은 아무것도 안 합니다");
@@ -3917,7 +4013,7 @@ brandStatics(W);
 globalThis.__W = W;   /* shell() 이 브랜드 이름을 읽습니다 */
 const tpl = fs.readFileSync(path.join(ROOT,"index.html"),"utf8");
 /* 본보기(index.html)가 들고 있는 스크립트 수 — 만들어진 화면도 같아야 합니다 */
-const WANT_SCRIPTS = (tpl.match(/<script[^>]+src="\/js\//g) || []).length;
+const WANT_SCRIPTS = (tpl.match(/<script[^>]+src="(?:\/dist)?\/js\//g) || []).length;
 if(WANT_SCRIPTS < 10)
   throw new Error("index.html 의 스크립트가 " + WANT_SCRIPTS + "개뿐입니다 — 본보기가 이미 깨졌습니다");
 const routes = allRoutes(W);
@@ -4198,6 +4294,19 @@ function checkSitemapDates(){
   console.log("   sitemap 의 lastmod " + n + "개가 전부 글의 실제 올린 날입니다");
 }
 checkSitemapDates();
+
+/* ⚠️ 안 쓰는 배포본을 치우고, 얼마나 줄었는지 적습니다 */
+{
+  const gone = sweepDist();
+  let raw = 0, cut = 0;
+  DIST_MADE.forEach(function(k){
+    raw += fs.statSync(path.join(ROOT, k.replace(/^\//, ""))).size;
+    cut += fs.statSync(path.join(ROOT, DIST, k.replace(/^\//, ""))).size;
+  });
+  console.log("배포본 자산 " + DIST_MADE.size + "개 · " +
+    Math.round(raw/1024) + "KB → " + Math.round(cut/1024) + "KB" +
+    " (주석을 뗀 사본 · 소스는 그대로)" + (gone ? " · 치운 것 " + gone + "개" : ""));
+}
 
 console.log("페이지 "+made+"개"+(skipped?" (건너뜀 "+skipped+")":"")+
             (removed?" · 치운 주소 "+removed+"개":"")+

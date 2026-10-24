@@ -74,14 +74,32 @@
    `min`   넣을 그림의 **최소** 가로×세로 (레티나 2배를 감안한 값)
    `ratio` 가로÷세로가 이 사이여야 합니다. 벗어나면 많이 잘립니다
    `maxKB` 이 용량을 넘으면 첫 화면이 느려집니다 */
-/* ⚠️⚠️ **2026-10-16 — 화면에 실제로 그려지는 자리는 일곱입니다.**
-   브라우저로 재서 적습니다 (자리 30 · 파일 12 · 그려지는 것 7) —
+/* ⚠️⚠️ **화면에 실제로 그려지는 자리는 넷입니다** (2026-10-24 재측정).
+   ⚠️ 전에 여기 "일곱" 이라고 적혀 있었습니다 — 구간이 내려갈 때마다
+   조용히 어긋나니 **메인을 고치실 때마다 브라우저로 다시 재세요.**
+   (자리 30 · 파일 12 · 그려지는 것 **4**) —
 
-     hero-start   메인 브랜드 히어로 바탕
      hero-startup · hero-ops · hero-closure
                   전문관 세 화면 머리 + **메인 진입 카드 셋**
      kind-pass    메인 ④ 매장 양도양수 배너
-     svc-interior · svc-it   메인 ⑦ 배너 둘
+
+   ⚠️⚠️ **파일이 있는데 안 나오는 것이 여덟입니다** — hero-start ·
+   hero-close(사장님이 주신 원본 두 장) · kind-take · kind-asset ·
+   svc-interior · svc-equip · svc-it · svc-clean. **지운 것이 아니라
+   쓰는 구간이 내려간 것**이고, 되살리면 코드를 한 줄도 안 고치고
+   붙습니다.
+
+   ⚠⚠ **비어 있는 자리 열여덟 가운데 "넣으면 나오는" 것은
+   category-* 여섯뿐입니다** — 나머지 열둘은 코드가 **아무 데서도
+   안 부릅니다**(cta-consult · feat-* 셋 · side-* 둘 · flow-* 둘 ·
+   svc-store · svc-admin · svc-marketing · svc-demolish). 전에 여기
+   "사야 하는 것은 cta-consult 한 장" 이라고 적어 두었는데 **그
+   줄이 틀렸습니다** — MainLast() 가 내려가면서 그 자리도 같이
+   죽었습니다.
+   ⚠️ category-* 여섯도 지금은 `/g/:stage` 여섯 화면의 **앞뒤 카드
+   한두 장**에만 나옵니다 (StageNear). 단계 열이 메인에 있던 시절의
+   자리라 **값을 재서 정하세요** — 돈을 쓰기 전에 그 화면을 찍어
+   보시는 쪽이 낫습니다.
 
    ⚠️⚠️ **"(지금 안 나옴)" 이 붙은 자리에 사진을 사지 마세요.** 파일을
    넣어도 화면에 안 나옵니다 — 그 구간이 메인에서 내려왔을 뿐이고
@@ -191,30 +209,30 @@ window.WOW_PHOTO_SLOTS = [
   /* ── START / CLOSE 큰 카드 (§16) ─────────────────────────────
      ⚠️ 카드 윗머리에 띠로 들어갑니다 (카드의 30~40%). 가로로 넓습니다.
      ⚠️ **짙은 막을 씌우지 않습니다** — 사진이 밝아야 합니다. */
-  { key:"side-start", sizes:"(max-width:900px) 28vw, 18vw", where:"START 카드 머리 · 새로 오픈하는 매장",
+  { key:"side-start", sizes:"(max-width:900px) 28vw, 18vw", where:"(지금 안 나옴) START 카드 머리 · 새로 오픈하는 매장",
     min:[1200,530], ratio:[2.0,2.6], maxKB:180,
     note:"새롭게 오픈하는 밝은 매장. 가로로 길게 잘립니다" },
-  { key:"side-close", sizes:"(max-width:900px) 28vw, 18vw", where:"CLOSE 카드 머리 · 깔끔하게 정리하는 매장",
+  { key:"side-close", sizes:"(max-width:900px) 28vw, 18vw", where:"(지금 안 나옴) CLOSE 카드 머리 · 깔끔하게 정리하는 매장",
     min:[1200,530], ratio:[2.0,2.6], maxKB:180,
     note:"깔끔하게 정리하는 매장. 어수선하거나 처연하면 안 됩니다" },
 
   /* ── 창업 ↔ 폐업 연결 구간 (§23) ──────────────────────────────
      ⚠️ 주황 카드와 초록 카드 안에 각각 한 장씩. 5:3 으로 잘립니다. */
-  { key:"flow-close", sizes:"(max-width:860px) 82vw, 30vw", where:"연결 · 정리하는 사장님 쪽", min:[900,540],
+  { key:"flow-close", sizes:"(max-width:860px) 82vw, 30vw", where:"(지금 안 나옴) 연결 · 정리하는 사장님 쪽", min:[900,540],
     ratio:[1.5,1.9], maxKB:180,
     note:"정리 중인 매장 · 시설. 차분하되 어둡지 않게" },
-  { key:"flow-start", sizes:"(max-width:860px) 82vw, 30vw", where:"연결 · 이어받는 사장님 쪽", min:[900,540],
+  { key:"flow-start", sizes:"(max-width:860px) 82vw, 30vw", where:"(지금 안 나옴) 연결 · 이어받는 사장님 쪽", min:[900,540],
     ratio:[1.5,1.9], maxKB:180,
     note:"이어받아 새로 여는 밝은 매장 내부" },
 
   /* ── 큰 카드 셋 (2026-10-03 리뉴얼 지시서 §11) ──────────────────
      ⚠️ 셋이 **서로 다른 사진**이어야 합니다. 같은 장면을 세 번 쓰면
      카드가 셋이 아니라 하나로 읽힙니다. */
-  { key:"feat-franchise", sizes:"(max-width:900px) 92vw, 36vw", where:"큰 카드 · 프랜차이즈", min:[900,620],
+  { key:"feat-franchise", sizes:"(max-width:900px) 92vw, 36vw", where:"(지금 안 나옴) 큰 카드 · 프랜차이즈", min:[900,620],
     ratio:[1.2,1.6], maxKB:200, note:"완성된 상업 매장 외관 또는 내부" },
-  { key:"feat-store", sizes:"(max-width:900px) 92vw, 36vw", where:"큰 카드 · 점포 · 상가", min:[900,620],
+  { key:"feat-store", sizes:"(max-width:900px) 92vw, 36vw", where:"(지금 안 나옴) 큰 카드 · 점포 · 상가", min:[900,620],
     ratio:[1.2,1.6], maxKB:200, note:"상가 · 점포 Exterior. 임대 안내가 붙은 빈 점포도 좋습니다" },
-  { key:"feat-interior", sizes:"(max-width:900px) 92vw, 36vw", where:"큰 카드 · 인테리어", min:[900,620],
+  { key:"feat-interior", sizes:"(max-width:900px) 92vw, 36vw", where:"(지금 안 나옴) 큰 카드 · 인테리어", min:[900,620],
     ratio:[1.2,1.6], maxKB:200, note:"상업공간 공사 중 또는 완성된 공간" },
 
   /* ── 주요 서비스 여덟 (지시서 §13 "실사 Thumbnail") ─────────────
@@ -249,9 +267,9 @@ window.WOW_PHOTO_SLOTS = [
   /* ⚠️ 2026-10-16 §3-7 — 배너 둘의 왼쪽 네모입니다 (재 본 값 104px ·
      폰 76px). 나머지 svc-* 는 지금 화면에 안 나옵니다 — 분류 여덟
      구간(MainServices)을 되살리면 바로 붙습니다. */
-  { key:"svc-interior", sizes:"104px", where:"메인 ⑦ 배너 01 · 인테리어 · 시공",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"시공 중인 상업공간 · 도면" },
+  { key:"svc-interior", sizes:"104px", where:"(지금 안 나옴) 서비스 · 인테리어 · 시공",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"시공 중인 상업공간 · 도면" },
   { key:"svc-equip", sizes:"92px",     where:"(지금 안 나옴) 서비스 · 시설 · 장비",     min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"업소용 장비. ⚠️ 한 업종으로 읽히지 않게" },
-  { key:"svc-it", sizes:"104px",       where:"메인 ⑦ 배너 02 · POS · CCTV · 매장시스템",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"POS · 키오스크 · CCTV. ⚠️ 브랜드가 보이면 안 됩니다" },
+  { key:"svc-it", sizes:"104px",       where:"(지금 안 나옴) 서비스 · POS · CCTV · 매장시스템",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"POS · 키오스크 · CCTV. ⚠️ 브랜드가 보이면 안 됩니다" },
   { key:"svc-admin", sizes:"92px",     where:"(지금 안 나옴) 서비스 · 행정 · 전문가",    min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"서류 · 상담 책상. ⚠️ 실제 서류 글자가 읽히면 안 됩니다" },
   { key:"svc-marketing", sizes:"92px", where:"(지금 안 나옴) 서비스 · 마케팅 · 디자인",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"디자인 작업 · 촬영" },
   { key:"svc-demolish", sizes:"92px",  where:"(지금 안 나옴) 서비스 · 철거",            min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"철거 · 원상복구 현장" },

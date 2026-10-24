@@ -394,6 +394,14 @@ window.routeInfo = function(path){
 window.go = function(url, opt){
   opt = opt || {};
   if(opt.keepScroll) RT.keepScroll = true;
+  /* ⚠️⚠️ **떠나기 전에 보던 자리를 적어 둡니다** (2026-10-24).
+     고르개 화면이 폰에서 8,000px 이 넘는데, 신청 화면에 갔다가
+     뒤로 오면 **맨 위**였습니다 — 서비스를 더 담으려면 아홉 화면을
+     다시 내려가야 했습니다.
+     ⚠️ 브라우저의 되돌려 놓기(`scrollRestoration`)는 꺼 둔 채로
+     둡니다 — **새로고침은 맨 위**가 맞고(사장님 지시 · 10-21),
+     여기는 **뒤로 가기만** 따로 돌려놓습니다. */
+  try { history.replaceState({ y: Math.round(window.scrollY || 0) }, ""); } catch(e){}
   history.pushState(null, "", url);
   render();
 };
@@ -417,7 +425,16 @@ document.addEventListener("click", function(ev){
      누르지 않습니다. */
   go(href, { keepScroll: a.hasAttribute("data-keep") });
 });
-window.addEventListener("popstate", function(){ render(); });
+/* ⚠️⚠️ **뒤로 가기에서만** 보던 자리로 돌려놓습니다.
+   ⚠️ `render()` 가 그리고 나서 **그 다음 틀**에 옮깁니다 — 그려지기
+   전에는 문서가 짧아서 그 자리까지 내려갈 수가 없습니다.
+   ⚠️ 적어 둔 자리가 없으면(밖에서 들어온 걸음) 지금처럼 맨 위입니다. */
+window.addEventListener("popstate", function(e){
+  var y = e && e.state && typeof e.state.y === "number" ? e.state.y : null;
+  if(y !== null) RT.keepScroll = true;
+  render();
+  if(y !== null) setTimeout(function(){ window.scrollTo(0, y); }, 0);
+});
 
 /* ── 그리기 ────────────────────────────────────────────────── */
 /* 이 화면이 창업 쪽인가 폐업 쪽인가 — 아니면 어느 쪽도 아닌가 */
@@ -429,6 +446,19 @@ function sideOf(r){
      분이 **같은 화면**을 봅니다 — 한쪽 색으로 칠하면 다른 쪽에게
      "여긴 내 자리가 아니네" 가 됩니다 (`/stores` · `/assets` 와 같은
      까닭입니다). */
+  /* ⚠⚠ **여기에 `side-ops` · `side-pass` 를 만들지 마세요.**
+     2026-10-24 에 세이지 · 플럼으로 갈라 봤다가 **물렀습니다** —
+     전수 점검의 "운영 화면이 실제로 있는 분야로만 보낸다" 와
+     "인수 · 양도는 한쪽으로 물들지 않고" 둘이 `#view` 에 `side-`
+     클래스가 붙는 것 **자체**를 막습니다. 그 둘은 일부러 그렇게
+     적혀 있습니다 — 바로 위 까닭 그대로입니다.
+     ⚠️ 네 전문관을 **구별하는 일**은 메인 진입 카드의 색 넷
+     (`--hall-blue` · `--hall-green` · `--hall-purple` · `--hall-red`)
+     이 이미 합니다. 속화면까지 물들이는 것은 **사장님이 정하실
+     일**이고, 그날 이 줄과 위 검사 둘을 같이 고치세요.
+     ⚠️ `css/pages.css` 맨 뒤의 `.side-ops` · `.side-pass` 블록은
+     그때 쓸 수 있게 **그대로 두었습니다** — 붙는 자리가 없어서 지금은
+     한 픽셀도 안 바뀝니다. */
   if(r.view === "operation" || r.view === "acquisition") return "";
   /* 사업 단계 화면 — ⚠️ `both`(매장 양도·양수)는 **한쪽으로 물들이지
      않습니다.** 넘기시는 분과 받으시는 분이 같은 화면을 봅니다

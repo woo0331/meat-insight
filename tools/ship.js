@@ -217,6 +217,10 @@ const STEPS = [
   { n: "check.js 문법",        c: ["node", ["--check", "check.js"]],              fast: true },
   { n: "빌드 + 가드 마흔",     c: ["node", ["build-pages.js"]],                   fast: true },
   { n: "조사 띄어쓰기",        c: ["node", ["tools/check-korean.js"]],            fast: true },
+  /* ⚠️⚠️ 배포본은 **주석을 눈 사본**(dist/)입니다. 떼는 코드가
+     틀리면 깨진 파일이 그대로 손님에게 나갑니다 — 이 저장소가
+     주석 처리로 열여덟 번 당한 자리라 함정 열네만큼을 먼저 넣어 봅니다. */
+  { n: "주석 떼기",            c: ["node", ["tools/test-strip.js"]],              fast: true },
   { n: "사진 규격",            c: ["node", ["tools/check-photos.js"]],            fast: true },
   { n: "접수 API 계약",        c: ["node", ["tools/test-api.js"]],                fast: true },
   { n: "접수번호 · 중복",      c: ["node", ["tools/test-intake.js"]],             fast: true },

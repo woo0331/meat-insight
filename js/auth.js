@@ -28,9 +28,15 @@
 
 var AM_AUTH_KEY = "am.auth.v1";
 
-/* 설정 · 상태 — `/api/session` 에 **한 번만** 묻고 들고 있습니다 */
+/* 설정 · 상태 — `/api/session` 에 **한 번만** 묻고 들고 있습니다
+   ⚠️⚠️ `flying` 은 **돌고 있는 물음**입니다. `asked` 만으로는 모자랍니다 —
+   그 깃발은 답이 온 뒤(`.then`)에 켜지는데, 부르는 쪽이 셋(헤더
+   `chrome.js` · 메모장 `state.js` · `/my`)이라 **같은 틱에 셋이 다
+   그물을 빠져나갑니다.** 재 보니 화면마다 2번(`/my` 는 3번) 나가고
+   있었습니다 — 지금은 돌고 있는 것을 그대로 돌려줍니다. */
 var AM_AUTH = { asked:false, on:false, signedIn:false, role:"", name:"",
                 provider:null, conf:null };
+var AM_AUTH_FLY = null;
 
 /* ── 저장 ────────────────────────────────────────────────────────
    ⚠️ 사파리 비공개 모드 등에서 localStorage 가 **던집니다.** 감싸지
@@ -123,13 +129,15 @@ function amAuthRefresh(){
    값입니다 — 화면이 고르는 것이 아닙니다 (`api/_auth.js` 머리말). */
 window.amAuthAsk = function(force){
   if(AM_AUTH.asked && !force) return Promise.resolve(AM_AUTH);
+  /* ⚠️ 이미 묻고 있으면 **그 물음을 그대로** 돌려줍니다 (요청 하나) */
+  if(AM_AUTH_FLY && !force) return AM_AUTH_FLY;
   amAuthTakeHash();
   function ask(){
     return fetch("/api/session", { headers: Object.assign(
       { accept:"application/json" }, window.amAuthHeaders()) })
       .then(function(r){ return r.ok ? r.json() : null; });
   }
-  return ask().then(function(d){
+  AM_AUTH_FLY = ask().then(function(d){
     /* 토큰이 만료되어 떨어졌으면 한 번만 새로 받아 다시 묻습니다 */
     if(d && d.auth && !d.signedIn && amAuthLoad()){
       AM_AUTH.conf = d.conf || null;
@@ -153,6 +161,10 @@ window.amAuthAsk = function(force){
     AM_AUTH.asked = true; AM_AUTH.on = false;
     return AM_AUTH;
   });
+  /* ⚠️ 답이 오면 놓습니다 — `force` 로 다시 물을 수 있어야 합니다
+     (토큰을 새로 받은 뒤 역할을 다시 읽는 길). */
+  return AM_AUTH_FLY.then(function(a){ AM_AUTH_FLY = null; return a; },
+                          function(e){ AM_AUTH_FLY = null; throw e; });
 };
 
 window.amAuthNow = function(){ return AM_AUTH; };

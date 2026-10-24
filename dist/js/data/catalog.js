@@ -1,0 +1,447 @@
+
+
+window.AM_START_CATS = [
+  { key:"item", name:"창업 아이템", icon:"bulb", tone:"t1", kind:"info",
+    lead:"무엇으로 시작할지부터",
+    desc:"프랜차이즈로 할지 내 브랜드로 할지, 얼마로 시작할 수 있는지부터 정합니다.",
+    items:[
+      { key:"franchise",   name:"프랜차이즈", to:"/franchise" },
+      { key:"independent", name:"개인창업" },
+      { key:"by-industry", name:"업종별 창업정보" },
+      { key:"small-cap",   name:"소자본 창업" },
+      { key:"unmanned",    name:"무인창업" },
+      { key:"solo",        name:"1인창업" },
+      { key:"new-brand",   name:"신규 브랜드" },
+      { key:"takeover",    name:"기존 매장 인수", to:"/stores" }
+    ]},
+
+  { key:"store", name:"점포 · 상가", icon:"pin", tone:"t5", kind:"listing",
+    lead:"자리를 정합니다",
+    desc:"지역 · 업종 · 평수 · 보증금 · 월세 · 권리금으로 찾습니다.",
+
+    kw:"점포임대 상가임대 점포매매 가게임대 가게자리",
+    to:"/stores",
+    items:[
+      { key:"shop",        name:"상가" },
+      { key:"store-space", name:"점포" },
+      { key:"running",     name:"기존 영업장" },
+      { key:"premium",     name:"권리금 매장" },
+      { key:"no-premium",  name:"무권리 매장" },
+      { key:"with-equip",  name:"시설 인수 가능 매장" }
+    ]},
+
+  { key:"area", name:"상권 · 입지", icon:"map", tone:"t5", kind:"info",
+    lead:"그 자리가 맞는 자리인가",
+    desc:"자리를 정하기 전에 확인할 것과, 봐 줄 수 있는 전문가를 찾습니다.",
+    items:[
+      { key:"trade-area",  name:"상권분석" },
+      { key:"foot-traffic",name:"유동인구" },
+      { key:"households",  name:"배후세대" },
+      { key:"competitors", name:"주변 경쟁업체" },
+      { key:"region",      name:"지역분석" },
+      { key:"sales-data",  name:"매출 관련 데이터" },
+      { key:"site-consult",name:"입지 상담", kind:"provider" }
+    ]},
+
+  { key:"interior", name:"인테리어 · 시공", icon:"roller", tone:"t4", kind:"provider",
+    lead:"가게를 만듭니다",
+    desc:"지역 · 업종 · 평수 · 예산으로 업체를 비교하고 견적을 받습니다.",
+    kw:"간판제작 간판공사 소방시설 소방공사 에어컨설치 냉난방공사 타일 타일공사 바닥공사 유리공사 샤시 셔터 목공 철거후시공",
+    items:[
+      { key:"interior", name:"인테리어" }, { key:"design",  name:"설계" },
+      { key:"electric", name:"전기" },     { key:"plumbing",name:"배관" },
+      { key:"gas",      name:"가스" },     { key:"fire",    name:"소방" },
+      { key:"hvac",     name:"냉난방" },   { key:"duct",    name:"닥트 · 후드" },
+      { key:"floor",    name:"바닥" },     { key:"paint",   name:"도장" },
+      { key:"sign",     name:"간판" },     { key:"awning",  name:"어닝" },
+      { key:"metal",    name:"철물" }
+    ]},
+
+  { key:"equip", name:"시설 · 장비", icon:"tool", tone:"t13", kind:"provider",
+    lead:"업종마다 다릅니다",
+    desc:"고르신 업종에 필요한 장비만 보여 드립니다.",
+    byIndustry:true,
+
+    kw:"주방설비 주방기기 설비 기기 집기설비",
+    items:[] },
+
+  { key:"furniture", name:"가구 · 집기", icon:"sofa", tone:"t3", kind:"provider",
+    lead:"앉을 것과 놓을 것",
+    desc:"업소용 가구와 맞춤 제작을 하는 곳을 찾습니다.",
+    items:[
+      { key:"table",   name:"테이블" }, { key:"chair",   name:"의자" },
+      { key:"shelf",   name:"선반" },   { key:"storage", name:"수납" },
+      { key:"counter", name:"카운터" }, { key:"biz-furn",name:"업소용 가구" },
+      { key:"custom",  name:"맞춤가구" }
+    ]},
+
+  { key:"it", name:"IT · 매장시스템", icon:"monitor", tone:"t1", kind:"provider",
+    lead:"주문받고 결제하고 지키는 것",
+    desc:"POS · 키오스크 · CCTV · 통신까지 한 번에 비교합니다.",
+
+    kw:"포스기 포스 카드단말기 단말기 시시티비 씨씨티비 정수기 제빙기 공기청정기 렌탈 렌털 비데",
+    items:[
+      { key:"pos",       name:"POS" },        { key:"kiosk",   name:"키오스크" },
+      { key:"table-order",name:"테이블오더" }, { key:"cctv",    name:"CCTV" },
+      { key:"internet",  name:"인터넷" },      { key:"phone",   name:"전화" },
+      { key:"wifi",      name:"와이파이" },    { key:"booking", name:"예약시스템" },
+      { key:"waiting",   name:"웨이팅" },      { key:"payment", name:"결제단말기" },
+      { key:"e-menu",    name:"전자메뉴판" },  { key:"security",name:"보안" },
+
+      { key:"inventory", name:"재고 관리" },  { key:"sales-mgmt",name:"매출 관리" },
+      { key:"hr-pay",    name:"근태 · 급여" }, { key:"acct-sw",  name:"회계 · 세무 프로그램" },
+
+      { key:"rental",    name:"정수기 · 렌탈" }
+    ]},
+
+  { key:"supply", name:"운영 공급업체", icon:"pkgck", tone:"t2", kind:"provider",
+    lead:"매일 들어오는 것",
+    desc:"거래처를 새로 뚫거나 바꾸실 때 조건을 비교합니다.",
+    kw:"포장용기 포장지 배달용기 일회용컵 식자재납품 배달대행 배달기사 라이더 배송",
+
+    items:[
+      { key:"ingredient",name:"식자재" },   { key:"meat",     name:"육류 · 축산물" },
+      { key:"seafood",   name:"수산물" },   { key:"produce",  name:"농산물" },
+      { key:"beverage",  name:"음료" },     { key:"coffee-bean",name:"커피 원두" },
+      { key:"bakery",    name:"베이커리 재료" },
+      { key:"liquor",    name:"주류" },     { key:"material", name:"원재료" },
+      { key:"packaging", name:"포장재" },   { key:"delivery-box",name:"배달용기" },
+
+      { key:"delivery-agent",name:"배달 대행" },
+      { key:"disposable",name:"일회용품" }, { key:"consumable",name:"소모품" },
+      { key:"uniform",   name:"유니폼" },   { key:"hygiene",  name:"위생용품" },
+      { key:"cleaning-sup",name:"청소용품" }, { key:"office-sup",name:"사무용품" }
+    ]},
+
+  { key:"repair", name:"수리 · 유지보수", icon:"tool", tone:"t12", kind:"provider",
+    lead:"멈췄을 때 부르는 곳",
+    kw:"소방점검 전기안전점검 가스점검 법정점검 안전점검 고장 수리기사 AS",
+    desc:"장비가 멈추면 그날 장사가 안 됩니다. 지역 · 품목으로 찾습니다.",
+
+    items:[
+      { key:"aircon-fix", name:"에어컨 수리" },
+      { key:"elec-fix",   name:"전기 · 배관 · 설비" },
+      { key:"check-up",   name:"정기 시설 점검" },
+
+      { key:"legal-check",name:"법정 점검 (소방 · 전기 · 가스)" },
+      { key:"rental-care",name:"렌탈 점검 · 관리" },
+      { key:"it-fix",     name:"POS · CCTV 유지보수" },
+      { key:"fridge-fix", name:"냉장 · 냉동고 수리" },
+      { key:"kitchen-fix",name:"주방설비 유지보수" },
+      { key:"coffee-fix", name:"커피머신 수리" },
+      { key:"ice-fix",    name:"제빙기 관리" }
+    ]},
+
+  { key:"admin", name:"행정 · 전문가", icon:"briefcase", tone:"t3", kind:"provider",
+    lead:"서류와 자격",
+
+    kw:"세금 세무 회계 장부 기장 노무 4대보험 인허가 허가 영업신고 보험 법률 저작권 공연권료 음악저작권 상표 상표출원",
+    desc:"지역 · 전문분야 · 상담 가능 여부로 전문가를 찾습니다.",
+    items:[
+      { key:"tax-agent", name:"세무사" },     { key:"labor-agent",name:"노무사" },
+      { key:"admin-agent",name:"행정사" },    { key:"legal",     name:"법무 · 법률" },
+      { key:"insurance", name:"보험" },       { key:"biz-reg",   name:"사업자등록" },
+
+      { key:"copyright",  name:"저작권 · 상표" },
+      { key:"permit",    name:"인허가" },     { key:"hygiene-edu",name:"위생교육" },
+      { key:"certify",   name:"인증" }
+    ]},
+
+  { key:"staff", name:"인력", icon:"users", tone:"t5", kind:"provider",
+    lead:"같이 일할 사람",
+    desc:"채용을 대신하지 않습니다 — 채용을 도와줄 곳을 연결합니다.",
+    items:[
+      { key:"fulltime", name:"정직원" },     { key:"parttime", name:"아르바이트" },
+      { key:"pro-staff",name:"업종별 전문인력" },
+      { key:"headhunt", name:"헤드헌팅" },   { key:"training", name:"교육" },
+      { key:"outsource",name:"외주" }
+    ]},
+
+  { key:"marketing", name:"마케팅 · 디자인", icon:"megaphone", tone:"t8", kind:"provider",
+    lead:"알리는 일",
+    desc:"브랜딩부터 오픈 마케팅까지 맡길 곳을 비교합니다.",
+    kw:"현수막 배너 블로그마케팅 인스타마케팅 인스타그램 네이버플레이스 바이럴 온라인광고",
+    items:[
+      { key:"naming",   name:"브랜드 네이밍" }, { key:"logo",     name:"로고" },
+      { key:"bici",     name:"BI · CI" },       { key:"menu-design",name:"메뉴판" },
+      { key:"package",  name:"패키지" },        { key:"photo",    name:"사진" },
+      { key:"video",    name:"영상" },          { key:"sns",      name:"SNS" },
+      { key:"blog",     name:"블로그" },        { key:"place",    name:"플레이스 관리" },
+      { key:"ad-agency",name:"광고대행" },      { key:"influencer",name:"인플루언서" },
+      { key:"flyer",    name:"전단지" },        { key:"outdoor",  name:"옥외광고" },
+      { key:"open-mkt", name:"오픈 마케팅" },
+
+      { key:"review",   name:"리뷰 관리" },   { key:"crm",      name:"고객 관리" }
+    ]},
+
+  { key:"clean", name:"청소 · 방역 · 유지관리", icon:"sparkle", tone:"t2", kind:"provider",
+    lead:"열기 전과 연 다음",
+    desc:"입주청소부터 정기 관리까지 맡길 곳을 찾습니다.",
+    items:[
+      { key:"move-in",  name:"입주청소" },   { key:"kitchen-clean",name:"주방청소" },
+      { key:"aircon",   name:"에어컨청소" }, { key:"disinfect",name:"방역" },
+      { key:"pest",     name:"해충방제" },   { key:"regular",  name:"정기청소" },
+      { key:"facility", name:"시설관리" }
+    ]},
+
+  { key:"fund", name:"자금 · 정부지원", icon:"wallet", tone:"t5", kind:"info",
+    lead:"돈이 드는 일이니까",
+    desc:"창업자금과 정책자금 정보를 모아 둡니다.",
+    to:"/support",
+    items:[
+      { key:"startup-fund",name:"창업자금 정보" }, { key:"policy-fund",name:"정책자금" },
+      { key:"gov-program", name:"정부지원사업" }, { key:"guarantee",  name:"보증제도" },
+      { key:"finance",     name:"금융 제휴" },    { key:"insure",     name:"보험" },
+      { key:"payment-svc", name:"결제" }
+    ]}
+];
+
+window.AM_CLOSE_CATS = [
+  { key:"process", name:"폐업 절차", icon:"listck", tone:"t7", kind:"info",
+    lead:"무엇부터 해야 하는지",
+    desc:"순서 · 필요서류 · 예상되는 비용 · 기한을 정리합니다.",
+    items:[
+      { key:"checklist", name:"폐업 체크리스트" }, { key:"steps",   name:"폐업 절차" },
+      { key:"documents", name:"필요서류" },        { key:"cost",    name:"예상비용" },
+      { key:"schedule",  name:"일정관리" },        { key:"expert",  name:"관련 전문가" }
+    ]},
+
+  { key:"transfer", name:"매장 양도", icon:"handover", tone:"t1", kind:"listing",
+    lead:"가게를 통째로 넘기기",
+    desc:"점포 · 권리금 · 시설을 포함해 넘기실 수 있습니다.",
+    kw:"권리금계산 권리금산정 가게넘기기 점포양도 매장매매",
+    to:"/stores",
+    items:[
+      { key:"store-transfer",name:"점포 양도" },   { key:"premium",  name:"권리금" },
+      { key:"equip-transfer",name:"시설 양도" },   { key:"find-buyer",name:"인수자 찾기" },
+      { key:"fc-transfer",   name:"프랜차이즈 매장 양도" }
+    ]},
+
+  { key:"asset", name:"시설 · 집기 처분", icon:"sofa", tone:"t3", kind:"listing",
+    lead:"쓰던 장비와 집기",
+    desc:"개별 판매 · 일괄 판매 · 시설 전체 인수까지 됩니다.",
+    kw:"중고주방 중고주방기기 중고장비 장비매각 집기매각",
+    to:"/assets",
+    items:[
+      { key:"kitchen-eq",name:"주방장비" },  { key:"fridge",  name:"냉장 · 냉동" },
+      { key:"espresso",  name:"커피머신" },  { key:"furniture",name:"가구" },
+      { key:"pos",       name:"POS" },       { key:"kiosk",   name:"키오스크" },
+      { key:"fitness",   name:"운동기구" },  { key:"salon-eq",name:"미용기기" },
+      { key:"biz-eq",    name:"업소용 장비" }
+    ]},
+
+  { key:"stock", name:"재고 처분", icon:"boxes", tone:"t2", kind:"listing",
+    lead:"남은 것",
+    desc:"식자재 · 상품 · 포장재 · 소모품을 업종별로 내놓습니다.",
+    to:"/assets",
+    items:[
+      { key:"ingredient",name:"식자재" },  { key:"goods",    name:"상품" },
+      { key:"packaging", name:"포장재" },  { key:"consumable",name:"소모품" },
+      { key:"material",  name:"원재료" },  { key:"etc-stock",name:"기타 재고" }
+    ]},
+
+  { key:"demolish", name:"철거", icon:"hammer", tone:"t9", kind:"provider",
+    lead:"뜯어내는 일",
+    desc:"지역 · 평수 · 업종 · 사진을 올리면 여러 곳에서 견적이 옵니다.",
+    items:[
+      { key:"full",     name:"전체철거" },  { key:"partial", name:"부분철거" },
+      { key:"kitchen",  name:"주방철거" },  { key:"sign",    name:"간판철거" },
+      { key:"facility", name:"시설철거" },
+
+      { key:"waste",   name:"철거 폐기물" }
+    ]},
+
+  { key:"restore", name:"원상복구", icon:"roller", tone:"t5", kind:"provider",
+    lead:"임대차가 끝나기 전에",
+    desc:"어디까지 복구해야 하는지부터 확인하고 견적을 받습니다.",
+    kw:"원상복구비용 복구공사 철거후복구 벽복구 바닥복구",
+    items:[
+      { key:"shop-restore",name:"상가 원상복구" }, { key:"electric",name:"전기" },
+      { key:"plumbing",    name:"배관" },          { key:"gas",     name:"가스" },
+      { key:"floor",       name:"바닥" },          { key:"wall",    name:"벽" },
+      { key:"ceiling",     name:"천장" },          { key:"sign",    name:"간판" }
+    ]},
+
+  { key:"waste", name:"폐기물 · 수거", icon:"trash", tone:"t7", kind:"provider",
+    lead:"내보내는 일",
+    desc:"허가가 필요한 일입니다 — 자격을 확인한 곳으로 연결합니다.",
+    items:[
+      { key:"biz-waste", name:"사업장 폐기물" }, { key:"bulky",   name:"대형폐기물" },
+      { key:"furniture", name:"가구" },          { key:"electronics",name:"전자제품" },
+      { key:"biz-eq",    name:"업소용 장비" },   { key:"recycle", name:"재활용품" }
+    ]},
+
+  { key:"tax", name:"폐업 세무 · 행정", icon:"calc", tone:"t7", kind:"provider",
+    lead:"신고하고 정리하는 일",
+    desc:"기한을 놓치면 가산세가 붙습니다. 전문가와 확인하세요.",
+    kw:"폐업신고서 폐업신고절차 부가세신고 폐업세금",
+    items:[
+      { key:"close-report",name:"폐업신고" },     { key:"vat",     name:"부가세" },
+      { key:"income-tax",  name:"종합소득세" },   { key:"biz-reg", name:"사업자등록 정리" },
+      { key:"permit",      name:"인허가 정리" },  { key:"consult", name:"전문가 상담" }
+    ]},
+
+  { key:"labor", name:"직원 · 노무", icon:"users", tone:"t5", kind:"provider",
+    lead:"같이 일하던 사람",
+    desc:"퇴직금과 4대보험 정리는 순서가 있습니다.",
+    kw:"4대보험료 사대보험 퇴직금계산 해고예고수당",
+    items:[
+      { key:"resign",   name:"직원 퇴직" },   { key:"severance",name:"퇴직금" },
+      { key:"insurance4",name:"4대보험" },    { key:"contract-end",name:"근로계약 종료" },
+      { key:"consult",  name:"노무상담" }
+    ]},
+
+  { key:"contract", name:"계약 해지", icon:"filex", tone:"t4", kind:"provider",
+    lead:"묶여 있는 것들",
+    desc:"약정 기간이 남아 있으면 위약금이 생깁니다. 먼저 확인하세요.",
+    items:[
+      { key:"internet", name:"인터넷" }, { key:"phone",   name:"전화" },
+      { key:"pos",      name:"POS" },    { key:"kiosk",   name:"키오스크" },
+      { key:"rental",   name:"렌탈" },   { key:"water",   name:"정수기" },
+      { key:"cctv",     name:"CCTV" },   { key:"security",name:"보안" },
+      { key:"insurance",name:"보험" }
+    ]},
+
+  { key:"law", name:"법률 · 채무", icon:"scale", tone:"t6", kind:"provider",
+    lead:"다툼이 생겼을 때",
+    desc:"저희가 대리하지 않습니다 — 자격 있는 전문가를 연결합니다.",
+    kw:"제소전화해 명도소송 보증금반환 임대차분쟁",
+    items:[
+      { key:"lease",    name:"임대차" },   { key:"receivable",name:"미수금" },
+      { key:"debt",     name:"채권 · 채무" }, { key:"dispute", name:"계약분쟁" },
+      { key:"consult",  name:"법률상담" }
+    ]},
+
+  { key:"support", name:"폐업지원", icon:"coins", tone:"t2", kind:"info",
+    lead:"받을 수 있는 것",
+    desc:"철거비 지원처럼 조건만 맞으면 받는 것이 있습니다.",
+    to:"/support",
+    items:[
+      { key:"gov-close", name:"정부 폐업지원" }, { key:"demolish-fund",name:"철거비 지원" },
+      { key:"rehire",    name:"재취업" },        { key:"restart",  name:"재창업" },
+      { key:"policy",    name:"정책지원" },      { key:"program",  name:"지원사업" }
+    ]}
+];
+
+window.AM_CATS = (window.AM_START_CATS || []).concat(window.AM_CLOSE_CATS || []);
+
+window.amSubName = function(key){
+  if(!key) return "";
+  var cats = window.AM_CATS || [];
+  for(var i = 0; i < cats.length; i++){
+    var items = cats[i].items || [];
+    for(var j = 0; j < items.length; j++)
+      if(items[j].key === key) return items[j].name;
+  }
+  return key;
+};
+
+window.amCat = function(key){
+  var r = AM_CATS.filter(function(c){ return c.key === key; });
+  return r.length ? r[0] : null;
+};
+window.amCatSide = function(key){
+  return (window.AM_START_CATS||[]).some(function(c){ return c.key === key; }) ? "start" : "close";
+};
+
+window.amCatItems = function(cat, industryKey){
+  if(!cat) return [];
+  if(cat.byIndustry){
+    var ind = (typeof amIndustry === "function") ? amIndustry(industryKey) : null;
+    return (ind && ind.equip) ? ind.equip : [];
+  }
+  return cat.items || [];
+};
+
+window.amCatsFor = function(industryKey, side){
+  var ind = (typeof amIndustry === "function") ? amIndustry(industryKey) : null;
+  var all = (side === "close") ? (window.AM_CLOSE_CATS||[]) : (window.AM_START_CATS||[]);
+  if(!ind) return all;
+  var order = (side === "close") ? (ind.closure||[]) : (ind.startup||[]);
+  if(!order.length) return all;
+  var picked = order.map(function(k){
+    return all.filter(function(c){ return c.key === k; })[0];
+  }).filter(Boolean);
+
+  all.forEach(function(c){ if(picked.indexOf(c) < 0) picked.push(c); });
+  return picked;
+};
+
+window.amSub = function(catKey, subKey, industryKey){
+  var c = amCat(catKey); if(!c) return null;
+  var r = amCatItems(c, industryKey).filter(function(i){ return i.key === subKey; });
+  return r.length ? r[0] : null;
+};
+
+window.AM_START_STEPS = [
+  { n:"01", key:"place", name:"자리 찾기", icon:"map",
+    lead:"무엇을 할지 정하고, 돈을 마련하고, 자리를 고릅니다",
+    cats:["item","fund","store","area"] },
+  { n:"02", key:"build", name:"가게 만들기", icon:"hammer",
+    lead:"공사가 제일 오래 걸리고 제일 많이 듭니다",
+    cats:["interior"] },
+  { n:"03", key:"fill",  name:"채우기", icon:"box",
+    lead:"업종에 따라 여기가 제일 많이 갈립니다",
+    cats:["equip","furniture","supply"] },
+  { n:"04", key:"ready", name:"영업 준비", icon:"doc",
+    lead:"서류와 시스템. 빠뜨리면 문을 못 엽니다",
+    cats:["it","admin","staff"] },
+
+  { n:"05", key:"open",  name:"손님 받기", icon:"megaphone",
+    lead:"열고 나서가 진짜 시작입니다",
+    cats:["marketing","clean","repair"] }
+];
+
+window.amStepCats = function(step, industryKey){
+  var order = (window.amCatsFor ? amCatsFor(industryKey, "start") : (window.AM_START_CATS||[]));
+  var want = {};
+  (step.cats || []).forEach(function(k){ want[k] = 1; });
+  return order.filter(function(c){ return want[c.key]; });
+};
+
+window.AM_CLOSE_WANTS = [
+  { key:"pass",  name:"매장 전체를 넘기고 싶어요", icon:"key",
+    lead:"양도가 되면 철거비도 안 들고 권리금도 회수할 기회가 생깁니다",
+    cats:["transfer","contract","tax","labor"] },
+  { key:"money", name:"시설 · 장비를 정리하고 싶어요", icon:"won",
+    lead:"버리는 것보다 넘기는 쪽이 낫습니다. 시설 · 집기 · 재고까지",
+    cats:["asset","stock","transfer","tax","support"] },
+  { key:"fast",  name:"완전히 폐업하려고 해요", icon:"clock",
+    lead:"순서가 곧 돈입니다. 기한이 있는 것이 여럿입니다",
+    cats:["process","contract","tax","labor","demolish","restore","waste"] },
+  { key:"lost",  name:"아직 어떻게 해야 할지 모르겠어요", icon:"info",
+    lead:"넘길 수 있는 것부터 짚어 드립니다. 순서대로 보시면 됩니다",
+    cats:["transfer","process","tax","labor","contract"] }
+];
+
+window.amCloseWant = function(key){
+  var r = (window.AM_CLOSE_WANTS||[]).filter(function(w){ return w.key === key; });
+  return r.length ? r[0] : null;
+};
+
+window.amCloseCatsFor = function(wantKey, industryKey){
+  var all = (window.amCatsFor ? amCatsFor(industryKey, "close") : (window.AM_CLOSE_CATS||[]));
+  var w = amCloseWant(wantKey);
+  if(!w) return { hit:all, rest:[] };
+  var want = {};
+  w.cats.forEach(function(k){ want[k] = 1; });
+  return {
+    hit:  all.filter(function(c){ return want[c.key]; }),
+    rest: all.filter(function(c){ return !want[c.key]; })
+  };
+};
+
+window.amAllSubs = function(cat){
+  if(!cat) return [];
+  if(!cat.byIndustry) return (cat.items || []).slice();
+
+  var byKey = {}, byName = {}, out = [];
+  (window.AM_INDUSTRIES || []).forEach(function(i){
+    (i.equip || []).forEach(function(e){
+      if(!e || !e.key) return;
+      if(byKey[e.key] || byName[e.name]) return;
+      byKey[e.key] = 1; byName[e.name] = 1; out.push(e);
+    });
+  });
+  return out;
+};

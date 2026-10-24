@@ -61,7 +61,9 @@ const SHIP = new Set();
 if(fs.existsSync("index.html")){
   const h = fs.readFileSync("index.html", "utf8");
   let m, re = /<script[^>]*src="\/([^"?]+)/g;
-  while((m = re.exec(h))) SHIP.add(m[1]);
+  /* ⚠️ index.html 은 **배포본**(dist/)을 가리킵니다 — 주석을 눈
+     사본입니다. 여기서 보는 것은 **소스** 이라 머리를 뗵니다. */
+  while((m = re.exec(h))) SHIP.add(m[1].replace(/^dist\//, ""));
 }
 
 /* ── 재서 "그냥 두기로" 한 자리 ──────────────────────────────────
@@ -76,12 +78,22 @@ const KNOWN = {
        + "통째로 삼켰습니다. 되살리기는 PageOperation() 한 줄입니다."
   },
   "js/pages/home.js": {
-    names: ["HomePass"],
+    names: ["HomePass", "HomeBanners"],
     why: "2026-10-20 시안 1 로 양도양수가 가로 배너에서 진입 카드 "
        + "넷째 장이 되면서 PageMain() 이 안 부릅니다. 재 보니 32줄 · "
        + "1.4KB 뿐이고, 그 배너가 들고 있던 길 일곱은 전부 카드 안의 "
        + "대표 서비스 다섯과 푸터가 받습니다 (재서 확인했습니다). "
-       + "되살리기는 PageMain() 에 HomePass()+ 한 줄입니다."
+       + "되살리기는 PageMain() 에 HomePass()+ 한 줄입니다.\n"
+       + "HomeBanners — 2026-10-22 시안으로 서비스 배너 둘이 메인에서 "
+       + "내려왔습니다. 재 보니 HOME_BAN 8줄 + 함수 22줄 = 1,281바이트 "
+       + "(gzip 686바이트)이고 .bban CSS 스물두 줄이 같이 있습니다. "
+       + "그 배너가 가리킨 둘(/providers/interior · /providers/it)은 "
+       + "전문관 카드의 대표 서비스에서 그대로 걸립니다 (재서 확인 — "
+       + "메인 #view 안에 각각 1곳). ⚠️ 그 배너만 쓰던 사진 자리 "
+       + "svc-interior · svc-it 은 **파일이 있는데 지금 안 나옵니다** "
+       + "(photos.js 의 where 에 적어 두었습니다). 되살리기는 "
+       + "PageMain() 에 HomeBanners()+ 한 줄 · check.js 의 want 에 "
+       + "bban · build-pages.js 의 크롤러 본문 세 줄입니다."
   },
   "js/pages/tools.js": {
     names: ["tlRel"],

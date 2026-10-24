@@ -362,10 +362,51 @@ var IA = {
     '<path class="a1" d="M6 40h5v5H6zM37 40h5v5h-5z"/>'
 };
 
-window.iconArt = function(name, size){
+var IA_FIT = {
+  bulb:[0.9995,0.012,-0.998],
+  mappin:[1,0,0],
+  money:[0.9524,0.19,1.619],
+  permit:[1,0,0],
+  staff:[1.0256,-2.154,-1.385],
+  calc:[1,0,0],
+  shield:[1,0,0],
+  supply:[1.0519,-1.246,-1.232],
+  tax:[0.9091,1.727,1.273],
+  repair:[1.0167,-1.269,3.105],
+  chart:[1,0,0],
+  handover:[1.0256,0.923,-2.154],
+  contract:[0.9091,0.445,1.273],
+  store:[0.9524,1.143,-0.286],
+  interior:[1.0811,-0.324,-2.486],
+  equip:[1.0526,-1.263,-3.895],
+  it:[0.9524,1.143,1.619],
+  admin:[0.9756,-1.854,1.073],
+  marketing:[0.9311,0.275,-0.224],
+  demolish:[1,0,0.5],
+  clean:[1.0256,-4.205,-0.103],
+  net:[1.0526,-1.263,-3.48],
+  pos:[1.1111,-5.444,-4.889],
+  cctv:[1.0131,-3.616,-1.793],
+  rental:[1,0,0],
+  kiosk:[0.9828,-0.865,1.052],
+  sign:[0.9524,1.619,1.143],
+  kitchen:[0.9195,2.161,3.77],
+  restore:[1.0256,0.41,-0.103],
+  won:[0.8889,3.111,-0.889],
+  wallet:[0.9524,1.143,-0.762],
+  trash:[0.9091,2.182,2.182],
+  sofa:[0.8333,4,3.167]
+};
+
+window.iconArt = function(name, size, opt){
   var d = IA[name]; if(!d) return "";
   var s = size || 46;
-  return '<svg class="ia" width="'+s+'" height="'+s+'" viewBox="0 0 48 48" '+
+  var f = (opt && opt.raw) ? null : IA_FIT[name];
+  if(f) d = '<g transform="translate('+f[1]+' '+f[2]+') scale('+f[0]+')">'+
+    d+'</g>';
+
+  return '<svg class="ia" data-ia="'+name+'" width="'+s+'" height="'+s+'" '+
+    'viewBox="0 0 48 48" '+
     'aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">'+
     d+'</svg>';
 };

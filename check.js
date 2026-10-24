@@ -4721,6 +4721,55 @@ const AUDIT = `(() => {
     if(dd.length) return "도구 카드 " + dd.length + "장이 같은 그림입니다";
     return true;`);
 
+  /* ⚠️⚠️ **컬러 아이콘 서른셋이 48 칸 안에서 저마다 다른 크기로
+     그려져 있었습니다** (2026-10-24 재측정 — 제일 긴 변이 26 ~ 48 ·
+     가운데도 4 가까이 떠 있었습니다). 같은 타일에 넣어도 어떤 것은
+     크고 어떤 것은 작아 보여서, 사장님이 메인 "직접 찾기 여덟" 을
+     보시고 "아이콘 크기들을 일치하게 만들어놔" 라고 하셨습니다.
+     지금은 iconArt() 가 IA_FIT 보정표로 **제일 긴 변 40 · 가운데
+     (24, 24)** 에 맞춥니다 (비율은 안 건드립니다).
+     ⚠️⚠️ **그 표를 믿지 않고 화면에 그려진 것을 다시 잽니다.** 아이콘
+     path 를 고치고 node tools/fit-icons.js --write 를 안 돌리면 그
+     하나만 조용히 어긋나는데, 표끼리 견주면 **둘 다 옛 값**이라 늘
+     통과합니다 (이 저장소가 "같은 규칙을 두 곳에 적어 어긋난" 사고를
+     여러 번 겪은 자리).
+     ⚠️ 선(stroke)까지 들어간 **보이는 네모**를 잽니다 — 서른셋 중
+     열셋이 선을 쓰고 그 굵기가 보이는 크기에 들어갑니다. */
+  await f("컬러 아이콘이 모두 같은 크기로 그려진다", "/", `
+    const svgs = Array.from(document.querySelectorAll("#view svg.ia"));
+    if(svgs.length < 4) return "컬러 아이콘이 " + svgs.length + "개뿐입니다";
+    const bad = [], seen = {};
+    svgs.forEach(function(sv){
+      const o = sv.getBoundingClientRect();
+      /* ⚠️ 너무 작게 그려진 것은 소수점이 뭉개져 건너뜁니다 */
+      if(o.width < 8) return;
+      const z = o.width / 48;
+      let L = Infinity, T = Infinity, R = -Infinity, B = -Infinity;
+      Array.from(sv.children).forEach(function(e){
+        const r = e.getBoundingClientRect();
+        if(!r.width && !r.height) return;
+        L = Math.min(L, r.left);  T = Math.min(T, r.top);
+        R = Math.max(R, r.right); B = Math.max(B, r.bottom);
+      });
+      if(!isFinite(L)) return;
+      const w = (R - L) / z, h = (B - T) / z;
+      const cx = (L - o.left) / z + w / 2, cy = (T - o.top) / z + h / 2;
+      const big = Math.max(w, h);
+      const nm = sv.getAttribute("data-ia") || "이름없음";
+      if(seen[nm]) return;
+      seen[nm] = 1;
+      if(Math.abs(big - 40) > 1)
+        bad.push(nm + " 긴 변 " + big.toFixed(1));
+      else if(Math.abs(cx - 24) > 1 || Math.abs(cy - 24) > 1)
+        bad.push(nm + " 가운데 " + cx.toFixed(1) + "," + cy.toFixed(1));
+    });
+    if(bad.length)
+      return "아이콘 " + bad.length + "개가 어긋났습니다 (40 · 24,24 라야 합니다) — " +
+        bad.slice(0, 6).join(" / ") + " · node tools/fit-icons.js --write";
+    if(Object.keys(seen).length < 4)
+      return "잰 아이콘이 " + Object.keys(seen).length + "개뿐입니다";
+    return true;`);
+
   /* ⚠️⚠️ **메인의 계산도구 넷과 글 셋이 전부 실제로 있는 것**이어야
      합니다 (2026-10-08 §9 — "임의로 작동하는 것처럼 만들지 않는다").
      key 가 AM_TOOLS 에 없으면 그 칸이 **조용히 빠집니다** — 넷이

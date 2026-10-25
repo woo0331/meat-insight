@@ -1,6 +1,6 @@
 
 
-var RQ = { asked:false, on:false, signedIn:false, role:"", name:"",
+var RQ = { asked:false, on:false, signedIn:false, role:"", name:"", linked:null,
            rows:null, provs:[], fil:"", open:"", to:"", busy:false,
            ctx:{},
 
@@ -109,6 +109,9 @@ function rqList(){
       '<b>목록에는 성함 · 연락처가 없습니다</b> — 가져오지 않습니다. '+
       '배정하면 그때 업체에게만 갑니다 (개인정보보호법 제17조). '+
       '상태를 바꾸면 <b>누가 · 언제 · 왜</b>가 DB 에 같이 남습니다.</p>'+
+
+    '<p class="rq-note">⚠️ <b>이 목록이 기준입니다 — 슬랙이 아닙니다.</b> '+
+      '알림이 실패하면 슬랙에는 없고 여기에만 있습니다.</p>'+
     rqChips(L)+
     '<div class="rq-g">'+ shown.map(rqRow).join("") +'</div>'+
     '<p class="rq-note">위 숫자는 <b>최근 '+L.length+'건에서 센 값</b>입니다. '+
@@ -388,18 +391,30 @@ function rqNeed(m, r){
   return out;
 }
 
+function rqPvLinked(id){
+  var L = RQ.linked;
+  if(!L) return null;
+  return L.indexOf(id) >= 0;
+}
+
 function rqPvOpt(p, cur){
   var on = p.assignable !== false;
+
+  var lk = rqPvLinked(p.id);
+  if(lk === false) on = false;
   return '<option value="'+esc(p.id)+'"'+
     (cur === p.id ? " selected" : "")+(on ? "" : " disabled")+'>'+
     esc(p.name)+
-    (on ? (p.listed ? "" : " (아직 공개 전)") : " — 배정 가능 꺼짐")+
+    (lk === false ? " — 업체 계정 미연결"
+      : on ? (p.listed ? "" : " (아직 공개 전)") : " — 배정 가능 꺼짐")+
   '</option>';
 }
 
 function rqPvFit(p, w){
   if(!w) return false;
   if(p.assignable === false) return false;
+
+  if(rqPvLinked(p.id) === false) return false;
   var subs = p.subs || [];
   if(w.sub){
     if(subs.indexOf(w.sub) < 0) return false;
@@ -715,6 +730,8 @@ function rqLoad(){
       RQ.role  = d.role || RQ.role;
       RQ.rows  = d.requests || [];
       RQ.provs = d.providers || [];
+
+      RQ.linked = Array.isArray(d.linked) ? d.linked : null;
 
       RQ.deals = d.deals || [];
       RQ.fees  = d.fees  || [];
@@ -1541,6 +1558,9 @@ function rqProvs(){
 
   var noCon = P.filter(function(p){ return !rqPvCon(p.id); }).length;
 
+  var noLink = RQ.linked
+    ? P.filter(function(p){ return rqPvLinked(p.id) === false; }).length : 0;
+
   return '<section class="ad-s rq-s rq-s-pv">'+
     '<h2>업체 · 공개 승인</h2>'+
     (!P.length
@@ -1554,6 +1574,8 @@ function rqProvs(){
             '배정 고르개에서 잠겨 있습니다 — 제휴 계약을 확인하고 켜 주세요.' : '')+
           (noCon ? ' <b>'+noCon+'곳</b>은 <b>담당자</b>가 안 적혀 있어 '+
             '배정하고 걸 곳이 대표번호뿐입니다.' : '')+
+          (noLink ? ' <b>'+noLink+'곳</b>은 <b>업체 계정이 안 이어져</b> '+
+            '있어 배정해도 업체가 수락 · 상담 · 견적으로 넘길 수 없습니다.' : '')+
           (RQ.role === "admin" ? ''
             : ' ⚠️ 공개 · 배정 가능을 켜는 것은 <b>관리자만</b> 할 수 있습니다.')+
         '</p>'+
@@ -1583,11 +1605,16 @@ function rqProvRow(p){
 
         '<i class="myq-st myq-'+(p.assignable === false ? "warn" : "ok")+'">'+
           (p.assignable === false ? "배정 불가" : "배정 가능")+'</i>'+
+
+        (rqPvLinked(p.id) === false
+          ? '<i class="myq-st myq-warn">계정 미연결</i>' : '')+
         (RQ.role === "admin"
           ? '<button class="btn '+(p.listed ? "btn-o" : "btn-b")+' btn-sm" type="button" '+
             'onclick="rqProvGo(\''+esc(p.id)+'\','+(!p.listed)+')">'+
             (p.listed ? "내리기" : "공개하기")+'</button>'+
-            '<button class="btn '+(p.assignable === false ? "btn-b" : "btn-o")+' btn-sm" type="button" '+
+            '<button class="btn '+(p.assignable === false ? "btn-b" : "btn-o")+' btn-sm" type="button"'+
+            (p.assignable === false && rqPvLinked(p.id) === false
+              ? ' disabled title="업체 계정이 이어져 있지 않습니다"' : '')+' '+
             'onclick="rqAsgGo(\''+esc(p.id)+'\','+(p.assignable === false)+')">'+
             (p.assignable === false ? "배정 가능으로" : "배정 막기")+'</button>'
           : '')+
@@ -1621,6 +1648,20 @@ window.rqPctx = function(k, v){ RQ.pctx[k] = v; };
 function rqPvConForm(p, c){
   var N = RQ.pctx || {};
   return '<div class="rq-bd rq-con-f">'+
+
+    (rqPvLinked(p.id) === false
+      ? '<div class="note-box"><b>업체 계정이 이어져 있지 않습니다.</b>'+
+        '<p>이대로 배정하면 <b>업체가 수락 · 상담 · 견적으로 넘길 수 '+
+          '없습니다</b> — 그 세 걸음은 업체 계정만 밟을 수 있습니다.</p>'+
+        '<p>① 그 업체 담당자가 <b>'+esc(WOW_BIZ && WOW_BIZ.site || "")+
+          '/my</b> 에서 메일로 먼저 로그인하십니다. '+
+          '② Supabase → Authentication → Users 에서 그 계정의 User UID 를 '+
+          '복사해 <b>SQL Editor</b> 에서 아래 한 줄을 돌립니다.</p>'+
+        '<pre class="ad-pre">update account set role = \'provider\', '+
+          'provider_id = \''+esc(p.id)+'\'\n where id = \'&lt;복사한 UID&gt;\';</pre>'+
+        '<p class="ad-note">⚠️ 역할 올리기는 <b>SQL 로만</b> 합니다 — '+
+          '화면에 그 단추가 있으면 누구나 업체 계정이 됩니다.</p></div>'
+      : '')+
     '<p class="f-h">⚠️ 이 칸은 <b>직원 · 관리자에게만</b> 보입니다 — '+
       '손님 화면에는 한 글자도 안 나갑니다. '+
       (c ? '마지막으로 고친 날 '+esc(String(c.updated_at || "").slice(0,10))

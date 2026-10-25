@@ -872,9 +872,13 @@ function adInvite(catKey, regKey){
 
   /* ⚠️ 전송자 정보 — 사업자 정보가 비어 있으면 **그 줄을 빼고**
      대신 적어야 할 것이 있다고 알립니다 (절대 규칙 2 · 3). */
+  /* ⚠️⚠️ 칸 이름은 `js/data/site.js` 것 그대로입니다 — 여기도
+     `B.name` · `B.bizNo` 를 읽고 있어서 **상호와 사업자등록번호가
+     업체에게 가는 글에서 빠졌습니다** (정보통신망법 제50조 제4항이
+     요구하는 전송자 표기입니다). 푸터와 같은 사고였습니다. */
   var from = [];
-  if(B.name)  from.push(B.name);
-  if(B.bizNo) from.push("사업자등록번호 " + B.bizNo);
+  if(B.company) from.push(B.company);
+  if(B.brn)     from.push("사업자등록번호 " + B.brn);
   if(B.phone) from.push(B.phone);
   if(B.email) from.push(B.email);
 

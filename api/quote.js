@@ -202,14 +202,44 @@ module.exports = async function handler(req, res){
      ⚠️ 업체 입점(partner)은 신청이 아니라 **업체 등록 신청**이라 다른
      표로 갑니다 (`provider_apply` · 0016) — 바로 아래 블록입니다.
      ════════════════════════════════════════════════════════════ */
-  let no = "";
+  let no = "", nearWhy = "";
+  const idem = clean(b.idem, 80);
   if(kind !== "partner" && dbReady()){
-    /* 최근 한 시간, 같은 번호의 것만 가져옵니다
+    /* ── ⓪ 멱등 열쇠로 **먼저** 찾습니다 (2026-10-25 §3) ──────────
+       ⚠️⚠️ **이 조회가 따로 있는 까닭이 셋입니다.**
+         ① `0017` 을 아직 안 돌린 DB 에서도 **멱등은 돕니다**
+            (`idem` 칸과 unique 인덱스는 `0009` 부터 있습니다).
+         ② 손님이 번호를 고쳐서 다시 누르신 재시도도 잡습니다
+            (아래 ①은 번호로 좁히기 때문에 못 잡습니다).
+         ③ 시각을 안 봅니다 — 끊긴 요청을 한참 뒤에 다시 누르셔도
+            같은 신청입니다.
+       ⚠️ 열쇠는 `crypto` 로 뽑은 32글자이고 손님이 고를 수 없습니다. */
+    if(idem){
+      const was = await dbSelect("request",
+        "?select=no&idem=eq." + encodeURIComponent(idem) + "&limit=1");
+      if(!was.ok)
+        console.error("[site] 멱등 조회를 못 했습니다 — " + dbWhy(was.why));
+      else if(was.rows.length && was.rows[0].no){
+        /* ⚠️⚠️ **두 번 보내지 않습니다.** 먼저 받은 번호를 그대로
+           돌려주고 여기서 끝냅니다 — 슬랙에도 안 갑니다. */
+        console.warn("[site] 같은 신청서를 다시 보내셨습니다 — " + was.rows[0].no);
+        return res.status(200).json({ ok:true, no:was.rows[0].no, dup:true,
+          say:"이미 접수되었습니다." });
+      }
+    }
+
+    /* ── ① 최근 한 시간, 같은 번호의 것 ─────────────────────────
+       ⚠️⚠️ **`tel` 이 아니라 `tel_key` 로 묻습니다** (`0017`). 표에는
+       손님이 적으신 그대로(`010-1234-5678`) 들어가는데 여기서는 숫자만
+       남겨 묻기 때문에, `tel=eq.…` 로 두면 **한 줄도 안 걸렸습니다** —
+       그러면 그 안에서 하는 멱등 비교와 스팸 판정도 같이 안 돕니다.
+       ⚠️ `0017` 을 안 돌린 DB 에서는 이 조회가 400 입니다 — 아래가
+       막지 않고 로그만 남깁니다 (멱등은 ⓪ 이 이미 잡습니다).
        ⚠️ 손님이 보낸 값을 질의문자에 그대로 이어 붙이지 않습니다 */
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const found = await dbSelect("request",
       "?select=no,tel,offer_id,cat,idem,created_at" +
-      "&tel=eq." + encodeURIComponent(telKey(q.tel)) +
+      "&tel_key=eq." + encodeURIComponent(telKey(q.tel)) +
       "&created_at=gte." + encodeURIComponent(since) +
       "&order=created_at.desc&limit=20");
 
@@ -223,7 +253,16 @@ module.exports = async function handler(req, res){
           /* §8 "재시도 요청의 중복 접수를 방지하기 위한 멱등성 처리"
              ⚠️⚠️ 같은 열쇠가 오면 **시각과 상관없이** 같은 접수입니다 —
              끊긴 요청을 다시 누르신 것이지 새 신청이 아닙니다. */
-          idem:clean(b.idem, 80) });
+          idem:idem });
+      /* ⚠️⚠️ **업무상 중복이 의심되는 것은 막지 않고 보이게 합니다**
+         (2026-10-25 §3). 같은 번호 · 같은 서비스가 10분 안에 또 와도
+         멱등 열쇠가 다르면 **손님이 새로 시작하신 것**이라 받습니다 —
+         대신 직원이 보는 자리(슬랙 글)에 한 줄로 붙습니다.
+         ⚠️ 손님 화면에는 한 글자도 안 나갑니다 (절대 규칙 3). */
+      if(dup.near){
+        nearWhy = dup.why || "";
+        console.warn("[site] 중복이 의심되지만 받았습니다 — " + nearWhy);
+      }
       /* 같은 요청을 또 누른 것 — 두 번 보내지 않고 먼저 받은 번호를
          그대로 돌려줍니다 (손님에게는 성공입니다) */
       if(dup.dup){
@@ -285,7 +324,7 @@ module.exports = async function handler(req, res){
          어느 업체에 줄지 정해지지 않았으니까요 — 배정할 때 받습니다.
          방침 제4조 제3항이 그렇게 적혀 있습니다. 비워 둡니다. */
       /* §8 멱등 — 끊겨서 다시 누르신 것을 알아보는 열쇠입니다 */
-      idem:      clean(b.idem, 80) || null,
+      idem:      idem || null,
       state:     "new"
     };
     const saved = await dbInsert("request", row);
@@ -306,7 +345,28 @@ module.exports = async function handler(req, res){
             dbWhy(it.why) + " (접수번호 " + cand + ")");
       }
     }
-    else console.error("[site] 접수를 저장하지 못했습니다 — " + dbWhy(saved.why));
+    else {
+      /* ── 동시에 들어온 요청 (2026-10-25 §3 의 5) ─────────────────
+         ⚠️⚠️ **둘째 자물쇠가 걸린 것입니다.** `0009` 의 부분 unique
+         인덱스(`request_idem_once`)가 같은 열쇠로 두 줄이 들어가는 것을
+         막습니다 — ⓪ 의 조회와 insert 사이에 다른 요청이 끼어들면
+         여기로 옵니다 (화면이 두 번 눌리거나 재시도가 겹칠 때).
+         ⚠️ 전에는 여기서 **로그만 남기고 번호를 안 냈습니다** — 다시
+         누른 손님만 번호를 못 받는 꼴이었습니다. 지금은 **먼저 들어간
+         줄의 번호를 다시 읽어** 돌려줍니다. */
+      const clash = saved.status === 409 ||
+                    /duplicate key|request_idem_once/i.test(String(saved.why || ""));
+      if(clash && idem){
+        const mine = await dbSelect("request",
+          "?select=no&idem=eq." + encodeURIComponent(idem) + "&limit=1");
+        if(mine.ok && mine.rows.length && mine.rows[0].no){
+          console.warn("[site] 동시에 들어온 같은 신청입니다 — " + mine.rows[0].no);
+          return res.status(200).json({ ok:true, no:mine.rows[0].no, dup:true,
+            say:"이미 접수되었습니다." });
+        }
+      }
+      console.error("[site] 접수를 저장하지 못했습니다 — " + dbWhy(saved.why));
+    }
   }
 
   /* ── 업체 입점 신청 (2026-10-25 진단 P1-7 · 0016) ───────────────
@@ -393,6 +453,13 @@ module.exports = async function handler(req, res){
   const L = [];
   /* ⚠️ 제일 위에 둡니다 — 직원이 전화하면서 제일 먼저 묻는 것입니다 */
   if(no) L.push("접수번호  " + no);
+  /* ⚠️⚠️ **운영자에게만 보이는 줄입니다** (2026-10-25 §3 "관리자가
+     확인할 수 있도록 하되 정상 신청을 차단하지 않는다"). 손님 화면에는
+     한 글자도 안 나갑니다 (절대 규칙 3) — 슬랙 글이 직원이 보는
+     자리라 여기에 붙입니다.
+     ⚠️ 개인정보를 싣지 않습니다 — 몇 번째인가와 앞 건의 접수번호
+     까지입니다 (성함 · 연락처는 아래 줄에 이미 있습니다). */
+  if(nearWhy) L.push("⚠️ 확인 필요  " + nearWhy);
   if(kind === "partner") L.push("업체명    " + q.company);
   L.push("성함      " + q.name);
   L.push("연락처    " + q.tel);
@@ -435,10 +502,32 @@ module.exports = async function handler(req, res){
   }
   const text = L.join("\n");
 
+  /* ── 저장과 전달을 **갈라서** 봅니다 (2026-10-25 §4) ──────────────
+     ⚠️⚠️ **전에는 전달이 실패하면 저장과 상관없이 503 이었습니다.**
+     DB 가 켜진 뒤에는 그게 이런 꼴이 됩니다 —
+
+        저장 성공 → 슬랙 실패 → 손님은 "접수되지 않았습니다" 를 보는데
+                              **DB 에는 이미 들어가 있습니다**
+
+     손님은 다시 누르고(그건 멱등이 막습니다) 그래도 실패를 보고
+     떠나시는데, 정작 요청은 받아 둔 상태입니다. §4 가 정한 대로
+     **저장된 접수는 성공**입니다.
+
+     ⚠️⚠️ 반대로 **아무 데도 안 갔으면 성공이라고 하지 않습니다**
+     (절대 규칙 5). 저장도 안 됐고 전달도 안 됐으면 503 입니다 —
+     손님이 다시 누를 수 있어야 합니다.
+
+     ⚠️ 알림이 안 간 접수는 **운영자가 `/admin` 접수 목록에서** 봅니다.
+     슬랙만 보시면 이 건을 영영 못 봅니다 — 그래서 로그에 접수번호를
+     같이 적습니다 (번호는 개인정보가 아닙니다). */
   const sent = await deliver(kind, q, subject, text);
   if(!sent.ok){
     console.error("[site] 요청을 전달하지 못했습니다 — " + why(kind, sent.why));
-    return res.status(503).json({ error: "지금 접수하지 못했습니다" });
+    if(!no)
+      return res.status(503).json({ error: "지금 접수하지 못했습니다" });
+    console.error("[site] ⚠️⚠️ 접수는 저장됐는데 알림이 가지 않았습니다 — " +
+      no + " · 슬랙에는 없습니다. /admin 접수 목록에서 보세요 " +
+      "(손님에게는 접수 성공으로 안내했습니다)");
   }
   /* ── 손님에게 접수 완료 안내 (2026-10-22 P0 ⑥) ──────────────────
      ⚠️⚠️ **접수를 막지 않습니다.** 보낼 곳이 설정되기 전에는 아무 일도

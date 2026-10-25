@@ -40,6 +40,46 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* ⚠️⚠️ 2026-10-25 §10 — 신청 화면의 단계 안내를 **손으로 적은 말**로
+     바꿔 봅니다. 그러면 제휴가 붙은 날에도 "아직 없습니다" 가 남습니다
+     (이 저장소가 CLAUDE.md 의 "아직 안 된 것" 표에서 겪은 자리). */
+  /* ⚠️ `CASES` 는 **[이름, 되돌리는 코드]** 짝입니다 — 객체로 적었다가
+     `.for is not iterable` 로 터졌습니다. */
+  ["신청 화면이 지금 어느 단계인지 센 값으로 말한다",
+   `window.QuoteStage = function(){
+      return '<p class="note-box qt-stage"><b>지금 등록된 제휴업체는 없습니다.</b> ' +
+             '손으로 적어 둔 말이라 업체가 생겨도 안 바뀝니다.</p>';
+    };
+    var el = document.querySelector(".qt-stage");
+    if(el) el.outerHTML = window.QuoteStage();`],
+  /* ══ 2026-10-25 §4 — 접수 실패 때 대체 연락 수단 ═══════════════
+     그 줄을 **만들지 않는** 꼴로 되돌립니다 (복사 단추만 있던 때). */
+  ["접수가 실패하면 적은 내용과 대체 연락 수단을 낸다",
+   `window.sendFail = function(failId, again, body, msg){
+      var box = document.getElementById(failId); if(!box) return;
+      box.innerHTML = '<div class="notice-bad"><b>지금은 접수되지 않았습니다.</b>'+
+        '<p>적어 주신 내용은 <b>그대로 남아 있습니다.</b></p>'+
+        '<button type="button">적은 내용 복사</button></div>';
+    };`],
+
+  /* ══ 2026-10-25 P0 — 사업자 정보가 채워도 안 나오던 자리 ══════════
+     푸터 렌더러를 **그때 꼴 그대로**(B.name · B.bizNo · B.mailOrderNo ·
+     B.addr) 되돌려 놓습니다. 그러면 채워도 네 줄이 안 나옵니다.
+     ⚠️ 그리는 함수를 바꿔치기하는 되돌리기가 보통은 안 먹습니다(검사가
+     이미 그려진 뒤에 도니까요) — 여기는 **검사가 스스로 다시 그리기**
+     때문에 먹습니다. */
+  ["사업자 정보를 채우면 푸터에 일곱 줄이 실제로 나온다",
+   `window.paintBiz = function(){
+      var B = window.WOW_BIZ || {}, box = document.getElementById("ft-biz");
+      if(!box) return;
+      var rows = [["상호", B.name], ["대표", B.ceo],
+                  ["사업자등록번호", B.bizNo], ["통신판매업신고", B.mailOrderNo],
+                  ["주소", B.addr], ["문의", B.email], ["전화", B.phone]]
+                 .filter(function(r){ return r[1]; });
+      box.innerHTML = rows.map(function(r){
+        return "<span>" + r[0] + " " + r[1] + "</span>"; }).join("");
+    };`],
+
   /* ══ 2026-10-21 — 새로고침하면 맨 위에서 시작한다 ════════════════
      ⚠️ 브라우저가 되돌려 놓는 것을 다시 켜 봅니다. 화면은 한 픽셀도
      안 바뀌고 **새로고침할 때만** 달라지는 종류라, 되돌리기를 안 넣으면

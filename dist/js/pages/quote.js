@@ -245,6 +245,20 @@ function QuoteDraftBox(){
   '</div>';
 }
 
+function QuoteStage(){
+  var n = (window.AM_PROVIDERS || []).length;
+  if(n > 0)
+    return '<p class="note-box qt-stage">지금 제휴업체 <b>'+n+'곳</b>이 '+
+      '등록되어 있습니다. 적어 주신 분야 · 지역 · 업종에 맞는 곳을 찾아 '+
+      '연결해 드립니다 — 어느 업체인지는 정해진 뒤에 알려 드리고, '+
+      '그때 연락처 전달 동의를 다시 받습니다.</p>';
+  return '<p class="note-box qt-stage"><b>지금 등록된 제휴업체는 없습니다.</b> '+
+    '요청을 받아 그 분야 업체를 찾아 드리는 단계입니다 — 접수는 실제로 '+
+    '저희에게 오고, 업체가 정해지면 어느 업체인지 알려 드린 뒤 연락처 '+
+    '전달 동의를 다시 받습니다. 언제까지 연결된다고 약속드리지는 '+
+    '않습니다.</p>';
+}
+
 function PageQuote(){
   var list = quoteServices();
   var cat  = nowQS("c"), sub = nowQS("s");
@@ -271,6 +285,8 @@ function PageQuote(){
     tight:true
   })+
   '<section class="sec sec-white"><div class="w form-wrap">'+
+
+    QuoteStage()+
     (ready ? "" :
       '<div class="notice-bad"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
         '<p>접수처 설정이 끝나면 바로 열립니다. 그동안에는 '+
@@ -554,7 +570,12 @@ window.amSend = function(failId, body, again, done){
     .then(function(r){ clearTimeout(late);
       return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
     .then(function(x){
-      if(!x.ok) throw new Error((x.j && x.j.error) || "보내지 못했습니다");
+      if(!x.ok){
+
+        const err = new Error((x.j && x.j.error) || "보내지 못했습니다");
+        err.fromServer = true;
+        throw err;
+      }
       var box = $(failId);
 
       var no = (x.j && x.j.no) ? String(x.j.no) : "";
@@ -576,9 +597,12 @@ window.amSend = function(failId, body, again, done){
     .catch(function(e){
       clearTimeout(late);
 
-      var why = (e && (e.name === "AbortError" || /aborted/i.test(e.message || "")))
-        ? "연결이 오래 걸려 끊었습니다. 신호가 잡히는 곳에서 다시 눌러 주세요."
-        : (e && e.message);
+      var why;
+      if(e && (e.name === "AbortError" || /aborted/i.test(e.message || "")))
+        why = "연결이 오래 걸려 끊었습니다. 신호가 잡히는 곳에서 다시 눌러 주세요.";
+      else if(e && e.fromServer) why = e.message;
+      else why = "인터넷 연결이 끊겼거나 서버에 닿지 못했습니다. " +
+                 "잠시 뒤 다시 눌러 주세요.";
       sendFail(failId, again, body, why);
     });
   return false;
@@ -595,6 +619,16 @@ function sendFail(failId, again, body, msg){
     return (Array.isArray(v) ? v.join(", ") : v) ? (k + ": " + v) : "";
   }).filter(Boolean).join("\n");
 
+  var B = window.WOW_BIZ || {};
+  var ways = [];
+  if(B.phone)
+    ways.push('<a class="btn btn-o" href="tel:'+
+      esc(String(B.phone).replace(/[^0-9+]/g, ""))+'">'+
+      icon("phone",16)+esc(B.phone)+'</a>');
+  if(B.email)
+    ways.push('<a class="btn btn-o" href="mailto:'+esc(B.email)+'">'+
+      icon("mail",16)+esc(B.email)+'</a>');
+
   box.innerHTML = '<div class="notice-bad"><b>지금은 접수되지 않았습니다.</b>'+
     '<p>적어 주신 내용은 <b>그대로 남아 있습니다.</b> 잠시 뒤 다시 눌러 보시거나, '+
       '아래 단추로 복사해 두셨다가 보내 주세요.</p>'+
@@ -602,6 +636,10 @@ function sendFail(failId, again, body, msg){
       '<button class="btn btn-o" type="button" onclick="amCopy(this)" '+
         'data-copy="'+esc(txt)+'">적은 내용 복사'+icon("doc",16)+'</button>'+
     '</div>'+
+    (ways.length
+      ? '<p>복사한 내용을 아래로 보내 주시면 저희가 받아 처리하겠습니다.</p>'+
+        '<div class="row-cta">'+ways.join("")+'</div>'
+      : '')+
     (msg ? '<p class="note">'+esc(msg)+'</p>' : '')+
   '</div>';
   var btn = document.querySelector("form button[type=submit]");

@@ -367,6 +367,26 @@ function QuoteDraftBox(){
   '</div>';
 }
 
+/* ── 지금 어느 단계인가 (§10) ─────────────────────────────────────
+   ⚠️⚠️ **지어내지 않습니다** — `AM_PROVIDERS` 를 그 자리에서 셉니다
+   (절대 규칙 1). 0곳이면 0곳이라고 말하고, 그게 지금 사실입니다.
+   ⚠️ **"검증된 업체" 라고 쓰지 마세요** — 검증 기능이 없습니다
+   (표시 · 광고의 공정화에 관한 법률 제3조 · 금지 문구 표).
+   ⚠️ 회신 시점을 약속하지 않습니다 (약관 제8조). */
+function QuoteStage(){
+  var n = (window.AM_PROVIDERS || []).length;
+  if(n > 0)
+    return '<p class="note-box qt-stage">지금 제휴업체 <b>'+n+'곳</b>이 '+
+      '등록되어 있습니다. 적어 주신 분야 · 지역 · 업종에 맞는 곳을 찾아 '+
+      '연결해 드립니다 — 어느 업체인지는 정해진 뒤에 알려 드리고, '+
+      '그때 연락처 전달 동의를 다시 받습니다.</p>';
+  return '<p class="note-box qt-stage"><b>지금 등록된 제휴업체는 없습니다.</b> '+
+    '요청을 받아 그 분야 업체를 찾아 드리는 단계입니다 — 접수는 실제로 '+
+    '저희에게 오고, 업체가 정해지면 어느 업체인지 알려 드린 뒤 연락처 '+
+    '전달 동의를 다시 받습니다. 언제까지 연결된다고 약속드리지는 '+
+    '않습니다.</p>';
+}
+
 function PageQuote(){
   var list = quoteServices();
   var cat  = nowQS("c"), sub = nowQS("s");
@@ -398,6 +418,23 @@ function PageQuote(){
     tight:true
   })+
   '<section class="sec sec-white"><div class="w form-wrap">'+
+    /* ⚠️⚠️ **지금 어느 단계인지 그 자리에서 말합니다** (2026-10-25
+       최종 지시서 §10 — "정보 제공과 실제 상담 가능한 서비스를 고객이
+       구분할 수 있는가 · 아직 운영하지 않는 서비스를 운영 중인 것처럼
+       표현하지 않는가").
+
+       ⚠️ 이 줄이 **한 번 사라졌습니다.** 전에는 메인의
+       `MainProviders()` · `MainLast()` 가 "지금은 요청을 받아 업체를
+       찾아 드리는 단계입니다" 를 내고 있었는데, 2026-10-22 개편으로 그
+       구간들이 `home-retired.js` 로 내려가면서 **손님이 보는 자리에서
+       통째로 빠졌습니다** (띄워서 재 보고 알았습니다 — 열한 화면 가운데
+       그 말을 하는 곳이 세 곳뿐이었고 `/quote` 는 없었습니다).
+
+       ⚠️⚠️ **세는 값입니다.** 손으로 "아직 없습니다" 를 적으면 제휴가
+       붙은 날에도 그대로 남습니다 — 업체를 등록하시면 **코드를 한 줄도
+       안 고치고** 아래 문장이 바뀝니다 (이 저장소가 CLAUDE.md 의
+       "아직 안 된 것" 표에서 겪은 자리). */
+    QuoteStage()+
     (ready ? "" :
       '<div class="notice-bad"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
         '<p>접수처 설정이 끝나면 바로 열립니다. 그동안에는 '+
@@ -769,7 +806,14 @@ window.amSend = function(failId, body, again, done){
     .then(function(r){ clearTimeout(late);
       return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
     .then(function(x){
-      if(!x.ok) throw new Error((x.j && x.j.error) || "보내지 못했습니다");
+      if(!x.ok){
+        /* ⚠️ 서버가 **사람 말로** 적어 준 것은 그대로 보여 줍니다
+           ("성함과 연락처를 적어 주세요"). 아래 catch 가 기술 문구와
+           가르려고 표시를 답니다 (2026-10-25 §4). */
+        const err = new Error((x.j && x.j.error) || "보내지 못했습니다");
+        err.fromServer = true;
+        throw err;
+      }
       var box = $(failId);
       /* §6 "모든 신청에 고유 신청번호를 발급한다"
          ⚠️⚠️ **번호가 없으면 줄째 뺍니다** (절대 규칙 2 · 5). 서버는
@@ -806,10 +850,18 @@ window.amSend = function(failId, body, again, done){
     .catch(function(e){
       clearTimeout(late);
       /* 끊긴 것인지 서버가 거절한 것인지를 갈라서 말합니다 — 손님이
-         무엇을 하셔야 하는지가 다릅니다. */
-      var why = (e && (e.name === "AbortError" || /aborted/i.test(e.message || "")))
-        ? "연결이 오래 걸려 끊었습니다. 신호가 잡히는 곳에서 다시 눌러 주세요."
-        : (e && e.message);
+         무엇을 하셔야 하는지가 다릅니다.
+         ⚠️⚠️ **기술 문구를 손님 화면에 찍지 않습니다** (2026-10-25 §4 ·
+         절대 규칙 3). `fetch` 가 던지는 것은 "Failed to fetch" · "Load
+         failed" 처럼 영어이고, 그걸 그대로 내면 사장님은 무엇을 하셔야
+         하는지 알 수 없습니다 — 서버가 **사람 말로** 적어 준 것만
+         그대로 내고, 나머지는 쉬운 한 줄로 바꿉니다. */
+      var why;
+      if(e && (e.name === "AbortError" || /aborted/i.test(e.message || "")))
+        why = "연결이 오래 걸려 끊었습니다. 신호가 잡히는 곳에서 다시 눌러 주세요.";
+      else if(e && e.fromServer) why = e.message;
+      else why = "인터넷 연결이 끊겼거나 서버에 닿지 못했습니다. " +
+                 "잠시 뒤 다시 눌러 주세요.";
       sendFail(failId, again, body, why);
     });
   return false;
@@ -826,6 +878,26 @@ function sendFail(failId, again, body, msg){
     return (Array.isArray(v) ? v.join(", ") : v) ? (k + ": " + v) : "";
   }).filter(Boolean).join("\n");
 
+  /* ── 대체 연락 수단 (2026-10-25 §4) ────────────────────────────
+     ⚠️⚠️ **전에는 "복사" 단추만 있고 보낼 곳이 없었습니다.** 길게
+     적어 주신 사장님이 복사만 하고 막다른 길에 서는 자리였습니다.
+     ⚠️⚠️ **등록된 연락처가 있을 때만 냅니다** — 없는 번호를 지어내면
+     그게 더 나쁩니다 (절대 규칙 1 · 2 · §4 "등록되지 않은 연락처를
+     임의로 생성하지 않는다"). 지금 `js/data/site.js` 의 `phone` ·
+     `email` 이 비어 있어서 **이 줄이 아예 안 나옵니다** — 대표님이
+     채우시는 날 코드를 한 줄도 안 고치고 나옵니다.
+     ⚠️ `tel:` 에는 **숫자만** 넣습니다 (하이픈이 들어가면 기기에 따라
+     안 걸립니다 · `/admin` 과 같은 규칙). */
+  var B = window.WOW_BIZ || {};
+  var ways = [];
+  if(B.phone)
+    ways.push('<a class="btn btn-o" href="tel:'+
+      esc(String(B.phone).replace(/[^0-9+]/g, ""))+'">'+
+      icon("phone",16)+esc(B.phone)+'</a>');
+  if(B.email)
+    ways.push('<a class="btn btn-o" href="mailto:'+esc(B.email)+'">'+
+      icon("mail",16)+esc(B.email)+'</a>');
+
   box.innerHTML = '<div class="notice-bad"><b>지금은 접수되지 않았습니다.</b>'+
     '<p>적어 주신 내용은 <b>그대로 남아 있습니다.</b> 잠시 뒤 다시 눌러 보시거나, '+
       '아래 단추로 복사해 두셨다가 보내 주세요.</p>'+
@@ -833,6 +905,10 @@ function sendFail(failId, again, body, msg){
       '<button class="btn btn-o" type="button" onclick="amCopy(this)" '+
         'data-copy="'+esc(txt)+'">적은 내용 복사'+icon("doc",16)+'</button>'+
     '</div>'+
+    (ways.length
+      ? '<p>복사한 내용을 아래로 보내 주시면 저희가 받아 처리하겠습니다.</p>'+
+        '<div class="row-cta">'+ways.join("")+'</div>'
+      : '')+
     (msg ? '<p class="note">'+esc(msg)+'</p>' : '')+
   '</div>';
   var btn = document.querySelector("form button[type=submit]");

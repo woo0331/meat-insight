@@ -690,8 +690,8 @@ function adInvite(catKey, regKey){
   ];
 
   var from = [];
-  if(B.name)  from.push(B.name);
-  if(B.bizNo) from.push("사업자등록번호 " + B.bizNo);
+  if(B.company) from.push(B.company);
+  if(B.brn)     from.push("사업자등록번호 " + B.brn);
   if(B.phone) from.push(B.phone);
   if(B.email) from.push(B.email);
 

@@ -246,9 +246,10 @@ function Footer(){
 function paintBiz(){
   var box = $("ft-biz"); if(!box) return;
   var B = window.WOW_BIZ || {};
+
   var rows = [
-    ["상호", B.name], ["대표", B.ceo], ["사업자등록번호", B.bizNo],
-    ["통신판매업신고", B.mailOrderNo], ["주소", B.addr],
+    ["상호", B.company], ["대표", B.ceo], ["사업자등록번호", B.brn],
+    ["통신판매업신고", B.mailOrder], ["주소", B.address],
     ["문의", B.email], ["전화", B.phone]
   ].filter(function(r){ return r[1]; });
 

@@ -1938,6 +1938,124 @@ const AUDIT = `(() => {
     if(t.indexOf("통신판매중개자") < 0) return "중개자라는 말이 없습니다";
     if(t.indexOf("당사자가 아닙니다") < 0) return "거래 당사자가 아니라는 말이 없습니다";
     return true;`);
+  /* ⚠️⚠️ **2026-10-25 §4 — 접수가 실패했을 때.** 전에는 "적은 내용
+     복사" 단추만 있고 **보낼 곳이 없었습니다** — 길게 적어 주신
+     사장님이 복사만 하고 막다른 길에 서는 자리였습니다.
+     여기서 지키는 것은 셋입니다 —
+       ① 적으신 내용이 그대로 남고 복사 단추가 있을 것
+       ② 등록된 연락처가 **있으면** 대체 연락 수단이 나올 것
+       ③ 등록되지 않았으면 **아예 안 나올 것** (지어내지 않습니다 ·
+          절대 규칙 1 · 2) — 지금 운영이 그 상태입니다
+     ⚠️ 채우는 것은 이 화면 안에서만이고 저장소 데이터는 그대로
+     비어 있습니다. 재고 나서 되돌립니다. */
+  /* ⚠️⚠️ 2026-10-25 최종 지시서 §10 — **지금 어느 단계인지 신청 화면이
+     말하는가.** 전에는 메인의 업체 구간 · 마지막 CTA 가 "지금은 요청을
+     받아 업체를 찾아 드리는 단계입니다" 를 내고 있었는데, 2026-10-22
+     개편으로 그 구간들이 내려가면서 **손님이 보는 자리에서 통째로
+     빠졌습니다** (열한 화면을 띄워서 재 보고 알았습니다).
+     ⚠️ 보는 것은 **세는 값인가**까지입니다 — 손으로 "아직 없습니다" 를
+     적으면 제휴가 붙은 날에도 그 말이 남습니다. 업체를 하나 끼워 넣고
+     문장이 바뀌는지 봅니다 (저장소 데이터는 그대로 0곳입니다). */
+  await f("신청 화면이 지금 어느 단계인지 센 값으로 말한다", "/quote", `
+    const el = document.querySelector(".qt-stage");
+    if(!el) return "단계 안내가 없습니다 (.qt-stage)";
+    const t0 = el.textContent;
+    if(!/등록된 제휴업체는 없습니다/.test(t0))
+      return "0곳인데 0곳이라고 말하지 않습니다 — " + t0.slice(0, 80);
+    /* ⚠️ 지킬 수 없는 약속 · 검증 주장이 없어야 합니다 */
+    if(/검증된|인증된|보장|최저가|시간 안|당일/.test(t0))
+      return "지킬 수 없는 말이 섞였습니다 — " + t0.slice(0, 80);
+    const was = window.AM_PROVIDERS;
+    try{
+      window.AM_PROVIDERS = [{ id:"chk-stage", name:"검사용", subs:["interior"],
+                               regions:["seoul"], industries:[] }];
+      if(typeof QuoteStage !== "function") return "QuoteStage 가 없습니다";
+      const t1 = QuoteStage();
+      if(/등록된 제휴업체는 없습니다/.test(t1))
+        return "업체가 생겼는데도 0곳이라고 말합니다 (센 값이 아닙니다)";
+      if(t1.indexOf("1곳") < 0) return "센 값이 안 보입니다 — " + t1.slice(0, 120);
+    } finally { window.AM_PROVIDERS = was; }
+    /* ⚠️⚠️ 통과는 **true** 입니다 — 빈 문자열로 적었다가
+       prove-checks 가 "안 잡습니다" 로 냈습니다 (before === true 를 봅니다).
+       ⚠️ 주석에 백틱을 쓰지 마세요 — 검사 본문이 템플릿 문자열이라
+       거기서 끊깁니다 (이 저장소의 스물일곱 번째입니다). */
+    return true;
+  `);
+
+  await f("접수가 실패하면 적은 내용과 대체 연락 수단을 낸다", "/quote", `
+    if(typeof sendFail !== "function") return "sendFail 이 없습니다";
+    const box = document.getElementById("q-fail");
+    if(!box) return "실패 안내 자리가 없습니다";
+    const B = window.WOW_BIZ || {};
+    const keepP = B.phone, keepE = B.email;
+    let out = true;
+    try{
+      /* ③ 비어 있을 때 — 연락 수단이 없어야 합니다 */
+      B.phone = ""; B.email = "";
+      sendFail("q-fail", "quoteSend", { name:"김사장", q:"철거" },
+               "인터넷 연결이 끊겼거나 서버에 닿지 못했습니다.");
+      if(box.querySelector('a[href^="tel:"]') || box.querySelector('a[href^="mailto:"]'))
+        return "등록되지 않은 연락처를 냈습니다";
+      if(box.textContent.indexOf("복사") < 0) return "복사 단추가 없습니다";
+      if(box.textContent.indexOf("그대로 남아 있습니다") < 0)
+        return "적은 내용이 남는다는 말이 없습니다";
+
+      /* ② 채우면 나와야 합니다 */
+      B.phone = "02-1234-5678"; B.email = "help@example.com";
+      sendFail("q-fail", "quoteSend", { name:"김사장", q:"철거" }, "");
+      const tel = box.querySelector('a[href^="tel:"]');
+      const mail = box.querySelector('a[href^="mailto:"]');
+      if(!tel)  return "전화 연락 수단이 안 나옵니다";
+      if(!mail) return "메일 연락 수단이 안 나옵니다";
+      /* ⚠️ tel: 에는 숫자만 — 하이픈이 들어가면 기기에 따라 안 걸립니다 */
+      if(tel.getAttribute("href") !== "tel:0212345678")
+        return "tel: 에 숫자만 들어가지 않았습니다 — " + tel.getAttribute("href");
+    }finally{
+      B.phone = keepP; B.email = keepE;
+      box.innerHTML = "";
+    }
+    return out;`);
+
+  /* ⚠️⚠️ **2026-10-25 P0 — 채우면 실제로 나오는가.** 푸터 렌더러가
+     읽는 칸 이름이 js/data/site.js 것과 달라서, 여덟 칸을 다 채워도
+     상호 · 사업자등록번호 · 통신판매업신고 · 주소 **네 줄이 영영 안
+     나왔습니다** (전자상거래법 제10조 제1항). 빈 칸은 설계상 줄째
+     빠지니까 화면이 멀쩡해 보이고, /admin 과 약관은 맞는 이름을 세서
+     "정상" 이라고 말합니다 — 세 신호가 전부 초록인 자리였습니다.
+     빌드 가드(checkBizFields)가 칸 이름을 막고, 여기서는 **실제로
+     그려지는지**를 봅니다 (둘 다 필요합니다 — 가드는 이름만 보고,
+     여기는 지금 사업자 정보가 비어 있어도 재 볼 수 있습니다).
+     ⚠️ 채우는 것은 **이 화면 안에서만**이고 저장소 데이터는 그대로
+     비어 있습니다 (절대 규칙 1 — 지어낸 사업자 정보를 커밋하지
+     않습니다). 재고 나서 되돌려 놓습니다. */
+  await f("사업자 정보를 채우면 푸터에 일곱 줄이 실제로 나온다", "/", `
+    const B = window.WOW_BIZ;
+    if(!B) return "WOW_BIZ 가 없습니다";
+    const want = [["company","검사상호주식회사"], ["ceo","검사대표자"],
+                  ["brn","000-00-00000"], ["mailOrder","제0000-검사-0000호"],
+                  ["address","검사시 검사구 검사로 1"],
+                  ["phone","02-0000-0000"], ["email","check@example.com"]];
+    const keep = {};
+    want.forEach(function(r){ keep[r[0]] = B[r[0]]; B[r[0]] = r[1]; });
+    let txt = "";
+    try{
+      if(typeof paintBiz === "function") paintBiz();
+      else if(typeof paintChrome === "function") paintChrome();
+      const box = document.getElementById("ft-biz");
+      txt = box ? box.textContent : "";
+    }finally{
+      /* ⚠️ 무슨 일이 나도 되돌립니다 — 안 되돌리면 뒤 검사가 지어낸
+         사업자 정보를 본 화면에서 돕니다 */
+      want.forEach(function(r){ B[r[0]] = keep[r[0]]; });
+      if(typeof paintBiz === "function") paintBiz();
+    }
+    if(!txt) return "푸터의 사업자 정보 칸을 못 찾았습니다";
+    const miss = want.filter(function(r){ return txt.indexOf(r[1]) < 0; });
+    if(miss.length)
+      return "채웠는데 푸터에 안 나옵니다 — " +
+        miss.map(function(r){ return r[0]; }).join(" · ") +
+        " (칸 이름이 js/data/site.js 것과 다릅니다)";
+    return true;`);
   await f("약관에 고기 플랫폼 문구가 남아 있지 않다", "/terms", `
     const t = document.getElementById("view").textContent;
     const bad = ["고깃집","정육점","축산","육류 공급"].filter(function(w){ return t.indexOf(w) >= 0; });

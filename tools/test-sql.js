@@ -164,7 +164,23 @@ try{
                      ⚠️⚠️ `provider` 에 바로 넣지 않는 까닭 — 신청은 아직
                      업체가 아니고, 꽂으면 배정 고르개에 바로 떠서 아무
                      합의도 없는 회사로 손님 연락처가 넘어갑니다 (제17조). */
-                  "db/migrations/0016_provider_apply.sql"];
+                  "db/migrations/0016_provider_apply.sql",
+                  /* ⚠️ 0017 — 전화번호 숫자만 남긴 생성 칸 + 인덱스
+                     (2026-10-25 §3). 중복 검사 1차가 하이픈 때문에
+                     **한 줄도 못 찾던 것**을 고친 자리입니다. */
+                  "db/migrations/0017_tel_key.sql",
+                  /* ⚠️⚠️ 0018 — 업체 **계정 연결**이 없으면 배정 가능으로
+                     켜지지 않습니다 (2026-10-25 §5). 길 표의 네 걸음이
+                     업체 전용이라, 연결이 없으면 배정해 놓고 아무도
+                     다음 걸음을 못 밟습니다. */
+                  "db/migrations/0018_provider_account_link.sql",
+                  /* ⚠️⚠️ 0019 — **남의 건을 밀 수 없습니다** (§6 · §7).
+                     `move_state()` 가 길 표에서 **역할만** 보고 "어느
+                     업체의 건인가 · 누구의 신청인가" 를 안 봤습니다 —
+                     아무 업체 계정이나 남의 건을 수락 · 상담 · 견적으로
+                     밀 수 있었고, 고객 계정도 남의 접수를 취소할 수
+                     있었습니다. §7A-7 을 쓰다 찾았습니다. */
+                  "db/migrations/0019_request_scope.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ /* ⚠️⚠️ NOTICE 가 먼저 쏟아져서 앞 세 줄만 보면 **진짜
@@ -211,26 +227,38 @@ try{
       ('22222222-2222-2222-2222-222222222222','b@test'),
       ('33333333-3333-3333-3333-333333333333','pv@test'),
       ('44444444-4444-4444-4444-444444444444','staff@test'),
-      ('55555555-5555-5555-5555-555555555555','admin@test');
-    /* ⚠️⚠️ **assignable 을 켜 둡니다** (0012). 안 켜면 배정 트리거가
+      ('55555555-5555-5555-5555-555555555555','admin@test'),
+      ('77777777-7777-7777-7777-777777777777','pv2@test');
+    /* ⚠️⚠️ **차례가 바뀌었습니다 (0018 · 2026-10-25 §5).** 전에는 업체를
+       assignable 을 바로 켜서 넣었는데, 이제 **업체 계정이 이어져 있지
+       않으면 배정 가능으로 켜지지 않습니다** — 길 표의 네 걸음이 업체
+       전용이라, 연결 없이 배정하면 그 건이 거기서 멈춥니다.
+       그래서 대표님이 실제로 하시는 차례 그대로 세웁니다 —
+         ① 업체 줄 (배정 가능은 **꺼진 채**)
+         ② 담당자 계정 + 연결
+         ③ 그 다음에 배정 가능으로
+       ⚠️⚠️ **assignable 을 켜 둬야 합니다** (0012). 안 켜면 배정 트리거가
        막아서 **아래 배정 · 계약 · 수수료 검사가 통째로** "아직 배정할 수
        없는 업체" 로 떨어집니다 — 그건 코드가 아니라 **씨앗이 틀린**
        것입니다 (이 저장소가 영업기간 · 가격 씨앗에서 겪은 자리).
        ⚠️ 꺼진 쪽은 아래 "배정 가능으로 켜지 않은 업체" 블록이 따로 세웁니다. */
-    insert into provider (id, name, listed, assignable) values
-      ('pv-one','가나다','t','t'),('pv-two','라마바','t','t');
+    insert into provider (id, name, listed) values
+      ('pv-one','가나다','t'),('pv-two','라마바','t');
     insert into account (id, role, provider_id) values
       ('11111111-1111-1111-1111-111111111111','customer',null),
       ('22222222-2222-2222-2222-222222222222','customer',null),
       ('33333333-3333-3333-3333-333333333333','provider','pv-one'),
       ('44444444-4444-4444-4444-444444444444','staff',null),
-      ('55555555-5555-5555-5555-555555555555','admin',null)
+      ('55555555-5555-5555-5555-555555555555','admin',null),
+      ('77777777-7777-7777-7777-777777777777','provider','pv-two')
     /* ⚠️⚠️ 0005 의 트리거가 가입하는 순간 account 줄을 **이미** 만듭니다
        (역할은 customer 로 박혀 있습니다). 그래서 역할을 올리는 것은
        insert 가 아니라 **update** 입니다 — db/README.md 1-4 가 적어 둔
        update account set role='admin' 그대로입니다. */
     on conflict (id) do update set role = excluded.role,
                                    provider_id = excluded.provider_id;
+    /* ③ 연결이 된 뒤에야 배정 가능으로 켭니다 (0018) */
+    update provider set assignable = true where id in ('pv-one','pv-two');
     insert into request (id, no, user_id, side, name, tel, agree_at, state) values
       ('aaaaaaaa-0000-0000-0000-000000000001','SW-AAAA-0001','11111111-1111-1111-1111-111111111111','start','갑','01011110000',now(),'done'),
       ('aaaaaaaa-0000-0000-0000-000000000002','SW-AAAA-0002','22222222-2222-2222-2222-222222222222','start','을','01022220000',now(),'new');
@@ -780,10 +808,13 @@ try{
   {
     const as = u => "set role authenticated; select become('" + u + "'); ";
 
-    /* 트리거가 account 줄을 만들었는가 — 씨앗이 auth.users 에 다섯을
-       넣었으니 다섯 줄이 있어야 합니다 */
-    ok("auth.users 다섯에 account 줄이 다 있다",
-       psql("select count(*) from account") === "5", psql("select count(*) from account"));
+    /* 트리거가 account 줄을 만들었는가 — 씨앗이 auth.users 에 여섯을
+       넣었으니 여섯 줄이 있어야 합니다
+       ⚠️ 2026-10-25 (0018) 로 **하나 늘었습니다** — pv-two 에도 이어진
+       계정이 있어야 배정 가능으로 켜집니다 (계정 연결이 없으면 길 표의
+       네 걸음을 아무도 못 밟습니다). */
+    ok("auth.users 여섯에 account 줄이 다 있다",
+       psql("select count(*) from account") === "6", psql("select count(*) from account"));
 
     /* ⚠️⚠️ 가입할 때 역할을 **고를 수 없어야** 합니다. raw_user_meta_data
        에 admin 을 적어 보냅니다 — 화면에서 보내는 값입니다. */
@@ -1725,6 +1756,7 @@ try{
   {
     const as = u => "set role authenticated; select become('" + u + "'); ";
     const A  = "11111111-1111-1111-1111-111111111111";
+    const PV0= "33333333-3333-3333-3333-333333333333";
     const ST = "44444444-4444-4444-4444-444444444444";
     const AD = "55555555-5555-5555-5555-555555555555";
     const R  = "aaaaaaaa-0000-0000-0000-000000000120";
@@ -1752,6 +1784,32 @@ try{
     ok("배정 가능은 직원이 못 켠다 (관리자만)",
        r.no && /관리자만/.test(r.why || ""), r.why);
 
+    /* ══ 0018 — **계정 연결이 먼저입니다** (2026-10-25 §5) ═══════════
+       ⚠️⚠️ 길 표에서 `assigned → accepted` · `accepted → consult` ·
+       `consult → quoted` 네 걸음이 **업체 전용**입니다. 업체 계정이 그
+       업체에 이어져 있지 않으면 배정해 놓고 **아무도 다음 걸음을 못
+       밟습니다** — 첫 고객의 건이 거기서 멈춥니다. 그래서 켜는 자리에서
+       막습니다. ⚠️ 자물쇠 셋이 **다른 말로** 거절해야 어느 쪽이
+       걸렸는지 압니다 (0003 에서 겪은 자리). */
+    r = denied(as(AD) + "select approve_provider('pv-new', null, null, null, true)");
+    ok("계정이 안 이어진 업체는 관리자도 배정 가능으로 못 켠다",
+       r.no && /계정이 이어져 있지 않아/.test(r.why || ""), r.why);
+    ok("못 켠 뒤에도 꺼진 채다",
+       psql("select assignable from provider where id='pv-new'") === "f");
+    /* ⚠️ 표를 직접 고치는 길도 막힙니다 (service key 를 포함해서) */
+    r = denied("update provider set assignable = true where id='pv-new'");
+    ok("표를 직접 고쳐서도 못 켠다 (트리거)",
+       r.no && /계정이 이어져 있지 않습니다/.test(r.why || ""), r.why);
+
+    /* 대표님이 실제로 하시는 차례 — ① 담당자 로그인 ② 계정 잇기 */
+    psql(`insert into auth.users (id, email) values
+            ('88888888-8888-8888-8888-888888888888','pvnew@test')
+            on conflict (id) do nothing;
+          update account set role='provider', provider_id='pv-new'
+           where id='88888888-8888-8888-8888-888888888888';`);
+    ok("계정을 이어 두면 연결되었다고 본다",
+       psql("select provider_linked('pv-new')::text") === "true");
+
     psql(as(AD) + "select approve_provider('pv-new', null, null, '계약서 확인', true)");
     ok("관리자가 켜면 켜진다",
        psql("select assignable from provider where id='pv-new'") === "t");
@@ -1763,6 +1821,37 @@ try{
     ok("켜면 배정된다",
        psql(`select count(*) from assignment
               where request_id='${R}' and provider_id='pv-new'`) === "1");
+
+    /* ⚠️⚠️ 켜 둔 뒤에 **연결이 풀린** 경우 — 켜는 문도 트리거도 안
+       지납니다. 그때는 배정해도 업체가 수락할 수 없으니 배정하는
+       순간에 막습니다 (셋째 자물쇠 · **다른 말로** 거절합니다). */
+    psql("update account set provider_id = null " +
+         "where id='88888888-8888-8888-8888-888888888888'");
+    /* ⚠️ 새 신청으로 재 봅니다 — 위 신청은 이미 배정이 끝났습니다 */
+    const RL = "aaaaaaaa-0000-0000-0000-000000000121";
+    psql(`insert into request (id, no, side, name, tel, agree_at, state) values
+            ('${RL}','SW-AAAA-0121','start','나사장','01088880000',now(),'check')
+            on conflict (id) do nothing;`);
+    r = denied(as(AD) + `select move_state('${RL}','assigned',
+              '{"providerId":"pv-new","agree3rd":true}'::jsonb)`);
+    ok("연결이 풀리면 배정하는 순간 막힌다",
+       r.no && /계정이 이어져 있지 않습니다/.test(r.why || ""), r.why);
+    psql("update account set role='provider', provider_id='pv-new' " +
+         "where id='88888888-8888-8888-8888-888888888888'");
+
+    /* ⚠️⚠️ 어느 업체에 계정이 이어졌는지는 **직원 · 관리자만** 봅니다.
+       화면이 "이 업체는 계정이 안 이어졌습니다" 를 보여 주려고 만든
+       문이고(0012 의 account_staff 가 직원에게 업체 줄을 안 보여 줘서
+       PostgREST 로는 못 읽습니다), 고객 · 업체에게는 남의 제휴 상태입니다.
+       ⚠️ 돌려주는 것은 **업체 id 뿐**입니다 — 사람 정보가 아닙니다. */
+    ok("직원은 계정이 이어진 업체 목록을 본다",
+       psql(as(ST) + "select count(*) from linked_providers() t where t='pv-new'") === "1");
+    r = denied(as(A) + "select * from linked_providers()");
+    ok("고객은 업체 계정 연결 목록을 못 본다",
+       r.no && /직원 · 관리자만/.test(r.why || ""), r.why);
+    r = denied(as(PV0) + "select * from linked_providers()");
+    ok("업체도 남의 계정 연결 목록을 못 본다",
+       r.no && /직원 · 관리자만/.test(r.why || ""), r.why);
 
     /* ⚠️ 자리로 부르던 옛 호출(네 번째가 사유)이 그대로 돌아야 합니다 —
        새 인자를 가운데 끼우면 거기서 터집니다 (실제로 넷이 걸렸습니다). */
@@ -1903,9 +1992,17 @@ try{
        `confirm_fee()` 를 불러 두었고 그 `fee_at` 은 **now()** 입니다 —
        오늘이 10월이라 "10월 정산" 에 그것까지 섞여서 합이 안 맞았습니다.
        **코드가 아니라 씨앗이 틀린** 자리입니다 (이 저장소의 단골). */
-    psql(`insert into provider (id, name, listed, assignable, subs) values
-            ('pv-set','정산업체','t','t','{interior}')
-          on conflict (id) do nothing;`);
+    /* ⚠️ 0018 — 배정 가능을 켜려면 **계정이 먼저** 이어져 있어야
+       합니다. 이 블록은 배정을 안 하지만, 차례를 실제와 같게 둡니다. */
+    psql(`insert into provider (id, name, listed, subs) values
+            ('pv-set','정산업체','t','{interior}')
+          on conflict (id) do nothing;
+          insert into auth.users (id, email) values
+            ('99999999-9999-9999-9999-999999999999','pvset@test')
+            on conflict (id) do nothing;
+          update account set role='provider', provider_id='pv-set'
+           where id='99999999-9999-9999-9999-999999999999';
+          update provider set assignable = true where id='pv-set';`);
 
     /* ⚠️⚠️ 확정 전인 계약(9,900만원)을 **계약금액으로** 섞으면 받을 돈이
        열 배로 부풀려집니다 — 미수금에서 겪은 그 자리입니다. */
@@ -2171,6 +2268,468 @@ try{
       "select become('33333333-3333-3333-3333-333333333333'); " +
       "update provider set intro = 'x' where id='pv-one'");
     ok("두 번 돌려도 표가 닫힌 채다", r.no && /permission denied/.test(r.why), r.why);
+  }
+
+  console.log("\n── 0017 전화번호 숫자만 남긴 칸 (§3 중복 검사 1차)");
+  {
+    /* ⚠️⚠️ **왜 이 검사가 필요한가.** 접수 때 최근 신청을
+       `?tel=eq.<숫자만>` 으로 찾는데 표에는 `010-1234-5678` 처럼
+       들어갑니다 — **한 줄도 안 걸렸습니다.** 그 조회가 0건이면
+       멱등 비교와 스팸 판정도 같이 안 돕니다. */
+    ok("tel_key 가 생성 칸이다",
+       psql("select is_generated from information_schema.columns " +
+            "where table_name='request' and column_name='tel_key'") === "ALWAYS",
+       psql("select is_generated from information_schema.columns " +
+            "where table_name='request' and column_name='tel_key'"));
+
+    /* ⚠️ 하이픈이 든 번호를 넣고 **숫자만 남는지** 실제로 봅니다 —
+       정의만 보고 넘기면 정규식이 틀려도 통과합니다. */
+    psql("insert into request (no, side, name, tel, agree_at) values " +
+         "('SW-TELK-0001','start','검사','031-000-0000', now())");
+    ok("하이픈이 든 번호가 숫자만으로 남는다",
+       psql("select tel_key from request where no='SW-TELK-0001'") === "0310000000",
+       psql("select tel_key from request where no='SW-TELK-0001'"));
+
+    /* ⚠️⚠️ 손으로 넣을 수 없어야 합니다 — 두 곳에서 각자 정규화하면
+       어긋나는 날이 옵니다 (생성 칸으로 둔 까닭입니다). */
+    const w = denied("update request set tel_key='9' where no='SW-TELK-0001'");
+    ok("tel_key 를 손으로 고칠 수 없다", w.no, w.why);
+
+    /* ⚠️ 인덱스가 없으면 신청이 쌓일수록 접수마다 표를 통째로
+       훑습니다 (접수는 손님이 기다리는 자리입니다). */
+    ok("tel_key 인덱스가 있다",
+       psql("select count(*) from pg_indexes where tablename='request' " +
+            "and indexname='request_tel_key_at'") === "1");
+
+    /* ⚠️⚠️ 멱등 열쇠의 **둘째 자물쇠**가 그대로인지 같이 봅니다 —
+       조회가 틈새로 지나가도 여기서 멈춥니다 (동시 요청). */
+    psql("insert into request (no, side, name, tel, agree_at, idem) values " +
+         "('SW-TELK-0002','start','검사','010-0000-0000', now(), 'idem-x')");
+    const dup = denied("insert into request (no, side, name, tel, agree_at, idem) " +
+      "values ('SW-TELK-0003','start','검사','010-0000-0000', now(), 'idem-x')");
+    ok("같은 멱등 열쇠로 두 줄이 안 들어간다",
+       dup.no && /request_idem_once|duplicate key/.test(dup.why), dup.why);
+
+    psql("delete from request where no like 'SW-TELK-%'");
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     2026-10-25 최종 지시서 §6 — 개인정보 및 권한 검증 (아홉 질문)
+
+     ⚠️⚠️ **앞 블록들이 흩어서 보던 것을 질문 그대로 한 자리에 모았습니다.**
+     까닭은 하나입니다 — 대표님께 "아홉 질문에 전부 답했습니다" 라고
+     말씀드리려면 **질문마다 이름 붙은 검사 한 줄**이 있어야 합니다.
+     흩어 두면 어느 질문이 검사 밖인지 아무도 모릅니다 (이 저장소가
+     "데이터가 0 이면 아무 검사도 안 받는다" 로 겪은 자리).
+
+     ⚠️ 아홉 가운데 **넷은 DB 밖**입니다 — ④ 관리자 API · ⑧ service key 는
+     `tools/test-auth.js`, ⑦ 공개 URL 은 거기 + `/admin` 1번 칸,
+     ⑨ 보유 · 파기는 **코드가 아니라 운영 규정**입니다 (보고서에 적습니다).
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️ §6 개인정보 · 권한 (아홉 질문)");
+  {
+    const as = u => "set role authenticated; select become('" + u + "'); ";
+    const A   = "11111111-1111-1111-1111-111111111111";  /* 고객 갑 */
+    const PV  = "33333333-3333-3333-3333-333333333333";  /* pv-one */
+    const PV2 = "66666666-6666-6666-6666-666666666666";  /* pv-two */
+    const ST  = "44444444-4444-4444-4444-444444444444";
+    const AD  = "55555555-5555-5555-5555-555555555555";
+    /* 아직 아무에게도 배정되지 않은 신청 하나 */
+    const RN = "aaaaaaaa-0000-0000-0000-00000000f601";
+    psql(`insert into request (id, no, side, name, tel, email, agree_at, state) values
+            ('${RN}','SW-F601-0001','start','배정안된사장','01066660000',
+             'none@test.invalid', now(), 'new')
+          on conflict (id) do nothing;`);
+
+    /* ① 제3자 제공 동의 **전에** 업체에 노출되지 않는가
+       ⚠️⚠️ 자물쇠가 둘입니다 — 배정 줄이 없으면 RLS 가 안 보여 주고,
+       배정 줄은 `agree3rd_at not null` 이라 **동의 시각 없이 생길 수가
+       없습니다.** 둘을 갈라서 봅니다 (한쪽만 보면 다른 쪽이 풀려도
+       통과합니다). */
+    ok("§6① 배정 전 신청은 업체에게 한 줄도 안 보인다",
+       psql(as(PV) + `select count(*) from request where id='${RN}'`) === "0");
+    ok("§6① 연락처 · 메일도 못 읽는다 (칸 단위로 봐도)",
+       psql(as(PV) + `select count(*) from request
+                       where id='${RN}' and tel is not null`) === "0");
+    let r = denied(`insert into assignment (request_id, provider_id)
+                    values ('${RN}','pv-one')`);
+    ok("§6① 동의 시각 없이 배정 줄을 만들 수 없다 (not null)",
+       r.no && /agree3rd_at|null/i.test(r.why || ""), r.why);
+
+    /* ② 업체명과 동의 시각이 정확하게 기록되는가
+       ⚠️ 기록하는 것은 **업체 id** 입니다 (상호가 아닙니다) — 상호는
+       바뀌고 id 는 안 바뀝니다. 상호는 `provider` 를 타고 읽습니다. */
+    psql(as(AD) + `select move_state('${RN}','check','{}'::jsonb)`);
+    psql(as(AD) + `select move_state('${RN}','assigned',
+            '{"providerId":"pv-one","agree3rd":true,"why":"§6 검사"}'::jsonb)`);
+    ok("§6② 배정 줄에 업체 id 와 동의 시각이 같이 남는다",
+       psql(`select provider_id||'/'||(agree3rd_at is not null)::text
+              from assignment where request_id='${RN}'`) === "pv-one/true");
+    ok("§6② 신청 쪽에도 동의 시각이 남는다",
+       psql(`select agree3rd_at is not null from request where id='${RN}'`) === "t");
+    ok("§6② 기록에도 어느 업체인지 남는다 (§8)",
+       psql(`select data->>'providerId' from audit_log
+              where obj_id='${RN}' and to_state='assigned'`) === "pv-one");
+    ok("§6② 기록한 id 로 상호를 댈 수 있다",
+       psql(`select name from provider where id = (
+               select provider_id from assignment where request_id='${RN}')`).length > 0);
+
+    /* ③ A업체가 B업체의 고객정보에 접근할 수 없는가
+       ⚠️⚠️ **"배정 안 된 건이 안 보인다" 만으로는 모자랍니다.** 그건
+       아직 아무에게도 안 간 건이고, 물어야 하는 것은 **남에게 간 건**
+       입니다. pv-two 로 재야 그 질문입니다. */
+    ok("§6③ 다른 업체에 간 신청이 안 보인다",
+       psql(as(PV2) + `select count(*) from request where id='${RN}'`) === "0");
+    ok("§6③ 다른 업체의 배정 줄이 안 보인다",
+       psql(as(PV2) + `select count(*) from assignment
+                        where request_id='${RN}'`) === "0");
+    ok("§6③ 다른 업체의 계약 · 수수료가 안 보인다",
+       psql(as(PV2) + "select count(*) from deal where provider_id='pv-one'") === "0");
+    ok("§6③ 다른 업체의 사진 · 서류가 안 보인다",
+       psql(as(PV2) + "select count(*) from request_photo") === "0");
+    ok("§6③ 다른 업체의 견적이 안 보인다",
+       psql(as(PV2) + "select count(*) from quote where provider_id='pv-one'") === "0");
+    /* ⚠️ 업체 담당자 직통 번호도 **자기 것만** 입니다 (0013)
+       ⚠️⚠️ **줄을 하나 만들어 두고 잽니다.** 앞 블록이 마지막에
+       `save_provider_contact('pv-one','{}')` 로 그 줄을 지워서, 그냥
+       세면 **숨길 것이 없어 늘 0** 입니다 — RLS 를 전체 공개로 되돌려
+       봐도 통과하는 **빈 검사**였습니다 (되돌려 보고 알았습니다 ·
+       이 저장소의 "데이터가 0 이면 아무 검사도 안 받는다" 그 자리). */
+    psql(as(ST) + "select save_provider_contact('pv-one', " +
+         "'{\"name\":\"§6담당\",\"tel\":\"010-6060-6060\"}'::jsonb,'§6 검사')");
+    ok("§6③ 가린 것이 실제로 있다 (빈 검사가 아닙니다)",
+       psql(as(PV) + "select count(*) from provider_contact " +
+            "where provider_id='pv-one'") === "1");
+    ok("§6③ 다른 업체의 담당자 연락처가 안 보인다",
+       psql(as(PV2) + "select count(*) from provider_contact " +
+            "where provider_id='pv-one'") === "0");
+
+    /* ④ 일반 고객이 관리자 문을 쓸 수 없는가 (API 쪽은 test-auth) */
+    r = denied(as(A) + `select set_owner('${RN}','${A}')`);
+    ok("§6④ 고객은 담당자를 정할 수 없다", r.no, r.why);
+    r = denied(as(A) + `select note_request_open('${RN}')`);
+    ok("§6④ 고객은 열람 이력 문을 쓸 수 없다", r.no, r.why);
+    r = denied(as(A) + "select linked_providers()");
+    ok("§6④ 고객은 업체 계정 연결을 볼 수 없다", r.no, r.why);
+    r = denied(as(A) + "select approve_provider('pv-one', true)");
+    ok("§6④ 고객은 업체를 공개할 수 없다", r.no, r.why);
+
+    /* ⑤ 관리자가 개인정보를 조회하면 열람 이력이 남는가 (0012)
+       ⚠️⚠️ **갯수를 그냥 세지 않습니다** — 전을 재고 늘어난 값만 봅니다. */
+    const seenWas = Number(psql(
+      "select count(*) from audit_log where to_state='contact:open'"));
+    psql(as(AD) + `select note_request_open('${RN}')`);
+    ok("§6⑤ 연락처를 열면 이력이 하나 늘어난다",
+       Number(psql("select count(*) from audit_log where to_state='contact:open'"))
+         === seenWas + 1, "전 " + seenWas);
+    ok("§6⑤ 누가 · 언제 열었는지 남는다",
+       psql(`select (by_user is not null)::text||'/'||(at is not null)::text
+              from audit_log where obj_id='${RN}'
+               and to_state='contact:open' order by at desc limit 1`) === "true/true");
+    /* ⚠️⚠️ **이력에 성함 · 번호를 적지 않습니다.** 감사 기록은 못 지우는
+       것이라, 거기 연락처를 박으면 그 자체가 또 하나의 보관입니다. */
+    const seen = psql(`select coalesce(why,'')||' '||coalesce(data::text,'')
+              from audit_log where obj_id='${RN}'
+               and to_state='contact:open' order by at desc limit 1`);
+    ok("§6⑤ 이력에 성함 · 번호가 안 적힌다",
+       seen.indexOf("배정안된사장") < 0 && seen.indexOf("01066660000") < 0, seen);
+
+    /* ⑥ 업체 입점 신청이 일반 고객에게 노출되지 않는가 (0016) */
+    ok("§6⑥ 고객에게 입점 신청이 안 보인다",
+       psql(as(A) + "select count(*) from provider_apply") === "0");
+    ok("§6⑥ 업체에게도 안 보인다",
+       psql(as(PV) + "select count(*) from provider_apply") === "0");
+
+    /* ⑦ 고객의 사진 · 서류가 공개로 새지 않는가 (0011)
+       ⚠️ **버킷이 비공개인지는 여기서 못 봅니다** — 그건 Supabase 설정이고
+       `/admin` 1번 칸이 `/api/admin-health` 로 읽어 말합니다. 여기서
+       보는 것은 **줄을 누가 읽는가**까지입니다. */
+    ok("§6⑦ 로그인 안 한 사람은 사진 줄을 아예 못 읽는다",
+       denied("set role anon; select count(*) from request_photo").no);
+    ok("§6⑦ 고객은 자기 사진만 본다 (남의 것 0)",
+       psql(as(A) + "select count(*) from request_photo rp " +
+            "where rp.request_id not in (select id from request)") === "0");
+
+    /* ⑧ service key 가 브라우저로 새지 않는가 — tools/test-auth.js
+       ⚠️ DB 쪽에서 볼 수 있는 것은 **anon 에게 아무 권한도 없다**까지입니다
+       (그래서 키가 새도 읽을 것이 없습니다). verify.sql ⑫ 와 짝입니다. */
+    ok("§6⑧ anon 에게 public 표 권한이 하나도 없다",
+       psql("select count(*) from information_schema.role_table_grants " +
+            "where grantee='anon' and table_schema='public'") === "0");
+
+    /* ⑨ 보유 · 파기 — ⚠️⚠️ **코드에 지우는 길이 없습니다.** 지금 있는 것은
+       `clear_user_state`(회원 메모장)와 `drop_photo`(사진 한 장)뿐이고,
+       신청 · 배정 · 계약을 보유기간이 지나 **파기하는 길은 없습니다.**
+       그건 기능이 아니라 **운영 규정**이라 대표님 결정과 법률 검토가
+       먼저입니다 — 여기서는 "있는 척하지 않는다" 만 못박습니다. */
+    ok("§6⑨ 사진 한 장을 지우는 길은 있다 (문으로만)",
+       psql("select count(*) from pg_proc where proname='drop_photo' " +
+            "and pronamespace='public'::regnamespace") === "1");
+    ok("§6⑨ 회원 메모장을 지우는 길도 있다 (문으로만)",
+       psql("select count(*) from pg_proc where proname='clear_user_state' " +
+            "and pronamespace='public'::regnamespace") === "1");
+    /* ⚠️⚠️ **일괄 파기 함수를 만들어 둔 척하지 마세요.** 없는 것이
+       지금 사실이고, 보고서에 미완료로 적습니다 (절대 규칙 5). */
+    ok("§6⑨ 일괄 파기 함수를 만들어 둔 척하지 않는다",
+       psql("select count(*) from pg_proc where pronamespace='public'::regnamespace " +
+            "and proname ~ '(purge|erase|expire|retention)'") === "0");
+
+    psql(`delete from request where id='${RN}'`);
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     2026-10-25 최종 지시서 §7 — 실제 운영 흐름 통합 테스트
+
+     ⚠️⚠️ **무엇을 재는지 분명히 해 둡니다.** 앞 블록들은 자물쇠를
+     하나씩 눌러 봅니다 (A 는 막히나 · B 는 되나). 여기는 **한 건을
+     접수부터 끝까지 이어서** 밀어 봅니다 — 자물쇠가 저마다 멀쩡해도
+     이어 보면 끊기는 자리가 있습니다 (이 저장소가 "문은 있는데 길이
+     없다" 로 세 번 겪은 자리 — api/deal.js 를 아무 화면도 안 부르던
+     것 · confirm_fee 가 고칠 deal 줄을 만드는 길이 없던 것 ·
+     quote 표에 금액이 안 남던 것).
+
+     ⚠️⚠️ **이 블록이 재는 것은 DB 구간뿐입니다.** 전 구간(브라우저 →
+     Vercel 함수 → 운영 Supabase)을 실제로 이어 본 것은 **아직
+     없습니다** — 보고서에 **미검증**으로 적습니다. 나머지 두 구간은
+     `tools/test-api.js`(접수 · 접수번호 · 슬랙)와
+     `tools/test-flows.js`(화면에서 고르고 신청까지)가 봅니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️ §7 시나리오 A · B · C (DB 구간)");
+  {
+    const as = u => "set role authenticated; select become('" + u + "'); ";
+    const A   = "11111111-1111-1111-1111-111111111111";
+    const PV  = "33333333-3333-3333-3333-333333333333";  /* pv-one */
+    const PV2 = "66666666-6666-6666-6666-666666666666";  /* pv-two */
+    const ST  = "44444444-4444-4444-4444-444444444444";
+    const AD  = "55555555-5555-5555-5555-555555555555";
+    let r, a;
+
+    /* 접수 한 건을 세웁니다 — ⚠️ 접수는 **로그인 없이** 들어오는 것이
+       맞습니다 (견적 하나 받으려고 가입하게 만들면 거기서 닫힙니다).
+       그래서 user_id 가 비어 있고, 뒤에 claim_request 로 이어집니다. */
+    const RA = "aaaaaaaa-0000-0000-0000-00000000f701";
+    psql("insert into request (id, no, side, cat, name, tel, agree_at, state) values " +
+      "('" + RA + "','SW-F701-0001','start','it','가사장','010-7701-0001',now(),'new') " +
+      "on conflict (id) do nothing");
+
+    /* ── 시나리오 A — 창업 준비 ────────────────────────────────────
+       신청 → 접수번호 → 관리자 확인 → 배정 → 업체 확인 → 상담 결과 */
+    ok("§7A-1 접수가 번호를 들고 들어온다",
+       psql("select no from request where id='" + RA + "'") === "SW-F701-0001");
+    a = allowed(as(ST) + "select move_state('" + RA + "','check','{}'::jsonb)");
+    ok("§7A-2 직원이 확인 중으로 넘긴다", a.yes, a.why);
+    /* ⚠️⚠️ **배정 = 제3자 제공입니다** (제17조 제2항) — 동의 없이는
+       거절되고, 이것이 A 에서 제일 중요한 걸음입니다. */
+    r = denied(as(ST) + "select move_state('" + RA + "','assigned'," +
+        "'{\"providerId\":\"pv-one\"}'::jsonb)");
+    ok("§7A-3 동의 없이는 배정이 막힌다 (제17조)", r.no, r.why);
+    a = allowed(as(ST) + "select move_state('" + RA + "','assigned'," +
+        "'{\"providerId\":\"pv-one\",\"agree3rd\":true,\"why\":\"조건 맞음\"}'::jsonb)");
+    ok("§7A-4 동의를 받고 배정한다", a.yes, a.why);
+    /* ⚠️⚠️ **다음 네 걸음은 업체 전용입니다** — 직원도 관리자도 못
+       갑니다 (업체가 수락했다는 기록을 남이 적으면 뜻이 달라집니다).
+       그래서 업체 계정 연결이 §5 의 자리였습니다. */
+    r = denied(as(ST) + "select move_state('" + RA + "','accepted','{}'::jsonb)");
+    ok("§7A-5 수락은 직원이 대신 못 한다 (업체 전용)",
+       r.no && /staff\(으\)로는 할 수 없습니다/.test(r.why || ""), r.why);
+    a = allowed(as(PV) + "select move_state('" + RA + "','accepted','{}'::jsonb)");
+    ok("§7A-6 배정받은 업체가 수락한다", a.yes, a.why);
+    /* ⚠️⚠️ **여기가 §7 을 쓰다 찾은 구멍입니다** — `move_state()` 가
+       길 표에서 **역할만** 보고 "어느 업체의 건인가" 를 안 봤습니다.
+       pv-two 계정이 pv-one 에게 배정된 건을 그대로 밀었고, 감사 기록에는
+       **남이 수락한 것**으로 남았습니다. 0019 가 트리거로 막습니다. */
+    r = denied(as(PV2) + "select move_state('" + RA + "','consult','{}'::jsonb)");
+    ok("§7A-7 남의 건은 다른 업체가 못 민다 (0019)",
+       r.no && /배정된 업체가 아닙니다/.test(r.why || ""), r.why);
+    a = allowed(as(PV) + "select move_state('" + RA + "','consult','{}'::jsonb)");
+    ok("§7A-8 상담 중으로 넘어간다", a.yes, a.why);
+    /* ⚠️ "상담 결과 기록" 은 상태 + 사유입니다 — 사유가 안 남으면
+       다음 사람이 그 건을 어떻게 다룰지 모릅니다 (§8). */
+    a = allowed(as(ST) + "select move_state('" + RA + "','hold'," +
+        "'{\"why\":\"다음 달에 다시 연락 주신다고 하셨습니다\"}'::jsonb)");
+    ok("§7A-9 상담 결과를 사유와 함께 남긴다", a.yes, a.why);
+    ok("§7A-10 그 사유가 기록에 그대로 남는다 (§8)",
+       /다음 달에 다시/.test(psql("select why from audit_log where obj_id='" + RA +
+         "' and to_state='hold' order by at desc limit 1")));
+    /* ⚠️⚠️ **보류는 취소가 아닙니다** — 돌아올 수 있어야 합니다
+       (돌아올 수 없는 보류는 이름만 다른 취소이고, 그러면 그 건이
+       영업 숫자에서 실패로 집계됩니다). */
+    a = allowed(as(ST) + "select move_state('" + RA + "','check','{}'::jsonb)");
+    ok("§7A-11 보류에서 다시 확인으로 돌아온다", a.yes, a.why);
+    /* ⚠️ 나중에 가입하신 분이 **번호 + 연락처**로 가져갑니다 (§10) */
+    a = allowed(as(A) + "select claim_request('SW-F701-0001','010-7701-0001')");
+    ok("§7A-12 나중에 가입해 자기 건으로 가져온다", a.yes, a.why);
+    ok("§7A-13 가져온 뒤 고객 화면에 보인다",
+       psql(as(A) + "select count(*) from request where id='" + RA + "'") === "1");
+
+    /* ── 시나리오 B — 폐업 · 정리 ──────────────────────────────────
+       신청 → 번호 → 확인 → 배정 → 업체 견적 → 고객 선택 → 계약 기록 */
+    const RB = "aaaaaaaa-0000-0000-0000-00000000f702";
+    psql("insert into request (id, no, user_id, side, cat, name, tel, agree_at, state) values " +
+      "('" + RB + "','SW-F702-0001','" + A + "','close','demolish','나사장'," +
+      "'010-7702-0002',now(),'new') on conflict (id) do nothing");
+    psql(as(AD) + "select move_state('" + RB + "','check','{}'::jsonb)");
+    psql(as(AD) + "select move_state('" + RB + "','assigned'," +
+      "'{\"providerId\":\"pv-one\",\"agree3rd\":true}'::jsonb)");
+    /* ⚠️⚠️ **`submit_quote` 가 보는 것은 배정 줄의 상태입니다** —
+       신청 상태가 아닙니다. 수락은 `answer_assignment()` 가 **둘을
+       같이** 적습니다 (배정 줄 + 신청 상태) — `move_state` 로 신청만
+       먼저 넘기면 "배정을 먼저 수락해 주세요" 로 막히고, 둘을 다
+       부르면 "같은 상태입니다" 로 막힙니다. 하나만 부릅니다. */
+    psql(as(PV) + "select answer_assignment('" + RB + "', true, null)");
+    psql(as(PV) + "select move_state('" + RB + "','consult','{}'::jsonb)");
+    /* ⚠️⚠️ **금액만 적힌 견적을 받지 않습니다** — 포함 범위가 없으면
+       견줄 수가 없고, 그걸 고른 사장님은 나중에 별도 비용을 또 냅니다. */
+    r = denied(as(PV) + "select submit_quote('" + RB + "'," +
+        "'{\"amount\":3000000}'::jsonb)");
+    ok("§7B-1 포함 범위 없는 견적은 거절한다", r.no, r.why);
+    a = allowed(as(PV) + "select submit_quote('" + RB + "'," +
+        "'{\"amount\":3000000,\"scope\":\"철거 · 폐기물 처리 포함\"," +
+        "\"days\":5}'::jsonb)");
+    ok("§7B-2 업체가 견적을 낸다", a.yes, a.why);
+    ok("§7B-3 금액 · 범위가 DB 에 남는다 (전화로 들은 값이 아닙니다)",
+       psql("select amount::text||'/'||(scope is not null)::text from quote " +
+            "where request_id='" + RB + "' and provider_id='pv-one'") === "3000000/true");
+    ok("§7B-4 견적을 내면 상태가 같이 넘어간다",
+       psql("select state from request where id='" + RB + "'") === "quoted");
+    /* ⚠️ 고객이 고릅니다 — ⚠️⚠️ **고른 것이 곧 계약이 아닙니다** */
+    const QB = psql("select id from quote where request_id='" + RB +
+                    "' and provider_id='pv-one'");
+    /* ⚠️ 인자가 셋입니다 (견적 · 사유 · 메모) — 하나만 넘기면
+       `choose_quote(uuid) does not exist` 입니다 */
+    /* ⚠️ 인자는 **신청 · 업체 · 사유**입니다 (견적 id 가 아닙니다) —
+       고객이 고르는 것은 "어느 업체의 견적" 이고, 그 업체의 견적이
+       하나뿐이어야 뜻이 분명합니다. 처음에 견적 id 를 넘겨서
+       `choose_quote(uuid) does not exist` 로 떨어졌습니다. */
+    a = allowed(as(A) + "select choose_quote('" + RB + "'::uuid, 'pv-one', '조건이 맞음')");
+    ok("§7B-5 고객이 견적을 고른다", a.yes, a.why);
+    ok("§7B-5 고른 견적만 고른 것으로 바뀐다",
+       psql("select state from quote where id='" + QB + "'") === "chosen");
+    ok("§7B-6 고른 것이 계약으로 저절로 넘어가지 않는다",
+       psql("select state from request where id='" + RB + "'") === "quoted");
+    psql(as(PV) + "select move_state('" + RB + "','nego','{}'::jsonb)");
+    /* ⚠️⚠️ **계약금액 없이 계약 완료로 못 갑니다** (§9) */
+    r = denied(as(AD) + "select move_state('" + RB + "','signed','{}'::jsonb)");
+    ok("§7B-7 계약금액 없이 계약 완료가 안 된다", r.no, r.why);
+    a = allowed(as(AD) + "select move_state('" + RB + "','signed'," +
+        "'{\"amount\":3000000,\"providerId\":\"pv-one\"}'::jsonb)");
+    ok("§7B-8 계약 결과를 기록한다", a.yes, a.why);
+    /* ⚠️⚠️ **여기가 2차에서 찾은 자리입니다** — confirm_fee 가 고칠
+       deal 줄을 만드는 길이 없었습니다 (문은 있는데 길이 없던 것). */
+    ok("§7B-9 계약 줄이 같이 생긴다 (수수료를 확정할 대상)",
+       psql("select count(*) from deal where request_id='" + RB + "'") === "1");
+    ok("§7B-10 계약 줄이 그 업체를 가리킨다",
+       psql("select provider_id from deal where request_id='" + RB + "'") === "pv-one");
+
+    /* ── 시나리오 C — 예외 아홉 ────────────────────────────────────
+       ⚠️ C1 슬랙 장애 · C2 중복 제출 · C3 재시도는 **접수 층**이라
+       `tools/test-api.js` 가 봅니다 (여기는 DB 가 없습니다). 아래는
+       DB 구간의 여섯입니다. */
+    /* ⚠️ C4 · C6 이 같이 쓰는 신청 하나 — **선언이 쓰는 곳보다 뒤에**
+       있으면 `Cannot access 'RC' before initialization` 입니다 (const 는
+       끌어올려지지 않습니다). C6 쪽에 두었다가 걸렸습니다. */
+    const RC = "aaaaaaaa-0000-0000-0000-00000000f703";
+    psql("insert into request (id, no, side, cat, name, tel, agree_at, state) values " +
+      "('" + RC + "','SW-F703-0001','start','it','다사장','010-7703-0003',now(),'check') " +
+      "on conflict (id) do nothing");
+
+    /* C4 업체 계정 미연결 — §5 · 0018 */
+    /* ⚠️⚠️ **씨앗을 두 번 틀렸습니다 — 적어 둡니다.**
+         ① `pv-two` 를 그대로 썼더니 이미 `assignable` 이 켜져 있어서
+            0018 의 문이 **건너뛰었습니다** (그 문은 "꺼진 것을 켜는
+            때" 만 봅니다 — 켜진 것을 또 켜도 아무 일이 없는 것이
+            맞습니다).
+         ② 꺼 두고 계정 하나(`66666666`)를 끊어 봤는데, 씨앗에 pv-two
+            계정이 **둘**(`77777777` 도)이라 여전히 이어져 있었습니다.
+       그래서 **계정이 하나도 없는 업체**를 새로 세워서 잽니다 —
+       대표님이 업체를 처음 등록하신 그 상태가 그것입니다. */
+    psql("insert into provider (id, name, listed) values ('pv-c4','§7 새업체','t') " +
+         "on conflict (id) do nothing");
+    ok("§7C4 갓 등록한 업체는 배정 가능이 꺼진 채다 (기본값)",
+       psql("select assignable from provider where id='pv-c4'") === "f");
+    r = denied(as(AD) + "select approve_provider('pv-c4', null, null, null, true)");
+    ok("§7C4 계정이 안 이어진 업체는 배정 가능으로 못 켠다",
+       r.no && /계정이 이어져 있지/.test(r.why || ""), r.why);
+    /* ⚠️ 그래서 배정도 못 합니다 — 배정해 놓고 멈추는 건이 안 생깁니다 */
+    r = denied(as(AD) + "select move_state('" + RC + "','assigned'," +
+        "'{\"providerId\":\"pv-c4\",\"agree3rd\":true}'::jsonb)");
+    ok("§7C4 그래서 배정도 막힌다 (배정해 놓고 멈추는 건이 없습니다)",
+       r.no, r.why);
+    psql("insert into auth.users (id, email) values " +
+         "('cccccccc-0000-0000-0000-0000000000c4','pvc4@test') " +
+         "on conflict (id) do nothing");
+    psql("update account set role='provider', provider_id='pv-c4' " +
+         "where id='cccccccc-0000-0000-0000-0000000000c4'");
+    psql(as(AD) + "select approve_provider('pv-c4', null, null, '계약서 확인', true)");
+    ok("§7C4 계정을 이어 주면 그 자리에서 켜진다",
+       psql("select assignable from provider where id='pv-c4'") === "t");
+
+    /* C5 업체 담당자 메일 미설정 — ⚠️⚠️ **배정을 막지 않습니다.**
+       막으면 손님의 건이 멈춥니다 — 메일이 없으면 **알림만** 안 가고,
+       그 사실을 /admin 담당자 칸이 그 자리에서 말합니다 (P1-5). */
+    psql(as(ST) + "select save_provider_contact('pv-two','{}'::jsonb,'§7 검사')");
+    ok("§7C5 메일이 없어도 배정은 된다 (알림만 안 갑니다)",
+       psql("select count(*) from provider_contact where provider_id='pv-two' " +
+            "and email is not null") === "0");
+
+    /* C6 제3자 제공 동의 거부 — §7A-3 과 같은 자물쇠이지만 **거부**는
+       다른 일입니다: 동의를 안 하신 분의 건은 배정으로 가지 않고 그
+       자리에 머물러야 합니다 (취소로 밀어 버리면 안 됩니다). */
+    r = denied(as(AD) + "select move_state('" + RC + "','assigned'," +
+        "'{\"providerId\":\"pv-one\",\"agree3rd\":false}'::jsonb)");
+    ok("§7C6 동의를 거부하면 배정되지 않는다",
+       r.no && /agree3rd|동의/.test(r.why || ""), r.why);
+    ok("§7C6 거부해도 그 건이 사라지지 않는다 (확인 중 그대로)",
+       psql("select state from request where id='" + RC + "'") === "check");
+
+    /* C7 잘못된 권한으로 접근 — §6④ 와 짝입니다 (여기는 **돈** · 그리고
+       0019 가 막는 **남의 건**입니다) */
+    /* ⚠️⚠️ 고객 쪽도 같은 구멍이었습니다 — 고객 역할이 갈 수 있는 길은
+       취소(`lost`)와 보류(`hold`)뿐인데 **자기 신청인지**를 안 봐서,
+       남의 접수를 취소할 수 있었습니다. 0019 가 막습니다. */
+    const B2 = "22222222-2222-2222-2222-222222222222";   /* 고객 을 */
+    r = denied(as(B2) + "select move_state('" + RC + "','lost'," +
+        "'{\"why\":\"남의 건을 취소\"}'::jsonb)");
+    ok("§7C7 남의 신청을 다른 고객이 취소할 수 없다 (0019)",
+       r.no && /내 신청이 아닙니다/.test(r.why || ""), r.why);
+    ok("§7C7 그래서 그 건이 그대로 살아 있다",
+       psql("select state from request where id='" + RC + "'") === "check");
+    /* ⚠️ 아직 아무에게도 안 붙은 접수는 고객 역할로 건드릴 수 없습니다 —
+       번호 + 연락처로 가져가신 뒤입니다 (claim_request). */
+
+    r = denied(as(PV) + "select confirm_fee('" +
+        psql("select id from deal where request_id='" + RB + "'") +
+        "', 100000, 'excl', 100000, '{}'::jsonb, '{}'::jsonb, '업체가 직접')");
+    ok("§7C7 업체는 자기 수수료를 확정할 수 없다", r.no, r.why);
+
+    /* C8 계약 취소 — ⚠️⚠️ **관리자만**이고 사유를 받습니다. 계약 뒤로는
+       보류가 없습니다 (돈이 얽혀 있어 멈추는 것이 아니라 취소입니다). */
+    r = denied(as(PV) + "select move_state('" + RB + "','lost'," +
+        "'{\"why\":\"업체가 취소\"}'::jsonb)");
+    ok("§7C8 계약 뒤 취소는 업체가 못 한다 (관리자만)", r.no, r.why);
+    r = denied(as(AD) + "select move_state('" + RB + "','hold'," +
+        "'{\"why\":\"잠깐 멈춤\"}'::jsonb)");
+    ok("§7C8 계약 뒤에는 보류로 갈 수 없다", r.no, r.why);
+
+    /* C9 정산 전 환수 또는 취소 — 두 길을 **갈라서** 봅니다.
+       ⚠️⚠️ 확정 전에는 **취소**이고, 확정 뒤에는 **환수**입니다.
+       환수는 확정했던 액을 갈아 치우지 않고 차액을 기록에 적습니다. */
+    const DB2 = psql("select id from deal where request_id='" + RB + "'");
+    r = denied(as(AD) + "select move_state('" + RB + "','fee_wait'," +
+        "'{\"proof\":\"계약서\"}'::jsonb)");
+    ok("§7C9 수수료를 확정하지 않고 정산 대기로 못 간다 (§13)", r.no, r.why);
+    a = allowed(as(AD) + "select move_state('" + RB + "','done','{}'::jsonb)");
+    ok("§7C9 이행 완료까지 간다", a.yes, a.why);
+    a = allowed(as(AD) + "select move_state('" + RB + "','lost'," +
+        "'{\"why\":\"고객이 취소하셨습니다 (정산 전)\"}'::jsonb)");
+    ok("§7C9 정산 전에는 취소로 닫을 수 있다", a.yes, a.why);
+    ok("§7C9 취소 사유가 기록에 남는다 (§8)",
+       /정산 전/.test(psql("select why from audit_log where obj_id='" + RB +
+         "' and to_state='lost' order by at desc limit 1")));
+
+    psql("delete from request where id in ('" + RA + "','" + RB + "','" + RC + "')");
+    psql("delete from account where id='cccccccc-0000-0000-0000-0000000000c4'");
+    psql("delete from provider where id='pv-c4'");
   }
 
   console.log("\n── 되돌리기 파일이 실수로 안 돌아가는가");

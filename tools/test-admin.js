@@ -1939,8 +1939,11 @@ function ok(name, cond, extra) {
               subs:["interior"], regions:["gyeonggi"], gu:[], industries:[] },
             /* ⚠️⚠️ **구두 합의 단계 업체** — 계약 전에 배정되면 그 순간
                성함 · 연락처가 그 업체로 넘어갑니다 (제17조 제2항). */
+            /* ⚠️⚠️ `subs` 는 **하위 key** 입니다 (`demolish` 는 분류 key —
+               적으면 조건에 아예 안 맞아서 아래 추천 검사가 **엉뚱한
+               까닭으로** 통과합니다). `full` = 전체 철거. */
             { id:"pv-new", name:"무촌철거", listed:true, assignable:false,
-              subs:["demolish"], regions:["seoul"], gu:[], industries:[] },
+              subs:["full"], regions:["seoul"], gu:[], industries:[] },
             /* 조건(하는 일 · 지역 · 업종)이 **다 맞는** 곳 — P2 ⑲ */
             { id:"pv-fit", name:"서울 철거산업", listed:true, assignable:true,
               subs:["demolish","waste"], regions:["seoul"], gu:["강남구"],
@@ -2127,6 +2130,131 @@ function ok(name, cond, extra) {
     ok("켜면 approve_provider 로 간다",
        !!sent && sent.fn === "approve_provider" && sent.args.p_assignable === true, sent);
     ok("왜 켰는지도 같이 보낸다", !!sent && /계약/.test(sent.args.p_why || ""), sent);
+
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     2026-10-25 최종 지시서 §5 — 업체 **계정 연결**이 화면에 보이는가
+
+     ⚠️⚠️ 길 표에서 `assigned → accepted` · `accepted → consult` ·
+     `consult → quoted` 세 걸음이 **업체 전용**입니다. 업체 계정이 그
+     업체에 이어져 있지 않으면 배정해 놓고 **아무도 다음 걸음을 못
+     밟습니다** — 첫 고객의 건이 거기서 멈춥니다. DB 가 막아 주지만
+     (0018), 직원이 **왜 못 켜는지**를 화면에서 알아야 합니다.
+
+     ⚠️ 위 P0 블록은 `linked` 를 **안 보냅니다** (모름) — 그때는 아무것도
+     막지 않는 것이 맞습니다. 여기는 **보내는 쪽**을 봅니다.
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️ 업체 계정 연결 (2026-10-25 §5)");
+  {
+    const { pg, ctx, errs } = await fresh(1440, 1400);
+    const ME = "44444444-4444-4444-4444-444444444444";
+    const R1 = "11111111-1111-1111-1111-111111111111";
+
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"admin",
+                             name:"관리자", provider:null,
+                             conf:{ url:"https://proj.supabase.co", anonKey:"A" } }) }));
+
+    await pg.route("**/api/me**", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({
+        auth:true, signedIn:true, role:"admin", me:ME,
+        requests:[
+          { id:R1, no:"SW-AB12-CD34", side:"close", cat:"demolish",
+            industry:"restaurant", region:"seoul", gu:"", state:"check",
+            owner_id:ME, created_at:"2026-10-25T02:00:00+00:00", assignment:[] }
+        ],
+        staff:[{ id:ME, name:"김직원", role:"staff" }],
+        providers:[
+          /* ⚠️ `subs` 는 **하위 key** 입니다 — `demolish` 는 분류 key 라
+             조건에 아예 안 맞고, 그러면 아래 추천 검사가 엉뚱한 까닭으로
+             통과합니다 (씨앗이 틀린 자리). */
+          { id:"pv-link", name:"이음철거", listed:true, assignable:true,
+            subs:["full"], regions:["seoul"], gu:[], industries:[] },
+          /* ⚠️⚠️ **계정이 안 이어진 업체** — 켜 봐야 0018 이 거절합니다 */
+          { id:"pv-bare", name:"홀로철거", listed:true, assignable:false,
+            subs:["full"], regions:["seoul"], gu:[], industries:[] },
+          /* ⚠️⚠️ **켜 둔 뒤에 연결이 풀린 업체** — 여기가 진짜 위험한
+             자리입니다. `assignable` 이 켜져 있어서 **배정 가능 쪽
+             자물쇠로는 안 걸리고**, 배정하면 0018 의 셋째 자물쇠가
+             거절합니다. 이 업체로 재지 않으면 고르개 · 추천 검사가
+             "배정 가능 꺼짐" 때문에 **엉뚱한 까닭으로** 통과합니다
+             (이 저장소가 0003 에서 겪은 자리). */
+          { id:"pv-cut", name:"끊긴철거", listed:true, assignable:true,
+            subs:["full"], regions:["seoul"], gu:[], industries:[] }
+        ],
+        /* ⚠️ **업체 id 뿐**입니다 (linked_providers() 가 돌려주는 것) */
+        linked:["pv-link"],
+        quotes:[], deals:[], audits:[] }) }));
+
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(500);
+
+    /* ── 업체 구간 — 딱지와 단추 ─────────────────────────────── */
+    const bare = pg.locator("#rq .rq-s-pv .rq-r").filter({ hasText:"홀로철거" });
+    const link = pg.locator("#rq .rq-s-pv .rq-r").filter({ hasText:"이음철거" });
+    ok("계정이 안 이어진 업체에 딱지가 붙는다",
+       (await bare.locator(".myq-st", { hasText:"계정 미연결" }).count()) === 1);
+    ok("이어진 업체에는 그 딱지가 없다",
+       (await link.locator(".myq-st", { hasText:"계정 미연결" }).count()) === 0);
+    /* ⚠️⚠️ 누를 때마다 DB 가 거절하는 단추를 내면 §30-7 입니다 —
+       막되 **왜 못 누르는지**를 그 자리에서 말합니다. */
+    const asgBtn = bare.locator("button", { hasText:"배정 가능으로" });
+    ok("배정 가능 단추가 꺼져 있다", (await asgBtn.count()) === 1 &&
+       (await asgBtn.first().isDisabled()) === true);
+    ok("왜 못 누르는지 단추가 들고 있다",
+       /계정/.test(await asgBtn.first().getAttribute("title") || ""),
+       await asgBtn.first().getAttribute("title"));
+
+    /* ── 고치는 길을 그 자리에서 ──────────────────────────────── */
+    const pvHtml = await pg.locator("#rq .rq-s-pv").innerHTML();
+    ok("몇 곳이 안 이어졌는지 센다", /2곳/.test(pvHtml) &&
+       /계정이 이어져 있지 않/.test(pvHtml));
+    /* ⚠️⚠️ **복구 SQL 을 그 자리에 냅니다** (§5 "최소한의 장애 복구
+       절차"). 화면에서 역할을 올릴 수 있게 만들면 그게 가장 큰
+       구멍이라 일부러 SQL 입니다 — 그래서 적어 줘야 합니다. */
+    await bare.locator("button", { hasText:"담당자" }).first().click();
+    await pg.waitForSelector("#rq .rq-con-f", { timeout:5000 });
+    const conTx = await pg.locator("#rq .rq-con-f").textContent();
+    ok("담당자 칸에 계정을 잇는 SQL 이 적혀 있다",
+       /update account set role/.test(conTx) && /provider_id/.test(conTx),
+       conTx.slice(0, 300));
+    /* ⚠️ 이어진 업체에는 그 안내를 안 냅니다 — 늘 뜨면 안 읽힙니다 */
+    await link.locator("button", { hasText:"담당자" }).first().click();
+    await pg.waitForTimeout(300);
+    ok("이어진 업체에는 그 안내를 안 낸다",
+       !/update account set role/.test(
+         await pg.locator("#rq .rq-con-f").textContent()));
+
+    /* ── 배정 고르개 — 아예 못 고릅니다 ───────────────────────── */
+    await pg.locator("#rq .rq-s-rq .rq-r >> nth=0 >> .rq-hd").click();
+    await pg.waitForTimeout(300);
+    await pg.locator("#rq-to").selectOption("assigned");
+    await pg.waitForTimeout(300);
+    const opts = await pg.locator("#rq-pv option").evaluateAll(
+      els => els.map(e => ({ v:e.value, off:e.disabled, t:e.textContent })));
+    /* ⚠️⚠️ `pv-cut`(배정 가능은 켜졌는데 연결이 풀린 곳)으로 잽니다 —
+       `pv-bare` 로 재면 "배정 가능 꺼짐" 이 먼저 막아서 이 자물쇠를
+       빼 봐도 통과합니다 (되돌려 보고 알았습니다). */
+    const bo = opts.filter(o => o.v === "pv-cut")[0];
+    /* ⚠️⚠️ **숨기지 않고 잠급니다** — 숨기면 "왜 그 업체가 목록에
+       없지" 가 되고, 왜 못 고르는지를 아는 쪽이 낫습니다. */
+    ok("고르개에 남아 있고 잠겨 있다", !!bo && bo.off === true, bo);
+    ok("고르개 딱지가 까닭을 말한다", !!bo && /계정 미연결/.test(bo.t), bo);
+    const lo = opts.filter(o => o.v === "pv-link")[0];
+    ok("이어진 업체는 그대로 고를 수 있다", !!lo && lo.off === false, lo);
+    /* ⚠️ 조건은 둘 다 맞지만(철거 · 서울) 추천에는 안 올립니다 */
+    const grp = await pg.locator("#rq-pv optgroup").evaluateAll(
+      els => els.map(e => ({ l:e.label,
+                             v:[].map.call(e.children, c => c.value) })));
+    ok("계정이 안 이어진 곳은 추천에 안 올린다",
+       grp.length === 2 && grp[0].v.join() === "pv-link" &&
+       grp[1].v.indexOf("pv-cut") >= 0 &&
+       grp[1].v.indexOf("pv-bare") >= 0, JSON.stringify(grp));
 
     ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
     await ctx.close();

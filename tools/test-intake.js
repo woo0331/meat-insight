@@ -119,6 +119,56 @@ console.log("\n── ⚠️⚠️ 멱등 열쇠 (§8 재시도의 중복 접수
   ok("빈 열쇠는 없는 것으로 본다", !blank.dup, blank);
 }
 
+/* ── 2026-10-25 최종 지시서 §3 — 중복 접수 **정책이 확정됐습니다** ──
+   · "같은 전화번호와 같은 서비스를 다시 신청하더라도 **명시적으로 새
+      신청을 시작한 경우에는 허용**한다."
+   · "업무상 중복이 의심되는 경우에는 **관리자가 확인할 수 있도록 하되,
+      정상 신청을 임의로 차단하지 않는다.**"
+
+   "명시적으로 새 신청" 을 아는 길이 **멱등 열쇠**입니다 — 화면이 폼
+   하나에 열쇠 하나를 만들고 보낸 뒤 비웁니다. 열쇠가 왔는데 ⓪(같은
+   열쇠)에서 안 걸렸다면 손님이 새로 시작하신 것입니다.
+   ⚠️⚠️ **열쇠가 없으면 그대로 막습니다** — 구분할 길이 없고, 안 막으면
+   20초에 끊긴 요청을 다시 누르신 분의 접수가 두 건이 됩니다. */
+console.log("\n── ⚠️⚠️ 2026-10-25 §3 — 같은 서비스 재신청을 막지 않는다");
+{
+  const prev = { no:"SW-NEAR-0001", tel:"010-1234-5678", idem:"key-old",
+                 offer_id:"interior", cat:"interior", created_at:ago(3) };
+
+  /* 열쇠가 **다름** = 손님이 폼을 새로 시작하셨다 → 받습니다 */
+  const fresh = I.intakeDup(NOW, [prev],
+    { tel:"010-1234-5678", offerId:"interior", idem:"key-new" });
+  ok("열쇠가 다르면 같은 서비스도 새 접수로 받는다", fresh.ok === true, fresh);
+  ok("받으면서 운영자에게 표시한다 (near)", fresh.near === true, fresh);
+  ok("몇 번째인지와 앞 건의 번호를 운영자에게 준다",
+     /2번째/.test(fresh.why || "") && fresh.no === "SW-NEAR-0001", fresh);
+  /* ⚠️⚠️ **손님 화면에는 한 글자도 안 나갑니다** (절대 규칙 3) —
+     `say` 가 없어야 합니다. 있으면 화면이 그걸 찍습니다. */
+  ok("손님에게 할 말이 없다 (운영자용입니다)", !fresh.say, fresh.say);
+  /* ⚠️ 막지 않았다는 것은 `dup` 이 없다는 뜻입니다 — 부르는 쪽이
+     `dup.dup` 을 보고 일찍 돌아갑니다 */
+  ok("막지 않는다 (dup 이 아니다)", !fresh.dup, fresh);
+
+  /* 열쇠가 **없으면** 재시도와 새 신청을 구분할 길이 없습니다 */
+  const noKey = I.intakeDup(NOW, [prev],
+    { tel:"010-1234-5678", offerId:"interior" });
+  ok("열쇠가 없으면 10분 안 같은 서비스는 그대로 막는다", noKey.dup === true, noKey);
+  ok("막은 까닭에 '구분할 수 없습니다' 가 적힌다",
+     /구분할 수 없/.test(noKey.why || ""), noKey.why);
+  ok("손님에게 할 말이 있다", !!noKey.say, noKey.say);
+
+  /* ⚠️ 다른 서비스는 전과 같이 **표시도 없이** 통과합니다 */
+  const other = I.intakeDup(NOW, [prev],
+    { tel:"010-1234-5678", offerId:"demolish", idem:"key-new" });
+  ok("다른 서비스는 표시도 안 붙는다", other.ok === true && !other.near, other);
+
+  /* ⚠️⚠️ 10분이 지나면 표시도 안 붙습니다 (정상 신청입니다) */
+  const later = I.intakeDup(NOW,
+    [Object.assign({}, prev, { created_at:ago(I.DUP_MIN + 1) })],
+    { tel:"010-1234-5678", offerId:"interior", idem:"key-new" });
+  ok("10분이 지나면 표시도 안 붙는다", later.ok === true && !later.near, later);
+}
+
 console.log("\n── 스팸 (§6 \"스팸을 방지\")");
 {
   function many(n, min){

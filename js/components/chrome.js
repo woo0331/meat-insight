@@ -600,9 +600,20 @@ function Footer(){
 function paintBiz(){
   var box = $("ft-biz"); if(!box) return;
   var B = window.WOW_BIZ || {};
+  /* ⚠️⚠️ **칸 이름은 `js/data/site.js` 의 WOW_BIZ 것 그대로입니다.**
+     2026-10-25 까지 여기가 `B.name` · `B.bizNo` · `B.mailOrderNo` ·
+     `B.addr` 를 읽고 있었는데 site.js 는 `company` · `brn` ·
+     `mailOrder` · `address` 입니다 — 여덟 칸을 다 채워도 푸터에는
+     **대표 · 문의 · 전화 셋만** 나왔습니다 (띄워서 재서 확인). 빈 칸은
+     설계상 줄째 빠지니까 화면이 멀쩡해 보이고, `/admin` 2번 칸과
+     빌드 경고는 **맞는 이름**을 세기 때문에 "✅ 사업자 정보" 라고
+     말합니다 — 채우고도 안 나오는 것을 아무도 못 잡는 자리였습니다
+     (전자상거래법 제10조 제1항이 표시하라고 정한 네 항목입니다).
+     ⚠️ 이제 `build-pages.js` 의 `checkBizFields()` 가 **WOW_BIZ 에
+     없는 칸 이름을 읽으면 빌드를 멈춥니다.** */
   var rows = [
-    ["상호", B.name], ["대표", B.ceo], ["사업자등록번호", B.bizNo],
-    ["통신판매업신고", B.mailOrderNo], ["주소", B.addr],
+    ["상호", B.company], ["대표", B.ceo], ["사업자등록번호", B.brn],
+    ["통신판매업신고", B.mailOrder], ["주소", B.address],
     ["문의", B.email], ["전화", B.phone]
   ].filter(function(r){ return r[1]; });
 

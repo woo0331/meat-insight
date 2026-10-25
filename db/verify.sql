@@ -8,7 +8,7 @@
 --     몇 번 돌려도 안전하고, 운영 중에 돌려도 됩니다.
 --
 --  ⚠️⚠️ 기대값은 전부 **저장소에서 센 값**입니다 (눈대중이 아닙니다) —
---     판 16 · 표 17 · 상태 13 · 역할 4 · 길 70 · 함수 36 · 트리거 3.
+--     판 19 · 표 17 · 상태 13 · 역할 4 · 길 70 · 함수 40 · 트리거 4.
 --     저장소를 고치면 이 파일도 같이 고치세요.
 --
 --  ⚠️⚠️ `tools/test-sql.js` 는 **가짜 auth 스키마**로 돌립니다
@@ -18,15 +18,15 @@
 -- ════════════════════════════════════════════════════════════════════
 
 with
-/* ① 판 번호 — 열네 줄이어야 합니다 (0001~0014) */
+/* ① 판 번호 — 열아홉 줄이어야 합니다 (0001~0019) */
 v_ver as (
   select count(*)::int n from schema_version
 ),
 /* ② 표 — 열넷 전부 있어야 합니다
-      ⚠️⚠️ **2026-10-18 — `request_item` 이 목록에서 부주고 있었습니다.**
+      ⚠️⚠️ **2026-10-18 — `request_item` 이 목록에서 빠져 있었습니다.**
       0009 로 표가 열셋이 됐고 기대값만 13 으로 올려서, **제대로
-      돌린 DB 가 12/13 ❌ 로** 나왔습니다 — 멀짱한 DB 를 "고쳐야
-      합니다" 로 잡는 쌍이고, 이것이 사장님이 돌린 DB 를 재는
+      돌린 DB 가 12/13 ❌ 로** 나왔습니다 — 멀쩡한 DB 를 "고쳐야
+      합니다" 로 잡는 자리이고, 이것이 사장님이 돌린 DB 를 재는
       유일한 길이라 제일 나쁜 종류입니다. 지금은 `checkMigDocs()` 가
       **목록 수와 기대값이 같은지**를 바로 봅니다. */
 v_tab as (
@@ -109,7 +109,12 @@ v_fn as (
                  /* 0014 — 업체가 스스로 고치는 문 (2026-10-22 P2 ⑳) */
                  ('save_provider_self'),
                  /* 0016 — 업체 입점 신청 (2026-10-25 진단 P1-7) */
-                 ('set_apply_state')) w(f)
+                 ('set_apply_state'),
+                 /* 0018 — 업체 계정 연결 (2026-10-25 최종 지시서 §5) */
+                 ('provider_linked'),('provider_link_check'),
+                 ('linked_providers'),
+                 /* 0019 — 남의 건을 밀 수 없게 (2026-10-25 §6 · §7) */
+                 ('request_scope_check')) w(f)
 ),
 /* ⑧ ⚠️⚠️ 가입 트리거가 **auth.users 에** 걸렸는가 (진짜 Supabase 전용).
       이게 없으면 가입해도 account 줄이 안 생겨서, 로그인은 되는데
@@ -156,7 +161,7 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (0001~0016)'            t, v_ver.n::text   got, '16' want from v_ver
+  select 1 i, '판 번호 (0001~0019)'            t, v_ver.n::text   got, '19' want from v_ver
   union all select  2, '표 (public)',              v_tab.n::text,  '17' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||
@@ -164,7 +169,7 @@ rows as (
                        v_st.n::text, '13' from v_st
   union all select  5, '역할',                     v_role.n::text, '4'  from v_role
   union all select  6, '갈 수 있는 길 (deal_move)', v_move.n::text, '70' from v_move
-  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '36' from v_fn
+  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '40' from v_fn
   union all select  8, '⚠️ 가입 트리거 (auth.users)', v_trg.n::text, '1' from v_trg
   union all select  9, '⚠️ auth.uid()',            v_uid.n::text,  '1'  from v_uid
   union all select 10, '⚠️ 돈 칸 쓰기 권한: ' || v_money.who, v_money.n::text, '0' from v_money

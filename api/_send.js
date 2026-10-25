@@ -29,6 +29,29 @@
 
 function won(n){ return Number(n||0).toLocaleString("ko-KR"); }
 
+/* ── 보내는 데 걸리는 시간 제한 (2026-10-25 §4) ──────────────────────
+   ⚠️⚠️ **왜 필요한가.** 받을 곳이 대답을 안 하면 `fetch` 가 돌아오지
+   않습니다. 그러면 **Vercel 함수가 먼저 죽고**(플랫폼 제한) 손님
+   화면에는 우리가 만들어 둔 안내가 아니라 플랫폼의 504 가 옵니다 —
+   애써 만든 실패 처리(적은 글 보존 · 복사 단추 · 다시 시도 · 대체
+   연락처)가 **영영 안 나옵니다.** 화면이 20초에 끊으니 그보다 먼저
+   돌아와야 합니다 (`api/_db.js` 의 8초와 같은 까닭입니다).
+   ⚠️ 8초입니다 — 더 짧으면 슬랙이 느린 날 멀쩡한 접수를 놓치고, 더
+   길면 화면이 먼저 끊습니다. */
+const SEND_TIMEOUT = 8000;
+
+function cut(){
+  if(typeof AbortController !== "function") return {};
+  const ctl = new AbortController();
+  const t = setTimeout(function(){ ctl.abort(); }, SEND_TIMEOUT);
+  /* ⚠️ 서버리스는 응답을 돌려준 뒤 멈춥니다 — 타이머를 안 치우면
+     그 사이에 한 번 더 깨어날 수 있습니다 */
+  if(t && typeof t.unref === "function") t.unref();
+  return { signal: ctl.signal };
+}
+function aborted(e){ return !!(e && (e.name === "AbortError" ||
+  /aborted|abort/i.test(String(e.message || "")))); }
+
 /* 종류별 환경변수를 먼저 보고, 없으면 공통을 씁니다.
    ⚠️ kind 는 손님이 보낸 값에서 옵니다 — 그대로 process.env 의 키로
    쓰면 안 됩니다. 알파벳만 남기고 잘라서 씁니다. */
@@ -49,18 +72,18 @@ async function deliver(kind, payload, subject, text){
   const errs = [];
   if(hook){
     try{
-      const r = await fetch(hook, {
+      const r = await fetch(hook, Object.assign({
         method:"POST", headers:{ "content-type":"application/json" },
         /* 슬랙·구글챗처럼 text 만 읽는 곳도 있어서 같이 넣습니다 */
         body: JSON.stringify(Object.assign({ kind:kind, text:subject+"\n\n"+text }, payload))
-      });
+      }, cut()));
       if(r.ok) return { ok:true };
       errs.push("webhook " + r.status);
-    }catch(e){ errs.push("webhook " + (e && e.message)); }
+    }catch(e){ errs.push("webhook " + (aborted(e) ? "시간 초과" : (e && e.message))); }
   }
   if(key && to){
     try{
-      const r = await fetch("https://api.resend.com/emails", {
+      const r = await fetch("https://api.resend.com/emails", Object.assign({
         method:"POST",
         headers:{ "content-type":"application/json", authorization:"Bearer " + key },
         body: JSON.stringify({
@@ -69,10 +92,10 @@ async function deliver(kind, payload, subject, text){
           to: to.split(",").map(s => s.trim()).filter(Boolean),
           subject: subject, text: text
         })
-      });
+      }, cut()));
       if(r.ok) return { ok:true };
       errs.push("resend " + r.status + " " + (await r.text().catch(()=> "")).slice(0,200));
-    }catch(e){ errs.push("resend " + (e && e.message)); }
+    }catch(e){ errs.push("resend " + (aborted(e) ? "시간 초과" : (e && e.message))); }
   }
   return { ok:false, why: errs.join(" / ") || "unknown" };
 }

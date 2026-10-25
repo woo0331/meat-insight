@@ -36,7 +36,7 @@
    **고른 업체가 조용히 빈 칸으로 돌아갔습니다** — 동의를 켜고 다시
    누르면 업체 없이 나가는 꼴이었습니다 (검사가 잡았습니다). 다시
    그려도 살아남아야 하니 상태로 들고, 칸은 그 값을 되읽습니다. */
-var RQ = { asked:false, on:false, signedIn:false, role:"", name:"",
+var RQ = { asked:false, on:false, signedIn:false, role:"", name:"", linked:null,
            rows:null, provs:[], fil:"", open:"", to:"", busy:false,
            ctx:{},
            /* 2차 — 계약 · 수수료 정책 · 한 건의 이력 */
@@ -182,6 +182,13 @@ function rqList(){
       '<b>목록에는 성함 · 연락처가 없습니다</b> — 가져오지 않습니다. '+
       '배정하면 그때 업체에게만 갑니다 (개인정보보호법 제17조). '+
       '상태를 바꾸면 <b>누가 · 언제 · 왜</b>가 DB 에 같이 남습니다.</p>'+
+    /* ⚠️⚠️ **2026-10-25 §4 — 이 목록이 기준입니다.** 저장이 전달보다
+       먼저라, 슬랙이 실패하면 손님은 "접수되지 않았습니다" 를 보는데
+       **여기에는 들어와 있습니다.** 슬랙만 보시면 그 건을 영영 못
+       봅니다 — 그래서 직원이 매일 보는 이 자리에 적어 둡니다
+       (api/quote.js 의 저장 · 전달 갈라 보기와 짝입니다). */
+    '<p class="rq-note">⚠️ <b>이 목록이 기준입니다 — 슬랙이 아닙니다.</b> '+
+      '알림이 실패하면 슬랙에는 없고 여기에만 있습니다.</p>'+
     rqChips(L)+
     '<div class="rq-g">'+ shown.map(rqRow).join("") +'</div>'+
     '<p class="rq-note">위 숫자는 <b>최근 '+L.length+'건에서 센 값</b>입니다. '+
@@ -527,12 +534,33 @@ function rqNeed(m, r){
    **왜 못 고르는지**를 그 자리에서 알려 주는 쪽이 낫습니다.
    ⚠️ 잠그는 것은 거드는 것이고 **막는 것은 DB 의 트리거**입니다
    (화면 코드로만 막으면 버그 하나에 뚫립니다). */
+/* ── 업체 계정이 이어져 있는가 (2026-10-25 §5 · 0018) ────────────
+   ⚠️⚠️ **왜 보여 줘야 하는가.** 길 표에서 `배정 → 수락` · `수락 →
+   상담` · `상담 → 견적` **세 걸음이 업체 전용**입니다. 업체 계정이 그
+   업체에 이어져 있지 않으면 **배정해 놓고 아무도 다음 걸음을 못
+   밟습니다** — 첫 고객의 건이 거기서 멈춥니다.
+   ⚠️ 돌아오는 것은 업체 id 목록뿐입니다 (`api/me.js` → `linked_providers`).
+   ⚠️ 못 읽었을 때(`RQ.linked` 가 null)는 **아무 말도 안 합니다** —
+   모르는 것을 "안 이어졌습니다" 로 적으면 멀쩡한 업체를 고치러
+   가십니다 (`/admin` 1번 칸의 `known:false` 와 같은 규칙). */
+function rqPvLinked(id){
+  var L = RQ.linked;
+  if(!L) return null;                       /* 모름 */
+  return L.indexOf(id) >= 0;
+}
+
 function rqPvOpt(p, cur){
   var on = p.assignable !== false;
+  /* ⚠️ 배정 가능이 켜져 있는데 연결이 **풀린** 경우가 있습니다
+     (계정을 지우거나 provider_id 를 비운 뒤). 그때는 배정해도 DB 가
+     거절하니 여기서도 잠급니다 — 0018 의 셋째 자물쇠와 짝입니다. */
+  var lk = rqPvLinked(p.id);
+  if(lk === false) on = false;
   return '<option value="'+esc(p.id)+'"'+
     (cur === p.id ? " selected" : "")+(on ? "" : " disabled")+'>'+
     esc(p.name)+
-    (on ? (p.listed ? "" : " (아직 공개 전)") : " — 배정 가능 꺼짐")+
+    (lk === false ? " — 업체 계정 미연결"
+      : on ? (p.listed ? "" : " (아직 공개 전)") : " — 배정 가능 꺼짐")+
   '</option>';
 }
 
@@ -564,6 +592,9 @@ function rqPvOpt(p, cur){
 function rqPvFit(p, w){
   if(!w) return false;
   if(p.assignable === false) return false;
+  /* ⚠️ 계정이 안 이어진 업체는 **추천하지 않습니다** — 배정해도 그
+     건이 멈춥니다 (0018 · 2026-10-25 §5) */
+  if(rqPvLinked(p.id) === false) return false;
   var subs = p.subs || [];
   if(w.sub){
     if(subs.indexOf(w.sub) < 0) return false;
@@ -965,6 +996,9 @@ function rqLoad(){
       RQ.role  = d.role || RQ.role;
       RQ.rows  = d.requests || [];
       RQ.provs = d.providers || [];
+      /* ⚠️ 못 읽었으면 **null 로 둡니다** — 빈 배열로 두면 "전부 안
+         이어졌다" 가 되어 멀쩡한 업체를 전부 잠급니다 (0018 · §5). */
+      RQ.linked = Array.isArray(d.linked) ? d.linked : null;
       /* ⚠️ 역할에 따라 **애초에 안 오는** 칸입니다 (api/me.js 의 PICK).
          화면이 없는 것을 숨기는 것이 아니라 서버가 안 보냅니다. */
       RQ.deals = d.deals || [];
@@ -1948,6 +1982,11 @@ function rqProvs(){
   /* ⚠️ **세는 값**입니다 — 담당자를 적어 둔 곳이 몇인지 손으로 적으면
      채운 뒤에도 그 수가 남습니다 (adReady() 와 같은 까닭). */
   var noCon = P.filter(function(p){ return !rqPvCon(p.id); }).length;
+  /* ⚠️⚠️ **계정 연결** — 이게 없으면 배정해 놓고 업체가 수락 · 상담 ·
+     견적으로 넘길 수 없습니다 (길 표의 세 걸음이 업체 전용입니다).
+     ⚠️ 못 읽었으면(`RQ.linked` 가 null) 아무 말도 안 합니다. */
+  var noLink = RQ.linked
+    ? P.filter(function(p){ return rqPvLinked(p.id) === false; }).length : 0;
 
   return '<section class="ad-s rq-s rq-s-pv">'+
     '<h2>업체 · 공개 승인</h2>'+
@@ -1962,6 +2001,8 @@ function rqProvs(){
             '배정 고르개에서 잠겨 있습니다 — 제휴 계약을 확인하고 켜 주세요.' : '')+
           (noCon ? ' <b>'+noCon+'곳</b>은 <b>담당자</b>가 안 적혀 있어 '+
             '배정하고 걸 곳이 대표번호뿐입니다.' : '')+
+          (noLink ? ' <b>'+noLink+'곳</b>은 <b>업체 계정이 안 이어져</b> '+
+            '있어 배정해도 업체가 수락 · 상담 · 견적으로 넘길 수 없습니다.' : '')+
           (RQ.role === "admin" ? ''
             : ' ⚠️ 공개 · 배정 가능을 켜는 것은 <b>관리자만</b> 할 수 있습니다.')+
         '</p>'+
@@ -1992,11 +2033,19 @@ function rqProvRow(p){
            "그냥 아직" 으로 읽히는데, 이건 배정이 막혀 있다는 뜻입니다. */
         '<i class="myq-st myq-'+(p.assignable === false ? "warn" : "ok")+'">'+
           (p.assignable === false ? "배정 불가" : "배정 가능")+'</i>'+
+        /* ⚠️⚠️ **계정 연결** (2026-10-25 §5 · 0018) — 이게 없으면
+           배정해 놓고 업체가 수락 · 상담 · 견적으로 넘길 수 없습니다.
+           ⚠️ 못 읽었을 때는 **딱지를 아예 안 냅니다** — 모르는 것을
+           "미연결" 로 적으면 멀쩡한 업체를 고치러 가십니다. */
+        (rqPvLinked(p.id) === false
+          ? '<i class="myq-st myq-warn">계정 미연결</i>' : '')+
         (RQ.role === "admin"
           ? '<button class="btn '+(p.listed ? "btn-o" : "btn-b")+' btn-sm" type="button" '+
             'onclick="rqProvGo(\''+esc(p.id)+'\','+(!p.listed)+')">'+
             (p.listed ? "내리기" : "공개하기")+'</button>'+
-            '<button class="btn '+(p.assignable === false ? "btn-b" : "btn-o")+' btn-sm" type="button" '+
+            '<button class="btn '+(p.assignable === false ? "btn-b" : "btn-o")+' btn-sm" type="button"'+
+            (p.assignable === false && rqPvLinked(p.id) === false
+              ? ' disabled title="업체 계정이 이어져 있지 않습니다"' : '')+' '+
             'onclick="rqAsgGo(\''+esc(p.id)+'\','+(p.assignable === false)+')">'+
             (p.assignable === false ? "배정 가능으로" : "배정 막기")+'</button>'
           : '')+
@@ -2045,6 +2094,24 @@ window.rqPctx = function(k, v){ RQ.pctx[k] = v; };
 function rqPvConForm(p, c){
   var N = RQ.pctx || {};
   return '<div class="rq-bd rq-con-f">'+
+    /* ── 계정 연결 안내 (2026-10-25 §5 · 0018) ────────────────────
+       ⚠️⚠️ **최소한의 복구 절차를 그 자리에 적습니다.** 연결은 SQL 한
+       줄이고 **화면이 없습니다** — 일부러 그렇습니다(화면에서 역할을
+       올릴 수 있으면 그게 가장 큰 구멍입니다). 그래서 "어디서 무엇을
+       하라" 를 여기에 둡니다. ⚠️ 못 읽었으면 아무 말도 안 합니다. */
+    (rqPvLinked(p.id) === false
+      ? '<div class="note-box"><b>업체 계정이 이어져 있지 않습니다.</b>'+
+        '<p>이대로 배정하면 <b>업체가 수락 · 상담 · 견적으로 넘길 수 '+
+          '없습니다</b> — 그 세 걸음은 업체 계정만 밟을 수 있습니다.</p>'+
+        '<p>① 그 업체 담당자가 <b>'+esc(WOW_BIZ && WOW_BIZ.site || "")+
+          '/my</b> 에서 메일로 먼저 로그인하십니다. '+
+          '② Supabase → Authentication → Users 에서 그 계정의 User UID 를 '+
+          '복사해 <b>SQL Editor</b> 에서 아래 한 줄을 돌립니다.</p>'+
+        '<pre class="ad-pre">update account set role = \'provider\', '+
+          'provider_id = \''+esc(p.id)+'\'\n where id = \'&lt;복사한 UID&gt;\';</pre>'+
+        '<p class="ad-note">⚠️ 역할 올리기는 <b>SQL 로만</b> 합니다 — '+
+          '화면에 그 단추가 있으면 누구나 업체 계정이 됩니다.</p></div>'
+      : '')+
     '<p class="f-h">⚠️ 이 칸은 <b>직원 · 관리자에게만</b> 보입니다 — '+
       '손님 화면에는 한 글자도 안 나갑니다. '+
       (c ? '마지막으로 고친 날 '+esc(String(c.updated_at || "").slice(0,10))

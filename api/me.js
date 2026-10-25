@@ -246,6 +246,20 @@ module.exports = async function handler(req, res){
     if(p.ok) out.providers = p.rows;
     else console.warn("[me] provider — " + p.why);
 
+    /* ⚠️⚠️ 2026-10-25 (0018) — **계정이 이어졌는가**를 같이 보냅니다.
+       길 표에서 `assigned → accepted` · `accepted → consult` ·
+       `consult → quoted` 세 걸음이 **업체 전용**이라, 계정이 안 이어진
+       업체에 배정하면 그 건이 **배정에서 멈춥니다.** 화면이 그것을
+       보여 줄 수 있어야 합니다.
+       ⚠️ `account` 를 직접 읽지 않습니다 — 직원에게는 **직원 · 관리자
+       줄만** 열려 있습니다 (0012 `account_staff`). 그래서 문으로 묻고,
+       돌아오는 것은 **업체 id 뿐**입니다 (사람 정보가 아닙니다).
+       ⚠️ 실패해도 목록은 그대로 냅니다 — 연결 표시만 안 보입니다
+       (배정 자체는 DB 가 막습니다). */
+    const lk = await dbRpc(s.token, "linked_providers", {});
+    if(lk.ok && Array.isArray(lk.data)) out.linked = lk.data;
+    else console.warn("[me] linked_providers — " + (lk.why || "모양이 다릅니다"));
+
     /* 담당자 고르개 (2026-10-22 P0 ⑤) — 직원 · 관리자 계정만입니다.
        ⚠️⚠️ **고객 계정은 애초에 안 옵니다** — 0012 의 `account_staff`
        정책이 `role in ('staff','admin')` 으로 묶어 두었습니다. 화면

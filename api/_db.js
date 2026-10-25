@@ -45,6 +45,46 @@ function safeTable(t){
   return String(t || "").toLowerCase().replace(/[^a-z_]/g, "").slice(0, 40);
 }
 
+/* ── DB 에러 본문에서 **개인정보를 걷어냅니다** (2026-10-25 §4) ──────
+   ⚠️⚠️ **왜 필요한가.** PostgREST 는 거절할 때 JSON 을 돌려주는데
+   `details` 에 **어긋난 줄을 되읽어** 적습니다 —
+
+     {"code":"23505",
+      "details":"Key (tel)=(010-1234-5678) already exists.",   ← 연락처!
+      "message":"duplicate key value violates unique constraint ..."}
+
+   그걸 그대로 `console.error` 에 적으면 **Vercel 로그에 손님 연락처가
+   남습니다.** 로그는 지우기 어렵고 수탁 범위도 아닙니다 — 이 저장소가
+   감사 기록(`audit_log`)에 성함 · 번호를 안 싣는 것과 **같은 규칙**
+   입니다 (제26조 · `note_request_open` 머리말).
+
+   ⚠️ 담는 것은 `code` 와 `message` **둘뿐**입니다. `message` 에는
+   제약 이름이 들어 있어서(`request_idem_once`) 부르는 쪽이 그걸로
+   "동시에 들어온 요청" 을 갈라볼 수 있습니다 — 값은 `details` 쪽에만
+   있으니 그것만 버리면 됩니다.
+   ⚠️⚠️ 꼴을 모르는 본문(HTML 에러 페이지 등)은 **숫자를 지웁니다** —
+   전화번호 · 사업자번호 · 금액이 섞여 들어오는 자리입니다. */
+function scrubDbErr(text){
+  const raw = String(text == null ? "" : text);
+  try{
+    const j = JSON.parse(raw);
+    if(j && typeof j === "object" && !Array.isArray(j)){
+      /* ⚠️⚠️ **꼴을 그대로 둡니다** (JSON). 부르는 쪽이 이 글에서
+         `"message":"…"` 를 뽑아 손님에게 그대로 보여 주는 자리가
+         있습니다 (`api/upload.js` — DB 가 사람 말로 거절한 것을
+         운영자 글로 덮지 않으려고요). 꼴을 바꾸면 그 말이 조용히
+         "지금 올리지 못했습니다" 로 뭉개집니다.
+         ⚠️ 버리는 것은 `details` · `hint` 입니다 — 값이 거기 있습니다. */
+      const keep = {};
+      if(j.code)    keep.code = String(j.code).slice(0, 40);
+      if(j.message) keep.message = String(j.message).slice(0, 200);
+      return Object.keys(keep).length
+        ? JSON.stringify(keep) : "(까닭을 알 수 없습니다)";
+    }
+  }catch(e){}
+  return raw.replace(/[0-9]/g, "\u00b7").slice(0, 200);
+}
+
 async function call(method, pathAndQuery, body, prefer){
   if(!dbReady()) return { ok:false, why:"nowhere" };
   const key = String(process.env.SUPABASE_SERVICE_KEY).trim();
@@ -64,9 +104,12 @@ async function call(method, pathAndQuery, body, prefer){
     });
     const text = await r.text().catch(function(){ return ""; });
     if(!r.ok){
-      /* ⚠️⚠️ 돌려주는 글에 **키를 넣지 마세요.** 에러 본문에 요청이
-         그대로 들어오는 경우가 있어서 길이를 자릅니다. */
-      return { ok:false, status:r.status, why:"db " + r.status + " " + text.slice(0, 300) };
+      /* ⚠️⚠️ 돌려주는 글에 **키도 개인정보도 넣지 마세요.** 에러 본문에
+         요청이 그대로 들어오는 경우가 있습니다 — `scrubDbErr()` 를
+         보세요 (2026-10-25 §4 "개인정보를 Slack 오류 로그나 감사
+         기록에 불필요하게 남기지 않는다"). */
+      return { ok:false, status:r.status,
+               why:"db " + r.status + " " + scrubDbErr(text) };
     }
     let data = null;
     if(text){ try{ data = JSON.parse(text); }catch(e){ data = null; } }
@@ -208,4 +251,4 @@ async function dbRpc(token, fn, args){
 }
 
 module.exports = { dbReady, dbInsert, dbSelect, dbWhy, safeTable, DB_TIMEOUT,
-                   safeFn, dbSelectAs, dbRpc, callAs, dbCallService };
+                   safeFn, dbSelectAs, dbRpc, callAs, dbCallService, scrubDbErr };

@@ -4011,6 +4011,100 @@ function checkApplySql(){
 
   console.log("   업체 입점 신청 표가 직원 · 관리자 밖으로 안 나갑니다 (0016)");
 }
+/* ════════════════════════════════════════════════════════════════════
+   사업자 정보 칸 이름이 WOW_BIZ 것과 같은가 (2026-10-25 P0)
+
+   ⚠️⚠️ **왜 이 검사가 필요한가 — 2026-10-25 에 실제로 겪었습니다.**
+   `js/components/chrome.js` 의 푸터가 `B.name` · `B.bizNo` ·
+   `B.mailOrderNo` · `B.addr` 를 읽고 있었는데 `js/data/site.js` 는
+   `company` · `brn` · `mailOrder` · `address` 입니다. 그래서 여덟 칸을
+   다 채워도 푸터에는 **대표 · 문의 · 전화 셋만** 나왔습니다 —
+   전자상거래법 제10조 제1항이 표시하라고 정한 **네 항목**입니다.
+
+   ⚠️ 왜 아무도 못 잡았나 —
+     ① 빈 칸은 **설계상 줄째 빠집니다** (절대 규칙 2) → 화면이 멀쩡해 보임
+     ② `/admin` 2번 칸(`AD_BIZ_NEED`)과 아래 `salesReady()` 는
+        **맞는 이름**을 세기 때문에 채우면 "✅ 사업자 정보" 라고 말함
+     ③ 약관 · 방침(`bizVal()`)은 **맞는 이름**을 읽어서 정상으로 나옴
+   → 세 신호가 전부 초록인데 푸터만 비어 있는 자리였습니다.
+
+   ⚠️⚠️ **주석을 먼저 떼고 봅니다.** 이 저장소는 주석에 칸 이름을 잔뜩
+   적습니다 (바로 위 문단이 그렇습니다) — 안 떼면 멀쩡한 파일을
+   실패로 잡습니다 (`select=*` 를 소스 전체에서 찾다가 겪은 자리).
+   ⚠️ 글자가 아니라 **WOW_BIZ 를 담은 변수가 보이는 범위**만 봅니다.
+   `chrome.js` 는 같은 이름 `B` 를 `AM_BRAND` 에도 쓰기 때문에, 파일
+   전체를 훑으면 `B.sub`(브랜드)가 "없는 칸" 으로 잡힙니다.
+   ════════════════════════════════════════════════════════════════════ */
+function checkBizFields(W){
+  const B = W.WOW_BIZ || {};
+  const have = new Set(Object.keys(B));
+  if(!have.size) throw new Error("js/data/site.js 의 WOW_BIZ 를 읽지 못했습니다");
+
+  const bad = [];
+  function look(rel){
+    const full = path.join(ROOT, rel);
+    if(!fs.existsSync(full)) return;
+    const src = STRIP.stripJs(fs.readFileSync(full, "utf8"));
+    const lines = src.split("\n");
+
+    /* ① WOW_BIZ.<칸> — 어디에 있든 */
+    let m, re = /WOW_BIZ\.([A-Za-z_]\w*)/g;
+    while((m = re.exec(src)))
+      if(!have.has(m[1])) bad.push(rel + " — WOW_BIZ." + m[1]);
+
+    /* ② `var B = … WOW_BIZ …` 로 담은 뒤 `B.<칸>` —
+       그 **최상위 함수 안**만 봅니다 (닫는 중괄호가 1열에 오는 데까지) */
+    lines.forEach(function(ln, i){
+      const b = ln.match(/\b(?:var|let|const)\s+([A-Za-z_]\w*)\s*=[^;]*WOW_BIZ/);
+      if(!b) return;
+      const alias = b[1];
+      let end = lines.length;
+      for(let j = i + 1; j < lines.length; j++)
+        if(/^\}/.test(lines[j])){ end = j; break; }
+      const blk = lines.slice(i, end).join("\n");
+      const rx = new RegExp("\\b" + alias + "\\.([A-Za-z_]\\w*)", "g");
+      let x;
+      while((x = rx.exec(blk)))
+        /* ⚠️ 줄 번호를 적지 않습니다 — 주석을 뗀 사본이라 **줄이
+           밀립니다.** 틀린 줄 번호는 없는 것보다 나쁩니다 (찾는 사람이
+           거기를 보고 "없네" 합니다). 파일과 칸 이름으로 충분합니다. */
+        if(!have.has(x[1])) bad.push(rel + " — " + alias + "." + x[1]);
+    });
+
+    /* ③ `bizVal("<칸>")` — 약관 · 방침이 쓰는 꼴 */
+    re = /bizVal\(\s*["']([^"']+)["']\s*\)/g;
+    while((m = re.exec(src)))
+      if(!have.has(m[1])) bad.push(rel + " — bizVal(\"" + m[1] + "\")");
+  }
+
+  const walk = d => fs.readdirSync(path.join(ROOT, d), { withFileTypes:true })
+    .forEach(function(e){
+      if(e.isDirectory()) walk(d + "/" + e.name);
+      else if(/\.js$/.test(e.name)) look(d + "/" + e.name);
+    });
+  walk("js");
+
+  if(bad.length)
+    throw new Error("WOW_BIZ 에 없는 칸 이름을 읽습니다 — 채워도 화면에 " +
+      "안 나오고, /admin 과 약관은 맞는 이름을 세서 '정상' 이라고 말합니다 " +
+      "(전자상거래법 제10조):\n   " + bad.join("\n   ") +
+      "\n   → js/data/site.js 의 칸 이름으로 맞추세요 (" +
+      [...have].slice(0, 8).join(" · ") + " …)");
+
+  /* 푸터가 제10조의 일곱을 **전부** 들고 있는가 — 하나라도 빠지면
+     채워도 그 줄이 영영 안 나옵니다 (위 ①의 반대쪽 사고). */
+  const ft = STRIP.stripJs(fs.readFileSync(path.join(ROOT, "js/components/chrome.js"), "utf8"));
+  const seg = (ft.match(/function\s+paintBiz\s*\(\)\s*\{[\s\S]*?\n\}/) || [""])[0];
+  if(!seg) throw new Error("js/components/chrome.js 의 paintBiz() 를 찾지 못했습니다");
+  ["company", "ceo", "brn", "mailOrder", "address", "email", "phone"].forEach(function(k){
+    if(seg.indexOf("." + k) < 0)
+      throw new Error("푸터(paintBiz)가 사업자 정보 `" + k + "` 를 안 냅니다 — " +
+        "전자상거래법 제10조 제1항이 표시하도록 정한 항목입니다");
+  });
+
+  console.log("   사업자 정보 칸 이름이 WOW_BIZ 것과 같습니다 (푸터 일곱 · 약관 · 업체 글)");
+}
+checkBizFields(W);
 checkMigDocs(W);
 checkPhotoSql();
 checkProviderSelfSql();

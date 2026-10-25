@@ -82,6 +82,11 @@ async function sendWithDb(body, opt){
      누구나 남의 계정에 신청을 꽂아 넣을 수 있습니다. */
   if(opt.auth) process.env.SUPABASE_ANON_KEY = "anon-key";
   let hook = null, inserted = null, keySeen = "", askedWho = 0, rpc = null;
+  /* ⚠️ 2026-10-25 §3 — 조회가 **둘**이 됐습니다 (멱등 열쇠로 먼저,
+     그 다음 tel_key 로 최근 한 시간). 어느 질의가 갔는지 봐야 하므로
+     주소를 모으고, 주소마다 다른 줄을 돌려줄 수 있게 합니다. */
+  const gets = [];
+  let posts = 0;
   const realFetch = global.fetch;
   global.fetch = async function(url, init){
     const u = String(url);
@@ -97,9 +102,13 @@ async function sendWithDb(body, opt){
       /* 키가 헤더로 가는지 (본문으로 새면 안 됩니다) */
       const h = (init && init.headers) || {};
       keySeen = h.apikey || "";
-      if(init.method === "GET")
+      if(init.method === "GET"){
+        gets.push(u);
+        const rows = (typeof opt.rowsFor === "function")
+          ? (opt.rowsFor(u) || []) : (opt.rows || []);
         return { ok:true, status:200, headers:{ get(){ return ""; } },
-                 text: async()=> JSON.stringify(opt.rows || []) };
+                 text: async()=> JSON.stringify(rows) };
+      }
       /* ⚠️⚠️ **함수 호출과 insert 를 갈라서** 받습니다. 전에는 둘 다
          `JSON.parse(body)[0]` 으로 읽어서, 항목을 적는 `/rpc/` 호출이
          저장된 줄을 **덮어썼습니다** — 멀쩡한 접수가 "안 저장됐다" 로
@@ -113,13 +122,25 @@ async function sendWithDb(body, opt){
                  text: async()=> "0" };
       }
       inserted = JSON.parse(init.body)[0];
+      posts++;
       if(opt.saveFails)
         return { ok:false, status:500, headers:{ get(){ return ""; } },
                  text: async()=> "boom" };
+      /* ⚠️⚠️ 동시에 들어온 요청 — `0009` 의 부분 unique 인덱스가
+         둘째 줄을 막습니다 (PostgREST 는 409). */
+      if(opt.saveClash)
+        return { ok:false, status:409, headers:{ get(){ return ""; } },
+                 text: async()=> JSON.stringify({ code:"23505",
+                   message:'duplicate key value violates unique constraint ' +
+                           '"request_idem_once"' }) };
       return { ok:true, status:201, headers:{ get(){ return ""; } },
                text: async()=> JSON.stringify([inserted]) };
     }
     hook = JSON.parse(init.body);
+    /* ⚠️ 2026-10-25 §4 — 전달만 실패하는 경우를 흉내냅니다 (저장은 성공) */
+    if(opt.hookFails)
+      return { ok:false, status:500, headers:{ get(){ return ""; } },
+               text: async()=> "slack down" };
     return { ok:true, status:200, headers:{ get(){ return ""; } }, text: async()=> "" };
   };
   const res = fakeRes();
@@ -133,7 +154,8 @@ async function sendWithDb(body, opt){
     delete process.env.SUPABASE_SERVICE_KEY;
     delete process.env.SUPABASE_ANON_KEY;
   }
-  return { res:res, sent:hook, row:inserted, keySeen:keySeen, askedWho:askedWho, rpc:rpc };
+  return { res:res, sent:hook, row:inserted, keySeen:keySeen, askedWho:askedWho,
+           rpc:rpc, gets:gets, posts:posts };
 }
 
 (async () => {
@@ -766,6 +788,135 @@ async function sendWithDb(body, opt){
       ok("안내가 터져도 접수는 성공이다", res.code === 200 && res.body.ok === true, res.body);
     }
     for(const k of ["RESEND_API_KEY","CUSTOMER_EMAIL_FROM"]) delete process.env[k];
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     2026-10-25 최종 지시서 §3 — 중복 접수가 **실제로** 막히는가
+
+     ⚠️⚠️ **고치기 전에는 조회가 한 줄도 안 걸렸습니다.** 표에는 손님이
+     적으신 그대로(`010-1234-5678`) 들어가는데 `?tel=eq.<숫자만>` 으로
+     물었기 때문입니다 — 그 조회가 0건이면 **그 안에서 하는 멱등 비교와
+     스팸 판정도 같이 안 돕니다.** 여기서 재는 것은 여섯입니다 —
+       ① 멱등 열쇠로 **먼저** 묻는가
+       ② 최근 것은 `tel_key` 로 묻는가 (하이픈 때문입니다)
+       ③ 같은 열쇠면 **슬랙에 안 보내고** 기존 번호를 돌려주는가
+       ④ 동시에 들어와 409 면 **먼저 들어간 번호**를 돌려주는가
+       ⑤ 같은 서비스 재신청은 **막지 않고** 운영자에게만 표시하는가
+       ⑥ 그 표시가 **손님 화면에 안 나가는가** (절대 규칙 3)
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️ 2026-10-25 §3 중복 접수 · 멱등");
+  {
+    const base = { kind:"quote", agree:true, name:"김사장", tel:"010-1234-5678",
+                   q:"인터넷 설치", service:"it", idem:"idem-aaa" };
+
+    /* ① ② 두 질의가 실제로 가는가 */
+    const g = await sendWithDb(base, { rows:[] });
+    const byIdem = g.gets.filter(u => u.indexOf("idem=eq.idem-aaa") >= 0);
+    ok("멱등 열쇠로 먼저 묻는다", byIdem.length === 1, g.gets);
+    const byTel = g.gets.filter(u => u.indexOf("tel_key=eq.01012345678") >= 0);
+    ok("최근 것은 tel_key 로 묻는다 (하이픈을 뗀 값)", byTel.length === 1, g.gets);
+    /* ⚠️ 옛 질의가 남아 있으면 그 조회는 영영 0건입니다 */
+    ok("tel=eq. 로 묻지 않는다",
+       !g.gets.some(u => /[?&]tel=eq\./.test(u)), g.gets);
+
+    /* ③ 같은 열쇠 — 저장도 전달도 하지 않고 기존 번호를 돌려줍니다 */
+    const again = await sendWithDb(base, {
+      rowsFor: u => u.indexOf("idem=eq.idem-aaa") >= 0
+        ? [{ no:"SW-OLD1-2222" }] : [] });
+    ok("같은 열쇠면 기존 접수번호를 돌려준다",
+       again.res.body && again.res.body.no === "SW-OLD1-2222", again.res.body);
+    ok("같은 열쇠면 중복이라고 알려 준다", again.res.body.dup === true, again.res.body);
+    ok("같은 열쇠면 다시 저장하지 않는다", again.posts === 0, again.posts);
+    /* ⚠️⚠️ 슬랙이 두 번 가면 직원이 같은 건에 두 번 전화합니다 */
+    ok("같은 열쇠면 슬랙에 다시 보내지 않는다", again.sent === null, again.sent);
+
+    /* ④ 동시에 들어와 409 — 먼저 들어간 줄의 번호를 다시 읽습니다 */
+    let asked = 0;
+    const clash = await sendWithDb(base, {
+      saveClash: true,
+      rowsFor: function(u){
+        if(u.indexOf("idem=eq.idem-aaa") < 0) return [];
+        asked++;
+        /* 첫 조회에는 아직 없고(그래서 insert 로 갑니다), 409 뒤
+           다시 읽을 때는 먼저 들어간 줄이 보입니다 */
+        return asked === 1 ? [] : [{ no:"SW-RACE-0001" }];
+      } });
+    ok("409 면 먼저 들어간 번호를 돌려준다",
+       clash.res.body && clash.res.body.no === "SW-RACE-0001", clash.res.body);
+    ok("409 면 중복이라고 알려 준다", clash.res.body.dup === true, clash.res.body);
+    ok("409 면 200 이다 (손님에게 실패라고 하지 않습니다)",
+       clash.res.code === 200, clash.res.code);
+
+    /* ⑤ ⑥ 같은 서비스 재신청 — 막지 않고 운영자에게만 표시 */
+    const near = await sendWithDb(
+      Object.assign({}, base, { idem:"idem-bbb" }), {
+      rowsFor: u => u.indexOf("tel_key=eq.") >= 0
+        ? [{ no:"SW-NEAR-0001", tel:"010-1234-5678", idem:"idem-aaa",
+             cat:"it", created_at:new Date(Date.now() - 3 * 60000).toISOString() }]
+        : [] });
+    ok("같은 서비스 재신청을 막지 않는다 (새 접수로 저장)",
+       near.posts === 1 && !!near.row, near.posts);
+    ok("그 접수도 번호를 받는다",
+       !!(near.res.body && near.res.body.no) && !near.res.body.dup, near.res.body);
+    /* ⚠️ 운영자가 보는 자리(슬랙)에 한 줄 */
+    ok("슬랙 글에 '확인 필요' 한 줄이 붙는다",
+       /확인 필요/.test(String((near.sent && near.sent.text) || "")),
+       String((near.sent && near.sent.text) || "").slice(0, 200));
+    /* ⚠️⚠️ 손님 화면에는 한 글자도 안 나갑니다 (절대 규칙 3) */
+    ok("손님 답에는 그 말이 없다",
+       !/확인 필요|번째/.test(JSON.stringify(near.res.body || {})), near.res.body);
+
+    /* ⚠️ 열쇠가 없으면 재시도와 새 신청을 구분할 길이 없어 그대로 막습니다 */
+    const noKey = await sendWithDb(
+      (function(){ const x = Object.assign({}, base); delete x.idem; return x; })(), {
+      rowsFor: u => u.indexOf("tel_key=eq.") >= 0
+        ? [{ no:"SW-NOKY-0001", tel:"010-1234-5678",
+             cat:"it", created_at:new Date(Date.now() - 3 * 60000).toISOString() }]
+        : [] });
+    ok("열쇠가 없으면 10분 안 같은 서비스는 막는다",
+       noKey.res.body && noKey.res.body.dup === true &&
+       noKey.res.body.no === "SW-NOKY-0001", noKey.res.body);
+    ok("막힌 것은 저장도 전달도 안 한다",
+       noKey.posts === 0 && noKey.sent === null, [noKey.posts, noKey.sent]);
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     2026-10-25 §4 — 저장과 전달을 **갈라서** 보는가
+
+     ⚠️⚠️ 전에는 전달이 실패하면 저장과 상관없이 503 이었습니다. DB 가
+     켜진 뒤에는 **저장은 됐는데 손님이 "실패" 를 보는** 꼴이 됩니다 —
+     그러면 다시 누르시고(멱등이 막습니다) 그래도 실패를 보고 떠나시는데
+     요청은 이미 받아 둔 상태입니다.
+     ⚠️ 반대로 **아무 데도 안 갔으면 성공이라고 하지 않습니다** (절대
+     규칙 5) — 손님이 다시 누를 수 있어야 합니다.
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️ 2026-10-25 §4 저장 · 전달을 갈라서 본다");
+  {
+    const base = { kind:"quote", agree:true, name:"김사장", tel:"010-7777-8888",
+                   q:"철거 상담", service:"demolish", idem:"idem-s4" };
+
+    /* ① 저장은 됐고 전달만 실패 → **성공**이고 번호도 줍니다 */
+    const late = await sendWithDb(base, { rows:[], hookFails:true });
+    ok("저장됐으면 전달이 실패해도 200 이다", late.res.code === 200, late.res.code);
+    ok("저장됐으면 접수번호를 준다",
+       !!(late.res.body && late.res.body.no), late.res.body);
+    ok("저장됐으면 에러를 돌려주지 않는다",
+       !(late.res.body && late.res.body.error), late.res.body);
+
+    /* ② 저장도 실패 + 전달도 실패 → 503 (아무 데도 안 갔습니다) */
+    const gone = await sendWithDb(base, { rows:[], saveFails:true, hookFails:true });
+    ok("둘 다 실패면 503 이다", gone.res.code === 503, gone.res.code);
+    ok("둘 다 실패면 번호를 주지 않는다",
+       !(gone.res.body && gone.res.body.no), gone.res.body);
+
+    /* ③ 저장만 실패 + 전달은 성공 → 받기는 했으니 성공, **번호는 없음**
+       ⚠️ 화면이 번호 줄을 **아예 안 그립니다** (절대 규칙 2) — 없는
+       번호를 주면 그 번호로 물어보셔도 아무것도 없습니다. */
+    const noNo = await sendWithDb(base, { rows:[], saveFails:true });
+    ok("저장만 실패하면 번호 없이 성공이다",
+       noNo.res.code === 200 && !(noNo.res.body && noNo.res.body.no),
+       noNo.res.body);
+    ok("그래도 운영자에게는 전달됐다", !!noNo.sent, noNo.sent);
   }
 
   console.log("\n── 받을 곳이 없을 때");

@@ -503,6 +503,37 @@ const AUDIT = `(() => {
         "|칸"+tracks+"에 항목"+items+"|" + (el.textContent||"").trim().slice(0,20));
   });
 
+  /* 7-2b. **flex 칸에서도 같은 일이 납니다** — 2026-10-25 에 겪었습니다.
+     아이콘 + 맨글 + 태그 + 맨글 을 그냥 넣으면 태그가 **제 칸**이 되고
+     앞뒤 맨글도 각각 칸이 되어, 좁은 폭에서 "서비 / 스" · "분류 / 기준"
+     으로 세 칸이 세로로 쪼개집니다. 넓은 폭에서는 한 줄에 서서 멀쩡해
+     보이고 가로 스크롤도 대비도 멀쩡해서 **찍어 봐야** 압니다.
+     ⚠️ CLAUDE.md 가 grid 로 적어 둔 규칙이 flex 에도 그대로인데
+     **검사는 grid 만 보고 있었습니다.**
+
+     ⚠️⚠️ 보는 것은 **맨글이 둘 이상**인 자리뿐입니다 — 태그가 문장을
+     가운데서 가른 꼴입니다. "아이콘 + 글" (맨글 하나)은 정상이고,
+     "제목 태그 + 설명 맨글" 도 일부러 두 칸으로 두는 자리가 있어
+     건드리지 않습니다. 고치는 법은 grid 와 같습니다 — **글 전체를
+     태그 하나로 감싸세요.** 일부러 그런 곳은 class 에 'g-mix'. */
+  document.querySelectorAll("body *").forEach(el => {
+    if (!vis(el)) return;
+    const c = getComputedStyle(el);
+    if (c.display !== "flex" && c.display !== "inline-flex") return;
+    if (String(el.className).indexOf("g-mix") >= 0) return;
+    let text = 0, items = 0;
+    el.childNodes.forEach(n => {
+      if (n.nodeType === 3 && n.nodeValue.trim()) { text++; items++; }
+      else if (n.nodeType === 1) {
+        const cs = getComputedStyle(n);
+        if (cs.position !== "absolute" && cs.position !== "fixed" && cs.display !== "none") items++;
+      }
+    });
+    if (text >= 2)
+      out.mix.push(String(el.className || el.tagName).split(" ")[0] +
+        "|flex 에 맨글"+text+" 항목"+items+"|" + (el.textContent||"").trim().slice(0,20));
+  });
+
   /* 7-3. 문장 **한가운데**에 덩어리(block/flex/grid)가 끼어 있는가
      ⚠️ CSS 선택자를 넓게 쓰다가 네 번 겪었습니다. ".notice-bad b" 처럼
      자식 기호 없이 쓰면 제목용 <b> 뿐 아니라 **문장 안의 <b> 까지** 덩어리가
@@ -992,7 +1023,7 @@ const AUDIT = `(() => {
       ["40px 미만 누름",     uniq(bad.tap)],
       ["낱말 가운데 잘림",   uniq(bad.wrap)],
       ["줄바꿈 사라져 낱말 붙음", uniq(bad.glue)],
-      ["grid 칸에 글과 태그가 섞임", uniq(bad.mix)],
+      ["grid · flex 칸에 글과 태그가 섞임", uniq(bad.mix)],
       ["화면 제목(h1)", uniq(bad.h1)],
       ["개발자 말 노출",     uniq(bad.bad)],
       ["구간 머리말이 회색으로 죽음", uniq(bad.eye)],
@@ -2070,7 +2101,7 @@ const AUDIT = `(() => {
      ⚠️ 이건 "보기 좋은가" 를 재는 검사가 아닙니다. 나중에 여기에
      큰 배너 · 설명 · 검색창을 하나씩 더하다 보면 카드가 첫 화면
      아래로 밀려나는데, 그걸 막는 것이 목적입니다. */
-  await f("메인은 헤더 바로 아래가 진입 카드 넷이고 번호가 01~04 다", "/", `
+  await f("메인은 히어로 다음이 진입 카드 넷이고 번호가 01~04 다", "/", `
     /* ⚠️⚠️ **2026-10-22 "최상단 디자인 최종 변경" §2 — 히어로가 다시
        빠졌습니다.** "기존 상단 대형 히어로(카페 사진)를 제거하고 4개
        전문관 카드를 최상단 콘텐츠로 한다." 이 검사는 10-17 에 한 번
@@ -2095,13 +2126,20 @@ const AUDIT = `(() => {
     const v = document.getElementById("view");
     const secs = [].slice.call(v.querySelectorAll("#view > section"));
     if(!secs.length) return "메인에 구간이 없습니다";
-    if(!secs[0].classList.contains("bent"))
-      return "첫 구간이 진입 카드가 아닙니다 — " +
+    /* WARN 2026-10-25 §1-01 — 첫 구간은 **히어로**이고 진입 카드 넷은
+       바로 그 다음입니다 ("메인페이지에 접속하면 … 히어로 … 그 아래
+       4개 핵심 서비스"). 10-22 지시서 때는 (1) 이 bent 였습니다 —
+       되돌리시면 그날 여기와 (2) 를 같이 뒤집으세요. */
+    if(!secs[0].classList.contains("bhero"))
+      return "첫 구간이 히어로가 아닙니다 — " +
              (secs[0].className || "").split(" ")[0];
+    if(!(secs[1] && secs[1].classList.contains("bent")))
+      return "히어로 다음이 진입 카드 넷이 아닙니다 — " +
+             ((secs[1] || {}).className || "").split(" ")[0];
 
     const h1s = document.querySelectorAll("#view h1");
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
-    if(!h1s[0].closest(".bent")) return "h1 이 진입 카드 구간에 없습니다";
+    if(!h1s[0].closest(".bhero")) return "h1 이 히어로 구간에 없습니다";
 
     /* (3) 번호가 빠짐없이 이어지는가 — 넷이 같은 무게로 섭니다 */
     const nos = [].slice.call(v.querySelectorAll(".bent-no"))
@@ -3659,10 +3697,12 @@ const AUDIT = `(() => {
     /* ⚠️⚠️ **2026-10-17 §4 — 히어로가 빠지고 계산도구 · 이용 가이드 ·
        견적 안내 카드가 들어왔습니다.** .bhero-go 는 함수를 안 지웠으니
        되살리실 수 있습니다 — 그날 여기에 다시 넣으세요. */
-    const need = [[".bent-g",   "창업 · 운영 · 폐업 진입 카드"],
+    /* WARN 2026-10-25 §1 — .bhero-go 가 돌아오고 .bwhy-g · .bqc 가
+       내려갔습니다 (중간 대형 견적 신청 섹션 금지). 되살리시면 그날
+       여기에 다시 넣으세요. */
+    const need = [[".bhero-go", "히어로 신청 단추"],
+                  [".bent-g",   "네 가지 핵심 서비스 카드"],
                   [".bdir-g",   "직접 서비스 찾기 여덟"],
-                  [".bwhy-g",   "선택받는 이유 넷"],
-                  [".bqc",      "견적 신청 안내 카드"],
                   [".bstep-g",  "이용 방법 5단계"],
                   [".bcal-g",   "계산도구 넷"],
                   [".bgd-g",    "이용 가이드"],
@@ -3724,7 +3764,10 @@ const AUDIT = `(() => {
     if(!secs.length) return "메인에 구간이 없습니다";
 
     /* ⚠️⚠️ **§3-2 가 이름까지 적은 셋**은 반드시 밝아야 합니다 */
-    for(const q of [[".bwhy","선택받는 이유"], [".bstep","이용 방법"],
+    /* WARN bwhy 가 2026-10-25 §1 로 내려가서 그 자리를 히어로가
+       받습니다 — §1-01 이 "BRIGHT PREMIUM 디자인 방향을 유지한다" 고
+       직접 적은 구간입니다. */
+    for(const q of [[".bhero","히어로"], [".bstep","이용 방법"],
                     [".bcal","계산도구"]]){
       const e = document.querySelector(q[0]);
       if(!e) return q[1] + " 구간이 없습니다";
@@ -4090,16 +4133,17 @@ const AUDIT = `(() => {
        모르는 이름에 **빈 문자열**을 돌려주어 조용히 빈 칸이 됩니다
        (에러도 404 도 없고 전수 점검도 통과했던 자리입니다).
        ⚠️ 이 주석에 백틱을 쓰지 마세요 — 문자열이 거기서 끝납니다.
-       ⚠️⚠️ 2026-10-16 §3 으로 메인이 아홉 영역이 되면서 재는 자리가
-       **진입 카드 셋 · 선택 까닭 넷 · 이용 방법 다섯 · 배너 둘**로
-       옮겨갔습니다. 보는 것은 그대로입니다 — 빈 아이콘과 한 묶음 안의
-       중복, 그리고 가짜 링크입니다. */
-    const groups = [[".bent-i", "진입 카드"], [".bwhy-i", "선택 까닭"],
-                    [".bstep-i", "이용 방법"], [".bban-i", "배너"],
-                    [".bcal-i", "계산도구"]];
+       ⚠️⚠️ 2026-10-25 §1 로 메인이 일곱 구간이 되면서 재는 자리가
+       **진입 카드 넷 · 직접 찾기 여덟 · 계산도구 넷 · 이용 방법 다섯**
+       으로 옮겨갔습니다. 보는 것은 그대로입니다 — 빈 아이콘과 한 묶음
+       안의 중복, 그리고 가짜 링크입니다.
+       ⚠️ 선택 까닭(.bwhy-i)과 배너(.bban-i)는 구간이 내려가서 뺐습니다 —
+       되살리시면 그날 여기도 같이 넣으세요 (안 넣으면 그 구간의 빈
+       아이콘을 아무도 안 봅니다). */
+    const groups = [[".bent-i", "진입 카드"], [".bdir-i", "직접 찾기"],
+                    [".bcal-i", "계산도구"], [".bstep-i", "이용 방법"]];
     for(const g of groups){
       const L = [].slice.call(document.querySelectorAll("#view " + g[0]));
-      if(!L.length && g[0] === ".bban-i") continue;   /* 배너는 사진이 오면 아이콘이 빠집니다 */
       if(!L.length) return g[1] + " 아이콘이 하나도 없습니다";
       const seen = [];
       for(const e of L){
@@ -4279,7 +4323,13 @@ const AUDIT = `(() => {
        다시 빠지고 진입 카드 넷이 최상단이 됐습니다.** 함수는 지우지
        않았으니 되살리실 수 있습니다 — 그날 여기 앞에 bhero 를 다시
        넣으세요. */
-    const want = ["bent","bdir","bcal","bwhy","bstep","bgd","bcta"];
+    /* WARN 2026-10-25 "메인페이지 최종 디자인 구현" §1 — 히어로가 01 로
+       돌아오고 bwhy(선택받는 이유 + 견적 안내 카드)가 내려갔습니다.
+       §1-07 · §11 이 "중간 대형 무료 견적 신청 섹션" 을 직접
+       금지해서, 그 카드가 들어 있던 구간을 안 부릅니다. 함수는
+       지우지 않았으니 되살리실 수 있습니다 — 그날 bcal 다음에
+       bwhy 를 다시 넣으세요. */
+    const want = ["bhero","bent","bdir","bcal","bstep","bgd","bcta"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";

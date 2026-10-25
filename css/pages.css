@@ -1950,6 +1950,10 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .msvc-sc-n{ display:flex; align-items:center; gap:6px; margin:0;
   font-size:var(--t-cap); color:var(--ink2); }
 .msvc-sc-n svg{ flex:0 0 auto; color:var(--blue-600); }
+/* ⚠️ 글은 한 덩이입니다 — `min-width:0` 이 없으면 좁은 폭에서 안 줄어듭니다 */
+.msvc-sc-n > span{ min-width:0; }
+@media (max-width:420px){ .msvc-sc-n{ align-items:flex-start; }
+  .msvc-sc-n svg{ margin-top:2px; } }
 @media (max-width:620px){
   .msvc-sc{ padding:var(--s4) var(--s5); }
   .msvc-sc-g{ gap:var(--s3) var(--s5); }
@@ -4817,6 +4821,13 @@ html.ivh #view .pre{ color:var(--hm-ink2); padding:var(--s9) 0; }
    또 a 를 넣지 마세요 (브라우저가 쪼갭니다). "자세히 보기" 와 아래
    아이콘 다섯은 **표시**이지 따로 누르는 단추가 아닙니다.
    ⚠️ ul 의 자식은 li 라야 합니다. */
+/* ⚠️⚠️ 메인 일곱 구간은 바탕을 **번갈아** 칠합니다 — 같은 색이 두 번
+   이어지면 두 구간이 한 구간으로 읽힙니다 (전수 점검이 ΔE 로 봅니다).
+   지금 차례 — 흰색 · 아이보리 · 베이지 · 아이보리 · 베이지 · 아이보리 ·
+   짙은 카드. 최저 ΔE 6.57 입니다 (기준 2.5).
+   ⚠️⚠️ 구간을 더하거나 빼시면 **여기를 다시 재세요** — 2026-10-25 에
+   bwhy 가 내려가면서 bcal ↔ bstep 이 ΔE 0.00 으로 붙었습니다. */
+.bdir{ background-color:var(--hm-bg2); padding:var(--sec-y) 0; }
 .bent{ background-color:var(--hm-bg); padding:var(--s8) 0 var(--sec-y); }
 .bent-g{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s5);
   list-style:none; margin:0; padding:0; }
@@ -5030,7 +5041,7 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
 /* ── ⑦ 사장님을 위한 계산도구 넷 (§4 · §12) ──────────────────────
    ⚠️⚠️ **§3-2 가 이 구간은 밝은 배경을 유지하라고 직접 적었습니다.**
    ⚠️ 아이콘 색 넷(브라운 · 그린 · 블루 · 코랄)은 §12 가 적은 것입니다. */
-.bcal{ background-color:var(--hm-bg2); padding:var(--sec-y) 0; }
+.bcal{ background-color:var(--hm-bg); padding:var(--sec-y) 0; }
 .bcal-g{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s5);
   list-style:none; margin:0; padding:0; }
 .bcal-c > a{ display:flex; flex-direction:column; gap:var(--s3); height:100%;
@@ -6201,6 +6212,65 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
    body 색이 비쳐 바로 아래 진입 카드 구간과 **ΔE 0.00** 이 되어 두
    구간이 한 구간으로 읽힙니다 (전수 점검이 잡았습니다). */
 .bhero{ background:var(--surface); }
+
+/* ── 메인 03 — 고르신 서비스가 있을 때만 서는 줄 (§1-03) ────────
+   ⚠️⚠️ 0개면 아예 안 그립니다 (HomePicked 가 "" 를 돌려줍니다). */
+.bdir-pk{ display:flex; flex-wrap:wrap; align-items:center;
+  justify-content:center; gap:var(--s3) var(--s4);
+  margin:var(--s5) auto 0; max-width:720px;
+  padding:var(--s4) var(--s5); border:1px solid var(--line);
+  border-radius:var(--r-lg); background:var(--surface); }
+.bdir-pk-t{ margin:0; display:flex; align-items:center; gap:6px;
+  font-size:15px; color:var(--ink); }
+.bdir-pk-t b{ color:var(--acc-dark); }
+.bdir-pk-t i{ font-style:normal; color:var(--ink2); font-size:var(--t-cap); }
+.bdir-pk .btn{ min-height:var(--tap); }
+/* ⚠️⚠️ flex 라 브라우저 기본 `[hidden]{display:none}` 을 이깁니다 —
+   이 줄이 없으면 0개가 되어도 줄이 그대로 보입니다 */
+.bdir-pk[hidden]{ display:none; }
+@media (max-width:520px){
+  .bdir-pk{ flex-direction:column; align-items:stretch; text-align:center; }
+  .bdir-pk-t{ justify-content:center; }
+}
+
+/* ── ① 메인 히어로 (2026-10-25 §1-01) ────────────────────────────
+   ⚠️⚠️ 글을 사진 위에 얹지 않습니다 — 넓으면 글 왼쪽 · 사진 오른쪽,
+   좁으면 글 아래 띠입니다. 사진 위 글자는 폭마다 대비가 달라지고
+   전수 점검이 못 잽니다 (PgHero 와 같은 판단). */
+.bhero-w{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,42%);
+  gap:var(--s7); align-items:center;
+  padding-top:var(--s8); padding-bottom:var(--s8); }
+.bhero-in{ min-width:0; }
+.bhero-k{ margin:0 0 var(--s2); font-size:var(--t-cap); font-weight:800;
+  letter-spacing:.02em; color:var(--gold-text); }
+.bhero-in h1{ margin:0 0 var(--s3); font-size:clamp(28px, 3.4vw, 46px);
+  line-height:1.24; letter-spacing:-.02em; color:var(--ink); }
+.bhero-s{ margin:0 0 var(--s5); max-width:34em;
+  font-size:17px; line-height:1.68; color:var(--ink2); }
+.bhero-go{ display:flex; flex-wrap:wrap; gap:var(--s3); }
+.bhero-go .btn{ min-height:var(--tap); }
+/* 사진 — 액자 비율을 고정합니다 (사진이 바뀌어도 칸이 안 흔들립니다) */
+.bhero-ph{ display:block; position:relative; aspect-ratio:4/3;
+  border-radius:var(--r-2xl); overflow:hidden; box-shadow:var(--shadow-soft); }
+.bhero-ph .ph{ width:100%; height:100%; object-fit:cover;
+  object-position:var(--ph-pos, 50% 50%); }
+
+@media (max-width:900px){
+  /* ⚠️⚠️ 사진을 글 "위" 로 올리지 않습니다 — 첫 화면에서 플랫폼이
+     무엇을 하는 곳인지가 먼저 읽혀야 합니다 (§3 모바일 히어로). */
+  .bhero-w{ grid-template-columns:minmax(0,1fr); gap:var(--s5);
+    padding-top:var(--s6); padding-bottom:var(--s6); }
+  .bhero-in h1{ font-size:clamp(24px, 6.4vw, 32px); }
+  .bhero-s{ font-size:16px; }
+  .bhero-ph{ aspect-ratio:16/9; }
+}
+@media (max-width:520px){
+  /* ⚠️⚠️ 단추 둘을 한 줄에 두면 420px 아래에서 글자가 잘립니다 —
+     재 보고 세로로 쌓습니다 (누름 높이는 그대로 48px). */
+  .bhero-go{ flex-direction:column; align-items:stretch; }
+  .bhero-go .btn{ width:100%; }
+}
+
 
 /* ── 내 업체 정보 (2026-10-22 전수검사 P2 ⑳) ─────────────────────
    ⚠️⚠️ **못 고치는 넷을 "고장난 칸" 으로 보이게 하지 마세요.** 적는

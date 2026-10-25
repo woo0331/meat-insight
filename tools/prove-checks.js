@@ -536,7 +536,7 @@ const CASES = [
      (사장님이 실제로 걸린 자리입니다).
      ⚠️ .bhero 는 메인에 **없으므로** 그걸 집으면 되돌리기가 터집니다
      (이 저장소에서 열두 번 겪은 자리). */
-  ["메인은 헤더 바로 아래가 진입 카드 넷이고 번호가 01~04 다",
+  ["메인은 히어로 다음이 진입 카드 넷이고 번호가 01~04 다",
    `document.querySelector(".bent-c.ent-closure").remove();`],
   /* ⚠️⚠️ 되돌리기는 **검사가 실제로 보는 것**을 망가뜨려야 합니다.
      검색 가는 길을 지울 때 입력칸만 지우고 돋보기를 남겼다가 "검사가
@@ -666,7 +666,10 @@ const CASES = [
      지시서가 다크로 정한 자리라 어둡게 해도 아무 일이 안 납니다
      (되돌리기가 틀린 자리, 이 저장소에서 열한 번 겪었습니다). */
   ["메인 구간 바탕은 밝고 그 표시가 메인 밖으로 안 샌다",
-   `document.querySelector(".bwhy").style.backgroundColor = "#2E2219";`],
+   /* ⚠️ 2026-10-25 §1 — .bwhy 가 내려가서 §3-2 가 이름까지 적은
+      자리를 **히어로**가 받습니다 (§1-01 "BRIGHT PREMIUM 유지").
+      없는 요소를 집으면 되돌리기가 터집니다 (열세 번째). */
+   `document.querySelector(".bhero").style.backgroundColor = "#2E2219";`],
   /* 짝 검사 — 속화면에 메인 표시가 새면 걸려야 합니다 */
   ["속화면은 그대로 밝고 메인 표시가 안 묻었다",
    `document.documentElement.classList.add("ivh");`],
@@ -745,8 +748,8 @@ const CASES = [
    /* ⚠️ 2026-10-16 §3 — 지금 메인에 있는 카드는 진입(.bent-c > a) ·
       까닭(.bwhy-c) · 절차(.bstep-c) · 배너(.bban-c > a) 입니다.
       **없는 요소를 집으면 되돌리기가 터집니다** (열한 번째). */
-   `const a = document.querySelector(".bwhy-c") ||
-             document.querySelector(".bstep-c") ||
+   `const a = document.querySelector(".bstep-c") ||
+             document.querySelector(".bcal-g > li > a") ||
              document.querySelector(".bent-c > a");
     const back = (function(el){
       let e = el.parentElement;
@@ -835,7 +838,11 @@ const CASES = [
      열두 칸에 같은 그림이 둘이면 무엇이 무엇인지 흐려집니다.
      ⚠️ 되돌리기는 **그려진 뒤에** 돕니다. DOM 을 직접 건드립니다. */
   ["메인 아이콘이 비지 않고 한 묶음 안에서 겹치지 않는다",
-   `const t = [].slice.call(document.querySelectorAll("#view .bwhy-i svg"));
+   /* ⚠️ 2026-10-25 §1 — .bwhy-i 가 내려가서 집을 것이 없습니다
+      (t[1] 이 undefined 라 되돌리기가 터집니다 · 열네 번째).
+      지금 메인에서 한 묶음 안에 아이콘이 여럿인 곳은 진입 카드 넷과
+      직접 찾기 여덟입니다. */
+   `const t = [].slice.call(document.querySelectorAll("#view .bdir-i svg"));
     t[1].innerHTML = t[0].innerHTML;`],
   /* 고른 전문관이 표시되지 않으면 걸려야 합니다 — 거르개는 무엇이
      켜졌는지 보이지 않으면 거르개가 아닙니다 */
@@ -1033,6 +1040,37 @@ async function proveAudit(pg){
     if(!ok2) bad++;
     console.log((ok2 ? "✅" : "❌") + " 머리 · 푸터 · 아래 네비가 하나가 아님 ② 가로줄 둘" +
       "  [가로줄을 하나 더 그으면 " + JSON.stringify(two).slice(0,70) + "]");
+  }
+
+  /* ⓪-2 flex 칸에 글과 태그가 섞임 (2026-10-25).
+     메인 범위 숫자 띠의 ⓘ 줄이 실제로 그 꼴이었습니다 — flex 에
+     맨글 둘 + `<b>` 하나라 320px 에서 "서비 / 스" · "분류 / 기준" 으로
+     쪼개졌습니다. 고친 뒤 되돌려 봅니다: 감싼 태그를 풀어 맨글로
+     되돌려 놓습니다.
+     ⚠️ 검사는 grid 만 보고 있었고 flex 는 **아무도 안 보고**
+     있었습니다 — 이 되돌리기가 그것을 지킵니다. */
+  {
+    await pg.goto(ROOT + "/", { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).mix;
+    const did = await pg.evaluate(() => {
+      const p = document.querySelector(".msvc-sc-n");
+      if(!p) return false;
+      const sp = p.querySelector("span");
+      if(!sp) return false;
+      /* 감싼 태그를 풀어 맨글 + <b> + 맨글 로 되돌립니다 */
+      while(sp.firstChild) p.insertBefore(sp.firstChild, sp);
+      sp.remove();
+      return true;
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).mix;
+    const ok = did && before.length === 0 &&
+      after.some(x => x.indexOf("flex 에 맨글") >= 0);
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " grid · flex 칸에 글과 태그가 섞임 (flex)" +
+      "  [지금 " + JSON.stringify(before) + " → 감싼 태그를 풀면 " +
+      JSON.stringify(after).slice(0,70) + "]");
   }
 
   /* ① 본문(푸터 제외) 어두운 면 — 구간 하나를 짙게 칠해 봅니다.

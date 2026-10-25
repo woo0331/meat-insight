@@ -148,12 +148,15 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     함수는 안 지웠으니 되살리시면 여기에 .bban-c 를 다시 넣으세요. */
  await click('.bdir-c:nth-child(1)');
  say((await url()).startsWith("/providers/"),"직접 찾기 → 분야 화면",await url());
- /* ⚠️⚠️ **2026-10-22 §2 — 히어로가 메인에서 다시 빠졌습니다.**
-    그래서 `.bhero-go` 를 누를 수 없습니다 (없는 요소를 집으면
-    타임아웃으로 터지고 뒤 블록이 통째로 안 돕니다). 메인에서 신청으로
-    가는 **늘 보이는 길**은 헤더 CTA 이고, 그건 160개 화면 전부에
-    있습니다 — 그쪽을 눌러 봅니다. 히어로를 되살리시면 그날 여기에
-    `.bhero-go` 를 다시 넣으세요. */
+ /* ⚠️⚠️ **2026-10-25 §1-01 — 히어로가 01 구간으로 돌아왔습니다.**
+    첫 화면에서 바로 신청으로 가는 길이 다시 생겼습니다 — 그쪽을 먼저
+    눌러 봅니다. ⚠️ 히어로를 다시 빼실 때는 여기도 같이 고치세요
+    (없는 요소를 집으면 타임아웃으로 터지고 뒤 블록이 통째로 안
+    돕니다 — 이 저장소가 그렇게 겪은 자리입니다). */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.bhero-go a[href="/quote"]');
+ say((await url()).startsWith("/quote"),"히어로 무료 견적 신청 → 신청 화면",await url());
+ /* ⚠️ 헤더 CTA 는 **160개 화면 전부**에 있는 늘 보이는 길입니다 */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.hd .hd-cta');
  say((await url()).startsWith("/quote"),"헤더 견적 신청 → 신청 화면",await url());
@@ -173,12 +176,13 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.bcta-go a[href="/quote"]');
  say((await url()).startsWith("/quote"),"마지막 구간 → 견적 · 상담 신청",await url());
- /* ⚠️ 2026-10-17 §9 — 히어로가 빠지고 **견적 신청 안내 카드**가
-    그 자리를 받았습니다 (선택받는 이유 구간 오른쪽). 첫 화면에서
-    멀지 않은 데서 바로 신청할 수 있어야 합니다. */
+ /* ⚠️⚠️ 2026-10-25 §1-07 · §11 — **중간 대형 무료 견적 신청 섹션이
+    없어야 합니다.** 그래서 `.bqc`(견적 안내 카드)를 더 안 냅니다 —
+    첫 화면의 히어로(바로 위)와 맨 아래 07 구간 둘이 그 길입니다.
+    여기서 **없는지** 확인합니다 (다시 생기면 지시서 위반입니다). */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bqc a[href="/quote"]');
- say((await url()).startsWith("/quote"),"견적 안내 카드 → 견적 · 상담 신청",await url());
+ say((await pg.locator('#view .bqc').count())===0,
+     "중간 대형 견적 신청 섹션이 없다 (§1-07)", "bqc 개수");
  /* ⚠️ §12 — 계산도구 넷이 실제로 열려야 합니다 */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.bcal-g > li:nth-child(1) > a');
@@ -899,6 +903,56 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      return b ? b.innerText.replace(/\s+/g," ").trim() : "(없음)"; }));
  }
  say(new Set(words).size === 1, "전문관 넷의 첫 단추가 같은 말이다", words.join(" | "));
+
+ /* ══ 【12】 2026-10-25 §4 — **메인에서 시작하는** 시나리오 넷 ══
+    ⚠️⚠️ 위 【9】 는 **전문관에서 시작합니다.** §4 가 적은 길은
+    "메인 접속 → 전문관 → 서비스 선택 → 견적 신청" 이라, 메인의
+    **진입 카드 넷**이 그 네 전문관으로 제대로 가는지를 아무도 안
+    보고 있었습니다 — 카드가 한 번 바뀔 때마다 조용히 끊길 자리입니다.
+    ⚠️ 보내지는 않습니다 — 신청 화면이 고른 것을 되읽는 데까지입니다. */
+ console.log("\n【12】 §4 메인에서 시작하는 시나리오 넷");
+ await pg.setViewportSize({ width:1440, height:900 });
+ for(const [nm, to, side] of [["창업","/startup","start"], ["운영","/operation","ops"],
+                              ["양도양수","/transfer","transfer"], ["폐업","/closure","close"]]){
+   await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+   await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
+   const card = await pg.$('.bent-g a[href="'+to+'"]');
+   say(!!card, nm+" — 메인 진입 카드가 그 전문관으로 간다", to);
+   if(!card) continue;
+   await card.click(); await pg.waitForTimeout(700);
+   const at = await url();
+   say(at.indexOf(to) === 0, nm+" — 전문관으로 갔다", at);
+   const bx = await pg.$$("#view [data-pick]");
+   say(bx.length > 0, nm+" — 첫 화면에 고를 칸이 있다", bx.length+"칸");
+   if(!bx.length) continue;
+   await bx[0].click(); await pg.waitForTimeout(300);
+   const go = await pg.$("[data-pick-go]");
+   const href = go ? await go.getAttribute("href") : "";
+   say(href.indexOf("side="+side) >= 0 && href.indexOf("sv=") >= 0,
+       nm+" — 신청 단추가 쪽과 고른 것을 들고 간다", href);
+ }
+
+ /* §1-03 — 고르신 것이 있으면 **메인이 그 자리에서** 냅니다.
+    ⚠️ 0개면 그 줄이 아예 안 나옵니다 (절대 규칙 2). */
+ await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+ await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
+ const pk0 = await pg.evaluate(()=>{
+   const r = document.querySelector("#view .bdir-pk");
+   return !r || r.hidden || !r.getClientRects().length; });
+ say(pk0, "메인 — 아무것도 안 고르면 그 줄이 없다");
+ await pg.goto(B+"/startup",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
+ const sx = await pg.$$("#view [data-pick]");
+ if(sx.length > 1){ await sx[0].click(); await pg.waitForTimeout(150);
+                    await sx[1].click(); await pg.waitForTimeout(300); }
+ await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
+ const pk2 = await pg.evaluate(()=>{
+   const r = document.querySelector("#view .bdir-pk");
+   if(!r || r.hidden) return null;
+   const a = r.querySelector("[data-pick-go]");
+   return { n:(r.querySelector("[data-pick-n]")||{}).textContent||"",
+            go:a?a.getAttribute("href"):"" }; });
+ say(pk2 && pk2.n === "2" && /sv=/.test(pk2.go||""),
+     "메인 — 고른 것을 그 자리에서 내고 신청까지 들고 간다", JSON.stringify(pk2));
 
  console.log("\n【5】 콘솔 오류");
  say(errs.length===0,"JS 에러 없음",errs.join(" / "));

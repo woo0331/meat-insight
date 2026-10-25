@@ -137,6 +137,15 @@ window.pickPaint = function(){
     el.textContent = String(n);
   });
 
+  /* ⚠️⚠️ 0개면 **줄째 가립니다** — 개수만 0 으로 고치면
+     "고르신 서비스 0개" 와 죽은 신청 단추가 그대로 섭니다 (절대 규칙 2).
+     붙이는 쪽은 `display:none` 이 걸리는 꼴이라야 합니다 — flex · grid
+     인 칸은 작성자 CSS 가 브라우저 기본 `[hidden]` 을 이깁니다
+     (`.bdir-pk[hidden]` · `.opg-n[hidden]` 이 그래서 있습니다). */
+  [].slice.call(document.querySelectorAll("[data-pick-row]")).forEach(function(el){
+    el.hidden = n === 0;
+  });
+
   /* 바구니 목록 · 빈 상태 */
   var box = document.getElementById("pk-list");
   if(box) box.innerHTML = pickRows();

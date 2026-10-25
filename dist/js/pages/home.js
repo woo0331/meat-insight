@@ -47,8 +47,9 @@ function MainScopeStrip(){
   return '<div class="msvc-sc">'+
     '<ul class="msvc-sc-g">'+n.map(function(x){
       return '<li><b>'+x[0]+'</b><i>'+esc(x[1])+'</i></li>'; }).join("")+'</ul>'+
+
     '<p class="msvc-sc-n">'+icon("info",14)+
-      ' 서비스 <b>분류 기준</b>이며 등록된 업체 수가 아닙니다.</p>'+
+      '<span>서비스 <b>분류 기준</b>이며 등록된 업체 수가 아닙니다.</span></p>'+
   '</div>';
 }
 
@@ -56,8 +57,8 @@ var MAIN_CALC = ["cost", "bep", "premium", "closecost"];
 
 function PageMain(){
 
-  return HomeEnter()+ HomeDirect()+
-         HomeCalc()+ HomeWhy()+ HomeSteps()+ HomeGuide()+ HomeCta();
+  return HomeHero()+ HomeEnter()+ HomeDirect()+
+         HomeCalc()+ HomeSteps()+ HomeGuide()+ HomeCta();
 }
 
 var HOME_ENTER = [
@@ -103,6 +104,31 @@ function homeHallItem(hall, name){
   return null;
 }
 
+function HomeHero(){
+  var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
+  var with_ = (window.koWith ? koWith(nm, "이가") : nm + "가");
+
+  var ph = hasPhoto("hero-start")
+    ? '<span class="bhero-ph" aria-hidden="true">'+photoBox("hero-start", "", true)+'</span>' : "";
+  return '<section class="bhero">'+
+    '<div class="w bhero-w">'+
+      '<div class="bhero-in">'+
+        '<p class="bhero-k">창업의 시작부터 폐업의 마무리까지</p>'+
+
+        '<h1>사장님의 모든 순간, '+esc(with_)+' 함께합니다.</h1>'+
+        '<p class="bhero-s">창업 준비, 매장 운영, 매장 양도양수, 폐업 · 정리에 '+
+          '필요한 모든 서비스를 한곳에서 찾고, 비교하고, 연결받으세요.</p>'+
+        '<div class="bhero-go">'+
+          '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
+            '무료 견적 신청'+icon("arrow",18)+'</a>'+
+          '<a class="btn btn-o btn-lg" href="/providers">어떤 서비스가 있는지 보기</a>'+
+        '</div>'+
+      '</div>'+
+      ph +
+    '</div>'+
+  '</section>';
+}
+
 function HomeEnter(){
   var H = window.AM_HALLS || [];
   var cards = HOME_ENTER.map(function(x){
@@ -131,7 +157,7 @@ function HomeEnter(){
       '<div class="sec-hd sec-hd-c">'+
         '<p class="eyebrow">SERVICE</p>'+
 
-        '<h1>필요한 서비스를 한곳에서 찾으세요.</h1>'+
+        '<h2>네 가지 핵심 서비스</h2>'+
         '<p>창업 준비 · 매장 운영 · 매장 양도양수 · 폐업 정리 — '+
           '단계를 고르시면 그 단계에 필요한 서비스만 모아서 보여 드립니다.</p>'+
       '</div>'+
@@ -158,7 +184,8 @@ function HomeDirect(){
     '</a></li>';
   }).filter(Boolean).join("");
   if(!cards) return "";
-  return '<section class="sec sec-ivory bdir"><div class="w">'+
+
+  return '<section class="bdir"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<h2>직접 서비스를 찾아보세요.</h2>'+
       '<p>무엇이 필요한지 이미 정해져 있으시면 여기서 바로 가세요.</p>'+
@@ -167,9 +194,27 @@ function HomeDirect(){
     '<p class="row-cta row-mid">'+
       '<a class="btn btn-o" href="/providers">전체 서비스 보기'+icon("arrow",16)+'</a>'+
     '</p>'+
+    HomePicked()+
 
     MainScopeStrip()+
   '</div></section>';
+}
+
+function HomePicked(){
+  if(typeof amPickCount !== "function" || !amPickCount()) return "";
+  var L = (typeof amPickList === "function") ? amPickList() : [];
+  var n = L.length || amPickCount();
+  var nm = L.slice(0, 4).map(function(x){ return x.name; }).filter(Boolean);
+  var to = (typeof amPickQuoteTo === "function") ? amPickQuoteTo("start") : "/quote";
+
+  return '<div class="bdir-pk" data-pick-row>'+
+    '<p class="bdir-pk-t">'+icon("check",16)+
+      ' 고르신 서비스 <b data-pick-n>'+n+'</b>개'+
+      (nm.length ? ' <i>'+esc(nm.join(" · "))+(n > nm.length ? " 외 "+(n-nm.length)+"개" : "")+'</i>' : "")+
+    '</p>'+
+    '<a class="btn btn-ac" data-pick-go="start" href="'+esc(to)+'">'+
+      '고른 서비스로 신청하기'+icon("arrow",16)+'</a>'+
+  '</div>';
 }
 
 function HomePass(){
@@ -266,6 +311,8 @@ function HomeSteps(){
 
       '<p class="bstep-n2">'+icon("info",14)+
         ' 업체 회신 시점은 업체가 정합니다 — 저희가 보장하지 않습니다.</p>'+
+
+      (typeof QuoteStage === "function" ? QuoteStage() : "")+
     '</div>'+
   '</section>';
 }

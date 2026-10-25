@@ -80,6 +80,10 @@ window.pickPaint = function(){
     el.textContent = String(n);
   });
 
+  [].slice.call(document.querySelectorAll("[data-pick-row]")).forEach(function(el){
+    el.hidden = n === 0;
+  });
+
   var box = document.getElementById("pk-list");
   if(box) box.innerHTML = pickRows();
   var zero = document.getElementById("pk-zero");

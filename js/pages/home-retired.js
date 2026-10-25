@@ -1873,35 +1873,12 @@ function MainOpsvc(){
   '</div></section>';
 }
 
-/* ───── HomeHero ───── */
-/* ── 메인에서 내려온 브랜드 히어로 (2026-10-16 §3-2) ──────────────
-   ⚠️⚠️ **2026-10-17 §4 가 이것을 메인에서 빼라고 적었습니다** —
-   "기존의 큰 브랜드 히어로 배너는 삭제한다." 함수는 **지우지
-   않았습니다** (되살리시려면 PageMain() 한 줄). */
-function HomeHero(){
-  var B = window.AM_BRAND || {};
-  var nm = (window.amBrand ? amBrand() : (B.name || ""));
-  var with_ = (window.koWith ? koWith(nm, "이가") : nm + "가");
-  return '<section class="bhero">'+
-    '<span class="bhero-ph" aria-hidden="true">'+
-      photoBox("hero-start", "", true)+'</span>'+
-    '<div class="w bhero-in">'+
-      '<p class="bhero-k">사장님의 시작부터 다음까지</p>'+
-      /* ⚠️⚠️ **여기를 br 로 쪼개지 마세요.** checkMainH2() 가 크롤러
-         본문의 머리말을 **소스에서 글자로** 찾는데, 중간에 태그가
-         끼면 못 찾아 빌드가 멈춥니다. 줄바꿈은 keep-all 이 합니다. */
-      '<h1>필요한 서비스를 한곳에서 찾으세요.</h1>'+
-      '<p class="bhero-s">창업 준비 · 매장 운영 · 매장 양도양수 · 폐업 '+
-        '정리까지, '+esc(with_)+' 사장님께 필요한 서비스를 쉽게 '+
-        '연결해 드립니다.</p>'+
-      '<div class="bhero-go">'+
-        '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
-          '무료 견적 신청하기'+icon("arrow",18)+'</a>'+
-      '</div>'+
-    '</div>'+
-  '</section>';
-}
-
+/* ───── HomeHero 는 2026-10-25 에 **되살아났습니다** ─────
+   2026-10-25 "메인페이지 최종 디자인 구현" §1-01 이 메인 히어로를
+   01 구간으로 못박아서, `js/pages/home.js` 로 **올려** 썼습니다
+   (문구도 §1-01 의 것으로 다시 썼습니다). 지운 것이 아니라 쓰는
+   자리로 옮긴 것이고, 두 파일에 같은 이름을 두면 `checkRetired()` 가
+   "손님이 받는 코드가 안 실리는 것을 부른다" 로 빌드를 멈춥니다. */
 
 /* ── 그리고 위 열여덟만 쓰던 **거드는 덩이 열넷**도 같이 내렸습니다.
    혼자 두면 손님이 받는데 아무도 안 부릅니다 (재서 찾았습니다). ── */

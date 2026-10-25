@@ -210,8 +210,13 @@ function MainScopeStrip(){
   return '<div class="msvc-sc">'+
     '<ul class="msvc-sc-g">'+n.map(function(x){
       return '<li><b>'+x[0]+'</b><i>'+esc(x[1])+'</i></li>'; }).join("")+'</ul>'+
+    /* ⚠️⚠️ **글 전체를 한 태그로 감쌉니다.** `.msvc-sc-n` 이 flex 라
+       맨글을 그냥 넣으면 `<b>` 가 **제 칸**이 되고 앞뒤 맨글도 각각
+       칸이 됩니다 — 320px 에서 "서비 / 스" · "분류 / 기준" 으로 세 칸이
+       세로로 쪼개졌습니다 (찍어 보고 알았습니다). 이 저장소가 grid 에서
+       네 번 겪고 적어 둔 규칙이 **flex 에도 그대로**입니다. */
     '<p class="msvc-sc-n">'+icon("info",14)+
-      ' 서비스 <b>분류 기준</b>이며 등록된 업체 수가 아닙니다.</p>'+
+      '<span>서비스 <b>분류 기준</b>이며 등록된 업체 수가 아닙니다.</span></p>'+
   '</div>';
 }
 
@@ -504,8 +509,33 @@ function PageMain(){
      줄**입니다 (① index.html 의 home.js 바로 앞에 home-retired.js ·
      ② 여기 앞에 HomeHero()+). 그날 check.js 의 want · 첫 구간 검사와
      build-pages.js 의 크롤러 본문도 **같은 커밋에서** 같이 고치세요. */
-  return HomeEnter()+ HomeDirect()+
-         HomeCalc()+ HomeWhy()+ HomeSteps()+ HomeGuide()+ HomeCta();
+  /* ⚠️⚠️ **2026-10-25 "메인페이지 최종 디자인 구현" §1 의 일곱**입니다
+     (HEADER · FOOTER 는 `#view` 밖) —
+
+       01 히어로            .bhero   §1-01
+       02 네 가지 핵심 서비스  .bent    §1-02
+       03 필요한 서비스 찾기   .bdir    §1-03
+       04 계산도구           .bcal    §1-04  ⚠️ 이용 방법보다 **먼저**
+       05 이용 방법          .bstep   §1-05
+       06 사장님 실전 가이드   .bgd     §1-06
+       07 마지막 상담 신청     .bcta    §1-07
+
+     ⚠️⚠️ **HomeWhy() 를 더 안 부릅니다.** §1 의 일곱에 그 구간이
+     없고, 그 안의 **견적 안내 카드(`HomeQuoteCard`)가 곧 "중간 대형
+     무료 견적 신청 섹션"** 이어서 §1-07 · §11 이 직접 없애라고
+     적었습니다 ("중간에 별도의 대형 무료 견적 신청 섹션을 추가하지
+     않는다"). ⚠️ **함수는 지우지 않았습니다** — `HOME_WHY` ·
+     `HomeWhy()` · `HomeQuoteCard()` 와 `.bwhy*` · `.bqc*` CSS 가 그대로
+     있고, 되살리시려면 이 줄에 `HomeWhy()+` 를 다시 넣으시면 됩니다
+     (그날 `check.js` 의 `want` · `need` 와 크롤러 본문도 같이).
+     ⚠️ 그 넷이 하던 말은 사라지지 않았습니다 — 중개자 지위는 **푸터**
+     (`.ft-role` · 전자상거래법 제20조 제1항), 광고로 올린 자리가 없다는
+     말은 `/providers`, 제3자 제공 재동의는 **05 이용 방법 ③**
+     (`AM_STEPS` · `checkSteps()` 가 그 줄을 찾습니다)이 받습니다.
+     ⚠️ 차례를 바꾸시려면 지시서를 먼저 고치고 `check.js` 의 `want` ·
+     `build-pages.js` 의 크롤러 본문을 **같이** 고치세요. */
+  return HomeHero()+ HomeEnter()+ HomeDirect()+
+         HomeCalc()+ HomeSteps()+ HomeGuide()+ HomeCta();
 }
 
 
@@ -656,6 +686,60 @@ function homeHallItem(hall, name){
    ⚠️ ul 의 자식은 li 라야 합니다.
    ⚠️⚠️ **grid 칸에 맨글과 태그를 섞지 마세요** — 안쪽을 전부 태그로
    감쌉니다 (이 저장소가 네 번 겪은 자리). */
+/* ── ① 메인 히어로 (2026-10-25 "최종 디자인 구현" §1-01) ──────────
+   ⚠️⚠️ **이 구간은 세 번째로 자리를 옮겼습니다** — 2026-10-16 §3-2 로
+   생기고 · 10-17 §4 로 빠지고(진입 카드가 최상단) · 10-22 §2 가 다시
+   빼라고 적었다가 · **10-25 §1-01 이 01 구간으로 못박았습니다.**
+   함수를 안 지워 둔 것이 세 번 다 그대로 쓰였습니다 (이번에는
+   `home-retired.js` 에서 올려 왔습니다).
+
+   §1-01 이 적은 필수 요소 —
+     핵심 메시지 두 줄 · 보조 설명 · 자영업 현장 사진 ·
+     무료 견적 신청 버튼 · 서비스를 살펴보는 보조 버튼 ·
+     간결한 핵심 서비스 안내
+
+   ⚠️⚠️ **글을 사진 위에 얹지 않았습니다.** 사진 위 글자는 폭마다
+   대비가 달라지고 **검사가 못 잽니다** — 이 저장소가 히어로 머리말
+   대비를 픽셀로 재다 1.52 를 찾은 자리입니다. 넓으면 글 왼쪽 ·
+   사진 오른쪽, 좁으면 글 아래 띠입니다 (PgHero 와 같은 방식).
+
+   ⚠️ 브랜드 이름은 `brand.js` 에서 오고 **조사는 koWith() 가**
+   고릅니다 (손으로 적으면 이름이 바뀔 때 "인수인계은" 이 됩니다).
+   ⚠️ 로고는 **헤더 바로 위**에 있습니다 — 히어로에 또 넣으면 한
+   화면에 로고가 둘입니다 (§9-12 중복 개발 금지).
+   ⚠️⚠️ h1 은 **여기 하나**입니다. 아래 02 구간은 h2 입니다
+   (화면마다 h1 이 둘이면 읽어 주는 프로그램이 뼈대를 못 잡습니다). */
+function HomeHero(){
+  var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
+  var with_ = (window.koWith ? koWith(nm, "이가") : nm + "가");
+  /* ⚠️⚠️ **셋째 인자(eager)를 빼지 마세요.** 첫 화면의 제일 큰 그림이라
+     여기가 LCP 입니다 — 빼면 `loading="lazy"` 가 붙어 **늦게 시작**하고,
+     그만큼 첫 그림이 늦습니다 (§6 "모바일 초기 렌더링 속도").
+     ⚠️ 액자가 `aspect-ratio` 로 자리를 미리 잡고 있어 **레이아웃이
+     밀리지 않습니다** (§6 "레이아웃 이동 방지"). */
+  var ph = hasPhoto("hero-start")
+    ? '<span class="bhero-ph" aria-hidden="true">'+photoBox("hero-start", "", true)+'</span>' : "";
+  return '<section class="bhero">'+
+    '<div class="w bhero-w">'+
+      '<div class="bhero-in">'+
+        '<p class="bhero-k">창업의 시작부터 폐업의 마무리까지</p>'+
+        /* ⚠️⚠️ **여기를 br 로 쪼개지 마세요.** checkMainH2() 가 크롤러
+           본문의 머리말을 **소스에서 글자로** 찾는데 중간에 태그가
+           끼면 못 찾아 빌드가 멈춥니다. 줄바꿈은 keep-all 이 합니다. */
+        '<h1>사장님의 모든 순간, '+esc(with_)+' 함께합니다.</h1>'+
+        '<p class="bhero-s">창업 준비, 매장 운영, 매장 양도양수, 폐업 · 정리에 '+
+          '필요한 모든 서비스를 한곳에서 찾고, 비교하고, 연결받으세요.</p>'+
+        '<div class="bhero-go">'+
+          '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
+            '무료 견적 신청'+icon("arrow",18)+'</a>'+
+          '<a class="btn btn-o btn-lg" href="/providers">어떤 서비스가 있는지 보기</a>'+
+        '</div>'+
+      '</div>'+
+      ph +
+    '</div>'+
+  '</section>';
+}
+
 function HomeEnter(){
   var H = window.AM_HALLS || [];
   var cards = HOME_ENTER.map(function(x){
@@ -687,7 +771,10 @@ function HomeEnter(){
            다시 빠져서 화면의 h1 이 여기 하나뿐입니다. 히어로를
            되살리시면 그날 h2 로 돌리세요 (h1 이 둘이면 읽어 주는
            프로그램이 화면의 뼈대를 못 잡습니다). */
-        '<h1>필요한 서비스를 한곳에서 찾으세요.</h1>'+
+        /* ⚠️⚠️ **h1 이 아니라 h2 입니다** — 2026-10-25 §1-01 로 히어로가
+           01 구간으로 돌아와 h1 이 거기 있습니다. 히어로를 다시 빼실
+           때는 그날 h1 으로 돌리세요 (화면마다 h1 은 딱 하나). */
+        '<h2>네 가지 핵심 서비스</h2>'+
         '<p>창업 준비 · 매장 운영 · 매장 양도양수 · 폐업 정리 — '+
           '단계를 고르시면 그 단계에 필요한 서비스만 모아서 보여 드립니다.</p>'+
       '</div>'+
@@ -734,7 +821,12 @@ function HomeDirect(){
     '</a></li>';
   }).filter(Boolean).join("");
   if(!cards) return "";
-  return '<section class="sec sec-ivory bdir"><div class="w">'+
+  /* ⚠️⚠️ **톤 클래스를 안 씁니다** — 이웃 넷(.bent · .bcal · .bstep ·
+     .bgd)이 제 바탕을 들고 번갈아 칠하는데 여기만 톤 클래스면
+     리듬이 한 칸 어긋납니다. 2026-10-25 §1 로 bwhy 가 내려가며
+     bcal ↔ bstep 이 ΔE 0.00 으로 붙었고(전수 점검이 잡았습니다),
+     다섯을 번갈아 다시 칠하면서 여기도 같이 맞췄습니다. */
+  return '<section class="bdir"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<h2>직접 서비스를 찾아보세요.</h2>'+
       '<p>무엇이 필요한지 이미 정해져 있으시면 여기서 바로 가세요.</p>'+
@@ -743,9 +835,50 @@ function HomeDirect(){
     '<p class="row-cta row-mid">'+
       '<a class="btn btn-o" href="/providers">전체 서비스 보기'+icon("arrow",16)+'</a>'+
     '</p>'+
+    HomePicked()+
     /* ⚠️ 숫자는 손으로 적지 않습니다 — 그 자리에서 셉니다 */
     MainScopeStrip()+
   '</div></section>';
+}
+
+/* ── 고르신 서비스가 있으면 그 자리에서 보여 줍니다 (§1-03) ───────
+   §1-03 — "고객이 서비스를 선택했을 때 기존 견적 신청 상태와
+   연동되도록 한다 · 선택한 서비스가 있다면 현재 선택 항목과 신청
+   경로를 쉽게 확인할 수 있어야 한다."
+
+   ⚠️⚠️ **0개면 줄째 안 냅니다** (절대 규칙 2). 전문관 화면의
+   `PickBasket()` 은 0개일 때도 "왜 아직 못 누르는지" 를 말해야 하는
+   자리라 비활성 단추를 남기지만, 메인은 **고르는 자리가 아닙니다** —
+   아무것도 안 고르신 분께 빈 바구니를 보여 주면 그게 자리표시자입니다.
+
+   ⚠️⚠️ **새 저장소를 만들지 않았습니다** (§9-12 중복 개발 금지).
+   `amPickCount()` · `amPickList()` · `amPickQuoteTo()` 를 그대로
+   부르고, `data-pick-n` · `data-pick-go` 를 달아 두어 `pickPaint()` 가
+   고치는 자리에 같이 묻어 갑니다.
+
+   ⚠️ 구간을 새로 만들지 않았습니다 — §9-7 이 "새로운 대형 섹션 추가
+   금지" 이고, 이것은 03 구간 **안의 한 줄**입니다. */
+function HomePicked(){
+  if(typeof amPickCount !== "function" || !amPickCount()) return "";
+  var L = (typeof amPickList === "function") ? amPickList() : [];
+  var n = L.length || amPickCount();
+  var nm = L.slice(0, 4).map(function(x){ return x.name; }).filter(Boolean);
+  var to = (typeof amPickQuoteTo === "function") ? amPickQuoteTo("start") : "/quote";
+  /* ⚠️⚠️ `data-pick-row` 를 빼지 마세요 — 0개가 되면 `pickPaint()` 가
+     이 줄을 통째로 가립니다. 지금 메인에 해제 단추가 없어서 0개로
+     떨어질 길이 안 보이지만, 다른 탭에서 비우거나 뒤에 해제 단추가
+     생기는 날 **"0개 고르셨습니다" + 죽은 단추**가 그대로 섭니다
+     (절대 규칙 2). `.bdir-pk` 는 `display:flex` 라 CSS 쪽에
+     `.bdir-pk[hidden]{display:none}` 이 같이 있어야 합니다 — 작성자
+     CSS 가 브라우저 기본 `[hidden]` 을 이깁니다. */
+  return '<div class="bdir-pk" data-pick-row>'+
+    '<p class="bdir-pk-t">'+icon("check",16)+
+      ' 고르신 서비스 <b data-pick-n>'+n+'</b>개'+
+      (nm.length ? ' <i>'+esc(nm.join(" · "))+(n > nm.length ? " 외 "+(n-nm.length)+"개" : "")+'</i>' : "")+
+    '</p>'+
+    '<a class="btn btn-ac" data-pick-go="start" href="'+esc(to)+'">'+
+      '고른 서비스로 신청하기'+icon("arrow",16)+'</a>'+
+  '</div>';
 }
 
 /* ── ③ 매장 양도양수 가로형 배너 (§7) ────────────────────────────
@@ -885,6 +1018,14 @@ function HomeSteps(){
          정합니다 (약관 제8조와 같은 말이어야 합니다). */
       '<p class="bstep-n2">'+icon("info",14)+
         ' 업체 회신 시점은 업체가 정합니다 — 저희가 보장하지 않습니다.</p>'+
+      /* ⚠️⚠️ §1-05 — "현재 제휴업체 등록이 0곳이므로 실제 업체 연결이나
+         견적 비교가 가능한 것처럼 오해를 유발하는 표현은 사용하지
+         않는다." 그래서 **지금 몇 곳인지를 세어서** 그 자리에 적습니다.
+         ⚠️⚠️ **새 문장을 쓰지 않았습니다** — `/quote` 가 쓰는
+         `QuoteStage()` 를 그대로 부릅니다 (§9-12 중복 개발 금지).
+         업체를 등록하시면 **코드를 한 줄도 안 고치고** "지금 제휴업체
+         n곳" 으로 바뀝니다 — 손으로 적으면 그날에도 0 으로 남습니다. */
+      (typeof QuoteStage === "function" ? QuoteStage() : "")+
     '</div>'+
   '</section>';
 }

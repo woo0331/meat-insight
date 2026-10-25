@@ -529,7 +529,13 @@ console.log("\n── /api/deal — 상태가 바뀌면 운영자에게 한 줄 
      ⚠️ 주석을 먼저 걷어냅니다 — 규칙을 설명하는 글에 걸려 멀쩡한
      코드를 실패로 잡은 적이 있습니다 (틀린 것은 검사였습니다). */
   const bare = src.replace(/\/\*[\s\S]*?\*\//g, " ");
-  const step = bare.slice(bare.indexOf("const STEP_FN"), bare.indexOf("const NOTE_TIMEOUT"));
+  /* ⚠️⚠️ 끝을 `const PT_FN` 으로 잡습니다 — 전에는 `const NOTE_TIMEOUT`
+     이었는데, 그 사이에 업체 안내(P1-5)가 들어오면서 **그 블록까지
+     같이 집었습니다.** 그러면 "고객이 고른 것은 안 알린다" 가 업체 쪽의
+     `choose_quote` 에 걸려 멀쩡한 코드를 실패로 잡습니다 — 틀린 것은
+     코드가 아니라 검사의 경계였습니다. 사이에 또 무엇을 넣으시면
+     **이 표시를 같이 옮기세요.** */
+  const step = bare.slice(bare.indexOf("const STEP_FN"), bare.indexOf("const PT_FN"));
   ok("배정 · 견적 도착만 알린다",
      /assign_item\s*:\s*"assigned"/.test(step) &&
      /submit_quote\s*:\s*"quoted"/.test(step), step.slice(0, 200));
@@ -564,6 +570,75 @@ console.log("\n── /api/deal — 상태가 바뀌면 운영자에게 한 줄 
   /* ⚠️⚠️ **회신 시점을 약속하지 않습니다** (약관 제8조) */
   ok("회신 시점을 약속하지 않는다",
      !/시간 안에|당일|24시간|보장/.test(cs), cs.slice(0, 600));
+
+  /* ── P1-5 업체(제휴사) 배정 안내 (2026-10-25) ────────────────────
+     ⚠️ 주석을 먼저 걷어냅니다 (위와 같은 까닭). */
+  const pt = bare.slice(bare.indexOf("const PT_FN"), bare.indexOf("const NOTE_TIMEOUT"));
+  ok("배정 · 고객이 고름만 업체에 알린다",
+     /assign_item\s*:\s*"assigned"/.test(pt) &&
+     /choose_quote\s*:\s*"chosen"/.test(pt), pt.slice(0, 200));
+  /* ⚠️⚠️ **업체가 스스로 한 일은 안 알립니다** — 자기가 방금 누른
+     것을 메일로 다시 받습니다 (고객 쪽과 같은 규칙). */
+  ok("업체가 낸 견적 · 업체의 답은 안 알린다",
+     !/submit_quote\s*:/.test(pt) && !/answer_assignment\s*:/.test(pt), pt.slice(0, 200));
+  /* ⚠️⚠️ **돈 쪽은 메일로 안 나갑니다** — 담당자 메일이 틀렸을 때
+     금액이 그대로 유출입니다. 청구서는 /my 에서 봅니다. */
+  ok("수수료 · 입금 · 환수는 업체 메일로 안 보낸다",
+     !/confirm_fee\s*:/.test(pt) && !/mark_paid\s*:/.test(pt) &&
+     !/clawback_fee\s*:/.test(pt), pt.slice(0, 200));
+  /* ⚠️ move_state 는 **가는 상태**가 assigned 일 때만 */
+  ok("move_state 는 배정으로 갈 때만 보낸다",
+     /p_to[\s\S]{0,60}assigned/.test(pt), pt.slice(0, 400));
+  /* ⚠️⚠️ 업체 id 가 길마다 다른 자리에 있습니다 (0004 는 ctx 안) */
+  ok("move_state 는 ctx 에서 업체를 꺼낸다",
+     /providerId/.test(pt), pt.slice(0, 400));
+  ok("담당자 메일이 없으면 안 보낸다 (fail-closed)",
+     /if\(!mail\) return/.test(pt), pt.slice(-500));
+  ok("업체 담당자 메일은 provider_contact 에서 읽는다",
+     /dbSelect\("provider_contact"/.test(pt), pt.slice(0, 900));
+  /* ⚠️⚠️ 읽은 것을 **답에 한 글자도 싣지 않습니다** */
+  ok("읽은 담당자 메일을 답에 안 싣는다",
+     !/json\([^)]*mail/.test(bare), bare.slice(bare.indexOf("partnerMail"), 200));
+  /* ⚠️⚠️ **실패해도 배정을 되돌리지 않습니다** */
+  ok("업체 메일이 터져도 배정을 되돌리지 않는다",
+     /partnerMail[\s\S]*?catch/.test(pt), pt.slice(-300));
+  /* ⚠️⚠️ **만들어 놓고 안 부르면 없는 것과 같습니다.** 이 저장소가
+     `api/deal.js` 자체를 아무 화면도 안 불러서 한 차수를 통째로
+     놓친 자리입니다 — 성공한 뒤에 실제로 부르는지 봅니다. */
+  ok("성공한 뒤에 업체 메일을 실제로 부른다",
+     /await partnerMail\(fn, pickArgs/.test(bare), bare.slice(-400));
+
+  /* 보내는 글 — ⚠️⚠️ 고객 성함 · 연락처 · 요청 내용이 한 글자도 없어야 합니다 */
+  const ps = sendSrc.slice(sendSrc.indexOf("const PARTNER_SAY"))
+                    .replace(/\/\*[\s\S]*?\*\//g, " ");
+  /* ⚠️⚠️ **낱말로 찾지 않습니다.** 처음에 "연락처" 같은 글자를 찾게
+     적었더니 **"성함과 연락처를 싣지 않습니다" 라는 그 문장**에 걸려
+     멀쩡한 코드를 실패로 잡았습니다 (틀린 것은 검사였습니다 — 이
+     저장소가 `select=*` 주석에서 겪은 그 자리).
+     대신 **구조로** 봅니다: 받는 인자가 `(to, no, kind)` 셋뿐이면
+     고객 데이터를 실을 길 자체가 없습니다. */
+  ok("업체 안내가 받는 것은 메일 주소 · 접수번호 · 종류 셋뿐이다",
+     /function partnerStep\(to, no, kind\)/.test(ps), ps.slice(0, 400));
+  ok("업체 안내가 그 셋 말고 다른 값을 안 읽는다",
+     !/\b(req|rq|row|cust|d)\./.test(ps.slice(0, ps.indexOf("fetch"))),
+     ps.slice(0, ps.indexOf("fetch")).slice(0, 400));
+  ok("업체 안내가 '성함과 연락처를 싣지 않는다' 고 적는다",
+     /성함과 연락처를 싣지 않습니다/.test(ps), ps.slice(0, 900));
+  ok("업체 안내가 광고가 아니라고 적는다", /광고가 아닙니다/.test(ps), ps.slice(0, 900));
+  ok("업체 안내에 끄는 길을 적는다", /회신/.test(ps), ps.slice(0, 900));
+  ok("업체 안내도 한 곳에만 보낸다", /to:\s*\[addr\]/.test(ps), ps.slice(0, 900));
+  /* ⚠️⚠️ 보내는 주소가 없으면 **아무 일도 안 합니다.** 기본값
+     (onboarding@resend.dev)으로 떨어뜨리면 보냈다고 생각하는데
+     업체는 못 받습니다. */
+  ok("업체 안내는 보내는 주소가 없으면 안 보낸다",
+     /!key \|\| !from/.test(ps), ps.slice(0, 900));
+  ok("업체 안내는 기본 발신 주소로 떨어지지 않는다",
+     !/onboarding@resend\.dev/.test(ps), ps.slice(0, 900));
+  /* ⚠️ 업체 답장은 **운영자에게 와야 맞습니다** (고객 쪽과 반대 판단) */
+  ok("업체 발신 주소는 운영자 주소를 쓴다",
+     /PARTNER_EMAIL_FROM[\s\S]{0,40}INTAKE_EMAIL_FROM/.test(ps), ps.slice(0, 900));
+  ok("업체 안내도 회신 시점을 약속하지 않는다",
+     !/시간 안에|당일|24시간|보장/.test(ps), ps.slice(0, 900));
 
   setEnv({});
 }
@@ -749,6 +824,26 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
     const st = calls.filter(c => /\/rest\/v1\/settlement/.test(c.url))[0];
     ok("정산 질의가 select=* 가 아니다",
        !!st && !/select=\*/.test(decodeURIComponent(st.url)), st && st.url);
+
+    /* ══ 2026-10-25 P1-7 — 업체 입점 신청 (0016) ═══════════════════
+       `/join` 으로 들어온 신청입니다. ⚠️⚠️ **고객 · 업체에게는 묻지도
+       않습니다** (아래 역할 돌림이 봅니다) — 0016 의 RLS 에 그 정책이
+       아예 없어서 어차피 0줄이지만, 묻지 않는 쪽이 한 겹 더 안전합니다. */
+    const apq = calls.filter(c => /provider_apply/.test(c.url))[0];
+    ok("관리자에게는 업체 입점 신청을 준다", !!apq, calls.map(c => c.url));
+    ok("입점 신청 질의가 select=* 가 아니다",
+       !!apq && !/select=\*/.test(decodeURIComponent(apq.url)), apq && apq.url);
+    /* ⚠️ 화면이 안 쓰는 칸은 안 가져옵니다 (최소 수집) */
+    ok("입점 신청 질의가 moved_by 를 안 가져온다",
+       !!apq && !/moved_by/.test(decodeURIComponent(apq.url)),
+       apq && decodeURIComponent(apq.url));
+    /* ⚠️⚠️ **접수번호가 빠지면 못 씁니다** — 직원이 전화하면서 제일
+       먼저 묻는 값입니다 (`id` 가 없으면 상태를 바꿀 수도 없습니다 —
+       고객 칸에서 `id` 를 빠뜨려 견적이 통째로 안 그려진 그 자리). */
+    ok("입점 신청 질의에 id 와 접수번호가 있다",
+       !!apq && /\bid\b/.test(decodeURIComponent(apq.url)) &&
+       /\bno\b/.test(decodeURIComponent(apq.url)),
+       apq && decodeURIComponent(apq.url));
   }
 
   /* 직원 · 업체 · 고객에게는 **묻지도 않습니다** */
@@ -761,6 +856,7 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
     mock([USER, [/\/rest\/v1\/account/, function(){ return body(200, [acct]); }],
           [/\/rest\/v1\/request/,  function(){ return body(200, []); }],
           [/provider_contact/,       function(){ return body(200, []); }],
+          [/provider_apply/,         function(){ return body(200, []); }],
           [/\/rest\/v1\/provider\b/, function(){ return body(200, []); }],
           [/\/rest\/v1\/deal/,     function(){ return body(200, []); }],
           [/\/rest\/v1\/settlement/, function(){ return body(200, []); }],
@@ -793,6 +889,16 @@ console.log("\n── /api/me — 역할마다 **어느 칸을** 가져오는가
     else
       ok(who + "에게는 업체 담당자를 묻지 않는다",
          calls.every(c => !/provider_contact/.test(c.url)), calls.map(c => c.url));
+
+    /* ⚠️⚠️ 입점 신청은 **직원에게는 줍니다** (전화하는 사람이 직원입니다).
+       업체 · 고객에게는 묻지 않습니다 — 남의 입점 신청이 보이면 그 자체가
+       유출입니다 (상호 · 담당자 · 번호). */
+    if(who === "직원")
+      ok("직원에게는 업체 입점 신청을 준다 (전화하는 사람이 직원입니다)",
+         calls.some(c => /provider_apply/.test(c.url)), calls.map(c => c.url));
+    else
+      ok(who + "에게는 업체 입점 신청을 묻지 않는다",
+         calls.every(c => !/provider_apply/.test(c.url)), calls.map(c => c.url));
   }
 
   /* ── 신청 한 건의 이력 (§6 "신청 및 변경 이력") ──────────────────

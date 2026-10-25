@@ -107,6 +107,96 @@ console.log("\n── 정상 조건에서 제대로 나오는가 (너무 넓게 
   ok("구독형 6회차 → 12만원", r.ok && r.fee === 120000, r.fee);
 }
 
+console.log("\n── 유지 수수료 (2026-10-25 P1-6 — 통신 · 렌탈 같은 구조)");
+{
+  /* 월 요금 55,000원 · 요율 10% · 12개월 → 한 달치 5,500 × 12 = 66,000 */
+  const r = W.amFeeCalc(P({ type:"mrr_rate", rate:10, when:"kept" }),
+                        { monthly:55000, times:12 });
+  ok("월 요금 55,000 · 10% · 12개월 → 66,000원",
+     r.ok && r.fee === 66000, r);
+  /* ⚠️⚠️ **한 달치를 먼저 반올림합니다.** 합계에 곱해서 한 번만
+     반올림하면 청구서에 달마다 적는 금액의 합과 총액이 어긋납니다.
+     ⚠️⚠️ **기대값을 코드와 같은 식으로 적지 마세요.** 처음에
+     `Math.round(33333 * 3.33 / 100) * 3` 으로 적었는데, 그건 코드가
+     쓰는 식을 그대로 베낀 것이라 **합계에 곱하는 쪽으로 되돌려도
+     답이 같아서** 아무것도 안 잡았습니다 (이 저장소의 "통과만 하고
+     아무것도 안 잡는 검사").
+     ⚠️ 그래서 **두 식의 답이 갈리는 수**를 골라 **손으로** 적습니다 —
+     월 1,000원 · 0.25% 는 한 달치가 2.5원이고, 먼저 반올림하면
+     3 × 4 = **12**, 합계로 한 번만 반올림하면 **10** 입니다. */
+  const q = W.amFeeCalc(P({ type:"mrr_rate", rate:0.25, when:"kept" }),
+                        { monthly:1000, times:4 });
+  ok("한 달치를 먼저 반올림한다 (달마다 적는 합과 같아야 합니다)",
+     q.ok && q.fee === 12, q);
+  /* base 는 **그 기간에 손님이 낸 요금 합**이라야 "수수료가 계약금액보다
+     크다" 는 자물쇠가 제대로 돕니다 */
+  ok("기준 금액이 그 기간 요금 합이다",
+     r.ok && r.base === 55000 * 12, r.base);
+  /* ⚠️ 정액 쪽 — 계산은 close 와 같지만 **다른 모델**입니다 */
+  const t = W.amFeeCalc(P({ type:"retain", flat:30000, rate:null, when:"kept" }), {});
+  ok("유지 성과 정액 → 그대로 30,000원",
+     t.ok && t.fee === 30000 && t.type === "retain", t);
+  ok("유지 성과는 기준 금액이 없다 (정액이라 비교할 것이 없습니다)",
+     t.ok && t.base === null, t.base);
+}
+{
+  /* ⚠️⚠️ **경계값 바로 아래** — 월 요금도 요율도 0 보다 큰데 한 달치가
+     0 원으로 떨어지는 자리입니다. 그대로 두면 회차를 아무리 곱해도
+     0 원이고, 정산서에 "유지 수수료 0원" 이 올라갑니다 (요율 쪽에서
+     겪은 85조원 · 25,000년과 같은 종류). */
+  const z = W.amFeeCalc(P({ type:"mrr_rate", rate:0.0001, when:"kept" }),
+                        { monthly:1000, times:36 });
+  ok("월 1,000원 · 0.0001% · 36개월 → 0원을 내놓지 않고 거절한다",
+     z.ok === false && /0원/.test(z.why), z);
+  /* 그 바로 위 — 한 달치가 1원이면 계산이 됩니다 (너무 넓게 막는 것도 고장) */
+  const o = W.amFeeCalc(P({ type:"mrr_rate", rate:0.1, when:"kept" }),
+                        { monthly:1000, times:36 });
+  ok("한 달치가 1원이면 그대로 계산한다 (경계 바로 위)",
+     o.ok === true && o.fee === 36, o);
+  /* 회차 — sub 과 같은 규칙 */
+  const c0 = W.amFeeCalc(P({ type:"mrr_rate", rate:10, when:"kept" }),
+                         { monthly:55000, times:0 });
+  ok("유지분 회차 0 을 막는다", c0.ok === false, c0.why);
+  const ch = W.amFeeCalc(P({ type:"mrr_rate", rate:10, when:"kept" }),
+                         { monthly:55000, times:1.5 });
+  ok("유지분 회차 소수를 막는다", ch.ok === false, ch.why);
+  const c1 = W.amFeeCalc(P({ type:"mrr_rate", rate:10, when:"kept" }),
+                         { monthly:55000, times:1 });
+  ok("유지분 회차 1 은 통과한다 (경계)", c1.ok === true && c1.fee === 5500, c1);
+  /* 월 요금을 **아직 모를 때** — 0 원이 아니라 거절입니다 */
+  const nm = W.amFeeCalc(P({ type:"mrr_rate", rate:10, when:"kept" }), { times:12 });
+  ok("월 요금이 아직 없으면 0 이 아니라 거절한다",
+     nm.ok === false && /월 요금/.test(nm.why), nm);
+  /* 음수 월 요금 */
+  const neg = W.amFeeCalc(P({ type:"mrr_rate", rate:10, when:"kept" }),
+                          { monthly:-1, times:12 });
+  ok("월 요금이 음수면 막는다", neg.ok === false, neg.why);
+  /* 월 요금 0 은 **값**입니다 (무료 요금제) — 0원 수수료가 맞습니다 */
+  const free = W.amFeeCalc(P({ type:"mrr_rate", rate:10, when:"kept" }),
+                           { monthly:0, times:12 });
+  ok("월 요금 0 은 값이라 0원을 그대로 낸다", free.ok === true && free.fee === 0, free);
+}
+{
+  /* 정책 자체가 말이 되는가 — ⚠️ 유지분도 요율 규칙이 같습니다 */
+  ok("유지분에 요율을 안 적으면 막는다",
+     !!W.amFeeBadPolicy(P({ type:"mrr_rate", rate:null, when:"kept" })));
+  ok("유지분 요율 0 을 막는다",
+     !!W.amFeeBadPolicy(P({ type:"mrr_rate", rate:0, when:"kept" })));
+  ok("유지분 요율 100% 를 넘으면 막는다",
+     !!W.amFeeBadPolicy(P({ type:"mrr_rate", rate:100.01, when:"kept" })));
+  ok("유지 성과에 정액을 안 적으면 막는다",
+     !!W.amFeeBadPolicy(P({ type:"retain", flat:null, rate:null, when:"kept" })));
+  ok("유지 성과 정액이 음수면 막는다",
+     !!W.amFeeBadPolicy(P({ type:"retain", flat:-1, rate:null, when:"kept" })));
+  /* ⚠️ 확정 조건 — 유지분은 계약한 날이 아니라 **유지된 것을 확인한 날** */
+  ok("'약정 유지 확인 후' 가 확정 조건에 있다",
+     (W.AM_FEE_WHEN || []).some(x => x.key === "kept"));
+  ok("확정 조건이 다섯이다", (W.AM_FEE_WHEN || []).length === 5,
+     (W.AM_FEE_WHEN || []).length);
+  ok("수익모델이 여덟이다", (W.AM_FEE_TYPE || []).length === 8,
+     (W.AM_FEE_TYPE || []).length);
+}
+
 console.log("\n── ⚠️⚠️ 경계값 **바로 아래** (85조원 · 25,000년이 났던 자리)");
 {
   /* 요율도 계약금액도 0 보다 큰데 반올림이 0 으로 떨어지는 자리 */

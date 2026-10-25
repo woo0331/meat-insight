@@ -12,7 +12,13 @@ window.AM_FEE_TYPE = [
   { key:"margin",    name:"직접 판매 · 유통 마진",    needs:["sell","cost"],
     lead:"판매가에서 매입가를 뺀 것이 수익입니다." },
   { key:"sub",       name:"반복 발주 · 구독형",        needs:["times"],
-    lead:"회차마다 정액입니다." }
+    lead:"회차마다 정액입니다." },
+
+  { key:"mrr_rate",  name:"월 요금의 일정 비율 (유지분)", needs:["monthly", "times"],
+    lead:"월 요금에 요율을 곱하고 회차만큼 쌓습니다." },
+
+  { key:"retain",    name:"유지 · 해지 방어 성과 정액",  needs:[],
+    lead:"약정이 유지된 것이 확인되면 건당 정액입니다." }
 ];
 
 window.AM_FEE_VAT = [
@@ -25,7 +31,9 @@ window.AM_FEE_WHEN = [
   { key:"lead_ok",  name:"유효 문의 확인 후",  need:"문의가 실제 상담으로 이어졌는지" },
   { key:"signed",   name:"계약 체결 확인 후",  need:"계약서 또는 계약 사실 증빙" },
   { key:"done",     name:"이행 완료 확인 후",  need:"설치·시공 완료 증빙" },
-  { key:"paid",     name:"업체 수금 확인 후",  need:"업체가 손님에게 받았다는 증빙" }
+  { key:"paid",     name:"업체 수금 확인 후",  need:"업체가 손님에게 받았다는 증빙" },
+
+  { key:"kept",     name:"약정 유지 확인 후",  need:"그 달까지 유지됐다는 증빙 (해지 내역 없음)" }
 ];
 
 window.AM_FEE_CYCLE = [
@@ -93,12 +101,14 @@ window.amFeeBadPolicy = function(p){
   var flat = num(p.flat), rate = num(p.rate),
       min = num(p.min), max = num(p.max);
 
-  if(p.type === "lead" || p.type === "close" || p.type === "sub"){
+  if(p.type === "lead" || p.type === "close" || p.type === "sub" ||
+     p.type === "retain"){
     if(flat === null) return "정액 수수료를 적어 주세요";
     if(flat < 0)      return "정액 수수료가 음수입니다";
 
   }
-  if(p.type === "rate" || p.type === "base_rate"){
+
+  if(p.type === "rate" || p.type === "base_rate" || p.type === "mrr_rate"){
     if(rate === null) return "요율을 적어 주세요";
     if(rate <= 0)     return "요율이 0 이하입니다 — 비율 수수료가 아닙니다";
 
@@ -139,14 +149,28 @@ window.amFeeCalc = function(snap, d, opt){
   var flat = num(snap.flat) || 0, rate = num(snap.rate) || 0;
   var base = null, fee = null, i;
 
-  var LABEL = { amount:"계약금액", sell:"판매가", cost:"매입가", times:"회차" };
+  var LABEL = { amount:"계약금액", sell:"판매가", cost:"매입가", times:"회차",
+                monthly:"월 요금" };
   for(i = 0; i < t.needs.length; i++){
     if(num(d[t.needs[i]]) === null)
       return { ok:false, why:LABEL[t.needs[i]] + "이 아직 없습니다" };
   }
 
-  if(snap.type === "lead" || snap.type === "close"){
+  if(snap.type === "lead" || snap.type === "close" || snap.type === "retain"){
     fee = Math.round(flat);
+  }
+
+  else if(snap.type === "mrr_rate"){
+    var monthly = num(d.monthly), mtimes = num(d.times);
+    if(monthly < 0) return { ok:false, why:"월 요금이 음수입니다" };
+    if(mtimes < 1 || Math.round(mtimes) !== mtimes)
+      return { ok:false, why:"회차는 1 이상의 정수여야 합니다" };
+    var per = Math.round(monthly * rate / 100);
+
+    if(per === 0 && monthly > 0 && rate > 0)
+      return { ok:false, why:"한 달치가 0원으로 떨어집니다 — 월 요금과 요율을 확인해 주세요" };
+    fee  = per * mtimes;
+    base = Math.round(monthly) * mtimes;
   }
   else if(snap.type === "sub"){
     var times = num(d.times);

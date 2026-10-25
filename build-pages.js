@@ -2055,10 +2055,13 @@ function checkDeal(W){
    checkFee — 수수료 틀이 §9 를 다 들고 있는가
    ════════════════════════════════════════════════════════════════════ */
 function checkFee(W){
-  if((W.AM_FEE_TYPE || []).length !== 6)
+  /* ⚠️ 지시서 §9 는 여섯이었고, 2026-10-25 P1-6 으로 **유지분 둘**이
+     늘어 여덟입니다 (월 요금 비례 · 유지 성과). 확정 조건도 넷 →
+     다섯입니다 (유지 확인 후). */
+  if((W.AM_FEE_TYPE || []).length !== 8)
     throw new Error("수익모델이 " + (W.AM_FEE_TYPE || []).length +
-      "개입니다 — 지시서 §9 는 여섯입니다");
-  for(const g of [["AM_FEE_TYPE", 6], ["AM_FEE_VAT", 3], ["AM_FEE_WHEN", 4], ["AM_FEE_CYCLE", 3]]){
+      "개입니다 — 지시서 §9 여섯 + 유지분 둘로 여덟입니다");
+  for(const g of [["AM_FEE_TYPE", 8], ["AM_FEE_VAT", 3], ["AM_FEE_WHEN", 5], ["AM_FEE_CYCLE", 3]]){
     const L = W[g[0]] || [], k = L.map(x => x.key);
     if(new Set(k).size !== k.length) throw new Error(g[0] + " 의 key 가 겹칩니다");
     for(const x of L) if(!x.key || !x.name) throw new Error(g[0] + " 에 이름 없는 항목이 있습니다");
@@ -2091,12 +2094,44 @@ function checkDealSql(W){
     throw new Error("db/migrations/0001_init.sql 이 없습니다 — 상태값을 맞춰 볼 데가 없습니다");
   const sql = fs.readFileSync(f, "utf8");
 
-  /* create type <이름> as enum ( '...' , '...' ) 안의 값들을 꺼냅니다 */
+  /* 뒤 마이그레이션이 `alter type … add value` 로 늘린 것까지 같이
+     읽습니다.
+     ⚠️⚠️ **0001 만 보면 안 됩니다.** 0001 은 사장님 DB 에서 이미 돌아간
+     파일이라 고칠 수가 없고(마이그레이션은 번호를 다시 쓰지 않습니다),
+     값을 늘리는 길은 다음 번호의 `alter type` 뿐입니다 — 0001 만 보면
+     **멀쩡한 코드가 "화면과 DB 가 다릅니다" 로 빌드를 멈춥니다.**
+     ⚠️ 이미 있는 값은 건너뜁니다. 0006 의 `'hold'` 는 0001 에도 들어
+     있어서(그때는 아직 안 돌린 파일이었습니다) 두 번 세면 안 됩니다. */
+  const MIG = fs.readdirSync(path.join(ROOT, "db", "migrations"))
+    .filter(x => /^\d+_.*\.sql$/.test(x) && !/_down\.sql$/.test(x)).sort();
+  const migSql = MIG.map(x =>
+    fs.readFileSync(path.join(ROOT, "db", "migrations", x), "utf8")).join("\n");
+
+  /* ⚠️ 주석을 먼저 걷어냅니다 — 0006 이 규칙을 설명하는 글에
+     `alter type … add value` 를 그대로 적어 두었습니다 (이 저장소가
+     `select=*` 주석에서 겪은 자리). */
+  const bare = migSql.replace(/^\s*--.*$/gm, " ");
+
   function enumOf(name){
     const re = new RegExp("create\\s+type\\s+" + name + "\\s+as\\s+enum\\s*\\(([^)]*)\\)", "i");
-    const m = sql.match(re);
-    if(!m) throw new Error("0001_init.sql 에 " + name + " enum 이 없습니다");
-    return (m[1].match(/'([^']+)'/g) || []).map(x => x.slice(1, -1));
+    /* ⚠️⚠️ **0001 만 보면 안 됩니다.** 뒤 번호가 **새 enum** 을 만들 수도
+       있습니다 (0016 의 `apply_state`) — 0001 은 이미 돌아간 파일이라
+       거기 넣을 수가 없고, 0001 만 보면 **멀쩡한 코드가 "enum 이
+       없습니다" 로 빌드를 멈춥니다.** 주석을 걷어낸 전체에서 찾습니다. */
+    const m = bare.match(re);
+    if(!m) throw new Error("db/migrations 에 " + name + " enum 이 없습니다");
+    const out = (m[1].match(/'([^']+)'/g) || []).map(x => x.slice(1, -1));
+    const are = new RegExp("alter\\s+type\\s+" + name +
+      "\\s+add\\s+value(?:\\s+if\\s+not\\s+exists)?\\s+'([^']+)'" +
+      "(?:\\s+(after|before)\\s+'([^']+)')?", "gi");
+    let a;
+    while((a = are.exec(bare))){
+      if(out.indexOf(a[1]) >= 0) continue;        /* 이미 있습니다 */
+      const at = a[3] ? out.indexOf(a[3]) : -1;
+      if(a[2] && at >= 0) out.splice(a[2].toLowerCase() === "after" ? at + 1 : at, 0, a[1]);
+      else out.push(a[1]);
+    }
+    return out;
   }
   function same(what, a, b){
     if(a.length !== b.length || a.some((x, i) => x !== b[i]))
@@ -2109,10 +2144,14 @@ function checkDealSql(W){
   }
   same("신청 상태 열셋",   (W.AM_DEAL_ST  || []).map(x => x.key), enumOf("deal_state"));
   same("역할 넷",          (W.AM_ROLES    || []).map(x => x.key), enumOf("app_role"));
-  same("수익모델 여섯",     (W.AM_FEE_TYPE || []).map(x => x.key), enumOf("fee_type"));
+  same("수익모델 여덟",     (W.AM_FEE_TYPE || []).map(x => x.key), enumOf("fee_type"));
   same("부가세 처리 기준",  (W.AM_FEE_VAT  || []).map(x => x.key), enumOf("fee_vat"));
   same("수수료 확정 조건",  (W.AM_FEE_WHEN || []).map(x => x.key), enumOf("fee_when"));
   same("정산 주기",        (W.AM_FEE_CYCLE|| []).map(x => x.key), enumOf("fee_cycle"));
+  /* 2026-10-25 P1-7 (0016) — 업체 입점 신청 상태 넷.
+     ⚠️ enum 이 **0016 에서** 만들어집니다 (0001 이 아닙니다) — 위
+     `enumOf()` 가 그래서 0001 만 보지 않습니다. */
+  same("입점 신청 상태 넷",  (W.AM_APPLY_ST || []).map(x => x.key), enumOf("apply_state"));
 
   /* ⚠️⚠️ **배정 상태 셋**은 enum 이 아니라 `assignment.state` 의 text
      입니다 — 그래서 SQL 이 **실제로 넣는 값**을 긁어서 맞춰 봅니다.
@@ -3872,9 +3911,110 @@ function checkProviderSelfSql(){
 
   console.log("   업체가 스스로 고치는 문이 승인 대상 칸을 안 건드립니다 (0014)");
 }
+/* ── 업체 입점 신청 (2026-10-25 진단 P1-7 · 0016) ────────────────
+   `/join` 으로 들어온 신청이 슬랙으로만 가고 있었습니다 — 채널 글이
+   묻히면 그 업체는 사라지고, 직원은 업체명 · 번호 · 하는 일을 **다시
+   손으로 칩니다.**
+
+   ⚠️⚠️ 보는 것은 **그 표가 새지 않는가**입니다 —
+     ① RLS 가 켜져 있는가 (안 켜면 Supabase 가 그대로 열어 줍니다)
+     ② 손님 · 업체에게 보이는 정책이 없는가 (남의 입점 신청이 보이면
+        그 자체가 유출입니다 — 상호 · 담당자 · 번호)
+     ③ 표에 쓰기 권한을 주지 않았는가 (§8 — 기록 없이 지나가는 길)
+     ④ 상태를 바꾸는 문이 감사 기록을 **같은 트랜잭션에서** 남기는가
+     ⑤ '등록 완료' 가 **그 업체를 가리키게** 막는가 (절대 규칙 5)
+     ⑥ 감사 기록에 상호 · 성함 · 번호를 안 싣는가 (제26조 · 기록은
+        고칠 수도 지울 수도 없어서 그 자체가 또 하나의 보관입니다)
+   ⚠️ 주석을 먼저 걷어냅니다 — 규칙을 **설명하는 글**에 걸려 멀쩡한
+   코드를 실패로 잡은 적이 있습니다 (틀린 것은 검사였습니다).
+   ────────────────────────────────────────────────────────────── */
+function checkApplySql(){
+  const f = path.join(ROOT, "db", "migrations", "0016_provider_apply.sql");
+  const q = path.join(ROOT, "api", "quote.js");
+  if(!fs.existsSync(f)) return;
+  const sq = fs.readFileSync(f, "utf8").replace(/^\s*--.*$/gm, " ");
+
+  if(!/alter\s+table\s+provider_apply\s+enable\s+row\s+level\s+security/.test(sq))
+    throw new Error("0016 의 provider_apply 에 RLS 가 안 켜져 있습니다 — " +
+      "안 켜진 표는 Supabase 가 그대로 열어 줍니다");
+
+  /* ② 정책이 **직원 · 관리자만** 보는가. ⚠️ `my_role()` 을 안 보는
+     정책이 하나라도 있으면 그 줄로 손님이 들어옵니다. */
+  const pol = sq.match(/create\s+policy[\s\S]*?on\s+provider_apply[\s\S]*?(?=;)/gi) || [];
+  if(!pol.length)
+    throw new Error("0016 에 provider_apply 정책이 없습니다 — " +
+      "RLS 만 켜고 정책이 없으면 직원도 아무것도 못 봅니다");
+  for(const p of pol){
+    if(!/my_role\(\)/.test(p) || !/staff/.test(p) || !/admin/.test(p))
+      throw new Error("0016 의 provider_apply 정책 하나가 직원 · 관리자로 " +
+        "묶여 있지 않습니다 — 남의 입점 신청이 보이면 그 자체가 유출입니다 " +
+        "(상호 · 담당자 · 번호)");
+    if(/for\s+(all|insert|update|delete)/i.test(p))
+      throw new Error("0016 의 provider_apply 정책이 읽기 밖을 엽니다 — " +
+        "쓰기는 문(set_apply_state)으로만 지나가야 합니다 (§8)");
+  }
+
+  /* ③ ⚠️⚠️ 표에 쓰기를 주면 기록 없이 지나가는 길이 하나 생깁니다 */
+  if(/grant\s+[^;]*\b(insert|update|delete)\b[^;]*on\s+provider_apply/i.test(sq))
+    throw new Error("0016 이 provider_apply 에 쓰기 권한을 줍니다 — " +
+      "0007 · 0008 · 0013 과 같은 규칙으로 **읽기만** 주세요 (§8)");
+  if(/grant[^;]*on\s+provider_apply[^;]*to\s+anon/i.test(sq))
+    throw new Error("0016 이 anon 에게 권한을 줍니다 — 로그인 안 한 쪽에는 " +
+      "아무 권한도 주지 않습니다");
+
+  /* 문 하나 — 함수 본문만 떼어 봅니다 */
+  const fn = (sq.match(/create\s+or\s+replace\s+function\s+set_apply_state[\s\S]*?\$\$;/) || [])[0];
+  if(!fn)
+    throw new Error("0016 에 set_apply_state 함수가 없습니다 — " +
+      "표만 두면 상태를 바꿀 길이 없습니다");
+  if(!/auth\.uid\(\)/.test(fn) || !/변경자/.test(fn))
+    throw new Error("set_apply_state 가 변경자를 확인하지 않습니다 — " +
+      "변경자를 못 적는 기록은 기록이 아닙니다 (§8)");
+  if(!/my_role\(\)/.test(fn) || !/staff/.test(fn))
+    throw new Error("set_apply_state 가 역할을 확인하지 않습니다 — " +
+      "로그인한 누구나 남의 입점 신청을 처리합니다");
+  /* ④ ⚠️⚠️ 기록이 **같은 함수 안**에 있어야 합니다 (한 트랜잭션) */
+  if(!/insert\s+into\s+audit_log/.test(fn))
+    throw new Error("set_apply_state 가 감사 기록을 안 남깁니다 — " +
+      "기록 없이 지나갈 길이 없어야 합니다 (§8)");
+  /* ⑤ 등록 완료는 그 업체를 가리켜야 합니다 */
+  if(!/등록한 업체를 골라 주세요/.test(fn))
+    throw new Error("set_apply_state 가 '등록 완료' 에 업체를 요구하지 않습니다 — " +
+      "어느 업체인지가 사라지면 '등록했다' 는 말만 남습니다 (절대 규칙 5)");
+  /* ⑥ ⚠️⚠️ 감사 기록에 상호 · 성함 · 번호를 싣지 않습니다 */
+  const log = (fn.match(/insert\s+into\s+audit_log[\s\S]*?;/) || [])[0] || "";
+  for(const bad of ["company", "v_name", "tel", "email", "v_tel", "v_mail"])
+    if(new RegExp("\\b" + bad + "\\b").test(log))
+      throw new Error("set_apply_state 가 감사 기록에 '" + bad + "' 를 싣습니다 — " +
+        "기록은 고칠 수도 지울 수도 없어서 그 자체가 또 하나의 보관입니다 " +
+        "(save_provider_contact 와 같은 규칙)");
+  /* ⚠️ 형변환에 맡기면 `invalid input value for enum` 이 손님 화면에
+     그대로 나갑니다 (0008 에서 겪은 자리) */
+  if(!/바꿀 상태를 골라 주세요/.test(fn))
+    throw new Error("set_apply_state 가 상태값을 사람 말로 거절하지 않습니다 — " +
+      "형변환에 맡기면 enum 에러가 그대로 화면에 나갑니다");
+
+  /* 접수가 **실제로 저장하는가** — 표를 만들어 놓고 안 쓰면 이 저장소가
+     여러 번 겪은 "만들어 놓고 안 쓰는 칸" 이 하나 더 생깁니다.
+     ⚠️⚠️ 글자가 **있는지**만 보면 모자랍니다 — 정의만 두고 안 부르면
+     그냥 통과합니다 (2026-10-21 에 그렇게 속았습니다). 넣는 줄과
+     번호를 돌려주는 줄을 **따로** 봅니다. */
+  if(fs.existsSync(q)){
+    const js = fs.readFileSync(q, "utf8").replace(/\/\*[\s\S]*?\*\//g, " ");
+    if(!/dbInsert\(\s*"provider_apply"/.test(js))
+      throw new Error("api/quote.js 가 입점 신청을 저장하지 않습니다 — " +
+        "0016 의 표가 만들어만 두고 비어 있습니다");
+    if(!/kind\s*===\s*"partner"\s*&&\s*dbReady\(\)/.test(js))
+      throw new Error("api/quote.js 가 DB 설정 전에도 입점 신청을 저장하려 듭니다 — " +
+        "설정 전에는 오늘과 글자 하나 다르지 않게 동작해야 합니다 (fail-closed)");
+  }
+
+  console.log("   업체 입점 신청 표가 직원 · 관리자 밖으로 안 나갑니다 (0016)");
+}
 checkMigDocs(W);
 checkPhotoSql();
 checkProviderSelfSql();
+checkApplySql();
 checkOffers(W);
 checkOfferSql(W);
 checkOpsvc(W);

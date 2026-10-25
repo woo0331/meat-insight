@@ -204,6 +204,102 @@ async function sendWithDb(body, opt){
     ok("kind 가 partner 로 간다", sent.kind === "partner", sent.kind);
   }
 
+  /* ⚠️⚠️ **2026-10-25 진단 P1-7** — 전에는 입점 신청이 **슬랙으로만**
+     갔습니다. 채널 글이 묻히면 그 업체는 사라지고, 직원은 업체명 ·
+     번호 · 하는 일을 다시 손으로 칩니다. */
+  console.log("\n── 파트너 등록이 DB 에 남는가 (0016)");
+  {
+    const P = { kind:"partner", company:"가나덕트", name:"김기사",
+                tel:"010-1234-5678", email:"a@b.co", brn:"123-45-67890",
+                region:"경기", exp:"음식점", note:"주말도 됩니다",
+                serviceNames:["덕트 · 환기","주방설비"], agree:true };
+
+    /* ⚠️⚠️ **DB 가 없으면 오늘과 글자 하나 다르지 않습니다** — 번호를
+       내주고 저장을 안 하면 그 번호로 물어봐도 아무것도 없습니다
+       (절대 규칙 5). */
+    {
+      const off = await send(P);
+      ok("DB 가 없으면 접수번호를 안 낸다",
+         off.res.code === 200 && !off.res.body.no, off.res.body);
+    }
+
+    const g = await sendWithDb(P, { rows:[] });
+    ok("DB 가 있으면 provider_apply 에 넣는다",
+       !!g.row && !!g.row.no, g.row);
+    ok("접수번호를 돌려준다",
+       g.res.code === 200 && g.res.body.no === (g.row || {}).no, g.res.body);
+    ok("업체명 · 담당자 · 연락처가 그대로 간다",
+       g.row && g.row.company === "가나덕트" && g.row.name === "김기사" &&
+       g.row.tel === "010-1234-5678", g.row);
+    ok("하시는 일이 배열로 간다",
+       g.row && Array.isArray(g.row.services) && g.row.services.length === 2,
+       g.row && g.row.services);
+    /* ⚠️⚠️ 동의를 **시각으로** 남깁니다 — boolean 으로 두면 "언제
+       받았나" 를 못 대고, 그게 분쟁에서 받지 않은 것과 같아집니다. */
+    ok("동의를 시각으로 남긴다",
+       g.row && /^\d{4}-\d{2}-\d{2}T/.test(String(g.row.agree_at || "")), g.row);
+    ok("새 신청으로 들어간다", g.row && g.row.state === "new", g.row);
+    /* ⚠️⚠️ **`provider` 가 아닙니다.** 신청은 아직 업체가 아니고, 꽂으면
+       배정 고르개에 바로 떠서 아무 합의도 없는 회사로 손님 성함 ·
+       연락처가 넘어갑니다 (제17조 제2항). */
+    ok("승인 · 공개 칸을 스스로 켜지 않는다",
+       g.row && g.row.listed === undefined && g.row.verified === undefined &&
+       g.row.assignable === undefined, g.row);
+    /* 슬랙은 전과 똑같이 갑니다 */
+    ok("슬랙 글은 그대로 간다", !!g.sent && /가나덕트/.test(g.sent.text));
+    /* ⚠️ 제목이 글 맨 위에 붙어 오니 **맨 앞**이 아닙니다 — 처음에
+       `indexOf(...) === 0` 으로 적어서 멀쩡한 글을 실패로 잡았습니다
+       (틀린 것은 검사였습니다). 직원이 전화하며 제일 먼저 묻는 값이라
+       **본문 첫 줄**에 있는지만 봅니다. */
+    ok("슬랙 글에 접수번호가 붙는다",
+       !!g.sent && new RegExp("접수번호\\s+" + g.row.no).test(g.sent.text),
+       (g.sent||{}).text);
+    /* ⚠️ service key 는 **헤더로만** 갑니다 */
+    ok("service key 가 슬랙 글에 안 섞인다",
+       !!g.sent && !/service-key-should-never-leak/.test(JSON.stringify(g.sent)));
+
+    /* ⚠️⚠️ **저장이 실패해도 접수는 막지 않습니다** — 슬랙으로는 그대로
+       가고 번호만 안 냅니다 (업체의 신청을 잃는 쪽이 더 나쁩니다). */
+    {
+      const f = await sendWithDb(P, { rows:[], saveFails:true });
+      ok("저장이 실패해도 접수는 성공이고 번호만 안 낸다",
+         f.res.code === 200 && !f.res.body.no && !!f.sent, f.res.body);
+    }
+
+    /* ⚠️⚠️ **중복은 에러가 아니라 성공입니다** — 에러를 보여 주면 같은
+       신청을 또 보냅니다. 먼저 받은 번호를 그대로 돌려줍니다.
+       ⚠️⚠️ **번호를 숫자만 남겨 견줍니다** — 업체가 줄표를 넣어 적으시면
+       `tel=eq.01012345678` 로는 **한 줄도 안 걸립니다** (`/admin` 영업
+       작업대 · `intakeDup()` 과 같은 규칙). 그래서 받아 온 뒤에 여기서
+       비교하고, 아래 씨앗이 **줄표 없는 꼴**로 들어 있습니다. */
+    {
+      const d = await sendWithDb(P, { rows:[
+        { no:"SW-AAAA-BBBB", company:"가나덕트", tel:"01012345678",
+          created_at:new Date().toISOString() }] });
+      ok("10분 안에 같은 업체가 또 신청하면 먼저 받은 번호를 돌려준다",
+         d.res.code === 200 && d.res.body.no === "SW-AAAA-BBBB" &&
+         d.res.body.dup === true, d.res.body);
+      ok("중복이면 다시 저장하지 않는다", d.row === null, d.row);
+      ok("중복이면 슬랙에도 다시 안 보낸다", d.sent === null, d.sent);
+    }
+    /* ⚠️ **다른 업체면 중복이 아닙니다** — 같은 사람이 회사 둘을
+       신청하는 것은 정상입니다 (`request` 쪽의 "다른 상품" 과 같은 선). */
+    {
+      const e = await sendWithDb(P, { rows:[
+        { no:"SW-CCCC-DDDD", company:"다른덕트", tel:"01012345678",
+          created_at:new Date().toISOString() }] });
+      ok("업체명이 다르면 중복이 아니다", !!e.row && !!e.res.body.no, e.res.body);
+    }
+
+    /* ⚠️⚠️ 입점 신청에는 **접수 완료 안내 메일을 안 보냅니다** — 신청이
+       아니라 업체 등록이고 보낼 글이 다릅니다. */
+    {
+      const m = await sendWithDb(P, { rows:[] });
+      ok("입점 신청에는 고객 안내 메일을 안 보낸다",
+         !/api\.resend\.com/.test(JSON.stringify(m.sent || {})), m.sent);
+    }
+  }
+
   console.log("\n── 안 받아야 하는 것");
   {
     const a = await send({ kind:"sos", q:"x", name:"홍", tel:"010", agree:false });
@@ -339,14 +435,25 @@ async function sendWithDb(body, opt){
        JSON.stringify([a.row.notify_ok, a.row.notify_at]));
   }
 
-  console.log("\n── 업체 입점은 저장하지 않는다 (§7 에서 붙습니다)");
+  /* ⚠️⚠️ **2026-10-25 P1-7 로 뒤집혔습니다.** 전에는 "업체 입점은
+     저장하지 않는다" 였고(§7 에서 붙기로 미뤄 둔 자리), 지금은
+     `provider_apply`(0016)에 저장하고 접수번호를 돌려줍니다 — 위
+     "파트너 등록이 DB 에 남는가" 블록이 그것을 봅니다.
+     ⚠️ **지켜야 하는 성질은 그대로**라 여기 남깁니다 — 입점 신청이
+     **손님 신청 표(`request`)에는 안 들어갑니다.** 들어가면 접수
+     목록에 업체가 섞여서 직원이 손님에게 전화하듯 전화합니다. */
+  console.log("\n── 업체 입점은 신청 표(request)에 안 들어간다");
   {
     const { res, row } = await sendWithDb({
       kind:"partner", company:"가나다 인테리어", serviceNames:["인테리어"],
-      name:"홍길동", tel:"010-1234-5678", agree:true });
+      name:"홍길동", tel:"010-1234-5678", agree:true }, { rows:[] });
     ok("200 으로 받는다", res.code === 200, "code=" + res.code);
-    ok("신청 표에 넣지 않는다", row === null, row);
-    ok("접수번호를 주지 않는다", res.body.no === undefined, res.body);
+    /* 넣는 표가 `provider_apply` 인지는 **칸 생김새**로 봅니다 —
+       `request` 줄에는 `side` · `state:"new"` · `agree_at` 이 있고
+       `company` 는 없습니다. */
+    ok("신청 표의 칸으로 넣지 않는다",
+       !!row && row.company === "가나다 인테리어" && row.side === undefined &&
+       row.body === undefined, row);
   }
 
   console.log("\n── 중복 · 스팸 (§6)");

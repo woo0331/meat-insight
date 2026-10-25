@@ -12,7 +12,9 @@ var RQ = { asked:false, on:false, signedIn:false, role:"", name:"",
 
            staff:[], mine:false, conOf:"", con:null, conBusy:false,
 
-           contacts:[], settles:[], pvOf:"", pctx:{}, sctx:{} };
+           contacts:[], settles:[], pvOf:"", pctx:{}, sctx:{},
+
+           applies:[], apOf:"", actx:{} };
 
 function rqDraw(){
   var root = $("rq");
@@ -25,7 +27,7 @@ function rqDraw(){
       '<h2>접수 · 배정</h2>'+
       rqBody()+
     '</section>'+
-    (RQ.signedIn ? rqMoney() + rqFees() + rqSettles() + rqProvs() : "");
+    (RQ.signedIn ? rqMoney() + rqFees() + rqSettles() + rqApplies() + rqProvs() : "");
 }
 
 function rqBody(){
@@ -724,6 +726,8 @@ function rqLoad(){
 
       RQ.contacts = d.contacts || [];
       RQ.settles  = d.settles  || [];
+
+      RQ.applies  = d.applies  || [];
       rqDraw();
     })
     .catch(function(e){
@@ -854,13 +858,7 @@ function rqFeeForm(d){
   var pick = RQ.mctx.feeId || P[0].id;
   var pol  = window.amFeeFromDb(P.filter(function(f){ return f.id === pick; })[0] || P[0]);
 
-  var calc = window.amFeeCalc(window.amFeeSnap(pol), {
-    amount: Number(d.amount || 0),
-    sell:   Number(d.amount || 0),
-    cost:   0,
-    times:  1,
-    at:     String(d.done_at || "").slice(0, 10) || undefined
-  });
+  var calc = window.amFeeCalc(window.amFeeSnap(pol), rqFeeIn(d, pol));
 
   return '<div class="rq-mv">'+
     '<div class="f-r">'+
@@ -877,16 +875,8 @@ function rqFeeForm(d){
       '<p class="f-h">⚠️ 고르신 정책은 계약에 <b>사본으로</b> 박힙니다 — '+
         '나중에 요율을 고쳐도 <b>이 계약의 수수료는 안 바뀝니다</b> (§9).</p>'+
     '</div>'+
-    (calc.ok
-      ? '<div class="rq-calc">'+
-          '<b>'+esc(won(calc.fee))+'원</b>'+
-          '<span>+ 부가세 '+esc(won(calc.vat))+'원 = 청구 '+esc(won(calc.total))+'원</span>'+
-          (calc.clamped ? '<em>'+(calc.clamped === "min" ? "최소" : "최대")+
-            ' 수수료가 적용됐습니다</em>' : '')+
-        '</div>'
-
-      : '<div class="notice-bad"><b>이 정책으로는 계산되지 않습니다</b>'+
-        '<p>'+esc(calc.why)+'</p></div>')+
+    rqFeeMrrFields(pol, d.id)+
+    '<div id="rq-calcbox">'+rqFeeCalcBox(calc)+'</div>'+
     '<div class="f-r">'+
       '<label for="rq-proof">계약 완료 증빙</label>'+
       '<input id="rq-proof" type="text" autocomplete="off" '+
@@ -910,6 +900,77 @@ function rqFeeForm(d){
   '</div>';
 }
 
+function rqFeeIn(d, pol){
+  var o = {
+    amount: Number(d.amount || 0),
+    sell:   Number(d.amount || 0),
+    cost:   0,
+    times:  1,
+    at:     String(d.done_at || "").slice(0, 10) || undefined
+  };
+  if(pol && pol.type === "mrr_rate"){
+
+    var m = String(RQ.mctx.mrr == null ? "" : RQ.mctx.mrr).trim();
+    var n = String(RQ.mctx.mon == null ? "" : RQ.mctx.mon).trim();
+    o.monthly = m === "" ? null : Number(m);
+    o.times   = n === "" ? null : Number(n);
+  }
+  return o;
+}
+
+function rqFeeMrrFields(pol, id){
+  if(!pol || pol.type !== "mrr_rate") return "";
+  return '<div class="f-r">'+
+      '<label for="rq-mrr">손님이 내는 월 요금 (원)</label>'+
+      '<input id="rq-mrr" type="number" min="0" step="1" autocomplete="off" '+
+        'inputmode="numeric" oninput="rqMctxFee(\'mrr\',this.value,\''+esc(id)+'\')" '+
+        'value="'+esc(RQ.mctx.mrr == null ? "" : RQ.mctx.mrr)+'" '+
+        'placeholder="예: 55000">'+
+      '<p class="f-h">⚠️ 이 금액의 요율이 <b>한 달치 수수료</b>입니다. '+
+        '요금제가 바뀌면 그때부터 다시 잡습니다.</p>'+
+    '</div>'+
+    '<div class="f-r">'+
+      '<label for="rq-mon">이번에 확정할 개월 수</label>'+
+      '<input id="rq-mon" type="number" min="1" step="1" autocomplete="off" '+
+        'inputmode="numeric" oninput="rqMctxFee(\'mon\',this.value,\''+esc(id)+'\')" '+
+        'value="'+esc(RQ.mctx.mon == null ? "" : RQ.mctx.mon)+'" '+
+        'placeholder="예: 12">'+
+      '<p class="f-h">⚠️⚠️ <b>약정 기간 전부를 한 번에 적지 마세요.</b> '+
+        '유지된 것이 확인된 달까지입니다 — 아직 받지도 않은 달을 '+
+        '확정하면 해지되었을 때 환수해야 합니다.</p>'+
+    '</div>';
+}
+
+function rqFeeCalcBox(calc){
+  if(calc.ok)
+    return '<div class="rq-calc">'+
+      '<b>'+esc(won(calc.fee))+'원</b>'+
+      '<span>+ 부가세 '+esc(won(calc.vat))+'원 = 청구 '+esc(won(calc.total))+'원</span>'+
+      (calc.clamped ? '<em>'+(calc.clamped === "min" ? "최소" : "최대")+
+        ' 수수료가 적용됐습니다</em>' : '')+
+      '</div>';
+
+  return '<div class="notice-bad"><b>이 정책으로는 계산되지 않습니다</b>'+
+    '<p>'+esc(calc.why)+'</p></div>';
+}
+
+window.rqMctxFee = function(k, v, id){
+  RQ.mctx[k] = v;
+  var d = (RQ.deals || []).filter(function(x){ return x.id === id; })[0];
+  if(!d) return;
+  var P = (RQ.fees || []).filter(function(f){
+    return f.provider_id === d.provider_id && f.active !== false; });
+  var pick = RQ.mctx.feeId || (P[0] && P[0].id);
+  var pol  = window.amFeeFromDb(P.filter(function(f){ return f.id === pick; })[0] || P[0]);
+  if(!pol) return;
+  var calc = window.amFeeCalc(window.amFeeSnap(pol), rqFeeIn(d, pol));
+  var box  = document.getElementById("rq-calcbox");
+  if(box) box.innerHTML = rqFeeCalcBox(calc);
+  var btn = box && box.parentElement &&
+            box.parentElement.querySelector(".ad-acts button");
+  if(btn) btn.disabled = !!RQ.busy || !calc.ok;
+};
+
 window.rqFeePick = function(v){ RQ.mctx.feeId = v; rqDraw(); };
 
 window.rqFeeGo = function(id){
@@ -924,10 +985,8 @@ window.rqFeeGo = function(id){
   if(!pol){ toast("적용할 정책을 골라 주세요"); return; }
 
   var snap = window.amFeeSnap(pol);
-  var calc = window.amFeeCalc(snap, {
-    amount: Number(d.amount || 0), sell: Number(d.amount || 0), cost: 0, times: 1,
-    at: String(d.done_at || "").slice(0, 10) || undefined
-  });
+
+  var calc = window.amFeeCalc(snap, rqFeeIn(d, pol));
   if(!calc.ok){ toast(calc.why); return; }
   var proof = String(RQ.mctx.proof || "").trim();
   if(!proof){ toast("계약 완료 증빙을 적어 주세요"); return; }
@@ -1050,6 +1109,7 @@ function rqCall(fn, args, say){
     RQ.money = ""; RQ.mctx = {}; RQ.open = ""; RQ.to = ""; RQ.ctx = {};
     RQ.itemOf = ""; RQ.ictx = {};
     RQ.pvOf = ""; RQ.pctx = {};
+    RQ.apOf = ""; RQ.actx = {};
     rqLoad();
   }).catch(function(e){
     RQ.busy = false;
@@ -1322,6 +1382,156 @@ window.rqSetHold = function(id, on){
     on ? "보류했습니다" : "보류를 풀었습니다");
 };
 
+function rqApplies(){
+  if(RQ.role !== "staff" && RQ.role !== "admin") return "";
+  var A = RQ.applies || [];
+
+  var nNew = A.filter(function(x){ return x.state === "new";    }).length;
+  var nCal = A.filter(function(x){ return x.state === "called"; }).length;
+
+  return '<section class="ad-s rq-s rq-s-ap">'+
+    '<h2>업체 입점 신청</h2>'+
+    (!A.length
+      ? '<p class="ad-empty">아직 들어온 입점 신청이 없습니다. '+
+        '<b>/join</b> 으로 신청이 들어오면 여기에 쌓입니다.</p>'
+      : '<p class="ad-lead">'+
+          (nNew ? '<b>'+nNew+'곳</b>이 아직 통화 전입니다. ' : '')+
+          (nCal ? '<b>'+nCal+'곳</b>은 통화했고 등록이 남았습니다. ' : '')+
+          '통화해서 합의가 되면 <b>관리자 설정 9번 칸</b>에서 업체 줄을 '+
+          '만들고, 그 다음에 여기서 <b>등록 완료</b>로 두세요.</p>'+
+        '<p class="f-h">⚠️ 여기서 바로 업체가 되는 것이 아닙니다 — '+
+          '통화도 안 한 회사가 배정 고르개에 서면 그 순간 손님 성함 · '+
+          '연락처가 넘어갑니다 (개인정보보호법 제17조 제2항).</p>'+
+        '<div class="rq-g">'+ A.map(rqApplyRow).join("") +'</div>')+
+  '</section>';
+}
+
+function rqApplyRow(a){
+  var open = RQ.apOf === a.id;
+  var nm = (typeof amApplyName === "function") ? amApplyName(a.state) : "";
+  var tn = (typeof amApplyTone === "function") ? amApplyTone(a.state) : "gray";
+  var meta = [String(a.created_at || "").slice(0, 10),
+              a.region || "", a.industry || "",
+              (a.services || []).length ? "하는 일 " + a.services.length : ""]
+             .filter(Boolean).join(" · ");
+  return '<article class="rq-r">'+
+    '<div class="rq-hd rq-hd-s">'+
+      '<span class="rq-hd-l">'+
+        '<b class="rq-no">'+esc(a.company)+'</b>'+
+        '<span class="rq-m">'+esc(meta)+'</span>'+
+      '</span>'+
+      '<span class="rq-hd-r">'+
+
+        '<i class="myq-st myq-'+esc(tn)+'">'+esc(nm || a.state)+'</i>'+
+        '<button class="btn btn-o btn-sm" type="button" aria-expanded="'+
+          (open ? "true" : "false")+'" '+
+          'onclick="rqApOpen(\''+esc(a.id)+'\')">'+
+          (open ? "접기" : "열기")+'</button>'+
+      '</span>'+
+    '</div>'+
+    (open ? rqApplyBody(a) : "")+
+  '</article>';
+}
+
+function rqApplyBody(a){
+  var C = RQ.actx || {};
+  var to = C.to || "";
+  var svc = (a.services || []).filter(Boolean);
+  return '<div class="rq-bd">'+
+    '<dl class="rq-con">'+
+      rqConItem("접수번호", a.no)+
+      rqConItem("담당자", a.name)+
+
+      (a.tel ? '<dt>연락처</dt><dd><a class="rq-tel" href="tel:'+
+         esc(String(a.tel).replace(/[^0-9+]/g, ""))+'">'+esc(a.tel)+'</a></dd>' : '')+
+      rqConItem("이메일", a.email)+
+      rqConItem("사업자등록번호", a.brn)+
+      rqConItem("주로 하시는 업종", a.industry)+
+      (svc.length ? '<dt>하시는 일</dt><dd>'+esc(svc.join(" · "))+'</dd>' : '')+
+      rqConItem("더 하신 말씀", a.note)+
+      rqConItem("마지막 메모", a.memo)+
+
+      rqConItem("등록된 업체", a.provider_id)+
+    '</dl>'+
+    '<div class="rq-mv">'+
+      '<div class="ad-f">'+
+        '<label for="rq-ap-to">상태 바꾸기</label>'+
+        '<select id="rq-ap-to" class="sel" onchange="rqActx(\'to\',this.value)">'+
+          '<option value="">골라 주세요</option>'+
+          (window.AM_APPLY_ST || []).map(function(st){
+            if(st.key === a.state) return "";
+            return '<option value="'+esc(st.key)+'"'+
+              (to === st.key ? " selected" : "")+'>'+esc(st.name)+'</option>';
+          }).join("")+
+        '</select>'+
+      '</div>'+
+
+      (to === "done" ? rqApplyPvPick(a) : "")+
+      '<div class="ad-f">'+
+        '<label for="rq-ap-why">사유 · 메모'+
+          (to === "drop" ? ' <em>(진행 안 함은 반드시)</em>' : '')+'</label>'+
+        '<input id="rq-ap-why" type="text" autocomplete="off" '+
+          'oninput="rqActx(\'why\',this.value)" value="'+esc(C.why || "")+'" '+
+          'placeholder="예: 통화함 · 다음 주에 다시 연락">'+
+      '</div>'+
+      '<button class="btn btn-b" type="button"'+(RQ.busy ? " disabled" : "")+
+        ' onclick="rqApGo(\''+esc(a.id)+'\')">바꾸기</button>'+
+    '</div>'+
+    '<p class="f-h">⚠️ 바꾼 사람 · 시각 · 사유가 <b>이력에 남습니다</b> '+
+      '(§8) — 다만 <b>상호 · 성함 · 번호는 기록에 안 적습니다.</b> '+
+      '⚠️ 업체가 적어 보낸 연락처라 <b>직원 · 관리자 밖으로는 한 글자도 '+
+      '안 나갑니다.</b></p>'+
+  '</div>';
+}
+
+function rqApplyPvPick(a){
+  var P = RQ.provs || [], C = RQ.actx || {};
+  if(!P.length)
+    return '<p class="note-box">DB 에 등록된 업체가 없습니다 — '+
+      '<b>관리자 설정 9번 칸</b>에서 이 업체의 등록 줄을 먼저 만드세요.</p>';
+  return '<div class="ad-f">'+
+    '<label for="rq-ap-pv">등록한 업체</label>'+
+    '<select id="rq-ap-pv" class="sel" onchange="rqActx(\'pv\',this.value)">'+
+      '<option value="">골라 주세요</option>'+
+      P.map(function(p){
+        return '<option value="'+esc(p.id)+'"'+
+          ((C.pv || a.provider_id) === p.id ? " selected" : "")+'>'+
+          esc(p.name)+'</option>';
+      }).join("")+
+    '</select>'+
+  '</div>';
+}
+
+window.rqApOpen = function(id){
+  RQ.apOf = (RQ.apOf === id) ? "" : id;
+
+  RQ.actx = {};
+  rqDraw();
+};
+
+window.rqActx = function(k, v){
+  RQ.actx[k] = v;
+  if(k === "to") rqDraw();
+};
+
+window.rqApGo = function(id){
+  var C = RQ.actx || {};
+  if(!C.to){ toast("바꿀 상태를 골라 주세요"); return; }
+
+  if(C.to === "drop" && !String(C.why || "").trim()){
+    toast("진행하지 않는 까닭을 적어 주세요"); return; }
+  if(C.to === "done" && !C.pv){
+    toast("등록한 업체를 골라 주세요"); return; }
+
+  var args = { p_apply:id, p_to:C.to };
+  if(C.to === "done") args.p_provider = C.pv;
+  if(String(C.why || "").trim()) args.p_why = String(C.why).trim();
+
+  var nm = (typeof amApplyName === "function" ? amApplyName(C.to) : "") || C.to;
+  rqCall("set_apply_state", args,
+    "입점 신청을 " + koWith(nm, "으로로") + " 두었습니다");
+};
+
 function rqProvs(){
   if(RQ.role !== "staff" && RQ.role !== "admin") return "";
   var P = RQ.provs || [];
@@ -1424,10 +1634,12 @@ function rqPvConForm(p, c){
         '<input id="rq-pc-t" type="tel" autocomplete="off" inputmode="tel" '+
         'oninput="rqPctx(\'ptel\',this.value)" value="'+esc(N.ptel || "")+'" '+
         'placeholder="예: 010-0000-0000"></div>'+
-      '<div class="ad-f"><label for="rq-pc-m">메일</label>'+
+
+      '<div class="ad-f"><label for="rq-pc-m">메일 '+
+        '<em>(배정 알림이 이 주소로 갑니다)</em></label>'+
         '<input id="rq-pc-m" type="email" autocomplete="off" '+
         'oninput="rqPctx(\'pmail\',this.value)" value="'+esc(N.pmail || "")+'" '+
-        'placeholder="선택"></div>'+
+        'placeholder="예: damdang@gonggi.co.kr"></div>'+
     '</div>'+
     '<div class="ad-f"><label for="rq-pc-o">메모 <em>(선택)</em></label>'+
       '<input id="rq-pc-o" type="text" autocomplete="off" '+
@@ -1436,6 +1648,9 @@ function rqPvConForm(p, c){
     (N.ptel ? '<p class="ad-rd-n">'+
       '<a class="rq-tel" href="tel:'+esc(String(N.ptel).replace(/[^0-9+]/g,""))+'">'+
       icon("phone",18)+esc(N.ptel)+'</a></p>' : "")+
+    '<p class="ad-rd-n">⚠️ 메일을 비워 두시면 <b>배정 알림이 안 갑니다</b> — '+
+      '그 업체는 로그인해서 들어와 봐야 압니다. '+
+      '알림에는 신청하신 분의 성함 · 연락처를 싣지 않습니다.</p>'+
     '<p class="ad-rd-n">⚠️ 넷을 다 비워서 저장하면 <b>줄째 지웁니다</b> '+
       '(담당자가 그만두셨을 때). 바뀐 것은 기록에 남지만 '+
       '<b>이름과 번호는 기록에 안 적습니다</b>.</p>'+

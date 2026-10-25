@@ -38,7 +38,7 @@
 
 const { authReady, session, authWhy } = require("./_auth.js");
 const { dbRpc, dbWhy } = require("./_db.js");
-const { deliver, clean, customerStep } = require("./_send.js");
+const { deliver, clean, customerStep, partnerStep } = require("./_send.js");
 const { dbSelect } = require("./_db.js");
 
 /* ⚠️⚠️ 여기 없는 이름은 **부르지 않습니다.** 손님이 보낸 글자가 곧
@@ -92,7 +92,15 @@ const OK_FN = {
      걸려고 연락처를 열 때마다 불립니다 — 알림을 보내면 하루에 수십 줄이고
      정작 돈 쪽 알림이 그 더미에 묻힙니다 (save_user_state 와 같은 까닭).
      열람 이력은 audit_log 에 그대로 남습니다 (제29조 접속기록). */
-  set_owner:1, note_request_open:1
+  set_owner:1, note_request_open:1,
+  /* 2026-10-25 P1-7 (0016) — `/join` 입점 신청의 상태.
+     ⚠️⚠️ **`FN_SAY` 에 넣지 마세요.** 이 문을 누르는 사람이 곧 직원
+     입니다 — 자기가 방금 누른 것을 운영자 채널로 되받으면 정작 돈 쪽
+     알림이 그 더미에 묻힙니다 (`note_request_open` · `save_user_state`
+     와 같은 까닭). 누가 · 언제 · 왜는 `audit_log` 에 그대로 있습니다.
+     ⚠️ 신청을 **넣는 길은 여기가 아닙니다** — 로그인 없이 들어오는
+     접수(`api/quote.js`)가 service key 로 넣습니다. */
+  set_apply_state:1
 };
 
 /* 보낼 수 있는 인자 — 이름까지 정해 둡니다. ⚠️ 통째로 넘기면 손님이
@@ -133,7 +141,11 @@ const OK_ARG = {
      `move_state` 의 "바뀔 상태" 와 **같은 이름을 나눠 씁니다** (위에
      이미 있습니다) — DB 가 자기 함수의 인자 꼴로 받으니 섞이지
      않습니다. `checkRpcArgs()` 가 양쪽으로 맞춰 봅니다. */
-  p_from:1, p_hold:1                                   /* build_settlement · hold_settlement */
+  p_from:1, p_hold:1,                                  /* build_settlement · hold_settlement */
+  /* 0016 — ⚠️ `p_to`(바꿀 상태) · `p_provider`(등록한 업체) · `p_why`
+     는 **위에 이미 있습니다.** DB 가 자기 함수의 인자 꼴로 받으니
+     섞이지 않습니다 — `checkRpcArgs()` 가 양쪽으로 맞춰 봅니다. */
+  p_apply:1                                            /* set_apply_state */
 };
 
 function pickArgs(a){
@@ -285,6 +297,90 @@ async function stepMail(fn, args){
   }
 }
 
+/* ── 업체(제휴사) 배정 안내 (2026-10-25 P1-5) ────────────────────
+   2026-10-25 진단에서 **가장 크게 비어 있던 자리**입니다 — 운영자는
+   슬랙으로 받고 고객은 (동의하면) 메일로 받는데, 정작 일을 해야 하는
+   업체는 **로그인해서 들어와 봐야** 알았습니다.
+
+   어느 길이 업체에게 알릴 일인가 — 셋입니다.
+   ⚠️⚠️ **업체가 스스로 한 일은 안 알립니다.** `submit_quote`(업체가
+   견적을 냄) · `answer_assignment`(업체가 답함)를 넣으면 자기가 방금
+   누른 것을 메일로 다시 받습니다 (고객 쪽과 같은 규칙).
+   ⚠️⚠️ 돈 쪽 셋(`confirm_fee` · `mark_paid` · `clawback_fee`)도 **안
+   보냅니다** — 금액이 메일로 나가면 담당자 메일이 틀렸을 때 그게 곧
+   유출입니다. 청구서는 `/my` 에서 봅니다. */
+const PT_FN = {
+  /* move_state 는 **가는 상태**를 봅니다 (p_to) */
+  move_state:   null,
+  assign_item:  "assigned",
+  choose_quote: "chosen"
+};
+
+/* 업체 id 가 길마다 다른 자리에 있습니다 (0004 · 0008 · 0009).
+   ⚠️ `move_state` 만 **ctx 안**입니다 — 자리를 눈대중으로 적으면
+   메일이 조용히 안 갑니다 (에러도 안 납니다). */
+function ptProvider(fn, args){
+  if(fn === "move_state"){
+    const c = args.p_ctx;
+    if(!c || typeof c !== "object") return null;
+    return c.providerId ? String(c.providerId) : null;
+  }
+  return args.p_provider ? String(args.p_provider) : null;
+}
+
+async function partnerMail(fn, args){
+  try{
+    if(!(fn in PT_FN)) return;
+    let kind = PT_FN[fn];
+    if(fn === "move_state"){
+      if(String(args.p_to || "") !== "assigned") return;
+      kind = "assigned";
+    }
+    if(!kind) return;
+
+    const pv = ptProvider(fn, args);
+    if(!pv) return;                      /* 업체를 모르면 조용히 지나갑니다 */
+
+    /* ⚠️⚠️ **service key 로 읽습니다.** 부른 사람의 토큰으로 읽으면
+       고객이 부른 길(`choose_quote`)에서 고객 권한으로 업체 담당자
+       메일을 읽는 셈이고, `provider_contact` 에는 고객 정책이 아예
+       없어서 늘 빈손입니다 (고객 안내와 같은 선).
+       ⚠️ 읽은 것을 **답에 한 글자도 싣지 않습니다** — 메일로만 갑니다. */
+    const pc = await dbSelect("provider_contact",
+      "?select=email&provider_id=eq." + encodeURIComponent(pv) + "&limit=1");
+    if(!pc.ok) return;
+    const mail = ((pc.rows || [])[0] || {}).email;
+    if(!mail) return;                    /* 담당자 메일이 없으면 끝 (fail-closed) */
+
+    /* 접수번호 — 길마다 가리키는 것이 다릅니다 */
+    let q = "", t = "request";
+    if(args.p_request){
+      q = "?select=no&id=eq." + encodeURIComponent(String(args.p_request)) + "&limit=1";
+    }else if(args.p_item){
+      t = "request_item";
+      q = "?select=" + encodeURIComponent("request(no)") +
+          "&id=eq." + encodeURIComponent(String(args.p_item)) + "&limit=1";
+    }
+    let no = "";
+    if(q){
+      const got = await dbSelect(t, q);
+      if(got.ok){
+        const row = (got.rows || [])[0] || {};
+        no = (args.p_item ? (row.request || {}).no : row.no) || "";
+      }
+    }
+    /* ⚠️ 번호를 못 읽어도 **보냅니다** — 번호는 줄째 빠지고(절대 규칙 2)
+       "배정되었습니다" 는 그대로 전해야 합니다. */
+    await partnerStep(mail, no, kind);
+  }catch(e){
+    /* ⚠️⚠️ **실패해도 배정을 되돌리지 않습니다.** 배정은 이미 DB 에
+       적혔고, 에러를 돌려주면 운영자가 다시 누르는데 두 번째는 "갈 수
+       없는 길" 로 거절당해서 더 헷갈립니다 (운영자 · 고객 알림과 같은
+       판단). 운영자 기록에만 남깁니다. */
+    try{ console.warn("[deal] partner mail — " + (e && e.message)); }catch(_){}
+  }
+}
+
 const NOTE_TIMEOUT = 5000;
 
 async function notify(fn, args, role){
@@ -363,6 +459,7 @@ module.exports = async function handler(req, res){
      **조용히 사라집니다.** 실패는 위에서 삼킵니다. */
   await notify(fn, pickArgs(b.args), s.role);
   await stepMail(fn, pickArgs(b.args));
+  await partnerMail(fn, pickArgs(b.args));
 
   return res.status(200).json({ ok:true, data:r.data === undefined ? null : r.data });
 };

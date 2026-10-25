@@ -275,6 +275,24 @@ module.exports = async function handler(req, res){
       "&order=updated_at.desc&limit=" + PROV_LIMIT);
     if(pc.ok) out.contacts = pc.rows;
     else console.warn("[me] provider_contact — " + pc.why);
+
+    /* 업체 입점 신청 (2026-10-25 진단 P1-7 · 0016) — `/join` 으로
+       들어온 것입니다.
+       ⚠️⚠️ **고객 · 업체에게는 묻지도 않습니다.** 0016 의 RLS 에 그
+       정책이 **아예 없어서** 어차피 0줄이지만, 묻지 않는 쪽이 한 겹 더
+       안전합니다 (`audit_log` 를 관리자에게만 묻는 것과 같은 선).
+       ⚠️ `moved_by` 를 안 가져옵니다 — 화면이 쓰지 않습니다 (최소 수집).
+       ⚠️⚠️ 담당자 연락처(`tel` · `email`)는 **업체가 영업용으로 적어
+       보낸 것**이라 그대로 가져옵니다 — 손님의 개인정보처럼 한 번 더
+       눌러 받게 하지 않습니다 (`provider_contact` 와 같은 선). 대신
+       직원 · 관리자 밖으로는 한 글자도 안 나갑니다. */
+    const ap = await dbSelectAs(s.token, "provider_apply",
+      "?select=" + encodeURIComponent(
+        "id,no,company,brn,name,tel,email,region,industry,services,note," +
+        "state,provider_id,memo,moved_at,created_at") +
+      "&order=created_at.desc&limit=" + LIMIT);
+    if(ap.ok) out.applies = ap.rows;
+    else console.warn("[me] provider_apply — " + ap.why);
   }
 
   /* 환수 · 부분환불 — ⚠️⚠️ **`deal` 에는 안 남습니다.** 확정했던 액을

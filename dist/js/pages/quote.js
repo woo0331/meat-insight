@@ -564,7 +564,8 @@ window.amSend = function(failId, body, again, done){
         (no ? '<p>접수번호 <b>' + esc(no) + '</b> — 문의하실 때 알려 주세요.</p>' : '') +
         '<p>적어 주신 연락처로 안내드리겠습니다. 회신 시점을 약속드리지는 않습니다.</p></div>';
 
-      if(no && box && typeof amPhotoAfter === "function")
+      if(no && box && (!body || body.kind !== "partner") &&
+         typeof amPhotoAfter === "function")
         amPhotoAfter(box, no, (body && body.tel) || "");
       toast(dup ? "이미 접수되었습니다" : "접수되었습니다");
       var f = box && box.closest("form"); if(f) f.reset();

@@ -199,9 +199,8 @@ module.exports = async function handler(req, res){
      그게 "하지 않은 일을 했다고 말하는 것" 입니다 (절대 규칙 5).
      번호는 **실제로 저장된 뒤에만** 손님에게 갑니다.
 
-     ⚠️ 업체 입점(partner)은 신청이 아니라 **업체 등록**입니다. 다른
-     표로 가야 해서 지금은 전과 똑같이 슬랙으로만 보냅니다 (§7 업체
-     관리에서 붙습니다).
+     ⚠️ 업체 입점(partner)은 신청이 아니라 **업체 등록 신청**이라 다른
+     표로 갑니다 (`provider_apply` · 0016) — 바로 아래 블록입니다.
      ════════════════════════════════════════════════════════════ */
   let no = "";
   if(kind !== "partner" && dbReady()){
@@ -308,6 +307,77 @@ module.exports = async function handler(req, res){
       }
     }
     else console.error("[site] 접수를 저장하지 못했습니다 — " + dbWhy(saved.why));
+  }
+
+  /* ── 업체 입점 신청 (2026-10-25 진단 P1-7 · 0016) ───────────────
+     전에는 `/join` 으로 들어온 입점 신청이 **슬랙으로만** 갔습니다.
+     채널 글이 묻히면 그 업체는 사라지고, 직원은 전화하려고 그 글을
+     찾아 **업체명 · 번호 · 하는 일을 다시 손으로 칩니다** — 그러다
+     하나라도 틀리면 `/admin` 9번 칸이 만드는 등록 줄이 어긋납니다.
+
+     ⚠️⚠️ **`provider` 에 바로 넣지 않습니다.** 신청은 아직 업체가
+     아닙니다 — 통화도 안 해 봤고 계약도 없습니다. `provider` 에
+     꽂으면 배정 고르개에 바로 떠서, 거기 배정되면 그 순간 손님 성함 ·
+     연락처가 **아무 합의도 없는 회사로** 넘어갑니다 (개인정보보호법
+     제17조 제2항 · 0012 의 `assignable` 을 둔 까닭 그대로).
+
+     ⚠️⚠️ **DB 가 없으면 오늘과 글자 하나 다르지 않습니다** — 슬랙으로
+     보내고 끝이고, 접수번호도 안 냅니다 (번호를 내주고 저장을 안 하면
+     그 번호로 물어봐도 아무것도 없습니다 — 절대 규칙 5).
+     ⚠️ 저장이 실패해도 **접수는 막지 않습니다.** 슬랙으로는 그대로
+     가고 번호만 안 냅니다 — 업체의 신청을 잃는 쪽이 더 나쁩니다.
+     ───────────────────────────────────────────────────────────── */
+  if(kind === "partner" && dbReady()){
+    /* 두 번 누르신 것 — ⚠️⚠️ **중복은 에러가 아니라 성공입니다.**
+       에러를 보여 주면 같은 신청을 또 보냅니다 (`request` 쪽과 같은
+       규칙) — 먼저 받은 번호를 그대로 돌려주고 다시 안 보냅니다.
+       ⚠️⚠️ **번호를 질의문자로 거르지 않습니다.** 업체가 `031-000-0000`
+       처럼 줄표를 넣어 적으시면 `tel=eq.0310000000` 에 **한 줄도 안
+       걸립니다** — 숫자만 남겨 견주는 일은 받아 온 뒤에 여기서 합니다
+       (`/admin` 영업 작업대 · `intakeDup()` 과 같은 규칙). 그래서
+       10분 창에 스물까지만 가져옵니다. */
+    const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const found = await dbSelect("provider_apply",
+      "?select=no,company,tel,created_at" +
+      "&created_at=gte." + encodeURIComponent(since) +
+      "&order=created_at.desc&limit=20");
+    if(!found.ok)
+      console.error("[site] 입점 신청 중복 검사를 못 했습니다 — " + dbWhy(found.why));
+    else {
+      const key = telKey(q.tel), co = q.company.replace(/\s+/g, "");
+      const same = (found.rows || []).filter(function(r){
+        return telKey(r && r.tel) === key &&
+               String((r && r.company) || "").replace(/\s+/g, "") === co;
+      })[0];
+      if(same && same.no){
+        console.warn("[site] 같은 업체가 10분 안에 또 신청했습니다 — " + same.no);
+        return res.status(200).json({ ok:true, no:same.no, dup:true,
+          say:"방금 같은 신청이 접수되었습니다." });
+      }
+    }
+
+    const cand = reqNo();
+    const saved = await dbInsert("provider_apply", {
+      no:       cand,
+      company:  q.company,
+      brn:      q.brn || null,
+      name:     q.name,
+      tel:      q.tel,
+      email:    q.email || null,
+      region:   q.region || null,
+      /* ⚠️ `/join` 의 "주로 하시는 업종" 입니다 — 화면이 이름 글자로
+         보냅니다 (분류 key 가 아닙니다). */
+      industry: q.exp || null,
+      services: q.services,
+      note:     q.note || null,
+      /* ⚠️⚠️ 동의를 **시각으로** 남깁니다 (제15조) — boolean 으로 두면
+         "언제 받았나" 를 못 대고, 그게 분쟁에서 받지 않은 것과
+         같아집니다 (`request.agree_at` 과 같은 규칙). */
+      agree_at: new Date().toISOString(),
+      state:    "new"
+    });
+    if(saved.ok) no = cand;
+    else console.error("[site] 입점 신청을 저장하지 못했습니다 — " + dbWhy(saved.why));
   }
 
   const head = kind === "sos" ? "[SOS]" : kind === "partner" ? "[파트너]" : "[견적]";

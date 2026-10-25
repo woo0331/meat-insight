@@ -208,6 +208,26 @@ window.amQuoteTone = function(key){
   return s ? s.tone : "gray";
 };
 
+window.AM_APPLY_ST = [
+  { key:"new",    name:"새 신청",     tone:"on"   },
+  { key:"called", name:"통화함",      tone:"warn" },
+  { key:"done",   name:"등록 완료",   tone:"ok"   },
+  { key:"drop",   name:"진행 안 함",  tone:"gray" }
+];
+window.amApplySt = function(key){
+  var L = window.AM_APPLY_ST, i;
+  for(i = 0; i < L.length; i++) if(L[i].key === key) return L[i];
+  return null;
+};
+window.amApplyName = function(key){
+  var s = window.amApplySt(key);
+  return s ? s.name : "";
+};
+window.amApplyTone = function(key){
+  var s = window.amApplySt(key);
+  return s ? s.tone : "gray";
+};
+
 window.amQuoteVat = function(key){
   if(key === "incl") return "부가세 포함";
   if(key === "free") return "면세";

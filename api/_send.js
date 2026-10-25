@@ -260,4 +260,79 @@ async function customerStep(to, no, kind){
   }catch(e){ return { ok:false, why:"resend " + (e && e.message) }; }
 }
 
-module.exports = { deliver, customerAck, customerStep, clean, won, why, fromOurPages };
+/* ── 업체(제휴사) 배정 안내 (2026-10-25 P1-5) ────────────────────
+   ⚠️⚠️ **이 줄이 없으면 플랫폼이 아니라 접수함입니다.** 배정해 놓고
+   업체가 그 사실을 모르면, 들어와서 볼 때까지 그 건은 멈춰 있습니다.
+   아정당처럼 하루 수십 건을 받는 회사에 "들어와서 보세요" 로는
+   안 돌아갑니다 — 2026-10-25 진단에서 가장 크게 비어 있던 자리입니다.
+
+   ⚠️⚠️ **신청하신 분의 성함 · 연락처 · 요청 내용을 한 글자도 싣지
+   않습니다.** 업체 담당자 메일이 한 글자 틀려 있으면 그 메일이
+   남에게 갑니다 — 고객 안내(`customerStep`)와 같은 까닭이고,
+   제17조는 **배정된 건에서만** 보게 하라는 뜻이지 메일로 보내라는
+   뜻이 아닙니다. 싣는 것은 접수번호와 "들어와서 보세요" 까지입니다.
+
+   ⚠️⚠️ **보내는 주소는 고객 쪽과 반대 판단입니다.** 고객 메일은
+   운영자 주소(`INTAKE_EMAIL_FROM`)로 보내면 답장이 내부로 오니까
+   갈라 두었는데, 업체 답장은 **운영자에게 와야 맞습니다.** 그래서
+   `PARTNER_EMAIL_FROM` 이 없으면 운영자 주소를 그대로 씁니다.
+   ⚠️ 기본값(`onboarding@resend.dev`)으로 **떨어뜨리지 않습니다** —
+   그 주소는 resend 계정 주인에게만 가서, 보냈다고 생각하는데
+   업체는 못 받는 꼴이 됩니다 (fail-closed).
+
+   ⚠️⚠️ **광고를 섞지 마세요.** 배정 안내는 거래 통지라 사전 수신동의가
+   필요 없지만, 한 줄만 권유를 넣으면 그때부터 광고성 정보이고
+   사전동의가 먼저입니다 (정보통신망법 제50조).
+   ⚠️⚠️ **회신 시점을 약속하지 않습니다** (약관 제8조).
+   ⚠️ 끄는 길을 본문에 적습니다 — 업체 쪽에는 수신 여부 칸이 따로
+   없고, 담당자 메일을 비우면 이 줄이 저절로 멈춥니다. */
+const PARTNER_SAY = {
+  assigned: { s:"신청이 배정되었습니다",
+              l:"신청 한 건이 귀사에 배정되었습니다." },
+  chosen:   { s:"고객이 귀사의 견적을 선택했습니다",
+              l:"보내신 견적을 고객이 선택했습니다." }
+};
+
+async function partnerStep(to, no, kind){
+  const key  = process.env.RESEND_API_KEY;
+  const from = process.env.PARTNER_EMAIL_FROM || process.env.INTAKE_EMAIL_FROM;
+  const addr = clean(to, 120);
+  const say  = PARTNER_SAY[kind];
+  /* ⚠️ 하나라도 없으면 **아무 일도 안 합니다** — 배정은 그대로 됩니다 */
+  if(!key || !from || !addr || addr.indexOf("@") < 1 || !say)
+    return { ok:false, why:"off" };
+
+  const L = [];
+  L.push(say.l);
+  L.push("");
+  /* ⚠️ 번호가 없으면 **줄째 뺍니다** (절대 규칙 2) */
+  if(no){
+    L.push("접수번호  " + clean(no, 20));
+    L.push("");
+  }
+  L.push("요청 내용과 연락처는 로그인하신 뒤 내 기록에서 보실 수 있습니다 —");
+  L.push("https://storeway.co.kr/my");
+  L.push("");
+  L.push("이 메일에는 신청하신 분의 성함과 연락처를 싣지 않습니다.");
+  L.push("");
+  L.push("이 메일은 배정 안내이며 광고가 아닙니다.");
+  L.push("받지 않으시려면 이 메일에 회신해 주시면 담당자 메일 주소를 지웁니다.");
+
+  try{
+    const r = await fetch("https://api.resend.com/emails", {
+      method:"POST",
+      headers:{ "content-type":"application/json", authorization:"Bearer " + key },
+      body: JSON.stringify({
+        /* ⚠️⚠️ **한 곳에만** 보냅니다 (쉼표를 그대로 넘기지 않습니다) */
+        from: from, to: [addr],
+        subject: "[배정] " + say.s + (no ? " (" + clean(no, 20) + ")" : ""),
+        text: L.join("\n")
+      })
+    });
+    if(r.ok) return { ok:true };
+    return { ok:false, why:"resend " + r.status };
+  }catch(e){ return { ok:false, why:"resend " + (e && e.message) }; }
+}
+
+module.exports = { deliver, customerAck, customerStep, partnerStep,
+                   clean, won, why, fromOurPages };

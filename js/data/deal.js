@@ -326,6 +326,44 @@ window.amQuoteTone = function(key){
   return s ? s.tone : "gray";
 };
 
+/* ════════════════════════════════════════════════════════════════════
+   업체 입점 신청 상태 넷 (0016 · 2026-10-25 진단 P1-7)
+
+   `/join` 으로 들어온 입점 신청이 어디까지 갔는지입니다.
+
+   ⚠️⚠️ **신청(`request`) 상태 열셋과 다른 것입니다.** 이쪽은 **업체가
+   우리에게** 등록을 신청한 것이고, 그쪽은 **손님이 서비스를** 신청한
+   것입니다 — 같은 딱지로 섞으면 접수 목록과 입점 목록이 한 통이 됩니다.
+
+   ⚠️⚠️ **`db/migrations/0016_provider_apply.sql` 의 enum 과 같아야
+   합니다.** 어긋나면 화면이 모르는 값이 와서 딱지가 **빈 칸**이 되거나
+   (`amApplyName()` 이 빈 문자열을 돌려줍니다), 화면이 내는 값을 DB 가
+   거절합니다 — `checkDealSql()` 이 빌드마다 맞춰 봅니다.
+
+   ⚠️ **`drop`(진행 안 함)을 끝으로 닫지 않았습니다.** 다시 `called` 로
+   되돌릴 수 있습니다 — "지금은 생각이 없다" 가 반 년 뒤에도 그런 것은
+   아닙니다 (보류에 `end:true` 를 안 붙인 그 자리).
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_APPLY_ST = [
+  { key:"new",    name:"새 신청",     tone:"on"   },
+  { key:"called", name:"통화함",      tone:"warn" },
+  { key:"done",   name:"등록 완료",   tone:"ok"   },
+  { key:"drop",   name:"진행 안 함",  tone:"gray" }
+];
+window.amApplySt = function(key){
+  var L = window.AM_APPLY_ST, i;
+  for(i = 0; i < L.length; i++) if(L[i].key === key) return L[i];
+  return null;
+};
+window.amApplyName = function(key){
+  var s = window.amApplySt(key);
+  return s ? s.name : "";
+};
+window.amApplyTone = function(key){
+  var s = window.amApplySt(key);
+  return s ? s.tone : "gray";
+};
+
 /* 부가세 표기 — ⚠️ 금액만 적어 두면 둘을 견줄 수가 없습니다
    (한 곳은 별도, 한 곳은 포함이면 실제로 내는 돈이 10% 다릅니다).
    ⚠️⚠️ **여기서 세금을 계산하지 않습니다** — 요율을 박아 두면 바뀌는

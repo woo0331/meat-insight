@@ -41,7 +41,21 @@ window.AM_FEE_TYPE = [
   { key:"margin",    name:"직접 판매 · 유통 마진",    needs:["sell","cost"],
     lead:"판매가에서 매입가를 뺀 것이 수익입니다." },
   { key:"sub",       name:"반복 발주 · 구독형",        needs:["times"],
-    lead:"회차마다 정액입니다." }
+    lead:"회차마다 정액입니다." },
+  /* ── 2026-10-25 P1-6 — 통신 · 렌탈처럼 **유지되는 동안** 받는 구조 ──
+     ⚠️⚠️ **`sub` 로는 못 담습니다.** `sub` 은 "회차마다 **정액**" 이고,
+     이쪽은 "매달 **요금의 일정 비율**" 입니다 — 월 요금이 5만원인
+     집과 15만원인 집이 같은 수수료가 되어 버립니다.
+     ⚠️ 2026-10-25 진단에서 제휴 논의 중인 회사의 수익 구조가 이
+     꼴이라 비어 있던 자리입니다. */
+  { key:"mrr_rate",  name:"월 요금의 일정 비율 (유지분)", needs:["monthly", "times"],
+    lead:"월 요금에 요율을 곱하고 회차만큼 쌓습니다." },
+  /* ⚠️ 계산은 `close` 와 같은 정액이지만 **다른 모델로 둡니다** —
+     확정 조건이 "유지 확인 후"(`kept`)이고, 청구서에 무엇으로
+     청구했는지가 남아야 합니다 (`lead` 와 `close` 를 가른 것과 같은
+     까닭입니다). */
+  { key:"retain",    name:"유지 · 해지 방어 성과 정액",  needs:[],
+    lead:"약정이 유지된 것이 확인되면 건당 정액입니다." }
 ];
 
 /* ── 부가세 처리 기준 (§9 "부가세 처리 기준") ───────────────── */
@@ -58,7 +72,12 @@ window.AM_FEE_WHEN = [
   { key:"lead_ok",  name:"유효 문의 확인 후",  need:"문의가 실제 상담으로 이어졌는지" },
   { key:"signed",   name:"계약 체결 확인 후",  need:"계약서 또는 계약 사실 증빙" },
   { key:"done",     name:"이행 완료 확인 후",  need:"설치·시공 완료 증빙" },
-  { key:"paid",     name:"업체 수금 확인 후",  need:"업체가 손님에게 받았다는 증빙" }
+  { key:"paid",     name:"업체 수금 확인 후",  need:"업체가 손님에게 받았다는 증빙" },
+  /* 2026-10-25 P1-6 — ⚠️ 유지분 · 해지 방어는 **계약한 날이 아니라
+     유지된 것을 확인한 날** 확정됩니다. `done`(이행 완료)으로 두면
+     설치한 날 전부를 확정하게 되고, 그건 아직 받지도 않은 달까지
+     청구하는 것입니다. */
+  { key:"kept",     name:"약정 유지 확인 후",  need:"그 달까지 유지됐다는 증빙 (해지 내역 없음)" }
 ];
 
 /* ── 정산 주기 (§9 "정산 주기") ─────────────────────────────── */
@@ -151,12 +170,15 @@ window.amFeeBadPolicy = function(p){
   var flat = num(p.flat), rate = num(p.rate),
       min = num(p.min), max = num(p.max);
 
-  if(p.type === "lead" || p.type === "close" || p.type === "sub"){
+  if(p.type === "lead" || p.type === "close" || p.type === "sub" ||
+     p.type === "retain"){
     if(flat === null) return "정액 수수료를 적어 주세요";
     if(flat < 0)      return "정액 수수료가 음수입니다";
     /* ⚠️ 0 원 정액은 "무료" 라는 뜻이라 말이 됩니다 — 막지 않습니다 */
   }
-  if(p.type === "rate" || p.type === "base_rate"){
+  /* ⚠️⚠️ 유지분도 **요율 규칙이 같습니다** — 여기 안 넣으면 요율을
+     안 적은 정책이 그대로 통과하고, 계산이 0 원으로 떨어집니다. */
+  if(p.type === "rate" || p.type === "base_rate" || p.type === "mrr_rate"){
     if(rate === null) return "요율을 적어 주세요";
     if(rate <= 0)     return "요율이 0 이하입니다 — 비율 수수료가 아닙니다";
     /* ⚠️⚠️ 100% 를 넘는 수수료는 계약금액보다 많이 받는다는 말입니다 */
@@ -180,10 +202,11 @@ window.amFeeBadPolicy = function(p){
 
 /* ── 계산 ─────────────────────────────────────────────────────
    snap : amFeeSnap() 이 만든 사본 (preview 일 때는 정책 그대로도 됩니다)
-   d    : { amount, sell, cost, times, at }
+   d    : { amount, sell, cost, times, monthly, at }
           amount  계약금액 (원)        — rate · base_rate
           sell·cost 판매가 · 매입가 (원) — margin
-          times   회차                  — sub
+          times   회차                  — sub · mrr_rate
+          monthly 손님이 내는 월 요금 (원) — mrr_rate
           at      기준일 (YYYY-MM-DD)   — 정책 적용 기간 확인
    opt  : { preview:true } 면 사본이 아니어도 계산합니다 (예상 안내용)
 
@@ -216,14 +239,34 @@ window.amFeeCalc = function(snap, d, opt){
   var base = null, fee = null, i;
 
   /* 꼭 있어야 하는 값 — ⚠️ 없으면 0 이 아니라 거절입니다 */
-  var LABEL = { amount:"계약금액", sell:"판매가", cost:"매입가", times:"회차" };
+  var LABEL = { amount:"계약금액", sell:"판매가", cost:"매입가", times:"회차",
+                monthly:"월 요금" };
   for(i = 0; i < t.needs.length; i++){
     if(num(d[t.needs[i]]) === null)
       return { ok:false, why:LABEL[t.needs[i]] + "이 아직 없습니다" };
   }
 
-  if(snap.type === "lead" || snap.type === "close"){
+  if(snap.type === "lead" || snap.type === "close" || snap.type === "retain"){
     fee = Math.round(flat);
+  }
+  /* ── 2026-10-25 P1-6 — 월 요금의 일정 비율 × 회차 ──────────────
+     ⚠️⚠️ **한 달치를 먼저 반올림하고 회차를 곱합니다.** 합계에
+     곱해서 한 번만 반올림하면, 청구서에 달마다 적는 금액의 합과
+     총액이 **1~2원씩 어긋납니다** — 업체가 그 차이를 묻습니다. */
+  else if(snap.type === "mrr_rate"){
+    var monthly = num(d.monthly), mtimes = num(d.times);
+    if(monthly < 0) return { ok:false, why:"월 요금이 음수입니다" };
+    if(mtimes < 1 || Math.round(mtimes) !== mtimes)
+      return { ok:false, why:"회차는 1 이상의 정수여야 합니다" };
+    var per = Math.round(monthly * rate / 100);
+    /* ⚠️⚠️ **경계값 바로 아래** — 월 요금도 요율도 0 보다 큰데 한 달치가
+       0 원으로 떨어지는 자리입니다 (월 1,000원 · 0.0001%). 그대로 두면
+       회차를 아무리 곱해도 0 원이고, 정산서에 "유지 수수료 0원" 이
+       올라갑니다 (`rate` 쪽과 같은 종류의 사고입니다). */
+    if(per === 0 && monthly > 0 && rate > 0)
+      return { ok:false, why:"한 달치가 0원으로 떨어집니다 — 월 요금과 요율을 확인해 주세요" };
+    fee  = per * mtimes;
+    base = Math.round(monthly) * mtimes;   /* 그 기간에 손님이 낸 요금 */
   }
   else if(snap.type === "sub"){
     var times = num(d.times);

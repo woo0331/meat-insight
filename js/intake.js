@@ -60,7 +60,11 @@ var RQ = { asked:false, on:false, signedIn:false, role:"", name:"",
            /* 2026-10-22 전수검사 P1 ⑬⑭ — 업체 담당자와 기간별 정산.
               ⚠️ `pvOf` 는 담당자 칸을 **펼친 업체 하나**입니다 —
               스물을 한꺼번에 펼쳐 두면 직통 번호가 한 화면에 깔립니다. */
-           contacts:[], settles:[], pvOf:"", pctx:{}, sctx:{} };
+           contacts:[], settles:[], pvOf:"", pctx:{}, sctx:{},
+           /* 2026-10-25 진단 P1-7 — `/join` 입점 신청.
+              ⚠️ `apOf` 는 **펼친 신청 하나**입니다 — 쉰 건의 담당자
+              번호를 한 화면에 깔지 않습니다 (`pvOf` 와 같은 선). */
+           applies:[], apOf:"", actx:{} };
 
 /* ── 그리기 ──────────────────────────────────────────────────────── */
 
@@ -86,7 +90,7 @@ function rqDraw(){
       '<h2>접수 · 배정</h2>'+
       rqBody()+
     '</section>'+
-    (RQ.signedIn ? rqMoney() + rqFees() + rqSettles() + rqProvs() : "");
+    (RQ.signedIn ? rqMoney() + rqFees() + rqSettles() + rqApplies() + rqProvs() : "");
 }
 
 function rqBody(){
@@ -979,6 +983,9 @@ function rqLoad(){
          화면이 숨기는 것이 아니라 서버가 안 보냅니다. */
       RQ.contacts = d.contacts || [];
       RQ.settles  = d.settles  || [];
+      /* 업체 입점 신청 (P1-7) — ⚠️ 직원 · 관리자에게만 옵니다
+         (0016 의 RLS 에 고객 · 업체 정책이 아예 없습니다). */
+      RQ.applies  = d.applies  || [];
       rqDraw();
     })
     .catch(function(e){
@@ -1134,14 +1141,10 @@ function rqFeeForm(d){
 
   var pick = RQ.mctx.feeId || P[0].id;
   var pol  = window.amFeeFromDb(P.filter(function(f){ return f.id === pick; })[0] || P[0]);
-  /* ⚠️⚠️ 숫자는 **계산값**입니다 — 손으로 적는 칸을 두지 않았습니다 */
-  var calc = window.amFeeCalc(window.amFeeSnap(pol), {
-    amount: Number(d.amount || 0),
-    sell:   Number(d.amount || 0),
-    cost:   0,
-    times:  1,
-    at:     String(d.done_at || "").slice(0, 10) || undefined
-  });
+  /* ⚠️⚠️ 숫자는 **계산값**입니다 — 손으로 적는 칸을 두지 않았습니다.
+     ⚠️ 월 요금 · 회차는 **계산에 넣는 사실**이지 금액이 아닙니다
+     (계약금액이 `deal.amount` 에서 오는 것과 같은 자리입니다). */
+  var calc = window.amFeeCalc(window.amFeeSnap(pol), rqFeeIn(d, pol));
 
   return '<div class="rq-mv">'+
     '<div class="f-r">'+
@@ -1158,16 +1161,8 @@ function rqFeeForm(d){
       '<p class="f-h">⚠️ 고르신 정책은 계약에 <b>사본으로</b> 박힙니다 — '+
         '나중에 요율을 고쳐도 <b>이 계약의 수수료는 안 바뀝니다</b> (§9).</p>'+
     '</div>'+
-    (calc.ok
-      ? '<div class="rq-calc">'+
-          '<b>'+esc(won(calc.fee))+'원</b>'+
-          '<span>+ 부가세 '+esc(won(calc.vat))+'원 = 청구 '+esc(won(calc.total))+'원</span>'+
-          (calc.clamped ? '<em>'+(calc.clamped === "min" ? "최소" : "최대")+
-            ' 수수료가 적용됐습니다</em>' : '')+
-        '</div>'
-      /* ⚠️⚠️ 계산이 안 되면 **0원을 내놓지 않고** 까닭을 적습니다 */
-      : '<div class="notice-bad"><b>이 정책으로는 계산되지 않습니다</b>'+
-        '<p>'+esc(calc.why)+'</p></div>')+
+    rqFeeMrrFields(pol, d.id)+
+    '<div id="rq-calcbox">'+rqFeeCalcBox(calc)+'</div>'+
     '<div class="f-r">'+
       '<label for="rq-proof">계약 완료 증빙</label>'+
       '<input id="rq-proof" type="text" autocomplete="off" '+
@@ -1191,6 +1186,92 @@ function rqFeeForm(d){
   '</div>';
 }
 
+/* 계산에 넣는 값 — ⚠️⚠️ **한 곳입니다.** 그리는 쪽과 보내는 쪽이
+   따로 만들면 화면에 보여 준 금액과 실제로 보내는 금액이 어긋나고,
+   그건 청구서에서 드러납니다.
+   ⚠️ 유지분(`mrr_rate`)만 월 요금 · 회차를 받습니다 — 나머지는
+   전과 글자 하나 다르지 않습니다. */
+function rqFeeIn(d, pol){
+  var o = {
+    amount: Number(d.amount || 0),
+    sell:   Number(d.amount || 0),
+    cost:   0,
+    times:  1,
+    at:     String(d.done_at || "").slice(0, 10) || undefined
+  };
+  if(pol && pol.type === "mrr_rate"){
+    /* ⚠️ 빈 칸은 **0 이 아니라 없는 것**입니다 — 0 으로 떨어뜨리면
+       "월 요금이 아직 없습니다" 가 아니라 0원 수수료가 나옵니다. */
+    var m = String(RQ.mctx.mrr == null ? "" : RQ.mctx.mrr).trim();
+    var n = String(RQ.mctx.mon == null ? "" : RQ.mctx.mon).trim();
+    o.monthly = m === "" ? null : Number(m);
+    o.times   = n === "" ? null : Number(n);
+  }
+  return o;
+}
+
+/* 유지분일 때만 나오는 칸 둘 — ⚠️ 다른 모델에서는 **아예 안 그립니다**
+   (안 쓰는 칸을 깔면 무엇을 적어야 하는지가 흐려집니다). */
+function rqFeeMrrFields(pol, id){
+  if(!pol || pol.type !== "mrr_rate") return "";
+  return '<div class="f-r">'+
+      '<label for="rq-mrr">손님이 내는 월 요금 (원)</label>'+
+      '<input id="rq-mrr" type="number" min="0" step="1" autocomplete="off" '+
+        'inputmode="numeric" oninput="rqMctxFee(\'mrr\',this.value,\''+esc(id)+'\')" '+
+        'value="'+esc(RQ.mctx.mrr == null ? "" : RQ.mctx.mrr)+'" '+
+        'placeholder="예: 55000">'+
+      '<p class="f-h">⚠️ 이 금액의 요율이 <b>한 달치 수수료</b>입니다. '+
+        '요금제가 바뀌면 그때부터 다시 잡습니다.</p>'+
+    '</div>'+
+    '<div class="f-r">'+
+      '<label for="rq-mon">이번에 확정할 개월 수</label>'+
+      '<input id="rq-mon" type="number" min="1" step="1" autocomplete="off" '+
+        'inputmode="numeric" oninput="rqMctxFee(\'mon\',this.value,\''+esc(id)+'\')" '+
+        'value="'+esc(RQ.mctx.mon == null ? "" : RQ.mctx.mon)+'" '+
+        'placeholder="예: 12">'+
+      '<p class="f-h">⚠️⚠️ <b>약정 기간 전부를 한 번에 적지 마세요.</b> '+
+        '유지된 것이 확인된 달까지입니다 — 아직 받지도 않은 달을 '+
+        '확정하면 해지되었을 때 환수해야 합니다.</p>'+
+    '</div>';
+}
+
+/* 계산 결과 칸 — ⚠️ 그리는 쪽과 **다시 칠하는 쪽**이 같은 글을
+   내야 합니다. 두 벌로 적으면 처음 그린 것과 값을 고친 뒤가
+   달라집니다. */
+function rqFeeCalcBox(calc){
+  if(calc.ok)
+    return '<div class="rq-calc">'+
+      '<b>'+esc(won(calc.fee))+'원</b>'+
+      '<span>+ 부가세 '+esc(won(calc.vat))+'원 = 청구 '+esc(won(calc.total))+'원</span>'+
+      (calc.clamped ? '<em>'+(calc.clamped === "min" ? "최소" : "최대")+
+        ' 수수료가 적용됐습니다</em>' : '')+
+      '</div>';
+  /* ⚠️⚠️ 계산이 안 되면 **0원을 내놓지 않고** 까닭을 적습니다 */
+  return '<div class="notice-bad"><b>이 정책으로는 계산되지 않습니다</b>'+
+    '<p>'+esc(calc.why)+'</p></div>';
+}
+
+/* ⚠️⚠️ **적는 칸에서는 다시 그리지 않습니다.** `rqDraw()` 를 부르면
+   한 글자 칠 때마다 커서가 칸에서 빠집니다 (이 저장소가 업체 빠른
+   등록에서 겪은 자리). 계산 칸과 단추 **둘만** 바꿔 끼웁니다.
+   ⚠️ 둘 중 하나만 고치면 "못 누르는 단추 옆에 계산된 금액" 이 섭니다. */
+window.rqMctxFee = function(k, v, id){
+  RQ.mctx[k] = v;
+  var d = (RQ.deals || []).filter(function(x){ return x.id === id; })[0];
+  if(!d) return;
+  var P = (RQ.fees || []).filter(function(f){
+    return f.provider_id === d.provider_id && f.active !== false; });
+  var pick = RQ.mctx.feeId || (P[0] && P[0].id);
+  var pol  = window.amFeeFromDb(P.filter(function(f){ return f.id === pick; })[0] || P[0]);
+  if(!pol) return;
+  var calc = window.amFeeCalc(window.amFeeSnap(pol), rqFeeIn(d, pol));
+  var box  = document.getElementById("rq-calcbox");
+  if(box) box.innerHTML = rqFeeCalcBox(calc);
+  var btn = box && box.parentElement &&
+            box.parentElement.querySelector(".ad-acts button");
+  if(btn) btn.disabled = !!RQ.busy || !calc.ok;
+};
+
 window.rqFeePick = function(v){ RQ.mctx.feeId = v; rqDraw(); };
 
 window.rqFeeGo = function(id){
@@ -1206,10 +1287,9 @@ window.rqFeeGo = function(id){
   /* ⚠️⚠️ **사본을 만들어 보냅니다** — 정책을 가리키게만 두면 요율을
      고친 날 지난 계약의 수수료가 같이 바뀝니다 (§9). */
   var snap = window.amFeeSnap(pol);
-  var calc = window.amFeeCalc(snap, {
-    amount: Number(d.amount || 0), sell: Number(d.amount || 0), cost: 0, times: 1,
-    at: String(d.done_at || "").slice(0, 10) || undefined
-  });
+  /* ⚠️⚠️ **그리는 쪽과 같은 함수**를 씁니다 — 두 곳에 적으면 화면에
+     보여 준 금액과 실제로 보내는 금액이 어긋납니다. */
+  var calc = window.amFeeCalc(snap, rqFeeIn(d, pol));
   if(!calc.ok){ toast(calc.why); return; }
   var proof = String(RQ.mctx.proof || "").trim();
   if(!proof){ toast("계약 완료 증빙을 적어 주세요"); return; }
@@ -1345,6 +1425,7 @@ function rqCall(fn, args, say){
     RQ.money = ""; RQ.mctx = {}; RQ.open = ""; RQ.to = ""; RQ.ctx = {};
     RQ.itemOf = ""; RQ.ictx = {};
     RQ.pvOf = ""; RQ.pctx = {};
+    RQ.apOf = ""; RQ.actx = {};
     rqLoad();
   }).catch(function(e){
     RQ.busy = false;
@@ -1668,6 +1749,195 @@ window.rqSetHold = function(id, on){
    공정화에 관한 법률 제3조).
    ════════════════════════════════════════════════════════════════════ */
 
+/* ════════════════════════════════════════════════════════════════════
+   업체 입점 신청 (2026-10-25 진단 P1-7 · 0016)
+
+   `/join` 으로 들어온 신청이 **슬랙으로만** 가고 있었습니다. 채널 글이
+   묻히면 그 업체는 사라지고, 직원은 전화하려고 그 글을 찾아 **업체명 ·
+   번호 · 하는 일을 다시 손으로 칩니다.**
+
+   ⚠️⚠️ **여기서 `provider` 를 만들지 않습니다.** 신청은 아직 업체가
+   아닙니다 — 통화도 안 해 봤고 계약도 없습니다. 통화해서 합의가 되면
+   **관리자 설정 9번 칸**이 `provider` 줄을 만들고, 그 다음에 여기서
+   `등록 완료` 로 두면 이 신청이 그 업체를 가리킵니다.
+   ⚠️ 그래서 이 구간에 "바로 등록" 단추가 없습니다 — 있으면 통화도 안
+   한 회사가 배정 고르개에 서고, 거기 배정되면 그 순간 손님 성함 ·
+   연락처가 넘어갑니다 (개인정보보호법 제17조 제2항).
+   ════════════════════════════════════════════════════════════════════ */
+
+function rqApplies(){
+  if(RQ.role !== "staff" && RQ.role !== "admin") return "";
+  var A = RQ.applies || [];
+  /* ⚠️ **세는 값**입니다 — 손으로 적으면 처리한 뒤에도 그 수가 남습니다 */
+  var nNew = A.filter(function(x){ return x.state === "new";    }).length;
+  var nCal = A.filter(function(x){ return x.state === "called"; }).length;
+
+  return '<section class="ad-s rq-s rq-s-ap">'+
+    '<h2>업체 입점 신청</h2>'+
+    (!A.length
+      ? '<p class="ad-empty">아직 들어온 입점 신청이 없습니다. '+
+        '<b>/join</b> 으로 신청이 들어오면 여기에 쌓입니다.</p>'
+      : '<p class="ad-lead">'+
+          (nNew ? '<b>'+nNew+'곳</b>이 아직 통화 전입니다. ' : '')+
+          (nCal ? '<b>'+nCal+'곳</b>은 통화했고 등록이 남았습니다. ' : '')+
+          '통화해서 합의가 되면 <b>관리자 설정 9번 칸</b>에서 업체 줄을 '+
+          '만들고, 그 다음에 여기서 <b>등록 완료</b>로 두세요.</p>'+
+        '<p class="f-h">⚠️ 여기서 바로 업체가 되는 것이 아닙니다 — '+
+          '통화도 안 한 회사가 배정 고르개에 서면 그 순간 손님 성함 · '+
+          '연락처가 넘어갑니다 (개인정보보호법 제17조 제2항).</p>'+
+        '<div class="rq-g">'+ A.map(rqApplyRow).join("") +'</div>')+
+  '</section>';
+}
+
+function rqApplyRow(a){
+  var open = RQ.apOf === a.id;
+  var nm = (typeof amApplyName === "function") ? amApplyName(a.state) : "";
+  var tn = (typeof amApplyTone === "function") ? amApplyTone(a.state) : "gray";
+  var meta = [String(a.created_at || "").slice(0, 10),
+              a.region || "", a.industry || "",
+              (a.services || []).length ? "하는 일 " + a.services.length : ""]
+             .filter(Boolean).join(" · ");
+  return '<article class="rq-r">'+
+    '<div class="rq-hd rq-hd-s">'+
+      '<span class="rq-hd-l">'+
+        '<b class="rq-no">'+esc(a.company)+'</b>'+
+        '<span class="rq-m">'+esc(meta)+'</span>'+
+      '</span>'+
+      '<span class="rq-hd-r">'+
+        /* ⚠️ 이름을 화면에 적지 않습니다 — `js/data/deal.js` 한 곳이고
+           `checkDealSql()` 이 DB 의 enum 과 빌드마다 맞춰 봅니다.
+           ⚠️ 모르는 값이면 **key 를 그대로** 냅니다 — 빈 딱지로 두면
+           어긋난 것을 아무도 모릅니다 (여기서 보이면 한쪽만 고친
+           것입니다). */
+        '<i class="myq-st myq-'+esc(tn)+'">'+esc(nm || a.state)+'</i>'+
+        '<button class="btn btn-o btn-sm" type="button" aria-expanded="'+
+          (open ? "true" : "false")+'" '+
+          'onclick="rqApOpen(\''+esc(a.id)+'\')">'+
+          (open ? "접기" : "열기")+'</button>'+
+      '</span>'+
+    '</div>'+
+    (open ? rqApplyBody(a) : "")+
+  '</article>';
+}
+
+function rqApplyBody(a){
+  var C = RQ.actx || {};
+  var to = C.to || "";
+  var svc = (a.services || []).filter(Boolean);
+  return '<div class="rq-bd">'+
+    '<dl class="rq-con">'+
+      rqConItem("접수번호", a.no)+
+      rqConItem("담당자", a.name)+
+      /* ⚠️ 번호에서 **숫자만** 남겨 `tel:` 을 만듭니다 — 하이픈이 섞인
+         채로 넣으면 기기마다 못 거는 데가 있습니다. */
+      (a.tel ? '<dt>연락처</dt><dd><a class="rq-tel" href="tel:'+
+         esc(String(a.tel).replace(/[^0-9+]/g, ""))+'">'+esc(a.tel)+'</a></dd>' : '')+
+      rqConItem("이메일", a.email)+
+      rqConItem("사업자등록번호", a.brn)+
+      rqConItem("주로 하시는 업종", a.industry)+
+      (svc.length ? '<dt>하시는 일</dt><dd>'+esc(svc.join(" · "))+'</dd>' : '')+
+      rqConItem("더 하신 말씀", a.note)+
+      rqConItem("마지막 메모", a.memo)+
+      /* 등록까지 끝난 신청은 **어느 업체인지**가 남습니다 */
+      rqConItem("등록된 업체", a.provider_id)+
+    '</dl>'+
+    '<div class="rq-mv">'+
+      '<div class="ad-f">'+
+        '<label for="rq-ap-to">상태 바꾸기</label>'+
+        '<select id="rq-ap-to" class="sel" onchange="rqActx(\'to\',this.value)">'+
+          '<option value="">골라 주세요</option>'+
+          (window.AM_APPLY_ST || []).map(function(st){
+            if(st.key === a.state) return "";
+            return '<option value="'+esc(st.key)+'"'+
+              (to === st.key ? " selected" : "")+'>'+esc(st.name)+'</option>';
+          }).join("")+
+        '</select>'+
+      '</div>'+
+      /* ⚠️⚠️ **등록 완료는 그 업체를 가리켜야 합니다.** 안 가리키면
+         "등록했다" 는 말만 남고 어느 업체인지가 사라집니다 — DB 가
+         거절하지만, 고를 자리를 안 주면 누를 때마다 실패하는 단추가
+         됩니다 (§30-7). */
+      (to === "done" ? rqApplyPvPick(a) : "")+
+      '<div class="ad-f">'+
+        '<label for="rq-ap-why">사유 · 메모'+
+          (to === "drop" ? ' <em>(진행 안 함은 반드시)</em>' : '')+'</label>'+
+        '<input id="rq-ap-why" type="text" autocomplete="off" '+
+          'oninput="rqActx(\'why\',this.value)" value="'+esc(C.why || "")+'" '+
+          'placeholder="예: 통화함 · 다음 주에 다시 연락">'+
+      '</div>'+
+      '<button class="btn btn-b" type="button"'+(RQ.busy ? " disabled" : "")+
+        ' onclick="rqApGo(\''+esc(a.id)+'\')">바꾸기</button>'+
+    '</div>'+
+    '<p class="f-h">⚠️ 바꾼 사람 · 시각 · 사유가 <b>이력에 남습니다</b> '+
+      '(§8) — 다만 <b>상호 · 성함 · 번호는 기록에 안 적습니다.</b> '+
+      '⚠️ 업체가 적어 보낸 연락처라 <b>직원 · 관리자 밖으로는 한 글자도 '+
+      '안 나갑니다.</b></p>'+
+  '</div>';
+}
+
+/* 등록한 업체 고르개 — ⚠️ 목록은 `api/me.js` 가 보낸 것 그대로입니다
+   (화면이 거르지 않습니다). 아직 업체가 하나도 없으면 **고를 것이
+   없다고 그대로 말합니다** (절대 규칙 2). */
+function rqApplyPvPick(a){
+  var P = RQ.provs || [], C = RQ.actx || {};
+  if(!P.length)
+    return '<p class="note-box">DB 에 등록된 업체가 없습니다 — '+
+      '<b>관리자 설정 9번 칸</b>에서 이 업체의 등록 줄을 먼저 만드세요.</p>';
+  return '<div class="ad-f">'+
+    '<label for="rq-ap-pv">등록한 업체</label>'+
+    '<select id="rq-ap-pv" class="sel" onchange="rqActx(\'pv\',this.value)">'+
+      '<option value="">골라 주세요</option>'+
+      P.map(function(p){
+        return '<option value="'+esc(p.id)+'"'+
+          ((C.pv || a.provider_id) === p.id ? " selected" : "")+'>'+
+          esc(p.name)+'</option>';
+      }).join("")+
+    '</select>'+
+  '</div>';
+}
+
+window.rqApOpen = function(id){
+  RQ.apOf = (RQ.apOf === id) ? "" : id;
+  /* ⚠️ 다른 줄을 펼치면 **적던 것을 치웁니다** — 안 치우면 앞 줄에
+     적은 사유가 다음 줄의 칸에 그대로 남습니다 (이력에서 겪은 자리). */
+  RQ.actx = {};
+  rqDraw();
+};
+
+/* ⚠️⚠️ **적는 칸에서는 다시 그리지 않습니다.** `rqDraw()` 를 부르면
+   한 글자 칠 때마다 커서가 칸에서 빠집니다 (업체 빠른 등록에서 겪은
+   자리) — 들고만 있습니다.
+   ⚠️ 상태 고르개는 **다시 그려야** 합니다 (`등록 완료` 를 고르면 업체
+   고르개가 생겨야 합니다) — 그 칸은 `<select>` 라 커서가 없습니다. */
+window.rqActx = function(k, v){
+  RQ.actx[k] = v;
+  if(k === "to") rqDraw();
+};
+
+window.rqApGo = function(id){
+  var C = RQ.actx || {};
+  if(!C.to){ toast("바꿀 상태를 골라 주세요"); return; }
+  /* ⚠️ DB 도 막지만 **왕복 한 번을 아끼고 먼저 말해 줍니다** — 자물쇠는
+     DB 쪽입니다 (화면 코드로만 막으면 버그 하나에 뚫립니다). */
+  if(C.to === "drop" && !String(C.why || "").trim()){
+    toast("진행하지 않는 까닭을 적어 주세요"); return; }
+  if(C.to === "done" && !C.pv){
+    toast("등록한 업체를 골라 주세요"); return; }
+  /* ⚠️⚠️ **이 길이 요구한 것만 보냅니다.** 들고 있는 것을 통째로
+     보내면, 등록하다 마음을 바꿔 보류로 넘길 때 엉뚱한 업체가 기록에
+     같이 남습니다 (배정에서 적어 둔 그 규칙). */
+  var args = { p_apply:id, p_to:C.to };
+  if(C.to === "done") args.p_provider = C.pv;
+  if(String(C.why || "").trim()) args.p_why = String(C.why).trim();
+  /* ⚠️⚠️ **조사를 손으로 적지 마세요.** 상태 이름이 "통화함"(받침 있음) ·
+     "등록 완료"(없음) 로 갈려서 "으로/로" 가 둘 다 나옵니다 —
+     `koWith()` 가 고릅니다 (이 저장소가 "인수인계은" 으로 겪은 자리).
+     ⚠️ 변수 뒤에 띄어 붙이지도 않습니다 ("완료 으로" 가 됩니다). */
+  var nm = (typeof amApplyName === "function" ? amApplyName(C.to) : "") || C.to;
+  rqCall("set_apply_state", args,
+    "입점 신청을 " + koWith(nm, "으로로") + " 두었습니다");
+};
+
 function rqProvs(){
   if(RQ.role !== "staff" && RQ.role !== "admin") return "";
   var P = RQ.provs || [];
@@ -1788,10 +2058,14 @@ function rqPvConForm(p, c){
         '<input id="rq-pc-t" type="tel" autocomplete="off" inputmode="tel" '+
         'oninput="rqPctx(\'ptel\',this.value)" value="'+esc(N.ptel || "")+'" '+
         'placeholder="예: 010-0000-0000"></div>'+
-      '<div class="ad-f"><label for="rq-pc-m">메일</label>'+
+      /* ⚠️⚠️ **이 칸이 비어 있으면 배정 알림이 안 갑니다** (2026-10-25
+         P1-5). 전에는 "선택" 이라고만 적혀 있어서 안 채우고 넘어가기
+         쉬웠는데, 지금은 업체가 배정을 아는 **유일한 길**입니다. */
+      '<div class="ad-f"><label for="rq-pc-m">메일 '+
+        '<em>(배정 알림이 이 주소로 갑니다)</em></label>'+
         '<input id="rq-pc-m" type="email" autocomplete="off" '+
         'oninput="rqPctx(\'pmail\',this.value)" value="'+esc(N.pmail || "")+'" '+
-        'placeholder="선택"></div>'+
+        'placeholder="예: damdang@gonggi.co.kr"></div>'+
     '</div>'+
     '<div class="ad-f"><label for="rq-pc-o">메모 <em>(선택)</em></label>'+
       '<input id="rq-pc-o" type="text" autocomplete="off" '+
@@ -1800,6 +2074,9 @@ function rqPvConForm(p, c){
     (N.ptel ? '<p class="ad-rd-n">'+
       '<a class="rq-tel" href="tel:'+esc(String(N.ptel).replace(/[^0-9+]/g,""))+'">'+
       icon("phone",18)+esc(N.ptel)+'</a></p>' : "")+
+    '<p class="ad-rd-n">⚠️ 메일을 비워 두시면 <b>배정 알림이 안 갑니다</b> — '+
+      '그 업체는 로그인해서 들어와 봐야 압니다. '+
+      '알림에는 신청하신 분의 성함 · 연락처를 싣지 않습니다.</p>'+
     '<p class="ad-rd-n">⚠️ 넷을 다 비워서 저장하면 <b>줄째 지웁니다</b> '+
       '(담당자가 그만두셨을 때). 바뀐 것은 기록에 남지만 '+
       '<b>이름과 번호는 기록에 안 적습니다</b>.</p>'+

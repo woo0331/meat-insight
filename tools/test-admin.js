@@ -947,7 +947,15 @@ function ok(name, cond, extra) {
               flat:null, rate:3, min_fee:null, max_fee:null, vat:"add",
               confirm_when:"done", cycle:"monthly", refund_rule:null,
               from_date:null, to_date:null, active:true,
-              created_at:"2026-10-01T02:00:00+00:00" }
+              created_at:"2026-10-01T02:00:00+00:00" },
+            /* 0015 유지 수수료 (2026-10-25 P1-6) — ⚠️ 칸 이름은 **DB 것**
+               입니다 (`confirm_when`). `amFeeFromDb()` 가 화면 쪽
+               이름으로 바꿉니다 — 두 벌이라 눈대중으로 적으면 틀립니다. */
+            { id:"f2", provider_id:"pv-one", offer_id:null, type:"mrr_rate",
+              flat:null, rate:10, min_fee:null, max_fee:null, vat:"add",
+              confirm_when:"kept", cycle:"monthly", refund_rule:null,
+              from_date:null, to_date:null, active:true,
+              created_at:"2026-10-02T02:00:00+00:00" }
           ],
           audits:[], history:hist }) });
     });
@@ -1000,7 +1008,7 @@ function ok(name, cond, extra) {
     /* ⚠️ 값이 없는 칸은 줄째 뺍니다 (절대 규칙 2) */
     ok("값이 없는 칸은 줄째 뺀다",
        !sp.includes("실제 입금액") && !sp.includes("확정일"), sp);
-    ok("적용할 정책 고르개가 있다", (await pg.locator("#rq-fp option").count()) === 1);
+    ok("적용할 정책 고르개가 있다", (await pg.locator("#rq-fp option").count()) === 2);
     const calc = await pg.locator("#rq .rq-s-mn .rq-calc").textContent();
     /* 10,000,000 × 3% = 300,000 · 부가세 별도 30,000 · 청구 330,000 */
     ok("수수료가 계산값으로 나온다",
@@ -1057,6 +1065,45 @@ function ok(name, cond, extra) {
        sent && sent.fn === "mark_paid" && sent.args.p_paid === 100000,
        JSON.stringify(sent));
 
+    /* ── ①-2 유지 수수료 (2026-10-25 P1-6) ──────────────────────
+       통신 · 렌탈처럼 **유지되는 동안** 받는 구조입니다. 정책을
+       바꿔 고르면 월 요금 · 개월 수 칸이 나와야 합니다. */
+    await pg.locator("#rq .rq-s-mn .rq-hd", { hasText:"SW-AB12-CD34" }).click();
+    await pg.waitForTimeout(300);
+    ok("요율 정책일 때는 숫자 칸이 없다",
+       (await pg.locator("#rq .rq-s-mn .rq-mv input[type=number]").count()) === 0);
+    await pg.selectOption("#rq-fp", "f2");
+    await pg.waitForTimeout(300);
+    ok("유지분을 고르면 월 요금 · 개월 수 칸이 나온다",
+       (await pg.locator("#rq-mrr").count()) === 1 &&
+       (await pg.locator("#rq-mon").count()) === 1);
+    /* ⚠️⚠️ 안 적으면 **0원이 아니라 까닭**입니다 (§9 · 절대 규칙 2) */
+    const mv0 = await pg.locator("#rq .rq-s-mn .rq-mv").textContent();
+    ok("월 요금을 안 적으면 0원을 내놓지 않고 까닭을 적는다",
+       mv0.includes("계산되지 않습니다") && mv0.includes("월 요금"), mv0.slice(0, 260));
+    ok("그때는 확정 단추가 꺼져 있다",
+       await pg.locator("#rq .rq-s-mn .rq-mv button", { hasText:"수수료 확정" })
+               .isDisabled());
+    /* 월 55,000 · 10% · 12개월 → 한 달치 5,500 × 12 = 66,000 */
+    await pg.fill("#rq-mrr", "55000");
+    await pg.fill("#rq-mon", "12");
+    await pg.waitForTimeout(300);
+    const mv1 = await pg.locator("#rq .rq-s-mn .rq-calc").textContent();
+    ok("유지분이 계산값으로 나온다 (55,000 · 10% · 12개월 → 66,000)",
+       mv1.includes("66,000") && mv1.includes("6,600") && mv1.includes("72,600"), mv1);
+    sent = null;
+    await pg.fill("#rq-proof", "통신사 유지 내역 2026-10 · 해지 없음");
+    await pg.locator("#rq .rq-s-mn .rq-mv button", { hasText:"수수료 확정" }).click();
+    await pg.waitForTimeout(400);
+    ok("화면에 보여 준 그 값을 그대로 보낸다",
+       sent && sent.fn === "confirm_fee" && sent.args.p_fee === 66000 &&
+       sent.args.p_vat === 6600 && sent.args.p_total === 72600,
+       JSON.stringify(sent && sent.args));
+    ok("유지분 정책 사본이 같이 간다",
+       sent && sent.args.p_snap && sent.args.p_snap.type === "mrr_rate" &&
+       sent.args.p_snap.when === "kept" && sent.args.p_snap.snapAt,
+       JSON.stringify(sent && sent.args.p_snap));
+
     /* ── ③ 환수 (§9 — 갈아 치우지 않습니다) ─────────────────── */
     await pg.locator("#rq .rq-s-mn .rq-hd", { hasText:"SW-IJ90-KL12" }).click();
     await pg.waitForTimeout(300);
@@ -1092,10 +1139,17 @@ function ok(name, cond, extra) {
     /* ── 수수료 정책 ────────────────────────────────────────── */
     const fs2 = await pg.locator("#rq .rq-s-fee");
     const fsTxt = await fs2.textContent();
-    ok("정책 줄이 나온다", (await fs2.locator(".rq-r").count()) === 1);
+    /* ⚠️ 씨앗이 둘입니다 (요율 · 유지분) — 2026-10-25 P1-6 */
+    ok("정책 줄이 나온다", (await fs2.locator(".rq-r").count()) === 2);
     ok("요율 · 부가세 · 확정 조건이 데이터 이름으로 나온다",
        fsTxt.includes("3%") && fsTxt.includes("부가세 별도") &&
        fsTxt.includes("이행 완료 확인 후"), fsTxt.slice(0, 220));
+    /* ⚠️⚠️ 새 enum 값이 **사람 말로** 나오는지 — 여기가 비면 화면에
+       `mrr_rate` · `kept` 가 날것으로 찍힙니다 (이 저장소가 포트폴리오의
+       `gyeonggi` · 장비의 `espresso` 로 겪은 자리). */
+    ok("유지분 정책도 이름으로 나온다",
+       fsTxt.includes("월 요금의 일정 비율") && fsTxt.includes("약정 유지 확인 후"),
+       fsTxt.slice(0, 400));
     /* ⚠️⚠️ 고친 정책이 지난 계약에 영향을 안 준다고 **그 자리에서** 밝힙니다 */
     ok("지난 계약에 영향을 주지 않는다고 밝힌다",
        fsTxt.includes("지난 계약에 영향을 주지 않습니다"), fsTxt.slice(0, 200));
@@ -1103,10 +1157,14 @@ function ok(name, cond, extra) {
     ok("지우는 단추가 없고 끄는 단추가 있다",
        !/지우기|삭제/.test(fsTxt) && fsTxt.includes("끄기"), fsTxt.slice(-200));
     sent = null;
-    await fs2.locator("button", { hasText:"끄기" }).click();
+    /* ⚠️ 정책이 둘이라 **첫 줄**을 집습니다 (2026-10-25 P1-6 으로
+       유지분 정책이 하나 늘었습니다) — 안 집으면 playwright 가
+       "둘이라 못 고릅니다" 로 터집니다. */
+    await fs2.locator("button", { hasText:"끄기" }).first().click();
     await pg.waitForTimeout(400);
     ok("set_fee_policy_active 로 끈다",
-       sent && sent.fn === "set_fee_policy_active" && sent.args.p_active === false,
+       sent && sent.fn === "set_fee_policy_active" && sent.args.p_active === false &&
+       sent.args.p_id === "f1",
        JSON.stringify(sent));
 
     /* 새 정책 — ⚠️ 저장하기 전에 봅니다 (fee.js 의 amFeeBadPolicy) */
@@ -1252,6 +1310,13 @@ function ok(name, cond, extra) {
     ok("손님에게 안 나간다고 적는다", conTx.includes("직원 · 관리자에게만"));
     ok("기록에 이름 · 번호가 안 간다고 적는다",
        conTx.includes("기록에 안 적습니다"), conTx.slice(0, 220));
+    /* ⚠️⚠️ 이 칸이 비면 **배정 알림이 안 갑니다** (2026-10-25 P1-5).
+       전에는 "선택" 이라고만 적혀 있어서 안 채우고 넘어가기 쉬웠고,
+       그러면 업체는 로그인해서 들어와 봐야 압니다. */
+    ok("메일 칸이 배정 알림이 가는 자리라고 적는다",
+       conTx.includes("배정 알림이 이 주소로 갑니다"), conTx.slice(0, 400));
+    ok("비우면 알림이 안 간다고 적는다",
+       conTx.includes("배정 알림이 안 갑니다"), conTx.slice(0, 600));
     /* ⚠️ 전화 링크는 **숫자만** · 누름 44px 이상 */
     const tel = await pg.locator("#rq .rq-con-f a.rq-tel").first();
     ok("전화 링크가 숫자만 담는다",
@@ -1318,6 +1383,161 @@ function ok(name, cond, extra) {
     ok("업체와 기간이 같이 간다",
        sent && sent.args && sent.args.p_provider === "pv-one" &&
        sent.args.p_from === "2026-11-01" && sent.args.p_to === "2026-11-30",
+       sent && JSON.stringify(sent.args));
+
+    ok("가로 스크롤 없음",
+       (await pg.evaluate(() => document.documentElement.scrollWidth)) <= 1440 + 1);
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
+  /* ══ 2026-10-25 진단 P1-7 — 업체 입점 신청 (0016) ════════════════
+     `/join` 으로 들어온 신청이 **슬랙으로만** 가고 있었습니다. 채널
+     글이 묻히면 그 업체는 사라지고, 직원은 전화하려고 그 글을 찾아
+     업체명 · 번호 · 하는 일을 **다시 손으로 칩니다.**
+     ⚠️⚠️ **여기서 업체가 되는 것이 아닙니다** — 통화도 안 한 회사가
+     배정 고르개에 서면 그 순간 손님 성함 · 연락처가 넘어갑니다
+     (제17조 제2항). 등록 줄은 관리자 설정 9번 칸이 만듭니다. */
+  console.log("\nP1-7 — 업체 입점 신청 (/join 에서 들어온 것)");
+  {
+    const { pg, ctx, errs } = await fresh(1440, 1400);
+    let sent = null;
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"staff",
+        name:"직원", provider:null,
+        conf:{ url:"https://proj.supabase.co", anonKey:"ANON-TEST" } }) }));
+    await pg.route("**/api/me**", r => r.fulfill({ status:200,
+      contentType:"application/json", body: JSON.stringify({
+        auth:true, signedIn:true, role:"staff", requests:[],
+        providers:[{ id:"pv-one", name:"가나다 인테리어", regions:["gyeonggi"],
+                     gu:["안양시"], industries:["cafe"], subs:["interior"],
+                     listed:true, assignable:true }],
+        contacts:[], staff:[],
+        applies:[
+          { id:"ap-1", no:"SW-APPL-0001", company:"가나덕트",
+            brn:"123-45-67890", name:"김기사", tel:"010-7777-8888",
+            email:"a@b.co", region:"경기", industry:"음식점",
+            services:["덕트 · 환기","주방설비"], note:"주말도 됩니다",
+            state:"new", provider_id:null, memo:null,
+            created_at:"2026-10-25T02:00:00+00:00" },
+          { id:"ap-2", no:"SW-APPL-0002", company:"라마바 철거",
+            name:"이사장", tel:"010-2222-3333", region:"서울",
+            services:["철거"], state:"called", provider_id:null,
+            memo:"다음 주에 다시",
+            created_at:"2026-10-24T02:00:00+00:00" }
+        ],
+        quotes:[] }) }));
+    await pg.route("**/api/deal", r => {
+      sent = JSON.parse(r.request().postData() || "{}");
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ ok:true }) });
+    });
+
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **접수 구간을 기다리고 입점 구간은 세어서 봅니다.** 바로
+       `#rq .rq-s-ap` 를 기다리면, 구간이 없어졌을 때 **엉뚱한 자리의
+       타임아웃으로 터지고 어느 검사가 틀렸는지도 안 나옵니다** (이
+       저장소가 환수 미리보기 · `/api/me?r=` 에서 겪은 자리). 먼저 ❌
+       한 줄을 내고 그 다음을 봅니다. */
+    await pg.waitForSelector("#rq .rq-s-rq", { timeout:8000 });
+    ok("입점 신청 구간이 있다", (await pg.locator("#rq .rq-s-ap").count()) === 1);
+    await pg.waitForSelector("#rq .rq-s-ap", { timeout:8000 });
+    ok("신청 줄이 둘이다",
+       (await pg.locator("#rq .rq-s-ap .rq-r").count()) === 2);
+    const apTx = await pg.locator("#rq .rq-s-ap").textContent();
+    /* ⚠️ **세는 값**입니다 — 손으로 적으면 처리한 뒤에도 남습니다 */
+    ok("통화 전인 곳이 몇인지 센다", apTx.includes("1곳") &&
+       apTx.includes("통화 전"), apTx.slice(0, 260));
+    ok("상태 딱지를 이름으로 낸다",
+       apTx.includes("새 신청") && apTx.includes("통화함"), apTx.slice(0, 300));
+    /* ⚠️⚠️ 여기서 바로 업체가 되는 것이 아니라고 적습니다 */
+    ok("바로 업체가 되는 것이 아니라고 적는다",
+       apTx.includes("배정 고르개"), apTx.slice(0, 500));
+    ok("등록 줄은 9번 칸이 만든다고 적는다",
+       apTx.includes("9번 칸"), apTx.slice(0, 500));
+    /* ⚠️ 펼치기 전에는 **담당자 번호가 화면에 없습니다** — 쉰 건의
+       번호를 한 화면에 깔지 않습니다 (담당자 칸과 같은 선) */
+    ok("⚠️ 펼치기 전에는 담당자 번호가 안 보인다",
+       !apTx.includes("010-7777-8888"), apTx.slice(0, 260));
+
+    await pg.locator("#rq .rq-s-ap button:has-text(\"열기\")").first().click();
+    await pg.waitForSelector("#rq .rq-s-ap .rq-bd", { timeout:5000 });
+    ok("한 번에 한 신청만 펼친다",
+       (await pg.locator("#rq .rq-s-ap .rq-bd").count()) === 1);
+    const bd = await pg.locator("#rq .rq-s-ap .rq-bd").textContent();
+    ok("접수번호가 보인다", bd.includes("SW-APPL-0001"), bd.slice(0, 300));
+    ok("담당자 · 사업자번호 · 하시는 일이 보인다",
+       bd.includes("김기사") && bd.includes("123-45-67890") &&
+       bd.includes("덕트 · 환기"), bd.slice(0, 400));
+    /* ⚠️ 전화 링크는 **숫자만** · 누름 44px 이상 */
+    const tel = pg.locator("#rq .rq-s-ap .rq-bd a.rq-tel").first();
+    ok("전화 링크가 숫자만 담는다",
+       (await tel.getAttribute("href")) === "tel:01077778888");
+    const tb = await tel.boundingBox();
+    ok("전화 링크가 44px 이상이다", tb && tb.height >= 44, tb && tb.height);
+    /* ⚠️ 지금 상태는 고르개에 안 냅니다 (같은 상태로 또 바꿀 일이 없습니다) */
+    ok("지금 상태는 고르개에 없다",
+       (await pg.locator("#rq-ap-to option").count()) === 4, /* 골라 주세요 + 셋 */
+       await pg.locator("#rq-ap-to").textContent());
+
+    /* ── 아무것도 안 고르고 누르면 보내지 않습니다 ───────────────── */
+    sent = null;
+    await pg.locator("#rq .rq-s-ap button:has-text(\"바꾸기\")").click();
+    await pg.waitForTimeout(220);
+    ok("상태를 안 고르면 보내지 않는다", sent === null, sent && sent.fn);
+
+    /* ── 진행 안 함은 사유를 받습니다 (§8) ─────────────────────── */
+    await pg.selectOption("#rq-ap-to", "drop");
+    await pg.waitForTimeout(160);
+    sent = null;
+    await pg.locator("#rq .rq-s-ap button:has-text(\"바꾸기\")").click();
+    await pg.waitForTimeout(220);
+    ok("진행 안 함은 사유 없이 보내지 않는다", sent === null, sent && sent.fn);
+
+    /* ── 등록 완료는 업체를 고르게 합니다 ──────────────────────── */
+    await pg.selectOption("#rq-ap-to", "done");
+    await pg.waitForTimeout(160);
+    ok("등록 완료를 고르면 업체 고르개가 생긴다",
+       (await pg.locator("#rq-ap-pv").count()) === 1);
+    sent = null;
+    await pg.locator("#rq .rq-s-ap button:has-text(\"바꾸기\")").click();
+    await pg.waitForTimeout(220);
+    ok("업체를 안 고르면 보내지 않는다", sent === null, sent && sent.fn);
+    await pg.selectOption("#rq-ap-pv", "pv-one");
+    await pg.waitForTimeout(160);
+    sent = null;
+    await pg.locator("#rq .rq-s-ap button:has-text(\"바꾸기\")").click();
+    await pg.waitForTimeout(260);
+    ok("등록 완료가 set_apply_state 로 간다",
+       sent && sent.fn === "set_apply_state", sent && sent.fn);
+    ok("어느 신청 · 어느 업체인지 같이 간다",
+       sent && sent.args && sent.args.p_apply === "ap-1" &&
+       sent.args.p_to === "done" && sent.args.p_provider === "pv-one",
+       sent && JSON.stringify(sent.args));
+
+    /* ── 통화함으로 바꾸면 **업체를 안 싣습니다** ──────────────────
+       ⚠️⚠️ 들고 있는 것을 통째로 보내면, 등록하다 마음을 바꿔 통화함으로
+       넘길 때 **엉뚱한 업체가 기록에 같이 남습니다** (배정에서 적어 둔
+       그 규칙 — 받지도 않은 동의가 보류 기록에 남던 자리). */
+    await pg.reload({ waitUntil:"networkidle" });
+    await pg.waitForSelector("#rq .rq-s-ap", { timeout:8000 });
+    await pg.locator("#rq .rq-s-ap button:has-text(\"열기\")").first().click();
+    await pg.waitForSelector("#rq .rq-s-ap .rq-bd", { timeout:5000 });
+    await pg.selectOption("#rq-ap-to", "done");
+    await pg.waitForTimeout(160);
+    await pg.selectOption("#rq-ap-pv", "pv-one");
+    await pg.selectOption("#rq-ap-to", "called");
+    await pg.waitForTimeout(160);
+    await pg.fill("#rq-ap-why", "통화함 · 다음 주에 다시");
+    sent = null;
+    await pg.locator("#rq .rq-s-ap button:has-text(\"바꾸기\")").click();
+    await pg.waitForTimeout(260);
+    ok("통화함으로 바꿀 때는 업체를 안 싣는다",
+       sent && sent.args && sent.args.p_provider === undefined,
+       sent && JSON.stringify(sent.args));
+    ok("적어 주신 사유가 같이 간다",
+       sent && sent.args && sent.args.p_why === "통화함 · 다음 주에 다시",
        sent && JSON.stringify(sent.args));
 
     ok("가로 스크롤 없음",

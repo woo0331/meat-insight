@@ -786,7 +786,14 @@ window.amSend = function(failId, body, again, done){
          없으면(저장 안 된 접수) · 버킷이 설정되기 전이면 **아예 안
          그려집니다** (js/photo.js 머리말). ⚠️ 연락처는 **보내신 몸통
          에서** 가져옵니다 — 폼은 바로 아래에서 비워집니다. */
-      if(no && box && typeof amPhotoAfter === "function")
+      /* ⚠️⚠️ **업체 입점(partner)에는 안 붙입니다.** 사진 자리를 주는
+         문은 `claim_photo_slot()` 이고 그것은 **신청(`request`)** 의
+         번호와 연락처만 봅니다 — 입점 신청은 다른 표(`provider_apply` ·
+         0016)라 **올릴 때마다 거절당합니다.** 2026-10-25 에 입점 신청도
+         접수번호를 받게 되면서 이 줄이 그대로 켜질 자리였습니다
+         (올리는 척하는 칸은 §30-7 이고 절대 규칙 5 입니다). */
+      if(no && box && (!body || body.kind !== "partner") &&
+         typeof amPhotoAfter === "function")
         amPhotoAfter(box, no, (body && body.tel) || "");
       toast(dup ? "이미 접수되었습니다" : "접수되었습니다");
       var f = box && box.closest("form"); if(f) f.reset();

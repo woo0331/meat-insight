@@ -155,7 +155,16 @@ try{
                      로그인한 손님 전부가 읽습니다. 아래 블록이 그것을
                      눌러 봅니다 (고객 토큰으로 0줄). */
                   "db/migrations/0013_provider_contact_settlement.sql",
-                  "db/migrations/0014_provider_self_notify.sql"];
+                  "db/migrations/0014_provider_self_notify.sql",
+                  /* 0015 — 유지 수수료 둘 + 확정 조건 하나 (2026-10-25 P1-6).
+                     ⚠️ 트랜잭션으로 안 감습니다 — alter type 으로 더한 값을
+                     같은 트랜잭션에서 쓰면 터집니다 (0006 과 같은 까닭). */
+                  "db/migrations/0015_retain_fee.sql",
+                  /* 0016 — 업체 입점 신청 표 + 상태 문 하나 (2026-10-25 P1-7).
+                     ⚠️⚠️ `provider` 에 바로 넣지 않는 까닭 — 신청은 아직
+                     업체가 아니고, 꽂으면 배정 고르개에 바로 떠서 아무
+                     합의도 없는 회사로 손님 연락처가 넘어갑니다 (제17조). */
+                  "db/migrations/0016_provider_apply.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ /* ⚠️⚠️ NOTICE 가 먼저 쏟아져서 앞 세 줄만 보면 **진짜
@@ -1110,6 +1119,26 @@ try{
        c.yes && psql("select active::text from fee_policy where id='" + FP + "'") === "false", c.why);
     const d = denied(as(ST) + "select set_fee_policy_active('" + FP + "', true)");
     ok("끄고 켜는 것도 관리자만", d.no && /관리자만/.test(d.why || ""), d.why);
+
+    /* ── 0015 유지 수수료 (2026-10-25 P1-6) ─────────────────────────
+       ⚠️⚠️ **enum 을 늘려 놓고 실제로 넣어 보지 않으면 모릅니다.**
+       이 저장소가 `gen_random_bytes()` 로 겪은 자리입니다 — SQL 만
+       읽어서는 멀쩡해 보이고 돌려 봐야 터집니다. */
+    const m = allowed(as(AD) +
+      `select save_fee_policy('pv-one','{"type":"mrr_rate","rate":10,"vat":"add","cycle":"monthly","confirmWhen":"kept"}'::jsonb, null, '유지분 10%')`);
+    ok("유지분 정책(mrr_rate · kept)이 실제로 들어간다",
+       m.yes && /^[0-9a-f-]{36}$/.test(m.out), m.why || m.out);
+    ok("유지분 정책의 확정 조건이 '유지 확인 후' 로 적힌다",
+       psql("select confirm_when::text from fee_policy where id='" + m.out + "'") === "kept",
+       psql("select confirm_when::text from fee_policy where id='" + m.out + "'"));
+    const rt = allowed(as(AD) +
+      `select save_fee_policy('pv-one','{"type":"retain","flat":30000,"vat":"add","cycle":"monthly","confirmWhen":"kept"}'::jsonb, null, '해지 방어 성과')`);
+    ok("유지 성과 정액(retain)이 실제로 들어간다",
+       rt.yes && /^[0-9a-f-]{36}$/.test(rt.out), rt.why || rt.out);
+    /* ⚠️ 0001 의 `fee_rate_range` 제약이 유지분에도 그대로 걸립니다 */
+    const over = denied(as(AD) +
+      `select save_fee_policy('pv-one','{"type":"mrr_rate","rate":200,"confirmWhen":"kept"}'::jsonb)`);
+    ok("유지분도 요율 100% 를 넘으면 막는다", over.no, over.why);
   }
 
   /* ══ 0008 — 견적 제출 · 수정 · 철회 + 고객의 선택 (§4 · §6) ════════
@@ -1992,6 +2021,132 @@ try{
        psql(as(A) + "select count(*) from settlement") === "0");
     ok("업체는 남의 정산을 못 본다 (pv-one 은 0건)",
        psql(as(PV) + "select count(*) from settlement where provider_id='pv-set'") === "0");
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     0016 업체 입점 신청 (2026-10-25 진단 P1-7)
+
+     ⚠️⚠️ **`provider` 에 바로 넣지 않는 까닭을 여기서 눌러 봅니다** —
+     신청은 아직 업체가 아니고, 꽂으면 배정 고르개에 바로 떠서 아무
+     합의도 없는 회사로 손님 성함 · 연락처가 넘어갑니다 (제17조 제2항).
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️ 0016 업체 입점 신청 (직원 · 관리자 밖으로 안 나갑니다)");
+  {
+    const as = u => "set role authenticated; select become('" + u + "'); ";
+    const A  = "11111111-1111-1111-1111-111111111111";
+    const PV = "33333333-3333-3333-3333-333333333333";   /* pv-one */
+    const ST = "44444444-4444-4444-4444-444444444444";
+    const AD = "55555555-5555-5555-5555-555555555555";
+    const AP = "bbbbbbbb-0016-0000-0000-000000000001";
+
+    /* 씨앗 — ⚠️ 접수(service key)가 넣는 자리입니다. 여기서는 상위
+       권한으로 바로 넣습니다. */
+    psql(`insert into provider_apply (id, no, company, brn, name, tel, email,
+            region, industry, services, note, agree_at) values
+          ('${AP}','SW-APPL-0001','가나덕트','123-45-67890','김기사',
+           '010-7777-8888','a@b.co','경기','음식점',
+           '{"덕트 · 환기","주방설비"}','주말도 됩니다', now())
+          on conflict (id) do nothing;`);
+
+    /* ⚠️⚠️ **이것이 RLS 에 고객 정책을 안 둔 까닭입니다** — 남의 입점
+       신청이 보이면 그 자체가 유출입니다 (상호 · 담당자 · 번호). */
+    ok("⚠️⚠️ 고객에게는 한 줄도 안 보인다",
+       psql(as(A) + "select count(*) from provider_apply") === "0");
+    ok("⚠️⚠️ 업체에게도 한 줄도 안 보인다",
+       psql(as(PV) + "select count(*) from provider_apply") === "0");
+    ok("직원은 본다 (전화하는 사람입니다)",
+       Number(psql(as(ST) + "select count(*) from provider_apply")) >= 1);
+    ok("관리자도 본다",
+       Number(psql(as(AD) + "select count(*) from provider_apply")) >= 1);
+
+    /* ⚠️⚠️ 표를 열면 기록 없이 지나가는 길이 하나 생깁니다 (§8) */
+    let r = denied(as(ST) + `insert into provider_apply
+            (no, company, name, tel, agree_at)
+            values ('SW-X','직접','ㄱ','010',now())`);
+    ok("표에 직접 쓰는 길이 없다 (문으로만)", r.no, r.why);
+    r = denied(as(ST) + `update provider_apply set state='done' where id='${AP}'`);
+    ok("표를 직접 고치는 길도 없다", r.no, r.why);
+
+    /* ── 문의 자물쇠 ───────────────────────────────────────────── */
+    r = denied(as(A) + `select set_apply_state('${AP}','called')`);
+    ok("고객은 입점 신청을 처리할 수 없다",
+       r.no && /직원 · 관리자만/.test(r.why || ""), r.why);
+    r = denied(as(ST) + `select set_apply_state(
+            'bbbbbbbb-0016-0000-0000-00000000ffff','called')`);
+    ok("없는 신청은 거절한다", r.no && /없는 입점 신청/.test(r.why || ""), r.why);
+
+    /* ⚠️⚠️ **형변환에 맡기면** `invalid input value for enum apply_state`
+       가 그대로 화면에 나갑니다 (0008 에서 겪은 자리). */
+    r = denied(as(ST) + `select set_apply_state('${AP}','zzz')`);
+    ok("모르는 상태는 사람 말로 거절한다",
+       r.no && /바꿀 상태를 골라 주세요/.test(r.why || "") &&
+       !/invalid input value/.test(r.why || ""), r.why);
+
+    /* ⚠️ 왜 안 하기로 했는지가 안 남으면 다음 사람이 또 전화합니다 (§8) */
+    r = denied(as(ST) + `select set_apply_state('${AP}','drop')`);
+    ok("진행 안 함은 사유를 받는다",
+       r.no && /까닭을 적어 주세요/.test(r.why || ""), r.why);
+
+    /* ⚠️⚠️ **등록 완료는 그 업체를 가리켜야 합니다** — 안 가리키면
+       "등록했다" 는 말만 남고 어느 업체인지가 사라집니다 (절대 규칙 5). */
+    r = denied(as(ST) + `select set_apply_state('${AP}','done')`);
+    ok("등록 완료는 업체를 받는다",
+       r.no && /등록한 업체를 골라 주세요/.test(r.why || ""), r.why);
+    r = denied(as(ST) + `select set_apply_state('${AP}','done','zz-none')`);
+    ok("없는 업체로는 등록 완료가 안 된다",
+       r.no && /없는 업체/.test(r.why || ""), r.why);
+
+    /* ── 실제로 바꿔 봅니다 ────────────────────────────────────── */
+    /* ⚠️⚠️ **갯수를 그냥 세지 않습니다** — 전을 재고 늘어난 값만 봅니다
+       (이 저장소가 감사 기록을 갯수로 세다 세 번 겪은 자리). */
+    const logWas = Number(psql(
+      "select count(*) from audit_log where obj='provider_apply'"));
+    psql(as(ST) + `select set_apply_state('${AP}','called',null,
+            '통화함 · 다음 주에 다시 연락')`);
+    ok("직원이 통화함으로 둔다",
+       psql(`select state from provider_apply where id='${AP}'`) === "called");
+    ok("적어 주신 사유가 줄에도 남는다",
+       /다음 주에 다시/.test(psql(`select memo from provider_apply where id='${AP}'`)));
+    /* ⚠️ **`::text` 로 캐스팅하지 마세요** — boolean 을 text 로 바꾸면
+       `true`/`false` 가 나오고, 칸을 그냥 내면 `t`/`f` 입니다. 처음에
+       `::text` 를 붙여 두고 `=== "t"` 로 견주어서 **멀쩡한 코드를
+       실패로** 잡았습니다 (틀린 것은 검사였습니다). */
+    ok("바꾼 사람 · 시각이 남는다",
+       psql(`select moved_by is not null and moved_at is not null
+              from provider_apply where id='${AP}'`) === "t");
+    ok("기록이 늘었다 (§8)",
+       Number(psql("select count(*) from audit_log where obj='provider_apply'"))
+         === logWas + 1, "전 " + logWas);
+
+    /* ⚠️⚠️ 감사 기록은 **못 지우는 것**이라, 거기 상호 · 성함 · 번호를
+       박으면 그 자체가 또 하나의 보관입니다 (제26조 ·
+       `save_provider_contact` 와 같은 규칙). */
+    ok("⚠️⚠️ 기록에 상호 · 성함 · 번호가 없다",
+       psql(`select count(*) from audit_log where obj='provider_apply'
+              and (coalesce(data::text,'') like '%가나덕트%'
+                or coalesce(data::text,'') like '%김기사%'
+                or coalesce(data::text,'') like '%010-7777%'
+                or coalesce(why,'')       like '%010-7777%')`) === "0");
+
+    psql(as(ST) + `select set_apply_state('${AP}','done','pv-one','계약했습니다')`);
+    ok("등록 완료로 두면 그 업체를 가리킨다",
+       psql(`select provider_id from provider_apply where id='${AP}'`) === "pv-one");
+
+    /* ⚠️ **끝으로 닫지 않았습니다** — "지금은 생각이 없다" 가 반 년 뒤에도
+       그런 것은 아닙니다 (보류에 end:true 를 안 붙인 그 자리). */
+    psql(as(ST) + `select set_apply_state('${AP}','drop',null,'연락이 끊겼습니다')`);
+    psql(as(ST) + `select set_apply_state('${AP}','called',null,'다시 통화됨')`);
+    ok("진행 안 함에서 다시 통화함으로 돌아올 수 있다",
+       psql(`select state from provider_apply where id='${AP}'`) === "called");
+
+    /* ⚠️ 로그인 안 한 쪽에는 아무 권한도 주지 않습니다 */
+    ok("anon 에게는 권한이 없다",
+       psql(`select count(*) from information_schema.role_table_grants
+              where table_name='provider_apply' and grantee='anon'`) === "0");
+    ok("authenticated 에게는 읽기만 준다",
+       psql(`select count(*) from information_schema.role_table_grants
+              where table_name='provider_apply' and grantee='authenticated'
+                and privilege_type <> 'SELECT'`) === "0");
   }
 
   console.log("\n── 0014 를 두 번 돌려도 안전한가");

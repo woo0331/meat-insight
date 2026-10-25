@@ -48,8 +48,27 @@ function amAuthToken(){
   if(!t) return "";
 
   if(t.at && Date.now() > t.at - 60000) return "";
-  return t.access_token;
+
+  var tk = String(t.access_token);
+  if(!/^[A-Za-z0-9._-]+$/.test(tk)) return "";
+  return tk;
 }
+
+window.amAuthUid = function(){
+  try{
+    var tk = amAuthToken();
+    if(!tk) return "";
+    var part = String(tk).split(".")[1];
+    if(!part) return "";
+
+    var b = part.replace(/-/g, "+").replace(/_/g, "/");
+    while(b.length % 4) b += "=";
+    var o = JSON.parse(decodeURIComponent(escape(atob(b))));
+    var id = o && o.sub ? String(o.sub) : "";
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      .test(id) ? id : "";
+  }catch(e){ return ""; }
+};
 
 window.amAuthHeaders = function(){
   var tk = amAuthToken();

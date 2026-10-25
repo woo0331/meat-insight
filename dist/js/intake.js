@@ -67,6 +67,17 @@ window.rqSend = function(ev){
   return false;
 };
 
+function rqAdminSql(){
+  var id = (typeof amAuthUid === "function") ? amAuthUid() : "";
+  return '<pre class="rq-sql">update account set role = \'admin\'\n'+
+      ' where id = \''+ (id ? esc(id) : '&lt;내 user id&gt;') +'\';</pre>'+
+    (id
+      ? '<p>지금 로그인한 계정(<b>'+esc(RQ.name || "")+'</b>)의 id 를 '+
+        '그대로 적었습니다 — <b>통째로 복사</b>해서 Supabase 의 '+
+        'SQL Editor 에 붙여 넣고 Run 하신 뒤 이 화면을 새로고침하세요.</p>'
+      : '<p>user id 는 Supabase → Authentication → Users 에서 보입니다.</p>');
+}
+
 function rqNoRole(){
   return '<div class="notice-bad">'+
       '<b>이 계정에는 접수를 볼 권한이 없습니다</b>'+
@@ -74,9 +85,7 @@ function rqNoRole(){
       '</b> 입니다. 가입하면 누구나 <b>고객</b>으로 시작하고, 직원 · 관리자는 '+
       '<b>SQL 로만</b> 올립니다 — 화면에 올리는 단추를 두면 누구나 관리자가 '+
       '됩니다. Supabase 의 SQL Editor 에서 한 줄입니다.</p>'+
-      '<pre class="rq-sql">update account set role = \'admin\'\n'+
-      ' where id = \'&lt;내 user id&gt;\';</pre>'+
-      '<p>user id 는 Supabase → Authentication → Users 에서 보입니다.</p>'+
+      rqAdminSql()+
     '</div>'+ rqOutRow();
 }
 

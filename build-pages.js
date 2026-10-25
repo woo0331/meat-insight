@@ -4124,6 +4124,7 @@ for(const hall of Object.keys(W.AM_PICK_GROUP || {})){
 }
 writeSvcList(W);
 writeMigList();
+writeApplySql();
 
 /* ⚠️⚠️ **서버가 "없는 서비스" 를 걸러낼 수 있게 목록을 내려놓습니다**
    (2026-10-17 창업 준비 §8 "잘못된 서비스 ID 차단").
@@ -4155,6 +4156,81 @@ writeMigList();
    빌드가 멈춥니다.
    ⚠️ `_down.sql` 은 되돌리기용이라 돌리는 목록이 아닙니다.
    ⚠️ 손으로 고치지 마세요 — 빌드가 돌 때마다 다시 씁니다. */
+/* ══════════════════════════════════════════════════════════════════
+   남은 마이그레이션을 **한 번에 붙여 넣는 파일**을 만듭니다
+   ══════════════════════════════════════════════════════════════════
+   사장님이 Supabase SQL 편집기에 파일을 **하나씩** 열어 붙여 넣으셔야
+   했습니다. 열두 번이면 한 번은 빠뜨리거나 차례가 뒤바뀌고, 그러면
+   견적 · 항목별 배정 · 회원 저장 · 사진 · 배정 가능 · 정산이 **에러도
+   없이 조용히** 안 됩니다.
+
+   ⚠️⚠️ **손으로 적은 사본이 아닙니다.** 빌드가 db/migrations 를 읽어
+   그대로 이어 붙입니다 — 두 곳에 같은 SQL 을 두면 어긋납니다
+   (이 저장소가 deal.js 와 deal_move 로 겪은 자리). 마이그레이션을
+   늘리시면 저절로 따라오고, 고친 것을 커밋 안 하면
+   tools/ship.js --ci 의 "빌드 결과가 커밋과 같은가" 가 잡습니다.
+
+   ⚠️⚠️ **통째로 트랜잭션으로 감싸지 마세요.** 파일마다 제 트랜잭션을
+   들고 있고, 0015 는 **일부러 안 감싸** 두었습니다 — alter type 으로
+   더한 enum 값은 같은 트랜잭션 안에서 못 씁니다 (0006 에서 겪은
+   자리). 그래서 **이어 붙이기만** 합니다.
+
+   ⚠️ APPLY_FROM 은 **사장님이 이미 돌려 두신 다음 번호**입니다
+   (2026-10-12 에 0007 까지 돌리셨습니다). 바꾸실 자리는 여기 한
+   곳이고, 파일 이름에 그 번호가 그대로 들어갑니다. */
+function writeApplySql(){
+  /* WARN 함수 안에 둡니다 — 위에서 var 로 두면 호출(4127줄)이 선언보다
+     앞서서 undefined 로 읽혔습니다 (함수 선언만 끌어올려집니다). */
+  const APPLY_FROM = 8;
+  const dir = path.join(ROOT, "db", "migrations");
+  const files = fs.readdirSync(dir)
+    .filter(f => /^[0-9]{4}_.+\.sql$/.test(f) && !/_down\.sql$/.test(f))
+    .filter(f => Number(f.slice(0, 4)) >= APPLY_FROM)
+    .sort();
+  if(!files.length)
+    throw new Error("db/migrations 에 " + APPLY_FROM + "번 이후 마이그레이션이 없습니다 — " +
+      "APPLY_FROM 을 고치셨나요? (build-pages.js)");
+
+  const four = n => String(n).padStart(4, "0");
+  const last = Number(files[files.length - 1].slice(0, 4));
+  const head =
+    "/* ==================================================================\n" +
+    "   " + four(APPLY_FROM) + " ~ " + four(last) + " 를 한 번에 —\n" +
+    "   Supabase SQL 편집기에 **이 파일을 통째로** 붙여 넣고 Run 하세요.\n" +
+    "   ==================================================================\n" +
+    "   WARN 빌드가 만드는 파일입니다 — 손으로 고치지 마세요.\n" +
+    "   db/migrations 의 " + files.length + "개를 번호 차례로 이어 붙인 것이고\n" +
+    "   한 글자도 바꾸지 않았습니다.\n" +
+    "\n" +
+    "   이미 " + four(APPLY_FROM - 1) + " 까지 돌려 두신 DB 에 쓰는 것입니다.\n" +
+    "   지금 몇 번째 판인지는 /admin 1번 칸이 말해 줍니다 (남은 파일\n" +
+    "   이름까지). 그보다 앞선 판이면 db/README.md 의 차례대로 먼저\n" +
+    "   올리세요 — 이 파일은 건너뛴 번호를 메워 주지 않습니다.\n" +
+    "\n" +
+    "   돌린 뒤에는 db/verify.sql 을 붙여 넣어 **열세 줄이 전부 OK** 인지\n" +
+    "   보세요. 중간에서 멈추면 그 파일 하나만 따로 돌리고 그 다음부터\n" +
+    "   이어 가시면 됩니다 — 번호를 다시 쓰지 않습니다.\n" +
+    "\n" +
+    "   WARN 통째로 begin/commit 으로 감싸지 마세요 — 파일마다 제\n" +
+    "   트랜잭션이 있고 0015 는 일부러 감싸지 않았습니다. */\n\n";
+
+  const body = files.map(function(f){
+    const sql = fs.readFileSync(path.join(dir, f), "utf8").replace(/\s+$/, "");
+    const bar = "/* ---------------------------- " + f +
+                " ---------------------------- */";
+    return bar + "\n" + sql + "\n";
+  }).join("\n");
+
+  const out = head + body;
+  const at  = path.join(ROOT, "db", "apply-from-" + four(APPLY_FROM) + ".sql");
+  const was = fs.existsSync(at) ? fs.readFileSync(at, "utf8") : "";
+  if(was !== out){
+    fs.writeFileSync(at, out);
+    console.log("   한 번에 붙여 넣을 SQL 을 다시 적었습니다 — db/apply-from-" +
+      four(APPLY_FROM) + ".sql (" + files.length + "개 · 판 " + last + ")");
+  }
+}
+
 function writeMigList(){
   const dir = path.join(ROOT, "db", "migrations");
   if(!fs.existsSync(dir)) throw new Error("db/migrations 가 없습니다");

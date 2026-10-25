@@ -94,8 +94,50 @@ function amAuthToken(){
   if(!t) return "";
   /* 60초 여유 — 딱 맞춰 두면 네트워크가 느릴 때 만료된 채로 나갑니다 */
   if(t.at && Date.now() > t.at - 60000) return "";
-  return t.access_token;
+  /* WARN 꼴이 아니면 **없는 것으로** 봅니다. 토큰은 JWT 라
+     `A-Za-z0-9._-` 뿐인데, 저장된 값이 망가져 한글 · 공백 같은 것이
+     섞이면 `Authorization` 머리를 만드는 자리에서 **fetch 가
+     던집니다** — HTTP 머리는 ASCII 만 담습니다. 그러면 `/my` 의
+     `.my-db` 와 `/admin` 의 `#rq` 가 **구간째 안 그려지고** 에러도
+     화면에 안 납니다 (실제로 눌러 보고 알았습니다 — `#rq` 가 통째로
+     빈 칸이었습니다). 없는 것으로 보면 로그인 칸이 다시 서서 손님이
+     빠져나올 수 있습니다.
+     ⚠️ `realm` 에 한글을 넣으면 응답이 터지는 것과 같은 자리입니다
+     (`middleware.js`). */
+  var tk = String(t.access_token);
+  if(!/^[A-Za-z0-9._-]+$/.test(tk)) return "";
+  return tk;
 }
+
+/* ── 내 계정 uuid (화면에 보여 주기만) ─────────────────────────────
+   ⚠️⚠️ **권한을 가르는 데 쓰지 마세요.** 누구인지와 무슨 역할인지는
+   언제나 **서버가 토큰을 Supabase 에 물어서** 알아냅니다
+   (`api/_auth.js` — 요청이 보낸 값을 안 믿습니다). 이 함수는 첫
+   관리자 SQL 한 줄에 **사장님 자신의 id** 를 그대로 적어 드리기
+   위한 것이고, 그러지 않으면 Supabase → Authentication → Users 에서
+   찾아 손으로 옮겨 적어야 합니다 (옮겨 적다 틀리면 그 SQL 은 아무
+   줄도 안 고치고 조용히 "0 rows" 입니다).
+
+   ⚠️ 새로 보이는 것이 없습니다 — 이 브라우저가 **이미 들고 있는 제
+   토큰** 안의 값이고, 남의 id 는 어디에도 없습니다.
+   ⚠️ 꼴이 uuid 가 아니면 **빈 문자열**을 돌려줍니다 — 화면은 그때
+   예전처럼 "<내 user id>" 를 적습니다 (틀린 값을 적어 드리는 것이
+   제일 나쁩니다). */
+window.amAuthUid = function(){
+  try{
+    var tk = amAuthToken();
+    if(!tk) return "";
+    var part = String(tk).split(".")[1];
+    if(!part) return "";
+    /* base64url → base64 (= 를 채워야 atob 가 받습니다) */
+    var b = part.replace(/-/g, "+").replace(/_/g, "/");
+    while(b.length % 4) b += "=";
+    var o = JSON.parse(decodeURIComponent(escape(atob(b))));
+    var id = o && o.sub ? String(o.sub) : "";
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      .test(id) ? id : "";
+  }catch(e){ return ""; }
+};
 
 /* 보낼 때 붙이는 머리 — 토큰이 없으면 **빈 객체**입니다.
    ⚠️ 빈 문자열로 `Authorization: Bearer ` 를 보내면 서버가 쓰레기를

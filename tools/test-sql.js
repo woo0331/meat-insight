@@ -2732,6 +2732,48 @@ try{
     psql("delete from provider where id='pv-c4'");
   }
 
+  console.log("\n── 한 번에 붙여 넣는 파일이 실제로 도는가 (db/apply-from-0008.sql)");
+  {
+    /* WARN 사장님은 Supabase SQL 편집기에 db/apply-from-0008.sql 을
+       **통째로** 붙여 넣습니다. 위의 마이그레이션 검사는 파일을
+       **하나씩** 돌리기 때문에, 이어 붙인 것이 한 세션에서 도는지는
+       아무도 안 보고 있었습니다 — 거기서 멈추면 사장님 DB 가 반만
+       올라가고 화면은 에러도 없이 조용히 안 됩니다.
+
+       WARN 0015 는 일부러 트랜잭션으로 안 감싸 둡니다 (alter type 으로
+       더한 enum 값은 같은 트랜잭션에서 못 씁니다 — 0006 에서 겪은
+       자리). 그래서 이어 붙인 뒤에도 그대로 도는지를 봐야 합니다. */
+    const AP = path.join(ROOT, "db/apply-from-0008.sql");
+    if(!fs.existsSync(AP)){
+      ok("db/apply-from-0008.sql 이 있다 (node build-pages.js 가 만듭니다)", false);
+    }else{
+      psql("create database swpaste", "postgres");
+      const upto7 = ["db/test/00_stub_auth.sql"].concat(
+        fs.readdirSync(path.join(ROOT, "db/migrations"))
+          .filter(f => /^[0-9]{4}_.+\.sql$/.test(f) && !/_down\.sql$/.test(f))
+          .filter(f => Number(f.slice(0, 4)) <= 7).sort()
+          .map(f => "db/migrations/" + f));
+      let why = "";
+      try{
+        for(const f of upto7) psqlFile(f, "swpaste");
+        psqlFile("db/apply-from-0008.sql", "swpaste");
+      }catch(err){
+        const t = String(err.stderr || err.stdout || err.message);
+        why = (t.split("\n").filter(l => /ERROR|FATAL/.test(l))[0] || t.split("\n")[0]);
+      }
+      ok("0007 까지 돌아간 DB 에 한 번에 부어도 통과한다", !why, why);
+      const top = psql("select coalesce(max(n),0) from schema_version", "swpaste");
+      ok("판 번호가 " + MIGS.length + "까지 올라간다", top === String(MIGS.length), top);
+      /* 돌린 뒤 사장님이 보는 것은 verify.sql 열세 줄입니다 */
+      let vout = "";
+      try{ vout = psqlFile("db/verify.sql", "swpaste"); }catch(err){ vout = String(err.stdout || ""); }
+      const vrows = vout.split("\n").filter(l => /✅|❌/.test(l));
+      ok("verify.sql 열세 줄이 전부 OK 로 나온다",
+         vrows.length === 13 && !vrows.some(l => l.includes("❌")),
+         vrows.filter(l => l.includes("❌")).join(" | ") || ("줄 " + vrows.length));
+    }
+  }
+
   console.log("\n── 되돌리기 파일이 실수로 안 돌아가는가");
   {
     const down = fs.readFileSync(path.join(ROOT, "db/migrations/0001_init_down.sql"), "utf8");

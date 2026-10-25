@@ -1642,6 +1642,87 @@ function ok(name, cond, extra) {
     ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
     await ctx.close();
   }
+  {
+    /* 첫 관리자 SQL 에 **내 uuid 가 그대로** 적히는가
+       WARN 전에는 `<내 user id>` 라고 자리만 비워 두어서, 사장님이
+       uuid 서른여섯 글자를 손으로 옮겨 적으셔야 했습니다 — 한 글자만
+       틀려도 그 SQL 은 아무 줄도 안 고치고 조용히 "0 rows" 이고,
+       화면은 여전히 "권한이 없습니다" 입니다.
+       WARN 권한을 가르는 값이 아닙니다 — 누구인지는 언제나 서버가
+       토큰을 물어서 알아냅니다 (api/_auth.js). 여기는 보여 주기만. */
+    const UID = "9f1c2b3a-44d5-4e6f-8a9b-0c1d2e3f4a5b";
+    const jwt = "x." + Buffer.from(JSON.stringify({ sub:UID }))
+      .toString("base64").replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"") + ".y";
+    const { pg, ctx, errs } = await fresh(1440, 1000);
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"customer",
+                             name:"갑", provider:null,
+                             conf:{ url:"https://p.supabase.co", anonKey:"A" } }) }));
+    await pg.route("**/api/me**", r => r.fulfill({ status:500, body:"no" }));
+    await pg.addInitScript(([tk]) => {
+      try{ localStorage.setItem("am.auth.v1", JSON.stringify({
+        access_token: tk, at: Date.now() + 3600000 })); }catch(e){}
+    }, [jwt]);
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(400);
+    const sql = await pg.locator("#rq .rq-sql").textContent();
+    ok("첫 관리자 SQL 에 내 uuid 가 그대로 적힌다", sql.includes(UID), sql);
+    ok("자리표시자가 남아 있지 않다", !sql.includes("내 user id"), sql);
+    ok("여전히 update 한 줄이다 (단추가 아니라)",
+       sql.includes("update account set role") && sql.includes("'admin'"), sql);
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+  {
+    /* 토큰이 쓰레기면 **예전처럼 자리만** 적습니다 — 틀린 uuid 를
+       적어 드리는 것이 제일 나쁩니다 (복사해 가서 0 rows). */
+    const { pg, ctx, errs } = await fresh(1440, 1000);
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"customer",
+                             name:"갑", provider:null,
+                             conf:{ url:"https://p.supabase.co", anonKey:"A" } }) }));
+    await pg.route("**/api/me**", r => r.fulfill({ status:500, body:"no" }));
+    await pg.addInitScript(() => {
+      try{ localStorage.setItem("am.auth.v1", JSON.stringify({
+        access_token: "abc.def.ghi", at: Date.now() + 3600000 })); }catch(e){}
+    });
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(400);
+    const sql = await pg.locator("#rq .rq-sql").textContent();
+    ok("토큰을 못 읽으면 자리만 적는다", sql.includes("내 user id"), sql);
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+  {
+    /* 저장된 토큰이 **망가져** 있어도 구간이 살아 있는가
+       WARN 한글 · 공백이 섞이면 Authorization 머리를 만드는 자리에서
+       fetch 가 던집니다 (HTTP 머리는 ASCII 만 담습니다) — 그러면 #rq 가
+       **통째로 빈 칸**이 되고 에러도 화면에 안 났습니다. 눌러 보고
+       알았고, amAuthToken() 이 꼴을 보고 없는 것으로 봅니다.
+       ⚠️ middleware.js 의 realm 에 한글을 넣으면 응답이 터지는 것과
+       같은 자리입니다. */
+    const { pg, ctx, errs } = await fresh(1440, 1000);
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"customer",
+                             name:"갑", provider:null,
+                             conf:{ url:"https://p.supabase.co", anonKey:"A" } }) }));
+    await pg.route("**/api/me**", r => r.fulfill({ status:500, body:"no" }));
+    await pg.addInitScript(() => {
+      try{ localStorage.setItem("am.auth.v1", JSON.stringify({
+        access_token: "쓰레기.쓰레기 토큰", at: Date.now() + 3600000 })); }catch(e){}
+    });
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(400);
+    const n = await pg.locator("#rq .rq-sql").count();
+    const txt = await pg.locator("#rq").textContent();
+    ok("망가진 토큰에도 구간이 빈 칸이 되지 않는다", n === 1 && txt.trim().length > 20,
+       "rq-sql " + n + " · 글 " + txt.trim().length);
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
 
   /* ════════════════════════════════════════════════════════════════
      2026-10-17 §6 · §7 — 신청 하나에 서비스 여러 개 · 항목별 배정

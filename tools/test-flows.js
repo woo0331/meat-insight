@@ -143,75 +143,11 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.bent-c.ent-transfer a[href="/transfer"]');
  say((await url())==="/transfer","양도양수 배너 → 전문관",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- /* ⚠️⚠️ **2026-10-26 §2 — 직접 찾기 여덟(.bdir-c)이 내려가고
-    04 추천 서비스(.brec-c)가 그 자리를 받습니다.** 함수는 안 지웠으니
-    되살리시면 여기에 .bdir-c 를 다시 넣으세요. */
- await click('.brec-c:nth-child(1) a.btn-o');
- say((await url()).startsWith("/providers/")||(await url()).startsWith("/c/"),
-     "추천 서비스 상세 보기 → 분야 화면",await url());
-
- /* ══ 2026-10-26 "전면 리뉴얼" §2-01 · §2-03 · §2-04 · §3-A · §3-B ══
-    ⚠️⚠️ **화면만 만들고 안 도는 것**을 막는 자리입니다 — 지시서가
-    §2-03 에 "단순히 화면만 만드는 것이 아니라 실제로 작동하도록
-    구현" 이라고 직접 적었습니다. */
-
- /* ① 히어로 통합검색이 **장식이 아닙니다** (§2-01) */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await pg.fill('#hs-q',"인테리어");
- await click('.bhero-sb');
- say((await url()).startsWith("/search?q="),"히어로 검색 → 통합검색",await url());
- /* 적은 말이 없으면 고른 업종 · 지역으로 업체찾기에 갑니다 */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await pg.selectOption('#hs-i',"cafe"); await pg.selectOption('#hs-r',"seoul");
- await click('.bhero-sb');
- say((await url()).startsWith("/providers?")&&(await url()).indexOf("i=cafe")>0
-     &&(await url()).indexOf("r=seoul")>0,
-     "히어로 검색 — 적은 말이 없으면 고른 조건으로",await url());
-
- /* ② 03 맞춤 찾기 — 고른 넷이 **주소에 실리고 04 가 바뀝니다** */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- const rec0=await pg.evaluate(()=>[].slice.call(
-   document.querySelectorAll(".brec-c > .brec-tx > b")).map(e=>e.textContent).join(","));
- await pg.selectOption('#fit-st',"closure");
- await pg.selectOption('#fit-i',"cafe");
- await pg.selectOption('#fit-r',"gyeonggi");
- await pg.selectOption('#fit-sz',"l");
- await click('.bfit-go');
- const u2=await url();
- say(u2.indexOf("st=closure")>0&&u2.indexOf("i=cafe")>0&&
-     u2.indexOf("r=gyeonggi")>0&&u2.indexOf("sz=l")>0,
-     "맞춤 찾기 넷이 주소에 실린다",u2);
- const rec1=await pg.evaluate(()=>[].slice.call(
-   document.querySelectorAll(".brec-c > .brec-tx > b")).map(e=>e.textContent).join(","));
- say(rec1&&rec1!==rec0,"고른 조건으로 04 추천이 실제로 바뀐다",rec1.slice(0,40));
-
- /* ③ 04 상담 신청이 **고른 조건을 그대로 들고 갑니다** (두 번 안 적게) */
- await click('.brec-c:nth-child(1) a.btn-ac');
- const u3=await url();
- say(u3.startsWith("/quote")&&u3.indexOf("i=cafe")>0&&u3.indexOf("r=gyeonggi")>0
-     &&u3.indexOf("py=")>0,"04 상담 신청이 업종 · 지역 · 평수를 들고 간다",u3);
- /* ⚠️ 받는 쪽이 **실제로 칸에 적는지**까지 봅니다 — 안 적으면 손님이
-    같은 것을 두 번 적고 거기서 닫습니다 */
- say((await pg.inputValue('#q-py'))==="30","신청 화면의 평수 칸에 그대로 적힌다",
-     await pg.inputValue('#q-py'));
-
- /* ④ 06 체크리스트 — 저장되고 세는 값이 따라옵니다 (§3-B) */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- const n0=await pg.textContent('#prep-n');
- await click('.prep-l > li:nth-child(1) .prep-k input');
- const n1=await pg.textContent('#prep-n');
- say(n0!==n1,"체크하면 세는 값이 따라온다",n0+" → "+n1);
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- say((await pg.textContent('#prep-n'))===n1,"다시 와도 체크가 남아 있다",
-     await pg.textContent('#prep-n'));
- /* ⚠️⚠️ **지우는 것은 한 번 물어봅니다** (되돌릴 수 없는 일이라
-    이 저장소의 규칙입니다). playwright 는 dialog 를 **기본으로
-    거절해서**, 받아 주지 않으면 "안 지워진다" 로 보입니다 —
-    코드가 아니라 **검사가 틀린** 자리입니다. */
- pg.once("dialog", d => d.accept());
- await click('.prep-go-r button');
- say((await pg.textContent('#prep-n'))===n0,"전체 해제가 실제로 지운다",
-     await pg.textContent('#prep-n'));
+ /* ⚠️⚠️ **2026-10-22 — 서비스 배너 둘이 메인에서 내려왔습니다**
+    (사장님 시안). 그 길은 ③ 직접 서비스 찾기 여덟이 그대로 받습니다 —
+    함수는 안 지웠으니 되살리시면 여기에 .bban-c 를 다시 넣으세요. */
+ await click('.bdir-c:nth-child(1)');
+ say((await url()).startsWith("/providers/"),"직접 찾기 → 분야 화면",await url());
  /* ⚠️⚠️ **2026-10-25 §1-01 — 히어로가 01 구간으로 돌아왔습니다.**
     첫 화면에서 바로 신청으로 가는 길이 다시 생겼습니다 — 그쪽을 먼저
     눌러 봅니다. ⚠️ 히어로를 다시 빼실 때는 여기도 같이 고치세요

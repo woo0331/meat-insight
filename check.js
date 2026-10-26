@@ -959,8 +959,7 @@ const AUDIT = `(() => {
   document.querySelectorAll("#view .ic-t, #view .stg-i, #view .ia-t," +
                             " #view .mhall-i, #view .mstp-i," +
                             " #view .bent-i, #view .bwhy-i, #view .bban-i," +
-                            " #view .bstep-i, #view .bcal-i," +
-                            " #view .brec-i, #view .bdir-i").forEach(e => {
+                            " #view .bstep-i, #view .bcal-i").forEach(e => {
     if(e.querySelector("svg")) return;
     const own = (e.parentElement || e);
     out.ico.push((own.textContent || "").trim().slice(0, 14) || "(이름 없음)");
@@ -2193,21 +2192,11 @@ const AUDIT = `(() => {
        ⚠️ 히어로 안에 검색창을 다시 넣지 마세요 (§3) — 같은 일을 하는
        입구가 한 화면에 둘이면 어느 쪽을 쓸지가 흐려집니다. */
     if(!vis(q) && !vis(ic)) return "메인 헤더에 검색이 없습니다 (§3)";
-    /* WARN **규칙이 세 번째로 뒤집혔습니다.** 2026-10-26 §2-01 이
-       히어로에 "업종 · 지역 · 필요한 서비스 검색" 을 직접 적었습니다.
-       그래서 메인에는 **둘**이고, 역할이 다릅니다 — 헤더는 167개
-       화면이 같이 쓰는 통합검색, 히어로는 **업종 · 지역까지** 받는
-       검색입니다 (2026-10-04 에 적어 둔 그 둘과 같은 꼴입니다).
-       ⚠️⚠️ 그래서 여기서 보는 것은 "하나뿐인가" 가 아니라
-       **히어로 검색이 장식이 아닌가**입니다 — 칸만 있고 아무 데도
-       안 보내면 §2-01 이 금지한 그 꼴입니다. */
-    const hf = document.querySelector("#view form.bhero-f");
-    if(hf){
-      if(!(hf.getAttribute("onsubmit") || "").trim())
-        return "히어로 검색이 아무 데도 안 보냅니다 (장식용 검색창)";
-      if(!hf.querySelector("button[type=submit]"))
-        return "히어로 검색에 보내는 단추가 없습니다";
-    }
+    /* ⚠️ 2026-10-17 §4 로 히어로가 메인에서 빠졌습니다. 검색으로 가는
+       길은 **헤더 하나**이고, 메인 본문에 또 만들면 같은 일을 하는
+       입구가 한 화면에 둘이 됩니다 (어느 쪽을 쓸지 흐려집니다). */
+    if(document.querySelector("#view input[type=search]"))
+      return "메인 본문에 검색창이 생겼습니다 (중복)";
     /* ⚠️ 패널 탭이 가리키던 다섯 곳이 길을 잃지 않았는지 — 메인이나
        푸터 어디에든 있어야 합니다 (지시서 §2-2 "기능 삭제 금지"). */
     const miss = ["/providers","/franchise","/stores","/support","/tools"]
@@ -2267,14 +2256,7 @@ const AUDIT = `(() => {
          · 폐업은 붉은 쪽이되 **주황이 아니라 버건디**(붉은빛이 파랑보다
            크고 초록이 제일 작은, 어두운 면)일 것
          · 세 카드의 **크기와 무게가 같을 것** (아래 짝 검사)
-       ⚠️ 이 셋은 **다크 위의 면**이라 밝기로 재지 않습니다.
-       ⚠️⚠️ **2026-10-26 — 재는 자리를 카드 면에서 번호 알약으로
-       옮겼습니다.** 시안(개선안)이 카드를 **밝은 크림 면 + 실사 사진**
-       으로 바꿔서 넷의 면이 전부 같은 크림입니다 — 구분 색은 번호
-       알약 · 아이콘 · 바로가기 알약이 그대로 들고 있고, 그중 **면으로
-       재기 좋은 것**이 번호 알약입니다. **규칙은 한 줄도 안 바꿨습니다**
-       (서로 다를 것 · 창업 브라운 · 운영 초록 · 폐업 버건디이되 주황이
-       아닐 것) — 재는 자리만 옮겼습니다. */
+       ⚠️ 이 셋은 **다크 위의 면**이라 밝기로 재지 않습니다. */
     const bg = function(q){
       const e = document.querySelector(q); if(!e) return null;
       const cs = getComputedStyle(e);
@@ -2287,9 +2269,9 @@ const AUDIT = `(() => {
       }
       return null;
     };
-    const st = bg(".ent-startup .bent-no");
-    const op = bg(".ent-operation .bent-no");
-    const cl = bg(".ent-closure .bent-no");
+    const st = bg(".bent-c.ent-startup > a");
+    const op = bg(".bent-c.ent-operation > a");
+    const cl = bg(".bent-c.ent-closure > a");
     if(!st || !op || !cl) return "진입 카드 셋의 색을 못 읽습니다";
     if(st.join() === op.join() || op.join() === cl.join() || st.join() === cl.join())
       return "진입 카드 셋의 색이 겹칩니다 (§2-1 — 색상 구분 유지)";
@@ -3727,17 +3709,11 @@ const AUDIT = `(() => {
     /* WARN 2026-10-25 §1 — .bhero-go 가 돌아오고 .bwhy-g · .bqc 가
        내려갔습니다 (중간 대형 견적 신청 섹션 금지). 되살리시면 그날
        여기에 다시 넣으세요. */
-    /* WARN 2026-10-26 §2 — 히어로에 **실제로 도는 검색**(.bhero-f)이
-       들어오고, 03 맞춤 찾기(.bfit-f) · 04 추천(.brec-g) · 06
-       체크리스트(.prep-l) 가 생겼습니다. .bdir-g · .bstep-g 는
-       함수를 안 지웠으니 되살리시면 여기에 다시 넣으세요. */
-    const need = [[".bhero-f",  "히어로 통합검색"],
-                  [".bhero-go", "히어로 신청 단추"],
+    const need = [[".bhero-go", "히어로 신청 단추"],
                   [".bent-g",   "네 가지 핵심 서비스 카드"],
-                  [".bfit-f",   "내 상황에 맞는 서비스 찾기"],
-                  [".brec-g",   "추천 서비스 카드"],
+                  [".bdir-g",   "직접 서비스 찾기 여덟"],
+                  [".bstep-g",  "이용 방법 5단계"],
                   [".bcal-g",   "계산도구 넷"],
-                  [".prep-l",   "업종별 준비 체크리스트"],
                   [".bgd-g",    "이용 가이드"],
                   [".bcta-go",  "하단 견적 신청"]];
     for(const q of need)
@@ -3797,14 +3773,11 @@ const AUDIT = `(() => {
     if(!secs.length) return "메인에 구간이 없습니다";
 
     /* ⚠️⚠️ **§3-2 가 이름까지 적은 셋**은 반드시 밝아야 합니다 */
-    /* WARN 2026-10-26 §2-01 — 히어로가 **사진 배경**이 되면서 짙어
-       졌습니다 (지시서가 "고품질 배경 이미지" 를 직접 적었습니다).
-       그래서 재는 자리를 03 맞춤 찾기 · 04 추천 · 05 계산도구로
-       옮겼습니다 — 셋 다 §1 이 "밝고 편안한" 으로 적은 자리입니다.
-       ⚠️ 옮긴 것이지 규칙이 풀린 것이 아닙니다 — 바로 아래 면적
-       검사가 "다크가 절반을 넘지 않는가" 를 그대로 봅니다. */
-    for(const q of [[".bfit","내 상황에 맞는 서비스 찾기"],
-                    [".brec","추천 서비스"], [".bcal","계산도구"]]){
+    /* WARN bwhy 가 2026-10-25 §1 로 내려가서 그 자리를 히어로가
+       받습니다 — §1-01 이 "BRIGHT PREMIUM 디자인 방향을 유지한다" 고
+       직접 적은 구간입니다. */
+    for(const q of [[".bhero","히어로"], [".bstep","이용 방법"],
+                    [".bcal","계산도구"]]){
       const e = document.querySelector(q[0]);
       if(!e) return q[1] + " 구간이 없습니다";
       const L = bgL(e);
@@ -3896,12 +3869,7 @@ const AUDIT = `(() => {
                   ".ia-t .ph", ".msvc-bg .ph", ".mbr-p .ph",
                   ".mk-k-ph .ph", ".mhall-bg .ph",
                   ".bent-ph .ph",
-                  ".bpass-ph .ph", ".bban-ph .ph",
-                  /* WARN 2026-10-26 §2 — 히어로 배경 사진과 추천 서비스
-                     카드 사진이 늘었습니다. **새 자리를 만들면 여기
-                     넣으세요** — 안 넣으면 object-fit 이 빠져도 조용히
-                     통과하고 사진이 늘어납니다. */
-                  ".bhero-bg .ph", ".brec-ph .ph"];
+                  ".bpass-ph .ph", ".bban-ph .ph"];
     const bad = [];
     for(const q of want){
       let ok = false;
@@ -4181,17 +4149,10 @@ const AUDIT = `(() => {
        ⚠️ 선택 까닭(.bwhy-i)과 배너(.bban-i)는 구간이 내려가서 뺐습니다 —
        되살리시면 그날 여기도 같이 넣으세요 (안 넣으면 그 구간의 빈
        아이콘을 아무도 안 봅니다). */
-    /* WARN 2026-10-26 §2 — 직접 찾기(.bdir-i) 와 이용 방법(.bstep-i)
-       구간이 내려가고 **추천 서비스의 아이콘 면**(.brec-i) 이
-       생겼습니다. 되살리시면 그날 여기도 같이 넣으세요.
-       ⚠️⚠️ .brec-i 는 **사진이 없는 카드에만** 그려집니다 — 그 분류에
-       사진이 다 들어오는 날 0개가 되는 것이 맞아서, 셋째 칸(opt)이
-       그때 건너뛰게 합니다. .bent-i · .bcal-i 는 늘 있어야 합니다. */
-    const groups = [[".bent-i", "진입 카드"], [".bcal-i", "계산도구"],
-                    [".brec-i", "추천 서비스 아이콘 면", true]];
+    const groups = [[".bent-i", "진입 카드"], [".bdir-i", "직접 찾기"],
+                    [".bcal-i", "계산도구"], [".bstep-i", "이용 방법"]];
     for(const g of groups){
       const L = [].slice.call(document.querySelectorAll("#view " + g[0]));
-      if(!L.length && g[2]) continue;
       if(!L.length) return g[1] + " 아이콘이 하나도 없습니다";
       const seen = [];
       for(const e of L){
@@ -4377,14 +4338,7 @@ const AUDIT = `(() => {
        금지해서, 그 카드가 들어 있던 구간을 안 부릅니다. 함수는
        지우지 않았으니 되살리실 수 있습니다 — 그날 bcal 다음에
        bwhy 를 다시 넣으세요. */
-    /* WARN 2026-10-26 "전면 리뉴얼" §2 — 여덟입니다 (헤더 · 푸터는
-       #view 밖). 03 내 상황에 맞는 서비스 찾기(bfit) · 04 추천
-       서비스(brec) · 06 업종별 준비 가이드(bigd) 가 들어오고,
-       직접 찾기(bdir) 와 이용 방법(bstep) 이 내려갔습니다.
-       ⚠️ 함수는 지우지 않았으니 되살리실 수 있습니다 — 그날 여기와
-       아래 need 목록, 그리고 build-pages.js 의 크롤러 본문을
-       **같이** 고치세요 (이 저장소가 열 번 겪은 자리입니다). */
-    const want = ["bhero","bent","bfit","brec","bcal","bigd","bgd","bcta"];
+    const want = ["bhero","bent","bdir","bcal","bstep","bgd","bcta"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
@@ -4395,8 +4349,7 @@ const AUDIT = `(() => {
       /* ⚠️ 앞 지시서의 이름들을 **빼지 않습니다** — 되살아나면
          "차례가 … 입니다" 로 이름을 내야 합니다 ("?3" 이 아니라). */
       for(const m of ["bent","bdir","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
-                      "bhero","bfit","brec","bigd",
-                      "mh","mbr","mhall","msvc","mexp","pkg","mind",
+                      "bhero","mh","mbr","mhall","msvc","mexp","pkg","mind",
                       "mti","mstp","mopsv","mjn","mlast"])
         if(e.classList.contains(m)) return m;
       const hd = (e.querySelector(".eyebrow") || {}).textContent || "";
@@ -5158,11 +5111,6 @@ const AUDIT = `(() => {
     const sel = ".cat,.ind,.pv,.fr,.fc,.mk,.help,.sp,.empty," +
                 ".bent-c > a,.bwhy-c,.bstep-c,.bban-c > a," +
                 ".bcal-c > a,.bgd-c > a,.bqc," +
-                /* WARN 2026-10-26 §2 — 추천 카드(.brec-c)와 맞춤 찾기
-                   판(.bfit-f) 이 생겼습니다. 새 카드를 만들면 여기
-                   넣으세요 — 빠뜨리면 구간 바탕과 같은 색이 되어도
-                   조용히 통과합니다. */
-                ".brec-c,.bfit-f,.prep," +
                 ".mhall-c,.mcal-g > li,.mstp-g > li," +
                 ".mti-c,.hsv-box,.mlast-h > li > a,.swt-c," +
                 ".ms-g a,.mv-g a,.mh-fc > li,.hb-g a,.hb-b";

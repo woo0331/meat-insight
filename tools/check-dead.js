@@ -78,7 +78,8 @@ const KNOWN = {
        + "통째로 삼켰습니다. 되살리기는 PageOperation() 한 줄입니다."
   },
   "js/pages/home.js": {
-    names: ["HomePass", "HomeBanners"],
+    names: ["HomePass", "HomeBanners", "HomeWhy",
+            "HomeFit", "HomeRec", "HomeIndGuide", "homeDirectChips"],
     why: "2026-10-20 시안 1 로 양도양수가 가로 배너에서 진입 카드 "
        + "넷째 장이 되면서 PageMain() 이 안 부릅니다. 재 보니 32줄 · "
        + "1.4KB 뿐이고, 그 배너가 들고 있던 길 일곱은 전부 카드 안의 "
@@ -93,7 +94,18 @@ const KNOWN = {
        + "svc-interior · svc-it 은 **파일이 있는데 지금 안 나옵니다** "
        + "(photos.js 의 where 에 적어 두었습니다). 되살리기는 "
        + "PageMain() 에 HomeBanners()+ 한 줄 · check.js 의 want 에 "
-       + "bban · build-pages.js 의 크롤러 본문 세 줄입니다."
+       + "bban · build-pages.js 의 크롤러 본문 세 줄입니다.\n"
+       + "⚠️⚠️ HomeWhy · HomeFit · HomeRec · HomeIndGuide · "
+       + "homeDirectChips — 2026-10-26 에 사장님이 메인을 전면 리뉴얼 "
+       + "직전 디자인(구간 일곱)으로 되돌리라고 하셔서 PageMain() 이 "
+       + "안 부릅니다. ⚠️ 지시서가 신규 기능을 임의로 지우지 말라고 "
+       + "적어서 함수 · CSS · 데이터를 한 줄도 안 지웠습니다 — "
+       + "맞춤 서비스 찾기(HomeFit) · 추천 서비스(HomeRec) · 업종별 "
+       + "체크리스트(HomeIndGuide)는 그 자리에 그대로 있고 메인에만 "
+       + "안 나옵니다. 되살리기는 PageMain() 의 return 한 줄 + "
+       + "check.js 의 want · need · build-pages.js 의 크롤러 본문 + "
+       + "css/pages.css 맨 뒤 블록 둘(전면 리뉴얼 · 찍어 보고 고친 것) "
+       + "입니다 — git show 2831322 로 꺼냅니다."
   },
   "js/pages/tools.js": {
     names: ["tlRel"],

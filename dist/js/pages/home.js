@@ -57,8 +57,8 @@ var MAIN_CALC = ["cost", "bep", "premium", "closecost"];
 
 function PageMain(){
 
-  return HomeHero()+ HomeEnter()+ HomeFit()+ HomeRec()+
-         HomeCalc()+ HomeIndGuide()+ HomeGuide()+ HomeCta();
+  return HomeHero()+ HomeEnter()+ HomeDirect()+
+         HomeCalc()+ HomeSteps()+ HomeGuide()+ HomeCta();
 }
 
 var HOME_ENTER = [
@@ -108,10 +108,9 @@ function HomeHero(){
   var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
   var with_ = (window.koWith ? koWith(nm, "이가") : nm + "가");
 
-  var ph = (typeof hasPhoto === "function" && hasPhoto("hero-start"))
-    ? '<span class="bhero-bg" aria-hidden="true">'+
-        photoBox("hero-start", "", true)+'</span>' : "";
-  return '<section class="bhero'+(ph ? " on-ph" : "")+'">'+ ph +
+  var ph = hasPhoto("hero-start")
+    ? '<span class="bhero-ph" aria-hidden="true">'+photoBox("hero-start", "", true)+'</span>' : "";
+  return '<section class="bhero">'+
     '<div class="w bhero-w">'+
       '<div class="bhero-in">'+
         '<p class="bhero-k">창업의 시작부터 폐업의 마무리까지</p>'+
@@ -119,26 +118,13 @@ function HomeHero(){
         '<h1>사장님의 모든 순간, '+esc(with_)+' 함께합니다.</h1>'+
         '<p class="bhero-s">창업 준비, 매장 운영, 매장 양도양수, 폐업 · 정리에 '+
           '필요한 모든 서비스를 한곳에서 찾고, 비교하고, 연결받으세요.</p>'+
-
-        '<form class="bhero-f" role="search" onsubmit="return homeHeroFind(event)">'+
-          '<label class="bhero-c"><span class="sr-only">업종</span>'+
-            (window.IndustrySelect ? IndustrySelect("hs-i", "", "", "업종 전체")
-              : '<select id="hs-i" class="sel"></select>')+'</label>'+
-          '<label class="bhero-c"><span class="sr-only">지역</span>'+
-            (window.RegionSelect ? RegionSelect("hs-r", "", "", "지역 전체")
-              : '<select id="hs-r" class="sel"></select>')+'</label>'+
-          '<label class="bhero-c bhero-q"><span class="sr-only">찾으시는 서비스</span>'+
-            '<input id="hs-q" type="search" placeholder="어떤 도움이 필요하신가요?"></label>'+
-          '<button class="btn btn-ac bhero-sb" type="submit">'+
-            icon("search",18)+'<span>검색하기</span></button>'+
-        '</form>'+
-
-        homeDirectChips()+
-        '<p class="bhero-go">'+
-          '<a class="btn btn-cr btn-lg" href="/quote" data-to="/quote">'+
-            '무료 상담 신청'+icon("arrow",18)+'</a>'+
-        '</p>'+
+        '<div class="bhero-go">'+
+          '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
+            '무료 견적 신청'+icon("arrow",18)+'</a>'+
+          '<a class="btn btn-o btn-lg" href="/providers">어떤 서비스가 있는지 보기</a>'+
+        '</div>'+
       '</div>'+
+      ph +
     '</div>'+
   '</section>';
 }
@@ -431,24 +417,19 @@ function homeReads(n){
 }
 
 function HomeGuide(){
-
-  var f = homeFit();
-  var L = (window.homeGuideFor ? homeGuideFor(f.hall, 3) : homeReads(3));
+  var L = homeReads(3);
   if(!L.length) return "";
   var all = (window.AM_CONTENTS || []).length;
   return '<section class="bgd"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">GUIDE</p>'+
-      '<h2>실제 사례 및 실용 정보</h2>'+
-
-      '<p>공개할 수 있는 거래 사례는 아직 없습니다. 대신 창업 · 운영 · '+
-        '양도양수 · 폐업에서 자주 막히는 자리를 정리했습니다 — 지금 '+
-        all+'편이고 근거를 댈 수 있는 것만 적습니다.</p>'+
+      '<h2>사장님께 필요한 이용 가이드</h2>'+
+      '<p>창업 · 운영 · 양도양수 · 폐업에서 자주 막히는 자리를 '+
+        '정리했습니다. 지금 '+all+'편이고 근거를 댈 수 있는 것만 적습니다.</p>'+
     '</div>'+
     '<ul class="bgd-g">'+L.map(function(c){
       var ct = (typeof amCat === "function") ? (amCat(c.cat) || {}) : {};
       var dt = (c.at && typeof amDate === "function") ? amDate(c.at) : "";
-
       return '<li class="bgd-c"><a href="/content/'+esc(c.slug)+'">'+
         (ct.name ? '<i class="bgd-k">'+esc(ct.name)+'</i>' : "")+
         '<b>'+esc(c.title)+'</b>'+
@@ -473,16 +454,9 @@ function HomeCta(){
       '연결해 드립니다. 신청은 무료이고 가입이 필요 없습니다.</p>'+
     '<div class="bcta-go">'+
       '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
-        '무료 상담 신청'+icon("arrow",18)+'</a>'+
+        '무료 견적 신청'+icon("arrow",18)+'</a>'+
       '<a class="btn btn-cr btn-lg" href="/faq">자주 묻는 질문</a>'+
     '</div>'+
-
-    '<ul class="bcta-tr">'+
-      '<li>'+icon("check",16)+'<span>신청과 상담은 무료입니다</span></li>'+
-      '<li>'+icon("check",16)+'<span>가입 없이 한 번만 적으시면 됩니다</span></li>'+
-      '<li>'+icon("check",16)+'<span>저희는 중개자이고 거래 당사자가 아닙니다</span></li>'+
-      '<li>'+icon("check",16)+'<span>업체에 연락처를 전달할 때 다시 동의를 받습니다</span></li>'+
-    '</ul>'+
   '</div></section>';
 }
 

@@ -534,24 +534,35 @@ function PageMain(){
      (`AM_STEPS` · `checkSteps()` 가 그 줄을 찾습니다)이 받습니다.
      ⚠️ 차례를 바꾸시려면 지시서를 먼저 고치고 `check.js` 의 `want` ·
      `build-pages.js` 의 크롤러 본문을 **같이** 고치세요. */
-  /* ⚠️⚠️ **2026-10-26 "메인페이지 전면 리뉴얼" §2 — 01~08 입니다.**
-       01 .bhero  히어로 (배경 사진 + 업종 · 지역 · 서비스 검색 + CTA)
-       02 .bent   4대 서비스 선택
-       03 .bfit   내 상황에 맞는 서비스 찾기 (신규)
-       04 .brec   추천 서비스 (신규 · 03 의 조건을 따릅니다)
-       05 .bcal   계산도구
-       06 .bigd   업종별 준비 가이드 + 개인별 체크리스트 (신규)
-       07 .bgd    실제 사례 및 실용 정보
-       08 .bcta   하단 상담 CTA
-     ⚠️⚠️ **"이용 방법"(`HomeSteps`)이 §2 의 01~08 에 없어 내려갔습니다.**
-     함수는 안 지웠습니다 — 되살리시려면 이 줄에 `HomeSteps()+` 입니다
-     (그날 `check.js` 의 `want` · `need` 와 크롤러 본문도 같이).
-     ⚠️ 그 구간 ③ 이 들고 있던 **제17조 재동의 고지**는 08 하단 CTA 가
-     받았습니다 — 법 고지가 메인에서 사라지지 않습니다.
-     ⚠️ `HomeDirect()` 도 안 부릅니다 — 그 여덟 칩이 **히어로 안**으로
-     올라갔고(`homeDirectChips()`), 범위 숫자 띠는 04 가 받습니다. */
-  return HomeHero()+ HomeEnter()+ HomeFit()+ HomeRec()+
-         HomeCalc()+ HomeIndGuide()+ HomeGuide()+ HomeCta();
+  /* ⚠️⚠️ **2026-10-26 — 전면 리뉴얼 직전 디자인으로 되돌렸습니다.**
+     사장님 지시 — "현재 메인페이지 디자인이 마음에 들지 않아 이번
+     전면 리뉴얼 직전 디자인으로 복원하고 싶다." 되돌린 자리는
+     **메인 화면뿐**입니다 (아래 "안 건드린 것" 을 보세요).
+
+       되돌린 것 ─ 이 return · HomeHero(사진을 배경에서 오른쪽 액자로)
+                   · HomeGuide 머리말 · HomeCta 단추 글
+                   · css/pages.css 맨 뒤 블록 둘
+                   · check.js 의 want/need · 크롤러 본문
+                   · tools/test-flows.js · prove-checks.js
+       안 건드린 것 ─ 서비스 화면 · 계산도구 · 신청 접수 · Supabase ·
+                   관리자 · DB · API · 주소 구조 (한 줄도)
+
+     ⚠️⚠️ **신규 기능을 한 줄도 안 지웠습니다** (지시서 6). 맞춤 서비스
+     찾기(`HomeFit`) · 추천 서비스(`HomeRec`) · 업종별 체크리스트
+     (`HomeIndGuide`)와 그 CSS · 데이터가 **그 자리에 그대로** 있고
+     메인에서만 안 나옵니다 — `tools/check-dead.js` 의 KNOWN 에
+     까닭과 되살리기를 적어 두었습니다.
+     ⚠️ 리뉴얼이 다른 화면에 더한 것은 **그대로 살아 있습니다** —
+     `/quote` 의 평수 미리 채우기(`py`)가 그것입니다 (`ui.js` ·
+     `quote.js`). `HomeFit` 이 안 나와서 지금은 아무도 그 값을
+     안 싣지만, 주소에 `?py=` 를 달면 그대로 동작합니다.
+
+     ⚠️⚠️ **리뉴얼로 되돌리시려면 다섯 자리입니다** (git show 2831322) —
+     ① 이 return ② `css/pages.css` 맨 뒤 블록 둘 ③ `check.js` 의
+     `want`·`need` ④ `build-pages.js` 의 크롤러 본문 ⑤ `test-flows.js`
+     · `prove-checks.js`. **하나만 고치면 빌드가 멈춥니다.** */
+  return HomeHero()+ HomeEnter()+ HomeDirect()+
+         HomeCalc()+ HomeSteps()+ HomeGuide()+ HomeCta();
 }
 
 
@@ -729,48 +740,29 @@ function HomeHero(){
   var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
   var with_ = (window.koWith ? koWith(nm, "이가") : nm + "가");
   /* ⚠️⚠️ **셋째 인자(eager)를 빼지 마세요.** 첫 화면의 제일 큰 그림이라
-     여기가 LCP 입니다 — 빼면 `loading="lazy"` 가 붙어 늦게 시작합니다.
-     ⚠️⚠️ **2026-10-26 §2-01 — 사진이 오른쪽 액자에서 "배경 이미지" 가
-     됐습니다.** 그래서 글이 사진 위에 앉고, 사진 위 글자는 **전수 점검이
-     못 잽니다** — 막(`.bhero-bg::after`)을 얼마나 짙게 줄지는 **픽셀로
-     재서** 정했습니다 (보고서 참조). 사진을 바꾸시면 다시 재세요. */
-  var ph = (typeof hasPhoto === "function" && hasPhoto("hero-start"))
-    ? '<span class="bhero-bg" aria-hidden="true">'+
-        photoBox("hero-start", "", true)+'</span>' : "";
-  return '<section class="bhero'+(ph ? " on-ph" : "")+'">'+ ph +
+     여기가 LCP 입니다 — 빼면 `loading="lazy"` 가 붙어 **늦게 시작**하고,
+     그만큼 첫 그림이 늦습니다 (§6 "모바일 초기 렌더링 속도").
+     ⚠️ 액자가 `aspect-ratio` 로 자리를 미리 잡고 있어 **레이아웃이
+     밀리지 않습니다** (§6 "레이아웃 이동 방지"). */
+  var ph = hasPhoto("hero-start")
+    ? '<span class="bhero-ph" aria-hidden="true">'+photoBox("hero-start", "", true)+'</span>' : "";
+  return '<section class="bhero">'+
     '<div class="w bhero-w">'+
       '<div class="bhero-in">'+
         '<p class="bhero-k">창업의 시작부터 폐업의 마무리까지</p>'+
         /* ⚠️⚠️ **여기를 br 로 쪼개지 마세요.** checkMainH2() 가 크롤러
            본문의 머리말을 **소스에서 글자로** 찾는데 중간에 태그가
-           끼면 못 찾아 빌드가 멈춥니다. */
+           끼면 못 찾아 빌드가 멈춥니다. 줄바꿈은 keep-all 이 합니다. */
         '<h1>사장님의 모든 순간, '+esc(with_)+' 함께합니다.</h1>'+
         '<p class="bhero-s">창업 준비, 매장 운영, 매장 양도양수, 폐업 · 정리에 '+
           '필요한 모든 서비스를 한곳에서 찾고, 비교하고, 연결받으세요.</p>'+
-        /* ⚠️⚠️ **장식용 검색창이 아닙니다** — 적으신 말이 있으면 통합검색,
-           없으면 고르신 업종 · 지역으로 업체 찾기로 보냅니다. 지역은
-           **받는 화면에만** 붙입니다 (안 받는 곳에 붙이면 조용히
-           버려지고 손님은 걸린 줄 압니다). */
-        '<form class="bhero-f" role="search" onsubmit="return homeHeroFind(event)">'+
-          '<label class="bhero-c"><span class="sr-only">업종</span>'+
-            (window.IndustrySelect ? IndustrySelect("hs-i", "", "", "업종 전체")
-              : '<select id="hs-i" class="sel"></select>')+'</label>'+
-          '<label class="bhero-c"><span class="sr-only">지역</span>'+
-            (window.RegionSelect ? RegionSelect("hs-r", "", "", "지역 전체")
-              : '<select id="hs-r" class="sel"></select>')+'</label>'+
-          '<label class="bhero-c bhero-q"><span class="sr-only">찾으시는 서비스</span>'+
-            '<input id="hs-q" type="search" placeholder="어떤 도움이 필요하신가요?"></label>'+
-          '<button class="btn btn-ac bhero-sb" type="submit">'+
-            icon("search",18)+'<span>검색하기</span></button>'+
-        '</form>'+
-        /* 바로가기 칩 — ⚠️ 분류 이름 · 아이콘 · 주소가 전부
-           `catalog.js` 것입니다 (손으로 적지 마세요). */
-        homeDirectChips()+
-        '<p class="bhero-go">'+
-          '<a class="btn btn-cr btn-lg" href="/quote" data-to="/quote">'+
-            '무료 상담 신청'+icon("arrow",18)+'</a>'+
-        '</p>'+
+        '<div class="bhero-go">'+
+          '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
+            '무료 견적 신청'+icon("arrow",18)+'</a>'+
+          '<a class="btn btn-o btn-lg" href="/providers">어떤 서비스가 있는지 보기</a>'+
+        '</div>'+
       '</div>'+
+      ph +
     '</div>'+
   '</section>';
 }
@@ -1197,36 +1189,19 @@ function homeReads(n){
    아무 사진이나 깔면 업종이 드러나 다른 업종 사장님께 "여긴 내
    자리가 아니네" 가 됩니다. 빈 액자도 깔지 않습니다. */
 function HomeGuide(){
-  /* ⚠️⚠️ **고르신 사업 단계(`?st=`)를 따릅니다** — 바로 위 06 의 탭과
-     **같은 값**입니다. 여기에 탭을 또 두면 한 화면에 같은 선택 영역이
-     둘이 됩니다 (이 저장소가 "같은 것을 두 번 묻는다" 로 겪은 자리). */
-  var f = homeFit();
-  var L = (window.homeGuideFor ? homeGuideFor(f.hall, 3) : homeReads(3));
+  var L = homeReads(3);
   if(!L.length) return "";
   var all = (window.AM_CONTENTS || []).length;
   return '<section class="bgd"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">GUIDE</p>'+
-      '<h2>실제 사례 및 실용 정보</h2>'+
-      /* ⚠️⚠️ **검증된 사례가 0건입니다** (§2-07). "사례" 딱지를 달아
-         두고 가이드를 넣으면 그게 허위입니다 — 지시서가 직접 "사례가
-         없다면 사례 영역 대신 실용 정보와 가이드를 노출" 이라고
-         적었으니 그대로 합니다. 사례가 쌓이면 여기에 같이 냅니다. */
-      '<p>공개할 수 있는 거래 사례는 아직 없습니다. 대신 창업 · 운영 · '+
-        '양도양수 · 폐업에서 자주 막히는 자리를 정리했습니다 — 지금 '+
-        all+'편이고 근거를 댈 수 있는 것만 적습니다.</p>'+
+      '<h2>사장님께 필요한 이용 가이드</h2>'+
+      '<p>창업 · 운영 · 양도양수 · 폐업에서 자주 막히는 자리를 '+
+        '정리했습니다. 지금 '+all+'편이고 근거를 댈 수 있는 것만 적습니다.</p>'+
     '</div>'+
     '<ul class="bgd-g">'+L.map(function(c){
       var ct = (typeof amCat === "function") ? (amCat(c.cat) || {}) : {};
       var dt = (c.at && typeof amDate === "function") ? amDate(c.at) : "";
-      /* ⚠️⚠️ **썸네일을 안 깝니다.** 시안은 실사 썸네일인데 쓸 수 있는
-         사진이 없습니다 — 받아 오는 것은 이미지 지시서 §4 가
-         금지하고(권한이 확인된 것만), 아무 사진이나 깔면 업종이 드러나
-         다른 업종 사장님께 "여긴 내 자리가 아니네" 가 됩니다.
-         ⚠️ 분류 아이콘을 대신 깔아 봤다가 **걷어냈습니다** — 셋 중
-         둘이 같은 분류라 같은 그림이 나란히 섰고 그게 곧 "준비 중"
-         으로 읽혔습니다 (절대 규칙 2 · 찍어 보고 알았습니다).
-         분류는 바로 아래 딱지(.bgd-k)가 말합니다. */
       return '<li class="bgd-c"><a href="/content/'+esc(c.slug)+'">'+
         (ct.name ? '<i class="bgd-k">'+esc(ct.name)+'</i>' : "")+
         '<b>'+esc(c.title)+'</b>'+
@@ -1258,22 +1233,9 @@ function HomeCta(){
       '연결해 드립니다. 신청은 무료이고 가입이 필요 없습니다.</p>'+
     '<div class="bcta-go">'+
       '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
-        '무료 상담 신청'+icon("arrow",18)+'</a>'+
+        '무료 견적 신청'+icon("arrow",18)+'</a>'+
       '<a class="btn btn-cr btn-lg" href="/faq">자주 묻는 질문</a>'+
     '</div>'+
-    /* ⚠️⚠️ **네 줄 다 지금 사실입니다** (§2-08 "실제 운영 정책에 맞게").
-       신청이 무료인 것 · 가입이 없는 것 · 중개자라는 것(약관 제5조 ·
-       전자상거래법 제20조 제1항) · **업체에 연락처를 넘길 때 다시
-       동의를 받는 것**(개인정보보호법 제17조 제2항)입니다.
-       ⚠️⚠️ **마지막 줄을 지우지 마세요.** 2026-10-26 리뉴얼로 "이용
-       방법" 구간이 내려가면서 그 ③ 이 들고 있던 제17조 고지가 메인에서
-       사라질 뻔했습니다 — 그 자리를 여기가 받습니다. */
-    '<ul class="bcta-tr">'+
-      '<li>'+icon("check",16)+'<span>신청과 상담은 무료입니다</span></li>'+
-      '<li>'+icon("check",16)+'<span>가입 없이 한 번만 적으시면 됩니다</span></li>'+
-      '<li>'+icon("check",16)+'<span>저희는 중개자이고 거래 당사자가 아닙니다</span></li>'+
-      '<li>'+icon("check",16)+'<span>업체에 연락처를 전달할 때 다시 동의를 받습니다</span></li>'+
-    '</ul>'+
   '</div></section>';
 }
 

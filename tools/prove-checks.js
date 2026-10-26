@@ -561,11 +561,16 @@ const CASES = [
   /* ⚠️ 검사가 보는 자리가 전문관 카드(.mhall-c.hall-close)의 **바탕**
      으로 옮겨갔습니다 — 글자색을 칠하면 아무 일도 안 납니다. */
   /* ⚠️ 2026-10-16 §2-1 — 셋이 **서로 달라야** 합니다. 폐업 카드를
-     창업과 같은 색으로 칠해 "색이 겹칩니다" 를 만듭니다. */
+     창업과 같은 색으로 칠해 "색이 겹칩니다" 를 만듭니다.
+     ⚠️⚠️ 2026-10-26 — 집는 자리가 **번호 알약**입니다. 브라운 통일로
+     카드 면이 넷 다 같은 크림이 되어 검사도 거기를 재는데, 카드 면을
+     칠하면 **아무 일도 안 납니다** ("전 true → 후 true") — 되돌리기가
+     틀린 자리이고 이 저장소에서 열두 번 겪었습니다. 메인을 전면 리뉴얼
+     직전으로 되돌릴 때 이 줄까지 같이 되돌렸다가 실제로 걸렸습니다. */
   ["전문관 셋이 저마다의 색으로 갈린다",
    `const st = getComputedStyle(
-      document.querySelector(".bent-c.ent-startup > a")).backgroundColor;
-    document.querySelector(".bent-c.ent-closure > a").style.background = st;`],
+      document.querySelector(".ent-startup .bent-no")).backgroundColor;
+    document.querySelector(".ent-closure .bent-no").style.background = st;`],
   /* ⚠️ 2026-10-11 간소화 §2 — 연결 구간이 메인에서 내려와 되돌릴
      요소가 없습니다. **없는 요소를 집으면 되돌리기가 터지고**, 그러면
      "검사가 안 잡는다" 로 보입니다 (이 저장소에서 아홉 번 겪은 자리).

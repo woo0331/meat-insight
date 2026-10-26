@@ -252,6 +252,37 @@ window.amDropEmpty = function(o){
   return out;
 };
 
+/* 멱등 열쇠 — **적는 폼 하나에 하나**입니다 (2026-10-25 §3)
+   ══════════════════════════════════════════════════════════════════
+   끊긴 요청을 다시 누르셨는지, 폼을 새로 시작하셨는지를 서버가 이것으로
+   가립니다. 열쇠가 **아예 없으면** `api/_intake.js` 가 둘을 구분할 길이
+   없어서, 같은 번호 · 같은 서비스가 10분 안에 또 오면 그대로 막습니다.
+
+   ⚠️⚠️ **폼마다 다른 `ns` 를 주세요.** 하나로 쓰면 `/quote` 에서 한 번
+   보내고 `/sell` 로 가신 분이 **같은 열쇠**를 들고 가서, 서버가 "같은
+   신청서를 다시 보냈다" 로 보고 **먼저 받은 접수번호를 돌려주고
+   끝냅니다** — 매물이 접수되지 않는데 화면은 성공으로 보입니다.
+
+   ⚠️ **보낸 뒤에만 비웁니다** (`amIdemClear(ns)`). 실패했을 때 비우면
+   다시 누르신 것이 **새 신청**이 되어 두 건이 됩니다.
+
+   ⚠️ `crypto` 가 없는 아주 오래된 브라우저에서는 시각과 난수로 만듭니다 —
+   예측될 수 있지만 이 값은 **비밀이 아니고** 같은 신청서인지만 가립니다. */
+var AM_IDEM = {};
+window.amIdem = function(ns){
+  ns = ns || "q";
+  if(AM_IDEM[ns]) return AM_IDEM[ns];
+  var a;
+  if(window.crypto && crypto.getRandomValues){
+    a = new Uint8Array(16); crypto.getRandomValues(a);
+    AM_IDEM[ns] = [].map.call(a, function(b){ return (b+256).toString(16).slice(1); }).join("");
+  }else{
+    AM_IDEM[ns] = String(Date.now()) + "-" + String(Math.random()).slice(2);
+  }
+  return AM_IDEM[ns];
+};
+window.amIdemClear = function(ns){ delete AM_IDEM[ns || "q"]; };
+
 /* ══════════════════════════════════════════════════════════════════
    컬러 아이콘 한 벌 — `iconArt()` (2026-10-09 지시서 §3)
    ══════════════════════════════════════════════════════════════════

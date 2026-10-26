@@ -510,20 +510,9 @@ window.quoteSend = function(ev){
   return amSend("q-fail", body, "quoteSend", quoteAfterSend);
 };
 
-var QIDEM = "";
-function quoteIdem(){
-  if(QIDEM) return QIDEM;
-  var a;
-  if(window.crypto && crypto.getRandomValues){
-    a = new Uint8Array(16); crypto.getRandomValues(a);
-    QIDEM = [].map.call(a, function(b){ return (b+256).toString(16).slice(1); }).join("");
-  }else{
-    QIDEM = String(Date.now()) + "-" + String(Math.random()).slice(2);
-  }
-  return QIDEM;
-}
+function quoteIdem(){ return amIdem("quote"); }
 
-window.quoteIdemClear = function(){ QIDEM = ""; };
+window.quoteIdemClear = function(){ amIdemClear("quote"); };
 
 window.quoteAfterSend = function(){
   quoteIdemClear();

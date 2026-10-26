@@ -683,8 +683,27 @@ window.sellSend = function(ev){
      깨지는 꼴이었습니다 (권리금 "무권리" 에서 겪은 자리). */
   detail = amDropEmpty(detail);
 
+  /* ⚠️⚠️ **`cat` 과 `idem` 을 같이 보냅니다** (2026-10-26 · 보고서 §2-A).
+     전에는 둘 다 안 보내서 **중복 방지가 한 번도 안 걸렸습니다** —
+     `api/_intake.js` 의 `intakeDup()` 은
+     `sameWhat = (offerId 둘 다 있으면) : (cat 둘 다 있으면) : false`
+     라, 둘 다 비면 10분 창 검사에 **한 줄도 안 걸립니다.** 그러면
+     신호가 약해 20초에 끊긴 것처럼 보여 다시 누르신 사장님의 매물이
+     **두 건** 접수되고 직원이 두 번 전화합니다.
+     ⚠️ `cat` 은 `catalog.js` 의 **진짜 분류 key** 입니다 (`kind:"listing"`) —
+     매장은 `transfer`(매장 양도) · 시설 장비는 `asset`(시설 · 집기 처분).
+     두 탭이 **다른 key** 라야 매장을 내놓고 이어서 장비를 내놓는 것이
+     중복으로 안 걸립니다 (다른 상품이면 중복이 아닙니다).
+     ⚠️⚠️ `idem` 의 `ns` 가 `/quote` 와 **달라야** 합니다 — 같으면 견적을
+     보낸 뒤 매물을 내놓으러 오신 분이 같은 열쇠를 들고 가서, 서버가
+     먼저 받은 접수번호를 돌려주고 끝냅니다.
+     ⚠️ `detail` 칸 수는 그대로입니다 (매장 13 · 시설 10 · 상한 스물) —
+     `cat` 과 `idem` 은 **맨 위 칸**이고 `detail` 안이 아닙니다. */
+  var ns = isStore ? "sell-store" : "sell-asset";
   return amSend("sl-fail", {
     kind: "quote",
+    cat:  isStore ? "transfer" : "asset",
+    idem: amIdem(ns),
     name:  v("sl-name"),
     tel:   v("sl-tel"),
     region: reg ? amRegionName(reg) : "",
@@ -693,5 +712,10 @@ window.sellSend = function(ev){
     budget: "",
     detail: detail,
     agree: true
-  }, "sellSend");
+  }, "sellSend", function(){
+    /* ⚠️⚠️ **성공한 뒤에만** 비웁니다. 실패했을 때 비우면 다시
+       누르신 것이 **새 신청**이 되어 두 건이 됩니다 (적으신 것은
+       `amSend()` 가 그대로 남겨 둡니다). */
+    amIdemClear(ns);
+  });
 };

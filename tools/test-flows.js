@@ -954,6 +954,53 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  say(pk2 && pk2.n === "2" && /sv=/.test(pk2.go||""),
      "메인 — 고른 것을 그 자리에서 내고 신청까지 들고 간다", JSON.stringify(pk2));
 
+ /* ══ 【13】 2026-10-26 — `/sell` 이 중복 방지를 들고 가는가 ══
+    ⚠️⚠️ **보고서 §2-A 가 찾은 자리입니다.** `/sell` 두 탭이 `idem` 도
+    `cat` 도 안 보내서 `intakeDup()` 의 `sameWhat` 이 늘 `false` 였고,
+    10분 창 검사에 **한 줄도 안 걸렸습니다** — 끊긴 요청을 다시 누르면
+    매물이 두 건 접수되고 직원이 두 번 전화합니다.
+    ⚠️ `tools/test-api.js` 는 **서버 쪽 계약**을 보고, 화면이 그 칸을
+    보내는가는 아무도 안 보고 있었습니다. 여기가 그 자리입니다.
+    ⚠️ 실제로 보내지 않습니다 — `amSend` 를 바꿔 끼워 **보낼 몸통**만
+    잽니다 (위 【7】 과 같은 방식). */
+ console.log("\n【13】 /sell 중복 방지");
+ async function sellBody(u){
+   await pg.goto(B+u,{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
+   return pg.evaluate(()=>{
+     const f=document.getElementById("sl-f"); if(!f) return null;
+     f.querySelectorAll("input,textarea").forEach(function(i){
+       if(i.type==="checkbox"||i.type==="radio") return;
+       i.value = i.type==="number" ? "20" : "테스트";
+       if(/tel/.test(i.type+i.id)) i.value="010-1234-5678"; });
+     f.querySelectorAll("select").forEach(function(x){
+       if(x.options.length>1) x.selectedIndex=1; });
+     const ag=document.getElementById("sl-ag"); if(ag) ag.checked=true;
+     let got=null; const real=window.amSend;
+     window.amSend=function(id,b){ got=b; return false; };
+     window.sellSend(new Event("submit"));
+     window.amSend=real; return got;
+   });
+ }
+ const bS = await sellBody("/sell");
+ const bA = await sellBody("/sell?t=asset");
+ say(!!bS && !!bS.idem && String(bS.idem).length>=16,
+     "매물 내놓기가 멱등 열쇠를 들고 간다", bS && String(bS.idem).slice(0,10));
+ say(!!bS && bS.cat==="transfer", "매장은 cat=transfer", bS && bS.cat);
+ say(!!bA && bA.cat==="asset",    "시설 · 장비는 cat=asset",  bA && bA.cat);
+ /* ⚠️⚠️ **두 탭이 다른 열쇠**라야 합니다 — 같으면 매장을 내놓고 이어서
+    장비를 내놓는 것이 "같은 신청서를 다시 보낸 것" 이 되어, 서버가 먼저
+    받은 접수번호를 돌려주고 **둘째 매물이 접수되지 않습니다.** */
+ say(!!bS && !!bA && bS.idem!==bA.idem, "두 탭의 열쇠가 다르다");
+ /* ⚠️⚠️ `/quote` 와도 섞이면 안 됩니다 (같은 사고의 더 흔한 길) */
+ const bQ = await pg.evaluate(()=>(typeof amIdem==="function") ? amIdem("quote") : null);
+ say(!!bQ && bQ!==bS.idem && bQ!==bA.idem, "/quote 의 열쇠와도 섞이지 않는다");
+ /* ⚠️ `detail` 은 스물까지입니다 (`api/quote.js`) — `cat` · `idem` 은
+    맨 위 칸이라 칸 수가 안 늘어나는 것을 여기서 셉니다. */
+ say(!!bS && Object.keys(bS.detail||{}).length<=20 &&
+     !!bA && Object.keys(bA.detail||{}).length<=20,
+     "detail 이 스물을 안 넘는다",
+     bS && (Object.keys(bS.detail||{}).length+" · "+Object.keys(bA.detail||{}).length));
+
  console.log("\n【5】 콘솔 오류");
  say(errs.length===0,"JS 에러 없음",errs.join(" / "));
  console.log(bad?("\n❌ "+bad+"건 실패"):"\n✅ 흐름 전부 통과");

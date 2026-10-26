@@ -166,6 +166,21 @@ window.amDropEmpty = function(o){
   return out;
 };
 
+var AM_IDEM = {};
+window.amIdem = function(ns){
+  ns = ns || "q";
+  if(AM_IDEM[ns]) return AM_IDEM[ns];
+  var a;
+  if(window.crypto && crypto.getRandomValues){
+    a = new Uint8Array(16); crypto.getRandomValues(a);
+    AM_IDEM[ns] = [].map.call(a, function(b){ return (b+256).toString(16).slice(1); }).join("");
+  }else{
+    AM_IDEM[ns] = String(Date.now()) + "-" + String(Math.random()).slice(2);
+  }
+  return AM_IDEM[ns];
+};
+window.amIdemClear = function(ns){ delete AM_IDEM[ns || "q"]; };
+
 var IA = {
 
   bulb: '<path class="a2" d="M24 5c8.3 0 15 6.6 15 14.7 0 5.3-2.8 9.4-5.6 12.3-1.4 1.5-2.4 3-2.4 4.6V38H17v-1.4c0-1.6-1-3.1-2.4-4.6C11.8 29.1 9 25 9 19.7 9 11.6 15.7 5 24 5z"/>'+

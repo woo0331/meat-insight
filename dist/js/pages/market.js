@@ -558,8 +558,11 @@ window.sellSend = function(ev){
 
   detail = amDropEmpty(detail);
 
+  var ns = isStore ? "sell-store" : "sell-asset";
   return amSend("sl-fail", {
     kind: "quote",
+    cat:  isStore ? "transfer" : "asset",
+    idem: amIdem(ns),
     name:  v("sl-name"),
     tel:   v("sl-tel"),
     region: reg ? amRegionName(reg) : "",
@@ -568,5 +571,8 @@ window.sellSend = function(ev){
     budget: "",
     detail: detail,
     agree: true
-  }, "sellSend");
+  }, "sellSend", function(){
+
+    amIdemClear(ns);
+  });
 };

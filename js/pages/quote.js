@@ -722,23 +722,18 @@ window.quoteSend = function(ev){
   return amSend("q-fail", body, "quoteSend", quoteAfterSend);
 };
 
-/* 멱등 열쇠 — ⚠️ `crypto` 가 없는 아주 오래된 브라우저에서는 시각과
-   `Math.random()` 을 섞습니다. 그때는 멱등이 약해질 뿐 접수는
-   그대로 됩니다 (막는 것보다 받는 쪽이 낫습니다). */
-var QIDEM = "";
-function quoteIdem(){
-  if(QIDEM) return QIDEM;
-  var a;
-  if(window.crypto && crypto.getRandomValues){
-    a = new Uint8Array(16); crypto.getRandomValues(a);
-    QIDEM = [].map.call(a, function(b){ return (b+256).toString(16).slice(1); }).join("");
-  }else{
-    QIDEM = String(Date.now()) + "-" + String(Math.random()).slice(2);
-  }
-  return QIDEM;
-}
+/* 멱등 열쇠 — 만드는 규칙은 `amIdem()` **한 곳**입니다
+   (`js/components/base.js`). ⚠️⚠️ **여기 또 적지 마세요** — 2026-10-26 에
+   `/sell` 도 열쇠가 필요해지면서 같은 열다섯 줄이 두 벌이 될 자리였고,
+   이 저장소는 같은 규칙을 두 곳에 적어 어긋난 사고를 여러 번 겪었습니다.
+   ⚠️ `ns` 가 `"quote"` 인 까닭 — `/sell` 과 **다른 열쇠**라야 합니다.
+   하나로 쓰면 견적을 보내고 매물을 내놓으러 가신 분이 같은 열쇠를 들고
+   가서, 서버가 "같은 신청서를 다시 보냈다" 로 보고 **먼저 받은
+   접수번호를 돌려주고 끝냅니다** (매물이 접수되지 않는데 화면은
+   성공으로 보입니다). */
+function quoteIdem(){ return amIdem("quote"); }
 /* 접수가 끝나면 열쇠를 비웁니다 — 다음 신청은 **다른 신청**입니다 */
-window.quoteIdemClear = function(){ QIDEM = ""; };
+window.quoteIdemClear = function(){ amIdemClear("quote"); };
 
 /* 접수가 **성공한 뒤에만** 치웁니다 (§4-3 "최종 제출 후 중복 임시
    신청 정리").

@@ -266,6 +266,8 @@ function PageQuote(){
   var side = nowQS("side") || "start";
 
   var bud  = nowQS("bud"), when = nowQS("when");
+
+  var py   = (nowQS("py") || "").replace(/[^0-9]/g, "").slice(0, 5);
   var c    = cat ? amCat(cat) : null;
   var subName = "";
   if(c){
@@ -339,7 +341,8 @@ function PageQuote(){
 
         '<div class="f-2">'+
           '<div class="f-r"><label for="q-py">평수</label>'+
-            '<input id="q-py" inputmode="numeric" placeholder="예: 30"></div>'+
+            '<input id="q-py" inputmode="numeric" value="'+esc(py||"")+'" '+
+              'placeholder="예: 30"></div>'+
           '<div class="f-r"><label for="q-bud">예산</label>'+
             '<input id="q-bud" value="'+esc(bud||"")+'" '+
               'placeholder="예: 5,000만원 / 아직 모름"></div>'+

@@ -435,6 +435,12 @@ window.quoteTo = function(o){
      안 읽으면 끊긴 것이고, 손님은 같은 것을 두 번 적게 됩니다. */
   if(o.bud)      q.push("bud="+encodeURIComponent(o.bud));
   if(o.when)     q.push("when="+encodeURIComponent(o.when));
+  /* ⚠️⚠️ 2026-10-26 §2-03 — 메인의 "내 상황에 맞는 서비스 찾기" 에서
+     고르신 **매장 규모**입니다. 받는 쪽(`/quote`)이 **실제로 읽어
+     평수 칸에 적습니다** — 안 읽으면 그 고르개가 "받아 놓고 안 읽는
+     칸" 이 됩니다 (이 저장소가 `gu` · `withEquip` 으로 겪은 자리).
+     ⚠️ 자유 입력 칸이라 **고치실 수 있게** 미리 적어만 둡니다. */
+  if(o.py)       q.push("py="+encodeURIComponent(o.py));
   /* ⚠️⚠️ 2026-10-09 §4-4 — **복수 상품을 한 번에** 신청하실 때
      고르신 상품 id 를 주소에 실습니다. 주소에 실어야 뒤로 가기 ·
      새로고침 · 링크 공유에 살아남습니다 (관심 업체 비교 `?cmp=` 와 같은

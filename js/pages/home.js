@@ -534,8 +534,24 @@ function PageMain(){
      (`AM_STEPS` · `checkSteps()` 가 그 줄을 찾습니다)이 받습니다.
      ⚠️ 차례를 바꾸시려면 지시서를 먼저 고치고 `check.js` 의 `want` ·
      `build-pages.js` 의 크롤러 본문을 **같이** 고치세요. */
-  return HomeHero()+ HomeEnter()+ HomeDirect()+
-         HomeCalc()+ HomeSteps()+ HomeGuide()+ HomeCta();
+  /* ⚠️⚠️ **2026-10-26 "메인페이지 전면 리뉴얼" §2 — 01~08 입니다.**
+       01 .bhero  히어로 (배경 사진 + 업종 · 지역 · 서비스 검색 + CTA)
+       02 .bent   4대 서비스 선택
+       03 .bfit   내 상황에 맞는 서비스 찾기 (신규)
+       04 .brec   추천 서비스 (신규 · 03 의 조건을 따릅니다)
+       05 .bcal   계산도구
+       06 .bigd   업종별 준비 가이드 + 개인별 체크리스트 (신규)
+       07 .bgd    실제 사례 및 실용 정보
+       08 .bcta   하단 상담 CTA
+     ⚠️⚠️ **"이용 방법"(`HomeSteps`)이 §2 의 01~08 에 없어 내려갔습니다.**
+     함수는 안 지웠습니다 — 되살리시려면 이 줄에 `HomeSteps()+` 입니다
+     (그날 `check.js` 의 `want` · `need` 와 크롤러 본문도 같이).
+     ⚠️ 그 구간 ③ 이 들고 있던 **제17조 재동의 고지**는 08 하단 CTA 가
+     받았습니다 — 법 고지가 메인에서 사라지지 않습니다.
+     ⚠️ `HomeDirect()` 도 안 부릅니다 — 그 여덟 칩이 **히어로 안**으로
+     올라갔고(`homeDirectChips()`), 범위 숫자 띠는 04 가 받습니다. */
+  return HomeHero()+ HomeEnter()+ HomeFit()+ HomeRec()+
+         HomeCalc()+ HomeIndGuide()+ HomeGuide()+ HomeCta();
 }
 
 
@@ -713,31 +729,78 @@ function HomeHero(){
   var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
   var with_ = (window.koWith ? koWith(nm, "이가") : nm + "가");
   /* ⚠️⚠️ **셋째 인자(eager)를 빼지 마세요.** 첫 화면의 제일 큰 그림이라
-     여기가 LCP 입니다 — 빼면 `loading="lazy"` 가 붙어 **늦게 시작**하고,
-     그만큼 첫 그림이 늦습니다 (§6 "모바일 초기 렌더링 속도").
-     ⚠️ 액자가 `aspect-ratio` 로 자리를 미리 잡고 있어 **레이아웃이
-     밀리지 않습니다** (§6 "레이아웃 이동 방지"). */
-  var ph = hasPhoto("hero-start")
-    ? '<span class="bhero-ph" aria-hidden="true">'+photoBox("hero-start", "", true)+'</span>' : "";
-  return '<section class="bhero">'+
+     여기가 LCP 입니다 — 빼면 `loading="lazy"` 가 붙어 늦게 시작합니다.
+     ⚠️⚠️ **2026-10-26 §2-01 — 사진이 오른쪽 액자에서 "배경 이미지" 가
+     됐습니다.** 그래서 글이 사진 위에 앉고, 사진 위 글자는 **전수 점검이
+     못 잽니다** — 막(`.bhero-bg::after`)을 얼마나 짙게 줄지는 **픽셀로
+     재서** 정했습니다 (보고서 참조). 사진을 바꾸시면 다시 재세요. */
+  var ph = (typeof hasPhoto === "function" && hasPhoto("hero-start"))
+    ? '<span class="bhero-bg" aria-hidden="true">'+
+        photoBox("hero-start", "", true)+'</span>' : "";
+  return '<section class="bhero'+(ph ? " on-ph" : "")+'">'+ ph +
     '<div class="w bhero-w">'+
       '<div class="bhero-in">'+
         '<p class="bhero-k">창업의 시작부터 폐업의 마무리까지</p>'+
         /* ⚠️⚠️ **여기를 br 로 쪼개지 마세요.** checkMainH2() 가 크롤러
            본문의 머리말을 **소스에서 글자로** 찾는데 중간에 태그가
-           끼면 못 찾아 빌드가 멈춥니다. 줄바꿈은 keep-all 이 합니다. */
+           끼면 못 찾아 빌드가 멈춥니다. */
         '<h1>사장님의 모든 순간, '+esc(with_)+' 함께합니다.</h1>'+
         '<p class="bhero-s">창업 준비, 매장 운영, 매장 양도양수, 폐업 · 정리에 '+
           '필요한 모든 서비스를 한곳에서 찾고, 비교하고, 연결받으세요.</p>'+
-        '<div class="bhero-go">'+
-          '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
-            '무료 견적 신청'+icon("arrow",18)+'</a>'+
-          '<a class="btn btn-o btn-lg" href="/providers">어떤 서비스가 있는지 보기</a>'+
-        '</div>'+
+        /* ⚠️⚠️ **장식용 검색창이 아닙니다** — 적으신 말이 있으면 통합검색,
+           없으면 고르신 업종 · 지역으로 업체 찾기로 보냅니다. 지역은
+           **받는 화면에만** 붙입니다 (안 받는 곳에 붙이면 조용히
+           버려지고 손님은 걸린 줄 압니다). */
+        '<form class="bhero-f" role="search" onsubmit="return homeHeroFind(event)">'+
+          '<label class="bhero-c"><span class="sr-only">업종</span>'+
+            (window.IndustrySelect ? IndustrySelect("hs-i", "", "", "업종 전체")
+              : '<select id="hs-i" class="sel"></select>')+'</label>'+
+          '<label class="bhero-c"><span class="sr-only">지역</span>'+
+            (window.RegionSelect ? RegionSelect("hs-r", "", "", "지역 전체")
+              : '<select id="hs-r" class="sel"></select>')+'</label>'+
+          '<label class="bhero-c bhero-q"><span class="sr-only">찾으시는 서비스</span>'+
+            '<input id="hs-q" type="search" placeholder="어떤 도움이 필요하신가요?"></label>'+
+          '<button class="btn btn-ac bhero-sb" type="submit">'+
+            icon("search",18)+'<span>검색하기</span></button>'+
+        '</form>'+
+        /* 바로가기 칩 — ⚠️ 분류 이름 · 아이콘 · 주소가 전부
+           `catalog.js` 것입니다 (손으로 적지 마세요). */
+        homeDirectChips()+
+        '<p class="bhero-go">'+
+          '<a class="btn btn-cr btn-lg" href="/quote" data-to="/quote">'+
+            '무료 상담 신청'+icon("arrow",18)+'</a>'+
+        '</p>'+
       '</div>'+
-      ph +
     '</div>'+
   '</section>';
+}
+
+/* 히어로 검색 — ⚠️ 헤더 통합검색과 **같은 곳**으로 보냅니다 */
+window.homeHeroFind = function(e){
+  if(e) e.preventDefault();
+  var v = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+  var q = v("hs-q"), i = v("hs-i"), r = v("hs-r");
+  if(q){ go("/search?q=" + encodeURIComponent(q)); return false; }
+  var p = [];
+  if(i) p.push("i=" + encodeURIComponent(i));
+  if(r) p.push("r=" + encodeURIComponent(r));
+  go("/providers" + (p.length ? "?" + p.join("&") : ""));
+  return false;
+};
+
+/* 바로가기 칩 여덟 — ⚠️ `HomeDirect()` 와 **같은 목록**을 씁니다.
+   두 곳에 적으면 한쪽만 고치게 됩니다. */
+function homeDirectChips(){
+  var C = window.AM_CATS || [];
+  var out = HOME_DIRECT.map(function(k){
+    var c = null, i;
+    for(i = 0; i < C.length; i++) if(C[i].key === k) c = C[i];
+    if(!c) return "";
+    var to = (typeof catTo === "function") ? catTo(c) : ("/providers/" + c.key);
+    return '<li><a class="bhero-chip" href="'+esc(to)+'">'+
+      icon(c.icon || "doc", 16)+'<span>'+esc(c.name)+'</span></a></li>';
+  }).filter(Boolean).join("");
+  return out ? '<ul class="bhero-chips">'+out+'</ul>' : "";
 }
 
 function HomeEnter(){
@@ -1126,19 +1189,36 @@ function homeReads(n){
    아무 사진이나 깔면 업종이 드러나 다른 업종 사장님께 "여긴 내
    자리가 아니네" 가 됩니다. 빈 액자도 깔지 않습니다. */
 function HomeGuide(){
-  var L = homeReads(3);
+  /* ⚠️⚠️ **고르신 사업 단계(`?st=`)를 따릅니다** — 바로 위 06 의 탭과
+     **같은 값**입니다. 여기에 탭을 또 두면 한 화면에 같은 선택 영역이
+     둘이 됩니다 (이 저장소가 "같은 것을 두 번 묻는다" 로 겪은 자리). */
+  var f = homeFit();
+  var L = (window.homeGuideFor ? homeGuideFor(f.hall, 3) : homeReads(3));
   if(!L.length) return "";
   var all = (window.AM_CONTENTS || []).length;
   return '<section class="bgd"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">GUIDE</p>'+
-      '<h2>사장님께 필요한 이용 가이드</h2>'+
-      '<p>창업 · 운영 · 양도양수 · 폐업에서 자주 막히는 자리를 '+
-        '정리했습니다. 지금 '+all+'편이고 근거를 댈 수 있는 것만 적습니다.</p>'+
+      '<h2>실제 사례 및 실용 정보</h2>'+
+      /* ⚠️⚠️ **검증된 사례가 0건입니다** (§2-07). "사례" 딱지를 달아
+         두고 가이드를 넣으면 그게 허위입니다 — 지시서가 직접 "사례가
+         없다면 사례 영역 대신 실용 정보와 가이드를 노출" 이라고
+         적었으니 그대로 합니다. 사례가 쌓이면 여기에 같이 냅니다. */
+      '<p>공개할 수 있는 거래 사례는 아직 없습니다. 대신 창업 · 운영 · '+
+        '양도양수 · 폐업에서 자주 막히는 자리를 정리했습니다 — 지금 '+
+        all+'편이고 근거를 댈 수 있는 것만 적습니다.</p>'+
     '</div>'+
     '<ul class="bgd-g">'+L.map(function(c){
       var ct = (typeof amCat === "function") ? (amCat(c.cat) || {}) : {};
       var dt = (c.at && typeof amDate === "function") ? amDate(c.at) : "";
+      /* ⚠️⚠️ **썸네일을 안 깝니다.** 시안은 실사 썸네일인데 쓸 수 있는
+         사진이 없습니다 — 받아 오는 것은 이미지 지시서 §4 가
+         금지하고(권한이 확인된 것만), 아무 사진이나 깔면 업종이 드러나
+         다른 업종 사장님께 "여긴 내 자리가 아니네" 가 됩니다.
+         ⚠️ 분류 아이콘을 대신 깔아 봤다가 **걷어냈습니다** — 셋 중
+         둘이 같은 분류라 같은 그림이 나란히 섰고 그게 곧 "준비 중"
+         으로 읽혔습니다 (절대 규칙 2 · 찍어 보고 알았습니다).
+         분류는 바로 아래 딱지(.bgd-k)가 말합니다. */
       return '<li class="bgd-c"><a href="/content/'+esc(c.slug)+'">'+
         (ct.name ? '<i class="bgd-k">'+esc(ct.name)+'</i>' : "")+
         '<b>'+esc(c.title)+'</b>'+
@@ -1170,8 +1250,447 @@ function HomeCta(){
       '연결해 드립니다. 신청은 무료이고 가입이 필요 없습니다.</p>'+
     '<div class="bcta-go">'+
       '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
-        '무료 견적 신청'+icon("arrow",18)+'</a>'+
+        '무료 상담 신청'+icon("arrow",18)+'</a>'+
       '<a class="btn btn-cr btn-lg" href="/faq">자주 묻는 질문</a>'+
+    '</div>'+
+    /* ⚠️⚠️ **네 줄 다 지금 사실입니다** (§2-08 "실제 운영 정책에 맞게").
+       신청이 무료인 것 · 가입이 없는 것 · 중개자라는 것(약관 제5조 ·
+       전자상거래법 제20조 제1항) · **업체에 연락처를 넘길 때 다시
+       동의를 받는 것**(개인정보보호법 제17조 제2항)입니다.
+       ⚠️⚠️ **마지막 줄을 지우지 마세요.** 2026-10-26 리뉴얼로 "이용
+       방법" 구간이 내려가면서 그 ③ 이 들고 있던 제17조 고지가 메인에서
+       사라질 뻔했습니다 — 그 자리를 여기가 받습니다. */
+    '<ul class="bcta-tr">'+
+      '<li>'+icon("check",16)+'<span>신청과 상담은 무료입니다</span></li>'+
+      '<li>'+icon("check",16)+'<span>가입 없이 한 번만 적으시면 됩니다</span></li>'+
+      '<li>'+icon("check",16)+'<span>저희는 중개자이고 거래 당사자가 아닙니다</span></li>'+
+      '<li>'+icon("check",16)+'<span>업체에 연락처를 전달할 때 다시 동의를 받습니다</span></li>'+
+    '</ul>'+
+  '</div></section>';
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   2026-10-26 "메인페이지 전면 리뉴얼" — 03 · 04 · 06 (신규) · 07 탭
+   ════════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **새 서비스 데이터를 하나도 안 만들었습니다** (§1 · §5). 여기
+   있는 것은 전부 `catalog.js` 의 분류 26 · 하위 207 과 `halls.js` ·
+   `svcpick.js` · `journey.js` · `opscheck.js` · `content.js` 를
+   **가리키기만** 합니다 — 업체 · 매물 · 후기 · 사례는 0 인 그대로입니다.
+
+   ⚠️⚠️ **고르신 조건은 주소에 실립니다** (`?i=` 업종 · `?r=` 지역 ·
+   `?sz=` 매장 규모 · `?st=` 사업 단계 · `?ct=` 정보 탭). 뒤로 가기 ·
+   새로고침 · 링크 공유에 살아남습니다 — 이 저장소가 거르개마다
+   지켜 온 규칙입니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 매장 규모 — ⚠️ **받아 놓고 안 읽는 칸이 아닙니다.** 둘을 합니다:
+   ① 추천 차례를 바꾸고 ② 신청 폼의 **평수 칸에 그대로 적힙니다**
+   (`quoteTo` 의 `py`). `gu` · `withEquip` 이 몇 달을 죽어 있던 자리라
+   새 고르개를 만들 때마다 "이것이 무엇을 바꾸는가" 를 먼저 정합니다. */
+var HOME_SIZE = [
+  { k:"s",  n:"10평 이하", py:8  },
+  { k:"m",  n:"10 ~ 20평", py:15 },
+  { k:"l",  n:"20 ~ 40평", py:30 },
+  { k:"xl", n:"40평 이상", py:50 }
+];
+
+/* ⚠️⚠️ **이 차례는 사람이 정한 것입니다.** 조회 · 클릭 · 신청을 하나도
+   안 모으므로 "많이 찾는" · "인기" 라고 적을 수 없습니다 (절대 규칙 1 ·
+   `sales.js` 의 `prio` 와 같은 성격). 화면도 **"저희가 추려 둔 차례"**
+   라고 적습니다 — 그 줄을 지우지 마세요.
+   넓은 매장일수록 공사 · 설비가 앞에 오는 것까지가 근거를 댈 수 있는
+   선입니다. 그 밖의 가중치를 지어내지 마세요. */
+var HOME_SIZE_FIRST = {
+  l:  ["interior", "equip"],
+  xl: ["interior", "equip", "furniture"]
+};
+
+/* 지금 고르신 조건 — 주소 한 곳에서만 읽습니다 */
+window.homeFit = function(){
+  var halls = (window.AM_HALLS || []).map(function(h){ return h.key; });
+  var st = nowQS("st");
+  return {
+    ind:  nowQS("i")  || "",
+    reg:  nowQS("r")  || "",
+    size: nowQS("sz") || "",
+    hall: (halls.indexOf(st) >= 0 ? st : (halls[0] || "startup"))
+  };
+};
+window.homeFitOn = function(f){ return !!(f.ind || f.reg || f.size || nowQS("st")); };
+
+/* 조건 → 주소 (빈 값은 안 싣습니다 — 같은 화면이 두 주소로 나가지
+   않게) */
+window.homeFitUrl = function(f, extra){
+  var q = [];
+  if(f.ind)  q.push("i="  + encodeURIComponent(f.ind));
+  if(f.reg)  q.push("r="  + encodeURIComponent(f.reg));
+  if(f.size) q.push("sz=" + encodeURIComponent(f.size));
+  if(f.hall) q.push("st=" + encodeURIComponent(f.hall));
+  if(extra)  q.push(extra);
+  /* ⚠️ 해시를 붙이지 않습니다 — 이 저장소는 `location.hash` 를 안 읽고
+     (늘 빈 문자열이라 **에러 없이 틀린 답**을 줍니다), 자리는
+     `keepScroll` 이 지킵니다. */
+  return "/" + (q.length ? "?" + q.join("&") : "");
+};
+
+/* ⚠️⚠️ **추천 규칙은 이 함수 하나입니다** (§3-A "추천 기준을 코드로
+   명확하게 관리"). 두 곳에 적으면 어긋납니다.
+     ① 고르신 사업 단계(전문관)의 **신청 가능한 분류**만 모읍니다
+        — `amPickHallCats()` 가 정보 분류(`AM_PICK_OFF`)를 이미 뺍니다
+     ② 그 단계 · 업종의 **대표 차례**를 앞으로 (`amPickTopIds`)
+     ③ 매장 규모 보정 (위 `HOME_SIZE_FIRST`)
+   ⚠️ **잘라 내지 않습니다** — 차례만 바꾸고 나머지는 뒤에 그대로
+   붙습니다 (`amCatsFor()` 와 같은 규칙). 잘라 내면 그 조건의
+   사장님에게는 그 기능이 **아예 없는 것**이 됩니다. */
+window.homeFitRank = function(f){
+  var pool = (window.amPickHallCats ? amPickHallCats(f.hall) : []);
+  var first = (window.amPickTopIds ? amPickTopIds(f.hall, f.ind) : []).slice();
+  (HOME_SIZE_FIRST[f.size] || []).slice().reverse().forEach(function(k){
+    var i = first.indexOf(k);
+    if(i >= 0) first.splice(i, 1);
+    first.unshift(k);
+  });
+  var rank = {};
+  first.forEach(function(k, i){ rank[k] = i; });
+  return pool.slice().sort(function(a, b){
+    var ra = (rank[a.id] === undefined) ? 999 : rank[a.id];
+    var rb = (rank[b.id] === undefined) ? 999 : rank[b.id];
+    return ra - rb;
+  });
+};
+
+/* ── 03 내 상황에 맞는 서비스 찾기 (§2-03 · §3-A · §3-D) ──────────── */
+function HomeFit(){
+  var H = window.AM_HALLS || [];
+  if(!H.length) return "";
+  var f = homeFit();
+  var steps = H.map(function(h){
+    return '<option value="'+esc(h.key)+'"'+(h.key === f.hall ? " selected" : "")+
+      '>'+esc(h.name)+'</option>';
+  }).join("");
+  var sizes = HOME_SIZE.map(function(s){
+    return '<option value="'+esc(s.k)+'"'+(s.k === f.size ? " selected" : "")+
+      '>'+esc(s.n)+'</option>';
+  }).join("");
+  return '<section class="bfit" id="fit"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">FIND</p>'+
+      '<h2>내 상황에 맞는 서비스 찾기</h2>'+
+      '<p>업종 · 지역 · 매장 규모 · 사업 단계를 고르시면 그 조건에 '+
+        '맞는 서비스를 추려 드립니다.</p>'+
+    '</div>'+
+    '<form class="bfit-f" onsubmit="return homeFitGo(event)">'+
+      '<label class="bfit-c"><span>사업 단계</span>'+
+        '<select id="fit-st" class="sel">'+steps+'</select></label>'+
+      '<label class="bfit-c"><span>업종</span>'+
+        (window.IndustrySelect ? IndustrySelect("fit-i", f.ind, "", "업종 전체")
+          : '<select id="fit-i" class="sel"></select>')+'</label>'+
+      '<label class="bfit-c"><span>지역</span>'+
+        (window.RegionSelect ? RegionSelect("fit-r", f.reg, "", "지역 전체")
+          : '<select id="fit-r" class="sel"></select>')+'</label>'+
+      '<label class="bfit-c"><span>매장 규모</span>'+
+        '<select id="fit-sz" class="sel">'+
+          '<option value="">규모 전체</option>'+sizes+'</select></label>'+
+      '<button class="btn btn-ac btn-lg bfit-go" type="submit">'+
+        '맞춤 서비스 찾기'+icon("arrow",18)+'</button>'+
+    '</form>'+
+    /* ⚠️ 지어낸 수를 적지 않습니다 — 그 자리에서 셉니다 */
+    '<p class="note bfit-n">'+icon("info",14)+' 저희가 추려 둔 차례입니다 — '+
+      '조회수나 신청 건수 같은 이용 통계가 아닙니다.</p>'+
+    /* ⚠️⚠️ **고르신 것이 있으면 그 자리에서 냅니다** (§1-03 · 앞
+       지시서). `HomeDirect()` 가 내려가면서 이 줄이 메인에서 통째로
+       사라질 뻔했습니다 — 고르고 다른 화면을 돌다 메인으로 오신
+       분이 **신청으로 가는 길을 잃습니다.**
+       ⚠️ 0개면 줄째 안 냅니다 (절대 규칙 2). */
+    HomePicked()+
+  '</div></section>';
+}
+
+window.homeFitGo = function(e){
+  if(e) e.preventDefault();
+  var v = function(id){ var el = document.getElementById(id); return el ? el.value : ""; };
+  var f = { hall:v("fit-st"), ind:v("fit-i"), reg:v("fit-r"), size:v("fit-sz") };
+  /* ⚠️ 주소를 바꾸고 **스크롤은 지킵니다** — 결과가 바로 아래라
+     맨 위로 올라가면 방금 고른 것이 안 보입니다 */
+  go(homeFitUrl(f), { keepScroll:true });
+  return false;
+};
+
+/* ── 04 추천 서비스 (§2-04) ──────────────────────────────────────── */
+var HOME_REC_N = 6;
+
+function HomeRec(){
+  var f = homeFit(), L = homeFitRank(f).slice(0, HOME_REC_N);
+  var hall = (window.amHall ? amHall(f.hall) : null);
+  var indName = (window.amIndustryName ? amIndustryName(f.ind) : "");
+  /* ⚠️⚠️ **조건에 맞는 것이 없을 때도 정상으로 안내합니다** (§3-A).
+     빈 칸을 내지 않고 **갈 곳**을 냅니다 (절대 규칙 2). */
+  if(!L.length) return '<section class="brec"><div class="w">'+
+    '<div class="sec-hd sec-hd-c"><h2>추천 서비스</h2>'+
+      '<p>고르신 조건에 맞는 서비스를 아직 못 찾았습니다. '+
+        '전체 서비스에서 바로 찾아보실 수 있습니다.</p></div>'+
+    '<p class="row-cta"><a class="btn btn-o btn-lg" href="/providers">'+
+      '전체 서비스 보기'+icon("arrow",16)+'</a></p>'+
+  '</div></section>';
+
+  var cards = L.map(function(s){
+    var c = (window.amCat ? amCat(s.cat) : null) || {};
+    var key = "svc-" + s.cat;
+    var ph = (typeof hasPhoto === "function" && hasPhoto(key))
+      ? '<span class="brec-ph">'+photoBox(key)+'</span>'
+      : '<span class="brec-i" aria-hidden="true">'+
+          ((typeof hasIconArt === "function" && hasIconArt(s.cat))
+            ? iconArt(s.cat, 84) : icon(c.icon || "doc", 52))+'</span>';
+    /* 하위 셋 — ⚠️ 그 분류가 **실제로 들고 있는 것**입니다 */
+    var subs = (window.amAllSubs ? amAllSubs(c) : (c.items || []))
+      .slice(0, 3).map(function(x){ return x.name; }).join(" · ");
+    var to = (typeof catTo === "function") ? catTo(c) : ("/providers/" + s.cat);
+    return '<li class="brec-c">'+ ph +
+      '<span class="brec-tx">'+
+        '<b>'+esc(s.name)+'</b>'+
+        (subs ? '<em>'+esc(subs)+'</em>' : (c.lead ? '<em>'+esc(c.lead)+'</em>' : ""))+
+      '</span>'+
+      '<span class="brec-go">'+
+        '<a class="btn btn-o" href="'+esc(to)+'">상세 보기</a>'+
+        /* ⚠️ 신청은 고르신 조건을 **그대로 들고 갑니다** (업종 · 지역 ·
+           평수). 안 들고 가면 손님이 같은 것을 두 번 적습니다. */
+        '<a class="btn btn-ac" href="'+esc(quoteTo({
+            cat:s.cat, industry:f.ind, region:f.reg, side:homeFitSide(f.hall),
+            py:homeFitPy(f.size) }))+'" data-to="/quote">상담 신청</a>'+
+      '</span>'+
+    '</li>';
+  }).join("");
+
+  /* ⚠️⚠️ **신청 가능한 서비스와 정보 제공을 가릅니다** (§2-03).
+     `AM_PICK_OFF` 넷은 업체가 하는 일이 아니라 **읽을 거리 · 매물 ·
+     기관 심사**라 신청 대상이 아닙니다 — 숨기지 않고 따로 냅니다. */
+  var info = (window.AM_PICK_OFF || []).map(function(k){
+    var c = (window.amCat ? amCat(k) : null);
+    if(!c) return "";
+    var to = (typeof catTo === "function") ? catTo(c) : ("/c/" + k);
+    return '<li><a href="'+esc(to)+'">'+icon("doc",14)+esc(c.name)+'</a></li>';
+  }).filter(Boolean).join("");
+
+  return '<section class="brec"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">RECOMMEND</p>'+
+      '<h2>추천 서비스</h2>'+
+      '<p>'+esc((indName ? indName + " · " : "") +
+        ((hall && hall.name) || "") )+' 기준으로 추려 드렸습니다. '+
+        '모두 지금 바로 상담 신청하실 수 있는 서비스입니다.</p>'+
+    '</div>'+
+    '<ul class="brec-g">'+cards+'</ul>'+
+    '<p class="row-cta row-mid">'+
+      '<a class="btn btn-o" href="'+esc(homeFitAllTo())+'">'+
+        '이 단계 서비스 전체 보기'+icon("arrow",16)+'</a></p>'+
+    /* ⚠️⚠️ **범위 숫자 띠를 여기가 받습니다.** `HomeDirect()` 가 내려
+       가면서 그 안의 ⓘ 줄("서비스 **분류 기준**이며 등록된 업체 수가
+       아닙니다")이 메인에서 사라질 뻔했습니다 — 지우지 마세요. */
+    (typeof MainScopeStrip === "function" ? MainScopeStrip() : "")+
+    (info ? '<div class="brec-info"><b>정보로 보시는 것</b>'+
+      '<p class="note">업체가 해 드리는 일이 아니라 읽고 알아보시는 '+
+        '자리입니다 — 신청 대상이 아닙니다.</p>'+
+      '<ul class="brec-info-g">'+info+'</ul></div>' : "")+
+  '</div></section>';
+}
+
+/* 전문관 → 신청의 쪽(side) · 전문관 주소 — ⚠️ 규칙을 여기 한 곳에만 */
+window.homeFitSide = function(hall){
+  return ({ startup:"start", operation:"ops",
+            transfer:"transfer", closure:"close" })[hall] || "start";
+};
+window.homeFitPy = function(size){
+  var s = HOME_SIZE.filter(function(x){ return x.k === size; })[0];
+  return s ? s.py : "";
+};
+window.homeFitAllTo = function(){
+  var f = homeFit();
+  var h = (window.amHall ? amHall(f.hall) : null);
+  return (h && h.to) ? h.to : "/providers";
+};
+
+/* ── 06 업종별 준비 가이드 + 개인별 체크리스트 (§2-06 · §3-B) ─────
+   ⚠️⚠️ **준비 항목을 새로 쓰지 않았습니다.** 창업 · 양도양수 · 폐업은
+   `journey.js` 의 `AM_PROCESS` 걸음을, 운영은 `opscheck.js` 의 운영
+   체크리스트를 그대로 읽습니다 — 두 곳에 적으면 어긋납니다. */
+var HOME_PREP = {
+  startup:  "startup",
+  transfer: "acq-in",
+  closure:  "closing"
+};
+
+window.homePrepList = function(hall){
+  var out = [];
+  if(hall === "operation"){
+    (window.AM_OPS_CHECK || []).forEach(function(o){
+      out.push({ id:"operation:" + o.name, n:o.name, d:o.lead || "", cat:o.cat || "" });
+    });
+    return out;
+  }
+  var key = HOME_PREP[hall];
+  ((window.AM_PROCESS || {})[key] || []).forEach(function(s){
+    out.push({ id:hall + ":" + s.name, n:s.name, d:s.lead || "",
+      cat:(s.cat ? (s.cat + (s.sub ? "/" + s.sub : "")) : "") });
+  });
+  return out;
+};
+
+/* ⚠️⚠️ **이 브라우저에만 남습니다.** §3-B 가 "우선 로그인 없이 쓸 수
+   있는 방식부터" 라고 적었고, 지금 `/api/session` 이 `auth:false` 라
+   계정 연동은 **할 수 있는 상태가 아닙니다** — 있는 척하지 않습니다
+   (절대 규칙 5). 로그인이 켜지는 날 `js/state.js` 가 `am.opsck.v1` 을
+   읽는 것과 같은 방식으로 이 열쇠를 한 줄 더 읽으면 됩니다.
+   ⚠️⚠️ **저장이 막힌 브라우저에서 성공했다고 말하지 않습니다** —
+   `amSet()` 은 에러를 삼키므로 여기서 직접 try/catch 합니다
+   (사파리 비공개 모드 · 운영 체크리스트와 같은 방식). */
+var PRK_KEY = "am.prepck.v1";
+
+function prkGet(){
+  try{
+    var d = JSON.parse(localStorage.getItem(PRK_KEY) || "null");
+    return (d && d.done) ? d.done : [];
+  }catch(e){ return []; }
+}
+function prkSet(keys){
+  try{ localStorage.setItem(PRK_KEY, JSON.stringify({ done:keys, at:Date.now() })); }
+  catch(e){ return false; }
+  return true;
+}
+
+window.homePrepToggle = function(id, el){
+  var done = prkGet(), i = done.indexOf(id);
+  var on = el ? !!el.checked : (i < 0);
+  if(on && i < 0) done.push(id);
+  if(!on && i >= 0) done.splice(i, 1);
+  /* ⚠️ 저장이 안 되면 **체크를 되돌립니다.** 그냥 두면 화면에는 켜져
+     있는데 다시 오면 꺼져 있어서, 손님은 저장된 줄 압니다. */
+  if(!prkSet(done)){
+    if(el) el.checked = !on;
+    toast("이 브라우저에 저장할 수 없어서 체크가 남지 않습니다");
+    return;
+  }
+  homePrepPaint();
+};
+
+window.homePrepClear = function(){
+  var f = homeFit(), L = homePrepList(f.hall);
+  var mine = L.map(function(x){ return x.id; });
+  var done = prkGet().filter(function(k){ return mine.indexOf(k) < 0; });
+  if(done.length === prkGet().length) return;
+  if(!confirm("이 단계에서 체크해 두신 것을 지웁니다. 되돌릴 수 없습니다.")) return;
+  prkSet(done);
+  var box = document.getElementById("prep-l");
+  if(box) [].slice.call(box.querySelectorAll("input[type=checkbox]"))
+    .forEach(function(e){ e.checked = false; });
+  homePrepPaint();
+  toast("지웠습니다");
+};
+
+/* ⚠️ 화면을 다시 그리지 않고 **제자리에서** 숫자와 막대만 고칩니다 —
+   다시 그리면 보던 자리를 잃습니다. */
+window.homePrepPaint = function(){
+  var f = homeFit(), L = homePrepList(f.hall), done = prkGet();
+  var n = L.filter(function(x){ return done.indexOf(x.id) >= 0; }).length;
+  var cnt = document.getElementById("prep-n");
+  var bar = document.getElementById("prep-bar");
+  if(cnt) cnt.textContent = n + " / " + L.length;
+  if(bar) bar.style.width = (L.length ? Math.round(n / L.length * 100) : 0) + "%";
+};
+
+function HomeIndGuide(){
+  var H = window.AM_HALLS || [];
+  var f = homeFit(), L = homePrepList(f.hall);
+  if(!H.length || !L.length) return "";
+  var done = prkGet();
+  var tabs = H.map(function(h){
+    var on = (h.key === f.hall);
+    return '<a class="chip'+(on ? " on" : "")+'" href="'+
+      esc(homeFitUrl({ ind:f.ind, reg:f.reg, size:f.size, hall:h.key }))+
+      '" data-keep'+(on ? ' aria-current="true"' : "")+'>'+esc(h.name)+'</a>';
+  }).join("");
+  var rows = L.map(function(x){
+    var on = done.indexOf(x.id) >= 0;
+    var s  = x.cat ? (window.amPickOne ? amPickOne(x.cat) : null) : null;
+    var to = "";
+    if(s){
+      var c = (window.amCat ? amCat(s.cat) : null);
+      to = c ? ((typeof catTo === "function") ? catTo(c) : "/providers/" + s.cat) : "";
+      if(to && s.sub) to += (to.indexOf("?") >= 0 ? "&" : "?") + "s=" + encodeURIComponent(s.sub);
+    }
+    return '<li class="prep-r">'+
+      '<label class="prep-k">'+
+        '<input type="checkbox"'+(on ? " checked" : "")+
+          ' onchange="homePrepToggle(\''+esc(x.id).replace(/'/g, "&#39;")+'\', this)">'+
+        '<span class="prep-t"><b>'+esc(x.n)+'</b>'+
+          (x.d ? '<em>'+esc(x.d)+'</em>' : "")+'</span>'+
+      '</label>'+
+      (to ? '<a class="prep-go" href="'+esc(to)+'">서비스 보기'+icon("arrow",14)+'</a>' : "")+
+    '</li>';
+  }).join("");
+  var nDone = L.filter(function(x){ return done.indexOf(x.id) >= 0; }).length;
+  return '<section class="bigd"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">CHECKLIST</p>'+
+      '<h2>업종별 준비 가이드</h2>'+
+      '<p>지금 단계에서 무엇을 해야 하는지 순서대로 모았습니다. '+
+        '체크해 두시면 다음에 오셨을 때 이어서 보실 수 있습니다.</p>'+
+    '</div>'+
+    '<div class="chip-g chip-g-fil bigd-tab">'+tabs+'</div>'+
+    '<div class="prep">'+
+      '<div class="prep-hd">'+
+        '<b>준비 항목 <i id="prep-n">'+nDone+' / '+L.length+'</i></b>'+
+        '<span class="prep-bar"><i id="prep-bar" style="width:'+
+          (L.length ? Math.round(nDone / L.length * 100) : 0)+'%"></i></span>'+
+      '</div>'+
+      '<ul class="prep-l'+(L.length > 8 ? " is-fold-rest" : "")+
+        '" id="prep-l">'+rows+'</ul>'+
+      /* ⚠️⚠️ **접어도 DOM 에 그대로 있습니다** — 크롤러 · 링크 검사 ·
+         색인이 한 글자도 안 바뀝니다. 열넷을 다 펼치면 PC 1,764px ·
+         폰 2,416px 이라 그 구간 하나가 화면 서넛입니다 (§4).
+         ⚠️ 접는 클래스가 is-fold-rest 로 **다릅니다** — 기본값
+         (is-fold-all)은 `display:none` 이라 목록이 통째로 사라집니다. */
+      (L.length > 8 ? '<p class="prep-fold">'+
+        FoldAll("prep-l", "나머지 "+(L.length - 6)+"개 보기", "접기",
+                "is-fold-rest")+'</p>' : "")+
+      '<div class="prep-go-r">'+
+        '<a class="btn btn-ac" href="'+esc(quoteTo({
+            industry:f.ind, region:f.reg, side:homeFitSide(f.hall),
+            py:homeFitPy(f.size) }))+'" data-to="/quote">이 단계 상담 신청</a>'+
+        '<button class="btn btn-o" type="button" onclick="homePrepClear()">전체 해제</button>'+
+      '</div>'+
+      /* ⚠️⚠️ **체크는 신청이 아닙니다** — 지우지 마세요 (절대 규칙 5) */
+      '<p class="note prep-n2">'+icon("info",14)+' 체크해 두신 것은 '+
+        '이 브라우저에만 남고 저희에게 오지 않습니다 — 체크는 신청이 아닙니다.</p>'+
     '</div>'+
   '</div></section>';
 }
+
+/* ── 07 실제 사례 및 실용 정보 (§2-07) ───────────────────────────
+   ⚠️⚠️ **검증된 사례가 0건입니다.** §2-07 이 직접 "사례가 없다면 사례
+   영역 대신 실용 정보와 가이드를 노출" 이라고 적었으니 그대로 합니다 —
+   "사례" 라는 딱지를 달아 두고 가이드를 넣으면 그게 허위입니다. */
+window.homeGuideFor = function(hall, n){
+  var all = (window.AM_CONTENTS || []).slice();
+  var set = {};
+  (window.amPickHallCats ? amPickHallCats(hall) : []).forEach(function(s){ set[s.id] = 1; });
+  (window.AM_PICK_OFF || []).forEach(function(k){ set[k] = 1; });
+  var by = function(a, b){ return String(b.at || "").localeCompare(String(a.at || "")); };
+  var mine = all.filter(function(c){ return set[c.cat]; }).sort(by);
+  /* ⚠️⚠️ **분류가 겹치지 않게 먼저 고릅니다.** 날짜 차례로만 집으면
+     셋 중 둘이 같은 분류(인테리어 · 시공)로 나와서 같은 말을 두 번
+     하는 꼴이 됩니다 — 이 저장소가 "같은 날짜 안에서는 분류와 업종이
+     안 겹치게 고릅니다" 로 메인 최신 정보에서 겪은 자리입니다.
+     ⚠️ 기준은 그대로 **날짜 하나**입니다 (인기 · 조회가 아닙니다). */
+  var hit = [], seen = {};
+  mine.forEach(function(c){
+    if(hit.length < n && !seen[c.cat]){ seen[c.cat] = 1; hit.push(c); } });
+  /* 분류를 다 돌고도 모자라면 같은 분류에서 더 집습니다 */
+  mine.forEach(function(c){
+    if(hit.length < n && hit.indexOf(c) < 0) hit.push(c); });
+  /* ⚠️ 그래도 모자라면 **최신 글로 채웁니다** — 빈 칸을 내지 않습니다 */
+  if(hit.length < n)
+    all.sort(by).forEach(function(c){
+      if(hit.length < n && hit.indexOf(c) < 0) hit.push(c);
+    });
+  return hit.slice(0, n);
+};

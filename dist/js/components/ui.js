@@ -287,6 +287,8 @@ window.quoteTo = function(o){
   if(o.bud)      q.push("bud="+encodeURIComponent(o.bud));
   if(o.when)     q.push("when="+encodeURIComponent(o.when));
 
+  if(o.py)       q.push("py="+encodeURIComponent(o.py));
+
   if(o.offers && o.offers.length)
     q.push("o="+encodeURIComponent([].concat(o.offers).join(",")));
   if(o.pack)     q.push("pk="+encodeURIComponent(o.pack));

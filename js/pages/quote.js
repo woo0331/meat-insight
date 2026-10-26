@@ -396,6 +396,8 @@ function PageQuote(){
      **고치실 수 있게** 미리 적어만 둡니다 — 못 고치게 잠그면 "3천 ~
      5천만원" 밖의 사정을 적을 자리가 없어집니다. */
   var bud  = nowQS("bud"), when = nowQS("when");
+  /* ⚠️ 메인 §2-03 에서 고르신 매장 규모 — 숫자만 받습니다 */
+  var py   = (nowQS("py") || "").replace(/[^0-9]/g, "").slice(0, 5);
   var c    = cat ? amCat(cat) : null;
   var subName = "";
   if(c){
@@ -499,7 +501,8 @@ function PageQuote(){
 
         '<div class="f-2">'+
           '<div class="f-r"><label for="q-py">평수</label>'+
-            '<input id="q-py" inputmode="numeric" placeholder="예: 30"></div>'+
+            '<input id="q-py" inputmode="numeric" value="'+esc(py||"")+'" '+
+              'placeholder="예: 30"></div>'+
           '<div class="f-r"><label for="q-bud">예산</label>'+
             '<input id="q-bud" value="'+esc(bud||"")+'" '+
               'placeholder="예: 5,000만원 / 아직 모름"></div>'+

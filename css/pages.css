@@ -6306,3 +6306,378 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
    ⚠️ 분야 이름과 "아직 없음 / n곳" 은 접힌 채로도 보입니다. */
 .join-g.is-fold-chips > .join-cat > .chip-g{ display:none; }
 .jn-fold-w{ margin-top:var(--s5); text-align:center; }
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-10-26 "메인페이지 최종 디자인 개선" — 브라운 · 아이보리 · 베이지
+   ══════════════════════════════════════════════════════════════════
+   시안(수정 후)의 오른쪽 주석 일곱을 그대로 따릅니다 —
+     ① 메인 비주얼   브라운 CTA + 고품질 이미지
+     ② 서비스 카드   실사 이미지가 주인공 · 브랜드 컬러와 구분색의 조화
+     ③ 서비스 찾기   **브라운 톤 아이콘으로 브랜드 일관성**
+     ④ 계산도구      아이콘 크기 · 색상 통일
+     ⑤ 이용 방법     브랜드 컬러로 통일
+     ⑥ 정보 콘텐츠   썸네일 · 카드 크기 · 텍스트 정렬
+     ⑦ 하단 CTA      브라운 배경과 강조 CTA
+
+   ⚠️⚠️ **이 블록은 파일 맨 뒤**라야 합니다. 위의 2026-10-16 §6 블록이
+   진입 카드를 짙은 채색 면으로 칠하고 있어서, 특정도가 같은 이 선언들이
+   **뒤에 와야** 이깁니다. 가운데 끼워 넣으면 아무 일도 안 납니다
+   (이 저장소가 되돌리기에서 여섯 번 겪은 자리).
+   ⚠️ 되돌리시려면 이 블록만 지우면 전과 똑같이 돌아옵니다.
+   ────────────────────────────────────────────────────────────────── */
+
+/* ── ① · ② 진입 카드 넷 — 짙은 채색 면에서 **밝은 카드**로 ──────────
+   ⚠️⚠️ 전에는 카드 넷이 브라운 · 딥그린 · 퍼플 · 버건디 **짙은 면**이고
+   사진 위에 .96 까지 가는 막이 덮여 있었습니다 — 사장님이 주신 실사
+   넉 장이 거의 안 보였고, 브라운 · 아이보리 브랜드에서 넷만 겉돌았습니다.
+   지금은 **사진이 주인공**이고 글은 크림 면에 섭니다.
+   ⚠️⚠️ **구분 색을 없앤 것이 아닙니다** (2026-10-16 §2-1 "색상 구분은
+   반드시 유지"). 번호 알약 · 아이콘 · 바로가기 알약 **셋**이 그대로
+   서비스별 색을 들고 있고, 검사도 거기를 봅니다. */
+.bent-c > a{ background:var(--hm-card); border:1px solid var(--hm-line);
+  color:var(--hm-ink); border-radius:20px; }
+/* ⚠️ 사진 위 막은 **번호 알약이 읽히는 만큼**만입니다. 짙게 하면 다시
+   사진이 죽고, 아예 빼면 밝은 사진에서 번호 알약 테두리가 묻힙니다.
+   ⚠️⚠️ **네 갈래를 따로 적어야 합니다.** 위 블록의
+   `.ent-startup .bent-ph::after` 가 (0,2,0) 이라 `.bent-ph::after`
+   (0,1,0) 하나로는 **못 이깁니다** — 한 줄로 적었다가 사진이 그대로
+   짙은 채로 남았습니다 (찍어 보고 알았습니다). */
+.ent-startup .bent-ph::after, .ent-operation .bent-ph::after,
+.ent-transfer .bent-ph::after, .ent-closure .bent-ph::after{
+  background:linear-gradient(180deg,
+    rgba(41,35,31,.16) 0%, rgba(41,35,31,.02) 40%, rgba(41,35,31,.12) 100%); }
+/* ⚠️⚠️ **넉 장의 밝기 · 채도를 맞춥니다** (지시서 §1 "이미지 크롭과
+   밝기를 통일해 브랜드 일관성 확보"). 원본은 안 건드립니다 — 화면에서만
+   맞춥니다.
+   ⚠️⚠️ **눈대중이 아니라 재서 정한 값**입니다. 원본 넷의 평균 밝기가
+   96.5 ~ 115.3 (0~255) 으로 벌어져 있고 `kind-pass` 만 채도가 61.9 로
+   혼자 높았습니다 — 한 줄로 같은 필터를 주면 그 차이가 그대로 남습니다.
+   재는 법은 캔버스의 `ctx.filter` 에 **이 값을 그대로 넣고** 그려서
+   평균을 내는 것입니다 (CSS 필터와 같은 규격이라 결과가 같습니다).
+   ⚠️ 사진을 바꾸시면 **다시 재서** 이 네 줄을 고치세요. */
+.bent-ph .ph{ filter:contrast(1.04); }
+.ent-startup   .bent-ph .ph{ filter:contrast(1.04) brightness(.99)  saturate(1.02); }
+.ent-operation .bent-ph .ph{ filter:contrast(1.04) brightness(1.11) saturate(1.02); }
+.ent-transfer  .bent-ph .ph{ filter:contrast(1.04) brightness(1.12) saturate(.65); }
+.ent-closure   .bent-ph .ph{ filter:contrast(1.04) brightness(.94)  saturate(1.22); }
+.bent-tx > b{ color:var(--hm-ink); }
+.ent-startup .bent-tx > em, .ent-operation .bent-tx > em,
+.ent-transfer .bent-tx > em, .ent-closure .bent-tx > em{ color:var(--hm-ink2); }
+.bent-d{ color:var(--hm-ink2); }
+/* 서비스별 구분색 — **밝은 면 위라 짙은 쪽**입니다 (-ac 는 다크용) */
+.ent-startup   .bent-i{ --ia-1:var(--ent-start); --ia-2:rgba(96,57,31,.20); }
+.ent-operation .bent-i{ --ia-1:var(--ent-ops);   --ia-2:rgba(6,70,56,.20); }
+.ent-transfer  .bent-i{ --ia-1:var(--ent-pass);  --ia-2:rgba(62,33,89,.20); }
+.ent-closure   .bent-i{ --ia-1:var(--ent-close); --ia-2:rgba(104,13,32,.20); }
+.bent-go{ background:var(--blue-50); border:1px solid var(--hm-line); }
+.ent-startup   .bent-go{ color:var(--ent-start); }
+.ent-operation .bent-go{ color:var(--ent-ops); }
+.ent-transfer  .bent-go{ color:var(--ent-pass); }
+.ent-closure   .bent-go{ color:var(--ent-close); }
+.bent-c > a:hover .bent-go{ background:var(--blue-100); }
+.ent-startup   > a:hover{ border-color:var(--ent-start); }
+.ent-operation > a:hover{ border-color:var(--ent-ops); }
+.ent-transfer  > a:hover{ border-color:var(--ent-pass); }
+.ent-closure   > a:hover{ border-color:var(--ent-close); }
+
+/* ── ③ · ④ · ⑤ 아이콘 타일 **한 벌로** ────────────────────────────
+   ⚠️⚠️ 전에는 셋이 제각각이었습니다 — 직접 찾기 58px(배경 **여덟 색**) ·
+   계산도구 76px(아이콘 **네 색**) · 이용 방법 40px 원형. 지시서 §1 이
+   "아이콘 크기 · 선 굵기 · 색상 · 배경 스타일 통일" 이라 **같은 모서리 ·
+   같은 브라운 틴트 · 같은 브라운 아이콘**으로 맞춥니다.
+   ⚠️⚠️ **색은 `--ia-1` · `--ia-2` 두 변수로만 들어옵니다** — `color` 만
+   바꾸면 컬러 아이콘은 제 기본값으로 그대로 섭니다 (계산도구에서 겪은
+   자리). 선 아이콘(`icon()`)은 `color` 를 봅니다 — 그래서 둘 다 적습니다.
+   ⚠️ 44px 아래로 내리지 마세요 — 두 톤이라 면이 뭉갭니다. */
+.bdir-i, .bcal-i{ width:64px; height:64px; border-radius:18px;
+  display:inline-flex; align-items:center; justify-content:center;
+  background:var(--blue-50); color:var(--blue-600);
+  --ia-1:var(--blue-600); --ia-2:rgba(106,78,57,.20); }
+/* ⚠️ `.cal-N .bcal-i`(0,2,0)가 위에 있어 같은 특정도로 눌러야 합니다 */
+.cal-1 .bcal-i, .cal-2 .bcal-i, .cal-3 .bcal-i, .cal-4 .bcal-i{
+  --ia-1:var(--blue-600); --ia-2:rgba(106,78,57,.20); }
+.bstep-i{ width:48px; height:48px; border-radius:14px;
+  align-items:center; justify-content:center;
+  background:var(--blue-50); color:var(--blue-600); }
+/* ⚠️ 좁은 폭 규칙이 이 블록보다 **앞**에 있어 여기서 다시 적습니다 —
+   안 적으면 폰에서도 64px 이 되어 칸이 넘칩니다 (재서 알았습니다). */
+@media (max-width:560px){
+  .bdir-i{ width:54px; height:54px; border-radius:16px; }
+}
+
+/* ── 카드 면을 한 벌로 (§1 "카드 여백 · 그림자 · 테두리 · 정렬") ──── */
+.bdir-c{ background:var(--hm-card); border-color:var(--hm-line);
+  border-radius:20px; }
+.bdir-c > b{ color:var(--hm-ink); }
+.bcal-c > a, .bgd-c > a{ border-radius:20px; }
+
+/* ── ⑥ 이용 가이드 — 썸네일 칸 ────────────────────────────────────
+   ⚠️⚠️ **사진이 아니라 우리가 그린 아이콘입니다.** 시안은 실사
+   썸네일인데, 쓸 수 있는 사진이 없습니다 — 받아 오는 것은 이미지
+   지시서 §4 가 금지하고(권한이 확인된 것만), 아무 사진이나 깔면
+   업종이 드러나 다른 업종 사장님께 "여긴 내 자리가 아니네" 가 됩니다.
+   그래서 **그 글의 분류 아이콘**을 브라운 틴트 판에 얹어 카드 크기와
+   정렬을 맞춥니다. 권한 있는 사진을 주시면 이 칸이 그대로 액자입니다. */
+/* ⚠️⚠️ **2026-10-26 에 걷어냈습니다** — 찍어 보니 셋 중 둘이 같은
+   분류(인테리어 · 시공)라 **같은 아이콘이 나란히** 섰고, 그게 곧
+   "준비 중" 으로 읽혔습니다. 이 저장소가 글 카드 썸네일을 처음부터
+   안 깔아 온 까닭 그대로입니다 (절대 규칙 2). 분류는 바로 아래
+   딱지(`.bgd-k`)가 말합니다. 권한 있는 사진을 주시면 그때 넣습니다. */
+
+/* ── ① · ⑦ 주 단추 — **밝은 면 위에서는 브라운** ──────────────────
+   ⚠️⚠️ `.btn-ac`(샌드 골드)는 **다크 면 위**에서 쓰는 색입니다. 히어로는
+   흰 면이라 거기서는 브라운 채움이라야 "주요 버튼에 브라운을 일관되게"
+   (§1)가 됩니다. 하단 CTA 는 다크 면이라 **골드 그대로**입니다 —
+   거기서 브라운으로 바꾸면 바탕에 묻힙니다. */
+.bhero-go .btn-ac{ background:var(--navy); color:var(--cream);
+  border-color:var(--navy); box-shadow:var(--hm-shadow); }
+.bhero-go .btn-ac:hover{ background:var(--navy-2); border-color:var(--navy-2);
+  color:var(--cream); }
+.bcta-go .btn-ac{ box-shadow:0 10px 26px rgba(0,0,0,.34); }
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-10-26 "메인페이지 전면 리뉴얼" — 01 · 03 · 04 · 06 · 08
+   ══════════════════════════════════════════════════════════════════
+   ⚠️ 02(.bent) · 05(.bcal) · 07(.bgd) 은 바로 위 블록이 이미 시안대로
+   맞춰 두었습니다 — 여기서는 새 구간과 히어로만 적습니다.
+   ⚠️⚠️ **이 블록도 파일 맨 뒤**라야 합니다 (특정도가 같은 선언들이
+   뒤에 와야 이깁니다).
+   ────────────────────────────────────────────────────────────────── */
+
+/* ── 01 히어로 — 사진이 **배경**입니다 (§2-01) ─────────────────── */
+.bhero{ position:relative; isolation:isolate; overflow:hidden;
+  background:var(--dk-esp); }
+.bhero-bg{ position:absolute; inset:0; z-index:0; display:block; }
+.bhero-bg .ph{ width:100%; height:100%; object-fit:cover;
+  filter:contrast(1.04) brightness(.96) saturate(.95); }
+/* ⚠️⚠️ **막의 세기는 픽셀로 재서 정했습니다.** 글이 왼쪽 위에 앉아서
+   왼쪽이 짙고 오른쪽이 옅습니다 — 사진은 오른쪽에서 살아 있습니다.
+   ⚠️ 사진을 바꾸시면 **다시 재세요** — 전수 점검은 사진 위 글자를
+   영원히 못 잽니다. */
+.bhero-bg::after{ content:""; position:absolute; inset:0;
+  background:linear-gradient(100deg,
+    rgba(26,18,14,.94) 0%, rgba(26,18,14,.88) 38%,
+    rgba(26,18,14,.62) 68%, rgba(26,18,14,.46) 100%); }
+.bhero-w{ position:relative; z-index:1; display:block;
+  padding-top:var(--s10); padding-bottom:var(--s10); }
+.bhero-in{ max-width:720px; }
+.bhero-k{ font-size:var(--t-sm); font-weight:800; letter-spacing:.08em;
+  color:var(--btn-gold); }
+.bhero.on-ph h1{ color:var(--cream); margin-top:var(--s3); }
+.bhero.on-ph .bhero-s{ margin-top:var(--s4); color:var(--on-dk2);
+  font-size:var(--t-lg); line-height:1.75; max-width:46ch; }
+/* 검색 — ⚠️ 장식이 아닙니다 (homeHeroFind) */
+.bhero-f{ display:grid; grid-template-columns:1fr 1fr 1.4fr auto;
+  gap:var(--s3); margin-top:var(--s7); align-items:stretch; }
+.bhero-c{ display:block; min-width:0; }
+.bhero-c .sel, .bhero-c input{ width:100%; min-height:52px; }
+.bhero-sb{ min-height:52px; padding:0 var(--s6); white-space:nowrap; }
+.bhero-chips{ display:flex; flex-wrap:wrap; gap:var(--s2);
+  margin:var(--s5) 0 0; padding:0; list-style:none; }
+.bhero-chip{ display:inline-flex; align-items:center; gap:6px;
+  min-height:40px; padding:0 14px; border-radius:var(--r-pill);
+  background:rgba(237,225,210,.12); border:1px solid var(--dk-line2);
+  color:var(--cream); font-size:var(--t-cap); font-weight:700; }
+.bhero-chip:hover{ background:rgba(237,225,210,.22); }
+.bhero-chip svg{ flex:none; color:var(--btn-gold); }
+.bhero-go{ margin-top:var(--s6); }
+@media (max-width:980px){
+  .bhero-f{ grid-template-columns:1fr 1fr; }
+  .bhero-q{ grid-column:1 / -1; }
+  .bhero-sb{ grid-column:1 / -1; }
+}
+/* ⚠️ 폰에서는 **간결한 검색 UI** 입니다 (§2-01) — 칸이 세로로 섭니다 */
+@media (max-width:640px){
+  .bhero-f{ grid-template-columns:1fr; gap:var(--s2); }
+  .bhero-in{ max-width:none; }
+  .bhero.on-ph .bhero-s{ font-size:var(--t-base); }
+  .bhero-bg::after{ background:linear-gradient(180deg,
+    rgba(26,18,14,.80) 0%, rgba(26,18,14,.90) 55%, rgba(26,18,14,.95) 100%); }
+  /* 칩은 가로로 흘립니다 — 세로로 쌓으면 첫 화면을 다 먹습니다 */
+  .bhero-chips{ flex-wrap:nowrap; overflow-x:auto; scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch; padding-bottom:4px; }
+  .bhero-chips > li{ flex:none; scroll-snap-align:start; }
+}
+
+/* ── 03 내 상황에 맞는 서비스 찾기 ───────────────────────────────── */
+.bfit{ background-color:var(--hm-bg2); padding:var(--sec-y) 0; }
+.bfit-f{ display:grid; grid-template-columns:repeat(4,1fr) auto;
+  gap:var(--s3); align-items:end;
+  padding:var(--s6); border-radius:20px;
+  background:var(--hm-card); border:1px solid var(--hm-line);
+  box-shadow:var(--hm-shadow); }
+.bfit-c{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+.bfit-c > span{ font-size:var(--t-cap); font-weight:800; color:var(--hm-ink2); }
+.bfit-c .sel{ width:100%; min-height:48px; }
+.bfit-go{ min-height:48px; white-space:nowrap; }
+.bfit-n{ margin-top:var(--s4); text-align:center; }
+@media (max-width:1100px){
+  .bfit-f{ grid-template-columns:1fr 1fr; }
+  .bfit-go{ grid-column:1 / -1; }
+}
+@media (max-width:560px){
+  .bfit-f{ grid-template-columns:1fr; padding:var(--s4); }
+}
+
+/* ── 04 추천 서비스 ──────────────────────────────────────────────── */
+.brec{ background-color:var(--hm-bg); padding:var(--sec-y) 0; }
+.brec-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s5);
+  margin:0 0 var(--s6); padding:0; list-style:none; }
+.brec-c{ display:flex; flex-direction:column; gap:var(--s3);
+  padding:var(--s5); border-radius:20px;
+  background:var(--hm-card); border:1px solid var(--hm-line);
+  box-shadow:var(--hm-shadow); }
+/* 사진이 있는 자리만 액자입니다 — 없으면 **빈 액자를 안 깝니다** */
+.brec-ph{ display:block; aspect-ratio:16/10; border-radius:14px;
+  overflow:hidden; background:var(--blue-50); }
+.brec-ph .ph{ width:100%; height:100%; object-fit:cover;
+  filter:contrast(1.04) saturate(.95); }
+.brec-i{ display:inline-flex; align-items:center; justify-content:center;
+  width:64px; height:64px; border-radius:18px;
+  background:var(--blue-50); color:var(--blue-600);
+  --ia-1:var(--blue-600); --ia-2:rgba(106,78,57,.20); }
+.brec-tx{ display:flex; flex-direction:column; gap:4px; flex:1 1 auto; }
+.brec-tx > b{ font-size:var(--t-lg); font-weight:900; letter-spacing:-.025em;
+  color:var(--hm-ink); }
+.brec-tx > em{ font-style:normal; font-size:var(--t-sm); line-height:1.7;
+  color:var(--hm-ink2); }
+.brec-go{ display:flex; gap:var(--s2); margin-top:auto; }
+.brec-go .btn{ flex:1; min-height:44px; font-size:var(--t-cap); }
+.brec-info{ margin-top:var(--s6); padding:var(--s5);
+  border-radius:16px; background:var(--blue-50);
+  border:1px solid var(--hm-line); }
+.brec-info > b{ font-size:var(--t-base); font-weight:900; color:var(--hm-ink); }
+.brec-info-g{ display:flex; flex-wrap:wrap; gap:var(--s2);
+  margin:var(--s3) 0 0; padding:0; list-style:none; }
+.brec-info-g > li > a{ display:inline-flex; align-items:center; gap:6px;
+  min-height:40px; padding:0 13px; border-radius:var(--r-pill);
+  background:var(--hm-card); border:1px solid var(--hm-line);
+  font-size:var(--t-cap); font-weight:700; color:var(--blue-600); }
+@media (max-width:1000px){ .brec-g{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:620px){ .brec-g{ grid-template-columns:1fr; } }
+
+/* ── 06 업종별 준비 가이드 + 체크리스트 ─────────────────────────── */
+.bigd{ background-color:var(--hm-bg2); padding:var(--sec-y) 0; }
+.bigd-tab{ justify-content:center; margin-bottom:var(--s6); }
+.prep{ padding:var(--s6); border-radius:20px;
+  background:var(--hm-card); border:1px solid var(--hm-line);
+  box-shadow:var(--hm-shadow); }
+.prep-hd{ display:flex; align-items:center; gap:var(--s4);
+  padding-bottom:var(--s4); border-bottom:1px solid var(--hm-line); }
+.prep-hd > b{ font-size:var(--t-base); font-weight:900; color:var(--hm-ink);
+  white-space:nowrap; }
+.prep-hd > b > i{ font-style:normal; color:var(--blue-600); }
+.prep-bar{ flex:1; height:8px; border-radius:999px;
+  background:var(--blue-50); overflow:hidden; }
+.prep-bar > i{ display:block; height:100%; border-radius:999px;
+  background:var(--blue-600); transition:width .2s; }
+.prep-l{ margin:0; padding:0; list-style:none; }
+.prep-r{ display:flex; align-items:flex-start; gap:var(--s3);
+  padding:var(--s3) 0; border-bottom:1px solid var(--line-soft); }
+.prep-r:last-child{ border-bottom:0; }
+.prep-k{ display:flex; align-items:flex-start; gap:var(--s3);
+  flex:1 1 auto; min-width:0; cursor:pointer; min-height:44px; }
+.prep-k input{ flex:none; width:22px; height:22px; margin-top:3px;
+  accent-color:var(--blue-600); }
+.prep-t{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.prep-t > b{ font-size:var(--t-base); font-weight:800; color:var(--hm-ink); }
+.prep-t > em{ font-style:normal; font-size:var(--t-cap); line-height:1.7;
+  color:var(--hm-ink2); }
+.prep-go{ flex:none; display:inline-flex; align-items:center; gap:4px;
+  min-height:44px; padding:0 12px; border-radius:var(--r-pill);
+  font-size:var(--t-cap); font-weight:800; color:var(--blue-600); }
+.prep-go:hover{ background:var(--blue-50); }
+.prep-go-r{ display:flex; flex-wrap:wrap; gap:var(--s3); margin-top:var(--s5); }
+.prep-go-r .btn{ min-height:48px; }
+.prep-n2{ margin-top:var(--s4); }
+@media (max-width:640px){
+  .prep{ padding:var(--s4); }
+  .prep-r{ flex-direction:column; align-items:stretch; gap:6px; }
+  .prep-go{ align-self:flex-start; }
+}
+
+/* ── 08 하단 CTA — 신뢰 요소 넷 (§2-08) ─────────────────────────── */
+.bcta-tr{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s3);
+  margin:var(--s7) 0 0; padding:0; list-style:none; }
+.bcta-tr > li{ display:flex; align-items:center; justify-content:center;
+  gap:7px; padding:12px var(--s3); border-radius:var(--r-pill);
+  background:rgba(237,225,210,.10); border:1px solid var(--dk-line);
+  font-size:var(--t-cap); font-weight:700; color:var(--on-dk2);
+  text-align:left; }
+.bcta-tr svg{ flex:none; color:var(--btn-gold); }
+@media (max-width:860px){ .bcta-tr{ grid-template-columns:1fr 1fr; } }
+@media (max-width:520px){ .bcta-tr{ grid-template-columns:1fr; } }
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-10-26 찍어 보고 고친 것 — ⚠️ **이 블록이 파일 맨 뒤**입니다
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ⚠️⚠️ **제목이 특정도에 져서 사진 위에서 거의 안 보였습니다 (여섯 번째).**
+   `html.ivh #view h1`(1,1,2)가 `.bhero.on-ph h1`(0,2,1)을 **이깁니다** —
+   짙은 사진 위에 짙은 브라운 글자가 앉아 대비 1.3 이었습니다. 가로
+   스크롤도 에러도 안 나고 **찍어 보고** 알았습니다.
+   이 저장소가 `.sec-hd p`↔`.eyebrow` · `.read li`↔`.rd-sum ul` ·
+   `.f-r label`↔`.rqf-k` · `.ft a`↔`.ft-col a` · `.bpass h2` 로 겪은
+   그 자리입니다 — **새 다크 면을 만들면 여기에 같이 적으세요.** */
+html.ivh #view .bhero.on-ph h1{ color:var(--cream); }
+html.ivh #view .bhero.on-ph .bhero-s{ color:var(--on-dk2); }
+html.ivh #view .bhero-k{ color:var(--btn-gold); }
+
+/* ⚠️ 글 칸은 720 인데 **검색 칸 넷이 같이 묶여** 고르개 딱지가
+   잘렸습니다 ("업종을 선택ㅎ"). 글 폭은 그대로 두고 칸만 넓힙니다. */
+.bhero-in{ max-width:960px; }
+.bhero.on-ph h1{ max-width:19ch; }
+
+/* ── 04 추천 서비스 — ⚠️⚠️ 사진 칸과 아이콘 칸의 **높이가 같아야** 합니다
+   사진이 있는 카드와 없는 카드가 한 줄에 섞이는데, 아이콘을 작은
+   타일로 두면 그 카드만 위가 텅 비어 "덜 준비된 칸" 으로 읽힙니다
+   (찍어 보고 알았습니다). 빈 액자를 까는 것이 아니라 **그 자체로
+   완성된 면**입니다 — `.mk-k-ph-n` 과 같은 방식입니다. */
+.brec-ph{ display:block; aspect-ratio:16/10; border-radius:16px;
+  overflow:hidden; background:var(--blue-50); }
+.brec-ph .ph{ width:100%; height:100%; object-fit:cover; }
+/* ⚠️⚠️ **옅은 틴트 상자를 깔면 그게 빈 액자입니다.** 처음에 그렇게
+   두었더니 여섯 중 넷이 커다란 베이지 상자라 "준비 중" 으로 읽혔습니다
+   (찍어 보고 알았습니다) — 이 저장소가 단계 카드 · 매물 카드 · 글 카드
+   썸네일에서 **세 번** 걷어낸 그 모양입니다.
+   지금은 `.mk-k-ph-n` 과 같은 방식입니다 — **짙은 면 + 큰 아이콘**이라
+   그 자체로 완성된 면이고, 사진 칸과 높이가 1px 까지 같습니다.
+   ⚠️ 사진이 들어오면 **코드를 한 줄도 안 고치고** 액자가 됩니다
+   (자리 이름은 svc-<분류 key> 입니다). */
+.brec-i{ display:flex; align-items:center; justify-content:center;
+  width:auto; height:auto; aspect-ratio:16/10; border-radius:16px;
+  background:linear-gradient(135deg, var(--blue) 0%, var(--navy-2) 100%);
+  --ia-1:var(--btn-gold); --ia-2:rgba(255,253,249,.28);
+  color:var(--btn-gold); }
+
+/* ── 06 준비 가이드 — ⚠️ 열넷을 다 펼치면 PC 1,764px · 폰 2,416px 입니다
+   (§4 "모바일에서는 섹션을 무조건 길게 나열하지 말고"). 접어도 **DOM 에
+   그대로 있어서** 크롤러 · 링크 검사 · 색인이 한 글자도 안 바뀝니다. */
+.prep-l.is-fold-rest > li:nth-child(n+7){ display:none; }
+
+/* ── 06 접는 단추 ──────────────────────────────────────────────── */
+.prep-fold{ margin:var(--s4) 0 0; text-align:center; }
+
+/* ── 04 를 폰에서 **가로로 흘립니다** — 세로로 쌓으면 2,503px 입니다 */
+@media (max-width:640px){
+  .brec-g{ display:flex; flex-wrap:nowrap; overflow-x:auto;
+    scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
+    gap:var(--s3); padding-bottom:6px; margin-left:calc(var(--pad) * -1);
+    margin-right:calc(var(--pad) * -1);
+    padding-left:var(--pad); padding-right:var(--pad); }
+  .brec-g > li{ flex:0 0 82%; scroll-snap-align:start; }
+}
+
+/* ── 메인 여덟 구간의 바탕을 **번갈아** 칠합니다 ──────────────────
+   ⚠️⚠️ **메인에서는 `paintTones()` 가 안 돕니다** (ivh 이른 반환) —
+   구간을 더하거나 빼면 **여기서 직접** 번갈아 칠하고 **ΔE 를
+   재세요.** 2026-10-26 리뉴얼로 brec 와 bcal 이 둘 다 아이보리라
+   **ΔE 0.00** 으로 한 구간처럼 읽혔습니다 (전수 점검이 잡았습니다).
+
+     bhero(사진) · bent(아이보리) · bfit(베이지) · brec(아이보리) ·
+     bcal(베이지) · bigd(아이보리) · bgd(베이지) · bcta(짙은 브라운)
+
+   ⚠️ `.bdir` · `.bstep` 을 되살리시면 그날 이 차례도 같이 고치세요. */
+.bcal{ background-color:var(--hm-bg2); }
+.bigd{ background-color:var(--hm-bg); }
+.bgd{ background-color:var(--hm-bg2); }

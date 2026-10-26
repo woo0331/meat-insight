@@ -563,9 +563,11 @@ const CASES = [
   /* ⚠️ 2026-10-16 §2-1 — 셋이 **서로 달라야** 합니다. 폐업 카드를
      창업과 같은 색으로 칠해 "색이 겹칩니다" 를 만듭니다. */
   ["전문관 셋이 저마다의 색으로 갈린다",
+   /* ⚠️ 2026-10-26 — 카드 면이 밝아져 검사가 **번호 알약**을 봅니다.
+      카드 면을 칠하면 아무 일도 안 납니다 (되돌리기가 틀린 자리). */
    `const st = getComputedStyle(
-      document.querySelector(".bent-c.ent-startup > a")).backgroundColor;
-    document.querySelector(".bent-c.ent-closure > a").style.background = st;`],
+      document.querySelector(".ent-startup .bent-no")).backgroundColor;
+    document.querySelector(".ent-closure .bent-no").style.background = st;`],
   /* ⚠️ 2026-10-11 간소화 §2 — 연결 구간이 메인에서 내려와 되돌릴
      요소가 없습니다. **없는 요소를 집으면 되돌리기가 터지고**, 그러면
      "검사가 안 잡는다" 로 보입니다 (이 저장소에서 아홉 번 겪은 자리).
@@ -666,10 +668,11 @@ const CASES = [
      지시서가 다크로 정한 자리라 어둡게 해도 아무 일이 안 납니다
      (되돌리기가 틀린 자리, 이 저장소에서 열한 번 겪었습니다). */
   ["메인 구간 바탕은 밝고 그 표시가 메인 밖으로 안 샌다",
-   /* ⚠️ 2026-10-25 §1 — .bwhy 가 내려가서 §3-2 가 이름까지 적은
-      자리를 **히어로**가 받습니다 (§1-01 "BRIGHT PREMIUM 유지").
-      없는 요소를 집으면 되돌리기가 터집니다 (열세 번째). */
-   `document.querySelector(".bhero").style.backgroundColor = "#2E2219";`],
+   /* ⚠️ 2026-10-26 §2-01 — 히어로가 **사진 배경**이 되면서 재는 자리가
+      03 맞춤 찾기 · 04 추천 · 05 계산도구로 옮겨갔습니다. 히어로를
+      집으면 그쪽은 이미 짙어서 **되돌리기 전후가 같은 말**로 떨어져
+      되돌리기를 통째로 가립니다 (이 저장소가 열세 번 겪은 자리). */
+   `document.querySelector(".bfit").style.backgroundColor = "#2E2219";`],
   /* 짝 검사 — 속화면에 메인 표시가 새면 걸려야 합니다 */
   ["속화면은 그대로 밝고 메인 표시가 안 묻었다",
    `document.documentElement.classList.add("ivh");`],
@@ -748,7 +751,10 @@ const CASES = [
    /* ⚠️ 2026-10-16 §3 — 지금 메인에 있는 카드는 진입(.bent-c > a) ·
       까닭(.bwhy-c) · 절차(.bstep-c) · 배너(.bban-c > a) 입니다.
       **없는 요소를 집으면 되돌리기가 터집니다** (열한 번째). */
-   `const a = document.querySelector(".bstep-c") ||
+   /* ⚠️ 2026-10-26 §2 — .bstep-c 가 내려갔습니다. 지금 메인의 카드는
+      추천(.brec-c) · 계산도구(.bcal-g > li > a) · 진입(.bent-c > a)
+      입니다. **없는 요소를 집으면 되돌리기가 터집니다.** */
+   `const a = document.querySelector(".brec-c") ||
              document.querySelector(".bcal-g > li > a") ||
              document.querySelector(".bent-c > a");
     const back = (function(el){
@@ -838,11 +844,11 @@ const CASES = [
      열두 칸에 같은 그림이 둘이면 무엇이 무엇인지 흐려집니다.
      ⚠️ 되돌리기는 **그려진 뒤에** 돕니다. DOM 을 직접 건드립니다. */
   ["메인 아이콘이 비지 않고 한 묶음 안에서 겹치지 않는다",
-   /* ⚠️ 2026-10-25 §1 — .bwhy-i 가 내려가서 집을 것이 없습니다
-      (t[1] 이 undefined 라 되돌리기가 터집니다 · 열네 번째).
-      지금 메인에서 한 묶음 안에 아이콘이 여럿인 곳은 진입 카드 넷과
-      직접 찾기 여덟입니다. */
-   `const t = [].slice.call(document.querySelectorAll("#view .bdir-i svg"));
+   /* ⚠️ 2026-10-26 §2 — .bdir-i 가 내려갔습니다. 지금 메인에서 한
+      묶음 안에 아이콘이 여럿인 곳은 **진입 카드 넷 · 계산도구 넷 ·
+      추천 서비스의 아이콘 면**입니다 (t[1] 이 undefined 면
+      되돌리기가 터집니다 · 열네 번째로 겪은 자리). */
+   `const t = [].slice.call(document.querySelectorAll("#view .bcal-i svg"));
     t[1].innerHTML = t[0].innerHTML;`],
   /* 고른 전문관이 표시되지 않으면 걸려야 합니다 — 거르개는 무엇이
      켜졌는지 보이지 않으면 거르개가 아닙니다 */
@@ -1298,7 +1304,8 @@ async function proveAudit(pg){
       const e = document.querySelector("#view .ic-t svg, #view .stg-i svg," +
         " #view .ia-t svg, #view .mhall-i svg, #view .mstp-i svg," +
         " #view .bent-i svg, #view .bwhy-i svg, #view .bban-i svg," +
-        " #view .bstep-i svg, #view .bcal-i svg");
+        " #view .bstep-i svg, #view .bcal-i svg," +
+        " #view .brec-i svg, #view .bdir-i svg");
       if(e) e.remove();
     });
     await pg.waitForTimeout(60);

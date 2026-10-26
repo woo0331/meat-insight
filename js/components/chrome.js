@@ -562,12 +562,23 @@ function Footer(){
          ⚠️ 링크를 **하나도 안 뺍니다** — 푸터에서 빼면 메인을 뺀
          160개 화면에서 그리로 가는 길이 사라집니다. DOM 에 그대로
          있고 접기만 합니다 (크롤러 · 링크 검사도 그대로 봅니다).
-         ⚠️ `<button>` 은 `<h4>` **안**입니다 — 반대로 넣으면 버튼의
-         내용 모델(phrasing)을 어깁니다. */
+         ⚠️ `<button>` 은 머리말 **안**입니다 — 반대로 넣으면 버튼의
+         내용 모델(phrasing)을 어깁니다.
+         ⚠️⚠️ **h2 입니다 (h4 가 아닙니다).** 163개 화면을 재 보니
+         #view 안에서 제일 깊은 제목이 **148개는 h2 · 15개는 h1**
+         (프랜차이즈 열셋 · /content · /faq)입니다 — 푸터를 h4 로 두면
+         문서 차례가 **163개 전부**에서 h2(또는 h1) → h4 로 건너뛰고,
+         h3 으로 둬도 h1 뿐인 열다섯에서 건너뜁니다. h2 가 어디서도
+         안 건너뛰는 유일한 값이고, 뜻으로도 푸터 칸은 본문 구간과
+         나란한 꼭대기 묶음입니다.
+         ⚠️ 전수 점검이 **`#view` 안만** 보고 있어서 이 건너뜀을
+         아무도 안 보고 있었습니다 (지금은 문서 전체를 봅니다).
+         ⚠️ 크기 · 색은 `css/app.css` 의 `.ft-col h2` 가 그대로
+         잡습니다 — 바꾸시려면 **거기 두 줄**도 같이 고치세요. */
       cols.map(function(c){
-        return '<div class="ft-col"><h4><button type="button" class="ft-fold" '+
+        return '<div class="ft-col"><h2><button type="button" class="ft-fold" '+
           'aria-expanded="true" onclick="ftFold(this)">'+
-          '<span>'+esc(c[0])+'</span>'+icon("chevd",16)+'</button></h4><ul>'+
+          '<span>'+esc(c[0])+'</span>'+icon("chevd",16)+'</button></h2><ul>'+
           c[1].map(function(l){
             return '<li><a href="'+esc(l[0])+'">'+esc(l[1])+'</a></li>';
           }).join("")+'</ul></div>';

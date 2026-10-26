@@ -1156,6 +1156,33 @@ async function proveAudit(pg){
       " → h2 하나를 h3 으로 바꾸면 " + JSON.stringify(after).slice(0,60) + "]");
   }
 
+  /* 제목 차례 — **푸터**도 보는가 (2026-10-26 에 넓혔습니다).
+     ⚠️⚠️ 바로 위 되돌리기는 view 안의 h2 를 바꿉니다. 그러면 검사가
+     view 안만 보던 때에도 통과해서, **넓힌 것이 실제로 무엇을 잡는지**
+     아무도 못 봅니다 — 푸터 칸 머리말을 h4 로 되돌려서 잽니다.
+     (그게 163개 화면에서 h2 → h4 로 건너뛰고 있던 바로 그 자리입니다.) */
+  for(const u of ["/", "/providers"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).hord;
+    const did = await pg.evaluate(() => {
+      const h = document.querySelector(".ft-col h2");
+      if(!h) return false;
+      const n = document.createElement("h4");
+      n.innerHTML = h.innerHTML;
+      n.className = h.className;
+      h.replaceWith(n);
+      return true;
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).hord;
+    const ok = did && before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 제목 차례를 건너뜀 (푸터) · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → 푸터 h2 를 h4 로 되돌리면 " + JSON.stringify(after).slice(0,60) + "]");
+  }
+
   /* 이웃한 두 구간이 붙어 보임 — 둘째 구간을 첫째와 같은 색으로
      돌려놓고 잡히는지 봅니다. ⚠️ 바탕을 **안 준** 구간도 봐야 합니다 —
      처음에 투명이라고 건너뛰었다가 업종 화면의 두 쌍을 놓쳤습니다. */

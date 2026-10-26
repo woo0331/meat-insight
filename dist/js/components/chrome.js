@@ -222,9 +222,9 @@ function Footer(){
       '</div>'+
 
       cols.map(function(c){
-        return '<div class="ft-col"><h4><button type="button" class="ft-fold" '+
+        return '<div class="ft-col"><h2><button type="button" class="ft-fold" '+
           'aria-expanded="true" onclick="ftFold(this)">'+
-          '<span>'+esc(c[0])+'</span>'+icon("chevd",16)+'</button></h4><ul>'+
+          '<span>'+esc(c[0])+'</span>'+icon("chevd",16)+'</button></h2><ul>'+
           c[1].map(function(l){
             return '<li><a href="'+esc(l[0])+'">'+esc(l[1])+'</a></li>';
           }).join("")+'</ul></div>';

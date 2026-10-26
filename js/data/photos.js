@@ -456,7 +456,18 @@ window.wowSlot = function(key){
    ⚠️ `sizes` 는 **자리**의 성질입니다 (히어로는 반쪽 화면, 서비스
    카드는 네 칸) — 그래서 `WOW_PHOTO_SLOTS` 에 적혀 있습니다. 없으면
    브라우저가 **화면 전체 폭**으로 보고 제일 큰 파일을 받습니다. */
-window.photoBox = function(key, cls, eager){
+/* ⚠️⚠️ 넷째 인자 `sz` 는 **그 자리의 실제 칸 폭**입니다 (안 넘기면 전과
+   똑같이 자리(`slot`)의 값을 씁니다). 같은 사진 자리를 **칸이 아주 다른
+   두 화면**이 같이 쓰기 때문에 생긴 칸입니다 —
+     hero-startup 등 넷:  메인 진입 카드 118~462px  ·  /startup 머리 320~1075px
+   자리에 하나만 적을 수 있어서, 머리 띠에 맞춰 둔 `42vw` 가 메인에서는
+   **303px 칸에 869w 짜리 파일**을 받게 했습니다 (재 보니 네 장이 446KB —
+   -sm 로 받으면 194KB). ⚠️ 자리의 `sizes` 를 메인에 맞춰 줄이면 이번에는
+   **전문관 머리 띠가 뿌옇게** 뜹니다. 그래서 자리는 그대로 두고 부르는
+   쪽이 제 칸을 알려 줍니다.
+   ⚠️ 재서 적으세요 — 눈대중으로 줄이면 작은 판을 받아 뿌옇게 뜨는데
+   **에러도 안 나고 검사도 통과합니다.** */
+window.photoBox = function(key, cls, eager, sz){
   var c = "ph" + (cls ? " " + cls : "");
   var p = wowPhoto(key);
   /* ⚠️ 없을 때 `alt` 를 단 빈 칸을 만들지 않습니다. 읽어 주는
@@ -464,7 +475,7 @@ window.photoBox = function(key, cls, eager){
   if(!p) return '<span class="' + c + ' ph-none" aria-hidden="true"></span>';
 
   var sl    = window.wowSlot(key) || {};
-  var sizes = p.sizes || sl.sizes || "";
+  var sizes = sz || p.sizes || sl.sizes || "";
   var szAtt = sizes ? ' sizes="' + esc(sizes) + '"' : "";
 
   /* ⚠️⚠️ `width` · `height` 를 적지 않으면 사진이 뜨는 순간 아래 글이

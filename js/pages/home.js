@@ -810,8 +810,16 @@ function HomeEnter(){
     for(i = 0; i < H.length; i++) if(H[i].key === x.key) h = H[i];
     if(!h) return "";
     var no = '<i class="bent-no">'+esc(x.no)+'</i>';
+    /* ⚠️⚠️ 칸 폭을 **재서** 넘깁니다 (2026-10-26 · 스물두 폭).
+         320~768  118px (고정)   769~999  727~858 (95vw)
+         1000~1100 450~500 (46vw)   1101~  238~303 (--w 1360 에서 멈춤)
+       자리(`photos.js`)의 `42vw` 는 **전문관 머리 띠**(320~1075px) 값이라,
+       그대로 두면 303px 칸에 869w 짜리를 받습니다 — 넷이 446KB 였습니다.
+       ⚠️ 자리 쪽을 줄이면 전문관 머리가 뿌옇게 뜹니다. */
     var ph = hasPhoto(x.ph)
-      ? '<span class="bent-ph" aria-hidden="true">'+photoBox(x.ph)+no+'</span>' : "";
+      ? '<span class="bent-ph" aria-hidden="true">'+photoBox(x.ph, "", false,
+          "(max-width:768px) 118px, (max-width:999px) 95vw, "+
+          "(max-width:1100px) 46vw, 310px")+no+'</span>' : "";
     /* 대표 서비스 다섯 — ⚠️ 아이콘과 이름이 **halls.js 것**입니다 */
     return '<li class="bent-c ent-'+esc(x.key)+'">'+
       '<a href="'+esc(h.to)+'">'+ ph +
@@ -1437,7 +1445,13 @@ function HomeRec(){
     var c = (window.amCat ? amCat(s.cat) : null) || {};
     var key = "svc-" + s.cat;
     var ph = (typeof hasPhoto === "function" && hasPhoto(key))
-      ? '<span class="brec-ph">'+photoBox(key)+'</span>'
+      /* ⚠️ 재 본 칸 폭 — 320~600 188~417(70vw · 스와이프) ·
+           601~1023 268~408(42vw) · 1024~ 259~371 (멈춤).
+         ⚠️⚠️ 자리의 `92px` · `104px` 는 **아이콘 원판 시절**(2026-10-10)
+         값입니다. 10-26 에 이 카드로 옮겨 오면서 칸이 네 배가 됐는데
+         그 줄만 남아 있었습니다. */
+      ? '<span class="brec-ph">'+photoBox(key, "", false,
+          "(max-width:600px) 70vw, (max-width:1023px) 42vw, 380px")+'</span>'
       : '<span class="brec-i" aria-hidden="true">'+
           ((typeof hasIconArt === "function" && hasIconArt(s.cat))
             ? iconArt(s.cat, 84) : icon(c.icon || "doc", 52))+'</span>';

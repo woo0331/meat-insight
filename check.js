@@ -588,9 +588,18 @@ const AUDIT = `(() => {
      ⚠️ 위의 h1 검사는 **개수만** 봅니다 — 차례는 아무도 안 보고
      있었고, 재 보니 메인과 약관 · 방침 **세 화면**이 1 → 3 으로
      건너뛰고 있었습니다 (목차 · 전문관 서비스 머리말).
-     ⚠️ 404.html 은 #view 가 없어 main 에서 셉니다 (h1 검사와 같습니다). */
+     ⚠️ 404.html 은 #view 가 없어 main 에서 셉니다 (h1 검사와 같습니다).
+     ⚠️⚠️ **문서 전체를 봅니다 — 전에는 view 안만 봤습니다.**
+     푸터 칸 머리말이 h4 인데 본문이 h2 에서 끝나서, 문서 차례가
+     163개 화면 **전부**에서 h2 → h4 로 건너뛰고 있었는데 이 검사가
+     view 안만 보느라 영원히 통과했습니다 (푸터는 그 밖입니다).
+     ⚠️ 주석에 백틱을 쓰지 마세요 — 검사 본문이 템플릿 문자열이라
+     거기서 끊깁니다 (여기서 스물여덟 번째로 겪었습니다).
+     머리 · 푸터 · 아래 네비는 160개 화면이 같이 쓰는 것이라, 거기서
+     한 번 끊기면 **한 화면이 아니라 전부**가 끊깁니다. */
   {
-    const root = document.getElementById("view") || document.querySelector("main") || document.body;
+    const root = document.getElementById("view") ? document.body
+      : (document.querySelector("main") || document.body);
     const hs = [...root.querySelectorAll("h1,h2,h3,h4,h5,h6")]
       .filter(vis).map(e => +e.tagName[1]);
     for(let i = 1; i < hs.length; i++)

@@ -6470,7 +6470,12 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
 .bhero-f{ display:grid; grid-template-columns:1fr 1fr 1.4fr auto;
   gap:var(--s3); margin-top:var(--s7); align-items:stretch; }
 .bhero-c{ display:block; min-width:0; }
-.bhero-c .sel, .bhero-c input{ width:100%; min-height:52px; }
+/* ⚠️ `height:100%` 가 있어야 **한 줄에 선 넷의 높이가 같습니다.**
+   `.bhero-f` 가 `align-items:stretch` 라 감싸개(`.bhero-c`)는 줄
+   높이를 받는데, 그 안이 `display:block` 이라 **칸은 제 글자
+   높이대로** 섭니다 — 재 보니 고르개 둘 55 · 단추 55 인데 적는
+   칸만 **52** 였습니다 (3px 낮게). */
+.bhero-c .sel, .bhero-c input{ width:100%; min-height:52px; height:100%; }
 .bhero-sb{ min-height:52px; padding:0 var(--s6); white-space:nowrap; }
 .bhero-chips{ display:flex; flex-wrap:wrap; gap:var(--s2);
   margin:var(--s5) 0 0; padding:0; list-style:none; }

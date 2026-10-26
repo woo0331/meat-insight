@@ -354,6 +354,21 @@ var IA = {
     '<path class="a1" d="M4 8h40v6H4z"/>'+
     '<path class="a1" d="M18.5 2h11v6h-11z"/>',
 
+  law: '<path class="a1" d="M21.8 9h4.4v33h-4.4z"/>'+
+    '<path class="a1" d="M13 42h22v4.2H13z"/>'+
+    '<path class="a1" d="M6.5 13.2h35v3.6h-35z"/>'+
+    '<path class="a1o" d="M12 16.8v4.4M36 16.8v4.4"/>'+
+    '<path class="a2" d="M3.4 21.2h17.2L12 33.4z"/>'+
+    '<path class="a2" d="M27.4 21.2h17.2L36 33.4z"/>'+
+    '<path class="aw" d="M8.2 23.8h7.6L12 29.2zM32.2 23.8h7.6L36 29.2z"/>'+
+    '<path class="a1" d="M24 3.2a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8z"/>',
+
+  stock: '<path class="a1" d="M4.5 25h18.2v18H4.5z"/>'+
+    '<path class="a1" d="M25.3 25h18.2v18H25.3z"/>'+
+    '<path class="a2" d="M14.9 5h18.2v18H14.9z"/>'+
+    '<path class="aw" d="M10.3 25h6.6v7.2h-6.6zM31.1 25h6.6v7.2h-6.6z"/>'+
+    '<path class="aw" d="M20.7 5h6.6v7.2h-6.6z"/>',
+
   sofa: '<path class="a1" d="M11 5h26a5 5 0 0 1 5 5v18H6V10a5 5 0 0 1 5-5z"/>'+
     '<path class="a2" d="M14 9h20a2 2 0 0 1 2 2v14H12V11a2 2 0 0 1 2-2z"/>'+
     '<path class="a1" d="M4 20a4 4 0 0 1 8 0v14H4zM36 20a4 4 0 0 1 8 0v14h-8z"/>'+
@@ -395,10 +410,17 @@ var IA_FIT = {
   won:[0.8889,3.111,-0.889],
   wallet:[0.9524,1.143,-0.762],
   trash:[0.9091,2.182,2.182],
+  law:[0.9302,1.674,1.023],
+  stock:[1.0256,-0.615,-0.615],
   sofa:[0.8333,4,3.167]
 };
 
+var IA_ALIAS = {
+  item:"bulb", area:"mappin", furniture:"sofa", fund:"wallet",
+  transfer:"handover", asset:"sofa", waste:"trash", labor:"staff"
+};
 window.iconArt = function(name, size, opt){
+  name = IA_ALIAS[name] || name;
   var d = IA[name]; if(!d) return "";
   var s = size || 46;
   var f = (opt && opt.raw) ? null : IA_FIT[name];
@@ -410,4 +432,5 @@ window.iconArt = function(name, size, opt){
     'aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">'+
     d+'</svg>';
 };
-window.hasIconArt = function(name){ return !!IA[name]; };
+
+window.hasIconArt = function(name){ return !!IA[IA_ALIAS[name] || name]; };

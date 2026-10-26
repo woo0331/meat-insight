@@ -506,6 +506,30 @@ var IA = {
     '<path class="a1" d="M4 8h40v6H4z"/>'+
     '<path class="a1" d="M18.5 2h11v6h-11z"/>',
 
+  /* 법률 · 채무 — 저울 (2026-10-26). ⚠️ 46px 로 줄여서 찍어 보고
+     그렸습니다 — 기둥 · 받침 · 보를 먼저 solid 로 세우고 접시를 옅은
+     면으로 답니다. 접시를 주인공으로 그리면 46px 에서 "안경" 으로
+     읽힙니다 (실제로 한 번 그렇게 나왔습니다). */
+  law: '<path class="a1" d="M21.8 9h4.4v33h-4.4z"/>'+
+    '<path class="a1" d="M13 42h22v4.2H13z"/>'+
+    '<path class="a1" d="M6.5 13.2h35v3.6h-35z"/>'+
+    '<path class="a1o" d="M12 16.8v4.4M36 16.8v4.4"/>'+
+    '<path class="a2" d="M3.4 21.2h17.2L12 33.4z"/>'+
+    '<path class="a2" d="M27.4 21.2h17.2L36 33.4z"/>'+
+    '<path class="aw" d="M8.2 23.8h7.6L12 29.2zM32.2 23.8h7.6L36 29.2z"/>'+
+    '<path class="a1" d="M24 3.2a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8z"/>',
+
+  /* 재고 처분 — 쌓은 상자 셋 (2026-10-26).
+     ⚠️ `supply`(들이는 상자 하나)와 **한 줄에 같이 설 수 있습니다** —
+     그래서 일부러 **여러 개를 쌓은** 모양입니다. 하나짜리로 그리면
+     같은 아이콘 둘이 됩니다 (이 저장소가 store ↔ 프랜차이즈로 겪은
+     자리). */
+  stock: '<path class="a1" d="M4.5 25h18.2v18H4.5z"/>'+
+    '<path class="a1" d="M25.3 25h18.2v18H25.3z"/>'+
+    '<path class="a2" d="M14.9 5h18.2v18H14.9z"/>'+
+    '<path class="aw" d="M10.3 25h6.6v7.2h-6.6zM31.1 25h6.6v7.2h-6.6z"/>'+
+    '<path class="aw" d="M20.7 5h6.6v7.2h-6.6z"/>',
+
   /* 가구 · 집기 (2026-10-17 창업 준비 §2-B — 전체 서비스 열넷에서
      유일하게 컬러 아이콘이 없던 분류입니다. 선형 하나만 섞이면 §10
      "아이콘 라이브러리 통일" 이 그 칸에서 깨집니다)
@@ -565,6 +589,8 @@ var IA_FIT = {
   won:[0.8889,3.111,-0.889],
   wallet:[0.9524,1.143,-0.762],
   trash:[0.9091,2.182,2.182],
+  law:[0.9302,1.674,1.023],
+  stock:[1.0256,-0.615,-0.615],
   sofa:[0.8333,4,3.167]
 };
 
@@ -572,7 +598,26 @@ var IA_FIT = {
    면이 뭉개져 선형 아이콘보다 오히려 안 읽힙니다 (찍어서 재 봤습니다).
    ⚠️ `opt.raw` 는 **재는 도구 전용**입니다 — 보정 전 자리를 재야 해서
    그때만 켭니다. 화면에서는 쓰지 마세요. */
+/* ⚠️⚠️ **분류 key 와 그 분류의 컬러 아이콘 이름이 다른 자리**입니다.
+   그림을 새로 그린 것이 아니라 **이미 있는 것을 가리키기만** 합니다 —
+   뜻이 정확히 같은 것만 적었습니다.
+   왜 필요한가 — 재 보니 메인 추천 여섯 줄에서 `area` 와 `fund` 만
+   `hasIconArt()` 가 false 라 **선 아이콘 52px** 으로 떨어지고, 나머지
+   넷은 **컬러 84px** 이었습니다. 한 줄에 아이콘 체계가 둘이고 크기가
+   1.6배 달랐습니다.
+   ⚠️ **뜻이 어긋나는 것은 적지 마세요.** `process`(폐업 절차)와
+   `support`(폐업지원)는 맞는 컬러 아이콘이 아직 없어서 **일부러
+   비워 두었습니다** — 비슷한 것을 가져다 붙이면 아이콘이 뜻을
+   속입니다. 둘은 선 아이콘으로 떨어지고, 어차피 `AM_PICK_OFF` 라
+   추천 줄에는 안 나옵니다 (재서 확인했습니다).
+   ⚠️ `law` · `stock` 은 **가리키지 않고 그렸습니다** — 뜻이 같은
+   것이 없었습니다 (저울 · 쌓은 상자). */
+var IA_ALIAS = {
+  item:"bulb", area:"mappin", furniture:"sofa", fund:"wallet",
+  transfer:"handover", asset:"sofa", waste:"trash", labor:"staff"
+};
 window.iconArt = function(name, size, opt){
+  name = IA_ALIAS[name] || name;
   var d = IA[name]; if(!d) return "";
   var s = size || 46;
   var f = (opt && opt.raw) ? null : IA_FIT[name];
@@ -586,4 +631,7 @@ window.iconArt = function(name, size, opt){
     'aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">'+
     d+'</svg>';
 };
-window.hasIconArt = function(name){ return !!IA[name]; };
+/* ⚠️ 가리키는 이름(IA_ALIAS)도 **있는 것으로** 셉니다 — 안 그러면
+   iconArt() 는 그려 주는데 부르는 쪽이 "없다" 고 보고 선 아이콘으로
+   떨어집니다 (두 곳이 다른 답을 내는 자리입니다). */
+window.hasIconArt = function(name){ return !!IA[IA_ALIAS[name] || name]; };

@@ -4609,7 +4609,8 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
 .bhero-f{ display:grid; grid-template-columns:1fr 1fr 1.4fr auto;
   gap:var(--s3); margin-top:var(--s7); align-items:stretch; }
 .bhero-c{ display:block; min-width:0; }
-.bhero-c .sel, .bhero-c input{ width:100%; min-height:52px; }
+
+.bhero-c .sel, .bhero-c input{ width:100%; min-height:52px; height:100%; }
 .bhero-sb{ min-height:52px; padding:0 var(--s6); white-space:nowrap; }
 .bhero-chips{ display:flex; flex-wrap:wrap; gap:var(--s2);
   margin:var(--s5) 0 0; padding:0; list-style:none; }

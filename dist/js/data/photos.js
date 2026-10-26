@@ -161,14 +161,14 @@ window.wowSlot = function(key){
   return null;
 };
 
-window.photoBox = function(key, cls, eager){
+window.photoBox = function(key, cls, eager, sz){
   var c = "ph" + (cls ? " " + cls : "");
   var p = wowPhoto(key);
 
   if(!p) return '<span class="' + c + ' ph-none" aria-hidden="true"></span>';
 
   var sl    = window.wowSlot(key) || {};
-  var sizes = p.sizes || sl.sizes || "";
+  var sizes = sz || p.sizes || sl.sizes || "";
   var szAtt = sizes ? ' sizes="' + esc(sizes) + '"' : "";
 
   var wh = (p.w && p.h) ? ' width="' + p.w + '" height="' + p.h + '"' : "";

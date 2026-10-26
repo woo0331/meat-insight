@@ -175,8 +175,11 @@ function HomeEnter(){
     for(i = 0; i < H.length; i++) if(H[i].key === x.key) h = H[i];
     if(!h) return "";
     var no = '<i class="bent-no">'+esc(x.no)+'</i>';
+
     var ph = hasPhoto(x.ph)
-      ? '<span class="bent-ph" aria-hidden="true">'+photoBox(x.ph)+no+'</span>' : "";
+      ? '<span class="bent-ph" aria-hidden="true">'+photoBox(x.ph, "", false,
+          "(max-width:768px) 118px, (max-width:999px) 95vw, "+
+          "(max-width:1100px) 46vw, 310px")+no+'</span>' : "";
 
     return '<li class="bent-c ent-'+esc(x.key)+'">'+
       '<a href="'+esc(h.to)+'">'+ ph +
@@ -605,7 +608,9 @@ function HomeRec(){
     var c = (window.amCat ? amCat(s.cat) : null) || {};
     var key = "svc-" + s.cat;
     var ph = (typeof hasPhoto === "function" && hasPhoto(key))
-      ? '<span class="brec-ph">'+photoBox(key)+'</span>'
+
+      ? '<span class="brec-ph">'+photoBox(key, "", false,
+          "(max-width:600px) 70vw, (max-width:1023px) 42vw, 380px")+'</span>'
       : '<span class="brec-i" aria-hidden="true">'+
           ((typeof hasIconArt === "function" && hasIconArt(s.cat))
             ? iconArt(s.cat, 84) : icon(c.icon || "doc", 52))+'</span>';

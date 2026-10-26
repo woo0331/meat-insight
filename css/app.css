@@ -457,7 +457,8 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
   gap:var(--s5) var(--s6); }
 .ft-b p{ margin:var(--s3) 0 var(--s4); line-height:1.8; color:var(--ink2);
   font-size:var(--t-sm); }
-.ft-col h4{ font-size:var(--t-base); margin:0; color:var(--navy); }
+/* ⚠️ 푸터 칸 머리말은 **h2** 입니다 (제목 차례 때문 — chrome.js 주석) */
+.ft-col h2{ font-size:var(--t-base); margin:0; color:var(--navy); }
 .ft-col > ul{ margin-top:var(--s2); }
 /* 머리말을 감싼 단추 — 넓은 화면에서는 **그냥 머리말로 보입니다.**
    ⚠️ 40px 아래로 내리지 마세요. 누름 검사가 `<button>` 을 전부 재는데
@@ -776,7 +777,7 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 .ft-b p{ color:rgba(255,252,247,.78); }
 .ft-biz, .ft-role{ color:rgba(255,252,247,.78); }
 /* 칸 머리말 — 밝은 아이보리 (남색은 짙은 바탕에서 안 보입니다) */
-.ft-col h4, .ft-fold{ color:#FFFCF7; }
+.ft-col h2, .ft-fold{ color:#FFFCF7; }
 .ft-col a:hover, .ft-tail a:hover{ color:#FFFFFF; }
 .ft-fold svg{ color:rgba(255,252,247,.66); }
 .ft-tail a{ color:rgba(255,252,247,.82); }

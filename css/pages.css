@@ -2037,8 +2037,12 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .msvc-q:hover svg{ color:#fff; }
 /* ⚠️ 칸 수는 **아래 1100px · 760px 묶음**이 정합니다 — 여기 또 적으면
    뒤엣것이 이겨서 "안 먹는다" 가 됩니다 (이 저장소의 특정도 함정). */
-  .msvc-ph-n svg{ width:28px; height:28px; }
-}
+/* ⚠️ 2026-10-26 — 여기 있던 `@media (max-width:460px)` 묶음이 2026-10-09 에
+   여는 줄만 지워져서, 안쪽 한 줄이 **전 폭에서** 돌고 닫는 중괄호 하나가
+   짝 없이 떠 있었습니다 (CSS 파서가 맨 바깥의 홀 `}` 를 그냥 건너뛰어
+   화면도 멀쩡했고 17일 동안 아무도 못 봤습니다). 그 안의 `.msvc-ph-n` 은
+   화면에서 쓰는 곳이 **한 군데도 없어서** 둘을 같이 지웠습니다.
+   ⚠️ 중괄호 짝은 `grep -o '{' | wc -l` 로 **세어 보세요** — 검사가 못 잡습니다. */
 
 
 /* ══════════════════════════════════════════════════════════════════
@@ -6435,3 +6439,107 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
   color:var(--cream); }
 .bcta-go .btn-ac{ box-shadow:0 10px 26px rgba(0,0,0,.34); }
 
+/* ══════════════════════════════════════════════════════════════════
+   2026-10-26 "브라운 · 아이보리 마감" — ⚠️⚠️ **이 블록이 파일 맨 뒤**입니다
+   ══════════════════════════════════════════════════════════════════
+   사장님 지시 — "전면 리뉴얼이 아니라 **색감과 시각적 디테일을 정리**하는
+   작업" · "현재 메인페이지의 섹션 구성, 순서, 서비스 카드, 기능과 동선을
+   유지해" · "현재 디자인을 새로 만드는 게 아니라 기존 베이지 디자인의
+   완성도를 높이는 작업".
+
+   ⚠️⚠️ **구조를 한 줄도 안 건드렸습니다.** 구간 일곱 · 차례 · 카드 ·
+   링크 · 검색 · 계산도구 · 상담 신청 · DB · API 가 전부 그대로이고,
+   여기서 바뀌는 것은 **색 · 그림자 · 글자 크기**뿐입니다
+   (`js/pages/home.js` 는 한 글자도 안 고쳤습니다).
+
+   ⚠️ **되돌리시려면 이 블록만 지우면** 전과 똑같습니다.
+   ⚠️ 바로 위 블록(①)이 이미 카드 면 · 선 · 아이콘 타일을 브라운으로
+   맞춰 두었습니다 — 선과 테두리를 여기서 **또 적지 않습니다**
+   (이미 `--hm-line` 이고, 또 적으면 두 곳이 어긋납니다).
+   ⚠️ `--hm-*` 는 메인에서만 쓰여 속화면 160개는 안 바뀝니다.
+   ────────────────────────────────────────────────────────────────── */
+
+/* ── 포인트를 **하나로** · 그림자를 낮춥니다 ──────────────────────
+   ⚠️⚠️ 지시서가 포인트를 #B18A68 하나로 정했는데 메인은 금빛
+   (`--gold-text` #7A5633)과 그 색이 **ΔE 3.05** 로 둘 다 섰습니다 —
+   거의 같은 브라운 둘은 통일이 아니라 흐림입니다. 금빛 글자 토큰을
+   메인에서만 포인트 쪽으로 돌려서 머리말 · 걸음 번호 · 분류 딱지 ·
+   체크 아이콘이 **한 색**이 됩니다.
+   ⚠️⚠️ **`--hm-pt`(#B18A68)를 글자로 쓰지 마세요** — 아이보리 위
+   2.83 입니다. 글자는 `--hm-pt-ink`(아이보리 6.23 · 베이지 5.15 ·
+   금빛 틴트 위 4.88 — 전부 AA 4.5 위입니다).
+   ⚠️⚠️ **`#view` 안에만 겁니다.** `html.ivh` 에 걸면 헤더 · 푸터까지
+   물들어 **메인만 머리가 다른 사이트**가 됩니다 (이 저장소가
+   "헤더 · 푸터는 `#view` 밖이라 안 물듭니다" 로 못박아 둔 자리).
+   ⚠️ 그림자를 **0 으로 두지 마세요** — 크림 카드가 아이보리 바탕과
+   ΔE 3.80 이라 묻힙니다. 선이 받치고 그림자는 거드는 정도까지입니다. */
+html.ivh #view{
+  --gold-text:  var(--hm-pt-ink);
+  --hm-shadow:  0 6px 18px rgba(44,33,28,.07);
+  --hm-shadow2: 0 10px 24px rgba(44,33,28,.11);
+}
+html.ivh #view .bent-c > a:hover,
+html.ivh #view .bcal-c > a:hover,
+html.ivh #view .bgd-c  > a:hover{ transform:translateY(-2px); }
+
+/* ── 주 단추를 **딥 브라운**으로 통일 (§4) ───────────────────────
+   ⚠️ 지시서가 숫자로 정한 #4A3025 입니다 — 흰 글자 대비 12.06 ·
+   hover 는 한 단계 짙은 #3A251C(14.37).
+   ⚠️⚠️ **`.btn-ac`(샌드 골드)로 되돌리지 마세요** — 밝은 면 위에서
+   흰 글자가 안 읽히고, 짙은 글자를 얹으면 주 단추로 안 읽힙니다. */
+html.ivh #view .bhero-go .btn-ac,
+html.ivh #view .bcta-go  .btn-ac{
+  background:var(--hm-btn); border-color:var(--hm-btn);
+  color:#FFFFFF; box-shadow:var(--hm-shadow); }
+html.ivh #view .bhero-go .btn-ac:hover,
+html.ivh #view .bcta-go  .btn-ac:hover{
+  background:var(--hm-btn-h); border-color:var(--hm-btn-h);
+  color:#FFFFFF; }
+
+/* ── 하단 상담 구간을 **밀크 베이지**로 ──────────────────────────
+   ⚠️⚠️ 여기가 짙은 브라운 면(`--dk-card`)이라 **딥 브라운 단추를
+   올릴 수가 없었습니다** — 면에 묻힙니다. 지시서의 다섯 색에 어두운
+   바탕이 없고(§2 "따뜻하고 정돈된"), 이 저장소의 BRIGHT PREMIUM 도
+   어두운 면을 두 자리까지로 못박아 두었습니다. 그래서 **면을 밝히고**
+   단추를 브라운으로 통일합니다 — 구간 · 글 · 단추 차례는 그대로입니다.
+   ⚠️⚠️ **구간의 `color` 까지 같이 뒤집으세요.** `.bcta` 가 자신에게
+   `color:var(--on-dk2)`(밝은 글자)를 들고 있어서, 안 뒤집으면 따로
+   색을 안 준 글이 **밝은 면에 밝은 글자**로 앉습니다.
+   ⚠️ 위 4800줄의 `html.ivh #view .bcta-c h2`(다크용)와 **특정도가
+   같아서** 여기가 뒤에 와야 이깁니다 — 가운데 끼우면 아무 일도
+   안 납니다 (이 저장소가 여섯 번 겪은 자리). */
+html.ivh #view .bcta{ background-color:var(--hm-bg2); color:var(--hm-ink2); }
+html.ivh #view .bcta-c h2{ color:var(--hm-ink); }
+html.ivh #view .bcta-c > .eyebrow{ color:var(--hm-pt-ink); }
+html.ivh #view .bcta-c > p{ color:var(--hm-ink2); }
+html.ivh #view .bcta-go .btn-ac{ box-shadow:var(--hm-shadow); }
+html.ivh #view .bcta-go .btn-cr{
+  background:transparent; border-color:var(--hm-btn);
+  color:var(--hm-btn); }
+html.ivh #view .bcta-go .btn-cr:hover{
+  background:var(--hm-btn); border-color:var(--hm-btn); color:#FFFFFF; }
+
+/* ── 본문 글자 (§5 "본문 글자 크기와 대비를 충분히 확보") ─────────
+   13px(`--t-cap`)은 이 저장소에서 **제일 작은 단계**이고 딱지 · 칩에
+   쓰는 크기입니다 — 읽는 문단에는 14.5px(`--t-sm`)로 올립니다.
+   ⚠️⚠️ **직접 찾기 여섯의 이름(`.bdir-c > b`)은 올리지 마세요.**
+   375px 에서 칸이 78px 이라 거기만 일부러 13px 로 내려 둔 자리이고,
+   여기서 전 폭에 올리면 **뒤에 와서 그 규칙을 이깁니다**
+   (낱말이 가운데서 잘립니다 · 재서 알았습니다).
+   ⚠️ 제목 · 딱지 · 걸음 번호는 그대로입니다 — 크기를 다 올리면
+   위계가 사라집니다. */
+html.ivh #view .bstep-c > p,
+html.ivh #view .bcal-c  em{ font-size:var(--t-sm); line-height:1.75; }
+
+/* ── 폰 (§6 "카드 · 버튼 · 글자가 편하게") ──────────────────────
+   ⚠️ 단추 셋이 한 줄에 둘씩 끼면 글자가 접힙니다 — 폭을 꽉 채우고
+   높이를 56px 로 둡니다 (누름 하한 40px 위). */
+@media (max-width:640px){
+  /* ⚠️ `.btn-ac` 만 적었다가 히어로의 보조 단추(`.btn-o`)가 **48px 로
+     혼자 낮았습니다** — 재서 알았습니다. 줄 안의 **단추 전부**를
+     집습니다 (단추 종류가 하나 늘어도 따라옵니다). */
+  html.ivh #view .bhero-go .btn,
+  html.ivh #view .bcta-go  .btn{ width:100%; min-height:56px; }
+  html.ivh #view .bhero-go,
+  html.ivh #view .bcta-go{ gap:var(--s3); }
+}

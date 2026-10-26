@@ -221,12 +221,18 @@
   --dk-line2:   rgba(237,225,210,.34);
   --dk-shadow:  0 18px 44px rgba(0,0,0,.42);
 
-  --hm-bg:      #F7F1E8;
-  --hm-bg2:     #EDE1D2;
+  --hm-bg:      #F7F3EC;
+  --hm-bg2:     #E9DDCD;
   --hm-card:    #FFFDF9;
+
   --hm-line:    #E4D7C6;
-  --hm-ink:     #30231C;
+  --hm-ink:     #2C211C;
   --hm-ink2:    #6B5A4E;
+
+  --hm-pt:      #B18A68;
+  --hm-pt-ink:  #7A512F;
+  --hm-btn:     #4A3025;
+  --hm-btn-h:   #3A251C;
   --hm-shadow:  0 10px 28px rgba(48,35,28,.10);
   --hm-shadow2: 0 18px 40px rgba(48,35,28,.16);
 

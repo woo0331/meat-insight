@@ -1528,9 +1528,6 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 .msvc-q:hover{ background:var(--ic-ink); color:#fff; }
 .msvc-q:hover svg{ color:#fff; }
 
-  .msvc-ph-n svg{ width:28px; height:28px; }
-}
-
 .mnum{ padding-top:var(--s9); padding-bottom:var(--s9); }
 .mst-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s6);
   padding:0; background:transparent; border:0; border-radius:0; box-shadow:none; }
@@ -4587,3 +4584,42 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
   color:var(--cream); }
 .bcta-go .btn-ac{ box-shadow:0 10px 26px rgba(0,0,0,.34); }
 
+html.ivh #view{
+  --gold-text:  var(--hm-pt-ink);
+  --hm-shadow:  0 6px 18px rgba(44,33,28,.07);
+  --hm-shadow2: 0 10px 24px rgba(44,33,28,.11);
+}
+html.ivh #view .bent-c > a:hover,
+html.ivh #view .bcal-c > a:hover,
+html.ivh #view .bgd-c  > a:hover{ transform:translateY(-2px); }
+
+html.ivh #view .bhero-go .btn-ac,
+html.ivh #view .bcta-go  .btn-ac{
+  background:var(--hm-btn); border-color:var(--hm-btn);
+  color:#FFFFFF; box-shadow:var(--hm-shadow); }
+html.ivh #view .bhero-go .btn-ac:hover,
+html.ivh #view .bcta-go  .btn-ac:hover{
+  background:var(--hm-btn-h); border-color:var(--hm-btn-h);
+  color:#FFFFFF; }
+
+html.ivh #view .bcta{ background-color:var(--hm-bg2); color:var(--hm-ink2); }
+html.ivh #view .bcta-c h2{ color:var(--hm-ink); }
+html.ivh #view .bcta-c > .eyebrow{ color:var(--hm-pt-ink); }
+html.ivh #view .bcta-c > p{ color:var(--hm-ink2); }
+html.ivh #view .bcta-go .btn-ac{ box-shadow:var(--hm-shadow); }
+html.ivh #view .bcta-go .btn-cr{
+  background:transparent; border-color:var(--hm-btn);
+  color:var(--hm-btn); }
+html.ivh #view .bcta-go .btn-cr:hover{
+  background:var(--hm-btn); border-color:var(--hm-btn); color:#FFFFFF; }
+
+html.ivh #view .bstep-c > p,
+html.ivh #view .bcal-c  em{ font-size:var(--t-sm); line-height:1.75; }
+
+@media (max-width:640px){
+
+  html.ivh #view .bhero-go .btn,
+  html.ivh #view .bcta-go  .btn{ width:100%; min-height:56px; }
+  html.ivh #view .bhero-go,
+  html.ivh #view .bcta-go{ gap:var(--s3); }
+}

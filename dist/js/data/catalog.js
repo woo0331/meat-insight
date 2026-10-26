@@ -135,7 +135,7 @@ window.AM_START_CATS = [
   { key:"admin", name:"행정 · 전문가", icon:"briefcase", tone:"t3", kind:"provider",
     lead:"서류와 자격",
 
-    kw:"세금 세무 회계 장부 기장 노무 4대보험 인허가 허가 영업신고 보험 법률 저작권 공연권료 음악저작권 상표 상표출원",
+    kw:"세금 세무 회계 장부 기장 노무 4대보험 인허가 허가 영업신고 보험 법률 저작권 공연권료 음악저작권 상표 상표출원 주류면허 담배소매인",
     desc:"지역 · 전문분야 · 상담 가능 여부로 전문가를 찾습니다.",
     items:[
       { key:"tax-agent", name:"세무사" },     { key:"labor-agent",name:"노무사" },

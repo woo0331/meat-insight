@@ -2269,9 +2269,21 @@ const AUDIT = `(() => {
       }
       return null;
     };
-    const st = bg(".bent-c.ent-startup > a");
-    const op = bg(".bent-c.ent-operation > a");
-    const cl = bg(".bent-c.ent-closure > a");
+    /* ⚠️⚠️ 재는 자리가 **번호 알약**입니다 — 카드 면이 아닙니다.
+       2026-10-26 "최종 디자인 개선"(브라운 통일)이 카드 넷을 전부 같은
+       크림 면으로 바꿨고, 그 블록은 **메인을 전면 리뉴얼 직전으로
+       되돌릴 때도 남겼습니다** (사장님이 고르신 쪽입니다). 구분 색은
+       번호 알약 · 아이콘 · 바로가기 알약이 그대로 들고 있고, 그중
+       **면으로 재기 좋은 것**이 번호 알약입니다.
+       ⚠️ **규칙은 한 줄도 안 바꿨습니다** (서로 다를 것 · 창업 브라운 ·
+       운영 초록 · 폐업 버건디이되 주황이 아닐 것) — 재는 자리만입니다.
+       ⚠️⚠️ **카드 면으로 되돌리지 마세요.** 넷이 전부 크림이라 "색이
+       겹칩니다" 가 **되돌리기 전부터** 뜹니다 — 복원하면서 검사를 통째로
+       되돌렸다가 실제로 그렇게 걸렸습니다 (색을 옮기고 검사는 안 옮긴
+       그 사고의 반대쪽입니다). */
+    const st = bg(".ent-startup .bent-no");
+    const op = bg(".ent-operation .bent-no");
+    const cl = bg(".ent-closure .bent-no");
     if(!st || !op || !cl) return "진입 카드 셋의 색을 못 읽습니다";
     if(st.join() === op.join() || op.join() === cl.join() || st.join() === cl.join())
       return "진입 카드 셋의 색이 겹칩니다 (§2-1 — 색상 구분 유지)";

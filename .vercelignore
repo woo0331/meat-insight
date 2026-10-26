@@ -1,0 +1,54 @@
+# ══════════════════════════════════════════════════════════════════
+#  배포에서 빼는 것 — 손님에게 갈 까닭이 없는 파일 (2026-10-26)
+# ══════════════════════════════════════════════════════════════════
+#  보고서 docs/PRELAUNCH_CHECK-2026-10-26.md §6-⑧ 에서 찾았습니다.
+#  이 파일이 없어서 tools/check.js · db/migrations/*.sql · docs/*.md ·
+#  CLAUDE.md 가 전부 주소로 열렸습니다 (눌러서 확인 — 전부 200).
+#
+#  ⚠️ 새로 새는 것은 없습니다 — GitHub 저장소가 이미 공개이고
+#     비밀이 섞인 파일은 0건입니다. 빼는 까닭은 ① 크롤러가 주울
+#     필요 없는 파일을 줄이고 ② 내부 글이 주소로 열리지 않게 하는
+#     것까지입니다.
+#
+#  ⚠️⚠️ 빼면 안 되는 것 — 손대지 마세요
+#     api/            Vercel 함수입니다 (빼면 접수가 통째로 죽습니다)
+#     middleware.js   Edge 미들웨어입니다 (/admin 잠금)
+#     package.json    Vercel 이 읽습니다
+#     js/ css/ dist/ img/   손님이 받는 자산
+#     **/index.html   손님 화면 168개
+#
+#  ⚠️⚠️⚠️ tools/ 를 통째로 빼지 마세요.
+#     그 안에 **계산도구 열네 화면**이 같이 있습니다 —
+#     tools/index.html(/tools) + tools/{bep,close,closecost,cost,
+#     delivery,fixed,hire,labor,margin,premium,rent,target,vs}/index.html
+#     통째로 빼면 그 열네 주소가 전부 404 입니다.
+#     그래서 아래는 **tools/ 바로 아래의 .js 와 og.html 만** 빼고
+#     폴더는 건드리지 않습니다 (gitignore 꼴에서 `*` 는 `/` 를
+#     넘지 않습니다).
+# ══════════════════════════════════════════════════════════════════
+
+# 빌드 · 검사 스크립트 (tools/ 바로 아래만 — 폴더는 그대로)
+tools/*.js
+tools/urls.json
+# 공유 미리보기 그림의 **원본**입니다 (화면이 아닙니다).
+# 찍은 결과물 /og.jpg 는 뿌리에 있고 그건 그대로 나갑니다.
+tools/og.html
+
+# 뿌리의 빌드 · 검사 스크립트
+build-pages.js
+check.js
+
+# DB 스키마 · 확인 질의 — 사장님이 Supabase 편집기에 붙여 넣는 글입니다
+db/
+
+# 작업 보고서 · 저장소 안내
+docs/
+CLAUDE.md
+README.md
+PLAN-revenue-platform.md
+SECURITY-REVIEW.md
+.github/
+
+# 손님이 받지 않는 내려온 코드 (index.html 이 싣지 않습니다)
+js/pages/home-retired.js
+dist/js/pages/home-retired.js

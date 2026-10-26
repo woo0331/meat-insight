@@ -8,6 +8,28 @@ function tlHas(v){ return v !== undefined && v !== null && String(v).trim() !== 
 function tlNum(v){ var n = parseFloat(String(v).replace(/[^0-9.-]/g, "")); return isNaN(n) ? 0 : n; }
 function tlMan(n){ return won(Math.round(n)) + "만원"; }
 
+var TL_DIGITS = 7;
+
+function tlTooLong(v){
+  var n = 0;
+  Object.keys(v || {}).forEach(function(k){
+    var s = String(v[k] === null || v[k] === undefined ? "" : v[k]);
+    if(s.replace(/[^0-9]/g, "").replace(/^0+/, "").length > TL_DIGITS) n++;
+  });
+  return n;
+}
+
+function tlRes(v, resFn){
+  var n = tlTooLong(v);
+  if(!n) return resFn(v);
+  return '<p class="tl-res-n"><b>적으신 숫자가 너무 깁니다.</b> '+
+    '한 칸에 '+TL_DIGITS+'자리('+won(Math.pow(10, TL_DIGITS) - 1)+')까지 '+
+    '적을 수 있는데, 지금 '+won(n)+'칸이 그보다 깁니다.</p>'+
+  '<p class="tl-res-n">전화번호나 사업자등록번호를 금액 칸에 붙여 넣으면 '+
+    '이 줄이 나옵니다. 칸 오른쪽의 단위(<b>만원 · 원 · %</b>)를 보고 '+
+    '다시 적어 주세요.</p>';
+}
+
 function tlOut(label, val, sub){
   return '<div class="tl-o">'+
     '<span class="tl-o-k">'+esc(label)+'</span>'+
@@ -157,7 +179,7 @@ function tlWire(key, resFn){
   window[key + "In"] = function(k, val){
     var v = tlGet(key); v[k] = val; tlPut(key, v);
     var el = document.getElementById("tl-res");
-    if(el) el.innerHTML = resFn(v);
+    if(el) el.innerHTML = tlRes(v, resFn);
   };
   window[key + "Reset"] = function(){
     if(!confirm("적으신 숫자를 전부 지웁니다. 되돌릴 수 없습니다.")) return;
@@ -173,7 +195,7 @@ function tlPage(o){
   })+
   '<section class="sec sec-white"><div class="w w-narrow">'+
     tlGroups(o.rows, v, o.key + "In", o.subs)+
-    '<div class="tl-res" id="tl-res">'+o.res(v)+'</div>'+
+    '<div class="tl-res" id="tl-res">'+tlRes(v, o.res)+'</div>'+
     tlAfter(o.key)+
     tlFoot(o.key + "Reset")+
   '</div></section>'+
@@ -509,7 +531,7 @@ function PageToolCloseCost(){
     '<h2 class="tl-h">돌아오는 돈 <span>확정된 것만</span></h2>'+
     '<ul class="tl-l">'+(window.AM_CLOSE_IN||[]).map(function(r){
       return tlRow(r, v, "closecostIn"); }).join("")+'</ul>'+
-    '<div class="tl-res" id="tl-res">'+CloseCostRes(v)+'</div>'+
+    '<div class="tl-res" id="tl-res">'+tlRes(v, CloseCostRes)+'</div>'+
     tlAfter("closecost")+
     tlFoot("closecostReset")+
   '</div></section>'+
@@ -568,7 +590,7 @@ function PageTools(){
 window.costIn = function(k, val){
   var v = tlGet("cost"); v[k] = val; tlPut("cost", v);
   var el = document.getElementById("tl-res");
-  if(el) el.innerHTML = CostRes(v);
+  if(el) el.innerHTML = tlRes(v, CostRes);
 };
 window.costReset = function(){
   if(!confirm("적으신 금액을 전부 지웁니다. 되돌릴 수 없습니다.")) return;
@@ -611,7 +633,7 @@ function PageToolCost(){
         '<ul class="tl-l">'+g.items.map(function(it){
           return tlRow(it, v, "costIn"); }).join("")+'</ul>';
     }).join("")+
-    '<div class="tl-res" id="tl-res">'+CostRes(v)+'</div>'+
+    '<div class="tl-res" id="tl-res">'+tlRes(v, CostRes)+'</div>'+
     tlAfter("cost")+
     tlFoot("costReset")+
   '</div></section>'+
@@ -621,7 +643,7 @@ function PageToolCost(){
 window.fixedIn = function(k, val){
   var v = tlGet("fixed"); v[k] = val; tlPut("fixed", v);
   var el = document.getElementById("tl-res");
-  if(el) el.innerHTML = FixedRes(v);
+  if(el) el.innerHTML = tlRes(v, FixedRes);
 };
 window.fixedReset = function(){
   if(!confirm("적으신 숫자를 전부 지웁니다. 되돌릴 수 없습니다.")) return;
@@ -661,7 +683,7 @@ function PageToolFixed(){
       return tlRow(r, v, "fixedIn"); }).join("")+'</ul>'+
     '<h2 class="tl-h">나눠 볼 기준</h2>'+
     '<ul class="tl-l">'+run.map(function(r){ return tlRow(r, v, "fixedIn"); }).join("")+'</ul>'+
-    '<div class="tl-res" id="tl-res">'+FixedRes(v)+'</div>'+
+    '<div class="tl-res" id="tl-res">'+tlRes(v, FixedRes)+'</div>'+
     tlAfter("fixed")+
     tlFoot("fixedReset")+
   '</div></section>'+
@@ -671,7 +693,7 @@ function PageToolFixed(){
 window.bepIn = function(k, val){
   var v = tlGet("bep"); v[k] = val; tlPut("bep", v);
   var el = document.getElementById("tl-res");
-  if(el) el.innerHTML = BepRes(v);
+  if(el) el.innerHTML = tlRes(v, BepRes);
 };
 window.bepReset = function(){
   if(!confirm("적으신 숫자를 전부 지웁니다. 되돌릴 수 없습니다.")) return;
@@ -744,7 +766,7 @@ function PageToolBep(){
     '<h2 class="tl-h">나눠 볼 기준 <span>안 적으셔도 월 매출까지는 나옵니다</span></h2>'+
     '<ul class="tl-l">'+(window.AM_BEP_RUN||[]).map(function(r){
       return tlRow(r, v, "bepIn"); }).join("")+'</ul>'+
-    '<div class="tl-res" id="tl-res">'+BepRes(v)+'</div>'+
+    '<div class="tl-res" id="tl-res">'+tlRes(v, BepRes)+'</div>'+
     tlAfter("bep")+
     tlFoot("bepReset")+
   '</div></section>'+
@@ -754,7 +776,7 @@ function PageToolBep(){
 window.laborIn = function(k, val){
   var v = tlGet("labor"); v[k] = val; tlPut("labor", v);
   var el = document.getElementById("tl-res");
-  if(el) el.innerHTML = LaborRes(v);
+  if(el) el.innerHTML = tlRes(v, LaborRes);
 };
 window.laborReset = function(){
   if(!confirm("적으신 숫자를 전부 지웁니다. 되돌릴 수 없습니다.")) return;
@@ -803,7 +825,7 @@ function PageToolLabor(){
         '<ul class="tl-l">'+g[k].map(function(r){
           return tlRow(r, v, "laborIn"); }).join("")+'</ul>';
     }).join("")+
-    '<div class="tl-res" id="tl-res">'+LaborRes(v)+'</div>'+
+    '<div class="tl-res" id="tl-res">'+tlRes(v, LaborRes)+'</div>'+
     tlAfter("labor")+
     tlFoot("laborReset")+
   '</div></section>'+
@@ -813,7 +835,7 @@ function PageToolLabor(){
 window.vsIn = function(k, val){
   var v = tlGet("vs"); v[k] = val; tlPut("vs", v);
   var el = document.getElementById("tl-res");
-  if(el) el.innerHTML = VsRes(v);
+  if(el) el.innerHTML = tlRes(v, VsRes);
 };
 window.vsReset = function(){
   if(!confirm("적으신 숫자를 전부 지웁니다. 되돌릴 수 없습니다.")) return;
@@ -876,7 +898,7 @@ function PageToolVs(){
     '<ul class="tl-l">'+nw.map(function(r){ return tlRow(r, v, "vsIn"); }).join("")+'</ul>'+
     '<h2 class="tl-h">하던 가게를 받을 때</h2>'+
     '<ul class="tl-l">'+tk.map(function(r){ return tlRow(r, v, "vsIn"); }).join("")+'</ul>'+
-    '<div class="tl-res" id="tl-res">'+VsRes(v)+'</div>'+
+    '<div class="tl-res" id="tl-res">'+tlRes(v, VsRes)+'</div>'+
     tlAfter("vs")+
     tlFoot("vsReset")+
   '</div></section>'+

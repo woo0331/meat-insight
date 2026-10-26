@@ -3650,6 +3650,72 @@ const AUDIT = `(() => {
     const t2 = (document.querySelector(".tl-res") || {}).innerText || "";
     if(t2.indexOf("공헌이익률 50%") < 0) return "정상 조건에서 결과가 안 나옵니다";
     return true;`);
+  await f("계산기가 자릿수가 넘는 숫자를 그대로 내지 않는다", "/tools/hire", `
+    /* ⚠️⚠️ 금액 칸에 전화번호나 사업자등록번호를 붙여 넣으면 산수는
+       맞는데 열여덟 자리짜리 답이 나와서 고장처럼 보였습니다 (출시 전
+       전체 점검 §6-② 에서 재서 찾았습니다).
+       ⚠️ **자르지 않습니다** — maxlength 로 막으면 열한 자리가 열
+       자리로 조용히 잘려서 여전히 10조원이 나옵니다. 이 저장소가
+       손익분기 85조원 · 권리금 25,000년에서 정한 그대로 숫자 대신
+       까닭입니다.
+       ⚠️⚠️ **반대로 너무 좁게 막는 것도 고장**이라, 정상 조건과 경계
+       바로 아래에서 결과가 그대로 나오는 것까지 같이 봅니다. */
+    const set = function(id, x){
+      const e = document.getElementById(id);
+      if(!e) return false;
+      e.value = String(x);
+      e.dispatchEvent(new Event("input", { bubbles:true }));
+      return true;
+    };
+    const res = function(){
+      const b = document.querySelector(".tl-res");
+      return b ? (b.innerText || "") : "";
+    };
+    /* 쉼표가 몇 번 이어지나 — 셋이면 열세 자리입니다.
+       ⚠️ 검사 본문에서는 정규식을 피합니다 (한 겹 백슬래시로 열다섯 번
+       당한 자리입니다). */
+    const commas = function(t){
+      let m = 0, run = 0;
+      for(let i = 0; i < t.length; i++){
+        if(t[i] === ","){ run++; if(run > m) m = run; }
+        else if(t[i] < "0" || t[i] > "9") run = 0;
+      }
+      return m;
+    };
+    const wait = function(){ return new Promise(function(r){ setTimeout(r, 120); }); };
+
+    if(!set("hireIn-wage", "01012345678")) return "급여 칸을 못 찾습니다";
+    await wait();
+    const t = res();
+    if(!t) return "결과 칸이 없습니다";
+    if(t.indexOf("너무 깁니다") < 0)
+      return "열한 자리를 넣었는데 까닭이 안 나옵니다 — " + t.slice(0, 40);
+    if(commas(t) >= 3) return "긴 숫자가 그대로 나옵니다 — " + t.slice(0, 60);
+
+    /* ⚠️ 정상 조건에서는 **나와야** 합니다 */
+    set("hireIn-wage", "300");
+    await wait();
+    const t2 = res();
+    if(t2.indexOf("너무 깁니다") >= 0) return "정상 조건에서도 막습니다";
+    if(t2.indexOf("만원") < 0) return "정상 조건에서 결과가 안 나옵니다";
+
+    /* ⚠️⚠️ 경계 **바로 아래**와 바로 위 — 이 저장소가 경계만 넣어 보고
+       그 옆에서 사고를 두 번 냈습니다 */
+    set("hireIn-wage", "9999999");
+    await wait();
+    if(res().indexOf("너무 깁니다") >= 0) return "일곱 자리를 막습니다";
+    set("hireIn-wage", "10000000");
+    await wait();
+    if(res().indexOf("너무 깁니다") < 0) return "여덟 자리를 안 막습니다";
+
+    /* ⚠️ 쉼표를 찍어 적으셔도 자릿수로 셉니다 */
+    set("hireIn-wage", "9,999,999");
+    await wait();
+    if(res().indexOf("너무 깁니다") >= 0) return "쉼표를 자릿수로 셉니다";
+
+    /* ⚠️ 적은 것을 치웁니다 — 뒤의 검사가 이 값을 보면 안 됩니다 */
+    try{ localStorage.removeItem("am.tool.hire"); }catch(e){}
+    return true;`);
   await f("MY: 전부 지우기가 도구 숫자까지 지운다", "/tools/bep", `
     window.bepIn("rent", "1000");
     window.laborIn && window.laborIn("sales", "5000");

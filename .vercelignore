@@ -44,6 +44,7 @@ db/
 # 작업 보고서 · 저장소 안내
 docs/
 CLAUDE.md
+HANDOFF.md
 README.md
 PLAN-revenue-platform.md
 SECURITY-REVIEW.md

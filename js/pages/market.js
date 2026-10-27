@@ -513,8 +513,13 @@ function PageSell(){
     ? '<div class="f-2">'+
         '<div class="f-r"><label for="sl-kind">거래 방식 <b>*</b></label>'+
           '<select class="sel" id="sl-kind">'+
-            '<option value="transfer">매장 양도 — 권리금을 받고 넘깁니다</option>'+
-            '<option value="lease">임대 — 보증금 · 월세로 내놓습니다</option>'+
+            /* ⚠️ 딱지를 길게 적지 마세요 — 320px 에서 칸이 214px 이라
+               넘치면 **낱말 가운데서 잘립니다.** `<select>` 안은 낱말
+               잘림 검사에도 가로 스크롤 검사에도 안 걸려서, 재는 것은
+               전수 점검의 "고르개 딱지가 칸보다 긺" 하나뿐입니다
+               (이 저장소가 네 번 겪은 자리). */
+            '<option value="transfer">매장 양도 — 권리금 받고 넘기기</option>'+
+            '<option value="lease">임대 — 보증금 · 월세로 내놓기</option>'+
           '</select></div>'+
         '<div class="f-r"><label for="sl-py">평수</label>'+
           '<input id="sl-py" inputmode="numeric" placeholder="예: 18"></div>'+

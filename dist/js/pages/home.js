@@ -104,6 +104,26 @@ function homeHallItem(hall, name){
   return null;
 }
 
+function homeHeroChecks(){
+  var n = (window.AM_CATS || []).length;
+  var L = [];
+  if(n) L.push("서비스 분야 " + n + "개");
+  L.push("지역 · 업종으로 찾기");
+  L.push("한 번에 여러 개 신청");
+  return '<ul class="bhero-ck">'+L.map(function(t){
+    return '<li>'+icon("check",15)+'<span>'+esc(t)+'</span></li>';
+  }).join("")+'</ul>';
+}
+
+function homeHeroCard(){
+  if(!hasPhoto("hero-start")) return "";
+  return '<a class="bhero-card" href="/providers">'+
+    '<span class="bhero-card-i" aria-hidden="true">'+iconArt("admin", 30)+'</span>'+
+    '<b>지금, 필요한 서비스를 바로 찾아보세요.</b>'+
+    '<span class="bhero-card-a" aria-hidden="true">'+icon("arrow",16)+'</span>'+
+  '</a>';
+}
+
 function HomeHero(){
   var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
   var with_ = (window.koWith ? koWith(nm, "이가") : nm + "가");
@@ -113,7 +133,7 @@ function HomeHero(){
   return '<section class="bhero">'+
     '<div class="w bhero-w">'+
       '<div class="bhero-in">'+
-        '<p class="bhero-k">창업의 시작부터 폐업의 마무리까지</p>'+
+        '<p class="bhero-k">'+icon("sparkle",14)+'창업부터 폐업까지 사장님의 든든한 파트너</p>'+
 
         '<h1>사장님의 모든 순간, '+esc(with_)+' 함께합니다.</h1>'+
         '<p class="bhero-s">창업 준비, 매장 운영, 매장 양도양수, 폐업 · 정리에 '+
@@ -123,8 +143,9 @@ function HomeHero(){
             '무료 견적 신청'+icon("arrow",18)+'</a>'+
           '<a class="btn btn-o btn-lg" href="/providers">어떤 서비스가 있는지 보기</a>'+
         '</div>'+
+        homeHeroChecks()+
       '</div>'+
-      ph +
+      ph + homeHeroCard() +
     '</div>'+
   '</section>';
 }
@@ -197,6 +218,13 @@ function HomeEnter(){
 var HOME_DIRECT = ["interior", "equip", "it", "admin",
                    "staff", "marketing", "demolish", "restore"];
 
+function homeDirDesc(c){
+  var it = (c.items || []);
+  if(it.length) return it.slice(0, 5).map(function(x){ return x.name; })
+                         .filter(Boolean).join(", ") + " 등";
+  return c.lead || "";
+}
+
 function HomeDirect(){
   var C = window.AM_CATS || [];
   var cards = HOME_DIRECT.map(function(k){
@@ -204,24 +232,30 @@ function HomeDirect(){
     for(i = 0; i < C.length; i++) if(C[i].key === k) c = C[i];
     if(!c) return "";
     var to = (typeof catTo === "function") ? catTo(c) : ("/providers/" + c.key);
+    var ds = homeDirDesc(c);
 
     return '<li><a class="bdir-c'+tn(c.tone)+'" href="'+esc(to)+'">'+
-      '<span class="bdir-i">'+
-        (hasIconArt(c.key) ? iconArt(c.key, 44) : icon(c.icon, 26))+'</span>'+
-      '<b>'+esc(c.name)+'</b>'+
+      '<span class="bdir-i" aria-hidden="true">'+
+        (hasIconArt(c.key) ? iconArt(c.key, 64) : icon(c.icon, 34))+'</span>'+
+      '<span class="bdir-tx">'+
+        '<b>'+esc(c.name)+'</b>'+
+        (ds ? '<em>'+esc(ds)+'</em>' : "")+
+      '</span>'+
+      '<span class="bdir-go">관련 서비스 보기'+icon("arrow",15)+'</span>'+
     '</a></li>';
   }).filter(Boolean).join("");
   if(!cards) return "";
 
   return '<section class="bdir"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
-      '<h2>직접 서비스를 찾아보세요.</h2>'+
-      '<p>무엇이 필요한지 이미 정해져 있으시면 여기서 바로 가세요.</p>'+
+    '<div class="sec-hd hm-hd">'+
+      '<div class="hm-hd-t">'+
+        '<h2>직접 서비스를 찾아보세요.</h2>'+
+        '<p>무엇이 필요하신지 이미 정해져 있으시면 여기서 바로 가세요.</p>'+
+      '</div>'+
+      '<a class="btn btn-ac hm-more" href="/providers">전체 서비스 보기'+
+        icon("arrow",16)+'</a>'+
     '</div>'+
     '<ul class="bdir-g">'+cards+'</ul>'+
-    '<p class="row-cta row-mid">'+
-      '<a class="btn btn-o" href="/providers">전체 서비스 보기'+icon("arrow",16)+'</a>'+
-    '</p>'+
     HomePicked()+
 
     MainScopeStrip()+
@@ -324,10 +358,12 @@ function HomeSteps(){
   if(!L.length) return "";
   return '<section class="bstep">'+
     '<div class="w">'+
-      '<div class="sec-hd sec-hd-c">'+
-        '<p class="eyebrow">HOW IT WORKS</p>'+
-        '<h2>이용 방법은 간단합니다.</h2>'+
-        '<p>신청은 무료이고 가입이 필요 없습니다.</p>'+
+      '<div class="sec-hd hm-hd">'+
+        '<div class="hm-hd-t">'+
+          '<p class="eyebrow">HOW IT WORKS</p>'+
+          '<h2>이용 방법은 간단합니다.</h2>'+
+          '<p>신청은 무료이고 가입이 필요 없습니다.</p>'+
+        '</div>'+
       '</div>'+
       '<ol class="bstep-g">'+L.map(function(x, i){
         return '<li class="bstep-c">'+
@@ -371,12 +407,17 @@ function HomeCalc(){
   var by = {}; (window.AM_TOOLS||[]).forEach(function(t){ by[t.key] = t; });
   var L = MAIN_CALC.map(function(k){ return by[k]; }).filter(Boolean);
   if(!L.length) return "";
+
   return '<section class="bcal"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
-      '<p class="eyebrow">TOOLS</p>'+
-      '<h2>사업에 필요한 계산도구를 이용해 보세요.</h2>'+
-      '<p>창업 · 운영 · 양도양수 · 폐업에 필요한 비용을 미리 계산해 '+
-        '보세요. 적으신 숫자는 이 브라우저에만 남습니다.</p>'+
+    '<div class="sec-hd hm-hd">'+
+      '<div class="hm-hd-t">'+
+        '<p class="eyebrow">TOOLS</p>'+
+        '<h2>사업에 필요한 계산도구를 이용해 보세요.</h2>'+
+        '<p>창업 · 운영 · 양도양수 · 폐업에 필요한 비용을 미리 계산해 '+
+          '보세요. 적으신 숫자는 이 브라우저에만 남습니다.</p>'+
+      '</div>'+
+      '<a class="btn btn-ac hm-more" href="/tools">계산도구 전체 보기'+
+        icon("arrow",16)+'</a>'+
     '</div>'+
     '<ul class="bcal-g">'+L.map(function(t, i){
       var art = (typeof hasIconArt === "function" && hasIconArt(t.icon));
@@ -421,11 +462,16 @@ function HomeGuide(){
   if(!L.length) return "";
   var all = (window.AM_CONTENTS || []).length;
   return '<section class="bgd"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
-      '<p class="eyebrow">GUIDE</p>'+
-      '<h2>사장님께 필요한 이용 가이드</h2>'+
-      '<p>창업 · 운영 · 양도양수 · 폐업에서 자주 막히는 자리를 '+
-        '정리했습니다. 지금 '+all+'편이고 근거를 댈 수 있는 것만 적습니다.</p>'+
+
+    '<div class="sec-hd hm-hd">'+
+      '<div class="hm-hd-t">'+
+        '<p class="eyebrow">GUIDE</p>'+
+        '<h2>사장님께 필요한 이용 가이드</h2>'+
+        '<p>창업 · 운영 · 양도양수 · 폐업에서 자주 막히는 자리를 '+
+          '정리했습니다. 지금 '+all+'편이고 근거를 댈 수 있는 것만 적습니다.</p>'+
+      '</div>'+
+      '<a class="btn btn-ac hm-more" href="/content">이용 가이드 전체 보기'+
+        icon("arrow",16)+'</a>'+
     '</div>'+
     '<ul class="bgd-g">'+L.map(function(c){
       var ct = (typeof amCat === "function") ? (amCat(c.cat) || {}) : {};
@@ -439,8 +485,6 @@ function HomeGuide(){
           '<span>'+icon("arrow",14)+'</span>'+
         '</span>'+
       '</a></li>'; }).join("")+'</ul>'+
-    '<p class="bgd-more"><a href="/content">이용 가이드 전체보기'+
-      icon("arrow",16)+'</a></p>'+
   '</div></section>';
 }
 

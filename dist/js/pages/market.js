@@ -403,8 +403,9 @@ function PageSell(){
     ? '<div class="f-2">'+
         '<div class="f-r"><label for="sl-kind">거래 방식 <b>*</b></label>'+
           '<select class="sel" id="sl-kind">'+
-            '<option value="transfer">매장 양도 — 권리금을 받고 넘깁니다</option>'+
-            '<option value="lease">임대 — 보증금 · 월세로 내놓습니다</option>'+
+
+            '<option value="transfer">매장 양도 — 권리금 받고 넘기기</option>'+
+            '<option value="lease">임대 — 보증금 · 월세로 내놓기</option>'+
           '</select></div>'+
         '<div class="f-r"><label for="sl-py">평수</label>'+
           '<input id="sl-py" inputmode="numeric" placeholder="예: 18"></div>'+

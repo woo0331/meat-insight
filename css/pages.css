@@ -6543,3 +6543,199 @@ html.ivh #view .bcal-c  em{ font-size:var(--t-sm); line-height:1.75; }
   html.ivh #view .bhero-go,
   html.ivh #view .bcta-go{ gap:var(--s3); }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-10-27 "최종 디자인 구현" §3-D — 직접 서비스를 찾아보세요
+   ══════════════════════════════════════════════════════════════════
+   시안에서 **가장 중요한 구간**입니다. 작은 세로 칸 여덟에서
+   **큰 아이콘 + 이름 + 설명 + 관련 서비스 보기** 가로 카드로 바뀝니다.
+
+   ⚠️⚠️ **이 블록은 파일 맨 뒤라야 합니다.** 위쪽 `.bdir-c`(0,1,0)와
+   특정도가 같아서 **뒤에 오는 쪽이 이깁니다** — 중간에 끼우면
+   가운데 정렬 · 6열이 그대로 남습니다 (이 저장소가 특정도 · 차례로
+   여섯 번 겪은 자리입니다).
+   ⚠️⚠️ **좁은 폭 규칙을 같이 눌러야 합니다.** 위에 `max-width:900`
+   3열 · `max-width:560` 2열 · `375~900` 4열이 **먼저** 적혀 있어서,
+   안 누르면 360px 에서 가로 카드가 4열로 서서 글자가 뭉갭니다.
+   ⚠️ 범위는 **묶어서** 적습니다 (`and (min-width:…)`) — 한쪽만 적으면
+   더 좁은 폭의 규칙까지 이깁니다 (진입 카드에서 겪은 자리). */
+
+/* 머리말 왼쪽 + 전체 서비스 보기 오른쪽 (시안) */
+.hm-hd{ display:flex; align-items:flex-end; justify-content:space-between;
+  gap:var(--s4) var(--s6); flex-wrap:wrap; text-align:left; }
+.hm-hd-t{ min-width:0; }
+.hm-hd h2{ font-size:clamp(26px, 2.9vw, 38px); font-weight:900;
+  letter-spacing:-.03em; line-height:1.25; }
+.hm-hd > .hm-hd-t > p{ margin-top:var(--s2); max-width:54ch; }
+.hm-more{ flex:none; white-space:nowrap; }
+
+/* 카드 — 왼쪽 큰 아이콘 · 오른쪽 이름과 설명 · 아래 한 줄 표시 */
+.bdir-g{ grid-template-columns:repeat(4,minmax(0,1fr)); gap:var(--s4); }
+.bdir-c{ grid-template-columns:auto minmax(0,1fr);
+  grid-template-rows:auto auto;
+  justify-items:stretch; align-content:space-between;
+  gap:var(--s3) var(--s3); text-align:left;
+  padding:var(--s4) var(--s4) var(--s3); }
+.bdir-i{ grid-row:1; grid-column:1; align-self:start; }
+.bdir-tx{ grid-row:1; grid-column:2; min-width:0;
+  display:flex; flex-direction:column; gap:5px; }
+.bdir-tx > b{ font-size:16px; font-weight:800; color:var(--hm-ink);
+  line-height:1.35; letter-spacing:-.02em; }
+.bdir-tx > em{ font-style:normal; font-size:var(--t-cap);
+  color:var(--hm-ink2); line-height:1.6; }
+/* ⚠️ 시안에서는 단추처럼 보이지만 **표시**입니다 — 카드 전체가
+   하나의 `a` 라 안에 또 `a` 를 넣으면 브라우저가 쪼갭니다. */
+.bdir-go{ grid-row:2; grid-column:1 / -1; justify-self:start;
+  display:inline-flex; align-items:center; gap:5px;
+  min-height:34px; padding:0 13px; border-radius:999px;
+  border:1px solid var(--hm-line); background:var(--hm-bg);
+  font-size:var(--t-cap); font-weight:700; color:var(--hm-pt-ink);
+  transition:background .15s, border-color .15s, color .15s; }
+.bdir-c:hover .bdir-go{ background:var(--hm-btn); border-color:var(--hm-btn);
+  color:#FFFFFF; }
+
+/* 아이콘 — §3-D "크고 선명하게 · 부드러운 그림자와 입체감"
+   ⚠️⚠️ **`--ia-1` · `--ia-2` 두 변수로만 색이 들어옵니다.** `color` 만
+   바꾸면 컬러 아이콘은 제 기본값(브라운)으로 그대로 섭니다.
+   ⚠️ 그림자는 svg 자체에 겁니다 — 타일에만 걸면 네모가 떠 보이고
+   그림이 평평하게 남습니다. 과한 그라디언트는 §4 가 금지합니다. */
+.bdir-i{ width:76px; height:76px; border-radius:22px;
+  background:linear-gradient(160deg, #FFFFFF 0%, var(--hm-bg) 55%, #F0E3D2 100%);
+  border:1px solid var(--hm-line);
+  box-shadow:0 6px 14px rgba(74,48,37,.07), inset 0 1px 0 #FFFFFF;
+  --ia-1:var(--hm-btn); --ia-2:rgba(177,138,104,.30); }
+.bdir-i svg{ filter:drop-shadow(0 3px 4px rgba(74,48,37,.20)); }
+
+/* 폭마다 칸 수 — 재서 정했습니다 (여덟 폭)
+     1101 위   4열   카드 309px (1440) · 262px (1280)
+     769~1100  2열   카드 437px (980)  · 349px (800)
+     561~768   2열   카드 352px (768)  · 258px (580)
+     560 아래  1열   카드 328px (360)  · 288px (320) */
+@media (max-width:1100px) and (min-width:769px){
+  .bdir-g{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:768px) and (min-width:561px){
+  .bdir-g{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s3); }
+}
+@media (max-width:560px){
+  .bdir-g{ grid-template-columns:minmax(0,1fr); gap:var(--s3); }
+  .bdir-c{ padding:var(--s3) var(--s4) var(--s3) var(--s3); }
+  .bdir-i{ width:64px; height:64px; border-radius:18px; }
+  .bdir-tx > b{ font-size:15.5px; }
+  .hm-hd{ align-items:flex-start; }
+  .hm-more{ width:100%; justify-content:center; }
+}
+
+/* ⚠️⚠️ **주 단추는 딥 브라운 한 가지입니다** (§2 · 2026-10-26 §4).
+   `.btn-ac`(샌드 골드) 그대로 두면 히어로 · 하단 CTA 와 **다른 색
+   단추**가 한 화면에 둘이 됩니다 — 위 `.bhero-go .btn-ac` 와 같은
+   방식으로 여기도 눌러 둡니다. */
+html.ivh #view .hm-more{
+  background:var(--hm-btn); border-color:var(--hm-btn);
+  color:#FFFFFF; box-shadow:var(--hm-shadow); }
+html.ivh #view .hm-more:hover{
+  background:var(--hm-btn-h); border-color:var(--hm-btn-h); color:#FFFFFF; }
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-10-27 §3-B — 히어로: 체크 셋 + 사진 위 안내 카드
+   ══════════════════════════════════════════════════════════════════ */
+.bhero-k{ display:inline-flex; align-items:center; gap:5px; }
+.bhero-ck{ display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5);
+  margin:var(--s5) 0 0; padding:0; list-style:none; }
+.bhero-ck > li{ display:flex; align-items:center; gap:7px;
+  font-size:var(--t-sm); font-weight:700; color:var(--hm-ink2); }
+/* ⚠️ 체크 동그라미는 **면**이고 글자가 아닙니다 — 3.0 이면 됩니다 */
+.bhero-ck > li > svg{ flex:none; width:22px; height:22px; padding:4px;
+  border-radius:50%; background:var(--hm-btn); color:#FFFFFF; }
+
+/* 사진 위 안내 카드 — ⚠️ `.bhero-w` 가 자리의 기준입니다 */
+.bhero-w{ position:relative; }
+.bhero-card{ position:absolute; right:var(--s4); bottom:var(--s4);
+  z-index:2; display:flex; align-items:center; gap:var(--s3);
+  max-width:300px; padding:var(--s3) var(--s4);
+  border-radius:18px; border:1px solid var(--hm-line);
+  background:var(--hm-card); box-shadow:var(--hm-shadow2);
+  transition:transform .15s, box-shadow .2s; }
+.bhero-card:hover{ transform:translateY(-2px); box-shadow:var(--hm-shadow2); }
+.bhero-card > b{ flex:1 1 auto; min-width:0; font-size:var(--t-cap);
+  font-weight:700; color:var(--hm-ink); line-height:1.5; }
+.bhero-card-i{ flex:none; display:inline-flex; align-items:center;
+  justify-content:center; width:44px; height:44px; border-radius:14px;
+  background:var(--hm-bg); border:1px solid var(--hm-line);
+  --ia-1:var(--hm-btn); --ia-2:rgba(177,138,104,.30); }
+.bhero-card-a{ flex:none; display:inline-flex; color:var(--hm-pt-ink); }
+/* ⚠️⚠️ 1024px 아래에서는 사진이 **띠로 눕습니다** — 거기에 카드를
+   얹으면 사진이 통째로 가려집니다. `/providers` 로 가는 길은 바로 위
+   보조 단추 · 아래 구간 머리말 · 헤더 메뉴가 전 폭에서 받습니다. */
+@media (max-width:1023px){ .bhero-card{ display:none; } }
+@media (max-width:560px){
+  .bhero-ck{ gap:var(--s2) var(--s4); }
+  .bhero-ck > li{ font-size:var(--t-cap); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-10-27 §3-E · §3-F · §3-G — 계산도구 · 이용 방법 · 이용 가이드
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **이 블록도 파일 맨 뒤라야 합니다** — `.bstep-c`(0,1,0) ·
+   `.bcal-c > a`(0,2,0)와 특정도가 같아 **뒤에 오는 쪽이 이깁니다.** */
+
+/* ── 이용 방법 다섯 — 아이콘 왼쪽 · 번호와 이름 오른쪽 (시안) ────
+   ⚠️ 마크업을 안 고쳤습니다 — `li` 의 자식 넷을 격자 칸에 앉히기만
+   합니다. 고치면 `html.ivh #view .bstep-c > p` 같은 **다른 블록의
+   선택자**가 조용히 안 맞게 됩니다. */
+.bstep-c{ position:relative; display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  grid-template-rows:auto auto auto;
+  align-content:start; gap:3px var(--s3); text-align:left; }
+.bstep-i{ grid-column:1; grid-row:1 / span 3; align-self:start; margin:0; }
+.bstep-n{ grid-column:2; grid-row:1; }
+.bstep-c > b{ grid-column:2; grid-row:2; }
+.bstep-c > p{ grid-column:2; grid-row:3; }
+/* 카드 사이 화살표 (시안) — ⚠️⚠️ **`position:absolute` 라야 합니다.**
+   흐름 안에 두면 가짜요소가 **격자 칸 하나를 차지해서** 글이 한 칸씩
+   밀립니다 (이 저장소가 "빈 가짜요소도 칸 하나" 로 적어 둔 자리). */
+@media (min-width:901px){
+  .bstep-c:not(:last-child)::after{
+    content:""; position:absolute; top:50%; right:-19px;
+    width:9px; height:9px; margin-top:-5px;
+    border-top:2px solid var(--hm-pt); border-right:2px solid var(--hm-pt);
+    transform:rotate(45deg); }
+}
+
+/* ── 계산도구 넷 — 시안만큼 조여서 ─────────────────────────────── */
+.bcal-g{ gap:var(--s4); }
+.bcal-c > a{ gap:var(--s2); padding:var(--s4); }
+.bcal-c b{ font-size:16.5px; margin-top:4px; }
+.bcal-go{ margin-top:var(--s3); }
+
+/* ── 이용 가이드 셋 ───────────────────────────────────────────── */
+.bgd-g{ gap:var(--s4); }
+.bgd-c > a{ gap:var(--s2); padding:var(--s4); }
+.bgd-c b{ font-size:16.5px; }
+
+/* ── 구간 머리말 — 왼쪽 글 + 오른쪽 전체 보기 (시안) ────────────
+   ⚠️ `.bent`(네 가지 핵심 서비스)만 **가운데**입니다 — 시안 그대로이고
+   거기에는 오른쪽 단추가 없습니다. */
+.hm-hd > .eyebrow{ display:none; }
+.hm-hd-t > .eyebrow{ margin-top:0; }
+
+/* ── 아이콘 타일을 한 벌로 (§3-E · §4 "아이콘 · 배경 스타일 통일") ──
+   ⚠️⚠️ **`--ia-1` · `--ia-2` 두 변수로만 색이 들어옵니다** — `color` 만
+   바꾸면 컬러 아이콘은 제 기본값으로 그대로 섭니다 (계산도구에서
+   겪은 자리). 선 아이콘(`icon()`)은 `color` 를 봅니다.
+   ⚠️ 그림자는 svg 자체에 겁니다 — 타일에만 걸면 네모가 떠 보이고
+   그림은 평평하게 남습니다. */
+.bcal-i, .bstep-i{
+  background:linear-gradient(160deg, #FFFFFF 0%, var(--hm-bg) 55%, #F0E3D2 100%);
+  border:1px solid var(--hm-line);
+  box-shadow:0 5px 12px rgba(74,48,37,.07), inset 0 1px 0 #FFFFFF;
+  color:var(--hm-btn);
+  --ia-1:var(--hm-btn); --ia-2:rgba(177,138,104,.30); }
+.bcal-i svg, .bstep-i svg{ filter:drop-shadow(0 3px 4px rgba(74,48,37,.18)); }
+/* ⚠️ `.cal-N .bcal-i`(0,2,0)가 위에 있어 같은 특정도로 눌러야 합니다 */
+.cal-1 .bcal-i, .cal-2 .bcal-i, .cal-3 .bcal-i, .cal-4 .bcal-i{
+  --ia-1:var(--hm-btn); --ia-2:rgba(177,138,104,.30); }
+
+/* 머리말과 단추의 높이 — ⚠️ `flex-end` 로 두면 설명이 두 줄인 구간에서
+   단추가 혼자 아래로 내려앉습니다 (계산도구에서 찍어 보고 알았습니다) */
+.hm-hd{ align-items:center; }

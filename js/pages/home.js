@@ -736,6 +736,47 @@ function homeHallItem(hall, name){
    화면에 로고가 둘입니다 (§9-12 중복 개발 금지).
    ⚠️⚠️ h1 은 **여기 하나**입니다. 아래 02 구간은 h2 입니다
    (화면마다 h1 이 둘이면 읽어 주는 프로그램이 뼈대를 못 잡습니다). */
+/* 히어로 체크 셋 (§3-B 시안) ─────────────────────────────────────
+   ⚠️⚠️ **셋 다 지금 실제로 되는 것**입니다.
+   ⚠️ 숫자를 손으로 적지 않습니다 — `AM_CATS` 를 그 자리에서 셉니다.
+   시안의 "26개 서비스" 는 지금 26 이 맞지만, 분류를 하나 늘리면
+   손으로 적어 둔 쪽만 조용히 틀립니다.
+   ⚠️⚠️ **"지역별 맞춤 업체" 라고 쓰지 않았습니다** (시안 문구).
+   등록된 업체가 **0곳**이라 그 말은 있는 것처럼 읽힙니다 (절대
+   규칙 1 · 지시서 §1 "이미지의 임의 문구보다 실제 데이터를
+   우선한다"). 저희가 지금 하는 것은 **지역 · 업종으로 좁혀 찾는
+   것**까지입니다. */
+function homeHeroChecks(){
+  var n = (window.AM_CATS || []).length;
+  var L = [];
+  if(n) L.push("서비스 분야 " + n + "개");
+  L.push("지역 · 업종으로 찾기");
+  L.push("한 번에 여러 개 신청");
+  return '<ul class="bhero-ck">'+L.map(function(t){
+    return '<li>'+icon("check",15)+'<span>'+esc(t)+'</span></li>';
+  }).join("")+'</ul>';
+}
+
+/* 사진 위 작은 안내 카드 (§3-B 시안) ─────────────────────────────
+   ⚠️ 사진에 글자를 합성하지 않습니다 — **제 흰 바탕을 들고 사진 위에
+   얹힌 카드**라 사진 밝기와 무관하게 읽힙니다 (히어로 머리말을
+   알약으로 받친 것과 같은 까닭).
+   ⚠️⚠️ **사진이 없으면 아예 안 냅니다** — 사진 없이 이 카드만 뜨면
+   빈 자리에 떠 있는 상자가 됩니다 (절대 규칙 2).
+   ⚠️⚠️ **1024px 아래에서는 CSS 가 접습니다** — 거기서는 사진이 띠로
+   누워서, 카드를 얹으면 사진이 통째로 가려집니다. `/providers` 로
+   가는 길은 바로 위 보조 단추 · 아래 구간 머리말 · 헤더 메뉴에
+   **전 폭에서** 남아 있습니다 (재서 확인했습니다 — `.bent-sv` 를
+   폰에서 숨겼다가 `/sell` 이 사라질 뻔한 자리입니다). */
+function homeHeroCard(){
+  if(!hasPhoto("hero-start")) return "";
+  return '<a class="bhero-card" href="/providers">'+
+    '<span class="bhero-card-i" aria-hidden="true">'+iconArt("admin", 30)+'</span>'+
+    '<b>지금, 필요한 서비스를 바로 찾아보세요.</b>'+
+    '<span class="bhero-card-a" aria-hidden="true">'+icon("arrow",16)+'</span>'+
+  '</a>';
+}
+
 function HomeHero(){
   var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
   var with_ = (window.koWith ? koWith(nm, "이가") : nm + "가");
@@ -749,7 +790,7 @@ function HomeHero(){
   return '<section class="bhero">'+
     '<div class="w bhero-w">'+
       '<div class="bhero-in">'+
-        '<p class="bhero-k">창업의 시작부터 폐업의 마무리까지</p>'+
+        '<p class="bhero-k">'+icon("sparkle",14)+'창업부터 폐업까지 사장님의 든든한 파트너</p>'+
         /* ⚠️⚠️ **여기를 br 로 쪼개지 마세요.** checkMainH2() 가 크롤러
            본문의 머리말을 **소스에서 글자로** 찾는데 중간에 태그가
            끼면 못 찾아 빌드가 멈춥니다. 줄바꿈은 keep-all 이 합니다. */
@@ -761,8 +802,9 @@ function HomeHero(){
             '무료 견적 신청'+icon("arrow",18)+'</a>'+
           '<a class="btn btn-o btn-lg" href="/providers">어떤 서비스가 있는지 보기</a>'+
         '</div>'+
+        homeHeroChecks()+
       '</div>'+
-      ph +
+      ph + homeHeroCard() +
     '</div>'+
   '</section>';
 }
@@ -867,6 +909,24 @@ function HomeEnter(){
 var HOME_DIRECT = ["interior", "equip", "it", "admin",
                    "staff", "marketing", "demolish", "restore"];
 
+/* ⚠️⚠️ **카드 설명은 그 분류가 실제로 들고 있는 하위 서비스**입니다
+   (`catalog.js` 의 `items`). 시안이 적어 둔 "주방기기, 냉난방, 집기,
+   가구, 보안매뉴 등" 은 디자인 예시이고, 지시서 §1 이 **"이미지에 있는
+   임의의 문구 · 숫자 · 서비스명보다 실제 사이트의 데이터를 우선한다"**
+   고 적었습니다.
+   ⚠️⚠️ 하위가 **업종에서 오는 분류**(시설 · 장비)는 여기서 셀 것이
+   0 이라 그때만 데이터에 처음부터 있던 `lead` 를 냅니다. `amAllSubs()`
+   로 모든 업종 장비를 합쳐 앞 다섯을 내면 **주방기기 · 냉장 · 냉동 ·
+   조리기기 · 후드**가 앞에 서는데(`AM_INDUSTRIES` 차례가 음식점부터),
+   그러면 미용실 · 학원 · 사무실 사장님께 "여긴 내 자리가 아니네" 가
+   됩니다 — 이 저장소가 사진 · 썸네일 · 팔레트에서 못박아 둔 자리입니다. */
+function homeDirDesc(c){
+  var it = (c.items || []);
+  if(it.length) return it.slice(0, 5).map(function(x){ return x.name; })
+                         .filter(Boolean).join(", ") + " 등";
+  return c.lead || "";
+}
+
 function HomeDirect(){
   var C = window.AM_CATS || [];
   var cards = HOME_DIRECT.map(function(k){
@@ -874,13 +934,21 @@ function HomeDirect(){
     for(i = 0; i < C.length; i++) if(C[i].key === k) c = C[i];
     if(!c) return "";
     var to = (typeof catTo === "function") ? catTo(c) : ("/providers/" + c.key);
-    /* ⚠️ 색은 `catalog.js` 의 `tone` 한 줄입니다 — 안 붙이면 여섯이
+    var ds = homeDirDesc(c);
+    /* ⚠️ 색은 `catalog.js` 의 `tone` 한 줄입니다 — 안 붙이면 여덟이
        전부 같은 브라운으로 서서 "서비스가 색으로 갈리지" 않습니다
-       (메인 업종 열넷에서 겪은 자리). */
+       (메인 업종 열넷에서 겪은 자리).
+       ⚠️⚠️ **카드 전체가 하나의 `a` 입니다** — "관련 서비스 보기" 는
+       시안에서 단추처럼 보이지만 **표시**이고, 안에 또 `a` 를 넣으면
+       브라우저가 쪼갭니다 (단계 카드 · 진입 카드에서 겪은 자리). */
     return '<li><a class="bdir-c'+tn(c.tone)+'" href="'+esc(to)+'">'+
-      '<span class="bdir-i">'+
-        (hasIconArt(c.key) ? iconArt(c.key, 44) : icon(c.icon, 26))+'</span>'+
-      '<b>'+esc(c.name)+'</b>'+
+      '<span class="bdir-i" aria-hidden="true">'+
+        (hasIconArt(c.key) ? iconArt(c.key, 64) : icon(c.icon, 34))+'</span>'+
+      '<span class="bdir-tx">'+
+        '<b>'+esc(c.name)+'</b>'+
+        (ds ? '<em>'+esc(ds)+'</em>' : "")+
+      '</span>'+
+      '<span class="bdir-go">관련 서비스 보기'+icon("arrow",15)+'</span>'+
     '</a></li>';
   }).filter(Boolean).join("");
   if(!cards) return "";
@@ -889,15 +957,19 @@ function HomeDirect(){
      리듬이 한 칸 어긋납니다. 2026-10-25 §1 로 bwhy 가 내려가며
      bcal ↔ bstep 이 ΔE 0.00 으로 붙었고(전수 점검이 잡았습니다),
      다섯을 번갈아 다시 칠하면서 여기도 같이 맞췄습니다. */
+  /* ⚠️ "전체 서비스 보기" 가 **구간 아래에서 머리말 오른쪽으로**
+     올라왔습니다 (시안). 길은 그대로 `/providers` 하나입니다 —
+     옮긴 것이지 지운 것이 아닙니다. */
   return '<section class="bdir"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
-      '<h2>직접 서비스를 찾아보세요.</h2>'+
-      '<p>무엇이 필요한지 이미 정해져 있으시면 여기서 바로 가세요.</p>'+
+    '<div class="sec-hd hm-hd">'+
+      '<div class="hm-hd-t">'+
+        '<h2>직접 서비스를 찾아보세요.</h2>'+
+        '<p>무엇이 필요하신지 이미 정해져 있으시면 여기서 바로 가세요.</p>'+
+      '</div>'+
+      '<a class="btn btn-ac hm-more" href="/providers">전체 서비스 보기'+
+        icon("arrow",16)+'</a>'+
     '</div>'+
     '<ul class="bdir-g">'+cards+'</ul>'+
-    '<p class="row-cta row-mid">'+
-      '<a class="btn btn-o" href="/providers">전체 서비스 보기'+icon("arrow",16)+'</a>'+
-    '</p>'+
     HomePicked()+
     /* ⚠️ 숫자는 손으로 적지 않습니다 — 그 자리에서 셉니다 */
     MainScopeStrip()+
@@ -1065,10 +1137,12 @@ function HomeSteps(){
   if(!L.length) return "";
   return '<section class="bstep">'+
     '<div class="w">'+
-      '<div class="sec-hd sec-hd-c">'+
-        '<p class="eyebrow">HOW IT WORKS</p>'+
-        '<h2>이용 방법은 간단합니다.</h2>'+
-        '<p>신청은 무료이고 가입이 필요 없습니다.</p>'+
+      '<div class="sec-hd hm-hd">'+
+        '<div class="hm-hd-t">'+
+          '<p class="eyebrow">HOW IT WORKS</p>'+
+          '<h2>이용 방법은 간단합니다.</h2>'+
+          '<p>신청은 무료이고 가입이 필요 없습니다.</p>'+
+        '</div>'+
       '</div>'+
       '<ol class="bstep-g">'+L.map(function(x, i){
         return '<li class="bstep-c">'+
@@ -1129,12 +1203,19 @@ function HomeCalc(){
   var by = {}; (window.AM_TOOLS||[]).forEach(function(t){ by[t.key] = t; });
   var L = MAIN_CALC.map(function(k){ return by[k]; }).filter(Boolean);
   if(!L.length) return "";
+  /* ⚠️⚠️ **"계산도구 전체 보기" 를 빼지 마세요** — 재 보니 `/tools` 로
+     가는 길이 메인 본문(`#view`)에 **한 곳도 없었습니다**(헤더 메뉴와
+     푸터뿐). 시안이 그 자리를 그려 둔 까닭입니다. */
   return '<section class="bcal"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
-      '<p class="eyebrow">TOOLS</p>'+
-      '<h2>사업에 필요한 계산도구를 이용해 보세요.</h2>'+
-      '<p>창업 · 운영 · 양도양수 · 폐업에 필요한 비용을 미리 계산해 '+
-        '보세요. 적으신 숫자는 이 브라우저에만 남습니다.</p>'+
+    '<div class="sec-hd hm-hd">'+
+      '<div class="hm-hd-t">'+
+        '<p class="eyebrow">TOOLS</p>'+
+        '<h2>사업에 필요한 계산도구를 이용해 보세요.</h2>'+
+        '<p>창업 · 운영 · 양도양수 · 폐업에 필요한 비용을 미리 계산해 '+
+          '보세요. 적으신 숫자는 이 브라우저에만 남습니다.</p>'+
+      '</div>'+
+      '<a class="btn btn-ac hm-more" href="/tools">계산도구 전체 보기'+
+        icon("arrow",16)+'</a>'+
     '</div>'+
     '<ul class="bcal-g">'+L.map(function(t, i){
       var art = (typeof hasIconArt === "function" && hasIconArt(t.icon));
@@ -1193,11 +1274,18 @@ function HomeGuide(){
   if(!L.length) return "";
   var all = (window.AM_CONTENTS || []).length;
   return '<section class="bgd"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
-      '<p class="eyebrow">GUIDE</p>'+
-      '<h2>사장님께 필요한 이용 가이드</h2>'+
-      '<p>창업 · 운영 · 양도양수 · 폐업에서 자주 막히는 자리를 '+
-        '정리했습니다. 지금 '+all+'편이고 근거를 댈 수 있는 것만 적습니다.</p>'+
+    /* ⚠️ "전체보기" 가 **구간 아래에서 머리말 오른쪽으로** 올라왔습니다
+       (시안). 길은 그대로 `/content` 하나입니다 — 옮긴 것이지 지운
+       것이 아닙니다. */
+    '<div class="sec-hd hm-hd">'+
+      '<div class="hm-hd-t">'+
+        '<p class="eyebrow">GUIDE</p>'+
+        '<h2>사장님께 필요한 이용 가이드</h2>'+
+        '<p>창업 · 운영 · 양도양수 · 폐업에서 자주 막히는 자리를 '+
+          '정리했습니다. 지금 '+all+'편이고 근거를 댈 수 있는 것만 적습니다.</p>'+
+      '</div>'+
+      '<a class="btn btn-ac hm-more" href="/content">이용 가이드 전체 보기'+
+        icon("arrow",16)+'</a>'+
     '</div>'+
     '<ul class="bgd-g">'+L.map(function(c){
       var ct = (typeof amCat === "function") ? (amCat(c.cat) || {}) : {};
@@ -1211,8 +1299,6 @@ function HomeGuide(){
           '<span>'+icon("arrow",14)+'</span>'+
         '</span>'+
       '</a></li>'; }).join("")+'</ul>'+
-    '<p class="bgd-more"><a href="/content">이용 가이드 전체보기'+
-      icon("arrow",16)+'</a></p>'+
   '</div></section>';
 }
 

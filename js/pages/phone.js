@@ -31,7 +31,7 @@ function pwSellGo(patch){
 
 /* 지금 몇 걸음째인가 — 고르신 것으로 정합니다 (억지로 막지 않습니다) */
 function pwSellStep(q){
-  /* ⚠⚠ **주소에 실린 값이 실제로 있는 것인지까지 봅니다.**
+  /* ⚠️⚠️ **주소에 실린 값이 실제로 있는 것인지까지 봅니다.**
      전에는 `q.grade` 가 비어만 있지 않으면 3단계로 보냈는데,
      `?gr=a` 처럼 **없는 등급**이면(key 는 대문자 S·A·B·C·D)
      `amGrade()` 가 null 을 돌려줘서 접수 글의 **외관 등급이
@@ -239,7 +239,7 @@ window.pwSellSubmit = function(){
     signal: ctl.signal,
     body: JSON.stringify({
       kind:"quote", name:name.trim(), tel:tel.trim(),
-      /* ⚠⚠ **`side` 를 반드시 보냅니다.** 안 보내면 `api/quote.js` 가
+      /* ⚠️⚠️ **`side` 를 반드시 보냅니다.** 안 보내면 `api/quote.js` 가
          기본값 `"start"` 를 박아서, 중고폰 매입 신청이 **"창업"
          건으로** 저장되고 직원이 창업 업체를 찾습니다 (`AM_SIDES` 주석). */
       side: (PW_WAY === "direct" ? "buyin" : "bid"),
@@ -485,7 +485,7 @@ function PageBid(){
     ["정산합니다", "받아들이시면 정산하고, 아니면 기기를 돌려받으십니다. 진행은 접수번호로 조회하실 수 있습니다."]
   ];
   return PgHero({ kicker:"BID", h1:"최고가 경쟁입찰",
-      /* ⚠⚠ "인증 매입업체가 … 냅니다" 라고 적었다가 고쳤습니다 —
+      /* ⚠️⚠️ "인증 매입업체가 … 냅니다" 라고 적었다가 고쳤습니다 —
          업체가 0곳인데 **있는 것처럼** 읽히고(절대 규칙 1),
          "인증" 은 저희가 자격을 준다는 말입니다. 지금 상태는
          아래 note-box 가 세는 값으로 그대로 말합니다. */
@@ -519,7 +519,7 @@ function PageBid(){
    연락처 · 요청 내용을 다 봅니다 — 번호와 연락처 **둘 다** 맞아야
    합니다. 이 규칙은 DB 의 claim_request 와 같습니다. */
 function PageTrack(){
-  /* ⚠⚠ 조회할 곳이 아직 없으면 **폼을 안 냅니다.** 전에는
+  /* ⚠️⚠️ 조회할 곳이 아직 없으면 **폼을 안 냅니다.** 전에는
      폼을 내고 누르면 "아직 안 열었습니다" 라고 답했는데,
      그것이 곧 **눌러도 작동하지 않는 단추**입니다 (§30-7).
      `/my` 의 `.my-db` · 사진 첨부 칸과 **같은 방식**입니다 —
@@ -529,9 +529,9 @@ function PageTrack(){
     '<section class="sec sec-white"><div class="w pwf" style="max-width:720px">'+
       '<div class="pwf-fm" id="tk-fm" hidden>'+
         '<div class="f-r"><label for="tk-no">접수번호 <em>*</em></label>'+
-          /* ⚠⚠ 접수번호는 **`SW-`** 로 시작합니다 (`api/_intake.js` 의
+          /* ⚠️⚠️ 접수번호는 **`SW-`** 로 시작합니다 (`api/_intake.js` 의
              `reqNo()` · `reqNoClean()` 이 `SW` + 여덟 글자만 받습니다).
-             여기에 다른 머리를 적어 두면 그 꿀로 찾으시다가 못 찾습니다. */
+             여기에 다른 머리를 적어 두면 그 꼴로 찾으시다가 못 찾습니다. */
           '<input id="tk-no" type="text" autocomplete="off" placeholder="SW-AB12-CD34"></div>'+
         '<div class="f-r"><label for="tk-tel">연락처 <em>*</em></label>'+
           '<input id="tk-tel" type="tel" autocomplete="tel" inputmode="tel" '+
@@ -549,7 +549,7 @@ function PageTrack(){
       '<div class="note-box" id="tk-why" style="margin-top:22px">'+
         '⚠ 접수번호와 연락처가 <b>둘 다</b> 맞아야 열립니다. 번호만으로 열어 '+
         '드리면 번호를 아는 누구나 남의 신청 내용을 보게 됩니다.<br>'+
-        /* ⚠⚠ "고객센터로 문의해 주세요" 라고 적었다가 고쳤습니다 —
+        /* ⚠️⚠️ "고객센터로 문의해 주세요" 라고 적었다가 고쳤습니다 —
            그런 창구가 없고 사업자 전화번호 칸조차 비어 있어서,
            그 말을 보고 번호를 찾다가 못 찾으십니다. */
         '번호를 잃어버리셨으면 <b>같은 연락처로 다시 신청</b>해 주세요 — '+
@@ -557,7 +557,7 @@ function PageTrack(){
       '</div>'+
     '</div></section>';
 }
-/* ⚠⚠ `/track` 에서만 한 번 묻습니다. `amAuthAsk()` 는 이미 물어
+/* ⚠️⚠️ `/track` 에서만 한 번 묻습니다. `amAuthAsk()` 는 이미 물어
    둔 답을 들고 있으면 그대로 돌려주고, 묻는 중이면 그 물음을
    다시 씁니다 — 왕복이 더 늘지 않습니다. */
 window.pwTrackInit = function(){

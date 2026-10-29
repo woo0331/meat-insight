@@ -14,7 +14,9 @@ var RQ = { asked:false, on:false, signedIn:false, role:"", name:"", linked:null,
 
            contacts:[], settles:[], pvOf:"", pctx:{}, sctx:{},
 
-           applies:[], apOf:"", actx:{} };
+           applies:[], apOf:"", actx:{},
+
+           devices:[], deviceCosts:[], dvOf:"", dvFil:"", dctx:{}, dvTo:"" };
 
 function rqDraw(){
   var root = $("rq");
@@ -27,7 +29,8 @@ function rqDraw(){
       '<h2>접수 · 배정</h2>'+
       rqBody()+
     '</section>'+
-    (RQ.signedIn ? rqMoney() + rqFees() + rqSettles() + rqApplies() + rqProvs() : "");
+    (RQ.signedIn ? rqMoney() + rqStock() + rqFees() + rqSettles() +
+                   rqApplies() + rqProvs() : "");
 }
 
 function rqBody(){
@@ -754,6 +757,9 @@ function rqLoad(){
       RQ.settles  = d.settles  || [];
 
       RQ.applies  = d.applies  || [];
+
+      RQ.devices     = d.devices     || [];
+      RQ.deviceCosts = d.deviceCosts || [];
       rqDraw();
     })
     .catch(function(e){
@@ -1136,6 +1142,8 @@ function rqCall(fn, args, say){
     RQ.itemOf = ""; RQ.ictx = {};
     RQ.pvOf = ""; RQ.pctx = {};
     RQ.apOf = ""; RQ.actx = {};
+
+    RQ.dvOf = ""; RQ.dvTo = ""; RQ.dctx = {};
     rqLoad();
   }).catch(function(e){
     RQ.busy = false;
@@ -1813,4 +1821,427 @@ window.rqHistGo = function(id){
       try{ console.warn("[rq] 이력 — " + e); }catch(_){}
       if(RQ.histOf === id){ RQ.hist = []; rqDraw(); }
     });
+};
+
+function rqStock(){
+  if(RQ.role !== "staff" && RQ.role !== "admin") return "";
+  var D = rqDevAll();
+
+  var nWait = D.filter(function(d){ return d.state === "waiting";  }).length;
+  var nChk  = D.filter(function(d){ return d.state === "checking" ||
+                                           d.state === "arrived";  }).length;
+  var nRe   = D.filter(function(d){ return d.state === "regrade";  }).length;
+  var nList = D.filter(function(d){ return d.state === "listed";   }).length;
+  var nSold = D.filter(function(d){ return d.state === "sold";     }).length;
+
+  return '<section class="ad-s rq-s rq-s-dv">'+
+    '<h2>직접 매입 재고</h2>'+
+    (!D.length
+      ? '<p class="ad-empty">아직 들어온 기기가 없습니다. '+
+        '<b>내 폰 팔기</b>로 신청이 들어오면 여기에 쌓입니다.</p>'+
+        '<p class="f-h">⚠️ 신청이 들어와도 기기 줄은 저절로 생기지 '+
+          '않습니다 — 받으신 다음에 <b>기기 등록</b>으로 한 줄 만드세요 '+
+          '(적어 주신 상태와 실제가 다를 수 있어, 같은 줄로 두지 '+
+          '않습니다).</p>'
+      : '<p class="ad-lead">'+
+          (nWait ? '<b>'+nWait+'대</b>가 아직 도착하지 않았습니다. ' : '')+
+          (nChk  ? '<b>'+nChk+'대</b>는 검수가 남았습니다. '          : '')+
+          (nRe   ? '<b>'+nRe+'대</b>는 금액 재협의 중입니다. '        : '')+
+          (nList ? '<b>'+nList+'대</b>가 판매 중이고, '               : '')+
+          '<b>'+nSold+'대</b>가 팔렸습니다.</p>'+
+        rqDevSum(D)+
+        rqDevChips(D)+
+        '<div class="rq-g">'+ rqDevRows(D).join("") +'</div>')+
+    rqDevNew()+
+  '</section>';
+}
+
+function rqDevAll(){
+  var C = RQ.deviceCosts || [];
+  return (RQ.devices || []).map(function(d){
+    var x = {}; for(var k in d) x[k] = d[k];
+    x.costs = C.filter(function(c){ return c.device_id === d.id; });
+    return x;
+  });
+}
+
+function rqDevSum(D){
+  var spent = 0, est = 0, real = 0, nEst = 0, nReal = 0;
+  D.forEach(function(d){
+
+    var p = (typeof amDevProfit === "function") ? amDevProfit(d) : null;
+    if(!p) return;
+    spent += p.spent;
+    if(p.est  != null){ est  += p.est;  nEst++;  }
+    if(p.real != null){ real += p.real; nReal++; }
+  });
+  return '<div class="rq-sum rq-dv-sum">'+
+    rqDevSumBox("들인 돈 (원가 + 비용)", spent, D.length + "대")+
+    rqDevSumBox("예상 수익", est, nEst + "대 · 판매가를 매긴 것만")+
+    rqDevSumBox("실제 수익", real, nReal + "대 · 팔린 것만")+
+    '<p class="f-h rq-sum-n">⚠️ 최근 '+D.length+'대에서 센 값입니다 — '+
+      '전체 누적이 아닙니다. <b>예상</b>은 판매가를 매긴 기기에만, '+
+      '<b>실제</b>는 팔린 기기에만 들어갑니다 (안 팔린 기기의 예상을 '+
+      '실제에 섞으면 장부가 거짓말이 됩니다).</p>'+
+  '</div>';
+}
+
+function rqDevSumBox(label, won, note){
+
+  var neg = won < 0;
+  return '<div class="rq-sum-b'+(neg ? ' is-neg' : '')+'">'+
+    '<span class="rq-sum-l">'+esc(label)+'</span>'+
+    '<b class="rq-sum-v">'+rqWon(won)+'</b>'+
+    '<span class="rq-sum-n2">'+esc(note)+'</span>'+
+  '</div>';
+}
+
+function rqWon(n){
+  var v = Number(n || 0);
+  return (v < 0 ? "−" : "") + Math.abs(v).toLocaleString("ko-KR") + "원";
+}
+
+function rqDevChips(D){
+  var out = ['<button class="chip'+(RQ.dvFil ? '' : ' on')+'" type="button" '+
+    'onclick="rqDvFil(\'\')">전체 '+D.length+'</button>'];
+  (window.AM_DEV_ST || []).forEach(function(st){
+    var n = D.filter(function(d){ return d.state === st.key; }).length;
+    if(!n) return;
+    out.push('<button class="chip'+(RQ.dvFil === st.key ? ' on' : '')+'" '+
+      'type="button" onclick="rqDvFil(\''+st.key+'\')">'+
+      esc(st.name)+' '+n+'</button>');
+  });
+  return '<div class="chip-g chip-g-fil">'+out.join("")+'</div>';
+}
+
+window.rqDvFil = function(k){ RQ.dvFil = k; RQ.dvOf = ""; RQ.dvTo = ""; rqDraw(); };
+
+function rqDevRows(D){
+  var L = RQ.dvFil ? D.filter(function(d){ return d.state === RQ.dvFil; }) : D;
+  if(!L.length) return ['<p class="ad-empty">그 상태인 기기가 없습니다.</p>'];
+  return L.map(rqDevRow);
+}
+
+function rqDevRow(d){
+  var open = RQ.dvOf === d.id;
+  var nm = (typeof amDevStName === "function") ? amDevStName(d.state) : d.state;
+  var tn = (typeof amDevTone === "function") ? amDevTone(d.state) : "gray";
+  var p  = (typeof amDevProfit === "function") ? amDevProfit(d) : null;
+
+  var title = rqDevName(d.model || d.said_model, d.cap != null ? d.cap : d.said_cap);
+  var meta = [String(d.created_at || "").slice(0, 10),
+              d.grade ? "검수 " + d.grade + "급"
+                      : (d.said_grade ? "적어 주신 " + d.said_grade + "급" : ""),
+              d.batt != null ? "배터리 " + d.batt + "%" : "",
+              d.imei_tail ? "IMEI …" + d.imei_tail : ""]
+             .filter(Boolean).join(" · ");
+
+  return '<article class="rq-r'+(open ? ' is-open' : '')+'">'+
+    '<div class="rq-hd rq-hd-s">'+
+      '<span class="rq-hd-l">'+
+        '<b class="rq-no">'+esc(title)+'</b>'+
+        '<span class="rq-m">'+esc(meta)+'</span>'+
+      '</span>'+
+      '<span class="rq-hd-r">'+
+        '<span class="myq-st myq-'+tn+'">'+esc(nm)+'</span>'+
+        (p && p.real != null
+          ? '<b class="rq-dv-p'+(p.real < 0 ? ' is-neg' : '')+'">'+rqWon(p.real)+'</b>'
+          : (p && p.est != null
+              ? '<span class="rq-dv-p is-est">예상 '+rqWon(p.est)+'</span>' : ''))+
+        '<button class="btn btn-o btn-s" type="button" '+
+          'onclick="rqDvOpen(\''+esc(d.id)+'\')">'+
+          (open ? "접기" : "열기")+'</button>'+
+      '</span>'+
+    '</div>'+
+    (open ? rqDevBody(d) : "")+
+  '</article>';
+}
+
+function rqDevName(model, cap){
+  var m = (typeof amModel === "function" && model) ? amModel(model) : null;
+
+  var n = m ? m.name : (model ? "기종 미확인 (" + model + ")" : "기기");
+  return n + (cap != null ? " " + cap + "GB" : "");
+}
+
+function rqDevBody(d){
+  return '<div class="rq-bd">'+
+    rqDevSaid(d)+
+    rqDevMoney(d)+
+    rqDevCosts(d)+
+    rqDevMove(d)+
+  '</div>';
+}
+
+function rqDevSaid(d){
+  var rows = [
+    ["적어 주신 기종", rqDevName(d.said_model, d.said_cap)],
+    ["적어 주신 등급", d.said_grade ? d.said_grade + "급" : ""],
+    ["검수한 기종",    d.model ? rqDevName(d.model, d.cap) : ""],
+    ["검수한 등급",    d.grade ? d.grade + "급" : ""],
+    ["색",             d.color || ""],
+    ["배터리",         d.batt != null ? d.batt + "%" : ""],
+    ["메모",           d.note || ""]
+  ].filter(function(r){ return r[1]; });
+  return '<dl class="rq-sp">'+ rows.map(function(r){
+    return '<dt>'+esc(r[0])+'</dt><dd>'+esc(String(r[1]))+'</dd>';
+  }).join("") +'</dl>';
+}
+
+function rqDevMoney(d){
+  var p = (typeof amDevProfit === "function") ? amDevProfit(d) : null;
+  if(!p) return "";
+  var rows = [];
+  if(d.cost != null)       rows.push(["매입원가", rqWon(d.cost)]);
+
+  if(d.cost != null && p.spent !== Number(d.cost))
+                           rows.push(["들인 돈 (원가 + 비용)", rqWon(p.spent)]);
+  if(d.price != null)      rows.push(["판매가", rqWon(d.price)]);
+  if(d.sold_price != null) rows.push(["실제 판매가", rqWon(d.sold_price)]);
+  if(p.est  != null)       rows.push(["예상 수익", rqWon(p.est)]);
+  if(p.real != null)       rows.push(["실제 수익", rqWon(p.real)]);
+  if(!rows.length)
+    return '<p class="f-h">⚠️ 검수를 하셔야 매입원가가 적힙니다 — '+
+      '검수 전에는 원가를 넣을 수 없습니다 (DB 가 막습니다).</p>';
+  return '<dl class="rq-sp rq-sp-won">'+ rows.map(function(r){
+    return '<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>';
+  }).join("") +'</dl>'+
+  (p.real != null ? '' :
+    '<p class="f-h">⚠️ <b>실제 수익</b>은 팔린 뒤에 나옵니다 — '+
+      '안 팔린 기기의 예상을 실제로 적으면 장부가 거짓말이 됩니다.</p>');
+}
+
+function rqDevCosts(d){
+  var C = d.costs || [];
+  var ks = (window.AM_DEV_COST || []);
+  return '<div class="rq-dv-c">'+
+    '<h4 class="rq-h4">비용 '+(C.length ? C.length + '줄' : '')+'</h4>'+
+    (C.length
+      ? '<ul class="rq-dv-cl">'+ C.map(function(c){
+          var n = ks.filter(function(x){ return x.key === c.kind; })[0];
+          return '<li><span>'+esc(n ? n.name : c.kind)+'</span>'+
+            '<b'+(Number(c.amount) < 0 ? ' class="is-neg"' : '')+'>'+
+              rqWon(c.amount)+'</b>'+
+            (c.memo ? '<i>'+esc(c.memo)+'</i>' : '')+'</li>';
+        }).join("") +'</ul>'
+      : '<p class="f-h">아직 더 든 돈이 없습니다.</p>')+
+
+    (d.cost == null ? '' :
+      '<div class="rq-f rq-f-cost">'+
+        '<label class="f-lb" for="dv-ck-'+esc(d.id)+'">갈래</label>'+
+        '<select id="dv-ck-'+esc(d.id)+'" class="sel" '+
+          'onchange="rqDctx(\'costKind\', this.value)">'+
+          ks.map(function(x){ return '<option value="'+esc(x.key)+'">'+
+            esc(x.name)+'</option>'; }).join("")+
+        '</select>'+
+        '<label class="f-lb" for="dv-ca-'+esc(d.id)+'">금액 (원)</label>'+
+        '<input id="dv-ca-'+esc(d.id)+'" type="number" step="1" '+
+          'placeholder="80000" oninput="rqDctx(\'costAmt\', this.value)">'+
+        '<label class="f-lb" for="dv-cm-'+esc(d.id)+'">메모</label>'+
+        '<input id="dv-cm-'+esc(d.id)+'" type="text" maxlength="200" '+
+          'placeholder="액정 교체" oninput="rqDctx(\'costMemo\', this.value)">'+
+        '<button class="btn btn-b btn-s" type="button"'+(RQ.busy ? ' disabled' : '')+
+          ' onclick="rqDvCost(\''+esc(d.id)+'\')">비용 적기</button>'+
+        '<p class="f-h">⚠️ 환불 · 반품은 <b>음수</b>로 적습니다 — 줄을 '+
+          '지우지 않고 차액을 남깁니다. <b>0 원</b>은 비용이 아니라 '+
+          '거절됩니다.</p>'+
+      '</div>')+
+  '</div>';
+}
+
+function rqDevMove(d){
+
+  var role = RQ.role;
+  var can = (window.AM_DEV_MOVE || []).filter(function(m){
+    if(m[0] !== d.state) return false;
+    return !(m[2] === "admin" && role !== "admin");
+  });
+
+  var hid = (window.AM_DEV_MOVE || []).filter(function(m){
+    return m[0] === d.state && m[2] === "admin" && role !== "admin"; });
+
+  if(!can.length)
+    return '<p class="f-h">'+
+      (hid.length ? '⚠️ 여기서 더 옮기는 것은 <b>관리자</b>만 할 수 있습니다.'
+                  : '여기서 더 옮길 곳이 없습니다.')+'</p>';
+
+  var to = RQ.dvTo;
+  var need = to ? ((window.AM_DEV_NEED || {})[to] || []) : [];
+  return '<div class="rq-f rq-f-mv">'+
+    '<label class="f-lb" for="dv-to-'+esc(d.id)+'">다음 상태</label>'+
+    '<select id="dv-to-'+esc(d.id)+'" class="sel" '+
+      'onchange="rqDvTo(this.value)">'+
+      '<option value="">골라 주세요</option>'+
+      can.map(function(m){
+        var st = (typeof amDevSt === "function") ? amDevSt(m[1]) : null;
+        return '<option value="'+esc(m[1])+'"'+(to === m[1] ? ' selected' : '')+'>'+
+          esc(st ? st.name : m[1])+'</option>';
+      }).join("")+
+    '</select>'+
+    (to ? rqDevNeed(to, need, d) : "")+
+    (to ? '<button class="btn btn-b btn-s" type="button"'+(RQ.busy ? ' disabled' : '')+
+        ' onclick="rqDvMove(\''+esc(d.id)+'\')">옮기기</button>' : "")+
+    (hid.length ? '<p class="f-h">⚠️ <b>폐기</b>는 관리자만 할 수 있습니다.</p>' : "")+
+  '</div>';
+}
+
+function rqDevNeed(to, need, d){
+  var out = [];
+  need.forEach(function(k){
+    if(k === "grade")
+      out.push(rqDevSel(d, "grade", "확정 등급",
+        (window.AM_GRADES || []).map(function(g){ return [g.key, g.name]; })));
+    else if(k === "cost")
+      out.push(rqDevNum(d, "cost", "매입원가 (원)", "700000"));
+    else if(k === "price")
+      out.push(rqDevNum(d, "price", "판매가 (원)", "950000"));
+    else if(k === "soldPrice")
+      out.push(rqDevNum(d, "soldPrice", "실제 판매가 (원)", "950000"));
+    else if(k === "why")
+      out.push(rqDevTxt(d, "why", to === "regrade"
+        ? "무엇이 달랐는지 (고객에게 갑니다)" : "사유"));
+  });
+
+  if(to === "checked")
+    out.push(rqDevNum(d, "batt",  "배터리 (%)", "94"),
+             rqDevTxt(d, "color", "색"),
+             rqDevTxt(d, "imeiTail", "IMEI 뒤 네 자리"));
+  if(to === "checked")
+    out.push('<p class="f-h">⚠️⚠️ <b>IMEI 는 뒤 네 자리만</b> 적습니다 — '+
+      '전체는 그 자체가 개인정보에 가깝고 분실 신고 · 명의와 엮입니다. '+
+      '같은 기종이 여러 대일 때 가르는 데만 씁니다.</p>');
+  if(to === "regrade")
+    out.push('<p class="f-h">⚠️⚠️ 적으신 내용이 <b>고객에게 그대로</b> '+
+      '갑니다 — 무엇이 달랐는지만 적고, 운영자끼리 할 말은 쓰지 마세요.</p>');
+  return out.join("");
+}
+
+function rqDevNum(d, k, label, ph){
+  return '<label class="f-lb" for="dv-'+k+'-'+esc(d.id)+'">'+esc(label)+'</label>'+
+    '<input id="dv-'+k+'-'+esc(d.id)+'" type="number" step="1" '+
+      'placeholder="'+esc(ph || "")+'" oninput="rqDctx(\''+k+'\', this.value)">';
+}
+function rqDevTxt(d, k, label){
+  return '<label class="f-lb" for="dv-'+k+'-'+esc(d.id)+'">'+esc(label)+'</label>'+
+    '<input id="dv-'+k+'-'+esc(d.id)+'" type="text" maxlength="200" '+
+      'oninput="rqDctx(\''+k+'\', this.value)">';
+}
+function rqDevSel(d, k, label, opts){
+  return '<label class="f-lb" for="dv-'+k+'-'+esc(d.id)+'">'+esc(label)+'</label>'+
+    '<select id="dv-'+k+'-'+esc(d.id)+'" class="sel" '+
+      'onchange="rqDctx(\''+k+'\', this.value)">'+
+      '<option value="">골라 주세요</option>'+
+      opts.map(function(o){ return '<option value="'+esc(o[0])+'">'+
+        esc(o[1])+'</option>'; }).join("")+
+    '</select>';
+}
+
+function rqDevNew(){
+  var M = (window.AM_MODELS || []);
+  return '<details class="rq-dv-new">'+
+    '<summary>기기 등록</summary>'+
+    '<p class="f-h">⚠️⚠️ 신청이 들어와도 기기 줄이 저절로 생기지 '+
+      '않습니다 — <b>적어 주신 것</b>과 <b>실제로 받은 것</b>이 다를 수 '+
+      '있어서, 받으신 다음에 손으로 한 줄 만듭니다.</p>'+
+    '<div class="rq-f">'+
+      '<label class="f-lb" for="dv-n-md">기종</label>'+
+      '<select id="dv-n-md" class="sel" onchange="rqDctx(\'newModel\', this.value)">'+
+        '<option value="">골라 주세요</option>'+
+        M.map(function(m){ return '<option value="'+esc(m.key)+'">'+
+          esc(m.name)+'</option>'; }).join("")+
+      '</select>'+
+      '<label class="f-lb" for="dv-n-cp">용량 (GB)</label>'+
+      '<input id="dv-n-cp" type="number" step="1" placeholder="256" '+
+        'oninput="rqDctx(\'newCap\', this.value)">'+
+      '<label class="f-lb" for="dv-n-gr">적어 주신 등급</label>'+
+      '<select id="dv-n-gr" class="sel" onchange="rqDctx(\'newGrade\', this.value)">'+
+        '<option value="">골라 주세요</option>'+
+        (window.AM_GRADES || []).map(function(g){
+          return '<option value="'+esc(g.key)+'">'+esc(g.name)+'</option>';
+        }).join("")+
+      '</select>'+
+      '<button class="btn btn-b btn-s" type="button"'+(RQ.busy ? ' disabled' : '')+
+        ' onclick="rqDvNew()">기기 등록</button>'+
+
+      '<p class="f-h">⚠️ 지금은 <b>신청과 이어 두지 않습니다</b> — '+
+        '접수번호로 신청을 찾아 주는 길이 아직 없어서, 기기 줄만 '+
+        '만듭니다 (수익은 그대로 세어집니다).</p>'+
+      '<p class="rq-in-n" id="dv-n-n"></p>'+
+    '</div>'+
+  '</details>';
+}
+
+window.rqDvOpen = function(id){
+
+  RQ.dvOf = (RQ.dvOf === id) ? "" : id;
+  RQ.dvTo = ""; RQ.dctx = {};
+  rqDraw();
+};
+window.rqDvTo  = function(v){ RQ.dvTo = v; rqDraw(); };
+
+window.rqDctx  = function(k, v){ RQ.dctx[k] = v; };
+
+window.rqDvMove = function(id){
+  var d = (RQ.devices || []).filter(function(x){ return x.id === id; })[0];
+  var to = RQ.dvTo;
+  if(!d || !to) return;
+
+  var can = (typeof amDevCan === "function")
+    ? amDevCan(d.state, to, RQ.role) : { ok:true, need:[] };
+  if(!can.ok){ toast(can.why); return; }
+
+  var need = can.need || [];
+  var data = {};
+  var miss = [];
+  need.forEach(function(k){
+    var v = RQ.dctx[k];
+
+    if(v === undefined || v === null || v === ""){ miss.push(k); return; }
+    data[k] = (k === "cost" || k === "price" || k === "soldPrice")
+      ? Number(v) : v;
+  });
+  if(miss.length){
+    toast(rqDvNeedName(miss[0]) + " 을 같이 적어 주세요");
+    return;
+  }
+
+  if(to === "checked"){
+    ["color", "imeiTail"].forEach(function(k){
+      if(RQ.dctx[k]) data[k] = RQ.dctx[k]; });
+    if(RQ.dctx.batt !== undefined && RQ.dctx.batt !== "")
+      data.batt = Number(RQ.dctx.batt);
+  }
+  rqCall("move_device", { p_device:id, p_to:to, p_data:data },
+    (typeof amDevStName === "function" ? amDevStName(to) : to) + " 로 옮겼습니다");
+};
+
+function rqDvNeedName(k){
+  return ({ grade:"확정 등급", cost:"매입원가", price:"판매가",
+            soldPrice:"실제 판매가", why:"사유" })[k] || k;
+}
+
+window.rqDvCost = function(id){
+  var kind = RQ.dctx.costKind || "inbound";
+  var amt  = RQ.dctx.costAmt;
+  if(amt === undefined || amt === null || amt === ""){
+    toast("금액을 적어 주세요"); return; }
+  var n = Number(amt);
+
+  if(!n){ toast("0 원은 비용이 아닙니다"); return; }
+  rqCall("add_device_cost",
+    { p_device:id, p_kind:kind, p_amount:n, p_memo:RQ.dctx.costMemo || null },
+    "비용을 적었습니다");
+};
+
+window.rqDvNew = function(){
+  var md = RQ.dctx.newModel, n = $("dv-n-n");
+  if(!md){ if(n) n.textContent = "기종을 골라 주세요"; return; }
+
+  rqCall("make_device", {
+    p_request: null,
+    p_model:   md,
+    p_cap:     (RQ.dctx.newCap !== undefined && RQ.dctx.newCap !== "")
+                 ? Number(RQ.dctx.newCap) : null,
+    p_grade:   RQ.dctx.newGrade || null
+  }, "기기를 등록했습니다");
 };

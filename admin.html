@@ -36,7 +36,7 @@
 <link rel="stylesheet" href="/dist/css/tokens.css?v=cf485e67">
 <link rel="stylesheet" href="/dist/css/app.css?v=7cdebc5e">
 <link rel="stylesheet" href="/dist/css/pages.css?v=5d46d723">
-<link rel="stylesheet" href="/dist/css/admin.css?v=ac24ba4e">
+<link rel="stylesheet" href="/dist/css/admin.css?v=8e8ccd9c">
 </head>
 <body class="ad-body">
 
@@ -126,11 +126,16 @@
      목록이 상태 이름과 색을 여기서 가져옵니다. 이 줄이 없으면 딱지가
      전부 회색이 되고 상태가 영어로 나옵니다 (에러는 안 납니다). -->
 <script src="/dist/js/data/deal.js?v=897b42e0"></script>
+<!-- ⚠️⚠️ 직접 매입 재고 (PHONEWAY ⑥) — 기기 상태 아홉 · 갈 수 있는
+     길 · 비용 갈래 · 기기 이름입니다. ⚠️ 이 두 줄이 없으면 재고 구간이
+     상태를 영어로 내고 기종 이름이 key 로 찍힙니다 (deal.js 와 같은 까닭). -->
+<script src="/dist/js/data/devices.js?v=8f95fcc0"></script>
+<script src="/dist/js/data/stock.js?v=45d018d9"></script>
 <script defer src="/dist/js/data/halls.js?v=e9811498"></script>
 <!-- 로그인 — ⚠️ admin.html 은 ui.js 를 안 읽으므로 auth.js 가 저장을
      스스로 들고 있습니다 (amGet/amSet 에 의존하지 않습니다). -->
 <script src="/dist/js/auth.js?v=5ffecb76"></script>
-<script src="/dist/js/intake.js?v=28135d0c"></script>
+<script src="/dist/js/intake.js?v=d7b0287a"></script>
 <script src="/dist/js/admin.js?v=b4080783"></script>
 <script src="/dist/js/sales.js?v=c0610327"></script>
 </body>

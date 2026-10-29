@@ -792,3 +792,52 @@ body.sl-locked{ overflow:hidden; }
   background:var(--bg-sky); }
 .rq-pvb .f-r:last-child{ margin-bottom:0; }
 .rq-pvq input{ width:100%; }
+
+.rq-dv-sum{ display:grid; gap:10px; margin:14px 0 4px;
+  grid-template-columns:repeat(3, minmax(0, 1fr)); }
+.rq-sum-b{ display:grid; gap:2px; padding:12px 14px;
+  background:var(--bg-sky, #EFF6FC); border:1px solid var(--line);
+  border-radius:10px; }
+.rq-sum-l{ font-size:13px; font-weight:700; color:var(--ink2); }
+.rq-sum-v{ font-size:19px; font-weight:800; color:var(--navy, #382820);
+  letter-spacing:-.01em; }
+.rq-sum-b.is-neg .rq-sum-v{ color:var(--bad-dark, #B3261E); }
+.rq-sum-n2{ font-size:13px; color:var(--ink3); }
+.rq-sum-n{ grid-column:1 / -1; margin:0; }
+
+.rq-sp-won dd{ text-align:right; font-variant-numeric:tabular-nums; }
+
+.rq-dv-p{ font-size:14px; font-weight:800; color:var(--start-deep, #056B4C);
+  white-space:nowrap; }
+.rq-dv-p.is-neg{ color:var(--bad-dark, #B3261E); }
+.rq-dv-p.is-est{ font-weight:700; color:var(--ink3); }
+
+.rq-h4{ margin:16px 0 8px; font-size:14px; font-weight:800;
+  color:var(--navy, #382820); }
+.rq-dv-cl{ display:grid; gap:6px; margin:0 0 12px; padding:0; list-style:none; }
+.rq-dv-cl > li{ display:grid; gap:2px 12px; align-items:baseline;
+  grid-template-columns:1fr auto; padding:8px 12px;
+  background:var(--bg-2, #F5F7F9); border-radius:8px; }
+.rq-dv-cl > li > b{ font-size:14px; font-weight:800; text-align:right;
+  font-variant-numeric:tabular-nums; color:var(--navy, #382820); }
+.rq-dv-cl > li > b.is-neg{ color:var(--bad-dark, #B3261E); }
+.rq-dv-cl > li > i{ grid-column:1 / -1; font-style:normal; font-size:13px;
+  color:var(--ink3); }
+
+.rq-f{ display:grid; gap:4px; margin:14px 0 0; padding-top:14px;
+  border-top:1px dashed var(--line); }
+.rq-f .f-lb{ margin-top:8px; font-size:13px; font-weight:700;
+  color:var(--ink2); }
+.rq-f .f-lb:first-child{ margin-top:0; }
+.rq-f .btn{ margin-top:12px; justify-self:start; }
+.rq-f .f-h{ margin:8px 0 0; }
+
+.rq-dv-new{ margin:16px 0 0; padding-top:14px;
+  border-top:1px dashed var(--line); }
+.rq-dv-new > summary{ display:flex; align-items:center;
+  min-height:var(--tap, 48px); font-size:14px; font-weight:800;
+  color:var(--navy, #382820); cursor:pointer; }
+
+@media (max-width:760px){
+  .rq-dv-sum{ grid-template-columns:1fr; }
+}

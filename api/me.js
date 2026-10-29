@@ -307,6 +307,35 @@ module.exports = async function handler(req, res){
       "&order=created_at.desc&limit=" + LIMIT);
     if(ap.ok) out.applies = ap.rows;
     else console.warn("[me] provider_apply — " + ap.why);
+
+    /* 직접 매입 재고 (2026-10-29 PHONEWAY ⑥ · 0020) — 우리가 사서
+       고쳐 파는 **매매 장부**입니다 (deal 은 중개 장부입니다).
+       ⚠️⚠️ **업체에게는 묻지도 않습니다.** 0020 의 RLS 에 그 정책이
+       아예 없어서 어차피 0줄이지만, 매입원가가 곧 경쟁 정보라
+       묻지 않는 쪽이 한 겹 더 안전합니다 (지시서 §10).
+       ⚠️⚠️ **수익을 칸으로 안 가져옵니다** — `v_device_pl` 이 원가와
+       붙은 비용을 그 자리에서 셉니다 (평점을 값으로 안 들고 있는
+       것과 같은 까닭 · 숫자로 들고 있으면 기록과 어긋나기 시작합니다).
+       ⚠️ 뷰를 거치므로 `cost` · `sold_price` 도 같이 옵니다 — 직원이
+       검수하고 값을 매기는 자리라 그게 맞습니다. 그 둘은 **고객 ·
+       업체에게는 칸 권한 자체가 없습니다** (0020 의 GRANT). */
+    const dv = await dbSelectAs(s.token, "v_device_pl",
+      "?select=" + encodeURIComponent(
+        "id,request_id,state,said_model,said_cap,said_grade," +
+        "model,cap,color,grade,batt,imei_tail,note," +
+        "cost,price,sold_price,spent,est_profit,real_profit," +
+        "checked_at,listed_at,sold_at,created_at") +
+      "&order=created_at.desc&limit=" + LIMIT);
+    if(dv.ok) out.devices = dv.rows;
+    else console.warn("[me] v_device_pl — " + dv.why);
+
+    /* 비용 — ⚠️ 기기마다 따로 묻지 않습니다 (기기 쉰 대면 왕복이 쉰
+       번입니다). 한 번에 가져와 화면이 기기별로 묶습니다. */
+    const dc = await dbSelectAs(s.token, "device_cost",
+      "?select=" + encodeURIComponent("id,device_id,kind,amount,memo,at") +
+      "&order=at.desc&limit=" + (LIMIT * 4));
+    if(dc.ok) out.deviceCosts = dc.rows;
+    else console.warn("[me] device_cost — " + dc.why);
   }
 
   /* 환수 · 부분환불 — ⚠️⚠️ **`deal` 에는 안 남습니다.** 확정했던 액을

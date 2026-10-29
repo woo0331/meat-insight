@@ -64,7 +64,13 @@ var RQ = { asked:false, on:false, signedIn:false, role:"", name:"", linked:null,
            /* 2026-10-25 진단 P1-7 — `/join` 입점 신청.
               ⚠️ `apOf` 는 **펼친 신청 하나**입니다 — 쉰 건의 담당자
               번호를 한 화면에 깔지 않습니다 (`pvOf` 와 같은 선). */
-           applies:[], apOf:"", actx:{} };
+           applies:[], apOf:"", actx:{},
+           /* 2026-10-29 PHONEWAY ⑥ — 직접 매입 재고.
+              ⚠️ `dvOf` 는 **펼친 기기 하나**입니다 — 쉰 대를 한꺼번에
+              펼치면 매입원가가 한 화면에 깔립니다 (`pvOf` · `apOf` 와 같은 선).
+              ⚠️⚠️ `dctx` 를 `ctx` · `ictx` 와 **갈라 둡니다** — 섞으면
+              검수하다 만 값이 엉뚱한 길에 실려 나갑니다. */
+           devices:[], deviceCosts:[], dvOf:"", dvFil:"", dctx:{}, dvTo:"" };
 
 /* ── 그리기 ──────────────────────────────────────────────────────── */
 
@@ -90,7 +96,8 @@ function rqDraw(){
       '<h2>접수 · 배정</h2>'+
       rqBody()+
     '</section>'+
-    (RQ.signedIn ? rqMoney() + rqFees() + rqSettles() + rqApplies() + rqProvs() : "");
+    (RQ.signedIn ? rqMoney() + rqStock() + rqFees() + rqSettles() +
+                   rqApplies() + rqProvs() : "");
 }
 
 function rqBody(){
@@ -1040,6 +1047,13 @@ function rqLoad(){
       /* 업체 입점 신청 (P1-7) — ⚠️ 직원 · 관리자에게만 옵니다
          (0016 의 RLS 에 고객 · 업체 정책이 아예 없습니다). */
       RQ.applies  = d.applies  || [];
+      /* 직접 매입 재고 (PHONEWAY ⑥) — ⚠️ 직원 · 관리자에게만 옵니다
+         (0020 의 RLS 에 업체 정책이 아예 없고, 고객은 자기 신청에서
+         나온 기기만 보는데 원가 칸은 권한 자체가 없습니다).
+         ⚠️⚠️ **수익이 칸으로 오지 않습니다** — `v_device_pl` 이 센
+         값(`est_profit` · `real_profit`)으로 옵니다. */
+      RQ.devices     = d.devices     || [];
+      RQ.deviceCosts = d.deviceCosts || [];
       rqDraw();
     })
     .catch(function(e){
@@ -1480,6 +1494,9 @@ function rqCall(fn, args, say){
     RQ.itemOf = ""; RQ.ictx = {};
     RQ.pvOf = ""; RQ.pctx = {};
     RQ.apOf = ""; RQ.actx = {};
+    /* 직접 매입 재고 (PHONEWAY ⑥) — ⚠️ 안 치우면 앞 기기에 적던
+       원가가 다음 기기로 실려 나갑니다 */
+    RQ.dvOf = ""; RQ.dvTo = ""; RQ.dctx = {};
     rqLoad();
   }).catch(function(e){
     RQ.busy = false;
@@ -2305,4 +2322,490 @@ window.rqHistGo = function(id){
       try{ console.warn("[rq] 이력 — " + e); }catch(_){}
       if(RQ.histOf === id){ RQ.hist = []; rqDraw(); }
     });
+};
+
+/* ═══ 직접 매입 재고 (2026-10-29 PHONEWAY ⑥) ═══════════════════════
+   검수 · 재고 · 매입원가 · 판매가격 · 비용 · 예상 · 실제 수익.
+
+   ⚠️⚠️ **중개 장부(위 `rqMoney`)와 갈라 둔 까닭** — 그쪽은 업체가
+   계약하고 저희가 수수료를 받는 것이고, 이것은 **저희가 사서 고쳐
+   파는 것**입니다. 한 구간에 합치면 수수료 수익과 판매 마진이 한
+   숫자로 섞여 어느 쪽이 남는 장사인지 영영 모릅니다.
+
+   ⚠️⚠️ **수익을 손으로 적는 칸이 없습니다.** 원가 · 비용 · 판매가를
+   적으면 DB 의 `v_device_pl` 이 셉니다 — 숫자로 들고 있으면 누군가
+   그 칸을 고칠 수 있고 원장과 어긋나기 시작합니다 (업체 평점을
+   값으로 저장하지 않는 것과 같은 까닭).
+
+   ⚠️⚠️ **업체에게는 이 구간이 통째로 안 옵니다** (0020 의 RLS 에 그
+   정책이 아예 없습니다) — 매입원가가 곧 경쟁 정보입니다 (지시서 §10). */
+function rqStock(){
+  if(RQ.role !== "staff" && RQ.role !== "admin") return "";
+  var D = rqDevAll();
+
+  /* ⚠️ 전부 **세는 값**입니다 — 손으로 적으면 처리한 뒤에도 그 수가
+     남습니다 (CLAUDE.md 의 "아직 안 된 것" 표에서 겪은 자리). */
+  var nWait = D.filter(function(d){ return d.state === "waiting";  }).length;
+  var nChk  = D.filter(function(d){ return d.state === "checking" ||
+                                           d.state === "arrived";  }).length;
+  var nRe   = D.filter(function(d){ return d.state === "regrade";  }).length;
+  var nList = D.filter(function(d){ return d.state === "listed";   }).length;
+  var nSold = D.filter(function(d){ return d.state === "sold";     }).length;
+
+  return '<section class="ad-s rq-s rq-s-dv">'+
+    '<h2>직접 매입 재고</h2>'+
+    (!D.length
+      ? '<p class="ad-empty">아직 들어온 기기가 없습니다. '+
+        '<b>내 폰 팔기</b>로 신청이 들어오면 여기에 쌓입니다.</p>'+
+        '<p class="f-h">⚠️ 신청이 들어와도 기기 줄은 저절로 생기지 '+
+          '않습니다 — 받으신 다음에 <b>기기 등록</b>으로 한 줄 만드세요 '+
+          '(적어 주신 상태와 실제가 다를 수 있어, 같은 줄로 두지 '+
+          '않습니다).</p>'
+      : '<p class="ad-lead">'+
+          (nWait ? '<b>'+nWait+'대</b>가 아직 도착하지 않았습니다. ' : '')+
+          (nChk  ? '<b>'+nChk+'대</b>는 검수가 남았습니다. '          : '')+
+          (nRe   ? '<b>'+nRe+'대</b>는 금액 재협의 중입니다. '        : '')+
+          (nList ? '<b>'+nList+'대</b>가 판매 중이고, '               : '')+
+          '<b>'+nSold+'대</b>가 팔렸습니다.</p>'+
+        rqDevSum(D)+
+        rqDevChips(D)+
+        '<div class="rq-g">'+ rqDevRows(D).join("") +'</div>')+
+    rqDevNew()+
+  '</section>';
+}
+
+/* ⚠️⚠️ **비용을 기기에 붙여 둡니다** — `amDevProfit()` 이 `d.costs` 를
+   읽기 때문입니다. 안 붙이면 비용이 0 으로 읽혀 **수익이 부풀려
+   집니다** (에러도 안 나고 화면도 멀쩡합니다). */
+function rqDevAll(){
+  var C = RQ.deviceCosts || [];
+  return (RQ.devices || []).map(function(d){
+    var x = {}; for(var k in d) x[k] = d[k];
+    x.costs = C.filter(function(c){ return c.device_id === d.id; });
+    return x;
+  });
+}
+
+/* ── 합계 — ⚠️⚠️ **확정된 것만** 셉니다 ─────────────────────────
+   미수금에서 겪은 자리입니다 — 검수 전인 기기를 "들인 돈" 에 섞으면
+   숫자가 거짓이 됩니다. 그리고 **실제 수익은 팔린 기기만**입니다. */
+function rqDevSum(D){
+  var spent = 0, est = 0, real = 0, nEst = 0, nReal = 0;
+  D.forEach(function(d){
+    /* ⚠️ 반송 · 폐기는 들인 돈에 넣습니다 — 폐기한 기기의 원가는
+       그대로 손실이고, 그걸 빼면 장부가 좋아 보입니다. */
+    var p = (typeof amDevProfit === "function") ? amDevProfit(d) : null;
+    if(!p) return;
+    spent += p.spent;
+    if(p.est  != null){ est  += p.est;  nEst++;  }
+    if(p.real != null){ real += p.real; nReal++; }
+  });
+  return '<div class="rq-sum rq-dv-sum">'+
+    rqDevSumBox("들인 돈 (원가 + 비용)", spent, D.length + "대")+
+    rqDevSumBox("예상 수익", est, nEst + "대 · 판매가를 매긴 것만")+
+    rqDevSumBox("실제 수익", real, nReal + "대 · 팔린 것만")+
+    '<p class="f-h rq-sum-n">⚠️ 최근 '+D.length+'대에서 센 값입니다 — '+
+      '전체 누적이 아닙니다. <b>예상</b>은 판매가를 매긴 기기에만, '+
+      '<b>실제</b>는 팔린 기기에만 들어갑니다 (안 팔린 기기의 예상을 '+
+      '실제에 섞으면 장부가 거짓말이 됩니다).</p>'+
+  '</div>';
+}
+
+function rqDevSumBox(label, won, note){
+  /* ⚠️ 음수를 숨기지 않습니다 — 손실을 0 으로 적으면 그게 가짜 장부입니다 */
+  var neg = won < 0;
+  return '<div class="rq-sum-b'+(neg ? ' is-neg' : '')+'">'+
+    '<span class="rq-sum-l">'+esc(label)+'</span>'+
+    '<b class="rq-sum-v">'+rqWon(won)+'</b>'+
+    '<span class="rq-sum-n2">'+esc(note)+'</span>'+
+  '</div>';
+}
+
+function rqWon(n){
+  var v = Number(n || 0);
+  return (v < 0 ? "−" : "") + Math.abs(v).toLocaleString("ko-KR") + "원";
+}
+
+/* ── 상태 칩 — ⚠️ 개수는 세는 값입니다 ─────────────────────────── */
+function rqDevChips(D){
+  var out = ['<button class="chip'+(RQ.dvFil ? '' : ' on')+'" type="button" '+
+    'onclick="rqDvFil(\'\')">전체 '+D.length+'</button>'];
+  (window.AM_DEV_ST || []).forEach(function(st){
+    var n = D.filter(function(d){ return d.state === st.key; }).length;
+    if(!n) return;   /* ⚠️ 0인 칩은 안 냅니다 (누르면 빈 목록입니다) */
+    out.push('<button class="chip'+(RQ.dvFil === st.key ? ' on' : '')+'" '+
+      'type="button" onclick="rqDvFil(\''+st.key+'\')">'+
+      esc(st.name)+' '+n+'</button>');
+  });
+  return '<div class="chip-g chip-g-fil">'+out.join("")+'</div>';
+}
+
+window.rqDvFil = function(k){ RQ.dvFil = k; RQ.dvOf = ""; RQ.dvTo = ""; rqDraw(); };
+
+function rqDevRows(D){
+  var L = RQ.dvFil ? D.filter(function(d){ return d.state === RQ.dvFil; }) : D;
+  if(!L.length) return ['<p class="ad-empty">그 상태인 기기가 없습니다.</p>'];
+  return L.map(rqDevRow);
+}
+
+/* ── 기기 한 줄 ──────────────────────────────────────────────────── */
+function rqDevRow(d){
+  var open = RQ.dvOf === d.id;
+  var nm = (typeof amDevStName === "function") ? amDevStName(d.state) : d.state;
+  var tn = (typeof amDevTone === "function") ? amDevTone(d.state) : "gray";
+  var p  = (typeof amDevProfit === "function") ? amDevProfit(d) : null;
+
+  /* ⚠️⚠️ **말씀하신 것과 검수한 것을 갈라서** 냅니다. 합쳐 적으면
+     "사장님이 A 라고 하셨는데 실제로 B 였다" 가 기록에서 사라지고,
+     그게 중고폰 분쟁의 1번 원인입니다. */
+  var title = rqDevName(d.model || d.said_model, d.cap != null ? d.cap : d.said_cap);
+  var meta = [String(d.created_at || "").slice(0, 10),
+              d.grade ? "검수 " + d.grade + "급"
+                      : (d.said_grade ? "적어 주신 " + d.said_grade + "급" : ""),
+              d.batt != null ? "배터리 " + d.batt + "%" : "",
+              d.imei_tail ? "IMEI …" + d.imei_tail : ""]
+             .filter(Boolean).join(" · ");
+
+  return '<article class="rq-r'+(open ? ' is-open' : '')+'">'+
+    '<div class="rq-hd rq-hd-s">'+
+      '<span class="rq-hd-l">'+
+        '<b class="rq-no">'+esc(title)+'</b>'+
+        '<span class="rq-m">'+esc(meta)+'</span>'+
+      '</span>'+
+      '<span class="rq-hd-r">'+
+        '<span class="myq-st myq-'+tn+'">'+esc(nm)+'</span>'+
+        (p && p.real != null
+          ? '<b class="rq-dv-p'+(p.real < 0 ? ' is-neg' : '')+'">'+rqWon(p.real)+'</b>'
+          : (p && p.est != null
+              ? '<span class="rq-dv-p is-est">예상 '+rqWon(p.est)+'</span>' : ''))+
+        '<button class="btn btn-o btn-s" type="button" '+
+          'onclick="rqDvOpen(\''+esc(d.id)+'\')">'+
+          (open ? "접기" : "열기")+'</button>'+
+      '</span>'+
+    '</div>'+
+    (open ? rqDevBody(d) : "")+
+  '</article>';
+}
+
+/* ⚠️ 이름은 `devices.js` 에서 옵니다 — 화면에 적지 마세요 */
+function rqDevName(model, cap){
+  var m = (typeof amModel === "function" && model) ? amModel(model) : null;
+  /* ⚠️⚠️ **모르는 key 를 기종 이름처럼 찍지 마세요.** 포트폴리오가
+     `gyeonggi` 를 그대로 찍었던 그 자리입니다 — 찍어 보고 알았습니다
+     (`ipad-air-11 128GB` 가 멀쩡한 상품명처럼 보였습니다). 직원에게는
+     **어느 key 가 틀렸는지**가 필요하니 key 는 내되, 이름이 아니라
+     **고쳐야 할 것**으로 보이게 적습니다. */
+  var n = m ? m.name : (model ? "기종 미확인 (" + model + ")" : "기기");
+  return n + (cap != null ? " " + cap + "GB" : "");
+}
+
+function rqDevBody(d){
+  return '<div class="rq-bd">'+
+    rqDevSaid(d)+
+    rqDevMoney(d)+
+    rqDevCosts(d)+
+    rqDevMove(d)+
+  '</div>';
+}
+
+/* ⚠️⚠️ 적어 주신 것 — **지우지 마세요.** 재협의를 할 때 "무엇이
+   달랐나" 를 댈 수 있는 유일한 자리입니다. */
+function rqDevSaid(d){
+  var rows = [
+    ["적어 주신 기종", rqDevName(d.said_model, d.said_cap)],
+    ["적어 주신 등급", d.said_grade ? d.said_grade + "급" : ""],
+    ["검수한 기종",    d.model ? rqDevName(d.model, d.cap) : ""],
+    ["검수한 등급",    d.grade ? d.grade + "급" : ""],
+    ["색",             d.color || ""],
+    ["배터리",         d.batt != null ? d.batt + "%" : ""],
+    ["메모",           d.note || ""]
+  ].filter(function(r){ return r[1]; });
+  return '<dl class="rq-sp">'+ rows.map(function(r){
+    return '<dt>'+esc(r[0])+'</dt><dd>'+esc(String(r[1]))+'</dd>';
+  }).join("") +'</dl>';
+}
+
+/* ── 돈 — ⚠️⚠️ **값이 없는 줄은 아예 안 냅니다** (절대 규칙 2) ──── */
+function rqDevMoney(d){
+  var p = (typeof amDevProfit === "function") ? amDevProfit(d) : null;
+  if(!p) return "";
+  var rows = [];
+  if(d.cost != null)       rows.push(["매입원가", rqWon(d.cost)]);
+  /* ⚠️⚠️ **검수 전에는 "들인 돈 0원" 을 안 냅니다.** 처음에 원가가
+     비었는지를 안 보고 `p.spent !== d.cost` 로만 걸렀더니 `0 !== null`
+     이 참이어서, 검수 전인 기기에 **0원 줄**이 서고 그 아래 "검수를
+     하셔야 원가가 적힙니다" 안내가 영영 안 나왔습니다 (검사가 잡았습니다). */
+  if(d.cost != null && p.spent !== Number(d.cost))
+                           rows.push(["들인 돈 (원가 + 비용)", rqWon(p.spent)]);
+  if(d.price != null)      rows.push(["판매가", rqWon(d.price)]);
+  if(d.sold_price != null) rows.push(["실제 판매가", rqWon(d.sold_price)]);
+  if(p.est  != null)       rows.push(["예상 수익", rqWon(p.est)]);
+  if(p.real != null)       rows.push(["실제 수익", rqWon(p.real)]);
+  if(!rows.length)
+    return '<p class="f-h">⚠️ 검수를 하셔야 매입원가가 적힙니다 — '+
+      '검수 전에는 원가를 넣을 수 없습니다 (DB 가 막습니다).</p>';
+  return '<dl class="rq-sp rq-sp-won">'+ rows.map(function(r){
+    return '<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>';
+  }).join("") +'</dl>'+
+  (p.real != null ? '' :
+    '<p class="f-h">⚠️ <b>실제 수익</b>은 팔린 뒤에 나옵니다 — '+
+      '안 팔린 기기의 예상을 실제로 적으면 장부가 거짓말이 됩니다.</p>');
+}
+
+/* ── 비용 — ⚠️ 0 원은 비용이 아닙니다 (DB 가 거절합니다) ────────── */
+function rqDevCosts(d){
+  var C = d.costs || [];
+  var ks = (window.AM_DEV_COST || []);
+  return '<div class="rq-dv-c">'+
+    '<h4 class="rq-h4">비용 '+(C.length ? C.length + '줄' : '')+'</h4>'+
+    (C.length
+      ? '<ul class="rq-dv-cl">'+ C.map(function(c){
+          var n = ks.filter(function(x){ return x.key === c.kind; })[0];
+          return '<li><span>'+esc(n ? n.name : c.kind)+'</span>'+
+            '<b'+(Number(c.amount) < 0 ? ' class="is-neg"' : '')+'>'+
+              rqWon(c.amount)+'</b>'+
+            (c.memo ? '<i>'+esc(c.memo)+'</i>' : '')+'</li>';
+        }).join("") +'</ul>'
+      : '<p class="f-h">아직 더 든 돈이 없습니다.</p>')+
+    /* ⚠️ 검수 전에는 비용 칸을 안 냅니다 — 원가가 아직 없는 기기에
+       비용을 붙이면 "무엇에 든 돈" 인지가 흐려집니다. */
+    (d.cost == null ? '' :
+      '<div class="rq-f rq-f-cost">'+
+        '<label class="f-lb" for="dv-ck-'+esc(d.id)+'">갈래</label>'+
+        '<select id="dv-ck-'+esc(d.id)+'" class="sel" '+
+          'onchange="rqDctx(\'costKind\', this.value)">'+
+          ks.map(function(x){ return '<option value="'+esc(x.key)+'">'+
+            esc(x.name)+'</option>'; }).join("")+
+        '</select>'+
+        '<label class="f-lb" for="dv-ca-'+esc(d.id)+'">금액 (원)</label>'+
+        '<input id="dv-ca-'+esc(d.id)+'" type="number" step="1" '+
+          'placeholder="80000" oninput="rqDctx(\'costAmt\', this.value)">'+
+        '<label class="f-lb" for="dv-cm-'+esc(d.id)+'">메모</label>'+
+        '<input id="dv-cm-'+esc(d.id)+'" type="text" maxlength="200" '+
+          'placeholder="액정 교체" oninput="rqDctx(\'costMemo\', this.value)">'+
+        '<button class="btn btn-b btn-s" type="button"'+(RQ.busy ? ' disabled' : '')+
+          ' onclick="rqDvCost(\''+esc(d.id)+'\')">비용 적기</button>'+
+        '<p class="f-h">⚠️ 환불 · 반품은 <b>음수</b>로 적습니다 — 줄을 '+
+          '지우지 않고 차액을 남깁니다. <b>0 원</b>은 비용이 아니라 '+
+          '거절됩니다.</p>'+
+      '</div>')+
+  '</div>';
+}
+
+/* ── 상태 옮기기 ────────────────────────────────────────────────── */
+function rqDevMove(d){
+  /* ⚠️⚠️ 갈 수 있는 길만 냅니다 — 못 가는 길을 내면 **누를 때마다
+     실패하는 단추**가 됩니다 (§30-7). 다만 막는 것은 화면이 아니라
+     DB 의 `move_device()` 입니다 (화면 코드로만 막으면 버그 하나에
+     뚫립니다) — 여기는 왕복 한 번을 아끼는 데까지입니다. */
+  var role = RQ.role;
+  var can = (window.AM_DEV_MOVE || []).filter(function(m){
+    if(m[0] !== d.state) return false;
+    return !(m[2] === "admin" && role !== "admin");
+  });
+  /* 관리자만 할 수 있는 길이 가려진 경우 — 까닭을 적습니다 */
+  var hid = (window.AM_DEV_MOVE || []).filter(function(m){
+    return m[0] === d.state && m[2] === "admin" && role !== "admin"; });
+
+  if(!can.length)
+    return '<p class="f-h">'+
+      (hid.length ? '⚠️ 여기서 더 옮기는 것은 <b>관리자</b>만 할 수 있습니다.'
+                  : '여기서 더 옮길 곳이 없습니다.')+'</p>';
+
+  var to = RQ.dvTo;
+  var need = to ? ((window.AM_DEV_NEED || {})[to] || []) : [];
+  return '<div class="rq-f rq-f-mv">'+
+    '<label class="f-lb" for="dv-to-'+esc(d.id)+'">다음 상태</label>'+
+    '<select id="dv-to-'+esc(d.id)+'" class="sel" '+
+      'onchange="rqDvTo(this.value)">'+
+      '<option value="">골라 주세요</option>'+
+      can.map(function(m){
+        var st = (typeof amDevSt === "function") ? amDevSt(m[1]) : null;
+        return '<option value="'+esc(m[1])+'"'+(to === m[1] ? ' selected' : '')+'>'+
+          esc(st ? st.name : m[1])+'</option>';
+      }).join("")+
+    '</select>'+
+    (to ? rqDevNeed(to, need, d) : "")+
+    (to ? '<button class="btn btn-b btn-s" type="button"'+(RQ.busy ? ' disabled' : '')+
+        ' onclick="rqDvMove(\''+esc(d.id)+'\')">옮기기</button>' : "")+
+    (hid.length ? '<p class="f-h">⚠️ <b>폐기</b>는 관리자만 할 수 있습니다.</p>' : "")+
+  '</div>';
+}
+
+/* ⚠️⚠️ **같이 적어야 하는 것만** 냅니다 — 들고 있는 것을 통째로
+   보내면, 검수하다 마음을 바꿔 반송으로 넘길 때 원가가 **반송
+   기록에 같이 남습니다** (배정에서 `agree3rd` 로 겪은 자리). */
+function rqDevNeed(to, need, d){
+  var out = [];
+  need.forEach(function(k){
+    if(k === "grade")
+      out.push(rqDevSel(d, "grade", "확정 등급",
+        (window.AM_GRADES || []).map(function(g){ return [g.key, g.name]; })));
+    else if(k === "cost")
+      out.push(rqDevNum(d, "cost", "매입원가 (원)", "700000"));
+    else if(k === "price")
+      out.push(rqDevNum(d, "price", "판매가 (원)", "950000"));
+    else if(k === "soldPrice")
+      out.push(rqDevNum(d, "soldPrice", "실제 판매가 (원)", "950000"));
+    else if(k === "why")
+      out.push(rqDevTxt(d, "why", to === "regrade"
+        ? "무엇이 달랐는지 (고객에게 갑니다)" : "사유"));
+  });
+  /* 검수 완료일 때만 같이 받는 것 — ⚠️ 필수가 아닙니다 */
+  if(to === "checked")
+    out.push(rqDevNum(d, "batt",  "배터리 (%)", "94"),
+             rqDevTxt(d, "color", "색"),
+             rqDevTxt(d, "imeiTail", "IMEI 뒤 네 자리"));
+  if(to === "checked")
+    out.push('<p class="f-h">⚠️⚠️ <b>IMEI 는 뒤 네 자리만</b> 적습니다 — '+
+      '전체는 그 자체가 개인정보에 가깝고 분실 신고 · 명의와 엮입니다. '+
+      '같은 기종이 여러 대일 때 가르는 데만 씁니다.</p>');
+  if(to === "regrade")
+    out.push('<p class="f-h">⚠️⚠️ 적으신 내용이 <b>고객에게 그대로</b> '+
+      '갑니다 — 무엇이 달랐는지만 적고, 운영자끼리 할 말은 쓰지 마세요.</p>');
+  return out.join("");
+}
+
+function rqDevNum(d, k, label, ph){
+  return '<label class="f-lb" for="dv-'+k+'-'+esc(d.id)+'">'+esc(label)+'</label>'+
+    '<input id="dv-'+k+'-'+esc(d.id)+'" type="number" step="1" '+
+      'placeholder="'+esc(ph || "")+'" oninput="rqDctx(\''+k+'\', this.value)">';
+}
+function rqDevTxt(d, k, label){
+  return '<label class="f-lb" for="dv-'+k+'-'+esc(d.id)+'">'+esc(label)+'</label>'+
+    '<input id="dv-'+k+'-'+esc(d.id)+'" type="text" maxlength="200" '+
+      'oninput="rqDctx(\''+k+'\', this.value)">';
+}
+function rqDevSel(d, k, label, opts){
+  return '<label class="f-lb" for="dv-'+k+'-'+esc(d.id)+'">'+esc(label)+'</label>'+
+    '<select id="dv-'+k+'-'+esc(d.id)+'" class="sel" '+
+      'onchange="rqDctx(\''+k+'\', this.value)">'+
+      '<option value="">골라 주세요</option>'+
+      opts.map(function(o){ return '<option value="'+esc(o[0])+'">'+
+        esc(o[1])+'</option>'; }).join("")+
+    '</select>';
+}
+
+/* ── 기기 등록 ──────────────────────────────────────────────────── */
+function rqDevNew(){
+  var M = (window.AM_MODELS || []);
+  return '<details class="rq-dv-new">'+
+    '<summary>기기 등록</summary>'+
+    '<p class="f-h">⚠️⚠️ 신청이 들어와도 기기 줄이 저절로 생기지 '+
+      '않습니다 — <b>적어 주신 것</b>과 <b>실제로 받은 것</b>이 다를 수 '+
+      '있어서, 받으신 다음에 손으로 한 줄 만듭니다.</p>'+
+    '<div class="rq-f">'+
+      '<label class="f-lb" for="dv-n-md">기종</label>'+
+      '<select id="dv-n-md" class="sel" onchange="rqDctx(\'newModel\', this.value)">'+
+        '<option value="">골라 주세요</option>'+
+        M.map(function(m){ return '<option value="'+esc(m.key)+'">'+
+          esc(m.name)+'</option>'; }).join("")+
+      '</select>'+
+      '<label class="f-lb" for="dv-n-cp">용량 (GB)</label>'+
+      '<input id="dv-n-cp" type="number" step="1" placeholder="256" '+
+        'oninput="rqDctx(\'newCap\', this.value)">'+
+      '<label class="f-lb" for="dv-n-gr">적어 주신 등급</label>'+
+      '<select id="dv-n-gr" class="sel" onchange="rqDctx(\'newGrade\', this.value)">'+
+        '<option value="">골라 주세요</option>'+
+        (window.AM_GRADES || []).map(function(g){
+          return '<option value="'+esc(g.key)+'">'+esc(g.name)+'</option>';
+        }).join("")+
+      '</select>'+
+      '<button class="btn btn-b btn-s" type="button"'+(RQ.busy ? ' disabled' : '')+
+        ' onclick="rqDvNew()">기기 등록</button>'+
+      /* ⚠️⚠️ **접수번호 칸을 안 만들었습니다.** `make_device` 는 신청의
+         `uuid` 를 받는데, 접수번호로 그 uuid 를 찾아 주는 길이 아직
+         없습니다 — 칸을 만들어 두면 적어도 아무 데도 안 읽히는
+         "받아 놓고 안 쓰는 칸" 이 됩니다 (`gu` · `withEquip` 으로
+         겪은 자리). 지금은 기기 줄과 신청이 **따로** 섭니다. */
+      '<p class="f-h">⚠️ 지금은 <b>신청과 이어 두지 않습니다</b> — '+
+        '접수번호로 신청을 찾아 주는 길이 아직 없어서, 기기 줄만 '+
+        '만듭니다 (수익은 그대로 세어집니다).</p>'+
+      '<p class="rq-in-n" id="dv-n-n"></p>'+
+    '</div>'+
+  '</details>';
+}
+
+window.rqDvOpen = function(id){
+  /* ⚠️ 다른 기기를 열면 적던 것을 치웁니다 — 안 치우면 앞 기기에
+     적던 원가가 다음 기기로 실려 나갑니다 */
+  RQ.dvOf = (RQ.dvOf === id) ? "" : id;
+  RQ.dvTo = ""; RQ.dctx = {};
+  rqDraw();
+};
+window.rqDvTo  = function(v){ RQ.dvTo = v; rqDraw(); };
+/* ⚠️⚠️ **적는 칸에서는 다시 그리지 않습니다** — 한 글자 칠 때마다
+   커서가 칸에서 빠집니다 (업체 빠른 등록에서 겪은 자리) */
+window.rqDctx  = function(k, v){ RQ.dctx[k] = v; };
+
+/* ── 보내기 — ⚠️⚠️ **그 길이 요구한 것만** 보냅니다 ────────────── */
+window.rqDvMove = function(id){
+  var d = (RQ.devices || []).filter(function(x){ return x.id === id; })[0];
+  var to = RQ.dvTo;
+  if(!d || !to) return;
+
+  /* ⚠️ **화면 앞단의 안내일 뿐 자물쇠가 아닙니다** — 막는 것은 DB 의
+     `move_device()` 입니다. 여기는 왕복 한 번을 아끼고 **사람 말로**
+     먼저 알려 주는 데까지입니다. */
+  var can = (typeof amDevCan === "function")
+    ? amDevCan(d.state, to, RQ.role) : { ok:true, need:[] };
+  if(!can.ok){ toast(can.why); return; }
+
+  var need = can.need || [];
+  var data = {};
+  var miss = [];
+  need.forEach(function(k){
+    var v = RQ.dctx[k];
+    /* ⚠️ `0` 은 값입니다 — 있는지만 봅니다 (무권리에서 겪은 자리) */
+    if(v === undefined || v === null || v === ""){ miss.push(k); return; }
+    data[k] = (k === "cost" || k === "price" || k === "soldPrice")
+      ? Number(v) : v;
+  });
+  if(miss.length){
+    toast(rqDvNeedName(miss[0]) + " 을 같이 적어 주세요");
+    return;
+  }
+  /* 검수 완료일 때만 같이 받는 것 — ⚠️ 필수가 아니라 적으신 것만 */
+  if(to === "checked"){
+    ["color", "imeiTail"].forEach(function(k){
+      if(RQ.dctx[k]) data[k] = RQ.dctx[k]; });
+    if(RQ.dctx.batt !== undefined && RQ.dctx.batt !== "")
+      data.batt = Number(RQ.dctx.batt);
+  }
+  rqCall("move_device", { p_device:id, p_to:to, p_data:data },
+    (typeof amDevStName === "function" ? amDevStName(to) : to) + " 로 옮겼습니다");
+};
+
+function rqDvNeedName(k){
+  return ({ grade:"확정 등급", cost:"매입원가", price:"판매가",
+            soldPrice:"실제 판매가", why:"사유" })[k] || k;
+}
+
+window.rqDvCost = function(id){
+  var kind = RQ.dctx.costKind || "inbound";
+  var amt  = RQ.dctx.costAmt;
+  if(amt === undefined || amt === null || amt === ""){
+    toast("금액을 적어 주세요"); return; }
+  var n = Number(amt);
+  /* ⚠️⚠️ **0 원은 비용이 아닙니다** — DB 도 거절하는데, 여기서 먼저
+     말해 주면 왕복 한 번을 아낍니다 */
+  if(!n){ toast("0 원은 비용이 아닙니다"); return; }
+  rqCall("add_device_cost",
+    { p_device:id, p_kind:kind, p_amount:n, p_memo:RQ.dctx.costMemo || null },
+    "비용을 적었습니다");
+};
+
+window.rqDvNew = function(){
+  var md = RQ.dctx.newModel, n = $("dv-n-n");
+  if(!md){ if(n) n.textContent = "기종을 골라 주세요"; return; }
+  /* ⚠️ 접수번호는 **있으면** 이어 둡니다 — 전화로 받은 기기도 있습니다.
+     ⚠️⚠️ 번호를 씻는 일(줄표 · 소문자)은 **서버와 DB** 가 합니다 —
+     화면에서 씻으면 같은 규칙이 두 곳에 적힙니다. */
+  rqCall("make_device", {
+    p_request: null,
+    p_model:   md,
+    p_cap:     (RQ.dctx.newCap !== undefined && RQ.dctx.newCap !== "")
+                 ? Number(RQ.dctx.newCap) : null,
+    p_grade:   RQ.dctx.newGrade || null
+  }, "기기를 등록했습니다");
 };

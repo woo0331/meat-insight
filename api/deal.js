@@ -100,7 +100,17 @@ const OK_FN = {
      와 같은 까닭). 누가 · 언제 · 왜는 `audit_log` 에 그대로 있습니다.
      ⚠️ 신청을 **넣는 길은 여기가 아닙니다** — 로그인 없이 들어오는
      접수(`api/quote.js`)가 service key 로 넣습니다. */
-  set_apply_state:1
+  set_apply_state:1,
+  /* 2026-10-29 PHONEWAY ⑥ (0020) — 직접 매입 재고.
+     ⚠️⚠️ **`add_device_check` 를 여기 안 넣었습니다** — 검수 항목을
+     적는 화면이 아직 없습니다. 허용 목록에 미리 넣어 두면 쓰는 코드가
+     없는 길이 하나 열려 있는 셈이고, 이 저장소가 "만들어 놓고 안 쓰는
+     칸" 으로 여러 번 겪은 자리입니다. 화면이 생기는 날 한 줄입니다.
+     ⚠️⚠️ **`FN_SAY` 에 넣지 마세요.** 기기 쉰 대를 검수하는 자리라
+     한 대마다 슬랙 한 줄이면 정작 돈 쪽 알림이 그 더미에 묻힙니다
+     (`note_request_open` · `save_user_state` 와 같은 까닭).
+     누가 · 언제 · 왜는 `audit_log` 에 그대로 있습니다. */
+  make_device:1, move_device:1, add_device_cost:1
 };
 
 /* 보낼 수 있는 인자 — 이름까지 정해 둡니다. ⚠️ 통째로 넘기면 손님이
@@ -145,7 +155,15 @@ const OK_ARG = {
   /* 0016 — ⚠️ `p_to`(바꿀 상태) · `p_provider`(등록한 업체) · `p_why`
      는 **위에 이미 있습니다.** DB 가 자기 함수의 인자 꼴로 받으니
      섞이지 않습니다 — `checkRpcArgs()` 가 양쪽으로 맞춰 봅니다. */
-  p_apply:1                                            /* set_apply_state */
+  p_apply:1,                                           /* set_apply_state */
+  /* 0020 — ⚠️ `p_to`(바꿀 상태) · `p_data`(같이 적는 것) · `p_grade` ·
+     `p_name` 은 **위에 이미 있습니다.** DB 가 자기 함수의 인자 꼴로
+     받으니 섞이지 않습니다 — `checkRpcArgs()` 가 양쪽으로 맞춰 봅니다.
+     ⚠️⚠️ `p_cost` · `p_price` 같은 칸이 **없습니다** — 돈은 전부
+     `p_data` 안의 jsonb 로 갑니다 (0020 의 `move_device`). 칸을
+     따로 열면 "검수 완료에는 등급과 원가가 같이" 가 뚫립니다. */
+  p_device:1, p_kind:1, p_amount:1, p_memo:1,          /* add_device_cost */
+  p_model:1, p_cap:1, p_grade:1                        /* make_device */
 };
 
 function pickArgs(a){

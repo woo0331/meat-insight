@@ -2353,6 +2353,150 @@ function ok(name, cond, extra) {
     await ctx.close();
   }
 
+  /* ══ 직접 매입 재고 (2026-10-29 PHONEWAY ⑥ · 0020) ══════════════
+     ⚠️⚠️ **기기가 0대일 때는 "없다" 만 확인받습니다.** 이 저장소가
+     "데이터가 0 이면 그 기능은 아무 검사도 안 받습니다" 로 여러 번
+     겪어서, 여기서는 **기기를 끼워 넣고** 봅니다 — 저장소 데이터는
+     그대로 0대입니다 (절대 규칙 1). */
+  {
+    console.log("\n── 직접 매입 재고 (PHONEWAY ⑥)");
+    const ctx = await br.newContext({ viewport:{ width:1280, height:900 } });
+    const pg = await ctx.newPage();
+    const errs = [];
+    pg.on("pageerror", e => errs.push(String(e)));
+    await pg.addInitScript(() => {
+      try{ localStorage.setItem("am.token.v1", "tok-test"); }catch(e){}
+    });
+    await pg.route("**/api/admin-health", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ store:true, auth:true }) }));
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"admin",
+        name:"관리자", provider:null,
+        conf:{ url:"https://proj.supabase.co", anonKey:"ANON-TEST" } }) }));
+    /* ⚠️⚠️ **씨앗을 실제보다 후하게 만들지 마세요** — 칸 목록은
+       `api/me.js` 의 `v_device_pl` 질의를 **글자까지 본뜬 것**입니다.
+       고객 칸에서 `id` 를 빠뜨려 견적 구간이 통째로 안 그려졌던
+       자리가 바로 그 반대쪽입니다 (찍어 봐도 멀쩡했습니다). */
+    await pg.route("**/api/me**", r => r.fulfill({ status:200,
+      contentType:"application/json", body: JSON.stringify({
+        auth:true, signedIn:true, role:"admin", requests:[], providers:[],
+        devices:[
+          /* 팔린 것 — 실제 수익이 나와야 합니다 */
+          { id:"dv-1", request_id:null, state:"sold",
+            said_model:"iphone-15-pro", said_cap:256, said_grade:"A",
+            model:"iphone-15-pro", cap:256, color:"블루", grade:"B", batt:94,
+            imei_tail:"1234", note:"",
+            cost:700000, price:950000, sold_price:980000,
+            spent:783000, est_profit:167000, real_profit:197000,
+            checked_at:"2026-10-20T00:00:00Z", listed_at:"2026-10-21T00:00:00Z",
+            sold_at:"2026-10-25T00:00:00Z", created_at:"2026-10-19T00:00:00Z" },
+          /* 판매 중 — 예상만 나와야 합니다 */
+          { id:"dv-2", request_id:null, state:"listed",
+            said_model:"galaxy-s24-ultra", said_cap:512, said_grade:"S",
+            model:"galaxy-s24-ultra", cap:512, color:"", grade:"A", batt:99,
+            imei_tail:null, note:"",
+            cost:900000, price:1180000, sold_price:null,
+            spent:900000, est_profit:280000, real_profit:null,
+            checked_at:"2026-10-26T00:00:00Z", listed_at:"2026-10-27T00:00:00Z",
+            sold_at:null, created_at:"2026-10-26T00:00:00Z" },
+          /* 검수 전 — 원가가 아직 없습니다 */
+          /* ⚠️ `no-such-model` 은 **일부러** 없는 key 입니다 —
+             모르는 key 가 이름처럼 찍히는지 보는 자리입니다 */
+          { id:"dv-3", request_id:null, state:"arrived",
+            said_model:"no-such-model", said_cap:128, said_grade:"B",
+            model:null, cap:null, color:null, grade:null, batt:null,
+            imei_tail:null, note:"",
+            cost:null, price:null, sold_price:null,
+            spent:0, est_profit:null, real_profit:null,
+            checked_at:null, listed_at:null, sold_at:null,
+            created_at:"2026-10-28T00:00:00Z" }
+        ],
+        deviceCosts:[
+          { id:"dc-1", device_id:"dv-1", kind:"repair", amount:80000,
+            memo:"액정 교체", at:"2026-10-20T00:00:00Z" },
+          { id:"dc-2", device_id:"dv-1", kind:"inbound", amount:3000,
+            memo:null, at:"2026-10-19T00:00:00Z" }
+        ] }) }));
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(600);
+
+    ok("재고 구간이 선다", (await pg.locator("#rq .rq-s-dv").count()) === 1);
+    ok("기기 세 대가 줄로 나온다",
+       (await pg.locator("#rq .rq-s-dv .rq-r").count()) === 3);
+
+    /* ⚠️⚠️ **합계는 확정된 것만** — 검수 전인 기기를 들인 돈에 섞으면
+       숫자가 거짓이 됩니다 (미수금에서 겪은 자리). 그리고 **실제
+       수익은 팔린 기기만**입니다. */
+    const sum = await pg.locator("#rq .rq-s-dv .rq-dv-sum").textContent();
+    ok("들인 돈이 센 값이다 (783000 + 900000)", /1,683,000원/.test(sum), sum);
+    ok("예상 수익은 판매가를 매긴 둘만 (167000 + 280000)",
+       /447,000원/.test(sum), sum);
+    ok("실제 수익은 팔린 한 대만 (197000)", /197,000원/.test(sum), sum);
+    ok("전체 누적이 아니라고 밝힌다", /전체 누적이 아닙니다/.test(sum), sum);
+
+    /* ⚠️ 상태 칩 — 0인 상태는 칩을 안 냅니다 (누르면 빈 목록입니다) */
+    const chips = await pg.locator("#rq .rq-s-dv .chip-g-fil .chip")
+      .evaluateAll(els => els.map(e => e.textContent.trim()));
+    ok("0인 상태는 칩을 안 낸다", chips.length === 4, JSON.stringify(chips));
+    ok("칩 개수가 센 값이다", chips[0] === "전체 3", JSON.stringify(chips));
+
+    /* 기기 하나를 열어 봅니다 */
+    await pg.locator("#rq .rq-s-dv .rq-r").first()
+      .locator("button:has-text('열기')").click();
+    await pg.waitForTimeout(300);
+    const bd = await pg.locator("#rq .rq-s-dv .rq-r").first()
+      .locator(".rq-bd").textContent();
+    /* ⚠️⚠️ **적어 주신 것과 검수한 것을 갈라서** 냅니다 — 합쳐 적으면
+       "사장님이 A 라고 하셨는데 실제로 B 였다" 가 기록에서 사라지고,
+       그게 중고폰 분쟁의 1번 원인입니다. */
+    ok("적어 주신 등급과 검수한 등급을 갈라서 낸다",
+       /적어 주신 등급/.test(bd) && /검수한 등급/.test(bd), bd.slice(0, 200));
+    ok("비용 두 줄이 보인다",
+       (await pg.locator("#rq .rq-s-dv .rq-r").first()
+          .locator(".rq-dv-cl > li").count()) === 2);
+    ok("들인 돈을 센 값으로 낸다", /783,000원/.test(bd), bd.slice(0, 400));
+    /* ⚠️⚠️ **수익을 손으로 적는 칸이 없습니다** — 원가 · 비용 ·
+       판매가를 적으면 DB 가 셉니다 (§9 · 가짜 정산 금지). */
+    const ids = await pg.locator("#rq .rq-s-dv input")
+      .evaluateAll(els => els.map(e => e.id));
+    ok("수익을 손으로 적는 칸이 없다",
+       !ids.filter(x => /profit|수익/.test(x)).length, JSON.stringify(ids));
+
+    /* ⚠️⚠️ 팔린 기기는 **더 옮길 곳이 없습니다** (sold 가 끝입니다) */
+    ok("팔린 기기에는 옮기는 칸을 안 낸다",
+       (await pg.locator("#rq .rq-s-dv .rq-r").first()
+          .locator(".rq-f-mv").count()) === 0);
+
+    /* 검수 전 기기 — ⚠️ 원가가 없으면 비용 칸을 안 냅니다 */
+    await pg.locator("#rq .rq-s-dv .rq-r").nth(2)
+      .locator("button:has-text('열기')").click();
+    await pg.waitForTimeout(300);
+    const r3 = pg.locator("#rq .rq-s-dv .rq-r").nth(2);
+    ok("검수 전에는 비용 적는 칸을 안 낸다",
+       (await r3.locator(".rq-f-cost").count()) === 0);
+    ok("검수를 해야 원가가 적힌다고 말한다",
+       /검수를 하셔야 매입원가가 적힙니다/.test(await r3.textContent()));
+    /* 검수 완료로 옮기면 등급 · 원가를 같이 묻습니다 */
+    await r3.locator("select").first().selectOption("checking");
+    await pg.waitForTimeout(250);
+    ok("갈 수 있는 길만 낸다 (입고 → 검수 중 · 반송)",
+       (await r3.locator(".rq-f-mv option").count()) === 3);
+
+    /* ⚠️⚠️ **모르는 기종 key 를 이름처럼 찍지 않습니다.** 찍어 보고
+       알았습니다 — `ipad-air-11`(실제 key 는 `ipad-air-11-m2`)이
+       멀쩡한 상품명처럼 보였습니다 (포트폴리오가 `gyeonggi` 를 그대로
+       찍었던 그 자리). 직원에게는 어느 key 가 틀렸는지가 필요하니
+       key 는 내되 **고쳐야 할 것**으로 보이게 적습니다. */
+    ok("모르는 기종 key 를 이름처럼 안 찍는다",
+       /기종 미확인 \(no-such-model\)/.test(
+         await pg.locator("#rq .rq-s-dv").textContent()));
+
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
   await br.close();
   srv.close();
   console.log("\n" + (fail ? "❌" : "✅") + " 통과 " + pass + " · 실패 " + fail);

@@ -6739,3 +6739,184 @@ html.ivh #view .hm-more:hover{
 /* 머리말과 단추의 높이 — ⚠️ `flex-end` 로 두면 설명이 두 줄인 구간에서
    단추가 혼자 아래로 내려앉습니다 (계산도구에서 찍어 보고 알았습니다) */
 .hm-hd{ align-items:center; }
+
+/* ══════════════════════════════════════════════════════════════════
+   PHONEWAY 메인 — 구간 여섯 (2026-10-29)
+
+   ⚠️⚠️ **이 블록은 파일 맨 뒤라야 합니다.** 바로 아래 두 줄이
+   `html.ivh #view`(4782줄)와 **특정도가 같아서**, 뒤에 와야 이깁니다.
+   앞에 두면 PHONEWAY 메인의 글자가 통째로 **앞 서비스의 브라운**으로
+   섭니다 — 이 저장소가 특정도 함정으로 여섯 번 겪은 자리입니다.
+
+   ⚠️ `ivh` 는 "메인 화면" 이라는 **표시**이고 빌드 가드와 짝 검사
+   둘이 그 이름을 봅니다. 뜻은 이제 "아이보리" 가 아니지만 이름을
+   바꾸면 다섯 자리를 같이 고쳐야 해서, 전역 교체를 하는 6단계로
+   미룹니다.
+
+   ⚠️⚠️ **창업·폐업 화면 157개를 한 픽셀도 안 건드립니다.** 아래는
+   전부 `.pw*` 로만 걸려 있고 색은 `--pw-*` 에서만 옵니다.
+   ══════════════════════════════════════════════════════════════════ */
+html.ivh #view{ color:var(--pw-ink2); background:var(--pw-white); }
+html.ivh #view h1, html.ivh #view h2,
+html.ivh #view h3, html.ivh #view h4{ color:var(--pw-ink); }
+
+/* ─── 단추 ─── */
+.btn-pw{ background:var(--pw-blue-600); color:#fff; border-color:var(--pw-blue-600); }
+.btn-pw:hover{ background:var(--pw-blue-700); border-color:var(--pw-blue-700); }
+.btn-pw-o{ background:#fff; color:var(--pw-navy); border-color:var(--pw-line); }
+.btn-pw-o:hover{ border-color:var(--pw-blue); color:var(--pw-blue-600); }
+.btn-pw-w{ background:#fff; color:var(--pw-navy); border-color:#fff; }
+.btn-pw-w:hover{ background:#EAF1FB; border-color:#EAF1FB; }
+.btn-pw-gh{ background:rgba(255,255,255,.06); color:#fff; border-color:rgba(255,255,255,.34); }
+.btn-pw-gh:hover{ background:rgba(255,255,255,.14); }
+
+/* ─── 구간 머리말 ─── */
+.pww,.pws,.pwst,.pwt{ padding:84px 0; }
+.pws,.pwt{ background:var(--pw-gray); }
+.pww,.pwst{ background:var(--pw-white); }
+.pw-hd{ text-align:center; margin-bottom:44px; }
+.pw-ey{ font-size:13px; font-weight:800; letter-spacing:.1em; color:var(--pw-blue-600); }
+.pw-hd h2{ margin-top:12px; font-size:clamp(25px,2.8vw,34px); font-weight:800; color:var(--pw-navy); }
+.pw-hd > p{ margin-top:14px; font-size:16.5px; color:var(--pw-ink2); }
+.pw-hd-l{ display:flex; align-items:center; justify-content:space-between; gap:20px;
+  flex-wrap:wrap; margin-bottom:32px; }
+.pw-hd-l h2{ font-size:clamp(23px,2.4vw,30px); font-weight:800; color:var(--pw-navy); }
+.pw-hd-l p{ margin-top:10px; font-size:15.5px; color:var(--pw-ink2); }
+.pw-more{ display:inline-flex; align-items:center; gap:6px; min-height:44px;
+  font-size:15px; font-weight:700; color:var(--pw-blue-600); }
+
+/* ─── 01 히어로 ─── */
+.pwh{ position:relative; background:var(--pw-navy); color:var(--pw-on-navy); overflow:hidden; }
+.pwh::before{ content:""; position:absolute; inset:0;
+  background:
+    radial-gradient(900px 520px at 72% 12%, rgba(22,115,234,.34), transparent 62%),
+    radial-gradient(640px 420px at 10% 92%, rgba(22,160,133,.16), transparent 66%),
+    linear-gradient(160deg, var(--pw-navy-2) 0%, var(--pw-navy) 42%, var(--pw-navy-3) 100%); }
+.pwh-in{ position:relative; display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,.92fr); gap:40px; align-items:center;
+  padding:72px 0 76px; }
+.pwh-k{ display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:700;
+  letter-spacing:.08em; color:#8FC0FF; background:rgba(111,168,240,.14);
+  border:1px solid rgba(111,168,240,.28); border-radius:999px; padding:7px 14px; }
+html.ivh #view .pwh h1{ margin:20px 0 0; font-size:clamp(34px,4.6vw,56px);
+  font-weight:800; letter-spacing:-.035em; color:#fff; }
+.pwh h1 em{ font-style:normal; color:var(--pw-blue-300); }
+.pwh-sub{ margin-top:18px; font-size:clamp(16px,1.35vw,18.5px);
+  color:var(--pw-on-navy2); line-height:1.68; max-width:30em; }
+.pwh-ch{ display:flex; flex-wrap:wrap; gap:10px; margin:28px 0 0; padding:0; list-style:none; }
+.pwh-ch li{ display:flex; align-items:center; gap:11px; background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.16); border-radius:14px; padding:11px 16px 11px 12px; }
+.pwh-ch i{ width:38px; height:38px; border-radius:11px; display:grid; place-items:center;
+  background:rgba(111,168,240,.2); color:#9CC6FF; flex:none; }
+.pwh-ch b{ display:block; font-size:14.5px; font-weight:700; color:#fff; line-height:1.35; }
+.pwh-ch span > span{ display:block; font-size:12.5px; color:var(--pw-on-navy3); line-height:1.4; }
+.pwh-go{ display:flex; flex-wrap:wrap; gap:12px; margin-top:34px; }
+.pwh-go .btn{ min-height:56px; font-size:17px; padding:0 28px; }
+.pwh-art{ position:relative; display:grid; place-items:center; min-height:380px; }
+.pwh-hand{ position:absolute; right:2%; top:4%; font-size:14.5px; line-height:1.5;
+  color:#A9C6EA; transform:rotate(-7deg); text-align:center; font-weight:600; }
+/* ⚠️ 크기를 인라인 style 로 주면 아래 미디어쿼리를 이겨 폰에서 안 줄어듭니다 */
+.pwh-svg{ width:100%; max-width:440px; }
+
+/* ─── 02 두 가지 방법 ─── */
+.pww-g{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+.pww-c{ position:relative; background:#fff; border:1px solid var(--pw-line);
+  border-radius:var(--pw-r2); padding:34px 32px 32px; box-shadow:var(--pw-sh);
+  display:flex; flex-direction:column; }
+.pww-no{ position:absolute; top:-16px; left:32px; width:46px; height:46px; border-radius:14px;
+  display:grid; place-items:center; font-weight:800; font-size:15px; color:#fff;
+  background:var(--pw-blue-600); box-shadow:0 6px 16px rgba(14,95,208,.3); }
+.pww-c.b .pww-no{ background:var(--pw-navy); }
+.pww-ic{ width:64px; height:64px; border-radius:18px; display:grid; place-items:center;
+  background:var(--pw-blue-50); color:var(--pw-blue-600); margin:12px 0 18px; }
+.pww-c.b .pww-ic{ background:var(--pw-ok-50); color:var(--pw-ok-600); }
+.pww-c h3{ font-size:23px; font-weight:800; color:var(--pw-navy); }
+.pww-l{ margin-top:10px; font-size:15.5px; color:var(--pw-ink2); line-height:1.65; }
+/* ⚠️ margin-bottom:auto — 설명 줄 수가 달라 두 카드의 단추가 어긋났습니다.
+   높이가 제각각이면 같은 단추가 다른 것으로 읽힙니다. */
+.pww-c ul{ margin:22px 0 auto; padding:0; list-style:none; display:grid; gap:11px; }
+.pww-c li{ display:flex; align-items:flex-start; gap:10px; font-size:15.5px; color:var(--pw-ink); }
+.pww-c li svg{ flex:none; margin-top:3px; color:var(--pw-blue-600); }
+.pww-c.b li svg{ color:var(--pw-ok-600); }
+.pww-c .btn{ margin-top:28px; width:100%; }
+.pww-n{ margin-top:14px; font-size:13px; color:var(--pw-ink3); line-height:1.55; }
+
+/* ─── 03 인증 중고폰 ─── */
+.pws-g{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px;
+  margin:0; padding:0; list-style:none; }
+.pws-c{ display:flex; flex-direction:column; align-items:center; gap:14px; background:#fff;
+  border:1px solid var(--pw-line); border-radius:var(--pw-r); padding:26px 16px;
+  text-align:center; box-shadow:var(--pw-sh); transition:.15s; height:100%; }
+.pws-c:hover{ border-color:var(--pw-blue); transform:translateY(-2px); }
+.pws-c i{ width:66px; height:66px; border-radius:20px; display:grid; place-items:center;
+  background:var(--pw-blue-50); color:var(--pw-blue-600); }
+.pws-c b{ font-size:16px; font-weight:700; color:var(--pw-navy); }
+.pws-c > span{ font-size:13.5px; color:var(--pw-ink3); margin-top:-6px; }
+.pws-e{ margin-top:24px; background:#fff; border:1px dashed #C7D3E3;
+  border-radius:var(--pw-r); padding:30px 24px; text-align:center; }
+.pws-e b{ display:block; font-size:17px; font-weight:700; color:var(--pw-navy); }
+.pws-e p{ margin-top:9px; font-size:14.5px; color:var(--pw-ink2); line-height:1.6; }
+
+/* ─── 04 이용 방법 ─── */
+.pwst-g{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:14px;
+  margin:0; padding:0; list-style:none; }
+.pwst-c{ position:relative; background:#fff; border:1px solid var(--pw-line);
+  border-radius:var(--pw-r); padding:26px 18px; text-align:center; }
+.pwst-n{ width:34px; height:34px; margin:0 auto 14px; border-radius:50%; display:grid;
+  place-items:center; background:var(--pw-navy); color:#fff; font-size:14px; font-weight:800; }
+.pwst-c i{ display:grid; place-items:center; color:var(--pw-blue-600); margin-bottom:12px; }
+.pwst-c b{ display:block; font-size:15.5px; font-weight:700; color:var(--pw-navy); }
+.pwst-c p{ margin-top:8px; font-size:13.5px; color:var(--pw-ink2); line-height:1.55; }
+.pwst-c:not(:last-child)::after{ content:""; position:absolute; right:-10px; top:50%;
+  width:12px; height:2px; background:#CBD6E4; }
+
+/* ─── 05 거래 전 고지 ─── */
+.pwt-g{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px;
+  margin:0; padding:0; list-style:none; }
+.pwt-c{ background:#fff; border:1px solid var(--pw-line); border-radius:var(--pw-r);
+  padding:26px 22px; }
+.pwt-c i{ width:50px; height:50px; border-radius:14px; display:grid; place-items:center;
+  background:var(--pw-ok-50); color:var(--pw-ok-600); margin-bottom:16px; }
+.pwt-c b{ display:block; font-size:16.5px; font-weight:700; color:var(--pw-navy); }
+.pwt-c p{ margin-top:9px; font-size:14.5px; color:var(--pw-ink2); line-height:1.6; }
+.pwt-n{ margin-top:26px; background:var(--pw-blue-50); border:1px solid var(--pw-blue-100);
+  border-radius:12px; padding:16px 20px; font-size:14px; color:#13395F; line-height:1.65; }
+
+/* ─── 06 하단 CTA ─── */
+.pwc{ background:var(--pw-navy); color:#fff; position:relative; overflow:hidden; }
+.pwc::before{ content:""; position:absolute; inset:0;
+  background:radial-gradient(760px 420px at 76% 30%, rgba(22,115,234,.3), transparent 64%); }
+.pwc-in{ position:relative; display:flex; align-items:center; justify-content:space-between;
+  gap:34px; flex-wrap:wrap; padding:68px 0; }
+html.ivh #view .pwc h2{ font-size:clamp(24px,2.7vw,34px); font-weight:800; color:#fff; }
+.pwc p{ margin-top:14px; font-size:16.5px; color:var(--pw-on-navy2); }
+.pwc-go{ display:flex; gap:12px; flex-wrap:wrap; }
+.pwc-go .btn{ min-height:56px; font-size:17px; padding:0 28px; }
+
+/* ─── 반응형 ─── */
+@media (max-width:1100px){
+  .pwh-in{ grid-template-columns:1fr; gap:28px; padding:52px 0 56px; }
+  .pwh-art{ order:-1; min-height:0; }
+  .pwh-hand{ display:none; }
+  .pwh-svg{ max-width:300px; }
+  .pws-g{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .pwst-g{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .pwst-c:nth-child(3)::after{ display:none; }
+  .pwt-g{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:760px){
+  .pww,.pws,.pwst,.pwt{ padding:56px 0; }
+  .pwh h1{ font-size:clamp(30px,8.4vw,40px); }
+  .pwh-ch{ display:grid; grid-template-columns:1fr; }
+  .pwh-go{ display:grid; grid-template-columns:1fr; }
+  .pwh-go .btn{ width:100%; }
+  .pwh-svg{ max-width:208px; }
+  .pww-g{ grid-template-columns:1fr; gap:34px; }
+  .pwst-g{ grid-template-columns:1fr 1fr; }
+  .pwst-c::after{ display:none !important; }
+  .pwt-g{ grid-template-columns:1fr; }
+  .pwc-in{ padding:52px 0; }
+  .pwc-go{ display:grid; grid-template-columns:1fr; width:100%; }
+  .pwc-go .btn{ width:100%; }
+}
+@media (max-width:380px){ .pws-g{ grid-template-columns:1fr; } }

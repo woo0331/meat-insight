@@ -57,8 +57,7 @@ var MAIN_CALC = ["cost", "bep", "premium", "closecost"];
 
 function PageMain(){
 
-  return HomeHero()+ HomeEnter()+ HomeDirect()+
-         HomeCalc()+ HomeSteps()+ HomeGuide()+ HomeCta();
+  return PwHero()+ PwWays()+ PwShop()+ PwSteps()+ PwTrust()+ PwCta();
 }
 
 var HOME_ENTER = [
@@ -851,3 +850,241 @@ window.homeGuideFor = function(hall, n){
     });
   return hit.slice(0, n);
 };
+
+function pwTick(){
+  return '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" '+
+    'stroke="currentColor" stroke-width="2.2" stroke-linecap="round" '+
+    'stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg>';
+}
+function pwArrow(){
+  return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" '+
+    'stroke="currentColor" stroke-width="2" stroke-linecap="round" '+
+    'stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>';
+}
+
+var PW_HERO_CHIPS = [
+  ["bolt", "직접 매입", "폰웨이가 바로 삽니다"],
+  ["bid",  "전국 업체 경쟁입찰", "여러 곳 견적 비교"],
+  ["ck",   "검수 완료 중고폰", "상태를 밝히고 팝니다"]
+];
+var PW_CHIP_IC = {
+  bolt: '<path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5Z"/>',
+  bid:  '<path d="m13 4 7 7M9.5 7.5 16.5 14.5M5 21h7M8 18 3.5 13.5l9-9L17 9l-9 9Z"/>',
+  ck:   '<path d="M12 3 4 6v6c0 4.5 3.2 8.3 8 9 4.8-.7 8-4.5 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>'
+};
+function PwHero(){
+  var B = window.amBrand ? amBrand() : "";
+  return '<section class="pwh"><div class="w pwh-in">'+
+    '<div class="pwh-tx">'+
+      '<span class="pwh-k">중고폰 통합 거래 플랫폼</span>'+
+      '<h1>내 폰의<br><em>가치를 가장 높게.</em></h1>'+
+      '<p class="pwh-sub">직접 매입부터 전국 전문업체 최고가 견적 비교까지.<br>'+
+        '중고폰 거래의 새로운 기준, '+ esc(B) +'.</p>'+
+      '<ul class="pwh-ch">'+ PW_HERO_CHIPS.map(function(c){
+        return '<li><i><svg width="20" height="20" viewBox="0 0 24 24" fill="none" '+
+          'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" '+
+          'stroke-linejoin="round" aria-hidden="true">'+ PW_CHIP_IC[c[0]] +'</svg></i>'+
+          '<span><b>'+ esc(c[1]) +'</b><span>'+ esc(c[2]) +'</span></span></li>';
+      }).join("") +'</ul>'+
+      '<div class="pwh-go">'+
+        '<a class="btn btn-pw" href="/sell">내 폰 팔기 '+ pwArrow() +'</a>'+
+        '<a class="btn btn-pw-gh" href="/shop">중고폰 구매하기</a>'+
+      '</div>'+
+    '</div>'+
+    '<div class="pwh-art">'+
+      '<p class="pwh-hand">좋은 폰이,<br>새로운 가치를 만듭니다.</p>'+ pwHeroArt() +
+    '</div>'+
+  '</div></section>';
+}
+
+function pwHeroArt(){
+  return '<svg class="pwh-svg" viewBox="0 0 440 400" aria-hidden="true">'+
+    '<defs>'+
+      '<linearGradient id="pwa" x1="0" y1="0" x2="1" y2="1">'+
+        '<stop offset="0" stop-color="#3C5A7E"/><stop offset="1" stop-color="#1B2F47"/></linearGradient>'+
+      '<linearGradient id="pwb" x1="0" y1="0" x2="1" y2="1">'+
+        '<stop offset="0" stop-color="#5E8FD4"/><stop offset="1" stop-color="#24456F"/></linearGradient>'+
+      '<linearGradient id="pwc" x1="0" y1="0" x2="1" y2="1">'+
+        '<stop offset="0" stop-color="#D6E2F2"/><stop offset="1" stop-color="#8FA8C6"/></linearGradient>'+
+      '<linearGradient id="pwsc" x1="0" y1="0" x2="1" y2="1">'+
+        '<stop offset="0" stop-color="#16243A"/><stop offset="1" stop-color="#0C1626"/></linearGradient>'+
+    '</defs>'+
+    '<ellipse cx="220" cy="356" rx="166" ry="20" fill="#06101E" opacity=".5"/>'+
+    '<g transform="rotate(-15 150 210)">'+
+      '<rect x="74" y="92" width="152" height="252" rx="26" fill="url(#pwa)"/>'+
+      '<rect x="82" y="100" width="136" height="236" rx="20" fill="url(#pwsc)"/>'+
+      '<rect x="128" y="106" width="44" height="9" rx="4.5" fill="#22314A"/>'+
+      '<circle cx="106" cy="126" r="13" fill="#2A3D59"/><circle cx="106" cy="126" r="6" fill="#0E1726"/>'+
+    '</g>'+
+    '<g transform="rotate(8 300 200)">'+
+      '<rect x="236" y="74" width="158" height="262" rx="27" fill="url(#pwc)"/>'+
+      '<rect x="244" y="82" width="142" height="246" rx="21" fill="url(#pwsc)"/>'+
+      '<rect x="292" y="88" width="46" height="9" rx="4.5" fill="#22314A"/>'+
+      '<circle cx="272" cy="112" r="15" fill="#B9C9DD"/><circle cx="272" cy="112" r="7.5" fill="#101C2E"/>'+
+      '<circle cx="272" cy="146" r="15" fill="#B9C9DD"/><circle cx="272" cy="146" r="7.5" fill="#101C2E"/>'+
+    '</g>'+
+    '<g>'+
+      '<rect x="156" y="56" width="162" height="272" rx="28" fill="url(#pwb)"/>'+
+      '<rect x="164" y="64" width="146" height="256" rx="22" fill="url(#pwsc)"/>'+
+      '<rect x="213" y="70" width="48" height="10" rx="5" fill="#22314A"/>'+
+      '<circle cx="192" cy="96" r="16" fill="#3D6CA8"/><circle cx="192" cy="96" r="8" fill="#0D1829"/>'+
+      '<circle cx="192" cy="132" r="16" fill="#3D6CA8"/><circle cx="192" cy="132" r="8" fill="#0D1829"/>'+
+      '<circle cx="192" cy="168" r="16" fill="#3D6CA8"/><circle cx="192" cy="168" r="8" fill="#0D1829"/>'+
+      '<rect x="186" y="236" width="86" height="7" rx="3.5" fill="#2C4568"/>'+
+      '<rect x="186" y="252" width="56" height="7" rx="3.5" fill="#22364F"/>'+
+    '</g></svg>';
+}
+
+function PwWays(){
+  var n = (window.AM_PROVIDERS || []).length;
+  return '<section class="pww"><div class="w">'+
+    '<div class="pw-hd">'+
+      '<span class="pw-ey">HOW TO SELL</span>'+
+      '<h2>휴대폰을 판매하는 두 가지 방법</h2>'+
+      '<p>원하는 방식으로 더 높은 가치를 받아보세요.</p>'+
+    '</div>'+
+    '<div class="pww-g">'+
+      pwWayCard({
+        no:"01", kind:"a", to:"/sell", cta:"바로 판매하기",
+        ic:'<rect x="2.5" y="6" width="19" height="13" rx="2.6"/><path d="M2.5 10.5h19M6.5 15h3"/>',
+        h:"PHONEWAY 직접 매입",
+        lead:"폰웨이가 직접 삽니다. 한 번만 등록하면 예상 매입가를 바로 확인할 수 있습니다.",
+        li:["빠르고 간편한 판매","검수 기준을 미리 공개","최종 금액에 동의한 뒤 정산"],
+        note:'⚠️ 등록 화면에 적으신 상태를 기준으로 한 <b>예상 금액</b>입니다. '+
+             '기기를 받아 검수한 뒤 최종 금액을 다시 안내드리고, 동의하신 뒤에 정산합니다.'
+      })+
+      pwWayCard({
+        no:"02", kind:"b", to:"/bid", cta:"견적 비교 신청하기",
+        ic:'<path d="m13 3.5 7.5 7.5M9.5 7 17 14.5M4.5 21h8M7.5 17.5 3 13l9.5-9.5L17 8l-9.5 9.5Z"/>',
+        h:"전국 업체 경쟁입찰",
+        lead:"전국의 인증 매입업체가 견적을 냅니다. 가격만이 아니라 거래 조건까지 나란히 놓고 고르세요.",
+        li:["여러 업체 견적 비교","검수 기준 · 정산 소요일 비교","고르는 것은 사장님입니다"],
+        note: n ? ('지금 <b>'+ n +'곳</b>이 참여하고 있습니다. 견적은 신청하신 기기의 '+
+                   '조건을 보고 업체가 직접 냅니다.')
+                : ('⚠️ <b>지금 입점업체를 모집하고 있습니다.</b> 참여 업체가 생기면 이 '+
+                   '자리에 실제 견적이 나란히 섭니다 — 없는 업체를 미리 보여 드리지 않습니다.')
+      })+
+    '</div>'+
+  '</div></section>';
+}
+function pwWayCard(o){
+  return '<article class="pww-c'+ (o.kind==="b" ? " b" : "") +'">'+
+    '<span class="pww-no">'+ esc(o.no) +'</span>'+
+    '<div class="pww-ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" '+
+      'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" '+
+      'stroke-linejoin="round" aria-hidden="true">'+ o.ic +'</svg></div>'+
+    '<h3>'+ esc(o.h) +'</h3>'+
+    '<p class="pww-l">'+ esc(o.lead) +'</p>'+
+    '<ul>'+ o.li.map(function(t){
+      return '<li>'+ pwTick() + esc(t) +'</li>'; }).join("") +'</ul>'+
+    '<a class="btn '+ (o.kind==="b" ? "btn-pw-o" : "btn-pw") +'" href="'+ esc(o.to) +'">'+
+      esc(o.cta) +'</a>'+
+    '<p class="pww-n">'+ o.note +'</p>'+
+  '</article>';
+}
+
+var PW_KINDS = [
+  ["/shop?m=iphone",  "아이폰",   "iPhone",
+   '<rect x="6" y="2.5" width="12" height="19" rx="2.8"/><path d="M10.5 5.5h3"/>'],
+  ["/shop?m=galaxy",  "갤럭시",   "Galaxy",
+   '<rect x="5.5" y="2.5" width="13" height="19" rx="3"/><path d="M12 18.5h.01"/>'],
+  ["/shop?m=tablet",  "태블릿",   "iPad · Tab",
+   '<rect x="3" y="4" width="18" height="16" rx="2.6"/><path d="M12 16.5h.01"/>'],
+  ["/shop?m=etc",     "기타 기기", "워치 · 버즈",
+   '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>']
+];
+function PwShop(){
+  var P = window.AM_PRODUCTS || [];
+  return '<section class="pws"><div class="w">'+
+    '<div class="pw-hd-l">'+
+      '<div><h2>검증된 중고폰을, 믿고 구매하세요</h2>'+
+        '<p>폰웨이가 직접 매입하고 검수한 기기만 판매합니다.</p></div>'+
+      '<a class="pw-more" href="/shop">전체 보기 '+ pwArrow() +'</a>'+
+    '</div>'+
+    '<ul class="pws-g">'+ PW_KINDS.map(function(k){
+      return '<li><a class="pws-c" href="'+ esc(k[0]) +'">'+
+        '<i><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
+          'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
+          k[3] +'</svg></i>'+
+        '<b>'+ esc(k[1]) +'</b><span>'+ esc(k[2]) +'</span></a></li>';
+    }).join("") +'</ul>'+
+    (P.length ? "" :
+      '<div class="pws-e">'+
+        '<b>지금 판매 중인 상품이 0건입니다.</b>'+
+        '<p>검수를 마친 기기부터 이 자리에 올라옵니다. 한 대라도 올라오면 사진 · 등급 · '+
+          '배터리 상태 · 검수 결과가 그대로 보입니다.<br>'+
+          '⚠️ 없는 상품을 미리 만들어 두지 않습니다.</p>'+
+      '</div>')+
+  '</div></section>';
+}
+
+var PW_STEPS = [
+  ["휴대폰 정보 등록", "기종 · 용량 · 상태 · 사진",
+   '<rect x="6" y="2.5" width="12" height="19" rx="2.8"/><path d="m9.5 12 2 2 3.5-4"/>'],
+  ["견적 확인", "직접 매입가 · 업체 입찰",
+   '<path d="M4 19V9m5 10V5m5 14v-7m5 7V8"/>'],
+  ["판매 방식 선택", "직접 매입 또는 업체 선택",
+   '<path d="M20.5 6 9.5 17 4 11.5"/>'],
+  ["기기 수거 · 검수", "진행 상황을 화면에서 확인",
+   '<path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5v-7Z"/><path d="m3 8.5 9 4.5 9-4.5M12 13v7"/>'],
+  ["금액 동의 · 정산", "동의하신 뒤에 보냅니다",
+   '<rect x="2.5" y="5.5" width="19" height="13" rx="2.6"/><path d="M2.5 10h19"/>']
+];
+function PwSteps(){
+  return '<section class="pwst"><div class="w">'+
+    '<div class="pw-hd"><span class="pw-ey">HOW IT WORKS</span>'+
+      '<h2>'+ esc(window.amBrand ? amBrand() : "") +' 이용 방법</h2>'+
+      '<p>등록부터 정산까지 다섯 걸음입니다.</p></div>'+
+    '<ol class="pwst-g">'+ PW_STEPS.map(function(s,i){
+      return '<li class="pwst-c"><span class="pwst-n">'+ (i+1) +'</span>'+
+        '<i><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
+          'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
+          s[2] +'</svg></i>'+
+        '<b>'+ esc(s[0]) +'</b><p>'+ esc(s[1]) +'</p></li>';
+    }).join("") +'</ol>'+
+  '</div></section>';
+}
+
+var PW_TRUST = [
+  ["검수 기준을 먼저 공개",
+   "외관 · 액정 · 배터리 · 기능을 어떤 기준으로 보는지 등록 전에 읽으실 수 있습니다.",
+   '<path d="M9 3.5h6l1 3.5h3.5v13H4.5v-13H8l1-3.5Z"/><path d="m9.5 13 2 2 3.5-4"/>'],
+  ["개인정보 삭제 안내",
+   "보내시기 전에 해 두셔야 할 것과, 저희가 받은 뒤 처리하는 절차를 그대로 적습니다.",
+   '<rect x="5" y="10.5" width="14" height="10" rx="2.4"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>'],
+  ["진행 상황 확인",
+   "접수 · 수거 · 검수 · 정산이 지금 어디까지 왔는지 화면에서 보입니다.",
+   '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.2 2"/>'],
+  ["분쟁이 생기면",
+   "검수 결과에 동의하지 않으시면 반송받으실 수 있습니다. 처리 절차를 고객센터에 적어 둡니다.",
+   '<path d="M12 3.5 4.5 7v5.5c0 4.3 3.1 7.9 7.5 8.5 4.4-.6 7.5-4.2 7.5-8.5V7L12 3.5Z"/><path d="M12 9v4M12 16h.01"/>']
+];
+function PwTrust(){
+  return '<section class="pwt"><div class="w">'+
+    '<div class="pw-hd"><span class="pw-ey">TRUST</span>'+
+      '<h2>거래하기 전에 밝혀 둡니다</h2>'+
+      '<p>지킬 수 있는 것만 적었습니다.</p></div>'+
+    '<ul class="pwt-g">'+ PW_TRUST.map(function(t){
+      return '<li class="pwt-c">'+
+        '<i><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
+          'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
+          t[2] +'</svg></i>'+
+        '<b>'+ esc(t[0]) +'</b><p>'+ esc(t[1]) +'</p></li>';
+    }).join("") +'</ul>'+
+    '<p class="pwt-n">⚠️ <b>이 화면에 "무료" · "당일 정산" · "최고가 보장" 을 적지 '+
+      '않았습니다.</b> 지킬 수 있는 것만 적는 것이 이 플랫폼의 규칙입니다 — 검수 뒤 '+
+      '금액이 바뀔 수 있다는 것, 정산까지 걸리는 시간, 반송 조건을 거래 전에 먼저 '+
+      '보여 드립니다.</p>'+
+  '</div></section>';
+}
+
+function PwCta(){
+  return '<section class="pwc"><div class="w pwc-in">'+
+    '<div><h2>지금 내 폰은 얼마일까요?</h2>'+
+      '<p>기종과 상태만 고르면 예상 금액을 바로 보실 수 있습니다.</p></div>'+
+    '<div class="pwc-go">'+
+      '<a class="btn btn-pw-w" href="/sell">내 폰 팔기</a>'+
+      '<a class="btn btn-pw-gh" href="/guide">이용 안내 보기</a>'+
+    '</div>'+
+  '</div></section>';
+}

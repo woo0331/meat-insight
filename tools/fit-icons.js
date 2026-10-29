@@ -113,9 +113,14 @@ var CSS = ".ia .a1{fill:#806047}.ia .a2{fill:#EDE0CF}.ia .aw{fill:#fff}" +
     return;
   }
 
+  /* ⚠️⚠️ **이름에 하이픈이 있으면 따옴표를 씌웁니다.** 그냥 적었다가
+     `dev-iphone:[1,0,0]` 이 되어 **base.js 가 통째로 문법 오류**가
+     났습니다 (빼기로 읽힙니다) — 도구가 고친 파일을 스스로 깨뜨리는
+     자리라, 쓰기 전에 `node --check` 로 한 번 더 봅니다. */
   var body = keys.map(function(k){
     var f = fit[k];
-    return "  " + k + ":[" + f[0] + "," + f[1] + "," + f[2] + "]";
+    var nm = /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(k) ? k : JSON.stringify(k);
+    return "  " + nm + ":[" + f[0] + "," + f[1] + "," + f[2] + "]";
   }).join(",\n");
   var block = "var IA_FIT = {\n" + body + "\n};";
   var re = /var IA_FIT = \{[\s\S]*?\n\};/;

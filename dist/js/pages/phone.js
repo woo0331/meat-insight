@@ -3,10 +3,12 @@
 function pwSellQS(){
   return { maker: nowQS("mk")||"", kind: nowQS("kd")||"phone",
            model: nowQS("md")||"", cap: nowQS("cap")||"",
-           grade: nowQS("gr")||"" };
+           grade: nowQS("gr")||"",
+           more: nowQS("mo")||"" };
 }
 function pwSellGo(patch){
-  var q = pwSellQS(), m = { mk:"maker", kd:"kind", md:"model", cap:"cap", gr:"grade" };
+  var q = pwSellQS(), m = { mk:"maker", kd:"kind", md:"model", cap:"cap", gr:"grade",
+                           mo:"more" };
   Object.keys(patch||{}).forEach(function(k){ q[k] = patch[k]; });
   var parts = [];
   Object.keys(m).forEach(function(p){ if(q[m[p]]) parts.push(p+"="+encodeURIComponent(q[m[p]])); });
@@ -45,22 +47,46 @@ function PageSell(){
     '</div></section>';
 }
 
+var PW_SELL_CARDS = [
+  { ia:"dev-iphone", nm:"아이폰",   sub:"iPhone",            maker:"apple",   kind:"phone"  },
+  { ia:"dev-galaxy", nm:"갤럭시",   sub:"Galaxy",            maker:"samsung", kind:"phone"  },
+  { ia:"dev-tablet", nm:"태블릿",   sub:"아이패드 · 갤럭시 탭", maker:"",        kind:"tablet" },
+  { ia:"dev-etc",    nm:"기타 기기", sub:"워치 · 버즈",         more:true }
+];
+
 function pwSellPick(q){
   var kinds = window.AM_DEVICE_KINDS || [], makers = window.AM_MAKERS || [];
   var models = (q.maker || q.kind) ? amModelsOf(q.maker, q.kind) : [];
   var md = q.model ? amModel(q.model) : null;
+  var more = q.more === "1" || q.kind === "watch" || q.kind === "buds" ||
+             q.maker === "etc";
   return '<div class="pwf-s" id="pf-1">'+
     '<h2 class="pwf-h"><b>01</b> 어떤 기기를 판매하시나요?</h2>'+
-    '<div class="pwf-r"><span class="pwf-l">기기 종류</span>'+
-      '<div class="chip-g">'+ kinds.map(function(k){
-        return '<a class="chip'+(q.kind===k.key?" on":"")+'" href="#" '+
-          'onclick="pwSellGo({kind:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'});return false">'+
-          esc(k.name)+'</a>'; }).join("") +'</div></div>'+
-    '<div class="pwf-r"><span class="pwf-l">제조사</span>'+
-      '<div class="chip-g">'+ makers.map(function(k){
-        return '<a class="chip'+(q.maker===k.key?" on":"")+'" href="#" '+
-          'onclick="pwSellGo({maker:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'});return false">'+
-          esc(k.name)+'</a>'; }).join("") +'</div></div>'+
+    '<div class="pwf-dv">'+ PW_SELL_CARDS.map(function(c){
+
+      var on = c.more ? more
+                      : (q.kind === c.kind && (q.maker||"") === (c.maker||""));
+
+      var act = c.more ? "pwSellGo({more:'1'})"
+             : "pwSellGo({maker:'"+c.maker+"',kind:'"+c.kind+"',"+
+               "model:'',cap:'',grade:''})";
+      return '<a class="pwf-dv-c'+(on?" on":"")+'" href="#" '+
+        'onclick="'+act+';return false">'+
+        '<span class="pwf-dv-i">'+ iconArt(c.ia, 46) +'</span>'+
+        '<b>'+esc(c.nm)+'</b><span class="pwf-dv-s">'+esc(c.sub)+'</span></a>';
+    }).join("") +'</div>'+
+    (more ?
+      '<div class="pwf-r"><span class="pwf-l">기기 종류</span>'+
+        '<div class="chip-g">'+ kinds.map(function(k){
+          return '<a class="chip'+(q.kind===k.key?" on":"")+'" href="#" '+
+            'onclick="pwSellGo({kind:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'});return false">'+
+            esc(k.name)+'</a>'; }).join("") +'</div></div>'+
+      '<div class="pwf-r"><span class="pwf-l">제조사</span>'+
+        '<div class="chip-g">'+ makers.map(function(k){
+          return '<a class="chip'+(q.maker===k.key?" on":"")+'" href="#" '+
+            'onclick="pwSellGo({maker:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'});return false">'+
+            esc(k.name)+'</a>'; }).join("") +'</div></div>'
+      : "")+
     (q.maker || q.kind ?
       '<div class="pwf-r"><span class="pwf-l">모델</span>'+
         (models.length ?

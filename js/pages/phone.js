@@ -19,10 +19,12 @@
 function pwSellQS(){
   return { maker: nowQS("mk")||"", kind: nowQS("kd")||"phone",
            model: nowQS("md")||"", cap: nowQS("cap")||"",
-           grade: nowQS("gr")||"" };
+           grade: nowQS("gr")||"",
+           more: nowQS("mo")||"" };
 }
 function pwSellGo(patch){
-  var q = pwSellQS(), m = { mk:"maker", kd:"kind", md:"model", cap:"cap", gr:"grade" };
+  var q = pwSellQS(), m = { mk:"maker", kd:"kind", md:"model", cap:"cap", gr:"grade",
+                           mo:"more" };
   Object.keys(patch||{}).forEach(function(k){ q[k] = patch[k]; });
   var parts = [];
   Object.keys(m).forEach(function(p){ if(q[m[p]]) parts.push(p+"="+encodeURIComponent(q[m[p]])); });
@@ -77,23 +79,65 @@ function PageSell(){
     '</div></section>';
 }
 
-/* STEP 1 — 기기 선택 */
+/* 빠른 선택 카드 넷 (2026-10-29 사장님 시안)
+   ⚠️⚠️ **브랜드 로고를 쓰지 않았습니다.** 애플 마크 · 삼성 워드마크는
+   남의 등록상표이고, 시안의 제품 사진도 권한이 확인된 것이 아닙니다
+   (이미지 지시서 §4 · §54). 아이콘은 `iconArt()` 에 직접 그린 넷이고
+   **기기 윤곽**만 냅니다.
+   ⚠️ 아래 줄(`sub`)에 적는 영문은 **기종을 가리키는 말**입니다 —
+   고르는 데 필요한 설명이고 상표를 흉내내는 것이 아닙니다.
+   ⚠️⚠️ **넷째 장은 조합을 고르는 카드가 아니라 칩 줄을 펼치는
+   단추입니다.** 워치 · 버즈 · 기타 제조사를 한 장에 담으면 고르신
+   것과 접수에 실리는 것이 달라집니다. */
+var PW_SELL_CARDS = [
+  { ia:"dev-iphone", nm:"아이폰",   sub:"iPhone",            maker:"apple",   kind:"phone"  },
+  { ia:"dev-galaxy", nm:"갤럭시",   sub:"Galaxy",            maker:"samsung", kind:"phone"  },
+  { ia:"dev-tablet", nm:"태블릿",   sub:"아이패드 · 갤럭시 탭", maker:"",        kind:"tablet" },
+  { ia:"dev-etc",    nm:"기타 기기", sub:"워치 · 버즈",         more:true }
+];
+
+/* STEP 1 — 기기 선택
+   ⚠️⚠️ **고르개가 둘입니다** — 위의 큰 카드 넷이 빠른 선택이고, 아래
+   칩 두 줄이 전부입니다 (`AM_PICK_QUICK` 위에 묶음을 둔 것과 같은
+   꼴입니다). 카드만 두면 **워치 · 버즈 · 기타 제조사로 가는 길이
+   사라집니다** — 네 장으로 덮이지 않는 조합이 그만큼 있습니다.
+   ⚠️ 그래서 칩 줄은 `기타 기기` 를 누르셨을 때 펼치고, **이미 워치 ·
+   버즈 · 기타 제조사를 고르신 상태면 저절로 펼칩니다** — 안 펼치면
+   고르신 것이 화면에 아예 안 보입니다. */
 function pwSellPick(q){
   var kinds = window.AM_DEVICE_KINDS || [], makers = window.AM_MAKERS || [];
   var models = (q.maker || q.kind) ? amModelsOf(q.maker, q.kind) : [];
   var md = q.model ? amModel(q.model) : null;
+  var more = q.more === "1" || q.kind === "watch" || q.kind === "buds" ||
+             q.maker === "etc";
   return '<div class="pwf-s" id="pf-1">'+
     '<h2 class="pwf-h"><b>01</b> 어떤 기기를 판매하시나요?</h2>'+
-    '<div class="pwf-r"><span class="pwf-l">기기 종류</span>'+
-      '<div class="chip-g">'+ kinds.map(function(k){
-        return '<a class="chip'+(q.kind===k.key?" on":"")+'" href="#" '+
-          'onclick="pwSellGo({kind:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'});return false">'+
-          esc(k.name)+'</a>'; }).join("") +'</div></div>'+
-    '<div class="pwf-r"><span class="pwf-l">제조사</span>'+
-      '<div class="chip-g">'+ makers.map(function(k){
-        return '<a class="chip'+(q.maker===k.key?" on":"")+'" href="#" '+
-          'onclick="pwSellGo({maker:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'});return false">'+
-          esc(k.name)+'</a>'; }).join("") +'</div></div>'+
+    '<div class="pwf-dv">'+ PW_SELL_CARDS.map(function(c){
+      /* ⚠️ 카드 전체가 눌립니다 — 안에 또 링크를 넣지 마세요
+         (브라우저가 쪼갭니다). */
+      var on = c.more ? more
+                      : (q.kind === c.kind && (q.maker||"") === (c.maker||""));
+      /* ⚠️ 이름을 `go` 로 짓지 마세요 — 라우터의 전역 함수를 가립니다. */
+      var act = c.more ? "pwSellGo({more:'1'})"
+             : "pwSellGo({maker:'"+c.maker+"',kind:'"+c.kind+"',"+
+               "model:'',cap:'',grade:''})";
+      return '<a class="pwf-dv-c'+(on?" on":"")+'" href="#" '+
+        'onclick="'+act+';return false">'+
+        '<span class="pwf-dv-i">'+ iconArt(c.ia, 46) +'</span>'+
+        '<b>'+esc(c.nm)+'</b><span class="pwf-dv-s">'+esc(c.sub)+'</span></a>';
+    }).join("") +'</div>'+
+    (more ?
+      '<div class="pwf-r"><span class="pwf-l">기기 종류</span>'+
+        '<div class="chip-g">'+ kinds.map(function(k){
+          return '<a class="chip'+(q.kind===k.key?" on":"")+'" href="#" '+
+            'onclick="pwSellGo({kind:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'});return false">'+
+            esc(k.name)+'</a>'; }).join("") +'</div></div>'+
+      '<div class="pwf-r"><span class="pwf-l">제조사</span>'+
+        '<div class="chip-g">'+ makers.map(function(k){
+          return '<a class="chip'+(q.maker===k.key?" on":"")+'" href="#" '+
+            'onclick="pwSellGo({maker:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'});return false">'+
+            esc(k.name)+'</a>'; }).join("") +'</div></div>'
+      : "")+
     (q.maker || q.kind ?
       '<div class="pwf-r"><span class="pwf-l">모델</span>'+
         (models.length ?

@@ -87,7 +87,11 @@ function loadApp(){
                    slug 를 가리킵니다 — 셋 다 위에 있습니다 (2026-10-18 §9) */
                 "js/data/opscheck.js",
                 /* 이용 절차 넷 — 메인 05 구간과 크롤러 본문이 같이 읽습니다 */
-                "js/data/steps.js"];
+                "js/data/steps.js",
+                /* ⚠️ 기기 카탈로그 (2026-10-29 PHONEWAY) — 모델 · 등급 ·
+                   상태 질문 · 매입 기준가. 다른 데이터를 안 가리켜서
+                   맨 뒤입니다. */
+                "js/data/devices.js"];
 
   /* ⚠️ 여기는 **glob 이 아니라 손으로 적은 목록**입니다. 새 데이터
      파일을 만들고 여기에 안 넣으면, 그 데이터를 쓰는 주소가 **에러
@@ -126,6 +130,13 @@ function allRoutes(W){
                  "/providers", "/franchise",
                  "/stores", "/assets", "/support", "/content",
                  "/quote", "/sell", "/join", "/my", "/search", "/compare",
+                 /* ⚠️⚠️ PHONEWAY 화면 넷 (2026-10-29). `/sell` 은 위에
+                    이미 있고 **내 폰 팔기**가 됐습니다 — 창업 · 폐업
+                    매물 폼은 `/sell-biz` 로 옮겼습니다 (지운 것이
+                    아닙니다). `/track` · `/sell-biz` 는 NOINDEX 라
+                    sitemap 에 안 들어가고 크롤러 본문 검사에서도
+                    빠지지만, HTML 은 만들어야 주소가 열립니다. */
+                 "/shop", "/bid", "/track", "/guide", "/sell-biz",
                  /* ⚠️ `/sample` 은 NOINDEX 라 sitemap 에 안 들어갑니다 —
                     HTML 은 만들어야 주소를 열 수 있어서 여기에 둡니다 */
                  "/sample",
@@ -865,7 +876,102 @@ function noscriptFor(W, r, route){
   /* ⚠️ 화면(PageSell)과 **같은 말**이어야 합니다. 여기에만 더 적으면
      그게 구글에 나가는 거짓말입니다 — 특히 "바로 올라갑니다" 처럼
      하지 않는 일을 적지 마세요 (절대 규칙 5). */
+  /* ── PHONEWAY 화면 넷 (2026-10-29) ──────────────────────────
+     ⚠️⚠️ **화면과 같은 말이어야 합니다.** `js/pages/phone.js` 의
+     `PageSell` · `PageShop` · `PageBid` · `PageGuide` 가 내는 머리말과
+     글을 그대로 따라갑니다 — 크롤러에게만 더 보여 주면 그게 구글에
+     나가는 거짓말입니다 (이 저장소가 **열한 번** 겪은 자리).
+     ⚠️ `/track` · `/sell-biz` 는 NOINDEX 라 이 검사에서 빠집니다. */
   if(route === "/sell"){
+    const MK = (W.AM_MAKERS || []).map(x => x.name);
+    /* ⚠️⚠️ **`AM_KINDS` 가 아니라 `AM_DEVICE_KINDS` 입니다.** 처음에
+       `AM_KINDS` 로 적었더니 `undefined` 라 **손으로 적어 둔 목록**이
+       대신 나갔습니다 — 화면은 데이터를 읽는데 크롤러만 박아 둔
+       글자를 내는 꼴이고, 기기 종류를 늘려도 그쪽만 안 따라옵니다. */
+    const KD = (W.AM_DEVICE_KINDS || []).map(x => x.name);
+    const GR = (W.AM_GRADES || []).map(g => g.name + " — " + g.lead);
+    h2("01 어떤 기기를 판매하시나요?");
+    ul(KD);
+    ul(MK);
+    p("모델과 용량까지 고르시면 됩니다. 가입하지 않으셔도 신청하실 수 있습니다.");
+    h2("02 기기 상태를 알려 주세요");
+    ul((W.AM_COND || []).map(c => c.q));
+    h2("외관 등급");
+    ul(GR);
+    p("등급은 겉모습을 보는 기준입니다. 최종 금액은 전원 · 액정 · 배터리 · "+
+      "카메라 · 수리 이력까지 검수한 뒤에 정해집니다.");
+    h2("03 판매 방법을 고르세요");
+    ul(["폰웨이 직접 매입 — 저희가 바로 사 드립니다",
+        "전국 업체 경쟁입찰 — 여러 업체의 매입가를 비교하고 고르십니다"]);
+    /* ⚠️⚠️ **매입 기준가를 지어내지 않습니다** (절대 규칙 1). 지금
+       `AM_BUY_PRICE` 가 0건이라 금액을 한 줄도 내지 않습니다 —
+       기준가가 올라오면 화면과 함께 저절로 바뀝니다. */
+    if(!(W.AM_BUY_PRICE || []).length)
+      p("지금은 기기별 매입 기준가가 등록되어 있지 않아 예상 금액을 "+
+        "보여 드리지 않습니다. 신청하시면 사람이 확인해서 금액을 "+
+        "알려 드립니다 — 없는 금액을 미리 적어 두지 않습니다.");
+    p("최고가를 보장하지 않습니다. 검수 뒤 금액이 달라질 수 있고, "+
+      "그때는 보내 드린 금액과 까닭을 함께 알려 드립니다.");
+    p("보내시기 전에 자료를 백업하고 계정 잠금을 풀어 주세요. 분실 · 도난 "+
+      "신고된 기기는 매입할 수 없습니다.");
+    return L.join("");
+  }
+  if(route === "/shop"){
+    h2("검증된 중고폰을, 믿고 구매하세요");
+    p((B.name || "") + "가 직접 매입하고 검수한 기기만 판매합니다. 사진 · 등급 · "+
+      "배터리 상태 · 검수 결과를 그대로 밝힙니다.");
+    ul(["전체","아이폰","갤럭시","태블릿","기타 기기"]);
+    const nPd = (W.AM_PRODUCTS || []).length;
+    if(nPd){
+      h2("판매 중인 상품 " + nPd + "건");
+    } else {
+      h2("지금 판매 중인 상품이 0건입니다");
+      p("검수를 마친 기기부터 이 자리에 올라옵니다. 한 대라도 올라오면 "+
+        "사진 · 외관 등급 · 배터리 상태 · 기능 검수 결과 · 구성품 · 보증과 "+
+        "반품 조건이 그대로 보입니다. 없는 상품을 미리 만들어 두지 않습니다.");
+    }
+    return L.join("");
+  }
+  if(route === "/bid"){
+    h2("최고가 경쟁입찰");
+    p("전국의 인증 매입업체가 같은 기기에 견적을 냅니다. 가격과 거래 "+
+      "조건을 나란히 놓고 고르세요.");
+    ul(["기기를 등록하시면 — 기종 · 용량 · 상태를 적어 주시면 됩니다. "+
+          "가입하지 않으셔도 됩니다.",
+        "업체가 견적을 냅니다 — 참여 업체가 기기 조건을 보고 금액과 "+
+          "거래 조건을 냅니다.",
+        "나란히 놓고 고르세요 — 금액만이 아니라 검수 기준 · 정산 "+
+          "소요일까지 같이 보실 수 있습니다.",
+        "고르는 것은 사장님입니다 — 저희가 자동으로 정하지 않습니다. "+
+          "고르신 뒤에 연락처가 그 업체로 갑니다."]);
+    const nPv = (W.AM_PROVIDERS || []).length;
+    p(nPv ? ("지금 " + nPv + "곳이 참여하고 있습니다.")
+          : ("지금 입점업체를 모집하고 있습니다. 신청은 받아 두고, 참여 "+
+             "업체가 생기는 대로 견적을 모아 알려 드립니다 — 없는 업체를 "+
+             "미리 보여 드리지 않습니다."));
+    p("최고가를 보장하지 않습니다. 업체가 낸 금액을 그대로 보여 드릴 "+
+      "뿐이고, 검수 뒤 금액이 달라질 수 있습니다.");
+    return L.join("");
+  }
+  if(route === "/guide"){
+    h2("판매 절차");
+    ul((W.AM_STEPS || []).map(x => x.n + " — " + x.d));
+    h2("외관 등급 기준");
+    ul((W.AM_GRADES || []).map(g => g.name + " — " + g.lead));
+    p("등급은 겉모습을 보는 기준입니다. 최종 금액은 전원 · 액정 · 배터리 · "+
+      "카메라 · 수리 이력까지 검수한 뒤에 정해집니다.");
+    h2("보내시기 전에 해 두실 것");
+    ul(["자료를 백업해 주세요 — 받은 뒤에는 돌려 드릴 수 없습니다.",
+        "계정 잠금을 풀어 주세요 (아이폰은 나의 찾기, 갤럭시는 삼성 계정).",
+        "기기를 초기화해 주세요. 저희도 받은 뒤 한 번 더 지웁니다.",
+        "유심 · 메모리카드를 빼 주세요.",
+        "분실 · 도난 신고된 기기는 매입할 수 없습니다."]);
+    p("분실 · 도난 조회는 아직 연동하지 않았습니다. 공식 조회 서비스는 "+
+      "계약이 필요해서, 지금은 받으신 뒤 사람이 확인합니다. 신고된 기기로 "+
+      "확인되면 매입이 취소되고 기기를 돌려 드립니다.");
+    return L.join("");
+  }
+  if(route === "/sell-biz"){
     h2("매장 · 점포를 내놓으실 때 적는 것");
     ul(["거래 방식 — 매장 양도 · 임대", "업종", "지역 (시 · 군 · 구까지)",
         "평수", "보증금", "월세", "권리금 (무권리면 0)", "시설 인수비",
@@ -2847,6 +2953,63 @@ function checkSvcPage(W){
    ⚠️⚠️ 메인 05 구간과 **크롤러 본문**이 `js/data/steps.js` 한 곳을
    같이 읽습니다. 그 파일이 비거나 아이콘 이름이 틀리면 한쪽이 조용히
    빠지므로 빌드가 멈춥니다. */
+/* ══════════════════════════════════════════════════════════════════
+   기기 카탈로그 (2026-10-29 PHONEWAY)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ 모델 key 가 겹치거나 없는 제조사·종류를 가리키면 그 모델이
+   고르개에서 **조용히 빠집니다** — 에러도 안 나고 화면도 멀쩡합니다
+   (이 저장소가 업체 subs · 사진 키 · 도구 묶음에서 겪은 자리).
+   ⚠️⚠️ **매입 기준가에 출처 없는 숫자가 섞이면 멈춥니다.** 사장님이
+   그 값으로 실제 매입을 하시기 때문입니다 (절대 규칙 1). */
+function checkDevices(W){
+  const MK = new Set((W.AM_MAKERS||[]).map(x => x.key));
+  const KD = new Set((W.AM_DEVICE_KINDS||[]).map(x => x.key));
+  const GR = new Set((W.AM_GRADES||[]).map(x => x.key));
+  const L  = W.AM_MODELS || [];
+  if(!MK.size || !KD.size || !GR.size)
+    throw new Error("js/data/devices.js — 제조사 · 종류 · 등급 중 빈 것이 있습니다");
+  if(!L.length) throw new Error("js/data/devices.js 의 AM_MODELS 가 비었습니다");
+
+  const seen = new Set();
+  for(const m of L){
+    if(!/^[a-z0-9-]+$/.test(m.key||""))
+      throw new Error("기기 모델 key 는 소문자·숫자·하이픈만 — " + m.key);
+    if(seen.has(m.key)) throw new Error("기기 모델 key 가 겹칩니다 — " + m.key);
+    seen.add(m.key);
+    if(!MK.has(m.maker)) throw new Error(m.key + " 의 제조사(" + m.maker + ")가 없습니다");
+    if(!KD.has(m.kind))  throw new Error(m.key + " 의 종류(" + m.kind + ")가 없습니다");
+    if(!String(m.name||"").trim()) throw new Error(m.key + " 의 이름이 비었습니다");
+    /* ⚠️ 용량은 워치·버즈처럼 없는 기기가 있어 빈 배열이 정상입니다.
+       있으면 **숫자**라야 합니다 — 문자열이면 고르개에서 안 걸립니다. */
+    if(!Array.isArray(m.caps)) throw new Error(m.key + " 의 caps 가 배열이 아닙니다");
+    for(const c of m.caps)
+      if(typeof c !== "number" || c <= 0)
+        throw new Error(m.key + " 의 용량에 숫자가 아닌 것이 있습니다 — " + c);
+  }
+
+  /* 상태 질문 — 받아 놓고 안 읽는 칸을 만들지 않게 꼴을 봅니다 */
+  for(const q of (W.AM_COND||[])){
+    if(!/^[a-z]+$/.test(q.key||"")) throw new Error("상태 질문 key 가 이상합니다 — " + q.key);
+    if(!Array.isArray(q.opt) || q.opt.length < 2)
+      throw new Error(q.key + " 의 선택지가 둘보다 적습니다");
+  }
+
+  /* ⚠️⚠️ 매입 기준가 — 비어 있는 것이 **정상**입니다 (사장님이 정하실 값).
+     적으셨다면 모델·등급이 실제로 있는 것이라야 하고 금액은 원 단위
+     정수라야 합니다. 0 을 적으면 "0원에 삽니다" 가 되므로 막습니다. */
+  for(const r of (W.AM_BUY_PRICE||[])){
+    if(!seen.has(r.model)) throw new Error("매입 기준가가 없는 모델을 가리킵니다 — " + r.model);
+    if(!GR.has(r.grade))   throw new Error("매입 기준가가 없는 등급을 가리킵니다 — " + r.grade);
+    if(typeof r.price !== "number" || !isFinite(r.price) || r.price <= 0 || r.price % 1)
+      throw new Error(r.model + " 의 매입 기준가가 원 단위 양의 정수가 아닙니다 — " + r.price);
+    if(r.cap != null && (typeof r.cap !== "number" || r.cap <= 0))
+      throw new Error(r.model + " 의 매입 기준가 용량이 숫자가 아닙니다 — " + r.cap);
+  }
+  console.log("   기기 " + L.length + "종 · 등급 " + GR.size + " · 상태 질문 " +
+    (W.AM_COND||[]).length + " · 매입 기준가 " + (W.AM_BUY_PRICE||[]).length +
+    ((W.AM_BUY_PRICE||[]).length ? "" : "건 (⚠️ 비어 있어 직접 매입 예상가를 안 냅니다)"));
+}
+
 function checkSteps(W){
   const L = W.AM_STEPS;
   if(!Array.isArray(L) || !L.length)
@@ -4247,6 +4410,7 @@ function writeSvcList(W){
 }
 checkSvcPage(W);
 checkSteps(W);
+checkDevices(W);
 checkPackages(W);
 checkReqForms(W);
 checkProviders(W);

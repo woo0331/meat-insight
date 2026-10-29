@@ -13,9 +13,9 @@ window.nowQS = function(k){
 
 var META = {
 
-  "/":          ["사장님의 시작부터 마지막까지",
-                 "창업 · 운영 · 인수 · 양도 · 폐업에 필요한 정보와 " +
-                 "서비스를 한곳에서."],
+  "/":          ["내 폰의 가치를 찾는 새로운 방법",
+                 "직접 매입 · 전국 업체 경쟁입찰 · 검수를 마친 중고폰 구매를 " +
+                 "한곳에서. 기종과 상태를 고르시면 견적을 나란히 놓고 비교하십니다."],
   "/startup":   ["창업 — 어떤 사업을 준비하세요?",
                  "업종만 고르시면 그 업종 창업에 실제로 필요한 것만 추려 드립니다. 점포 · 상권 · 인테리어 · 장비 · 가구 · POS · 공급 · 인허가 · 마케팅까지."],
 
@@ -43,7 +43,18 @@ var META = {
                  "창업비용 · 철거비 · 원상복구 범위 · 권리금 · 사업자등록 · 폐업신고처럼 실제로 막히는 것만 정리합니다."],
   "/quote":     ["견적 요청",
                  "한 번만 적으시면 조건에 맞는 업체들에 같이 전달합니다. 받으신 제안을 한 화면에서 비교하세요."],
-  "/sell":      ["매장 · 시설 내놓기",
+
+  "/sell":      ["내 폰 팔기 — 기기 선택하고 견적 받기",
+                 "쓰시던 휴대폰 · 태블릿 · 워치를 고르고 상태를 확인하시면, 바로 매입 신청을 넣거나 전국 전문업체 견적을 비교하실 수 있습니다."],
+  "/shop":      ["중고폰 구매 — 검수를 마친 기기만",
+                 "제조사 · 모델 · 용량 · 상태 등급으로 찾습니다. 기기마다 검수 항목과 상태를 밝히고, 등록된 재고만 냅니다."],
+  "/bid":       ["최고가 경쟁입찰 — 전국 전문업체 견적 비교",
+                 "기기를 한 번 등록하시면 조건이 맞는 전문업체들이 매입가를 제출합니다. 받으신 견적을 한 화면에서 나란히 놓고 고르세요."],
+  "/track":     ["판매 진행 조회",
+                 "접수번호와 연락처로 지금 어느 단계인지 확인하실 수 있습니다. 기기 발송 · 검수 · 정산까지 진행 상황을 그대로 냅니다."],
+  "/guide":     ["이용 안내 — 판매부터 정산까지",
+                 "기기 등록 · 상태 등급 기준 · 발송 · 검수 · 정산 차례와, 검수 결과가 다를 때 어떻게 되는지까지 적어 두었습니다."],
+  "/sell-biz":  ["매장 · 시설 내놓기",
                  "정리하시는 매장과 쓰시던 시설 · 장비를 내놓으실 수 있습니다. 평수 · 보증금 · 월세 · 권리금 조건 그대로 올리고 문의를 전달합니다."],
   "/join":      ["업체 입점하기",
                  "창업과 폐업을 준비하는 사장님이 직접 찾아옵니다. 지역과 전문 분야가 맞는 요청만 받아 보세요. 기본 입점은 무료입니다."],
@@ -92,7 +103,8 @@ var META = {
                  "어떤 정보를 어떤 목적으로 얼마나 보관하는지, 업체에 연락처를 전달할 때 어떻게 다시 동의를 받는지 적어 두었습니다."]
 };
 
-var NOINDEX = ["/my","/search","/quote","/compare","/sample"];
+var NOINDEX = ["/my","/search","/quote","/compare","/sample",
+               "/track","/sell-biz"];
 
 function pvDesc(pv){
   var who = [];
@@ -168,7 +180,12 @@ window.routeInfo = function(path){
     "/support":   "support",
     "/content":   "contents",
     "/quote":     "quote",
-    "/sell":      "sell",
+    "/sell":      "phone-sell",
+    "/shop":      "phone-shop",
+    "/bid":       "phone-bid",
+    "/track":     "phone-track",
+    "/guide":     "phone-guide",
+    "/sell-biz":  "sell",
     "/sample":    "sample",
     "/join":      "join",
     "/my":        "my",
@@ -343,6 +360,10 @@ window.addEventListener("popstate", function(e){
 });
 
 function sideOf(r){
+
+  if(r.view === "phone-sell" || r.view === "phone-shop" ||
+     r.view === "phone-bid"  || r.view === "phone-track" ||
+     r.view === "phone-guide") return "pw-skin";
   if(r.view === "startup" || r.view === "startupIndustry") return "side-start";
   if(r.view === "closure" || r.view === "closureIndustry") return "side-close";
 
@@ -431,7 +452,12 @@ function render(){
     case "contents":        html = PageContents();                  break;
     case "content":         html = PageContent(r.content);          break;
     case "quote":           html = PageQuote();                     break;
-    case "sell":            html = PageSell();                      break;
+    case "phone-sell":      html = PageSell();                      break;
+    case "phone-shop":      html = PageShop();                      break;
+    case "phone-bid":       html = PageBid();                       break;
+    case "phone-track":     html = PageTrack();                     break;
+    case "phone-guide":     html = PageGuide();                     break;
+    case "sell":            html = PageSellBiz();                   break;
     case "join":            html = PageJoin();                      break;
     case "my":              html = PageMy();                        break;
     case "search":          html = PageSearch();                    break;

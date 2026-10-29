@@ -173,7 +173,7 @@ window.AM_PROCESS = {
       read:"maejang-yangdo-gyeyak", cat:"transfer" },
     { name:"매장 등록",         lead:"조건을 적어 보내 주시면 사람이 확인하고 올려 드립니다.",
       check:"연락처 · 상호 · 번지 주소는 매물에 안 나갑니다. 지역은 시 · 군 · 구까지입니다.",
-      to:"/sell", cat:"transfer" },
+      to:"/sell-biz", cat:"transfer" },
     { name:"인수 희망자 연결",  lead:"보러 오시는 분과 조건을 맞춥니다.",
       check:"보여 드릴 서류를 미리 한 벌 묶어 두세요 — 임대차계약서 · 매출 근거 · 시설 목록.",
       cat:"transfer", sub:"find-buyer" },
@@ -209,7 +209,7 @@ window.AM_PROCESS = {
       tool:"closecost" },
     { name:"판매 · 양도",       lead:"적어 보내 주시면 사람이 확인하고 올려 드립니다.",
       check:"바로 올라가지 않습니다 — 올리기 전에 한 번 연락드립니다.",
-      to:"/sell?t=asset", cat:"asset" },
+      to:"/sell-biz?t=asset", cat:"asset" },
     { name:"남은 물품 처리",    lead:"안 팔린 것과 폐기할 것을 치웁니다.",
       check:"수거 날짜를 원상복구 공사보다 앞으로 잡으세요 — 치우고 들어가야 공사가 됩니다.",
       cat:"waste", sub:"biz-waste", read:"pyegimul-jeungmyeong" }

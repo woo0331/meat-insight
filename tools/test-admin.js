@@ -95,7 +95,15 @@ function ok(name, cond, extra) {
     ok("전화 판이 열린다", await mod.count() === 1);
     ok("전화번호가 크게 보인다", (await pg.locator(".sl-big-tel").innerText()).includes("031-000-0000"));
     ok("전화 멘트가 있다", (await pg.locator("#ad-t-sl-first").inputValue()).includes("안녕하세요, 사장님"));
-    ok("멘트에 브랜드 이름이 들어간다", (await pg.locator("#ad-t-sl-first").inputValue()).includes("인수인계입니다"));
+    /* 이름을 손으로 적지 마세요 — 이 저장소에서 여섯 번 바뀌었고, 그때마다
+       이 줄이 **멀쩡한 코드를 "틀렸다" 고** 잡았습니다 (브랜드 이름은
+       js/data/brand.js 한 곳이고 멘트는 거기서 읽습니다).
+       slFirstWords 가 "플랫폼 <이름>입니다" 꼴로 적어서 뒤 두 글자까지 봅니다 —
+       받침에 따라 갈리는 조사를 손으로 적지 않는 것과 같은 까닭입니다. */
+    const slBrand = await pg.evaluate(() => (window.AM_BRAND || {}).name || "");
+    ok("멘트에 브랜드 이름이 들어간다",
+       !!slBrand && (await pg.locator("#ad-t-sl-first").inputValue()).includes(slBrand + "입니다"),
+       "brand=" + slBrand);
     ok("결과 단추가 다섯", await pg.locator(".sl-res-b").count() === 5);
 
     await pg.click(".sl-res-warm");
@@ -525,7 +533,11 @@ function ok(name, cond, extra) {
     const vendor = await pg.locator("#ad-t-vendor").inputValue();
     ok("업체 글에 성함이 안 들어간다", !vendor.includes("홍길동"));
     ok("업체 글에 연락처가 안 들어간다", !vendor.includes("1234-5678"));
-    ok("회신 글에는 브랜드 이름이 있다", (await pg.locator("#ad-t-reply").inputValue()).includes("인수인계"));
+    /* 위와 같은 까닭으로 이름을 데이터에서 읽습니다 (adBrand() 가 그 값입니다). */
+    const rpBrand = await pg.evaluate(() => (window.AM_BRAND || {}).name || "");
+    ok("회신 글에는 브랜드 이름이 있다",
+       !!rpBrand && (await pg.locator("#ad-t-reply").inputValue()).includes(rpBrand),
+       "brand=" + rpBrand);
 
     /* 6번 — 초대 글 (sales.js 가 같은 함수를 씁니다) */
     await pg.selectOption("#ad-icat", "demolish");

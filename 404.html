@@ -18,7 +18,7 @@
      check.js 의 "404 가 본 사이트와 같은 색을 쓴다" 가 잡습니다. */
   :root{
     color-scheme: only light;   /* ⚠️ 자동 다크모드 반전 끄기 — css/tokens.css 와 같은 줄입니다 */
-    --navy:#382820; --navy-dark:#30241E; --bg:#FFFCF7; --surface:#fff;
+    --navy:#102C4A; --navy-dark:#0B1F36; --bg:#F5F7FA; --surface:#fff;
     /* ⚠️ 이 화면은 라우터 밖이라 `css/tokens.css` 를 **안 읽습니다** —
        색을 바꾸면 여기도 같이 고쳐야 합니다. 2026-10-01 에 글자 세 단계를
        읽히는 값으로 내리면서 여기만 옛 값(--ink3 #7B8794, 대비 3.66)이
@@ -27,8 +27,12 @@
        브라운으로 통째로 바뀌었는데 여기만 **옛 블루**(--navy #123B68 ·
        --ink #102F50)로 남아 있어서, 404 화면 하나만 다른 사이트로
        보였습니다. 토큰을 고치실 때는 **여기 · manifest.json ·
-       index.html 의 theme-color** 를 같이 보세요. */
-    --ink:#29231F; --ink2:#4A4038; --ink3:#65594F; --line:#E9DED1;
+       index.html 의 theme-color** 를 같이 보세요.
+       ⚠️⚠️ **2026-10-29 PHONEWAY 전환에서 또 그랬습니다** (세 번째) —
+       머리 · 꼬리가 딥 네이비가 됐는데 여기만 **베이지 · 브라운**으로
+       남아 있었습니다. 지금 값은 `css/tokens.css` 의 `--pw-*` 를 베낀
+       것입니다 (navy #102C4A · bg #F5F7FA · ink #121A24 · line #E3E8EF). */
+    --ink:#121A24; --ink2:#48566A; --ink3:#66748A; --line:#E3E8EF;
     --font:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,
            "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
   }

@@ -6883,7 +6883,18 @@ html.ivh #view .pwh h1{ margin:20px 0 0; font-size:clamp(34px,4.6vw,56px);
   border-radius:12px; padding:16px 20px; font-size:14px; color:#13395F; line-height:1.65; }
 
 /* ─── 06 하단 CTA ─── */
-.pwc{ background:var(--pw-navy); color:#fff; position:relative; overflow:hidden; }
+/* ⚠️⚠️ **푸터와 같은 네이비로 두지 마세요.** `--pw-navy` 로 두었더니
+   바로 아래 푸터와 **ΔE 0.00** 이라 페이지 끝이 한 덩이로 읽혔습니다 —
+   전수 점검의 "이웃한 두 구간이 붙어 보임" 이 네 폭에서 잡았습니다
+   (푸터를 아이보리2 로 밝혔다가 본문에 녹았던 그 자리이고, 구간끼리만
+   견주면 안 걸립니다 — **마지막 구간과 푸터도** 봐야 합니다).
+   ⚠️ 푸터는 167개 화면이 같이 쓰는 것이라 거기를 손대지 않고, 메인에만
+   있는 이 구간을 팔레트에 이미 있는 밝은 네이비로 옮겼습니다 —
+   재 본 값: 푸터와 ΔE 8.89 · 흰 글자 10.96 · `--pw-on-navy2` 7.44 ·
+   `--pw-on-navy3` 5.15 (넷 다 AA 를 넘깁니다).
+   ⚠️ 마지막 CTA 가 **더 밝은** 쪽인 것이 맞습니다 — 행동하는 자리가
+   앞에 서고 푸터가 물러납니다. */
+.pwc{ background:var(--pw-navy-2); color:#fff; position:relative; overflow:hidden; }
 .pwc::before{ content:""; position:absolute; inset:0;
   background:radial-gradient(760px 420px at 76% 30%, rgba(22,115,234,.3), transparent 64%); }
 .pwc-in{ position:relative; display:flex; align-items:center; justify-content:space-between;
@@ -6920,3 +6931,256 @@ html.ivh #view .pwc h2{ font-size:clamp(24px,2.7vw,34px); font-weight:800; color
   .pwc-go .btn{ width:100%; }
 }
 @media (max-width:380px){ .pws-g{ grid-template-columns:1fr; } }
+
+/* ══════════════════════════════════════════════════════════════════
+   PHONEWAY 화면 다섯 — /sell /shop /bid /track /guide (2026-10-29)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **이 블록은 맨 뒤라야 합니다.** 위쪽 블록들이 `.sec` ·
+   `.chip` · `input` 꼴을 이미 잡고 있어서, 특정도가 같은 선언은
+   **뒤에 오는 쪽이 이깁니다** (이 저장소가 `.sec-hd p` ↔ `.eyebrow` ·
+   `.f-r label` ↔ `.rqf-k` · `.ft a` ↔ `.ft-col a` · `.bpass h2` 로
+   **여섯 번** 겪은 자리).
+
+   ⚠️ 속화면이라 `html.ivh` 를 **안 씁니다** — 거기는 메인 전용
+   표시이고, 빌드가 하위 화면에서 떼어 냅니다.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── 걸음 표시 (01 → 02 → 03) ─────────────────────────────────── */
+.pwf-st{ display:flex; gap:8px; list-style:none; margin:0 0 26px;
+  padding:0; flex-wrap:wrap; }
+.pwf-st > li{ display:flex; align-items:center; gap:8px;
+  min-height:40px; padding:0 14px; border-radius:999px;
+  border:1px solid var(--pw-line); background:var(--pw-white);
+  font-size:14px; font-weight:700; color:var(--pw-ink3); }
+.pwf-st > li b{ display:grid; place-items:center; width:22px; height:22px;
+  border-radius:50%; background:var(--pw-gray); color:var(--pw-ink3);
+  font-size:12px; }
+.pwf-st > li.on{ border-color:var(--pw-blue); color:var(--pw-blue-700);
+  background:var(--pw-blue-50); }
+.pwf-st > li.on b{ background:var(--pw-blue); color:#fff; }
+.pwf-st > li.done{ border-color:var(--pw-ok); color:var(--pw-ok-600);
+  background:var(--pw-ok-50); }
+.pwf-st > li.done b{ background:var(--pw-ok); color:#fff; }
+
+/* ── 한 걸음 상자 ───────────────────────────────────────────────── */
+.pwf-s, .pwf-fm{ border:1px solid var(--pw-line); border-radius:var(--pw-r2);
+  background:var(--pw-white); padding:26px 24px; margin:0 0 18px;
+  box-shadow:var(--pw-sh); }
+.pwf-h{ display:flex; align-items:center; gap:10px; margin:0 0 20px;
+  font-size:20px; font-weight:800; color:var(--pw-ink); }
+.pwf-h b{ display:grid; place-items:center; width:30px; height:30px;
+  flex:none; border-radius:9px; background:var(--pw-navy); color:#fff;
+  font-size:13px; }
+.pwf-h2{ margin:0 0 18px; font-size:20px; font-weight:800;
+  color:var(--pw-ink); }
+
+/* ── 한 줄 (딱지 + 고르개) ──────────────────────────────────────
+   ⚠️ 940px 위에서만 두 칸입니다. 그 아래에서 딱지를 옆에 두면
+   고르개 칸이 좁아져 **딱지가 낱말 가운데서 잘립니다** (`<select>`
+   안은 낱말 잘림 검사에도 가로 스크롤 검사에도 안 걸립니다 — 이
+   저장소가 네 번 겪은 자리). */
+.pwf-r{ margin:0 0 16px; }
+.pwf-r:last-child{ margin-bottom:0; }
+.pwf-l{ display:block; margin:0 0 7px; font-size:14px; font-weight:700;
+  color:var(--pw-ink2); }
+.pwf-r .sel, .pwf-r input{ width:100%; }
+@media (min-width:940px){
+  .pwf-r{ display:grid; grid-template-columns:132px minmax(0,1fr);
+    gap:14px; align-items:center; }
+  .pwf-l{ margin:0; }
+}
+
+/* ── 외관 등급 고르개 ───────────────────────────────────────────── */
+.pwf-gr{ display:flex; gap:8px; flex-wrap:wrap; }
+.pwf-g{ display:flex; flex-direction:column; gap:2px; min-height:48px;
+  padding:9px 14px; border-radius:12px; border:1px solid var(--pw-line);
+  background:var(--pw-white); text-decoration:none; }
+.pwf-g b{ font-size:14px; font-weight:800; color:var(--pw-ink); }
+.pwf-g span{ font-size:12.5px; color:var(--pw-ink3); }
+.pwf-g:hover{ border-color:var(--pw-blue-300); }
+.pwf-g.on{ border-color:var(--pw-blue); background:var(--pw-blue-50);
+  box-shadow:inset 0 0 0 1px var(--pw-blue); }
+.pwf-g.on b{ color:var(--pw-blue-700); }
+.pwf-q{ margin:20px 0 0; padding:18px 0 0;
+  border-top:1px solid var(--pw-line); }
+
+/* ── 판매 방법 두 칸 ────────────────────────────────────────────── */
+.pwf-sum{ margin:0 0 18px; padding:12px 16px; border-radius:12px;
+  background:var(--pw-gray); font-size:15px; font-weight:700;
+  color:var(--pw-ink); }
+.pwf-of{ display:grid; gap:14px; }
+@media (min-width:860px){ .pwf-of{ grid-template-columns:1fr 1fr; } }
+.pwf-o{ display:flex; flex-direction:column; gap:10px;
+  border:1px solid var(--pw-line); border-radius:16px;
+  background:var(--pw-white); padding:20px 18px; }
+.pwf-o.b{ border-color:var(--pw-blue-100); background:var(--pw-blue-50); }
+.pwf-o-k{ font-size:12px; font-weight:800; letter-spacing:.04em;
+  color:var(--pw-blue-700); }
+.pwf-o.b .pwf-o-k{ color:var(--pw-navy); }
+.pwf-o-p{ font-size:26px; font-weight:800; color:var(--pw-ink);
+  line-height:1.15; }
+.pwf-o-n{ margin:0; font-size:13.5px; line-height:1.65;
+  color:var(--pw-ink2); }
+/* ⚠️ 단추를 칸 바닥에 맞춥니다 — 글 길이가 달라 높이가 어긋나면
+   같은 단추가 서로 다른 것으로 읽힙니다 */
+.pwf-o .btn{ margin-top:auto; }
+
+/* ── 작은 안내줄 · 성공 · 모자란 것 ───────────────────────────── */
+.pwf-n{ margin:12px 0 0; font-size:13px; line-height:1.7;
+  color:var(--pw-ink3); }
+.pwf-ok{ border:1px solid var(--pw-ok); border-radius:14px;
+  background:var(--pw-ok-50); padding:20px 18px; }
+.pwf-ok b{ display:block; margin:0 0 8px; font-size:17px;
+  color:var(--pw-ok-600); }
+.pwf-ok p{ margin:0; font-size:14px; line-height:1.75;
+  color:var(--pw-ink2); }
+
+/* ── 번호 붙은 절차 (/bid · /guide) ───────────────────────────── */
+.pwb-g{ display:grid; gap:14px; list-style:none; margin:0 0 24px;
+  padding:0; counter-reset:none; }
+@media (min-width:900px){ .pwb-g{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.pwb-g > li{ border:1px solid var(--pw-line); border-radius:16px;
+  background:var(--pw-white); padding:20px 18px; }
+.pwb-n{ display:grid; place-items:center; width:30px; height:30px;
+  margin:0 0 10px; border-radius:9px; background:var(--pw-navy);
+  color:#fff; font-size:13px; font-weight:800; }
+.pwb-g > li b{ display:block; margin:0 0 5px; font-size:16px;
+  font-weight:800; color:var(--pw-ink); }
+.pwb-g > li p{ margin:0; font-size:14px; line-height:1.7;
+  color:var(--pw-ink2); }
+.pwb-go{ display:flex; gap:10px; flex-wrap:wrap; margin:22px 0 0; }
+
+/* ── /guide 등급표 · 체크 ──────────────────────────────────────── */
+.pwg-gr, .pwg-ck{ display:grid; gap:10px; list-style:none; margin:0;
+  padding:0; }
+@media (min-width:900px){ .pwg-gr{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.pwg-gr > li{ display:grid; grid-template-columns:70px minmax(0,1fr);
+  gap:12px; align-items:baseline; padding:14px 16px; border-radius:12px;
+  background:var(--pw-white); border:1px solid var(--pw-line); }
+.pwg-gr > li b{ font-size:15px; font-weight:800; color:var(--pw-blue-700); }
+.pwg-gr > li span{ font-size:14px; line-height:1.6; color:var(--pw-ink2); }
+.pwg-ck > li{ position:relative; padding:12px 16px 12px 42px;
+  border-radius:12px; background:var(--pw-gray); font-size:14.5px;
+  line-height:1.65; color:var(--pw-ink2); }
+.pwg-ck > li::before{ content:""; position:absolute; left:16px; top:17px;
+  width:14px; height:8px; border-left:2.4px solid var(--pw-ok);
+  border-bottom:2.4px solid var(--pw-ok); transform:rotate(-45deg); }
+
+/* ── /shop 0건 ─────────────────────────────────────────────────── */
+.pws-e{ border:1px dashed var(--pw-line); border-radius:var(--pw-r2);
+  background:var(--pw-gray); padding:34px 24px; text-align:center; }
+.pws-e > b{ display:block; margin:0 0 10px; font-size:19px;
+  font-weight:800; color:var(--pw-ink); }
+.pws-e > p{ margin:0 0 20px; font-size:14.5px; line-height:1.8;
+  color:var(--pw-ink2); }
+
+@media (max-width:420px){
+  .pwf-s, .pwf-fm{ padding:22px 16px; border-radius:16px; }
+  .pwf-h{ font-size:18px; }
+  .pwf-h2{ font-size:18px; }
+  .pwf-o-p{ font-size:23px; }
+  .pwg-gr > li{ grid-template-columns:1fr; gap:4px; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   히어로를 **밝은 쪽으로** 돌립니다 (2026-10-29 · 재서 고침)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **재 보니 어두운 구간이 23.3%(1440px) · 21.0%(390px)** 였습니다.
+   PHONEWAY 지시서 §2 가 배경을 **화이트 #FFFFFF · 라이트 그레이
+   #F5F7FA** 로 정했고, 이 저장소는 어두운 면을 **15%** 로 못박아
+   두었습니다 — 짙은 네이비 히어로 하나가 둘을 같이 넘겼습니다.
+
+   딥 네이비(#102C4A)를 버린 것이 아닙니다 — **제목 · 머리말 알약 ·
+   일러스트 선**으로 남고, 머리와 꼬리는 그대로 짙습니다. 짙은 면은
+   **하단 CTA(.pwc) 한 장**까지입니다 (이 저장소가 `.mjn-c` 한 장으로
+   두어 온 그 규칙 그대로).
+
+   ⚠️⚠️ **이 블록은 맨 뒤라야 합니다** — 위 `.pwh` 선언들과 특정도가
+   같아서 뒤에 오는 쪽이 이깁니다 (이 저장소가 여섯 번 겪은 자리).
+   ⚠️ 되돌리시려면 **이 블록만 지우면** 짙은 히어로로 돌아갑니다.
+   ⚠️ 글자 대비를 다시 쟀습니다 — 제목 14.1 · 서브 5.98 · 머리말
+   알약 6.23 · 체크 줄 11.2 (전부 AA 4.5 위).
+   ══════════════════════════════════════════════════════════════════ */
+.pwh{ background:var(--pw-gray); color:var(--pw-ink2); }
+.pwh::before{
+  background:
+    radial-gradient(900px 520px at 72% 10%, rgba(22,115,234,.10), transparent 64%),
+    radial-gradient(640px 420px at 6% 94%, rgba(22,160,133,.07), transparent 68%),
+    linear-gradient(165deg, #FFFFFF 0%, var(--pw-gray) 58%, #EDF2F8 100%); }
+.pwh-k{ color:var(--pw-blue-700); background:var(--pw-blue-50);
+  border-color:var(--pw-blue-100); }
+html.ivh #view .pwh h1{ color:var(--pw-navy); }
+.pwh h1 em{ color:var(--pw-blue-600); }
+.pwh-sub{ color:var(--pw-ink2); }
+.pwh-ch li{ background:#fff; border-color:var(--pw-line);
+  box-shadow:0 1px 3px rgba(16,44,74,.05); }
+.pwh-ch i{ background:var(--pw-blue-50); color:var(--pw-blue-600); }
+.pwh-ch b{ color:var(--pw-ink); }
+.pwh-ch span > span{ color:var(--pw-ink3); }
+/* ⚠️ 손글씨 한 줄 — 밝은 바탕에서는 흐린 파랑이 안 읽힙니다 */
+.pwh-hand{ color:var(--pw-blue-700); }
+
+/* ════════════════════════════════════════════════════════════════════
+   PHONEWAY 속화면 다섯 — `#view.pw-skin` (2026-10-29)
+
+   `/sell` · `/shop` · `/bid` · `/track` · `/guide` 안에서만 공통 UI
+   토큰을 네이비 · 블루로 다시 정의합니다. `js/app.js` 의 `sideOf()`
+   가 그 다섯에만 클래스를 붙입니다.
+
+   ⚠️⚠️ **토큰을 전역으로 갈지 않았습니다.** `--blue` · `--navy` ·
+   `--bg*` 는 창업 · 폐업 157개 화면이 **같이 읽는** 값이고, 그
+   157개를 어떻게 할지는 전환 계획 0단계 ① 로 사장님이 정하실
+   일입니다 — 지금 전역으로 갈면 그 157개가 같이 바뀌고 되돌릴 수가
+   없습니다. `.side-start` · `.side-close` 와 **똑같은 방식**입니다.
+   ⚠️ 되돌리시려면 **이 블록과 `sideOf()` 의 그 한 줄**입니다.
+
+   ⚠️⚠️ **`--blue`(#1673EA)를 글자로 쓰지 마세요** — 밝은 바탕 넷에서
+   최저 **4.05** 로 AA(4.5) 미달입니다. 글자는 `--blue-600`(5.31),
+   흰 글자를 얹는 면은 `--blue-600`(5.89) 또는 `--navy`(14.18).
+   ⚠️⚠️ **`--ink3` 를 그대로 두지 마세요** — PHONEWAY 의 #66748A 는
+   옅은 블루 틴트 위에서 **3.75** 입니다. 여기서는 #546272(최저 4.93).
+   ⚠️ 재 본 값 (흰 · 그레이 · 블루50 · 그린50 · 블루100 다섯에서 최저)
+   — ink 15.80 · ink2 6.73 · ink3 4.93 · navy 12.79 · blue-600 5.31.
+   ⚠️ 구간 바탕끼리 ΔE 3.30 이상입니다 (흰 ↔ 그레이가 제일 가깝습니다).
+   ════════════════════════════════════════════════════════════════════ */
+#view.pw-skin{
+  /* 행동색 다섯 — 아이콘 타일 · 칩 · 단추 · 머리말 · 포커스가 따라옵니다 */
+  --blue:      var(--pw-blue);
+  --blue-600:  var(--pw-blue-600);
+  --blue-400:  var(--pw-blue-300);
+  --blue-50:   var(--pw-blue-50);
+  --blue-100:  var(--pw-blue-100);
+  /* 제목 · 기본 단추 */
+  --navy:      var(--pw-navy);
+  --navy-dark: var(--pw-navy-3);
+  --navy-2:    var(--pw-navy-2);
+  --navy-soft: var(--pw-blue-50);
+  /* 바탕 · 선 */
+  --bg:        var(--pw-gray);
+  --bg-2:      var(--pw-gray);
+  --surface:   var(--pw-white);
+  --line:      var(--pw-line);
+  --line-soft: #EEF2F7;
+  --bg-white:  var(--pw-white);
+  --bg-cream:  var(--pw-white);
+  --bg-ivory2: var(--pw-blue-50);
+  --bg-gray:   var(--pw-gray);
+  --bg-sky:    var(--pw-blue-50);
+  --bg-mint:   var(--pw-ok-50);
+  --bg-sand:   var(--pw-blue-100);
+  /* 글자 — ⚠️ ink3 만 따로입니다 (위 까닭) */
+  --ink:       var(--pw-ink);
+  --ink2:      var(--pw-ink2);
+  --ink3:      #546272;
+  /* 머리 사진 띠의 틴트 채널 — ⚠️ rgba() 안에는 var() 를 통째로 못
+     넣어서 채널만 토큰처럼 들고 있습니다. `--pw-blue` 와 같이 가세요. */
+  --pgh-tint:  22,115,234;
+}
+/* 구간 바탕 — `.sec-white` 가 아이보리를 들고 있어서 그대로 두면
+   흰 구간이 **크림**으로 섭니다. 여기서는 진짜 흰색입니다. */
+#view.pw-skin .sec-white{ background:var(--pw-white); }
+#view.pw-skin .sec-gray,
+#view.pw-skin .sec-ivory{ background:var(--pw-gray); }
+/* 머리 — `.pgh` 는 쪽마다 그라디언트가 다릅니다 (위 `--pgh-tint`) */
+#view.pw-skin .pgh{ background:
+  linear-gradient(180deg, var(--pw-white) 0%, var(--pw-gray) 100%); }

@@ -19,7 +19,7 @@ function PageStores(){
     h1raw:"자리부터 정합니다.",
     lead:"지역 · 업종 · 평수 · 보증금 · 월세 · 권리금 · 영업기간으로 찾습니다. 시설을 그대로 인수할 수 있는 매장만 따로 보실 수도 있습니다.",
     tight:true,
-    cta:'<a class="btn btn-o btn-lg" href="/sell">내 매장 내놓기'+icon("arrow",18)+'</a>'
+    cta:'<a class="btn btn-o btn-lg" href="/sell-biz">내 매장 내놓기'+icon("arrow",18)+'</a>'
   })+
   '<section class="sec sec-white"><div class="w">'+
 
@@ -50,7 +50,7 @@ function PageStores(){
           readTitle:"자리를 보러 가시기 전에",
           cta:'<a class="btn btn-b" href="'+esc(quoteTo({side:"start",industry:ind,region:reg}))+'">'+
               '찾는 조건 남기기'+icon("arrow",16)+'</a>'+
-              '<a class="btn btn-o" href="/sell">내 매장 내놓기</a>'
+              '<a class="btn btn-o" href="/sell-biz">내 매장 내놓기</a>'
         }))+
   '</div></section>'+
   BridgeNote()+
@@ -97,7 +97,7 @@ function PageAssets(){
     h1raw:"한 사장님의 끝이<br class=\"br-m\"> <em>다른 사장님의 시작</em>이 됩니다.",
     lead:"정리하시는 사장님이 내놓은 주방장비 · 커피머신 · 가구 · POS · 운동기구 · 미용기기와 남은 재고입니다. 개별로도, 일괄로도, 시설 전체 인수로도 거래하실 수 있습니다.",
     tight:true,
-    cta:'<a class="btn btn-o btn-lg" href="/sell?t=asset">내 시설 내놓기'+icon("arrow",18)+'</a>'
+    cta:'<a class="btn btn-o btn-lg" href="/sell-biz?t=asset">내 시설 내놓기'+icon("arrow",18)+'</a>'
   })+
   '<section class="sec sec-white"><div class="w">'+
     (indObj && indObj.equip.length ? '<ul class="chip-g chip-g-fil">'+
@@ -137,7 +137,7 @@ function PageAssets(){
                "찾으시는 것이 있으면 조건을 남겨 두시면 올라오는 대로 알려 드립니다.",
           reads: amContentsFor({ cat:"asset", side:"close", industry:ind, limit:3 }),
           readTitle:"장비를 사고 넘기기 전에",
-          cta:'<a class="btn btn-b" href="/sell?t=asset">내 시설 내놓기'+icon("arrow",16)+'</a>'+
+          cta:'<a class="btn btn-b" href="/sell-biz?t=asset">내 시설 내놓기'+icon("arrow",16)+'</a>'+
               '<a class="btn btn-o" href="'+esc(quoteTo({side:"start",industry:ind,region:reg}))+'">'+
               '찾는 조건 남기기</a>'
         }))+
@@ -388,12 +388,12 @@ var SELL_TABS = [
 function sellTabs(t){
   return '<nav class="chip-g chip-g-fil" aria-label="무엇을 내놓으시나요">'+
     SELL_TABS.map(function(x){
-      return '<a class="chip'+(x.k === t ? " on" : "")+'" href="/sell?t='+x.k+'">'+
+      return '<a class="chip'+(x.k === t ? " on" : "")+'" href="/sell-biz?t='+x.k+'">'+
         esc(x.name)+'</a>'; }).join("")+
   '</nav>';
 }
 
-function PageSell(){
+function PageSellBiz(){
   var t = nowQS("t") === "asset" ? "asset" : "store";
   var ind = nowQS("i"), reg = nowQS("r");
   var ready = !!(window.WOW_BIZ && WOW_BIZ.sosReady);

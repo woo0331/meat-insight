@@ -1838,7 +1838,9 @@ function PwHero(){
       }).join("") +'</ul>'+
       '<div class="pwh-go">'+
         '<a class="btn btn-pw" href="/sell">내 폰 팔기 '+ pwArrow() +'</a>'+
-        '<a class="btn btn-pw-gh" href="/shop">중고폰 구매하기</a>'+
+        /* ⚠️ 히어로가 **밝은 바탕**이 되면서 유령 단추(.btn-pw-gh · 흰 글자)는
+           거기서 흰 바탕에 흰 글자가 됩니다 — 테두리 단추입니다 */
+        '<a class="btn btn-pw-o" href="/shop">중고폰 구매하기</a>'+
       '</div>'+
     '</div>'+
     '<div class="pwh-art">'+
@@ -1895,36 +1897,50 @@ function pwHeroArt(){
       보여 드리지 않습니다 (절대 규칙 1).
    ⚠️ ②의 숫자는 **그 자리에서 세는 값**이라 업체를 등록하시면 저절로
       바뀝니다 — 손으로 "모집 중" 을 적어 두면 등록 뒤에도 남습니다. */
+/* ⚠️⚠️ **두 방법은 `PW_WAYS` 한 곳입니다.** 전에 `PwWays()` 안에
+   손으로 두 번 적어 두었는데, 그러면 `check.js` 가 번호를 **자기도
+   손으로 적어** 견주게 됩니다 — 카드를 늘릴 때 한쪽만 바뀌고 그 검사가
+   조용히 어긋납니다 (이 저장소가 흐름 검사 개수 · 감사 기록 갯수로
+   두 번 겪은 자리).
+   ⚠️ `note` 는 **함수**입니다 — 업체 수를 그릴 때마다 세기 때문에,
+   등록하시면 코드를 한 줄도 안 고치고 바뀝니다. 값으로 두면 "모집 중"
+   이 등록 뒤에도 남습니다. */
+var PW_WAYS = [
+  { no:"01", kind:"a", to:"/sell", cta:"바로 판매하기",
+    ic:'<rect x="2.5" y="6" width="19" height="13" rx="2.6"/>'+
+       '<path d="M2.5 10.5h19M6.5 15h3"/>',
+    /* ⚠️ 영문 브랜드를 화면 이름처럼 쓰지 않습니다 — 손님에게 먼저
+       보이는 이름은 하나입니다 (`amBrand()` 가 읽습니다). */
+    h:function(){ return (window.amBrand ? amBrand() : "") + " 직접 매입"; },
+    lead:"저희가 직접 삽니다. 한 번만 등록하시면 예상 매입가를 바로 "+
+         "확인하실 수 있습니다.",
+    li:["빠르고 간편한 판매","검수 기준을 미리 공개","최종 금액에 동의한 뒤 정산"],
+    note:function(){
+      return '⚠️ 등록 화면에 적으신 상태를 기준으로 한 <b>예상 금액</b>입니다. '+
+             '기기를 받아 검수한 뒤 최종 금액을 다시 안내드리고, 동의하신 '+
+             '뒤에 정산합니다.'; } },
+  { no:"02", kind:"b", to:"/bid", cta:"견적 비교 신청하기",
+    ic:'<path d="m13 3.5 7.5 7.5M9.5 7 17 14.5M4.5 21h8M7.5 17.5 3 13l9.5-9.5L17 8l-9.5 9.5Z"/>',
+    h:function(){ return "전국 업체 경쟁입찰"; },
+    lead:"전국의 인증 매입업체가 견적을 냅니다. 가격만이 아니라 거래 "+
+         "조건까지 나란히 놓고 고르세요.",
+    li:["여러 업체 견적 비교","검수 기준 · 정산 소요일 비교","고르는 것은 사장님입니다"],
+    note:function(){
+      var n = (window.AM_PROVIDERS || []).length;
+      return n ? ('지금 <b>'+ n +'곳</b>이 참여하고 있습니다. 견적은 신청하신 '+
+                  '기기의 조건을 보고 업체가 직접 냅니다.')
+               : ('⚠️ <b>지금 입점업체를 모집하고 있습니다.</b> 참여 업체가 '+
+                  '생기면 이 자리에 실제 견적이 나란히 섭니다 — 없는 업체를 '+
+                  '미리 보여 드리지 않습니다.'); } }
+];
 function PwWays(){
-  var n = (window.AM_PROVIDERS || []).length;
   return '<section class="pww"><div class="w">'+
     '<div class="pw-hd">'+
       '<span class="pw-ey">HOW TO SELL</span>'+
       '<h2>휴대폰을 판매하는 두 가지 방법</h2>'+
       '<p>원하는 방식으로 더 높은 가치를 받아보세요.</p>'+
     '</div>'+
-    '<div class="pww-g">'+
-      pwWayCard({
-        no:"01", kind:"a", to:"/sell", cta:"바로 판매하기",
-        ic:'<rect x="2.5" y="6" width="19" height="13" rx="2.6"/><path d="M2.5 10.5h19M6.5 15h3"/>',
-        h:"PHONEWAY 직접 매입",
-        lead:"폰웨이가 직접 삽니다. 한 번만 등록하면 예상 매입가를 바로 확인할 수 있습니다.",
-        li:["빠르고 간편한 판매","검수 기준을 미리 공개","최종 금액에 동의한 뒤 정산"],
-        note:'⚠️ 등록 화면에 적으신 상태를 기준으로 한 <b>예상 금액</b>입니다. '+
-             '기기를 받아 검수한 뒤 최종 금액을 다시 안내드리고, 동의하신 뒤에 정산합니다.'
-      })+
-      pwWayCard({
-        no:"02", kind:"b", to:"/bid", cta:"견적 비교 신청하기",
-        ic:'<path d="m13 3.5 7.5 7.5M9.5 7 17 14.5M4.5 21h8M7.5 17.5 3 13l9.5-9.5L17 8l-9.5 9.5Z"/>',
-        h:"전국 업체 경쟁입찰",
-        lead:"전국의 인증 매입업체가 견적을 냅니다. 가격만이 아니라 거래 조건까지 나란히 놓고 고르세요.",
-        li:["여러 업체 견적 비교","검수 기준 · 정산 소요일 비교","고르는 것은 사장님입니다"],
-        note: n ? ('지금 <b>'+ n +'곳</b>이 참여하고 있습니다. 견적은 신청하신 기기의 '+
-                   '조건을 보고 업체가 직접 냅니다.')
-                : ('⚠️ <b>지금 입점업체를 모집하고 있습니다.</b> 참여 업체가 생기면 이 '+
-                   '자리에 실제 견적이 나란히 섭니다 — 없는 업체를 미리 보여 드리지 않습니다.')
-      })+
-    '</div>'+
+    '<div class="pww-g">'+ PW_WAYS.map(pwWayCard).join("") +'</div>'+
   '</div></section>';
 }
 function pwWayCard(o){
@@ -1933,13 +1949,13 @@ function pwWayCard(o){
     '<div class="pww-ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" '+
       'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" '+
       'stroke-linejoin="round" aria-hidden="true">'+ o.ic +'</svg></div>'+
-    '<h3>'+ esc(o.h) +'</h3>'+
+    '<h3>'+ esc(typeof o.h === "function" ? o.h() : o.h) +'</h3>'+
     '<p class="pww-l">'+ esc(o.lead) +'</p>'+
     '<ul>'+ o.li.map(function(t){
       return '<li>'+ pwTick() + esc(t) +'</li>'; }).join("") +'</ul>'+
     '<a class="btn '+ (o.kind==="b" ? "btn-pw-o" : "btn-pw") +'" href="'+ esc(o.to) +'">'+
       esc(o.cta) +'</a>'+
-    '<p class="pww-n">'+ o.note +'</p>'+
+    '<p class="pww-n">'+ (typeof o.note === "function" ? o.note() : o.note) +'</p>'+
   '</article>';
 }
 
@@ -1984,29 +2000,22 @@ function PwShop(){
 /* ─── 04 이용 방법 다섯 ───────────────────────────────────────────
    ⚠️ ⑤ 의 "동의하신 뒤에 보냅니다" 를 지우지 마세요 — 검수 뒤 금액이
    달라질 수 있다는 것을 거래 전에 밝히는 자리입니다. */
-var PW_STEPS = [
-  ["휴대폰 정보 등록", "기종 · 용량 · 상태 · 사진",
-   '<rect x="6" y="2.5" width="12" height="19" rx="2.8"/><path d="m9.5 12 2 2 3.5-4"/>'],
-  ["견적 확인", "직접 매입가 · 업체 입찰",
-   '<path d="M4 19V9m5 10V5m5 14v-7m5 7V8"/>'],
-  ["판매 방식 선택", "직접 매입 또는 업체 선택",
-   '<path d="M20.5 6 9.5 17 4 11.5"/>'],
-  ["기기 수거 · 검수", "진행 상황을 화면에서 확인",
-   '<path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5v-7Z"/><path d="m3 8.5 9 4.5 9-4.5M12 13v7"/>'],
-  ["금액 동의 · 정산", "동의하신 뒤에 보냅니다",
-   '<rect x="2.5" y="5.5" width="19" height="13" rx="2.6"/><path d="M2.5 10h19"/>']
-];
+/* ⚠️⚠️ **걸음 다섯은 `js/data/steps.js` 한 곳입니다.** 전에 여기
+   `var PW_STEPS` 로 적어 두었는데, `build-pages.js` 는 `js/pages/*` 를
+   **읽지 않습니다** — 크롤러 본문에서 그 값이 `undefined` 라 구간이
+   에러 없이 조용히 빠집니다. `/guide` 의 판매 절차도 같은 값을
+   읽습니다 (한 곳을 고치면 셋이 같이 따라옵니다). */
 function PwSteps(){
   return '<section class="pwst"><div class="w">'+
     '<div class="pw-hd"><span class="pw-ey">HOW IT WORKS</span>'+
       '<h2>'+ esc(window.amBrand ? amBrand() : "") +' 이용 방법</h2>'+
       '<p>등록부터 정산까지 다섯 걸음입니다.</p></div>'+
-    '<ol class="pwst-g">'+ PW_STEPS.map(function(s,i){
+    '<ol class="pwst-g">'+ (window.AM_STEPS||[]).map(function(s,i){
       return '<li class="pwst-c"><span class="pwst-n">'+ (i+1) +'</span>'+
         '<i><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
           'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
-          s[2] +'</svg></i>'+
-        '<b>'+ esc(s[0]) +'</b><p>'+ esc(s[1]) +'</p></li>';
+          (s.art||'') +'</svg></i>'+
+        '<b>'+ esc(s.n) +'</b><p>'+ esc(s.d) +'</p></li>';
     }).join("") +'</ol>'+
   '</div></section>';
 }

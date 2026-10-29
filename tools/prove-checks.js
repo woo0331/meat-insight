@@ -518,7 +518,10 @@ const CASES = [
       칸이 없어졌습니다. 지어낸 수를 박는 자리를 카드의 한 줄로
       옮깁니다 — 없는 요소를 집으면 되돌리기가 터져 "검사가 안
       잡는다" 로 보입니다 (이 저장소에서 열두 번 겪은 자리). */
-   `document.querySelector(".bent-tx > em").textContent = "입점 업체 1,200곳";`],
+   /* ⚠️⚠️ 2026-10-29 PHONEWAY — 카드 한 줄이 .pww-l 입니다. .bent-tx 는
+      메인에 **없으므로** 그걸 집으면 되돌리기가 터지고 "검사가 안
+      잡는다" 로 보입니다 (이 저장소에서 열세 번 겪은 자리). */
+   `document.querySelector(".pww-l").textContent = "누적 거래 32,581건";`],
   /* ⚠️⚠️ **2026-10-13 §5 — 히어로에는 h1 이 없습니다.** 전에는 h1
      글자를 바꿔 되돌렸는데, 지금 검사가 보는 것은 **두 판의 크기 ·
      무게**입니다 (한쪽을 좁히면 그게 "덜 중요한 것" 이라는 말입니다).
@@ -536,8 +539,14 @@ const CASES = [
      (사장님이 실제로 걸린 자리입니다).
      ⚠️ .bhero 는 메인에 **없으므로** 그걸 집으면 되돌리기가 터집니다
      (이 저장소에서 열두 번 겪은 자리). */
-  ["메인은 히어로 다음이 진입 카드 넷이고 번호가 01~04 다",
-   `document.querySelector(".bent-c.ent-closure").remove();`],
+  /* ⚠️⚠️ **2026-10-29 PHONEWAY — 히어로(pwh) 다음이 판매 두 방법(pww)
+     입니다.** 검사가 보는 것은 "첫 구간이 히어로 · h1 이 거기 하나 ·
+     번호가 PW_WAYS 와 같음 · 업체 0곳을 0 이라고 말함" 이고, 되돌리기는
+     그중 번호를 끊습니다 — 둘째 카드를 지워 01 에서 끝냅니다.
+     ⚠️ .bent-c 는 메인에 **없으므로** 그걸 집으면 되돌리기가 터집니다
+     (이 저장소에서 열세 번 겪은 자리). */
+  ["메인은 히어로 다음이 판매 두 방법이고 번호가 이어진다",
+   `document.querySelector(".pww-c.b").remove();`],
   /* ⚠️⚠️ 되돌리기는 **검사가 실제로 보는 것**을 망가뜨려야 합니다.
      검색 가는 길을 지울 때 입력칸만 지우고 돋보기를 남겼다가 "검사가
      안 잡는다" 로 보였던 적이 있습니다 — 검사가 아니라 되돌리기가
@@ -567,10 +576,12 @@ const CASES = [
      칠하면 **아무 일도 안 납니다** ("전 true → 후 true") — 되돌리기가
      틀린 자리이고 이 저장소에서 열두 번 겪었습니다. 메인을 전면 리뉴얼
      직전으로 되돌릴 때 이 줄까지 같이 되돌렸다가 실제로 걸렸습니다. */
-  ["전문관 셋이 저마다의 색으로 갈린다",
+  /* ⚠️⚠️ 2026-10-29 PHONEWAY — 두 방법(직접 매입 · 경쟁입찰)의 색을
+     같게 만들어 봅니다. 번호 알약에서 재기 때문에 거기를 집습니다. */
+  ["판매 두 방법이 색으로 갈리고 둘의 무게가 같다",
    `const st = getComputedStyle(
-      document.querySelector(".ent-startup .bent-no")).backgroundColor;
-    document.querySelector(".ent-closure .bent-no").style.background = st;`],
+      document.querySelector(".pww-c:not(.b) .pww-no")).backgroundColor;
+    document.querySelector(".pww-c.b .pww-no").style.background = st;`],
   /* ⚠️ 2026-10-11 간소화 §2 — 연결 구간이 메인에서 내려와 되돌릴
      요소가 없습니다. **없는 요소를 집으면 되돌리기가 터지고**, 그러면
      "검사가 안 잡는다" 로 보입니다 (이 저장소에서 아홉 번 겪은 자리).
@@ -598,8 +609,11 @@ const CASES = [
    `document.querySelector('#view a[href^="/tools/"]')
       .setAttribute("href", "/tools/zzz-없는계산기");`],
   /* ⚠️ grid 의 stretch 를 덮어야 합니다 — 폭과 높이를 같이 줄입니다. */
-  ["진입 카드 셋의 크기가 같다",
-   `const e3 = document.querySelectorAll(".bent-c")[2];
+  /* ⚠️ grid 의 stretch 를 덮어야 합니다 — 폭과 높이를 같이 줄입니다.
+     ⚠️⚠️ 2026-10-29 PHONEWAY — 재는 자리가 **구매 갈래 넷**(.pws-c)
+     입니다. .bent-c 는 메인에 없으므로 그걸 집으면 되돌리기가 터집니다. */
+  ["구매 갈래 넷의 크기가 같다",
+   `const e3 = document.querySelectorAll(".pws-c")[2];
    e3.style.width = "70%"; e3.style.minHeight = "0"; e3.style.height = "80px";`],
   /* ⚠️⚠️ **아이콘 칸(.stg-i)만 집어야 합니다.** 처음에
      ".mstg-g > li > a svg" 로 적었더니 **화살표까지** 걸려서
@@ -674,7 +688,10 @@ const CASES = [
    /* ⚠️ 2026-10-25 §1 — .bwhy 가 내려가서 §3-2 가 이름까지 적은
       자리를 **히어로**가 받습니다 (§1-01 "BRIGHT PREMIUM 유지").
       없는 요소를 집으면 되돌리기가 터집니다 (열세 번째). */
-   `document.querySelector(".bhero").style.backgroundColor = "#2E2219";`],
+   /* ⚠️ 2026-10-29 PHONEWAY — §2 가 이름까지 적은 자리를 **히어로
+      (pwh)** 가 받습니다. .bhero 는 메인에 **없으므로** 그걸 집으면
+      되돌리기가 터집니다 (열네 번째). */
+   `document.querySelector(".pwh").style.backgroundColor = "#0B1F36";`],
   /* 짝 검사 — 속화면에 메인 표시가 새면 걸려야 합니다 */
   ["속화면은 그대로 밝고 메인 표시가 안 묻었다",
    `document.documentElement.classList.add("ivh");`],
@@ -759,9 +776,12 @@ const CASES = [
    /* ⚠️ 2026-10-16 §3 — 지금 메인에 있는 카드는 진입(.bent-c > a) ·
       까닭(.bwhy-c) · 절차(.bstep-c) · 배너(.bban-c > a) 입니다.
       **없는 요소를 집으면 되돌리기가 터집니다** (열한 번째). */
-   `const a = document.querySelector(".bstep-c") ||
-             document.querySelector(".bcal-g > li > a") ||
-             document.querySelector(".bent-c > a");
+   /* ⚠️ 2026-10-29 PHONEWAY — 지금 메인의 카드는 판매 방법(.pww-c) ·
+      구매 갈래(.pws-c) · 이용 방법(.pwst-c) · 고지(.pwt-c) 입니다.
+      **없는 요소를 집으면 되돌리기가 터집니다** (열네 번째). */
+   `const a = document.querySelector(".pwst-c") ||
+             document.querySelector(".pws-c") ||
+             document.querySelector(".pww-c");
     const back = (function(el){
       let e = el.parentElement;
       while(e){
@@ -853,7 +873,10 @@ const CASES = [
       (t[1] 이 undefined 라 되돌리기가 터집니다 · 열네 번째).
       지금 메인에서 한 묶음 안에 아이콘이 여럿인 곳은 진입 카드 넷과
       직접 찾기 여덟입니다. */
-   `const t = [].slice.call(document.querySelectorAll("#view .bdir-i svg"));
+   /* ⚠️ 2026-10-29 PHONEWAY — 한 묶음 안에 아이콘이 여럿인 곳은
+      구매 갈래 넷(.pws-c i)과 이용 방법 다섯(.pwst-c i)입니다.
+      .bdir-i 는 메인에 없어 t[1] 이 undefined 라 터집니다 (열네 번째). */
+   `const t = [].slice.call(document.querySelectorAll("#view .pws-c i svg"));
     t[1].innerHTML = t[0].innerHTML;`],
   /* 고른 전문관이 표시되지 않으면 걸려야 합니다 — 거르개는 무엇이
      켜졌는지 보이지 않으면 거르개가 아닙니다 */
@@ -1061,18 +1084,51 @@ async function proveAudit(pg){
      ⚠️ 검사는 grid 만 보고 있었고 flex 는 **아무도 안 보고**
      있었습니다 — 이 되돌리기가 그것을 지킵니다. */
   {
+    /* ⚠️⚠️ **재는 화면이 메인입니다** (2026-10-29 PHONEWAY).
+       실제 그 꼴이던 .msvc-sc-n(범위 숫자 띠의 ⓘ 줄)은 메인에서
+       내려간 구간 안이라 지금 **어느 화면에도 안 그려집니다** —
+       거기서 집으면 되돌리기가 아무 일도 안 해서 "검사가 안 잡는다"
+       로 보입니다 (열네 번째).
+       ⚠️⚠️ /operation 의 .pks-r 로 옮겼다가 **또 헛돌았습니다** —
+       그쪽은 접힌 묶음 안이라 **폭 · 높이가 0** 이고, AUDIT 의
+       vis() 가 그런 칸을 건너뜁니다 (열다섯 번째). 지금은 메인
+       히어로의 체크 칩(.pwh-ch li)이고, **보이는지(폭 · 높이)까지**
+       보고 고릅니다. */
     await pg.goto(ROOT + "/", { waitUntil:"load" });
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).mix;
     const did = await pg.evaluate(() => {
-      const p = document.querySelector(".msvc-sc-n");
-      if(!p) return false;
-      const sp = p.querySelector("span");
-      if(!sp) return false;
-      /* 감싼 태그를 풀어 맨글 + <b> + 맨글 로 되돌립니다 */
-      while(sp.firstChild) p.insertBefore(sp.firstChild, sp);
-      sp.remove();
-      return true;
+      /* ⚠️⚠️ **감싼 태그를 풀기만 하면 아무 일도 안 납니다** (열다섯 번째).
+         `.pks-r > span` 안이 `<b>` + `<i>` 라 **둘 다 태그**이고, 풀어
+         봐야 맨글이 **0개**입니다 — 검사는 "flex 안에 맨글이 둘 이상"
+         을 보는데 그 꼴이 안 만들어져서 "검사가 안 잡는다" 로
+         보였습니다. **검사가 아니라 되돌리기가 틀린** 자리입니다.
+         ⚠️ 실제로 겪은 꼴(2026-10-25 범위 숫자 띠)은
+         `아이콘 + 맨글 + <b> + 맨글` 입니다 — 태그 하나에 맨글 둘.
+         그래서 감싼 태그를 풀고 **안쪽 태그를 맨글로 되돌립니다.** */
+      const all = [].slice.call(document.querySelectorAll("#view *"));
+      for(const p of all){
+        if(getComputedStyle(p).display !== "flex") continue;
+        /* ⚠️⚠️ **보이는 칸만** — AUDIT 의 vis() 가 폭 · 높이 0 인 칸을
+           건너뛰기 때문에, 접힌 묶음 안을 집으면 아무 일도 안 납니다. */
+        const r = p.getBoundingClientRect();
+        if(r.width <= 0 || r.height <= 0) continue;
+        const sp = p.querySelector(":scope > span");
+        if(!sp) continue;
+        const kids = [].slice.call(sp.childNodes);
+        const tags = kids.filter(function(n){ return n.nodeType === 1; });
+        if(tags.length < 2) continue;
+        /* 감싼 태그를 풀고 */
+        while(sp.firstChild) p.insertBefore(sp.firstChild, sp);
+        sp.remove();
+        /* 안쪽 태그를 맨글로 — 이제 flex 에 맨글 둘이 섞입니다 */
+        tags.forEach(function(t){
+          t.parentNode.replaceChild(
+            document.createTextNode(" " + (t.textContent || "x") + " "), t);
+        });
+        return true;
+      }
+      return false;
     });
     await pg.waitForTimeout(60);
     const after = (await pg.evaluate(AUDIT)).mix;
@@ -1186,6 +1242,38 @@ async function proveAudit(pg){
     console.log((ok ? "✅" : "❌") + " 제목 차례를 건너뜀 (푸터) · " + u +
       "  [지금 " + JSON.stringify(before) +
       " → 푸터 h2 를 h4 로 되돌리면 " + JSON.stringify(after).slice(0,60) + "]");
+  }
+
+
+  /* 제목이 비었음 — 2026-10-29 에 실제로 그랬습니다. PgHero() 의 칸
+     이름을 h1 이 아니라 h 로 적어 **다섯 화면이 전부 빈 제목**으로
+     나갔는데, 개수는 1 이라 "h1 이 딱 하나" 가 통과했습니다.
+     ⚠️ 그래서 되돌리기도 **개수를 바꾸지 않고 글자만 비웁니다** —
+     지우면 개수 검사에 걸려서 새 검사가 무엇을 잡는지 증명이 안 됩니다.
+     ⚠️⚠️ **그런데 textContent 를 빈 문자열로 두면 그것도 개수 검사에
+     걸립니다.** 빈 블록은 폭은 있어도 **높이가 0** 이라 vis() 가 떨어
+     내고, 그러면 h1 이 0개가 되어 "제목(h1)이 없습니다" 가 먼저
+     납니다 — 실제로 그렇게 나왔고 **검사가 아니라 되돌리기가 틀린**
+     자리였습니다 (이 저장소에서 열세 번째). 이 검사가 혼자 잡는 것은
+     **상자는 보이는데 낱말이 없는 제목**이라, 줄바꿈 안 되는 공백 한
+     자를 넣습니다 — 그러면 높이가 생겨 개수는 1 이고, trim() 은 그
+     글자를 지워서 "비었습니다" 가 납니다. */
+  for(const u of ["/sell", "/guide"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).h1;
+    await pg.evaluate(() => {
+      const h = document.querySelector("#view h1");
+      /* U+00A0 — 그려지므로 높이가 생기고, trim() 이 지우므로 낱말은 0 */
+      if(h) h.textContent = "\u00a0";
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).h1;
+    const ok = before.length === 0 && after.some(x => x.indexOf("비었습니다") >= 0);
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 제목(h1)이 비었음 · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → 낱말만 비우면 " + JSON.stringify(after).slice(0,60) + "]");
   }
 
   /* 이웃한 두 구간이 붙어 보임 — 둘째 구간을 첫째와 같은 색으로
@@ -1336,7 +1424,9 @@ async function proveAudit(pg){
       const e = document.querySelector("#view .ic-t svg, #view .stg-i svg," +
         " #view .ia-t svg, #view .mhall-i svg, #view .mstp-i svg," +
         " #view .bent-i svg, #view .bwhy-i svg, #view .bban-i svg," +
-        " #view .bstep-i svg, #view .bcal-i svg");
+        " #view .bstep-i svg, #view .bcal-i svg," +
+        /* 2026-10-29 PHONEWAY — 메인 판매 방법 타일 */
+        " #view .pww-ic svg");
       if(e) e.remove();
     });
     await pg.waitForTimeout(60);
@@ -1440,8 +1530,21 @@ async function proveAudit(pg){
     if(!g){ console.log("? 검사를 못 찾음: " + name); bad++; continue; }
     await pg.goto(ROOT + g.url, { waitUntil:"load" });
     await pg.waitForTimeout(260);
-    /* 먼저 멀쩡한 상태에서 통과하는지 */
-    const before = await pg.evaluate("(async()=>{ " + g.body + " })()");
+    /* 먼저 멀쩡한 상태에서 통과하는지
+       ⚠️⚠️ **검사 본문이 터져도 어느 건인지 이름을 냅니다.** 전에는
+       그대로 던져서 `Cannot set properties of null` 한 줄만 보이고
+       **어느 검사인지도 · 남은 되돌리기도** 안 나왔습니다 — 화면이
+       바뀌어 검사가 집던 요소가 없어질 때마다 나는 일입니다
+       (되돌리기가 터지는 경우를 바로 아래에서 이미 그렇게 받고
+       있었는데 이쪽만 빠져 있었습니다). */
+    let before;
+    try {
+      before = await pg.evaluate("(async()=>{ " + g.body + " })()");
+    } catch(e){
+      console.log("❌ " + name + "   — 검사 본문이 터집니다: " +
+        String(e && e.message || e).split("\n")[0].slice(0,120));
+      bad++; continue;
+    }
     /* ⚠️⚠️ **되돌리기가 터지면 그 한 건만 실패로 적고 넘어갑니다.**
        전에는 여기서 그대로 던져서 **남은 되돌리기가 통째로 안 돌았고**,
        터진 것이 어느 건인지도 안 나왔습니다 (SyntaxError 한 줄만

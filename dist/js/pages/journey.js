@@ -491,10 +491,10 @@ function AcqWhich(t, ind, iq){
     '</div>'+
 
     '<ul class="aq-m">'+(t === "out" ? [
-      ["/sell",          "handover", "내 매장 내놓기",   "평수 · 보증금 · 권리금을 적어 보내시면 됩니다"],
+      ["/sell-biz",          "handover", "내 매장 내놓기",   "평수 · 보증금 · 권리금을 적어 보내시면 됩니다"],
       ["#pick",          "check",    "넘길 때 필요한 것", "시설 인계 · 계약 · 세무를 골라 보세요"],
       ["/tools/premium", "gauge",    "권리금 알아보기",  "몇 달이면 돌아오는지 따져 봅니다"],
-      ["/sell?t=asset",  "boxes",    "시설 · 장비만 내놓기", "매장은 두고 장비만 넘기실 때"],
+      ["/sell-biz?t=asset",  "boxes",    "시설 · 장비만 내놓기", "매장은 두고 장비만 넘기실 때"],
       ["/content?side=close", "book","양도 가이드",      "넘기기 전에 보셔야 하는 것"]
     ] : [
       ["/stores"+iq,     "store",    "매장 인수하기",    "상가 · 점포 · 권리금 매장"],
@@ -552,8 +552,8 @@ function AcqMarket(t, ind, iq){
     '</div>'+
     (out
       ? '<div class="row-cta">'+
-          '<a class="btn btn-b" href="/sell">내 매장 내놓기'+icon("arrow",16)+'</a>'+
-          '<a class="btn btn-o" href="/sell?t=asset">시설 · 장비만 내놓기</a>'+
+          '<a class="btn btn-b" href="/sell-biz">내 매장 내놓기'+icon("arrow",16)+'</a>'+
+          '<a class="btn btn-o" href="/sell-biz?t=asset">시설 · 장비만 내놓기</a>'+
         '</div>'
       :
     (nStore || nAsset

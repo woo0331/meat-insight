@@ -100,8 +100,24 @@ const PAGES = [
   ["/support",           "자금 · 정부지원"],
   ["/content",           "창업 · 폐업 정보"],
   ["/quote",             "견적 요청"],
-  ["/sell",              "매물 내놓기 — 매장"],
-  ["/sell?t=asset",      "매물 내놓기 — 시설 · 장비"],
+  /* ⚠️⚠️ **2026-10-29 — PHONEWAY 가 `/sell` 을 가져갔습니다.** 옛 매물
+     내놓기는 `/sell-biz` 로 옮겼는데 이 두 줄만 옛 주소에 남아 있어서,
+     딱지는 "매물 내놓기" 인데 실제로는 **내 폰 팔기**를 재고 있었고
+     `?t=asset` 은 그 화면에서 아무 뜻이 없었습니다 — 딱지가 거짓이면
+     무엇이 걸렸는지 읽을 수가 없습니다. */
+  ["/sell",              "내 폰 팔기 (01 기기 고르기)"],
+  ["/sell-biz",          "매물 내놓기 — 매장"],
+  ["/sell-biz?t=asset",  "매물 내놓기 — 시설 · 장비"],
+  /* ⚠️⚠️ **넷이 표본 밖에 있었습니다.** `/shop` · `/bid` · `/track` ·
+     `/guide` 가 여기 없어서 **대비 · 누름 크기 · 어두운 면 · 낱말 잘림 ·
+     크롤러 본문**을 하나도 안 받고 있었습니다 — `tools/sweep-rest.js` 가
+     `/guide` 에서 대비 4.42 를 잡아서 알았습니다. `/home` 이 PAGES 에
+     없어서 크롤러 본문 95자를 몇 주 놓친 그 자리입니다.
+     **화면을 만들면 여기 넣으세요.** */
+  ["/shop",              "인증 중고폰 구매 (매물 0건)"],
+  ["/bid",               "최고가 경쟁입찰 (업체 0곳)"],
+  ["/track",             "판매 진행 조회"],
+  ["/guide",             "이용 안내"],
   ["/quote?c=interior&i=cafe&r=gyeonggi&side=start", "견적 요청 (조건 실려 옴)"],
   ["/join",              "업체 입점하기"],
   ["/my",                "MY"],
@@ -591,6 +607,18 @@ const AUDIT = `(() => {
     const h1 = [...root.querySelectorAll("h1")].filter(vis);
     if (h1.length !== 1)
       out.h1.push(h1.length === 0 ? "제목(h1)이 없습니다" : "제목(h1)이 "+h1.length+"개입니다");
+    /* ⚠️⚠️ **빈 h1 도 하나로 셉니다** — 2026-10-29 에 그렇게 당했습니다.
+       PgHero() 의 칸 이름을 h1 이 아니라 h 로 적었더니 **다섯 화면이
+       전부 빈 제목**으로 나갔는데, 개수는 1 이라 이 검사가 통과했고
+       에러도 안 났습니다. 머리말 자리에 아무것도 없고 설명만 덩그러니
+       떠 있는 꼴이라 **찍어 봐야** 알았습니다.
+       ⚠️ 위의 개수 검사와 **갈라 둡니다** — 하나로 묶으면 "제목이
+       하나인가" 와 "그 제목에 글자가 있는가" 중 한쪽만 보게 됩니다. */
+    h1.forEach(e => {
+      if (!(e.textContent || "").trim())
+        out.h1.push("제목(h1)이 비었습니다 — " +
+          String(e.className || "h1").split(" ")[0]);
+    });
   }
   /* 9-2. **제목 차례를 건너뛰지 않는가** (h1 → h3 금지)
      ⚠️⚠️ 읽어 주는 프로그램을 쓰는 분은 제목으로 화면의 뼈대를
@@ -969,7 +997,9 @@ const AUDIT = `(() => {
   document.querySelectorAll("#view .ic-t, #view .stg-i, #view .ia-t," +
                             " #view .mhall-i, #view .mstp-i," +
                             " #view .bent-i, #view .bwhy-i, #view .bban-i," +
-                            " #view .bstep-i, #view .bcal-i").forEach(e => {
+                            " #view .bstep-i, #view .bcal-i," +
+                            /* 2026-10-29 PHONEWAY — 메인 구간 여섯의 타일 */
+                            " #view .pww-ic").forEach(e => {
     if(e.querySelector("svg")) return;
     const own = (e.parentElement || e);
     out.ico.push((own.textContent || "").trim().slice(0, 14) || "(이름 없음)");
@@ -1767,7 +1797,11 @@ const AUDIT = `(() => {
   /* ⚠️⚠️ **내놓는 길**입니다. 전에는 폼이 아예 없어서 "매장 내놓기" 가
      목록 화면으로 갔습니다. 여기서 받는 칸이 market.js 의 생김새와
      어긋나면, 받아 적을 때마다 사람이 맞춰 넣어야 합니다. */
-  await f("매물 내놓기: 업종 · 지역 없이는 안 보낸다", "/sell", `
+  await f("매물 내놓기: 업종 · 지역 없이는 안 보낸다", "/sell-biz", `
+    /* ⚠️⚠️ **주소가 "/sell-biz" 로 바뀌었습니다** (2026-10-29 PHONEWAY).
+       "/sell" 은 이제 내 폰 팔기이고, 창업 · 폐업 매물 내놓기 폼은
+       그대로 살아 있습니다 (market.js 의 PageSellBiz). 규칙은 한 줄도
+       안 바꿨습니다 — 재는 화면이 바뀐 것입니다. */
     let sent = false;
     const o = window.fetch; window.fetch = function(){ sent = true; return o.apply(this, arguments); };
     document.getElementById("sl-q").value    = "평촌 18평 카페입니다";
@@ -1780,7 +1814,11 @@ const AUDIT = `(() => {
     /* 지역 없는 매물은 거르개에서 빠지고 빌드가 멈춥니다 */
     return sent ? "업종 · 지역 없이 보냈습니다" : true;`);
 
-  await f("매물 내놓기: 적은 조건이 매물 생김새로 나간다", "/sell", `
+  await f("매물 내놓기: 적은 조건이 매물 생김새로 나간다", "/sell-biz", `
+    /* ⚠️⚠️ **주소가 "/sell-biz" 로 바뀌었습니다** (2026-10-29 PHONEWAY).
+       "/sell" 은 이제 내 폰 팔기이고, 창업 · 폐업 매물 내놓기 폼은
+       그대로 살아 있습니다 (market.js 의 PageSellBiz). 규칙은 한 줄도
+       안 바꿨습니다 — 재는 화면이 바뀐 것입니다. */
     let body = null;
     const o = window.fetch;
     window.fetch = function(u, i){ try{ body = JSON.parse(i.body); }catch(e){}
@@ -2120,7 +2158,7 @@ const AUDIT = `(() => {
      ⚠️ 이건 "보기 좋은가" 를 재는 검사가 아닙니다. 나중에 여기에
      큰 배너 · 설명 · 검색창을 하나씩 더하다 보면 카드가 첫 화면
      아래로 밀려나는데, 그걸 막는 것이 목적입니다. */
-  await f("메인은 히어로 다음이 진입 카드 넷이고 번호가 01~04 다", "/", `
+  await f("메인은 히어로 다음이 판매 두 방법이고 번호가 이어진다", "/", `
     /* ⚠️⚠️ **2026-10-22 "최상단 디자인 최종 변경" §2 — 히어로가 다시
        빠졌습니다.** "기존 상단 대형 히어로(카페 사진)를 제거하고 4개
        전문관 카드를 최상단 콘텐츠로 한다." 이 검사는 10-17 에 한 번
@@ -2149,35 +2187,51 @@ const AUDIT = `(() => {
        바로 그 다음입니다 ("메인페이지에 접속하면 … 히어로 … 그 아래
        4개 핵심 서비스"). 10-22 지시서 때는 (1) 이 bent 였습니다 —
        되돌리시면 그날 여기와 (2) 를 같이 뒤집으세요. */
-    if(!secs[0].classList.contains("bhero"))
+    /* ⚠️⚠️ **2026-10-29 PHONEWAY 전환.** 첫 구간이 히어로(pwh)이고
+       바로 다음이 **판매 두 방법**(pww)입니다 — 직접 매입과 경쟁입찰.
+       ⚠️ 앞 지시서의 진입 카드 넷(bhero 다음 bent · 번호 01~04)은
+       함수를 안 지웠으니 되살리실 수 있습니다 — 그날 여기를 뒤집으세요. */
+    if(!secs[0].classList.contains("pwh"))
       return "첫 구간이 히어로가 아닙니다 — " +
              (secs[0].className || "").split(" ")[0];
-    if(!(secs[1] && secs[1].classList.contains("bent")))
-      return "히어로 다음이 진입 카드 넷이 아닙니다 — " +
+    if(!(secs[1] && secs[1].classList.contains("pww")))
+      return "히어로 다음이 판매 두 방법이 아닙니다 — " +
              ((secs[1] || {}).className || "").split(" ")[0];
 
     const h1s = document.querySelectorAll("#view h1");
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
-    if(!h1s[0].closest(".bhero")) return "h1 이 히어로 구간에 없습니다";
+    if(!h1s[0].closest(".pwh")) return "h1 이 히어로 구간에 없습니다";
 
-    /* (3) 번호가 빠짐없이 이어지는가 — 넷이 같은 무게로 섭니다 */
-    const nos = [].slice.call(v.querySelectorAll(".bent-no"))
+    /* (3) 번호가 빠짐없이 이어지는가 — 둘이 같은 무게로 섭니다.
+       ⚠️⚠️ **번호를 손으로 적지 마세요** — PW_WAYS 에서 읽습니다. */
+    const nos = [].slice.call(v.querySelectorAll(".pww-no"))
       .map(function(e){ return (e.textContent || "").trim(); });
-    const want = (window.HOME_ENTER || []).map(function(x){ return x.no; });
-    if(!want.length) return "HOME_ENTER 를 못 읽습니다";
+    const want = (window.PW_WAYS || []).map(function(x){ return x.no; });
+    if(!want.length) return "PW_WAYS 를 못 읽습니다";
     if(nos.join(",") !== want.join(","))
-      return "진입 카드 번호가 [" + nos.join(" ") + "] 입니다 — [" +
+      return "판매 방법 번호가 [" + nos.join(" ") + "] 입니다 — [" +
              want.join(" ") + "] 라야 차례가 안 끊깁니다";
 
-    /* (4) 사진 — 자리가 채워져 있으면 실제로 그려져야 합니다 */
-    const EN = (window.HOME_ENTER || []);
-    for(const x of EN){
-      if(window.hasPhoto && hasPhoto(x.ph) &&
-         !document.querySelector(".ent-" + x.key + " .bent-ph .ph"))
-        return x.key + " 카드 사진이 있는데 안 그려졌습니다";
-    }
+    /* (4) ⚠️⚠️ **업체 수를 손으로 적지 않습니다** — 경쟁입찰 카드가
+       AM_PROVIDERS 를 그 자리에서 셉니다. 0곳이면 0 이라고 말해야
+       하고, 지어낸 수가 적히면 표시 · 광고의 공정화에 관한 법률
+       제3조입니다 (절대 규칙 1). */
+    const nPv = (window.AM_PROVIDERS || []).length;
+    const bidTx = (v.querySelector(".pww-c.b") || {}).textContent || "";
+    if(!nPv && !/모집/.test(bidTx))
+      return "업체가 0곳인데 경쟁입찰 카드가 그 사실을 말하지 않습니다";
     return true;`);
   await f("어느 화면에서나 검색으로 가는 길이 있고 메인이 두 갈래로 갈린다", "/", `
+    /* 지난 주석 (PHONEWAY 전환 때 이 검사는 메인으로 되돌렸습니다) (2026-10-29
+       PHONEWAY 전환). 메인이 중고폰 거래로 바뀌어 창업 · 폐업 쪽
+       길이 거기 없습니다 — 그쪽 157개 화면은 **아직 살아 있고
+       색인돼 있어서** 길이 끊기면 안 되고, 그 입구가 "/startup"
+       입니다 (푸터 맨 아랫줄 한 줄이 거기로 보냅니다).
+       **규칙은 한 줄도 안 바꿨습니다** — 재는 자리가 바뀐 것입니다.
+       ⚠️ 창업 · 폐업을 내리실 때(전환 계획 0단계 ①) 이 검사도 같이
+       치우세요. 그 전에 지우면 **그 영역이 길을 잃은 것을 아무도 안
+       봅니다.** 입구 자체는 짝 검사("창업 · 폐업 영역이 사이트 안에서
+       길을 잃지 않았다")가 메인에서 봅니다. */
     /* ⚠️⚠️ **2026-10-08 — 떠 있는 검색 패널이 메인에서 내려왔습니다**
        (시안에 없습니다). 그래서 검색으로 가는 길은 **헤더 하나**이고,
        넓은 화면은 적는 칸 · 1180px 아래는 돋보기입니다. 헤더를 지우면
@@ -2207,18 +2261,12 @@ const AUDIT = `(() => {
        입구가 한 화면에 둘이 됩니다 (어느 쪽을 쓸지 흐려집니다). */
     if(document.querySelector("#view input[type=search]"))
       return "메인 본문에 검색창이 생겼습니다 (중복)";
-    /* ⚠️ 패널 탭이 가리키던 다섯 곳이 길을 잃지 않았는지 — 메인이나
-       푸터 어디에든 있어야 합니다 (지시서 §2-2 "기능 삭제 금지"). */
-    const miss = ["/providers","/franchise","/stores","/support","/tools"]
-      .filter(function(u){ return !document.querySelector('a[href="' + u + '"]'); });
-    if(miss.length) return "메인에서 갈 수 없게 된 곳: " + miss.join(" · ");
-    /* ⚠️⚠️ **사업 단계 여섯(/g/:stage)이 길을 잃으면 안 됩니다.**
-       메인의 단계 열이 내려오면서 푸터가 그 길을 받았습니다 — 안
-       받으면 색인은 되어 있는데 아무 데서도 안 걸리는 화면이 여섯
-       생깁니다. */
-    const st6 = (window.AM_STAGES || []).map(function(s2){ return "/g/" + s2.key; })
-      .filter(function(u){ return !document.querySelector('a[href="' + u + '"]'); });
-    if(st6.length) return "사업 단계가 사이트 안에서 길을 잃었습니다: " + st6.join(" · ");
+    /* ⚠️⚠️ **창업 · 폐업 쪽 길 확인은 짝 검사로 옮겼습니다**
+       (2026-10-29 PHONEWAY) — "창업 · 폐업 영역이 사이트 안에서 길을
+       잃지 않았다" 가 그것들을 봅니다. 메인이 중고폰 거래가 되면서
+       그 다섯 곳과 사업 단계 여섯은 **메인에 없고 입구를 거쳐**
+       닿습니다. 여기는 검색 하나만 봅니다 — 둘을 한 검사에 묶으면
+       한쪽이 바뀔 때마다 다른 쪽이 같이 빨개집니다. */
     return true;`);
   /* ⚠️⚠️ **메인을 뺀 화면에는 헤더 검색이 그대로 있어야 합니다**
      (2026-10-13 §3 — 기능 자체는 삭제하지 않습니다). 메인에서 접는
@@ -2248,76 +2296,89 @@ const AUDIT = `(() => {
        · 폐업 쪽이 **빨강으로 흘러가지 않는 것** (그 순간 옛 걱정이
          그대로 돌아옵니다 — 이 저장소가 여러 곳에 못박아 둔 것입니다)
        · 두 쪽의 **크기와 무게가 같은 것** (위 히어로 검사가 봅니다) */
-  await f("전문관 셋이 저마다의 색으로 갈린다", "/", `
-    /* ⚠️⚠️ **규칙이 여러 번 뒤집혔습니다.**
-       ① 처음에는 "창업과 폐업을 색으로 가르지 않는다" 였습니다 —
-          빨강/초록으로 나누면 "폐업은 나쁜 것" 이 되기 때문입니다.
-       ② 2026-09-30 이 START=초록 / CLOSE=주황으로 정했고,
-       ③ 2026-10-08 이 창업을 블루로,
-       ④ 2026-10-15 가 히어로 한 자리에서 폐업을 딥 버건디로,
-       ⑤ **2026-10-16 §2-1 이 다크 브라운 위에서 셋을 다시 정했습니다** —
-          창업 = 브라운 · 골드 / 운영 = 딥 포레스트 그린 /
-          폐업 = 딥 버건디. 지시서가 "세 전문관의 색상 구분은 반드시
-          유지한다" 고 직접 적었습니다.
-       그래서 지금 지키는 것은 —
-         · 셋이 **서로 다른 색**일 것 (구분이 정체성입니다)
-         · 창업은 따뜻한 브라운 · 골드 쪽일 것
-         · 운영은 **초록 성분이 제일 큰** 쪽일 것
-         · 폐업은 붉은 쪽이되 **주황이 아니라 버건디**(붉은빛이 파랑보다
-           크고 초록이 제일 작은, 어두운 면)일 것
-         · 세 카드의 **크기와 무게가 같을 것** (아래 짝 검사)
-       ⚠️ 이 셋은 **다크 위의 면**이라 밝기로 재지 않습니다. */
+  await f("창업 · 폐업 영역이 사이트 안에서 길을 잃지 않았다", "/", `
+    /* ⚠️⚠️ **2026-10-29 PHONEWAY 전환 — 157개 화면이 고아가 되는 것을
+       막는 검사입니다.** 헤더 · 메인이 중고폰 거래로 바뀌면서 창업 ·
+       폐업 쪽으로 가는 길이 거기서 **통째로 없어졌습니다.** 그런데 그
+       157개는 아직 살아 있고 **이미 색인돼 있습니다** — 길만 끊으면
+       검색과 북마크로는 들어오는데 사이트 안에서는 아무 데서도 안
+       걸리는 꼴이고, 이 저장소가 "/g/:stage" 여섯으로 겪은 그 자리입니다.
+
+       지금은 **푸터 맨 아랫줄 한 줄**이 그 입구입니다 (161개 화면
+       전부에 있습니다). 그 한 줄을 지우면 여기서 걸립니다.
+
+       ⚠️⚠️ **내리기로 정하셨으면**(전환 계획 0단계 ①) 순서가 있습니다 —
+       ① "vercel.json" 에 redirect(또는 410)를 먼저 넣고 ② 주소를
+       "tools/urls.json" 에서 빼고 ③ 그 다음에 이 검사와 짝 검사 셋
+       ("/startup" 에서 재는 것들)을 같이 치웁니다. 거꾸로 하면
+       색인이 깨집니다. */
+    const H = [].slice.call(document.querySelectorAll("a[href]"))
+      .map(function(a){ return (a.getAttribute("href") || "").split("?")[0]; });
+    /* 입구 하나로 충분합니다 — /startup 이 그쪽 전체를 다시 엽니다 */
+    const ENTRY = ["/startup", "/closure", "/operation", "/transfer"];
+    if(!ENTRY.some(function(u){ return H.indexOf(u) >= 0; }))
+      return "창업 · 폐업 영역으로 가는 길이 한 곳도 없습니다 — " +
+             ENTRY.join(" · ") + " 중 하나는 남아야 합니다 " +
+             "(157개 화면이 색인돼 있습니다)";
+    /* ⚠️⚠️ **사업 단계 여섯은 입구가 따로입니다.** 재 보니 전문관 네
+       화면 어디에도 /g/ 링크가 없고, /g/startup 에서 앞뒤 카드로
+       여섯이 서로 이어집니다 — 그 입구 한 줄이 끊기면 여섯이 통째로
+       길을 잃습니다 (색인은 되어 있는 채로). */
+    const g6 = (window.AM_STAGES || []).map(function(x){ return "/g/" + x.key; });
+    if(g6.length && !g6.some(function(u){ return H.indexOf(u) >= 0; }))
+      return "사업 단계 여섯으로 가는 길이 한 곳도 없습니다 — " +
+             g6[0] + " 하나만 남아도 나머지는 앞뒤 카드로 이어집니다";
+    return true;`);
+
+  await f("판매 두 방법이 색으로 갈리고 둘의 무게가 같다", "/", `
+    /* ⚠️⚠️ **2026-10-29 PHONEWAY 전환.** 전에는 창업 브라운 · 운영
+       딥그린 · 폐업 버건디 셋을 봤습니다 — 그 구간 함수를 안 지웠으니
+       되살리시면 그날 여기를 뒤집으세요.
+
+       지금 지키는 것은 —
+         · 두 방법이 **서로 다른 색**일 것 (직접 매입 · 경쟁입찰)
+         · 둘의 **크기와 무게가 같을 것** — 한쪽을 좁히거나 가볍게
+           만들면 그게 "덜 중요한 것" 이라는 말입니다
+         · ⚠️⚠️ **경쟁입찰 쪽을 작게 만들지 마세요.** 지시서가 폰웨이
+           자체 매입 부서와 경쟁업체의 권한을 가르라고 못박았고, 한쪽을
+           크게 내는 것이 그 첫 걸음입니다 */
+    /* ⚠️⚠️ **검사 본문에서는 정규식을 피하세요.** 본문이 템플릿
+       문자열이라 백슬래시를 한 겹으로 적으면 **먹혀서** 정규식이
+       깨집니다 — 이 저장소가 **열다섯 번** 당한 자리이고 여기서도
+       한 번 깨졌습니다. 숫자만 글자로 모아 셉니다. */
     const bg = function(q){
       const e = document.querySelector(q); if(!e) return null;
       const cs = getComputedStyle(e);
-      const m = (cs.backgroundColor + " " + cs.backgroundImage)
-        .match(/rgba?\\((\\d+), ?(\\d+), ?(\\d+)/g) || [];
-      for(const one of m){
-        const v = one.match(/(\\d+), ?(\\d+), ?(\\d+)/);
-        const c = [+v[1], +v[2], +v[3]];
-        if(c[0] + c[1] + c[2] > 30) return c;
+      const src = cs.backgroundColor + " " + cs.backgroundImage;
+      const out = [];
+      let cur = "", nums = [];
+      for(let k = 0; k <= src.length; k++){
+        const ch = src.charAt(k);
+        if(ch >= "0" && ch <= "9"){ cur += ch; continue; }
+        if(cur){ nums.push(+cur); cur = ""; }
+        /* 색 하나가 닫히면 앞의 셋을 한 묶음으로 봅니다 */
+        if(ch === ")" && nums.length >= 3){ out.push(nums.slice(0,3)); }
+        if(ch === ")") nums = [];
       }
+      for(const c of out) if(c[0] + c[1] + c[2] > 30) return c;
       return null;
     };
-    /* ⚠️⚠️ 재는 자리가 **번호 알약**입니다 — 카드 면이 아닙니다.
-       2026-10-26 "최종 디자인 개선"(브라운 통일)이 카드 넷을 전부 같은
-       크림 면으로 바꿨고, 그 블록은 **메인을 전면 리뉴얼 직전으로
-       되돌릴 때도 남겼습니다** (사장님이 고르신 쪽입니다). 구분 색은
-       번호 알약 · 아이콘 · 바로가기 알약이 그대로 들고 있고, 그중
-       **면으로 재기 좋은 것**이 번호 알약입니다.
-       ⚠️ **규칙은 한 줄도 안 바꿨습니다** (서로 다를 것 · 창업 브라운 ·
-       운영 초록 · 폐업 버건디이되 주황이 아닐 것) — 재는 자리만입니다.
-       ⚠️⚠️ **카드 면으로 되돌리지 마세요.** 넷이 전부 크림이라 "색이
-       겹칩니다" 가 **되돌리기 전부터** 뜹니다 — 복원하면서 검사를 통째로
-       되돌렸다가 실제로 그렇게 걸렸습니다 (색을 옮기고 검사는 안 옮긴
-       그 사고의 반대쪽입니다). */
-    const st = bg(".ent-startup .bent-no");
-    const op = bg(".ent-operation .bent-no");
-    const cl = bg(".ent-closure .bent-no");
-    if(!st || !op || !cl) return "진입 카드 셋의 색을 못 읽습니다";
-    if(st.join() === op.join() || op.join() === cl.join() || st.join() === cl.join())
-      return "진입 카드 셋의 색이 겹칩니다 (§2-1 — 색상 구분 유지)";
-    if(!(st[0] > st[1] && st[1] > st[2]))
-      return "창업이 브라운 · 골드 쪽이 아닙니다 rgb(" + st.join(",") + ")";
-    if(!(op[1] > op[0] && op[1] >= op[2]))
-      return "운영이 딥 포레스트 그린이 아닙니다 rgb(" + op.join(",") + ")";
-    if(!(cl[0] > cl[2] && cl[2] > cl[1]))
-      return "폐업이 딥 버건디가 아닙니다 rgb(" + cl.join(",") + ")";
-    /* ⚠️⚠️ **주황으로 흘러가면 안 됩니다** — 버건디는 파랑이 초록보다
-       크고, 주황은 그 반대입니다. 둘을 가르는 줄입니다. */
-    if(cl[1] > cl[2]) return "폐업이 주황 쪽으로 넘어갔습니다 rgb(" + cl.join(",") + ")";
+    const L = [].slice.call(document.querySelectorAll(".pww-c"));
+    if(L.length !== 2) return "판매 방법 카드가 " + L.length + "개입니다";
+    const a = bg(".pww-c:not(.b) .pww-no"), b = bg(".pww-c.b .pww-no");
+    if(!a || !b) return "번호 알약의 색을 못 읽습니다";
+    if(a.join(",") === b.join(","))
+      return "두 방법의 색이 같습니다 — rgb(" + a.join(",") + ")";
 
-    /* ⚠️ 악센트(번호 · 화살표)도 셋이 서로 달라야 합니다 — 면만 다르고
-       글자가 같은 색이면 카드 셋이 한 덩이로 읽힙니다. */
-    const acc = function(q){
-      const e = document.querySelector(q); if(!e) return null;
-      return getComputedStyle(e).color;
-    };
-    const a1 = acc(".ent-startup .bent-no"), a2 = acc(".ent-operation .bent-no"),
-          a3 = acc(".ent-closure .bent-no");
-    if(!a1 || !a2 || !a3) return "진입 카드 번호를 못 읽습니다";
-    if(a1 === a2 || a2 === a3 || a1 === a3)
-      return "진입 카드 악센트가 겹칩니다";
+    /* 나란히 놓인 때만 봅니다 (좁아지면 줄이 갈립니다) */
+    if(innerWidth <= 900) return true;
+    const R = L.map(function(e){ return e.getBoundingClientRect(); });
+    if(Math.abs(R[0].top - R[1].top) > 2) return true;
+    if(Math.abs(R[0].width - R[1].width) > 1 ||
+       Math.abs(R[0].height - R[1].height) > 1)
+      return "두 카드의 크기가 다릅니다 — " +
+        Math.round(R[0].width) + "×" + Math.round(R[0].height) + " vs " +
+        Math.round(R[1].width) + "×" + Math.round(R[1].height);
     return true;`);
 
   /* ⑨ 규모감 숫자 — **센 값**이어야 합니다
@@ -3797,13 +3858,17 @@ const AUDIT = `(() => {
     /* WARN 2026-10-25 §1 — .bhero-go 가 돌아오고 .bwhy-g · .bqc 가
        내려갔습니다 (중간 대형 견적 신청 섹션 금지). 되살리시면 그날
        여기에 다시 넣으세요. */
-    const need = [[".bhero-go", "히어로 신청 단추"],
-                  [".bent-g",   "네 가지 핵심 서비스 카드"],
-                  [".bdir-g",   "직접 서비스 찾기 여덟"],
-                  [".bstep-g",  "이용 방법 5단계"],
-                  [".bcal-g",   "계산도구 넷"],
-                  [".bgd-g",    "이용 가이드"],
-                  [".bcta-go",  "하단 견적 신청"]];
+    /* ⚠️⚠️ 2026-10-29 PHONEWAY 전환 — 찾는 표시를 지금 화면의 것으로
+       옮깁니다. 보는 것은 그대로 "/ 가 중간 소개 화면이 아니라 실제
+       서비스 메인인가" 입니다. ⚠️ 앞 지시서의 표시(.bhero-go ·
+       .bent-g · .bdir-g · .bstep-g · .bcal-g · .bgd-g · .bcta-go)는
+       함수를 안 지웠으니 되살리실 수 있습니다 — 그날 다시 넣으세요. */
+    const need = [[".pwh-go", "히어로 단추 둘"],
+                  [".pww-g",  "판매 두 방법 카드"],
+                  [".pws-g",  "중고폰 구매 갈래"],
+                  [".pwst-g", "이용 방법 다섯"],
+                  [".pwt-g",  "거래 전 고지"],
+                  [".pwc-go", "하단 CTA"]];
     for(const q of need)
       if(!v.querySelector(q[0])) return q[1] + " 가 메인에 없습니다";
     /* ⚠️⚠️ **메인에서는 헤더 검색을 찾지 않습니다** (2026-10-13 §3 —
@@ -3864,8 +3929,12 @@ const AUDIT = `(() => {
     /* WARN bwhy 가 2026-10-25 §1 로 내려가서 그 자리를 히어로가
        받습니다 — §1-01 이 "BRIGHT PREMIUM 디자인 방향을 유지한다" 고
        직접 적은 구간입니다. */
-    for(const q of [[".bhero","히어로"], [".bstep","이용 방법"],
-                    [".bcal","계산도구"]]){
+    /* ⚠️⚠️ 2026-10-29 PHONEWAY — 지시서 §2 가 배경을 화이트 ·
+       라이트 그레이로 정했습니다. 히어로(pwh) · 이용 방법(pwst) ·
+       거래 전 고지(pwt)가 **반드시 밝아야** 하는 자리입니다 —
+       짙은 면은 하단 CTA(pwc) 한 장까지입니다. */
+    for(const q of [[".pwh","히어로"], [".pwst","이용 방법"],
+                    [".pwt","거래 전 고지"]]){
       const e = document.querySelector(q[0]);
       if(!e) return q[1] + " 구간이 없습니다";
       const L = bgL(e);
@@ -3971,7 +4040,17 @@ const AUDIT = `(() => {
       if(!ok) bad.push(q);
     }
     return bad.length ? bad.join(" · ") + " 에 object-fit:cover 가 없습니다" : true;`);
-  await f("사업 단계 여섯이 분류 스물다섯을 빠짐없이 나눠 가진다", "/", `
+  await f("사업 단계 여섯이 분류 스물다섯을 빠짐없이 나눠 가진다", "/startup", `
+    /* ⚠️⚠️ **재는 화면을 "/startup" 으로 옮겼습니다** (2026-10-29
+       PHONEWAY 전환). 메인이 중고폰 거래로 바뀌어 창업 · 폐업 쪽
+       길이 거기 없습니다 — 그쪽 157개 화면은 **아직 살아 있고
+       색인돼 있어서** 길이 끊기면 안 되고, 그 입구가 "/startup"
+       입니다 (푸터 맨 아랫줄 한 줄이 거기로 보냅니다).
+       **규칙은 한 줄도 안 바꿨습니다** — 재는 자리가 바뀐 것입니다.
+       ⚠️ 창업 · 폐업을 내리실 때(전환 계획 0단계 ①) 이 검사도 같이
+       치우세요. 그 전에 지우면 **그 영역이 길을 잃은 것을 아무도 안
+       봅니다.** 입구 자체는 짝 검사("창업 · 폐업 영역이 사이트 안에서
+       길을 잃지 않았다")가 메인에서 봅니다. */
     /* ⚠️⚠️ **2026-10-04 구조 개편의 핵심입니다.** 여섯은 새 분류가
        아니라 catalog.js 의 분류를 묶어 보는 틀입니다 — 그래서 분류
        하나가 **빠지면 그 기능이 메인에서 갈 길을 잃고**, 둘에 겹치면
@@ -3989,46 +4068,43 @@ const AUDIT = `(() => {
     if(dup.length)   return "두 단계에 겹친 분류가 있습니다 — " + dup.join(" · ");
     const miss = all.filter(function(k){ return !seen[k]; });
     if(miss.length) return "어느 단계에도 안 든 분류가 있습니다 — " + miss.join(" · ");
-    /* ⚠️⚠️ **2026-10-08 — 단계 열이 메인에서 내려왔습니다** (지시서
-       §3 의 일곱 구간에 없습니다). 카드 생김새는 /g/:stage 화면이
-       그대로 들고 있고, 여기서는 **여섯이 사이트 안에서 길을 잃지
-       않았는지**를 봅니다 — 푸터가 그 길을 받았습니다. 안 받으면
-       색인은 되어 있는데 아무 데서도 안 걸리는 화면이 여섯 생깁니다. */
-    const lost = S.map(function(s2){ return "/g/" + s2.key; })
-      .filter(function(u){ return !document.querySelector('a[href="' + u + '"]'); });
-    if(lost.length) return "사이트 안에서 갈 길이 없는 단계 — " + lost.join(" · ");
+    /* ⚠️⚠️ **길을 잃지 않았는지는 짝 검사로 옮겼습니다** (2026-10-29
+       PHONEWAY) — "창업 · 폐업 영역이 사이트 안에서 길을 잃지 않았다"
+       가 메인에서 입구 한 줄을 봅니다. 재 보니 /g/startup 하나만
+       남아도 **앞뒤 카드로 여섯이 서로 이어집니다** (startup →
+       location → build → operation → transfer → closing). 여기서는
+       **분류 스물여섯이 빠짐없이 한 번씩 나뉘는가** 만 봅니다 —
+       그게 이 검사의 이름이고 하는 일입니다.
+       ⚠️ 둘을 한 검사에 묶으면 한쪽이 바뀔 때마다 다른 쪽이 같이
+       빨개져서, 정작 지키려는 것이 확인되지 않습니다. */
     return true;`);
-  await f("진입 카드 셋의 크기가 같다", "/", `
-    /* ⚠️⚠️ **한쪽을 좁히거나 가볍게 만들면 그게 "덜 중요한 것" 이라는
-       말입니다.** 재는 자리가 세 번 옮겨 왔습니다 — 히어로 선택 카드
-       둘(2026-10-08) → 전문관 카드 넷(10-11) → **창업 · 운영 · 폐업
-       진입 카드 셋**(10-16 §3-3). 규칙이 바뀐 것이 아니라 재는 자리가
-       바뀐 것입니다.
-       ⚠️ 나란히 놓인 때만 봅니다 (좁아지면 줄이 갈립니다). */
-    /* ⚠️ 2026-10-20 시안 1 — 양도양수가 가로형 배너에서 카드로
-       올라와 **넷**입니다. 규칙이 바뀐 것이 아니라 재는 자리가
-       바뀵 것입니다 — 넷의 크기와 무게가 같아야 합니다. */
-    const L = [].slice.call(document.querySelectorAll(".bent-c"));
-    if(L.length !== 4) return "진입 카드가 " + L.length + "개입니다";
+  await f("구매 갈래 넷의 크기가 같다", "/", `
+    /* ⚠️⚠️ **재는 자리가 네 번 옮겨 왔습니다** — 히어로 선택 카드
+       둘(2026-10-08) → 전문관 카드 넷(10-11) → 진입 카드 셋(10-16) →
+       넷(10-20) → **구매 갈래 넷**(10-29 PHONEWAY). 규칙이 바뀐 것이
+       아니라 재는 자리가 바뀐 것입니다. 한쪽을 좁히거나 가볍게 만들면
+       그게 "덜 중요한 것" 이라는 말입니다.
+       ⚠️ 판매 두 방법은 바로 위 검사가 봅니다 — 둘을 묶지 마세요
+       (한쪽만 보면 다른 쪽이 조용히 어긋납니다). */
+    const L = [].slice.call(document.querySelectorAll(".pws-c"));
+    const want = (window.PW_KINDS || []).length;
+    if(!want) return "PW_KINDS 를 못 읽습니다";
+    if(L.length !== want)
+      return "구매 갈래가 " + L.length + "개입니다 (" + want + "이어야 합니다)";
     if(innerWidth <= 900) return true;
     const R = L.map(function(e){ return e.getBoundingClientRect(); });
     if(Math.max.apply(null, R.map(function(r){ return r.top; })) -
        Math.min.apply(null, R.map(function(r){ return r.top; })) > 2) return true;
     const w = R.map(function(r){ return r.width; });
     const h = R.map(function(r){ return r.height; });
-    if(Math.max.apply(null,w) - Math.min.apply(null,w) > 2 ||
-       Math.max.apply(null,h) - Math.min.apply(null,h) > 2)
-      return L.map(function(e, i){ return e.textContent.trim().slice(0,6) + " " +
-        Math.round(w[i]) + "×" + Math.round(h[i]); }).join(" · ");
-    /* ⚠️⚠️ **카드 전체가 하나의 링크입니다** — 안에 또 링크를 넣으면
-       브라우저가 쪼갭니다. "서비스 보기 →" 는 표시이지 단추가 아닙니다. */
-    for(const e of L){
-      const a = e.querySelector("a");
-      if(!a) return "진입 카드가 링크가 아닙니다";
-      if(a.querySelector("a")) return "진입 카드 안에 링크가 또 있습니다";
-      const h2 = a.getAttribute("href") || "";
-      if(!h2 || h2 === "#") return "진입 카드에 가짜 링크가 있습니다";
-    }
+    if(Math.max.apply(null,w) - Math.min.apply(null,w) > 1 ||
+       Math.max.apply(null,h) - Math.min.apply(null,h) > 1)
+      return L.map(function(e, k){ return e.textContent.trim().slice(0,6) + " " +
+        Math.round(w[k]) + "×" + Math.round(h[k]); }).join(" · ");
+    /* ⚠️⚠️ **칸 전체가 하나의 링크입니다** — 안에 또 링크를 넣으면
+       브라우저가 쪼갭니다. */
+    for(const e of L)
+      if(e.querySelector("a")) return "구매 갈래 안에 링크가 또 있습니다";
     return true;`);
   /* ══ 여정 넷 (2026-10-05 V2 지시서 §1 · §2 · §4 · §6 · §7 · §31) ══ */
 
@@ -4237,8 +4313,11 @@ const AUDIT = `(() => {
        ⚠️ 선택 까닭(.bwhy-i)과 배너(.bban-i)는 구간이 내려가서 뺐습니다 —
        되살리시면 그날 여기도 같이 넣으세요 (안 넣으면 그 구간의 빈
        아이콘을 아무도 안 봅니다). */
-    const groups = [[".bent-i", "진입 카드"], [".bdir-i", "직접 찾기"],
-                    [".bcal-i", "계산도구"], [".bstep-i", "이용 방법"]];
+    /* ⚠️⚠️ 2026-10-29 PHONEWAY — 재는 자리가 판매 두 방법 · 구매 갈래 ·
+       이용 방법 · 거래 전 고지로 옮겨갔습니다. 보는 것은 그대로입니다 —
+       빈 아이콘과 한 묶음 안의 중복, 그리고 가짜 링크입니다. */
+    const groups = [[".pww-ic", "판매 방법"], [".pws-c i", "구매 갈래"],
+                    [".pwst-c i", "이용 방법"], [".pwt-c i", "거래 전 고지"]];
     for(const g of groups){
       const L = [].slice.call(document.querySelectorAll("#view " + g[0]));
       if(!L.length) return g[1] + " 아이콘이 하나도 없습니다";
@@ -4289,7 +4368,17 @@ const AUDIT = `(() => {
     }
     return true;`);
 
-  await f("양도양수가 인수 · 양도 · 전문관 세 길을 낸다", "/", `
+  await f("양도양수가 인수 · 양도 · 전문관 세 길을 낸다", "/startup", `
+    /* ⚠️⚠️ **재는 화면을 "/startup" 으로 옮겼습니다** (2026-10-29
+       PHONEWAY 전환). 메인이 중고폰 거래로 바뀌어 창업 · 폐업 쪽
+       길이 거기 없습니다 — 그쪽 157개 화면은 **아직 살아 있고
+       색인돼 있어서** 길이 끊기면 안 되고, 그 입구가 "/startup"
+       입니다 (푸터 맨 아랫줄 한 줄이 거기로 보냅니다).
+       **규칙은 한 줄도 안 바꿨습니다** — 재는 자리가 바뀐 것입니다.
+       ⚠️ 창업 · 폐업을 내리실 때(전환 계획 0단계 ①) 이 검사도 같이
+       치우세요. 그 전에 지우면 **그 영역이 길을 잃은 것을 아무도 안
+       봅니다.** 입구 자체는 짝 검사("창업 · 폐업 영역이 사이트 안에서
+       길을 잃지 않았다")가 메인에서 봅니다. */
     /* ⚠️⚠️ **2026-10-16 §3-4 — 매장 양도양수가 가로형 진입 배너**가
        됐습니다. 전에는 메인에서 전문관을 골라 서비스를 펼치는 구간이
        있었는데, §3 의 아홉 영역에 그 자리가 없습니다 — 함수(MainHalls)는
@@ -4426,7 +4515,13 @@ const AUDIT = `(() => {
        금지해서, 그 카드가 들어 있던 구간을 안 부릅니다. 함수는
        지우지 않았으니 되살리실 수 있습니다 — 그날 bcal 다음에
        bwhy 를 다시 넣으세요. */
-    const want = ["bhero","bent","bdir","bcal","bstep","bgd","bcta"];
+    /* ⚠️⚠️ **2026-10-29 PHONEWAY 전환 — 구간 여섯입니다.**
+       01 히어로(pwh) · 02 판매 두 방법(pww) · 03 중고폰 구매(pws) ·
+       04 이용 방법(pwst) · 05 거래 전 고지(pwt) · 06 하단 CTA(pwc).
+       ⚠️ 앞 지시서의 일곱(bhero · bent · bdir · bcal · bstep · bgd ·
+       bcta)은 **함수를 안 지웠으니** 되살리실 수 있습니다 — 그날
+       여기와 아래 PHONEWAY 검사 일곱을 같이 뒤집으세요. */
+    const want = ["pwh","pww","pws","pwst","pwt","pwc"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
@@ -4436,7 +4531,8 @@ const AUDIT = `(() => {
          합니다 ("?3" 이 아니라). */
       /* ⚠️ 앞 지시서의 이름들을 **빼지 않습니다** — 되살아나면
          "차례가 … 입니다" 로 이름을 내야 합니다 ("?3" 이 아니라). */
-      for(const m of ["bent","bdir","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
+      for(const m of ["pwh","pww","pws","pwst","pwt","pwc",
+                      "bent","bdir","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
                       "bhero","mh","mbr","mhall","msvc","mexp","pkg","mind",
                       "mti","mstp","mopsv","mjn","mlast"])
         if(e.classList.contains(m)) return m;
@@ -5000,7 +5096,15 @@ const AUDIT = `(() => {
      여러 번 겪은 자리).
      ⚠️ 선(stroke)까지 들어간 **보이는 네모**를 잽니다 — 서른셋 중
      열셋이 선을 쓰고 그 굵기가 보이는 크기에 들어갑니다. */
-  await f("컬러 아이콘이 모두 같은 크기로 그려진다", "/", `
+  /* ⚠️⚠️ **재는 화면을 "/providers" 로 옮겼습니다** (2026-10-29
+     PHONEWAY). 메인은 구간 여섯이 손으로 그린 인라인 svg 라
+     "svg.ia"(컬러 아이콘)가 **0개**입니다 — 거기서 재면 "0개뿐입니다"
+     로 영원히 떨어집니다. 규칙은 한 줄도 안 바꿨습니다: 서른다섯 장이
+     전부 같은 크기로 그려지는가.
+     ⚠️ 재 본 값 — /providers 17 · /startup 20 · /operation 17 ·
+     /closure 25 장. 메인에 컬러 아이콘을 다시 넣으시면 그날 여기를
+     "/" 로 되돌리셔도 됩니다. */
+  await f("컬러 아이콘이 모두 같은 크기로 그려진다", "/providers", `
     const svgs = Array.from(document.querySelectorAll("#view svg.ia"));
     if(svgs.length < 4) return "컬러 아이콘이 " + svgs.length + "개뿐입니다";
     const bad = [], seen = {};
@@ -5196,7 +5300,14 @@ const AUDIT = `(() => {
        카드(.mcal-g > li)와 절차 카드(.mstp-g > li)가 생겼습니다. */
     /* ⚠️ 2026-10-16 §3 — 진입 카드(.bent-c > a) · 까닭 카드(.bwhy-c) ·
        절차 카드(.bstep-c) · 배너(.bban-c > a)가 생겼습니다. */
+    /* ⚠️⚠️ 2026-10-29 PHONEWAY — 메인 카드가 판매 방법(.pww-c) ·
+       구매 갈래(.pws-c) · 이용 방법(.pwst-c) · 거래 전 고지(.pwt-c)로
+       바뀌었습니다. **넷을 여기 안 넣으면** 그 카드가 구간 바탕과
+       같은 색이 되어도 조용히 통과합니다 — 되돌려 보고 알았습니다
+       (prove-checks 가 "되돌리기 전 true → 후 true" 로 잡았습니다).
+       ⚠️ 새 카드를 만들면 **반드시 여기 넣으세요.** */
     const sel = ".cat,.ind,.pv,.fr,.fc,.mk,.help,.sp,.empty," +
+                ".pww-c,.pws-c,.pwst-c,.pwt-c," +
                 ".bent-c > a,.bwhy-c,.bstep-c,.bban-c > a," +
                 ".bcal-c > a,.bgd-c > a,.bqc," +
                 ".mhall-c,.mcal-g > li,.mstp-g > li," +

@@ -51,15 +51,18 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
 
  console.log("\n【1】 창업 → 업종 → 신규창업 → 로드맵 → 상세");
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- /* ⚠️⚠️ **히어로의 창업 / 폐업 선택 카드가 없어졌습니다**
-    (2026-10-11 최종 디자인 지시서 §3 — 히어로는 카피 + 통합검색 +
-    바로가기 칩입니다). 메인에서 `/startup` 으로 가는 길은 전문관
-    카드를 고르고 **전체보기**이고, 그게 손님이 실제로 누르는 길입니다. */
- /* ⚠️⚠️ **2026-10-16 §3-3 — 메인에서 /startup 으로 가는 길이 진입
-    카드 셋의 첫 장이 됐습니다** (전문관 넷 + 전체보기는 내려왔습니다).
-    카드 전체가 하나의 링크라 카드를 그대로 누릅니다. */
- await click('.bent-c.ent-startup > a');
- say((await url())==="/startup","메인 진입 카드 창업 준비 → /startup",await url());
+ /* ⚠️⚠️ **2026-10-29 PHONEWAY — 메인에 창업 진입 카드가 없습니다.**
+    메인이 중고폰 거래로 바뀌면서 창업 · 폐업 157개 화면으로 가는 길이
+    **푸터 맨 아랫줄 한 줄**만 남았습니다 (`chrome.js` 의 `tail`).
+    그게 지금 손님이 실제로 지나는 길이라 거기서 들어갑니다 —
+    ⚠️ 그 줄을 지우면 157개가 사이트 안에서 길을 잃고 이 블록이
+    통째로 터집니다 (`check.js` 의 "창업 · 폐업 영역이 사이트 안에서
+    길을 잃지 않았다" 가 그 줄을 따로 봅니다).
+    ⚠️⚠️ 0단계 ① 로 그 157개를 **410 으로 닫거나 redirect** 하기로
+    정하시면, 그날 이 블록(【1】 【2】 【3】)과 【6】 【7】 【8】 【9】 도
+    같이 내리세요 — 없는 화면을 누르면 타임아웃으로 터집니다. */
+ await click('.ft a[href="/startup"]');
+ say((await url())==="/startup","푸터 창업 · 폐업 서비스 → /startup",await url());
  /* ⚠️⚠️ **2026-10-17 창업 준비 §2 로 업종 고르개가 접혔습니다.**
     주인공이 **서비스 고르기**(§2-B)이고, 고르는 격자 둘이 나란히 있으면
     "같은 선택 영역의 반복" 입니다 (§11). 길은 그대로이고 **한 번 더
@@ -101,96 +104,89 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  say((await url()).indexOf("w=money")>=0 && (await url()).indexOf("staff=1")>=0,"진단 결과로 보낸다",await url());
  say((await txt()).indexOf("직원이 계시면 기한부터")>=0,"직원 있다고 하면 기한 안내가 붙는다");
 
- console.log("\n【4】 계산기 · 정보 · 업체 · 입점");
+ console.log("\n【4】 메인에서 갈라지는 길 · 계산기 · 정보 · 입점");
+ /* ⚠️⚠️ **2026-10-29 PHONEWAY — 메인이 통째로 바뀌었습니다.**
+    여기 있던 길(진입 카드 넷 · 직접 찾기 여덟 · 계산도구 카드 ·
+    가이드 카드 · 헤더 `계산기` · 헤더 `이용 가이드`)은 전부 STOREWAY
+    메인 것이고 지금 **하나도 없습니다.** 지우지 않고 **재서 갈랐습니다** —
+      ① PHONEWAY 메인이 내는 길은 여기서 끝까지 눌러 보고
+      ② 창업 · 폐업 157개로 가는 길은 **푸터 한 줄**로 들어가서,
+         거기서 /tools · /content · /closure · /operation · /transfer
+         가 이어지는지 봅니다 (재 보니 /startup 본문이 그 다섯을 전부
+         들고 있습니다).
+    ⚠️ 0단계 ① 로 그 157개를 닫기로 정하시면 ② 도 같이 내리세요. */
+
+ /* ── ① PHONEWAY 메인 ────────────────────────────────────────── */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- /* ⚠️⚠️ **2026-10-16 §3 — 계산도구 구간이 메인에서 내려왔습니다.**
-    길은 **헤더 "계산기"** 가 받습니다 — 끝이 막히지 않았는지 거기서
-    눌러 봅니다 (함수는 안 지웠고 /tools 가 열셋을 다 들고 있습니다). */
- await click('.hd .gnb a[href="/tools"]');
- say((await url())==="/tools","헤더 계산기 → 계산도구 목록",await url());
+ await click('.pwh-go a[href="/sell"]');
+ say((await url())==="/sell","히어로 내 폰 팔기 → /sell",await url());
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.pwh-go a[href="/shop"]');
+ say((await url())==="/shop","히어로 중고폰 구매 → /shop",await url());
+ /* 판매 방법 둘 — A 직접 매입 · B 경쟁입찰. ⚠️ 둘 다 **실제로 열려야**
+    합니다 (지시서 §4 — 작동하지 않는 버튼을 만들지 않습니다). */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.pww-c a[href="/sell"]');
+ say((await url())==="/sell","직접 매입 카드 → /sell",await url());
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.pww-c a[href="/bid"]');
+ say((await url())==="/bid","경쟁입찰 카드 → /bid",await url());
+ /* 구매 갈래 — ⚠️ 매물이 0건이어도 **화면은 열려야** 합니다
+    (0건을 0건이라고 말하는 자리입니다). */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.pws-c[href^="/shop"]');
+ say((await url()).startsWith("/shop"),"구매 갈래 카드 → /shop",await url());
+ /* 하단 CTA 둘 */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.pwc a[href="/sell"]');
+ say((await url())==="/sell","하단 CTA → /sell",await url());
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.pwc a[href="/guide"]');
+ say((await url())==="/guide","하단 CTA → /guide",await url());
+ /* ⚠️ 헤더 CTA 는 **167개 화면 전부**에 있는 늘 보이는 길입니다 */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.hd .hd-cta');
+ say((await url())==="/sell","헤더 팔기 → /sell",await url());
+ /* ⚠️⚠️ 헤더 메뉴 여섯이 **전부 실제로 열려야** 합니다 — 하나라도
+    막히면 167개 화면에서 그 길이 끊깁니다. */
+ for(const [h,n] of [["/sell","내 폰 팔기"],["/shop","중고폰 구매"],
+                     ["/bid","최고가 경쟁입찰"],["/track","판매 진행 조회"],
+                     ["/guide","이용 안내"],["/faq","고객센터"]]){
+   await pg.goto(B+"/",{waitUntil:"networkidle"});
+   await click('.hd .gnb a[href="'+h+'"]');
+   say((await url())===h,"헤더 "+n+" → "+h,await url());
+ }
+ /* ⚠️ 매입업체 입점 — 끝이 막히지 않았는지 푸터에서 눌러 봅니다 */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.ft a[href="/join"]');
+ say((await url())==="/join","푸터 매입업체 입점 → 신청 화면",await url());
+
+ /* ── ② 창업 · 폐업 157개 — 푸터 한 줄로 들어갑니다 ───────────── */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.ft a[href="/g/startup"]');
+ say((await url())==="/g/startup","푸터 사업 단계별 서비스 → /g/startup",await url());
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.ft a[href="/startup"]');
+ say((await url())==="/startup","푸터 창업 · 폐업 서비스 → /startup",await url());
+ /* 거기서 계산도구 · 정보센터 · 나머지 전문관이 이어지는가 */
+ await click('#view a[href="/tools"]');
+ say((await url())==="/tools","창업 준비 → 계산도구 목록",await url());
  await click('#view a[href="/tools/cost"]');
  say((await url())==="/tools/cost","계산도구 목록 → 실제 계산기",await url());
  await pg.evaluate(()=>{const i=document.querySelector("#tl-f input");if(i){i.value="1000";i.dispatchEvent(new Event("input",{bubbles:true}));}});
  await pg.waitForTimeout(200);
  say((await pg.evaluate(()=>!!document.querySelector(".tl-res"))),"계산기 결과 칸이 돈다");
- /* ⚠️⚠️ **"최신 정보" 구간이 메인에서 내려왔습니다** (최종 디자인
-    지시서 §1 — 메인은 일곱 구간이고 글 구간이 없습니다). 글 예순 편이
-    길을 잃지 않았는지 **남은 길**로 끝까지 눌러 봅니다 — 마지막 구간의
-    도움 줄과 푸터 `정보센터` 둘입니다. */
- /* ⚠️⚠️ **2026-10-16 §4 — 글 예순 편으로 가는 길이 헤더 "이용
-    가이드" 가 됐습니다** (메인의 도움 줄은 §3 의 아홉 영역에
-    없습니다). 끝이 막히지 않았는지 거기서 눌러 봅니다. */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.hd .gnb a[href="/content"]');
- say((await url())==="/content","헤더 이용 가이드 → 정보센터",await url());
+ await pg.goto(B+"/startup",{waitUntil:"networkidle"});
+ await click('#view a[href="/content"]');
+ say((await url())==="/content","창업 준비 → 정보센터",await url());
  await click('.ct-l > li:nth-child(1) a');
  say((await url()).startsWith("/content/"),"정보센터 → 글 상세",await url());
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- /* ⚠️ 2026-10-11 UI/UX 지시서 §2 — 분류 여덟(.msvc-g)이 **전문관
-    넷**이 됐습니다. 끝이 막힌 길이 생기지 않았는지 눌러서 봅니다 —
-    ① 전문관을 고르면 그 전문관 서비스가 나오고 ② 서비스 칸이 실제
-    화면으로 가고 ③ 전체보기가 그 전문관으로 갑니다. */
- /* ⚠️⚠️ **2026-10-16 §3 — 메인에서 전문관을 고르는 구간이
-    내려왔습니다.** 진입 카드 셋이 전문관 세 화면으로 **바로** 보내고,
-    매장 양도양수는 ④ 가로형 배너가 받습니다. 끝이 막힌 길이 생기지
-    않았는지 넷 다 눌러 봅니다. */
- await click('.bent-c.ent-closure > a');
- say((await url())==="/closure","메인 진입 카드 폐업 · 정리 → /closure",await url());
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bent-c.ent-operation > a');
- say((await url())==="/operation","메인 진입 카드 매장 운영 → /operation",await url());
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bent-c.ent-transfer a[href="/transfer"]');
- say((await url())==="/transfer","양도양수 배너 → 전문관",await url());
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- /* ⚠️⚠️ **2026-10-22 — 서비스 배너 둘이 메인에서 내려왔습니다**
-    (사장님 시안). 그 길은 ③ 직접 서비스 찾기 여덟이 그대로 받습니다 —
-    함수는 안 지웠으니 되살리시면 여기에 .bban-c 를 다시 넣으세요. */
- await click('.bdir-c:nth-child(1)');
- say((await url()).startsWith("/providers/"),"직접 찾기 → 분야 화면",await url());
- /* ⚠️⚠️ **2026-10-25 §1-01 — 히어로가 01 구간으로 돌아왔습니다.**
-    첫 화면에서 바로 신청으로 가는 길이 다시 생겼습니다 — 그쪽을 먼저
-    눌러 봅니다. ⚠️ 히어로를 다시 빼실 때는 여기도 같이 고치세요
-    (없는 요소를 집으면 타임아웃으로 터지고 뒤 블록이 통째로 안
-    돕니다 — 이 저장소가 그렇게 겪은 자리입니다). */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bhero-go a[href="/quote"]');
- say((await url()).startsWith("/quote"),"히어로 무료 견적 신청 → 신청 화면",await url());
- /* ⚠️ 헤더 CTA 는 **160개 화면 전부**에 있는 늘 보이는 길입니다 */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.hd .hd-cta');
- say((await url()).startsWith("/quote"),"헤더 견적 신청 → 신청 화면",await url());
- /* ⚠️ 업체찾기로 가는 길도 헤더에 있어야 합니다 (메뉴에서 빠지면
-    160개 화면에서 길이 끊깁니다) */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.hd .gnb a[href="/providers"]');
- say((await url())==="/providers","헤더 서비스 · 상품 → 업체찾기",await url());
- /* ⚠️ 2026-10-11 간소화 지시서 §2-F — 파트너 입점 구간이 메인에서
-    내려왔습니다. ⚠️⚠️ **최종 디자인 지시서 §2 로 헤더 CTA 도 "무료
-    견적 신청"(`/quote`) 이 됐습니다** — 업체 입점은 이제 **푸터**가
-    유일한 길입니다. 끝이 막히지 않았는지 거기서 눌러 봅니다. */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.ft a[href="/join"]');
- say((await url())==="/join","푸터 업체 입점 → 신청 화면",await url());
- /* §2-E — 메인에서 견적 · 상담으로 가는 길이 하나는 있어야 합니다 */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bcta-go a[href="/quote"]');
- say((await url()).startsWith("/quote"),"마지막 구간 → 견적 · 상담 신청",await url());
- /* ⚠️⚠️ 2026-10-25 §1-07 · §11 — **중간 대형 무료 견적 신청 섹션이
-    없어야 합니다.** 그래서 `.bqc`(견적 안내 카드)를 더 안 냅니다 —
-    첫 화면의 히어로(바로 위)와 맨 아래 07 구간 둘이 그 길입니다.
-    여기서 **없는지** 확인합니다 (다시 생기면 지시서 위반입니다). */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- say((await pg.locator('#view .bqc').count())===0,
-     "중간 대형 견적 신청 섹션이 없다 (§1-07)", "bqc 개수");
- /* ⚠️ §12 — 계산도구 넷이 실제로 열려야 합니다 */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bcal-g > li:nth-child(1) > a');
- say((await url()).startsWith("/tools/"),"계산도구 카드 → 계산기",await url());
- /* ⚠️ §13 — 이용 가이드가 실제 글로 열려야 합니다 */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bgd-g > li:nth-child(1) > a');
- say((await url()).startsWith("/content/"),"이용 가이드 카드 → 글",await url());
+ for(const [h,n] of [["/closure","폐업 · 정리"],["/operation","매장 운영"],
+                     ["/transfer","매장 양도양수"]]){
+   await pg.goto(B+"/startup",{waitUntil:"networkidle"});
+   await click('#view a[href="'+h+'"]');
+   say((await url())===h,"창업 준비 → "+n,await url());
+ }
 
 
  /* ══════════════════════════════════════════════════════════════
@@ -904,24 +900,61 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  }
  say(new Set(words).size === 1, "전문관 넷의 첫 단추가 같은 말이다", words.join(" | "));
 
- /* ══ 【12】 2026-10-25 §4 — **메인에서 시작하는** 시나리오 넷 ══
-    ⚠️⚠️ 위 【9】 는 **전문관에서 시작합니다.** §4 가 적은 길은
-    "메인 접속 → 전문관 → 서비스 선택 → 견적 신청" 이라, 메인의
-    **진입 카드 넷**이 그 네 전문관으로 제대로 가는지를 아무도 안
-    보고 있었습니다 — 카드가 한 번 바뀔 때마다 조용히 끊길 자리입니다.
+ /* ══ 【12】 메인에서 시작하는 시나리오 ══════════════════════════
+    ⚠️⚠️ **2026-10-29 PHONEWAY — 메인 진입 카드 넷이 없어졌습니다.**
+    여기 있던 "메인 → 전문관 → 서비스 선택 → 견적 신청" 은 STOREWAY
+    메인 것입니다. **두 쪽으로 갈랐습니다** —
+      ① PHONEWAY 메인이 내는 길 (판매 · 구매)
+      ② 창업 · 폐업 전문관 넷 — 푸터 한 줄로 들어간 뒤 **직접**
+         (메인에 그 네 카드가 없으니 "메인 진입 카드" 로는 못 잽니다)
     ⚠️ 보내지는 않습니다 — 신청 화면이 고른 것을 되읽는 데까지입니다. */
- console.log("\n【12】 §4 메인에서 시작하는 시나리오 넷");
+ console.log("\n【12】 메인에서 시작하는 시나리오");
  await pg.setViewportSize({ width:1440, height:900 });
+
+ /* ── ① PHONEWAY — 메인에서 /sell 까지, 그리고 끝까지 고릅니다 ── */
+ await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+ await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
+ await click('.pww-c a[href="/sell"]');
+ say((await url())==="/sell","메인 직접 매입 카드 → 내 폰 팔기",await url());
+ /* 기기 → 제조사 → 모델 → 상태 → 견적 · 신청. ⚠️ 끝이 막히지 않았는지
+    **실제로 눌러** 봅니다 (고르개가 주소에 실리는 꼴입니다). */
+ await click('#pf-1 .chip-g a:has-text("스마트폰")');
+ await click('#pf-1 .chip-g a:has-text("애플")');
+ say((await url()).indexOf("mk=apple")>=0,"제조사가 주소에 실린다",await url());
+ await pg.selectOption("#pf-md", { index:1 });
+ await pg.waitForTimeout(400);
+ say((await url()).indexOf("md=")>=0,"모델이 주소에 실린다",await url());
+ /* ⚠️⚠️ **용량까지 골라야 2단계가 열립니다** (`pwSellStep()`) — 모델만
+    고르고 "2단계가 안 열린다" 고 적으면 **검사가 틀린** 것입니다. */
+ const pwCap = await pg.$$('#pf-1 .chip-g a');
+ if(pwCap.length) await pwCap[pwCap.length-1].click();
+ await pg.waitForTimeout(450);
+ say((await pg.locator("#pf-2").count())>0,"용량까지 고르면 2단계(상태 · 등급)가 열린다");
+ /* 등급을 고르면 3단계(견적 · 신청)가 열려야 합니다 */
+ const gr = await pg.$$('#pf-2 .pwf-g');
+ if(gr.length){ await gr[0].click(); await pg.waitForTimeout(450); }
+ say((await pg.locator("#pf-3").count())>0,"3단계(견적 · 신청)가 열린다");
+ /* ⚠️⚠️ **매입 기준가가 0건이라 금액을 내지 않습니다** (절대 규칙 1).
+    기준가를 넣으시면 이 줄이 **반대로** 뒤집혀야 합니다. */
+ say((await pg.locator("#pf-3").innerText()).indexOf("원")<0 ||
+     (await pg.evaluate(()=>typeof amBuyReady==="function" && !amBuyReady())),
+     "기준가 0건이라 예상 금액을 안 낸다");
+ say((await pg.locator("#pf-send").count())>0,"신청 단추가 있다");
+ /* 구매 쪽 */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.pws-c[href^="/shop"]');
+ say((await url()).startsWith("/shop"),"메인 구매 갈래 → 중고폰 구매",await url());
+
+ /* ── ② 창업 · 폐업 전문관 넷 — 푸터로 들어간 뒤 ───────────────── */
+ /* ⚠️⚠️ **메인에 그 네 카드가 없습니다.** 길은 푸터 한 줄이고, 거기서
+    /startup 으로 들어가면 나머지 셋이 본문에서 이어집니다 (위 【4】②
+    가 그 이어짐을 봅니다). 여기서는 **전문관마다 고를 칸이 있고 신청
+    단추가 쪽과 고른 것을 들고 가는지**를 봅니다 — 그게 이 블록이
+    원래 지키던 성질입니다. */
  for(const [nm, to, side] of [["창업","/startup","start"], ["운영","/operation","ops"],
                               ["양도양수","/transfer","transfer"], ["폐업","/closure","close"]]){
    await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
-   await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
-   const card = await pg.$('.bent-g a[href="'+to+'"]');
-   say(!!card, nm+" — 메인 진입 카드가 그 전문관으로 간다", to);
-   if(!card) continue;
-   await card.click(); await pg.waitForTimeout(700);
-   const at = await url();
-   say(at.indexOf(to) === 0, nm+" — 전문관으로 갔다", at);
+   await pg.goto(B+to,{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
    const bx = await pg.$$("#view [data-pick]");
    say(bx.length > 0, nm+" — 첫 화면에 고를 칸이 있다", bx.length+"칸");
    if(!bx.length) continue;
@@ -931,28 +964,11 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    say(href.indexOf("side="+side) >= 0 && href.indexOf("sv=") >= 0,
        nm+" — 신청 단추가 쪽과 고른 것을 들고 간다", href);
  }
-
- /* §1-03 — 고르신 것이 있으면 **메인이 그 자리에서** 냅니다.
-    ⚠️ 0개면 그 줄이 아예 안 나옵니다 (절대 규칙 2). */
- await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
- await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
- const pk0 = await pg.evaluate(()=>{
-   const r = document.querySelector("#view .bdir-pk");
-   return !r || r.hidden || !r.getClientRects().length; });
- say(pk0, "메인 — 아무것도 안 고르면 그 줄이 없다");
- await pg.goto(B+"/startup",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
- const sx = await pg.$$("#view [data-pick]");
- if(sx.length > 1){ await sx[0].click(); await pg.waitForTimeout(150);
-                    await sx[1].click(); await pg.waitForTimeout(300); }
- await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
- const pk2 = await pg.evaluate(()=>{
-   const r = document.querySelector("#view .bdir-pk");
-   if(!r || r.hidden) return null;
-   const a = r.querySelector("[data-pick-go]");
-   return { n:(r.querySelector("[data-pick-n]")||{}).textContent||"",
-            go:a?a.getAttribute("href"):"" }; });
- say(pk2 && pk2.n === "2" && /sv=/.test(pk2.go||""),
-     "메인 — 고른 것을 그 자리에서 내고 신청까지 들고 간다", JSON.stringify(pk2));
+ /* ⚠️⚠️ **"메인이 고른 것을 그 자리에서 낸다"(.bdir-pk)는 뺐습니다** —
+    그 줄은 STOREWAY 메인의 03 구간(`HomeDirect()`) 안이고, PHONEWAY
+    메인에는 그 구간이 없습니다. 함수는 `home.js` 에 그대로 있으니
+    되살리시면 **여기도 같이 되살리세요** (없는 요소를 집으면
+    타임아웃으로 터지고 뒤 블록이 통째로 안 돕니다). */
 
  /* ══ 【13】 2026-10-26 — `/sell` 이 중복 방지를 들고 가는가 ══
     ⚠️⚠️ **보고서 §2-A 가 찾은 자리입니다.** `/sell` 두 탭이 `idem` 도
@@ -963,7 +979,12 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     보내는가는 아무도 안 보고 있었습니다. 여기가 그 자리입니다.
     ⚠️ 실제로 보내지 않습니다 — `amSend` 를 바꿔 끼워 **보낼 몸통**만
     잽니다 (위 【7】 과 같은 방식). */
- console.log("\n【13】 /sell 중복 방지");
+ /* ⚠️⚠️ **2026-10-29 — 주소가 `/sell-biz` 로 옮겼습니다.** `/sell` 은
+    PHONEWAY 의 **내 폰 팔기**가 되었고, 창업 · 폐업 매물 내놓기는
+    `/sell-biz` 입니다 (`js/pages/market.js` 의 `PageSellBiz()`).
+    ⚠️ 화면 함수 이름도 `PageSell` → `PageSellBiz` 입니다 — 같은 이름을
+    두 파일에 두면 **나중에 실리는 쪽이 조용히 이깁니다.** */
+ console.log("\n【13】 /sell-biz 중복 방지");
  async function sellBody(u){
    await pg.goto(B+u,{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
    return pg.evaluate(()=>{
@@ -981,8 +1002,8 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      window.amSend=real; return got;
    });
  }
- const bS = await sellBody("/sell");
- const bA = await sellBody("/sell?t=asset");
+ const bS = await sellBody("/sell-biz");
+ const bA = await sellBody("/sell-biz?t=asset");
  say(!!bS && !!bS.idem && String(bS.idem).length>=16,
      "매물 내놓기가 멱등 열쇠를 들고 간다", bS && String(bS.idem).slice(0,10));
  say(!!bS && bS.cat==="transfer", "매장은 cat=transfer", bS && bS.cat);

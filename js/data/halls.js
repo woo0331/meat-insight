@@ -89,7 +89,7 @@ window.AM_HALLS = [
     items:[
       /* ── §7 의 여섯 ── */
       { n:"매장 인수",     ia:"store",    to:"/stores",  tone:"t5" },
-      { n:"매장 양도",     ia:"handover", to:"/sell",    tone:"t13" },
+      { n:"매장 양도",     ia:"handover", to:"/sell-biz",    tone:"t13" },
       { n:"권리금 정보",   ia:"calc",     to:"/tools/premium", tone:"t6" },
       { n:"계약 · 행정",   ia:"contract", cat:"admin", sub:"legal" },
       { n:"시설 · 장비 인계",ia:"equip",   to:"/assets",  tone:"t12" },

@@ -1585,7 +1585,7 @@ function MainTakeoverGuide(nAssets){
         : '인수 가능한 매장 정보를 준비하고 있습니다.')+'</p>'+
     '<p class="row-cta row-mid">'+
       '<a class="btn btn-nv" href="/transfer">인수 · 양도 알아보기'+icon("arrow",18)+'</a>'+
-      '<a class="btn btn-o" href="/sell">매장 내놓기</a></p>'+
+      '<a class="btn btn-o" href="/sell-biz">매장 내놓기</a></p>'+
   '</div>';
 }
 
@@ -2015,7 +2015,7 @@ var MAIN_ASSET_KIND = [
   { ic:"pin",      tone:"t5",  ph:"kind-take",  n:"매장 인수하기",
     d:"인수 가능한 매장을 찾아보세요.", to:"/stores" },
   { ic:"handover", tone:"t13", ph:"kind-pass",  n:"내 매장 양도하기",
-    d:"내 매장을 등록하고 새로운 사장님을 만나보세요.", to:"/sell" },
+    d:"내 매장을 등록하고 새로운 사장님을 만나보세요.", to:"/sell-biz" },
   { ic:"boxes",    tone:"t12", ph:"kind-asset", n:"시설 · 장비 거래",
     d:"중고 시설과 장비를 구매하거나 판매할 수 있습니다.", to:"/assets" }
 ];

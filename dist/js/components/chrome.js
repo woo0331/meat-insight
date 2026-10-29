@@ -2,24 +2,21 @@
 
 window.AM_GNB = [
 
-  { to:"/startup",   name:"창업 준비" },
-  { to:"/operation", name:"매장 운영" },
-  { to:"/transfer",  name:"매장 양도양수" },
-  { to:"/closure",   name:"폐업 · 정리" },
-  { to:"/providers", name:"서비스 · 상품" },
-
-  { to:"/tools",     name:"계산도구" },
-  { to:"/content",   name:"이용 가이드" },
-
-  { to:"/faq",       name:"도움말" }
+  { to:"/sell",    name:"내 폰 팔기" },
+  { to:"/shop",    name:"중고폰 구매" },
+  { to:"/bid",     name:"최고가 경쟁입찰" },
+  { to:"/track",   name:"판매 진행 조회" },
+  { to:"/guide",   name:"이용 안내" },
+  { to:"/faq",     name:"고객센터" }
 ];
 
 var MNAV = [
-  { to:"/",          name:"홈",       icon:"home" },
-  { to:"/providers", name:"서비스",    icon:"grid" },
-  { to:"/tools",     name:"계산도구",  icon:"calc" },
-  { to:"/content",   name:"가이드",    icon:"book" },
-  { to:"/my",        name:"마이",      icon:"user" }
+
+  { to:"/",      name:"홈",     icon:"home" },
+  { to:"/sell",  name:"팔기",   icon:"mobile" },
+  { to:"/shop",  name:"구매",   icon:"bag" },
+  { to:"/track", name:"진행",   icon:"search" },
+  { to:"/my",    name:"마이",   icon:"user" }
 ];
 
 function brandName(){ return (window.AM_BRAND || {}).name || ""; }
@@ -43,7 +40,7 @@ function Logo(where){
 
   return '<a class="lg hd-lg" href="/" aria-label="'+esc(nm)+' 홈">'+
     (mark ? mark :
-      '<span class="hd-lg-i" aria-hidden="true">'+icon("home",20)+'</span>'+
+      '<span class="hd-lg-i" aria-hidden="true">'+icon("mobile",20)+'</span>'+
       '<span class="hd-lg-t"><b>'+esc(nm)+'</b>'+
         (logoSub() ? '<i>'+esc(logoSub())+'</i>' : '')+'</span>')+
   '</a>';
@@ -72,8 +69,8 @@ function Header(){
 
       '<a class="hd-txt" href="/my">'+icon("user",18)+'<span>내 기록</span></a>'+
 
-      '<a class="btn btn-nv hd-cta" href="/quote" data-to="/quote">'+
-        '<span class="hd-cta-w">무료 </span>견적 신청'+icon("arrow",16)+'</a>'+
+      '<a class="btn btn-nv hd-cta" href="/sell" data-to="/sell">'+
+        '<span class="hd-cta-w">내 폰 </span>팔기'+icon("arrow",16)+'</a>'+
 
       '<button class="hd-ic hd-mb" type="button" id="hdMb" aria-label="메뉴"'+
         ' aria-expanded="false" aria-controls="hdMenu" onclick="hdMenu()">'+
@@ -168,10 +165,14 @@ function MobileNav(){
 }
 
 var MNAV_NEAR = [
-  [/^\/tools/,                                   "/tools"],
-  [/^\/(content|faq|about|support)/,             "/content"],
-  [/^\/(my|search|compare)/,                     "/my"],
-  [/^\/(providers|p\/|c\/|g\/|quote|join|franchise|sell|stores|assets|s\/|a\/|startup|operation|transfer|closure)/, "/providers"]
+
+  [/^\/(sell|bid)/,                              "/sell"],
+  [/^\/(shop|a\/|s\/)/,                          "/shop"],
+  [/^\/(track|quote)/,                           "/track"],
+  [/^\/(my|search|compare|join)/,                "/my"],
+  [/^\/(guide|faq|about|terms|privacy|content|support|tools)/, "/"],
+
+  [/^\/(providers|p\/|c\/|g\/|franchise|stores|assets|startup|operation|transfer|closure)/, "/shop"]
 ];
 function paintMnav(){
   var n = $("mnav"); if(!n) return;
@@ -187,37 +188,31 @@ function paintMnav(){
 
 function Footer(){
 
-  var stages = (window.AM_STAGES || []).map(function(st){
-    return ["/g/" + st.key, st.name];
-  });
-
-  var journeys = (window.AM_JOURNEYS || []).map(function(j){
-    return [j.to, j.name];
-  });
-
   var cols = [
 
-    [brandName(), [["/about","서비스 소개"]].concat(journeys)],
-    ["사업 단계", stages],
-    ["서비스",   [["/providers","업체 찾기"],["/content","정보센터"],
-                  ["/tools","사장님 도구"],["/stores","매장 찾기"],
-
-                  ["/sell","매장 내놓기"],
-                  ["/assets","시설 · 집기"],["/franchise","프랜차이즈"],
-                  ["/support","창업 · 폐업 지원"],["/quote","견적 요청"]]],
-    ["파트너",   [["/join","파트너 입점"]]],
-    ["고객지원", [["/faq","자주 묻는 질문"],["/terms","이용약관"],
-                  ["/privacy","개인정보처리방침"]]]
+    [brandName(), [["/guide","이용 안내"],["/bid","경쟁입찰이란"],
+                   ["/faq","고객센터"]]],
+    ["판매",     [["/sell","내 폰 팔기"],["/bid","최고가 경쟁입찰"],
+                   ["/track","판매 진행 조회"]]],
+    ["구매",     [["/shop","중고폰 구매"],["/shop?m=iphone","아이폰"],
+                   ["/shop?m=galaxy","갤럭시"],["/shop?m=tablet","태블릿"]]],
+    ["파트너",   [["/join","매입업체 입점"]]],
+    ["고객지원", [["/faq","자주 묻는 질문"],["/my","내 기록"],
+                   ["/terms","이용약관"],["/privacy","개인정보처리방침"]]]
   ];
 
-  var tail = [["/search","통합검색"],["/my","내 기록"]];
+  var tail = [["/search","통합검색"],["/my","내 기록"],
+              ["/startup","창업 · 폐업 서비스"],
+
+              ["/g/startup","사업 단계별 서비스"]];
 
   return '<footer class="ft"><div class="w">'+
     '<div class="ft-g">'+
       '<div class="ft-b">'+
         Logo("ft") +
+
         '<p>'+esc((window.AM_BRAND||{}).slogan || "")+'<br> '+
-          '창업에 필요한 모든 것, 폐업에 필요한 모든 것.</p>'+
+          '직접 매입 · 전국 업체 경쟁입찰 · 검수 완료 중고폰까지.</p>'+
         '<a class="btn btn-nv" href="/join">업체 입점하기'+icon("arrow",16)+'</a>'+
       '</div>'+
 

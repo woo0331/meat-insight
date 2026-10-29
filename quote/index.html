@@ -43,9 +43,9 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 
-<link rel="stylesheet" href="/dist/css/tokens.css?v=8b3931dc">
-<link rel="stylesheet" href="/dist/css/app.css?v=488ed35f">
-<link rel="stylesheet" href="/dist/css/pages.css?v=6e895d74">
+<link rel="stylesheet" href="/dist/css/tokens.css?v=cf485e67">
+<link rel="stylesheet" href="/dist/css/app.css?v=7cdebc5e">
+<link rel="stylesheet" href="/dist/css/pages.css?v=737018e7">
 
 <!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
      마세요 — 다음에 돌릴 때 덮어써집니다. 내용은 js/data/faq.js 와
@@ -78,7 +78,7 @@
 <script defer src="/dist/js/data/indgroups.js?v=87b19790"></script>
 <script defer src="/dist/js/data/catalog.js?v=d4687cec"></script>
 <script defer src="/dist/js/data/lifecycle.js?v=a948ce6d"></script>
-<script defer src="/dist/js/data/journey.js?v=4495e0c3"></script>
+<script defer src="/dist/js/data/journey.js?v=5f423dc1"></script>
 <script defer src="/dist/js/data/franchise.js?v=08e81b83"></script>
 <script defer src="/dist/js/data/providers.js?v=c1a9448a"></script>
 <script defer src="/dist/js/data/market.js?v=ac34c208"></script>
@@ -107,18 +107,19 @@
 <!-- 창업 · 폐업 패키지 (§4-4 · §6-4) — offers 의 상품 id 를 쓰므로 그 뒤 -->
 <script defer src="/dist/js/data/offers.js?v=92a08469"></script>
 <script defer src="/dist/js/data/packages.js?v=5c5708c9"></script>
-<script defer src="/dist/js/data/halls.js?v=fe423aff"></script>
+<script defer src="/dist/js/data/halls.js?v=e9811498"></script>
 <!-- 고를 수 있는 서비스 (2026-10-17 창업 준비 전문관 §12 · §2-B).
      ⚠️ halls 와 reqforms 의 값을 읽으므로 **그 뒤**입니다. -->
 <script defer src="/dist/js/data/svcpick.js?v=7a704162"></script>
 <script defer src="/dist/js/data/svcpage.js?v=b907398d"></script>
-<script defer src="/dist/js/data/steps.js?v=2617c183"></script>
+<script defer src="/dist/js/data/steps.js?v=4e0f124e"></script>
+<script defer src="/dist/js/data/devices.js?v=8f95fcc0"></script>
 <!-- ⚠️⚠️ 운영 체크리스트 (2026-10-18 §9) — svcpick 의 id · tools 의 key ·
      content 의 slug 를 가리킵니다. ⚠️ 이 줄이 없으면 `/operation` 의
      체크리스트 구간이 **조용히 통째로 빠집니다** (에러는 안 납니다). -->
 <script defer src="/dist/js/data/opscheck.js?v=f6f63146"></script>
 
-<script defer src="/dist/js/components/base.js?v=0df6f5e2"></script>
+<script defer src="/dist/js/components/base.js?v=f0318b55"></script>
 <script defer src="/dist/js/components/ui.js?v=aeb3ab24"></script>
 <!-- 선택한 서비스 (2026-10-17 창업 준비 전문관 §3 · §4-1).
      ⚠️ ui.js 의 amGet/amSet 과 svcpick.js 를 읽으므로 **그 뒤**입니다.
@@ -131,22 +132,26 @@
      꺼져 있으면 fetch 를 한 번도 안 보냅니다 (js/state.js 머리말) -->
 <script defer src="/dist/js/state.js?v=95e250a7"></script>
 <script defer src="/dist/js/photo.js?v=fb4d7968"></script>
-<script defer src="/dist/js/components/chrome.js?v=3fb39153"></script>
+<script defer src="/dist/js/components/chrome.js?v=8e67d83f"></script>
 
-<script defer src="/dist/js/pages/home.js?v=6761fbb0"></script>
-<script defer src="/dist/js/pages/journey.js?v=2d15b6a8"></script>
+<script defer src="/dist/js/pages/home.js?v=0961506a"></script>
+<script defer src="/dist/js/pages/journey.js?v=716d7de8"></script>
 <script defer src="/dist/js/pages/flow.js?v=9d3b6b6b"></script>
 <script defer src="/dist/js/pages/providers.js?v=5e384601"></script>
 <script defer src="/dist/js/pages/franchise.js?v=a7dcbc4c"></script>
-<script defer src="/dist/js/pages/market.js?v=3b385422"></script>
+<script defer src="/dist/js/pages/market.js?v=6d137100"></script>
 <script defer src="/dist/js/pages/quote.js?v=84fbb715"></script>
 <script defer src="/dist/js/pages/info.js?v=ecb93643"></script>
 <script defer src="/dist/js/pages/tools.js?v=de236ab4"></script>
 <script defer src="/dist/js/pages/my.js?v=d8107f81"></script>
 <script defer src="/dist/js/pages/search.js?v=75dcd044"></script>
 <script defer src="/dist/js/pages/legal.js?v=0792185d"></script>
+<!-- ⚠️⚠️ PHONEWAY 화면 다섯 (/sell /shop /bid /track /guide).
+     market.js 보다 **뒤**라야 합니다 — 둘 다 PageSell 을 들고 있던
+     자리이고, market.js 쪽은 PageSellBiz 로 이름을 갈랐습니다. -->
+<script defer src="/dist/js/pages/phone.js?v=e3bf60a4"></script>
 
-<script defer src="/dist/js/app.js?v=7b459d34"></script>
+<script defer src="/dist/js/app.js?v=557fd41e"></script>
 
 <div id="chrome-t"></div>
 <!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가

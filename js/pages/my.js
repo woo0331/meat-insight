@@ -1033,6 +1033,36 @@ function myqCall(fn, args, say){
   });
 }
 
+/* 폰웨이 쪽 — ⚠️⚠️ **내 기록의 첫 화면이 창업 고르개였습니다.**
+   중고폰을 팔러 오신 분이 헤더의 `내 기록` 을 누르면 상황 · 업종 ·
+   평수부터 물었습니다 — 남의 질문입니다. 지금은 이 띠가 먼저이고
+   창업 · 폐업 기록은 아래에 **접혀** 있습니다 (지운 것이 아닙니다 —
+   157개 화면이 아직 살아 있고 0단계 ① 은 사장님이 정하실 일입니다).
+   ⚠️ 지어낸 숫자를 내지 않습니다 — 진행 중인 건수는 서버에 물어야
+   아는 값이고, 로그인 전에는 그 길이 없습니다. 가는 길만 냅니다. */
+function MyPwBand(){
+  var L = [
+    /* ⚠️⚠️ **`iconArt()` 에 없는 이름을 적지 마세요** — 빈 문자열을
+       돌려줘서 타일이 덩그러니 빕니다 (에러도 404 도 안 납니다).
+       `search` 를 적었다가 찍어 보고 알았습니다. `contract` 는
+       서류 · 진행이라 "어디까지 왔나" 에 맞습니다. */
+    { to:"/track", ia:"contract",   nm:"판매 진행 조회",
+      s:"접수번호로 지금 어디까지 왔는지 보십시오." },
+    { to:"/sell",  ia:"dev-iphone", nm:"내 폰 팔기",
+      s:"기종과 상태만 고르시면 판매 방법을 바로 보실 수 있습니다." },
+    { to:"/shop",  ia:"dev-tablet", nm:"중고폰 구매",
+      s:"검수를 마친 기기만 올립니다." }
+  ];
+  return '<section class="sec sec-white"><div class="w">'+
+    '<h2 class="pwf-h2">무엇을 하시겠어요?</h2>'+
+    '<div class="my-pw">'+ L.map(function(x){
+      return '<a class="my-pw-c" href="'+esc(x.to)+'">'+
+        '<span class="my-pw-i">'+ iconArt(x.ia, 44) +'</span>'+
+        '<b>'+esc(x.nm)+'</b><span class="my-pw-s">'+esc(x.s)+'</span></a>';
+    }).join("") +'</div>'+
+  '</div></section>';
+}
+
 function PageMy(){
   var p = amGet(MKEY, { side:"", industry:"", region:"", gu:"", pyeong:"", dday:"" });
   var qs = amGet("am.quotes.v1", []);
@@ -1040,7 +1070,10 @@ function PageMy(){
 
   return PgHero({
     kicker:"MY",
-    h1raw: p.side === "close" ? "내 폐업" : (p.side === "start" ? "내 창업" : "지금 어느 쪽이세요?"),
+    /* ⚠️⚠️ 안 고르신 분께 **"어느 쪽이세요"** 로 묻지 않습니다 — 중고폰을
+       팔러 오신 분께는 창업이냐 폐업이냐가 남의 질문입니다 (헤더
+       메뉴 이름과 같은 **내 기록**입니다). 고르신 분께는 그대로. */
+    h1raw: p.side === "close" ? "내 폐업" : (p.side === "start" ? "내 창업" : "내 기록"),
     lead:"이 브라우저에만 남습니다. 서버로 보내지 않습니다.",
     tight:true
   })+
@@ -1051,7 +1084,13 @@ function PageMy(){
      ⚠️ 위의 상황 · 업종 칸은 **이 브라우저 안**에만 남는 것이고,
      이 구간은 **서버에 저장된 신청**입니다 — 둘은 다릅니다. */
   MyDbBand()+
+  MyPwBand()+
   '<section class="sec sec-white"><div class="w">'+
+    /* ⚠️⚠️ **접었지 지우지 않았습니다.** 창업 · 폐업 157개 화면이
+       아직 살아 있고, 그 처리는 0단계 ① 로 사장님이 정하실 일입니다.
+       접힌 것도 DOM 에 그대로 있어 링크 검사와 색인이 안 바뀝니다. */
+    '<details class="my-biz"><summary><b>창업 · 폐업 기록</b>'+
+      '<span>앞서 쓰시던 상황 · 업종 · 저장한 업체 · 받은 제안</span></summary>'+
     '<div class="my-set">'+
       '<div class="f-r"><label for="my-side">상황</label>'+
         '<select class="sel" id="my-side" onchange="myPut()">'+
@@ -1106,6 +1145,9 @@ function PageMy(){
             '제안 비교 화면 열기</a></div>')+
     '</div>'+
 
+    '</details>'+
+    /* ⚠️ 지우기는 **접는 칸 밖**입니다 — 폰웨이 쪽에서 고르신 것도
+       같이 지우는 단추라, 창업 · 폐업 칸 안에 두면 안 보입니다. */
     '<div class="row-cta"><button class="btn btn-o" type="button" onclick="myClear()">'+
       '내 기록 전부 지우기</button></div>'+
   '</div></section>';

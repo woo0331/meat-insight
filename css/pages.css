@@ -7339,3 +7339,28 @@ html.ivh #view .pwh h1{ color:var(--pw-navy); }
 .shp-d-ph{ background:linear-gradient(160deg, #EDF3FB 0%, #DCE7F5 100%);
   background-color:#E6EEF8; border:1px solid var(--pw-line, #DDE4EE); }
 .shp-d-ph .ia{ --ia-1:#2E5584; --ia-2:#9FB8D8; }
+
+/* ── /my — 폰웨이 띠 + 접은 창업 · 폐업 기록 (2026-10-29) ───────── */
+.my-pw{ display:grid; gap:12px; margin:0 0 22px;
+  grid-template-columns:repeat(3, minmax(0,1fr)); }
+@media (max-width:760px){ .my-pw{ grid-template-columns:1fr; } }
+.my-pw-c{ display:flex; flex-direction:column; gap:4px; padding:16px 16px 17px;
+  border:1px solid var(--pw-line, #DDE4EE); border-radius:var(--pw-r2, 14px);
+  background:var(--pw-white, #fff); text-decoration:none; }
+.my-pw-i{ display:grid; place-items:center; width:56px; height:56px;
+  margin:0 0 4px; border-radius:15px; background:var(--pw-blue-50, #EDF4FE);
+  --ia-1:var(--pw-navy, #102C4A); --ia-2:#AFC6E4; }
+.my-pw-c > b{ font-size:16px; font-weight:800; color:var(--pw-ink, #121A24); }
+.my-pw-s{ font-size:13.5px; line-height:1.5; color:var(--pw-ink2, #4A5668); }
+.my-pw-c:hover{ border-color:var(--pw-blue-300, #8FB6F0); }
+/* ⚠️ 여는 단추가 40px 이상입니다 — `summary` 는 기본 높이가 글자만큼입니다 */
+.my-biz{ margin:0 0 22px; border:1px solid var(--pw-line, #DDE4EE);
+  border-radius:var(--pw-r2, 14px); background:var(--pw-white, #fff); }
+.my-biz > summary{ display:flex; align-items:center; flex-wrap:wrap; gap:4px 10px;
+  min-height:var(--tap, 48px); padding:12px 16px; cursor:pointer;
+  font-size:15px; color:var(--pw-ink, #121A24); }
+.my-biz > summary > span{ font-size:13px; color:var(--pw-ink3, #66748A); }
+.my-biz[open] > summary{ border-bottom:1px solid var(--pw-line, #DDE4EE); }
+.my-biz > :not(summary){ margin-left:16px; margin-right:16px; }
+.my-biz > :first-of-type:not(summary){ margin-top:16px; }
+.my-biz > :last-child{ margin-bottom:16px; }

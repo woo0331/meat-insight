@@ -801,6 +801,26 @@ function myqCall(fn, args, say){
   });
 }
 
+function MyPwBand(){
+  var L = [
+
+    { to:"/track", ia:"contract",   nm:"판매 진행 조회",
+      s:"접수번호로 지금 어디까지 왔는지 보십시오." },
+    { to:"/sell",  ia:"dev-iphone", nm:"내 폰 팔기",
+      s:"기종과 상태만 고르시면 판매 방법을 바로 보실 수 있습니다." },
+    { to:"/shop",  ia:"dev-tablet", nm:"중고폰 구매",
+      s:"검수를 마친 기기만 올립니다." }
+  ];
+  return '<section class="sec sec-white"><div class="w">'+
+    '<h2 class="pwf-h2">무엇을 하시겠어요?</h2>'+
+    '<div class="my-pw">'+ L.map(function(x){
+      return '<a class="my-pw-c" href="'+esc(x.to)+'">'+
+        '<span class="my-pw-i">'+ iconArt(x.ia, 44) +'</span>'+
+        '<b>'+esc(x.nm)+'</b><span class="my-pw-s">'+esc(x.s)+'</span></a>';
+    }).join("") +'</div>'+
+  '</div></section>';
+}
+
 function PageMy(){
   var p = amGet(MKEY, { side:"", industry:"", region:"", gu:"", pyeong:"", dday:"" });
   var qs = amGet("am.quotes.v1", []);
@@ -808,13 +828,18 @@ function PageMy(){
 
   return PgHero({
     kicker:"MY",
-    h1raw: p.side === "close" ? "내 폐업" : (p.side === "start" ? "내 창업" : "지금 어느 쪽이세요?"),
+
+    h1raw: p.side === "close" ? "내 폐업" : (p.side === "start" ? "내 창업" : "내 기록"),
     lead:"이 브라우저에만 남습니다. 서버로 보내지 않습니다.",
     tight:true
   })+
 
   MyDbBand()+
+  MyPwBand()+
   '<section class="sec sec-white"><div class="w">'+
+
+    '<details class="my-biz"><summary><b>창업 · 폐업 기록</b>'+
+      '<span>앞서 쓰시던 상황 · 업종 · 저장한 업체 · 받은 제안</span></summary>'+
     '<div class="my-set">'+
       '<div class="f-r"><label for="my-side">상황</label>'+
         '<select class="sel" id="my-side" onchange="myPut()">'+
@@ -866,6 +891,8 @@ function PageMy(){
           '<div class="row-cta"><a class="btn btn-o" href="/quote">'+
             '제안 비교 화면 열기</a></div>')+
     '</div>'+
+
+    '</details>'+
 
     '<div class="row-cta"><button class="btn btn-o" type="button" onclick="myClear()">'+
       '내 기록 전부 지우기</button></div>'+

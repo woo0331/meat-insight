@@ -20,7 +20,7 @@ function PageSearch(){
   return PgHero({
     kicker:"통합검색",
     h1raw:"무엇을 찾으세요?",
-    lead:"업체 · 프랜차이즈 · 매장 · 시설장비 · 정보를 한 번에 찾습니다.",
+    lead:"기종 · 중고폰 상품 · 업체 · 정보를 한 번에 찾습니다.",
     tight:true
   })+
   '<section class="sec sec-white"><div class="w">'+
@@ -123,6 +123,13 @@ function amContentText(c){
 window.amSearch = function(q){
   var words = q.toLowerCase().split(" ").filter(Boolean);
   var G = {
+    /* ⚠️⚠️ **기종과 상품이 맨 앞입니다** (2026-10-29 PHONEWAY).
+       중고폰 플랫폼인데 "갤럭시 S24" 를 치면 **0건**이었습니다 —
+       `AM_MODELS` 예순다섯도 `AM_SHOP_SAMPLES` 도 색인에 아예 없었고,
+       헤더 검색은 **167개 화면 전부**에 있습니다. 차례가 곧 화면의
+       차례라(`Object.keys(G)`) 손님이 제일 먼저 찾는 둘을 위에 둡니다. */
+    model:{ name:"기종", rows:[] }, shop:{ name:"중고폰 상품", rows:[] },
+    page:{ name:"폰웨이 서비스", rows:[] },
     provider:{ name:"업체", rows:[] }, franchise:{ name:"프랜차이즈", rows:[] },
     store:{ name:"매장 · 점포", rows:[] }, asset:{ name:"시설 · 장비", rows:[] },
     cat:{ name:"분류", rows:[] }, industry:{ name:"업종", rows:[] },
@@ -135,6 +142,54 @@ window.amSearch = function(q){
   };
   function push(g, name, sub, to, score){ if(score > 0) G[g].rows.push({name:name,sub:sub,to:to,s:score}); }
 
+  /* ⚠️⚠️ **기종 예순다섯** — "갤럭시 S24" · "아이폰 15" 를 치는 분이
+     제일 많은데 색인에 없었습니다. 가는 곳은 `/sell` 의 그 기종까지
+     골라 둔 자리라, 누르면 바로 02 걸음(상태 · 등급)입니다.
+     ⚠️ 제조사 · 종류 이름도 같이 읽습니다 — "삼성 태블릿" 이 걸립니다. */
+  (window.AM_MODELS || []).forEach(function(m){
+    var mk = (typeof amMakerName === "function") ? amMakerName(m.maker) : "";
+    var kd = (typeof amKindName === "function") ? amKindName(m.kind) : "";
+    push("model", m.name, mk + (kd ? " · " + kd : ""),
+      "/sell?mk=" + encodeURIComponent(m.maker) +
+      "&kd=" + encodeURIComponent(m.kind) +
+      "&md=" + encodeURIComponent(m.key),
+      amScore(m.name + " " + mk + " " + kd + " " + (m.en || ""), words) * 2);
+  });
+  /* ⚠️⚠️ **지금 /shop 이 내고 있는 것만** 색인합니다 (`amShopList()`).
+     실제 상품이 생기면 예시는 저절로 빠집니다 — 두 곳에 규칙을 적으면
+     검색에는 있는데 눌러 들어간 자리에 없는 상품이 생깁니다.
+     ⚠️ 예시일 때는 **딱지를 붙입니다** — 안 붙이면 검색 결과에서는
+     살 수 있는 것처럼 읽히고, 들어가서야 "구매하실 수 없습니다" 입니다. */
+  if(typeof amShopList === "function"){
+    var shSample = (typeof amShopSampleOn === "function") && amShopSampleOn();
+    amShopList({}).forEach(function(p){
+      var nm = (typeof amShopName === "function") ? amShopName(p) : (p.model || "");
+      var g  = (typeof amGrade === "function") ? amGrade(p.grade) : null;
+      push("shop", nm + (shSample ? " (예시)" : ""),
+        (g ? g.name + " · " : "") + Number(p.price || 0).toLocaleString() + "원",
+        "/d/" + p.id,
+        amScore(nm + " " + (p.color || "") + " " + (g ? g.name : ""), words) * 2);
+    });
+  }
+  /* ⚠️⚠️ **폰웨이 화면 다섯도 검색감입니다.** 전에는 "중고폰" · "택배"
+     를 쳐도 **0건**이었습니다 — 사이트가 하는 일 그 자체인데 색인에
+     아예 없었습니다 (업종 · 단계 · 여정이 색인에 없어 겪은 그 자리).
+     ⚠️ 이름과 짧은 줄은 `META` **한 곳**에서 가져옵니다 — 여기 또
+     적으면 제목을 고친 날 검색 결과만 옛 이름으로 남습니다.
+     ⚠️ `kw` 는 **검색 전용 다른 말**입니다 (`catalog.js` 와 같은 꼴) —
+     손님은 화면 이름을 모르고 하려는 일을 칩니다. 더하실 때는 반드시
+     **쳐 보세요** (메인 추천 검색어 넷이 전부 0건이던 자리입니다). */
+  [ { to:"/sell",  kw:"중고폰 폰팔기 핸드폰 휴대폰 스마트폰 판매 매입 처분 중고" },
+    { to:"/shop",  kw:"중고폰 구매 구입 사기 쇼핑몰 상품 중고 리퍼" },
+    { to:"/bid",   kw:"경쟁입찰 입찰 최고가 견적비교 여러곳 비교 중고폰" },
+    { to:"/track", kw:"진행 조회 접수번호 상태확인 어디까지 배송 입금" },
+    { to:"/guide", kw:"이용안내 택배 발송 보내는법 절차 등급기준 초기화 개인정보 삭제 중고폰" }
+  ].forEach(function(x){
+    var m = (window.META || {})[x.to];
+    if(!m) return;   /* ⚠️ 주소를 지우면 조용히 빠집니다 — 가짜 링크를 안 냅니다 */
+    push("page", m[0], m[1], x.to,
+      amScore(m[0] + " " + m[1] + " " + x.kw, words) * 2);
+  });
   (window.AM_INDUSTRIES||[]).forEach(function(i){
     /* ⚠️⚠️ **세부 업종 말까지 읽습니다** (2026-10-09 지시서 PART 3).
        전에는 이름과 짧은 줄만 봐서, 사장님들이 쓰는 업종 말 서른 중

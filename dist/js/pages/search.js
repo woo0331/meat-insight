@@ -6,7 +6,7 @@ function PageSearch(){
   return PgHero({
     kicker:"통합검색",
     h1raw:"무엇을 찾으세요?",
-    lead:"업체 · 프랜차이즈 · 매장 · 시설장비 · 정보를 한 번에 찾습니다.",
+    lead:"기종 · 중고폰 상품 · 업체 · 정보를 한 번에 찾습니다.",
     tight:true
   })+
   '<section class="sec sec-white"><div class="w">'+
@@ -89,6 +89,9 @@ function amContentText(c){
 window.amSearch = function(q){
   var words = q.toLowerCase().split(" ").filter(Boolean);
   var G = {
+
+    model:{ name:"기종", rows:[] }, shop:{ name:"중고폰 상품", rows:[] },
+    page:{ name:"폰웨이 서비스", rows:[] },
     provider:{ name:"업체", rows:[] }, franchise:{ name:"프랜차이즈", rows:[] },
     store:{ name:"매장 · 점포", rows:[] }, asset:{ name:"시설 · 장비", rows:[] },
     cat:{ name:"분류", rows:[] }, industry:{ name:"업종", rows:[] },
@@ -100,6 +103,39 @@ window.amSearch = function(q){
   };
   function push(g, name, sub, to, score){ if(score > 0) G[g].rows.push({name:name,sub:sub,to:to,s:score}); }
 
+  (window.AM_MODELS || []).forEach(function(m){
+    var mk = (typeof amMakerName === "function") ? amMakerName(m.maker) : "";
+    var kd = (typeof amKindName === "function") ? amKindName(m.kind) : "";
+    push("model", m.name, mk + (kd ? " · " + kd : ""),
+      "/sell?mk=" + encodeURIComponent(m.maker) +
+      "&kd=" + encodeURIComponent(m.kind) +
+      "&md=" + encodeURIComponent(m.key),
+      amScore(m.name + " " + mk + " " + kd + " " + (m.en || ""), words) * 2);
+  });
+
+  if(typeof amShopList === "function"){
+    var shSample = (typeof amShopSampleOn === "function") && amShopSampleOn();
+    amShopList({}).forEach(function(p){
+      var nm = (typeof amShopName === "function") ? amShopName(p) : (p.model || "");
+      var g  = (typeof amGrade === "function") ? amGrade(p.grade) : null;
+      push("shop", nm + (shSample ? " (예시)" : ""),
+        (g ? g.name + " · " : "") + Number(p.price || 0).toLocaleString() + "원",
+        "/d/" + p.id,
+        amScore(nm + " " + (p.color || "") + " " + (g ? g.name : ""), words) * 2);
+    });
+  }
+
+  [ { to:"/sell",  kw:"중고폰 폰팔기 핸드폰 휴대폰 스마트폰 판매 매입 처분 중고" },
+    { to:"/shop",  kw:"중고폰 구매 구입 사기 쇼핑몰 상품 중고 리퍼" },
+    { to:"/bid",   kw:"경쟁입찰 입찰 최고가 견적비교 여러곳 비교 중고폰" },
+    { to:"/track", kw:"진행 조회 접수번호 상태확인 어디까지 배송 입금" },
+    { to:"/guide", kw:"이용안내 택배 발송 보내는법 절차 등급기준 초기화 개인정보 삭제 중고폰" }
+  ].forEach(function(x){
+    var m = (window.META || {})[x.to];
+    if(!m) return;
+    push("page", m[0], m[1], x.to,
+      amScore(m[0] + " " + m[1] + " " + x.kw, words) * 2);
+  });
   (window.AM_INDUSTRIES||[]).forEach(function(i){
 
     var subs = (window.amIndSubs ? window.amIndSubs(i.key) : []).join(" ");

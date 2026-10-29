@@ -1002,8 +1002,13 @@ const AUDIT = `(() => {
                             " #view .mhall-i, #view .mstp-i," +
                             " #view .bent-i, #view .bwhy-i, #view .bban-i," +
                             " #view .bstep-i, #view .bcal-i," +
-                            /* 2026-10-29 PHONEWAY — 메인 구간 여섯의 타일 */
-                            " #view .pww-ic").forEach(e => {
+                            /* 2026-10-29 PHONEWAY — 메인 구간 여섯의 타일 ·
+                               /sell 01 기기 카드 · /my 폰웨이 띠.
+                               ⚠️ 새 타일을 만들면 **여기 같이 넣으세요** —
+                               안 넣으면 컬러 아이콘에 없는 이름을 적어도
+                               빈 칸이 조용히 섭니다 (search 로 겪었습니다). */
+                            " #view .pww-ic, #view .pwf-dv-i," +
+                            " #view .my-pw-i").forEach(e => {
     if(e.querySelector("svg")) return;
     const own = (e.parentElement || e);
     out.ico.push((own.textContent || "").trim().slice(0, 14) || "(이름 없음)");

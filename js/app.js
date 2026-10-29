@@ -403,6 +403,30 @@ window.routeInfo = function(path){
     r.title = as.title; r.desc = asDesc(as);
     return r;
   }
+  /* 중고폰 상품 하나 — /d/:id (2026-10-29)
+     ⚠️⚠️ **예시 상품은 noindex 입니다.** 지어낸 값이 붙은 화면이
+     검색에 걸리면 손님이 그걸 보고 돈을 보냅니다 — `build-pages.js`
+     의 sitemap 은 `r.noindex` 를 보고 빼고, HTML 은 만들어야 주소가
+     열립니다 (`/sample` 과 같은 방식입니다). */
+  var mdp = /^\/d\/([a-zA-Z0-9-]+)$/.exec(path);
+  if(mdp){
+    var one = (typeof amShopOne === "function") ? amShopOne(mdp[1]) : null;
+    if(!one){ r.ok = false; return r; }
+    r.view = "product"; r.product = one;
+    var nm = (typeof amShopName === "function") ? amShopName(one.it) : "";
+    var gg = (typeof amGrade === "function") ? amGrade(one.it.grade) : null;
+    r.title = (one.sample ? "[예시] " : "") + nm + " 중고 — 검수 결과 그대로";
+    r.desc  = (one.sample
+        ? "⚠️ 실제 상품이 아니라 화면 예시입니다. "
+        : "") +
+      nm + (one.it.color ? " · " + one.it.color : "") +
+      (gg ? " · " + gg.name : "") +
+      (one.it.batt ? " · 배터리 " + one.it.batt + "%" : "") +
+      ". 외관 등급 · 배터리 상태 · 검수 항목 · 구성품 · 보증 조건을 " +
+      "그대로 밝힙니다.";
+    r.noindex = !!one.sample;
+    return r;
+  }
   /* 글 하나 — /content/:slug */
   var mct = /^\/content\/([a-z0-9-]+)$/.exec(path);
   if(mct){
@@ -627,6 +651,7 @@ function render(){
     case "phone-bid":       html = PageBid();                       break;
     case "phone-track":     html = PageTrack();                     break;
     case "phone-guide":     html = PageGuide();                     break;
+    case "product":         html = PageProduct(r.product);          break;
     case "sell":            html = PageSellBiz();                   break;
     case "join":            html = PageJoin();                      break;
     case "my":              html = PageMy();                        break;

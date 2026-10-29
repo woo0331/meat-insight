@@ -387,6 +387,11 @@ var IA = {
     '<path class="aw" d="M10.3 25h6.6v7.2h-6.6zM31.1 25h6.6v7.2h-6.6z"/>'+
     '<path class="aw" d="M20.7 5h6.6v7.2h-6.6z"/>',
 
+  mobile: '<path class="a1" d="M15 1h18a5 5 0 0 1 5 5v36a5 5 0 0 1-5 5H15a5 5 0 0 1-5-5V6a5 5 0 0 1 5-5z"/>'+
+    '<path class="a2" d="M14 8h20v29H14z"/>'+
+    '<path class="aw" d="M20.5 3.6h7a.9.9 0 0 1 0 1.8h-7a.9.9 0 0 1 0-1.8z"/>'+
+    '<path class="aw" d="M20 41h8a1 1 0 0 1 0 2h-8a1 1 0 0 1 0-2z"/>'+
+    '<path class="a1" d="M17 11h7v2.6h-7zM17 16h14v2.6H17zM17 21h11v2.6H17z"/>',
   sofa: '<path class="a1" d="M11 5h26a5 5 0 0 1 5 5v18H6V10a5 5 0 0 1 5-5z"/>'+
     '<path class="a2" d="M14 9h20a2 2 0 0 1 2 2v14H12V11a2 2 0 0 1 2-2z"/>'+
     '<path class="a1" d="M4 20a4 4 0 0 1 8 0v14H4zM36 20a4 4 0 0 1 8 0v14h-8z"/>'+
@@ -430,6 +435,7 @@ var IA_FIT = {
   trash:[0.9091,2.182,2.182],
   law:[0.9302,1.674,1.023],
   stock:[1.0256,-0.615,-0.615],
+  mobile:[0.8696,3.13,3.13],
   sofa:[0.8333,4,3.167]
 };
 

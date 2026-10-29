@@ -1031,6 +1031,62 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      "detail 이 스물을 안 넘는다",
      bS && (Object.keys(bS.detail||{}).length+" · "+Object.keys(bA.detail||{}).length));
 
+ /* ══ 【14】 2026-10-29 ③ — 중고폰 쇼핑몰을 실제로 눌러 봅니다 ══
+    ⚠️⚠️ **거르개가 장식이 아닌지**가 핵심입니다. 칩의 주소를 눈으로
+    보면 멀쩡해 보이는데, `shopUrl()` 이 짧은 이름(`kd`)을 받고 안에서
+    긴 이름(`kind`)을 읽고 있어서 **칩 전부가 `/shop` 으로** 가고
+    있었습니다 — 에러도 안 나고 화면도 멀쩡했습니다. 눌러 봐야 압니다.
+    ⚠️ 실제 상품이 등록되면 예시가 사라져서 이 묶음은 건너뜁니다. */
+ console.log("\n【14】 중고폰 쇼핑몰");
+ await pg.goto(B+"/shop",{waitUntil:"networkidle"});
+ const spOn = await pg.evaluate(()=>typeof amShopSampleOn==="function" && amShopSampleOn());
+ if(!spOn){
+   console.log("  — 실제 상품이 등록되어 예시 검사는 건너뜁니다");
+ } else {
+   const n0 = await pg.evaluate(()=>document.querySelectorAll(".shp-c").length);
+   say(n0>0, "목록에 카드가 있다", n0+"장");
+   /* 칩을 **눌러서** 주소가 바뀌는지 */
+   await pg.click('.shp-fil .chip-g a:nth-child(2)');
+   await pg.waitForTimeout(400);
+   const u1 = (await pg.url()).replace(/^.*?:\d+/,"");
+   say(u1.indexOf("?")>0, "거르개 칩이 주소를 바꾼다", u1);
+   const n1 = await pg.evaluate(()=>document.querySelectorAll(".shp-c").length);
+   say(n1>0 && n1<n0, "그만큼 목록이 줄어든다", n0+" → "+n1);
+   /* ⚠️ 둘을 같이 걸면 **둘 다** 주소에 남아야 합니다 — 한 칸만 싣고
+      나머지를 버리면 손님이 자기가 끈 줄 모릅니다 */
+   const grs = await pg.$$('.shp-fil .pwf-r:nth-of-type(4) .chip');
+   if(grs[2]) await grs[2].click();
+   await pg.waitForTimeout(400);
+   const u2 = (await pg.url()).replace(/^.*?:\d+/,"");
+   say(u2.indexOf("kd=")>0 && u2.indexOf("gr=")>0, "거르개가 쌓인다 (한 칸만 남지 않는다)", u2);
+   const off = await pg.evaluate(()=>(document.querySelector(".shp-n")||{}).textContent||"");
+   say(off.indexOf("숨겼")>=0, "거르개로 몇 건이 빠졌는지 밝힌다", off.trim());
+   /* 찾기 — ⚠️ 손님은 띄어쓰기를 안 합니다 */
+   await pg.goto(B+"/shop",{waitUntil:"networkidle"});
+   await pg.fill("#sh-q","아이폰15");
+   await pg.click(".shp-q .btn");
+   await pg.waitForTimeout(400);
+   const nq = await pg.evaluate(()=>document.querySelectorAll(".shp-c").length);
+   say(nq===1, "띄어쓰기 없이 쳐도 걸린다", nq+"장");
+   /* 0건이면 막다른 길이 아닌가 */
+   await pg.goto(B+"/shop?q=zzzz",{waitUntil:"networkidle"});
+   const z = await pg.evaluate(()=>({e:!!document.querySelector(".pws-e"),
+     go:!!document.querySelector('.pws-e a[href="/shop"]')}));
+   say(z.e && z.go, "0건이면 까닭과 풀기 단추를 낸다");
+   /* 카드를 눌러 상세로 — ⚠️ 예시에는 구매 단추가 없어야 합니다 */
+   await pg.goto(B+"/shop",{waitUntil:"networkidle"});
+   await pg.click(".shp-c");
+   await pg.waitForTimeout(500);
+   const d = await pg.evaluate(()=>({u:location.pathname,
+     ex:(document.querySelector(".shp-note")||{}).textContent||"",
+     buy:document.body.textContent.indexOf("구매 문의하기")>=0,
+     h1:((document.querySelector("#view h1")||{}).textContent||"").trim()}));
+   say(d.u.indexOf("/d/")===0, "카드가 상세로 열린다", d.u);
+   say(d.h1.length>0, "상세 제목이 비지 않았다", d.h1);
+   say(d.ex.indexOf("예시")>=0, "상세가 예시라고 맨 위에서 말한다");
+   say(!d.buy, "예시에는 구매 단추가 없다");
+ }
+
  console.log("\n【5】 콘솔 오류");
  say(errs.length===0,"JS 에러 없음",errs.join(" / "));
  console.log(bad?("\n❌ "+bad+"건 실패"):"\n✅ 흐름 전부 통과");

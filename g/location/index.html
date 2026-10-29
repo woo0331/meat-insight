@@ -45,7 +45,7 @@
 
 <link rel="stylesheet" href="/dist/css/tokens.css?v=cf485e67">
 <link rel="stylesheet" href="/dist/css/app.css?v=7cdebc5e">
-<link rel="stylesheet" href="/dist/css/pages.css?v=737018e7">
+<link rel="stylesheet" href="/dist/css/pages.css?v=24621dda">
 
 <!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
      마세요 — 다음에 돌릴 때 덮어써집니다. 내용은 js/data/faq.js 와
@@ -113,12 +113,16 @@
 <script defer src="/dist/js/data/svcpage.js?v=b907398d"></script>
 <script defer src="/dist/js/data/steps.js?v=4e0f124e"></script>
 <script defer src="/dist/js/data/devices.js?v=8f95fcc0"></script>
+<!-- ⚠️⚠️ 중고폰 쇼핑몰 (2026-10-29) — devices.js **뒤**라야 합니다
+     (모델 · 용량 · 등급 이름을 거기서 읽습니다). ⚠️ 이 줄이 없으면
+     `/shop` 목록이 **조용히 0건**이 되고 `/d/:id` 가 404 가 됩니다. -->
+<script defer src="/dist/js/data/shop.js?v=07ed7f5e"></script>
 <!-- ⚠️⚠️ 운영 체크리스트 (2026-10-18 §9) — svcpick 의 id · tools 의 key ·
      content 의 slug 를 가리킵니다. ⚠️ 이 줄이 없으면 `/operation` 의
      체크리스트 구간이 **조용히 통째로 빠집니다** (에러는 안 납니다). -->
 <script defer src="/dist/js/data/opscheck.js?v=f6f63146"></script>
 
-<script defer src="/dist/js/components/base.js?v=b6d65a00"></script>
+<script defer src="/dist/js/components/base.js?v=0213dbae"></script>
 <script defer src="/dist/js/components/ui.js?v=aeb3ab24"></script>
 <!-- 선택한 서비스 (2026-10-17 창업 준비 전문관 §3 · §4-1).
      ⚠️ ui.js 의 amGet/amSet 과 svcpick.js 를 읽으므로 **그 뒤**입니다.
@@ -148,9 +152,9 @@
 <!-- ⚠️⚠️ PHONEWAY 화면 다섯 (/sell /shop /bid /track /guide).
      market.js 보다 **뒤**라야 합니다 — 둘 다 PageSell 을 들고 있던
      자리이고, market.js 쪽은 PageSellBiz 로 이름을 갈랐습니다. -->
-<script defer src="/dist/js/pages/phone.js?v=40ee58cc"></script>
+<script defer src="/dist/js/pages/phone.js?v=5972e9db"></script>
 
-<script defer src="/dist/js/app.js?v=c441a05f"></script>
+<script defer src="/dist/js/app.js?v=2cb79aaf"></script>
 
 <div id="chrome-t"></div>
 <!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가

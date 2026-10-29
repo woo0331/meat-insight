@@ -35,7 +35,7 @@ function pwSellStep(q){
      전에는 `q.grade` 가 비어만 있지 않으면 3단계로 보냈는데,
      `?gr=a` 처럼 **없는 등급**이면(key 는 대문자 S·A·B·C·D)
      `amGrade()` 가 null 을 돌려줘서 접수 글의 **외관 등급이
-     통째로 빠집니다** — 에러도 안 나고 화면도 멀줦합니다.
+     통째로 빠집니다** — 에러도 안 나고 화면도 멀쩡합니다.
      링크를 받으셨거나 주소를 손으로 고치면 나는 자리입니다. */
   var md = amModel(q.model);
   if(!md) return 1;
@@ -270,28 +270,202 @@ window.pwSellSubmit = function(){
     });
 };
 
-/* ─── /shop · 중고폰 구매 ───────────────────────────────────── */
+/* ─── /shop · 중고폰 구매 ─────────────────────────────────────
+   ⚠️⚠️ **실제 상품과 예시를 한 줄에 섞지 않습니다** (shop.js).
+   실제 상품이 한 건이라도 생기면 예시가 저절로 사라집니다. */
+function shopQS(){
+  return { kind:nowQS("kd")||"", maker:nowQS("mk")||"", grade:nowQS("gr")||"",
+           price:nowQS("pr")||"", q:nowQS("q")||"" };
+}
+/* 거르개 한 칸을 바꾸고 나머지는 그대로 — ⚠️ 주소에 전부 싣습니다.
+   한 칸만 싣고 나머지를 버리면 손님이 자기가 끈 줄 모릅니다.
+   ⚠️⚠️ **`patch` 의 열쇠는 긴 이름입니다** (`kind` · `maker` · `grade` ·
+   `price` · `q`). 짧은 이름(`kd`)으로 받게 적었다가 **칩이 전부 죽은
+   링크**가 됐습니다 — `shopQS()` 가 긴 이름으로 들고 있어서
+   `f["kd"]=...` 가 아무도 안 읽는 칸을 채웠고, 주소에는 한 글자도
+   안 실렸습니다. 에러도 안 나고 화면도 멀쩡했습니다 (전수 점검의
+   "거르개가 주소를 안 바꿉니다" 가 잡았습니다). */
+var SHOP_QK = { kd:"kind", mk:"maker", gr:"grade", pr:"price", q:"q" };
+function shopUrl(patch){
+  var f = shopQS();
+  Object.keys(patch||{}).forEach(function(k){ f[k] = patch[k]; });
+  var parts = [];
+  Object.keys(SHOP_QK).forEach(function(p){
+    if(f[SHOP_QK[p]]) parts.push(p+"="+encodeURIComponent(f[SHOP_QK[p]])); });
+  return "/shop" + (parts.length ? "?"+parts.join("&") : "");
+}
+window.shopGo = function(patch){ go(shopUrl(patch)); };
+window.shopFind = function(){
+  var el = document.getElementById("sh-q");
+  shopGo({ q: el ? el.value : "" });
+};
+
+function shopChips(f){
+  function row(label, now, opts, key){
+    return '<div class="pwf-r"><span class="pwf-l">'+esc(label)+'</span><div class="chip-g">'+
+      opts.map(function(o){
+        return '<a class="chip'+(now===o[0]?" on":"")+'" href="'+
+          esc(shopUrl((function(){ var p={}; p[key]=o[0]; return p; })()))+'">'+
+          esc(o[1])+'</a>'; }).join("") +'</div></div>';
+  }
+  var kinds = [["","전체"]].concat((window.AM_DEVICE_KINDS||[]).map(function(k){ return [k.key,k.name]; }));
+  var mks   = [["","전체"]].concat((window.AM_MAKERS||[]).map(function(k){ return [k.key,k.name]; }));
+  var grs   = [["","전체"]].concat((window.AM_GRADES||[]).map(function(g){ return [g.key,g.name]; }));
+  var prs   = [["","전체"]].concat((window.AM_SHOP_PRICE||[]).map(function(r){ return [r.k,r.name]; }));
+  return '<div class="shp-fil">'+
+    '<div class="pwf-r"><span class="pwf-l">기종 찾기</span>'+
+      '<div class="shp-q"><input id="sh-q" type="search" value="'+esc(f.q)+'" '+
+        'placeholder="아이폰 15 · 갤럭시 S23" '+
+        'onkeydown="if(event.key===\'Enter\')shopFind()">'+
+        '<button type="button" class="btn btn-pw" onclick="shopFind()">찾기</button></div></div>'+
+    row("기기 종류", f.kind, kinds, "kind")+
+    row("제조사", f.maker, mks, "maker")+
+    row("외관 등급", f.grade, grs, "grade")+
+    row("가격", f.price, prs, "price")+
+  '</div>';
+}
+
+/* 카드 — ⚠️ 예시면 **딱지가 붙습니다.** 붙이지 않으면 지어낸 값이
+   실제 상품으로 읽힙니다 (절대 규칙 1). */
+function shopCard(p, sample){
+  var md = (typeof amModel === "function") ? amModel(p.model) : null;
+  var g  = (typeof amGrade === "function") ? amGrade(p.grade) : null;
+  return '<a class="shp-c'+(sample?" ex":"")+'" href="/d/'+esc(p.id)+'">'+
+    '<span class="shp-ph">'+
+      (sample ? '<span class="shp-ex">예시</span>' : '')+
+      iconArt("mobile", 84)+'</span>'+
+    '<span class="shp-tx">'+
+      '<b>'+esc(amShopName(p))+'</b>'+
+      '<span class="shp-m">'+
+        [ (md && typeof amMakerName === "function") ? amMakerName(md.maker) : "",
+          g ? g.name : "", p.color || "" ].filter(Boolean).map(esc).join(" · ")+
+      '</span>'+
+      '<b class="shp-p">'+Number(p.price||0).toLocaleString()+'원</b>'+
+      (p.batt ? '<span class="shp-b">배터리 '+esc(String(p.batt))+'%</span>' : '')+
+    '</span></a>';
+}
+
 function PageShop(){
-  var P = window.AM_PRODUCTS || [];
-  var m = nowQS("m") || "";
+  var f = shopQS();
+  var list = (typeof amShopList === "function") ? amShopList(f) : [];
+  var sample = (typeof amShopSampleOn === "function") ? amShopSampleOn() : false;
+  var all = (typeof amShopList === "function") ? amShopList({}) : [];
+  var off = all.length - list.length;
   return PgHero({ kicker:"SHOP", h1:"검수를 마친 중고폰만 올립니다",
       lead:amBrand()+"가 직접 매입하고 검수한 기기만 판매합니다. "+
            "사진 · 등급 · 배터리 상태 · 검수 결과를 그대로 밝힙니다." })+
     '<section class="sec sec-white"><div class="w">'+
-      '<div class="chip-g chip-g-fil">'+
-        [["","전체"],["iphone","아이폰"],["galaxy","갤럭시"],
-         ["tablet","태블릿"],["etc","기타 기기"]].map(function(k){
-          return '<a class="chip'+(m===k[0]?" on":"")+'" href="/shop'+
-            (k[0]?"?m="+k[0]:"")+'">'+esc(k[1])+'</a>'; }).join("") +'</div>'+
-      (P.length ? "" :
-        '<div class="pws-e" style="margin-top:28px">'+
-          '<b>지금 판매 중인 상품이 0건입니다.</b>'+
-          '<p>검수를 마친 기기부터 이 자리에 올라옵니다. 한 대라도 올라오면 '+
-            '사진 · 외관 등급 · 배터리 상태 · 기능 검수 결과 · 구성품 · '+
-            '보증과 반품 조건이 그대로 보입니다.<br>'+
-            '⚠️ 없는 상품을 미리 만들어 두지 않습니다.</p>'+
+      /* ⚠️⚠️ **예시 안내가 목록보다 위입니다.** 아래에 두면 카드를
+         먼저 보고 실제 상품으로 읽으십니다 — 절대 규칙 3 이 "운영자에게
+         할 말" 을 금지하는 것과 달리, 이것은 **손님이 꼭 알아야 하는
+         사실**입니다. */
+      (sample ?
+        '<div class="shp-note">'+
+          '<b>⚠️ 아래 '+all.length+'건은 실제 상품이 아니라 예시입니다.</b>'+
+          '<p>지금 판매 중인 상품이 <b>0건</b>이라, 목록 · 검색 · 상세 화면이 '+
+            '어떻게 보이는지 보여 드리는 자리입니다. 값 · 배터리 · 보증 '+
+            '일수는 <b>지어낸 숫자</b>이고 <b>구매하실 수 없습니다.</b><br>'+
+            '검수를 마친 기기가 한 대라도 올라오면 이 안내와 예시가 '+
+            '저절로 사라집니다.</p>'+
           '<a class="btn btn-pw" href="/sell">내 폰 팔기</a>'+
-        '</div>')+
+        '</div>' : "")+
+      shopChips(f)+
+      (list.length ?
+        '<p class="shp-n">'+ list.length +'건'+
+          (off > 0 ? ' · 거르개로 '+off+'건을 숨겼습니다' : '') +'</p>'+
+        '<div class="shp-g">'+ list.map(function(p){ return shopCard(p, sample); }).join("") +'</div>'
+        : (all.length ?
+            '<div class="pws-e"><b>그 조건에 맞는 기기가 없습니다.</b>'+
+              '<p>거르개를 하나씩 풀어 보세요.</p>'+
+              '<a class="btn btn-pw-o" href="/shop">조건 모두 풀기</a></div>'
+          : '<div class="pws-e">'+
+              '<b>지금 판매 중인 상품이 0건입니다.</b>'+
+              '<p>검수를 마친 기기부터 이 자리에 올라옵니다. 한 대라도 올라오면 '+
+                '사진 · 외관 등급 · 배터리 상태 · 기능 검수 결과 · 구성품 · '+
+                '보증과 반품 조건이 그대로 보입니다.<br>'+
+                '⚠️ 없는 상품을 미리 만들어 두지 않습니다.</p>'+
+              '<a class="btn btn-pw" href="/sell">내 폰 팔기</a>'+
+            '</div>'))+
+    '</div></section>';
+}
+
+/* ─── /d/:id · 상품 상세 ──────────────────────────────────────
+   ⚠️⚠️ **예시면 구매 단추를 아예 안 냅니다.** 비활성으로 두지도
+   않습니다 — 왜 못 사는지를 그 자리에서 말하는 쪽이 낫습니다. */
+function PageProduct(one){
+  var p = one.it, sample = one.sample;
+  var md = (typeof amModel === "function") ? amModel(p.model) : null;
+  var g  = (typeof amGrade === "function") ? amGrade(p.grade) : null;
+  /* ⚠️⚠️ **값이 없는 칸은 아예 안 넣습니다** (절대 규칙 2).
+     CSS 로 숨기면 빈 상자가 칸 하나를 차지합니다. */
+  var rows = [];
+  if(md) rows.push(["기종", md.name]);
+  if(md && typeof amMakerName === "function") rows.push(["제조사", amMakerName(md.maker)]);
+  if(p.cap) rows.push(["저장 용량", p.cap >= 1024 ? (p.cap/1024)+"TB" : p.cap+"GB"]);
+  if(p.color) rows.push(["색상", p.color]);
+  if(g) rows.push(["외관 등급", g.name]);
+  if(p.batt) rows.push(["배터리 성능", p.batt+"%"]);
+  if(p.warranty) rows.push(["보증", p.warranty+"일"]);
+  if(md && md.year) rows.push(["출시", md.year+"년"]);
+  return '<div class="w crumb-w"><nav class="crumb" aria-label="위치">'+
+      '<a href="/shop">중고폰 구매</a><span>'+esc(amShopName(p))+'</span></nav></div>'+
+    '<section class="sec sec-white"><div class="w shp-d">'+
+      (sample ?
+        '<div class="shp-note">'+
+          '<b>⚠️ 이 화면은 실제 상품이 아니라 예시입니다.</b>'+
+          '<p>상세 화면이 어떻게 보이는지 보여 드리는 자리입니다. '+
+            '아래 값 · 배터리 · 보증 일수는 <b>지어낸 숫자</b>이고, '+
+            '<b>구매하실 수 없습니다.</b></p>'+
+        '</div>' : "")+
+      '<div class="shp-d-g">'+
+        '<div class="shp-d-ph">'+
+          (sample ? '<span class="shp-ex">예시</span>' : '')+
+          iconArt("mobile", 150)+
+          /* ⚠️ 사진이 없으면 **액자째 안 그립니다** — 옅은 틴트 상자를
+             깔면 그게 빈 액자이고 "준비 중" 으로 읽힙니다. 지금은 큰
+             아이콘 면이라 그 자체로 완성된 자리입니다. */
+        '</div>'+
+        '<div class="shp-d-tx">'+
+          '<h1>'+esc(amShopName(p))+'</h1>'+
+          (g ? '<p class="shp-d-g2">'+esc(g.name)+' · '+esc(g.lead)+'</p>' : '')+
+          '<b class="shp-d-p">'+Number(p.price||0).toLocaleString()+'원</b>'+
+          (sample
+            ? '<div class="note-box">예시 상품이라 구매 단추가 없습니다. '+
+              '지금 실제로 하실 수 있는 것은 <b>내 폰 팔기</b>입니다.'+
+              '<div class="pwb-go" style="margin-top:12px">'+
+                '<a class="btn btn-pw" href="/sell">내 폰 팔기</a>'+
+                '<a class="btn btn-pw-o" href="/shop">다른 예시 보기</a></div></div>'
+            : '<div class="pwb-go">'+
+                '<a class="btn btn-pw" href="/quote?c=shop&p='+esc(p.id)+'">구매 문의하기</a>'+
+              '</div>'+
+              /* ⚠️⚠️ **온라인 결제를 만들지 않았습니다.** PG 계약이
+                 먼저이고(지시서가 직접 적었습니다), 없는데 결제 단추를
+                 내면 누를 때마다 실패합니다 (§30-7). */
+              '<p class="pwf-n">⚠️ 온라인 결제는 아직 열지 않았습니다 — '+
+                '문의를 남기시면 확인한 뒤 연락드립니다.</p>')+
+        '</div>'+
+      '</div>'+
+      (rows.length ?
+        '<h2 class="pwf-h2">기기 정보</h2>'+
+        '<dl class="shp-sp">'+ rows.map(function(r){
+          return '<div><dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd></div>'; }).join("") +'</dl>' : "")+
+      (p.check && p.check.length ?
+        '<h2 class="pwf-h2">검수한 것</h2>'+
+        '<ul class="shp-ck">'+ p.check.map(function(c){
+          return '<li>'+icon("check",16)+esc(c)+'</li>'; }).join("") +'</ul>'+
+        '<p class="pwf-n">⚠️ 적힌 항목만 확인한 것입니다 — 적히지 않은 것은 '+
+          '확인하지 않았습니다.</p>' : "")+
+      (p.parts && p.parts.length ?
+        '<h2 class="pwf-h2">같이 보내는 것</h2>'+
+        '<ul class="shp-ck">'+ p.parts.map(function(c){
+          return '<li>'+icon("check",16)+esc(c)+'</li>'; }).join("") +'</ul>' : "")+
+      (p.note ? '<h2 class="pwf-h2">상태 설명</h2><p class="shp-no">'+esc(p.note)+'</p>' : "")+
+      '<div class="note-box" style="margin-top:24px">'+
+        '⚠️ 중고 기기라 같은 등급이어도 기기마다 상태가 다릅니다. '+
+        '위에 적힌 것이 <b>이 기기 하나</b>의 상태입니다.<br>'+
+        '⚠️ 분실 · 도난 조회는 공식 서비스 계약이 필요해 아직 연동하지 '+
+        '않았습니다 — 받으신 뒤 사람이 확인합니다.'+
+      '</div>'+
     '</div></section>';
 }
 
@@ -315,8 +489,8 @@ function PageBid(){
          업체가 0곳인데 **있는 것처럼** 읽히고(절대 규칙 1),
          "인증" 은 저희가 자격을 준다는 말입니다. 지금 상태는
          아래 note-box 가 세는 값으로 그대로 말합니다. */
-      lead:"한 대의 기기를 여러 매입업체가 보고 각자 검적을 냅니다. "+
-           "금액과 거래 조건을 나란히 놀고 고르세요." })+
+      lead:"한 대의 기기를 여러 매입업체가 보고 각자 견적을 냅니다. "+
+           "금액과 거래 조건을 나란히 놓고 고르세요." })+
     '<section class="sec sec-white"><div class="w">'+
       '<ol class="pwb-g">'+ rows.map(function(r,i){
         return '<li><span class="pwb-n">'+(i+1)+'</span><b>'+esc(r[0])+'</b>'+
@@ -345,10 +519,10 @@ function PageBid(){
    연락처 · 요청 내용을 다 봅니다 — 번호와 연락처 **둘 다** 맞아야
    합니다. 이 규칙은 DB 의 claim_request 와 같습니다. */
 function PageTrack(){
-  /* ⚠⚠ 조회할 곣이 아직 없으면 **폼을 안 냅니다.** 전에는
+  /* ⚠⚠ 조회할 곳이 아직 없으면 **폼을 안 냅니다.** 전에는
      폼을 내고 누르면 "아직 안 열었습니다" 라고 답했는데,
      그것이 곧 **눌러도 작동하지 않는 단추**입니다 (§30-7).
-     `/my` 의 `.my-db` · 사진 체붙 칸과 **같은 방식**입니다 —
+     `/my` 의 `.my-db` · 사진 첨부 칸과 **같은 방식**입니다 —
      `pwTrackInit()` 이 `auth:true` 를 받으면 그때 열립니다. */
   return PgHero({ kicker:"TRACK", h1:"판매 진행 조회",
       lead:"접수하신 건이 지금 어디까지 왔는지 알려 드립니다." })+
@@ -385,13 +559,13 @@ function PageTrack(){
 }
 /* ⚠⚠ `/track` 에서만 한 번 묻습니다. `amAuthAsk()` 는 이미 물어
    둔 답을 들고 있으면 그대로 돌려주고, 묻는 중이면 그 물음을
-   다시 씁니다 — 왜복이 더 늘지 않습니다. */
+   다시 씁니다 — 왕복이 더 늘지 않습니다. */
 window.pwTrackInit = function(){
   var fm = document.getElementById("tk-fm"), off = document.getElementById("tk-off");
   if(!fm || !off) return;
   var pre = (typeof amAuthAsk === "function") ? amAuthAsk() : Promise.resolve(null);
   pre.then(function(a){
-    if(!a || !a.auth) return;            /* 꾼 채로 둡니다 */
+    if(!a || !a.auth) return;            /* 꺼진 채로 둡니다 */
     fm.hidden = false; off.hidden = true;
   }).catch(function(){ /* 못 물었으면 그대로 둡니다 */ });
 };

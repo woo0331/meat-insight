@@ -48,7 +48,7 @@ function loadApp(){
                 "js/data/support.js","js/data/content.js",
                 /* ⚠️ sample 은 providers 의 계산 함수를 쓰므로 **그 뒤**입니다.
                    AM_PROVIDERS 에는 **안 들어갑니다** (§19) */
-                "js/data/sample.js","js/data/photos.js",
+                "js/data/sample.js","js/data/shop.js","js/data/photos.js",
                 "js/data/legal-terms.js","js/data/legal-privacy.js",
                 "js/data/faq.js","js/data/tools.js","js/data/join.js",
                 /* ⚠️ sales 는 catalog 의 분류 · 하위 key 를 **묶어 보는 틀**이라
@@ -167,10 +167,19 @@ function allRoutes(W){
   const pvs = (W.AM_PROVIDERS || []).map(p => "/p/" + p.id);
   const frs = (W.AM_FRANCHISES || []).map(f => "/f/" + f.slug);
   const cts = (W.AM_CONTENTS  || []).map(c => "/content/" + c.slug);
+  /* 중고폰 상품 — ⚠️⚠️ **예시도 HTML 을 만듭니다** (주소가 열려야
+     목록에서 눌러 보실 수 있습니다). 예시는 `routeInfo()` 가
+     `noindex:true` 로 돌려줘서 **sitemap 에서 빠집니다** —
+     `/sample` 과 같은 방식입니다. 실제 상품이 생기면 예시 주소는
+     저절로 안 만들어집니다 (`amShopSampleOn()`). */
+  const pds = (W.AM_PRODUCTS || []).map(x => "/d/" + x.id);
+  const pdsSp = (typeof W.amShopSampleOn === "function" && W.amShopSampleOn())
+                ? (W.AM_SHOP_SAMPLES || []).map(x => "/d/" + x.id) : [];
   /* 매물도 등록된 것만 주소가 됩니다 — 지금 0건이라 0개가 만들어집니다 */
   const sts = (W.AM_STORES || []).map(x => "/s/" + x.id);
   const ass = (W.AM_ASSETS || []).map(x => "/a/" + x.id);
-  return fixed.concat(tls, flows, stgs, pcats, icats, fcats, pvs, frs, cts, sts, ass);
+  return fixed.concat(tls, flows, stgs, pcats, icats, fcats, pvs, frs, cts, sts, ass,
+                      pds, pdsSp);
 }
 
 function esc(s){
@@ -916,26 +925,50 @@ function noscriptFor(W, r, route){
       "신고된 기기는 매입할 수 없습니다.");
     return L.join("");
   }
+  /* ⚠️⚠️ **화면과 글자까지 같아야 합니다.** 전에는 여기만
+     "검증된 중고폰" · "전국의 인증 매입업체" 였습니다 — 둘 다
+     이 저장소가 금지로 둔 말이고(검증 기능이 없습니다 · "인증" 은
+     저희가 자격을 준다는 뜻입니다), 화면에서는 이미 고쳐 두었는데
+     **크롤러에게만 옛 말이 나가고** 있었습니다. 열두 번째입니다. */
   if(route === "/shop"){
-    h2("검증된 중고폰을, 믿고 구매하세요");
+    h2("검수를 마친 중고폰만 올립니다");
     p((B.name || "") + "가 직접 매입하고 검수한 기기만 판매합니다. 사진 · 등급 · "+
       "배터리 상태 · 검수 결과를 그대로 밝힙니다.");
-    ul(["전체","아이폰","갤럭시","태블릿","기타 기기"]);
     const nPd = (W.AM_PRODUCTS || []).length;
+    const spOn = (typeof W.amShopSampleOn === "function") && W.amShopSampleOn();
     if(nPd){
       h2("판매 중인 상품 " + nPd + "건");
+      ul((W.AM_PRODUCTS || []).slice(0, 24).map(x =>
+        (typeof W.amShopName === "function" ? W.amShopName(x) : x.model) +
+        (x.color ? " · " + x.color : "") +
+        " · " + Number(x.price || 0).toLocaleString() + "원"));
+    } else if(spOn){
+      /* ⚠️⚠️ **예시라는 것을 크롤러에게도 그대로 말합니다.** 화면이
+         "예시입니다" 라고 적는데 여기서 상품처럼 적으면 그게 구글에
+         나가는 거짓말입니다 — 예시 개수만 내고 모델명은 안 냅니다
+         (검색 결과에서 상품으로 읽히지 않게). */
+      h2("지금 판매 중인 상품이 0건입니다");
+      p("검수를 마친 기기부터 이 자리에 올라옵니다. 지금 목록에 보이는 " +
+        (W.AM_SHOP_SAMPLES || []).length + "건은 실제 상품이 아니라, 목록 · 검색 · " +
+        "상세 화면이 어떻게 보이는지 보여 드리는 예시입니다. 값 · 배터리 · " +
+        "보증 일수는 지어낸 숫자이고 구매하실 수 없습니다.");
     } else {
       h2("지금 판매 중인 상품이 0건입니다");
       p("검수를 마친 기기부터 이 자리에 올라옵니다. 한 대라도 올라오면 "+
         "사진 · 외관 등급 · 배터리 상태 · 기능 검수 결과 · 구성품 · 보증과 "+
         "반품 조건이 그대로 보입니다. 없는 상품을 미리 만들어 두지 않습니다.");
     }
+    h2("찾으시는 조건으로 좁히기");
+    ul(["기기 종류 — " + (W.AM_DEVICE_KINDS || []).map(k => k.name).join(" · "),
+        "제조사 — " + (W.AM_MAKERS || []).map(k => k.name).join(" · "),
+        "외관 등급 — " + (W.AM_GRADES || []).map(g => g.name).join(" · "),
+        "가격 — " + (W.AM_SHOP_PRICE || []).map(r => r.name).join(" · ")]);
     return L.join("");
   }
   if(route === "/bid"){
     h2("최고가 경쟁입찰");
-    p("전국의 인증 매입업체가 같은 기기에 견적을 냅니다. 가격과 거래 "+
-      "조건을 나란히 놓고 고르세요.");
+    p("한 대의 기기를 여러 매입업체가 보고 각자 견적을 냅니다. 금액과 "+
+      "거래 조건을 나란히 놓고 고르세요.");
     ul(["기기를 등록하시면 — 기종 · 용량 · 상태를 적어 주시면 됩니다. "+
           "가입하지 않으셔도 됩니다.",
         "업체가 견적을 냅니다 — 참여 업체가 기기 조건을 보고 금액과 "+
@@ -943,7 +976,12 @@ function noscriptFor(W, r, route){
         "나란히 놓고 고르세요 — 금액만이 아니라 검수 기준 · 정산 "+
           "소요일까지 같이 보실 수 있습니다.",
         "고르는 것은 사장님입니다 — 저희가 자동으로 정하지 않습니다. "+
-          "고르신 뒤에 연락처가 그 업체로 갑니다."]);
+          "고르신 뒤에 상호를 알려 드리고, 연락처 전달은 그때 다시 "+
+          "동의를 받습니다.",
+        "수거하고 검수합니다 — 택배나 방문으로 기기를 보내시면 업체가 "+
+          "상태를 확인합니다. 적어 주신 것과 다르면 먼저 알려 드립니다.",
+        "정산합니다 — 받아들이시면 정산하고, 아니면 기기를 돌려받으십니다. "+
+          "진행은 접수번호로 조회하실 수 있습니다."]);
     const nPv = (W.AM_PROVIDERS || []).length;
     p(nPv ? ("지금 " + nPv + "곳이 참여하고 있습니다.")
           : ("지금 입점업체를 모집하고 있습니다. 신청은 받아 두고, 참여 "+
@@ -1154,6 +1192,53 @@ function noscriptFor(W, r, route){
         p("정보공개서 등록번호 " + fr.disclosure.no
           + (fr.disclosure.at ? " · 등록일 " + fr.disclosure.at : "") + ".");
       p("저희는 가맹본부가 아니라 통신판매중개자입니다. 계약은 본사와 직접 하십니다.");
+    }
+    return L.join("");
+  }
+
+  /* 중고폰 상품 상세 — /d/:id (2026-10-29)
+     ⚠️⚠️ **예시 상품은 noindex 라 크롤러 본문을 요구받지 않습니다**
+     (`checkCrawl()` 이 NOINDEX 를 빼고 셉니다). 그래도 적어 둡니다 —
+     자바스크립트 전에 들어오신 분이 빈 화면을 보지 않게, 그리고 그
+     첫 문단이 **예시라고 말해야** 합니다. */
+  const mpd = /^\/d\/([a-zA-Z0-9-]+)$/.exec(route);
+  if(mpd){
+    const one = (typeof W.amShopOne === "function") ? W.amShopOne(mpd[1]) : null;
+    if(one){
+      const it = one.it;
+      const md = W.amModel ? W.amModel(it.model) : null;
+      const gg = W.amGrade ? W.amGrade(it.grade) : null;
+      if(one.sample){
+        p("이 화면은 실제 상품이 아니라 예시입니다. 상세 화면이 어떻게 "
+          + "보이는지 보여 드리는 자리이고, 아래 값 · 배터리 · 보증 일수는 "
+          + "지어낸 숫자입니다. 구매하실 수 없습니다.");
+      }
+      p((W.amShopName ? W.amShopName(it) : it.model)
+        + (it.color ? " · " + it.color : "")
+        + (gg ? " · " + gg.name : "") + " 중고 기기입니다.");
+      h2("기기 정보");
+      ul([
+        md ? "기종 " + md.name : "",
+        (md && W.amMakerName) ? "제조사 " + W.amMakerName(md.maker) : "",
+        it.cap ? "저장 용량 " + (it.cap >= 1024 ? (it.cap/1024)+"TB" : it.cap+"GB") : "",
+        it.color ? "색상 " + it.color : "",
+        gg ? "외관 등급 " + gg.name + " — " + gg.lead : "",
+        it.batt ? "배터리 성능 " + it.batt + "%" : "",
+        it.warranty ? "보증 " + it.warranty + "일" : "",
+        (md && md.year) ? "출시 " + md.year + "년" : "",
+        "판매가 " + Number(it.price || 0).toLocaleString() + "원"
+      ].filter(Boolean));
+      if(it.check && it.check.length){
+        h2("검수한 것");
+        ul(it.check);
+        p("적힌 항목만 확인한 것입니다 — 적히지 않은 것은 확인하지 않았습니다.");
+      }
+      if(it.parts && it.parts.length){ h2("같이 보내는 것"); ul(it.parts); }
+      if(it.note){ h2("상태 설명"); p(it.note); }
+      p("중고 기기라 같은 등급이어도 기기마다 상태가 다릅니다. 위에 적힌 "
+        + "것이 이 기기 하나의 상태입니다. 분실 · 도난 조회는 공식 서비스 "
+        + "계약이 필요해 아직 연동하지 않았습니다 — 받으신 뒤 사람이 "
+        + "확인합니다. 온라인 결제도 아직 열지 않았습니다.");
     }
     return L.join("");
   }
@@ -2966,6 +3051,63 @@ function checkSvcPage(W){
    (이 저장소가 업체 subs · 사진 키 · 도구 묶음에서 겪은 자리).
    ⚠️⚠️ **매입 기준가에 출처 없는 숫자가 섞이면 멈춥니다.** 사장님이
    그 값으로 실제 매입을 하시기 때문입니다 (절대 규칙 1). */
+/* ── 중고폰 쇼핑몰 (2026-10-29) ──────────────────────────────────
+   ⚠️⚠️ **모델 · 용량 · 등급 key 가 `devices.js` 것이라야 합니다.**
+   한 글자 틀리면 에러도 안 나고 화면도 멀쩡한데 **그 상품만** 이름이
+   비고 거르개에서 빠집니다 (업체 `subs` · 사진 키 · 매물 `sub` 에서
+   겪은 그 자리).
+   ⚠️⚠️ 그리고 **예시가 실제 상품 배열로 기어들지 않았는지** 봅니다 —
+   섞이는 순간 지어낸 값이 구글과 손님에게 상품으로 나갑니다
+   (절대 규칙 1 · 표시 · 광고의 공정화에 관한 법률 제3조). */
+function checkShop(W){
+  const bad = [];
+  const mds = new Set((W.AM_MODELS || []).map(m => m.key));
+  const grs = new Set((W.AM_GRADES || []).map(g => g.key));
+  const seen = new Set();
+  const look = (list, what) => (list || []).forEach(x => {
+    const w = what + " " + (x.id || "(id 없음)");
+    if(!x.id || !/^[a-z0-9-]+$/.test(String(x.id))) bad.push(w + " — id 꼴이 아닙니다");
+    if(seen.has(x.id)) bad.push(w + " — id 가 겹칩니다");
+    seen.add(x.id);
+    if(!mds.has(x.model)) bad.push(w + " — 없는 모델 " + x.model);
+    if(!grs.has(x.grade)) bad.push(w + " — 없는 등급 " + x.grade);
+    const md = (W.AM_MODELS || []).filter(m => m.key === x.model)[0];
+    if(md && md.caps && md.caps.length && x.cap && md.caps.indexOf(x.cap) < 0)
+      bad.push(w + " — " + md.name + " 에 없는 용량 " + x.cap);
+    if(typeof x.price !== "number" || !(x.price > 0))
+      bad.push(w + " — 판매가가 원 단위 정수라야 합니다");
+    /* ⚠️ 배터리 · 보증은 **모르면 비우는 것이 맞습니다** (절대 규칙 2) —
+       있으면 말이 되는 값인지만 봅니다 */
+    if(x.batt != null && !(x.batt > 0 && x.batt <= 100))
+      bad.push(w + " — 배터리 성능은 1~100 입니다");
+    if(x.warranty != null && !(x.warranty > 0))
+      bad.push(w + " — 보증 일수가 0 이면 칸을 비우세요");
+  });
+  look(W.AM_PRODUCTS, "상품");
+  look(W.AM_SHOP_SAMPLES, "예시");
+  /* ⚠️⚠️ **예시 id 는 `sample-` 로 시작해야 합니다.** 주소에 그대로
+     나가는 값이라, 보기만 해도 예시인 것이 드러나야 합니다. 그리고
+     실제 상품 쪽에 `sample-` 이 있으면 그건 예시가 기어든 것입니다. */
+  (W.AM_SHOP_SAMPLES || []).forEach(x => {
+    if(String(x.id || "").indexOf("sample-") !== 0)
+      bad.push("예시 " + x.id + " — id 가 sample- 로 시작해야 합니다");
+  });
+  (W.AM_PRODUCTS || []).forEach(x => {
+    if(String(x.id || "").indexOf("sample-") === 0)
+      bad.push("상품 " + x.id + " — 예시가 실제 상품 배열에 들어 있습니다");
+  });
+  /* 가격 구간 — ⚠️ 윗값만 있는 칸이 **하나뿐**이라야 합니다
+     (둘이면 제일 싼 상품이 두 칸에 다 걸립니다 · 권리금에서 겪었습니다) */
+  const op = (W.AM_SHOP_PRICE || []).filter(r => r.min == null);
+  if(op.length !== 1)
+    bad.push("가격 구간에 아래값 없는 칸이 " + op.length + "개입니다 (하나라야 합니다)");
+  if(bad.length) throw new Error("중고폰 쇼핑몰 —\n  " + bad.join("\n  "));
+  const n = (W.AM_PRODUCTS || []).length;
+  const sp = (W.AM_SHOP_SAMPLES || []).length;
+  console.log("   상품 " + n + "건" +
+    (n ? "" : " · 예시 " + sp + "건 (⚠️ 예시라고 밝히고 살 수 없습니다)"));
+}
+
 function checkDevices(W){
   const MK = new Set((W.AM_MAKERS||[]).map(x => x.key));
   const KD = new Set((W.AM_DEVICE_KINDS||[]).map(x => x.key));
@@ -4416,6 +4558,7 @@ function writeSvcList(W){
 checkSvcPage(W);
 checkSteps(W);
 checkDevices(W);
+checkShop(W);
 checkPackages(W);
 checkReqForms(W);
 checkProviders(W);
@@ -4517,7 +4660,10 @@ dups(seenTitle,"제목"); dups(seenDesc,"설명");
 
    그래서 **데이터로 만들어지는 뿌리는 늘 훑습니다** — 지금 주소가
    하나도 없어도 들어가서 비웁니다. */
-const DATA_ROOTS = ["p", "f", "s", "a", "c", "content", "startup", "closure", "providers", "franchise"];
+/* ⚠️ `d` 는 중고폰 상품입니다 (2026-10-29). 예시를 끄거나 실제
+   상품을 내리면 그 화면이 서버에 남습니다 — 여기 없으면 아무도
+   안 치웁니다. */
+const DATA_ROOTS = ["p", "f", "s", "a", "c", "d", "content", "startup", "closure", "providers", "franchise"];
 const roots = new Set(
   routes.filter(r => r !== "/").map(r => r.split("/")[1]).concat(DATA_ROOTS));
 let removed = 0;

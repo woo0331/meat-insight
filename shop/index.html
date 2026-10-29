@@ -45,7 +45,7 @@
 
 <link rel="stylesheet" href="/dist/css/tokens.css?v=cf485e67">
 <link rel="stylesheet" href="/dist/css/app.css?v=7cdebc5e">
-<link rel="stylesheet" href="/dist/css/pages.css?v=737018e7">
+<link rel="stylesheet" href="/dist/css/pages.css?v=24621dda">
 
 <!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
      마세요 — 다음에 돌릴 때 덮어써집니다. 내용은 js/data/faq.js 와
@@ -113,12 +113,16 @@
 <script defer src="/dist/js/data/svcpage.js?v=b907398d"></script>
 <script defer src="/dist/js/data/steps.js?v=4e0f124e"></script>
 <script defer src="/dist/js/data/devices.js?v=8f95fcc0"></script>
+<!-- ⚠️⚠️ 중고폰 쇼핑몰 (2026-10-29) — devices.js **뒤**라야 합니다
+     (모델 · 용량 · 등급 이름을 거기서 읽습니다). ⚠️ 이 줄이 없으면
+     `/shop` 목록이 **조용히 0건**이 되고 `/d/:id` 가 404 가 됩니다. -->
+<script defer src="/dist/js/data/shop.js?v=07ed7f5e"></script>
 <!-- ⚠️⚠️ 운영 체크리스트 (2026-10-18 §9) — svcpick 의 id · tools 의 key ·
      content 의 slug 를 가리킵니다. ⚠️ 이 줄이 없으면 `/operation` 의
      체크리스트 구간이 **조용히 통째로 빠집니다** (에러는 안 납니다). -->
 <script defer src="/dist/js/data/opscheck.js?v=f6f63146"></script>
 
-<script defer src="/dist/js/components/base.js?v=b6d65a00"></script>
+<script defer src="/dist/js/components/base.js?v=0213dbae"></script>
 <script defer src="/dist/js/components/ui.js?v=aeb3ab24"></script>
 <!-- 선택한 서비스 (2026-10-17 창업 준비 전문관 §3 · §4-1).
      ⚠️ ui.js 의 amGet/amSet 과 svcpick.js 를 읽으므로 **그 뒤**입니다.
@@ -148,15 +152,15 @@
 <!-- ⚠️⚠️ PHONEWAY 화면 다섯 (/sell /shop /bid /track /guide).
      market.js 보다 **뒤**라야 합니다 — 둘 다 PageSell 을 들고 있던
      자리이고, market.js 쪽은 PageSellBiz 로 이름을 갈랐습니다. -->
-<script defer src="/dist/js/pages/phone.js?v=40ee58cc"></script>
+<script defer src="/dist/js/pages/phone.js?v=5972e9db"></script>
 
-<script defer src="/dist/js/app.js?v=c441a05f"></script>
+<script defer src="/dist/js/app.js?v=2cb79aaf"></script>
 
 <div id="chrome-t"></div>
 <!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가
      이 사이에 **크롤러가 읽을 본문**을 써 넣습니다. 메인은 원본이라
      shell() 이 손대지 않아서, 한동안 여기가 빈 칸으로 나갔습니다. -->
-<main id="view"><div class="pre w"><h1>중고폰 구매 — 검수를 마친 기기만</h1><p>제조사 · 모델 · 용량 · 상태 등급으로 찾습니다. 기기마다 검수 항목과 상태를 밝히고, 등록된 재고만 냅니다.</p><h2>검증된 중고폰을, 믿고 구매하세요</h2><p>폰웨이가 직접 매입하고 검수한 기기만 판매합니다. 사진 · 등급 · 배터리 상태 · 검수 결과를 그대로 밝힙니다.</p><ul><li>전체</li><li>아이폰</li><li>갤럭시</li><li>태블릿</li><li>기타 기기</li></ul><h2>지금 판매 중인 상품이 0건입니다</h2><p>검수를 마친 기기부터 이 자리에 올라옵니다. 한 대라도 올라오면 사진 · 외관 등급 · 배터리 상태 · 기능 검수 결과 · 구성품 · 보증과 반품 조건이 그대로 보입니다. 없는 상품을 미리 만들어 두지 않습니다.</p></div></main>
+<main id="view"><div class="pre w"><h1>중고폰 구매 — 검수를 마친 기기만</h1><p>제조사 · 모델 · 용량 · 상태 등급으로 찾습니다. 기기마다 검수 항목과 상태를 밝히고, 등록된 재고만 냅니다.</p><h2>검수를 마친 중고폰만 올립니다</h2><p>폰웨이가 직접 매입하고 검수한 기기만 판매합니다. 사진 · 등급 · 배터리 상태 · 검수 결과를 그대로 밝힙니다.</p><h2>지금 판매 중인 상품이 0건입니다</h2><p>검수를 마친 기기부터 이 자리에 올라옵니다. 지금 목록에 보이는 6건은 실제 상품이 아니라, 목록 · 검색 · 상세 화면이 어떻게 보이는지 보여 드리는 예시입니다. 값 · 배터리 · 보증 일수는 지어낸 숫자이고 구매하실 수 없습니다.</p><h2>찾으시는 조건으로 좁히기</h2><ul><li>기기 종류 — 스마트폰 · 태블릿 · 워치 · 이어버즈</li><li>제조사 — 애플 · 삼성 · 기타</li><li>외관 등급 — S급 · 미사용 · A급 · 생활기스 · B급 · 사용감 · C급 · 사용감 많음 · D급 · 파손</li><li>가격 — 40만원 이하 · 40~60만원 · 60~80만원 · 80~100만원 · 100만원 이상</li></ul></div></main>
 <div id="chrome-b"></div>
 </body>
 </html>

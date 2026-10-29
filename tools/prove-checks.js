@@ -40,16 +40,32 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
-  /* ══ 2026-10-29 PHONEWAY — 조회할 곤이 없는 동안의 `/track` ═════
+  /* ══ 2026-10-29 PHONEWAY — 조회할 곳이 없는 동안의 `/track` ═════
      전의 꼴—폼을 내고 안내를 감춘 꼴—으로 되돌립니다. 그러면
      손님이 적고 누르셨는데 "아직 안 열었습니다" 가 나옵니다 (§30-7).
      ⚠ 두 칸이 둘 다 `/track` 에 실제로 있습니다 — 없는 요소를 집으면
      되돌리기가 헛돌고 "검사가 안 잡는다" 로 보입니다. */
-  ["진행 조회: 조회할 곤이 없으면 폼을 안 낸다",
+  ["진행 조회: 조회할 곳이 없으면 폼을 안 낸다",
    `var fm = document.getElementById("tk-fm");
     var off = document.getElementById("tk-off");
     if(fm) fm.hidden = false;
     if(off) off.hidden = true;`],
+  /* ⚠️⚠️ 2026-10-29 ③ — 예시 상품에서 **예시 딱지를 떼어** 봅니다.
+     떼면 지어낸 값이 실제 상품으로 읽힙니다 (절대 규칙 1).
+     ⚠️ 안내 상자를 지우는 쪽으로 적지 마세요 — 그러면 "안내가
+     없습니다" 가 먼저 나서 **딱지 검사가 도는지는 모릅니다**
+     (이 저장소가 "겹겹이 막아 둔 것이 검사를 속인다" 로 겪은 자리). */
+  ["쇼핑몰: 예시면 예시라고 밝히고 살 수 없다",
+   `var ex = document.querySelectorAll(".shp-ex");
+    for(var i = 0; i < ex.length; i++) ex[i].remove();`],
+  /* ⚠️⚠️ 예시 상세에 **구매 단추를 돌려 놓아** 봅니다 — 누를 때마다
+     실패하는 단추입니다 (§30-7). ⚠️ 이 되돌리기는 **이미 그려진 뒤에**
+     도므로 그리는 함수를 바꿔치기해도 아무 일이 안 납니다 — DOM 을
+     직접 건드립니다 (이 저장소가 여러 번 겪은 자리). */
+  ["쇼핑몰: 예시 상세에는 구매 단추가 없다",
+   `var box = document.querySelector(".shp-d-tx .note-box");
+    if(box) box.insertAdjacentHTML("afterend",
+      '<div class="pwb-go"><a class="btn btn-pw" href="/quote">구매 문의하기</a></div>');`],
   /* ⚠️⚠️ 2026-10-25 §10 — 신청 화면의 단계 안내를 **손으로 적은 말**로
      바꿔 봅니다. 그러면 제휴가 붙은 날에도 "아직 없습니다" 가 남습니다
      (이 저장소가 CLAUDE.md 의 "아직 안 된 것" 표에서 겪은 자리). */

@@ -114,7 +114,11 @@ const PAGES = [
      `/guide` 에서 대비 4.42 를 잡아서 알았습니다. `/home` 이 PAGES 에
      없어서 크롤러 본문 95자를 몇 주 놓친 그 자리입니다.
      **화면을 만들면 여기 넣으세요.** */
-  ["/shop",              "인증 중고폰 구매 (매물 0건)"],
+  ["/shop",              "중고폰 구매 — 상품 0건 · 예시 6건"],
+  /* ⚠️ 예시 상품 상세 — **여기 없으면 아무 검사도 안 받습니다**
+     (대비 · 누름 크기 · 어두운 면 · h1). 실제 상품이 등록되면
+     이 주소는 사라지므로, 그때 실제 상품 하나로 바꾸세요. */
+  ["/d/sample-ip15p-256-a", "중고폰 상품 상세 (예시)"],
   ["/bid",               "최고가 경쟁입찰 (업체 0곳)"],
   ["/track",             "판매 진행 조회"],
   ["/guide",             "이용 안내"],
@@ -2273,7 +2277,7 @@ const AUDIT = `(() => {
       const r = e.getBoundingClientRect();
       return (getComputedStyle(e).display !== "none" && r.height >= 24) ? r.height : 0;
     };
-    /* ⚠️⚠️ **규칙이 두 번 뒤집혔습니다.**
+  /* ⚠️⚠️ **규칙이 두 번 뒤집혔습니다.**
        ① 2026-10-13 §3 — "메인 상단 검색 아이콘은 제거한다" (메인만 접음)
        ② 2026-10-15 §3 — "기존 검색 기능은 유지하되, 메인 **히어로**에
           검색창을 추가하지 않는다." 시안의 헤더에는 돋보기가 있습니다.
@@ -2309,17 +2313,17 @@ const AUDIT = `(() => {
     };
     if(!vis(q) && !vis(ic)) return "속화면 헤더에도 검색이 없습니다";
     return true;`);
-  /* ⚠⚠ **조회할 곤이 없는 동안에는 폼을 안 냅니다** (2026-10-29).
+  /* ⚠⚠ **조회할 곳이 없는 동안에는 폼을 안 냅니다** (2026-10-29).
      전에는 폼을 내고 누르면 "아직 안 열었습니다" 라고 답했는데,
      그것이 곧 **눌러도 작동하지 않는 단추**입니다 (§30-7) — `/my` 의
-     `.my-db` · 사진 체붙 칸이 지키는 규칙과 같습니다.
+     `.my-db` · 사진 첨부 칸이 지키는 규칙과 같습니다.
      같은 자리에서 둘을 더 봅니다 —
        · 없는 **고객센터**를 가리키지 않는가 (전화번호 칸조차 비어
          있어서, 그 말을 보고 번호를 찾다가 못 찾으십니다)
-       · 접수번호 보기가 **실제 꿀**과 같은가. 서버가 내주는 번호는
+       · 접수번호 보기가 **실제 꼴**과 같은가. 서버가 내주는 번호는
          `SW-` 로 시작하고(`api/_intake.js`), 다른 머리를 적어 두면
-         손님이 그 꿀로 찾으시다가 못 찾습니다. */
-  await f("진행 조회: 조회할 곤이 없으면 폼을 안 낸다", "/track", `
+         손님이 그 꼴로 찾으시다가 못 찾습니다. */
+  await f("진행 조회: 조회할 곳이 없으면 폼을 안 낸다", "/track", `
     const fm = document.getElementById("tk-fm");
     const off = document.getElementById("tk-off");
     if(!fm) return "조회 폼이 아예 없습니다";
@@ -2328,15 +2332,65 @@ const AUDIT = `(() => {
       const r = e.getBoundingClientRect();
       return getComputedStyle(e).display !== "none" && r.height > 0;
     };
-    /* 검사 환경에는 /api/session 이 없어 로그인이 꾼 쪽입니다 */
-    if(vis(fm)) return "조회할 곤이 없는데 폼이 보입니다 — 눌러도 안 되는 단추입니다";
+    /* 검사 환경에는 /api/session 이 없어 로그인이 꺼진 쪽입니다 */
+    if(vis(fm)) return "조회할 곳이 없는데 폼이 보입니다 — 눌러도 안 되는 단추입니다";
     if(!vis(off)) return "폼도 안내도 안 보입니다";
     const all = (document.getElementById("view") || document.body).textContent || "";
     if(all.indexOf("고객센터") >= 0) return "없는 고객센터를 가리킵니다";
     const no = document.getElementById("tk-no");
     const ph = no ? String(no.placeholder || "") : "";
     if(ph.indexOf("SW-") !== 0)
-      return "접수번호 보기가 실제 꿀(SW-)과 다릅니다 — " + ph;
+      return "접수번호 보기가 실제 꼴(SW-)과 다릅니다 — " + ph;
+    return true;`);
+  /* ⚠️⚠️ **예시 상품은 예시라고 말하고, 살 수 없어야 합니다**
+     (2026-10-29 ③). 지어낸 값이 붙은 카드가 실제 상품으로 읽히면
+     그 순간 없는 물건을 광고하는 것이고(절대 규칙 1), 상세에
+     구매 단추를 내면 누를 때마다 실패합니다 (§30-7).
+     ⚠️ 검사가 보는 것은 **목록과 상세 둘 다**입니다 — 한쪽만 보면
+     다른 쪽에서 딱지가 빠져도 그냥 통과합니다.
+     ⚠️ 실제 상품이 등록되면 예시가 저절로 사라져서 이 검사는
+     **건너뜁니다** (`amShopSampleOn()`). 그때는 "실제 상품에
+     예시 딱지가 안 붙는가" 를 보는 쪽이 맞습니다. */
+  await f("쇼핑몰: 예시면 예시라고 밝히고 살 수 없다", "/shop", `
+    if(typeof amShopSampleOn !== "function") return "쇼핑몰 데이터가 안 실렸습니다";
+    if(!amShopSampleOn()) return true;          /* 실제 상품이 있는 날 */
+    const note = document.querySelector(".shp-note");
+    if(!note) return "예시라는 안내가 목록에 없습니다";
+    const nt = note.textContent || "";
+    if(nt.indexOf("예시") < 0) return "안내에 예시라는 말이 없습니다";
+    if(nt.indexOf("구매하실 수 없습니다") < 0)
+      return "살 수 없다는 말이 없습니다";
+    const cards = document.querySelectorAll(".shp-c");
+    if(!cards.length) return "예시를 켜 두었는데 카드가 0장입니다";
+    const noEx = [].filter.call(cards, function(c){ return !c.querySelector(".shp-ex"); });
+    if(noEx.length) return "예시 딱지가 없는 카드가 " + noEx.length + "장입니다";
+    /* 안내가 **카드보다 위**라야 합니다 — 아래에 두면 카드를 먼저
+       보고 실제 상품으로 읽으십니다 */
+    const g = document.querySelector(".shp-g");
+    if(g && note.getBoundingClientRect().top >= g.getBoundingClientRect().top)
+      return "예시 안내가 카드보다 아래에 있습니다";
+    /* 거르개가 장식이 아닌가 — 보내는 주소가 실제로 달라져야 합니다 */
+    const chip = document.querySelector('.shp-fil .chip:not(.on)');
+    if(!chip) return "거르개 칩이 없습니다";
+    const h = chip.getAttribute("href") || "";
+    if(h.indexOf("/shop?") !== 0) return "거르개가 주소를 안 바꿉니다 — " + h;
+    return true;`);
+  await f("쇼핑몰: 예시 상세에는 구매 단추가 없다", "/d/sample-ip15p-256-a", `
+    if(typeof amShopSampleOn !== "function") return "쇼핑몰 데이터가 안 실렸습니다";
+    if(!amShopSampleOn()) return true;
+    const note = document.querySelector(".shp-note");
+    if(!note) return "예시라는 안내가 상세에 없습니다";
+    if((note.textContent || "").indexOf("구매하실 수 없습니다") < 0)
+      return "살 수 없다는 말이 없습니다";
+    const v = document.getElementById("view") || document.body;
+    const all = v.textContent || "";
+    if(all.indexOf("구매 문의하기") >= 0) return "예시인데 구매 단추가 있습니다";
+    /* ⚠️ 비활성 단추로 두지도 않습니다 — 왜 못 사는지를 말하는
+       쪽이 낫습니다 (0개일 때 신청 단추와 같은 규칙) */
+    const dis = v.querySelector("button[disabled]");
+    if(dis) return "예시인데 비활성 단추가 있습니다 — 까닭을 말하세요";
+    const h1 = v.querySelector("h1");
+    if(!h1 || !(h1.textContent || "").trim()) return "제목이 비었습니다";
     return true;`);
   /* ⚠️⚠️ **규칙이 두 번 뒤집혔습니다.**
        ① 처음에는 "창업과 폐업을 색으로 가르지 않는다" 였습니다 —

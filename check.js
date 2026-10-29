@@ -1114,16 +1114,31 @@ const AUDIT = `(() => {
      ⚠️ 해시를 읽던 자리가 남으면 **에러 없이 조용히 틀린 답**을 냅니다.
      화면은 그려지니 위의 검사들은 다 통과합니다 — 그래서 따로 봅니다. */
   const NAV = [
-    ["/startup",   "헤더 메뉴 켜짐",
-      () => !!document.querySelector('#gnb a.on[data-to="/startup"]')],
-    ["/closure",   "헤더 메뉴 켜짐",
-      () => !!document.querySelector('#gnb a.on[data-to="/closure"]')],
-    ["/startup/cafe", "속화면에서도 부모 메뉴가 켜짐",
-      () => !!document.querySelector('#gnb a.on[data-to="/startup"]')],
-    ["/providers", "아래 네비 켜짐",
-      () => !!document.querySelector('.mnav a.on[data-to="/providers"]')],
-    ["/stores",    "아래 네비는 제일 가까운 칸",
-      () => !!document.querySelector('.mnav a.on[data-to="/providers"]')],
+    /* ⚠️⚠️ **칸 이름을 박지 마세요.** 전에 여덟 줄이
+       `/startup` · `/providers` · `/tools` · `/content` 를 **글자로**
+       들고 있었는데, 2026-10-29 로 메뉴와 네비가 PHONEWAY 것이 되자
+       **멀쩡한 코드를 여덟 건이나 "틀렸다" 고** 잡았습니다 — 바로 아래
+       주석이 이미 "여기서 지키는 것은 칸 이름이 아니다" 라고 적어 두고
+       정작 코드는 이름을 박고 있었습니다 (`tools/test-admin.js` 가
+       브랜드 이름을 박아 둔 그 자리입니다).
+       지금 보는 것은 **뜻 둘**입니다 — ① 메뉴에 있는 화면에서는 그
+       메뉴가 켜진다 ② 접두사가 겹치는 다른 주소에서 엉뚱한 메뉴가
+       켜지지 않는다. 메뉴 목록은 `chrome.js` 에서 읽습니다. */
+    ["/sell",      "헤더 메뉴 켜짐",
+      () => !!document.querySelector('#gnb a.on[data-to]')],
+    ["/shop",      "헤더 메뉴 켜짐",
+      () => !!document.querySelector('#gnb a.on[data-to]')],
+    ["/guide",     "메뉴에 있는 화면은 그 메뉴가 켜짐",
+      () => {
+        var on = document.querySelector('#gnb a.on[data-to]');
+        return !!on && on.getAttribute("data-to") === "/guide";
+      }],
+    /* ⚠️⚠️ `/sell-biz` 는 `/sell` 의 속화면이 **아닙니다.** 켜짐을
+       `indexOf(to)` 로 느슨하게 적으면 여기서 "내 폰 팔기" 가 켜져서
+       매물 내놓기 화면이 중고폰 팔기로 읽힙니다 — `paintGnb()` 가
+       `to + "/"` 로 보는 까닭입니다. */
+    ["/sell-biz",  "접두사가 겹치는 주소에서 엉뚱한 메뉴가 안 켜짐",
+      () => !document.querySelector('#gnb a.on[data-to="/sell"]')],
     ["/",          "아래 네비 홈",
       () => !!document.querySelector('.mnav a.on[data-to="/"]')],
     /* ⚠️⚠️ **2026-10-22 — 아래 네비 다섯이 바뀌었습니다** (사장님
@@ -1136,14 +1151,22 @@ const AUDIT = `(() => {
        아무것도 안 켜져 있으면 손님은 자기가 어디 있는지 모릅니다).
        전에는 /operation · /transfer · /tools · /faq · /sell ·
        /about **여섯이 안 켜지고** 있었습니다. */
-    ["/closure/gym", "아래 네비 서비스",
-      () => !!document.querySelector('.mnav a.on[data-to="/providers"]')],
+    ["/closure/gym", "아래 네비가 안 비어 있음",
+      () => !!document.querySelector('.mnav a.on')],
     ["/operation",   "아래 네비가 안 비어 있음",
       () => !!document.querySelector('.mnav a.on')],
-    ["/tools/cost",  "아래 네비 계산도구",
-      () => !!document.querySelector('.mnav a.on[data-to="/tools"]')],
-    ["/faq",         "아래 네비 가이드",
-      () => !!document.querySelector('.mnav a.on[data-to="/content"]')],
+    ["/tools/cost",  "아래 네비가 안 비어 있음",
+      () => !!document.querySelector('.mnav a.on')],
+    ["/faq",         "아래 네비가 안 비어 있음",
+      () => !!document.querySelector('.mnav a.on')],
+    ["/sell-biz",    "아래 네비가 안 비어 있음",
+      () => !!document.querySelector('.mnav a.on')],
+    /* ⚠️⚠️ **켜진 칸이 거짓이면 안 켜는 것보다 나쁩니다.** 창업·폐업
+       주소를 `/shop`(중고폰 구매)에 묶어 두었더니 창업 준비 화면에서
+       "구매" 가 켜져 손님이 자기가 중고폰을 사는 중이라고 읽었습니다 —
+       지금은 홈입니다 (`MNAV_NEAR` 의 ⚠️⚠️). */
+    ["/startup",     "창업 화면에서 '구매' 가 켜지지 않음",
+      () => !document.querySelector('.mnav a.on[data-to="/shop"]')],
     /* 주소에 실린 조건이 화면에 그대로 반영되는가 — 끊기면 손님은
        같은 것을 두 번 적게 되고 거기서 닫습니다. */
     ["/quote?c=interior&s=duct&i=cafe&r=gyeonggi&side=start",
@@ -5355,6 +5378,17 @@ const AUDIT = `(() => {
      놓기 때문입니다. 크롤러가 읽는 것은 **고쳐지기 전의 파일**이라,
      여기서는 파일을 그대로 받아서 셉니다. */
   const headBad = [];
+  /* 색인 안 하는 화면 목록 — `js/app.js` 한 곳에서 읽습니다 (위 ⚠️⚠️) */
+  const NOIDX = (() => {
+    const src = require("fs").readFileSync(__dirname + "/js/app.js", "utf8");
+    const i = src.indexOf("var NOINDEX");
+    const a = src.indexOf("[", i), b = src.indexOf("]", a);
+    const L = (i < 0 || a < 0 || b < 0) ? [] :
+      JSON.parse(src.slice(a, b + 1).replace(/\s+/g, ""));
+    if (!L.length || L.indexOf("/my") < 0)
+      throw new Error("js/app.js 의 NOINDEX 를 읽지 못했습니다 — 꼴이 바뀌었는지 보세요");
+    return L;
+  })();
   {
     const strip = t => t.replace(/<script[\s\S]*?<\/script>/g,"")
                         .replace(/<style[\s\S]*?<\/style>/g,"")
@@ -5365,11 +5399,16 @@ const AUDIT = `(() => {
       /* ⚠️ `noindex` 화면(MY · 검색 · 견적 요청)은 검색에 올리지 않으므로
          크롤러 본문을 요구하지 않습니다. 요구하면 오탐만 쌓입니다. */
       const path = url.split("?")[0];
-      /* ⚠️ 이 목록은 `js/app.js` 의 `NOINDEX` 와 **같아야 합니다** —
-         한쪽만 늘리면 여기서 오탐이 납니다 (`/compare` 가 그랬습니다). */
-      /* ⚠️ `js/app.js` 의 `NOINDEX` 와 **같은 목록**이라야 합니다 —
-         한쪽만 늘리면 색인 안 하는 화면에 크롤러 본문을 요구합니다 */
-      if (["/my","/search","/quote","/compare","/sample"].indexOf(path) >= 0) continue;
+      /* ⚠️⚠️ **이 목록을 손으로 적지 마세요.** 전에 다섯을 박아 두고
+         주석으로만 "`js/app.js` 의 `NOINDEX` 와 같아야 합니다" 라고 적어
+         두었는데, 그쪽이 일곱이 되자 `/track` · `/sell-biz` 가 **색인도
+         안 하는 화면인데 크롤러 본문을 요구받아** 멀쩡한 화면이 걸렸습니다
+         (`/compare` 로 이미 한 번 겪고 주석만 더해 둔 자리입니다).
+         지금은 `js/app.js` 를 읽어 **그 목록 하나**를 씁니다 — 어긋날
+         수가 없습니다. ⚠️ 못 읽으면 조용히 비우지 않고 멈춥니다
+         (빈 목록이면 전부 요구해 오탐이 쌓이고, 통째로 집으면 반대로
+         **아무 화면도 안 보게** 됩니다). */
+      if (NOIDX.indexOf(path) >= 0) continue;
       const res = await fetch(ROOT + path).catch(() => null);
       if (!res || !res.ok) { headBad.push(name + ": 파일이 없습니다"); continue; }
       const html = await res.text();

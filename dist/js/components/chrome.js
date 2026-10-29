@@ -166,13 +166,13 @@ function MobileNav(){
 
 var MNAV_NEAR = [
 
-  [/^\/(sell|bid)/,                              "/sell"],
-  [/^\/(shop|a\/|s\/)/,                          "/shop"],
+  [/^\/(sell|bid)(\/|$)/,                        "/sell"],
+  [/^\/shop(\/|$)/,                              "/shop"],
   [/^\/(track|quote)/,                           "/track"],
   [/^\/(my|search|compare|join)/,                "/my"],
   [/^\/(guide|faq|about|terms|privacy|content|support|tools)/, "/"],
 
-  [/^\/(providers|p\/|c\/|g\/|franchise|stores|assets|startup|operation|transfer|closure)/, "/shop"]
+  [/^\/(providers|p\/|c\/|g\/|a\/|s\/|franchise|stores|assets|startup|operation|transfer|closure|sell-biz)/, "/"]
 ];
 function paintMnav(){
   var n = $("mnav"); if(!n) return;

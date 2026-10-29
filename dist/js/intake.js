@@ -1741,14 +1741,16 @@ window.rqProvGo = function(id, on){
 function rqQuotes(r){
   var L = (RQ.quotes || []).filter(function(q){ return q.request_id === r.id; });
   if(!L.length) return "";
-  return '<div class="rq-s"><h4>받은 견적 '+L.length+'건</h4>'+
+
+  var pw = (r.side === "buyin" || r.side === "bid");
+  return '<div class="rq-s"><h4>'+(pw ? "받은 입찰 " : "받은 견적 ")+L.length+'건</h4>'+
     '<ul class="rq-q">'+L.map(function(q){
       var bits = [];
       if(q.amount != null)
         bits.push(won(q.amount)+"원 · "+
           (typeof amQuoteVat === "function" ? amQuoteVat(q.vat) : ""));
       if(q.days)     bits.push(q.days+"일");
-      if(q.start_on) bits.push(amDate(q.start_on)+" 시작");
+      if(q.start_on) bits.push(amDate(q.start_on)+(pw ? " 수거" : " 시작"));
       return '<li><div class="rq-q-h">'+
           '<b>'+esc(q.provider_id)+'</b>'+
 

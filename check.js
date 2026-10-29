@@ -1368,10 +1368,14 @@ const AUDIT = `(() => {
 
   /* 입점 화면에서는 **예시라고 밝히고** 보여 줍니다 (§26) */
   await f("입점 화면의 예시는 예시라고 밝힌다", "/join", `
-    const sp = window.amSample ? window.amSample("provider") : null;
-    if(!sp) return true;
+    /* ⚠️⚠️ **2026-10-29 PHONEWAY — 예시 카드를 안 내고 있습니다.**
+       \`AM_SAMPLES\` 는 창업 · 폐업 예시 업체(인테리어)라, 중고폰
+       매입업체에게 "이렇게 보입니다" 로 내면 자기 일이 아닌 화면입니다.
+       그래서 **없으면 건너뜁니다** — 검사를 지우지는 않았습니다.
+       매입업체용 예시가 생겨 다시 켜는 날, 딱지와 "실제 업체가 아니다"
+       줄이 빠지면 여기서 바로 걸립니다 (되돌리기가 그 꼴을 만들어 봅니다). */
     const box = document.querySelector(".jn-ex");
-    if(!box) return "입점 화면에 '이렇게 보입니다' 구간이 없습니다";
+    if(!box) return true;
     const tag = box.querySelector(".jn-ex-tag");
     if(!tag || (tag.textContent||"").indexOf("예시") < 0)
       return "예시 카드에 예시 딱지가 없습니다";
@@ -2304,6 +2308,35 @@ const AUDIT = `(() => {
       return (getComputedStyle(e).display !== "none" && r.height >= 24) ? r.height : 0;
     };
     if(!vis(q) && !vis(ic)) return "속화면 헤더에도 검색이 없습니다";
+    return true;`);
+  /* ⚠⚠ **조회할 곤이 없는 동안에는 폼을 안 냅니다** (2026-10-29).
+     전에는 폼을 내고 누르면 "아직 안 열었습니다" 라고 답했는데,
+     그것이 곧 **눌러도 작동하지 않는 단추**입니다 (§30-7) — `/my` 의
+     `.my-db` · 사진 체붙 칸이 지키는 규칙과 같습니다.
+     같은 자리에서 둘을 더 봅니다 —
+       · 없는 **고객센터**를 가리키지 않는가 (전화번호 칸조차 비어
+         있어서, 그 말을 보고 번호를 찾다가 못 찾으십니다)
+       · 접수번호 보기가 **실제 꿀**과 같은가. 서버가 내주는 번호는
+         `SW-` 로 시작하고(`api/_intake.js`), 다른 머리를 적어 두면
+         손님이 그 꿀로 찾으시다가 못 찾습니다. */
+  await f("진행 조회: 조회할 곤이 없으면 폼을 안 낸다", "/track", `
+    const fm = document.getElementById("tk-fm");
+    const off = document.getElementById("tk-off");
+    if(!fm) return "조회 폼이 아예 없습니다";
+    if(!off) return "대신 낼 안내가 없습니다";
+    const vis = function(e){
+      const r = e.getBoundingClientRect();
+      return getComputedStyle(e).display !== "none" && r.height > 0;
+    };
+    /* 검사 환경에는 /api/session 이 없어 로그인이 꾼 쪽입니다 */
+    if(vis(fm)) return "조회할 곤이 없는데 폼이 보입니다 — 눌러도 안 되는 단추입니다";
+    if(!vis(off)) return "폼도 안내도 안 보입니다";
+    const all = (document.getElementById("view") || document.body).textContent || "";
+    if(all.indexOf("고객센터") >= 0) return "없는 고객센터를 가리킵니다";
+    const no = document.getElementById("tk-no");
+    const ph = no ? String(no.placeholder || "") : "";
+    if(ph.indexOf("SW-") !== 0)
+      return "접수번호 보기가 실제 꿀(SW-)과 다릅니다 — " + ph;
     return true;`);
   /* ⚠️⚠️ **규칙이 두 번 뒤집혔습니다.**
        ① 처음에는 "창업과 폐업을 색으로 가르지 않는다" 였습니다 —

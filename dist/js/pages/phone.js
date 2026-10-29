@@ -14,10 +14,11 @@ function pwSellGo(patch){
 }
 
 function pwSellStep(q){
-  if(!q.model) return 1;
+
   var md = amModel(q.model);
-  if(md && md.caps && md.caps.length && !q.cap) return 1;
-  if(!q.grade) return 2;
+  if(!md) return 1;
+  if(md.caps && md.caps.length && md.caps.indexOf(+q.cap) < 0) return 1;
+  if(!amGrade(q.grade)) return 2;
   return 3;
 }
 
@@ -198,6 +199,8 @@ window.pwSellSubmit = function(){
     signal: ctl.signal,
     body: JSON.stringify({
       kind:"quote", name:name.trim(), tel:tel.trim(),
+
+      side: (PW_WAY === "direct" ? "buyin" : "bid"),
       serviceName:"중고폰 매입 — " + (md ? md.name : ""),
       agree:true, idem:(window.amIdem ? amIdem() : ""),
       detail: (window.amDropEmpty ? amDropEmpty(det) : det)
@@ -226,7 +229,7 @@ window.pwSellSubmit = function(){
 function PageShop(){
   var P = window.AM_PRODUCTS || [];
   var m = nowQS("m") || "";
-  return PgHero({ kicker:"SHOP", h1:"검증된 중고폰을, 믿고 구매하세요",
+  return PgHero({ kicker:"SHOP", h1:"검수를 마친 중고폰만 올립니다",
       lead:amBrand()+"가 직접 매입하고 검수한 기기만 판매합니다. "+
            "사진 · 등급 · 배터리 상태 · 검수 결과를 그대로 밝힙니다." })+
     '<section class="sec sec-white"><div class="w">'+
@@ -253,11 +256,15 @@ function PageBid(){
     ["기기를 등록하시면", "기종 · 용량 · 상태를 적어 주시면 됩니다. 가입하지 않으셔도 됩니다."],
     ["업체가 견적을 냅니다", "참여 업체가 기기 조건을 보고 금액과 거래 조건을 냅니다."],
     ["나란히 놓고 고르세요", "금액만이 아니라 검수 기준 · 정산 소요일까지 같이 보실 수 있습니다."],
-    ["고르는 것은 사장님입니다", "저희가 자동으로 정하지 않습니다. 고르신 뒤에 연락처가 그 업체로 갑니다."]
+    ["고르는 것은 사장님입니다", "저희가 자동으로 정하지 않습니다. 고르신 뒤에 상호를 알려 드리고, 연락처 전달은 그때 다시 동의를 받습니다."],
+
+    ["수거하고 검수합니다", "택배나 방문으로 기기를 보내시면 업체가 상태를 확인합니다. 적어 주신 것과 다르면 먼저 알려 드립니다."],
+    ["정산합니다", "받아들이시면 정산하고, 아니면 기기를 돌려받으십니다. 진행은 접수번호로 조회하실 수 있습니다."]
   ];
   return PgHero({ kicker:"BID", h1:"최고가 경쟁입찰",
-      lead:"전국의 인증 매입업체가 같은 기기에 견적을 냅니다. "+
-           "가격과 거래 조건을 나란히 놓고 고르세요." })+
+
+      lead:"한 대의 기기를 여러 매입업체가 보고 각자 검적을 냅니다. "+
+           "금액과 거래 조건을 나란히 놀고 고르세요." })+
     '<section class="sec sec-white"><div class="w">'+
       '<ol class="pwb-g">'+ rows.map(function(r,i){
         return '<li><span class="pwb-n">'+(i+1)+'</span><b>'+esc(r[0])+'</b>'+
@@ -272,44 +279,63 @@ function PageBid(){
       '</div>'+
       '<div class="pwb-go"><a class="btn btn-pw" href="/sell">내 기기 등록하고 견적 받기</a>'+
         '<a class="btn btn-pw-o" href="/join">매입업체로 참여하기</a></div>'+
+
+      '<p class="sec-note">'+icon("info",15)+
+        '이미 참여 중인 매입업체이시면 <a href="/my">내 기록</a>에서 '+
+        '배정받은 기기에 입찰을 내실 수 있습니다.</p>'+
     '</div></section>';
 }
 
 function PageTrack(){
+
   return PgHero({ kicker:"TRACK", h1:"판매 진행 조회",
-      lead:"접수번호와 신청하실 때 적으신 연락처로 확인하실 수 있습니다." })+
+      lead:"접수하신 건이 지금 어디까지 왔는지 알려 드립니다." })+
     '<section class="sec sec-white"><div class="w pwf" style="max-width:720px">'+
-      '<div class="pwf-fm">'+
+      '<div class="pwf-fm" id="tk-fm" hidden>'+
         '<div class="f-r"><label for="tk-no">접수번호 <em>*</em></label>'+
-          '<input id="tk-no" type="text" autocomplete="off" placeholder="PW-AB12-CD34"></div>'+
+
+          '<input id="tk-no" type="text" autocomplete="off" placeholder="SW-AB12-CD34"></div>'+
         '<div class="f-r"><label for="tk-tel">연락처 <em>*</em></label>'+
           '<input id="tk-tel" type="tel" autocomplete="tel" inputmode="tel" '+
           'placeholder="010-0000-0000"></div>'+
         '<button type="button" class="btn btn-pw pwf-send" onclick="pwTrackFind()">조회하기</button>'+
         '<p class="pwf-n" id="tk-msg"></p>'+
       '</div>'+
-      '<div class="note-box" style="margin-top:22px">'+
-        '⚠️ 접수번호와 연락처가 <b>둘 다</b> 맞아야 열립니다. 번호만으로 열어 '+
+      '<div class="note-box" id="tk-off">'+
+        '⚠ <b>온라인 조회는 아직 열지 않았습니다.</b> 신청하시면 저희가 '+
+        '내용을 확인한 뒤 적어 주신 연락처로 직접 연락드립니다.<br>'+
+        '⚠ 회신 시점을 약속드리지는 않습니다.'+
+        '<div class="pwb-go" style="margin-top:14px">'+
+          '<a class="btn btn-pw" href="/sell">내 폰 팔기</a></div>'+
+      '</div>'+
+      '<div class="note-box" id="tk-why" style="margin-top:22px">'+
+        '⚠ 접수번호와 연락처가 <b>둘 다</b> 맞아야 열립니다. 번호만으로 열어 '+
         '드리면 번호를 아는 누구나 남의 신청 내용을 보게 됩니다.<br>'+
-        '번호를 잃어버리셨으면 고객센터로 문의해 주세요.'+
+
+        '번호를 잃어버리셨으면 <b>같은 연락처로 다시 신청</b>해 주세요 — '+
+        '저희 쪽에서 같은 분의 건으로 확인합니다.'+
       '</div>'+
     '</div></section>';
 }
+
+window.pwTrackInit = function(){
+  var fm = document.getElementById("tk-fm"), off = document.getElementById("tk-off");
+  if(!fm || !off) return;
+  var pre = (typeof amAuthAsk === "function") ? amAuthAsk() : Promise.resolve(null);
+  pre.then(function(a){
+    if(!a || !a.auth) return;
+    fm.hidden = false; off.hidden = true;
+  }).catch(function(){   });
+};
 window.pwTrackFind = function(){
   var no = (document.getElementById("tk-no")||{}).value || "";
   var tel = (document.getElementById("tk-tel")||{}).value || "";
   var msg = document.getElementById("tk-msg");
   if(!no.trim() || !tel.trim()){
-    if(msg) msg.textContent = "⚠️ 접수번호와 연락처를 둘 다 적어 주세요.";
+    if(msg) msg.textContent = "⚠ 접수번호와 연락처를 둘 다 적어 주세요.";
     return;
   }
-
-  var on = window.amAuthOn && amAuthOn();
-  if(msg) msg.textContent = on
-    ? "조회 중입니다…"
-    : "⚠️ 아직 온라인 조회를 열지 않았습니다. 접수번호를 가지고 고객센터로 "+
-      "문의해 주시면 진행 상황을 알려 드립니다.";
-  if(!on) return;
+  if(msg) msg.textContent = "조회 중입니다…";
 
   go("/my?claim=" + encodeURIComponent(no.trim()));
 };

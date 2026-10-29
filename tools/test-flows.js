@@ -866,20 +866,29 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    return { cta, form:!!q("#join-form"), fields:!!q("#join-fields"),
      fold:!!q(".jn-fold-w .fld-b"),
      chipAll:chips.length, chipVis:chips.filter(c=>c.offsetParent).length,
+     catAll:document.querySelectorAll(".join-cat").length,
      names:[...document.querySelectorAll(".join-cat > b")].filter(b=>b.offsetParent).length,
      faqOpen:document.querySelectorAll(".faq-a:not([hidden])").length,
      faqAll:document.querySelectorAll(".faq-a").length };
  });
  say(jn.cta.indexOf("#join-form")>=0 && jn.form,
      "/join 히어로에서 신청 폼으로 바로 간다", jn.cta.join(" "));
- say(jn.fold && jn.chipVis===0 && jn.chipAll>50,
-     "입점 분야 칩이 접혀 있다 (DOM 에는 그대로)", "보임 "+jn.chipVis+"/"+jn.chipAll);
- say(jn.names>=10, "접혀도 분야 이름은 보인다", jn.names+"개");
+ /* ⚠️⚠️ **기준값을 손으로 적지 마세요.** 전에는 `chipAll>50` ·
+    `names>=10` 이었는데, 그건 창업 · 폐업 분류 열일곱 · 칩 128개에
+    맞춰 박아 둔 수였습니다 — 2026-10-29 로 이 구간이 **취급 기기**
+    (종류 넷)로 바뀌자 멀쩡한 화면이 세 건 실패로 떨어졌습니다.
+    지켜야 하는 것은 개수가 아니라 셋입니다 — ① 접혀 있다
+    ② 접혀도 묶음 이름은 보인다 ③ 펼치면 전부 나온다. 세는 값으로
+    보면 데이터가 어떻게 바뀌어도 그 셋을 계속 봅니다. */
+ say(jn.fold && jn.chipAll>0 && jn.chipVis===0,
+     "취급 기기 칩이 접혀 있다 (DOM 에는 그대로)", "보임 "+jn.chipVis+"/"+jn.chipAll);
+ say(jn.catAll>0 && jn.names===jn.catAll,
+     "접혀도 묶음 이름은 보인다", jn.names+"/"+jn.catAll);
  say(jn.faqOpen===0 && jn.faqAll>0,
      "/join FAQ 가 아코디언이다", jn.faqOpen+"/"+jn.faqAll);
  await pg.click(".jn-fold-w .fld-b"); await pg.waitForTimeout(250);
  const open = await pg.evaluate(()=>[...document.querySelectorAll(".join-cat .chip")].filter(c=>c.offsetParent).length);
- say(open>50, "눌러서 펼치면 칩이 나온다", open+"개");
+ say(open===jn.chipAll, "눌러서 펼치면 칩이 전부 나온다", open+"/"+jn.chipAll);
 
  /* ③ 신청 폼 — 지역도 브라우저가 막습니다 (딱지에 * 가 있습니다) */
  await pg.goto(B+"/quote",{waitUntil:"load"}); await pg.waitForTimeout(500);

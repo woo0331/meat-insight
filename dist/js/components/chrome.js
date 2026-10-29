@@ -7,7 +7,8 @@ window.AM_GNB = [
   { to:"/bid",     name:"최고가 경쟁입찰" },
   { to:"/track",   name:"판매 진행 조회" },
   { to:"/guide",   name:"이용 안내" },
-  { to:"/faq",     name:"고객센터" }
+
+  { to:"/faq",     name:"도움말" }
 ];
 
 var MNAV = [
@@ -190,8 +191,7 @@ function Footer(){
 
   var cols = [
 
-    [brandName(), [["/guide","이용 안내"],["/bid","경쟁입찰이란"],
-                   ["/faq","고객센터"]]],
+    [brandName(), [["/guide","이용 안내"],["/bid","경쟁입찰이란"]]],
     ["판매",     [["/sell","내 폰 팔기"],["/bid","최고가 경쟁입찰"],
                    ["/track","판매 진행 조회"]]],
     ["구매",     [["/shop","중고폰 구매"],["/shop?m=iphone","아이폰"],

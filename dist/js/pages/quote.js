@@ -314,7 +314,7 @@ function PageQuote(){
           '<div class="f-r"><label for="q-side">무엇 때문에 <b>*</b></label>'+
             '<select class="sel" id="q-side">'+
 
-              (window.AM_SIDES || []).map(function(s){
+              (window.AM_SIDES || []).filter(function(s){ return !s.pw; }).map(function(s){
                 return '<option value="'+esc(s.key)+'"'+
                   ((side === s.key || (!side && s.key === "start")) ? " selected" : "")+
                   '>'+esc(s.say)+'</option>';

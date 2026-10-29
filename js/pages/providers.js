@@ -682,22 +682,33 @@ function PageSample(){
    자리에 실제 숫자가 나오고, 고쳐 쓸 자리가 없습니다.
    ════════════════════════════════════════════════════════════════════ */
 function PageJoin(){
-  var subs = [];
-  AM_CATS.forEach(function(c){
-    if(c.kind !== "provider") return;
-    /* ⚠️ `amAllSubs()` 입니다. `c.items` 를 그대로 쓰면 업종에서
-       값을 받는 분류(시설 · 장비)가 여기서 **텅 빕니다** — 제목만
-       남고 칸이 비어서 미완성으로 읽힙니다 (절대 규칙 2). */
-    var it = (window.amAllSubs ? amAllSubs(c) : (c.items||[]));
-    if(!it.length) return;          /* 그래도 비면 줄째 뺍니다 */
-    subs.push({ cat:c, items:it });
-  });
+  /* ⚠️⚠️ **2026-10-29 PHONEWAY — 취급 기기로 바꿨습니다.**
+     전에는 `catalog.js` 의 창업 · 폐업 분류 25(인테리어 · 철거 · 세무 ·
+     노무 …)를 "입점 분야" 로 깔고 있었습니다 — 중고폰 매입업체가
+     `/bid` 에서 넘어와 보면 **자기 일이 하나도 없는 목록**입니다.
+     매입업체가 알아야 하는 것은 "어떤 기기가 들어오나" 까지입니다.
+     ⚠️ `devices.js` 한 곳에서 옵니다 — 여기 손으로 적지 마세요.
+     ⚠️ 셈(`amProvidersInCat`)은 `subs`(하위 분류 key)로 맞춰 보는
+     규칙이라 기기 묶음에는 안 걸립니다. 그래서 **0 곳으로 읽히고**,
+     지금 업체가 0곳이라 그게 사실입니다 — 등록이 시작되면 그때
+     기기별로 세는 규칙을 따로 만들어야 합니다. */
+  var subs = (window.AM_DEVICE_KINDS || []).map(function(k){
+    return { cat:{ key:k.key, name:k.name, items:[] },
+             items:(window.AM_MODELS || []).filter(function(m){
+               return m.kind === k.key; }) };
+  }).filter(function(g){ return g.items.length; });
   var ready = !!(window.WOW_BIZ && WOW_BIZ.sosReady);
 
   return PgHero({
-    kicker:"업체 · 전문가 · 프랜차이즈 본사",
-    h1raw:"창업과 폐업을 준비하는<br class=\"br-m\"> 사장님이 직접 찾아옵니다.",
-    lead:"하시는 일과 지역만 등록해 두시면, 조건이 맞는 요청만 보내 드립니다. 기본 입점은 무료입니다.",
+    /* ⚠️⚠️ 2026-10-29 PHONEWAY — 받는 분이 **중고폰 매입업체**로 바뀌었습니다.
+       전에는 창업 · 폐업 업체(인테리어 · 철거 · 세무)에게 하는 말이었는데,
+       `/bid` 의 "매입업체로 참여하기" 가 여기로 보냅니다 — 누른 분은
+       자기 일이 아닌 글을 보셨습니다.
+       ⚠️ "무료" 를 적지 마세요 (PHONEWAY 지시서 §5 가 직접 금지).
+       ⚠️ 글은 `js/data/join.js` 한 곳이고 여기는 히어로 석 줄뿐입니다. */
+    kicker:"중고폰 매입업체 · 전문 수리업체",
+    h1raw:"기기를 팔려는 분과<br class=\"br-m\"> 바로 이어 드립니다.",
+    lead:"상호와 취급 기기만 남겨 주시면, 조건이 맞는 건만 보내 드립니다. 입찰에 참여하시는 데 받는 비용은 없습니다.",
     /* ⚠️⚠️ **이 화면은 영업 작업대의 종착점입니다.** 직원이 전화로
        설득해서 보낸 링크가 여기인데, 재 보니 폰에서 적는 칸까지가
        **3,721px(4.1화면)** 였습니다 — 거기서 닫히면 그 통화가
@@ -732,13 +743,16 @@ function PageJoin(){
    ⚠️ 카드마다 **예시 딱지**를 붙이고 구간 아래에 한 줄을 더 적습니다.
    ⚠️ 노출 자리는 전부 **실제로 있는 화면**입니다. 없는 자리를 적으면
    업체에게 하는 거짓말이고, 등록하고 나면 바로 압니다. */
+/* ⚠️⚠️ **2026-10-29 PHONEWAY — 노출 자리가 통째로 바뀝니다.**
+   중고폰 매입업체는 `/providers`(창업 · 폐업 업체찾기)에 **안 나옵니다** —
+   거기는 인테리어 · 철거 · 세무를 찾는 화면입니다. 그대로 두면 등록하신
+   업체가 거기서 자기를 찾다가 못 찾습니다 (업체에게 하는 거짓말).
+   매입업체가 실제로 보이는 자리는 **판매자가 견적을 고르는 화면**입니다. */
 var JOIN_WHERE = [
-  { ic:"search",   t:"업체찾기",        p:"분야 · 지역 · 업종 · 하위 서비스로 좁혀 찾는 화면", to:"/providers" },
-  { ic:"grid",     t:"분야 화면",       p:"인테리어 · 철거 · 세무처럼 분야마다 있는 화면", to:"/providers/interior" },
-  { ic:"compare",  t:"업체 비교",       p:"손님이 두세 곳을 나란히 놓고 보는 화면" },
-  { ic:"home",     t:"메인 업체 구간",  p:"첫 화면에서 등록된 차례로", to:"/" },
-  { ic:"layers",   t:"사업 단계 화면",  p:"그 단계에 필요한 분야로 들어온 손님에게", to:"/g/build" },
-  { ic:"doc",      t:"견적 요청",       p:"분야 · 지역이 맞는 요청을 나눠 받습니다", to:"/quote" }
+  { ic:"gavel",    t:"경쟁입찰",        p:"판매자가 올린 기기에 견적을 내는 자리", to:"/bid" },
+  { ic:"compare",  t:"견적 비교 화면",  p:"판매자가 받은 견적을 나란히 놓고 보는 자리" },
+  { ic:"mobile",   t:"기기 조건",       p:"기종 · 용량 · 외관 등급 · 상태가 적혀 옵니다", to:"/sell" },
+  { ic:"doc",      t:"진행 조회",       p:"고르신 뒤의 수거 · 검수 · 정산 기록", to:"/track" }
 ];
 /* ── 업체가 제일 먼저 묻는 여섯 (2026-10-06 2차 §19) ───────────────
    ⚠️⚠️ **성과를 지어내지 마세요.** "월 n건" · "n곳 입점" 은 지금 0 이고
@@ -767,7 +781,15 @@ function JoinSix(){
 }
 
 function JoinShow(){
-  var sp = (typeof amSample === "function") ? amSample("provider") : null;
+  /* ⚠️⚠️ **2026-10-29 PHONEWAY — 예시 카드를 안 냅니다.**
+     `AM_SAMPLES` 는 창업 · 폐업 예시 업체(가나다 인테리어)이고,
+     중고폰 매입업체에게 그걸 "이렇게 보입니다" 로 내면 **자기 일이
+     아닌 화면**을 보여 드리는 것입니다. 맞는 것이 없으면 구간째
+     뺍니다 (절대 규칙 2) — "준비 중" 도 안 찍습니다.
+     ⚠️ `AM_SAMPLES` 와 `/sample` 화면은 **지우지 않았습니다** —
+     창업 · 폐업 157개를 어떻게 할지(0단계 ①) 정해지면 같이 갑니다.
+     ⚠️ 매입업체용 예시가 생기면 이 한 줄만 되돌리면 됩니다. */
+  var sp = null;
   return '<section class="sec sec-white"><div class="w">'+
     '<div class="sec-hd">'+
       '<p class="eyebrow">입점하면 어디에 보이나</p>'+
@@ -846,11 +868,13 @@ function JoinNow(subs){
       '<ul class="jn-now-l">'+
         /* ⚠️ "준비 중" 이라고 하지 않습니다 — 언제 되는지 약속하는 말로
            읽힙니다 (절대 규칙 5). 지금 사실만 적습니다. */
+        /* ⚠️ 2026-10-29 PHONEWAY — 세 칸의 말을 중고폰 쪽으로 옮겼습니다.
+           ⚠️⚠️ "무료" 는 지시서 §5 가 직접 금지한 말이라 뺐습니다. */
         '<li><b>'+esc(open ? "열려 있습니다" : "아직 열지 않았습니다")+'</b>'+
-          '<span>사장님 쪽 견적 요청 접수</span></li>'+
+          '<span>판매자 쪽 판매 신청 접수</span></li>'+
         '<li><b>'+(empty || subs.length)+'개 분야</b>'+
           '<span>'+esc(empty ? "아직 등록된 업체가 없습니다" : "업체를 받고 있습니다")+'</span></li>'+
-        '<li><b>무료</b><span>기본 입점 · 프로필 관리</span></li>'+
+        '<li><b>비용 없음</b><span>입찰 참여 · 프로필 관리</span></li>'+
       '</ul>'+
     '</div>'+
   '</div></section>';
@@ -931,12 +955,12 @@ function JoinFields(subs){
      이 구간 하나가 **3,177px(3.5화면)** 였습니다 — 그만큼 신청
      폼이 아래로 밀립니다. ⚠️ **지우는 것이 아닙니다** — DOM 에
      그대로 있어서 크롤러 본문도 검색도 한 글자 안 바뀝니다.
-     ⚠️ 분야 **이름과 지금 몇 곤인지**는 접힌 채로도 보입니다 —
+     ⚠️ 분야 **이름과 지금 몇 곳인지**는 접힌 채로도 보입니다 —
      업체 사장님이 알아야 하는 것은 "내 일이 여기 있나" 까지입니다. */
   return '<section class="sec sec-white" id="join-fields"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">이런 곳을 찾고 있습니다</p>'+
-      '<h2>입점 분야</h2>'+
-      '<p>여기 없는 분야도 적어 주시면 분류를 만들어 드립니다.</p></div>'+
+      '<h2>이런 기기가 들어옵니다</h2>'+
+      '<p>여기 없는 기종도 적어 주시면 목록에 넣어 드립니다.</p></div>'+
     '<div class="join-g is-fold-chips" id="jn-fields-g">'+subs.map(function(g){
       var show = g.items.slice(0, 6), more = g.items.length - show.length;
       var n = window.amProvidersInCat ? amProvidersInCat(g.cat) : 0;
@@ -950,12 +974,12 @@ function JoinFields(subs){
         (more > 0 ? '<li><span class="chip chip-flat chip-more">외 '+more+'</span></li>' : '')+
         '</ul></div>';
     }).join("")+'</div>'+
-    /* ⚠️⚠️ **단추는 하나입니다.** 분야마다 달았더니 열일곡 개가
+    /* ⚠️⚠️ **단추는 하나입니다.** 분야마다 달았더니 열일곱 개가
        제 높이를 먹어 줄어든 만큼을 되돌려 받았습니다 (재 보고 고쳤습니다).
-       ⚠️ 접혀도 **분야 이름과 지금 몇 곤인지**는 그대로 보입니다 —
+       ⚠️ 접혀도 **분야 이름과 지금 몇 곳인지**는 그대로 보입니다 —
        업체 사장님이 알아야 하는 것은 "내 일이 여기 있나" 까지입니다. */
     '<div class="jn-fold-w">'+
-      FoldAll("jn-fields-g", "분야마다 하는 일 보기", "접기", "is-fold-chips")+
+      FoldAll("jn-fields-g", "기종마다 어떤 모델인지 보기", "접기", "is-fold-chips")+
     '</div>'+
   '</div></section>';
 }
@@ -1004,14 +1028,16 @@ function JoinForm(ready){
       Field("jn-tel","연락처","010-0000-0000",true,"tel","tel")+
       Field("jn-mail","이메일","",false,"email","email")+
       '<div class="f-r"><label for="jn-svc">하시는 일 <b>*</b></label>'+
-        '<input id="jn-svc" required placeholder="예: 카페 인테리어, 주방 철거"></div>'+
+        '<input id="jn-svc" required placeholder="예: 아이폰 · 갤럭시 매입, 액정 수리"></div>'+
       '<div class="f-r"><label for="jn-reg">서비스 가능 지역 <b>*</b></label>'+
         RegionSelect("jn-reg","")+'</div>'+
-      '<div class="f-r"><label for="jn-ind">전문 업종</label>'+
-        IndustrySelect("jn-ind","")+'</div>'+
+      /* ⚠️ 전에는 업종 고르개(음식점 · 카페 …)였습니다 — 매입업체에게는
+         남의 말입니다. 취급 기기를 글로 받습니다. */
+      '<div class="f-r"><label for="jn-ind">취급 기기</label>'+
+        '<input id="jn-ind" placeholder="예: 아이폰 전 기종, 갤럭시 S 시리즈"></div>'+
       '<div class="f-r"><label for="jn-note">소개 · 경력 · 포트폴리오 주소</label>'+
         '<textarea id="jn-note" rows="5" placeholder="하신 일과 자신 있는 것을 적어 주세요."></textarea></div>'+
-      AgreeBox("jn-ag","업체명 · 담당자 성함 · 연락처 · 이메일 · 하시는 일 · 지역",
+      AgreeBox("jn-ag","업체명 · 담당자 성함 · 연락처 · 이메일 · 취급 기기 · 지역",
                "입점 심사와 안내", "입점 종료 후 1년")+
       '<div id="jn-fail"></div>'+
       '<button class="btn btn-b btn-lg btn-full" type="submit"'+(ready?"":" disabled")+'>'+

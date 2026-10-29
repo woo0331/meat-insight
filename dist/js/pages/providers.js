@@ -505,20 +505,19 @@ function PageSample(){
 }
 
 function PageJoin(){
-  var subs = [];
-  AM_CATS.forEach(function(c){
-    if(c.kind !== "provider") return;
 
-    var it = (window.amAllSubs ? amAllSubs(c) : (c.items||[]));
-    if(!it.length) return;
-    subs.push({ cat:c, items:it });
-  });
+  var subs = (window.AM_DEVICE_KINDS || []).map(function(k){
+    return { cat:{ key:k.key, name:k.name, items:[] },
+             items:(window.AM_MODELS || []).filter(function(m){
+               return m.kind === k.key; }) };
+  }).filter(function(g){ return g.items.length; });
   var ready = !!(window.WOW_BIZ && WOW_BIZ.sosReady);
 
   return PgHero({
-    kicker:"업체 · 전문가 · 프랜차이즈 본사",
-    h1raw:"창업과 폐업을 준비하는<br class=\"br-m\"> 사장님이 직접 찾아옵니다.",
-    lead:"하시는 일과 지역만 등록해 두시면, 조건이 맞는 요청만 보내 드립니다. 기본 입점은 무료입니다.",
+
+    kicker:"중고폰 매입업체 · 전문 수리업체",
+    h1raw:"기기를 팔려는 분과<br class=\"br-m\"> 바로 이어 드립니다.",
+    lead:"상호와 취급 기기만 남겨 주시면, 조건이 맞는 건만 보내 드립니다. 입찰에 참여하시는 데 받는 비용은 없습니다.",
 
     cta:'<a class="btn btn-b btn-lg" href="#join-form">입점 신청하기'+icon("arrow",18)+'</a>'+
         '<a class="btn btn-o btn-lg" href="#join-fields">어떤 분야를 찾나요</a>'
@@ -537,12 +536,10 @@ function PageJoin(){
 }
 
 var JOIN_WHERE = [
-  { ic:"search",   t:"업체찾기",        p:"분야 · 지역 · 업종 · 하위 서비스로 좁혀 찾는 화면", to:"/providers" },
-  { ic:"grid",     t:"분야 화면",       p:"인테리어 · 철거 · 세무처럼 분야마다 있는 화면", to:"/providers/interior" },
-  { ic:"compare",  t:"업체 비교",       p:"손님이 두세 곳을 나란히 놓고 보는 화면" },
-  { ic:"home",     t:"메인 업체 구간",  p:"첫 화면에서 등록된 차례로", to:"/" },
-  { ic:"layers",   t:"사업 단계 화면",  p:"그 단계에 필요한 분야로 들어온 손님에게", to:"/g/build" },
-  { ic:"doc",      t:"견적 요청",       p:"분야 · 지역이 맞는 요청을 나눠 받습니다", to:"/quote" }
+  { ic:"gavel",    t:"경쟁입찰",        p:"판매자가 올린 기기에 견적을 내는 자리", to:"/bid" },
+  { ic:"compare",  t:"견적 비교 화면",  p:"판매자가 받은 견적을 나란히 놓고 보는 자리" },
+  { ic:"mobile",   t:"기기 조건",       p:"기종 · 용량 · 외관 등급 · 상태가 적혀 옵니다", to:"/sell" },
+  { ic:"doc",      t:"진행 조회",       p:"고르신 뒤의 수거 · 검수 · 정산 기록", to:"/track" }
 ];
 
 function JoinSix(){
@@ -567,7 +564,8 @@ function JoinSix(){
 }
 
 function JoinShow(){
-  var sp = (typeof amSample === "function") ? amSample("provider") : null;
+
+  var sp = null;
   return '<section class="sec sec-white"><div class="w">'+
     '<div class="sec-hd">'+
       '<p class="eyebrow">입점하면 어디에 보이나</p>'+
@@ -639,10 +637,10 @@ function JoinNow(subs){
       '<ul class="jn-now-l">'+
 
         '<li><b>'+esc(open ? "열려 있습니다" : "아직 열지 않았습니다")+'</b>'+
-          '<span>사장님 쪽 견적 요청 접수</span></li>'+
+          '<span>판매자 쪽 판매 신청 접수</span></li>'+
         '<li><b>'+(empty || subs.length)+'개 분야</b>'+
           '<span>'+esc(empty ? "아직 등록된 업체가 없습니다" : "업체를 받고 있습니다")+'</span></li>'+
-        '<li><b>무료</b><span>기본 입점 · 프로필 관리</span></li>'+
+        '<li><b>비용 없음</b><span>입찰 참여 · 프로필 관리</span></li>'+
       '</ul>'+
     '</div>'+
   '</div></section>';
@@ -709,8 +707,8 @@ function JoinFields(subs){
 
   return '<section class="sec sec-white" id="join-fields"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">이런 곳을 찾고 있습니다</p>'+
-      '<h2>입점 분야</h2>'+
-      '<p>여기 없는 분야도 적어 주시면 분류를 만들어 드립니다.</p></div>'+
+      '<h2>이런 기기가 들어옵니다</h2>'+
+      '<p>여기 없는 기종도 적어 주시면 목록에 넣어 드립니다.</p></div>'+
     '<div class="join-g is-fold-chips" id="jn-fields-g">'+subs.map(function(g){
       var show = g.items.slice(0, 6), more = g.items.length - show.length;
       var n = window.amProvidersInCat ? amProvidersInCat(g.cat) : 0;
@@ -726,7 +724,7 @@ function JoinFields(subs){
     }).join("")+'</div>'+
 
     '<div class="jn-fold-w">'+
-      FoldAll("jn-fields-g", "분야마다 하는 일 보기", "접기", "is-fold-chips")+
+      FoldAll("jn-fields-g", "기종마다 어떤 모델인지 보기", "접기", "is-fold-chips")+
     '</div>'+
   '</div></section>';
 }
@@ -767,14 +765,15 @@ function JoinForm(ready){
       Field("jn-tel","연락처","010-0000-0000",true,"tel","tel")+
       Field("jn-mail","이메일","",false,"email","email")+
       '<div class="f-r"><label for="jn-svc">하시는 일 <b>*</b></label>'+
-        '<input id="jn-svc" required placeholder="예: 카페 인테리어, 주방 철거"></div>'+
+        '<input id="jn-svc" required placeholder="예: 아이폰 · 갤럭시 매입, 액정 수리"></div>'+
       '<div class="f-r"><label for="jn-reg">서비스 가능 지역 <b>*</b></label>'+
         RegionSelect("jn-reg","")+'</div>'+
-      '<div class="f-r"><label for="jn-ind">전문 업종</label>'+
-        IndustrySelect("jn-ind","")+'</div>'+
+
+      '<div class="f-r"><label for="jn-ind">취급 기기</label>'+
+        '<input id="jn-ind" placeholder="예: 아이폰 전 기종, 갤럭시 S 시리즈"></div>'+
       '<div class="f-r"><label for="jn-note">소개 · 경력 · 포트폴리오 주소</label>'+
         '<textarea id="jn-note" rows="5" placeholder="하신 일과 자신 있는 것을 적어 주세요."></textarea></div>'+
-      AgreeBox("jn-ag","업체명 · 담당자 성함 · 연락처 · 이메일 · 하시는 일 · 지역",
+      AgreeBox("jn-ag","업체명 · 담당자 성함 · 연락처 · 이메일 · 취급 기기 · 지역",
                "입점 심사와 안내", "입점 종료 후 1년")+
       '<div id="jn-fail"></div>'+
       '<button class="btn btn-b btn-lg btn-full" type="submit"'+(ready?"":" disabled")+'>'+

@@ -480,7 +480,12 @@ function sideOf(r){
      자체를 막습니다 (운영 · 인수양도는 중립이라야 합니다). */
   if(r.view === "phone-sell" || r.view === "phone-shop" ||
      r.view === "phone-bid"  || r.view === "phone-track" ||
-     r.view === "phone-guide") return "pw-skin";
+     r.view === "phone-guide" ||
+     /* ⚠️ 2026-10-29 — 글을 중고폰 것으로 바꾼 뒤 **색도 같이** 옮겼습니다.
+        `/join` 은 매입업체 모집, `/faq` 는 헤더 "도움말" 이 가리키는
+        화면이라 둘 다 PHONEWAY 쪽입니다 — 안 옮기면 중고폰 메뉴로
+        들어왔는데 거기만 갈색으로 서서 다른 사이트로 읽힙니다. */
+     r.view === "join" || r.view === "faq") return "pw-skin";
   if(r.view === "startup" || r.view === "startupIndustry") return "side-start";
   if(r.view === "closure" || r.view === "closureIndustry") return "side-close";
   /* ⚠️⚠️ 여정 넷 가운데 **매장 운영 · 인수 · 양도는 중립(파랑)** 입니다.
@@ -671,6 +676,10 @@ function render(){
      않습니다. ⚠️ 다른 화면에서는 묻지 않습니다 — 한 번씩 더 가는
      요청은 그만큼 느려집니다. */
   if(nowPath() === "/my" && typeof window.myLoadDb === "function") window.myLoadDb();
+  /* ⚠⚠ `/track` 도 같은 규칙입니다 — 조회할 곤이 없는 동안에는
+     폼을 안 내고, 로그인이 켜지면 `pwTrackInit()` 이 그때 엽니다.
+     ⚠ 다른 화면에서는 묻지 않습니다. */
+  if(nowPath() === "/track" && typeof window.pwTrackInit === "function") window.pwTrackInit();
   /* 고르신 서비스 — 하단 띠 높이를 재서 본문을 그만큼 비우고, 단추
      글씨의 개수를 맞춥니다 (2026-10-17 창업 준비 §3-3).
      ⚠️ 어느 화면에서나 부릅니다 — 띠가 없는 화면에서는 아무 일도 안

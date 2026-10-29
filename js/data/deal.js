@@ -400,8 +400,76 @@ window.AM_SIDES = [
   { key:"transfer", name:"인수 · 양도",   short:"양도양수", pick:"/transfer#pick",
     say:"인수 · 양도 — 매장을 받거나 넘깁니다" },
   { key:"close",    name:"폐업 · 정리",   short:"폐업",   pick:"/closure#pick",
-    say:"폐업 — 정리하려고 합니다" }
+    say:"폐업 — 정리하려고 합니다" },
+  /* ⚠⚠ **2026-10-29 PHONEWAY — 둘을 더했습니다.**
+     전에는 `/sell`(내 폰 팔기)이 `side` 를 안 보내서,
+     `api/quote.js` 가 기본값 **`"start"`** 를 박아 저장했습니다 —
+     중고폰 매입 신청이 전부 **"창업 · 시작" 건으로** 들어가고,
+     `/admin` 목록을 보는 직원이 그걸 보고 **창업 업체**를 찾습니다.
+     이 저장소가 `ops` · `transfer` 로 두 번 겪은 자리의 **세 번째**입니다.
+     ⚠ `request.side` 는 `text not null` 일 뿐 **check 가 없어서**(0001 133줄)
+     마이그레이션 없이도 그대로 저장됩니다.
+     ⚠⚠ `pw:true` 는 **`/quote` 고르개에 안 내는 표시**입니다 —
+     거기는 창업 · 폐업 신청 화면이라, 안 걸러내면 거기서
+     "중고폰 직접 매입" 을 고를 수 있게 됩니다. */
+  { key:"buyin",    name:"중고폰 · 직접 매입", short:"직접매입", pick:"/sell", pw:true,
+    say:"중고폰 — 폰웨이가 바로 사는 것" },
+  { key:"bid",      name:"중고폰 · 경쟁입찰", short:"경쟁입찰", pick:"/sell", pw:true,
+    say:"중고폰 — 업체 경쟁입찰" }
 ];
+
+/* ── 견적 칸의 이름 — ⚠️⚠️ **한 곳입니다** ────────────────────────
+   2026-10-29 PHONEWAY. `quote` 표(0008)는 **새 표를 만들지 않고
+   그대로 씁니다** — 칸이 중고폰 입찰에도 그대로 맞습니다. 다만
+   **읽히는 말이 반대**입니다:
+
+     창업 · 폐업   업체가 일을 해 주고 **받는** 돈
+     중고폰 입찰   업체가 기기를 **사 가며 주는** 돈
+
+   그래서 "시작 가능일" 은 "수거 가능일" 이고, "A/S · 보증" 은
+   "검수 기준 · 재검수" 입니다. 그대로 두면 매입업체가 **남의 말로
+   적힌 폼**을 채우게 되고, 판매자는 "A/S" 가 무엇인지 묻습니다.
+
+   ⚠️⚠️ **화면마다 손으로 적지 마세요.** 입찰 폼(`/my` 업체 쪽) ·
+   비교 카드(`/my` 고객 쪽) · `/admin` 의 받은 견적 **셋이 같이**
+   읽습니다 — 두 곳에 적으면 업체가 적은 칸과 판매자가 보는 칸의
+   이름이 달라집니다 (이 저장소가 `amCatTo`/`catTo` 로 겪은 자리). */
+window.AM_QUOTE_LABELS = {
+  def: {
+    amount:   "견적 금액 (원) *",
+    amountHint:"⚠️ 이 금액이 고객 화면에 그대로 나갑니다. 0 원은 '무상' 으로 읽힙니다",
+    scope:    "이 금액에 포함되는 것 *",
+    scopeHint:"범위 없는 견적은 금액만 적힌 종이입니다",
+    excludes: "별도로 드는 것",
+    exHint:   "나중에 또 받게 되는 비용을 미리 적어 두면 분쟁이 줄어듭니다",
+    days:     "예상 소요일",
+    startOn:  "시작 가능일",
+    warranty: "A/S · 보증",
+    scopeRow: "포함 범위",
+    exRow:    "별도",
+    wsRow:    "A/S · 보증"
+  },
+  phone: {
+    amount:   "매입 금액 (원) *",
+    amountHint:"⚠️ 이 금액이 판매자 화면에 그대로 나갑니다. 검수 뒤 달라지면 먼저 알리셔야 합니다",
+    scope:    "이 금액에 포함되는 것 *",
+    scopeHint:"수거 방식(택배 · 방문) · 포장 · 택배비 부담을 같이 적어 주세요",
+    excludes: "검수에서 차감될 수 있는 것",
+    exHint:   "미리 적어 두시면 검수 뒤 다툴 일이 줄어듭니다",
+    days:     "정산 소요일 (기기를 받은 뒤)",
+    startOn:  "수거 가능일",
+    warranty: "검수 기준 · 재검수",
+    scopeRow: "수거 · 포함 조건",
+    exRow:    "차감될 수 있는 것",
+    wsRow:    "검수 기준"
+  }
+};
+/* ⚠️ 모르는 쪽이면 기본(창업 · 폐업)입니다 — 빈 칸을 만들지 않습니다 */
+window.amQuoteLabels = function(side){
+  var L = window.AM_QUOTE_LABELS || {};
+  return (side === "buyin" || side === "bid") ? (L.phone || L.def || {}) : (L.def || {});
+};
+
 window.amSide = function(key){
   var L = window.AM_SIDES, i;
   for(i = 0; i < L.length; i++) if(L[i].key === key) return L[i];

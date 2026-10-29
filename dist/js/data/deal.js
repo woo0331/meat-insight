@@ -242,8 +242,50 @@ window.AM_SIDES = [
   { key:"transfer", name:"인수 · 양도",   short:"양도양수", pick:"/transfer#pick",
     say:"인수 · 양도 — 매장을 받거나 넘깁니다" },
   { key:"close",    name:"폐업 · 정리",   short:"폐업",   pick:"/closure#pick",
-    say:"폐업 — 정리하려고 합니다" }
+    say:"폐업 — 정리하려고 합니다" },
+
+  { key:"buyin",    name:"중고폰 · 직접 매입", short:"직접매입", pick:"/sell", pw:true,
+    say:"중고폰 — 폰웨이가 바로 사는 것" },
+  { key:"bid",      name:"중고폰 · 경쟁입찰", short:"경쟁입찰", pick:"/sell", pw:true,
+    say:"중고폰 — 업체 경쟁입찰" }
 ];
+
+window.AM_QUOTE_LABELS = {
+  def: {
+    amount:   "견적 금액 (원) *",
+    amountHint:"⚠️ 이 금액이 고객 화면에 그대로 나갑니다. 0 원은 '무상' 으로 읽힙니다",
+    scope:    "이 금액에 포함되는 것 *",
+    scopeHint:"범위 없는 견적은 금액만 적힌 종이입니다",
+    excludes: "별도로 드는 것",
+    exHint:   "나중에 또 받게 되는 비용을 미리 적어 두면 분쟁이 줄어듭니다",
+    days:     "예상 소요일",
+    startOn:  "시작 가능일",
+    warranty: "A/S · 보증",
+    scopeRow: "포함 범위",
+    exRow:    "별도",
+    wsRow:    "A/S · 보증"
+  },
+  phone: {
+    amount:   "매입 금액 (원) *",
+    amountHint:"⚠️ 이 금액이 판매자 화면에 그대로 나갑니다. 검수 뒤 달라지면 먼저 알리셔야 합니다",
+    scope:    "이 금액에 포함되는 것 *",
+    scopeHint:"수거 방식(택배 · 방문) · 포장 · 택배비 부담을 같이 적어 주세요",
+    excludes: "검수에서 차감될 수 있는 것",
+    exHint:   "미리 적어 두시면 검수 뒤 다툴 일이 줄어듭니다",
+    days:     "정산 소요일 (기기를 받은 뒤)",
+    startOn:  "수거 가능일",
+    warranty: "검수 기준 · 재검수",
+    scopeRow: "수거 · 포함 조건",
+    exRow:    "차감될 수 있는 것",
+    wsRow:    "검수 기준"
+  }
+};
+
+window.amQuoteLabels = function(side){
+  var L = window.AM_QUOTE_LABELS || {};
+  return (side === "buyin" || side === "bid") ? (L.phone || L.def || {}) : (L.def || {});
+};
+
 window.amSide = function(key){
   var L = window.AM_SIDES, i;
   for(i = 0; i < L.length; i++) if(L[i].key === key) return L[i];

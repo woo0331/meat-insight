@@ -1031,9 +1031,14 @@ function noscriptFor(W, r, route){
     h2("어떻게 진행되나");
     ul((W.AM_JOIN_STEPS||[]).map(x => x.t + " — " + x.d));
 
-    h2("입점 분야");
-    (W.AM_CATS||[]).filter(c => c.kind === "provider").forEach(c => {
-      L.push("<h3>"+esc(c.name)+"</h3>"); ul(subNames(c));
+    /* ⚠⚠ 2026-10-29 PHONEWAY — 화면이 **취급 기기**로 바뀜습니다.
+       크롤러에게만 창업 · 폐업 분류 25 를 보여 주면 그게 구글에
+       나가는 거짓말입니다 — 이 저장소가 열한 번 겪은 자리입니다. */
+    h2("이런 기기가 들어옵니다");
+    (W.AM_DEVICE_KINDS||[]).forEach(k => {
+      const ms = (W.AM_MODELS||[]).filter(m => m.kind === k.key);
+      if(!ms.length) return;
+      L.push("<h3>"+esc(k.name)+"</h3>"); ul(ms.map(m => m.name));
     });
 
     const jf = (W.AM_JOIN_FAQ || []);

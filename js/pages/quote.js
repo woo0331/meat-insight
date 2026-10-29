@@ -472,7 +472,11 @@ function PageQuote(){
                  중인 사장님이 "창업" 으로 접수되는 사고를 고치고도
                  `transfer` 가 **같은 자리에 그대로** 남아 있었습니다 —
                  지금은 `AM_SIDES`(deal.js)를 세어서 냅니다. */
-              (window.AM_SIDES || []).map(function(s){
+              /* ⚠⚠ `pw:true`(중고폰 쪽 둘)은 여기 안 냅니다 — 이 화면은
+                 창업 · 폐업 신청이고, 중고폰은 `/sell` 이 제 길로 받습니다.
+                 안 걸러내면 창업 신청 폼에서 "중고폰 직접 매입" 을
+                 고를 수 있게 되고, 그 건은 배정할 곣이 없습니다. */
+              (window.AM_SIDES || []).filter(function(s){ return !s.pw; }).map(function(s){
                 return '<option value="'+esc(s.key)+'"'+
                   ((side === s.key || (!side && s.key === "start")) ? " selected" : "")+
                   '>'+esc(s.say)+'</option>';

@@ -31,10 +31,16 @@ function pwSellGo(patch){
 
 /* 지금 몇 걸음째인가 — 고르신 것으로 정합니다 (억지로 막지 않습니다) */
 function pwSellStep(q){
-  if(!q.model) return 1;
+  /* ⚠⚠ **주소에 실린 값이 실제로 있는 것인지까지 봅니다.**
+     전에는 `q.grade` 가 비어만 있지 않으면 3단계로 보냈는데,
+     `?gr=a` 처럼 **없는 등급**이면(key 는 대문자 S·A·B·C·D)
+     `amGrade()` 가 null 을 돌려줘서 접수 글의 **외관 등급이
+     통째로 빠집니다** — 에러도 안 나고 화면도 멀줦합니다.
+     링크를 받으셨거나 주소를 손으로 고치면 나는 자리입니다. */
   var md = amModel(q.model);
-  if(md && md.caps && md.caps.length && !q.cap) return 1;
-  if(!q.grade) return 2;
+  if(!md) return 1;
+  if(md.caps && md.caps.length && md.caps.indexOf(+q.cap) < 0) return 1;
+  if(!amGrade(q.grade)) return 2;
   return 3;
 }
 
@@ -233,6 +239,10 @@ window.pwSellSubmit = function(){
     signal: ctl.signal,
     body: JSON.stringify({
       kind:"quote", name:name.trim(), tel:tel.trim(),
+      /* ⚠⚠ **`side` 를 반드시 보냅니다.** 안 보내면 `api/quote.js` 가
+         기본값 `"start"` 를 박아서, 중고폰 매입 신청이 **"창업"
+         건으로** 저장되고 직원이 창업 업체를 찾습니다 (`AM_SIDES` 주석). */
+      side: (PW_WAY === "direct" ? "buyin" : "bid"),
       serviceName:"중고폰 매입 — " + (md ? md.name : ""),
       agree:true, idem:(window.amIdem ? amIdem() : ""),
       detail: (window.amDropEmpty ? amDropEmpty(det) : det)
@@ -264,7 +274,7 @@ window.pwSellSubmit = function(){
 function PageShop(){
   var P = window.AM_PRODUCTS || [];
   var m = nowQS("m") || "";
-  return PgHero({ kicker:"SHOP", h1:"검증된 중고폰을, 믿고 구매하세요",
+  return PgHero({ kicker:"SHOP", h1:"검수를 마친 중고폰만 올립니다",
       lead:amBrand()+"가 직접 매입하고 검수한 기기만 판매합니다. "+
            "사진 · 등급 · 배터리 상태 · 검수 결과를 그대로 밝힙니다." })+
     '<section class="sec sec-white"><div class="w">'+
@@ -292,11 +302,21 @@ function PageBid(){
     ["기기를 등록하시면", "기종 · 용량 · 상태를 적어 주시면 됩니다. 가입하지 않으셔도 됩니다."],
     ["업체가 견적을 냅니다", "참여 업체가 기기 조건을 보고 금액과 거래 조건을 냅니다."],
     ["나란히 놓고 고르세요", "금액만이 아니라 검수 기준 · 정산 소요일까지 같이 보실 수 있습니다."],
-    ["고르는 것은 사장님입니다", "저희가 자동으로 정하지 않습니다. 고르신 뒤에 연락처가 그 업체로 갑니다."]
+    ["고르는 것은 사장님입니다", "저희가 자동으로 정하지 않습니다. 고르신 뒤에 상호를 알려 드리고, 연락처 전달은 그때 다시 동의를 받습니다."],
+    /* ⚠️⚠️ 2026-10-29 — 전에는 "고르세요" 에서 끝났습니다. 고른 뒤에
+       무엇이 남았는지가 없으면 판매자는 거기서 멈춘 줄 압니다 —
+       수거 · 검수 · 정산이 실제 거래의 절반입니다. 상태 열셋
+       (`AM_DEAL_ST`)에 이미 있는 걸음이라 지어낸 말이 아닙니다. */
+    ["수거하고 검수합니다", "택배나 방문으로 기기를 보내시면 업체가 상태를 확인합니다. 적어 주신 것과 다르면 먼저 알려 드립니다."],
+    ["정산합니다", "받아들이시면 정산하고, 아니면 기기를 돌려받으십니다. 진행은 접수번호로 조회하실 수 있습니다."]
   ];
   return PgHero({ kicker:"BID", h1:"최고가 경쟁입찰",
-      lead:"전국의 인증 매입업체가 같은 기기에 견적을 냅니다. "+
-           "가격과 거래 조건을 나란히 놓고 고르세요." })+
+      /* ⚠⚠ "인증 매입업체가 … 냅니다" 라고 적었다가 고쳤습니다 —
+         업체가 0곳인데 **있는 것처럼** 읽히고(절대 규칙 1),
+         "인증" 은 저희가 자격을 준다는 말입니다. 지금 상태는
+         아래 note-box 가 세는 값으로 그대로 말합니다. */
+      lead:"한 대의 기기를 여러 매입업체가 보고 각자 검적을 냅니다. "+
+           "금액과 거래 조건을 나란히 놀고 고르세요." })+
     '<section class="sec sec-white"><div class="w">'+
       '<ol class="pwb-g">'+ rows.map(function(r,i){
         return '<li><span class="pwb-n">'+(i+1)+'</span><b>'+esc(r[0])+'</b>'+
@@ -311,6 +331,12 @@ function PageBid(){
       '</div>'+
       '<div class="pwb-go"><a class="btn btn-pw" href="/sell">내 기기 등록하고 견적 받기</a>'+
         '<a class="btn btn-pw-o" href="/join">매입업체로 참여하기</a></div>'+
+      /* ⚠️ 이미 참여 중인 업체가 **입찰을 내는 자리**로 가는 길입니다.
+         `/my` 는 로그인이 꺼져 있으면 구간째 안 그리므로 가짜 단추가
+         아니라 **한 줄 안내**로 둡니다 — 켜지면 거기서 바로 냅니다. */
+      '<p class="sec-note">'+icon("info",15)+
+        '이미 참여 중인 매입업체이시면 <a href="/my">내 기록</a>에서 '+
+        '배정받은 기기에 입찰을 내실 수 있습니다.</p>'+
     '</div></section>';
 }
 
@@ -319,43 +345,67 @@ function PageBid(){
    연락처 · 요청 내용을 다 봅니다 — 번호와 연락처 **둘 다** 맞아야
    합니다. 이 규칙은 DB 의 claim_request 와 같습니다. */
 function PageTrack(){
+  /* ⚠⚠ 조회할 곣이 아직 없으면 **폼을 안 냅니다.** 전에는
+     폼을 내고 누르면 "아직 안 열었습니다" 라고 답했는데,
+     그것이 곧 **눌러도 작동하지 않는 단추**입니다 (§30-7).
+     `/my` 의 `.my-db` · 사진 체붙 칸과 **같은 방식**입니다 —
+     `pwTrackInit()` 이 `auth:true` 를 받으면 그때 열립니다. */
   return PgHero({ kicker:"TRACK", h1:"판매 진행 조회",
-      lead:"접수번호와 신청하실 때 적으신 연락처로 확인하실 수 있습니다." })+
+      lead:"접수하신 건이 지금 어디까지 왔는지 알려 드립니다." })+
     '<section class="sec sec-white"><div class="w pwf" style="max-width:720px">'+
-      '<div class="pwf-fm">'+
+      '<div class="pwf-fm" id="tk-fm" hidden>'+
         '<div class="f-r"><label for="tk-no">접수번호 <em>*</em></label>'+
-          '<input id="tk-no" type="text" autocomplete="off" placeholder="PW-AB12-CD34"></div>'+
+          /* ⚠⚠ 접수번호는 **`SW-`** 로 시작합니다 (`api/_intake.js` 의
+             `reqNo()` · `reqNoClean()` 이 `SW` + 여덟 글자만 받습니다).
+             여기에 다른 머리를 적어 두면 그 꿀로 찾으시다가 못 찾습니다. */
+          '<input id="tk-no" type="text" autocomplete="off" placeholder="SW-AB12-CD34"></div>'+
         '<div class="f-r"><label for="tk-tel">연락처 <em>*</em></label>'+
           '<input id="tk-tel" type="tel" autocomplete="tel" inputmode="tel" '+
           'placeholder="010-0000-0000"></div>'+
         '<button type="button" class="btn btn-pw pwf-send" onclick="pwTrackFind()">조회하기</button>'+
         '<p class="pwf-n" id="tk-msg"></p>'+
       '</div>'+
-      '<div class="note-box" style="margin-top:22px">'+
-        '⚠️ 접수번호와 연락처가 <b>둘 다</b> 맞아야 열립니다. 번호만으로 열어 '+
+      '<div class="note-box" id="tk-off">'+
+        '⚠ <b>온라인 조회는 아직 열지 않았습니다.</b> 신청하시면 저희가 '+
+        '내용을 확인한 뒤 적어 주신 연락처로 직접 연락드립니다.<br>'+
+        '⚠ 회신 시점을 약속드리지는 않습니다.'+
+        '<div class="pwb-go" style="margin-top:14px">'+
+          '<a class="btn btn-pw" href="/sell">내 폰 팔기</a></div>'+
+      '</div>'+
+      '<div class="note-box" id="tk-why" style="margin-top:22px">'+
+        '⚠ 접수번호와 연락처가 <b>둘 다</b> 맞아야 열립니다. 번호만으로 열어 '+
         '드리면 번호를 아는 누구나 남의 신청 내용을 보게 됩니다.<br>'+
-        '번호를 잃어버리셨으면 고객센터로 문의해 주세요.'+
+        /* ⚠⚠ "고객센터로 문의해 주세요" 라고 적었다가 고쳤습니다 —
+           그런 창구가 없고 사업자 전화번호 칸조차 비어 있어서,
+           그 말을 보고 번호를 찾다가 못 찾으십니다. */
+        '번호를 잃어버리셨으면 <b>같은 연락처로 다시 신청</b>해 주세요 — '+
+        '저희 쪽에서 같은 분의 건으로 확인합니다.'+
       '</div>'+
     '</div></section>';
 }
+/* ⚠⚠ `/track` 에서만 한 번 묻습니다. `amAuthAsk()` 는 이미 물어
+   둔 답을 들고 있으면 그대로 돌려주고, 묻는 중이면 그 물음을
+   다시 씁니다 — 왜복이 더 늘지 않습니다. */
+window.pwTrackInit = function(){
+  var fm = document.getElementById("tk-fm"), off = document.getElementById("tk-off");
+  if(!fm || !off) return;
+  var pre = (typeof amAuthAsk === "function") ? amAuthAsk() : Promise.resolve(null);
+  pre.then(function(a){
+    if(!a || !a.auth) return;            /* 꾼 채로 둡니다 */
+    fm.hidden = false; off.hidden = true;
+  }).catch(function(){ /* 못 물었으면 그대로 둡니다 */ });
+};
 window.pwTrackFind = function(){
   var no = (document.getElementById("tk-no")||{}).value || "";
   var tel = (document.getElementById("tk-tel")||{}).value || "";
   var msg = document.getElementById("tk-msg");
   if(!no.trim() || !tel.trim()){
-    if(msg) msg.textContent = "⚠️ 접수번호와 연락처를 둘 다 적어 주세요.";
+    if(msg) msg.textContent = "⚠ 접수번호와 연락처를 둘 다 적어 주세요.";
     return;
   }
-  /* ⚠️⚠️ **로그인이 설정되기 전에는 조회할 곳이 없습니다.** 되는 척하지
-     않고 그대로 말씀드립니다 (절대 규칙 5). 로그인이 켜지면 이 자리에서
-     claim_request 로 이어집니다 — 그 문은 DB 에 이미 있습니다. */
-  var on = window.amAuthOn && amAuthOn();
-  if(msg) msg.textContent = on
-    ? "조회 중입니다…"
-    : "⚠️ 아직 온라인 조회를 열지 않았습니다. 접수번호를 가지고 고객센터로 "+
-      "문의해 주시면 진행 상황을 알려 드립니다.";
-  if(!on) return;
-  /* 로그인이 켜진 뒤의 길 — /my 에서 신청번호로 가져가실 수 있습니다 */
+  if(msg) msg.textContent = "조회 중입니다…";
+  /* 폼은 로그인이 켜졌을 때만 나오므로, 여기까지 오면 길이 있습니다 —
+     `/my` 에서 신청번호로 가져가실 수 있습니다 (`claim_request`). */
   go("/my?claim=" + encodeURIComponent(no.trim()));
 };
 

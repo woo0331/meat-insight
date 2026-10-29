@@ -569,13 +569,15 @@ function myqOf(d, rid){
   return (d.quotes || []).filter(function(q){ return q.request_id === rid; });
 }
 
-function myqSpecs(q){
+function myqSpecs(q, side){
+
+  var pw = (side === "buyin" || side === "bid");
   var rows = [];
   if(q.amount != null)
-    rows.push(["견적 금액", won(q.amount)+"원 · "+
+    rows.push([pw ? "매입 금액" : "견적 금액", won(q.amount)+"원 · "+
       ((typeof amQuoteVat === "function") ? amQuoteVat(q.vat) : "")]);
-  if(q.days)      rows.push(["예상 소요", q.days+"일"]);
-  if(q.start_on)  rows.push(["시작 가능", amDate(q.start_on)]);
+  if(q.days)      rows.push([pw ? "정산 소요" : "예상 소요", q.days+"일"]);
+  if(q.start_on)  rows.push([pw ? "수거 가능" : "시작 가능", amDate(q.start_on)]);
   if(q.valid_to)  rows.push(["견적 유효", amDate(q.valid_to)+"까지"]);
   if(!rows.length) return "";
   return '<dl class="myd-l">'+rows.map(function(r){
@@ -583,9 +585,11 @@ function myqSpecs(q){
   }).join("")+'</dl>';
 }
 
-function myqText(q){
-  var L = [["포함", q.scope], ["별도", q.excludes],
-           ["A/S · 보증", q.warranty], ["메모", q.note]];
+function myqText(q, side){
+
+  var N = (typeof amQuoteLabels === "function") ? amQuoteLabels(side) : {};
+  var L = [[N.scopeRow || "포함", q.scope], [N.exRow || "별도", q.excludes],
+           [N.wsRow || "A/S · 보증", q.warranty], ["메모", q.note]];
   return L.filter(function(r){ return r[1]; }).map(function(r){
     return '<p class="myq-b"><b>'+esc(r[0])+'</b> '+esc(String(r[1]))+'</p>';
   }).join("");
@@ -608,7 +612,7 @@ function MyQuoteCompare(d, r){
             esc((typeof amQuoteName === "function") ? amQuoteName(q.state) : q.state)+
           '</span>'+
         '</div>'+
-        myqSpecs(q)+myqText(q)+
+        myqSpecs(q, r && r.side)+myqText(q, r && r.side)+
 
         (!got
           ? '<div class="row-cta"><button class="btn btn-b" type="button"'+
@@ -653,7 +657,7 @@ function MyQuoteMine(d, r){
             ? amQuoteTone(mine.state) : "gray")+'">'+
             esc((typeof amQuoteName === "function")
               ? amQuoteName(mine.state) : mine.state)+'</span></p>'+
-        myqSpecs(mine)+myqText(mine)
+        myqSpecs(mine, r && r.side)+myqText(mine, r && r.side)
       : '<p class="myqt-h">'+icon("doc",15)+'견적 내기</p>')+
     (open ? MyQuoteForm(r, mine) : MyQuoteBtns(r, mine, can))+
   '</div>';
@@ -683,16 +687,18 @@ function myqIn(id, k, v, extra){
 }
 
 function MyQuoteForm(r, mine){
+
+  var N = (typeof amQuoteLabels === "function") ? amQuoteLabels(r && r.side) : {};
   var g = function(k, fb){
     var v = MYQ.draft[k];
     return v === undefined ? (fb == null ? "" : fb) : v;
   };
   var vat = g("vat", (mine && mine.vat) || "add");
   return '<div class="myqt-f">'+
-    myqRow("myq-amt", "견적 금액 (원) *",
+    myqRow("myq-amt", N.amount || "견적 금액 (원) *",
       myqIn("myq-amt", "amount", g("amount", mine && mine.amount),
             'type="number" min="0" step="1000" inputmode="numeric"'),
-      "⚠️ 이 금액이 고객 화면에 그대로 나갑니다. 0 원은 '무상' 으로 읽힙니다")+
+      N.amountHint || "")+
     myqRow("myq-vat", "부가세",
       '<select id="myq-vat" onchange="myqSet(\'vat\',this.value)">'+
         ["add","incl","free"].map(function(k){
@@ -700,23 +706,23 @@ function MyQuoteForm(r, mine){
             esc((typeof amQuoteVat === "function") ? amQuoteVat(k) : k)+'</option>';
         }).join("")+'</select>',
       "별도인지 포함인지가 없으면 고객이 두 견적을 견줄 수 없습니다")+
-    myqRow("myq-sc", "이 금액에 포함되는 것 *",
+    myqRow("myq-sc", N.scope || "이 금액에 포함되는 것 *",
       '<textarea id="myq-sc" rows="3" oninput="myqSet(\'scope\',this.value)">'+
         esc(g("scope", mine && mine.scope))+'</textarea>',
-      "범위 없는 견적은 금액만 적힌 종이입니다")+
-    myqRow("myq-ex", "별도로 드는 것",
+      N.scopeHint || "")+
+    myqRow("myq-ex", N.excludes || "별도로 드는 것",
       '<textarea id="myq-ex" rows="2" oninput="myqSet(\'excludes\',this.value)">'+
         esc(g("excludes", mine && mine.excludes))+'</textarea>',
-      "나중에 또 받게 되는 비용을 미리 적어 두면 분쟁이 줄어듭니다")+
-    myqRow("myq-dy", "예상 소요일",
+      N.exHint || "")+
+    myqRow("myq-dy", N.days || "예상 소요일",
       myqIn("myq-dy", "days", g("days", mine && mine.days),
             'type="number" min="1" step="1" inputmode="numeric"'))+
 
-    myqRow("myq-st", "시작 가능일",
+    myqRow("myq-st", N.startOn || "시작 가능일",
       myqIn("myq-st", "startOn", g("startOn", mine && mine.start_on), 'type="date"'))+
     myqRow("myq-vt", "견적 유효기간",
       myqIn("myq-vt", "validTo", g("validTo", mine && mine.valid_to), 'type="date"'))+
-    myqRow("myq-ws", "A/S · 보증",
+    myqRow("myq-ws", N.warranty || "A/S · 보증",
       '<textarea id="myq-ws" rows="2" oninput="myqSet(\'warranty\',this.value)">'+
         esc(g("warranty", mine && mine.warranty))+'</textarea>')+
     myqRow("myq-nt", "메모",

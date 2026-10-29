@@ -40,6 +40,16 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* ══ 2026-10-29 PHONEWAY — 조회할 곤이 없는 동안의 `/track` ═════
+     전의 꼴—폼을 내고 안내를 감춘 꼴—으로 되돌립니다. 그러면
+     손님이 적고 누르셨는데 "아직 안 열었습니다" 가 나옵니다 (§30-7).
+     ⚠ 두 칸이 둘 다 `/track` 에 실제로 있습니다 — 없는 요소를 집으면
+     되돌리기가 헛돌고 "검사가 안 잡는다" 로 보입니다. */
+  ["진행 조회: 조회할 곤이 없으면 폼을 안 낸다",
+   `var fm = document.getElementById("tk-fm");
+    var off = document.getElementById("tk-off");
+    if(fm) fm.hidden = false;
+    if(off) off.hidden = true;`],
   /* ⚠️⚠️ 2026-10-25 §10 — 신청 화면의 단계 안내를 **손으로 적은 말**로
      바꿔 봅니다. 그러면 제휴가 붙은 날에도 "아직 없습니다" 가 남습니다
      (이 저장소가 CLAUDE.md 의 "아직 안 된 것" 표에서 겪은 자리). */
@@ -371,7 +381,17 @@ const CASES = [
    `window.AM_PROVIDERS.push(window.amSample("provider"));`],
   /* 예시 딱지를 떼면 걸려야 합니다 */
   ["입점 화면의 예시는 예시라고 밝힌다",
-   `document.querySelectorAll(".jn-ex-tag").forEach(function(e){ e.remove(); });`],
+   /* ⚠⚠ 2026-10-29 — 예시 카드가 지금 화면에 **없습니다.**
+      전의 되돌리기(`.jn-ex-tag` 지우기)는 지울 것이 없어 **헛돌고**
+      "검사가 안 잡는다" 로 보였을 자리입니다 (이 저장소가 열두 번
+      겪은 것). 지금은 **딱지 없이 다시 켜는 꼴**을 만들어 봅니다 —
+      매입업체용 예시를 나중에 다시 켜면서 딱지를 잊는 바로 그것입니다. */
+   `var w = document.querySelector("#view .w"); if(w){
+      var d = document.createElement("div"); d.className = "jn-ex";
+      d.innerHTML = '<p class="jn-ex-h"><b>업체 카드는 이렇게 보입니다</b></p>' +
+                    '<div class="jn-ex-b"><b>가나다 매입</b></div>';
+      w.appendChild(d);
+    }`],
   /* ══ 여정 넷 (2026-10-05 V2) — 되돌려 보고 실제로 잡히는지 ══════ */
   /* 단계 하나를 두 여정에 넣으면 걸려야 합니다 */
   ["여정 넷이 단계 여섯을 빠짐없이 나눠 가진다",

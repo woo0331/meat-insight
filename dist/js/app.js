@@ -363,7 +363,9 @@ function sideOf(r){
 
   if(r.view === "phone-sell" || r.view === "phone-shop" ||
      r.view === "phone-bid"  || r.view === "phone-track" ||
-     r.view === "phone-guide") return "pw-skin";
+     r.view === "phone-guide" ||
+
+     r.view === "join" || r.view === "faq") return "pw-skin";
   if(r.view === "startup" || r.view === "startupIndustry") return "side-start";
   if(r.view === "closure" || r.view === "closureIndustry") return "side-close";
 
@@ -492,6 +494,8 @@ function render(){
   initReveal();
 
   if(nowPath() === "/my" && typeof window.myLoadDb === "function") window.myLoadDb();
+
+  if(nowPath() === "/track" && typeof window.pwTrackInit === "function") window.pwTrackInit();
 
   if(typeof window.pickPaint === "function") window.pickPaint();
 

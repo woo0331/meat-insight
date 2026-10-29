@@ -79,22 +79,57 @@ function PageSell(){
     '</div></section>';
 }
 
-/* 빠른 선택 카드 넷 (2026-10-29 사장님 시안)
-   ⚠️⚠️ **브랜드 로고를 쓰지 않았습니다.** 애플 마크 · 삼성 워드마크는
-   남의 등록상표이고, 시안의 제품 사진도 권한이 확인된 것이 아닙니다
-   (이미지 지시서 §4 · §54). 아이콘은 `iconArt()` 에 직접 그린 넷이고
-   **기기 윤곽**만 냅니다.
-   ⚠️ 아래 줄(`sub`)에 적는 영문은 **기종을 가리키는 말**입니다 —
-   고르는 데 필요한 설명이고 상표를 흉내내는 것이 아닙니다.
+/* 빠른 선택 카드 넷 (2026-10-29 사장님 지시서 §2)
+   ⚠️⚠️ **브랜드 로고를 그리지 않았습니다.** 애플 마크 · 삼성
+   워드마크는 남의 등록상표이고, 사장님이 직접 "AI 가 임의로 재현한
+   부정확한 로고는 쓰지 말 것" 이라고 적으셨습니다 — 권한을 확인한
+   SVG 가 생기면 `AM_MAKER_LOGO` 에 주소 한 줄입니다 (화면은 안 고칩니다).
+   ⚠️ 아래 줄(`sub`)의 영문은 **기종을 가리키는 말**입니다 — 고르는 데
+   필요한 설명이고 상표를 흉내내는 것이 아닙니다.
    ⚠️⚠️ **넷째 장은 조합을 고르는 카드가 아니라 칩 줄을 펼치는
    단추입니다.** 워치 · 버즈 · 기타 제조사를 한 장에 담으면 고르신
    것과 접수에 실리는 것이 달라집니다. */
 var PW_SELL_CARDS = [
-  { ia:"dev-iphone", nm:"아이폰",   sub:"iPhone",            maker:"apple",   kind:"phone"  },
-  { ia:"dev-galaxy", nm:"갤럭시",   sub:"Galaxy",            maker:"samsung", kind:"phone"  },
-  { ia:"dev-tablet", nm:"태블릿",   sub:"아이패드 · 갤럭시 탭", maker:"",        kind:"tablet" },
-  { ia:"dev-etc",    nm:"기타 기기", sub:"워치 · 버즈",         more:true }
+  { ph:"dev-iphone", ia:"dev-iphone", lg:"apple",   nm:"아이폰",
+    sub:"iPhone",                maker:"apple",   kind:"phone"  },
+  { ph:"dev-galaxy", ia:"dev-galaxy", lg:"samsung", nm:"갤럭시",
+    sub:"Galaxy",                maker:"samsung", kind:"phone"  },
+  { ph:"dev-tablet", ia:"dev-tablet", lg:"",        nm:"태블릿",
+    sub:"아이패드 · 갤럭시 탭",     maker:"",        kind:"tablet" },
+  { ph:"dev-etc",    ia:"dev-etc",    lg:"",        nm:"기타 기기",
+    sub:"워치 · 버즈",             more:true }
 ];
+
+/* 카드 한 장 — ⚠️⚠️ **사진이 없어도 그대로 돕니다** (지시서 §6).
+   사진이 있으면 사진, 없으면 **직접 그린 기기 아이콘**입니다 — 옅은
+   틴트 빈 액자를 깔지 않습니다 (그게 "준비 중" 으로 읽힙니다). */
+function pwDevCard(c, on){
+  /* ⚠️ `role="radio"` 를 쓰지 않았습니다 — 넷째가 라디오가 아니라
+     **펼치개**라, 한 묶음에 역할 둘을 섞으면 읽어 주는 프로그램에
+     깨진 라디오그룹으로 들립니다. 누름 단추 + `aria-pressed`(고르개)와
+     `aria-expanded`(펼치개)가 각자 맞는 말입니다. */
+  var act = c.more ? "pwSellGo({more:'1'})"
+          : "pwSellGo({maker:'"+c.maker+"',kind:'"+c.kind+"'," +
+            "model:'',cap:'',grade:''})";
+  var st  = c.more ? ' aria-expanded="'+(on?"true":"false")+'" aria-controls="pf-chip"'
+                   : ' aria-pressed="'+(on?"true":"false")+'"';
+  var lg  = c.lg && (window.AM_MAKER_LOGO || {})[c.lg];
+  return '<button type="button" class="dvc'+(on?" on":"")+'"'+ st +
+    ' onclick="'+act+'">'+
+    '<span class="dvc-ph">'+
+      (typeof hasPhoto === "function" && hasPhoto(c.ph)
+        ? photoBox(c.ph, "dvc-im")
+        : iconArt(c.ia, 96))+
+    '</span>'+
+    '<span class="dvc-tx">'+
+      /* ⚠️ 권한이 확인된 파일이 있을 때만 그립니다 — 없으면 **칸째**
+         안 냅니다 (빈 액자 금지 · 절대 규칙 2). */
+      (lg ? '<img class="dvc-lg" src="'+esc(lg)+'" alt="" aria-hidden="true">' : '')+
+      '<b class="dvc-nm">'+esc(c.nm)+'</b>'+
+      '<span class="dvc-s">'+esc(c.sub)+'</span>'+
+    '</span>'+
+  '</button>';
+}
 
 /* STEP 1 — 기기 선택
    ⚠️⚠️ **고르개가 둘입니다** — 위의 큰 카드 넷이 빠른 선택이고, 아래
@@ -112,21 +147,15 @@ function pwSellPick(q){
              q.maker === "etc";
   return '<div class="pwf-s" id="pf-1">'+
     '<h2 class="pwf-h"><b>01</b> 어떤 기기를 판매하시나요?</h2>'+
-    '<div class="pwf-dv">'+ PW_SELL_CARDS.map(function(c){
-      /* ⚠️ 카드 전체가 눌립니다 — 안에 또 링크를 넣지 마세요
-         (브라우저가 쪼갭니다). */
+    /* ⚠️ 카드 넷이 덮는 것은 apple/phone · samsung/phone · tablet
+       셋뿐입니다 — 나머지는 아래 칩 줄에만 있습니다. */
+    '<div class="dvc-g">'+ PW_SELL_CARDS.map(function(c){
       var on = c.more ? more
                       : (q.kind === c.kind && (q.maker||"") === (c.maker||""));
-      /* ⚠️ 이름을 `go` 로 짓지 마세요 — 라우터의 전역 함수를 가립니다. */
-      var act = c.more ? "pwSellGo({more:'1'})"
-             : "pwSellGo({maker:'"+c.maker+"',kind:'"+c.kind+"',"+
-               "model:'',cap:'',grade:''})";
-      return '<a class="pwf-dv-c'+(on?" on":"")+'" href="#" '+
-        'onclick="'+act+';return false">'+
-        '<span class="pwf-dv-i">'+ iconArt(c.ia, 46) +'</span>'+
-        '<b>'+esc(c.nm)+'</b><span class="pwf-dv-s">'+esc(c.sub)+'</span></a>';
+      return pwDevCard(c, on);
     }).join("") +'</div>'+
     (more ?
+      '<div id="pf-chip">'+
       '<div class="pwf-r"><span class="pwf-l">기기 종류</span>'+
         '<div class="chip-g">'+ kinds.map(function(k){
           return '<a class="chip'+(q.kind===k.key?" on":"")+'" href="#" '+
@@ -136,7 +165,8 @@ function pwSellPick(q){
         '<div class="chip-g">'+ makers.map(function(k){
           return '<a class="chip'+(q.maker===k.key?" on":"")+'" href="#" '+
             'onclick="pwSellGo({maker:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'});return false">'+
-            esc(k.name)+'</a>'; }).join("") +'</div></div>'
+            esc(k.name)+'</a>'; }).join("") +'</div></div>'+
+      '</div>'
       : "")+
     (q.maker || q.kind ?
       '<div class="pwf-r"><span class="pwf-l">모델</span>'+

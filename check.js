@@ -1007,7 +1007,7 @@ const AUDIT = `(() => {
                                ⚠️ 새 타일을 만들면 **여기 같이 넣으세요** —
                                안 넣으면 컬러 아이콘에 없는 이름을 적어도
                                빈 칸이 조용히 섭니다 (search 로 겪었습니다). */
-                            " #view .pww-ic, #view .pwf-dv-i," +
+                            " #view .pww-ic, #view .dvc-ph," +
                             " #view .my-pw-i").forEach(e => {
     if(e.querySelector("svg")) return;
     const own = (e.parentElement || e);

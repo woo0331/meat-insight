@@ -562,7 +562,7 @@ function ok(name, cond, extra) {
        inv.includes("중고폰") && call.includes("중고폰"));
     /* ⚠️⚠️ "무료" 는 PHONEWAY 지시서 §5 금지 — 법이 요구하는
        "무료수신거부" 표기만 예외입니다. */
-    ok("무료 라고 하지 않는다",
+    ok("무료라고 하지 않는다",
        inv.replace(/무료수신거부/g, "").includes("무료") === false &&
        call.includes("무료") === false);
     ok("전화 순서 글도 있다", call.includes("전화로 말할 순서"));

@@ -927,9 +927,29 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  say((await url())==="/sell","메인 직접 매입 카드 → 내 폰 팔기",await url());
  /* 기기 → 제조사 → 모델 → 상태 → 견적 · 신청. ⚠️ 끝이 막히지 않았는지
     **실제로 눌러** 봅니다 (고르개가 주소에 실리는 꼴입니다). */
- await click('#pf-1 .chip-g a:has-text("스마트폰")');
- await click('#pf-1 .chip-g a:has-text("애플")');
- say((await url()).indexOf("mk=apple")>=0,"제조사가 주소에 실린다",await url());
+ /* ⚠️⚠️ **기기 종류 · 제조사 칩은 이제 접혀 있습니다** (2026-10-29
+    지시서 §2 — 큰 카드 넷이 먼저입니다). 전에는 그 칩을 눌렀는데,
+    카드가 **제조사와 종류를 한 번에** 고르므로 손님이 실제로 하는
+    것은 카드 한 번입니다 — 검사가 틀린 것이 아니라 화면이 바뀐
+    것이라 **누르는 자리를 옮겼습니다**. */
+ say((await pg.locator('#pf-chip').count())===0,
+     "01 걸음의 첫 화면에 칩 줄이 안 펼쳐져 있다");
+ say((await pg.locator('.dvc').count())===4,"기기 카드가 넷이다");
+ await click('.dvc:has-text("아이폰")');
+ say((await url()).indexOf("mk=apple")>=0 && (await url()).indexOf("kd=phone")>=0,
+     "카드 한 번에 제조사와 종류가 같이 실린다",await url());
+ say((await pg.getAttribute('.dvc:has-text("아이폰")',"aria-pressed"))==="true",
+     "고른 카드가 눌린 것으로 읽힌다");
+ /* ⚠️⚠️ **워치 · 버즈 · 기타 제조사 길이 살아 있는지** 같이 봅니다 —
+    카드 넷이 덮지 않는 조합이고, 넷째 카드가 그 칩 줄을 펼칩니다.
+    여기서 끊기면 그 기기를 가진 분은 팔 길이 아예 없습니다. */
+ await click('.dvc:has-text("기타 기기")');
+ await pg.waitForTimeout(400);
+ say((await pg.locator('#pf-chip .chip-g a:has-text("워치")').count())>0,
+     "기타 기기를 누르면 워치 · 버즈 칩이 나온다");
+ await click('#pf-chip .chip-g a:has-text("스마트폰")');
+ await click('#pf-chip .chip-g a:has-text("애플")');
+ say((await url()).indexOf("mk=apple")>=0,"펼친 칩으로도 그대로 고를 수 있다",await url());
  await pg.selectOption("#pf-md", { index:1 });
  await pg.waitForTimeout(400);
  say((await url()).indexOf("md=")>=0,"모델이 주소에 실린다",await url());

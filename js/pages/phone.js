@@ -714,3 +714,128 @@ function PageGuide(){
         '취소되고 기기를 돌려 드립니다.</div>'+
     '</div></section>';
 }
+
+/* ─── /biz · 기업 · 수출 거래 (2026-10-29 시안 §3-E) ───────────────
+   ⚠️⚠️ **거래 절차를 만든 것이 아닙니다.** §3-E 가 "실제 거래 절차가
+   준비되지 않았다면 **문의 접수형으로 운영하고 준비 상태를 명확히
+   표시한다**" 고 적었습니다 — 지금 이 화면이 하는 일은 **문의를 받아
+   사람이 연락드리는 것**까지이고, 화면 맨 위가 그렇게 말합니다
+   (절대 규칙 5).
+
+   ⚠️⚠️ **수출국 · 거래량 · 단가 · 실적을 한 글자도 안 적었습니다.**
+   지어내면 표시 · 광고의 공정화에 관한 법률 제3조입니다 — 지금
+   거래 실적이 0건이고, 그걸 숨기지 않고 그대로 적습니다. */
+var PW_BIZ_WHAT = [
+  ["대량 매입",
+   "법인 · 대리점 · 기기 교체처럼 한 번에 여러 대를 넘기시는 경우입니다. "+
+   "수량과 기종을 알려 주시면 확인한 뒤 연락드립니다.",
+   '<rect x="3.5" y="8" width="7" height="12" rx="1.6"/>'+
+   '<rect x="13.5" y="4" width="7" height="16" rx="1.6"/><path d="M2.5 20h19"/>'],
+  ["해외 수출",
+   "등급별로 묶어 내보내는 거래입니다. ⚠️ 통관 · 수출 절차는 건마다 달라서 "+
+   "상담으로 진행합니다.",
+   '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/>'+
+   '<path d="M12 3.5c2.5 2.6 2.5 14.4 0 17M12 3.5c-2.5 2.6-2.5 14.4 0 17"/>'],
+  ["기업 일괄 처분",
+   "쓰던 업무용 기기를 한 번에 정리하시는 경우입니다. 개인정보 삭제 절차를 "+
+   "먼저 알려 드립니다.",
+   '<path d="M4 20V6.5L12 3l8 3.5V20"/><path d="M9.5 20v-5h5v5"/><path d="M2.5 20h19"/>']
+];
+function PageBiz(){
+  return PgHero({ kicker:"BUSINESS", h1:"기업 · 수출 거래",
+      lead:"대량 매입과 해외 수출을 상담으로 진행합니다. "+
+           "수량 · 기종 · 상태를 알려 주시면 확인한 뒤 연락드립니다." })+
+    '<section class="sec sec-white"><div class="w pwf">'+
+      /* ⚠️⚠️ **맨 위입니다.** 다 읽고 적으신 뒤에 "사실 아직 준비
+         중입니다" 를 보시면 그 자리에서 닫습니다 (절대 규칙 3 · 5). */
+      '<div class="pwz-now"><b>지금은 문의를 받는 단계입니다.</b>'+
+        '<p>온라인에서 바로 견적 · 계약이 되는 절차는 아직 없습니다. '+
+          '보내 주신 내용을 사람이 확인하고 연락드립니다. '+
+          '⚠️ 회신 시점을 약속드리지는 않습니다.</p></div>'+
+      '<h2 class="pwf-h2">이런 거래를 받습니다</h2>'+
+      '<ul class="pwz-g">'+ PW_BIZ_WHAT.map(function(w){
+        return '<li><i><svg width="26" height="26" viewBox="0 0 24 24" fill="none" '+
+          'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" '+
+          'stroke-linejoin="round" aria-hidden="true">'+ w[2] +'</svg></i>'+
+          '<b>'+ esc(w[0]) +'</b><p>'+ esc(w[1]) +'</p></li>';
+      }).join("") +'</ul>'+
+      '<h2 class="pwf-h2" id="biz-form">거래 문의</h2>'+
+      '<div class="pwf-fm" id="pz-form">'+
+        '<div class="f-r"><label for="pz-co">회사 · 기관명 <em>*</em></label>'+
+          '<input id="pz-co" type="text" autocomplete="organization" required></div>'+
+        '<div class="f-r"><label for="pz-name">담당자 성함 <em>*</em></label>'+
+          '<input id="pz-name" type="text" autocomplete="name" required></div>'+
+        '<div class="f-r"><label for="pz-tel">연락처 <em>*</em></label>'+
+          '<input id="pz-tel" type="tel" autocomplete="tel" inputmode="tel" required '+
+          'placeholder="010-0000-0000"></div>'+
+        '<div class="f-r"><label for="pz-kind">거래 종류 <em>*</em></label>'+
+          '<select id="pz-kind" class="sel" required>'+
+            '<option value="">골라 주세요</option>'+
+            PW_BIZ_WHAT.map(function(w){
+              return '<option value="'+ esc(w[0]) +'">'+ esc(w[0]) +'</option>'; }).join("")+
+          '</select></div>'+
+        '<div class="f-r"><label for="pz-qty">예상 수량 <em>(선택)</em></label>'+
+          '<input id="pz-qty" type="text" inputmode="numeric" placeholder="예: 120대"></div>'+
+        '<div class="f-r"><label for="pz-memo">기종 · 상태 · 그 밖에 알려 주실 것 '+
+          '<em>(선택)</em></label>'+
+          '<textarea id="pz-memo" rows="4" placeholder="기종과 대략의 상태, 희망 일정 등"></textarea></div>'+
+        (typeof AgreeBox === "function" ? AgreeBox("pz-agree") : "")+
+        '<button type="button" class="btn btn-pw pwf-send" id="pz-send" '+
+          'onclick="pwBizSubmit()">문의 보내기</button>'+
+        '<p class="pwf-n" id="pz-msg"></p>'+
+      '</div>'+
+    '</div></section>';
+}
+
+window.pwBizSubmit = function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var co = ($("pz-co")||{}).value || "", name = ($("pz-name")||{}).value || "";
+  var tel = ($("pz-tel")||{}).value || "", kind = ($("pz-kind")||{}).value || "";
+  var qty = ($("pz-qty")||{}).value || "", memo = ($("pz-memo")||{}).value || "";
+  if(!co.trim()){  toast("회사 · 기관명을 적어 주세요"); return; }
+  if(!name.trim()){ toast("담당자 성함을 적어 주세요"); return; }
+  /* ⚠️ required 는 폼 제출만 막습니다 — 이 함수를 바로 부르면 그냥 지나갑니다 */
+  if(String(tel).replace(/[^0-9]/g,"").length < 9){ toast("연락처를 다시 확인해 주세요"); return; }
+  if(!kind){ toast("거래 종류를 골라 주세요"); return; }
+  var ag = $("pz-agree");
+  if(ag && !ag.checked){ toast("개인정보 수집 · 이용에 동의해 주세요"); return; }
+
+  var btn = $("pz-send");
+  if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
+  var ctl = new AbortController();
+  var t = setTimeout(function(){ ctl.abort(); }, 20000);
+  var det = { "회사 · 기관명": co.trim(), "거래 종류": kind,
+              "예상 수량": qty.trim(), "알려 주신 것": memo.trim() };
+  fetch("/api/quote", {
+    method:"POST", headers:{ "content-type":"application/json" },
+    signal: ctl.signal,
+    body: JSON.stringify({
+      kind:"quote", name:name.trim(), tel:tel.trim(),
+      /* ⚠️⚠️ `side` 를 안 보내면 `api/quote.js` 가 기본값 `"start"` 를
+         박아서 **창업 건으로** 저장됩니다 (`/sell` 에서 겪은 자리). */
+      side:"export", serviceName:"기업 · 수출 거래 — " + kind,
+      agree:true, idem:(window.amIdem ? amIdem() : ""),
+      detail:(window.amDropEmpty ? amDropEmpty(det) : det)
+    })
+  }).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+    .then(function(x){
+      clearTimeout(t);
+      if(!x.ok) throw new Error((x.j && x.j.say) || "보내지 못했습니다");
+      /* ⚠️⚠️ 접수번호는 **실제로 저장된 뒤에만** 옵니다 — 없으면 줄째
+         뺍니다 (절대 규칙 5). */
+      var no = x.j && x.j.no, f = $("pz-form");
+      if(f) f.innerHTML = '<div class="pwf-ok"><b>문의가 접수되었습니다.</b>'+
+        (no ? '<p>접수번호 <code>'+ esc(no) +'</code></p>' : '')+
+        '<p>확인한 뒤 연락드리겠습니다. ⚠️ 회신 시점을 약속드리지는 않습니다.</p>'+
+        '<a class="btn btn-pw-o" href="/guide">이용 안내 보기</a></div>';
+    })
+    .catch(function(e){
+      clearTimeout(t);
+      if(btn){ btn.disabled = false; btn.textContent = "문의 보내기"; }
+      var m = $("pz-msg");
+      if(m) m.innerHTML = '<b>보내지 못했습니다.</b> '+
+        esc(e && e.name === "AbortError"
+            ? "연결이 끊겼습니다 — 적어 주신 내용은 그대로 있습니다. 다시 눌러 주세요."
+            : (e && e.message) || "잠시 뒤 다시 눌러 주세요.");
+    });
+};

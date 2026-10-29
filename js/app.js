@@ -110,6 +110,8 @@ var META = {
                  "접수번호와 연락처로 지금 어느 단계인지 확인하실 수 있습니다. 기기 발송 · 검수 · 정산까지 진행 상황을 그대로 냅니다."],
   "/guide":     ["이용 안내 — 판매부터 정산까지",
                  "기기 등록 · 상태 등급 기준 · 발송 · 검수 · 정산 차례와, 검수 결과가 다를 때 어떻게 되는지까지 적어 두었습니다."],
+  "/biz":       ["기업 · 수출 거래 — 대량 매입 · 해외 수출 문의",
+                 "법인 · 대리점의 대량 매입, 기업 일괄 처분, 해외 수출을 상담으로 진행합니다. 수량과 기종을 알려 주시면 확인한 뒤 연락드립니다."],
   "/sell-biz":  ["매장 · 시설 내놓기",
                  "정리하시는 매장과 쓰시던 시설 · 장비를 내놓으실 수 있습니다. 평수 · 보증금 · 월세 · 권리금 조건 그대로 올리고 문의를 전달합니다."],
   "/join":      ["업체 입점하기",
@@ -267,6 +269,7 @@ window.routeInfo = function(path){
     "/bid":       "phone-bid",
     "/track":     "phone-track",
     "/guide":     "phone-guide",
+    "/biz":       "phone-biz",
     "/sell-biz":  "sell",
     "/sample":    "sample",
     "/join":      "join",
@@ -505,6 +508,12 @@ function sideOf(r){
   if(r.view === "phone-sell" || r.view === "phone-shop" ||
      r.view === "phone-bid"  || r.view === "phone-track" ||
      r.view === "phone-guide" ||
+     /* ⚠️⚠️ **`/biz` 를 여기 안 넣어서 그 화면만 갈색으로 서 있었습니다**
+        (2026-10-29 오렌지 차수에 재서 찾았습니다). 머리 띠 그라디언트도
+        `#view.pw-skin .pgh` 라 안 걸려서 머리와 본문이 **ΔE 0.00** 이었고,
+        전수 점검이 그걸로 잡았습니다 — **새 PHONEWAY 화면을 만들면
+        이 목록에 같이 넣으세요.** */
+     r.view === "phone-biz" ||
      /* ⚠️ 2026-10-29 — 글을 중고폰 것으로 바꾼 뒤 **색도 같이** 옮겼습니다.
         `/join` 은 매입업체 모집, `/faq` 는 헤더 "도움말" 이 가리키는
         화면이라 둘 다 PHONEWAY 쪽입니다 — 안 옮기면 중고폰 메뉴로
@@ -655,6 +664,7 @@ function render(){
     case "phone-bid":       html = PageBid();                       break;
     case "phone-track":     html = PageTrack();                     break;
     case "phone-guide":     html = PageGuide();                     break;
+    case "phone-biz":       html = PageBiz();                       break;
     case "product":         html = PageProduct(r.product);          break;
     case "sell":            html = PageSellBiz();                   break;
     case "join":            html = PageJoin();                      break;

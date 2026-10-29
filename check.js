@@ -1008,6 +1008,10 @@ const AUDIT = `(() => {
                                안 넣으면 컬러 아이콘에 없는 이름을 적어도
                                빈 칸이 조용히 섭니다 (search 로 겪었습니다). */
                             " #view .pww-ic, #view .dvc-ph," +
+                            /* 2026-10-29 오렌지 시안 — 신뢰 넷 ·
+                               바로가기 다섯 · 기업수출 화면 셋 */
+                            " #view .pwh-tr-g i, #view .pwq-c i," +
+                            " #view .pwz-g i," +
                             " #view .my-pw-i").forEach(e => {
     if(e.querySelector("svg")) return;
     const own = (e.parentElement || e);
@@ -2194,7 +2198,7 @@ const AUDIT = `(() => {
      ⚠️ 이건 "보기 좋은가" 를 재는 검사가 아닙니다. 나중에 여기에
      큰 배너 · 설명 · 검색창을 하나씩 더하다 보면 카드가 첫 화면
      아래로 밀려나는데, 그걸 막는 것이 목적입니다. */
-  await f("메인은 히어로 다음이 판매 두 방법이고 번호가 이어진다", "/", `
+  await f("메인은 히어로 다음이 기기 선택이고 구간 수가 데이터와 같다", "/", `
     /* ⚠️⚠️ **2026-10-22 "최상단 디자인 최종 변경" §2 — 히어로가 다시
        빠졌습니다.** "기존 상단 대형 히어로(카페 사진)를 제거하고 4개
        전문관 카드를 최상단 콘텐츠로 한다." 이 검사는 10-17 에 한 번
@@ -2223,39 +2227,57 @@ const AUDIT = `(() => {
        바로 그 다음입니다 ("메인페이지에 접속하면 … 히어로 … 그 아래
        4개 핵심 서비스"). 10-22 지시서 때는 (1) 이 bent 였습니다 —
        되돌리시면 그날 여기와 (2) 를 같이 뒤집으세요. */
-    /* ⚠️⚠️ **2026-10-29 PHONEWAY 전환.** 첫 구간이 히어로(pwh)이고
-       바로 다음이 **판매 두 방법**(pww)입니다 — 직접 매입과 경쟁입찰.
-       ⚠️ 앞 지시서의 진입 카드 넷(bhero 다음 bent · 번호 01~04)은
-       함수를 안 지웠으니 되살리실 수 있습니다 — 그날 여기를 뒤집으세요. */
-    if(!secs[0].classList.contains("pwh"))
-      return "첫 구간이 히어로가 아닙니다 — " +
-             (secs[0].className || "").split(" ")[0];
-    if(!(secs[1] && secs[1].classList.contains("pww")))
-      return "히어로 다음이 판매 두 방법이 아닙니다 — " +
-             ((secs[1] || {}).className || "").split(" ")[0];
+    /* ⚠️⚠️ **2026-10-29 오렌지 시안 §3 의 차례**입니다 —
+       히어로(pwh) → 기기 선택(pwd) → 사업 배너(pwbz) →
+       바로가기(pwq) → 이용 방법(pwst) → 거래 전 고지(pwt) → CTA(pwc).
+       ⚠️ 앞 차례(pwh → pww 판매 두 방법 → pws 중고폰 갈래)는 함수도
+       CSS 도 안 지웠으니 되살리실 수 있습니다 — 그날 여기를 같이
+       뒤집으세요. **규칙은 한 줄도 안 바꿨습니다** (첫 구간이
+       히어로인가 · h1 이 거기 하나인가 · 지어낸 수가 없는가) —
+       재는 자리가 바뀐 것입니다. */
+    const order = ["pwh","pwd","pwbz","pwq","pwst","pwt","pwc"];
+    for(let i = 0; i < order.length; i++){
+      if(!(secs[i] && secs[i].classList.contains(order[i])))
+        return "구간 " + (i + 1) + " 이 ." + order[i] + " 가 아닙니다 — " +
+               (((secs[i] || {}).className || "").split(" ")[0] || "없습니다");
+    }
 
     const h1s = document.querySelectorAll("#view h1");
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
     if(!h1s[0].closest(".pwh")) return "h1 이 히어로 구간에 없습니다";
 
-    /* (3) 번호가 빠짐없이 이어지는가 — 둘이 같은 무게로 섭니다.
-       ⚠️⚠️ **번호를 손으로 적지 마세요** — PW_WAYS 에서 읽습니다. */
-    const nos = [].slice.call(v.querySelectorAll(".pww-no"))
-      .map(function(e){ return (e.textContent || "").trim(); });
-    const want = (window.PW_WAYS || []).map(function(x){ return x.no; });
-    if(!want.length) return "PW_WAYS 를 못 읽습니다";
-    if(nos.join(",") !== want.join(","))
-      return "판매 방법 번호가 [" + nos.join(" ") + "] 입니다 — [" +
-             want.join(" ") + "] 라야 차례가 안 끊깁니다";
+    /* (3) 기기 넷 · 배너 넷 · 바로가기 다섯이 **데이터에서 온 수**인가.
+       ⚠️⚠️ 손으로 적지 마세요 — 하나를 늘릴 때 화면만 바뀌고 검사는
+       옛 수를 그대로 셉니다. */
+    const nDev = v.querySelectorAll(".pwd-g > li").length;
+    const wDev = (window.PW_SELL_CARDS || []).length;
+    if(!wDev) return "PW_SELL_CARDS 를 못 읽습니다";
+    if(nDev !== wDev)
+      return "기기 카드가 " + nDev + "장인데 데이터는 " + wDev + "개입니다";
+    const nBiz = v.querySelectorAll(".pwbz-g > li").length;
+    const wBiz = (window.PW_BIZ || []).length;
+    if(nBiz !== wBiz)
+      return "사업 배너가 " + nBiz + "장인데 데이터는 " + wBiz + "개입니다";
+    const nQ = v.querySelectorAll(".pwq-g > li").length;
+    const wQ = (window.PW_QUICK || []).length;
+    if(nQ !== wQ)
+      return "바로가기가 " + nQ + "칸인데 데이터는 " + wQ + "개입니다";
 
-    /* (4) ⚠️⚠️ **업체 수를 손으로 적지 않습니다** — 경쟁입찰 카드가
-       AM_PROVIDERS 를 그 자리에서 셉니다. 0곳이면 0 이라고 말해야
-       하고, 지어낸 수가 적히면 표시 · 광고의 공정화에 관한 법률
-       제3조입니다 (절대 규칙 1). */
-    const nPv = (window.AM_PROVIDERS || []).length;
-    const bidTx = (v.querySelector(".pww-c.b") || {}).textContent || "";
-    if(!nPv && !/모집/.test(bidTx))
-      return "업체가 0곳인데 경쟁입찰 카드가 그 사실을 말하지 않습니다";
+    /* (4) ⚠️⚠️ **지킬 수 없는 약속을 적지 않습니다** (시안 §3-C —
+       "실제로 제공하지 않는 혜택은 확정된 서비스처럼 표시하지 않는다").
+       택배사와 맺은 계약이 없어서 "무료 택배" 를 쓸 수 없고, 이
+       저장소가 "무료 · 당일 정산 · 최고가 보장" 을 안 쓰기로 못박아
+       두었습니다 (절대 규칙 5). */
+    const tr = (v.querySelector(".pwh-tr") || {}).textContent || "";
+    if(/무료|당일\s*정산|최고가\s*보장/.test(tr))
+      return "신뢰 요소에 지킬 수 없는 약속이 있습니다 — " + tr.trim().slice(0, 40);
+
+    /* (5) ⚠️⚠️ **기업 · 수출은 거래 절차가 없습니다** — §3-E 가 적은
+       대로 준비 상태를 그 자리에서 밝혀야 합니다. */
+    const bizTx = (v.querySelector(".pwbz-v4") || {}).textContent || "";
+    if(!/문의/.test(bizTx))
+      return "기업 · 수출 배너가 지금 문의 단계라는 것을 말하지 않습니다";
+    return true;
     return true;`);
   await f("어느 화면에서나 검색으로 가는 길이 있고 메인이 두 갈래로 갈린다", "/", `
     /* 지난 주석 (PHONEWAY 전환 때 이 검사는 메인으로 되돌렸습니다) (2026-10-29
@@ -2445,55 +2467,64 @@ const AUDIT = `(() => {
              g6[0] + " 하나만 남아도 나머지는 앞뒤 카드로 이어집니다";
     return true;`);
 
-  await f("판매 두 방법이 색으로 갈리고 둘의 무게가 같다", "/", `
-    /* ⚠️⚠️ **2026-10-29 PHONEWAY 전환.** 전에는 창업 브라운 · 운영
-       딥그린 · 폐업 버건디 셋을 봤습니다 — 그 구간 함수를 안 지웠으니
-       되살리시면 그날 여기를 뒤집으세요.
-
-       지금 지키는 것은 —
-         · 두 방법이 **서로 다른 색**일 것 (직접 매입 · 경쟁입찰)
-         · 둘의 **크기와 무게가 같을 것** — 한쪽을 좁히거나 가볍게
+  await f("사업 배너 넷이 색으로 갈리고 넷의 무게가 같다", "/", `
+    /* ⚠️⚠️ **재는 자리를 옮겼습니다 (2026-10-29 오렌지 시안 §3-E).**
+       전에는 판매 두 방법(pww-c)을 봤고 그 전에는 전문관 카드였습니다 —
+       **규칙은 한 줄도 안 바꿨습니다.** 지키는 것은 —
+         · 넷이 **서로 다른 면**일 것 (시안이 색으로 갈라 두었습니다)
+         · 넷의 **크기와 무게가 같을 것** — 하나를 좁히거나 가볍게
            만들면 그게 "덜 중요한 것" 이라는 말입니다
          · ⚠️⚠️ **경쟁입찰 쪽을 작게 만들지 마세요.** 지시서가 폰웨이
            자체 매입 부서와 경쟁업체의 권한을 가르라고 못박았고, 한쪽을
-           크게 내는 것이 그 첫 걸음입니다 */
+           크게 내는 것이 그 첫 걸음입니다
+       ⚠️ 판매 두 방법(pww)은 함수도 CSS 도 안 지웠으니 되살리실 수
+       있습니다 — 그날 여기를 같이 뒤집으세요. */
     /* ⚠️⚠️ **검사 본문에서는 정규식을 피하세요.** 본문이 템플릿
        문자열이라 백슬래시를 한 겹으로 적으면 **먹혀서** 정규식이
-       깨집니다 — 이 저장소가 **열다섯 번** 당한 자리이고 여기서도
-       한 번 깨졌습니다. 숫자만 글자로 모아 셉니다. */
-    const bg = function(q){
-      const e = document.querySelector(q); if(!e) return null;
+       깨집니다 — 이 저장소가 열다섯 번 당한 자리입니다. 숫자만
+       글자로 모아 셉니다. */
+    const bg = function(e){
       const cs = getComputedStyle(e);
       const src = cs.backgroundColor + " " + cs.backgroundImage;
-      const out = [];
-      let cur = "", nums = [];
+      const out = []; let cur = "", nums = [];
       for(let k = 0; k <= src.length; k++){
         const ch = src.charAt(k);
         if(ch >= "0" && ch <= "9"){ cur += ch; continue; }
         if(cur){ nums.push(+cur); cur = ""; }
-        /* 색 하나가 닫히면 앞의 셋을 한 묶음으로 봅니다 */
-        if(ch === ")" && nums.length >= 3){ out.push(nums.slice(0,3)); }
+        if(ch === ")" && nums.length >= 3) out.push(nums.slice(0,3));
         if(ch === ")") nums = [];
       }
       for(const c of out) if(c[0] + c[1] + c[2] > 30) return c;
       return null;
     };
-    const L = [].slice.call(document.querySelectorAll(".pww-c"));
-    if(L.length !== 2) return "판매 방법 카드가 " + L.length + "개입니다";
-    const a = bg(".pww-c:not(.b) .pww-no"), b = bg(".pww-c.b .pww-no");
-    if(!a || !b) return "번호 알약의 색을 못 읽습니다";
-    if(a.join(",") === b.join(","))
-      return "두 방법의 색이 같습니다 — rgb(" + a.join(",") + ")";
+    const L = [].slice.call(document.querySelectorAll(".pwbz-c"));
+    const want = (window.PW_BIZ || []).length;
+    if(!want) return "PW_BIZ 를 못 읽습니다";
+    if(L.length !== want)
+      return "사업 배너가 " + L.length + "장입니다 (" + want + "이어야 합니다)";
+    const cols = L.map(bg);
+    for(let k = 0; k < cols.length; k++)
+      if(!cols[k]) return (k+1) + "번째 배너의 면 색을 못 읽습니다";
+    /* ⚠️ 셋째 · 넷째는 **일부러 같은 차콜**입니다 (시안 그대로) —
+       그 둘을 뺀 나머지가 서로 달라야 합니다. */
+    const keys = [cols[0].join(","), cols[1].join(","), cols[2].join(",")];
+    if(new Set(keys).size !== keys.length)
+      return "배너 면 색이 겹칩니다 — " + keys.join(" / ");
 
-    /* 나란히 놓인 때만 봅니다 (좁아지면 줄이 갈립니다) */
-    if(innerWidth <= 900) return true;
+    if(innerWidth <= 1024) return true;
     const R = L.map(function(e){ return e.getBoundingClientRect(); });
-    if(Math.abs(R[0].top - R[1].top) > 2) return true;
-    if(Math.abs(R[0].width - R[1].width) > 1 ||
-       Math.abs(R[0].height - R[1].height) > 1)
-      return "두 카드의 크기가 다릅니다 — " +
-        Math.round(R[0].width) + "×" + Math.round(R[0].height) + " vs " +
-        Math.round(R[1].width) + "×" + Math.round(R[1].height);
+    if(Math.max.apply(null, R.map(function(r){ return r.top; })) -
+       Math.min.apply(null, R.map(function(r){ return r.top; })) > 2) return true;
+    const w = R.map(function(r){ return r.width; });
+    const h = R.map(function(r){ return r.height; });
+    if(Math.max.apply(null,w) - Math.min.apply(null,w) > 1 ||
+       Math.max.apply(null,h) - Math.min.apply(null,h) > 1)
+      return L.map(function(e, k){ return e.textContent.trim().slice(0,6) + " " +
+        Math.round(w[k]) + "×" + Math.round(h[k]); }).join(" · ");
+    /* ⚠️⚠️ **카드 전체가 하나의 링크입니다** — 안에 또 링크를 넣으면
+       브라우저가 쪼갭니다. */
+    for(const e of L)
+      if(e.querySelector("a")) return "배너 안에 링크가 또 있습니다";
     return true;`);
 
   /* ⑨ 규모감 숫자 — **센 값**이어야 합니다
@@ -3978,12 +4009,20 @@ const AUDIT = `(() => {
        서비스 메인인가" 입니다. ⚠️ 앞 지시서의 표시(.bhero-go ·
        .bent-g · .bdir-g · .bstep-g · .bcal-g · .bgd-g · .bcta-go)는
        함수를 안 지웠으니 되살리실 수 있습니다 — 그날 다시 넣으세요. */
-    const need = [[".pwh-go", "히어로 단추 둘"],
-                  [".pww-g",  "판매 두 방법 카드"],
-                  [".pws-g",  "중고폰 구매 갈래"],
-                  [".pwst-g", "이용 방법 다섯"],
-                  [".pwt-g",  "거래 전 고지"],
-                  [".pwc-go", "하단 CTA"]];
+    /* ⚠️⚠️ 2026-10-29 오렌지 시안 §3 — 찾는 표시를 지금 화면의
+       것으로 옮깁니다. ⚠️ pww-g(판매 두 방법) · pws-g(중고폰
+       갈래)는 **함수도 CSS 도 안 지웠으니** 되살리실 수 있습니다 —
+       그날 여기에 다시 넣으세요.
+       ⚠️⚠️ **주석에 백틱을 쓰지 마세요** — 검사 본문이 템플릿
+       문자열이라 거기서 끊깁니다 (이 저장소 서른 번째입니다). */
+    const need = [[".pwh-go",  "히어로 단추 둘"],
+                  [".pwh-tr-g","신뢰 요소 넷"],
+                  [".pwd-g",   "기기 선택 넷"],
+                  [".pwbz-g",  "주요 사업 배너 넷"],
+                  [".pwq-g",   "서비스 바로가기 다섯"],
+                  [".pwst-g",  "이용 방법 다섯"],
+                  [".pwt-g",   "거래 전 고지"],
+                  [".pwc-go",  "하단 CTA"]];
     for(const q of need)
       if(!v.querySelector(q[0])) return q[1] + " 가 메인에 없습니다";
     /* ⚠️⚠️ **메인에서는 헤더 검색을 찾지 않습니다** (2026-10-13 §3 —
@@ -4193,19 +4232,20 @@ const AUDIT = `(() => {
        ⚠️ 둘을 한 검사에 묶으면 한쪽이 바뀔 때마다 다른 쪽이 같이
        빨개져서, 정작 지키려는 것이 확인되지 않습니다. */
     return true;`);
-  await f("구매 갈래 넷의 크기가 같다", "/", `
-    /* ⚠️⚠️ **재는 자리가 네 번 옮겨 왔습니다** — 히어로 선택 카드
+  await f("기기 선택 카드 넷의 크기가 같다", "/", `
+    /* ⚠️⚠️ **재는 자리가 다섯 번 옮겨 왔습니다** — 히어로 선택 카드
        둘(2026-10-08) → 전문관 카드 넷(10-11) → 진입 카드 셋(10-16) →
-       넷(10-20) → **구매 갈래 넷**(10-29 PHONEWAY). 규칙이 바뀐 것이
-       아니라 재는 자리가 바뀐 것입니다. 한쪽을 좁히거나 가볍게 만들면
-       그게 "덜 중요한 것" 이라는 말입니다.
-       ⚠️ 판매 두 방법은 바로 위 검사가 봅니다 — 둘을 묶지 마세요
+       넷(10-20) → 구매 갈래 넷(10-29 PHONEWAY) → **기기 선택 카드
+       넷**(10-29 오렌지 시안 §3-D). 규칙이 바뀐 것이 아니라 재는
+       자리가 바뀐 것입니다 — 하나를 좁히거나 가볍게 만들면 그게
+       "덜 중요한 것" 이라는 말입니다.
+       ⚠️ 사업 배너 넷은 다른 검사가 봅니다 — 둘을 묶지 마세요
        (한쪽만 보면 다른 쪽이 조용히 어긋납니다). */
-    const L = [].slice.call(document.querySelectorAll(".pws-c"));
-    const want = (window.PW_KINDS || []).length;
-    if(!want) return "PW_KINDS 를 못 읽습니다";
+    const L = [].slice.call(document.querySelectorAll(".pwd-g .dvc"));
+    const want = (window.PW_SELL_CARDS || []).length;
+    if(!want) return "PW_SELL_CARDS 를 못 읽습니다";
     if(L.length !== want)
-      return "구매 갈래가 " + L.length + "개입니다 (" + want + "이어야 합니다)";
+      return "기기 카드가 " + L.length + "장입니다 (" + want + "이어야 합니다)";
     if(innerWidth <= 900) return true;
     const R = L.map(function(e){ return e.getBoundingClientRect(); });
     if(Math.max.apply(null, R.map(function(r){ return r.top; })) -
@@ -4216,10 +4256,10 @@ const AUDIT = `(() => {
        Math.max.apply(null,h) - Math.min.apply(null,h) > 1)
       return L.map(function(e, k){ return e.textContent.trim().slice(0,6) + " " +
         Math.round(w[k]) + "×" + Math.round(h[k]); }).join(" · ");
-    /* ⚠️⚠️ **칸 전체가 하나의 링크입니다** — 안에 또 링크를 넣으면
+    /* ⚠️⚠️ **카드 전체가 하나의 링크입니다** — 안에 또 링크를 넣으면
        브라우저가 쪼갭니다. */
     for(const e of L)
-      if(e.querySelector("a")) return "구매 갈래 안에 링크가 또 있습니다";
+      if(e.querySelector("a")) return "기기 카드 안에 링크가 또 있습니다";
     return true;`);
   /* ══ 여정 넷 (2026-10-05 V2 지시서 §1 · §2 · §4 · §6 · §7 · §31) ══ */
 
@@ -4428,10 +4468,15 @@ const AUDIT = `(() => {
        ⚠️ 선택 까닭(.bwhy-i)과 배너(.bban-i)는 구간이 내려가서 뺐습니다 —
        되살리시면 그날 여기도 같이 넣으세요 (안 넣으면 그 구간의 빈
        아이콘을 아무도 안 봅니다). */
-    /* ⚠️⚠️ 2026-10-29 PHONEWAY — 재는 자리가 판매 두 방법 · 구매 갈래 ·
-       이용 방법 · 거래 전 고지로 옮겨갔습니다. 보는 것은 그대로입니다 —
-       빈 아이콘과 한 묶음 안의 중복, 그리고 가짜 링크입니다. */
-    const groups = [[".pww-ic", "판매 방법"], [".pws-c i", "구매 갈래"],
+    /* ⚠️⚠️ 2026-10-29 오렌지 시안 — 재는 자리가 신뢰 넷 · 기기 선택 ·
+       바로가기 다섯 · 이용 방법 · 거래 전 고지로 옮겨갔습니다. 보는
+       것은 그대로입니다 — 빈 아이콘과 한 묶음 안의 중복, 그리고
+       가짜 링크입니다.
+       ⚠️ 판매 두 방법(pww-ic) · 구매 갈래(pws-c i)는 구간이
+       내려가서 뺐습니다 — 되살리시면 그날 여기도 같이 넣으세요
+       (안 넣으면 그 구간의 빈 아이콘을 아무도 안 봅니다). */
+    const groups = [[".pwh-tr-g i", "신뢰 요소"], [".pwd-g .dvc-ph", "기기 선택"],
+                    [".pwq-c i", "서비스 바로가기"],
                     [".pwst-c i", "이용 방법"], [".pwt-c i", "거래 전 고지"]];
     for(const g of groups){
       const L = [].slice.call(document.querySelectorAll("#view " + g[0]));
@@ -4630,13 +4675,18 @@ const AUDIT = `(() => {
        금지해서, 그 카드가 들어 있던 구간을 안 부릅니다. 함수는
        지우지 않았으니 되살리실 수 있습니다 — 그날 bcal 다음에
        bwhy 를 다시 넣으세요. */
-    /* ⚠️⚠️ **2026-10-29 PHONEWAY 전환 — 구간 여섯입니다.**
-       01 히어로(pwh) · 02 판매 두 방법(pww) · 03 중고폰 구매(pws) ·
-       04 이용 방법(pwst) · 05 거래 전 고지(pwt) · 06 하단 CTA(pwc).
-       ⚠️ 앞 지시서의 일곱(bhero · bent · bdir · bcal · bstep · bgd ·
-       bcta)은 **함수를 안 지웠으니** 되살리실 수 있습니다 — 그날
-       여기와 아래 PHONEWAY 검사 일곱을 같이 뒤집으세요. */
-    const want = ["pwh","pww","pws","pwst","pwt","pwc"];
+    /* ⚠️⚠️ **2026-10-29 오렌지 시안 §3 — 구간 일곱입니다.**
+       01 히어로 + 신뢰 넷(pwh) · 02 기기 선택(pwd) · 03 사업 배너(pwbz) ·
+       04 서비스 바로가기(pwq) · 05 이용 방법(pwst) · 06 거래 전
+       고지(pwt) · 07 하단 CTA(pwc). HEADER · FOOTER 는 #view 밖입니다.
+       ⚠️ 05~07 은 시안 §3 목록 밖이지만 §1 이 "기존 PHONEWAY 기능과
+       데이터베이스는 보존한다" 고 적었고, 06 은 "무료 · 당일 정산 ·
+       최고가 보장을 적지 않는다" 를 말하는 자리입니다.
+       ⚠️ 앞 차례(pww 판매 두 방법 · pws 중고폰 갈래)와 그 앞
+       지시서의 일곱(bhero · bent · bdir · bcal · bstep · bgd · bcta)은
+       **함수도 CSS 도 안 지웠으니** 되살리실 수 있습니다 — 그날
+       여기와 PHONEWAY 검사들을 같이 뒤집으세요. */
+    const want = ["pwh","pwd","pwbz","pwq","pwst","pwt","pwc"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
@@ -4646,7 +4696,7 @@ const AUDIT = `(() => {
          합니다 ("?3" 이 아니라). */
       /* ⚠️ 앞 지시서의 이름들을 **빼지 않습니다** — 되살아나면
          "차례가 … 입니다" 로 이름을 내야 합니다 ("?3" 이 아니라). */
-      for(const m of ["pwh","pww","pws","pwst","pwt","pwc",
+      for(const m of ["pwh","pwd","pwbz","pwq","pww","pws","pwst","pwt","pwc",
                       "bent","bdir","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
                       "bhero","mh","mbr","mhall","msvc","mexp","pkg","mind",
                       "mti","mstp","mopsv","mjn","mlast"])

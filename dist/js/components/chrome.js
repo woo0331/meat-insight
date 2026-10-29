@@ -4,11 +4,11 @@ window.AM_GNB = [
 
   { to:"/sell",    name:"내 폰 팔기" },
   { to:"/shop",    name:"중고폰 구매" },
-  { to:"/bid",     name:"최고가 경쟁입찰" },
-  { to:"/track",   name:"판매 진행 조회" },
-  { to:"/guide",   name:"이용 안내" },
+  { to:"/bid",     name:"경쟁입찰" },
+  { to:"/biz",     name:"수출 · 기업거래" },
+  { to:"/guide",   name:"이용안내" },
 
-  { to:"/faq",     name:"도움말" }
+  { to:"/faq",     name:"고객센터" }
 ];
 
 var MNAV = [
@@ -167,7 +167,7 @@ function MobileNav(){
 
 var MNAV_NEAR = [
 
-  [/^\/(sell|bid)(\/|$)/,                        "/sell"],
+  [/^\/(sell|bid|biz)(\/|$)/,                    "/sell"],
   [/^\/shop(\/|$)/,                              "/shop"],
   [/^\/(track|quote)/,                           "/track"],
   [/^\/(my|search|compare|join)/,                "/my"],

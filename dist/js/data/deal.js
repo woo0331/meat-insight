@@ -247,7 +247,10 @@ window.AM_SIDES = [
   { key:"buyin",    name:"중고폰 · 직접 매입", short:"직접매입", pick:"/sell", pw:true,
     say:"중고폰 — 폰웨이가 바로 사는 것" },
   { key:"bid",      name:"중고폰 · 경쟁입찰", short:"경쟁입찰", pick:"/sell", pw:true,
-    say:"중고폰 — 업체 경쟁입찰" }
+    say:"중고폰 — 업체 경쟁입찰" },
+
+  { key:"export",   name:"기업 · 수출 거래", short:"기업수출", pick:"/biz", pw:true,
+    say:"기업 · 수출 — 대량 매입 · 해외 수출 문의" }
 ];
 
 window.AM_QUOTE_LABELS = {

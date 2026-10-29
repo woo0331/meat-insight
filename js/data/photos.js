@@ -351,6 +351,24 @@ window.WOW_PHOTO_SLOTS = [
   { key:"dev-etc", sizes:"(max-width:767px) 95px, 150px",
     where:"/sell 01 기기 카드 — 기타 기기", min:[400,400], ratio:[0.85,1.2], maxKB:60,
     note:"워치 + 무선 이어폰. ⚠️ 특정 제조사가 드러나지 않아야 합니다 · 흰 배경" },
+  /* ⚠️⚠️ 2026-10-29 오렌지 §3-E — **메인 03 사업 배너 넷**. `PW_BIZ` 의
+     `ph` 가 이 열쇠를 가리키고 `PwBiz()` 가 `hasPhoto()` 로 기다립니다 —
+     **코드를 한 줄도 안 고치고** 사진으로 바뀝니다 (없으면 컬러 아이콘이
+     자리를 지킵니다 · 절대 규칙 2). 재 본 액자: **601px 위 84×84 ·
+     그 아래 72×72** (전 폭 정사각 · `object-fit:contain`).
+     ⚠️ 가로로 긴 사진을 넣으면 위아래가 빕니다. */
+  { key:"biz-sell", sizes:"(max-width:600px) 72px, 84px",
+    where:"메인 03 사업 배너 — 지금 바로 내 폰 팔기", min:[200,200], ratio:[0.9,1.15], maxKB:40,
+    note:"손에 든 휴대폰 또는 택배 상자 하나. ⚠️ 제조사 상표 · 상호가 읽히면 안 됩니다" },
+  { key:"biz-shop", sizes:"(max-width:600px) 72px, 84px",
+    where:"메인 03 사업 배너 — 믿을 수 있는 중고폰 구매", min:[200,200], ratio:[0.9,1.15], maxKB:40,
+    note:"포장을 푼 기기 또는 쇼핑백. ⚠️ 상표 · 상호가 읽히면 안 됩니다" },
+  { key:"biz-bid", sizes:"(max-width:600px) 72px, 84px",
+    where:"메인 03 사업 배너 — 업체 경쟁입찰", min:[200,200], ratio:[0.9,1.15], maxKB:40,
+    note:"견적서 · 숫자 비교가 보이는 장면. ⚠️ **금액을 읽을 수 있게 찍지 마세요** (지어낸 값이 됩니다)" },
+  { key:"biz-export", sizes:"(max-width:600px) 72px, 84px",
+    where:"메인 03 사업 배너 — 기업 · 수출 거래", min:[200,200], ratio:[0.9,1.15], maxKB:40,
+    note:"상자 여러 개 또는 팔레트. ⚠️ 상호 · 국기 · 특정 국가가 드러나면 안 됩니다 (거래 절차가 아직 없습니다)" },
   { key:"kind-take", sizes:"(max-width:520px) 94vw, (max-width:600px) 480px, (max-width:900px) 47vw, (max-width:1280px) 31vw, 387px",
     where:"(지금 안 나옴) 자산 카드 01 · 매장 인수하기", min:[1120,840], ratio:[1.25,1.45], maxKB:140,
     note:"문 여는 상업공간 · 빈 점포 내부. ⚠️ 상호 · 간판 · 업종이 읽히면 안 됩니다" },

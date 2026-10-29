@@ -930,88 +930,89 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
    금빛 머리말)이 아직 쓰고 있어서, 값을 갈면 157개 화면이 같이
    바뀝니다 — 여기서는 **머리 · 꼬리 면만** 다시 칠합니다.
 
-   ⚠️⚠️ **`--pw-blue`(#1673EA)를 흰 글자 바탕으로 쓰지 마세요** — 재 보니
-   **4.49** 로 AA(4.5) 미달입니다. 채운 단추는 `--pw-blue-600`
-   (#0E5FD0 · **5.89**)입니다. 지시서 §2 가 적은 프라이머리 블루는
-   **면 · 선 · 아이콘** 쪽입니다.
+   ⚠️⚠️ **`--pw-or`(#F37021)를 흰 글자 바탕으로 쓰지 마세요** — 재 보니
+   **2.94** 로 AA(4.5)는 물론 큰글자(3.0)도 못 넘깁니다. 채운 단추는
+   딥 오렌지(#C84F0A · **4.59**)이고, 메인 오렌지는 **면 · 테두리 ·
+   아이콘 · 선택 표시**까지입니다. 지시서 §5 가 "Primary 배경
+   #F37021" 과 "WCAG AA" 를 둘 다 적었는데 이 둘이 부딪히는
+   자리라, 손님이 40~60대 사장님이어서 **읽힘을 택했습니다.**
 
-   ⚠️ 재 본 값 (바탕 #102C4A) — 흰 **14.18** · 보조 #C9D6E6 **9.62** ·
-   옅은 #9FB4CC **6.67** · 밝은 파랑 #6FA8F0 **5.76**. 전부 AA 위입니다.
-   ⚠️⚠️ **흐린 글자(`--ink2` · `--ink3`)를 쓰지 마세요** — 짙은 바탕용이
-   아닙니다. 그리고 **선택자를 원래 규칙과 똑같이** 적으세요: `.ft a`
-   (0,1,1)로 적었다가 `.ft-col a`(0,2,0)에 져서 링크 대비가 4.33
-   이었던 자리입니다.
-   ════════════════════════════════════════════════════════════════════ */
-.hd{ background:rgba(16,44,74,.96); border-bottom:1px solid rgba(201,214,230,.18); }
-.sc .hd{ box-shadow:0 1px 0 rgba(201,214,230,.18), 0 10px 26px -16px rgba(11,31,54,.8); }
-.lg b{ color:var(--pw-on-navy); }
-.lg span{ color:var(--pw-on-navy2); }
-.hd-lg-t b{ color:var(--pw-on-navy); }
-.hd-lg-t i{ color:var(--pw-on-navy2); }
-.gnb a{ color:var(--pw-on-navy2); }
-.gnb a:hover{ color:var(--pw-blue-300); }
-.gnb a.on{ color:var(--pw-blue-300); }
-.hd-ic{ color:var(--pw-on-navy2); }
-.hd-ic:hover{ background:rgba(201,214,230,.14); color:var(--pw-on-navy); }
-.hd-txt{ color:var(--pw-on-navy2); }
-.hd-txt:hover{ color:var(--pw-on-navy); }
-.hd-sep{ background:rgba(201,214,230,.18); }
+   ⚠️ 재 본 값 (바탕 #18212B 차콜) — 흰 **16.26** · 보조 #D5DAE1
+   **11.57** · 옅은 #A4AEBB **7.24** · 오렌지 #F8A066 **7.91**.
+   전부 AA 위입니다. */
+.hd{ background:rgba(24,33,43,.96); border-bottom:1px solid rgba(213,218,225,.18); }
+.sc .hd{ box-shadow:0 1px 0 rgba(213,218,225,.18), 0 10px 26px -16px rgba(16,23,31,.8); }
+.lg b{ color:var(--pw-on-dk); }
+.lg span{ color:var(--pw-on-dk2); }
+.hd-lg-t b{ color:var(--pw-on-dk); }
+.hd-lg-t i{ color:var(--pw-on-dk2); }
+.gnb a{ color:var(--pw-on-dk2); }
+.gnb a:hover{ color:var(--pw-or-300); }
+.gnb a.on{ color:var(--pw-or-300); }
+.hd-ic{ color:var(--pw-on-dk2); }
+.hd-ic:hover{ background:rgba(213,218,225,.14); color:var(--pw-on-dk); }
+.hd-txt{ color:var(--pw-on-dk2); }
+.hd-txt:hover{ color:var(--pw-on-dk); }
+.hd-sep{ background:rgba(213,218,225,.18); }
 /* 통합검색 — 짙은 바탕 위라 면을 **밝은 쪽으로 옅게** 깝니다.
    ⚠️ 흰 면을 깔면 헤더에 흰 알약이 떠서 머리가 두 층으로 읽힙니다. */
-.hd-s{ background:rgba(201,214,230,.10); border-color:rgba(201,214,230,.30); }
-.hd-s:focus-within{ background:rgba(201,214,230,.16); border-color:var(--pw-blue-300); }
-.hd-s-i{ color:var(--pw-on-navy3); }
-.hd-s input{ color:var(--pw-on-navy); }
-.hd-s input::placeholder{ color:#9FB4CC; }
+.hd-s{ background:rgba(213,218,225,.10); border-color:rgba(213,218,225,.30); }
+.hd-s:focus-within{ background:rgba(213,218,225,.16); border-color:var(--pw-or-300); }
+.hd-s-i{ color:var(--pw-on-dk3); }
+.hd-s input{ color:var(--pw-on-dk); }
+.hd-s input::placeholder{ color:var(--pw-on-dk3); }
 /* 내 폰 팔기 — 오른쪽에 **하나뿐인 채운 단추**입니다.
-   ⚠️⚠️ 면이 `--pw-blue`(4.49)가 아니라 `--pw-blue-600`(5.89)입니다. */
-.hd-cta{ background:var(--pw-blue-600); border-color:var(--pw-blue-600);
-  color:var(--pw-on-navy); font-weight:800; }
-.hd-cta:hover{ background:var(--pw-blue); border-color:var(--pw-blue);
-  color:var(--pw-on-navy); }
+   ⚠️⚠️ 면이 `--pw-or`(4.49)가 아니라 `--pw-or-600`(5.89)입니다. */
+.hd-cta{ background:var(--pw-or-600); border-color:var(--pw-or-600);
+  color:var(--pw-on-dk); font-weight:800; }
+.hd-cta:hover{ background:var(--pw-or); border-color:var(--pw-or);
+  color:var(--pw-on-dk); }
 /* 햄버거 · 서랍 (1100px 아래에서 메뉴가 거기로 갑니다).
    ⚠️⚠️ **선택자를 원래 규칙과 똑같이** 적습니다 — 서랍 규칙이
    미디어 안의 `.hd-dw-g a`(0,2,0)라, `.hd-dw a`(0,1,1)로 적으면
    hover 색만 조용히 안 먹습니다. */
-.hd-mb{ color:var(--pw-on-navy2); }
+.hd-mb{ color:var(--pw-on-dk2); }
 @media (max-width:1100px){
-  .hd-dw{ background:var(--pw-navy); border-bottom:1px solid rgba(201,214,230,.18); }
-  .hd-dw-g a{ color:var(--pw-on-navy2); border-bottom-color:rgba(201,214,230,.18); }
-  .hd-dw-g a svg{ color:var(--pw-on-navy3); }
-  .hd-dw-g a:hover{ color:var(--pw-blue-300); }
+  .hd-dw{ background:var(--pw-dk); border-bottom:1px solid rgba(213,218,225,.18); }
+  .hd-dw-g a{ color:var(--pw-on-dk2); border-bottom-color:rgba(213,218,225,.18); }
+  .hd-dw-g a svg{ color:var(--pw-on-dk3); }
+  .hd-dw-g a:hover{ color:var(--pw-or-300); }
 }
 /* 아래 네비 — 머리 · 꼬리와 한 식구입니다 (`#view` 밖 · 폰 전용).
    ⚠️⚠️ 머리와 꼬리가 네이비인데 여기만 흰 띠로 두면 **폰 화면 아래에
    흰 선이 떠서** 한 사이트로 안 읽힙니다. */
 @media (max-width:900px){
-  .mnav{ background:var(--pw-navy); border-top:1px solid rgba(201,214,230,.18); }
-  .mnav a{ color:var(--pw-on-navy2); }
-  .mnav a.on{ color:var(--pw-blue-300); }
+  .mnav{ background:var(--pw-dk); border-top:1px solid rgba(213,218,225,.18); }
+  .mnav a{ color:var(--pw-on-dk2); }
+  .mnav a.on{ color:var(--pw-or-300); }
 }
 /* 푸터 — 같은 네이비 면. ⚠️ `--bg-foot` 은 창업 · 폐업 쪽이 아직
    읽는 값이라 손대지 않고 `.ft` 에서만 덮습니다. */
-.ft{ background:var(--pw-navy); color:rgba(255,255,255,.88);
+.ft{ background:var(--pw-dk); color:rgba(255,255,255,.88);
   border-top:0; }
 .ft-col a{ color:rgba(255,255,255,.88); }
-.ft-b p{ color:var(--pw-on-navy2); }
-.ft-biz, .ft-role{ color:var(--pw-on-navy2); }
-.ft-col h2, .ft-fold{ color:var(--pw-on-navy); }
-.ft-col a:hover, .ft-tail a:hover{ color:var(--pw-blue-300); }
-.ft-fold svg{ color:var(--pw-on-navy3); }
-.ft-tail a{ color:var(--pw-on-navy2); }
-.ft-end{ border-color:rgba(201,214,230,.18); }
-.ft-col a{ border-color:rgba(201,214,230,.10); }
-.ft .lg-ft b{ color:var(--pw-on-navy); }
-.ft .lg-ft i, .ft .lg span{ color:var(--pw-on-navy3); }
+.ft-b p{ color:var(--pw-on-dk2); }
+.ft-biz, .ft-role{ color:var(--pw-on-dk2); }
+.ft-col h2, .ft-fold{ color:var(--pw-on-dk); }
+.ft-col a:hover, .ft-tail a:hover{ color:var(--pw-or-300); }
+.ft-fold svg{ color:var(--pw-on-dk3); }
+.ft-tail a{ color:var(--pw-on-dk2); }
+.ft-end{ border-color:rgba(213,218,225,.18); }
+.ft-col a{ border-color:rgba(213,218,225,.10); }
+.ft .lg-ft b{ color:var(--pw-on-dk); }
+.ft .lg-ft i, .ft .lg span{ color:var(--pw-on-dk3); }
 /* 입점 단추 — 짙은 바탕 위라 **밝은 면 + 짙은 글자**입니다
    (네이비 채움은 바탕에 묻힙니다) */
-.ft .btn-nv{ background:var(--pw-white); color:var(--pw-navy);
+.ft .btn-nv{ background:var(--pw-white); color:var(--pw-dk);
   border-color:var(--pw-white); }
-.ft .btn-nv:hover{ background:var(--pw-blue-50); color:var(--pw-navy);
-  border-color:var(--pw-blue-50); }
+.ft .btn-nv:hover{ background:var(--pw-or-50); color:var(--pw-dk);
+  border-color:var(--pw-or-50); }
 /* 로고 마크 타일 — 기본 규칙이 `background:var(--navy)` 인데 그 토큰이
    2026-10-13 로 **에스프레소 브라운**이 됐습니다. 머리가 네이비가 되면서
    거기만 갈색 알약으로 남았습니다 (찍어 보고 알았습니다).
-   ⚠️ `--pw-blue`(#1673EA) 위 흰 **아이콘**은 4.49 — 아이콘 기준(3.0)은
-   넘습니다. ⚠️ **글자로는 쓰지 마세요** (AA 4.5 미달). */
-.hd-lg .hd-lg-i{ background:var(--pw-blue); color:var(--pw-white); }
+   ⚠️⚠️ **여기만 `--pw-or`(밝은 오렌지)를 그대로 씁니다.** 흰 글리프
+   대비가 2.94 라 UI 기준(3.0)에 0.06 모자라는데, WCAG 1.4.3 이
+   **로고타입은 대비 요건에서 빼** 두었고 시안의 로고가 밝은
+   오렌지 타일입니다. ⚠️ **로고 밖에서는 쓰지 마세요** — 흰 글자를
+   얹는 면은 전부 `--pw-or-600`(4.59)입니다. */
+.hd-lg .hd-lg-i{ background:var(--pw-or); color:var(--pw-white); }

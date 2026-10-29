@@ -581,7 +581,28 @@ function PageMain(){
        04 이용 방법       .pwst   다섯 걸음
        05 거래 전 고지    .pwt    검수 기준 · 개인정보 삭제 · 진행 · 분쟁
        06 하단 CTA       .pwc                                             */
-  return PwHero()+ PwWays()+ PwShop()+ PwSteps()+ PwTrust()+ PwCta();
+  /* ⚠️⚠️ **2026-10-29 오렌지 시안 §3 의 차례**입니다 — HEADER ·
+     FOOTER 는 `#view` 밖(`chrome.js`)이라 여기서는 **일곱**입니다.
+       01 히어로 + 신뢰 넷   .pwh   §3-B · §3-C
+       02 기기 선택 넷        .pwd   §3-D
+       03 주요 사업 배너 넷   .pwb   §3-E
+       04 서비스 바로가기 다섯 .pwq   §3-F
+       05 이용 방법 다섯      .pwst  (지시서 §3 목록 밖 · 아래 까닭)
+       06 거래 전 고지        .pwt
+       07 하단 CTA           .pwc
+
+     ⚠️⚠️ **05~07 을 지우지 않았습니다.** 시안이 보여 주는 것은
+     04 까지인데, 그 셋은 §1 이 보존하라고 적은 **기존 콘텐츠**
+     이고 06 은 "무료 · 당일 정산 · 최고가 보장을 적지 않는다" 를
+     말하는 자리입니다 (§3-C 가 요구한 바로 그것).
+
+     ⚠️⚠️ **`PwWays()` · `PwShop()` 이 내려왔습니다 — 지우지
+     않았습니다.** 되살리시려면 아래 한 줄입니다. 둘이 가리키던
+     주소가 어디로 갔는지 재서 확인했습니다 —
+       · PwWays  /sell · /bid  → 03 배너 넷 · 04 바로가기 다섯
+       · PwShop  /shop?m=…     → 03 배너 둘째 · 04 바로가기 · 푸터 `구매` 칸 */
+  return PwHero()+ PwDevice()+ PwBiz()+ PwQuick()+
+         PwSteps()+ PwTrust()+ PwCta();
 }
 
 
@@ -1822,32 +1843,67 @@ var PW_CHIP_IC = {
   bid:  '<path d="m13 4 7 7M9.5 7.5 16.5 14.5M5 21h7M8 18 3.5 13.5l9-9L17 9l-9 9Z"/>',
   ck:   '<path d="M12 3 4 6v6c0 4.5 3.2 8.3 8 9 4.8-.7 8-4.5 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>'
 };
+/* ─── 01 메인 히어로 (2026-10-29 시안 §3-B) ──────────────────────
+   ⚠️⚠️ **시안의 제품 사진을 잘라서 쓰지 않았습니다** (§3-B 가 직접
+   "첨부 이미지에서 제품 부분만 잘라서 사용하는 방식은 지양한다").
+   권한이 확인된 고해상도 파일이 없어서, 지금은 **여기서 그린 SVG**
+   입니다 — 자리(`pw-hero` · `pw-hero-m`)를 열어 두었고 파일을
+   넣으시면 코드를 한 줄도 안 고치고 사진으로 바뀝니다.
+
+   ⚠️ 손글씨 줄은 **HTML 글자**입니다. 사진 안에 합성하면 폭마다
+   대비가 달라지고 읽어 주는 프로그램이 못 읽습니다. */
 function PwHero(){
-  var B = window.amBrand ? amBrand() : "";
-  return '<section class="pwh"><div class="w pwh-in">'+
-    '<div class="pwh-tx">'+
-      '<span class="pwh-k">중고폰 통합 거래 플랫폼</span>'+
-      '<h1>내 폰의<br><em>가치를 가장 높게.</em></h1>'+
-      '<p class="pwh-sub">직접 매입부터 전국 전문업체 최고가 견적 비교까지.<br>'+
-        '중고폰 거래의 새로운 기준, '+ esc(B) +'.</p>'+
-      '<ul class="pwh-ch">'+ PW_HERO_CHIPS.map(function(c){
-        return '<li><i><svg width="20" height="20" viewBox="0 0 24 24" fill="none" '+
-          'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" '+
-          'stroke-linejoin="round" aria-hidden="true">'+ PW_CHIP_IC[c[0]] +'</svg></i>'+
-          '<span><b>'+ esc(c[1]) +'</b><span>'+ esc(c[2]) +'</span></span></li>';
-      }).join("") +'</ul>'+
-      '<div class="pwh-go">'+
-        '<a class="btn btn-pw" href="/sell">내 폰 팔기 '+ pwArrow() +'</a>'+
-        /* ⚠️ 히어로가 **밝은 바탕**이 되면서 유령 단추(.btn-pw-gh · 흰 글자)는
-           거기서 흰 바탕에 흰 글자가 됩니다 — 테두리 단추입니다 */
-        '<a class="btn btn-pw-o" href="/shop">중고폰 구매하기</a>'+
+  return '<section class="pwh">'+
+    '<div class="w pwh-in">'+
+      '<div class="pwh-tx">'+
+        '<p class="pwh-hand">쓰던 폰이 새로운 기회가 됩니다.</p>'+
+        '<h1>지금, 당신의 폰이<br><em>새로운 가치를 만납니다.</em></h1>'+
+        '<p class="pwh-sub">가장 쉽고, 가장 높은 가격으로<br class="br-m"> '+
+          '폰웨이와 함께하세요.</p>'+
+        '<div class="pwh-go">'+
+          '<a class="btn btn-pw" href="/sell">내 폰 팔기 '+ pwArrow() +'</a>'+
+          /* ⚠️ 히어로가 **밝은 크림 바탕**이라 유령 단추(흰 글자)는
+             흰 바탕에 흰 글자가 됩니다 — 테두리 단추입니다 */
+          '<a class="btn btn-pw-o" href="/shop">중고폰 구매하기</a>'+
+        '</div>'+
       '</div>'+
+      '<div class="pwh-art">'+ pwHeroArt() +'</div>'+
     '</div>'+
-    '<div class="pwh-art">'+
-      '<p class="pwh-hand">좋은 폰이,<br>새로운 가치를 만듭니다.</p>'+ pwHeroArt() +
-    '</div>'+
-  '</div></section>';
+    pwHeroTrust()+
+  '</section>';
 }
+
+/* 신뢰 요소 넷 (시안 §3-C)
+   ⚠️⚠️ **"무료 택배" 를 그대로 쓰지 않았습니다.** §3-C 가 직접
+   "실제로 제공하지 않는 혜택은 확정된 서비스처럼 표시하지 않는다"
+   고 적었고, 지금 택배사와 맺은 계약이 없습니다 — 무료라고 적는
+   순간 지킬 수 없는 약속이 됩니다 (절대 규칙 5 · 이 저장소가
+   "무료 · 당일 정산 · 최고가 보장" 을 안 쓰기로 못박아 둔 자리).
+   ⚠️ 택배비를 저희가 내기로 **정해지면** 그때 "무료 택배" 로
+   바꾸시면 됩니다 — 아래 한 줄입니다. */
+var PW_TRUST4 = [
+  ["box",   "택배 수거",        "전국 어디서나"],
+  ["shield","안전한 거래",      "개인정보 완전 삭제"],
+  ["bars",  "최고가 경쟁입찰",   "여러 업체 견적 비교"],
+  ["crown", "직접 매입 · 판매",  "검수된 중고폰 쇼핑몰"]
+];
+var PW_T4_IC = {
+  box:'<path d="M3.5 7.5h13l2.5 4h1.5v5h-2"/><path d="M3.5 7.5v9h1.5"/>'+
+      '<circle cx="7" cy="17.5" r="2"/><circle cx="17" cy="17.5" r="2"/><path d="M9 17.5h6"/>',
+  shield:'<path d="M12 3.2 5 6v5.6c0 4 2.9 7.4 7 8.2 4.1-.8 7-4.2 7-8.2V6l-7-2.8Z"/>'+
+      '<path d="m9.2 12 2 2 3.6-4"/>',
+  bars:'<path d="M5 19.5V13M10 19.5V9M15 19.5v-4M20 19.5V5"/>',
+  crown:'<path d="M4 17.5h16"/><path d="m4 14.5 1.6-8 4.2 4L12 5.5l2.2 5 4.2-4 1.6 8H4Z"/>'
+};
+function pwHeroTrust(){
+  return '<div class="pwh-tr"><ul class="w pwh-tr-g">'+ PW_TRUST4.map(function(t){
+    return '<li><i><svg width="26" height="26" viewBox="0 0 24 24" fill="none" '+
+      'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" '+
+      'stroke-linejoin="round" aria-hidden="true">'+ PW_T4_IC[t[0]] +'</svg></i>'+
+      '<span><b>'+ esc(t[1]) +'</b><span>'+ esc(t[2]) +'</span></span></li>';
+  }).join("") +'</ul></div>';
+}
+
 /* ⚠️ 크기는 전부 CSS 가 정합니다 — 인라인 `style="max-width"` 를 쓰면
    미디어쿼리를 이겨서 **폰에서 안 줄어듭니다** (시안에서 겪었습니다:
    844px 화면을 850px 짜리 그림이 통째로 먹었습니다). */
@@ -1872,54 +1928,54 @@ function pwHeroArt(){
     '<defs>'+
       /* 기기 테두리 — 티타늄 느낌 */
       '<linearGradient id="pwa" x1=".1" y1="0" x2=".9" y2="1">'+
-        '<stop offset="0" stop-color="#8FA9C9"/><stop offset=".45" stop-color="#48648A"/>'+
-        '<stop offset="1" stop-color="#2A3F5C"/></linearGradient>'+
+        '<stop offset="0" stop-color="#C9BBAE"/><stop offset=".45" stop-color="#4E5560"/>'+
+        '<stop offset="1" stop-color="#2E3740"/></linearGradient>'+
       /* 화면 */
       '<linearGradient id="pwsc" x1="0" y1="0" x2=".6" y2="1">'+
-        '<stop offset="0" stop-color="#16263E"/><stop offset="1" stop-color="#0A1322"/></linearGradient>'+
+        '<stop offset="0" stop-color="#1B242E"/><stop offset="1" stop-color="#0E141B"/></linearGradient>'+
       /* 뒤에 선 기기 */
-      '<linearGradient id="pwb" x1="0" y1="0" x2="1" y2="1">'+
-        '<stop offset="0" stop-color="#2E4A72"/><stop offset="1" stop-color="#16263E"/></linearGradient>'+
+      '<linearGradient id="pwhg" x1="0" y1="0" x2="1" y2="1">'+
+        '<stop offset="0" stop-color="#353F4A"/><stop offset="1" stop-color="#1B242E"/></linearGradient>'+
       '<linearGradient id="pwcard" x1="0" y1="0" x2="0" y2="1">'+
-        '<stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EAF1FA"/></linearGradient>'+
+        '<stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FBEFE4"/></linearGradient>'+
       '<radialGradient id="pwglow" cx=".5" cy=".5" r=".5">'+
-        '<stop offset="0" stop-color="#2E6FD0" stop-opacity=".55"/>'+
-        '<stop offset="1" stop-color="#2E6FD0" stop-opacity="0"/></radialGradient>'+
+        '<stop offset="0" stop-color="#E07A2E" stop-opacity=".55"/>'+
+        '<stop offset="1" stop-color="#E07A2E" stop-opacity="0"/></radialGradient>'+
     '</defs>'+
     /* 바탕 빛 · 그림자 */
     '<circle cx="224" cy="186" r="172" fill="url(#pwglow)"/>'+
-    '<ellipse cx="224" cy="358" rx="150" ry="17" fill="#04101F" opacity=".45"/>'+
+    '<ellipse cx="224" cy="358" rx="150" ry="17" fill="#080D13" opacity=".45"/>'+
     /* ① 뒤에 비껴 선 기기 — 거래라서 한 대가 아닙니다 */
     '<g transform="rotate(-11 300 200)" opacity=".92">'+
       '<rect x="258" y="86" width="132" height="226" rx="26" fill="url(#pwa)"/>'+
-      '<rect x="266" y="94" width="116" height="210" rx="20" fill="url(#pwb)"/>'+
-      '<rect x="302" y="100" width="36" height="7" rx="3.5" fill="#2B3F5C"/>'+
-      '<rect x="282" y="130" width="84" height="6" rx="3" fill="#33517A" opacity=".8"/>'+
-      '<rect x="282" y="146" width="58" height="6" rx="3" fill="#2A4366" opacity=".8"/>'+
-      '<rect x="282" y="176" width="84" height="46" rx="8" fill="#1E3353" opacity=".75"/>'+
+      '<rect x="266" y="94" width="116" height="210" rx="20" fill="url(#pwhg)"/>'+
+      '<rect x="302" y="100" width="36" height="7" rx="3.5" fill="#2F3842"/>'+
+      '<rect x="282" y="130" width="84" height="6" rx="3" fill="#3A444F" opacity=".8"/>'+
+      '<rect x="282" y="146" width="58" height="6" rx="3" fill="#303A45" opacity=".8"/>'+
+      '<rect x="282" y="176" width="84" height="46" rx="8" fill="#242E39" opacity=".75"/>'+
     '</g>'+
     /* ② 가운데 기기 — 주인공 */
     '<g>'+
       '<rect x="128" y="60" width="168" height="282" rx="30" fill="url(#pwa)"/>'+
       '<rect x="137" y="69" width="150" height="264" rx="23" fill="url(#pwsc)"/>'+
-      '<rect x="188" y="76" width="48" height="9" rx="4.5" fill="#24374F"/>'+
+      '<rect x="188" y="76" width="48" height="9" rx="4.5" fill="#282F38"/>'+
       /* 화면 안 — 기기 카드 한 장 */
-      '<rect x="152" y="100" width="120" height="58" rx="11" fill="#1E3353"/>'+
-      '<rect x="162" y="112" width="26" height="34" rx="5" fill="#9FBCE2"/>'+
-      '<rect x="196" y="116" width="62" height="7" rx="3.5" fill="#B9CFEC"/>'+
-      '<rect x="196" y="130" width="40" height="6" rx="3" fill="#6E8FB8"/>'+
+      '<rect x="152" y="100" width="120" height="58" rx="11" fill="#242E39"/>'+
+      '<rect x="162" y="112" width="26" height="34" rx="5" fill="#EDC09A"/>'+
+      '<rect x="196" y="116" width="62" height="7" rx="3.5" fill="#F3CDAA"/>'+
+      '<rect x="196" y="130" width="40" height="6" rx="3" fill="#9A8B7E"/>'+
       /* 값 비교 막대 셋 — ⚠️ 숫자를 적지 않습니다 */
-      '<rect x="152" y="176" width="120" height="7" rx="3.5" fill="#24395A"/>'+
-      '<rect x="152" y="176" width="52" height="7" rx="3.5" fill="#3E7FD6"/>'+
-      '<rect x="152" y="196" width="120" height="7" rx="3.5" fill="#24395A"/>'+
-      '<rect x="152" y="196" width="86" height="7" rx="3.5" fill="#1673EA"/>'+
-      '<rect x="152" y="216" width="120" height="7" rx="3.5" fill="#24395A"/>'+
-      '<rect x="152" y="216" width="68" height="7" rx="3.5" fill="#3E7FD6"/>'+
+      '<rect x="152" y="176" width="120" height="7" rx="3.5" fill="#2E3A47"/>'+
+      '<rect x="152" y="176" width="52" height="7" rx="3.5" fill="#F8A066"/>'+
+      '<rect x="152" y="196" width="120" height="7" rx="3.5" fill="#2E3A47"/>'+
+      '<rect x="152" y="196" width="86" height="7" rx="3.5" fill="#F37021"/>'+
+      '<rect x="152" y="216" width="120" height="7" rx="3.5" fill="#2E3A47"/>'+
+      '<rect x="152" y="216" width="68" height="7" rx="3.5" fill="#F8A066"/>'+
       /* 정산 단추 */
-      '<rect x="152" y="246" width="120" height="30" rx="15" fill="#1673EA"/>'+
-      '<rect x="182" y="258" width="60" height="7" rx="3.5" fill="#CFE2FF"/>'+
+      '<rect x="152" y="246" width="120" height="30" rx="15" fill="#F37021"/>'+
+      '<rect x="182" y="258" width="60" height="7" rx="3.5" fill="#FFE0C4"/>'+
       /* 홈 표시 */
-      '<rect x="186" y="314" width="52" height="6" rx="3" fill="#2B4365"/>'+
+      '<rect x="186" y="314" width="52" height="6" rx="3" fill="#313B46"/>'+
     '</g>'+
     /* ③ 검수 완료 카드 — 떠 있습니다 */
     '<g transform="translate(246 236)">'+
@@ -1928,23 +1984,23 @@ function pwHeroArt(){
       '<path d="M23.5 31.5l5.5 5.5 10.5-11.5" fill="none" stroke="#12806C" '+
         'stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'+
       '<rect x="58" y="20" width="70" height="8" rx="4" fill="#12806C"/>'+
-      '<rect x="58" y="36" width="48" height="7" rx="3.5" fill="#9BB0C8"/>'+
+      '<rect x="58" y="36" width="48" height="7" rx="3.5" fill="#B9BFC7"/>'+
     '</g>'+
     /* ④ 등급 칩 — 왼쪽 위 */
     '<g transform="translate(44 108)">'+
       '<rect x="0" y="0" width="104" height="46" rx="13" fill="url(#pwcard)"/>'+
-      '<circle cx="26" cy="23" r="14" fill="#102C4A"/>'+
+      '<circle cx="26" cy="23" r="14" fill="#18212B"/>'+
       '<path d="M26 14.5l2.9 5.9 6.5 1-4.7 4.6 1.1 6.4-5.8-3-5.8 3 1.1-6.4-4.7-4.6 6.5-1z" fill="#E7B65C"/>'+
-      '<rect x="50" y="15" width="40" height="7" rx="3.5" fill="#1D3657"/>'+
-      '<rect x="50" y="28" width="26" height="6" rx="3" fill="#92A7C0"/>'+
+      '<rect x="50" y="15" width="40" height="7" rx="3.5" fill="#222B35"/>'+
+      '<rect x="50" y="28" width="26" height="6" rx="3" fill="#B2B8C0"/>'+
     '</g>'+
     /* ⑤ 배터리 게이지 칩 — 오른쪽 위 */
     '<g transform="translate(330 48)">'+
       '<rect x="0" y="0" width="78" height="78" rx="20" fill="url(#pwcard)"/>'+
-      '<circle cx="39" cy="33" r="19" fill="none" stroke="#DCE6F2" stroke-width="7"/>'+
+      '<circle cx="39" cy="33" r="19" fill="none" stroke="#F2E6DA" stroke-width="7"/>'+
       '<path d="M39 14a19 19 0 0 1 14.8 30.9" fill="none" stroke="#16A085" '+
         'stroke-width="7" stroke-linecap="round"/>'+
-      '<rect x="22" y="60" width="34" height="7" rx="3.5" fill="#9BB0C8"/>'+
+      '<rect x="22" y="60" width="34" height="7" rx="3.5" fill="#B9BFC7"/>'+
     '</g>'+
   '</svg>';
 }
@@ -2054,6 +2110,111 @@ function PwShop(){
           '배터리 상태 · 검수 결과가 그대로 보입니다.<br>'+
           '⚠️ 없는 상품을 미리 만들어 두지 않습니다.</p>'+
       '</div>')+
+  '</div></section>';
+}
+
+/* ─── 02 기기 선택 (2026-10-29 시안 §3-D) ────────────────────────
+   ⚠️⚠️ **`/sell` 의 카드 넷과 같은 데이터입니다** (`PW_SELL_CARDS`).
+   여기서 따로 적으면 기기를 하나 늘릴 때 한쪽만 바뀝니다 — 이
+   저장소가 `amCatTo`/`catTo` · 랜딩 아이콘 · 도구 아이콘 표로 세 번
+   겪은 자리입니다. 다른 것은 **링크냐 단추냐** 하나뿐입니다 (여기는
+   메인이라 `/sell` 로 보내고, 거기서는 그 자리에서 고릅니다).
+
+   ⚠️⚠️ **제조사 로고를 그리지 않았습니다.** 애플 마크 · 삼성
+   워드마크는 남의 등록상표이고 사장님이 "AI 가 임의로 재현한
+   부정확한 로고는 쓰지 말 것" 이라고 직접 적으셨습니다 — 권한을
+   확인한 SVG 가 생기면 `AM_MAKER_LOGO` 에 주소 한 줄입니다. */
+function pwDevLink(c){
+  var qs = c.more ? "?more=1"
+         : "?maker="+ encodeURIComponent(c.maker) +"&kind="+ encodeURIComponent(c.kind);
+  var lg = c.lg && (window.AM_MAKER_LOGO || {})[c.lg];
+  return '<li><a class="dvc dvc-a" href="/sell'+ qs +'">'+
+    '<span class="dvc-ph">'+
+      (typeof hasPhoto === "function" && hasPhoto(c.ph)
+        ? photoBox(c.ph, "dvc-im")
+        : iconArt(c.ia, 96))+
+    '</span>'+
+    '<span class="dvc-tx">'+
+      (lg ? '<img class="dvc-lg" src="'+ esc(lg) +'" alt="" aria-hidden="true">' : '')+
+      '<b class="dvc-nm">'+ esc(c.nm) +'</b>'+
+      '<span class="dvc-s">'+ esc(c.sub) +'</span>'+
+    '</span>'+
+    '<span class="dvc-go" aria-hidden="true">'+ pwArrow() +'</span>'+
+  '</a></li>';
+}
+function PwDevice(){
+  var C = window.PW_SELL_CARDS || [];
+  if(!C.length) return "";
+  return '<section class="pwd"><div class="w pwd-in">'+
+    '<div class="pwd-hd">'+
+      '<span class="pw-ey">SELL YOUR DEVICE</span>'+
+      '<h2>어떤 기기를<br>판매하시나요?</h2>'+
+      '<p>판매할 기기 종류를 선택해 주세요.</p>'+
+    '</div>'+
+    '<ul class="pwd-g">'+ C.map(pwDevLink).join("") +'</ul>'+
+  '</div></section>';
+}
+
+/* ─── 03 주요 사업 배너 넷 (시안 §3-E) ───────────────────────────
+   ⚠️⚠️ **넷 다 실제로 열리는 화면입니다** (§7 — "존재하지 않는
+   페이지로 이동하거나 작동하지 않는 버튼을 만들지 않는다").
+   ⚠️⚠️ **기업 · 수출은 거래 절차가 아직 없습니다** — §3-E 가 적은
+   대로 **문의 접수형**이고, 카드에 그 준비 상태를 그대로 적습니다
+   (절대 규칙 5). 지어낸 거래량 · 수출국 · 실적을 쓰지 않습니다. */
+var PW_BIZ = [
+  { k:"1", nm:"지금 바로<br>내 폰 팔기", to:"/sell", cta:"내 폰 팔기",
+    d:"복잡한 절차 없이, 간편하게 최고가 견적을 받아보세요.", ph:"biz-sell", ia:"mobile" },
+  { k:"2", nm:"믿을 수 있는<br>중고폰 구매", to:"/shop", cta:"중고폰 보기",
+    d:"검수를 마친 중고폰을 합리적인 가격에 만나보세요.", ph:"biz-shop", ia:"bag" },
+  { k:"3", nm:"업체 경쟁입찰", to:"/bid", cta:"경쟁입찰 알아보기",
+    d:"여러 업체의 견적을 한번에 비교하고 가장 높은 값에 판매하세요.",
+    ph:"biz-bid", ia:"chart" },
+  { k:"4", nm:"기업 · 수출 거래", to:"/biz", cta:"거래 문의하기",
+    d:"대량 매입과 해외 수출을 상담으로 진행합니다.",
+    note:"지금은 문의를 받는 단계입니다", ph:"biz-export", ia:"handover" }
+];
+function PwBiz(){
+  return '<section class="pwbz"><div class="w">'+
+    '<ul class="pwbz-g">'+ PW_BIZ.map(function(b){
+      return '<li><a class="pwbz-c pwbz-v'+ b.k +'" href="'+ esc(b.to) +'">'+
+        '<span class="pwbz-tx">'+
+          '<b class="pwbz-nm">'+ b.nm +'</b>'+
+          '<span class="pwbz-d">'+ esc(b.d) +'</span>'+
+          (b.note ? '<span class="pwbz-note">'+ esc(b.note) +'</span>' : '')+
+          '<span class="pwbz-go">'+ esc(b.cta) +' '+ pwArrow() +'</span>'+
+        '</span>'+
+        '<span class="pwbz-ph">'+
+          (typeof hasPhoto === "function" && hasPhoto(b.ph)
+            ? photoBox(b.ph, "pwbz-im")
+            : '<span class="pwbz-ic">'+ iconArt(b.ia, 76) +'</span>')+
+        '</span>'+
+      '</a></li>';
+    }).join("") +'</ul>'+
+  '</div></section>';
+}
+
+/* ─── 04 주요 서비스 바로가기 다섯 (시안 §3-F) ──────────────────
+   ⚠️ 다섯 전부 **지금 열리는 화면**입니다. 시안의 `고객센터` 는
+   전화도 채팅도 없고 사업자 전화번호 칸조차 비어 있어서, 실제로
+   답이 있는 `/faq` 로 보내고 아래 줄에 **무엇이 있는지**를 적습니다. */
+var PW_QUICK = [
+  ["/sell",  "mobile",   "내 폰 팔기",     "간편 신청"],
+  ["/shop",  "bag",      "중고폰 구매",    "검수된 제품"],
+  ["/bid",   "chart",    "경쟁입찰",       "최고가 견적"],
+  ["/biz",   "handover", "수출 · 기업거래", "대량 거래"],
+  ["/faq",   "chat",     "고객센터",       "자주 묻는 질문"]
+];
+function PwQuick(){
+  return '<section class="pwq"><div class="w">'+
+    '<div class="pw-hd-l"><div><h2>주요 서비스 바로가기</h2></div>'+
+      '<a class="pw-more" href="/guide">이용 안내 '+ pwArrow() +'</a></div>'+
+    '<ul class="pwq-g">'+ PW_QUICK.map(function(q){
+      return '<li><a class="pwq-c" href="'+ esc(q[0]) +'">'+
+        '<i>'+ (typeof iconArt === "function" && hasIconArt(q[1])
+                 ? iconArt(q[1], 44)
+                 : icon(q[1], 26)) +'</i>'+
+        '<b>'+ esc(q[2]) +'</b><span>'+ esc(q[3]) +'</span></a></li>';
+    }).join("") +'</ul>'+
   '</div></section>';
 }
 

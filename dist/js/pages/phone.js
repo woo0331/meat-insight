@@ -320,13 +320,22 @@ function shopChips(f){
   '</div>';
 }
 
+function shopIcon(md){
+  var kd = md && md.kind, mk = md && md.maker;
+  if(kd === "tablet")            return "dev-tablet";
+  if(kd === "watch" || kd === "buds") return "dev-etc";
+  if(kd === "phone" && mk === "apple")   return "dev-iphone";
+  if(kd === "phone" && mk === "samsung") return "dev-galaxy";
+  return "mobile";
+}
+
 function shopCard(p, sample){
   var md = (typeof amModel === "function") ? amModel(p.model) : null;
   var g  = (typeof amGrade === "function") ? amGrade(p.grade) : null;
   return '<a class="shp-c'+(sample?" ex":"")+'" href="/d/'+esc(p.id)+'">'+
     '<span class="shp-ph">'+
       (sample ? '<span class="shp-ex">예시</span>' : '')+
-      iconArt("mobile", 84)+'</span>'+
+      iconArt(shopIcon(md), 84)+'</span>'+
     '<span class="shp-tx">'+
       '<b>'+esc(amShopName(p))+'</b>'+
       '<span class="shp-m">'+
@@ -406,7 +415,7 @@ function PageProduct(one){
       '<div class="shp-d-g">'+
         '<div class="shp-d-ph">'+
           (sample ? '<span class="shp-ex">예시</span>' : '')+
-          iconArt("mobile", 150)+
+          iconArt(shopIcon(md), 150)+
 
         '</div>'+
         '<div class="shp-d-tx">'+
@@ -482,8 +491,10 @@ function PageBid(){
         '<a class="btn btn-pw-o" href="/join">매입업체로 참여하기</a></div>'+
 
       '<p class="sec-note">'+icon("info",15)+
-        '이미 참여 중인 매입업체이시면 <a href="/my">내 기록</a>에서 '+
-        '배정받은 기기에 입찰을 내실 수 있습니다.</p>'+
+        '이미 참여 중인 매입업체이시면 내 기록에서 배정받은 기기에 '+
+        '입찰을 내실 수 있습니다.</p>'+
+      '<div class="row-cta"><a class="btn btn-o" href="/my">'+
+        '내 기록 열기'+icon("arrow",16)+'</a></div>'+
     '</div></section>';
 }
 

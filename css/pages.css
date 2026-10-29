@@ -7145,7 +7145,15 @@ html.ivh #view .pwh h1{ color:var(--pw-navy); }
    ════════════════════════════════════════════════════════════════════ */
 #view.pw-skin{
   /* 행동색 다섯 — 아이콘 타일 · 칩 · 단추 · 머리말 · 포커스가 따라옵니다 */
-  --blue:      var(--pw-blue);
+  /* ⚠️⚠️ **`--pw-blue`(#1673EA)를 여기 넣지 마세요.** 이 토큰은 채운
+     단추의 **면**이자 문장 속 **링크 글자**로 둘 다 쓰입니다 —
+     흰 글자 4.49 · 링크 4.19 로 **AA(4.5) 미달**이었습니다 (전수
+     점검이 /join 에서 10건으로 잡았습니다). 짙은 쪽(#0E5FD0)이면
+     흰 글자 5.89 · 링크 5.89 입니다.
+     ⚠️ 밝은 브랜드 블루가 필요한 자리(고른 카드 테두리 · 포커스
+     테두리)는 `--pw-blue` 를 **직접** 부릅니다 — 거기는 글자가
+     안 올라앉는 선이라 4.49 로 충분합니다. */
+  --blue:      var(--pw-blue-600);
   --blue-600:  var(--pw-blue-600);
   --blue-400:  var(--pw-blue-300);
   --blue-50:   var(--pw-blue-50);
@@ -7235,11 +7243,16 @@ html.ivh #view .pwh h1{ color:var(--pw-navy); }
 /* ⚠️⚠️ **빈 액자를 옅은 틴트로 깔지 않습니다** — 사진이 없는 동안
    그게 "준비 중" 으로 읽힙니다. 네이비 면에 큰 아이콘을 얹어 그
    자체로 완성된 자리로 둡니다 (매물 세 카드에서 겪은 자리). */
+/* ⚠️⚠️ **밝은 면입니다.** 짙은 네이비 4:3 액자가 한 줄에 서넛씩
+   깔리면서 `/shop` 본문의 어두운 면이 **19.2%** 였습니다 (한도 15% ·
+   전수 점검이 잡았습니다). 상세 액자(`.shp-d-ph`)와 같은 까닭입니다 —
+   ⚠️ 빈 액자처럼 읽히지 않게 테두리를 주고 아이콘을 크게 둡니다. */
 .shp-ph{ position:relative; display:flex; align-items:center;
   justify-content:center; aspect-ratio:4/3;
-  background:linear-gradient(145deg, #16355A 0%, #0D2440 100%);
-  background-color:#13304F; }
-.shp-ph .ia{ --ia-1:#AFC6E4; --ia-2:#5C7CA6; }
+  background:linear-gradient(160deg, #EDF3FB 0%, #DCE7F5 100%);
+  background-color:#E6EEF8;
+  border-bottom:1px solid var(--pw-line, #DDE4EE); }
+.shp-ph .ia{ --ia-1:#2E5584; --ia-2:#9FB8D8; }
 .shp-ex{ position:absolute; top:9px; left:9px; z-index:1;
   padding:3px 9px; border-radius:999px; font-size:13px; font-weight:800;
   letter-spacing:-.01em; background:#FFE8B5; color:#6B4A18; }

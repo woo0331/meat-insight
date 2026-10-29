@@ -5055,7 +5055,7 @@ html.ivh #view .pwh h1{ color:var(--pw-navy); }
 
 #view.pw-skin{
 
-  --blue:      var(--pw-blue);
+  --blue:      var(--pw-blue-600);
   --blue-600:  var(--pw-blue-600);
   --blue-400:  var(--pw-blue-300);
   --blue-50:   var(--pw-blue-50);
@@ -5130,9 +5130,10 @@ html.ivh #view .pwh h1{ color:var(--pw-navy); }
 
 .shp-ph{ position:relative; display:flex; align-items:center;
   justify-content:center; aspect-ratio:4/3;
-  background:linear-gradient(145deg, #16355A 0%, #0D2440 100%);
-  background-color:#13304F; }
-.shp-ph .ia{ --ia-1:#AFC6E4; --ia-2:#5C7CA6; }
+  background:linear-gradient(160deg, #EDF3FB 0%, #DCE7F5 100%);
+  background-color:#E6EEF8;
+  border-bottom:1px solid var(--pw-line, #DDE4EE); }
+.shp-ph .ia{ --ia-1:#2E5584; --ia-2:#9FB8D8; }
 .shp-ex{ position:absolute; top:9px; left:9px; z-index:1;
   padding:3px 9px; border-radius:999px; font-size:13px; font-weight:800;
   letter-spacing:-.01em; background:#FFE8B5; color:#6B4A18; }

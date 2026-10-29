@@ -401,13 +401,28 @@ function shopChips(f){
 
 /* 카드 — ⚠️ 예시면 **딱지가 붙습니다.** 붙이지 않으면 지어낸 값이
    실제 상품으로 읽힙니다 (절대 규칙 1). */
+/* 상품 아이콘 — ⚠️⚠️ **기종에 맞는 그림이라야 합니다.** 전에는 넷 다
+   `mobile`(스마트폰)이라, 아이패드와 애플워치 카드에도 **휴대폰
+   그림**이 붙어 있었습니다 (찍어 보고 알았습니다). 사진이 아니라
+   아이콘이어도 그건 그 상품에 대한 거짓말입니다.
+   ⚠️ 모르는 종류 · 모르는 제조사는 `mobile` 이 받습니다 — 빈 칸을
+   만들지 않습니다 (절대 규칙 2). */
+function shopIcon(md){
+  var kd = md && md.kind, mk = md && md.maker;
+  if(kd === "tablet")            return "dev-tablet";
+  if(kd === "watch" || kd === "buds") return "dev-etc";
+  if(kd === "phone" && mk === "apple")   return "dev-iphone";
+  if(kd === "phone" && mk === "samsung") return "dev-galaxy";
+  return "mobile";
+}
+
 function shopCard(p, sample){
   var md = (typeof amModel === "function") ? amModel(p.model) : null;
   var g  = (typeof amGrade === "function") ? amGrade(p.grade) : null;
   return '<a class="shp-c'+(sample?" ex":"")+'" href="/d/'+esc(p.id)+'">'+
     '<span class="shp-ph">'+
       (sample ? '<span class="shp-ex">예시</span>' : '')+
-      iconArt("mobile", 84)+'</span>'+
+      iconArt(shopIcon(md), 84)+'</span>'+
     '<span class="shp-tx">'+
       '<b>'+esc(amShopName(p))+'</b>'+
       '<span class="shp-m">'+
@@ -494,7 +509,7 @@ function PageProduct(one){
       '<div class="shp-d-g">'+
         '<div class="shp-d-ph">'+
           (sample ? '<span class="shp-ex">예시</span>' : '')+
-          iconArt("mobile", 150)+
+          iconArt(shopIcon(md), 150)+
           /* ⚠️ 사진이 없으면 **액자째 안 그립니다** — 옅은 틴트 상자를
              깔면 그게 빈 액자이고 "준비 중" 으로 읽힙니다. 지금은 큰
              아이콘 면이라 그 자체로 완성된 자리입니다. */
@@ -582,9 +597,14 @@ function PageBid(){
       /* ⚠️ 이미 참여 중인 업체가 **입찰을 내는 자리**로 가는 길입니다.
          `/my` 는 로그인이 꺼져 있으면 구간째 안 그리므로 가짜 단추가
          아니라 **한 줄 안내**로 둡니다 — 켜지면 거기서 바로 냅니다. */
+      /* ⚠️⚠️ **문장 한가운데 링크를 박지 마세요** — 높이가 20px 이라
+         누르기 어렵습니다 (전수 점검이 "40px 미만 누름" 으로 잡았습니다).
+         문단 끝에 **단추로** 내놓습니다. */
       '<p class="sec-note">'+icon("info",15)+
-        '이미 참여 중인 매입업체이시면 <a href="/my">내 기록</a>에서 '+
-        '배정받은 기기에 입찰을 내실 수 있습니다.</p>'+
+        '이미 참여 중인 매입업체이시면 내 기록에서 배정받은 기기에 '+
+        '입찰을 내실 수 있습니다.</p>'+
+      '<div class="row-cta"><a class="btn btn-o" href="/my">'+
+        '내 기록 열기'+icon("arrow",16)+'</a></div>'+
     '</div></section>';
 }
 

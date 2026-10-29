@@ -66,6 +66,11 @@ function loadApp(){
                    ⚠️ fee 는 deal 의 상태를 가리키지 않고 거꾸로도
                    아니어서 차례는 상관없습니다 */
                 "js/data/deal.js", "js/data/fee.js",
+                /* ⚠️ stock 은 직접 매입 재고의 상태 · 비용 종류입니다 —
+                   deal(중개 장부)과 섞지 않은 **다른 장부**라 차례는
+                   상관없지만, SQL 의 enum 과 맞춰 보는 쪽이 있어
+                   여기 둡니다 */
+                "js/data/stock.js",
                 /* ⚠️ offers 는 catalog 의 분류 · 하위 key 와 fee 의
                    수익모델 key 를 그대로 쓰므로 **그 뒤**입니다 */
                 "js/data/offers.js",

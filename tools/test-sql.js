@@ -180,7 +180,8 @@ try{
                      아무 업체 계정이나 남의 건을 수락 · 상담 · 견적으로
                      밀 수 있었고, 고객 계정도 남의 접수를 취소할 수
                      있었습니다. §7A-7 을 쓰다 찾았습니다. */
-                  "db/migrations/0019_request_scope.sql"];
+                  "db/migrations/0019_request_scope.sql",
+                  "db/migrations/0020_device.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ /* ⚠️⚠️ NOTICE 가 먼저 쏟아져서 앞 세 줄만 보면 **진짜
@@ -2732,7 +2733,111 @@ try{
     psql("delete from provider where id='pv-c4'");
   }
 
-  console.log("\n── 한 번에 붙여 넣는 파일이 실제로 도는가 (db/apply-from-0008.sql)");
+  /* ══ 0020 · 직접 매입 재고 ═══════════════════════════════════════
+   ⚠️⚠️ **SQL 만 읽어서는 멀쩡해 보이는 것**이 이 저장소에서 여러 번
+   났습니다 (gen_random_bytes · 부분 인덱스 · 칸 순서) — 실제로
+   돌려 봅니다. */
+console.log("\n── 0020 직접 매입 재고 (검수 · 원가 · 수익)");
+{
+  const A = '55555555-5555-5555-5555-555555555555';   /* 관리자 */
+  const S = '44444444-4444-4444-4444-444444444444';   /* 직원   */
+  const C = '11111111-1111-1111-1111-111111111111';   /* 고객   */
+  const P = '33333333-3333-3333-3333-333333333333';   /* 업체   */
+  /* ⚠️ `become()` 은 **authenticated 롤로 들어간 뒤**라야 RLS 가
+     제대로 겁니다 — 그냥 부르면 superuser 로 돌아 전부 통과합니다. */
+  const as = u => "set role authenticated; select become('" + u + "'); ";
+  const no = sql => denied(sql).no;
+  const mk = (who, req, model) =>
+    psql(as(who) + `select id from make_device(${req}, '${model}')`);
+  /* 만들기 — ⚠️ 고객은 못 만듭니다 */
+  ok("고객은 기기를 만들 수 없다",
+     /권한이 없습니다/.test(((sql)=>denied(sql).why||'')(as(C) + `select make_device(null::uuid,'iphone-15')`)));
+  const d1 = mk(S, "null::uuid", "iphone-15-pro");
+  ok("직원이 기기를 만든다", /^[0-9a-f-]{36}$/.test(d1), d1);
+  ok("만든 것이 감사 기록에 남는다",
+     psql(`select count(*) from audit_log where obj='device' and obj_id='${d1}' and to_state='waiting'`) === "1");
+
+  /* ⚠️ 길 표에 없는 길 — 입고를 건너뛰고 바로 판매 */
+  ok("갈 수 없는 길은 거절한다",
+     /갈 수 없는 길입니다/.test(((sql)=>denied(sql).why||'')(as(S) + `select move_device('${d1}','sold','{"soldPrice":1}')`)));
+  psql(as(S) + `select move_device('${d1}','arrived','{}')`);
+  psql(as(S) + `select move_device('${d1}','checking','{}')`);
+  /* ⚠️⚠️ 같이 적어야 하는 것 — 등급 · 원가 */
+  ok("검수 완료에는 등급과 원가가 같이 와야 한다",
+     /cost/.test(((sql)=>denied(sql).why||'')(as(S) + `select move_device('${d1}','checked','{"grade":"A"}')`)));
+  /* ⚠️⚠️ **검수 전에 원가가 적히면 안 됩니다** — 제약이 한 번 더 막습니다 */
+  ok("표를 직접 고쳐 원가를 넣을 수 없다",
+     /permission denied|denied for table/.test(((sql)=>denied(sql).why||'')(as(S) + `update device set cost=100 where id='${d1}'`)));
+  /* ⚠️⚠️ **어느 자물쇠가 걸렸는지 가릅니다.** 바로 위는 **GRANT** 가
+     막은 것이고, 그 뿐이면 권한을 여는 날 제약이 없어도 모릅니다 —
+     상위 권한으로 GRANT 를 지나가 보아 **제약 이름까지** 맞추어 봅니다. */
+  {
+    const sup = "select become('55555555-5555-5555-5555-555555555555'); ";
+    const r = denied(sup + `update device set cost=100 where id='${d1}'`);
+    ok("검수 전엔 원가가 적힐 수 없다 (제약)",
+       r.no && /device_cost_needs_check/.test(r.why || ""), r.why);
+  }
+  psql(as(S) + `select move_device('${d1}','checked',` +
+       `'{"grade":"A","cost":700000,"batt":94,"color":"블루"}')`);
+  ok("검수자와 검수 시각이 같이 적힌다",
+     psql(`select (checked_by is not null and checked_at is not null)::text from device where id='${d1}'`) === "true");
+
+  /* 비용 — ⚠️ 0 원은 비용이 아닙니다 */
+  ok("0 원 비용은 거절한다",
+     /0 원입니다/.test(((sql)=>denied(sql).why||'')(as(S) + `select add_device_cost('${d1}','repair',0)`)));
+  psql(as(S) + `select add_device_cost('${d1}','repair',80000,'액정 교체')`);
+  psql(as(S) + `select add_device_cost('${d1}','inbound',3000)`);
+  /* ⚠️ 음수를 허용합니다 — 환불을 지우지 않고 차액으로 적습니다 */
+  psql(as(S) + `select add_device_cost('${d1}','repair',-10000,'부품 반품')`);
+
+  /* 수익 — ⚠️⚠️ **세는 값**입니다 */
+  psql(as(S) + `select move_device('${d1}','listed','{"price":950000}')`);
+  ok("예상 수익을 센다 (950000 − 773000)",
+     psql(`select est_profit::text from v_device_pl where id='${d1}'`) === "177000");
+  ok("아직 안 팔렸으면 실제 수익은 비어 있다",
+     psql(`select coalesce(real_profit::text,'(없음)') from v_device_pl where id='${d1}'`) === "(없음)");
+  /* ⚠️⚠️ **판매가가 적혀 있어도** 상태가 '판매 완료' 가 아니면
+     실제 수익은 비어 있습니다. 지금은 `sold` 가 끝이라 그 일이
+     없지만, 환불 · 반품 길(`sold → returning`)을 더하는 날
+     **반품한 기기에 이익이 남습니다** — 그러면 장부가 거짓말입니다.
+     ⚠️ 그 쪽은 move_device 로는 못 만듭니다 — 상위 권한으로 직접 세웁니다. */
+  {
+    const sup = "select become('55555555-5555-5555-5555-555555555555'); ";
+    psql(sup + `update device set sold_price=980000 where id='${d1}'`);
+    ok("판매가가 적혀도 팔리기 전이면 실제 수익이 비어 있다",
+       psql(`select coalesce(real_profit::text,'(없음)') from v_device_pl where id='${d1}'`) === "(없음)");
+    psql(sup + `update device set sold_price=null where id='${d1}'`);
+  }
+  psql(as(S) + `select move_device('${d1}','sold','{"soldPrice":980000}')`);
+  ok("팔리면 실제 수익이 센 값으로 나온다 (980000 − 773000)",
+     psql(`select real_profit::text from v_device_pl where id='${d1}'`) === "207000");
+
+  /* ⚠️⚠️ 폐기는 관리자만 */
+  const d2 = mk(S, "null::uuid", "galaxy-s23");
+  psql(as(S) + `select move_device('${d2}','arrived','{}')`);
+  psql(as(S) + `select move_device('${d2}','checking','{}')`);
+  psql(as(S) + `select move_device('${d2}','checked','{"grade":"D","cost":50000}')`);
+  ok("폐기는 직원이 못 한다 (관리자만)",
+     /권한이 없습니다/.test(((sql)=>denied(sql).why||'')(as(S) + `select move_device('${d2}','scrapped','{"why":"침수"}')`)));
+  psql(as(A) + `select move_device('${d2}','scrapped','{"why":"침수"}')`);
+  ok("관리자는 폐기할 수 있고 사유가 기록에 남는다",
+     psql(`select count(*) from audit_log where obj='device' and obj_id='${d2}' and why='침수'`) === "1");
+
+  /* ⚠️⚠️ 업체는 재고를 한 줄도 못 봅니다 — 원가가 곧 경쟁 정보입니다 */
+  ok("업체는 재고를 한 줄도 못 본다",
+     psql(as(P) + `select count(*) from device`) === "0");
+  ok("업체는 비용도 못 본다",
+     psql(as(P) + `select count(*) from device_cost`) === "0");
+  /* ⚠️ 고객은 **자기가 보낸 기기**만 봅니다 */
+  ok("접수와 무관한 고객은 재고를 못 본다",
+     psql(as(C) + `select count(*) from device`) === "0");
+  ok("고객에게는 원가 칸 권한이 아예 없다",
+     /permission denied|denied for/.test(((sql)=>denied(sql).why||'')(as(C) + `select cost from device`)));
+  ok("anon 에게는 아무 권한도 없다",
+     /permission denied|denied for/.test((denied('set role anon; select count(*) from device').why || '')));
+}
+
+console.log("\n── 한 번에 붙여 넣는 파일이 실제로 도는가 (db/apply-from-0008.sql)");
   {
     /* WARN 사장님은 Supabase SQL 편집기에 db/apply-from-0008.sql 을
        **통째로** 붙여 넣습니다. 위의 마이그레이션 검사는 파일을

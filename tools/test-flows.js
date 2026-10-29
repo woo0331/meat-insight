@@ -123,19 +123,46 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.pwh-go a[href="/shop"]');
  say((await url())==="/shop","히어로 중고폰 구매 → /shop",await url());
- /* 판매 방법 둘 — A 직접 매입 · B 경쟁입찰. ⚠️ 둘 다 **실제로 열려야**
-    합니다 (지시서 §4 — 작동하지 않는 버튼을 만들지 않습니다). */
+ /* ⚠️⚠️ **2026-10-29 오렌지 시안 §3-D · §3-E — 누르는 자리가 바뀌었습니다.**
+    옛 판매 두 방법(`.pww-c`) · 구매 갈래(`.pws-c`)는 메인에서 내려갔고
+    (함수도 CSS 도 안 지웠습니다), 지금은 **기기 선택 넷(`.pwd-g .dvc`)**
+    과 **사업 배너 넷(`.pwbz-c`)** 입니다. ⚠️ 없는 요소를 집으면
+    **click 이 30초 타임아웃으로 터지고 뒤 블록이 통째로 안 돕니다** —
+    어느 검사가 틀렸는지도 안 나옵니다 (이 저장소에서 여러 번 겪은 자리).
+    그 구간을 되살리시면 **여기도 같이** 뒤집으세요. */
+ /* 기기 선택 카드 — ⚠️ **카드 전체가 하나의 링크**입니다 (§3-D). */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.pww-c a[href="/sell"]');
- say((await url())==="/sell","직접 매입 카드 → /sell",await url());
+ await click('.pwd-g .dvc');
+ /* ⚠️ 카드가 **제조사와 종류를 한 번에** 고르므로 주소에 그것이
+    실립니다 (`/sell?maker=apple&kind=phone`) — 통째로 견주면
+    멀쩡한 길을 "틀렸다" 고 잡습니다. */
+ say((await url()).startsWith("/sell"),"기기 선택 카드 → /sell",await url());
+ /* 사업 배너 넷 — ⚠️ 넷 다 **실제로 열려야** 합니다 (§7 — 존재하지
+    않는 페이지로 보내거나 작동하지 않는 버튼을 만들지 않습니다). */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.pww-c a[href="/bid"]');
- say((await url())==="/bid","경쟁입찰 카드 → /bid",await url());
- /* 구매 갈래 — ⚠️ 매물이 0건이어도 **화면은 열려야** 합니다
-    (0건을 0건이라고 말하는 자리입니다). */
+ await click('.pwbz-c[href="/sell"]');
+ say((await url())==="/sell","사업 배너 · 내 폰 팔기 → /sell",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.pws-c[href^="/shop"]');
- say((await url()).startsWith("/shop"),"구매 갈래 카드 → /shop",await url());
+ await click('.pwbz-c[href="/bid"]');
+ say((await url())==="/bid","사업 배너 · 경쟁입찰 → /bid",await url());
+ /* ⚠️ 매물이 0건이어도 **화면은 열려야** 합니다 (0건을 0건이라고
+    말하는 자리입니다). */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.pwbz-c[href="/shop"]');
+ say((await url()).startsWith("/shop"),"사업 배너 · 중고폰 구매 → /shop",await url());
+ /* ⚠️⚠️ **기업 · 수출은 거래 절차가 없어 문의 접수입니다** (§3-E) —
+    그래도 그 화면은 열려야 합니다 (막다른 길이면 안 됩니다). */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.pwbz-c[href="/biz"]');
+ say((await url())==="/biz","사업 배너 · 기업 · 수출 → /biz",await url());
+ /* 서비스 바로가기 다섯 — ⚠️ 다섯 전부 **지금 열리는 화면**입니다 (§3-F) */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ const qn = await pg.evaluate(()=>{
+   const a = [].slice.call(document.querySelectorAll(".pwq-c"));
+   return { n:a.length, bad:a.filter(function(e){
+     const h = e.getAttribute("href") || ""; return h.charAt(0) !== "/"; }).length }; });
+ say(qn.n>0 && qn.bad===0,"바로가기 다섯이 전부 사이트 안 주소다",
+     qn.n+"칸 · 밖으로 나가는 것 "+qn.bad);
  /* 하단 CTA 둘 */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.pwc a[href="/sell"]');
@@ -147,15 +174,30 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.hd .hd-cta');
  say((await url())==="/sell","헤더 팔기 → /sell",await url());
- /* ⚠️⚠️ 헤더 메뉴 여섯이 **전부 실제로 열려야** 합니다 — 하나라도
-    막히면 167개 화면에서 그 길이 끊깁니다. */
- for(const [h,n] of [["/sell","내 폰 팔기"],["/shop","중고폰 구매"],
-                     ["/bid","최고가 경쟁입찰"],["/track","판매 진행 조회"],
-                     ["/guide","이용 안내"],["/faq","고객센터"]]){
+ /* ⚠️⚠️ 헤더 메뉴가 **전부 실제로 열려야** 합니다 — 하나라도 막히면
+    167개 화면에서 그 길이 끊깁니다.
+    ⚠️⚠️ **메뉴 목록을 글자로 박지 마세요.** 전에 여섯을 손으로 적어
+    두었다가, 2026-10-29 오렌지 시안 §3-A 로 `/track` 이 헤더에서
+    내려가자 **없는 메뉴를 누르려다 click 이 30초 타임아웃으로
+    터졌습니다** (뒤 블록이 통째로 안 돌고 어느 검사가 틀렸는지도
+    안 나왔습니다). 여기서 지키는 것은 이름이 아니라 **어느 메뉴도
+    막다른 길이 아니다** 라서, 지금 화면의 메뉴를 그대로 읽습니다. */
+ const gnb = await pg.evaluate(()=>[].slice.call(
+   document.querySelectorAll(".hd .gnb a")).map(function(a){
+     return [a.getAttribute("href"), a.textContent.trim()]; }));
+ say(gnb.length>0,"헤더 메뉴를 읽었다",gnb.length+"칸");
+ for(const [h,n] of gnb){
    await pg.goto(B+"/",{waitUntil:"networkidle"});
    await click('.hd .gnb a[href="'+h+'"]');
    say((await url())===h,"헤더 "+n+" → "+h,await url());
  }
+ /* ⚠️⚠️ **`/track`(판매 진행 조회)이 헤더에서 내려갔습니다** — 지운
+    것이 아니라 자리가 바뀐 것이라, 갈 길이 **실제로 남아 있는지**
+    여기서 봅니다 (푸터 한 줄). 안 보면 색인은 되어 있는데 사이트
+    안에서는 아무 데서도 안 걸리는 화면이 하나 생깁니다. */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.ft a[href="/track"]');
+ say((await url())==="/track","푸터 판매 진행 조회 → /track",await url());
  /* ⚠️ 매입업체 입점 — 끝이 막히지 않았는지 푸터에서 눌러 봅니다 */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.ft a[href="/join"]');
@@ -923,8 +965,12 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  /* ── ① PHONEWAY — 메인에서 /sell 까지, 그리고 끝까지 고릅니다 ── */
  await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
  await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
- await click('.pww-c a[href="/sell"]');
- say((await url())==="/sell","메인 직접 매입 카드 → 내 폰 팔기",await url());
+ /* ⚠️ 2026-10-29 오렌지 시안 §3-D — 메인의 첫 걸음은 **기기 선택
+    카드**입니다 (옛 `.pww-c` 는 내려갔습니다 · 없는 요소를 집으면
+    click 이 타임아웃으로 터집니다). */
+ await click('.pwd-g .dvc');
+ /* ⚠️ 카드가 제조사 · 종류를 주소에 싣습니다 — 통째로 견주지 않습니다. */
+ say((await url()).startsWith("/sell"),"메인 기기 선택 카드 → 내 폰 팔기",await url());
  /* 기기 → 제조사 → 모델 → 상태 → 견적 · 신청. ⚠️ 끝이 막히지 않았는지
     **실제로 눌러** 봅니다 (고르개가 주소에 실리는 꼴입니다). */
  /* ⚠️⚠️ **기기 종류 · 제조사 칩은 이제 접혀 있습니다** (2026-10-29
@@ -971,8 +1017,8 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  say((await pg.locator("#pf-send").count())>0,"신청 단추가 있다");
  /* 구매 쪽 */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.pws-c[href^="/shop"]');
- say((await url()).startsWith("/shop"),"메인 구매 갈래 → 중고폰 구매",await url());
+ await click('.pwbz-c[href="/shop"]');
+ say((await url()).startsWith("/shop"),"메인 사업 배너 → 중고폰 구매",await url());
 
  /* ── ② 창업 · 폐업 전문관 넷 — 푸터로 들어간 뒤 ───────────────── */
  /* ⚠️⚠️ **메인에 그 네 카드가 없습니다.** 길은 푸터 한 줄이고, 거기서

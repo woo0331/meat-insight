@@ -5185,3 +5185,6 @@ html.ivh #view .pwh h1{ color:var(--pw-navy); }
 .shp-ck li svg{ flex:none; color:var(--pw-ok, #16A085); }
 .shp-no{ margin:0 0 6px; font-size:15px; line-height:1.75;
   color:var(--pw-ink, #121A24); }
+
+.pwh-hand{ right:auto; left:-2%; top:-2%; text-align:left; transform:rotate(-5deg); }
+@media (max-width:1180px){ .pwh-hand{ left:0; top:-4%; } }

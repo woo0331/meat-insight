@@ -7297,3 +7297,10 @@ html.ivh #view .pwh h1{ color:var(--pw-navy); }
 .shp-ck li svg{ flex:none; color:var(--pw-ok, #16A085); }
 .shp-no{ margin:0 0 6px; font-size:15px; line-height:1.75;
   color:var(--pw-ink, #121A24); }
+
+/* ⚠️ 히어로 손글씨 — 2026-10-29 로 일러스트를 다시 그리면서 **배터리
+   게이지 칩과 겹쳤습니다** (찍어 보고 알았습니다). 일러스트의 오른쪽
+   위 78px 칩을 피해 **왼쪽 위**로 옮깁니다 — 이 블록은 파일 맨 뒤라
+   위의 `.pwh-hand` 를 이깁니다. */
+.pwh-hand{ right:auto; left:-2%; top:-2%; text-align:left; transform:rotate(-5deg); }
+@media (max-width:1180px){ .pwh-hand{ left:0; top:-4%; } }

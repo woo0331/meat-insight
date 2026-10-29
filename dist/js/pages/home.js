@@ -901,39 +901,83 @@ function PwHero(){
 function pwHeroArt(){
   return '<svg class="pwh-svg" viewBox="0 0 440 400" aria-hidden="true">'+
     '<defs>'+
-      '<linearGradient id="pwa" x1="0" y1="0" x2="1" y2="1">'+
-        '<stop offset="0" stop-color="#3C5A7E"/><stop offset="1" stop-color="#1B2F47"/></linearGradient>'+
+
+      '<linearGradient id="pwa" x1=".1" y1="0" x2=".9" y2="1">'+
+        '<stop offset="0" stop-color="#8FA9C9"/><stop offset=".45" stop-color="#48648A"/>'+
+        '<stop offset="1" stop-color="#2A3F5C"/></linearGradient>'+
+
+      '<linearGradient id="pwsc" x1="0" y1="0" x2=".6" y2="1">'+
+        '<stop offset="0" stop-color="#16263E"/><stop offset="1" stop-color="#0A1322"/></linearGradient>'+
+
       '<linearGradient id="pwb" x1="0" y1="0" x2="1" y2="1">'+
-        '<stop offset="0" stop-color="#5E8FD4"/><stop offset="1" stop-color="#24456F"/></linearGradient>'+
-      '<linearGradient id="pwc" x1="0" y1="0" x2="1" y2="1">'+
-        '<stop offset="0" stop-color="#D6E2F2"/><stop offset="1" stop-color="#8FA8C6"/></linearGradient>'+
-      '<linearGradient id="pwsc" x1="0" y1="0" x2="1" y2="1">'+
-        '<stop offset="0" stop-color="#16243A"/><stop offset="1" stop-color="#0C1626"/></linearGradient>'+
+        '<stop offset="0" stop-color="#2E4A72"/><stop offset="1" stop-color="#16263E"/></linearGradient>'+
+      '<linearGradient id="pwcard" x1="0" y1="0" x2="0" y2="1">'+
+        '<stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EAF1FA"/></linearGradient>'+
+      '<radialGradient id="pwglow" cx=".5" cy=".5" r=".5">'+
+        '<stop offset="0" stop-color="#2E6FD0" stop-opacity=".55"/>'+
+        '<stop offset="1" stop-color="#2E6FD0" stop-opacity="0"/></radialGradient>'+
     '</defs>'+
-    '<ellipse cx="220" cy="356" rx="166" ry="20" fill="#06101E" opacity=".5"/>'+
-    '<g transform="rotate(-15 150 210)">'+
-      '<rect x="74" y="92" width="152" height="252" rx="26" fill="url(#pwa)"/>'+
-      '<rect x="82" y="100" width="136" height="236" rx="20" fill="url(#pwsc)"/>'+
-      '<rect x="128" y="106" width="44" height="9" rx="4.5" fill="#22314A"/>'+
-      '<circle cx="106" cy="126" r="13" fill="#2A3D59"/><circle cx="106" cy="126" r="6" fill="#0E1726"/>'+
+
+    '<circle cx="224" cy="186" r="172" fill="url(#pwglow)"/>'+
+    '<ellipse cx="224" cy="358" rx="150" ry="17" fill="#04101F" opacity=".45"/>'+
+
+    '<g transform="rotate(-11 300 200)" opacity=".92">'+
+      '<rect x="258" y="86" width="132" height="226" rx="26" fill="url(#pwa)"/>'+
+      '<rect x="266" y="94" width="116" height="210" rx="20" fill="url(#pwb)"/>'+
+      '<rect x="302" y="100" width="36" height="7" rx="3.5" fill="#2B3F5C"/>'+
+      '<rect x="282" y="130" width="84" height="6" rx="3" fill="#33517A" opacity=".8"/>'+
+      '<rect x="282" y="146" width="58" height="6" rx="3" fill="#2A4366" opacity=".8"/>'+
+      '<rect x="282" y="176" width="84" height="46" rx="8" fill="#1E3353" opacity=".75"/>'+
     '</g>'+
-    '<g transform="rotate(8 300 200)">'+
-      '<rect x="236" y="74" width="158" height="262" rx="27" fill="url(#pwc)"/>'+
-      '<rect x="244" y="82" width="142" height="246" rx="21" fill="url(#pwsc)"/>'+
-      '<rect x="292" y="88" width="46" height="9" rx="4.5" fill="#22314A"/>'+
-      '<circle cx="272" cy="112" r="15" fill="#B9C9DD"/><circle cx="272" cy="112" r="7.5" fill="#101C2E"/>'+
-      '<circle cx="272" cy="146" r="15" fill="#B9C9DD"/><circle cx="272" cy="146" r="7.5" fill="#101C2E"/>'+
-    '</g>'+
+
     '<g>'+
-      '<rect x="156" y="56" width="162" height="272" rx="28" fill="url(#pwb)"/>'+
-      '<rect x="164" y="64" width="146" height="256" rx="22" fill="url(#pwsc)"/>'+
-      '<rect x="213" y="70" width="48" height="10" rx="5" fill="#22314A"/>'+
-      '<circle cx="192" cy="96" r="16" fill="#3D6CA8"/><circle cx="192" cy="96" r="8" fill="#0D1829"/>'+
-      '<circle cx="192" cy="132" r="16" fill="#3D6CA8"/><circle cx="192" cy="132" r="8" fill="#0D1829"/>'+
-      '<circle cx="192" cy="168" r="16" fill="#3D6CA8"/><circle cx="192" cy="168" r="8" fill="#0D1829"/>'+
-      '<rect x="186" y="236" width="86" height="7" rx="3.5" fill="#2C4568"/>'+
-      '<rect x="186" y="252" width="56" height="7" rx="3.5" fill="#22364F"/>'+
-    '</g></svg>';
+      '<rect x="128" y="60" width="168" height="282" rx="30" fill="url(#pwa)"/>'+
+      '<rect x="137" y="69" width="150" height="264" rx="23" fill="url(#pwsc)"/>'+
+      '<rect x="188" y="76" width="48" height="9" rx="4.5" fill="#24374F"/>'+
+
+      '<rect x="152" y="100" width="120" height="58" rx="11" fill="#1E3353"/>'+
+      '<rect x="162" y="112" width="26" height="34" rx="5" fill="#9FBCE2"/>'+
+      '<rect x="196" y="116" width="62" height="7" rx="3.5" fill="#B9CFEC"/>'+
+      '<rect x="196" y="130" width="40" height="6" rx="3" fill="#6E8FB8"/>'+
+
+      '<rect x="152" y="176" width="120" height="7" rx="3.5" fill="#24395A"/>'+
+      '<rect x="152" y="176" width="52" height="7" rx="3.5" fill="#3E7FD6"/>'+
+      '<rect x="152" y="196" width="120" height="7" rx="3.5" fill="#24395A"/>'+
+      '<rect x="152" y="196" width="86" height="7" rx="3.5" fill="#1673EA"/>'+
+      '<rect x="152" y="216" width="120" height="7" rx="3.5" fill="#24395A"/>'+
+      '<rect x="152" y="216" width="68" height="7" rx="3.5" fill="#3E7FD6"/>'+
+
+      '<rect x="152" y="246" width="120" height="30" rx="15" fill="#1673EA"/>'+
+      '<rect x="182" y="258" width="60" height="7" rx="3.5" fill="#CFE2FF"/>'+
+
+      '<rect x="186" y="314" width="52" height="6" rx="3" fill="#2B4365"/>'+
+    '</g>'+
+
+    '<g transform="translate(246 236)">'+
+      '<rect x="0" y="0" width="150" height="62" rx="14" fill="url(#pwcard)"/>'+
+      '<circle cx="31" cy="31" r="17" fill="#E4F6F1"/>'+
+      '<path d="M23.5 31.5l5.5 5.5 10.5-11.5" fill="none" stroke="#12806C" '+
+        'stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'+
+      '<rect x="58" y="20" width="70" height="8" rx="4" fill="#12806C"/>'+
+      '<rect x="58" y="36" width="48" height="7" rx="3.5" fill="#9BB0C8"/>'+
+    '</g>'+
+
+    '<g transform="translate(44 108)">'+
+      '<rect x="0" y="0" width="104" height="46" rx="13" fill="url(#pwcard)"/>'+
+      '<circle cx="26" cy="23" r="14" fill="#102C4A"/>'+
+      '<path d="M26 14.5l2.9 5.9 6.5 1-4.7 4.6 1.1 6.4-5.8-3-5.8 3 1.1-6.4-4.7-4.6 6.5-1z" fill="#E7B65C"/>'+
+      '<rect x="50" y="15" width="40" height="7" rx="3.5" fill="#1D3657"/>'+
+      '<rect x="50" y="28" width="26" height="6" rx="3" fill="#92A7C0"/>'+
+    '</g>'+
+
+    '<g transform="translate(330 48)">'+
+      '<rect x="0" y="0" width="78" height="78" rx="20" fill="url(#pwcard)"/>'+
+      '<circle cx="39" cy="33" r="19" fill="none" stroke="#DCE6F2" stroke-width="7"/>'+
+      '<path d="M39 14a19 19 0 0 1 14.8 30.9" fill="none" stroke="#16A085" '+
+        'stroke-width="7" stroke-linecap="round"/>'+
+      '<rect x="22" y="60" width="34" height="7" rx="3.5" fill="#9BB0C8"/>'+
+    '</g>'+
+  '</svg>';
 }
 
 var PW_WAYS = [

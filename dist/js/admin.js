@@ -580,12 +580,11 @@ function adInit(){
         '동의를 받는 것</b>입니다. 전자적으로 보내실 때는 제목의 (광고) 표기와 '+
         '본문의 보내는 사람 · 연락처 · 수신거부 방법을 지우지 마세요. '+
         '21시~08시 사이에는 보내지 마십시오.</p></div>'+
-      '<p class="ad-lead">분야와 지역을 고르시면 그 업체에 맞는 글이 나옵니다. '+
-        '<b>지금 등록된 업체 수는 세어서 그대로 적습니다</b> — 0이면 0이라고 '+
+      '<p class="ad-lead">지역을 고르시면 그 지역 업체에 맞는 글이 나옵니다. '+
+        '<b>지금 등록된 매입업체 수는 세어서 그대로 적습니다</b> — 0이면 0이라고 '+
         '적습니다. 부풀리면 업체가 등록하고 바로 압니다.</p>'+
+
       '<div class="ad-g">'+
-        adSel2("ad-icat", "분야", "icat",
-          adInviteCat().map(function(c){ return [c.key, c.name]; }))+
         adSel2("ad-ireg", "지역", "ireg",
           (window.AM_REGIONS||[]).map(function(r){ return [r.key, r.name]; }))+
       '</div>'+
@@ -652,41 +651,37 @@ function adInit(){
   adHlDraw();
 }
 
-function adInviteCat(){
-  return (window.AM_CATS || []).filter(function(c){ return c.kind === "provider"; });
-}
-
-function adInviteN(catKey){
-  var c = (window.amCat ? amCat(catKey) : null);
-  return (c && window.amProvidersInCat) ? amProvidersInCat(c) : 0;
-}
-
 function adInvite(catKey, regKey){
   var ic = (catKey === undefined ? AD.icat : catKey);
   var ir = (regKey === undefined ? AD.ireg : regKey);
   var c = ic ? (window.amCat ? amCat(ic) : null) : null;
   var catName = c ? c.name : "";
   var reg = ir ? (window.amRegion ? (amRegion(ir) || {}).name : "") : "";
-  var n = ic ? adInviteN(ic) : (window.AM_PROVIDERS || []).length;
+  var n = 0;
   var brand = (window.AM_BRAND || {}).name || "";
   var site = "https://storeway.co.kr/join";
   var B = window.WOW_BIZ || {};
 
-  var what = koWith(brand, "은는") + " 창업 · 폐업을 준비하는 사장님이 필요한 업체를 " +
-    "찾고 비교하는 곳입니다.";
-  var who = (reg ? reg + " " : "") + (catName ? catName + " " : "") + "업체";
+  var what = koWith(brand, "은는") + " 중고폰을 팔려는 분과 매입업체를 " +
+    "입찰로 잇는 곳입니다.";
+
+  var who = (reg ? reg + " " : "") + "중고폰 매입업체";
+
+  n = (window.AM_PROVIDERS || []).length;
 
   var now = n === 0
-    ? (catName ? catName + " 분야는 아직 등록된 업체가 없습니다." :
-        "아직 등록된 업체가 없습니다.") + " 부풀려 말씀드리지 않겠습니다 — " +
-      "지금 들어오시면 " + (catName ? "그 분야의 " : "") + "첫 번째입니다."
-    : (catName ? catName + " 분야에 지금 " : "지금 ") + n + "곳이 등록돼 있습니다.";
+    ? "아직 등록된 매입업체가 없습니다. 부풀려 말씀드리지 않겠습니다 — " +
+      "지금 들어오시면 첫 번째입니다."
+    : "지금 " + n + "곳이 등록돼 있습니다.";
 
-  var promise = [
-    "· 기본 입점은 무료입니다.",
-    "· 지역과 전문 분야가 맞는 요청만 보내 드립니다.",
-    "· 광고비를 받고 소개 순서를 바꾸지 않습니다.",
-    "· 손님 연락처는 업체가 정해지고 그분이 다시 동의하신 뒤에 전달됩니다."
+  var promise = (window.AM_JOIN_WHY || []).map(function(w){
+    return "· " + w.t + (w.s ? " (" + w.s + ")" : "");
+  });
+  if(!promise.length) promise = [
+    "· 취급하시는 기기에 맞는 건만 보내 드립니다.",
+    "· 금액으로 줄을 세우지 않습니다 — 낸 차례대로 냅니다.",
+    "· 판매자 연락처는 그분이 업체를 고르시고 다시 동의하신 뒤에 갑니다.",
+    "· 입찰에 참여하시는 데 받는 비용이 없습니다."
   ];
 
   var from = [];
@@ -707,7 +702,8 @@ function adInviteSms(v){
   L.push(v.what);
   L.push("");
   L.push(v.now);
-  L.push("기본 입점은 무료이고, 지역과 분야가 맞는 요청만 보내 드립니다.");
+
+  L.push("참여 비용은 없고, 취급하시는 기기에 맞는 건만 보내 드립니다.");
   L.push("");
   L.push("등록: " + v.site);
   L.push("");
@@ -721,14 +717,13 @@ function adInviteSms(v){
 
 function adInviteMail(v){
   var L = [];
-  L.push("제목: (광고) " + (v.catName ? v.catName + " " : "") +
-    "업체를 찾고 있습니다 — " + v.brand);
+  L.push("제목: (광고) 중고폰 매입업체를 찾고 있습니다 — " + v.brand);
   L.push("");
   L.push("안녕하세요. " + v.brand + "입니다.");
   L.push("");
   L.push(v.what);
   L.push((v.reg ? v.reg + " 지역의 " : "") +
-    (v.catName ? v.catName + " " : "") + "업체를 찾고 있어 연락드립니다.");
+    "중고폰 매입업체를 찾고 있어 연락드립니다.");
   L.push("");
   L.push("[지금 상태]");
   L.push(v.now);
@@ -737,9 +732,9 @@ function adInviteMail(v){
   v.promise.forEach(function(x){ L.push(x); });
   L.push("");
   L.push("[어떻게 진행되나]");
-  L.push("1. 하시는 일과 지역을 등록합니다 (아래 주소, 양식 한 번)");
-  L.push("2. 조건이 맞는 요청을 받습니다 — 받으실지는 업체가 정하십니다");
-  L.push("3. 사장님과 직접 계약하십니다 (저희는 중개자이고 거래 당사자가 아닙니다)");
+  L.push("1. 상호와 취급하시는 기기를 등록합니다 (아래 주소, 양식 한 번)");
+  L.push("2. 조건이 맞는 건에 입찰을 내십니다 — 내실지는 업체가 정하십니다");
+  L.push("3. 판매자가 고르시면 직접 거래하십니다 (저희는 중개자이고 거래 당사자가 아닙니다)");
   L.push("");
   L.push("등록: " + v.site);
   L.push("궁금하신 것은 이 메일로 그대로 답장 주셔도 됩니다.");
@@ -757,12 +752,12 @@ function adInviteCall(v){
   L.push("");
   L.push("1) 누구인지 (5초)");
 
-  L.push("   " + koWith(v.brand, "이라고라고") + " 합니다. 창업 · 폐업을 준비하는");
-  L.push("   사장님이 필요한 업체를 찾고 비교하는 곳입니다.");
+  L.push("   " + koWith(v.brand, "이라고라고") + " 합니다. 중고폰을 팔려는 분과");
+  L.push("   매입업체를 입찰로 잇는 곳입니다.");
   L.push("");
   L.push("2) 왜 전화했는지 (10초)");
-  L.push("   " + (v.reg ? v.reg + " " : "") + (v.catName ? v.catName + " " : "") +
-    "업체를 찾고 있어서 연락드렸습니다.");
+  L.push("   " + (v.reg ? v.reg + " 지역의 " : "") +
+    "중고폰 매입업체를 찾고 있어서 연락드렸습니다.");
   L.push("");
   L.push("3) 지금 상태 — ⚠️ 부풀리지 마세요");
   L.push("   " + v.now);
@@ -771,18 +766,23 @@ function adInviteCall(v){
   v.promise.forEach(function(x){ L.push("   " + x); });
   L.push("");
   L.push("5) 무엇을 부탁드리는지");
-  L.push("   " + v.site + "에서 하시는 일과 지역만 등록해 주시면 됩니다.");
+  L.push("   " + v.site + "에서 상호와 취급하시는 기기만 남겨 주시면 됩니다.");
   L.push("   문자로 주소 보내 드려도 될까요?  ← 여기서 수신동의를 받으십니다");
   L.push("");
   L.push("[자주 나오는 질문]");
-  L.push("· 돈 드나요 → 기본 입점은 무료입니다. 유료 상품이 생기면 미리 알리고");
-  L.push("  동의하신 경우에만 적용합니다.");
-  L.push("· 요청이 얼마나 오나요 → 지금은 약속드릴 수 없습니다. 모으는 중이라");
+
+  L.push("· 돈 드나요 → 입찰에 참여하시는 데 받는 비용은 없습니다. 수수료");
+  L.push("  기준이 생기면 내용과 금액을 미리 알리고 동의하신 경우에만");
+  L.push("  적용합니다 (약관 제6조).");
+  L.push("· 건이 얼마나 오나요 → 지금은 약속드릴 수 없습니다. 모으는 중이라");
   L.push("  건수를 말씀드리면 그건 지어낸 숫자입니다.");
-  L.push("· 광고비 내면 위에 올려 주나요 → 아닙니다. 지역과 분야가 맞는지로");
-  L.push("  냅니다. 광고 자리가 생기면 광고라고 표시합니다.");
-  L.push("· 손님 연락처 바로 오나요 → 아닙니다. 업종 · 지역 · 필요한 것 ·");
-  L.push("  상황까지입니다. 성함과 연락처는 그분이 다시 동의하신 뒤에 갑니다.");
+  L.push("· 금액 높게 쓰면 위에 올려 주나요 → 아닙니다. 낸 차례대로 내고");
+  L.push("  그 줄을 화면에 적습니다. 광고 자리가 생기면 광고라고 표시합니다.");
+  L.push("· 안 받는 기기도 오나요 → 아닙니다. 제조사 · 기종 · 외관 등급이");
+  L.push("  맞을 때만 보냅니다. 취급 안 하시는 조건은 등록하실 때 적으십니다.");
+  L.push("· 판매자 연락처 바로 오나요 → 아닙니다. 기기 · 등급 · 상태 ·");
+  L.push("  지역까지입니다. 성함과 연락처는 그분이 업체를 고르시고 다시");
+  L.push("  동의하신 뒤에 갑니다 (개인정보보호법 제17조).");
   return adText(L);
 }
 

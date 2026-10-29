@@ -539,14 +539,33 @@ function ok(name, cond, extra) {
        !!rpBrand && (await pg.locator("#ad-t-reply").inputValue()).includes(rpBrand),
        "brand=" + rpBrand);
 
-    /* 6번 — 초대 글 (sales.js 가 같은 함수를 씁니다) */
-    await pg.selectOption("#ad-icat", "demolish");
+    /* 6번 — 초대 글 (sales.js 가 같은 함수를 씁니다)
+       ⚠️⚠️ **2026-10-29 PHONEWAY — 분야 고르개를 뺐습니다.** `AM_CATS` 는
+       창업 · 폐업 서비스 분류라 중고폰 매입업체에게 나가는 글에 들어가면
+       안 되고, 그래서 `adInvite()` 가 그 값을 안 씁니다 — 고르개를 그대로
+       두면 **골라도 글이 안 바뀌는 칸**이 됩니다 (§30-7).
+       ⚠️ 검사가 틀린 것이 아니라 화면이 바뀐 것이라, 보는 자리를 옮깁니다. */
     await pg.selectOption("#ad-ireg", "gyeonggi");
     await pg.waitForTimeout(150);
     const inv = await pg.locator("#ad-t-inv-sms").inputValue();
     ok("6번 초대 글이 여전히 돈다", inv.includes("(광고)") && inv.includes("무료수신거부"));
-    ok("고른 분야가 반영된다", inv.includes("철거"));
-    ok("전화 순서 글도 있다", (await pg.locator("#ad-t-inv-call").inputValue()).includes("전화로 말할 순서"));
+    ok("고른 지역이 반영된다", inv.includes("경기"), inv.split("\n")[2] || "");
+    ok("분야 고르개가 없다", await pg.locator("#ad-icat").count() === 0);
+    /* ⚠️⚠️ 창업 · 폐업 분류 이름이 업체에게 나가는 글에 섞이면 안 됩니다 —
+       받는 분은 "나한테 왜 이걸 보내지" 가 됩니다. */
+    const mail = await pg.locator("#ad-t-inv-mail").inputValue();
+    const call = await pg.locator("#ad-t-inv-call").inputValue();
+    const bad = ["인테리어", "철거", "폐업", "창업", "원상복구", "세무"]
+      .filter(w => inv.includes(w) || mail.includes(w) || call.includes(w));
+    ok("창업 · 폐업 말이 안 섞인다", bad.length === 0, bad.join(" · "));
+    ok("중고폰 매입업체에게 하는 말이다",
+       inv.includes("중고폰") && call.includes("중고폰"));
+    /* ⚠️⚠️ "무료" 는 PHONEWAY 지시서 §5 금지 — 법이 요구하는
+       "무료수신거부" 표기만 예외입니다. */
+    ok("무료 라고 하지 않는다",
+       inv.replace(/무료수신거부/g, "").includes("무료") === false &&
+       call.includes("무료") === false);
+    ok("전화 순서 글도 있다", call.includes("전화로 말할 순서"));
 
     /* 7번 — 매물 접수를 등록 줄로 */
     await pg.fill("#ad-mk-in", "[견적] 홍길동 · 매장 내놓기\n성함      홍길동\n지역      경기\n\n── 요청 조건 ──\n  · 거래 방식 — 매장 양도\n  · 업종 — 카페 · 디저트\n  · 시군구 — 안양시\n  · 평수 — 18\n  · 보증금(만원) — 3000\n  · 월세(만원) — 180\n  · 권리금(만원) — 2000");

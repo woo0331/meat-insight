@@ -1493,8 +1493,13 @@ function checkPhotos(W){
       bad.push('"' + k + '" 는 없는 자리입니다 (js/data/photos.js 의 WOW_PHOTO_SLOTS)');
     if(!p || !p.src){ bad.push('"' + k + '" 에 src 가 없습니다'); continue; }
 
-    one(k, p.src, "src", "jpg");
-    urls(p.jpg).forEach(u => one(k, u, "jpg srcset", "jpg"));
+    /* ⚠️⚠️ 대체 그림이 늘 JPEG 인 것은 아닙니다 — **배경이 투명한 그림은
+       PNG** 입니다 (JPEG 는 투명을 못 담아 검정이 됩니다 · 기기 카드 넷).
+       여기서 지키는 것은 "이름과 안이 같은가" 이지 "JPEG 인가" 가
+       아니라, 형식을 **이름에서** 가져옵니다. */
+    const fbType = /\.png(\?|$)/.test(p.src) ? "png" : "jpg";
+    one(k, p.src, "src", fbType);
+    urls(p.jpg).forEach(u => one(k, u, "jpg srcset", fbType));
     urls(p.webp).forEach(u => one(k, u, "webp srcset", "webp"));
     urls(p.avif).forEach(u => one(k, u, "avif srcset", "avif"));
 

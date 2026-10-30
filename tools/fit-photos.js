@@ -215,8 +215,27 @@ const strays = fs.readdirSync(RAW).filter(f => {
           return null;
         };
 
+        /* ⚠️⚠️ **배경이 투명한 그림은 JPEG 로 못 냅니다.** 크로미움은
+           투명한 자리에 흰 바탕을 깔아 주지 않아서 **검정으로 채워집니다** —
+           이름만 믿고 쓰면 멀쩡해 보이는 코드가 사진을 까맣게 만듭니다.
+           그래서 알파가 있으면 jpeg 변형을 **png 로 바꿔 끼웁니다.**
+           ⚠️ PNG 는 무손실이라 아래 품질 이분탐색이 안 먹습니다 — 용량이
+           넘치면 fit() 이 치수를 줄여 맞춥니다 (최소 크기 아래로는 안 갑니다). */
+        const hasAlpha = (function(){
+          const c = draw(Math.min(cw, 320), Math.min(ch, 320));
+          const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+          for(let i = 3; i < d.length; i += 4) if(d[i] < 250) return true;
+          return false;
+        })();
+        const vars = o.variants.map(function(v){
+          return (hasAlpha && v.type === "image/jpeg")
+            ? { type:"image/png", ext:v.ext.replace(/\.jpe?g$/, ".png"),
+                scale:v.scale, kb:v.kb }
+            : v;
+        });
+
         const out = [];
-        for(const v of o.variants){
+        for(const v of vars){
           const small = v.scale < 1;
           /* 작은 판은 **제 폭이 충분히 작을 때만** 만듭니다 — 큰 판과
              거의 같은 크기면 파일만 둘이 되고 받는 양은 그대로입니다. */
@@ -233,7 +252,7 @@ const strays = fs.readdirSync(RAW).filter(f => {
         if(!out.length) return { err: "아무 변형도 못 만들었습니다" };
         const full = out[0];
         return { out, w: full.w, h: full.h, q: full.q, kb: full.kb, sw, sh, tooSmall,
-                 cropped: (cw !== sw || ch !== sh) };
+                 alpha: hasAlpha, cropped: (cw !== sw || ch !== sh) };
       }, { url, minW: s.min[0], minH: s.min[1], rMin: s.ratio[0], rMax: s.ratio[1],
            maxKB: s.maxKB, anchor: s.anchor || "center", variants: VARIANTS });
     }catch(e){ fail.push([s, e.message]); continue; }
@@ -251,7 +270,8 @@ const strays = fs.readdirSync(RAW).filter(f => {
     for(const v of r.out){
       const buf  = Buffer.from(v.data, "base64");
       const want = v.ext.indexOf("webp") >= 0 ? "webp"
-                 : v.ext.indexOf("avif") >= 0 ? "avif" : "jpg";
+                 : v.ext.indexOf("avif") >= 0 ? "avif"
+                 : v.ext.indexOf("png")  >= 0 ? "png"  : "jpg";
       const got  = sniff(buf);
       if(got !== want){ wrong = v.ext + " 를 시켰는데 " + got + " 가 나왔습니다"; break; }
       fs.writeFileSync(path.join(OUT, s.key + v.ext), buf);
@@ -307,8 +327,10 @@ const strays = fs.readdirSync(RAW).filter(f => {
     const made = {};
     done.forEach(([s, r]) => {
       const alt = (prev[s.key] && prev[s.key].alt) || "";
-      const o = { src: url(s.key + ".jpg"), alt: alt, w: r.w, h: r.h };
-      const j = setOf(s.key, r, ".jpg"), wp = setOf(s.key, r, ".webp");
+      /* ⚠️⚠️ 투명한 그림은 대체 그림이 **JPEG 가 아니라 PNG** 입니다 */
+      const fb = r.alpha ? ".png" : ".jpg";
+      const o = { src: url(s.key + fb), alt: alt, w: r.w, h: r.h };
+      const j = setOf(s.key, r, fb), wp = setOf(s.key, r, ".webp");
       /* 한 줄짜리 srcset 은 안 냅니다 — src 와 똑같아서 받는 양이
          그대로이고, 읽는 사람만 "반응형이구나" 로 잘못 압니다. */
       if(j.indexOf(",")  > 0) o.jpg  = j;

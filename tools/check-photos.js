@@ -152,7 +152,12 @@ Object.keys(PHOTOS).forEach(key => {
   /* ⚠️ 화면이 `<img src>` 하나라 `<picture>` 분기가 없습니다 */
   if(d.type === "webp")
     warn.push(tag + " — WebP 입니다. 되도록 JPEG 로 주세요 (대체 그림 자리가 없습니다)");
-  if(d.type === "png" && kb > 100)
+  /* ⚠️⚠️ **투명한 그림에 JPEG 를 권하지 마세요.** JPEG 는 알파를 못 담아
+     투명한 자리가 **검정**이 됩니다 — 그 말을 따르면 사진이 까매집니다.
+     PNG 머리의 색 종류(6 = RGBA · 4 = 회색+알파)를 보고 가릅니다. */
+  const pngAlpha = (d.type === "png" && buf.length > 26 &&
+                    (buf[25] === 6 || buf[25] === 4));
+  if(d.type === "png" && kb > 100 && !pngAlpha)
     warn.push(tag + " — 사진인데 PNG 입니다 (" + kb + "KB). JPEG 가 훨씬 작습니다");
 
   /* ⚠️ alt 는 읽어 주는 프로그램과 검색엔진이 봅니다 */

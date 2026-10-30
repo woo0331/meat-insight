@@ -48,9 +48,9 @@ function PageSell(){
 }
 
 var PW_SELL_CARDS = [
-  { ph:"dev-iphone", ia:"dev-iphone", lg:"",   nm:"아이폰",
+  { ph:"dev-iphone", ia:"dev-iphone", lg:"apple",   nm:"아이폰",
     sub:"iPhone",                maker:"apple",   kind:"phone"  },
-  { ph:"dev-galaxy", ia:"dev-galaxy", lg:"", nm:"갤럭시",
+  { ph:"dev-galaxy", ia:"dev-galaxy", lg:"samsung", nm:"갤럭시",
     sub:"Galaxy",                maker:"samsung", kind:"phone"  },
   { ph:"dev-tablet", ia:"dev-tablet", lg:["apple","samsung"], nm:"태블릿",
     sub:"아이패드 · 갤럭시 탭",     maker:"",        kind:"tablet" },

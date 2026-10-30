@@ -5243,7 +5243,7 @@ html.ivh #view .pwh h1{ color:var(--pw-dk); }
   --ia-1:var(--pw-dk, #18212B); --ia-2:#F3C9A8; }
 
 @media (max-width:767px){
-  .dvc-ph{ width:100%; height:clamp(62px, 17vw, 76px);
+  .dvc-ph{ width:100%; height:clamp(78px, 21vw, 95px);
     border-radius:11px; margin:0 0 9px; }
 }
 
@@ -5550,11 +5550,6 @@ html.ivh #view .pwd-hd h2{ color:var(--dv-ink); font-size:clamp(23px,2.4vw,32px)
 .pwd-g .dvc{ background-color:#1A1410;
   background-image:linear-gradient(180deg,#1F150E 0%,#1C1511 55%,#161211 100%); }
 .pwd-g .dvc:active, .pwd-g .dvc.on{ background-image:none; background-color:#2B1F17; }
-
-.pwd-g .dvc-ph .ph{ -webkit-mask-image:radial-gradient(ellipse 72% 78% at 50% 50%,#000 70%,transparent 100%);
-  mask-image:radial-gradient(ellipse 72% 78% at 50% 50%,#000 70%,transparent 100%); }
-
-.dvc-ph:has(.ph:not(.ph-none)){ background:#1F150E; }
 
 .pwd-g{ grid-auto-rows:1fr; }
 .pwd-g .dvc-ph{ height:clamp(132px,10.6vw,152px); }

@@ -343,18 +343,18 @@ window.WOW_PHOTO_SLOTS = [
      흰 네모가 뜹니다. 비율 범위를 0.85~1.8 로 넓혔습니다.
      ⚠️⚠️ **제품만 찍힌 사진**이라야 합니다 — 손 · 배경 · 상호 · 매장이
      들어가면 카드 넷의 결이 어긋납니다 (흰 배경 또는 투명 배경). */
-  { key:"dev-iphone", temp:true, sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
-    where:"메인 02 · /sell 01 기기 카드 — 아이폰", min:[600,400], ratio:[0.85,1.8], maxKB:90,
-    note:"아이폰 한 대. ⚠️ 애플 로고가 **읽히지 않아야** 합니다 (남의 등록상표) · 흰 배경" },
-  { key:"dev-galaxy", temp:true, sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
-    where:"메인 02 · /sell 01 기기 카드 — 갤럭시", min:[600,400], ratio:[0.85,1.8], maxKB:90,
-    note:"갤럭시 한 대. ⚠️ 삼성 워드마크가 읽히지 않아야 합니다 · 흰 배경" },
-  { key:"dev-tablet", temp:true, sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
-    where:"메인 02 · /sell 01 기기 카드 — 태블릿", min:[600,400], ratio:[0.85,1.8], maxKB:90,
-    note:"태블릿 한 대(또는 두 대 나란히). ⚠️ 상표가 읽히지 않아야 합니다 · 흰 배경" },
-  { key:"dev-etc", temp:true, sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
-    where:"메인 02 · /sell 01 기기 카드 — 기타 기기", min:[600,400], ratio:[0.85,1.8], maxKB:90,
-    note:"워치 + 무선 이어폰. ⚠️ 특정 제조사가 드러나지 않아야 합니다 · 흰 배경" },
+  { key:"dev-iphone", sizes:"(max-width:359px) 222px, (max-width:1199px) 44vw, 270px",
+    where:"메인 02 · /sell 01 기기 카드 — 아이폰", min:[400,400], ratio:[0.85,1.4], maxKB:330,
+    note:"아이폰 한 대. ⚠️ 애플 로고가 **읽히지 않아야** 합니다 (남의 등록상표) · **배경 투명**" },
+  { key:"dev-galaxy", sizes:"(max-width:359px) 222px, (max-width:1199px) 44vw, 270px",
+    where:"메인 02 · /sell 01 기기 카드 — 갤럭시", min:[400,400], ratio:[0.85,1.4], maxKB:330,
+    note:"갤럭시 한 대 + 스타일러스. ⚠️ 삼성 워드마크가 읽히지 않아야 합니다 · **배경 투명**" },
+  { key:"dev-tablet", sizes:"(max-width:359px) 222px, (max-width:1199px) 44vw, 270px",
+    where:"메인 02 · /sell 01 기기 카드 — 태블릿", min:[400,400], ratio:[0.85,1.4], maxKB:330,
+    note:"태블릿 한 대(또는 두 대 나란히). ⚠️ 상표가 읽히지 않아야 합니다 · **배경 투명**" },
+  { key:"dev-etc", sizes:"(max-width:359px) 222px, (max-width:1199px) 44vw, 270px",
+    where:"메인 02 · /sell 01 기기 카드 — 기타 기기", min:[400,400], ratio:[0.85,1.4], maxKB:330,
+    note:"워치 + 무선 이어폰. ⚠️ 특정 제조사가 드러나지 않아야 합니다 · **배경 투명**" },
   /* ⚠️⚠️ 2026-10-29 오렌지 §3-E — **메인 03 사업 배너 넷**. `PW_BIZ` 의
      `ph` 가 이 열쇠를 가리키고 `PwBiz()` 가 `hasPhoto()` 로 기다립니다 —
      **코드를 한 줄도 안 고치고** 사진으로 바뀝니다 (없으면 컬러 아이콘이
@@ -420,25 +420,6 @@ window.WOW_PHOTO_SLOTS = [
    한쪽만 새로 넣으면 다른 쪽이 조용히 사라지니, 돌린 뒤에는 반드시
    이 칸을 되읽어 보세요 (실제로 hero-close 가 한 번 빠졌습니다). */
 window.WOW_PHOTOS = {
-  /* ⚠️⚠️ 2026-10-30 — 기기 카드 넷은 **사장님이 주신 시안에서 잘라 넣은
-     임시 그림**입니다 (사장님이 "B 로 해줘 · 로고도 넣어" 로 정하셨고, 그
-     그림을 쓸 권리를 사장님이 확인하셨습니다). 가로 352~418px 라 PC
-     카드에서는 조금 뿌옇습니다 — 자리에 `temp:true` 가 붙어 있어
-     `check-photos` 가 돌 때마다 ⚠️ 줄로 알립니다. 정식 사진(투명 배경 ·
-     600×400 이상)이 오면 `node tools/fit-photos.js` 로 갈아 끼우세요.
-     ⚠️ 바탕이 시안 카드의 짙은 갈색이라 **어두운 카드 위에서만** 맞습니다. */
-  "dev-iphone": { src:"/img/dev-iphone.jpg?v=95dfbba9", w:352, h:298,
-    webp:"/img/dev-iphone.webp?v=99c87b5f 352w", jpg:"/img/dev-iphone.jpg?v=95dfbba9 352w",
-    alt:"아이폰 앞면과 뒷면, 애플 로고" },
-  "dev-galaxy": { src:"/img/dev-galaxy.jpg?v=838d5d9a", w:408, h:284,
-    webp:"/img/dev-galaxy.webp?v=837b7594 408w", jpg:"/img/dev-galaxy.jpg?v=838d5d9a 408w",
-    alt:"갤럭시 스마트폰 앞면과 뒷면, S펜, 삼성 로고" },
-  "dev-tablet": { src:"/img/dev-tablet.jpg?v=7986e9ab", w:418, h:238,
-    webp:"/img/dev-tablet.webp?v=fb7f1874 418w", jpg:"/img/dev-tablet.jpg?v=7986e9ab 418w",
-    alt:"아이패드와 갤럭시 탭" },
-  "dev-etc": { src:"/img/dev-etc.jpg?v=287d64e5", w:392, h:226,
-    webp:"/img/dev-etc.webp?v=ad6ce617 392w", jpg:"/img/dev-etc.jpg?v=287d64e5 392w",
-    alt:"스마트워치와 무선 이어폰" },
   "hero-start": { src:"/img/hero-start.jpg?v=43939c5f",
     w:1701, h:756,
     webp:"/img/hero-start-sm.webp?v=d10230c9 936w, /img/hero-start.webp?v=61230e9c 1701w",
@@ -480,6 +461,22 @@ window.WOW_PHOTOS = {
     w:267, h:263,
     webp:"/img/svc-clean.webp?v=a079a198 267w",
     alt:"매장 청소에 쓰는 세정제 분무기와 밀대, 청소 카트" },
+  "dev-iphone": { src:"/img/dev-iphone.png?v=355b70a9",
+    w:414, h:482,
+    webp:"/img/dev-iphone.webp?v=d5a124d2 414w",
+    alt:"앞면과 뒷면을 함께 보여 주는 검정 스마트폰. 뒷면 왼쪽 위에 렌즈 셋이 모여 있습니다" },
+  "dev-galaxy": { src:"/img/dev-galaxy.png?v=4ac94913",
+    w:449, h:502,
+    webp:"/img/dev-galaxy.webp?v=162bb06d 449w",
+    alt:"앞면과 뒷면을 함께 보여 주는 검정 스마트폰과 그 옆에 놓인 스타일러스 펜" },
+  "dev-tablet": { src:"/img/dev-tablet.png?v=8d4a679b",
+    w:479, h:522,
+    webp:"/img/dev-tablet.webp?v=cc7202e7 479w",
+    alt:"앞면과 뒷면을 함께 보여 주는 검정 태블릿" },
+  "dev-etc": { src:"/img/dev-etc.png?v=922c22ec",
+    w:540, h:422,
+    webp:"/img/dev-etc.webp?v=d8ce29c4 540w",
+    alt:"검정 스마트워치와 충전 케이스에 담긴 무선 이어폰" },
   "kind-take": { src:"/img/kind-take.jpg?v=88e14a31",
     w:1120, h:840,
     webp:"/img/kind-take-sm.webp?v=785bc293 560w, /img/kind-take.webp?v=fe3cdf82 1120w",
@@ -494,8 +491,7 @@ window.WOW_PHOTOS = {
     w:1120, h:840,
     webp:"/img/kind-asset-sm.webp?v=d6f4fc74 560w, /img/kind-asset.webp?v=64cc0fe1 1120w",
     jpg:"/img/kind-asset-sm.jpg?v=428937df 560w, /img/kind-asset.jpg?v=449ec642 1120w",
-    alt:"스테인리스 조리대와 장비가 늘어선 상업용 주방" },
-
+    alt:"스테인리스 조리대와 장비가 늘어선 상업용 주방" }
 };
 
 window.wowPhoto = function(key){

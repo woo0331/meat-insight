@@ -809,10 +809,25 @@ function MyQuoteCompare(d, r){
       (got ? '' : ' <i>— 하나를 고르시면 업체에 전달됩니다</i>')+'</p>'+
     '<ul class="myqt-l">'+L.map(function(q){
       var pv = (q.provider && q.provider.name) || q.provider_id;
+      /* ⚠️⚠️ **누구와 거래하는지 밝힙니다** (0021 · §10). 폰웨이 자신이
+         낸 입찰과 제휴 매입업체가 낸 입찰이 구분 없이 섞여 있으면,
+         손님은 저희가 **중개자인지 당사자인지** 모르는 채로 고릅니다 —
+         전자상거래법 제20조 제1항이 미리 고지하라고 정한 그 구분입니다.
+         ⚠️ 딱지는 **DB 가 켜 준 것만** 냅니다 (관리자 전용 문) — 이름을
+         보고 짐작하지 않습니다 (절대 규칙 1). */
+      var ih = !!(q.provider && q.provider.inhouse);
       var tone = (typeof amQuoteTone === "function") ? amQuoteTone(q.state) : "gray";
       return '<li class="myqt-c'+(q.state === "chosen" ? " is-got" : "")+'">'+
         '<div class="myq-h">'+
-          '<b class="myqt-pv">'+esc(pv)+'</b>'+
+          /* ⚠️⚠️ **업체 이름을 제 태그로 감쌉니다** (`.myqt-nm`).
+             `.myqt-pv` 는 칩이 붙으면서 flex 가 됐는데, 맨글로 두면
+             ① 이름이 flex 항목이 되어 (이 저장소가 grid · flex 로
+             다섯 번 겪은 자리) ② `.myqt-pv` 의 글을 읽는 쪽이
+             **이름 + 칩**을 같이 읽습니다 — "등록된 차례로 냅니다"
+             검사가 그래서 떨어졌습니다. 이름만 읽을 자리를 둡니다. */
+          '<b class="myqt-pv"><span class="myqt-nm">'+esc(pv)+'</span>'+
+            '<i class="myqt-who'+(ih ? " is-ih" : "")+'">'+
+              (ih ? "직접 매입" : "제휴 매입업체")+'</i></b>'+
           '<span class="myq-st myq-'+esc(tone)+'">'+
             esc((typeof amQuoteName === "function") ? amQuoteName(q.state) : q.state)+
           '</span>'+

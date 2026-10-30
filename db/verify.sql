@@ -118,7 +118,12 @@ v_fn as (
                  ('request_scope_check'),
                  /* 0020 — 직접 매입 재고 (2026-10-29 PHONEWAY ⑥) */
                  ('make_device'),('move_device'),
-                 ('add_device_check'),('add_device_cost')) w(f)
+                 ('add_device_check'),('add_device_cost'),
+                 /* ⚠️⚠️ 0021 — 자체 매입 부서를 경쟁 입찰에서 갈라 둡니다
+                    (2026-10-30 PHONEWAY §10). `account_role_guard` 가
+                    **입찰을 내는 쪽과 다 보는 쪽이 같은 계정일 수 없게**
+                    막습니다 — 이게 없으면 한 줄로 둘 다 됩니다. */
+                 ('account_role_guard'),('set_provider_inhouse')) w(f)
 ),
 /* ⑧ ⚠️⚠️ 가입 트리거가 **auth.users 에** 걸렸는가 (진짜 Supabase 전용).
       이게 없으면 가입해도 account 줄이 안 생겨서, 로그인은 되는데
@@ -165,7 +170,7 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (0001~0020)'            t, v_ver.n::text   got, '20' want from v_ver
+  select 1 i, '판 번호 (0001~0021)'            t, v_ver.n::text   got, '21' want from v_ver
   union all select  2, '표 (public)',              v_tab.n::text,  '21' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||
@@ -173,7 +178,7 @@ rows as (
                        v_st.n::text, '13' from v_st
   union all select  5, '역할',                     v_role.n::text, '4'  from v_role
   union all select  6, '갈 수 있는 길 (deal_move)', v_move.n::text, '70' from v_move
-  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '44' from v_fn
+  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '46' from v_fn
   union all select  8, '⚠️ 가입 트리거 (auth.users)', v_trg.n::text, '1' from v_trg
   union all select  9, '⚠️ auth.uid()',            v_uid.n::text,  '1'  from v_uid
   union all select 10, '⚠️ 돈 칸 쓰기 권한: ' || v_money.who, v_money.n::text, '0' from v_money

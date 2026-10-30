@@ -284,7 +284,12 @@ const ADM_DEAL = [
        추천이 됩니다 (약관 제6조 제4항 · "최저가" 는 금지 문구) */
     ok("등록된 차례로 냅니다 (싼 것이 위로 올라오지 않았다)",
         (await pg.evaluate(() => [].map.call(
-          document.querySelectorAll(".myqt-pv"), e => e.textContent).join(">")))
+          /* ⚠️⚠️ **`.myqt-pv` 가 아니라 `.myqt-nm`** — 2026-10-30 (0021)
+             으로 그 안에 "직접 매입" · "제휴 매입업체" 칩이 들어왔고,
+             `.myqt-pv` 의 글을 읽으면 **이름 + 칩**이 같이 나옵니다.
+             여기서 지키는 것은 **차례**(등록된 순서 · 싼 것이 위로
+             올라오지 않는 것)이지 이름 글자가 아닙니다. */
+          document.querySelectorAll(".myqt-nm"), e => e.textContent).join(">")))
           === "가나다 인테리어>라마바 시공");
     ok("금액순으로 줄 세우지 않는다는 줄이 있다",
         !!t && t.includes("금액순으로 줄 세우지 않습니다"));

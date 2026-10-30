@@ -410,7 +410,14 @@ module.exports = async function handler(req, res){
                "created_at,updated_at";
     const qq = await dbSelectAs(s.token, "quote",
       "?select=" + encodeURIComponent(
-        s.role === "customer" ? qp + ",provider(id,name)" : qp) +
+        /* ⚠️⚠️ **`inhouse` 를 같이 가져옵니다** (0021 · §10). 입찰을
+           나란히 놓을 때 "폰웨이 직접 매입" 과 "제휴 매입업체" 가
+           구분이 없으면 손님은 **누구와 거래하는지 모르는 채로**
+           고릅니다 — 그 자체가 §10 이 막으려는 오인이고, 중개자
+           고지(전자상거래법 제20조 제1항)와 같은 결입니다.
+           ⚠️ 권한이 아니라 **표시**입니다 — 보는 것 · 내는 것은
+           이 값과 무관하게 RLS 가 정합니다. */
+        s.role === "customer" ? qp + ",provider(id,name,inhouse)" : qp) +
       "&order=created_at.desc&limit=" + QUOTE_LIMIT);
     if(qq.ok) out.quotes = qq.rows;
     else console.warn("[me] quote — " + qq.why);

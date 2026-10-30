@@ -3029,7 +3029,14 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
   border-radius:var(--r); }
 
 .myqt-c.is-got{ border-color:var(--start); box-shadow:var(--shadow-soft); }
-.myqt-pv{ font-size:var(--t-sm); font-weight:800; color:var(--navy); }
+.myqt-pv{ font-size:var(--t-sm); font-weight:800; color:var(--navy);
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; }
+
+.myqt-nm{ min-width:0; }
+.myqt-who{ font-style:normal; font-size:12px; font-weight:700;
+  padding:3px 9px; border-radius:999px; white-space:nowrap;
+  color:#4A5260; background:#EEF1F5; border:1px solid #DDE2E9; }
+.myqt-who.is-ih{ color:#8A4A2A; background:#FBEEE6; border-color:#F0D8C6; }
 
 .myqt-c .row-cta{ margin-top:auto; }
 

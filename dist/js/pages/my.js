@@ -604,10 +604,15 @@ function MyQuoteCompare(d, r){
       (got ? '' : ' <i>— 하나를 고르시면 업체에 전달됩니다</i>')+'</p>'+
     '<ul class="myqt-l">'+L.map(function(q){
       var pv = (q.provider && q.provider.name) || q.provider_id;
+
+      var ih = !!(q.provider && q.provider.inhouse);
       var tone = (typeof amQuoteTone === "function") ? amQuoteTone(q.state) : "gray";
       return '<li class="myqt-c'+(q.state === "chosen" ? " is-got" : "")+'">'+
         '<div class="myq-h">'+
-          '<b class="myqt-pv">'+esc(pv)+'</b>'+
+
+          '<b class="myqt-pv"><span class="myqt-nm">'+esc(pv)+'</span>'+
+            '<i class="myqt-who'+(ih ? " is-ih" : "")+'">'+
+              (ih ? "직접 매입" : "제휴 매입업체")+'</i></b>'+
           '<span class="myq-st myq-'+esc(tone)+'">'+
             esc((typeof amQuoteName === "function") ? amQuoteName(q.state) : q.state)+
           '</span>'+

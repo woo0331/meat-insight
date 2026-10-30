@@ -181,7 +181,14 @@ try{
                      밀 수 있었고, 고객 계정도 남의 접수를 취소할 수
                      있었습니다. §7A-7 을 쓰다 찾았습니다. */
                   "db/migrations/0019_request_scope.sql",
-                  "db/migrations/0020_device.sql"];
+                  "db/migrations/0020_device.sql",
+                  /* ⚠️⚠️ 0021 — **자체 매입 부서를 경쟁 입찰에서**
+                     갈라 둡니다 (PHONEWAY §10). 봉인은 0008 이
+                     이미 해 두었는데(업체는 자기 입찰 · 자기 배정
+                     줄만 봅니다) `account` 가 role 과 provider_id 를
+                     **둘 다** 들 수 있어서, 한 줄이면 같은 계정이
+                     경쟁 금액을 다 보고 자기 입찰을 냈습니다. */
+                  "db/migrations/0021_inhouse.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ /* ⚠️⚠️ NOTICE 가 먼저 쏟아져서 앞 세 줄만 보면 **진짜
@@ -1367,6 +1374,150 @@ try{
     psql(mv(AD, "signed", `'{"amount":1100000,"providerId":"pv-one"}'::jsonb`));
     r = denied(as(PV2) + "select submit_quote('" + R + `','{"amount":5,"scope":"x"}'::jsonb)`);
     ok("계약 뒤에는 견적을 못 낸다", r.no && /견적을 낼 수 없습니다/.test(r.why || ""), r.why);
+  }
+
+  /* ══ 0021 — 자체 매입 부서를 **경쟁 입찰에서** 갈라 둡니다 (§10) ═════
+     ⚠️⚠️ 봉인은 0008 이 이미 해 두었습니다 (업체는 자기 입찰 · 자기
+     배정 줄만 봅니다). 구멍은 `account` 가 role 과 provider_id 를
+     **둘 다** 들 수 있다는 것 하나였습니다 — 한 줄이면 같은 계정이
+     경쟁 금액을 다 보고(quote_staff) 자기 입찰을 냅니다(my_provider).
+     ⚠️ 여기서 보는 것은 **딱지가 권한이 아니라는 것**까지입니다. */
+  console.log("\n── ⚠️⚠️ 0021 §10 — 입찰을 내는 쪽과 다 보는 쪽을 가릅니다");
+  {
+    const AD  = "55555555-5555-5555-5555-555555555555";
+    const PV  = "33333333-3333-3333-3333-333333333333";
+    const IH  = "99999999-0021-0000-0000-000000000001";
+    const as  = u => "set role authenticated; select become('" + u + "'); ";
+
+    psql(`insert into provider (id, name, listed) values ('pv-inh','폰웨이 매입팀','t')
+            on conflict (id) do nothing;
+          insert into auth.users (id, email) values ('${IH}','inhouse@test')
+            on conflict (id) do nothing;
+          insert into account (id, role, provider_id) values ('${IH}','provider','pv-inh')
+            on conflict (id) do update set role='provider', provider_id='pv-inh';`);
+
+    /* ── ⚠️⚠️ §10 의 자물쇠 — 한 계정이 둘 다 할 수 없습니다 ────────── */
+    let r = denied("update account set role='staff' where id='" + IH + "'");
+    ok("§10 업체 계정을 직원으로 올릴 수 없다",
+       r.no && /같은 계정일 수 없습니다/.test(r.why || ""), r.why);
+    r = denied("update account set role='admin' where id='" + IH + "'");
+    ok("§10 업체 계정을 관리자로 올릴 수 없다", r.no, r.why);
+    /* ⚠️ 반대쪽도 같은 줄이 막습니다 — 직원에게 업체를 붙이는 길 */
+    r = denied("update account set provider_id='pv-inh' " +
+               "where id='44444444-4444-4444-4444-444444444444'");
+    ok("§10 직원 계정에 업체를 붙일 수 없다",
+       r.no && /같은 계정일 수 없습니다/.test(r.why || ""), r.why);
+    /* ⚠️⚠️ **한 문장으로 둘을 같이 넣는 길**도 막습니다 (위 셋은 하나가
+       이미 있는 줄에 나머지를 붙이는 길입니다).
+       ⚠️ 처음에 `insert into account` 로 적었다가 **엉뚱한 자물쇠**로
+       통과했습니다 — 0005 의 가입 트리거가 `auth.users` 에 줄이 생기는
+       순간 `account` 를 **이미 만들어 두어서**, 되돌려 보니 §10 이
+       아니라 기본키 충돌이 잡고 있었습니다 (이 저장소가 0003 에서
+       겪은 자리). 실제 길인 **update** 로 잽니다. */
+    psql(`insert into auth.users (id, email)
+          values ('99999999-0021-0000-0000-000000000009','dual@test')
+          on conflict (id) do nothing;`);
+    r = denied(`update account set role='staff', provider_id='pv-inh'
+                 where id='99999999-0021-0000-0000-000000000009'`);
+    ok("§10 한 문장으로 둘을 같이 넣을 수도 없다",
+       r.no && /같은 계정일 수 없습니다/.test(r.why || ""), r.why);
+
+    /* ⚠️⚠️ **너무 넓게 막는 것도 고장입니다** — 멀쩡한 길이 그대로
+       되는지 같이 봅니다 (업체 연결 · 직원 · 고객). */
+    let a = allowed("update account set role='provider', provider_id='pv-inh' " +
+                    "where id='" + IH + "'");
+    ok("업체 계정 연결은 그대로 된다", a.yes, a.why);
+    a = allowed("update account set role='staff', provider_id=null " +
+                "where id='44444444-4444-4444-4444-444444444444'");
+    ok("직원 계정은 그대로 된다", a.yes, a.why);
+
+    /* ── 자체 매입 딱지 — 권한이 아니라 **표시**입니다 ──────────────── */
+    r = denied(as(PV) + "select set_provider_inhouse('pv-inh', true)");
+    ok("업체는 자체 매입 표시를 못 켠다", r.no && /관리자만/.test(r.why || ""), r.why);
+    r = denied(as("44444444-4444-4444-4444-444444444444") +
+               "select set_provider_inhouse('pv-inh', true)");
+    ok("직원도 자체 매입 표시를 못 켠다", r.no, r.why);
+    r = denied("set role authenticated; select become(null); " +
+               "select set_provider_inhouse('pv-inh', true)");
+    ok("로그인 없이 자체 매입 표시를 못 켠다", r.no, r.why);
+    r = denied(as(AD) + "select set_provider_inhouse('없는업체', true)");
+    ok("없는 업체는 거절한다", r.no && /없는 업체/.test(r.why || ""), r.why);
+
+    const au0 = psql("select count(*) from audit_log where obj='provider'");
+    a = allowed(as(AD) + "select set_provider_inhouse('pv-inh', true, '자체 매입팀입니다')");
+    ok("관리자는 자체 매입 표시를 켠다", a.yes, a.why);
+    ok("딱지가 실제로 켜진다",
+       psql("select inhouse::text from provider where id='pv-inh'") === "true");
+    ok("켠 기록이 남는다 (§8)",
+       Number(psql("select count(*) from audit_log where obj='provider'")) > Number(au0));
+
+    /* ⚠️⚠️ **자물쇠가 둘이고, 어느 것이 걸렸는지 갈라서 봅니다.**
+       이 저장소가 0003 에서 겪은 자리입니다 — "막히기만 하면 통과" 로
+       적으면 **엉뚱한 자물쇠**가 먼저 막아도 초록이고, 정작 보려던
+       것이 빠져도 아무도 모릅니다.
+         ① 칸 권한   `inhouse` 에 update 를 안 줬습니다  → permission denied
+         ② 트리거     그 권한이 **생기더라도** 막습니다   → 관리자가 정합니다 */
+    r = denied(as(IH) + "update provider set inhouse=false where id='pv-inh'");
+    ok("① 업체에게 inhouse 칸 권한이 아예 없다",
+       r.no && /permission denied/i.test(r.why || ""), r.why);
+    /* ⚠️ ②를 재려면 ①을 **통과시켜 놓고** 봐야 합니다 (칸 권한을
+       잠깐 주고 되돌립니다) — 안 그러면 트리거를 지워도 검사가
+       그대로 통과해서 "막고 있다" 고 믿게 됩니다. */
+    psql("grant update (inhouse) on provider to authenticated");
+    r = denied(as(IH) + "update provider set inhouse=false where id='pv-inh'");
+    psql("revoke update (inhouse) on provider from authenticated");
+    ok("② 칸 권한이 생겨도 트리거가 막는다",
+       r.no && /관리자가 정합니다/.test(r.why || ""), r.why);
+    ok("되돌린 뒤 칸 권한이 다시 없다",
+       psql("select count(*) from information_schema.column_privileges " +
+            "where table_name='provider' and column_name='inhouse' " +
+            "and grantee='authenticated' and privilege_type='UPDATE'") === "0");
+
+    /* ⚠️⚠️ **여기가 §10 의 뜻입니다** — 딱지를 켜도 보는 것이 한 줄도
+       안 달라집니다. 자체 매입 부서도 남과 똑같이 자기 것만 봅니다. */
+    ok("자체 매입이어도 남의 입찰은 한 줄도 안 보인다",
+       psql(as(IH) + "select count(*) from quote where provider_id <> 'pv-inh'") === "0",
+       psql(as(IH) + "select count(*) from quote where provider_id <> 'pv-inh'"));
+    ok("자체 매입이어도 남의 배정 줄은 안 보인다",
+       psql(as(IH) + "select count(*) from assignment where provider_id <> 'pv-inh'") === "0");
+
+    /* ⚠️⚠️ **칸을 열지 않았습니다** — 바꾸는 길은 문 하나뿐입니다 */
+    const wr = psql(
+      "select count(*) from information_schema.column_privileges " +
+      "where table_name='provider' and column_name='inhouse' " +
+      "and grantee='authenticated' and privilege_type in ('INSERT','UPDATE')");
+    ok("inhouse 칸에 쓰기 권한이 없다", wr === "0", wr);
+    const an = psql(
+      "select count(*) from information_schema.routine_privileges " +
+      "where routine_name='set_provider_inhouse' and grantee='anon'");
+    ok("anon 에게 자체 매입 문 권한이 없다", an === "0", an);
+
+    /* ⚠️⚠️ **이미 둘 다 든 계정이 있으면 0021 이 멈춥니다.**
+       트리거는 **앞으로만** 막습니다 — 이미 있는 줄은 그대로 §10
+       구멍인데, 조용히 두면 "막았습니다" 가 거짓이 됩니다.
+       ⚠️ 그 줄을 만들려면 트리거를 잠깐 떼어야 합니다 (마이그레이션이
+       돌기 **전**의 DB 를 흉내내는 것입니다). 재고 바로 되돌립니다. */
+    psql(`alter table account disable trigger account_role_guard_t;
+          update account set role='staff' where id='${IH}';
+          alter table account enable trigger account_role_guard_t;`);
+    r = denied(`do $$
+      declare v_n int; v_who text;
+      begin
+        select count(*), coalesce(string_agg(id::text, ', '), '')
+          into v_n, v_who
+          from account where provider_id is not null and role in ('staff','admin');
+        if v_n > 0 then
+          raise exception '업체에 이어진 계정이 직원 · 관리자입니다 (%건: %)', v_n, v_who;
+        end if;
+      end $$;`);
+    ok("이미 둘 다 든 계정이 있으면 0021 이 멈춘다",
+       r.no && /직원 · 관리자입니다/.test(r.why || ""), r.why);
+    psql(`alter table account disable trigger account_role_guard_t;
+          update account set role='provider' where id='${IH}';
+          alter table account enable trigger account_role_guard_t;`);
+    ok("되돌린 뒤에는 걸리는 줄이 없다",
+       psql("select count(*) from account " +
+            "where provider_id is not null and role in ('staff','admin')") === "0");
   }
 
   /* ════════════════════════════════════════════════════════════════

@@ -4030,7 +4030,21 @@ a.chip:hover{ background:var(--blue-50); color:var(--blue); }
 /* 고른 견적 — ⚠️ 색으로만 말하지 않습니다. 딱지(`.myq-st`)가 글자로
    "고른 견적" 이라고 적고, 테두리는 그 보조입니다. */
 .myqt-c.is-got{ border-color:var(--start); box-shadow:var(--shadow-soft); }
-.myqt-pv{ font-size:var(--t-sm); font-weight:800; color:var(--navy); }
+.myqt-pv{ font-size:var(--t-sm); font-weight:800; color:var(--navy);
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; }
+/* ⚠️⚠️ **누가 낸 입찰인가** (0021 · §10) — 폰웨이 자신이 낸 것과 제휴
+   매입업체가 낸 것을 가릅니다. 손님이 **중개자와 거래하는지 당사자와
+   거래하는지**를 고르기 전에 알아야 합니다 (전자상거래법 제20조 제1항).
+   ⚠️ 글자로 쓰는 색은 **짙은 쪽**입니다 — 재 본 값:
+      제휴 #4A5260 / #EEF1F5 **6.95** (흰 카드 위 7.87)
+      직접 #8A4A2A / #FBEEE6 **5.97** (흰 카드 위 6.79) */
+/* ⚠️ 이름 칸 — flex 항목이라 `min-width:0` 이 없으면 긴 상호가 칩을
+   밀어냅니다 (기본값이 auto 라 안쪽보다 못 좁아집니다). */
+.myqt-nm{ min-width:0; }
+.myqt-who{ font-style:normal; font-size:12px; font-weight:700;
+  padding:3px 9px; border-radius:999px; white-space:nowrap;
+  color:#4A5260; background:#EEF1F5; border:1px solid #DDE2E9; }
+.myqt-who.is-ih{ color:#8A4A2A; background:#FBEEE6; border-color:#F0D8C6; }
 /* ⚠️ 두 카드의 높이가 다를 때 **단추를 바닥에 맞춥니다.** 높이가
    제각각이면 같은 단추가 다른 것으로 읽힙니다 (연결 구간에서 두 딱지가
    49px 어긋나 화살표가 한 방향으로만 읽혔던 자리 — 찍어 보고 알았습니다). */

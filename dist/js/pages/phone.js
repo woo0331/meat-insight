@@ -12,7 +12,8 @@ function pwSellGo(patch){
   Object.keys(patch||{}).forEach(function(k){ q[k] = patch[k]; });
   var parts = [];
   Object.keys(m).forEach(function(p){ if(q[m[p]]) parts.push(p+"="+encodeURIComponent(q[m[p]])); });
-  go("/sell" + (parts.length ? "?"+parts.join("&") : ""));
+
+  go("/sell" + (parts.length ? "?"+parts.join("&") : ""), { keepScroll:true });
 }
 
 function pwSellStep(q){
@@ -35,7 +36,8 @@ function pwSteps(now){
 function PageSell(){
   var q = pwSellQS(), step = pwSellStep(q);
   return PgHero({
-      kicker:"SELL", h1:"내 폰 팔기",
+
+      kicker:"SELL", h1:"내 폰 판매",
       lead:"기종과 상태만 고르시면 판매 방법을 바로 보실 수 있습니다. "+
            "가입하지 않으셔도 됩니다."
     })+
@@ -107,14 +109,14 @@ function pwSellPick(q){
       '<div id="pf-chip">'+
       '<div class="pwf-r"><span class="pwf-l">기기 종류</span>'+
         '<div class="chip-g">'+ kinds.map(function(k){
-          return '<a class="chip'+(q.kind===k.key?" on":"")+'" href="#" '+
-            'onclick="pwSellGo({kind:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'});return false">'+
-            esc(k.name)+'</a>'; }).join("") +'</div></div>'+
+          return '<button type="button" class="chip'+(q.kind===k.key?" on":"")+'" aria-pressed="'+((q.kind===k.key)?"true":"false")+'" '+
+            'onclick="pwSellGo({kind:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'})">'+
+            esc(k.name)+'</button>'; }).join("") +'</div></div>'+
       '<div class="pwf-r"><span class="pwf-l">제조사</span>'+
         '<div class="chip-g">'+ makers.map(function(k){
-          return '<a class="chip'+(q.maker===k.key?" on":"")+'" href="#" '+
-            'onclick="pwSellGo({maker:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'});return false">'+
-            esc(k.name)+'</a>'; }).join("") +'</div></div>'+
+          return '<button type="button" class="chip'+(q.maker===k.key?" on":"")+'" aria-pressed="'+((q.maker===k.key)?"true":"false")+'" '+
+            'onclick="pwSellGo({maker:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'})">'+
+            esc(k.name)+'</button>'; }).join("") +'</div></div>'+
       '</div>'
       : "")+
     (q.maker || q.kind ?
@@ -133,8 +135,8 @@ function pwSellPick(q){
       '<div class="pwf-r"><span class="pwf-l">저장 용량</span><div class="chip-g">'+
         md.caps.map(function(c){
           var t = c >= 1024 ? (c/1024)+"TB" : c+"GB";
-          return '<a class="chip'+(String(q.cap)===String(c)?" on":"")+'" href="#" '+
-            'onclick="pwSellGo({cap:\''+c+'\',grade:\'\'});return false">'+t+'</a>';
+          return '<button type="button" class="chip'+(String(q.cap)===String(c)?" on":"")+'" aria-pressed="'+((String(q.cap)===String(c))?"true":"false")+'" '+
+            'onclick="pwSellGo({cap:\''+c+'\',grade:\'\'})">'+t+'</button>';
         }).join("") +'</div></div>' : "")+
   '</div>';
 }
@@ -144,9 +146,9 @@ function pwSellCond(q){
     '<h2 class="pwf-h"><b>02</b> 기기 상태를 알려 주세요</h2>'+
     '<div class="pwf-r"><span class="pwf-l">외관 등급</span><div class="pwf-gr">'+
       (window.AM_GRADES||[]).map(function(g){
-        return '<a class="pwf-g'+(q.grade===g.key?" on":"")+'" href="#" '+
-          'onclick="pwSellGo({grade:\''+g.key+'\'});return false">'+
-          '<b>'+esc(g.name)+'</b><span>'+esc(g.lead)+'</span></a>';
+        return '<button type="button" class="pwf-g'+(q.grade===g.key?" on":"")+'" aria-pressed="'+((q.grade===g.key)?"true":"false")+'" '+
+          'onclick="pwSellGo({grade:\''+g.key+'\'})">'+
+          '<b>'+esc(g.name)+'</b><span>'+esc(g.lead)+'</span></button>';
       }).join("") +'</div></div>'+
     '<div class="pwf-q">'+ (window.AM_COND||[]).map(function(c){
       return '<div class="pwf-r"><span class="pwf-l">'+esc(c.q)+'</span>'+
@@ -214,7 +216,7 @@ function pwSellForm(){
       '<textarea id="pf-memo" rows="3" placeholder="구성품 · 수리 이력 · 사진 주소 등"></textarea></div>'+
     (typeof AgreeBox === "function" ? AgreeBox("pf-agree") : "")+
     '<button type="button" class="btn btn-pw pwf-send" id="pf-send" '+
-      'onclick="pwSellSubmit()">신청 보내기</button>'+
+      'onclick="pwSellSubmit()">내 폰 팔기</button>'+
     '<p class="pwf-n" id="pf-msg"></p>'+
   '</div>';
 }
@@ -275,7 +277,7 @@ window.pwSellSubmit = function(){
     })
     .catch(function(e){
       clearTimeout(t);
-      if(btn){ btn.disabled = false; btn.textContent = "신청 보내기"; }
+      if(btn){ btn.disabled = false; btn.textContent = "내 폰 팔기"; }
       if(msg) msg.textContent = "⚠️ " + (e && e.name === "AbortError"
         ? "연결이 끊겼습니다. 적으신 내용은 그대로 있습니다 — 다시 눌러 주세요."
         : (e && e.message) || "보내지 못했습니다. 잠시 뒤 다시 눌러 주세요.");
@@ -296,25 +298,59 @@ function shopUrl(patch){
     if(f[SHOP_QK[p]]) parts.push(p+"="+encodeURIComponent(f[SHOP_QK[p]])); });
   return "/shop" + (parts.length ? "?"+parts.join("&") : "");
 }
-window.shopGo = function(patch){ go(shopUrl(patch)); };
+
+function shopApply(url){
+  try { history.replaceState(history.state, "", url); }
+  catch(e){ go(url, { keepScroll:true }); return; }
+  var f = shopQS();
+  [].forEach.call(document.querySelectorAll(".shp-fil [data-shf]"), function(a){
+    var k = a.getAttribute("data-shf"), v = a.getAttribute("data-shv") || "";
+    var on = (f[k] || "") === v;
+    a.classList.toggle("on", on);
+    a.setAttribute("aria-pressed", on ? "true" : "false");
+
+    var p = {}; p[k] = v; a.setAttribute("href", shopUrl(p));
+  });
+  var res = document.getElementById("shp-res");
+  if(res) res.innerHTML = shopRes(f);
+}
+window.shopGo = function(patch){ shopApply(shopUrl(patch)); };
+
+window.shopPick = function(ev, a){
+  if(ev && (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button)) return true;
+  if(ev) ev.preventDefault();
+
+  var p = {}; p[a.getAttribute("data-shf")] = a.getAttribute("data-shv") || "";
+  shopApply(shopUrl(p));
+  return false;
+};
 window.shopFind = function(){
   var el = document.getElementById("sh-q");
   shopGo({ q: el ? el.value : "" });
+};
+
+window.shopReset = function(){
+  var el = document.getElementById("sh-q"); if(el) el.value = "";
+  shopApply("/shop");
 };
 
 function shopChips(f){
   function row(label, now, opts, key){
     return '<div class="pwf-r"><span class="pwf-l">'+esc(label)+'</span><div class="chip-g">'+
       opts.map(function(o){
-        return '<a class="chip'+(now===o[0]?" on":"")+'" href="'+
-          esc(shopUrl((function(){ var p={}; p[key]=o[0]; return p; })()))+'">'+
+        var on = now === o[0];
+        return '<a class="chip'+(on?" on":"")+'" href="'+
+          esc(shopUrl((function(){ var p={}; p[key]=o[0]; return p; })()))+'" '+
+          'data-shf="'+esc(key)+'" data-shv="'+esc(o[0])+'" '+
+          'aria-pressed="'+(on?"true":"false")+'" '+
+          'onclick="return shopPick(event,this)">'+
           esc(o[1])+'</a>'; }).join("") +'</div></div>';
   }
   var kinds = [["","전체"]].concat((window.AM_DEVICE_KINDS||[]).map(function(k){ return [k.key,k.name]; }));
   var mks   = [["","전체"]].concat((window.AM_MAKERS||[]).map(function(k){ return [k.key,k.name]; }));
   var grs   = [["","전체"]].concat((window.AM_GRADES||[]).map(function(g){ return [g.key,g.name]; }));
   var prs   = [["","전체"]].concat((window.AM_SHOP_PRICE||[]).map(function(r){ return [r.k,r.name]; }));
-  return '<div class="shp-fil">'+
+  return '<div class="shp-fil" role="group" aria-label="상품 거르개">'+
     '<div class="pwf-r"><span class="pwf-l">기종 찾기</span>'+
       '<div class="shp-q"><input id="sh-q" type="search" value="'+esc(f.q)+'" '+
         'placeholder="아이폰 15 · 갤럭시 S23" '+
@@ -354,13 +390,39 @@ function shopCard(p, sample){
     '</span></a>';
 }
 
-function PageShop(){
-  var f = shopQS();
+function shopRes(f){
   var list = (typeof amShopList === "function") ? amShopList(f) : [];
   var sample = (typeof amShopSampleOn === "function") ? amShopSampleOn() : false;
   var all = (typeof amShopList === "function") ? amShopList({}) : [];
   var off = all.length - list.length;
-  return PgHero({ kicker:"SHOP", h1:"검수를 마친 중고폰만 올립니다",
+  var any = !!(f.kind || f.maker || f.grade || f.price || f.q);
+
+  var reset = any ? '<button type="button" class="btn btn-pw-o shp-rs" '+
+    'onclick="shopReset()">필터 초기화</button>' : "";
+  return (list.length ?
+        '<div class="shp-nr"><p class="shp-n">'+ list.length +'건'+
+          (off > 0 ? ' · 거르개로 '+off+'건을 숨겼습니다' : '') +'</p>'+ reset +'</div>'+
+        '<div class="shp-g">'+ list.map(function(p){ return shopCard(p, sample); }).join("") +'</div>'
+        : (all.length ?
+            '<div class="pws-e"><b>그 조건에 맞는 기기가 없습니다.</b>'+
+              '<p>거르개를 하나씩 풀어 보세요.</p>'+
+              '<a class="btn btn-pw-o" href="/shop" onclick="shopReset();return false">조건 모두 풀기</a></div>'
+          : '<div class="pws-e">'+
+              '<b>지금 판매 중인 상품이 0건입니다.</b>'+
+              '<p>검수를 마친 기기부터 이 자리에 올라옵니다. 한 대라도 올라오면 '+
+                '사진 · 외관 등급 · 배터리 상태 · 기능 검수 결과 · 구성품 · '+
+                '보증과 반품 조건이 그대로 보입니다.<br>'+
+                '⚠️ 없는 상품을 미리 만들어 두지 않습니다.</p>'+
+              '<a class="btn btn-pw" href="/sell">내 폰 팔기</a>'+
+            '</div>'));
+}
+
+function PageShop(){
+  var f = shopQS();
+  var sample = (typeof amShopSampleOn === "function") ? amShopSampleOn() : false;
+  var all = (typeof amShopList === "function") ? amShopList({}) : [];
+
+  return PgHero({ kicker:"SHOP", h1:"내 폰 구매",
       lead:amBrand()+"가 직접 매입하고 검수한 기기만 판매합니다. "+
            "사진 · 등급 · 배터리 상태 · 검수 결과를 그대로 밝힙니다." })+
     '<section class="sec sec-white"><div class="w">'+
@@ -376,22 +438,7 @@ function PageShop(){
           '<a class="btn btn-pw" href="/sell">내 폰 팔기</a>'+
         '</div>' : "")+
       shopChips(f)+
-      (list.length ?
-        '<p class="shp-n">'+ list.length +'건'+
-          (off > 0 ? ' · 거르개로 '+off+'건을 숨겼습니다' : '') +'</p>'+
-        '<div class="shp-g">'+ list.map(function(p){ return shopCard(p, sample); }).join("") +'</div>'
-        : (all.length ?
-            '<div class="pws-e"><b>그 조건에 맞는 기기가 없습니다.</b>'+
-              '<p>거르개를 하나씩 풀어 보세요.</p>'+
-              '<a class="btn btn-pw-o" href="/shop">조건 모두 풀기</a></div>'
-          : '<div class="pws-e">'+
-              '<b>지금 판매 중인 상품이 0건입니다.</b>'+
-              '<p>검수를 마친 기기부터 이 자리에 올라옵니다. 한 대라도 올라오면 '+
-                '사진 · 외관 등급 · 배터리 상태 · 기능 검수 결과 · 구성품 · '+
-                '보증과 반품 조건이 그대로 보입니다.<br>'+
-                '⚠️ 없는 상품을 미리 만들어 두지 않습니다.</p>'+
-              '<a class="btn btn-pw" href="/sell">내 폰 팔기</a>'+
-            '</div>'))+
+      '<div id="shp-res" aria-live="polite">'+ shopRes(f) +'</div>'+
     '</div></section>';
 }
 
@@ -436,7 +483,7 @@ function PageProduct(one){
                 '<a class="btn btn-pw" href="/sell">내 폰 팔기</a>'+
                 '<a class="btn btn-pw-o" href="/shop">다른 예시 보기</a></div></div>'
             : '<div class="pwb-go">'+
-                '<a class="btn btn-pw" href="/quote?c=shop&p='+esc(p.id)+'">구매 문의하기</a>'+
+                '<a class="btn btn-pw" href="/quote?c=shop&p='+esc(p.id)+'">중고폰 구매하기</a>'+
               '</div>'+
 
               '<p class="pwf-n">⚠️ 온라인 결제는 아직 열지 않았습니다 — '+

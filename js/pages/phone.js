@@ -28,7 +28,10 @@ function pwSellGo(patch){
   Object.keys(patch||{}).forEach(function(k){ q[k] = patch[k]; });
   var parts = [];
   Object.keys(m).forEach(function(p){ if(q[m[p]]) parts.push(p+"="+encodeURIComponent(q[m[p]])); });
-  go("/sell" + (parts.length ? "?"+parts.join("&") : ""));
+  /* ⚠️⚠️ **고를 때마다 맨 위로 보내지 않습니다** (2026-10-30 모바일 지시서 §2).
+     고른 것 아래에 다음 걸음이 붙는 화면이라, 맨 위로 올라가면 방금 고른
+     칸과 다음 걸음을 다시 찾아 내려와야 합니다. */
+  go("/sell" + (parts.length ? "?"+parts.join("&") : ""), { keepScroll:true });
 }
 
 /* 지금 몇 걸음째인가 — 고르신 것으로 정합니다 (억지로 막지 않습니다) */
@@ -67,7 +70,10 @@ function pwSteps(now){
 function PageSell(){
   var q = pwSellQS(), step = pwSellStep(q);
   return PgHero({
-      kicker:"SELL", h1:"내 폰 팔기",
+      /* ⚠️ 제목은 아래 네비의 "팔기" 와 짝이고, **실행 단추는 "내 폰 팔기"**
+         입니다 (2026-10-30 모바일 지시서 §1) — 둘을 같은 말로 두면 제목과
+         단추가 구분이 안 됩니다. */
+      kicker:"SELL", h1:"내 폰 판매",
       lead:"기종과 상태만 고르시면 판매 방법을 바로 보실 수 있습니다. "+
            "가입하지 않으셔도 됩니다."
     })+
@@ -176,14 +182,14 @@ function pwSellPick(q){
       '<div id="pf-chip">'+
       '<div class="pwf-r"><span class="pwf-l">기기 종류</span>'+
         '<div class="chip-g">'+ kinds.map(function(k){
-          return '<a class="chip'+(q.kind===k.key?" on":"")+'" href="#" '+
-            'onclick="pwSellGo({kind:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'});return false">'+
-            esc(k.name)+'</a>'; }).join("") +'</div></div>'+
+          return '<button type="button" class="chip'+(q.kind===k.key?" on":"")+'" aria-pressed="'+((q.kind===k.key)?"true":"false")+'" '+
+            'onclick="pwSellGo({kind:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'})">'+
+            esc(k.name)+'</button>'; }).join("") +'</div></div>'+
       '<div class="pwf-r"><span class="pwf-l">제조사</span>'+
         '<div class="chip-g">'+ makers.map(function(k){
-          return '<a class="chip'+(q.maker===k.key?" on":"")+'" href="#" '+
-            'onclick="pwSellGo({maker:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'});return false">'+
-            esc(k.name)+'</a>'; }).join("") +'</div></div>'+
+          return '<button type="button" class="chip'+(q.maker===k.key?" on":"")+'" aria-pressed="'+((q.maker===k.key)?"true":"false")+'" '+
+            'onclick="pwSellGo({maker:\''+k.key+'\',model:\'\',cap:\'\',grade:\'\'})">'+
+            esc(k.name)+'</button>'; }).join("") +'</div></div>'+
       '</div>'
       : "")+
     (q.maker || q.kind ?
@@ -202,8 +208,8 @@ function pwSellPick(q){
       '<div class="pwf-r"><span class="pwf-l">저장 용량</span><div class="chip-g">'+
         md.caps.map(function(c){
           var t = c >= 1024 ? (c/1024)+"TB" : c+"GB";
-          return '<a class="chip'+(String(q.cap)===String(c)?" on":"")+'" href="#" '+
-            'onclick="pwSellGo({cap:\''+c+'\',grade:\'\'});return false">'+t+'</a>';
+          return '<button type="button" class="chip'+(String(q.cap)===String(c)?" on":"")+'" aria-pressed="'+((String(q.cap)===String(c))?"true":"false")+'" '+
+            'onclick="pwSellGo({cap:\''+c+'\',grade:\'\'})">'+t+'</button>';
         }).join("") +'</div></div>' : "")+
   '</div>';
 }
@@ -216,9 +222,9 @@ function pwSellCond(q){
     '<h2 class="pwf-h"><b>02</b> 기기 상태를 알려 주세요</h2>'+
     '<div class="pwf-r"><span class="pwf-l">외관 등급</span><div class="pwf-gr">'+
       (window.AM_GRADES||[]).map(function(g){
-        return '<a class="pwf-g'+(q.grade===g.key?" on":"")+'" href="#" '+
-          'onclick="pwSellGo({grade:\''+g.key+'\'});return false">'+
-          '<b>'+esc(g.name)+'</b><span>'+esc(g.lead)+'</span></a>';
+        return '<button type="button" class="pwf-g'+(q.grade===g.key?" on":"")+'" aria-pressed="'+((q.grade===g.key)?"true":"false")+'" '+
+          'onclick="pwSellGo({grade:\''+g.key+'\'})">'+
+          '<b>'+esc(g.name)+'</b><span>'+esc(g.lead)+'</span></button>';
       }).join("") +'</div></div>'+
     '<div class="pwf-q">'+ (window.AM_COND||[]).map(function(c){
       return '<div class="pwf-r"><span class="pwf-l">'+esc(c.q)+'</span>'+
@@ -289,7 +295,7 @@ function pwSellForm(){
       '<textarea id="pf-memo" rows="3" placeholder="구성품 · 수리 이력 · 사진 주소 등"></textarea></div>'+
     (typeof AgreeBox === "function" ? AgreeBox("pf-agree") : "")+
     '<button type="button" class="btn btn-pw pwf-send" id="pf-send" '+
-      'onclick="pwSellSubmit()">신청 보내기</button>'+
+      'onclick="pwSellSubmit()">내 폰 팔기</button>'+
     '<p class="pwf-n" id="pf-msg"></p>'+
   '</div>';
 }
@@ -355,7 +361,7 @@ window.pwSellSubmit = function(){
     })
     .catch(function(e){
       clearTimeout(t);
-      if(btn){ btn.disabled = false; btn.textContent = "신청 보내기"; }
+      if(btn){ btn.disabled = false; btn.textContent = "내 폰 팔기"; }
       if(msg) msg.textContent = "⚠️ " + (e && e.name === "AbortError"
         ? "연결이 끊겼습니다. 적으신 내용은 그대로 있습니다 — 다시 눌러 주세요."
         : (e && e.message) || "보내지 못했습니다. 잠시 뒤 다시 눌러 주세요.");
@@ -386,25 +392,74 @@ function shopUrl(patch){
     if(f[SHOP_QK[p]]) parts.push(p+"="+encodeURIComponent(f[SHOP_QK[p]])); });
   return "/shop" + (parts.length ? "?"+parts.join("&") : "");
 }
-window.shopGo = function(patch){ go(shopUrl(patch)); };
+/* ⚠️⚠️ **거르개는 화면을 새로 그리지 않습니다** (2026-10-30 모바일 지시서 §2).
+   전에는 칩이 평범한 링크라 click 가로채기 → `go()` → `render()` 를
+   타고, `render()` 끝의 `scrollTo(0,0)` 이 **칩을 누를 때마다 맨
+   위로** 올려 보냈습니다 — 폰에서 거르개 넷을 차례로 고르시려면 네 번
+   다시 내려와야 했습니다. 스크롤을 되돌려 놓는 땜질이 아니라 **화면을
+   통째로 다시 그리지 않는 것**이 고침입니다 —
+     ① 주소만 `replaceState` 로 바꿉니다 (거르개 하나하나가 뒤로 가기
+        한 칸이 되면 상세에서 돌아올 때 그만큼 더 눌러야 합니다)
+     ② 칩은 **제자리에서** 켜고 끕니다 (포커스 · 보던 자리가 그대로)
+     ③ 목록(`#shp-res`)만 갈아 끼웁니다 — 거르개 **아래**라 높이가 바뀌어도
+        보고 계신 거르개가 안 움직입니다
+   ⚠️ `href` 는 그대로 둡니다 — 새 탭 · 크롤러 · 자바스크립트 없는 화면이
+   그 주소로 같은 결과를 받습니다. 가로채는 것은 그냥 누를 때뿐입니다. */
+function shopApply(url){
+  try { history.replaceState(history.state, "", url); }
+  catch(e){ go(url, { keepScroll:true }); return; }
+  var f = shopQS();
+  [].forEach.call(document.querySelectorAll(".shp-fil [data-shf]"), function(a){
+    var k = a.getAttribute("data-shf"), v = a.getAttribute("data-shv") || "";
+    var on = (f[k] || "") === v;
+    a.classList.toggle("on", on);
+    a.setAttribute("aria-pressed", on ? "true" : "false");
+    /* ⚠️⚠️ **`href` 도 지금 상태로 다시 적습니다.** 처음 그릴 때의 주소를
+       그대로 두면 칩마다 **그때의 다른 거르개**를 들고 있어서, 애플을
+       고른 뒤 스마트폰을 누르면 애플이 조용히 풀렸습니다 (눌러 보고
+       알았습니다 — 쌓이지 않았습니다). */
+    var p = {}; p[k] = v; a.setAttribute("href", shopUrl(p));
+  });
+  var res = document.getElementById("shp-res");
+  if(res) res.innerHTML = shopRes(f);
+}
+window.shopGo = function(patch){ shopApply(shopUrl(patch)); };
+/* 칩 — ⚠️ 새 탭 · 가운데 단추는 그대로 링크로 보냅니다 */
+window.shopPick = function(ev, a){
+  if(ev && (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button)) return true;
+  if(ev) ev.preventDefault();
+  /* 누른 순간의 상태에서 그 칸만 바꿉니다 (href 를 믿지 않습니다) */
+  var p = {}; p[a.getAttribute("data-shf")] = a.getAttribute("data-shv") || "";
+  shopApply(shopUrl(p));
+  return false;
+};
 window.shopFind = function(){
   var el = document.getElementById("sh-q");
   shopGo({ q: el ? el.value : "" });
+};
+/* 초기화 — ⚠️ 거르개만 풉니다. 스크롤은 안 움직이고 찾는 말 칸도 비웁니다 */
+window.shopReset = function(){
+  var el = document.getElementById("sh-q"); if(el) el.value = "";
+  shopApply("/shop");
 };
 
 function shopChips(f){
   function row(label, now, opts, key){
     return '<div class="pwf-r"><span class="pwf-l">'+esc(label)+'</span><div class="chip-g">'+
       opts.map(function(o){
-        return '<a class="chip'+(now===o[0]?" on":"")+'" href="'+
-          esc(shopUrl((function(){ var p={}; p[key]=o[0]; return p; })()))+'">'+
+        var on = now === o[0];
+        return '<a class="chip'+(on?" on":"")+'" href="'+
+          esc(shopUrl((function(){ var p={}; p[key]=o[0]; return p; })()))+'" '+
+          'data-shf="'+esc(key)+'" data-shv="'+esc(o[0])+'" '+
+          'aria-pressed="'+(on?"true":"false")+'" '+
+          'onclick="return shopPick(event,this)">'+
           esc(o[1])+'</a>'; }).join("") +'</div></div>';
   }
   var kinds = [["","전체"]].concat((window.AM_DEVICE_KINDS||[]).map(function(k){ return [k.key,k.name]; }));
   var mks   = [["","전체"]].concat((window.AM_MAKERS||[]).map(function(k){ return [k.key,k.name]; }));
   var grs   = [["","전체"]].concat((window.AM_GRADES||[]).map(function(g){ return [g.key,g.name]; }));
   var prs   = [["","전체"]].concat((window.AM_SHOP_PRICE||[]).map(function(r){ return [r.k,r.name]; }));
-  return '<div class="shp-fil">'+
+  return '<div class="shp-fil" role="group" aria-label="상품 거르개">'+
     '<div class="pwf-r"><span class="pwf-l">기종 찾기</span>'+
       '<div class="shp-q"><input id="sh-q" type="search" value="'+esc(f.q)+'" '+
         'placeholder="아이폰 15 · 갤럭시 S23" '+
@@ -452,13 +507,43 @@ function shopCard(p, sample){
     '</span></a>';
 }
 
-function PageShop(){
-  var f = shopQS();
+/* 목록 자리 — ⚠️ 거르개를 바꾸면 **이것만** 다시 그립니다 (shopApply).
+   화면을 처음 그릴 때와 거르개를 바꿀 때 **같은 함수**를 씁니다 — 두 벌을
+   두면 처음 연 화면과 거른 화면이 서로 다른 말을 합니다. */
+function shopRes(f){
   var list = (typeof amShopList === "function") ? amShopList(f) : [];
   var sample = (typeof amShopSampleOn === "function") ? amShopSampleOn() : false;
   var all = (typeof amShopList === "function") ? amShopList({}) : [];
   var off = all.length - list.length;
-  return PgHero({ kicker:"SHOP", h1:"검수를 마친 중고폰만 올립니다",
+  var any = !!(f.kind || f.maker || f.grade || f.price || f.q);
+  /* ⚠️ 초기화는 **거르개 아래**에 둡니다 — 위에 두면 나타나고 사라질 때
+     보고 계신 칩이 그만큼 위아래로 움직입니다. */
+  var reset = any ? '<button type="button" class="btn btn-pw-o shp-rs" '+
+    'onclick="shopReset()">필터 초기화</button>' : "";
+  return (list.length ?
+        '<div class="shp-nr"><p class="shp-n">'+ list.length +'건'+
+          (off > 0 ? ' · 거르개로 '+off+'건을 숨겼습니다' : '') +'</p>'+ reset +'</div>'+
+        '<div class="shp-g">'+ list.map(function(p){ return shopCard(p, sample); }).join("") +'</div>'
+        : (all.length ?
+            '<div class="pws-e"><b>그 조건에 맞는 기기가 없습니다.</b>'+
+              '<p>거르개를 하나씩 풀어 보세요.</p>'+
+              '<a class="btn btn-pw-o" href="/shop" onclick="shopReset();return false">조건 모두 풀기</a></div>'
+          : '<div class="pws-e">'+
+              '<b>지금 판매 중인 상품이 0건입니다.</b>'+
+              '<p>검수를 마친 기기부터 이 자리에 올라옵니다. 한 대라도 올라오면 '+
+                '사진 · 외관 등급 · 배터리 상태 · 기능 검수 결과 · 구성품 · '+
+                '보증과 반품 조건이 그대로 보입니다.<br>'+
+                '⚠️ 없는 상품을 미리 만들어 두지 않습니다.</p>'+
+              '<a class="btn btn-pw" href="/sell">내 폰 팔기</a>'+
+            '</div>'));
+}
+
+function PageShop(){
+  var f = shopQS();
+  var sample = (typeof amShopSampleOn === "function") ? amShopSampleOn() : false;
+  var all = (typeof amShopList === "function") ? amShopList({}) : [];
+  /* ⚠️ 제목은 아래 네비의 "구매" 와 짝입니다 (2026-10-30 모바일 지시서 §1) */
+  return PgHero({ kicker:"SHOP", h1:"내 폰 구매",
       lead:amBrand()+"가 직접 매입하고 검수한 기기만 판매합니다. "+
            "사진 · 등급 · 배터리 상태 · 검수 결과를 그대로 밝힙니다." })+
     '<section class="sec sec-white"><div class="w">'+
@@ -477,22 +562,7 @@ function PageShop(){
           '<a class="btn btn-pw" href="/sell">내 폰 팔기</a>'+
         '</div>' : "")+
       shopChips(f)+
-      (list.length ?
-        '<p class="shp-n">'+ list.length +'건'+
-          (off > 0 ? ' · 거르개로 '+off+'건을 숨겼습니다' : '') +'</p>'+
-        '<div class="shp-g">'+ list.map(function(p){ return shopCard(p, sample); }).join("") +'</div>'
-        : (all.length ?
-            '<div class="pws-e"><b>그 조건에 맞는 기기가 없습니다.</b>'+
-              '<p>거르개를 하나씩 풀어 보세요.</p>'+
-              '<a class="btn btn-pw-o" href="/shop">조건 모두 풀기</a></div>'
-          : '<div class="pws-e">'+
-              '<b>지금 판매 중인 상품이 0건입니다.</b>'+
-              '<p>검수를 마친 기기부터 이 자리에 올라옵니다. 한 대라도 올라오면 '+
-                '사진 · 외관 등급 · 배터리 상태 · 기능 검수 결과 · 구성품 · '+
-                '보증과 반품 조건이 그대로 보입니다.<br>'+
-                '⚠️ 없는 상품을 미리 만들어 두지 않습니다.</p>'+
-              '<a class="btn btn-pw" href="/sell">내 폰 팔기</a>'+
-            '</div>'))+
+      '<div id="shp-res" aria-live="polite">'+ shopRes(f) +'</div>'+
     '</div></section>';
 }
 
@@ -543,7 +613,7 @@ function PageProduct(one){
                 '<a class="btn btn-pw" href="/sell">내 폰 팔기</a>'+
                 '<a class="btn btn-pw-o" href="/shop">다른 예시 보기</a></div></div>'
             : '<div class="pwb-go">'+
-                '<a class="btn btn-pw" href="/quote?c=shop&p='+esc(p.id)+'">구매 문의하기</a>'+
+                '<a class="btn btn-pw" href="/quote?c=shop&p='+esc(p.id)+'">중고폰 구매하기</a>'+
               '</div>'+
               /* ⚠️⚠️ **온라인 결제를 만들지 않았습니다.** PG 계약이
                  먼저이고(지시서가 직접 적었습니다), 없는데 결제 단추를

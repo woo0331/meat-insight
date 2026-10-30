@@ -2438,7 +2438,7 @@ const AUDIT = `(() => {
       return "살 수 없다는 말이 없습니다";
     const v = document.getElementById("view") || document.body;
     const all = v.textContent || "";
-    if(all.indexOf("구매 문의하기") >= 0) return "예시인데 구매 단추가 있습니다";
+    if(all.indexOf("중고폰 구매하기") >= 0) return "예시인데 구매 단추가 있습니다";
     /* ⚠️ 비활성 단추로 두지도 않습니다 — 왜 못 사는지를 말하는
        쪽이 낫습니다 (0개일 때 신청 단추와 같은 규칙) */
     const dis = v.querySelector("button[disabled]");

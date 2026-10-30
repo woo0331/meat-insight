@@ -1002,17 +1002,17 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     여기서 끊기면 그 기기를 가진 분은 팔 길이 아예 없습니다. */
  await click('.dvc:has-text("기타 기기")');
  await pg.waitForTimeout(400);
- say((await pg.locator('#pf-chip .chip-g a:has-text("워치")').count())>0,
+ say((await pg.locator('#pf-chip .chip-g .chip:has-text("워치")').count())>0,
      "기타 기기를 누르면 워치 · 버즈 칩이 나온다");
- await click('#pf-chip .chip-g a:has-text("스마트폰")');
- await click('#pf-chip .chip-g a:has-text("애플")');
+ await click('#pf-chip .chip-g .chip:has-text("스마트폰")');
+ await click('#pf-chip .chip-g .chip:has-text("애플")');
  say((await url()).indexOf("mk=apple")>=0,"펼친 칩으로도 그대로 고를 수 있다",await url());
  await pg.selectOption("#pf-md", { index:1 });
  await pg.waitForTimeout(400);
  say((await url()).indexOf("md=")>=0,"모델이 주소에 실린다",await url());
  /* ⚠️⚠️ **용량까지 골라야 2단계가 열립니다** (`pwSellStep()`) — 모델만
     고르고 "2단계가 안 열린다" 고 적으면 **검사가 틀린** 것입니다. */
- const pwCap = await pg.$$('#pf-1 .chip-g a');
+ const pwCap = await pg.$$('#pf-1 .chip-g .chip');
  if(pwCap.length) await pwCap[pwCap.length-1].click();
  await pg.waitForTimeout(450);
  say((await pg.locator("#pf-2").count())>0,"용량까지 고르면 2단계(상태 · 등급)가 열린다");
@@ -1138,6 +1138,37 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    say(u2.indexOf("kd=")>0 && u2.indexOf("gr=")>0, "거르개가 쌓인다 (한 칸만 남지 않는다)", u2);
    const off = await pg.evaluate(()=>(document.querySelector(".shp-n")||{}).textContent||"");
    say(off.indexOf("숨겼")>=0, "거르개로 몇 건이 빠졌는지 밝힌다", off.trim());
+   /* ⚠️⚠️ 2026-10-30 모바일 지시서 §2 — **거르개를 눌러도 맨 위로 안 튄다.**
+      전에는 칩이 링크라 render() 끝의 scrollTo(0,0) 을 탔습니다. 지금은
+      목록(#shp-res)만 갈아 끼웁니다 — 화면을 통째로 다시 그리면 이 줄이
+      다시 떨어집니다. ⚠️ 누르기 **전에** 칩을 화면에 들여 두고 잽니다
+      (안 그러면 click 이 스스로 스크롤해서 그 값을 "튀었다" 로 잽니다). */
+   await pg.goto(B+"/shop",{waitUntil:"networkidle"});
+   const yLen0 = await pg.evaluate(()=>history.length);
+   const ySteps = [];
+   for(const sel of ['.shp-fil a.chip[data-shf="maker"][data-shv="apple"]',
+                     '.shp-fil a.chip[data-shf="kind"][data-shv="phone"]']){
+     await pg.locator(sel).scrollIntoViewIfNeeded();
+     await pg.evaluate(()=>window.scrollBy(0, 40));
+     const y0 = await pg.evaluate(()=>Math.round(scrollY));
+     await pg.click(sel); await pg.waitForTimeout(250);
+     const y1 = await pg.evaluate(()=>Math.round(scrollY));
+     ySteps.push(y0+"→"+y1);
+   }
+   say(ySteps.every(t=>{ const a=t.split("→"); return Math.abs(a[0]-a[1])<=2; }),
+     "거르개를 눌러도 보던 자리가 그대로다", ySteps.join(" · "));
+   const yOn = await pg.evaluate(()=>[...document.querySelectorAll(".shp-fil a.chip.on")]
+     .map(a=>a.getAttribute("data-shv")).join(","));
+   say(yOn.indexOf("apple")>=0 && yOn.indexOf("phone")>=0,
+     "제자리에서 갈아 끼워도 거르개가 쌓인다", yOn);
+   say(await pg.evaluate(()=>history.length)===yLen0,
+     "거르개 하나하나가 뒤로 가기 칸을 늘리지 않는다");
+   await pg.locator(".shp-rs").scrollIntoViewIfNeeded();
+   const yR0 = await pg.evaluate(()=>Math.round(scrollY));
+   await pg.click(".shp-rs"); await pg.waitForTimeout(250);
+   const yR = await pg.evaluate(()=>({y:Math.round(scrollY),u:location.pathname+location.search}));
+   say(yR.u==="/shop" && Math.abs(yR.y-yR0)<=2, "필터 초기화가 거르개만 풀고 스크롤은 그대로다",
+     yR0+"→"+yR.y+" · "+yR.u);
    /* 찾기 — ⚠️ 손님은 띄어쓰기를 안 합니다 */
    await pg.goto(B+"/shop",{waitUntil:"networkidle"});
    await pg.fill("#sh-q","아이폰15");
@@ -1156,7 +1187,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    await pg.waitForTimeout(500);
    const d = await pg.evaluate(()=>({u:location.pathname,
      ex:(document.querySelector(".shp-note")||{}).textContent||"",
-     buy:document.body.textContent.indexOf("구매 문의하기")>=0,
+     buy:((document.getElementById("view")||document.body).textContent||"").indexOf("중고폰 구매하기")>=0,
      h1:((document.querySelector("#view h1")||{}).textContent||"").trim()}));
    say(d.u.indexOf("/d/")===0, "카드가 상세로 열린다", d.u);
    say(d.h1.length>0, "상세 제목이 비지 않았다", d.h1);

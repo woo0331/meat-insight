@@ -8427,3 +8427,52 @@ html.ivh #view .pwh h1{ margin:18px 0 0; font-size:clamp(28px,3.9vw,48px);
   .pwh-art .ph{ max-height:160px; }
   .pwpd-g > li{ flex:0 0 148px; }
 }
+/* ⚠️⚠️ **아래 블록은 바로 위 메인 리뉴얼 블록 뒤에 옵니다.** 둘 다 파일
+   맨 뒤에 붙은 블록인데 **가리키는 자리가 안 겹칩니다** — 위는 메인
+   (`.pwh` · `.pwsv` · `.pwbr` · `.pwpd` · `.pwbz` · `.pwst` · `.pwc`),
+   아래는 `/shop` · `/sell` 의 거르개 칩(`.shp-fil` · `.pwf` · `.shp-nr`
+   · `#shp-res`)입니다. 그래서 차례가 서로를 안 이깁니다.
+   ⚠️ 새 블록을 또 붙이실 때는 **선택자가 겹치는지 먼저 보세요** —
+   겹치면 뒤에 오는 쪽이 이기고, 그게 이 저장소가 일곱 번 겪은
+   특정도 함정입니다. */
+/* ── 2026-10-30 모바일 지시서 §3 — 중고폰 거르개 칩 ───────────────
+   고른 칩: 오렌지 면 + 흰 글자 (`--pw-or-600` · 흰 글자 4.55)
+   안 고른 칩: 흰 면 + 진한 브라운 글자 (`--pw-ink` · 흰 바탕 15 이상)
+   ⚠️⚠️ **`--pw-or`(#F37021)를 칩 면으로 쓰지 마세요** — 흰 글자 2.94 로
+   AA 미달입니다. ⚠️ 색만으로 고름을 말하지 않게 **굵기와 테두리**도
+   같이 바뀝니다 (`aria-pressed` 는 읽어 주는 프로그램 몫입니다).
+   ⚠️ `.shp-fil` · `.pwf` 안에만 겁니다 — 다른 화면의 칩은 그대로입니다. */
+.shp-fil .chip, .pwf .chip{ min-height:44px; padding:0 16px;
+  background:#fff; color:var(--pw-ink, #352014);
+  border:1px solid var(--pw-line, #EADBC8);
+  font-size:14px; font-weight:600; white-space:nowrap; }
+.shp-fil .chip:hover, .pwf .chip:hover{ border-color:var(--pw-or-600, #D24601); }
+.shp-fil .chip.on, .pwf .chip.on{ background:var(--pw-or-600, #D24601);
+  border-color:var(--pw-or-600, #D24601); color:#fff; font-weight:800; }
+.shp-fil .chip:focus-visible, .pwf .chip:focus-visible{
+  outline:3px solid rgba(243,112,33,.45); outline-offset:2px; }
+.shp-fil .chip-g, .pwf .chip-g{ gap:8px; }
+/* 결과 줄 — 건수 왼쪽 · 초기화 오른쪽 (거르개 **아래**라 나타나고
+   사라져도 보고 계신 칩이 안 움직입니다) */
+.shp-nr{ display:flex; align-items:center; justify-content:space-between;
+  gap:10px; flex-wrap:wrap; margin:0 0 14px; }
+.shp-nr .shp-n{ margin:0; }
+.shp-rs{ min-height:44px; padding:0 16px; font-size:14px; }
+@media (max-width:520px){
+  .shp-fil{ padding:14px; }
+  .shp-fil .chip, .pwf .chip{ padding:0 13px; font-size:13.5px; }
+  .shp-fil .chip-g, .pwf .chip-g{ gap:6px; }
+}
+/* ⚠️ `/sell` 의 칩 · 등급은 **단추**입니다 (전에는 `href="#"` 링크였습니다 —
+   누르는 순간 주소에 `#` 이 붙을 자리이고 읽어 주는 프로그램은 "링크" 로
+   읽습니다). 단추의 브라우저 기본 글꼴 · 정렬만 걷어냅니다. */
+button.chip, button.pwf-g{ font:inherit; cursor:pointer; text-align:left;
+  -webkit-appearance:none; appearance:none; }
+.pwf button.chip{ font-size:14px; }
+@media (max-width:520px){ .pwf button.chip{ font-size:13.5px; } }
+/* 거르개 결과 자리는 스크롤 기준점에서 뺍니다 — 결과가 통째로 갈려 나갈
+   때 브라우저의 스크롤 고정(scroll anchoring)이 사라진 카드를 기준으로
+   잡지 않고, 위의 거르개를 기준으로 남게 하려는 **예방**입니다.
+   ⚠️ 재 보니 이것 없이도 360 · 390 · 430px 에서 움직이지 않았습니다 —
+   그래도 결과 높이가 크게 바뀌는 자리라 남겨 둡니다. */
+#shp-res{ overflow-anchor:none; }

@@ -73,7 +73,7 @@ const CASES = [
   ["쇼핑몰: 예시 상세에는 구매 단추가 없다",
    `var box = document.querySelector(".shp-d-tx .note-box");
     if(box) box.insertAdjacentHTML("afterend",
-      '<div class="pwb-go"><a class="btn btn-pw" href="/quote">구매 문의하기</a></div>');`],
+      '<div class="pwb-go"><a class="btn btn-pw" href="/quote">중고폰 구매하기</a></div>');`],
   /* ⚠️⚠️ 2026-10-25 §10 — 신청 화면의 단계 안내를 **손으로 적은 말**로
      바꿔 봅니다. 그러면 제휴가 붙은 날에도 "아직 없습니다" 가 남습니다
      (이 저장소가 CLAUDE.md 의 "아직 안 된 것" 표에서 겪은 자리). */

@@ -337,19 +337,23 @@ window.WOW_PHOTO_SLOTS = [
      ⚠️ 액자 비율이 가로세로 거의 1:1 입니다 (PC 136px · 폰 84px 높이의
      칸에 `object-fit:contain` 으로 앉습니다) — 가로로 긴 사진을 넣으면
      위아래가 비고, 세로로 긴 사진은 좌우가 빕니다.
+     ⚠️⚠️ 2026-10-30 — 메인 02 의 액자가 **가로로 넓어졌습니다**
+     (1440px 약 256×170 · 390px 약 150×114 · 어두운 카드 #211C19).
+     그래서 **투명 배경(PNG→WebP)** 이 제일 낫고, 흰 배경이면 카드 위에
+     흰 네모가 뜹니다. 비율 범위를 0.85~1.7 로 넓혔습니다.
      ⚠️⚠️ **제품만 찍힌 사진**이라야 합니다 — 손 · 배경 · 상호 · 매장이
      들어가면 카드 넷의 결이 어긋납니다 (흰 배경 또는 투명 배경). */
-  { key:"dev-iphone", sizes:"(max-width:767px) 95px, 150px",
-    where:"/sell 01 기기 카드 — 아이폰", min:[400,400], ratio:[0.85,1.2], maxKB:60,
+  { key:"dev-iphone", sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
+    where:"메인 02 · /sell 01 기기 카드 — 아이폰", min:[600,400], ratio:[0.85,1.7], maxKB:90,
     note:"아이폰 한 대. ⚠️ 애플 로고가 **읽히지 않아야** 합니다 (남의 등록상표) · 흰 배경" },
-  { key:"dev-galaxy", sizes:"(max-width:767px) 95px, 150px",
-    where:"/sell 01 기기 카드 — 갤럭시", min:[400,400], ratio:[0.85,1.2], maxKB:60,
+  { key:"dev-galaxy", sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
+    where:"메인 02 · /sell 01 기기 카드 — 갤럭시", min:[600,400], ratio:[0.85,1.7], maxKB:90,
     note:"갤럭시 한 대. ⚠️ 삼성 워드마크가 읽히지 않아야 합니다 · 흰 배경" },
-  { key:"dev-tablet", sizes:"(max-width:767px) 95px, 150px",
-    where:"/sell 01 기기 카드 — 태블릿", min:[400,400], ratio:[0.85,1.2], maxKB:60,
+  { key:"dev-tablet", sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
+    where:"메인 02 · /sell 01 기기 카드 — 태블릿", min:[600,400], ratio:[0.85,1.7], maxKB:90,
     note:"태블릿 한 대(또는 두 대 나란히). ⚠️ 상표가 읽히지 않아야 합니다 · 흰 배경" },
-  { key:"dev-etc", sizes:"(max-width:767px) 95px, 150px",
-    where:"/sell 01 기기 카드 — 기타 기기", min:[400,400], ratio:[0.85,1.2], maxKB:60,
+  { key:"dev-etc", sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
+    where:"메인 02 · /sell 01 기기 카드 — 기타 기기", min:[600,400], ratio:[0.85,1.7], maxKB:90,
     note:"워치 + 무선 이어폰. ⚠️ 특정 제조사가 드러나지 않아야 합니다 · 흰 배경" },
   /* ⚠️⚠️ 2026-10-29 오렌지 §3-E — **메인 03 사업 배너 넷**. `PW_BIZ` 의
      `ph` 가 이 열쇠를 가리키고 `PwBiz()` 가 `hasPhoto()` 로 기다립니다 —

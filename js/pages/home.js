@@ -2127,7 +2127,6 @@ function PwShop(){
 function pwDevLink(c){
   var qs = c.more ? "?more=1"
          : "?maker="+ encodeURIComponent(c.maker) +"&kind="+ encodeURIComponent(c.kind);
-  var lg = c.lg && (window.AM_MAKER_LOGO || {})[c.lg];
   return '<li><a class="dvc dvc-a" href="/sell'+ qs +'">'+
     '<span class="dvc-ph">'+
       (typeof hasPhoto === "function" && hasPhoto(c.ph)
@@ -2135,7 +2134,7 @@ function pwDevLink(c){
         : iconArt(c.ia, 96))+
     '</span>'+
     '<span class="dvc-tx">'+
-      (lg ? '<img class="dvc-lg" src="'+ esc(lg) +'" alt="" aria-hidden="true">' : '')+
+      pwDevLogos(c)+
       '<b class="dvc-nm">'+ esc(c.nm) +'</b>'+
       '<span class="dvc-s">'+ esc(c.sub) +'</span>'+
     '</span>'+
@@ -2148,7 +2147,7 @@ function PwDevice(){
   return '<section class="pwd"><div class="w pwd-in">'+
     '<div class="pwd-hd">'+
       '<span class="pw-ey">SELL YOUR DEVICE</span>'+
-      '<h2>어떤 기기를<br>판매하시나요?</h2>'+
+      '<h2>어떤 기기를 판매하시나요?</h2>'+
       '<p>판매할 기기 종류를 선택해 주세요.</p>'+
     '</div>'+
     '<ul class="pwd-g">'+ C.map(pwDevLink).join("") +'</ul>'+

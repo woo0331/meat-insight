@@ -7725,3 +7725,94 @@ html.ivh #view .pwd-hd h2{ margin:0; font-size:clamp(24px,2.3vw,30px);
    이용방법(크림) → 고지(흰) → CTA(차콜). */
 .pwd, .pwq, .pwt{ background:var(--pw-white); }
 .pwst{ background:var(--pw-or-50); }
+
+/* ══════════════════════════════════════════════════════════════════
+   PHONEWAY 메인 02 — 기기 선택 카드 넷 · 다크 프리미엄 (2026-10-30 시안)
+   ══════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **이 블록이 파일 맨 뒤라야 합니다.** 위의 `.pwd-g .dvc` 블록과
+   특정도가 같아서 뒤에 오는 것이 이깁니다. 되돌리시려면 이 블록만
+   지우면 앞 모습(흰 구간 · 머리말 왼쪽 칸)으로 돌아갑니다.
+   ⚠️⚠️ **`.pwd` 안에만 겁니다** — `/sell` 의 `.dvc` 는 한 픽셀도 안
+   바뀝니다.
+
+   색 (시안 §2 그대로) — 구간 #171717 · 카드 #211C19 · 테두리 #505050 ·
+   제목 #FFF · 보조 #B9BDC5 · 화살표 원 #F37021.
+   재 본 대비 — 제목 흰색/카드 17.3 · 보조/카드 9.8 · 보조/구간 10.2 ·
+   머리말 #F37021/구간 6.0 (밝은 바탕에서 못 쓰는 오렌지가 **어두운
+   바탕에서는 글자로 됩니다**).
+   ⚠️ 사진 칸 위쪽 · 로고 줄 · 이름 · 설명 · 오른쪽 아래 화살표 차례입니다.
+   ⚠️⚠️ 사진이 없으면 **직접 그린 기기 아이콘**이 서고, 로고 파일이
+   없으면 **로고 줄이 통째로 빠집니다** (빈 자리를 깔지 않습니다). */
+.pwd{ --dv-bg:#171717; --dv-card:#211C19; --dv-line:#505050;
+  --dv-ink:#FFFFFF; --dv-ink2:#B9BDC5;
+  background:var(--dv-bg); color:var(--dv-ink); }
+.pwd-in{ display:block; max-width:1200px; }
+.pwd-hd{ margin:0 0 clamp(18px,2vw,28px); }
+.pwd-hd .pw-ey{ color:var(--pw-or, #F37021); }
+html.ivh #view .pwd-hd h2{ color:var(--dv-ink); font-size:clamp(23px,2.4vw,32px); }
+.pwd-hd p{ color:var(--dv-ink2); margin-top:8px; }
+
+.pwd-g{ grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; }
+.pwd-g .dvc{ flex-direction:column; align-items:stretch; justify-content:flex-start;
+  gap:0; min-height:clamp(260px,21vw,300px); padding:18px 18px 22px;
+  background:var(--dv-card); border:1px solid var(--dv-line); border-radius:18px;
+  box-shadow:none; color:var(--dv-ink);
+  transition:border-color .15s, background-color .15s; }
+.pwd-g .dvc:hover{ border-color:var(--pw-or, #F37021); }
+/* 누른 순간 — 은은한 오렌지 바탕 (지시서 §7 "선택 시") */
+.pwd-g .dvc:active, .pwd-g .dvc.on{ border-color:var(--pw-or, #F37021);
+  background:#2B1F17; box-shadow:inset 0 0 0 1px var(--pw-or, #F37021); }
+.pwd-g .dvc:focus-visible{ outline:3px solid var(--pw-or, #F37021); outline-offset:3px; }
+
+/* 사진 칸 — 카드 위쪽 60% 안팎. ⚠️ 높이를 미리 잡아 사진이 늦게 떠도
+   카드가 안 움직입니다. 바탕은 카드와 같은 색 (액자를 깔지 않습니다). */
+.pwd-g .dvc-ph{ width:100%; height:clamp(150px,12.4vw,178px); margin:0 0 12px;
+  border-radius:12px; background:transparent;
+  --ia-1:var(--pw-or, #F37021); --ia-2:#5A3A26; }
+.pwd-g .dvc-ph .ia{ width:clamp(96px,8vw,124px); height:auto; }
+.pwd-g .dvc-ph .ph, .pwd-g .dvc-im{ object-fit:contain; }
+
+.pwd-g .dvc-tx{ align-items:center; text-align:center; gap:4px; padding:0 50px; }
+/* ⚠️ 좌우 50px 은 오른쪽 아래 화살표 원(44px)을 피하는 자리입니다 —
+   한쪽만 두면 가운데 정렬이 어긋납니다. 줄이면 긴 설명이 원 밑으로 들어갑니다. */
+.dvc-lgs{ display:flex; align-items:center; justify-content:center; gap:12px;
+  height:clamp(24px,2.4vw,34px); margin:0 0 8px; }
+.dvc-lgs .dvc-lg{ height:100%; width:auto; max-width:110px; margin:0;
+  object-fit:contain; }
+.dvc-lgsep{ width:1px; height:70%; background:var(--dv-line, #505050); }
+.pwd-g .dvc-nm{ color:var(--dv-ink); font-size:clamp(18px,1.4vw,20px); }
+.pwd-g .dvc-s{ color:var(--dv-ink2); font-size:clamp(13px,1vw,14px); }
+
+/* 오른쪽 아래 오렌지 원 — ⚠️ **표시**이지 따로 누르는 단추가 아닙니다
+   (카드 전체가 링크입니다). */
+.pwd-g .dvc-a .dvc-go{ right:16px; bottom:18px; width:44px; height:44px;
+  background:var(--pw-or, #F37021); color:#fff; }
+.pwd-g .dvc-a:hover .dvc-go{ background:var(--pw-or-600, #C84F0A); }
+
+/* 768~1199px — 2열 (시안 §6). 카드가 넓어지니 사진도 조금 키웁니다 */
+@media (max-width:1199px){
+  .pwd-g{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+  .pwd-g .dvc{ min-height:clamp(250px,30vw,300px); }
+  .pwd-g .dvc-ph{ height:clamp(130px,18vw,175px); }
+}
+/* 폰 — 2열 × 2행 · 좌우 여백 16 · 간격 11 (시안 §4) */
+@media (max-width:767px){
+  .pwd-g{ gap:11px; }
+  .pwd-g .dvc{ min-height:clamp(214px,58vw,240px); padding:12px 10px 16px;
+    border-radius:16px; }
+  .pwd-g .dvc-ph{ height:clamp(100px,30vw,122px); margin:0 0 8px; }
+  .pwd-g .dvc-ph .ia{ width:clamp(70px,21vw,92px); }
+  .pwd-g .dvc-tx{ padding:0 42px 0 0; align-items:flex-start; text-align:left; }
+  .dvc-lgs{ justify-content:flex-start; height:22px; margin:0 0 6px; gap:8px; }
+  .pwd-g .dvc-nm{ font-size:clamp(15px,4.2vw,17px); }
+  .pwd-g .dvc-s{ font-size:12.5px; }
+  .pwd-g .dvc-a .dvc-go{ right:10px; bottom:12px; width:36px; height:36px; }
+}
+/* 359px 아래 — 한 줄 (시안 §4 "1열로 전환") · 가로로 눕힙니다 */
+@media (max-width:359px){
+  .pwd-g{ grid-template-columns:minmax(0,1fr); }
+  .pwd-g .dvc{ flex-direction:row; align-items:center; min-height:120px;
+    padding:12px 54px 12px 12px; gap:12px; }
+  .pwd-g .dvc-ph{ width:96px; height:96px; margin:0; flex:none; }
+  .pwd-g .dvc-tx{ padding:0; }
+}

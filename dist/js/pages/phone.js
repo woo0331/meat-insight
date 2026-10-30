@@ -52,12 +52,21 @@ var PW_SELL_CARDS = [
     sub:"iPhone",                maker:"apple",   kind:"phone"  },
   { ph:"dev-galaxy", ia:"dev-galaxy", lg:"samsung", nm:"갤럭시",
     sub:"Galaxy",                maker:"samsung", kind:"phone"  },
-  { ph:"dev-tablet", ia:"dev-tablet", lg:"",        nm:"태블릿",
+  { ph:"dev-tablet", ia:"dev-tablet", lg:["apple","samsung"], nm:"태블릿",
     sub:"아이패드 · 갤럭시 탭",     maker:"",        kind:"tablet" },
-  { ph:"dev-etc",    ia:"dev-etc",    lg:"",        nm:"기타 기기",
-    sub:"워치 · 버즈",             more:true }
+  { ph:"dev-etc",    ia:"dev-etc",    lg:["apple","samsung"], nm:"기타 기기",
+    sub:"워치 · 버즈 · 액세서리",    more:true }
 ];
 
+function pwDevLogos(c){
+  var M = window.AM_MAKER_LOGO || {};
+  var L = [].concat(c.lg || []).map(function(k){ return M[k]; })
+    .filter(function(u){ return !!u; });
+  if(!L.length) return "";
+  return '<span class="dvc-lgs" aria-hidden="true">'+ L.map(function(u){
+    return '<img class="dvc-lg" src="'+ esc(u) +'" alt="" width="72" height="24" decoding="async">';
+  }).join('<i class="dvc-lgsep"></i>') +'</span>';
+}
 function pwDevCard(c, on){
 
   var act = c.more ? "pwSellGo({more:'1'})"
@@ -65,7 +74,6 @@ function pwDevCard(c, on){
             "model:'',cap:'',grade:''})";
   var st  = c.more ? ' aria-expanded="'+(on?"true":"false")+'" aria-controls="pf-chip"'
                    : ' aria-pressed="'+(on?"true":"false")+'"';
-  var lg  = c.lg && (window.AM_MAKER_LOGO || {})[c.lg];
   return '<button type="button" class="dvc'+(on?" on":"")+'"'+ st +
     ' onclick="'+act+'">'+
     '<span class="dvc-ph">'+
@@ -75,7 +83,7 @@ function pwDevCard(c, on){
     '</span>'+
     '<span class="dvc-tx">'+
 
-      (lg ? '<img class="dvc-lg" src="'+esc(lg)+'" alt="" aria-hidden="true">' : '')+
+      pwDevLogos(c)+
       '<b class="dvc-nm">'+esc(c.nm)+'</b>'+
       '<span class="dvc-s">'+esc(c.sub)+'</span>'+
     '</span>'+

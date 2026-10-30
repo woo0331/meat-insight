@@ -94,15 +94,29 @@ var PW_SELL_CARDS = [
     sub:"iPhone",                maker:"apple",   kind:"phone"  },
   { ph:"dev-galaxy", ia:"dev-galaxy", lg:"samsung", nm:"갤럭시",
     sub:"Galaxy",                maker:"samsung", kind:"phone"  },
-  { ph:"dev-tablet", ia:"dev-tablet", lg:"",        nm:"태블릿",
+  { ph:"dev-tablet", ia:"dev-tablet", lg:["apple","samsung"], nm:"태블릿",
     sub:"아이패드 · 갤럭시 탭",     maker:"",        kind:"tablet" },
-  { ph:"dev-etc",    ia:"dev-etc",    lg:"",        nm:"기타 기기",
-    sub:"워치 · 버즈",             more:true }
+  { ph:"dev-etc",    ia:"dev-etc",    lg:["apple","samsung"], nm:"기타 기기",
+    sub:"워치 · 버즈 · 액세서리",    more:true }
 ];
 
 /* 카드 한 장 — ⚠️⚠️ **사진이 없어도 그대로 돕니다** (지시서 §6).
    사진이 있으면 사진, 없으면 **직접 그린 기기 아이콘**입니다 — 옅은
    틴트 빈 액자를 깔지 않습니다 (그게 "준비 중" 으로 읽힙니다). */
+/* 제조사 로고 줄 — `lg` 는 하나(글자)거나 여럿(배열)입니다.
+   ⚠️⚠️ **권한이 확인된 파일이 있는 것만** 그립니다 (`AM_MAKER_LOGO`).
+   하나도 없으면 **줄째 안 냅니다** — 빈 자리 · 비슷하게 그린 로고 ·
+   글자로 흉내낸 워드마크 전부 안 됩니다 (사장님 지시 · 절대 규칙 2).
+   여럿이면 사이에 가는 세로줄을 둡니다 (시안). */
+function pwDevLogos(c){
+  var M = window.AM_MAKER_LOGO || {};
+  var L = [].concat(c.lg || []).map(function(k){ return M[k]; })
+    .filter(function(u){ return !!u; });
+  if(!L.length) return "";
+  return '<span class="dvc-lgs" aria-hidden="true">'+ L.map(function(u){
+    return '<img class="dvc-lg" src="'+ esc(u) +'" alt="" width="72" height="24" decoding="async">';
+  }).join('<i class="dvc-lgsep"></i>') +'</span>';
+}
 function pwDevCard(c, on){
   /* ⚠️ `role="radio"` 를 쓰지 않았습니다 — 넷째가 라디오가 아니라
      **펼치개**라, 한 묶음에 역할 둘을 섞으면 읽어 주는 프로그램에
@@ -113,7 +127,6 @@ function pwDevCard(c, on){
             "model:'',cap:'',grade:''})";
   var st  = c.more ? ' aria-expanded="'+(on?"true":"false")+'" aria-controls="pf-chip"'
                    : ' aria-pressed="'+(on?"true":"false")+'"';
-  var lg  = c.lg && (window.AM_MAKER_LOGO || {})[c.lg];
   return '<button type="button" class="dvc'+(on?" on":"")+'"'+ st +
     ' onclick="'+act+'">'+
     '<span class="dvc-ph">'+
@@ -124,7 +137,7 @@ function pwDevCard(c, on){
     '<span class="dvc-tx">'+
       /* ⚠️ 권한이 확인된 파일이 있을 때만 그립니다 — 없으면 **칸째**
          안 냅니다 (빈 액자 금지 · 절대 규칙 2). */
-      (lg ? '<img class="dvc-lg" src="'+esc(lg)+'" alt="" aria-hidden="true">' : '')+
+      pwDevLogos(c)+
       '<b class="dvc-nm">'+esc(c.nm)+'</b>'+
       '<span class="dvc-s">'+esc(c.sub)+'</span>'+
     '</span>'+

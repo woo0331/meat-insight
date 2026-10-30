@@ -876,43 +876,58 @@ var PW_CHIP_IC = {
 
 function PwHero(){
   return '<section class="pwh">'+
+    '<div class="pwh-bg" aria-hidden="true">'+
+      '<span class="pwh-bg-panel"></span>'+
+      '<span class="pwh-bg-glow"></span>'+
+    '</div>'+
     '<div class="w pwh-in">'+
       '<div class="pwh-tx">'+
-        '<p class="pwh-hand">쓰던 폰이 새로운 기회가 됩니다.</p>'+
-        '<h1>지금, 당신의 폰이<br><em>새로운 가치를 만납니다.</em></h1>'+
-        '<p class="pwh-sub">가장 쉽고, 가장 높은 가격으로<br class="br-m"> '+
-          '폰웨이와 함께하세요.</p>'+
-        '<div class="pwh-go">'+
-          '<a class="btn btn-pw" href="/sell">내 폰 팔기 '+ pwArrow() +'</a>'+
 
-          '<a class="btn btn-pw-o" href="/shop">중고폰 구매하기</a>'+
-        '</div>'+
+        '<p class="pwh-k">PHONEWAY</p>'+
+        '<p class="pwh-k2">중고폰, 더 스마트하게</p>'+
+
+        '<h1><span class="pwh-h1a">지금, 당신의 폰이</span>'+
+          '<em>새로운 가치를</em><em>만납니다.</em></h1>'+
+        '<p class="pwh-sub">여러 업체의 견적을 비교하고<br>'+
+          '가장 좋은 조건으로 거래하세요.</p>'+
+        pwHero3()+
       '</div>'+
-      '<div class="pwh-art">'+ pwHeroArt() +'</div>'+
+      '<div class="pwh-art">'+
+        photoBox("dev-iphone", "pwh-ph", true,
+          "(max-width:899px) 44vw, (max-width:1199px) 34vw, 400px")+
+      '</div>'+
+
+      '<div class="pwh-go">'+
+        '<a class="btn pwh-b1" href="/sell" data-to="/sell">'+
+          icon("mobile",21)+'<b>내 폰 팔기</b>'+ pwArrow() +'</a>'+
+        '<a class="btn pwh-b2" href="/shop" data-to="/shop">'+
+          icon("cart",21)+'<b>중고폰 구매하기</b>'+ pwArrow() +'</a>'+
+      '</div>'+
     '</div>'+
     pwHeroTrust()+
   '</section>';
 }
 
-var PW_TRUST4 = [
-  ["box",   "택배 수거",        "전국 어디서나"],
-  ["shield","안전한 거래",      "개인정보 완전 삭제"],
-  ["bars",  "최고가 경쟁입찰",   "여러 업체 견적 비교"],
-  ["crown", "직접 매입 · 판매",  "검수된 중고폰 쇼핑몰"]
+var PW_HERO3 = [
+  ["shield", "전문업체", "연결"],
+  ["coins",  "견적 비교", "한 번에"],
+  ["lock",   "개인정보", "보호"]
 ];
-var PW_T4_IC = {
-  box:'<path d="M3.5 7.5h13l2.5 4h1.5v5h-2"/><path d="M3.5 7.5v9h1.5"/>'+
-      '<circle cx="7" cy="17.5" r="2"/><circle cx="17" cy="17.5" r="2"/><path d="M9 17.5h6"/>',
-  shield:'<path d="M12 3.2 5 6v5.6c0 4 2.9 7.4 7 8.2 4.1-.8 7-4.2 7-8.2V6l-7-2.8Z"/>'+
-      '<path d="m9.2 12 2 2 3.6-4"/>',
-  bars:'<path d="M5 19.5V13M10 19.5V9M15 19.5v-4M20 19.5V5"/>',
-  crown:'<path d="M4 17.5h16"/><path d="m4 14.5 1.6-8 4.2 4L12 5.5l2.2 5 4.2-4 1.6 8H4Z"/>'
-};
+function pwHero3(){
+  return '<ul class="pwh-f3">'+ PW_HERO3.map(function(t){
+    return '<li><i>'+ icon(t[0],26) +'</i><b>'+ esc(t[1]) +'</b>'+
+      '<span>'+ esc(t[2]) +'</span></li>'; }).join("") +'</ul>';
+}
+
+var PW_TRUST4 = [
+  ["tag",    "지금 바로",   "견적 비교"],
+  ["bolt",   "수거 · 정산", "한 흐름으로"],
+  ["shield", "개인정보",    "안전 처리"],
+  ["seed",   "지속 가능한", "중고 거래"]
+];
 function pwHeroTrust(){
   return '<div class="pwh-tr"><ul class="w pwh-tr-g">'+ PW_TRUST4.map(function(t){
-    return '<li><i><svg width="26" height="26" viewBox="0 0 24 24" fill="none" '+
-      'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" '+
-      'stroke-linejoin="round" aria-hidden="true">'+ PW_T4_IC[t[0]] +'</svg></i>'+
+    return '<li><i>'+ icon(t[0],26) +'</i>'+
       '<span><b>'+ esc(t[1]) +'</b><span>'+ esc(t[2]) +'</span></span></li>';
   }).join("") +'</ul></div>';
 }

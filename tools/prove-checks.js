@@ -1151,8 +1151,14 @@ async function proveAudit(pg){
        ⚠️⚠️ /operation 의 .pks-r 로 옮겼다가 **또 헛돌았습니다** —
        그쪽은 접힌 묶음 안이라 **폭 · 높이가 0** 이고, AUDIT 의
        vis() 가 그런 칸을 건너뜁니다 (열다섯 번째). 지금은 메인
-       히어로의 체크 칩(.pwh-ch li)이고, **보이는지(폭 · 높이)까지**
-       보고 고릅니다. */
+       히어로의 신뢰 요소 띠(.pwh-tr-g li — 아이콘 + span>(b+span))
+       이고, **보이는지(폭 · 높이)까지** 보고 고릅니다.
+       ⚠️⚠️ **선택자를 박아 두지 않았습니다** — 아래 걷기가 조건
+       (보이는 flex + 자식 span 안에 태그 둘 이상)으로 **그 자리에서
+       찾습니다.** 히어로가 다시 짜일 때마다 집는 자리가 바뀌는데,
+       박아 두면 그때마다 되돌리기가 조용히 헛돕니다 (2026-10-30 에
+       히어로를 고치면서 옛 .pwh-ch li 가 없어졌고, 걷기가 이 띠를
+       알아서 찾았습니다). 고치실 때는 **재서** 확인하세요. */
     await pg.goto(ROOT + "/", { waitUntil:"load" });
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).mix;

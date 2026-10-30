@@ -6766,7 +6766,7 @@ html.ivh #view h3, html.ivh #view h4{ color:var(--pw-ink); }
 .btn-pw-o{ background:#fff; color:var(--pw-dk); border-color:var(--pw-line); }
 .btn-pw-o:hover{ border-color:var(--pw-or); color:var(--pw-or-600); }
 .btn-pw-w{ background:#fff; color:var(--pw-dk); border-color:#fff; }
-.btn-pw-w:hover{ background:#FFF4E9; border-color:#FFF4E9; }
+.btn-pw-w:hover{ background:#FDEDDC; border-color:#FDEDDC; }
 .btn-pw-gh{ background:rgba(255,255,255,.06); color:#fff; border-color:rgba(255,255,255,.34); }
 .btn-pw-gh:hover{ background:rgba(255,255,255,.14); }
 
@@ -7113,7 +7113,7 @@ html.ivh #view .pwh h1{ color:var(--pw-dk); }
 .pwh h1 em{ color:var(--pw-or-600); }
 .pwh-sub{ color:var(--pw-ink2); }
 .pwh-ch li{ background:#fff; border-color:var(--pw-line);
-  box-shadow:0 1px 3px rgba(24,33,43,.05); }
+  box-shadow:0 1px 3px rgba(54,35,19,.05); }
 .pwh-ch i{ background:var(--pw-or-50); color:var(--pw-or-600); }
 .pwh-ch b{ color:var(--pw-ink); }
 .pwh-ch span > span{ color:var(--pw-ink3); }
@@ -7240,21 +7240,21 @@ html.ivh #view .pwh h1{ color:var(--pw-dk); }
 
 /* ── 거르개 ───────────────────────────────────────────────────── */
 .shp-fil{ margin:0 0 20px; padding:18px 20px; border-radius:var(--pw-r2, 14px);
-  background:var(--pw-gray, #F8F9FA); border:1px solid var(--pw-line, #E5E7EB); }
+  background:var(--pw-gray, #F4E4D0); border:1px solid var(--pw-line, #EADBC8); }
 /* ⚠️ 찾는 칸과 단추를 한 줄에 — `type=search` 는 `css/app.css` 의 폼
    꼴을 못 받아서 높이가 24px 로 섭니다 (누름 40px 미달). 이 저장소가
    숫자 · 날짜 칸에 이어 **세 번째**로 겪은 자리입니다. */
 .shp-q{ display:flex; gap:8px; }
 .shp-q input[type=search]{ flex:1; min-width:0; min-height:48px;
   padding:0 14px; font:inherit; font-size:15px;
-  border:1px solid var(--pw-line, #E5E7EB); border-radius:10px;
-  background:#fff; color:var(--pw-ink, #18212B); -webkit-appearance:none; }
+  border:1px solid var(--pw-line, #EADBC8); border-radius:10px;
+  background:#fff; color:var(--pw-ink, #352014); -webkit-appearance:none; }
 .shp-q input[type=search]:focus{ outline:none;
-  border-color:var(--pw-or-600, #C84F0A);
+  border-color:var(--pw-or-600, #D24601);
   box-shadow:0 0 0 3px rgba(243,112,33,.18); }
 .shp-q .btn{ flex:none; min-height:48px; }
 .shp-n{ margin:0 0 14px; font-size:14px; font-weight:700;
-  color:var(--pw-ink2, #3E4A5A); }
+  color:var(--pw-ink2, #5A4433); }
 
 /* ── 목록 ─────────────────────────────────────────────────────── */
 .shp-g{ display:grid; gap:14px; grid-template-columns:repeat(4, minmax(0,1fr)); }
@@ -7263,11 +7263,11 @@ html.ivh #view .pwh h1{ color:var(--pw-dk); }
 @media (max-width:420px){  .shp-g{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; } }
 
 .shp-c{ display:flex; flex-direction:column; text-decoration:none;
-  background:#fff; border:1px solid var(--pw-line, #E5E7EB);
+  background:#fff; border:1px solid var(--pw-line, #EADBC8);
   border-radius:var(--pw-r2, 14px); overflow:hidden;
   transition:border-color .15s, box-shadow .15s, transform .15s; }
-.shp-c:hover{ border-color:var(--pw-or-600, #C84F0A);
-  box-shadow:0 8px 22px rgba(24,33,43,.10); transform:translateY(-2px); }
+.shp-c:hover{ border-color:var(--pw-or-600, #D24601);
+  box-shadow:0 8px 22px rgba(54,35,19,.10); transform:translateY(-2px); }
 /* ⚠️⚠️ **빈 액자를 옅은 틴트로 깔지 않습니다** — 사진이 없는 동안
    그게 "준비 중" 으로 읽힙니다. 네이비 면에 큰 아이콘을 얹어 그
    자체로 완성된 자리로 둡니다 (매물 세 카드에서 겪은 자리). */
@@ -7278,19 +7278,19 @@ html.ivh #view .pwh h1{ color:var(--pw-dk); }
 .shp-ph{ position:relative; display:flex; align-items:center;
   justify-content:center; aspect-ratio:4/3;
   background:linear-gradient(160deg, #FFF8F1 0%, #FBE6D2 100%);
-  background-color:#FFF4E9;
-  border-bottom:1px solid var(--pw-line, #E5E7EB); }
+  background-color:#FDEDDC;
+  border-bottom:1px solid var(--pw-line, #EADBC8); }
 .shp-ph .ia{ --ia-1:#A33E06; --ia-2:#E8A86F; }
 .shp-ex{ position:absolute; top:9px; left:9px; z-index:1;
   padding:3px 9px; border-radius:999px; font-size:13px; font-weight:800;
   letter-spacing:-.01em; background:#FFE8B5; color:#6B4A18; }
 .shp-tx{ display:flex; flex-direction:column; gap:3px; padding:13px 14px 15px; }
 .shp-tx > b{ font-size:15px; font-weight:800; line-height:1.4;
-  color:var(--pw-dk, #18212B); }
-.shp-m{ font-size:13px; color:var(--pw-ink2, #3E4A5A); line-height:1.5; }
+  color:var(--pw-dk, #362313); }
+.shp-m{ font-size:13px; color:var(--pw-ink2, #5A4433); line-height:1.5; }
 .shp-p{ margin-top:5px; font-size:18px; font-weight:800;
-  color:var(--pw-or-600, #C84F0A); }
-.shp-b{ font-size:13px; color:var(--pw-ink2, #3E4A5A); }
+  color:var(--pw-or-600, #D24601); }
+.shp-b{ font-size:13px; color:var(--pw-ink2, #5A4433); }
 
 /* ── 상세 ─────────────────────────────────────────────────────── */
 .shp-d{ max-width:980px; }
@@ -7306,38 +7306,38 @@ html.ivh #view .pwh h1{ color:var(--pw-dk); }
 .shp-d-ph{ position:relative; display:flex; align-items:center;
   justify-content:center; aspect-ratio:4/3; border-radius:var(--pw-r2, 14px);
   background:linear-gradient(145deg, #FFF8F1 0%, #FBE6D2 100%);
-  background-color:#FFF4E9; }
+  background-color:#FDEDDC; }
 .shp-d-ph .ia{ --ia-1:#F3C9A8; --ia-2:#C87A3E; }
 .shp-d-tx h1{ margin:0; font-size:26px; font-weight:800; line-height:1.3;
-  color:var(--pw-dk, #18212B); }
+  color:var(--pw-dk, #362313); }
 .shp-d-g2{ margin:10px 0 0; font-size:14.5px; line-height:1.6;
-  color:var(--pw-ink2, #3E4A5A); }
+  color:var(--pw-ink2, #5A4433); }
 .shp-d-p{ display:block; margin:16px 0 18px; font-size:30px; font-weight:800;
-  color:var(--pw-or-600, #C84F0A); }
+  color:var(--pw-or-600, #D24601); }
 
 /* 조건표 — ⚠️ 값 없는 칸은 아예 안 넣습니다 (절대 규칙 2) */
 .shp-sp{ display:grid; gap:0; grid-template-columns:repeat(2, minmax(0,1fr));
-  margin:0 0 26px; border-top:1px solid var(--pw-line, #E5E7EB); }
+  margin:0 0 26px; border-top:1px solid var(--pw-line, #EADBC8); }
 @media (max-width:620px){ .shp-sp{ grid-template-columns:1fr; } }
 .shp-sp > div{ display:flex; gap:12px; padding:13px 2px;
-  border-bottom:1px solid var(--pw-line, #E5E7EB); }
+  border-bottom:1px solid var(--pw-line, #EADBC8); }
 /* 홀수면 마지막 칸이 두 칸을 씁니다 — 밑줄이 가운데서 끊기면
    표가 깨진 것처럼 보입니다 (매물 조건표에서 겪은 자리) */
 .shp-sp > div:last-child:nth-child(odd){ grid-column:1 / -1; }
 .shp-sp dt{ flex:none; width:96px; font-size:14px; font-weight:700;
-  color:var(--pw-ink2, #3E4A5A); }
+  color:var(--pw-ink2, #5A4433); }
 .shp-sp dd{ margin:0; font-size:14.5px; font-weight:700;
-  color:var(--pw-dk, #18212B); }
+  color:var(--pw-dk, #362313); }
 
 .shp-ck{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 20px; padding:0;
   list-style:none; }
 .shp-ck li{ display:flex; align-items:center; gap:6px;
   padding:7px 12px; border-radius:999px; font-size:14px; font-weight:700;
-  background:var(--pw-gray, #F8F9FA); color:var(--pw-dk, #18212B);
-  border:1px solid var(--pw-line, #E5E7EB); }
+  background:var(--pw-gray, #F4E4D0); color:var(--pw-dk, #362313);
+  border:1px solid var(--pw-line, #EADBC8); }
 .shp-ck li svg{ flex:none; color:var(--pw-ok, #16A085); }
 .shp-no{ margin:0 0 6px; font-size:15px; line-height:1.75;
-  color:var(--pw-ink, #18212B); }
+  color:var(--pw-ink, #352014); }
 
 /* ⚠️ 히어로 손글씨 — 2026-10-29 로 일러스트를 다시 그리면서 **배터리
    게이지 칩과 겹쳤습니다** (찍어 보고 알았습니다). 일러스트의 오른쪽
@@ -7353,7 +7353,7 @@ html.ivh #view .pwh h1{ color:var(--pw-dk); }
    ⚠️ 빈 액자처럼 읽히지 않게 테두리를 주고 아이콘을 크게 둡니다
    (옅은 틴트 상자만 깔면 그게 "준비 중" 입니다). */
 .shp-d-ph{ background:linear-gradient(160deg, #FFF8F1 0%, #FBE6D2 100%);
-  background-color:#FFF4E9; border:1px solid var(--pw-line, #E5E7EB); }
+  background-color:#FDEDDC; border:1px solid var(--pw-line, #EADBC8); }
 .shp-d-ph .ia{ --ia-1:#A33E06; --ia-2:#E8A86F; }
 
 /* ── /my — 폰웨이 띠 + 접은 창업 · 폐업 기록 (2026-10-29) ───────── */
@@ -7361,22 +7361,22 @@ html.ivh #view .pwh h1{ color:var(--pw-dk); }
   grid-template-columns:repeat(3, minmax(0,1fr)); }
 @media (max-width:760px){ .my-pw{ grid-template-columns:1fr; } }
 .my-pw-c{ display:flex; flex-direction:column; gap:4px; padding:16px 16px 17px;
-  border:1px solid var(--pw-line, #E5E7EB); border-radius:var(--pw-r2, 14px);
+  border:1px solid var(--pw-line, #EADBC8); border-radius:var(--pw-r2, 14px);
   background:var(--pw-white, #fff); text-decoration:none; }
 .my-pw-i{ display:grid; place-items:center; width:56px; height:56px;
-  margin:0 0 4px; border-radius:15px; background:var(--pw-or-50, #FFF4E9);
-  --ia-1:var(--pw-dk, #18212B); --ia-2:#F3C9A8; }
-.my-pw-c > b{ font-size:16px; font-weight:800; color:var(--pw-ink, #18212B); }
-.my-pw-s{ font-size:13.5px; line-height:1.5; color:var(--pw-ink2, #3E4A5A); }
+  margin:0 0 4px; border-radius:15px; background:var(--pw-or-50, #FDEDDC);
+  --ia-1:var(--pw-dk, #362313); --ia-2:#F3C9A8; }
+.my-pw-c > b{ font-size:16px; font-weight:800; color:var(--pw-ink, #352014); }
+.my-pw-s{ font-size:13.5px; line-height:1.5; color:var(--pw-ink2, #5A4433); }
 .my-pw-c:hover{ border-color:var(--pw-or-300, #F8A066); }
 /* ⚠️ 여는 단추가 40px 이상입니다 — `summary` 는 기본 높이가 글자만큼입니다 */
-.my-biz{ margin:0 0 22px; border:1px solid var(--pw-line, #E5E7EB);
+.my-biz{ margin:0 0 22px; border:1px solid var(--pw-line, #EADBC8);
   border-radius:var(--pw-r2, 14px); background:var(--pw-white, #fff); }
 .my-biz > summary{ display:flex; align-items:center; flex-wrap:wrap; gap:4px 10px;
   min-height:var(--tap, 48px); padding:12px 16px; cursor:pointer;
-  font-size:15px; color:var(--pw-ink, #18212B); }
-.my-biz > summary > span{ font-size:13px; color:var(--pw-ink3, #667085); }
-.my-biz[open] > summary{ border-bottom:1px solid var(--pw-line, #E5E7EB); }
+  font-size:15px; color:var(--pw-ink, #352014); }
+.my-biz > summary > span{ font-size:13px; color:var(--pw-ink3, #74604F); }
+.my-biz[open] > summary{ border-bottom:1px solid var(--pw-line, #EADBC8); }
 .my-biz > :not(summary){ margin-left:16px; margin-right:16px; }
 .my-biz > :first-of-type:not(summary){ margin-top:16px; }
 .my-biz > :last-child{ margin-bottom:16px; }
@@ -7398,8 +7398,8 @@ html.ivh #view .pwh h1{ color:var(--pw-dk); }
 .dvc{ display:flex; align-items:center; gap:clamp(10px, 1.4vw, 20px);
   width:100%; min-height:clamp(168px, 14.9vw, 206px);
   padding:clamp(11px, 1.9vw, 28px);
-  border:1px solid var(--pw-line, #E5E7EB); border-radius:16px;
-  background:var(--pw-white, #fff); box-shadow:0 1px 2px rgba(24,33,43,.05);
+  border:1px solid var(--pw-line, #EADBC8); border-radius:16px;
+  background:var(--pw-white, #fff); box-shadow:0 1px 2px rgba(54,35,19,.05);
   font:inherit; color:inherit; text-align:left; cursor:pointer; }
 /* ⚠️ 폰에서는 사진이 위 · 글이 아래입니다 (지시서 §4) */
 @media (max-width:767px){
@@ -7410,8 +7410,8 @@ html.ivh #view .pwh h1{ color:var(--pw-dk); }
    방지). 사진이 늦게 떠도 카드가 안 움직입니다. */
 .dvc-ph{ display:grid; place-items:center; flex:none;
   width:clamp(84px, 9.4vw, 150px); height:clamp(84px, 9.4vw, 150px);
-  border-radius:13px; background:var(--pw-or-50, #FFF4E9);
-  --ia-1:var(--pw-dk, #18212B); --ia-2:#F3C9A8; }
+  border-radius:13px; background:var(--pw-or-50, #FDEDDC);
+  --ia-1:var(--pw-dk, #362313); --ia-2:#F3C9A8; }
 /* ⚠️⚠️ 2026-10-30 — 95px 으로 **되돌렸습니다.** 잠깐 76px 로 내려 두었던
    까닭은 디자인이 아니라 밝기였습니다 — 시안에서 잘라 온 임시 사진 넷이
    거의 검은 바탕이라 액자를 짙은 갈색으로 칠해야 했고, 폰에서는 그 액자
@@ -7436,12 +7436,12 @@ html.ivh #view .pwh h1{ color:var(--pw-dk); }
 .dvc-lg{ display:block; width:auto; height:clamp(18px, 2vw, 26px);
   max-width:clamp(35px, 6.2vw, 90px); margin:0 0 5px; object-fit:contain; }
 .dvc-nm{ font-size:clamp(15px, 1.45vw, 20px); font-weight:800; line-height:1.3;
-  color:var(--pw-ink, #18212B); }
+  color:var(--pw-ink, #352014); }
 /* ⚠️⚠️ **12px 미만으로 내리지 마세요.** 지시서 §4 는 11~12px 인데 이
    저장소의 하한이 12px 이고(아래 네비를 11.5px 로 두었다가 전수 점검에
    175건이 걸렸습니다) 손님이 40~60대입니다 — 그 범위의 위를 씁니다. */
 .dvc-s{ font-size:clamp(12px, 1.05vw, 14px); line-height:1.4;
-  color:var(--pw-ink3, #667085); }
+  color:var(--pw-ink3, #74604F); }
 
 .dvc:hover{ border-color:var(--pw-or-300, #F8A066); }
 /* ⚠️ 키보드로 왔을 때가 보여야 합니다 (지시서 §7) */
@@ -7449,7 +7449,7 @@ html.ivh #view .pwh h1{ color:var(--pw-dk); }
   outline-offset:2px; }
 /* 고른 카드 — 블루 테두리 + 은은한 블루 바탕 (지시서 §1) */
 .dvc.on{ border-color:var(--pw-or, #F37021);
-  background:var(--pw-or-50, #FFF4E9);
+  background:var(--pw-or-50, #FDEDDC);
   box-shadow:inset 0 0 0 1px var(--pw-or, #F37021); }
 .dvc.on .dvc-nm{ color:var(--pw-or-700, #A33E06); }
 .dvc.on .dvc-ph{ background:#fff; }
@@ -7512,7 +7512,7 @@ html.ivh #view .pwh h1{ margin:0; color:var(--pw-ink);
 .pwh-tr-g i{ width:44px; height:44px; flex:none; border-radius:13px;
   display:grid; place-items:center;
   background:var(--pw-white); color:var(--pw-or-600);
-  box-shadow:0 1px 3px rgba(24,33,43,.08); }
+  box-shadow:0 1px 3px rgba(54,35,19,.08); }
 .pwh-tr-g b{ display:block; font-size:15px; font-weight:800;
   color:var(--pw-ink); line-height:1.3; }
 .pwh-tr-g span > span{ display:block; margin-top:2px; font-size:12.5px;
@@ -7582,7 +7582,7 @@ html.ivh #view .pwd-hd h2{ margin:0; font-size:clamp(24px,2.3vw,30px);
   border:1px solid rgba(248,160,102,.34); }
 .pwbz-c:hover{ transform:translateY(-2px); }
 .pwbz-c{ transition:transform .16s ease, box-shadow .16s ease; }
-.pwbz-c:hover{ box-shadow:0 10px 26px rgba(24,33,43,.14); }
+.pwbz-c:hover{ box-shadow:0 10px 26px rgba(54,35,19,.14); }
 
 /* ─── 04 주요 서비스 바로가기 다섯 (시안 §3-F) ─────────────────── */
 .pwq{ background:var(--pw-white); padding:var(--sec-y) 0; }
@@ -7593,7 +7593,7 @@ html.ivh #view .pwd-hd h2{ margin:0; font-size:clamp(24px,2.3vw,30px);
   padding:22px 14px; border-radius:16px;
   background:var(--pw-white); border:1px solid var(--pw-line);
   transition:border-color .16s ease, box-shadow .16s ease, transform .16s ease; }
-.pwq-c:hover{ border-color:var(--pw-or); box-shadow:0 8px 22px rgba(24,33,43,.08);
+.pwq-c:hover{ border-color:var(--pw-or); box-shadow:0 8px 22px rgba(54,35,19,.08);
   transform:translateY(-2px); }
 .pwq-c i{ width:56px; height:56px; display:grid; place-items:center;
   border-radius:15px; background:var(--pw-or-50);
@@ -7797,7 +7797,7 @@ html.ivh #view .pwd-hd h2{ color:var(--dv-ink); font-size:clamp(23px,2.4vw,32px)
    (카드 전체가 링크입니다). */
 .pwd-g .dvc-a .dvc-go{ right:16px; bottom:18px; width:44px; height:44px;
   background:var(--pw-or, #F37021); color:#fff; }
-.pwd-g .dvc-a:hover .dvc-go{ background:var(--pw-or-600, #C84F0A); }
+.pwd-g .dvc-a:hover .dvc-go{ background:var(--pw-or-600, #D24601); }
 
 /* 768~1199px — 2열 (시안 §6). 카드가 넓어지니 사진도 조금 키웁니다 */
 @media (max-width:1199px){
@@ -7869,3 +7869,260 @@ html.ivh #view .pwd-hd h2{ color:var(--dv-ink); font-size:clamp(23px,2.4vw,32px)
 }
 @media (min-width:1200px){ .pwd-g .dvc{ padding-top:14px; padding-bottom:18px; }
   .pwd-g .dvc-ph{ height:clamp(132px,10.2vw,148px); } }
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-10-30 "폰웨이 모바일 메인페이지 프리미엄 디자인 구현 지시서"
+   — 01 히어로 · §5 아이콘 셋 · §6 CTA 둘 · §7 장점 넷
+
+   ⚠️⚠️ **이 블록이 파일 맨 뒤라야 합니다.** 위의 2026-10-29 오렌지
+   블록(.pwh …)과 특정도가 같아서 **뒤에 오는 것이 이깁니다** —
+   가운데 끼워 넣으면 색과 짜임새가 조용히 안 먹습니다.
+   되돌리시려면 **이 블록만 지우면** 10-29 히어로로 돌아갑니다.
+
+   ⚠️⚠️ **시안의 오렌지 가죽 상자와 스티치 리본을 재현하지
+   않았습니다** — 에르메스의 고유한 포장이고 §12 가 직접 금지했습니다.
+   같은 분위기를 추상 오렌지 면 · 빛 · 석재 받침으로 만듭니다.
+   ══════════════════════════════════════════════════════════════════ */
+.pwh{
+  position:relative; overflow:hidden;
+  color:var(--pw-ink);
+  /* ⚠️⚠️ **`background-color` 를 따로 적습니다.** `background:` 한 줄에
+     그라디언트만 적으면 `getComputedStyle(e).backgroundColor` 가
+     **투명(rgba(0,0,0,0))** 으로 읽혀, 색을 재는 검사가 전부 그것을
+     **검정**으로 집습니다 — "히어로 구간이 밝지 않습니다"(§3-2)와
+     BRIGHT PREMIUM 의 어두운 면 15% 가 **둘 다** 그 값을 봅니다.
+     이 저장소가 그라디언트 · 히어로 `::before` · 자산 카드로 **세 번**
+     겪은 자리입니다. 값은 아래 띠의 가운데 멈춤과 같게 둡니다. */
+  background-color:#F8ECDF;
+  /* 시안 실측 #F8ECDF 를 가운데에 두고 위아래로 밝게 폅니다 */
+  background-image:
+    radial-gradient(130% 90% at 18% 6%, #FFFCF8 0%, rgba(255,252,248,0) 58%),
+    linear-gradient(176deg, #FDF6EE 0%, #F8ECDF 46%, #F6E6D6 100%);
+}
+.pwh::before{ content:none; }
+
+/* ── 배경 장식 — 전부 CSS ───────────────────────────────────────
+   ⚠️ `pointer-events:none` 을 빼지 마세요 — 사진 · 단추 위에 깔려서
+   누름을 가로챕니다. */
+.pwh-bg{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.pwh-bg > span{ position:absolute; display:block; }
+/* 오른쪽 위 오렌지 면 (가죽 상자 자리 — 추상 면입니다)
+   ⚠️⚠️ **글 칸을 침범하면 안 됩니다.** 글 칸이 왼쪽 57% 이고 h1 의
+   둘째 · 셋째 줄이 **오렌지 글자**라, 면이 그 뒤로 들어오면 오렌지
+   위에 오렌지가 앉아 거의 안 읽힙니다 (찍어 보고 알았습니다).
+   지금 왼쪽 끝이 화면의 **62%** 자리이고 글 칸 오른쪽 끝(57%)보다
+   뒤입니다 — 폭이나 기울기를 키우시면 **다시 찍어서 보세요.** */
+.pwh-bg-panel{
+  right:-9%; top:4%; width:42%; height:34%; border-radius:24px;
+  transform:rotate(-4deg);
+  background:linear-gradient(152deg, #F5853F 0%, #EC6B21 46%, #D2520B 100%);
+  box-shadow:0 22px 44px -20px rgba(146,62,10,.44);
+  opacity:.95;
+  /* ⚠️ 아래쪽을 녹여 **면이 아니라 빛**으로 읽히게 합니다. 안 녹이면
+     커다란 주황 판이 되어 §2 의 "밝고 정돈된" 과 멀어집니다. */
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 56%,transparent 100%);
+          mask-image:linear-gradient(180deg,#000 0%,#000 56%,transparent 100%);
+}
+/* 왼쪽 위 은은한 빛 */
+.pwh-bg-glow{
+  left:-20%; top:-14%; width:96%; height:70%; border-radius:50%;
+  background:radial-gradient(closest-side, rgba(255,255,255,.92), rgba(255,255,255,0));
+}
+/* ⚠️⚠️ 석재 받침은 **사진에 붙어 있습니다** (`.pwh-art::after`) —
+   배경 칸(.pwh-bg)에 두면 사진이 커지거나 폭이 바뀔 때 받침만
+   따로 놀아 자리를 못 잡습니다. 처음에 .pwh-bg-pod 라는 빈 span
+   으로 두었다가 **top 도 bottom 도 없어 아예 안 보였고**, 그걸
+   display:none 으로 덮어 두니 PC 쪽 규칙 한 줄이 아무 일도 안 하는
+   채로 남았습니다 — 지금은 span 도 규칙도 없습니다. */
+
+/* ── 글 · 사진 · 단추 세 자리 ──────────────────────────────────── */
+.pwh-in{
+  position:relative; z-index:1;
+  display:grid; align-items:start;
+  grid-template-columns:minmax(0,57fr) minmax(0,43fr);
+  grid-template-areas:"tx art" "go go";
+  column-gap:6px; row-gap:0;
+  padding:26px var(--pad) 22px;
+}
+.pwh-tx{ grid-area:tx; min-width:0; }
+.pwh-art{ grid-area:art; min-width:0; align-self:end; }
+.pwh-go{ grid-area:go; min-width:0; }
+
+.pwh-k{
+  margin:0; font-size:clamp(12px,2.9vw,13px); font-weight:700;
+  letter-spacing:.42em; color:var(--pw-or-700);
+  background:none; padding:0; display:block; border-radius:0;
+  /* ⚠️ 10-29 블록이 이 줄을 **알약**으로 두었습니다 — 테두리를 같이
+     끄지 않으면 글자 둘레에 빈 네모가 남습니다 (찍어 보고 알았습니다). */
+  border:0;
+}
+.pwh-k2{
+  margin:8px 0 0; font-size:clamp(13px,3.4vw,15.5px); font-weight:600;
+  letter-spacing:.14em; color:var(--pw-ink2);
+}
+/* ⚠️⚠️ **`html.ivh #view` 를 붙여야 합니다** — 위의 10-29 블록에
+   `html.ivh #view .pwh h1`(1,1,3)이 있어서 `.pwh h1`(0,1,1)은
+   **뒤에 와도 집니다.** 이 저장소가 `.sec-hd p` ↔ `.eyebrow`,
+   `.ft a` ↔ `.ft-col a`, `.bpass h2` 로 **여섯 번** 겪은 자리입니다. */
+html.ivh #view .pwh h1{
+  margin:10px 0 0; font-weight:900; letter-spacing:-.022em;
+  font-size:clamp(26px,7.1vw,40px); line-height:1.19;
+}
+/* ⚠️⚠️ **첫 줄은 딥 브라운 · 둘째 셋째 줄은 오렌지**입니다 (§4).
+   `em` 은 줄마다 하나씩이고 `display:block` 이라 줄이 나뉩니다 —
+   `<br>` 을 쓰면 좁은 폭에서 줄을 더 쪼갤 수가 없습니다. */
+.pwh-h1a{ display:block; color:var(--pw-ink); }
+.pwh h1 em{
+  display:block; font-style:normal; font-weight:900;
+  /* 흰~크림 바탕 위 3.65~4.55 · **큰 글자**(3.0) 기준입니다.
+     ⚠️ 작은 글자에 이 색을 쓰지 마세요 — `--pw-or-700` 입니다. */
+  color:var(--pw-or-600);
+}
+.pwh-sub{
+  margin:14px 0 0; font-size:clamp(14px,3.7vw,17px); line-height:1.6;
+  color:var(--pw-ink2); font-weight:500;
+}
+
+/* ── §5 아이콘 셋 + 얇은 세로 구분선 ───────────────────────────── */
+.pwh-f3{
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
+  margin:22px 0 0; padding:0; list-style:none;
+}
+.pwh-f3 li{
+  display:flex; flex-direction:column; align-items:center; gap:0;
+  min-width:0; padding:4px 4px; text-align:center;
+}
+.pwh-f3 li + li{ border-left:1px solid rgba(160,106,52,.26); }
+/* ⚠️ `gap` 을 쓰면 b 와 span 사이도 벌어져 **두 덩이로** 읽힙니다 —
+   아이콘 밑 여백만 따로 줍니다 (찍어 보고 알았습니다). */
+.pwh-f3 i{ color:var(--pw-or-700); line-height:0; margin-bottom:8px; }
+.pwh-f3 b{
+  font-size:clamp(12px,3vw,13.5px); font-weight:700; line-height:1.35;
+  color:var(--pw-ink);
+}
+.pwh-f3 span{
+  font-size:clamp(12px,3vw,13.5px); font-weight:700; line-height:1.35;
+  color:var(--pw-ink);
+}
+
+/* ── 사진 ──────────────────────────────────────────────────────
+   ⚠️⚠️ **`--ph-pos` 가 아니라 `object-fit:contain` 입니다** — 배경이
+   투명한 제품 사진이라 잘라내면 기기가 잘립니다.
+   ⚠️ 원본이 414×482 입니다. `max-width` 를 그 위로 올리면 **뿌옇게**
+   뜹니다 (늘린 것은 규격을 맞춘 것이 아닙니다). */
+.pwh-art .ph{
+  display:block; width:100%; height:auto; max-width:300px;
+  margin-inline:auto; object-fit:contain;
+  filter:drop-shadow(0 22px 26px rgba(74,44,18,.30));
+}
+.pwh-art .ph-none{ display:none; }
+/* 밝은 석재 받침 — ⚠️ `pointer-events:none` 을 빼지 마세요 */
+.pwh-art{ position:relative; }
+.pwh-art::after{
+  content:""; position:absolute; left:50%; bottom:-10px; z-index:-1;
+  width:92%; height:30px; margin-left:-46%; border-radius:12px;
+  pointer-events:none;
+  background:linear-gradient(178deg,#FCF5EC 0%,#F0E2D0 54%,#DEC9B0 100%);
+  box-shadow:0 16px 28px -14px rgba(88,58,30,.46);
+}
+
+/* ── §6 CTA 둘 — 세로로 쌓고 전체 폭 ──────────────────────────── */
+.pwh-go{
+  display:flex; flex-direction:column; gap:11px; margin:20px 0 0;
+}
+.pwh-go .btn{
+  position:relative; display:flex; align-items:center; justify-content:center;
+  gap:11px; width:100%; min-height:62px; padding:0 44px;
+  border-radius:17px; font-size:clamp(16px,4.3vw,19px); font-weight:800;
+  letter-spacing:-.01em;
+}
+.pwh-go .btn b{ font-weight:800; }
+.pwh-go .btn svg{ flex:none; }
+/* 흰 글자 4.55 — ⚠️ `--pw-or`(#F37021)로 바꾸면 2.94 로 미달입니다 */
+.pwh-b1{
+  background:linear-gradient(180deg,#DE6219 0%,var(--pw-or-600) 56%,#C44300 100%);
+  border:1px solid rgba(146,62,10,.28); color:#fff;
+  box-shadow:0 12px 26px -12px rgba(176,72,10,.68);
+}
+.pwh-b1:hover{ background:var(--pw-or-600); color:#fff; }
+.pwh-b2{
+  background:var(--pw-or-50); border:1px solid var(--pw-line);
+  color:var(--pw-ink);
+  box-shadow:0 8px 20px -14px rgba(88,58,30,.42);
+}
+.pwh-b2:hover{ background:#FFF7EE; border-color:var(--pw-or-100); color:var(--pw-ink); }
+/* 오른쪽 끝 꺾쇠 — ⚠️ **표시**이지 따로 누르는 단추가 아닙니다 */
+.pwh-go .btn::after{
+  content:""; position:absolute; right:19px; top:50%;
+  width:9px; height:9px; margin-top:-5px;
+  border-right:2px solid currentColor; border-top:2px solid currentColor;
+  transform:rotate(45deg); opacity:.55;
+}
+
+/* ── §7 장점 넷 — 크림 둥근 박스 ──────────────────────────────── */
+.pwh-tr{
+  position:relative; z-index:1; border-top:0;
+  padding:0 var(--pad) 26px; background:none;
+}
+.pwh-tr-g{
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:0; margin:0; padding:20px 4px; list-style:none;
+  background:var(--pw-gray); border:1px solid rgba(201,163,120,.30);
+  border-radius:22px; box-shadow:0 10px 26px -18px rgba(88,58,30,.40);
+}
+.pwh-tr-g li{
+  display:flex; flex-direction:column; align-items:center; gap:9px;
+  min-width:0; padding:2px 6px; text-align:center;
+}
+.pwh-tr-g li + li{ border-left:1px solid rgba(160,106,52,.22); }
+.pwh-tr-g i{
+  width:48px; height:48px; flex:none; border-radius:50%;
+  display:grid; place-items:center;
+  background:var(--pw-or-100); color:var(--pw-or-700); border:0;
+}
+.pwh-tr-g span{ display:block; min-width:0; }
+.pwh-tr-g b{
+  display:block; font-size:clamp(12px,3vw,13.5px); font-weight:700;
+  line-height:1.35; color:var(--pw-ink);
+}
+.pwh-tr-g span > span{
+  display:block; margin-top:0; font-size:clamp(12px,3vw,13.5px);
+  font-weight:700; line-height:1.35; color:var(--pw-ink);
+}
+
+/* ── 아주 좁은 폭 (320~359) ────────────────────────────────────
+   ⚠️ 장점 넷을 2×2 로 접습니다 — 한 줄 넷이면 칸이 70px 이라
+   "환경을 생각하는" 이 낱말 가운데서 쪼개집니다. */
+@media (max-width:359px){
+  .pwh-in{ grid-template-columns:minmax(0,60fr) minmax(0,40fr); }
+  .pwh-f3 li{ padding:4px 2px; }
+  .pwh-go .btn{ min-height:56px; padding:0 38px; }
+  .pwh-tr-g{ grid-template-columns:repeat(2,minmax(0,1fr)); row-gap:16px; }
+  .pwh-tr-g li:nth-child(3){ border-left:0; }
+  .pwh-tr-g li:nth-child(n+3){ border-top:1px solid rgba(160,106,52,.22); padding-top:16px; }
+}
+
+/* ── PC — 모바일 디자인을 자연스럽게 넓힙니다 (§9) ──────────────── */
+@media (min-width:900px){
+  .pwh-in{
+    grid-template-columns:minmax(0,54fr) minmax(0,46fr);
+    grid-template-areas:"tx art" "go art";
+    align-items:center; column-gap:34px;
+    padding:52px var(--pad) 46px;
+  }
+  .pwh-art{ grid-row:1 / span 2; align-self:center; }
+  .pwh-art .ph{ max-width:400px; }
+  /* ⚠️ 시안이 **세로로 쌓은 전체 폭 단추 둘**입니다 — PC 에서도
+     그대로 두고 폭만 묶습니다. `flex-direction:row` 를 적어 봤자
+     `.btn{width:100%}` 이 남아 있어 **그대로 줄바꿈**되고, 아무
+     일도 안 하는 규칙이 하나 남습니다 (재서 알았습니다). */
+  .pwh-go{ max-width:560px; }
+  .pwh-go .btn{ min-height:66px; padding:0 40px; }
+  .pwh-go .btn::after{ right:16px; }
+  .pwh-tr{ padding:0 var(--pad) 42px; }
+  .pwh-tr-g{ padding:26px 10px; }
+  .pwh-tr-g i{ width:54px; height:54px; }
+}
+@media (min-width:1200px){
+  .pwh-in{ padding:64px var(--pad) 56px; }
+}

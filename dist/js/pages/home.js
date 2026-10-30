@@ -1088,8 +1088,9 @@ function PwShop(){
 }
 
 function pwDevLink(c){
-  var qs = c.more ? "?more=1"
-         : "?maker="+ encodeURIComponent(c.maker) +"&kind="+ encodeURIComponent(c.kind);
+
+  var qs = c.more ? "?mo=1"
+         : "?mk="+ encodeURIComponent(c.maker) +"&kd="+ encodeURIComponent(c.kind);
   return '<li><a class="dvc dvc-a" href="/sell'+ qs +'">'+
     '<span class="dvc-ph">'+
       (typeof hasPhoto === "function" && hasPhoto(c.ph)

@@ -6,7 +6,8 @@ window.AM_MAKERS = [
   { key:"etc",     name:"기타",  en:"Other"   }
 ];
 
-window.AM_MAKER_LOGO = { apple:"", samsung:"" };
+window.AM_MAKER_LOGO = { apple:"/img/brands/apple.png?v=7c53732b",
+                         samsung:"/img/brands/samsung.png?v=a26d5261" };
 
 window.AM_DEVICE_KINDS = [
   { key:"phone",  name:"스마트폰" },

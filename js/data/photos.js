@@ -340,20 +340,20 @@ window.WOW_PHOTO_SLOTS = [
      ⚠️⚠️ 2026-10-30 — 메인 02 의 액자가 **가로로 넓어졌습니다**
      (1440px 약 256×170 · 390px 약 150×114 · 어두운 카드 #211C19).
      그래서 **투명 배경(PNG→WebP)** 이 제일 낫고, 흰 배경이면 카드 위에
-     흰 네모가 뜹니다. 비율 범위를 0.85~1.7 로 넓혔습니다.
+     흰 네모가 뜹니다. 비율 범위를 0.85~1.8 로 넓혔습니다.
      ⚠️⚠️ **제품만 찍힌 사진**이라야 합니다 — 손 · 배경 · 상호 · 매장이
      들어가면 카드 넷의 결이 어긋납니다 (흰 배경 또는 투명 배경). */
-  { key:"dev-iphone", sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
-    where:"메인 02 · /sell 01 기기 카드 — 아이폰", min:[600,400], ratio:[0.85,1.7], maxKB:90,
+  { key:"dev-iphone", temp:true, sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
+    where:"메인 02 · /sell 01 기기 카드 — 아이폰", min:[600,400], ratio:[0.85,1.8], maxKB:90,
     note:"아이폰 한 대. ⚠️ 애플 로고가 **읽히지 않아야** 합니다 (남의 등록상표) · 흰 배경" },
-  { key:"dev-galaxy", sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
-    where:"메인 02 · /sell 01 기기 카드 — 갤럭시", min:[600,400], ratio:[0.85,1.7], maxKB:90,
+  { key:"dev-galaxy", temp:true, sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
+    where:"메인 02 · /sell 01 기기 카드 — 갤럭시", min:[600,400], ratio:[0.85,1.8], maxKB:90,
     note:"갤럭시 한 대. ⚠️ 삼성 워드마크가 읽히지 않아야 합니다 · 흰 배경" },
-  { key:"dev-tablet", sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
-    where:"메인 02 · /sell 01 기기 카드 — 태블릿", min:[600,400], ratio:[0.85,1.7], maxKB:90,
+  { key:"dev-tablet", temp:true, sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
+    where:"메인 02 · /sell 01 기기 카드 — 태블릿", min:[600,400], ratio:[0.85,1.8], maxKB:90,
     note:"태블릿 한 대(또는 두 대 나란히). ⚠️ 상표가 읽히지 않아야 합니다 · 흰 배경" },
-  { key:"dev-etc", sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
-    where:"메인 02 · /sell 01 기기 카드 — 기타 기기", min:[600,400], ratio:[0.85,1.7], maxKB:90,
+  { key:"dev-etc", temp:true, sizes:"(max-width:359px) 96px, (max-width:1199px) 46vw, 270px",
+    where:"메인 02 · /sell 01 기기 카드 — 기타 기기", min:[600,400], ratio:[0.85,1.8], maxKB:90,
     note:"워치 + 무선 이어폰. ⚠️ 특정 제조사가 드러나지 않아야 합니다 · 흰 배경" },
   /* ⚠️⚠️ 2026-10-29 오렌지 §3-E — **메인 03 사업 배너 넷**. `PW_BIZ` 의
      `ph` 가 이 열쇠를 가리키고 `PwBiz()` 가 `hasPhoto()` 로 기다립니다 —
@@ -420,6 +420,25 @@ window.WOW_PHOTO_SLOTS = [
    한쪽만 새로 넣으면 다른 쪽이 조용히 사라지니, 돌린 뒤에는 반드시
    이 칸을 되읽어 보세요 (실제로 hero-close 가 한 번 빠졌습니다). */
 window.WOW_PHOTOS = {
+  /* ⚠️⚠️ 2026-10-30 — 기기 카드 넷은 **사장님이 주신 시안에서 잘라 넣은
+     임시 그림**입니다 (사장님이 "B 로 해줘 · 로고도 넣어" 로 정하셨고, 그
+     그림을 쓸 권리를 사장님이 확인하셨습니다). 가로 352~418px 라 PC
+     카드에서는 조금 뿌옇습니다 — 자리에 `temp:true` 가 붙어 있어
+     `check-photos` 가 돌 때마다 ⚠️ 줄로 알립니다. 정식 사진(투명 배경 ·
+     600×400 이상)이 오면 `node tools/fit-photos.js` 로 갈아 끼우세요.
+     ⚠️ 바탕이 시안 카드의 짙은 갈색이라 **어두운 카드 위에서만** 맞습니다. */
+  "dev-iphone": { src:"/img/dev-iphone.jpg?v=95dfbba9", w:352, h:298,
+    webp:"/img/dev-iphone.webp?v=99c87b5f 352w", jpg:"/img/dev-iphone.jpg?v=95dfbba9 352w",
+    alt:"아이폰 앞면과 뒷면, 애플 로고" },
+  "dev-galaxy": { src:"/img/dev-galaxy.jpg?v=838d5d9a", w:408, h:284,
+    webp:"/img/dev-galaxy.webp?v=837b7594 408w", jpg:"/img/dev-galaxy.jpg?v=838d5d9a 408w",
+    alt:"갤럭시 스마트폰 앞면과 뒷면, S펜, 삼성 로고" },
+  "dev-tablet": { src:"/img/dev-tablet.jpg?v=7986e9ab", w:418, h:238,
+    webp:"/img/dev-tablet.webp?v=fb7f1874 418w", jpg:"/img/dev-tablet.jpg?v=7986e9ab 418w",
+    alt:"아이패드와 갤럭시 탭" },
+  "dev-etc": { src:"/img/dev-etc.jpg?v=287d64e5", w:392, h:226,
+    webp:"/img/dev-etc.webp?v=ad6ce617 392w", jpg:"/img/dev-etc.jpg?v=287d64e5 392w",
+    alt:"스마트워치와 무선 이어폰" },
   "hero-start": { src:"/img/hero-start.jpg?v=43939c5f",
     w:1701, h:756,
     webp:"/img/hero-start-sm.webp?v=d10230c9 936w, /img/hero-start.webp?v=61230e9c 1701w",

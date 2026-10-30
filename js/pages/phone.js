@@ -90,9 +90,9 @@ function PageSell(){
    단추입니다.** 워치 · 버즈 · 기타 제조사를 한 장에 담으면 고르신
    것과 접수에 실리는 것이 달라집니다. */
 var PW_SELL_CARDS = [
-  { ph:"dev-iphone", ia:"dev-iphone", lg:"apple",   nm:"아이폰",
+  { ph:"dev-iphone", ia:"dev-iphone", lg:"",   nm:"아이폰",
     sub:"iPhone",                maker:"apple",   kind:"phone"  },
-  { ph:"dev-galaxy", ia:"dev-galaxy", lg:"samsung", nm:"갤럭시",
+  { ph:"dev-galaxy", ia:"dev-galaxy", lg:"", nm:"갤럭시",
     sub:"Galaxy",                maker:"samsung", kind:"phone"  },
   { ph:"dev-tablet", ia:"dev-tablet", lg:["apple","samsung"], nm:"태블릿",
     sub:"아이패드 · 갤럭시 탭",     maker:"",        kind:"tablet" },
@@ -137,7 +137,7 @@ function pwDevCard(c, on){
     '<span class="dvc-tx">'+
       /* ⚠️ 권한이 확인된 파일이 있을 때만 그립니다 — 없으면 **칸째**
          안 냅니다 (빈 액자 금지 · 절대 규칙 2). */
-      pwDevLogos(c)+
+      /* ⚠️ 로고가 흰색이라 이 흰 카드에서는 안 그립니다 (메인만) */
       '<b class="dvc-nm">'+esc(c.nm)+'</b>'+
       '<span class="dvc-s">'+esc(c.sub)+'</span>'+
     '</span>'+

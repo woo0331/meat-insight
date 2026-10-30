@@ -2125,8 +2125,12 @@ function PwShop(){
    부정확한 로고는 쓰지 말 것" 이라고 직접 적으셨습니다 — 권한을
    확인한 SVG 가 생기면 `AM_MAKER_LOGO` 에 주소 한 줄입니다. */
 function pwDevLink(c){
-  var qs = c.more ? "?more=1"
-         : "?maker="+ encodeURIComponent(c.maker) +"&kind="+ encodeURIComponent(c.kind);
+  /* ⚠️⚠️ **`/sell` 이 읽는 열쇠는 `mk` · `kd` · `mo` 입니다** (phone.js 의
+     `pwSellState()`). 여기서 `maker` · `kind` · `more` 로 보내고 있어서,
+     카드를 누르면 `/sell` 이 열리기는 하는데 **아무것도 안 고른 채**였습니다
+     (2026-10-30 눌러 보고 알았습니다 — 링크 검사는 주소가 열리는지만 봅니다). */
+  var qs = c.more ? "?mo=1"
+         : "?mk="+ encodeURIComponent(c.maker) +"&kd="+ encodeURIComponent(c.kind);
   return '<li><a class="dvc dvc-a" href="/sell'+ qs +'">'+
     '<span class="dvc-ph">'+
       (typeof hasPhoto === "function" && hasPhoto(c.ph)

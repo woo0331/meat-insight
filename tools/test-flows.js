@@ -134,9 +134,19 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.pwd-g .dvc');
  /* ⚠️ 카드가 **제조사와 종류를 한 번에** 고르므로 주소에 그것이
-    실립니다 (`/sell?maker=apple&kind=phone`) — 통째로 견주면
+    실립니다 (`/sell?mk=apple&kd=phone`) — 통째로 견주면
     멀쩡한 길을 "틀렸다" 고 잡습니다. */
  say((await url()).startsWith("/sell"),"기기 선택 카드 → /sell",await url());
+ /* ⚠️⚠️ **고른 채로 도착해야 합니다** (2026-10-30 시안 §7). 메인이
+    `maker` · `kind` 로 보내고 `/sell` 은 `mk` · `kd` 를 읽어서, 열리기는
+    하는데 **아무것도 안 고른 채**였습니다 — 주소만 보면 영원히 통과합니다. */
+ say((await pg.locator('.dvc[aria-pressed="true"]').count())===1,
+   "기기 선택 카드 → /sell 에서 그 카드가 고른 채로 선다",
+   (await pg.locator('.dvc[aria-pressed="true"]').count())+"장");
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.pwd-g .dvc:has-text("기타 기기")');
+ say((await pg.getAttribute('.dvc:has-text("기타 기기")',"aria-expanded"))==="true",
+   "기타 기기 카드 → /sell 에서 칩 줄이 펼쳐진 채로 선다", await url());
  /* 사업 배너 넷 — ⚠️ 넷 다 **실제로 열려야** 합니다 (§7 — 존재하지
     않는 페이지로 보내거나 작동하지 않는 버튼을 만들지 않습니다). */
  await pg.goto(B+"/",{waitUntil:"networkidle"});

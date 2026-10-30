@@ -7816,3 +7816,41 @@ html.ivh #view .pwd-hd h2{ color:var(--dv-ink); font-size:clamp(23px,2.4vw,32px)
   .pwd-g .dvc-ph{ width:96px; height:96px; margin:0; flex:none; }
   .pwd-g .dvc-tx{ padding:0; }
 }
+/* ⚠️⚠️ 2026-10-30 — 카드 바탕을 **시안 카드의 그라데이션**에 맞춥니다.
+   사진 넷이 시안에서 잘라 온 것이라 제 바탕(위쪽 #1F150E 안팎)을 들고
+   있어서, 카드가 그 색이 아니면 사진 둘레에 네모가 뜹니다.
+   ⚠️ `background-color` 를 따로 둡니다 — 그라데이션만 적으면 검사가
+   투명으로 읽습니다. 흰 제목 16.8 · 보조 9.6 (제일 밝은 위쪽에서). */
+.pwd-g .dvc{ background-color:#1A1410;
+  background-image:linear-gradient(180deg,#1F150E 0%,#1C1511 55%,#161211 100%); }
+.pwd-g .dvc:active, .pwd-g .dvc.on{ background-image:none; background-color:#2B1F17; }
+/* 사진 가장자리를 카드에 녹입니다 (잘린 경계가 보이지 않게) */
+.pwd-g .dvc-ph .ph{ -webkit-mask-image:radial-gradient(ellipse 72% 78% at 50% 50%,#000 70%,transparent 100%);
+  mask-image:radial-gradient(ellipse 72% 78% at 50% 50%,#000 70%,transparent 100%); }
+/* /sell 의 흰 카드 — 사진 바탕이 짙어서 **사진이 있을 때만** 액자를 같은 색으로 */
+.dvc-ph:has(.ph:not(.ph-none)){ background:#1F150E; }
+/* ⚠️ 로고 줄이 있는 카드(태블릿 · 기타)만 키가 커져 줄마다 높이가
+   달랐습니다 — **모든 줄을 같은 높이로** 둡니다 (재 보고 알았습니다).
+   PC 는 사진 칸을 조금 낮춰 지시서 범위(260~310px) 안에 둡니다. */
+.pwd-g{ grid-auto-rows:1fr; }
+.pwd-g .dvc-ph{ height:clamp(132px,10.6vw,152px); }
+.dvc-lgs{ height:clamp(22px,2vw,28px); margin-bottom:6px; }
+@media (max-width:1199px){ .pwd-g .dvc-ph{ height:clamp(126px,16vw,165px); } }
+@media (max-width:767px){ .pwd-g .dvc-ph{ height:clamp(96px,28vw,116px); }
+  .dvc-lgs{ height:20px; margin-bottom:5px; } }
+@media (max-width:359px){ .pwd-g{ grid-auto-rows:auto; } .pwd-g .dvc-ph{ height:96px; } }
+/* ⚠️⚠️ 사진이 액자를 넘쳐 **이름 위에 앉았습니다** (1440px 에서 152px 칸에
+   193px). 액자가 grid 인데 칸(행)이 auto 라 `height:100%` 가 안 풀렸습니다 —
+   grid 칸을 100% 로 못박아도 0 이 됐습니다 — 사진을 액자에 **절대 위치로**
+   붙입니다. /sell 액자에도 똑같이 맞는 말입니다. */
+.dvc-ph{ position:relative; overflow:hidden; }
+.dvc-ph .ph, .dvc-ph .dvc-im{ position:absolute; inset:0; width:100%; height:100%;
+  object-fit:contain; }
+/* 폰 — 설명이 화살표 원 밑으로 안 들어가게 원을 조금 줄이고 자리를 냅니다 */
+@media (max-width:767px){
+  .pwd-g .dvc-a .dvc-go{ width:32px; height:32px; right:8px; bottom:12px; }
+  .pwd-g .dvc-tx{ padding-right:36px; }
+  .pwd-g .dvc-s{ font-size:12px; }
+}
+@media (min-width:1200px){ .pwd-g .dvc{ padding-top:14px; padding-bottom:18px; }
+  .pwd-g .dvc-ph{ height:clamp(132px,10.2vw,148px); } }

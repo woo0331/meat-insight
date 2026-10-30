@@ -7412,8 +7412,19 @@ html.ivh #view .pwh h1{ color:var(--pw-dk); }
   width:clamp(84px, 9.4vw, 150px); height:clamp(84px, 9.4vw, 150px);
   border-radius:13px; background:var(--pw-or-50, #FFF4E9);
   --ia-1:var(--pw-dk, #18212B); --ia-2:#F3C9A8; }
+/* ⚠️⚠️ 2026-10-30 — 폰에서 액자 높이를 95 → 76px 로 내렸습니다.
+   까닭은 디자인이 아니라 밝기입니다. 시안에서 잘라 온 제품 사진 넷이
+   거의 검은 바탕이라 바로 아래 규칙이 액자를 짙은 갈색으로 칠하는데,
+   기기 고르기 화면은 폰에서 그 액자 넷이 첫 화면에 다 들어옵니다 —
+   재 보니 430px 15.1% · 390px 15.7% · 375px 15.6% 로 BRIGHT PREMIUM
+   한도(15%)를 넘었습니다 (전수 점검의 "어두운 면이 15% 넘음").
+   76px 로 내리면 12% 안팎입니다.
+   ⚠️ 그래서 이 수를 **다시 올리지 마세요** — 올리는 순간 같은 검사가
+   폰 세 폭에서 되살아납니다. 올리시려면 사진부터 밝은 바탕(또는 배경
+   투명)으로 바꾸고, 그때 아래 어두운 액자 규칙도 같이 걷어내세요.
+   ⚠️ PC 는 액자가 작아 처음부터 통과했습니다 — 손대지 않았습니다. */
 @media (max-width:767px){
-  .dvc-ph{ width:100%; height:clamp(75px, 22vw, 95px);
+  .dvc-ph{ width:100%; height:clamp(62px, 17vw, 76px);
     border-radius:11px; margin:0 0 9px; }
 }
 /* ⚠️ 비율을 지킵니다 — `.ph` 의 기본값은 `fill` 이라 안 주면 늘어납니다 */

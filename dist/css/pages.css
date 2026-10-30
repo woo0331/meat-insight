@@ -5241,8 +5241,9 @@ html.ivh #view .pwh h1{ color:var(--pw-dk); }
   width:clamp(84px, 9.4vw, 150px); height:clamp(84px, 9.4vw, 150px);
   border-radius:13px; background:var(--pw-or-50, #FFF4E9);
   --ia-1:var(--pw-dk, #18212B); --ia-2:#F3C9A8; }
+
 @media (max-width:767px){
-  .dvc-ph{ width:100%; height:clamp(75px, 22vw, 95px);
+  .dvc-ph{ width:100%; height:clamp(62px, 17vw, 76px);
     border-radius:11px; margin:0 0 9px; }
 }
 

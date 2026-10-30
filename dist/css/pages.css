@@ -5776,3 +5776,31 @@ html.ivh #view .pwh h1{
 @media (min-width:1200px){
   .pwh-in{ padding:64px var(--pad) 56px; }
 }
+
+.shp-fil .chip, .pwf .chip{ min-height:44px; padding:0 16px;
+  background:#fff; color:var(--pw-ink, #352014);
+  border:1px solid var(--pw-line, #EADBC8);
+  font-size:14px; font-weight:600; white-space:nowrap; }
+.shp-fil .chip:hover, .pwf .chip:hover{ border-color:var(--pw-or-600, #D24601); }
+.shp-fil .chip.on, .pwf .chip.on{ background:var(--pw-or-600, #D24601);
+  border-color:var(--pw-or-600, #D24601); color:#fff; font-weight:800; }
+.shp-fil .chip:focus-visible, .pwf .chip:focus-visible{
+  outline:3px solid rgba(243,112,33,.45); outline-offset:2px; }
+.shp-fil .chip-g, .pwf .chip-g{ gap:8px; }
+
+.shp-nr{ display:flex; align-items:center; justify-content:space-between;
+  gap:10px; flex-wrap:wrap; margin:0 0 14px; }
+.shp-nr .shp-n{ margin:0; }
+.shp-rs{ min-height:44px; padding:0 16px; font-size:14px; }
+@media (max-width:520px){
+  .shp-fil{ padding:14px; }
+  .shp-fil .chip, .pwf .chip{ padding:0 13px; font-size:13.5px; }
+  .shp-fil .chip-g, .pwf .chip-g{ gap:6px; }
+}
+
+button.chip, button.pwf-g{ font:inherit; cursor:pointer; text-align:left;
+  -webkit-appearance:none; appearance:none; }
+.pwf button.chip{ font-size:14px; }
+@media (max-width:520px){ .pwf button.chip{ font-size:13.5px; } }
+
+#shp-res{ overflow-anchor:none; }

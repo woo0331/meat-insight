@@ -1014,6 +1014,9 @@ const AUDIT = `(() => {
                             " #view .pwz-g i," +
                             " #view .my-pw-i").forEach(e => {
     if(e.querySelector("svg")) return;
+    /* 2026-10-30 — 기기 카드 넷은 **사진**이 아이콘 자리를 받습니다.
+       빈 액자(ph-none)는 그대로 빈 것으로 셉니다. */
+    if(e.querySelector("img.ph:not(.ph-none)")) return;
     const own = (e.parentElement || e);
     out.ico.push((own.textContent || "").trim().slice(0, 14) || "(이름 없음)");
   });
@@ -4483,9 +4486,12 @@ const AUDIT = `(() => {
       if(!L.length) return g[1] + " 아이콘이 하나도 없습니다";
       const seen = [];
       for(const e of L){
+        /* 2026-10-30 — 기기 선택은 사진이 들어오면 svg 대신 img 입니다.
+           그때는 그 사진 주소로 겹침을 봅니다 (빈 액자 ph-none 은 빈 것). */
+        const im = e.querySelector("img.ph:not(.ph-none)");
         const sv = e.querySelector("svg");
-        if(!sv || !sv.innerHTML.trim()) return g[1] + " 에 빈 아이콘이 있습니다";
-        const k = sv.innerHTML.trim();
+        if(!im && (!sv || !sv.innerHTML.trim())) return g[1] + " 에 빈 아이콘이 있습니다";
+        const k = im ? (im.getAttribute("src") || "") : sv.innerHTML.trim();
         if(seen.indexOf(k) >= 0) return g[1] + " 아이콘이 겹칩니다";
         seen.push(k);
       }

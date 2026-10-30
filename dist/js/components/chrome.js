@@ -8,7 +8,7 @@ window.AM_GNB = [
   { to:"/biz",     name:"수출 · 기업거래" },
   { to:"/guide",   name:"이용안내" },
 
-  { to:"/faq",     name:"고객센터" }
+  { to:"/faq",     name:"도움말" }
 ];
 
 var MNAV = [

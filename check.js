@@ -2372,6 +2372,30 @@ const AUDIT = `(() => {
     if(ph.indexOf("SW-") !== 0)
       return "접수번호 보기가 실제 꼴(SW-)과 다릅니다 — " + ph;
     return true;`);
+  /* ⚠️⚠️ **바로 위 검사는 이것을 못 봤습니다** (2026-10-30 에 알았습니다).
+     거기는 /track 의 view 안만 보는데, 그 이름이 걸려 있던 자리는
+     **헤더**였습니다 — view 밖이고 167개 화면이 같이 씁니다. 규칙을
+     한 화면의 본문에만 걸어 두면, 같은 말이 머리나 꼬리로 옮겨가는
+     순간 아무도 안 봅니다 (이 저장소가 제목 차례 검사에서 겪은
+     자리입니다 — 거기도 view 안만 보다가 푸터를 통째로 놓쳤습니다).
+     ⚠️ 그래서 여기서는 **문서 전체**를 보고, 다만 **누르는 것의
+     이름**만 봅니다 — 글 속의 "업체 고객센터에 전화해서" 같은 문장과
+     약관의 사업자 정보 딱지는 거짓이 아니라서 걸면 안 됩니다.
+     ⚠️ 전화 창구가 생겨 WOW_BIZ.phone 이 채워지면 이 검사는 스스로
+     비킵니다 — 그때는 그 이름이 사실이기 때문입니다. */
+  await f("없는 고객센터로 보내는 길이 없다", "/", `
+    const biz = window.WOW_BIZ || {};
+    if(String(biz.phone || "").trim()) return true;   /* 전화 창구가 생겼으면 사실입니다 */
+    const bad = [];
+    document.querySelectorAll("a, button").forEach(function(e){
+      const own = [].slice.call(e.childNodes)
+        .filter(function(n){ return n.nodeType === 3; })
+        .map(function(n){ return n.textContent; }).join("").trim();
+      if(own === "고객센터") bad.push(e.getAttribute("href") || e.className || e.tagName);
+    });
+    if(bad.length)
+      return "전화 창구가 없는데 고객센터로 보냅니다 — " + bad.join(" · ");
+    return true;`);
   /* ⚠️⚠️ **예시 상품은 예시라고 말하고, 살 수 없어야 합니다**
      (2026-10-29 ③). 지어낸 값이 붙은 카드가 실제 상품으로 읽히면
      그 순간 없는 물건을 광고하는 것이고(절대 규칙 1), 상세에

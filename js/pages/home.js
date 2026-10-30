@@ -601,8 +601,31 @@ function PageMain(){
      주소가 어디로 갔는지 재서 확인했습니다 —
        · PwWays  /sell · /bid  → 03 배너 넷 · 04 바로가기 다섯
        · PwShop  /shop?m=…     → 03 배너 둘째 · 04 바로가기 · 푸터 `구매` 칸 */
-  return PwHero()+ PwDevice()+ PwBiz()+ PwQuick()+
-         PwSteps()+ PwTrust()+ PwCta();
+  /* ⚠️⚠️ **2026-10-30 최종 지시서 §2 · §3 의 차례**입니다
+     (시안 이미지 그대로). 헤더 · 푸터는 `#view` 밖이라
+     여기가 내놓는 것은 **아홉**입니다 — · 06 은 게시물이 0건이라
+     지금 **구간째 빠집니다**(여덟이 그려집니다).
+
+       01 .pwh   히어로          02 .pwsv  핵심 서비스 여섯
+       03 .pwbr  브랜드 여섯     04 .pwpd  지금 보실 수 있는 중고폰
+       05 .pwbz  안내 배너 셋    06 .pwnw  소식과 혜택 (0건 → 안 나옴)
+       07 .pwst  이용 방법        08 .pwt   거래 전 고지
+       09 .pwc   마지막 CTA
+
+     ⚠️⚠️ **내려온 셋을 지우지 않았습니다** (§0-3). 되살리시려면
+     아래 한 줄입니다 — 그날 `check.js` 의 `order`/`want` 와
+     `build-pages.js` 의 크롤러 본문도 **같이** 고치세요.
+       return PwHero()+ PwDevice()+ PwBiz()+ PwQuick()+
+              PwSteps()+ PwTrust()+ PwCta();
+     ⚠️ 셋이 가리키던 곳은 전부 남아 있습니다 — 기기 선택 넷은
+     `/sell` 첫 화면이 그대로 그 카드이고(`pwDevCard`), 바로가기
+     다섯은 02 핵심 서비스 여섯이 받고, 옛 사업 배너 넷(`PwBiz`)이
+     들던 길은 02 여섯과 05 안내 배너 셋(`PwBanners`)이 나눠 받습니다.
+     ⚠️⚠️ **`PwBiz` 와 `PwBanners` 는 둘 다 `.pwbz-c` 를 씁니다** —
+     되살리시면 한 화면에 그 클래스가 두 벌이 되어 검사가 **엉뚱한
+     카드를 집습니다.** 그날 `PwBiz` 쪽 클래스를 갈라 두세요. */
+  return PwHero()+ PwServices()+ PwBrands()+ PwProducts()+
+         PwBanners()+ PwNews()+ PwSteps()+ PwTrust()+ PwCta();
 }
 
 
@@ -1874,11 +1897,38 @@ var PW_CHIP_IC = {
    ⚠️⚠️ **평면 일러스트(`pwHeroArt`)를 더 이상 안 부릅니다** (§12).
    함수는 지우지 않았습니다 — 되살리시려면 아래 `.pwh-art` 안의
    `photoBox(...)` 를 `pwHeroArt()` 로 바꾸는 한 줄입니다.         */
+/* ══════════════════════════════════════════════════════════════
+   01 메인 히어로 — 2026-10-30 "PC · 모바일 전면 리뉴얼" §2-2 · §3-2
+
+   ⚠️⚠️ **거래 건수 · 고객 만족도 · 제휴업체 수 · 전국 매장 수 띠를
+   넣지 않았습니다.** 시안이 `120,000+ · 4.9/5.0 · 1,200+ · 50+` 을
+   적었지만 §0-8 이 "임의의 거래 건수, 후기, 고객 만족도, 제휴업체 수,
+   매장 수를 생성하지 않는다" 를 직접 금지하고, §2-2 가 "실제 수치가
+   없다면 해당 영역을 제거하고 히어로 여백을 자연스럽게 재조정한다"
+   고 적었습니다. 지금 전부 **0** 입니다 — 그 자리는 숫자가 아니라
+   **우리가 지킬 수 있는 말 넷**(`pwHeroTrust`)이 받습니다.
+
+   ⚠️⚠️ **슬라이더 `1/3` 표시를 안 냅니다.** 슬라이드가 하나뿐인데
+   셋인 척하면 그게 §2-2 가 막은 "가짜 페이지 표시" 입니다. 배너가
+   실제로 둘 이상이 되는 날 그때 붙이세요.
+
+   ⚠️ 오렌지 리본 곡선은 **전부 CSS** 입니다 (`.pwh-rb`) — 시안을
+   배경 그림으로 까는 것은 §0-5 가 금지합니다.
+   ⚠️ 제품 사진은 사장님이 주신 정식 자산(`dev-iphone`)입니다.
+   ⚠️⚠️ 사진 안에 글자를 합성하지 않습니다 — 시안 오른쪽의 손글씨가
+   그것입니다. 폭마다 대비가 달라지고 읽어 주는 프로그램이 못 읽습니다.
+   ══════════════════════════════════════════════════════════════ */
 function PwHero(){
+  var nm = (window.amBrand ? amBrand() : "");
+  /* ⚠️⚠️ **조사를 손으로 적지 마세요.** 이름이 받침 있는 것으로
+     바뀌면 "폰웨이과" 가 됩니다 — 이 저장소가 푸터의 중개자 고지에서
+     "인수인계은" 으로 겪은 자리입니다. */
+  var wa = (typeof josa === "function") ? josa(nm, "와과") : "와";
   return '<section class="pwh">'+
     '<div class="pwh-bg" aria-hidden="true">'+
-      '<span class="pwh-bg-panel"></span>'+
-      '<span class="pwh-bg-glow"></span>'+
+      '<span class="pwh-rb"></span>'+
+      '<span class="pwh-rb2"></span>'+
+      '<span class="pwh-glow"></span>'+
     '</div>'+
     '<div class="w pwh-in">'+
       '<div class="pwh-tx">'+
@@ -1886,28 +1936,22 @@ function PwHero(){
            이름은 `AM_BRAND.name` 하나이고, 여기 글자는 자간을 벌린
            라벨이라 이름을 대신하지 않습니다. */
         '<p class="pwh-k">PHONEWAY</p>'+
-        '<p class="pwh-k2">중고폰, 더 스마트하게</p>'+
         /* ⚠️⚠️ 화면마다 h1 은 **딱 하나**입니다. 히어로를 내리시면
            아래 구간 머리말을 h1 으로 올려야 합니다. */
-        '<h1><span class="pwh-h1a">지금, 당신의 폰이</span>'+
-          '<em>새로운 가치를</em><em>만납니다.</em></h1>'+
-        '<p class="pwh-sub">여러 업체의 견적을 비교하고<br>'+
-          '가장 좋은 조건으로 거래하세요.</p>'+
-        pwHero3()+
+        '<h1><span class="pwh-h1a">중고폰의 새로운 기준</span>'+
+          '<em><b>'+ esc(nm) + esc(wa) +'</b> 더 가깝게</em></h1>'+
+        '<p class="pwh-sub">팔기부터 구매, 수리, 도매, 수출까지'+
+          '<br class="br-m"> 중고폰의 모든 것을 한 곳에서</p>'+
+        '<div class="pwh-go">'+
+          '<a class="btn pwh-b1" href="/sell" data-to="/sell">'+
+            '<b>내 폰 팔기</b>'+ pwArrow() +'</a>'+
+          '<a class="btn pwh-b2" href="/shop" data-to="/shop">'+
+            '<b>중고폰 구매하기</b>'+ pwArrow() +'</a>'+
+        '</div>'+
       '</div>'+
       '<div class="pwh-art">'+
         photoBox("dev-iphone", "pwh-ph", true,
-          "(max-width:899px) 44vw, (max-width:1199px) 34vw, 400px")+
-      '</div>'+
-      /* ⚠️⚠️ **단추 줄은 글 칸 밖입니다.** 안에 두면 폰에서 글 칸이
-         사진을 피해 56% 로 좁아진 만큼 단추도 같이 좁아집니다 —
-         시안은 **화면 전체 폭**입니다. 격자에서 `go` 가 두 칸을
-         가로지릅니다. */
-      '<div class="pwh-go">'+
-        '<a class="btn pwh-b1" href="/sell" data-to="/sell">'+
-          icon("mobile",21)+'<b>내 폰 팔기</b>'+ pwArrow() +'</a>'+
-        '<a class="btn pwh-b2" href="/shop" data-to="/shop">'+
-          icon("cart",21)+'<b>중고폰 구매하기</b>'+ pwArrow() +'</a>'+
+          "(max-width:767px) 42vw, (max-width:1199px) 36vw, 420px")+
       '</div>'+
     '</div>'+
     pwHeroTrust()+
@@ -2355,5 +2399,249 @@ function PwCta(){
       '<a class="btn btn-pw-w" href="/sell">내 폰 팔기</a>'+
       '<a class="btn btn-pw-gh" href="/guide">이용 안내 보기</a>'+
     '</div>'+
+  '</div></section>';
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-10-30 "메인페이지 PC · 모바일 전면 리뉴얼 최종 작업지시서"
+   §2 · §3 — 시안의 차례 그대로
+
+     01 히어로              .pwh    사진 + h1 + 단추 둘
+     02 핵심 서비스 여섯      .pwsv   §2-3
+     03 브랜드 여섯          .pwbr   §2-4  ⚠️ 정확히 여섯만
+     04 지금 보실 수 있는 중고폰 .pwpd  §2-5  필터 + 카드
+     05 안내 배너 셋          .pwbz   §2-6  딥 브라운
+     06 소식과 혜택          .pwnw   §2-7  ⚠️ 게시물 0건이면 구간째 빠집니다
+     07 이용 방법 다섯        .pwst   (보존 · §0-3)
+     08 거래 전 고지          .pwt    (보존 · 전자상거래법 제20조 제1항)
+     09 마지막 CTA           .pwc    (보존)
+
+   ⚠️⚠️ **내려온 둘을 지우지 않았습니다** (§0-3) —
+     · PwDevice()  기기 선택 넷 → `/sell` **첫 화면이 그대로 그
+       카드**입니다 (`pwDevCard()` 를 같이 씁니다). 사장님이 주신
+       제품 사진 넉 장도 거기서 그대로 보입니다.
+     · PwQuick()   바로가기 다섯 → 02 핵심 서비스 **여섯**이 받습니다
+       (다섯이 가리키던 주소가 전부 그 여섯 안에 있습니다).
+   되살리시려면 `PageMain()` 한 줄입니다.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ─── 02 핵심 서비스 여섯 (§2-3) ─────────────────────────────────
+   ⚠️⚠️ **여섯 전부 지금 열리고 지금 무언가를 받는 화면**입니다.
+   §0-6 "모든 버튼과 카드는 실제 사이트의 해당 기능에 연결한다" ·
+   §0-7 "기능이 미구현된 메뉴는 가짜 화면으로 연결하지 않는다".
+   ⚠️ 아이콘은 여섯이 서로 달라야 합니다 — 전수 점검이 셉니다.    */
+/* ⚠️ 위 목록은 js/data/shop.js 로 옮겨 놓았습니다 — 크롤러 본문이
+   js/data 만 읽어서, 여기 두면 그 구간이 **에러 없이 조용히** 빠졌습니다. */
+function PwServices(){
+  return '<section class="pwsv"><div class="w">'+
+    /* ⚠️⚠️ **머리말을 빼지 마세요.** 없으면 제목 차례가 h1 → h2
+       에서 한 칸 비고, 크롤러 본문에도 이 구간이 제 이름으로
+       안 나갑니다 — 읽어 주는 프로그램을 쓰는 분은 제목으로 화면의
+       뼈대를 잡습니다 (재서 알았습니다). */
+    '<div class="pw-hd"><h2>무엇을 도와드릴까요?</h2>'+
+      '<p>중고폰을 팔고 · 사고 · 고치고 · 도매로 넘기는 길을 한곳에 모았습니다.</p></div>'+
+    '<ul class="pwsv-g">'+ window.PW_SVC6.map(function(s){
+      /* ⚠️ 카드 **전체**가 하나의 `a` 입니다. 오른쪽 아래 원형 화살표는
+         **표시**이지 따로 누르는 단추가 아닙니다 — `a` 안에 `a` 를
+         넣으면 브라우저가 쪼갭니다. */
+      return '<li><a class="pwsv-c" href="'+ esc(s.to) +'">'+
+        '<i class="pwsv-i">'+ iconArt(s.ia, 46) +'</i>'+
+        '<b>'+ esc(s.nm) +'</b>'+
+        '<span class="pwsv-d">'+ esc(s.d) +'</span>'+
+        '<span class="pwsv-go" aria-hidden="true">'+ pwArrow() +'</span>'+
+      '</a></li>';
+    }).join("") +'</ul>'+
+  '</div></section>';
+}
+
+/* ─── 03 브랜드 여섯 (§2-4) ──────────────────────────────────────
+   ⚠️⚠️ **정확히 여섯입니다** — 목록은 `js/data/shop.js` 의
+   `AM_SHOP_BRANDS` 한 곳이고, 거기 머리말에 "왜 제조사 DB 를 안
+   건드렸는지" 와 "로고가 둘뿐인 까닭" 을 적어 두었습니다.
+
+   ⚠️⚠️ **로고가 없으면 로고 칸 자체를 안 그립니다** (빈 액자 금지 ·
+   절대 규칙 2). 영문 이름이 그 자리를 지킵니다 — §2-4 도 "영문
+   이름으로 구성한다" 고 적었습니다.
+   ⚠️ 가진 로고 둘은 **흰 글자 · 투명 바탕**이라(어두운 카드용) 흰
+   카드에 그대로 얹으면 **안 보입니다.** CSS 한 줄로 검은 쪽을
+   냅니다 — 단색 실루엣의 흑백 판이고, 다시 그린 것이 아닙니다.
+
+   ⚠️⚠️ **가짜 상품을 만들지 않습니다.** 취급 모델이 0종인 브랜드는
+   눌러 가신 `/shop` 이 0건이라고 사실대로 말합니다 (§2-4). 그래서
+   건수를 **세어서** 카드에 같이 냅니다 — 0 이면 0 이라고 적습니다. */
+function PwBrands(){
+  var B = window.AM_SHOP_BRANDS || [], LG = window.AM_MAKER_LOGO || {};
+  if(!B.length) return "";
+  return '<section class="pwbr"><div class="w">'+
+    '<div class="pw-hd-l"><div><h2>다양한 브랜드의 기기를 만나보세요</h2></div>'+
+      '<a class="pw-more" href="/shop">전체 보기 '+ pwArrow() +'</a></div>'+
+    '<ul class="pwbr-g">'+ B.map(function(b){
+      /* ⚠️ 둘째 인자 true — **예시를 뺀 실제 재고**만 셉니다 */
+      var n = (typeof amShopBrandN === "function") ? amShopBrandN(b.key, true) : 0;
+      return '<li><a class="pwbr-c" href="/shop?m='+ esc(b.key) +'">'+
+        (LG[b.key]
+          ? '<span class="pwbr-lg"><img src="'+ esc(LG[b.key]) +'" alt="" '+
+            'width="92" height="26" loading="lazy" decoding="async"></span>'
+          : '')+
+        '<b>'+ esc(b.en) +'</b>'+
+        /* ⚠️⚠️ **"준비 중" 을 적지 마세요.** 0 일 때 그 말을 넣었다가
+           전수 점검의 "준비 중 자리표시자" 에 걸렸습니다 — 이 저장소가
+           프랜차이즈 분류 열두 칸에서 겪은 그 자리입니다. 낼 것은
+           **세는 값**이고, 0 이면 0 이라고 적습니다 (절대 규칙 1 ·
+           2 — 0 을 숨기지 않고 자리표시자도 안 찍습니다). 기기가
+           올라오면 코드를 한 줄도 안 고치고 숫자가 됩니다. */
+        '<span class="pwbr-n">'+ n +'대</span>'+
+      '</a></li>';
+    }).join("") +'</ul>'+
+    /* ⚠️ 그 숫자가 **무엇을 센 값인지** 그 자리에서 밝힙니다 — 안
+       밝히면 "곧 생기나 보다" 로 읽히고, 그건 약속입니다 (절대 규칙 5). */
+    '<p class="pwbr-n0">⚠️ 대수는 <b>지금 올라와 있는 기기를 센 값</b>입니다. '+
+      '0대는 아직 올라온 기기가 없다는 뜻이고, '+
+      '없는 기기를 미리 보여 드리지 않습니다.</p>'+
+  '</div></section>';
+}
+
+/* ─── 04 지금 보실 수 있는 중고폰 (§2-5) ────────────────────────
+   ⚠️⚠️ **"지금 인기 있는" 이라고 쓰지 않습니다.** 조회 · 클릭 · 구매를
+   하나도 모으지 않아서 **무엇이 인기인지 우리는 모릅니다** — 시안이
+   그 이름을 적었지만, 적는 순간 없는 데이터를 있는 것처럼 말하는
+   것이고 이 저장소가 "지금 많이 찾는 서비스" · "인기 검색어" 로
+   못박아 둔 자리입니다 (§0-8 · 절대 규칙 5). 차례는 **등록된 차례**
+   이고 화면이 그렇게 적습니다.
+
+   ⚠️⚠️ **인기 · 추천 딱지를 붙이지 않습니다.** 시안의 빨간 `인기` ·
+   `추천` 배지가 그것입니다.
+
+   ⚠️ 거르개는 **브랜드**입니다. 고른 것은 주소(`?b=`)에 실리고,
+   ⚠️⚠️ **맨 위로 튀지 않습니다** — `data-keep` 이 그 표시입니다
+   (`js/app.js` 의 click 가로채기가 봅니다). 목록을 좁히는 것인데
+   맨 위로 올라가면 방금 보던 자리를 잃습니다.                     */
+var PW_PD_N = 5;   /* ⚠️ PC 한 줄에 다섯 (§2-5). 두 곳에 적지 마세요 */
+function PwProducts(){
+  var B  = window.AM_SHOP_BRANDS || [];
+  var pick = nowQS("b");
+  /* ⚠️⚠️ **예시를 안 섞습니다** (§2-5 "실제 재고 데이터 기준" ·
+     §0-8). /shop 은 딱지와 함께 예시를 내는 자리지만, 메인은
+     손님이 제일 먼저 보는 화면이라 거기 지어낸 값이 서면
+     그때부터 없는 재고를 광고하는 것입니다 (절대 규칙 1). */
+  var all = (typeof amShopList === "function") ? amShopList({ real:true }) : [];
+  var L   = pick ? all.filter(function(p){
+      var md = (typeof amModel === "function") ? amModel(p.model) : null;
+      return md && md.maker === pick;
+    }) : all;
+
+  var chips = '<a class="chip'+ (pick ? "" : " on") +'" href="/" data-keep>전체</a>'+
+    B.map(function(b){
+      return '<a class="chip'+ (pick === b.key ? " on" : "") +'" '+
+        'href="/?b='+ esc(b.key) +'" data-keep>'+ esc(b.name) +'</a>';
+    }).join("");
+
+  var body;
+  if(!L.length){
+    /* ⚠️ 0건이면 **0건이라고 말하고** 지금 되는 것을 같이 냅니다
+       (막다른 길로 두지 않습니다 · 절대 규칙 2). */
+    body = '<div class="pwpd-0"><b>'+
+      (pick ? '아직 이 브랜드의 기기가 없습니다.' : '아직 올라온 기기가 없습니다.')+
+      '</b><p>검수를 마친 기기부터 이 자리에 올라옵니다. '+
+      '먼저 파실 기기가 있으시면 견적부터 받아 보세요.</p>'+
+      '<div class="row-cta"><a class="btn btn-pw" href="/sell">내 폰 팔기</a>'+
+      '<a class="btn btn-pw-o" href="/shop">중고폰 전체 보기</a></div></div>';
+  } else {
+    body = '<ul class="pwpd-g">'+ L.slice(0, PW_PD_N).map(pwPdCard).join("") +'</ul>';
+  }
+
+  return '<section class="pwpd"><div class="w">'+
+    '<div class="pw-hd-l"><div><h2>지금 보실 수 있는 중고폰</h2>'+
+      '<p>등록된 차례로 냅니다 — 조회수나 판매량 같은 이용 통계가 아닙니다.</p></div>'+
+      '<a class="pw-more" href="/shop">전체 보기 '+ pwArrow() +'</a></div>'+
+    '<div class="chip-g chip-g-fil pwpd-fil">'+ chips +'</div>'+
+    body+
+  '</div></section>';
+}
+
+/* 상품 카드 한 장 — ⚠️ `/shop` 과 **같은 규칙**이라야 합니다.
+   ⚠️⚠️ **사진이 없으면 다른 기종 사진으로 때우지 않습니다** (§4 —
+   "없는 사진을 다른 기종의 사진으로 대체하여 실제 판매 상품처럼
+   표시하지 않는다"). 그 자리는 기기 종류 아이콘이 지킵니다. */
+function pwPdCard(p){
+  var md  = (typeof amModel === "function") ? amModel(p.model) : null;
+  var smp = String(p.id || "").indexOf("sample-") === 0;
+  var ph  = (p.images && p.images[0]) || "";
+  return '<li><a class="pwpd-c" href="/d/'+ esc(p.id) +'">'+
+    '<span class="pwpd-ph">'+
+      (ph ? '<img class="ph" src="'+ esc(ph) +'" alt="" loading="lazy" decoding="async">'
+          /* ⚠️⚠️ `shopIcon()` 은 **이름을** 돌려줍니다 (HTML 이 아닙니다) —
+             그대로 찍었더니 카드에 **`dev-iphone` 이 글자로** 나왔습니다
+             (포트폴리오가 `gyeonggi` 를 그대로 찍은 그 자리). 찍어 보고 알았습니다. */
+          : iconArt((typeof shopIcon === "function" ? shopIcon(md) : "mobile"), 58))+
+      (smp ? '<span class="pwpd-smp-b">예시</span>' : '')+
+    '</span>'+
+    '<b class="pwpd-nm">'+ esc(md ? md.name : p.model) +'</b>'+
+    '<span class="pwpd-sp">'+
+      esc([(p.cap ? (p.cap >= 1024 ? (p.cap/1024)+"TB" : p.cap+"GB") : ""),
+           p.color || ""].filter(Boolean).join(" · "))+'</span>'+
+    '<span class="pwpd-pr">'+ esc(Number(p.price||0).toLocaleString()) +'원</span>'+
+    '<span class="pwpd-bd">'+
+      '<i>'+ esc(p.grade) +'등급</i>'+
+      (p.batt ? '<i>배터리 '+ esc(p.batt) +'%</i>' : '')+
+    '</span>'+
+  '</a></li>';
+}
+
+/* ─── 05 안내 배너 셋 (§2-6) ─────────────────────────────────────
+   ⚠️⚠️ **딥 브라운입니다** — 이 저장소에서 어두운 면을 쓸 수 있는
+   자리이고, 지시서 §2-6 이 "딥 브라운 배경의 가로 배너 3개" 로
+   직접 정했습니다. 어두운 면이 늘면 BRIGHT PREMIUM 15% 한도에
+   닿으니 **폭마다 재세요**.
+   ⚠️ 셋 다 실제로 열리는 화면입니다. 광고가 아니라 **우리 서비스**라
+   "추천 · 인기 · 광고" 딱지를 붙이지 않습니다 (광고주 0곳).        */
+/* ⚠️ 위 목록도 js/data/shop.js 입니다 (같은 까닭). */
+function PwBanners(){
+  return '<section class="pwbz"><div class="w">'+
+    '<div class="pw-hd"><h2>먼저 보시면 좋은 것</h2>'+
+      '<p>거래 전에 한 번 읽어 두시면 선택이 쉬워집니다.</p></div>'+
+    '<ul class="pwbz-g">'+ window.PW_BAN3.map(function(b, i){
+      return '<li><a class="pwbz-c pwbz-v'+ (i+1) +'" href="'+ esc(b.to) +'">'+
+        '<span class="pwbz-ph"><span class="pwbz-ic">'+ iconArt(b.ia, 56) +'</span></span>'+
+        '<span class="pwbz-tx">'+
+          '<b class="pwbz-nm">'+ esc(b.nm) +'</b>'+
+          '<span class="pwbz-d">'+ esc(b.d) +'</span>'+
+          '<span class="pwbz-go">'+ esc(b.cta) +' '+ pwArrow() +'</span>'+
+        '</span>'+
+      '</a></li>';
+    }).join("") +'</ul>'+
+  '</div></section>';
+}
+
+/* ─── 06 소식과 혜택 (§2-7) ──────────────────────────────────────
+   ⚠️⚠️ **게시물이 0건이면 구간째 빠집니다.** 시안의 넉 장과 날짜는
+   디자인 예시이고, 적는 순간 없는 소식을 지어내는 것입니다
+   (§0-8 · 절대 규칙 1). 한 줄이라도 적으시면 **코드를 한 줄도 안
+   고치고** 섭니다 — `js/data/shop.js` 의 `AM_PW_NEWS` 입니다.
+   ⚠️ 날짜는 **데이터의 실제 날짜**이고 `amDate()` 가 꼴을 맞춥니다.
+   "n일 전" 같은 상대 표기를 쓰지 마세요.                           */
+function PwNews(){
+  var L = (window.AM_PW_NEWS || []).slice()
+    .sort(function(a,b){ return String(b.at||"").localeCompare(String(a.at||"")); })
+    .slice(0, 4);
+  if(!L.length) return "";
+  return '<section class="pwnw"><div class="w">'+
+    '<div class="pw-hd-l"><div><h2>'+ esc(window.amBrand ? amBrand() : "") +
+      ' 소식과 혜택</h2></div>'+
+      '<a class="pw-more" href="/guide">전체 보기 '+ pwArrow() +'</a></div>'+
+    '<ul class="pwnw-g">'+ L.map(function(n){
+      var d = (typeof amDate === "function") ? amDate(n.at) : "";
+      return '<li><a class="pwnw-c" href="'+ esc(n.to || "/guide") +'">'+
+        '<span class="pwnw-ph">'+
+          (n.ph && typeof hasPhoto === "function" && hasPhoto(n.ph)
+            ? photoBox(n.ph, "pwnw-im")
+            : '<span class="pwnw-ic">'+ iconArt("mobile", 44) +'</span>')+
+        '</span>'+
+        '<b>'+ esc(n.title) +'</b>'+
+        (n.lead ? '<span class="pwnw-d">'+ esc(n.lead) +'</span>' : '')+
+        (d ? '<time datetime="'+ esc(n.at) +'">'+ esc(d) +'</time>' : '')+
+      '</a></li>';
+    }).join("") +'</ul>'+
   '</div></section>';
 }

@@ -2,11 +2,13 @@
 
 window.AM_GNB = [
 
-  { to:"/sell",    name:"내 폰 팔기" },
   { to:"/shop",    name:"중고폰 구매" },
-  { to:"/bid",     name:"경쟁입찰" },
-  { to:"/biz",     name:"수출 · 기업거래" },
-  { to:"/guide",   name:"이용안내" },
+  { to:"/sell",    name:"내 폰 판매" },
+  { to:"/repair",  name:"수리 서비스" },
+  { to:"/bid",     name:"B2B 경매" },
+  { to:"/biz?t=corp",   name:"기업 매입" },
+  { to:"/biz?t=export", name:"해외 수출" },
+  { to:"/guide",   name:"이용 안내" },
 
   { to:"/faq",     name:"도움말" }
 ];
@@ -71,7 +73,7 @@ function Header(){
       '<a class="hd-txt" href="/my">'+icon("user",18)+'<span>내 기록</span></a>'+
 
       '<a class="btn btn-nv hd-cta" href="/sell" data-to="/sell">'+
-        '<span class="hd-cta-w">내 폰 </span>팔기'+icon("arrow",16)+'</a>'+
+        '<span class="hd-cta-w">판매 </span>신청'+icon("arrow",16)+'</a>'+
 
       '<button class="hd-ic hd-mb" type="button" id="hdMb" aria-label="메뉴"'+
         ' aria-expanded="false" aria-controls="hdMenu" onclick="hdMenu()">'+
@@ -146,9 +148,17 @@ function paintGnb(){
   els('a[data-to="/quote"]', document.querySelector(".hd") || document)
     .forEach(function(a){ a.setAttribute("href", gnbQuoteHref()); });
   var g = $("gnb"); if(!g) return;
+
+  var seen = {};
   els("a", g).forEach(function(a){
     var to = a.getAttribute("data-to");
-    var on = (to === "/") ? (p === "/") : (p === to || p.indexOf(to + "/") === 0);
+    var qi = to.indexOf("?"), tp = qi < 0 ? to : to.slice(0, qi);
+    var on = (tp === "/") ? (p === "/") : (p === tp || p.indexOf(tp + "/") === 0);
+    if(on && qi >= 0){
+      var kv = to.slice(qi + 1).split("="), v = nowQS(kv[0]);
+      on = v ? (v === kv[1]) : !seen[tp];
+      seen[tp] = 1;
+    }
     a.classList.toggle("on", on);
     if(on) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current");
 

@@ -614,10 +614,21 @@ var PW_BIZ_WHAT = [
    "먼저 알려 드립니다.",
    '<path d="M4 20V6.5L12 3l8 3.5V20"/><path d="M9.5 20v-5h5v5"/><path d="M2.5 20h19"/>']
 ];
+
+var PW_BIZ_TAB = {
+  corp:   { kicker:"BULK PURCHASE", h1:"기업 대량 매입",
+            lead:"법인 · 대리점 · 기기 교체처럼 한 번에 여러 대를 넘기시는 경우입니다. "+
+                 "수량 · 기종 · 상태를 알려 주시면 확인한 뒤 연락드립니다.",
+            pick:"대량 매입" },
+  export: { kicker:"EXPORT", h1:"해외 수출",
+            lead:"등급별로 묶어 내보내는 거래입니다. "+
+                 "⚠️ 통관 · 수출 절차는 건마다 달라서 상담으로 진행합니다.",
+            pick:"해외 수출" }
+};
 function PageBiz(){
-  return PgHero({ kicker:"BUSINESS", h1:"기업 · 수출 거래",
-      lead:"대량 매입과 해외 수출을 상담으로 진행합니다. "+
-           "수량 · 기종 · 상태를 알려 주시면 확인한 뒤 연락드립니다." })+
+
+  var t = PW_BIZ_TAB[nowQS("t")] || PW_BIZ_TAB.corp;
+  return PgHero({ kicker:t.kicker, h1:t.h1, lead:t.lead })+
     '<section class="sec sec-white"><div class="w pwf">'+
 
       '<div class="pwz-now"><b>지금은 문의를 받는 단계입니다.</b>'+
@@ -644,7 +655,8 @@ function PageBiz(){
           '<select id="pz-kind" class="sel" required>'+
             '<option value="">골라 주세요</option>'+
             PW_BIZ_WHAT.map(function(w){
-              return '<option value="'+ esc(w[0]) +'">'+ esc(w[0]) +'</option>'; }).join("")+
+              return '<option value="'+ esc(w[0]) +'"'+
+                (w[0] === t.pick ? " selected" : "") +'>'+ esc(w[0]) +'</option>'; }).join("")+
           '</select></div>'+
         '<div class="f-r"><label for="pz-qty">예상 수량 <em>(선택)</em></label>'+
           '<input id="pz-qty" type="text" inputmode="numeric" placeholder="예: 120대"></div>'+
@@ -703,6 +715,136 @@ window.pwBizSubmit = function(){
       clearTimeout(t);
       if(btn){ btn.disabled = false; btn.textContent = "문의 보내기"; }
       var m = $("pz-msg");
+      if(m) m.innerHTML = '<b>보내지 못했습니다.</b> '+
+        esc(e && e.name === "AbortError"
+            ? "연결이 끊겼습니다 — 적어 주신 내용은 그대로 있습니다. 다시 눌러 주세요."
+            : (e && e.message) || "잠시 뒤 다시 눌러 주세요.");
+    });
+};
+
+function PageRepair(){
+  var W = window.AM_REPAIR_WHAT || [], Y = window.AM_REPAIR_WAY || [];
+  var pre = nowQS("w");
+  return PgHero({ kicker:"REPAIR", h1:"수리 서비스",
+      lead:"깨진 액정 · 배터리 · 충전 단자처럼 고쳐 쓰실 수 있는 것이 많습니다. "+
+           "증상을 알려 주시면 맞는 수리점을 찾아 연결해 드립니다." })+
+    '<section class="sec sec-white"><div class="w pwf">'+
+
+      '<div class="pwz-now"><b>지금은 수리 접수를 받는 단계입니다.</b>'+
+        '<p>온라인에서 바로 수리비가 나오고 결제까지 되는 절차는 아직 '+
+          '없습니다. 보내 주신 증상을 보고 맞는 수리점을 찾아 연락드립니다. '+
+          '⚠️ 수리비 · 소요 시간은 기종과 부품에 따라 갈려서 미리 '+
+          '약속드리지 않습니다.</p></div>'+
+
+      '<h2 class="pwf-h2">이런 증상을 받습니다</h2>'+
+      '<ul class="rpw-g">'+ W.map(function(w){
+        return '<li><b>'+ esc(w.name) +'</b><p>'+ esc(w.lead) +'</p></li>';
+      }).join("") +'</ul>'+
+
+      '<div class="rpw-vs"><b>고치는 게 나을까, 파는 게 나을까?</b>'+
+        '<p>수리비가 중고 시세에 가까우면 파시는 쪽이 나을 수 있습니다. '+
+          '⚠️ 저희가 대신 정해 드리지 않습니다 — 두 가지를 다 보시고 '+
+          '고르시라고 양쪽 길을 같이 둡니다.</p>'+
+        '<div class="row-cta">'+
+          '<a class="btn btn-pw-o" href="/sell">파는 쪽 견적 보기</a>'+
+          '<a class="btn btn-pw-o" href="/bid">경쟁입찰로 비교하기</a>'+
+        '</div></div>'+
+
+      '<h2 class="pwf-h2" id="repair-form">수리 접수</h2>'+
+      '<div class="pwf-fm" id="rp-form">'+
+        '<div class="f-r"><label for="rp-what">증상 <em>*</em></label>'+
+          '<select id="rp-what" class="sel" required>'+
+            '<option value="">골라 주세요</option>'+
+            W.map(function(w){
+              return '<option value="'+ esc(w.name) +'"'+
+                (pre === w.key ? " selected" : "") +'>'+ esc(w.name) +'</option>';
+            }).join("")+
+          '</select></div>'+
+        '<div class="f-r"><label for="rp-maker">제조사 <em>*</em></label>'+
+          '<select id="rp-maker" class="sel" required>'+
+            '<option value="">골라 주세요</option>'+
+            (window.AM_MAKERS||[]).map(function(m){
+              return '<option value="'+ esc(m.name) +'">'+ esc(m.name) +'</option>';
+            }).join("")+
+          '</select></div>'+
+
+        '<div class="f-r"><label for="rp-model">기종 <em>(아시는 만큼)</em></label>'+
+          '<input id="rp-model" type="text" placeholder="예: 아이폰 13 · 갤럭시 S22"></div>'+
+        '<div class="f-r"><label for="rp-way">받는 방식 <em>*</em></label>'+
+          '<select id="rp-way" class="sel" required>'+
+            '<option value="">골라 주세요</option>'+
+            Y.map(function(y){
+              return '<option value="'+ esc(y.name) +'">'+ esc(y.name) +
+                ' — '+ esc(y.lead) +'</option>';
+            }).join("")+
+          '</select></div>'+
+
+        '<div class="f-r"><label for="rp-reg">지역 <em>*</em></label>'+
+          RegionSelect("rp-reg", "", "", "골라 주세요", true)+'</div>'+
+        '<div class="f-r"><label for="rp-name">성함 <em>*</em></label>'+
+          '<input id="rp-name" type="text" autocomplete="name" required></div>'+
+        '<div class="f-r"><label for="rp-tel">연락처 <em>*</em></label>'+
+          '<input id="rp-tel" type="tel" autocomplete="tel" inputmode="tel" required '+
+          'placeholder="010-0000-0000"></div>'+
+        '<div class="f-r"><label for="rp-memo">증상을 더 알려 주실 것 '+
+          '<em>(선택)</em></label>'+
+          '<textarea id="rp-memo" rows="4" placeholder="언제부터인지, 떨어뜨린 적이 있는지 등"></textarea></div>'+
+        (typeof AgreeBox === "function" ? AgreeBox("rp-agree") : "")+
+        '<button type="button" class="btn btn-pw pwf-send" id="rp-send" '+
+          'onclick="pwRepairSubmit()">수리 접수하기</button>'+
+        '<p class="pwf-n" id="rp-msg"></p>'+
+      '</div>'+
+    '</div></section>';
+}
+
+window.pwRepairSubmit = function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var v = function(id){ return (($(id)||{}).value || "").trim(); };
+  var what = v("rp-what"), maker = v("rp-maker"), model = v("rp-model");
+  var way = v("rp-way"), reg = v("rp-reg"), name = v("rp-name");
+  var tel = v("rp-tel"), memo = v("rp-memo");
+  if(!what){ toast("증상을 골라 주세요"); return; }
+  if(!maker){ toast("제조사를 골라 주세요"); return; }
+  if(!way){ toast("받는 방식을 골라 주세요"); return; }
+  if(!reg){ toast("지역을 골라 주세요"); return; }
+  if(!name){ toast("성함을 적어 주세요"); return; }
+
+  if(String(tel).replace(/[^0-9]/g,"").length < 9){ toast("연락처를 다시 확인해 주세요"); return; }
+  var ag = $("rp-agree");
+  if(ag && !ag.checked){ toast("개인정보 수집 · 이용에 동의해 주세요"); return; }
+
+  var btn = $("rp-send");
+  if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
+  var ctl = new AbortController();
+  var t = setTimeout(function(){ ctl.abort(); }, 20000);
+  var det = { "증상": what, "제조사": maker, "기종": model,
+              "받는 방식": way, "알려 주신 것": memo };
+  fetch("/api/quote", {
+    method:"POST", headers:{ "content-type":"application/json" },
+    signal: ctl.signal,
+    body: JSON.stringify({
+      kind:"quote", name:name, tel:tel, region:reg,
+
+      side:"repair", serviceName:"수리 서비스 — " + what,
+      agree:true, idem:(window.amIdem ? amIdem() : ""),
+      detail:(window.amDropEmpty ? amDropEmpty(det) : det)
+    })
+  }).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+    .then(function(x){
+      clearTimeout(t);
+      if(!x.ok) throw new Error((x.j && x.j.say) || "보내지 못했습니다");
+
+      var no = x.j && x.j.no, f = $("rp-form");
+      if(f) f.innerHTML = '<div class="pwf-ok"><b>수리 접수가 되었습니다.</b>'+
+        (no ? '<p>접수번호 <code>'+ esc(no) +'</code></p>' : '')+
+        '<p>증상을 보고 맞는 수리점을 찾아 연락드리겠습니다. '+
+          '⚠️ 회신 시점을 약속드리지는 않습니다.</p>'+
+        '<a class="btn btn-pw-o" href="/track">판매 진행 조회</a></div>';
+    })
+    .catch(function(e){
+      clearTimeout(t);
+      if(btn){ btn.disabled = false; btn.textContent = "수리 접수하기"; }
+      var m = $("rp-msg");
       if(m) m.innerHTML = '<b>보내지 못했습니다.</b> '+
         esc(e && e.name === "AbortError"
             ? "연결이 끊겼습니다 — 적어 주신 내용은 그대로 있습니다. 다시 눌러 주세요."

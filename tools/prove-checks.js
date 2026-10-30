@@ -595,7 +595,7 @@ const CASES = [
      되게 합니다 (화면만 바뀌고 데이터는 그대로입니다).
      ⚠️ .pww-c · .bent-c 는 지금 메인에 **없으므로** 그걸 집으면
      되돌리기가 터집니다 (이 저장소에서 열여섯 번 겪은 자리). */
-  ["메인은 히어로 다음이 기기 선택이고 구간 수가 데이터와 같다",
+  ["메인은 히어로 다음이 핵심 서비스이고 구간 수가 데이터와 같다",
    `document.querySelector(".pwbz-g > li:last-child").remove();`],
   /* ⚠️⚠️ 되돌리기는 **검사가 실제로 보는 것**을 망가뜨려야 합니다.
      검색 가는 길을 지울 때 입력칸만 지우고 돋보기를 남겼다가 "검사가
@@ -628,12 +628,13 @@ const CASES = [
      직전으로 되돌릴 때 이 줄까지 같이 되돌렸다가 실제로 걸렸습니다. */
   /* ⚠️⚠️ 2026-10-29 오렌지 시안 — 사업 배너 둘의 면 색을 같게 만들어
      봅니다. 재는 자리가 **카드 자신의 면**(.pwbz-c)이라 거기 집습니다 —
-     셋째 · 넷째는 **일부러 같은 차콜**이어서 검사가 그 둘을 뺀 나머지만
-     봅니다. 그래서 **둘째를 첫째 색으로** 덮어야 걸립니다 (넷째를
-     건드리면 아무 일도 안 나고 "검사가 안 잡는다" 로 보입니다). */
-  ["사업 배너 넷이 색으로 갈리고 넷의 무게가 같다",
-   `const L = document.querySelectorAll(".pwbz-c");
-    L[1].style.background = getComputedStyle(L[0]).background;`],
+     2026-10-30 §2-6 으로 **셋**이 됐고, 셋이 **일부러 같은 딥 브라운**
+     입니다 — 색으로는 되돌릴 것이 없어서 **무게**를 끊습니다
+     (둘째를 좁히고 낮춥니다). ⚠️ grid 의 stretch 를 덮어야 하니
+     폭과 높이를 같이 줍니다. */
+  ["안내 배너 셋의 무게가 같고 흰 글자가 읽히는 면이다",
+   `const e = document.querySelectorAll(".pwbz-c")[1];
+    e.style.width = "60%"; e.style.minHeight = "0"; e.style.height = "70px";`],
   /* ⚠️ 2026-10-11 간소화 §2 — 연결 구간이 메인에서 내려와 되돌릴
      요소가 없습니다. **없는 요소를 집으면 되돌리기가 터지고**, 그러면
      "검사가 안 잡는다" 로 보입니다 (이 저장소에서 아홉 번 겪은 자리).
@@ -663,10 +664,11 @@ const CASES = [
   /* ⚠️ grid 의 stretch 를 덮어야 합니다 — 폭과 높이를 같이 줄입니다. */
   /* ⚠️ grid 의 stretch 를 덮어야 합니다 — 폭과 높이를 같이 줄입니다.
      ⚠️⚠️ 2026-10-29 오렌지 시안 — 재는 자리가 **기기 선택 카드 넷**
-     (.pwd-g .dvc) 입니다. ⚠️ .pwd-g 를 빼고 .dvc 만 집으면 /sell 의
-     카드까지 걸리고, .bent-c 는 지금 메인에 없어 되돌리기가 터집니다. */
-    ["기기 선택 카드 넷의 크기가 같다",
-   `const e3 = document.querySelectorAll(".pwd-g .dvc")[2];
+     (2026-10-30 §2-3)입니다. ⚠️ .pwd-g .dvc 는 메인에 없어졌습니다 —
+     그걸 집으면 되돌리기가 **아무 일도 안 하고** "검사가 안 잡는다" 로
+     보입니다 (이 저장소에서 열여섯 번 겪은 자리). */
+    ["핵심 서비스 카드 여섯의 크기가 같다",
+   `const e3 = document.querySelectorAll(".pwsv-g .pwsv-c")[2];
    e3.style.width = "70%"; e3.style.minHeight = "0"; e3.style.height = "80px";`],
   /* ⚠️⚠️ **아이콘 칸(.stg-i)만 집어야 합니다.** 처음에
      ".mstg-g > li > a svg" 로 적었더니 **화살표까지** 걸려서
@@ -829,13 +831,14 @@ const CASES = [
    /* ⚠️ 2026-10-16 §3 — 지금 메인에 있는 카드는 진입(.bent-c > a) ·
       까닭(.bwhy-c) · 절차(.bstep-c) · 배너(.bban-c > a) 입니다.
       **없는 요소를 집으면 되돌리기가 터집니다** (열한 번째). */
-   /* ⚠️ 2026-10-29 오렌지 시안 — 지금 메인의 카드는 기기 선택
-      (.pwd-g .dvc) · 사업 배너(.pwbz-c) · 바로가기(.pwq-c) ·
-      이용 방법(.pwst-c) · 고지(.pwt-c) 입니다. 아래 || 사슬의
-      .pws-c · .pww-c 는 **옛 구간을 되살리실 때를 위한 것**이고
-      지금은 .pwst-c 가 먼저 맞습니다.
+   /* ⚠️ 2026-10-30 전면 리뉴얼 §2 — 지금 메인의 카드는 핵심
+      서비스(.pwsv-c) · 브랜드(.pwbr-c) · 상품(.pwpd-c · 0건이면 .pwpd-0) ·
+      안내 배너(.pwbz-c) · 이용 방법(.pwst-c) · 고지(.pwt-c) 입니다.
+      아래 || 사슬의 .pws-c · .pww-c 는 **옛 구간을 되살리실 때를 위한
+      것**이고 지금은 .pwsv-c 가 먼저 맞습니다.
       **없는 요소를 집으면 되돌리기가 터집니다** (열네 번째). */
-   `const a = document.querySelector(".pwst-c") ||
+   `const a = document.querySelector(".pwsv-c") ||
+             document.querySelector(".pwst-c") ||
              document.querySelector(".pws-c") ||
              document.querySelector(".pww-c");
     const back = (function(el){
@@ -932,10 +935,10 @@ const CASES = [
    /* ⚠️ 2026-10-29 PHONEWAY — 한 묶음 안에 아이콘이 여럿인 곳은
       구매 갈래 넷(.pws-c i)과 이용 방법 다섯(.pwst-c i)입니다.
       .bdir-i 는 메인에 없어 t[1] 이 undefined 라 터집니다 (열네 번째). */
-   /* ⚠️ 2026-10-29 오렌지 시안 — 한 묶음 안에 아이콘이 여럿인 곳은
-      서비스 바로가기 다섯(.pwq-c i)과 이용 방법 다섯입니다.
-      .pws-c 는 메인에 없어 t[1] 이 undefined 라 터집니다 (열다섯 번째). */
-   `const t = [].slice.call(document.querySelectorAll("#view .pwq-c i svg"));
+   /* ⚠️ 2026-10-30 전면 리뉴얼 — 한 묶음 안에 아이콘이 여럿인 곳은
+      **핵심 서비스 여섯(.pwsv-i)** 과 이용 방법 다섯입니다.
+      .pwq-c 는 메인에 없어 t[1] 이 undefined 라 터집니다 (열다섯 번째). */
+   `const t = [].slice.call(document.querySelectorAll("#view .pwsv-i svg"));
     t[1].innerHTML = t[0].innerHTML;`],
   /* 고른 전문관이 표시되지 않으면 걸려야 합니다 — 거르개는 무엇이
      켜졌는지 보이지 않으면 거르개가 아닙니다 */
@@ -1490,11 +1493,12 @@ async function proveAudit(pg){
         " #view .ia-t svg, #view .mhall-i svg, #view .mstp-i svg," +
         " #view .bent-i svg, #view .bwhy-i svg, #view .bban-i svg," +
         " #view .bstep-i svg, #view .bcal-i svg," +
-        /* 2026-10-29 오렌지 시안 — 신뢰 넷 · 기기 선택 · 바로가기 다섯.
-           ⚠️ .pww-ic 는 메인에 없어 그것만 적으면 아무것도 안
-           지워지고 "검사가 안 잡는다" 로 보입니다 (열여섯 번째). */
+        /* 2026-10-30 전면 리뉴얼 — 신뢰 넷 · **핵심 서비스 여섯** ·
+           안내 배너 셋. ⚠️ .pww-ic · .pwd-g · .pwq-c 는 메인에 없어
+           그것만 적으면 아무것도 안 지워지고 "검사가 안 잡는다" 로
+           보입니다 (열여섯 번째). */
         " #view .pww-ic svg, #view .pwh-tr-g i svg," +
-        " #view .pwd-g .dvc-ph svg, #view .pwq-c i svg");
+        " #view .pwsv-i svg, #view .pwbz-ic svg");
       if(e) e.remove();
     });
     await pg.waitForTimeout(60);

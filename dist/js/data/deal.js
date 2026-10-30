@@ -250,7 +250,10 @@ window.AM_SIDES = [
     say:"중고폰 — 업체 경쟁입찰" },
 
   { key:"export",   name:"기업 · 수출 거래", short:"기업수출", pick:"/biz", pw:true,
-    say:"기업 · 수출 — 대량 매입 · 해외 수출 문의" }
+    say:"기업 · 수출 — 대량 매입 · 해외 수출 문의" },
+
+  { key:"repair",   name:"중고폰 · 수리",    short:"수리",   pick:"/repair", pw:true,
+    say:"수리 — 쓰던 기기를 고치려고 합니다" }
 ];
 
 window.AM_QUOTE_LABELS = {

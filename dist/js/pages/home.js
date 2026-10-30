@@ -57,8 +57,8 @@ var MAIN_CALC = ["cost", "bep", "premium", "closecost"];
 
 function PageMain(){
 
-  return PwHero()+ PwDevice()+ PwBiz()+ PwQuick()+
-         PwSteps()+ PwTrust()+ PwCta();
+  return PwHero()+ PwServices()+ PwBrands()+ PwProducts()+
+         PwBanners()+ PwNews()+ PwSteps()+ PwTrust()+ PwCta();
 }
 
 var HOME_ENTER = [
@@ -875,33 +875,34 @@ var PW_CHIP_IC = {
 };
 
 function PwHero(){
+  var nm = (window.amBrand ? amBrand() : "");
+
+  var wa = (typeof josa === "function") ? josa(nm, "와과") : "와";
   return '<section class="pwh">'+
     '<div class="pwh-bg" aria-hidden="true">'+
-      '<span class="pwh-bg-panel"></span>'+
-      '<span class="pwh-bg-glow"></span>'+
+      '<span class="pwh-rb"></span>'+
+      '<span class="pwh-rb2"></span>'+
+      '<span class="pwh-glow"></span>'+
     '</div>'+
     '<div class="w pwh-in">'+
       '<div class="pwh-tx">'+
 
         '<p class="pwh-k">PHONEWAY</p>'+
-        '<p class="pwh-k2">중고폰, 더 스마트하게</p>'+
 
-        '<h1><span class="pwh-h1a">지금, 당신의 폰이</span>'+
-          '<em>새로운 가치를</em><em>만납니다.</em></h1>'+
-        '<p class="pwh-sub">여러 업체의 견적을 비교하고<br>'+
-          '가장 좋은 조건으로 거래하세요.</p>'+
-        pwHero3()+
+        '<h1><span class="pwh-h1a">중고폰의 새로운 기준</span>'+
+          '<em><b>'+ esc(nm) + esc(wa) +'</b> 더 가깝게</em></h1>'+
+        '<p class="pwh-sub">팔기부터 구매, 수리, 도매, 수출까지'+
+          '<br class="br-m"> 중고폰의 모든 것을 한 곳에서</p>'+
+        '<div class="pwh-go">'+
+          '<a class="btn pwh-b1" href="/sell" data-to="/sell">'+
+            '<b>내 폰 팔기</b>'+ pwArrow() +'</a>'+
+          '<a class="btn pwh-b2" href="/shop" data-to="/shop">'+
+            '<b>중고폰 구매하기</b>'+ pwArrow() +'</a>'+
+        '</div>'+
       '</div>'+
       '<div class="pwh-art">'+
         photoBox("dev-iphone", "pwh-ph", true,
-          "(max-width:899px) 44vw, (max-width:1199px) 34vw, 400px")+
-      '</div>'+
-
-      '<div class="pwh-go">'+
-        '<a class="btn pwh-b1" href="/sell" data-to="/sell">'+
-          icon("mobile",21)+'<b>내 폰 팔기</b>'+ pwArrow() +'</a>'+
-        '<a class="btn pwh-b2" href="/shop" data-to="/shop">'+
-          icon("cart",21)+'<b>중고폰 구매하기</b>'+ pwArrow() +'</a>'+
+          "(max-width:767px) 42vw, (max-width:1199px) 36vw, 420px")+
       '</div>'+
     '</div>'+
     pwHeroTrust()+
@@ -1243,5 +1244,152 @@ function PwCta(){
       '<a class="btn btn-pw-w" href="/sell">내 폰 팔기</a>'+
       '<a class="btn btn-pw-gh" href="/guide">이용 안내 보기</a>'+
     '</div>'+
+  '</div></section>';
+}
+
+function PwServices(){
+  return '<section class="pwsv"><div class="w">'+
+
+    '<div class="pw-hd"><h2>무엇을 도와드릴까요?</h2>'+
+      '<p>중고폰을 팔고 · 사고 · 고치고 · 도매로 넘기는 길을 한곳에 모았습니다.</p></div>'+
+    '<ul class="pwsv-g">'+ window.PW_SVC6.map(function(s){
+
+      return '<li><a class="pwsv-c" href="'+ esc(s.to) +'">'+
+        '<i class="pwsv-i">'+ iconArt(s.ia, 46) +'</i>'+
+        '<b>'+ esc(s.nm) +'</b>'+
+        '<span class="pwsv-d">'+ esc(s.d) +'</span>'+
+        '<span class="pwsv-go" aria-hidden="true">'+ pwArrow() +'</span>'+
+      '</a></li>';
+    }).join("") +'</ul>'+
+  '</div></section>';
+}
+
+function PwBrands(){
+  var B = window.AM_SHOP_BRANDS || [], LG = window.AM_MAKER_LOGO || {};
+  if(!B.length) return "";
+  return '<section class="pwbr"><div class="w">'+
+    '<div class="pw-hd-l"><div><h2>다양한 브랜드의 기기를 만나보세요</h2></div>'+
+      '<a class="pw-more" href="/shop">전체 보기 '+ pwArrow() +'</a></div>'+
+    '<ul class="pwbr-g">'+ B.map(function(b){
+
+      var n = (typeof amShopBrandN === "function") ? amShopBrandN(b.key, true) : 0;
+      return '<li><a class="pwbr-c" href="/shop?m='+ esc(b.key) +'">'+
+        (LG[b.key]
+          ? '<span class="pwbr-lg"><img src="'+ esc(LG[b.key]) +'" alt="" '+
+            'width="92" height="26" loading="lazy" decoding="async"></span>'
+          : '')+
+        '<b>'+ esc(b.en) +'</b>'+
+
+        '<span class="pwbr-n">'+ n +'대</span>'+
+      '</a></li>';
+    }).join("") +'</ul>'+
+
+    '<p class="pwbr-n0">⚠️ 대수는 <b>지금 올라와 있는 기기를 센 값</b>입니다. '+
+      '0대는 아직 올라온 기기가 없다는 뜻이고, '+
+      '없는 기기를 미리 보여 드리지 않습니다.</p>'+
+  '</div></section>';
+}
+
+var PW_PD_N = 5;
+function PwProducts(){
+  var B  = window.AM_SHOP_BRANDS || [];
+  var pick = nowQS("b");
+
+  var all = (typeof amShopList === "function") ? amShopList({ real:true }) : [];
+  var L   = pick ? all.filter(function(p){
+      var md = (typeof amModel === "function") ? amModel(p.model) : null;
+      return md && md.maker === pick;
+    }) : all;
+
+  var chips = '<a class="chip'+ (pick ? "" : " on") +'" href="/" data-keep>전체</a>'+
+    B.map(function(b){
+      return '<a class="chip'+ (pick === b.key ? " on" : "") +'" '+
+        'href="/?b='+ esc(b.key) +'" data-keep>'+ esc(b.name) +'</a>';
+    }).join("");
+
+  var body;
+  if(!L.length){
+
+    body = '<div class="pwpd-0"><b>'+
+      (pick ? '아직 이 브랜드의 기기가 없습니다.' : '아직 올라온 기기가 없습니다.')+
+      '</b><p>검수를 마친 기기부터 이 자리에 올라옵니다. '+
+      '먼저 파실 기기가 있으시면 견적부터 받아 보세요.</p>'+
+      '<div class="row-cta"><a class="btn btn-pw" href="/sell">내 폰 팔기</a>'+
+      '<a class="btn btn-pw-o" href="/shop">중고폰 전체 보기</a></div></div>';
+  } else {
+    body = '<ul class="pwpd-g">'+ L.slice(0, PW_PD_N).map(pwPdCard).join("") +'</ul>';
+  }
+
+  return '<section class="pwpd"><div class="w">'+
+    '<div class="pw-hd-l"><div><h2>지금 보실 수 있는 중고폰</h2>'+
+      '<p>등록된 차례로 냅니다 — 조회수나 판매량 같은 이용 통계가 아닙니다.</p></div>'+
+      '<a class="pw-more" href="/shop">전체 보기 '+ pwArrow() +'</a></div>'+
+    '<div class="chip-g chip-g-fil pwpd-fil">'+ chips +'</div>'+
+    body+
+  '</div></section>';
+}
+
+function pwPdCard(p){
+  var md  = (typeof amModel === "function") ? amModel(p.model) : null;
+  var smp = String(p.id || "").indexOf("sample-") === 0;
+  var ph  = (p.images && p.images[0]) || "";
+  return '<li><a class="pwpd-c" href="/d/'+ esc(p.id) +'">'+
+    '<span class="pwpd-ph">'+
+      (ph ? '<img class="ph" src="'+ esc(ph) +'" alt="" loading="lazy" decoding="async">'
+
+          : iconArt((typeof shopIcon === "function" ? shopIcon(md) : "mobile"), 58))+
+      (smp ? '<span class="pwpd-smp-b">예시</span>' : '')+
+    '</span>'+
+    '<b class="pwpd-nm">'+ esc(md ? md.name : p.model) +'</b>'+
+    '<span class="pwpd-sp">'+
+      esc([(p.cap ? (p.cap >= 1024 ? (p.cap/1024)+"TB" : p.cap+"GB") : ""),
+           p.color || ""].filter(Boolean).join(" · "))+'</span>'+
+    '<span class="pwpd-pr">'+ esc(Number(p.price||0).toLocaleString()) +'원</span>'+
+    '<span class="pwpd-bd">'+
+      '<i>'+ esc(p.grade) +'등급</i>'+
+      (p.batt ? '<i>배터리 '+ esc(p.batt) +'%</i>' : '')+
+    '</span>'+
+  '</a></li>';
+}
+
+function PwBanners(){
+  return '<section class="pwbz"><div class="w">'+
+    '<div class="pw-hd"><h2>먼저 보시면 좋은 것</h2>'+
+      '<p>거래 전에 한 번 읽어 두시면 선택이 쉬워집니다.</p></div>'+
+    '<ul class="pwbz-g">'+ window.PW_BAN3.map(function(b, i){
+      return '<li><a class="pwbz-c pwbz-v'+ (i+1) +'" href="'+ esc(b.to) +'">'+
+        '<span class="pwbz-ph"><span class="pwbz-ic">'+ iconArt(b.ia, 56) +'</span></span>'+
+        '<span class="pwbz-tx">'+
+          '<b class="pwbz-nm">'+ esc(b.nm) +'</b>'+
+          '<span class="pwbz-d">'+ esc(b.d) +'</span>'+
+          '<span class="pwbz-go">'+ esc(b.cta) +' '+ pwArrow() +'</span>'+
+        '</span>'+
+      '</a></li>';
+    }).join("") +'</ul>'+
+  '</div></section>';
+}
+
+function PwNews(){
+  var L = (window.AM_PW_NEWS || []).slice()
+    .sort(function(a,b){ return String(b.at||"").localeCompare(String(a.at||"")); })
+    .slice(0, 4);
+  if(!L.length) return "";
+  return '<section class="pwnw"><div class="w">'+
+    '<div class="pw-hd-l"><div><h2>'+ esc(window.amBrand ? amBrand() : "") +
+      ' 소식과 혜택</h2></div>'+
+      '<a class="pw-more" href="/guide">전체 보기 '+ pwArrow() +'</a></div>'+
+    '<ul class="pwnw-g">'+ L.map(function(n){
+      var d = (typeof amDate === "function") ? amDate(n.at) : "";
+      return '<li><a class="pwnw-c" href="'+ esc(n.to || "/guide") +'">'+
+        '<span class="pwnw-ph">'+
+          (n.ph && typeof hasPhoto === "function" && hasPhoto(n.ph)
+            ? photoBox(n.ph, "pwnw-im")
+            : '<span class="pwnw-ic">'+ iconArt("mobile", 44) +'</span>')+
+        '</span>'+
+        '<b>'+ esc(n.title) +'</b>'+
+        (n.lead ? '<span class="pwnw-d">'+ esc(n.lead) +'</span>' : '')+
+        (d ? '<time datetime="'+ esc(n.at) +'">'+ esc(d) +'</time>' : '')+
+      '</a></li>';
+    }).join("") +'</ul>'+
   '</div></section>';
 }

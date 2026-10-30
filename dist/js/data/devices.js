@@ -112,6 +112,33 @@ window.AM_COND = [
     opt:[["no","없습니다"],["official","공식 서비스센터에서 수리했습니다"],["private","사설 수리를 받았습니다"]] }
 ];
 
+window.AM_REPAIR_WHAT = [
+  { key:"lcd",   name:"액정 · 화면",
+    lead:"깨짐 · 줄 · 터치 안 됨 · 멍" },
+  { key:"batt",  name:"배터리",
+    lead:"금방 닳음 · 부풀어 오름 · 성능 저하" },
+  { key:"charge",name:"충전 · 단자",
+    lead:"충전이 안 되거나 끊김 · 단자 헐거움" },
+  { key:"back",  name:"후면 · 프레임",
+    lead:"후면 유리 깨짐 · 휘어짐" },
+  { key:"cam",   name:"카메라",
+    lead:"초점 안 맞음 · 흐림 · 렌즈 깨짐" },
+  { key:"sound", name:"소리 · 마이크",
+    lead:"통화 안 들림 · 스피커 먹먹함" },
+  { key:"water", name:"침수",
+    lead:"물에 빠뜨린 뒤 이상이 생겼습니다" },
+  { key:"power", name:"전원이 안 켜짐",
+    lead:"아무 반응이 없거나 껐다 켜짐을 반복합니다" },
+  { key:"etc",   name:"그 밖에",
+    lead:"위에 없는 증상입니다" }
+];
+
+window.AM_REPAIR_WAY = [
+  { key:"visit", name:"매장 방문",  lead:"가까운 수리점에 직접 가져갑니다" },
+  { key:"post",  name:"택배 수리",  lead:"보내고 받습니다" },
+  { key:"ask",   name:"아직 모르겠습니다", lead:"안내를 받고 정하겠습니다" }
+];
+
 window.AM_BUY_PRICE = [];
 
 window.amMakerName = function(k){

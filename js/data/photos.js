@@ -81,7 +81,7 @@
 
      hero-startup · hero-ops · hero-closure
                   전문관 세 화면 머리 + **메인 진입 카드 셋**
-     kind-pass    메인 ④ 매장 양도양수 배너
+     kind-pass    매장 양도양수(/transfer) 머리
 
    ⚠️⚠️ **파일이 있는데 안 나오는 것이 여덟입니다** — hero-start ·
    hero-close(사장님이 주신 원본 두 장) · kind-take · kind-asset ·
@@ -155,15 +155,15 @@ window.WOW_PHOTO_SLOTS = [
      재 본 값 — 전문관 머리 605×399(1440) · 진입 카드 411×257.
      둘 중 큰 쪽을 덮는 sizes 입니다. */
   { key:"hero-startup", sizes:"(max-width:1023px) 100vw, 42vw",
-    where:"창업 전문관(/startup) 머리 · 메인 진입 카드 01",
+    where:"창업 전문관(/startup) 머리",
     min:[840,740], ratio:[0.85,1.5], maxKB:200, anchor:"right",
     note:"새로 여는 밝은 상업공간 · 자연광. ⚠️ 상호 · 간판 · 로고가 읽히면 안 됩니다" },
   { key:"hero-closure", sizes:"(max-width:1023px) 100vw, 42vw",
-    where:"폐업 · 정리 전문관(/closure) 머리 · 메인 진입 카드 03",
+    where:"폐업 · 정리 전문관(/closure) 머리",
     min:[840,740], ratio:[0.85,1.5], maxKB:200, anchor:"right",
     note:"정리 중인 매장 — 의자를 올리고 박스를 싸는 장면. ⚠️⚠️ 불 꺼진 가게 · 고개 숙인 사람 · 폐허 금지. 실패가 아니라 다음을 준비하는 장면입니다" },
   { key:"hero-ops", sizes:"(max-width:1023px) 100vw, 42vw",
-    where:"운영 서비스관(/operation) 머리 · 메인 진입 카드 02",
+    where:"운영 서비스관(/operation) 머리",
     min:[840,740], ratio:[0.85,1.5], maxKB:200, anchor:"right",
     note:"문을 연 매장에서 POS · 태블릿으로 일하는 장면. ⚠️ 실제 POS 상표 · 서비스 로고가 읽히면 안 됩니다" },
 
@@ -344,16 +344,16 @@ window.WOW_PHOTO_SLOTS = [
      ⚠️⚠️ **제품만 찍힌 사진**이라야 합니다 — 손 · 배경 · 상호 · 매장이
      들어가면 카드 넷의 결이 어긋납니다 (흰 배경 또는 투명 배경). */
   { key:"dev-iphone", sizes:"(max-width:359px) 222px, (max-width:1199px) 44vw, 270px",
-    where:"메인 02 · /sell 01 기기 카드 — 아이폰", min:[400,400], ratio:[0.85,1.4], maxKB:330,
+    where:"메인 히어로 · /sell 01 기기 카드 — 아이폰", min:[400,400], ratio:[0.85,1.4], maxKB:330,
     note:"아이폰 한 대. ⚠️ 애플 로고가 **읽히지 않아야** 합니다 (남의 등록상표) · **배경 투명**" },
   { key:"dev-galaxy", sizes:"(max-width:359px) 222px, (max-width:1199px) 44vw, 270px",
-    where:"메인 02 · /sell 01 기기 카드 — 갤럭시", min:[400,400], ratio:[0.85,1.4], maxKB:330,
+    where:"/sell 01 기기 카드 — 갤럭시", min:[400,400], ratio:[0.85,1.4], maxKB:330,
     note:"갤럭시 한 대 + 스타일러스. ⚠️ 삼성 워드마크가 읽히지 않아야 합니다 · **배경 투명**" },
   { key:"dev-tablet", sizes:"(max-width:359px) 222px, (max-width:1199px) 44vw, 270px",
-    where:"메인 02 · /sell 01 기기 카드 — 태블릿", min:[400,400], ratio:[0.85,1.4], maxKB:330,
+    where:"/sell 01 기기 카드 — 태블릿", min:[400,400], ratio:[0.85,1.4], maxKB:330,
     note:"태블릿 한 대(또는 두 대 나란히). ⚠️ 상표가 읽히지 않아야 합니다 · **배경 투명**" },
   { key:"dev-etc", sizes:"(max-width:359px) 222px, (max-width:1199px) 44vw, 270px",
-    where:"메인 02 · /sell 01 기기 카드 — 기타 기기", min:[400,400], ratio:[0.85,1.4], maxKB:330,
+    where:"/sell 01 기기 카드 — 기타 기기", min:[400,400], ratio:[0.85,1.4], maxKB:330,
     note:"워치 + 무선 이어폰. ⚠️ 특정 제조사가 드러나지 않아야 합니다 · **배경 투명**" },
   /* ⚠️⚠️ 2026-10-29 오렌지 §3-E — **메인 03 사업 배너 넷**. `PW_BIZ` 의
      `ph` 가 이 열쇠를 가리키고 `PwBiz()` 가 `hasPhoto()` 로 기다립니다 —
@@ -362,16 +362,16 @@ window.WOW_PHOTO_SLOTS = [
      그 아래 72×72** (전 폭 정사각 · `object-fit:contain`).
      ⚠️ 가로로 긴 사진을 넣으면 위아래가 빕니다. */
   { key:"biz-sell", sizes:"(max-width:600px) 72px, 84px",
-    where:"메인 03 사업 배너 — 지금 바로 내 폰 팔기", min:[200,200], ratio:[0.9,1.15], maxKB:40,
+    where:"(지금 안 나옴) 옛 메인 사업 배너 — 내 폰 팔기", min:[200,200], ratio:[0.9,1.15], maxKB:40,
     note:"손에 든 휴대폰 또는 택배 상자 하나. ⚠️ 제조사 상표 · 상호가 읽히면 안 됩니다" },
   { key:"biz-shop", sizes:"(max-width:600px) 72px, 84px",
-    where:"메인 03 사업 배너 — 믿을 수 있는 중고폰 구매", min:[200,200], ratio:[0.9,1.15], maxKB:40,
+    where:"(지금 안 나옴) 옛 메인 사업 배너 — 중고폰 구매", min:[200,200], ratio:[0.9,1.15], maxKB:40,
     note:"포장을 푼 기기 또는 쇼핑백. ⚠️ 상표 · 상호가 읽히면 안 됩니다" },
   { key:"biz-bid", sizes:"(max-width:600px) 72px, 84px",
-    where:"메인 03 사업 배너 — 업체 경쟁입찰", min:[200,200], ratio:[0.9,1.15], maxKB:40,
+    where:"(지금 안 나옴) 옛 메인 사업 배너 — 업체 경쟁입찰", min:[200,200], ratio:[0.9,1.15], maxKB:40,
     note:"견적서 · 숫자 비교가 보이는 장면. ⚠️ **금액을 읽을 수 있게 찍지 마세요** (지어낸 값이 됩니다)" },
   { key:"biz-export", sizes:"(max-width:600px) 72px, 84px",
-    where:"메인 03 사업 배너 — 기업 · 수출 거래", min:[200,200], ratio:[0.9,1.15], maxKB:40,
+    where:"(지금 안 나옴) 옛 메인 사업 배너 — 기업 · 수출", min:[200,200], ratio:[0.9,1.15], maxKB:40,
     note:"상자 여러 개 또는 팔레트. ⚠️ 상호 · 국기 · 특정 국가가 드러나면 안 됩니다 (거래 절차가 아직 없습니다)" },
   { key:"kind-take", sizes:"(max-width:520px) 94vw, (max-width:600px) 480px, (max-width:900px) 47vw, (max-width:1280px) 31vw, 387px",
     where:"(지금 안 나옴) 자산 카드 01 · 매장 인수하기", min:[1120,840], ratio:[1.25,1.45], maxKB:140,

@@ -36,6 +36,22 @@ window.AM_SHOP_SAMPLES = [
     note:"거의 쓰지 않은 기기입니다." }
 ];
 
+window.AM_SHOP_BRANDS = [
+  { key:"apple",   en:"Apple",   name:"애플"   },
+  { key:"samsung", en:"Samsung", name:"삼성"   },
+  { key:"google",  en:"Google",  name:"구글"   },
+  { key:"huawei",  en:"Huawei",  name:"화웨이" },
+  { key:"oppo",    en:"OPPO",    name:"오포"   },
+  { key:"xiaomi",  en:"Xiaomi",  name:"샤오미" }
+];
+
+window.amShopBrandN = function(key, real){
+  return (typeof window.amShopList === "function")
+    ? window.amShopList({ maker:key, real:!!real }).length : 0;
+};
+
+window.AM_PW_NEWS = [];
+
 window.AM_SHOP_PRICE = [
   { k:"a", name:"40만원 이하",   max:400000 },
   { k:"b", name:"40~60만원",     min:400000, max:600000 },
@@ -61,7 +77,8 @@ window.amShopOne = function(id){
 
 window.amShopList = function(f){
   f = f || {};
-  var base = window.amShopReady() ? (window.AM_PRODUCTS || [])
+
+  var base = (f.real || window.amShopReady()) ? (window.AM_PRODUCTS || [])
            : (window.amShopSampleOn() ? (window.AM_SHOP_SAMPLES || []) : []);
   var q = String(f.q || "").trim().toLowerCase();
   var qn = q.replace(/\s+/g, "");
@@ -92,3 +109,22 @@ window.amShopName = function(p){
   var cap = p.cap ? (p.cap >= 1024 ? (p.cap/1024)+"TB" : p.cap+"GB") : "";
   return [(md ? md.name : p.model), cap].filter(Boolean).join(" ");
 };
+
+window.PW_SVC6 = [
+  { to:"/sell",         ia:"mobile",   nm:"내 폰 판매",     d:"경쟁견적 · 직접 매입" },
+  { to:"/shop",         ia:"bag",      nm:"중고폰 구매",     d:"검수 중고폰 쇼핑" },
+  { to:"/repair",       ia:"repair",   nm:"수리 서비스",     d:"수리 견적 · 접수" },
+  { to:"/bid",          ia:"gavel",    nm:"B2B 경매",       d:"전문업체 도매 거래" },
+  { to:"/biz?t=corp",   ia:"tower",    nm:"기업 대량 매입",  d:"법인 단말기 일괄 매입" },
+  { to:"/biz?t=export", ia:"globe",    nm:"해외 수출",      d:"해외 바이어 · 수출 문의" }
+];
+
+window.PW_BAN3 = [
+  { to:"/guide",        ia:"shield", cta:"검수 기준 보기",
+    nm:"검수 인증 중고폰",   d:"꼼꼼한 검수로 더 안전한 중고폰" },
+  { to:"/repair",       ia:"repair", cta:"수리 접수하기",
+    nm:"수리 vs 판매, 어떤 게 유리할까?", d:"수리비와 매입가를 같이 보고 고르세요" },
+  { to:"/biz?t=corp",   ia:"tower",  cta:"상담 신청하기",
+    nm:"기업 · 법인 대량 매입", d:"회사 보유 단말기, 한 번에 정리하세요" }
+];
+

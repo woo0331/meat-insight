@@ -54,6 +54,8 @@ var META = {
                  "접수번호와 연락처로 지금 어느 단계인지 확인하실 수 있습니다. 기기 발송 · 검수 · 정산까지 진행 상황을 그대로 냅니다."],
   "/guide":     ["이용 안내 — 판매부터 정산까지",
                  "기기 등록 · 상태 등급 기준 · 발송 · 검수 · 정산 차례와, 검수 결과가 다를 때 어떻게 되는지까지 적어 두었습니다."],
+  "/repair":    ["수리 서비스 — 증상 알려 주시면 수리점을 찾아 드립니다",
+                 "깨진 액정 · 배터리 · 충전 단자 · 침수까지, 증상과 기종을 알려 주시면 맞는 수리점을 찾아 연결해 드립니다. 고치는 것과 파는 것을 같이 견줘 보세요."],
   "/biz":       ["기업 · 수출 거래 — 대량 매입 · 해외 수출 문의",
                  "법인 · 대리점의 대량 매입, 기업 일괄 처분, 해외 수출을 상담으로 진행합니다. 수량과 기종을 알려 주시면 확인한 뒤 연락드립니다."],
   "/sell-biz":  ["매장 · 시설 내놓기",
@@ -188,6 +190,7 @@ window.routeInfo = function(path){
     "/track":     "phone-track",
     "/guide":     "phone-guide",
     "/biz":       "phone-biz",
+    "/repair":    "phone-repair",
     "/sell-biz":  "sell",
     "/sample":    "sample",
     "/join":      "join",
@@ -388,7 +391,7 @@ function sideOf(r){
      r.view === "phone-bid"  || r.view === "phone-track" ||
      r.view === "phone-guide" ||
 
-     r.view === "phone-biz" ||
+     r.view === "phone-biz" || r.view === "phone-repair" ||
 
      r.view === "join" || r.view === "faq" ||
 
@@ -487,6 +490,7 @@ function render(){
     case "phone-track":     html = PageTrack();                     break;
     case "phone-guide":     html = PageGuide();                     break;
     case "phone-biz":       html = PageBiz();                       break;
+    case "phone-repair":    html = PageRepair();                    break;
     case "product":         html = PageProduct(r.product);          break;
     case "sell":            html = PageSellBiz();                   break;
     case "join":            html = PageJoin();                      break;

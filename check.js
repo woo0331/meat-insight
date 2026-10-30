@@ -122,6 +122,10 @@ const PAGES = [
   ["/bid",               "최고가 경쟁입찰 (업체 0곳)"],
   ["/track",             "판매 진행 조회"],
   ["/guide",             "이용 안내"],
+  /* ⚠️ 2026-10-30 최종 지시서 §2-3 · §5 — 수리 서비스.
+     헤더 메뉴 여덟 중 하나가 가리키는 화면입니다 — 여기 없으면
+     크롤러 본문 · 대비 · 누름 크기 · 어두운 면을 아무도 안 봅니다. */
+  ["/repair",            "수리 서비스"],
   ["/quote?c=interior&i=cafe&r=gyeonggi&side=start", "견적 요청 (조건 실려 옴)"],
   ["/join",              "업체 입점하기"],
   ["/my",                "MY"],
@@ -1009,8 +1013,9 @@ const AUDIT = `(() => {
                                빈 칸이 조용히 섭니다 (search 로 겪었습니다). */
                             " #view .pww-ic, #view .dvc-ph," +
                             /* 2026-10-29 오렌지 시안 — 신뢰 넷 ·
-                               바로가기 다섯 · 기업수출 화면 셋 */
-                            " #view .pwh-tr-g i, #view .pwq-c i," +
+                               바로가기 다섯 · 기업수출 화면 셋
+                               2026-10-30 전면 리뉴얼 — 핵심 서비스 여섯(pwsv-i) */
+                            " #view .pwh-tr-g i, #view .pwq-c i, #view .pwsv-i," +
                             " #view .pwz-g i," +
                             " #view .my-pw-i").forEach(e => {
     if(e.querySelector("svg")) return;
@@ -2201,7 +2206,7 @@ const AUDIT = `(() => {
      ⚠️ 이건 "보기 좋은가" 를 재는 검사가 아닙니다. 나중에 여기에
      큰 배너 · 설명 · 검색창을 하나씩 더하다 보면 카드가 첫 화면
      아래로 밀려나는데, 그걸 막는 것이 목적입니다. */
-  await f("메인은 히어로 다음이 기기 선택이고 구간 수가 데이터와 같다", "/", `
+  await f("메인은 히어로 다음이 핵심 서비스이고 구간 수가 데이터와 같다", "/", `
     /* ⚠️⚠️ **2026-10-22 "최상단 디자인 최종 변경" §2 — 히어로가 다시
        빠졌습니다.** "기존 상단 대형 히어로(카페 사진)를 제거하고 4개
        전문관 카드를 최상단 콘텐츠로 한다." 이 검사는 10-17 에 한 번
@@ -2230,15 +2235,22 @@ const AUDIT = `(() => {
        바로 그 다음입니다 ("메인페이지에 접속하면 … 히어로 … 그 아래
        4개 핵심 서비스"). 10-22 지시서 때는 (1) 이 bent 였습니다 —
        되돌리시면 그날 여기와 (2) 를 같이 뒤집으세요. */
-    /* ⚠️⚠️ **2026-10-29 오렌지 시안 §3 의 차례**입니다 —
-       히어로(pwh) → 기기 선택(pwd) → 사업 배너(pwbz) →
-       바로가기(pwq) → 이용 방법(pwst) → 거래 전 고지(pwt) → CTA(pwc).
-       ⚠️ 앞 차례(pwh → pww 판매 두 방법 → pws 중고폰 갈래)는 함수도
-       CSS 도 안 지웠으니 되살리실 수 있습니다 — 그날 여기를 같이
-       뒤집으세요. **규칙은 한 줄도 안 바꿨습니다** (첫 구간이
-       히어로인가 · h1 이 거기 하나인가 · 지어낸 수가 없는가) —
-       재는 자리가 바뀐 것입니다. */
-    const order = ["pwh","pwd","pwbz","pwq","pwst","pwt","pwc"];
+    /* ⚠️⚠️ **2026-10-30 전면 리뉴얼 지시서 §2 의 차례**입니다 —
+       히어로(pwh) → 핵심 서비스 여섯(pwsv) → 브랜드 여섯(pwbr) →
+       중고폰 목록(pwpd) → 안내 배너 셋(pwbz) → [소식(pwnw)] →
+       이용 방법(pwst) → 거래 전 고지(pwt) → CTA(pwc).
+       ⚠️⚠️ **소식은 게시물이 0건이면 구간째 빠집니다** (절대 규칙 1) —
+       그래서 기대하는 차례를 **데이터에서** 만듭니다. 손으로
+       열여덟을 적어 두면 첫 소식을 올리는 날 멀쩡한 화면이 걸립니다.
+       ⚠️ 앞 차례(기기 선택 pwd · 바로가기 pwq · 판매 두 방법 pww ·
+       중고폰 갈래 pws)는 함수도 CSS 도 안 지웠으니 되살리실 수
+       있습니다 — 그날 여기와 (2) 를 같이 뒤집으세요.
+       **규칙은 한 줄도 안 바꿨습니다** (첫 구간이 히어로인가 · h1 이
+       거기 하나인가 · 지어낸 수가 없는가) — 재는 자리가 바뀜 것입니다. */
+    const nNews = (window.AM_PW_NEWS || []).length;
+    const order = ["pwh","pwsv","pwbr","pwpd","pwbz"]
+      .concat(nNews ? ["pwnw"] : [])
+      .concat(["pwst","pwt","pwc"]);
     for(let i = 0; i < order.length; i++){
       if(!(secs[i] && secs[i].classList.contains(order[i])))
         return "구간 " + (i + 1) + " 이 ." + order[i] + " 가 아닙니다 — " +
@@ -2249,22 +2261,37 @@ const AUDIT = `(() => {
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
     if(!h1s[0].closest(".pwh")) return "h1 이 히어로 구간에 없습니다";
 
-    /* (3) 기기 넷 · 배너 넷 · 바로가기 다섯이 **데이터에서 온 수**인가.
+    /* (3) 서비스 여섯 · 브랜드 여섯 · 배너 셋이 **데이터에서 온 수**인가.
        ⚠️⚠️ 손으로 적지 마세요 — 하나를 늘릴 때 화면만 바뀌고 검사는
        옛 수를 그대로 셉니다. */
-    const nDev = v.querySelectorAll(".pwd-g > li").length;
-    const wDev = (window.PW_SELL_CARDS || []).length;
-    if(!wDev) return "PW_SELL_CARDS 를 못 읽습니다";
-    if(nDev !== wDev)
-      return "기기 카드가 " + nDev + "장인데 데이터는 " + wDev + "개입니다";
-    const nBiz = v.querySelectorAll(".pwbz-g > li").length;
-    const wBiz = (window.PW_BIZ || []).length;
-    if(nBiz !== wBiz)
-      return "사업 배너가 " + nBiz + "장인데 데이터는 " + wBiz + "개입니다";
-    const nQ = v.querySelectorAll(".pwq-g > li").length;
-    const wQ = (window.PW_QUICK || []).length;
-    if(nQ !== wQ)
-      return "바로가기가 " + nQ + "칸인데 데이터는 " + wQ + "개입니다";
+    const nSvc = v.querySelectorAll(".pwsv-g > li").length;
+    const wSvc = (window.PW_SVC6 || []).length;
+    if(!wSvc) return "PW_SVC6 를 못 읽습니다";
+    if(nSvc !== wSvc)
+      return "핵심 서비스가 " + nSvc + "장인데 데이터는 " + wSvc + "개입니다";
+    const nBr = v.querySelectorAll(".pwbr-g > li").length;
+    const wBr = (window.AM_SHOP_BRANDS || []).length;
+    if(!wBr) return "AM_SHOP_BRANDS 를 못 읽습니다";
+    if(nBr !== wBr)
+      return "브랜드가 " + nBr + "장인데 데이터는 " + wBr + "개입니다";
+    const nBan = v.querySelectorAll(".pwbz-g > li").length;
+    const wBan = (window.PW_BAN3 || []).length;
+    if(nBan !== wBan)
+      return "안내 배너가 " + nBan + "장인데 데이터는 " + wBan + "개입니다";
+
+    /* (3b) ⚠️⚠️ **중고폰 목록은 실제 재고만** 냅니다 (§2-5 · §0-8).
+       0건이면 카드가 한 장도 없고 빈 상태가 서야 하고, 있으면
+       한 줄(PW_PD_N)을 넘지 않습니다. ⚠️ 기준은 amShopList() —
+       목록 화면과 **같은 규칙**이라 여기에만 나오는 기기가
+       생길 수 없습니다. */
+    const nPd = v.querySelectorAll(".pwpd-g > li").length;
+    const wPd = (typeof amShopList === "function") ? amShopList({ real:true }).length : 0;
+    const cap = window.PW_PD_N || 5;
+    if(!wPd && nPd) return "재고가 0건인데 상품 카드가 " + nPd + "장 나옵니다";
+    if(!wPd && !v.querySelector(".pwpd-0"))
+      return "재고가 0건인데 빈 상태를 안 냅니다";
+    if(wPd && nPd !== Math.min(wPd, cap))
+      return "상품 카드가 " + nPd + "장인데 재고 " + wPd + "건 · 한 줄 " + cap + "장입니다";
 
     /* (4) ⚠️⚠️ **지킬 수 없는 약속을 적지 않습니다** (시안 §3-C —
        "실제로 제공하지 않는 혜택은 확정된 서비스처럼 표시하지 않는다").
@@ -2275,11 +2302,19 @@ const AUDIT = `(() => {
     if(/무료|당일\s*정산|최고가\s*보장/.test(tr))
       return "신뢰 요소에 지킬 수 없는 약속이 있습니다 — " + tr.trim().slice(0, 40);
 
-    /* (5) ⚠️⚠️ **기업 · 수출은 거래 절차가 없습니다** — §3-E 가 적은
-       대로 준비 상태를 그 자리에서 밝혀야 합니다. */
-    const bizTx = (v.querySelector(".pwbz-v4") || {}).textContent || "";
-    if(!/문의/.test(bizTx))
-      return "기업 · 수출 배너가 지금 문의 단계라는 것을 말하지 않습니다";
+    /* (5) ⚠️⚠️ **기업 · 법인은 거래 절차가 없습니다** — §0-7 그대로
+       지금은 **문의 접수**라고 그 자리에서 밝혀야 합니다. */
+    const bizTx = (v.querySelector(".pwbz-v3") || {}).textContent || "";
+    if(!/문의|상담/.test(bizTx))
+      return "기업 · 법인 배너가 지금 문의 단계라는 것을 말하지 않습니다";
+
+    /* (6) ⚠️⚠️ **지어낸 실적을 적지 않습니다** (§0-8) — 거래 건수 ·
+       후기 · 만족도 · 제휴업체 수 · 매장 수는 전부 0 입니다.
+       ⚠️ 브랜드 칸의 "n대" 는 **그 자리에서 세는 값**이라 다릅니다
+       (amShopBrandN()) — 재고가 0 이면 "준비 중" 입니다. */
+    const mainTx = v.textContent || "";
+    const fake = mainTx.match(/(\d[\d,]*)\s*(건\s*거래|명\s*이용|개\s*후기|고객|만족도|제휴업체|가맹점)/);
+    if(fake) return "지어낸 실적이 있습니다 — " + fake[0];
     return true;
     return true;`);
   await f("어느 화면에서나 검색으로 가는 길이 있고 메인이 두 갈래로 갈린다", "/", `
@@ -2494,7 +2529,7 @@ const AUDIT = `(() => {
              g6[0] + " 하나만 남아도 나머지는 앞뒤 카드로 이어집니다";
     return true;`);
 
-  await f("사업 배너 넷이 색으로 갈리고 넷의 무게가 같다", "/", `
+  await f("안내 배너 셋의 무게가 같고 흰 글자가 읽히는 면이다", "/", `
     /* ⚠️⚠️ **재는 자리를 옮겼습니다 (2026-10-29 오렌지 시안 §3-E).**
        전에는 판매 두 방법(pww-c)을 봤고 그 전에는 전문관 카드였습니다 —
        **규칙은 한 줄도 안 바꿨습니다.** 지키는 것은 —
@@ -2525,18 +2560,34 @@ const AUDIT = `(() => {
       return null;
     };
     const L = [].slice.call(document.querySelectorAll(".pwbz-c"));
-    const want = (window.PW_BIZ || []).length;
-    if(!want) return "PW_BIZ 를 못 읽습니다";
+    /* ⚠️⚠️ 2026-10-30 전면 리뉴얼 §2-6 — 넷에서 **셋**이 됐습니다
+       (지시서가 "딥 브라운 배경의 가로 배너 3개" 로 직접 정했습니다).
+       수는 PW_BAN3 에서 옵니다 — 손으로 적지 마세요. */
+    const want = (window.PW_BAN3 || []).length;
+    if(!want) return "PW_BAN3 를 못 읽습니다";
     if(L.length !== want)
-      return "사업 배너가 " + L.length + "장입니다 (" + want + "이어야 합니다)";
+      return "안내 배너가 " + L.length + "장입니다 (" + want + "이어야 합니다)";
     const cols = L.map(bg);
     for(let k = 0; k < cols.length; k++)
       if(!cols[k]) return (k+1) + "번째 배너의 면 색을 못 읽습니다";
-    /* ⚠️ 셋째 · 넷째는 **일부러 같은 차콜**입니다 (시안 그대로) —
-       그 둘을 뺀 나머지가 서로 달라야 합니다. */
-    const keys = [cols[0].join(","), cols[1].join(","), cols[2].join(",")];
-    if(new Set(keys).size !== keys.length)
-      return "배너 면 색이 겹칩니다 — " + keys.join(" / ");
+    /* ⚠️⚠️ **셋이 서로 다른 색이어야 한다는 규칙은 없어졌습니다.**
+       2026-10-30 §2-6 이 "딥 브라운 배경의 가로 배너 3개" 로 직접
+       정해서 셋이 **일부러 같은 면**입니다 — 전 지시서(오렌지 시안
+       §3-E)는 넷을 색으로 갈라 두었고 그때는 그 규칙이 맞았습니다.
+       대신 **흰 글자가 읽히는 면인가**를 봅니다 (시안대로 넣었는데
+       글자가 안 읽히면 그건 지시서를 지킨 것이 아닙니다).
+       ⚠️ 무엇으로 가리는가는 **아이콘**입니다 — 한 묶음 안에서 겹치면
+       "메인 아이콘이 비지 않고 한 묶음 안에서 겹치지 않는다" 가 잡습니다.
+       ⚠️⚠️ 둘을 한 검사에 묶지 마세요. */
+    for(let k = 0; k < cols.length; k++){
+      const c = cols[k];
+      const lum = function(v){ v = v / 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+      const Y = 0.2126 * lum(c[0]) + 0.7152 * lum(c[1]) + 0.0722 * lum(c[2]);
+      const ratio = 1.05 / (Y + 0.05);
+      if(ratio < 4.5)
+        return (k+1) + "번째 배너 면이 흰 글자에 " + ratio.toFixed(2) + "입니다 (4.5 이상)";
+    }
 
     if(innerWidth <= 1024) return true;
     const R = L.map(function(e){ return e.getBoundingClientRect(); });
@@ -4042,11 +4093,16 @@ const AUDIT = `(() => {
        그날 여기에 다시 넣으세요.
        ⚠️⚠️ **주석에 백틱을 쓰지 마세요** — 검사 본문이 템플릿
        문자열이라 거기서 끊깁니다 (이 저장소 서른 번째입니다). */
+    /* ⚠️⚠️ 2026-10-30 전면 리뉴얼 §2 — 찾는 표시를 지금 화면의
+       것으로 옮깁니다. ⚠️ pwd-g(기기 선택) · pwq-g(바로가기)는
+       **함수도 CSS 도 안 지웠으니** 되살리실 수 있습니다 — 그날
+       여기에 다시 넣으세요. */
     const need = [[".pwh-go",  "히어로 단추 둘"],
                   [".pwh-tr-g","신뢰 요소 넷"],
-                  [".pwd-g",   "기기 선택 넷"],
-                  [".pwbz-g",  "주요 사업 배너 넷"],
-                  [".pwq-g",   "서비스 바로가기 다섯"],
+                  [".pwsv-g",  "핵심 서비스 여섯"],
+                  [".pwbr-g",  "브랜드 여섯"],
+                  [".pwpd-fil","중고폰 거르개"],
+                  [".pwbz-g",  "안내 배너 셋"],
                   [".pwst-g",  "이용 방법 다섯"],
                   [".pwt-g",   "거래 전 고지"],
                   [".pwc-go",  "하단 CTA"]];
@@ -4259,20 +4315,20 @@ const AUDIT = `(() => {
        ⚠️ 둘을 한 검사에 묶으면 한쪽이 바뀔 때마다 다른 쪽이 같이
        빨개져서, 정작 지키려는 것이 확인되지 않습니다. */
     return true;`);
-  await f("기기 선택 카드 넷의 크기가 같다", "/", `
+  await f("핵심 서비스 카드 여섯의 크기가 같다", "/", `
     /* ⚠️⚠️ **재는 자리가 다섯 번 옮겨 왔습니다** — 히어로 선택 카드
        둘(2026-10-08) → 전문관 카드 넷(10-11) → 진입 카드 셋(10-16) →
-       넷(10-20) → 구매 갈래 넷(10-29 PHONEWAY) → **기기 선택 카드
-       넷**(10-29 오렌지 시안 §3-D). 규칙이 바뀐 것이 아니라 재는
+       넷(10-20) → 구매 갈래 넷(10-29 PHONEWAY) → 기기 선택 넷(10-29) →
+       **핵심 서비스 카드 여섯**(10-30 §2-3). 규칙이 바뀐 것이 아니라 재는
        자리가 바뀐 것입니다 — 하나를 좁히거나 가볍게 만들면 그게
        "덜 중요한 것" 이라는 말입니다.
        ⚠️ 사업 배너 넷은 다른 검사가 봅니다 — 둘을 묶지 마세요
        (한쪽만 보면 다른 쪽이 조용히 어긋납니다). */
-    const L = [].slice.call(document.querySelectorAll(".pwd-g .dvc"));
-    const want = (window.PW_SELL_CARDS || []).length;
-    if(!want) return "PW_SELL_CARDS 를 못 읽습니다";
+    const L = [].slice.call(document.querySelectorAll(".pwsv-g .pwsv-c"));
+    const want = (window.PW_SVC6 || []).length;
+    if(!want) return "PW_SVC6 를 못 읽습니다";
     if(L.length !== want)
-      return "기기 카드가 " + L.length + "장입니다 (" + want + "이어야 합니다)";
+      return "서비스 카드가 " + L.length + "장입니다 (" + want + "이어야 합니다)";
     if(innerWidth <= 900) return true;
     const R = L.map(function(e){ return e.getBoundingClientRect(); });
     if(Math.max.apply(null, R.map(function(r){ return r.top; })) -
@@ -4502,8 +4558,15 @@ const AUDIT = `(() => {
        ⚠️ 판매 두 방법(pww-ic) · 구매 갈래(pws-c i)는 구간이
        내려가서 뺐습니다 — 되살리시면 그날 여기도 같이 넣으세요
        (안 넣으면 그 구간의 빈 아이콘을 아무도 안 봅니다). */
-    const groups = [[".pwh-tr-g i", "신뢰 요소"], [".pwd-g .dvc-ph", "기기 선택"],
-                    [".pwq-c i", "서비스 바로가기"],
+    /* ⚠️⚠️ 2026-10-30 전면 리뉴얼 §2 — 재는 자리가 **핵심 서비스
+       여섯 · 안내 배너 셋**으로 옮겨갔습니다.
+       ⚠️ 브랜드 칸은 여기서 안 봅니다 — 거기는 svg 가 아니라
+       **권리를 확인한 로고 파일(img)** 이고, 없는 브랜드는 로고 줄이
+       **통째 안 나오는 것이 맞습니다** (빈 칸을 안 깁0니다 · 절대 규칙 2).
+       ⚠️ 기기 선택(pwd-g) · 바로가기(pwq-c)는 구간이 내려가서
+       뺐습니다 — 되살리시면 그날 여기도 같이 넣으세요. */
+    const groups = [[".pwh-tr-g i", "신뢰 요소"], [".pwsv-i", "핵심 서비스"],
+                    [".pwbz-ic", "안내 배너"],
                     [".pwst-c i", "이용 방법"], [".pwt-c i", "거래 전 고지"]];
     for(const g of groups){
       const L = [].slice.call(document.querySelectorAll("#view " + g[0]));
@@ -4716,7 +4779,27 @@ const AUDIT = `(() => {
        지시서의 일곱(bhero · bent · bdir · bcal · bstep · bgd · bcta)은
        **함수도 CSS 도 안 지웠으니** 되살리실 수 있습니다 — 그날
        여기와 PHONEWAY 검사들을 같이 뒤집으세요. */
-    const want = ["pwh","pwd","pwbz","pwq","pwst","pwt","pwc"];
+    /* ⚠️⚠️ **2026-10-30 전면 리뉴얼 §2 — 구간 여덟(소식까지
+       아홉)입니다.** 01 히어로 + 신뢰 넷(pwh) · 02 핵심 서비스
+       여섯(pwsv) · 03 브랜드 여섯(pwbr) · 04 중고폰 목록(pwpd) ·
+       05 안내 배너 셋(pwbz) · [06 소식(pwnw)] · 07 이용 방법(pwst) ·
+       08 거래 전 고지(pwt) · 09 하단 CTA(pwc). HEADER · FOOTER 는 #view
+       밖입니다.
+       ⚠️⚠️ **소식은 게시물 0건이면 구간째 빠집니다** — 지어내지
+       않기 때문입니다 (절대 규칙 1). 그래서 기대하는 차례를
+       **데이터에서** 만듭니다.
+       ⚠️ 07–09 은 지시서 §2 목록 밖이지만 §0-3 이 "기존 기능을
+       삭제하거나 훼손하지 않는다" 고 적었고, 08 은 "무료 · 당일
+       정산 · 최고가 보장을 적지 않는다" 를 말하는 자리입니다.
+       ⚠️ 앞 차례(pwd 기기 선택 · pwq 바로가기 · pww · pws)와 그 앞
+       지시서의 일곱(bhero · bent · bdir · bcal · bstep · bgd · bcta)은
+       **함수도 CSS 도 안 지웠으니** 되살리실 수 있습니다 — 그날
+       여기와 PHONEWAY 검사들을 같이 뒤집으세요. 그리고
+       **build-pages.js 의 크롤러 본문도 같이** 고치세요 (이 저장소가
+       열두 번 겪은 자리입니다). */
+    const want = ["pwh","pwsv","pwbr","pwpd","pwbz"]
+      .concat((window.AM_PW_NEWS || []).length ? ["pwnw"] : [])
+      .concat(["pwst","pwt","pwc"]);
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
@@ -4726,7 +4809,8 @@ const AUDIT = `(() => {
          합니다 ("?3" 이 아니라). */
       /* ⚠️ 앞 지시서의 이름들을 **빼지 않습니다** — 되살아나면
          "차례가 … 입니다" 로 이름을 내야 합니다 ("?3" 이 아니라). */
-      for(const m of ["pwh","pwd","pwbz","pwq","pww","pws","pwst","pwt","pwc",
+      for(const m of ["pwh","pwsv","pwbr","pwpd","pwnw",
+                      "pwd","pwbz","pwq","pww","pws","pwst","pwt","pwc",
                       "bent","bdir","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
                       "bhero","mh","mbr","mhall","msvc","mexp","pkg","mind",
                       "mti","mstp","mopsv","mjn","mlast"])
@@ -5503,6 +5587,11 @@ const AUDIT = `(() => {
        ⚠️ 새 카드를 만들면 **반드시 여기 넣으세요.** */
     const sel = ".cat,.ind,.pv,.fr,.fc,.mk,.help,.sp,.empty," +
                 ".pww-c,.pws-c,.pwst-c,.pwt-c," +
+                /* 2026-10-30 전면 리뉴얼 §2 — 핵심 서비스 여섯 ·
+                   브랜드 여섯 · 상품 카드 · 빈 상태 · 소식 카드.
+                   ⚠️ 안내 배너(.pwbz-c)는 **짙은 브라운 그라디언트**라
+                   여기 넣지 마세요 — 구간 바탕과 비교하면 거짓으로 걸립니다. */
+                ".pwsv-c,.pwbr-c,.pwpd-c,.pwpd-0,.pwnw-c," +
                 ".bent-c > a,.bwhy-c,.bstep-c,.bban-c > a," +
                 ".bcal-c > a,.bgd-c > a,.bqc," +
                 ".mhall-c,.mcal-g > li,.mstp-g > li," +

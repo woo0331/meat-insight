@@ -37,7 +37,7 @@ function PageSell(){
   var q = pwSellQS(), step = pwSellStep(q);
   return PgHero({
 
-      kicker:"SELL", h1:"내 폰 판매",
+      kicker:"SELL", h1:"내 폰 팔기",
       lead:"기종과 상태만 고르시면 판매 방법을 바로 보실 수 있습니다. "+
            "가입하지 않으셔도 됩니다."
     })+

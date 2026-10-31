@@ -35,22 +35,12 @@ function loadApp(){
      guides.js 는 problems.js 의 key 를 그대로 쓰므로 그 뒤여야 합니다. */
   const DATA = ["js/data/korean.js","js/data/brand.js","js/data/site.js",
                 "js/data/regions.js","js/data/industries.js",
-                /* ⚠️ indgroups 는 업종 열넷 key 를 그대로 쓰므로 **그 뒤**입니다
-                   (2026-10-09 지시서 PART 3 — 대분류 아홉 + 세부 업종) */
-                "js/data/indgroups.js",
                 "js/data/catalog.js",
-                /* ⚠️ lifecycle 은 catalog 의 key 를 그대로 쓰므로 **그 뒤**입니다 */
-                "js/data/lifecycle.js",
-                /* ⚠️ journey 는 lifecycle 의 단계 key 와 catalog 의 분류 key 를
-                   그대로 쓰므로 **그 뒤**입니다 (2026-10-05 V2 §1) */
-                "js/data/journey.js",
                 "js/data/franchise.js","js/data/providers.js","js/data/market.js",
-                "js/data/support.js","js/data/content.js",
-                /* ⚠️ sample 은 providers 의 계산 함수를 쓰므로 **그 뒤**입니다.
-                   AM_PROVIDERS 에는 **안 들어갑니다** (§19) */
-                "js/data/sample.js","js/data/shop.js","js/data/photos.js",
+                "js/data/support.js",
+                "js/data/shop.js","js/data/photos.js",
                 "js/data/legal-terms.js","js/data/legal-privacy.js",
-                "js/data/faq.js","js/data/tools.js","js/data/join.js",
+                "js/data/faq.js","js/data/join.js",
                 /* ⚠️ sales 는 catalog 의 분류 · 하위 key 를 **묶어 보는 틀**이라
                    그 뒤입니다. 손님 화면은 안 읽습니다 — /admin 전용이지만
                    분류 25 를 빠짐없이 나눠 가지는지 빌드가 봅니다 */
@@ -78,7 +68,7 @@ function loadApp(){
                 "js/data/reqforms.js",
                 /* ⚠️ opsvc 는 catalog 의 분류 · 하위 key 와 industries 의
                    업종 key 를 가리킵니다 — 둘 다 위에 있습니다 */
-                "js/data/opsvc.js",
+                
                 /* ⚠️ packages 는 offers 의 상품 id 를 가리킵니다 */
                 "js/data/packages.js",
                 /* ⚠️ halls 는 catalog 의 분류 · 하위 key 를 가리킵니다
@@ -87,10 +77,10 @@ function loadApp(){
                 /* ⚠️ svcpick 은 halls 의 칸과 reqforms 의 분류 key 를
                    읽습니다 — 둘 다 위에 있습니다 (2026-10-17 §12) */
                 "js/data/svcpick.js",
-                "js/data/svcpage.js",
+                
                 /* ⚠️ opscheck 은 svcpick 의 id · tools 의 key · content 의
                    slug 를 가리킵니다 — 셋 다 위에 있습니다 (2026-10-18 §9) */
-                "js/data/opscheck.js",
+                
                 /* 이용 절차 넷 — 메인 05 구간과 크롤러 본문이 같이 읽습니다 */
                 "js/data/steps.js",
                 /* ⚠️ 기기 카탈로그 (2026-10-29 PHONEWAY) — 모델 · 등급 ·
@@ -130,63 +120,37 @@ function allRoutes(W){
   /* ⚠️⚠️ **`/home` 이 여기 없는 것은 실수가 아닙니다** (2026-10-01).
      랜딩을 없애면서 그 화면이 `/` 가 됐습니다. 옛 주소는
      `vercel.json` 의 redirects 가 308 로 `/` 에 보냅니다 — 여기에
-     다시 넣으면 **같은 내용이 두 주소로 나가고 구글이 둘 다 무시**합니다. */
-  const fixed = ["/", "/startup", "/operation", "/transfer", "/closure",
-                 "/providers", "/franchise",
-                 "/stores", "/assets", "/support", "/content",
-                 "/quote", "/sell", "/join", "/my", "/search", "/compare",
-                 /* ⚠️⚠️ PHONEWAY 화면 넷 (2026-10-29). `/sell` 은 위에
-                    이미 있고 **내 폰 팔기**가 됐습니다 — 창업 · 폐업
-                    매물 폼은 `/sell-biz` 로 옮겼습니다 (지운 것이
-                    아닙니다). `/track` · `/sell-biz` 는 NOINDEX 라
-                    sitemap 에 안 들어가고 크롤러 본문 검사에서도
-                    빠지지만, HTML 은 만들어야 주소가 열립니다. */
-                 "/shop", "/bid", "/track", "/guide", "/biz", "/repair", "/sell-biz",
-                 /* ⚠️ `/sample` 은 NOINDEX 라 sitemap 에 안 들어갑니다 —
-                    HTML 은 만들어야 주소를 열 수 있어서 여기에 둡니다 */
-                 "/sample",
-                 "/tools",
-                 "/faq", "/about", "/terms", "/privacy"];
-  /* 업종별 창업 · 폐업 — **검색에서 들어오는 제일 큰 문**입니다
-     ("카페 창업" · "음식점 폐업"). 반드시 진짜 HTML 파일이어야 합니다. */
-  const inds  = (W.AM_INDUSTRIES || []).map(i => i.key);
-  const flows = inds.map(k => "/startup/" + k).concat(inds.map(k => "/closure/" + k));
-  /* 업체를 찾는 분류 — /providers/interior 처럼 (§46) */
-  const pcats = (W.AM_CATS || []).filter(c => c.kind === "provider")
-                  .map(c => "/providers/" + c.key);
-  /* 정보 · 매물 성격의 분류 — ⚠️ `to` 가 따로 있는 것은 그 주소가
-     진짜 화면이므로 여기서 또 만들지 않습니다 (주소 두 개가 같은
-     내용을 내면 구글이 둘 다 무시합니다). */
-  const icats = (W.AM_CATS || []).filter(c => c.kind !== "provider" && !c.to)
-                  .map(c => "/c/" + c.key);
-  const fcats = (W.AM_FRANCHISE_CATS || []).map(c => "/franchise/" + c.key);
-  /* 사업 단계 여섯 — 2026-10-04 구조 개편. ⚠️ 새 분류가 아니라
-     `catalog.js` 의 분류를 묶어 보는 화면이라, 분류 주소는 그대로
-     따로 만들어집니다 (여기는 묶음이고 거기는 낱개입니다). */
-  const stgs  = (W.AM_STAGES || []).map(s2 => "/g/" + s2.key);
-  /* ⚠️ 도구 주소는 `AM_TOOLS` 에서 가져옵니다 — 손으로 적어 두면
-     도구를 늘릴 때마다 여기를 잊어 **주소가 조용히 안 만들어집니다.** */
-  const tls = (W.AM_TOOLS || []).map(t => t.to);
-  /* 업체 · 브랜드 · 글은 **등록된 것만** 주소가 됩니다. 지금 0 건이라
-     0 개가 만들어집니다 — 없는 것을 만들지 않습니다. */
-  const pvs = (W.AM_PROVIDERS || []).map(p => "/p/" + p.id);
-  const frs = (W.AM_FRANCHISES || []).map(f => "/f/" + f.slug);
-  const cts = (W.AM_CONTENTS  || []).map(c => "/content/" + c.slug);
+     다시 넣으면 **같은 내용이 두 주소로 나가고 구글이 둘 다 무시**합니다.
+
+     ⚠️⚠️ **2026-10-31 — 창업 · 폐업 주소 160개를 뺐습니다.** 사장님
+     지시("인수인계 자료를 다 지워 · 중고폰 쪽은 살려두고")로 그
+     데이터와 화면을 지웠습니다. 옛 주소는 `vercel.json` 의
+     redirect 스물일곱이 **308 로 `/` 에** 보내므로 색인은 안 깨집니다.
+
+     뺀 것 — /startup · /operation · /transfer · /closure · /providers ·
+     /franchise · /stores · /assets · /support · /content · /compare ·
+     /sample · /sell-biz · /tools · /about 과 그 밑의 동적 주소
+     (/startup/:업종 · /closure/:업종 · /g/:단계 · /providers/:분류 ·
+      /c/:분류 · /franchise/:분류 · /f/:슬러그 · /p/:id · /s/:id ·
+      /a/:id · /content/:슬러그 · /tools/:도구 열셋).
+     ⚠️ `js/app.js` 의 `META` · `VIEW` · `render()` 와 **같이** 움직입니다 —
+     한쪽만 고치면 "알 수 없는 주소" 로 160개가 건너뛰어집니다. */
+  const fixed = ["/", "/quote", "/sell", "/join", "/my", "/search",
+                 /* ⚠️ `/track` 은 NOINDEX 라 sitemap 에 안 들어가고
+                    크롤러 본문 검사에서도 빠지지만, HTML 은 만들어야
+                    주소가 열립니다. */
+                 "/shop", "/bid", "/track", "/guide", "/biz", "/repair",
+                 "/faq", "/terms", "/privacy"];
   /* 중고폰 상품 — ⚠️⚠️ **예시도 HTML 을 만듭니다** (주소가 열려야
      목록에서 눌러 보실 수 있습니다). 예시는 `routeInfo()` 가
-     `noindex:true` 로 돌려줘서 **sitemap 에서 빠집니다** —
-     `/sample` 과 같은 방식입니다. 실제 상품이 생기면 예시 주소는
-     저절로 안 만들어집니다 (`amShopSampleOn()`). */
+     `noindex:true` 로 돌려줘서 **sitemap 에서 빠집니다.**
+     실제 상품이 생기면 예시 주소는 저절로 안 만들어집니다
+     (`amShopSampleOn()`). */
   const pds = (W.AM_PRODUCTS || []).map(x => "/d/" + x.id);
   const pdsSp = (typeof W.amShopSampleOn === "function" && W.amShopSampleOn())
                 ? (W.AM_SHOP_SAMPLES || []).map(x => "/d/" + x.id) : [];
-  /* 매물도 등록된 것만 주소가 됩니다 — 지금 0건이라 0개가 만들어집니다 */
-  const sts = (W.AM_STORES || []).map(x => "/s/" + x.id);
-  const ass = (W.AM_ASSETS || []).map(x => "/a/" + x.id);
-  return fixed.concat(tls, flows, stgs, pcats, icats, fcats, pvs, frs, cts, sts, ass,
-                      pds, pdsSp);
+  return fixed.concat(pds, pdsSp);
 }
-
 function esc(s){
   return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
     .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
@@ -298,19 +262,6 @@ function jsonLd(W, r, route){
   if(mf){
     const c = (W.AM_FRANCHISE_CATS||[]).filter(x => x.key === mf[1])[0];
     if(c) out.push(crumb([["프랜차이즈","/franchise"], [c.name, route]]));
-    return out;
-  }
-  const mc = /^\/content\/([a-z0-9-]+)$/.exec(route);
-  if(mc){
-    const ct = (W.AM_CONTENTS||[]).filter(x => x.slug === mc[1])[0];
-    if(ct){
-      out.push(crumb([["정보","/content"], [ct.title, route]]));
-      out.push({
-        "@context":"https://schema.org","@type":"Article",
-        headline:ct.title, description:ct.lead, inLanguage:"ko",
-        datePublished:ct.at, author:{ "@type":"Organization", name:B.name }
-      });
-    }
     return out;
   }
   /* 상세 네 갈래의 빵부스러기 — 검색 결과에 "매장 인수 › 안양 평촌
@@ -648,268 +599,15 @@ function noscriptFor(W, r, route){
     (W.AM_FAQ||[]).forEach(x => { L.push("<h2>"+esc(x.q)+"</h2>"); p(x.a); });
     return L.join("");
   }
-  if(route === "/tools"){
-    /* ⚠️ 화면에 목적별 탭(2026-10-20 시안 7)이 섬니다 — 크롤러에게
-       안 보여 주면 둘이 다른 것을 내보내는 셌입니다. */
-    h2("언제 쓰는 계산기인가");
-    ul((W.AM_JOURNEYS||[]).map(j => j.name + " " +
-      (W.AM_TOOLS||[]).filter(t => (t.jy||[]).indexOf(j.key) >= 0).length + "개"));
-    h2("무료로 쓰실 수 있는 계산기");
-    (W.AM_TOOLS||[]).forEach(t => {
-      L.push("<h3>"+esc(t.name)+"</h3>");
-      p(t.lead + " — " + t.ask + " 를 적으시면 " + t.out + " 이 나옵니다.");
-    });
-    /* ⚠️ 여기에 기준값을 적지 마세요 — "인건비율 25%면 정상" 같은 것은
-       업종 · 지역마다 달라서 근거를 댈 수 없습니다. */
-    p("전부 사장님이 적으신 숫자를 나누는 것까지입니다. 기준값을 만들어 " +
-      "좋다 나쁘다 판정하지 않습니다. 적으신 숫자는 이 브라우저에만 남고 " +
-      "서버로 보내지 않습니다.");
-    return L.join("");
-  }
-  const mtl = /^\/tools\/([a-z]+)$/.exec(route);
-  if(mtl){
-    const t = (W.AM_TOOLS||[]).filter(x => x.key === mtl[1])[0];
-    if(t){
-      h2(t.name);
-      p(t.lead + ".");
-      p(t.ask + " 를 적으시면 " + t.out + " 이 나옵니다. 안 적으신 칸은 " +
-        "계산에서 빠지고, 업계 평균으로 메우지 않습니다.");
-      if(t.key === "cost"){
-        h2("적는 항목");
-        (W.AM_COST_GROUPS||[]).forEach(g => {
-          L.push("<h3>"+esc(g.h)+"</h3>");
-          ul(g.items.map(i => i.name));
-        });
-      }
-      if(t.key === "close"){
-        h2("짚어 볼 것");
-        (W.AM_CLOSE_CHECK||[]).forEach(g => {
-          L.push("<h3>"+esc(g.h)+"</h3>");
-          ul(g.items.map(i => i.t + (i.due ? " (기한 있음)" : "")));
-        });
-      }
-      if(t.key === "bep" || t.key === "fixed"){
-        h2("적는 항목");
-        ul((W.AM_FIXED||[]).map(r => r.name + " — " + r.hint));
-      }
-      if(t.key === "labor"){
-        h2("적는 항목");
-        ul((W.AM_LABOR||[]).map(r => r.name + " — " + r.hint));
-      }
-      if(t.key === "vs"){
-        h2("나란히 놓는 것");
-        ul((W.AM_VS||[]).map(r => (r.side === "new" ? "새로 만들 때 · " : "가게를 받을 때 · ") + r.name));
-      }
-      /* 2026-10-05 V2 §16 로 더한 일곱 — ⚠️ 목록을 손으로 또 적지
-         않습니다. 데이터 배열 이름만 도구 key 에 맞춰 둡니다. */
-      const MORE = { target:"AM_TARGET", premium:"AM_PREMIUM", rent:"AM_RENT",
-                     hire:"AM_HIRE", delivery:"AM_DELIVERY", margin:"AM_MARGIN" };
-      if(MORE[t.key]){
-        h2("적는 항목");
-        ul((W[MORE[t.key]]||[]).map(r =>
-          r.name + (r.unit ? " (" + r.unit + ")" : "") + (r.hint ? " — " + r.hint : "")));
-      }
-      if(t.key === "closecost"){
-        h2("나가는 돈");
-        ul((W.AM_CLOSE_OUT||[]).map(r => r.name + (r.hint ? " — " + r.hint : "")));
-        h2("돌아오는 돈");
-        ul((W.AM_CLOSE_IN||[]).map(r => r.name + (r.hint ? " — " + r.hint : "")));
-        p("나가는 돈만 세면 반쪽입니다. 보증금과 시설 매각은 돌아오는 쪽이라, " +
-          "둘을 같이 놓아야 실제로 얼마가 드는지가 나옵니다.");
-      }
-    }
-    return L.join("");
-  }
 
-  const mi = /^\/(startup|closure)\/([a-z0-9-]+)$/.exec(route);
-  if(mi){
-    const ind = (W.AM_INDUSTRIES||[]).filter(x => x.key === mi[2])[0];
-    if(ind){
-      const start = mi[1] === "startup";
-      const order = (start ? ind.startup : ind.closure) || [];
-      const all = start ? (W.AM_START_CATS||[]) : (W.AM_CLOSE_CATS||[]);
-      const cats = order.map(k => all.filter(c => c.key === k)[0]).filter(Boolean);
-      if(ind.equip && ind.equip.length){
-        h2(ind.name + (start ? " 창업에 필요한 장비" : " 정리할 시설 · 장비"));
-        ul(ind.equip.map(e => e.name));
-      }
-      h2(ind.name + (start ? " 창업에 필요한 모든 것" : " 폐업에 필요한 모든 것"));
-      cats.forEach(c => { L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc); ul(subNames(c)); });
-      if(!start && (ind.stock||[]).length){ h2("재고 처분"); ul(ind.stock); }
-    }
-    return L.join("");
-  }
 
-  const mp = /^\/providers\/([a-z0-9-]+)$/.exec(route);
-  const mc = /^\/c\/([a-z0-9-]+)$/.exec(route);
-  if(mp || mc){
-    const key = (mp||mc)[1];
-    const c = (W.AM_CATS||[]).filter(x => x.key === key)[0];
-    if(c){
-      h2(c.name + " — " + c.lead);
-      ul(subNames(c));
-      /* §6 의 네 구간 — ⚠⚠ **화면에 나오는 분류에만** 올립니다.
-         화면에 없는 것을 크롤러에게만 보여 주면 그게 구글에
-         나가는 거짓말입니다 (이 지장소가 다섯 번 겪은 자리). */
-      const sp = (W.AM_SVCPAGE || {})[key];
-      if(sp){
-        if((sp.when||[]).length){ h2(c.name + " 업체를 이런 때 찾으십니다"); ul(sp.when); }
-        if((sp.flow||[]).length){ h2("어떻게 진행되나요");
-          ul(sp.flow.map(x => x.n + " — " + x.d)); }
-        if((sp.cost||[]).length){ h2("비용은 무엇으로 갈리나요");
-          ul(sp.cost.map(x => x.n + " — " + x.d)); }
-        if((sp.faq||[]).length){ h2("자주 묻는 것");
-          sp.faq.forEach(x => { L.push("<h3>"+esc(x.q)+"</h3>"); p(x.a); }); }
-      }
-      h2("업종별로 찾기");
-      ul((W.AM_INDUSTRIES||[]).map(i => i.name));
-      h2("지역별로 찾기");
-      ul((W.AM_REGIONS||[]).map(x => x.name));
-    }
-    return L.join("");
-  }
 
-  /* 사업 단계 — /g/build (2026-10-04 구조 개편)
-     ⚠️ 화면과 **같은 것**을 냅니다 — 그 단계의 분류와 하위 서비스.
-     크롤러에게만 더 보여 주면 화면과 다른 것을 내보내는 셈입니다. */
-  if(/^\/g\//.test(route)){
-    const st = r.stage;
-    if(st){
-      const cs = (W.amStageCats ? W.amStageCats(st) : []);
-      h2(st.name + " 단계에 필요한 분야");
-      cs.forEach(c => {
-        L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc);
-        ul((W.amCatItems ? W.amCatItems(c, "") : (c.items||[])).map(i => i.name));
-      });
-      (st.extra || []).forEach(x => { L.push("<h3>"+esc(x.name)+"</h3>"); p(x.lead); });
-      const L2 = (W.AM_STAGES || []);
-      h2("사업 단계 여섯");
-      ul(L2.map(x => x.no + " " + x.name + " — " + x.lead + " " + x.sub));
-    }
-    return L.join("");
-  }
 
-  /* 여정 넷 — 운영 · 인수/양도 (2026-10-05 V2 §6 · §7)
-     ⚠️ **화면과 같은 것**을 냅니다. 크롤러에게만 더 보여 주면 화면과
-     다른 것을 내보내는 셈입니다. */
-  if(route === "/operation"){
-    h2("운영하면서 막히는 자리");
-    ul((W.AM_OPS||[]).map(o => o.name));
-    h2("업종마다 쓰는 것이 다릅니다");
-    ul((W.AM_INDUSTRIES||[]).map(i => i.name + " — " + i.lead));
-    h2("운영에 필요한 분야");
-    const opc = {};
-    (W.AM_OPS||[]).forEach(o => { if(o.cat) opc[o.cat] = 1; });
-    (W.AM_CATS||[]).filter(c => opc[c.key]).forEach(c => {
-      L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc); ul(subNames(c));
-    });
-    return L.join("");
-  }
-  if(route === "/transfer"){
-    const nSt2 = (W.AM_STORES||[]).length, nAs2 = (W.AM_ASSETS||[]).length;
-    h2("받을 때는 이 순서입니다");
-    ul((W.AM_PROCESS||{})["acq-in"].map((x,i) => (i+1) + ". " + x.name + " — " + x.lead));
-    h2("넘길 때는 이 순서입니다");
-    ul((W.AM_PROCESS||{})["acq-out"].map((x,i) => (i+1) + ". " + x.name + " — " + x.lead));
-    h2("지금 올라온 것");
-    /* ⚠️ 0 이면 0 이라고 적습니다 (절대 규칙 1) */
-    p("매장 매물 " + nSt2 + "건 · 시설 · 장비 " + nAs2 + "건. " +
-      (nSt2 || nAs2 ? "등록된 차례로 냅니다. 광고로 위에 올린 자리는 없습니다."
-                    : "아직 올라온 매물이 없습니다. 없는 매물을 지어내지 않습니다."));
-    p("매물에 적힌 평수 · 보증금 · 월세 · 권리금 · 매출은 올리신 사장님이 " +
-      "적으신 값이고, 저희가 확인하거나 보증하는 값이 아닙니다.");
-    return L.join("");
-  }
 
-  if(route === "/startup" || route === "/closure"){
-    const start = route === "/startup";
-    /* 준비 과정 — 2026-10-05 V2 §4(창업 12걸음) · §8(폐업 13걸음) */
-    const pr = (W.AM_PROCESS||{})[start ? "startup" : "closing"] || [];
-    if(pr.length){
-      h2(start ? "창업 준비, 무엇부터 하나요?" : "폐업, 무엇부터 하나요?");
-      ul(pr.map((x,i) => (i+1) + ". " + x.name + " — " + x.lead));
-    }
-    h2("업종");
-    ul((W.AM_INDUSTRIES||[]).map(i => i.name + " — " + i.lead));
-    h2(start ? "창업에 필요한 모든 것" : "폐업에 필요한 모든 것");
-    (start ? (W.AM_START_CATS||[]) : (W.AM_CLOSE_CATS||[])).forEach(c => {
-      L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc); ul(subNames(c));
-    });
-    return L.join("");
-  }
 
-  if(route === "/providers"){
-    /* ⚠️ 화면(2026-10-20 시안 6)과 **같은 말**이어야 합니다 — 화면에
-       거르개 다섯이 섰는데 크롤러에게 안 보여 주면 둘이 다른 것을
-       내보내는 셈입니다 (이 저장소가 메인에서 열 번 겪은 자리). */
-    h2("이런 조건으로 찾습니다");
-    ul(["지역","업종","서비스 분야","사업 단계","확인 상태"]);
-    p("평점 · 응답속도 · 가격대로는 거르지 않습니다 — 재는 장치도 "+
-      "후기도 없어서 거르개로 만들면 지어낸 기준이 됩니다.");
-    (W.AM_CATS||[]).filter(c => c.kind === "provider").forEach(c => {
-      L.push("<h3>"+esc(c.name)+"</h3>"); p(c.desc); ul(subNames(c));
-    });
-    h2("지역");
-    ul((W.AM_REGIONS||[]).map(x => x.name));
-    return L.join("");
-  }
 
-  /* 프랜차이즈 **분류 하나** — ⚠️⚠️ /franchise 와 **같은 본문을 내지
-     마세요.** 열두 화면이 글자까지 같아서 구글이 중복으로 보고 전부
-     무시합니다 (2026-10-24 재 보니 233자 열둘이 거의 같았습니다).
-     ⚠️ 화면(PageFranchiseCat)과 **같은 말**이어야 합니다 — 브랜드가
-     0개라 화면이 내는 것은 분류 이름 · 확인하실 것 · **그 업종의 글**
-     입니다. 여기에만 더 적으면 그게 구글에 나가는 거짓말입니다. */
-  const mfc = /^\/franchise\/([a-z0-9-]+)$/.exec(route);
-  if(mfc){
-    const fc = (W.AM_FRANCHISE_CATS||[]).filter(x => x.key === mfc[1])[0];
-    if(fc){
-      const nFr = (W.AM_FRANCHISES||[]).filter(f => f.cat === fc.key).length;
-      h2(fc.name + " 프랜차이즈 브랜드");
-      p(nFr
-        ? fc.name + " 쪽으로 등록된 브랜드 " + nFr + "개입니다. 총 예상 "
-          + "창업비 · 가맹비 · 권장 평수 · 모집지역을 나란히 놓고 보십시오."
-        : fc.name + " 쪽으로 등록된 브랜드는 아직 없습니다. 본사가 직접 "
-          + "등록하고 정보공개서로 확인한 값만 올립니다.");
-      h2("브랜드마다 확인하실 것");
-      ul(["총 예상 창업비","가맹비","교육비","보증금","인테리어비","설비비",
-          "권장 평수","가맹점 수","본사 지원","모집지역","정보공개서"]);
-      /* ⚠️ 그 업종 글이 없으면 **구간째 뺍니다** (절대 규칙 2) */
-      const frd = fc.ind && W.amContentsFor
-        ? W.amContentsFor({ side:"start", industry:fc.ind, limit:3 }) : [];
-      if(frd.length){
-        h2((W.amIndustryName ? W.amIndustryName(fc.ind) : fc.name) + " 창업을 보고 계시면");
-        ul(frd.map(x => x.title));
-      }
-    }
-    return L.join("");
-  }
 
-  if(route === "/franchise"){
-    h2("프랜차이즈 분류");
-    ul((W.AM_FRANCHISE_CATS||[]).map(c => c.name));
-    h2("브랜드마다 확인하실 것");
-    ul(["총 예상 창업비","가맹비","교육비","보증금","인테리어비","설비비",
-        "권장 평수","가맹점 수","본사 지원","모집지역","정보공개서"]);
-    p("본사가 직접 등록하고 정보공개서로 확인한 값만 올립니다.");
-    return L.join("");
-  }
 
-  if(route === "/stores"){
-    h2("이런 조건으로 찾습니다");
-    ul(["지역","업종","평수","보증금","월세","권리금","시설 인수 가능 여부"]);
-    h2("업종");  ul((W.AM_INDUSTRIES||[]).map(i => i.name));
-    h2("지역");  ul((W.AM_REGIONS||[]).map(x => x.name));
-    return L.join("");
-  }
-  if(route === "/assets"){
-    h2("업종별로 나오는 시설 · 장비");
-    (W.AM_INDUSTRIES||[]).filter(i => (i.equip||[]).length).forEach(i => {
-      L.push("<h3>"+esc(i.name)+"</h3>");
-      ul(i.equip.map(e => e.name).concat(i.stock||[]));
-    });
-    return L.join("");
-  }
   /* ⚠️ 화면(PageSell)과 **같은 말**이어야 합니다. 여기에만 더 적으면
      그게 구글에 나가는 거짓말입니다 — 특히 "바로 올라갑니다" 처럼
      하지 않는 일을 적지 마세요 (절대 규칙 5). */
@@ -1081,41 +779,6 @@ function noscriptFor(W, r, route){
       "0건이고, 없는 숫자를 적지 않습니다.");
     return L.join("");
   }
-  if(route === "/sell-biz"){
-    h2("매장 · 점포를 내놓으실 때 적는 것");
-    ul(["거래 방식 — 매장 양도 · 임대", "업종", "지역 (시 · 군 · 구까지)",
-        "평수", "보증금", "월세", "권리금 (무권리면 0)", "시설 인수비",
-        "시설을 그대로 두고 가시는지", "문 연 해", "넘기고 싶은 시점",
-        "월 매출 (적어 주시면 사장님이 적으신 값이라고 밝혀서 올립니다)"]);
-    h2("시설 · 장비를 내놓으실 때 적는 것");
-    ul(["무엇을 내놓으시는지", "거래 단위 — 낱개 · 묶음 · 시설 전체",
-        "업종", "지역 (시 · 군 · 구까지)", "제조사", "연식", "수량",
-        "희망가", "상태"]);
-    h2("올리기 전에 한 번 연락드립니다");
-    p("적어 주신 내용은 바로 올라가지 않습니다. 저희가 보고 빠진 것을 여쭌 "+
-      "다음에 올립니다. 연락처 · 상호 · 번지 주소는 매물에 나가지 않습니다 — "+
-      "지역은 시 · 군 · 구까지만 올리고, 보시려는 분께 연락처를 전하는 것은 "+
-      "사장님이 그때 다시 동의하셔야 합니다 (개인정보보호법 제17조).");
-    p("저희는 통신판매중개자이고 거래 당사자가 아닙니다. 적어 주신 값을 "+
-      "확인하거나 보증하지 않습니다 — 계약은 두 사장님이 직접 하십니다.");
-    return L.join("");
-  }
-  if(route === "/support"){
-    h2("자금 · 정부지원");
-    ul(["창업자금","정책자금","정부지원사업","보증제도",
-        "폐업지원","철거비 지원","재취업","재창업"]);
-    p("공고 원문을 확인한 것만 올립니다. 지원사업은 해마다 바뀌고 예산이 "+
-      "소진되면 중간에 닫힙니다.");
-    /* ⚠️ 화면(SupportWhere)과 **같은 말**이어야 합니다. 공고를
-       지어내지 않는 대신 어디를 봐야 하는지는 냅니다 — 개별 사업
-       이름은 여기에도 적지 마세요. 해마다 바뀝니다. */
-    h2("공고는 여기에 올라옵니다");
-    ul((W.AM_SUPPORT_WHERE||[]).map(x => x.org + " — " + x.what));
-    p("여기 적힌 것은 기관까지입니다. 개별 공고가 아닙니다 — 대상 · 금액 · "+
-      "기한은 그 기관의 공고에서 직접 확인하셔야 하고, 신청과 심사도 "+
-      "그쪽에서 합니다.");
-    return L.join("");
-  }
   if(route === "/join"){
     /* ⚠️ 화면(PageJoin)과 **같은 말**이어야 합니다. 글은
        js/data/join.js 한 곳에 있습니다.
@@ -1158,115 +821,12 @@ function noscriptFor(W, r, route){
     }
     return L.join("");
   }
-  if(route === "/content"){
-    h2("창업 · 폐업 정보");
-    ul((W.AM_CONTENTS||[]).map(c => c.title));
-    /* ⚠️ 글이 아직 없어도 **무엇을 다루는 자리인지**는 적습니다.
-       크롤러에게 빈 화면을 주면 이 주소는 없는 것과 같습니다.
-       ⚠️ 여기에 금액을 적지 마세요 — 근거를 댈 수 없으면 "무엇이
-       금액을 가르는가" 를 적습니다 (§45). */
-    h2("창업에서 막히는 것");
-    ul(["업종별 창업비용은 무엇이 가르는가 — 평수 · 지역 · 철거 유무 · 시설 인수 여부",
-        "권리금은 무엇에 대한 값인가",
-        "사업자등록과 업종별 인허가 순서",
-        "상가 임대차계약에서 확인할 것",
-        "정책자금과 정부지원사업 신청 조건"]);
-    h2("폐업에서 막히는 것");
-    ul(["폐업 절차와 기한이 있는 신고",
-        "원상복구 범위는 계약서의 어디를 보는가",
-        "철거비는 무엇이 가르는가 — 평수 · 층수 · 폐기물 종류 · 반출 조건",
-        "시설과 집기를 버리지 않고 넘기는 방법",
-        "직원 퇴직금과 4대보험 정리 순서",
-        "인터넷 · POS · 렌탈 계약 해지와 위약금"]);
-    p("근거를 댈 수 있는 것만 씁니다. 법령과 제도는 바뀌므로 확인하는 곳을 " +
-      "같이 적습니다 (관할 구청 · 세무서 · 고용노동부).");
-    return L.join("");
-  }
   /* ⚠️⚠️ **업체 · 브랜드 상세에는 크롤러 본문이 없었습니다.** 23자짜리
      로 나가고 있었고, 설명(description)도 소개 한 줄이라 너무 짧았습니다.
      데이터가 0이라 그 주소 자체가 안 만들어져서 몇 달째 아무도 못 봤고,
      **첫 업체를 등록하는 날** 그 화면이 그대로 구글에 갔을 것입니다 —
      정작 "안양 카페 인테리어 업체" 로 잡혀야 할 화면입니다.
 
-     ⚠️ 여기 적는 것은 **전부 등록된 값**입니다. 업체 수 · 실적 · 평점을
-     지어내지 않습니다 (절대 규칙 1). 후기가 없으면 그 줄이 아예 빠집니다. */
-  const mpv = /^\/p\/([a-z0-9-]+)$/.exec(route);
-  if(mpv){
-    const pv = (W.AM_PROVIDERS||[]).filter(x => x.id === mpv[1])[0];
-    if(pv){
-      const regs = (pv.regions||[]).map(k => W.amRegionName ? W.amRegionName(k) : k);
-      const gus  = pv.gu || [];
-      const inds = (pv.industries||[]).map(k => W.amIndustryName ? W.amIndustryName(k) : k);
-      const subs = (pv.subs||[]).map(k => W.amSubName ? W.amSubName(k) : k);
-      h2("하는 일");
-      ul(subs);
-      if(regs.length || gus.length){
-        h2("일하는 지역");
-        ul(regs.concat(gus));
-      }
-      if(inds.length){ h2("전문 업종"); ul(inds); }
-      /* ⚠️⚠️ **평균을 말하지 않고 후기 그 자체를 냅니다.** 처음에 "평균
-         만족도 4.5점" 이라고 적었다가 전수 점검에 걸렸습니다 — 계산된
-         값이긴 하지만 "만족도" 는 지어낸 신뢰의 전형적인 말이고,
-         CLAUDE.md 도 "만족도를 붙이지 마세요" 라고 적어 두었습니다.
-         **검사가 맞았습니다.**
-
-         그리고 검색에 쓸모 있는 것도 평균이 아니라 **사장님이 쓰신 글**
-         입니다. 이름은 화면과 똑같이 `amMaskName()` 으로 가립니다. */
-      const rv = (pv.reviews||[]).filter(function(x){ return x.text; });
-      if(rv.length){
-        h2("후기");
-        ul(rv.slice(0, 5).map(function(x){
-          const who = x.by && W.amMaskName ? W.amMaskName(x.by) + " 사장님" : "사장님";
-          const what = [x.industry && W.amIndustryName ? W.amIndustryName(x.industry) : "",
-                        x.sub && W.amSubName ? W.amSubName(x.sub) : ""].filter(Boolean).join(" · ");
-          return who + (what ? " · " + what : "") + " — " + x.text;
-        }));
-        p("플랫폼을 통해 상담 · 계약하신 분이 쓰신 것만 올립니다. "
-          + "저희가 대신 적지 않습니다.");
-      }
-      const bd = W.amProviderBadges ? W.amProviderBadges(pv) : [];
-      if(bd.length){ h2("확인한 것"); ul(bd); }
-      if(pv.since) p(pv.since + "년부터 일하고 있습니다.");
-      p("연락처를 바로 드리지 않습니다. 필요한 내용을 적어 주시면 그대로 "
-        + "전달하고, 업체 연락처는 사장님이 동의하신 뒤에만 오갑니다. "
-        + "견적은 무료이고, 저희는 거래 당사자가 아닌 통신판매중개자입니다.");
-    }
-    return L.join("");
-  }
-  const mfr = /^\/f\/([a-z0-9-]+)$/.exec(route);
-  if(mfr){
-    const fr = (W.AM_FRANCHISES||[]).filter(x => x.slug === mfr[1])[0];
-    if(fr){
-      const fc = (W.AM_FRANCHISE_CATS||[]).filter(c => c.key === fr.cat)[0];
-      if(fc) p(fc.name + " 프랜차이즈입니다.");
-      ul(fr.features || []);
-      /* ⚠️ 금액은 **출처와 기준일이 있는 것만** 냅니다 (가맹사업법).
-         화면이 숨기는 값을 크롤러에게만 주면 그게 더 나쁩니다. */
-      const c = W.amFranchiseCost ? W.amFranchiseCost(fr) : null;
-      if(c){
-        h2("창업비");
-        const rows = [["total","총 예상 창업비"],["join","가맹비"],["edu","교육비"],
-                      ["deposit","보증금"],["interior","인테리어"],["equip","장비"],["etc","기타"]];
-        ul(rows.filter(x => c[x[0]]).map(x => x[1] + " " + c[x[0]] + (c.unit||"만원")));
-        if(c.pyeong) p("권장 평수는 " + c.pyeong + "평입니다.");
-        p("출처 " + c.source + " · 기준일 " + c.asOf
-          + ". 점포 비용과 지역에 따라 달라집니다. 실제 금액은 정보공개서와 본사 상담으로 확인하세요.");
-      } else {
-        p("본사가 금액을 등록하지 않았습니다. 상담으로 확인하세요.");
-      }
-      if((fr.support||[]).length){ h2("본사 지원"); ul(fr.support); }
-      if((fr.regions||[]).length){
-        h2("모집 지역");
-        ul(fr.regions.map(k => W.amRegionName ? W.amRegionName(k) : k));
-      }
-      if(fr.disclosure && fr.disclosure.has && fr.disclosure.no)
-        p("정보공개서 등록번호 " + fr.disclosure.no
-          + (fr.disclosure.at ? " · 등록일 " + fr.disclosure.at : "") + ".");
-      p("저희는 가맹본부가 아니라 통신판매중개자입니다. 계약은 본사와 직접 하십니다.");
-    }
-    return L.join("");
-  }
 
   /* 중고폰 상품 상세 — /d/:id (2026-10-29)
      ⚠️⚠️ **예시 상품은 noindex 라 크롤러 본문을 요구받지 않습니다**
@@ -1315,86 +875,7 @@ function noscriptFor(W, r, route){
     return L.join("");
   }
 
-  /* 매물 상세 — ⚠️⚠️ **매출은 크롤러 본문에도 넣지 않습니다.** 확인할
-     방법이 없는 숫자이고, 검색 결과는 우리 손을 떠나 한참 돌아다닙니다.
-     ⚠️ 연락처 · 상호 · 번지 주소는 스키마에 없고, 여기에도 없습니다 —
-     매물 하나가 곧 올리신 사장님의 개인정보가 되면 안 됩니다. */
-  const mst = /^\/s\/([a-zA-Z0-9-]+)$/.exec(route);
-  if(mst){
-    const st = (W.AM_STORES||[]).filter(x => x.id === mst[1])[0];
-    if(st){
-      const where = W.amRegionName ? W.amRegionName(st.region, st.gu) : st.region;
-      const ind   = W.amIndustryName ? W.amIndustryName(st.industry) : st.industry;
-      p([where, ind].filter(Boolean).join(" ") + " 매장입니다"
-        + (st.kind === "lease" ? " (임대)" : st.kind === "transfer" ? " (양도)" : "") + ".");
-      h2("조건");
-      ul([
-        st.pyeong    != null ? "면적 " + st.pyeong + "평" : "",
-        st.deposit   != null ? "보증금 " + st.deposit + "만원" : "",
-        st.rent      != null ? "월세 " + st.rent + "만원" : "",
-        st.premium   != null ? "권리금 " + st.premium + "만원" : "",
-        st.equipCost != null ? "시설 인수비 " + st.equipCost + "만원" : "",
-        st.since ? "운영 " + st.since + "년부터" : (st.months ? "운영 " + st.months + "개월" : ""),
-        st.wantAt ? "넘기고 싶은 시점 " + st.wantAt : "",
-        st.withEquip ? "시설을 그대로 인수하실 수 있습니다" : "",
-        st.fc ? "프랜차이즈 매장입니다" : ""
-      ].filter(Boolean));
-      if(st.text){ h2("사장님 설명"); p(st.text); }
-      p("적힌 값은 올리신 사장님이 적으신 것이고 저희가 확인하거나 보증하는 "
-        + "값이 아닙니다. 계약 전에 등기부 · 임대차계약서 · 관리비 · 원상복구 "
-        + "범위를 직접 확인하세요. 저희는 거래 당사자가 아닌 통신판매중개자이고, "
-        + "연락처는 두 사장님이 동의하신 뒤에만 오갑니다.");
-    }
-    return L.join("");
-  }
-  const mas = /^\/a\/([a-zA-Z0-9-]+)$/.exec(route);
-  if(mas){
-    const as = (W.AM_ASSETS||[]).filter(x => x.id === mas[1])[0];
-    if(as){
-      const where = W.amRegionName ? W.amRegionName(as.region, as.gu) : as.region;
-      const ind   = W.amIndustryName ? W.amIndustryName(as.industry) : as.industry;
-      /* ⚠️ `as.sub` 는 key 입니다 — 이름으로 바꿔서 냅니다 */
-      const kind  = W.amEquipName ? W.amEquipName(as.sub) : "";
-      p([where, ind, kind].filter(Boolean).join(" ")
-        + (as.cat === "stock" ? " 재고입니다." : "입니다."));
-      h2("조건");
-      const d = (W.AM_DEAL_KINDS||[]).filter(x => x.key === as.deal)[0];
-      ul([
-        as.price != null ? "가격 " + as.price + "만원" + (as.nego ? " (협의 가능)" : "") : "가격 협의",
-        as.brand ? "제조사 " + as.brand : "",
-        as.year  ? as.year + "년식" : "",
-        as.count ? "수량 " + as.count + "개" : "",
-        as.state ? "상태 " + as.state : "",
-        d ? d.name : ""
-      ].filter(Boolean));
-      if(as.text){ h2("사장님 설명"); p(as.text); }
-      p("사업을 정리하면서 나온 것입니다. 적힌 값은 올리신 사장님이 적으신 "
-        + "것이고 저희가 확인하거나 보증하는 값이 아닙니다. 보시려는 날짜를 "
-        + "적으시면 그대로 전달하고, 연락처는 두 사장님이 동의하신 뒤에만 "
-        + "오갑니다 — 저희는 거래 당사자가 아닌 통신판매중개자입니다.");
-    }
-    return L.join("");
-  }
 
-  const mct = /^\/content\/([a-z0-9-]+)$/.exec(route);
-  if(mct){
-    const ct = (W.AM_CONTENTS||[]).filter(x => x.slug === mct[1])[0];
-    /* ⚠️ 별표를 **떼고** 내보냅니다. 화면은 `mark()` 가 `**굵게**` 를
-       `<b>` 로 살리지만, 여기는 `esc()` 라 별표가 글자로 남습니다 —
-       크롤러와 LLM 봇이 읽는 것이 그 글입니다. */
-    const plain = t => String(t||"").replace(/\*\*/g, "");
-    if(ct) (ct.body||[]).forEach(b => {
-      if(b.h) h2(plain(b.h));
-      (b.p||[]).forEach(t => p(plain(t)));
-      ul((b.ul||[]).map(plain));
-    });
-    /* 법령은 바뀝니다 — 확인하는 곳을 크롤러에게도 냅니다 */
-    if(ct && (ct.source||[]).length){
-      h2("확인하는 곳");
-      ul(ct.source.map(x => x.name + " — " + x.where));
-    }
-    return L.join("");
-  }
   /* 약관 · 방침 — ⚠️ 본문이 데이터에 있으므로 조문 제목이라도 냅니다.
      크롤러에게 빈 화면을 주면 이 주소는 없는 것과 같습니다. */
   if(route === "/terms" || route === "/privacy"){
@@ -1406,40 +887,6 @@ function noscriptFor(W, r, route){
       const items = a.items || a.body || a.lines || [];
       ul(items.filter(x => typeof x === "string"));
     });
-    return L.join("");
-  }
-  if(route === "/about"){
-    /* ⚠️ 이 화면이 **진행 방법 · 범위 · 자주 묻는 것**을 갖고 있습니다
-       (2026-09-30 §23 으로 랜딩에서 옮겨 왔습니다). 화면(PageAbout)과
-       같은 개수 · 같은 글이어야 합니다. */
-    h2("하는 일");
-    ul(["필요한 업체 · 전문가 · 프랜차이즈를 분류와 지역으로 찾아 드립니다.",
-        "한 번 적으신 내용을 조건이 맞는 여러 곳에 같이 전달합니다.",
-        "정리하시는 사장님의 점포 · 시설 · 집기를 시작하시는 사장님께 이어 드립니다."]);
-    h2("하지 않는 일");
-    ul(["직접 인테리어 · 철거 · 세무 · 마케팅을 하지 않습니다.",
-        "광고비를 받고 업체 순서를 바꾸지 않습니다.",
-        "등록된 적 없는 업체 · 브랜드 · 매물을 화면에 만들지 않습니다.",
-        "거래 당사자가 아닙니다."]);
-    h2("우리가 다루는 범위");
-    p("업종 " + (W.AM_INDUSTRIES||[]).length +
-      " · 창업 " + (W.AM_START_CATS||[]).length +
-      "분야 · 폐업 " + (W.AM_CLOSE_CATS||[]).length +
-      "분야 · 세부 서비스 " + (W.AM_CATS||[]).reduce(function(a2,c){
-        return a2 + ((c.items||[]).length); }, 0) +
-      ". 이 숫자는 다루는 분야의 수이고, 등록된 업체 수나 거래 실적이 아닙니다.");
-    h2("어떻게 진행되나");
-    ul(["조건을 고릅니다 — 업종 · 지역 · 필요한 서비스. 가입하지 않으셔도 됩니다.",
-        "한 번만 적어 보냅니다 — 같은 내용을 업체마다 다시 적지 않으셔도 됩니다.",
-        "받으신 제안을 나란히 놓습니다 — 무엇이 포함됐는지가 같아야 비교가 뜻을 가집니다."]);
-    /* ⚠️ 화면(FaqBand)이 여섯만 내므로 여기도 여섯입니다. 크롤러에게만
-       더 보여 주면 화면과 다른 것을 내보내는 셈입니다. 전체는 /faq 에
-       있고 그 주소가 sitemap 에 들어 있습니다. */
-    const fq3 = (W.AM_FAQ || []).slice(0, 6);
-    if(fq3.length){
-      h2("자주 묻는 것");
-      fq3.forEach(x => { L.push("<h3>"+esc(x.q)+"</h3>"); p(x.a); });
-    }
     return L.join("");
   }
   return L.join("");
@@ -1868,78 +1315,6 @@ function checkSales(W){
     Object.keys(cats).length + "개를 빠짐없이 나눠 가집니다");
 }
 
-function checkProcess(W){
-  const cats = {};
-  (W.AM_CATS||[]).forEach(c => { cats[c.key] = c; });
-  const slugs = new Set((W.AM_CONTENTS||[]).map(c => c.slug));
-  const tools = new Set((W.AM_TOOLS||[]).map(t => t.key));
-  const routes = new Set(allRoutes(W));
-  const bad = [];
-  const chk = (where, o) => {
-    if(o.cat && !cats[o.cat]) bad.push(where + " — 없는 분류 " + o.cat);
-    if(o.sub && o.cat && cats[o.cat] &&
-       !(cats[o.cat].items||[]).some(i => i.key === o.sub))
-      bad.push(where + " — " + o.cat + " 에 없는 하위 " + o.sub);
-    if(o.read && !slugs.has(o.read)) bad.push(where + " — 없는 글 " + o.read);
-    if(o.tool && !tools.has(o.tool)) bad.push(where + " — 없는 도구 " + o.tool);
-    /* ⚠️ 걸음의 주소에는 **질의문자가 붙을 수 있습니다**
-       (`/sell?t=asset`). 통째로 견주면 멀쩡한 주소가 "없는 주소" 로
-       걸립니다 — 경로만 떼어 봅니다. */
-    [o.to, o.to2].forEach(t => {
-      if(t && !routes.has(String(t).split("?")[0]))
-        bad.push(where + " — 없는 주소 " + t); });
-  };
-  Object.keys(W.AM_PROCESS||{}).forEach(k =>
-    (W.AM_PROCESS[k]||[]).forEach((st, i) => chk("AM_PROCESS."+k+"["+i+"] "+st.name, st)));
-  (W.AM_OPS||[]).forEach((o, i) => chk("AM_OPS["+i+"] "+o.name, o));
-  /* 계산 결과에서 업체로 가는 길 (V2 §17) */
-  (W.AM_TOOLS||[]).forEach(t => (t.rel||[]).forEach((o, i) =>
-    chk("AM_TOOLS."+t.key+".rel["+i+"]", o)));
-  /* ⚠️⚠️ 도구의 묶음 이름이 `AM_TOOL_GROUPS` 에 없으면 그 도구가
-     **목록에서 조용히 빠집니다** — 주소는 살아 있어서 아무도 모릅니다. */
-  const tg = W.AM_TOOL_GROUPS || [];
-  (W.AM_TOOLS||[]).forEach(t => {
-    if(!t.grp) bad.push("AM_TOOLS." + t.key + " — 묶음(grp)이 없습니다");
-    else if(tg.indexOf(t.grp) < 0)
-      bad.push("AM_TOOLS." + t.key + " — AM_TOOL_GROUPS 에 없는 묶음 " + t.grp);
-  });
-  /* ⚠️⚠️ 목적별 탭(2026-10-20 시안 7) — `jy` 가 없거나 없는
-     여정을 가리키면 그 도구가 **탭에서 조용히 빠집니다**이고,
-     아무 도구도 안 들어 있는 여정은 **고르면 0개가 나오는 막다른
-     길**입니다 (업체 찾기의 빈 여정을 고르개에서 뺀 것과 같은 꺼리). */
-  const jyk = (W.AM_JOURNEYS||[]).map(x => x.key);
-  const jyUse = [];
-  (W.AM_TOOLS||[]).forEach(t => {
-    const L = t.jy || [];
-    if(!L.length) bad.push("AM_TOOLS." + t.key + " — 목적(jy)이 없습니다");
-    L.forEach(k => {
-      if(jyk.indexOf(k) < 0)
-        bad.push("AM_TOOLS." + t.key + " — 없는 여정 " + k);
-      else jyUse.push(k);
-    });
-  });
-  jyk.forEach(k => {
-    if(jyUse.indexOf(k) < 0)
-      bad.push("계산도구 목적별 탭 — 여정 " + k + " 에 들어가는 도구가 0개입니다");
-  });
-
-  /* 여정 넷이 단계 여섯을 빠짐없이 한 번씩 나눠 가지는가 */
-  const stages = (W.AM_STAGES||[]).map(x => x.key);
-  const used = [];
-  (W.AM_JOURNEYS||[]).forEach(j => (j.stages||[]).forEach(k => {
-    if(stages.indexOf(k) < 0) bad.push("AM_JOURNEYS." + j.key + " — 없는 단계 " + k);
-    used.push(k);
-  }));
-  stages.forEach(k => {
-    const n = used.filter(x => x === k).length;
-    if(n !== 1) bad.push("단계 " + k + " 가 여정 " + n + "곳에 들어 있습니다 (하나여야 합니다)");
-  });
-  (W.AM_JOURNEYS||[]).forEach(j => {
-    if(!routes.has(j.to)) bad.push("AM_JOURNEYS." + j.key + " — 없는 주소 " + j.to); });
-  if(bad.length)
-    throw new Error("준비 과정 · 운영 과제가 없는 것을 가리킵니다 —\n   " +
-      bad.join("\n   ") + "\n   → 가짜 링크는 절대 규칙 5 입니다. 있는 것만 적으세요.");
-}
 
 function checkMarketData(W){
   const bad = [];
@@ -2871,248 +2246,8 @@ function checkFaq(W){
   }
 }
 
-function checkPickGroup(W){
-  const G = W.AM_PICK_GROUP || {};
-  /* 지시서가 적은 묶음 개수 — ⚠️ 바꾸시려면 지시서를 먼저 고치세요 */
-  /* 2026-10-18 §4-2 (운영) · 전체 점검 지시서 §3 · §12 · §13 (나머지)
-     ⚠️⚠️ **창업은 여기 없습니다** — 그쪽은 묶음이 아니라 `AM_PICK_TOP`
-     의 대표 여섯이고 `checkSvcPick()` 이 셉니다 (고르는 단위가
-     분류라서입니다). 묶음을 안 쓰는 전문관을 WANT 에 적으면 빌드가
-     "AM_PICK_GROUP 에 startup 이 없습니다" 로 멈춥니다.
-     ⚠️ 양도양수가 **여섯**인 까닭 — §4 가 "실제 서비스가 부족한
-     경우 억지로 채우지 않는다" 고 적었습니다. 늘리시려면 지시서를
-     먼저 고치세요. */
-  const WANT = { operation: 8, closure: 8, transfer: 6 };
-  const OFF  = new Set(W.AM_PICK_OFF || []);
 
-  for(const hall of Object.keys(WANT))
-    if(!(G[hall] || []).length)
-      throw new Error("js/data/svcpick.js 의 AM_PICK_GROUP 에 \"" + hall +
-        "\" 가 없습니다 (§4-2)");
 
-  for(const hall of Object.keys(G)){
-    const gs   = G[hall] || [];
-    const want = WANT[hall];
-    if(!want)
-      throw new Error("\"" + hall + "\" 묶음 개수가 지시서에 없습니다" +
-        "\n   → build-pages.js 의 WANT 에 적으세요 (지시서를 먼저 고치고)");
-    if(gs.length !== want)
-      throw new Error("대표 묶음이 " + gs.length + "개입니다 (" + hall +
-        ") — 지시서는 " + want + "입니다");
-
-    /* 전체 서비스 보기가 들고 있는 분류 — 묶음이 가리키는 분류가
-       여기 빠지면 "대표로는 고르는데 전체 목록에는 없는" 꼴입니다 */
-    const hallCats = new Set(W.amPickHallCats(hall).map(s => s.id));
-    const keys = new Set(), ias = new Set(), tones = new Set();
-    const anys = new Set(), subs = new Map();
-
-    for(const g of gs){
-      const at = "운영 대표 \"" + (g.name || g.key || "(이름 없음)") + "\"";
-      if(!g.key || keys.has(g.key))
-        throw new Error(at + " 의 key 가 비었거나 겹칩니다 — " + g.key);
-      keys.add(g.key);
-      if(!g.name || !g.lead)
-        throw new Error(at + " 에 쉬운 이름이나 한 줄이 없습니다 (§4-4)");
-      if(!g.ia || !IA_NAMES.has(g.ia))
-        throw new Error(at + " 의 컬러 아이콘이 없는 이름입니다 — " + g.ia +
-          "\n   → js/components/base.js 의 IA 에 있어야 합니다");
-      if(ias.has(g.ia))
-        throw new Error(at + " 의 아이콘이 같은 전문관의 다른 묶음과 겹칩니다 — " +
-          g.ia + "\n   → 여덟 칸에 같은 그림이 둘이면 손님이 가를 수 없습니다");
-      ias.add(g.ia);
-      if(!g.tone || !TONE_NAMES.has(g.tone))
-        throw new Error(at + " 의 틴트가 없는 이름입니다 — " + g.tone +
-          "\n   → css/pages.css 의 .tn-* 에 있어야 합니다");
-      if(tones.has(g.tone))
-        throw new Error(at + " 의 틴트가 다른 묶음과 겹칩니다 — " + g.tone);
-      tones.add(g.tone);
-
-      /* ⚠️ "모르겠어요" 가 담는 것 — 없으면 그 단추가 아무 일도 안 합니다 */
-      const any = W.amPickOne(g.any);
-      if(!any)
-        throw new Error(at + " 의 any 가 없는 서비스입니다 — " + g.any +
-          "\n   → js/data/catalog.js 의 분류 또는 `분류/하위` 여야 합니다");
-      if(OFF.has(g.any))
-        throw new Error(at + " 의 any 가 내려놓은 서비스입니다 — " + g.any +
-          "\n   → AM_PICK_OFF 에 있는 것은 고르개에 안 나와야 합니다 (§12)");
-      if(anys.has(g.any))
-        throw new Error(at + " 의 any 가 다른 묶음과 겹칩니다 — " + g.any +
-          "\n   → 여덟 중 둘이 같은 칸이 됩니다 (§4-4 혼동 방지)");
-      anys.add(g.any);
-      if(!hallCats.has(any.sub ? W.amPickSplit(g.any).cat : any.id))
-        throw new Error(at + " 의 any 가 전체 서비스 목록에 없는 분류입니다 — " +
-          g.any + "\n   → amPickHallCats(\"" + hall + "\") 가 받아야 합니다");
-
-      const list = g.subs || [];
-      if(!list.length)
-        throw new Error(at + " 에 세부 선택지가 없습니다 (§4-4)");
-      for(const id of list){
-        const where = at + " 의 세부 \"" + id + "\"";
-        if(String(id).indexOf("/") < 0)
-          throw new Error(where + " 가 분류입니다 — `분류/하위` 꼴이어야 합니다" +
-            "\n   → 분류를 섞으면 고르신 것과 접수에 실리는 것이 달라집니다");
-        if(!W.amPickOne(id))
-          throw new Error(where + " 는 없는 서비스입니다" +
-            "\n   → js/data/catalog.js 의 그 분류 하위(items)에 있어야 합니다");
-        if(OFF.has(id))
-          throw new Error(where + " 는 내려놓은 서비스입니다 (AM_PICK_OFF · §12)");
-        if(subs.has(id))
-          throw new Error(where + " 가 \"" + subs.get(id) + "\" 묶음에도 있습니다" +
-            "\n   → 같은 서비스를 두 자리에서 고르게 됩니다 (§2 선택 영역은 하나)");
-        subs.set(id, g.name || g.key);
-        const cat = W.amPickSplit(id).cat;
-        if(!hallCats.has(cat))
-          throw new Error(where + " 의 분류가 전체 서비스 목록에 없습니다 — " + cat);
-      }
-    }
-
-    /* ⚠️⚠️ **내려온 구간이 가리키던 분류를 빠짐없이 받는가** (§0 · §2).
-       §2 가 선택 영역을 하나로 줄이라고 적었는데, 그러면 내려온 구간
-       (운영 서비스관 여섯 · 운영 과제 스물넷)이 가리키던 분류가 갈 곳이
-       없어집니다 — 그건 §0 의 "기존 서비스 데이터" 보존을 어기는 것입니다.
-       ⚠️ `amPickHallCats()` 가 그 둘에서 모으기 때문에 보통은 저절로
-       맞지만, **없는 key 를 적거나 내려놓은 분류를 아직 가리키면**
-       조용히 빠집니다 — 그것을 여기서 잡습니다. */
-    if(hall === "operation"){
-      const need = new Map();
-      for(const g of (W.AM_OPSVC || []))
-        for(const o of (g.items || [])) need.set(o.cat, "운영 서비스관 " + g.name);
-      /* ⚠️ 분류가 없는 과제가 하나 있습니다 — "원가 · 매출 관리" 는
-         분류가 아니라 `/tools` 로 바로 갑니다. 거기까지 세면 멀쩡한
-         데이터를 "분류 undefined" 로 잡습니다 (제 검사가 그랬습니다). */
-      for(const o of (W.AM_OPS || []))
-        if(o.cat) need.set(o.cat, "운영 과제 \"" + o.name + "\"");
-      for(const [cat, from] of need)
-        if(!hallCats.has(cat))
-          throw new Error(from + " 가 가리키는 분류 \"" + cat +
-            "\" 를 운영 전체 서비스 목록이 못 받습니다" +
-            "\n   → 내려온 구간이 가리키던 분류는 빠짐없이 받아야 합니다 (§0 · §2)");
-    }
-  }
-}
-
-/* ── §9 운영 체크리스트 (2026-10-18 매장 운영 2차) ────────────────
-   ⚠️⚠️ 막는 것 일곱 —
-     ① 대표가 여섯이 아님 (지시서 §9) · ② key 가 비었거나 겹침
-     ③ 이름 · 설명이 없음
-     ④ **없는 서비스 id** — 맡길 곳 단추가 아무 데도 안 갑니다
-     ⑤ **없는 계산도구 key** (§11 "없는 계산도구를 클릭 가능한 가짜
-        카드로 표시하지 않는다")
-     ⑥ **없는 글 slug** — 가짜 링크입니다 (절대 규칙 5)
-     ⑦ **기한 숫자 · 요율** — 과세 유형과 업종에 따라 갈려서 적어 두면
-        틀린 날부터 거짓말입니다 (손익분기 85조원과 같은 자리)
-   ──────────────────────────────────────────────────────────────── */
-function checkOpsCheck(W){
-  const L = W.AM_OPS_CHECK || [];
-  if(!L.length) throw new Error("js/data/opscheck.js 의 AM_OPS_CHECK 가 비었습니다 (§9)");
-  const top = L.filter(o => o.top).length;
-  if(top !== 6)
-    throw new Error("운영 체크리스트 대표가 " + top + "개입니다 — 지시서 §9 는 여섯입니다");
-
-  const tools = new Set((W.AM_TOOLS || []).map(t => t.key));
-  const slugs = new Set((W.AM_CONTENTS || []).map(c => c.slug));
-  /* 기한 · 요율 — 숫자 뒤에 날 · 개월 · 퍼센트가 붙은 것 */
-  const WHEN = /[0-9][0-9,.]*\s*(일\s*(안|내|까지)|개월|퍼센트|%)/;
-  const seen = new Set();
-
-  for(const o of L){
-    const at = "운영 체크리스트 \"" + (o.name || o.key || "(이름 없음)") + "\"";
-    if(!o.key || seen.has(o.key))
-      throw new Error(at + " 의 key 가 비었거나 겹칩니다 — " + o.key);
-    seen.add(o.key);
-    if(!o.name || !o.lead)
-      throw new Error(at + " 에 이름이나 설명이 없습니다");
-    if(WHEN.test(o.lead))
-      throw new Error(at + " 의 설명에 기한이나 요율이 적혀 있습니다" +
-        "\n   → 과세 유형 · 업종 · 사업장 규모에 따라 갈립니다. 적는 것은" +
-        " **무엇을 확인해야 하는가**와 **어디서 확인하나**까지입니다");
-    if(o.cat && !W.amPickOne(o.cat))
-      throw new Error(at + " 가 없는 서비스를 가리킵니다 — " + o.cat +
-        "\n   → svcpick 의 id(`분류` 또는 `분류/하위`)여야 합니다");
-    if(o.tool && !tools.has(o.tool))
-      throw new Error(at + " 가 없는 계산도구를 가리킵니다 — " + o.tool +
-        "\n   → §11 이 금지한 **가짜 카드**가 됩니다 (js/data/tools.js)");
-    if(o.read && !slugs.has(o.read))
-      throw new Error(at + " 가 없는 글을 가리킵니다 — " + o.read);
-  }
-}
-
-/* ── §6 서비스 상세의 공통 네 구간 (2026-10-11 간소화 지시서) ──────
-   ⚠️⚠️ **금액을 적을 수 없게 막습니다.** ④ 의 이름이 "예상 비용
-   **또는** 비용 결정 요인" 인 까닭이고, 프랜차이즈 창업비를
-   정보공개서 값으로만 내는 것과 같은 규칙입니다 — 사장님이 그
-   숫자를 보고 수천만 원을 빌리러 가십니다.
-   ⚠️ 빈 배열도 막습니다. 칸을 열어 놓고 비우면 그게 자리표시자이고,
-   §6 이 "실제 정보가 없는 영역을 억지로 채우지 않는다" 라고 적은
-   것은 **구간째 빼라**는 말입니다 (절대 규칙 2).
-   ──────────────────────────────────────────────────────────────── */
-function checkSvcPage(W){
-  const P = W.AM_SVCPAGE || {};
-  const keys = Object.keys(P);
-  if(!keys.length)
-    throw new Error("js/data/svcpage.js 의 AM_SVCPAGE 가 비었습니다 (§6)");
-
-  const cats  = new Map((W.AM_CATS || []).map(c => [c.key, c]));
-  const paths = new Set(allRoutes(W));
-  /* 금액 · 요율 — 숫자 뒤에 돈 단위나 퍼센트가 붙은 것 */
-  const MONEY = /[0-9][0-9,.]*\s*(억|천만|백만|만\s*원|원|%)/;
-  /* 지킬 수 없는 약속 — check.js 의 `/join` 검사와 같은 목록입니다 */
-  const SAY = [[/보장/, "보장"], [/최저가/, "최저가"], [/무조건/, "무조건"],
-               [/[0-9]\s*시간\s*(안|내)/, "n시간 안에"],
-               [/당일\s*(연락|배정|시공)/, "당일"],
-               [/평균/, "평균"], [/시세/, "시세"]];
-
-  for(const k of keys){
-    const c = cats.get(k);
-    if(!c) throw new Error("js/data/svcpage.js 가 없는 분류를 가리킵니다 — " + k +
-      "\n   → js/data/catalog.js 의 분류 key 를 적으세요");
-    const dest = c.to ? c.to
-      : ((c.kind === "provider") ? "/providers/" + c.key : "/c/" + c.key);
-    if(!paths.has(String(dest).split("?")[0]))
-      throw new Error("\"" + k + "\" 는 화면이 없는 분류입니다 — " + dest);
-
-    const d = P[k] || {};
-    const got = ["when","flow","cost","faq"].filter(f => f in d);
-    if(!got.length)
-      throw new Error("\"" + k + "\" 에 네 구간(when · flow · cost · faq)이 하나도 없습니다");
-
-    for(const f of got){
-      const L = d[f];
-      if(!Array.isArray(L) || !L.length)
-        throw new Error("\"" + k + "\" 의 " + f + " 가 비었습니다 — " +
-          "칸을 열어 놓고 비우면 자리표시자입니다. 쓸 것이 없으면 그 칸을 **빼세요** (§6)");
-
-      L.forEach((x, i) => {
-        const at = "\"" + k + "\" 의 " + f + " " + (i + 1) + "번";
-        let txt;
-        if(f === "when"){
-          if(typeof x !== "string" || !x.trim())
-            throw new Error(at + " 이 비었습니다");
-          txt = x;
-        }else if(f === "faq"){
-          if(!x || !x.q || !x.a) throw new Error(at + " 에 질문이나 답이 없습니다");
-          /* ⚠️ 이 칸은 esc() 만 거쳐서 별표가 **글자로** 찍힙니다 */
-          if(/\*\*/.test(x.q + x.a))
-            throw new Error(at + " 에 별표(**)가 있습니다 — 이 칸은 mark() 를 안 거쳐서 " +
-              "별표가 글자로 찍힙니다");
-          txt = x.q + " " + x.a;
-        }else{
-          if(!x || !x.n || !x.d) throw new Error(at + " 에 이름이나 설명이 없습니다");
-          txt = x.n + " " + x.d;
-        }
-        if(MONEY.test(txt))
-          throw new Error(at + " 에 금액이나 요율이 있습니다 — " +
-            (txt.match(MONEY) || [""])[0].trim() +
-            "\n   → 지역 · 평수 · 업종에 따라 몇 배로 갈립니다. 적는 것은 " +
-            "**무엇이 비용을 가르는가**까지입니다 (절대 규칙 1)");
-        for(const q of SAY)
-          if(q[0].test(txt))
-            throw new Error(at + " 에 \"" + q[1] + "\" 가 있습니다 — " +
-              "지킬 수 없는 약속이거나 재 본 적 없는 값입니다 (약관 제8조)");
-      });
-    }
-  }
-}
 
 /* ══════════════════════════════════════════════════════════════════
    서비스 이용 절차 넷 (2026-10-11 최종 디자인 지시서 §7)
@@ -3267,61 +2402,6 @@ function checkSteps(W){
       "없습니다 — 개인정보보호법 제17조 제2항 (방침 제4조 제3항과 같은 말)");
 }
 
-function checkOpsvc(W){
-  const G = W.AM_OPSVC || [];
-  if(!G.length) throw new Error("js/data/opsvc.js 의 AM_OPSVC 가 비었습니다 (§5-2)");
-  if(G.length !== 6)
-    throw new Error("운영 서비스 묶음이 " + G.length + "개입니다 — §5-2 는 여섯(A~F)입니다");
-
-  const cats = new Map((W.AM_CATS || []).map(c => [c.key, c]));
-  const inds = new Set((W.AM_INDUSTRIES || []).map(x => x.key));
-  const keys = new Set(), tones = new Set(), nos = new Set();
-
-  const oneBad = (it, where) => {
-    if(!it || !it.cat) return where + " 에 분류가 빠진 칸이 있습니다";
-    const c = cats.get(it.cat);
-    if(!c) return where + " 가 없는 분류를 가리킵니다 — " + it.cat;
-    const subs = new Set((c.items || []).map(x => x.key));
-    if(!it.sub) return where + " 에 하위 서비스가 없습니다 — " + it.cat;
-    if(!subs.has(it.sub))
-      return where + " 가 없는 하위를 가리킵니다 — " + it.cat + " / " + it.sub;
-    return "";
-  };
-
-  for(const g of G){
-    if(!g.key || keys.has(g.key)) throw new Error("운영 묶음 key 가 비었거나 겹칩니다 — " + g.key);
-    keys.add(g.key);
-    if(!g.no || nos.has(g.no)) throw new Error("운영 묶음 번호가 비었거나 겹칩니다 — " + g.key);
-    nos.add(g.no);
-    if(!g.name || !g.lead) throw new Error("운영 묶음에 이름이나 한 줄이 없습니다 — " + g.key);
-    /* ⚠️ 여섯이 같은 색이면 무엇이 무엇인지 흐려집니다 */
-    if(g.tone){
-      if(tones.has(g.tone)) throw new Error("운영 묶음 색이 겹칩니다 — " + g.key + " · " + g.tone);
-      tones.add(g.tone);
-    }
-    /* ⚠️ 아이콘 이름이 틀리면 타일이 덩그러니 빕니다 (icon() 이 빈 문자열) */
-    if(!g.icon || !IC_NAMES.has(g.icon))
-      throw new Error("운영 묶음 아이콘이 없는 이름입니다 — " + g.key + " · " + g.icon);
-    if(!(g.items || []).length) throw new Error("운영 묶음이 비었습니다 — " + g.key);
-    for(const it of g.items){
-      const bad = oneBad(it, "운영 묶음 " + g.key);
-      if(bad) throw new Error(bad);
-    }
-  }
-
-  /* §5-4 업종별 차례 — 업종 key 와 하위 key 를 둘 다 봅니다 */
-  const BY = W.AM_OPSVC_BY_IND || {};
-  for(const ind of Object.keys(BY)){
-    if(!inds.has(ind))
-      throw new Error("운영 업종별 차례가 없는 업종을 가리킵니다 — " + ind);
-    for(const it of (BY[ind] || [])){
-      const bad = oneBad(it, "운영 업종별 차례(" + ind + ")");
-      if(bad) throw new Error(bad);
-    }
-  }
-  console.log("   운영 서비스 묶음 6개 · 업종별 차례 " +
-    Object.keys(BY).length + "개 업종이 실제 분류를 가리킵니다");
-}
 
 /* ══════════════════════════════════════════════════════════════════
    패키지 (§4-4 · §6-4)
@@ -3962,107 +3042,41 @@ function checkMigDocs(W){
   console.log("   마이그레이션 " + migs.length + "개가 README \u00b7 test-sql \u00b7 verify 와 같습니다 (판 " + top + ")");
 }
 
-function checkIndGroups(W){
-  const G = W.AM_IND_GROUPS || [], S = W.AM_IND_SUBS || {};
-  const inds = (W.AM_INDUSTRIES || []).map(i => i.key);
-  if(!G.length) throw new Error("js/data/indgroups.js 의 AM_IND_GROUPS 가 비었습니다");
-
-  const used = [];
-  G.forEach(function(g){
-    if(!g.key || !g.name) throw new Error("업종 대분류에 key 나 이름이 없습니다");
-    if(!(g.inds || []).length)
-      throw new Error("업종 대분류 '" + g.name + "' 에 업종이 하나도 없습니다\n" +
-        "   → 빈 대분류는 자리표시자입니다 (절대 규칙 2). 받을 업종이 실제로 있을 때만 만드세요");
-    (g.inds || []).forEach(k => used.push(k));
-  });
-
-  const missing = inds.filter(k => used.indexOf(k) < 0);
-  if(missing.length)
-    throw new Error("업종 대분류에 안 들어간 업종이 있습니다: " + missing.join(" · ") +
-      "\n   → 그 업종 사장님에게는 화면에서 자기 자리가 조용히 사라집니다");
-
-  const dup = used.filter((k, i) => used.indexOf(k) !== i);
-  if(dup.length)
-    throw new Error("업종이 두 대분류에 들어 있습니다: " + dup.join(" · ") +
-      "\n   → 한 업종을 두 곳에 넣고 싶어지면, 그건 그 업종을 쪼갤 때입니다");
-
-  const ghost = used.filter(k => inds.indexOf(k) < 0);
-  if(ghost.length)
-    throw new Error("없는 업종 key 를 가리킵니다: " + ghost.join(" · ") +
-      "\n   → js/data/industries.js 의 key 와 맞추세요");
-
-  /* 세부 업종 — 업종마다 있어야 합니다 */
-  const noSub = inds.filter(k => !(S[k] || []).length);
-  if(noSub.length)
-    throw new Error("세부 업종이 비어 있는 업종이 있습니다: " + noSub.join(" · ") +
-      "\n   → 검색이 그 업종을 자기 이름으로만 찾습니다 (사장님이 쓰는 말로는 0건)");
-
-  /* ⚠️ 짧은 줄의 말이 세부 목록에 **반드시** 들어 있어야 합니다 */
-  const drift = [];
-  (W.AM_INDUSTRIES || []).forEach(function(i){
-    if(i.key === "etc") return;          /* 기타는 짧은 줄이 안내문입니다 */
-    String(i.lead || "").split("·").map(x => x.trim()).filter(Boolean).forEach(function(w){
-      if((S[i.key] || []).indexOf(w) < 0) drift.push(i.key + " → " + w);
-    });
-  });
-  if(drift.length)
-    throw new Error("짧은 줄(lead)에 있는데 세부 업종에 없는 말: " + drift.join(" · ") +
-      "\n   → 화면에는 보이는데 **검색에서는 0건**이 됩니다. 둘을 같이 고치세요");
-}
 
 /* ── 실행 ─────────────────────────────────────────────────────── */
+/* ⚠️⚠️ **2026-10-31 — 창업 · 폐업 가드 열일곱을 부르지 않습니다.**
+   사장님 지시("인수인계 자료를 다 지워 · 중고폰 쪽은 살려두고")로 그
+   데이터와 화면을 지웠습니다 — 가드가 없어진 분류 · 주소를 찾아서
+   **빌드가 멈춥니다.** 함수는 **지우지 않았습니다**: 되살리시는 날
+   그대로 다시 부르면 됩니다 (아래 목록 그대로).
+
+     checkIndGroups · checkStartAsk · checkProcess  · checkSales
+     checkHalls     · checkSvcPick  · checkPickGroup · checkOpsCheck
+     checkSvcPage   · checkOpsvc    · checkPackages · checkOffers
+     checkReqForms  · checkProviders · checkMarketData
+     checkRetired   · checkHallFrame
+
+   ⚠️ `checkOfferSql` 은 **그대로 부릅니다** — `js/data/offers.js` 를
+   남겨 두었고(마이그레이션이 그 스물일곱 줄을 DB 에 넣습니다) 한쪽만
+   고치면 어긋납니다. 화면에는 안 나옵니다.
+   ⚠️ 중고폰 쪽 가드(`checkShop` · `checkDevices` · `checkSteps` ·
+   `checkFaq`)와 DB · 주소 · 사진 · 팔레트 가드는 **전부 그대로**입니다. */
 checkCssVars();
 checkColorSchemeCss();
 checkVercel();
 const W = loadApp();
-checkIndGroups(W);
 
 /* ⚠️⚠️ **창업 진단의 걸음 번호가 로드맵과 맞는가** (2026-10-09 PART 4)
    `AM_START_STAGE` 의 `at` 은 **그 로드맵에서 몇 번째 걸음인가**(1부터)
    입니다. 걸음이 늘거나 줄면 어긋나는데 **에러도 안 나고 화면도
    멀쩡합니다** — 엉뚱한 걸음부터 "지금부터 할 일" 이라고 말할 뿐입니다.
    그래서 빌드가 매번 두 로드맵에 그 걸음이 실제로 있는지 봅니다. */
-function checkStartAsk(W){
-  const S = W.AM_START_STAGE || [];
-  if(!S.length) throw new Error("js/data/journey.js 의 AM_START_STAGE 가 비었습니다");
-  const seen = {};
-  S.forEach(function(x){
-    if(!x.k || !x.n) throw new Error("창업 진단 단계에 key 나 이름이 없습니다");
-    if(seen[x.k]) throw new Error("창업 진단 단계 key 가 겹칩니다 — " + x.k);
-    seen[x.k] = 1;
-    ["startup", "acq-in"].forEach(function(rk){
-      const L = (W.AM_PROCESS || {})[rk] || [];
-      const at = (x.at || {})[rk];
-      if(!at) throw new Error("창업 진단 '" + x.n + "' 에 " + rk + " 걸음 번호가 없습니다");
-      if(!(at >= 1 && at <= L.length))
-        throw new Error("창업 진단 '" + x.n + "' 의 " + rk + " 걸음 번호가 " + at +
-          " 인데 그 로드맵은 " + L.length + "걸음입니다\n" +
-          "   → 로드맵을 고치셨으면 AM_START_STAGE 의 at 도 같이 고치세요");
-    });
-  });
-  ["AM_START_BUD", "AM_START_WHEN"].forEach(function(n){
-    const L = W[n] || [];
-    if(!L.length) throw new Error("js/data/journey.js 의 " + n + " 가 비었습니다");
-    L.forEach(function(x){
-      if(!x.k || !x.n) throw new Error(n + " 에 key 나 이름이 없습니다");
-      /* ⚠️ 금액 구간은 사장님이 **스스로 고르시는 범위**입니다 — 저희가
-         재 본 값처럼 "평균" · "보통" 이라고 적지 마세요 (절대 규칙 1). */
-      if(/평균|보통|대부분/.test(x.n))
-        throw new Error(n + " 에 재 본 적 없는 말이 있습니다 — " + x.n);
-    });
-  });
-  console.log("   창업 진단 단계 " + S.length + "개가 두 로드맵과 맞습니다");
-}
-checkStartAsk(W);
-checkProcess(W);
-checkSales(W);
 checkDeal(W);
 checkFee(W);
 checkDealSql(W);
 checkClaimSql();
 checkQuoteSql(W);
 checkRpcArgs();
-checkRetired();
 
 /* ════════════════════════════════════════════════════════════════════
    checkHallFrame() — **전문관 넷의 공통 검사가 글자까지 같은가**
@@ -4120,7 +3134,6 @@ function checkHallFrame(){
   console.log("   전문관 공통 검사 4개가 글자까지 같습니다 (" +
     Object.keys(sides).join(" · ") + ")");
 }
-checkHallFrame();
 /* ════════════════════════════════════════════════════════════════════
    checkPhotoSql() — **받는 형식과 크기가 서버와 DB 에서 같은가**
                      (2026-10-18 §7-3 · §15)
@@ -4429,14 +3442,8 @@ checkMigDocs(W);
 checkPhotoSql();
 checkProviderSelfSql();
 checkApplySql();
-checkOffers(W);
 checkOfferSql(W);
-checkOpsvc(W);
-checkHalls(W);
-checkSvcPick(W);
-checkPickGroup(W);
 checkFaq(W);
-checkOpsCheck(W);
 for(const hall of Object.keys(W.AM_PICK_GROUP || {})){
   const gs = W.amPickGroups(hall);
   console.log("   " + hall + " 대표 " + gs.length + "묶음 · 세부 " +
@@ -4632,14 +3639,9 @@ function writeSvcList(W){
   const was = fs.existsSync(at) ? fs.readFileSync(at, "utf8") : "";
   if(was !== out){ fs.writeFileSync(at, out); console.log("   서비스 목록을 다시 적었습니다 — api/_services.js (" + uniq.length + ")"); }
 }
-checkSvcPage(W);
 checkSteps(W);
 checkDevices(W);
 checkShop(W);
-checkPackages(W);
-checkReqForms(W);
-checkProviders(W);
-checkMarketData(W);
 checkPhotos(W);
 brandStatics(W);
 globalThis.__W = W;   /* shell() 이 브랜드 이름을 읽습니다 */
@@ -4873,11 +3875,14 @@ checkMainH2();
    ⚠️ 날짜를 다시 넣고 싶어지면 **빌드가 날마다 같은 결과를 내는지**
    먼저 보세요. HEAD 커밋 날짜도 안 됩니다 — 빌드하고 커밋하면
    커밋 날짜가 바뀌어서, 그 커밋을 다시 빌드하면 또 달라집니다. */
+/* ⚠️⚠️ **2026-10-31 — 적을 수 있는 날짜가 0건이 됐습니다.** 글
+   예순여섯 편(`content.js`)이 인수인계와 같이 내려가서, 지금 모든
+   주소가 `lastmod` 를 **아예 안 냅니다** (위 ⚠️ 가 적어 둔 그대로 —
+   없는 것이 틀린 것보다 낫습니다).
+   ⚠️ 빈 칸을 남겨 두는 까닭 — 날짜를 가진 데이터가 생기는 날 여기에
+   한 줄만 더하면 됩니다. 그날 **빌드가 날마다 같은 결과를 내는지**
+   먼저 보세요 (`node build-pages.js` 를 두 번 돌려 견줍니다). */
 const ctAt = {};
-(W.AM_CONTENTS || []).forEach(function(c){
-  if(c && c.slug && /^\d{4}-\d{2}-\d{2}$/.test(String(c.at || "")))
-    ctAt["/content/" + c.slug] = c.at;
-});
 /* ⚠️ **앞 서비스에서 남은 줄이었습니다** — `/sos` · `/check` · `/start` ·
    `/lab` 은 지금 하나도 없는 주소라, 메인 말고는 전부 0.6 으로 나가고
    있었습니다 (`robots.txt` 에서 겪은 것과 같은 꼴입니다).

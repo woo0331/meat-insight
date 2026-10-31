@@ -155,15 +155,15 @@ window.WOW_PHOTO_SLOTS = [
      재 본 값 — 전문관 머리 605×399(1440) · 진입 카드 411×257.
      둘 중 큰 쪽을 덮는 sizes 입니다. */
   { key:"hero-startup", sizes:"(max-width:1023px) 100vw, 42vw",
-    where:"창업 전문관(/startup) 머리",
+    where:"(지금 안 나옴) 옛 창업 전문관 머리",
     min:[840,740], ratio:[0.85,1.5], maxKB:200, anchor:"right",
     note:"새로 여는 밝은 상업공간 · 자연광. ⚠️ 상호 · 간판 · 로고가 읽히면 안 됩니다" },
   { key:"hero-closure", sizes:"(max-width:1023px) 100vw, 42vw",
-    where:"폐업 · 정리 전문관(/closure) 머리",
+    where:"(지금 안 나옴) 옛 폐업 · 정리 전문관 머리",
     min:[840,740], ratio:[0.85,1.5], maxKB:200, anchor:"right",
     note:"정리 중인 매장 — 의자를 올리고 박스를 싸는 장면. ⚠️⚠️ 불 꺼진 가게 · 고개 숙인 사람 · 폐허 금지. 실패가 아니라 다음을 준비하는 장면입니다" },
   { key:"hero-ops", sizes:"(max-width:1023px) 100vw, 42vw",
-    where:"운영 서비스관(/operation) 머리",
+    where:"(지금 안 나옴) 옛 운영 서비스관 머리",
     min:[840,740], ratio:[0.85,1.5], maxKB:200, anchor:"right",
     note:"문을 연 매장에서 POS · 태블릿으로 일하는 장면. ⚠️ 실제 POS 상표 · 서비스 로고가 읽히면 안 됩니다" },
 
@@ -187,22 +187,22 @@ window.WOW_PHOTO_SLOTS = [
      기준이 영영 사라집니다. 라이선스가 있는 원본을 `img/raw/` 에
      `category-*.jpg` 로 넣고 `node tools/fit-photos.js --write` 를
      돌리면 **화면은 한 줄도 안 고치고** 띠가 돌아옵니다. */
-  { key:"category-startup", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"단계 카드 01 · 창업 준비",
+  { key:"category-startup", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"(지금 안 나옴) 단계 카드 01 · 창업 준비",
     min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
     note:"사업계획서 · 노트 · 펜 · 노트북 · 밝은 상업공간. ⚠️ 커피컵처럼 한 업종이 떠오르는 사진에 기대지 마세요 — '준비한다' 는 느낌이 먼저입니다" },
-  { key:"category-location", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"단계 카드 02 · 상가 · 입지",
+  { key:"category-location", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"(지금 안 나옴) 단계 카드 02 · 상가 · 입지",
     min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
     note:"한국의 깔끔한 상업지역 · 상가 외관. ⚠️ 브랜드 로고 · 간판 글자가 보이면 안 되고, 해외 거리 느낌도 피합니다" },
-  { key:"category-build", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"단계 카드 03 · 매장 만들기",
+  { key:"category-build", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"(지금 안 나옴) 단계 카드 03 · 매장 만들기",
     min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
     note:"마감 · 조명 설치 · 가구 배치. ⚠️ 거친 건설현장이 아니라 **매장이 완성되어 가는 모습**입니다" },
-  { key:"category-operation", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"단계 카드 04 · 매장 운영",
+  { key:"category-operation", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"(지금 안 나옴) 단계 카드 04 · 매장 운영",
     min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
     note:"POS · 매출 관리 · 주문 관리. ⚠️ 실제 서비스 상표나 POS 브랜드 로고가 보이면 안 됩니다" },
-  { key:"category-transfer", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"단계 카드 05 · 매장 양도 · 양수",
+  { key:"category-transfer", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"(지금 안 나옴) 단계 카드 05 · 매장 양도 · 양수",
     min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
     note:"계약서 · 열쇠 · 깔끔한 상업공간. ⚠️ 악수 스톡사진 느낌은 피합니다 — 이 플랫폼의 핵심 차별화 자리라 고급스럽고 신뢰감 있게" },
-  { key:"category-closing", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"단계 카드 06 · 폐업 · 정리",
+  { key:"category-closing", sizes:"(max-width:900px) 92vw, (max-width:1100px) 44vw, 32vw", where:"(지금 안 나옴) 단계 카드 06 · 폐업 · 정리",
     min:[900,560], ratio:[1.2,1.9], maxKB:160, anchor:"center",
     note:"정리된 박스 · 집기 이동 · 전문 작업자의 정리. ⚠️⚠️ 폐허 · 쓰레기 더미 · 불 꺼진 매장 · 실패한 느낌 **절대 금지** — 폐업은 실패가 아니라 안전한 정리입니다" },
 
@@ -380,7 +380,7 @@ window.WOW_PHOTO_SLOTS = [
      (자산 카드 셋은 메인에서 내려왔습니다). 재 본 값 — 536×401(1440) ·
      394×295(1024) · 858×643(900) · 348×261(390). */
   { key:"kind-pass", sizes:"(max-width:900px) 96vw, (max-width:1100px) 42vw, 40vw",
-    where:"메인 ④ 매장 양도양수 배너", min:[1120,840], ratio:[1.25,1.45], maxKB:140,
+    where:"(지금 안 나옴) 옛 메인 ④ 매장 양도양수 배너", min:[1120,840], ratio:[1.25,1.45], maxKB:140,
     note:"정리하는 상업공간 · 넘기는 열쇠. ⚠️ 처연하면 안 됩니다 — 불 꺼진 가게 · 고개 숙인 사람 금지" },
   { key:"kind-asset", sizes:"(max-width:520px) 94vw, (max-width:600px) 480px, (max-width:900px) 47vw, (max-width:1280px) 31vw, 387px",
     where:"(지금 안 나옴) 자산 카드 03 · 시설 · 장비 거래", min:[1120,840], ratio:[1.25,1.45], maxKB:140,

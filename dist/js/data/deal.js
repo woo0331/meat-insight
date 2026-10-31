@@ -238,22 +238,22 @@ window.AM_SIDES = [
   { key:"start",    name:"창업 · 시작",   short:"창업",   pick:"/startup#pick",
     say:"창업 — 시작하려고 합니다" },
   { key:"ops",      name:"운영",          short:"운영",   pick:"/operation#pick",
-    say:"운영 — 장사하면서 필요합니다" },
+    say:"운영 — 장사하며 필요한 것" },
   { key:"transfer", name:"인수 · 양도",   short:"양도양수", pick:"/transfer#pick",
-    say:"인수 · 양도 — 매장을 받거나 넘깁니다" },
+    say:"인수 · 양도 — 매장 거래" },
   { key:"close",    name:"폐업 · 정리",   short:"폐업",   pick:"/closure#pick",
     say:"폐업 — 정리하려고 합니다" },
 
   { key:"buyin",    name:"중고폰 · 직접 매입", short:"직접매입", pick:"/sell", pw:true,
-    say:"중고폰 — 폰웨이가 바로 사는 것" },
+    say:"중고폰 — 바로 팔기" },
   { key:"bid",      name:"중고폰 · 경쟁입찰", short:"경쟁입찰", pick:"/sell", pw:true,
     say:"중고폰 — 업체 경쟁입찰" },
 
   { key:"export",   name:"기업 · 수출 거래", short:"기업수출", pick:"/biz", pw:true,
-    say:"기업 · 수출 — 대량 매입 · 해외 수출 문의" },
+    say:"기업 · 수출 — 대량 거래" },
 
   { key:"repair",   name:"중고폰 · 수리",    short:"수리",   pick:"/repair", pw:true,
-    say:"수리 — 쓰던 기기를 고치려고 합니다" },
+    say:"수리 — 기기를 고칩니다" },
 
   { key:"shop",     name:"중고폰 · 구매",    short:"구매",   pick:"/shop", pw:true,
     say:"중고폰 — 사려고 합니다" }

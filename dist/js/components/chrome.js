@@ -178,10 +178,12 @@ function MobileNav(){
 var MNAV_NEAR = [
 
   [/^\/(sell|bid|biz)(\/|$)/,                    "/sell"],
-  [/^\/shop(\/|$)/,                              "/shop"],
+
+  [/^\/(shop|d)(\/|$)/,                          "/shop"],
   [/^\/(track|quote)/,                           "/track"],
   [/^\/(my|search|compare|join)/,                "/my"],
-  [/^\/(guide|faq|about|terms|privacy|content|support|tools)/, "/"],
+
+  [/^\/(repair|guide|faq|about|terms|privacy|content|support|tools)/, "/"],
 
   [/^\/(providers|p\/|c\/|g\/|a\/|s\/|franchise|stores|assets|startup|operation|transfer|closure|sell-biz)/, "/"]
 ];

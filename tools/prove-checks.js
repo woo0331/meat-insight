@@ -140,22 +140,6 @@ const CASES = [
   ["새로고침하면 맨 위에서 시작한다",
    `try{ history.scrollRestoration = "auto"; }catch(e){}`],
 
-  /* ══ 2026-10-20 전체 고도화 — 되돌리기 다섯 ═══════════════════
-     ⚠️⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — 그리는 함수를 바꿔치기
-     하면 화면은 그대로라 "검사가 안 잡는다" 로 보입니다. DOM 을
-     직접 건드리고, **집을 요소가 실제로 있는 화면**에서 합니다. */
-
-  /* PART 10-2 — 탭 숫자를 손으로 적으면 글을 한 편 쓸 때마다
-     어긋납니다. 하나를 엉뚱한 수로 바꿔 봅니다. */
-  ["글 목록 거르개 숫자가 센 값이다",
-   `var c = document.querySelectorAll(".chip-g-fil .chip")[1];
-    if(c) c.textContent = "창업 준비 999";`],
-
-  /* PART 10-3 — "작동하지 않는 검색창은 추가하지 않는다."
-     칸은 두고 **거르는 일만** 없애 봅니다. */
-  ["가이드 검색이 실제로 거른다",
-   `window.ctFind = function(){};`],
-
   /* PART 11-3 — 답이 처음부터 펼쳐져 있으면 아코디언이 아닙니다. */
   ["FAQ 가 접혔다 펴진다",
    `[].slice.call(document.querySelectorAll(".faq-a")).forEach(function(e){
@@ -169,12 +153,6 @@ const CASES = [
       li.innerHTML = '<a class="chip" href="/faq?c=etc">기타 0</a>';
       ul.appendChild(li); }`],
 
-  /* PART 9-2 — 그 자리에서 고를 수 있어야 합니다. 체크칸을 **링크로**
-     되돌려 봅니다 (전에 그랬던 꼴입니다). */
-  ["계산 결과에서 서비스를 바로 고를 수 있다",
-   `[].slice.call(document.querySelectorAll("#pick .pk-ck")).forEach(function(e){
-      if(e.parentNode) e.parentNode.removeChild(e); });`],
-
   /* ══ 2026-10-11 전면 감사 1차 — 로그인 ═════════════════════════
      ⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — 그려 두고 DOM 을 건드립니다.
      "로그인이 설정되기 전에는 아무것도 안 낸다" 를 어기는 가장 흔한
@@ -187,87 +165,11 @@ const CASES = [
      에러도 안 나고 화면도 멀쩡해서 **구간이 그냥 안 보일 뿐**입니다. */
   ["MY: 토큰이 있으면 Authorization 을 보낸다",
    `window.amAuthHeaders = function(){ return {}; };`],
-  /* ══ 2026-10-17 창업 준비 전문관 — 고르고 · 담기고 · 한 번에 ═══
-     ⚠️⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — 그리는 함수를 바꿔치기
-     하면 화면은 그대로라 "검사가 안 잡는다" 로 보입니다 (이 저장소가
-     열 번 겪은 자리). DOM 을 직접 건드립니다.
-     ⚠️ 집을 요소가 **실제로 있는 화면**에서 해야 합니다 — 없는 것을
-     집으면 되돌리기가 터지고, 그것도 "안 잡는다" 로 보입니다. */
-
-  /* ══ 2026-10-18 전체 점검 §3 — 네 전문관이 같은 프레임 ════════
-     ⚠️⚠️ **넷을 나란히 재는 검사**라 되돌리기도 넷을 다 걸어야 하는데,
-     셋은 같은 꼴이라 **제일 늦게 들어온 양도양수** 하나로 봅니다 —
-     그 화면에서만 통하는 자리를 집지 않고 **공통 조각**(계산도구
-     구간 · 바구니의 신청 단추)을 집기 때문에 넷 다 같이 지켜집니다.
-     ⚠️ 집을 요소가 **실제로 있는 화면**이라야 합니다 (이 저장소가
-     "되돌리기가 없는 요소를 집었다" 로 열한 번 겪은 자리). */
-  ["전문관 공통 여덟 — /transfer",
-   `var c = document.querySelector(".sec-calc");
-    if(c && c.parentNode) c.parentNode.removeChild(c);`],
-  /* ⚠️⚠️ **쪽(side)이 틀리면 엉뚱한 업체를 찾습니다** — 이 저장소가
-     ops 와 transfer 로 두 번 겪은 자리라 따로 재 봅니다. */
-  ["전문관 공통 여덟 — /closure",
-   `var b = document.getElementById("pk-bar-go");
-    if(b) b.setAttribute("href", "/quote?side=start");`],
-
-  /* ① 구간 하나를 빼 봅니다 (§2 여섯 영역) */
-  ["창업 준비가 §2 의 여섯 영역이다",
-   `var b = document.querySelector(".stB");
-    if(b && b.parentNode) b.parentNode.removeChild(b);`],
-
-  /* ② ⚠️⚠️ **색만으로 선택을 표시**해 봅니다 (§3-1 · §14 가 금지).
-     체크 표시를 지우면 색을 못 가리는 분께 상태가 안 보입니다. */
-  ["서비스를 여러 개 고르면 한 신청으로 간다",
-   `var old = window.pickPaint;
-    window.pickPaint = function(){
-      old();
-      [].slice.call(document.querySelectorAll("[data-pick]")).forEach(function(e){
-        e.checked = false; });
-    };`],
 
   /* ③ ⚠️⚠️ **저장만 했는데 접수된 것처럼** 적어 봅니다 (§4 · 절대 규칙 5) */
   ["임시저장이 접수가 아니라고 말한다",
    `var p = document.querySelector(".q-draft .q-draft-t span");
     if(p) p.innerHTML = "<b>지금 적은 조건을 저장해 두실 수 있습니다.</b>";`],
-
-  /* ══ 2026-10-18 매장 운영 전문관 2차 ═══════════════════════════ */
-
-  /* ① 고르는 자리를 **둘**로 만들어 봅니다 (§2 가 "하나" 라고 적었습니다) */
-  ["매장 운영이 §2 의 일곱 영역이다",
-   `var s = document.querySelector(".pkb-sel");
-    if(s && s.parentNode) s.parentNode.insertBefore(s.cloneNode(true), s);`],
-
-  /* ② ⚠️⚠️ **대표 카드 머리에 체크칸을 달아 봅니다** (§4-4 가 금지한
-     혼동 — 머리와 세부가 둘 다 담기면 하나를 골랐다고 생각하는데
-     접수에는 둘이 실립니다) */
-  ["운영은 세부까지 고르고 한 신청으로 간다",
-   `var h = document.querySelector(".opg-h");
-    if(h){ var i = document.createElement("input");
-      i.type = "checkbox"; h.appendChild(i); }`],
-
-  /* ③ ⚠️⚠️ **체크가 저희에게 가는 것처럼** 적어 봅니다 (§9 · 절대 규칙 5) */
-  ["운영 체크리스트가 신청이 아니라고 말한다",
-   `var n = document.querySelector(".opsck .sec-note");
-    if(n) n.textContent = "체크해 두시면 담당자가 확인합니다.";`],
-
-  /* ④ §5 — ⚠️⚠️ **0개인데 눌리는 단추**를 만들어 봅니다. 비활성을
-     풀어 놓으면 아무것도 안 고른 채로 신청 화면까지 가서, 거기서
-     무엇을 적어야 하는지를 손님이 들고 있어야 합니다. */
-  ["0개면 신청 단추가 안 눌리고 까닭이 보인다",
-   `var b = document.getElementById("pk-go-off");
-    if(b){ b.disabled = false; b.hidden = false; }
-    var a = document.getElementById("pk-go-on");
-    if(a) a.hidden = false;`],
-
-  /* ⑤ §6-2 · §9 — ⚠️⚠️ **꺼져 있는데 서버로 보내게** 만들어 봅니다.
-     로그인이 `auth:false` 인데 매 화면 왕복이 생기면, 손님은 아무것도
-     못 얻은 채로 그만큼 느려집니다. */
-  ["로그인이 꺼져 있으면 계정 저장을 묻지 않는다",
-   `window.amStateTouch = function(){
-      fetch("/api/deal", { method:"POST",
-        headers:{ "content-type":"application/json" },
-        body: JSON.stringify({ fn:"save_user_state", args:{} }) });
-    };`],
 
   /* ⑥ §7-3 — ⚠️⚠️ **설정 전인데 사진 칸을 내게** 만들어 봅니다.
      올릴 데가 없는 칸은 고르고 눌렀다가 실패하는 길입니다. */
@@ -278,14 +180,6 @@ const CASES = [
       w.textContent = "사진 고르기";
       box.appendChild(w);
     };`],
-
-  /* ══ 2026-10-09 지시서 PART 4 — 창업 진단 넷 ═══════════════════ */
-  /* ⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — DOM 을 직접 건드립니다.
-     견적 링크에서 예산 · 일정을 떼면 "받아만 놓는 칸" 이 됩니다. */
-  ["창업 진단 넷이 받아만 놓는 칸이 아니다",
-   `var a = document.querySelector(".sask-r a[href^='/quote']");
-    if(a) a.setAttribute("href", a.getAttribute("href")
-      .replace(/&bud=[^&]*/, "").replace(/&when=[^&]*/, ""));`],
   /* ══ 2026-10-08 수익형 플랫폼 지시서 §6 ═══════════════════════ */
   /* ⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — DOM 을 직접 건드립니다
      (그리는 함수를 바꾸면 아무 일이 안 납니다 · 열 번째로 겪은 자리). */
@@ -319,14 +213,6 @@ const CASES = [
      document.querySelector(".mhall h2") ||
      document.querySelector("#view h1")).textContent =
        "사장님들이 많이 찾는 서비스";`],
-  /* ══ 2026-10-06 2차 지시서 ══════════════════════════════════════ */
-  /* 여정 화면의 카드를 고르개로 바꾸면 걸려야 합니다 — 그렇게 되면
-     여정 네 화면에서 "눌러도 아무 데도 안 가는 카드" 가 됩니다.
-     ⚠️ 되돌리기는 **그려진 뒤에** 돕니다. DOM 을 직접 건드립니다. */
-  ["여정 카드가 실제로 그 여정 화면으로 간다",
-   `[].slice.call(document.querySelectorAll(".jy-g > li > a")).forEach(function(a){
-      a.setAttribute("data-keep", "");
-    });`],
   /* 구간이 자기 톤을 숨기면 걸려야 합니다 — `.mjy` 가 꼭 그랬습니다
      (클래스로는 아무 말도 안 하고 CSS 로만 회색) */
   ["이웃한 두 구간이 붙어 보이지 않는다",
@@ -339,89 +225,6 @@ const CASES = [
       S[1].style.background = c;
       S[0].style.background = c;
     })();`],
-
-  /* ══ 매물 내놓기 (/sell) ═══════════════════════════════════════ */
-  /* 업종 · 지역을 안 막던 때로 돌려놓습니다 — 딱지에 별표만 붙여 두고
-     안 막으면 빈 채로 들어오고, 그 매물은 거르개에서 빠집니다.
-     ⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — 보내는 함수를 감쌉니다
-     (검사가 window.sellSend 를 그때 찾아 부르기 때문에 먹습니다). */
-  ["매물 내놓기: 업종 · 지역 없이는 안 보낸다",
-   `(function(){
-      const real = window.sellSend;
-      window.sellSend = function(ev){
-        document.getElementById("sl-ind").value = "cafe";
-        document.getElementById("sl-reg").value = "gyeonggi";
-        return real(ev);
-      };
-    })();`],
-  /* 무권리(0)가 빈 칸으로 떨어지던 꼴을 만들어 봅니다 — 적는 칸의
-     id 를 바꿔 놓으면 값을 못 읽어 그 칸이 통째로 빠집니다. */
-  ["매물 내놓기: 적은 조건이 매물 생김새로 나간다",
-   `document.getElementById("sl-pm").id = "sl-pm-deleted";`],
-
-  /* ══ 도구 열셋 (2026-10-05 V2 §16) ══════════════════════════════ */
-  /* 묶음을 떼면 걸려야 합니다 — 떼면 목록에서 조용히 빠집니다 */
-  ["도구 열셋이 저마다 묶음과 갈 곳을 가진다",
-   `window.AM_TOOLS = (window.AM_TOOLS||[]).map(function(t){
-      return t.key === "margin" ? Object.assign({}, t, { grp:"" }) : t; });`],
-  /* 10년 한도를 걷어내면 25,000년이 숫자로 나옵니다 */
-  ["권리금 계산이 사람이 못 받는 기간을 숫자로 내지 않는다",
-   /* ⚠️⚠️ `PremiumRes` 를 바꿔치기해도 **아무 일이 안 납니다** —
-      `tlWire()` 가 적는 함수를 만들 때 그 함수를 **값으로 잡아** 두기
-      때문입니다. 적는 함수 쪽을 감싸야 합니다 (열 번째 "되돌리기가
-      틀렸습니다"). */
-   `window.premiumIn = (function(real){
-      return function(k, val){
-        real(k, val);
-        const el = document.getElementById("tl-res");
-        /* 한도를 안 보던 그때 — 300,000개월이 그대로 나왔습니다 */
-        if(el) el.innerHTML = el.innerHTML.split("10년이 넘습니다").join("300,000개월");
-      };
-    })(window.premiumIn);`],
-  /* 돌아오는 돈을 안 세면 걸려야 합니다 */
-  ["폐업 예상비용이 돌아오는 돈을 같이 센다",
-   `window.AM_CLOSE_IN = [];`],
-  /* 내려간 업체를 기록에서 안 지우면 걸려야 합니다 */
-  ["저장한 업체가 MY 로 이어진다",
-   `window.MySaved = (function(real){
-      return function(){
-        /* 내려간 업체를 안 걸러 내던 그때 */
-        const ids = window.amSaved();
-        return '<div class="my-next"><h2>저장한 업체 ' + ids.length + '곳</h2></div>';
-      };
-    })(window.MySaved);`],
-  /* 계산 결과에서 업체로 가는 길을 걷어내면 걸려야 합니다 */
-  ["계산 결과에서 업체로 가는 길이 있다",
-   `window.AM_TOOLS = (window.AM_TOOLS||[]).map(function(t){
-      return t.key === "cost" ? Object.assign({}, t, { rel:[] }) : t; });`],
-  /* 글 끝의 업체 수를 손으로 적어 넣으면 걸려야 합니다 */
-  ["글 끝에 관련 서비스 · 업체 · 도구가 붙는다",
-   `document.querySelectorAll(".cn-n").forEach(function(e){
-      e.textContent = "인테리어 · 시공 분야에 등록된 업체 23곳";   /* 지어낸 숫자 */
-    });`],
-  /* 도구를 색인에서 빼면 걸려야 합니다 */
-  ["검색이 도구와 여정도 찾는다",
-   `window.AM_TOOLS = [];`],
-  /* 체크칸을 카드(링크) 안으로 넣으면 걸려야 합니다 */
-  ["업체 둘을 나란히 비교할 수 있다",
-   `window.ProviderPickCard = function(p){
-      /* 체크칸을 카드 안에 넣던 그때 — 링크 안의 누름입니다 */
-      return '<div class="pv-w">' + window.ProviderCard(p).replace("</a>",
-        '<label class="pv-ck"><input type="checkbox"><span>비교</span></label></a>') + '</div>';
-    };`],
-  /* 아무도 안 적은 칸을 채워 내면 걸려야 합니다.
-     ⚠️ 이 검사는 **스스로 다시 그립니다**(업체를 끼워 넣으니까) —
-     DOM 을 미리 고쳐 놓으면 그 그리기에 지워집니다. 그리는 함수를
-     감싸야 합니다. */
-  ["비교표는 안 적은 값을 지어내지 않는다",
-   `window.PageCompare = (function(real){
-      return function(){
-        return real().split('<em class="cmp-no">\u2014</em>').join("빠름");
-      };
-    })(window.PageCompare);`],
-  /* 예시 프로필을 손님 목록에 섞으면 걸려야 합니다 */
-  ["예시 프로필이 손님 화면에 섞이지 않는다",
-   `window.AM_PROVIDERS.push(window.amSample("provider"));`],
   /* 예시 딱지를 떼면 걸려야 합니다 */
   ["입점 화면의 예시는 예시라고 밝힌다",
    /* ⚠⚠ 2026-10-29 — 예시 카드가 지금 화면에 **없습니다.**
@@ -435,36 +238,6 @@ const CASES = [
                     '<div class="jn-ex-b"><b>가나다 매입</b></div>';
       w.appendChild(d);
     }`],
-  /* ══ 여정 넷 (2026-10-05 V2) — 되돌려 보고 실제로 잡히는지 ══════ */
-  /* 단계 하나를 두 여정에 넣으면 걸려야 합니다 */
-  ["여정 넷이 단계 여섯을 빠짐없이 나눠 가진다",
-   `window.AM_JOURNEYS = (window.AM_JOURNEYS||[]).map(function(j){
-      /* 운영 여정이 매장 만들기까지 가져가 버린 그때 */
-      return j.key === "operation" ? Object.assign({}, j, { stages:["operation","build"] }) : j; });`],
-  /* 없는 하위 분류를 가리키면 걸려야 합니다 */
-  ["운영 화면이 실제로 있는 분야로만 보낸다",
-   `window.AM_OPS = (window.AM_OPS||[]).map(function(o){
-      return o.name === "세무 · 기장" ? Object.assign({}, o, { sub:"없는하위" }) : o; });`],
-  /* 인수 · 양도를 한쪽 색으로 칠하면 걸려야 합니다.
-     ⚠️ 되돌리기는 **그릴 때가 아니라 그려진 뒤에** 돕니다 — 그리는
-     함수를 바꿔치기해도 화면은 이미 그려져 있어서 아무 일이 안
-     납니다 (그렇게 짰다가 "검사가 안 잡는다" 로 보였습니다).
-     DOM 을 직접 건드립니다. */
-  ["인수 · 양도는 한쪽으로 물들지 않고 두 길이 같은 무게다",
-   `document.getElementById("view").className = "side-start";`],
-  /* 걸음에서 갈 곳을 걷어내면 걸려야 합니다 */
-  ["준비 과정의 걸음마다 갈 곳이 있다",
-   `document.querySelectorAll(".pcs-ls").forEach(function(e){ e.innerHTML = ""; });`],
-  /* ⚠️ 2026-10-06 2차 §8 로 그 자리가 EmptyGuide(.emg)가 됐습니다 —
-     옛 클래스(.empty-rl)만 지우고 있어서 아무 일이 안 났습니다.
-     ⚠️⚠️ **되돌리기가 옛 생김새를 지우고 있으면 검사는 늘 통과합니다.**
-     화면을 고치면 되돌리기도 같이 보세요. */
-  ["빈 칸이 읽을 것을 같이 낸다",
-   `document.querySelectorAll(".emg-l, .empty-rl").forEach(function(e){ e.remove(); });`],
-  /* 몇 곳인지 말하는 줄을 지우면 걸려야 합니다 — 0 을 숨기는 것은
-     없는 회사를 광고하는 쪽으로 가는 첫 걸음입니다 (절대 규칙 1) */
-  ["빈 칸이 읽을 것을 같이 낸다",
-   `document.querySelectorAll(".emg-n").forEach(function(e){ e.textContent = ""; });`],
   /* 시간 제한을 걷어내면 걸려야 합니다 — 멈추면 영원히 "보내는 중…". */
   ["접수가 멈추면 끊고 적은 글을 돌려준다",
    `window.amSend = function(failId, body){
@@ -474,50 +247,10 @@ const CASES = [
         headers:{ "content-type":"application/json" }, body: JSON.stringify(body) });
       return false;                      /* 시간 제한이 없던 그때 */
     };`],
-  /* 데이터가 0이라 안 보이던 자리들 — 되돌리면 걸려야 합니다. */
-  ["출처 없는 창업비는 목록에서도 안 나온다",
-   `window.FranchiseCard = function(f){
-      const c = (f && f.cost) || {};           /* 출처를 안 보던 그때 */
-      return "<a>" + f.name + (c.total ? " 총 " + c.total.toLocaleString() + "만원" : "") + "</a>";
-    };`],
-  ["후기 평점은 계산값이고 이름은 가려서 낸다",
-   `window.amProviderBadges = function(p){
-      const v = (p && p.verified) || {};
-      return v.biz ? ["사업자 확인"] : [];      /* 첫 배지만 내던 그때 */
-    };`],
-  ["공고는 원문 링크가 있는 것만 낸다",
-   `window.amSupports = function(side){
-      return (window.AM_SUPPORTS || []).filter(function(s){
-        return !side || s.side === side || s.side === "both"; });  /* link 를 안 보던 그때 */
-    };`],
   ["가격은 10건 이상 · 기준일 있는 것만 낸다",
    `window.amQuoteStats = function(){ return window.AM_QUOTE_STATS || []; };`],
-  /* 분류를 안 넘기면(옛 버그) 모든 업체가 모든 분야에 나옵니다. */
-  ["업체는 자기 분야에만 나온다",
-   `const real = window.amProviders;
-    window.amProviders = function(f){
-      f = Object.assign({}, f); delete f.cat;   /* 분류를 빠뜨리던 그때 */
-      return real(f);
-    };`],
   ["입점 배지와 업체찾기가 같은 규칙으로 센다",
    `window.amProvidersInCat = function(){ return 99; };`],
-  /* 업종 차례를 안 따르고 그냥 전부 내던 그때로 되돌리면 걸려야 합니다. */
-  /* ⚠️⚠️ **`amCatsFor` 를 바꿔치기하면 안 됩니다.** 검사가 "화면이
-     데이터와 같은가" 를 보는데, 데이터 쪽을 망가뜨리면 **둘 다 같이
-     틀려서** 검사가 통과해 버립니다 (처음에 그렇게 짰다가 걸렸습니다).
-     망가뜨릴 것은 **화면이 업종을 안 읽는 것** 쪽입니다. */
-  /* ⚠️⚠️ **되돌리기는 데이터 쪽을 망가뜨려야 합니다.** 업종 차례에서
-     빠진 분류를 잘라 내던 그때를 되살립니다 — 잘라 내면 그 업종
-     사장님에게는 그 기능이 **아예 없는 것**이 됩니다. */
-  ["업종을 고르면 그 업종 것이 펼쳐진다",
-   `const real = window.amCatsFor;
-    window.amCatsFor = function(i, side){ return real(i, side).slice(0, 3); };
-    window.rerender(true);`],
-  /* 창업 쪽과 정리 쪽이 같은 분야를 내던 그때. */
-  ["같은 업종이어도 창업 쪽과 정리 쪽이 다르다",
-   `const real = window.amCatsFor;
-    window.amCatsFor = function(i, side){ return real(i, "start"); };
-    window.rerender(true);`],
   /* 조사를 손으로 적던 그때 — ⚠️ `koWith` 를 바꿔치기해서는 안 됩니다.
      그러면 **다시 그리지 않아** 화면 글자가 그대로라 엉뚱하게 통과/실패
      합니다 (처음에 그렇게 짰다가 "인수인계는 가 화면에 있습니다" 라는
@@ -530,34 +263,6 @@ const CASES = [
     document.querySelectorAll(".ft-role, .note-box").forEach(function(e){
       e.textContent = e.textContent.split(nm + right).join(nm + wrong);
     });`],
-  /* 매물 카드가 `<div>` 로 돌아가면(옛 모습) 열 수가 없어야 걸립니다. */
-  ["매물 카드가 상세로 열린다",
-   `window.StoreCard = function(s){
-      return "<div class=mk><b>" + s.title + "</b></div>";   /* 안 열리던 그때 */
-    };`],
-  /* 매출을 "누가 적은 값" 없이 숫자만 내면 걸려야 합니다. */
-  ["점포 상세가 적힌 값만 내고 매출은 누가 적었는지 밝힌다",
-   `const real = window.PageStoreOne;
-    window.PageStoreOne = function(s){
-      return real(s).replace(/사장님이 적으신 값[^<]*/g, "");
-    };`],
-  /* 장비 key 를 이름으로 안 바꾸면 화면에 `espresso` 가 나와야 걸립니다. */
-  ["시설 상세가 장비 종류를 영문 key 로 내지 않는다",
-   `window.amEquipName = function(k){ return k; };      /* key 를 그대로 찍던 그때 */`],
-  /* 목록을 통째로 그리면(옛 모습) 걸려야 합니다. */
-  ["목록이 길어도 한 번에 다 그리지 않는다",
-   `window.amShown = function(total){ return total; };  /* 다 그리던 그때 */
-    window.MoreBtn  = function(){ return ""; };`],
-  /* ⚠️⚠️ 어느 상황을 고르셔도 **같은 열세 걸음**이 나오던 그때로
-     되돌리면 걸려야 합니다 (2026-10-08 §15 · §16 · §17).
-     ⚠️ 되돌리기는 **데이터 쪽**입니다 — 화면만 고치면 go() 로 넘어갈
-     때 다시 그려져서 원래대로 돌아옵니다. */
-  ["고르신 상황마다 정리 순서가 다르다",
-   `window.CLOSE_PROC.money = window.CLOSE_PROC.fast;
-    window.CLOSE_PROC.pass  = window.CLOSE_PROC.fast;`],
-  /* 질문을 하나 빼면 걸려야 합니다 (§18 은 다섯입니다). */
-  ["모르겠다고 하시면 짧게 묻고 그 순서로 보낸다",
-   `window.CLOSE_ASK.pop(); window.rerender(true);`],
   /* 하지 않는 저장을 한다고 적어 두면 걸려야 합니다 (절대 규칙 5). */
   ["견적: 요청을 저장한다는 말과 실제가 같다",
    `document.querySelector("#q-f .note-mid").textContent =
@@ -666,20 +371,6 @@ const CASES = [
       for(const r of rules)
         if(r.selectorText === ".mbr-p .ph") r.style.objectFit = "fill";
     }`],
-  /* 이름을 분류에 없는 것으로 바꿔 놓습니다 — 손으로 적으면 이렇게 됩니다 */
-  /* ⚠️ 되돌리기는 **데이터 쪽**을 망가뜨려야 합니다 — 화면만 고치면
-     "이름이 데이터와 다릅니다" 로 잡혀서, 정작 지키려는 것(분류 스물
-     다섯이 빠짐없이 나뉘는가)이 확인되지 않습니다. */
-  ["사업 단계 여섯이 분류 스물다섯을 빠짐없이 나눠 가진다",
-   `window.AM_STAGES[5].cats = window.AM_STAGES[5].cats.slice(1);`],
-  /* ⚠️ 이 검사는 전에 되돌리기가 없었습니다 — 2026-10-11 에 글 셋이
-     내려오면서 다시 쓰면서 같이 넣었습니다 (되돌리기 없는 검사는
-     아무것도 증명하지 않습니다). */
-  /* ⚠️ 2026-10-16 §3 — 계산도구 구간이 메인에서 내려와 검사가
-     /tools 로 옮겨갔습니다. 거기서 없는 계산기를 가리키게 만듭니다. */
-  ["계산도구가 실제로 있는 것이고 저마다 다르다",
-   `document.querySelector('#view a[href^="/tools/"]')
-      .setAttribute("href", "/tools/zzz-없는계산기");`],
   /* ⚠️ grid 의 stretch 를 덮어야 합니다 — 폭과 높이를 같이 줄입니다. */
   /* ⚠️ grid 의 stretch 를 덮어야 합니다 — 폭과 높이를 같이 줄입니다.
      ⚠️⚠️ 2026-10-29 오렌지 시안 — 재는 자리가 **기기 선택 카드 넷**
@@ -689,36 +380,6 @@ const CASES = [
     ["핵심 서비스 카드 여섯의 크기가 같다",
    `const e3 = document.querySelectorAll(".pwsv-g .pwsv-c")[2];
    e3.style.width = "70%"; e3.style.minHeight = "0"; e3.style.height = "80px";`],
-  /* ⚠️⚠️ **아이콘 칸(.stg-i)만 집어야 합니다.** 처음에
-     ".mstg-g > li > a svg" 로 적었더니 **화살표까지** 걸려서
-     [아이콘0, 화살표0, 아이콘1, …] 이 되고, 0번에 화살표를 넣는 바람에
-     아이콘끼리는 여전히 달라 "검사가 안 잡는다" 로 나왔습니다 —
-     검사가 아니라 되돌리기가 틀린 것이었습니다 (이 저장소에서 세 번째). */
-  /* ⚠️⚠️ **아이콘 칸만 집어야 합니다.** 예전에 카드 안의 svg 를 전부
-     집었더니 화살표까지 걸려서 "검사가 안 잡는다" 로 보였습니다 —
-     검사가 아니라 되돌리기가 틀린 것이었습니다 (세 번째). */
-  /* ⚠️ 2026-10-09 §3 — 카드가 컬러 아이콘 원판(.ia-t)이 되면서 집는
-     자리가 바뀌었습니다. **없는 요소를 집으면 되돌리기가 터지고**,
-     그러면 "검사가 안 잡는다" 가 아니라 되돌리기가 틀린 것입니다
-     (이 저장소에서 아홉 번 겪은 자리). */
-
-  /* ⚠️⚠️ 2026-10-11 — 사진이 원판 밖으로 나가 **카드 전체를 채우는
-     바탕**이 됐습니다. 그 갈래 둘을 따로 되돌려 봅니다.
-     ⚠️ 사진이 한 장도 없으면 아이콘 쪽을 비워 같은 검사를 때립니다 —
-     **없는 요소를 집으면 되돌리기가 터지고**, 그러면 "검사가 안
-     잡는다" 로 보입니다 (이 저장소에서 여덟 번 겪은 자리). */
-
-  /* ⚠️ 2026-10-11 — "핵심 서비스 여덟" 검사가 "전문관 넷과 서비스
-     아이콘" 으로 바뀌면서 옛 되돌리기 셋을 뺐습니다 (.msvc-g 가
-     화면에 없어서 전부 터집니다). 새 되돌리기는 이 목록 맨 아래입니다. */
-  ["업종 열넷이 저마다 다른 색을 쓴다",
-   /* ⚠️ `.ic-t` 에 transition 이 걸려 있어서 그냥 바꾸면 **색이 번지는
-      도중**에 재어 다른 값이 나옵니다 — 되돌리기가 헛돕니다. 끕니다. */
-   `const t = document.querySelectorAll(".ind-g > li > a");
-    const a0 = t[0].querySelector(".ind-ic"), a1 = t[1].querySelector(".ind-ic");
-    t[1].style.transition = "none"; a1.style.transition = "none";
-    t[1].style.background = getComputedStyle(t[0]).backgroundColor;
-    a1.style.background = getComputedStyle(a0).backgroundColor;`],
   ["메인 구간 차례가 지시서와 같다",
    `const v = document.getElementById("view");
     v.insertBefore(v.children[3], v.children[1]);`],
@@ -743,10 +404,6 @@ const CASES = [
    `const S = document.querySelectorAll("#view > section");
     const prev = getComputedStyle(S[S.length - 3]).backgroundColor;
     S[S.length - 2].style.background = prev;`],
-  ["규모감 숫자가 손으로 쓴 값이 아니라 센 값이다",
-   `document.querySelectorAll(".scale-n")[3].textContent = "500";`],
-  ["규모감 숫자가 무엇을 센 값인지 밝힌다",
-   `document.querySelector(".scale-n-b").remove();`],
   /* ⚠️ 랜딩을 없앴으므로 "랜딩에 기능을 끌어오지 않았다" 는 반대가
      됐습니다 — 이제 랜딩 구간이 **되살아나는 것**을 되돌려 봅니다. */
   ["메인(/)이 중간 소개 화면이 아니다",
@@ -789,47 +446,12 @@ const CASES = [
    `document.querySelector(".jn-now-t h2").textContent = "월 30건의 요청을 보장합니다";`],
   ["입점 화면이 연락처는 나중에 간다고 밝힌다",
    `document.querySelectorAll(".jn-req-l > li > b")[0].textContent = "연락처";`],
-  ["업종 화면에는 그 업종 글이 맨 앞에 온다",
-   `document.querySelector(".rd-l b").textContent =
-      "사업자등록 — 언제, 어디서, 무엇을 들고 가나";`],
-  ["폐업 글은 주황 쪽 · 창업 글은 초록 쪽으로 물든다",
-   `document.getElementById("view").className = "";`],
-  ["계산기가 말이 안 되는 숫자를 내지 않는다",
-   /* 1% 아래 공헌이익률을 막던 것을 풀어 놓습니다 — 전에 그랬습니다 */
-   `window.BepRes = (function(orig){
-      return function(v){
-        const out = orig(v);
-        if(out.indexOf("99%를 넘습니다") < 0) return out;
-        const fix = ["rent","labor","util","lease","loan","etc"]
-          .reduce(function(a,k){ const x=parseFloat(v[k]); return a+(isFinite(x)?x:0); },0);
-        const varSum = ["mat","fee"]
-          .reduce(function(a,k){ const x=parseFloat(v[k]); return a+(isFinite(x)?x:0); },0);
-        const cm = 100 - varSum;
-        return out.replace("—", (fix/(cm/100)).toLocaleString()+"만원")
-                  .replace("99%를 넘습니다", "공헌이익률 0%");
-      };
-    })(window.BepRes);
-    window.bepIn("mat", 99.99);`],
-  ["계산기가 자릿수가 넘는 숫자를 그대로 내지 않는다",
-   /* 자릿수 막는 것을 풀어 놓습니다 — 전에 그랬습니다.
-      ⚠️ tlRes 는 맨 위 함수 선언이라 전역 객체의 칸입니다. 그래서
-         window 쪽을 바꿔 끼우면 부르는 열세 자리가 전부 이것을
-         지납니다 (검사가 스스로 타이핑해서 다시 그립니다). */
-   `window.tlRes = function(v, f){ return f(v); };`],
-  ["검색이 글 본문까지 찾는다",
-   /* 글 색인을 **제목 + 머리말**로 되돌려 놓습니다 — 전에 그랬습니다.
-      ⚠️ 본문을 편 글자는 slug 로 **캐시**되므로, body 만 비우면 이미
-      캐시된 값이 그대로 나와서 되돌리기가 헛돕니다. slug 까지 바꿔
-      캐시를 비켜 갑니다 (제목은 그대로라 검사가 보는 값은 같습니다). */
-   `window.AM_CONTENTS = window.AM_CONTENTS.map(function(c){
-      const d = Object.assign({}, c);
-      d.slug = c.slug + "-nobody";
-      d.body = [];
-      return d;
-    });`],
-  ["글 목록 거르개 숫자가 센 값이다",
-   `document.querySelectorAll(".chip-g-fil .chip")[0]
-      .textContent = "전체 120";`],
+  ["검색이 기종과 상품을 같이 찾는다",
+   /* 기종 색인을 비웁니다 — 2026-10-29 전까지 실제로 그랬습니다
+      (예순다섯이 색인에 아예 없어서 "갤럭시 S24" 가 0건이었습니다).
+      ⚠️ 글 본문 쪽과 달리 캐시가 없습니다 — js/pages/search.js 가
+      amSearch() 를 부를 때마다 AM_MODELS 를 다시 훑습니다. */
+   `window.AM_MODELS = [];`],
   ["카드가 구간 바탕과 같은 색이 아니다",
    /* ⚠️ 바탕만 같게 하면 안 잡힙니다 — **테두리가 있으면 카드로
       읽힌다**고 봐 주기 때문입니다. 그림자로만 보이는 상태를
@@ -873,44 +495,6 @@ const CASES = [
     a.style.boxShadow = "none";
     a.style.background = back;`],
 
-  /* ══ 거르개 (2026-10-05 V2 §7 · §11) ════════════════════════════ */
-  /* "확인" 을 두 뜻으로 쓰던 그때 — 사진만 올린 업체가 "확인된 곳만"
-     에 같이 걸렸습니다 */
-  ["업체 거르개가 확인과 포트폴리오를 가른다",
-   `window.amProviderVerified = (function(real){
-      return function(p){
-        const out = real(p).slice();
-        if((((p||{}).portfolio)||[]).length) out.push("포트폴리오 확인");
-        return out;
-      };
-    })(window.amProviderVerified);`],
-  /* 위아래를 둘 다 닫던 그때 — 보증금 3,000 이 두 칸에 걸렸습니다 */
-  /* ⚠️ 영업기간 묶음을 통째로 빼 봅니다 — 데이터에서 빠지면 화면의
-     고르개도 같이 사라지므로 검사가 걸려야 합니다. */
-  ["영업기간 · 시설 포함으로 실제로 걸러진다",
-   `window.AM_STORE_RANGES = window.AM_STORE_RANGES.filter(function(g){
-      return g.key !== "yr"; });
-    window.rerender(true);`],
-  ["매물 거르개의 칸이 겹치지도 비지도 않는다",
-   `window.amInRange = function(val, opt){
-      if(val == null || !opt) return false;
-      const n = Number(val);
-      if(!isFinite(n)) return false;
-      if(opt.min != null && n < opt.min) return false;
-      if(opt.max != null && n >  opt.max) return false;
-      return true;
-    };`],
-  /* ⚠️ 이 검사는 **스스로 다시 그립니다** — DOM 을 건드려 두면
-     rerender 가 덮어 씁니다. 그리는 함수를 감싸야 합니다 (열한 번째
-     "되돌리기가 틀렸습니다"). */
-  ["거르개로 숨긴 건수를 밝힌다",
-   `window.PageProviderCat = (function(real){
-      return function(cat){
-        /* 숨긴 건수를 안 밝히던 그때 */
-        return real(cat).split('class="fil-off"').join('class="fil-off-gone"');
-      };
-    })(window.PageProviderCat);`],
-
   /* ══ 메인 카드 (2026-10-06) ═════════════════════════════════════ */
   /* 아이콘을 손으로 적어 둔 표로 되돌리면 — 표에 없는 도구가 전부
      같은 기본 아이콘이 됩니다 */
@@ -923,25 +507,6 @@ const CASES = [
   ["컬러 아이콘이 모두 같은 크기로 그려진다",
    `const g = document.querySelector("#view svg.ia > g");
     if(g) g.setAttribute("transform", "translate(12 12) scale(0.5)");`],
-  ["도구 카드 아이콘이 도구 데이터 것과 같고 저마다 다르다",
-   /* ⚠️ /tools 의 아이콘 칸은 tl-c-ic 입니다 (ic-t 가 아닙니다) —
-      틀린 칸을 집으면 **아무 일도 안 나서** "검사가 안 잡는다" 로
-      보입니다. 검사가 아니라 되돌리기가 틀린 자리, 여덟 번째입니다. */
-   `document.querySelectorAll(".tl-g > li .tl-c-ic").forEach(function(e, i){
-      if(i > 1) e.innerHTML = document.querySelector(".tl-g > li .tl-c-ic").innerHTML;
-    });`],
-  /* 하위가 0인 분류의 lead 를 떼면 이름만 남습니다 */
-  ["분야 카드가 설명도 숫자도 없이 비지 않는다",
-   /* ⚠️ 되돌리기는 **지울 것이 실제로 있는** 자리라야 합니다 — 지울
-      것이 없는 화면을 고르면 또 "검사가 안 잡는다" 로 보입니다
-      (이 저장소에서 네 번째). .stp-i 안의 이름(b) 말고 전부 지웁니다. */
-   `document.querySelectorAll(".stp-i").forEach(function(a){
-      [].slice.call(a.children).forEach(function(e){
-        if(e.tagName !== "B") e.remove();
-      });
-      [].slice.call(a.querySelectorAll("b")).slice(1)
-        .forEach(function(e){ e.remove(); });
-    });`],
   /* ══ 2026-10-11 UI/UX 지시서 — 전문관 넷 ═══════════════════════ */
   /* 한 전문관 안에서 두 칸이 같은 아이콘을 쓰면 걸려야 합니다 —
      열두 칸에 같은 그림이 둘이면 무엇이 무엇인지 흐려집니다.
@@ -959,48 +524,6 @@ const CASES = [
       .pwq-c 는 메인에 없어 t[1] 이 undefined 라 터집니다 (열다섯 번째). */
    `const t = [].slice.call(document.querySelectorAll("#view .pwsv-i svg"));
     t[1].innerHTML = t[0].innerHTML;`],
-  /* 고른 전문관이 표시되지 않으면 걸려야 합니다 — 거르개는 무엇이
-     켜졌는지 보이지 않으면 거르개가 아닙니다 */
-  /* ⚠️ 2026-10-16 §3-4 — 양도양수가 가로형 배너가 됐습니다. 세 길
-     가운데 하나를 지워 "길이 배너에 없습니다" 를 만듭니다. */
-  /* ── 2026-10-20 시안 6 · 2·3 · 7 ────────────────────── */
-  /* 업체 찾기 검색을 **장식**으로 바꿉니다 — 칸은 그대로 있고
-     아무것도 안 거릅니다. 이게 지시서가 직접 금지한 꼴입니다. */
-  ["업체 찾기 검색이 실제로 거르고 거르개가 주소에 실린다",
-   `window.pvFind = function(){};`],
-  /* 거르개를 분야 링크에서 떼 봅니다 — 들어가자마자 지역과 업종이
-     조용히 풀리는 꼴입니다. */
-  ["업체 찾기에서 고른 조건이 분야 화면까지 따라간다",
-   `[].slice.call(document.querySelectorAll("#pv-g > li a")).forEach(function(a){
-      a.setAttribute("href", (a.getAttribute("href")||"").split("?")[0]); });`],
-  /* 선택 패널을 **고정에서 풀어** 봅니다 — 규칙 자체를 건드립니다
-     (검사가 CSS 규칙을 읽기 때문에 DOM 만 고쳐서는 아무 일도 안 납니다). */
-  ["전문관에 선택 패널이 붙고 넓은 화면에서 따라온다",
-   `for(const sh of document.styleSheets){
-      let rs; try { rs = sh.cssRules; } catch(e) { continue; }
-      for(const r of rs){
-        if(r.type !== 4) continue;
-        if((r.conditionText || "").indexOf("min-width: 1100px") < 0) continue;
-        for(const x of r.cssRules)
-          if(x.selectorText === ".pks-side") x.style.position = "static";
-      }
-    }`],
-  /* 탭 숫자를 손으로 박아 봅니다 — 센 값이 아니게 되면 걸려야 합니다 */
-  ["계산도구 목적별 탭이 센 값이고 실제로 거른다",
-   `document.querySelector('.tl-tab a[href="/tools?j=startup"]').textContent = "창업 준비 99";`],
-
-  /* ⚠️ 2026-10-20 시안 1(확대본) — 메인 카드가 간결해져 /sell 은
-     **푸터 서비스 칸**이 받습니다. 푸터는 #view 밖이라 문서 전체에서
-     지워야 합니다 — #view 안만 지우면 아무 일도 안 납니다. */
-  ["양도양수가 인수 · 양도 · 전문관 세 길을 낸다",
-   `[].slice.call(document.querySelectorAll('a[href="/sell"]'))
-      .forEach(function(a){ a.remove(); });`],
-
-  /* 2026-10-11 간소화 지시서 §6 — 네 구간 중 하나가 조용히 빠지면
-     걸려야 합니다. ⚠️ 되돌리기는 **그려진 뒤에** 도니 DOM 을 직접
-     건드립니다 (그리는 함수를 바꿔치기하면 아무 일도 안 납니다). */
-  ["서비스 상세가 §6 의 여섯 구조를 갖춘다",
-   `document.querySelector(".svp-cost > li").remove();`],
 
 ];
 
@@ -1234,7 +757,9 @@ async function proveAudit(pg){
      "검사가 안 잡는다" 로 보였을 것입니다 — 이 저장소가 여러 번
      겪은 "되돌리기가 틀린" 자리입니다. 지울 것이 아니라 **본문을**
      어둡게 해야 합니다. */
-  for(const u of ["/search", "/tools", "/my"]){
+  /* ⚠️ 2026-10-31 — /tools 가 창업 · 폐업과 함께 없어졌습니다.
+     /shop 은 구간 둘 · /my 는 넷이라 집을 것이 실제로 있습니다 (재 봤습니다). */
+  for(const u of ["/search", "/shop", "/my"]){
     await pg.goto(ROOT + u, { waitUntil:"load" });
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).dark;
@@ -1282,7 +807,10 @@ async function proveAudit(pg){
   /* 제목 차례를 건너뜀 — h2 하나를 h3 으로 바꿔 놓고 봅니다.
      ⚠️ **고쳐 놓고 되돌리기를 안 넣으면** 그 검사가 실제로 잡는지
      아무도 못 봅니다 (골드 검사가 그렇게 비어 있었습니다). */
-  for(const u of ["/", "/terms", "/startup"]){
+  /* ⚠️ **#view 안에 h2 가 실제로 있는 화면**이라야 합니다 — 재 본 값:
+     / 7개 · /terms 19개 · /guide 3개. /shop · /search · /track 은 0개라
+     거기서 집으면 되돌리기가 헛돕니다 (이 저장소에서 열여섯 번). */
+  for(const u of ["/", "/terms", "/guide"]){
     await pg.goto(ROOT + u, { waitUntil:"load" });
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).hord;
@@ -1309,7 +837,8 @@ async function proveAudit(pg){
      view 안만 보던 때에도 통과해서, **넓힌 것이 실제로 무엇을 잡는지**
      아무도 못 봅니다 — 푸터 칸 머리말을 h4 로 되돌려서 잽니다.
      (그게 163개 화면에서 h2 → h4 로 건너뛰고 있던 바로 그 자리입니다.) */
-  for(const u of ["/", "/providers"]){
+  /* ⚠️ 푸터 칸 머리말(.ft-col h2)은 **180개 화면 전부에 다섯 개**입니다 */
+  for(const u of ["/", "/guide"]){
     await pg.goto(ROOT + u, { waitUntil:"load" });
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).hord;
@@ -1366,7 +895,11 @@ async function proveAudit(pg){
   /* 이웃한 두 구간이 붙어 보임 — 둘째 구간을 첫째와 같은 색으로
      돌려놓고 잡히는지 봅니다. ⚠️ 바탕을 **안 준** 구간도 봐야 합니다 —
      처음에 투명이라고 건너뛰었다가 업종 화면의 두 쌍을 놓쳤습니다. */
-  for(const u of ["/startup", "/startup/cafe", "/providers/interior"]){
+  /* ⚠️ 구간이 **셋 이상이고 바탕을 실제로 들고 있는** 화면이라야
+     합니다 — 재 본 값: / 8개(8개가 바탕 있음) · /join 10개(9) ·
+     /guide 4개(3). /terms · /privacy 는 `#view > section` 이 **0개**라
+     거기서 집으면 터집니다. */
+  for(const u of ["/", "/join", "/guide"]){
     await pg.goto(ROOT + u, { waitUntil:"load" });
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).tone;
@@ -1392,19 +925,29 @@ async function proveAudit(pg){
   /* 마지막 구간 ↔ 푸터 — 푸터를 본문 색으로 돌려놓고 봅니다.
      ⚠️ 푸터에 **테두리를 두면 안 됩니다.** 검사가 그 선을 보고
      통과시켜서, 푸터가 다시 본문과 같은 색이 되어도 아무도 모릅니다. */
-  for(const u of ["/providers/interior", "/about"]){
+  /* ⚠️⚠️ 구간이 **하나라도 있는** 화면이라야 합니다 — 약관 · 방침은
+     `#view > section` 이 0개라 `s[s.length-1]` 이 undefined 로 터집니다. */
+  for(const u of ["/", "/join"]){
     await pg.goto(ROOT + u, { waitUntil:"load" });
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).tone;
-    await pg.evaluate(() => {
+    /* ⚠️⚠️ **없는 것을 집으면 터집니다.** 전에는 그대로 집어서
+       `Cannot read properties of null` 로 proveAudit 이 **그 자리에서
+       멈췄고**, 뒤의 되돌리기가 통째로 안 돌았습니다 — 어느 것이
+       틀렸는지도 안 나옵니다. 못 집으면 **그 한 건만** 실패로 적습니다. */
+    const did = await pg.evaluate(() => {
       const s = [...document.querySelectorAll("#view > section")];
-      document.querySelector("footer.ft").style.background =
-        getComputedStyle(s[s.length-1]).backgroundColor; });
+      const ft = document.querySelector("footer.ft");
+      if(!ft || !s.length) return false;
+      ft.style.background = getComputedStyle(s[s.length-1]).backgroundColor;
+      return true;
+    });
     await pg.waitForTimeout(60);
     const after = (await pg.evaluate(AUDIT)).tone;
-    const ok = before.length === 0 && after.some(x => x.indexOf("푸터") >= 0);
+    const ok = did && before.length === 0 && after.some(x => x.indexOf("푸터") >= 0);
     if(!ok) bad++;
     console.log((ok ? "✅" : "❌") + " 마지막 구간 ↔ 푸터 · " + u +
+      (did ? "" : "  [구간이나 푸터를 못 집었습니다 — 되돌리기가 틀린 자리]") +
       "  [지금 " + JSON.stringify(before) +
       " → 푸터를 본문 색으로 하면 " + JSON.stringify(after).slice(0,50) + "]");
   }
@@ -1412,7 +955,8 @@ async function proveAudit(pg){
   /* 글자가 바탕에 묻힘 — **기준이 1.6 이었습니다.** 그때는 13px 설명글이
      대비 3.4 로 사이트 전체에 앉아 있어도 통과했습니다. 그 상태를
      되돌려 놓고 지금 기준(AA)이 잡는지 봅니다. */
-  for(const u of ["/", "/about"]){
+  /* ⚠️ 잎사귀 글자 칸이 많은 화면 — 재 본 값: / 44개 · /faq 31개 */
+  for(const u of ["/", "/faq"]){
     await pg.goto(ROOT + u, { waitUntil:"load" });
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).dim;
@@ -1440,7 +984,9 @@ async function proveAudit(pg){
      놓고 잡히는지 봅니다 — 잎사귀만 보던 때로 돌아가면 못 잡습니다.
      ⚠️ 지울 것이 **실제로 있는** 화면을 고릅니다 (이 저장소에서
      타일이 없는 화면에 되돌리기를 걸어 헛물을 켠 적이 있습니다). */
-  for(const u of ["/closure", "/startup"]){
+  /* ⚠️ svg 를 품고 **제 글자도 들고 있는** 칸이 실제로 있는 화면 —
+     재 본 값: / 5개 · /join 8개 (/guide · /shop 은 0개입니다). */
+  for(const u of ["/", "/join"]){
     await pg.goto(ROOT + u, { waitUntil:"load" });
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).dim;
@@ -1469,7 +1015,9 @@ async function proveAudit(pg){
   /* "준비 중" 자리표시자 — 프랜차이즈 분류 칸을 원래대로 돌려놓습니다.
      열두 칸이 전부 "준비 중" 이었고, 세는 값(0개 브랜드)을 내야 할
      자리였습니다 (절대 규칙 2). */
-  for(const u of ["/franchise", "/join"]){
+  /* ⚠️ 2026-10-31 — /franchise 가 없어졌습니다. 세는 값을 내는 자리가
+     남은 곳은 /join 의 분야 배지(.jn-now-l b · 재 보니 3개)입니다. */
+  for(const u of ["/join"]){
     await pg.goto(ROOT + u, { waitUntil:"load" });
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).ph;
@@ -1495,7 +1043,9 @@ async function proveAudit(pg){
      되돌리기가 틀린 것입니다 — 이 저장소에서 여러 번 겪었습니다).
      지금 타일이 있는 화면은 / (45개) · /transfer (5) · /g/:stage (1)
      입니다. /tools · /providers · /about · /startup 에는 없습니다. */
-  for(const u of ["/", "/transfer"]){
+  /* ⚠️ 타일이 실제로 있는 화면 — 재 본 값: / 22개 · /join 6개 · /my 3개
+     (/shop · /guide · /terms 는 0개입니다). */
+  for(const u of ["/", "/join"]){
     await pg.goto(ROOT + u, { waitUntil:"load" });
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).ico;
@@ -1564,7 +1114,9 @@ async function proveAudit(pg){
      (처음에 기본 폭으로 두었다가 "검사가 안 잡는다" 로 보였습니다 —
      검사가 아니라 되돌리기가 틀린 자리입니다.) */
   const vpWas = pg.viewportSize();
-  for(const u of ["/stores", "/assets"]){
+  /* ⚠️ `#view select.sel` 이 실제로 있는 화면 — 재 본 값: /repair 4개 ·
+     /quote 3개 (/stores · /assets 는 창업 · 폐업과 함께 없어졌습니다). */
+  for(const u of ["/quote", "/repair"]){
     await pg.setViewportSize({ width:360, height:900 });
     await pg.goto(ROOT + u, { waitUntil:"load" });
     await pg.waitForTimeout(260);

@@ -73,32 +73,12 @@ function amScore(hay, words){
   return words.length > 1 ? n * hit : n;
 }
 
-var AM_CT_TEXT = {};
-function amContentText(c){
-
-  if(AM_CT_TEXT[c.slug] !== undefined) return AM_CT_TEXT[c.slug];
-  var out = [];
-  (c.body || []).forEach(function(b){
-    if(b.h) out.push(b.h);
-    (b.p  || []).forEach(function(t){ out.push(t); });
-    (b.ul || []).forEach(function(t){ out.push(t); });
-  });
-
-  return (AM_CT_TEXT[c.slug] = out.join(" ").split("**").join(""));
-}
-
 window.amSearch = function(q){
   var words = q.toLowerCase().split(" ").filter(Boolean);
   var G = {
 
     model:{ name:"기종", rows:[] }, shop:{ name:"중고폰 상품", rows:[] },
     page:{ name:"폰웨이 서비스", rows:[] },
-    provider:{ name:"업체", rows:[] }, franchise:{ name:"프랜차이즈", rows:[] },
-    store:{ name:"매장 · 점포", rows:[] }, asset:{ name:"시설 · 장비", rows:[] },
-    cat:{ name:"분류", rows:[] }, industry:{ name:"업종", rows:[] },
-    content:{ name:"정보", rows:[] },
-    tool:{ name:"도구", rows:[] },
-    support:{ name:"지원사업", rows:[] },
 
     info:{ name:"자주 묻는 것", rows:[] }
   };
@@ -140,72 +120,6 @@ window.amSearch = function(q){
     push("page", m[0], m[1], x.to,
       amScore(m[0] + " " + m[1] + " " + x.kw, words) * 2);
   });
-
-  var AM_SEARCH_BIZ = false;
-
-  if(AM_SEARCH_BIZ){
-  (window.AM_INDUSTRIES||[]).forEach(function(i){
-
-    var subs = (window.amIndSubs ? window.amIndSubs(i.key) : []).join(" ");
-    var s = amScore(i.name+" "+i.lead+" "+subs, words);
-
-    push("industry", i.name+" 창업", i.lead, "/startup/"+i.key, s);
-    push("industry", i.name+" 폐업", "정리에 필요한 것", "/closure/"+i.key, s ? s-0.5 : 0);
-  });
-
-  (window.AM_STAGES || []).forEach(function(st){
-
-    push("cat", st.name + " 단계", st.lead, "/g/" + st.key,
-      amScore(st.name + " " + st.lead + " " + st.sub, words) * 2);
-  });
-
-  (window.AM_JOURNEYS || []).forEach(function(j){
-    push("cat", j.name, j.q, j.to,
-      amScore(j.name + " " + j.q + " " + j.lead + " " + j.sub, words) * 2);
-  });
-
-  (window.AM_TOOLS || []).forEach(function(t){
-    push("tool", t.name, t.lead, t.to,
-      amScore(t.name + " " + t.lead + " " + (t.ask||"") + " " + (t.out||""), words) * 2);
-  });
-  AM_CATS.forEach(function(c){
-    var subs = (c.items||[]).map(function(x){ return x.name; }).join(" ");
-
-    var s = amScore(c.name+" "+c.lead+" "+c.desc+" "+(c.kw||"")+" "+subs, words);
-    push("cat", c.name, c.lead, catTo(c), s);
-    (c.items||[]).forEach(function(it){
-      var ss = amScore(it.name, words);
-      if(ss > 0) push("cat", it.name, c.name,
-        (c.kind === "provider" ? "/providers/"+c.key+"?s="+encodeURIComponent(it.key) : catTo(c)), ss + 1);
-    });
-  });
-  (window.AM_PROVIDERS||[]).forEach(function(p){
-    push("provider", p.name, (p.regions||[]).map(function(k){ return amRegionName(k); }).join(" · "),
-      "/p/"+p.id, amScore(p.name+" "+(p.intro||"")+" "+(p.subs||[]).join(" "), words));
-  });
-  (window.AM_FRANCHISES||[]).forEach(function(f){
-    push("franchise", f.name, f.intro||"", "/f/"+f.slug, amScore(f.name+" "+(f.intro||""), words));
-  });
-  (window.AM_STORES||[]).forEach(function(s){
-    push("store", s.title, amRegionName(s.region, s.gu), "/stores",
-      amScore(s.title+" "+amIndustryName(s.industry), words));
-  });
-  (window.AM_ASSETS||[]).forEach(function(a){
-    push("asset", a.title, amRegionName(a.region, a.gu), "/assets",
-      amScore(a.title+" "+(a.brand||"")+" "+amIndustryName(a.industry), words));
-  });
-
-  (window.AM_CONTENTS||[]).forEach(function(c){
-    push("content", c.title, c.lead, "/content/"+c.slug,
-      amScore(c.title+" "+c.lead, words) * 3 + amScore(amContentText(c), words));
-  });
-
-  (typeof amSupports === "function" ? amSupports() : []).forEach(function(x){
-    push("support", x.name, (x.org || "") + (x.when ? " · " + x.when : ""), "/support",
-      amScore(x.name + " " + (x.org||""), words) * 3 +
-      amScore([x.who, x.what, x.amount].filter(Boolean).join(" "), words));
-  });
-  }
 
   (window.AM_FAQ || []).forEach(function(x){
     push("info", x.q, "자주 묻는 것", "/faq", amScore(x.q+" "+x.a, words));

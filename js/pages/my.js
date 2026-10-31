@@ -1111,10 +1111,10 @@ function PageMy(){
        업종별 분류 카드 · `MySaved()`(저장한 업체) · `MyTools()`(계산기에
        적은 숫자) · 받은 제안.
 
-       ⚠️⚠️ **함수를 하나도 안 지웠습니다.** `MySaved()` · `MyTools()` 가
-       그대로 있고, 되살리시려면 `git show 2ed861f:js/pages/my.js` 의
-       이 자리를 그대로 가져오면 됩니다. 그날 `vercel.json` 의 redirect
-       스물넷과 `js/app.js` 의 `NOINDEX_PRE` 도 같이 되돌리세요.
+       ⚠️⚠️ **같은 날 그 함수들도 지웠습니다** (사장님이 범위를 "그냥 다
+       지워" 로 넓히셨습니다). 되살리시려면 `git show 6d85a17:js/pages/my.js`
+       의 이 자리를 그대로 가져오고, 그날 `vercel.json` 의 redirect 와
+       `js/app.js` 의 라우터도 같이 되돌리세요.
 
        ⚠️ **이 브라우저에 남아 있던 값은 아래 단추가 지웁니다** — 칸만
        빼고 값을 남겨 두면 지울 길이 없어집니다. */
@@ -1131,105 +1131,32 @@ function PageMy(){
   '</div></section>';
 }
 
-/* ⚠️⚠️ **2026-10-31 — 이 함수를 부르는 자리가 없습니다.** 창업 · 폐업
-   기록 칸(상황 · 업종 · 지역 · 평수 고르개)을 화면에서 내리면서
-   `onchange="myPut()"` 도 같이 없어졌습니다.
-   ⚠️ 지우지 않고 **칸이 없으면 조용히 돌아가게** 두었습니다 — 그대로
-   두면 `$("my-side")` 가 null 이라 **누군가 부르는 날 그 자리에서
-   던지고 화면이 통째로 안 그려집니다.** 칸을 되살리시면 아무것도
-   안 고치고 다시 돕니다. */
-window.myPut = function(){
-  var sd = $("my-side"), id2 = $("my-ind"), rg = $("my-reg"), py = $("my-py");
-  if(!sd || !id2 || !rg || !py) return;
-  amSet(MKEY, {
-    side: sd.value, industry: id2.value,
-    region: rg.value, gu:"", pyeong: py.value.trim(), dday:""
-  });
-  rerender(true);
-};
 /* ⚠️ 되돌릴 수 없으므로 한 번 물어봅니다 */
 window.myClear = function(){
   if(!confirm("이 브라우저에 남은 기록을 전부 지웁니다. 되돌릴 수 없습니다.")) return;
   amDel(MKEY); amDel("am.quotes.v1"); amDel(window.AM_SAVE_KEY || "am.saved.v1");
-  /* ⚠️⚠️ **도구에 적은 숫자도 같이 지웁니다.** 여기를 빠뜨리면
-     "전부 지웁니다" 라고 해 놓고 계산기 숫자가 그대로 남습니다 —
+  /* ⚠️⚠️ **계산기에 적어 두신 숫자도 같이 지웁니다.** 여기를 빠뜨리면
+     "전부 지웁니다" 라고 해 놓고 매출 · 인건비가 그대로 남습니다 —
      가게 컴퓨터는 여러 사람이 쓰므로 그게 그대로 남의 눈에 들어갑니다.
-     ⚠️ 새 도구를 만들면 `AM_TOOLS` 에만 넣으면 여기도 같이 지워집니다.
-     목록을 손으로 또 적지 마세요. */
-  (window.AM_TOOLS || []).forEach(function(t){ amDel("am.tool." + t.key); });
+     ⚠️⚠️ **목록을 돌지 않고 머리말로 훑습니다.** 전에는 `AM_TOOLS` 를
+     돌았는데, 그 데이터가 인수인계와 같이 내려가면 **지울 길이 조용히
+     없어집니다** — 앞서 쓰시던 분의 브라우저에는 값이 그대로 남아
+     있습니다. ⚠️ 지우면서 돌면 자리가 밀립니다 — 먼저 모읍니다. */
+  try{
+    var kill = [];
+    for(var i = 0; i < localStorage.length; i++){
+      var k = localStorage.key(i);
+      if(k && k.indexOf("am.tool.") === 0) kill.push(k);
+    }
+    kill.forEach(function(k){ amDel(k); });
+  }catch(e){}
   rerender(true);
 };
 
-/* ── 저장한 업체 (2026-10-05 V2 §13) ─────────────────────────────
-   ⚠️⚠️ **이 화면의 설명이 "저장한 업체" 를 이미 약속하고 있었습니다** —
-   기능은 없는 채로요. 하지 않은 일을 했다고 말한 자리라(절대 규칙 5)
-   약속한 쪽을 만들었습니다.
-   ⚠️ **담는 것은 업체 id 하나뿐**입니다. 성함 · 연락처는 안 담습니다.
-   ⚠️ 내려간 업체는 조용히 빠집니다 — 없는 업체 이름을 들고 있으면
-   눌렀을 때 404 입니다. */
-function MySaved(){
-  var ids = (window.amSaved ? amSaved() : []);
-  var ps  = ids.map(function(id){ return amProvider(id); }).filter(Boolean);
-  /* ⚠️ 내려간 업체는 기록에서도 지웁니다 — 안 지우면 영영 남습니다 */
-  if(ps.length !== ids.length)
-    amSet(window.AM_SAVE_KEY || "am.saved.v1", ps.map(function(p){ return p.id; }));
-
-  if(!ps.length) return '<div class="my-next"><h2>저장한 업체</h2>'+
-    '<p class="lead">아직 저장하신 업체가 없습니다. 업체 화면에서 '+
-      '\u201C관심 업체\u201D 를 누르시면 여기 모아 드립니다.</p>'+
-    '<div class="row-cta"><a class="btn btn-o" href="/providers">업체찾기'+icon("arrow",16)+'</a></div>'+
-  '</div>';
-
-  return '<div class="my-next"><h2>저장한 업체 '+ps.length+'곳</h2>'+
-    '<ul class="my-tl">'+ps.map(function(p){
-      return '<li><a href="/p/'+esc(p.id)+'">'+
-        '<span class="my-tl-ic">'+icon("users",18)+'</span>'+
-        '<b>'+esc(p.name)+'</b>'+
-        '<span class="my-tl-n">'+esc((p.regions||[]).map(amRegionName)
-          .filter(Boolean).join(" · ") || "지역 미등록")+'</span>'+
-        '<span class="my-tl-go" aria-hidden="true">'+icon("arrow",15)+'</span>'+
-      '</a></li>';
-    }).join("")+'</ul>'+
-    '<div class="row-cta">'+
-      (ps.length > 1
-        ? '<a class="btn btn-b" href="/compare?ids='+esc(ps.slice(0, window.AM_CMP_MAX || 3)
-            .map(function(p){ return p.id; }).join(","))+'">저장한 업체 비교하기'+icon("arrow",16)+'</a>'
-        : '')+
-      '<a class="btn btn-o" href="/providers">업체 더 찾기</a>'+
-    '</div>'+
-  '</div>';
-}
-
-/* ── 도구에 적어 두신 것 ──────────────────────────────────────────
-   ⚠️ 도구를 만들어 놓고 MY 에 안 이으면, 사장님은 어디에 적었는지
-   찾으러 돌아다니게 됩니다.
-   ⚠️ **적은 값을 여기 그대로 찍지 않습니다.** 매출 · 인건비는 남이
-   보면 안 되는 숫자입니다 — "적어 두셨습니다" 까지만 알리고 값은
-   그 화면에서 보시게 합니다. */
-function MyTools(){
-  var list = (window.AM_TOOLS || []).map(function(t){
-    var v = amGet("am.tool." + t.key, null);
-    var n = 0;
-    if(v && typeof v === "object")
-      n = Object.keys(v).filter(function(k){
-        return v[k] !== "" && v[k] !== null && v[k] !== undefined && v[k] !== false; }).length;
-    return { t:t, n:n };
-  }).filter(function(x){ return x.n > 0; });
-
-  if(!list.length) return '<div class="my-next"><h2>사장님 도구</h2>'+
-    '<p class="lead">아직 적어 두신 숫자가 없습니다. '+
-      '창업비 · 고정비 · 손익분기를 적어 두시면 여기 모아 드립니다.</p>'+
-    '<div class="row-cta"><a class="btn btn-o" href="/tools">도구 보기'+icon("arrow",16)+'</a></div>'+
-  '</div>';
-
-  return '<div class="my-next"><h2>사장님 도구</h2>'+
-    '<ul class="my-tl">'+list.map(function(x){
-      return '<li><a href="'+esc(x.t.to)+'">'+
-        '<span class="my-tl-ic">'+icon(x.t.icon,18)+'</span>'+
-        '<b>'+esc(x.t.name)+'</b>'+
-        '<span class="my-tl-n">'+x.n+'칸 적어 두셨습니다</span>'+
-        '<span class="my-tl-go" aria-hidden="true">'+icon("arrow",15)+'</span>'+
-      '</a></li>';
-    }).join("")+'</ul>'+
-  '</div>';
-}
+/* ⚠️⚠️ **2026-10-31 — 이 파일에서 인수인계 덩이 셋을 지웠습니다.**
+   `MySaved()`(저장한 업체) · `MyTools()`(계산기에 적은 숫자) ·
+   `myPut()`(상황 · 업종 · 지역 · 평수 칸을 담는 것)이 거기 있었습니다.
+   ⚠️ 셋을 부르는 자리가 이미 없어졌고(창업 · 폐업 기록 칸이 화면에서
+   내려갔습니다), 그 셋이 보내던 `/providers` · `/tools` 는 308 로 `/` 에
+   갑니다 — 남겨 두면 안 열리는 주소로 보내는 단추만 늘어납니다.
+   ⚠️ 꺼내 보시려면 `git show 6d85a17:js/pages/my.js`. */

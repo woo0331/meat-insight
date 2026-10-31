@@ -851,81 +851,18 @@ function PageMy(){
   '</div></section>';
 }
 
-window.myPut = function(){
-  var sd = $("my-side"), id2 = $("my-ind"), rg = $("my-reg"), py = $("my-py");
-  if(!sd || !id2 || !rg || !py) return;
-  amSet(MKEY, {
-    side: sd.value, industry: id2.value,
-    region: rg.value, gu:"", pyeong: py.value.trim(), dday:""
-  });
-  rerender(true);
-};
-
 window.myClear = function(){
   if(!confirm("이 브라우저에 남은 기록을 전부 지웁니다. 되돌릴 수 없습니다.")) return;
   amDel(MKEY); amDel("am.quotes.v1"); amDel(window.AM_SAVE_KEY || "am.saved.v1");
 
-  (window.AM_TOOLS || []).forEach(function(t){ amDel("am.tool." + t.key); });
+  try{
+    var kill = [];
+    for(var i = 0; i < localStorage.length; i++){
+      var k = localStorage.key(i);
+      if(k && k.indexOf("am.tool.") === 0) kill.push(k);
+    }
+    kill.forEach(function(k){ amDel(k); });
+  }catch(e){}
   rerender(true);
 };
 
-function MySaved(){
-  var ids = (window.amSaved ? amSaved() : []);
-  var ps  = ids.map(function(id){ return amProvider(id); }).filter(Boolean);
-
-  if(ps.length !== ids.length)
-    amSet(window.AM_SAVE_KEY || "am.saved.v1", ps.map(function(p){ return p.id; }));
-
-  if(!ps.length) return '<div class="my-next"><h2>저장한 업체</h2>'+
-    '<p class="lead">아직 저장하신 업체가 없습니다. 업체 화면에서 '+
-      '\u201C관심 업체\u201D 를 누르시면 여기 모아 드립니다.</p>'+
-    '<div class="row-cta"><a class="btn btn-o" href="/providers">업체찾기'+icon("arrow",16)+'</a></div>'+
-  '</div>';
-
-  return '<div class="my-next"><h2>저장한 업체 '+ps.length+'곳</h2>'+
-    '<ul class="my-tl">'+ps.map(function(p){
-      return '<li><a href="/p/'+esc(p.id)+'">'+
-        '<span class="my-tl-ic">'+icon("users",18)+'</span>'+
-        '<b>'+esc(p.name)+'</b>'+
-        '<span class="my-tl-n">'+esc((p.regions||[]).map(amRegionName)
-          .filter(Boolean).join(" · ") || "지역 미등록")+'</span>'+
-        '<span class="my-tl-go" aria-hidden="true">'+icon("arrow",15)+'</span>'+
-      '</a></li>';
-    }).join("")+'</ul>'+
-    '<div class="row-cta">'+
-      (ps.length > 1
-        ? '<a class="btn btn-b" href="/compare?ids='+esc(ps.slice(0, window.AM_CMP_MAX || 3)
-            .map(function(p){ return p.id; }).join(","))+'">저장한 업체 비교하기'+icon("arrow",16)+'</a>'
-        : '')+
-      '<a class="btn btn-o" href="/providers">업체 더 찾기</a>'+
-    '</div>'+
-  '</div>';
-}
-
-function MyTools(){
-  var list = (window.AM_TOOLS || []).map(function(t){
-    var v = amGet("am.tool." + t.key, null);
-    var n = 0;
-    if(v && typeof v === "object")
-      n = Object.keys(v).filter(function(k){
-        return v[k] !== "" && v[k] !== null && v[k] !== undefined && v[k] !== false; }).length;
-    return { t:t, n:n };
-  }).filter(function(x){ return x.n > 0; });
-
-  if(!list.length) return '<div class="my-next"><h2>사장님 도구</h2>'+
-    '<p class="lead">아직 적어 두신 숫자가 없습니다. '+
-      '창업비 · 고정비 · 손익분기를 적어 두시면 여기 모아 드립니다.</p>'+
-    '<div class="row-cta"><a class="btn btn-o" href="/tools">도구 보기'+icon("arrow",16)+'</a></div>'+
-  '</div>';
-
-  return '<div class="my-next"><h2>사장님 도구</h2>'+
-    '<ul class="my-tl">'+list.map(function(x){
-      return '<li><a href="'+esc(x.t.to)+'">'+
-        '<span class="my-tl-ic">'+icon(x.t.icon,18)+'</span>'+
-        '<b>'+esc(x.t.name)+'</b>'+
-        '<span class="my-tl-n">'+x.n+'칸 적어 두셨습니다</span>'+
-        '<span class="my-tl-go" aria-hidden="true">'+icon("arrow",15)+'</span>'+
-      '</a></li>';
-    }).join("")+'</ul>'+
-  '</div>';
-}

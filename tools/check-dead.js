@@ -53,8 +53,35 @@ for(const f of ["build-pages.js", "check.js"]) if(fs.existsSync(f)) ALL.push(f);
 if(fs.existsSync("tools"))
   for(const f of fs.readdirSync("tools")) if(f.endsWith(".js")) ALL.push("tools/" + f);
 
+/* ⚠️⚠️ **화면 속 onclick= 은 문자열이라 strip() 이 지웁니다.**
+   이 저장소는 단추를 거의 전부 onclick="fn()" 로 답니다 — 그걸 안
+   보면 **멀쩡히 돌고 있는 함수가 "안 쓰임" 으로** 나옵니다
+   (2026-10-31 에 pwSellGo 가 실제로 그랬습니다). 그대로 믿고
+   -retired.js 로 옮기면 /sell 의 칩 · 고르개 전부가 죽는데, 속성
+   안이라 빌드도 전수 점검도 안 잡습니다 — **눌러 봐야** 압니다.
+   그래서 **거는 자리의 속 글만** 따로 떠서 뒤에 붙입니다.
+   ⚠️ 재 보니 이 저장소의 거는 자리 208곳이 전부 on…=" 꼴이라,
+   여는 겹따옴표 다음부터 **다음 겹따옴표까지**가 그 속 글입니다
+   (안쪽은 홑따옴표와 이어 붙이기뿐입니다). 다른 꼴을 쓰시면
+   여기도 같이 고치세요. */
+function handlers(s){
+  const out = [];
+  const re = /\bon[a-z]+\s*=\s*"/g;
+  let m;
+  while((m = re.exec(s))){
+    const a = m.index + m[0].length;
+    const b = s.indexOf('"', a);
+    if(b < 0) continue;
+    out.push(s.slice(a, b));
+  }
+  return out.join("\n");
+}
+
 const BODY = {};
-for(const p of ALL) BODY[p] = strip(fs.readFileSync(p, "utf8"));
+for(const p of ALL){
+  const raw = fs.readFileSync(p, "utf8");
+  BODY[p] = strip(raw) + "\n" + handlers(raw);
+}
 
 /* 손님이 받는 파일 — index.html 에 적힌 것만 */
 const SHIP = new Set();
@@ -70,49 +97,38 @@ if(fs.existsSync("index.html")){
    ⚠️⚠️ 여기에 적는 것은 **재 본 값과 까닭**입니다. 귀찮아서 적지
    마세요 — 적는 순간 그 덩이는 아무도 다시 안 봅니다. */
 const KNOWN = {
-  "js/pages/journey.js": {
-    names: ["OpsGrid", "OpsPick", "OpsvcForInd"],
-    why: "2026-10-18 운영 개편으로 PageOperation() 이 안 부릅니다. "
-       + "재 보니 3.8KB(약 1KB gzip)뿐이라, 파일을 가르는 값이 더 "
-       + "큽니다 — 이 저장소는 함수를 파일 사이로 옮기다 다섯 번 "
-       + "통째로 삼켰습니다. 되살리기는 PageOperation() 한 줄입니다."
-  },
+  /* ⚠️⚠️ **2026-10-31 — 옛 두 줄을 걷어냈습니다.**
+     js/pages/journey.js 는 **파일째 없어졌고**(인수인계 삭제),
+     js/pages/home.js 의 일곱(HomePass · HomeBanners · HomeWhy ·
+     HomeFit · HomeRec · HomeIndGuide · homeDirectChips)은 **덩이가
+     지워져서** 이제 셀 것이 없습니다 — 그대로 두면 아무것도 안
+     맞히는 줄이 둘 남고, 그러면 다음 사람이 "여기 적힌 것은 재 본
+     것" 이라고 믿게 됩니다. 꺼내 보시려면
+     git show 6d85a17:tools/check-dead.js 입니다. */
   "js/pages/home.js": {
-    names: ["HomePass", "HomeBanners", "HomeWhy",
-            "HomeFit", "HomeRec", "HomeIndGuide", "homeDirectChips"],
-    why: "2026-10-20 시안 1 로 양도양수가 가로 배너에서 진입 카드 "
-       + "넷째 장이 되면서 PageMain() 이 안 부릅니다. 재 보니 32줄 · "
-       + "1.4KB 뿐이고, 그 배너가 들고 있던 길 일곱은 전부 카드 안의 "
-       + "대표 서비스 다섯과 푸터가 받습니다 (재서 확인했습니다). "
-       + "되살리기는 PageMain() 에 HomePass()+ 한 줄입니다.\n"
-       + "HomeBanners — 2026-10-22 시안으로 서비스 배너 둘이 메인에서 "
-       + "내려왔습니다. 재 보니 HOME_BAN 8줄 + 함수 22줄 = 1,281바이트 "
-       + "(gzip 686바이트)이고 .bban CSS 스물두 줄이 같이 있습니다. "
-       + "그 배너가 가리킨 둘(/providers/interior · /providers/it)은 "
-       + "전문관 카드의 대표 서비스에서 그대로 걸립니다 (재서 확인 — "
-       + "메인 #view 안에 각각 1곳). ⚠️ 그 배너만 쓰던 사진 자리 "
-       + "svc-interior · svc-it 은 **파일이 있는데 지금 안 나옵니다** "
-       + "(photos.js 의 where 에 적어 두었습니다). 되살리기는 "
-       + "PageMain() 에 HomeBanners()+ 한 줄 · check.js 의 want 에 "
-       + "bban · build-pages.js 의 크롤러 본문 세 줄입니다.\n"
-       + "⚠️⚠️ HomeWhy · HomeFit · HomeRec · HomeIndGuide · "
-       + "homeDirectChips — 2026-10-26 에 사장님이 메인을 전면 리뉴얼 "
-       + "직전 디자인(구간 일곱)으로 되돌리라고 하셔서 PageMain() 이 "
-       + "안 부릅니다. ⚠️ 지시서가 신규 기능을 임의로 지우지 말라고 "
-       + "적어서 함수 · CSS · 데이터를 한 줄도 안 지웠습니다 — "
-       + "맞춤 서비스 찾기(HomeFit) · 추천 서비스(HomeRec) · 업종별 "
-       + "체크리스트(HomeIndGuide)는 그 자리에 그대로 있고 메인에만 "
-       + "안 나옵니다. 되살리기는 PageMain() 의 return 한 줄 + "
-       + "check.js 의 want · need · build-pages.js 의 크롤러 본문 + "
-       + "css/pages.css 맨 뒤 블록 둘(전면 리뉴얼 · 찍어 보고 고친 것) "
-       + "입니다 — git show 2831322 로 꺼냅니다."
-  },
-  "js/pages/tools.js": {
-    names: ["tlRel"],
-    why: "2026-10-20 PART 9-2 로 같은 자리를 tlRelPick() 이 받습니다 "
-       + "(보내기만 하던 것 → 그 자리에서 고르기). 24줄 · 1.1KB 이고 "
-       + "같은 rel 데이터를 읽습니다 — 되살리기는 tlNext() 와 "
-       + "PageToolVs() 두 줄입니다."
+    names: ["PW_HERO_CHIPS", "PW_CHIP_IC", "pwHero3", "pwHeroArt",
+            "PwWays", "PwShop", "PwDevice", "PwBiz", "PwQuick"],
+    why: "2026-10-29 · 10-30 두 지시서로 PHONEWAY 메인이 네 번 다시 "
+       + "짜이면서 PageMain() 이 아홉을 안 부릅니다 — 히어로 쪽 넷"
+       + "(PW_HERO_CHIPS · PW_CHIP_IC · pwHero3 · pwHeroArt)은 사장님이 "
+       + "주신 투명 PNG 가 그 자리를 받았고, 구간 쪽 다섯(PwWays 판매 "
+       + "두 방법 · PwShop 중고폰 갈래 · PwDevice 기기 선택 · PwBiz 옛 "
+       + "사업 배너 넷 · PwQuick 바로가기 다섯)은 핵심 서비스 여섯 · "
+       + "브랜드 여섯 · 안내 배너 셋이 받았습니다.\n"
+       + "재 본 값 — 아홉 합쳐 291줄 · 18,958바이트(gzip 약 6,937).\n"
+       + "⚠️ 그런데 **옮기지 않고 그냥 둡니다.** 이 아홉은 사장님 시안이 "
+       + "올 때마다 들고 나는 자리이고(히어로만 2026-10-17 · 10-22 아침 · "
+       + "10-22 저녁 · 10-25 로 네 번 뒤집혔습니다), 되살리기는 PageMain() "
+       + "한 줄입니다 — 파일 사이로 옮기면 그 한 줄이 두 줄이 되고(그 "
+       + "파일을 index.html 에 먼저 넣어야 합니다), 이 저장소는 함수를 "
+       + "파일 사이로 옮기다 **일곱 번** 통째로 삼켰습니다.\n"
+       + "⚠️⚠️ js/pages/home-retired.js 는 **없습니다** — 거기 있던 것이 "
+       + "전부 인수인계 것이어서 같이 지웠습니다. 다시 만드시려면 "
+       + "build-pages.js 의 checkRetired() 가 그 파일을 보고 있는 것을 "
+       + "먼저 확인하세요(살아 있는 쪽에서 부르면 빌드가 멈춥니다).\n"
+       + "⚠️ PW_HERO3 · PW_BIZ · PW_QUICK · PW_SELL_CARDS 는 이 아홉 "
+       + "안에서만 불려서 여기 목록에 안 나옵니다 — 셈이 한 겹만 "
+       + "봅니다. 아홉을 되살리시면 그것들도 같이 삽니다."
   }
 };
 

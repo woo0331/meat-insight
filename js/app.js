@@ -65,36 +65,13 @@ var META = {
   "/":          ["내 폰의 가치를 찾는 새로운 방법",
                  "직접 매입 · 전국 업체 경쟁입찰 · 검수를 마친 중고폰 구매를 " +
                  "한곳에서. 기종과 상태를 고르시면 견적을 나란히 놓고 비교하십니다."],
-  "/startup":   ["창업 — 어떤 사업을 준비하세요?",
-                 "업종만 고르시면 그 업종 창업에 실제로 필요한 것만 추려 드립니다. 점포 · 상권 · 인테리어 · 장비 · 가구 · POS · 공급 · 인허가 · 마케팅까지."],
   /* 2026-10-05 V2 지시서 §1 — 여정 넷. 창업 · 폐업은 이미 있던 주소이고
      운영 · 인수/양도 둘이 새로 생겼습니다 (§28 의 `/operation` ·
      `/transfer`). ⚠️ `/closing` · `/companies` · `/guides` 는
      `vercel.json` 이 308 로 보냅니다 — 같은 내용을 두 주소로 내면
      구글이 둘 다 무시합니다. */
-  "/operation": ["매장 운영 — 운영하면서 필요한 모든 것",
-                 "세무 · 노무 · 직원 · POS · CCTV · 인터넷 · 식자재 · 소모품 · 청소 · 방역 · 시설보수 · 보험 · 법률 · 마케팅까지. 문을 연 뒤에 생기는 일을 맡길 곳을 한곳에서 찾습니다."],
-  "/transfer":["매장 인수 · 양도 — 받는 쪽과 넘기는 쪽",
-                 "있던 가게를 받으면 공사 기간과 초기 비용이 줄고, 넘기면 철거비와 원상복구가 줄어듭니다. 순서 · 권리금 · 시설 인수 범위 · 임대차 승계까지 짚어 드립니다."],
-  "/closure":   ["폐업 — 사업을 어떻게 정리하세요?",
-                 "매장 양도 · 시설 집기 처분 · 재고 · 철거 · 원상복구 · 폐기물 · 폐업신고 · 계약 해지까지, 정리에 필요한 곳을 한곳에서 찾습니다."],
   /* ⚠️ 색인에서 빠지는 화면이라도 제목 · 설명은 적습니다 — 공유했을 때
      카카오 · 슬랙 미리보기에 쓰입니다 */
-  "/sample":    ["업체 상세 예시 — 입점하면 이렇게 보입니다",
-                 "실제 업체가 아닌 예시 화면입니다. 입점 업체의 소개 · 전문분야 · " +
-                 "포트폴리오 · 확인 배지 · 후기가 어떤 짜임새로 나가는지 보실 수 있습니다."],
-  "/providers": ["업체찾기",
-                 "인테리어 · 철거 · 간판 · 주방설비 · POS · 세무 · 노무 · 청소까지. 지역과 업종에 맞는 업체를 비교하고 견적을 받으세요."],
-  "/franchise": ["프랜차이즈",
-                 "업종별 프랜차이즈 브랜드를 창업비 · 가맹비 · 권장 평수 · 모집지역으로 비교하고 창업 상담을 신청하실 수 있습니다."],
-  "/stores":    ["점포 · 상가 · 매장 양도",
-                 "지역 · 업종 · 평수 · 보증금 · 월세 · 권리금으로 찾습니다. 시설을 그대로 인수할 수 있는 매장도 함께 봅니다."],
-  "/assets":    ["시설 · 집기 · 재고",
-                 "정리하시는 사장님이 내놓은 주방장비 · 커피머신 · 가구 · POS · 운동기구 · 미용기기와 남은 재고를 찾습니다."],
-  "/support":   ["자금 · 정부지원",
-                 "창업자금 · 정책자금 · 폐업지원 · 철거비 지원까지, 조건에 맞으면 신청하실 수 있는 지원사업을 모읍니다."],
-  "/content":   ["창업 · 폐업 정보",
-                 "창업비용 · 철거비 · 원상복구 범위 · 권리금 · 사업자등록 · 폐업신고처럼 실제로 막히는 것만 정리합니다."],
   "/quote":     ["견적 요청",
                  "한 번만 적으시면 조건에 맞는 업체들에 같이 전달합니다. 받으신 제안을 한 화면에서 비교하세요."],
   /* ⚠️⚠️ 2026-10-29 PHONEWAY 전환 — `/sell` 이 **내 폰 팔기**가
@@ -114,49 +91,15 @@ var META = {
                  "깨진 액정 · 배터리 · 충전 단자 · 침수까지, 증상과 기종을 알려 주시면 맞는 수리점을 찾아 연결해 드립니다. 고치는 것과 파는 것을 같이 견줘 보세요."],
   "/biz":       ["기업 · 수출 거래 — 대량 매입 · 해외 수출 문의",
                  "법인 · 대리점의 대량 매입, 기업 일괄 처분, 해외 수출을 상담으로 진행합니다. 수량과 기종을 알려 주시면 확인한 뒤 연락드립니다."],
-  "/sell-biz":  ["매장 · 시설 내놓기",
-                 "정리하시는 매장과 쓰시던 시설 · 장비를 내놓으실 수 있습니다. 평수 · 보증금 · 월세 · 권리금 조건 그대로 올리고 문의를 전달합니다."],
   "/join":      ["업체 입점하기",
                  "창업과 폐업을 준비하는 사장님이 직접 찾아옵니다. 지역과 전문 분야가 맞는 요청만 받아 보세요. 기본 입점은 무료입니다."],
   "/my":        ["MY",
                  "판매 신청과 받은 견적, 저장해 두신 것을 한 화면에서 보십시오. 진행 조회는 접수번호로도 됩니다."],
-  "/compare":   ["업체 비교",
-                 "고르신 업체를 지역 · 전문분야 · 전문업종 · 평점 · 포트폴리오 · 인증 · 상담 시간으로 나란히 놓고 보십시오. 등록된 값만 냅니다."],
   "/search":    ["통합검색",
                  "기종 · 중고폰 상품 · 업체 · 정보를 한 번에 찾습니다. 기종 이름을 그대로 치셔도 됩니다."],
-  "/tools":     ["사장님 도구",
-                 "창업비 정리표 · 월 고정비 · 손익분기 · 인건비율 · 신규 창업과 매장 인수 비교 · 폐업 체크리스트. 전부 무료입니다."],
-  "/tools/cost":["창업비 정리표",
-                 "빠뜨리기 쉬운 항목을 전부 늘어놓고, 실제로 받으신 견적을 적으면 합계와 아직 안 받은 칸을 보여 드립니다."],
-  "/tools/fixed":["월 고정비 계산",
-                 "팔리든 안 팔리든 나가는 돈을 더하고, 하루에 얼마를 벌어야 그것만이라도 맞는지 보여 드립니다."],
-  "/tools/bep": ["손익분기 계산",
-                 "고정비를 공헌이익률로 나눕니다. 본전이 되는 월 매출과 하루 매출, 하루 손님 수까지."],
-  "/tools/labor":["인건비율 계산",
-                 "매출 대비 인건비가 몇 퍼센트인지. 판정하지 않고 사장님 가게의 흐름을 보시게 합니다."],
-  "/tools/vs":  ["신규 창업 vs 매장 인수",
-                 "새로 만드는 것과 하던 가게를 받는 것. 들어가는 돈과 문 여는 시점을 나란히 놓습니다."],
-  "/tools/close":["폐업 체크리스트",
-                 "정리 순서대로 짚어 가며 빠뜨린 것을 찾습니다. 기한이 있는 것이 여럿입니다."],
   /* 2026-10-05 V2 §16 — 지시서가 적은 열여덟 중 모자라던 것들 */
-  "/tools/target":["목표 매출 계산",
-                 "가져가고 싶은 월 순이익을 적으시면, 그러려면 얼마를 팔아야 하는지 월 매출 · 하루 매출 · 하루 손님 수까지 나옵니다."],
-  "/tools/premium":["권리금 따져보기",
-                 "달라는 권리금이 몇 달이면 돌아오는지, 그중 눈에 보이는 시설값이 얼마인지를 갈라 봅니다. 남은 계약 안에 회수되는지까지."],
-  "/tools/rent":["임대료 비율 계산",
-                 "월 매출에서 월세와 관리비가 몇 퍼센트인지. 권리금까지 영업 기간으로 나눠 보면 자리에 실제로 쓰는 돈이 보입니다."],
-  "/tools/hire":["직원 고용비용 계산",
-                 "급여만 보시면 실제보다 적게 잡힙니다. 사업주 부담 4대보험 · 퇴직충당 · 식대까지 더한 한 사람 월 비용과 1년치."],
-  "/tools/delivery":["배달 한 건 남는 돈",
-                 "중개 · 결제 수수료는 비율로, 배달비 · 포장재 · 재료비는 건마다 빠집니다. 둘을 갈라서 한 건에 얼마가 남는지 봅니다."],
-  "/tools/margin":["원가율 · 마진 계산",
-                 "판매가와 재료비를 넣으면 원가율과 한 개 남는 돈이 같이 나옵니다. 한 달 판매 수량까지 적으시면 달 단위로도 봅니다."],
-  "/tools/closecost":["폐업 예상비용",
-                 "철거 · 원상복구 · 위약금처럼 나가는 돈과 보증금 · 시설 매각처럼 돌아오는 돈을 같이 놓습니다. 중요한 것은 그 차액입니다."],
   "/faq":       ["자주 묻는 것",
                  "돈이 드는지, 연락처가 업체에 바로 넘어가는지, 등록된 업체가 몇 곳인지 — 먼저 궁금해하시는 것들에 그대로 답했습니다."],
-  "/about":     ["소개",
-                 "무엇을 하고 무엇을 하지 않는지 적어 두었습니다. 저희는 중개자이고 거래 당사자가 아닙니다."],
   "/terms":     ["이용약관",
                  "중개 · 매칭 서비스 기준으로 쓴 이용약관입니다. 회사의 지위, 견적 · 상담의 처리, 업체와 이용자 사이의 책임 범위를 적어 두었습니다."],
   "/privacy":   ["개인정보처리방침",
@@ -188,35 +131,9 @@ var META = {
    **주석 쪽을 먼저 맞혀** 여기 적힌 꺾쇠를 배열로 읽습니다 — 이
    저장소가 화면 표시(`main` 칸)를 주석에 적어 스크립트 서른둘을
    통째로 삼킨 그 자리이고, 여기서도 **한 번 더** 빠졌습니다. */
-var NOINDEX = ["/my","/search","/quote","/compare","/sample",
-               "/track","/sell-biz","/about"];
+var NOINDEX = ["/my","/search","/quote","/track"];
 
-/* ⚠️⚠️ **창업 · 폐업 쪽 157개는 2026-10-31 로 색인에서 뺐습니다**
-   (사장님 지시 — "인수인계 자료들은 다 지워줘" · 범위는 "화면에서
-   내리고 주소는 308 로 살림" 을 고르셨습니다).
 
-   `vercel.json` 의 redirects 가 그 157개를 **308 로 `/` 에** 보냅니다.
-   그런데 sitemap 이 그 주소를 계속 내면 구글에게 **"크롤해라" 와
-   "옮겼다" 를 같이** 말하는 꼴이고, sitemaps.org 와 구글 둘 다
-   리다이렉트하는 주소를 sitemap 에 올리지 말라고 적어 두었습니다.
-
-   ⚠️⚠️ **HTML 생성은 일부러 그대로 둡니다.** `allRoutes()` 에서 빼면
-   가드 넷(`checkProcess` · `checkHalls` · `checkSvcPage` ·
-   `checkOffers`)이 데이터의 `to` 주소를 거기서 찾기 때문에 **빌드가
-   멈춥니다** — 코드 · 데이터를 살려 두기로 한 범위라 그쪽을 손대지
-   않았습니다. 만들어 둔 HTML 은 308 이 먼저 걸려 **아무도 받지
-   않습니다.**
-
-   ⚠️ 되돌리시려면 **이 배열을 비우고** `vercel.json` 맨 뒤의
-   redirect 스물넷을 지우면 전과 똑같습니다.
-
-   ⚠️⚠️ **위 `NOINDEX` 와 꼴을 합치지 마세요.** `check.js` 가
-   `var NOINDEX` 의 **납작한 배열**을 글자로 읽어 갑니다 — 꼴을 바꾸면
-   거기서 "읽지 못했습니다" 로 멈춥니다. 그래서 접두사는 따로 둡니다. */
-var NOINDEX_PRE = ["/startup", "/closure", "/operation", "/transfer",
-                   "/providers", "/franchise", "/stores", "/assets",
-                   "/support", "/content", "/tools",
-                   "/g/", "/c/", "/p/", "/f/", "/s/", "/a/"];
 
 /* 정확히 일치하거나 접두사로 걸리면 색인에서 뺍니다.
    ⚠️ 접두사는 `/tools` 처럼 그 자체와 `/tools/...` 를 **둘 다** 봅니다 —
@@ -224,80 +141,18 @@ var NOINDEX_PRE = ["/startup", "/closure", "/operation", "/transfer",
    걸리지 않습니다 (재서 확인했습니다). */
 function amNoIndex(p2){
   if(NOINDEX.indexOf(p2) >= 0) return true;
-  for(var i = 0; i < NOINDEX_PRE.length; i++){
-    var k = NOINDEX_PRE[i];
-    if(k.slice(-1) === "/"){ if(p2.indexOf(k) === 0) return true; }
-    else if(p2 === k || p2.indexOf(k + "/") === 0) return true;
-  }
+  /* 예시 상품(/d/sample-…)은 routeInfo 가 r.noindex 를 따로 켭니다 */
   return false;
 }
 
-/* ⚠️⚠️ **업체 · 브랜드 상세의 설명을 등록값으로 만듭니다.**
-   전에는 `pv.intro` 한 줄을 그대로 썼습니다 — 소개가 짧으면 검색 결과에
-   쓸 설명이 안 되고(30자 미만이면 빌드가 멈춥니다), 그 화면이 바로
-   "안양 카페 인테리어 업체" 로 잡혀야 할 자리입니다.
-
-   ⚠️ **지어내지 않습니다** — 지역 · 하는 일 · 업종은 전부 등록된 값이고,
-   없으면 그 조각이 빠집니다 (절대 규칙 1). */
-function pvDesc(pv){
-  var who = [];
-  var reg = (pv.regions||[]).map(amRegionName).filter(Boolean);
-  var gu  = (pv.gu||[]).slice(0, 3);
-  var sub = (pv.subs||[]).map(amSubName).filter(Boolean);
-  var ind = (pv.industries||[]).map(amIndustryName).filter(Boolean);
-  if(reg.length || gu.length) who.push((gu.length ? gu.join(" · ") : reg.join(" · ")) + "에서");
-  if(ind.length) who.push(ind.join(" · "));
-  if(sub.length) who.push(sub.join(" · ") + " 일을 합니다.");
-  else who.push("일하는 업체입니다.");
-  var out = pv.name + " — " + who.join(" ");
-  if(pv.intro) out += " " + pv.intro;
-  return out + " 지역 · 업종 · 평수 · 예산을 적으시면 견적을 받으실 수 있습니다. " +
-         "연락처는 사장님이 동의하신 뒤에만 오갑니다.";
-}
-function frDesc(fr){
-  var fc = (typeof amFranchiseCat === "function") ? amFranchiseCat(fr.cat) : null;
-  var out = fr.name + " — " + (fc ? fc.name + " 프랜차이즈입니다. " : "");
-  if(fr.intro) out += fr.intro + " ";
-  var c = (typeof amFranchiseCost === "function") ? amFranchiseCost(fr) : null;
-  /* ⚠️ 금액은 출처와 기준일이 있는 것만 — 검색 결과에도 같은 규칙입니다 */
-  if(c && c.total) out += "총 예상 창업비 " + c.total + (c.unit||"만원") +
-                          " (" + c.source + " 기준 " + c.asOf + "). ";
-  if(c && c.pyeong) out += "권장 평수 " + c.pyeong + "평. ";
-  return out + "창업비 · 가맹비 · 보증금 · 모집지역을 같은 기준으로 비교하실 수 있습니다.";
-}
-
-/* 매물 상세의 설명 — ⚠️ **올리신 사장님이 적은 값만** 씁니다. 평수 ·
-   보증금 · 월세 · 권리금을 우리가 확인하지 않으므로 설명에도 "사장님이
-   적으신 값" 이라는 꼬리를 답니다. 매출은 **설명에 넣지 않습니다** —
-   검색 결과는 우리 손을 떠나 한참 돌아다니고, 확인할 방법이 없는
-   숫자를 거기까지 내보내면 안 됩니다. */
-function stDesc(s){
-  var where = amRegionName(s.region, s.gu);
-  var out = s.title + " — " + [where, amIndustryName(s.industry)].filter(Boolean).join(" ");
-  var m = [];
-  if(s.pyeong  != null) m.push(s.pyeong + "평");
-  if(s.deposit != null) m.push("보증금 " + s.deposit + "만원");
-  if(s.rent    != null) m.push("월세 " + s.rent + "만원");
-  if(s.premium != null) m.push("권리금 " + s.premium + "만원");
-  if(m.length) out += " " + m.join(" · ") + ".";
-  if(s.withEquip) out += " 시설을 그대로 인수하실 수 있습니다.";
-  return out + " 올리신 사장님이 적으신 값이고 저희가 보증하는 값이 아닙니다. " +
-         "보시려는 날짜를 적으시면 그대로 전달합니다.";
-}
-function asDesc(a){
-  var where = amRegionName(a.region, a.gu);
-  var kind  = (typeof amEquipName === "function") ? amEquipName(a.sub) : "";
-  var out = a.title + " — " + [where, amIndustryName(a.industry), kind]
-            .filter(Boolean).join(" ") + ".";
-  var m = [];
-  if(a.brand) m.push(a.brand);
-  if(a.year)  m.push(a.year + "년식");
-  if(a.price != null) m.push(a.price + "만원" + (a.nego ? " (협의 가능)" : ""));
-  if(m.length) out += " " + m.join(" · ") + ".";
-  var d = (window.AM_DEAL_KINDS||[]).filter(function(x){ return x.key === a.deal; })[0];
-  if(d) out += " " + d.name + "로 거래하실 수 있습니다.";
-  return out + " 사업을 정리하면서 나온 것이고, 올리신 사장님이 적으신 값입니다.";
-}
+/* ⚠️⚠️ **2026-10-31 — 상세 설명 넷(pvDesc · frDesc · stDesc · asDesc)을
+   내렸습니다.** 사장님 지시("인수인계 자료를 다 지워 · 중고폰 쪽은
+   살려두고")로 그 넷이 설명을 만들던 네 주소(/p/:id · /f/:slug ·
+   /s/:id · /a/:id)가 routeInfo 에서 없어졌습니다 — 70줄이 **20개 화면
+   전부에 실리면서** 아무 데서도 안 불리고 있었습니다.
+   ⚠️ 꺼내 보시려면 git show 6d85a17:js/app.js 입니다. 그 넷을
+   되살리시려면 routeInfo 에 그 네 갈래를 같이 넣으세요 — 설명만
+   되살리면 또 아무도 안 부릅니다 (node tools/check-dead.js 가 셉니다). */
 
 window.routeInfo = function(path){
   var r = { ok:true, title:"", desc:"", canon:null,
@@ -310,16 +165,6 @@ window.routeInfo = function(path){
        옛 주소 `/home` 은 `vercel.json` 이 308 로 여기 보냅니다 —
        화면이 아니라 **안 깨지라고 남겨 둔 길**입니다. */
     "/":          "main",
-    "/startup":   "startup",
-    "/operation": "operation",
-    "/transfer":"acquisition",
-    "/closure":   "closure",
-    "/providers": "providers",
-    "/franchise": "franchise",
-    "/stores":    "stores",
-    "/assets":    "assets",
-    "/support":   "support",
-    "/content":   "contents",
     "/quote":     "quote",
     "/sell":      "phone-sell",
     "/shop":      "phone-shop",
@@ -328,142 +173,15 @@ window.routeInfo = function(path){
     "/guide":     "phone-guide",
     "/biz":       "phone-biz",
     "/repair":    "phone-repair",
-    "/sell-biz":  "sell",
-    "/sample":    "sample",
     "/join":      "join",
     "/my":        "my",
     "/search":    "search",
-    "/compare":   "compare",
-    "/tools":      "tools",
-    "/tools/cost": "tool-cost",
-    "/tools/fixed":"tool-fixed",
-    "/tools/bep":  "tool-bep",
-    "/tools/labor":"tool-labor",
-    "/tools/vs":   "tool-vs",
-    "/tools/close":"tool-close",
-    "/tools/target":"tool-target",
-    "/tools/premium":"tool-premium",
-    "/tools/rent":"tool-rent",
-    "/tools/hire":"tool-hire",
-    "/tools/delivery":"tool-delivery",
-    "/tools/margin":"tool-margin",
-    "/tools/closecost":"tool-closecost",
     "/faq":       "faq",
-    "/about":     "about",
     "/terms":     "terms",
     "/privacy":   "privacy"
   };
   if(VIEW[path]){ r.view = VIEW[path]; return r; }
 
-  /* 사업 단계 — /g/build (2026-10-04 구조 개편)
-     ⚠️ 새 분류를 만든 것이 아니라 `catalog.js` 의 분류를 묶어 보는
-     화면입니다. 제목 · 설명이 여섯 개 다 달라야 빌드가 통과합니다. */
-  var mg = /^\/g\/([a-z0-9-]+)$/.exec(path);
-  if(mg){
-    var st = (typeof amStage === "function") ? amStage(mg[1]) : null;
-    if(!st){ r.ok = false; return r; }
-    var sc = (typeof amStageCats === "function") ? amStageCats(st) : [];
-    r.view = "stage"; r.stage = st;
-    r.title = st.name + " — 필요한 서비스 한곳에서";
-    r.desc  = st.lead + " " + st.sub + " 등 " + st.name.replace(/ /g, "") +
-              " 단계에 필요한 분야 " + sc.length + "가지를 모았습니다. " +
-              "업체를 비교하고 한 번에 견적을 받으세요.";
-    return r;
-  }
-
-  /* 업종별 창업 — /startup/cafe */
-  var m = /^\/startup\/([a-z0-9-]+)$/.exec(path);
-  if(m){
-    var ind = (typeof amIndustry === "function") ? amIndustry(m[1]) : null;
-    if(!ind){ r.ok = false; return r; }
-    r.view = "startupIndustry"; r.industry = ind;
-    r.title = ind.name + " 창업 — 필요한 모든 것";
-    r.desc  = ind.name + " 창업에 실제로 필요한 것만 추렸습니다. " +
-              "점포 · 상권 · 인테리어 · " + (ind.equip[0] ? ind.equip[0].name + " · " : "") +
-              "가구 · POS · 인허가 · 마케팅까지 업체를 비교하고 견적을 받으세요.";
-    return r;
-  }
-  /* 업종별 폐업 — /closure/restaurant */
-  var mc = /^\/closure\/([a-z0-9-]+)$/.exec(path);
-  if(mc){
-    var ind2 = (typeof amIndustry === "function") ? amIndustry(mc[1]) : null;
-    if(!ind2){ r.ok = false; return r; }
-    r.view = "closureIndustry"; r.industry = ind2;
-    r.title = ind2.name + " 폐업 — 정리에 필요한 모든 것";
-    r.desc  = ind2.name + " 정리에 필요한 것을 순서대로 정리했습니다. " +
-              "매장 양도 · 시설 집기 처분 · 재고 · 철거 · 원상복구 · 폐업신고까지.";
-    return r;
-  }
-  /* 업체를 찾는 분류 — /providers/interior */
-  var mp = /^\/providers\/([a-z0-9-]+)$/.exec(path);
-  if(mp){
-    var pc = (typeof amCat === "function") ? amCat(mp[1]) : null;
-    if(!pc || pc.kind !== "provider"){ r.ok = false; return r; }
-    r.view = "providerCat"; r.cat = pc;
-    r.title = pc.name + " 업체찾기";
-    r.desc  = pc.desc + " " + (pc.items||[]).slice(0,6).map(function(i){ return i.name; }).join(" · ") +
-              " 전문업체를 지역과 업종으로 비교하실 수 있습니다.";
-    return r;
-  }
-  /* 정보 · 매물 성격의 분류 — /c/area */
-  var mcat = /^\/c\/([a-z0-9-]+)$/.exec(path);
-  if(mcat){
-    var cc = (typeof amCat === "function") ? amCat(mcat[1]) : null;
-    if(!cc || cc.kind === "provider"){ r.ok = false; return r; }
-    r.view = "cat"; r.cat = cc;
-    r.title = cc.name;
-    r.desc  = cc.desc + " " + (cc.items||[]).slice(0,6).map(function(i){ return i.name; }).join(" · ") + ".";
-    return r;
-  }
-  /* 프랜차이즈 분류 — /franchise/cafe */
-  var mf = /^\/franchise\/([a-z0-9-]+)$/.exec(path);
-  if(mf){
-    var fc = (typeof amFranchiseCat === "function") ? amFranchiseCat(mf[1]) : null;
-    if(!fc){ r.ok = false; return r; }
-    r.view = "franchiseCat"; r.fcat = fc;
-    r.title = fc.name + " 프랜차이즈";
-    r.desc  = fc.name + " 프랜차이즈 브랜드를 창업비 · 가맹비 · 권장 평수 · 모집지역으로 비교하고 창업 상담을 신청하실 수 있습니다.";
-    return r;
-  }
-  /* 브랜드 상세 — /f/:slug */
-  var mfd = /^\/f\/([a-z0-9-]+)$/.exec(path);
-  if(mfd){
-    var fr = (typeof amFranchise === "function") ? amFranchise(mfd[1]) : null;
-    if(!fr){ r.ok = false; return r; }
-    r.view = "franchiseOne"; r.fr = fr;
-    r.title = fr.name; r.desc = frDesc(fr);
-    return r;
-  }
-  /* 업체 상세 — /p/:id */
-  var mpd = /^\/p\/([a-z0-9-]+)$/.exec(path);
-  if(mpd){
-    var pv = (typeof amProvider === "function") ? amProvider(mpd[1]) : null;
-    if(!pv){ r.ok = false; return r; }
-    r.view = "providerOne"; r.provider = pv;
-    r.title = pv.name; r.desc = pvDesc(pv);
-    return r;
-  }
-  /* 점포 상세 — /s/:id
-     ⚠️ 이 둘이 없어서 매물 카드가 **열리지 않았습니다.** 한 건을 찾아
-     오는 `amStore()` · `amAsset()` 은 처음부터 있었는데 쓰는 화면이
-     없었고, 사장님이 적어 주신 설명 · 사진 · 매출이 전부 죽은 칸이었습니다. */
-  var mst = /^\/s\/([a-zA-Z0-9-]+)$/.exec(path);
-  if(mst){
-    var st = (typeof amStore === "function") ? amStore(mst[1]) : null;
-    if(!st){ r.ok = false; return r; }
-    r.view = "storeOne"; r.store = st;
-    r.title = st.title; r.desc = stDesc(st);
-    return r;
-  }
-  /* 시설 · 집기 상세 — /a/:id */
-  var mas = /^\/a\/([a-zA-Z0-9-]+)$/.exec(path);
-  if(mas){
-    var as = (typeof amAsset === "function") ? amAsset(mas[1]) : null;
-    if(!as){ r.ok = false; return r; }
-    r.view = "assetOne"; r.asset = as;
-    r.title = as.title; r.desc = asDesc(as);
-    return r;
-  }
   /* 중고폰 상품 하나 — /d/:id (2026-10-29)
      ⚠️⚠️ **예시 상품은 noindex 입니다.** 지어낸 값이 붙은 화면이
      검색에 걸리면 손님이 그걸 보고 돈을 보냅니다 — `build-pages.js`
@@ -486,15 +204,6 @@ window.routeInfo = function(path){
       ". 외관 등급 · 배터리 상태 · 검수 항목 · 구성품 · 보증 조건을 " +
       "그대로 밝힙니다.";
     r.noindex = !!one.sample;
-    return r;
-  }
-  /* 글 하나 — /content/:slug */
-  var mct = /^\/content\/([a-z0-9-]+)$/.exec(path);
-  if(mct){
-    var ct = (typeof amContent === "function") ? amContent(mct[1]) : null;
-    if(!ct){ r.ok = false; return r; }
-    r.view = "content"; r.content = ct;
-    r.title = ct.title; r.desc = ct.lead;
     return r;
   }
 
@@ -694,28 +403,6 @@ function render(){
   var html;
   switch(r.view){
     case "main":            html = PageMain();                      break;
-    case "stage":           html = PageStage(r.stage);              break;
-    case "startup":         html = PageStartup();                   break;
-    case "operation":       html = PageOperation();                 break;
-    case "acquisition":     html = PageAcquisition();               break;
-    case "startupIndustry": html = PageStartupIndustry(r.industry); break;
-    case "closure":         html = PageClosure();                   break;
-    case "closureIndustry": html = PageClosureIndustry(r.industry);  break;
-    case "sample":          html = PageSample();                    break;
-    case "providers":       html = PageProviders();                 break;
-    case "providerCat":     html = PageProviderCat(r.cat);          break;
-    case "providerOne":     html = PageProviderOne(r.provider);     break;
-    case "cat":             html = PageCat(r.cat);                  break;
-    case "franchise":       html = PageFranchise();                 break;
-    case "franchiseCat":    html = PageFranchiseCat(r.fcat);        break;
-    case "franchiseOne":    html = PageFranchiseOne(r.fr);          break;
-    case "storeOne":        html = PageStoreOne(r.store);         break;
-    case "assetOne":        html = PageAssetOne(r.asset);         break;
-    case "stores":          html = PageStores();                    break;
-    case "assets":          html = PageAssets();                    break;
-    case "support":         html = PageSupport();                   break;
-    case "contents":        html = PageContents();                  break;
-    case "content":         html = PageContent(r.content);          break;
     case "quote":           html = PageQuote();                     break;
     case "phone-sell":      html = PageSell();                      break;
     case "phone-shop":      html = PageShop();                      break;
@@ -725,27 +412,10 @@ function render(){
     case "phone-biz":       html = PageBiz();                       break;
     case "phone-repair":    html = PageRepair();                    break;
     case "product":         html = PageProduct(r.product);          break;
-    case "sell":            html = PageSellBiz();                   break;
     case "join":            html = PageJoin();                      break;
     case "my":              html = PageMy();                        break;
     case "search":          html = PageSearch();                    break;
-    case "compare":         html = PageCompare();                   break;
-    case "tools":           html = PageTools();                     break;
-    case "tool-cost":       html = PageToolCost();                  break;
-    case "tool-fixed":      html = PageToolFixed();                 break;
-    case "tool-bep":        html = PageToolBep();                   break;
-    case "tool-labor":      html = PageToolLabor();                 break;
-    case "tool-vs":         html = PageToolVs();                    break;
-    case "tool-close":      html = PageToolClose();                 break;
-    case "tool-target":     html = PageToolTarget();                break;
-    case "tool-premium":    html = PageToolPremium();               break;
-    case "tool-rent":       html = PageToolRent();                  break;
-    case "tool-hire":       html = PageToolHire();                  break;
-    case "tool-delivery":   html = PageToolDelivery();              break;
-    case "tool-margin":     html = PageToolMargin();                break;
-    case "tool-closecost":  html = PageToolCloseCost();             break;
     case "faq":             html = PageFaq();                       break;
-    case "about":           html = PageAbout();                     break;
     case "terms":           html = PageTerms();                     break;
     case "privacy":         html = PagePrivacy();                   break;
     default:                return notFound(path);
@@ -806,16 +476,22 @@ window.rerender = function(keepScroll){
   render();
 };
 
+/* ⚠️⚠️ **2026-10-31 — 창업 · 폐업 둘로 보내고 있었습니다.** 사장님
+   지시로 그 157개 주소가 `vercel.json` 에서 308 로 `/` 에 가므로,
+   404 에서 거기로 보내면 **눌러도 메인으로 튕깁니다** — 전수 점검의
+   "안 열리는 주소" 가 `/startup` · `/closure` 로 잡았습니다.
+   ⚠️ `404.html`(라우터 밖에서 혼자 뜨는 화면)에도 **같은 단추 둘**이
+   있습니다 — 한쪽만 고치면 그 화면만 옛 길로 남습니다. */
 function notFound(path){
   $("view").innerHTML =
     '<div class="w pad-pg">'+
       '<p class="eyebrow">404</p>'+
       '<h1 class="pg-h1">찾으시는 페이지가 없습니다.</h1>'+
-      '<p class="pg-lead">주소가 바뀌었을 수 있습니다. 창업과 폐업 둘 중 '+
-        '하나를 고르시면 거기서 다시 찾으실 수 있습니다.</p>'+
+      '<p class="pg-lead">주소가 바뀌었을 수 있습니다. 팔거나 사시려는 것을 '+
+        '고르시면 거기서 다시 찾으실 수 있습니다.</p>'+
       '<div class="row-cta">'+
-        '<a class="btn btn-b btn-lg" href="/startup">창업 시작하기'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-o btn-lg" href="/closure">폐업 시작하기</a>'+
+        '<a class="btn btn-b btn-lg" href="/sell">내 폰 팔기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="/shop">중고폰 구매</a>'+
       '</div>'+
     '</div>';
   document.title = "찾을 수 없습니다 · " + ((window.AM_BRAND||{}).name || "");

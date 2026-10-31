@@ -706,6 +706,13 @@ const ADM_DEAL = [
   /* ══ ⑦ 회원 계정 저장 — 합치기 규칙 (js/state.js) ═══════════════
      ⚠️⚠️ **규칙은 하나입니다 — 보고 계신 화면이 이깁니다.** 합집합으로
      섞으면 폰에서 지운 것이 PC 에서 되살아납니다. */
+  /* ⚠️⚠️ **띄우는 화면을 /startup 에서 /quote 로 옮겼습니다**
+     (2026-10-31). 그 주소가 없어져서 정적 서버가 404.html 을 내는데
+     거기는 **스크립트를 하나도 안 싣습니다** — amPickGet 이 없어서
+     ReferenceError 로 이 묶음이 통째로 터졌습니다. 고를 서비스를
+     읽는 화면이 /quote 라 뜻으로도 그쪽이 맞습니다.
+     ⚠️ 살아 있는 주소는 tools/urls.json 에 있습니다 — 없는 주소를
+     띄우면 **검사가 아니라 404 를 재게** 됩니다. */
   console.log("\n⑦ 회원 계정 저장 — 이 브라우저가 비어 있으면 서버 것을 잇습니다");
   {
     const { ctx, pg, errs, sent } = await openMy(
@@ -714,7 +721,7 @@ const ADM_DEAL = [
         state:{ pick:["interior","repair/aircon-fix"],
                 draft:{ "q-ind":"cafe", "q-reg":"seoul" }, checks:["tax-file"],
                 updated_at:"2026-10-20T01:00:00Z" } },
-      { path:"/startup" });
+      { path:"/quote" });
     ok("/api/me?s=1 로 메모장만 묻는다 (신청 쉰 건을 안 끌고 온다)",
         sent.some(x => x === "me:?s=1"), sent.join(" | "));
     const got = await pg.evaluate(() => amPickGet());
@@ -738,7 +745,7 @@ const ADM_DEAL = [
       { auth:true, signedIn:true, role:"customer", requests:[], quotes:[],
         state:{ pick:["demolish"], draft:{}, checks:[],
                 updated_at:"2026-10-20T01:00:00Z" } },
-      { path:"/startup",
+      { path:"/quote",
         before:"try{localStorage.setItem('am.pick.v1'," +
                "JSON.stringify({ids:['interior'],at:Date.now()}))}catch(e){}" });
     const got = await pg.evaluate(() => amPickGet());
@@ -767,7 +774,7 @@ const ADM_DEAL = [
       { auth:true, signedIn:true, role:"customer" },
       { auth:true, signedIn:true, role:"customer", requests:[], quotes:[],
         state:{ pick:[], draft:{}, checks:[], updated_at:null } },
-      { path:"/startup",
+      { path:"/quote",
         before:"try{localStorage.setItem('am.pick.v1'," +
                "JSON.stringify({ids:['interior'],at:Date.now()}));" +
                "localStorage.setItem('am.opsck.v1'," +
@@ -812,7 +819,9 @@ const ADM_DEAL = [
       body: JSON.stringify({ ok:false, error:"거절" }) }));
     await pg.addInitScript("try{localStorage.setItem('am.pick.v1'," +
       "JSON.stringify({ids:['interior'],at:Date.now()}))}catch(e){}");
-    await pg.goto(base + "/startup", { waitUntil:"networkidle" });
+    /* ⚠️ /quote 입니다 — /startup 은 없어졌고 404.html 은 스크립트를
+       하나도 안 싣습니다 (위 ⑦ 머리말) */
+    await pg.goto(base + "/quote", { waitUntil:"networkidle" });
     await pg.waitForTimeout(900);
     ok("amStateOn() 이 거짓이다 (서버에도 저장됨 표시를 안 켭니다)",
         (await pg.evaluate(() => amStateOn())) === false);

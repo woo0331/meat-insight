@@ -1,8 +1,15 @@
 /* ════════════════════════════════════════════════════════════════════
    통합검색 (§43)
 
-   결과를 **업체 · 프랜차이즈 · 매장 · 시설장비 · 분류 · 정보**로
-   나눠서 보여 줍니다.
+   결과를 **기종 · 중고폰 상품 · 폰웨이 서비스 · 자주 묻는 것**
+   넷으로 나눠서 보여 줍니다.
+
+   ⚠️⚠️ **2026-10-31 — 창업 · 폐업 묶음 아홉을 껐습니다**(`AM_SEARCH_BIZ`).
+   업체 · 프랜차이즈 · 매장 · 시설장비 · 분류 · 정보 · 공고 · 도구 ·
+   여정이 거기 있었고, 그 157개 주소가 `vercel.json` 에서 308 로 `/` 에
+   갑니다 — 검색에 남겨 두면 눌러도 메인으로 튕깁니다.
+   ⚠️ 되살리시려면 그 값을 `true` 로 두고, `check.js` 의
+   "검색이 기종과 상품을 같이 찾는다" 도 **그날 같이** 되돌리세요.
 
    ⚠️ **새 데이터를 만들면 여기 색인에도 넣으세요.** 이 저장소에서
    글 열두 편을 만들어 놓고 검색에 안 넣어서, 손님에게는 없는 것과
@@ -105,25 +112,6 @@ function amScore(hay, words){
   return words.length > 1 ? n * hit : n;
 }
 
-/* 글 한 편을 **검색할 수 있는 한 덩이 글자**로 폅니다.
-   ⚠️ `body[]` 는 { h, p[], ul[] } 꼴입니다 — 셋 다 넣습니다.
-   ⚠️ `source` 와 `next` 는 뺍니다. 출처 기관 이름("국세청")이 본문보다
-   흔해서, 안 빼면 세무와 상관없는 글이 "국세청" 검색에 줄줄이 걸립니다. */
-var AM_CT_TEXT = {};
-function amContentText(c){
-  /* ⚠️ 글 객체에 `__tx` 를 붙이지 않습니다 — 공유 데이터에 몰래 칸을
-     하나 더하는 것이고, 나중에 그 객체를 그대로 내보내는 자리가
-     생기면 거기에 같이 딸려 나갑니다. 밖에 따로 들고 있습니다. */
-  if(AM_CT_TEXT[c.slug] !== undefined) return AM_CT_TEXT[c.slug];
-  var out = [];
-  (c.body || []).forEach(function(b){
-    if(b.h) out.push(b.h);
-    (b.p  || []).forEach(function(t){ out.push(t); });
-    (b.ul || []).forEach(function(t){ out.push(t); });
-  });
-  /* 굵게 표시(**)는 검색감이 아닙니다 — 낱말 가운데 들어가면 못 맞힙니다 */
-  return (AM_CT_TEXT[c.slug] = out.join(" ").split("**").join(""));
-}
 
 window.amSearch = function(q){
   var words = q.toLowerCase().split(" ").filter(Boolean);
@@ -135,12 +123,6 @@ window.amSearch = function(q){
        차례라(`Object.keys(G)`) 손님이 제일 먼저 찾는 둘을 위에 둡니다. */
     model:{ name:"기종", rows:[] }, shop:{ name:"중고폰 상품", rows:[] },
     page:{ name:"폰웨이 서비스", rows:[] },
-    provider:{ name:"업체", rows:[] }, franchise:{ name:"프랜차이즈", rows:[] },
-    store:{ name:"매장 · 점포", rows:[] }, asset:{ name:"시설 · 장비", rows:[] },
-    cat:{ name:"분류", rows:[] }, industry:{ name:"업종", rows:[] },
-    content:{ name:"정보", rows:[] },
-    tool:{ name:"도구", rows:[] },
-    support:{ name:"지원사업", rows:[] },
     /* ⚠️ `push()` 는 없는 묶음 이름을 받으면 그 자리에서 던집니다 —
        화면이 통째로 안 그려집니다. 묶음을 먼저 만드세요. */
     info:{ name:"자주 묻는 것", rows:[] }
@@ -201,127 +183,15 @@ window.amSearch = function(q){
     push("page", m[0], m[1], x.to,
       amScore(m[0] + " " + m[1] + " " + x.kw, words) * 2);
   });
-  /* ⚠️⚠️ **창업 · 폐업 쪽 색인을 2026-10-31 로 껐습니다** (사장님 지시 —
-     "인수인계 자료들은 다 지워줘"). 그 157개는 지금 `vercel.json` 이
-     **308 로 `/` 에** 보내므로, 색인에 두면 검색 결과를 눌러도 메인으로
-     튕깁니다 — 손님에게는 그게 **검색이 고장난 것**으로 읽힙니다.
-
-     ⚠️⚠️ **코드를 지우지 않았습니다.** 아래 묶음 아홉(업종 · 단계 ·
-     분류 · 도구 · 업체 · 프랜차이즈 · 점포 · 시설 · 공고)이 그대로
-     있고, 되살리시려면 **이 한 줄을 `true` 로** 바꾸면 됩니다.
-     ⚠️ 그날 `vercel.json` 의 redirect 스물넷과 `js/app.js` 의
-     `NOINDEX_PRE` 도 같이 되돌리세요 — 색인만 켜면 결과는 뜨는데
-     누르면 308 이 먼저 걸립니다.
-
-     ⚠️ 묶음 선언(`G`)은 **안 지웁니다** — 줄이 0개면 화면이 그 묶음을
-     아예 안 그립니다(`if(!g.rows.length) return ""`). 선언을 지우면
-     `push()` 가 없는 묶음 이름을 받아 **그 자리에서 던지고 검색 화면이
-     통째로 안 그려집니다** (바로 위 ⚠️ 가 적어 둔 그것입니다). */
-  var AM_SEARCH_BIZ = false;
-
-  if(AM_SEARCH_BIZ){
-  (window.AM_INDUSTRIES||[]).forEach(function(i){
-    /* ⚠️⚠️ **세부 업종 말까지 읽습니다** (2026-10-09 지시서 PART 3).
-       전에는 이름과 짧은 줄만 봐서, 사장님들이 쓰는 업종 말 서른 중
-       **스물한 개가 0건**이었습니다 — 지시서 PART 2 4-4 가 이름까지
-       적은 "미용실"(우리 이름은 "미용 · 헤어")과 "소매업"(우리 이름은
-       "소매 · 편의점")이 거기 있었습니다. 자기 업종 이름을 치는 분이
-       0건을 보는 것이라 제일 나쁜 종류입니다.
-       ⚠️ 세부 업종은 `indgroups.js` 한 곳이고, 짧은 줄과 어긋나면
-       빌드가 멈춥니다 (checkIndGroups). */
-    var subs = (window.amIndSubs ? window.amIndSubs(i.key) : []).join(" ");
-    var s = amScore(i.name+" "+i.lead+" "+subs, words);
-    /* ⚠️ 아래 줄(`sub`)은 **짧은 줄**을 그대로 냅니다 — 세부 업종
-       스물넷을 다 깔면 결과 한 줄이 화면을 먹습니다. */
-    push("industry", i.name+" 창업", i.lead, "/startup/"+i.key, s);
-    push("industry", i.name+" 폐업", "정리에 필요한 것", "/closure/"+i.key, s ? s-0.5 : 0);
-  });
-  /* ⚠️ **사업 단계 여섯도 검색감입니다** (2026-10-04 구조 개편).
-     손님은 "매장 운영" · "양도" 라고 치는데, 그건 분류 이름이 아니라
-     **단계 이름**입니다 — 색인에 없으면 메인에서만 갈 수 있는 화면이
-     됩니다. 대표 서비스(`sub`)까지 검색감으로 씁니다. */
-  (window.AM_STAGES || []).forEach(function(st){
-    /* ⚠️ 여정 넷과 **이름이 겹칩니다** (매장 운영 · 매장 양도 양수) —
-       같은 이름 두 줄이 나란히 뜨면 검색이 고장난 것처럼 보입니다.
-       단계 쪽에 "단계" 를 붙여 갈라 둡니다. */
-    push("cat", st.name + " 단계", st.lead, "/g/" + st.key,
-      amScore(st.name + " " + st.lead + " " + st.sub, words) * 2);
-  });
-  /* ⚠️⚠️ **여정 넷도 검색감입니다** (2026-10-05 V2 §1 · §22).
-     손님은 "운영" · "인수" · "양도" 라고 치는데, 그건 분류 이름도
-     단계 이름도 아니라 **여정 이름**입니다 — 색인에 없으면 메인에서만
-     갈 수 있는 화면이 됩니다. */
-  (window.AM_JOURNEYS || []).forEach(function(j){
-    push("cat", j.name, j.q, j.to,
-      amScore(j.name + " " + j.q + " " + j.lead + " " + j.sub, words) * 2);
-  });
-  /* ⚠️⚠️ **도구도 검색감입니다** (§22 — "검색 결과는 업체 · 정보 ·
-     서비스 · 매물 · 도구로 구분한다"). "손익분기" · "창업비" · "폐업
-     체크리스트" 를 치는 분이 실제로 많은데 색인에 없었습니다. */
-  (window.AM_TOOLS || []).forEach(function(t){
-    push("tool", t.name, t.lead, t.to,
-      amScore(t.name + " " + t.lead + " " + (t.ask||"") + " " + (t.out||""), words) * 2);
-  });
-  AM_CATS.forEach(function(c){
-    var subs = (c.items||[]).map(function(x){ return x.name; }).join(" ");
-    /* ⚠️ `kw` 는 분류가 들고 있는 **검색 전용 다른 말**입니다 (catalog.js).
-       화면에는 안 나오고 여기서만 씁니다 — "주방설비" 처럼 손님이 쓰는
-       말과 우리 이름("시설 · 장비")이 다른 자리를 메웁니다. */
-    var s = amScore(c.name+" "+c.lead+" "+c.desc+" "+(c.kw||"")+" "+subs, words);
-    push("cat", c.name, c.lead, catTo(c), s);
-    (c.items||[]).forEach(function(it){
-      var ss = amScore(it.name, words);
-      if(ss > 0) push("cat", it.name, c.name,
-        (c.kind === "provider" ? "/providers/"+c.key+"?s="+encodeURIComponent(it.key) : catTo(c)), ss + 1);
-    });
-  });
-  (window.AM_PROVIDERS||[]).forEach(function(p){
-    push("provider", p.name, (p.regions||[]).map(function(k){ return amRegionName(k); }).join(" · "),
-      "/p/"+p.id, amScore(p.name+" "+(p.intro||"")+" "+(p.subs||[]).join(" "), words));
-  });
-  (window.AM_FRANCHISES||[]).forEach(function(f){
-    push("franchise", f.name, f.intro||"", "/f/"+f.slug, amScore(f.name+" "+(f.intro||""), words));
-  });
-  (window.AM_STORES||[]).forEach(function(s){
-    push("store", s.title, amRegionName(s.region, s.gu), "/stores",
-      amScore(s.title+" "+amIndustryName(s.industry), words));
-  });
-  (window.AM_ASSETS||[]).forEach(function(a){
-    push("asset", a.title, amRegionName(a.region, a.gu), "/assets",
-      amScore(a.title+" "+(a.brand||"")+" "+amIndustryName(a.industry), words));
-  });
-  /* ⚠️⚠️ **글은 본문까지 검색감입니다** (2026-10-01).
-     전에는 제목과 머리말만 봤습니다. 그런데 손님은 글 제목을 치지
-     않습니다 — "배달" · "간이과세" · "보건증" 이라고 칩니다. 그 낱말이
-     **글 본문에는 다 있는데** 검색은 0건을 냈습니다. 사이트가 답을
-     들고 있으면서 못 찾아 주는 셈이라, `/faq` 와 같은 방식으로
-     바꿨습니다 (거기도 "답 본문 전체" 를 씁니다).
-
-     ⚠️ 제목이 맞은 글이 본문만 맞은 글보다 **위로** 와야 합니다 —
-     그래서 제목 · 머리말에 가중치 3 을 주고 본문은 1 입니다. 안 그러면
-     "원상복구" 를 쳤을 때 그 말이 스쳐 지나가는 긴 글이 정작 원상복구
-     글보다 위에 앉습니다. */
-  (window.AM_CONTENTS||[]).forEach(function(c){
-    push("content", c.title, c.lead, "/content/"+c.slug,
-      amScore(c.title+" "+c.lead, words) * 3 + amScore(amContentText(c), words));
-  });
-
-  /* ⚠️⚠️ **지원사업 공고도 검색감입니다.** 전에는 색인에 아예 없어서,
-     "소상공인" · "정책자금" · "간판 지원" 을 쳐도 공고가 안 나왔습니다.
-     기한이 있는 것이라 못 찾으면 **기회를 놓치는** 쪽입니다.
-
-     ⚠️ **`amSupports()` 를 거칩니다** — `link`(공고 원문) 없는 항목은
-     화면에 안 나오는데 검색에만 나오면, 눌러 들어간 자리에 그 공고가
-     없습니다. 거르는 규칙이 두 곳에서 갈리면 안 됩니다.
-
-     ⚠️ 기관 이름(`org`)과 대상(`who`)까지 검색감입니다 — 손님은 공고
-     이름을 모르고 "소상공인시장진흥공단" 이나 "폐업" 이라고 칩니다. */
-  (typeof amSupports === "function" ? amSupports() : []).forEach(function(x){
-    push("support", x.name, (x.org || "") + (x.when ? " · " + x.when : ""), "/support",
-      amScore(x.name + " " + (x.org||""), words) * 3 +
-      amScore([x.who, x.what, x.amount].filter(Boolean).join(" "), words));
-  });
-  } /* if(AM_SEARCH_BIZ) — 창업 · 폐업 색인 끝 */
+  /* ⚠️⚠️ **2026-10-31 — 창업 · 폐업 색인 묶음 아홉을 지웠습니다.**
+     사장님 지시("그냥 인수인계 자료를 다 지워 · 중고폰 쪽은 살려두고").
+     지운 묶음 — 업체 · 프랜차이즈 · 매장 · 시설 · 분류 · 업종 ·
+     정보 · 도구 · 지원사업.
+     ⚠️ 그 157개 주소는 `vercel.json` 이 **308 로 `/` 에** 보냅니다 —
+     색인에 두면 검색 결과를 눌러도 메인으로 튕기고, 손님에게는 그게
+     **검색이 고장난 것**으로 읽힙니다.
+     ⚠️ 꺼내 보시려면 `git show 6d85a17:js/pages/search.js`. 그날
+     `vercel.json` 의 redirect 와 `js/app.js` 의 라우터도 같이 되돌리세요. */
 
   /* ⚠️ 자주 묻는 것은 **질문과 답 본문 전체**를 검색감으로 씁니다.
      손님은 "자주 묻는 것" 이라고 치지 않고 "무료" · "연락처" ·

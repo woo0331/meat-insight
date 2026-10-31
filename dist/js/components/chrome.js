@@ -2,15 +2,15 @@
 
 window.AM_GNB = [
 
-  { to:"/shop",    name:"중고폰 구매" },
-  { to:"/sell",    name:"내 폰 판매" },
-  { to:"/repair",  name:"수리 서비스" },
-  { to:"/bid",     name:"B2B 경매" },
-  { to:"/biz?t=corp",   name:"기업 매입" },
-  { to:"/biz?t=export", name:"해외 수출" },
-  { to:"/guide",   name:"이용 안내" },
+  { to:"/sell",    name:"내 폰 팔기",     ic:"mobile" },
+  { to:"/shop",    name:"중고폰 구매",     ic:"bag" },
+  { to:"/repair",  name:"수리 서비스",     ic:"tool" },
+  { to:"/bid",     name:"B2B 도매·경매",   ic:"gavel" },
+  { to:"/biz?t=corp",   name:"기업 대량 매입", ic:"building" },
+  { to:"/biz?t=export", name:"해외 수출",   ic:"globe" },
+  { to:"/guide",   name:"이용 안내",       ic:"listck" },
 
-  { to:"/faq",     name:"도움말" }
+  { to:"/faq",     name:"도움말", ic:"chat" }
 ];
 
 var MNAV = [
@@ -51,36 +51,42 @@ function Logo(where){
 
 function Header(){
 
-  return '<header class="hd"><div class="w-wide hd-in">'+
+  return '<header class="hd hd-2r"><div class="hd-t1"><div class="w-wide hd-t1-in">'+
     Logo() +
-    '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
-      AM_GNB.map(function(m){
-        return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+esc(m.name)+'</a>';
-      }).join("")+
-    '</nav>'+
-    '<div class="hd-r">'+
 
-      '<form class="hd-s" role="search" onsubmit="return hdSearch(event)">'+
-        '<span class="hd-s-i" aria-hidden="true">'+icon("search",18)+'</span>'+
-        '<input type="search" id="hdQ" name="q" autocomplete="off" '+
-          'aria-label="통합 검색" placeholder="원하는 서비스나 업체를 검색하세요.">'+
-      '</form>'+
+    '<form class="hd-s" role="search" onsubmit="return hdSearch(event)">'+
+      '<span class="hd-s-i" aria-hidden="true">'+icon("search",19)+'</span>'+
+      '<input type="search" id="hdQ" name="q" autocomplete="off" '+
+        'aria-label="통합 검색" placeholder="어떤 기기를 찾고 계신가요? (예: 아이폰 15, 갤럭시 S24)">'+
+      '<button class="hd-s-go" type="submit" aria-label="검색">'+icon("search",18)+'</button>'+
+    '</form>'+
+    '<div class="hd-r">'+
       '<a class="hd-ic hd-ic-s" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
-      '<span class="hd-sep" aria-hidden="true"></span>'+
 
       '<span class="hd-auth" id="hdAuth" hidden></span>'+
 
-      '<a class="hd-txt" href="/my">'+icon("user",18)+'<span>내 기록</span></a>'+
+      '<a class="hd-txt" href="/my">'+icon("user",18)+'<span>마이페이지</span></a>'+
+
+      '<a class="hd-ic hd-fav" href="/my" aria-label="찜한 중고폰">'+
+        icon("heart",20)+'<span class="hd-fav-n" data-fav-n hidden></span></a>'+
 
       '<a class="btn btn-nv hd-cta" href="/sell" data-to="/sell">'+
-        '<span class="hd-cta-w">판매 </span>신청'+icon("arrow",16)+'</a>'+
-
+        '<span class="hd-cta-w">판매 </span>신청</a>'+
       '<button class="hd-ic hd-mb" type="button" id="hdMb" aria-label="메뉴"'+
         ' aria-expanded="false" aria-controls="hdMenu" onclick="hdMenu()">'+
         icon("menu",22)+'</button>'+
     '</div>'+
-    HeaderDrawer()+
-  '</div></header>';
+  '</div></div>'+
+
+  '<div class="hd-t2"><nav class="w-wide gnb" id="gnb" aria-label="주요 메뉴">'+
+    AM_GNB.map(function(m){
+      return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+
+        (m.ic ? '<i aria-hidden="true">'+icon(m.ic,17)+'</i>' : '')+
+        '<span>'+esc(m.name)+'</span></a>';
+    }).join("")+
+  '</nav></div>'+
+  HeaderDrawer()+
+  '</header>';
 }
 
 function HeaderDrawer(){
@@ -113,11 +119,12 @@ function hdAuthPaint(){
   window.amAuthAsk().then(function(a){
     if(!a || !a.on){ box.setAttribute("hidden",""); box.innerHTML = ""; return; }
     box.removeAttribute("hidden");
+
     box.innerHTML = a.signedIn
       ? '<a class="hd-txt" href="/my">'+icon("user",18)+
           '<span>'+esc("내 계정")+'</span></a>'
-      : '<a class="hd-txt" href="/my">'+icon("user",18)+
-          '<span>'+esc("로그인")+'</span></a>';
+      : '<a class="hd-txt hd-lgi" href="/my">'+
+          '<span>'+esc("로그인 · 회원가입")+'</span></a>';
   });
 }
 

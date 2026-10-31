@@ -521,7 +521,14 @@ const CASES = [
      아이콘이 스물여덟 장 있습니다 (없는 요소를 집으면 아무 일도 안
      나서 "검사가 안 잡는다" 로 보입니다 — 이 저장소에서 열한 번). */
   ["컬러 아이콘이 모두 같은 크기로 그려진다",
-   `const g = document.querySelector("#view svg.ia > g");
+   /* ⚠️ 2026-10-31 — **보이는** 아이콘을 집어야 합니다. 메인 맨 앞의
+      svg.ia 다섯은 폰 전용 빠른 메뉴(.pwmq)라 1440px 에서
+      display:none 이고, 검사는 폭 0 인 것을 건너뜁니다 — 그것을
+      줄여 봐도 아무 일이 안 나서 "검사가 안 잡는다" 로 보입니다
+      (이 저장소에서 열일곱 번째). */
+   `const sv = [].slice.call(document.querySelectorAll("#view svg.ia"))
+      .filter(function(e){ return e.getBoundingClientRect().width > 8; })[0];
+    const g = sv && sv.querySelector(":scope > g");
     if(g) g.setAttribute("transform", "translate(12 12) scale(0.5)");`],
   /* ══ 2026-10-11 UI/UX 지시서 — 전문관 넷 ═══════════════════════ */
   /* 한 전문관 안에서 두 칸이 같은 아이콘을 쓰면 걸려야 합니다 —

@@ -492,7 +492,13 @@ function shopIcon(md){
 function shopCard(p, sample){
   var md = (typeof amModel === "function") ? amModel(p.model) : null;
   var g  = (typeof amGrade === "function") ? amGrade(p.grade) : null;
-  return '<a class="shp-c'+(sample?" ex":"")+'" href="/d/'+esc(p.id)+'">'+
+  /* ⚠️⚠️ **하트는 `a` 밖입니다** — `a` 안의 `button` 은 브라우저가
+     쪼갭니다. 감싸개를 하나 두고 CSS 로 오른쪽 위에 겹칩니다
+     (`js/fav.js` · 메인의 `pwPdCard()` 와 **같은 규칙**이라야
+     담긴 것이 양쪽에서 같이 켜집니다). */
+  return '<span class="shp-w">'+
+    (typeof FavBtn === "function" ? FavBtn(p.id) : "")+
+    '<a class="shp-c'+(sample?" ex":"")+'" href="/d/'+esc(p.id)+'">'+
     '<span class="shp-ph">'+
       (sample ? '<span class="shp-ex">예시</span>' : '')+
       iconArt(shopIcon(md), 84)+'</span>'+
@@ -504,7 +510,7 @@ function shopCard(p, sample){
       '</span>'+
       '<b class="shp-p">'+Number(p.price||0).toLocaleString()+'원</b>'+
       (p.batt ? '<span class="shp-b">배터리 '+esc(String(p.batt))+'%</span>' : '')+
-    '</span></a>';
+    '</span></a></span>';
 }
 
 /* 목록 자리 — ⚠️ 거르개를 바꾸면 **이것만** 다시 그립니다 (shopApply).

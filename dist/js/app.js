@@ -246,6 +246,8 @@ function render(){
 
   if(typeof window.pickPaint === "function") window.pickPaint();
 
+  if(typeof window.amFavPaint === "function") window.amFavPaint();
+
   if(typeof window.amStateSync === "function") window.amStateSync();
 
   if(nowPath() === "/quote" && typeof window.quoteDraftPaint === "function")

@@ -79,13 +79,26 @@ window.AM_GNB = [
      **올라앉습니다** — `.gnb` 가 `min-width:0` 이라 문서 폭은 그대로여서
      가로 스크롤 검사는 영원히 통과합니다. AUDIT 의 `hdfit` 이 그
      자리이고, 손대실 때는 **재 보세요.** */
-  { to:"/shop",    name:"중고폰 구매" },
-  { to:"/sell",    name:"내 폰 판매" },
-  { to:"/repair",  name:"수리 서비스" },
-  { to:"/bid",     name:"B2B 경매" },
-  { to:"/biz?t=corp",   name:"기업 매입" },
-  { to:"/biz?t=export", name:"해외 수출" },
-  { to:"/guide",   name:"이용 안내" },
+  /* ⚠️⚠️ **2026-10-31 최종 확정 시안 §2 의 차례**입니다 — 시안이
+     `내 폰 팔기` 를 맨 앞에 두었고, 아이콘도 시안 그대로 한 칸씩
+     답니다 (`ic`).
+
+     ⚠️⚠️ **시안의 아홉 중 둘을 못 넣었습니다** (§11 · §13 — 보고 대상).
+       · `내 폰 시세` — 갈 곳이 `/sell` 하나뿐입니다. 메뉴 둘이 같은
+         주소를 가리키면 `paintGnb()` 가 **둘 다 켜고**, 구글에는 같은
+         내용이 두 주소로 나갑니다. 시세를 고르는 자리는 시안 §7 의
+         **오른쪽 사이드바**에 그대로 만들어 두었습니다.
+       · `매장 찾기` — 오프라인 매장이 **0곳**입니다. 넣으면 눌러서
+         빈 화면을 보시는 메뉴가 하나 생깁니다 (§11). 매장이 생기는
+         날 이 목록에 한 줄입니다.
+     ⚠️ `고객센터` 라고 적지 않은 까닭은 바로 아래에 있습니다. */
+  { to:"/sell",    name:"내 폰 팔기",     ic:"mobile" },
+  { to:"/shop",    name:"중고폰 구매",     ic:"bag" },
+  { to:"/repair",  name:"수리 서비스",     ic:"tool" },
+  { to:"/bid",     name:"B2B 도매·경매",   ic:"gavel" },
+  { to:"/biz?t=corp",   name:"기업 대량 매입", ic:"building" },
+  { to:"/biz?t=export", name:"해외 수출",   ic:"globe" },
+  { to:"/guide",   name:"이용 안내",       ic:"listck" },
   /* ⚠️⚠️ **"고객센터" 라고 적지 마세요** (2026-10-30 사장님이 정하셨고,
      이 저장소가 앞 서비스에서부터 못박아 둔 규칙입니다). 전화도 채팅도
      없고 사업자 전화번호 칸조차 비어 있어서, 그 이름으로 오신 분이
@@ -94,7 +107,7 @@ window.AM_GNB = [
      ⚠️ 전화 창구가 실제로 생기면 그날 `WOW_BIZ.phone` 을 채우세요 —
      화면이 그 값을 보고 전화 단추를 저절로 냅니다. 이름을 되돌리는
      것은 그때 함께 정하실 일입니다. */
-  { to:"/faq",     name:"도움말" }
+  { to:"/faq",     name:"도움말", ic:"chat" }
 ];
 
 /* 폰 아래 네비 — 다섯 칸을 넘기지 마세요. 손가락이 닿는 폭이 줄고
@@ -160,72 +173,68 @@ function Logo(where){
 function Header(){
   /* ⚠️ 본문 바로가기는 `index.html` 에 이미 있습니다. 여기서 또 내면
      읽어 주는 프로그램에 같은 것이 두 번 들립니다. */
-  return '<header class="hd"><div class="w-wide hd-in">'+
+  /* ⚠️⚠️ **2026-10-31 최종 확정 시안 §2 — 줄이 둘입니다.**
+     윗줄: 로고 · 큰 통합검색 · 오른쪽 아이콘 묶음 · 판매 신청
+     아랫줄: 메뉴 여덟 (아이콘 한 칸씩)
+
+     ⚠️⚠️ **메뉴가 제 줄을 가지면서 폭 걱정이 사라졌습니다** — 전에는
+     로고 · 검색 · CTA 와 한 줄을 나눠 써서 901px 에서 남는 폭이 30px
+     이었고, 넘치면 **가로 스크롤이 아니라 메뉴가 오른쪽 위로
+     올라앉아** 전수 점검이 영원히 통과했습니다. 그래도 AUDIT 의
+     `hdfit` 은 그대로 둡니다 — 1100px 아래에서 접히는 규칙은 안
+     바뀌었고, 손대실 때는 여전히 재 보셔야 합니다.
+     ⚠️ 폰에서는 윗줄이 **두 줄로 접힙니다** (로고 · 아이콘 / 검색) —
+     시안의 모바일이 그 모양입니다. */
+  return '<header class="hd hd-2r"><div class="hd-t1"><div class="w-wide hd-t1-in">'+
     Logo() +
-    '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
-      AM_GNB.map(function(m){
-        return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+esc(m.name)+'</a>';
-      }).join("")+
-    '</nav>'+
+    /* ⚠️⚠️ 시안 §2 의 **큰 통합검색**입니다. 장식이 아니라 167개
+       화면이 같이 쓰는 그 검색이고, 엔터로도 갑니다. */
+    '<form class="hd-s" role="search" onsubmit="return hdSearch(event)">'+
+      '<span class="hd-s-i" aria-hidden="true">'+icon("search",19)+'</span>'+
+      '<input type="search" id="hdQ" name="q" autocomplete="off" '+
+        'aria-label="통합 검색" placeholder="어떤 기기를 찾고 계신가요? (예: 아이폰 15, 갤럭시 S24)">'+
+      '<button class="hd-s-go" type="submit" aria-label="검색">'+icon("search",18)+'</button>'+
+    '</form>'+
     '<div class="hd-r">'+
-      /* ⚠️⚠️ 시안 §2 의 **통합검색**입니다. 전에는 히어로 안에 큰
-         검색창이 있었는데, 리뉴얼로 히어로가 START/CLOSE 두 장짜리
-         비주얼이 되면서 들어갈 자리가 없어졌습니다 — 지우지 않고
-         헤더로 올렸습니다. 모든 화면에서 쓸 수 있게 된 쪽이 낫습니다.
-         ⚠️ 폼입니다 — 엔터로도 가야 합니다. */
-      '<form class="hd-s" role="search" onsubmit="return hdSearch(event)">'+
-        '<span class="hd-s-i" aria-hidden="true">'+icon("search",18)+'</span>'+
-        '<input type="search" id="hdQ" name="q" autocomplete="off" '+
-          'aria-label="통합 검색" placeholder="원하는 서비스나 업체를 검색하세요.">'+
-      '</form>'+
       '<a class="hd-ic hd-ic-s" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
-      '<span class="hd-sep" aria-hidden="true"></span>'+
-      /* ⚠️⚠️ **로그인은 설정됐을 때만 나옵니다** (2026-10-13 §3).
-         지시서가 "로그인 또는 내 계정" 을 적었는데, `/api/session` 이
-         `auth:false` 인 동안 그 단추를 내면 **눌러도 아무 일이 안
-         납니다** — §0-7(클릭해도 작동하지 않는 버튼)이고 이 저장소가
-         헤더에서 "로그인" 을 네 번 빼 온 까닭입니다.
-         그래서 **빈 칸으로 두고** `hdAuthPaint()` 가 켜졌을 때만
+      /* ⚠️⚠️ **로그인 · 회원가입은 설정됐을 때만 나옵니다.**
+         시안 §2 가 둘을 적었는데 `/api/session` 이 지금 `auth:false`
+         입니다 — 그 단추를 내면 **눌러도 아무 일이 안 납니다**
+         (§11 "아직 구현되지 않은 서비스는 허위 기능을 만들지
+         않는다"). 빈 칸으로 두고 `hdAuthPaint()` 가 켜졌을 때만
          채웁니다. Vercel 에 환경변수가 들어가는 날 **코드를 한 줄도
-         안 고치고** 나타납니다 (`/my` 의 `.my-db` 와 같은 방식). */
+         안 고치고** 시안 그대로 나타납니다. */
       '<span class="hd-auth" id="hdAuth" hidden></span>'+
-      /* ⚠️ **"로그인" 이라고 적지 마세요.** 시안 §2 에는 로그인이
-         있지만 지금 백엔드가 없어서 로그인이라는 기능 자체가
-         없습니다 — 눌러도 로그인 화면이 없으면 그건 고장난 것으로
-         읽히고, 절대 규칙 5(하지 않은 일을 했다고 하지 않는다)에
-         걸립니다. 지시서 §2 자신이 "기존 Route와 실제 기능을 확인하여
-         연결한다" 고 적었고, 실제로 있는 것은 `/my` 입니다.
-         회원 기능이 생기면 그때 이 한 줄을 바꿉니다. */
-      '<a class="hd-txt" href="/my">'+icon("user",18)+'<span>내 기록</span></a>'+
-      /* ⚠️ 폰에서는 "업체" 를 접습니다. 다 적어 두면 헤더가 360px 를
-         넘겨 **가로 스크롤**이 생깁니다 (실제로 415px 였습니다). */
-      /* ⚠️⚠️ **2026-10-11 지시서 §2 — 오른쪽은 검색 · 무료 견적 신청 ·
-         로그인**입니다. 전에는 `업체 입점` 이 있었는데, 그 길은
-         **푸터 `파트너` 칸**이 161개 화면에서 그대로 받습니다 (재서
-         확인했습니다).
-         ⚠️ `data-to="/quote"` 를 지우지 마세요 — `paintGnb()` 가 그
-         표시를 보고 **보던 조건을 href 에 실어 줍니다.** 없으면
-         분류 화면에서 눌렀을 때 빈 견적 화면이 떠서 처음부터 다시
-         적게 됩니다 (업체 상세의 `quoteTo({})` 로 겪은 사고). */
-      /* ⚠️ 시안 §2-1 의 **판매 신청** 단추입니다. 좁은 폭에서는
-         "판매 " 를 접어 `신청` 만 남습니다 — 다 적어 두면 헤더가
-         360px 를 넘겨 가로 스크롤이 생깁니다 (실제로 415px 였습니다). */
+      /* ⚠️ 시안의 `마이페이지` 입니다 — 가는 곳은 실제로 있는 `/my`. */
+      '<a class="hd-txt" href="/my">'+icon("user",18)+'<span>마이페이지</span></a>'+
+      /* ⚠️⚠️ **장바구니를 넣지 않았습니다** (§11 · §13 — 보고 대상).
+         중고폰은 한 대가 한 건이라 담아서 한 번에 사는 길 자체가
+         없고, 장바구니 표도 결제도 없습니다 — 아이콘만 걸면 눌러서
+         빈 화면입니다. 결제가 붙는 날 여기 한 줄입니다.
+         ⚠️ **찜은 실제로 됩니다** (`js/fav.js`) — 상품 카드의 하트와
+         같은 값을 보고, 담긴 수가 뱃지로 섭니다. */
+      '<a class="hd-ic hd-fav" href="/my" aria-label="찜한 중고폰">'+
+        icon("heart",20)+'<span class="hd-fav-n" data-fav-n hidden></span></a>'+
+      /* ⚠️ `data-to="/sell"` 을 지우지 마세요 — `paintGnb()` 가 그
+         표시를 보고 보던 조건을 href 에 실어 줍니다. */
       '<a class="btn btn-nv hd-cta" href="/sell" data-to="/sell">'+
-        '<span class="hd-cta-w">판매 </span>신청'+icon("arrow",16)+'</a>'+
-      /* ⚠️⚠️ **폰 햄버거** (§3 — "모바일에서는 간결한 로고, 견적 신청
-         진입 버튼, 햄버거 메뉴를 우선 배치한다").
-         900px 아래에서는 `.gnb` 가 통째로 접혀서, 그 전까지 **매장
-         운영 · 매장 양도양수 · 계산도구 · 도움말 넷은 푸터까지
-         내려가야** 닿았습니다 (아래 네비 다섯 칸은 홈 · 창업 · 폐업 ·
-         업체찾기 · MY 라 그 넷이 없습니다). 재서 확인한 구멍입니다.
-         ⚠️ 아래 네비를 대신하는 것이 아닙니다 — 그쪽은 자주 쓰는
-         다섯, 이쪽은 **헤더 메뉴 전부**입니다. */
+        '<span class="hd-cta-w">판매 </span>신청</a>'+
       '<button class="hd-ic hd-mb" type="button" id="hdMb" aria-label="메뉴"'+
         ' aria-expanded="false" aria-controls="hdMenu" onclick="hdMenu()">'+
         icon("menu",22)+'</button>'+
     '</div>'+
-    HeaderDrawer()+
-  '</div></header>';
+  '</div></div>'+
+  /* 아랫줄 — 메뉴 여덟. ⚠️ 1100px 아래에서는 통째로 접히고 햄버거
+     서랍이 **같은 목록**을 받습니다. */
+  '<div class="hd-t2"><nav class="w-wide gnb" id="gnb" aria-label="주요 메뉴">'+
+    AM_GNB.map(function(m){
+      return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+
+        (m.ic ? '<i aria-hidden="true">'+icon(m.ic,17)+'</i>' : '')+
+        '<span>'+esc(m.name)+'</span></a>';
+    }).join("")+
+  '</nav></div>'+
+  HeaderDrawer()+
+  '</header>';
 }
 
 /* ⚠️ 서랍은 **헤더 메뉴와 같은 목록**(`AM_GNB`)에서 옵니다 — 손으로
@@ -271,11 +280,18 @@ function hdAuthPaint(){
   window.amAuthAsk().then(function(a){
     if(!a || !a.on){ box.setAttribute("hidden",""); box.innerHTML = ""; return; }
     box.removeAttribute("hidden");
+    /* ⚠️⚠️ **`회원가입` 을 따로 내지 않습니다.** 이 사이트의 로그인은
+       비밀번호가 없는 **매직링크** 하나라(`js/auth.js`), 처음 오신
+       분도 같은 칸에 메일 주소를 적으면 그 자리에서 계정이
+       생깁니다 — 가입 화면이라는 것이 없습니다. 시안 §2 는 둘을
+       나란히 그렸지만, 둘 다 같은 곳으로 보내면 읽어 주는
+       프로그램에 **같은 링크가 두 번** 들리고 구글에는 같은 화면이
+       두 번 적힙니다. 한 칸에 둘을 적습니다 (§13 보고 대상). */
     box.innerHTML = a.signedIn
       ? '<a class="hd-txt" href="/my">'+icon("user",18)+
           '<span>'+esc("내 계정")+'</span></a>'
-      : '<a class="hd-txt" href="/my">'+icon("user",18)+
-          '<span>'+esc("로그인")+'</span></a>';
+      : '<a class="hd-txt hd-lgi" href="/my">'+
+          '<span>'+esc("로그인 · 회원가입")+'</span></a>';
   });
 }
 

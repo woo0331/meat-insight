@@ -45,7 +45,7 @@
 
 <link rel="stylesheet" href="/dist/css/tokens.css?v=7341a748">
 <link rel="stylesheet" href="/dist/css/app.css?v=132f3ad5">
-<link rel="stylesheet" href="/dist/css/pages.css?v=34b38208">
+<link rel="stylesheet" href="/dist/css/pages.css?v=6fe9d6aa">
 
 <!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
      마세요 — 다음에 돌릴 때 덮어써집니다. 내용은 js/data/faq.js 와
@@ -109,11 +109,11 @@
 <!-- ⚠️⚠️ 중고폰 쇼핑몰 (2026-10-29) — devices.js **뒤**라야 합니다
      (모델 · 용량 · 등급 이름을 거기서 읽습니다). ⚠️ 이 줄이 없으면
      `/shop` 목록이 **조용히 0건**이 되고 `/d/:id` 가 404 가 됩니다. -->
-<script defer src="/dist/js/data/shop.js?v=bc4c378c"></script>
+<script defer src="/dist/js/data/shop.js?v=0709ab58"></script>
 <!-- ⚠️⚠️ 2026-10-31 — 여기 있던 "운영 체크리스트"(`opscheck.js`) 주석을
      지웠습니다. 그 파일도 `/operation` 화면도 없어졌는데 주석만 남아
      **없는 화면이 깨진다고 경고**하고 있었습니다. -->
-<script defer src="/dist/js/components/base.js?v=bea1f8cf"></script>
+<script defer src="/dist/js/components/base.js?v=dfe05f49"></script>
 <script defer src="/dist/js/components/ui.js?v=1b49b1ae"></script>
 <!-- 고르신 서비스 바구니 (`am.pick.v1`).
      ⚠️ `ui.js` 의 amGet/amSet 과 `catalog.js` 의 분류 · 하위를 읽으므로
@@ -121,6 +121,7 @@
      파일이 없어지고 `amPickOne()` 이 catalog 를 직접 봅니다).
      ⚠️⚠️ 담는 것은 서비스 id 뿐입니다 — 성함 · 연락처를 담지 않습니다. -->
 <script defer src="/dist/js/pick.js?v=342d2582"></script>
+<script defer src="/dist/js/fav.js?v=d02d1109"></script>
 <!-- 로그인 (Supabase Auth) — ⚠️ 설정 전에는 /api/session 이 auth:false 라
      화면이 그 구간째 안 그립니다. 아무것에도 의존하지 않습니다. -->
 <script defer src="/dist/js/auth.js?v=5ffecb76"></script>
@@ -128,27 +129,27 @@
      꺼져 있으면 fetch 를 한 번도 안 보냅니다 (js/state.js 머리말) -->
 <script defer src="/dist/js/state.js?v=95e250a7"></script>
 <script defer src="/dist/js/photo.js?v=fb4d7968"></script>
-<script defer src="/dist/js/components/chrome.js?v=7e1ad059"></script>
+<script defer src="/dist/js/components/chrome.js?v=609dea72"></script>
 
-<script defer src="/dist/js/pages/home.js?v=10f221d0"></script>
+<script defer src="/dist/js/pages/home.js?v=a00a3bcc"></script>
 <script defer src="/dist/js/pages/quote.js?v=7b4696bb"></script>
 <script defer src="/dist/js/pages/join.js?v=abd8ac7d"></script>
 <script defer src="/dist/js/pages/info.js?v=9385fda8"></script>
-<script defer src="/dist/js/pages/my.js?v=3f744af1"></script>
+<script defer src="/dist/js/pages/my.js?v=7c68fadf"></script>
 <script defer src="/dist/js/pages/search.js?v=06cf0b22"></script>
 <script defer src="/dist/js/pages/legal.js?v=0792185d"></script>
 <!-- ⚠️⚠️ PHONEWAY 화면 다섯 (/sell /shop /bid /track /guide).
      market.js 보다 **뒤**라야 합니다 — 둘 다 PageSell 을 들고 있던
      자리이고, market.js 쪽은 PageSellBiz 로 이름을 갈랐습니다. -->
-<script defer src="/dist/js/pages/phone.js?v=98242c4a"></script>
+<script defer src="/dist/js/pages/phone.js?v=0f1aef31"></script>
 
-<script defer src="/dist/js/app.js?v=0a15352a"></script>
+<script defer src="/dist/js/app.js?v=61691896"></script>
 
 <div id="chrome-t"></div>
 <!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가
      이 사이에 **크롤러가 읽을 본문**을 써 넣습니다. 메인은 원본이라
      shell() 이 손대지 않아서, 한동안 여기가 빈 칸으로 나갔습니다. -->
-<main id="view"><!-- crawl:start --><div class="pre w"><h1>내 폰의 가치를 찾는 새로운 방법</h1><p>직접 매입 · 전국 업체 경쟁입찰 · 검수를 마친 중고폰 구매를 한곳에서. 기종과 상태를 고르시면 견적을 나란히 놓고 비교하십니다.</p><p>팔기부터 구매, 수리, 도매, 수출까지 중고폰의 모든 것을 한 곳에서. 내 폰 팔기 · 중고폰 구매하기.</p><p>지금 바로 견적 비교 · 수거부터 정산까지 한 흐름으로 · 개인정보 안전 처리 · 지속 가능한 중고 거래.</p><h2>무엇을 도와드릴까요?</h2><p>중고폰을 팔고 · 사고 · 고치고 · 도매로 넘기는 길을 한곳에 모았습니다.</p><ul><li>내 폰 판매 — 경쟁견적 · 직접 매입</li><li>중고폰 구매 — 검수 중고폰 쇼핑</li><li>수리 서비스 — 수리 견적 · 접수</li><li>B2B 경매 — 전문업체 도매 거래</li><li>기업 대량 매입 — 법인 단말기 일괄 매입</li><li>해외 수출 — 해외 바이어 · 수출 문의</li></ul><h2>다양한 브랜드의 기기를 만나보세요</h2><ul><li>Apple 애플 — 준비 중</li><li>Samsung 삼성 — 준비 중</li><li>Google 구글 — 준비 중</li><li>Huawei 화웨이 — 준비 중</li><li>OPPO 오포 — 준비 중</li><li>Xiaomi 샤오미 — 준비 중</li></ul><p>대수는 지금 올라와 있는 기기를 센 값입니다. 아직 다루지 않는 브랜드는 준비 중으로 적어 두었고, 없는 기기를 미리 보여 드리지 않습니다.</p><h2>지금 보실 수 있는 중고폰</h2><p>등록된 차례로 냅니다 — 조회수나 판매량 같은 이용 통계가 아닙니다.</p><p>아직 올라온 기기가 없습니다. 검수를 마친 기기부터 이 자리에 올라옵니다. 먼저 파실 기기가 있으시면 견적부터 받아 보세요.</p><h2>먼저 보시면 좋은 것</h2><p>거래 전에 한 번 읽어 두시면 선택이 쉬워집니다.</p><ul><li>검수 인증 중고폰 — 꼼꼼한 검수로 더 안전한 중고폰</li><li>수리 vs 판매, 어떤 게 유리할까? — 수리비와 매입가를 같이 보고 고르세요</li><li>기업 · 법인 대량 매입 — 회사 보유 단말기, 한 번에 정리하세요</li></ul><h2>폰웨이 이용 방법</h2><p>등록부터 정산까지 다섯 걸음입니다. 1 휴대폰 정보 등록(기종 · 용량 · 상태를 고르시면 됩니다. 가입하지 않으셔도 됩니다.), 2 견적 확인(직접 매입가와 업체 입찰가를 나란히 놓고 보실 수 있습니다.), 3 판매 방식 선택(직접 매입과 업체 가운데 고르십니다. 업체를 고르시면 상호를 알려 드리고, 연락처를 전달하는 것은 그때 다시 동의를 받습니다.), 4 기기 수거 · 검수(보내 주신 기기를 검수합니다. 어느 단계인지 화면에서 확인하실 수 있습니다.), 5 금액 동의 · 정산(검수 결과와 최종 금액을 알려 드리고, 동의하신 뒤에 보냅니다. 동의하지 않으시면 기기를 돌려 드립니다.).</p><h2>거래하기 전에 밝혀 둡니다</h2><p>지킬 수 있는 것만 적었습니다. 검수 기준을 먼저 공개 — 외관 · 액정 · 배터리 · 기능을 어떤 기준으로 보는지 등록 전에 읽으실 수 있습니다. 개인정보 삭제 안내 — 보내시기 전에 해 두셔야 할 것과 저희가 받은 뒤 처리하는 절차를 그대로 적습니다. 진행 상황 확인 — 접수 · 수거 · 검수 · 정산이 지금 어디까지 왔는지 화면에서 보입니다. 분쟁이 생기면 — 검수 결과에 동의하지 않으시면 반송받으실 수 있습니다.</p><p>이 화면에 무료 · 당일 정산 · 최고가 보장을 적지 않았습니다. 검수 뒤 금액이 바뀔 수 있다는 것, 정산까지 걸리는 시간, 반송 조건을 거래 전에 먼저 보여 드립니다.</p><p>경쟁입찰은 지금 매입업체를 모집하고 있습니다 — 없는 업체를 미리 보여 드리지 않습니다.</p><h2>지금 내 폰은 얼마일까요?</h2><p>기종과 상태만 고르면 예상 금액을 바로 보실 수 있습니다. 내 폰 팔기 · 이용 안내 보기.</p></div><!-- crawl:end --></main>
+<main id="view"><!-- crawl:start --><div class="pre w"><h1>내 폰의 가치를 찾는 새로운 방법</h1><p>직접 매입 · 전국 업체 경쟁입찰 · 검수를 마친 중고폰 구매를 한곳에서. 기종과 상태를 고르시면 견적을 나란히 놓고 비교하십니다.</p><p>팔기부터 구매, 수리, 도매, 수출까지 중고폰의 모든 것을 한 곳에서. 내 폰 팔기 · 중고폰 구매하기.</p><p>지금 바로 견적 비교 · 수거부터 정산까지 한 흐름으로 · 개인정보 안전 처리 · 지속 가능한 중고 거래.</p><h2>무엇을 도와드릴까요?</h2><p>중고폰을 팔고 · 사고 · 고치고 · 도매로 넘기는 길을 한곳에 모았습니다.</p><ul><li>내 폰 판매 — 경쟁견적 · 직접 매입</li><li>중고폰 구매 — 검수 중고폰 쇼핑</li><li>수리 서비스 — 수리 견적 · 접수</li><li>B2B 경매 — 전문업체 도매 거래</li><li>기업 대량 매입 — 법인 단말기 일괄 매입</li><li>해외 수출 — 해외 바이어 · 수출 문의</li></ul><h2>다양한 브랜드의 기기를 만나보세요</h2><ul><li>Apple 애플 — 0대</li><li>Samsung 삼성 — 0대</li><li>Google 구글 — 0대</li><li>Huawei 화웨이 — 0대</li><li>OPPO 오포 — 0대</li><li>Xiaomi 샤오미 — 0대</li></ul><p>대수는 지금 올라와 있는 기기를 센 값입니다. 0대는 아직 올라온 기기가 없다는 뜻이고, 없는 기기를 미리 보여 드리지 않습니다.</p><h2>지금 보실 수 있는 중고폰</h2><p>등록된 차례로 냅니다 — 조회수나 판매량 같은 이용 통계가 아닙니다.</p><p>아직 올라온 기기가 없습니다. 검수를 마친 기기부터 이 자리에 올라옵니다. 먼저 파실 기기가 있으시면 견적부터 받아 보세요.</p><p>내 폰 견적 바로 받기 — 제조사 · 모델 · 저장용량 · 기기 상태를 고르시면 신청 화면이 그대로 이어집니다. 매입 기준가를 아직 공개하지 않아 이 자리에서 금액을 내지 않습니다.</p><p>수리 서비스 — 정확한 진단, 합리적인 비용. 판매 진행 조회 — 접수번호로 지금 어디까지 왔는지 보실 수 있습니다.</p><h2>먼저 보시면 좋은 것</h2><p>거래 전에 한 번 읽어 두시면 선택이 쉬워집니다.</p><ul><li>검수 인증 중고폰 — 꼼꼼한 검수로 더 안전한 중고폰</li><li>수리 vs 판매, 어떤 게 유리할까? — 수리비와 매입가를 같이 보고 고르세요</li><li>기업 · 법인 대량 매입 — 회사 보유 단말기, 한 번에 정리하세요</li></ul><h2>폰웨이 이용 방법</h2><p>등록부터 정산까지 다섯 걸음입니다. 1 휴대폰 정보 등록(기종 · 용량 · 상태를 고르시면 됩니다. 가입하지 않으셔도 됩니다.), 2 견적 확인(직접 매입가와 업체 입찰가를 나란히 놓고 보실 수 있습니다.), 3 판매 방식 선택(직접 매입과 업체 가운데 고르십니다. 업체를 고르시면 상호를 알려 드리고, 연락처를 전달하는 것은 그때 다시 동의를 받습니다.), 4 기기 수거 · 검수(보내 주신 기기를 검수합니다. 어느 단계인지 화면에서 확인하실 수 있습니다.), 5 금액 동의 · 정산(검수 결과와 최종 금액을 알려 드리고, 동의하신 뒤에 보냅니다. 동의하지 않으시면 기기를 돌려 드립니다.).</p><h2>거래하기 전에 밝혀 둡니다</h2><p>지킬 수 있는 것만 적었습니다. 검수 기준을 먼저 공개 — 외관 · 액정 · 배터리 · 기능을 어떤 기준으로 보는지 등록 전에 읽으실 수 있습니다. 개인정보 삭제 안내 — 보내시기 전에 해 두셔야 할 것과 저희가 받은 뒤 처리하는 절차를 그대로 적습니다. 진행 상황 확인 — 접수 · 수거 · 검수 · 정산이 지금 어디까지 왔는지 화면에서 보입니다. 분쟁이 생기면 — 검수 결과에 동의하지 않으시면 반송받으실 수 있습니다.</p><p>이 화면에 무료 · 당일 정산 · 최고가 보장을 적지 않았습니다. 검수 뒤 금액이 바뀔 수 있다는 것, 정산까지 걸리는 시간, 반송 조건을 거래 전에 먼저 보여 드립니다.</p><p>경쟁입찰은 지금 매입업체를 모집하고 있습니다 — 없는 업체를 미리 보여 드리지 않습니다.</p><h2>지금 내 폰은 얼마일까요?</h2><p>기종과 상태만 고르면 예상 금액을 바로 보실 수 있습니다. 내 폰 팔기 · 이용 안내 보기.</p></div><!-- crawl:end --></main>
 <div id="chrome-b"></div>
 </body>
 </html>

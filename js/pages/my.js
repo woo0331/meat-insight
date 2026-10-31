@@ -1101,6 +1101,50 @@ function MyPwBand(){
   '</div></section>';
 }
 
+/* ─── 찜한 중고폰 (2026-10-31 시안 §2 · §6) ─────────────────────
+   헤더의 하트와 상품 카드의 하트가 담는 그 목록입니다 (`js/fav.js`).
+
+   ⚠️⚠️ **담긴 것이 없으면 "없습니다" 라고 말하고 갈 곳을 같이
+   냅니다** — 막다른 길로 두지 않습니다 (절대 규칙 2).
+   ⚠️⚠️ **찜은 예약도 구매도 아닙니다.** 담아 두기만 하면 저희에게
+   아무것도 오지 않습니다 (절대 규칙 5) — 그 줄을 지우지 마세요.
+   ⚠️ 없어진 상품은 `amFavIds()` 가 걸러 냅니다 — 지금 담긴 것이
+   예시이고, 실제 재고가 올라오면 예시가 통째로 사라집니다. */
+function MyFavBand(){
+  var ids = (typeof amFavIds === "function") ? amFavIds() : [];
+  var body;
+  if(!ids.length){
+    body = '<p class="lead">아직 찜한 기기가 없습니다. '+
+      '중고폰 목록에서 하트를 누르시면 여기에 모입니다.</p>'+
+      '<div class="row-cta"><a class="btn btn-pw" href="/shop">중고폰 보러 가기</a></div>';
+  } else {
+    body = '<ul class="pwpd-g my-fav-g">'+ ids.map(function(id){
+      var r = amShopOne(id); if(!r) return "";
+      var p = r.it, md = (typeof amModel === "function") ? amModel(p.model) : null;
+      return '<li class="pwpd-li">'+ FavBtn(id) +
+        '<a class="pwpd-c" href="/d/'+ esc(id) +'">'+
+          '<span class="pwpd-ph">'+
+            iconArt((typeof shopIcon === "function" ? shopIcon(md) : "mobile"), 58)+
+            (r.sample ? '<span class="pwpd-smp-b">예시</span>' : '')+
+          '</span>'+
+          '<b class="pwpd-nm">'+ esc(md ? md.name : p.model) +'</b>'+
+          '<span class="pwpd-sp">'+
+            esc([(p.cap ? (p.cap >= 1024 ? (p.cap/1024)+"TB" : p.cap+"GB") : ""),
+                 p.color || ""].filter(Boolean).join(" · "))+'</span>'+
+          '<span class="pwpd-pr">'+ esc(Number(p.price||0).toLocaleString()) +'원</span>'+
+        '</a></li>';
+    }).join("") +'</ul>'+
+    '<div class="row-cta"><button class="btn btn-o" type="button" '+
+      'onclick="amFavClear()">찜 전부 지우기</button></div>';
+  }
+  return '<section class="sec sec-gray"><div class="w">'+
+    '<h2>찜한 중고폰 '+ (ids.length ? '<span class="my-fav-n">'+ ids.length +'</span>' : '') +'</h2>'+
+    '<p class="lead">이 브라우저에만 남습니다. '+
+      '<b>찜해 두신 것은 신청이 아닙니다</b> — 저희에게 아무것도 오지 않습니다.</p>'+
+    body+
+  '</div></section>';
+}
+
 function PageMy(){
   var qs = amGet("am.quotes.v1", []);
 
@@ -1124,6 +1168,7 @@ function PageMy(){
      이 구간은 **서버에 저장된 신청**입니다 — 둘은 다릅니다. */
   MyDbBand()+
   MyPwBand()+
+  MyFavBand()+
   '<section class="sec sec-white"><div class="w">'+
     /* ⚠️⚠️ **창업 · 폐업 기록 칸을 2026-10-31 에 내렸습니다** (사장님
        지시 — "인수인계 자료들은 다 지워줘"). 전에는 `<details
@@ -1159,6 +1204,9 @@ function PageMy(){
 window.myClear = function(){
   if(!confirm("이 브라우저에 남은 기록을 전부 지웁니다. 되돌릴 수 없습니다.")) return;
   amDel(MKEY); amDel("am.quotes.v1"); amDel(window.AM_SAVE_KEY || "am.saved.v1");
+  /* ⚠️ 찜도 같이 지웁니다 — "전부 지웁니다" 라고 해 놓고 남기면
+     거짓이 됩니다 (`am.fav.v1` · js/fav.js). */
+  amDel("am.fav.v1");
   /* ⚠️⚠️ **계산기에 적어 두신 숫자도 같이 지웁니다.** 여기를 빠뜨리면
      "전부 지웁니다" 라고 해 놓고 매출 · 인건비가 그대로 남습니다 —
      가게 컴퓨터는 여러 사람이 쓰므로 그게 그대로 남의 눈에 들어갑니다.

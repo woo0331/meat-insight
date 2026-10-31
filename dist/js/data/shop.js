@@ -111,11 +111,11 @@ window.amShopName = function(p){
 };
 
 window.PW_SVC6 = [
-  { to:"/sell",         ia:"mobile",   nm:"내 폰 판매",     d:"경쟁견적 · 직접 매입" },
+  { to:"/sell",         ia:"mobile",   nm:"내 폰 판매",     sm:"내 폰 팔기", d:"경쟁견적 · 직접 매입" },
   { to:"/shop",         ia:"bag",      nm:"중고폰 구매",     d:"검수 중고폰 쇼핑" },
   { to:"/repair",       ia:"repair",   nm:"수리 서비스",     d:"수리 견적 · 접수" },
   { to:"/bid",          ia:"gavel",    nm:"B2B 경매",       d:"전문업체 도매 거래" },
-  { to:"/biz?t=corp",   ia:"tower",    nm:"기업 대량 매입",  d:"법인 단말기 일괄 매입" },
+  { to:"/biz?t=corp",   ia:"tower",    nm:"기업 대량 매입",  sm:"기업 매입", d:"법인 단말기 일괄 매입" },
   { to:"/biz?t=export", ia:"globe",    nm:"해외 수출",      d:"해외 바이어 · 수출 문의" }
 ];
 

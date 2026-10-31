@@ -1,7 +1,7 @@
 
 
 function PageMain(){
-  return PwHero()+ PwServices()+ PwBrands()+ PwProducts()+
+  return PwHero()+ PwServices()+ PwMarket()+
          PwBanners()+ PwNews()+ PwSteps()+ PwTrust()+ PwCta();
 }
 
@@ -32,6 +32,7 @@ function PwHero(){
 
   var wa = (typeof josa === "function") ? josa(nm, "와과") : "와";
   return '<section class="pwh">'+
+    pwHeroQuick()+
     '<div class="pwh-bg" aria-hidden="true">'+
       '<span class="pwh-rb"></span>'+
       '<span class="pwh-rb2"></span>'+
@@ -52,14 +53,40 @@ function PwHero(){
           '<a class="btn pwh-b2" href="/shop" data-to="/shop">'+
             '<b>중고폰 구매하기</b>'+ pwArrow() +'</a>'+
         '</div>'+
+        pwHeroLinks()+
       '</div>'+
+
       '<div class="pwh-art">'+
+        '<span class="pwh-ph2" aria-hidden="true">'+
+          photoBox("dev-galaxy", "pwh-ph", false,
+            "(max-width:1199px) 24vw, 300px")+'</span>'+
         photoBox("dev-iphone", "pwh-ph", true,
           "(max-width:767px) 42vw, (max-width:1199px) 36vw, 420px")+
       '</div>'+
     '</div>'+
     pwHeroTrust()+
   '</section>';
+}
+
+function pwHeroQuick(){
+  var L = (window.PW_SVC6 || []).slice(0, 5);
+  if(!L.length) return "";
+  return '<div class="pwmq"><ul class="w pwmq-g">'+ L.map(function(q){
+    return '<li><a class="pwmq-c" href="'+ esc(q.to) +'">'+
+      '<i>'+ iconArt(q.ia, 34) +'</i><span>'+ esc(q.sm || q.nm) +'</span></a></li>';
+  }).join("") +'</ul></div>';
+}
+
+var PW_HERO_LINKS = [
+  ["/sell",   "tag",   "내 폰 견적 확인"],
+  ["/bid",    "gavel", "경쟁견적 받아보기"],
+  ["/repair", "tool",  "수리 견적 문의"]
+];
+function pwHeroLinks(){
+  return '<ul class="pwh-lk">'+ PW_HERO_LINKS.map(function(l){
+    return '<li><a href="'+ esc(l[0]) +'" data-to="'+ esc(l[0]) +'">'+
+      '<i aria-hidden="true">'+ icon(l[1], 17) +'</i>'+ esc(l[2]) +'</a></li>';
+  }).join("") +'</ul>';
 }
 
 var PW_HERO3 = [
@@ -408,7 +435,7 @@ function PwServices(){
     '<ul class="pwsv-g">'+ window.PW_SVC6.map(function(s){
 
       return '<li><a class="pwsv-c" href="'+ esc(s.to) +'">'+
-        '<i class="pwsv-i">'+ iconArt(s.ia, 46) +'</i>'+
+        '<i class="pwsv-i">'+ iconArt(s.ia, 88) +'</i>'+
         '<b>'+ esc(s.nm) +'</b>'+
         '<span class="pwsv-d">'+ esc(s.d) +'</span>'+
         '<span class="pwsv-go" aria-hidden="true">'+ pwArrow() +'</span>'+
@@ -420,7 +447,7 @@ function PwServices(){
 function PwBrands(){
   var B = window.AM_SHOP_BRANDS || [], LG = window.AM_MAKER_LOGO || {};
   if(!B.length) return "";
-  return '<section class="pwbr"><div class="w">'+
+  return '<div class="pwbr">'+
     '<div class="pw-hd-l"><div><h2>다양한 브랜드의 기기를 만나보세요</h2></div>'+
       '<a class="pw-more" href="/shop">전체 보기 '+ pwArrow() +'</a></div>'+
     '<ul class="pwbr-g">'+ B.map(function(b){
@@ -440,7 +467,7 @@ function PwBrands(){
     '<p class="pwbr-n0">⚠️ 대수는 <b>지금 올라와 있는 기기를 센 값</b>입니다. '+
       '0대는 아직 올라온 기기가 없다는 뜻이고, '+
       '없는 기기를 미리 보여 드리지 않습니다.</p>'+
-  '</div></section>';
+  '</div>';
 }
 
 var PW_PD_N = 5;
@@ -473,20 +500,23 @@ function PwProducts(){
     body = '<ul class="pwpd-g">'+ L.slice(0, PW_PD_N).map(pwPdCard).join("") +'</ul>';
   }
 
-  return '<section class="pwpd"><div class="w">'+
+  return '<div class="pwpd">'+
     '<div class="pw-hd-l"><div><h2>지금 보실 수 있는 중고폰</h2>'+
       '<p>등록된 차례로 냅니다 — 조회수나 판매량 같은 이용 통계가 아닙니다.</p></div>'+
       '<a class="pw-more" href="/shop">전체 보기 '+ pwArrow() +'</a></div>'+
     '<div class="chip-g chip-g-fil pwpd-fil">'+ chips +'</div>'+
     body+
-  '</div></section>';
+  '</div>';
 }
 
 function pwPdCard(p){
   var md  = (typeof amModel === "function") ? amModel(p.model) : null;
   var smp = String(p.id || "").indexOf("sample-") === 0;
   var ph  = (p.images && p.images[0]) || "";
-  return '<li><a class="pwpd-c" href="/d/'+ esc(p.id) +'">'+
+
+  return '<li class="pwpd-li">'+
+    (typeof FavBtn === "function" ? FavBtn(p.id) : "")+
+    '<a class="pwpd-c" href="/d/'+ esc(p.id) +'">'+
     '<span class="pwpd-ph">'+
       (ph ? '<img class="ph" src="'+ esc(ph) +'" alt="" loading="lazy" decoding="async">'
 
@@ -504,6 +534,92 @@ function pwPdCard(p){
     '</span>'+
   '</a></li>';
 }
+
+function PwMarket(){
+  return '<section class="pwmk"><div class="w pwmk-in">'+
+    '<div class="pwmk-main">'+ PwBrands() + PwProducts() +'</div>'+
+    PwSide()+
+  '</div></section>';
+}
+
+function PwSide(){
+  var MK = (window.AM_MAKERS || []), GR = (window.AM_GRADES || []);
+  var opt = function(v, t){ return '<option value="'+ esc(v) +'">'+ esc(t) +'</option>'; };
+  return '<aside class="pwsd" aria-label="내 폰 견적 바로 받기">'+
+    '<div class="pwsd-q">'+
+      '<b class="pwsd-h">내 폰 견적 바로 받기</b>'+
+      '<p class="pwsd-l">기기를 고르시면 신청 화면이 그대로 이어집니다.</p>'+
+
+      '<form class="pwsd-f" onsubmit="return pwSdGo(event)">'+
+        '<select class="sel" id="sdMk" aria-label="제조사 선택" onchange="pwSdMk()">'+
+          opt("", "제조사 선택")+
+          MK.map(function(m){ return opt(m.key, m.name); }).join("")+
+        '</select>'+
+        '<select class="sel" id="sdMd" aria-label="모델 선택" onchange="pwSdMd()" disabled>'+
+          opt("", "모델 선택")+'</select>'+
+        '<select class="sel" id="sdCp" aria-label="저장용량 선택" disabled>'+
+          opt("", "저장용량 선택")+'</select>'+
+        '<select class="sel" id="sdGr" aria-label="기기 상태 선택">'+
+          opt("", "기기 상태 선택")+
+          GR.map(function(g){ return opt(g.key, g.name); }).join("")+
+        '</select>'+
+        '<button class="btn btn-pw pwsd-go" type="submit">견적 받으러 가기'+
+          pwArrow() +'</button>'+
+      '</form>'+
+
+      '<p class="pwsd-n">매입 기준가를 아직 공개하지 않아 이 자리에서 '+
+        '금액을 내지 않습니다. 고르신 기기로 <b>신청 화면</b>이 열리고, '+
+        '전국 매입업체 견적을 받아 보실 수 있습니다.</p>'+
+    '</div>'+
+    '<a class="pwsd-b pwsd-b1" href="/repair">'+
+      '<i aria-hidden="true">'+ iconArt("repair", 40) +'</i>'+
+      '<b>수리 서비스</b>'+
+      '<span>정확한 진단, 합리적인 비용</span>'+
+      '<em>수리 견적 바로가기'+ pwArrow() +'</em></a>'+
+    '<a class="pwsd-b pwsd-b2" href="/track">'+
+      '<i aria-hidden="true">'+ iconArt("chart", 40) +'</i>'+
+      '<b>판매 진행 조회</b>'+
+      '<span>접수번호로 지금 어디까지 왔는지 보실 수 있습니다</span>'+
+      '<em>진행 상황 보기'+ pwArrow() +'</em></a>'+
+  '</aside>';
+}
+
+function pwSdFill(sel, list, ph, dis){
+  var e = document.getElementById(sel);
+  if(!e) return;
+  e.innerHTML = '<option value="">'+ esc(ph) +'</option>'+ list.map(function(o){
+    return '<option value="'+ esc(o[0]) +'">'+ esc(o[1]) +'</option>'; }).join("");
+  e.disabled = !!dis;
+  e.value = "";
+}
+window.pwSdMk = function(){
+  var mk = (document.getElementById("sdMk") || {}).value || "";
+
+  var L = mk && typeof amModelsOf === "function" ? amModelsOf(mk, "") : [];
+  pwSdFill("sdMd", L.map(function(m){ return [m.key, m.name]; }),
+           mk ? "모델 선택" : "먼저 제조사를 골라 주세요", !mk);
+  pwSdFill("sdCp", [], "저장용량 선택", true);
+};
+window.pwSdMd = function(){
+  var k  = (document.getElementById("sdMd") || {}).value || "";
+  var md = (k && typeof amModel === "function") ? amModel(k) : null;
+  var caps = (md && md.caps) ? md.caps : [];
+  pwSdFill("sdCp", caps.map(function(c){
+    return [String(c), c >= 1024 ? (c/1024)+"TB" : c+"GB"]; }),
+    caps.length ? "저장용량 선택" : "저장용량 선택", !caps.length);
+};
+
+window.pwSdGo = function(ev){
+  if(ev && ev.preventDefault) ev.preventDefault();
+  var v = function(id){ return (document.getElementById(id) || {}).value || ""; };
+  var q = [];
+  if(v("sdMk")) q.push("mk=" + encodeURIComponent(v("sdMk")));
+  if(v("sdMd")) q.push("md=" + encodeURIComponent(v("sdMd")));
+  if(v("sdCp")) q.push("cap=" + encodeURIComponent(v("sdCp")));
+  if(v("sdGr")) q.push("gr=" + encodeURIComponent(v("sdGr")));
+  go("/sell" + (q.length ? "?" + q.join("&") : ""));
+  return false;
+};
 
 function PwBanners(){
   return '<section class="pwbz"><div class="w">'+

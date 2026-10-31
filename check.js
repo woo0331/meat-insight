@@ -837,14 +837,22 @@ const AUDIT = `(() => {
     if(!as.length) return;
     const gap = parseFloat(getComputedStyle(g).gap) || 0;
     let need = gap * (as.length - 1), rows = {}, over = 0;
-    const rl = r.getBoundingClientRect().left;
+    const gb = g.getBoundingClientRect(), rb = r.getBoundingClientRect();
+    /* ⚠️⚠️ **2026-10-31 — 헤더가 두 줄이 되면서 2 는 같은 줄일
+       때만 봅니다.** 메뉴가 제 줄을 가지면 오른쪽 덩이와 세로로
+       겹치지 않아서, 그대로 재면 **멀쩡한 메뉴가 늘 "올라앉았다" 로**
+       걸립니다 (실제로 일곱 폭에서 전부 걸렸습니다). 규칙은 한 줄도
+       안 바꿨습니다 — 한 줄짜리 헤더로 되돌리시면 그날 다시
+       걸립니다. 1 과 3 은 줄 수와 무관하게 그대로 봅니다. */
+    const sameRow = gb.top < rb.bottom - 1 && rb.top < gb.bottom - 1;
+    const rl = rb.left;
     as.forEach(function(a){
       const b = a.getBoundingClientRect();
       need += b.width;
       rows[Math.round(b.top)] = 1;
-      if(b.right > rl + 0.5) over++;
+      if(sameRow && b.right > rl + 0.5) over++;
     });
-    const have = g.getBoundingClientRect().width;
+    const have = gb.width;
     if(need > have + 0.5)
       out.hdfit.push("메뉴 " + as.length + "칸이 " + Math.round(need) +
         "px 인데 자리가 " + Math.round(have) + "px");
@@ -1770,7 +1778,16 @@ const AUDIT = `(() => {
        **규칙은 한 줄도 안 바꿨습니다** (첫 구간이 히어로인가 · h1 이
        거기 하나인가 · 지어낸 수가 없는가) — 재는 자리가 바뀜 것입니다. */
     const nNews = (window.AM_PW_NEWS || []).length;
-    const order = ["pwh","pwsv","pwbr","pwpd","pwbz"]
+    /* ⚠️⚠️ **2026-10-31 최종 확정 시안 §7 — 브랜드와 상품이 한
+       구간(.pwmk)입니다.** 시안이 그 둘 오른쪽에 세로 사이드바를
+       두어서, 사이드바가 두 줄에 걸쳐 서려면 둘이 같은 칸이라야
+       합니다. **규칙은 한 줄도 안 바꿨습니다** — 차례 · h1 · 지어낸
+       수를 그대로 보고, 재는 자리만 옮겼습니다. 아래 (3) 의
+       pwbr-g · pwpd-g 선택자는 그대로입니다.
+       ⚠️ 주석에 백틱을 쓰지 마세요 — 검사 본문이 템플릿 문자열이라
+       거기서 끊깁니다 (이 저장소가 서른두 번 겪은 자리이고, 이 줄도
+       한 번 그렇게 끊겨서 흐름 검사가 통째로 멈췄습니다). */
+    const order = ["pwh","pwsv","pwmk","pwbz"]
       .concat(nNews ? ["pwnw"] : [])
       .concat(["pwst","pwt","pwc"]);
     for(let i = 0; i < order.length; i++){
@@ -2879,7 +2896,10 @@ const AUDIT = `(() => {
        여기와 PHONEWAY 검사들을 같이 뒤집으세요. 그리고
        **build-pages.js 의 크롤러 본문도 같이** 고치세요 (이 저장소가
        열두 번 겪은 자리입니다). */
-    const want = ["pwh","pwsv","pwbr","pwpd","pwbz"]
+    /* ⚠⚠ 2026-10-31 — 브랜드와 상품을 한 구간(pwmk)으로 합쳤습니다
+       (시안의 사이드바가 둘에 걸쳐 서는 짜임새입니다). 규칙은 한
+       줄도 안 바꿨습니다 — 세는 자리만 옮겼습니다. */
+    const want = ["pwh","pwsv","pwmk","pwbz"]
       .concat((window.AM_PW_NEWS || []).length ? ["pwnw"] : [])
       .concat(["pwst","pwt","pwc"]);
     const S = [].slice.call(document.querySelectorAll("#view > section"));

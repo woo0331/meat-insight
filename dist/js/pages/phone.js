@@ -375,7 +375,10 @@ function shopIcon(md){
 function shopCard(p, sample){
   var md = (typeof amModel === "function") ? amModel(p.model) : null;
   var g  = (typeof amGrade === "function") ? amGrade(p.grade) : null;
-  return '<a class="shp-c'+(sample?" ex":"")+'" href="/d/'+esc(p.id)+'">'+
+
+  return '<span class="shp-w">'+
+    (typeof FavBtn === "function" ? FavBtn(p.id) : "")+
+    '<a class="shp-c'+(sample?" ex":"")+'" href="/d/'+esc(p.id)+'">'+
     '<span class="shp-ph">'+
       (sample ? '<span class="shp-ex">예시</span>' : '')+
       iconArt(shopIcon(md), 84)+'</span>'+
@@ -387,7 +390,7 @@ function shopCard(p, sample){
       '</span>'+
       '<b class="shp-p">'+Number(p.price||0).toLocaleString()+'원</b>'+
       (p.batt ? '<span class="shp-b">배터리 '+esc(String(p.batt))+'%</span>' : '')+
-    '</span></a>';
+    '</span></a></span>';
 }
 
 function shopRes(f){

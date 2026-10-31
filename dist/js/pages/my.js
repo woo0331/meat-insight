@@ -833,6 +833,41 @@ function MyPwBand(){
   '</div></section>';
 }
 
+function MyFavBand(){
+  var ids = (typeof amFavIds === "function") ? amFavIds() : [];
+  var body;
+  if(!ids.length){
+    body = '<p class="lead">아직 찜한 기기가 없습니다. '+
+      '중고폰 목록에서 하트를 누르시면 여기에 모입니다.</p>'+
+      '<div class="row-cta"><a class="btn btn-pw" href="/shop">중고폰 보러 가기</a></div>';
+  } else {
+    body = '<ul class="pwpd-g my-fav-g">'+ ids.map(function(id){
+      var r = amShopOne(id); if(!r) return "";
+      var p = r.it, md = (typeof amModel === "function") ? amModel(p.model) : null;
+      return '<li class="pwpd-li">'+ FavBtn(id) +
+        '<a class="pwpd-c" href="/d/'+ esc(id) +'">'+
+          '<span class="pwpd-ph">'+
+            iconArt((typeof shopIcon === "function" ? shopIcon(md) : "mobile"), 58)+
+            (r.sample ? '<span class="pwpd-smp-b">예시</span>' : '')+
+          '</span>'+
+          '<b class="pwpd-nm">'+ esc(md ? md.name : p.model) +'</b>'+
+          '<span class="pwpd-sp">'+
+            esc([(p.cap ? (p.cap >= 1024 ? (p.cap/1024)+"TB" : p.cap+"GB") : ""),
+                 p.color || ""].filter(Boolean).join(" · "))+'</span>'+
+          '<span class="pwpd-pr">'+ esc(Number(p.price||0).toLocaleString()) +'원</span>'+
+        '</a></li>';
+    }).join("") +'</ul>'+
+    '<div class="row-cta"><button class="btn btn-o" type="button" '+
+      'onclick="amFavClear()">찜 전부 지우기</button></div>';
+  }
+  return '<section class="sec sec-gray"><div class="w">'+
+    '<h2>찜한 중고폰 '+ (ids.length ? '<span class="my-fav-n">'+ ids.length +'</span>' : '') +'</h2>'+
+    '<p class="lead">이 브라우저에만 남습니다. '+
+      '<b>찜해 두신 것은 신청이 아닙니다</b> — 저희에게 아무것도 오지 않습니다.</p>'+
+    body+
+  '</div></section>';
+}
+
 function PageMy(){
   var qs = amGet("am.quotes.v1", []);
 
@@ -846,6 +881,7 @@ function PageMy(){
 
   MyDbBand()+
   MyPwBand()+
+  MyFavBand()+
   '<section class="sec sec-white"><div class="w">'+
 
     '<h2>이 브라우저에 남은 기록</h2>'+
@@ -859,6 +895,8 @@ function PageMy(){
 window.myClear = function(){
   if(!confirm("이 브라우저에 남은 기록을 전부 지웁니다. 되돌릴 수 없습니다.")) return;
   amDel(MKEY); amDel("am.quotes.v1"); amDel(window.AM_SAVE_KEY || "am.saved.v1");
+
+  amDel("am.fav.v1");
 
   try{
     var kill = [];

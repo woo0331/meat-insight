@@ -8490,3 +8490,328 @@ button.chip, button.pwf-g{ font:inherit; cursor:pointer; text-align:left;
    ⚠️ 재 보니 이것 없이도 360 · 390 · 430px 에서 움직이지 않았습니다 —
    그래도 결과 높이가 크게 바뀌는 자리라 남겨 둡니다. */
 #shp-res{ overflow-anchor:none; }
+
+/* ════════════════════════════════════════════════════════════════════
+   2026-10-31 "PHONEWAY 최종 디자인 확정 — PC · 모바일 원본 1:1 구현"
+
+   ⚠️⚠️ **이 블록은 파일 맨 뒤라야 합니다.** 위의 `.pwh` · `.pwsv` ·
+   `.pwbr` · `.pwpd` 선언들과 특정도가 같아서 **뒤에 오는 쪽이
+   이깁니다** — 가운데에 끼워 넣으면 조용히 안 먹습니다 (이 저장소가
+   일곱 번 겪은 특정도 함정).
+   ⚠️ 되돌리시려면 **이 블록만 지우면** 앞 차례로 돌아갑니다.
+
+   ⚠️⚠️ **구간 바탕을 다시 칠했습니다.** 브랜드와 상품이 한 구간
+   (`.pwmk`)으로 합쳐지면서 이웃이 바뀌었습니다 — 메인에서는
+   `paintTones()` 가 안 돌기 때문에(`ivh` 이른 반환) **여기서 직접**
+   칠하고 ΔE 를 다시 재야 합니다.
+     pwh 웜 → pwsv 흰 → pwmk 웜 → pwbz 흰 → pwst 크림 → pwt 흰 → pwc 짙음
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── 헤더 두 줄 (§2) ──────────────────────────────────────────── */
+.hd-2r{ padding:0; }
+.hd-2r .hd-t1{ border-bottom:1px solid var(--pw-line); }
+.hd-2r .hd-t1-in{ display:flex; align-items:center; gap:20px;
+  min-height:72px; padding-top:10px; padding-bottom:10px; }
+.hd-2r .hd-in{ display:none; }
+/* 큰 통합검색 — 시안 §2 의 가운데 칸 */
+.hd-2r .hd-s{ flex:1 1 auto; max-width:620px; height:48px; position:relative;
+  display:flex; align-items:center; gap:10px; padding:0 6px 0 16px;
+  border:2px solid var(--pw-or); border-radius:999px;
+  background:var(--pw-white); }
+.hd-2r .hd-s:focus-within{ border-color:var(--pw-or-600); }
+.hd-2r .hd-s input{ flex:1 1 auto; min-width:0; height:100%; border:0; outline:0;
+  background:transparent; font-size:14.5px; color:var(--pw-ink); }
+.hd-2r .hd-s .hd-s-i{ display:none; }
+/* ⚠️⚠️ **누름은 40px 이상**입니다 — 34px 로 두었다가 전수 점검에
+   걸렸습니다 (`BUTTON.hd-s-go|34px`). 알약 높이도 같이 올립니다. */
+.hd-2r .hd-s-go{ flex:0 0 auto; width:40px; height:40px; border:0; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center;
+  border-radius:50%; background:var(--pw-or-600); color:#fff; }
+.hd-2r .hd-s-go:hover{ background:var(--pw-or-600); }
+.hd-2r .hd-r{ gap:14px; }
+.hd-2r .hd-txt{ color:var(--pw-ink2); font-size:14px; font-weight:700; gap:5px; }
+.hd-2r .hd-txt:hover{ color:var(--pw-or-700); }
+.hd-2r .hd-lgi{ font-weight:600; }
+.hd-fav{ position:relative; }
+.hd-fav-n{ position:absolute; top:2px; right:0; min-width:17px; height:17px;
+  padding:0 4px; border-radius:999px; background:var(--pw-or-600); color:#fff;
+  font-size:11px; font-weight:800; line-height:17px; text-align:center; }
+/* ⚠️⚠️ **`--pw-or`(#F37021) 위 흰 글자는 2.94 입니다** — AA(4.5)에
+   한참 못 미칩니다. 이 토큰은 **면 · 테두리 · 아이콘 전용**이고
+   흰 글자를 얹는 면은 `--pw-or-600`(4.55)입니다. 전수 점검이
+   일곱 폭에서 잡았습니다 (이 저장소가 다섯 번 겪은 자리). */
+.hd-2r .hd-cta{ min-height:44px; border-radius:999px; font-weight:800;
+  background:var(--pw-or-600); border-color:var(--pw-or-600); color:#fff; }
+.hd-2r .hd-cta:hover{ background:var(--pw-or-700); border-color:var(--pw-or-700); }
+/* 아랫줄 — 메뉴 여덟 */
+.hd-2r .hd-t2{ background:var(--pw-white); }
+.hd-2r .gnb{ display:flex; align-items:center; gap:4px; min-height:48px;
+  flex-wrap:nowrap; overflow:visible; }
+.hd-2r .gnb a{ display:inline-flex; align-items:center; gap:7px;
+  min-height:44px; padding:0 12px; border-radius:10px; white-space:nowrap;
+  font-size:14.5px; font-weight:700; letter-spacing:-.02em; color:var(--pw-ink); }
+.hd-2r .gnb a i{ display:inline-flex; color:var(--pw-or); }
+.hd-2r .gnb a:hover{ background:var(--pw-or-50); color:var(--pw-or-700); }
+.hd-2r .gnb a.on{ color:var(--pw-or-700); background:var(--pw-or-50); }
+.hd-2r .gnb a.on i{ color:var(--pw-or-600); }
+@media (max-width:1340px){
+  .hd-2r .gnb a{ font-size:13.5px; padding:0 9px; gap:6px; }
+  .hd-2r .hd-t1-in{ gap:14px; }
+}
+@media (max-width:1100px){
+  .hd-2r .hd-t2{ display:none; }
+  .hd-2r .hd-t1{ border-bottom:0; }
+}
+/* 폰 — 윗줄이 두 줄로 접힙니다 (로고 · 아이콘 / 검색) */
+@media (max-width:767px){
+  .hd-2r .hd-t1-in{ flex-wrap:wrap; gap:8px 10px; min-height:0;
+    padding-top:8px; padding-bottom:10px; }
+  .hd-2r .hd-r{ margin-left:auto; gap:4px; }
+  .hd-2r .hd-s{ order:9; flex:1 0 100%; max-width:none; height:42px; }
+  .hd-2r .hd-ic-s{ display:none; }
+  .hd-2r .hd-cta{ min-height:40px; padding:0 13px; font-size:13.5px; }
+}
+@media (max-width:359px){ .hd-2r .hd-cta{ display:none; } }
+
+/* ── 01 히어로 (§3) ──────────────────────────────────────────── */
+/* 바로가기 셋 — 단추 아래 얇은 줄 */
+.pwh-lk{ list-style:none; margin:18px 0 0; padding:0;
+  display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; }
+.pwh-lk li{ display:flex; align-items:center; }
+.pwh-lk li + li{ padding-left:18px; border-left:1px solid rgba(48,32,21,.16); }
+.pwh-lk a{ display:inline-flex; align-items:center; gap:7px; min-height:40px;
+  font-size:14px; font-weight:700; color:var(--pw-ink2); }
+.pwh-lk a i{ display:inline-flex; width:26px; height:26px; flex:none;
+  align-items:center; justify-content:center; border-radius:50%;
+  background:var(--pw-or-50); color:var(--pw-or-700); }
+.pwh-lk a:hover{ color:var(--pw-or-700); }
+@media (max-width:767px){
+  .pwh-lk{ gap:4px 12px; margin-top:12px; }
+  .pwh-lk li + li{ padding-left:12px; }
+  .pwh-lk a{ font-size:13px; gap:6px; }
+}
+/* 기기 둘을 겹칩니다 — 뒤의 갤럭시는 장식 */
+.pwh-art{ position:relative; }
+.pwh-ph2{ position:absolute; left:-4%; top:12%; width:58%; z-index:0;
+  opacity:.92; transform:rotate(-7deg); pointer-events:none; }
+.pwh-art > .ph-p, .pwh-art > .pwh-ph{ position:relative; z-index:1; }
+@media (max-width:900px){ .pwh-ph2{ display:none; } }
+
+/* 폰 빠른 메뉴 다섯 — 767px 아래에서만 (§9) */
+.pwmq{ display:none; }
+@media (max-width:767px){
+  .pwmq{ display:block; position:relative; z-index:2;
+    padding:12px 0 2px; }
+  .pwmq-g{ list-style:none; margin:0; padding:0;
+    display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:6px; }
+  .pwmq-c{ display:flex; flex-direction:column; align-items:center; gap:5px;
+    min-height:76px; padding:9px 2px; border-radius:12px;
+    background:var(--pw-white); border:1px solid var(--pw-line);
+    text-align:center; }
+  .pwmq-c i{ display:inline-flex; }
+  .pwmq-c span{ font-size:12px; font-weight:700; line-height:1.25;
+    letter-spacing:-.04em; color:var(--pw-ink); }
+}
+@media (max-width:359px){ .pwmq-c span{ font-size:12px; letter-spacing:-.06em; } }
+
+/* ── 02 핵심 서비스 여섯 (§4) — 큰 그림 칸 + 아래 화살표 ─────── */
+.pwsv{ background:var(--pw-white); }
+.pwsv-g{ grid-template-columns:repeat(6, minmax(0,1fr)); gap:14px; }
+.pwsv-c{ display:flex; flex-direction:column; align-items:flex-start;
+  gap:0; min-height:0; padding:0 0 14px; border-radius:16px;
+  background:var(--pw-white); border:1px solid var(--pw-line);
+  box-shadow:0 1px 2px rgba(48,32,21,.04); overflow:hidden; position:relative; }
+.pwsv-c:hover{ border-color:var(--pw-or); box-shadow:0 8px 20px -12px rgba(48,32,21,.3); }
+.pwsv-i{ display:flex; align-items:center; justify-content:center;
+  width:100%; aspect-ratio:1/.78; margin:0 0 12px;
+  background:linear-gradient(160deg,#FFF3E6 0%, #FDE7D1 100%); }
+.pwsv-c b{ padding:0 14px; font-size:15.5px; font-weight:800;
+  letter-spacing:-.02em; color:var(--pw-ink); }
+.pwsv-d{ padding:4px 14px 0; font-size:12.5px; line-height:1.45;
+  color:var(--pw-ink3); }
+.pwsv-go{ position:absolute; right:12px; bottom:12px;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:30px; height:30px; border-radius:50%;
+  background:var(--pw-or-50); color:var(--pw-or-700); }
+.pwsv-c:hover .pwsv-go{ background:var(--pw-or); color:#fff; }
+@media (max-width:1199px){ .pwsv-g{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
+@media (max-width:767px){
+  .pwsv-g{ grid-template-columns:repeat(3, minmax(0,1fr)); gap:9px; }
+  .pwsv-c{ padding-bottom:40px; }
+  .pwsv-c b{ padding:0 9px; font-size:13.5px; }
+  .pwsv-d{ padding:3px 9px 0; font-size:11.5px; display:none; }
+  .pwsv-go{ right:8px; bottom:8px; width:26px; height:26px; }
+}
+@media (max-width:420px){ .pwsv-g{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .pwsv-d{ display:block; } }
+
+/* ── 03+04 브랜드 · 상품 · 사이드바 (§5 · §6 · §7) ─────────────── */
+.pwmk{ background:var(--pw-warm); padding:var(--sec-y) 0; }
+.pwmk-in{ display:grid; grid-template-columns:minmax(0,1fr) 268px;
+  gap:28px; align-items:start; }
+.pwmk-main{ min-width:0; display:grid; gap:34px;
+  /* ⚠️⚠️ **`minmax(0,1fr)` 이라야 합니다.** 기본 `auto` 는 **안쪽의
+     제일 안 쪼개지는 것**보다 좁아지지 않는데, 폰에서 브랜드 · 상품이
+     가로 스크롤 띠(`display:flex`)가 되면서 그 띠의 max-content
+     (604px)가 칸 폭이 됐습니다 — 390px 화면에서 **문서 폭이 624px**
+     이 되어 가로 스크롤이 났습니다 (`.ad-main` · `.gnb` 로 겪은 자리).
+     ⚠️ 재서 알았습니다 — 찍은 그림만 보면 "좀 넓네" 입니다. */
+  grid-template-columns:minmax(0,1fr); }
+.pwbr, .pwpd{ background:none; padding:0; }
+.pwbr-g{ grid-template-columns:repeat(6, minmax(0,1fr)); gap:12px; }
+.pwbr-c{ min-height:118px; border-radius:14px; background:var(--pw-white);
+  border:1px solid var(--pw-line); }
+.pwbr-c:hover{ border-color:var(--pw-or); }
+.pwpd-g{ grid-template-columns:repeat(5, minmax(0,1fr)); gap:14px; }
+.pwpd-li{ position:relative; }
+/* 찜 — 카드 오른쪽 위에 겹칩니다 (`a` 밖) */
+.favb{ position:absolute; top:8px; right:8px; z-index:2;
+  width:34px; height:34px; display:inline-flex; align-items:center;
+  justify-content:center; border-radius:50%; cursor:pointer;
+  border:1px solid var(--pw-line); background:rgba(255,255,255,.94);
+  color:var(--pw-ink3); padding:0; }
+.favb:hover{ color:var(--pw-or-600); border-color:var(--pw-or); }
+.favb.on{ color:var(--pw-or-600); border-color:var(--pw-or); }
+
+/* 사이드바 */
+.pwsd{ display:grid; gap:14px; position:sticky; top:96px; }
+.pwsd-q{ padding:18px 16px 16px; border-radius:16px;
+  background:var(--pw-white); border:1px solid var(--pw-line);
+  box-shadow:0 2px 10px -6px rgba(48,32,21,.2); }
+.pwsd-h{ display:block; font-size:16.5px; font-weight:900;
+  letter-spacing:-.02em; color:var(--pw-ink); }
+.pwsd-l{ margin:6px 0 0; font-size:12.5px; line-height:1.5; color:var(--pw-ink3); }
+.pwsd-f{ display:grid; gap:8px; margin-top:13px; }
+.pwsd-f .sel{ width:100%; min-height:44px; font-size:14px; }
+.pwsd-go{ width:100%; min-height:46px; justify-content:center;
+  border-radius:10px; font-weight:800; }
+.pwsd-n{ margin:11px 0 0; font-size:12px; line-height:1.55; color:var(--pw-ink3); }
+.pwsd-n b{ color:var(--pw-ink2); }
+.pwsd-b{ position:relative; display:block; padding:16px 15px 14px;
+  border-radius:16px; background-color:var(--pw-dk);
+  background-image:linear-gradient(145deg, #3A2719 0%, #241810 100%);
+  color:var(--pw-on-dk); overflow:hidden; }
+.pwsd-b i{ position:absolute; right:10px; top:12px; opacity:.5; }
+.pwsd-b b{ display:block; font-size:15px; font-weight:800; color:#fff; }
+.pwsd-b span{ display:block; margin-top:5px; padding-right:40px;
+  font-size:12.5px; line-height:1.5; color:var(--pw-on-dk2); }
+/* ⚠️ 같은 까닭으로 `--pw-or-600` 입니다 (흰 글자 4.55). */
+.pwsd-b em{ display:inline-flex; align-items:center; gap:5px; margin-top:11px;
+  min-height:34px; padding:0 13px; border-radius:999px; font-style:normal;
+  font-size:12.5px; font-weight:800; background:var(--pw-or-600); color:#fff; }
+.pwsd-b:hover em{ background:var(--pw-or-700); }
+@media (max-width:1199px){
+  .pwmk-in{ grid-template-columns:minmax(0,1fr) 240px; gap:20px; }
+  .pwpd-g{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .pwbr-g{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+}
+@media (max-width:1023px){
+  .pwmk-in{ grid-template-columns:minmax(0,1fr); }
+  .pwsd{ position:static; grid-template-columns:repeat(3, minmax(0,1fr));
+    align-items:start; }
+  .pwsd-q{ grid-column:1 / -1; }
+}
+@media (max-width:767px){
+  .pwmk-main{ gap:26px; }
+  .pwsd{ grid-template-columns:minmax(0,1fr); }
+  /* ⚠️⚠️ **상품은 폰에서 가로로 넘깁니다** — 시안의 모바일이 그
+     모양이고(넷째 카드가 오른쪽에서 잘립니다) 위 블록이 이미 그렇게
+     해 두었습니다. 여기서 격자로 덮으면 시안과 달라집니다. */
+  .pwbr-g{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
+    gap:8px; overflow-x:visible; }
+  .pwbr-c{ min-height:80px; }
+  .favb{ width:30px; height:30px; top:6px; right:6px; }
+}
+
+/* ── 05 안내 배너 셋 — 구간 바탕을 흰색으로 (ΔE) ──────────────── */
+.pwbz{ background:var(--pw-white); }
+
+/* ── 헤더 두 줄 — 찍어 보고 고친 것 (2026-10-31) ─────────────────
+   ⚠️⚠️ **윗줄이 짙은 브라운입니다.** 앞 차례의 `.hd-txt` 는 밝은
+   바탕용 색(`--pw-ink2` #5A4433)이라 그대로 두었더니 **짙은 면에
+   짙은 글자**로 앉아 거의 안 보였습니다 (찍어 보고 알았습니다 —
+   가로 스크롤도 에러도 안 납니다). 짙은 면 위 글자는 밝은 쪽입니다.
+   재 본 값: #EADBC8 on #362313 = 9.6 · 흰 글자 = 12.9.          */
+.hd-2r .hd-txt, .hd-2r .hd-ic, .hd-2r .hd-lgi{ color:var(--pw-on-dk2); }
+.hd-2r .hd-txt:hover, .hd-2r .hd-ic:hover, .hd-2r .hd-lgi:hover{
+  color:#fff; background:rgba(255,255,255,.10); }
+.hd-2r .hd-ic{ border-radius:10px; }
+/* ⚠️ 큰 검색창이 보이는 폭에서는 돋보기를 접습니다 — 둘 다 내면
+   같은 일을 하는 단추가 한 줄에 둘입니다. 767px 아래에서는 검색창이
+   제 줄로 내려가고 돋보기는 그대로 접힙니다(서랍에 통합검색이
+   있습니다). */
+.hd-2r .hd-ic-s{ display:none; }
+/* 로고 밑줄 — 윗줄이 넉넉해서 되살립니다 (시안 §2) */
+@media (min-width:1101px){ .hd-2r .hd-lg-t i{ display:block; color:var(--pw-on-dk3); } }
+/* CTA 는 시안 글자 그대로 `판매 신청` 입니다 */
+@media (min-width:768px){ .hd-2r .hd-cta-w{ display:inline; } }
+/* 아랫줄 메뉴는 **왼쪽 맞춤** (시안 §2) */
+.hd-2r .gnb{ justify-content:flex-start; gap:6px; }
+@media (min-width:1341px){ .hd-2r .gnb{ gap:14px; } }
+
+/* ── 폰 — 찍어 보고 고친 것 (2026-10-31) ───────────────────────── */
+/* ⚠️⚠️ **`ul` 을 재설정하면서 `.w` 의 좌우 여백까지 지웠습니다** —
+   빠른 메뉴 다섯이 화면 끝에서 끝까지 닿아 다섯째 칸이 가장자리에
+   붙었습니다 (찍어 보고 알았습니다 · 문서 폭은 390 그대로라 가로
+   스크롤 검사는 통과합니다). `.w` 와 같은 여백을 돌려줍니다. */
+@media (max-width:767px){
+  .pwmq-g{ padding:0 var(--pad); }
+  /* 시안의 모바일은 단추 둘이 **나란히** 섭니다 — 글 칸을 조금
+     넓히고 두 칸으로 놓습니다 (재 보고 정한 값). */
+  .pwh-in{ grid-template-columns:62% 38%; }
+  .pwh-go{ display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+  .pwh-go .btn{ min-height:46px; padding:0 8px; font-size:13px; }
+  .pwh-go .btn b{ font-size:13px; }
+  /* ⚠️⚠️ **바로가기 셋을 폰에서 접습니다** — 시안의 모바일에 없고,
+     셋이 가리키는 `/sell` · `/bid` · `/repair` 가 **바로 위 빠른
+     메뉴 다섯**에 그대로 있습니다 (재서 확인했습니다). 길이
+     사라지는 것이 아니라 한 화면에 같은 주소가 두 번 안 서게
+     하는 것입니다. */
+  .pwh-lk{ display:none; }
+}
+/* 시안의 모바일은 서비스가 **3열 두 줄**입니다 — 420px 아래에서
+   2열로 내리던 규칙을 거둡니다 (재 보니 3열에서도 낱말이 안 잘립니다). */
+@media (max-width:420px){
+  .pwsv-g{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .pwsv-d{ display:none; }
+}
+
+@media (max-width:767px){
+  /* 브랜드 카드 — 로고가 있는 둘만 키가 커서 줄이 들쭉날쭉했습니다.
+     ⚠️ 빈 액자를 깔지 않고(절대 규칙 2) **하한을 올려** 맞춥니다 —
+     로고 칸 24 + 이름 18 + 대수 16 + 여백이 108 안에 들어갑니다. */
+  .pwbr-c{ min-height:108px; padding:12px 8px; gap:6px; }
+  .pwbr-lg{ height:24px; }
+  .pwbr-lg img{ max-height:22px; max-width:74px; }
+  .pwbr-c > b{ font-size:12.5px; }
+  /* 구간 머리말과 `전체 보기` 를 한 줄에 둡니다 (시안) */
+  .pw-hd-l{ flex-direction:row; align-items:flex-end; gap:10px; }
+  .pw-hd-l h2{ font-size:19px; }
+  .pw-hd-l p{ margin-top:6px; font-size:13px; }
+  .pw-more{ flex:none; font-size:12.5px; white-space:nowrap; }
+  /* 히어로 단추 둘 — 한 줄에 나란히 서게 글자만 줄입니다.
+     ⚠️ 화살표를 접습니다 — 107px 칸에 "중고폰 구매하기" + 화살표는
+     안 들어가고, 줄이면 12px 아래로 내려갑니다 (이 저장소 하한). */
+  .pwh-go .btn{ font-size:12.5px; padding:0 6px; gap:3px; }
+  .pwh-go .btn b{ font-size:12.5px; }
+  .pwh-go .btn svg{ display:none; }
+}
+
+/* 서비스 카드 그림칸 — 아이콘을 칸 폭에 맞춥니다.
+   ⚠️ JS 가 88px 로 그리는데 폰에서는 칸이 110px 이라 거의 꽉 찹니다.
+   폭 비율로 두면 어느 폭에서도 같은 여백이 남습니다 (재 보고 정했습니다). */
+.pwsv-i svg{ width:clamp(44px, 46%, 88px); height:auto; }
+
+/* 찜한 중고폰 (/my) — 상품 카드와 **같은 생김새**라야 합니다
+   (한 시스템으로 읽혀야 하고, 두 벌을 두면 한쪽만 고치게 됩니다). */
+.my-fav-g{ margin-top:16px; }
+.my-fav-n{ display:inline-flex; align-items:center; justify-content:center;
+  min-width:26px; height:26px; margin-left:8px; padding:0 8px;
+  border-radius:999px; background:var(--pw-or-50); color:var(--pw-or-700);
+  font-size:14px; font-weight:800; vertical-align:middle; }
+
+/* /shop 카드의 찜 — 카드가 격자 칸을 그대로 채우게 감싸개를 통과시킵니다.
+   ⚠️ `display:contents` 로 두면 하트의 기준 상자가 사라져 카드 밖으로
+   튑니다 — 감싸개가 자리를 잡고 카드가 그 안을 꽉 채웁니다. */
+.shp-w{ position:relative; display:flex; }
+.shp-w > .shp-c{ flex:1 1 auto; min-width:0; }

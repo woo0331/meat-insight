@@ -461,6 +461,10 @@ function render(){
      하고, 띠가 있는 화면에서만 높이를 잽니다. 화면마다 조건을 적으면
      새 화면을 만들 때 한쪽만 고치게 됩니다. */
   if(typeof window.pickPaint === "function") window.pickPaint();
+  /* 찜 — 헤더 뱃지와 화면의 하트를 **한 번에** 맞춥니다 (`js/fav.js`).
+     ⚠️ 어느 화면에서나 부릅니다 — 하트가 없는 화면에서는 아무 일도
+     안 하고, 헤더 뱃지는 167개 화면 전부에 있습니다. */
+  if(typeof window.amFavPaint === "function") window.amFavPaint();
   /* ⚠️⚠️ **회원 계정에 남은 것과 한 번 맞춰 봅니다** (2026-10-18 §6-2 · §9).
      로그인이 꺼져 있거나 안 들어와 계시면 `amStateSync()` 가 **fetch 를
      한 번도 안 보내고** 그대로 끝납니다 — 지금 운영 사이트가 그

@@ -72,7 +72,7 @@
    ⚠️ `index.html` 의 html 태그에 `ivh` 가 있어서 **첫 그림부터** 이
    바탕이고, 하위 화면에서는 빌드가 떼어 냅니다 (`shell()`). */
 function PageMain(){
-  return PwHero()+ PwServices()+ PwBrands()+ PwProducts()+
+  return PwHero()+ PwServices()+ PwMarket()+
          PwBanners()+ PwNews()+ PwSteps()+ PwTrust()+ PwCta();
 }
 
@@ -160,6 +160,7 @@ function PwHero(){
      "인수인계은" 으로 겪은 자리입니다. */
   var wa = (typeof josa === "function") ? josa(nm, "와과") : "와";
   return '<section class="pwh">'+
+    pwHeroQuick()+
     '<div class="pwh-bg" aria-hidden="true">'+
       '<span class="pwh-rb"></span>'+
       '<span class="pwh-rb2"></span>'+
@@ -183,14 +184,70 @@ function PwHero(){
           '<a class="btn pwh-b2" href="/shop" data-to="/shop">'+
             '<b>중고폰 구매하기</b>'+ pwArrow() +'</a>'+
         '</div>'+
+        pwHeroLinks()+
       '</div>'+
+      /* ⚠️⚠️ **기기 둘을 겹쳐 냅니다** (시안 §3 — 여러 제조사의
+         스마트폰이 겹쳐 있는 대형 이미지). 시안은 다섯 대인데 지금
+         **권한이 확인된 촬영본이 넷**이고(사장님이 주신 투명 PNG),
+         그중 휴대폰은 둘입니다 — 태블릿 · 워치를 섞으면 "스마트폰이
+         겹친 그림" 이 아니라 잡다한 기기 모음이 됩니다. 넉 장을 더
+         받으시면 여기 한 줄씩입니다 (§13 보고 대상).
+         ⚠️ 뒤에 서는 갤럭시는 **장식**이라 `aria-hidden` 이고, 폰에서는
+         접습니다 (둘을 겹치면 390px 에서 한 덩어리로 뭉갭니다). */
       '<div class="pwh-art">'+
+        '<span class="pwh-ph2" aria-hidden="true">'+
+          photoBox("dev-galaxy", "pwh-ph", false,
+            "(max-width:1199px) 24vw, 300px")+'</span>'+
         photoBox("dev-iphone", "pwh-ph", true,
           "(max-width:767px) 42vw, (max-width:1199px) 36vw, 420px")+
       '</div>'+
     '</div>'+
     pwHeroTrust()+
   '</section>';
+}
+
+/* ─── 폰에서만 — 빠른 메뉴 다섯 (2026-10-31 시안 §9) ────────────
+   시안의 모바일이 검색 바로 아래에 다섯 칸을 두었습니다. PC 시안에는
+   없어서 **767px 아래에서만** 보이고, 넓은 화면에서는 바로 아래
+   `핵심 서비스 여섯`이 같은 일을 합니다.
+
+   ⚠️⚠️ **새 구간을 만들지 않았습니다** — 히어로(`.pwh`) **안**입니다.
+   `#view > section` 을 세는 검사가 여럿이고, 폰에서만 보이는 구간을
+   하나 늘리면 넓은 화면에서 **보이지 않는 구간**이 차례에 끼어
+   들어갑니다.
+   ⚠️⚠️ **목록을 손으로 적지 않았습니다** — `PW_SVC6` 의 앞 다섯이
+   시안의 다섯과 같습니다. 여기 또 적으면 서비스를 하나 고칠 때
+   한쪽만 바뀝니다 (이 저장소가 아이콘 표로 겪은 자리). */
+function pwHeroQuick(){
+  var L = (window.PW_SVC6 || []).slice(0, 5);
+  if(!L.length) return "";
+  return '<div class="pwmq"><ul class="w pwmq-g">'+ L.map(function(q){
+    return '<li><a class="pwmq-c" href="'+ esc(q.to) +'">'+
+      '<i>'+ iconArt(q.ia, 34) +'</i><span>'+ esc(q.sm || q.nm) +'</span></a></li>';
+  }).join("") +'</ul></div>';
+}
+
+/* ─── 히어로 아래 바로가기 셋 (2026-10-31 시안 §3) ───────────────
+   시안이 단추 둘 **아래**에 얇은 줄로 셋을 적어 두었습니다 —
+   내 폰 시세 확인 · 경쟁견적 받아보기 · 수리 견적 문의.
+
+   ⚠️⚠️ **`내 폰 시세 확인` 의 이름을 바꿨습니다.** 매입 기준가가
+   **0건**이라(`amBuyReady()` 가 거짓) 지금 이 사이트는 어느
+   화면에서도 예상 시세 금액을 내지 않습니다 — 그 이름을 그대로
+   걸면 눌러 오신 분이 **금액을 찾다가 못 찾습니다** (절대 규칙 5).
+   기준가를 넣으시면 그날 이 한 줄과 사이드바 한 줄을 같이
+   되돌리시면 됩니다 (§13 보고 대상).
+   ⚠️ 셋 다 **실제로 열리고 실제로 무언가를 받는 화면**입니다. */
+var PW_HERO_LINKS = [
+  ["/sell",   "tag",   "내 폰 견적 확인"],
+  ["/bid",    "gavel", "경쟁견적 받아보기"],
+  ["/repair", "tool",  "수리 견적 문의"]
+];
+function pwHeroLinks(){
+  return '<ul class="pwh-lk">'+ PW_HERO_LINKS.map(function(l){
+    return '<li><a href="'+ esc(l[0]) +'" data-to="'+ esc(l[0]) +'">'+
+      '<i aria-hidden="true">'+ icon(l[1], 17) +'</i>'+ esc(l[2]) +'</a></li>';
+  }).join("") +'</ul>';
 }
 
 /* §5 핵심 서비스 안내 아이콘 셋 (히어로 안 · 세로 구분선)
@@ -681,7 +738,7 @@ function PwServices(){
          **표시**이지 따로 누르는 단추가 아닙니다 — `a` 안에 `a` 를
          넣으면 브라우저가 쪼갭니다. */
       return '<li><a class="pwsv-c" href="'+ esc(s.to) +'">'+
-        '<i class="pwsv-i">'+ iconArt(s.ia, 46) +'</i>'+
+        '<i class="pwsv-i">'+ iconArt(s.ia, 88) +'</i>'+
         '<b>'+ esc(s.nm) +'</b>'+
         '<span class="pwsv-d">'+ esc(s.d) +'</span>'+
         '<span class="pwsv-go" aria-hidden="true">'+ pwArrow() +'</span>'+
@@ -708,7 +765,7 @@ function PwServices(){
 function PwBrands(){
   var B = window.AM_SHOP_BRANDS || [], LG = window.AM_MAKER_LOGO || {};
   if(!B.length) return "";
-  return '<section class="pwbr"><div class="w">'+
+  return '<div class="pwbr">'+
     '<div class="pw-hd-l"><div><h2>다양한 브랜드의 기기를 만나보세요</h2></div>'+
       '<a class="pw-more" href="/shop">전체 보기 '+ pwArrow() +'</a></div>'+
     '<ul class="pwbr-g">'+ B.map(function(b){
@@ -730,11 +787,15 @@ function PwBrands(){
       '</a></li>';
     }).join("") +'</ul>'+
     /* ⚠️ 그 숫자가 **무엇을 센 값인지** 그 자리에서 밝힙니다 — 안
-       밝히면 "곧 생기나 보다" 로 읽히고, 그건 약속입니다 (절대 규칙 5). */
+       밝히면 "곧 생기나 보다" 로 읽히고, 그건 약속입니다 (절대 규칙 5).
+       ⚠️⚠️ 시안에는 이 줄이 없습니다. **빼지 않았습니다** — 빼면
+       브랜드 로고 여섯이 "여섯 브랜드의 기기가 있습니다" 로 읽히고,
+       지금 실제 재고는 0건입니다 (§11 · 절대 규칙 1). 재고가 올라오면
+       숫자가 저절로 바뀌고 이 줄은 그대로 맞는 말로 남습니다. */
     '<p class="pwbr-n0">⚠️ 대수는 <b>지금 올라와 있는 기기를 센 값</b>입니다. '+
       '0대는 아직 올라온 기기가 없다는 뜻이고, '+
       '없는 기기를 미리 보여 드리지 않습니다.</p>'+
-  '</div></section>';
+  '</div>';
 }
 
 /* ─── 04 지금 보실 수 있는 중고폰 (§2-5) ────────────────────────
@@ -786,13 +847,13 @@ function PwProducts(){
     body = '<ul class="pwpd-g">'+ L.slice(0, PW_PD_N).map(pwPdCard).join("") +'</ul>';
   }
 
-  return '<section class="pwpd"><div class="w">'+
+  return '<div class="pwpd">'+
     '<div class="pw-hd-l"><div><h2>지금 보실 수 있는 중고폰</h2>'+
       '<p>등록된 차례로 냅니다 — 조회수나 판매량 같은 이용 통계가 아닙니다.</p></div>'+
       '<a class="pw-more" href="/shop">전체 보기 '+ pwArrow() +'</a></div>'+
     '<div class="chip-g chip-g-fil pwpd-fil">'+ chips +'</div>'+
     body+
-  '</div></section>';
+  '</div>';
 }
 
 /* 상품 카드 한 장 — ⚠️ `/shop` 과 **같은 규칙**이라야 합니다.
@@ -803,7 +864,11 @@ function pwPdCard(p){
   var md  = (typeof amModel === "function") ? amModel(p.model) : null;
   var smp = String(p.id || "").indexOf("sample-") === 0;
   var ph  = (p.images && p.images[0]) || "";
-  return '<li><a class="pwpd-c" href="/d/'+ esc(p.id) +'">'+
+  /* ⚠️⚠️ **하트는 `a` 밖입니다** — `a` 안의 `button` 은 브라우저가
+     쪼갭니다. CSS 로 카드 오른쪽 위에 겹칩니다 (`js/fav.js`). */
+  return '<li class="pwpd-li">'+
+    (typeof FavBtn === "function" ? FavBtn(p.id) : "")+
+    '<a class="pwpd-c" href="/d/'+ esc(p.id) +'">'+
     '<span class="pwpd-ph">'+
       (ph ? '<img class="ph" src="'+ esc(ph) +'" alt="" loading="lazy" decoding="async">'
           /* ⚠️⚠️ `shopIcon()` 은 **이름을** 돌려줍니다 (HTML 이 아닙니다) —
@@ -823,6 +888,131 @@ function pwPdCard(p){
     '</span>'+
   '</a></li>';
 }
+
+
+/* ─── 03+04 브랜드 · 중고폰 · 오른쪽 사이드바 (2026-10-31 시안 §7) ──
+   시안이 브랜드 줄과 상품 줄 **오른쪽에 세로 사이드바**를 두었습니다 —
+   내 폰 시세 폼 · 수리 서비스 배너 · 매장 찾기 배너.
+
+   ⚠️⚠️ **브랜드와 상품을 한 구간으로 합쳤습니다.** 사이드바가 두
+   줄에 걸쳐 서려면 둘이 **같은 칸** 안에 있어야 합니다. `#view >
+   section` 을 세는 검사가 여럿이라 `.pwbr` · `.pwpd` 를 구간에서
+   내리고 `.pwmk` 하나로 묶었습니다 — **규칙은 한 줄도 안
+   바꿨습니다**(차례 · h1 · 지어낸 수). `check.js` 의 `order` 가
+   재는 자리만 같이 옮겼습니다.
+   ⚠️ `.pwbr-g` · `.pwpd-g` · `.pwpd-fil` · `.pwpd-0` 은 그대로입니다 —
+   검사가 그 이름으로 셉니다.
+   ⚠️ 1100px 아래에서는 사이드바가 **상품 아래로** 내려갑니다
+   (시안의 모바일에 사이드바가 없고, 좁은 폭에서 옆에 두면 상품 칸이
+   180px 이 됩니다 — 재 보고 정했습니다). */
+function PwMarket(){
+  return '<section class="pwmk"><div class="w pwmk-in">'+
+    '<div class="pwmk-main">'+ PwBrands() + PwProducts() +'</div>'+
+    PwSide()+
+  '</div></section>';
+}
+
+/* ─── 오른쪽 사이드바 ────────────────────────────────────────────
+   ⚠️⚠️ **머리말이 시안과 다릅니다** — 시안은 "내 폰 시세 바로
+   확인하기 / 예상 시세 확인" 인데, 매입 기준가가 **0건**이라
+   (`amBuyReady()`) 이 사이트는 어느 화면에서도 예상 금액을 내지
+   않습니다. 그 글을 그대로 걸면 다 고르고 누르셨을 때 **금액이
+   없습니다** — §11 이 금지한 허위 기능이고 절대 규칙 5 입니다.
+   하는 일(기기를 골라 신청으로 잇기)과 칸 넷은 시안 그대로이고,
+   **약속하는 글만** 사실에 맞췄습니다. 기준가를 넣으시면 그날
+   머리말 · 단추 두 줄을 시안 글로 되돌리시면 됩니다.
+
+   ⚠️⚠️ **둘째 배너가 `매장 찾기` 가 아닙니다** — 오프라인 매장이
+   0곳입니다 (§11 · §0-8 이 "매장 수를 생성하지 않는다"). 대신 실제로
+   도는 `판매 진행 조회` 를 둡니다. 매장이 생기는 날 여기 한 줄입니다.
+   ⚠️ 셋 다 실제로 열리는 화면입니다 (§11).                      */
+function PwSide(){
+  var MK = (window.AM_MAKERS || []), GR = (window.AM_GRADES || []);
+  var opt = function(v, t){ return '<option value="'+ esc(v) +'">'+ esc(t) +'</option>'; };
+  return '<aside class="pwsd" aria-label="내 폰 견적 바로 받기">'+
+    '<div class="pwsd-q">'+
+      '<b class="pwsd-h">내 폰 견적 바로 받기</b>'+
+      '<p class="pwsd-l">기기를 고르시면 신청 화면이 그대로 이어집니다.</p>'+
+      /* ⚠️ 폼입니다 — 엔터로도 가야 합니다. */
+      '<form class="pwsd-f" onsubmit="return pwSdGo(event)">'+
+        '<select class="sel" id="sdMk" aria-label="제조사 선택" onchange="pwSdMk()">'+
+          opt("", "제조사 선택")+
+          MK.map(function(m){ return opt(m.key, m.name); }).join("")+
+        '</select>'+
+        '<select class="sel" id="sdMd" aria-label="모델 선택" onchange="pwSdMd()" disabled>'+
+          opt("", "모델 선택")+'</select>'+
+        '<select class="sel" id="sdCp" aria-label="저장용량 선택" disabled>'+
+          opt("", "저장용량 선택")+'</select>'+
+        '<select class="sel" id="sdGr" aria-label="기기 상태 선택">'+
+          opt("", "기기 상태 선택")+
+          GR.map(function(g){ return opt(g.key, g.name); }).join("")+
+        '</select>'+
+        '<button class="btn btn-pw pwsd-go" type="submit">견적 받으러 가기'+
+          pwArrow() +'</button>'+
+      '</form>'+
+      /* ⚠️⚠️ 이 줄을 지우지 마세요 — 고르고 누르면 **금액이 아니라
+         신청 화면**이 나온다는 것을 누르기 전에 밝히는 자리입니다. */
+      '<p class="pwsd-n">매입 기준가를 아직 공개하지 않아 이 자리에서 '+
+        '금액을 내지 않습니다. 고르신 기기로 <b>신청 화면</b>이 열리고, '+
+        '전국 매입업체 견적을 받아 보실 수 있습니다.</p>'+
+    '</div>'+
+    '<a class="pwsd-b pwsd-b1" href="/repair">'+
+      '<i aria-hidden="true">'+ iconArt("repair", 40) +'</i>'+
+      '<b>수리 서비스</b>'+
+      '<span>정확한 진단, 합리적인 비용</span>'+
+      '<em>수리 견적 바로가기'+ pwArrow() +'</em></a>'+
+    '<a class="pwsd-b pwsd-b2" href="/track">'+
+      '<i aria-hidden="true">'+ iconArt("chart", 40) +'</i>'+
+      '<b>판매 진행 조회</b>'+
+      '<span>접수번호로 지금 어디까지 왔는지 보실 수 있습니다</span>'+
+      '<em>진행 상황 보기'+ pwArrow() +'</em></a>'+
+  '</aside>';
+}
+
+/* 제조사를 고르면 **그 제조사의 모델**로 다시 채웁니다.
+   ⚠️⚠️ 화면을 다시 그리지 않습니다 — 고르개 셋만 바꿔 끼웁니다.
+   다시 그리면 방금 고르신 것이 날아가고 스크롤이 맨 위로 갑니다. */
+function pwSdFill(sel, list, ph, dis){
+  var e = document.getElementById(sel);
+  if(!e) return;
+  e.innerHTML = '<option value="">'+ esc(ph) +'</option>'+ list.map(function(o){
+    return '<option value="'+ esc(o[0]) +'">'+ esc(o[1]) +'</option>'; }).join("");
+  e.disabled = !!dis;
+  e.value = "";
+}
+window.pwSdMk = function(){
+  var mk = (document.getElementById("sdMk") || {}).value || "";
+  /* ⚠️ 스마트폰만이 아닙니다 — 태블릿 · 워치도 삽니다. `amModelsOf()`
+     한 곳으로 가져와 `/sell` 과 같은 목록을 씁니다. */
+  var L = mk && typeof amModelsOf === "function" ? amModelsOf(mk, "") : [];
+  pwSdFill("sdMd", L.map(function(m){ return [m.key, m.name]; }),
+           mk ? "모델 선택" : "먼저 제조사를 골라 주세요", !mk);
+  pwSdFill("sdCp", [], "저장용량 선택", true);
+};
+window.pwSdMd = function(){
+  var k  = (document.getElementById("sdMd") || {}).value || "";
+  var md = (k && typeof amModel === "function") ? amModel(k) : null;
+  var caps = (md && md.caps) ? md.caps : [];
+  pwSdFill("sdCp", caps.map(function(c){
+    return [String(c), c >= 1024 ? (c/1024)+"TB" : c+"GB"]; }),
+    caps.length ? "저장용량 선택" : "저장용량 선택", !caps.length);
+};
+/* ⚠️⚠️ **고르신 것을 그대로 `/sell` 에 실어 보냅니다.** 안 실으면
+   같은 것을 두 번 고르시게 되고, 거기서 닫힙니다 (이 저장소가
+   업체 상세의 `quoteTo({})` 로 겪은 자리).
+   ⚠️ 아무것도 안 고르셔도 막지 않습니다 — `/sell` 첫 걸음이 바로
+   기기 고르는 화면입니다 (고르는 자리를 두 번 만들지 않습니다). */
+window.pwSdGo = function(ev){
+  if(ev && ev.preventDefault) ev.preventDefault();
+  var v = function(id){ return (document.getElementById(id) || {}).value || ""; };
+  var q = [];
+  if(v("sdMk")) q.push("mk=" + encodeURIComponent(v("sdMk")));
+  if(v("sdMd")) q.push("md=" + encodeURIComponent(v("sdMd")));
+  if(v("sdCp")) q.push("cap=" + encodeURIComponent(v("sdCp")));
+  if(v("sdGr")) q.push("gr=" + encodeURIComponent(v("sdGr")));
+  go("/sell" + (q.length ? "?" + q.join("&") : ""));
+  return false;
+};
 
 /* ─── 05 안내 배너 셋 (§2-6) ─────────────────────────────────────
    ⚠️⚠️ **딥 브라운입니다** — 이 저장소에서 어두운 면을 쓸 수 있는

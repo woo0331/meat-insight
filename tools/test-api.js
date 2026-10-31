@@ -159,7 +159,14 @@ async function sendWithDb(body, opt){
 }
 
 (async () => {
-  console.log("\n── 사장님 SOS");
+  /* ⚠️⚠️ **`kind:"sos"` 는 첫 서비스(고기 사업자 문제해결) 것이고 지금
+     어느 화면도 안 보냅니다** (2026-10-31 에 `js/` 전체를 훑어
+     확인했습니다 — `js/admin.js` 의 `AD.kind` 는 붙여 넣은 글을 읽는
+     쪽의 기본값이지 접수가 아닙니다). 접수 API 계약이라 **받는 것은
+     그대로** 두고(직접 POST 하는 길이 열려 있습니다) 여기서 계속
+     재 봅니다 — 그래서 **씨앗도 그 시절 말 그대로** 둡니다. 중고폰
+     낱말로 바꾸면 "지금 쓰는 길" 로 읽혀 다음 사람이 속습니다. */
+  console.log("\n── 사장님 SOS (옛 kind · 어느 화면도 안 보냅니다)");
   {
     const { res, sent } = await send({
       kind:"sos", q:"덕트 냄새 민원이 들어옵니다", cat:"duct",
@@ -167,33 +174,43 @@ async function sendWithDb(body, opt){
     ok("200 으로 받는다", res.code === 200, "code=" + res.code);
     ok("적은 상황이 그대로 간다", /덕트 냄새 민원/.test(sent.text));
     ok("분류가 간다",     sent.cat === "duct", sent.cat);
-    ok("업종·지역이 간다", sent.biz === "고깃집" && sent.region === "경기 안양");
+    /* ⚠️ `biz` 는 **사람이 읽는 글에는 안 나옵니다** (2026-10-31) —
+       안 오는 칸의 딱지를 보고 직원이 "그 칸이 있구나" 로 읽습니다.
+       몸통(payload)으로는 그대로 가는지 여기서 봅니다. */
+    ok("옛 칸(biz)과 지역이 몸통으로 간다",
+       sent.biz === "고깃집" && sent.region === "경기 안양");
     ok("제목에 [SOS] 가 붙는다", /\[SOS\]/.test(sent.text));
   }
 
   console.log("\n── 견적 요청");
   {
     const { res, sent } = await send({
-      kind:"quote", service:"duct", serviceName:"덕트 · 환기",
-      q:"3년 전에 시공했고 손 안 댔습니다", region:"경기 안양", budget:"500",
+      /* ⚠️⚠️ **씨앗을 실제 분류 · 실제 질문으로 둡니다** (2026-10-31).
+         전에는 `duct`(덕트 · 환기)와 "화구 수 · 평수" 였는데, 그 key 도
+         그 질문도 지금 `catalog.js` · `reqforms.js` 에 **없습니다** —
+         통과는 하는데(몸통을 그대로 흘려보내는 자리라) 그걸 보고 베껴
+         쓰는 쪽이 없는 칸을 적습니다. 지금 것은 `fix/lcd` 와
+         `reqforms.js` 의 `fix` 질문 그대로입니다. */
+      kind:"quote", service:"lcd", serviceName:"액정 교체",
+      q:"떨어뜨려서 액정에 금이 갔습니다", region:"경기 안양", budget:"20",
       name:"홍길동", tel:"010-1234-5678",
-      detail:{ "화구 수":"12", "평수":"40", "왜 부르시나요":"냄새 · 민원" },
-      asks:["배기구 위치를 바꿀 수 있나요.",
-            "탈취 방식이 무엇이고 월 유지비가 얼마나 드나요."],
+      detail:{ "기종":"아이폰 14", "증상":"액정 파손", "급한 정도":"이번 주" },
+      asks:["정품 액정인가요.",
+            "수리하면 방수 기능이 그대로인가요."],
       agree:true });
     ok("200 으로 받는다", res.code === 200, "code=" + res.code);
     /* ⚠️ 여기가 실제로 빠져 있던 칸들입니다 */
-    ok("서비스 이름이 간다", sent.serviceName === "덕트 · 환기", sent.serviceName);
-    ok("서비스 key 가 간다", sent.service === "duct", sent.service);
-    ok("예산이 간다",       /500/.test(sent.text), "본문에 없음");
-    ok("화구 수가 간다",    /화구 수 — 12/.test(sent.text), "본문에 없음");
-    ok("평수가 간다",       /평수 — 40/.test(sent.text), "본문에 없음");
-    ok("제목에 [견적] 과 서비스가 붙는다", /\[견적\][\s\S]*덕트/.test(sent.text));
+    ok("서비스 이름이 간다", sent.serviceName === "액정 교체", sent.serviceName);
+    ok("서비스 key 가 간다", sent.service === "lcd", sent.service);
+    ok("예산이 간다",       /20/.test(sent.text), "본문에 없음");
+    ok("기종이 간다",       /기종 — 아이폰 14/.test(sent.text), "본문에 없음");
+    ok("증상이 간다",       /증상 — 액정 파손/.test(sent.text), "본문에 없음");
+    ok("제목에 [견적] 과 서비스가 붙는다", /\[견적\][\s\S]*액정/.test(sent.text));
     /* ⚠️ 가이드에서 고르신 "물어볼 것" — 사장님이 **대신 물어봐 달라고
        맡기신 것**입니다. 빠지면 요청은 성공하는데 정작 물어볼 것이
        사라집니다. */
-    ok("물어볼 것이 간다",   /배기구 위치를 바꿀 수 있나요/.test(sent.text), "본문에 없음");
-    ok("물어볼 것이 번호와 같이 간다", /1\. 배기구 위치/.test(sent.text), "번호가 없음");
+    ok("물어볼 것이 간다",   /정품 액정인가요/.test(sent.text), "본문에 없음");
+    ok("물어볼 것이 번호와 같이 간다", /1\. 정품 액정/.test(sent.text), "번호가 없음");
     ok("물어볼 것이 따로 묶여 간다",
        /물어봐 달라고 하신 것/.test(sent.text), "제목줄이 없음");
   }
@@ -202,8 +219,8 @@ async function sendWithDb(body, opt){
      업체가 "물어볼 게 없다" 로 읽습니다. */
   {
     const { res, sent } = await send({
-      kind:"quote", service:"duct", serviceName:"덕트 · 환기",
-      q:"민원이 들어옵니다", name:"홍길동", tel:"010-1234-5678",
+      kind:"quote", service:"lcd", serviceName:"액정 교체",
+      q:"금이 갔습니다", name:"홍길동", tel:"010-1234-5678",
       asks:[], agree:true });
     ok("안 고르면 그 칸이 아예 안 나온다",
        res.code === 200 && !/물어봐 달라고 하신 것/.test(sent.text), "빈 칸이 찍힘");
@@ -212,16 +229,20 @@ async function sendWithDb(body, opt){
   console.log("\n── 파트너 등록");
   {
     const { res, sent } = await send({
-      kind:"partner", company:"가나덕트", name:"김기사", tel:"010-1234-5678",
-      brn:"123-45-67890", region:"경기 남부", exp:"고깃집 덕트 8년",
+      /* ⚠️⚠️ **`exp` 는 "경력" 이 아니라 "취급 기기" 입니다** —
+         `/join` 의 `jn-ind` 가 2026-10-29 로 그 칸이 됐는데 칸
+         이름(`exp`)만 그대로입니다. 씨앗도 그 뜻으로 둡니다. */
+      kind:"partner", company:"가나모바일", name:"김기사", tel:"010-1234-5678",
+      brn:"123-45-67890", region:"경기 남부", exp:"아이폰 · 갤럭시 전 기종",
       note:"주말도 됩니다",
-      services:["duct","kitchen"], serviceNames:["덕트 · 환기","주방설비"],
+      services:["lcd","battery"], serviceNames:["액정 교체","배터리 교체"],
       agree:true });
     ok("200 으로 받는다", res.code === 200, "code=" + res.code);
     /* ⚠️ 파트너 등록이 통째로 "견적" 으로 처리되어 업체명이 사라졌었습니다 */
-    ok("업체명이 간다",     sent.company === "가나덕트", sent.company);
-    ok("취급 서비스가 간다", /덕트 · 환기/.test(sent.text) && /주방설비/.test(sent.text));
-    ok("사업자번호·경력이 간다", /123-45-67890/.test(sent.text) && /8년/.test(sent.text));
+    ok("업체명이 간다",     sent.company === "가나모바일", sent.company);
+    ok("취급 서비스가 간다", /액정 교체/.test(sent.text) && /배터리 교체/.test(sent.text));
+    ok("사업자번호 · 취급 기기가 간다",
+       /123-45-67890/.test(sent.text) && /갤럭시 전 기종/.test(sent.text));
     ok("제목에 [파트너] 가 붙는다", /\[파트너\]/.test(sent.text));
     ok("kind 가 partner 로 간다", sent.kind === "partner", sent.kind);
   }
@@ -231,10 +252,10 @@ async function sendWithDb(body, opt){
      번호 · 하는 일을 다시 손으로 칩니다. */
   console.log("\n── 파트너 등록이 DB 에 남는가 (0016)");
   {
-    const P = { kind:"partner", company:"가나덕트", name:"김기사",
+    const P = { kind:"partner", company:"가나모바일", name:"김기사",
                 tel:"010-1234-5678", email:"a@b.co", brn:"123-45-67890",
-                region:"경기", exp:"음식점", note:"주말도 됩니다",
-                serviceNames:["덕트 · 환기","주방설비"], agree:true };
+                region:"경기", exp:"아이폰 전 기종", note:"주말도 됩니다",
+                serviceNames:["액정 교체","배터리 교체"], agree:true };
 
     /* ⚠️⚠️ **DB 가 없으면 오늘과 글자 하나 다르지 않습니다** — 번호를
        내주고 저장을 안 하면 그 번호로 물어봐도 아무것도 없습니다
@@ -251,7 +272,7 @@ async function sendWithDb(body, opt){
     ok("접수번호를 돌려준다",
        g.res.code === 200 && g.res.body.no === (g.row || {}).no, g.res.body);
     ok("업체명 · 담당자 · 연락처가 그대로 간다",
-       g.row && g.row.company === "가나덕트" && g.row.name === "김기사" &&
+       g.row && g.row.company === "가나모바일" && g.row.name === "김기사" &&
        g.row.tel === "010-1234-5678", g.row);
     ok("하시는 일이 배열로 간다",
        g.row && Array.isArray(g.row.services) && g.row.services.length === 2,
@@ -268,7 +289,7 @@ async function sendWithDb(body, opt){
        g.row && g.row.listed === undefined && g.row.verified === undefined &&
        g.row.assignable === undefined, g.row);
     /* 슬랙은 전과 똑같이 갑니다 */
-    ok("슬랙 글은 그대로 간다", !!g.sent && /가나덕트/.test(g.sent.text));
+    ok("슬랙 글은 그대로 간다", !!g.sent && /가나모바일/.test(g.sent.text));
     /* ⚠️ 제목이 글 맨 위에 붙어 오니 **맨 앞**이 아닙니다 — 처음에
        `indexOf(...) === 0` 으로 적어서 멀쩡한 글을 실패로 잡았습니다
        (틀린 것은 검사였습니다). 직원이 전화하며 제일 먼저 묻는 값이라
@@ -296,7 +317,7 @@ async function sendWithDb(body, opt){
        비교하고, 아래 씨앗이 **줄표 없는 꼴**로 들어 있습니다. */
     {
       const d = await sendWithDb(P, { rows:[
-        { no:"SW-AAAA-BBBB", company:"가나덕트", tel:"01012345678",
+        { no:"SW-AAAA-BBBB", company:"가나모바일", tel:"01012345678",
           created_at:new Date().toISOString() }] });
       ok("10분 안에 같은 업체가 또 신청하면 먼저 받은 번호를 돌려준다",
          d.res.code === 200 && d.res.body.no === "SW-AAAA-BBBB" &&
@@ -308,7 +329,7 @@ async function sendWithDb(body, opt){
        신청하는 것은 정상입니다 (`request` 쪽의 "다른 상품" 과 같은 선). */
     {
       const e = await sendWithDb(P, { rows:[
-        { no:"SW-CCCC-DDDD", company:"다른덕트", tel:"01012345678",
+        { no:"SW-CCCC-DDDD", company:"다른모바일", tel:"01012345678",
           created_at:new Date().toISOString() }] });
       ok("업체명이 다르면 중복이 아니다", !!e.row && !!e.res.body.no, e.res.body);
     }
@@ -330,7 +351,7 @@ async function sendWithDb(body, opt){
     const b = await send({ kind:"sos", q:"x", name:"", tel:"010-1234-5678", agree:true });
     ok("성함 없이는 안 받는다", b.res.code === 400, "code=" + b.res.code);
 
-    const c = await send({ kind:"partner", company:"가나덕트", name:"김기사",
+    const c = await send({ kind:"partner", company:"가나모바일", name:"김기사",
                            tel:"010-1234-5678", services:[], agree:true });
     ok("파트너는 하는 일 없이 안 받는다", c.res.code === 400, "code=" + c.res.code);
 
@@ -394,7 +415,7 @@ async function sendWithDb(body, opt){
   {
     for(const k of ["SUPABASE_URL","SUPABASE_SERVICE_KEY"]) delete process.env[k];
     const { res, sent } = await send({
-      kind:"quote", service:"duct", q:"확인 부탁드립니다",
+      kind:"quote", service:"lcd", q:"확인 부탁드립니다",
       name:"홍길동", tel:"010-1234-5678", agree:true });
     ok("200 으로 받는다", res.code === 200, "code=" + res.code);
     /* ⚠️⚠️ 저장을 안 했으니 접수번호를 주지 않습니다 — 번호를 주고
@@ -607,11 +628,11 @@ async function sendWithDb(body, opt){
   console.log("\n── ⚠️⚠️ 신청 하나에 서비스 여러 개 (§5-4 · §6)");
   {
     const { res, sent, row, rpc } = await sendWithDb({
-      kind:"quote", serviceName:"인테리어 · 주방", q:"20평 카페입니다",
-      region:"경기", gu:"안양시", side:"start", cat:"interior",
-      items:[{ id:"interior", detail:{ "공사 범위":"전체 시공" } },
-             { id:"equip",    detail:{} },
-             { id:"marketing",detail:{ "필요한 것":"네이버 플레이스" } }],
+      kind:"quote", serviceName:"중고폰 매입 · 수리", q:"아이폰 14 두 대입니다",
+      region:"경기", gu:"안양시", side:"buyin", cat:"buyin",
+      items:[{ id:"buyin", detail:{ "기기 종류":"휴대폰" } },
+             { id:"fix",   detail:{} },
+             { id:"shop",  detail:{ "찾는 것":"아이폰 15" } }],
       idem:"abc123", name:"홍길동", tel:"010-1234-5678", agree:true });
     ok("200 으로 받는다", res.code === 200, "code=" + res.code);
     ok("항목을 함수로 적는다 (트랜잭션 · §8)",
@@ -619,14 +640,14 @@ async function sendWithDb(body, opt){
     ok("항목 셋이 그대로 간다",
        rpc && rpc.args.p_items.length === 3, rpc && rpc.args.p_items);
     ok("서비스별 답이 항목에 담긴다",
-       rpc && rpc.args.p_items[0].detail["공사 범위"] === "전체 시공",
+       rpc && rpc.args.p_items[0].detail["기기 종류"] === "휴대폰",
        rpc && rpc.args.p_items[0]);
     ok("저장된 신청 id 로 적는다",
        rpc && rpc.args.p_request === (row && row.id), rpc && rpc.args.p_request);
     /* ⚠️⚠️ 받아 보는 사람이 **항목을 항목으로** 봐야 서비스마다 다른
        업체에 돌릴 수 있습니다 (§7) */
     ok("슬랙 글에 항목이 줄로 들어간다",
-       /신청 서비스 3개/.test(sent.text) && /1\) interior/.test(sent.text),
+       /신청 서비스 3개/.test(sent.text) && /1\) buyin/.test(sent.text),
        (sent.text || "").slice(-300));
     ok("멱등 열쇠가 저장된다 (§8)", row && row.idem === "abc123", row && row.idem);
   }
@@ -634,28 +655,33 @@ async function sendWithDb(body, opt){
   console.log("\n── ⚠️⚠️ 없는 서비스 id 는 거른다 (§8)");
   {
     const { res, rpc } = await sendWithDb({
-      kind:"quote", serviceName:"뭐든", q:"내용", region:"경기", side:"start",
-      items:[{ id:"interior" }, { id:"없는것" }, { id:"<script>" }, { id:"interior" }],
+      kind:"quote", serviceName:"뭐든", q:"내용", region:"경기", side:"buyin",
+      items:[{ id:"buyin" }, { id:"없는것" }, { id:"<script>" }, { id:"buyin" }],
       name:"홍", tel:"010-1234-5678", agree:true });
     /* ⚠️⚠️ **통째로 거절하지 않습니다** — 옛 링크가 지워진 분류를 들고
        있을 수 있고, 나머지 서비스는 멀쩡합니다 (접수를 잃는 쪽이 더
        나쁩니다). */
     ok("접수는 그대로 된다", res.code === 200, "code=" + res.code);
     ok("없는 id 는 빠진다", rpc && rpc.args.p_items.length === 1, rpc && rpc.args.p_items);
-    ok("남은 것은 멀쩡한 것뿐", rpc && rpc.args.p_items[0].id === "interior");
+    ok("남은 것은 멀쩡한 것뿐", rpc && rpc.args.p_items[0].id === "buyin");
   }
 
   console.log("\n── ⚠️⚠️ 하위까지 내려간 id (2026-10-18 운영 §4-4 · §15)");
   {
-    /* 운영 쪽은 고르는 단위가 **`분류/하위`** 입니다. 서버가 그것을
+    /* 고르는 단위가 **`분류/하위`** 까지 내려갑니다. 서버가 그것을
        모르면 **고르신 것이 통째로 빠지고** 접수에는 아무 항목도 안
-       남습니다 — `api/_services.js` 를 빌드가 하위까지 적습니다. */
+       남습니다 — `api/_services.js` 를 빌드가 하위까지 적습니다.
+       ⚠️⚠️ **2026-10-31 — 씨앗이 창업 · 폐업 key 였습니다**
+       (`repair/aircon-fix` · `admin/tax-agent`). 그 분류가 없어진
+       뒤에도 그대로 남아서, **열두 검사가 "없는 id" 로 떨어졌습니다** —
+       코드가 아니라 **씨앗이 낡은** 자리입니다 (이 저장소가 여러 번
+       겪었습니다). 지금은 중고폰 하위 둘입니다. */
     const { res, rpc, row } = await sendWithDb({
-      kind:"quote", serviceName:"뭐든", q:"내용", region:"경기", side:"ops",
-      items:[{ id:"repair/aircon-fix", detail:{ "고장난 것":"에어컨" } },
-             { id:"admin/tax-agent" },
-             { id:"repair/없는것" },
-             { id:"repair/aircon-fix/x" }],
+      kind:"quote", serviceName:"뭐든", q:"내용", region:"경기", side:"repair",
+      items:[{ id:"fix/battery", detail:{ "고장난 것":"배터리" } },
+             { id:"inspect/wipe" },
+             { id:"fix/없는것" },
+             { id:"fix/battery/x" }],
       name:"홍", tel:"010-1234-5678", agree:true });
     ok("접수는 그대로 된다", res.code === 200, "code=" + res.code);
     ok("하위 id 둘이 남는다", rpc && rpc.args.p_items.length === 2,
@@ -663,21 +689,23 @@ async function sendWithDb(body, opt){
     ok("없는 하위는 빠진다",
        rpc && !rpc.args.p_items.some(x => String(x.id).indexOf("없는것") >= 0));
     ok("서비스별 답이 같이 간다",
-       rpc && rpc.args.p_items[0].detail["고장난 것"] === "에어컨",
+       rpc && rpc.args.p_items[0].detail["고장난 것"] === "배터리",
        rpc && rpc.args.p_items[0]);
-    /* ⚠️⚠️ DB 는 처음부터 `ops` 를 받습니다 (0001 — start | ops |
-       transfer | close). 화면에 그 선택지가 없어서 운영 중인 사장님이
-       **"창업" 으로 접수**되던 자리입니다 — 배정하는 직원이 그것을
-       보고 창업 업체를 찾습니다. */
-    ok("운영 쪽(side=ops)이 저장 줄에 그대로 실린다",
-       row && row.side === "ops", row && row.side);
+    /* ⚠️⚠️ `request.side` 는 **check 가 없는 text** 입니다 (0001 133줄) —
+       그래서 중고폰 쪽 다섯(buyin · bid · export · repair · shop)을
+       마이그레이션 없이 더할 수 있었습니다. 화면에 그 선택지가 없으면
+       그 접수가 **다른 쪽으로 저장되고**, 배정하는 직원이 그것을 보고
+       엉뚱한 업체를 찾습니다 — 이 저장소가 `ops` · `transfer` ·
+       `repair` · `shop` 으로 **다섯 번** 겪은 자리입니다. */
+    ok("수리 쪽(side=repair)이 저장 줄에 그대로 실린다",
+       row && row.side === "repair", row && row.side);
   }
 
   console.log("\n── ⚠️⚠️ 항목 저장이 실패해도 접수는 살린다");
   {
     const { res, sent } = await sendWithDb({
-      kind:"quote", serviceName:"인테리어", q:"내용", region:"경기", side:"start",
-      items:[{ id:"interior" }],
+      kind:"quote", serviceName:"중고폰 매입", q:"내용", region:"경기", side:"buyin",
+      items:[{ id:"buyin" }],
       name:"홍", tel:"010-1234-5678", agree:true }, { itemsFail:true });
     ok("200 으로 받는다", res.code === 200, "code=" + res.code);
     /* 번호는 이미 나갔고, 슬랙 글에 항목이 그대로 있어 사람이 봅니다 */
@@ -688,7 +716,7 @@ async function sendWithDb(body, opt){
   console.log("\n── ⚠️⚠️ 항목이 비정상으로 많아도 받아내지 않는다 (§8)");
   {
     const many = [];
-    for(let i = 0; i < 500; i++) many.push({ id:"interior" });
+    for(let i = 0; i < 500; i++) many.push({ id:"buyin" });
     const { res, rpc } = await sendWithDb({
       kind:"quote", serviceName:"많이", q:"내용", region:"경기", side:"start",
       items:many, name:"홍", tel:"010-1234-5678", agree:true });

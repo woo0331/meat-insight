@@ -58,6 +58,8 @@ window.pickPaint = function(){
   [].slice.call(document.querySelectorAll("[data-pick]")).forEach(function(el){
     var on = ids.indexOf(el.getAttribute("data-pick")) >= 0;
     if(el.checked !== on) el.checked = on;
+    var card = el.closest ? el.closest(".pk-c") : null;
+    if(card) card.classList.toggle("is-on", on);
   });
 
   [].slice.call(document.querySelectorAll("[data-pick-n]")).forEach(function(el){

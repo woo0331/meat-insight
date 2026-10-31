@@ -305,3 +305,8 @@ window.amSideName = function(key){
   var s = window.amSide(key);
   return s ? s.name : "";
 };
+
+window.amSideShort = function(key){
+  var s = window.amSide(key);
+  return s ? (s.short || s.name) : "";
+};

@@ -481,7 +481,11 @@ const ADM_DEAL = [
   {
     const MINE = { id:"ganada-interior", name:"가나다 인테리어",
       intro:"안양에서 12년 했습니다",
-      regions:["gyeonggi"], gu:["안양시","군포시"], industries:["cafe"],
+      /* ⚠️⚠️ `industries` 는 **DB 칸 이름**이고, 화면에서는 2026-10-31 로
+         **취급 기기**(`AM_DEVICE_KINDS` — phone · tablet · watch · buds)가
+         됐습니다. 업종 key(`cafe`)를 적어 두면 고르개에 그 칸이 없어서
+         **아무것도 안 켜지고**, 검사는 멀쩡한 화면을 실패로 잡습니다. */
+      regions:["gyeonggi"], gu:["안양시","군포시"], industries:["phone"],
       subs:["interior","design"], since:2014, consult_hours:"평일 09~18",
       verified:{ biz:true }, listed:true, assignable:true };
     const CON = { provider_id:"ganada-interior", name:"박실장",
@@ -515,7 +519,7 @@ const ADM_DEAL = [
                                o => o.selected).map(o => o.value);
       const i = [].filter.call(document.getElementById("pvs-ind").options,
                                o => o.selected).map(o => o.value);
-      return r.join() === "gyeonggi" && i.join() === "cafe";
+      return r.join() === "gyeonggi" && i.join() === "phone";
     }));
     /* ⚠️⚠️ **못 고치는 넷** — 적는 칸이 아예 없어야 합니다 (있으면
        눌러 보고 "왜 안 되나" 가 됩니다). */
@@ -718,17 +722,29 @@ const ADM_DEAL = [
     const { ctx, pg, errs, sent } = await openMy(
       { auth:true, signedIn:true, role:"customer" },
       { auth:true, signedIn:true, role:"customer", requests:[], quotes:[],
-        state:{ pick:["interior","repair/aircon-fix"],
-                draft:{ "q-ind":"cafe", "q-reg":"seoul" }, checks:["tax-file"],
+        /* ⚠️⚠️ **고를 수 있는 id 로 적으세요.** `amPickGet()` 이
+           `amPickOne()` 으로 되돌려 찾아 **없는 id 를 걸러 냅니다** —
+           구사업 분류(`interior` · `demolish` · `repair/aircon-fix`)를
+           적어 두면 바구니가 **빈 배열**이 되고, 그러면 ⑦ · ⑦-2 · ⑦-4 가
+           한꺼번에 떨어집니다 (2026-10-31 에 실제로 그랬습니다).
+           지금 분류 열은 buyin · broken · fix · shop · wholesale · corp ·
+           export · inspect · pickup · access 이고 하위는
+           `node -e` 로 `amCat(key).items` 를 세어 보면 됩니다. */
+        state:{ pick:["buyin","fix/lcd"],
+                draft:{ "q-ind":"phone", "q-reg":"seoul" },
+                /* ⚠️ `checks` 는 운영 체크리스트가 쓰던 칸입니다 —
+                   그 화면이 없어져서 **지금은 넣는 쪽이 없습니다.**
+                   state.js 는 칸 이름을 안 봅니다(DB 트리거가 봅니다). */
+                checks:["chk-wipe"],
                 updated_at:"2026-10-20T01:00:00Z" } },
       { path:"/quote" });
     ok("/api/me?s=1 로 메모장만 묻는다 (신청 쉰 건을 안 끌고 온다)",
         sent.some(x => x === "me:?s=1"), sent.join(" | "));
     const got = await pg.evaluate(() => amPickGet());
     ok("서버에 있던 둘이 바구니에 들어온다",
-        got.length === 2 && got.indexOf("repair/aircon-fix") >= 0, JSON.stringify(got));
+        got.length === 2 && got.indexOf("fix/lcd") >= 0, JSON.stringify(got));
     ok("적어 두신 조건도 이 브라우저에 적힌다", await pg.evaluate(() => {
-      try { return (JSON.parse(localStorage.getItem("am.draft.v1")).f["q-ind"]) === "cafe"; }
+      try { return (JSON.parse(localStorage.getItem("am.draft.v1")).f["q-ind"]) === "phone"; }
       catch (e) { return false; }
     }));
     /* ⚠️ 내려받는 중에 또 올리면 왕복이 끝나지 않습니다 (AM_ST.pulled) */
@@ -743,16 +759,16 @@ const ADM_DEAL = [
     const { ctx, pg, errs, sent } = await openMy(
       { auth:true, signedIn:true, role:"customer" },
       { auth:true, signedIn:true, role:"customer", requests:[], quotes:[],
-        state:{ pick:["demolish"], draft:{}, checks:[],
+        state:{ pick:["shop"], draft:{}, checks:[],
                 updated_at:"2026-10-20T01:00:00Z" } },
       { path:"/quote",
         before:"try{localStorage.setItem('am.pick.v1'," +
-               "JSON.stringify({ids:['interior'],at:Date.now()}))}catch(e){}" });
+               "JSON.stringify({ids:['buyin'],at:Date.now()}))}catch(e){}" });
     const got = await pg.evaluate(() => amPickGet());
-    /* ⚠️⚠️ 합집합이면 둘이 됩니다 — 그러면 폰에서 지운 demolish 가
+    /* ⚠️⚠️ 합집합이면 둘이 됩니다 — 그러면 폰에서 지운 shop 이
        PC 에서 되살아나고, 사장님은 자기가 지운 줄을 의심합니다 */
     ok("보고 계신 화면이 이긴다 (서버 것이 섞이지 않는다)",
-        got.length === 1 && got[0] === "interior", JSON.stringify(got));
+        got.length === 1 && got[0] === "buyin", JSON.stringify(got));
     const push = sent.filter(x => x.indexOf("deal:save_user_state") === 0);
     ok("서버에 올린다", push.length >= 1, sent.join(" | "));
     /* ⚠️⚠️ **성함 · 연락처는 한 글자도 안 올립니다.** 보내는 칸은
@@ -763,7 +779,7 @@ const ADM_DEAL = [
         push[0]);
     ok("올린 것이 이 브라우저 것이다", push.length >= 1 &&
         JSON.stringify(JSON.parse(push[0].slice("deal:save_user_state:".length)).p_pick)
-          === JSON.stringify(["interior"]), push[0]);
+          === JSON.stringify(["buyin"]), push[0]);
     ok("JS 에러 0", errs.length === 0, errs.join(" | "));
     await ctx.close();
   }
@@ -776,9 +792,9 @@ const ADM_DEAL = [
         state:{ pick:[], draft:{}, checks:[], updated_at:null } },
       { path:"/quote",
         before:"try{localStorage.setItem('am.pick.v1'," +
-               "JSON.stringify({ids:['interior'],at:Date.now()}));" +
+               "JSON.stringify({ids:['buyin'],at:Date.now()}));" +
                "localStorage.setItem('am.opsck.v1'," +
-               "JSON.stringify({done:['tax-file'],at:Date.now()}))}catch(e){}" });
+               "JSON.stringify({done:['chk-wipe'],at:Date.now()}))}catch(e){}" });
     /* 조건만 비웁니다 — ⚠️ 고르신 서비스까지 날아가면 안 됩니다 */
     await pg.evaluate(() => { amStateDrop("draft"); });
     await pg.waitForTimeout(1500);
@@ -818,7 +834,7 @@ const ADM_DEAL = [
       contentType:"application/json",
       body: JSON.stringify({ ok:false, error:"거절" }) }));
     await pg.addInitScript("try{localStorage.setItem('am.pick.v1'," +
-      "JSON.stringify({ids:['interior'],at:Date.now()}))}catch(e){}");
+      "JSON.stringify({ids:['buyin'],at:Date.now()}))}catch(e){}");
     /* ⚠️ /quote 입니다 — /startup 은 없어졌고 404.html 은 스크립트를
        하나도 안 싣습니다 (위 ⑦ 머리말) */
     await pg.goto(base + "/quote", { waitUntil:"networkidle" });

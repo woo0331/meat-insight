@@ -354,24 +354,6 @@ function adReady(){
           '비워 두는 것이 낫지만, 영업 전에는 둘 다 안 됩니다.</p>'
       : '<p>표시 의무 칸이 다 채워져 있습니다.</p>'));
 
-  /* ② 지원사업 "찾는 곳" 링크 — 눌러 보고 켜야 나갑니다 */
-  var W = window.AM_SUPPORT_WHERE || [];
-  if(W.length){
-    var hasUrl = W.filter(function(x){ return !!x.url; });
-    var off = hasUrl.filter(function(x){ return !x.checked; });
-    L.push(adReadyRow(!off.length, "지원사업 '찾는 곳' 링크",
-      off.length
-        ? '<p>주소가 적힌 <b>'+hasUrl.length+'곳</b> 가운데 <b>'+off.length+'곳</b>이 '+
-          '아직 안 켜져 있습니다. <b>한 번씩 눌러 보시고</b> 살아 있으면 '+
-          '<code>js/data/support.js</code> 에서 <code>checked:true</code> 로 '+
-          '바꾸세요 — 죽은 링크는 없는 것보다 나쁩니다.</p>'+
-          '<ul class="ad-rd-l">'+off.map(function(x){
-            return '<li><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+
-              esc(x.org)+icon("up",14)+'</a></li>'; }).join("")+'</ul>'+
-          '<p class="ad-rd-n">켜기 전에는 기관 이름과 찾는 말까지만 나갑니다 '+
-          '— 손님 화면이 비지는 않습니다.</p>'
-        : '<p>주소가 적힌 '+hasUrl.length+'곳을 전부 확인하셨습니다.</p>'));
-  }
 
   /* ③ 약관 · 방침 — 사람이 봐야 하는 것이라 끝나는 날이 없습니다 */
   L.push(adReadyRow(false, "약관 · 개인정보처리방침 확인",
@@ -461,7 +443,12 @@ function adFields(){
     name:   adPick(raw, ["성함", "이름"]),
     tel:    adPick(raw, ["연락처", "전화", "휴대폰"]),
     region: adPick(raw, ["지역"]),
-    biz:    adPick(raw, ["업종"]),
+    /* ⚠️⚠️ **딱지 둘을 같이 봅니다.** 접수 글은 2026-10-31 로
+       "취급 기기" 를 적는데(`api/quote.js`), 그 전에 받아 두신 메일에는
+       "업종" 으로 적혀 있습니다 — 한쪽만 보면 **붙여 넣어도 그 칸이
+       조용히 빕니다**. 접수 글의 딱지를 고치실 때는 **여기 목록에
+       새 딱지를 더하고 옛 딱지는 남기세요.** */
+    biz:    adPick(raw, ["취급 기기", "업종"]),
     budget: adPick(raw, ["예산"])
   };
 }
@@ -566,7 +553,12 @@ function adVendor(F, P, G, svcName){
   if(svcName) L.push("· 서비스   " + svcName);
   if(P)       L.push("· 분류     " + P.name);
   if(F.region)L.push("· 지역     " + F.region);
-  if(F.biz)   L.push("· 업종     " + F.biz);
+  /* ⚠️⚠️ **2026-10-31 까지 "업종" 으로 나가고 있었습니다** — 업체에
+     보내는 글이라 받는 분이 중고폰 일인지 알 수가 없었습니다.
+     ⚠️ 딱지는 **열한 칸**입니다 (한글 한 자가 두 칸 · 위아래 줄과
+     맞춥니다). "· 취급 기기" 는 그 자체로 열한 칸이라 띄어쓰기를 넣을
+     자리가 없어서 값이 붙습니다 — 그래서 "· 기기" + 다섯 칸입니다. */
+  if(F.biz)   L.push("· 기기     " + F.biz);
   if(F.budget)L.push("· 예산     " + F.budget);
   L.push("");
   L.push("── 사장님이 적어 주신 상황 ──");
@@ -685,7 +677,7 @@ function adInit(){
         '됩니다. <b>아무것도 서버로 보내지 않습니다</b> — 이 브라우저 안에서만 '+
         '돌고, 새로고침하면 사라집니다.</p>'+
       '<textarea id="ad-in" rows="10" spellcheck="false" '+
-        'placeholder="[SOS] 덕트 · 경기 안양&#10;성함      홍길동&#10;연락처    010-0000-0000&#10;…"></textarea>'+
+        'placeholder="[견적] 홍길동 · 액정 · 유리 교체&#10;성함      홍길동&#10;연락처    010-0000-0000&#10;…"></textarea>'+
       '<div class="ad-acts">'+
         '<button class="btn btn-b" type="button" onclick="adRead()">'+
           icon("search",18)+'읽어 오기</button>'+
@@ -706,7 +698,7 @@ function adInit(){
         adSel("ad-svc", "견적 서비스", "svc",
           adAllSubs())+
         '<div class="ad-f"><label for="ad-co">업체명 <em>(정해졌으면)</em></label>'+
-          '<input id="ad-co" type="text" autocomplete="off" placeholder="예: 가나덕트"'+
+          '<input id="ad-co" type="text" autocomplete="off" placeholder="예: 가나모바일"'+
           ' oninput="adSet(\'co\',this.value)"></div>'+
       '</div>'+
     '</section>'+
@@ -748,24 +740,9 @@ function adInit(){
       '<div id="ad-inv-out"></div>'+
     '</section>'+
 
-    '<section class="ad-s">'+
-      '<h2>7. 매물 접수를 등록 줄로</h2>'+
-      '<p class="ad-lead">내놓기(<b>/sell</b>)로 들어온 접수를 그대로 붙여 '+
-        '넣으시면 <b>market.js 에 넣을 줄</b>을 만들어 드립니다. '+
-        '손으로 치면 업종 · 지역 key 와 장비 key(sub)에서 틀리는데, '+
-        '틀리면 <b>에러도 없이 그 매물만 안 뜨거나 빌드가 멈춥니다</b>. '+
-        '여기도 아무것도 저장하지 않습니다.</p>'+
-      '<textarea id="ad-mk-in" rows="10" spellcheck="false" '+
-        'placeholder="[견적] 홍길동 · 매장 내놓기&#10;성함      홍길동&#10;지역      경기&#10;&#10;── 요청 조건 ──&#10;  · 거래 방식 — 매장 양도&#10;  · 업종 — 카페 · 디저트&#10;…"></textarea>'+
-      '<div class="ad-acts">'+
-        '<button class="btn btn-b" type="button" onclick="adMkRead()">'+
-          icon("search",18)+'읽어 오기</button>'+
-      '</div>'+
-      '<div id="ad-mk-out"></div>'+
-    '</section>'+
 
     '<section class="ad-s">'+
-      '<h2>8. 수익상품 — 지금 낼 수 있는 상태인가</h2>'+
+      '<h2>7. 수익상품 — 지금 낼 수 있는 상태인가</h2>'+
       '<p class="ad-lead">지시서 §5 가 <b>"실제 제휴사가 확보되지 않은 '+
         '상품은 신청 가능 상품처럼 오인시키지 말라"</b>고 적었습니다. '+
         '그래서 상품마다 <b>무엇이 남았는지</b>를 세어서 냅니다 — '+
@@ -775,7 +752,7 @@ function adInit(){
     '</section>'+
 
     '<section class="ad-s">'+
-      '<h2>9. 제휴업체 등록 줄</h2>'+
+      '<h2>8. 제휴업체 등록 줄</h2>'+
       '<p class="ad-lead">받아 온 업체를 적으시면 <b>넣을 줄 둘</b>을 '+
         '만들어 드립니다 — <b>손님 화면</b>(정적 파일)과 <b>배정용 DB</b> '+
         '입니다. 한쪽만 넣으면 <b>에러 없이 반쪽</b>입니다 — 화면에는 '+
@@ -786,26 +763,14 @@ function adInit(){
         '골라 만들면 틀릴 수가 없습니다. '+
         '<b>여기도 아무것도 저장하지 않습니다.</b></p>'+
       '<div id="ad-pv"></div>'+
-    '</section>'+
-
-    '<section class="ad-s">'+
-      '<h2>10. 전문관 노출 순서</h2>'+
-      '<p class="ad-lead">메인의 <b>전문관 넷</b>과 그 안의 서비스 차례를 '+
-        '눌러서 바꾸고, <b>붙여 넣을 줄</b>을 만들어 드립니다 '+
-        '(<code>js/data/halls.js</code>). ' +
-        '<b>여기서 저장하지 않습니다</b> — 저장할 서버가 없는데 저장되는 '+
-        '척하면 그게 거짓말입니다. 만든 줄을 붙여 넣고 '+
-        '<code>node build-pages.js</code> 하시면 반영됩니다.</p>'+
-      '<div id="ad-hl"></div>'+
     '</section>';
+
 
   adHealth();
   adReady();
   adDraw();
   adInviteDraw();
-  adMkDraw();
   adPvDraw();
-  adHlDraw();
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -1051,249 +1016,16 @@ function adSel(id, label, key, opts){
 document.addEventListener("DOMContentLoaded", adInit);
 
 
-/* ════════════════════════════════════════════════════════════════════
-   7. 매물 접수를 **등록 줄**로 (2026-10-07)
-
-   `/sell` 로 들어온 접수를 사람이 `js/data/market.js` 에 옮겨 적어야
-   하는데, 그걸 손으로 치면 **조용히 깨지는 자리**가 둘 있습니다 —
-   자산의 `sub`(장비 key)와 `industry` · `region` key 입니다. 틀리면
-   에러도 안 나고 화면도 멀쩡한데 **그 매물만 안 뜨거나 빌드가
-   멈춥니다.** 여기서 골라 만들면 그 둘이 틀릴 수가 없습니다.
-
-   ⚠️⚠️ **아무것도 저장하지 않습니다.** 이 브라우저 안에서만 돌고
-   새로고침하면 사라집니다 (구간 3 과 같습니다).
-   ⚠️⚠️ **만든 줄에 성함 · 연락처를 넣지 않습니다.** 매물 하나가 곧
-   올리신 사장님의 개인정보가 됩니다 — 스키마에 그 칸이 없는 것이
-   맞고, 섞여 들어가면 아래 경고가 뜹니다.
-   ⚠️ **읽지 못한 칸은 비워 둡니다.** 지어내지 않습니다 (절대 규칙 1).
-   ════════════════════════════════════════════════════════════════════ */
-var AD_MK = { id:"", sub:"", raw:"", got:null };
-
-/* "  · 업종 — 카페 · 디저트" 꼴에서 값만 꺼냅니다.
-   ⚠️ 값에도 가운뎃점이 들어오므로 **첫 번째 긴 줄표**에서만 자릅니다. */
-function adMkVal(raw, label){
-  var lines = String(raw || "").split("\n");
-  for(var i = 0; i < lines.length; i++){
-    var ln = lines[i].replace(/^[\s·]+/, "").trim();
-    if(ln.indexOf(label) !== 0) continue;
-    var rest = ln.slice(label.length);
-    /* ⚠️ 줄 모양이 **둘**입니다 — 요청 조건은 "· 업종 — 카페",
-       머리쪽 칸은 "지역      경기" 처럼 공백으로만 떨어져 있습니다.
-       줄표만 보다가 지역을 통째로 못 읽었습니다.
-       ⚠️ 줄표가 있으면 **첫 줄표**에서 자릅니다 — "월 매출(사장님이
-       적으신 값)" 처럼 딱지 뒤에 괄호가 붙는 칸이 있어서, 공백부터
-       잘라 버리면 괄호가 값으로 딸려 옵니다. */
-    var cut = rest.indexOf("—");
-    var v;
-    if(cut >= 0) v = rest.slice(cut + 1).trim();
-    else if(/^[\s:]/.test(rest)) v = rest.replace(/^[\s:]+/, "").trim();
-    else continue;
-    if(v) return v;
-  }
-  return "";
-}
-/* 숫자만 (쉼표 · 단위를 떼고). ⚠️ **0 은 값입니다** — 못 찾은 것과
-   갈라야 해서 못 찾으면 null 입니다. */
-function adMkNum(raw, label){
-  var v = adMkVal(raw, label).replace(/[^0-9]/g, "");
-  return v === "" ? null : Number(v);
-}
-function adMkKeyOf(list, name, nameKey){
-  var hit = null;
-  (list || []).forEach(function(x){
-    if(!hit && x[nameKey || "name"] === name) hit = x.key;
-  });
-  return hit;
-}
-/* 설명 — "── 필요한 것 ──" 아래부터 다음 토막 전까지 */
-function adMkText(raw){
-  var lines = String(raw || "").split("\n");
-  var from = -1;
-  for(var i = 0; i < lines.length; i++)
-    if(lines[i].indexOf("필요한 것") >= 0 && lines[i].indexOf("──") >= 0){ from = i + 1; break; }
-  if(from < 0) return "";
-  var out = [];
-  for(var j = from; j < lines.length; j++){
-    if(lines[j].indexOf("──") >= 0) break;
-    out.push(lines[j]);
-  }
-  return out.join("\n").trim();
-}
-
-function adMkParse(raw){
-  var isAsset = raw.indexOf("시설 · 장비 내놓기") >= 0 ||
-                (!!adMkVal(raw, "품목") && !adMkVal(raw, "거래 방식"));
-  var indName = adMkVal(raw, "업종");
-  var regName = adMkVal(raw, "지역");
-  var g = {
-    asset: isAsset,
-    industry: adMkKeyOf(window.AM_INDUSTRIES, indName),
-    indName: indName,
-    region: adMkKeyOf(window.AM_REGIONS, regName),
-    regName: regName,
-    gu: adMkVal(raw, "시군구"),
-    text: adMkText(raw),
-    img: adMkVal(raw, "사진 주소"),
-    name: adMkVal(raw, "성함"),
-    tel: adMkVal(raw, "연락처")
-  };
-  if(isAsset){
-    g.item  = adMkVal(raw, "품목");
-    g.brand = adMkVal(raw, "제조사");
-    g.year  = adMkNum(raw, "연식");
-    g.count = adMkNum(raw, "수량");
-    g.price = adMkNum(raw, "희망가");
-    g.state = adMkVal(raw, "상태");
-    var dl = adMkVal(raw, "거래 단위");
-    g.deal = dl.indexOf("묶음") >= 0 ? "bulk" : dl.indexOf("전체") >= 0 ? "all" : "single";
-  }else{
-    g.kind    = adMkVal(raw, "거래 방식").indexOf("임대") >= 0 ? "lease" : "transfer";
-    g.pyeong  = adMkNum(raw, "평수");
-    g.deposit = adMkNum(raw, "보증금");
-    g.rent    = adMkNum(raw, "월세");
-    g.premium = adMkNum(raw, "권리금");
-    g.equipCost = adMkNum(raw, "시설 인수비");
-    g.since   = adMkNum(raw, "문 연 해");
-    g.wantAt  = adMkVal(raw, "넘기고 싶은 시점");
-    g.sales   = adMkNum(raw, "월 매출");
-    g.withEquip = !!adMkVal(raw, "시설 포함");
-  }
-  return g;
-}
-
-/* 오늘 날짜 — `at`(올린 날)입니다. 오래된 매물을 그대로 두면
-   허위매물과 같아져서 화면이 이 날짜를 냅니다. */
-function adMkToday(){
-  var d = new Date(), z = function(n){ return (n < 10 ? "0" : "") + n; };
-  return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate());
-}
-
-function adMkLine(g){
-  var q = function(v){ return '"' + String(v).split('"').join('\\"').split("\n").join("\\n") + '"'; };
-  var L = [];
-  var push = function(k, v){ if(v !== null && v !== undefined && v !== "") L.push("    " + k + ": " + v + ","); };
-  if(g.asset){
-    L.push("  {");
-    push("id", q(AD_MK.id || "여기에-주소가-될-id"));
-    push("cat", q("asset"));
-    push("sub", q(AD_MK.sub || "장비키를-골라-주세요"));
-    push("industry", q(g.industry || "업종키-없음"));
-    push("region", q(g.region || "지역키-없음"));
-    push("gu", g.gu ? q(g.gu) : null);
-    push("title", q(g.item || ""));
-    push("brand", g.brand ? q(g.brand) : null);
-    push("year", g.year);
-    push("count", g.count);
-    push("price", g.price);
-    push("nego", g.price === null ? "true" : "false");
-    push("deal", q(g.deal));
-    push("state", g.state ? q(g.state) : null);
-    push("text", q(g.text));
-    push("images", "[]");
-    push("at", q(adMkToday()));
-  }else{
-    var t = [g.gu, g.pyeong ? g.pyeong + "평" : "", g.indName,
-             g.kind === "lease" ? "임대" : "양도"].filter(Boolean).join(" ");
-    L.push("  {");
-    push("id", q(AD_MK.id || "여기에-주소가-될-id"));
-    push("kind", q(g.kind));
-    push("industry", q(g.industry || "업종키-없음"));
-    push("region", q(g.region || "지역키-없음"));
-    push("gu", g.gu ? q(g.gu) : null);
-    push("pyeong", g.pyeong);
-    push("deposit", g.deposit);
-    push("rent", g.rent);
-    push("premium", g.premium);
-    push("equipCost", g.equipCost);
-    push("sales", g.sales);
-    push("since", g.since);
-    push("wantAt", g.wantAt ? q(g.wantAt) : null);
-    push("withEquip", g.withEquip ? "true" : "false");
-    push("fc", "false");
-    push("title", q(t));
-    push("text", q(g.text));
-    push("images", "[]");
-    push("at", q(adMkToday()));
-  }
-  /* 마지막 쉼표를 뗍니다 */
-  if(L.length > 1) L[L.length - 1] = L[L.length - 1].replace(/,$/, "");
-  L.push("  }");
-  return (g.asset ? "/* js/data/market.js 의 AM_ASSETS 에 넣으세요 */\n"
-                  : "/* js/data/market.js 의 AM_STORES 에 넣으세요 */\n") +
-    L.join("\n");
-}
-
-/* ⚠️ **빌드를 멈추게 하는 것**을 먼저 말해 줍니다. 손으로 치면 여기서
-   틀리고, 틀리면 에러 없이 그 매물만 안 뜹니다. */
-function adMkWarn(g, line){
-  var w = [];
-  if(!AD_MK.id) w.push("id 를 적어 주세요 — 주소가 됩니다 (/s/… · /a/…)");
-  if(!g.industry) w.push("업종을 못 읽었습니다" + (g.indName ? " (" + g.indName + ")" : ""));
-  if(!g.region)   w.push("지역을 못 읽었습니다" + (g.regName ? " (" + g.regName + ")" : ""));
-  if(g.asset && !AD_MK.sub) w.push("장비 key(sub)를 골라 주세요 — 비거나 틀리면 빌드가 멈춥니다");
-  if(g.name && line.indexOf(g.name) >= 0) w.push("성함이 들어 있습니다 — 매물에 넣지 않습니다");
-  if(g.tel){
-    var d = g.tel.replace(/[^0-9]/g, "");
-    if(d.length >= 8 && line.replace(/[^0-9]/g, "").indexOf(d) >= 0)
-      w.push("연락처가 들어 있습니다 — 매물에 넣지 않습니다");
-  }
-  return w;
-}
-
-function adMkSubs(){
-  var g = AD_MK.got;
-  var out = [["", "장비 key 를 골라 주세요"]];
-  if(!g || !g.industry) return out;
-  (window.AM_INDUSTRIES || []).forEach(function(i){
-    if(i.key !== g.industry) return;
-    (i.equip || []).forEach(function(e){ out.push([e.key, e.name]); });
-  });
-  return out;
-}
-
-function adMkDraw(){
-  var box = $("ad-mk-out");
-  if(!box) return;
-  var g = AD_MK.got;
-  if(!g){ box.innerHTML = '<p class="ad-empty">접수를 붙여 넣고 ‘읽어 오기’ 를 누르세요.</p>'; return; }
-  var line = adMkLine(g);
-  var w = adMkWarn(g, line);
-  box.innerHTML =
-    '<div class="ad-g">'+
-      '<div class="ad-f"><label for="ad-mk-id">id <em>(주소가 됩니다)</em></label>'+
-        '<input id="ad-mk-id" type="text" autocomplete="off" value="'+esc(AD_MK.id)+'" '+
-          'placeholder="예: anyang-pyeongchon-cafe-18" '+
-          'oninput="adMkSet(\'id\', this.value)"></div>'+
-      (g.asset
-        ? '<div class="ad-f"><label for="ad-mk-sub">장비 key <em>(sub)</em></label>'+
-            '<select id="ad-mk-sub" onchange="adMkSet(\'sub\', this.value)">'+
-              adMkSubs().map(function(o){
-                return '<option value="'+esc(o[0])+'"'+(o[0]===AD_MK.sub?" selected":"")+'>'+
-                  esc(o[1])+'</option>'; }).join("")+
-            '</select></div>'
-        : '')+
-    '</div>'+
-    (w.length
-      ? '<p class="ad-vet">'+icon("alert",16)+esc(w.join(" · "))+'</p>' : '')+
-    adCard(g.asset ? "AM_ASSETS 에 넣을 줄" : "AM_STORES 에 넣을 줄", "mk", line)+
-    '<p class="ad-lead">넣고 <b>node build-pages.js</b> 하시면 '+
-      (g.asset ? '/a/' : '/s/')+'&lt;id&gt; 화면과 sitemap 이 같이 생깁니다. '+
-      '사진은 사장님이 주신 것만 <b>images</b> 에 넣으세요.</p>';
-}
-
-window.adMkSet = function(what, v){ AD_MK[what] = v; adMkDraw(); };
-window.adMkRead = function(){
-  var raw = ($("ad-mk-in") || {}).value || "";
-  if(!raw.trim()){ toast("매물 접수를 붙여 넣어 주세요."); return; }
-  AD_MK.raw = raw;
-  AD_MK.got = adMkParse(raw);
-  if(!AD_MK.id && AD_MK.got.industry)
-    AD_MK.id = AD_MK.got.industry + "-" + adMkToday().split("-").slice(0,2).join("") + "-1";
-  adMkDraw();
-  toast("읽었습니다. 못 읽은 칸은 비워 두었습니다 — 지어내지 않습니다.");
-};
-
-/* ── 8. 수익상품 상태 (§5) ──────────────────────────────────────
+/* ── 7. 수익상품 상태 (§5) ──────────────────────────────────────
+   ⚠️⚠️ **2026-10-31 — 이 칸은 아직 창업 · 폐업 상품 스물일곱을
+   셉니다** (`js/data/offers.js`). 중고폰 상품으로 바꾸려면 **DB 를
+   같이** 고쳐야 합니다 — `offer` 표(0012)가 그 id 들을 들고 있고
+   `fee_policy.offer_id` · `request.offer_id` 가 그것을 FK 로
+   가리킵니다. 지시서 §6 이 **"파괴적인 운영 DB 삭제는 백업 확인 및
+   관리자 승인 후"** 라고 적어서, 지우지 않고 **승인 대기**로 둡니다
+   (`docs/` 의 DB 정리 보고서). ⚠️ 여기만 고치면 빌드가 멈춥니다
+   (`checkOfferSql()` 이 양쪽을 맞춰 봅니다). */
+/*
    ⚠️⚠️ **손님 화면이 아닙니다.** 여기 적는 것은 운영자가 해야 할
    일이고, 손님에게는 그 상품이 **그 분야의 진짜 화면**으로만 보입니다
    (절대 규칙 3).
@@ -1370,21 +1102,16 @@ function adPvCats(){
   return (window.AM_CATS || []).filter(function(c){ return c.kind === "provider"; });
 }
 
-/* ⚠️ `시설 · 장비`(equip)는 하위가 **업종에서** 옵니다 (`byIndustry`).
-   그 분류의 `items` 는 비어 있어서, 업종마다 적힌 장비를 전부 모아
-   냅니다 — 안 모으면 그 분류만 고르개가 **덩그러니 빕니다**. */
+/* ⚠️⚠️ **2026-10-31 — `byIndustry` 갈래를 지웠습니다.** 전에는
+   `시설 · 장비`(equip) 하나만 하위를 업종(`industries.js` 의 `equip`)
+   에서 가져와서, 거기를 안 모으면 그 분류의 고르개가 덩그러니
+   비었습니다. 중고폰 분류 열은 **전부 자기 `items` 를 들고 있어서**
+   그 갈래를 지나는 분류가 하나도 없습니다 (세어서 확인 — 0건).
+   ⚠️ 하위를 다른 데서 가져오는 분류를 또 만드시면 그날 이 갈래도
+   같이 되살리세요 (`amAllSubs()` 와 짝입니다). */
 function adPvSubs(catKey){
   var c = window.amCat ? amCat(catKey) : null;
-  if(!c) return [];
-  if(!c.byIndustry) return c.items || [];
-  var seen = {}, out = [];
-  (window.AM_INDUSTRIES || []).forEach(function(ind){
-    (ind.equip || []).forEach(function(it){
-      if(seen[it.key]) return;
-      seen[it.key] = 1; out.push(it);
-    });
-  });
-  return out;
+  return c ? (c.items || []) : [];
 }
 
 /* 고른 것 — ⚠️ **세는 값**입니다. 숫자를 손으로 적지 않습니다. */
@@ -1437,6 +1164,8 @@ function adPvLines(){
     "    name:" + adPvJs(AD_PV.name) + ",\n" +
     "    regions:" + adPvArr(regs) + ",\n" +
     (gus.length ? "    gu:" + adPvArr(gus) + ",\n" : "") +
+    /* ⚠️ 칸 이름은 `industries` 그대로입니다 (DB · providers.js 와
+       같아야 합니다). 담기는 값만 **기기 종류 key** 입니다. */
     "    industries:" + adPvArr(inds) + ",\n" +
     "    subs:" + adPvArr(subs) + ",\n" +
     (AD_PV.intro ? "    intro:" + adPvJs(AD_PV.intro) + ",\n" : "") +
@@ -1486,12 +1215,17 @@ function adPvWarn(L){
   if(bad) w.push("주소(id) — " + bad);
   if(!String(AD_PV.name || "").trim()) w.push("업체명이 비어 있습니다");
   if(!L.subs.length)
+    /* ⚠️⚠️ **같은 경고 안에서 한 칸을 두 이름으로 부르고 있었습니다** —
+       이 줄은 "업종 · 전업종", 바로 아래 줄은 "취급 기기" 였습니다
+       (2026-10-31 에 재서 찾았습니다). 직원이 어느 칸을 말하는지
+       못 가립니다 — 칸 이름은 `provider.industries` 이지만 사람에게
+       보이는 이름은 **취급 기기** 하나입니다. */
     w.push("하는 일(하위 분야)이 비어 있습니다 — 비면 **아무 분류에도 " +
-           "안 걸립니다.** 지역 · 업종을 안 적은 것은 '전국 · 전업종' 으로 " +
-           "읽는 게 말이 되지만, 하는 일을 안 적은 것을 '전부 다 합니다' 로 " +
-           "읽으면 인테리어 업체가 세무 화면에 앉습니다 (빌드가 멈춥니다)");
+           "안 걸립니다.** 지역 · 취급 기기를 안 적은 것은 '전국 · 전기기' " +
+           "로 읽는 게 말이 되지만, 하는 일을 안 적은 것을 '전부 다 합니다' " +
+           "로 읽으면 수리 업체가 검수 화면에 앉습니다 (빌드가 멈춥니다)");
   if(!L.regs.length) w.push("지역이 비어 있습니다 — 지역이 매칭의 첫 조건입니다");
-  if(!L.inds.length) w.push("전문 업종이 비어 있습니다");
+  if(!L.inds.length) w.push("취급 기기가 비어 있습니다");
   if(!w.length) return "";
   return '<div class="notice-bad ad-pv-w"><b>아직 빠진 것</b><ul>'+
     w.map(function(x){ return '<li>'+mark(x)+'</li>'; }).join("")+'</ul></div>';
@@ -1534,11 +1268,11 @@ function adPvDraw(){
   box.innerHTML =
     '<div class="ad-g">'+
       '<div class="ad-f"><label for="ad-pv-nm">업체명 <em>(필수)</em></label>'+
-        '<input id="ad-pv-nm" type="text" autocomplete="off" placeholder="예: 가나다 인테리어"'+
+        '<input id="ad-pv-nm" type="text" autocomplete="off" placeholder="예: 가나다 폰마켓"'+
         ' value="'+esc(AD_PV.name)+'" oninput="adPvSet(\'name\',this.value)"></div>'+
       '<div class="ad-f"><label for="ad-pv-id">주소가 될 값 <em>(필수 · 영문)</em></label>'+
         '<input id="ad-pv-id" type="text" autocomplete="off" spellcheck="false"'+
-        ' placeholder="ganada-interior" value="'+esc(AD_PV.id)+'"'+
+        ' placeholder="ganada-phone" value="'+esc(AD_PV.id)+'"'+
         ' oninput="adPvSet(\'id\',this.value)"></div>'+
       '<div class="ad-f"><label for="ad-pv-sc">문 연 해 <em>(선택)</em></label>'+
         '<input id="ad-pv-sc" type="number" min="1900" max="2100" inputmode="numeric"'+
@@ -1552,7 +1286,7 @@ function adPvDraw(){
 
     '<div class="ad-f"><label for="ad-pv-in">한 줄 소개 <em>(선택 · 업체가 준 글만)</em></label>'+
       '<input id="ad-pv-in" type="text" autocomplete="off"'+
-      ' placeholder="예: 카페 · 음식점 인테리어를 10년 해 왔습니다"'+
+      ' placeholder="예: 아이폰 · 갤럭시 수리를 10년 해 왔습니다"'+
       ' value="'+esc(AD_PV.intro)+'" oninput="adPvSet(\'intro\',this.value)"></div>'+
 
     '<div class="ad-pv-b"><b>서비스 지역</b>'+
@@ -1568,8 +1302,16 @@ function adPvDraw(){
         ' oninput="adPvSet(\'gus\',this.value)"></div>'+
     '</div>'+
 
-    '<div class="ad-pv-b"><b>전문 업종</b>'+
-      adPvChk("inds", window.AM_INDUSTRIES || [])+
+    /* ⚠️⚠️ **2026-10-31 로 업종 열넷 → 기기 종류입니다.** 업종(음식점 ·
+       카페 · 미용 …)은 창업 · 폐업 쪽 축이고 중고폰 매입업체에게는 남의
+       말입니다. 목록은 `js/data/devices.js` 의 `AM_DEVICE_KINDS` 한
+       곳이고, DB 칸 이름은 `provider.industries` **그대로**입니다 —
+       지금 등록된 업체가 **0곳**이라 옛 값이 한 줄도 없어서 뜻이
+       어긋나는 지난 기록이 없습니다 (세어서 확인했습니다).
+       ⚠️ 업체가 등록된 뒤에 이 칸의 뜻을 또 바꾸시려면 그날
+       **마이그레이션이 필요합니다.** */
+    '<div class="ad-pv-b"><b>취급 기기</b>'+
+      adPvChk("inds", window.AM_DEVICE_KINDS || [])+
     '</div>'+
 
     '<div class="ad-pv-b"><b>하는 일 — 하위 분야</b>'+
@@ -1605,107 +1347,17 @@ function adPvDraw(){
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   10. 전문관 노출 순서 (2026-10-11 UI/UX 지시서 §5)
+   ⚠️⚠️ 2026-10-31 — 여기 있던 칸 셋을 내렸습니다 (PHONEWAY 전환 §2)
 
-   > §5 — "관리자에서 노출 순서 변경 가능하도록 설계."
+     2번 칸의 "지원사업 '찾는 곳' 링크"   `js/data/support.js`
+     7번 칸 "매물 접수를 등록 줄로"        `js/data/market.js`
+     10번 칸 "전문관 노출 순서"            `js/data/halls.js`
 
-   ⚠️⚠️ **아무것도 저장하지 않습니다.** 백엔드가 없는데 "저장되었습니다"
-   라고 하면 그게 절대 규칙 5 입니다. 여기가 하는 일은 **눌러서 차례를
-   바꾸고, 그 차례대로 `js/data/halls.js` 에 붙여 넣을 줄을 만들어
-   주는 것**까지입니다 — 7번 매물 등록 줄 · 9번 제휴업체 등록 줄과
-   같은 방식입니다.
-
-   ⚠️ 손으로 차례를 옮기면 쉼표 · 중괄호에서 틀리고, 틀리면 빌드가
-   멈추거나(그나마 다행) 그 칸이 조용히 빠집니다.
-   ⚠️ 이름 · 주소 · 아이콘은 **건드리지 않습니다** — 차례만 바꿉니다.
+   셋 다 **창업 · 폐업 전용**이었습니다 — 지원사업 공고 · 점포 · 시설
+   장비 매물 · 전문관 넷은 중고폰 플랫폼에 그 축 자체가 없습니다.
+   ⚠️ 화면에서 감춘 것이 아니라 **데이터 파일과 같이 지웠습니다**
+   (지시서 §2 — "단순히 화면에서 숨기는 방식이 아니라 실제 프로젝트에서
+   정리한다").
+   ⚠️ 꺼내 보시려면 `git show 6d85a17:js/admin.js` 와 그 커밋의
+   `js/data/{support,market,halls}.js` 입니다.
    ════════════════════════════════════════════════════════════════════ */
-var AD_HL = null;
-
-function adHlInit(){
-  if(AD_HL) return;
-  /* 원본을 복사해 둡니다 — 화면에서 AM_HALLS 를 직접 흔들면
-     되돌릴 수가 없습니다 */
-  AD_HL = (window.AM_HALLS || []).map(function(h){
-    return { key:h.key, name:h.name, items:(h.items||[]).map(function(i){ return i.n; }) };
-  });
-}
-
-function adHlMove(hi, ii, dir){
-  adHlInit();
-  var arr = (ii < 0) ? AD_HL : AD_HL[hi].items;
-  var at  = (ii < 0) ? hi : ii;
-  var to  = at + dir;
-  if(to < 0 || to >= arr.length) return;
-  var t = arr[at]; arr[at] = arr[to]; arr[to] = t;
-  adHlDraw();
-}
-
-function adHlDraw(){
-  var box = document.getElementById("ad-hl");
-  if(!box) return;
-  adHlInit();
-  if(!AD_HL.length){
-    box.innerHTML = '<p class="ad-lead">전문관 데이터가 없습니다 '+
-      '(js/data/halls.js 가 admin.html 에 실려 있는지 보세요).</p>';
-    return;
-  }
-  box.innerHTML = AD_HL.map(function(h, hi){
-    return '<div class="ad-hl-h">'+
-      '<div class="ad-hl-t">'+
-        '<b>'+esc(h.name)+'</b> <i>'+esc(h.key)+' · '+h.items.length+'개</i>'+
-        '<span class="ad-hl-b">'+
-          '<button class="btn btn-s" type="button" onclick="adHlMove('+hi+',-1,-1)">↑</button>'+
-          '<button class="btn btn-s" type="button" onclick="adHlMove('+hi+',-1,1)">↓</button>'+
-        '</span>'+
-      '</div>'+
-      '<ol class="ad-hl-l">'+h.items.map(function(n, ii){
-        return '<li><span>'+esc(n)+'</span>'+
-          '<span class="ad-hl-b">'+
-            '<button class="btn btn-s" type="button" onclick="adHlMove('+hi+','+ii+',-1)">↑</button>'+
-            '<button class="btn btn-s" type="button" onclick="adHlMove('+hi+','+ii+',1)">↓</button>'+
-          '</span></li>'; }).join("")+'</ol>'+
-    '</div>';
-  }).join("")+
-  '<div class="ad-acts">'+
-    '<button class="btn btn-b" type="button" onclick="adHlCopy()">'+
-      '붙여 넣을 줄 만들기</button>'+
-    '<button class="btn btn-o" type="button" onclick="AD_HL=null;adHlDraw()">'+
-      '처음 차례로</button>'+
-  '</div>'+
-  '<textarea id="ad-t-halls" rows="12" spellcheck="false" '+
-    'placeholder="차례를 바꾸신 뒤 단추를 누르시면 여기에 나옵니다"></textarea>';
-}
-
-/* ⚠️⚠️ **차례만 바꾼 줄을 만듭니다.** 원본 객체의 다른 칸(ia · cat ·
-   sub · to · tone)은 손대지 않고 그대로 옮겨 적습니다 — 여기서 새로
-   적으면 두 곳에 같은 규칙을 적는 셈이고 반드시 어긋납니다. */
-function adHlCopy(){
-  adHlInit();
-  var src = {};
-  (window.AM_HALLS || []).forEach(function(h){
-    var m = {}; (h.items||[]).forEach(function(i){ m[i.n] = i; });
-    src[h.key] = { h:h, byName:m };
-  });
-  var q = function(v){ return '"' + String(v).replace(/"/g, '\\"') + '"'; };
-  var out = "window.AM_HALLS = [\n" + AD_HL.map(function(hh){
-    var h = src[hh.key].h;
-    var lines = hh.items.map(function(n){
-      var it = src[hh.key].byName[n]; if(!it) return "";
-      var bits = ["n:" + q(it.n), "ia:" + q(it.ia)];
-      if(it.cat)  bits.push("cat:"  + q(it.cat));
-      if(it.sub)  bits.push("sub:"  + q(it.sub));
-      if(it.to)   bits.push("to:"   + q(it.to));
-      if(it.tone) bits.push("tone:" + q(it.tone));
-      return "      { " + bits.join(", ") + " }";
-    }).filter(Boolean).join(",\n");
-    return "  { key:" + q(h.key) + ", name:" + q(h.name) + ", lead:" + q(h.lead) + ",\n" +
-           "    tone:" + q(h.tone) + ", to:" + q(h.to) + ", ic:" + q(h.ic) + ",\n" +
-           "    items:[\n" + lines + "\n    ] }";
-  }).join(",\n\n") + "\n];";
-  var ta = document.getElementById("ad-t-halls");
-  if(!ta) return;
-  ta.value = out;
-  /* ⚠️ adCopy 는 **요소 id** 를 받습니다 (글이 아닙니다) — 규칙을
-     두 벌로 만들지 않습니다. */
-  adCopy("halls");
-}

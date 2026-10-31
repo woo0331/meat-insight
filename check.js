@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   전수 점검 — 창업 · 폐업 플랫폼
+   전수 점검 — 폰웨이(PHONEWAY) 중고폰 통합 거래 플랫폼
 
    실행:  node check.js
 
@@ -62,11 +62,12 @@ const PAGES = [
   ["/track",             "판매 진행 조회"],
   ["/guide",             "이용 안내"],
   ["/repair",            "수리 서비스"],
+  ["/biz",               "기업 · 수출 문의"],
   ["/quote?c=repair&r=gyeonggi&side=repair", "견적 요청 (조건 실려 옴)"],
   ["/join",              "업체 입점하기"],
   ["/my",                "MY"],
   ["/search",            "검색 (처음)"],
-  ["/search?q=%EC%B9%B4%ED%8E%98%20%EC%9D%B8%ED%85%8C%EB%A6%AC%EC%96%B4", "검색 결과 (카페 인테리어)"],
+  ["/search?q=%EA%B0%A4%EB%9F%AD%EC%8B%9C%20S24", "검색 결과 (갤럭시 S24)"],
   ["/search?q=zzz",      "검색 (못 찾음)"],
   ["/faq",               "자주 묻는 것"],
   ["/terms",             "이용약관"],
@@ -95,10 +96,16 @@ const PAGES = [
       .slice(0, n)
       .forEach(d => PAGES.push(["/" + dir + "/" + d.name, label + " — " + d.name]));
   };
-  pick("p", "업체 상세", 2);
-  pick("f", "브랜드 상세", 2);
-  pick("s", "점포 상세", 2);
-  pick("a", "시설 상세", 2);
+  /* ⚠️⚠️ **2026-10-31 — 넷을 하나로 바꿨습니다.** `p` · `f` · `s` · `a`
+     는 창업 · 폐업 쪽 상세(업체 · 브랜드 · 점포 · 시설)이고 **네 주소
+     전부 410** 입니다 (vercel.json 의 rewrites). 폴더가 없으니 `pick()`
+     이 그냥 돌아와서 **아무것도 안 보는 네 줄**이었습니다 — 그대로
+     두면 다음 사람이 "상세 화면은 저절로 표본에 든다" 고 믿는데
+     드는 것이 없습니다.
+     ⚠️ 중고폰 상품 상세(`/d/:id`)가 지금 그 자리입니다 — 빌드가
+     만들어 둔 폴더에서 둘을 집습니다. 업체 상세를 되살리시는 날
+     `pick("p", …)` 한 줄을 다시 넣으세요. */
+  pick("d", "중고폰 상품 상세", 2);
 })();
 /* ⚠️ **360px 을 같이 봅니다.** 폰은 390px 만 있는 것이 아닙니다 —
    갤럭시 계열이 360px 이고, 새 헤더가 거기서만 370px 로 넘쳐
@@ -133,7 +140,7 @@ const VIEWS = [[1440,900,"데스크톱"],[1024,820,"태블릿"],[768,1024,"작�
 const BAD = /undefined|NaN|\[object |null년|console\.|localStorage|TODO|FIXME|placeholder|지시서|스펙 ?\d|어드민|[은는이가을를와과](\([은는이가을를와과]\))/i;
 
 const AUDIT = `(() => {
-  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[], hord:[], hdfit:[], chrome:[] };
+  const W = window.innerWidth, out = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[], hord:[], hdfit:[], chrome:[], vow:[] };
   /* ⚠️ **흰 글자가 흰 바탕에 앉는 일이 실제로 있었습니다.** 창업 다섯
      마디(.flow)는 어두운 구간에만 있던 것이라 글자색 기본이 흰색이고,
      밝은 쪽은 .sec-tone 안에서만 되돌려 놓았습니다. 그 구간을 순백으로
@@ -745,6 +752,44 @@ const AUDIT = `(() => {
     });
   }
 
+  /* ⚠️⚠️ **지킬 수 없는 약속을 화면마다 봅니다** (PHONEWAY 지시서 §5 —
+     "무료" · "최고가 보장" · "당일 정산" 금지 · 절대 규칙 5).
+     ⚠️⚠️ **전에는 메인의 신뢰 요소 한 칸만** 보고 있었습니다. 그래서
+     /quote 의 머리말이 "무료입니다" 로 나가는 것을 아무도 안 보고
+     있었고, 정작 메인에는 "이 화면에 무료를 적지 마세요" 라는 고지가
+     붙어 있었습니다 (2026-10-31 에 dist 를 글자로 세어 찾았습니다).
+     §5 는 **사이트 전체**의 규칙이라 재는 자리도 화면 전부입니다.
+     ⚠️ "무료수신거부" 는 정보통신망법 제50조 제4항이 요구하는 표기라
+     예외입니다 — 다만 그 글은 /admin 에만 있어서 여기 안 걸립니다
+     (전수 점검은 /admin 을 못 봅니다). 혹시 손님 화면으로 오면
+     그때 여기에 예외를 적으세요.
+     ⚠️⚠️ **예외가 하나 있습니다 — 메인의 거래 전 고지(.pwt-n).**
+     그 줄은 "이 화면에 무료 · 당일 정산 · 최고가 보장 을 **적지
+     않았습니다**" 라고 밝히는 글입니다 — 주장이 아니라 **안 한다는
+     고지**라서 금지 낱말을 글자로 담고 있어도 맞습니다. 그 칸을
+     빼지 않으면 멀쩡한 메인이 걸립니다 (재 보고 알았습니다).
+     ⚠️ 예외를 늘리실 때는 **그 칸이 정말 "안 한다" 를 말하는지**
+     보세요 — 약속하는 글에 예외를 주면 이 검사가 뜻을 잃습니다.
+     ⚠️ 정규식 대신 indexOf 입니다 — 본문이 템플릿 문자열입니다. */
+  {
+    const VOW = ["무료", "최고가 보장", "최고가보장", "당일 정산",
+                 "당일정산", "최저가", "100% 보장"];
+    /* ⚠️⚠️ **잎사귀만 세지 마세요.** 처음에 그렇게 적었는데, 이 글은
+       한 칸 안에서 b · br 로 쪼개져 있어서 **자식이 있는 칸이 통째로
+       빠집니다** — 되돌려 봐도 안 잡힙니다 (재 보고 알았습니다).
+       글자 노드를 직접 훑고 .pwt-n 안만 건너뜁니다. */
+    const vbox = document.getElementById("view");
+    let vt = "";
+    const walk = n => {
+      if(n.nodeType === 1){
+        if(n.classList && n.classList.contains("pwt-n")) return;
+        n.childNodes.forEach(walk);
+      } else if(n.nodeType === 3) vt += " " + (n.nodeValue || "");
+    };
+    if(vbox) walk(vbox);
+    VOW.forEach(w => { if(vt.indexOf(w) >= 0) out.vow.push(w); });
+  }
+
   /* ⚠️⚠️ **없는 아이콘 key 를 적으면 빈 칸이 그려집니다.**
      icon() 은 모르는 이름에 **빈 문자열**을 돌려줍니다 — 에러도 안 나고
      화면도 안 죽고, 그 타일만 덩그러니 빕니다. 매장 구간의 "장비"
@@ -919,7 +964,7 @@ const AUDIT = `(() => {
       if (!/pretendard|cdn\.jsdelivr/.test(u)) miss.push(u.split("/").pop());
     });
 
-    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[], hord:[], hdfit:[], chrome:[], over:[] };
+    const bad = { small:[], tap:[], wrap:[], bad:[], glue:[], mix:[], h1:[], dim:[], eye:[], star:[], dark:[], tone:[], ph:[], ico:[], sel:[], hord:[], hdfit:[], chrome:[], vow:[], over:[] };
     for (const [hash, name] of PAGES) {
       await p.goto(ROOT + hash, { waitUntil:"load" });
       await p.waitForTimeout(280);
@@ -953,6 +998,7 @@ const AUDIT = `(() => {
       ["어두운 면이 15% 넘음",   uniq(bad.dark)],
       ["이웃한 두 구간이 붙어 보임", uniq(bad.tone)],
       ["\"준비 중\" 자리표시자", uniq(bad.ph)],
+      ["지킬 수 없는 약속 (무료 · 최고가 보장 · 당일 정산)", uniq(bad.vow)],
       ["아이콘 자리가 비었음", uniq(bad.ico)],
       ["고르개 딱지가 칸보다 긺", uniq(bad.sel)],
       ["헤더 메뉴가 오른쪽 위로 올라앉음", uniq(bad.hdfit)],
@@ -1032,10 +1078,14 @@ const AUDIT = `(() => {
       () => !!document.querySelector('.mnav a.on[data-to="/shop"]')],
     /* 주소에 실린 조건이 화면에 그대로 반영되는가 — 끊기면 손님은
        같은 것을 두 번 적게 되고 거기서 닫습니다. */
-    ["/quote?c=interior&s=duct&i=cafe&r=gyeonggi&side=repair",
+    /* ⚠️⚠️ **2026-10-31 — 씨앗이 구사업 id 였습니다.** `c=interior` ·
+       `s=duct` · `i=cafe` 는 지금 없는 분류 · 하위 · 업종이고, 업종
+       칸(`q-ind`)은 중고폰으로 바뀌면서 폼에서 **아예 빠졌습니다** —
+       `getElementById` 가 null 이라 그 줄에서 터져 **늘 실패**했습니다.
+       코드가 아니라 씨앗이 낡은 자리입니다. */
+    ["/quote?c=fix&s=lcd&r=gyeonggi&side=repair",
       "견적 요청에 조건이 채워짐",
-      () => document.getElementById("q-what").value.indexOf("닥트") >= 0
-         && document.getElementById("q-ind").value === "cafe"
+      () => document.getElementById("q-what").value.indexOf("액정") >= 0
          && document.getElementById("q-reg").value === "gyeonggi"
          && document.getElementById("q-side").value === "repair"],
     /* ⚠️⚠️ **주소가 들고 온 쪽은 걸러도 냅니다.** `/quote` 의 쪽
@@ -1183,22 +1233,41 @@ const AUDIT = `(() => {
      나옵니다.** 지하 상가처럼 신호가 약한 곳에서 실제로 일어납니다.
      ⚠️ 검사에서는 20초를 기다릴 수 없어, **멈추는 fetch** 를 끼워 넣고
      시간 제한이 **걸려 있는지**(AbortController 를 쓰는지)를 봅니다. */
-  await f("서비스마다 다르게 묻는다", "/quote?c=interior", `
+  await f("서비스마다 다르게 묻는다", "/quote?c=buyin", `
     /* 지시서 6절 — 서비스 특성에 따라 질문을 다르게 표시한다.
-       ⚠️ 면적 · 업종 · 지역 · 예산은 공통 칸이라 또 묻지 않습니다. */
+       ⚠️⚠️ **2026-10-31 — 재던 자리가 /quote?c=interior 였습니다.**
+       그 분류가 없어진 뒤에도 그대로여서 이 검사가 **"서비스별 질문이
+       없습니다" 로 떨어질 자리**였습니다 — 씨앗이 낡은 자리입니다.
+       ⚠️ 지역 · 희망 금액 · 희망 시점은 공통 칸이라 또 묻지 않습니다. */
     const box = document.querySelector(".rqf");
-    if(!box) return "인테리어인데 서비스별 질문이 없습니다";
+    if(!box) return "중고폰 매입인데 서비스별 질문이 없습니다";
     const txt = box.innerText;
-    if(txt.indexOf("공사 범위") < 0) return "인테리어인데 공사 범위를 안 묻습니다";
-    for(const dup of ["업종", "예산"])
+    if(txt.indexOf("기기 대수") < 0) return "중고폰 매입인데 기기 대수를 안 묻습니다";
+    for(const dup of ["지역", "희망 금액"])
       if(new RegExp("^\\s*" + dup + "\\s*$", "m").test(txt))
         return "공통 칸(" + dup + ")을 또 묻습니다";
     /* ⚠️ 누르는 것은 40px 이상 */
     const small = [...box.querySelectorAll(".rqf-k")]
       .filter(e => e.getBoundingClientRect().height < 40).length;
     if(small) return "체크 칩 " + small + "개가 40px 미만입니다";
-    /* ⚠️ 날짜는 date 라야 합니다 — 손으로 적으면 "다음달 초" 가 들어옵니다 */
-    if(!box.querySelector('input[type=date]')) return "날짜 칸이 date 가 아닙니다";
+    /* ⚠️⚠️ 날짜는 date 라야 합니다 — 손으로 적게 하면 "다음달 초" 가
+       들어오고 그건 일정이 아닙니다.
+       ⚠️⚠️ **있으라고 요구하지 마세요.** 전에는 이 화면에서
+       input[type=date] 를 찾았는데, 중고폰 매입에는 날짜 칸이 **아예
+       없습니다** — 없는 규칙을 만든 것이라 2026-10-31 에 떨어졌습니다
+       (검사가 틀린 자리, 열아홉 번째). 지키는 것은 "날짜 칸이 있으면
+       date 라야 한다" 이고, 그건 한 화면이 아니라 **열 분류 전부**의
+       성질이라 데이터에서 훑습니다 — 분류가 늘면 저절로 따라옵니다.
+       ⚠️ 정규식을 쓰지 마세요 (본문이 템플릿 문자열입니다) — indexOf 입니다. */
+    var DT = ["시점", "날짜", "일자"];
+    var FM = window.AM_REQ_FORMS || {};
+    if(!Object.keys(FM).length) return "AM_REQ_FORMS 를 못 읽습니다";
+    for(var ck in FM){
+      var bad = (FM[ck] || []).filter(function(fd){
+        return DT.some(function(w){ return (fd.k || "").indexOf(w) >= 0; })
+               && fd.t !== "date"; });
+      if(bad.length) return ck + " 의 " + bad[0].k + " 칸이 date 가 아닙니다";
+    }
     return true;
   `);
 
@@ -1255,42 +1324,41 @@ const AUDIT = `(() => {
     if(kept0.indexOf("소중한") < 0) return "보내는 동안 적은 글이 날아갑니다";
     return true;`);
 
-  await f("가격은 10건 이상 · 기준일 있는 것만 낸다", "/", `
-    /* ⚠️ 칸 이름은 market.js 의 생김새 그대로 key 입니다 — 검사가
-       없는 칸(cat)으로 씨앗을 적어 두면 그걸 보고 베껴 쓰게 됩니다. */
-    window.AM_QUOTE_STATS.push(
-      { key:"zz-a", name:"검사용 A", range:"평당 100~120만원", n:12, asOf:"2026-10-01" },
-      { key:"zz-b", name:"검사용 B", range:"평당 50~60만원",   n:9,  asOf:"2026-10-01" },
-      { key:"zz-c", name:"검사용 C", range:"평당 70~80만원",   n:30 });
-    const got = window.amQuoteStats().map(function(x){ return x.key; });
-    window.AM_QUOTE_STATS = window.AM_QUOTE_STATS.filter(function(x){
-      return String(x.key).indexOf("zz-") !== 0; });
-    let why = true;
-    if(got.indexOf("zz-a") < 0) why = "10건 넘는 것이 안 나옵니다";
-    else if(got.indexOf("zz-b") >= 0) why = "9건짜리가 나옵니다 — 적은 표본으로 시세를 말합니다";
-    else if(got.indexOf("zz-c") >= 0) why = "기준일 없는 것이 나옵니다";
-    return why;`);
+  /* ⚠️⚠️ **2026-10-31 — "가격은 10건 이상 · 기준일 있는 것만 낸다" 를
+     지웠습니다.** 그 검사가 보던 AM_QUOTE_STATS · amQuoteStats 가
+     js/data/market.js 와 함께 없어져서, 첫 줄(push)이 **TypeError 로
+     터지고** 있었습니다 — 중고폰에는 "평당 얼마" 라는 값이 없습니다.
+     ⚠️ 지켜야 하는 뜻(적은 표본으로 시세를 말하지 않는다)은 그대로
+     살아 있습니다 — 매입 기준가(AM_BUY_PRICE)가 0건이라 /sell 이
+     **예상 금액을 아예 안 냅니다**. 기준가를 넣으시는 날 그 자리에
+     표본 수와 기준일을 보는 검사를 새로 만드세요.
+     ⚠️ 옛 검사는 git show d1810ed:check.js 에 있습니다. */
 
   /* 같은 규칙을 두 곳에 적으면 한쪽만 고치게 됩니다 (amCatTo 로 겪었습니다). */
   await f("입점 배지와 업체찾기가 같은 규칙으로 센다", "/join", `
+    /* ⚠️⚠️ **2026-10-31 — 씨앗이 창업 · 폐업 key 였습니다**
+       (업종 cafe · 하위 interior · 분류 interior/demolish). 그 분류가
+       없어진 뒤에도 그대로여서 amCat 이 undefined 를 돌려주고,
+       늘어난 값이 0 이라 **이 검사가 떨어질 자리**였습니다.
+       지금은 중고폰 매입(buyin) · 수리(fix) 입니다. */
     window.AM_PROVIDERS.push({
       id:"zz-check", name:"검사용 업체", regions:["gyeonggi"],
-      industries:["cafe"], subs:["interior"], intro:"검사 안에서만 삽니다."
+      industries:["phone"], subs:["ph-buy"], intro:"검사 안에서만 삽니다."
     });
     /* ⚠️ 여기도 **늘어난 값**으로 봅니다 — 진짜 업체가 등록되면 절대값은
        달라지지만, 한 곳을 넣었을 때 **양쪽이 똑같이 1 늘어야** 합니다. */
-    const a  = window.amProvidersInCat(window.amCat("interior"));
-    const b  = window.amProviders({ cat:"interior" }).length;
-    const dz = window.amProvidersInCat(window.amCat("demolish"));
+    const a  = window.amProvidersInCat(window.amCat("buyin"));
+    const b  = window.amProviders({ cat:"buyin" }).length;
+    const dz = window.amProvidersInCat(window.amCat("fix"));
     window.AM_PROVIDERS = window.AM_PROVIDERS.filter(function(p){ return p.id !== "zz-check"; });
-    const a0 = window.amProvidersInCat(window.amCat("interior"));
-    const b0 = window.amProviders({ cat:"interior" }).length;
-    const d0 = window.amProvidersInCat(window.amCat("demolish"));
+    const a0 = window.amProvidersInCat(window.amCat("buyin"));
+    const b0 = window.amProviders({ cat:"buyin" }).length;
+    const d0 = window.amProvidersInCat(window.amCat("fix"));
     let why = true;
     if(a !== b)            why = "입점 배지 " + a + "곳 · 업체찾기 " + b + "곳 — 규칙이 갈렸습니다";
     else if(a - a0 !== 1)  why = "한 곳을 넣었는데 입점 배지가 " + (a - a0) + " 늘었습니다";
     else if(b - b0 !== 1)  why = "한 곳을 넣었는데 업체찾기가 " + (b - b0) + " 늘었습니다";
-    else if(dz !== d0)     why = "철거 배지가 같이 늘었습니다 (" + d0 + " → " + dz + ")";
+    else if(dz !== d0)     why = "수리 배지가 같이 늘었습니다 (" + d0 + " → " + dz + ")";
     return why;`);
   await f("지어낸 실적 숫자가 메인에 없다", "/", `
     /* ⚠️ 새 랜딩(시안)에는 실적 숫자가 **한 곳도 없습니다.** 그래서
@@ -1313,8 +1381,8 @@ const AUDIT = `(() => {
   await f("견적: 동의 없이는 보내지 않는다", "/quote", `
     let sent = false;
     const o = window.fetch; window.fetch = function(){ sent = true; return o.apply(this, arguments); };
-    document.getElementById("q-what").value = "카페 인테리어";
-    document.getElementById("q-q").value = "30평 신규 오픈입니다";
+    document.getElementById("q-what").value = "아이폰 14 매입";
+    document.getElementById("q-q").value = "두 대 팔고 싶습니다";
     document.getElementById("q-name").value = "홍길동";
     document.getElementById("q-tel").value = "010-1234-5678";
     document.getElementById("q-ag").checked = false;
@@ -1327,13 +1395,20 @@ const AUDIT = `(() => {
     const o = window.fetch;
     window.fetch = function(u, i){ try{ body = JSON.parse(i.body); }catch(e){}
       return Promise.resolve({ ok:true, json:function(){ return Promise.resolve({}); } }); };
-    document.getElementById("q-what").value = "카페 인테리어";
-    document.getElementById("q-q").value = "30평 신규 오픈입니다";
+    /* ⚠️⚠️ **2026-10-31 — 세 칸이 없어진 뒤에도 그대로였습니다.**
+       q-ind(업종) · q-py(평수)는 중고폰으로 바뀌면서 폼에서 빠졌는데
+       여기가 그 둘에 값을 넣고 있었습니다 — getElementById 가 null 이라
+       **TypeError 로 이 검사가 통째로 안 돌았습니다.** 밖의 try/catch 가
+       quoteSend 만 감싸서 그 앞 줄이 먼저 터집니다. 씨앗이 낡은 자리입니다.
+       ⚠️ 지금 공통 칸은 여섯입니다 — 상황 · 시군구 · 희망 금액 ·
+       희망 시점 · 사진 · 신청 서비스 (js/pages/quote.js 의 detail). */
+    document.getElementById("q-what").value = "아이폰 14 매입";
+    document.getElementById("q-q").value = "두 대 팔고 싶습니다";
     document.getElementById("q-name").value = "홍길동";
     document.getElementById("q-tel").value = "010-1234-5678";
-    document.getElementById("q-ind").value = "cafe";
     document.getElementById("q-reg").value = "gyeonggi";
-    document.getElementById("q-py").value = "30";
+    document.getElementById("q-gu").value = "안양시";
+    document.getElementById("q-when").value = "이번 주";
     document.getElementById("q-ag").checked = true;
     try{ window.quoteSend({ preventDefault:function(){} }); }catch(e){}
     await new Promise(r => setTimeout(r, 200));
@@ -1341,8 +1416,15 @@ const AUDIT = `(() => {
     if(!body) return "보내지 않았습니다";
     if(body.agree !== true) return "동의 표시가 안 실렸습니다";
     if(!body.serviceName || !body.q || !body.name || !body.tel) return "필수 칸이 빠졌습니다";
-    if(!body.detail || body.detail["업종"] !== "카페 · 디저트") return "업종이 안 실렸습니다";
-    if(body.detail["평수"] !== "30") return "평수가 안 실렸습니다";
+    /* ⚠️⚠️ **region 은 key 가 아니라 이름입니다** ("경기"). 전에 여기가
+       "gyeonggi" 를 기다렸는데, 그 위 줄들이 없어진 칸에서 먼저 터져서
+       **이 줄까지 한 번도 안 와 봤습니다** — 받는 쪽(tools/test-api.js)도
+       이름으로 견주고 api/quote.js 의 슬랙 글도 이름을 적습니다.
+       ⚠️ 글자를 박지 않고 amRegionName() 으로 견줍니다 (이름이 바뀌는
+       날 또 걸리지 않게). */
+    if(body.region !== window.amRegionName("gyeonggi")) return "지역이 안 실렸습니다";
+    if(!body.detail || body.detail["시군구"] !== "안양시") return "시군구가 안 실렸습니다";
+    if(body.detail["희망 시점"] !== "이번 주") return "희망 시점이 안 실렸습니다";
     return true;`);
 
 
@@ -1573,7 +1655,7 @@ const AUDIT = `(() => {
     try{
       /* ③ 비어 있을 때 — 연락 수단이 없어야 합니다 */
       B.phone = ""; B.email = "";
-      sendFail("q-fail", "quoteSend", { name:"김사장", q:"철거" },
+      sendFail("q-fail", "quoteSend", { name:"김사장", q:"배터리 교체" },
                "인터넷 연결이 끊겼거나 서버에 닿지 못했습니다.");
       if(box.querySelector('a[href^="tel:"]') || box.querySelector('a[href^="mailto:"]'))
         return "등록되지 않은 연락처를 냈습니다";
@@ -2553,28 +2635,50 @@ const AUDIT = `(() => {
     /* ⚠️ 2026-10-11 — 선택 카드 액자(.hpk-ph)가 없어지고 마지막 CTA
        의 상담 사진 액자(.mlast-im)가 생겼습니다. 그 자리는 **지금
        비어 있어서** 사진이 들어오는 날 바로 걸립니다. */
-    /* ⚠️ 2026-10-16 §3 — 메인이 아홉 영역이 되면서 사진 자리 넷이
-       늘었습니다 (브랜드 히어로 · 진입 카드 · 양도양수 배너 · 배너 둘).
-       **새 자리를 만들면 여기 넣으세요** — 안 넣으면 object-fit 이
-       빠져도 조용히 통과하고 사진이 늘어납니다. */
-    const want = [".mh-ph .ph", ".mlast-im .ph", ".mfeat-ph .ph",
-                  ".ia-t .ph", ".msvc-bg .ph", ".mbr-p .ph",
-                  ".mk-k-ph .ph", ".mhall-bg .ph",
-                  ".bent-ph .ph",
-                  ".bpass-ph .ph", ".bban-ph .ph"];
+    /* ⚠️⚠️ **2026-10-31 — 재던 열한 자리가 전부 죽어 있었습니다.**
+       인수인계 화면을 지우면서 그 자리를 그리는 JS 가 없어졌는데 CSS 는
+       남아 있어서, 이 검사가 **아무 데도 안 쓰이는 규칙 열하나를 보고
+       초록**이었습니다 — 정작 지금 사진이 들어가는 넷(히어로 · 기기
+       카드 · 안내 배너 · 소식)은 **아무도 안 보고 있었습니다.**
+       photoBox 를 부르는 자리를 세어 찾았습니다 (js=0 vs css=22).
+       ⚠️ 옛 열하나는 git show d1810ed:check.js 에 있습니다.
+
+       ⚠️⚠️ **cover 만 보지 마세요.** 기기 사진 넉 장이 **배경이
+       투명한 PNG** 라 contain 이 맞습니다 — cover 로 두면 제품이
+       액자 밖으로 잘립니다. 자리마다 어느 쪽인지 적습니다.
+       ⚠️ 사진 자리를 새로 만들면 **여기 넣으세요** — 안 넣으면
+       object-fit 이 빠져도 조용히 통과하고 사진이 늘어납니다
+       (img 의 기본값이 fill 입니다 — 액자에 맞춰 늘어납니다).
+       ⚠️⚠️ **묶음 선택자를 알아봅니다** (쉼표로 나눠 봅니다). 전에는
+       selectorText 를 **글자까지 그대로** 견주어서, CSS 쪽에
+       ".dvc-ph .ph, .dvc-im" 처럼 한 선택자가 더 붙자 멀쩡한 규칙을
+       "object-fit 이 없습니다" 로 잡았습니다 (2026-10-31).
+       ⚠️ 그래도 **앞에 다른 클래스를 붙이면 못 찾습니다**
+       (".pwd-g .dvc-ph .ph" 는 다른 규칙입니다) — 그건 일부러입니다.
+       ⚠️⚠️ 주석에 백틱을 쓰지 마세요 — 이 본문이 템플릿 문자열이라
+       거기서 끊깁니다 (방금 또 그랬습니다 · 서른세 번째). */
+    const want = [[".pwh-art .ph",   "contain"],   /* 메인 히어로 (투명 PNG) */
+                  [".dvc-ph .ph",    "contain"],   /* 기기 카드 (투명 PNG) */
+                  [".pwbz-im",       "contain"],   /* 안내 배너 */
+                  [".pwnw-ph .ph",   "cover"],     /* 소식 (지금 0건) */
+                  [".pgh-im .ph",    "cover"]];    /* PgHero (지금 부르는 데 없음) */
     const bad = [];
-    for(const q of want){
+    for(const pair of want){
+      const q = pair[0], fitWant = pair[1];
       let ok = false;
       for(const sh of document.styleSheets){
         let rules; try { rules = sh.cssRules; } catch(e){ continue; }
         if(!rules) continue;
         for(const r of rules){
-          if(r.selectorText === q && /cover/.test(r.style.objectFit || "")) ok = true;
+          var parts = (r.selectorText || "").split(",").map(function(s){
+            return s.trim(); });
+          if(parts.indexOf(q) >= 0 &&
+             (r.style.objectFit || "").indexOf(fitWant) >= 0) ok = true;
         }
       }
-      if(!ok) bad.push(q);
+      if(!ok) bad.push(q + " (" + fitWant + ")");
     }
-    return bad.length ? bad.join(" · ") + " 에 object-fit:cover 가 없습니다" : true;`);
+    return bad.length ? bad.join(" · ") + " 에 object-fit 이 없습니다" : true;`);
   await f("핵심 서비스 카드 여섯의 크기가 같다", "/", `
     /* ⚠️⚠️ **재는 자리가 다섯 번 옮겨 왔습니다** — 히어로 선택 카드
        둘(2026-10-08) → 전문관 카드 넷(10-11) → 진입 카드 셋(10-16) →

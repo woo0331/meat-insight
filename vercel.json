@@ -8,182 +8,145 @@
       "permanent": true
     },
     {
-      "source": "/closing",
-      "destination": "/closure",
-      "permanent": true
-    },
-    {
-      "source": "/acquisition",
-      "destination": "/transfer",
-      "permanent": true
-    },
-    {
-      "source": "/companies",
-      "destination": "/providers",
-      "permanent": true
-    },
-    {
-      "source": "/companies/sample-interior",
-      "destination": "/sample",
-      "permanent": true
-    },
-    {
-      "source": "/companies/:cat",
-      "destination": "/providers/:cat",
-      "permanent": true
-    },
-    {
-      "source": "/guides",
-      "destination": "/content",
-      "permanent": true
-    },
-    {
-      "source": "/guides/:slug",
-      "destination": "/content",
-      "permanent": true
-    },
-    {
       "source": "/partners",
       "destination": "/join",
       "permanent": true
-    },
+    }
+  ],
+  "rewrites": [
     {
       "source": "/startup",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
     },
     {
       "source": "/closure",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
     },
     {
       "source": "/operation",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
     },
     {
       "source": "/transfer",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
     },
     {
       "source": "/providers",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
     },
     {
       "source": "/franchise",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
     },
     {
       "source": "/stores",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
     },
     {
       "source": "/assets",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
     },
     {
       "source": "/support",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
     },
     {
       "source": "/content",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
     },
     {
       "source": "/sell-biz",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
     },
     {
       "source": "/tools",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/startup/:p*",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/closure/:p*",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/providers/:p*",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/franchise/:p*",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/content/:p*",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/tools/:p*",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/g/:p*",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/c/:p*",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/p/:p*",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/f/:p*",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/s/:p*",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/a/:p*",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
     },
     {
       "source": "/about",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
     },
     {
       "source": "/compare",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
     },
     {
       "source": "/sample",
-      "destination": "/",
-      "permanent": true
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/closing",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/acquisition",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/companies",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/guides",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/startup/:p*",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/closure/:p*",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/providers/:p*",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/franchise/:p*",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/content/:p*",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/tools/:p*",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/companies/:p*",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/guides/:p*",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/g/:p*",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/c/:p*",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/p/:p*",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/f/:p*",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/s/:p*",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/a/:p*",
+      "destination": "/api/gone"
     }
   ],
-  "rewrites": [],
   "headers": [
     {
       "source": "/(.*)\\.(css|js)",

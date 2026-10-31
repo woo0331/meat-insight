@@ -18,8 +18,9 @@
      id:"", name:"", logo:"", cover:"",
      regions:["gyeonggi"],          지역 key (regions.js)
      gu:["안양시","군포시"],          서비스 가능 시/군/구
-     industries:["cafe"],           전문 업종 key (industries.js)
-     subs:["interior","design"],    전문 서비스 = 하위 분류 key (catalog.js)
+     industries:["phone","tablet"], ⚠️ **취급 기기** key (devices.js 의
+                                    AM_DEVICE_KINDS) — 칸 이름만 옛것입니다
+     subs:["ph-buy","lcd"],         전문 서비스 = 하위 분류 key (catalog.js)
      intro:"", since:2015, staff:0,
      price:[ {name:"카페 인테리어", from:0, unit:"평당", note:""} ],
      portfolio:[ {title:"", industry:"", region:"", year:2026,
@@ -88,9 +89,9 @@ window.amProviderStats = function(p){
    `subs` 에 적는 것은 **하위 분류**(`catalog.js` 의 `items[].key`)이지
    분류 key 가 아닙니다.
 
-   ⚠️ 비어 있으면 **아무 분류에도 안 걸립니다.** 지역 · 업종은 안 적으면
-   "전국 · 전업종" 으로 읽는 게 말이 되지만, 하시는 일을 안 적은 것을
-   "전부 다 합니다" 로 읽으면 인테리어 업체가 세무 화면에 앉습니다.
+   ⚠️ 비어 있으면 **아무 분류에도 안 걸립니다.** 지역 · 취급 기기는 안
+   적으면 "전국 · 전기기" 로 읽는 게 말이 되지만, 하시는 일을 안 적은
+   것을 "전부 다 합니다" 로 읽으면 수리 업체가 수출 화면에 앉습니다.
    비어 있는 채로 등록되는 것은 `build-pages.js` 가 막습니다.
 
    ⚠️ 이 규칙은 **여기 한 곳**입니다. `join.js` 의 `amProvidersInCat()`
@@ -122,7 +123,7 @@ window.AM_VERIFY = [
   { key:"owner",     name:"대표자 확인",  what:"대표자 신원" },
   { key:"phone",     name:"전화 확인",    what:"연락 가능한 번호" },
   { key:"addr",      name:"주소 확인",    what:"사업장 소재지" },
-  { key:"license",   name:"면허 확인",    what:"업종에 필요한 면허 · 자격" },
+  { key:"license",   name:"면허 확인",    what:"사업에 필요한 면허 · 자격" },
   { key:"insurance", name:"보험 가입",    what:"영업배상책임보험 등" }
 ];
 

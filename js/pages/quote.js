@@ -20,7 +20,7 @@
 var QKEY = "am.quotes.v1";
 
 /* ── 서비스별 질문 (§6 · 2026-10-17 §5-3) ───────────────────────
-   ⚠️⚠️ **같은 것을 두 번 묻지 않습니다.** 면적 · 업종 · 지역 · 예산은
+   ⚠️⚠️ **같은 것을 두 번 묻지 않습니다.** 성함 · 연락처 · 지역 · 희망 금액은
    공통 칸이고, 여기는 그 서비스에서만 쓰는 것입니다 (`reqforms.js`).
    ⚠️ 칸이 없는 서비스면 **그 묶음째 빠집니다** — 빈 머리말을 찍지
    않습니다 (절대 규칙 2).
@@ -128,49 +128,6 @@ function quoteItems(list){
 }
 
 /* ═════════════════════════════════════════════════════════════════
-   복수 상품 신청 (2026-10-09 최종 통합 지시서 §4-4)
-   ═════════════════════════════════════════════════════════════════
-   ⚠️ 주소의 `?o=` 가 상품 id 목록입니다. **없는 id 는 조용히
-   빠집니다** — 밖으로 나간 링크가 옛 id 를 들고 있을 수 있어서,
-   거기서 에러를 내면 손님은 아무 잘못도 안 하시고 깨진 화면을 봅니다.
-   ⚠️ `/closure` · `/transfer` 의 패키지가 아직 이 길로 옵니다 —
-   창업 쪽은 2026-10-17 로 `?sv=`(서비스 고르개)가 받습니다. */
-function quoteOffers(){
-  var raw = nowQS("o");
-  if(!raw) return [];
-  return raw.split(",").map(function(id){
-    return (typeof amOffer === "function") ? amOffer(id.trim()) : null;
-  }).filter(Boolean);
-}
-
-/* 접수에 실을 한 줄 — ⚠️ 이름은 `offers.js` 에서 옵니다 */
-function quoteOfferNames(){
-  return quoteOffers().map(function(o){ return o.name; }).join(" · ");
-}
-
-/* 화면 맨 위에 고르신 것을 되읽어 드립니다.
-   ⚠️⚠️ **패키지 하나가 계약 하나가 아닙니다** (§4-4) — 그 줄을
-   지우지 마세요. 지금은 제휴사가 0곳이라 상품별로 **찾아서 연결**해
-   드리는 단계까지입니다. */
-function QuoteOfferBand(){
-  var L = quoteOffers();
-  if(!L.length) return "";
-  var pk = (typeof amPackage === "function") ? amPackage(nowQS("pk")) : null;
-  return '<div class="qof">'+
-    '<p class="qof-k">'+icon("listck",15)+
-      (pk ? esc(pk.name)+" — " : "")+'고르신 상품 '+L.length+'개</p>'+
-    '<ul class="qof-l">'+L.map(function(o){
-      return '<li>'+icon(o.icon || "check", 15)+esc(o.name)+'</li>'; }).join("")+'</ul>'+
-    /* ⚠️ 바깥 칸이 `display:flex` · `gap` 이라 **맨글과 `<b>` 가 제각각
-       flex 칸**이 됩니다 — "따로 입니다" 처럼 벌어졌습니다 (찍어 보고
-       알았습니다). 문장을 한 칸에 둡니다. */
-    '<p class="qof-n">'+icon("info",14)+
-      '<span>한 번만 적으시면 저희가 나눠서 연결해 드립니다 — '+
-      '<b>상품마다 업체와 계약은 따로</b>입니다.</span></p>'+
-  '</div>';
-}
-
-/* ═════════════════════════════════════════════════════════════════
    고르신 서비스 (2026-10-17 창업 준비 전문관 §5-4)
    ═════════════════════════════════════════════════════════════════
    ⚠️⚠️ **읽는 자리가 셋입니다** — ① 주소의 `?sv=` ② 이 브라우저에
@@ -199,67 +156,104 @@ function quoteServices(){
   return out;
 }
 
-/* STEP 01 — 고르신 서비스 (§5-1 1단계 · §9-4 "항상 확인 가능")
+/* ═════════════════════════════════════════════════════════════════
+   STEP 01 — 고르는 자리 **그 자체**입니다 (2026-10-31)
+   ═════════════════════════════════════════════════════════════════
+   ⚠️⚠️ **전에는 다른 화면으로 보냈습니다.** "서비스 고르러 가기" 가
+   전문관(`/startup#pick` · `/operation#pick` …)으로 갔는데, 그 157개는
+   2026-10-31 로 **410(끝난 서비스)** 입니다 — 누르면 "찾으시던 서비스는
+   끝났습니다" 가 떴습니다 (눌러 보고 알았습니다). 고르는 카드를 이
+   화면에 들여오면 그 길이 **아예 필요 없습니다.**
+
    ⚠️⚠️ 하나도 안 고르셔도 **막지 않습니다.** 무엇이 필요한지 모르셔서
    오신 분이 있고, 그분께 "먼저 고르고 오세요" 라고 하면 거기서
-   닫습니다 — 상황만 적으시면 저희가 찾아 드립니다. */
-/* ⚠⚠ **돌아가는 길이 `/startup` 으로 박혀 있었습니다.** 2026-10-18
-   로 운영 쪽(`side=ops`)도 같은 고르개를 쓰게 되면서, 운영 중인
-   사장님이 "서비스 더 고르기" 를 누르면 **창업 준비 화면**으로
-   갔습니다 — 고르던 자리를 잃습니다. 쪽을 보고 보냅니다. */
-/* ⚠️⚠️ **네 쪽의 이름과 돌아갈 자리는 `js/data/deal.js` 한 곳입니다**
-   (`AM_SIDES`). 전에 여기서 손으로 적고 있었고 `transfer` 가
-   빠져 있어서, 양도양수에서 고르고 오신 분이 "서비스 더 고르기" 를
-   누르면 **창업 고르개**로 갔습니다 — 고르신 것은 그대로 있는데
-   화면이 다른 전문관이라 자기가 어디 있는지를 잃습니다. */
-function quotePickBack(side){
-  var s = (typeof amSide === "function") ? amSide(side) : null;
-  /* ⚠️⚠️ **기본값을 `/sell` 로 바꿨습니다** (2026-10-31). 전에는 쪽을
-     못 찾으면 `/startup` 이었고, `/quote` 의 고르개 기본값도 `"start"`
-     라 **그냥 `/quote` 를 열기만 해도** 그 길로 갔습니다 (재서
-     알았습니다) — 그 157개는 지금 **308 로 `/` 에** 갑니다.
-
-     ⚠️⚠️ **쪽을 찾았으면 그 쪽의 `pick` 을 그대로 씁니다** — 중고폰
-     쪽만 보내게 걸러 봤다가 물렀습니다. `side=ops` 로 오신 분을
-     `/sell`(내 폰 팔기)로 보내는 것은 **다른 서비스로 보내는 것**이고,
-     308 로 메인에 가는 것보다 나쁩니다 (고르신 것은 그대로인데 화면이
-     남의 서비스입니다). `AM_SIDES` 의 `pick` 은 그 전문관의 **제
-     주소**이고, 되살리시는 날 그대로 맞아야 합니다. */
-  return (s && s.pick) ? s.pick : "/sell";
-}
-
-function QuoteSvcStep(list, side){
+   닫습니다 — 상황만 적으시면 저희가 찾아 드립니다.
+   ⚠️ 목록은 `js/data/catalog.js` **한 곳**입니다 (분류 열). 여기 적지
+   마세요 — 두 곳에 적으면 분류를 늘릴 때 한쪽만 바뀝니다.
+   ⚠️ 생김새는 `css/pages.css` 의 `.pk-g` · `.pk-c` 를 **그대로** 씁니다
+   (전문관 고르개가 쓰던 것). 색만으로 표시하지 않습니다 — 체크 표시 ·
+   테두리 두 겹 · 짙은 바탕 셋이 같이 바뀝니다. */
+function QuoteSvcStep(list){
+  var cats = (window.AM_CATS || []);
+  var n = list.length;
   return '<div class="qs" id="qs-svc">'+
     QStepHd("01", "어떤 서비스가 필요하신가요?",
-      list.length ? "고르신 서비스입니다. 빼실 수 있고, 더 고르실 수도 있습니다."
-                  : "아직 안 고르셨어도 됩니다. 아래에 상황만 적어 주시면 저희가 찾아 드립니다.")+
-    (list.length
-      ? '<ul class="qs-l" id="q-svl">'+list.map(function(sv){
-          return '<li><span class="qs-n">'+esc(amPickLabel(sv))+'</span>'+
-            '<button class="qs-x" type="button" onclick="quoteSvcDel(\''+esc(sv.id)+'\')" '+
-              'aria-label="'+esc(amPickLabel(sv))+' 빼기">'+icon("x",15)+'</button></li>';
-        }).join("")+'</ul>'
-      : '<p class="qs-zero">'+icon("info",16)+
-        ' 고르신 서비스가 없습니다. 그대로 보내셔도 됩니다.</p>')+
-    '<p class="qs-go"><a class="btn btn-o" href="'+esc(quotePickBack(side))+'">'+
-      (list.length ? "서비스 더 고르기" : "서비스 고르러 가기")+icon("arrow",16)+'</a></p>'+
+      "여러 개 고르실 수 있습니다. 하나도 안 고르셔도 보내실 수 있습니다.")+
+    '<ul class="pk-g">'+cats.map(function(c){
+      var on = (typeof amPickHas === "function") && amPickHas(c.key);
+      var id = "q-pk-" + c.key;
+      return '<li><label class="pk-c'+(on ? " is-on" : "")+'" for="'+id+'">'+
+        /* ⚠️⚠️ **열 칸이 전부 선 아이콘입니다.** `iconArt()` 가 있는
+           것만 컬러로 내면 한 줄에 아이콘 체계가 둘이 되고 크기가
+           1.6배 달라집니다 — 이 저장소가 메인 추천 줄에서 재서 겪은
+           자리입니다 (지금 열 중 셋만 컬러가 있습니다). 컬러로 가시려면
+           **열 장을 다 그린 뒤에** 한꺼번에 바꾸세요. */
+        '<span class="pk-i">'+icon(c.icon || "check", 34)+'</span>'+
+        '<span class="pk-t"><b>'+esc(c.name)+'</b>'+
+          (c.lead ? '<i>'+esc(c.lead)+'</i>' : "")+'</span>'+
+        '<input class="pk-ck" type="checkbox" id="'+id+'" data-pick="'+esc(c.key)+'"'+
+          (on ? " checked" : "")+
+          ' onchange="quoteSvcPick(\''+esc(c.key)+'\',this)">'+
+      '</label></li>';
+    }).join("")+'</ul>'+
+    /* ⚠️⚠️ 0개면 **줄째 가립니다** — 개수만 0 으로 고치면 "0개
+       고르셨습니다" 와 죽은 해제 단추가 그대로 섭니다 (절대 규칙 2).
+       가리는 것은 `pickPaint()` 가 `[data-pick-row]` 로 합니다. */
+    '<p class="qs-sum" data-pick-row'+(n ? "" : " hidden")+'>'+icon("listck",16)+
+      '<span><b data-pick-n>'+n+'</b>개 고르셨습니다. 아래에 그 서비스에서만 '+
+      '쓰는 것을 더 묻습니다.</span>'+
+      '<button class="qs-clr" type="button" onclick="pickClear()">전부 해제</button></p>'+
   '</div>';
 }
 
-/* ⚠️ 빼면 **주소도 같이 고칩니다** — 안 그러면 새로고침했을 때
-   주소에 남은 옛 목록이 되살아납니다 (고친 것과 보이는 것이 달라지는
-   자리입니다). */
-window.quoteSvcDel = function(id){
-  /* ⚠️⚠️ **`amPickDel` 이라는 함수는 없습니다.** 처음에 그 이름으로
-     막아 두었다가 조건이 **영영 false** 라 빼기가 아무 일도 안
-     했습니다 — 주소만 다시 만들어서 지운 것이 **되살아났습니다.**
-     에러도 안 나고 화면도 멀쩡했습니다 (검사가 3 → 3 으로 잡았습니다). */
-  if(typeof pickDel === "function") pickDel(id);
-  var left = (typeof amPickGet === "function") ? amPickGet() : [];
-  var q = ["side=" + encodeURIComponent($("q-side") ? $("q-side").value : "start")];
-  if(left.length) q.push("sv=" + encodeURIComponent(left.join(",")));
-  go("/quote?" + q.join("&"));
+/* 체크칸을 누르면 — ⚠️⚠️ **화면을 다시 그리지 않습니다.** 다시 그리면
+   적으시던 성함 · 연락처 · 자세한 내용이 통째로 날아갑니다. 바뀌는
+   자리만 제자리에서 고칩니다 (`pickPaint()` + 아래 둘). */
+window.quoteSvcPick = function(id, el){
+  if(typeof pickToggle === "function") pickToggle(id, el);
+  quoteSvcSync();
 };
+
+/* ⚠️⚠️ **서비스별 질문 묶음을 다시 그립니다.** 안 그리면 방금 고르신
+   서비스의 추가 질문이 **영영 안 나옵니다** — 고르개는 바뀌는데 아래가
+   그대로라, 손님은 고른 것이 안 넘어갔다고 읽습니다.
+   ⚠️⚠️ **적으신 답을 먼저 떠 둡니다.** 그냥 다시 그리면 그대로 두신
+   서비스의 답까지 같이 비워집니다 (고친 것과 보이는 것이 달라지는
+   자리입니다). 열쇠는 `data-rq` 이고 다시 그린 뒤 같은 열쇠에 돌려
+   놓습니다. */
+function quoteSvcSync(){
+  var box = document.getElementById("q-ask");
+  if(box){
+    var keep = {};
+    [].slice.call(box.querySelectorAll("[data-rq]")).forEach(function(el){
+      var k = el.getAttribute("data-rq");
+      if(el.type === "checkbox"){
+        if(!keep[k]) keep[k] = {};
+        keep[k][el.value] = el.checked;
+      }else keep[k] = el.value;
+    });
+    box.innerHTML = SvcAskBand(quoteServices());
+    [].slice.call(box.querySelectorAll("[data-rq]")).forEach(function(el){
+      var k = el.getAttribute("data-rq"), v = keep[k];
+      if(v == null) return;
+      if(el.type === "checkbox"){ if(v && v[el.value]) el.checked = true; }
+      else el.value = v;
+    });
+  }
+  /* 보내기 단추의 글 — ⚠️ 개수가 늘었는데 단추가 그대로면 "고른 것과
+     넘어가는 것이 다릅니다" 로 읽힙니다. */
+  var n = (typeof amPickCount === "function") ? amPickCount() : 0;
+  var t = document.getElementById("q-go-t");
+  if(t) t.textContent = n ? ("선택한 " + n + "개 서비스 견적 신청하기")
+                          : "견적 신청하기";
+  /* 필요한 일 칸 — ⚠️⚠️ **비어 있을 때만** 채웁니다. 적으신 글을
+     덮어쓰면 그게 제일 나쁩니다. */
+  var w = document.getElementById("q-what");
+  if(w && !String(w.value || "").trim()){
+    var L = (typeof amPickList === "function") ? amPickList() : [];
+    w.value = L.map(amPickLabel).join(" · ");
+  }
+}
 
 function QStepHd(no, t, lead){
   return '<div class="qs-h"><span class="qs-no">'+esc(no)+'</span>'+
@@ -272,8 +266,8 @@ function QStepHd(no, t, lead){
    > §4 — "임시저장과 실제 견적 신청은 반드시 구분한다. 저장만 했는데
    >  실제 신청이 접수된 것처럼 표시하면 안 된다."
 
-   ⚠️⚠️ **담는 것은 조건 칸 여덟뿐입니다** — 상황 · 필요한 일 · 업종 ·
-   지역 · 시군구 · 평수 · 예산 · 일정. **성함 · 연락처 · 자세한 내용 ·
+   ⚠️⚠️ **담는 것은 조건 칸 여섯뿐입니다** — 상황 · 필요한 일 · 지역 ·
+   시군구 · 희망 금액 · 희망 일정. **성함 · 연락처 · 자세한 내용 ·
    사진 주소는 담지 않습니다.** §4-1 이 "개인정보와 민감한 신청 정보는
    보안 위험을 고려하여 브라우저에 무분별하게 저장하지 않는다" 고
    적었고, 이 저장소도 "가게 컴퓨터는 여러 사람이 씁니다" 로 같은
@@ -285,9 +279,15 @@ function QStepHd(no, t, lead){
    이 `auth:false` 인 지금은 그 길이 없고, 있는 척하지 않습니다
    (절대 규칙 5). */
 var DKEY = "am.draft.v1";
-var DRAFT_FIELDS = [["q-side","상황"],["q-what","필요한 일"],["q-ind","업종"],
-  ["q-reg","지역"],["q-gu","시 · 군 · 구"],["q-py","평수"],
-  ["q-bud","예산"],["q-when","희망 일정"]];
+/* ⚠️⚠️ **2026-10-31 로 여섯이 됐습니다.** 업종(`q-ind`)과 평수
+   (`q-py`)를 뺐습니다 — 둘 다 창업 · 폐업 쪽 칸이고 중고폰 신청에는
+   그 칸 자체가 없습니다.
+   ⚠️⚠️ **0010 의 트리거가 담을 수 있는 칸을 정합니다.** 여기 늘리기만
+   하면 계정 저장이 **거절당합니다** (화면은 멀쩡하고 서버만 거절합니다)
+   — `db/migrations/0010_user_state.sql` 의 허용 목록을 같이 보세요. */
+var DRAFT_FIELDS = [["q-side","상황"],["q-what","필요한 일"],
+  ["q-reg","지역"],["q-gu","시 · 군 · 구"],
+  ["q-bud","희망 금액"],["q-when","희망 일정"]];
 
 window.quoteDraftSave = function(){
   var d = {};
@@ -297,7 +297,7 @@ window.quoteDraftSave = function(){
   amSet(DKEY, { f:d, at:Date.now() });
   /* §6-2 — 로그인하고 들어와 계시면 **계정에도** 남깁니다. 꺼져 있으면
      `amStateTouch()` 가 아무 일도 안 합니다 (js/state.js 머리말).
-     ⚠️⚠️ 올라가는 것은 **이 여덟 칸까지**이고 0010 의 트리거가 그 밖의
+     ⚠️⚠️ 올라가는 것은 **이 여섯 칸까지**이고 0010 의 트리거가 그 밖의
      칸을 거절합니다 — 성함 · 연락처는 화면 버그로도 안 올라갑니다. */
   if(typeof amStateTouch === "function") amStateTouch("draft");
   quoteDraftPaint();
@@ -369,10 +369,20 @@ function QuoteDraftBox(){
     '</div>'+
     '<p class="q-draft-w" id="q-draft-when"></p>'+
     /* §4-1 — 유지 범위와 삭제 조건을 그대로 적습니다 */
-    '<p class="note">저장되는 것은 <b>상황 · 필요한 일 · 업종 · 지역 · '+
-      '시군구 · 평수 · 예산 · 일정</b>까지입니다. '+
+    /* ⚠️⚠️ **2026-10-31 까지 거짓이었습니다.** 같은 날 `DRAFT_FIELDS`
+       에서 업종(`q-ind`)과 평수(`q-py`)를 뺐는데(둘 다 창업 · 폐업 쪽
+       칸입니다) **이 안내만 여덟 칸이라고 적고 있었습니다** — 저장하지
+       않는 것을 저장한다고 말한 것이고, §4-1 이 요구한 "유지 범위와
+       삭제 조건을 안내한다" 가 거기서 깨집니다.
+       ⚠️⚠️ **`DRAFT_FIELDS` 를 고치면 이 글도 같이 고치세요** — 칸 수와
+       이름을 손으로 적는 자리입니다 (화면이 세는 값이 아닙니다). */
+    /* ⚠️ 가운뎃점으로 가르는 줄이라 **"시군구" 로 붙여 적습니다** —
+       `DRAFT_FIELDS` 의 딱지("시 · 군 · 구")를 그대로 쓰면 여섯 칸이
+       여덟으로 읽힙니다 (세는 값이 아니라 사람이 읽는 줄입니다). */
+    '<p class="note">저장되는 것은 <b>상황 · 필요한 일 · 지역 · '+
+      '시군구 · 희망 금액 · 희망 일정</b>까지입니다. '+
       '<b>성함 · 연락처 · 자세한 내용 · 사진 주소는 저장하지 않습니다.</b> '+
-      '이 브라우저에 남고, <b>로그인하신 경우에만</b> 같은 여덟 칸이 '+
+      '이 브라우저에 남고, <b>로그인하신 경우에만</b> 같은 여섯 칸이 '+
       '계정에도 올라가 다른 기기에서 이어집니다. 위 단추로 지우시거나 '+
       '브라우저 기록을 지우시면 함께 사라집니다.</p>'+
   '</div>';
@@ -388,7 +398,7 @@ function QuoteStage(){
   var n = (window.AM_PROVIDERS || []).length;
   if(n > 0)
     return '<p class="note-box qt-stage">지금 제휴업체 <b>'+n+'곳</b>이 '+
-      '등록되어 있습니다. 적어 주신 분야 · 지역 · 업종에 맞는 곳을 찾아 '+
+      '등록되어 있습니다. 적어 주신 분야 · 지역에 맞는 곳을 찾아 '+
       '연결해 드립니다 — 어느 업체인지는 정해진 뒤에 알려 드리고, '+
       '그때 연락처 전달 동의를 다시 받습니다.</p>';
   return '<p class="note-box qt-stage"><b>지금 등록된 제휴업체는 없습니다.</b> '+
@@ -401,21 +411,21 @@ function QuoteStage(){
 function PageQuote(){
   var list = quoteServices();
   var cat  = nowQS("c"), sub = nowQS("s");
-  var ind  = nowQS("i"), reg = nowQS("r");
+  var reg  = nowQS("r");
   /* ⚠️⚠️ **기본값이 2026-10-31 로 `shop` 이 됐습니다.** 전에는 `start`
      (창업)라, 중고폰 구매하기로 들어오신 분의 문의가 **"창업" 건으로**
      저장됐습니다 (위 고르개 ⚠️ 와 같은 자리). */
   var side = nowQS("side") || "shop";
-  /* ⚠️ 창업 진단(PART 4)에서 고르신 예산 · 일정입니다. 자유 입력 칸이라
-     **고치실 수 있게** 미리 적어만 둡니다 — 못 고치게 잠그면 "3천 ~
-     5천만원" 밖의 사정을 적을 자리가 없어집니다. */
+  /* ⚠️ 앞 화면에서 적어 두신 희망 금액 · 시점입니다. 자유 입력 칸이라
+     **고치실 수 있게** 미리 적어만 둡니다 — 잠그면 그 범위 밖의 사정을
+     적을 자리가 없어집니다. */
   var bud  = nowQS("bud"), when = nowQS("when");
-  /* ⚠️ 메인 §2-03 에서 고르신 매장 규모 — 숫자만 받습니다 */
-  var py   = (nowQS("py") || "").replace(/[^0-9]/g, "").slice(0, 5);
   var c    = cat ? amCat(cat) : null;
   var subName = "";
   if(c){
-    var hit = amCatItems(c, ind).filter(function(x){ return x.key === sub; })[0];
+    /* ⚠️ `amCatItems()` 는 2026-10-31 로 **인자가 하나**입니다 (전엔
+       업종까지 둘). 하위는 분류가 직접 들고 있습니다. */
+    var hit = amCatItems(c).filter(function(x){ return x.key === sub; })[0];
     subName = hit ? hit.name : "";
   }
   var ready = !!(window.WOW_BIZ && WOW_BIZ.sosReady);
@@ -423,14 +433,20 @@ function PageQuote(){
      빈 칸이 뜨면 손님은 골라 놓은 것이 안 넘어왔다고 읽고 거기서
      닫습니다 — 이 저장소가 "업체 상세의 견적 단추가 조건을 안
      넘기더라" 로 겪은 자리입니다. */
-  var offNames = (typeof quoteOfferNames === "function") ? quoteOfferNames() : "";
   var svNames  = list.map(amPickLabel).join(" · ");
-  var what = subName || svNames || (c ? c.name : "") || offNames;
+  var what = subName || svNames || (c ? c.name : "");
 
   return PgHero({
     kicker:"견적 요청",
     h1raw:"한 번만 적으시면<br class=\"br-m\"> 여러 곳에서 답이 옵니다.",
-    lead:"고르신 서비스마다 업체를 찾아 연결해 드립니다. 같은 내용을 업체마다 다시 적지 않으셔도 됩니다. 무료입니다.",
+    /* ⚠️⚠️ **"무료" 를 적지 마세요** (PHONEWAY 지시서 §5 — "최고가
+       보장" · "당일 정산" 과 같이 금지). 2026-10-31 까지 이 줄이
+       "무료입니다" 로 나가고 있었습니다 — 메인(`/`)의 고지 구간이
+       "이 화면에 무료를 적지 마세요" 라고 적어 두고 정작 신청 화면이
+       그러고 있었습니다. **받는 비용이 없다는 것**과 "무료 서비스" 는
+       다른 말이고 앞엣것만 사실입니다 (영업 초대 글을 2026-10-29 에
+       같은 까닭으로 고친 그 자리). */
+    lead:"고르신 서비스마다 업체를 찾아 연결해 드립니다. 같은 내용을 업체마다 다시 적지 않으셔도 됩니다. 신청하고 견적을 받는 데 드는 비용은 없습니다.",
     tight:true
   })+
   '<section class="sec sec-white"><div class="w form-wrap">'+
@@ -463,10 +479,9 @@ function PageQuote(){
           '<a class="btn btn-o" href="/sell">내 폰 팔기</a>'+
           '<a class="btn btn-o" href="/guide">이용 안내</a>'+
         '</div></div>')+
-    QuoteOfferBand()+
 
     '<form id="q-f" onsubmit="return quoteSend(event)">'+
-      QuoteSvcStep(list, side)+
+      QuoteSvcStep(list)+
 
       /* ── STEP 02 지역 (§5-1 2단계) ───────────────────────────── */
       '<div class="qs">'+
@@ -478,9 +493,7 @@ function PageQuote(){
           '<div class="f-r"><label for="q-gu">시 · 군 · 구</label>'+
             '<input id="q-gu" autocomplete="address-level2" placeholder="예: 안양시"></div>'+
         '</div>'+
-        '<div class="f-2">'+
-          '<div class="f-r"><label for="q-ind">업종</label>'+IndustrySelect("q-ind", ind)+'</div>'+
-          '<div class="f-r"><label for="q-side">무엇 때문에 <b>*</b></label>'+
+        '<div class="f-r"><label for="q-side">무엇 때문에 <b>*</b></label>'+
             '<select class="sel" id="q-side">'+
               /* ⚠⚠ **운영이 없었습니다.** DB 는 처음부터 `ops` 를
                  받는데(0001 — start | ops | transfer | close) 화면에
@@ -513,7 +526,6 @@ function PageQuote(){
                   '>'+esc(s.say)+'</option>';
               }).join("")+
             '</select></div>'+
-        '</div>'+
       '</div>'+
 
       /* ── STEP 03 연락처와 필요한 정보 (§5-1 3단계 · §5-2) ─────── */
@@ -532,31 +544,37 @@ function PageQuote(){
 
         '<div class="f-r"><label for="q-what">필요한 일 <b>*</b></label>'+
           '<input id="q-what" required value="'+esc(what)+'" '+
-            'placeholder="예: 카페 인테리어 / 주방 철거 / POS 설치"></div>'+
+            'placeholder="예: 아이폰 14 매입 / 액정 교체 / 업무용 50대 정리"></div>'+
 
         '<div class="f-2">'+
-          '<div class="f-r"><label for="q-py">평수</label>'+
-            '<input id="q-py" inputmode="numeric" value="'+esc(py||"")+'" '+
-              'placeholder="예: 30"></div>'+
-          '<div class="f-r"><label for="q-bud">예산</label>'+
+          /* ⚠️⚠️ **금액을 저희가 적지 않습니다.** 사장님이 바라시는 값을
+             받는 칸이고, 저희가 재 본 값이 아닙니다 — 매입 기준가가
+             0건인 동안 여기에 숫자를 미리 채우면 그게 지어낸 값입니다
+             (절대 규칙 1). */
+          '<div class="f-r"><label for="q-bud">희망 금액</label>'+
             '<input id="q-bud" value="'+esc(bud||"")+'" '+
-              'placeholder="예: 5,000만원 / 아직 모름"></div>'+
+              'placeholder="예: 50만원 / 아직 모름"></div>'+
+          '<div class="f-r"><label for="q-when">희망 시점</label>'+
+            '<input id="q-when" value="'+esc(when||"")+'" '+
+              'placeholder="예: 이번 주 안 / 이번 달 안"></div>'+
         '</div>'+
-        '<div class="f-r"><label for="q-when">희망 일정</label>'+
-          '<input id="q-when" value="'+esc(when||"")+'" '+
-            'placeholder="예: 2027년 2월 오픈 / 이번 달 안"></div>'+
 
         '<div class="f-r"><label for="q-q">자세한 내용 <b>*</b></label>'+
           '<textarea id="q-q" rows="6" required '+
-            'placeholder="지금 상황과 필요한 것을 그대로 적어 주세요. 양식이 없어도 됩니다."></textarea></div>'+
+            'placeholder="기종 · 용량 · 상태(액정 · 배터리 · 침수) · 구성품을 아시는 만큼만 적어 주세요. 양식이 없어도 됩니다."></textarea></div>'+
         /* ⚠️ 파일을 받아 둘 곳이 없어서 **주소로 받습니다.** 첨부 칸을
            만들어 놓고 버리는 것보다 낫습니다. */
-        '<div class="f-r"><label for="q-img">사진 · 도면 주소</label>'+
-          '<input id="q-img" placeholder="공유 링크가 있으면 붙여 주세요 (선택)"></div>'+
+        '<div class="f-r"><label for="q-img">사진 주소</label>'+
+          '<input id="q-img" placeholder="기기 사진 링크가 있으면 붙여 주세요 (선택)"></div>'+
 
         /* §5-3 — 고르신 서비스마다 그 서비스에서만 쓰는 것을 묻습니다.
            ⚠️ 칸이 없는 서비스면 그 묶음째 빠집니다 (절대 규칙 2). */
-        SvcAskBand(list)+
+        /* ⚠️⚠️ **감싸개에 id 가 있어야 합니다.** STEP 01 에서 체크를
+           누르면 `quoteSvcSync()` 가 **이 칸만** 다시 그립니다 — 화면을
+           통째로 다시 그리면 적으시던 성함 · 연락처 · 자세한 내용이
+           날아갑니다. id 를 지우면 방금 고르신 서비스의 추가 질문이
+           **영영 안 나옵니다** (에러도 안 나고 접수는 성공합니다). */
+        '<div id="q-ask">'+SvcAskBand(list)+'</div>'+
 
         QuoteDraftBox()+
       '</div>'+
@@ -564,8 +582,8 @@ function PageQuote(){
       /* ── STEP 04 확인하고 보내기 (§5-1 4단계) ─────────────────── */
       '<div class="qs">'+
         QStepHd("04", "확인하고 보내기", "")+
-        AgreeBox("q-ag","성함 · 연락처 · 업종 · 지역 · 평수 · 예산 · 일정 · 적어 주신 내용",
-                 "견적 요청 접수와 상담 안내","접수일로부터 1년")+
+        AgreeBox("q-ag","성함 · 연락처 · 지역 · 희망 금액 · 희망 시점 · 적어 주신 내용 · 사진 주소",
+                 "중고폰 매입 · 판매 · 수리 신청 접수와 상담 안내","접수일로부터 1년")+
         QNotifyBox()+
         '<div id="q-fail"></div>'+
         '<button class="btn btn-b btn-lg btn-full" type="submit"'+(ready?"":" disabled")+'>'+
@@ -703,7 +721,7 @@ window.quoteSend = function(ev){
   }
 
   var list = quoteServices();
-  var ind = $("q-ind").value, reg = $("q-reg").value;
+  var reg = $("q-reg").value;
   var body = {
     kind: "quote",
     name:  $("q-name").value.trim(),
@@ -713,7 +731,12 @@ window.quoteSend = function(ev){
     service: "", serviceName: $("q-what").value.trim(),
     side:  $("q-side").value,
     cat:   list.length ? list[0].id : (nowQS("c") || ""),
-    industry: ind,
+    /* ⚠️⚠️ **업종 칸을 안 보냅니다** (2026-10-31). `request.industry` 는
+       DB 에 그대로 있지만(0001) 중고폰 신청에는 업종이라는 축이 없고,
+       화면에 없는 값을 억지로 채우면 받아 보는 직원이 그걸 조건으로
+       읽습니다. ⚠️ 기기 종류를 그 칸에 담으시려면 그날 `/admin` 목록의
+       `rqIndName()` 과 `/my` 의 `myCond()` 도 같이 보세요 — 셋이 같은
+       칸을 읽습니다. */
     gu:    $("q-gu").value.trim(),
     q:      $("q-q").value.trim(),
     budget: $("q-bud").value.trim(),
@@ -736,16 +759,14 @@ window.quoteSend = function(ev){
          으로 나갔습니다 — 받아 보는 직원이 그것을 보고 창업 업체를
          찾습니다. 이름은 `AM_SIDES` 한 곳입니다. */
       "상황":  amSideName($("q-side").value),
-      "업종":  ind ? amIndustryName(ind) : "",
       "시군구": $("q-gu").value.trim(),
-      "평수":  $("q-py").value.trim(),
-      "일정":  $("q-when").value.trim(),
+      "희망 금액": $("q-bud").value.trim(),
+      "희망 시점": $("q-when").value.trim(),
       "사진":  $("q-img").value.trim(),
       /* ⚠️⚠️ 고르신 서비스는 **이름으로 한 줄** 더 적습니다. 받아 보는
          사람이 슬랙 글만 보고 바로 알아야 해서입니다 — 기계가 읽는
          것은 위의 `items` 이고 둘은 같은 것을 가리킵니다. */
-      "신청 서비스": list.map(amPickLabel).join(" · "),
-      "신청 상품": quoteOfferNames()
+      "신청 서비스": list.map(amPickLabel).join(" · ")
     }),
     agree: true,
     /* ⑱ 진행 안내 (2026-10-22 P2) — ⚠️⚠️ **선택**입니다. 안 고르시면
@@ -781,6 +802,10 @@ window.quoteAfterSend = function(){
   amDel(DKEY);
   if(typeof amPickSet === "function") amPickSet([]);
   if(typeof pickPaint === "function") pickPaint();
+  /* ⚠️ 고르신 것을 비웠으니 **서비스별 질문 묶음도 같이 비웁니다** —
+     안 비우면 보낸 뒤에도 그 질문들이 그대로 떠 있어서, 손님은 아직
+     안 보낸 줄 압니다. */
+  if(typeof quoteSvcSync === "function") quoteSvcSync();
   if(typeof window.quoteDraftPaint === "function") window.quoteDraftPaint();
 };
 
@@ -793,7 +818,7 @@ window.joinSend = function(ev){
     if(!$(jneed[j][0]).value.trim()){
       toast(jneed[j][1]+"을(를) 적어 주세요"); $(jneed[j][0]).focus(); return false; }
   }
-  var reg = $("jn-reg").value, ind = $("jn-ind").value;
+  var reg = $("jn-reg").value;
   var body = {
     kind: "partner",
     name:  $("jn-ceo").value.trim(),
@@ -801,7 +826,12 @@ window.joinSend = function(ev){
     email: $("jn-mail").value.trim(),
     region: reg ? amRegionName(reg) : "",
     company: $("jn-name").value.trim(),
-    exp:  ind ? amIndustryName(ind) : "",
+    /* ⚠️⚠️ **`jn-ind` 는 자유 입력입니다** (2026-10-29 로 업종 고르개가
+       "취급 기기" 적는 칸이 됐습니다). 전에는 그 값을 `amIndustryName()`
+       에 넣고 있었는데, key 가 아니라 적어 주신 글이라 **늘 빈 문자열**
+       이었습니다 — 업체가 적어 주신 취급 기기가 접수에 한 글자도 안
+       갔습니다 (읽어 보고 알았습니다). 그대로 보냅니다. */
+    exp:  $("jn-ind").value.trim(),
     note: $("jn-note").value.trim(),
     serviceNames: [$("jn-svc").value.trim()].filter(Boolean),
     agree: true

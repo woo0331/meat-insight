@@ -148,7 +148,14 @@ module.exports = async function handler(req, res){
   if(kind === "sos"){
     q.q   = clean(b.q, 4000);       /* 손님이 적은 상황 */
     q.cat = clean(b.cat, 40);       /* 빠른 선택 분류 */
-    q.biz = clean(b.biz, 80);       /* 업종 */
+    /* ⚠️⚠️ **아무 화면도 이 칸을 안 보냅니다** (2026-10-31 에 재서
+       확인했습니다). `kind:"sos"` 자체가 첫 서비스(고기 사업자
+       문제해결) 것이고, 지금 `/join` 이 묻는 **취급 기기**는 아래
+       `exp` 로 옵니다. 접수 API 계약이라 **받는 것은 그대로**
+       두되(직접 POST 하는 길이 아직 열려 있습니다) 사람이 읽는 글에는
+       안 냅니다 — 안 오는 칸의 딱지를 보고 직원이 "그 칸이 있구나" 로
+       읽습니다. */
+    q.biz = clean(b.biz, 80);
   }
   else if(kind === "quote"){
     q.service     = clean(b.service, 40);
@@ -425,8 +432,12 @@ module.exports = async function handler(req, res){
       tel:      q.tel,
       email:    q.email || null,
       region:   q.region || null,
-      /* ⚠️ `/join` 의 "주로 하시는 업종" 입니다 — 화면이 이름 글자로
-         보냅니다 (분류 key 가 아닙니다). */
+      /* ⚠️⚠️ **칸 이름만 `industry` 입니다 — 담기는 것은 `/join` 의
+         "취급 기기" 입니다** (2026-10-29 로 그 칸이 바뀌었습니다).
+         화면이 이름 글자로 보냅니다 (분류 key 가 아닙니다).
+         ⚠️ 칸 이름은 `0016` 이 이미 번호를 받은 파일이라 그대로
+         둡니다 — 돌린 마이그레이션은 고치지 않습니다. 사람이 읽는
+         딱지만 맞춥니다 (`js/intake.js` 의 입점 신청 카드). */
       industry: q.exp || null,
       services: q.services,
       note:     q.note || null,
@@ -464,14 +475,20 @@ module.exports = async function handler(req, res){
   L.push("성함      " + q.name);
   L.push("연락처    " + q.tel);
   if(q.email)  L.push("이메일    " + q.email);
-  if(q.biz)    L.push("업종      " + q.biz);
   if(q.region) L.push("지역      " + q.region);
   if(q.cat)    L.push("분류      " + q.cat);
   if(q.serviceName || q.service)
                L.push("서비스    " + (q.serviceName || q.service));
   if(q.budget) L.push("예산      " + q.budget + " 만원");
   if(q.brn)    L.push("사업자번호 " + q.brn);
-  if(q.exp)    L.push("경력      " + q.exp);
+  /* ⚠️⚠️ **2026-10-31 까지 "경력" 으로 나가고 있었습니다.** `/join` 의
+     `jn-ind` 는 2026-10-29 로 **취급 기기**를 적는 칸이 됐는데(전에는
+     경력 연수였습니다) 칸 이름(`exp`)만 그대로 두고 딱지를 안 고쳤습니다
+     — 업체가 "아이폰 전 기종" 을 적으면 직원 화면에 **"경력  아이폰 전
+     기종"** 으로 떴습니다. 칸 이름은 접수 API 계약이라 그대로 둡니다.
+     ⚠️ 딱지는 **열 칸**입니다 (한글 한 자가 두 칸이라 "취급 기기" 가
+     아홉 · 띄어쓰기 하나). 열한 칸으로 적으면 위아래 줄과 어긋납니다. */
+  if(q.exp)    L.push("취급 기기 " + q.exp);
 
   if(kind === "partner"){
     L.push("");

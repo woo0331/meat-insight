@@ -62,7 +62,20 @@ function ok(name, cond, extra) {
     return { ctx, pg, errs };
   }
 
+  /* ⚠️⚠️ 묶음 key 가 **지금 있는 것인지 먼저 봅니다.** 없는 값을
+     selectOption 하면 playwright 가 **30초를 기다리다 터지고 뒤 묶음이
+     통째로 안 돕니다** — 어느 씨앗이 낡았는지도 안 나옵니다.
+     2026-10-31 영업 묶음을 중고폰 축으로 다시 짜면서 낡은 key 일곱
+     (interior · demolish · it · clean · equip …)을 그렇게 찾았고,
+     한 번에 하나씩만 드러나 세 판을 돌렸습니다. */
+  async function gKeys(pg) {
+    return pg.$$eval("#sl-g option", es => es.map(e => e.value).filter(Boolean));
+  }
   async function add(pg, name, tel, g, reg, gu) {
+    const ks = await gKeys(pg);
+    if (ks.indexOf(g) < 0)
+      throw new Error("없는 영업 묶음 key 를 씨앗으로 적었습니다: " + g +
+        "  (지금 있는 것: " + ks.join(" ") + ")");
     await pg.fill("#sl-name", name);
     await pg.fill("#sl-tel", tel);
     await pg.selectOption("#sl-g", g);
@@ -81,13 +94,13 @@ function ok(name, cond, extra) {
     ok("첫 화면에 '오늘 영업' 이 있다", await pg.locator("h2:has-text('오늘 영업')").count() === 1);
     ok("업체가 0곳이면 '등록된 영업 업체가 없습니다'", (await pg.locator(".sl-none").innerText()).includes("아직 등록된 영업 업체가 없습니다"));
 
-    await add(pg, "대한인테리어", "031-000-0000", "interior", "gyeonggi", "성남시");
-    const row = rowOf(pg, "대한인테리어");
+    await add(pg, "대한폰매입", "031-000-0000", "buyin", "gyeonggi", "성남시");
+    const row = rowOf(pg, "대한폰매입");
     ok("목록에 등장", await row.count() === 1);
     ok("상태가 연락전", (await row.locator(".sl-bd").innerText()).trim() === "연락전");
     ok("오늘 DB 등록이 1", (await pg.locator(".sl-n").first().locator("b").innerText()) === "1");
     ok("등록 뒤 업체명 칸이 비었다", (await pg.inputValue("#sl-name")) === "");
-    ok("카테고리는 그대로 남았다", (await pg.inputValue("#sl-g")) === "interior");
+    ok("카테고리는 그대로 남았다", (await pg.inputValue("#sl-g")) === "buyin");
 
     await row.locator("button:has-text('전화')").click();
     await pg.waitForTimeout(80);
@@ -117,7 +130,7 @@ function ok(name, cond, extra) {
 
     await pg.click("button:has-text('발송 완료')");
     await pg.waitForTimeout(100);
-    const row2 = rowOf(pg, "대한인테리어");
+    const row2 = rowOf(pg, "대한폰매입");
     ok("상태가 입점제안으로 저절로 바뀐다", (await row2.locator(".sl-bd").innerText()).trim() === "입점제안");
     ok("오늘 입점제안이 1", (await pg.locator(".sl-n").nth(3).locator("b").innerText()) === "1");
     ok("입점 진행 구간이 생긴다", await pg.locator("h2:has-text('입점 진행')").count() === 1);
@@ -125,7 +138,7 @@ function ok(name, cond, extra) {
 
     /* 새로고침해도 남아 있는가 (저장) */
     await pg.reload({ waitUntil:"networkidle" });
-    ok("새로고침 뒤에도 업체가 남는다", await rowOf(pg, "대한인테리어").count() === 1);
+    ok("새로고침 뒤에도 업체가 남는다", await rowOf(pg, "대한폰매입").count() === 1);
     ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
     await ctx.close();
   }
@@ -134,8 +147,8 @@ function ok(name, cond, extra) {
   console.log("\nTEST 2  다시 연락 → 내일 → 재연락 목록");
   {
     const { ctx, pg, errs } = await fresh();
-    await add(pg, "대한철거", "010-1111-2222", "demolish", "gyeonggi", "성남시");
-    await rowOf(pg, "대한철거").locator("button:has-text('결과')").click();
+    await add(pg, "대한수리", "010-1111-2222", "fix", "gyeonggi", "성남시");
+    await rowOf(pg, "대한수리").locator("button:has-text('결과')").click();
     await pg.waitForTimeout(80);
     await pg.click(".sl-res-recall");
     await pg.waitForTimeout(80);
@@ -144,7 +157,7 @@ function ok(name, cond, extra) {
     await pg.fill("#sl-when-memo", "오후에 전화 요청");
     await pg.click(".sl-when-b >> nth=0");          /* 내일 */
     await pg.waitForTimeout(100);
-    ok("상태가 재연락", (await rowOf(pg, "대한철거").locator(".sl-bd").innerText()).trim() === "재연락");
+    ok("상태가 재연락", (await rowOf(pg, "대한수리").locator(".sl-bd").innerText()).trim() === "재연락");
     ok("내일이면 오늘 재연락 목록에는 아직 없다", await pg.locator(".sl-rc").count() === 0);
 
     /* 날짜를 오늘로 돌려서 재연락 목록에 뜨는지 */
@@ -159,7 +172,7 @@ function ok(name, cond, extra) {
     ok("지난 약속은 '지남' 으로 표시", (await pg.locator(".sl-late").first().innerText()).includes("일 지남"));
 
     /* ⚠️ 날짜를 안 고르고 판을 닫아도 **잊히면 안 됩니다** */
-    await rowOf(pg, "대한철거").locator("button:has-text('결과')").click();
+    await rowOf(pg, "대한수리").locator("button:has-text('결과')").click();
     await pg.waitForTimeout(70);
     await pg.click(".sl-res-recall");
     await pg.waitForTimeout(70);
@@ -186,14 +199,14 @@ function ok(name, cond, extra) {
   console.log("\nTEST 3  부재중 → 기록 생성 · 횟수 누적");
   {
     const { ctx, pg, errs } = await fresh();
-    await add(pg, "서울간판", "02-333-4444", "interior", "seoul");
+    await add(pg, "서울파손폰", "02-333-4444", "broken", "seoul");
     for (let i = 0; i < 2; i++) {
-      await rowOf(pg, "서울간판").locator("button:has-text('결과')").click();
+      await rowOf(pg, "서울파손폰").locator("button:has-text('결과')").click();
       await pg.waitForTimeout(70);
       await pg.click(".sl-res-miss");
       await pg.waitForTimeout(90);
     }
-    const row = rowOf(pg, "서울간판");
+    const row = rowOf(pg, "서울파손폰");
     ok("부재중이면 상태가 재연락", (await row.locator(".sl-bd").innerText()).trim() === "재연락");
     await row.locator(".sl-row-b").click();
     await pg.waitForTimeout(80);
@@ -210,8 +223,8 @@ function ok(name, cond, extra) {
   console.log("\nTEST 4  관심없음 → 사유 → 상태 변경");
   {
     const { ctx, pg, errs } = await fresh();
-    await add(pg, "하남POS", "031-555-6666", "it", "gyeonggi");
-    await rowOf(pg, "하남POS").locator("button:has-text('결과')").click();
+    await add(pg, "하남도매", "031-555-6666", "wholesale", "gyeonggi");
+    await rowOf(pg, "하남도매").locator("button:has-text('결과')").click();
     await pg.waitForTimeout(70);
     await pg.click(".sl-res-no");
     await pg.waitForTimeout(80);
@@ -219,11 +232,11 @@ function ok(name, cond, extra) {
     ok("사유가 여섯", await pg.locator(".sl-why-b").count() === 6);
     await pg.click(".sl-why-b >> nth=1");           /* 기존 광고 충분 */
     await pg.waitForTimeout(90);
-    ok("상태가 관심없음", (await rowOf(pg, "하남POS").locator(".sl-bd").innerText()).trim() === "관심없음");
+    ok("상태가 관심없음", (await rowOf(pg, "하남도매").locator(".sl-bd").innerText()).trim() === "관심없음");
     await pg.click(".sl-chip:has-text('거절')");
     await pg.waitForTimeout(80);
     ok("거절 칩으로 걸러진다", await pg.locator(".sl-row").count() === 1);
-    await rowOf(pg, "하남POS").locator(".sl-row-b").click();
+    await rowOf(pg, "하남도매").locator(".sl-row-b").click();
     await pg.waitForTimeout(80);
     ok("거절 사유가 남는다", (await pg.locator(".sl-open").innerText()).includes("기존 광고 충분"));
     ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
@@ -234,16 +247,16 @@ function ok(name, cond, extra) {
   console.log("\nTEST 5  중복 검사");
   {
     const { ctx, pg, errs } = await fresh();
-    await add(pg, "대한인테리어", "031-000-0000", "interior", "gyeonggi");
-    await add(pg, "다른이름인테리어", "0310000000", "interior", "gyeonggi");   /* 하이픈만 다름 */
+    await add(pg, "대한폰매입", "031-000-0000", "buyin", "gyeonggi");
+    await add(pg, "다른이름폰매입", "0310000000", "buyin", "gyeonggi");   /* 하이픈만 다름 */
     ok("하이픈이 달라도 같은 번호로 잡는다", await pg.locator(".sl-dup").count() === 1);
-    ok("기존 업체 이름을 보여 준다", (await pg.locator(".sl-dup").innerText()).includes("대한인테리어"));
+    ok("기존 업체 이름을 보여 준다", (await pg.locator(".sl-dup").innerText()).includes("대한폰매입"));
     ok("등록되지 않았다", await pg.locator(".sl-row").count() === 1);
     await pg.click(".sl-dup button:has-text('기존 업체 보기')");
     await pg.waitForTimeout(90);
     ok("기존 업체가 펼쳐진다", await pg.locator(".sl-open").count() === 1);
 
-    await add(pg, "대한인테리어", "02-999-8888", "interior", "seoul");         /* 이름만 같음 */
+    await add(pg, "대한폰매입", "02-999-8888", "buyin", "seoul");         /* 이름만 같음 */
     ok("업체명이 같으면 보조로 잡는다", await pg.locator(".sl-dup").count() === 1);
     ok("필수 칸이 비면 등록되지 않는다", await (async () => {
       await pg.click(".sl-dup button:has-text('닫기')");
@@ -270,7 +283,7 @@ function ok(name, cond, extra) {
     ok("무엇이 막혔는지 적는다",
       (await pg.locator(".sl-bad-intake").first().innerText()).includes("storeway.co.kr/join"));
 
-    await add(pg, "접수잠김확인", "031-707-7070", "interior", "gyeonggi");
+    await add(pg, "접수잠김확인", "031-707-7070", "buyin", "gyeonggi");
     await rowOf(pg, "접수잠김확인").locator("button:has-text('결과')").click();
     await pg.waitForTimeout(70);
     await pg.click(".sl-res-warm");
@@ -303,7 +316,7 @@ function ok(name, cond, extra) {
     let boom = 0;
     pg.on("dialog", async d => { boom++; await d.dismiss(); });
     const EVIL = '<img src=x onerror="window.__x=1">사장님';
-    await add(pg, EVIL, "031-404-4040", "interior", "gyeonggi", "<b>성남</b>");
+    await add(pg, EVIL, "031-404-4040", "buyin", "gyeonggi", "<b>성남</b>");
     await pg.waitForTimeout(150);
     ok("글자 그대로 들어간다", (await pg.locator(".sl-row-n").first().innerText()).includes("onerror"));
     ok("태그가 살아나지 않는다", await pg.locator(".sl-row-n img").count() === 0);
@@ -323,16 +336,16 @@ function ok(name, cond, extra) {
   console.log("\nTEST 6  검색 (업체명 · 전화번호 일부 · 지역 · 카테고리)");
   {
     const { ctx, pg, errs } = await fresh();
-    await add(pg, "대한인테리어", "031-000-0000", "interior", "gyeonggi", "성남시");
-    await add(pg, "서울철거", "02-777-8888", "demolish", "seoul", "강남구");
-    await add(pg, "부산청소", "051-222-3333", "clean", "busan");
+    await add(pg, "대한폰매입", "031-000-0000", "buyin", "gyeonggi", "성남시");
+    await add(pg, "서울수리", "02-777-8888", "fix", "seoul", "강남구");
+    await add(pg, "부산아이폰", "051-222-3333", "inspect", "busan");
     const q = pg.locator(".sl-fils input[type=search]");
     const n = async () => { await pg.waitForTimeout(90); return pg.locator(".sl-row").count(); };
-    await q.fill("철거");       ok("업체명으로 찾는다", await n() === 1);
+    await q.fill("수리");       ok("업체명으로 찾는다", await n() === 1);
     await q.fill("777");        ok("전화번호 일부로 찾는다", await n() === 1);
     await q.fill("0317");       ok("없는 번호는 0건", await n() === 0);
     await q.fill("성남");       ok("시·군·구로 찾는다", await n() === 1);
-    await q.fill("청소");       ok("카테고리 이름으로 찾는다", await n() === 1);
+    await q.fill("검수");       ok("카테고리 이름으로 찾는다", await n() === 1);
     await q.fill("");
     await pg.selectOption(".sl-fils select >> nth=1", "seoul");
     ok("지역 거르개", await n() === 1);
@@ -348,17 +361,17 @@ function ok(name, cond, extra) {
     const doc = await pg.evaluate(() => document.documentElement.scrollWidth);
     ok("가로 스크롤 없음 (" + doc + "px)", doc <= 360);
     ok("아래 고정 단추가 보인다", await pg.locator(".sl-sticky .sl-sk-b").first().isVisible());
-    await add(pg, "성남주방설비", "031-888-9999", "equip", "gyeonggi", "성남시");
-    ok("모바일에서 등록된다", await rowOf(pg, "성남주방설비").count() === 1);
+    await add(pg, "성남폰도매", "031-888-9999", "wholesale", "gyeonggi", "성남시");
+    ok("모바일에서 등록된다", await rowOf(pg, "성남폰도매").count() === 1);
     const tel = pg.locator(".sl-row-t").first();
     ok("번호가 보기 좋게 찍힌다", (await tel.innerText()).trim() === "031-888-9999");
-    await rowOf(pg, "성남주방설비").locator("button:has-text('전화')").click();
+    await rowOf(pg, "성남폰도매").locator("button:has-text('전화')").click();
     await pg.waitForTimeout(90);
     const href = await pg.locator(".sl-big-tel").getAttribute("href");
     ok("tel: 링크로 전화 앱에 연결된다", href === "tel:0318889999");
     await pg.click(".sl-res-warm");
     await pg.waitForTimeout(90);
-    ok("모바일에서도 결과 처리된다", (await rowOf(pg, "성남주방설비").locator(".sl-bd").innerText()).trim() === "관심");
+    ok("모바일에서도 결과 처리된다", (await rowOf(pg, "성남폰도매").locator(".sl-bd").innerText()).trim() === "관심");
     const doc2 = await pg.evaluate(() => document.documentElement.scrollWidth);
     ok("판이 떠도 가로 스크롤 없음 (" + doc2 + "px)", doc2 <= 360);
     ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
@@ -379,7 +392,12 @@ function ok(name, cond, extra) {
       !/admin-health|Failed to load resource/.test(m.text())) errs.push(m.text()); });
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
 
+    /* ⚠️ 위 add(pg, ...) 와 같은 까닭으로 key 를 먼저 봅니다 */
     const add = async (name, tel, g, reg, gu) => {
+      const ks = await gKeys(pg);
+      if (ks.indexOf(g) < 0)
+        throw new Error("없는 영업 묶음 key 를 씨앗으로 적었습니다: " + g +
+          "  (지금 있는 것: " + ks.join(" ") + ")");
       await pg.fill("#sl-name", name); await pg.fill("#sl-tel", tel);
       await pg.selectOption("#sl-g", g);
       if (reg) await pg.selectOption("#sl-reg", reg);
@@ -391,25 +409,25 @@ function ok(name, cond, extra) {
 
     /* ── 오늘 찾을 업체 (§4 · §5) ── */
     console.log("\n오늘 찾을 업체 · 목표 진행");
-    await pg.selectOption(".sl-goal-f select >> nth=0", "demolish");
+    await pg.selectOption(".sl-goal-f select >> nth=0", "fix");
     await pg.waitForTimeout(90);
-    ok("고른 카테고리가 보인다", (await pg.locator(".sl-goal-now > b").innerText()) === "철거 · 원상복구");
-    ok("검색할 말이 나온다", (await pg.locator(".sl-find").innerText()).includes("매장 철거"));
-    ok("다루는 서비스가 catalog 에서 온다", (await pg.locator(".sl-svc").innerText()).includes("원상복구"));
-    ok("등록 칸의 카테고리도 같이 맞춰진다", (await pg.inputValue("#sl-g")) === "demolish");
+    ok("고른 카테고리가 보인다", (await pg.locator(".sl-goal-now > b").innerText()) === "수리 · 리퍼");
+    ok("검색할 말이 나온다", (await pg.locator(".sl-find").innerText()).includes("휴대폰 수리"));
+    ok("다루는 서비스가 catalog 에서 온다", (await pg.locator(".sl-svc").innerText()).includes("배터리 교체"));
+    ok("등록 칸의 카테고리도 같이 맞춰진다", (await pg.inputValue("#sl-g")) === "fix");
     await pg.fill(".sl-f-n input", "4");
     await pg.locator(".sl-f-n input").dispatchEvent("change");
     await pg.waitForTimeout(90);
     ok("목표가 4로 바뀐다", (await pg.locator(".sl-goal-now > i").innerText()).includes("/ 4"));
-    await add("가나다철거", "031-100-1000", "demolish", "gyeonggi", "성남시");
-    await add("라마바원상복구", "031-200-2000", "demolish", "gyeonggi", "하남시");
+    await add("가나다수리", "031-100-1000", "fix", "gyeonggi", "성남시");
+    await add("라마바리퍼", "031-200-2000", "fix", "gyeonggi", "하남시");
     ok("진행이 2 / 4", (await pg.locator(".sl-goal-now > i").innerText()).replace(/\s/g,"") === "2/4");
     const w = await pg.locator(".sl-bar > span").evaluate(e => e.style.width);
     ok("Progress Bar 가 50%", w === "50%");
 
     /* ── 입점 진행 · 자료 완성도 (§19 · §21) ── */
     console.log("\n입점 진행 · 자료 완성도");
-    await rowOf("가나다철거").locator("button:has-text('결과')").click();
+    await rowOf("가나다수리").locator("button:has-text('결과')").click();
     await pg.waitForTimeout(70); await pg.click(".sl-res-warm"); await pg.waitForTimeout(70);
     await pg.click("button:has-text('발송 완료')"); await pg.waitForTimeout(100);
     const jn = pg.locator(".sl-jn").first();
@@ -420,13 +438,13 @@ function ok(name, cond, extra) {
     ok("하나 누르면 14%", (await pg.locator(".sl-jn").first().locator(".sl-jn-p").innerText()).includes("14%"));
     await pg.locator(".sl-jn").first().locator("button:has-text('자료대기')").click();
     await pg.waitForTimeout(90);
-    ok("자료대기로 바뀐다", (await rowOf("가나다철거").locator(".sl-bd").innerText()).trim() === "자료대기");
+    ok("자료대기로 바뀐다", (await rowOf("가나다수리").locator(".sl-bd").innerText()).trim() === "자료대기");
     await pg.locator(".sl-jn").first().locator("button:has-text('검토필요')").click();
     await pg.waitForTimeout(90);
-    ok("검토필요로 바뀐다", (await rowOf("가나다철거").locator(".sl-bd").innerText()).trim() === "검토필요");
+    ok("검토필요로 바뀐다", (await rowOf("가나다수리").locator(".sl-bd").innerText()).trim() === "검토필요");
     await pg.locator(".sl-jn").first().locator("button:has-text('입점완료')").click();
     await pg.waitForTimeout(90);
-    ok("입점완료로 바뀐다", (await rowOf("가나다철거").locator(".sl-bd").innerText()).trim() === "입점완료");
+    ok("입점완료로 바뀐다", (await rowOf("가나다수리").locator(".sl-bd").innerText()).trim() === "입점완료");
     ok("오늘 입점완료가 1", (await pg.locator(".sl-n").nth(4).locator("b").innerText()) === "1");
 
     /* ── 퍼널 · 전환율 · 카테고리별 성과 (§24 · §25) ── */
@@ -435,7 +453,7 @@ function ok(name, cond, extra) {
     ok("퍼널에 여섯 걸음", (await pg.locator(".sl-fn").count()) === 6);
     ok("DB 2 · 전화 1 · 통화 1 · 관심 1", /2[\s\S]*DB[\s\S]*1[\s\S]*전화/.test(fn));
     ok("전환율이 나온다", (await pg.locator(".sl-rate").innerText()).includes("통화 → 관심"));
-    ok("카테고리별 성과 표", (await pg.locator(".sl-tbl").innerText()).includes("철거 · 원상복구"));
+    ok("카테고리별 성과 표", (await pg.locator(".sl-tbl").innerText()).includes("수리 · 리퍼"));
     ok("이번주 · 이번달도 돈다", await (async () => {
       for (const p of ["이번주", "이번달", "오늘"]) {
         await pg.click(".sl-st .sl-chip:has-text('" + p + "')");
@@ -458,7 +476,7 @@ function ok(name, cond, extra) {
       return (await pg.locator("#ad-t-sl-rep").inputValue()).includes("김영업");
     })());
     ok("기록에 담당자가 남는다", await (async () => {
-      await add("담당자기록확인", "031-909-0909", "clean", "gyeonggi");
+      await add("담당자기록확인", "031-909-0909", "logi", "gyeonggi");
       await rowOf("담당자기록확인").locator(".sl-row-b").click();
       await pg.waitForTimeout(90);
       return (await pg.locator(".sl-open").innerText()).includes("김영업");
@@ -470,20 +488,20 @@ function ok(name, cond, extra) {
       pg.click(".sl-bk button:has-text('내려받기')")]);
     const f = await dl[0].path();
     const saved = JSON.parse(fs.readFileSync(f, "utf8"));
-    ok("파일 이름이 날짜까지", /storeway-sales-20\d\d-\d\d-\d\d\.json/.test(dl[0].suggestedFilename()));
+    ok("파일 이름이 날짜까지", /phoneway-sales-20\d\d-\d\d-\d\d\.json/.test(dl[0].suggestedFilename()));
     ok("업체가 전부 들어 있다", saved.co.length === 3, "co=" + saved.co.length);
-    ok("활동기록도 같이", (saved.co.find(c => c.name === "가나다철거").log || []).length >= 4);
+    ok("활동기록도 같이", (saved.co.find(c => c.name === "가나다수리").log || []).length >= 4);
 
     /* ── 보관 · 완전삭제 (§28) ── */
     console.log("\n보관 · 완전삭제");
-    await rowOf("라마바원상복구").locator(".sl-row-b").click();
+    await rowOf("라마바리퍼").locator(".sl-row-b").click();
     await pg.waitForTimeout(80);
     await pg.click(".sl-arch");
     await pg.waitForTimeout(100);
-    ok("목록에서 빠진다", await rowOf("라마바원상복구").count() === 0);
+    ok("목록에서 빠진다", await rowOf("라마바리퍼").count() === 0);
     ok("보관함 안내가 나온다", (await pg.locator(".sl-off").last().innerText()).includes("보관함에 1곳"));
     ok("보관해도 중복 검사에는 걸린다", await (async () => {
-      await add("딴이름", "031-200-2000", "demolish", "gyeonggi");
+      await add("딴이름", "031-200-2000", "fix", "gyeonggi");
       const hit = await pg.locator(".sl-dup").count();
       if (hit) await pg.click(".sl-dup button:has-text('닫기')");
       return hit === 1;
@@ -508,7 +526,14 @@ function ok(name, cond, extra) {
        8번 칸(수익상품)을 더하자 **멀쩡한 화면을 실패로** 잡았습니다 —
        이 저장소가 "검사가 갯수를 그냥 셌음" 으로 **세 번** 겪은 자리입니다
        (업체 분야 · 거르개 숨김 건수 · 감사 기록). 지키려는 것은
-       "옛 일곱이 살아 있는가" 이지 "전부 일곱인가" 가 아닙니다 (§29 KEEP). */
+       "옛 칸이 살아 있는가" 이지 "전부 몇인가" 가 아닙니다 (§29 KEEP).
+       ⚠️⚠️ 2026-10-31 — 목록에서 **"매물 접수를 등록 줄로"** 를 뺐습니다.
+       그 칸은 창업 · 폐업 전용(점포 · 시설 장비 매물)이라 데이터 파일과
+       함께 지웠습니다 (PHONEWAY 전환 §2 — "화면에서 숨기는 것이 아니라
+       실제 프로젝트에서 정리한다"). **일부러 없앤 것**이므로 KEEP 목록에
+       남겨 두면 그 검사가 영원히 빨갛습니다.
+       ⚠️ 지원사업 '찾는 곳' · 전문관 노출 순서도 같은 까닭으로 내려갔고,
+       그 둘은 애초에 이 목록에 없었습니다. */
     {
       const heads = (await pg.locator("#ad > section h2").allInnerTexts())
                       .map(t => t.replace(/\s+/g, " ").trim());
@@ -517,15 +542,20 @@ function ok(name, cond, extra) {
          입니다. **코드가 아니라 씨앗이 틀렸습니다** (이 저장소에서 네 번째). */
       const keep = ["지금 접수가 되고 있나요", "영업 시작 전에 남은 것",
                     "들어온 접수를 붙여 넣으세요", "분류는 사람이 고릅니다",
-                    "보낼 글", "업체에 보낼 초대 글", "매물 접수를 등록 줄로"];
+                    "보낼 글", "업체에 보낼 초대 글",
+                    "수익상품", "제휴업체 등록 줄"];
       const miss = keep.filter(k => !heads.some(h => h.includes(k)));
-      ok("옛 일곱 칸이 그대로 있다 (§29 KEEP)", miss.length === 0, miss.join(" · "));
-      ok("칸이 일곱 이상이다", heads.length >= 7, heads.length);
+      ok("옛 칸 여덟이 그대로 있다 (§29 KEEP)", miss.length === 0, miss.join(" · "));
+      ok("칸이 여덟 이상이다", heads.length >= 8, heads.length);
+      /* ⚠️ 지운 칸이 되살아나면 그것도 고장입니다 — PHONEWAY 에 없는 축
+         (점포 · 시설 장비 매물)을 다시 내는 것이니까요. */
+      ok("지운 칸이 되살아나지 않았다",
+         !heads.some(h => h.includes("매물 접수")), heads.join(" | "));
     }
     ok("2번 영업 시작 전 점검이 돈다", await pg.locator("#ad-ready .ad-rd").count() > 0);
 
     /* 3~5번 — 접수 붙여넣기 → 분류 → 보낼 글 셋 */
-    await pg.fill("#ad-in", "[SOS] 덕트 · 경기 안양\n성함      홍길동\n연락처    010-1234-5678\n업종      음식점\n지역      경기\n\n── 요청 조건 ──\n  · 필요한 일 — 덕트 청소\n  · 자세한 내용 — 후드에서 기름이 떨어집니다");
+    await pg.fill("#ad-in", "[접수] 액정 수리 · 경기 안양\n성함      홍길동\n연락처    010-1234-5678\n기기      스마트폰\n지역      경기\n\n── 요청 조건 ──\n  · 필요한 일 — 액정 교체\n  · 자세한 내용 — 떨어뜨려서 화면이 깨졌습니다");
     await pg.click("#ad button:has-text('읽어 오기')");
     await pg.waitForTimeout(200);
     const outs = await pg.locator("#ad-out .ad-c").count();
@@ -567,17 +597,29 @@ function ok(name, cond, extra) {
        call.includes("무료") === false);
     ok("전화 순서 글도 있다", call.includes("전화로 말할 순서"));
 
-    /* 7번 — 매물 접수를 등록 줄로 */
-    await pg.fill("#ad-mk-in", "[견적] 홍길동 · 매장 내놓기\n성함      홍길동\n지역      경기\n\n── 요청 조건 ──\n  · 거래 방식 — 매장 양도\n  · 업종 — 카페 · 디저트\n  · 시군구 — 안양시\n  · 평수 — 18\n  · 보증금(만원) — 3000\n  · 월세(만원) — 180\n  · 권리금(만원) — 2000");
-    await pg.click("#ad button:has-text('읽어 오기') >> nth=1");
-    await pg.waitForTimeout(200);
-    const mk = await pg.locator("#ad-mk-out textarea").first().inputValue();
-    /* ⚠️ 적는 모양은 `industry: "cafe"` 로 **쉼표 뒤에 빈칸이 있습니다.**
-       빈칸 없이 견주다가 멀쩡한 코드를 세 번째로 "틀렸다" 고 했습니다 —
-       검사가 틀린 자리입니다. 값만 봅니다. */
-    const has = (k, v) => new RegExp(k + ':\\s*"?' + v + '"?').test(mk);
-    ok("7번 등록 줄이 여전히 나온다", has("industry", "cafe") && has("region", "gyeonggi"));
-    ok("업종 · 지역 · 시군구 key 가 맞다", has("gu", "안양시") && has("deposit", "3000"));
+    /* ⚠️⚠️ 2026-10-31 — 여기 있던 "7번 매물 접수를 등록 줄로" 검사를
+       내렸습니다. 그 칸이 창업 · 폐업 전용(점포 · 시설 장비 매물)이라
+       js/data/market.js 와 함께 지워졌습니다 (PHONEWAY 전환 §2).
+       ⚠️ 없어진 요소를 click 하면 **30초 타임아웃으로 터지고 뒤 묶음이
+       통째로 안 돕니다** — 어느 검사가 틀렸는지도 안 나옵니다.
+       ⚠️ 꺼내 보시려면 git show 6d85a17:tools/test-admin.js 입니다. */
+    ok("매물 등록 줄은 지웠습니다 (칸이 아예 없습니다)",
+       (await pg.locator("#ad-mk-in").count()) === 0);
+    const secN = await pg.locator("#ad .ad-s h2").count();
+    ok("관리자 설정 칸이 여덟이다", secN === 8, String(secN));
+
+    /* ⚠️⚠️ **접는 딱지가 없는 칸을 가리키면 안 됩니다.** 칸 셋을
+       내린 뒤에도 `admin.html` 의 `<summary>` 가 **"매물 등록 줄"** 이라고
+       적고 있었습니다 — 직원이 그 글을 보고 칸을 찾아 열었다가
+       없는 것을 봅니다. 위의 `#ad-mk-in` 검사는 **요소가 없는 것**만
+       보기 때문에 딱지가 거짓이어도 통과했습니다 (딱지를 읽는 검사가
+       아무 데도 없었습니다 — 2026-10-31 에 찾았습니다).
+       ⚠️ 칸을 늘리거나 내리면 `admin.html` 의 그 글도 같이 고치세요. */
+    const foldTag = (await pg.locator(".ad-fold > summary").innerText()) || "";
+    const foldBad = ["매물", "지원사업", "전문관", "창업", "폐업", "업종"]
+      .filter(w => foldTag.indexOf(w) >= 0);
+    ok("관리자 설정 딱지가 없는 칸을 가리키지 않는다",
+       foldBad.length === 0, foldBad.join(" · ") + " / " + foldTag);
 
     ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
     await ctx.close();
@@ -603,15 +645,15 @@ function ok(name, cond, extra) {
     ok("'준비 중' 자리표시자가 없다",
        !(await pg.locator("#rq").textContent()).includes("준비"));
 
-    /* ── 9번 제휴업체 등록 줄 ──────────────────────────────────
+    /* ── 8번 제휴업체 등록 줄 ──────────────────────────────────
        ⚠️ 여기 적는 업체는 **테스트 브라우저 안에서만** 삽니다 —
        저장소 데이터(js/data/providers.js)는 그대로 0곳입니다
        (절대 규칙 1). */
-    /* ⚠️ 9번은 접힌 "관리자 설정" 안입니다 (§29) — 펼쳐야 보입니다 */
+    /* ⚠️ 8번은 접힌 "관리자 설정" 안입니다 (§29) — 펼쳐야 보입니다 */
     await pg.click(".ad-fold > summary");
     await pg.waitForTimeout(200);
     const pvB = pg.locator("#ad-pv");
-    ok("9번 칸이 있다", (await pvB.count()) === 1);
+    ok("8번 칸이 있다", (await pvB.count()) === 1);
 
     /* 아무것도 안 적었을 때 — ⚠️ 빠진 것을 **보여 줍니다** */
     const warn0 = await pg.locator("#ad-pv-out .ad-pv-w").textContent();
@@ -620,7 +662,7 @@ function ok(name, cond, extra) {
     ok("하위 분야가 비면 까닭까지 말한다",
        warn0.includes("아무 분류에도"), warn0.slice(0, 200));
 
-    await pg.fill("#ad-pv-nm", "가나다 인테리어");
+    await pg.fill("#ad-pv-nm", "가나다 폰수리");
     await pg.fill("#ad-pv-id", "GANADA_1");
     await pg.waitForTimeout(150);
     ok("주소에 한글 · 대문자 · 밑줄을 못 쓰게 한다",
@@ -631,27 +673,30 @@ function ok(name, cond, extra) {
        `pg.fill()` 은 값을 한 번에 넣어서 **이 사고를 못 잡습니다.** */
     await pg.fill("#ad-pv-id", "");
     await pg.click("#ad-pv-id");
-    await pg.type("#ad-pv-id", "ganada-interior", { delay:12 });
+    await pg.type("#ad-pv-id", "ganada-fix", { delay:12 });
     ok("한 글자씩 쳐도 칸에서 커서가 안 빠진다",
        (await pg.evaluate(() => document.activeElement && document.activeElement.id)) === "ad-pv-id" &&
-       (await pg.locator("#ad-pv-id").inputValue()) === "ganada-interior",
+       (await pg.locator("#ad-pv-id").inputValue()) === "ganada-fix",
        await pg.locator("#ad-pv-id").inputValue());
     await pg.fill("#ad-pv-sc", "2015");
     /* ⚠️ 경기도는 넓습니다 — `gu` 는 적어 받아 놓고 안 읽던 칸입니다 */
     await pg.fill("#ad-pv-gu", "안양시, 군포시");
-    await pg.fill("#ad-pv-in", "카페 인테리어를 10년 해 왔습니다");
+    await pg.fill("#ad-pv-in", "휴대폰 수리를 10년 해 왔습니다");
     await pg.locator("#ad-pv .ad-pv-b", { hasText:"서비스 지역" })
             .locator("label", { hasText:"경기" }).first()
             .locator("input").check();
-    await pg.locator("#ad-pv .ad-pv-b", { hasText:"전문 업종" })
-            .locator("label", { hasText:"카페" }).first()
+    /* ⚠️⚠️ 2026-10-31 — "전문 업종"(창업 · 폐업 업종 열넷)이 **취급
+       기기**(스마트폰 · 태블릿 · 워치 · 이어버즈)로 바뀌었습니다.
+       목록은 js/data/devices.js 의 AM_DEVICE_KINDS 한 곳입니다. */
+    await pg.locator("#ad-pv .ad-pv-b", { hasText:"취급 기기" })
+            .locator("label", { hasText:"스마트폰" }).first()
             .locator("input").check();
-    /* ⚠️⚠️ 분류가 아니라 **하위 분야**를 고르는 자리입니다 —
-       `interior` 는 **둘 다 있는 이름**이라 손으로 적으면 틀립니다. */
-    await pg.selectOption("#ad-pv-cat", "interior");
+    /* ⚠️⚠️ 분류가 아니라 **하위 분야**를 고르는 자리입니다 — 분류
+       key 를 적으면 "아무 분류에도 안 걸립니다" 가 됩니다. */
+    await pg.selectOption("#ad-pv-cat", "fix");
     await pg.waitForTimeout(150);
     await pg.locator("#ad-pv .ad-pv-b", { hasText:"하는 일" })
-            .locator("label", { hasText:"전기" }).first()
+            .locator("label", { hasText:"액정 교체" }).first()
             .locator("input").check();
     await pg.waitForTimeout(200);
 
@@ -660,16 +705,16 @@ function ok(name, cond, extra) {
     /* ⚠️ 쉼표 뒤 빈칸까지 통째로 견주지 않습니다 — 값만 봅니다
        (이 저장소가 7번 칸에서 세 번 겪은 자리). */
     ok("① 손님 화면 줄이 나온다",
-       /id:\s*"ganada-interior"/.test(js) && /subs:\s*\["electric"\]/.test(js), js.slice(0, 160));
-    ok("지역 · 업종 key 가 맞다",
-       /regions:\s*\["gyeonggi"\]/.test(js) && /industries:\s*\["cafe"\]/.test(js), js.slice(0, 200));
+       /id:\s*"ganada-fix"/.test(js) && /subs:\s*\["lcd"\]/.test(js), js.slice(0, 160));
+    ok("지역 · 취급 기기 key 가 맞다",
+       /regions:\s*\["gyeonggi"\]/.test(js) && /industries:\s*\["phone"\]/.test(js), js.slice(0, 200));
   ok("시 · 군 · 구가 쉼표로 갈려 들어간다",
      /gu:\s*\["안양시","군포시"\]/.test(js), js.slice(0, 260));
     /* ⚠️ 평점 · 후기 수를 적는 칸이 없습니다 — 배열에서 셉니다 */
     ok("평점 · 후기 수를 적는 칸이 없다",
        !/rating|reviewN|jobs/.test(js) && /reviews:\[\]/.test(js), js);
     ok("② 배정용 SQL 이 같이 나온다",
-       /insert into provider/.test(sql) && /'\{"electric"\}'/.test(sql), sql.slice(0, 200));
+       /insert into provider/.test(sql) && /'\{"lcd"\}'/.test(sql), sql.slice(0, 200));
     /* ⚠️⚠️ 두 번 돌려도 안전해야 합니다. 지우고 다시 넣으면 그 업체에
        붙은 배정 · 계약이 cascade 로 같이 지워집니다. */
     ok("두 번 돌려도 안전하다 (on conflict)", /on conflict \(id\) do update/.test(sql));
@@ -678,13 +723,26 @@ function ok(name, cond, extra) {
     ok("verified 를 건드리지 않는다", !/verified/.test(sql), sql);
     ok("빠진 것 경고가 사라졌다", (await pg.locator("#ad-pv-out .ad-pv-w").count()) === 0);
 
-    /* ⚠️ `시설 · 장비` 는 하위가 **업종에서** 옵니다 — 그 분류의
-       `items` 가 비어 있어서 안 모으면 고르개가 덩그러니 빕니다. */
-    await pg.selectOption("#ad-pv-cat", "equip");
-    await pg.waitForTimeout(150);
-    const eq = await pg.locator("#ad-pv .ad-pv-b", { hasText:"하는 일" })
-                       .locator(".ad-pv-chk label").count();
-    ok("시설 · 장비도 하위 고르개가 빈 칸이 아니다", eq > 10, "label=" + eq);
+    /* ⚠️⚠️ 2026-10-31 — 전에는 `시설 · 장비` 한 분류만 봤습니다. 그
+       분류는 하위가 **업종에서** 오는 갈래(`byIndustry`)라 안 모으면
+       고르개가 덩그러니 비는 유일한 자리였는데, 중고폰 분류 열은 전부
+       제 `items` 를 들고 있어서 그 갈래 자체가 없어졌습니다
+       (`js/admin.js` 1095줄 · `git show 6d85a17:js/data/catalog.js`).
+       ⚠️ 그래서 **열을 하나씩** 봅니다 — 한 분류만 보면 다음에 빈
+       분류가 생겨도 조용히 통과합니다. */
+    const cats = await pg.$$eval("#ad-pv-cat option",
+      es => es.map(e => e.value).filter(Boolean));
+    ok("분류 고르개가 비어 있지 않다", cats.length >= 10, "cat=" + cats.length);
+    const empty = [];
+    for (const c of cats) {
+      await pg.selectOption("#ad-pv-cat", c);
+      await pg.waitForTimeout(90);
+      const n = await pg.locator("#ad-pv .ad-pv-b", { hasText:"하는 일" })
+                        .locator(".ad-pv-chk label").count();
+      if (n === 0) empty.push(c);
+    }
+    ok("분류 " + cats.length + "개가 전부 하위 고르개를 낸다",
+       empty.length === 0, empty.join(" · "));
 
     ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
     await ctx.close();
@@ -717,18 +775,18 @@ function ok(name, cond, extra) {
             region:"gyeonggi", gu:"안양시", state:"check",
             created_at:"2026-10-11T02:00:00+00:00", assignment:[] },
           { id:"22222222-2222-2222-2222-222222222222", no:"SW-EF56-GH78",
-            side:"close", cat:"demolish", industry:"restaurant",
+            side:"repair", cat:"fix", industry:"phone",
             region:"seoul", gu:"", state:"hold",
             created_at:"2026-10-10T02:00:00+00:00", assignment:[] }
         ],
-        providers:[{ id:"pv-one", name:"가나다 인테리어", listed:false }],
+        providers:[{ id:"pv-one", name:"가나다 폰수리", listed:false }],
         /* 업체가 낸 견적 — ⚠️⚠️ **받아만 놓지 않는지** 봅니다 (0008).
            서버가 보내는데 화면이 안 그리면 직원은 금액을 전화로 다시
            물어야 합니다 (이 저장소의 "만들어 놓고 안 쓰는 칸"). */
         quotes:[
           { id:"q1", request_id:"11111111-1111-1111-1111-111111111111",
             provider_id:"pv-one", amount:1200000, vat:"add",
-            scope:"철거 · 폐기물 처리", days:5, start_on:"2026-11-02",
+            scope:"액정 교체 · 강화유리 포함", days:5, start_on:"2026-11-02",
             state:"open", created_at:"2026-10-11T03:00:00+00:00" }
         ],
         deals:[], audits:[] }) }));
@@ -796,7 +854,7 @@ function ok(name, cond, extra) {
     ok("견적 금액 · 부가세 처리가 같이 나온다",
        /1,200,000원/.test(qTxt) && /부가세 별도/.test(qTxt), qTxt);
     ok("포함 범위가 나온다 (금액만으로는 못 견줍니다)",
-       /철거 · 폐기물 처리/.test(qTxt), qTxt);
+       /액정 교체 · 강화유리 포함/.test(qTxt), qTxt);
     /* ⚠️ 상태 딱지는 `/my` 와 **같은 클래스**입니다 — 다른 색이면 한
        시스템으로 안 읽힙니다 (css/admin.css 가 적어 둔 그대로). */
     ok("견적 딱지가 /my 와 같은 클래스를 쓴다",
@@ -966,11 +1024,11 @@ function ok(name, cond, extra) {
               created_at:"2026-10-11T02:00:00+00:00", assignment:[] }
           ],
           providers:[
-            { id:"pv-one", name:"가나다 인테리어", regions:["gyeonggi"],
-              gu:["안양시"], industries:["cafe"], subs:["interior","design"],
+            { id:"pv-one", name:"가나다 폰수리", regions:["gyeonggi"],
+              gu:["안양시"], industries:["phone"], subs:["lcd","battery"],
               listed:false },
-            { id:"pv-two", name:"라마바 철거", regions:["seoul"], gu:[],
-              industries:["restaurant"], subs:["demolish"], listed:true }
+            { id:"pv-two", name:"라마바 검수", regions:["seoul"], gu:[],
+              industries:["tablet"], subs:["wipe"], listed:true }
           ],
           deals: DEALS,
           fees:[
@@ -1283,11 +1341,11 @@ function ok(name, cond, extra) {
       contentType:"application/json", body: JSON.stringify({
         auth:true, signedIn:true, role:"admin", requests:[], deals:[],
         providers:[
-          { id:"pv-one", name:"가나다 인테리어", regions:["gyeonggi"],
-            gu:["안양시"], industries:["cafe"], subs:["interior"],
+          { id:"pv-one", name:"가나다 폰수리", regions:["gyeonggi"],
+            gu:["안양시"], industries:["phone"], subs:["lcd"],
             listed:true, assignable:true },
-          { id:"pv-two", name:"라마바 철거", regions:["seoul"], gu:[],
-            industries:["restaurant"], subs:["demolish"],
+          { id:"pv-two", name:"라마바 검수", regions:["seoul"], gu:[],
+            industries:["tablet"], subs:["wipe"],
             listed:true, assignable:true }
         ],
         /* pv-one 만 담당자가 있습니다 — 세는 값이 맞는지 봅니다 */
@@ -1428,7 +1486,7 @@ function ok(name, cond, extra) {
      업체명 · 번호 · 하는 일을 **다시 손으로 칩니다.**
      ⚠️⚠️ **여기서 업체가 되는 것이 아닙니다** — 통화도 안 한 회사가
      배정 고르개에 서면 그 순간 손님 성함 · 연락처가 넘어갑니다
-     (제17조 제2항). 등록 줄은 관리자 설정 9번 칸이 만듭니다. */
+     (제17조 제2항). 등록 줄은 관리자 설정 8번 칸이 만듭니다. */
   console.log("\nP1-7 — 업체 입점 신청 (/join 에서 들어온 것)");
   {
     const { pg, ctx, errs } = await fresh(1440, 1400);
@@ -1441,20 +1499,20 @@ function ok(name, cond, extra) {
     await pg.route("**/api/me**", r => r.fulfill({ status:200,
       contentType:"application/json", body: JSON.stringify({
         auth:true, signedIn:true, role:"staff", requests:[],
-        providers:[{ id:"pv-one", name:"가나다 인테리어", regions:["gyeonggi"],
-                     gu:["안양시"], industries:["cafe"], subs:["interior"],
+        providers:[{ id:"pv-one", name:"가나다 폰수리", regions:["gyeonggi"],
+                     gu:["안양시"], industries:["phone"], subs:["lcd"],
                      listed:true, assignable:true }],
         contacts:[], staff:[],
         applies:[
-          { id:"ap-1", no:"SW-APPL-0001", company:"가나덕트",
+          { id:"ap-1", no:"SW-APPL-0001", company:"가나폰마켓",
             brn:"123-45-67890", name:"김기사", tel:"010-7777-8888",
-            email:"a@b.co", region:"경기", industry:"음식점",
-            services:["덕트 · 환기","주방설비"], note:"주말도 됩니다",
+            email:"a@b.co", region:"경기", industry:"스마트폰",
+            services:["중고폰 매입","액정 교체"], note:"주말도 됩니다",
             state:"new", provider_id:null, memo:null,
             created_at:"2026-10-25T02:00:00+00:00" },
-          { id:"ap-2", no:"SW-APPL-0002", company:"라마바 철거",
+          { id:"ap-2", no:"SW-APPL-0002", company:"라마바 검수센터",
             name:"이사장", tel:"010-2222-3333", region:"서울",
-            services:["철거"], state:"called", provider_id:null,
+            services:["검수 · 데이터 삭제"], state:"called", provider_id:null,
             memo:"다음 주에 다시",
             created_at:"2026-10-24T02:00:00+00:00" }
         ],
@@ -1485,8 +1543,8 @@ function ok(name, cond, extra) {
     /* ⚠️⚠️ 여기서 바로 업체가 되는 것이 아니라고 적습니다 */
     ok("바로 업체가 되는 것이 아니라고 적는다",
        apTx.includes("배정 고르개"), apTx.slice(0, 500));
-    ok("등록 줄은 9번 칸이 만든다고 적는다",
-       apTx.includes("9번 칸"), apTx.slice(0, 500));
+    ok("등록 줄은 8번 칸이 만든다고 적는다",
+       apTx.includes("8번 칸"), apTx.slice(0, 500));
     /* ⚠️ 펼치기 전에는 **담당자 번호가 화면에 없습니다** — 쉰 건의
        번호를 한 화면에 깔지 않습니다 (담당자 칸과 같은 선) */
     ok("⚠️ 펼치기 전에는 담당자 번호가 안 보인다",
@@ -1500,7 +1558,7 @@ function ok(name, cond, extra) {
     ok("접수번호가 보인다", bd.includes("SW-APPL-0001"), bd.slice(0, 300));
     ok("담당자 · 사업자번호 · 하시는 일이 보인다",
        bd.includes("김기사") && bd.includes("123-45-67890") &&
-       bd.includes("덕트 · 환기"), bd.slice(0, 400));
+       bd.includes("중고폰 매입"), bd.slice(0, 400));
     /* ⚠️ 전화 링크는 **숫자만** · 누름 44px 이상 */
     const tel = pg.locator("#rq .rq-s-ap .rq-bd a.rq-tel").first();
     ok("전화 링크가 숫자만 담는다",
@@ -1598,8 +1656,8 @@ function ok(name, cond, extra) {
       contentType:"application/json", body: JSON.stringify({
         auth:true, signedIn:true, role:"staff",
         requests:[], providers:[
-          { id:"pv-one", name:"가나다 인테리어", regions:["gyeonggi"],
-            gu:["안양시"], industries:["cafe"], subs:["interior"], listed:false }
+          { id:"pv-one", name:"가나다 폰수리", regions:["gyeonggi"],
+            gu:["안양시"], industries:["phone"], subs:["lcd"], listed:false }
         ] }) }));
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
     await pg.waitForTimeout(500);
@@ -1774,13 +1832,13 @@ function ok(name, cond, extra) {
       contentType:"application/json", body: JSON.stringify({
         auth:true, signedIn:true, role:"admin",
         requests:[
-          { id:R, no:"SW-AB12-CD34", side:"start", cat:"interior",
-            industry:"cafe", region:"gyeonggi", gu:"안양시", state:"check",
+          { id:R, no:"SW-AB12-CD34", side:"buyin", cat:"buyin",
+            industry:"phone", region:"gyeonggi", gu:"안양시", state:"check",
             created_at:"2026-10-17T02:00:00+00:00", assignment:[],
             request_item:[
-              { id:"it-1", service_id:"interior", state:"new",
-                detail:{ "공사 범위":"전체 시공" }, assignment:[] },
-              { id:"it-2", service_id:"equip", state:"assigned",
+              { id:"it-1", service_id:"buyin", state:"new",
+                detail:{ "기기 종류":"휴대폰" }, assignment:[] },
+              { id:"it-2", service_id:"fix", state:"assigned",
                 detail:{}, assignment:[{ provider_id:"pv-one", state:"sent" }] },
               /* ⚠️ 내려간 분류의 옛 항목 — 이름을 모르면 key 를 냅니다 */
               { id:"it-3", service_id:"없어진분류", state:"new",
@@ -1788,12 +1846,12 @@ function ok(name, cond, extra) {
             ] },
           /* ⚠️ 항목이 없는 옛 접수 — 구간째 빠져야 합니다 (절대 규칙 2) */
           { id:"22222222-2222-2222-2222-222222222222", no:"SW-EF56-GH78",
-            side:"close", cat:"demolish", industry:"restaurant",
+            side:"repair", cat:"fix", industry:"tablet",
             region:"seoul", gu:"", state:"new",
             created_at:"2026-10-16T02:00:00+00:00", assignment:[] }
         ],
-        providers:[{ id:"pv-one", name:"가나다 인테리어", listed:true },
-                   { id:"pv-two", name:"라마바 설비", listed:false }],
+        providers:[{ id:"pv-one", name:"가나다 폰수리", listed:true },
+                   { id:"pv-two", name:"라마바 검수", listed:false }],
         quotes:[], deals:[], fees:[] }) }));
 
     await pg.route("**/api/deal", r => {
@@ -1813,7 +1871,7 @@ function ok(name, cond, extra) {
     /* ⚠️⚠️ 이름은 catalog.js 에서 읽습니다 — key 를 그대로 찍으면
        이 저장소가 `gyeonggi` · `espresso` 로 겪은 자리입니다 */
     ok("서비스 이름을 분류에서 읽는다",
-       names[0] === "인테리어 · 시공" && names[1] === "시설 · 장비", names.join(" / "));
+       names[0] === "중고폰 매입" && names[1] === "수리 서비스", names.join(" / "));
     /* ⚠️ 내려간 분류는 **key 를 그대로** 냅니다 (지난 신청은 보존 · §12) */
     ok("모르는 분류는 key 를 그대로 낸다", names[2] === "없어진분류", names[2]);
     ok("이미 배정된 항목은 업체가 보인다",
@@ -1824,7 +1882,7 @@ function ok(name, cond, extra) {
     await pg.locator("#rq .rq-it-b").first().click();
     await pg.waitForTimeout(200);
     ok("적어 주신 서비스별 답이 보인다",
-       (await pg.locator("#rq .rq-it-d").textContent()).includes("전체 시공"));
+       (await pg.locator("#rq .rq-it-d").textContent()).includes("휴대폰"));
     ok("업체 고르개가 둘이다 (공개 전도 보입니다)",
        (await pg.locator("#rq-ipv-it-1 option").count()) === 3);
 
@@ -2037,36 +2095,36 @@ function ok(name, cond, extra) {
         body: JSON.stringify({
           auth:true, signedIn:true, role:"admin", me:ME,
           requests:[
-            { id:R1, no:"SW-AB12-CD34", side:"start", cat:"interior",
-              industry:"cafe", region:"gyeonggi", gu:"안양시", state:"check",
+            { id:R1, no:"SW-AB12-CD34", side:"buyin", cat:"buyin",
+              industry:"phone", region:"gyeonggi", gu:"안양시", state:"check",
               owner_id:ME, created_at:"2026-10-11T02:00:00+00:00", assignment:[] },
-            { id:R2, no:"SW-EF56-GH78", side:"close", cat:"demolish",
-              industry:"restaurant", region:"seoul", gu:"", state:"check",
+            { id:R2, no:"SW-EF56-GH78", side:"repair", cat:"fix",
+              industry:"tablet", region:"seoul", gu:"", state:"check",
               owner_id:null, created_at:"2026-10-10T02:00:00+00:00", assignment:[] }
           ],
           staff:[{ id:ME, name:"김직원", role:"staff" },
                  { id:"55555555-5555-5555-5555-555555555555", name:"관리자", role:"admin" }],
           providers:[
-            { id:"pv-ok",  name:"가나다 인테리어", listed:true,  assignable:true,
-              subs:["interior"], regions:["gyeonggi"], gu:[], industries:[] },
+            { id:"pv-ok",  name:"가나다 폰매입", listed:true,  assignable:true,
+              subs:["ph-buy"], regions:["gyeonggi"], gu:[], industries:[] },
             /* ⚠️⚠️ **구두 합의 단계 업체** — 계약 전에 배정되면 그 순간
                성함 · 연락처가 그 업체로 넘어갑니다 (제17조 제2항). */
-            /* ⚠️⚠️ `subs` 는 **하위 key** 입니다 (`demolish` 는 분류 key —
+            /* ⚠️⚠️ `subs` 는 **하위 key** 입니다 (`fix` 는 분류 key —
                적으면 조건에 아예 안 맞아서 아래 추천 검사가 **엉뚱한
-               까닭으로** 통과합니다). `full` = 전체 철거. */
-            { id:"pv-new", name:"무촌철거", listed:true, assignable:false,
-              subs:["full"], regions:["seoul"], gu:[], industries:[] },
-            /* 조건(하는 일 · 지역 · 업종)이 **다 맞는** 곳 — P2 ⑲ */
-            { id:"pv-fit", name:"서울 철거산업", listed:true, assignable:true,
-              subs:["demolish","waste"], regions:["seoul"], gu:["강남구"],
-              industries:["restaurant"] }
+               까닭으로** 통과합니다). `board` = 메인보드 수리. */
+            { id:"pv-new", name:"무촌폰수리", listed:true, assignable:false,
+              subs:["board"], regions:["seoul"], gu:[], industries:[] },
+            /* 조건(하는 일 · 지역 · 취급 기기)이 **다 맞는** 곳 — P2 ⑲ */
+            { id:"pv-fit", name:"서울 폰수리산업", listed:true, assignable:true,
+              subs:["lcd","battery"], regions:["seoul"], gu:["강남구"],
+              industries:["tablet"] }
           ],
           quotes:[], deals:[], audits:[],
           /* 연락처는 **`?c=1` 로 물을 때만** 옵니다 */
           contact: (one && wantC)
             ? { id:one, no:"SW-AB12-CD34", name:"최사장", tel:"010-7777-0000",
-                email:"owner@test.invalid", body:"주방 공사 견적이 필요합니다",
-                detail:{ "평수":"18평" }, owner_id:ME }
+                email:"owner@test.invalid", body:"액정이 깨져서 수리가 필요합니다",
+                detail:{ "기기 종류":"태블릿" }, owner_id:ME }
             : undefined,
           history: one ? [] : undefined }) });
     });
@@ -2121,8 +2179,8 @@ function ok(name, cond, extra) {
     txt = await pg.locator("#rq .rq-con-b").textContent();
     ok("눌러야 연락처가 온다", /010-7777-0000/.test(txt) && /최사장/.test(txt), txt.slice(0, 200));
     ok("?c=1 로 물었다", conAsk === before + 1, conAsk + " / " + before);
-    ok("요청 내용도 같이 온다", /주방 공사 견적/.test(txt), txt.slice(0, 240));
-    ok("적어 주신 조건도 온다", /18평/.test(txt), txt.slice(0, 240));
+    ok("요청 내용도 같이 온다", /액정이 깨져서/.test(txt), txt.slice(0, 240));
+    ok("적어 주신 조건도 온다", /태블릿/.test(txt), txt.slice(0, 240));
     /* ⚠️ 전화는 **누름 44px 이상**이고 숫자만 넣습니다 */
     const tel = await pg.locator("#rq .rq-con-b .rq-tel").getAttribute("href");
     ok("전화 링크에 숫자만 넣는다", tel === "tel:01077770000", tel);
@@ -2157,7 +2215,7 @@ function ok(name, cond, extra) {
     ok("제17조를 그 자리에서 알려 준다", /제17조/.test(pvTxt), pvTxt);
 
     /* ── 조건에 맞는 업체 추천 (P2 ⑲) ─────────────────────────
-       ⚠️⚠️ 지금 펼친 건은 **철거 · 서울 · 음식점**입니다 — 조건이 다
+       ⚠️⚠️ 지금 펼친 건은 **수리 · 서울 · 태블릿**입니다 — 조건이 다
        맞는 곳은 `pv-fit` 하나이고, `pv-new` 는 조건은 맞지만 **배정
        가능이 꺼져** 있어 추천에 안 올라갑니다 (켜기 전에 배정하면
        그 순간 제17조). */
@@ -2170,7 +2228,7 @@ function ok(name, cond, extra) {
     ok("배정 가능이 꺼진 곳은 추천에 안 올린다",
        !!grp[1] && grp[1].v.indexOf("pv-new") >= 0, JSON.stringify(grp));
     ok("무엇을 보고 추렸는지 적는다",
-       /하는 일/.test(pvTxt) && /서울/.test(pvTxt) && /음식점/.test(pvTxt), pvTxt);
+       /하는 일/.test(pvTxt) && /서울/.test(pvTxt) && /태블릿/.test(pvTxt), pvTxt);
     /* ⚠️⚠️ **추천이 아니라 조건**이라고 적습니다. 평점 · 응답속도로 줄을
        세우면 그 순서가 곧 지어낸 추천입니다 (절대 규칙 1). */
     ok("평점 · 응답속도로 세우지 않는다고 적는다",
@@ -2202,11 +2260,11 @@ function ok(name, cond, extra) {
     vs = await pg.locator("#rq-pv option").evaluateAll(
       els => els.map(e => e.value).filter(Boolean));
     ok("시 · 군 · 구로도 걸린다", vs.join() === "pv-fit", vs.join());
-    await pg.locator("#rq-pv-q").fill("음식점");
+    await pg.locator("#rq-pv-q").fill("태블릿");
     await pg.waitForTimeout(250);
     vs = await pg.locator("#rq-pv option").evaluateAll(
       els => els.map(e => e.value).filter(Boolean));
-    ok("업종 이름으로도 걸린다", vs.join() === "pv-fit", vs.join());
+    ok("취급 기기 이름으로도 걸린다", vs.join() === "pv-fit", vs.join());
     /* ⚠️⚠️ **고른 것이 걸러져 사라지지 않습니다** — 사라지면 select 가
        첫 칸으로 돌아가고 직원은 자기가 고른 줄 압니다. */
     await pg.locator("#rq-pv").selectOption("pv-fit");
@@ -2227,7 +2285,7 @@ function ok(name, cond, extra) {
     await pg.waitForTimeout(250);
 
     /* 업체 구간 — 딱지와 단추 */
-    const pvRow = pg.locator("#rq .rq-s-pv .rq-r").filter({ hasText:"무촌철거" });
+    const pvRow = pg.locator("#rq .rq-s-pv .rq-r").filter({ hasText:"무촌폰수리" });
     ok("업체 줄에 배정 불가 딱지가 있다",
        (await pvRow.locator(".myq-st", { hasText:"배정 불가" }).count()) === 1);
     ok("공개와 배정 가능이 다른 것이라고 적는다",
@@ -2276,28 +2334,28 @@ function ok(name, cond, extra) {
       body: JSON.stringify({
         auth:true, signedIn:true, role:"admin", me:ME,
         requests:[
-          { id:R1, no:"SW-AB12-CD34", side:"close", cat:"demolish",
-            industry:"restaurant", region:"seoul", gu:"", state:"check",
+          { id:R1, no:"SW-AB12-CD34", side:"repair", cat:"fix",
+            industry:"phone", region:"seoul", gu:"", state:"check",
             owner_id:ME, created_at:"2026-10-25T02:00:00+00:00", assignment:[] }
         ],
         staff:[{ id:ME, name:"김직원", role:"staff" }],
         providers:[
-          /* ⚠️ `subs` 는 **하위 key** 입니다 — `demolish` 는 분류 key 라
+          /* ⚠️ `subs` 는 **하위 key** 입니다 — `fix` 는 분류 key 라
              조건에 아예 안 맞고, 그러면 아래 추천 검사가 엉뚱한 까닭으로
-             통과합니다 (씨앗이 틀린 자리). */
-          { id:"pv-link", name:"이음철거", listed:true, assignable:true,
-            subs:["full"], regions:["seoul"], gu:[], industries:[] },
+             통과합니다 (씨앗이 틀린 자리). `lcd` = 액정 교체. */
+          { id:"pv-link", name:"이음폰수리", listed:true, assignable:true,
+            subs:["lcd"], regions:["seoul"], gu:[], industries:[] },
           /* ⚠️⚠️ **계정이 안 이어진 업체** — 켜 봐야 0018 이 거절합니다 */
-          { id:"pv-bare", name:"홀로철거", listed:true, assignable:false,
-            subs:["full"], regions:["seoul"], gu:[], industries:[] },
+          { id:"pv-bare", name:"홀로폰수리", listed:true, assignable:false,
+            subs:["lcd"], regions:["seoul"], gu:[], industries:[] },
           /* ⚠️⚠️ **켜 둔 뒤에 연결이 풀린 업체** — 여기가 진짜 위험한
              자리입니다. `assignable` 이 켜져 있어서 **배정 가능 쪽
              자물쇠로는 안 걸리고**, 배정하면 0018 의 셋째 자물쇠가
              거절합니다. 이 업체로 재지 않으면 고르개 · 추천 검사가
              "배정 가능 꺼짐" 때문에 **엉뚱한 까닭으로** 통과합니다
              (이 저장소가 0003 에서 겪은 자리). */
-          { id:"pv-cut", name:"끊긴철거", listed:true, assignable:true,
-            subs:["full"], regions:["seoul"], gu:[], industries:[] }
+          { id:"pv-cut", name:"끊긴폰수리", listed:true, assignable:true,
+            subs:["lcd"], regions:["seoul"], gu:[], industries:[] }
         ],
         /* ⚠️ **업체 id 뿐**입니다 (linked_providers() 가 돌려주는 것) */
         linked:["pv-link"],
@@ -2307,8 +2365,8 @@ function ok(name, cond, extra) {
     await pg.waitForTimeout(500);
 
     /* ── 업체 구간 — 딱지와 단추 ─────────────────────────────── */
-    const bare = pg.locator("#rq .rq-s-pv .rq-r").filter({ hasText:"홀로철거" });
-    const link = pg.locator("#rq .rq-s-pv .rq-r").filter({ hasText:"이음철거" });
+    const bare = pg.locator("#rq .rq-s-pv .rq-r").filter({ hasText:"홀로폰수리" });
+    const link = pg.locator("#rq .rq-s-pv .rq-r").filter({ hasText:"이음폰수리" });
     ok("계정이 안 이어진 업체에 딱지가 붙는다",
        (await bare.locator(".myq-st", { hasText:"계정 미연결" }).count()) === 1);
     ok("이어진 업체에는 그 딱지가 없다",
@@ -2359,7 +2417,7 @@ function ok(name, cond, extra) {
     ok("고르개 딱지가 까닭을 말한다", !!bo && /계정 미연결/.test(bo.t), bo);
     const lo = opts.filter(o => o.v === "pv-link")[0];
     ok("이어진 업체는 그대로 고를 수 있다", !!lo && lo.off === false, lo);
-    /* ⚠️ 조건은 둘 다 맞지만(철거 · 서울) 추천에는 안 올립니다 */
+    /* ⚠️ 조건은 둘 다 맞지만(수리 · 서울) 추천에는 안 올립니다 */
     const grp = await pg.locator("#rq-pv optgroup").evaluateAll(
       els => els.map(e => ({ l:e.label,
                              v:[].map.call(e.children, c => c.value) })));

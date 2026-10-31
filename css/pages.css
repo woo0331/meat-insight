@@ -5203,7 +5203,16 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
    단추 16px 이상. **줄이지 마세요.** 손님이 40~60대 사장님입니다. */
 
 /* ── 고르는 카드 (§3-1) ──────────────────────────────────────────── */
-.pk-g{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s4);
+/* ⚠️⚠️ **칸이 둘입니다 — 셋으로 늘리지 마세요.** 이 격자가 사는 자리는
+   `/quote` 의 **760px 짜리 폼 기둥**(`.form-wrap`) 한 곳뿐입니다
+   (전문관 화면이 없어진 뒤로 쓰는 곳이 거기만 남았습니다). 1440px
+   에서도 격자가 쓰는 폭은 **638px** 이라, 셋으로 나누면 카드가 202px
+   이고 글 칸(`.pk-t`)이 **62px** 로 주저앉아 설명이 **여섯 줄로
+   쪼개졌습니다** — 전수 점검의 "낱말 가운데 잘림" 이 잡았습니다.
+   ⚠️⚠️ **바깥 폭(viewport)이 아니라 제 기둥 폭이 정합니다.** 화면이
+   넓어도 이 격자는 안 넓어집니다 — 칸을 늘리시려면 먼저 `.form-wrap`
+   의 폭을 재 보세요 (재지 않고 늘리면 같은 자리로 돌아옵니다). */
+.pk-g{ display:grid; grid-template-columns:repeat(2,1fr); gap:var(--s4);
   list-style:none; padding:0; margin:0; }
 .pk-g > li{ display:flex; }
 
@@ -5255,7 +5264,9 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
      `--acc` 로 두면 2.14 라 체크가 바탕에 묻힙니다. */
   align-self:center; accent-color:var(--acc-dark); }
 
-@media (max-width:1024px){ .pk-g{ grid-template-columns:repeat(2,1fr); } }
+/* ⚠️ 1024px 에서 둘로 줄이던 규칙을 **지웠습니다** — 기본이 둘이라
+   아무 일도 안 하는 규칙이었습니다 (남겨 두면 다음 사람이 그것을
+   고칩니다). 좁은 폭은 아래 620px · 380px 둘이 받습니다. */
 /* §13 — 폰에서 1~2열. 2열을 지키되 카드 안을 세로로 쌓습니다 */
 @media (max-width:620px){
   .pk-c{ grid-template-columns:1fr auto; grid-template-rows:auto auto;
@@ -5602,24 +5613,27 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
 .qs-h i{ display:block; margin-top:3px; font-style:normal;
   font-size:var(--t-base); color:var(--ink2); }
 
-/* 고르신 서비스 — 바구니 칩과 **같은 식구**입니다 (§10) */
-.qs-l{ display:flex; flex-wrap:wrap; gap:var(--s2); list-style:none;
-  padding:0; margin:0 0 var(--s4); }
-.qs-l > li{ display:inline-flex; align-items:center; gap:6px;
-  min-height:48px; padding:0 2px 0 var(--s4);
+/* 몇 개 고르셨나 — ⚠️⚠️ **0개면 줄째 가립니다** (`[data-pick-row]`).
+   개수만 0 으로 고치면 "0개 고르셨습니다" 와 죽은 해제 단추가 그대로
+   섭니다 (절대 규칙 2).
+   ⚠️⚠️ `display:flex` 라 **브라우저 기본 `[hidden]` 을 이깁니다** —
+   아래 `.qs-sum[hidden]` 한 줄이 있어야 실제로 숨습니다 (이 저장소가
+   `.q-draft-b .btn` · `.pk-bar` · `.opg-n` 으로 겪은 자리입니다). */
+.qs-sum{ display:flex; align-items:center; flex-wrap:wrap; gap:var(--s2);
+  margin:var(--s4) 0 0; padding:var(--s3) var(--s4);
   background:var(--sand); border:1px solid var(--acc-dark);
-  border-radius:999px; }
-.qs-n{ font-size:var(--t-base); font-weight:700; color:var(--gold-text); }
-/* ⚠️ 44px — 바구니의 지우기 단추와 같은 까닭입니다 (§9-2) */
-.qs-x{ display:grid; place-items:center; width:44px; height:44px;
-  border:0; border-radius:999px; background:transparent; cursor:pointer;
-  color:var(--ink3); }
-.qs-x:hover{ background:var(--bg-sand); color:var(--ink); }
-.qs-zero{ display:flex; align-items:center; gap:var(--s2);
-  margin:0 0 var(--s4); font-size:var(--t-base); color:var(--ink2); }
-.qs-zero svg{ flex:none; color:var(--blue-600); }
-.qs-go{ margin:0; }
-.qs-go .btn{ min-height:48px; font-size:16px; }
+  border-radius:var(--r-lg);
+  font-size:var(--t-base); color:var(--ink2); }
+.qs-sum[hidden]{ display:none; }
+.qs-sum svg{ flex:none; color:var(--gold-text); }
+.qs-sum > span{ flex:1 1 auto; min-width:0; }
+.qs-sum b{ font-size:var(--t-lg); font-weight:800; color:var(--gold-text); }
+/* ⚠️ 44px 이상 — 누름입니다 (§9-2) */
+.qs-clr{ flex:none; min-height:44px; padding:0 var(--s4);
+  border:1px solid var(--line); border-radius:999px;
+  background:var(--surface); cursor:pointer;
+  font-size:var(--t-sm); font-weight:700; color:var(--ink2); }
+.qs-clr:hover{ border-color:var(--acc-dark); color:var(--ink); }
 
 /* 서비스별 질문 묶음 — 서비스가 여럿이면 묶음도 여럿입니다 */
 .rqf-all{ display:grid; gap:var(--s5); margin:var(--s5) 0 0; }
@@ -5652,7 +5666,7 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
   .qs-h b{ font-size:var(--t-lg); }
   .q-draft-b{ display:grid; }
   .q-draft-b .btn{ width:100%; }
-  .qs-go .btn{ width:100%; }
+  .qs-clr{ width:100%; }
 }
 
 /* ── §7-3 사진 · 서류 붙이기 (접수 완료 안내 안) ──────────────────

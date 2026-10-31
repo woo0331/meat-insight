@@ -56,11 +56,12 @@ window.RegionSelect = function(id, val, onchange, ph, req){
         esc(r.name)+'</option>';
     }).join("")+'</select>';
 };
-window.IndustrySelect = function(id, val, onchange, ph){
+
+window.DeviceKindSelect = function(id, val, onchange, ph){
   return '<select class="sel" id="'+esc(id)+'"'+
     (onchange ? ' onchange="'+esc(onchange)+'"' : '')+
-    ' aria-label="업종"><option value="">'+esc(ph || "업종 전체")+'</option>'+
-    (window.AM_INDUSTRIES||[]).map(function(i){
+    ' aria-label="기기 종류"><option value="">'+esc(ph || "기기 전체")+'</option>'+
+    (window.AM_DEVICE_KINDS||[]).map(function(i){
       return '<option value="'+esc(i.key)+'"'+(i.key===val?" selected":"")+'>'+
         esc(i.name)+'</option>';
     }).join("")+'</select>';
@@ -76,7 +77,8 @@ window.ProviderCard = function(p){
 
   var badges = amProviderBadges(p);
   var subs   = (p.subs||[]).map(amSubName).filter(Boolean);
-  var inds   = (p.industries||[]).map(amIndustryName).filter(Boolean);
+
+  var inds   = (p.industries||[]).map(amKindName).filter(Boolean);
   var regs   = (p.regions||[]).map(amRegionName).filter(Boolean);
   var folio  = (p.portfolio||[]);
   var cover  = p.cover || (folio[0] && folio[0].after) || "";

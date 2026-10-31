@@ -355,7 +355,15 @@ function MyPvSelf(d){
           '<textarea id="pvs-intro" rows="3" maxlength="400" '+
             'placeholder="어떤 일을 얼마나 해 오셨는지 적어 주세요">'+
             esc(m.intro || "")+'</textarea>'+
-          '<span class="f-h">손님이 업체찾기에서 먼저 읽는 글입니다. '+
+          /* ⚠️⚠️ 2026-10-31 — 전에는 "손님이 업체찾기에서 먼저 읽는
+             글입니다" 라고 적고 있었는데, 그 화면(/providers)이 없어져서
+             **지금 이 글을 손님 화면에 내는 자리가 한 곳도 없습니다**
+             (28개 주소를 훑어 확인했습니다). 가는 곳을 사실대로 적습니다 —
+             안 그러면 업체 사장님이 손님에게 보인다고 믿고 적으십니다
+             (절대 규칙 5). ⚠️ 손님 목록 화면이 생기는 날 이 줄도 같이
+             고치세요. */
+          '<span class="f-h">저희 직원이 요청을 넘길 곳을 고를 때 먼저 '+
+            '읽는 글입니다. 지금은 손님 화면에 나가지 않습니다. '+
             '⚠️ 지어낸 실적 · 평점 · "검증된" 같은 말은 적지 마세요 '+
             '(표시 · 광고의 공정화에 관한 법률 제3조).</span>'+
         '</div>'+
@@ -380,14 +388,14 @@ function MyPvSelf(d){
             '곳은 이것이 있어야 가까운 요청만 갑니다.</span>'+
         '</div>'+
         '<div class="f-r">'+
-          '<label for="pvs-ind">잘하시는 업종</label>'+
-          '<select id="pvs-ind" class="sel" multiple size="6">'+
-            (typeof AM_INDUSTRIES !== "undefined" ? AM_INDUSTRIES : []).map(function(i){
+          '<label for="pvs-ind">취급 기기</label>'+
+          '<select id="pvs-ind" class="sel" multiple size="4">'+
+            (typeof AM_DEVICE_KINDS !== "undefined" ? AM_DEVICE_KINDS : []).map(function(i){
               return '<option value="'+esc(i.key)+'"'+
                 ((m.industries || []).indexOf(i.key) >= 0 ? " selected" : "")+'>'+
                 esc(i.name)+'</option>'; }).join("")+
           '</select>'+
-          '<span class="f-h">비워 두면 전업종으로 읽습니다.</span>'+
+          '<span class="f-h">비워 두면 전 기기로 읽습니다.</span>'+
         '</div>'+
         '<div class="f-r">'+
           '<label for="pvs-since">문 연 해</label>'+
@@ -555,10 +563,15 @@ function MyPvList(L, d){
     '</li>'; }).join("")+'</ul>';
 }
 
+/* 신청 한 건의 조건 줄 — ⚠️⚠️ **쪽 이름을 손으로 적지 마세요.**
+   전에 "close 가 아니면 창업" 이라 적혀 있어서 중고폰 쪽 접수가 전부
+   "창업" 으로 보였습니다 — 이름은 `AM_SIDES`(js/data/deal.js) 한
+   곳입니다 (`amSideShort()`).
+   ⚠️ `r.industry` 는 2026-10-31 로 **기기 종류**입니다 (전엔 업종). */
 function myCond(r, cat){
-  return [ (r.side === "close" ? "폐업 · 정리" : "창업"),
+  return [ (typeof amSideShort === "function" ? amSideShort(r.side) : ""),
     (cat ? cat.name : ""),
-    (r.industry && typeof amIndustryName === "function" ? amIndustryName(r.industry) : ""),
+    (r.industry && typeof amKindName === "function" ? amKindName(r.industry) : ""),
     (r.region && typeof amRegionName === "function" ? amRegionName(r.region) : ""),
     (r.gu || "")
   ].filter(Boolean).map(esc).join(" · ");
@@ -642,8 +655,19 @@ function MyFunnel(L){
   var deals = ST.filter(function(s){
       return typeof amDealAfterSign === "function" && amDealAfterSign(s.key); })
     .reduce(function(a, s){ return a + (n[s.key] || 0); }, 0);
-  var side = { start:0, close:0 };
-  L.forEach(function(r){ if(r.side === "close") side.close++; else side.start++; });
+  /* ⚠️⚠️ 2026-10-31 — 쪽을 **창업 · 폐업 둘로 박아** 두고 있었습니다.
+     `AM_SIDES` 는 아홉이고 그중 다섯이 PHONEWAY 쪽인데, `close` 가
+     아니면 전부 "창업 쪽" 으로 세어서 **중고폰 신청 전부가 창업으로**
+     집계됐습니다 — 직원이 보는 숫자가 조용히 거짓인 종류입니다.
+     지금은 `AM_SIDES` 에서 세고 **0건인 쪽은 칸째 뺍니다** (절대
+     규칙 2 — "0건" 칸을 늘어놓지 않습니다). 쪽이 늘면 저절로 따라옵니다. */
+  var side = {};
+  L.forEach(function(r){ var k = r.side || "";
+                         side[k] = (side[k] || 0) + 1; });
+  var sideRows = (window.AM_SIDES || []).filter(function(s){ return side[s.key]; })
+    .map(function(s){
+      return '<div><dt>'+esc(s.short || s.name)+' 쪽</dt><dd>'+
+             side[s.key]+'건</dd></div>'; }).join("");
 
   return '<ul class="myk-g">'+ST.filter(function(s){
       /* 돈이 걸린 상태는 관리자 칸(아래)에서 금액과 같이 냅니다 */
@@ -654,8 +678,7 @@ function MyFunnel(L){
         '<b>'+c+'</b><span>'+esc(s.name)+'</span></li>';
     }).join("")+'</ul>'+
     '<dl class="myd-l myd-l3">'+
-      '<div><dt>창업 쪽</dt><dd>'+side.start+'건</dd></div>'+
-      '<div><dt>폐업 · 정리 쪽</dt><dd>'+side.close+'건</dd></div>'+
+      sideRows+
       /* ⚠️⚠️ **분모가 0 이면 비율을 안 냅니다** — "전환율 0%" 는 비율이
          아닙니다 (`/admin` 의 `slPct()` 와 같은 규칙). 여기는 위에서
          이미 0건을 걸러 냈으니 분모가 늘 1 이상입니다. */
@@ -1079,16 +1102,17 @@ function MyPwBand(){
 }
 
 function PageMy(){
-  var p = amGet(MKEY, { side:"", industry:"", region:"", gu:"", pyeong:"", dday:"" });
   var qs = amGet("am.quotes.v1", []);
-  var ind = p.industry ? amIndustry(p.industry) : null;
 
   return PgHero({
     kicker:"MY",
-    /* ⚠️⚠️ 안 고르신 분께 **"어느 쪽이세요"** 로 묻지 않습니다 — 중고폰을
-       팔러 오신 분께는 창업이냐 폐업이냐가 남의 질문입니다 (헤더
-       메뉴 이름과 같은 **내 기록**입니다). 고르신 분께는 그대로. */
-    h1raw: p.side === "close" ? "내 폐업" : (p.side === "start" ? "내 창업" : "내 기록"),
+    /* ⚠️⚠️ **쪽을 보고 제목을 바꾸지 않습니다.** 전에는 이 브라우저에
+       남은 창업 · 폐업 프로필(`am.profile.v1`)의 `side` 를 보고 "내 창업" ·
+       "내 폐업" 으로 바뀌었습니다 — 그 칸이 2026-10-31 에 화면에서
+       내려갔는데 제목만 남아, 앞서 쓰시던 분께는 중고폰 화면에 **"내
+       폐업"** 이 떴습니다 (재서 알았습니다). 헤더 메뉴와 같은 이름
+       하나입니다. */
+    h1raw:"내 기록",
     lead:"이 브라우저에만 남습니다. 서버로 보내지 않습니다.",
     tight:true
   })+

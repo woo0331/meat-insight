@@ -93,11 +93,17 @@ window.RegionSelect = function(id, val, onchange, ph, req){
         esc(r.name)+'</option>';
     }).join("")+'</select>';
 };
-window.IndustrySelect = function(id, val, onchange, ph){
+/* 기기 종류 고르개 — ⚠️⚠️ **2026-10-31 로 `IndustrySelect`(업종 열넷)를
+   대신합니다.** 업종(음식점 · 카페 · 미용 …)은 창업 · 폐업 쪽 축이고
+   중고폰에는 쓸 자리가 없습니다. 지금 축은 **기기 종류**이고 목록은
+   `js/data/devices.js` 의 `AM_DEVICE_KINDS` 한 곳입니다.
+   ⚠️ 적는 화면에서는 넷째 인자로 "골라 주세요" 를 주세요 — 거르개의
+   "전체" 를 그대로 쓰면 고른 것처럼 읽힙니다. */
+window.DeviceKindSelect = function(id, val, onchange, ph){
   return '<select class="sel" id="'+esc(id)+'"'+
     (onchange ? ' onchange="'+esc(onchange)+'"' : '')+
-    ' aria-label="업종"><option value="">'+esc(ph || "업종 전체")+'</option>'+
-    (window.AM_INDUSTRIES||[]).map(function(i){
+    ' aria-label="기기 종류"><option value="">'+esc(ph || "기기 전체")+'</option>'+
+    (window.AM_DEVICE_KINDS||[]).map(function(i){
       return '<option value="'+esc(i.key)+'"'+(i.key===val?" selected":"")+'>'+
         esc(i.name)+'</option>';
     }).join("")+'</select>';
@@ -138,7 +144,13 @@ window.ProviderCard = function(p){
   /* ⚠️ 규칙은 `providers.js` 의 `amProviderBadges()` 한 곳입니다. */
   var badges = amProviderBadges(p);
   var subs   = (p.subs||[]).map(amSubName).filter(Boolean);
-  var inds   = (p.industries||[]).map(amIndustryName).filter(Boolean);
+  /* ⚠️⚠️ **2026-10-31 — 기기 종류입니다** (전엔 업종이었습니다).
+     `provider.industries` 칸은 그대로 쓰고 **뒤지 기기 종류 key**
+     (`AM_DEVICE_KINDS`)로 바띀었습니다 — 지금 뒱록된 업제가 **0곳**이라
+     옆 값이 한 줄도 없어서 뜻이 어긋나는 지난 기록이 없습니다
+     (세어서 확인했습니다). ⚠️ 업제가 뒱록된 뒤에 이 칸의 뜻을
+     다시 바꾸시려면 그날 **마이그레이새이 필요합니다.** */
+  var inds   = (p.industries||[]).map(amKindName).filter(Boolean);
   var regs   = (p.regions||[]).map(amRegionName).filter(Boolean);
   var folio  = (p.portfolio||[]);
   var cover  = p.cover || (folio[0] && folio[0].after) || "";

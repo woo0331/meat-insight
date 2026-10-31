@@ -173,24 +173,34 @@ const seeded = [];
 if (seeded.length) STOP.push("검사 씨앗이 남았습니다 (zz-) — " + seeded.join(" · "));
 
 /* 지금 몇 건인지 **세어서** 적습니다. 막지는 않습니다 — 사장님이 실제
-   업체를 받아 오시면 늘어나는 것이 맞습니다. 다만 늘었으면 보이게 합니다. */
+   업체를 받아 오시면 늘어나는 것이 맞습니다. 다만 늘었으면 보이게 합니다.
+   ⚠️⚠️ **2026-10-31 — 세던 넷 중 셋이 없어진 파일이었습니다**
+   (market · franchise · support). `L()` 이 그때 "?" 를 돌려주는데,
+   그 "?" 는 **0 도 아니고 숫자도 아니라** 참으로 읽혀서 바로 아래
+   경고가 늘 떴습니다 — "데이터가 0 이 아닙니다" 가 **파일이 없다는
+   뜻으로** 나가고 있었습니다. 지금은 중고폰 쪽을 셉니다.
+   ⚠️ 못 읽은 것은 **세지 않고 그렇게 적습니다** — 못 읽은 것을 0 으로
+   적으면 지어낸 수가 되고, 참으로 읽으면 멀쩡한 트리가 늘 경고입니다. */
 const counts = (() => {
   try {
     const g = { window: {} };
-    ["providers", "market", "franchise", "support"].forEach(n => {
+    ["providers", "shop", "devices"].forEach(n => {
       const p = path.join(ROOT, "js/data/" + n + ".js");
       if (fs.existsSync(p)) new Function("window", fs.readFileSync(p, "utf8"))(g.window);
     });
-    const L = k => Array.isArray(g.window[k]) ? g.window[k].length : "?";
-    return { pv: L("AM_PROVIDERS"), st: L("AM_STORES"), as: L("AM_ASSETS"),
-             fc: L("AM_FRANCHISES"), sp: L("AM_SUPPORTS") };
+    const L = k => Array.isArray(g.window[k]) ? g.window[k].length : null;
+    return { pv: L("AM_PROVIDERS"), pd: L("AM_PRODUCTS"),
+             md: L("AM_MODELS"), bp: L("AM_BUY_PRICE") };
   } catch (e) { return null; }
 })();
 if (counts) {
-  say("  지금 데이터   업체 " + counts.pv + "곳 · 점포 " + counts.st + "건 · 시설 " +
-      counts.as + "건 · 브랜드 " + counts.fc + "개 · 공고 " + counts.sp + "건");
-  if (counts.pv || counts.st || counts.as || counts.fc || counts.sp)
-    WARN.push("데이터가 0 이 아닙니다 — 실제로 받아 오신 것만 올라가는지 보세요 (절대 규칙 1)");
+  const n = v => v == null ? "못 읽음" : String(v);
+  say("  지금 데이터   업체 " + n(counts.pv) + "곳 · 중고폰 재고 " + n(counts.pd) +
+      "건 · 기기 " + n(counts.md) + "종 · 매입 기준가 " + n(counts.bp) + "건");
+  /* ⚠️ 기기 65종은 **카탈로그**라 0 이 아닌 것이 맞습니다 — 세기만 합니다.
+     지어낼 수 없는 것(업체 · 재고 · 기준가)만 늘었을 때 보이게 합니다. */
+  if (counts.pv || counts.pd || counts.bp)
+    WARN.push("업체 · 재고 · 기준가가 0 이 아닙니다 — 실제로 받아 오신 것만 올라가는지 보세요 (절대 규칙 1)");
 }
 
 /* ── 검사용 가짜 auth 를 운영 코드가 부르는지 ───────────────────

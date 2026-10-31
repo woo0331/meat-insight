@@ -517,3 +517,12 @@ window.amSideName = function(key){
   var s = window.amSide(key);
   return s ? s.name : "";
 };
+/* 짧은 이름 — ⚠️ 목록의 메타줄은 ` · ` 로 이어 붙이는 자리라 긴 이름을
+   쓰면 어디까지가 쪽인지 안 읽힙니다 (`js/intake.js` 의 `rqSideName()` ·
+   `/my` 의 `myCond()` 가 같이 씁니다).
+   ⚠️⚠️ **두 곳에 적지 마세요** — 전에 `/my` 가 "close 가 아니면 창업"
+   이라 손으로 적고 있어서 중고폰 접수가 전부 "창업" 으로 보였습니다. */
+window.amSideShort = function(key){
+  var s = window.amSide(key);
+  return s ? (s.short || s.name) : "";
+};

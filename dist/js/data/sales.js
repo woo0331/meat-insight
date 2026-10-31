@@ -1,67 +1,53 @@
 
 
 window.AM_SALES_GROUPS = [
-  { key:"estate", no:"01", name:"점포 · 부동산", prio:2,
-    cats:["store", "area", "transfer"],
-    find:["상가 전문 공인중개", "점포 임대 중개", "상권분석", "권리금 중개"] },
+  { key:"buyin", no:"01", name:"중고폰 매입점", prio:1,
+    cats:["buyin"],
+    find:["중고폰 매입", "휴대폰 매입", "폰 매입 전문", "중고 아이폰 매입",
+          "갤럭시 매입", "태블릿 매입"] },
 
-  { key:"interior", no:"02", name:"인테리어 · 시공", prio:1,
-    cats:["interior"],
-    find:["상업 인테리어", "음식점 인테리어", "카페 인테리어", "미용실 인테리어",
-          "사무실 인테리어", "전기공사", "설비", "간판"] },
+  { key:"broken", no:"02", name:"고장 · 파손폰 매입", prio:1,
+    cats:["broken"],
+    find:["액정파손 폰 매입", "고장폰 매입", "침수폰 매입", "부품용 폰 매입",
+          "배터리 불량 폰 매입"] },
 
-  { key:"demolish", no:"03", name:"철거 · 원상복구", prio:1,
-    cats:["demolish", "restore"],
-    find:["매장 철거", "부분 철거", "원상복구", "집기 철거", "폐기물 처리"] },
+  { key:"fix", no:"03", name:"수리 · 리퍼", prio:1,
+    cats:["fix"],
+    find:["휴대폰 수리", "아이폰 수리", "액정 교체", "배터리 교체",
+          "사설 수리점", "메인보드 수리"] },
 
-  { key:"equip", no:"04", name:"시설 · 장비 · 수리", prio:1,
-    cats:["equip", "furniture", "repair"],
-    find:["주방설비", "냉장 냉동장비", "업소용 장비", "중고 주방기기",
-          "업소용 가구", "음향 영상"] },
+  { key:"inspect", no:"04", name:"검수 · 데이터 삭제", prio:1,
+    cats:["inspect"],
+    find:["휴대폰 데이터 삭제", "단말기 검수", "IMEI 조회",
+          "리퍼 검수", "통신사 잠금 해제"] },
 
-  { key:"it", no:"05", name:"POS · IT · 보안", prio:1,
-    cats:["it"],
-    find:["POS 대리점", "키오스크", "테이블오더", "CCTV 설치", "매장 인터넷"] },
+  { key:"wholesale", no:"05", name:"도매 · 경매", prio:1,
+    cats:["wholesale"],
+    find:["중고폰 도매", "휴대폰 도매상", "중고폰 경매", "단말기 벌크",
+          "부품용 로트"] },
 
-  { key:"tax", no:"06", name:"세무 · 회계", prio:2,
-    cats:["tax"],
+  { key:"corp", no:"06", name:"기업 · 법인 매입", prio:2,
+    cats:["corp"],
+    find:["법인 휴대폰 매입", "기업 단말기 처분", "업무용 기기 반납",
+          "렌탈 단말기 회수", "자산 평가"] },
 
-    subs:[["admin", "tax-agent"], ["admin", "biz-reg"]],
-    find:["세무사 사무실", "기장 대행", "부가세 신고", "폐업 세무"] },
+  { key:"export", no:"07", name:"해외 수출 · 바이어", prio:2,
+    cats:["export"],
+    find:["중고폰 수출", "휴대폰 바이어", "수출 통관 대행",
+          "컨테이너 수출", "해외 도매"] },
 
-  { key:"labor", no:"07", name:"노무 · 인사", prio:3,
-    cats:["labor", "staff"],
-    subs:[["admin", "labor-agent"]],
-    find:["노무사 사무실", "급여 대행", "4대보험 업무대행"] },
+  { key:"shop", no:"08", name:"중고폰 판매점", prio:2,
+    cats:["shop"],
+    find:["중고폰 판매점", "리퍼폰 판매", "중고 휴대폰 매장",
+          "자급제 중고폰"] },
 
-  { key:"marketing", no:"08", name:"마케팅 · 디자인", prio:2,
-    cats:["marketing"],
-    find:["매장 마케팅 대행", "플레이스 관리", "블로그 대행", "메뉴판 디자인",
-          "매장 촬영", "브랜딩"] },
+  { key:"logi", no:"09", name:"수거 · 배송 · 부자재", prio:3,
+    cats:["pickup", "access"],
+    find:["택배 수거 대행", "퀵 수거", "방문 수거",
+          "휴대폰 케이스 도매", "충전기 도매", "강화유리 도매"] },
 
-  { key:"clean", no:"09", name:"청소 · 방역 · 관리", prio:2,
-    cats:["clean"],
-    find:["입주청소", "매장 정기청소", "주방 후드청소", "방역", "해충방제"] },
-
-  { key:"supply", no:"10", name:"식자재 · 운영공급", prio:3,
-    cats:["supply"],
-    find:["식자재 납품", "육류 납품", "음료 총판", "포장용기", "유니폼"] },
-
-  { key:"legal", no:"11", name:"행정 · 법률 · 전문가", prio:3,
-    cats:["admin", "law", "contract"],
-    find:["행정사 사무소", "인허가 대행", "법무사", "임대차 분쟁 변호사"] },
-
-  { key:"fund", no:"12", name:"금융 · 보험 · 지원", prio:3,
-    cats:["fund"],
-    find:["사업자 보험", "정책자금 컨설팅", "정부지원사업 컨설팅"] },
-
-  { key:"closing", no:"13", name:"폐업 · 정리", prio:1,
-    cats:["process", "asset", "stock", "waste", "support"],
-    find:["폐업 대행", "중고 주방기기 매입", "시설 매입", "재고 처분",
-          "사업장 폐기물"] },
-
-  { key:"etc", no:"14", name:"기타", prio:3, etc:true, cats:[],
-    find:["프랜차이즈 본사", "창업 컨설팅"] }
+  { key:"etc", no:"10", name:"기타", prio:3, etc:true, cats:[],
+    find:["통신기기 유통", "휴대폰 액세서리 총판"] }
 ];
 
 window.amSalesEtcCats = function(){

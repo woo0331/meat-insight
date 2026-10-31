@@ -28,14 +28,19 @@
   걱정하지 않으셔도 됩니다. (자산 주소의 ?v= 와 브랜드 이름 두 칸만
   빌드가 갈아 끼웁니다.)
 
-  ⚠️⚠️ **접수 정리 · 환경변수 · 매물 등록 줄은 지우지 않았습니다** —
+  ⚠️⚠️ **접수 정리 · 환경변수 · 제휴업체 등록 줄은 지우지 않았습니다** —
   맨 아래 "관리자 설정" 안으로 접었습니다 (지시서 §29 · §41). 직원의
   업무화면에서 안 보이게만 했고 기능은 그대로입니다.
+
+  ⚠️⚠️ 2026-10-31 — 그 안의 칸 **셋**은 아예 내렸습니다 (PHONEWAY 전환
+  §2) — 지원사업 '찾는 곳' 링크 · 매물 등록 줄 · 전문관 노출 순서.
+  셋 다 창업 · 폐업 전용이고 데이터 파일과 같이 지웠습니다.
+  꺼내 보시려면 `git show 6d85a17:js/admin.js` 입니다.
   ════════════════════════════════════════════════════════════════
 -->
 <link rel="stylesheet" href="/dist/css/tokens.css?v=7341a748">
 <link rel="stylesheet" href="/dist/css/app.css?v=132f3ad5">
-<link rel="stylesheet" href="/dist/css/pages.css?v=90b40557">
+<link rel="stylesheet" href="/dist/css/pages.css?v=34b38208">
 <link rel="stylesheet" href="/dist/css/admin.css?v=8e8ccd9c">
 </head>
 <body class="ad-body">
@@ -61,7 +66,11 @@
 
   <!-- ⚠️ 직원 업무화면에서 접어 둔 것 (§29). 기능은 그대로입니다. -->
   <details class="ad-fold">
-    <summary><b>관리자 설정</b><span>접수 정리 · 환경변수 · 매물 등록 줄 · 영업 시작 전 점검</span></summary>
+    <!-- ⚠️⚠️ 이 줄은 **손님(직원)이 보는 글**입니다. 2026-10-31 까지
+         "매물 등록 줄" 이라고 적혀 있었는데 그 칸은 이미 내려갔습니다 —
+         없는 칸을 찾아 열게 하는 딱지였습니다. 칸을 늘리거나 내리면
+         **여기 글도 같이** 고치세요 (`js/admin.js` 의 h2 여덟). -->
+    <summary><b>관리자 설정</b><span>접수 상태 · 접수 정리 · 보낼 글 · 수익상품 · 제휴업체 등록 줄</span></summary>
 
     <p class="ad-sub">여기는 <b>대표가 보는 자리</b>입니다. 들어온 접수를 정리해
       보낼 글을 만들고, 접수처 설정이 살아 있는지 봅니다. 지금은
@@ -99,24 +108,29 @@
 <script src="/dist/js/data/site.js?v=9f0b10d4"></script>
 <script src="/dist/js/data/brand.js?v=2ee46b19"></script>
 <script src="/dist/js/data/regions.js?v=b7a0090c"></script>
-<script src="/dist/js/data/industries.js?v=103f2861"></script>
-<script src="/dist/js/data/catalog.js?v=d4687cec"></script>
-<!-- ⚠️ 초대 글이 "이 분야에 지금 몇 곳" 을 세려면 이 둘이 필요합니다.
-     providers.js 가 먼저여야 join.js 의 amProvidersInCat 이 셀 것이 있습니다. -->
-<script src="/dist/js/data/providers.js?v=c1a9448a"></script>
+<script src="/dist/js/data/catalog.js?v=cd144e13"></script>
+<!-- ⚠️ 영업 작업대가 "이 묶음에 지금 몇 곳" 을 셉니다
+     (`amSalesProviderN()` → `amProvidersInCat()`) · 입점 약속 넷도
+     `join.js` 에서 읽습니다. ⚠️ providers.js 가 **먼저**여야 셀 것이
+     있습니다.
+     ⚠️ 2026-10-31 — 나가는 글에서는 분야 이름을 안 씁니다 (중고폰
+     매입업체에게 창업 · 폐업 분류는 남의 말입니다) — 세는 값만 씁니다. -->
+<script src="/dist/js/data/providers.js?v=4249fc65"></script>
 <script src="/dist/js/data/join.js?v=c95da232"></script>
-<!-- ⚠️ "영업 시작 전에 남은 것" 칸이 지원사업 '찾는 곳' 링크를 셉니다 —
-     이 줄이 없으면 그 항목이 **조용히 통째로 빠집니다**. -->
-<script src="/dist/js/data/support.js?v=5e72524d"></script>
-<script src="/dist/js/data/legal-privacy.js?v=b0fac9af"></script>
+<!-- ⚠️⚠️ "영업 시작 전에 남은 것"(2번 칸)이 **방침의 수탁자**를 셉니다
+     (`adTrustees()` → `WOW_PRIVACY.trustees`) — 이 줄이 없으면 그 항목이
+     **조용히 통째로 빠집니다**.
+     ⚠️ 2026-10-31 — 전에는 까닭을 "지원사업 '찾는 곳' 링크를 셉니다" 로
+     적어 두었는데, `support.js` 가 없어져서 그 까닭이 거짓이 됐습니다.
+     까닭이 틀린 주석은 다음 사람이 **이 줄을 지우게** 만듭니다. -->
+<script src="/dist/js/data/legal-privacy.js?v=eacf02f4"></script>
 <!-- ⚠️ 영업 카테고리는 catalog.js 의 분류를 묶어 보는 틀이라 **그 뒤**입니다 -->
-<script src="/dist/js/data/sales.js?v=0a97f67b"></script>
+<script src="/dist/js/data/sales.js?v=5dc3cb91"></script>
 <!-- ⚠️⚠️ 신청 항목의 서비스 이름 — 2026-10-18 운영 §4-4 로 항목 id 가
      `repair/aircon-fix` 꼴로 올 수 있습니다. 이 줄이 없으면 `rqSvcName()`
      이 분류만 보고 **key 를 그대로 찍어서**, 관리자가 "repair/aircon-fix"
      를 보고 업체를 고르게 됩니다 (포트폴리오에 `gyeonggi` 가 그대로
      찍혔던 자리와 같습니다). ⚠️ catalog · industries 뒤여야 합니다. -->
-<script src="/dist/js/data/svcpick.js?v=255d4747"></script>
 <!-- 수익상품 (수익형 플랫폼 지시서 5절) — catalog · fee 뒤입니다 -->
 <script src="/dist/js/data/fee.js?v=0cab2c2b"></script>
 <script src="/dist/js/data/offers.js?v=92a08469"></script>
@@ -125,18 +139,17 @@
 <!-- ⚠️⚠️ 신청 상태 열셋 · 역할 넷 · 옮길 수 있는 길 — /admin 의 접수
      목록이 상태 이름과 색을 여기서 가져옵니다. 이 줄이 없으면 딱지가
      전부 회색이 되고 상태가 영어로 나옵니다 (에러는 안 납니다). -->
-<script src="/dist/js/data/deal.js?v=ea179015"></script>
+<script src="/dist/js/data/deal.js?v=5fbe1a98"></script>
 <!-- ⚠️⚠️ 직접 매입 재고 (PHONEWAY ⑥) — 기기 상태 아홉 · 갈 수 있는
      길 · 비용 갈래 · 기기 이름입니다. ⚠️ 이 두 줄이 없으면 재고 구간이
      상태를 영어로 내고 기종 이름이 key 로 찍힙니다 (deal.js 와 같은 까닭). -->
 <script src="/dist/js/data/devices.js?v=30141f7b"></script>
 <script src="/dist/js/data/stock.js?v=45d018d9"></script>
-<script defer src="/dist/js/data/halls.js?v=e9811498"></script>
 <!-- 로그인 — ⚠️ admin.html 은 ui.js 를 안 읽으므로 auth.js 가 저장을
      스스로 들고 있습니다 (amGet/amSet 에 의존하지 않습니다). -->
 <script src="/dist/js/auth.js?v=5ffecb76"></script>
-<script src="/dist/js/intake.js?v=d7b0287a"></script>
-<script src="/dist/js/admin.js?v=cae74059"></script>
-<script src="/dist/js/sales.js?v=08ee8abd"></script>
+<script src="/dist/js/intake.js?v=522d5d39"></script>
+<script src="/dist/js/admin.js?v=60945113"></script>
+<script src="/dist/js/sales.js?v=ef24243a"></script>
 </body>
 </html>

@@ -40,7 +40,7 @@ window.AM_VERIFY = [
   { key:"owner",     name:"대표자 확인",  what:"대표자 신원" },
   { key:"phone",     name:"전화 확인",    what:"연락 가능한 번호" },
   { key:"addr",      name:"주소 확인",    what:"사업장 소재지" },
-  { key:"license",   name:"면허 확인",    what:"업종에 필요한 면허 · 자격" },
+  { key:"license",   name:"면허 확인",    what:"사업에 필요한 면허 · 자격" },
   { key:"insurance", name:"보험 가입",    what:"영업배상책임보험 등" }
 ];
 

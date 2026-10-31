@@ -34,10 +34,9 @@ function loadApp(){
   /* ⚠️ **순서가 곧 의존 순서입니다** — 뒤의 파일이 앞의 것을 씁니다.
      guides.js 는 problems.js 의 key 를 그대로 쓰므로 그 뒤여야 합니다. */
   const DATA = ["js/data/korean.js","js/data/brand.js","js/data/site.js",
-                "js/data/regions.js","js/data/industries.js",
+                "js/data/regions.js",
                 "js/data/catalog.js",
-                "js/data/franchise.js","js/data/providers.js","js/data/market.js",
-                "js/data/support.js",
+                "js/data/providers.js",
                 "js/data/shop.js","js/data/photos.js",
                 "js/data/legal-terms.js","js/data/legal-privacy.js",
                 "js/data/faq.js","js/data/join.js",
@@ -66,21 +65,6 @@ function loadApp(){
                 "js/data/offers.js",
                 /* ⚠️ reqforms 는 catalog 의 분류 key 를 씁니다 */
                 "js/data/reqforms.js",
-                /* ⚠️ opsvc 는 catalog 의 분류 · 하위 key 와 industries 의
-                   업종 key 를 가리킵니다 — 둘 다 위에 있습니다 */
-                
-                /* ⚠️ packages 는 offers 의 상품 id 를 가리킵니다 */
-                "js/data/packages.js",
-                /* ⚠️ halls 는 catalog 의 분류 · 하위 key 를 가리킵니다
-                   (2026-10-11 UI/UX 지시서 §2 · §4 — 전문관 넷) */
-                "js/data/halls.js",
-                /* ⚠️ svcpick 은 halls 의 칸과 reqforms 의 분류 key 를
-                   읽습니다 — 둘 다 위에 있습니다 (2026-10-17 §12) */
-                "js/data/svcpick.js",
-                
-                /* ⚠️ opscheck 은 svcpick 의 id · tools 의 key · content 의
-                   slug 를 가리킵니다 — 셋 다 위에 있습니다 (2026-10-18 §9) */
-                
                 /* 이용 절차 넷 — 메인 05 구간과 크롤러 본문이 같이 읽습니다 */
                 "js/data/steps.js",
                 /* ⚠️ 기기 카탈로그 (2026-10-29 PHONEWAY) — 모델 · 등급 ·
@@ -1036,7 +1020,16 @@ function checkProviders(W){
   cats.forEach(c => (c.items || []).forEach(i => subKeys.add(i.key)));
   const catKeys = new Set(cats.map(c => c.key));
   const regions = new Set((W.AM_REGIONS || []).map(r => r.key));
-  const inds    = new Set((W.AM_INDUSTRIES || []).map(i => i.key));
+  /* ⚠️⚠️ **2026-10-31 — `industries` 칸이 취급 기기로 바뀌었습니다.**
+     인수인계를 걷어내면서 `js/data/industries.js` 를 지웠는데 이 줄만
+     `AM_INDUSTRIES` 를 읽고 있었습니다 — 그 값이 **빈 묶음**이 되어,
+     업체 한 곳이 `industries:["phone"]` 로 들어오는 날 **"없는 업종
+     phone" 으로 빌드가 멈춥니다.** 업체가 0곳이라 아무도 못 볼 자리였고
+     `gu` · `withEquip` 과 같은 "칸은 바뀌었는데 읽는 쪽만 낡은" 사고입니다.
+     ⚠️ 칸 이름(`industries`)은 **안 바꿨습니다** — DB 의 `provider`
+     표와 `save_provider()` 가 그 이름을 쓰고, 지금 0곳이라 마이그레이션
+     없이 뜻만 옮겼습니다 (업체가 생기면 그때 칸 이름을 옮기세요). */
+  const kinds   = new Set((W.AM_DEVICE_KINDS || []).map(i => i.key));
   const bad = [];
   (W.AM_PROVIDERS || []).forEach(p => {
     const who = p.id || p.name || "(이름 없는 업체)";
@@ -1051,13 +1044,17 @@ function checkProviders(W){
         + (catKeys.has(k) ? " (그건 분류 key 입니다 — 그 분류의 items 에서 고르세요)" : ""));
     });
     (p.regions   || []).forEach(k => { if(!regions.has(k)) bad.push(who + ": 없는 지역 " + k); });
-    (p.industries|| []).forEach(k => { if(!inds.has(k))    bad.push(who + ": 없는 업종 " + k); });
+    (p.industries|| []).forEach(k => { if(!kinds.has(k))   bad.push(who + ": 없는 취급 기기 " + k); });
   });
   const ids = (W.AM_PROVIDERS || []).map(p => p.id).filter(Boolean);
   ids.forEach((id, n) => { if(ids.indexOf(id) !== n) bad.push("id 가 겹칩니다: " + id); });
   if(bad.length)
     throw new Error("업체 등록이 어긋났습니다 (그 업체는 **조용히 안 나옵니다**):\n   "
       + bad.join("\n   "));
+  /* ⚠️ 0곳이어도 한 줄은 냅니다 — 안 내면 이 가드가 도는지를 알 길이
+     없고, 그게 "정의만 남고 아무것도 안 보는 검사" 로 가는 첫 걸음입니다. */
+  console.log("   업체 " + (W.AM_PROVIDERS || []).length +
+    "곳의 하위 분야 · 지역 · 취급 기기 key 가 실제로 있는 것입니다");
 }
 
 function checkVercel(){
@@ -1091,6 +1088,41 @@ function checkVercel(){
   if(!back)
     throw new Error("vercel.json 에 /home → / 리다이렉트가 없습니다 — " +
       "랜딩을 없애면서 /home 이 / 가 됐습니다. 빼면 밖에서 퍼간 링크가 404 입니다.");
+
+  /* ⚠️⚠️ **끝난 사업의 주소를 메인으로 보내지 마세요** (2026-10-31 §7).
+     바로 전까지 창업 · 폐업 주소 스물일곱 묶음을 전부 `/` 로 308 로
+     보내고 있었습니다. 그건 검색엔진에게 "그 내용이 메인으로 옮겨갔다"
+     고 말하는 것인데 **사실이 아닙니다** — 내용은 사라졌고 메인은
+     중고폰 플랫폼입니다. 구글은 그런 리다이렉트를 soft 404 로 보고,
+     그동안 "인수인계 창업" 으로 검색해 들어온 분이 중고폰 메인을
+     봅니다. 끝난 주소는 410(api/gone.js)입니다.
+     ⚠️ `/home` 은 예외입니다 — 그 주소의 내용이 **실제로** 메인입니다. */
+  const toRoot = (vj.redirects || [])
+    .filter(r => String(r.destination) === "/" && String(r.source) !== "/home")
+    .map(r => String(r.source));
+  if(toRoot.length)
+    throw new Error("끝난 사업의 주소를 메인으로 보내고 있습니다 — " +
+      toRoot.join(" · ") +
+      "\n  그 내용은 메인으로 옮겨간 것이 아니라 없어졌습니다. " +
+      "vercel.json 의 rewrites 로 /api/gone (410) 에 보내세요 " +
+      "(2026-10-31 지시서 §7).");
+
+  /* 410 을 내주는 함수가 실제로 있는가 */
+  const goneSrc = (vj.rewrites || [])
+    .filter(r => String(r.destination) === "/api/gone");
+  if(goneSrc.length){
+    const f = path.join(ROOT, "api", "gone.js");
+    if(!fs.existsSync(f))
+      throw new Error("vercel.json 이 /api/gone 으로 보내는데 api/gone.js 가 " +
+        "없습니다 — 그 주소 " + goneSrc.length + "개가 전부 404 입니다");
+    const src = fs.readFileSync(f, "utf8");
+    if(!/statusCode\s*=\s*410/.test(src))
+      throw new Error("api/gone.js 가 410 을 안 돌려줍니다 — " +
+        "404 는 \"오타일 수도 있다\" 라 색인에 더 오래 남습니다");
+    if(!/noindex/.test(src))
+      throw new Error("api/gone.js 에 noindex 가 없습니다 — " +
+        "410 을 못 읽는 수집기까지 막는 자리입니다");
+  }
 }
 
 
@@ -1268,157 +1300,6 @@ function checkColorSchemeCss(){
    ⚠️⚠️ 걸음에 적은 `cat` · `sub` · `read` · `tool` · `to` 가 하나라도
    없으면 **가짜 링크**입니다 (절대 규칙 5). 화면에서는 그냥 404 로
    열리고 에러도 안 나서, 손님이 눌러 봐야 압니다 — 여기서 멈춥니다. */
-/* ⚠️⚠️ 영업 카테고리 열넷이 **분류 스물다섯을 빠짐없이 한 번씩** 나눠
-   가지는지 (지시서 §6 — "중복 데이터를 만들지 않는다"). 빠지면 그 분류의
-   업체를 직원이 영업 카테고리로 **고를 수가 없고**, 겹치면 카테고리별
-   성과가 두 번 세어집니다. 둘 다 에러 없이 조용히 틀립니다.
-   ⚠️ 14 기타는 남은 것을 세는 값이라 여기서는 **셈에만** 들어갑니다. */
-function checkSales(W){
-  const G = W.AM_SALES_GROUPS || [];
-  if(!G.length) throw new Error("AM_SALES_GROUPS 가 비었습니다 — js/data/sales.js");
-
-  const cats = {};
-  (W.AM_CATS||[]).forEach(c => { cats[c.key] = c; });
-  const bad = [], cnt = {};
-
-  G.forEach(g => {
-    if(!g.key || !g.name || !g.no) bad.push("묶음에 key · name · no 가 있어야 합니다");
-    W.amSalesCats(g).forEach(k => {
-      cnt[k] = (cnt[k] || 0) + 1;
-      if(!cats[k]) bad.push(g.key + " — 없는 분류 " + k);
-    });
-    (g.subs||[]).forEach(p => {
-      const c = cats[p[0]];
-      if(!c) bad.push(g.key + " — 없는 분류 " + p[0]);
-      else if(!(c.items||[]).some(i => i.key === p[1]))
-        bad.push(g.key + " — " + p[0] + " 에 없는 하위 " + p[1]);
-    });
-  });
-
-  Object.keys(cats).forEach(k => {
-    if(!cnt[k]) bad.push("분류 " + k + " 가 어느 영업 카테고리에도 없습니다");
-    else if(cnt[k] > 1) bad.push("분류 " + k + " 가 " + cnt[k] + "곳에 들어 있습니다");
-  });
-
-  /* 상태 key 는 **직원 브라우저에 쌓인 기록**이 쓰는 값입니다 */
-  const need = ["new","recall","warm","sent","doc","review","done","no","bad"];
-  const has = new Set((W.AM_SALES_ST||[]).map(s => s.key));
-  need.forEach(k => { if(!has.has(k)) bad.push("AM_SALES_ST 에 " + k + " 가 없습니다"); });
-  (W.AM_SALES_RESULT||[]).forEach(r => {
-    if(!has.has(r.st)) bad.push("통화 결과 " + r.key + " 가 없는 상태 " + r.st + " 를 가리킵니다");
-  });
-
-  if(bad.length)
-    throw new Error("영업 카테고리(js/data/sales.js)가 분류와 어긋납니다:\n   · " +
-      bad.join("\n   · "));
-  console.log("   영업 카테고리 " + G.length + "개가 분류 " +
-    Object.keys(cats).length + "개를 빠짐없이 나눠 가집니다");
-}
-
-
-function checkMarketData(W){
-  const bad = [];
-  const regions = new Set((W.AM_REGIONS || []).map(r => r.key));
-  const inds    = new Set((W.AM_INDUSTRIES || []).map(i => i.key));
-  const dupe = (list, key, what) => {
-    const seen = new Set();
-    list.forEach(x => {
-      const v = x[key];
-      if(!v) return bad.push(what + ": " + key + " 가 없습니다");
-      if(seen.has(v)) bad.push(what + ": " + key + " 가 겹칩니다 — " + v);
-      seen.add(v);
-    });
-  };
-
-  /* ── 프랜차이즈 ── */
-  const fcats = new Set((W.AM_FRANCHISE_CATS || []).map(c => c.key));
-  const FR = W.AM_FRANCHISES || [];
-  dupe(FR, "slug", "브랜드");
-  FR.forEach(f => {
-    const who = f.slug || f.name || "(이름 없는 브랜드)";
-    if(!f.name) bad.push(who + ": name 이 없습니다");
-    if(!fcats.has(f.cat)) bad.push(who + ": 없는 프랜차이즈 분류 " + f.cat);
-    (f.regions || []).forEach(k => { if(!regions.has(k)) bad.push(who + ": 없는 지역 " + k); });
-    const c = f.cost || {};
-    /* ⚠️ 가맹사업법 — 출처와 기준일 없는 금액은 화면에 **안 나옵니다.**
-       적어 놓고 안 나오면 "왜 금액이 안 보이지" 로 한참 헤맵니다. */
-    const hasMoney = ["total","join","edu","deposit","interior","equip","etc"]
-      .some(k => c[k]);
-    if(hasMoney && !(c.source && c.asOf))
-      bad.push(who + ": 금액을 적었는데 cost.source / cost.asOf 가 없습니다"
-        + " — 화면에 **안 나옵니다** (가맹사업법: 정보공개서 출처와 기준일)");
-    if(f.stores === 0)
-      bad.push(who + ": 가맹점 수가 0 입니다 — 모르면 null 입니다 (0 은 '한 곳도 없다' 는 숫자)");
-    if(f.disclosure && f.disclosure.has && !f.disclosure.no)
-      bad.push(who + ": 정보공개서가 있다는데 등록번호가 없습니다");
-  });
-
-  /* ── 매물 · 자산 ── */
-  const ST = W.AM_STORES || [], AS = W.AM_ASSETS || [];
-  dupe(ST, "id", "매물"); dupe(AS, "id", "자산");
-  ST.forEach(x => {
-    const who = x.id || "(id 없는 매물)";
-    if(!x.title) bad.push(who + ": title 이 없습니다");
-    if(["transfer","lease"].indexOf(x.kind) < 0) bad.push(who + ": kind 는 transfer 또는 lease 입니다 — " + x.kind);
-    if(x.industry && !inds.has(x.industry)) bad.push(who + ": 없는 업종 " + x.industry);
-    if(x.region   && !regions.has(x.region)) bad.push(who + ": 없는 지역 " + x.region);
-    if(!x.industry || !x.region)
-      bad.push(who + ": 업종 · 지역이 없으면 거르개에서 **빠집니다**");
-  });
-  const storeIds = new Set(ST.map(x => x.id));
-  AS.forEach(x => {
-    const who = x.id || "(id 없는 자산)";
-    if(!x.title) bad.push(who + ": title 이 없습니다");
-    if(["asset","stock"].indexOf(x.cat) < 0) bad.push(who + ": cat 은 asset 또는 stock 입니다 — " + x.cat);
-    if(x.deal && ["single","bulk","all"].indexOf(x.deal) < 0) bad.push(who + ": 없는 deal " + x.deal);
-    if(x.industry && !inds.has(x.industry)) bad.push(who + ": 없는 업종 " + x.industry);
-    if(x.region   && !regions.has(x.region)) bad.push(who + ": 없는 지역 " + x.region);
-    if(x.storeId && !storeIds.has(x.storeId))
-      bad.push(who + ": storeId \"" + x.storeId + "\" 인 매물이 없습니다 (끊어진 연결)");
-    /* ⚠️⚠️ `sub`(장비 종류)가 틀리거나 비면 **조용히 안 나옵니다.**
-       `/assets` 는 업종의 장비 칩으로 거르는데 거기에 안 걸리고, 상세
-       화면의 종류 딱지도 사라집니다 — 업체 `subs` 가 그랬던 것과 같은
-       자리입니다. 장비 key 는 `industries.js` 의 `equip` 에 있습니다. */
-    if(!x.sub)
-      bad.push(who + ": sub(장비 종류)가 없습니다 — 장비 칩으로 **못 찾습니다**");
-    else if(!W.amEquipName)
-      bad.push("amEquipName() 이 없습니다 — 장비 key 를 이름으로 못 바꿉니다 "
-        + "(쓰는 쪽에 typeof 방어가 걸려 있어 **딱지만 조용히 사라집니다**)");
-    else if(!W.amEquipName(x.sub))
-      bad.push(who + ": 없는 장비 종류 \"" + x.sub + "\" — industries.js 의 equip key 여야 합니다"
-        + " (틀리면 에러 없이 **조용히 안 나옵니다**)");
-  });
-
-  /* ── 지원사업 공고 ── */
-  const SP = W.AM_SUPPORTS || [];
-  dupe(SP, "key", "공고");
-  SP.forEach(x => {
-    const who = x.key || x.name || "(이름 없는 공고)";
-    if(!x.name) bad.push(who + ": name 이 없습니다");
-    if(["start","close","both"].indexOf(x.side) < 0)
-      bad.push(who + ": side 는 start · close · both 입니다 — " + x.side);
-    /* ⚠️ `amSupports()` 가 link 없는 것을 **아예 안 냅니다.** 적어 두고
-       안 나오면 "왜 안 뜨지" 로 헤매니, 빌드가 먼저 말합니다. */
-    if(!x.link)
-      bad.push(who + ": link(공고 원문)가 없습니다 — 화면에 **안 나옵니다**");
-    if(!x.asOf)
-      bad.push(who + ": asOf(확인한 날)가 없습니다 — 열어 보지 않고 적으면 그 자체가 거짓말입니다");
-  });
-
-  /* ── 가격 데이터 ── */
-  (W.AM_QUOTE_STATS || []).forEach((q, n) => {
-    const who = "가격 " + (q.cat || n);
-    if(!q.range) bad.push(who + ": range 가 없습니다");
-    if(!q.asOf)  bad.push(who + ": asOf 가 없습니다 — 화면에 안 나옵니다");
-    if((q.n || 0) < 10)
-      bad.push(who + ": 건수가 " + (q.n || 0) + "건입니다 — 10건 아래는 화면에 **안 나옵니다**"
-        + " (적은 표본으로 시세를 말하지 않습니다)");
-  });
-
-  if(bad.length)
-    throw new Error("등록한 데이터가 어긋났습니다 (그 항목은 **조용히 안 나옵니다**):\n   "
-      + bad.join("\n   "));
-}
 
 /* ── 라우터 밖 파일에 브랜드 이름 넣기 ──────────────────────────────
    ⚠️⚠️ `404.html` 과 `admin.html` 은 **라우터 밖에서 혼자 뜨는** 파일이라
@@ -1459,8 +1340,12 @@ function brandStatics(W){
      404 · 관리자 작업대 · `WOW_BIZ.service`). 그래서 **셉니다.**
      ⚠️ 고치는 것이 아니라 멈춥니다 — 저 둘은 사람이 보고 바꿔야 하는
      자리입니다 (realm 처럼 한글을 넣으면 안 되는 칸이 섞여 있습니다). */
+  /* ⚠️⚠️ **2026-10-31 — `api/deal.js` 를 더했습니다.** Vercel 함수라
+     화면 전역을 못 읽어서 알림 제목을 손으로 적는데, 사업이 바뀐 뒤에도
+     **"[인수인계]"** 로 운영자 알림이 나가고 있었습니다. */
   for(const [f, why] of [["manifest.json", "홈 화면에 추가하면 여기 이름이 뜹니다"],
-                         ["middleware.js", "관리자 차단 화면에 이 이름이 뜹니다"]]){
+                         ["middleware.js", "관리자 차단 화면에 이 이름이 뜹니다"],
+                         ["api/deal.js",  "상태 변경 알림 제목에 이 이름이 뜹니다"]]){
     const src = fs.readFileSync(path.join(ROOT, f), "utf8");
     if(src.indexOf(name) < 0)
       throw new Error(f + " 에 브랜드 이름(" + name + ")이 없습니다 — " + why
@@ -1504,6 +1389,13 @@ function checkKeepUrls(routes, vj){
   const reds = (vj.redirects || [])
                  .map(r => [String(r.source), String(r.destination)])
                  .sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
+  /* 410 으로 닫은 주소 — api/gone.js 로 rewrite 하는 자리입니다.
+     ⚠️⚠️ 이 목록도 지킵니다. 한 줄이 조용히 빠지면 그 주소가 404 가
+     되는데, 404 는 "오타일 수도 있다" 라 색인에 더 오래 남습니다 —
+     우리는 영구히 없앴다는 것을 알고 있어서 410 이 맞습니다. */
+  const goneUrls = (vj.rewrites || [])
+                 .filter(r => String(r.destination) === "/api/gone")
+                 .map(r => String(r.source)).sort();
 
   /* 다시 적어 달라고 하셨을 때 */
   if(process.argv.includes("--keep-urls")){
@@ -1511,10 +1403,12 @@ function checkKeepUrls(routes, vj){
       note: "있던 주소가 사라지지 않았는지 빌드가 맞춰 보는 목록입니다. 손으로 지우지 마세요 — build-pages.js 의 checkKeepUrls() 주석을 보세요.",
       at: new Date().toISOString().slice(0, 10),
       routes: now,
-      redirects: reds
+      redirects: reds,
+      gone: goneUrls
     }, null, 2) + "\n");
     console.log("  ✎ tools/urls.json 을 다시 적었습니다 — 주소 " +
-                now.length + "개 · 리다이렉트 " + reds.length + "개");
+                now.length + "개 · 리다이렉트 " + reds.length + "개 · 410 " +
+                goneUrls.length + "개");
     return;
   }
 
@@ -1536,9 +1430,15 @@ function checkKeepUrls(routes, vj){
       "먼저 넣고, 그 다음에 tools/urls.json 에서 그 줄을 지우세요 " +
       "(allRoutes() 또는 데이터에서 빠진 것일 수도 있습니다)");
 
-  const nowRed = new Map(reds);
-  const badRed = [];
+  const nowRed  = new Map(reds);
+  const nowGone = new Set(goneUrls);
+  const badRed  = [];
   for(const [src, dst] of (kept.redirects || [])){
+    /* ⚠️ 리다이렉트였던 자리가 **410 으로 바뀐 것은 고장이 아닙니다.**
+       2026-10-31 지시서 §7 로 창업 · 폐업 주소 스물일곱 묶음을 `/` 308
+       에서 410 으로 옮겼습니다 — 그 주소는 여전히 **일부러 답하고**
+       있고, 다만 "옮겼다" 가 아니라 "없앴다" 로 답합니다. */
+    if(nowGone.has(src))            continue;
     if(!nowRed.has(src))            badRed.push(src + " (없어짐)");
     else if(nowRed.get(src) !== dst) badRed.push(src + " → " + nowRed.get(src) + " (전에는 " + dst + ")");
   }
@@ -1546,6 +1446,33 @@ function checkKeepUrls(routes, vj){
     throw new Error("옛 주소를 보내 주던 redirect 가 바뀌었습니다 — " +
       badRed.join(" · ") + "\n  밖으로 퍼진 링크가 그 주소를 들고 있습니다 " +
       "(vercel.json)");
+
+  /* ⚠️⚠️ **410 이 살아 있는 주소를 삼키면 안 됩니다.** rewrite 는
+     파일이 없을 때만 걸리지만, 주소 하나를 새로 만들면서 그 이름이
+     410 목록의 접두사와 겹치면 **그 화면이 통째로 410** 이 됩니다 —
+     화면으로는 "없는 주소" 로 보이고 에러도 안 납니다. */
+  const ate = [];
+  for(const g of goneUrls){
+    const base = g.replace(/\/:p\*$/, "");
+    for(const r of now){
+      if(r === base || (g.endsWith("/:p*") && r.startsWith(base + "/")))
+        ate.push(g + " → " + r);
+    }
+  }
+  if(ate.length)
+    throw new Error("410 으로 닫은 자리가 살아 있는 주소를 삼킵니다 — " +
+      ate.join(" · ") + "\n  vercel.json 의 rewrites 에서 그 줄을 빼세요");
+
+  /* 410 으로 닫아 둔 자리가 빠졌는가 */
+  const lostGone = (kept.gone || []).filter(g => !nowGone.has(g) &&
+                                                 !nowRed.has(g));
+  if(lostGone.length)
+    throw new Error("410 으로 닫아 둔 주소 " + lostGone.length + "개가 " +
+      "vercel.json 에서 빠졌습니다 — " + lostGone.slice(0, 12).join(" · ") +
+      (lostGone.length > 12 ? " …" : "") +
+      "\n  그러면 그 주소가 404 가 됩니다. 404 는 \"오타일 수도 있다\" 라 " +
+      "색인에 더 오래 남습니다 — 끝난 사업의 주소는 410 이 맞습니다 " +
+      "(api/gone.js).");
 
   const added = now.filter(r => !(kept.routes || []).includes(r));
   if(added.length)
@@ -1847,7 +1774,7 @@ function checkDealSql(W){
    덧그러니 빅니다 — 에러도 404 도 없었고 전수 점검도 통과했던 자리입니다
    (`fridge` 로 겪었습니다). 빌드가 base.js 의 아이콘 목록을 읽어 넣습니다.
    ⚠️ base.js 는 샌드박스에 안 실려서(화면 코드입니다) **글자로** 읽습니다.
-   ⚠️ 중쾄호 짝을 센다음 잔락니다 — 정규식으로 자르다가 다음 함수를 통째
+   ⚠️ 중괄호 짝을 센 다음 잘라냅니다 — 정규식으로 자르다가 다음 함수를 통째
    삼킨 사고가 이 저장소에 있습니다. */
 const IC_NAMES = (() => {
   const src = fs.readFileSync(path.join(ROOT, "js/components/base.js"), "utf8");
@@ -1867,354 +1794,19 @@ const IC_NAMES = (() => {
   return out;
 })();
 
-/* ⚠️ 컬러 아이콘(`iconArt`) 이름도 같은 방식으로 셉니다 — 없는 이름을
-   적으면 타일이 덩그러니 빕니다 (iconArt 가 빈 문자열을 돌려줍니다).
-   ⚠️ 선형 아이콘(IC)과 **다른 목록**입니다. 섞지 마세요. */
-const IA_NAMES = (() => {
-  const src = fs.readFileSync(path.join(ROOT, "js/components/base.js"), "utf8");
-  const i = src.indexOf("var IA = {");
-  if(i < 0) throw new Error("base.js 에서 컬러 아이콘 목록을 못 찾았습니다");
-  let d = 0, j = i + "var IA = ".length;
-  for(; j < src.length; j++){
-    if(src[j] === "{") d++;
-    else if(src[j] === "}"){ d--; if(!d){ j++; break; } }
-  }
-  const out = new Set();
-  const re = new RegExp("(?:^|[{,\\s])[\"']?([a-z][a-z0-9-]*)[\"']?\\s*:\\s*[\"'`]", "g");
-  let m; const body = src.slice(i, j);
-  while((m = re.exec(body))) out.add(m[1]);
-  if(out.size < 10) throw new Error("컬러 아이콘 이름을 " + out.size + "개밖에 못 읽었습니다");
-  return out;
-})();
-
-/* ⚠️ 틴트 이름(`tn-*`)도 CSS 에서 읽어 셉니다 — 없는 이름을 적으면
-   아이콘 타일이 **색 없이** 섭니다 (규칙이 아예 없으니 `--ic-ink` 가
-   물려받은 값으로 남습니다). 에러도 안 나고 화면도 멀쩡해 보입니다. */
-const TONE_NAMES = (() => {
-  const src = fs.readFileSync(path.join(ROOT, "css/pages.css"), "utf8");
-  const out = new Set();
-  const re = new RegExp("^\\.tn-([a-z0-9]+)", "gm");
-  let m;
-  while((m = re.exec(src))) out.add(m[1]);
-  if(out.size < 14) throw new Error("틴트 이름을 " + out.size + "개밖에 못 읽었습니다");
-  return out;
-})();
-
-/* ── 전문관 넷 (2026-10-11 UI/UX 지시서 §2 · §4 · §5) ───────────────
-   ⚠️⚠️ 막는 것 일곱 —
-     ① 없는 분류 · ② 없는 하위 · ③ 하위를 적을 수 없는 분류에 하위
-     ④ 없는 주소 · ⑤ 없는 컬러 아이콘
-     ⑥ **한 전문관 안에서 아이콘이 겹침** (열두 칸에 같은 그림 둘)
-     ⑦ **한 전문관 안에서 가는 곳이 겹침** (§5 중복 방지 —
-        손님은 둘이 다른 것인 줄 압니다)
-   전부 일부러 틀리게 해 보고 멈추는 것을 확인했습니다. */
-function checkHalls(W){
-  const H = W.AM_HALLS || [];
-  if(!H.length) throw new Error("js/data/halls.js 의 AM_HALLS 가 비었습니다 (§2)");
-  if(H.length !== 4)
-    throw new Error("전문관이 " + H.length + "개입니다 — 지시서 §2 는 넷입니다");
-
-  const cats  = new Map((W.AM_CATS || []).map(c => [c.key, c]));
-  const paths = new Set(allRoutes(W));
-  const seenKey = new Set(), seenTone = new Set();
-
-  /* 질의문자가 붙은 주소(`/assets?c=stock`)는 경로만 떼어 봅니다 —
-     checkProcess() 가 멀쩡한 주소를 "없는 주소" 로 잡았던 자리입니다 */
-  const okRoute = (u) => paths.has(String(u).split("?")[0].split("#")[0]);
-
-  for(const h of H){
-    if(!h.key || seenKey.has(h.key))
-      throw new Error("전문관 key 가 비었거나 겹칩니다 — " + h.key);
-    seenKey.add(h.key);
-    if(!h.name || !h.lead)
-      throw new Error("전문관에 이름이나 한 줄이 없습니다 — " + h.key);
-    if(!h.tone || seenTone.has(h.tone))
-      throw new Error("전문관 색이 비었거나 겹칩니다 — " + h.key + " · " + h.tone);
-    seenTone.add(h.tone);
-    if(!h.to || !okRoute(h.to))
-      throw new Error("전문관이 없는 주소를 가리킵니다 — " + h.key + " · " + h.to);
-    if(!h.ic || !IC_NAMES.has(h.ic))
-      throw new Error("전문관 아이콘이 없는 이름입니다 — " + h.key + " · " + h.ic);
-
-    const items = h.items || [];
-    if(!items.length) throw new Error("전문관이 비었습니다 — " + h.key);
-    const ias = new Set(), tos = new Set();
-
-    for(const it of items){
-      const at = "전문관 " + h.key + " 의 \"" + (it.n || "(이름 없음)") + "\"";
-      if(!it.n) throw new Error(at + " — 이름이 없습니다");
-      if(!it.ia || !IA_NAMES.has(it.ia))
-        throw new Error(at + " 가 없는 컬러 아이콘을 가리킵니다 — " + it.ia);
-      if(ias.has(it.ia))
-        throw new Error(at + " 의 아이콘이 같은 전문관 안에서 겹칩니다 — " + it.ia);
-      ias.add(it.ia);
-
-      let dest = it.to;
-      if(!dest){
-        const c = cats.get(it.cat);
-        if(!c) throw new Error(at + " 가 없는 분류를 가리킵니다 — " + it.cat);
-        if(it.sub){
-          if(c.byIndustry)
-            throw new Error(at + " — " + it.cat + " 는 하위가 업종에서 와서 하위를 적을 수 없습니다");
-          const subs = new Set((c.items || []).map(x => x.key));
-          if(!subs.has(it.sub))
-            throw new Error(at + " 가 없는 하위를 가리킵니다 — " + it.cat + " / " + it.sub);
-        }
-        const base = c.to ? c.to
-          : ((c.kind === "provider") ? "/providers/" + c.key : "/c/" + c.key);
-        dest = it.sub ? (base + (base.indexOf("?") < 0 ? "?" : "&") + "s=" + it.sub) : base;
-      }
-      if(!okRoute(dest))
-        throw new Error(at + " 가 없는 주소로 갑니다 — " + dest);
-      if(tos.has(dest))
-        throw new Error(at + " 가 같은 전문관 안의 다른 칸과 **같은 데로** 갑니다 — " + dest +
-          "\n   → 손님은 둘이 다른 것인 줄 압니다. 하나를 빼거나 하위(?s=)로 가르세요 (§5)");
-      tos.add(dest);
-    }
-  }
-}
-
-/* ── §12 고를 수 있는 서비스 (2026-10-17 창업 준비 전문관) ─────────
-   ⚠️⚠️ **대표 여섯이 실제로 고를 수 있는 서비스인지** 봅니다. 없는 id 를
-   적으면 그 칸이 **조용히 빠지고** 대표가 다섯이 됩니다 — 화면으로는
-   "원래 다섯인가" 로 보여서 아무도 모릅니다 (halls 의 아이콘 · 업체
-   subs · 사진 키로 겪은 그 자리).
-   ⚠️ 쉬운 이름(§9-3)도 **없는 id 에 적어 두면** 영영 안 쓰입니다. */
-function checkSvcPick(W){
-  const TOP  = W.AM_PICK_TOP  || {};
-  const EASY = W.AM_PICK_EASY || {};
-  const OFF  = new Set(W.AM_PICK_OFF || []);
-  if(!Object.keys(TOP).length)
-    throw new Error("js/data/svcpick.js 의 AM_PICK_TOP 이 비었습니다 (§2-B)");
-
-  /* ⚠️⚠️ **지시서가 적은 대표 개수는 전문관마다 다릅니다.**
-     창업 준비는 여섯(2026-10-17 §2-B), 매장 운영은 여덟(2026-10-18
-     §4-2)입니다. 여기 하나로 박아 두었다가 운영 쪽을 붙이자 **멀쩡한
-     여덟이 "여섯이 아닙니다" 로** 빌드를 멈췄습니다 — 전문관을 더하면
-     지시서를 먼저 고치고 이 줄을 같이 고치세요. */
-  const TOP_N = { startup: 6 };
-
-  /* 전문관마다 고를 수 있는 서비스를 모아 둡니다.
-     ⚠⚠ **하위까지 모읍니다.** 2026-10-18 운영 §4-4 로 고르는 단위가
-     `분류/하위`(`repair/aircon-fix`)까지 내려왔습니다 — 분류만 모으면
-     그 쉬운 이름들이 전부 "고를 수 없는 서비스" 로 잡혀 멀쩡한 줄이
-     빌드를 멈춥니다.
-     ⚠️ 운영 쪽은 `AM_PICK_SIDE` 에 없어서 `amPickAll()` 이 빈 배열을
-     돌려줍니다 — `amPickHallCats()` 가 그 자리입니다. */
-  const ok = new Set();
-  const addCat = (s) => {
-    if(!s || !s.id) return;
-    ok.add(s.id);
-    if(s.sub) return;                        /* 하위는 더 내려갈 것이 없습니다 */
-    for(const sub of W.amPickSubs(s.id)) ok.add(sub.id);
-  };
-  for(const h of (W.AM_HALLS || [])){
-    for(const s of W.amPickAll(h.key)) addCat(s);
-    for(const s of W.amPickHallCats(h.key)) addCat(s);
-  }
-
-  for(const hall of Object.keys(TOP)){
-    const ids = TOP[hall] || [];
-    const want = TOP_N[hall];
-    if(!want)
-      throw new Error("\"" + hall + "\" 전문관의 대표 개수가 지시서에 없습니다" +
-        "\n   → build-pages.js 의 TOP_N 에 적으세요 (지시서를 먼저 고치고)");
-    if(ids.length !== want)
-      throw new Error("대표 서비스가 " + ids.length + "개입니다 (" + hall +
-        ") — 지시서는 " + want + "입니다");
-    const seen = new Set();
-    for(const id of ids){
-      if(seen.has(id))
-        throw new Error("대표 서비스가 겹칩니다 — " + hall + " · " + id);
-      seen.add(id);
-      if(!W.amPickAll(hall).some(s => s.id === id))
-        throw new Error("대표 서비스 \"" + id + "\" 를 " + hall +
-          " 전문관에서 고를 수 없습니다" +
-          "\n   → js/data/halls.js 의 그 전문관 칸에 분류(cat)로 있어야 합니다");
-    }
-  }
-
-  /* ⚠️⚠️ **업종이 드러나는 말을 쓰지 마세요.** 쉬운 이름은 업종 열넷
-     **전부**에 같은 글자로 나옵니다 — 2026-10-20 에 재 보니 `equip` 이
-     "주방 기계 · 설비" 라, 미용실 · 헬스장 · 학원 · 사무실 사장님께는
-     남의 말이었습니다. 업종을 가르는 것은 이 이름이 아니라
-     `amCatItems()`(그 업종의 장비 하위)입니다. */
-  const INDWORD = /주방|미용|헤어|네일|헬스|학원|교습|카페|음식점|식당|반려|애견|무인|숙박|모텔|주점|술집|편의점/;
-  for(const id of Object.keys(EASY)){
-    if(!EASY[id])
-      throw new Error("쉬운 이름이 비었습니다 — " + id +
-        "\n   → 적을 말이 없으면 칸째 빼세요 (원래 이름이 그대로 나옵니다)");
-    /* ⚠️⚠️ **내려놓은 서비스(`AM_PICK_OFF`)의 쉬운 이름은 그대로
-       둡니다.** 고르개에만 안 나오고 `amPickOne()` 은 여전히 찾습니다 —
-       지난 신청 기록이 그 분류를 가리키고 있어서, 여기서 지우면
-       `/my` 와 `/admin` 에 **옛 접수의 서비스 이름**이 분류 이름으로
-       돌아갑니다 (§12 "과거 신청 기록은 보존한다"). 2026-10-22 에
-       `item` · `store` 를 내릴 때 이 검사가 멀쩡한 줄을 잡았습니다 —
-       **검사가 더 좁았던** 자리입니다. */
-    const offCat = OFF.has(id) || OFF.has(String(id).split("/")[0]);
-    if(!ok.has(id) && !(offCat && W.amPickOne(id)))
-      throw new Error("쉬운 이름이 고를 수 없는 서비스를 가리킵니다 — " + id +
-        "\n   → 영영 안 쓰이는 줄입니다 (AM_PICK_EASY)");
-    if(INDWORD.test(EASY[id]))
-      throw new Error("쉬운 이름에 업종이 드러나는 말이 있습니다 — " + id +
-        " → \"" + EASY[id] + "\"" +
-        "\n   → 업종 열넷 전부에 같은 글자로 나옵니다. 업종별 차이는" +
-        " amCatItems() 가 냅니다 (AM_PICK_EASY)");
-  }
-
-  /* ── ⚠️⚠️ 내려놓은 서비스 (2026-10-22 전수검사 P1-12) ─────────
-     `AM_PICK_OFF` 는 **고르개에서만** 빼는 것입니다 (지난 신청 기록이
-     그 분류를 가리키고 있어서 `amPickOne()` 은 여전히 찾아야 합니다).
-     막는 것 둘 —
-       ① **없는 것을 적어 두기** — 분류를 지우고 여기만 남으면 영영
-          안 쓰이는 줄이고, 누군가 "뺐구나" 로 읽습니다
-       ② **진짜 화면이 없는 것을 빼기** — 고르개에서 빼면 그 서비스로
-          가는 길이 **그 분류의 진짜 화면 하나**가 됩니다. 그 화면이
-          없으면 서비스가 통째로 사라집니다 (절대 규칙 2) */
-  for(const id of (W.AM_PICK_OFF || [])){
-    if(!W.amPickOne(id))
-      throw new Error("내려놓은 서비스가 없는 것을 가리킵니다 — " + id +
-        "\n   → 분류를 지우지 말고 AM_PICK_OFF 에만 적으세요" +
-        " (지난 신청 기록이 그 key 를 들고 있습니다 · §12)");
-  }
-  /* ⚠️⚠️ **② 를 따로 안 막습니다 — 이미 막혀 있습니다.** "내려놓은
-     분류로 갈 화면이 있는가" 를 재는 가드를 한 번 썼다가 되돌려 보니
-     `checkHalls()` 와 `checkSvcPage()` 가 **먼저** 잡았습니다 —
-     분류 **전부**에 대해 이미 보고 있는 것이라, 제 가드는 영원히 안
-     걸립니다. 안 걸리는 가드를 두면 "막고 있다" 고 믿게 되는데 실제로
-     막는 것은 다른 줄입니다 (이 저장소가 "겹겹이 막아 둔 것이 검사를
-     속인다" 로 겪은 자리) — 그래서 지웠습니다. */
-
-  /* ── ⚠️⚠️ 하위가 겹치지 않는가 (2026-10-22 전수검사 P1-15) ─────
-     `시설 · 장비` 는 하위가 **업종에서** 옵니다 (`amAllSubs()`). 거기서
-     같은 key 를 업종마다 **다른 이름**으로 적어 두면 고르개에 **같은
-     `data-pick` id 를 가진 체크칸이 두 번** 그려집니다 — 하나를
-     누르면 둘이 같이 켜지는데 바구니에는 한 번만 담겨서, 손님이
-     보기에 "왜 두 개가 켜지지" 입니다. 2026-10-22 에 다섯이 그랬고
-     **화면으로는 그냥 목록이 길어 보였습니다.**
-     ⚠️ 이름이 겹치는 것도 같이 봅니다 — 글자가 똑같은 칸이 둘이면
-     어느 쪽을 눌러야 하는지가 안 읽힙니다 (띄어쓰기만 다른 것도
-     같은 것으로 봅니다).
-     ⚠️ **되돌려 본 결과를 그대로 적습니다** — 이름 겹침은 보통
-     분류(`c.items`)에서만 걸립니다. `시설 · 장비` 쪽은 `amAllSubs()`
-     가 이름으로도 먼저 걸러서 여기까지 안 옵니다 (그쪽에서 걸리는
-     것은 **id 겹침**입니다). 둘을 한 줄로 묶지 마세요 — 묶으면
-     어느 쪽이 막고 있는지 알 수 없게 됩니다. */
-  for(const c of (W.AM_CATS || [])){
-    const subs = W.amPickSubs(c.key) || [];
-    const sid = new Set(), snm = new Set();
-    for(const sub of subs){
-      if(sid.has(sub.id))
-        throw new Error("고르개에 같은 서비스가 둘입니다 — " + sub.id +
-          "\n   → 같은 key 를 업종마다 다른 이름으로 적어 두면" +
-          " amAllSubs() 가 둘을 냅니다 (하나를 누르면 둘이 켜집니다)");
-      sid.add(sub.id);
-      const nm = String(sub.easy || sub.name || "").replace(/\s/g, "");
-      if(nm && snm.has(nm))
-        throw new Error("고르개에 같은 이름이 둘입니다 — " + c.key + " · " + nm +
-          "\n   → 글자가 똑같은 칸이 둘이면 어느 쪽인지 안 읽힙니다");
-      if(nm) snm.add(nm);
-    }
-  }
-
-  /* ── 업종별 추천 (2026-10-20 PART 4-4) ────────────────────────
-     ⚠️⚠️ 막는 것 여섯 —
-       ① 없는 전문관 · ② 없는 업종 key · ③ 개수가 지시서와 다름
-       ④ 추천이 겹침 · ⑤ 그 전문관에서 고를 수 없는 id
-       ⑥ **그 업종 목록에 없는 분류를 추천** — 카페에 `staff` 를
-          적으면 그 업종 차례에 없는 것을 앞에 내는 꼴입니다
-     ⚠️ `기타`(etc)에 적는 것도 막습니다 — 받는 그릇이라 추천이
-     어느 사장님에게도 안 맞습니다. */
-  /* ── 빠른 선택 여섯 (2026-10-20 PART 2-2 A) ──────────────────
-     ⚠️⚠️ 막는 것 넷 — ① 개수 ② 겹침 ③ 없는 id ④ **내려놓은 서비스**.
-     ③ 을 그냥 두면 `amPickQuick()` 이 **조용히 빼서** 다섯 칸이 되고,
-     첫 화면에 고를 칸이 모자란 그 고장이 그대로 돌아옵니다. */
-  const QUICK = W.AM_PICK_QUICK || {};
-  for(const hall of Object.keys(QUICK)){
-    const ids = QUICK[hall] || [];
-    if(ids.length !== 6)
-      throw new Error("빠른 선택이 " + ids.length + "개입니다 (" + hall +
-        ") — 여섯이라야 합니다 (PART 5-3 · 6-2-B)");
-    const seen = new Set();
-    for(const id of ids){
-      if(seen.has(id))
-        throw new Error("빠른 선택이 겹칩니다 — " + hall + " · " + id);
-      seen.add(id);
-      if(OFF.has(id) || OFF.has(id.split("/")[0]))
-        throw new Error("내려놓은 서비스를 빠른 선택에 적었습니다 — " + id +
-          "\n   → AM_PICK_OFF 에 있는 것은 고르개에 안 나와야 합니다");
-      if(!W.amPickOne(id))
-        throw new Error("빠른 선택 \"" + id + "\" 가 없는 서비스입니다 (" +
-          hall + ")\n   → `분류/하위` 꼴이라야 합니다" +
-          " (그냥 두면 조용히 빠져 다섯 칸이 됩니다)");
-      /* ⚠️⚠️ **분류를 적으면 바로 아래 묶음 머리와 같은 칸이 됩니다** —
-         한 화면에 같은 것이 두 번 나옵니다 (PART 16-12). 찍어 보고
-         알았습니다. */
-      if(id.indexOf("/") < 0)
-        throw new Error("빠른 선택에 분류를 적었습니다 — " + hall + " · " + id +
-          "\n   → 바로 아래 묶음 머리와 같은 칸이 됩니다 (PART 16-12)" +
-          "\n   → `분류/하위` 꼴로 적으세요 (예: " + id + "/…)");
-    }
-  }
-
-  const IND  = W.AM_PICK_IND || {};
-  const INDS = new Map((W.AM_INDUSTRIES || []).map(i => [i.key, i]));
-  for(const hall of Object.keys(IND)){
-    const side = (W.AM_PICK_SIDE || {})[hall];
-    if(!side)
-      throw new Error("AM_PICK_IND 에 \"" + hall + "\" 전문관이 있는데 " +
-        "AM_PICK_SIDE 에는 없습니다 — amPickAll() 이 빈 배열을 돌려줍니다");
-    const can = new Set(W.amPickAll(hall).map(s => s.id));
-    const want = TOP_N[hall];
-    for(const ind of Object.keys(IND[hall])){
-      if(ind === "etc")
-        throw new Error("업종 추천을 `기타`(etc)에 적었습니다 — 그건 업종이 " +
-          "아니라 받는 그릇입니다 (적지 않으면 기본 여섯이 섭니다)");
-      const it = INDS.get(ind);
-      if(!it)
-        throw new Error("없는 업종에 추천을 적었습니다 — " + ind +
-          "\n   → js/data/industries.js 의 key 입니다");
-      const ids = IND[hall][ind] || [];
-      if(want && ids.length !== want)
-        throw new Error("업종 추천이 " + ids.length + "개입니다 (" + hall +
-          " · " + ind + ") — 지시서는 " + want + "입니다");
-      const seen = new Set();
-      const mine = new Set([].concat(it[side === "close" ? "closure" : "startup"] || []));
-      for(const id of ids){
-        if(seen.has(id))
-          throw new Error("업종 추천이 겹칩니다 — " + ind + " · " + id);
-        seen.add(id);
-        if(!can.has(id))
-          throw new Error("업종 추천 \"" + id + "\" 를 " + hall +
-            " 전문관에서 고를 수 없습니다 (" + ind + ")");
-        if(!mine.has(id))
-          throw new Error("업종 추천 \"" + id + "\" 가 " + it.name +
-            " 업종 목록에 없습니다" +
-            "\n   → js/data/industries.js 의 그 업종 " +
-            (side === "close" ? "closure" : "startup") + " 차례에 있어야 합니다");
-      }
-    }
-  }
-}
-
-/* ── §4 운영 대표 여덟 + 세부 펼침 (2026-10-18 매장 운영 2차) ──────
-   > §4-4 — "대표 카테고리 선택과 실제 서비스 선택을 혼동하지 않도록 한다."
-
-   ⚠️⚠️ 막는 것 아홉 —
-     ① 묶음 개수가 지시서와 다름 · ② 묶음 key 가 비었거나 겹침
-     ③ 없는 컬러 아이콘 · ④ **한 전문관 안에서 아이콘이 겹침**
-        (여덟 칸에 같은 그림 둘이면 손님이 가를 수가 없습니다)
-     ⑤ 없는 틴트 이름 · ⑥ 틴트 겹침
-     ⑦ **없는 id**(`any` · `subs`) — 그냥 두면 `amPickGroups()` 가
-        조용히 빼서 "원래 일곱인가" 로 보입니다
-     ⑧ **세부가 두 묶음에 들어감** 또는 `any` 가 겹침 — 같은 서비스를
-        두 자리에서 고르게 되고, 그게 §2 가 없애려는 그 혼동입니다
-     ⑨ **내려놓은 서비스**(`AM_PICK_OFF`)를 아직 가리킴 — 고르개에
-        안 나와야 하는 것을 대표로 내는 꼴입니다
-   ⚠️ `subs` 는 **전부 `분류/하위` 꼴**이라야 합니다. 분류를 섞으면
-   "에어컨 수리" 자리에 "수리 · 유지보수 전체" 가 끼어서, 고르신 것과
-   접수에 실리는 것이 달라집니다.
-   ──────────────────────────────────────────────────────────────── */
+/* ⚠️⚠️ **2026-10-31 — `IA_NAMES` · `TONE_NAMES` 를 지웠습니다.**
+   둘을 읽던 가드(`checkPickGroup` · `checkOpsvc` · `checkOffers`)가
+   인수인계와 함께 없어져서 **읽는 쪽이 0곳**이 됐습니다. 남겨 두면
+   다음 사람이 "컬러 아이콘 이름은 빌드가 본다" 로 믿는데 보는 것이
+   없습니다 — 이 저장소가 "안 쓰는 규칙을 남겨 두면 다음 사람이
+   그것을 고칩니다" 로 적어 둔 자리입니다.
+   ⚠️ `IC_NAMES`(선형 아이콘)는 **그대로 씁니다** — 아래
+   `checkSteps()` 가 이용 절차 다섯의 아이콘 이름을 그것으로 봅니다.
+   ⚠️⚠️ **중고폰 쪽 컬러 아이콘은 지금 아무 가드도 안 봅니다.**
+   `iconArt()` 는 모르는 이름에 **빈 문자열**을 돌려주고 에러도 404 도
+   안 납니다 — 전수 점검의 "아이콘 자리가 비었음" 이 그려진 화면에서
+   잡는 것이 지금 유일한 자물쇠입니다. 되살리시려면
+   `git show 6d85a17:build-pages.js` 의 `IA_NAMES` 열아홉 줄입니다. */
 /* ── FAQ 카테고리 (2026-10-20 지시서 PART 11-2) ───────────────────
    ⚠️⚠️ 막는 것 셋 — ① 없는 카테고리 key ② key 가 겹침
    ③ 카테고리 목록이 비었는데 문답에 `cat` 이 붙어 있음.
@@ -2403,159 +1995,7 @@ function checkSteps(W){
 }
 
 
-/* ══════════════════════════════════════════════════════════════════
-   패키지 (§4-4 · §6-4)
-   ══════════════════════════════════════════════════════════════════
-   ⚠️⚠️ **금액 칸을 만들지 마세요** — 상품마다 조건으로 몇 배씩 갈리고,
-   제휴사가 0곳이라 깎아 드릴 주체가 없습니다 (프랜차이즈 창업비와
-   같은 까닭 · 절대 규칙 1).
-   ⚠️⚠️ **"인기" 를 쓰지 마세요** — 신청 데이터를 모으지 않습니다. */
-function checkPackages(W){
-  const P = W.AM_PACKAGES || [];
-  if(!P.length) throw new Error("js/data/packages.js 의 AM_PACKAGES 가 비었습니다");
-  const offers = new Map((W.AM_OFFERS || []).map(o => [o.id, o]));
-  const keys = new Set();
-  const MONEY = ["price", "from", "cost", "amount", "discount", "sale"];
-  for(const p of P){
-    if(!p.key || keys.has(p.key)) throw new Error("패키지 key 가 비었거나 겹칩니다 — " + p.key);
-    keys.add(p.key);
-    if(!p.name || !p.lead) throw new Error("패키지에 이름이나 한 줄이 없습니다 — " + p.key);
-    if(["start", "close", "both"].indexOf(p.side) < 0)
-      throw new Error("패키지 side 가 start · close · both 가 아닙니다 — " + p.key);
-    if(!p.icon || !IC_NAMES.has(p.icon))
-      throw new Error("패키지 아이콘이 없는 이름입니다 — " + p.key + " · " + p.icon);
-    for(const m of MONEY)
-      if(p[m] != null) throw new Error("패키지에 금액 칸이 있습니다 — " + p.key + " · " + m);
-    if((p.items || []).length < 2)
-      throw new Error("패키지가 상품 둘 미만입니다 — " + p.key + " (묶을 것이 없습니다)");
-    const seen = new Set();
-    for(const id of p.items){
-      if(!offers.has(id)) throw new Error("패키지가 없는 상품을 가리킵니다 — " + p.key + " / " + id);
-      if(seen.has(id)) throw new Error("패키지 안에 같은 상품이 두 번 — " + p.key + " / " + id);
-      seen.add(id);
-    }
-    const bad = (p.name + " " + p.lead + " " + (p.desc || ""))
-      .match(/인기|추천|BEST|TOP|많이 찾는|할인|최저가/);
-    if(bad) throw new Error("패키지 글에 쓰면 안 되는 말이 있습니다 — " + p.key + " · " + bad[0]);
-  }
-  console.log("   패키지 " + P.length + "개가 실제 상품만 가리킵니다");
-}
 
-/* ════════════════════════════════════════════════════════════════════
-   수익상품이 **DB 와 같은가** (2026-10-22 오픈 전 전수검사 P0 ⑦)
-
-   ⚠️⚠️ `offer` 표가 **비어 있었습니다.** js/data/offers.js 에 스물일곱이
-   있는데 DB 에는 한 줄도 넣는 코드가 없었고, 그래서 —
-     · `fee_policy.offer_id` 가 offer(id) 를 가리켜 **상품별 요율을
-       못 걸고** 업체 전체 정책만 걸렸습니다.
-     · `request.offer_id` 도 같은 FK 라, 화면이 offerId 를 보내기
-       시작하는 날 **그 접수의 저장이 통째로 실패**합니다.
-
-   ⚠️⚠️ 한쪽만 고치면 **조용히 어긋납니다** — 그래서 빌드가 양쪽을
-   맞춰 봅니다 (`deal.js` ↔ `deal_move` 를 지키는 것과 같은 방식).
-   ⚠️ 보는 것은 **id 와 이름**까지입니다. lead · 적용 방식은 글이라
-   한 글자 다를 수 있고, 거기까지 묶으면 글을 고칠 때마다 빌드가
-   멈춥니다 — 지켜야 하는 것은 **줄이 빠짐없이 있는가** 입니다.
-   ════════════════════════════════════════════════════════════════════ */
-function checkOfferSql(W){
-  const L = W.AM_OFFERS || [];
-  if(!L.length) return;
-  const f = path.join(ROOT, "db", "migrations", "0012_owner_assignable_offer.sql");
-  if(!fs.existsSync(f))
-    throw new Error("db/migrations/0012_owner_assignable_offer.sql 이 없습니다 — "+
-      "수익상품이 DB 에 들어가는 길이 사라집니다 (offer 표가 비면 상품별 수수료 정책을 못 만듭니다)");
-  /* 주석을 먼저 걷어냅니다 — 규칙을 설명하는 글에 걸려 멀쩡한 파일을
-     실패로 잡은 적이 있습니다 (select=* 로 겪은 자리) */
-  const sql = fs.readFileSync(f, "utf8").replace(/--[^\n]*/g, " ");
-  const bad = [];
-  L.forEach(function(o){
-    const q = "('" + o.id + "', '" + String(o.name).replace(/'/g, "''") + "'";
-    if(sql.indexOf(q) < 0)
-      bad.push(o.id + " (" + o.name + ")");
-  });
-  if(bad.length)
-    throw new Error("수익상품이 db/migrations/0012 의 offer 줄과 어긋납니다: " +
-      bad.join(" · ") +
-      "\n   → offer 표에 없는 상품은 `fee_policy.offer_id` 로 요율을 걸 수 없고," +
-      "\n     `request.offer_id` 로 보내는 날 **접수 저장이 FK 로 통째로 실패**합니다" +
-      "\n   → 줄 만드는 법: node -e 로 AM_OFFERS 를 돌려 insert 줄을 뽑아 0012 에 넣으세요");
-  /* 거꾸로 — SQL 에만 있는 줄 (지운 상품이 DB 에 남아 있는 것) */
-  const ids = {}; L.forEach(o => { ids[o.id] = 1; });
-  const extra = (sql.match(/\n  \('([a-z0-9-]+)'/g) || [])
-    .map(x => x.replace(/[^a-z0-9-]/g, "")).filter(k => k && !ids[k]);
-  if(extra.length)
-    throw new Error("db/migrations/0012 에 offers.js 에 없는 상품이 있습니다: " +
-      extra.join(" · ") + "\n   → 상품을 내리실 때는 offers.js 와 0012 를 **같이** 고치세요");
-  console.log("   수익상품 " + L.length + "개가 offer 표(0012)와 같습니다");
-}
-
-function checkOffers(W){
-  const L = W.AM_OFFERS || [];
-  if(!L.length) throw new Error("수익상품이 하나도 없습니다 (§5)");
-
-  const cats  = new Map((W.AM_CATS || []).map(c => [c.key, c]));
-  const inds  = new Set((W.AM_INDUSTRIES || []).map(x => x.key));
-  const regs  = new Set((W.AM_REGIONS || []).map(x => x.key));
-  const fees  = new Set((W.AM_FEE_TYPE || []).map(x => x.key));
-  const apply = new Set((W.AM_OFFER_APPLY || []).map(x => x.key));
-  const cost  = new Set((W.AM_OFFER_COST || []).map(x => x.key));
-  const stat  = new Set((W.AM_OFFER_STATUS || []).map(x => x.key));
-  const routes = new Set(allRoutes(W));
-  const seen = new Set();
-
-  for(const x of L){
-    const at = "수익상품 " + (x.id || "(id 없음)");
-    if(!x.id || !x.name) throw new Error(at + " 에 id 나 이름이 없습니다");
-    if(seen.has(x.id)) throw new Error("수익상품 id 가 겹칩니다 — " + x.id);
-    seen.add(x.id);
-
-    const c = cats.get(x.cat);
-    if(!c) throw new Error(at + " 가 없는 분류를 가리킵니다 — " + x.cat);
-    /* ⚠️⚠️ 하위 key 는 **그 분류의 items** 안에 있어야 합니다. 업체
-       `subs` 에서 겪은 그 자리입니다 — 틀리면 에러 없이 조용히 안 걸립니다.
-       ⚠️ `equip` 처럼 하위가 **업종에서 오는** 분류는 items 가 비어
-       있어서, 그때는 sub 을 적지 않는 것이 맞습니다. */
-    if(x.sub){
-      const items = (c.items || []).map(i => i.key);
-      if(!items.length)
-        throw new Error(at + " 는 하위를 적을 수 없는 분류입니다 (하위가 업종에서 옵니다) — " + x.cat);
-      if(items.indexOf(x.sub) < 0)
-        throw new Error(at + " 의 하위 key 가 " + x.cat + " 에 없습니다 — " + x.sub +
-          "\n   있는 것: " + items.join(" · "));
-    }
-    for(const k of (x.industries || []))
-      if(!inds.has(k)) throw new Error(at + " 가 없는 업종을 가리킵니다 — " + k);
-    for(const k of (x.regions || []))
-      if(!regs.has(k)) throw new Error(at + " 가 없는 지역을 가리킵니다 — " + k);
-    if(!apply.has(x.apply)) throw new Error(at + " 의 신청 유형이 없습니다 — " + x.apply);
-    if(!cost.has(x.costWay)) throw new Error(at + " 의 비용 안내 방식이 없습니다 — " + x.costWay);
-    if(!stat.has(x.status)) throw new Error(at + " 의 노출 상태가 없습니다 — " + x.status);
-    /* ⚠️ 수익모델은 fee.js 의 key 라야 합니다 — 어긋나면 4차에서
-       수수료를 계산할 수가 없습니다 */
-    if(!fees.has(x.fee)) throw new Error(at + " 의 수익모델이 fee.js 에 없습니다 — " + x.fee);
-    if(!x.feeNote) throw new Error(at + " 에 정산 기준이 없습니다 (§9)");
-    /* ⚠️⚠️ `to` 는 **이미 있는 화면**이라야 합니다. 새 주소를 만들면
-       같은 내용이 두 주소로 나갑니다 (§22) — 가짜 링크는 절대 규칙 5 입니다. */
-    if(!x.to || !routes.has(String(x.to).split("?")[0]))
-      throw new Error(at + " 가 없는 주소를 가리킵니다 — " + x.to);
-    /* ⚠️ 금액을 적는 칸을 만들지 마세요 (프랜차이즈 창업비와 같은 까닭) */
-    for(const k of ["price", "from", "cost", "amount"])
-      if(x[k] != null)
-        throw new Error(at + " 에 금액 칸(" + k + ")이 있습니다 — 금액은 적지 않습니다 (§5)");
-  }
-
-  /* ⚠️⚠️ **§5 를 기계로 지키는 줄입니다.** 업체가 없는 분야의 상품을
-     "신청 받는 중" 으로 켜면, 손님이 다 적고 눌렀는데 배정할 곳이
-     없습니다 — 받아 두고 못 하는 것이 절대 규칙 5 입니다. */
-  const live = L.filter(x => x.status === "live");
-  for(const x of live){
-    const n = W.amProvidersInCat ? W.amProvidersInCat(x.cat) : 0;
-    if(!n)
-      throw new Error("수익상품 " + x.id + " 가 '신청 받는 중' 인데 " +
-        x.cat + " 분야에 등록된 업체가 0곳입니다 — 손님이 다 적고 눌렀을 때 " +
-        "배정할 곳이 없습니다 (§5 · 절대 규칙 5). 업체를 등록한 뒤 켜세요");
-  }
-}
 
 /* ════════════════════════════════════════════════════════════════════
    checkReqForms — 서비스별 질문이 **조용히 사라지지 않는가** (§6)
@@ -2569,12 +2009,22 @@ function checkReqForms(W){
   const F = W.AM_REQ_FORMS || {};
   const cats = new Map((W.AM_CATS || []).map(c => [c.key, c]));
   const T = new Set(["text", "num", "date", "sel", "chk"]);
-  /* 공통 칸 (js/pages/quote.js 의 detail)
-     ⚠️⚠️ 2026-10-09 §4-4 로 **일곱**이 됐습니다 — 복수 상품을 묶어
-     신청하실 때 "신청 상품" 한 줄이 같이 나갑니다. 그만큼
-     서비스별 상한이 열넷 → **열셋**으로 줄었습니다.
-     ⚠️ 넘으면 `api/quote.js` 가 뒤쪽 칸을 **에러 없이** 버립니다. */
-  const COMMON = 7, MAX = 20;
+  /* ⚠️⚠️ **상한이 둘이고 서로 독립입니다** (2026-10-31 에 재서 고쳤습니다).
+     전에는 `공통 7 + 서비스별 ≤ 20` 한 덩이로 보고 있었는데, 2026-10-17
+     창업 준비 §5-4 로 서비스별 답이 **`items[].detail` 로 갈라져** 나간
+     뒤에도 그 셈이 남아 있었습니다 — 멀쩡한 분류를 "너무 많습니다" 로
+     잡을 수 있는 **검사가 틀린 자리**입니다 (지금 제일 많은 `corp` 가
+     일곱이라 아직 안 걸렸습니다).
+
+       api/quote.js  78줄   items[].detail  Object.keys(...).slice(0, 20)
+                    110줄   detail          Object.keys(d).slice(0, 20)
+
+     앞이 **서비스 하나의 질문**, 뒤가 **공통 칸**입니다. 공통은 지금
+     여섯(상황 · 시군구 · 희망 금액 · 희망 시점 · 사진 · 신청 서비스)이고
+     서비스별 질문과 한 바구니에 담기지 않습니다.
+     ⚠️ 넘으면 `api/quote.js` 가 뒤쪽 칸을 **에러 없이** 버립니다 —
+     손님은 다 적었는데 받아 보는 사람만 모릅니다. */
+  const MAX = 20;
 
   for(const k of Object.keys(F)){
     if(!cats.has(k))
@@ -2582,11 +2032,10 @@ function checkReqForms(W){
     const L = F[k];
     if(!Array.isArray(L) || !L.length)
       throw new Error("서비스별 질문이 비어 있습니다 — " + k + " (빈 묶음은 지우세요)");
-    if(COMMON + L.length > MAX)
+    if(L.length > MAX)
       throw new Error("서비스별 질문이 너무 많습니다 — " + k + " 가 " + L.length +
-        "칸입니다. 공통 " + COMMON + "칸과 합쳐 " + MAX + "칸을 넘으면 " +
-        "api/quote.js 에서 **뒤쪽 칸이 조용히 사라집니다** (최대 " +
-        (MAX - COMMON) + "칸)");
+        "칸입니다. api/quote.js 가 항목 하나의 detail 을 " + MAX +
+        "칸까지만 읽어서 **뒤쪽 칸이 조용히 사라집니다**");
     const seen = new Set();
     for(const f of L){
       if(!f.k) throw new Error(k + " 에 딱지 없는 칸이 있습니다");
@@ -2598,14 +2047,24 @@ function checkReqForms(W){
         throw new Error(k + " · " + f.k + " 에 보기가 없습니다");
       /* ⚠️⚠️ 공통 칸과 **같은 것을 또 묻지 않습니다** — 같은 것을 두 번
          묻는 폼은 거기서 닫힙니다 */
-      for(const dup of ["업종", "지역", "시군구", "평수", "예산", "면적"])
+      /* ⚠️⚠️ 공통 칸 이름은 `js/pages/quote.js` 의 `detail` 과
+         `DRAFT_FIELDS` 에서 왔습니다. 2026-10-31 로 중고폰 쪽 이름이
+         됐습니다 — `평수` · `면적` 처럼 쓰는 곳이 없어진 말을 남겨
+         두면 "막고 있다" 고 믿게 되는데 막는 것이 없습니다. */
+      for(const dup of ["상황", "지역", "시군구", "희망금액", "희망시점",
+                        "희망일정", "사진", "신청서비스"])
         if(String(f.k).replace(/\s/g, "") === dup)
           throw new Error(k + " 가 공통 칸(" + dup + ")을 또 묻습니다 (§6)");
       /* ⚠️ 금액을 묻지 마세요 — 예산은 공통 칸에 있습니다 */
       if(/금액|가격|비용|얼마/.test(f.k) && f.t === "num")
-        throw new Error(k + " · " + f.k + " — 금액을 묻지 않습니다 (예산은 공통 칸입니다)");
+        throw new Error(k + " · " + f.k + " — 금액을 묻지 않습니다 (희망 금액은 공통 칸입니다)");
     }
   }
+  /* ⚠️ 한 줄은 냅니다 — 안 내면 이 가드가 도는지를 알 길이 없습니다 */
+  const ks = Object.keys(F);
+  console.log("   서비스별 질문 " + ks.length + "분류 · " +
+    ks.reduce((n, k) => n + F[k].length, 0) + "칸이 공통 칸과 안 겹칩니다 (최대 " +
+    ks.reduce((n, k) => Math.max(n, F[k].length), 0) + "칸 / " + MAX + ")");
 }
 
 
@@ -3042,23 +2501,77 @@ function checkMigDocs(W){
   console.log("   마이그레이션 " + migs.length + "개가 README \u00b7 test-sql \u00b7 verify 와 같습니다 (판 " + top + ")");
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   수익상품이 **DB 와 같은가** (2026-10-22 오픈 전 전수검사 P0 ⑦)
+
+   ⚠️⚠️ `offer` 표가 **비어 있었습니다.** js/data/offers.js 에 스물일곱이
+   있는데 DB 에는 한 줄도 넣는 코드가 없었고, 그래서 —
+     · `fee_policy.offer_id` 가 offer(id) 를 가리켜 **상품별 요율을
+       못 걸고** 업체 전체 정책만 걸렸습니다.
+     · `request.offer_id` 도 같은 FK 라, 화면이 offerId 를 보내기
+       시작하는 날 **그 접수의 저장이 통째로 실패**합니다.
+
+   ⚠️⚠️ 한쪽만 고치면 **조용히 어긋납니다** — 그래서 빌드가 양쪽을
+   맞춰 봅니다 (`deal.js` ↔ `deal_move` 를 지키는 것과 같은 방식).
+   ⚠️ 보는 것은 **id 와 이름**까지입니다. lead · 적용 방식은 글이라
+   한 글자 다를 수 있고, 거기까지 묶으면 글을 고칠 때마다 빌드가
+   멈춥니다 — 지켜야 하는 것은 **줄이 빠짐없이 있는가** 입니다.
+   ════════════════════════════════════════════════════════════════════ */
+function checkOfferSql(W){
+  const L = W.AM_OFFERS || [];
+  if(!L.length) return;
+  const f = path.join(ROOT, "db", "migrations", "0012_owner_assignable_offer.sql");
+  if(!fs.existsSync(f))
+    throw new Error("db/migrations/0012_owner_assignable_offer.sql 이 없습니다 — "+
+      "수익상품이 DB 에 들어가는 길이 사라집니다 (offer 표가 비면 상품별 수수료 정책을 못 만듭니다)");
+  /* 주석을 먼저 걷어냅니다 — 규칙을 설명하는 글에 걸려 멀쩡한 파일을
+     실패로 잡은 적이 있습니다 (select=* 로 겪은 자리) */
+  const sql = fs.readFileSync(f, "utf8").replace(/--[^\n]*/g, " ");
+  const bad = [];
+  L.forEach(function(o){
+    const q = "('" + o.id + "', '" + String(o.name).replace(/'/g, "''") + "'";
+    if(sql.indexOf(q) < 0)
+      bad.push(o.id + " (" + o.name + ")");
+  });
+  if(bad.length)
+    throw new Error("수익상품이 db/migrations/0012 의 offer 줄과 어긋납니다: " +
+      bad.join(" · ") +
+      "\n   → offer 표에 없는 상품은 `fee_policy.offer_id` 로 요율을 걸 수 없고," +
+      "\n     `request.offer_id` 로 보내는 날 **접수 저장이 FK 로 통째로 실패**합니다" +
+      "\n   → 줄 만드는 법: node -e 로 AM_OFFERS 를 돌려 insert 줄을 뽑아 0012 에 넣으세요");
+  /* 거꾸로 — SQL 에만 있는 줄 (지운 상품이 DB 에 남아 있는 것) */
+  const ids = {}; L.forEach(o => { ids[o.id] = 1; });
+  const extra = (sql.match(/\n  \('([a-z0-9-]+)'/g) || [])
+    .map(x => x.replace(/[^a-z0-9-]/g, "")).filter(k => k && !ids[k]);
+  if(extra.length)
+    throw new Error("db/migrations/0012 에 offers.js 에 없는 상품이 있습니다: " +
+      extra.join(" · ") + "\n   → 상품을 내리실 때는 offers.js 와 0012 를 **같이** 고치세요");
+  console.log("   수익상품 " + L.length + "개가 offer 표(0012)와 같습니다");
+}
+
 
 /* ── 실행 ─────────────────────────────────────────────────────── */
-/* ⚠️⚠️ **2026-10-31 — 창업 · 폐업 가드 열일곱을 부르지 않습니다.**
+/* ⚠️⚠️ **2026-10-31 — 창업 · 폐업 가드 열넷을 이 파일에서 지웠습니다.**
    사장님 지시("인수인계 자료를 다 지워 · 중고폰 쪽은 살려두고")로 그
-   데이터와 화면을 지웠습니다 — 가드가 없어진 분류 · 주소를 찾아서
-   **빌드가 멈춥니다.** 함수는 **지우지 않았습니다**: 되살리시는 날
-   그대로 다시 부르면 됩니다 (아래 목록 그대로).
+   데이터 파일을 지웠더니, 가드가 없어진 분류 · 주소를 찾아서 **빌드가
+   멈췄습니다.** 부르는 줄만 빼면 **정의만 남아 아무것도 안 보는 검사**가
+   되기 때문에(이 저장소가 "통과만 하고 아무것도 안 잡는 검사" 로 세 번
+   겪은 자리) 정의째 걷어냈습니다 —
 
-     checkIndGroups · checkStartAsk · checkProcess  · checkSales
-     checkHalls     · checkSvcPick  · checkPickGroup · checkOpsCheck
-     checkSvcPage   · checkOpsvc    · checkPackages · checkOffers
-     checkReqForms  · checkProviders · checkMarketData
-     checkRetired   · checkHallFrame
+     checkIndGroups · checkStartAsk  · checkProcess   · checkSales
+     checkHalls     · checkSvcPick   · checkPickGroup · checkOpsCheck
+     checkSvcPage   · checkOpsvc     · checkPackages  · checkOffers
+     checkMarketData · checkHallFrame
 
-   ⚠️ `checkOfferSql` 은 **그대로 부릅니다** — `js/data/offers.js` 를
-   남겨 두었고(마이그레이션이 그 스물일곱 줄을 DB 에 넣습니다) 한쪽만
-   고치면 어긋납니다. 화면에는 안 나옵니다.
+   ⚠️⚠️ **되살리시려면 `git show 6d85a17:build-pages.js`** 입니다 — 그
+   커밋이 열넷을 다 들고 있는 마지막 판이고, 되살리는 날 **그 가드가
+   보는 데이터 파일**(`js/data/industries.js` 등)도 같이 되살려야 합니다.
+
+   ⚠️⚠️ **`checkOfferSql` 은 그대로 부릅니다** — 이 묶음에서 **한 번
+   삼켜서 `ReferenceError` 로 빌드가 멈췄습니다** (인덱스로 잘라 내다
+   함수를 통째로 삼킨 **일곱 번째**). `js/data/offers.js` 를 남겨 두었고
+   (0012 가 그 스물일곱 줄을 DB 에 넣습니다) 한쪽만 고치면 `fee_policy`
+   · `request` 의 FK 가 조용히 어긋납니다. 화면에는 안 나옵니다.
    ⚠️ 중고폰 쪽 가드(`checkShop` · `checkDevices` · `checkSteps` ·
    `checkFaq`)와 DB · 주소 · 사진 · 팔레트 가드는 **전부 그대로**입니다. */
 checkCssVars();
@@ -3078,62 +2591,6 @@ checkClaimSql();
 checkQuoteSql(W);
 checkRpcArgs();
 
-/* ════════════════════════════════════════════════════════════════════
-   checkHallFrame() — **전문관 넷의 공통 검사가 글자까지 같은가**
-                      (2026-10-18 전체 점검 §3)
-
-   ⚠️⚠️ `check.js` 의 "전문관 공통 여덟" 은 **넷을 글자로 적어 둡니다.**
-   반복문으로 이름을 만들면 `tools/prove-checks.js` 가 검사를
-   `await f("이름", "주소", 백틱)` 글자로 찾기 때문에 **못 찾고**,
-   그러면 검사는 도는데 **되돌려 보는 쪽이 닿지 못해** "통과만 하고
-   아무것도 안 잡는 검사" 와 같아집니다 (실제로 그렇게 적었다가
-   ship 이 막았습니다).
-
-   ⚠️⚠️ 글자로 넷을 적으면 이번에는 **한쪽만 고치는** 사고가 납니다 —
-   이 저장소가 `amCatTo`/`catTo` · 랜딩 아이콘 표 · `deal.js`↔`deal_move`
-   로 여러 번 겪은 자리입니다. 그래서 넷의 본문이 **첫 줄(WANT_SIDE)을
-   빼고 글자까지 같은지** 빌드가 셉니다. */
-function checkHallFrame(){
-  const src = fs.readFileSync("check.js", "utf8");
-  const got = [];
-  const re = /await f\("전문관 공통 여덟 — ([^"]+)", "([^"]*)", `([\s\S]*?)`\);/g;
-  let m;
-  while((m = re.exec(src))) got.push({ name:m[1], url:m[2], body:m[3] });
-
-  if(got.length !== 4)
-    die("전문관 공통 검사가 넷이 아닙니다 — " + got.length +
-        "개 (check.js · 반복문으로 만들면 prove-checks 가 못 찾습니다)");
-
-  const want = ["/startup", "/operation", "/transfer", "/closure"];
-  want.forEach(function(u){
-    if(!got.some(function(g){ return g.url === u; }))
-      die("전문관 공통 검사에 " + u + " 가 빠졌습니다 (check.js)");
-  });
-
-  /* 첫 줄이 WANT_SIDE 하나이고, 그 아래가 넷 다 같은가 */
-  const sides = {};
-  const rest = got.map(function(g){
-    const L = g.body.replace(/^\n/, "").split("\n");
-    const first = L[0].trim();
-    const sm = first.match(/^const WANT_SIDE = "([a-z]+)";$/);
-    if(!sm) die("전문관 공통 검사 " + g.url + " 의 첫 줄이 WANT_SIDE 가 아닙니다 — " + first);
-    if(sides[sm[1]]) die("전문관 공통 검사에 같은 쪽이 둘입니다 — " + sm[1]);
-    sides[sm[1]] = 1;
-    if(g.url !== g.name) die("전문관 공통 검사의 이름과 주소가 다릅니다 — " + g.name + " / " + g.url);
-    return L.slice(1).join("\n");
-  });
-  /* ⚠️ 화면이 받는 값 넷과 같아야 합니다 (0001 — start | ops | transfer | close) */
-  ["start", "ops", "transfer", "close"].forEach(function(k){
-    if(!sides[k]) die("전문관 공통 검사에 쪽 " + k + " 가 빠졌습니다");
-  });
-  rest.forEach(function(b, i){
-    if(b !== rest[0])
-      die("전문관 공통 검사 " + got[i].url + " 의 본문이 " + got[0].url +
-          " 과 다릅니다 — 넷은 WANT_SIDE 말고는 글자까지 같아야 합니다");
-  });
-  console.log("   전문관 공통 검사 4개가 글자까지 같습니다 (" +
-    Object.keys(sides).join(" · ") + ")");
-}
 /* ════════════════════════════════════════════════════════════════════
    checkPhotoSql() — **받는 형식과 크기가 서버와 DB 에서 같은가**
                      (2026-10-18 §7-3 · §15)
@@ -3444,11 +2901,21 @@ checkProviderSelfSql();
 checkApplySql();
 checkOfferSql(W);
 checkFaq(W);
-for(const hall of Object.keys(W.AM_PICK_GROUP || {})){
-  const gs = W.amPickGroups(hall);
-  console.log("   " + hall + " 대표 " + gs.length + "묶음 · 세부 " +
-    gs.reduce((n, g) => n + g.subs.length, 0) + "개가 실제 서비스를 가리킵니다");
-}
+/* ⚠️⚠️ **2026-10-31 로 둘을 다시 켰습니다.** 인수인계를 걷어내는 동안
+   부르는 자리가 빠져서 **정의만 남고 아무것도 안 보고 있었습니다** —
+   그게 이 저장소가 "통과만 하고 아무것도 안 잡는 검사" 로 세 번 겪은
+   꼴입니다. 둘 다 PHONEWAY 데이터에 그대로 맞습니다 —
+     checkProviders  업체 줄의 하위 분야 key · 지역 · 기기 · id (지금 0곳)
+     checkReqForms   서비스별 질문이 공통 칸과 겹치지 않는가 · detail 상한 */
+checkProviders(W);
+checkReqForms(W);
+/* ⚠️⚠️ **2026-10-31 로 다시 켰습니다 (셋째).** `js/pages/home-retired.js`
+   가 지워져서 이 가드는 지금 **첫 줄에서 그냥 돌아옵니다** — 그래도
+   부릅니다. 정의만 두고 안 부르면 그게 "통과만 하고 아무것도 안 잡는
+   검사" 이고, 내려온 구간을 다시 파일로 가르는 날(CLAUDE.md 가 적어 둔
+   `home.js` 의 안 불리는 아홉) **손님이 받는 코드가 안 실리는 파일을
+   부르는 것**을 이 가드가 잡아야 합니다. */
+checkRetired();
 writeSvcList(W);
 writeMigList();
 writeApplySql();

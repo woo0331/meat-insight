@@ -448,10 +448,12 @@ function rqCatName(k){
   for(i = 0; i < L.length; i++) if(L[i].key === k) return L[i].name;
   return "";
 }
+/* ⚠️ 2026-10-31 로 **기기 종류**입니다 (전엔 업종 열넷). 목록은
+   `js/data/devices.js` 의 `AM_DEVICE_KINDS` 한 곳이고, 모르는 값은
+   **빈 문자열**입니다 — 옛 접수에 업종 key 가 들어 있을 수 있어서
+   그때는 그 칸이 줄째 빠집니다 (자리표시자를 안 찍습니다). */
 function rqIndName(k){
-  var L = window.AM_INDUSTRIES || [], i;
-  for(i = 0; i < L.length; i++) if(L[i].key === k) return L[i].name;
-  return "";
+  return (typeof amKindName === "function") ? (amKindName(k) || "") : "";
 }
 function rqRegName(r){
   var nm = window.amRegionName ? amRegionName(r.region) : "";
@@ -605,16 +607,16 @@ function rqPvOpt(p, cur){
    바꾸는 것까지이고, 고르는 것도 제17조 동의를 받는 것도 사람입니다.
    저절로 넘기면 동의를 받은 사람이 아무도 없게 됩니다.
 
-   ⚠️⚠️ **보는 것은 넷뿐입니다** — 분야(하는 일) · 지역 · 업종 ·
+   ⚠️⚠️ **보는 것은 넷뿐입니다** — 분야(하는 일) · 지역 · 취급 기기 ·
    배정 가능. 평점 · 후기 수 · 응답속도 · 거래 수를 **쓰지 않습니다**:
    후기가 0건이고 응답 시각을 재는 장치가 없어서, 그 값으로 줄을
    세우면 그 순서가 곧 **지어낸 추천**입니다 (절대 규칙 1 · 약관
    제6조 제4항 "광고 순서의 기준을 밝힌다").
 
-   ⚠️ 지역 · 업종을 **안 적은 업체는 맞는 것으로 봅니다** — 안 적은
-   것을 "전국 · 전업종" 으로 읽는 게 말이 됩니다. 반대로 **하는
+   ⚠️ 지역 · 취급 기기를 **안 적은 업체는 맞는 것으로 봅니다** — 안
+   적은 것을 "전국 · 전기기" 로 읽는 게 말이 됩니다. 반대로 **하는
    일(`subs`)을 안 적은 업체는 어느 조건에도 안 맞습니다** (그걸
-   "전부 다 합니다" 로 읽으면 인테리어 업체가 세무 화면에 앉습니다 —
+   "전부 다 합니다" 로 읽으면 수리 업체가 수출 화면에 앉습니다 —
    `amProviderInCat()` 과 같은 규칙입니다). */
 function rqPvFit(p, w){
   if(!w) return false;
@@ -647,7 +649,7 @@ function rqPvWhy(w){
   if(w && w.region) L.push(
     (typeof amRegionName === "function" ? amRegionName(w.region) : w.region) || "지역");
   if(w && w.industry) L.push(
-    (typeof amIndustryName === "function" ? amIndustryName(w.industry) : w.industry) || "업종");
+    (typeof amKindName === "function" ? amKindName(w.industry) : w.industry) || "기기");
   return L;
 }
 
@@ -658,7 +660,7 @@ function rqPvWhy(w){
    ⚠️⚠️ **목록을 조용히 자르지 않습니다.** 거른 만큼 몇 곳이 빠졌는지
    그 자리에서 밝힙니다 (`/stores` 거르개와 같은 규칙) — 안 밝히면
    직원은 그 분야에 원래 그만큼만 있는 줄 알고 넘어갑니다.
-   ⚠️ 보는 것은 **업체명 · 지역 이름 · 업종 이름 · 하는 일 이름**입니다.
+   ⚠️ 보는 것은 **업체명 · 지역 이름 · 기기 이름 · 하는 일 이름**입니다.
    직원은 업체 id(`ganada-interior`)를 모르고 상호를 칩니다. */
 function rqPvHit(p, q){
   if(!q) return true;
@@ -669,7 +671,7 @@ function rqPvHit(p, q){
   (p.gu || []).forEach(function(g){ hay.push(g); });
   (p.industries || []).forEach(function(k){
     hay.push(k);
-    if(typeof amIndustryName === "function") hay.push(amIndustryName(k) || ""); });
+    if(typeof amKindName === "function") hay.push(amKindName(k) || ""); });
   (p.subs || []).forEach(function(k){
     hay.push(k);
     var one = (typeof amSubName === "function") ? amSubName(k) : "";
@@ -703,7 +705,7 @@ function rqPvIn(key){
   return '<div class="f-r rq-pvq">'+
     '<label for="'+esc(key)+'-q">업체 찾기</label>'+
     '<input id="'+esc(key)+'-q" class="in" type="search" '+
-      'value="'+esc(q)+'" placeholder="상호 · 지역 · 업종 · 하는 일" '+
+      'value="'+esc(q)+'" placeholder="상호 · 지역 · 취급 기기 · 하는 일" '+
       'oninput="rqPvQ(\''+esc(key)+'\',this.value)">'+
   '</div>';
 }
@@ -743,8 +745,15 @@ function rqPvNote(key, cur){
     (P.length - L.length)+'곳은 검색으로 빠졌습니다. '+
     (kept ? '<b>고르신 곳은 찾으신 말과 안 맞아도 그대로 둡니다.</b> ' : '');
   else  t += '고를 수 있는 업체는 '+on+'곳입니다 (등록 '+P.length+'곳). ';
+  /* ⚠️⚠️ **조사를 손으로 적지 마세요.** 맨 끝 낱말이 기기 이름(스마트폰 ·
+     태블릿 · 워치 · 이어버즈) · 지역 이름 · "하는 일" 로 바뀌는 자리라
+     받침이 있을 때도 없을 때도 있습니다 — `이` 를 박아 두어서 실제로
+     **"기기이 맞는 곳"** 이 관리자 화면에 나갔습니다 (2026-10-31 ·
+     취급 기기로 바꾸면서 드러났습니다). `josa()` 가 고릅니다. */
   if(why.length)
-    t += '<b>'+esc(why.join(" · "))+'</b>이 맞는 곳 '+fit+'곳을 위에 모았습니다 — '+
+    t += '<b>'+esc(why.join(" · "))+'</b>'+
+      (window.josa ? josa(why[why.length - 1], "이가") : "이")+
+      ' 맞는 곳 '+fit+'곳을 위에 모았습니다 — '+
       '추천이 아니라 <b>조건이 맞는 것</b>이고, 평점 · 응답속도로 줄을 세우지 '+
       '않습니다 (재는 장치가 없습니다). 고르는 것은 사람입니다.';
   if(on < L.length)
@@ -1829,7 +1838,7 @@ window.rqSetHold = function(id, on){
 
    ⚠️⚠️ **여기서 `provider` 를 만들지 않습니다.** 신청은 아직 업체가
    아닙니다 — 통화도 안 해 봤고 계약도 없습니다. 통화해서 합의가 되면
-   **관리자 설정 9번 칸**이 `provider` 줄을 만들고, 그 다음에 여기서
+   **관리자 설정 8번 칸**이 `provider` 줄을 만들고, 그 다음에 여기서
    `등록 완료` 로 두면 이 신청이 그 업체를 가리킵니다.
    ⚠️ 그래서 이 구간에 "바로 등록" 단추가 없습니다 — 있으면 통화도 안
    한 회사가 배정 고르개에 서고, 거기 배정되면 그 순간 손님 성함 ·
@@ -1851,7 +1860,7 @@ function rqApplies(){
       : '<p class="ad-lead">'+
           (nNew ? '<b>'+nNew+'곳</b>이 아직 통화 전입니다. ' : '')+
           (nCal ? '<b>'+nCal+'곳</b>은 통화했고 등록이 남았습니다. ' : '')+
-          '통화해서 합의가 되면 <b>관리자 설정 9번 칸</b>에서 업체 줄을 '+
+          '통화해서 합의가 되면 <b>관리자 설정 8번 칸</b>에서 업체 줄을 '+
           '만들고, 그 다음에 여기서 <b>등록 완료</b>로 두세요.</p>'+
         '<p class="f-h">⚠️ 여기서 바로 업체가 되는 것이 아닙니다 — '+
           '통화도 안 한 회사가 배정 고르개에 서면 그 순간 손님 성함 · '+
@@ -1905,7 +1914,7 @@ function rqApplyBody(a){
          esc(String(a.tel).replace(/[^0-9+]/g, ""))+'">'+esc(a.tel)+'</a></dd>' : '')+
       rqConItem("이메일", a.email)+
       rqConItem("사업자등록번호", a.brn)+
-      rqConItem("주로 하시는 업종", a.industry)+
+      rqConItem("취급 기기", a.industry)+
       (svc.length ? '<dt>하시는 일</dt><dd>'+esc(svc.join(" · "))+'</dd>' : '')+
       rqConItem("더 하신 말씀", a.note)+
       rqConItem("마지막 메모", a.memo)+
@@ -1953,7 +1962,7 @@ function rqApplyPvPick(a){
   var P = RQ.provs || [], C = RQ.actx || {};
   if(!P.length)
     return '<p class="note-box">DB 에 등록된 업체가 없습니다 — '+
-      '<b>관리자 설정 9번 칸</b>에서 이 업체의 등록 줄을 먼저 만드세요.</p>';
+      '<b>관리자 설정 8번 칸</b>에서 이 업체의 등록 줄을 먼저 만드세요.</p>';
   return '<div class="ad-f">'+
     '<label for="rq-ap-pv">등록한 업체</label>'+
     '<select id="rq-ap-pv" class="sel" onchange="rqActx(\'pv\',this.value)">'+
@@ -2029,7 +2038,7 @@ function rqProvs(){
     '<h2>업체 · 공개 승인</h2>'+
     (!P.length
       ? '<p class="ad-empty">DB 에 등록된 업체가 없습니다. '+
-        '아래 <b>관리자 설정</b> 의 9번 칸에서 등록 줄을 만드세요.</p>'
+        '아래 <b>관리자 설정</b> 의 8번 칸에서 등록 줄을 만드세요.</p>'
       : '<p class="ad-lead">'+
           (off ? '<b>'+off+'곳</b>이 아직 공개 전입니다. ' : '')+
           '공개 전인 업체도 <b>배정 고르개에는 보입니다</b> — '+
@@ -2060,7 +2069,7 @@ function rqProvRow(p){
         '<b class="rq-no">'+esc(p.name)+'</b>'+
         '<span class="rq-m">'+
           esc([subs ? "하는 일 " + subs : "", regs ? "지역 " + regs : "",
-               (p.industries || []).length ? "업종 " + p.industries.length : ""]
+               (p.industries || []).length ? "기기 " + p.industries.length : ""]
               .filter(Boolean).join(" · "))+'</span>'+
       '</span>'+
       '<span class="rq-hd-r">'+

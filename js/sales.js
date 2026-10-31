@@ -745,7 +745,7 @@ function slAddBox(){
     '<div class="sl-add-g">' +
       '<label class="sl-f sl-f-w"><span>업체명 <em>*</em></span>' +
         '<input id="sl-name" type="text" autocomplete="organization" ' +
-          'placeholder="예: 대한인테리어" onkeydown="slKey(event,\'sl-tel\')"></label>' +
+          'placeholder="예: 대한폰마켓" onkeydown="slKey(event,\'sl-tel\')"></label>' +
       '<label class="sl-f"><span>전화번호 <em>*</em></span>' +
         '<input id="sl-tel" type="tel" inputmode="tel" autocomplete="tel" ' +
           'placeholder="031-000-0000" onkeydown="slKey(event,\'sl-g\')"></label>' +
@@ -1284,7 +1284,7 @@ window.slDown = function(){
        눌러도 열리지 않고 백업을 여러 번 받으면 `download(1)` 로 쌓입니다.
        재현해서 확인했습니다 (한글 → "download", 영문 → 그대로). 윈도에서
        한글 파일명이 깨지는 것까지 생각하면 영문이 맞습니다. */
-    a.download = "storeway-sales-" + slToday() + ".json";
+    a.download = "phoneway-sales-" + slToday() + ".json";
     document.body.appendChild(a);
     a.click();
     setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 0);

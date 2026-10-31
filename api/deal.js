@@ -409,7 +409,14 @@ async function notify(fn, args, role){
     .filter(function(k){ return args[k] !== undefined && args[k] !== null; })
     .map(function(k){ return SAY_ARG[k] + ": " + clean(String(args[k]), 80); });
 
-  const subject = "[인수인계] " + say;
+  /* ⚠️⚠️ **브랜드 이름을 손으로 적은 자리입니다.** Vercel 함수라
+     `js/data/brand.js`(화면 전역)를 못 읽습니다 — `manifest.json` ·
+     `middleware.js` 와 같은 자리이고, 그래서 `build-pages.js` 의
+     `brandStatics()` 가 **빌드마다 셉니다** (고쳐 주지는 않습니다).
+     ⚠️ 2026-10-31 까지 **"[인수인계]"** 로 나가고 있었습니다 — 사업이
+     바뀐 뒤에도 운영자 알림 제목만 옛 이름이었습니다. 화면에서는 표가
+     안 나고 **알림을 받아 봐야** 압니다. */
+  const subject = "[폰웨이] " + say;
   const text = subject + "\n" +
     "바꾼 사람: " + clean(role || "", 20) + "\n" +
     lines.join("\n") + "\n\n" +

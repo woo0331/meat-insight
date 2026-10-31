@@ -255,24 +255,6 @@ function adReady(){
           '비워 두는 것이 낫지만, 영업 전에는 둘 다 안 됩니다.</p>'
       : '<p>표시 의무 칸이 다 채워져 있습니다.</p>'));
 
-  var W = window.AM_SUPPORT_WHERE || [];
-  if(W.length){
-    var hasUrl = W.filter(function(x){ return !!x.url; });
-    var off = hasUrl.filter(function(x){ return !x.checked; });
-    L.push(adReadyRow(!off.length, "지원사업 '찾는 곳' 링크",
-      off.length
-        ? '<p>주소가 적힌 <b>'+hasUrl.length+'곳</b> 가운데 <b>'+off.length+'곳</b>이 '+
-          '아직 안 켜져 있습니다. <b>한 번씩 눌러 보시고</b> 살아 있으면 '+
-          '<code>js/data/support.js</code> 에서 <code>checked:true</code> 로 '+
-          '바꾸세요 — 죽은 링크는 없는 것보다 나쁩니다.</p>'+
-          '<ul class="ad-rd-l">'+off.map(function(x){
-            return '<li><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+
-              esc(x.org)+icon("up",14)+'</a></li>'; }).join("")+'</ul>'+
-          '<p class="ad-rd-n">켜기 전에는 기관 이름과 찾는 말까지만 나갑니다 '+
-          '— 손님 화면이 비지는 않습니다.</p>'
-        : '<p>주소가 적힌 '+hasUrl.length+'곳을 전부 확인하셨습니다.</p>'));
-  }
-
   L.push(adReadyRow(false, "약관 · 개인정보처리방침 확인",
     '<p>두 문서는 <b>초안</b>입니다. 영업을 시작하시기 전에 변호사나 '+
     '한국소비자원 표준약관과 대조해 확인하세요.</p>'+
@@ -350,7 +332,8 @@ function adFields(){
     name:   adPick(raw, ["성함", "이름"]),
     tel:    adPick(raw, ["연락처", "전화", "휴대폰"]),
     region: adPick(raw, ["지역"]),
-    biz:    adPick(raw, ["업종"]),
+
+    biz:    adPick(raw, ["취급 기기", "업종"]),
     budget: adPick(raw, ["예산"])
   };
 }
@@ -433,7 +416,8 @@ function adVendor(F, P, G, svcName){
   if(svcName) L.push("· 서비스   " + svcName);
   if(P)       L.push("· 분류     " + P.name);
   if(F.region)L.push("· 지역     " + F.region);
-  if(F.biz)   L.push("· 업종     " + F.biz);
+
+  if(F.biz)   L.push("· 기기     " + F.biz);
   if(F.budget)L.push("· 예산     " + F.budget);
   L.push("");
   L.push("── 사장님이 적어 주신 상황 ──");
@@ -538,7 +522,7 @@ function adInit(){
         '됩니다. <b>아무것도 서버로 보내지 않습니다</b> — 이 브라우저 안에서만 '+
         '돌고, 새로고침하면 사라집니다.</p>'+
       '<textarea id="ad-in" rows="10" spellcheck="false" '+
-        'placeholder="[SOS] 덕트 · 경기 안양&#10;성함      홍길동&#10;연락처    010-0000-0000&#10;…"></textarea>'+
+        'placeholder="[견적] 홍길동 · 액정 · 유리 교체&#10;성함      홍길동&#10;연락처    010-0000-0000&#10;…"></textarea>'+
       '<div class="ad-acts">'+
         '<button class="btn btn-b" type="button" onclick="adRead()">'+
           icon("search",18)+'읽어 오기</button>'+
@@ -558,7 +542,7 @@ function adInit(){
         adSel("ad-svc", "견적 서비스", "svc",
           adAllSubs())+
         '<div class="ad-f"><label for="ad-co">업체명 <em>(정해졌으면)</em></label>'+
-          '<input id="ad-co" type="text" autocomplete="off" placeholder="예: 가나덕트"'+
+          '<input id="ad-co" type="text" autocomplete="off" placeholder="예: 가나모바일"'+
           ' oninput="adSet(\'co\',this.value)"></div>'+
       '</div>'+
     '</section>'+
@@ -592,23 +576,7 @@ function adInit(){
     '</section>'+
 
     '<section class="ad-s">'+
-      '<h2>7. 매물 접수를 등록 줄로</h2>'+
-      '<p class="ad-lead">내놓기(<b>/sell</b>)로 들어온 접수를 그대로 붙여 '+
-        '넣으시면 <b>market.js 에 넣을 줄</b>을 만들어 드립니다. '+
-        '손으로 치면 업종 · 지역 key 와 장비 key(sub)에서 틀리는데, '+
-        '틀리면 <b>에러도 없이 그 매물만 안 뜨거나 빌드가 멈춥니다</b>. '+
-        '여기도 아무것도 저장하지 않습니다.</p>'+
-      '<textarea id="ad-mk-in" rows="10" spellcheck="false" '+
-        'placeholder="[견적] 홍길동 · 매장 내놓기&#10;성함      홍길동&#10;지역      경기&#10;&#10;── 요청 조건 ──&#10;  · 거래 방식 — 매장 양도&#10;  · 업종 — 카페 · 디저트&#10;…"></textarea>'+
-      '<div class="ad-acts">'+
-        '<button class="btn btn-b" type="button" onclick="adMkRead()">'+
-          icon("search",18)+'읽어 오기</button>'+
-      '</div>'+
-      '<div id="ad-mk-out"></div>'+
-    '</section>'+
-
-    '<section class="ad-s">'+
-      '<h2>8. 수익상품 — 지금 낼 수 있는 상태인가</h2>'+
+      '<h2>7. 수익상품 — 지금 낼 수 있는 상태인가</h2>'+
       '<p class="ad-lead">지시서 §5 가 <b>"실제 제휴사가 확보되지 않은 '+
         '상품은 신청 가능 상품처럼 오인시키지 말라"</b>고 적었습니다. '+
         '그래서 상품마다 <b>무엇이 남았는지</b>를 세어서 냅니다 — '+
@@ -618,7 +586,7 @@ function adInit(){
     '</section>'+
 
     '<section class="ad-s">'+
-      '<h2>9. 제휴업체 등록 줄</h2>'+
+      '<h2>8. 제휴업체 등록 줄</h2>'+
       '<p class="ad-lead">받아 온 업체를 적으시면 <b>넣을 줄 둘</b>을 '+
         '만들어 드립니다 — <b>손님 화면</b>(정적 파일)과 <b>배정용 DB</b> '+
         '입니다. 한쪽만 넣으면 <b>에러 없이 반쪽</b>입니다 — 화면에는 '+
@@ -629,26 +597,13 @@ function adInit(){
         '골라 만들면 틀릴 수가 없습니다. '+
         '<b>여기도 아무것도 저장하지 않습니다.</b></p>'+
       '<div id="ad-pv"></div>'+
-    '</section>'+
-
-    '<section class="ad-s">'+
-      '<h2>10. 전문관 노출 순서</h2>'+
-      '<p class="ad-lead">메인의 <b>전문관 넷</b>과 그 안의 서비스 차례를 '+
-        '눌러서 바꾸고, <b>붙여 넣을 줄</b>을 만들어 드립니다 '+
-        '(<code>js/data/halls.js</code>). ' +
-        '<b>여기서 저장하지 않습니다</b> — 저장할 서버가 없는데 저장되는 '+
-        '척하면 그게 거짓말입니다. 만든 줄을 붙여 넣고 '+
-        '<code>node build-pages.js</code> 하시면 반영됩니다.</p>'+
-      '<div id="ad-hl"></div>'+
     '</section>';
 
   adHealth();
   adReady();
   adDraw();
   adInviteDraw();
-  adMkDraw();
   adPvDraw();
-  adHlDraw();
 }
 
 function adInvite(catKey, regKey){
@@ -826,220 +781,6 @@ function adSel(id, label, key, opts){
 
 document.addEventListener("DOMContentLoaded", adInit);
 
-var AD_MK = { id:"", sub:"", raw:"", got:null };
-
-function adMkVal(raw, label){
-  var lines = String(raw || "").split("\n");
-  for(var i = 0; i < lines.length; i++){
-    var ln = lines[i].replace(/^[\s·]+/, "").trim();
-    if(ln.indexOf(label) !== 0) continue;
-    var rest = ln.slice(label.length);
-
-    var cut = rest.indexOf("—");
-    var v;
-    if(cut >= 0) v = rest.slice(cut + 1).trim();
-    else if(/^[\s:]/.test(rest)) v = rest.replace(/^[\s:]+/, "").trim();
-    else continue;
-    if(v) return v;
-  }
-  return "";
-}
-
-function adMkNum(raw, label){
-  var v = adMkVal(raw, label).replace(/[^0-9]/g, "");
-  return v === "" ? null : Number(v);
-}
-function adMkKeyOf(list, name, nameKey){
-  var hit = null;
-  (list || []).forEach(function(x){
-    if(!hit && x[nameKey || "name"] === name) hit = x.key;
-  });
-  return hit;
-}
-
-function adMkText(raw){
-  var lines = String(raw || "").split("\n");
-  var from = -1;
-  for(var i = 0; i < lines.length; i++)
-    if(lines[i].indexOf("필요한 것") >= 0 && lines[i].indexOf("──") >= 0){ from = i + 1; break; }
-  if(from < 0) return "";
-  var out = [];
-  for(var j = from; j < lines.length; j++){
-    if(lines[j].indexOf("──") >= 0) break;
-    out.push(lines[j]);
-  }
-  return out.join("\n").trim();
-}
-
-function adMkParse(raw){
-  var isAsset = raw.indexOf("시설 · 장비 내놓기") >= 0 ||
-                (!!adMkVal(raw, "품목") && !adMkVal(raw, "거래 방식"));
-  var indName = adMkVal(raw, "업종");
-  var regName = adMkVal(raw, "지역");
-  var g = {
-    asset: isAsset,
-    industry: adMkKeyOf(window.AM_INDUSTRIES, indName),
-    indName: indName,
-    region: adMkKeyOf(window.AM_REGIONS, regName),
-    regName: regName,
-    gu: adMkVal(raw, "시군구"),
-    text: adMkText(raw),
-    img: adMkVal(raw, "사진 주소"),
-    name: adMkVal(raw, "성함"),
-    tel: adMkVal(raw, "연락처")
-  };
-  if(isAsset){
-    g.item  = adMkVal(raw, "품목");
-    g.brand = adMkVal(raw, "제조사");
-    g.year  = adMkNum(raw, "연식");
-    g.count = adMkNum(raw, "수량");
-    g.price = adMkNum(raw, "희망가");
-    g.state = adMkVal(raw, "상태");
-    var dl = adMkVal(raw, "거래 단위");
-    g.deal = dl.indexOf("묶음") >= 0 ? "bulk" : dl.indexOf("전체") >= 0 ? "all" : "single";
-  }else{
-    g.kind    = adMkVal(raw, "거래 방식").indexOf("임대") >= 0 ? "lease" : "transfer";
-    g.pyeong  = adMkNum(raw, "평수");
-    g.deposit = adMkNum(raw, "보증금");
-    g.rent    = adMkNum(raw, "월세");
-    g.premium = adMkNum(raw, "권리금");
-    g.equipCost = adMkNum(raw, "시설 인수비");
-    g.since   = adMkNum(raw, "문 연 해");
-    g.wantAt  = adMkVal(raw, "넘기고 싶은 시점");
-    g.sales   = adMkNum(raw, "월 매출");
-    g.withEquip = !!adMkVal(raw, "시설 포함");
-  }
-  return g;
-}
-
-function adMkToday(){
-  var d = new Date(), z = function(n){ return (n < 10 ? "0" : "") + n; };
-  return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate());
-}
-
-function adMkLine(g){
-  var q = function(v){ return '"' + String(v).split('"').join('\\"').split("\n").join("\\n") + '"'; };
-  var L = [];
-  var push = function(k, v){ if(v !== null && v !== undefined && v !== "") L.push("    " + k + ": " + v + ","); };
-  if(g.asset){
-    L.push("  {");
-    push("id", q(AD_MK.id || "여기에-주소가-될-id"));
-    push("cat", q("asset"));
-    push("sub", q(AD_MK.sub || "장비키를-골라-주세요"));
-    push("industry", q(g.industry || "업종키-없음"));
-    push("region", q(g.region || "지역키-없음"));
-    push("gu", g.gu ? q(g.gu) : null);
-    push("title", q(g.item || ""));
-    push("brand", g.brand ? q(g.brand) : null);
-    push("year", g.year);
-    push("count", g.count);
-    push("price", g.price);
-    push("nego", g.price === null ? "true" : "false");
-    push("deal", q(g.deal));
-    push("state", g.state ? q(g.state) : null);
-    push("text", q(g.text));
-    push("images", "[]");
-    push("at", q(adMkToday()));
-  }else{
-    var t = [g.gu, g.pyeong ? g.pyeong + "평" : "", g.indName,
-             g.kind === "lease" ? "임대" : "양도"].filter(Boolean).join(" ");
-    L.push("  {");
-    push("id", q(AD_MK.id || "여기에-주소가-될-id"));
-    push("kind", q(g.kind));
-    push("industry", q(g.industry || "업종키-없음"));
-    push("region", q(g.region || "지역키-없음"));
-    push("gu", g.gu ? q(g.gu) : null);
-    push("pyeong", g.pyeong);
-    push("deposit", g.deposit);
-    push("rent", g.rent);
-    push("premium", g.premium);
-    push("equipCost", g.equipCost);
-    push("sales", g.sales);
-    push("since", g.since);
-    push("wantAt", g.wantAt ? q(g.wantAt) : null);
-    push("withEquip", g.withEquip ? "true" : "false");
-    push("fc", "false");
-    push("title", q(t));
-    push("text", q(g.text));
-    push("images", "[]");
-    push("at", q(adMkToday()));
-  }
-
-  if(L.length > 1) L[L.length - 1] = L[L.length - 1].replace(/,$/, "");
-  L.push("  }");
-  return (g.asset ? "/* js/data/market.js 의 AM_ASSETS 에 넣으세요 */\n"
-                  : "/* js/data/market.js 의 AM_STORES 에 넣으세요 */\n") +
-    L.join("\n");
-}
-
-function adMkWarn(g, line){
-  var w = [];
-  if(!AD_MK.id) w.push("id 를 적어 주세요 — 주소가 됩니다 (/s/… · /a/…)");
-  if(!g.industry) w.push("업종을 못 읽었습니다" + (g.indName ? " (" + g.indName + ")" : ""));
-  if(!g.region)   w.push("지역을 못 읽었습니다" + (g.regName ? " (" + g.regName + ")" : ""));
-  if(g.asset && !AD_MK.sub) w.push("장비 key(sub)를 골라 주세요 — 비거나 틀리면 빌드가 멈춥니다");
-  if(g.name && line.indexOf(g.name) >= 0) w.push("성함이 들어 있습니다 — 매물에 넣지 않습니다");
-  if(g.tel){
-    var d = g.tel.replace(/[^0-9]/g, "");
-    if(d.length >= 8 && line.replace(/[^0-9]/g, "").indexOf(d) >= 0)
-      w.push("연락처가 들어 있습니다 — 매물에 넣지 않습니다");
-  }
-  return w;
-}
-
-function adMkSubs(){
-  var g = AD_MK.got;
-  var out = [["", "장비 key 를 골라 주세요"]];
-  if(!g || !g.industry) return out;
-  (window.AM_INDUSTRIES || []).forEach(function(i){
-    if(i.key !== g.industry) return;
-    (i.equip || []).forEach(function(e){ out.push([e.key, e.name]); });
-  });
-  return out;
-}
-
-function adMkDraw(){
-  var box = $("ad-mk-out");
-  if(!box) return;
-  var g = AD_MK.got;
-  if(!g){ box.innerHTML = '<p class="ad-empty">접수를 붙여 넣고 ‘읽어 오기’ 를 누르세요.</p>'; return; }
-  var line = adMkLine(g);
-  var w = adMkWarn(g, line);
-  box.innerHTML =
-    '<div class="ad-g">'+
-      '<div class="ad-f"><label for="ad-mk-id">id <em>(주소가 됩니다)</em></label>'+
-        '<input id="ad-mk-id" type="text" autocomplete="off" value="'+esc(AD_MK.id)+'" '+
-          'placeholder="예: anyang-pyeongchon-cafe-18" '+
-          'oninput="adMkSet(\'id\', this.value)"></div>'+
-      (g.asset
-        ? '<div class="ad-f"><label for="ad-mk-sub">장비 key <em>(sub)</em></label>'+
-            '<select id="ad-mk-sub" onchange="adMkSet(\'sub\', this.value)">'+
-              adMkSubs().map(function(o){
-                return '<option value="'+esc(o[0])+'"'+(o[0]===AD_MK.sub?" selected":"")+'>'+
-                  esc(o[1])+'</option>'; }).join("")+
-            '</select></div>'
-        : '')+
-    '</div>'+
-    (w.length
-      ? '<p class="ad-vet">'+icon("alert",16)+esc(w.join(" · "))+'</p>' : '')+
-    adCard(g.asset ? "AM_ASSETS 에 넣을 줄" : "AM_STORES 에 넣을 줄", "mk", line)+
-    '<p class="ad-lead">넣고 <b>node build-pages.js</b> 하시면 '+
-      (g.asset ? '/a/' : '/s/')+'&lt;id&gt; 화면과 sitemap 이 같이 생깁니다. '+
-      '사진은 사장님이 주신 것만 <b>images</b> 에 넣으세요.</p>';
-}
-
-window.adMkSet = function(what, v){ AD_MK[what] = v; adMkDraw(); };
-window.adMkRead = function(){
-  var raw = ($("ad-mk-in") || {}).value || "";
-  if(!raw.trim()){ toast("매물 접수를 붙여 넣어 주세요."); return; }
-  AD_MK.raw = raw;
-  AD_MK.got = adMkParse(raw);
-  if(!AD_MK.id && AD_MK.got.industry)
-    AD_MK.id = AD_MK.got.industry + "-" + adMkToday().split("-").slice(0,2).join("") + "-1";
-  adMkDraw();
-  toast("읽었습니다. 못 읽은 칸은 비워 두었습니다 — 지어내지 않습니다.");
-};
-
 function adOffers(){
   var L = window.AM_OFFERS || [];
   if(!L.length) return '<p class="ad-lead">등록된 수익상품이 없습니다.</p>';
@@ -1080,16 +821,7 @@ function adPvCats(){
 
 function adPvSubs(catKey){
   var c = window.amCat ? amCat(catKey) : null;
-  if(!c) return [];
-  if(!c.byIndustry) return c.items || [];
-  var seen = {}, out = [];
-  (window.AM_INDUSTRIES || []).forEach(function(ind){
-    (ind.equip || []).forEach(function(it){
-      if(seen[it.key]) return;
-      seen[it.key] = 1; out.push(it);
-    });
-  });
-  return out;
+  return c ? (c.items || []) : [];
 }
 
 function adPvKeys(o){
@@ -1131,6 +863,7 @@ function adPvLines(){
     "    name:" + adPvJs(AD_PV.name) + ",\n" +
     "    regions:" + adPvArr(regs) + ",\n" +
     (gus.length ? "    gu:" + adPvArr(gus) + ",\n" : "") +
+
     "    industries:" + adPvArr(inds) + ",\n" +
     "    subs:" + adPvArr(subs) + ",\n" +
     (AD_PV.intro ? "    intro:" + adPvJs(AD_PV.intro) + ",\n" : "") +
@@ -1172,12 +905,13 @@ function adPvWarn(L){
   if(bad) w.push("주소(id) — " + bad);
   if(!String(AD_PV.name || "").trim()) w.push("업체명이 비어 있습니다");
   if(!L.subs.length)
+
     w.push("하는 일(하위 분야)이 비어 있습니다 — 비면 **아무 분류에도 " +
-           "안 걸립니다.** 지역 · 업종을 안 적은 것은 '전국 · 전업종' 으로 " +
-           "읽는 게 말이 되지만, 하는 일을 안 적은 것을 '전부 다 합니다' 로 " +
-           "읽으면 인테리어 업체가 세무 화면에 앉습니다 (빌드가 멈춥니다)");
+           "안 걸립니다.** 지역 · 취급 기기를 안 적은 것은 '전국 · 전기기' " +
+           "로 읽는 게 말이 되지만, 하는 일을 안 적은 것을 '전부 다 합니다' " +
+           "로 읽으면 수리 업체가 검수 화면에 앉습니다 (빌드가 멈춥니다)");
   if(!L.regs.length) w.push("지역이 비어 있습니다 — 지역이 매칭의 첫 조건입니다");
-  if(!L.inds.length) w.push("전문 업종이 비어 있습니다");
+  if(!L.inds.length) w.push("취급 기기가 비어 있습니다");
   if(!w.length) return "";
   return '<div class="notice-bad ad-pv-w"><b>아직 빠진 것</b><ul>'+
     w.map(function(x){ return '<li>'+mark(x)+'</li>'; }).join("")+'</ul></div>';
@@ -1220,11 +954,11 @@ function adPvDraw(){
   box.innerHTML =
     '<div class="ad-g">'+
       '<div class="ad-f"><label for="ad-pv-nm">업체명 <em>(필수)</em></label>'+
-        '<input id="ad-pv-nm" type="text" autocomplete="off" placeholder="예: 가나다 인테리어"'+
+        '<input id="ad-pv-nm" type="text" autocomplete="off" placeholder="예: 가나다 폰마켓"'+
         ' value="'+esc(AD_PV.name)+'" oninput="adPvSet(\'name\',this.value)"></div>'+
       '<div class="ad-f"><label for="ad-pv-id">주소가 될 값 <em>(필수 · 영문)</em></label>'+
         '<input id="ad-pv-id" type="text" autocomplete="off" spellcheck="false"'+
-        ' placeholder="ganada-interior" value="'+esc(AD_PV.id)+'"'+
+        ' placeholder="ganada-phone" value="'+esc(AD_PV.id)+'"'+
         ' oninput="adPvSet(\'id\',this.value)"></div>'+
       '<div class="ad-f"><label for="ad-pv-sc">문 연 해 <em>(선택)</em></label>'+
         '<input id="ad-pv-sc" type="number" min="1900" max="2100" inputmode="numeric"'+
@@ -1238,7 +972,7 @@ function adPvDraw(){
 
     '<div class="ad-f"><label for="ad-pv-in">한 줄 소개 <em>(선택 · 업체가 준 글만)</em></label>'+
       '<input id="ad-pv-in" type="text" autocomplete="off"'+
-      ' placeholder="예: 카페 · 음식점 인테리어를 10년 해 왔습니다"'+
+      ' placeholder="예: 아이폰 · 갤럭시 수리를 10년 해 왔습니다"'+
       ' value="'+esc(AD_PV.intro)+'" oninput="adPvSet(\'intro\',this.value)"></div>'+
 
     '<div class="ad-pv-b"><b>서비스 지역</b>'+
@@ -1252,8 +986,8 @@ function adPvDraw(){
         ' oninput="adPvSet(\'gus\',this.value)"></div>'+
     '</div>'+
 
-    '<div class="ad-pv-b"><b>전문 업종</b>'+
-      adPvChk("inds", window.AM_INDUSTRIES || [])+
+    '<div class="ad-pv-b"><b>취급 기기</b>'+
+      adPvChk("inds", window.AM_DEVICE_KINDS || [])+
     '</div>'+
 
     '<div class="ad-pv-b"><b>하는 일 — 하위 분야</b>'+
@@ -1286,88 +1020,3 @@ function adPvDraw(){
   adPvOut();
 }
 
-var AD_HL = null;
-
-function adHlInit(){
-  if(AD_HL) return;
-
-  AD_HL = (window.AM_HALLS || []).map(function(h){
-    return { key:h.key, name:h.name, items:(h.items||[]).map(function(i){ return i.n; }) };
-  });
-}
-
-function adHlMove(hi, ii, dir){
-  adHlInit();
-  var arr = (ii < 0) ? AD_HL : AD_HL[hi].items;
-  var at  = (ii < 0) ? hi : ii;
-  var to  = at + dir;
-  if(to < 0 || to >= arr.length) return;
-  var t = arr[at]; arr[at] = arr[to]; arr[to] = t;
-  adHlDraw();
-}
-
-function adHlDraw(){
-  var box = document.getElementById("ad-hl");
-  if(!box) return;
-  adHlInit();
-  if(!AD_HL.length){
-    box.innerHTML = '<p class="ad-lead">전문관 데이터가 없습니다 '+
-      '(js/data/halls.js 가 admin.html 에 실려 있는지 보세요).</p>';
-    return;
-  }
-  box.innerHTML = AD_HL.map(function(h, hi){
-    return '<div class="ad-hl-h">'+
-      '<div class="ad-hl-t">'+
-        '<b>'+esc(h.name)+'</b> <i>'+esc(h.key)+' · '+h.items.length+'개</i>'+
-        '<span class="ad-hl-b">'+
-          '<button class="btn btn-s" type="button" onclick="adHlMove('+hi+',-1,-1)">↑</button>'+
-          '<button class="btn btn-s" type="button" onclick="adHlMove('+hi+',-1,1)">↓</button>'+
-        '</span>'+
-      '</div>'+
-      '<ol class="ad-hl-l">'+h.items.map(function(n, ii){
-        return '<li><span>'+esc(n)+'</span>'+
-          '<span class="ad-hl-b">'+
-            '<button class="btn btn-s" type="button" onclick="adHlMove('+hi+','+ii+',-1)">↑</button>'+
-            '<button class="btn btn-s" type="button" onclick="adHlMove('+hi+','+ii+',1)">↓</button>'+
-          '</span></li>'; }).join("")+'</ol>'+
-    '</div>';
-  }).join("")+
-  '<div class="ad-acts">'+
-    '<button class="btn btn-b" type="button" onclick="adHlCopy()">'+
-      '붙여 넣을 줄 만들기</button>'+
-    '<button class="btn btn-o" type="button" onclick="AD_HL=null;adHlDraw()">'+
-      '처음 차례로</button>'+
-  '</div>'+
-  '<textarea id="ad-t-halls" rows="12" spellcheck="false" '+
-    'placeholder="차례를 바꾸신 뒤 단추를 누르시면 여기에 나옵니다"></textarea>';
-}
-
-function adHlCopy(){
-  adHlInit();
-  var src = {};
-  (window.AM_HALLS || []).forEach(function(h){
-    var m = {}; (h.items||[]).forEach(function(i){ m[i.n] = i; });
-    src[h.key] = { h:h, byName:m };
-  });
-  var q = function(v){ return '"' + String(v).replace(/"/g, '\\"') + '"'; };
-  var out = "window.AM_HALLS = [\n" + AD_HL.map(function(hh){
-    var h = src[hh.key].h;
-    var lines = hh.items.map(function(n){
-      var it = src[hh.key].byName[n]; if(!it) return "";
-      var bits = ["n:" + q(it.n), "ia:" + q(it.ia)];
-      if(it.cat)  bits.push("cat:"  + q(it.cat));
-      if(it.sub)  bits.push("sub:"  + q(it.sub));
-      if(it.to)   bits.push("to:"   + q(it.to));
-      if(it.tone) bits.push("tone:" + q(it.tone));
-      return "      { " + bits.join(", ") + " }";
-    }).filter(Boolean).join(",\n");
-    return "  { key:" + q(h.key) + ", name:" + q(h.name) + ", lead:" + q(h.lead) + ",\n" +
-           "    tone:" + q(h.tone) + ", to:" + q(h.to) + ", ic:" + q(h.ic) + ",\n" +
-           "    items:[\n" + lines + "\n    ] }";
-  }).join(",\n\n") + "\n];";
-  var ta = document.getElementById("ad-t-halls");
-  if(!ta) return;
-  ta.value = out;
-
-  adCopy("halls");
-}

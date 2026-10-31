@@ -229,7 +229,9 @@ function MyPvSelf(d){
           '<textarea id="pvs-intro" rows="3" maxlength="400" '+
             'placeholder="어떤 일을 얼마나 해 오셨는지 적어 주세요">'+
             esc(m.intro || "")+'</textarea>'+
-          '<span class="f-h">손님이 업체찾기에서 먼저 읽는 글입니다. '+
+
+          '<span class="f-h">저희 직원이 요청을 넘길 곳을 고를 때 먼저 '+
+            '읽는 글입니다. 지금은 손님 화면에 나가지 않습니다. '+
             '⚠️ 지어낸 실적 · 평점 · "검증된" 같은 말은 적지 마세요 '+
             '(표시 · 광고의 공정화에 관한 법률 제3조).</span>'+
         '</div>'+
@@ -254,14 +256,14 @@ function MyPvSelf(d){
             '곳은 이것이 있어야 가까운 요청만 갑니다.</span>'+
         '</div>'+
         '<div class="f-r">'+
-          '<label for="pvs-ind">잘하시는 업종</label>'+
-          '<select id="pvs-ind" class="sel" multiple size="6">'+
-            (typeof AM_INDUSTRIES !== "undefined" ? AM_INDUSTRIES : []).map(function(i){
+          '<label for="pvs-ind">취급 기기</label>'+
+          '<select id="pvs-ind" class="sel" multiple size="4">'+
+            (typeof AM_DEVICE_KINDS !== "undefined" ? AM_DEVICE_KINDS : []).map(function(i){
               return '<option value="'+esc(i.key)+'"'+
                 ((m.industries || []).indexOf(i.key) >= 0 ? " selected" : "")+'>'+
                 esc(i.name)+'</option>'; }).join("")+
           '</select>'+
-          '<span class="f-h">비워 두면 전업종으로 읽습니다.</span>'+
+          '<span class="f-h">비워 두면 전 기기로 읽습니다.</span>'+
         '</div>'+
         '<div class="f-r">'+
           '<label for="pvs-since">문 연 해</label>'+
@@ -419,9 +421,9 @@ function MyPvList(L, d){
 }
 
 function myCond(r, cat){
-  return [ (r.side === "close" ? "폐업 · 정리" : "창업"),
+  return [ (typeof amSideShort === "function" ? amSideShort(r.side) : ""),
     (cat ? cat.name : ""),
-    (r.industry && typeof amIndustryName === "function" ? amIndustryName(r.industry) : ""),
+    (r.industry && typeof amKindName === "function" ? amKindName(r.industry) : ""),
     (r.region && typeof amRegionName === "function" ? amRegionName(r.region) : ""),
     (r.gu || "")
   ].filter(Boolean).map(esc).join(" · ");
@@ -486,8 +488,14 @@ function MyFunnel(L){
   var deals = ST.filter(function(s){
       return typeof amDealAfterSign === "function" && amDealAfterSign(s.key); })
     .reduce(function(a, s){ return a + (n[s.key] || 0); }, 0);
-  var side = { start:0, close:0 };
-  L.forEach(function(r){ if(r.side === "close") side.close++; else side.start++; });
+
+  var side = {};
+  L.forEach(function(r){ var k = r.side || "";
+                         side[k] = (side[k] || 0) + 1; });
+  var sideRows = (window.AM_SIDES || []).filter(function(s){ return side[s.key]; })
+    .map(function(s){
+      return '<div><dt>'+esc(s.short || s.name)+' 쪽</dt><dd>'+
+             side[s.key]+'건</dd></div>'; }).join("");
 
   return '<ul class="myk-g">'+ST.filter(function(s){
 
@@ -498,8 +506,7 @@ function MyFunnel(L){
         '<b>'+c+'</b><span>'+esc(s.name)+'</span></li>';
     }).join("")+'</ul>'+
     '<dl class="myd-l myd-l3">'+
-      '<div><dt>창업 쪽</dt><dd>'+side.start+'건</dd></div>'+
-      '<div><dt>폐업 · 정리 쪽</dt><dd>'+side.close+'건</dd></div>'+
+      sideRows+
 
       '<div><dt>계약까지 간 비율</dt><dd>'+
         Math.round(deals / L.length * 100)+'%</dd></div>'+
@@ -827,14 +834,12 @@ function MyPwBand(){
 }
 
 function PageMy(){
-  var p = amGet(MKEY, { side:"", industry:"", region:"", gu:"", pyeong:"", dday:"" });
   var qs = amGet("am.quotes.v1", []);
-  var ind = p.industry ? amIndustry(p.industry) : null;
 
   return PgHero({
     kicker:"MY",
 
-    h1raw: p.side === "close" ? "내 폐업" : (p.side === "start" ? "내 창업" : "내 기록"),
+    h1raw:"내 기록",
     lead:"이 브라우저에만 남습니다. 서버로 보내지 않습니다.",
     tight:true
   })+

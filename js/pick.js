@@ -106,11 +106,15 @@ window.pickClear = function(){
 window.pickPaint = function(){
   var ids = amPickGet(), n = ids.length;
 
-  /* 체크칸 — 지금 화면에 하나도 없지만, 되살리는 날 이 줄이
-     먼저 돕니다 (저장된 값과 화면을 맞추는 유일한 자리). */
+  /* 체크칸 — ⚠️⚠️ **색만으로 표시하지 않습니다.** 체크 표시(브라우저가
+     그립니다)와 **카드의 테두리 · 바탕**(`.pk-c.is-on`)이 같이 바뀝니다.
+     ⚠️ `:has()` 에 맡기지 않습니다 — 그걸 못 읽는 브라우저에서 눌림이
+     **체크 하나로만** 보입니다 (손님이 40~60대 사장님입니다). */
   [].slice.call(document.querySelectorAll("[data-pick]")).forEach(function(el){
     var on = ids.indexOf(el.getAttribute("data-pick")) >= 0;
     if(el.checked !== on) el.checked = on;
+    var card = el.closest ? el.closest(".pk-c") : null;
+    if(card) card.classList.toggle("is-on", on);
   });
 
   /* 개수 — 여러 자리에 같은 수가 나옵니다 */
@@ -169,4 +173,11 @@ window.amPickQuoteTo = function(side){
   return "/quote?" + q.join("&");
 };
 
-/* ── 조각들 ──────────────────────────────────────────────────────── */
+/* ⚠️⚠️ **id 를 읽는 넷은 `js/data/catalog.js` 에 있습니다** —
+   `amPickSplit()` · `amPickWrap()` · `amPickOne()` · `amPickLabel()`.
+   여기 두지 않은 까닭은 **`admin.html` 이 이 파일을 안 싣기** 때문
+   입니다 (`amGet` · `amSet` 이 거기서는 없는 함수라 실을 수가 없습니다)
+   — 그런데 `/admin` 접수 목록의 `rqSvcName()` 이 `amPickOne()` 을
+   읽습니다. 데이터 쪽에 두면 양쪽이 같은 함수를 봅니다.
+   ⚠️ 2026-10-31 로 `js/data/svcpick.js` 에서 옮겨 왔습니다 — 꺼내
+   보시려면 `git show 6d85a17:js/data/svcpick.js`. */

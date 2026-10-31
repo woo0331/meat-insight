@@ -183,6 +183,10 @@ const CASES = [
   /* ══ 2026-10-08 수익형 플랫폼 지시서 §6 ═══════════════════════ */
   /* ⚠️ 되돌리기는 **그려진 뒤에** 돕니다 — DOM 을 직접 건드립니다
      (그리는 함수를 바꾸면 아무 일이 안 납니다 · 열 번째로 겪은 자리). */
+  /* ⚠️ 이 되돌리기는 **구간이 있는가**를 봅니다. 같은 검사가 보는
+     "날짜 칸이 date 인가" 는 **데이터 성질**이라 DOM 을 건드려서는
+     못 되돌립니다 — 그쪽은 `AM_REQ_FORMS` 를 직접 바꿔 보고
+     확인했습니다 (corp 의 "회수 희망 시점" 을 text 로 → 걸립니다). */
   ["서비스마다 다르게 묻는다",
    `var b = document.querySelector(".rqf"); if(b) b.remove();`],
   ["칸이 없는 분류면 구간째 뺀다",
@@ -247,8 +251,12 @@ const CASES = [
         headers:{ "content-type":"application/json" }, body: JSON.stringify(body) });
       return false;                      /* 시간 제한이 없던 그때 */
     };`],
-  ["가격은 10건 이상 · 기준일 있는 것만 낸다",
-   `window.amQuoteStats = function(){ return window.AM_QUOTE_STATS || []; };`],
+  /* ⚠️⚠️ "가격은 10건 이상 · 기준일 있는 것만 낸다" 되돌리기를
+     **지웠습니다** (2026-10-31). 그 검사는 창업 · 폐업 가격 데이터와
+     함께 없어졌는데 이 줄만 남아 `? 검사를 못 찾음` 으로 세어지고
+     있었습니다 — 그대로 두면 "되돌려 본 적 있다" 고 믿게 되는데
+     되돌릴 검사가 없습니다. ⚠️ **검사 이름을 바꾸거나 지우면 여기도
+     같이** 보세요 (이 저장소가 두 번 겪은 자리입니다). */
   ["입점 배지와 업체찾기가 같은 규칙으로 센다",
    `window.amProvidersInCat = function(){ return 99; };`],
   /* 조사를 손으로 적던 그때 — ⚠️ `koWith` 를 바꿔치기해서는 안 됩니다.
@@ -364,12 +372,20 @@ const CASES = [
      "검사가 안 잡는다" 로 보입니다 (이 저장소에서 아홉 번 겪은 자리).
      검사는 "없으면 건너뜀" 으로 남겨 두었으니 되살리시는 날 이 줄도
      같이 되살리세요. */
+  /* ⚠️⚠️ 2026-10-31 — 이 되돌리기가 **없어진 선택자**(.mbr-p .ph ·
+     창업 · 폐업 연결 구간)를 집고 있었습니다. 아무 일도 안 하니
+     "검사가 안 잡는다" 로 보입니다 — **검사가 아니라 되돌리기가
+     틀린** 자리이고 이 저장소에서 열일곱 번째입니다.
+     ⚠️ 쉼표로 나눠 찾습니다 — CSS 쪽이 ".dvc-ph .ph, .dvc-im" 처럼
+     묶음이라 글자를 통째로 견주면 또 못 찾습니다. */
   ["사진 자리가 비율을 무시하고 늘어나지 않는다",
    `for(const sh of document.styleSheets){
       let rules; try { rules = sh.cssRules; } catch(e){ continue; }
       if(!rules) continue;
-      for(const r of rules)
-        if(r.selectorText === ".mbr-p .ph") r.style.objectFit = "fill";
+      for(const r of rules){
+        const parts = (r.selectorText || "").split(",").map(s => s.trim());
+        if(parts.indexOf(".dvc-ph .ph") >= 0) r.style.objectFit = "fill";
+      }
     }`],
   /* ⚠️ grid 의 stretch 를 덮어야 합니다 — 폭과 높이를 같이 줄입니다. */
   /* ⚠️ grid 의 stretch 를 덮어야 합니다 — 폭과 높이를 같이 줄입니다.
@@ -1032,6 +1048,27 @@ async function proveAudit(pg){
     console.log((ok ? "✅" : "❌") + " \"준비 중\" 자리표시자 · " + u +
       "  [지금 " + JSON.stringify(before) +
       " → 한 칸을 준비 중으로 하면 " + JSON.stringify(after).slice(0,50) + "]");
+  }
+  /* 지킬 수 없는 약속 — 지시서 §5 가 금지한 낱말을 화면에 넣어 봅니다.
+     ⚠️⚠️ 이 검사는 화면마다 도는 AUDIT 이라 `CASES` 로는 못 잡습니다.
+     2026-10-31 까지 **메인의 신뢰 요소 한 칸**만 보고 있어서 /quote 의
+     머리말이 "무료입니다" 로 나가는 것을 아무도 안 봤습니다 —
+     §5 는 사이트 전체의 규칙이라 재는 자리도 화면 전부입니다. */
+  for(const u of ["/", "/quote"]){
+    await pg.goto(ROOT + u, { waitUntil:"load" });
+    await pg.waitForTimeout(260);
+    const before = (await pg.evaluate(AUDIT)).vow;
+    await pg.evaluate(() => {
+      const e = document.querySelector("#view p, #view .pg-lead, #view h2");
+      if(e) e.textContent = e.textContent + " 무료입니다. 최고가 보장.";
+    });
+    await pg.waitForTimeout(60);
+    const after = (await pg.evaluate(AUDIT)).vow;
+    const ok = before.length === 0 && after.length > 0;
+    if(!ok) bad++;
+    console.log((ok ? "✅" : "❌") + " 지킬 수 없는 약속 · " + u +
+      "  [지금 " + JSON.stringify(before) +
+      " → 무료 · 최고가 보장을 적으면 " + JSON.stringify(after).slice(0,50) + "]");
   }
   /* 아이콘 자리가 비었음 — 타일 안의 svg 를 지워 봅니다.
      없는 아이콘 key 를 적으면 icon() 이 **빈 문자열**을 돌려줘서

@@ -84,7 +84,7 @@ function JoinShow(){
         ProviderCard(sp)+
       '</div>'+
       '<p class="jn-ex-h"><b>상세 화면에는 이만큼 들어갑니다</b>'+
-        '<em>사진 · 전문분야 · 전문업종 · 활동지역 · 가격 · 포트폴리오 · 확인 · 후기 · 상담 시간.</em></p>'+
+        '<em>사진 · 전문분야 · 취급기기 · 활동지역 · 가격 · 포트폴리오 · 확인 · 후기 · 상담 시간.</em></p>'+
       '<ul class="jn-ex-l">'+ joinExRows(sp).map(function(r){
         return '<li><b>'+esc(r[0])+'</b><span>'+esc(r[1])+'</span></li>'; }).join("")+'</ul>'+
       '<p class="sec-note">'+icon("info",15)+
@@ -99,9 +99,9 @@ function joinExRows(p){
   var st = amProviderStats(p) || {};
   var rows = [
     ["전문 서비스", (p.subs||[]).map(amSubName).join(" · ")],
-    ["전문 업종",   (p.industries||[]).map(amIndustryName).join(" · ")],
+    ["취급 기기",   (p.industries||[]).map(amKindName).join(" · ")],
     ["활동 지역",   (p.regions||[]).map(amRegionName).concat(p.gu||[]).join(" · ")],
-    ["포트폴리오",  (p.portfolio||[]).length + "건 — 공사 내용 · 업종 · 지역 · 연도 · 사진"],
+    ["포트폴리오",  (p.portfolio||[]).length + "건 — 거래 내용 · 기기 · 지역 · 연도 · 사진"],
 
     ["확인",        amProviderVerified(p).join(" · ") || "확인한 것만"],
     ["상담 가능 시간", p.consultHours || ""]

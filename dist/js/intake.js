@@ -310,10 +310,9 @@ function rqCatName(k){
   for(i = 0; i < L.length; i++) if(L[i].key === k) return L[i].name;
   return "";
 }
+
 function rqIndName(k){
-  var L = window.AM_INDUSTRIES || [], i;
-  for(i = 0; i < L.length; i++) if(L[i].key === k) return L[i].name;
-  return "";
+  return (typeof amKindName === "function") ? (amKindName(k) || "") : "";
 }
 function rqRegName(r){
   var nm = window.amRegionName ? amRegionName(r.region) : "";
@@ -449,7 +448,7 @@ function rqPvWhy(w){
   if(w && w.region) L.push(
     (typeof amRegionName === "function" ? amRegionName(w.region) : w.region) || "지역");
   if(w && w.industry) L.push(
-    (typeof amIndustryName === "function" ? amIndustryName(w.industry) : w.industry) || "업종");
+    (typeof amKindName === "function" ? amKindName(w.industry) : w.industry) || "기기");
   return L;
 }
 
@@ -462,7 +461,7 @@ function rqPvHit(p, q){
   (p.gu || []).forEach(function(g){ hay.push(g); });
   (p.industries || []).forEach(function(k){
     hay.push(k);
-    if(typeof amIndustryName === "function") hay.push(amIndustryName(k) || ""); });
+    if(typeof amKindName === "function") hay.push(amKindName(k) || ""); });
   (p.subs || []).forEach(function(k){
     hay.push(k);
     var one = (typeof amSubName === "function") ? amSubName(k) : "";
@@ -491,7 +490,7 @@ function rqPvIn(key){
   return '<div class="f-r rq-pvq">'+
     '<label for="'+esc(key)+'-q">업체 찾기</label>'+
     '<input id="'+esc(key)+'-q" class="in" type="search" '+
-      'value="'+esc(q)+'" placeholder="상호 · 지역 · 업종 · 하는 일" '+
+      'value="'+esc(q)+'" placeholder="상호 · 지역 · 취급 기기 · 하는 일" '+
       'oninput="rqPvQ(\''+esc(key)+'\',this.value)">'+
   '</div>';
 }
@@ -525,8 +524,11 @@ function rqPvNote(key, cur){
     (P.length - L.length)+'곳은 검색으로 빠졌습니다. '+
     (kept ? '<b>고르신 곳은 찾으신 말과 안 맞아도 그대로 둡니다.</b> ' : '');
   else  t += '고를 수 있는 업체는 '+on+'곳입니다 (등록 '+P.length+'곳). ';
+
   if(why.length)
-    t += '<b>'+esc(why.join(" · "))+'</b>이 맞는 곳 '+fit+'곳을 위에 모았습니다 — '+
+    t += '<b>'+esc(why.join(" · "))+'</b>'+
+      (window.josa ? josa(why[why.length - 1], "이가") : "이")+
+      ' 맞는 곳 '+fit+'곳을 위에 모았습니다 — '+
       '추천이 아니라 <b>조건이 맞는 것</b>이고, 평점 · 응답속도로 줄을 세우지 '+
       '않습니다 (재는 장치가 없습니다). 고르는 것은 사람입니다.';
   if(on < L.length)
@@ -1431,7 +1433,7 @@ function rqApplies(){
       : '<p class="ad-lead">'+
           (nNew ? '<b>'+nNew+'곳</b>이 아직 통화 전입니다. ' : '')+
           (nCal ? '<b>'+nCal+'곳</b>은 통화했고 등록이 남았습니다. ' : '')+
-          '통화해서 합의가 되면 <b>관리자 설정 9번 칸</b>에서 업체 줄을 '+
+          '통화해서 합의가 되면 <b>관리자 설정 8번 칸</b>에서 업체 줄을 '+
           '만들고, 그 다음에 여기서 <b>등록 완료</b>로 두세요.</p>'+
         '<p class="f-h">⚠️ 여기서 바로 업체가 되는 것이 아닙니다 — '+
           '통화도 안 한 회사가 배정 고르개에 서면 그 순간 손님 성함 · '+
@@ -1480,7 +1482,7 @@ function rqApplyBody(a){
          esc(String(a.tel).replace(/[^0-9+]/g, ""))+'">'+esc(a.tel)+'</a></dd>' : '')+
       rqConItem("이메일", a.email)+
       rqConItem("사업자등록번호", a.brn)+
-      rqConItem("주로 하시는 업종", a.industry)+
+      rqConItem("취급 기기", a.industry)+
       (svc.length ? '<dt>하시는 일</dt><dd>'+esc(svc.join(" · "))+'</dd>' : '')+
       rqConItem("더 하신 말씀", a.note)+
       rqConItem("마지막 메모", a.memo)+
@@ -1522,7 +1524,7 @@ function rqApplyPvPick(a){
   var P = RQ.provs || [], C = RQ.actx || {};
   if(!P.length)
     return '<p class="note-box">DB 에 등록된 업체가 없습니다 — '+
-      '<b>관리자 설정 9번 칸</b>에서 이 업체의 등록 줄을 먼저 만드세요.</p>';
+      '<b>관리자 설정 8번 칸</b>에서 이 업체의 등록 줄을 먼저 만드세요.</p>';
   return '<div class="ad-f">'+
     '<label for="rq-ap-pv">등록한 업체</label>'+
     '<select id="rq-ap-pv" class="sel" onchange="rqActx(\'pv\',this.value)">'+
@@ -1582,7 +1584,7 @@ function rqProvs(){
     '<h2>업체 · 공개 승인</h2>'+
     (!P.length
       ? '<p class="ad-empty">DB 에 등록된 업체가 없습니다. '+
-        '아래 <b>관리자 설정</b> 의 9번 칸에서 등록 줄을 만드세요.</p>'
+        '아래 <b>관리자 설정</b> 의 8번 칸에서 등록 줄을 만드세요.</p>'
       : '<p class="ad-lead">'+
           (off ? '<b>'+off+'곳</b>이 아직 공개 전입니다. ' : '')+
           '공개 전인 업체도 <b>배정 고르개에는 보입니다</b> — '+
@@ -1613,7 +1615,7 @@ function rqProvRow(p){
         '<b class="rq-no">'+esc(p.name)+'</b>'+
         '<span class="rq-m">'+
           esc([subs ? "하는 일 " + subs : "", regs ? "지역 " + regs : "",
-               (p.industries || []).length ? "업종 " + p.industries.length : ""]
+               (p.industries || []).length ? "기기 " + p.industries.length : ""]
               .filter(Boolean).join(" · "))+'</span>'+
       '</span>'+
       '<span class="rq-hd-r">'+

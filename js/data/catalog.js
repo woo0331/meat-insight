@@ -1,605 +1,277 @@
 /* ════════════════════════════════════════════════════════════════════
-   ServiceCategory · ServiceSubcategory (§7~20 창업 · §21~33 폐업)
+   서비스 분류 — PHONEWAY 제휴업체가 하는 일 (열 가지)
 
-   **이 파일이 플랫폼의 뼈대입니다.** 화면 · 검색 · 업체 입점 · 견적
-   요청 · 크롤러 본문 · 주소가 전부 여기서 나옵니다.
+   ⚠️⚠️ **2026-10-31 전면 교체.** 그 전까지 이 파일은 **창업 · 폐업
+   분류 26 · 하위 210**(인테리어 · 철거 · 세무 · 노무 …)이었습니다.
+   그 사업은 끝났고, 지금 중개하는 것은 중고폰입니다.
+   ⚠️ 옛 분류를 꺼내 보시려면 `git show bf9e1bc:js/data/catalog.js`.
 
-   | 칸 | 무엇 |
-   |---|---|
-   | `key`  | **주소에 들어갑니다** (`/c/interior`). 한 번 정하면 바꾸지 마세요 |
-   | `kind` | `provider` 업체를 찾는 곳 · `listing` 매물을 보고 등록하는 곳 · `info` 정보 |
-   | `items`| 하위 분류. 이것이 **업체 입점의 단위**입니다 (§39) |
+   ⚠️⚠️ **키를 하나도 겹치지 않게 지었습니다.** 옛 26개 키
+   (item · store · area · interior · equip · furniture · it · supply ·
+   repair · admin · staff · marketing · clean · fund · process ·
+   transfer · asset · stock · demolish · restore · waste · tax ·
+   labor · contract · law · support)와 **한 글자도 겹치지 않습니다** —
+   `request_item.service_id` 가 글자로 저장되어 있어서, 같은 키를
+   다른 뜻으로 쓰면 **지난 신청 기록의 뜻이 조용히 바뀝니다.**
+   그래서 수리는 `repair` 가 아니라 **`fix`** 입니다 (옛 `repair` 는
+   매장 설비 수리였습니다).
 
-   ⚠️ **하위 분류를 코드에 박지 마세요** (§54). 화면은 이 배열만
-   읽습니다. 관리자에서 추가·삭제·정렬하게 하려고 데이터로 둔 것입니다.
-   ⚠️ `equip`(시설·장비)의 하위는 **여기 없습니다.** 업종마다 다르기
-   때문에 `industries.js` 의 `equip` 에서 옵니다 (§12).
-   ⚠️ **업체 명단을 만들지 마세요.** 이 화면들은 "무엇이 필요한지"
-   고르는 자리이고, 업체는 조건이 정해진 뒤에 나옵니다 (§54).
-   ⚠️ 새 분류를 넣으면 `industries.js` 의 `startup`/`closure` 차례에도
-   넣으세요. 안 넣으면 그 업종에서 **조용히 안 보입니다** —
-   `node build-pages.js` 가 어긋난 key 를 잡습니다.
+   ⚠️⚠️ **이 분류가 쓰이는 자리는 셋입니다.**
+     ① `/quote` STEP 01 — 손님이 **고르는 칸** (복수 선택)
+     ② `/quote` 의 서비스별 질문 — `reqforms.js` 가 이 키로 묶습니다
+     ③ `/admin` 배정 — 항목마다 그 분류를 하는 업체를 고릅니다
+        (`provider.subs` 가 **하위 키**를 들고 있습니다)
+   그래서 ①에 없는 분류를 만들면 **아무도 고를 수 없는 칸**이 되고,
+   ③에 업체가 없는 분류를 열면 **배정할 곳이 없는 신청**이 들어옵니다.
+
+   ⚠️⚠️ **`subs` 는 분류 키가 아니라 하위 키입니다.** 업체를 등록할 때
+   `subs:["lcd","battery"]` 처럼 **하위**를 적습니다 — 분류 키를 적으면
+   그 업체만 조용히 안 뜹니다. `checkProviders()` 가 빌드를 멈춥니다.
+
+   ⚠️ 업종(`industry`)이 없습니다. 창업 · 폐업에는 업종 열넷이 분류의
+   하위를 갈랐지만(카페는 커피머신 · 미용실은 샴푸대), **중고폰은
+   업종으로 갈리지 않습니다** — 갈리는 것은 **기기**(`devices.js` 의
+   제조사 · 종류 · 모델)입니다. 그래서 `amCatItems(c)` 는 인자가
+   하나이고 `c.items` 를 그대로 돌려줍니다.
+
+   칸
+     key    주소 · 저장 · 배정에 쓰는 값 — **바꾸지 마세요**
+     name   화면에 나가는 이름
+     icon   `icon()` 의 이름 — 없는 이름을 적으면 빈 칸이 됩니다
+     lead   한 줄 설명 (고르는 칸 아래에 나갑니다)
+     items  하위 — [{key,name}] · 업체 `subs` 와 배정이 이 키를 씁니다
+     kw     검색 전용 다른 말 — 손님은 분류 이름을 모르고 하려는 일을 칩니다
+     kind   지금은 전부 "provider"(업체가 하는 일)입니다
    ════════════════════════════════════════════════════════════════════ */
 
-/* ── START · 창업에 필요한 모든 것 ──────────────────────────────── */
-window.AM_START_CATS = [
-  { key:"item", name:"창업 아이템", icon:"bulb", tone:"t1", kind:"info",
-    lead:"무엇으로 시작할지부터",
-    desc:"프랜차이즈로 할지 내 브랜드로 할지, 얼마로 시작할 수 있는지부터 정합니다.",
+window.AM_CATS = [
+
+  { key:"buyin", name:"중고폰 매입", icon:"mobile", kind:"provider",
+    lead:"쓰던 기기를 팔고 싶으실 때입니다.",
+    kw:"폰팔기 핸드폰 휴대폰 중고 처분 판매 되팔기 보상판매 공기계",
     items:[
-      { key:"franchise",   name:"프랜차이즈", to:"/franchise" },
-      { key:"independent", name:"개인창업" },
-      { key:"by-industry", name:"업종별 창업정보" },
-      { key:"small-cap",   name:"소자본 창업" },
-      { key:"unmanned",    name:"무인창업" },
-      { key:"solo",        name:"1인창업" },
-      { key:"new-brand",   name:"신규 브랜드" },
-      { key:"takeover",    name:"기존 매장 인수", to:"/stores" }
+      { key:"ph-buy",    name:"스마트폰 매입" },
+      { key:"tab-buy",   name:"태블릿 매입" },
+      { key:"watch-buy", name:"스마트워치 매입" },
+      { key:"buds-buy",  name:"무선이어폰 매입" },
+      { key:"nb-buy",    name:"노트북 매입" },
+      { key:"self-buy",  name:"자급제 · 공기계 매입" }
     ]},
 
-  { key:"store", name:"점포 · 상가", icon:"pin", tone:"t5", kind:"listing",
-    lead:"자리를 정합니다",
-    desc:"지역 · 업종 · 평수 · 보증금 · 월세 · 권리금으로 찾습니다.",
-    /* ⚠️ `kw` 는 **검색에만** 쓰는 다른 말입니다 — 화면에는 안 나옵니다.
-       손님이 치는 말과 저희 분류 이름이 달라서 **0건이던 말**을 적습니다
-       (2026-10-17 에 188낱말을 쳐 보고 찾았습니다). 아래 분류들의 `kw`
-       가 전부 같은 규칙입니다.
-       ⚠️⚠️ **없는 서비스를 적는 칸이 아닙니다** — 그 분류가 실제로
-       다루는 것을 가리키는 **다른 말**만 적습니다 (절대 규칙 1).
-       그래서 `소방안전관리자`(선임 대행)는 일부러 안 넣었습니다.
-       ⚠️ **더한 뒤에는 쳐 보고 어디로 가는지 확인하세요** — 걸리기만
-       하고 엉뚱한 데로 가면 더 나쁩니다. */
-    kw:"점포임대 상가임대 점포매매 가게임대 가게자리",
-    to:"/stores",
+  { key:"broken", name:"고장 · 파손폰 매입", icon:"bolt", kind:"provider",
+    lead:"깨지거나 켜지지 않아도 값이 나올 수 있습니다.",
+    kw:"액정깨짐 파손 침수 먹통 안켜짐 고장 부품 폐폰 깨진폰",
     items:[
-      { key:"shop",        name:"상가" },
-      { key:"store-space", name:"점포" },
-      { key:"running",     name:"기존 영업장" },
-      { key:"premium",     name:"권리금 매장" },
-      { key:"no-premium",  name:"무권리 매장" },
-      { key:"with-equip",  name:"시설 인수 가능 매장" }
+      { key:"lcd-bad",   name:"액정 파손" },
+      { key:"wet-bad",   name:"침수" },
+      { key:"pwr-bad",   name:"전원 불량" },
+      { key:"batt-bad",  name:"배터리 불량" },
+      { key:"back-bad",  name:"뒷판 · 프레임 파손" },
+      { key:"part-bad",  name:"부품용 단말기" }
     ]},
 
-  { key:"area", name:"상권 · 입지", icon:"map", tone:"t5", kind:"info",
-    lead:"그 자리가 맞는 자리인가",
-    desc:"자리를 정하기 전에 확인할 것과, 봐 줄 수 있는 전문가를 찾습니다.",
+  /* ⚠️⚠️ `icon` 은 **선 아이콘**(`icon()`)입니다 — 컬러 쪽(`iconArt()`)과
+     이름이 다릅니다. 여기 `repair` 라고 적혀 있었는데 그건 컬러 아이콘
+     이름이고, 선 쪽에는 그런 이름이 없어서 `icon()` 이 **빈 문자열**을
+     돌려줬습니다 — 타일이 덩그러니 비는데 에러도 404 도 안 납니다
+     (세어서 알았습니다). 선 쪽 이름은 `tool` 입니다. */
+  { key:"fix", name:"수리 서비스", icon:"tool", kind:"provider",
+    lead:"고쳐서 더 쓰실 수 있는지부터 봅니다.",
+    kw:"수리 AS 사설수리 액정교체 배터리교체 충전 침수복구 데이터복구",
     items:[
-      { key:"trade-area",  name:"상권분석" },
-      { key:"foot-traffic",name:"유동인구" },
-      { key:"households",  name:"배후세대" },
-      { key:"competitors", name:"주변 경쟁업체" },
-      { key:"region",      name:"지역분석" },
-      { key:"sales-data",  name:"매출 관련 데이터" },
-      { key:"site-consult",name:"입지 상담", kind:"provider" }
+      { key:"lcd",     name:"액정 교체" },
+      { key:"battery", name:"배터리 교체" },
+      { key:"charge",  name:"충전 단자 수리" },
+      { key:"camera",  name:"카메라 수리" },
+      { key:"sound",   name:"스피커 · 마이크 수리" },
+      { key:"wet-fix", name:"침수 복구" },
+      { key:"board",   name:"메인보드 수리" },
+      { key:"data",    name:"데이터 복구" }
     ]},
 
-  { key:"interior", name:"인테리어 · 시공", icon:"roller", tone:"t4", kind:"provider",
-    lead:"가게를 만듭니다",
-    desc:"지역 · 업종 · 평수 · 예산으로 업체를 비교하고 견적을 받습니다.",
-    kw:"간판제작 간판공사 소방시설 소방공사 에어컨설치 냉난방공사 타일 타일공사 바닥공사 유리공사 샤시 셔터 목공 철거후시공",
+  { key:"shop", name:"검수 중고폰 판매", icon:"cart", kind:"provider",
+    lead:"검수하고 등급을 매긴 기기를 팝니다.",
+    kw:"중고폰구매 구입 사기 쇼핑몰 리퍼 중고기기 자급제구매",
     items:[
-      { key:"interior", name:"인테리어" }, { key:"design",  name:"설계" },
-      { key:"electric", name:"전기" },     { key:"plumbing",name:"배관" },
-      { key:"gas",      name:"가스" },     { key:"fire",    name:"소방" },
-      { key:"hvac",     name:"냉난방" },   { key:"duct",    name:"닥트 · 후드" },
-      { key:"floor",    name:"바닥" },     { key:"paint",   name:"도장" },
-      { key:"sign",     name:"간판" },     { key:"awning",  name:"어닝" },
-      { key:"metal",    name:"철물" }
+      { key:"ph-sell",    name:"스마트폰" },
+      { key:"tab-sell",   name:"태블릿" },
+      { key:"watch-sell", name:"스마트워치" },
+      { key:"buds-sell",  name:"무선이어폰" },
+      { key:"nb-sell",    name:"노트북" }
     ]},
 
-  { key:"equip", name:"시설 · 장비", icon:"tool", tone:"t13", kind:"provider",
-    lead:"업종마다 다릅니다",
-    desc:"고르신 업종에 필요한 장비만 보여 드립니다.",
-    byIndustry:true,      /* ⚠️ 하위 분류가 업종에서 옵니다 (§12) */
-    /* ⚠️ `kw` 는 **검색에만** 쓰는 다른 말입니다 — 화면에는 안 나옵니다.
-       이 분류는 이름이 "시설 · 장비" 인데 손님은 **"주방설비"** 라고
-       칩니다. 하위가 업종에서 와서(`byIndustry`) 분류 자신이 들고 있는
-       글자가 거의 없고, 그래서 "주방설비" 가 **0건**이었습니다.
-       ⚠️ 없는 서비스를 적는 칸이 아닙니다 — **같은 것을 가리키는 다른
-       말**만 적습니다 (절대 규칙 1). */
-    kw:"주방설비 주방기기 설비 기기 집기설비",
-    items:[] },
-
-  { key:"furniture", name:"가구 · 집기", icon:"sofa", tone:"t3", kind:"provider",
-    lead:"앉을 것과 놓을 것",
-    desc:"업소용 가구와 맞춤 제작을 하는 곳을 찾습니다.",
+  { key:"wholesale", name:"B2B 도매 · 경매", icon:"boxes", kind:"provider",
+    lead:"전문업체끼리 수량으로 거래하는 자리입니다.",
+    kw:"도매 벌크 경매 입찰 물량 다량 업자 사입 등급별",
     items:[
-      { key:"table",   name:"테이블" }, { key:"chair",   name:"의자" },
-      { key:"shelf",   name:"선반" },   { key:"storage", name:"수납" },
-      { key:"counter", name:"카운터" }, { key:"biz-furn",name:"업소용 가구" },
-      { key:"custom",  name:"맞춤가구" }
+      { key:"lot",      name:"단말기 도매" },
+      { key:"bulk",     name:"등급별 벌크" },
+      { key:"auction",  name:"경매 참여" },
+      { key:"part-lot", name:"부품 · 모듈 도매" }
     ]},
 
-  { key:"it", name:"IT · 매장시스템", icon:"monitor", tone:"t1", kind:"provider",
-    lead:"주문받고 결제하고 지키는 것",
-    desc:"POS · 키오스크 · CCTV · 통신까지 한 번에 비교합니다.",
-    /* ⚠️ `kw` 는 **검색에만** 쓰는 다른 말입니다 — 화면에는 안
-       나옵니다. 하위가 "POS" 라 **"포스기"** 를 치면 0건이었습니다
-       (사장님이 실제로 쓰는 말입니다). 같은 것을 가리키는 다른 말만
-       적습니다 — 없는 서비스를 적는 칸이 아닙니다 (절대 규칙 1). */
-    kw:"포스기 포스 카드단말기 단말기 시시티비 씨씨티비 정수기 제빙기 공기청정기 렌탈 렌털 비데",
+  { key:"corp", name:"기업 · 법인 대량 매입", icon:"building", kind:"provider",
+    lead:"업무용 기기를 한 번에 정리하실 때입니다.",
+    kw:"기업 법인 단체 업무용 사내 임대폰 리스 자산정리 대량",
     items:[
-      { key:"pos",       name:"POS" },        { key:"kiosk",   name:"키오스크" },
-      { key:"table-order",name:"테이블오더" }, { key:"cctv",    name:"CCTV" },
-      { key:"internet",  name:"인터넷" },      { key:"phone",   name:"전화" },
-      { key:"wifi",      name:"와이파이" },    { key:"booking", name:"예약시스템" },
-      { key:"waiting",   name:"웨이팅" },      { key:"payment", name:"결제단말기" },
-      { key:"e-menu",    name:"전자메뉴판" },  { key:"security",name:"보안" },
-      /* ⚠️ 2026-10-09 §5-2 D — 운영 솔루션 넷이 갈 곳이 없었습니다.
-         매장 안에서 도는 프로그램이라 `it` 이 맞는 자리입니다. */
-      { key:"inventory", name:"재고 관리" },  { key:"sales-mgmt",name:"매출 관리" },
-      { key:"hr-pay",    name:"근태 · 급여" }, { key:"acct-sw",  name:"회계 · 세무 프로그램" },
-      /* ⚠️⚠️ 2026-10-22 — **가입 쪽에 렌탈이 없었습니다.** 있던 것은
-         `contract/rental`(해지)과 `repair/rental-care`(점검)뿐이라,
-         운영 과제 "렌탈 · 정수기" 가 **해지 쪽**을 가리키고 있었습니다
-         (방향이 반대입니다). 자영업 거의 전부가 쓰는 것이고 수익상품
-         `water-ice-rental` 도 이미 있어서, **가입 쪽 자리**를 만듭니다.
-         ⚠️ 분류를 늘린 것이 아니라 **하위 한 줄을 더한 것**입니다 —
-         업체 `subs` · 매물 `sub` · 글 `cat` 이 쓰는 key 는 그대로입니다. */
-      { key:"rental",    name:"정수기 · 렌탈" }
+      { key:"office",    name:"업무용 단말기 정리" },
+      { key:"lease",     name:"임대 · 리스 단말기 회수" },
+      { key:"wipe-cert", name:"데이터 완전 삭제 증명" },
+      { key:"asset-val", name:"자산 목록 평가" }
     ]},
 
-  { key:"supply", name:"운영 공급업체", icon:"pkgck", tone:"t2", kind:"provider",
-    lead:"매일 들어오는 것",
-    desc:"거래처를 새로 뚫거나 바꾸실 때 조건을 비교합니다.",
-    kw:"포장용기 포장지 배달용기 일회용컵 식자재납품 배달대행 배달기사 라이더 배송",
-    /* ⚠️⚠️ 2026-10-09 최종 통합 지시서 §5-2 A · B — 운영 중인 사장님이
-       **매달 사는 것**이 여기 들어옵니다. 육류 · 수산 · 농산은 "식자재"
-       한 칸으로 묶여 있었는데, 거래처가 **서로 다른 업체**라 한 칸으로
-       두면 고기집 사장님께 채소 도매상이 갑니다.
-       ⚠️ key 를 바꾸지 않았습니다 — 더했습니다 (업체 `subs` · 상품 `sub` 이
-       그 값을 들고 있습니다). */
+  { key:"export", name:"해외 수출 · 바이어", icon:"globe", kind:"provider",
+    lead:"해외로 내보내는 거래를 잇습니다.",
+    kw:"수출 해외 바이어 무역 통관 선적 컨테이너 외국",
     items:[
-      { key:"ingredient",name:"식자재" },   { key:"meat",     name:"육류 · 축산물" },
-      { key:"seafood",   name:"수산물" },   { key:"produce",  name:"농산물" },
-      { key:"beverage",  name:"음료" },     { key:"coffee-bean",name:"커피 원두" },
-      { key:"bakery",    name:"베이커리 재료" },
-      { key:"liquor",    name:"주류" },     { key:"material", name:"원재료" },
-      { key:"packaging", name:"포장재" },   { key:"delivery-box",name:"배달용기" },
-      /* ⚠️ 2026-10-22 전수검사 P1-16 — "배달대행" 이 검색에서 **0건**
-         이었습니다. 배달용기는 있는데 **배달을 맡기는 일**이 없어서,
-         매일 쓰는 외주인데 들어올 자리가 없었습니다. ⚠️ 분류를 늘린
-         것이 아니라 하위를 더한 것입니다 (업체 `subs` · 상품 `sub` 이
-         그 key 를 들고 있습니다). */
-      { key:"delivery-agent",name:"배달 대행" },
-      { key:"disposable",name:"일회용품" }, { key:"consumable",name:"소모품" },
-      { key:"uniform",   name:"유니폼" },   { key:"hygiene",  name:"위생용품" },
-      { key:"cleaning-sup",name:"청소용품" }, { key:"office-sup",name:"사무용품" }
+      { key:"buyer",     name:"해외 바이어 연결" },
+      { key:"customs",   name:"수출 통관" },
+      { key:"container", name:"등급별 컨테이너" },
+      { key:"shipping",  name:"선적 · 물류" }
     ]},
 
-  /* ⚠️⚠️ **새 분류입니다** (2026-10-09 최종 통합 지시서 §5-2 C).
-     이 저장소는 묶음 틀(단계 여섯 · 여정 넷 · 영업 카테고리 열넷)을
-     만들 때 **분류를 새로 만들지 않는 것**을 규칙으로 삼아 왔습니다.
-     그런데 **장비 · 시설 수리**는 갈 곳이 없었습니다 — `equip` 은 사는 것,
-     `clean` 은 청소, `contract` 은 해지입니다. 냉장고가 멈춰서 오늘 고쳐야
-     하는 사장님이 들어올 자리가 사이트에 **한 곳도 없었습니다.**
-     ⚠️ 분류를 늘리면 `lifecycle.js`(단계 여섯)와 `sales.js`(영업 카테고리
-     열넷)에도 **같이 넣어야** 합니다 — 안 넣으면 빌드가 멈춥니다. */
-  { key:"repair", name:"수리 · 유지보수", icon:"tool", tone:"t12", kind:"provider",
-    lead:"멈췄을 때 부르는 곳",
-    kw:"소방점검 전기안전점검 가스점검 법정점검 안전점검 고장 수리기사 AS",
-    desc:"장비가 멈추면 그날 장사가 안 됩니다. 지역 · 품목으로 찾습니다.",
-    /* ⚠️⚠️ **전업종 공통인 것을 앞에 둡니다.** 화면은 하위를 다섯까지만
-       미리 보여 주는데(`StepBand`), 냉장고 · 커피머신 같은 **업종이 드러나는
-       것**을 앞에 두었더니 **미용실 창업 화면에 "커피머신 수리" 가
-       떴습니다** — 전수 점검이 잡았습니다. 에어컨 · 전기배관 · 정기
-       점검 · 렌탈 · POS 는 어느 업종이든 쓸 일이 있습니다.
-       ⚠️ 전체 목록은 `/providers/repair` 에 그대로 있습니다 — 잘라 낸 것이
-       아니라 **차례만** 바꾸었습니다 (`amCatsFor()` 와 같은 생각). */
+  { key:"inspect", name:"검수 · 데이터 삭제", icon:"scan", kind:"provider",
+    lead:"상태를 판정하고 안에 남은 것을 지웁니다.",
+    kw:"검수 등급 판정 상태확인 초기화 데이터삭제 개인정보 잠금 아이클라우드",
     items:[
-      { key:"aircon-fix", name:"에어컨 수리" },
-      { key:"elec-fix",   name:"전기 · 배관 · 설비" },
-      { key:"check-up",   name:"정기 시설 점검" },
-      /* ⚠️⚠️ 2026-10-22 전수검사 P1-16 — **법으로 하게 되어 있는 점검**은
-         위의 "정기 시설 점검"(스스로 맡기는 것)과 다른 일입니다. 안
-         받으면 과태료가 나오고, 사고가 나면 그때 책임이 갈립니다.
-         ⚠️⚠️ **대상 · 주기 · 과태료 숫자를 적지 마세요** — 업종 · 면적 ·
-         설비에 따라 갈립니다 (`AM_OPS_CHECK` 와 같은 규칙). 적는 것은
-         **그런 점검이 있다**는 것까지이고, 대상인지는 관할 소방서 ·
-         한국전기안전공사 · 도시가스사가 정합니다. */
-      { key:"legal-check",name:"법정 점검 (소방 · 전기 · 가스)" },
-      { key:"rental-care",name:"렌탈 점검 · 관리" },
-      { key:"it-fix",     name:"POS · CCTV 유지보수" },
-      { key:"fridge-fix", name:"냉장 · 냉동고 수리" },
-      { key:"kitchen-fix",name:"주방설비 유지보수" },
-      { key:"coffee-fix", name:"커피머신 수리" },
-      { key:"ice-fix",    name:"제빙기 관리" }
+      { key:"grade",  name:"외관 등급 판정" },
+      { key:"func",   name:"기능 검수" },
+      { key:"imei",   name:"제조번호 조회" },
+      { key:"wipe",   name:"데이터 완전 삭제" },
+      { key:"unlock", name:"잠금 해제 확인" }
     ]},
 
-  { key:"admin", name:"행정 · 전문가", icon:"briefcase", tone:"t3", kind:"provider",
-    lead:"서류와 자격",
-    /* ⚠️ 검색 전용 다른 말 — 손님은 분류 이름("행정 · 전문가")을 모르고
-       **하려는 일**("세금")을 칩니다. 2026-10-20 에 창업 고르개에서
-       "세금" 이 0건이던 자리입니다 (하위는 "세무사" 라 안 걸렸습니다).
-       ⚠️⚠️ **여기 적는 것은 이 분류가 실제로 다루는 것까지입니다** —
-       없는 서비스를 적으면 걸리기만 하고 엉뚱한 데로 보냅니다. */
-    kw:"세금 세무 회계 장부 기장 노무 4대보험 인허가 허가 영업신고 보험 법률 저작권 공연권료 음악저작권 상표 상표출원 주류면허 담배소매인",
-    desc:"지역 · 전문분야 · 상담 가능 여부로 전문가를 찾습니다.",
+  { key:"pickup", name:"수거 · 배송", icon:"truck", kind:"provider",
+    lead:"기기를 가져오고 돌려보내는 일입니다.",
+    kw:"택배 수거 방문 발송 보내는법 포장 배송 퀵",
     items:[
-      { key:"tax-agent", name:"세무사" },     { key:"labor-agent",name:"노무사" },
-      { key:"admin-agent",name:"행정사" },    { key:"legal",     name:"법무 · 법률" },
-      { key:"insurance", name:"보험" },       { key:"biz-reg",   name:"사업자등록" },
-      /* ⚠️ 2026-10-22 전수검사 P1-16 — "저작권" · "공연권료" 가 검색에서
-         **0건**이었습니다. 매장에서 음악을 틀면 공연권료가 붙고(저작권법
-         제29조 제2항 단서 · 시행령 제11조), 간판 이름을 지키려면 상표를
-         내야 합니다 — 둘 다 자영업자가 실제로 겪는 일인데 들어올 자리가
-         없었습니다. ⚠️ **요율 · 면적 기준 숫자를 적지 마세요** — 업종 ·
-         면적으로 갈리고 해마다 바뀝니다. */
-      { key:"copyright",  name:"저작권 · 상표" },
-      { key:"permit",    name:"인허가" },     { key:"hygiene-edu",name:"위생교육" },
-      { key:"certify",   name:"인증" }
+      { key:"post",  name:"택배 수거" },
+      { key:"visit", name:"방문 수거" },
+      { key:"store", name:"매장 방문" },
+      { key:"pack",  name:"안전 포장" }
     ]},
 
-  { key:"staff", name:"인력", icon:"users", tone:"t5", kind:"provider",
-    lead:"같이 일할 사람",
-    desc:"채용을 대신하지 않습니다 — 채용을 도와줄 곳을 연결합니다.",
+  { key:"access", name:"액세서리 · 부자재", icon:"plug", kind:"provider",
+    lead:"기기와 같이 쓰는 것들입니다.",
+    kw:"케이스 필름 충전기 케이블 보호필름 거치대 포장재 액세서리",
     items:[
-      { key:"fulltime", name:"정직원" },     { key:"parttime", name:"아르바이트" },
-      { key:"pro-staff",name:"업종별 전문인력" },
-      { key:"headhunt", name:"헤드헌팅" },   { key:"training", name:"교육" },
-      { key:"outsource",name:"외주" }
-    ]},
-
-  { key:"marketing", name:"마케팅 · 디자인", icon:"megaphone", tone:"t8", kind:"provider",
-    lead:"알리는 일",
-    desc:"브랜딩부터 오픈 마케팅까지 맡길 곳을 비교합니다.",
-    kw:"현수막 배너 블로그마케팅 인스타마케팅 인스타그램 네이버플레이스 바이럴 온라인광고",
-    items:[
-      { key:"naming",   name:"브랜드 네이밍" }, { key:"logo",     name:"로고" },
-      { key:"bici",     name:"BI · CI" },       { key:"menu-design",name:"메뉴판" },
-      { key:"package",  name:"패키지" },        { key:"photo",    name:"사진" },
-      { key:"video",    name:"영상" },          { key:"sns",      name:"SNS" },
-      { key:"blog",     name:"블로그" },        { key:"place",    name:"플레이스 관리" },
-      { key:"ad-agency",name:"광고대행" },      { key:"influencer",name:"인플루언서" },
-      { key:"flyer",    name:"전단지" },        { key:"outdoor",  name:"옥외광고" },
-      { key:"open-mkt", name:"오픈 마케팅" },
-      /* ⚠️ 2026-10-09 §5-2 E — 문 열고 나서 계속 돈이 드는 둘입니다 */
-      { key:"review",   name:"리뷰 관리" },   { key:"crm",      name:"고객 관리" }
-    ]},
-
-  { key:"clean", name:"청소 · 방역 · 유지관리", icon:"sparkle", tone:"t2", kind:"provider",
-    lead:"열기 전과 연 다음",
-    desc:"입주청소부터 정기 관리까지 맡길 곳을 찾습니다.",
-    items:[
-      { key:"move-in",  name:"입주청소" },   { key:"kitchen-clean",name:"주방청소" },
-      { key:"aircon",   name:"에어컨청소" }, { key:"disinfect",name:"방역" },
-      { key:"pest",     name:"해충방제" },   { key:"regular",  name:"정기청소" },
-      { key:"facility", name:"시설관리" }
-    ]},
-
-  { key:"fund", name:"자금 · 정부지원", icon:"wallet", tone:"t5", kind:"info",
-    lead:"돈이 드는 일이니까",
-    desc:"창업자금과 정책자금 정보를 모아 둡니다.",
-    to:"/support",
-    items:[
-      { key:"startup-fund",name:"창업자금 정보" }, { key:"policy-fund",name:"정책자금" },
-      { key:"gov-program", name:"정부지원사업" }, { key:"guarantee",  name:"보증제도" },
-      { key:"finance",     name:"금융 제휴" },    { key:"insure",     name:"보험" },
-      { key:"payment-svc", name:"결제" }
+      { key:"case",    name:"케이스 · 필름" },
+      { key:"charger", name:"충전기 · 케이블" },
+      { key:"wrap",    name:"보호 포장재" },
+      { key:"stand",   name:"거치대" }
     ]}
+
 ];
 
-/* ── CLOSE · 폐업에 필요한 모든 것 ──────────────────────────────── */
-window.AM_CLOSE_CATS = [
-  { key:"process", name:"폐업 절차", icon:"listck", tone:"t7", kind:"info",
-    lead:"무엇부터 해야 하는지",
-    desc:"순서 · 필요서류 · 예상되는 비용 · 기한을 정리합니다.",
-    items:[
-      { key:"checklist", name:"폐업 체크리스트" }, { key:"steps",   name:"폐업 절차" },
-      { key:"documents", name:"필요서류" },        { key:"cost",    name:"예상비용" },
-      { key:"schedule",  name:"일정관리" },        { key:"expert",  name:"관련 전문가" }
-    ]},
 
-  { key:"transfer", name:"매장 양도", icon:"handover", tone:"t1", kind:"listing",
-    lead:"가게를 통째로 넘기기",
-    desc:"점포 · 권리금 · 시설을 포함해 넘기실 수 있습니다.",
-    kw:"권리금계산 권리금산정 가게넘기기 점포양도 매장매매",
-    to:"/stores",
-    items:[
-      { key:"store-transfer",name:"점포 양도" },   { key:"premium",  name:"권리금" },
-      { key:"equip-transfer",name:"시설 양도" },   { key:"find-buyer",name:"인수자 찾기" },
-      { key:"fc-transfer",   name:"프랜차이즈 매장 양도" }
-    ]},
-
-  { key:"asset", name:"시설 · 집기 처분", icon:"sofa", tone:"t3", kind:"listing",
-    lead:"쓰던 장비와 집기",
-    desc:"개별 판매 · 일괄 판매 · 시설 전체 인수까지 됩니다.",
-    kw:"중고주방 중고주방기기 중고장비 장비매각 집기매각",
-    to:"/assets",
-    items:[
-      { key:"kitchen-eq",name:"주방장비" },  { key:"fridge",  name:"냉장 · 냉동" },
-      { key:"espresso",  name:"커피머신" },  { key:"furniture",name:"가구" },
-      { key:"pos",       name:"POS" },       { key:"kiosk",   name:"키오스크" },
-      { key:"fitness",   name:"운동기구" },  { key:"salon-eq",name:"미용기기" },
-      { key:"biz-eq",    name:"업소용 장비" }
-    ]},
-
-  { key:"stock", name:"재고 처분", icon:"boxes", tone:"t2", kind:"listing",
-    lead:"남은 것",
-    desc:"식자재 · 상품 · 포장재 · 소모품을 업종별로 내놓습니다.",
-    to:"/assets",
-    items:[
-      { key:"ingredient",name:"식자재" },  { key:"goods",    name:"상품" },
-      { key:"packaging", name:"포장재" },  { key:"consumable",name:"소모품" },
-      { key:"material",  name:"원재료" },  { key:"etc-stock",name:"기타 재고" }
-    ]},
-
-  { key:"demolish", name:"철거", icon:"hammer", tone:"t9", kind:"provider",
-    lead:"뜯어내는 일",
-    desc:"지역 · 평수 · 업종 · 사진을 올리면 여러 곳에서 견적이 옵니다.",
-    items:[
-      { key:"full",     name:"전체철거" },  { key:"partial", name:"부분철거" },
-      { key:"kitchen",  name:"주방철거" },  { key:"sign",    name:"간판철거" },
-      { key:"facility", name:"시설철거" },
-      /* ⚠️⚠️ **`waste` 분류와 이름을 갈라 둡니다** (2026-10-22 전수검사 P1-15).
-         여기 것은 **철거하며 나오는 것**이라 철거업체가 같이 싣고 가고,
-         `waste` 분류는 **따로 부르는 수거**입니다 (남은 짐 · 가구 · 전자
-         제품). 둘 다 "폐기물" 이면 폐업 전문관 한 화면에 같은 이름이
-         둘이고, 어느 쪽을 골라야 하는지가 안 읽힙니다 — `pickDupLabels()`
-         는 **글자가 똑같을 때만** 묶음 이름을 붙여서 이것을 못 잡습니다. */
-      { key:"waste",   name:"철거 폐기물" }
-    ]},
-
-  { key:"restore", name:"원상복구", icon:"roller", tone:"t5", kind:"provider",
-    lead:"임대차가 끝나기 전에",
-    desc:"어디까지 복구해야 하는지부터 확인하고 견적을 받습니다.",
-    kw:"원상복구비용 복구공사 철거후복구 벽복구 바닥복구",
-    items:[
-      { key:"shop-restore",name:"상가 원상복구" }, { key:"electric",name:"전기" },
-      { key:"plumbing",    name:"배관" },          { key:"gas",     name:"가스" },
-      { key:"floor",       name:"바닥" },          { key:"wall",    name:"벽" },
-      { key:"ceiling",     name:"천장" },          { key:"sign",    name:"간판" }
-    ]},
-
-  { key:"waste", name:"폐기물 · 수거", icon:"trash", tone:"t7", kind:"provider",
-    lead:"내보내는 일",
-    desc:"허가가 필요한 일입니다 — 자격을 확인한 곳으로 연결합니다.",
-    items:[
-      { key:"biz-waste", name:"사업장 폐기물" }, { key:"bulky",   name:"대형폐기물" },
-      { key:"furniture", name:"가구" },          { key:"electronics",name:"전자제품" },
-      { key:"biz-eq",    name:"업소용 장비" },   { key:"recycle", name:"재활용품" }
-    ]},
-
-  { key:"tax", name:"폐업 세무 · 행정", icon:"calc", tone:"t7", kind:"provider",
-    lead:"신고하고 정리하는 일",
-    desc:"기한을 놓치면 가산세가 붙습니다. 전문가와 확인하세요.",
-    kw:"폐업신고서 폐업신고절차 부가세신고 폐업세금",
-    items:[
-      { key:"close-report",name:"폐업신고" },     { key:"vat",     name:"부가세" },
-      { key:"income-tax",  name:"종합소득세" },   { key:"biz-reg", name:"사업자등록 정리" },
-      { key:"permit",      name:"인허가 정리" },  { key:"consult", name:"전문가 상담" }
-    ]},
-
-  { key:"labor", name:"직원 · 노무", icon:"users", tone:"t5", kind:"provider",
-    lead:"같이 일하던 사람",
-    desc:"퇴직금과 4대보험 정리는 순서가 있습니다.",
-    kw:"4대보험료 사대보험 퇴직금계산 해고예고수당",
-    items:[
-      { key:"resign",   name:"직원 퇴직" },   { key:"severance",name:"퇴직금" },
-      { key:"insurance4",name:"4대보험" },    { key:"contract-end",name:"근로계약 종료" },
-      { key:"consult",  name:"노무상담" }
-    ]},
-
-  { key:"contract", name:"계약 해지", icon:"filex", tone:"t4", kind:"provider",
-    lead:"묶여 있는 것들",
-    desc:"약정 기간이 남아 있으면 위약금이 생깁니다. 먼저 확인하세요.",
-    items:[
-      { key:"internet", name:"인터넷" }, { key:"phone",   name:"전화" },
-      { key:"pos",      name:"POS" },    { key:"kiosk",   name:"키오스크" },
-      { key:"rental",   name:"렌탈" },   { key:"water",   name:"정수기" },
-      { key:"cctv",     name:"CCTV" },   { key:"security",name:"보안" },
-      { key:"insurance",name:"보험" }
-    ]},
-
-  { key:"law", name:"법률 · 채무", icon:"scale", tone:"t6", kind:"provider",
-    lead:"다툼이 생겼을 때",
-    desc:"저희가 대리하지 않습니다 — 자격 있는 전문가를 연결합니다.",
-    kw:"제소전화해 명도소송 보증금반환 임대차분쟁",
-    items:[
-      { key:"lease",    name:"임대차" },   { key:"receivable",name:"미수금" },
-      { key:"debt",     name:"채권 · 채무" }, { key:"dispute", name:"계약분쟁" },
-      { key:"consult",  name:"법률상담" }
-    ]},
-
-  { key:"support", name:"폐업지원", icon:"coins", tone:"t2", kind:"info",
-    lead:"받을 수 있는 것",
-    desc:"철거비 지원처럼 조건만 맞으면 받는 것이 있습니다.",
-    to:"/support",
-    items:[
-      { key:"gov-close", name:"정부 폐업지원" }, { key:"demolish-fund",name:"철거비 지원" },
-      { key:"rehire",    name:"재취업" },        { key:"restart",  name:"재창업" },
-      { key:"policy",    name:"정책지원" },      { key:"program",  name:"지원사업" }
-    ]}
-];
-
-/* ── 찾아 쓰는 함수 ──────────────────────────────────────────────── */
-window.AM_CATS = (window.AM_START_CATS || []).concat(window.AM_CLOSE_CATS || []);
-
-/* 하위 분류 key → 이름. ⚠️ 전에는 `/p/:id` 화면 안에 박혀 있어서,
-   다른 자리(후기 · 검색)에서 쓰려면 같은 반복문을 또 적어야 했습니다. */
-window.amSubName = function(key){
-  if(!key) return "";
-  var cats = window.AM_CATS || [];
-  for(var i = 0; i < cats.length; i++){
-    var items = cats[i].items || [];
-    for(var j = 0; j < items.length; j++)
-      if(items[j].key === key) return items[j].name;
-  }
-  return key;
-};
-
+/* 분류 하나 — 없는 키에는 null 입니다 (빈 칸을 만들지 않습니다) */
 window.amCat = function(key){
-  var r = AM_CATS.filter(function(c){ return c.key === key; });
-  return r.length ? r[0] : null;
-};
-window.amCatSide = function(key){
-  return (window.AM_START_CATS||[]).some(function(c){ return c.key === key; }) ? "start" : "close";
-};
-/* 업종을 알면 장비 하위 분류가 그 업종 것으로 바뀝니다 (§12) */
-window.amCatItems = function(cat, industryKey){
-  if(!cat) return [];
-  if(cat.byIndustry){
-    var ind = (typeof amIndustry === "function") ? amIndustry(industryKey) : null;
-    return (ind && ind.equip) ? ind.equip : [];
-  }
-  return cat.items || [];
-};
-/* 업종이 정한 차례대로 카테고리를 돌려줍니다 (§41) */
-window.amCatsFor = function(industryKey, side){
-  var ind = (typeof amIndustry === "function") ? amIndustry(industryKey) : null;
-  var all = (side === "close") ? (window.AM_CLOSE_CATS||[]) : (window.AM_START_CATS||[]);
-  if(!ind) return all;
-  var order = (side === "close") ? (ind.closure||[]) : (ind.startup||[]);
-  if(!order.length) return all;
-  var picked = order.map(function(k){
-    return all.filter(function(c){ return c.key === k; })[0];
-  }).filter(Boolean);
-  /* 차례에 안 적힌 것도 빠뜨리지 않고 뒤에 붙입니다 —
-     ⚠️ 여기서 잘라 내면 그 업종 사장님에게는 그 기능이 없는 것이 됩니다 */
-  all.forEach(function(c){ if(picked.indexOf(c) < 0) picked.push(c); });
-  return picked;
-};
-/* 하위 분류 하나 찾기 — 업체 입점 · 업체 목록의 단위입니다 */
-window.amSub = function(catKey, subKey, industryKey){
-  var c = amCat(catKey); if(!c) return null;
-  var r = amCatItems(c, industryKey).filter(function(i){ return i.key === subKey; });
-  return r.length ? r[0] : null;
+  var L = window.AM_CATS || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === key) return L[i];
+  return null;
 };
 
-/* ════════════════════════════════════════════════════════════════════
-   창업을 **과정**으로 보여 줍니다 (§7)
-
-   분류를 열세 개 늘어놓으면 손님이 그걸 공부해야 합니다. 사장님이
-   알고 싶은 것은 **"내가 지금 어디까지 왔고 다음에 뭘 해야 하는가"**
-   입니다.
-
-   ⚠️ **단계는 업종과 무관하게 같습니다.** 자리를 찾고 → 만들고 →
-   채우고 → 영업 준비하고 → 손님을 받는 것은 카페든 미용실이든
-   같습니다. 업종이 갈리는 것은 **각 단계 안의 하위 서비스**입니다
-   (카페 3단계에 커피머신, 미용 3단계에 샴푸대).
-
-   ⚠️⚠️ **모든 분류가 어느 한 단계에는 들어가야 합니다.** 빠뜨리면
-   그 분류가 창업 화면에서 **조용히 사라집니다** — 에러도 안 나고
-   화면도 멀쩡합니다. `check.js` 가 개수를 맞춰 봅니다.
-   ════════════════════════════════════════════════════════════════════ */
-window.AM_START_STEPS = [
-  { n:"01", key:"place", name:"자리 찾기", icon:"map",
-    lead:"무엇을 할지 정하고, 돈을 마련하고, 자리를 고릅니다",
-    cats:["item","fund","store","area"] },
-  { n:"02", key:"build", name:"가게 만들기", icon:"hammer",
-    lead:"공사가 제일 오래 걸리고 제일 많이 듭니다",
-    cats:["interior"] },
-  { n:"03", key:"fill",  name:"채우기", icon:"box",
-    lead:"업종에 따라 여기가 제일 많이 갈립니다",
-    cats:["equip","furniture","supply"] },
-  { n:"04", key:"ready", name:"영업 준비", icon:"doc",
-    lead:"서류와 시스템. 빠뜨리면 문을 못 엽니다",
-    cats:["it","admin","staff"] },
-  /* ⚠️⚠️ `repair`(수리 · 유지보수)가 여기 들어왔습니다 — 2026-10-09
-     §5-2 C 로 분류를 늘렸는데 **단계에 안 넣었더니 창업 화면에서
-     조용히 사라졌습니다** (화면 13 · 분류 14). 전수 점검이 개수를
-     맞춰 보고 잡았고, 이 파일 맨 위 경고가 적어 둔 바로 그 사고입니다.
-     ⚠️ 05 가 맞는 자리입니다 — 머리말이 이미 "열고 나서가 진짜
-     시작입니다" 이고, 수리는 문을 열고 나서 부르는 곳입니다. */
-  { n:"05", key:"open",  name:"손님 받기", icon:"megaphone",
-    lead:"열고 나서가 진짜 시작입니다",
-    cats:["marketing","clean","repair"] }
-];
-
-/* 그 업종의 그 단계에 들어가는 분류.
-   ⚠️ 업종 차례(`amCatsFor`)를 **단계 안에서** 지킵니다 — 업종이 먼저
-   꼽은 분류가 그 단계에서도 앞에 옵니다. */
-window.amStepCats = function(step, industryKey){
-  var order = (window.amCatsFor ? amCatsFor(industryKey, "start") : (window.AM_START_CATS||[]));
-  var want = {};
-  (step.cats || []).forEach(function(k){ want[k] = 1; });
-  return order.filter(function(c){ return want[c.key]; });
+/* 분류의 하위
+   ⚠️ 인자가 **하나**입니다. 창업 · 폐업 때는 `amCatItems(c, 업종)` 으로
+      업종마다 다른 장비를 냈는데(`시설 · 장비`), 중고폰은 업종으로
+      갈리지 않습니다 — 갈리는 것은 기기이고 그건 `devices.js` 입니다. */
+window.amCatItems = function(c){
+  if(!c) return [];
+  return c.items || [];
 };
 
-/* ════════════════════════════════════════════════════════════════════
-   폐업은 목록이 아니라 **무엇을 원하시는가**부터 묻습니다 (§8)
-
-   폐업 화면에 들어오자마자 분류 열두 개를 늘어놓으면, 이미 지쳐
-   계신 분께 숙제를 하나 더 드리는 것입니다. 원하는 결과를 고르시면
-   그에 맞는 절차만 추려 드립니다.
-
-   ⚠️ **고르신 것에 없는 분류를 숨기지 마세요.** 추려 낸 것 아래에
-   나머지도 냅니다 — 숨기면 그 사장님에게는 그 기능이 없는 것이
-   됩니다. `check.js` 가 봅니다.
-   ════════════════════════════════════════════════════════════════════ */
-/* ⚠️⚠️ **2026-10-08 지시서 §16 STEP 01 의 넷으로 이름을 맞췄습니다.**
-   전에는 `돈을 남기고` · `빨리 정리` 처럼 **바라는 것**으로 물었는데,
-   지시서는 **지금 하려는 일**로 묻습니다 — 사장님이 답하기 쉬운 쪽은
-   뒤쪽이고(§20 "답변이 없는 항목을 임의로 추정하지 않는다"), 고른
-   결과가 §17 · §18 · §19 의 세 로드맵과 그대로 맞물립니다.
-
-   ⚠️⚠️ **key 를 바꾸지 마세요.** 주소(`?w=`)에 실려 밖으로 나간 링크가
-   그 값을 들고 있습니다 — 이름만 바꿉니다 (영업 상태 key 를 안 바꾸는
-   것과 같은 까닭입니다).
-   ⚠️ `cats` 는 **그 상황에서 먼저 볼 분류**입니다. 여기 없는 분류도
-   잘라 내지 않습니다 — `amCloseCatsFor()` 가 뒤에 붙여 줍니다. */
-window.AM_CLOSE_WANTS = [
-  { key:"pass",  name:"매장 전체를 넘기고 싶어요", icon:"key",
-    lead:"양도가 되면 철거비도 안 들고 권리금도 회수할 기회가 생깁니다",
-    cats:["transfer","contract","tax","labor"] },
-  { key:"money", name:"시설 · 장비를 정리하고 싶어요", icon:"won",
-    lead:"버리는 것보다 넘기는 쪽이 낫습니다. 시설 · 집기 · 재고까지",
-    cats:["asset","stock","transfer","tax","support"] },
-  { key:"fast",  name:"완전히 폐업하려고 해요", icon:"clock",
-    lead:"순서가 곧 돈입니다. 기한이 있는 것이 여럿입니다",
-    cats:["process","contract","tax","labor","demolish","restore","waste"] },
-  { key:"lost",  name:"아직 어떻게 해야 할지 모르겠어요", icon:"info",
-    lead:"넘길 수 있는 것부터 짚어 드립니다. 순서대로 보시면 됩니다",
-    cats:["transfer","process","tax","labor","contract"] }
-];
-
-window.amCloseWant = function(key){
-  var r = (window.AM_CLOSE_WANTS||[]).filter(function(w){ return w.key === key; });
-  return r.length ? r[0] : null;
+/* 모든 하위를 한 줄로 — 업체 등록 고르개가 씁니다
+   ⚠️⚠️ **같은 하위 키가 둘 들어가면 안 됩니다.** 고르개에 체크칸이
+   두 번 그려지고, 하나를 누르면 둘이 같이 켜지는데 바구니에는 한 번만
+   담깁니다 (창업 · 폐업에서 `시설 · 장비` 하위 다섯이 그랬습니다).
+   ⚠️ 지금은 분류마다 제 `items` 뿐이라 겹칠 수가 없지만, 하위를
+   더하실 때 **같은 키를 두 분류에 적지 마세요** — 빌드가 막습니다. */
+window.amAllSubs = function(c){
+  if(!c) return [];
+  return c.items || [];
 };
 
-/* 고르신 것에 맞는 분류를 **앞에**, 나머지는 뒤에.
-   ⚠️ 잘라 내지 않습니다 — 숨기면 그 기능이 없는 것이 됩니다. */
-window.amCloseCatsFor = function(wantKey, industryKey){
-  var all = (window.amCatsFor ? amCatsFor(industryKey, "close") : (window.AM_CLOSE_CATS||[]));
-  var w = amCloseWant(wantKey);
-  if(!w) return { hit:all, rest:[] };
-  var want = {};
-  w.cats.forEach(function(k){ want[k] = 1; });
+/* 하위 하나의 이름 — 없으면 빈 문자열입니다 (키를 날것으로 찍지 않게) */
+window.amSubName = function(catKey, subKey){
+  var c = window.amCat(catKey); if(!c) return "";
+  var L = c.items || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === subKey) return L[i].name;
+  return "";
+};
+
+/* ── id 꼴 · 한 벌로 읽기 ─────────────────────────────────────────
+   ⚠️⚠️ **2026-10-31 — `js/data/svcpick.js` 에서 옮겨 왔습니다.** 그
+   파일은 창업 준비 전문관의 고르개 데이터(쉬운 이름 열넷 · 대표 여섯 ·
+   업종별 차례 · 묶음 여덟 · 전문관별 목록)였고 전부 인수인계 것이라
+   지웠습니다 — 여기 넷만 **중고폰에서도 그대로 쓰는 것**이라 살렸습니다
+   (`/quote` STEP 01 · `/admin` 접수 목록 · 회원 계정 저장이 읽습니다).
+   ⚠️ 꺼내 보시려면 `git show 6d85a17:js/data/svcpick.js`.
+
+   ```
+   buyin              중고폰 매입 (분류 전체)
+   buyin/ph-buy       스마트폰 매입 (하위 하나)
+   ```
+   ⚠️ 구분자가 `/` 인 까닭 — 분류 key 와 하위 key 가 둘 다
+   `[a-z0-9-]` 뿐이라 섞일 수가 없습니다. ⚠️⚠️ **key 에 `/` 를 쓰지
+   마세요** — 그 순간 이 꼴이 깨집니다.
+   ⚠️⚠️ **추가 질문은 분류 단위입니다** (`reqforms.js`). 같은 분류의
+   하위 둘을 고르셔도 질문은 **한 번만** 나옵니다 — `api/quote.js` 의
+   `detail` 상한(20)을 지키는 자리입니다. */
+window.amPickSplit = function(id){
+  var s = String(id || "").split("/");
+  return { cat: s[0] || "", sub: (s.length > 1 ? s[1] : "") };
+};
+
+/* 화면이 쓰는 한 벌 — 이름 · 설명 · 아이콘은 **원본(`catalog.js`)에서**
+   읽습니다. 여기 적으면 두 곳이 어긋납니다.
+   ⚠️ `sub` 을 주면 **하위 한 벌**입니다. 아이콘은 **분류 것을 그대로**
+   씁니다 — 같은 서비스가 다른 자리에서 다른 그림이면 한 시스템으로
+   안 읽힙니다. */
+window.amPickWrap = function(c, sub){
+  if(!c) return null;
+  var ask = !!(window.AM_REQ_FORMS && window.AM_REQ_FORMS[c.key]);
+  if(sub && sub.key) return {
+    id:c.key + "/" + sub.key, cat:c.key, sub:sub.key,
+    name:sub.name, easy:"", lead:"",
+    /* ⚠️ 작은 줄에 **분류 이름**을 냅니다 — "스마트폰 매입" 만 있으면
+       어느 분야 것인지 안 보이고, 목록에서 섞이면 더 그렇습니다. */
+    desc:c.name,
+    icon:(sub.icon || c.icon || "check"),
+    to:(typeof window.catTo === "function") ? window.catTo(c) : "",
+    ask:ask
+  };
   return {
-    hit:  all.filter(function(c){ return want[c.key]; }),
-    rest: all.filter(function(c){ return !want[c.key]; })
+    id:c.key, cat:c.key, sub:"",
+    name:c.name, easy:"", lead:(c.lead || ""), desc:(c.desc || ""),
+    icon:(c.icon || "check"),
+    to:(typeof window.catTo === "function") ? window.catTo(c) : "",
+    ask:ask
   };
 };
 
-/* 업체가 "내가 하는 일" 을 찾을 때 쓰는 목록.
-   ⚠️ `byIndustry` 분류(시설 · 장비)는 하위가 **업종에서** 옵니다.
-   업종을 안 고른 화면(`/join`)에서는 비어 있어서, 제목만 남고 칸이
-   텅 비었습니다 — 절대 규칙 2 위반입니다. 그래서 여기서는 **모든
-   업종의 장비를 합쳐서** 돌려줍니다. 주방설비 업체도 미용기기
-   업체도 자기 분야를 찾을 수 있어야 입점합니다.
-   ⚠️ 같은 이름이 여러 업종에 있습니다(냉장 · 냉동). 한 번만 냅니다. */
-window.amAllSubs = function(cat){
-  if(!cat) return [];
-  if(!cat.byIndustry) return (cat.items || []).slice();
-  /* ⚠️⚠️ **key 와 이름을 둘 다 봅니다** (2026-10-22 전수검사 P1-15).
-     전에는 **이름만** 보고 걸렀습니다 — 그래서 같은 key 를 업종마다
-     **다른 이름**으로 적어 둔 다섯(`sound` · `showcase` · `desk` ·
-     `pc` · `shelf`)이 **둘씩** 들어갔고, 고르개에서 **같은
-     `data-pick` id 를 가진 체크칸이 두 번** 그려졌습니다 — 하나를
-     누르면 둘이 같이 켜지는데 바구니에는 한 번만 담겨서, 손님이
-     보기에 "왜 두 개가 켜지지" 입니다 (§3-2 중복 방지).
-     ⚠️ key 로만 걸러도 안 됩니다 — **다른 key 를 같은 이름**으로 적어
-     두면 글자가 똑같은 칸이 둘이 됩니다.
-     ⚠️ 먼저 나온 이름을 남깁니다 (`AM_INDUSTRIES` 차례) — 그 key 로
-     저장된 지난 신청이 그 이름으로 읽혀야 합니다. */
-  var byKey = {}, byName = {}, out = [];
-  (window.AM_INDUSTRIES || []).forEach(function(i){
-    (i.equip || []).forEach(function(e){
-      if(!e || !e.key) return;
-      if(byKey[e.key] || byName[e.name]) return;
-      byKey[e.key] = 1; byName[e.name] = 1; out.push(e);
-    });
-  });
-  return out;
+/* id 하나를 되돌려 찾습니다 — 주소(`?sv=`)와 저장된 선택을 읽을 때.
+   ⚠️⚠️ **없는 id 는 null 입니다.** 밖으로 나간 링크가 옛 id 를 들고
+   있을 수 있어서, 거기서 에러를 내면 손님은 아무 잘못도 안 하시고
+   깨진 화면을 봅니다 — 부르는 쪽이 걸러 냅니다. */
+window.amPickOne = function(id){
+  if(!id) return null;
+  var p = window.amPickSplit(id);
+  var c = (typeof window.amCat === "function") ? window.amCat(p.cat) : null;
+  if(!c) return null;
+  if(!p.sub) return window.amPickWrap(c);
+  /* ⚠️⚠️ **없는 하위는 null 입니다.** 분류는 맞는데 하위만 틀린
+     id(`fix/없는것`)를 분류로 눌러 주면, 손님이 고른 것과 접수에
+     실리는 것이 **조용히 달라집니다** — 액정 교체를 고르셨는데
+     "수리 서비스 전체" 로 들어가는 꼴입니다. */
+  var subs = (typeof window.amAllSubs === "function")
+    ? window.amAllSubs(c) : (c.items || []);
+  var hit = subs.filter(function(s){ return s && s.key === p.sub; })[0];
+  return hit ? window.amPickWrap(c, hit) : null;
+};
+
+/* 화면에 내는 딱지 — ⚠️ 쉬운 이름(`easy`)은 창업 쪽 열넷을 위해 두었던
+   칸이고 중고폰 분류 이름은 이미 쉬운 말입니다 (중고폰 매입 · 수리
+   서비스 …). 칸은 **남겨 둡니다** — 되살리시는 날 여기만 채우면 됩니다. */
+window.amPickLabel = function(s){
+  return (s && (s.easy || s.name)) || "";
 };

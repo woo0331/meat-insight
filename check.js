@@ -2911,7 +2911,10 @@ const AUDIT = `(() => {
          합니다 ("?3" 이 아니라). */
       /* ⚠️ 앞 지시서의 이름들을 **빼지 않습니다** — 되살아나면
          "차례가 … 입니다" 로 이름을 내야 합니다 ("?3" 이 아니라). */
-      for(const m of ["pwh","pwsv","pwbr","pwpd","pwnw",
+      /* ⚠ 2026-10-31 — pwmk 가 들어왔습니다. pwbr · pwpd 는 **빼지
+         않습니다** — 되살아나면 "차례가 … 입니다" 로 이름을 내야
+         합니다 ("?3" 이 아니라). */
+      for(const m of ["pwh","pwsv","pwmk","pwbr","pwpd","pwnw",
                       "pwd","pwbz","pwq","pww","pws","pwst","pwt","pwc",
                       "bent","bdir","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
                       "bhero","mh","mbr","mhall","msvc","mexp","pkg","mind",

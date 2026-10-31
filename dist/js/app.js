@@ -108,7 +108,22 @@ var META = {
 };
 
 var NOINDEX = ["/my","/search","/quote","/compare","/sample",
-               "/track","/sell-biz"];
+               "/track","/sell-biz","/about"];
+
+var NOINDEX_PRE = ["/startup", "/closure", "/operation", "/transfer",
+                   "/providers", "/franchise", "/stores", "/assets",
+                   "/support", "/content", "/tools",
+                   "/g/", "/c/", "/p/", "/f/", "/s/", "/a/"];
+
+function amNoIndex(p2){
+  if(NOINDEX.indexOf(p2) >= 0) return true;
+  for(var i = 0; i < NOINDEX_PRE.length; i++){
+    var k = NOINDEX_PRE[i];
+    if(k.slice(-1) === "/"){ if(p2.indexOf(k) === 0) return true; }
+    else if(p2 === k || p2.indexOf(k + "/") === 0) return true;
+  }
+  return false;
+}
 
 function pvDesc(pv){
   var who = [];
@@ -167,7 +182,7 @@ function asDesc(a){
 
 window.routeInfo = function(path){
   var r = { ok:true, title:"", desc:"", canon:null,
-            noindex: NOINDEX.indexOf(path) >= 0, view:null };
+            noindex: amNoIndex(path), view:null };
   if(META[path]){ r.title = META[path][0]; r.desc = META[path][1]; }
 
   var VIEW = {

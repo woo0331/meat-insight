@@ -1101,77 +1101,49 @@ function PageMy(){
   MyDbBand()+
   MyPwBand()+
   '<section class="sec sec-white"><div class="w">'+
-    /* ⚠️⚠️ **접었지 지우지 않았습니다.** 창업 · 폐업 157개 화면이
-       아직 살아 있고, 그 처리는 0단계 ① 로 사장님이 정하실 일입니다.
-       접힌 것도 DOM 에 그대로 있어 링크 검사와 색인이 안 바뀝니다. */
-    '<details class="my-biz"><summary><b>창업 · 폐업 기록</b>'+
-      '<span>앞서 쓰시던 상황 · 업종 · 저장한 업체 · 받은 제안</span></summary>'+
-    '<div class="my-set">'+
-      '<div class="f-r"><label for="my-side">상황</label>'+
-        '<select class="sel" id="my-side" onchange="myPut()">'+
-          '<option value=""'+(!p.side?" selected":"")+'>고르지 않음</option>'+
-          '<option value="start"'+(p.side==="start"?" selected":"")+'>창업 준비중</option>'+
-          '<option value="close"'+(p.side==="close"?" selected":"")+'>폐업 준비중</option>'+
-        '</select></div>'+
-      '<div class="f-r"><label for="my-ind">업종</label>'+
-        IndustrySelect("my-ind", p.industry, "myPut()")+'</div>'+
-      '<div class="f-r"><label for="my-reg">지역</label>'+
-        RegionSelect("my-reg", p.region, "myPut()")+'</div>'+
-      '<div class="f-r"><label for="my-py">평수</label>'+
-        '<input id="my-py" inputmode="numeric" value="'+esc(p.pyeong||"")+'" '+
-        'onchange="myPut()" placeholder="예: 30"></div>'+
-    '</div>'+
+    /* ⚠️⚠️ **창업 · 폐업 기록 칸을 2026-10-31 에 내렸습니다** (사장님
+       지시 — "인수인계 자료들은 다 지워줘"). 전에는 `<details
+       class="my-biz">` 로 **접어** 두었는데, 접혀 있어도 "창업 · 폐업
+       기록" 이라는 **요약 줄이 화면에 보입니다** — 화면에서 내리는
+       것이 범위라 통째로 뺐습니다.
 
-    (p.side && ind
-      ? '<div class="my-next"><h2>'+esc(ind.name)+' '+
-          (p.side==="close"?"정리":"창업")+'에 필요한 것</h2>'+
-          '<div class="cat-g cat-g4">'+
-            amCatsFor(p.industry, p.side==="close"?"close":"start").slice(0,8)
-              .map(function(c){ return CatCard(c, p.industry); }).join("")+
-          '</div>'+
-          '<div class="row-cta">'+
-            '<a class="btn btn-b" href="'+esc(p.side==="close"?("/closure/"+p.industry):("/startup/"+p.industry))+'">'+
-              '전부 보기'+icon("arrow",16)+'</a>'+
-            '<a class="btn btn-o" href="'+esc(quoteTo({industry:p.industry,region:p.region,side:p.side}))+'">'+
-              '견적 요청</a>'+
-          '</div></div>'
-      : Empty({
-          icon:"user",
-          title:"상황과 업종을 고르시면",
-          text:"그 업종에 실제로 필요한 것만 여기 모아 드립니다.",
-          cta:'<a class="btn btn-b" href="/startup">창업 시작하기'+icon("arrow",16)+'</a>'+
-              '<a class="btn btn-o" href="/closure">폐업 시작하기</a>'
-        }))+
+       그 칸이 들고 있던 것 — 상황 · 업종 · 지역 · 평수 고르개 ·
+       업종별 분류 카드 · `MySaved()`(저장한 업체) · `MyTools()`(계산기에
+       적은 숫자) · 받은 제안.
 
-    MySaved()+
+       ⚠️⚠️ **함수를 하나도 안 지웠습니다.** `MySaved()` · `MyTools()` 가
+       그대로 있고, 되살리시려면 `git show 2ed861f:js/pages/my.js` 의
+       이 자리를 그대로 가져오면 됩니다. 그날 `vercel.json` 의 redirect
+       스물넷과 `js/app.js` 의 `NOINDEX_PRE` 도 같이 되돌리세요.
 
-    MyTools()+
-
-    '<div class="my-next"><h2>받은 제안</h2>'+
-      (qs.length
-        ? '<p class="lead">'+qs.length+'건을 적어 두셨습니다.</p>'+
-          '<div class="row-cta"><a class="btn btn-o" href="/quote">비교 화면으로</a></div>'
-        /* ⚠️ 문장 한가운데 링크를 박지 않습니다 — 높이가 16px 이라
-           누르기 어렵습니다. 문단 끝에 버튼으로 냅니다 (바로 위
-           칸과 같은 꼴입니다). */
-        : '<p class="lead">아직 적어 두신 제안이 없습니다. 견적을 받으시면 '+
-          '나란히 놓고 보실 수 있습니다.</p>'+
-          '<div class="row-cta"><a class="btn btn-o" href="/quote">'+
-            '제안 비교 화면 열기</a></div>')+
-    '</div>'+
-
-    '</details>'+
-    /* ⚠️ 지우기는 **접는 칸 밖**입니다 — 폰웨이 쪽에서 고르신 것도
-       같이 지우는 단추라, 창업 · 폐업 칸 안에 두면 안 보입니다. */
+       ⚠️ **이 브라우저에 남아 있던 값은 아래 단추가 지웁니다** — 칸만
+       빼고 값을 남겨 두면 지울 길이 없어집니다. */
+    /* ⚠️⚠️ **이 단추는 지우지 마세요.** 창업 · 폐업 칸을 내린 뒤에도
+       **전에 쓰시던 값이 이 브라우저에 그대로 남아 있습니다** (상황 ·
+       업종 · 지역 · 평수 · 저장한 업체 · 계산기 숫자 · 받은 제안) —
+       칸만 빼고 단추를 없애면 그 값을 지울 길이 아예 없어집니다.
+       ⚠️ 가게 컴퓨터는 여러 사람이 씁니다. */
+    '<h2>이 브라우저에 남은 기록</h2>'+
+    '<p class="lead">고르신 기기 · 적어 두신 숫자 · 앞서 쓰시던 기록이 '+
+      '<b>이 브라우저 안에만</b> 남아 있습니다. 저희 서버로는 보내지 않습니다.</p>'+
     '<div class="row-cta"><button class="btn btn-o" type="button" onclick="myClear()">'+
       '내 기록 전부 지우기</button></div>'+
   '</div></section>';
 }
 
+/* ⚠️⚠️ **2026-10-31 — 이 함수를 부르는 자리가 없습니다.** 창업 · 폐업
+   기록 칸(상황 · 업종 · 지역 · 평수 고르개)을 화면에서 내리면서
+   `onchange="myPut()"` 도 같이 없어졌습니다.
+   ⚠️ 지우지 않고 **칸이 없으면 조용히 돌아가게** 두었습니다 — 그대로
+   두면 `$("my-side")` 가 null 이라 **누군가 부르는 날 그 자리에서
+   던지고 화면이 통째로 안 그려집니다.** 칸을 되살리시면 아무것도
+   안 고치고 다시 돕니다. */
 window.myPut = function(){
+  var sd = $("my-side"), id2 = $("my-ind"), rg = $("my-reg"), py = $("my-py");
+  if(!sd || !id2 || !rg || !py) return;
   amSet(MKEY, {
-    side: $("my-side").value, industry: $("my-ind").value,
-    region: $("my-reg").value, gu:"", pyeong: $("my-py").value.trim(), dday:""
+    side: sd.value, industry: id2.value,
+    region: rg.value, gu:"", pyeong: py.value.trim(), dday:""
   });
   rerender(true);
 };

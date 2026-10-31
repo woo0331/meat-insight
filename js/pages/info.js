@@ -621,8 +621,11 @@ function PageFaq(){
         title:"아직 정리된 문답이 없습니다",
         text:"궁금한 것을 견적 요청에 적어 주시면 답해 드리고, 자주 나오는 것은 "+
              "여기에 정리해 둡니다.",
-        cta:'<a class="btn btn-b" href="/quote">견적 요청하기</a>'+
-            '<a class="btn btn-o" href="/about">소개 보기</a>'
+        /* ⚠️ 2026-10-31 — 전에는 `/quote`(견적 요청) · `/about`(소개)
+           이었습니다. 뒤엣것은 창업 · 폐업 소개라 지금 308 로 `/` 에
+           갑니다 — 지금 실제로 열리는 곳으로 보냅니다. */
+        cta:'<a class="btn btn-b" href="/sell">내 폰 팔기</a>'+
+            '<a class="btn btn-o" href="/guide">이용 안내</a>'
       })+
     '</div></section>';
 
@@ -670,8 +673,9 @@ function PageFaq(){
        실제로 되는 것을 냅니다. */
     '<p class="note note-mid">여기 없는 것이 궁금하시면 요청에 그대로 적어 주세요.</p>'+
     '<div class="row-cta row-mid">'+
-      '<a class="btn btn-b btn-lg" href="/quote">견적 요청하기'+icon("arrow",18)+'</a>'+
-      '<a class="btn btn-o btn-lg" href="/about">소개 보기</a>'+
+      /* ⚠️ 2026-10-31 — 위 ⚠️ 와 같은 까닭입니다 */
+      '<a class="btn btn-b btn-lg" href="/sell">내 폰 팔기'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-o btn-lg" href="/guide">이용 안내</a>'+
     '</div>'+
   '</div></section>';
 }

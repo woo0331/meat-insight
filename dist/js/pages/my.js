@@ -843,71 +843,20 @@ function PageMy(){
   MyPwBand()+
   '<section class="sec sec-white"><div class="w">'+
 
-    '<details class="my-biz"><summary><b>창업 · 폐업 기록</b>'+
-      '<span>앞서 쓰시던 상황 · 업종 · 저장한 업체 · 받은 제안</span></summary>'+
-    '<div class="my-set">'+
-      '<div class="f-r"><label for="my-side">상황</label>'+
-        '<select class="sel" id="my-side" onchange="myPut()">'+
-          '<option value=""'+(!p.side?" selected":"")+'>고르지 않음</option>'+
-          '<option value="start"'+(p.side==="start"?" selected":"")+'>창업 준비중</option>'+
-          '<option value="close"'+(p.side==="close"?" selected":"")+'>폐업 준비중</option>'+
-        '</select></div>'+
-      '<div class="f-r"><label for="my-ind">업종</label>'+
-        IndustrySelect("my-ind", p.industry, "myPut()")+'</div>'+
-      '<div class="f-r"><label for="my-reg">지역</label>'+
-        RegionSelect("my-reg", p.region, "myPut()")+'</div>'+
-      '<div class="f-r"><label for="my-py">평수</label>'+
-        '<input id="my-py" inputmode="numeric" value="'+esc(p.pyeong||"")+'" '+
-        'onchange="myPut()" placeholder="예: 30"></div>'+
-    '</div>'+
-
-    (p.side && ind
-      ? '<div class="my-next"><h2>'+esc(ind.name)+' '+
-          (p.side==="close"?"정리":"창업")+'에 필요한 것</h2>'+
-          '<div class="cat-g cat-g4">'+
-            amCatsFor(p.industry, p.side==="close"?"close":"start").slice(0,8)
-              .map(function(c){ return CatCard(c, p.industry); }).join("")+
-          '</div>'+
-          '<div class="row-cta">'+
-            '<a class="btn btn-b" href="'+esc(p.side==="close"?("/closure/"+p.industry):("/startup/"+p.industry))+'">'+
-              '전부 보기'+icon("arrow",16)+'</a>'+
-            '<a class="btn btn-o" href="'+esc(quoteTo({industry:p.industry,region:p.region,side:p.side}))+'">'+
-              '견적 요청</a>'+
-          '</div></div>'
-      : Empty({
-          icon:"user",
-          title:"상황과 업종을 고르시면",
-          text:"그 업종에 실제로 필요한 것만 여기 모아 드립니다.",
-          cta:'<a class="btn btn-b" href="/startup">창업 시작하기'+icon("arrow",16)+'</a>'+
-              '<a class="btn btn-o" href="/closure">폐업 시작하기</a>'
-        }))+
-
-    MySaved()+
-
-    MyTools()+
-
-    '<div class="my-next"><h2>받은 제안</h2>'+
-      (qs.length
-        ? '<p class="lead">'+qs.length+'건을 적어 두셨습니다.</p>'+
-          '<div class="row-cta"><a class="btn btn-o" href="/quote">비교 화면으로</a></div>'
-
-        : '<p class="lead">아직 적어 두신 제안이 없습니다. 견적을 받으시면 '+
-          '나란히 놓고 보실 수 있습니다.</p>'+
-          '<div class="row-cta"><a class="btn btn-o" href="/quote">'+
-            '제안 비교 화면 열기</a></div>')+
-    '</div>'+
-
-    '</details>'+
-
+    '<h2>이 브라우저에 남은 기록</h2>'+
+    '<p class="lead">고르신 기기 · 적어 두신 숫자 · 앞서 쓰시던 기록이 '+
+      '<b>이 브라우저 안에만</b> 남아 있습니다. 저희 서버로는 보내지 않습니다.</p>'+
     '<div class="row-cta"><button class="btn btn-o" type="button" onclick="myClear()">'+
       '내 기록 전부 지우기</button></div>'+
   '</div></section>';
 }
 
 window.myPut = function(){
+  var sd = $("my-side"), id2 = $("my-ind"), rg = $("my-reg"), py = $("my-py");
+  if(!sd || !id2 || !rg || !py) return;
   amSet(MKEY, {
-    side: $("my-side").value, industry: $("my-ind").value,
-    region: $("my-reg").value, gu:"", pyeong: $("my-py").value.trim(), dday:""
+    side: sd.value, industry: id2.value,
+    region: rg.value, gu:"", pyeong: py.value.trim(), dday:""
   });
   rerender(true);
 };

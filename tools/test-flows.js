@@ -51,18 +51,20 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
 
  console.log("\n【1】 창업 → 업종 → 신규창업 → 로드맵 → 상세");
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- /* ⚠️⚠️ **2026-10-29 PHONEWAY — 메인에 창업 진입 카드가 없습니다.**
-    메인이 중고폰 거래로 바뀌면서 창업 · 폐업 157개 화면으로 가는 길이
-    **푸터 맨 아랫줄 한 줄**만 남았습니다 (`chrome.js` 의 `tail`).
-    그게 지금 손님이 실제로 지나는 길이라 거기서 들어갑니다 —
-    ⚠️ 그 줄을 지우면 157개가 사이트 안에서 길을 잃고 이 블록이
-    통째로 터집니다 (`check.js` 의 "창업 · 폐업 영역이 사이트 안에서
-    길을 잃지 않았다" 가 그 줄을 따로 봅니다).
-    ⚠️⚠️ 0단계 ① 로 그 157개를 **410 으로 닫거나 redirect** 하기로
-    정하시면, 그날 이 블록(【1】 【2】 【3】)과 【6】 【7】 【8】 【9】 도
-    같이 내리세요 — 없는 화면을 누르면 타임아웃으로 터집니다. */
- await click('.ft a[href="/startup"]');
- say((await url())==="/startup","푸터 창업 · 폐업 서비스 → /startup",await url());
+ /* ⚠️⚠️ **2026-10-31 — 푸터의 창업 · 폐업 가교가 없어졌습니다**
+    (사장님 지시 · 그 157개는 `vercel.json` 이 308 로 `/` 에 보냅니다).
+    전에는 여기서 `click('.ft a[href="/startup"]')` 로 들어갔는데,
+    **없는 요소를 click 하면 타임아웃으로 터지고 뒤 블록이 통째로 안
+    돕니다** — 어느 검사가 틀렸는지도 안 나옵니다 (이 저장소의 단골).
+
+    ⚠️⚠️ **블록을 지우지 않고 `goto` 로 바꿨습니다.** 코드 · 데이터가
+    그대로 살아 있고 되살리실 수 있어서, 그 쪽이 **아직 멀쩡한지**는
+    계속 봐야 합니다 — 다만 지금은 **손님이 지나는 길이 아닙니다**
+    (제 서버에는 redirect 가 없어서 주소로 바로 열립니다).
+    ⚠️ 되살리시는 날 이 둘을 `click('.ft a[href="/startup"]')` 로
+    되돌리세요. */
+ await pg.goto(B+"/startup",{waitUntil:"networkidle"});
+ say((await url())==="/startup","창업 준비 화면이 그대로 열린다 (308 뒤라 손님은 안 지납니다)",await url());
  /* ⚠️⚠️ **2026-10-17 창업 준비 §2 로 업종 고르개가 접혔습니다.**
     주인공이 **서비스 고르기**(§2-B)이고, 고르는 격자 둘이 나란히 있으면
     "같은 선택 영역의 반복" 입니다 (§11). 길은 그대로이고 **한 번 더
@@ -215,13 +217,13 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.ft a[href="/join"]');
  say((await url())==="/join","푸터 매입업체 입점 → 신청 화면",await url());
 
- /* ── ② 창업 · 폐업 157개 — 푸터 한 줄로 들어갑니다 ───────────── */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.ft a[href="/g/startup"]');
- say((await url())==="/g/startup","푸터 사업 단계별 서비스 → /g/startup",await url());
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.ft a[href="/startup"]');
- say((await url())==="/startup","푸터 창업 · 폐업 서비스 → /startup",await url());
+ /* ── ② 창업 · 폐업 157개 — ⚠️ 2026-10-31 로 **푸터 가교가 없어졌습니다**
+    (바로 위 【1】 의 ⚠️⚠️ 와 같은 까닭). 주소로 바로 엽니다 — 코드가
+    아직 멀쩡한지는 계속 보고, 다만 손님이 지나는 길은 아닙니다. */
+ await pg.goto(B+"/g/startup",{waitUntil:"networkidle"});
+ say((await url())==="/g/startup","사업 단계 화면이 그대로 열린다",await url());
+ await pg.goto(B+"/startup",{waitUntil:"networkidle"});
+ say((await url())==="/startup","창업 준비 화면이 그대로 열린다",await url());
  /* 거기서 계산도구 · 정보센터 · 나머지 전문관이 이어지는가 */
  await click('#view a[href="/tools"]');
  say((await url())==="/tools","창업 준비 → 계산도구 목록",await url());

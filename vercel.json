@@ -2,15 +2,186 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
-    { "source": "/home", "destination": "/", "permanent": true },
-    { "source": "/closing", "destination": "/closure", "permanent": true },
-    { "source": "/acquisition", "destination": "/transfer", "permanent": true },
-    { "source": "/companies", "destination": "/providers", "permanent": true },
-    { "source": "/companies/sample-interior", "destination": "/sample", "permanent": true },
-    { "source": "/companies/:cat", "destination": "/providers/:cat", "permanent": true },
-    { "source": "/guides", "destination": "/content", "permanent": true },
-    { "source": "/guides/:slug", "destination": "/content", "permanent": true },
-    { "source": "/partners", "destination": "/join", "permanent": true }
+    {
+      "source": "/home",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/closing",
+      "destination": "/closure",
+      "permanent": true
+    },
+    {
+      "source": "/acquisition",
+      "destination": "/transfer",
+      "permanent": true
+    },
+    {
+      "source": "/companies",
+      "destination": "/providers",
+      "permanent": true
+    },
+    {
+      "source": "/companies/sample-interior",
+      "destination": "/sample",
+      "permanent": true
+    },
+    {
+      "source": "/companies/:cat",
+      "destination": "/providers/:cat",
+      "permanent": true
+    },
+    {
+      "source": "/guides",
+      "destination": "/content",
+      "permanent": true
+    },
+    {
+      "source": "/guides/:slug",
+      "destination": "/content",
+      "permanent": true
+    },
+    {
+      "source": "/partners",
+      "destination": "/join",
+      "permanent": true
+    },
+    {
+      "source": "/startup",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/closure",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/operation",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/transfer",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/providers",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/franchise",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/stores",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/assets",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/support",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/content",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sell-biz",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/tools",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/startup/:p*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/closure/:p*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/providers/:p*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/franchise/:p*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/content/:p*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/tools/:p*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/g/:p*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/c/:p*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/p/:p*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/f/:p*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/s/:p*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/a/:p*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/about",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/compare",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sample",
+      "destination": "/",
+      "permanent": true
+    }
   ],
   "rewrites": [],
   "headers": [

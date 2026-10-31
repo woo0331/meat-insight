@@ -211,10 +211,7 @@ function Footer(){
                    ["/terms","이용약관"],["/privacy","개인정보처리방침"]]]
   ];
 
-  var tail = [["/search","통합검색"],["/my","내 기록"],
-              ["/startup","창업 · 폐업 서비스"],
-
-              ["/g/startup","사업 단계별 서비스"]];
+  var tail = [["/search","통합검색"],["/my","내 기록"]];
 
   return '<footer class="ft"><div class="w">'+
     '<div class="ft-g">'+

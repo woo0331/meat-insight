@@ -1471,9 +1471,15 @@ const AUDIT = `(() => {
     }
     return true;`);
 
-  await f("검색이 도구와 여정도 찾는다", "/search", `
-    /* 지시서 §22 — 업체 · 정보 · 서비스 · 매물 · 도구로 구분합니다.
-       ⚠️ 색인에 없으면 메인에서만 갈 수 있는 화면이 됩니다. */
+  await f("검색이 서비스 화면도 찾는다", "/search", `
+    /* ⚠️ 색인에 없으면 메인에서만 갈 수 있는 화면이 됩니다 — 손님은
+       화면 이름을 모르고 **하려는 일**을 칩니다.
+       ⚠️⚠️ **2026-10-31 로 재는 자리를 옮겼습니다.** 전에는 도구
+       (손익분기 · 창업비)와 여정(인수 · 운영)으로 봤는데, 그 157개가
+       308 로 메인에 가면서 색인에서 내려갔습니다 — 지키려는 것은
+       낱말이 아니라 **사이트가 하는 일을 쳤을 때 그 화면이 나오는
+       것**이라, 지금 하는 일(중고폰)로 봅니다.
+       ⚠️ 색인을 되살리시면 그날 도구 · 여정 줄도 같이 되살리세요. */
     const find = function(q, to){
       const R = window.amSearch(q);
       if(!R || !R.groups) return null;
@@ -1481,13 +1487,15 @@ const AUDIT = `(() => {
         if(r.to === to) return g.name;
       return null;
     };
-    if(!find("손익분기", "/tools/bep")) return "'손익분기' 로 도구가 안 나옵니다";
-    if(!find("창업비", "/tools/cost")) return "'창업비' 로 도구가 안 나옵니다";
-    if(!find("인수", "/transfer")) return "'인수' 로 인수 · 양도 화면이 안 나옵니다";
-    if(!find("운영", "/operation")) return "'운영' 으로 매장 운영 화면이 안 나옵니다";
-    /* 도구는 자기 묶음으로 갈립니다 */
-    if(find("손익분기", "/tools/bep") !== "도구")
-      return "도구가 '도구' 묶음이 아니라 다른 묶음에 들어갑니다";
+    /* ⚠️⚠️ 이 넷은 **쳐 보고** 골랐습니다 (메인 추천 검색어 넷이 전부
+       0건이던 자리입니다). 더하실 때도 쳐 보세요. */
+    if(!find("중고폰", "/shop")) return "'중고폰' 으로 구매 화면이 안 나옵니다";
+    if(!find("액정 수리", "/repair")) return "'액정 수리' 로 수리 화면이 안 나옵니다";
+    if(!find("경쟁입찰", "/bid")) return "'경쟁입찰' 로 입찰 화면이 안 나옵니다";
+    if(!find("수출", "/biz")) return "'수출' 로 기업 · 수출 화면이 안 나옵니다";
+    /* 화면은 자기 묶음으로 갈립니다 */
+    if(find("액정 수리", "/repair") !== "폰웨이 서비스")
+      return "서비스 화면이 제 묶음이 아니라 다른 묶음에 들어갑니다";
     return true;`);
 
   await f("저장한 업체가 MY 로 이어진다", "/my", `
@@ -1700,14 +1708,17 @@ const AUDIT = `(() => {
       { key:"zz-no", side:"start", name:"검사용 공고 B", org:"기관",
         asOf:"2026-10-01" });
     const got = window.amSupports().map(function(x){ return x.key; });
-    const inSearch = JSON.stringify(window.amSearch("검사용 공고"));
     window.AM_SUPPORTS = window.AM_SUPPORTS.filter(function(x){
       return x.key.indexOf("zz-") !== 0; });
     let why = true;
     if(got.indexOf("zz-ok") < 0) why = "원문 있는 공고가 안 나옵니다";
     else if(got.indexOf("zz-no") >= 0) why = "원문 없는 공고가 나옵니다";
-    else if(inSearch.indexOf("검사용 공고 A") < 0) why = "공고가 검색에 안 걸립니다";
-    else if(inSearch.indexOf("검사용 공고 B") >= 0) why = "원문 없는 공고가 검색에만 나옵니다";
+    /* ⚠️⚠️ **검색 쪽 두 줄을 걷어냈습니다** (2026-10-31). 공고를
+       검색에서 찾는지도 같이 봤는데, 창업 · 폐업 색인이 꺼지면서
+       (지원사업 화면이 308 로 메인에 갑니다) 그 둘이 **되돌리기 전부터
+       실패**했습니다. 지키려는 것은 절대 규칙 1 — **원문 없는 공고를
+       화면에 내지 않는 것**이고, 그건 amSupports() 가 거릅니다.
+       ⚠️ 색인을 되살리시면 그날 그 두 줄도 같이 되살리세요. */
     return why;`);
   await f("가격은 10건 이상 · 기준일 있는 것만 낸다", "/", `
     /* ⚠️ 칸 이름은 market.js 의 생김새 그대로 key 입니다 — 검사가
@@ -2495,38 +2506,42 @@ const AUDIT = `(() => {
        · 폐업 쪽이 **빨강으로 흘러가지 않는 것** (그 순간 옛 걱정이
          그대로 돌아옵니다 — 이 저장소가 여러 곳에 못박아 둔 것입니다)
        · 두 쪽의 **크기와 무게가 같은 것** (위 히어로 검사가 봅니다) */
-  await f("창업 · 폐업 영역이 사이트 안에서 길을 잃지 않았다", "/", `
-    /* ⚠️⚠️ **2026-10-29 PHONEWAY 전환 — 157개 화면이 고아가 되는 것을
-       막는 검사입니다.** 헤더 · 메인이 중고폰 거래로 바뀌면서 창업 ·
-       폐업 쪽으로 가는 길이 거기서 **통째로 없어졌습니다.** 그런데 그
-       157개는 아직 살아 있고 **이미 색인돼 있습니다** — 길만 끊으면
-       검색과 북마크로는 들어오는데 사이트 안에서는 아무 데서도 안
-       걸리는 꼴이고, 이 저장소가 "/g/:stage" 여섯으로 겪은 그 자리입니다.
+  /* ⚠️⚠️ **2026-10-31 — 이 검사가 뒤집혔습니다** (사장님 지시 —
+     "인수인계 자료들은 다 지워줘" · 범위는 "화면에서 내리고 주소는
+     308 로 살림").
 
-       지금은 **푸터 맨 아랫줄 한 줄**이 그 입구입니다 (161개 화면
-       전부에 있습니다). 그 한 줄을 지우면 여기서 걸립니다.
+     전에는 **"창업 · 폐업으로 가는 길이 한 곳은 남아야 한다"** 였습니다.
+     그 까닭은 157개가 색인돼 있는데 사이트 안에서 길을 잃으면 안
+     된다는 것이었고, 푸터 맨 아랫줄 두 줄이 그 입구였습니다.
 
-       ⚠️⚠️ **내리기로 정하셨으면**(전환 계획 0단계 ①) 순서가 있습니다 —
-       ① "vercel.json" 에 redirect(또는 410)를 먼저 넣고 ② 주소를
-       "tools/urls.json" 에서 빼고 ③ 그 다음에 이 검사와 짝 검사 셋
-       ("/startup" 에서 재는 것들)을 같이 치웁니다. 거꾸로 하면
-       색인이 깨집니다. */
-    const H = [].slice.call(document.querySelectorAll("a[href]"))
-      .map(function(a){ return (a.getAttribute("href") || "").split("?")[0]; });
-    /* 입구 하나로 충분합니다 — /startup 이 그쪽 전체를 다시 엽니다 */
-    const ENTRY = ["/startup", "/closure", "/operation", "/transfer"];
-    if(!ENTRY.some(function(u){ return H.indexOf(u) >= 0; }))
-      return "창업 · 폐업 영역으로 가는 길이 한 곳도 없습니다 — " +
-             ENTRY.join(" · ") + " 중 하나는 남아야 합니다 " +
-             "(157개 화면이 색인돼 있습니다)";
-    /* ⚠️⚠️ **사업 단계 여섯은 입구가 따로입니다.** 재 보니 전문관 네
-       화면 어디에도 /g/ 링크가 없고, /g/startup 에서 앞뒤 카드로
-       여섯이 서로 이어집니다 — 그 입구 한 줄이 끊기면 여섯이 통째로
-       길을 잃습니다 (색인은 되어 있는 채로). */
-    const g6 = (window.AM_STAGES || []).map(function(x){ return "/g/" + x.key; });
-    if(g6.length && !g6.some(function(u){ return H.indexOf(u) >= 0; }))
-      return "사업 단계 여섯으로 가는 길이 한 곳도 없습니다 — " +
-             g6[0] + " 하나만 남아도 나머지는 앞뒤 카드로 이어집니다";
+     지금은 **`vercel.json` 이 그 157개를 308 로 `/` 에 보냅니다.**
+     그래서 화면에 길을 남겨 두면 손님이 눌러도 메인으로 튕기고,
+     그건 **링크가 고장난 것**으로 읽힙니다 — 지켜야 하는 것이
+     반대가 됐습니다.
+
+     ⚠️⚠️ **되살리시려면 셋을 같이 되돌리세요** — ① `vercel.json` 맨
+     뒤 redirect 스물일곱 ② `js/app.js` 의 색인 제외 접두사
+     ③ 이 검사. 하나만 되돌리면 길은 있는데 308 이 먼저 걸리거나,
+     길이 없는데 검사만 통과합니다.
+
+     ⚠️ 여기서 재는 것은 **메인과 머리 · 꼬리 · 아래 네비**입니다
+     (푸터는 180개 화면이 같이 쓰므로 한 번 재면 전부 덮습니다).
+     나머지 공통 화면은 바로 아래 짝 검사가 `/quote` 에서 봅니다 —
+     거기가 실제로 걸렸던 자리입니다. */
+  await f("창업 · 폐업으로 가는 길이 화면에 없다", "/", `
+    const LEG = /^\\/(startup|closure|operation|transfer|providers|franchise|stores|assets|support|content|sell-biz|tools|g\\/|c\\/|p\\/|f\\/|s\\/|a\\/)(\\/|$)/;
+    const bad = [].slice.call(document.querySelectorAll("a[href]"))
+      .map(function(a){ return (a.getAttribute("href") || "").split("?")[0].split("#")[0]; })
+      .filter(function(h){ return LEG.test(h); });
+    if(bad.length)
+      return "창업 · 폐업으로 가는 링크가 " + bad.length + "건 남았습니다 — " +
+             bad.slice(0, 6).join(" · ") +
+             " (그 주소는 308 로 / 에 갑니다 — 누르면 메인으로 튕깁니다)";
+    /* ⚠️ 푸터가 실제로 그려져 있는지도 봅니다 — 푸터가 아예 없으면
+       링크 0건이 **당연해져서** 이 검사가 아무것도 안 보게 됩니다
+       (0건을 세는 검사의 단골 함정입니다). */
+    if(!document.querySelector(".ft a[href]"))
+      return "푸터가 안 그려졌습니다 — 링크 0건이 저절로 통과합니다";
     return true;`);
 
   await f("안내 배너 셋의 무게가 같고 흰 글자가 읽히는 면이다", "/", `

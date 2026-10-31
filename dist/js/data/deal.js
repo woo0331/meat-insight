@@ -253,7 +253,10 @@ window.AM_SIDES = [
     say:"기업 · 수출 — 대량 매입 · 해외 수출 문의" },
 
   { key:"repair",   name:"중고폰 · 수리",    short:"수리",   pick:"/repair", pw:true,
-    say:"수리 — 쓰던 기기를 고치려고 합니다" }
+    say:"수리 — 쓰던 기기를 고치려고 합니다" },
+
+  { key:"shop",     name:"중고폰 · 구매",    short:"구매",   pick:"/shop", pw:true,
+    say:"중고폰 — 사려고 합니다" }
 ];
 
 window.AM_QUOTE_LABELS = {

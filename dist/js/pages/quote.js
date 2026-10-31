@@ -129,7 +129,8 @@ function quoteServices(){
 
 function quotePickBack(side){
   var s = (typeof amSide === "function") ? amSide(side) : null;
-  return (s && s.pick) ? s.pick : "/startup#pick";
+
+  return (s && s.pick) ? s.pick : "/sell";
 }
 
 function QuoteSvcStep(list, side){
@@ -263,7 +264,8 @@ function PageQuote(){
   var list = quoteServices();
   var cat  = nowQS("c"), sub = nowQS("s");
   var ind  = nowQS("i"), reg = nowQS("r");
-  var side = nowQS("side") || "start";
+
+  var side = nowQS("side") || "shop";
 
   var bud  = nowQS("bud"), when = nowQS("when");
 
@@ -291,10 +293,13 @@ function PageQuote(){
     QuoteStage()+
     (ready ? "" :
       '<div class="notice-bad"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
+
         '<p>접수처 설정이 끝나면 바로 열립니다. 그동안에는 '+
-        '<a href="/providers">업체찾기</a>에서 분야를 보시거나, '+
-        '<a href="/content">창업 · 폐업 정보</a>에서 무엇을 확인해야 하는지 '+
-        '먼저 보실 수 있습니다.</p></div>')+
+        '아래에서 지금 되는 것을 보실 수 있습니다.</p>'+
+        '<div class="row-cta">'+
+          '<a class="btn btn-o" href="/sell">내 폰 팔기</a>'+
+          '<a class="btn btn-o" href="/guide">이용 안내</a>'+
+        '</div></div>')+
     QuoteOfferBand()+
 
     '<form id="q-f" onsubmit="return quoteSend(event)">'+
@@ -314,9 +319,11 @@ function PageQuote(){
           '<div class="f-r"><label for="q-side">무엇 때문에 <b>*</b></label>'+
             '<select class="sel" id="q-side">'+
 
-              (window.AM_SIDES || []).filter(function(s){ return !s.pw; }).map(function(s){
+              (window.AM_SIDES || []).filter(function(s){
+                return s.pw || s.key === side;
+              }).map(function(s){
                 return '<option value="'+esc(s.key)+'"'+
-                  ((side === s.key || (!side && s.key === "start")) ? " selected" : "")+
+                  ((side === s.key || (!side && s.key === "shop")) ? " selected" : "")+
                   '>'+esc(s.say)+'</option>';
               }).join("")+
             '</select></div>'+

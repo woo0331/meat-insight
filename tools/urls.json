@@ -1,6 +1,6 @@
 {
   "note": "있던 주소가 사라지지 않았는지 빌드가 맞춰 보는 목록입니다. 손으로 지우지 마세요 — build-pages.js 의 checkKeepUrls() 주석을 보세요.",
-  "at": "2026-10-30",
+  "at": "2026-10-31",
   "routes": [
     "/",
     "/about",
@@ -186,12 +186,36 @@
   ],
   "redirects": [
     [
+      "/a/:p*",
+      "/"
+    ],
+    [
+      "/about",
+      "/"
+    ],
+    [
       "/acquisition",
       "/transfer"
     ],
     [
+      "/assets",
+      "/"
+    ],
+    [
+      "/c/:p*",
+      "/"
+    ],
+    [
       "/closing",
       "/closure"
+    ],
+    [
+      "/closure",
+      "/"
+    ],
+    [
+      "/closure/:p*",
+      "/"
     ],
     [
       "/companies",
@@ -206,6 +230,34 @@
       "/sample"
     ],
     [
+      "/compare",
+      "/"
+    ],
+    [
+      "/content",
+      "/"
+    ],
+    [
+      "/content/:p*",
+      "/"
+    ],
+    [
+      "/f/:p*",
+      "/"
+    ],
+    [
+      "/franchise",
+      "/"
+    ],
+    [
+      "/franchise/:p*",
+      "/"
+    ],
+    [
+      "/g/:p*",
+      "/"
+    ],
+    [
       "/guides",
       "/content"
     ],
@@ -218,8 +270,64 @@
       "/"
     ],
     [
+      "/operation",
+      "/"
+    ],
+    [
+      "/p/:p*",
+      "/"
+    ],
+    [
       "/partners",
       "/join"
+    ],
+    [
+      "/providers",
+      "/"
+    ],
+    [
+      "/providers/:p*",
+      "/"
+    ],
+    [
+      "/s/:p*",
+      "/"
+    ],
+    [
+      "/sample",
+      "/"
+    ],
+    [
+      "/sell-biz",
+      "/"
+    ],
+    [
+      "/startup",
+      "/"
+    ],
+    [
+      "/startup/:p*",
+      "/"
+    ],
+    [
+      "/stores",
+      "/"
+    ],
+    [
+      "/support",
+      "/"
+    ],
+    [
+      "/tools",
+      "/"
+    ],
+    [
+      "/tools/:p*",
+      "/"
+    ],
+    [
+      "/transfer",
+      "/"
     ]
   ]
 }

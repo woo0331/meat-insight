@@ -174,8 +174,63 @@ var META = {
    ⚠️ `/sell-biz` 는 창업 · 폐업 매물 폼이고 **옛 `/sell` 의 내용**
    입니다. 색인에 새로 올리지 않습니다 — 주소는 그대로 열리고
    창업 · 폐업 쪽 링크가 거기로 갑니다 (지운 것이 아닙니다). */
+/* ⚠️⚠️ **`/about` 은 2026-10-31 에 더했습니다.** 그 화면은 창업 · 폐업
+   소개(2,266자 · "가게 하나를 열고 닫는 데…")라 지금 308 로 `/` 에
+   갑니다 — sitemap 에 두면 구글에게 **"크롤해라" 와 "옮겼다" 를 같이**
+   말하는 꼴입니다.
+   ⚠️ `/compare` · `/sample` 도 같은 날 308 에 들어갔고 **전부터 여기
+   있었습니다** (결과 화면 · 지어낸 업체 예시).
+   ⚠️⚠️ **아래 배열 안에 주석을 넣지 마세요.** 전수 점검이 그 선언을
+   글자로 찾아 여는 꺾쇠부터 닫는 꺾쇠까지를 떼어 **JSON 으로 바로
+   읽습니다** — 주석을 넣는 순간 거기서 "읽지 못했습니다" 로 멈춥니다
+   (실제로 한 번 빠졌습니다). 중첩 괄호도 안 됩니다.
+   ⚠️⚠️ **그 선언 이름을 주석에 글자로 적지도 마세요.** 찾는 코드가
+   **주석 쪽을 먼저 맞혀** 여기 적힌 꺾쇠를 배열로 읽습니다 — 이
+   저장소가 화면 표시(`main` 칸)를 주석에 적어 스크립트 서른둘을
+   통째로 삼킨 그 자리이고, 여기서도 **한 번 더** 빠졌습니다. */
 var NOINDEX = ["/my","/search","/quote","/compare","/sample",
-               "/track","/sell-biz"];
+               "/track","/sell-biz","/about"];
+
+/* ⚠️⚠️ **창업 · 폐업 쪽 157개는 2026-10-31 로 색인에서 뺐습니다**
+   (사장님 지시 — "인수인계 자료들은 다 지워줘" · 범위는 "화면에서
+   내리고 주소는 308 로 살림" 을 고르셨습니다).
+
+   `vercel.json` 의 redirects 가 그 157개를 **308 로 `/` 에** 보냅니다.
+   그런데 sitemap 이 그 주소를 계속 내면 구글에게 **"크롤해라" 와
+   "옮겼다" 를 같이** 말하는 꼴이고, sitemaps.org 와 구글 둘 다
+   리다이렉트하는 주소를 sitemap 에 올리지 말라고 적어 두었습니다.
+
+   ⚠️⚠️ **HTML 생성은 일부러 그대로 둡니다.** `allRoutes()` 에서 빼면
+   가드 넷(`checkProcess` · `checkHalls` · `checkSvcPage` ·
+   `checkOffers`)이 데이터의 `to` 주소를 거기서 찾기 때문에 **빌드가
+   멈춥니다** — 코드 · 데이터를 살려 두기로 한 범위라 그쪽을 손대지
+   않았습니다. 만들어 둔 HTML 은 308 이 먼저 걸려 **아무도 받지
+   않습니다.**
+
+   ⚠️ 되돌리시려면 **이 배열을 비우고** `vercel.json` 맨 뒤의
+   redirect 스물넷을 지우면 전과 똑같습니다.
+
+   ⚠️⚠️ **위 `NOINDEX` 와 꼴을 합치지 마세요.** `check.js` 가
+   `var NOINDEX` 의 **납작한 배열**을 글자로 읽어 갑니다 — 꼴을 바꾸면
+   거기서 "읽지 못했습니다" 로 멈춥니다. 그래서 접두사는 따로 둡니다. */
+var NOINDEX_PRE = ["/startup", "/closure", "/operation", "/transfer",
+                   "/providers", "/franchise", "/stores", "/assets",
+                   "/support", "/content", "/tools",
+                   "/g/", "/c/", "/p/", "/f/", "/s/", "/a/"];
+
+/* 정확히 일치하거나 접두사로 걸리면 색인에서 뺍니다.
+   ⚠️ 접두사는 `/tools` 처럼 그 자체와 `/tools/...` 를 **둘 다** 봅니다 —
+   `/track` · `/terms` 는 `/t` 가 아니라 온전한 토막으로 견주므로
+   걸리지 않습니다 (재서 확인했습니다). */
+function amNoIndex(p2){
+  if(NOINDEX.indexOf(p2) >= 0) return true;
+  for(var i = 0; i < NOINDEX_PRE.length; i++){
+    var k = NOINDEX_PRE[i];
+    if(k.slice(-1) === "/"){ if(p2.indexOf(k) === 0) return true; }
+    else if(p2 === k || p2.indexOf(k + "/") === 0) return true;
+  }
+  return false;
+}
 
 /* ⚠️⚠️ **업체 · 브랜드 상세의 설명을 등록값으로 만듭니다.**
    전에는 `pv.intro` 한 줄을 그대로 썼습니다 — 소개가 짧으면 검색 결과에
@@ -246,7 +301,7 @@ function asDesc(a){
 
 window.routeInfo = function(path){
   var r = { ok:true, title:"", desc:"", canon:null,
-            noindex: NOINDEX.indexOf(path) >= 0, view:null };
+            noindex: amNoIndex(path), view:null };
   if(META[path]){ r.title = META[path][0]; r.desc = META[path][1]; }
 
   var VIEW = {

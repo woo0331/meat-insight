@@ -26,7 +26,7 @@ function PageSearch(){
   '<section class="sec sec-white"><div class="w">'+
     '<form class="sb" onsubmit="return searchGo(event)">'+
       '<span class="sb-ic" aria-hidden="true">'+icon("search",20)+'</span>'+
-      '<input id="sb-q" value="'+esc(q)+'" placeholder="카페 인테리어 · 안양 철거 · 미용실 POS · 카페 양도" '+
+      '<input id="sb-q" value="'+esc(q)+'" placeholder="아이폰 15 · 갤럭시 S24 · 액정 수리 · 아이패드" '+
         'aria-label="검색어">'+
       '<button class="btn btn-b" type="submit">검색</button>'+
     '</form>'+
@@ -46,14 +46,19 @@ function PageSearch(){
           text:"다른 말로 찾아 보시거나, 필요한 일을 그대로 적어서 물어보세요. "+
                "분류에 없는 일도 찾아 드립니다.",
           cta:'<a class="btn btn-b" href="/quote">그대로 적어서 물어보기'+icon("arrow",16)+'</a>'+
-              '<a class="btn btn-o" href="/providers">분류로 찾기</a>'
+              '<a class="btn btn-o" href="/shop">중고폰 둘러보기</a>'
         })))+
   '</div></section>';
 }
 
 function SearchHints(){
-  var eg = ["카페 인테리어","안양 철거","미용실 POS","음식점 주방설비",
-            "카페 양도","원상복구","폐업신고","권리금","세무사"];
+  /* ⚠️⚠️ **아홉 다 쳐 보고 골랐습니다** (2026-10-31). 전에는 창업 · 폐업
+     말("카페 인테리어" · "원상복구" · "권리금")이었는데, 그쪽 색인을
+     끄면서 **추천해 둔 말이 전부 0건**이 될 자리였습니다 — 이 저장소가
+     메인 추천 검색어 넷으로 겪은 그 자리입니다.
+     ⚠️ 바꾸실 때는 **반드시 쳐 보세요** (건수는 아래 주석에). */
+  var eg = ["아이폰 15","갤럭시 S24","중고폰","아이패드",
+            "애플워치","액정 수리","배터리 교체","택배 수거","경쟁입찰"];
   return '<div class="sr-hint"><b>이렇게 찾아 보세요</b><ul class="chip-g">'+
     eg.map(function(t){
       return '<li><a class="chip" href="/search?q='+encodeURIComponent(t)+'">'+esc(t)+'</a></li>';
@@ -183,13 +188,38 @@ window.amSearch = function(q){
     { to:"/shop",  kw:"중고폰 구매 구입 사기 쇼핑몰 상품 중고 리퍼" },
     { to:"/bid",   kw:"경쟁입찰 입찰 최고가 견적비교 여러곳 비교 중고폰" },
     { to:"/track", kw:"진행 조회 접수번호 상태확인 어디까지 배송 입금" },
-    { to:"/guide", kw:"이용안내 택배 발송 보내는법 절차 등급기준 초기화 개인정보 삭제 중고폰" }
+    { to:"/guide", kw:"이용안내 택배 발송 보내는법 절차 등급기준 초기화 개인정보 삭제 중고폰" },
+    /* ⚠️⚠️ **둘이 빠져 있었습니다** (2026-10-31 에 쳐 보고 알았습니다).
+       화면은 2026-10-30 에 생겼는데 여기 안 넣어서 **"액정 수리" ·
+       "기업 매입" 이 0건**이었고, `/sell` 의 자리글이 "액정 수리" 를
+       추천하고 있었으니 **그 자리글이 거짓**이었습니다. */
+    { to:"/repair", kw:"수리 액정 깨진 배터리 교체 충전 침수 카메라 버튼 스피커 고장 AS 사설" },
+    { to:"/biz",   kw:"기업 법인 대량 단체 수출 해외 재고 임대폰 업무용 매입문의" }
   ].forEach(function(x){
     var m = (window.META || {})[x.to];
     if(!m) return;   /* ⚠️ 주소를 지우면 조용히 빠집니다 — 가짜 링크를 안 냅니다 */
     push("page", m[0], m[1], x.to,
       amScore(m[0] + " " + m[1] + " " + x.kw, words) * 2);
   });
+  /* ⚠️⚠️ **창업 · 폐업 쪽 색인을 2026-10-31 로 껐습니다** (사장님 지시 —
+     "인수인계 자료들은 다 지워줘"). 그 157개는 지금 `vercel.json` 이
+     **308 로 `/` 에** 보내므로, 색인에 두면 검색 결과를 눌러도 메인으로
+     튕깁니다 — 손님에게는 그게 **검색이 고장난 것**으로 읽힙니다.
+
+     ⚠️⚠️ **코드를 지우지 않았습니다.** 아래 묶음 아홉(업종 · 단계 ·
+     분류 · 도구 · 업체 · 프랜차이즈 · 점포 · 시설 · 공고)이 그대로
+     있고, 되살리시려면 **이 한 줄을 `true` 로** 바꾸면 됩니다.
+     ⚠️ 그날 `vercel.json` 의 redirect 스물넷과 `js/app.js` 의
+     `NOINDEX_PRE` 도 같이 되돌리세요 — 색인만 켜면 결과는 뜨는데
+     누르면 308 이 먼저 걸립니다.
+
+     ⚠️ 묶음 선언(`G`)은 **안 지웁니다** — 줄이 0개면 화면이 그 묶음을
+     아예 안 그립니다(`if(!g.rows.length) return ""`). 선언을 지우면
+     `push()` 가 없는 묶음 이름을 받아 **그 자리에서 던지고 검색 화면이
+     통째로 안 그려집니다** (바로 위 ⚠️ 가 적어 둔 그것입니다). */
+  var AM_SEARCH_BIZ = false;
+
+  if(AM_SEARCH_BIZ){
   (window.AM_INDUSTRIES||[]).forEach(function(i){
     /* ⚠️⚠️ **세부 업종 말까지 읽습니다** (2026-10-09 지시서 PART 3).
        전에는 이름과 짧은 줄만 봐서, 사장님들이 쓰는 업종 말 서른 중
@@ -291,6 +321,7 @@ window.amSearch = function(q){
       amScore(x.name + " " + (x.org||""), words) * 3 +
       amScore([x.who, x.what, x.amount].filter(Boolean).join(" "), words));
   });
+  } /* if(AM_SEARCH_BIZ) — 창업 · 폐업 색인 끝 */
 
   /* ⚠️ 자주 묻는 것은 **질문과 답 본문 전체**를 검색감으로 씁니다.
      손님은 "자주 묻는 것" 이라고 치지 않고 "무료" · "연락처" ·

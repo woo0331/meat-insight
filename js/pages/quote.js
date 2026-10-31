@@ -214,7 +214,18 @@ function quoteServices(){
    화면이 다른 전문관이라 자기가 어디 있는지를 잃습니다. */
 function quotePickBack(side){
   var s = (typeof amSide === "function") ? amSide(side) : null;
-  return (s && s.pick) ? s.pick : "/startup#pick";
+  /* ⚠️⚠️ **기본값을 `/sell` 로 바꿨습니다** (2026-10-31). 전에는 쪽을
+     못 찾으면 `/startup` 이었고, `/quote` 의 고르개 기본값도 `"start"`
+     라 **그냥 `/quote` 를 열기만 해도** 그 길로 갔습니다 (재서
+     알았습니다) — 그 157개는 지금 **308 로 `/` 에** 갑니다.
+
+     ⚠️⚠️ **쪽을 찾았으면 그 쪽의 `pick` 을 그대로 씁니다** — 중고폰
+     쪽만 보내게 걸러 봤다가 물렀습니다. `side=ops` 로 오신 분을
+     `/sell`(내 폰 팔기)로 보내는 것은 **다른 서비스로 보내는 것**이고,
+     308 로 메인에 가는 것보다 나쁩니다 (고르신 것은 그대로인데 화면이
+     남의 서비스입니다). `AM_SIDES` 의 `pick` 은 그 전문관의 **제
+     주소**이고, 되살리시는 날 그대로 맞아야 합니다. */
+  return (s && s.pick) ? s.pick : "/sell";
 }
 
 function QuoteSvcStep(list, side){
@@ -391,7 +402,10 @@ function PageQuote(){
   var list = quoteServices();
   var cat  = nowQS("c"), sub = nowQS("s");
   var ind  = nowQS("i"), reg = nowQS("r");
-  var side = nowQS("side") || "start";
+  /* ⚠️⚠️ **기본값이 2026-10-31 로 `shop` 이 됐습니다.** 전에는 `start`
+     (창업)라, 중고폰 구매하기로 들어오신 분의 문의가 **"창업" 건으로**
+     저장됐습니다 (위 고르개 ⚠️ 와 같은 자리). */
+  var side = nowQS("side") || "shop";
   /* ⚠️ 창업 진단(PART 4)에서 고르신 예산 · 일정입니다. 자유 입력 칸이라
      **고치실 수 있게** 미리 적어만 둡니다 — 못 고치게 잠그면 "3천 ~
      5천만원" 밖의 사정을 적을 자리가 없어집니다. */
@@ -439,10 +453,16 @@ function PageQuote(){
     QuoteStage()+
     (ready ? "" :
       '<div class="notice-bad"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
+        /* ⚠️ 2026-10-31 — 전에는 `/providers` · `/content` 로 보냈는데
+           그 둘은 지금 308 로 `/` 에 갑니다. 지금 실제로 열리는 곳으로
+           보냅니다. ⚠️ **문장 한가운데 링크를 박지 않습니다** — 높이가
+           글줄 높이(19px)라 누르기 어렵습니다 (누름 40px 이상). */
         '<p>접수처 설정이 끝나면 바로 열립니다. 그동안에는 '+
-        '<a href="/providers">업체찾기</a>에서 분야를 보시거나, '+
-        '<a href="/content">창업 · 폐업 정보</a>에서 무엇을 확인해야 하는지 '+
-        '먼저 보실 수 있습니다.</p></div>')+
+        '아래에서 지금 되는 것을 보실 수 있습니다.</p>'+
+        '<div class="row-cta">'+
+          '<a class="btn btn-o" href="/sell">내 폰 팔기</a>'+
+          '<a class="btn btn-o" href="/guide">이용 안내</a>'+
+        '</div></div>')+
     QuoteOfferBand()+
 
     '<form id="q-f" onsubmit="return quoteSend(event)">'+
@@ -472,13 +492,24 @@ function PageQuote(){
                  중인 사장님이 "창업" 으로 접수되는 사고를 고치고도
                  `transfer` 가 **같은 자리에 그대로** 남아 있었습니다 —
                  지금은 `AM_SIDES`(deal.js)를 세어서 냅니다. */
-              /* ⚠⚠ `pw:true`(중고폰 쪽 둘)은 여기 안 냅니다 — 이 화면은
-                 창업 · 폐업 신청이고, 중고폰은 `/sell` 이 제 길로 받습니다.
-                 안 걸러내면 창업 신청 폼에서 "중고폰 직접 매입" 을
-                 고를 수 있게 되고, 그 건은 배정할 곣이 없습니다. */
-              (window.AM_SIDES || []).filter(function(s){ return !s.pw; }).map(function(s){
+              /* ⚠️⚠️ **2026-10-31 로 거르는 쪽이 뒤집혔습니다.** 전에는
+                 `!s.pw`(창업 · 폐업 넷)를 냈습니다 — 그 전제가 "이 화면은
+                 창업 · 폐업 신청" 이었는데, 그 157개가 지금 308 로 `/` 에
+                 가므로 **그 넷은 배정할 곳이 없습니다.** 지금은 중고폰
+                 쪽(`pw:true`)만 냅니다.
+                 ⚠️ 되살리시려면 `!s.pw` 로 되돌리고 `AM_SIDES` 의 `pick`
+                 넷이 다시 열리는지 같이 보세요. */
+              /* ⚠️⚠️ **주소가 들고 온 쪽은 걸러도 냅니다** (`s.key === side`).
+                 거르기만 하면 맞는 칸이 없어서 브라우저가 **첫 칸을
+                 고르고**, 적어 보내신 쪽이 조용히 다른 값으로 바뀝니다 —
+                 `ops` · `transfer` · 중고폰 둘 · `repair` · `shop` 으로
+                 여섯 번 겪은 그 사고를 거르개로 다시 만드는 것입니다.
+                 주소가 말한 쪽은 **무엇이든 그대로** 저장돼야 합니다. */
+              (window.AM_SIDES || []).filter(function(s){
+                return s.pw || s.key === side;
+              }).map(function(s){
                 return '<option value="'+esc(s.key)+'"'+
-                  ((side === s.key || (!side && s.key === "start")) ? " selected" : "")+
+                  ((side === s.key || (!side && s.key === "shop")) ? " selected" : "")+
                   '>'+esc(s.say)+'</option>';
               }).join("")+
             '</select></div>'+

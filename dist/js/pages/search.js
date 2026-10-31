@@ -12,7 +12,7 @@ function PageSearch(){
   '<section class="sec sec-white"><div class="w">'+
     '<form class="sb" onsubmit="return searchGo(event)">'+
       '<span class="sb-ic" aria-hidden="true">'+icon("search",20)+'</span>'+
-      '<input id="sb-q" value="'+esc(q)+'" placeholder="카페 인테리어 · 안양 철거 · 미용실 POS · 카페 양도" '+
+      '<input id="sb-q" value="'+esc(q)+'" placeholder="아이폰 15 · 갤럭시 S24 · 액정 수리 · 아이패드" '+
         'aria-label="검색어">'+
       '<button class="btn btn-b" type="submit">검색</button>'+
     '</form>'+
@@ -32,14 +32,15 @@ function PageSearch(){
           text:"다른 말로 찾아 보시거나, 필요한 일을 그대로 적어서 물어보세요. "+
                "분류에 없는 일도 찾아 드립니다.",
           cta:'<a class="btn btn-b" href="/quote">그대로 적어서 물어보기'+icon("arrow",16)+'</a>'+
-              '<a class="btn btn-o" href="/providers">분류로 찾기</a>'
+              '<a class="btn btn-o" href="/shop">중고폰 둘러보기</a>'
         })))+
   '</div></section>';
 }
 
 function SearchHints(){
-  var eg = ["카페 인테리어","안양 철거","미용실 POS","음식점 주방설비",
-            "카페 양도","원상복구","폐업신고","권리금","세무사"];
+
+  var eg = ["아이폰 15","갤럭시 S24","중고폰","아이패드",
+            "애플워치","액정 수리","배터리 교체","택배 수거","경쟁입찰"];
   return '<div class="sr-hint"><b>이렇게 찾아 보세요</b><ul class="chip-g">'+
     eg.map(function(t){
       return '<li><a class="chip" href="/search?q='+encodeURIComponent(t)+'">'+esc(t)+'</a></li>';
@@ -129,13 +130,20 @@ window.amSearch = function(q){
     { to:"/shop",  kw:"중고폰 구매 구입 사기 쇼핑몰 상품 중고 리퍼" },
     { to:"/bid",   kw:"경쟁입찰 입찰 최고가 견적비교 여러곳 비교 중고폰" },
     { to:"/track", kw:"진행 조회 접수번호 상태확인 어디까지 배송 입금" },
-    { to:"/guide", kw:"이용안내 택배 발송 보내는법 절차 등급기준 초기화 개인정보 삭제 중고폰" }
+    { to:"/guide", kw:"이용안내 택배 발송 보내는법 절차 등급기준 초기화 개인정보 삭제 중고폰" },
+
+    { to:"/repair", kw:"수리 액정 깨진 배터리 교체 충전 침수 카메라 버튼 스피커 고장 AS 사설" },
+    { to:"/biz",   kw:"기업 법인 대량 단체 수출 해외 재고 임대폰 업무용 매입문의" }
   ].forEach(function(x){
     var m = (window.META || {})[x.to];
     if(!m) return;
     push("page", m[0], m[1], x.to,
       amScore(m[0] + " " + m[1] + " " + x.kw, words) * 2);
   });
+
+  var AM_SEARCH_BIZ = false;
+
+  if(AM_SEARCH_BIZ){
   (window.AM_INDUSTRIES||[]).forEach(function(i){
 
     var subs = (window.amIndSubs ? window.amIndSubs(i.key) : []).join(" ");
@@ -197,6 +205,7 @@ window.amSearch = function(q){
       amScore(x.name + " " + (x.org||""), words) * 3 +
       amScore([x.who, x.what, x.amount].filter(Boolean).join(" "), words));
   });
+  }
 
   (window.AM_FAQ || []).forEach(function(x){
     push("info", x.q, "자주 묻는 것", "/faq", amScore(x.q+" "+x.a, words));

@@ -734,13 +734,17 @@ function PwServices(){
     '<div class="pw-hd"><h2>무엇을 도와드릴까요?</h2>'+
       '<p>중고폰을 팔고 · 사고 · 고치고 · 도매로 넘기는 길을 한곳에 모았습니다.</p></div>'+
     '<ul class="pwsv-g">'+ window.PW_SVC6.map(function(s){
-      /* ⚠️ 카드 **전체**가 하나의 `a` 입니다. 오른쪽 아래 원형 화살표는
-         **표시**이지 따로 누르는 단추가 아닙니다 — `a` 안에 `a` 를
+      /* ⚠️ 카드 **전체**가 하나의 a 입니다. 오른쪽 아래 원형 화살표는
+         **표시**이지 따로 누르는 단추가 아닙니다 — a 안에 a 를
          넣으면 브라우저가 쪼갭니다. */
-      return '<li><a class="pwsv-c" href="'+ esc(s.to) +'">'+
-        '<i class="pwsv-i">'+ iconArt(s.ia, 88) +'</i>'+
+      /* ⚠️⚠️ 2026-10-31 §3 — 사진이 있으면 사진, 없으면 컬러 아이콘입니다.
+         빈 액자를 깔지 않습니다 (절대 규칙 2). 사진 자리 이름은
+         `ph` 한 줄이고 규격은 `WOW_PHOTO_SLOTS` 가 들고 있습니다. */
+      var ph = s.ph && typeof hasPhoto === "function" && hasPhoto(s.ph);
+      return '<li><a class="pwsv-c'+ (ph ? " has-ph" : "") +'" href="'+ esc(s.to) +'">'+
+        '<i class="pwsv-i">'+ (ph ? photoBox(s.ph, "pwsv-ph") : iconArt(s.ia, 88)) +'</i>'+
         '<b>'+ esc(s.nm) +'</b>'+
-        '<span class="pwsv-d">'+ esc(s.d) +'</span>'+
+        '<span class="pwsv-d">'+ [].concat(s.d).map(esc).join("<br>") +'</span>'+
         '<span class="pwsv-go" aria-hidden="true">'+ pwArrow() +'</span>'+
       '</a></li>';
     }).join("") +'</ul>'+

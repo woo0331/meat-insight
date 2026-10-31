@@ -513,7 +513,7 @@ function noscriptFor(W, r, route){
     /* ── ② 핵심 서비스 여섯 (PwServices) ── */
     h2("무엇을 도와드릴까요?");
     p("중고폰을 팔고 · 사고 · 고치고 · 도매로 넘기는 길을 한곳에 모았습니다.");
-    ul((W.PW_SVC6||[]).map(x => x.nm + " — " + x.d));
+    ul((W.PW_SVC6||[]).map(x => x.nm + " \u2014 " + [].concat(x.d).join(" \u00b7 ")));
 
     /* ── ③ 브랜드 여섯 (PwBrands) ──
        ⚠️⚠️ 대수는 **실제 재고를 센 값**입니다. 0 이면 "준비 중" 이고,

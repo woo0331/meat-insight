@@ -8815,3 +8815,40 @@ button.chip, button.pwf-g{ font:inherit; cursor:pointer; text-align:left;
    튑니다 — 감싸개가 자리를 잡고 카드가 그 안을 꽉 채웁니다. */
 .shp-w{ position:relative; display:flex; }
 .shp-w > .shp-c{ flex:1 1 auto; min-width:0; }
+
+/* ══ 2026-10-31 핵심 서비스 카드 여섯 — 확정 시안 1:1 ══════════════
+   지시서 §4 — 카드 전체가 따뜻한 베이지 · 상단 대형 일러스트 ·
+   검은 굵은 제목 · 짧은 설명 두 줄 · 오른쪽 아래 흰 원형 화살표
+   (테두리는 연한 오렌지). PC 6열 · 태블릿과 폰 3열 2행.
+   ⚠️⚠️ **카드 바탕은 그림의 바탕과 같은 #FDF6ED 라야 합니다.**
+   잘라 낸 여섯의 배경을 그 색으로 눌러 두어서 이음매가 안 보이는
+   것입니다 — 색을 바꾸시면 `img/raw/svc-*.png` 를 다시 뽑으세요
+   (안 그러면 그림 아래에 베이지 네모가 뜹니다).
+   ⚠️ 이 블록은 **파일 맨 뒤**라야 위의 .pwsv-* 를 이깁니다. */
+.pwsv-c.has-ph{ background:var(--pw-card-bg, #FDF6ED); border-color:transparent;
+  box-shadow:none; padding-bottom:10px; }
+.pwsv-c.has-ph:hover{ border-color:transparent;
+  box-shadow:0 10px 24px -14px rgba(48,32,21,.45); }
+.pwsv-c.has-ph .pwsv-i{ width:100%; aspect-ratio:320/156; margin:0;
+  background:none; display:block; }
+.pwsv-c.has-ph .pwsv-ph, .pwsv-c.has-ph .pwsv-i img{
+  display:block; width:100%; height:100%; object-fit:cover; }
+.pwsv-c.has-ph b{ padding:6px 16px 0; font-size:16px; line-height:1.2; color:#1A1512; }
+.pwsv-c.has-ph .pwsv-d{ padding:4px 52px 0 16px; font-size:12.5px;
+  line-height:1.35; color:var(--pw-ink2); }
+.pwsv-c.has-ph .pwsv-go{ right:12px; bottom:11px; width:32px; height:32px;
+  background:#fff; border:1px solid #F0D5B9; color:#1A1512; }
+.pwsv-c.has-ph:hover .pwsv-go{ background:var(--pw-or); border-color:var(--pw-or);
+  color:#fff; }
+@media (max-width:1199px){
+  .pwsv-c.has-ph b{ font-size:16px; }
+}
+/* 폰 — 3열 2행. 설명은 생략합니다 (§4 "모바일은 이미지와 제목 중심").
+   ⚠️ 그래도 **크롤러 본문과 DOM 에는 그대로 있습니다** — 지우는 것과
+   다릅니다 (읽어 주는 프로그램과 검색엔진이 봅니다). */
+@media (max-width:767px){
+  .pwsv-c.has-ph{ padding-bottom:10px; }
+  .pwsv-c.has-ph b{ padding:8px 10px 0; font-size:13px; letter-spacing:-.03em; }
+  .pwsv-c.has-ph .pwsv-d{ display:none; }
+  .pwsv-c.has-ph .pwsv-go{ display:none; }
+}

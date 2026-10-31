@@ -121,6 +121,38 @@ window.WOW_PHOTO_SLOTS = [
   { key:"dev-etc", sizes:"(max-width:359px) 222px, (max-width:1199px) 44vw, 270px",
     where:"/sell 01 기기 카드 — 기타 기기", min:[400,400], ratio:[0.85,1.4], maxKB:330,
     note:"워치 + 무선 이어폰. ⚠️ 특정 제조사가 드러나지 않아야 합니다 · **배경 투명**" },
+  /* ⚠️⚠️ 2026-10-31 지시서 §3 — **메인 02 핵심 서비스 카드 여섯**.
+     사장님이 주신 확정 시안 한 장에서 **일러스트 띠만** 잘라 낸 것입니다
+     (§3-1 "각 서비스의 상단 일러스트 부분만 추출한다"). 제목(y362)보다
+     한참 위인 y354 에서 잘라서 **글자 · 화살표가 한 점도 안 들어갑니다.**
+     ⚠️⚠️ **배경을 투명하게 뚫지 않았습니다.** 원본이 손실 압축이라
+     평평한 베이지에도 ±5 결이 있어 알파가 0 으로 안 떨어지고 흰 네모가
+     남았습니다 (찍어 보고 알았습니다). 지금은 바탕을 **카드 색
+     #FDF6ED 로 눌러** 두었고, `.pwsv-c` 가 같은 색이라 이음매가
+     안 보입니다 — **카드 바탕색을 바꾸시면 이 여섯도 다시 뽑아야
+     합니다** (안 그러면 그림 아래에 베이지 네모가 뜹니다).
+     ⚠️ 여섯이 **전부 320×156** 입니다 (시안 카드의 폭이 302~331 로 제각각이라
+     **폭을 320 에 맞춰 배율을 0.97~1.06 으로** 두었습니다 — 그래야
+     그림이 카드의 87% 를 차지하는 시안 비율이 여섯 다 같습니다) — 그래야 카드 높이와 그림
+     크기가 1px 까지 같습니다 (§6 PC 검수). */
+  { key:"svc-sell", sizes:"(max-width:1199px) 31vw, 186px",
+    where:"메인 02 핵심 서비스 — 내 폰 판매", min:[320,156], ratio:[2.0,2.1], maxKB:60,
+    note:"검정 스마트폰 둘 앞에 금화가 쌓인 그림. ⚠️ 바탕은 카드와 같은 #FDF6ED" },
+  { key:"svc-buy", sizes:"(max-width:1199px) 31vw, 186px",
+    where:"메인 02 핵심 서비스 — 중고폰 구매", min:[320,156], ratio:[2.0,2.1], maxKB:60,
+    note:"주황 쇼핑백과 그 뒤로 늘어선 스마트폰. ⚠️ 바탕은 카드와 같은 #FDF6ED" },
+  { key:"svc-repair", sizes:"(max-width:1199px) 31vw, 186px",
+    where:"메인 02 핵심 서비스 — 수리 서비스", min:[320,156], ratio:[2.0,2.1], maxKB:60,
+    note:"화면이 깨진 스마트폰과 수리 공구. ⚠️ 바탕은 카드와 같은 #FDF6ED" },
+  { key:"svc-b2b", sizes:"(max-width:1199px) 31vw, 186px",
+    where:"메인 02 핵심 서비스 — B2B 도매 · 경매", min:[320,156], ratio:[2.0,2.1], maxKB:60,
+    note:"나무 경매 망치와 늘어선 스마트폰. ⚠️ 바탕은 카드와 같은 #FDF6ED" },
+  { key:"svc-corp", sizes:"(max-width:1199px) 31vw, 186px",
+    where:"메인 02 핵심 서비스 — 기업 대량 매입", min:[320,156], ratio:[2.0,2.1], maxKB:60,
+    note:"사무용 건물들과 그 앞에 놓인 스마트폰. ⚠️ 바탕은 카드와 같은 #FDF6ED" },
+  { key:"svc-export", sizes:"(max-width:1199px) 31vw, 186px",
+    where:"메인 02 핵심 서비스 — 해외 수출", min:[320,156], ratio:[2.0,2.1], maxKB:60,
+    note:"소포 상자와 지구본, 그 위를 지나는 비행기. ⚠️ 바탕은 카드와 같은 #FDF6ED" },
   /* ⚠️⚠️ 2026-10-29 오렌지 §3-E — **메인 사업 배너 넷**. `PW_BIZ` 의
      `ph` 가 이 열쇠를 가리키고 `PwBiz()` 가 `hasPhoto()` 로 기다립니다 —
      **코드를 한 줄도 안 고치고** 사진으로 바뀝니다 (없으면 컬러 아이콘이
@@ -181,7 +213,31 @@ window.WOW_PHOTOS = {
   "dev-etc": { src:"/img/dev-etc.png?v=922c22ec",
     w:540, h:422,
     webp:"/img/dev-etc.webp?v=d8ce29c4 540w",
-    alt:"검정 스마트워치와 충전 케이스에 담긴 무선 이어폰" }
+    alt:"검정 스마트워치와 충전 케이스에 담긴 무선 이어폰" },
+  "svc-sell": { src:"/img/svc-sell.jpg?v=598fe425",
+    w:320, h:156,
+    webp:"/img/svc-sell.webp?v=af5b4548 320w",
+    alt:"검정 스마트폰 두 대 앞에 금화가 여러 더미로 쌓여 있는 그림" },
+  "svc-buy": { src:"/img/svc-buy.jpg?v=ff39889a",
+    w:320, h:156,
+    webp:"/img/svc-buy.webp?v=c78874fe 320w",
+    alt:"주황색 쇼핑백과 그 뒤로 색이 다른 스마트폰 넉 대가 늘어서 있는 그림" },
+  "svc-repair": { src:"/img/svc-repair.jpg?v=52f7eaa9",
+    w:320, h:156,
+    webp:"/img/svc-repair.webp?v=cdf92b1a 320w",
+    alt:"화면이 깨진 스마트폰과 그 옆에 놓인 수리 공구들" },
+  "svc-b2b": { src:"/img/svc-b2b.jpg?v=764d5bda",
+    w:320, h:156,
+    webp:"/img/svc-b2b.webp?v=dbd3b69e 320w",
+    alt:"나무 경매 망치와 그 옆에 나란히 선 스마트폰 석 대" },
+  "svc-corp": { src:"/img/svc-corp.jpg?v=fc57381e",
+    w:320, h:156,
+    webp:"/img/svc-corp.webp?v=fbd7a12b 320w",
+    alt:"파란 사무용 건물들 앞에 검정 스마트폰 여러 대가 놓인 그림" },
+  "svc-export": { src:"/img/svc-export.jpg?v=d26174c3",
+    w:320, h:156,
+    webp:"/img/svc-export.webp?v=9f487c4f 320w",
+    alt:"소포 상자와 파란 지구본, 그 위를 지나가는 비행기" }
 };
 
 window.wowPhoto = function(key){

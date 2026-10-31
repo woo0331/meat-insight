@@ -545,8 +545,18 @@ const CASES = [
    /* ⚠️ 2026-10-30 전면 리뉴얼 — 한 묶음 안에 아이콘이 여럿인 곳은
       **핵심 서비스 여섯(.pwsv-i)** 과 이용 방법 다섯입니다.
       .pwq-c 는 메인에 없어 t[1] 이 undefined 라 터집니다 (열다섯 번째). */
-   `const t = [].slice.call(document.querySelectorAll("#view .pwsv-i svg"));
-    t[1].innerHTML = t[0].innerHTML;`],
+   /* ⚠️ 2026-10-31 §3 — 핵심 서비스 여섯이 **사진**이 됐습니다.
+      그래서 svg 를 집으면 t[1] 이 undefined 라 되돌리기가 터집니다
+      (없는 요소를 집은 자리, 이 저장소에서 열여덟 번째). 검사는
+      사진일 때 **주소로** 겹침을 보니 되돌리기도 주소를 겹칩니다. */
+   `const t = [].slice.call(document.querySelectorAll("#view .pwsv-i img.ph"));
+    if(t.length > 1){ t[1].setAttribute("src", t[0].getAttribute("src"));
+      const p = t[1].closest("picture");
+      if(p) [].slice.call(p.querySelectorAll("source")).forEach(function(s){ s.remove(); });
+    } else {
+      const v = [].slice.call(document.querySelectorAll("#view .pwsv-i svg"));
+      v[1].innerHTML = v[0].innerHTML;
+    }`],
 
 ];
 
@@ -1111,7 +1121,7 @@ async function proveAudit(pg){
            그것만 적으면 아무것도 안 지워지고 "검사가 안 잡는다" 로
            보입니다 (열여섯 번째). */
         " #view .pww-ic svg, #view .pwh-tr-g i svg," +
-        " #view .pwsv-i svg, #view .pwbz-ic svg");
+        " #view .pwsv-i svg, #view .pwsv-i img, #view .pwbz-ic svg");
       if(e) e.remove();
     });
     await pg.waitForTimeout(60);

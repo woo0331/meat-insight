@@ -434,10 +434,11 @@ function PwServices(){
       '<p>중고폰을 팔고 · 사고 · 고치고 · 도매로 넘기는 길을 한곳에 모았습니다.</p></div>'+
     '<ul class="pwsv-g">'+ window.PW_SVC6.map(function(s){
 
-      return '<li><a class="pwsv-c" href="'+ esc(s.to) +'">'+
-        '<i class="pwsv-i">'+ iconArt(s.ia, 88) +'</i>'+
+      var ph = s.ph && typeof hasPhoto === "function" && hasPhoto(s.ph);
+      return '<li><a class="pwsv-c'+ (ph ? " has-ph" : "") +'" href="'+ esc(s.to) +'">'+
+        '<i class="pwsv-i">'+ (ph ? photoBox(s.ph, "pwsv-ph") : iconArt(s.ia, 88)) +'</i>'+
         '<b>'+ esc(s.nm) +'</b>'+
-        '<span class="pwsv-d">'+ esc(s.d) +'</span>'+
+        '<span class="pwsv-d">'+ [].concat(s.d).map(esc).join("<br>") +'</span>'+
         '<span class="pwsv-go" aria-hidden="true">'+ pwArrow() +'</span>'+
       '</a></li>';
     }).join("") +'</ul>'+

@@ -111,12 +111,18 @@ window.amShopName = function(p){
 };
 
 window.PW_SVC6 = [
-  { to:"/sell",         ia:"mobile",   nm:"내 폰 판매",     sm:"내 폰 팔기", d:"경쟁견적 · 직접 매입" },
-  { to:"/shop",         ia:"bag",      nm:"중고폰 구매",     d:"검수 중고폰 쇼핑" },
-  { to:"/repair",       ia:"repair",   nm:"수리 서비스",     d:"수리 견적 · 접수" },
-  { to:"/bid",          ia:"gavel",    nm:"B2B 경매",       d:"전문업체 도매 거래" },
-  { to:"/biz?t=corp",   ia:"tower",    nm:"기업 대량 매입",  sm:"기업 매입", d:"법인 단말기 일괄 매입" },
-  { to:"/biz?t=export", ia:"globe",    nm:"해외 수출",      d:"해외 바이어 · 수출 문의" }
+  { to:"/sell",         ia:"mobile",   ph:"svc-sell",   nm:"내 폰 판매",
+    sm:"내 폰 팔기",  d:["최고가 경쟁견적", "지금 바로 판매하세요"] },
+  { to:"/shop",         ia:"bag",      ph:"svc-buy",    nm:"중고폰 구매",
+    d:["검수된 중고폰을", "안전하게 구매하세요"] },
+  { to:"/repair",       ia:"repair",   ph:"svc-repair", nm:"수리 서비스",
+    d:["정확한 견적과", "빠른 수리 접수"] },
+  { to:"/bid",          ia:"gavel",    ph:"svc-b2b",    nm:"B2B 도매·경매",
+    sm:"B2B 경매",    d:["전문업체 전용", "대량 거래 플랫폼"] },
+  { to:"/biz?t=corp",   ia:"tower",    ph:"svc-corp",   nm:"기업 대량 매입",
+    sm:"기업 매입",   d:["법인 단말기", "일괄 매입 상담"] },
+  { to:"/biz?t=export", ia:"globe",    ph:"svc-export", nm:"해외 수출",
+    d:["글로벌 바이어와", "새로운 시장으로"] }
 ];
 
 window.PW_BAN3 = [

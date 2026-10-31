@@ -88,9 +88,39 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  }
  /* 브랜드 여섯 — ⚠️⚠️ 재고가 0건인 브랜드도 **화면은 열려야** 합니다
     (0건을 0건이라고 말하는 자리입니다 · 절대 규칙 2). */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.pwbr-c[href="/shop?m=apple"]');
- say((await url()).startsWith("/shop"),"브랜드 · Apple → /shop",await url());
+ /* ⚠️⚠️ **열리는지만 보지 마세요.** 전에는 `startsWith("/shop")` 만 봐서,
+    열쇠가 틀려(`?m=`) 브랜드가 **하나도 안 걸리고 전부** 나오는데도 여섯
+    다 통과했습니다 (`/shop` 이 읽는 열쇠는 `mk` 입니다). 지금 보는 것은
+    **거른 목록이 안 거른 목록보다 적은가**입니다 — 그 한 줄이 그 사고를
+    바로 잡습니다.
+    ⚠️ 취급 모델이 0종인 넷(구글 · 화웨이 · OPPO · 샤오미)은 **0건 안내**가
+    맞습니다 (절대 규칙 2) — `AM_MAKERS` 에 넣으면 `/sell` 모델 고르개에
+    고를 것이 없는 제조사가 생깁니다. */
+ /* ⚠️ 상품 카드는 `.shp-g > li` 가 아니라 **`.shp-w > a.shp-c`** 입니다
+    (찜 단추가 `a` 밖이라 감싸개가 하나 있습니다). `li` 로 세었다가
+    여섯이 전부 0건으로 읽혀 멀쩡한 화면을 실패로 잡았습니다 — 검사가
+    틀린 자리입니다. */
+ await pg.goto(B+"/shop",{waitUntil:"networkidle"});
+ await pg.waitForTimeout(260);
+ const shopAll = await pg.evaluate(()=>document.querySelectorAll(".shp-g .shp-c").length);
+ for(const [k, nm, en] of [["apple","애플","Apple"],["samsung","삼성","Samsung"],
+       ["google","구글","Google"],["huawei","화웨이","Huawei"],
+       ["oppo","오포","OPPO"],["xiaomi","샤오미","Xiaomi"]]){
+   await pg.goto(B+"/",{waitUntil:"networkidle"});
+   await pg.evaluate(()=>document.querySelector(".pwbr-g").scrollIntoView());
+   /* ⚠️⚠️ **주소로 집지 마세요.** `[href="/shop?mk=..."]` 로 집으면 열쇠가
+      또 틀어지는 날 click 이 **30초 타임아웃으로 터지고** 뒤 묶음이 통째로
+      안 돕니다 (어느 검사가 틀렸는지도 안 나옵니다). 손님이 보는 **이름**
+      으로 집으면 그때 깨끗하게 ❌ 가 납니다. */
+   await click('.pwbr-c:has(b:text-is("'+en+'"))');
+   const u = await url();
+   const r = await pg.evaluate(()=>({
+     n: document.querySelectorAll(".shp-g .shp-c").length,
+     e: !!document.querySelector(".pws-e") }));
+   say(u==="/shop?mk="+k && r.n < shopAll && (r.n > 0 || r.e),
+     "브랜드 · "+nm+" → "+u+" · "+r.n+"건(안 거르면 "+shopAll+") 0건안내 "+r.e,
+     u+" n="+r.n+" e="+r.e);
+ }
  /* 안내 배너 셋 — ⚠️ 셋 다 **실제로 열려야** 합니다 (§0-6 · §0-7)
     ⚠️⚠️ **기업 매입은 질의문자까지 그대로 가야 합니다.** `/biz` 는 기업
     매입과 해외 수출이 **같이 쓰는 화면**이고 어느 쪽인지는 `?t=` 가

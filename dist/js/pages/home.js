@@ -454,10 +454,11 @@ function PwBrands(){
     '<ul class="pwbr-g">'+ B.map(function(b){
 
       var n = (typeof amShopBrandN === "function") ? amShopBrandN(b.key, true) : 0;
-      return '<li><a class="pwbr-c" href="/shop?m='+ esc(b.key) +'">'+
+
+      return '<li><a class="pwbr-c" href="/shop?mk='+ esc(b.key) +'">'+
         (LG[b.key]
           ? '<span class="pwbr-lg"><img src="'+ esc(LG[b.key]) +'" alt="" '+
-            'width="92" height="26" loading="lazy" decoding="async"></span>'
+            'loading="lazy" decoding="async"></span>'
           : '')+
         '<b>'+ esc(b.en) +'</b>'+
 

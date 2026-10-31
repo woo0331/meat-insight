@@ -6,8 +6,14 @@ window.AM_MAKERS = [
   { key:"etc",     name:"기타",  en:"Other"   }
 ];
 
-window.AM_MAKER_LOGO = { apple:"/img/brands/apple.png?v=7c53732b",
-                         samsung:"/img/brands/samsung.png?v=a26d5261" };
+window.AM_MAKER_LOGO = {
+  apple:   "/img/brands/apple.png?v=d57683da",
+  samsung: "/img/brands/samsung.png?v=925303ae",
+  google:  "/img/brands/google.png?v=ca1d4183",
+  huawei:  "/img/brands/huawei.png?v=644d6acc",
+  oppo:    "/img/brands/oppo.png?v=b50bdbdc",
+  xiaomi:  "/img/brands/xiaomi.png?v=4b0daf45"
+};
 
 window.AM_DEVICE_KINDS = [
   { key:"phone",  name:"스마트폰" },

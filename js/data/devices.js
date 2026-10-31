@@ -36,12 +36,25 @@ window.AM_MAKERS = [
    비어 있는 동안은 **로고 칸 자체를 안 그립니다** (빈 액자를 깔지
    않습니다 · 절대 규칙 2). 제조사 이름은 카드의 글(`아이폰 / iPhone`)이
    이미 말하고 있어서, 로고가 없다고 못 고르는 것이 아닙니다. */
-/* ⚠️ 2026-10-30 — 시안에서 잘라 흰 글자 · 투명 바탕으로 만든 것입니다
-   (사장님이 쓸 권리를 확인하셨습니다). **흰색이라 어두운 카드에서만**
-   보입니다 — /sell 의 흰 카드에는 일부러 안 그립니다. ⚠️ /img/ 는 1년
-   캐시라 파일을 바꾸면 `?v=` 를 같이 고치세요. */
-window.AM_MAKER_LOGO = { apple:"/img/brands/apple.png?v=7c53732b",
-                         samsung:"/img/brands/samsung.png?v=a26d5261" };
+/* ⚠️⚠️ 2026-10-31 — **확정 시안에서 여섯을 그대로 잘랐습니다** (지시서
+   §3 "공식 브랜드 에셋을 우선 사용하고, 로고의 색상 · 형태 · 비율을
+   임의로 변경하지 않는다"). 다시 그린 것이 아니라 시안의 픽셀이고,
+   바깥 흰 바탕만 투명하게 뺐습니다 — 그래서 색 · 모양 · 비율이
+   시안과 같습니다. ⚠️ 쓸 권리를 확인하시는 것은 그대로 사장님 몫입니다.
+   ⚠️⚠️ **색 로고라 어두운 면에 그대로 얹으면 안 읽힙니다.** 전에는
+   흰 글자 판이었고 지금은 색판입니다 — 어두운 카드(`.dvc-lgs`)는
+   CSS 가 흰 실루엣으로 바꿔 냅니다 (`css/pages.css` 의 `.dvc-lg`).
+   ⚠️ /img/ 는 1년 캐시라 **파일을 바꾸면 `?v=` 를 같이** 고치세요 —
+   안 고치면 손님 화면은 영영 옛 로고입니다 (sha1 앞 여덟 글자).
+   ⚠️ 옛 흰 글자 판 둘은 `git show 1eb06ba:img/brands/apple.png` 입니다. */
+window.AM_MAKER_LOGO = {
+  apple:   "/img/brands/apple.png?v=d57683da",
+  samsung: "/img/brands/samsung.png?v=925303ae",
+  google:  "/img/brands/google.png?v=ca1d4183",
+  huawei:  "/img/brands/huawei.png?v=644d6acc",
+  oppo:    "/img/brands/oppo.png?v=b50bdbdc",
+  xiaomi:  "/img/brands/xiaomi.png?v=4b0daf45"
+};
 
 /* ─── 기기 종류 ───────────────────────────────────────────────────── */
 window.AM_DEVICE_KINDS = [

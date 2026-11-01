@@ -148,7 +148,10 @@ function sideOf(r){
 
      r.view === "join" || r.view === "faq" ||
 
-     r.view === "search" || r.view === "my") return "pw-skin";
+     r.view === "search" || r.view === "my" ||
+
+     r.view === "quote" || r.view === "product" ||
+     r.view === "terms" || r.view === "privacy") return "pw-skin";
   if(r.view === "startup" || r.view === "startupIndustry") return "side-start";
   if(r.view === "closure" || r.view === "closureIndustry") return "side-close";
 

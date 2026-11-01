@@ -50,6 +50,13 @@ window.amShopBrandN = function(key, real){
     ? window.amShopList({ maker:key, real:!!real }).length : 0;
 };
 
+window.amShopMakers = function(){
+  var B = window.AM_SHOP_BRANDS || [], M = window.AM_MAKERS || [], out = [], seen = {};
+  B.forEach(function(b){ if(!seen[b.key]){ seen[b.key] = 1; out.push({ key:b.key, name:b.name }); } });
+  M.forEach(function(m){ if(!seen[m.key]){ seen[m.key] = 1; out.push({ key:m.key, name:m.name }); } });
+  return out;
+};
+
 window.AM_PW_NEWS = [];
 
 window.AM_SHOP_PRICE = [
@@ -61,6 +68,15 @@ window.AM_SHOP_PRICE = [
 ];
 
 window.amShopReady = function(){ return (window.AM_PRODUCTS || []).length > 0; };
+
+window.amInRange = function(val, opt){
+  if(val == null || !opt) return false;
+  var n = Number(val);
+  if(!isFinite(n)) return false;
+  if(opt.min != null && n <= opt.min) return false;
+  if(opt.max != null && n >  opt.max) return false;
+  return true;
+};
 
 window.amShopSampleOn = function(){
   return !window.amShopReady() && window.AM_SHOP_SAMPLE_ON !== false &&

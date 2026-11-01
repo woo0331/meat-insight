@@ -2016,6 +2016,27 @@ const AUDIT = `(() => {
      검사 밖이었습니다).
      ⚠️ 상품이 0건이면 예시 여섯으로 셉니다 — 재고가 올라오면 그
      수로 저절로 바뀝니다. */
+  /* 메인 브랜드 카드 여섯 → /shop 의 제조사 칩이 그 브랜드로 켜지는가.
+     2026-11-01 — 구글 · 화웨이 · OPPO · 샤오미 넷에서 **아무 칩도 안
+     켜지고** 있었습니다 (메인은 AM_SHOP_BRANDS 여섯, /shop 칩은
+     AM_MAKERS 셋). 거르개는 걸리는데 손님은 자기가 거른 줄 모릅니다 —
+     주소가 열리기는 하니 링크 검사도 흐름 검사도 통과했습니다. */
+  await f("메인 브랜드 카드가 쇼핑몰 제조사 칩을 켠다", "/shop", `
+    if(typeof amShopMakers !== "function") return "amShopMakers 가 없습니다";
+    const B = (window.AM_SHOP_BRANDS || []).map(x => x.key);
+    if(!B.length) return "브랜드 목록이 안 실렸습니다";
+    const M = amShopMakers().map(x => x.key);
+    const miss = B.filter(k => M.indexOf(k) < 0);
+    if(miss.length)
+      return "메인이 내는 브랜드가 쇼핑몰 거르개에 없습니다 — " + miss.join(" · ") +
+             " (그 카드를 누르면 아무 칩도 안 켜집니다)";
+    const chips = [...document.querySelectorAll('[data-shf="maker"]')]
+      .map(e => e.getAttribute("data-shv"));
+    const gone = B.filter(k => chips.indexOf(k) < 0);
+    if(gone.length) return "제조사 칩이 안 그려진 브랜드 — " + gone.join(" · ");
+    return true;
+  `);
+
   await f("푸터 구매 칸의 기종 줄이 실제로 거른다", "/", `
     if(typeof amShopList !== "function" || typeof SHOP_QK === "undefined")
       return "쇼핑몰 데이터가 안 실렸습니다";

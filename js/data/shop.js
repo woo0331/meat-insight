@@ -132,6 +132,33 @@ window.amShopBrandN = function(key, real){
     ? window.amShopList({ maker:key, real:!!real }).length : 0;
 };
 
+/* ─── /shop 거르개의 제조사 축 — ⚠️⚠️ **한 곳입니다** ───────────────
+   2026-11-01 — 재서 고쳤습니다.
+
+   메인 브랜드 카드는 `AM_SHOP_BRANDS`(여섯)를 읽고 `/shop?mk=<key>`
+   로 보내는데, `/shop` 의 제조사 칩은 `AM_MAKERS`(애플 · 삼성 ·
+   기타 **셋**)를 읽고 있었습니다. 그래서 **구글 · 화웨이 · OPPO ·
+   샤오미 카드를 누르면 아무 칩도 안 켜졌습니다** — 거르개는 실제로
+   걸리는데(카드 0장) 손님은 **자기가 거른 줄 모릅니다.** 메인에서
+   그 카드를 누르고 온 분께는 "안 눌린 건가" 로 읽힙니다.
+   브라우저로 여섯을 눌러 보고 알았습니다 (링크 검사는 통과합니다 —
+   주소가 열리기는 하니까요).
+
+   ⚠️⚠️ **`AM_MAKERS` 를 늘려서 맞추지 않았습니다.** 그쪽은 **기기
+   DB 의 제조사 축**이라, 취급 모델이 0종인 넷을 넣으면 `/sell` 의
+   모델 고르개에 **고를 것이 없는 제조사**가 생깁니다 (§30-7 "클릭해도
+   작동하지 않는" 자리). 기기를 올리시는 날 거기에 넣으시면 됩니다.
+
+   ⚠️ `기타`(etc)는 `AM_SHOP_BRANDS` 에 없습니다 — 거기는 **로고
+   카드를 내는 목록**이고 "기타" 는 로고가 없습니다. 거르개에서는
+   받아 주어야 해서 `AM_MAKERS` 에서 그 한 줄만 가져옵니다.        */
+window.amShopMakers = function(){
+  var B = window.AM_SHOP_BRANDS || [], M = window.AM_MAKERS || [], out = [], seen = {};
+  B.forEach(function(b){ if(!seen[b.key]){ seen[b.key] = 1; out.push({ key:b.key, name:b.name }); } });
+  M.forEach(function(m){ if(!seen[m.key]){ seen[m.key] = 1; out.push({ key:m.key, name:m.name }); } });
+  return out;
+};
+
 /* ─── 소식과 혜택 ─────────────────────────────────────────────────
    2026-10-30 최종 지시서 §2-7 — "실제 게시된 콘텐츠만 표시한다.
    게시물이 없는 경우 임의의 날짜나 가짜 기사를 생성하지 않는다.
@@ -173,6 +200,33 @@ window.AM_SHOP_PRICE = [
 
 /* 실제 상품이 있는가 — 화면이 이것 하나만 봅니다 */
 window.amShopReady = function(){ return (window.AM_PRODUCTS || []).length > 0; };
+
+/* ─── 값이 그 구간에 드는가 — ⚠️⚠️ **한 곳입니다** ──────────────────
+   2026-11-01 — 되살렸습니다. 2026-10-31 에 창업 · 폐업
+   `js/data/market.js` 를 지울 때 **이 함수가 같이 날아갔습니다** —
+   `/shop` 의 가격 거르개가 이것을 부르는 유일한 자리인데, 가격 칩을
+   누르면 `TypeError: window.amInRange is not a function` 으로
+   **목록이 통째로 안 그려졌습니다** (거르개 줄까지 사라지고 0건).
+   거르개를 안 걸면 안 터지니 다른 길로는 표가 안 납니다 —
+   `/shop?pr=a` 를 눌러 보고 알았습니다.
+
+   ⚠️⚠️ **아래는 열고 위는 닫습니다** (min < n ≤ max).
+   둘 다 닫으면 60만원짜리가 "40~60만원" 과 "60~80만원"
+   **두 칸에 다 걸립니다** — 손님이 60~80을 골랐는데 60짜리가 나오면
+   그때부터 거르개를 안 씁니다. 이 방향이라야 딱지도 맞습니다 —
+   "40만원 이하" 는 400,000 을 담고 "40~60만원" 은 안 담습니다.
+
+   ⚠️ **값을 안 적은 상품은 어느 칸에도 안 걸립니다** (`val == null`).
+   조건을 건 손님에게 "모르는 것" 을 섞어 보내면 헛걸음입니다 —
+   ⚠️ 반대로 `0` 은 값입니다.                                        */
+window.amInRange = function(val, opt){
+  if(val == null || !opt) return false;
+  var n = Number(val);
+  if(!isFinite(n)) return false;
+  if(opt.min != null && n <= opt.min) return false;
+  if(opt.max != null && n >  opt.max) return false;
+  return true;
+};
 /* 예시를 낼 자리인가 — ⚠️ 실제 상품이 생기면 저절로 false 입니다 */
 window.amShopSampleOn = function(){
   return !window.amShopReady() && window.AM_SHOP_SAMPLE_ON !== false &&

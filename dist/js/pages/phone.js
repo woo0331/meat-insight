@@ -347,7 +347,10 @@ function shopChips(f){
           esc(o[1])+'</a>'; }).join("") +'</div></div>';
   }
   var kinds = [["","전체"]].concat((window.AM_DEVICE_KINDS||[]).map(function(k){ return [k.key,k.name]; }));
-  var mks   = [["","전체"]].concat((window.AM_MAKERS||[]).map(function(k){ return [k.key,k.name]; }));
+
+  var mks   = [["","전체"]].concat(
+    (typeof amShopMakers === "function" ? amShopMakers() : (window.AM_MAKERS||[]))
+      .map(function(k){ return [k.key,k.name]; }));
   var grs   = [["","전체"]].concat((window.AM_GRADES||[]).map(function(g){ return [g.key,g.name]; }));
   var prs   = [["","전체"]].concat((window.AM_SHOP_PRICE||[]).map(function(r){ return [r.k,r.name]; }));
   return '<div class="shp-fil" role="group" aria-label="상품 거르개">'+

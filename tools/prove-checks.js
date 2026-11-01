@@ -50,6 +50,17 @@ const CASES = [
       var h = a.getAttribute("href") || "";
       if(h.indexOf("/shop?") === 0) a.setAttribute("href", "/shop?m=iphone");
     });`],
+  /* 2026-11-01 — /shop 의 제조사 칩을 **AM_MAKERS 셋**으로 되돌려 봅니다
+     (그게 고치기 전의 모습입니다). 구글 · 화웨이 · OPPO · 샤오미 칩이
+     사라지고, 메인에서 그 카드를 누르면 아무 칩도 안 켜집니다.
+     ⚠️ 칩은 이미 그려져 있으니 **DOM 에서 네 칩을 떼고** amShopMakers 도
+     같이 좁힙니다 — 검사가 둘을 다 보기 때문입니다. */
+  ["메인 브랜드 카드가 쇼핑몰 제조사 칩을 켠다",
+   `window.amShopMakers = function(){ return (window.AM_MAKERS || []).slice(); };
+    [].forEach.call(document.querySelectorAll('[data-shf="maker"]'), function(a){
+      var v = a.getAttribute("data-shv") || "";
+      if(v && v !== "apple" && v !== "samsung" && v !== "etc") a.remove();
+    });`],
   /* ⚠️⚠️ 2026-10-31 — **푸터에 창업 · 폐업 가교를 다시 넣어** 봅니다
      (사장님 지시 — "인수인계 자료들은 다 지워줘").
      그 157개는 지금 `vercel.json` 이 308 로 `/` 에 보냅니다 — 화면에

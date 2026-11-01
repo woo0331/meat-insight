@@ -296,7 +296,21 @@ function sideOf(r){
      /* ⚠️ 헤더에서 바로 가는 둘입니다 — 돋보기(`/search`)와
         `내 기록`(`/my`). 안 옮기면 네이비 헤더 밑에 **갈색 본문**이
         서서 두 서비스로 읽힙니다 (찍어 보고 알았습니다). */
-     r.view === "search" || r.view === "my") return "pw-skin";
+     r.view === "search" || r.view === "my" ||
+     /* ⚠️⚠️ **2026-11-01 — 넷이 더 빠져 있었습니다** (재서 찾았습니다).
+        스물한 주소를 띄워 기본 단추 색을 재 보니 `/quote` 하나만
+        `rgb(128,96,71)`(브라운)이었습니다 — 나머지는 전부
+        `rgb(210,70,1)`(오렌지)입니다. 거기는 **사이트 전체가 흘러드는
+        신청 화면**이고, 손님이 제일 마지막에 누르는 "보내기" 단추가
+        혼자 다른 색으로 서 있었습니다.
+        `/d/:id`(상품 상세 · `product`)는 `/shop` 의 카드가 전부
+        도착하는 자리이고, `/terms` · `/privacy` 는 **스물한 화면의
+        푸터**에서 바로 갑니다 — 거기만 갈색이면 두 서비스로 읽힙니다.
+        ⚠️ 법 문서는 중립으로 두고 싶어지는 자리인데, 중립이라는 것이
+        **앞 서비스 팔레트**를 뜻하게 되어 있습니다 (전역 토큰을 안
+        갈았기 때문입니다 — 위 주석). */
+     r.view === "quote" || r.view === "product" ||
+     r.view === "terms" || r.view === "privacy") return "pw-skin";
   if(r.view === "startup" || r.view === "startupIndustry") return "side-start";
   if(r.view === "closure" || r.view === "closureIndustry") return "side-close";
   /* ⚠️⚠️ 여정 넷 가운데 **매장 운영 · 인수 · 양도는 중립(파랑)** 입니다.

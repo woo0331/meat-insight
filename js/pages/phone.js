@@ -456,7 +456,13 @@ function shopChips(f){
           esc(o[1])+'</a>'; }).join("") +'</div></div>';
   }
   var kinds = [["","전체"]].concat((window.AM_DEVICE_KINDS||[]).map(function(k){ return [k.key,k.name]; }));
-  var mks   = [["","전체"]].concat((window.AM_MAKERS||[]).map(function(k){ return [k.key,k.name]; }));
+  /* ⚠️⚠️ **`amShopMakers()` 입니다 — `AM_MAKERS` 가 아닙니다** (js/data/shop.js).
+     그쪽은 기기 DB 의 축(애플 · 삼성 · 기타 셋)이고, 메인 브랜드 카드는
+     여섯을 내면서 `/shop?mk=google` 로 보냅니다 — 셋만 읽으면 그 넷에서
+     **아무 칩도 안 켜지고** 손님은 자기가 거른 줄 모릅니다 (재서 알았습니다). */
+  var mks   = [["","전체"]].concat(
+    (typeof amShopMakers === "function" ? amShopMakers() : (window.AM_MAKERS||[]))
+      .map(function(k){ return [k.key,k.name]; }));
   var grs   = [["","전체"]].concat((window.AM_GRADES||[]).map(function(g){ return [g.key,g.name]; }));
   var prs   = [["","전체"]].concat((window.AM_SHOP_PRICE||[]).map(function(r){ return [r.k,r.name]; }));
   return '<div class="shp-fil" role="group" aria-label="상품 거르개">'+

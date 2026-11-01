@@ -1126,3 +1126,208 @@ window.pwRepairSubmit = function(){
             : (e && e.message) || "잠시 뒤 다시 눌러 주세요.");
     });
 };
+
+/* ══════════════════════════════════════════════════════════════════
+   내 폰 시세 — /price   (2026-11-01 C안 §3 · §6)
+   ⚠️⚠️ **금액을 내지 않습니다.** `AM_BUY_PRICE` 가 0건이라
+   `amBuyReady()` 가 거짓이고, 그 상태에서 숫자를 내면 그 값을 보고
+   폰을 보내신 분께 다른 금액을 말하게 됩니다 (절대 규칙 1 · 5).
+   ⚠️ 기준가를 넣으시면 **이 화면이 저절로 금액을 냅니다** — 아래
+   `amBuyReady()` 분기 한 곳이고 화면을 안 고칩니다.
+   ⚠️⚠️ `/sell` 과 **같은 화면이 아닙니다** — 여기는 기종을 골라
+   "무엇이 값을 가르는가" 를 보는 자리이고, 신청은 `/sell` 입니다.
+   ══════════════════════════════════════════════════════════════════ */
+function PagePrice(){
+  var K = window.AM_DEVICE_KINDS || [], G = window.AM_GRADES || [];
+  var M = window.AM_MODELS || [], Q = window.AM_COND_Q || [];
+  var mk = nowQS("mk"), kd = nowQS("kd") || "phone";
+  var list = M.filter(function(m){
+    return m.kind === kd && (!mk || m.maker === mk);
+  });
+  var ready = (typeof amBuyReady === "function") && amBuyReady();
+
+  return PgHero({ kicker:"PRICE", h1:"내 폰 시세",
+      lead:"기종과 상태에 따라 값이 얼마나 갈리는지 먼저 보시고, "+
+           "실제 금액은 여러 매입업체의 견적으로 받아 보세요." })+
+    '<section class="sec sec-white"><div class="w pwf">'+
+
+      /* ⚠️⚠️ **맨 위입니다** — 다 고르신 뒤에 "금액은 없습니다" 를
+         보시면 그 자리에서 닫습니다 (절대 규칙 3). */
+      (ready ? "" :
+        '<div class="pwz-now"><b>지금은 금액을 내지 않습니다.</b>'+
+          '<p>직접 매입 기준가가 아직 준비되지 않아, 짐작으로 적은 '+
+            '숫자를 보여 드리지 않습니다. 대신 <b>전국 매입업체의 '+
+            '경쟁견적</b>으로 실제 값을 받아 보실 수 있습니다 — '+
+            '기기 상태를 적어 주시면 여러 곳이 각자 금액을 냅니다.</p>'+
+          '<div class="row-cta">'+
+            '<a class="btn btn-pw" href="/sell">견적 받아 보기</a>'+
+            '<a class="btn btn-pw-o" href="/bid">경쟁입찰이란</a>'+
+          '</div></div>')+
+
+      '<h2 class="pwf-h2">어떤 기기인가요</h2>'+
+      '<div class="prc-f">'+
+        '<div class="prc-chips" role="group" aria-label="기기 종류">'+
+          K.map(function(k){
+            return '<a class="chip'+(kd===k.key?" on":"")+'" data-keep'+
+              ' href="/price?kd='+esc(k.key)+(mk?"&mk="+esc(mk):"")+'"'+
+              ' aria-pressed="'+(kd===k.key)+'">'+esc(k.name)+'</a>';
+          }).join("")+
+        '</div>'+
+        '<div class="prc-chips" role="group" aria-label="제조사">'+
+          '<a class="chip'+(mk?"":" on")+'" data-keep href="/price?kd='+esc(kd)+'"'+
+            ' aria-pressed="'+(!mk)+'">전체</a>'+
+          (window.AM_MAKERS||[]).map(function(m){
+            return '<a class="chip'+(mk===m.key?" on":"")+'" data-keep'+
+              ' href="/price?kd='+esc(kd)+'&mk='+esc(m.key)+'"'+
+              ' aria-pressed="'+(mk===m.key)+'">'+esc(m.name)+'</a>';
+          }).join("")+
+        '</div>'+
+      '</div>'+
+
+      /* ⚠️ 센 값입니다 — 모델을 늘리면 저절로 바뀝니다. */
+      '<p class="prc-n">'+ list.length +'개 기종</p>'+
+      (list.length
+        ? '<ul class="prc-g">'+ list.map(function(m){
+            return '<li><a href="/sell?mk='+esc(m.maker)+'&kd='+esc(m.kind)+
+              '&md='+esc(m.key)+'"><b>'+esc(m.name)+'</b>'+
+              '<span>'+ (m.caps||[]).map(function(c){
+                return c >= 1024 ? (c/1024)+"TB" : c+"GB"; }).join(" · ") +
+              '</span></a></li>';
+          }).join("") +'</ul>'
+        : '<div class="empty"><b>고르신 조건에 맞는 기종이 없습니다.</b>'+
+            '<p>다른 기기 종류나 제조사를 골라 보세요.</p>'+
+            '<div class="row-cta"><a class="btn btn-pw-o" href="/price">조건 모두 풀기</a></div>'+
+          '</div>')+
+
+      '<h2 class="pwf-h2">값을 가르는 것</h2>'+
+      '<ul class="prc-w">'+
+        '<li><b>외관 등급</b><p>'+
+          G.map(function(g){ return esc(g.name); }).join(" · ") + '</p></li>'+
+        '<li><b>기기 상태</b><p>'+
+          (Q.length ? Q.map(function(q){ return esc(q.name || q.q || ""); })
+                       .filter(Boolean).join(" · ")
+                    : '배터리 성능 · 잠금 해제 여부 · 부품 교체 이력 등')+
+          '</p></li>'+
+        '<li><b>구성품</b><p>박스 · 충전기 · 케이블이 함께 있으면 값이 올라갑니다.</p></li>'+
+      '</ul>'+
+
+      '<div class="pwz-note">⚠️ 여기 적은 것은 <b>값이 어떻게 갈리는지</b>'+
+        '까지입니다. 실제 금액은 기기를 받아 검수한 뒤에 정해지고, '+
+        '저희가 미리 보장하지 않습니다.</div>'+
+
+    '</div></section>';
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   알뜰폰 · 선불폰 — /mvno   (2026-11-01 C안 §11)
+   ⚠️⚠️ **요금제를 한 줄도 적지 않습니다.** 지시서 §11 이 "제휴가 없는
+   통신사나 실제 제공하지 않는 요금제 · 혜택은 노출하지 않는다" 고
+   직접 적었고, 지금 제휴 통신사가 **0곳**입니다. 숫자를 적어 두면
+   그 요금을 보고 오신 분께 다른 값을 말하게 됩니다 (절대 규칙 1).
+   ⚠️ 여기서 실제로 되는 것은 **문의 접수**(`/quote`)와 **중고폰
+   구매와 잇는 것**(`/shop`)까지입니다.
+   ══════════════════════════════════════════════════════════════════ */
+var AM_MVNO_WHAT = [
+  { k:"plan",   nm:"알뜰폰 요금제", d:"쓰시는 양에 맞는 요금제를 같이 찾아 드립니다." },
+  { k:"prepaid",nm:"선불폰",        d:"약정 없이 쓰는 만큼만 내는 방식입니다." },
+  { k:"new",    nm:"신규가입",      d:"처음 번호를 받으시는 경우입니다." },
+  { k:"move",   nm:"번호이동",      d:"쓰던 번호를 그대로 옮기시는 경우입니다." },
+  { k:"usim",   nm:"유심",          d:"꽂아 쓰는 칩입니다. 기기에 맞는 크기를 봅니다." },
+  { k:"esim",   nm:"eSIM",          d:"칩 없이 내려받아 여는 방식입니다. 되는 기기가 정해져 있습니다." },
+  { k:"open",   nm:"개통 안내",     d:"필요한 서류와 걸리는 시간을 알려 드립니다." }
+];
+
+function PageMvno(){
+  var pre = nowQS("w");
+  return PgHero({ kicker:"MVNO", h1:"알뜰폰 · 선불폰",
+      lead:"중고폰을 사시면 개통이 남습니다. 어떤 방식이 맞는지 "+
+           "같이 보고, 필요한 것을 알려 드립니다." })+
+    '<section class="sec sec-white"><div class="w pwf">'+
+
+      /* ⚠️⚠️ **맨 위입니다** (절대 규칙 3). */
+      '<div class="pwz-now"><b>지금은 안내와 문의 접수를 받는 단계입니다.</b>'+
+        '<p>통신사 요금제를 이 화면에서 바로 고르고 개통까지 되는 절차는 '+
+          '아직 없습니다. <b>제휴 통신사가 정해지지 않아 요금제와 혜택을 '+
+          '적어 두지 않습니다</b> — 짐작으로 적으면 그 값을 보고 오신 분께 '+
+          '다른 요금을 말하게 됩니다. 필요하신 것을 남겨 주시면 맞는 길을 '+
+          '찾아 연락드립니다.</p></div>'+
+
+      '<h2 class="pwf-h2">무엇이 필요하신가요</h2>'+
+      '<ul class="mvn-g">'+ AM_MVNO_WHAT.map(function(w){
+        return '<li'+(pre===w.k?' class="on"':'')+'><b>'+esc(w.nm)+'</b>'+
+          '<p>'+esc(w.d)+'</p>'+
+          '<a class="mvn-go" href="/quote?c=access&w='+esc(w.k)+'">문의 남기기</a></li>';
+      }).join("") +'</ul>'+
+
+      /* ⚠️ §11 이 "중고폰 구매와 요금제 선택을 연결할 수 있는 구조" 를
+         적었습니다 — 지금 실제로 되는 연결은 **이 길 하나**입니다. */
+      '<div class="rpw-vs"><b>중고폰을 먼저 고르시겠어요?</b>'+
+        '<p>기기를 정하시면 어떤 유심 · eSIM 이 맞는지가 같이 정해집니다. '+
+          '검수된 중고폰을 먼저 보시고 개통은 그 다음에 하셔도 됩니다.</p>'+
+        '<div class="row-cta">'+
+          '<a class="btn btn-pw-o" href="/shop">중고폰 둘러보기</a>'+
+          '<a class="btn btn-pw-o" href="/price">내 폰 시세 보기</a>'+
+        '</div></div>'+
+
+      '<div class="pwz-note">⚠️ 통신 요금 · 할인은 통신사가 정하고 수시로 '+
+        '바뀝니다. 저희가 금액을 약속드리지 않고, 제휴가 확정되면 그때 '+
+        '어느 통신사인지 밝히고 적습니다.</div>'+
+
+    '</div></section>';
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   사업자 전용관 — /business   (2026-11-01 C안 §9 · §10)
+   ⚠️⚠️ **새 기능을 만든 것이 아닙니다.** B2B 도매 · 경매(`/bid`) ·
+   기업 대량 매입(`/biz?t=corp`) · 해외 수출(`/biz?t=export`)은 전부터
+   있던 화면이고, 여기는 그 셋을 **사업자 한 분이 한자리에서** 보시는
+   입구입니다 — 소비자 메인에서 그 셋을 내린 자리를 받습니다 (§6).
+   ⚠️⚠️ **승인 · 정산 · 거래내역 화면을 만들지 않았습니다** (§10 "실제
+   운영 가능한 기능만 활성화한다"). 그 셋은 DB 의 문이 이미 있지만
+   로그인이 꺼져 있어 지금 열면 빈 화면입니다 — `/my` 가 켜지는 날
+   역할별로 저절로 섭니다.
+   ══════════════════════════════════════════════════════════════════ */
+var AM_BIZ_HALL = [
+  { to:"/bid",            ia:"gavel",  nm:"B2B 도매 · 경매",
+    d:"전문업체끼리 대량으로 사고파는 자리입니다.",
+    li:["도매 물량 조회","경쟁입찰 참여","낙찰 뒤 진행 확인"] },
+  { to:"/biz?t=corp",     ia:"tower",  nm:"기업 대량 매입",
+    d:"법인이 보유한 단말기를 한 번에 정리합니다.",
+    li:["회사 · 담당자 정보","기기 종류와 수량","견적 요청"] },
+  { to:"/biz?t=export",   ia:"globe",  nm:"해외 수출",
+    d:"해외 바이어와 대량 거래를 잇습니다.",
+    li:["바이어 문의 접수","수출용 재고 상담","거래 진행 확인"] }
+];
+
+function PageBusiness(){
+  var n = (window.AM_PROVIDERS || []).length;
+  return PgHero({ kicker:"BUSINESS", h1:"사업자 전용관",
+      lead:"도매 · 경매, 기업 대량 매입, 해외 수출 — 사업자에게 필요한 "+
+           "거래를 한자리에서 보십니다." })+
+    '<section class="sec sec-white"><div class="w pwf">'+
+
+      '<div class="pwz-now"><b>지금은 거래 문의를 받는 단계입니다.</b>'+
+        '<p>등록된 제휴 매입업체는 <b>'+ n +'곳</b>입니다. 온라인에서 '+
+          '입찰부터 정산까지 한 번에 끝나는 절차는 아직 열려 있지 않고, '+
+          '보내 주신 조건을 보고 맞는 쪽을 찾아 연락드립니다.</p>'+
+        '<div class="row-cta">'+
+          '<a class="btn btn-pw" href="/join">매입업체로 입점하기</a>'+
+        '</div></div>'+
+
+      '<h2 class="pwf-h2">사업자 서비스 셋</h2>'+
+      '<ul class="bzh-g">'+ AM_BIZ_HALL.map(function(b){
+        return '<li><a href="'+esc(b.to)+'">'+
+          '<i class="bzh-i" aria-hidden="true">'+ iconArt(b.ia, 40) +'</i>'+
+          '<b>'+esc(b.nm)+'</b><p>'+esc(b.d)+'</p>'+
+          '<ul class="bzh-li">'+ b.li.map(function(x){
+            return '<li>'+esc(x)+'</li>'; }).join("") +'</ul>'+
+          '<span class="bzh-go" aria-hidden="true">'+ pwArrow() +'</span>'+
+        '</a></li>';
+      }).join("") +'</ul>'+
+
+      '<div class="pwz-note">⚠️ 사업자 거래도 <b>저희가 거래당사자가 아닌 '+
+        '건</b>이 있습니다. 어느 쪽인지는 건마다 화면에 밝힙니다 '+
+        '(전자상거래법 제20조 제1항).</div>'+
+
+    '</div></section>';
+}

@@ -9,6 +9,9 @@
   <url><loc>https://storeway.co.kr/guide</loc><priority>0.6</priority></url>
   <url><loc>https://storeway.co.kr/biz</loc><priority>0.6</priority></url>
   <url><loc>https://storeway.co.kr/repair</loc><priority>0.6</priority></url>
+  <url><loc>https://storeway.co.kr/price</loc><priority>0.6</priority></url>
+  <url><loc>https://storeway.co.kr/mvno</loc><priority>0.6</priority></url>
+  <url><loc>https://storeway.co.kr/business</loc><priority>0.6</priority></url>
   <url><loc>https://storeway.co.kr/faq</loc><priority>0.6</priority></url>
   <url><loc>https://storeway.co.kr/terms</loc><priority>0.3</priority></url>
   <url><loc>https://storeway.co.kr/privacy</loc><priority>0.3</priority></url>

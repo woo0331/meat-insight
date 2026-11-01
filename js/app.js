@@ -102,6 +102,14 @@ var META = {
                  "중고폰을 팔려는 분이 지역과 기종을 적어 직접 찾아옵니다. 취급 기기와 지역이 맞는 요청만 받아 보세요. 참여 비용은 없습니다."],
   "/my":        ["MY",
                  "판매 신청과 받은 견적, 저장해 두신 것을 한 화면에서 보십시오. 진행 조회는 접수번호로도 됩니다."],
+  /* ⚠️⚠️ **2026-11-01 C안 §3 · §6 · §9 · §11 — 새 주소 셋.**
+     셋 다 실제로 열리고 실제로 무언가를 받는 화면입니다. */
+  "/price":     ["내 폰 시세",
+                 "기종과 상태에 따라 중고폰 값이 어떻게 갈리는지 보시고, 실제 금액은 여러 매입업체의 경쟁견적으로 받아 보세요."],
+  "/mvno":      ["알뜰폰 · 선불폰",
+                 "알뜰폰 요금제 · 선불폰 · 유심 · eSIM · 번호이동까지, 중고폰을 사신 뒤 개통에 필요한 것을 안내하고 문의를 받습니다."],
+  "/business":  ["사업자 전용관",
+                 "B2B 도매 · 경매, 기업 대량 매입, 해외 수출 — 사업자에게 필요한 중고폰 거래를 한자리에서 보십니다."],
   "/search":    ["통합검색",
                  "기종 · 중고폰 상품 · 업체 · 정보를 한 번에 찾습니다. 기종 이름을 그대로 치셔도 됩니다."],
   /* 2026-10-05 V2 §16 — 지시서가 적은 열여덟 중 모자라던 것들 */
@@ -180,6 +188,9 @@ window.routeInfo = function(path){
     "/guide":     "phone-guide",
     "/biz":       "phone-biz",
     "/repair":    "phone-repair",
+    "/price":     "phone-price",
+    "/mvno":      "phone-mvno",
+    "/business":  "phone-business",
     "/join":      "join",
     "/my":        "my",
     "/search":    "search",
@@ -288,6 +299,9 @@ function sideOf(r){
         전수 점검이 그걸로 잡았습니다 — **새 PHONEWAY 화면을 만들면
         이 목록에 같이 넣으세요.** */
      r.view === "phone-biz" || r.view === "phone-repair" ||
+     /* ⚠️⚠️ 2026-11-01 C안의 새 셋 — **빠뜨리면 그 화면만 갈색**입니다. */
+     r.view === "phone-price" || r.view === "phone-mvno" ||
+     r.view === "phone-business" ||
      /* ⚠️ 2026-10-29 — 글을 중고폰 것으로 바꾼 뒤 **색도 같이** 옮겼습니다.
         `/join` 은 매입업체 모집, `/faq` 는 헤더 "도움말" 이 가리키는
         화면이라 둘 다 PHONEWAY 쪽입니다 — 안 옮기면 중고폰 메뉴로
@@ -432,6 +446,9 @@ function render(){
     case "phone-guide":     html = PageGuide();                     break;
     case "phone-biz":       html = PageBiz();                       break;
     case "phone-repair":    html = PageRepair();                    break;
+    case "phone-price":     html = PagePrice();                     break;
+    case "phone-mvno":      html = PageMvno();                      break;
+    case "phone-business":  html = PageBusiness();                  break;
     case "product":         html = PageProduct(r.product);          break;
     case "join":            html = PageJoin();                      break;
     case "my":              html = PageMy();                        break;

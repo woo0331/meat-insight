@@ -92,23 +92,51 @@ window.AM_GNB = [
          빈 화면을 보시는 메뉴가 하나 생깁니다 (§11). 매장이 생기는
          날 이 목록에 한 줄입니다.
      ⚠️ `고객센터` 라고 적지 않은 까닭은 바로 아래에 있습니다. */
-  { to:"/sell",    name:"내 폰 팔기",     ic:"mobile" },
-  { to:"/shop",    name:"중고폰 구매",     ic:"bag" },
-  { to:"/repair",  name:"수리 서비스",     ic:"tool" },
-  { to:"/bid",     name:"B2B 도매·경매",   ic:"gavel" },
-  { to:"/biz?t=corp",   name:"기업 대량 매입", ic:"building" },
-  { to:"/biz?t=export", name:"해외 수출",   ic:"globe" },
-  { to:"/guide",   name:"이용 안내",       ic:"listck" },
-  /* ⚠️⚠️ **"고객센터" 라고 적지 마세요** (2026-10-30 사장님이 정하셨고,
-     이 저장소가 앞 서비스에서부터 못박아 둔 규칙입니다). 전화도 채팅도
-     없고 사업자 전화번호 칸조차 비어 있어서, 그 이름으로 오신 분이
-     **번호를 찾다가 못 찾습니다.** 시안 §3-A 가 그 이름을 적었지만
-     가는 곳은 `/faq` 이고, 거기 있는 것은 자주 묻는 질문입니다.
-     ⚠️ 전화 창구가 실제로 생기면 그날 `WOW_BIZ.phone` 을 채우세요 —
-     화면이 그 값을 보고 전화 단추를 저절로 냅니다. 이름을 되돌리는
-     것은 그때 함께 정하실 일입니다. */
-  { to:"/faq",     name:"도움말", ic:"chat" }
+  { to:"/sell",   name:"내 폰 팔기",      ic:"mobile" },
+  { to:"/shop",   name:"중고폰 구매",      ic:"bag" },
+  { to:"/repair", name:"수리 서비스",      ic:"tool" },
+  { to:"/price",  name:"내 폰 시세",       ic:"chart" },
+  { to:"/mvno",   name:"알뜰폰 · 선불폰",  ic:"sim" }
 ];
+
+/* ⚠️⚠️ **사업자 전용관은 `AM_GNB` 와 따로입니다** (C안 §3).
+   시안이 그 하나만 **딥 브라운 바탕**으로 일반 메뉴와 갈라 두었고,
+   `paintGnb()` 가 `AM_GNB` 를 돌면서 칠하는 규칙과 생김새가 다릅니다.
+   ⚠️ 서랍(폰)에서는 **같은 목록에 이어 붙여** 냅니다 — 빼면 폰에서만
+   사업자 전용관으로 가는 길이 사라집니다 (이 저장소가 아이콘 표 ·
+   랜딩 미니카드로 겪은 "한쪽만 고치는" 자리입니다). */
+window.AM_GNB_BIZ = { to:"/business", name:"사업자 전용관", ic:"building" };
+
+/* ⚠️⚠️ **상단 공지 바** (C안 §3).
+   ⚠️ 시안의 글은 "지금 내 폰 시세를 **무료**로 확인하고, **최고가**로
+   판매하세요" 인데, 그 둘은 **지시서 §5 가 금지한 낱말**이고
+   `check.js` 가 화면마다 찾습니다 (지킬 수 없는 약속). 같은 자리 ·
+   같은 뜻으로 다시 적었습니다 — 받는 비용이 없다는 것은 사실이고
+   "무료 서비스" 는 다른 말입니다. */
+window.AM_HD_TOP = {
+  msg: "내 폰 시세를 확인하고, 여러 매입업체의 견적을 나란히 비교해 보세요.",
+  /* ⚠️⚠️ **시안의 이름 둘을 그대로 쓰지 못했습니다** (§17 보고 대상).
+     C안 §3 은 `매장 찾기` · `고객센터` 라고 적었는데 —
+
+       매장 찾기 → 오프라인 매장이 **0곳**입니다. 누르고 "어디 있나"
+                   를 찾으시면 화면에 아무것도 없습니다. 같은 §3 이
+                   "실제 제공하지 않는 혜택이나 최고가 보장을
+                   사실처럼 표시하지 않는다" 고 적었고, §10 은
+                   "실제 운영 가능한 기능만 활성화한다" 입니다.
+       고객센터  → 전화 창구가 없습니다 (`WOW_BIZ.phone` 이 빈 칸).
+                   ⚠️⚠️ `check.js` 의 **"없는 고객센터로 보내는 길이
+                   없다"** 가 문서 전체에서 **누르는 것의 이름**을
+                   보고 잡습니다 — 이 저장소가 푸터 · 헤더 · 서비스
+                   카드에서 **세 번** 같은 판단을 했습니다.
+
+     ⚠️ **그 검사는 스스로 비킵니다** — `WOW_BIZ.phone` 이 채워지면
+     그 이름이 사실이 되기 때문입니다. 전화번호가 생기는 날 아래
+     이름을 `고객센터` 로 되돌리시면 됩니다 (가는 곳은 그대로 `/faq`
+     이고 그 화면이 전화 단추를 저절로 냅니다).
+     ⚠️ 매장이 생기는 날은 `이용 안내` 를 `매장 찾기` 로 되돌리고
+     주소만 바꾸시면 됩니다. */
+  links: [["/guide","이용 안내"], ["/faq","도움말"]]
+};
 
 /* 폰 아래 네비 — 다섯 칸을 넘기지 마세요. 손가락이 닿는 폭이 줄고
    무엇이 중요한지가 안 보입니다. */
@@ -173,67 +201,85 @@ function Logo(where){
 function Header(){
   /* ⚠️ 본문 바로가기는 `index.html` 에 이미 있습니다. 여기서 또 내면
      읽어 주는 프로그램에 같은 것이 두 번 들립니다. */
-  /* ⚠️⚠️ **2026-10-31 최종 확정 시안 §2 — 줄이 둘입니다.**
-     윗줄: 로고 · 큰 통합검색 · 오른쪽 아이콘 묶음 · 판매 신청
-     아랫줄: 메뉴 여덟 (아이콘 한 칸씩)
+  /* ══════════════════════════════════════════════════════════════
+     2026-11-01 **C안 최종 확정 시안 §3** — 줄이 둘입니다.
+       윗줄(.hd-t0) 딥 브라운 공지 바 — 안내 한 줄 · 오른쪽 둘
+       아랫줄(.hd-t1) 흰 줄 — 로고 | 메뉴 다섯 + 사업자 전용관 | 오른쪽
 
-     ⚠️⚠️ **메뉴가 제 줄을 가지면서 폭 걱정이 사라졌습니다** — 전에는
-     로고 · 검색 · CTA 와 한 줄을 나눠 써서 901px 에서 남는 폭이 30px
-     이었고, 넘치면 **가로 스크롤이 아니라 메뉴가 오른쪽 위로
-     올라앉아** 전수 점검이 영원히 통과했습니다. 그래도 AUDIT 의
-     `hdfit` 은 그대로 둡니다 — 1100px 아래에서 접히는 규칙은 안
-     바뀌었고, 손대실 때는 여전히 재 보셔야 합니다.
-     ⚠️ 폰에서는 윗줄이 **두 줄로 접힙니다** (로고 · 아이콘 / 검색) —
-     시안의 모바일이 그 모양입니다. */
-  return '<header class="hd hd-2r"><div class="hd-t1"><div class="w-wide hd-t1-in">'+
-    Logo() +
-    /* ⚠️⚠️ 시안 §2 의 **큰 통합검색**입니다. 장식이 아니라 167개
-       화면이 같이 쓰는 그 검색이고, 엔터로도 갑니다. */
-    '<form class="hd-s" role="search" onsubmit="return hdSearch(event)">'+
-      '<span class="hd-s-i" aria-hidden="true">'+icon("search",19)+'</span>'+
-      '<input type="search" id="hdQ" name="q" autocomplete="off" '+
-        'aria-label="통합 검색" placeholder="어떤 기기를 찾고 계신가요? (예: 아이폰 15, 갤럭시 S24)">'+
-      '<button class="hd-s-go" type="submit" aria-label="검색">'+icon("search",18)+'</button>'+
-    '</form>'+
-    '<div class="hd-r">'+
-      '<a class="hd-ic hd-ic-s" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
-      /* ⚠️⚠️ **로그인 · 회원가입은 설정됐을 때만 나옵니다.**
-         시안 §2 가 둘을 적었는데 `/api/session` 이 지금 `auth:false`
-         입니다 — 그 단추를 내면 **눌러도 아무 일이 안 납니다**
-         (§11 "아직 구현되지 않은 서비스는 허위 기능을 만들지
-         않는다"). 빈 칸으로 두고 `hdAuthPaint()` 가 켜졌을 때만
-         채웁니다. Vercel 에 환경변수가 들어가는 날 **코드를 한 줄도
-         안 고치고** 시안 그대로 나타납니다. */
-      '<span class="hd-auth" id="hdAuth" hidden></span>'+
-      /* ⚠️ 시안의 `마이페이지` 입니다 — 가는 곳은 실제로 있는 `/my`. */
-      '<a class="hd-txt" href="/my">'+icon("user",18)+'<span>마이페이지</span></a>'+
-      /* ⚠️⚠️ **장바구니를 넣지 않았습니다** (§11 · §13 — 보고 대상).
-         중고폰은 한 대가 한 건이라 담아서 한 번에 사는 길 자체가
-         없고, 장바구니 표도 결제도 없습니다 — 아이콘만 걸면 눌러서
-         빈 화면입니다. 결제가 붙는 날 여기 한 줄입니다.
-         ⚠️ **찜은 실제로 됩니다** (`js/fav.js`) — 상품 카드의 하트와
-         같은 값을 보고, 담긴 수가 뱃지로 섭니다. */
-      '<a class="hd-ic hd-fav" href="/my" aria-label="찜한 중고폰">'+
-        icon("heart",20)+'<span class="hd-fav-n" data-fav-n hidden></span></a>'+
-      /* ⚠️ `data-to="/sell"` 을 지우지 마세요 — `paintGnb()` 가 그
-         표시를 보고 보던 조건을 href 에 실어 줍니다. */
-      '<a class="btn btn-nv hd-cta" href="/sell" data-to="/sell">'+
-        '<span class="hd-cta-w">판매 </span>신청</a>'+
-      '<button class="hd-ic hd-mb" type="button" id="hdMb" aria-label="메뉴"'+
-        ' aria-expanded="false" aria-controls="hdMenu" onclick="hdMenu()">'+
-        icon("menu",22)+'</button>'+
-    '</div>'+
-  '</div></div>'+
-  /* 아랫줄 — 메뉴 여덟. ⚠️ 1100px 아래에서는 통째로 접히고 햄버거
-     서랍이 **같은 목록**을 받습니다. */
-  '<div class="hd-t2"><nav class="w-wide gnb" id="gnb" aria-label="주요 메뉴">'+
-    AM_GNB.map(function(m){
-      return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+
-        (m.ic ? '<i aria-hidden="true">'+icon(m.ic,17)+'</i>' : '')+
-        '<span>'+esc(m.name)+'</span></a>';
-    }).join("")+
-  '</nav></div>'+
-  HeaderDrawer()+
+     ⚠️⚠️ **검색창을 뺐습니다** (§3 · §13 이 PC · 모바일 둘 다 "검색창은
+     추가하지 않는다" 고 직접 적었습니다). 전에는 헤더 돋보기가
+     `/search` 로 가는 **유일한 길**이었어서, 그냥 떼면 그 화면이
+     색인은 되어 있는데 사이트 안에서는 아무 데서도 안 걸립니다 —
+     **푸터 `고객지원` 칸에 한 줄로 내렸습니다.** 되살리실 때는 둘을
+     같이 보세요 (`git show 5f2ac7b:js/components/chrome.js`).
+
+     ⚠️⚠️ **메뉴가 로고와 한 줄을 나눠 씁니다** (시안 그대로). 그래서
+     폭 걱정이 돌아왔습니다 — 넘치면 **가로 스크롤이 나는 것이 아니라**
+     메뉴가 오른쪽 덩이 위로 **올라앉고**, `.gnb` 가 `min-width:0` 이라
+     문서 폭은 그대로여서 가로 스크롤 검사는 영원히 통과합니다.
+     AUDIT 의 `hdfit` 이 그 자리이고 **손대실 때는 재 보세요.**
+     ══════════════════════════════════════════════════════════════ */
+  var T = window.AM_HD_TOP || { msg:"", links:[] };
+  var B = window.AM_GNB_BIZ;
+  return '<header class="hd hd-c">'+
+
+    /* ── 윗줄 · 딥 브라운 공지 바 ───────────────────────────────
+       ⚠️ 폰에서는 **안내 한 줄만** 남고 오른쪽 둘은 서랍으로 갑니다
+       (360px 에서 셋을 한 줄에 두면 글자가 겹칩니다 — 재 봤습니다). */
+    '<div class="hd-t0"><div class="w-wide hd-t0-in">'+
+      '<p class="hd-t0-m"><i aria-hidden="true">'+icon("megaphone",15)+'</i>'+
+        esc(T.msg)+'</p>'+
+      '<nav class="hd-t0-r" aria-label="안내">'+
+        (T.links||[]).map(function(l){
+          return '<a href="'+esc(l[0])+'">'+esc(l[1])+'</a>';
+        }).join('<span aria-hidden="true">|</span>')+
+      '</nav>'+
+    '</div></div>'+
+
+    /* ── 아랫줄 · 흰 줄 ─────────────────────────────────────── */
+    '<div class="hd-t1"><div class="w-wide hd-t1-in">'+
+      Logo()+
+
+      '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
+        AM_GNB.map(function(m){
+          return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+
+            (m.ic ? '<i aria-hidden="true">'+icon(m.ic,17)+'</i>' : '')+
+            '<span>'+esc(m.name)+'</span></a>';
+        }).join("")+
+        /* ⚠️⚠️ **딥 브라운 칩** — 시안이 이 하나만 일반 메뉴와 갈라
+           두었습니다. `data-to` 를 지우지 마세요: `paintGnb()` 가 그
+           표시를 보고 지금 보고 계신 자리를 켭니다. */
+        (B ? '<a class="gnb-biz" href="'+esc(B.to)+'" data-to="'+esc(B.to)+'">'+
+             (B.ic ? '<i aria-hidden="true">'+icon(B.ic,16)+'</i>' : '')+
+             '<span>'+esc(B.name)+'</span></a>' : '')+
+      '</nav>'+
+
+      '<div class="hd-r">'+
+        /* ⚠️⚠️ **로그인 · 회원가입은 설정됐을 때만 나옵니다.**
+           C안 §3 이 둘을 적었는데 `/api/session` 이 지금 `auth:false`
+           입니다 — 그 단추를 내면 **눌러도 아무 일이 안 납니다**
+           (§10 "실제 운영 가능한 기능만 활성화한다"). 빈 칸으로 두고
+           `hdAuthPaint()` 가 켜졌을 때만 채웁니다. Vercel 에 환경변수가
+           들어가는 날 **코드를 한 줄도 안 고치고** 시안 그대로 섭니다. */
+        '<span class="hd-auth" id="hdAuth" hidden></span>'+
+        '<a class="hd-ic" href="/my" aria-label="마이페이지">'+icon("user",20)+'</a>'+
+        /* ⚠️ 찜은 **실제로 됩니다** (`js/fav.js`) — 상품 카드의 하트와
+           같은 값을 보고 담긴 수가 뱃지로 섭니다. */
+        '<a class="hd-ic hd-fav" href="/my" aria-label="찜한 중고폰">'+
+          icon("heart",20)+'<span class="hd-fav-n" data-fav-n hidden></span></a>'+
+        /* ⚠️⚠️ **장바구니를 넣지 않았습니다** (§17 보고 대상).
+           C안 §3 · §15 가 적었지만 **장바구니 표도 결제도 없습니다** —
+           중고폰은 한 대가 한 건이라 담아서 한 번에 사는 길 자체가
+           없고, 아이콘만 걸면 눌러서 빈 화면입니다 (§10 "실제 운영
+           가능한 기능만 활성화한다"). 결제가 붙는 날 여기 한 줄입니다. */
+        '<a class="btn btn-nv hd-cta" href="/sell" data-to="/sell">'+
+          '<span class="hd-cta-w">판매 </span>신청</a>'+
+        '<button class="hd-ic hd-mb" type="button" id="hdMb" aria-label="메뉴"'+
+          ' aria-expanded="false" aria-controls="hdMenu" onclick="hdMenu()">'+
+          icon("menu",22)+'</button>'+
+      '</div>'+
+    '</div></div>'+
+    HeaderDrawer()+
   '</header>';
 }
 
@@ -248,8 +294,22 @@ function HeaderDrawer(){
         return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+
           esc(m.name)+icon("arrow",16)+'</a>';
       }).join("")+
+      /* ⚠️⚠️ **사업자 전용관을 서랍에도 냅니다.** 1100px 아래에서는
+         `.gnb` 가 통째로 접히는데, 그 칩은 `.gnb` 안에 있습니다 —
+         여기 없으면 **폰에서만** 사업자 전용관으로 가는 길이 사라집니다
+         (§9 · §10 이 그 화면을 C안의 핵심 차별화 요소로 적었습니다). */
+      (window.AM_GNB_BIZ ? '<a class="hd-dw-biz" href="'+esc(AM_GNB_BIZ.to)+'"'+
+        ' data-to="'+esc(AM_GNB_BIZ.to)+'">'+esc(AM_GNB_BIZ.name)+
+        icon("arrow",16)+'</a>' : '')+
       '<a href="/my">'+esc("내 기록")+icon("arrow",16)+'</a>'+
       '<a href="/join">'+esc("파트너 입점")+icon("arrow",16)+'</a>'+
+      /* ⚠️ 공지 바 오른쪽 둘(`매장 찾기` · `고객센터`)도 폰에서는
+         여기로 옵니다 — 360px 에서 안내 한 줄과 나란히 두면 글자가
+         겹칩니다 (재 봤습니다). 목록을 손으로 적지 않고 같은 데이터
+         (`AM_HD_TOP.links`)에서 가져옵니다. */
+      ((window.AM_HD_TOP||{}).links||[]).map(function(l){
+        return '<a href="'+esc(l[0])+'">'+esc(l[1])+icon("arrow",16)+'</a>';
+      }).join("")+
       /* ⚠️⚠️ **통합검색을 여기에도 둡니다** (2026-10-19). 320px
          (옛 아이폰 SE)에서 헤더 오른쪽이 11px 넘쳐서 가로 스크롤이
          났고, 거기서는 돋보기를 접습니다 — 서랍에 없으면 그 기계에서
@@ -322,13 +382,11 @@ function gnbQuoteHref(){
 
 function paintGnb(){
   var p = nowPath();
-  /* ⚠️⚠️ **메인의 헤더 검색만 접습니다** (2026-10-13 §3 — "기존
-     메인페이지 상단 검색 아이콘은 제거한다. 다만 기존 검색 기능
-     자체는 삭제하지 않고 필요한 서비스 페이지에서 계속 사용할 수
-     있도록 유지한다").
-     ⚠️ **헤더에서 통째로 빼지 마세요** — 160개 화면에서 검색이
-     사라집니다. 접는 것은 `/` 한 곳뿐이고, 그래서 `check.js` 의
-     "어느 화면에서나 검색으로 가는 길이 있다" 도 메인만 빼고 봅니다. */
+  /* ⚠️ `.is-home` 은 **메인인지 아닌지를 알려 주는 표시**입니다.
+     2026-11-01 C안 전까지는 이것으로 메인의 헤더 검색을 접었는데,
+     §3 · §13 으로 검색 폼이 헤더에서 통째로 내려가서 지금은 **CSS
+     규칙이 하나도 없습니다** — 헤더가 메인에서만 달라져야 하는 날
+     쓰는 걸개로 남겨 둡니다 (한 줄이고 비용이 없습니다). */
   var hd = document.querySelector(".hd");
   if(hd) hd.classList.toggle("is-home", p === "/");
   /* 주소가 바뀌면 폰 서랍을 닫습니다 — 안 닫으면 넘어간 화면 위에
@@ -396,7 +454,12 @@ var MNAV_NEAR = [
      켜졌습니다** — 헤더에서 `to + "/"` 로 막아 둔 그 사고가 아래
      네비에만 남아 있었습니다. 먼저 맞은 줄이 이기니 접두사가 겹치는
      주소가 생길 때마다 여기를 보세요. */
-  [/^\/(sell|bid|biz)(\/|$)/,                    "/sell"],
+  /* ⚠️⚠️ **`/price`(내 폰 시세)를 "팔기" 에 묶습니다** — 값을 보러
+     오시는 분은 파실 분이고, 그 화면의 단추가 전부 `/sell` ·
+     `/bid` 로 갑니다. ⚠️ `/mvno` · `/business` 는 **홈**입니다
+     (아래) — 파는 것도 사는 것도 아니라 "팔기" · "구매" 에 묶으면
+     **거짓**이 되고, 그건 아무것도 안 켜는 것보다 나쁩니다. */
+  [/^\/(sell|bid|biz|price)(\/|$)/,              "/sell"],
   /* ⚠️⚠️ **`/d/:id`(중고폰 상품 상세)가 아무 칸도 안 켜고 있었습니다**
      (2026-10-31 에 재서 찾았습니다). `/shop` 의 카드를 누르면 전부
      거기로 가는데 `^\/shop` 에 안 걸려서, **상품을 보는 동안 네비가
@@ -405,6 +468,12 @@ var MNAV_NEAR = [
   [/^\/(shop|d)(\/|$)/,                          "/shop"],
   [/^\/(track|quote)/,                           "/track"],
   [/^\/(my|search|compare|join)/,                "/my"],
+  /* ⚠️⚠️ **2026-11-01 C안 — `/business` · `/mvno` 가 아무 칸도 안
+     켜고 있었습니다** (전수 점검의 "안 켜지는 주소 3건" 이 잡았습니다 ·
+     `/price` 와 같이). 새 주소를 만들 때마다 **여기도 같이 보세요.**
+     ⚠️ 둘 다 **홈**입니다 — 사업자 거래와 개통은 네비 다섯(홈 · 팔기 ·
+     구매 · 진행 · 마이) 어느 칸도 아니고, 홈이 그 전부의 부모입니다. */
+  [/^\/(business|mvno)(\/|$)/,                   "/"],
   /* ⚠️⚠️ **`/repair`(수리 서비스)도 안 켜지고 있었습니다** — 헤더
      메뉴 여덟 중 하나인데 여기 한 줄이 빠져 있었습니다.
      ⚠️ 켜는 칸은 **홈**입니다. 수리는 파는 것도 사는 것도 아니라
@@ -513,7 +582,16 @@ function Footer(){
     ["구매",     [["/shop","중고폰 구매"],["/shop?mk=apple","아이폰"],
                    ["/shop?mk=samsung","갤럭시"],["/shop?kd=tablet","태블릿"]]],
     ["파트너",   [["/join","매입업체 입점"]]],
-    ["고객지원", [["/faq","자주 묻는 질문"],["/my","내 기록"],
+    /* ⚠️⚠️ **`통합검색` 이 2026-11-01 에 여기로 내려왔습니다** (C안 §3 ·
+       §13 · §16-2 — "검색창은 추가하지 않는다" · "헤더에 검색창이
+       없는지"). 전에는 헤더 돋보기가 `/search` 로 가는 **유일한 길**
+       이었어서, 그냥 떼면 그 화면이 색인은 되어 있는데 사이트 안에서는
+       아무 데서도 안 걸립니다 — 검색 **기능**은 그대로 두라고 §0 ·
+       §15 가 적었습니다. 이 줄과 폰 서랍 한 줄이 그 길입니다.
+       ⚠️ 지우지 마세요 — `check.js` 의 "통합검색으로 가는 길이 남아
+       있다" 가 봅니다. */
+    ["고객지원", [["/faq","자주 묻는 질문"],["/search","통합검색"],
+                   ["/my","내 기록"],
                    ["/terms","이용약관"],["/privacy","개인정보처리방침"]]]
   ];
   /* ⚠️⚠️ **이 아래 `tail` 선언을 지우지 마세요** — 밑에서 씁니다.
@@ -696,12 +774,10 @@ window.mountChrome = function(){
   hdAuthPaint();
 };
 
-/* 헤더 통합검색 — ⚠️ 빈 채로 보내면 `/search` 가 빈 화면입니다. */
-window.hdSearch = function(e){
-  e.preventDefault();
-  var el = $("hdQ"), v = ((el && el.value) || "").trim();
-  if(!v){ toast("찾으실 것을 적어 주세요"); if(el) el.focus(); return false; }
-  go("/search?q=" + encodeURIComponent(v));
-  if(el) el.blur();
-  return false;
-};
+/* ⚠️⚠️ **`hdSearch()` 를 2026-11-01 에 지웠습니다** — C안 §3 · §13 ·
+   §16-2 로 헤더에서 검색 폼이 내려가서 **부르는 자리가 0개**가
+   됐습니다 (`tools/check-dead.js` 가 세는 그 자리입니다). 검색 자체는
+   `/search` 화면이 그대로 들고 있고, 거기로 가는 길은 **푸터
+   `고객지원` 칸 한 줄과 폰 서랍 한 줄**입니다.
+   ⚠️ 헤더에 검색을 되살리실 때는 이 함수도 같이 되살리세요 —
+   `git show 5f2ac7b:js/components/chrome.js` 에 있습니다. */

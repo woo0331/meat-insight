@@ -64,11 +64,11 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  /* ⚠️⚠️ **2026-10-30 전면 리뉴얼 §2 — 누르는 자리가 또 바뀌었습니다.**
     기기 선택 넷(.pwd-g .dvc) · 바로가기 다섯(.pwq-c)은 메인에서
     내려갔고 (함수도 CSS 도 안 지웠습니다), 지금은 **핵심 서비스
-    여섯(.pwsv-c)** · **브랜드 여섯(.pwbr-c)** · **안내 배너 셋(.pwbz-c)**
+    다섯(.pwsv-c)** · **브랜드 여섯(.pwbr-c)** · **안내 배너 셋(.pwbz-c)**
     입니다. ⚠️ 없는 요소를 집으면 **click 이 30초 타임아웃으로 터지고
     뒤 블록이 통째로 안 돕니다** — 어느 검사가 틀렸는지도 안 나옵니다.
     그 구간을 되살리시면 **여기도 같이** 뒤집으세요. */
- /* 핵심 서비스 여섯 — ⚠️ 여섯 전부 **지금 열리는 화면**입니다
+ /* 핵심 서비스 다섯 — ⚠️ 다섯 전부 **지금 열리는 화면**입니다
     (§0-6 · §0-7 — 안 열리는 메뉴를 가짜 화면으로 보내지 않습니다). */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  const svc = await pg.evaluate(()=>{
@@ -77,14 +77,40 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      const h = e.getAttribute("href") || ""; return h.charAt(0) !== "/"; }).length,
      inner:a.filter(function(e){ return !!e.querySelector("a"); }).length }; });
  say(svc.n>0 && svc.bad===0 && svc.inner===0,
-   "핵심 서비스 여섯이 전부 사이트 안 주소이고 카드 안에 또 링크가 없다",
+   "핵심 서비스 다섯이 전부 사이트 안 주소이고 카드 안에 또 링크가 없다",
    svc.n+"장 · 밖 "+svc.bad+" · 안에 링크 "+svc.inner);
+ /* ⚠️⚠️ **2026-11-01 C안 §6 — 소비자 다섯이 됐습니다.** `/bid` ·
+    `/biz?t=corp` · `/biz?t=export` 셋이 **사업자 전용관**으로 갈려
+    나가면서, 전에 여기서 누르던 `.pwsv-c[href="/bid"]` 가 메인에
+    없어졌고 **click 이 30초 타임아웃으로 터져 뒤 블록이 통째로 안
+    돌았습니다** (ship.js 가 배포를 막았습니다 — 게이트가 제 일을 한
+    자리입니다). 지금은 다섯 중 **새로 생긴 둘**을 같이 눌러 봅니다. */
  for(const [sel, want, nm] of [['.pwsv-c[href="/sell"]',  "/sell",  "내 폰 판매"],
                                ['.pwsv-c[href="/repair"]',"/repair","수리 서비스"],
-                               ['.pwsv-c[href="/bid"]',   "/bid",   "B2B 경매"]]){
+                               ['.pwsv-c[href="/price"]', "/price", "내 폰 시세"],
+                               ['.pwsv-c[href="/mvno"]',  "/mvno",  "알뜰폰 · 선불폰"]]){
    await pg.goto(B+"/",{waitUntil:"networkidle"});
    await click(sel);
    say((await url())===want,"핵심 서비스 · "+nm+" → "+want,await url());
+ }
+ /* ⚠️⚠️ **사업자 전용관으로 가는 길 셋** (C안 §9 · §10 — "C안의 핵심
+    차별화 요소"). 메인 배너 · 헤더 칩 · 그 화면 안의 카드 셋까지
+    끝이 열려 있는지 봅니다 — 하나라도 막히면 도매 · 기업 · 수출이
+    사이트 안에서 길을 잃습니다 (이 저장소가 묶음 주소 여섯으로 겪은
+    자리). */
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await pg.evaluate(()=>{ const e=document.querySelector(".pwsd-biz"); if(e) e.scrollIntoView(); });
+ await click('.pwsd-biz');
+ say((await url())==="/business","메인 사업자 배너 → /business",await url());
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.hd .gnb a.gnb-biz');
+ say((await url())==="/business","헤더 사업자 전용관 칩 → /business",await url());
+ for(const [sel, want, nm] of [['.bzh-g a[href="/bid"]', "/bid", "B2B 도매 · 경매"],
+                               ['.bzh-g a[href="/biz?t=corp"]',  "/biz?t=corp",  "기업 대량 매입"],
+                               ['.bzh-g a[href="/biz?t=export"]',"/biz?t=export","해외 수출"]]){
+   await pg.goto(B+"/business",{waitUntil:"networkidle"});
+   await click(sel);
+   say((await url())===want,"사업자 전용관 · "+nm+" → "+want,await url());
  }
  /* 브랜드 여섯 — ⚠️⚠️ 재고가 0건인 브랜드도 **화면은 열려야** 합니다
     (0건을 0건이라고 말하는 자리입니다 · 절대 규칙 2). */

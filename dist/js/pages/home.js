@@ -2,7 +2,15 @@
 
 function PageMain(){
   return PwHero()+ PwServices()+ PwMarket()+
-         PwBanners()+ PwNews()+ PwSteps()+ PwTrust()+ PwCta();
+         PwBanners()+ PwNews()+ PwSteps()+ PwTrust()+ PwCta()+
+         PwFixCta();
+}
+
+function PwFixCta(){
+  return '<div class="pwfx" aria-hidden="false">'+
+    '<a class="btn pwfx-b1" href="/shop" data-to="/shop">내 폰 사기</a>'+
+    '<a class="btn pwfx-b2" href="/sell" data-to="/sell">내 폰 팔기</a>'+
+  '</div>';
 }
 
 function pwTick(){
@@ -32,7 +40,6 @@ function PwHero(){
 
   var wa = (typeof josa === "function") ? josa(nm, "와과") : "와";
   return '<section class="pwh">'+
-    pwHeroQuick()+
     '<div class="pwh-bg" aria-hidden="true">'+
       '<span class="pwh-rb"></span>'+
       '<span class="pwh-rb2"></span>'+
@@ -45,8 +52,9 @@ function PwHero(){
 
         '<h1><span class="pwh-h1a">중고폰의 새로운 기준</span>'+
           '<em><b>'+ esc(nm) + esc(wa) +'</b> 더 가깝게</em></h1>'+
-        '<p class="pwh-sub">팔기부터 구매, 수리, 도매, 수출까지'+
-          '<br class="br-m"> 중고폰의 모든 것을 한 곳에서</p>'+
+
+        '<p class="pwh-sub">판매부터 구매, 수리, 알뜰폰까지'+
+          '<br class="br-m"> 중고폰 거래의 모든 것을 한 곳에서</p>'+
         '<div class="pwh-go">'+
           '<a class="btn pwh-b1" href="/sell" data-to="/sell">'+
             '<b>내 폰 팔기</b>'+ pwArrow() +'</a>'+
@@ -66,15 +74,6 @@ function PwHero(){
     '</div>'+
     pwHeroTrust()+
   '</section>';
-}
-
-function pwHeroQuick(){
-  var L = (window.PW_SVC6 || []).slice(0, 5);
-  if(!L.length) return "";
-  return '<div class="pwmq"><ul class="w pwmq-g">'+ L.map(function(q){
-    return '<li><a class="pwmq-c" href="'+ esc(q.to) +'">'+
-      '<i>'+ iconArt(q.ia, 34) +'</i><span>'+ esc(q.sm || q.nm) +'</span></a></li>';
-  }).join("") +'</ul></div>';
 }
 
 var PW_HERO_LINKS = [
@@ -101,10 +100,10 @@ function pwHero3(){
 }
 
 var PW_TRUST4 = [
-  ["tag",    "지금 바로",   "견적 비교"],
+  ["scan",   "전문 검수",   "등급 공개"],
   ["bolt",   "수거 · 정산", "한 흐름으로"],
-  ["shield", "개인정보",    "안전 처리"],
-  ["seed",   "지속 가능한", "중고 거래"]
+  ["coins",  "여러 곳 견적", "나란히 비교"],
+  ["lock",   "개인정보",    "안전 처리"]
 ];
 function pwHeroTrust(){
   return '<div class="pwh-tr"><ul class="w pwh-tr-g">'+ PW_TRUST4.map(function(t){
@@ -431,8 +430,8 @@ function PwServices(){
   return '<section class="pwsv"><div class="w">'+
 
     '<div class="pw-hd"><h2>무엇을 도와드릴까요?</h2>'+
-      '<p>중고폰을 팔고 · 사고 · 고치고 · 도매로 넘기는 길을 한곳에 모았습니다.</p></div>'+
-    '<ul class="pwsv-g">'+ window.PW_SVC6.map(function(s){
+      '<p>중고폰을 팔고 · 사고 · 고치고 · 개통하는 길을 한곳에 모았습니다.</p></div>'+
+    '<ul class="pwsv-g">'+ window.PW_SVC5.map(function(s){
 
       var ph = s.ph && typeof hasPhoto === "function" && hasPhoto(s.ph);
       return '<li><a class="pwsv-c'+ (ph ? " has-ph" : "") +'" href="'+ esc(s.to) +'">'+
@@ -503,7 +502,8 @@ function PwProducts(){
   }
 
   return '<div class="pwpd">'+
-    '<div class="pw-hd-l"><div><h2>지금 보실 수 있는 중고폰</h2>'+
+
+    '<div class="pw-hd-l"><div><h2>중고폰 둘러보기</h2>'+
       '<p>등록된 차례로 냅니다 — 조회수나 판매량 같은 이용 통계가 아닙니다.</p></div>'+
       '<a class="pw-more" href="/shop">전체 보기 '+ pwArrow() +'</a></div>'+
     '<div class="chip-g chip-g-fil pwpd-fil">'+ chips +'</div>'+
@@ -548,6 +548,14 @@ function PwSide(){
   var MK = (window.AM_MAKERS || []), GR = (window.AM_GRADES || []);
   var opt = function(v, t){ return '<option value="'+ esc(v) +'">'+ esc(t) +'</option>'; };
   return '<aside class="pwsd" aria-label="내 폰 견적 바로 받기">'+
+
+    '<a class="pwsd-biz" href="'+ esc((window.AM_GNB_BIZ||{}).to || "/business") +'">'+
+      '<b>기업 · 도매 · 해외 거래가<br class="br-m"> 필요하신가요?</b>'+
+      '<span>대량 매입부터 도매 · 경매, 해외 수출까지'+
+        '<br class="br-m"> 사업자 전용 서비스를 이용하세요.</span>'+
+      '<em>사업자 전용관 바로가기'+ pwArrow() +'</em>'+
+      '<i class="pwsd-biz-i" aria-hidden="true">'+ iconArt("supply", 56) +'</i>'+
+    '</a>'+
     '<div class="pwsd-q">'+
       '<b class="pwsd-h">내 폰 견적 바로 받기</b>'+
       '<p class="pwsd-l">기기를 고르시면 신청 화면이 그대로 이어집니다.</p>'+

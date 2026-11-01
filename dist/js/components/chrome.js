@@ -2,16 +2,20 @@
 
 window.AM_GNB = [
 
-  { to:"/sell",    name:"내 폰 팔기",     ic:"mobile" },
-  { to:"/shop",    name:"중고폰 구매",     ic:"bag" },
-  { to:"/repair",  name:"수리 서비스",     ic:"tool" },
-  { to:"/bid",     name:"B2B 도매·경매",   ic:"gavel" },
-  { to:"/biz?t=corp",   name:"기업 대량 매입", ic:"building" },
-  { to:"/biz?t=export", name:"해외 수출",   ic:"globe" },
-  { to:"/guide",   name:"이용 안내",       ic:"listck" },
-
-  { to:"/faq",     name:"도움말", ic:"chat" }
+  { to:"/sell",   name:"내 폰 팔기",      ic:"mobile" },
+  { to:"/shop",   name:"중고폰 구매",      ic:"bag" },
+  { to:"/repair", name:"수리 서비스",      ic:"tool" },
+  { to:"/price",  name:"내 폰 시세",       ic:"chart" },
+  { to:"/mvno",   name:"알뜰폰 · 선불폰",  ic:"sim" }
 ];
+
+window.AM_GNB_BIZ = { to:"/business", name:"사업자 전용관", ic:"building" };
+
+window.AM_HD_TOP = {
+  msg: "내 폰 시세를 확인하고, 여러 매입업체의 견적을 나란히 비교해 보세요.",
+
+  links: [["/guide","이용 안내"], ["/faq","도움말"]]
+};
 
 var MNAV = [
 
@@ -51,41 +55,51 @@ function Logo(where){
 
 function Header(){
 
-  return '<header class="hd hd-2r"><div class="hd-t1"><div class="w-wide hd-t1-in">'+
-    Logo() +
+  var T = window.AM_HD_TOP || { msg:"", links:[] };
+  var B = window.AM_GNB_BIZ;
+  return '<header class="hd hd-c">'+
 
-    '<form class="hd-s" role="search" onsubmit="return hdSearch(event)">'+
-      '<span class="hd-s-i" aria-hidden="true">'+icon("search",19)+'</span>'+
-      '<input type="search" id="hdQ" name="q" autocomplete="off" '+
-        'aria-label="통합 검색" placeholder="어떤 기기를 찾고 계신가요? (예: 아이폰 15, 갤럭시 S24)">'+
-      '<button class="hd-s-go" type="submit" aria-label="검색">'+icon("search",18)+'</button>'+
-    '</form>'+
-    '<div class="hd-r">'+
-      '<a class="hd-ic hd-ic-s" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
+    '<div class="hd-t0"><div class="w-wide hd-t0-in">'+
+      '<p class="hd-t0-m"><i aria-hidden="true">'+icon("megaphone",15)+'</i>'+
+        esc(T.msg)+'</p>'+
+      '<nav class="hd-t0-r" aria-label="안내">'+
+        (T.links||[]).map(function(l){
+          return '<a href="'+esc(l[0])+'">'+esc(l[1])+'</a>';
+        }).join('<span aria-hidden="true">|</span>')+
+      '</nav>'+
+    '</div></div>'+
 
-      '<span class="hd-auth" id="hdAuth" hidden></span>'+
+    '<div class="hd-t1"><div class="w-wide hd-t1-in">'+
+      Logo()+
 
-      '<a class="hd-txt" href="/my">'+icon("user",18)+'<span>마이페이지</span></a>'+
+      '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
+        AM_GNB.map(function(m){
+          return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+
+            (m.ic ? '<i aria-hidden="true">'+icon(m.ic,17)+'</i>' : '')+
+            '<span>'+esc(m.name)+'</span></a>';
+        }).join("")+
 
-      '<a class="hd-ic hd-fav" href="/my" aria-label="찜한 중고폰">'+
-        icon("heart",20)+'<span class="hd-fav-n" data-fav-n hidden></span></a>'+
+        (B ? '<a class="gnb-biz" href="'+esc(B.to)+'" data-to="'+esc(B.to)+'">'+
+             (B.ic ? '<i aria-hidden="true">'+icon(B.ic,16)+'</i>' : '')+
+             '<span>'+esc(B.name)+'</span></a>' : '')+
+      '</nav>'+
 
-      '<a class="btn btn-nv hd-cta" href="/sell" data-to="/sell">'+
-        '<span class="hd-cta-w">판매 </span>신청</a>'+
-      '<button class="hd-ic hd-mb" type="button" id="hdMb" aria-label="메뉴"'+
-        ' aria-expanded="false" aria-controls="hdMenu" onclick="hdMenu()">'+
-        icon("menu",22)+'</button>'+
-    '</div>'+
-  '</div></div>'+
+      '<div class="hd-r">'+
 
-  '<div class="hd-t2"><nav class="w-wide gnb" id="gnb" aria-label="주요 메뉴">'+
-    AM_GNB.map(function(m){
-      return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+
-        (m.ic ? '<i aria-hidden="true">'+icon(m.ic,17)+'</i>' : '')+
-        '<span>'+esc(m.name)+'</span></a>';
-    }).join("")+
-  '</nav></div>'+
-  HeaderDrawer()+
+        '<span class="hd-auth" id="hdAuth" hidden></span>'+
+        '<a class="hd-ic" href="/my" aria-label="마이페이지">'+icon("user",20)+'</a>'+
+
+        '<a class="hd-ic hd-fav" href="/my" aria-label="찜한 중고폰">'+
+          icon("heart",20)+'<span class="hd-fav-n" data-fav-n hidden></span></a>'+
+
+        '<a class="btn btn-nv hd-cta" href="/sell" data-to="/sell">'+
+          '<span class="hd-cta-w">판매 </span>신청</a>'+
+        '<button class="hd-ic hd-mb" type="button" id="hdMb" aria-label="메뉴"'+
+          ' aria-expanded="false" aria-controls="hdMenu" onclick="hdMenu()">'+
+          icon("menu",22)+'</button>'+
+      '</div>'+
+    '</div></div>'+
+    HeaderDrawer()+
   '</header>';
 }
 
@@ -96,8 +110,16 @@ function HeaderDrawer(){
         return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+
           esc(m.name)+icon("arrow",16)+'</a>';
       }).join("")+
+
+      (window.AM_GNB_BIZ ? '<a class="hd-dw-biz" href="'+esc(AM_GNB_BIZ.to)+'"'+
+        ' data-to="'+esc(AM_GNB_BIZ.to)+'">'+esc(AM_GNB_BIZ.name)+
+        icon("arrow",16)+'</a>' : '')+
       '<a href="/my">'+esc("내 기록")+icon("arrow",16)+'</a>'+
       '<a href="/join">'+esc("파트너 입점")+icon("arrow",16)+'</a>'+
+
+      ((window.AM_HD_TOP||{}).links||[]).map(function(l){
+        return '<a href="'+esc(l[0])+'">'+esc(l[1])+icon("arrow",16)+'</a>';
+      }).join("")+
 
       '<a href="/search">'+esc("통합검색")+icon("arrow",16)+'</a>'+
     '</nav>'+
@@ -184,11 +206,13 @@ function MobileNav(){
 
 var MNAV_NEAR = [
 
-  [/^\/(sell|bid|biz)(\/|$)/,                    "/sell"],
+  [/^\/(sell|bid|biz|price)(\/|$)/,              "/sell"],
 
   [/^\/(shop|d)(\/|$)/,                          "/shop"],
   [/^\/(track|quote)/,                           "/track"],
   [/^\/(my|search|compare|join)/,                "/my"],
+
+  [/^\/(business|mvno)(\/|$)/,                   "/"],
 
   [/^\/(repair|guide|faq|about|terms|privacy|content|support|tools)/, "/"],
 
@@ -217,7 +241,9 @@ function Footer(){
     ["구매",     [["/shop","중고폰 구매"],["/shop?mk=apple","아이폰"],
                    ["/shop?mk=samsung","갤럭시"],["/shop?kd=tablet","태블릿"]]],
     ["파트너",   [["/join","매입업체 입점"]]],
-    ["고객지원", [["/faq","자주 묻는 질문"],["/my","내 기록"],
+
+    ["고객지원", [["/faq","자주 묻는 질문"],["/search","통합검색"],
+                   ["/my","내 기록"],
                    ["/terms","이용약관"],["/privacy","개인정보처리방침"]]]
   ];
 
@@ -305,11 +331,3 @@ window.mountChrome = function(){
   hdAuthPaint();
 };
 
-window.hdSearch = function(e){
-  e.preventDefault();
-  var el = $("hdQ"), v = ((el && el.value) || "").trim();
-  if(!v){ toast("찾으실 것을 적어 주세요"); if(el) el.focus(); return false; }
-  go("/search?q=" + encodeURIComponent(v));
-  if(el) el.blur();
-  return false;
-};

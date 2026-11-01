@@ -9067,3 +9067,409 @@ html.ivh #view .pwh h1{ font-size:clamp(29px, 3.9vw, 48px); }
    (전에는 기둥보다 좌우 40px 씩 넓었습니다). 안쪽 여백은 카드 제
    것이라 그대로 둡니다. */
 .pwh-tr-g{ max-width:calc(var(--w) - var(--pad) * 2); margin-inline:auto; }
+
+/* ════════════════════════════════════════════════════════════════════
+   2026-11-01 "PHONEWAY C안 최종 확정 — PC · 모바일 전면 리뉴얼"  §3 헤더
+
+   ⚠️⚠️ **이 블록은 파일 맨 뒤라야 합니다.** 위의 `.hd-2r` 블록과
+   특정도가 같아서 **뒤에 오는 쪽이 이깁니다** — 가운데에 끼워 넣으면
+   조용히 안 먹습니다 (이 저장소가 여덟 번 겪은 특정도 함정).
+   ⚠️ 되돌리시려면 **이 블록만 지우고** `chrome.js` 의 `Header()` 를
+   `git show 5f2ac7b:js/components/chrome.js` 에서 되살리면 됩니다.
+
+   ⚠️⚠️ **`css/app.css` 의 PHONEWAY 블록이 `.hd` 를 짙은 브라운으로
+   칠하고 `.gnb a` 를 밝은 글자로 둡니다.** C안의 메인 헤더는 **흰
+   줄**이라, 그 위에 밝은 글자가 그대로 오면 **흰 면에 흰 글자**가
+   앉습니다 (이 저장소가 `.btn-gh` 로 겪은 자리) — 그래서 아래는
+   `.hd-c` 를 앞에 붙여 (0,2,1) 로 덮습니다. ⚠️ `.gnb a` 만 적으면
+   (0,1,1) 이라 **집니다.**
+
+   ⚠️⚠️ **검색 폼이 없습니다** (§3 · §13 · §16-2 — "검색창은 추가하지
+   않는다" · "모바일 헤더에서도 검색창은 만들지 않는다" · 검수 2번
+   "헤더에 검색창이 없는지"). 검색 **기능**은 그대로이고(§0 · §15)
+   `/search` 로 가는 길은 **푸터 `고객지원` 칸 한 줄과 폰 서랍 한
+   줄**입니다 — 둘을 지우면 그 화면이 색인은 되어 있는데 사이트
+   안에서는 아무 데서도 안 걸립니다.
+
+   ⚠️⚠️ **메뉴가 로고와 한 줄을 나눠 씁니다** (시안 그대로). 넘치면
+   **가로 스크롤이 나는 것이 아니라** 메뉴가 오른쪽 덩이 위로
+   **올라앉고**, `.gnb` 가 `min-width:0` 이라 문서 폭은 그대로여서
+   가로 스크롤 검사는 영원히 통과합니다 — AUDIT 의 `hdfit` 이 그
+   자리이고 **손대실 때는 재 보세요.**
+
+   재 본 대비 — 공지 바 글자 #EADBC8/#362313 **9.6** · 메뉴 글자
+   #352014/흰 **15.8** · 사업자 칩 흰/#362313 **14.18** · CTA 흰
+   /#C84F0A **4.59** (전부 AA 위).
+   ══════════════════════════════════════════════════════════════════ */
+.hd.hd-c{ padding:0; background:var(--pw-white);
+  border-bottom:1px solid var(--pw-line); }
+.hd.hd-c .hd-in{ display:none; }
+
+/* ── 윗줄 · 딥 브라운 공지 바 ─────────────────────────────────── */
+.hd-c .hd-t0{ background:var(--pw-dk); }
+.hd-c .hd-t0-in{ display:flex; align-items:center; justify-content:space-between;
+  gap:16px; min-height:40px; padding-top:0; padding-bottom:0; }
+/* ⚠️ 13px 입니다 — 이 저장소의 하한이 12px 이고, 아래 네비를 11.5px
+   로 두었다가 전수 점검에 **175건**이 걸린 자리입니다. 작아 보이게
+   하려면 크기가 아니라 **자간과 색**입니다. */
+.hd-c .hd-t0-m{ margin:0; display:flex; align-items:center; gap:7px;
+  min-width:0; font-size:13px; letter-spacing:-.02em;
+  color:var(--pw-on-dk2); overflow:hidden; text-overflow:ellipsis;
+  white-space:nowrap; }
+.hd-c .hd-t0-m i{ display:inline-flex; flex:none; color:var(--pw-or-300); }
+.hd-c .hd-t0-r{ display:flex; align-items:center; gap:10px; flex:none; }
+/* ⚠️ 누름 40px 이상입니다 — 글줄 높이(19px)로 두면 손가락으로 못
+   누릅니다 (문장 속 링크로 다섯 번 겪은 자리). */
+.hd-c .hd-t0-r a{ display:inline-flex; align-items:center; min-height:40px;
+  padding:0 2px; font-size:13px; font-weight:600; letter-spacing:-.02em;
+  color:var(--pw-on-dk2); white-space:nowrap; }
+.hd-c .hd-t0-r a:hover{ color:var(--pw-on-dk); }
+.hd-c .hd-t0-r span{ color:rgba(234,219,200,.42); font-size:12px; }
+
+/* ── 아랫줄 · 흰 줄 ─────────────────────────────────────────── */
+.hd-c .hd-t1-in{ display:flex; align-items:center; gap:22px;
+  min-height:72px; padding-top:9px; padding-bottom:9px; }
+.hd-c .lg b{ color:var(--pw-ink); }
+.hd-c .lg span{ color:var(--pw-ink3); }
+.hd-c .hd-lg-t b{ color:var(--pw-ink); }
+.hd-c .hd-lg-t i{ color:var(--pw-ink2); }
+
+.hd-c .gnb{ display:flex; align-items:center; gap:2px; min-width:0;
+  flex:1 1 auto; justify-content:center; flex-wrap:nowrap; }
+.hd-c .gnb a{ display:inline-flex; align-items:center; gap:7px;
+  min-height:44px; padding:0 11px; border-radius:10px; white-space:nowrap;
+  font-size:15px; font-weight:700; letter-spacing:-.025em;
+  color:var(--pw-ink); }
+.hd-c .gnb a i{ display:inline-flex; flex:none; color:var(--pw-or); }
+.hd-c .gnb a:hover{ background:var(--pw-or-50); color:var(--pw-or-700); }
+.hd-c .gnb a.on{ background:var(--pw-or-50); color:var(--pw-or-700); }
+.hd-c .gnb a.on i{ color:var(--pw-or-600); }
+/* ⚠️⚠️ **사업자 전용관만 딥 브라운 칩**입니다 (§3 — "일반 메뉴와
+   구분한다"). 흰 글자를 얹으므로 면은 `--pw-dk`(14.18)이고,
+   `--pw-or`(2.94)를 쓰면 그 자리에서 AA 미달입니다. */
+.hd-c .gnb a.gnb-biz{ margin-left:8px; padding:0 14px; border-radius:999px;
+  background:var(--pw-dk); color:var(--pw-on-dk); font-weight:800; }
+.hd-c .gnb a.gnb-biz i{ color:var(--pw-or-300); }
+.hd-c .gnb a.gnb-biz:hover{ background:var(--pw-dk2); color:var(--pw-on-dk); }
+.hd-c .gnb a.gnb-biz.on{ background:var(--pw-dk2); color:var(--pw-on-dk); }
+
+.hd-c .hd-r{ gap:4px; flex:none; margin-left:auto; }
+.hd-c .hd-ic{ color:var(--pw-ink2); }
+.hd-c .hd-ic:hover{ background:var(--pw-or-50); color:var(--pw-or-700); }
+.hd-c .hd-txt{ color:var(--pw-ink2); font-size:14px; font-weight:700; gap:5px; }
+.hd-c .hd-txt:hover{ color:var(--pw-or-700); }
+.hd-c .hd-cta{ min-height:44px; margin-left:6px; padding:0 18px;
+  border-radius:999px; font-weight:800; font-size:14.5px;
+  background:var(--pw-or-600); border-color:var(--pw-or-600);
+  color:var(--pw-white); }
+.hd-c .hd-cta:hover{ background:var(--pw-or-700);
+  border-color:var(--pw-or-700); color:var(--pw-white); }
+.hd-c .hd-mb{ color:var(--pw-ink2); }
+
+/* ⚠️⚠️ **1100px 아래에서 메뉴를 접습니다 — 이 줄을 지우지 마세요.**
+   `css/app.css` 에 이미 `@media (max-width:1100px){ .gnb{display:none} }`
+   가 있는데, 위의 `.hd-c .gnb{display:flex}` 가 **(0,2,1) 로 그
+   (0,1,0) 을 이깁니다** — 그래서 접히지 않고 375 · 360 · 320px 에서
+   문서 폭이 **378 · 370 · 379px** 가 되어 가로 스크롤이 났습니다
+   (재서 알았습니다 · 특정도 함정 아홉 번째). 서랍 규칙도 같은
+   1100px 이라 둘이 한 자리에서 바뀝니다.
+   ⚠️ 1024px 에서는 메뉴가 들어가기는 합니다 (남는 폭 29px) — 그래도
+   접습니다. `#hdAuth`(로그인 · 회원가입)가 **환경변수가 들어가는 날
+   저절로 켜지면서** 110px 가량 늘어나는데, 그때 넘치면 가로 스크롤이
+   나는 것이 아니라 메뉴가 오른쪽 덩이 **위로 올라앉고** 가로 스크롤
+   검사는 영원히 통과합니다. */
+@media (max-width:1100px){ .hd-c .gnb{ display:none; } }
+
+/* 서랍 — 흰 줄 밑이라 글자도 짙은 쪽입니다.
+   ⚠️⚠️ **선택자를 원래 규칙과 똑같은 깊이로** 적습니다 — 서랍 규칙이
+   미디어 안의 `.hd-dw-g a`(0,2,0)라 `.hd-dw a` 로 적으면 조용히
+   안 먹습니다 (app.css 의 짙은 블록이 겪은 자리). */
+@media (max-width:1100px){
+  .hd-c .hd-dw{ background:var(--pw-white); border-bottom-color:var(--pw-line); }
+  .hd-c .hd-dw-g a{ color:var(--pw-ink); border-bottom-color:var(--pw-line); }
+  .hd-c .hd-dw-g a svg{ color:var(--pw-ink3); }
+  .hd-c .hd-dw-g a:hover{ color:var(--pw-or-700); }
+  .hd-c .hd-dw-g a.hd-dw-biz{ color:var(--pw-or-700); font-weight:800; }
+}
+/* 1340px 아래 — 메뉴를 좁힙니다 (여섯 칸 + 오른쪽 덩이) */
+@media (max-width:1340px){
+  .hd-c .hd-t1-in{ gap:14px; }
+  .hd-c .gnb a{ font-size:14px; padding:0 8px; gap:6px; }
+  .hd-c .gnb a.gnb-biz{ margin-left:4px; padding:0 11px; }
+  .hd-c .hd-cta{ padding:0 14px; }
+}
+@media (max-width:1200px){
+  .hd-c .gnb a{ font-size:13.5px; padding:0 6px; gap:5px;
+    letter-spacing:-.04em; }
+}
+/* 폰 — 공지 바는 **안내 한 줄만** 남고 오른쪽 둘은 서랍으로 갑니다
+   (360px 에서 셋을 한 줄에 두면 글자가 겹칩니다 — 재 봤습니다). */
+@media (max-width:767px){
+  .hd-c .hd-t0-r{ display:none; }
+  .hd-c .hd-t0-in{ min-height:32px; }
+  .hd-c .hd-t0-m{ font-size:12.5px; }
+  .hd-c .hd-t1-in{ gap:8px; min-height:60px;
+    padding-top:7px; padding-bottom:7px; }
+  .hd-c .hd-cta{ min-height:40px; margin-left:2px; padding:0 13px;
+    font-size:13.5px; }
+}
+@media (max-width:359px){ .hd-c .hd-cta{ display:none; } }
+
+/* ── C안 §6 소비자 서비스 다섯 ─────────────────────────────────
+   ⚠️⚠️ **위의 `.pwsv-g` 선언 넷(기본 · 1199 · 767 · 359)과 특정도가
+   같아서 뒤에 오는 이쪽이 이깁니다** — 가운데에 끼워 넣으면 조용히
+   안 먹습니다. 되돌리시려면 이 토막만 지우면 여섯 열로 돌아갑니다.
+   ⚠️ 여섯이 다섯이 되면서 **같은 폭에서 카드가 커집니다** — 글씨 ·
+   액자 크기는 그대로 두고 열 수만 바꿥니다 (재서 정했습니다). */
+.pwsv-g{ grid-template-columns:repeat(5, minmax(0,1fr)); }
+@media (max-width:1199px){ .pwsv-g{ grid-template-columns:repeat(5, minmax(0,1fr)); } }
+@media (max-width:1023px){ .pwsv-g{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
+/* 폰 — §6 "모바일 2열 카드 구조 · 마지막 5번째 카드는 화면 너비에
+   맞춰 자연스럽게". ⚠️ 2열에 다섯이면 마지막이 **둘째 칸을 비운 채
+   혼자** 남아 "빠뜨린 칸" 으로 읽힙니다 (이 저장소가 걸음 여섯을
+   다섯 칸 격자에 넣었다가 겪은 자리) — 마지막만 **두 칸을 걸칩니다.** */
+@media (max-width:767px){
+  .pwsv-g{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .pwsv-g > li:last-child{ grid-column:1 / -1; }
+  /* 두 칸을 걸치면 가로로 길어져서 세로 쌓기가 어색합니다 — 그 하나만
+     가로로 눕힙니다 (액자 왼쪽 · 글 오른쪽). */
+  .pwsv-g > li:last-child .pwsv-c{ flex-direction:row; align-items:center;
+    justify-content:flex-start; gap:12px; text-align:left;
+    min-height:0; padding:12px 44px 12px 12px; }
+  /* ⚠️⚠️ **찍어 보고 고쳤습니다.** 액자를 84px 알약으로 두었더니 그
+     한 장만 **흰 카드**로 읽혔습니다 — 다른 넷은 위쪽 액자(사진 ·
+     옅은 그라디언트)가 카드의 결을 만드는데 거기만 작은 타일이라
+     결이 끊겼습니다. 왼쪽 40% 를 **세로로 꽉 채워** 같은 결로
+     맞춥니다. */
+  .pwsv-g > li:last-child .pwsv-i{ flex:0 0 auto; width:40%; max-width:150px;
+    aspect-ratio:auto; align-self:stretch; min-height:92px; }
+  .pwsv-g > li:last-child .pwsv-c b{ padding:0; }
+  /* ⚠️ 폰에서는 **설명과 화살표를 다섯 다** 접습니다 (§4 — "모바일은
+     이미지와 제목 중심 · 설명은 생략할 수 있다"). 전에는 사진 있는
+     셋만 접혀서 다섯이 두 가지로 보였습니다 (찍어 보고 알았습니다).
+     ⚠️ DOM 과 크롤러 본문에는 그대로 있습니다 — 지우는 것과 다릅니다. */
+  .pwsv-g .pwsv-d, .pwsv-g .pwsv-go{ display:none; }
+}
+
+/* ── C안 §5 신뢰 안내 넷 — 폰에서 2열 × 2행 ──────────────────────
+   §5 가 "PC: 4열 · 모바일: 2열 × 2행" 이라고 직접 적었습니다. 전에는
+   그 2열 규칙이 **`max-width:359px`** 안에만 있어서, 재 보니 360 ·
+   375 · 390 · 430 · 768px 에서 **네 칸이 한 줄**이었습니다 (한 칸이
+   78px 이라 글이 세 줄로 쪼개집니다).
+   ⚠️⚠️ 위 359px 블록과 **같은 규칙**을 폭만 넓혀 다시 적습니다 —
+   거기를 고치면 그 안의 다른 네 줄(히어로 칸 비율 · 단추 높이)까지
+   같이 움직입니다. */
+@media (max-width:767px){
+  .pwh-tr-g{ grid-template-columns:repeat(2,minmax(0,1fr)); row-gap:16px; }
+  .pwh-tr-g li:nth-child(3){ border-left:0; }
+  .pwh-tr-g li:nth-child(n+3){ border-top:1px solid rgba(160,106,52,.22);
+    padding-top:16px; }
+}
+
+/* ── 사진이 없는 서비스 카드의 액자 (C안 §7) ────────────────────
+   ⚠️⚠️ **찍어 보고 알았습니다.** `.pwsv-c` 가 세로 flex 인데 사진이
+   없는 `.pwsv-i` 에는 높이를 잡아 주는 것이 없어서, 그 칸이 **남는
+   자리를 통째로 먹고** 제목이 카드 바닥까지 밀렸습니다 — 사진 카드
+   셋과 아이콘 카드 둘이 **다른 짜임새**로 보였습니다 (가로 스크롤도
+   대비도 멀쩡해서 검사는 전부 통과합니다).
+   사진 액자(`320/156`)와 **같은 비율 · 같은 폭**을 줘서 다섯 장의
+   제목 줄이 한 자리에 섭니다.
+   ⚠️ 여기에 따로 바탕을 깔지 마세요 — 카드 바탕이 이미 크림이고,
+   네모를 하나 더 깔면 빈 액자로 읽힙니다 (절대 규칙 2). */
+.pwsv-c:not(.has-ph) .pwsv-i{ width:min(100%, 188px); aspect-ratio:320/156;
+  margin-inline:auto; display:grid; place-items:center; }
+
+/* 헤더 CTA — C안 §3 은 `판매 신청` 입니다. `css/app.css` 가 1440px
+   아래에서 `판매 `(`.hd-cta-w`)를 접는데, 두 줄 헤더가 되어 자리가
+   남습니다 (1440px 에서 남는 폭 268px · 1200px 에서 253px — 재
+   봤습니다). 1100px 아래에서는 메뉴가 서랍으로 가고 오른쪽 덩이만
+   남으므로 거기서부터 접습니다. */
+.hd-c .hd-cta-w{ display:inline; }
+@media (max-width:1100px){ .hd-c .hd-cta-w{ display:none; } }
+
+/* ── C안 §9 사업자 전용관 진입 배너 (상품 영역 오른쪽) ──────────
+   ⚠️⚠️ **딥 브라운 + 흰 글자**입니다 (§9). 면이 `--pw-dk`(흰 글자
+   14.18)이고 `--pw-or`(2.94)를 면으로 쓰면 그 자리에서 AA 미달입니다
+   — 이 저장소가 다섯 번 겪은 자리입니다. 보조 글자는
+   `--pw-on-dk2`(9.6), 단추 줄은 `--pw-or-300` 입니다.
+   ⚠️⚠️ **BRIGHT PREMIUM 15% 한도**를 먹는 자리입니다 — 폭마다 재고
+   넓히지 마세요 (`check.js` 가 문서 전체에서 셉니다). */
+.pwsd-biz{ position:relative; display:block; overflow:hidden;
+  padding:20px 76px 18px 20px; border-radius:18px;
+  background:linear-gradient(135deg, var(--pw-dk) 0%, var(--pw-dk2) 100%);
+  color:var(--pw-on-dk); }
+.pwsd-biz:hover{ color:var(--pw-on-dk);
+  box-shadow:0 12px 26px -16px rgba(41,27,14,.75); }
+.pwsd-biz > b{ display:block; font-size:16.5px; font-weight:800;
+  line-height:1.35; letter-spacing:-.02em; color:var(--pw-on-dk); }
+.pwsd-biz > span{ display:block; margin-top:7px; font-size:13px;
+  line-height:1.5; color:var(--pw-on-dk2); }
+/* ⚠️ 누름 40px 이상 — 카드 전체가 a 라 높이는 넉넉하지만, 이 줄이
+   단추처럼 읽히므로 제 높이도 같이 잡습니다. */
+.pwsd-biz > em{ display:inline-flex; align-items:center; gap:6px;
+  min-height:40px; margin-top:8px; font-style:normal;
+  font-size:13.5px; font-weight:800; color:var(--pw-or-300); }
+.pwsd-biz-i{ position:absolute; right:12px; bottom:10px;
+  display:inline-flex; opacity:.9; --ia-1:var(--pw-or-300); --ia-2:#5A4433; }
+@media (max-width:1100px){
+  /* 폰 · 태블릿 — 상품 아래 **전체 너비 배너** (§9 · §13 의 7번) */
+  .pwsd-biz{ padding:18px 84px 16px 18px; }
+}
+@media (max-width:420px){
+  .pwsd-biz{ padding:16px 16px 14px; }
+  .pwsd-biz-i{ position:static; display:block; margin-top:10px; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   C안 §10 · §11 — 새 화면 셋 (/price · /mvno · /business)
+
+   ⚠️⚠️ **이 셋은 클래스가 하나도 없는 채로 돌고 있었습니다** — 화면은
+   그려지는데 격자도 카드도 없어서 글이 세로로 줄줄 흘렀습니다
+   (가로 스크롤도 JS 에러도 안 나서 검사는 전부 통과합니다 · 재서
+   알았습니다). 새 화면을 만들 때는 **CSS 를 같이** 적으세요.
+   ⚠️ `.chip` · `.empty` · `.row-cta` · `.pwf-h2` · `.btn-pw` 는 이미
+   있는 것을 그대로 씁니다 — 두 벌을 만들면 한쪽만 고치게 됩니다.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* 지금 어느 단계인지 — ⚠️ 맨 위입니다 (다 고르신 뒤에 "금액이
+   없습니다" 를 보시면 그 자리에서 닫습니다 · 절대 규칙 3). */
+.pwz-now{ margin:0 0 24px; padding:18px 20px; border-radius:16px;
+  background:var(--pw-or-50); border:1px solid rgba(195,120,60,.28); }
+.pwz-now > b{ display:block; font-size:16px; font-weight:800;
+  color:var(--pw-or-700); }
+.pwz-now > p{ margin:7px 0 0; font-size:14px; line-height:1.6;
+  color:var(--pw-ink2); }
+.pwz-now .row-cta{ margin-top:14px; }
+/* 법으로 알려야 하는 고지 — ⚠️ 읽히지 않는 고지는 고지가 아닙니다.
+   `--pw-ink3`(4.93)이 하한이고 그 아래로 내리지 마세요. */
+.pwz-note{ margin:26px 0 0; padding:14px 16px; border-radius:12px;
+  background:var(--pw-gray); border:1px solid var(--pw-line);
+  font-size:13px; line-height:1.6; color:var(--pw-ink2); }
+
+/* ── /price 내 폰 시세 ──────────────────────────────────────── */
+.prc-f{ display:flex; flex-direction:column; gap:10px; margin:0 0 16px; }
+.prc-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.prc-n{ margin:0 0 12px; font-size:13px; font-weight:700;
+  color:var(--pw-ink3); }
+.prc-g{ list-style:none; margin:0; padding:0; display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
+.prc-g a{ display:flex; flex-direction:column; gap:3px; min-height:72px;
+  justify-content:center; padding:12px 14px; border-radius:14px;
+  background:var(--pw-white); border:1px solid var(--pw-line); }
+.prc-g a:hover{ border-color:var(--pw-or); }
+.prc-g b{ font-size:14.5px; font-weight:800; color:var(--pw-ink);
+  line-height:1.3; }
+.prc-g span{ font-size:12.5px; color:var(--pw-ink3); }
+.prc-w{ list-style:none; margin:0; padding:0; display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; }
+.prc-w li{ padding:16px 18px; border-radius:16px;
+  background:var(--pw-gray); border:1px solid var(--pw-line); }
+.prc-w b{ display:block; font-size:14.5px; font-weight:800;
+  color:var(--pw-ink); }
+.prc-w p{ margin:6px 0 0; font-size:13px; line-height:1.6;
+  color:var(--pw-ink2); }
+@media (max-width:1023px){
+  .prc-g{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .prc-w{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+}
+@media (max-width:767px){
+  .prc-g{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .prc-w{ grid-template-columns:1fr; }
+}
+
+/* ── /mvno 알뜰폰 · 선불폰 ───────────────────────────────────── */
+.mvn-g{ list-style:none; margin:0 0 24px; padding:0; display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; }
+/* ⚠️⚠️ **카드는 `li` 자신입니다** — 안쪽이 `<b>` · `<p>` · `<a>` 세
+   형제이고 **감싸는 a 가 없습니다.** 처음에 `.mvn-g > li > a` 를
+   카드로 적었다가, 그 선택자가 **단추(`.mvn-go`)를 맞혀** 알약이
+   카드 크기(419×120)로 부풀었습니다 — 재서 알았습니다.
+   ⚠️ 카드 전체를 누르게 하려면 markup 을 `a` 로 감싸야 하는데, 그러면
+   `a` 안에 `a` 가 되어 브라우저가 쪼갭니다 (상품 카드의 찜 하트와
+   같은 자리) — 여기는 **단추 하나**가 누르는 자리입니다. */
+.mvn-g > li{ position:relative; display:flex; flex-direction:column;
+  gap:5px; min-height:148px; padding:18px 18px 64px;
+  border-radius:16px; background:var(--pw-white);
+  border:1px solid var(--pw-line); }
+.mvn-g > li:hover{ border-color:var(--pw-or);
+  box-shadow:0 8px 20px -14px rgba(48,32,21,.34); }
+/* 주소에 `?w=` 로 실려 온 칸을 그 자리에서 밝혀 둡니다 — 어디서
+   눌러 오셨는지가 화면에 남습니다. */
+.mvn-g > li.on{ border-color:var(--pw-or-600);
+  box-shadow:0 0 0 2px var(--pw-or-50) inset; }
+.mvn-g b{ font-size:15.5px; font-weight:800; color:var(--pw-ink); }
+.mvn-g p{ margin:0; font-size:13px; line-height:1.55; color:var(--pw-ink2); }
+/* ⚠️⚠️ **30px 동그라미로 두었다가 전수 점검에 여덟 폭 전부 걸렸습니다**
+   — 그 안에 "문의 남기기" 라는 **글자가 들어 있어서** 2낱말이 5줄로
+   쪼개지고 낱말 가운데가 잘렸습니다 (`알뜰폰 · 선불폰 › 문의 남기기
+   (2낱말 5줄)`). 화살표만 든 칸과 **글자가 든 칸은 다릅니다** —
+   글이 있으면 알약으로 내고 줄바꿈을 막습니다.
+   ⚠️ 누름 40px 이상입니다. */
+.mvn-go{ position:absolute; left:18px; bottom:14px;
+  display:inline-flex; align-items:center; min-height:40px; padding:0 14px;
+  border-radius:999px; white-space:nowrap;
+  font-size:13.5px; font-weight:800;
+  background:var(--pw-or-50); color:var(--pw-or-700); }
+.mvn-go:hover{ background:var(--pw-or-600); color:var(--pw-white); }
+@media (max-width:1023px){ .mvn-g{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
+@media (max-width:519px){ .mvn-g{ grid-template-columns:1fr; } }
+
+/* ── /business 사업자 전용관 ─────────────────────────────────── */
+.bzh-g{ list-style:none; margin:0 0 10px; padding:0; display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; }
+.bzh-g > li > a{ position:relative; display:flex; flex-direction:column;
+  gap:8px; height:100%; padding:20px 20px 56px; border-radius:18px;
+  background:var(--pw-white); border:1px solid var(--pw-line); }
+.bzh-g > li > a:hover{ border-color:var(--pw-or);
+  box-shadow:0 10px 24px -14px rgba(48,32,21,.34); }
+.bzh-i{ display:inline-flex; --ia-1:var(--pw-dk); --ia-2:#F6D3B2; }
+.bzh-g b{ font-size:16.5px; font-weight:800; color:var(--pw-ink); }
+.bzh-g > li > a > p{ margin:0; font-size:13.5px; line-height:1.55;
+  color:var(--pw-ink2); }
+.bzh-li{ list-style:none; margin:4px 0 0; padding:0; display:flex;
+  flex-direction:column; gap:4px; }
+.bzh-li li{ position:relative; padding-left:13px; font-size:13px;
+  line-height:1.5; color:var(--pw-ink3); }
+.bzh-li li::before{ content:""; position:absolute; left:2px; top:8px;
+  width:5px; height:5px; border-radius:50%; background:var(--pw-or); }
+.bzh-go{ position:absolute; right:16px; bottom:16px; width:34px; height:34px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border-radius:50%; background:var(--pw-or-50); color:var(--pw-or-700); }
+.bzh-g > li > a:hover .bzh-go{ background:var(--pw-or-600);
+  color:var(--pw-white); }
+@media (max-width:1023px){ .bzh-g{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
+@media (max-width:639px){ .bzh-g{ grid-template-columns:1fr; } }
+
+/* ── C안 §12 스크롤 고정 구매 · 판매 단추 ───────────────────────
+   ⚠️⚠️ **1024px 아래에서는 안 그립니다** — 그 폭부터 아래 네비(.mnav)
+   가 섭니다. 둘을 같이 두면 §12 가 금지한 겹침이고, 폰에서 본문
+   아래 110px 이 단추에 덮입니다 (재 봤습니다).
+   ⚠️ 보이고 숨는 것은 `.sc` 한 클래스입니다 (`js/app.js`) — 새 스크롤
+   처리를 만들지 않았습니다.
+   ⚠️⚠️ **누름 48px** 입니다 (이 저장소는 40 이 하한이고 "큰 쪽을
+   따른다" 고 정해 두었습니다).
+   ⚠️ 흰 글자를 얹는 면은 `--pw-or-600`(4.59)입니다 — `--pw-or`(2.94)를
+   쓰면 그 자리에서 AA 미달입니다. */
+.pwfx{ display:none; }
+@media (min-width:1024px){
+  .pwfx{ position:fixed; right:24px; bottom:24px; z-index:40;
+    display:flex; gap:10px; padding:10px;
+    border-radius:999px; background:rgba(255,255,255,.92);
+    border:1px solid var(--pw-line);
+    box-shadow:0 14px 34px -18px rgba(48,32,21,.55);
+    -webkit-backdrop-filter:saturate(1.2) blur(8px);
+    backdrop-filter:saturate(1.2) blur(8px);
+    opacity:0; transform:translateY(14px); pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease; }
+  .sc .pwfx{ opacity:1; transform:none; pointer-events:auto; }
+  .pwfx .btn{ min-height:48px; padding:0 22px; border-radius:999px;
+    font-size:15px; font-weight:800; }
+  .pwfx-b1{ background:var(--pw-white); border:1px solid var(--pw-dk);
+    color:var(--pw-ink); }
+  .pwfx-b1:hover{ background:var(--pw-or-50); border-color:var(--pw-or-600);
+    color:var(--pw-or-700); }
+  .pwfx-b2{ background:var(--pw-or-600); border:1px solid var(--pw-or-600);
+    color:var(--pw-white); }
+  .pwfx-b2:hover{ background:var(--pw-or-700); border-color:var(--pw-or-700);
+    color:var(--pw-white); }
+}

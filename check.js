@@ -63,6 +63,14 @@ const PAGES = [
   ["/guide",             "이용 안내"],
   ["/repair",            "수리 서비스"],
   ["/biz",               "기업 · 수출 문의"],
+  /* ⚠️⚠️ **C안 §3 · §10 · §11 의 새 주소 셋입니다.** 손님이 헤더에서
+     바로 닿는 화면이라, 표본에 안 넣으면 **대비 · 누름 크기 · 어두운
+     면 · 가로 스크롤을 아무도 안 봅니다** — 이 저장소가 "손님이 제일
+     많이 닿는 화면이 PAGES 에 없어서 크롤러 본문 95자가 몇 주 동안
+     안 걸렸다" 로 겪은 자리입니다. */
+  ["/price",             "내 폰 시세 (기준가 0건)"],
+  ["/mvno",              "알뜰폰 · 선불폰"],
+  ["/business",          "사업자 전용관"],
   ["/quote?c=repair&r=gyeonggi&side=repair", "견적 요청 (조건 실려 옴)"],
   ["/join",              "업체 입점하기"],
   ["/my",                "MY"],
@@ -1054,24 +1062,40 @@ const AUDIT = `(() => {
       () => !!document.querySelector('#gnb a.on[data-to]')],
     ["/shop",      "헤더 메뉴 켜짐",
       () => !!document.querySelector('#gnb a.on[data-to]')],
-    ["/guide",     "메뉴에 있는 화면은 그 메뉴가 켜짐",
+    /* ⚠️⚠️ **2026-11-01 — 또 이름을 박아 두었다가 걸렸습니다.** 바로
+       위 주석이 "칸 이름을 박지 마세요" 라고 적어 두고 정작 `/guide`
+       를 글자로 들고 있었는데, C안 §3 으로 그 화면이 메뉴에서
+       **공지 바**로 옮겨가자 **멀쩡한 코드를 "틀렸다" 고** 잡았습니다
+       (`tools/test-admin.js` 가 브랜드 이름을 박아 둔 그 자리 ·
+       이 저장소에서 세 번째). 지금은 **화면이 들고 있는 메뉴의 첫
+       칸**으로 가서 그 칸이 켜지는지 봅니다 — 메뉴가 무엇으로 바뀌든
+       같은 뜻을 잽니다. */
+    ["/price",     "메뉴에 있는 화면은 그 메뉴가 켜짐",
       () => {
         var on = document.querySelector('#gnb a.on[data-to]');
-        return !!on && on.getAttribute("data-to") === "/guide";
+        return !!on && on.getAttribute("data-to") === "/price";
       }],
-    /* ⚠️⚠️ **한 화면에 입구가 둘입니다** — `기업 매입`(`/biz?t=corp`)과
-       `해외 수출`(`/biz?t=export`)이 둘 다 `/biz` 입니다. 경로만 보면
-       **둘 다 켜져서** 손님은 자기가 어디 있는지 모릅니다 —
-       `paintGnb()` 가 질의문자까지 보고 가립니다. 전에는 이 자리를
-       `/sell-biz`(창업 · 폐업 매물 내놓기)로 재고 있었는데, 그 화면이
-       없어져서 **빈 화면에서 "아무것도 안 켜졌다" 가 그냥 통과**하고
-       있었습니다 (되돌려도 안 잡히는 자리). */
-    ["/biz?t=export", "질의문자가 다르면 다른 메뉴가 켜짐",
+    /* ⚠️⚠️ **접두사가 겹치는 두 주소**입니다 — `/biz`(기업 매입 ·
+       해외 수출)와 `/business`(사업자 전용관). 메뉴에 있는 것은
+       **뒤엣것 하나**이고, `paintGnb()` 가 `p === tp` 또는
+       `p.indexOf(tp + "/") === 0` 으로 가립니다. 느슨하게 적으면
+       `/biz` 에서 `사업자 전용관`이 켜지고, 손님은 자기가 전용관에
+       있다고 읽습니다 — **켜진 칸이 거짓이면 안 켜는 것보다
+       나쁩니다.** 두 줄로 갈라 **켜져야 할 때 켜지고 · 안 켜져야 할
+       때 안 켜지는지**를 따로 봅니다 (하나로 묶으면 한쪽이 영영
+       안 걸립니다).
+       ⚠️ 전에는 이 자리를 `/biz?t=export`(질의문자로 갈리는 메뉴)로
+       재고 있었는데, C안 §3 으로 `/biz` 가 **헤더에서 내려가면서**
+       그 뜻을 잴 자리가 없어졌습니다 — 질의문자로 갈리는 메뉴가
+       다시 생기면 그때 한 줄을 되살리세요. */
+    ["/business",  "사업자 전용관에서는 그 칩 하나만 켜짐",
       () => {
         var on = [].slice.call(document.querySelectorAll('#gnb a.on[data-to]'))
           .map(function(a){ return a.getAttribute("data-to"); });
-        return on.length === 1 && on[0] === "/biz?t=export";
+        return on.length === 1 && on[0] === "/business";
       }],
+    ["/biz?t=export", "접두사가 겹치는 주소에서 엉뚱한 메뉴가 안 켜짐",
+      () => document.querySelectorAll('#gnb a.on[data-to]').length === 0],
     ["/",          "아래 네비 홈",
       () => !!document.querySelector('.mnav a.on[data-to="/"]')],
     /* ⚠️⚠️ **켜진 칸이 거짓이면 안 켜는 것보다 나쁩니다.** 수리는 파는
@@ -1804,8 +1828,8 @@ const AUDIT = `(() => {
        ⚠️⚠️ 손으로 적지 마세요 — 하나를 늘릴 때 화면만 바뀌고 검사는
        옛 수를 그대로 셉니다. */
     const nSvc = v.querySelectorAll(".pwsv-g > li").length;
-    const wSvc = (window.PW_SVC6 || []).length;
-    if(!wSvc) return "PW_SVC6 를 못 읽습니다";
+    const wSvc = (window.PW_SVC5 || []).length;
+    if(!wSvc) return "PW_SVC5 를 못 읽습니다";
     if(nSvc !== wSvc)
       return "핵심 서비스가 " + nSvc + "장인데 데이터는 " + wSvc + "개입니다";
     const nBr = v.querySelectorAll(".pwbr-g > li").length;
@@ -1856,66 +1880,57 @@ const AUDIT = `(() => {
     if(fake) return "지어낸 실적이 있습니다 — " + fake[0];
     return true;
     return true;`);
-  await f("어느 화면에서나 검색으로 가는 길이 있고 메인이 두 갈래로 갈린다", "/", `
-    /* 지난 주석 (PHONEWAY 전환 때 이 검사는 메인으로 되돌렸습니다) (2026-10-29
-       PHONEWAY 전환). 메인이 중고폰 거래로 바뀌어 창업 · 폐업 쪽
-       길이 거기 없습니다 — 그쪽 157개 화면은 **아직 살아 있고
-       색인돼 있어서** 길이 끊기면 안 되고, 그 입구가 "/startup"
-       입니다 (푸터 맨 아랫줄 한 줄이 거기로 보냅니다).
-       **규칙은 한 줄도 안 바꿨습니다** — 재는 자리가 바뀐 것입니다.
-       ⚠️ 창업 · 폐업을 내리실 때(전환 계획 0단계 ①) 이 검사도 같이
-       치우세요. 그 전에 지우면 **그 영역이 길을 잃은 것을 아무도 안
-       봅니다.** 입구 자체는 짝 검사("창업 · 폐업 영역이 사이트 안에서
-       길을 잃지 않았다")가 메인에서 봅니다. */
-    /* ⚠️⚠️ **2026-10-08 — 떠 있는 검색 패널이 메인에서 내려왔습니다**
-       (시안에 없습니다). 그래서 검색으로 가는 길은 **헤더 하나**이고,
-       넓은 화면은 적는 칸 · 1180px 아래는 돋보기입니다. 헤더를 지우면
-       **160개 화면에서 검색이 사라집니다** — 여기가 그걸 막습니다.
-       ⚠️ MainSearch 함수는 지우지 않았습니다 (되돌리실 수 있습니다).
-       ⚠️⚠️ 이 글은 템플릿 문자열 안입니다 — 주석에 백틱을 쓰면
-       문자열이 거기서 끝나고 검사가 통째로 멈춥니다 (열세 번째). */
-    const q = document.querySelector('.hd input[type="search"]');
-    const ic = document.querySelector('.hd a[href="/search"]');
+  await f("헤더에 검색창이 없고 통합검색으로 가는 길은 남아 있다", "/", `
+    /* ⚠️⚠️ **2026-11-01 C안 — 규칙이 세 번째로 뒤집혔습니다.**
+       ① 2026-10-13 §3 — 메인에서만 검색 아이콘을 뺍니다
+       ② 2026-10-15 §3 — 히어로에는 안 넣고 **헤더에는 둡니다**
+       ③ 2026-11-01 C안 §3 · §13 · §16-2 — "검색창은 추가하지 않는다" ·
+          "모바일 헤더에서도 검색창은 만들지 않는다" · 검수 2번
+          "헤더에 검색창이 없는지". 그래서 **헤더 폼이 내려갔습니다.**
+       ⚠️⚠️ 그런데 §0 · §15 가 "기존에 정상 작동하는 기능은 유지한다"
+       고 적었습니다 — 검색 **화면**(/search)은 그대로 돌아야 하고,
+       전에는 헤더 돋보기가 그리로 가는 **유일한 길**이었습니다.
+       그냥 떼면 색인은 되어 있는데 사이트 안에서는 아무 데서도
+       안 걸리는 화면이 하나 생깁니다 (이 저장소가 묶음 주소 여섯 ·
+       자산 함수로 겪은 자리). 그래서 **둘을 한 검사에서** 봅니다 —
+       헤더에 폼이 없는 것과, 그 길이 어딘가 남아 있는 것.
+       ⚠️ 이 글은 템플릿 문자열 안입니다 — 주석에 백틱을 쓰면 문자열이
+       거기서 끝나고 검사가 통째로 멈춥니다 (서른두 번 겪었습니다). */
     const vis = function(e){
       if(!e) return 0;
       const r = e.getBoundingClientRect();
-      return (getComputedStyle(e).display !== "none" && r.height >= 24) ? r.height : 0;
+      return (getComputedStyle(e).display !== "none" && r.height >= 20) ? r.height : 0;
     };
-  /* ⚠️⚠️ **규칙이 두 번 뒤집혔습니다.**
-       ① 2026-10-13 §3 — "메인 상단 검색 아이콘은 제거한다" (메인만 접음)
-       ② 2026-10-15 §3 — "기존 검색 기능은 유지하되, 메인 **히어로**에
-          검색창을 추가하지 않는다." 시안의 헤더에는 돋보기가 있습니다.
-       그래서 지금은 **메인에도 있어야 합니다.** 바로 아래 짝 검사가
-       속화면을 봅니다 — 둘을 한 검사로 묶지 마세요. 한쪽만 보면
-       "헤더에서 통째로 빼기" 가 그냥 통과합니다.
-       ⚠️ 히어로 안에 검색창을 다시 넣지 마세요 (§3) — 같은 일을 하는
-       입구가 한 화면에 둘이면 어느 쪽을 쓸지가 흐려집니다. */
-    if(!vis(q) && !vis(ic)) return "메인 헤더에 검색이 없습니다 (§3)";
-    /* ⚠️ 2026-10-17 §4 로 히어로가 메인에서 빠졌습니다. 검색으로 가는
-       길은 **헤더 하나**이고, 메인 본문에 또 만들면 같은 일을 하는
-       입구가 한 화면에 둘이 됩니다 (어느 쪽을 쓸지 흐려집니다). */
+    const hd = document.querySelector(".hd");
+    if(!hd) return "헤더가 없습니다";
+    if(hd.querySelector('input[type="search"]') || hd.querySelector(".hd-s"))
+      return "헤더에 검색창이 생겼습니다 (C안 §3 · §13 · §16-2)";
+    /* 히어로 · 본문에도 넣지 않습니다 — 같은 일을 하는 입구가 한
+       화면에 둘이면 어느 쪽을 쓸지가 흐려집니다 (§3). */
     if(document.querySelector("#view input[type=search]"))
-      return "메인 본문에 검색창이 생겼습니다 (중복)";
-    /* ⚠️⚠️ **창업 · 폐업 쪽 길 확인은 짝 검사로 옮겼습니다**
-       (2026-10-29 PHONEWAY) — "창업 · 폐업 영역이 사이트 안에서 길을
-       잃지 않았다" 가 그것들을 봅니다. 메인이 중고폰 거래가 되면서
-       그 다섯 곳과 사업 단계 여섯은 **메인에 없고 입구를 거쳐**
-       닿습니다. 여기는 검색 하나만 봅니다 — 둘을 한 검사에 묶으면
-       한쪽이 바뀔 때마다 다른 쪽이 같이 빨개집니다. */
+      return "메인 본문에 검색창이 생겼습니다 (C안 §3)";
+    /* ⚠️⚠️ **보이는 길**이라야 합니다. 폰 서랍 안의 한 줄은 넓은
+       화면에서 display:none 이라, 그것만 세면 PC 에서 길이 0 인 것을
+       놓칩니다 — 푸터 한 줄이 그 자리입니다. */
+    const ways = [].slice.call(document.querySelectorAll('a[href^="/search"]'))
+      .filter(function(a){ return vis(a); });
+    if(!ways.length) return "통합검색으로 가는 길이 화면에 하나도 없습니다";
     return true;`);
-  /* ⚠️⚠️ **메인을 뺀 화면에는 헤더 검색이 그대로 있어야 합니다**
-     (2026-10-13 §3 — 기능 자체는 삭제하지 않습니다). 메인에서 접는
-     것은 `.is-home` 한 클래스뿐이고, 헤더에서 통째로 빼면 **160개
-     화면에서 검색이 사라집니다** — 위 검사와 짝입니다. */
-  await f("메인을 뺀 화면에는 헤더 검색이 그대로 있다", "/shop", `
-    const q = document.querySelector('.hd input[type="search"]');
-    const ic = document.querySelector('.hd a[href="/search"]');
-    const vis = function(e){
-      if(!e) return 0;
-      const r = e.getBoundingClientRect();
-      return (getComputedStyle(e).display !== "none" && r.height >= 24) ? r.height : 0;
-    };
-    if(!vis(q) && !vis(ic)) return "속화면 헤더에도 검색이 없습니다";
+  /* ⚠️⚠️ **속화면에만 다시 넣는 것도 막습니다** (C안 §13 — "모바일
+     헤더에서도 검색창은 만들지 않는다"). 위 검사는 메인만 보기
+     때문에, 이 짝이 없으면 **스물한 화면 중 스물에 다시 넣기** 가
+     그냥 통과합니다. */
+  await f("속화면 헤더에도 검색창이 없다", "/shop", `
+    /* ⚠️⚠️ **위 검사와 짝입니다 — 묶지 마세요.** 한쪽만 보면
+       "메인만 빼고 속화면에는 다시 넣기" 가 그냥 통과합니다 (이
+       저장소가 "두 검사를 갈라 두는 것이 맞다" 로 적어 둔 자리 —
+       빈 제목 · 개수 검사와 같은 까닭입니다).
+       ⚠️ 여기는 **없는 것만** 봅니다. 길이 남아 있는가는 아래
+       "통합검색으로 가는 길이 남아 있다" 가 봅니다. */
+    const hd = document.querySelector(".hd");
+    if(!hd) return "헤더가 없습니다";
+    if(hd.querySelector('input[type="search"]') || hd.querySelector(".hd-s"))
+      return "속화면 헤더에 검색창이 생겼습니다 (C안 §13)";
     return true;`);
   /* ⚠⚠ **조회할 곳이 없는 동안에는 폼을 안 냅니다** (2026-10-29).
      전에는 폼을 내고 누르면 "아직 안 열었습니다" 라고 답했는데,
@@ -2444,25 +2459,26 @@ const AUDIT = `(() => {
       return "더 보기 링크가 사이트 안 주소가 아닙니다";
     return true;`);
 
-  await f("어느 화면에서나 검색으로 가는 길이 있다", "/shop", `
-    /* ⚠️ 2026-10-03 — 넓은 화면에서는 **입력칸**, 좁은 화면에서는
-       **돋보기 단추**입니다 (지시서 §2). 둘 중 하나는 늘 보여야 합니다.
-       ⚠️⚠️ **보는 화면을 / 에서 /providers 로 옮겼습니다** —
-       2026-10-13 §3 이 "기존 메인페이지 상단 검색 아이콘은 제거한다"
-       고 적었습니다. 메인에서 없어야 하는 것은 위 검사가 보고, 여기는
-       **나머지 화면에 그대로 있는가**를 봅니다 (§3 이 같은 문장에서
-       "검색 기능 자체는 삭제하지 않는다" 고 적었습니다). */
+  await f("통합검색으로 가는 길이 남아 있다", "/shop", `
+    /* ⚠️⚠️ **C안 §3 으로 헤더 돋보기가 내려갔습니다.** 검색 화면은
+       그대로 돌아야 하고(§0 · §15 "기존에 정상 작동하는 기능은
+       유지한다"), 그 길은 지금 **푸터 고객지원 칸 한 줄과 폰 서랍
+       한 줄**입니다. 둘 다 지우면 /search 는 색인은 되어 있는데
+       사이트 안에서는 아무 데서도 안 걸립니다.
+       ⚠️ 누르는 칸이라 **40px 이상**이어야 합니다 — 푸터 줄을
+       글줄 높이로 두면 손가락으로 못 누릅니다. */
     const vis = function(e){
       if(!e) return null;
       const r = e.getBoundingClientRect();
-      return (r.width >= 40 && r.height >= 40) ? r : null;
+      return (getComputedStyle(e).display !== "none" && r.height >= 20) ? r : null;
     };
-    const box = vis(document.querySelector(".hd .hd-s"));
-    const ico = vis(document.querySelector('.hd a[href="/search"]'));
-    if(!box && !ico) return "헤더에 쓸 수 있는 검색 자리가 없습니다";
-    /* 입력칸이 보이면 엔터로 실제로 가야 합니다 */
-    if(box && !document.querySelector('.hd input[type="search"]'))
-      return "헤더 검색이 입력칸이 아닙니다";
+    const ways = [].slice.call(document.querySelectorAll('a[href^="/search"]'))
+      .map(vis).filter(Boolean);
+    if(!ways.length) return "통합검색으로 가는 길이 화면에 하나도 없습니다";
+    const low = ways.filter(function(r){ return r.height < 40; });
+    if(low.length === ways.length)
+      return "통합검색 링크가 전부 40px 미만입니다 (" +
+        Math.round(ways[0].height) + "px)";
     return true;`);
   await f("추천 검색어가 실제로 결과를 낸다", "/search", `
     /* ⚠️ 눌렀는데 "결과 없음" 이 나오면 검색이 고장난 것처럼 보입니다 */
@@ -2762,8 +2778,8 @@ const AUDIT = `(() => {
        ⚠️ 사업 배너 넷은 다른 검사가 봅니다 — 둘을 묶지 마세요
        (한쪽만 보면 다른 쪽이 조용히 어긋납니다). */
     const L = [].slice.call(document.querySelectorAll(".pwsv-g .pwsv-c"));
-    const want = (window.PW_SVC6 || []).length;
-    if(!want) return "PW_SVC6 를 못 읽습니다";
+    const want = (window.PW_SVC5 || []).length;
+    if(!want) return "PW_SVC5 를 못 읽습니다";
     if(L.length !== want)
       return "서비스 카드가 " + L.length + "장입니다 (" + want + "이어야 합니다)";
     if(innerWidth <= 900) return true;

@@ -658,12 +658,12 @@ function adInit(){
   if(!root) return;
 
   root.innerHTML =
-    '<section class="ad-s">'+
+    '<section class="ad-s ad-s-1">'+
       '<h2>1. 지금 접수가 되고 있나요</h2>'+
       '<div id="ad-health"><p class="ad-empty">확인하는 중…</p></div>'+
     '</section>'+
 
-    '<section class="ad-s">'+
+    '<section class="ad-s ad-s-2">'+
       '<h2>2. 영업 시작 전에 남은 것</h2>'+
       '<p class="ad-lead">사람이 직접 해야 하는 것만 모았습니다. '+
         '<b>전부 세는 값</b>이라 채우시면 이 칸에서 저절로 사라집니다 — '+
@@ -671,7 +671,7 @@ function adInit(){
       '<div id="ad-ready"></div>'+
     '</section>'+
 
-    '<section class="ad-s">'+
+    '<section class="ad-s ad-s-3">'+
       '<h2>3. 들어온 접수를 붙여 넣으세요</h2>'+
       '<p class="ad-lead">슬랙이나 메일로 받은 접수를 그대로 붙여 넣으시면 '+
         '됩니다. <b>아무것도 서버로 보내지 않습니다</b> — 이 브라우저 안에서만 '+
@@ -686,7 +686,7 @@ function adInit(){
       '</div>'+
     '</section>'+
 
-    '<section class="ad-s">'+
+    '<section class="ad-s ad-s-4">'+
       '<h2>4. 분류는 사람이 고릅니다</h2>'+
       /* ⚠️ 절대 규칙 5 — 하지 않은 일을 했다고 말하지 않습니다.
          자동분류를 하지 않으므로 "분석했습니다" 라고 쓰지 않습니다. */
@@ -703,14 +703,14 @@ function adInit(){
       '</div>'+
     '</section>'+
 
-    '<section class="ad-s">'+
+    '<section class="ad-s ad-s-5">'+
       '<h2>5. 보낼 글</h2>'+
       '<p class="ad-lead">고치셔도 됩니다. 복사해서 슬랙 · 메일 · 문자로 '+
         '보내시면 됩니다.</p>'+
       '<div id="ad-out"></div>'+
     '</section>'+
 
-    '<section class="ad-s">'+
+    '<section class="ad-s ad-s-6">'+
       '<h2>6. 업체에 보낼 초대 글</h2>'+
       /* ⚠️ 운영자 화면이라 여기에 법 얘기를 적습니다 (절대 규칙 3).
          손님 화면에는 안 나갑니다. */
@@ -741,7 +741,7 @@ function adInit(){
     '</section>'+
 
 
-    '<section class="ad-s">'+
+    '<section class="ad-s ad-s-7">'+
       '<h2>7. 수익상품 — 지금 낼 수 있는 상태인가</h2>'+
       '<p class="ad-lead">지시서 §5 가 <b>"실제 제휴사가 확보되지 않은 '+
         '상품은 신청 가능 상품처럼 오인시키지 말라"</b>고 적었습니다. '+
@@ -751,7 +751,7 @@ function adInit(){
       adOffers()+
     '</section>'+
 
-    '<section class="ad-s">'+
+    '<section class="ad-s ad-s-8">'+
       '<h2>8. 제휴업체 등록 줄</h2>'+
       '<p class="ad-lead">받아 온 업체를 적으시면 <b>넣을 줄 둘</b>을 '+
         '만들어 드립니다 — <b>손님 화면</b>(정적 파일)과 <b>배정용 DB</b> '+

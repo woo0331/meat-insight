@@ -1027,3 +1027,71 @@ body.sl-locked{ overflow:hidden; }
 @media (max-width:760px){
   .rq-dv-sum{ grid-template-columns:1fr; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   관리자 메뉴 — 한 번에 한 칸 (2026-11-01)
+
+   ⚠️⚠️ **이 블록은 파일 맨 뒤라야 합니다.** `.ad-s{…}` · `.sl-s{…}` 와
+   특정도가 같아서 **뒤에 오는 쪽이 이깁니다** — 가운데 끼워 넣으면
+   가리기가 조용히 안 먹고 "메뉴를 눌러도 안 바뀐다" 로만 보입니다
+   (이 저장소가 특정도로 일곱 번 겪은 자리).
+
+   되돌리시려면 이 블록과 `js/adnav.js` · `admin.html` 의 nav 한 줄을
+   같이 걷어내세요 — 그러면 구간 스물둘이 전과 똑같이 쌓입니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+.ad-nav{ display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+  padding:0 0 var(--s2); }
+/* ⚠️ 메뉴가 비면(JS 가 안 돌거나 그릴 칸이 0개) **자리를 안 먹습니다** —
+   빈 알약 줄만 남으면 그게 자리표시자입니다 (절대 규칙 2). */
+.ad-nav:empty{ display:none; }
+
+/* ⚠️⚠️ 누름 48px 입니다 — `padding` 만으로 만들면 짧은 이름("업체")
+   에서 다시 낮아집니다. 글씨는 13px(`--t-cap`)이 하한입니다. */
+.ad-nav-b{ display:inline-flex; align-items:center; min-height:48px;
+  padding:0 16px; border-radius:var(--r-pill); background:var(--surface);
+  border:1px solid var(--line); font-family:var(--font);
+  font-size:var(--t-cap); font-weight:800; color:var(--ink2);
+  cursor:pointer; }
+.ad-nav-b:hover{ border-color:var(--blue); color:var(--ink); }
+/* ⚠️⚠️ **색만으로 고른 것을 표시하지 않습니다.** 짙은 면 + 흰 글자
+   + `aria-pressed` 셋이 같이 바뀝니다 — 읽어 주는 프로그램도
+   눌림을 읽습니다. 재 본 대비: 흰 글자 / `--navy` 12.79 */
+.ad-nav-b.is-on{ background:var(--navy); border-color:var(--navy);
+  color:#fff; }
+.ad-nav-b.is-on:hover{ color:#fff; }
+
+/* 직원 칸과 대표 칸 사이 — ⚠️ 글자가 아니라 선입니다 (읽어 주는
+   프로그램에는 `aria-hidden` 으로 안 들립니다) */
+.ad-nav-sep{ display:inline-block; width:1px; height:24px;
+  margin:0 4px; background:var(--line); }
+
+/* ⚠️⚠️ 고른 칸에 없는 구간을 가립니다. 선택자를 `.ad-main .ad-off` 로
+   두는 까닭은 `.ad-s` · `.sl-s` 가 자기 `display` 를 들고 있어서
+   한 겹 선택자로는 **질 수 있기** 때문입니다 (`[hidden]` 이 flex 에
+   안 먹던 그 자리). */
+.ad-main .ad-off{ display:none; }
+
+/* ⚠️⚠️ 간격은 전에 `.ad-fold #ad{display:grid;gap}` 이 주고 있었습니다 —
+   `<details>` 를 걷어내면서 **그 한 줄이 같이 죽어** 구간 여덟이 0px 로
+   붙었습니다 (대비도 · 누름도 · 가로 넘침도 멀쩡해서 **재 봐야** 압니다).
+   ⚠️ `.ad-fold` 규칙은 되돌리기용으로 위에 그대로 두었습니다. */
+#ad{ display:grid; gap:var(--s5); }
+
+/* ⚠️⚠️ **id 로 잡는 규칙은 클래스를 아무리 겹쳐도 못 이깁니다.**
+   `#sl{display:grid}`(197줄)가 (1,0,0) 이라 `.ad-main .ad-off`(0,2,0)
+   가 **집니다** — 영업 작업대 칸이 다른 칸을 눌러도 **그대로 남아**
+   있었습니다 (재 보니 `class="ad-off"` 인데 `display:grid` · 높이
+   2,616px). 화면으로는 "메뉴가 안 먹네" 로만 보입니다.
+   그래서 세 감싸개는 **id 로** 눌러 둡니다 (1,1,0).
+   ⚠️ `#rq` · `#ad` 를 세는 묶음을 더하시면 여기에 같이 적으세요 —
+   `js/adnav.js` 의 `AD_NAV` 에 `#xx` 꼴을 쓰는 순간 필요해집니다. */
+#rq.ad-off, #sl.ad-off, #ad.ad-off{ display:none; }
+
+@media (max-width:760px){
+  /* ⚠️ 폰에서는 메뉴가 길어 두세 줄이 됩니다 — 가로로 밀지 않고
+     줄바꿈합니다 (가로 스크롤을 기본 구조로 만들지 않습니다). */
+  .ad-nav{ gap:6px; }
+  .ad-nav-b{ padding:0 12px; }
+  .ad-nav-sep{ display:none; }
+}

@@ -138,7 +138,15 @@ const AUDIT = () => {
   if (document.documentElement.scrollWidth > window.innerWidth + 1)
     bad.scroll.push(document.documentElement.scrollWidth + " > " + window.innerWidth);
 
-  document.querySelectorAll("#sl *, .ad-fold *, .sl-mod-bg *, .sl-sticky *").forEach(el => {
+  /* ⚠️⚠️ **범위에 `#rq` 가 빠져 있었습니다** (2026-11-01 에 찾았습니다).
+     전에는 `#sl *, .ad-fold *, …` 라서 **접수 · 배정 · 계약 · 수수료 ·
+     정산 · 업체 · 재고 일곱 구간이 한 번도 안 재졌습니다** — 바로 위
+     주석이 "세 상태를 가로채서 그려 놓고 잽니다" 라고 적고 있었는데
+     그 글이 거짓이었습니다 (`.ad-fold` 는 `#ad` 만 덮습니다).
+     지금은 `.ad-main` 통째입니다 — 메뉴 · `#rq` · `#sl` · `#ad` 가
+     한 번에 들어옵니다. ⚠️ 구간을 늘려도 저절로 따라옵니다.
+     ⚠️ `.ad-fold` 는 2026-11-01 에 메뉴로 바뀌어 없어졌습니다. */
+  document.querySelectorAll(".ad-main *, .sl-mod-bg *, .sl-sticky *").forEach(el => {
     if (!vis(el)) return;
     const cs = getComputedStyle(el);
     const own = [].slice.call(el.childNodes)
@@ -316,7 +324,19 @@ function SESS(sess, me){
     ["재연락 판", async pg => { await pg.evaluate(() => { SL.modal = { k:"when", id:"qa1" }; slDraw(); }); }],
     ["사유 판", async pg => { await pg.evaluate(() => { SL.modal = { k:"why", id:"qa1" }; slDraw(); }); }],
     ["보관함", async pg => { await pg.evaluate(() => { SL.modal = { k:"arch", id:"" }; slDraw(); }); }],
-    ["관리자 설정", async pg => { await pg.click(".ad-fold > summary"); await pg.waitForTimeout(200); }],
+    /* ⚠️⚠️ 2026-11-01 — 전에는 `<details class="ad-fold">` 를 눌러
+       펼쳤습니다. 그 접힘을 **메뉴가 받았습니다** — 이제 **칸마다**
+       봅니다. 한 칸만 보면 나머지 아홉 칸의 대비 · 누름 크기 · 고르개
+       딱지를 **영원히 못 봅니다** (업체가 0곳이라 확인 배지 대비
+       1.99 가 한 번도 안 재졌던 그 자리).
+       ⚠️⚠️ 여기서 `adNavOff()` 를 **부르지 마세요** — 그러면 메뉴가
+       켜진 모습을 아무도 안 보게 됩니다. 기능은
+       `tools/test-admin.js` 가 끄고 봅니다 (둘을 묶지 마세요). */
+    ["메뉴 접수상태", async pg => { await pg.evaluate(() => adNavGo("health")); }],
+    ["메뉴 접수정리", async pg => { await pg.evaluate(() => adNavGo("sort")); }],
+    ["메뉴 초대글", async pg => { await pg.evaluate(() => adNavGo("invite")); }],
+    ["메뉴 수익상품", async pg => { await pg.evaluate(() => adNavGo("offer")); }],
+    ["메뉴 등록줄", async pg => { await pg.evaluate(() => adNavGo("pvnew")); }],
     ["이번달 실적", async pg => { await pg.click(".sl-st .sl-chip:has-text('이번달')"); }],
     /* ⚠️⚠️ 접수 · 배정 칸(2026-10-11 전면 감사 §6)은 `/api/session` 이
        없으면 **한 픽셀도 안 그려집니다** — 그러면 이 검사가 그 칸의
@@ -325,8 +345,15 @@ function SESS(sess, me){
        가로채서 그려 놓고 잽니다. 가로채는 것은 **주소뿐**이고 저장소
        데이터는 그대로 0곳입니다 (절대 규칙 1). */
     ["로그인 칸", async pg => {}, SESS({ auth:true, signedIn:false })],
-    ["접수 목록", async pg => {}, SESS(ADMIN, ME)],
+    /* ⚠️⚠️ **건드릴 구간의 칸을 먼저 켭니다.** 안 켜면
+       `display:none` 이라 click 이 **30초 타임아웃으로 터지고 뒤
+       상태가 통째로 안 돕니다** (어느 상태가 틀렸는지도 안 나옵니다).
+       ⚠️ 칸 이름이 아니라 **선택자**를 주세요 (`adNavFor`) — `AD_NAV`
+       묶음을 다시 짜도 여기를 안 고칩니다. */
+    ["접수 목록", async pg => { await pg.evaluate(() => adNavFor(".rq-s-rq")); },
+      SESS(ADMIN, ME)],
     ["배정 판", async pg => {
+        await pg.evaluate(() => adNavFor(".rq-s-rq"));
         await pg.locator("#rq .rq-r .rq-hd").first().click();
         await pg.waitForTimeout(150);
         await pg.selectOption("#rq-to", "assigned");
@@ -337,29 +364,34 @@ function SESS(sess, me){
        서로 다른 폼이라, 하나만 보면 나머지 둘의 대비 · 누름 크기를
        못 봅니다. */
     ["수수료 확정 판", async pg => {
+        await pg.evaluate(() => adNavFor(".rq-s-mn"));
         await pg.locator("#rq .rq-s-mn .rq-hd", { hasText:"SW-AB12-CD34" }).click();
         await pg.waitForTimeout(200);
       }, SESS(ADMIN, ME)],
     ["입금 판", async pg => {
+        await pg.evaluate(() => adNavFor(".rq-s-mn"));
         await pg.locator("#rq .rq-s-mn .rq-hd", { hasText:"SW-EF56-GH78" }).click();
         await pg.waitForTimeout(200);
       }, SESS(ADMIN, ME)],
     ["환수 판", async pg => {
+        await pg.evaluate(() => adNavFor(".rq-s-mn"));
         await pg.locator("#rq .rq-s-mn .rq-hd", { hasText:"SW-IJ90-KL12" }).click();
         await pg.waitForTimeout(200);
       }, SESS(ADMIN, ME)],
     ["새 정책 판", async pg => {
+        await pg.evaluate(() => adNavFor(".rq-s-fee"));
         await pg.locator("#rq .rq-s-fee .rq-new summary").click();
         await pg.waitForTimeout(200);
       }, SESS(ADMIN, ME)],
     ["이력 판", async pg => {
+        await pg.evaluate(() => adNavFor(".rq-s-rq"));
         await pg.locator("#rq .rq-s-rq .rq-hd").first().click();
         await pg.waitForTimeout(150);
         await pg.locator("#rq .rq-s-rq button", { hasText:"이력 보기" }).click();
         await pg.waitForTimeout(300);
       }, SESS(ADMIN, ME)],
     /* ⚠️ 직원 — 돈 구간이 **안 와서** 안 그려지는 쪽입니다 */
-    ["직원", async pg => {},
+    ["직원", async pg => { await pg.evaluate(() => adNavFor(".rq-s-rq")); },
       SESS({ auth:true, signedIn:true, role:"staff", name:"직원" },
            Object.assign({}, ME, { role:"staff", deals:undefined, fees:undefined }))],
     ["권한 없음", async pg => {},

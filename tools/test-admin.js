@@ -59,6 +59,14 @@ function ok(name, cond, extra) {
     });
     pg.on("requestfailed", q => { if (!okMiss(q.url())) errs.push("못 불러옴: " + q.url()); });
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     return { ctx, pg, errs };
   }
 
@@ -138,6 +146,7 @@ function ok(name, cond, extra) {
 
     /* 새로고침해도 남아 있는가 (저장) */
     await pg.reload({ waitUntil:"networkidle" });
+    await pg.evaluate(() => window.adNavOff && adNavOff());   /* ⚠️ 위 주석 — 메뉴를 끄고 전부 펼칩니다 */
     ok("새로고침 뒤에도 업체가 남는다", await rowOf(pg, "대한폰매입").count() === 1);
     ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
     await ctx.close();
@@ -391,6 +400,14 @@ function ok(name, cond, extra) {
     pg.on("console", m => { if (m.type() === "error" &&
       !/admin-health|Failed to load resource/.test(m.text())) errs.push(m.text()); });
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
 
     /* ⚠️ 위 add(pg, ...) 와 같은 까닭으로 key 를 먼저 봅니다 */
     const add = async (name, tel, g, reg, gu) => {
@@ -519,7 +536,12 @@ function ok(name, cond, extra) {
 
     /* ── 옛 기능이 그대로 사는가 (§41 KEEP) ── */
     console.log("\n옛 기능 보존 — 관리자 설정 안");
-    await pg.click(".ad-fold > summary");
+    /* ⚠️⚠️ 2026-11-01 — 전에는 `<details class="ad-fold">` 를 눌러
+       펼쳤습니다. 그 접힘을 **메뉴가 받았습니다** — 여기는
+       `adNavOff()` 로 이미 전부 펼쳐져 있으니 누를 것이 없습니다.
+       ⚠️ 이 블록이 지키는 것은 **옛 칸 여덟이 살아 있는가**(§29 KEEP)
+       이지 "접혔다 펴지는가" 가 아닙니다 — 그쪽은 맨 아래
+       "관리자 메뉴" 블록이 봅니다. */
     await pg.waitForTimeout(250);
     ok("1번 접수 상태 칸", (await pg.locator("#ad h2").first().innerText()).includes("지금 접수가 되고 있나요"));
     /* ⚠️⚠️ **갯수를 그냥 세지 않습니다.** `=== 7` 로 적어 두었다가
@@ -615,11 +637,17 @@ function ok(name, cond, extra) {
        보기 때문에 딱지가 거짓이어도 통과했습니다 (딱지를 읽는 검사가
        아무 데도 없었습니다 — 2026-10-31 에 찾았습니다).
        ⚠️ 칸을 늘리거나 내리면 `admin.html` 의 그 글도 같이 고치세요. */
-    const foldTag = (await pg.locator(".ad-fold > summary").innerText()) || "";
+    /* ⚠️⚠️ 2026-11-01 — 전에는 `<details>` 의 `<summary>` 글을
+       봤습니다. 그 자리를 **메뉴 이름**이 받았습니다 (`js/adnav.js`
+       의 `AD_NAV`) — 지키려는 것은 그대로입니다: **없는 칸을
+       가리키는 딱지를 두지 않는 것.** 직원이 그 글을 보고 칸을
+       찾아 열었다가 없는 것을 봅니다. */
+    const navTags = (await pg.evaluate(() =>
+      (window.AD_NAV || []).map(x => x.name).join(" / "))) || "";
     const foldBad = ["매물", "지원사업", "전문관", "창업", "폐업", "업종"]
-      .filter(w => foldTag.indexOf(w) >= 0);
-    ok("관리자 설정 딱지가 없는 칸을 가리키지 않는다",
-       foldBad.length === 0, foldBad.join(" · ") + " / " + foldTag);
+      .filter(w => navTags.indexOf(w) >= 0);
+    ok("메뉴 이름이 없는 칸을 가리키지 않는다",
+       foldBad.length === 0, foldBad.join(" · ") + " / " + navTags);
 
     ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
     await ctx.close();
@@ -632,6 +660,14 @@ function ok(name, cond, extra) {
   {
     const { pg, ctx, errs } = await fresh(1440, 1000);
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     await pg.waitForTimeout(400);
 
     /* 로컬 정적 서버에는 `/api/session` 이 없습니다 — 화면은 그것을
@@ -649,9 +685,9 @@ function ok(name, cond, extra) {
        ⚠️ 여기 적는 업체는 **테스트 브라우저 안에서만** 삽니다 —
        저장소 데이터(js/data/providers.js)는 그대로 0곳입니다
        (절대 규칙 1). */
-    /* ⚠️ 8번은 접힌 "관리자 설정" 안입니다 (§29) — 펼쳐야 보입니다 */
-    await pg.click(".ad-fold > summary");
-    await pg.waitForTimeout(200);
+    /* ⚠️ 8번은 메뉴의 "제휴업체 줄 만들기" 칸입니다 (§29 — 직원
+       화면에서 안 보이게). 여기는 `adNavOff()` 로 전부 펼쳐져
+       있으니 누를 것이 없습니다. */
     const pvB = pg.locator("#ad-pv");
     ok("8번 칸이 있다", (await pvB.count()) === 1);
 
@@ -807,6 +843,14 @@ function ok(name, cond, extra) {
     });
 
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     await pg.waitForTimeout(500);
 
     ok("접수 줄이 나온다", (await pg.locator("#rq .rq-s-rq .rq-r").count()) === 2);
@@ -1056,6 +1100,14 @@ function ok(name, cond, extra) {
     });
 
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     await pg.waitForTimeout(600);
 
     /* ── 숫자 넷 (§9 — 각각 구분) ────────────────────────────── */
@@ -1373,6 +1425,14 @@ function ok(name, cond, extra) {
     });
 
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     await pg.waitForSelector("#rq .rq-s-pv", { timeout:8000 });
 
     /* ── ⑬ 담당자 ────────────────────────────────────────────── */
@@ -1524,6 +1584,14 @@ function ok(name, cond, extra) {
     });
 
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     /* ⚠️⚠️ **접수 구간을 기다리고 입점 구간은 세어서 봅니다.** 바로
        `#rq .rq-s-ap` 를 기다리면, 구간이 없어졌을 때 **엉뚱한 자리의
        타임아웃으로 터지고 어느 검사가 틀렸는지도 안 나옵니다** (이
@@ -1610,6 +1678,7 @@ function ok(name, cond, extra) {
        넘길 때 **엉뚱한 업체가 기록에 같이 남습니다** (배정에서 적어 둔
        그 규칙 — 받지도 않은 동의가 보류 기록에 남던 자리). */
     await pg.reload({ waitUntil:"networkidle" });
+    await pg.evaluate(() => window.adNavOff && adNavOff());   /* ⚠️ 위 주석 — 메뉴를 끄고 전부 펼칩니다 */
     await pg.waitForSelector("#rq .rq-s-ap", { timeout:8000 });
     await pg.locator("#rq .rq-s-ap button:has-text(\"열기\")").first().click();
     await pg.waitForSelector("#rq .rq-s-ap .rq-bd", { timeout:5000 });
@@ -1660,6 +1729,14 @@ function ok(name, cond, extra) {
             gu:["안양시"], industries:["phone"], subs:["lcd"], listed:false }
         ] }) }));
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     await pg.waitForTimeout(500);
 
     ok("직원에게는 계약 · 수수료 구간이 아예 없다",
@@ -1699,6 +1776,14 @@ function ok(name, cond, extra) {
       body: JSON.stringify({ auth:true, signedIn:false,
         conf:{ url:"https://proj.supabase.co", anonKey:"ANON-TEST" } }) }));
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     await pg.waitForTimeout(400);
     ok("로그인 칸이 나온다", (await pg.locator("#rq-em").count()) === 1);
     /* ⚠️ 비밀번호를 받지 않습니다 */
@@ -1720,6 +1805,14 @@ function ok(name, cond, extra) {
                              conf:{ url:"https://p.supabase.co", anonKey:"A" } }) }));
     await pg.route("**/api/me**", r => r.fulfill({ status:500, body:"no" }));
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     await pg.waitForTimeout(400);
     const t = await pg.locator("#rq").textContent();
     ok("고객 계정에는 접수를 안 보여 준다", t.includes("권한이 없습니다"), t.slice(0, 60));
@@ -1754,6 +1847,14 @@ function ok(name, cond, extra) {
         access_token: tk, at: Date.now() + 3600000 })); }catch(e){}
     }, [jwt]);
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     await pg.waitForTimeout(400);
     const sql = await pg.locator("#rq .rq-sql").textContent();
     ok("첫 관리자 SQL 에 내 uuid 가 그대로 적힌다", sql.includes(UID), sql);
@@ -1778,6 +1879,14 @@ function ok(name, cond, extra) {
         access_token: "abc.def.ghi", at: Date.now() + 3600000 })); }catch(e){}
     });
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     await pg.waitForTimeout(400);
     const sql = await pg.locator("#rq .rq-sql").textContent();
     ok("토큰을 못 읽으면 자리만 적는다", sql.includes("내 user id"), sql);
@@ -1804,6 +1913,14 @@ function ok(name, cond, extra) {
         access_token: "쓰레기.쓰레기 토큰", at: Date.now() + 3600000 })); }catch(e){}
     });
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     await pg.waitForTimeout(400);
     const n = await pg.locator("#rq .rq-sql").count();
     const txt = await pg.locator("#rq").textContent();
@@ -1861,6 +1978,14 @@ function ok(name, cond, extra) {
     });
 
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     await pg.waitForTimeout(400);
     await pg.locator("#rq .rq-r").first().locator(".rq-hd").click();
     await pg.waitForTimeout(250);
@@ -1944,6 +2069,7 @@ function ok(name, cond, extra) {
       await pg.route("**/api/admin-health", r => r.fulfill({ status:200,
         contentType:"application/json", body: JSON.stringify(health(d)) }));
       await pg.reload({ waitUntil:"networkidle" });
+    await pg.evaluate(() => window.adNavOff && adNavOff());   /* ⚠️ 위 주석 — 메뉴를 끄고 전부 펼칩니다 */
       await pg.waitForTimeout(200);
       /* ⚠️ 1번 칸은 **접힌 관리자 설정 안**입니다 — `innerText()` 는
          안 보이는 칸에서 빈 문자열을 돌려줍니다 (그러면 검사가
@@ -2136,6 +2262,14 @@ function ok(name, cond, extra) {
     });
 
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     await pg.waitForTimeout(500);
 
     /* ── 담당자 (P0 ⑤) ──────────────────────────────────────── */
@@ -2362,6 +2496,14 @@ function ok(name, cond, extra) {
         quotes:[], deals:[], audits:[] }) }));
 
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     await pg.waitForTimeout(500);
 
     /* ── 업체 구간 — 딱지와 단추 ─────────────────────────────── */
@@ -2497,6 +2639,14 @@ function ok(name, cond, extra) {
             memo:null, at:"2026-10-19T00:00:00Z" }
         ] }) }));
     await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    /* ⚠️⚠️ **메뉴를 끄고 전부 펼칩니다.** 2026-11-01 로 `/admin` 이
+       한 번에 한 칸만 보이는데, 이 도구는 **기능**을 보기 때문에
+       (190군데를 누르고 적고 고릅니다) 칸을 안 고르면 `display:none`
+       인 자리를 눌러 **30초 타임아웃으로 터지고 뒤 블록이 통째로
+       안 돕니다**. 생김새는 `tools/audit-admin.js` 가 **칸마다 ·
+       일곱 폭에서** 봅니다 — 둘을 묶지 마세요.
+       ⚠️ 메뉴 자체가 도는지는 맨 아래 블록이 봅니다. */
+    await pg.evaluate(() => window.adNavOff && adNavOff());
     await pg.waitForTimeout(600);
 
     ok("재고 구간이 선다", (await pg.locator("#rq .rq-s-dv").count()) === 1);
@@ -2569,6 +2719,169 @@ function ok(name, cond, extra) {
     ok("모르는 기종 key 를 이름처럼 안 찍는다",
        /기종 미확인 \(no-such-model\)/.test(
          await pg.locator("#rq .rq-s-dv").textContent()));
+
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     관리자 메뉴 — 한 번에 한 칸 (2026-11-01)
+
+     ⚠️⚠️ 위 블록들은 전부 `adNavOff()` 로 **메뉴를 끄고** 돕니다
+     (기능을 보는 도구라 190군데를 누릅니다). 그래서 **메뉴 자체가
+     도는지는 아무도 안 봅니다** — 이 블록이 그 자리입니다.
+     ⚠️ 여기서는 `adNavOff()` 를 **부르지 마세요.**
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n관리자 메뉴 — 한 번에 한 칸만 보인다");
+  {
+    const ctx = await br.newContext({ viewport:{ width:1440, height:900 } });
+    const pg = await ctx.newPage();
+    const errs = [];
+    pg.on("pageerror", e => errs.push(String(e)));
+    /* ⚠️ 씨앗은 **이 브라우저 안에서만** 삽니다 — 저장소 데이터는
+       그대로 0곳입니다 (절대 규칙 1). 업체가 하나라도 있어야 영업
+       작업대의 목록 · 재연락 · 실적 구간이 다 그려집니다. */
+    await pg.addInitScript(() => {
+      try{
+        localStorage.setItem("am.sales.v1", JSON.stringify({
+          v:1, me:"김영업",
+          goal:{ g:"used-buy", reg:"gyeonggi", n:30, d:"" },
+          last:{ g:"used-buy", reg:"gyeonggi" },
+          co:[{ id:"nav1", name:"가나다폰", tel:"031-000-0000", g:"used-buy",
+                reg:"gyeonggi", st:"warm", log:[], at:"2026-10-01" }] }));
+        /* ⚠️⚠️ `addInitScript` 는 **새로고침마다 다시 돕니다** — 그냥
+           `removeItem` 하면 "새로고침해도 보던 칸" 검사가 **제가
+           지워 놓고** 실패합니다 (코드가 아니라 씨앗이 틀린 자리).
+           첫 열기에만 지웁니다. */
+        if(!sessionStorage.getItem("nav-seeded")){
+          localStorage.removeItem("am.admin.tab.v1");
+          sessionStorage.setItem("nav-seeded", "1");
+        }
+      }catch(e){}
+    });
+    /* ⚠️ 로그인을 켜 둡니다 — 꺼져 있으면 `#rq` 가 한 픽셀도 안
+       그려서 **메뉴 칸 넷이 아예 안 생깁니다** (그게 맞습니다). */
+    await pg.route("**/api/session", r => r.fulfill({ status:200,
+      contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"admin",
+        name:"관리자", provider:null,
+        conf:{ url:"https://proj.supabase.co", anonKey:"ANON-TEST" } }) }));
+    await pg.route("**/api/me**", r => r.fulfill({ status:200,
+      contentType:"application/json", body: JSON.stringify({
+        auth:true, signedIn:true, role:"admin", requests:[], providers:[],
+        deals:[], fees:[], audits:[], applies:[], devices:[] }) }));
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(600);
+
+    const m = await pg.evaluate(() => ({
+      n: document.querySelectorAll("#ad-nav .ad-nav-b").length,
+      at: document.querySelector(".ad-main").getAttribute("data-tab"),
+      lost: window.adNavCheck ? adNavCheck() : ["adNavCheck 가 없습니다"],
+      low: [...document.querySelectorAll("#ad-nav .ad-nav-b")]
+             .filter(b => b.getBoundingClientRect().height < 40).length,
+      press: [...document.querySelectorAll("#ad-nav .ad-nav-b")]
+               .filter(b => b.getAttribute("aria-pressed") === "true").length
+    }));
+    ok("메뉴가 그려진다", m.n >= 5, "칸 " + m.n + "개");
+    /* ⚠️⚠️ **어느 칸에도 없는 구간이 있으면 그 구간은 영영 안
+       보입니다** — 지운 것과 같아집니다. 구간을 늘리고 `AD_NAV` 에
+       안 넣으면 바로 여기서 걸립니다. */
+    ok("어느 칸에도 없는 구간이 없다", m.lost.length === 0, m.lost.join(" / "));
+    ok("첫 칸은 영업 작업대", m.at === "sales", m.at);
+    ok("누르는 것이 40px 이상", m.low === 0);
+    /* ⚠️ **색만으로 고른 것을 표시하지 않습니다** — `aria-pressed` 가
+       같이 바뀌어야 읽어 주는 프로그램도 눌림을 읽습니다. */
+    ok("고른 칸이 aria-pressed 로 하나", m.press === 1, "눌린 칸 " + m.press + "개");
+
+    /* 칸마다 눌러 보고 — 그 칸의 구간만 보이는가 */
+    const keys = await pg.evaluate(() => AD_NAV.map(x => x.k));
+    let allOk = true, longest = 0, note = [];
+    for(const k of keys){
+      const got = await pg.evaluate(k => {
+        if(!adNavGo(k)) return null;
+        const main = document.querySelector(".ad-main");
+        const vis = [...main.querySelectorAll("#rq > section, #sl > section, " +
+            "#ad > section, .ad-sub")].filter(e => e.getClientRects().length);
+        const mine = AD_NAV.filter(x => x.k === k)[0].of;
+        const bad = vis.filter(e => !mine.some(sel =>
+          e.matches(sel) || (e.parentNode && e.parentNode.matches &&
+                             e.parentNode.matches(sel))));
+        return { at: main.getAttribute("data-tab"),
+                 doc: document.documentElement.scrollHeight,
+                 wide: document.documentElement.scrollWidth,
+                 y: Math.round(scrollY), bad: bad.length };
+      }, k);
+      if(!got){ allOk = false; note.push(k + " 를 못 눌렀습니다"); continue; }
+      if(got.at !== k){ allOk = false; note.push(k + " 칸이 안 켜졌습니다"); }
+      if(got.bad){ allOk = false; note.push(k + " 칸에 남의 구간 " + got.bad + "개"); }
+      if(got.wide > 1440){ allOk = false; note.push(k + " 가로 넘침 " + got.wide); }
+      /* ⚠️ 긴 칸에서 짧은 칸으로 가면 스크롤이 문서 끝에 남아
+         **빈 화면이 보입니다** — 맨 위로 올립니다. */
+      if(got.y !== 0){ allOk = false; note.push(k + " 가 맨 위로 안 올라갔습니다"); }
+      if(got.doc > longest) longest = got.doc;
+    }
+    ok("칸마다 그 칸의 구간만 보인다", allOk, note.join(" / "));
+    /* ⚠️⚠️ 고치기 전에는 **접힌 채로 4,633px · 설정을 펼치면 #ad
+       혼자 10,756px(열두 화면)** 이었습니다. 제일 긴 칸이 그보다
+       짧아야 이 작업이 뜻이 있습니다 — 숫자로 못박아 둡니다. */
+    ok("제일 긴 칸이 전보다 짧다 (" + longest + "px < 4633)", longest < 4633);
+
+    /* 다시 그려도 가려져 있는가 — ⚠️ `rqDraw` · `slDraw` 는 맨 위
+       함수 선언이라 `window` 쪽을 감싸면 안에서 부르는 자리까지
+       지납니다. `tlWire()` 처럼 값으로 잡으면 아무 일도 안 납니다. */
+    await pg.evaluate(() => adNavGo("offer"));
+    await pg.evaluate(() => { rqDraw(); slDraw(); });
+    await pg.waitForTimeout(150);
+    /* ⚠️⚠️ **재는 자리가 둘로 갈립니다.** `#sl` 은 `AD_NAV` 가
+       감싸개째(`#sl`) 가리키니 그 요소에 `ad-off` 가 붙고, `#rq` ·
+       `#ad` 는 **구간마다**(`.rq-s-*` · `.ad-s-*`) 붙습니다 —
+       `#rq` 의 `display` 를 재면 늘 `block` 입니다 (자식만 숨었고
+       감싸개는 그대로). **높이**로 재야 맞습니다. */
+    const after = await pg.evaluate(() => ({
+      sl: getComputedStyle(document.getElementById("sl")).display,
+      rqH: Math.round(document.getElementById("rq").getBoundingClientRect().height),
+      rqOff: document.querySelectorAll("#rq > section.ad-off").length,
+      rqAll: document.querySelectorAll("#rq > section").length,
+      at: document.querySelector(".ad-main").getAttribute("data-tab") }));
+    ok("다시 그린 뒤에도 가려져 있다",
+       after.sl === "none" && after.rqH === 0 &&
+       after.rqAll > 0 && after.rqOff === after.rqAll && after.at === "offer",
+       JSON.stringify(after));
+
+    /* ⚠️ 검사 쪽에서는 **선택자**를 줍니다 — 칸 이름을 박아 두면
+       `AD_NAV` 묶음을 다시 짤 때마다 검사를 같이 고쳐야 합니다. */
+    let forOk = true, forNote = [];
+    for(const [sel, want] of [[".rq-s-mn", "deal"], [".ad-s-7", "offer"],
+                              ["#sl", "sales"], ["#rq .rq-s-rq .rq-hd", "intake"]]){
+      const got = await pg.evaluate(s => { adNavFor(s);
+        return document.querySelector(".ad-main").getAttribute("data-tab"); }, sel);
+      if(got !== want){ forOk = false; forNote.push(sel + " → " + got + " (기대 " + want + ")"); }
+    }
+    ok("adNavFor(선택자) 가 그 칸을 켠다", forOk, forNote.join(" / "));
+
+    /* 새로고침해도 보던 칸 — ⚠️ 담는 것은 **칸 이름 하나**입니다 */
+    await pg.evaluate(() => adNavGo("pvnew"));
+    await pg.reload({ waitUntil:"networkidle" });
+    await pg.waitForTimeout(600);
+    ok("새로고침해도 보던 칸",
+       await pg.evaluate(() => document.querySelector(".ad-main")
+         .getAttribute("data-tab")) === "pvnew");
+    const kept = await pg.evaluate(() => {
+      try{ return localStorage.getItem("am.admin.tab.v1"); }catch(e){ return "?"; } });
+    ok("담는 것은 칸 이름 하나뿐", kept === "pvnew", String(kept));
+
+    /* 폰 — ⚠️ 메뉴가 길어 두세 줄이 됩니다. 가로로 밀지 않습니다. */
+    await pg.setViewportSize({ width:360, height:780 });
+    await pg.waitForTimeout(200);
+    const ph = await pg.evaluate(() => ({
+      wide: document.documentElement.scrollWidth,
+      low: [...document.querySelectorAll("#ad-nav .ad-nav-b")]
+             .filter(b => b.getBoundingClientRect().height < 40).length,
+      small: [...document.querySelectorAll("#ad-nav .ad-nav-b")]
+               .filter(b => parseFloat(getComputedStyle(b).fontSize) < 12).length }));
+    ok("폰 360px 가로 넘침 없음", ph.wide <= 360, "문서 폭 " + ph.wide);
+    ok("폰에서도 누름 40px 이상", ph.low === 0);
+    ok("폰에서도 12px 미만 글씨 없음", ph.small === 0);
 
     ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
     await ctx.close();

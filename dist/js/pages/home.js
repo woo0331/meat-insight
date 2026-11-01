@@ -65,6 +65,9 @@ function PwHero(){
       '</div>'+
 
       '<div class="pwh-art">'+
+
+        '<p class="pwh-scr">중고폰도,<br>실속 있는 통신도<br>'+
+          '<em>'+ esc(nm) +'에서!</em></p>'+
         '<span class="pwh-ph2" aria-hidden="true">'+
           photoBox("dev-galaxy", "pwh-ph", false,
             "(max-width:1199px) 24vw, 300px")+'</span>'+
@@ -100,8 +103,8 @@ function pwHero3(){
 }
 
 var PW_TRUST4 = [
-  ["scan",   "전문 검수",   "등급 공개"],
-  ["bolt",   "수거 · 정산", "한 흐름으로"],
+  ["shield", "전문 검수",   "등급 공개"],
+  ["truck",  "수거 · 정산", "한 흐름으로"],
   ["coins",  "여러 곳 견적", "나란히 비교"],
   ["lock",   "개인정보",    "안전 처리"]
 ];
@@ -429,8 +432,9 @@ function PwCta(){
 function PwServices(){
   return '<section class="pwsv"><div class="w">'+
 
-    '<div class="pw-hd"><h2>무엇을 도와드릴까요?</h2>'+
-      '<p>중고폰을 팔고 · 사고 · 고치고 · 개통하는 길을 한곳에 모았습니다.</p></div>'+
+    '<div class="pw-hd-l pwsv-hd"><h2>주요 서비스</h2>'+
+      '<p>중고폰 판매 · 구매부터 수리, 시세 확인, 알뜰폰 개통까지'+
+        '<br class="br-m"> '+ esc(window.amBrand ? amBrand() : "") +'에서 한 번에 이용하세요.</p></div>'+
     '<ul class="pwsv-g">'+ window.PW_SVC5.map(function(s){
 
       var ph = s.ph && typeof hasPhoto === "function" && hasPhoto(s.ph);

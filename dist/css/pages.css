@@ -6661,3 +6661,53 @@ html.ivh #view .pwh h1{ font-size:clamp(29px, 3.9vw, 48px); }
   .pwfx-b2:hover{ background:var(--pw-or-700); border-color:var(--pw-or-700);
     color:var(--pw-white); }
 }
+
+.hd-c .hd-cta{ background:var(--pw-dk); border-color:var(--pw-dk); }
+.hd-c .hd-cta:hover{ background:var(--pw-dk2); border-color:var(--pw-dk2); }
+
+.pwsv-hd{ align-items:baseline; justify-content:flex-start; gap:18px;
+  flex-wrap:wrap; }
+.pwsv-hd h2{ flex:none; }
+.pwsv-hd p{ margin-top:0; flex:1 1 320px; min-width:0; }
+@media (max-width:767px){
+  .pwsv-hd{ flex-direction:column; align-items:flex-start; gap:6px; }
+  .pwsv-hd p{ flex:none; }
+}
+
+.pwh-scr{ display:none; }
+@media (min-width:1200px){
+  .pwh-art{ padding-right:128px; }
+  .pwh-scr{ display:block; position:absolute; right:0; top:50%; z-index:3;
+    width:118px; margin:0; transform:translateY(-62%) rotate(-6deg);
+    font-size:clamp(15px,1.15vw,17px); line-height:1.55; font-weight:700;
+    color:var(--pw-ink); letter-spacing:-.01em; }
+  .pwh-scr em{ display:inline-block; margin-top:3px; font-style:normal;
+    font-weight:800; font-size:1.12em; color:var(--pw-or-700);
+    border-bottom:3px solid var(--pw-or); padding-bottom:2px; }
+}
+@media (min-width:1440px){
+  .pwh-art{ padding-right:150px; }
+  .pwh-scr{ width:138px; }
+}
+
+.pwh-rb{ background:linear-gradient(142deg,
+    #FFEEE0 0%, #FBDDC5 44%, #F8D5B6 100%); opacity:1; }
+.pwh-rb2{ background:linear-gradient(158deg,
+    rgba(255,255,255,.62), rgba(255,255,255,0) 58%); }
+
+.pwsv-c:not(.has-ph) .pwsv-i svg{ width:auto; height:clamp(56px, 5.4vw, 78px);
+  max-width:100%; }
+
+.pwsv-c:not(.has-ph){ background:var(--pw-card-bg, #FDF6ED);
+  border-color:transparent; box-shadow:none; padding-bottom:10px; }
+.pwsv-c:not(.has-ph):hover{ border-color:transparent;
+  box-shadow:0 10px 24px -14px rgba(48,32,21,.45); }
+.pwsv-c:not(.has-ph) .pwsv-i{ background:none; margin:0; }
+.pwsv-c:not(.has-ph) b{ padding:6px 16px 0; font-size:16px; line-height:1.2;
+  color:#1A1512; }
+.pwsv-c:not(.has-ph) .pwsv-d{ padding:4px 52px 0 16px; font-size:12.5px;
+  line-height:1.35; color:var(--pw-ink2); }
+.pwsv-c:not(.has-ph) .pwsv-go{ right:12px; bottom:11px; width:32px; height:32px;
+  background:#fff; border:1px solid #F0D5B9; color:#1A1512; }
+.pwsv-c:not(.has-ph):hover .pwsv-go{ background:var(--pw-or);
+  border-color:var(--pw-or); color:#fff; }

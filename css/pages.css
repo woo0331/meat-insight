@@ -8192,11 +8192,11 @@ html.ivh #view .pwh h1{
 /* 오렌지 리본 — ⚠️ **CSS 입니다.** 시안을 배경 그림으로 까는 것은
    §0-5 가 금지합니다. 두 겹이 겹쳐 리본처럼 휩니다. */
 /* ⚠️⚠️ **글 칸을 덮지 않습니다.** 처음에 폭을 86% 로 두었더니
-   오렌지가 왼쪽 까지 넘어와 **짙은 브라운 제목이 오렌지 위에** 앜았고,
+   오렌지가 왼쪽 까지 넘어와 **짙은 브라운 제목이 오렌지 위에** 앉았고,
    그것은 시안도 아니고 대비도 안 나옵니다 (찍어 보고 알았습니다).
    지금은 **왼쪽 끝이 44%** 라 글은 아이보리 위에 서고 사진만
    오렌지 위에 섭니다. ⚠️ 이 수를 내리시면 **제목 대비를 다시
-   재세요** — 검사는 사진 · 그라디언트 위 글자를 못 재니다. */
+   재세요** — 검사는 사진 · 그라디언트 위 글자를 못 잽니다. */
 .pwh-rb{ position:absolute; left:44%; right:-16%; top:-30%; bottom:-30%;
   background:linear-gradient(142deg, #FF9A4D 0%, var(--pw-or) 46%, #E0560F 100%);
   border-radius:46% 54% 42% 58% / 56% 44% 56% 44%;
@@ -9473,3 +9473,111 @@ html.ivh #view .pwh h1{ font-size:clamp(29px, 3.9vw, 48px); }
   .pwfx-b2:hover{ background:var(--pw-or-700); border-color:var(--pw-or-700);
     color:var(--pw-white); }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-11-01 **C안 시안과 맞추기** — 이미지를 보고 좁힌 세 자리
+
+   ⚠️⚠️ **이 블록이 파일 맨 뒤라야 합니다.** 위의 `.hd-c` · `.pwsv` ·
+   `.pwh-art` 선언과 특정도가 같아서 **뒤에 오는 쪽이 이깁니다** —
+   가운데 끼워 넣으면 조용히 안 먹습니다 (이 저장소가 아홉 번 겪은
+   자리). 되돌리시려면 이 블록만 지우면 됩니다.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ① 헤더 `판매 신청` — 시안은 **딥 브라운**입니다 (오렌지가 아닙니다).
+   ⚠️ 히어로의 `내 폰 팔기` 가 오렌지라, 헤더까지 오렌지면 첫 화면에
+   같은 무게의 오렌지 알약이 둘이 되어 어느 쪽을 누를지가 흐려집니다.
+   ⚠️ 재 본 값 — 흰 글자 / #362313 = **14.18** (AA 4.5). */
+.hd-c .hd-cta{ background:var(--pw-dk); border-color:var(--pw-dk); }
+.hd-c .hd-cta:hover{ background:var(--pw-dk2); border-color:var(--pw-dk2); }
+
+/* ② 주요 서비스 머리말 — 시안은 **왼쪽 정렬 + 설명이 같은 줄**입니다.
+   ⚠️ `.pw-hd-l` 은 h2 와 오른쪽 단추를 양끝으로 미는 틀이라,
+   여기서는 `justify-content` 를 앞으로 되돌리고 설명을 바로 옆에
+   세웁니다 (`.pw-hd-l p` 의 `margin-top` 도 같이 지웁니다). */
+.pwsv-hd{ align-items:baseline; justify-content:flex-start; gap:18px;
+  flex-wrap:wrap; }
+.pwsv-hd h2{ flex:none; }
+.pwsv-hd p{ margin-top:0; flex:1 1 320px; min-width:0; }
+@media (max-width:767px){
+  .pwsv-hd{ flex-direction:column; align-items:flex-start; gap:6px; }
+  .pwsv-hd p{ flex:none; }
+}
+
+/* ③ 히어로 오른쪽 장식 문구 (§4) — **HTML 텍스트**입니다.
+   ⚠️⚠️ 액자에 `padding-right` 로 **자리를 먼저 비우고** 그 자리에
+   절대 위치로 앉힙니다. 자리를 안 비우면 사진 위에 겹칩니다
+   (재서 알았습니다).
+   ⚠️ 1199px 아래에서는 통째로 접습니다 — 액자가 좁아지면서 겹치고,
+   폰에서는 히어로가 한 칸이라 들어갈 자리가 없습니다.
+   ⚠️ 재 본 값 — 본문 #352014 / 크림 = 12.1 · 밑줄 줄 `--pw-or-700` = 5.27. */
+.pwh-scr{ display:none; }
+@media (min-width:1200px){
+  .pwh-art{ padding-right:128px; }
+  .pwh-scr{ display:block; position:absolute; right:0; top:50%; z-index:3;
+    width:118px; margin:0; transform:translateY(-62%) rotate(-6deg);
+    font-size:clamp(15px,1.15vw,17px); line-height:1.55; font-weight:700;
+    color:var(--pw-ink); letter-spacing:-.01em; }
+  .pwh-scr em{ display:inline-block; margin-top:3px; font-style:normal;
+    font-weight:800; font-size:1.12em; color:var(--pw-or-700);
+    border-bottom:3px solid var(--pw-or); padding-bottom:2px; }
+}
+@media (min-width:1440px){
+  .pwh-art{ padding-right:150px; }
+  .pwh-scr{ width:138px; }
+}
+
+/* ④ 히어로 오른쪽 면 — **시안은 옅은 피치**입니다 (진한 오렌지 원반이
+   아닙니다). 그 전 값(#FF9A4D → #F37021 → #E0560F)은 첫 화면의
+   오른쪽 절반을 통째로 진한 주황으로 덮어서, 시안의 "밝고 고급스러운"
+   결과 정반대였습니다 — 이미지를 놓고 포개어 보고 알았습니다.
+   ⚠️⚠️ **브랜드 오렌지는 면적이 아니라 글자와 UI 악센트입니다**
+   (이 문서가 적어 둔 그대로). 큰 면에는 옅은 쪽을 깔고, 진한 쪽은
+   머리말 · 단추 · 밑줄에만 씁니다.
+   ⚠️ 밝아져서 어두운 면 비율 · 구간 색차는 전보다 안전해집니다
+   (`.pwh` 의 `background-color` 는 그대로 `--pw-warm` 입니다).
+   ⚠️ 글자가 이 면 위에 앉습니다(`.pwh-scr`) — 색을 되돌리시면
+   **그 대비를 다시 재세요.** 검사는 그라디언트 위 글자를 못 잽니다. */
+/* ⚠️⚠️ **마지막 멈춤이 `#F8D5B6` 인 까닭** — 장식 문구의 오렌지 줄
+   (`--pw-or-700`)이 이 면 위에 앉습니다. 한 단계 더 진하게(#F6C9A6)
+   두었더니 대비가 **4.25** 로 AA(4.5)에 못 미쳤고, 그 글자는 18.5px
+   이라 큰 글자(18.66px 굵게)에도 **0.16px 모자랍니다**. 재 본 값 —
+   #FFEEE0 5.71 · #FBDDC5 5.00 · **#F8D5B6 4.67**.
+   ⚠️ 더 진하게 하시려면 `.pwh-scr em` 색도 같이 내리세요. */
+.pwh-rb{ background:linear-gradient(142deg,
+    #FFEEE0 0%, #FBDDC5 44%, #F8D5B6 100%); opacity:1; }
+.pwh-rb2{ background:linear-gradient(158deg,
+    rgba(255,255,255,.62), rgba(255,255,255,0) 58%); }
+
+/* ⑥ 사진이 없는 서비스 카드의 **아이콘 크기** — 재 보니 **44px**
+   이었습니다. `.pwsv-i svg{ width:clamp(44px,46%,88px) }` 의 46% 가
+   액자(188px)가 아니라 **최소값으로 떨어져** 있었고, 그래서 사진
+   카드 셋(188×92)과 아이콘 카드 둘이 한 줄에서 **다른 무게**로
+   섰습니다 (시안은 다섯이 같은 크기의 그림입니다).
+   ⚠️ %는 액자 크기가 제 내용에 기대면 **조용히 최소값으로** 떨어집니다 —
+   여기서는 재 본 액자 높이(92 · 86 · 82px)에 맞춰 **px 로** 적습니다.
+   ⚠️ 권한이 확인된 촬영본이 오면 `WOW_PHOTOS` 에 `svc-price` ·
+   `svc-mvno` 한 줄씩이고, 그러면 이 규칙은 저절로 안 걸립니다
+   (`hasPhoto()` 가 참이 되어 `.has-ph` 로 갑니다). */
+.pwsv-c:not(.has-ph) .pwsv-i svg{ width:auto; height:clamp(56px, 5.4vw, 78px);
+  max-width:100%; }
+
+/* ⑦ 사진이 없는 카드 둘을 **사진 카드 셋과 한 벌로** (시안 §6) —
+   찍어 보니 넷째 · 다섯째만 **흰 카드 + 테두리 + 그 안에 옅은 피치
+   네모**였습니다. 시안은 다섯이 같은 크림 카드이고, 그 피치 네모는
+   아이콘 뒤에 깔린 액자라 **빈 액자로 읽힙니다** (절대 규칙 2).
+   ⚠️ 글 자리(제목 · 설명 · 화살표)도 `.has-ph` 와 같은 값이라야
+   한 줄에서 기준선이 맞습니다 — 재서 맞췄습니다.
+   ⚠️ 사진이 들어오면 이 규칙은 저절로 안 걸립니다 (`.has-ph` 로 갑니다). */
+.pwsv-c:not(.has-ph){ background:var(--pw-card-bg, #FDF6ED);
+  border-color:transparent; box-shadow:none; padding-bottom:10px; }
+.pwsv-c:not(.has-ph):hover{ border-color:transparent;
+  box-shadow:0 10px 24px -14px rgba(48,32,21,.45); }
+.pwsv-c:not(.has-ph) .pwsv-i{ background:none; margin:0; }
+.pwsv-c:not(.has-ph) b{ padding:6px 16px 0; font-size:16px; line-height:1.2;
+  color:#1A1512; }
+.pwsv-c:not(.has-ph) .pwsv-d{ padding:4px 52px 0 16px; font-size:12.5px;
+  line-height:1.35; color:var(--pw-ink2); }
+.pwsv-c:not(.has-ph) .pwsv-go{ right:12px; bottom:11px; width:32px; height:32px;
+  background:#fff; border:1px solid #F0D5B9; color:#1A1512; }
+.pwsv-c:not(.has-ph):hover .pwsv-go{ background:var(--pw-or);
+  border-color:var(--pw-or); color:#fff; }

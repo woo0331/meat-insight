@@ -520,8 +520,9 @@ function noscriptFor(W, r, route){
       "나란히 비교 · 개인정보 안전 처리.");
 
     /* ── ② 핵심 서비스 여섯 (PwServices) ── */
-    h2("무엇을 도와드릴까요?");
-    p("중고폰을 팔고 · 사고 · 고치고 · 도매로 넘기는 길을 한곳에 모았습니다.");
+    h2("주요 서비스");
+    p("중고폰 판매 · 구매부터 수리, 시세 확인, 알뜰폰 개통까지 " +
+      (W.AM_BRAND||{}).name + "에서 한 번에 이용하세요.");
     ul((W.PW_SVC5||[]).map(x => x.nm + " \u2014 " + [].concat(x.d).join(" \u00b7 ")));
 
     /* ── ③ 브랜드 여섯 (PwBrands) ──
@@ -544,7 +545,11 @@ function noscriptFor(W, r, route){
       "기기가 없다는 뜻이고, 없는 기기를 미리 보여 드리지 않습니다.");
 
     /* ── ④ 중고폰 목록 (PwProducts) ── */
-    h2("지금 보실 수 있는 중고폰");
+    /* ⚠️⚠️ 2026-11-01 — 화면은 **중고폰 둘러보기** 인데 여기만 "지금
+       보실 수 있는 중고폰" 이었습니다. `checkMainH2()` 가 그 글자를
+       home.js 의 **주석**에서 찾아 통과시키고 있었습니다 — 지금은
+       주석을 걷어내고 봅니다 (열두 번째로 겪은 자리). */
+    h2("중고폰 둘러보기");
     p("등록된 차례로 냅니다 — 조회수나 판매량 같은 이용 통계가 아닙니다.");
     if(!nPd)
       p("아직 올라온 기기가 없습니다. 검수를 마친 기기부터 이 자리에 " +
@@ -3505,7 +3510,14 @@ function checkMainH2(){
                .map(m => m[1].replace(/<[^>]*>/g, "").trim()).filter(Boolean);
   if(hs.length < 3)
     throw new Error("메인 크롤러 본문에서 h2 를 "+hs.length+"개밖에 못 찾았습니다 — 검사가 틀렸거나 구간이 빠졌습니다");
-  const home = fs.readFileSync(path.join(ROOT, "js", "pages", "home.js"), "utf8") + (fs.existsSync(path.join(ROOT, "js", "pages", "home-retired.js")) ? fs.readFileSync(path.join(ROOT, "js", "pages", "home-retired.js"), "utf8") : "");
+  /* ⚠️⚠️ **주석을 걷어내고 봅니다.** 그 전에는 소스를 통째로 찾아서,
+     화면에서 내려간 옛 머리말이 **주석에만 남아 있어도** 통과했습니다 —
+     실제로 "지금 보실 수 있는 중고폰" 이 그렇게 크롤러로만 나가고
+     있었습니다 (화면은 "중고폰 둘러보기"). 이 저장소가 "검사가 소스
+     전체에서 찾아 주석에 걸렸다" 로 겪은 자리의 **반대쪽**입니다. */
+  const { stripJs } = require("./tools/strip-comments.js");
+  const homeSrc = fs.readFileSync(path.join(ROOT, "js", "pages", "home.js"), "utf8") + (fs.existsSync(path.join(ROOT, "js", "pages", "home-retired.js")) ? fs.readFileSync(path.join(ROOT, "js", "pages", "home-retired.js"), "utf8") : "");
+  const home = stripJs(homeSrc);
   /* ⚠️⚠️ **브랜드 이름이 든 머리말은 통째로 못 견줍니다.** 화면은
      "지금, " + koWith(이름,"와과") + " 함께 시작하세요." 로 **조각**
      이고 조사는 런타임에 붙습니다 — 통째로 찾으면 멀쩡한 머리말이

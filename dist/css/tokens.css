@@ -186,7 +186,8 @@
   --s11: 116px; --s12: 160px;
 
   --w:       1360px;
-  --w-wide:  1440px;
+
+  --w-wide:  1360px;
 
   --pad:     40px;
   --w-read:  760px;

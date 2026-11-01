@@ -40,6 +40,16 @@ for(const m of src.matchAll(/await f\("([^"]+)",\s*"([^"]*)",\s*`([\s\S]*?)`\);/
   guards[m[1]] = { url:m[2], body:eval("`" + m[3] + "`") };
 
 const CASES = [
+  /* ⚠️⚠️ 2026-11-01 — 푸터 구매 줄의 열쇠를 **옛 꼴로 되돌려** 봅니다.
+     /shop 은 mk(제조사) · kd(기기 종류) 만 읽는데, 2026-11-01 까지
+     거기가 ?m=iphone 이라 **아무것도 안 걸러진 채** 전체 목록이
+     나왔습니다 — 열리기는 해서 링크 검사도 흐름 검사도 통과했습니다.
+     ⚠️ 집는 자리가 **푸터**인 것이 요점입니다 (스물한 화면 전부). */
+  ["푸터 구매 칸의 기종 줄이 실제로 거른다",
+   `[].forEach.call(document.querySelectorAll(".ft a"), function(a){
+      var h = a.getAttribute("href") || "";
+      if(h.indexOf("/shop?") === 0) a.setAttribute("href", "/shop?m=iphone");
+    });`],
   /* ⚠️⚠️ 2026-10-31 — **푸터에 창업 · 폐업 가교를 다시 넣어** 봅니다
      (사장님 지시 — "인수인계 자료들은 다 지워줘").
      그 157개는 지금 `vercel.json` 이 308 로 `/` 에 보냅니다 — 화면에

@@ -3,7 +3,8 @@
 window.AM_FEE_TYPE = [
   { key:"lead",      name:"유효 문의당 정액",       needs:[],
     lead:"문의가 유효하다고 확인되면 건당 정액입니다." },
-  { key:"close",     name:"계약·설치 완료당 정액",   needs:[],
+
+  { key:"close",     name:"계약 · 이행 완료당 정액", needs:[],
     lead:"계약과 이행이 끝나면 건당 정액입니다." },
   { key:"rate",      name:"계약금액의 일정 비율",     needs:["amount"],
     lead:"계약금액에 요율을 곱합니다." },

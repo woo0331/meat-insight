@@ -2531,6 +2531,147 @@ function checkMigDocs(W){
    한 글자 다를 수 있고, 거기까지 묶으면 글을 고칠 때마다 빌드가
    멈춥니다 — 지켜야 하는 것은 **줄이 빠짐없이 있는가** 입니다.
    ════════════════════════════════════════════════════════════════════ */
+/* ⚠️⚠️ 수익상품(js/data/offers.js)이 **지금 있는 분류 · 주소 · 수익모델**을
+   가리키는지 (지시서 §5).
+
+   ⚠️⚠️ **2026-11-01 에 되살렸습니다.** 2026-10-31 인수인계 삭제 묶음에서
+   `checkSales` 와 같이 지워져 있었고, 그 사이에 상품 스물일곱이 전부
+   **없어진 분류**(`it` · `equip` · `interior` …)를 가리켰습니다 — `/admin`
+   수익상품 칸이 "매장 인터넷 · POS · CCTV" 를 내고 분류 이름 자리에
+   **key 날것**을 찍었는데 **아무도 안 막았습니다.**
+
+   ⚠️ 옛 판은 `AM_INDUSTRIES` 를 봤습니다 — 그 파일은 없어졌고(중고폰에는
+   업종 축이 없습니다) `industries` 는 빈 배열이라, **있을 때만** 봅니다. */
+function checkOffers(W){
+  const L = W.AM_OFFERS || [];
+  if(!L.length) throw new Error("수익상품이 하나도 없습니다 (§5)");
+
+  const cats  = new Map((W.AM_CATS || []).map(c => [c.key, c]));
+  const inds  = new Set((W.AM_INDUSTRIES || []).map(x => x.key));
+  const regs  = new Set((W.AM_REGIONS || []).map(x => x.key));
+  const fees  = new Set((W.AM_FEE_TYPE || []).map(x => x.key));
+  const apply = new Set((W.AM_OFFER_APPLY || []).map(x => x.key));
+  const cost  = new Set((W.AM_OFFER_COST || []).map(x => x.key));
+  const stat  = new Set((W.AM_OFFER_STATUS || []).map(x => x.key));
+  const routes = new Set(allRoutes(W));
+  const seen = new Set();
+
+  for(const x of L){
+    const at = "수익상품 " + (x.id || "(id 없음)");
+    if(!x.id || !x.name) throw new Error(at + " 에 id 나 이름이 없습니다");
+    if(seen.has(x.id)) throw new Error("수익상품 id 가 겹칩니다 — " + x.id);
+    seen.add(x.id);
+
+    const c = cats.get(x.cat);
+    if(!c) throw new Error(at + " 가 없는 분류를 가리킵니다 — " + x.cat +
+      "\n   있는 것: " + [...cats.keys()].join(" · "));
+    /* ⚠️⚠️ 하위 key 는 **그 분류의 items** 안에 있어야 합니다. 업체
+       `subs` 에서 겪은 그 자리입니다 — 틀리면 에러 없이 조용히 안 걸립니다. */
+    if(x.sub){
+      const items = (c.items || []).map(i => i.key);
+      if(!items.length)
+        throw new Error(at + " 는 하위를 적을 수 없는 분류입니다 — " + x.cat);
+      if(items.indexOf(x.sub) < 0)
+        throw new Error(at + " 의 하위 key 가 " + x.cat + " 에 없습니다 — " + x.sub +
+          "\n   있는 것: " + items.join(" · "));
+    }
+
+    /* ⚠️ 업종 축은 중고폰에 없습니다 — 적어 둔 것이 있을 때만 봅니다 */
+    if(inds.size) for(const k of (x.industries || []))
+      if(!inds.has(k)) throw new Error(at + " 가 없는 업종을 가리킵니다 — " + k);
+    for(const k of (x.regions || []))
+      if(!regs.has(k)) throw new Error(at + " 가 없는 지역을 가리킵니다 — " + k);
+    if(!apply.has(x.apply)) throw new Error(at + " 의 신청 유형이 없습니다 — " + x.apply);
+    if(!cost.has(x.costWay)) throw new Error(at + " 의 비용 안내 방식이 없습니다 — " + x.costWay);
+    if(!stat.has(x.status)) throw new Error(at + " 의 노출 상태가 없습니다 — " + x.status);
+    /* ⚠️ 수익모델은 fee.js 의 key 라야 합니다 — 어긋나면 수수료를 계산할
+       수가 없습니다 */
+    if(!fees.has(x.fee)) throw new Error(at + " 의 수익모델이 fee.js 에 없습니다 — " + x.fee);
+    if(!x.feeNote) throw new Error(at + " 에 정산 기준이 없습니다 (§9)");
+    /* ⚠️⚠️ `to` 는 **이미 있는 화면**이라야 합니다. 새 주소를 만들면 같은
+       내용이 두 주소로 나갑니다 — 가짜 링크는 절대 규칙 5 입니다.
+       ⚠️ 질의문자가 붙을 수 있어 **경로만** 떼어 봅니다 (`/biz?t=corp`). */
+    if(!x.to || !routes.has(String(x.to).split("?")[0]))
+      throw new Error(at + " 가 없는 주소를 가리킵니다 — " + x.to);
+    /* ⚠️ 금액을 적는 칸을 만들지 마세요 (매입 기준가가 0건입니다) */
+    for(const k of ["price", "from", "cost", "amount"])
+      if(x[k] != null)
+        throw new Error(at + " 에 금액 칸(" + k + ")이 있습니다 — 금액은 적지 않습니다 (§5)");
+  }
+
+  /* ⚠️⚠️ **분류를 빠짐없이 덮는지** — 2026-11-01 에 더했습니다.
+     덮지 못한 분류가 있으면 `/admin` 7번 칸에서 그 분야가 **아예 안
+     보이고**, 운영자는 "무엇이 남았나" 를 그 자리에서 셀 수가 없습니다. */
+  const covered = new Set(L.map(x => x.cat));
+  const miss = [...cats.keys()].filter(k => !covered.has(k));
+  if(miss.length)
+    throw new Error("수익상품이 안 덮은 분류가 있습니다 — " + miss.join(" · ") +
+      "\n   → js/data/offers.js 에 한 줄 더하고 0012 의 insert 도 같이 고치세요");
+
+  /* ⚠️⚠️ **§5 를 기계로 지키는 줄입니다.** 업체가 없는 분야의 상품을
+     "신청 받는 중" 으로 켜면, 손님이 다 적고 눌렀는데 배정할 곳이
+     없습니다 — 받아 두고 못 하는 것이 절대 규칙 5 입니다. */
+  const live = L.filter(x => x.status === "live");
+  for(const x of live){
+    const n = W.amProvidersInCat ? W.amProvidersInCat(x.cat) : 0;
+    if(!n)
+      throw new Error("수익상품 " + x.id + " 가 '신청 받는 중' 인데 " +
+        x.cat + " 분야에 등록된 업체가 0곳입니다 — 손님이 다 적고 눌렀을 때 " +
+        "배정할 곳이 없습니다 (§5 · 절대 규칙 5). 업체를 등록한 뒤 켜세요");
+  }
+  console.log("   수익상품 " + L.length + "개가 분류 " + cats.size +
+    "개를 빠짐없이 덮습니다 (신청 받는 중 " + live.length + "개)");
+}
+
+/* ⚠️⚠️ 영업 묶음(js/data/sales.js)이 **분류를 빠짐없이 한 번씩** 나눠
+   가지는지. 빠지면 그 분류의 업체를 직원이 영업 카테고리로 **고를 수가
+   없고**, 겹치면 카테고리별 성과가 두 번 세어집니다. 둘 다 에러 없이
+   조용히 틀립니다.
+   ⚠️ 마지막 `기타` 는 남은 것을 세는 값이라 여기서는 **셈에만** 들어갑니다.
+   ⚠️⚠️ **2026-11-01 에 되살렸습니다** — 2026-10-31 삭제 묶음에서 같이
+   지워져 있었습니다. */
+function checkSales(W){
+  const G = W.AM_SALES_GROUPS || [];
+  if(!G.length) throw new Error("AM_SALES_GROUPS 가 비었습니다 — js/data/sales.js");
+
+  const cats = {};
+  (W.AM_CATS||[]).forEach(c => { cats[c.key] = c; });
+  const bad = [], cnt = {};
+
+  G.forEach(g => {
+    if(!g.key || !g.name || !g.no) bad.push("묶음에 key · name · no 가 있어야 합니다");
+    W.amSalesCats(g).forEach(k => {
+      cnt[k] = (cnt[k] || 0) + 1;
+      if(!cats[k]) bad.push(g.key + " — 없는 분류 " + k);
+    });
+    (g.subs||[]).forEach(p => {
+      const c = cats[p[0]];
+      if(!c) bad.push(g.key + " — 없는 분류 " + p[0]);
+      else if(!(c.items||[]).some(i => i.key === p[1]))
+        bad.push(g.key + " — " + p[0] + " 에 없는 하위 " + p[1]);
+    });
+  });
+
+  Object.keys(cats).forEach(k => {
+    if(!cnt[k]) bad.push("분류 " + k + " 가 어느 영업 묶음에도 없습니다");
+    else if(cnt[k] > 1) bad.push("분류 " + k + " 가 " + cnt[k] + "곳에 들어 있습니다");
+  });
+
+  /* 상태 key 는 **직원 브라우저에 쌓인 기록**이 쓰는 값입니다 */
+  const need = ["new","recall","warm","sent","doc","review","done","no","bad"];
+  const has = new Set((W.AM_SALES_ST||[]).map(s => s.key));
+  need.forEach(k => { if(!has.has(k)) bad.push("AM_SALES_ST 에 " + k + " 가 없습니다"); });
+  (W.AM_SALES_RESULT||[]).forEach(r => {
+    if(!has.has(r.st)) bad.push("통화 결과 " + r.key + " 가 없는 상태 " + r.st + " 를 가리킵니다");
+  });
+
+  if(bad.length)
+    throw new Error("영업 묶음(js/data/sales.js)이 분류와 어긋납니다:\n   · " +
+      bad.join("\n   · "));
+  console.log("   영업 묶음 " + G.length + "개가 분류 " +
+    Object.keys(cats).length + "개를 빠짐없이 나눠 가집니다");
+}
+
 function checkOfferSql(W){
   const L = W.AM_OFFERS || [];
   if(!L.length) return;
@@ -2913,6 +3054,8 @@ checkMigDocs(W);
 checkPhotoSql();
 checkProviderSelfSql();
 checkApplySql();
+checkOffers(W);
+checkSales(W);
 checkOfferSql(W);
 checkFaq(W);
 /* ⚠️⚠️ **2026-10-31 로 둘을 다시 켰습니다.** 인수인계를 걷어내는 동안

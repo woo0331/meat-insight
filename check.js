@@ -2003,6 +2003,41 @@ const AUDIT = `(() => {
     const h = chip.getAttribute("href") || "";
     if(h.indexOf("/shop?") !== 0) return "거르개가 주소를 안 바꿉니다 — " + h;
     return true;`);
+  /* ⚠️⚠️ 푸터 구매 칸의 기종 줄이 **실제로 거르는가.**
+
+     2026-11-01 까지 셋이 /shop?m=iphone 꼴로 적혀 있었는데 /shop 이
+     읽는 열쇠는 mk(제조사) · kd(기기 종류) 입니다 — 열리기는 해서
+     링크 검사도 흐름 검사도 통과했고, 손님이 "아이폰" 을 눌러도
+     **전체 목록**이 나왔습니다. 푸터라 스물한 화면 전부에 있었습니다.
+
+     ⚠️⚠️ 주소가 열리는지만 보면 이 사고를 영원히 못 잡습니다 —
+     **거른 수가 안 거른 것보다 적은가**를 봅니다 (2026-10-31 에
+     브랜드 카드에서 같은 것을 겪고 넣은 규칙인데, 푸터 쪽은 그
+     검사 밖이었습니다).
+     ⚠️ 상품이 0건이면 예시 여섯으로 셉니다 — 재고가 올라오면 그
+     수로 저절로 바뀝니다. */
+  await f("푸터 구매 칸의 기종 줄이 실제로 거른다", "/", `
+    if(typeof amShopList !== "function" || typeof SHOP_QK === "undefined")
+      return "쇼핑몰 데이터가 안 실렸습니다";
+    const base = amShopList({}).length;
+    if(!base) return true;
+    const ls = [...document.querySelectorAll(".ft a")]
+      .map(a => a.getAttribute("href") || "")
+      .filter(h => h.indexOf("/shop?") === 0);
+    if(!ls.length) return "푸터에 거르개가 붙은 구매 줄이 없습니다";
+    const bad = [];
+    for(const h of ls){
+      const qs = new URLSearchParams(h.slice(h.indexOf("?") + 1));
+      const fil = {};
+      qs.forEach((v, k) => { if(SHOP_QK[k]) fil[SHOP_QK[k]] = v; });
+      if(!Object.keys(fil).length){ bad.push(h + " (읽는 열쇠가 하나도 없습니다)"); continue; }
+      const n = amShopList(fil).length;
+      if(n >= base) bad.push(h + " (" + n + "/" + base + " — 안 걸러집니다)");
+    }
+    if(bad.length) return "푸터 구매 줄이 거르지 못합니다 — " + bad.join(" · ");
+    return true;
+  `);
+
   await f("쇼핑몰: 예시 상세에는 구매 단추가 없다", "/d/sample-ip15p-256-a", `
     if(typeof amShopSampleOn !== "function") return "쇼핑몰 데이터가 안 실렸습니다";
     if(!amShopSampleOn()) return true;

@@ -2056,21 +2056,34 @@ try{
     ok("기록을 직접 넣는 길이 없다 (문으로만)", r.no, r.why);
 
     /* ══ 수익상품 — offer 표가 비어 있었습니다 ══════════════════ */
+    /* ⚠️⚠️ **개수를 손으로 적지 마세요.** 2026-11-01 에 상품이 창업 ·
+       폐업 스물일곱에서 중고폰 열일곱으로 바뀌었는데 여기만 27 로
+       남아 있어서 **멀쩡한 스키마가 실패**로 잡혔습니다 — 이 저장소가
+       "검사가 갯수를 그냥 셌음" 으로 겪은 그 자리입니다. js/data 에서
+       세면 어긋날 수가 없습니다. */
+    const OFF = (() => {
+      const g = {};
+      new Function("window", fs.readFileSync("js/data/offers.js", "utf8"))(g);
+      return g.AM_OFFERS || [];
+    })();
     ok("수익상품이 offer 표에 들어 있다",
-       Number(psql("select count(*) from offer")) === 27);
+       Number(psql("select count(*) from offer")) === OFF.length);
     ok("전부 info 다 (제휴사 0곳인데 live 면 신청 가능으로 읽힙니다)",
        psql("select count(*) from offer where status <> 'info'") === "0");
+    /* ⚠️ 씨앗 id 도 js/data 에서 가져옵니다 — 상품 이름을 바꿀 때마다
+       여기를 손으로 고치지 않게 (전에 'pos-card' 로 박혀 있었습니다). */
+    const OID = OFF[0].id;
     /* ⚠️⚠️ 이 FK 가 비어 있어서 **상품별 요율을 못 걸고 있었습니다** */
     psql(as(AD) + `select save_fee_policy('pv-new',
-            '{"type":"rate","rate":"3","offerId":"pos-card"}'::jsonb)`);
+            '{"type":"rate","rate":"3","offerId":"${OID}"}'::jsonb)`);
     ok("상품별 수수료 정책을 걸 수 있다",
-       psql("select count(*) from fee_policy where offer_id='pos-card'") === "1");
+       psql(`select count(*) from fee_policy where offer_id='${OID}'`) === "1");
     /* 다시 돌려도 사장님이 켜 둔 status 를 안 되돌립니다 */
-    psql("update offer set status='live' where id='pos-card'");
+    psql(`update offer set status='live' where id='${OID}'`);
     psqlFile("db/migrations/0012_owner_assignable_offer.sql");
     ok("다시 돌려도 켜 둔 status 를 안 되돌린다",
-       psql("select status from offer where id='pos-card'") === "live");
-    psql("update offer set status='info' where id='pos-card'");
+       psql(`select status from offer where id='${OID}'`) === "live");
+    psql(`update offer set status='info' where id='${OID}'`);
   }
 
   console.log("\n── ⚠️⚠️ 0013 업체 담당자(별도 표) · 기간별 정산");

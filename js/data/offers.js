@@ -53,10 +53,10 @@
 
 /* 신청 유형 (§5) — 손님이 무엇을 신청하는 것인가 */
 window.AM_OFFER_APPLY = [
-  { key:"quote",   name:"견적 비교",   lead:"조건을 적으시면 여러 곳에서 견적이 옵니다" },
-  { key:"install", name:"설치 · 개통", lead:"일정을 정해 설치 · 개통까지" },
-  { key:"rental",  name:"렌탈 계약",   lead:"월 단위 계약으로 들여놓는 것" },
-  { key:"dispose", name:"처분 · 매각", lead:"쓰던 것을 넘기거나 파는 것" }
+  { key:"sell",  name:"내 폰 팔기",   lead:"기기를 적으시면 매입 · 입찰로 이어집니다" },
+  { key:"quote", name:"견적 비교",    lead:"조건을 적으시면 여러 곳에서 견적이 옵니다" },
+  { key:"buy",   name:"중고폰 구매",  lead:"검수를 마친 기기를 고르시는 것" },
+  { key:"bulk",  name:"대량 · 수출 상담", lead:"대수가 많아 사람이 먼저 상담하는 것" }
 ];
 
 /* 예상 비용을 어떻게 안내하는가 (§5)
@@ -76,191 +76,143 @@ window.AM_OFFER_STATUS = [
   { key:"off",  name:"내림",        lead:"화면에 안 냅니다" }
 ];
 
-/* ── 초기 핵심 상품 열 (§5 의 목록 그대로) ────────────────────
-   ⚠️ `cat` 은 catalog.js 의 분류 key · `sub` 은 그 분류의 하위 key 입니다.
-   ⚠️ `to` 는 **이미 있는 화면**입니다 — 새 주소를 만들지 않습니다.
-   ⚠️ `fee` 는 fee.js 의 AM_FEE_TYPE key 이고 **지금은 계획**입니다.
-      실제 요율은 업체마다 `fee_policy` 에 적습니다 (§9). */
+/* ── 중고폰 수익상품 열일곱 ────────────────────────────────────
+   ⚠️⚠️ **2026-11-01 — 창업 · 폐업 상품 스물일곱을 여기서 갈았습니다.**
+   그때까지 이 파일은 `it` · `equip` · `interior` 처럼 **없어진 분류**를
+   가리키고 있어서, `/admin` 수익상품 칸이 "매장 인터넷 · POS · CCTV ·
+   정수기 렌탈" 을 내고 분류 이름 자리에 **`it` · `equip` 날것**을
+   찍었습니다 (`amCat()` 이 못 찾아서 — 포트폴리오가 `gyeonggi` 를
+   찍었던 그 자리). 손님 화면에는 안 나가고 `/admin` 하나가 읽습니다.
+
+   ⚠️⚠️ **열일곱이 분류 열을 빠짐없이 덮습니다** — buyin 4 · broken 2 ·
+   fix 2 · shop 1 · wholesale 2 · corp 2 · export 1 · inspect 1 ·
+   pickup 1 · access 1. 분류를 늘리시면 여기도 한 줄 더하세요
+   (`checkOffers()` 가 덮지 못한 분류를 세어 알려 줍니다).
+
+   ⚠️⚠️ **`id` · `name` 쌍이 `0012` 의 insert 와 글자까지 같아야 합니다** —
+   `checkOfferSql()` 이 양쪽으로 맞춰 보고 **빌드를 멈춥니다**. 한쪽만
+   고치면 `fee_policy.offer_id` 로 요율을 걸 수 없고, `request.offer_id`
+   로 보내는 날 **접수 저장이 FK 로 통째로 실패**합니다.
+
+   ⚠️⚠️ **금액 칸을 만들지 마세요** (`price` · `from` · `cost` ·
+   `amount`). 하나라도 있으면 빌드가 멈춥니다 — 매입 기준가가 0건이고,
+   적는 순간 사장님이 그 숫자를 보고 오십니다 (절대 규칙 1).
+
+   ⚠️ `status` 는 **전부 `info`** 입니다 — 매입업체가 0곳인데 `live` 로
+   두면 "신청 가능" 으로 읽힙니다 (절대 규칙 5).
+   ──────────────────────────────────────────────────────── */
 window.AM_OFFERS = [
-  { id:"store-internet", icon:"globe", name:"매장 인터넷", cat:"it", sub:"internet",
-    lead:"개통일을 맞추는 것이 전부입니다. 공사 일정과 함께 잡으세요.",
-    apply:"install", consult:true, costWay:"quote",
-    fee:"close", feeNote:"개통 확인 후 건당 정액", status:"info",
-    to:"/providers/it" },
+  /* ── 매입 (buyin) — 폰웨이가 직접 삽니다 ───────────────── */
+  { id:"ph-buyin", icon:"mobile", name:"스마트폰 직접 매입", cat:"buyin", sub:"ph-buy",
+    lead:"등급과 용량이 값을 가릅니다. 기준가가 없으면 예상 금액을 내지 않습니다.",
+    apply:"sell", consult:false, costWay:"quote",
+    fee:"margin", feeNote:"재판매가에서 매입가와 검수 원가를 뺀 차액", status:"info",
+    to:"/sell" },
 
-  { id:"pos-card", icon:"receipt", name:"POS · 카드단말기", cat:"it", sub:"pos",
-    lead:"카드 수수료와 단말기 비용은 다른 이야기입니다. 둘을 갈라서 보세요.",
-    apply:"install", consult:true, costWay:"quote",
-    fee:"close", feeNote:"설치 확인 후 건당 정액", status:"info",
-    to:"/providers/it" },
+  { id:"tab-buyin", icon:"laptop", name:"태블릿 · 워치 · 이어폰 매입", cat:"buyin", sub:"tab-buy",
+    lead:"스마트폰보다 기종이 적어 등급표가 단순합니다.",
+    apply:"sell", consult:false, costWay:"quote",
+    fee:"margin", feeNote:"재판매가에서 매입가와 검수 원가를 뺀 차액", status:"info",
+    to:"/sell" },
 
-  { id:"cctv-security", icon:"camera", name:"CCTV · 보안", cat:"it", sub:"cctv",
-    lead:"대수와 저장 기간이 값을 가릅니다. 녹화 보관은 법에 걸리는 부분이 있습니다.",
-    apply:"install", consult:true, costWay:"quote",
-    fee:"close", feeNote:"설치 확인 후 건당 정액", status:"info",
-    to:"/providers/it" },
+  { id:"self-buyin", icon:"box", name:"자급제 · 공기계 매입", cat:"buyin", sub:"self-buy",
+    lead:"약정이 없는 기기라 명의와 잠금만 확인하면 됩니다.",
+    apply:"sell", consult:false, costWay:"quote",
+    fee:"margin", feeNote:"재판매가에서 매입가와 검수 원가를 뺀 차액", status:"info",
+    to:"/sell" },
 
-  { id:"water-ice-rental", icon:"snow", name:"정수기 · 제빙기 렌탈", cat:"equip",
-    lead:"사는 것과 빌리는 것의 차액은 계약 기간에서 갈립니다.",
-    apply:"rental", consult:true, costWay:"quote",
-    fee:"sub", feeNote:"계약 회차마다 정액", status:"info",
-    to:"/providers/equip" },
-
-  { id:"kiosk-order", icon:"monitor", name:"키오스크 · 테이블오더", cat:"it", sub:"kiosk",
-    lead:"인건비를 줄이려는 것이라면 먼저 계산해 보세요.",
-    apply:"install", consult:true, costWay:"tool",
-    fee:"close", feeNote:"설치 확인 후 건당 정액", status:"info",
-    to:"/providers/it" },
-
-  { id:"interior-sign", icon:"roller", name:"인테리어 · 간판", cat:"interior", sub:"interior",
-    lead:"평수보다 무엇을 뜯는가가 금액을 가릅니다.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
-    to:"/providers/interior" },
-
-  { id:"kitchen-equip", icon:"knife", name:"주방 · 업소용 장비", cat:"equip",
-    lead:"새것과 중고의 차이는 값이 아니라 수리와 부품입니다.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
-    to:"/providers/equip" },
-
-  { id:"demolish-restore", icon:"hammer", name:"철거 · 원상복구", cat:"demolish", sub:"full",
-    lead:"원상복구 범위는 계약서에 적힌 대로입니다. 먼저 그것부터 확인하세요.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
-    to:"/providers/demolish" },
-
-  { id:"clean-disinfect", icon:"broom", name:"청소 · 방역", cat:"clean", sub:"move-in",
-    lead:"문 열기 전 한 번과 정기로 받는 것은 다른 계약입니다.",
+  { id:"bid-match", icon:"gavel", name:"매입업체 경쟁입찰 중개", cat:"buyin",
+    lead:"저희가 사는 것이 아니라 제휴 매입업체가 입찰합니다 — 중개입니다.",
     apply:"quote", consult:false, costWay:"quote",
-    fee:"lead", feeNote:"유효 문의 확인 후 건당 정액", status:"info",
-    to:"/providers/clean" },
+    fee:"rate", feeNote:"낙찰가의 일정 비율 · 업체 수금 확인 후", status:"info",
+    to:"/bid" },
 
-  { id:"used-equip", icon:"boxes", name:"중고 시설 · 장비", cat:"asset",
-    lead:"정리하시는 사장님의 것이 시작하시는 사장님에게 갑니다.",
-    apply:"dispose", consult:false, costWay:"quote",
-    fee:"margin", feeNote:"판매가와 매입가의 차액", status:"info",
-    to:"/assets" },
+  /* ── 고장 · 파손 (broken) ──────────────────────────────── */
+  { id:"broken-buyin", icon:"alert", name:"고장 · 파손폰 매입", cat:"broken",
+    lead:"켜지지 않아도 값이 붙습니다. 무엇이 고장인지만 적으시면 됩니다.",
+    apply:"sell", consult:false, costWay:"quote",
+    fee:"margin", feeNote:"수리 · 부품 회수 뒤 재판매 차액", status:"info",
+    to:"/sell" },
 
-  /* ══ 2026-10-09 최종 통합 지시서 — 창업 §4-3 나머지 ═════════
-     ⚠️ 지시서가 인테리어와 간판을 **따로** 적었습니다. 전에는 한 상품
-     (`interior-sign`)이었는데, 간판만 하시는 분과 공사 전체를 맡기시는
-     분은 **부르는 업체가 다릅니다.** 갈라 두었고 옛 id 는 남겨 두었습니다
-     (밖으로 나간 링크가 그 값을 들고 있을 수 있습니다). */
-  { id:"signage", icon:"sign", name:"간판 · 사인", cat:"interior", sub:"sign",
-    lead:"크기와 내달는 자리에 따라 구청 허가가 따로 필요할 수 있습니다.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
-    to:"/providers/interior" },
+  { id:"part-lot", icon:"boxes", name:"부품용 단말기 매입", cat:"broken", sub:"part-bad",
+    lead:"살릴 수 없는 기기도 모듈 단위로는 거래됩니다.",
+    apply:"sell", consult:false, costWay:"quote",
+    fee:"margin", feeNote:"부품 판매가에서 매입가를 뺀 차액", status:"info",
+    to:"/sell" },
 
-  { id:"hvac", icon:"snow", name:"냉난방 · 공조", cat:"interior", sub:"hvac",
-    lead:"평수보다 천장 높이와 주방 열이 용량을 가릅니다.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
-    to:"/providers/interior" },
-
-  { id:"furniture-set", icon:"sofa", name:"가구 · 집기", cat:"furniture", sub:"biz-furn",
-    lead:"붙박이인지 떼어 옮길 수 있는지를 먼저 보세요 — 정리할 때 갈립니다.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
-    to:"/providers/furniture" },
-
-  { id:"booking-order", icon:"calendar", name:"예약 · 주문 솔루션", cat:"it", sub:"booking",
-    lead:"예약과 주문은 다른 프로그램일 때가 많습니다. 묶을 수 있는지 보세요.",
-    apply:"install", consult:true, costWay:"quote",
-    fee:"close", feeNote:"개통 확인 후 건당 정액", status:"info",
-    to:"/providers/it" },
-
-  { id:"marketing-svc", icon:"megaphone", name:"오픈 마케팅", cat:"marketing", sub:"open-mkt",
-    lead:"문 열기 전에 해 두는 것과 열고 나서 하는 것이 다릅니다.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"lead", feeNote:"유효 문의 확인 후 건당 정액", status:"info",
-    to:"/providers/marketing" },
-
-  /* ══ 운영 §5-2 · §5-3 ═════════════════════════════
-     ⚠️⚠️ **반복 구매를 직접 받지 않습니다** (§5-3). 직접 재고를 매입하거나
-     물류망을 만들지 않고, 공급업체와 제휴해 **연결**합니다. 그래서
-     수익모델이 `sub`(회차마다 정액)이고 주문 버튼이 아니라 상담 요청입니다.
-     ⚠️ 제휴 공급사가 0곳이라 전부 `status:"info"` 입니다 — 주문이 되는 것처럼
-     보이면 그것이 절대 규칙 5 입니다. */
-  { id:"food-supply", icon:"utensils", name:"식자재 거래처 연결", cat:"supply", sub:"ingredient",
-    lead:"품목마다 거래처가 다릅니다. 육류 · 수산 · 농산을 한 곳에서 받기는 어렵습니다.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"sub", feeNote:"발주 회차마다 정액", status:"info",
-    to:"/providers/supply" },
-
-  { id:"consum-supply", icon:"boxes", name:"소모품 · 포장재 정기 공급", cat:"supply", sub:"packaging",
-    lead:"배달용기는 단가보다 최소 수량이 부담인 경우가 많습니다.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"sub", feeNote:"발주 회차마다 정액", status:"info",
-    to:"/providers/supply" },
-
-  { id:"equip-repair", icon:"tool", name:"장비 수리 · 유지보수", cat:"repair", sub:"kitchen-fix",
-    lead:"멈춘 뒤에 부르면 그날 장사가 안 됩니다. 정기 점검을 같이 보세요.",
+  /* ── 수리 (fix) — 중개입니다 ───────────────────────────── */
+  { id:"fix-match", icon:"tool", name:"수리 업체 연결", cat:"fix",
+    lead:"기종과 증상으로 갈립니다. 부품을 구할 수 있는지가 먼저입니다.",
     apply:"quote", consult:false, costWay:"quote",
-    fee:"lead", feeNote:"유효 문의 확인 후 건당 정액", status:"info",
-    to:"/providers/repair" },
+    fee:"close", feeNote:"수리 완료 확인 후 건당 정액", status:"info",
+    to:"/repair" },
 
-  { id:"regular-clean", icon:"broom", name:"정기 청소 · 방역", cat:"clean", sub:"regular",
-    lead:"한 번 받는 것과 주기로 받는 것은 다른 계약입니다.",
+  { id:"fix-data", icon:"filex", name:"데이터 복구 연결", cat:"fix", sub:"data",
+    lead:"침수 · 액정 고장과 다른 일입니다. 복구율을 약속하지 않습니다.",
+    apply:"quote", consult:true, costWay:"quote",
+    fee:"close", feeNote:"복구 완료 확인 후 건당 정액", status:"info",
+    to:"/repair" },
+
+  /* ── 판매 (shop) — 폰웨이가 직접 팝니다 ────────────────── */
+  { id:"shop-sale", icon:"store", name:"검수 중고폰 판매", cat:"shop",
+    lead:"검수를 마친 기기만 올립니다. 등급과 배터리 상태를 같이 냅니다.",
+    apply:"buy", consult:false, costWay:"quote",
+    fee:"margin", feeNote:"판매가에서 매입가와 검수 원가를 뺀 차액", status:"info",
+    to:"/shop" },
+
+  /* ── 도매 · 경매 (wholesale) ───────────────────────────── */
+  { id:"lot-whole", icon:"layers", name:"등급별 벌크 도매", cat:"wholesale", sub:"bulk",
+    lead:"대수와 등급 구성으로 값이 갈립니다. 한 대씩 보는 거래가 아닙니다.",
+    apply:"bulk", consult:true, costWay:"quote",
+    fee:"margin", feeNote:"도매가에서 매입가를 뺀 차액", status:"info",
+    to:"/biz" },
+
+  { id:"auction-fee", icon:"gavel", name:"B2B 경매 중개", cat:"wholesale", sub:"auction",
+    lead:"참여 업체끼리 값을 냅니다 — 저희는 자리를 열고 중개합니다.",
+    apply:"bulk", consult:true, costWay:"quote",
+    fee:"rate", feeNote:"낙찰가의 일정 비율 · 업체 수금 확인 후", status:"info",
+    to:"/biz" },
+
+  /* ── 기업 · 법인 (corp) ────────────────────────────────── */
+  { id:"corp-buyin", icon:"building", name:"기업 · 법인 대량 매입", cat:"corp", sub:"office",
+    lead:"자산 목록과 반출 절차가 먼저입니다. 대수가 많으면 사람이 갑니다.",
+    apply:"bulk", consult:true, costWay:"quote",
+    fee:"margin", feeNote:"재판매가에서 매입가와 회수 원가를 뺀 차액", status:"info",
+    to:"/biz?t=corp" },
+
+  { id:"wipe-cert", icon:"shield", name:"데이터 완전 삭제 증명", cat:"corp", sub:"wipe-cert",
+    lead:"업무용 단말기는 삭제를 증명해야 반출이 끝납니다.",
+    apply:"bulk", consult:true, costWay:"quote",
+    fee:"close", feeNote:"증명서 발급 건당 정액", status:"info",
+    to:"/biz?t=corp" },
+
+  /* ── 수출 (export) ─────────────────────────────────────── */
+  { id:"export-buyer", icon:"globe", name:"해외 바이어 연결", cat:"export", sub:"buyer",
+    lead:"나라마다 받는 등급과 기종이 다릅니다. 통관이 따라옵니다.",
+    apply:"bulk", consult:true, costWay:"quote",
+    fee:"rate", feeNote:"수출 대금의 일정 비율 · 수금 확인 후", status:"info",
+    to:"/biz?t=export" },
+
+  /* ── 검수 (inspect) ────────────────────────────────────── */
+  { id:"inspect-fee", icon:"scan", name:"검수 · 등급 판정", cat:"inspect", sub:"grade",
+    lead:"외관과 기능을 갈라서 봅니다. 등급은 사람이 정하고 기준을 밝힙니다.",
     apply:"quote", consult:false, costWay:"quote",
-    fee:"sub", feeNote:"계약 회차마다 정액", status:"info",
-    to:"/providers/clean" },
+    fee:"close", feeNote:"검수 완료 건당 정액", status:"info",
+    to:"/quote?c=inspect" },
 
-  { id:"place-mkt", icon:"pin", name:"플레이스 · 리뷰 관리", cat:"marketing", sub:"place",
-    lead:"검색해서 찾아오는 손님이 여기서 갈립니다.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"sub", feeNote:"월 계약 회차마다 정액", status:"info",
-    to:"/providers/marketing" },
+  /* ── 수거 (pickup) ─────────────────────────────────────── */
+  { id:"pickup-post", icon:"truck", name:"택배 · 방문 수거", cat:"pickup", sub:"post",
+    lead:"포장이 반입니다. 깨진 액정은 따로 싸야 더 깨지지 않습니다.",
+    apply:"sell", consult:false, costWay:"quote",
+    fee:"close", feeNote:"수거 완료 건당 정액", status:"info",
+    to:"/sell" },
 
-  { id:"tax-labor", icon:"briefcase", name:"세무 · 노무 기장", cat:"admin", sub:"tax-agent",
-    lead:"직원이 생기면 노무가 같이 따라옵니다.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"sub", feeNote:"월 기장 회차마다 정액", status:"info",
-    to:"/providers/admin" },
-
-  /* ══ 폐업 §6-3 ══════════════════════════════════
-     ⚠️⚠️ **철거를 먼저 권하지 않습니다** (§6-4). 양도 · 재판매 가능성을
-     먼저 안내합니다 — 넘기면 철거비도 원상복구도 줄어듭니다.
-     ⚠️⚠️ **폐기물 처리는 법정 허가가 필요합니다** (§6-3) — 허가를 확인한
-     업체만 연결합니다. 그것을 확인하기 전에는 live 로 바꾸지 마세요.
-     ⚠️⚠️ **권리금 거래 · 부동산 중개는 하지 않습니다** (§6-3) — 양도 · 인수는
-     정보와 준비까지이고 계약은 공인중개사의 일입니다. */
-  { id:"transfer-ready", icon:"handover", name:"매장 양도 준비", cat:"transfer", sub:"store-transfer",
-    lead:"넘기기 전에 임대차 승계와 시설 범위를 먼저 정리합니다.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"lead", feeNote:"유효 문의 확인 후 건당 정액", status:"info",
-    to:"/stores" },
-
-  { id:"store-photo", icon:"camera", name:"매장 · 시설 촬영", cat:"marketing", sub:"photo",
-    lead:"사진 한 장이 보러 오시는 분의 수를 가릅니다.",
-    apply:"quote", consult:false, costWay:"quote",
-    fee:"close", feeNote:"촬영 완료 후 건당 정액", status:"info",
-    to:"/providers/marketing" },
-
-  { id:"stock-clear", icon:"boxes", name:"재고 처분", cat:"stock", sub:"goods",
-    lead:"반품이 되는 것부터 갈라 놓으세요 — 거래처와 먼저 얻습니다.",
-    apply:"dispose", consult:false, costWay:"quote",
-    fee:"margin", feeNote:"판매가와 매입가의 차액", status:"info",
-    to:"/assets" },
-
-  { id:"restore-work", icon:"restore", name:"원상복구", cat:"restore", sub:"shop-restore",
-    lead:"범위는 임대차 계약서에 적힐 대로입니다. 그것부터 확인하세요.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
-    to:"/providers/restore" },
-
-  { id:"waste-disposal", icon:"trash", name:"폐기물 처리", cat:"waste", sub:"biz-waste",
-    lead:"사업장 폐기물은 허가받은 업체만 가져갈 수 있고 증빙이 남아야 합니다.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
-    to:"/providers/waste" },
-
-  { id:"equip-move", icon:"truck", name:"장비 철거 · 이전", cat:"demolish", sub:"facility",
-    lead:"떼어서 옮기면 돈이고 부수면 비용입니다. 순서를 먼저 정하세요.",
-    apply:"quote", consult:true, costWay:"quote",
-    fee:"rate", feeNote:"계약금액의 일정 비율", status:"info",
-    to:"/providers/demolish" }
+  /* ── 액세서리 (access) ─────────────────────────────────── */
+  { id:"access-sale", icon:"plug", name:"액세서리 · 부자재", cat:"access",
+    lead:"기기와 같이 나가는 것들입니다. 케이스 · 충전기 · 포장재.",
+    apply:"buy", consult:false, costWay:"quote",
+    fee:"margin", feeNote:"판매가에서 매입가를 뺀 차액", status:"info",
+    to:"/shop" }
 ];
 
 /* ── 읽기 ─────────────────────────────────────────────────── */

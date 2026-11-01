@@ -1349,8 +1349,8 @@ grant execute on function approve_provider(text, boolean, jsonb, text, boolean) 
 -- ════════════════════════════════════════════════════════════════════
 -- ④ 수익상품 — ⚠️⚠️ `offer` 표가 **비어 있었습니다**
 --
---   js/data/offers.js 에 상품 스물일곱이 있는데 DB 에는 한 줄도 넣는
---   코드가 없었습니다. 그래서 —
+--   js/data/offers.js 에 상품이 있는데 DB 에는 한 줄도 넣는 코드가
+--   없었습니다. 그래서 —
 --     · `fee_policy.offer_id` 가 offer(id) 를 가리켜서 **상품별 요율을
 --       못 걸고** 업체 전체 정책만 걸렸습니다.
 --     · `request.offer_id` 도 같은 FK 라, 화면이 offerId 를 보내기
@@ -1364,36 +1364,36 @@ grant execute on function approve_provider(text, boolean, jsonb, text, boolean) 
 -- ⚠️ `status` 는 **전부 `info`** 입니다 — 제휴사가 0곳인데 `live` 로
 --   두면 "신청 가능" 으로 읽힙니다 (절대 규칙 5 · checkOffers 가 막습니다).
 -- ⚠️ 업종 · 지역을 비워 둡니다 — `{}` 는 "전업종 · 전국" 입니다.
+--
+-- ⚠️⚠️ **2026-11-01 — 창업 · 폐업 상품 스물일곱을 중고폰 열일곱으로
+--   갈았습니다.** 이 파일은 운영 DB 에 **아직 안 돌아갔습니다**
+--   (`APPLY_FROM = 8` · 사장님이 0007 까지 돌리셨습니다) — 그래서
+--   새 번호를 만들지 않고 여기를 고쳤습니다 (0006 의 enum 과 같은
+--   판단입니다). ⚠️ **이미 돌리신 뒤라면 이 파일을 고치지 말고 다음
+--   번호로 새로 만드세요.**
+-- ⚠️ `apply_type` 도 중고폰 꼴 넷입니다 — sell · quote · buy · bulk
+--   (`install` · `rental` 은 창업 · 폐업 것이었습니다). 표의 그 칸은
+--   제약 없는 text 라 값만 바뀌면 됩니다.
 -- ════════════════════════════════════════════════════════════════════
 insert into offer (id, name, lead, cats, industries, regions,
                    apply_type, needs_consult, cost_note, status) values
-  ('store-internet', '매장 인터넷', '개통일을 맞추는 것이 전부입니다. 공사 일정과 함께 잡으세요.', array['it'], '{}', '{}', 'install', true, 'quote', 'info'::offer_status),
-  ('pos-card', 'POS · 카드단말기', '카드 수수료와 단말기 비용은 다른 이야기입니다. 둘을 갈라서 보세요.', array['it'], '{}', '{}', 'install', true, 'quote', 'info'::offer_status),
-  ('cctv-security', 'CCTV · 보안', '대수와 저장 기간이 값을 가릅니다. 녹화 보관은 법에 걸리는 부분이 있습니다.', array['it'], '{}', '{}', 'install', true, 'quote', 'info'::offer_status),
-  ('water-ice-rental', '정수기 · 제빙기 렌탈', '사는 것과 빌리는 것의 차액은 계약 기간에서 갈립니다.', array['equip'], '{}', '{}', 'rental', true, 'quote', 'info'::offer_status),
-  ('kiosk-order', '키오스크 · 테이블오더', '인건비를 줄이려는 것이라면 먼저 계산해 보세요.', array['it'], '{}', '{}', 'install', true, 'tool', 'info'::offer_status),
-  ('interior-sign', '인테리어 · 간판', '평수보다 무엇을 뜯는가가 금액을 가릅니다.', array['interior'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
-  ('kitchen-equip', '주방 · 업소용 장비', '새것과 중고의 차이는 값이 아니라 수리와 부품입니다.', array['equip'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
-  ('demolish-restore', '철거 · 원상복구', '원상복구 범위는 계약서에 적힌 대로입니다. 먼저 그것부터 확인하세요.', array['demolish'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
-  ('clean-disinfect', '청소 · 방역', '문 열기 전 한 번과 정기로 받는 것은 다른 계약입니다.', array['clean'], '{}', '{}', 'quote', false, 'quote', 'info'::offer_status),
-  ('used-equip', '중고 시설 · 장비', '정리하시는 사장님의 것이 시작하시는 사장님에게 갑니다.', array['asset'], '{}', '{}', 'dispose', false, 'quote', 'info'::offer_status),
-  ('signage', '간판 · 사인', '크기와 내달는 자리에 따라 구청 허가가 따로 필요할 수 있습니다.', array['interior'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
-  ('hvac', '냉난방 · 공조', '평수보다 천장 높이와 주방 열이 용량을 가릅니다.', array['interior'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
-  ('furniture-set', '가구 · 집기', '붙박이인지 떼어 옮길 수 있는지를 먼저 보세요 — 정리할 때 갈립니다.', array['furniture'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
-  ('booking-order', '예약 · 주문 솔루션', '예약과 주문은 다른 프로그램일 때가 많습니다. 묶을 수 있는지 보세요.', array['it'], '{}', '{}', 'install', true, 'quote', 'info'::offer_status),
-  ('marketing-svc', '오픈 마케팅', '문 열기 전에 해 두는 것과 열고 나서 하는 것이 다릅니다.', array['marketing'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
-  ('food-supply', '식자재 거래처 연결', '품목마다 거래처가 다릅니다. 육류 · 수산 · 농산을 한 곳에서 받기는 어렵습니다.', array['supply'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
-  ('consum-supply', '소모품 · 포장재 정기 공급', '배달용기는 단가보다 최소 수량이 부담인 경우가 많습니다.', array['supply'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
-  ('equip-repair', '장비 수리 · 유지보수', '멈춘 뒤에 부르면 그날 장사가 안 됩니다. 정기 점검을 같이 보세요.', array['repair'], '{}', '{}', 'quote', false, 'quote', 'info'::offer_status),
-  ('regular-clean', '정기 청소 · 방역', '한 번 받는 것과 주기로 받는 것은 다른 계약입니다.', array['clean'], '{}', '{}', 'quote', false, 'quote', 'info'::offer_status),
-  ('place-mkt', '플레이스 · 리뷰 관리', '검색해서 찾아오는 손님이 여기서 갈립니다.', array['marketing'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
-  ('tax-labor', '세무 · 노무 기장', '직원이 생기면 노무가 같이 따라옵니다.', array['admin'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
-  ('transfer-ready', '매장 양도 준비', '넘기기 전에 임대차 승계와 시설 범위를 먼저 정리합니다.', array['transfer'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
-  ('store-photo', '매장 · 시설 촬영', '사진 한 장이 보러 오시는 분의 수를 가릅니다.', array['marketing'], '{}', '{}', 'quote', false, 'quote', 'info'::offer_status),
-  ('stock-clear', '재고 처분', '반품이 되는 것부터 갈라 놓으세요 — 거래처와 먼저 얻습니다.', array['stock'], '{}', '{}', 'dispose', false, 'quote', 'info'::offer_status),
-  ('restore-work', '원상복구', '범위는 임대차 계약서에 적힐 대로입니다. 그것부터 확인하세요.', array['restore'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
-  ('waste-disposal', '폐기물 처리', '사업장 폐기물은 허가받은 업체만 가져갈 수 있고 증빙이 남아야 합니다.', array['waste'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
-  ('equip-move', '장비 철거 · 이전', '떼어서 옮기면 돈이고 부수면 비용입니다. 순서를 먼저 정하세요.', array['demolish'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status)
+  ('ph-buyin', '스마트폰 직접 매입', '등급과 용량이 값을 가릅니다. 기준가가 없으면 예상 금액을 내지 않습니다.', array['buyin'], '{}', '{}', 'sell', false, 'quote', 'info'::offer_status),
+  ('tab-buyin', '태블릿 · 워치 · 이어폰 매입', '스마트폰보다 기종이 적어 등급표가 단순합니다.', array['buyin'], '{}', '{}', 'sell', false, 'quote', 'info'::offer_status),
+  ('self-buyin', '자급제 · 공기계 매입', '약정이 없는 기기라 명의와 잠금만 확인하면 됩니다.', array['buyin'], '{}', '{}', 'sell', false, 'quote', 'info'::offer_status),
+  ('bid-match', '매입업체 경쟁입찰 중개', '저희가 사는 것이 아니라 제휴 매입업체가 입찰합니다 — 중개입니다.', array['buyin'], '{}', '{}', 'quote', false, 'quote', 'info'::offer_status),
+  ('broken-buyin', '고장 · 파손폰 매입', '켜지지 않아도 값이 붙습니다. 무엇이 고장인지만 적으시면 됩니다.', array['broken'], '{}', '{}', 'sell', false, 'quote', 'info'::offer_status),
+  ('part-lot', '부품용 단말기 매입', '살릴 수 없는 기기도 모듈 단위로는 거래됩니다.', array['broken'], '{}', '{}', 'sell', false, 'quote', 'info'::offer_status),
+  ('fix-match', '수리 업체 연결', '기종과 증상으로 갈립니다. 부품을 구할 수 있는지가 먼저입니다.', array['fix'], '{}', '{}', 'quote', false, 'quote', 'info'::offer_status),
+  ('fix-data', '데이터 복구 연결', '침수 · 액정 고장과 다른 일입니다. 복구율을 약속하지 않습니다.', array['fix'], '{}', '{}', 'quote', true, 'quote', 'info'::offer_status),
+  ('shop-sale', '검수 중고폰 판매', '검수를 마친 기기만 올립니다. 등급과 배터리 상태를 같이 냅니다.', array['shop'], '{}', '{}', 'buy', false, 'quote', 'info'::offer_status),
+  ('lot-whole', '등급별 벌크 도매', '대수와 등급 구성으로 값이 갈립니다. 한 대씩 보는 거래가 아닙니다.', array['wholesale'], '{}', '{}', 'bulk', true, 'quote', 'info'::offer_status),
+  ('auction-fee', 'B2B 경매 중개', '참여 업체끼리 값을 냅니다 — 저희는 자리를 열고 중개합니다.', array['wholesale'], '{}', '{}', 'bulk', true, 'quote', 'info'::offer_status),
+  ('corp-buyin', '기업 · 법인 대량 매입', '자산 목록과 반출 절차가 먼저입니다. 대수가 많으면 사람이 갑니다.', array['corp'], '{}', '{}', 'bulk', true, 'quote', 'info'::offer_status),
+  ('wipe-cert', '데이터 완전 삭제 증명', '업무용 단말기는 삭제를 증명해야 반출이 끝납니다.', array['corp'], '{}', '{}', 'bulk', true, 'quote', 'info'::offer_status),
+  ('export-buyer', '해외 바이어 연결', '나라마다 받는 등급과 기종이 다릅니다. 통관이 따라옵니다.', array['export'], '{}', '{}', 'bulk', true, 'quote', 'info'::offer_status),
+  ('inspect-fee', '검수 · 등급 판정', '외관과 기능을 갈라서 봅니다. 등급은 사람이 정하고 기준을 밝힙니다.', array['inspect'], '{}', '{}', 'quote', false, 'quote', 'info'::offer_status),
+  ('pickup-post', '택배 · 방문 수거', '포장이 반입니다. 깨진 액정은 따로 싸야 더 깨지지 않습니다.', array['pickup'], '{}', '{}', 'sell', false, 'quote', 'info'::offer_status),
+  ('access-sale', '액세서리 · 부자재', '기기와 같이 나가는 것들입니다. 케이스 · 충전기 · 포장재.', array['access'], '{}', '{}', 'buy', false, 'quote', 'info'::offer_status)
 on conflict (id) do update set
   name = excluded.name, lead = excluded.lead, cats = excluded.cats,
   apply_type = excluded.apply_type, needs_consult = excluded.needs_consult,

@@ -208,10 +208,16 @@ function MyPvSelf(d){
     '<div class="my-pv">'+
       '<dl class="my-pv-fix">'+
         '<dt>상호</dt><dd>'+esc(m.name || "")+'</dd>'+
+
         '<dt>하는 일</dt><dd>'+
           esc((m.subs || []).map(function(k){
             return (typeof amSubName === "function") ? (amSubName(k) || k) : k;
-          }).join(" · ") || "아직 없습니다")+'</dd>'+
+          }).join(" · ") || "아직 없습니다")+
+          '<span class="my-pv-fx">'+
+          (window.amProviderCanFix && amProviderCanFix(m)
+            ? "수리 가능 — 예 (수리 분야가 들어 있습니다)"
+            : "수리 가능 — 아니요 (수리 분야를 넣으시면 켜집니다)")+
+          '</span></dd>'+
         '<dt>공개</dt><dd>'+(m.listed ? "공개 중" : "아직 공개 전")+'</dd>'+
         '<dt>확인된 것</dt><dd>'+
           (on.length ? esc(on.map(function(v){ return v.name; }).join(" · "))
@@ -264,6 +270,32 @@ function MyPvSelf(d){
                 esc(i.name)+'</option>'; }).join("")+
           '</select>'+
           '<span class="f-h">비워 두면 전 기기로 읽습니다.</span>'+
+        '</div>'+
+
+        '<div class="f-r">'+
+          '<label for="pvs-brand">취급 브랜드</label>'+
+          '<select id="pvs-brand" class="sel" multiple size="5">'+
+            (window.amProviderBrandAxis ? amProviderBrandAxis() : []).map(function(b){
+              return '<option value="'+esc(b.key)+'"'+
+                ((m.brands || []).indexOf(b.key) >= 0 ? " selected" : "")+'>'+
+                esc(b.name)+'</option>'; }).join("")+
+          '</select>'+
+          '<span class="f-h">여럿 고르실 수 있습니다. '+
+            '⚠️ <b>비워 두면 전 브랜드</b>로 읽습니다.</span>'+
+        '</div>'+
+        '<div class="f-r">'+
+          '<label for="pvs-scale">거래 규모</label>'+
+          '<select id="pvs-scale" class="sel">'+
+            '<option value="">고르지 않음</option>'+
+            (typeof AM_PROVIDER_SCALE !== "undefined" ? AM_PROVIDER_SCALE : []).map(function(x){
+              return '<option value="'+esc(x.key)+'"'+
+                (m.scale === x.key ? " selected" : "")+'>'+
+                esc(x.name)+' — '+esc(x.what)+'</option>'; }).join("")+
+          '</select>'+
+
+          '<span class="f-h">한 번에 받으실 수 있는 양입니다. '+
+            '적어 주신 그대로 쓰고 저희가 확인하는 값은 아닙니다 — '+
+            '고르지 않으셔도 됩니다.</span>'+
         '</div>'+
         '<div class="f-r">'+
           '<label for="pvs-since">문 연 해</label>'+
@@ -341,6 +373,7 @@ window.myPvSave = function(ev){
   myPvCall("save_provider_self",
     { p_data:{ intro:g("pvs-intro"), regions:myPvSel("pvs-reg"),
                gu:gu, industries:myPvSel("pvs-ind"),
+               brands:myPvSel("pvs-brand"), scale:g("pvs-scale"),
                since:g("pvs-since"), consultHours:g("pvs-hrs") },
       p_why:"업체가 직접 고쳤습니다" },
     "pvs-n", ev, "업체 정보 저장");

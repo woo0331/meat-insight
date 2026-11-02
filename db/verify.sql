@@ -8,7 +8,7 @@
 --     몇 번 돌려도 안전하고, 운영 중에 돌려도 됩니다.
 --
 --  ⚠️⚠️ 기대값은 전부 **저장소에서 센 값**입니다 (눈대중이 아닙니다) —
---     판 22 · 표 21 · 상태 13 · 역할 4 · 길 70 · 함수 48.
+--     판 23 · 표 21 · 상태 13 · 역할 4 · 길 70 · 함수 48.
 --     ⚠️ 전에 여기 적혀 있던 **트리거 4** 는 근거 없는 숫자였습니다 —
 --     이 파일이 세는 트리거는 **가입 트리거 하나**(on_auth_user_created)
 --     뿐입니다. 세지 않는 것을 기대값처럼 적지 마세요.
@@ -26,7 +26,7 @@
 -- ════════════════════════════════════════════════════════════════════
 
 with
-/* ① 판 번호 — 스물두 줄이어야 합니다 (0001~0022) */
+/* ① 판 번호 — 스물세 줄이어야 합니다 (0001~0023) */
 v_ver as (
   select count(*)::int n from schema_version
 ),
@@ -181,7 +181,7 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (0001~0022)'            t, v_ver.n::text   got, '22' want from v_ver
+  select 1 i, '판 번호 (0001~0023)'            t, v_ver.n::text   got, '23' want from v_ver
   union all select  2, '표 (public)',              v_tab.n::text,  '21' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||

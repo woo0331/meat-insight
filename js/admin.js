@@ -1096,7 +1096,11 @@ function adOffers(){
    ════════════════════════════════════════════════════════════════════ */
 
 var AD_PV = { id:"", name:"", intro:"", since:"", hours:"",
-              cat:"", regs:{}, gus:"", inds:{}, subs:{}, listed:false };
+              cat:"", regs:{}, gus:"", inds:{}, subs:{},
+              /* 2026-11-02 업체 분류 축 둘 (0023) — ⚠️ 수리 가능은
+                 칸이 아닙니다 (`subs` 에서 셉니다) */
+              brs:{}, scale:"",
+              listed:false };
 
 function adPvCats(){
   return (window.AM_CATS || []).filter(function(c){ return c.kind === "provider"; });
@@ -1155,7 +1159,8 @@ function adPvJs(v){
 
 function adPvLines(){
   var regs = adPvKeys(AD_PV.regs), inds = adPvKeys(AD_PV.inds),
-      subs = adPvKeys(AD_PV.subs);
+      subs = adPvKeys(AD_PV.subs), brs = adPvKeys(AD_PV.brs);
+  var scale = String(AD_PV.scale || "");
   var gus = String(AD_PV.gus || "").split(/[,·]/)
               .map(function(x){ return x.trim(); }).filter(Boolean);
   var since = String(AD_PV.since || "").replace(/[^0-9]/g, "");
@@ -1171,6 +1176,10 @@ function adPvLines(){
     (AD_PV.intro ? "    intro:" + adPvJs(AD_PV.intro) + ",\n" : "") +
     (since ? "    since:" + since + ",\n" : "") +
     (AD_PV.hours ? "    consultHours:" + adPvJs(AD_PV.hours) + ",\n" : "") +
+    /* ⚠️ 빈 것은 **줄째 뺍니다** — `brands:[]` 를 적어 두면 다음 사람이
+       "안 받는다" 로 읽습니다 (빈 것은 "전 브랜드" 입니다 · 절대 규칙 2). */
+    (brs.length ? "    brands:" + adPvArr(brs) + ",\n" : "") +
+    (scale ? "    scale:" + adPvJs(scale) + ",\n" : "") +
     "    reviews:[], portfolio:[] }";
 
   /* ⚠️⚠️ `on conflict` 로 두 번 돌려도 안전하게 합니다. 한 번 넣고
@@ -1181,7 +1190,8 @@ function adPvLines(){
      보고 켜는 칸이라, 다시 돌릴 때 꺼지면 안 됩니다. */
   var sql =
     "insert into provider\n" +
-    "  (id, name, intro, regions, gu, industries, subs, since, consult_hours, listed)\n" +
+    "  (id, name, intro, regions, gu, industries, subs, since, consult_hours,\n" +
+    "   brands, scale, listed)\n" +
     "values (\n" +
     "  " + adPvQ(AD_PV.id) + ",\n" +
     "  " + adPvQ(AD_PV.name) + ",\n" +
@@ -1192,6 +1202,8 @@ function adPvLines(){
     "  " + adPvSql(subs) + ",\n" +
     "  " + (since ? since : "null") + ",\n" +
     "  " + (AD_PV.hours ? adPvQ(AD_PV.hours) : "null") + ",\n" +
+    "  " + adPvSql(brs) + ",\n" +
+    "  " + (scale ? adPvQ(scale) : "null") + ",\n" +
     "  " + (AD_PV.listed ? "true" : "false") + "\n" +
     ")\n" +
     "on conflict (id) do update set\n" +
@@ -1202,9 +1214,11 @@ function adPvLines(){
     "  industries = excluded.industries,\n" +
     "  subs = excluded.subs,\n" +
     "  since = excluded.since,\n" +
-    "  consult_hours = excluded.consult_hours;";
+    "  consult_hours = excluded.consult_hours,\n" +
+    "  brands = excluded.brands,\n" +
+    "  scale = excluded.scale;";
 
-  return { js:js, sql:sql, regs:regs, inds:inds, subs:subs };
+  return { js:js, sql:sql, regs:regs, inds:inds, subs:subs, brs:brs };
 }
 
 /* 빠진 것 — ⚠️ **막지 않고 보이게** 합니다 (업체 글의 PII 경고와 같은
@@ -1312,6 +1326,39 @@ function adPvDraw(){
        **마이그레이션이 필요합니다.** */
     '<div class="ad-pv-b"><b>취급 기기</b>'+
       adPvChk("inds", window.AM_DEVICE_KINDS || [])+
+    '</div>'+
+
+    /* ── 2026-11-02 업체 분류 축 둘 (0023) ────────────────────────
+       ⚠️⚠️ **브랜드 축을 여기 또 적지 않습니다** — `amShopMakers()`
+       한 곳에서 옵니다 (쇼핑몰 제조사 칩과 같은 축). 두 벌로 두면
+       브랜드를 하나 늘린 날 업체 쪽만 안 따라옵니다.
+       ⚠️⚠️ **"수리 가능" 체크칸을 만들지 마세요** — 바로 아래 "하는 일"
+       이 이미 답합니다 (`fix` 분류). 칸으로 두면 같은 규칙이 두 곳이
+       되고, 그 둘이 어긋나는 날 수리를 찾는 손님에게 수리 안 하는
+       업체가 보입니다. */
+    '<div class="ad-pv-b"><b>취급 브랜드</b>'+
+      '<p class="ad-rd-n">⚠️ <b>비워 두면 전 브랜드</b>로 읽습니다 — '+
+        '안 받는 브랜드가 있을 때만 골라 주세요.</p>'+
+      adPvChk("brs", (window.amProviderBrandAxis ? amProviderBrandAxis() : []))+
+    '</div>'+
+
+    '<div class="ad-pv-b"><b>거래 규모</b>'+
+      /* ⚠️⚠️ **업체가 말한 값**이라고 그 자리에 적습니다 — 우리가 재 본
+         적이 없습니다 (A/S · 업체 FAQ 와 같은 규칙). 안 적으면 손님
+         쪽에서 "플랫폼이 확인한 처리량" 으로 읽힙니다. */
+      '<p class="ad-rd-n">통화에서 <b>업체가 말한 그대로</b> 고르세요 — '+
+        '저희가 확인하는 값이 아닙니다. 모르면 비워 두셔도 됩니다.</p>'+
+      '<div class="ad-g"><div class="ad-f">'+
+        '<label for="ad-pv-sz">한 번에 받을 수 있는 양</label>'+
+        '<select id="ad-pv-sz" onchange="adPvSet(\'scale\',this.value)">'+
+          '<option value="">고르지 않음</option>'+
+          (window.AM_PROVIDER_SCALE || []).map(function(x){
+            return '<option value="'+esc(x.key)+'"'+
+              (AD_PV.scale === x.key ? " selected" : "")+'>'+
+              esc(x.name)+' — '+esc(x.what)+'</option>';
+          }).join("")+
+        '</select>'+
+      '</div></div>'+
     '</div>'+
 
     '<div class="ad-pv-b"><b>하는 일 — 하위 분야</b>'+

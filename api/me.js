@@ -225,8 +225,13 @@ module.exports = async function handler(req, res){
   if(s.role === "provider"){
     const mine = await dbSelectAs(s.token, "provider",
       "?select=" + encodeURIComponent(
+        /* ⚠️⚠️ 2026-11-02 (0023) — **`brands` · `scale` 을 같이 가져옵니다.**
+           안 가져오면 고치는 폼이 **빈 칸으로** 서고, 업체가 소개만
+           고쳐도 `save_provider_self` 가 그 둘을 빈 값으로 덮어씁니다
+           (전체를 다시 쓰는 문입니다) — 적어 둔 브랜드가 조용히
+           사라지는 길입니다. */
         "id,name,intro,regions,gu,industries,subs,since,consult_hours," +
-        "verified,listed,assignable") +
+        "brands,scale,verified,listed,assignable") +
       "&id=eq." + encodeURIComponent(s.provider_id || "") + "&limit=1");
     if(mine.ok) out.mine = (mine.rows || [])[0] || null;
     else console.warn("[me] provider(mine) — " + mine.why);
@@ -254,7 +259,10 @@ module.exports = async function handler(req, res){
            `listed`(손님 목록에 보이는가)와 다른 것이고, 안 가져오면
            화면이 배정 고르개에서 **잠글 수가 없습니다** — 구두 합의
            단계 업체에 배정되면 그 순간 제17조입니다. */
-        "id,name,regions,gu,industries,subs,listed,assignable") +
+        /* ⚠️ 배정 고르개가 **조건으로 추립니다** — 브랜드 · 규모를 안
+           가져오면 그 축으로 못 추리고, 직원이 200대 건을 소량 업체에
+           넘깁니다 (⑲ 추천이 보는 것을 늘린 자리입니다). */
+        "id,name,regions,gu,industries,subs,brands,scale,listed,assignable") +
       "&order=name.asc&limit=" + PROV_LIMIT);
     if(p.ok) out.providers = p.rows;
     else console.warn("[me] provider — " + p.why);

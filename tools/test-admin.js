@@ -736,6 +736,13 @@ function ok(name, cond, extra) {
             .locator("input").check();
     await pg.waitForTimeout(200);
 
+    /* ── 2026-11-02 업체 분류 축 둘 ─────────────────────────────── */
+    await pg.locator("#ad-pv .ad-pv-b", { hasText:"취급 브랜드" })
+            .locator("label", { hasText:"애플" }).first()
+            .locator("input").check();
+    await pg.selectOption("#ad-pv-sz", "mid");
+    await pg.waitForTimeout(200);
+
     const js  = await pg.locator("#ad-t-pvjs").inputValue();
     const sql = await pg.locator("#ad-t-pvsql").inputValue();
     /* ⚠️ 쉼표 뒤 빈칸까지 통째로 견주지 않습니다 — 값만 봅니다
@@ -757,6 +764,18 @@ function ok(name, cond, extra) {
     /* ⚠️ 확인 배지는 서류를 보고 켜는 칸입니다 — 이 줄이 손대면
        다시 돌릴 때 꺼집니다 */
     ok("verified 를 건드리지 않는다", !/verified/.test(sql), sql);
+    /* WARN **두 벌을 같이 봅니다** — 손님 화면 줄(JS)과 배정용 SQL 이
+       같은 값을 들어야 합니다. 한쪽만 적으면 `/shop` · `/join` 에는
+       브랜드가 뜨는데 배정 고르개에서는 안 걸리거나 그 반대입니다. */
+    ok("취급 브랜드 · 거래 규모가 두 벌에 다 들어간다",
+       /brands:\s*\["apple"\]/.test(js) && /scale:\s*"mid"/.test(js) &&
+       /'\{"apple"\}'/.test(sql) && /'mid'/.test(sql),
+       js.slice(0, 320) + " || " + sql.slice(0, 320));
+    /* WARN **수리 가능은 칸이 아닙니다** — `subs` 가 답합니다. 여기에
+       적으면 같은 규칙이 두 곳이 되고, 그 둘이 어긋나는 날 수리를
+       찾는 손님에게 수리 안 하는 업체가 보입니다. */
+    ok("수리 가능을 칸으로 적지 않는다",
+       !/repair|can_fix|canFix/.test(js) && !/repair|can_fix/.test(sql), js);
     ok("빠진 것 경고가 사라졌다", (await pg.locator("#ad-pv-out .ad-pv-w").count()) === 0);
 
     /* ⚠️⚠️ 2026-10-31 — 전에는 `시설 · 장비` 한 분류만 봤습니다. 그
@@ -1068,8 +1087,13 @@ function ok(name, cond, extra) {
               created_at:"2026-10-11T02:00:00+00:00", assignment:[] }
           ],
           providers:[
+            /* ⚠️ 분류 축 둘은 **pv-one 에만** 넣습니다 — 안 적은 업체
+               (pv-two)와 갈라 보려고입니다. 안 적은 것을 "소량 · 안
+               받는다" 로 적어 내면 업체가 말하지 않은 것을 우리가
+               말하는 것입니다. */
             { id:"pv-one", name:"가나다 폰수리", regions:["gyeonggi"],
               gu:["안양시"], industries:["phone"], subs:["lcd","battery"],
+              brands:["apple","samsung"], scale:"large",
               listed:false },
             { id:"pv-two", name:"라마바 검수", regions:["seoul"], gu:[],
               industries:["tablet"], subs:["wipe"], listed:true }
@@ -1338,6 +1362,17 @@ function ok(name, cond, extra) {
     /* ⚠️⚠️ 확인 배지를 화면에서 켜는 칸을 두지 않았습니다 (절대 규칙 1) */
     ok("확인 배지를 켜는 칸이 없다",
        !/확인 배지|사업자 확인|보험 가입/.test(psTxt), psTxt.slice(0, 300));
+    /* ── 2026-11-02 업체 분류 축 둘 + 센 값 하나 ─────────────────
+       WARN **적힌 업체만** 그 줄을 냅니다. 안 적은 곳에 "소량" 을
+       채워 내면 업체가 말하지 않은 것을 우리가 말하는 것이고, 대량
+       물량을 받는 곳이 소량으로 걸러집니다 (평점을 값으로 저장하지
+       않는 것과 같은 까닭). */
+    ok("업체 줄이 취급 브랜드 · 거래 규모 · 수리를 낸다",
+       /브랜드\s*2/.test(psTxt) && psTxt.includes("대량") &&
+       psTxt.includes("수리"), psTxt.slice(0, 400));
+    ok("안 적은 업체에는 그 줄을 안 적는다",
+       (psTxt.match(/대량|중형|소량/g) || []).length === 1,
+       (psTxt.match(/대량|중형|소량/g) || []).join(","));
     sent = null;
     await ps.locator("button", { hasText:"공개하기" }).click();
     await pg.waitForTimeout(400);

@@ -1092,6 +1092,8 @@ function checkProviders(W){
      표와 `save_provider()` 가 그 이름을 쓰고, 지금 0곳이라 마이그레이션
      없이 뜻만 옮겼습니다 (업체가 생기면 그때 칸 이름을 옮기세요). */
   const kinds   = new Set((W.AM_DEVICE_KINDS || []).map(i => i.key));
+  const brands  = new Set((W.amShopMakers ? W.amShopMakers() : []).map(i => i.key));
+  const scales  = new Set((W.AM_PROVIDER_SCALE || []).map(i => i.key));
   const bad = [];
   (W.AM_PROVIDERS || []).forEach(p => {
     const who = p.id || p.name || "(이름 없는 업체)";
@@ -1107,6 +1109,24 @@ function checkProviders(W){
     });
     (p.regions   || []).forEach(k => { if(!regions.has(k)) bad.push(who + ": 없는 지역 " + k); });
     (p.industries|| []).forEach(k => { if(!kinds.has(k))   bad.push(who + ": 없는 취급 기기 " + k); });
+    /* ── 2026-11-02 업체 분류 축 ──────────────────────────────────
+       ⚠️ 브랜드 축은 `amShopMakers()` 한 곳에서 옵니다 — 쇼핑몰 제조사
+       칩과 **글자까지 같은 축**이라 여기서 또 적지 않습니다. */
+    (p.brands || []).forEach(k => {
+      if(!brands.has(k)) bad.push(who + ": 없는 취급 브랜드 " + k +
+        " (amShopMakers() 의 key 에서 고르세요)");
+    });
+    if(p.scale && !scales.has(p.scale))
+      bad.push(who + ": 없는 거래 규모 " + p.scale +
+        " (AM_PROVIDER_SCALE 의 key 에서 고르세요)");
+    /* ⚠️⚠️ **`repair` 칸을 만들지 마세요** — 수리 가능 여부는 `subs` 가
+       이미 답합니다 (`amProviderCanFix()`). 칸으로 두면 같은 규칙이 두
+       곳이 되고, 그 둘이 어긋나는 날 수리를 찾는 손님에게 수리 안 하는
+       업체가 보입니다. 0023 이 그 칸을 일부러 안 만들었습니다. */
+    if(Object.prototype.hasOwnProperty.call(p, "repair") ||
+       Object.prototype.hasOwnProperty.call(p, "canFix"))
+      bad.push(who + ": 수리 가능 여부를 칸으로 들고 있습니다 — " +
+        "subs 에 fix 분류의 하위를 적으세요 (amProviderCanFix 가 셉니다)");
   });
   const ids = (W.AM_PROVIDERS || []).map(p => p.id).filter(Boolean);
   ids.forEach((id, n) => { if(ids.indexOf(id) !== n) bad.push("id 가 겹칩니다: " + id); });
@@ -2436,7 +2456,22 @@ function checkMigDocs(W){
       그냥 통과**했습니다 — 되돌려 보고 알았습니다 (`adHealthMig` 를
       "있는가" 로 세다가 겪은 그 자리). */
    ["api/me.js", "archived_at=is.null", 1,
-    "보관한 앞 서비스 접수가 목록에서 안 내려갑니다"]].forEach(function(w){
+    "보관한 앞 서비스 접수가 목록에서 안 내려갑니다"],
+   /* ⚠️⚠️ 0023 — 업체 분류 축을 **가져오는가.** `save_provider_self()` 는
+      받은 것으로 **통째로 다시 씁니다** — 화면이 이 둘을 못 읽으면 폼이
+      빈 칸을 보내고, 업체가 소개글 한 줄만 고쳐도 **취급 브랜드 · 거래
+      규모가 같이 지워집니다.** 에러도 안 나고 저장도 성공합니다.
+      ⚠️ 둘 이상입니다 — 업체 자기 줄(고치는 자리)과 직원 목록(배정
+      고르개의 검색감)이 **둘 다** 읽어야 합니다. */
+   /* ⚠️⚠️ 0023 — `/admin` 업체 줄 만들기의 **취급 브랜드 축**이
+      `amShopMakers()`(js/data/shop.js) 하나입니다. admin.html 이 그
+      파일을 안 읽으면 그 묶음이 **조용히 빕니다** — 에러도 404 도 없고
+      머리말만 덩그러니 남습니다 (하위 고르개가 비던 그 자리 · 재 보고
+      알았습니다). 두 곳에 적지 않으려고 파일을 읽게 두었습니다. */
+   ["admin.html", "data/shop.js", 1,
+    "/admin 업체 줄 만들기의 취급 브랜드 묶음이 빈 칸으로 섭니다"],
+   ["api/me.js", "brands,scale", 2,
+    "업체 분류 축을 안 가져옵니다 — 업체가 다른 칸만 고쳐도 같이 지워집니다"]].forEach(function(w){
     const f = path.join(ROOT, w[0]);
     if(!fs.existsSync(f)) return;
     const n = fs.readFileSync(f, "utf8").split(w[1]).length - 1;
@@ -2728,6 +2763,61 @@ function checkSales(W){
       bad.join("\n   · "));
   console.log("   영업 묶음 " + G.length + "개가 분류 " +
     Object.keys(cats).length + "개를 빠짐없이 나눠 가집니다");
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   업체 분류 축 — 화면의 key 와 DB 의 제약이 같은가 (0023)
+
+   ⚠️⚠️ **한쪽만 고치면 조용히 어긋납니다.** 화면이 "중형" 을 보내는데
+   DB 가 거절하거나(업체가 저장을 못 합니다), 더 나쁘게 **화면이 모르는
+   값이 DB 에 들어가** 그 업체만 규모 줄이 빕니다 — 에러도 안 나고
+   화면도 멀쩡합니다. `deal.js` ↔ `deal_move` 와 같은 선입니다.
+   ⚠️ 브랜드 축은 `amShopMakers()` 한 곳에서 오므로 여기서 또 세지
+   않습니다 (두 벌로 두면 브랜드를 늘린 날 업체 쪽만 안 따라옵니다).
+   ════════════════════════════════════════════════════════════════════ */
+function checkProviderAxes(W){
+  const want = (W.AM_PROVIDER_SCALE || []).map(x => x.key);
+  if(!want.length)
+    throw new Error("AM_PROVIDER_SCALE 이 비었습니다 — 거래 규모를 고를 수가 없습니다");
+  const f = path.join(ROOT, "db", "migrations", "0023_provider_axes.sql");
+  if(!fs.existsSync(f))
+    throw new Error("db/migrations/0023_provider_axes.sql 이 없습니다 — " +
+      "취급 브랜드 · 거래 규모가 DB 에 들어가는 길이 사라집니다");
+  /* 주석을 먼저 걷어냅니다 — 그 규칙을 **설명하는 글**에 걸려 멀쩡한
+     파일을 실패로 잡은 적이 있습니다 (`select=*` 로 겪은 자리). */
+  const sql = fs.readFileSync(f, "utf8").replace(/--[^\n]*/g, " ");
+
+  const m = sql.match(/constraint\s+provider_scale_ok[\s\S]*?check\s*\(([\s\S]*?)\)\s*;/i);
+  if(!m) throw new Error("0023 에 provider_scale_ok 제약이 없습니다 — " +
+    "모르는 규모가 그대로 들어갑니다");
+  const got = (m[1].match(/'([a-z_]+)'/g) || []).map(x => x.slice(1, -1));
+
+  const miss = want.filter(k => got.indexOf(k) < 0);
+  const extra = got.filter(k => want.indexOf(k) < 0);
+  if(miss.length || extra.length)
+    throw new Error("거래 규모가 화면과 DB 에서 다릅니다 — " +
+      (miss.length  ? "DB 에 없는 것: " + miss.join(" · ") + " " : "") +
+      (extra.length ? "화면에 없는 것: " + extra.join(" · ") : "") +
+      "\n   → js/data/providers.js 의 AM_PROVIDER_SCALE 과 0023 의 " +
+      "provider_scale_ok 를 **같이** 고치세요");
+
+  /* ⚠️⚠️ **문 둘이 그 값을 실제로 쓰는가**도 봅니다. 칸만 더하고 문이
+     안 쓰면 업체가 적어도 아무 데도 안 저장되고, 그게 이 저장소의
+     "만들어 놓고 안 쓰는 칸" 입니다 (`gu` · `amStore()` · `withEquip`).
+     ⚠️ 글자를 **거르는 그대로** 셉니다 — 이름만 세면 바로 위 주석에
+     걸려 빼 봐도 통과합니다 (0022 에서 겪은 자리). */
+  [["save_provider", "brands = excluded.brands"],
+   ["save_provider_self", "brands = coalesce("]].forEach(function(x){
+    if(sql.indexOf(x[1]) < 0)
+      throw new Error("0023 의 " + x[0] + " 가 brands 를 안 씁니다 — " +
+        "업체가 적어도 저장되지 않습니다");
+  });
+  if((sql.match(/scale\s*=\s*(excluded\.scale|v_scale)/g) || []).length < 2)
+    throw new Error("0023 의 문 둘이 scale 을 안 씁니다 — " +
+      "업체가 골라도 저장되지 않습니다");
+
+  console.log("   업체 분류 축 — 거래 규모 " + want.length +
+    "가지가 DB 제약과 같고 문 둘이 그 값을 씁니다 (수리 가능은 subs 에서 셉니다)");
 }
 
 function checkOfferSql(W){
@@ -3123,6 +3213,7 @@ checkFaq(W);
      checkProviders  업체 줄의 하위 분야 key · 지역 · 기기 · id (지금 0곳)
      checkReqForms   서비스별 질문이 공통 칸과 겹치지 않는가 · detail 상한 */
 checkProviders(W);
+checkProviderAxes(W);
 checkReqForms(W);
 /* ⚠️⚠️ **2026-10-31 로 다시 켰습니다 (셋째).** `js/pages/home-retired.js`
    가 지워져서 이 가드는 지금 **첫 줄에서 그냥 돌아옵니다** — 그래도

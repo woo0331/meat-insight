@@ -40,7 +40,7 @@
 -->
 <link rel="stylesheet" href="/dist/css/tokens.css?v=c2bf05e1">
 <link rel="stylesheet" href="/dist/css/app.css?v=132f3ad5">
-<link rel="stylesheet" href="/dist/css/pages.css?v=e166b004">
+<link rel="stylesheet" href="/dist/css/pages.css?v=5da6f0b3">
 <link rel="stylesheet" href="/dist/css/admin.css?v=dbcc00d9">
 </head>
 <body class="ad-body">
@@ -125,7 +125,7 @@
      있습니다.
      ⚠️ 2026-10-31 — 나가는 글에서는 분야 이름을 안 씁니다 (중고폰
      매입업체에게 창업 · 폐업 분류는 남의 말입니다) — 세는 값만 씁니다. -->
-<script src="/dist/js/data/providers.js?v=4249fc65"></script>
+<script src="/dist/js/data/providers.js?v=1ed68db4"></script>
 <script src="/dist/js/data/join.js?v=c95da232"></script>
 <!-- ⚠️⚠️ "영업 시작 전에 남은 것"(2번 칸)이 **방침의 수탁자**를 셉니다
      (`adTrustees()` → `WOW_PRIVACY.trustees`) — 이 줄이 없으면 그 항목이
@@ -155,11 +155,17 @@
      상태를 영어로 내고 기종 이름이 key 로 찍힙니다 (deal.js 와 같은 까닭). -->
 <script src="/dist/js/data/devices.js?v=2bf08709"></script>
 <script src="/dist/js/data/stock.js?v=45d018d9"></script>
+<!-- 2026-11-02 업체 분류 축 — WARN 취급 브랜드의 축이 여기 있습니다
+     (amShopMakers). 이 줄이 없으면 업체 줄 만들기의 "취급 브랜드"
+     묶음이 **조용히 빕니다** — 에러도 안 나고 머리말만 덩그러니 남습니다
+     (업체 하위 고르개가 비던 그 자리). 같은 축을 /shop 제조사 칩과
+     메인 브랜드 카드가 읽습니다 — 두 곳에 적지 마세요. -->
+<script src="/dist/js/data/shop.js?v=9ec9b945"></script>
 <!-- 로그인 — ⚠️ admin.html 은 ui.js 를 안 읽으므로 auth.js 가 저장을
      스스로 들고 있습니다 (amGet/amSet 에 의존하지 않습니다). -->
 <script src="/dist/js/auth.js?v=5ffecb76"></script>
-<script src="/dist/js/intake.js?v=522d5d39"></script>
-<script src="/dist/js/admin.js?v=726ad669"></script>
+<script src="/dist/js/intake.js?v=2afc3d27"></script>
+<script src="/dist/js/admin.js?v=543a6b96"></script>
 <script src="/dist/js/sales.js?v=ef24243a"></script>
 <script src="/dist/js/adnav.js?v=5a45c653"></script>
 </body>

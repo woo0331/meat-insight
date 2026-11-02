@@ -676,6 +676,16 @@ function rqPvHit(p, q){
     hay.push(k);
     var one = (typeof amSubName === "function") ? amSubName(k) : "";
     if(one) hay.push(one); });
+  /* 2026-11-02 업체 분류 축 — ⚠️ 직원은 key 가 아니라 **"애플" · "대량"**
+     을 칩니다 (상호를 치는 것과 같은 까닭). */
+  (p.brands || []).forEach(function(k){ hay.push(k); });
+  (window.amProviderBrandNames ? amProviderBrandNames(p) : [])
+    .forEach(function(n){ hay.push(n); });
+  if(p.scale){
+    hay.push(p.scale);
+    var sc = window.amProviderScale ? amProviderScale(p) : null;
+    if(sc) hay.push(sc.name);
+  }
   return hay.join(" ").toLowerCase().replace(/\s+/g, "")
     .indexOf(String(q).toLowerCase().replace(/\s+/g, "")) >= 0;
 }
@@ -2068,8 +2078,15 @@ function rqProvRow(p){
       '<span class="rq-hd-l">'+
         '<b class="rq-no">'+esc(p.name)+'</b>'+
         '<span class="rq-m">'+
+          /* ⚠️ 거래 규모는 **업체가 말한 값**이라 이름만 냅니다 (숫자를
+             적으면 저희가 잰 처리량으로 읽힙니다).
+             ⚠️⚠️ 수리 가능은 **센 값**입니다 — `subs` 에서 옵니다. */
           esc([subs ? "하는 일 " + subs : "", regs ? "지역 " + regs : "",
-               (p.industries || []).length ? "기기 " + p.industries.length : ""]
+               (p.industries || []).length ? "기기 " + p.industries.length : "",
+               (p.brands || []).length ? "브랜드 " + p.brands.length : "",
+               (function(){ var sc = window.amProviderScale ? amProviderScale(p) : null;
+                            return sc ? sc.name : ""; })(),
+               (window.amProviderCanFix && amProviderCanFix(p)) ? "수리" : ""]
               .filter(Boolean).join(" · "))+'</span>'+
       '</span>'+
       '<span class="rq-hd-r">'+

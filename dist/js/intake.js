@@ -466,6 +466,15 @@ function rqPvHit(p, q){
     hay.push(k);
     var one = (typeof amSubName === "function") ? amSubName(k) : "";
     if(one) hay.push(one); });
+
+  (p.brands || []).forEach(function(k){ hay.push(k); });
+  (window.amProviderBrandNames ? amProviderBrandNames(p) : [])
+    .forEach(function(n){ hay.push(n); });
+  if(p.scale){
+    hay.push(p.scale);
+    var sc = window.amProviderScale ? amProviderScale(p) : null;
+    if(sc) hay.push(sc.name);
+  }
   return hay.join(" ").toLowerCase().replace(/\s+/g, "")
     .indexOf(String(q).toLowerCase().replace(/\s+/g, "")) >= 0;
 }
@@ -1614,8 +1623,13 @@ function rqProvRow(p){
       '<span class="rq-hd-l">'+
         '<b class="rq-no">'+esc(p.name)+'</b>'+
         '<span class="rq-m">'+
+
           esc([subs ? "하는 일 " + subs : "", regs ? "지역 " + regs : "",
-               (p.industries || []).length ? "기기 " + p.industries.length : ""]
+               (p.industries || []).length ? "기기 " + p.industries.length : "",
+               (p.brands || []).length ? "브랜드 " + p.brands.length : "",
+               (function(){ var sc = window.amProviderScale ? amProviderScale(p) : null;
+                            return sc ? sc.name : ""; })(),
+               (window.amProviderCanFix && amProviderCanFix(p)) ? "수리" : ""]
               .filter(Boolean).join(" · "))+'</span>'+
       '</span>'+
       '<span class="rq-hd-r">'+

@@ -195,7 +195,8 @@ try{
                      외래키가 여섯이고 다섯이 cascade 라, 줄을 옮기면
                      배정 · 계약 · 수수료 · 입찰 · 사진이 같이
                      사라집니다. 아래 블록이 끝까지 눌러 봅니다. */
-                  "db/migrations/0022_legacy_archive.sql"];
+                  "db/migrations/0022_legacy_archive.sql",
+                  "db/migrations/0023_provider_axes.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ /* ⚠️⚠️ NOTICE 가 먼저 쏟아져서 앞 세 줄만 보면 **진짜
@@ -2440,6 +2441,25 @@ try{
       "select become('33333333-3333-3333-3333-333333333333'); " +
       "update provider set intro = 'x' where id='pv-one'");
     ok("두 번 돌려도 표가 닫힌 채다", r.no && /permission denied/.test(r.why), r.why);
+
+    /* WARN **앞 번호를 손으로 다시 붙여 넣으면 뒤 번호가 조용히
+       내려갑니다.** 0023 이 같은 이름의 `save_provider_self` 를 다시
+       써서, 위에서 0014 를 한 번 더 돌린 순간 **취급 브랜드 · 거래
+       규모를 적는 줄과 거래 규모 확인이 통째로 사라졌습니다** — 에러도
+       안 나고 그 뒤 모든 블록이 **내려간 스키마**를 재게 됩니다
+       (실제로 0023 블록 둘이 그래서 떨어졌습니다. 코드가 아니라
+       **이 블록이 남긴 자리**였습니다).
+       WARN 그래서 ① 내려간 것을 **세어서 보이고** ② 뒤 번호를 다시
+       올려 둡니다. 사장님은 `db/apply-from-0008.sql` 을 통째로 붙여
+       넣으시니 그 길에서는 0023 이 마지막이라 안전합니다 — 위험한
+       것은 **앞 파일 하나만** 다시 붙여 넣는 경우입니다. */
+    ok("앞 번호를 다시 붙여 넣으면 뒤 번호의 같은 함수가 내려간다",
+       psql("select (prosrc like '%v_scale%')::text from pg_proc " +
+            "where proname='save_provider_self'") === "false");
+    psqlFile("db/migrations/0023_provider_axes.sql");
+    ok("뒤 번호를 다시 올리면 되돌아온다",
+       psql("select (prosrc like '%v_scale%')::text from pg_proc " +
+            "where proname='save_provider_self'") === "true");
   }
 
   console.log("\n── 0017 전화번호 숫자만 남긴 칸 (§3 중복 검사 1차)");
@@ -3132,6 +3152,109 @@ console.log("\n── 0020 직접 매입 재고 (검수 · 원가 · 수익)");
        있는지까지 봅니다 (옮기는 설계였다면 cascade 로 사라졌습니다). */
     ok("내려놓아도 그 건의 계약이 그대로 있다",
        psql(`select count(*) from deal where request_id='${R2}'`) === "1");
+  }
+
+  /* ══ 0023 — 업체 분류 축 (취급 브랜드 · 거래 규모) ═══════════════
+     ⚠️⚠️ **셋을 받아 둘만 칸으로 만들었습니다.** "수리 가능 여부" 는
+     `provider.subs` 가 이미 답합니다 (`catalog.js` 의 `fix` 분류) —
+     칸을 더하면 같은 규칙이 두 곳이 되고, 그 둘이 어긋나는 날 수리를
+     찾는 손님에게 수리 안 하는 업체가 보입니다. 화면이 셉니다.
+     ⚠️ 여기서 보는 것은 ① 직원이 적는 문 ② 업체가 **자기 줄만**
+     ③ 모르는 규모를 양쪽 문이 거절 ④ 업체가 `subs` 를 못 넓힘
+     ⑤ 제약 (자물쇠 둘을 **갈라서**) ⑥ 칸에 쓰기 권한 없음 입니다. */
+  console.log("\n── ⚠️⚠️ 0023 — 업체 분류 축 (취급 브랜드 · 거래 규모)");
+  {
+    const PV  = "33333333-3333-3333-3333-333333333333";
+    const ST  = "44444444-4444-4444-4444-444444444444";
+    const AD  = "55555555-5555-5555-5555-555555555555";
+    const as  = u => "set role authenticated; select become('" + u + "'); ";
+
+    /* ── ① 직원이 적는 문 ─────────────────────────────────────────── */
+    let a = allowed(as(ST) +
+      `select save_provider('pv-ax','축 업체',
+        '{"subs":["ph-buy"],"brands":["apple","samsung"],"scale":"mid"}'::jsonb,
+        '축 넣기')`);
+    ok("직원이 취급 브랜드 · 거래 규모를 적을 수 있다", a.yes, a.why);
+    ok("브랜드가 실제로 들어간다",
+       psql("select array_to_string(brands,',') from provider where id='pv-ax'") === "apple,samsung");
+    ok("거래 규모가 실제로 들어간다",
+       psql("select scale from provider where id='pv-ax'") === "mid");
+
+    /* ── ② 모르는 규모는 **조용히 비우지 않고** 거절합니다 ──────────── */
+    let r = denied(as(ST) +
+      `select save_provider('pv-ax','축 업체',
+        '{"subs":["ph-buy"],"scale":"huge"}'::jsonb, 'x')`);
+    ok("직원 문이 모르는 거래 규모를 거절한다",
+       r.no && /small · mid · large/.test(r.why || ""), r.why);
+    ok("거절당해도 먼저 적은 값이 그대로다",
+       psql("select scale from provider where id='pv-ax'") === "mid");
+
+    /* ── ③ 업체가 **자기 줄만** 고칩니다 ──────────────────────────── */
+    psql("update account set provider_id='pv-ax' where id='" + PV + "'");
+    a = allowed(as(PV) +
+      `select save_provider_self('{"brands":["apple"],"scale":"small"}'::jsonb, '내가 고침')`);
+    ok("업체가 자기 브랜드 · 규모를 고칠 수 있다", a.yes, a.why);
+    ok("업체가 고친 값이 들어간다",
+       psql("select scale || '|' || array_to_string(brands,',') from provider where id='pv-ax'")
+         === "small|apple");
+    r = denied(as(PV) +
+      `select save_provider_self('{"scale":"huge"}'::jsonb, 'x')`);
+    ok("업체 문도 모르는 거래 규모를 거절한다",
+       r.no && /small · mid · large/.test(r.why || ""), r.why);
+
+    /* ⚠️⚠️ **업체가 하는 일을 스스로 넓히면 안 됩니다** — 수거만 하는
+       곳이 수리 화면에 앉습니다. 그 문이 `subs` 를 **아예 안 씁니다.** */
+    const sub0 = psql("select array_to_string(subs,',') from provider where id='pv-ax'");
+    allowed(as(PV) + `select save_provider_self('{"subs":["lcd","board"]}'::jsonb, 'x')`);
+    ok("업체가 보낸 subs 는 무시된다 (하는 일은 승인 대상)",
+       psql("select array_to_string(subs,',') from provider where id='pv-ax'") === sub0,
+       sub0 + " → " + psql("select array_to_string(subs,',') from provider where id='pv-ax'"));
+
+    /* ── ④ 기록이 같이 남습니다 (§8) ──────────────────────────────── */
+    ok("업체가 고친 기록이 남는다",
+       Number(psql("select count(*) from audit_log where obj='provider' " +
+                   "and obj_id='pv-ax' and to_state='self-updated'")) > 0);
+
+    /* ── ⑤ 자물쇠가 둘입니다 — **갈라서** 봅니다 ───────────────────
+       ① 칸 권한   `scale` 에 update 를 안 줬습니다  → permission denied
+       ② 제약       그 권한이 **생기더라도** 막습니다 → provider_scale_ok
+       ⚠️⚠️ 갈라 두지 않으면 ①이 먼저 막아서, 제약을 지워 봐도 검사가
+       그대로 통과합니다 (0003 · 0021 에서 겪은 자리). */
+    r = denied(as(PV) + "update provider set scale='huge' where id='pv-ax'");
+    ok("① 업체에게 scale 칸 권한이 아예 없다",
+       r.no && /permission denied/i.test(r.why || ""), r.why);
+    psql("grant update (scale) on provider to authenticated");
+    r = denied(as(PV) + "update provider set scale='huge' where id='pv-ax'");
+    psql("revoke update (scale) on provider from authenticated");
+    ok("② 칸 권한이 생겨도 제약이 막는다",
+       r.no && /provider_scale_ok/.test(r.why || ""), r.why);
+    ok("되돌린 뒤 칸 권한이 다시 없다",
+       psql("select count(*) from information_schema.column_privileges " +
+            "where table_name='provider' and column_name='scale' " +
+            "and grantee='authenticated' and privilege_type='UPDATE'") === "0");
+
+    /* ── ⑥ 칸에 쓰기 권한이 없습니다 — 바꾸는 길은 문 둘뿐입니다 ────── */
+    const wr = psql(
+      "select count(*) from information_schema.column_privileges " +
+      "where table_name='provider' and grantee='authenticated' " +
+      "and privilege_type in ('INSERT','UPDATE') " +
+      "and column_name in ('brands','scale')");
+    ok("취급 브랜드 · 거래 규모 칸에 쓰기 권한이 없다", wr === "0", wr);
+
+    /* ⚠️⚠️ **`repair` 칸을 만들지 않았습니다** — `subs` 가 답합니다.
+       칸이 생기면 같은 규칙이 두 곳이 되고, 그 둘이 어긋나는 날
+       수리를 찾는 손님에게 수리 안 하는 업체가 보입니다. */
+    ok("수리 가능 여부를 칸으로 두지 않았다",
+       psql("select count(*) from information_schema.columns " +
+            "where table_name='provider' and column_name in ('repair','can_fix')") === "0");
+
+    /* ⚠️ 안 적은 것을 "안 한다" 로 읽지 않습니다 — 기본값이 빈 배열 ·
+       null 이고, 화면이 그것을 "전 브랜드 · 모름" 으로 읽습니다. */
+    allowed(as(ST) + `select save_provider('pv-ax2','빈 축 업체',
+      '{"subs":["ph-buy"]}'::jsonb, 'x')`);
+    ok("안 적으면 빈 배열 · null 입니다 (0 이 아니라 '모름')",
+       psql("select (brands = '{}' and scale is null)::text from provider where id='pv-ax2'")
+         === "true");
   }
 
 console.log("\n── 한 번에 붙여 넣는 파일이 실제로 도는가 (db/apply-from-0008.sql)");

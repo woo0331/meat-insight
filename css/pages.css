@@ -9838,3 +9838,13 @@ html.ivh #view > section.pwc{ background:var(--pw-dk2); }
 /* 적는 칸 묶음(기기 고르기)도 같은 흰 카드 한 벌로 */
 .pwsd .pwsd-q{ background:var(--pw-white); border:1px solid var(--pw-line);
   border-radius:var(--pw-r); box-shadow:none; }
+
+/* ════════════════════════════════════════════════════════════════
+   2026-11-02 — 업체 자기 정보의 "하는 일" 줄 안에 센 값 한 줄
+   ⚠️ 따로 dt 줄로 만들지 않습니다 (바로 아래 한 줄이 "위 넷" 이라고
+   적고, 그 넷은 승인이 걸린 것입니다 — 센 값은 그 넷이 아닙니다).
+   ⚠️ 13px 입니다 — 이 저장소의 하한이 12px 이고, 아래 네비를 11.5px
+   로 두었다가 전수 점검에 175건이 걸린 자리입니다.
+   ════════════════════════════════════════════════════════════════ */
+.my-pv-fix .my-pv-fx{ display:block; margin-top:3px;
+  font-size:var(--t-cap); color:var(--ink2); }

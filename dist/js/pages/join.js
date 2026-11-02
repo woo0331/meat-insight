@@ -100,6 +100,15 @@ function joinExRows(p){
   var rows = [
     ["전문 서비스", (p.subs||[]).map(amSubName).join(" · ")],
     ["취급 기기",   (p.industries||[]).map(amKindName).join(" · ")],
+
+    ["취급 브랜드", (window.amProviderBrandNames ? amProviderBrandNames(p) : []).join(" · ")],
+
+    ["거래 규모",   (function(){
+      var sc = window.amProviderScale ? amProviderScale(p) : null;
+      return sc ? (sc.name + " — " + sc.what + " (업체가 적어 준 내용입니다)") : "";
+    })()],
+
+    ["수리",        (window.amProviderCanFix && amProviderCanFix(p)) ? "수리까지 합니다" : ""],
     ["활동 지역",   (p.regions||[]).map(amRegionName).concat(p.gu||[]).join(" · ")],
     ["포트폴리오",  (p.portfolio||[]).length + "건 — 거래 내용 · 기기 · 지역 · 연도 · 사진"],
 

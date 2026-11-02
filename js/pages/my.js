@@ -308,9 +308,10 @@ function MyPvBand(d){
    >  지금은 직원이 /admin 9번 칸에서 적습니다."
 
    ⚠️⚠️ **고칠 수 있는 것과 못 하는 것을 그 자리에서 가릅니다.**
-   소개 · 지역 · 시군구 · 업종 · 문 연 해 · 상담 시간은 업체 것이고,
+   소개 · 지역 · 시군구 · 취급 기기 · **취급 브랜드 · 거래 규모** ·
+   문 연 해 · 상담 시간은 업체 것이고,
    **상호 · 하는 일(분야) · 확인 배지 · 공개 여부 · 배정 가능**은
-   승인 대상입니다 — 하는 일을 스스로 넓히면 철거만 하는 곳이 세무
+   승인 대상입니다 — 하는 일을 스스로 넓히면 수거만 하는 곳이 수리
    화면에 앉고(`amProviderInCat()`), 확인 배지를 스스로 켜면 그건
    지어낸 신뢰입니다 (절대 규칙 1 · 표시 · 광고의 공정화에 관한 법률
    제3조). 못 고치는 것도 **보여는 줍니다** — 안 보여 주면 "왜 안
@@ -333,10 +334,26 @@ function MyPvSelf(d){
     '<div class="my-pv">'+
       '<dl class="my-pv-fix">'+
         '<dt>상호</dt><dd>'+esc(m.name || "")+'</dd>'+
+        /* ⚠️⚠️ **수리 가능은 칸이 아니라 센 값입니다** — 이 "하는 일" 에
+           수리 분야가 들어 있으면 참입니다. 따로 체크칸을 두면 같은
+           규칙이 두 곳이 되고, 그 둘이 어긋나는 날 수리를 찾는 손님에게
+           수리 안 하는 업체가 보입니다 (평점을 값으로 저장하지 않는
+           것과 같은 까닭).
+           ⚠️⚠️ **줄을 따로 만들지 않고 이 줄 안에 둡니다** — 아래 한
+           줄이 "위 넷은 여기서 못 고칩니다" 라고 적고 있고, 그 넷은
+           **승인이 걸린 것**입니다. 센 값을 다섯째로 세우면 그 문장이
+           거짓이 되고, 회색인 까닭이 서로 다른 둘을 한 말로 덮습니다 —
+           무엇을 고치면 켜지는지도 **그것을 정하는 줄 옆**에 있어야
+           읽힙니다. */
         '<dt>하는 일</dt><dd>'+
           esc((m.subs || []).map(function(k){
             return (typeof amSubName === "function") ? (amSubName(k) || k) : k;
-          }).join(" · ") || "아직 없습니다")+'</dd>'+
+          }).join(" · ") || "아직 없습니다")+
+          '<span class="my-pv-fx">'+
+          (window.amProviderCanFix && amProviderCanFix(m)
+            ? "수리 가능 — 예 (수리 분야가 들어 있습니다)"
+            : "수리 가능 — 아니요 (수리 분야를 넣으시면 켜집니다)")+
+          '</span></dd>'+
         '<dt>공개</dt><dd>'+(m.listed ? "공개 중" : "아직 공개 전")+'</dd>'+
         '<dt>확인된 것</dt><dd>'+
           (on.length ? esc(on.map(function(v){ return v.name; }).join(" · "))
@@ -396,6 +413,38 @@ function MyPvSelf(d){
                 esc(i.name)+'</option>'; }).join("")+
           '</select>'+
           '<span class="f-h">비워 두면 전 기기로 읽습니다.</span>'+
+        '</div>'+
+        /* ── 2026-11-02 업체 분류 축 둘 ──────────────────────────────
+           ⚠️⚠️ **수리 가능 여부는 칸이 아닙니다** — `subs`(하는 일)가
+           이미 답합니다. 여기에 체크칸을 하나 두면 같은 규칙이 두 곳이
+           되고, 하는 일은 업체가 스스로 못 넓히는 값이라(수거만 하는
+           곳이 수리 화면에 앉습니다) **업체 화면에서 켜지면 안 됩니다.** */
+        '<div class="f-r">'+
+          '<label for="pvs-brand">취급 브랜드</label>'+
+          '<select id="pvs-brand" class="sel" multiple size="5">'+
+            (window.amProviderBrandAxis ? amProviderBrandAxis() : []).map(function(b){
+              return '<option value="'+esc(b.key)+'"'+
+                ((m.brands || []).indexOf(b.key) >= 0 ? " selected" : "")+'>'+
+                esc(b.name)+'</option>'; }).join("")+
+          '</select>'+
+          '<span class="f-h">여럿 고르실 수 있습니다. '+
+            '⚠️ <b>비워 두면 전 브랜드</b>로 읽습니다.</span>'+
+        '</div>'+
+        '<div class="f-r">'+
+          '<label for="pvs-scale">거래 규모</label>'+
+          '<select id="pvs-scale" class="sel">'+
+            '<option value="">고르지 않음</option>'+
+            (typeof AM_PROVIDER_SCALE !== "undefined" ? AM_PROVIDER_SCALE : []).map(function(x){
+              return '<option value="'+esc(x.key)+'"'+
+                (m.scale === x.key ? " selected" : "")+'>'+
+                esc(x.name)+' — '+esc(x.what)+'</option>'; }).join("")+
+          '</select>'+
+          /* ⚠️⚠️ **우리가 재 본 값이 아니라고 그 자리에 적습니다** —
+             안 적으면 손님 쪽에서 "플랫폼이 확인한 처리량" 으로
+             읽힙니다 (A/S · 업체 FAQ 와 같은 규칙). */
+          '<span class="f-h">한 번에 받으실 수 있는 양입니다. '+
+            '적어 주신 그대로 쓰고 저희가 확인하는 값은 아닙니다 — '+
+            '고르지 않으셔도 됩니다.</span>'+
         '</div>'+
         '<div class="f-r">'+
           '<label for="pvs-since">문 연 해</label>'+
@@ -477,6 +526,7 @@ window.myPvSave = function(ev){
   myPvCall("save_provider_self",
     { p_data:{ intro:g("pvs-intro"), regions:myPvSel("pvs-reg"),
                gu:gu, industries:myPvSel("pvs-ind"),
+               brands:myPvSel("pvs-brand"), scale:g("pvs-scale"),
                since:g("pvs-since"), consultHours:g("pvs-hrs") },
       p_why:"업체가 직접 고쳤습니다" },
     "pvs-n", ev, "업체 정보 저장");

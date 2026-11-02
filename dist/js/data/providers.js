@@ -44,6 +44,37 @@ window.AM_VERIFY = [
   { key:"insurance", name:"보험 가입",    what:"영업배상책임보험 등" }
 ];
 
+window.amProviderBrandAxis = function(){
+  return (window.amShopMakers ? window.amShopMakers() : []);
+};
+
+window.AM_PROVIDER_SCALE = [
+  { key:"small", name:"소량",   what:"한 번에 몇 대까지 — 개인 손님 위주" },
+  { key:"mid",   name:"중형",   what:"수십 대 단위까지 한 번에 받습니다" },
+  { key:"large", name:"대량",   what:"수백 대 이상 · 기업 · 법인 물량까지" }
+];
+
+window.amProviderScale = function(p){
+  var k = p && p.scale;
+  if(!k) return null;
+  var r = (window.AM_PROVIDER_SCALE || []).filter(function(x){ return x.key === k; });
+  return r.length ? r[0] : null;
+};
+
+window.amProviderBrandNames = function(p){
+  var ax = window.amProviderBrandAxis();
+  return (p && p.brands || []).map(function(k){
+    var r = ax.filter(function(x){ return x.key === k; });
+    return r.length ? r[0].name : "";
+  }).filter(Boolean);
+};
+
+window.amProviderCanFix = function(p){
+  if(!p) return false;
+  var c = window.amCat ? window.amCat("fix") : null;
+  return c ? window.amProviderInCat(p, c) : false;
+};
+
 window.amProviderVerified = function(p){
   var v = (p && p.verified) || {};
 
@@ -85,6 +116,7 @@ window.amProviders = function(f){
 
     if(f.verified && !window.amProviderVerified(p).length) return false;
     if(f.folio    && !((p.portfolio||[]).length)) return false;
+
     return true;
   });
 };

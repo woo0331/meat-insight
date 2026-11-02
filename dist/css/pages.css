@@ -6857,3 +6857,6 @@ html.ivh #view > section.pwc{ background:var(--pw-dk2); }
 
 .pwsd .pwsd-q{ background:var(--pw-white); border:1px solid var(--pw-line);
   border-radius:var(--pw-r); box-shadow:none; }
+
+.my-pv-fix .my-pv-fx{ display:block; margin-top:3px;
+  font-size:var(--t-cap); color:var(--ink2); }

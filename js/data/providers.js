@@ -21,6 +21,11 @@
      industries:["phone","tablet"], ⚠️ **취급 기기** key (devices.js 의
                                     AM_DEVICE_KINDS) — 칸 이름만 옛것입니다
      subs:["ph-buy","lcd"],         전문 서비스 = 하위 분류 key (catalog.js)
+                                    ⚠️ 여기에 `fix` 분류의 하위가 들어 있으면
+                                       **수리 가능**입니다 (amProviderCanFix)
+     brands:["apple","samsung"],    취급 브랜드 key — amShopMakers() 의 일곱
+     scale:"mid",                   거래 규모 — AM_PROVIDER_SCALE 의 셋 중 하나
+                                    ⚠️ **업체가 적은 값**입니다 (재 본 값 아님)
      intro:"", since:2015, staff:0,
      price:[ {name:"카페 인테리어", from:0, unit:"평당", note:""} ],
      portfolio:[ {title:"", industry:"", region:"", year:2026,
@@ -127,6 +132,65 @@ window.AM_VERIFY = [
   { key:"insurance", name:"보험 가입",    what:"영업배상책임보험 등" }
 ];
 
+/* ════════════════════════════════════════════════════════════════════
+   업체 분류 축 셋 (2026-11-02)
+
+   ⚠️⚠️ **셋 중 둘만 칸입니다.** "수리 가능 여부" 는 `subs` 가 이미
+   답하고 있습니다 — `catalog.js` 의 `fix`(수리 서비스) 분류에 든
+   하위를 하나라도 적었으면 수리하는 곳입니다. 거기에 boolean 을 하나
+   더 두면 **같은 규칙이 두 곳**이 되고, 이 저장소는 그렇게 어긋난
+   사고를 여러 번 겪었습니다 (`amCatTo`/`catTo` · 손으로 적어 둔 아이콘
+   표 둘 · `deal.js` ↔ `deal_move`). 그래서 **계산값**입니다 —
+   평점 · 포트폴리오 건수를 값으로 저장하지 않는 것과 같은 까닭입니다.
+
+     취급 브랜드   brands   칸 O   어느 제조사를 받는가
+     거래 규모     scale    칸 O   한 번에 얼마나 받을 수 있는가
+     수리 가능     (없음)   계산   amProviderCanFix(p) ← subs ∩ fix
+
+   ⚠️⚠️ **거래 규모는 업체가 적은 값입니다** — 우리가 재 본 것이 아닙니다
+   (`as` · `faq` 와 같은 결). 화면에 낼 때 그 줄을 같이 적으세요.
+   ⚠️ 그래서 **거르개의 기본값으로 쓰지 마세요** — 안 적은 업체가
+   조용히 빠집니다 (지역 · 취급 기기를 "안 적었으면 전부" 로 읽는 것과
+   같은 규칙으로, 아래 `amProviders()` 도 빈 값은 안 거릅니다).
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ⚠️⚠️ **브랜드 축을 여기 또 적지 않습니다** — `amShopMakers()` 한
+   곳에서 옵니다 (쇼핑몰 제조사 칩과 **글자까지 같은 축**입니다).
+   두 벌로 두면 브랜드를 하나 늘린 날 업체 쪽만 안 따라옵니다. */
+window.amProviderBrandAxis = function(){
+  return (window.amShopMakers ? window.amShopMakers() : []);
+};
+
+/* 거래 규모 — ⚠️ **업체가 고르는 한 칸**입니다 (여럿 아님) */
+window.AM_PROVIDER_SCALE = [
+  { key:"small", name:"소량",   what:"한 번에 몇 대까지 — 개인 손님 위주" },
+  { key:"mid",   name:"중형",   what:"수십 대 단위까지 한 번에 받습니다" },
+  { key:"large", name:"대량",   what:"수백 대 이상 · 기업 · 법인 물량까지" }
+];
+
+window.amProviderScale = function(p){
+  var k = p && p.scale;
+  if(!k) return null;              /* ⚠️ 안 적은 것은 "소량" 이 아닙니다 */
+  var r = (window.AM_PROVIDER_SCALE || []).filter(function(x){ return x.key === k; });
+  return r.length ? r[0] : null;
+};
+
+window.amProviderBrandNames = function(p){
+  var ax = window.amProviderBrandAxis();
+  return (p && p.brands || []).map(function(k){
+    var r = ax.filter(function(x){ return x.key === k; });
+    return r.length ? r[0].name : "";
+  }).filter(Boolean);
+};
+
+/* ⚠️⚠️ **계산값입니다** — `fix` 분류의 하위를 하나라도 들고 있으면 참.
+   규칙은 `amProviderInCat()` 한 곳이고 여기서 또 적지 않습니다. */
+window.amProviderCanFix = function(p){
+  if(!p) return false;
+  var c = window.amCat ? window.amCat("fix") : null;
+  return c ? window.amProviderInCat(p, c) : false;
+};
+
 /* **우리가 서류로 확인한 것**만 — 거르개가 보는 것이 이쪽입니다 */
 window.amProviderVerified = function(p){
   var v = (p && p.verified) || {};
@@ -185,6 +249,19 @@ window.amProviders = function(f){
        여기 있는 둘은 **우리가 실제로 들고 있는 사실**입니다. */
     if(f.verified && !window.amProviderVerified(p).length) return false;
     if(f.folio    && !((p.portfolio||[]).length)) return false;
+    /* ⚠️⚠️ **2026-11-02 업체 분류 축(취급 브랜드 · 거래 규모 · 수리)은
+       여기에 거르개를 안 만들었습니다.** 지금 이 함수를 부르는 화면이
+       **한 곳도 없고**(업체 목록 화면이 앞 서비스와 함께 내려갔습니다),
+       거를 칸도 없습니다 — 그런 거르개는 `withEquip` · `gu` ·
+       `amStore()` 로 네 번 겪은 **"만들어 놓고 안 쓰는 칸"** 입니다.
+       지금 그 셋을 쓰는 자리는 **배정 고르개 검색감**(js/intake.js) ·
+       업체 줄 메타 · `/my` 업체 칸 · `/join` 예시이고, 전부
+       `amProviderBrandNames()` · `amProviderScale()` ·
+       `amProviderCanFix()` 를 부릅니다.
+       ⚠️ 업체 목록 화면을 다시 만드시는 날 **그 화면의 칸과 같이**
+       넣으세요 — 그때 규칙은 위의 지역 · 취급 기기와 같습니다
+       (**안 적은 업체는 떨어뜨리지 않습니다** · 하는 일 `subs` 만
+       반대입니다). */
     return true;
   });
 };

@@ -156,6 +156,17 @@ function joinExRows(p){
   var rows = [
     ["전문 서비스", (p.subs||[]).map(amSubName).join(" · ")],
     ["취급 기기",   (p.industries||[]).map(amKindName).join(" · ")],
+    /* 2026-11-02 업체 분류 축 — ⚠️ 빈 줄은 아래 filter 가 뺍니다 */
+    ["취급 브랜드", (window.amProviderBrandNames ? amProviderBrandNames(p) : []).join(" · ")],
+    /* ⚠️⚠️ **업체가 적은 값**이라고 그 줄에 같이 적습니다 — 저희가 재
+       본 처리량이 아닙니다 (A/S · 업체 FAQ 와 같은 규칙). */
+    ["거래 규모",   (function(){
+      var sc = window.amProviderScale ? amProviderScale(p) : null;
+      return sc ? (sc.name + " — " + sc.what + " (업체가 적어 준 내용입니다)") : "";
+    })()],
+    /* ⚠️⚠️ **센 값입니다** — 바로 위 "전문 서비스" 에 수리 분야가 들어
+       있으면 참입니다. 칸으로 두면 같은 규칙이 두 곳이 됩니다. */
+    ["수리",        (window.amProviderCanFix && amProviderCanFix(p)) ? "수리까지 합니다" : ""],
     ["활동 지역",   (p.regions||[]).map(amRegionName).concat(p.gu||[]).join(" · ")],
     ["포트폴리오",  (p.portfolio||[]).length + "건 — 거래 내용 · 기기 · 지역 · 연도 · 사진"],
     /* ⚠️ 바로 위가 포트폴리오 줄이라 여기는 **서류로 확인한 것**만

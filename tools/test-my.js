@@ -486,7 +486,13 @@ const ADM_DEAL = [
          됐습니다. 업종 key(`cafe`)를 적어 두면 고르개에 그 칸이 없어서
          **아무것도 안 켜지고**, 검사는 멀쩡한 화면을 실패로 잡습니다. */
       regions:["gyeonggi"], gu:["안양시","군포시"], industries:["phone"],
-      subs:["interior","design"], since:2014, consult_hours:"평일 09~18",
+      /* ⚠️⚠️ `subs` 도 **지금 분류의 하위 key** 여야 합니다 — 앞 서비스
+         key(`interior`)를 적어 두면 `amSubName()` 이 날것을 돌려주고
+         `amProviderCanFix()` 가 늘 거짓이라, **수리 줄을 재는 검사가
+         영원히 한쪽만** 봅니다 (바로 위 `industries` 에서 겪은 자리).
+         `lcd` 는 수리 분야(`fix`)의 하위라 센 값이 **참**이 됩니다. */
+      subs:["ph-buy","lcd"], since:2014, consult_hours:"평일 09~18",
+      brands:["apple","samsung"], scale:"mid",
       verified:{ biz:true }, listed:true, assignable:true };
     const CON = { provider_id:"ganada-interior", name:"박실장",
       tel:"010-2222-3333", email:"park@test.invalid", memo:"오전에 연락" };
@@ -520,6 +526,22 @@ const ADM_DEAL = [
       const i = [].filter.call(document.getElementById("pvs-ind").options,
                                o => o.selected).map(o => o.value);
       return r.join() === "gyeonggi" && i.join() === "phone";
+    }));
+    /* ── 2026-11-02 업체 분류 축 둘 ─────────────────────────────── */
+    ok("고른 취급 브랜드 · 거래 규모가 켜져 있다", await pg.evaluate(() => {
+      const b = [].filter.call(document.getElementById("pvs-brand").options,
+                               o => o.selected).map(o => o.value);
+      return b.join() === "apple,samsung" &&
+             document.getElementById("pvs-scale").value === "mid";
+    }));
+    /* WARN **센 값은 고치는 칸이 아니라 "하는 일" 줄 안**에 있습니다 —
+       체크칸을 두면 같은 규칙이 두 곳이 되고, 다섯째 dt 로 세우면 바로
+       아래 "위 넷은 여기서 못 고칩니다" 가 거짓이 됩니다. */
+    ok("수리 가능이 하는 일 줄 안의 센 값으로 나온다", await pg.evaluate(() => {
+      const d = document.querySelectorAll(".my-pv-fix dd")[1];
+      const x = d && d.querySelector(".my-pv-fx");
+      return !!x && /수리 가능 — 예/.test(x.textContent) &&
+             document.querySelectorAll(".my-pv-fix [id*=fix],.my-pv-fix input").length === 0;
     }));
     /* ⚠️⚠️ **못 고치는 넷** — 적는 칸이 아예 없어야 합니다 (있으면
        눌러 보고 "왜 안 되나" 가 됩니다). */
@@ -566,6 +588,26 @@ const ADM_DEAL = [
     b = lastDeal();
     ok("여럿 고른 지역이 다 실린다",
         !!b && b.args.p_data.regions.length === 2, b && b.args.p_data.regions);
+    /* WARN **안 실으면 저장할 때 비워집니다** — 그 문은 받은 것으로
+       통째로 다시 쓰기 때문에, 소개글 한 줄만 고쳐도 취급 브랜드 ·
+       거래 규모가 같이 지워집니다 (`api/me.js` 의 `PICK` 과 짝입니다). */
+    await pg.selectOption("#pvs-brand", ["apple"]);
+    await pg.selectOption("#pvs-scale", "large");
+    await pg.click(".my-pv form:nth-of-type(1) button");
+    await pg.waitForTimeout(400);
+    b = lastDeal();
+    /* ⚠️ `.join()` 을 바로 부르지 마세요 — 그 칸이 아예 안 실리면
+       **TypeError 로 터지고 어느 검사가 틀렸는지도 안 나옵니다**
+       (되돌려 보고 알았습니다 · 이 저장소가 여러 번 겪은 자리).
+       먼저 **있는지**를 보고 그 다음에 읽습니다. */
+    ok("고친 취급 브랜드 · 거래 규모가 실린다",
+        !!b && Array.isArray(b.args.p_data.brands) &&
+        b.args.p_data.brands.join("|") === "apple" &&
+        b.args.p_data.scale === "large", b && b.args.p_data);
+    /* ⚠️ 센 값은 **보내지 않습니다** — DB 에 그 칸이 없습니다 */
+    ok("수리 가능은 안 보낸다",
+        !!b && b.args.p_data.repair === undefined &&
+        b.args.p_data.canFix === undefined, b && b.args.p_data);
     /* ⚠️⚠️ 승인 대상 칸을 **보내지 않습니다** */
     ok("상호 · 하는 일 · 공개를 안 보낸다", !!b &&
         b.args.p_data.name === undefined && b.args.p_data.subs === undefined &&

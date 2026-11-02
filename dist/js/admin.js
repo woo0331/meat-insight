@@ -813,7 +813,10 @@ function adOffers(){
 }
 
 var AD_PV = { id:"", name:"", intro:"", since:"", hours:"",
-              cat:"", regs:{}, gus:"", inds:{}, subs:{}, listed:false };
+              cat:"", regs:{}, gus:"", inds:{}, subs:{},
+
+              brs:{}, scale:"",
+              listed:false };
 
 function adPvCats(){
   return (window.AM_CATS || []).filter(function(c){ return c.kind === "provider"; });
@@ -854,7 +857,8 @@ function adPvJs(v){
 
 function adPvLines(){
   var regs = adPvKeys(AD_PV.regs), inds = adPvKeys(AD_PV.inds),
-      subs = adPvKeys(AD_PV.subs);
+      subs = adPvKeys(AD_PV.subs), brs = adPvKeys(AD_PV.brs);
+  var scale = String(AD_PV.scale || "");
   var gus = String(AD_PV.gus || "").split(/[,·]/)
               .map(function(x){ return x.trim(); }).filter(Boolean);
   var since = String(AD_PV.since || "").replace(/[^0-9]/g, "");
@@ -869,11 +873,15 @@ function adPvLines(){
     (AD_PV.intro ? "    intro:" + adPvJs(AD_PV.intro) + ",\n" : "") +
     (since ? "    since:" + since + ",\n" : "") +
     (AD_PV.hours ? "    consultHours:" + adPvJs(AD_PV.hours) + ",\n" : "") +
+
+    (brs.length ? "    brands:" + adPvArr(brs) + ",\n" : "") +
+    (scale ? "    scale:" + adPvJs(scale) + ",\n" : "") +
     "    reviews:[], portfolio:[] }";
 
   var sql =
     "insert into provider\n" +
-    "  (id, name, intro, regions, gu, industries, subs, since, consult_hours, listed)\n" +
+    "  (id, name, intro, regions, gu, industries, subs, since, consult_hours,\n" +
+    "   brands, scale, listed)\n" +
     "values (\n" +
     "  " + adPvQ(AD_PV.id) + ",\n" +
     "  " + adPvQ(AD_PV.name) + ",\n" +
@@ -884,6 +892,8 @@ function adPvLines(){
     "  " + adPvSql(subs) + ",\n" +
     "  " + (since ? since : "null") + ",\n" +
     "  " + (AD_PV.hours ? adPvQ(AD_PV.hours) : "null") + ",\n" +
+    "  " + adPvSql(brs) + ",\n" +
+    "  " + (scale ? adPvQ(scale) : "null") + ",\n" +
     "  " + (AD_PV.listed ? "true" : "false") + "\n" +
     ")\n" +
     "on conflict (id) do update set\n" +
@@ -894,9 +904,11 @@ function adPvLines(){
     "  industries = excluded.industries,\n" +
     "  subs = excluded.subs,\n" +
     "  since = excluded.since,\n" +
-    "  consult_hours = excluded.consult_hours;";
+    "  consult_hours = excluded.consult_hours,\n" +
+    "  brands = excluded.brands,\n" +
+    "  scale = excluded.scale;";
 
-  return { js:js, sql:sql, regs:regs, inds:inds, subs:subs };
+  return { js:js, sql:sql, regs:regs, inds:inds, subs:subs, brs:brs };
 }
 
 function adPvWarn(L){
@@ -988,6 +1000,29 @@ function adPvDraw(){
 
     '<div class="ad-pv-b"><b>취급 기기</b>'+
       adPvChk("inds", window.AM_DEVICE_KINDS || [])+
+    '</div>'+
+
+    '<div class="ad-pv-b"><b>취급 브랜드</b>'+
+      '<p class="ad-rd-n">⚠️ <b>비워 두면 전 브랜드</b>로 읽습니다 — '+
+        '안 받는 브랜드가 있을 때만 골라 주세요.</p>'+
+      adPvChk("brs", (window.amProviderBrandAxis ? amProviderBrandAxis() : []))+
+    '</div>'+
+
+    '<div class="ad-pv-b"><b>거래 규모</b>'+
+
+      '<p class="ad-rd-n">통화에서 <b>업체가 말한 그대로</b> 고르세요 — '+
+        '저희가 확인하는 값이 아닙니다. 모르면 비워 두셔도 됩니다.</p>'+
+      '<div class="ad-g"><div class="ad-f">'+
+        '<label for="ad-pv-sz">한 번에 받을 수 있는 양</label>'+
+        '<select id="ad-pv-sz" onchange="adPvSet(\'scale\',this.value)">'+
+          '<option value="">고르지 않음</option>'+
+          (window.AM_PROVIDER_SCALE || []).map(function(x){
+            return '<option value="'+esc(x.key)+'"'+
+              (AD_PV.scale === x.key ? " selected" : "")+'>'+
+              esc(x.name)+' — '+esc(x.what)+'</option>';
+          }).join("")+
+        '</select>'+
+      '</div></div>'+
     '</div>'+
 
     '<div class="ad-pv-b"><b>하는 일 — 하위 분야</b>'+

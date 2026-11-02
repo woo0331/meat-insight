@@ -2439,7 +2439,17 @@ function checkMigDocs(W){
    ["js/admin.js", "adHealthMig", 2,
     "/admin 1번 칸이 판 번호를 안 냅니다"],
    ["js/admin.js", "adHealthBucket", 2,
-    "/admin 1번 칸이 버킷 설정을 안 봅니다"]].forEach(function(w){
+    "/admin 1번 칸이 버킷 설정을 안 봅니다"],
+   /* ⚠️⚠️ 0022 — 보관 표시를 **실제로 읽는가.** `request.archived_at` 을
+      만들어 두고 목록 질의가 그것을 안 거르면, 관리자가 보관을 눌러도
+      화면은 한 줄도 안 바뀝니다 — 이 저장소가 `gu` · `amStore()` ·
+      `withEquip` 로 네 번 겪은 "만들어 놓고 안 쓰는 칸" 입니다. */
+   /* ⚠️⚠️ **거르는 글자 그대로를 셉니다.** 처음에 `archived_at` 만
+      찾았다가, 바로 위 주석에 그 낱말이 있어서 **거르는 줄을 지워도
+      그냥 통과**했습니다 — 되돌려 보고 알았습니다 (`adHealthMig` 를
+      "있는가" 로 세다가 겪은 그 자리). */
+   ["api/me.js", "archived_at=is.null", 1,
+    "보관한 앞 서비스 접수가 목록에서 안 내려갑니다"]].forEach(function(w){
     const f = path.join(ROOT, w[0]);
     if(!fs.existsSync(f)) return;
     const n = fs.readFileSync(f, "utf8").split(w[1]).length - 1;

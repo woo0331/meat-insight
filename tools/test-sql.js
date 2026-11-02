@@ -188,7 +188,14 @@ try{
                      줄만 봅니다) `account` 가 role 과 provider_id 를
                      **둘 다** 들 수 있어서, 한 줄이면 같은 계정이
                      경쟁 금액을 다 보고 자기 입찰을 냈습니다. */
-                  "db/migrations/0021_inhouse.sql"];
+                  "db/migrations/0021_inhouse.sql",
+                  /* ⚠️⚠️ 0022 — 앞 서비스(창업 · 폐업) 접수를 **보관
+                     표시**로 내려놓습니다 (전환 지시서 §6). 지우는
+                     것이 한 줄도 없습니다 — `request(id)` 를 가리키는
+                     외래키가 여섯이고 다섯이 cascade 라, 줄을 옮기면
+                     배정 · 계약 · 수수료 · 입찰 · 사진이 같이
+                     사라집니다. 아래 블록이 끝까지 눌러 봅니다. */
+                  "db/migrations/0022_legacy_archive.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ /* ⚠️⚠️ NOTICE 가 먼저 쏟아져서 앞 세 줄만 보면 **진짜
@@ -3000,6 +3007,132 @@ console.log("\n── 0020 직접 매입 재고 (검수 · 원가 · 수익)");
   ok("anon 에게는 아무 권한도 없다",
      /permission denied|denied for/.test((denied('set role anon; select count(*) from device').why || '')));
 }
+
+  /* ══ 0022 — 앞 서비스(창업 · 폐업) 접수를 **보관 표시**로 (§6) ══════
+     ⚠️⚠️ 지우는 것이 한 줄도 없습니다. 처음 계획은 보관 표로 **옮기는**
+     것이었는데 `request(id)` 를 가리키는 외래키가 **여섯**이고 다섯이
+     `on delete cascade` 라, 옮기는 순간 그 건의 배정 · 계약 · 수수료 ·
+     입찰 · 사진이 **같이 사라집니다** — 복구 가능한 마이그레이션이
+     아니라 제일 비싼 파괴였습니다.
+     ⚠️ 여기서 보는 것은 ① 관리자만 ② 사유 없이는 안 됨 ③ 앞 서비스
+     값 넷만 ④ **돈이 안 끝난 건은 두고 감** ⑤ 기록이 같이 남음
+     ⑥ 되돌리는 문 ⑦ 칸에 쓰기 권한이 없음 입니다. */
+  console.log("\n── ⚠️⚠️ 0022 §6 — 앞 서비스 접수를 지우지 않고 내려놓습니다");
+  {
+    const A   = "11111111-1111-1111-1111-111111111111";
+    const PV  = "33333333-3333-3333-3333-333333333333";
+    const ST  = "44444444-4444-4444-4444-444444444444";
+    const AD  = "55555555-5555-5555-5555-555555555555";
+    const as  = u => "set role authenticated; select become('" + u + "'); ";
+    const R1  = "bbbb0022-0000-0000-0000-000000000001";  /* 앞 서비스 · 돈 없음 */
+    const R2  = "bbbb0022-0000-0000-0000-000000000002";  /* 앞 서비스 · 돈 안 끝남 */
+    const R3  = "bbbb0022-0000-0000-0000-000000000003";  /* 중고폰 — 건드리면 안 됩니다 */
+
+    psql(`insert into request (id, no, user_id, side, name, tel, agree_at, state) values
+            ('${R1}','SW-AR22-0001','${A}','start','보관하나','01022000001',now(),'done'),
+            ('${R2}','SW-AR22-0002','${A}','close','보관둘','01022000002',now(),'done'),
+            ('${R3}','SW-AR22-0003','${A}','buyin','중고폰','01022000003',now(),'new');
+          /* ⚠️ R2 는 **수수료를 확정해 두고 입금이 안 된** 건입니다 —
+             내려놓으면 미수금이 화면에서 사라집니다. */
+          insert into deal (request_id, provider_id, amount, fee, fee_by, fee_at)
+            values ('${R2}','pv-one',1000000,30000,'${AD}',now());`);
+
+    /* ── ① 관리자만 ───────────────────────────────────────────────── */
+    let r = denied(as(A) + "select archive_legacy_side('정리')");
+    ok("고객은 보관할 수 없다", r.no && /관리자만/.test(r.why || ""), r.why);
+    r = denied(as(PV) + "select archive_legacy_side('정리')");
+    ok("업체는 보관할 수 없다", r.no && /관리자만/.test(r.why || ""), r.why);
+    r = denied(as(ST) + "select archive_legacy_side('정리')");
+    ok("직원도 보관할 수 없다", r.no && /관리자만/.test(r.why || ""), r.why);
+    r = denied("set role authenticated; select become(null); " +
+               "select archive_legacy_side('정리')");
+    ok("로그인 없이 보관할 수 없다",
+       r.no && /변경자를 알 수 없습니다/.test(r.why || ""), r.why);
+
+    /* ── ② 사유가 없으면 거절 — 사유 없는 보관은 기록이 아닙니다 (§8) ── */
+    r = denied(as(AD) + "select archive_legacy_side('')");
+    ok("사유가 비면 거절한다", r.no && /사유/.test(r.why || ""), r.why);
+    r = denied(as(AD) + "select archive_legacy_side('   ')");
+    ok("공백만 적어도 거절한다", r.no && /사유/.test(r.why || ""), r.why);
+
+    /* ── ③④⑤ 실제로 내려놓기 ──────────────────────────────────────── */
+    const au0 = psql("select count(*) from audit_log where to_state='archived'");
+    let a = allowed(as(AD) + "select archive_legacy_side('앞 서비스 종료 — 전환 지시서 §6')");
+    ok("관리자는 보관할 수 있다", a.yes, a.why);
+    ok("앞 서비스 접수가 내려간다",
+       psql(`select (archived_at is not null)::text from request where id='${R1}'`) === "true");
+    ok("사유가 같이 적힌다",
+       psql(`select archived_why from request where id='${R1}'`).indexOf("§6") >= 0);
+    /* ⚠️⚠️ **돈이 안 끝난 건은 두고 갑니다** — 수수료를 확정해 두고
+       입금이 안 된 건을 목록에서 내리면 미수금이 화면에서 사라집니다. */
+    ok("수수료 확정 · 입금 전인 건은 두고 간다",
+       psql(`select (archived_at is null)::text from request where id='${R2}'`) === "true");
+    ok("두고 온 건을 세어서 돌려준다",
+       Number(JSON.parse(a.out || "{}").kept || 0) >= 1, a.out);
+    /* ⚠️⚠️ **중고폰 쪽은 한 글자도 안 건드립니다** */
+    ok("중고폰 접수는 그대로 남는다",
+       psql(`select (archived_at is null)::text from request where id='${R3}'`) === "true");
+    ok("내려놓은 기록이 남는다 (§8)",
+       Number(psql("select count(*) from audit_log where to_state='archived'")) > Number(au0));
+    /* ⚠️ 기록에 성함 · 번호를 안 적습니다 — 감사 기록은 못 지우는 것이라
+       거기 연락처를 박으면 그 자체가 또 하나의 보관입니다. */
+    ok("기록에 성함 · 연락처가 없다",
+       psql("select count(*) from audit_log where to_state='archived' " +
+            "and (why like '%보관하나%' or why like '%01022000001%')") === "0");
+
+    /* ── ⑥ 두 번 돌려도 이미 내려놓은 것을 다시 안 셉니다 ─────────────── */
+    a = allowed(as(AD) + "select archive_legacy_side('다시')");
+    /* ⚠️⚠️ **`|| -1` 로 적었다가 틀렸습니다** — 기다리는 값이 **0** 인데
+       `0 || -1` 은 -1 이라, 멀쩡한 답(`archived: 0`)을 실패로 잡았습니다.
+       코드가 아니라 **검사가 틀린** 자리입니다 (이 저장소의 단골). */
+    ok("두 번 돌려도 새로 내려가는 것이 없다",
+       a.yes && JSON.parse(a.out || "{}").archived === 0, a.out);
+
+    /* ── ⑦ 제약 — 시각만 있고 사유가 없는 줄을 만들 수 없습니다 ───────── */
+    r = denied(`update request set archived_at = now(), archived_why = null
+                 where id='${R3}'`);
+    ok("사유 없는 보관 표시를 DB 가 막는다",
+       r.no && /request_archived_why_ok/.test(r.why || ""), r.why);
+
+    /* ── ⑧ 되돌리는 문 ──────────────────────────────────────────────── */
+    r = denied(as(ST) + "select restore_legacy_request('SW-AR22-0001','되돌림')");
+    ok("직원은 되돌릴 수 없다", r.no && /관리자만/.test(r.why || ""), r.why);
+    r = denied(as(AD) + "select restore_legacy_request('SW-AR22-0001','')");
+    ok("되돌리는 사유도 비면 거절한다", r.no && /사유/.test(r.why || ""), r.why);
+    /* ⚠️⚠️ **없는 번호와 안 보관된 번호를 가르지 않습니다** — 갈라 주면
+       번호가 있는지를 확인해 가며 긁을 수 있습니다 (0005 와 같은 선). */
+    const noSuch = denied(as(AD) + "select restore_legacy_request('SW-ZZZZ-ZZZZ','x')");
+    const notArc = denied(as(AD) + "select restore_legacy_request('SW-AR22-0003','x')");
+    ok("없는 번호와 안 보관된 번호가 같은 말로 거절된다",
+       noSuch.no && notArc.no && noSuch.why === notArc.why,
+       (noSuch.why || "") + " / " + (notArc.why || ""));
+    a = allowed(as(AD) + "select restore_legacy_request('SW-AR22-0001','사장님 요청')");
+    ok("관리자는 한 건을 되돌릴 수 있다", a.yes, a.why);
+    ok("되돌리면 표시가 비워진다",
+       psql(`select (archived_at is null and archived_why is null)::text
+               from request where id='${R1}'`) === "true");
+    ok("되돌린 기록도 남는다 (§8)",
+       Number(psql("select count(*) from audit_log where from_state='archived' " +
+                   `and obj_id='${R1}'`)) > 0);
+
+    /* ── ⑨ 칸에 쓰기 권한이 없습니다 — 바꾸는 길은 문 둘뿐입니다 ──────── */
+    const wr = psql(
+      "select count(*) from information_schema.column_privileges " +
+      "where table_name='request' and grantee='authenticated' " +
+      "and privilege_type in ('INSERT','UPDATE') " +
+      "and column_name in ('archived_at','archived_why')");
+    ok("보관 표시 칸에 쓰기 권한이 없다", wr === "0", wr);
+    const an = psql(
+      "select count(*) from information_schema.routine_privileges " +
+      "where routine_name in ('archive_legacy_side','restore_legacy_request') " +
+      "and grantee='anon'");
+    ok("anon 에게 보관 문 권한이 없다", an === "0", an);
+
+    /* ⚠️⚠️ **지운 것이 한 줄도 없습니다** — 그 건의 계약이 그대로
+       있는지까지 봅니다 (옮기는 설계였다면 cascade 로 사라졌습니다). */
+    ok("내려놓아도 그 건의 계약이 그대로 있다",
+       psql(`select count(*) from deal where request_id='${R2}'`) === "1");
+  }
 
 console.log("\n── 한 번에 붙여 넣는 파일이 실제로 도는가 (db/apply-from-0008.sql)");
   {

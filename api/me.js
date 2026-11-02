@@ -168,8 +168,21 @@ module.exports = async function handler(req, res){
   const role = s.role === "admin" ? "staff" : s.role;
   const pick = PICK[role] || PICK.customer;
 
+  /* ⚠️⚠️ 2026-11-02 (0022) — **보관한 건은 목록에 없습니다.**
+     전환 지시서 §6 으로 앞 서비스(창업 · 폐업) 접수를 지우지 않고
+     `request.archived_at` 으로 **내려놓기만** 했습니다 — 내려놓은 것이
+     실제로 목록에서 빠지는 자리가 여기입니다. 이 한 줄이 없으면
+     `archived_at` 은 **아무도 안 읽는 칸**이 되고(이 저장소가 `gu` ·
+     `amStore()` · `withEquip` 로 네 번 겪은 자리), 보관을 눌러도
+     화면은 한 줄도 안 바뀝니다.
+     ⚠️⚠️ **역할을 가르지 않습니다.** 고객 쪽만 내리면 직원 목록에 앞
+     서비스가 그대로 쌓여 있고, 직원 쪽만 내리면 410 으로 닫은 서비스를
+     여전히 고객에게 보여 주는 것이 됩니다.
+     ⚠️ **한 건을 여는 길은 그대로입니다** (`?r=<id>&c=1` · `id=eq.`) —
+     되돌리기 전에 관리자가 그 건을 봐야 합니다. */
   const q = await dbSelectAs(s.token, "request",
     "?select=" + encodeURIComponent(pick) +
+    "&archived_at=is.null" +
     "&order=created_at.desc&limit=" + LIMIT);
   if(!q.ok){
     if(q.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });

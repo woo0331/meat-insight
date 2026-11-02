@@ -129,23 +129,36 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.goto(B+"/shop",{waitUntil:"networkidle"});
  await pg.waitForTimeout(260);
  const shopAll = await pg.evaluate(()=>document.querySelectorAll(".shp-g .shp-c").length);
- for(const [k, nm, en] of [["apple","애플","Apple"],["samsung","삼성","Samsung"],
-       ["google","구글","Google"],["huawei","화웨이","Huawei"],
-       ["oppo","오포","OPPO"],["xiaomi","샤오미","Xiaomi"]]){
+ /* ⚠️⚠️ 2026-11-02 확정 시안 — **브랜드 로고 카드가 메인에서 내려갔습니다.**
+    제조사는 상품 영역의 **거르개 칩**으로만 나옵니다 (§7). 그래서 누르는
+    자리를 칩으로 옮깁니다 — 여기서 지키는 것은 "메인에서 제조사를 고르면
+    실제로 걸린다" 이지 카드냐 칩이냐가 아닙니다.
+    ⚠️ 주소(`[href=...]`)로 집지 않습니다 — 열쇠가 틀어지는 날 click 이
+    30초 타임아웃으로 터지고 뒤 묶음이 통째로 안 돕니다. 손님이 보는
+    **이름**으로 집어야 그때 깨끗하게 ❌ 가 납니다. */
+ for(const [k, nm] of [["apple","애플"],["samsung","삼성"],
+       ["google","구글"],["huawei","화웨이"],
+       ["oppo","오포"],["xiaomi","샤오미"]]){
    await pg.goto(B+"/",{waitUntil:"networkidle"});
-   await pg.evaluate(()=>document.querySelector(".pwbr-g").scrollIntoView());
-   /* ⚠️⚠️ **주소로 집지 마세요.** `[href="/shop?mk=..."]` 로 집으면 열쇠가
-      또 틀어지는 날 click 이 **30초 타임아웃으로 터지고** 뒤 묶음이 통째로
-      안 돕니다 (어느 검사가 틀렸는지도 안 나옵니다). 손님이 보는 **이름**
-      으로 집으면 그때 깨끗하게 ❌ 가 납니다. */
-   await click('.pwbr-c:has(b:text-is("'+en+'"))');
+   await pg.evaluate(()=>document.querySelector(".pwpd-fil").scrollIntoView());
+   await click('.pwpd-fil .chip:text-is("'+nm+'")');
    const u = await url();
    const r = await pg.evaluate(()=>({
+     on: ((document.querySelector(".pwpd-fil .chip.on")||{}).textContent||"").trim(),
+     n:  document.querySelectorAll(".pwpd-g > li").length,
+     e:  !!document.querySelector(".pwpd-0") }));
+   say(u==="/?b="+k && r.on===nm && (r.n > 0 || r.e),
+     "브랜드 칩 · "+nm+" → "+u+" · 켜진 칩 "+r.on+" · "+r.n+"건 0건안내 "+r.e,
+     u+" on="+r.on+" n="+r.n+" e="+r.e);
+   /* 쇼핑몰 쪽 열쇠(`mk`)도 그대로 걸리는가 — 푸터 · 전체 보기가 그 길입니다 */
+   await pg.goto(B+"/shop?mk="+k,{waitUntil:"networkidle"});
+   const sr = await pg.evaluate(()=>({
      n: document.querySelectorAll(".shp-g .shp-c").length,
-     e: !!document.querySelector(".pws-e") }));
-   say(u==="/shop?mk="+k && r.n < shopAll && (r.n > 0 || r.e),
-     "브랜드 · "+nm+" → "+u+" · "+r.n+"건(안 거르면 "+shopAll+") 0건안내 "+r.e,
-     u+" n="+r.n+" e="+r.e);
+     e: !!document.querySelector(".pws-e"),
+     on: !!document.querySelector(".shp-fil .chip.on") }));
+   say(sr.on && (sr.n < shopAll) && (sr.n > 0 || sr.e),
+     "쇼핑몰 · "+nm+" → "+sr.n+"건(안 거르면 "+shopAll+") 0건안내 "+sr.e,
+     "n="+sr.n+" e="+sr.e+" on="+sr.on);
  }
  /* 안내 배너 셋 — ⚠️ 셋 다 **실제로 열려야** 합니다 (§0-6 · §0-7)
     ⚠️⚠️ **기업 매입은 질의문자까지 그대로 가야 합니다.** `/biz` 는 기업

@@ -543,7 +543,8 @@ function pwPdCard(p){
 
 function PwMarket(){
   return '<section class="pwmk"><div class="w pwmk-in">'+
-    '<div class="pwmk-main">'+ PwBrands() + PwProducts() +'</div>'+
+
+    '<div class="pwmk-main">'+ PwProducts() +'</div>'+
     PwSide()+
   '</div></section>';
 }

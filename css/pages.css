@@ -9581,3 +9581,260 @@ html.ivh #view .pwh h1{ font-size:clamp(29px, 3.9vw, 48px); }
   background:#fff; border:1px solid #F0D5B9; color:#1A1512; }
 .pwsv-c:not(.has-ph):hover .pwsv-go{ background:var(--pw-or);
   border-color:var(--pw-or); color:#fff; }
+
+/* ════════════════════════════════════════════════════════════════════
+   2026-11-02 · 최종 확정 디자인 — **화이트 중심 프리미엄 쇼핑몰**
+
+   첨부 시안(PHONEWAY_FINAL_reference_original.png)을 보고 맞췄습니다.
+   §0-3 전체 배경 화이트 · §0-4 오렌지는 강조에만 · §0-5 브라운 ·
+   베이지 배경을 더하지 않음 · §2 그림자 최소 · 얇은 테두리 ·
+   큰 둥근 모서리 금지.
+
+   ⚠️⚠️ **이 블록은 파일 맨 뒤라야 합니다.** 위의 같은 선택자들과
+   특정도가 같아서, 가운데 끼워 넣으면 조용히 안 먹습니다.
+   되돌리시려면 이 블록과 `css/tokens.css` 맨 뒤 블록 둘입니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── 구간 — 흰색 ↔ 보조(#F7F7F7) + **얇은 선** ───────────────────
+   ⚠️⚠️ 흰색과 #F7F7F7 은 ΔE **2.81** 로 기준(2.5) 바로 위입니다.
+   그래서 구간 사이에 선을 같이 둡니다 — 전수 점검의 "이웃한 두
+   구간이 붙어 보임" 은 **보이는 테두리가 있으면 건너뜁니다**.
+   선은 §2 의 "얇고 균일한 테두리" 이기도 합니다. */
+/* ⚠️⚠️ **선으로 때우지 마세요.** 처음에 구간 사이에 `border-top` 을
+   **전부** 둘렀더니 ΔE 가 0 이어도 검사가 건너뛰어서, "이웃한 두
+   구간이 붙어 보임" 이 **아무것도 안 잡는 검사**가 됐습니다
+   (`prove-checks` 가 다섯 건으로 잡았습니다 — 이 저장소가 "통과만
+   하고 아무것도 안 잡는 검사" 로 여러 번 겪은 자리).
+   지금은 **자리로 번갈아 칠합니다** — 흰색 ↔ #F7F7F7 은 ΔE **2.81**
+   이라 선 없이도 기준(2.5)을 넘습니다.
+   ⚠️ `nth-of-type` 입니다 — `#view` 에는 구간 말고 고정 CTA 같은
+   덩이도 있어서 `nth-child` 로 세면 한 칸씩 밀립니다. */
+html.ivh #view > section:nth-of-type(odd){ background:var(--pw-white); }
+html.ivh #view > section:nth-of-type(even){ background:var(--pw-gray); }
+/* 마지막 CTA 는 지시서가 이름까지 적어 둔 짙은 면이라 그대로 둡니다 */
+html.ivh #view > section.pwc{ background:var(--pw-dk2); }
+#view.pw-skin > section:nth-of-type(odd){ background:var(--pw-white); }
+#view.pw-skin > section:nth-of-type(even){ background:var(--pw-gray); }
+#view.pw-skin .pgh{ background:
+  linear-gradient(180deg, var(--pw-white) 0%, var(--pw-gray) 100%); }
+
+/* ── §4 히어로 — 흰 바탕 + 오렌지 곡선 ──────────────────────────
+   ⚠️⚠️ 시안의 오른쪽은 **아래로 흐르는 오렌지 물결**입니다. 앞
+   차수는 오른쪽 절반을 덩어리로 덮고 있었는데, 그러면 §0-4
+   ("오렌지는 핵심 강조 요소에만")와 정면으로 부딪칩니다 —
+   재 보니 첫 화면의 오렌지 면이 그만큼 넓었습니다.
+   지금은 **아래 오른쪽**에서 올라오는 곡선이고 위쪽은 흰색입니다. */
+/* ⚠️⚠️ **그라디언트도 같이 끕니다.** 앞 차수가 `.pwh` 에 크림
+   그라디언트(#F8ECDF)를 깔아 두어서 `background-color` 만 흰색으로
+   바꾸면 **그림이 그대로 위에 남습니다** (찍어 보고 알았습니다).
+   ⚠️ `background-color` 는 꼭 따로 적습니다 — `background:` 한 줄에
+   그라디언트만 적으면 색을 재는 검사가 **투명을 검정으로** 집습니다
+   (이 저장소가 세 번 겪은 자리). */
+.pwh{ background-color:var(--pw-white); background-image:none; }
+/* ⚠️⚠️ **물결이 안내 띠까지 내려오면 안 됩니다** — 시안은 띠가
+   흰 바탕 위에 섭니다. 띠(`.pwh-tr`)에 흰 바탕을 주어 그 줄부터
+   아래를 덮습니다 (물결은 그 위에만 남습니다).
+   ⚠️ 높이를 px 로 못박지 마세요 — 띠는 폭마다 2열 · 4열로 바뀌어
+   높이가 움직입니다 (재서 알았습니다). */
+.pwh-rb{ left:54%; right:-46%; top:24%; bottom:-140%;
+  border-radius:50%; transform:rotate(-7deg); opacity:1;
+  background:linear-gradient(118deg, #FFD3AB 0%, #F99253 44%, var(--pw-or) 100%); }
+/* 둘째 띠 — 첫째 위를 지나가는 **얇은 밝은 결**입니다 (시안의 리본) */
+.pwh-rb2{ left:60%; right:-52%; top:14%; bottom:-120%;
+  border-radius:50%; transform:rotate(-7deg);
+  background:linear-gradient(118deg, rgba(255,255,255,.72) 0%,
+    rgba(255,255,255,.12) 38%, rgba(255,255,255,0) 58%); }
+.pwh-glow{ display:none; }
+/* 머리말 — 시안은 알약이 아니라 **자간을 벌린 글자 + 짧은 선**입니다 */
+.pwh-k{ background:none; border:0; padding:0; gap:10px;
+  color:var(--pw-or-700); font-size:13px; letter-spacing:.2em; }
+.pwh-k::after{ content:""; width:28px; height:2px; background:var(--pw-or);
+  display:inline-block; }
+.pwh h1 em b{ color:var(--pw-or-600); }
+/* ⚠️⚠️ **줄임꼴로 적지 마세요** — `.w` 의 좌우 여백(`padding:0 var(--pad)`)이
+   같이 지워져 **글이 화면 끝에 붙습니다** (390px 에서 x=0 이었습니다 ·
+   이 저장소가 `.pwh-in` · `.pwc-in` · `.lgp` 로 겪은 그 자리입니다).
+   위아래만 바꾸려면 `padding-block` 입니다. */
+.pwh-in{ padding-block:46px 34px; }
+/* ⚠️ 시안의 기기는 글 칸과 비슷한 높이입니다 — 앞 차수는 액자가
+   커서 첫 화면이 기기 사진 하나로 읽혔습니다 (재서 줄였습니다). */
+.pwh-art{ min-height:286px; }
+.pwh-art .ph{ max-height:330px; }
+
+/* ── §5 안내 넷 — **흰 카드 띠** (시안) ──────────────────────────
+   앞 차수는 반투명 띠에 위 선 하나였습니다. 시안은 글 기둥 안에
+   선 테두리가 있는 **흰 카드**이고 넷 사이에 세로 구분선이 섭니다. */
+.pwh-tr{ background:var(--pw-white); border-top:0; padding-bottom:34px; }
+.pwh-tr > .w{ padding-inline:var(--pad); }
+.pwh-tr-g{ background:var(--pw-white); border:1px solid var(--pw-line);
+  border-radius:var(--pw-r2); box-shadow:var(--pw-sh);
+  padding:18px 10px; margin:0; }
+.pwh-tr-g li{ border-left:1px solid var(--pw-line); }
+.pwh-tr-g li:first-child{ border-left:0; }
+
+/* ── §6 주요 서비스 — 흰 카드 다섯 · 한 줄 ──────────────────────
+   ⚠️ 시안은 **흰 카드 + 얇은 테두리**입니다. 앞 차수의 크림 카드
+   (`.pwsv-c:not(.has-ph)` 의 #FDF6ED)를 여기서 걷습니다 — 그림
+   여섯 장도 바탕을 흰색으로 다시 눌렀습니다 (`img/raw/svc-*.png`).
+   ⚠️⚠️ **카드 바탕을 또 바꾸시면 그 그림을 다시 뽑아야 합니다.** */
+.pwsv-c, .pwsv-c:not(.has-ph){ background:var(--pw-white);
+  border:1px solid var(--pw-line); border-radius:var(--pw-r);
+  box-shadow:none; padding:16px 16px 48px; min-height:208px; }
+.pwsv-c:hover, .pwsv-c:not(.has-ph):hover{ transform:none;
+  border-color:var(--pw-or); box-shadow:var(--pw-sh); }
+.pwsv-c.has-ph .pwsv-i,
+.pwsv-c:not(.has-ph) .pwsv-i{ width:100%; max-width:none; margin:0 0 10px;
+  aspect-ratio:320/150; }
+.pwsv-c b, .pwsv-c:not(.has-ph) b{ padding:0; font-size:17px;
+  font-weight:800; line-height:1.3; color:var(--pw-ink); }
+.pwsv-d, .pwsv-c:not(.has-ph) .pwsv-d{ padding:4px 44px 0 0; font-size:13px;
+  line-height:1.45; color:var(--pw-ink3); }
+.pwsv-go, .pwsv-c:not(.has-ph) .pwsv-go{ right:14px; bottom:13px;
+  width:34px; height:34px; background:var(--pw-or-50);
+  border:1px solid var(--pw-or-100); color:var(--pw-or-700); }
+.pwsv-c:hover .pwsv-go, .pwsv-c:not(.has-ph):hover .pwsv-go{
+  background:var(--pw-or); border-color:var(--pw-or); color:#fff; }
+
+/* 구간 머리말 — 시안은 제목 앞에 **짧은 오렌지 막대**가 섭니다 */
+/* ⚠️ `>` 로 두면 **상품 구간 제목만 빠집니다** — 거기는 h2 가
+   한 겹 더 안쪽입니다 (`.pw-hd-l > div > h2`). 재서 알았습니다. */
+.pw-hd-l h2{ position:relative; padding-left:14px; }
+.pw-hd-l h2::before{ content:""; position:absolute; left:0; top:.18em;
+  bottom:.18em; width:4px; border-radius:2px; background:var(--pw-or); }
+
+/* ── §3 헤더 — 흰 안내 바 + 워드마크 ─────────────────────────────
+   ⚠️⚠️ 시안의 윗줄은 **흰색**입니다 (앞 차수는 딥 브라운이었습니다).
+   §0-3 · §0-5 와 같은 줄이라 면을 흰색으로 돌리고, 밝은 바탕용
+   글자색으로 같이 바꿉니다 — 짙은 면용 색(`--pw-on-dk2`)을 그대로
+   두면 **흰 면에 밝은 글자**가 앉습니다 (이 저장소가 겪은 자리). */
+/* ⚠️⚠️ **`.hd-c` 를 같이 적어야 이깁니다** — 앞 차수가
+   `.hd-c .hd-t0`(0,2,0)로 적어 두어서 `.hd-t0`(0,1,0)로는 조용히
+   안 먹습니다 (찍어 보고 알았습니다 · 이 저장소가 특정도로 아홉 번
+   겪은 자리). */
+.hd-c .hd-t0{ background:var(--pw-white);
+  border-bottom:1px solid var(--pw-line); }
+.hd-c .hd-t0-m{ color:var(--pw-ink2); }
+.hd-c .hd-t0-m i{ color:var(--pw-or-700); }
+.hd-c .hd-t0-r a{ color:var(--pw-ink3); }
+.hd-c .hd-t0-r a:hover{ color:var(--pw-or-700); }
+.hd-c .hd-t0-r .hd-t0-sep{ width:1px; height:12px; padding:0;
+  background:var(--pw-line); display:inline-block; }
+.hd.hd-c{ background:var(--pw-white); border-bottom:1px solid var(--pw-line); }
+.hd-c .hd-t1{ background:var(--pw-white); }
+.hd-c .gnb a{ color:var(--pw-ink2); }
+.hd-c .hd-ic{ color:var(--pw-ink2); }
+
+/* 워드마크 — `PHONE` 짙은 색 · `WAY` 오렌지 (시안) */
+/* ⚠️ `.lg span{display:none}` 이 좁은 폭에서 로고 속 span 을 통째로
+   끄고 있어서, 워드마크도 같이 사라집니다 — 자리를 같이 적어 이깁니다
+   (이 저장소가 "로고가 1040px 아래에서 통째로 사라짐" 으로 겪은 자리). */
+.hd-c .lg .hd-lg-w, .hd-lg-w{ display:inline-flex; align-items:baseline; font-weight:900;
+  font-size:clamp(20px,1.5vw,25px); letter-spacing:-.01em; line-height:1; }
+.hd-lg-w b{ color:var(--pw-ink); font-weight:900; }
+/* ⚠️⚠️ **`--pw-or` 를 여기 쓰면 안 됩니다** — 흰 바탕에서 **2.94** 라
+   큰 글자 기준(3.0)도 못 넘깁니다 (표본 밖 화면 검사가 20건으로
+   잡았습니다). 짙은 쪽은 4.59 이고 눈에는 같은 오렌지입니다 —
+   이 저장소가 밝은 브랜드색을 글자로 쓰다가 **여섯 번째**입니다. */
+.hd-lg-w em{ color:var(--pw-or-600); font-style:normal; font-weight:900; }
+
+/* 사업자 전용관 — 시안은 **오렌지 테두리 알약**입니다 (딥 브라운 ✕) */
+.hd-c .gnb a.gnb-biz{ background:var(--pw-white); color:var(--pw-or-700);
+  border:1.5px solid var(--pw-or); }
+.hd-c .gnb a.gnb-biz:hover{ background:var(--pw-or-50); color:var(--pw-or-700); }
+.hd-c .gnb a.gnb-biz i{ color:var(--pw-or); }
+/* 판매 신청 — 채운 오렌지. ⚠️ 흰 글자가 올라앉으므로 **짙은 쪽**입니다
+   (`--pw-or` 는 흰 글자 2.94 로 AA 미달 — 다섯 번 겪은 자리). */
+.hd-c .hd-r .hd-cta{ background:var(--pw-or-600); border-color:var(--pw-or-600);
+  color:#fff; }
+.hd-c .hd-r .hd-cta:hover{ background:var(--pw-or-700);
+  border-color:var(--pw-or-700); }
+
+/* ── §6 사진 카드도 흰 바탕 ──────────────────────────────────────
+   ⚠️⚠️ `.pwsv-c.has-ph`(0,2,0)가 따로 크림을 들고 있어서 `.pwsv-c`
+   (0,1,0)로는 안 먹습니다 — **재서 알았습니다** (사진 카드 셋만
+   크림이고 아이콘 카드 둘만 흰색이었습니다). */
+.pwsv-c.has-ph{ background:var(--pw-white); border:1px solid var(--pw-line);
+  box-shadow:none; }
+.pwsv-c.has-ph:hover{ border-color:var(--pw-or); box-shadow:var(--pw-sh);
+  transform:none; }
+
+/* ── §8 사업자 전용관 배너 — 시안처럼 **크게** ────────────────── */
+.pwsd-biz{ padding:26px 92px 24px 24px; border-radius:var(--pw-r2); }
+.pwsd-biz b{ font-size:21px; line-height:1.34; }
+
+/* 사진 카드의 원형 화살표도 같이 — ⚠️ `.pwsv-c.has-ph .pwsv-go`(0,3,0)가
+   따로 있어서 `.pwsv-go`(0,1,0)로는 안 먹습니다 (재서 알았습니다). */
+.pwsv-c.has-ph .pwsv-go{ right:14px; bottom:13px; width:34px; height:34px;
+  background:var(--pw-or-50); border:1px solid var(--pw-or-100);
+  color:var(--pw-or-700); }
+.pwsv-c.has-ph:hover .pwsv-go{ background:var(--pw-or);
+  border-color:var(--pw-or); color:#fff; }
+
+/* ── §7 브랜드 거르개 칩 — 흰 알약 · 고른 것만 오렌지 ────────────
+   ⚠️⚠️ 고른 칩은 **흰 글자가 올라앉으므로 짙은 쪽**(`--pw-or-600`)
+   입니다. `--pw-or` 는 흰 글자 2.94 로 AA 미달입니다 (이 저장소가
+   다섯 번 겪은 자리). */
+.pwpd-fil .chip{ background:var(--pw-white); border:1px solid var(--pw-line);
+  color:var(--pw-ink2); font-weight:600; }
+.pwpd-fil .chip:hover{ border-color:var(--pw-or); color:var(--pw-or-700); }
+.pwpd-fil .chip.on{ background:var(--pw-or-600); border-color:var(--pw-or-600);
+  color:#fff; font-weight:700; }
+
+/* ── §7 상품 카드 액자 — 흰 바탕 (시안) ────────────────────────
+   ⚠️ 사진은 `object-fit:contain` 이라 잘리지 않습니다 (§7). */
+.pwpd-ph{ background:var(--pw-white); border:1px solid var(--pw-line); }
+.pwpd-0{ background:var(--pw-white); border:1px solid var(--pw-line); }
+
+/* 오른쪽 칸을 시안 비율로 — 재 보니 시안의 배너는 글 기둥의 **36%**
+   입니다 (268px 는 그 절반이라 제목이 석 줄로 쪼개졌습니다). */
+@media (min-width:1280px){ .pwmk-in{ grid-template-columns:minmax(0,1fr) 360px; } }
+@media (min-width:1101px) and (max-width:1279px){
+  .pwmk-in{ grid-template-columns:minmax(0,1fr) 300px; } }
+/* ⚠️ 오른쪽 여백 92px 은 아이콘 자리였는데, 그만큼 글 폭이 줄어
+   제목이 쪼개졌습니다 — 여백은 **CTA 줄에만** 줍니다 (재서 고쳤습니다). */
+.pwsd-biz{ padding:24px 24px 22px; }
+.pwsd-biz em{ padding-right:78px; }
+
+/* ── 안내 배너 셋 — **흰 카드**로 (§0-3 · §0-4 · §2) ────────────
+   ⚠️⚠️ 앞 차수(2026-10-30 §2-6)가 "딥 브라운 가로 배너 3개" 로
+   못박아 둔 자리입니다. 확정 디자인이 **헤더까지 흰색**으로 바뀌면서
+   이 셋만 짙은 면으로 남아 한 화면에서 결이 갈렸습니다 — §0-5
+   ("불필요한 브라운 · 베이지 배경") 와 §2("카드 그림자 최소 · 얇고
+   균일한 테두리")에 맞춰 흰 카드로 돌립니다.
+   ⚠️ 되돌리시려면 이 블록만 지우면 딥 브라운으로 돌아갑니다.
+   ⚠️⚠️ 짙은 면용 글자색(`--pw-on-dk*`)을 그대로 두면 **흰 면에 밝은
+   글자**가 앉습니다 — 같이 바꿉니다 (이 저장소가 겪은 자리). */
+/* ⚠️ `.pwbz-g .pwbz-c`(0,2,0)가 딥 브라운을 들고 있어서 `.pwbz-c`
+   (0,1,0)로는 안 먹습니다 — 자리를 같이 적어 이깁니다 (찍어 보고
+   알았습니다 · 이 저장소가 특정도로 겪은 그 자리). */
+.pwbz-g .pwbz-c{ background-color:var(--pw-white); background-image:none;
+  color:var(--pw-ink); border:1px solid var(--pw-line);
+  border-radius:var(--pw-r); }
+.pwbz-g .pwbz-c:hover{ transform:none; border-color:var(--pw-or);
+  box-shadow:var(--pw-sh); }
+.pwbz-g .pwbz-c b{ color:var(--pw-ink); }
+.pwbz-g .pwbz-c span, .pwbz-g .pwbz-c p{ color:var(--pw-ink3); }
+.pwbz-g .pwbz-c em{ color:var(--pw-or-700); }
+/* ⚠️ 단추 알약도 같이 — 흰 카드 위에서 흰 글자가 됩니다 */
+.pwbz-g .pwbz-c .pwbz-go{ color:var(--pw-or-700);
+  background:var(--pw-or-50); border:1px solid var(--pw-or-100); }
+.pwbz-g .pwbz-c .pwbz-ic{ color:var(--pw-or-700);
+  --ia-1:var(--pw-dk); --ia-2:var(--pw-or-100); }
+
+/* ── 사이드바 작은 배너 둘(수리 서비스 · 판매 진행 조회)도 흰 카드
+   ⚠️⚠️ §2 가 딥 브라운으로 정한 것은 **사업자 배너**(`.pwsd-biz`)
+   하나입니다. 그 아래 둘까지 짙게 두면 §0-5("불필요한 브라운 배경을
+   추가하지 않는다")에 걸리고, 폰에서는 짙은 덩이 셋이 연달아 섭니다
+   (찍어 보고 알았습니다).
+   ⚠️ 짙은 면용 글자색과 **투명도 .5 아이콘**을 같이 바꿉니다 —
+   안 바꾸면 흰 면에 흰 글자 · 반투명 흰 아이콘이 앉습니다. */
+.pwsd .pwsd-b{ background-color:var(--pw-white); background-image:none;
+  color:var(--pw-ink); border:1px solid var(--pw-line);
+  border-radius:var(--pw-r); }
+.pwsd .pwsd-b:hover{ border-color:var(--pw-or); box-shadow:var(--pw-sh); }
+.pwsd .pwsd-b b{ color:var(--pw-ink); }
+.pwsd .pwsd-b span{ color:var(--pw-ink3); }
+.pwsd .pwsd-b i{ opacity:1; color:var(--pw-or-700); }
+/* 적는 칸 묶음(기기 고르기)도 같은 흰 카드 한 벌로 */
+.pwsd .pwsd-q{ background:var(--pw-white); border:1px solid var(--pw-line);
+  border-radius:var(--pw-r); box-shadow:none; }

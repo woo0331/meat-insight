@@ -190,11 +190,22 @@ function Logo(where){
   /* 헤더 — 마크 타일 + 이름 + (이름과 다를 때만) 영문 작은 줄.
      ⚠️ 작은 줄은 **로고 한 덩어리 안**입니다. 떼어서 따로 내면
      그때부터 서로 다른 서비스 둘로 읽힙니다 (brand.js 의 `en`). */
+  /* ⚠️⚠️ 2026-11-02 확정 시안 — 헤더 로고는 **영문 워드마크**입니다
+     (`PHONE` 짙은 색 · `WAY` 오렌지). 글자를 손으로 적지 않습니다 —
+     `AM_BRAND.en` 과 **자르는 자리**(`enCut`) 둘만 읽습니다. 영문
+     이름이 없으면 전처럼 **타일 + 한글 이름**으로 섭니다.
+     ⚠️ `aria-label` 은 그대로 **한글 이름**입니다 — 읽어 주는
+     프로그램에는 글 속에서 읽는 이름이 가야 합니다. */
+  var en = String(B.en || ""), cut = Number(B.enCut || 0);
+  if(!cut) cut = en.length > 3 ? Math.ceil(en.length / 2) : 0;
+  var wm = en ? ('<span class="hd-lg-w" aria-hidden="true">'+
+        '<b>'+ esc(en.slice(0, cut)) +'</b>'+
+        (cut < en.length ? '<em>'+ esc(en.slice(cut)) +'</em>' : '') +'</span>') : "";
   return '<a class="lg hd-lg" href="/" aria-label="'+esc(nm)+' 홈">'+
-    (mark ? mark :
+    (mark ? mark : (wm ||
       '<span class="hd-lg-i" aria-hidden="true">'+icon("mobile",20)+'</span>'+
       '<span class="hd-lg-t"><b>'+esc(nm)+'</b>'+
-        (logoSub() ? '<i>'+esc(logoSub())+'</i>' : '')+'</span>')+
+        (logoSub() ? '<i>'+esc(logoSub())+'</i>' : '')+'</span>'))+
   '</a>';
 }
 
@@ -232,7 +243,12 @@ function Header(){
       '<nav class="hd-t0-r" aria-label="안내">'+
         (T.links||[]).map(function(l){
           return '<a href="'+esc(l[0])+'">'+esc(l[1])+'</a>';
-        }).join('<span aria-hidden="true">|</span>')+
+        /* ⚠️⚠️ 구분선을 **글자(`|`)로 두지 않습니다.** 옅은 회색
+           글자는 흰 바탕에서 대비 1.20 이고, 그건 읽으라고 둔 글자가
+           아닌데도 검사가 **글자로 잽니다** (표본 밖 화면에서 20건으로
+           걸렸습니다). 빈 칸에 선을 그으면 같은 모양이고 잴 글자가
+           없습니다. */
+        }).join('<span class="hd-t0-sep" aria-hidden="true"></span>')+
       '</nav>'+
     '</div></div>'+
 

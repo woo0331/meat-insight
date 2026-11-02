@@ -45,11 +45,16 @@ function Logo(where){
       (mark || '<b>'+esc(nm)+'</b><i>'+esc(brandSub())+'</i>')+'</a>';
   }
 
+  var en = String(B.en || ""), cut = Number(B.enCut || 0);
+  if(!cut) cut = en.length > 3 ? Math.ceil(en.length / 2) : 0;
+  var wm = en ? ('<span class="hd-lg-w" aria-hidden="true">'+
+        '<b>'+ esc(en.slice(0, cut)) +'</b>'+
+        (cut < en.length ? '<em>'+ esc(en.slice(cut)) +'</em>' : '') +'</span>') : "";
   return '<a class="lg hd-lg" href="/" aria-label="'+esc(nm)+' 홈">'+
-    (mark ? mark :
+    (mark ? mark : (wm ||
       '<span class="hd-lg-i" aria-hidden="true">'+icon("mobile",20)+'</span>'+
       '<span class="hd-lg-t"><b>'+esc(nm)+'</b>'+
-        (logoSub() ? '<i>'+esc(logoSub())+'</i>' : '')+'</span>')+
+        (logoSub() ? '<i>'+esc(logoSub())+'</i>' : '')+'</span>'))+
   '</a>';
 }
 
@@ -65,7 +70,8 @@ function Header(){
       '<nav class="hd-t0-r" aria-label="안내">'+
         (T.links||[]).map(function(l){
           return '<a href="'+esc(l[0])+'">'+esc(l[1])+'</a>';
-        }).join('<span aria-hidden="true">|</span>')+
+
+        }).join('<span class="hd-t0-sep" aria-hidden="true"></span>')+
       '</nav>'+
     '</div></div>'+
 

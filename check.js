@@ -1832,11 +1832,14 @@ const AUDIT = `(() => {
     if(!wSvc) return "PW_SVC5 를 못 읽습니다";
     if(nSvc !== wSvc)
       return "핵심 서비스가 " + nSvc + "장인데 데이터는 " + wSvc + "개입니다";
-    const nBr = v.querySelectorAll(".pwbr-g > li").length;
-    const wBr = (window.AM_SHOP_BRANDS || []).length;
+    /* ⚠️⚠️ 2026-11-02 확정 시안 — **브랜드 로고 구간을 내렸습니다.**
+       제조사는 상품 영역의 거르개 칩으로만 나옵니다. 장수 대신
+       **칩이 데이터를 빠짐없이 덮는가**를 봅니다 (아래 (3c)). */
+    const nBrC = v.querySelectorAll(".pwpd-fil .chip").length;
+    const wBr  = (window.AM_SHOP_BRANDS || []).length;
     if(!wBr) return "AM_SHOP_BRANDS 를 못 읽습니다";
-    if(nBr !== wBr)
-      return "브랜드가 " + nBr + "장인데 데이터는 " + wBr + "개입니다";
+    if(nBrC !== wBr + 1)
+      return "브랜드 칩이 " + nBrC + "개인데 데이터는 " + wBr + "개 + 전체입니다";
     const nBan = v.querySelectorAll(".pwbz-g > li").length;
     const wBan = (window.PW_BAN3 || []).length;
     if(nBan !== wBan)
@@ -2143,7 +2146,7 @@ const AUDIT = `(() => {
       return "푸터가 안 그려졌습니다 — 링크 0건이 저절로 통과합니다";
     return true;`);
 
-  await f("안내 배너 셋의 무게가 같고 흰 글자가 읽히는 면이다", "/", `
+  await f("안내 배너 셋의 무게가 같고 글자가 읽히는 면이다", "/", `
     /* ⚠️⚠️ **재는 자리를 옮겼습니다 (2026-10-29 오렌지 시안 §3-E).**
        전에는 판매 두 방법(pww-c)을 봤고 그 전에는 전문관 카드였습니다 —
        **규칙은 한 줄도 안 바꿨습니다.** 지키는 것은 —
@@ -2184,23 +2187,41 @@ const AUDIT = `(() => {
     const cols = L.map(bg);
     for(let k = 0; k < cols.length; k++)
       if(!cols[k]) return (k+1) + "번째 배너의 면 색을 못 읽습니다";
-    /* ⚠️⚠️ **셋이 서로 다른 색이어야 한다는 규칙은 없어졌습니다.**
-       2026-10-30 §2-6 이 "딥 브라운 배경의 가로 배너 3개" 로 직접
-       정해서 셋이 **일부러 같은 면**입니다 — 전 지시서(오렌지 시안
-       §3-E)는 넷을 색으로 갈라 두었고 그때는 그 규칙이 맞았습니다.
-       대신 **흰 글자가 읽히는 면인가**를 봅니다 (시안대로 넣었는데
-       글자가 안 읽히면 그건 지시서를 지킨 것이 아닙니다).
+    /* ⚠️⚠️ **규칙이 두 번 바뀐 자리입니다 — 글자를 보고 재세요.**
+         오렌지 시안 §3-E   넷을 **색으로 갈라** 두었습니다
+         2026-10-30 §2-6   셋을 **딥 브라운 한 색**으로 못박았습니다
+         2026-11-02 §2     **흰 카드 + 얇은 테두리**로 바뀌었습니다
+       그때마다 "흰 글자가 읽히는가" 로 적어 두면 **다음 지시서에서
+       멀쩡한 화면이 걸립니다** — 실제로 흰 카드가 되자마자 1.00 으로
+       떨어졌습니다. 지키는 것은 면의 색이 아니라 **그 카드가 제 글자를
+       읽히게 들고 있는가**이므로, 카드가 실제로 쓰는 글자색을 읽어
+       제 면과 견줍니다.
        ⚠️ 무엇으로 가리는가는 **아이콘**입니다 — 한 묶음 안에서 겹치면
        "메인 아이콘이 비지 않고 한 묶음 안에서 겹치지 않는다" 가 잡습니다.
        ⚠️⚠️ 둘을 한 검사에 묶지 마세요. */
-    for(let k = 0; k < cols.length; k++){
-      const c = cols[k];
-      const lum = function(v){ v = v / 255;
+    const rgb = function(src){
+      const out = []; let cur = "", nums = [];
+      for(let k = 0; k <= src.length; k++){
+        const ch = src.charAt(k);
+        if(ch >= "0" && ch <= "9"){ cur += ch; continue; }
+        if(cur){ nums.push(+cur); cur = ""; }
+        if(ch === ")" && nums.length >= 3) out.push(nums.slice(0,3));
+        if(ch === ")") nums = [];
+      }
+      return out.length ? out[0] : null;
+    };
+    const lum = function(c){
+      const f = function(v){ v = v / 255;
         return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
-      const Y = 0.2126 * lum(c[0]) + 0.7152 * lum(c[1]) + 0.0722 * lum(c[2]);
-      const ratio = 1.05 / (Y + 0.05);
+      return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]);
+    };
+    for(let k = 0; k < cols.length; k++){
+      const fg = rgb(getComputedStyle(L[k]).color);
+      if(!fg) return (k+1) + "번째 배너의 글자색을 못 읽습니다";
+      const a = lum(fg), b = lum(cols[k]);
+      const ratio = (Math.max(a,b) + 0.05) / (Math.min(a,b) + 0.05);
       if(ratio < 4.5)
-        return (k+1) + "번째 배너 면이 흰 글자에 " + ratio.toFixed(2) + "입니다 (4.5 이상)";
+        return (k+1) + "번째 배너의 글자가 제 면에 " + ratio.toFixed(2) + "입니다 (4.5 이상)";
     }
 
     if(innerWidth <= 1024) return true;
@@ -2569,7 +2590,6 @@ const AUDIT = `(() => {
     const need = [[".pwh-go",  "히어로 단추 둘"],
                   [".pwh-tr-g","신뢰 요소 넷"],
                   [".pwsv-g",  "핵심 서비스 여섯"],
-                  [".pwbr-g",  "브랜드 여섯"],
                   [".pwpd-fil","중고폰 거르개"],
                   [".pwbz-g",  "안내 배너 셋"],
                   [".pwst-g",  "이용 방법 다섯"],

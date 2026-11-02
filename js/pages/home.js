@@ -1013,7 +1013,15 @@ function pwPdCard(p){
    180px 이 됩니다 — 재 보고 정했습니다). */
 function PwMarket(){
   return '<section class="pwmk"><div class="w pwmk-in">'+
-    '<div class="pwmk-main">'+ PwBrands() + PwProducts() +'</div>'+
+    /* ⚠️⚠️ 2026-11-02 확정 시안 — **브랜드 로고 구간을 내렸습니다.**
+       시안에서 제조사는 상품 영역의 **거르개 칩 일곱**(전체 + 여섯)
+       으로만 나옵니다 (§7). 로고 카드 여섯을 따로 두면 ① 같은 축이
+       한 화면에 두 벌이고 ② 재고가 0건이라 그 카드 여섯이 전부
+       `0대` 로 서서 첫 화면 다음이 **빈 칸 여섯**이 됩니다.
+       ⚠️ `PwBrands()` 는 **지우지 않았습니다** — 되살리시려면 이
+       줄에 다시 더하시면 되고, 그날 `check.js` 의 메인 구간 검사와
+       크롤러 본문도 같이 보세요. */
+    '<div class="pwmk-main">'+ PwProducts() +'</div>'+
     PwSide()+
   '</div></section>';
 }

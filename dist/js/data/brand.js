@@ -8,6 +8,8 @@ window.AM_BRAND = {
 
   en:      "PHONEWAY",
 
+  enCut:   5,
+
   logo:    "",
 
   sub:     "중고폰 통합 거래 플랫폼",

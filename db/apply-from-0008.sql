@@ -3243,7 +3243,9 @@ commit;
 --
 -- 되돌리는 법 ───────────────────────────────────────────────────────
 --   alter table provider drop column brands, drop column scale;
---   (문 둘은 0013 · 0014 의 정의를 다시 돌리면 그대로 돌아옵니다)
+--   (문 둘은 0007(save_provider) · 0014(save_provider_self) 의 정의를
+--    다시 돌리면 그대로 돌아옵니다 — ⚠️ 0013 이 아닙니다. 그 번호는
+--    담당자 표(save_provider_contact)입니다)
 --
 -- ⚠️ 두 번 돌려도 안전합니다 (add column if not exists · create or replace).
 -- ════════════════════════════════════════════════════════════════════

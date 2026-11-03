@@ -39,6 +39,13 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 }
 .btn .ic{ flex: none; }
 .btn-pri{ background: var(--grn-btn); color: #fff; }   /* 딥그린 위 흰 글자 12.59 */
+/* ⚠️⚠️ 금색 **테두리** 단추입니다 (머리말 — 3차 시안). 금색 면에
+   흰 글자를 얹으면 1.91 이라 어떤 기준도 못 넘습니다. 그래서 면은
+   비우고 **글자와 테두리만** 금색으로 둡니다 (머리말 위 8.14). */
+.btn-gold{ background: transparent; color: var(--gold);
+           border:1.5px solid var(--gold-line); }
+.btn-gold:hover{ background: rgba(217,184,95,.14); border-color: var(--gold); }
+.btn-gold .ic{ color: var(--gold); }
 .btn-pri:hover{ background: #0A4A34; }
 /* ⚠️⚠️ **포인트 그린 단추에는 흰 글자를 얹지 마세요** — 2.22 입니다.
    짙은 글자(--on-pt)로만 씁니다 — 7.30. 시안은 흰 글자였습니다. */
@@ -58,13 +65,17 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 
 /* ⚠️ 로고도 누르는 것입니다 — 38px 였다가 전수 점검에 걸렸습니다 */
 .lg{ display:flex; align-items:center; gap:10px; flex:none; min-height: var(--tap); }
-.lg-mk{ width:38px; height:38px; flex:none; }
+/* ⚠️ 로고 표식은 **금색**입니다 (3차 시안). 금색은 어두운 면 위에서만
+   씁니다 — 머리말 바탕(#08291F) 위 8.14 입니다 (tokens.css 에 잰 값). */
+.lg-mk{ width:38px; height:38px; flex:none; color: var(--gold); }
+.lg-im{ width:40px; height:40px; flex:none; object-fit:contain; }
 .lg-tx{ display:flex; flex-direction:column; line-height:1.1; }
 .lg-en{ font-size:17px; font-weight:800; letter-spacing:.02em; }
-.lg-en b{ color: var(--pt-on-dark); font-weight:800; }         /* 헤더 위 8.84 */
+.lg-en b{ color: var(--gold); font-weight:800; }               /* 헤더 위 8.14 */
 .lg-ko{ font-size:12.5px; color: var(--on-dark-2); margin-top:2px; }
 
-.gnb{ display:flex; align-items:center; gap:4px; }
+/* ⚠️ 검색이 제 줄로 내려가면서 메뉴가 **가운데**로 옵니다 (3차 시안) */
+.gnb{ display:flex; align-items:center; gap:4px; margin-inline:auto; }
 .gnb a, .gnb button{
   display:inline-flex; align-items:center; gap:5px;
   min-height: var(--tap); padding: 8px 13px; border-radius: 8px;
@@ -72,16 +83,25 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 }
 .gnb a:hover, .gnb button:hover{ background: rgba(255,255,255,.12); }
 
-.sch{ flex:1; min-width:0; max-width:430px; margin-left:auto; position:relative; }
+/* ── 검색 띠 — 머리말 **아래 제 줄** (3차 시안) ───────────────
+   ⚠️ 머리말 안에 끼워 두면 좁은 화면에서 메뉴 · 검색 · 단추가 서로를
+   밀어 글자가 잘립니다. 제 줄로 내리면 그 다툼이 없습니다. */
+.schband{ background: var(--grn-deep); padding-block: 0 14px; }
+.sch{ position:relative; width:100%; }
 .sch input{
-  width:100%; min-height:46px; border-radius: var(--r-pill);
-  border:0; padding: 10px 50px 10px 20px; font-size:15px;
+  width:100%; min-height:50px; border-radius: var(--r-pill);
+  border:0; padding: 10px 56px 10px 48px; font-size:15px;
   background:#fff; color: var(--ink);
 }
 .sch input::placeholder{ color:var(--ink3); }
+/* 왼쪽 돋보기는 **장식**입니다 (aria-hidden) — 누르는 것은 오른쪽 단추 */
+.sch-ic{
+  position:absolute; left:17px; top:50%; transform:translateY(-50%);
+  display:flex; color: var(--ink3); pointer-events:none;
+}
 .sch button{
-  position:absolute; right:4px; top:50%; transform:translateY(-50%);
-  width:42px; height:42px; border-radius:50%;
+  position:absolute; right:5px; top:50%; transform:translateY(-50%);
+  width:44px; height:44px; border-radius:50%;
   display:flex; align-items:center; justify-content:center; color: var(--grn);
 }
 .hd-r{ display:flex; align-items:center; gap:6px; flex:none; }
@@ -93,11 +113,20 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 @media (max-width: 1100px){
   .hd-in{ flex-wrap: wrap; min-height:0; padding-block:10px; gap:10px; }
   .gnb{ order:3; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;
-        padding-bottom:2px; scrollbar-width:none; }
+        padding-bottom:2px; scrollbar-width:none; margin-inline:0; }
   .gnb::-webkit-scrollbar{ display:none; }
-  .sch{ order:4; width:100%; max-width:none; margin-left:0; }
   .hd-r{ margin-left:auto; }
   .hd-r .lbl{ display:none; }
+}
+/* ⚠️ 아주 좁은 폭 — 로고와 입점 단추가 **한 줄에** 앉게 줄입니다.
+   줄이지 않으면 단추가 제 줄로 내려가 머리말이 **세 줄**이 됩니다
+   (390px 에서 그랬습니다). 글자는 그대로 두고 크기만 줄입니다. */
+@media (max-width: 560px){
+  .lg-mk{ width:32px; height:32px; }
+  .lg-en{ font-size:15px; }
+  .lg-ko{ font-size:11.5px; }
+  .hd-r .btn{ font-size:13.5px; padding-inline:13px; }
+  .hd-in{ gap:8px; }
 }
 
 /* ── 히어로 ───────────────────────────────────────────
@@ -118,15 +147,38 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
   background: radial-gradient(60% 100% at 50% 100%, rgba(67,198,83,.18), rgba(67,198,83,0) 70%);
   pointer-events:none;
 }
-.hero-in{ position:relative; z-index:1; padding-block: 74px 86px; max-width:720px; }
+.hero-in{ position:relative; z-index:1; padding-block: 74px 30px; max-width:720px; }
 .hero-kick{
   font-size:13.5px; letter-spacing:.26em; font-weight:700;
   color: var(--pt-on-dark); margin-bottom:16px;
 }
 .hero h1{ color:#fff; font-size: clamp(34px, 5.2vw, 56px); line-height:1.18; letter-spacing:-.01em; }
-.hero h1 b{ color: var(--pt-on-dark); font-weight:800; }
+/* ⚠️ 브랜드 이름은 **금색** (3차 시안) — 히어로 바탕 위 6.58~8.34.
+   ⚠️⚠️ 흰 바탕에는 절대 쓰지 마세요 (1.91 — 어떤 기준도 못 넘습니다). */
+.hero h1 b{ color: var(--gold); font-weight:800; }
 .hero-sub{ margin-top:18px; font-size: clamp(16px, 1.6vw, 19px); color: var(--on-dark-2); }
 .hero-cta{ display:flex; flex-wrap:wrap; gap:12px; margin-top:30px; }
+/* 믿음 줄 넷 — ⚠️ 아이콘은 장식, 글이 본문입니다 */
+/* ⚠️ 본문 액자 바깥이라 제 위치를 따로 잡습니다 (히어로의 쌓는 차례
+   0 사진 · 1 막 · 2 글 가운데 **글** 쪽입니다). */
+.hero-tr{ position:relative; z-index:2; display:flex; flex-wrap:wrap;
+          gap:14px 34px; padding-bottom:76px; }
+.hero-tr li{
+  display:flex; align-items:center; gap:9px;
+  font-size:14.5px; font-weight:700; color: var(--on-dark-2);
+}
+.hero-tr .ic{ color: var(--pt-on-dark); flex:none; }
+@media (max-width: 760px){
+  /* ⚠️ 폰에서는 둘씩 — 넷을 한 줄에 두면 글자가 잘립니다 */
+  /* ⚠️⚠️ **아래 여백을 넉넉히 둡니다.** 분류 상자(.cats-in)가 42px
+     올라와 히어로를 덮는데, 폰에서는 믿음 줄이 **두 줄**이라 여백이
+     모자라면 아랫줄이 그 흰 상자에 가려집니다 (실제로 가려졌습니다 —
+     화면을 찍어 보고 알았습니다. 도구는 "가려짐" 을 못 잡습니다). */
+  .hero-tr{ display:grid; grid-template-columns: 1fr 1fr; gap:12px 14px;
+            padding-bottom:78px; }
+  .hero-tr li{ font-size:13.5px; }
+  .hero-tr > *{ min-width:0; }
+}
 /* ⚠️ 사진이 들어올 자리입니다 — 지금은 그라디언트입니다.
    없는 골프장 사진을 만들어 넣지 않습니다 (저작권 · 절대 규칙 1). */
 
@@ -144,16 +196,42 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 @media (max-width: 760px){ .cat-grid{ grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 460px){ .cat-grid{ grid-template-columns: repeat(2, 1fr); } }
 
+/* ⚠️⚠️ **사진형 카드입니다** (3차 시안) — 위에 사진, 가운데 둥근
+   아이콘, 아래 이름과 한 줄. ⚠️ 사진이 없으면 그 자리를 **딥그린
+   면**으로 둡니다: 빈 회색 액자가 보이면 그 순간 미완성 사이트로
+   읽힙니다 (절대 규칙 2). */
 .cat{
   display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
-  gap:8px; text-align:center; min-height: 128px; padding: 18px 6px 16px;
-  border-radius: var(--r); background: var(--bg-2);
-  border:1.5px solid transparent; transition: border-color .15s, background .15s;
+  text-align:center; padding-bottom:16px; overflow:hidden;
+  border-radius: var(--r); background:#fff;
+  border:1.5px solid var(--line); transition: border-color .15s, box-shadow .15s, transform .15s;
 }
-.cat:hover{ background:#fff; border-color: var(--grn-line); }
-.cat .ic{ color: var(--grn); }
-.cat-n{ font-size:14.5px; font-weight:700; color: var(--ink); line-height:1.35; }
-.cat-l{ font-size:12px; color: var(--ink3); line-height:1.45; }
+.cat:hover{ border-color: var(--grn-line); box-shadow: var(--shadow-soft); }
+.cat:hover .cat-ph img{ transform: scale(1.04); }
+/* 사진 액자 — ⚠️ 비율을 고정해 카드 높이가 제각각이 되지 않게 합니다 */
+.cat-ph{
+  width:100%; aspect-ratio: 16 / 9; display:block; overflow:hidden;
+  background-color: var(--grn-deep);
+  background-image: linear-gradient(150deg, #0E5240 0%, #08291F 100%);
+}
+.cat-ph img{
+  width:100%; height:100%; object-fit:cover; object-position:center;
+  display:block; transition: transform .25s;
+}
+/* 둥근 아이콘 — 사진 아래 경계에 걸칩니다 */
+.cat-ic{
+  width:46px; height:46px; margin-top:-23px; border-radius:50%;
+  background:#fff; border:1.5px solid var(--grn-line);
+  display:flex; align-items:center; justify-content:center;
+  color: var(--grn); position:relative; z-index:1; flex:none;
+}
+.cat-n{ font-size:14.5px; font-weight:700; color: var(--ink);
+        line-height:1.35; margin-top:10px; padding-inline:6px; }
+.cat-l{ font-size:12px; color: var(--ink3); line-height:1.45;
+        margin-top:4px; padding-inline:6px; }
+/* ⚠️ 격자 칸은 제 내용만큼 벌어집니다 (기본 min-width:auto) — 사진이
+   칸을 벌려 화면이 가로로 밀리는 것을 막습니다. */
+.cat-grid > *{ min-width:0; }
 
 /* ── 구간 ─────────────────────────────────────────────── */
 .sec{ padding-block: 58px; }
@@ -211,9 +289,21 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
        border-radius: var(--r); padding: 24px;
        display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
 .join .ic{ color: var(--grn); flex:none; }
+/* 아이콘을 둥근 면에 담습니다 (3차 시안) */
+.join-ic{
+  width:52px; height:52px; border-radius: var(--r-sm); flex:none;
+  background:#fff; border:1.5px solid var(--grn-line);
+  display:flex; align-items:center; justify-content:center;
+}
 .join-t{ flex:1; min-width:220px; }
 .join-t h3{ font-size:18px; }
 .join-t p{ margin-top:6px; font-size:14.5px; color: var(--ink3); }
+
+/* 푸터의 브랜드 덩이 — 머리말과 같은 금색 표식 */
+.ft-bd{ min-width:220px; }
+.ft-lg{ display:flex; align-items:center; gap:10px; }
+.ft-mk{ width:32px; height:32px; }
+.ft-bd .lg-en{ color:#fff; }
 
 /* ── 푸터 ─────────────────────────────────────────────── */
 .ft{ background: var(--grn-deep); color: var(--on-dark-2); padding-block: 42px 34px; margin-top: 0; }
@@ -240,6 +330,34 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 /* 이용 방법 — 번호. ⚠️ 어두운 면 위라 포인트 그린을 글자로 씁니다
    (딥그린 위 5.66 · 다크그린 위 7.01). */
 .step-n{ color: var(--pt-on-dark); font-weight:800; font-size:13px; letter-spacing:.2em; }
+
+/* ── 이용 방법 — 화살표로 잇습니다 (3차 시안) ──────────────────
+   ⚠️ 번호(01~04)가 이미 차례를 말하므로 화살표는 **장식**입니다
+   (aria-hidden). 소리로 듣는 분께는 ol 과 번호가 차례를 줍니다.
+   ⚠️ 폰에서는 화살표가 **아래를 가리켜야** 맞습니다 — 글을 바꾸지
+   않고 CSS 로 돌립니다. */
+.steps{ display:flex; align-items:stretch; gap:10px; flex-wrap:nowrap; }
+.step{
+  flex:1 1 0; min-width:0; border-radius: var(--r); padding: 20px 20px 22px;
+  color:#fff; background-color: var(--grn-deep);
+  background-image: linear-gradient(150deg, #1B5E3A 0%, #0C2A1B 100%);
+  display:flex; flex-direction:column;
+}
+.step h3{ color:#fff; font-size:17px; margin-top:8px; }
+.step p{ margin-top:7px; font-size:13.5px; color: var(--on-dark-2); line-height:1.55; }
+.steps-a{
+  flex:none; align-self:center; display:flex; color: var(--ink3);
+}
+@media (max-width: 980px){
+  .steps{ flex-wrap:wrap; }
+  .step{ flex: 1 1 calc(50% - 26px); }
+}
+@media (max-width: 620px){
+  /* ⚠️ 한 줄에 하나 — 화살표는 **아래**를 가리킵니다 */
+  .steps{ flex-direction:column; gap:8px; }
+  .step{ flex:none; width:100%; }
+  .steps-a{ transform: rotate(90deg); }
+}
 
 /* ── 하위 화면의 머리 ──────────────────────────────────── */
 .pghd{ background: var(--grn-soft); border-bottom:1px solid var(--grn-line);
@@ -479,6 +597,38 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .mband-l .ic{ color: var(--grn-text); flex:none; }
 .mband-s{ flex:none; color: var(--grn); opacity:.5; }
 @media (max-width: 720px){ .mband-s{ display:none; } }
+
+/* ── 띠에 사진이 깔릴 때 (3차 시안) ───────────────────────────
+   ⚠️⚠️ **여기는 막을 깔지 않습니다** (히어로와 다릅니다). 시안이
+   사진을 그대로 보여 주기 때문입니다 — 대신 글은 **흰 판 위**에
+   앉으므로 대비를 판이 책임집니다. 사진이 아무리 밝거나 어두워도
+   글 뒤는 늘 흰 판입니다.
+   ⚠️ 음수 z-index 를 쓰지 않습니다 — 제 바탕이 그 위에 깔려 사진이
+   통째로 가려집니다 (히어로에서 겪은 자리). 0 · 1 로 적습니다. */
+.mband-ph, .join-ph{ position:relative; overflow:hidden; border-color:transparent; }
+.mband-bg, .join-bg{
+  position:absolute; inset:0; width:100%; height:100%; z-index:0;
+  object-fit:cover; object-position: right center;
+}
+/* 글이 앉는 흰 판 — ⚠️ 반투명이 아니라 **거의 불투명**입니다.
+   반투명으로 두면 사진이 비쳐 글자 대비가 사진에 따라 흔들립니다. */
+.mband-ph .mband-t, .join-ph .join-t{
+  position:relative; z-index:1;
+  background: rgba(255,255,255,.95);
+  border-radius: var(--r); padding: 22px 24px;
+  backdrop-filter: blur(2px);
+}
+.mband-ph{ padding: 26px; }
+.mband-ph .mband-t{ max-width: 56%; }
+.join-ph{ padding: 22px 26px; }
+.join-ph .join-t{ flex:1; }
+.join-ph .join-ic, .join-ph .btn{ position:relative; z-index:1; }
+@media (max-width: 860px){
+  /* ⚠️ 좁아지면 판이 **가득** 찹니다 — 56% 로 두면 글이 두 글자씩
+     끊겨 내려갑니다 (사진은 그 뒤에 그대로 있습니다). */
+  .mband-ph .mband-t{ max-width:none; }
+  .mband-bg, .join-bg{ object-position: center; }
+}
 
 /* ── 작업실 · 배정 · 내 요청 (2차 지시서 §5 · §6 · §7) ─────────
    ⚠️⚠️ 클래스 이름을 **두 글자로 줄이지 않았습니다.** 짧은 이름(.lg)을
@@ -724,11 +874,24 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
           z-index:0; }
 /* ⚠️ background 에 그라디언트만 적으면 backgroundColor 가 투명이라
    색을 재는 쪽이 검정으로 읽습니다 — background-color 를 같이 적습니다. */
+/* ⚠️⚠️ **막이 왼쪽에서 짙고 오른쪽에서 옅습니다** (3차 시안 — 사진이
+   오른쪽에서 보여야 합니다). 그런데 **글은 왼쪽에만 있는 것이 아닙니다**:
+   믿음 줄 넷이 히어로 **아래쪽을 가로질러** 놓입니다. 그래서 가로
+   그라디언트만 쓰면 오른쪽 끝 글자가 밝은 사진 위에서 3.8 까지
+   떨어집니다 (손으로 재 봤습니다 — AA 아래입니다).
+   ⚠️ 그래서 **아래쪽 띠를 한 겹 더** 깔아 바닥은 어디서나 어둡게
+   둡니다. 먼저 적은 것이 위에 깔립니다.
+   ⚠️ 여기에는 background-color 바닥을 안 깝니다 — 깔면 오른쪽이 다시
+   어두워져 이 규칙의 뜻이 사라집니다. 불투명한 바닥은 `.hero` 자신의
+   background-color(#08291F)가 이미 받치고 있습니다. */
 .hero-ph::after{ content:""; position:absolute; inset:0; z-index:1;
                  border-radius:0; height:auto;
-                 background-color: rgba(6,59,43,.93);
-                 background-image: linear-gradient(180deg,
-                   rgba(8,41,31,.90) 0%, rgba(6,59,43,.95) 100%); }
+                 background-image:
+                   linear-gradient(to top,
+                     rgba(6,59,43,.90) 0%, rgba(6,59,43,0) 34%),
+                   linear-gradient(105deg,
+                     rgba(6,59,43,.97) 0%, rgba(6,59,43,.95) 42%,
+                     rgba(6,59,43,.55) 100%); }
 .hero-ph .hero-in{ z-index:2; }
 
 .feat-ph{ position:relative; overflow:hidden; }

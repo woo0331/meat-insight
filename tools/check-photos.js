@@ -93,20 +93,28 @@ let ok = 0;
     path.join(ROOT, "js/components/base.js"), "utf8"))(w2);
   new Function("window", fs.readFileSync(
     path.join(ROOT, "js/data/catalog.js"), "utf8"))(w2);
-  const zones = (w2.AM_ZONES || []).map(z => z.key);
-  if(!zones.length){ bad.push("AM_ZONES 를 한 줄도 못 읽었습니다 — 검사가 틀렸습니다"); return; }
-  const slotZones = SLOTS.map(s => s.key).filter(k => k.indexOf("zone-") === 0)
-    .map(k => k.slice(5));
-  zones.forEach(z => {
-    if(slotZones.indexOf(z) < 0)
-      bad.push("영역 '" + z + "' 의 사진 자리(zone-" + z + ")가 없습니다 — " +
-               "그 카드만 조용히 사진 없이 나옵니다");
-  });
-  slotZones.forEach(z => {
-    if(zones.indexOf(z) < 0)
-      bad.push("사진 자리 'zone-" + z + "' 가 가리키는 영역이 없습니다 — " +
-               "아무 데도 안 쓰이는 자리입니다");
-  });
+  /* ⚠️ 짝을 맞출 자리가 둘입니다 — 영역(zone-)과 분류(cat-).
+     규칙이 같으니 **한 함수**로 봅니다 (두 벌로 적으면 한쪽만 고칩니다). */
+  function pair(prefix, keys, what){
+    if(!keys.length){
+      bad.push(what + " 를 한 줄도 못 읽었습니다 — 검사가 틀렸습니다");
+      return;
+    }
+    const mine = SLOTS.map(s => s.key).filter(k => k.indexOf(prefix) === 0)
+      .map(k => k.slice(prefix.length));
+    keys.forEach(z => {
+      if(mine.indexOf(z) < 0)
+        bad.push(what + " '" + z + "' 의 사진 자리(" + prefix + z + ")가 없습니다 — " +
+                 "그 카드만 조용히 사진 없이 나옵니다");
+    });
+    mine.forEach(z => {
+      if(keys.indexOf(z) < 0)
+        bad.push("사진 자리 '" + prefix + z + "' 가 가리키는 " + what +
+                 "가 없습니다 — 아무 데도 안 쓰이는 자리입니다");
+    });
+  }
+  pair("zone-", (w2.AM_ZONES || []).map(z => z.key), "영역");
+  pair("cat-",  (w2.AM_CATS  || []).map(c => c.key), "분류");
 })();
 
 Object.keys(PHOTOS).forEach(key => {

@@ -59,8 +59,17 @@ var NAV = [
 function header(){
   var B = W.AM_BRAND, cut = B.enCut;
   return '<header class="hd"><div class="wrap hd-in">' +
+    /* ⚠️⚠️ **로고 그림이 아직 없습니다.** 3차 시안은 금색 방패 안에
+       골퍼가 들어간 그림을 씁니다 — 저희에게 그 파일이 없고, 비슷하게
+       그려 놓고 "로고" 라고 부르면 없는 것을 있다고 하는 것입니다.
+       그래서 **금색 방패 표식**으로 두고, 진짜 로고 파일이 오면
+       `AM_BRAND.logo` 에 주소만 적으시면 여기서 바뀝니다 (칸은 이미
+       있습니다 — js/data/brand.js). */
     '<a class="lg" href="/" aria-label="' + esc(B.name) + ' 홈">' +
-      '<span class="lg-mk" style="color:var(--pt-on-dark)">' + icon("flag", 38) + '</span>' +
+      (B.logo
+        ? '<img class="lg-im" src="' + esc(B.logo) + '" alt="" aria-hidden="true" ' +
+          'width="40" height="40">'
+        : '<span class="lg-mk">' + icon("shield", 38) + '</span>') +
       '<span class="lg-tx">' +
         '<span class="lg-en">' + esc(B.en.slice(0,cut)) + '<b>' + esc(B.en.slice(cut)) + '</b></span>' +
         '<span class="lg-ko">' + esc(B.name) + '</span>' +
@@ -72,19 +81,29 @@ function header(){
                (n.icon ? icon(n.icon, 18) : "") + '</a>';
       }).join("") +
     '</nav>' +
-    '<form class="sch" role="search" action="/search" method="get">' +
-      '<label class="sr" for="q">골프 서비스 · 업체 검색</label>' +
-      '<input id="q" name="q" type="search" placeholder="원하는 골프 서비스, 업체를 검색해보세요.">' +
-      '<button type="submit" aria-label="검색">' + icon("search", 22) + '</button>' +
-    '</form>' +
+
     /* ⚠️⚠️ **로그인 · 회원가입 단추를 아직 안 냅니다.** 지시서 3번의
        머리말 목록에는 있지만, 회원 기능이 돌기 전에 내면 눌러도 아무
        일이 안 나는 단추가 됩니다 (절대 규칙 5). 5단계에서 회원 · 업체
        등록을 세울 때 같이 켭니다 — 자리는 .hd-r 그대로입니다. */
     '<div class="hd-r">' +
-      '<a class="btn btn-pri btn-sm" href="/join">' + icon("store", 18) + '업체 입점하기</a>' +
+      '<a class="btn btn-gold btn-sm" href="/join">' + icon("store", 18) + '업체 입점하기</a>' +
     '</div>' +
-  '</div></header>';
+  '</div>' +
+  /* ⚠️⚠️ **검색을 제 줄로 내렸습니다** (3차 시안). 머리말 안에 끼워
+     두면 좁은 화면에서 메뉴 · 검색 · 단추가 서로를 밀어 글자가
+     잘립니다. ⚠️ 보내는 곳(`/search`)과 받는 열쇠(`q`)는 그대로입니다 —
+     주소를 바꾸면 **열리기는 하는데 아무것도 안 걸리는** 자리가 됩니다
+     (앞 서비스의 `?m=apple` 자리). */
+  '<div class="schband"><div class="wrap">' +
+    '<form class="sch" role="search" action="/search" method="get">' +
+      '<label class="sr" for="q">골프 서비스 · 업체 검색</label>' +
+      '<span class="sch-ic" aria-hidden="true">' + icon("search", 20) + '</span>' +
+      '<input id="q" name="q" type="search" placeholder="원하는 골프 서비스, 업체를 검색해보세요.">' +
+      '<button type="submit" aria-label="검색">' + icon("search", 22) + '</button>' +
+    '</form>' +
+  '</div></div>' +
+  '</header>';
 }
 
 /* ⚠️⚠️ 전자상거래법 제20조 제1항 — **중개한다는 사실을 미리 알립니다.**
@@ -125,8 +144,18 @@ function footer(){
   ];
   return '<footer class="ft"><div class="wrap">' +
     '<div class="ft-top">' +
-      '<div><div class="lg-en" style="color:#fff;font-size:18px">' + esc(B.en) + '</div>' +
-      '<p style="margin-top:8px;font-size:14px">' + esc(B.sub) + '</p></div>' +
+      /* ⚠️ 머리말과 **같은 표식**입니다 (3차 시안) — 로고 그림이 오면
+         `AM_BRAND.logo` 한 칸으로 둘 다 바뀝니다. */
+      '<div class="ft-bd">' +
+        '<div class="ft-lg">' +
+          (B.logo
+            ? '<img class="lg-im" src="' + esc(B.logo) + '" alt="" aria-hidden="true" ' +
+              'width="34" height="34">'
+            : '<span class="lg-mk ft-mk">' + icon("shield", 32) + '</span>') +
+          '<span class="lg-en" style="font-size:18px">' +
+            esc(B.en.slice(0, B.enCut)) + '<b>' + esc(B.en.slice(B.enCut)) + '</b></span>' +
+        '</div>' +
+        '<p style="margin-top:10px;font-size:14px">' + esc(B.sub) + '</p></div>' +
       '<nav class="ft-nav" aria-label="푸터 메뉴">' + cols.map(function(c){
         /* ⚠️ h4 였다가 접근성 점검에 걸렸습니다 — 본문이 h2 까지만 쓰는데
            푸터가 h4 로 뛰면 낭독기가 "빠진 단계" 로 읽습니다. */

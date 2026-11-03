@@ -46,6 +46,21 @@ var STEPS = [
 
 /* 시안 가운데의 매칭 띠 — ⚠️ 여기 적는 셋은 **매칭이 실제로 하는 일**
    입니다. 지키지 못할 말을 적으면 그대로 거짓말이 됩니다. */
+/* 히어로 아래의 믿음 줄 넷 (3차 시안) — ⚠️⚠️ **시안의 "검증된 업체
+   연결" 을 그대로 쓰지 않았습니다.** "검증" 은 우리가 무엇을 얼마나
+   봤는지 말해 주지 않는 말이고, 지금 실제로 하는 것은 **사업자등록을
+   확인하는 것**입니다 (provider.verified 는 플랫폼이 서류를 본 뒤에만
+   켜집니다 — 업체가 스스로 못 켭니다). 할 수 있는 말로 적습니다
+   (절대 규칙 1 · 5 · 지시서의 "실제 검증 프로세스가 존재하는 경우에만").
+   ⚠️ 아래 "일하는 방식" 이 같은 넷을 **풀어서** 적습니다 — 여기는
+   이름표, 거기는 설명입니다. 두 곳의 뜻이 어긋나면 안 됩니다. */
+var TRUST = [
+  { icon:"shield", t:"사업자 확인한 업체" },
+  { icon:"bolt",   t:"조건을 나란히 비교" },
+  { icon:"cal",    t:"상담 · 예약까지 한곳" },
+  { icon:"flag",   t:"골프만 하는 곳" }
+];
+
 var MATCH_WHY = [
   "원하는 조건만 입력하면",
   "여러 업체가 제안하고",
@@ -78,7 +93,16 @@ function hero(){
       '<a class="btn btn-ghost" href="/match">' + icon("match",20) +
         '한 번에 견적 · 매칭 요청하기</a>' +
     '</div>' +
-  '</div></section>';
+    /* ⚠️ 아이콘은 장식이라 소리로 읽을 것이 없습니다 — icon() 이
+       aria-hidden 을 답니다. 글은 그 옆에 그대로 있습니다. */
+  '</div>' +
+    /* ⚠️⚠️ 믿음 줄은 **본문 액자 바깥**입니다. 히어로 글은 720px 로
+       묶어 두었는데(한 줄이 너무 길면 안 읽힙니다) 그 안에 넷을 넣으니
+       두 줄로 접혔습니다 — 시안은 한 줄입니다. 그래서 형제로 둡니다. */
+    '<div class="wrap"><ul class="hero-tr">' + TRUST.map(function(x){
+      return '<li>' + icon(x.icon, 20) + esc(x.t) + '</li>';
+    }).join("") + '</ul></div>' +
+  '</section>';
 }
 
 function cats(){
@@ -86,8 +110,18 @@ function cats(){
     '<h2 id="cats-h" class="sr">서비스 분류</h2>' +
     '<div class="cats-in"><div class="cat-grid">' +
     W.AM_CATS.map(function(c){
+      /* ⚠️⚠️ 분류 사진 — 키가 `AM_CATS` 의 key 와 짝입니다
+         (check-photos 가 맞춰 봅니다). **없으면 액자를 비워 두지 않고**
+         딥그린 면으로 둡니다 — 빈 회색 칸이 보이면 그 순간 미완성
+         사이트로 읽힙니다 (절대 규칙 2).
+         ⚠️ 첫 화면 바로 아래라 lazy 를 답니다 (히어로만 미리 받습니다). */
+      var cp = W.amPhoto ? W.amPhoto("cat-" + c.key) : null;
       return '<a class="cat" href="' + esc(W.amCatUrl(c)) + '">' +
-        icon(c.icon, 34) +
+        '<span class="cat-ph' + (cp ? " cat-ph-on" : "") + '">' +
+          (cp ? '<img src="' + esc(cp.src) + '" alt="" aria-hidden="true" ' +
+                'width="800" height="450" loading="lazy">' : "") +
+        '</span>' +
+        '<span class="cat-ic">' + icon(c.icon, 26) + '</span>' +
         '<span class="cat-n">' + esc(c.name) + '</span>' +
         '<span class="cat-l">' + esc(c.lead) + '</span>' +
       '</a>';
@@ -97,7 +131,7 @@ function cats(){
 
 function feats(){
   return '<section class="sec"><div class="wrap">' +
-    '<div class="sec-hd"><h2>무엇을 하시려고 오셨나요</h2>' +
+    '<div class="sec-hd"><h2>무엇을 하시려고 오셨나요?</h2>' +
     '<p>골프에 필요한 일을 네 가지로 묶었습니다. 하려는 일을 고르면 그 안의 분류로 이어집니다.</p></div>' +
     '<div class="feat">' + (W.AM_ZONES || []).map(function(z, i){
       var cs = W.amZoneCats(z);
@@ -159,20 +193,33 @@ function providers(){
 }
 
 function steps(){
+  /* ⚠️⚠️ 차례를 **화살표로 잇습니다** (3차 시안). 화살표는 장식이라
+     `aria-hidden` 입니다 — 소리로 듣는 분께는 01 · 02 · 03 · 04 가
+     이미 차례를 말합니다. ⚠️ 폰에서는 화살표가 **아래를 가리켜야**
+     맞는데, 돌려 그리면 CSS 한 줄로 끝납니다 (글은 그대로입니다). */
   return '<section class="sec sec-alt"><div class="wrap">' +
     '<div class="sec-hd"><h2>이용 방법</h2></div>' +
-    '<div class="feat">' + STEPS.map(function(s){
-      return '<div class="feat-c" style="background-image:linear-gradient(150deg,#1B5E3A,#0C2A1B)">' +
-        '<p class="step-n">' + esc(s.n) + '</p>' +
-        '<h3 style="margin-top:10px">' + esc(s.t) + '</h3><p>' + esc(s.d) + '</p></div>';
-    }).join("") + '</div>' +
+    '<ol class="steps">' + STEPS.map(function(s, i){
+      return (i ? '<li class="steps-a" aria-hidden="true">' + icon("arrow", 20) + '</li>' : "") +
+        '<li class="step"><p class="step-n">' + esc(s.n) + '</p>' +
+        '<h3>' + esc(s.t) + '</h3><p>' + esc(s.d) + '</p></li>';
+    }).join("") + '</ol>' +
   '</div></section>';
 }
 
 /* ⚠️ 히어로의 두 번째 단추와 **같은 곳**으로 갑니다 (/match).
    두 곳에 서로 다른 주소를 적으면 한쪽만 고쳐서 어긋납니다. */
 function matchBand(){
-  return '<section class="sec"><div class="wrap"><div class="mband">' +
+  /* ⚠️⚠️ 사진이 **뒤에 깔립니다** — 글은 왼쪽의 밝은 판 위에 앉습니다.
+     그래서 이 자리는 히어로와 달리 **막을 깔지 않습니다**: 사진이
+     그대로 보여야 시안처럼 됩니다. 대신 글이 앉는 왼쪽은 흰 판이
+     받치므로 대비가 사진에 흔들리지 않습니다 (판이 책임집니다).
+     ⚠️ 사진이 없으면 연초록 면 그대로입니다 — 빈 액자를 두지 않습니다. */
+  var mp = W.amPhoto ? W.amPhoto("match-banner") : null;
+  return '<section class="sec"><div class="wrap">' +
+    '<div class="mband' + (mp ? " mband-ph" : "") + '">' +
+    (mp ? '<img class="mband-bg" src="' + esc(mp.src) + '" alt="" aria-hidden="true" ' +
+          'width="2000" height="800" loading="lazy">' : "") +
     '<div class="mband-t">' +
       '<h2>한 번에 견적 · 매칭 요청하기</h2>' +
       '<ul class="mband-l">' + MATCH_WHY.map(function(t){
@@ -180,13 +227,19 @@ function matchBand(){
       }).join("") + '</ul>' +
       '<a class="btn btn-pt" href="/match">지금 매칭 요청하기' + icon("arrow",18) + '</a>' +
     '</div>' +
-    '<div class="mband-s">' + icon("match", 72) + '</div>' +
+    (mp ? "" : '<div class="mband-s">' + icon("match", 72) + '</div>') +
   '</div></div></section>';
 }
 
 function joinBand(){
-  return '<section class="sec"><div class="wrap"><div class="join">' +
-    icon("store", 34) +
+  /* ⚠️ 매칭 띠와 **같은 규칙**입니다 — 사진은 뒤에, 글은 왼쪽 밝은 판
+     위에. 사진이 없으면 연초록 면 그대로입니다. */
+  var pp = W.amPhoto ? W.amPhoto("partner-banner") : null;
+  return '<section class="sec"><div class="wrap">' +
+    '<div class="join' + (pp ? " join-ph" : "") + '">' +
+    (pp ? '<img class="join-bg" src="' + esc(pp.src) + '" alt="" aria-hidden="true" ' +
+          'width="2000" height="480" loading="lazy">' : "") +
+    '<span class="join-ic">' + icon("store", 30) + '</span>' +
     '<div class="join-t"><h3>골프 관련 사업자라면 지금 바로 입점하세요</h3>' +
     '<p>입점은 무료입니다. 사업자 정보와 하시는 일을 등록하시면 그 일을 찾는 손님에게 이어집니다.</p></div>' +
     '<a class="btn btn-pri" href="/join">업체 입점하기' + icon("arrow",18) + '</a>' +

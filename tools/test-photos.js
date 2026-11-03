@@ -131,40 +131,83 @@ async function makeBright(b, file, w, h){
        히어로 높이 전부를 차지합니다 — 그 상자를 재니 바닥 모서리의
        **흰 카드 한 점**(255,255,255)이 잡혀 대비가 1.00 이었습니다.
        그래서 **글 덩이들의 바깥 테두리**만 모읍니다. */
+    /* ⚠️⚠️⚠️ **덩이마다 따로 잽니다 — 하나로 묶지 마세요.** 처음에는
+       글 덩이들의 바깥 테두리를 하나로 묶어 쟀는데, 그 네모에는 글이
+       없는 빈 자리가 잔뜩 들어갑니다. 막을 왼쪽만 짙게 바꾸자 그
+       네모의 **오른쪽 위 빈 구석**(사진이 그대로 보이는 곳)이 잡혀
+       대비 1.26 으로 떨어졌습니다 — 거기에는 글자가 한 자도 없습니다.
+       멀쩡한 화면을 고장이라고 한 것입니다 (이 파일에서 세 번째입니다).
+       ⚠️ 재야 하는 것은 **글자가 실제로 깔고 앉은 자리**뿐입니다. */
     const boxes = await p.evaluate(function(){
-      function union(outer, nodes){
+      /* ⚠️⚠️ **고를 자리를 손으로 적지 않습니다.** 클래스 이름을 적어
+         두면 화면을 고치는 날 그 자리가 조용히 안 재는 곳이 됩니다.
+         대신 **뜻으로** 고릅니다 — 막 위에 바로 앉은 밝은 글자:
+           ① 제 글자를 직접 품고 있고 (자식 상자가 아니라)
+           ② 제 바탕이 없고 (단추처럼 제 면을 깔면 그 면이 책임집니다)
+           ③ 글자색이 밝다 (어두운 글자는 이 막의 일이 아닙니다)
+         ⚠️ 그래서 단추(제 면이 있음)와 빈 상자(글자가 없음)는 빠집니다 —
+         처음에 그 둘을 넣어 **빈 구석의 사진**을 재고 1.26 으로
+         떨어뜨렸습니다. */
+      function lightText(outer){
         const a = outer.getBoundingClientRect();
-        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, n = 0;
-        nodes.forEach(function(el){
+        const out = [];
+        Array.prototype.forEach.call(outer.querySelectorAll("*"), function(el){
+          let has = false;
+          for(let i = 0; i < el.childNodes.length; i++){
+            const n = el.childNodes[i];
+            if(n.nodeType === 3 && (n.textContent || "").trim()){ has = true; break; }
+          }
+          if(!has) return;
+          const cs = getComputedStyle(el);
+          const bg = cs.backgroundColor || "";
+          const m = bg.match(/rgba?\(([^)]+)\)/);
+          /* 제 바탕이 있으면 그 면이 대비를 책임집니다 (알파 0 이 아니면 빼기) */
+          if(m){
+            const v = m[1].split(",").map(function(x){ return parseFloat(x); });
+            if(v.length < 4 || v[3] > 0.05) return;
+          }
+          const cm = (cs.color || "").match(/rgba?\(([^)]+)\)/);
+          if(!cm) return;
+          const c = cm[1].split(",").map(function(x){ return parseFloat(x); });
+          /* 밝은 글자만 — 어두운 글자는 이 막이 지키는 대상이 아닙니다 */
+          if((c[0] + c[1] + c[2]) / 3 < 150) return;
           const r = el.getBoundingClientRect();
           if(r.width < 2 || r.height < 2) return;
-          n++;
-          x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y);
-          x1 = Math.max(x1, r.right); y1 = Math.max(y1, r.bottom);
+          out.push({ el: el, x: Math.round(r.x - a.x), y: Math.round(r.y - a.y),
+                     w: Math.round(r.width), h: Math.round(r.height) });
         });
-        if(!n) return { n: 0, x: 0, y: 0, w: 0, h: 0 };
-        return { n: n, x: Math.round(x0 - a.x), y: Math.round(y0 - a.y),
-                 w: Math.round(x1 - x0), h: Math.round(y1 - y0) };
+        /* ⚠️⚠️⚠️ **찾은 그 자리를 바로 숨깁니다.** 숨기는 것을 CSS
+           선택자로 따로 적어 두었더니, 믿음 줄을 `.hero-in` 밖으로
+           옮기는 날 그 줄만 **안 숨겨진 채** 재서 글자 알갱이를
+           바탕으로 읽었습니다 (대비 1.26 — 멀쩡한 막을 고장이라고
+           했습니다. 이 파일에서 네 번째입니다).
+           ⚠️ 재는 자리와 숨기는 자리를 **한 곳에서** 정하면 둘이
+           어긋날 길이 없습니다. */
+        out.forEach(function(o){ o.el.style.visibility = "hidden"; });
+        return out;
       }
       const hero = document.querySelector(".hero");
+      /* ⚠️⚠️ **믿음 줄을 빠뜨리면 안 됩니다.** 그 넷은 히어로 글
+         상자(.hero-in) **바깥**에서 아래쪽을 가로지릅니다 — 막이
+         왼쪽에서 짙고 오른쪽에서 옅으므로, 오른쪽 끝이 재는 자리에
+         안 들어가면 거기만 아무도 안 재는 곳이 됩니다. */
       const out = {
-        hero: union(hero, [].slice.call(hero.querySelectorAll(".hero-in > *"))),
-        feat: [] };
+        hero: lightText(hero), feat: [] };
       document.querySelectorAll(".feat-ph").forEach(function(c){
-        out.feat.push(union(c, [].slice.call(c.children)
-          .filter(function(el){ return !el.classList.contains("feat-bg"); })));
+        out.feat.push(lightText(c));
       });
-      return out;
+      /* 돌려줄 때는 상자만 (DOM 조각은 못 건너옵니다) */
+      const strip = function(L){ return L.map(function(o){
+        return { x:o.x, y:o.y, w:o.w, h:o.h }; }); };
+      window.__amPhShown = false;
+      return { hero: strip(out.hero), feat: out.feat.map(strip) };
     });
     ok("히어로의 글 덩이를 찾았다 (잴 자리가 0개가 아니다)",
-       boxes.hero.n >= 3 && boxes.hero.w > 100 && boxes.hero.h > 50,
-       JSON.stringify(boxes.hero));
-    const hide = await p.addStyleTag({ content:
-      ".hero-in, .feat-ph > *:not(.feat-bg){ visibility:hidden !important }" });
+       boxes.hero.length >= 5, boxes.hero.length + "덩이");
 
     /* 한 자리의 **가장 밝은 바탕**을 돌려줍니다 — ⚠️ 평균이 아닙니다.
        평균은 어두운 쪽에 끌려가서 "괜찮다" 고 말합니다. */
-    async function worstBg(loc, box){
+    async function worstBg(loc, boxList){
       const shot = await loc.screenshot();
       return await p.evaluate(async function(a){
         const img = new Image();
@@ -176,19 +219,21 @@ async function makeBright(b, file, w, h){
         c.width = img.width; c.height = img.height;
         const g = c.getContext("2d");
         g.drawImage(img, 0, 0);
-        const bx = Math.max(0, a.box.x), by = Math.max(0, a.box.y);
-        const bw = Math.min(a.box.w, img.width - bx), bh = Math.min(a.box.h, img.height - by);
-        if(bw < 4 || bh < 4) return { n: 0, L: 1 };
-        const d = g.getImageData(bx, by, bw, bh).data;
         function ch(v){ v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
         let L = 0, n = 0;
-        for(let i = 0; i < d.length; i += 4){
-          n++;
-          const l = 0.2126 * ch(d[i]) + 0.7152 * ch(d[i+1]) + 0.0722 * ch(d[i+2]);
-          if(l > L) L = l;
-        }
+        a.boxes.forEach(function(box){
+          const bx = Math.max(0, box.x), by = Math.max(0, box.y);
+          const bw = Math.min(box.w, img.width - bx), bh = Math.min(box.h, img.height - by);
+          if(bw < 4 || bh < 4) return;
+          const d = g.getImageData(bx, by, bw, bh).data;
+          for(let i = 0; i < d.length; i += 4){
+            n++;
+            const l = 0.2126 * ch(d[i]) + 0.7152 * ch(d[i+1]) + 0.0722 * ch(d[i+2]);
+            if(l > L) L = l;
+          }
+        });
         return { n: n, L: L };
-      }, { b64: shot.toString("base64"), box: box });
+      }, { b64: shot.toString("base64"), boxes: boxList });
     }
     /* 흰 글자(L=1) 대비 = 1.05 / (L + 0.05) */
     const ratioOf = x => 1.05 / (x.L + 0.05);
@@ -206,6 +251,9 @@ async function makeBright(b, file, w, h){
        아무도 안 재는 자리가 됩니다. */
     ok("영역 카드를 찾았다 (잰 것이 0장이 아니다)",
        boxes.feat.length === zones.length, boxes.feat.length + " / " + zones.length);
+    ok("  영역 카드마다 글 덩이를 찾았다",
+       boxes.feat.every(function(L){ return L.length >= 2; }),
+       boxes.feat.map(function(L){ return L.length; }).join(" "));
     let fWorst = 99, fAt = -1, fPts = 0;
     for(let i = 0; i < boxes.feat.length; i++){
       const F = await worstBg(p.locator(".feat-ph").nth(i), boxes.feat[i]);
@@ -226,7 +274,6 @@ async function makeBright(b, file, w, h){
     ok("막을 옅게 하면 이 검사가 **떨어진다** (재는 자리가 맞습니다)",
        ratioOf(T) < 4.5, "대비 " + ratioOf(T).toFixed(2));
     await thin.evaluate(function(e){ e.remove(); });
-    await hide.evaluate(function(e){ e.remove(); });
     await p.close();
 
     console.log("\n── ③ 규격 검사가 실제로 잡는가 (일부러 작은 그림)");

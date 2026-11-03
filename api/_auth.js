@@ -112,6 +112,26 @@ async function roleOf(token, sub){
 }
 
 /* 한 번에 — 화면이 보낸 요청에서 "누구이고 무슨 역할인가" 까지 */
+/* ⚠️⚠️ **역할(role)과 능력(hat)은 다른 것입니다** — 0025 머리말을 보세요.
+   role 은 권한(customer · provider · staff · admin), hat 은 능력
+   (seller · pro · biz) 입니다. 화면이 둘을 섞으면 "프로로 등록" 이
+   권한을 올리는 길처럼 보이게 됩니다.
+
+   ⚠️ 손님의 토큰으로 읽습니다 — RLS 가 **자기 것만** 돌려줍니다.
+   service key 로 읽으면 RLS 를 통째로 지나가므로 쓰지 않습니다.
+   ⚠️ 못 읽으면 **빈 배열**입니다 (fail-closed). 없는 능력을 있다고
+   읽으면 그 한 줄이 사고입니다. */
+async function hatsOf(token){
+  const r = await fetchWithTimeout(
+    base() + "/rest/v1/account_hat?select=hat",
+    { method:"GET",
+      headers:{ "apikey": env("SUPABASE_ANON_KEY"),
+                "authorization": "Bearer " + token } });
+  if(!r.ok || !Array.isArray(r.data)) return [];
+  return r.data.map(function(x){ return x.hat; })
+               .filter(Boolean).sort();
+}
+
 async function session(req){
   if(!authReady()) return { ok:false, why:"nowhere" };
   const token = bearer(req);
@@ -119,8 +139,9 @@ async function session(req){
   const w = await whoami(token);
   if(!w.ok) return w;
   const a = await roleOf(token, w.sub);
+  const hats = await hatsOf(token);
   return { ok:true, token:token, sub:w.sub, email:w.email,
-           role:a.role, provider_id:a.provider_id, name:a.name };
+           role:a.role, provider_id:a.provider_id, name:a.name, hats:hats };
 }
 
 /* 운영자에게 할 말 (절대 규칙 3 — 손님 화면에 찍지 않습니다) */
@@ -151,5 +172,5 @@ function publicConf(){
   return { url: base(), anonKey: env("SUPABASE_ANON_KEY") };
 }
 
-module.exports = { authReady, bearer, whoami, roleOf, session, authWhy,
+module.exports = { authReady, bearer, whoami, roleOf, hatsOf, session, authWhy,
                    publicConf, AUTH_TIMEOUT };

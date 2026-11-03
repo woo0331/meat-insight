@@ -34,8 +34,12 @@ var AM_AUTH_KEY = "am.auth.v1";
    `chrome.js` · 메모장 `state.js` · `/my`)이라 **같은 틱에 셋이 다
    그물을 빠져나갑니다.** 재 보니 화면마다 2번(`/my` 는 3번) 나가고
    있었습니다 — 지금은 돌고 있는 것을 그대로 돌려줍니다. */
+/* ⚠️⚠️ role 과 hats 는 **다른 것**입니다. role 은 권한(customer ·
+   provider · staff · admin), hats 는 능력(seller · pro · biz) 입니다.
+   화면이 둘을 한 칸에 담으면 "프로로 등록" 이 권한을 올리는 길처럼
+   보이게 됩니다 (db/migrations/0025_account_hat.sql 머리말). */
 var AM_AUTH = { asked:false, on:false, signedIn:false, role:"", name:"",
-                provider:null, conf:null };
+                hats:[], provider:null, conf:null };
 var AM_AUTH_FLY = null;
 
 /* ── 저장 ────────────────────────────────────────────────────────
@@ -188,10 +192,11 @@ window.amAuthAsk = function(force){
     return d;
   }).then(function(d){
     AM_AUTH.asked = true;
-    if(!d){ AM_AUTH.on = false; return AM_AUTH; }
+    if(!d){ AM_AUTH.on = false; AM_AUTH.hats = []; return AM_AUTH; }
     AM_AUTH.on       = !!d.auth;
     AM_AUTH.signedIn = !!d.signedIn;
     AM_AUTH.role     = d.role || "";
+    AM_AUTH.hats     = Array.isArray(d.hats) ? d.hats : [];
     AM_AUTH.name     = d.name || "";
     AM_AUTH.provider = d.provider || null;
     AM_AUTH.conf     = d.conf || AM_AUTH.conf;
@@ -200,7 +205,7 @@ window.amAuthAsk = function(force){
     /* ⚠️ 운영자에게만 남깁니다 — 손님은 아무 잘못도 안 했습니다
        (절대 규칙 3). */
     try{ console.warn("[auth] /api/session — " + e); }catch(_){}
-    AM_AUTH.asked = true; AM_AUTH.on = false;
+    AM_AUTH.asked = true; AM_AUTH.on = false; AM_AUTH.hats = [];
     return AM_AUTH;
   });
   /* ⚠️ 답이 오면 놓습니다 — `force` 로 다시 물을 수 있어야 합니다

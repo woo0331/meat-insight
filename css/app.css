@@ -302,3 +302,48 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 
 /* ⚠️ 문단 끝의 단추 — 문장 속 링크(19px)를 대신합니다 */
 .notes-go{ display:flex; width:max-content; margin-top:10px; }
+
+/* ── 로그인 · 내 정보 · 관리자 ──────────────────────────────────
+   ⚠️ 누르는 것은 전부 40px 이상입니다 (전수 점검이 셉니다). */
+.lform{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:16px; }
+.lform input{ flex:1; min-width:220px; max-width:360px; min-height:46px;
+  border:1.5px solid var(--line); border-radius: var(--r-pill);
+  padding:10px 18px; font-size:16px; color: var(--ink); background:#fff; }
+.lform input::placeholder{ color:#7C8A82; }
+.lmsg{ margin-top:12px; font-size:15px; color: var(--ink2); }
+
+.mybox{ display:grid; gap:16px; }
+.mycard{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+         padding:20px 22px; }
+.mycard h2{ font-size:22px; }
+.myrole{ margin-top:6px; font-size:15px; color: var(--grn-text); font-weight:700; }
+.myhint{ margin-top:8px; font-size:14px; color: var(--ink3); }
+
+.hats{ display:grid; gap:12px; }
+.hat{ display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+      background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+      padding:18px 20px; }
+.hat > div{ flex:1; min-width:200px; }
+.hat h3{ font-size:16.5px; }
+.hat p{ margin-top:4px; font-size:14.5px; color: var(--ink3); }
+.hat-on{ border-color: var(--grn-line); background: var(--grn-soft); }
+/* ⚠️ 사업자 회원은 단추가 없습니다 — 본인이 못 켭니다. 글로만 알립니다. */
+.hat-note{ display:flex; align-items:center; min-height:40px;
+           font-size:14px; color: var(--ink3); }
+
+.adminbox{ display:grid; gap:16px; }
+.cnts{ display:grid; gap:12px; grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 900px){ .cnts{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 460px){ .cnts{ grid-template-columns: 1fr; } }
+.cnt{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+      padding:16px 18px; }
+.cnt dt{ font-size:13.5px; color: var(--ink3); }
+.cnt dd{ margin:4px 0 0; font-size:22px; font-weight:800; color: var(--ink); }
+
+/* 머리말의 로그인 자리 — ⚠️ 자바스크립트가 넣습니다. 로그인이 꺼져
+   있으면 **아무것도 안 들어옵니다.** */
+.hd-lk{ display:inline-flex; align-items:center; gap:6px;
+        min-height:44px; padding:8px 12px; border-radius:8px;
+        font-size:15px; font-weight:600; }
+.hd-lk:hover{ background: rgba(255,255,255,.12); }
+@media (max-width: 1100px){ .hd-lk .lbl{ display:none; } }

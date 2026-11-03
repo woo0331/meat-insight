@@ -35,7 +35,9 @@
     return;
   }
   box.innerHTML =
-    "<h3>" + esc(q) + " 와 맞는 분류 " + hit.length + "가지</h3>" +
+    /* ⚠️ 손님이 친 글 뒤에 붙는 조사입니다 — 받침에 따라 와/과 가
+       갈립니다 ("퍼터와" · "드라이버와" · "아이언과"). */
+    "<h3>" + esc(window.koWith(q, "와과")) + " 맞는 분류 " + hit.length + "가지</h3>" +
     '<ul class="chips" style="justify-content:center;margin-top:14px">' +
     hit.map(function(c){
       return '<li><a class="chip chip-go" href="' + esc(window.amCatUrl(c)) + '">' +

@@ -31,7 +31,8 @@ function exists(route){
   return false;
 }
 
-var routes = JSON.parse(fs.readFileSync(path.join(__dirname, "routes.json"), "utf8"));
+var R = JSON.parse(fs.readFileSync(path.join(__dirname, "routes.json"), "utf8"));
+var routes = R.routes, skipOrphan = R.unlinked || [];
 var linked = {}, bad = [], blocked = [];
 
 routes.forEach(function(r){
@@ -50,7 +51,11 @@ routes.forEach(function(r){
 });
 
 /* 찍었는데 아무도 안 거는 화면 — 손님이 닿을 길이 없습니다 */
-var orphan = routes.filter(function(r){ return r !== "/" && !linked[r]; });
+/* ⚠️ 일부러 안 거는 화면은 빼고 셉니다 — 안 그러면 경고가 늘 떠서
+   진짜 외톨이가 묻힙니다. 다만 **빼 둔 목록은 화면이 스스로 적습니다**
+   (pages/*.js 의 unlinked) — 검사 쪽에 손으로 적지 않습니다. */
+var orphan = routes.filter(function(r){
+  return r !== "/" && !linked[r] && skipOrphan.indexOf(r) < 0; });
 
 function uniq(a){ return a.filter(function(v,i){ return a.indexOf(v) === i; }); }
 bad = uniq(bad); blocked = uniq(blocked);

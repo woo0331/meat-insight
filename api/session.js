@@ -53,6 +53,9 @@ module.exports = async function handler(req, res){
     auth:true, signedIn:true,
     conf:conf,
     role:s.role,
+    /* ⚠️ 능력은 **배열**입니다. 하나만 골라 내려주면 화면이 "역할 하나"
+       로 읽어 지시서 6번(한 계정에 여러 역할)이 조용히 무너집니다. */
+    hats: Array.isArray(s.hats) ? s.hats : [],
     /* ⚠️ 업체 역할일 때만 나갑니다. 다른 역할에 붙여 두면 화면이
        "나는 업체다" 로 읽습니다. */
     provider: s.role === "provider" ? (s.provider_id || null) : null,

@@ -37,6 +37,6 @@ exports.build = function(){
     desc: "골프 업체와 서비스를 찾습니다. " +
           W.AM_CATS.map(function(c){ return c.name; }).join(" · ") + " 분류에서 고르거나 검색하세요.",
     body: body,
-    js: "/js/search.js"
+    js: ["/js/data/korean.js", "/js/search.js"]
   };
 };

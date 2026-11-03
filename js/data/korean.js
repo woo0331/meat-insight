@@ -52,7 +52,7 @@ window.josa = function(word, pair){
     var c = s.charCodeAt(s.length-1);
     if(c>=0xAC00 && c<=0xD7A3 && ((c-0xAC00)%28)===8) return "로";
   }
-  var has = koJong(word);
+  var has = window.koJong(word);
   /* 한글도 숫자도 아니면 읽는 법을 모릅니다. 괄호로 때우지 않고
      받침 없는 쪽을 씁니다 — 적어도 문장으로는 읽힙니다. */
   if(has === null) return t[1];
@@ -61,4 +61,6 @@ window.josa = function(word, pair){
 
 /* 낱말 뒤에 조사를 붙여 돌려줍니다 — 부르는 쪽이 짧아집니다.
    window.koWith("곱창","은는") → "곱창은" */
-window.koWith = function(word, pair){ return String(word)+josa(word, pair); };
+/* ⚠️ window. 를 붙여 부릅니다 — 브라우저에서는 맨이름으로도 되지만
+   빌드 · 검사는 node 에서 돌아서 맨이름이면 터집니다. */
+window.koWith = function(word, pair){ return String(word)+window.josa(word, pair); };

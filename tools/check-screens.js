@@ -136,7 +136,7 @@ function hex(a){ return "#" + a.map(function(n){ return ("0"+Math.round(n).toStr
   if(!routes.length){
     /* 인자가 없으면 빌드가 적어 둔 주소 **전부** 를 돕니다 */
     var rf = path.join(__dirname, "routes.json");
-    routes = fs.existsSync(rf) ? JSON.parse(fs.readFileSync(rf, "utf8")) : ["/"];
+    routes = fs.existsSync(rf) ? JSON.parse(fs.readFileSync(rf, "utf8")).routes : ["/"];
   }
   var prove = process.argv.indexOf("--prove") >= 0;
   var port = 8731 + (process.pid % 90);

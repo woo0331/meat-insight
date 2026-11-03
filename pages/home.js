@@ -86,7 +86,9 @@ function feats(){
 function why(){
   return '<section class="sec sec-alt"><div class="wrap">' +
     '<div class="why">' +
-      '<p class="why-t">' + esc(W.AM_BRAND.name) + '이<br>일하는 방식</p>' +
+      /* ⚠️ 조사를 글자로 박지 않습니다 — 이름이 바뀌면 "골프파크이" 가
+         됩니다. 받침에 따라 갈리는 일은 koWith() 한 곳에서 합니다. */
+      '<p class="why-t">' + esc(W.koWith(W.AM_BRAND.name, "이가")) + '<br>일하는 방식</p>' +
       WHY.map(function(w){
         return '<div class="why-i">' + icon(w.icon, 24) +
           '<div><h3>' + esc(w.t) + '</h3><p>' + esc(w.d) + '</p></div></div>';

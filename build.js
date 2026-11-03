@@ -27,7 +27,8 @@ var SITE_LIVE = false;
 
 /* ── 데이터 읽기 — 브라우저와 같은 파일을 그대로 씁니다 ────────── */
 global.window = {};
-["js/components/base.js","js/data/brand.js","js/data/site.js","js/data/catalog.js"]
+["js/components/base.js","js/data/korean.js","js/data/brand.js",
+ "js/data/site.js","js/data/catalog.js"]
   .forEach(function(f){ require("./" + f); });
 var W = global.window, esc = W.esc, icon = W.icon;
 
@@ -157,7 +158,10 @@ function page(o){
     '<meta name="color-scheme" content="only light">\n' +
     '<title>' + esc(title) + '</title>\n' +
     '<meta name="description" content="' + esc(o.desc) + '">\n' +
-    (SITE_LIVE ? '' : '<meta name="robots" content="noindex,nofollow">\n') +
+    /* ⚠️ 개인 화면(/my · /admin)은 **영업을 시작해도** 색인하지 않습니다.
+       SITE_LIVE 와 따로 둡니다 — 한 칸으로 묶으면 문 여는 날 같이
+       열립니다. */
+    ((SITE_LIVE && !o.noindex) ? '' : '<meta name="robots" content="noindex,nofollow">\n') +
     '<link rel="canonical" href="' + esc(canon) + '">\n' +
     '<meta property="og:type" content="website">\n' +
     '<meta property="og:site_name" content="' + esc(B.name) + '">\n' +
@@ -172,7 +176,8 @@ function page(o){
     header() + '\n<main id="main">\n' + o.body + '\n</main>\n' + footer() + '\n' +
     /* ⚠️ 자바스크립트는 **덧대는 것**입니다. 본문은 이미 위에 다 있습니다 —
        스크립트가 안 돌아도 화면이 비지 않습니다. */
-    (o.js ? ['/js/components/base.js','/js/data/brand.js','/js/data/catalog.js', o.js]
+    (o.js ? ['/js/components/base.js','/js/data/brand.js','/js/data/catalog.js']
+              .concat(Array.isArray(o.js) ? o.js : [o.js])
               .map(function(f){ return '<script src="' + f + ver(f.replace(/^\//,"")) + '"></script>\n'; })
               .join("") : '') +
     '</body>\n</html>\n';
@@ -186,7 +191,7 @@ if(require.main === module){
   var cat  = require("./pages/category.js");
   var home = require("./pages/home.js");
   var list = require("./pages/categories.js");
-  var flat = ["guide", "help", "join", "search"].map(function(n){
+  var flat = ["guide", "help", "join", "search", "login", "my", "admin"].map(function(n){
     return require("./pages/" + n + ".js").build();
   });
 
@@ -226,8 +231,14 @@ if(require.main === module){
 
   /* 찍은 주소를 적어 둡니다 — 전수 점검이 인자 없이 돌 때 이것을 읽습니다.
      ⚠️ 주소가 **사라지는** 것도 여기서 보입니다 (전 목록과 견주세요). */
-  fs.writeFileSync("tools/routes.json",
-    JSON.stringify(built.map(function(b){ return b.route; }), null, 2) + "\n");
+  /* ⚠️ 한 파일에 둡니다 — 두 곳에 적으면 한쪽만 고쳐서 어긋납니다.
+     unlinked 는 **일부러 아무 데서도 안 거는** 화면입니다 (로그인 자리는
+     자바스크립트가 넣고, 관리자는 메뉴에 두지 않습니다). */
+  fs.writeFileSync("tools/routes.json", JSON.stringify({
+    routes:   built.map(function(b){ return b.route; }),
+    unlinked: built.filter(function(b){ return b.unlinked; })
+                   .map(function(b){ return b.route; })
+  }, null, 2) + "\n");
 
   console.log("화면 " + built.length + "장 찍었습니다 — " +
               built.map(function(b){ return b.route; }).join(" "));

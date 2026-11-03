@@ -45,7 +45,7 @@ var NAV = [
   { href:"/categories", name:"카테고리 전체보기", icon:"down" },
   { href:"/search",     name:"업체찾기" },
   { href:"/guide",      name:"이용안내" },
-  { href:"/notice",     name:"고객센터" }
+  { href:"/help",       name:"고객센터" }
 ];
 
 function header(){
@@ -69,10 +69,11 @@ function header(){
       '<input id="q" name="q" type="search" placeholder="원하는 골프 서비스, 업체를 검색해보세요.">' +
       '<button type="submit" aria-label="검색">' + icon("search", 22) + '</button>' +
     '</form>' +
+    /* ⚠️⚠️ **로그인 · 회원가입 단추를 아직 안 냅니다.** 지시서 3번의
+       머리말 목록에는 있지만, 회원 기능이 돌기 전에 내면 눌러도 아무
+       일이 안 나는 단추가 됩니다 (절대 규칙 5). 5단계에서 회원 · 업체
+       등록을 세울 때 같이 켭니다 — 자리는 .hd-r 그대로입니다. */
     '<div class="hd-r">' +
-      '<a class="gnb-a" href="/login" style="display:inline-flex;align-items:center;gap:6px;' +
-        'min-height:44px;padding:8px 12px;border-radius:8px;font-size:15px;font-weight:600">' +
-        icon("user", 20) + '<span class="lbl">로그인</span></a>' +
       '<a class="btn btn-pri btn-sm" href="/join">' + icon("store", 18) + '업체 입점하기</a>' +
     '</div>' +
   '</div></header>';
@@ -93,8 +94,12 @@ function bizRows(){
     ["전화", "phone"], ["이메일", "email"], ["개인정보 보호책임자", "privacyOfficer"]
   ].filter(function(r){ return W.bizVal(r[1]); });
   if(!rows.length){
-    console.warn("  ⚠️ 사업자 정보 여덟 칸이 비어 있습니다 — 영업 시작 전에 " +
-                 "js/data/site.js 를 채우세요 (전자상거래법 제10조).");
+    /* ⚠️ 화면마다 한 번씩 찍으면 빌드 기록이 같은 말로 덮입니다 — 한 번만 */
+    if(!bizRows.warned){
+      bizRows.warned = true;
+      console.warn("  ⚠️ 사업자 정보 여덟 칸이 비어 있습니다 — 영업 시작 전에 " +
+                   "js/data/site.js 를 채우세요 (전자상거래법 제10조).");
+    }
     return "";
   }
   return '<div class="ft-biz"><dl>' + rows.map(function(r){
@@ -106,8 +111,8 @@ function footer(){
   var B = W.AM_BRAND;
   var cols = [
     ["서비스", W.amCatsOf("provider").slice(0,5).map(function(c){
-        return ["/c/" + c.key, c.name]; })],
-    ["이용 안내", [["/guide","이용안내"], ["/notice","고객센터"], ["/join","업체 입점하기"]]],
+        return [W.amCatUrl(c), c.name]; })],
+    ["이용 안내", [["/guide","이용안내"], ["/help","고객센터"], ["/join","업체 입점하기"]]],
     ["약관 · 방침", [["/terms","이용약관"], ["/privacy","개인정보처리방침"]]]
   ];
   return '<footer class="ft"><div class="wrap">' +
@@ -165,6 +170,11 @@ function page(o){
     '</head>\n<body>\n' +
     '<a class="skip" href="#main">본문 바로가기</a>\n' +
     header() + '\n<main id="main">\n' + o.body + '\n</main>\n' + footer() + '\n' +
+    /* ⚠️ 자바스크립트는 **덧대는 것**입니다. 본문은 이미 위에 다 있습니다 —
+       스크립트가 안 돌아도 화면이 비지 않습니다. */
+    (o.js ? ['/js/components/base.js','/js/data/brand.js','/js/data/catalog.js', o.js]
+              .map(function(f){ return '<script src="' + f + ver(f.replace(/^\//,"")) + '"></script>\n'; })
+              .join("") : '') +
     '</body>\n</html>\n';
 }
 
@@ -172,10 +182,55 @@ module.exports = { page: page, header: header, footer: footer, ver: ver,
                    W: W, SITE_LIVE: SITE_LIVE };
 
 if(require.main === module){
+  var routeGuard = require("./tools/check-routes.js");
+  var cat  = require("./pages/category.js");
   var home = require("./pages/home.js");
-  var out = page(home.build());
-  fs.writeFileSync("index.html", out);
-  console.log("index.html  " + out.length.toLocaleString("ko-KR") + " 글자");
+  var list = require("./pages/categories.js");
+  var flat = ["guide", "help", "join", "search"].map(function(n){
+    return require("./pages/" + n + ".js").build();
+  });
+
+  var built = [home.build(), list.build()]
+    .concat(W.AM_CATS.map(function(c){ return cat.build(c); }))
+    .concat(flat);
+
+  /* ⚠️⚠️ 찍기 전에 **주소가 vercel.json 에 잡아먹히는지** 먼저 봅니다.
+     걸리면 저장소에는 파일이 멀쩡한데 손님에게는 410 이 나갑니다 —
+     로컬에서는 영원히 안 보이는 고장입니다. */
+  var eaten = built.map(function(b){
+    return { r: b.route, hit: routeGuard.swallows(b.route) };
+  }).filter(function(x){ return x.hit; });
+  if(eaten.length){
+    eaten.forEach(function(x){
+      console.error("❌ " + x.r + " 은 vercel.json 의 '" + x.hit.s + "' 에 걸려 " +
+                    x.hit.d + " 로 갑니다");
+    });
+    process.exit(1);
+  }
+
+  built.forEach(function(b){
+    var file = b.route === "/" ? "index.html"
+             : b.route.replace(/^\//, "") + "/index.html";
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, page(b));
+  });
+
+  /* 같은 제목이 둘이면 검색엔진이 둘 다 흘립니다 — 빌드에서 멈춥니다 */
+  var seen = {}, dup = [];
+  built.forEach(function(b){
+    var t = W.amTitle(b.title, b.route);
+    if(seen[t]) dup.push(t + "  (" + seen[t] + " · " + b.route + ")");
+    seen[t] = b.route;
+  });
+  if(dup.length){ dup.forEach(function(d){ console.error("❌ 제목이 겹칩니다: " + d); }); process.exit(1); }
+
+  /* 찍은 주소를 적어 둡니다 — 전수 점검이 인자 없이 돌 때 이것을 읽습니다.
+     ⚠️ 주소가 **사라지는** 것도 여기서 보입니다 (전 목록과 견주세요). */
+  fs.writeFileSync("tools/routes.json",
+    JSON.stringify(built.map(function(b){ return b.route; }), null, 2) + "\n");
+
+  console.log("화면 " + built.length + "장 찍었습니다 — " +
+              built.map(function(b){ return b.route; }).join(" "));
   if(!SITE_LIVE)
     console.warn("  ⚠️⚠️ SITE_LIVE 가 false 입니다 — 모든 화면에 noindex 가 붙습니다. " +
                  "영업을 시작하는 날 build.js 에서 true 로 바꾸세요.");

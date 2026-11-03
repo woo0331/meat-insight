@@ -229,3 +229,76 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 /* 이용 방법 — 번호. ⚠️ 중간 밝기 그린 면 위라 --lime-on-mid 입니다
    (--lime-on-dark 를 쓰면 4.45 로 AA 에 걸립니다). */
 .step-n{ color: var(--lime-on-mid); font-weight:800; font-size:13px; letter-spacing:.2em; }
+
+/* ── 하위 화면의 머리 ──────────────────────────────────── */
+.pghd{ background: var(--grn-soft); border-bottom:1px solid var(--grn-line);
+       padding-block: 26px 32px; }
+.pghd h1{ font-size: clamp(26px, 3.4vw, 38px); margin-top:10px; }
+.pghd-l{ margin-top:12px; color: var(--ink2); font-size:16px; max-width:70ch; }
+
+.crumb{ display:flex; align-items:center; gap:4px; flex-wrap:wrap;
+        font-size:13.5px; color: var(--ink3); }
+.crumb a{ display:inline-flex; align-items:center; min-height:40px; padding-inline:2px;
+          color: var(--grn-text); font-weight:600; }
+.crumb a:hover{ text-decoration: underline; }
+.crumb .ic{ color: var(--ink3); flex:none; }
+.crumb span[aria-current]{ display:inline-flex; align-items:center; min-height:40px; }
+
+/* ── 칩 ───────────────────────────────────────────────
+   ⚠️ .chip 은 **글**입니다. 누르는 것은 .chip-go 뿐입니다 —
+   눌러도 아무 일이 안 나는 칸을 만들지 않습니다. */
+.chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.chip{ display:inline-flex; align-items:center; gap:6px;
+       min-height:40px; padding:8px 15px; border-radius: var(--r-pill);
+       background:#fff; border:1.5px solid var(--line);
+       font-size:14.5px; color: var(--ink2); }
+.chip-go{ border-color: var(--grn-line); color: var(--grn-text); font-weight:600; }
+.chip-go:hover{ background: var(--grn-soft); }
+.chip-go .ic{ color: var(--grn); }
+
+/* ── 카테고리 전체보기 ─────────────────────────────────── */
+.calist{ display:grid; gap:16px; grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 760px){ .calist{ grid-template-columns: 1fr; } }
+.ca{ border:1.5px solid var(--line); border-radius: var(--r);
+     background:#fff; padding: 18px 20px 20px; }
+.ca-h{ display:flex; align-items:center; gap:10px; min-height:44px; }
+.ca-h .ic{ color: var(--grn); flex:none; }
+.ca-n{ font-size:18px; font-weight:700; color: var(--ink); }
+.ca-k{ margin-left:auto; font-size:12.5px; color: var(--grn-text);
+       background: var(--grn-soft); border-radius: var(--r-pill); padding:4px 10px; }
+.ca-l{ margin-top:4px; color: var(--ink3); font-size:14px; }
+.ca-s{ display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+.ca-s li{ font-size:13.5px; color: var(--ink2);
+          background: var(--bg-2); border-radius: var(--r-sm); padding:6px 11px; }
+
+/* ── 절차 목록 ────────────────────────────────────────── */
+.flow{ display:grid; gap:12px; grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 760px){ .flow{ grid-template-columns: 1fr; } }
+.flow li{ display:flex; gap:14px; background:#fff; border:1.5px solid var(--line);
+          border-radius: var(--r); padding:18px 20px; }
+.flow-n{ flex:none; width:30px; height:30px; border-radius:50%;
+         background: var(--grn); color:#fff; font-weight:800; font-size:14px;
+         display:flex; align-items:center; justify-content:center; }
+.flow h3{ font-size:16.5px; }
+.flow p{ margin-top:5px; font-size:14.5px; color: var(--ink3); }
+
+/* ── 알림 목록 ────────────────────────────────────────── */
+.notes{ display:grid; gap:10px; max-width:80ch; }
+.notes li{ position:relative; padding-left:18px; font-size:15.5px; color: var(--ink2); }
+.notes li::before{ content:""; position:absolute; left:0; top:11px;
+                   width:7px; height:7px; border-radius:50%; background: var(--lime); }
+.notes b{ color: var(--ink); }
+.notes a{ color: var(--grn-text); font-weight:700; text-decoration: underline; }
+
+/* ── 연락 방법 ────────────────────────────────────────── */
+.ways{ display:grid; gap:14px; grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 760px){ .ways{ grid-template-columns: 1fr; } }
+.way{ display:flex; gap:12px; background:#fff; border:1.5px solid var(--line);
+      border-radius: var(--r); padding:18px 20px; }
+.way .ic{ color: var(--grn); flex:none; }
+.way h3{ font-size:16px; }
+.way p{ margin-top:4px; font-size:15px; color: var(--ink2); }
+.way-h{ color: var(--ink3); font-size:13.5px; }
+
+/* ⚠️ 문단 끝의 단추 — 문장 속 링크(19px)를 대신합니다 */
+.notes-go{ display:flex; width:max-content; margin-top:10px; }

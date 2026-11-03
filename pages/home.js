@@ -60,7 +60,7 @@ function cats(){
     '<h2 id="cats-h" class="sr">서비스 분류</h2>' +
     '<div class="cats-in"><div class="cat-grid">' +
     W.AM_CATS.map(function(c){
-      return '<a class="cat" href="/c/' + esc(c.key) + '">' +
+      return '<a class="cat" href="' + esc(W.amCatUrl(c)) + '">' +
         icon(c.icon, 34) +
         '<span class="cat-n">' + esc(c.name) + '</span>' +
         '<span class="cat-l">' + esc(c.lead) + '</span>' +
@@ -76,7 +76,7 @@ function feats(){
     '<div class="feat">' + FEAT.map(function(f, i){
       var c = W.amCat(f.key);
       if(!c) return "";   /* ⚠️ 없는 키면 카드를 안 그립니다 — 빈 칸을 남기지 않습니다 */
-      return '<a class="feat-c feat-' + (i+1) + '" href="/c/' + esc(c.key) + '">' +
+      return '<a class="feat-c feat-' + (i+1) + '" href="' + esc(W.amCatUrl(c)) + '">' +
         '<h3>' + esc(c.name) + '</h3><p>' + esc(f.line) + '</p>' +
         '<span class="go">' + icon("arrow",20) + '</span></a>';
     }).join("") + '</div>' +

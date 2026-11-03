@@ -199,6 +199,16 @@ window.amSub = function(subKey){
 window.amCatsOf = function(kind){
   return (window.AM_CATS || []).filter(function(c){ return c.kind === kind; });
 };
+/* ⚠️⚠️ **분류 주소는 여기서만 짓습니다.** 한 번 build.js 에서만 /cat/ 으로
+   바꾸고 링크는 /c/ 로 남겨 둔 적이 있습니다 — 화면 열두 장의 링크
+   예순다섯 곳이 전부 410 으로 갈 뻔했습니다 (tools/check-links.js 가
+   잡았습니다). 주소를 바꾸실 때도 이 함수 하나만 고치세요.
+   ⚠️ c 한 글자는 못 씁니다 — vercel.json 이 /c/:p* 를 410 으로 보냅니다. */
+window.amCatUrl = function(c){
+  var key = (typeof c === "string") ? c : (c && c.key);
+  return key ? "/cat/" + key : "/categories";
+};
+
 window.amCatIsProvider = function(c){
   if(typeof c === "string") c = window.amCat(c);
   return !!(c && c.kind === "provider");

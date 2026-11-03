@@ -35,8 +35,11 @@ function serve(port){
   var s = http.createServer(function(q, r){
     var u = decodeURIComponent(q.url.split("?")[0]);
     var f = path.join(ROOT, u === "/" ? "index.html" : u);
+    /* ⚠️ 폴더면 그 안의 index.html 을 섬깁니다 (cleanUrls:true 와 같게).
+       처음에는 폴더를 그냥 404 로 떨어뜨려 멀쩡한 화면 열한 장을
+       실패로 잡았습니다 — 화면이 아니라 **검사가 틀린 자리**입니다. */
     if(!fs.existsSync(f) && fs.existsSync(f + ".html")) f = f + ".html";
-    if(!fs.existsSync(f) && fs.existsSync(path.join(f, "index.html"))) f = path.join(f, "index.html");
+    if(fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, "index.html");
     if(!fs.existsSync(f) || fs.statSync(f).isDirectory()){ r.writeHead(404); return r.end("404"); }
     r.writeHead(200, { "Content-Type": T[path.extname(f)] || "application/octet-stream" });
     r.end(fs.readFileSync(f));
@@ -130,7 +133,11 @@ function hex(a){ return "#" + a.map(function(n){ return ("0"+Math.round(n).toStr
 
 (async function(){
   var routes = process.argv.slice(2).filter(function(a){ return a[0] !== "-"; });
-  if(!routes.length) routes = ["/"];
+  if(!routes.length){
+    /* 인자가 없으면 빌드가 적어 둔 주소 **전부** 를 돕니다 */
+    var rf = path.join(__dirname, "routes.json");
+    routes = fs.existsSync(rf) ? JSON.parse(fs.readFileSync(rf, "utf8")) : ["/"];
+  }
   var prove = process.argv.indexOf("--prove") >= 0;
   var port = 8731 + (process.pid % 90);
   var srv = await serve(port);

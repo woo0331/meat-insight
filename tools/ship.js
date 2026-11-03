@@ -26,10 +26,13 @@ const quick = process.argv.indexOf("--quick") >= 0;
 const STEPS = [
   ["화면을 찍습니다",            ["build.js"],                    false],
   ["붙여넣기 파일을 다시 만듭니다", ["tools/make-apply.js"],         false],
+  ["주석이 코드를 삼키나",        ["tools/check-comments.js", "--prove"], false],
   ["분류 키가 옛 키와 겹치나",     ["tools/check-keys.js"],         false],
+  ["키 · 헤더 · CSP",            ["tools/check-safe.js"],         false],
   ["주소가 vercel 규칙에 걸리나",  ["tools/check-routes.js", "--prove"], false],
   ["링크가 실제로 열리나",        ["tools/check-links.js"],        false],
   ["네 폭에서 전부 잽니다",       ["tools/check-screens.js"],      false],
+  ["접근성을 잽니다",            ["tools/check-a11y.js"],         false],
   ["입점 신청 양식을 눌러 봅니다", ["tools/test-join.js"],          false],
   ["관리자 화면을 눌러 봅니다",    ["tools/test-admin.js"],         false],
   ["DB 를 눌러 봅니다",          ["tools/test-sql.js"],           true]
@@ -63,7 +66,8 @@ for(const [name, argv, needsPg] of STEPS){
 console.log("\n▶ 빌드 결과가 커밋과 같은가  (git status)");
 const g = spawnSync("git", ["status", "--porcelain", "--",
   "index.html", "cat", "categories", "guide", "help", "join", "search",
-  "login", "my", "admin", "tools/routes.json", "db/apply-from-0008.sql"],
+  "login", "my", "admin", "terms", "privacy",
+  "tools/routes.json", "db/apply-from-0008.sql", "sitemap.xml", "robots.txt"],
   { cwd: ROOT, stdio:["ignore","pipe","pipe"] });
 const dirty = (g.stdout || "").toString().trim();
 if(dirty){

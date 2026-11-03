@@ -31,7 +31,7 @@
       "SUPABASE_URL · SUPABASE_ANON_KEY 를 넣고 다시 배포하세요."); }catch(e){}
     /* ⚠️⚠️ 조사를 글자로 박지 않습니다. "내 정보은" · "관리자은" 으로
        나갔습니다 — 받침에 따라 갈립니다 (js/data/korean.js 의 koWith). */
-    return "<h3>" + esc(window.koWith(what, "은는")) + " 아직 열지 않았습니다.</h3>" +
+    return "<h2>" + esc(window.koWith(what, "은는")) + " 아직 열지 않았습니다.</h2>" +
       "<p>문을 열기 전이라 로그인을 받지 않습니다. 준비가 끝나기 전에는 " +
       "양식을 열지 않습니다 — 다 적으신 뒤에 실패하는 일이 없도록.</p>" +
       '<a class="btn btn-line" href="/categories">카테고리 둘러보기</a>';
@@ -59,12 +59,12 @@
     if(!a.on) return say(box, offNote("로그인"));
     if(a.signedIn){
       return say(box,
-        "<h3>이미 로그인하셨습니다.</h3>" +
+        "<h2>이미 로그인하셨습니다.</h2>" +
         "<p>" + esc(a.name || "회원") + "님 — " + esc(ROLE_NAME[a.role] || a.role) + "</p>" +
         '<a class="btn btn-pri" href="/my">내 정보로 가기</a>');
     }
     say(box,
-      "<h3>메일로 받은 링크로 들어옵니다.</h3>" +
+      "<h2>메일로 받은 링크로 들어옵니다.</h2>" +
       "<p>비밀번호를 받지 않습니다. 적으신 주소로 한 번 쓰는 링크를 보내 드립니다.</p>" +
       '<form id="lf" class="lform"><label class="sr" for="le">이메일</label>' +
       '<input id="le" type="email" name="email" required autocomplete="email" ' +
@@ -106,7 +106,7 @@
     var box = el("mybox"); if(!box) return;
     if(!a.on)       return say(box, offNote("내 정보"));
     if(!a.signedIn) return say(box,
-      "<h3>로그인하시면 내 정보가 보입니다.</h3>" +
+      "<h2>로그인하시면 내 정보가 보입니다.</h2>" +
       "<p>메일로 받은 링크 한 번이면 됩니다.</p>" +
       '<a class="btn btn-pri" href="/login">로그인하기</a>');
 
@@ -149,12 +149,12 @@
     var box = el("adminbox"); if(!box) return;
     if(!a.on)       return say(box, offNote("관리자"));
     if(!a.signedIn) return say(box,
-      "<h3>로그인이 필요합니다.</h3>" +
+      "<h2>로그인이 필요합니다.</h2>" +
       '<a class="btn btn-pri" href="/login">로그인하기</a>');
     if(a.role !== "admin" && a.role !== "staff")
       /* ⚠️ 왜 안 되는지 자세히 적지 않습니다 — 권한 구조를 알려 주는
          글이 됩니다. 손님에게는 여기까지. */
-      return say(box, "<h3>이 화면은 운영자만 볼 수 있습니다.</h3>" +
+      return say(box, "<h2>이 화면은 운영자만 볼 수 있습니다.</h2>" +
         '<a class="btn btn-line" href="/">홈으로</a>');
 
     box.hidden = false; box.className = "adminbox";

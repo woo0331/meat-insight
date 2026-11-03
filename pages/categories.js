@@ -37,6 +37,15 @@ exports.build = function(){
   return {
     route: "/categories",
     title: "카테고리 전체보기",
+    /* ⚠️ 화면의 crumb 과 **같은 길**입니다 — 두 곳에 적으면 검색엔진에
+       나가는 길과 손님이 보는 길이 어긋납니다. */
+    crumbs: [["카테고리 전체보기", "/categories"]],
+    ld: { "@context":"https://schema.org", "@type":"ItemList",
+          name:"골프올인원 서비스 분류",
+          itemListElement: W.AM_CATS.map(function(c, i){
+            return { "@type":"ListItem", position:i+1, name:c.name,
+                     url: W.amCatUrl(c) };
+          }) },
     desc: "골프올인원의 서비스 분류 " + W.AM_CATS.length + "가지와 항목 " + subs +
           "개를 한 화면에서 봅니다. " +
           W.AM_CATS.map(function(c){ return c.name; }).join(" · ") + ".",

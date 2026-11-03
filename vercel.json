@@ -11,6 +11,11 @@
       "source": "/partners",
       "destination": "/join",
       "permanent": true
+    },
+    {
+      "source": "/faq",
+      "destination": "/help",
+      "permanent": true
     }
   ],
   "rewrites": [
@@ -145,6 +150,46 @@
     {
       "source": "/a/:p*",
       "destination": "/api/gone"
+    },
+    {
+      "source": "/sell",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/shop",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/repair",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/price",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/mvno",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/bid",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/track",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/biz",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/business",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/quote",
+      "destination": "/api/gone"
     }
   ],
   "headers": [
@@ -200,7 +245,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self'"
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://*.supabase.co"
         }
       ]
     }

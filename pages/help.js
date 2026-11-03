@@ -35,7 +35,7 @@ exports.build = function(){
     console.warn("  ⚠️ /help — 전화 · 이메일이 비어 있어 연락처를 못 냈습니다 " +
                  "(js/data/site.js 의 phone · email · hours).");
     body += '<section class="sec"><div class="wrap"><div class="none">' +
-      '<h3>지금은 문의를 받지 못합니다.</h3>' +
+      '<h2>지금은 문의를 받지 못합니다.</h2>' +
       '<p>문을 열기 전이라 받을 자리를 준비하고 있습니다. 없는 연락처를 적어 두지 않습니다.</p>' +
       '<a class="btn btn-line" href="/categories">' + icon("arrow",18) + '카테고리 둘러보기</a>' +
     '</div></div></section>';
@@ -56,7 +56,7 @@ exports.build = function(){
     '</ul></div></section>';
 
   return {
-    route: "/help", title: "고객센터",
+    route: "/help", title: "고객센터", crumbs: [["고객센터", "/help"]],
     desc: "골프올인원 고객센터 — 이용 중 막히는 곳, 업체와의 문제, 입점 문의를 받습니다.",
     body: body
   };

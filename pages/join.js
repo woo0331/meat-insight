@@ -65,19 +65,19 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div class="sec-hd"><h2>입점 신청</h2></div>' +
     '<div id="joinbox" class="none">' +
-      '<h3>지금은 입점 신청을 받지 못합니다.</h3>' +
+      '<h2>지금은 입점 신청을 받지 못합니다.</h2>' +
       '<p>받을 자리를 준비하고 있습니다. 다 적으신 뒤에 실패하는 일이 없도록, ' +
       '준비가 끝나기 전에는 양식을 열지 않습니다.</p>' +
       '<a class="btn btn-line" href="/guide">이용안내 먼저 보기</a>' +
     '</div></div></section>';
 
   return {
-    route: "/join", title: "업체 입점하기",
+    route: "/join", title: "업체 입점하기", crumbs: [["업체 입점하기", "/join"]],
     desc: "골프 레슨 · 골프장 부킹 · 연습장 · 용품 · 피팅 · 여행 업체의 골프올인원 입점 안내. " +
           "입점과 업체 정보 등록은 무료이며, 연결 · 거래가 성사될 때 수수료가 발생합니다.",
     body: body,
     /* ⚠️ site.js 를 같이 읽습니다 — 보유 기간(applyKeep)이 거기 있습니다.
        화면에 다시 적으면 한쪽만 고쳐서 방침과 어긋납니다. */
-    js: ["/js/data/site.js", "/js/auth.js", "/js/applyform.js"]
+    js: ["/js/data/site.js", "/js/data/regions.js", "/js/auth.js", "/js/applyform.js"]
   };
 };

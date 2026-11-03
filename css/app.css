@@ -191,7 +191,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
   border:1.5px dashed var(--grn-line); background: var(--grn-soft);
   border-radius: var(--r); padding: 26px 22px; text-align:center;
 }
-.none h3{ font-size:17px; }
+.none h2{ font-size:17px; }
 .none p{ margin-top:8px; color: var(--ink3); font-size:15px; }
 .none .btn{ margin-top:16px; }
 
@@ -210,7 +210,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .ft a:hover{ color:#fff; text-decoration: underline; }
 .ft-top{ display:flex; gap:34px; flex-wrap:wrap; justify-content:space-between; }
 .ft-nav{ display:flex; gap:26px; flex-wrap:wrap; }
-.ft-nav h4{ color:#fff; font-size:14px; margin-bottom:10px; }
+.ft-nav .ft-h{ color:#fff; font-size:14px; margin-bottom:10px; }
 /* ⚠️ 푸터 링크도 누르는 것입니다. 글줄만 두면 17px 이라
    손가락으로 못 누릅니다 — min-height 와 flex 를 같이 둡니다.
    padding 만으로 만들면 짧은 이름에서 다시 낮아집니다. */
@@ -357,12 +357,13 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .jrow-full{ grid-column: 1 / -1; }
 .jrow label{ font-size:14.5px; font-weight:700; color: var(--ink); }
 .jrow label b{ color: var(--bad-text); }
-.jform input, .jform textarea{
+.jform input, .jform textarea, .jform select{
   min-height:46px; border:1.5px solid var(--line); border-radius: var(--r-sm);
   padding:10px 14px; font-size:16px; color: var(--ink); background:#fff;
   font-family: inherit; }
 .jform textarea{ min-height:96px; resize: vertical; }
-.jform input:focus, .jform textarea:focus{ outline:2px solid var(--grn); outline-offset:1px; }
+.jform select{ appearance:none; background-image:none; }
+.jform input:focus, .jform textarea:focus, .jform select:focus{ outline:2px solid var(--grn); outline-offset:1px; }
 
 .svcs{ display:grid; gap:12px; grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 900px){ .svcs{ grid-template-columns: repeat(2, 1fr); } }
@@ -403,3 +404,27 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .apl-d{ margin-top:8px; font-size:15px; color: var(--ink2); }
 .apl-s{ margin-top:4px; font-size:13.5px; color: var(--ink3); }
 .apl-b{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+
+/* ── 약관 · 방침 ─
+   ⚠️⚠️ **클래스 이름이 .lg 였다가 로고(.lg)와 겹쳤습니다.** 로고의
+   display:flex 가 약관 본문에 걸려 조문 스무 개가 **가로로 늘어섰습니다.**
+   에러도 안 나고 PC 에서는 티도 안 났습니다 — 전수 점검의 '글자 두 배'
+   검사가 잡았습니다. 짧은 클래스 이름을 두 곳에 쓰지 마세요.──────────────────────────────────────────── */
+.doc{ max-width: 80ch; }
+.doc-eff{ margin-top:10px; font-size:14px; color: var(--ink3); }
+.doc-a{ margin-bottom:30px; }
+.doc-a h2{ font-size:18px; padding-bottom:8px; border-bottom:1.5px solid var(--line); }
+.doc-a p{ margin-top:12px; font-size:15.5px; color: var(--ink2); }
+.doc-ul{ margin-top:12px; display:grid; gap:7px; }
+.doc-ul li{ position:relative; padding-left:16px; font-size:15.5px; color: var(--ink2); }
+.doc-ul li::before{ content:""; position:absolute; left:0; top:10px;
+                   width:6px; height:6px; border-radius:50%; background: var(--lime); }
+/* ⚠️ 표는 폰에서 가로로 넘칩니다 — 칸째 가로 스크롤을 줍니다
+   (화면 전체가 가로로 밀리면 전수 점검이 잡습니다). */
+.doc-t{ margin-top:12px; overflow-x:auto; border:1.5px solid var(--line); border-radius: var(--r-sm); }
+.doc-t table{ border-collapse:collapse; width:100%; min-width:520px; font-size:14.5px; }
+.doc-t th, .doc-t td{ padding:11px 13px; text-align:left; vertical-align:top;
+                    border-bottom:1px solid var(--line-soft); }
+.doc-t th{ background: var(--bg-2); color: var(--ink); font-weight:700; white-space:nowrap; }
+.doc-t td{ color: var(--ink2); }
+.doc-t tr:last-child td{ border-bottom:0; }

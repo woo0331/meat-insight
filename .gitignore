@@ -13,3 +13,9 @@ img/raw/
 node_modules/
 package-lock.json
 .DS_Store
+
+# 키는 저장소에 넣지 않습니다 — 공개 저장소입니다
+.env
+.env.*
+*.pem
+*.key

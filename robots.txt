@@ -1,0 +1,5 @@
+# 아직 문을 열기 전입니다 — 전부 막습니다.
+# 영업을 시작하는 날 build.js 의 SITE_LIVE 를 true 로 바꾸면
+# 이 파일이 Allow 로 다시 찍힙니다.
+User-agent: *
+Disallow: /

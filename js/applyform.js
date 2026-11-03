@@ -57,9 +57,20 @@
         '<label for="j-email">이메일</label>' +
         '<input id="j-email" name="email" type="email" autocomplete="email">' +
       '</div>' +
+      /* ⚠️⚠️ **자유 입력이 아니라 고르는 칸입니다.** 앞 서비스가 "화면이
+         보낸 글 그대로" 저장했다가 경기 · gyeonggi · 경기도 가 섞여
+         거르개가 조용히 어긋났습니다 (0016 머리말). 목록은
+         js/data/regions.js **한 곳**에서 옵니다.
+         ⚠️ select 안의 글자는 낱말 잘림 검사에도 가로 스크롤 검사에도
+         안 걸립니다 — tools/test-join.js 가 글자 폭을 따로 잽니다. */
       '<div class="jrow">' +
         '<label for="j-region">영업 지역</label>' +
-        '<input id="j-region" name="region" maxlength="40" placeholder="예: 경기 성남시">' +
+        '<select id="j-region" name="region">' +
+          '<option value="">고르지 않음</option>' +
+          (window.AM_REGIONS || []).map(function(r){
+            return '<option value="' + esc(r.name) + '">' + esc(r.full) + '</option>';
+          }).join("") +
+        '</select>' +
       '</div>' +
       '<div class="jrow jrow-full">' +
         '<label>하시는 일 <b>*</b></label>' +
@@ -119,7 +130,7 @@
       });
     }).then(function(no){
       /* ⚠️ "접수됐습니다" 는 **실제로 들어간 뒤에만** 말합니다. */
-      box.innerHTML = '<div class="none"><h3>접수됐습니다.</h3>' +
+      box.innerHTML = '<div class="none"><h2>접수됐습니다.</h2>' +
         '<p>신청번호 <b>' + esc(String(no).replace(/^"|"$/g, "")) + '</b> 입니다. ' +
         '확인한 뒤 적어 주신 연락처로 연락드립니다.</p>' +
         '<a class="btn btn-line" href="/guide">이용안내 보기</a></div>';

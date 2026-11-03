@@ -52,7 +52,7 @@ exports.build = function(){
     '</ul></div></section>';
 
   return {
-    route: "/guide", title: "이용안내",
+    route: "/guide", title: "이용안내", crumbs: [["이용안내", "/guide"]],
     desc: "골프올인원 이용안내 — 손님은 분류나 검색으로 업체를 찾아 비교하고 상담을 신청합니다. " +
           "업체는 입점 신청 뒤 확인을 거쳐 손님 문의를 받습니다. 골프올인원은 통신판매중개자이며 거래 당사자가 아닙니다.",
     body: body

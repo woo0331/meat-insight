@@ -29,23 +29,9 @@ var ROOT = path.join(__dirname, "..");
 var WIDTHS = [360, 414, 768, 1440];
 var MIN_FONT = 12, MIN_TAP = 40;
 
-function serve(port){
-  var T = { ".html":"text/html;charset=utf-8", ".css":"text/css;charset=utf-8",
-            ".js":"text/javascript;charset=utf-8", ".svg":"image/svg+xml", ".png":"image/png" };
-  var s = http.createServer(function(q, r){
-    var u = decodeURIComponent(q.url.split("?")[0]);
-    var f = path.join(ROOT, u === "/" ? "index.html" : u);
-    /* ⚠️ 폴더면 그 안의 index.html 을 섬깁니다 (cleanUrls:true 와 같게).
-       처음에는 폴더를 그냥 404 로 떨어뜨려 멀쩡한 화면 열한 장을
-       실패로 잡았습니다 — 화면이 아니라 **검사가 틀린 자리**입니다. */
-    if(!fs.existsSync(f) && fs.existsSync(f + ".html")) f = f + ".html";
-    if(fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, "index.html");
-    if(!fs.existsSync(f) || fs.statSync(f).isDirectory()){ r.writeHead(404); return r.end("404"); }
-    r.writeHead(200, { "Content-Type": T[path.extname(f)] || "application/octet-stream" });
-    r.end(fs.readFileSync(f));
-  });
-  return new Promise(function(ok){ s.listen(port, function(){ ok(s); }); });
-}
+/* 서버는 tools/_serve.js 한 곳에 있습니다 — 운영과 같은 헤더를 보냅니다 */
+const { serve, watch } = require("./_serve.js");
+
 
 /* 화면 안에서 재는 글 — ⚠️ 여기서 돌아오는 값만 믿습니다.
    보이지 않는 칸(offsetParent 가 없는 것)은 건너뜁니다. */
@@ -140,7 +126,7 @@ function hex(a){ return "#" + a.map(function(n){ return ("0"+Math.round(n).toStr
   }
   var prove = process.argv.indexOf("--prove") >= 0;
   var port = 8731 + (process.pid % 90);
-  var srv = await serve(port);
+  var srv = (await serve(port)).srv;
   var b = await chromium.launch();
   var bad = 0, measured = 0;
 
@@ -184,7 +170,7 @@ function hex(a){ return "#" + a.map(function(n){ return ("0"+Math.round(n).toStr
     console.log("\n되돌려 보기 — 일부러 깨뜨립니다");
     var css = path.join(ROOT, "css/app.css"), keep = fs.readFileSync(css, "utf8");
     fs.writeFileSync(css, keep + "\n.cat-l{font-size:9px}\n.btn{min-height:22px;padding:0 10px}\n");
-    var b2 = await chromium.launch(); var srv2 = await serve(port + 1);
+    var b2 = await chromium.launch(); var srv2 = (await serve(port + 1)).srv;
     var p2 = await b2.newPage({ viewport:{ width:1440, height:900 } });
     await p2.goto("http://127.0.0.1:" + (port+1) + "/", { waitUntil:"networkidle" });
     var r2 = await p2.evaluate(PROBE, { font: MIN_FONT, tap: MIN_TAP });

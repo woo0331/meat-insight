@@ -45,11 +45,12 @@ var KIND = {
   }
 };
 
-/* 지금 등록 · 신청을 실제로 받을 수 있는가.
-   ⚠️⚠️ 접수처(환경변수)가 꺼져 있으면 **단추를 내지 않습니다.** 손님이
-   눌렀다가 막다른 길에 서는 것을 막습니다 (절대 규칙 5). 무엇을
-   설정해야 하는지는 손님 화면이 아니라 운영자에게만 말합니다. */
-function intakeOn(){ return W.bizVal("sosReady") === true; }
+/* ⚠️⚠️ **입점 단추는 늘 냅니다.** 이 단추는 "신청을 보낸다" 가 아니라
+   입점 화면으로 **가는 것**입니다 — 가 보면 지금 받을 수 있는지를 그
+   화면이 스스로 말합니다. 눌러도 아무 일이 안 나는 단추가 아닙니다.
+   ⚠️ 전에는 sosReady(슬랙 접수처)로 막고 있었는데, 입점 신청은 이제
+   슬랙이 아니라 DB 로 들어갑니다 (0027). 조건을 두 곳에 두면 한쪽만
+   고쳐서 조용히 어긋납니다 — 판단은 /join 한 곳에서만 합니다. */
 
 function crumbs(c){
   return '<nav class="crumb" aria-label="현재 위치">' +
@@ -91,21 +92,18 @@ exports.build = function(c){
     : "";
 
   var zero = '<section class="sec sec-alt"><div class="wrap"><div class="none">' +
-    '<h3>' + esc(k.zeroT) + '</h3>' +
+    '<h2>' + esc(k.zeroT) + '</h2>' +
     '<p>' + esc(k.zeroD) + '</p>' +
-    (k.cta && intakeOn()
+    (k.cta
       ? '<a class="btn btn-pri" href="' + esc(k.cta[0]) + '">' +
         icon(k.cta[2], 20) + esc(k.cta[1]) + '</a>'
       : '') +
   '</div></div></section>';
 
-  if(k.cta && !intakeOn())
-    console.warn("  ⚠️ /cat/" + c.key + " — 접수처가 꺼져 있어 '" + k.cta[1] +
-                 "' 단추를 내지 않았습니다 (js/data/site.js 의 sosReady).");
-
   return {
     route: W.amCatUrl(c),
     title: c.name,
+    crumbs: [["카테고리 전체보기", "/categories"], [c.name, W.amCatUrl(c)]],
     desc: c.name + " — " + c.lead + ". " + k.what + " " +
           (items.length ? "다루는 것: " + items.map(function(i){ return i.name; }).join(" · ") + "." : ""),
     body: head + subs + zero + related(c)

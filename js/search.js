@@ -29,7 +29,7 @@
   box.hidden = false;
   if(!hit.length){
     box.innerHTML =
-      "<h3>" + esc(q) + " 로 찾은 것이 없습니다.</h3>" +
+      "<h2>" + esc(q) + " 로 찾은 것이 없습니다.</h2>" +
       "<p>아래 분류에서 골라 보세요. 업체는 아직 등록 전이라 0곳입니다 — " +
       "없는 업체를 지어내 보여 드리지 않습니다.</p>";
     return;
@@ -37,7 +37,7 @@
   box.innerHTML =
     /* ⚠️ 손님이 친 글 뒤에 붙는 조사입니다 — 받침에 따라 와/과 가
        갈립니다 ("퍼터와" · "드라이버와" · "아이언과"). */
-    "<h3>" + esc(window.koWith(q, "와과")) + " 맞는 분류 " + hit.length + "가지</h3>" +
+    "<h2>" + esc(window.koWith(q, "와과")) + " 맞는 분류 " + hit.length + "가지</h2>" +
     '<ul class="chips" style="justify-content:center;margin-top:14px">' +
     hit.map(function(c){
       return '<li><a class="chip chip-go" href="' + esc(window.amCatUrl(c)) + '">' +

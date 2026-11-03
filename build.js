@@ -28,7 +28,8 @@ var SITE_LIVE = false;
 /* ── 데이터 읽기 — 브라우저와 같은 파일을 그대로 씁니다 ────────── */
 global.window = {};
 ["js/components/base.js","js/data/korean.js","js/data/brand.js",
- "js/data/site.js","js/data/catalog.js"]
+ "js/data/site.js","js/data/catalog.js",
+ "js/data/legal-terms.js","js/data/legal-privacy.js"]
   .forEach(function(f){ require("./" + f); });
 var W = global.window, esc = W.esc, icon = W.icon;
 
@@ -121,7 +122,9 @@ function footer(){
       '<div><div class="lg-en" style="color:#fff;font-size:18px">' + esc(B.en) + '</div>' +
       '<p style="margin-top:8px;font-size:14px">' + esc(B.sub) + '</p></div>' +
       '<nav class="ft-nav" aria-label="푸터 메뉴">' + cols.map(function(c){
-        return '<div><h4>' + esc(c[0]) + '</h4><ul>' + c[1].map(function(l){
+        /* ⚠️ h4 였다가 접근성 점검에 걸렸습니다 — 본문이 h2 까지만 쓰는데
+           푸터가 h4 로 뛰면 낭독기가 "빠진 단계" 로 읽습니다. */
+        return '<div><h2 class="ft-h">' + esc(c[0]) + '</h2><ul>' + c[1].map(function(l){
           return '<li><a href="' + esc(l[0]) + '">' + esc(l[1]) + '</a></li>';
         }).join("") + '</ul></div>';
       }).join("") + '</nav>' +
@@ -139,14 +142,42 @@ function page(o){
   var B = W.AM_BRAND, site = W.bizVal("site") || "";
   var title = W.amTitle(o.title, o.route);
   var canon = site + (o.route === "/" ? "/" : o.route);
-  var ld = {
+  /* ── 구조화 데이터 ────────────────────────────────────────
+     ⚠️⚠️ **없는 별점(aggregateRating)을 넣지 마세요.** 적발되면 리치
+     결과가 **통째로** 막힙니다. 후기가 쌓이면 그때 실제 배열에서
+     계산해 넣습니다 — 값으로 들고 있지 않습니다.
+     ⚠️ 사업자 정보가 없으면 Organization 을 **안 냅니다.** 빈 칸을
+     넣으면 검색엔진에 틀린 정보를 알리는 것이 됩니다. */
+  var ld = [{
     "@context":"https://schema.org", "@type":"WebSite",
     name: B.name, alternateName: B.en, url: site + "/",
     description: o.desc,
+    inLanguage: "ko-KR",
     potentialAction: { "@type":"SearchAction",
       target: { "@type":"EntryPoint", urlTemplate: site + "/search?q={search_term_string}" },
       "query-input":"required name=search_term_string" }
-  };
+  }];
+
+  var org = { "@context":"https://schema.org", "@type":"Organization",
+              name: B.name, alternateName: B.en, url: site + "/" };
+  var oFields = 0;
+  if(W.bizVal("company")){ org.legalName = W.bizVal("company"); oFields++; }
+  if(W.bizVal("phone")){   org.telephone = W.bizVal("phone");   oFields++; }
+  if(W.bizVal("email")){   org.email     = W.bizVal("email");   oFields++; }
+  if(W.bizVal("address")){ org.address   = { "@type":"PostalAddress",
+                                             streetAddress: W.bizVal("address"),
+                                             addressCountry:"KR" }; oFields++; }
+  if(oFields) ld.push(org);
+
+  /* 빵부스러기 — 화면이 그린 길과 **같은 길**이어야 합니다 */
+  if(Array.isArray(o.crumbs) && o.crumbs.length){
+    ld.push({ "@context":"https://schema.org", "@type":"BreadcrumbList",
+      itemListElement: [["홈","/"]].concat(o.crumbs).map(function(c, i){
+        return { "@type":"ListItem", position: i + 1, name: c[0],
+                 item: site + (c[1] === "/" ? "/" : c[1]) };
+      }) });
+  }
+  if(o.ld) ld.push(o.ld);
   /* ⚠️ 구조화 데이터에 **없는 별점(aggregateRating)을 넣지 마세요** —
      적발되면 리치 결과가 통째로 막힙니다. 후기가 쌓이면 그때 실제
      배열에서 계산해 넣습니다. */
@@ -170,7 +201,13 @@ function page(o){
     '<meta property="og:url" content="' + esc(canon) + '">\n' +
     '<link rel="stylesheet" href="/css/tokens.css' + ver("css/tokens.css") + '">\n' +
     '<link rel="stylesheet" href="/css/app.css' + ver("css/app.css") + '">\n' +
-    '<script type="application/ld+json">' + JSON.stringify(ld) + '</script>\n' +
+    (W.bizVal("naverVerify")
+      ? '<meta name="naver-site-verification" content="' + esc(W.bizVal("naverVerify")) + '">\n' : '') +
+    (W.bizVal("googleVerify")
+      ? '<meta name="google-site-verification" content="' + esc(W.bizVal("googleVerify")) + '">\n' : '') +
+    ld.map(function(x){
+      return '<script type="application/ld+json">' + JSON.stringify(x) + '</script>\n';
+    }).join("") +
     '</head>\n<body>\n' +
     '<a class="skip" href="#main">본문 바로가기</a>\n' +
     header() + '\n<main id="main">\n' + o.body + '\n</main>\n' + footer() + '\n' +
@@ -191,7 +228,8 @@ if(require.main === module){
   var cat  = require("./pages/category.js");
   var home = require("./pages/home.js");
   var list = require("./pages/categories.js");
-  var flat = ["guide", "help", "join", "search", "login", "my", "admin"].map(function(n){
+  var flat = ["guide", "help", "join", "search", "login", "my", "admin",
+               "terms", "privacy"].map(function(n){
     return require("./pages/" + n + ".js").build();
   });
 
@@ -239,6 +277,44 @@ if(require.main === module){
     unlinked: built.filter(function(b){ return b.unlinked; })
                    .map(function(b){ return b.route; })
   }, null, 2) + "\n");
+
+  /* ── 사이트맵 · robots (지시서 9번) ──────────────────────────
+     ⚠️⚠️ **주소 목록은 여기 한 곳에서 나옵니다.** 손으로 적은 사이트맵은
+     화면을 지우거나 늘린 날 조용히 어긋납니다 — 검색엔진이 없는 주소를
+     긁고, 새 주소는 영영 모릅니다.
+     ⚠️ 개인 화면(noindex)은 **빼고** 적습니다. 사이트맵에 넣고 noindex 를
+     거는 것은 "오라고 해 놓고 보지 말라" 는 말이라 둘 다 손해입니다.
+     ⚠️⚠️ SITE_LIVE 가 false 면 robots 가 **전부 막습니다.** 문 열기 전에
+     긁히면 "준비 중" 화면이 검색 결과에 박힙니다. */
+  var site = W.bizVal("site") || "";
+  var pub  = built.filter(function(b){ return !b.noindex; });
+  var day  = new Date().toISOString().slice(0, 10);
+
+  fs.writeFileSync("sitemap.xml",
+    '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+    pub.map(function(b){
+      return "  <url><loc>" + site + (b.route === "/" ? "/" : b.route) + "</loc>" +
+             "<lastmod>" + day + "</lastmod>" +
+             "<changefreq>" + (b.route === "/" ? "daily" : "weekly") + "</changefreq>" +
+             "<priority>" + (b.route === "/" ? "1.0" : "0.7") + "</priority></url>";
+    }).join("\n") + "\n</urlset>\n");
+
+  fs.writeFileSync("robots.txt", SITE_LIVE
+    ? ("User-agent: *\n" +
+       "Allow: /\n" +
+       /* 개인 화면은 긁지 않게 — 사이트맵에도 없습니다 */
+       built.filter(function(b){ return b.noindex; })
+            .map(function(b){ return "Disallow: " + b.route + "\n"; }).join("") +
+       "\nSitemap: " + site + "/sitemap.xml\n")
+    : ("# 아직 문을 열기 전입니다 — 전부 막습니다.\n" +
+       "# 영업을 시작하는 날 build.js 의 SITE_LIVE 를 true 로 바꾸면\n" +
+       "# 이 파일이 Allow 로 다시 찍힙니다.\n" +
+       "User-agent: *\n" +
+       "Disallow: /\n"));
+
+  console.log("사이트맵 " + pub.length + "개 주소 · robots " +
+              (SITE_LIVE ? "열림" : "전부 막음"));
 
   console.log("화면 " + built.length + "장 찍었습니다 — " +
               built.map(function(b){ return b.route; }).join(" "));

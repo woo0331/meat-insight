@@ -109,7 +109,7 @@ function providers(){
   return '<section class="sec"><div class="wrap">' +
     '<div class="sec-hd"><h2>신규 입점업체</h2></div>' +
     '<div class="none">' +
-      '<h3>아직 입점한 업체가 없습니다.</h3>' +
+      '<h2>아직 입점한 업체가 없습니다.</h2>' +
       '<p>문을 열기 전이라 보여 드릴 업체가 없습니다. 없는 업체를 지어내 보여 드리지 않습니다.</p>' +
       '<a class="btn btn-pri" href="/join">' + icon("store",20) + '첫 번째로 입점하기</a>' +
     '</div>' +

@@ -27,22 +27,13 @@ function ok(name, cond, got){
   else { bad++; console.log("  ❌ " + name + (got !== undefined ? "  →  " + String(got).slice(0, 200) : "")); }
 }
 
-function serve(port){
-  const T = { ".html":"text/html;charset=utf-8", ".css":"text/css;charset=utf-8",
-              ".js":"text/javascript;charset=utf-8" };
-  const s = http.createServer(function(q, r){
-    const u = decodeURIComponent(q.url.split("?")[0]);
-    let f = path.join(ROOT, u === "/" ? "index.html" : u);
-    if(!fs.existsSync(f) && fs.existsSync(f + ".html")) f = f + ".html";
-    if(fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, "index.html");
-    if(!fs.existsSync(f) || fs.statSync(f).isDirectory()){ r.writeHead(404); return r.end("404"); }
-    r.writeHead(200, { "Content-Type": T[path.extname(f)] || "application/octet-stream" });
-    r.end(fs.readFileSync(f));
-  });
-  return new Promise(function(done){ s.listen(port, function(){ done(s); }); });
-}
+/* 서버는 tools/_serve.js 한 곳에 있습니다 — 운영과 같은 헤더를 보냅니다 */
+const { serve, watch } = require("./_serve.js");
 
-const FAKE = "http://sb.test";
+
+/* ⚠️ 운영 CSP(connect-src)가 허락하는 꼴이어야 합니다 — 좁히면
+   이 검사가 같이 떨어집니다. 그게 맞습니다. */
+const FAKE = "https://sb-test.supabase.co";
 const ROWS = [
   { id:"11111111-1111-1111-1111-111111111111", no:"GA261103-0001",
     company:"성남 그린골프연습장", name:"홍길동", tel:"010-1234-5678",
@@ -74,7 +65,7 @@ function stub(p, who, applyBody){
 
 (async function(){
   const PORT = 8790 + (process.pid % 50);
-  const srv = await serve(PORT);
+  const srv = (await serve(PORT)).srv;
   const b = await chromium.launch();
   const URL = "http://127.0.0.1:" + PORT + "/admin";
 
@@ -98,14 +89,14 @@ function stub(p, who, applyBody){
   /* ── ② 관리자일 때 ─────────────────────────────────────────── */
   console.log("\n── 관리자는 봅니다");
   p = await b.newPage({ viewport:{ width:1280, height:900 } });
-  let errs = [];
-  p.on("pageerror", function(e){ errs.push(String(e)); });
+  /* ⚠️ CSP 거절과 화면 에러를 같이 모읍니다 (tools/_serve.js 의 watch) */
+  const errs = watch(p);
   await stub(p, { role:"admin", name:"관리자" }, function(r){
     return r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify(ROWS) });
   });
   await p.goto(URL, { waitUntil:"networkidle" });
   await p.waitForTimeout(500);
-  ok("화면 에러가 없다", errs.length === 0, errs.join(" | "));
+  ok("화면 에러 · CSP 거절이 0건이다", errs.length === 0, errs.join(" | "));
   ok("세는 칸이 그려진다", (await p.locator(".cnt").count()) === 8,
      await p.locator(".cnt").count());
   ok("신청 두 줄이 그려진다", (await p.locator(".apl-r").count()) === 2,

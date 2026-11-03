@@ -144,10 +144,17 @@ function feats(){
         '" href="' + esc(W.amCatUrl(cs[0])) + '">' +
         (zp ? '<img class="feat-bg" src="' + esc(zp.src) + '" alt="" aria-hidden="true" ' +
               'width="1200" height="600" loading="lazy">' : "") +
-        '<h3>' + esc(z.name) + '</h3>' +
-        '<p>' + esc(cs.map(function(c){ return c.name; }).join(" · ")) + '</p>' +
-        '<p class="feat-l">' + esc(z.lead) + '</p>' +
-        '<span class="go">' + icon("arrow",20) + '</span></a>';
+        /* ⚠️⚠️ **글을 한 덩이로 묶습니다.** 막을 카드 전체에 깔고
+           "아래쪽은 짙게" 로 두었더니, 글이 길어 두 줄이 되는 카드에서
+           글머리가 **옅은 쪽까지 올라가** 대비가 2.7 까지 떨어졌습니다.
+           막이 카드 높이를 따라가면 안 되고 **글을 따라가야** 합니다 —
+           그래서 이 덩이가 제 막을 깔고 앉습니다. */
+        '<span class="feat-tx">' +
+          '<h3>' + esc(z.name) + '</h3>' +
+          '<p>' + esc(cs.map(function(c){ return c.name; }).join(" · ")) + '</p>' +
+          '<p class="feat-l">' + esc(z.lead) + '</p>' +
+          '<span class="go">' + icon("arrow",20) + '</span>' +
+        '</span></a>';
     }).join("") + '</div>' +
   '</div></section>';
 }

@@ -212,9 +212,11 @@ if(fs.existsSync(IMG)){
        "안 쓰는 파일" 로 잡아서 경고가 났습니다 — 원본은 화면이
        읽지 않는 것이 맞습니다. */
     if(fs.statSync(path.join(IMG, f)).isDirectory()) return;
+    /* ⚠️ 그림이 아닌 파일(README 등)은 "안 쓰는 사진" 이 아닙니다 */
+    if(!/\.(jpe?g|png|webp|avif|gif|svg)$/i.test(f)) return;
     const rel = path.join("img", f);
     if(!used.has(rel))
-      warn.push(rel + " — WOW_PHOTOS 에 없는 파일입니다 (안 쓰입니다)");
+      warn.push(rel + " — AM_PHOTOS 에 없는 파일입니다 (안 쓰입니다)");
   });
 }
 

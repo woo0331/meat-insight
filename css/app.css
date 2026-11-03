@@ -635,6 +635,14 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
   .mband-ph .mband-t{ max-width:none; }
   .mband-bg, .join-bg{ object-position: center; }
 }
+@media (max-width: 720px){
+  /* ⚠️⚠️ 입점 띠의 아이콘이 **판 밖에 홀로** 떠 있었습니다 (찍어 보고
+     알았습니다). 아이콘은 장식이고 제목이 같은 말을 하므로, 좁은
+     화면에서는 빼고 판을 가득 채웁니다 — 단추도 한 줄로. */
+  .join-ph .join-ic{ display:none; }
+  .join-ph .join-t{ width:100%; flex:1 1 100%; }
+  .join-ph .btn{ width:100%; justify-content:center; }
+}
 
 /* ── 작업실 · 배정 · 내 요청 (2차 지시서 §5 · §6 · §7) ─────────
    ⚠️⚠️ 클래스 이름을 **두 글자로 줄이지 않았습니다.** 짧은 이름(.lg)을
@@ -903,13 +911,47 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .feat-ph{ position:relative; overflow:hidden; }
 .feat-bg{ position:absolute; inset:0; width:100%; height:100%;
           object-fit:cover; object-position:center; z-index:0; }
+/* ⚠️⚠️ **막이 위에서 옅고 아래에서 짙습니다.** 처음에는 통째로
+   거의 불투명하게 덮었는데, 그러면 **사진이 안 보입니다** — 찍어 보고
+   알았습니다 (카드 넉 장이 그냥 짙은 초록 네모였습니다).
+   ⚠️ 대신 **글은 아래쪽에만** 앉힙니다 (.feat-ph 의 justify-content).
+   글이 앉는 자리는 .95 라 사진이 아무리 밝아도 흰 글자가 읽힙니다 —
+   tools/test-photos.js 가 덩이마다 재서 확인합니다.
+   ⚠️ background-color 바닥을 깔지 않습니다 — 깔면 위쪽이 다시 어두워져
+   이 규칙의 뜻이 사라집니다. 불투명한 바닥은 .feat-c 가 받칩니다. */
+/* ⚠️ 사진이 깔리면 카드를 **더 높게** 둡니다 — 글이 아래에 앉고 위쪽에
+   사진이 보일 자리가 생깁니다 (시안의 짜임새입니다). */
+.feat-ph{ justify-content: flex-end; min-height: 215px; }
+.feat-ph .go{ margin-top: 14px; }
+
+/* 글 덩이 — ⚠️⚠️ **막을 여기가 깝니다** (카드가 아니라).
+   카드에 깔고 "아래쪽은 짙게" 로 두면, 글이 두 줄이 되는 카드에서
+   글머리가 옅은 쪽까지 올라가 대비가 떨어집니다 (2.12 · 2.66 으로
+   두 번 떨어졌습니다). 글이 길어지면 이 덩이도 같이 커지므로
+   **막이 글을 따라갑니다.**
+   ⚠️ 사진이 없는 카드에서는 아무것도 안 깝니다 (바탕이 이미 짙습니다). */
+.feat-tx{ display:flex; flex-direction:column; align-items:stretch; }
+.feat-ph .feat-tx{
+  margin: 0 -22px -22px; padding: 44px 22px 22px;
+  background-image: linear-gradient(180deg,
+    rgba(8,41,31,0) 0%, rgba(8,41,31,.90) 34%, rgba(8,41,31,.97) 100%);
+}
+.feat-tx .go{ align-self:flex-end; }
 .feat-ph::after{ content:""; position:absolute; inset:0; z-index:1;
-                 background-color: rgba(8,41,31,.90);
+                 /* 사진 전체에 얇게 — 분위기만 잡습니다.
+                    글자 대비는 위의 .feat-tx 가 책임집니다. */
                  background-image: linear-gradient(180deg,
-                   rgba(8,41,31,.86) 0%, rgba(8,41,31,.95) 100%); }
-/* ⚠️ 카드 안의 글 · 화살표가 막 위로 올라와야 합니다 */
-.feat-ph > *{ position:relative; z-index:2; }
-.feat-ph > .feat-bg{ z-index:0; }
+                   rgba(8,41,31,.18) 0%, rgba(8,41,31,.34) 100%); }
+/* ⚠️ 카드 안의 글 · 화살표가 막 위로 올라와야 합니다.
+   ⚠️⚠️ **`:not(.feat-bg)` 를 빼면 사진이 액자 안쪽으로 밀려납니다.**
+   `.feat-ph > *`(0,1,0)와 `.feat-bg`(0,1,0)는 특정도가 **같아서**
+   뒤에 적은 쪽이 이깁니다 — 사진의 `position:absolute` 가
+   `position:relative` 로 덮여 흐름 안으로 들어가고, 카드의 padding
+   만큼 **사방에 짙은 테두리**가 생깁니다. 에러도 안 나고 사진은
+   보이니 "원래 저런가" 싶은 꼴입니다 (찍어 보고 알았습니다).
+   ⚠️ 작업 기억의 "새 블록을 뒤에 붙였다고 이기는 것이 아닙니다" 가
+   바로 이 자리입니다. */
+.feat-ph > *:not(.feat-bg){ position:relative; z-index:2; }
 
 /* ── 후기 · 평점 (0037) ────────────────────────────────────────
    ⚠️⚠️ **별 글자에 밝은 금색을 쓰지 마세요.** 작은 글씨에 밝은 색을

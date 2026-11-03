@@ -43,6 +43,19 @@ function build(){
   return spawnSync(process.execPath, ["build.js"], { cwd: ROOT, stdio:["ignore","pipe","pipe"] });
 }
 
+/* 씨앗을 **덧붙입니다** — ⚠️⚠️ 처음에는 `window.AM_PHOTOS = {};` 라는
+   글자를 찾아 갈아 끼웠는데, 사장님이 사진을 넣으시자 그 글자가 사라져
+   **바꿔치기가 조용히 아무 일도 안 했습니다.** 검사는 씨앗이 들어간 줄
+   알고 참 사진을 재며 네 건을 실패로 찍었습니다 (코드가 아니라 검사가
+   틀린 자리입니다).
+   ⚠️ 같은 이름을 뒤에 다시 적으면 **나중 것이 이깁니다** — 파일 내용이
+   어떻든 씨앗이 확실히 이깁니다. 되돌리기는 사본으로 합니다. */
+function seedPhotos(seed){
+  fs.writeFileSync(DATA, fs.readFileSync(BAK, "utf8") +
+    "\n/* 검사용 씨앗 — tools/test-photos.js 가 잠깐 덧붙인 것입니다. */\n" +
+    "window.AM_PHOTOS = " + JSON.stringify(seed, null, 2) + ";\n");
+}
+
 /* 가장 밝은 사진을 하나 만듭니다 — ⚠️ 흰색에 가까워야 뜻이 있습니다
    (어두운 사진은 막이 없어도 통과합니다). */
 async function makeBright(b, file, w, h){
@@ -83,9 +96,7 @@ async function makeBright(b, file, w, h){
     zones.forEach(function(z){
       seed["zone-" + z] = { src:"/img/__t-zone.jpg", alt:z + " 장면" };
     });
-    fs.writeFileSync(DATA,
-      fs.readFileSync(BAK, "utf8").replace("window.AM_PHOTOS = {};",
-        "window.AM_PHOTOS = " + JSON.stringify(seed, null, 2) + ";"));
+    seedPhotos(seed);
 
     const r1 = build();
     ok("빌드가 돈다", r1.status === 0,
@@ -280,18 +291,14 @@ async function makeBright(b, file, w, h){
     const small = path.join(IMGDIR, "__t-small.jpg");
     await makeBright(b, small, 400, 200);
     made.push(small);
-    fs.writeFileSync(DATA,
-      fs.readFileSync(BAK, "utf8").replace("window.AM_PHOTOS = {};",
-        'window.AM_PHOTOS = { "hero": { src:"/img/__t-small.jpg", alt:"작은 그림" } };'));
+    seedPhotos({ hero: { src:"/img/__t-small.jpg", alt:"작은 그림" } });
     const c1 = spawnSync(process.execPath, ["tools/check-photos.js"],
       { cwd: ROOT, stdio:["ignore","pipe","pipe"] });
     ok("최소 크기에 못 미치면 **멈춘다**", c1.status !== 0,
        (c1.stdout || "").toString().trim().split("\n").slice(-2).join(" | "));
 
     console.log("\n── ④ alt 를 안 적으면");
-    fs.writeFileSync(DATA,
-      fs.readFileSync(BAK, "utf8").replace("window.AM_PHOTOS = {};",
-        'window.AM_PHOTOS = { "hero": { src:"/img/__t-hero.jpg" } };'));
+    seedPhotos({ hero: { src:"/img/__t-hero.jpg" } });
     const r2 = build();
     ok("빌드는 돈다 (화면이 안 깨집니다)", r2.status === 0);
     /* ⚠️⚠️ alt 가 없으면 **안 내보냅니다** — 내보내면 접근성 검사가

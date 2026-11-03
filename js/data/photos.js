@@ -104,7 +104,69 @@ window.AM_PHOTO_SLOTS = [
    보기 —
      "hero": { src:"/img/hero.jpg", alt:"해 질 녘 페어웨이와 카트 길" }
    ════════════════════════════════════════════════════════════════ */
-window.AM_PHOTOS = {};
+/* ⚠️⚠️⚠️ **경로가 둘입니다 — 일부러 갈라 두었습니다.**
+
+     /img/…        원본 품질입니다 (따로 만든 사진). 그대로 씁니다.
+     /img/mock/…   **시안 스크린샷에서 뽑아 늘린 것**입니다. 규격은
+                   맞지만 원본 해상도가 아니라 **크게 보면 뿌옇습니다.**
+                   원본 사진이 생기면 **그 파일만** /img/ 로 옮기고
+                   아래 경로에서 `mock/` 만 지우면 끝입니다.
+
+   ⚠️ 왜 갈라 두는가 — 한 폴더에 섞어 두면 **어느 것이 임시인지 아무도
+   모릅니다.** 화면 코드에도 그대로 드러나야 다음 사람이 알아봅니다.
+   ⚠️ 원본은 `img/raw/` 에 있고 `node tools/fit-photos.js` 가 그것을
+   읽어 규격에 맞춥니다 (손으로 자르지 마세요).
+
+   ⚠️⚠️ **아직 사람 눈으로 확인하셔야 하는 것 둘** (도구가 못 잡습니다) —
+     · `cat-market` 상자에 **금색 글자**가 보입니다 (AI 가 만든 글자라
+       읽히지는 않지만 글자꼴입니다). 규칙은 "글자 없음" 입니다.
+     · `match-banner` 의 골프공에 **방패 로고**가 박혀 있습니다. 사진
+       안에 있어 나중에 못 바꿉니다 — 그 로고를 브랜드로 쓰실지
+       정하신 뒤에 두세요.
+
+   ⚠️ `img/hold/biz-01~04.jpg` 는 **아무 데서도 안 씁니다.** 시안의
+   "신규 입점업체" 예시 사진인데, 그 자리에 쓰면 없는 업체 넷을
+   광고하는 것입니다 (절대 규칙 1). 실제 업체가 승인되면 그 업체의
+   사진으로 채워집니다. */
+window.AM_PHOTOS = {
+  /* ── 원본 품질 ─────────────────────────────────────────────── */
+  "hero":        { src:"/img/hero.jpg",
+                   alt:"해 질 녘 골프장 페어웨이와 카트 길" },
+  "zone-learn":  { src:"/img/zone-learn.jpg",
+                   alt:"실내 연습장에서 스윙하는 골퍼의 뒷모습" },
+  "zone-trade":  { src:"/img/zone-trade.jpg",
+                   alt:"장갑 낀 손이 아이언 헤드를 손질하는 모습" },
+  "zone-play":   { src:"/img/zone-play.jpg",
+                   alt:"공이 놓인 넓은 페어웨이와 벙커" },
+  "zone-biz":    { src:"/img/zone-biz.jpg",
+                   alt:"창가 테이블에 마주 앉아 이야기하는 두 사람" },
+
+  /* ── 시안에서 뽑아 늘린 것 (원본이 생기면 교체) ──────────────── */
+  "cat-lesson":    { src:"/img/mock/cat-lesson.jpg",
+                     alt:"해 질 녘 스윙을 마친 골퍼의 실루엣" },
+  "cat-used":      { src:"/img/mock/cat-used.jpg",
+                     alt:"잔디 위에 놓인 아이언과 우드 헤드" },
+  "cat-booking":   { src:"/img/mock/cat-booking.jpg",
+                     alt:"연못과 산이 보이는 골프장 페어웨이" },
+  "cat-matchup":   { src:"/img/mock/cat-matchup.jpg",
+                     alt:"골프백을 메고 함께 걸어가는 골퍼 셋의 뒷모습" },
+  "cat-range":     { src:"/img/mock/cat-range.jpg",
+                     alt:"대형 스크린이 있는 실내 골프 연습장 타석" },
+  "cat-market":    { src:"/img/mock/cat-market.jpg",
+                     alt:"잔디 위에 놓인 골프공과 포장 상자" },
+  "cat-fitting":   { src:"/img/mock/cat-fitting.jpg",
+                     alt:"피팅 장비에 물려 있는 클럽 헤드" },
+  "cat-travel":    { src:"/img/mock/cat-travel.jpg",
+                     alt:"야자수와 바다가 보이는 해외 골프 리조트" },
+  "cat-career":    { src:"/img/mock/cat-career.jpg",
+                     alt:"정장 차림의 두 사람이 악수하는 모습" },
+  "cat-community": { src:"/img/mock/cat-community.jpg",
+                     alt:"말풍선이 뜬 초록 화면의 휴대전화를 든 손" },
+  "match-banner":  { src:"/img/mock/match-banner.jpg",
+                     alt:"잔디 위에 놓인 골프공 클로즈업" },
+  "partner-banner":{ src:"/img/mock/partner-banner.jpg",
+                     alt:"나무가 늘어선 맑은 날의 골프장 잔디" }
+};
 
 /* 한 자리의 사진 — ⚠️ 없으면 **null** 입니다 (빈 객체가 아닙니다).
    화면이 `if(!p)` 로 갈라서 글 짜임새로 갑니다. */

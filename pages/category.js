@@ -16,6 +16,7 @@
    단추가 됩니다. 말도 자리도 kind 로 갈립니다.
    ════════════════════════════════════════════════════════════════════ */
 var W = global.window, esc = W.esc, icon = W.icon;
+var card = require("./_card.js");
 
 /* kind 마다 다른 말 — ⚠️ 두 곳에 적지 않습니다. 여기 한 곳입니다. */
 var KIND = {
@@ -90,6 +91,25 @@ exports.build = function(c){
         return '<li><span class="chip">' + esc(it.name) + '</span></li>';
       }).join("") + '</ul></div></section>'
     : "";
+
+  /* ⚠️⚠️ **업체가 있을 때와 없을 때를 둘 다 그립니다.** 앞 서비스에서
+     "0곳" 안내만 만들어 두고 **있을 때 그리는 자리를 안 만든** 적이
+     있습니다 — 승인해도 손님에게 보일 곳이 없었습니다.
+     tools/test-providers.js 가 **둘 다** 눌러 봅니다. */
+  var list = W.amProvidersOf(c.key);
+  if(list.length){
+    return {
+      route: W.amCatUrl(c), title: c.name,
+      crumbs: [["카테고리 전체보기", "/categories"], [c.name, W.amCatUrl(c)]],
+      desc: c.name + " — " + c.lead + ". " + k.what + " 지금 " + list.length + "곳이 있습니다.",
+      body: head + subs +
+        '<section class="sec sec-alt"><div class="wrap">' +
+          '<div class="sec-hd"><h2>' + esc(c.name) + ' 업체 ' + W.won(list.length) + '곳</h2>' +
+          '<p>골프올인원은 통신판매중개자이며 거래 당사자가 아닙니다.</p></div>' +
+          card.grid(list) +
+        '</div></section>' + related(c)
+    };
+  }
 
   var zero = '<section class="sec sec-alt"><div class="wrap"><div class="none">' +
     '<h2>' + esc(k.zeroT) + '</h2>' +

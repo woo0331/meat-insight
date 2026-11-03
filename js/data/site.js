@@ -110,5 +110,11 @@ window.bizVal = function(k){
   v = String(v).trim();
   return v ? v : null;
 };
-window.bizPrivacyEmail = function(){ return bizVal("privacyEmail") || bizVal("email"); };
-window.bizPrivacyPhone = function(){ return bizVal("privacyPhone") || bizVal("phone"); };
+/* ⚠️ window. 를 붙여 부릅니다 — 맨이름은 브라우저에서만 됩니다.
+   빌드 · 검사는 node 에서 돌고 거기서는 터집니다. 이 둘은 개인정보
+   보호책임자가 비어 있어 **아직 안 불렸을 뿐**이고, 값을 채우는 날
+   터졌을 자리입니다 (tools/check-globals.js 가 잡았습니다). */
+window.bizPrivacyEmail = function(){
+  return window.bizVal("privacyEmail") || window.bizVal("email"); };
+window.bizPrivacyPhone = function(){
+  return window.bizVal("privacyPhone") || window.bizVal("phone"); };

@@ -59,10 +59,10 @@ window.AM_REGIONS = [
 ];
 
 window.amRegion = function(key){
-  var r = AM_REGIONS.filter(function(x){ return x.key === key; });
+  var r = window.AM_REGIONS.filter(function(x){ return x.key === key; });
   return r.length ? r[0] : null;
 };
 window.amRegionName = function(key, gu){
-  var r = amRegion(key); if(!r) return "";
+  var r = window.amRegion(key); if(!r) return "";
   return gu ? (r.name + " " + gu) : r.name;
 };

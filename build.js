@@ -28,7 +28,8 @@ var SITE_LIVE = false;
 /* ── 데이터 읽기 — 브라우저와 같은 파일을 그대로 씁니다 ────────── */
 global.window = {};
 ["js/components/base.js","js/data/korean.js","js/data/brand.js",
- "js/data/site.js","js/data/catalog.js",
+ "js/data/site.js","js/data/catalog.js","js/data/regions.js",
+ "js/data/providers.generated.js","js/data/providers.js",
  "js/data/legal-terms.js","js/data/legal-privacy.js"]
   .forEach(function(f){ require("./" + f); });
 var W = global.window, esc = W.esc, icon = W.icon;
@@ -233,9 +234,29 @@ if(require.main === module){
     return require("./pages/" + n + ".js").build();
   });
 
+  /* ⚠️⚠️ **업체가 쓰는 하위 키가 진짜인지 먼저 봅니다.** 분류 키를
+     적었거나 오타가 나면 그 업체만 **조용히 아무 데도 안 뜹니다** —
+     에러도 404 도 안 납니다 (0016 머리말이 적어 둔 자리).
+     ⚠️ 자료는 DB 에서 나오므로, 여기서 멈추면 DB 를 고쳐야 합니다. */
+  var provs = W.amProviders();
+  var subBad = [];
+  provs.forEach(function(p){
+    (Array.isArray(p.subs) ? p.subs : []).forEach(function(k){
+      if(!W.amSub(k)) subBad.push(p.id + " 의 subs 에 '" + k + "' — 그런 하위가 없습니다");
+    });
+    if(!(Array.isArray(p.subs) && p.subs.length))
+      subBad.push(p.id + " 에 subs 가 비었습니다 — 아무 분류에도 안 뜹니다");
+  });
+  if(subBad.length){
+    subBad.forEach(function(m){ console.error("❌ " + m); });
+    process.exit(1);
+  }
+
+  var prov = require("./pages/provider.js");
   var built = [home.build(), list.build()]
     .concat(W.AM_CATS.map(function(c){ return cat.build(c); }))
-    .concat(flat);
+    .concat(flat)
+    .concat(provs.map(function(p){ return prov.build(p); }));
 
   /* ⚠️⚠️ 찍기 전에 **주소가 vercel.json 에 잡아먹히는지** 먼저 봅니다.
      걸리면 저장소에는 파일이 멀쩡한데 손님에게는 410 이 나갑니다 —
@@ -315,6 +336,8 @@ if(require.main === module){
 
   console.log("사이트맵 " + pub.length + "개 주소 · robots " +
               (SITE_LIVE ? "열림" : "전부 막음"));
+  console.log("업체 " + provs.length + "곳 (" + (W.AM_PROVIDERS_AT || "?") + ")" +
+              (provs.length ? "" : " — 0곳이라 화면이 0곳이라고 말합니다"));
 
   console.log("화면 " + built.length + "장 찍었습니다 — " +
               built.map(function(b){ return b.route; }).join(" "));

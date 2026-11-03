@@ -33,6 +33,7 @@ const STEPS = [
   ["화면을 찍습니다",            ["build.js"],                    false],
   ["붙여넣기 파일을 다시 만듭니다", ["tools/make-apply.js"],         false],
   ["주석이 코드를 삼키나",        ["tools/check-comments.js", "--prove"], false],
+  ["window. 없이 쓴 맨이름",      ["tools/check-globals.js", "--prove"], false],
   ["분류 키가 옛 키와 겹치나",     ["tools/check-keys.js"],         false],
   ["키 · 헤더 · CSP",            ["tools/check-safe.js"],         false],
   ["주소가 vercel 규칙에 걸리나",  ["tools/check-routes.js", "--prove"], false],
@@ -41,6 +42,9 @@ const STEPS = [
   ["접근성을 잽니다",            ["tools/check-a11y.js"],         false],
   ["입점 신청 양식을 눌러 봅니다", ["tools/test-join.js"],          false],
   ["관리자 화면을 눌러 봅니다",    ["tools/test-admin.js"],         false],
+  /* ⚠️⚠️ 업체가 0곳이라 "있을 때" 자리는 아무도 본 적이 없습니다 —
+     씨앗을 넣고 실제로 찍어 봅니다. 끝나면 사본으로 되돌립니다. */
+  ["업체가 있을 때를 눌러 봅니다",  ["tools/test-providers.js"],     false],
   ["DB 를 눌러 봅니다",          ["tools/test-sql.js"],           true],
   /* ⚠️⚠️ 운영 DB 에 올렸을 때 기존 자료가 어떻게 되는지 — 지시서 11번이
      "기존 기능과 데이터에 대한 영향 및 테스트 결과를 확인한 뒤" 라고

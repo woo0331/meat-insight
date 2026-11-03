@@ -428,3 +428,29 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .doc-t th{ background: var(--bg-2); color: var(--ink); font-weight:700; white-space:nowrap; }
 .doc-t td{ color: var(--ink2); }
 .doc-t tr:last-child td{ border-bottom:0; }
+
+/* ── 업체 카드 ─────────────────────────────────────────────── */
+.pvs{ display:grid; gap:14px; grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 1000px){ .pvs{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px){ .pvs{ grid-template-columns: 1fr; } }
+/* ⚠️ 카드 전체가 누르는 것입니다 — 높이를 min-height 로 잡습니다
+   (padding 만으로 만들면 이름이 짧은 업체에서 다시 낮아집니다). */
+.pv{ display:flex; flex-direction:column; min-height:140px;
+     background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+     padding:18px 20px; transition: border-color .15s, box-shadow .15s; }
+.pv:hover{ border-color: var(--grn-line); box-shadow: var(--shadow-soft); }
+.pv-h{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.pv-h h3{ font-size:17.5px; }
+.pv-ok{ display:inline-flex; align-items:center; gap:4px;
+        font-size:12.5px; font-weight:700; color: var(--grn-text);
+        background: var(--grn-soft); border-radius: var(--r-pill); padding:3px 9px; }
+.pv-m{ margin-top:6px; font-size:14px; color: var(--ink3); }
+.pv-i{ margin-top:8px; font-size:14.5px; color: var(--ink2); }
+.pv-c{ display:flex; flex-wrap:wrap; gap:6px; margin-top:auto; padding-top:12px; }
+.pv-c li{ font-size:12.5px; color: var(--ink2);
+          background: var(--bg-2); border-radius: var(--r-sm); padding:4px 9px; }
+.chip-ok{ border-color: var(--grn-line); background: var(--grn-soft);
+          color: var(--grn-text); font-weight:700; }
+.chip-ok .ic{ color: var(--grn); }
+/* 업체 정보 표의 머리 칸 — 세로로 섭니다 */
+.doc-t th[scope="row"]{ white-space:nowrap; width:1%; }

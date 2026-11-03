@@ -26,7 +26,36 @@
     return words.some(function(w){ return h.t.indexOf(w) >= 0; });
   }).map(function(h){ return h.c; });
 
+  /* ⚠️ 업체도 같이 찾습니다 — 이름 · 소개 · 지역 · 하는 일로.
+     ⚠️⚠️ 업체가 **있을 때 먼저** 내고 분류를 아래에 둡니다. 손님이
+     찾는 것은 분류가 아니라 업체입니다. */
+  var pvs = (window.amProviders ? window.amProviders() : []).filter(function(p){
+    var t = (p.name + " " + (p.intro || "") + " " +
+             (window.amProviderRegions(p) || []).join(" ") + " " +
+             window.amProviderSubs(p).map(function(k){
+               var f = window.amSub(k); return f ? f.item.name + " " + f.cat.name : ""; }).join(" ")
+            ).toLowerCase();
+    return words.some(function(w){ return t.indexOf(w) >= 0; });
+  });
+
   box.hidden = false;
+  if(pvs.length){
+    box.innerHTML =
+      "<h2>" + esc(window.koWith(q, "와과")) + " 맞는 업체 " + pvs.length + "곳</h2>" +
+      '<ul class="chips" style="justify-content:center;margin-top:14px">' +
+      pvs.slice(0, 12).map(function(p){
+        return '<li><a class="chip chip-go" href="' + esc(window.amProviderUrl(p)) + '">' +
+          esc(p.name) + "</a></li>";
+      }).join("") + "</ul>" +
+      (hit.length
+        ? '<p style="margin-top:14px">분류로도 보실 수 있습니다 — ' +
+          hit.map(function(c){
+            return '<a href="' + esc(window.amCatUrl(c)) + '">' + esc(c.name) + "</a>";
+          }).join(" · ") + "</p>"
+        : "");
+    return;
+  }
+
   if(!hit.length){
     box.innerHTML =
       "<h2>" + esc(q) + " 로 찾은 것이 없습니다.</h2>" +

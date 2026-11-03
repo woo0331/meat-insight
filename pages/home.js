@@ -12,6 +12,7 @@
    막다른 길로 두지 않고 지금 실제로 되는 것을 같이 냅니다.
    ════════════════════════════════════════════════════════════════════ */
 var W = global.window, esc = W.esc, icon = W.icon;
+var card = require("./_card.js");
 
 /* 시안의 큰 카드 넉 장 — 분류에서 끌어옵니다 (이름을 두 곳에 안 적습니다) */
 var FEAT = [
@@ -100,11 +101,18 @@ function why(){
 /* ⚠️⚠️ 입점업체 0곳 — 카드를 지어내지 않습니다. 대신 지금 실제로
    되는 것(입점 신청 · 분류 둘러보기)을 같이 냅니다. */
 function providers(){
-  var list = (W.AM_PROVIDERS || []);
+  var list = W.amProviders();
   if(list.length){
-    /* 업체가 생기면 여기서 그립니다. ⚠️ 평점 · 후기 수는 값으로 들고
-       있지 말고 실제 배열에서 **계산**하세요. */
-    return "";
+    /* ⚠️ 최근 여섯 곳만 — 메인이 목록 화면이 되면 분류 화면이 할 일이
+       없어집니다. 전부 보는 길은 분류 · 업체찾기입니다.
+       ⚠️ 평점 · 후기 수는 값으로 들고 있지 않습니다 (절대 규칙 1). */
+    return '<section class="sec"><div class="wrap">' +
+      '<div class="sec-hd"><h2>입점업체</h2>' +
+      '<p>지금 ' + W.won(list.length) + '곳이 등록되어 있습니다.</p></div>' +
+      card.grid(list.slice(0, 6)) +
+      '<p style="margin-top:18px"><a class="btn btn-line" href="/categories">' +
+      icon("arrow",18) + '분류에서 더 보기</a></p>' +
+    '</div></section>';
   }
   return '<section class="sec"><div class="wrap">' +
     '<div class="sec-hd"><h2>신규 입점업체</h2></div>' +

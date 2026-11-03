@@ -1029,3 +1029,98 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .gv-h{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .gv-h b{ font-size:15px; color: var(--ink); }
 .gv-d{ margin-top:6px; font-size:13.5px; color: var(--ink3); }
+
+/* ── 업체찾기 (/search) ─────────────────────────────────────────
+   ⚠️⚠️ 머리를 **낮게** 둡니다 — 소개글이 길면 손님이 첫 화면에서
+   업체를 못 봅니다. ⚠️ 좌우 여백을 지우지 않으려고 `padding-block`
+   으로만 바꿉니다 (padding 줄임꼴은 좌우를 0 으로 만듭니다). */
+.pghd-tt{ padding-block: 16px 18px; }
+.pghd-tt h1{ margin-top:4px; }
+.pghd-tt .pghd-l{ margin-top:6px; font-size:15px; }
+
+/* 거르개 띠 — ⚠️ 폰에서는 **가로로 미끄러집니다** (쌓으면 거르개가
+   화면 두 장을 차지합니다). ⚠️⚠️ 미끄러지는 상자는 격자 칸 안에
+   두지 않습니다 — 격자 칸의 기본 min-width:auto 가 칸을 벌려서
+   **화면 전체가 가로로 밀립니다** (작업 기억의 그 자리). 그래서
+   이 띠는 격자가 아니라 그냥 블록입니다. */
+.sfilt{ background:#fff; border-bottom:1px solid var(--line);
+        padding-block: 14px; position:relative; z-index:1; }
+.sf-r{ display:flex; align-items:center; gap:12px; min-width:0; }
+.sf-r + .sf-r{ margin-top:10px; }
+.sf-l{ flex:none; font-size:14px; font-weight:700; color: var(--ink);
+       width:38px; }
+.sf-c{ display:flex; gap:8px; overflow-x:auto; min-width:0;
+       padding-block:4px; scrollbar-width:thin;
+       -webkit-overflow-scrolling:touch; }
+.sf-c .chip{ flex:none; }
+/* 눌린 칸 — ⚠️ 흰 글자를 얹는 면은 --grn-btn 입니다 (12.59).
+   --pt 는 **면 전용**이라 흰 글자를 얹으면 아무 기준도 못 넘습니다. */
+.chip-on{ background: var(--grn-btn); border-color: var(--grn-btn);
+          color:#fff; font-weight:700; }
+.chip-on .ic{ color: var(--gold); }
+.sf-now{ margin-top:10px; font-size:14px; color: var(--ink3); }
+
+/* 업체 카드 — 거르개 화면에서는 아이콘 타일과 단추가 붙습니다.
+   ⚠️⚠️ 카드 전체가 링크면 그 안에 단추를 넣을 수 없습니다 — 그래서
+   상호 쪽만 링크(.pv-go)로 두고 단추를 밖에 둡니다. */
+.pv-act{ padding:0; }
+.pv-go{ display:flex; gap:14px; padding:18px 20px 12px; flex:1; min-width:0; }
+.pv-go:hover .pv-h h3{ text-decoration: underline; }
+.pv-b{ display:flex; flex-direction:column; flex:1; min-width:0; }
+.pv-th{ flex:none; display:flex; align-items:center; justify-content:center;
+        width:56px; height:56px; border-radius: var(--r-sm);
+        background: var(--pt-soft); }
+.pv-th .ic{ color: var(--grn); }
+/* 등록된 가격 — ⚠️ 업체가 등록한 것만 나옵니다 (없으면 줄째 없습니다) */
+.pv-p{ display:flex; align-items:baseline; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.pv-p b{ font-size:16px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.pv-pl{ font-size:13px; color: var(--ink3); }
+.pv-pn{ font-size:12.5px; color: var(--ink3); }
+.pv-btn{ display:flex; align-items:center; flex-wrap:wrap; gap:8px;
+         padding:0 20px 16px; }
+.pv-cmp{ display:inline-flex; align-items:center; gap:7px; min-height:40px;
+         margin-left:auto; font-size:14px; color: var(--ink2); cursor:pointer; }
+.pv-cmp input{ width:20px; height:20px; accent-color: var(--grn); }
+
+/* 비교표 — ⚠️⚠️ **고른 업체만** 들어갑니다. 빈 표를 미리 그리면
+   가짜 비교 자료가 들어오는 문이 됩니다 (절대 규칙 1).
+   ⚠️ 표가 제 상자 안에서 가로로 도는 것은 일부러 그렇게 둔 것입니다 —
+   `min-width:0` 이 없으면 바깥이 격자일 때 화면이 밀립니다. */
+.cmp{ margin-top:18px; background:#fff; border:1.5px solid var(--grn-line);
+      border-radius: var(--r); padding:16px 18px; min-width:0; }
+.cmp-h{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.cmp-h h3{ font-size:16.5px; flex:1; min-width:140px; }
+.cmp-s{ margin-top:12px; overflow-x:auto; min-width:0; }
+.cmp-t{ width:100%; min-width:520px; border-collapse:collapse; font-size:14.5px; }
+.cmp-t th, .cmp-t td{ border:1px solid var(--line); padding:10px 12px;
+                      text-align:left; vertical-align:top;
+                      word-break: keep-all; overflow-wrap:anywhere; }
+.cmp-t thead th{ background: var(--grn-soft); color: var(--grn-text);
+                 font-size:15px; }
+/* ⚠️ 표 머리의 상호도 **누르는 것**입니다 — 글줄 그대로 두면 높이가
+   22px 이라 손가락으로 못 누릅니다 (누르는 것은 40px 이상). */
+.cmp-t thead th a{ display:inline-flex; align-items:center; min-height:40px;
+                   color: var(--grn-text); font-weight:700;
+                   word-break: keep-all; overflow-wrap:anywhere; }
+.cmp-t thead th a:hover{ text-decoration: underline; }
+.cmp-t th[scope="row"]{ background: var(--bg-2); color: var(--ink2);
+                        white-space:nowrap; width:1%; }
+.cmp-sm{ font-size:13px; color: var(--ink3); }
+
+/* 빈 자리의 단추 둘 — ⚠️ 폰에서 붙으면 잘못 누릅니다 */
+.none h3{ font-size:17px; }
+.none-b{ display:flex; justify-content:center; flex-wrap:wrap; gap:10px;
+         margin-top:16px; }
+.none-b .btn{ margin-top:0; }
+@media (max-width: 560px){
+  .none-b .btn{ width:100%; }
+  .sf-l{ width:auto; }
+}
+
+/* ── 등록된 가격 (0042) ─────────────────────────────────────────
+   ⚠️ 금액은 자릿수가 흔들리지 않게 — 표에서 오른쪽으로 둡니다. */
+.pr-amt{ white-space:nowrap; font-variant-numeric: tabular-nums; }
+.pr-amt b{ font-size:16px; }
+/* 업체가 보는 가격 목록 — 내린 줄은 **지운 것이 아니라** 내린 것입니다 */
+.pr-off{ background: var(--bg-2); border-style:dashed; }
+.pr-f{ margin-top:16px; }

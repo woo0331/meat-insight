@@ -1679,6 +1679,157 @@ function stub(p, who, tables, rpcs, up){
   ok("  어느 신청으로 만드는지 적힌다", /AP-0001/.test(t), t.slice(0, 300));
   await s.p.close();
 
+  /* ══ 가격 등록 (0042 · 업체찾기 개선 7번) ═══════════════════════
+     ⚠️⚠️⚠️ **이 화면이 없으면 가격은 영원히 비어 있습니다.** 업체찾기
+     카드의 "실제 등록 가격" 은 업체가 여기서 올린 줄입니다 — 문만
+     만들고 화면을 안 만들면 그 기능은 없는 것입니다. */
+  const PRICES = [
+    { id:"eeee-1", sub:"ls-solo", label:"주 1회 · 8회권", amount:400000,
+      unit:"8회", note:"타석 이용료 별도", active:true },
+    { id:"eeee-2", sub:"rg-in", label:"타석 1시간", amount:12000,
+      unit:"1시간", note:null, active:true },
+    /* ⚠️ 내린 줄 — **지운 것이 아닙니다** (얼마를 걸어 두었나가 기록입니다) */
+    { id:"eeee-3", sub:"ls-solo", label:"지난 봄 특가", amount:300000,
+      unit:"8회", note:null, active:false }
+  ];
+  const PRT = { provider_price: PRICES,
+                provider: [{ id:"t-range", subs:["ls-solo","rg-in"] }] };
+
+  console.log("\n── /desk 가격 등록 — 업체가 아니면 한 줄도 안 보입니다");
+  s = await open("/desk", { role:"customer", name:"일반회원" },
+                 Object.assign({ assignment:[], request:[], quote:[],
+                                 request_item:[] }, PRT));
+  ok("가격 자리가 아예 안 그려진다",
+     (await s.p.locator("#pricebox [data-pf='open']").count()) === 0);
+  ok("⚠️ 가격을 **읽으러 가지도 않는다**",
+     s.sent.filter(function(x){
+       return x.name === "GET" && x.body.indexOf("provider_price") >= 0; }).length === 0,
+     JSON.stringify(s.sent.slice(0, 4)));
+  await s.p.close();
+
+  console.log("\n── /desk 가격 등록 — 업체");
+  s = await open("/desk", PRO, Object.assign({ assignment:[], request:[], quote:[],
+                                               request_item:[] }, PRT));
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  t = (await s.p.textContent("#pricebox")) || "";
+  ok("올려 둔 가격이 그려진다",
+     t.indexOf("주 1회 · 8회권") >= 0 && t.indexOf("400,000원") >= 0, t.slice(0, 300));
+  ok("단위가 같이 나온다", t.indexOf("8회") >= 0);
+  ok("어느 서비스의 가격인지 **사람 말**로 나온다 (하위 키가 아니다)",
+     t.indexOf("개인 레슨") >= 0 || t.indexOf("레슨") >= 0, t.slice(0, 300));
+  ok("덧말도 나온다", t.indexOf("타석 이용료 별도") >= 0);
+  /* ⚠️⚠️ 내린 줄은 **남아 있고** 내린 것으로 보입니다 */
+  ok("⚠️ 내린 가격도 보이고 '내림' 이라고 적힌다",
+     t.indexOf("지난 봄 특가") >= 0 && t.indexOf("내림") >= 0, t.slice(0, 400));
+  ok("  ⚠️ 내린 줄에는 단추를 **안 낸다** (DB 가 거절합니다)",
+     (await s.p.locator("button[data-pdown='eeee-3']").count()) === 0 &&
+     (await s.p.locator("button[data-pedit='eeee-3']").count()) === 0);
+  /* ⚠️ 올린 뒤 손님 화면에 언제 보이는지를 그 자리에서 말해야 합니다 */
+  ok("⚠️ 손님 화면에 **언제** 보이는지 말한다 (자료를 다시 올린 뒤입니다)",
+     /다시 올린 뒤/.test(t), t.slice(0, 300));
+
+  console.log("\n── /desk 가격 올리기 양식");
+  await s.p.click("#pricebox [data-pf='open']");
+  await s.p.waitForTimeout(250);
+  ok("양식이 열린다", (await s.p.locator("#pricebox form#pf").count()) === 1);
+  /* ⚠️⚠️ **그 업체가 하는 일만** 고를 수 있습니다 — 안 하는 일에 가격을
+     달면 DB 가 거절하고, 그 칸은 눌러도 안 되는 칸이 됩니다. */
+  ok("⚠️ 서비스는 **하는 일 두 가지만** 고를 수 있다",
+     (await s.p.locator("#pf-sub option").count()) === 2,
+     await s.p.locator("#pf-sub option").count());
+  ok("  고르는 칸이다 (자유 입력이 아니다 — 키가 어긋나지 않습니다)",
+     (await s.p.locator("select#pf-sub").count()) === 1);
+  ok("단위 칸에 보기를 같이 낸다 (datalist)",
+     (await s.p.locator("#pf-units option").count()) >= 5);
+  ok("무료면 0 을 적으라고 말한다",
+     /무료면/.test((await s.p.textContent("#pricebox")) || ""));
+
+  await s.p.fill("#pf-label", "주 2회 · 12회권");
+  await s.p.fill("#pf-amount", "550,000원");     /* ⚠️ 쉼표 · 원 을 적으셔도 */
+  await s.p.fill("#pf-unit", "12회");
+  await s.p.fill("#pf-note", "주 2회 기준");
+  await s.p.click("#pricebox form#pf button[type='submit']");
+  await s.p.waitForTimeout(350);
+  const pv1 = s.sent.filter(function(x){ return x.name === "save_provider_price"; })[0];
+  ok("save_provider_price 를 부른다", !!pv1,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  let pp = null;
+  try{ pp = JSON.parse(pv1.body).p; }catch(_){}
+  ok("  꾸러미의 칸 이름이 문과 같다 (sub · label · amount · unit · note)",
+     !!pp && pp.sub === "ls-solo" && pp.label === "주 2회 · 12회권" &&
+     pp.unit === "12회" && pp.note === "주 2회 기준", pv1 && pv1.body);
+  /* ⚠️ 숫자 칸은 **숫자만** 보냅니다 (쉼표 · 원 을 적으셔도 되게) */
+  ok("  ⚠️ 금액은 숫자로 보낸다 (쉼표 · '원' 을 적어도)",
+     !!pp && pp.amount === 550000, pv1 && pv1.body);
+
+  console.log("\n── /desk 금액에 숫자가 하나도 없으면");
+  s = await open("/desk", PRO, Object.assign({ assignment:[], request:[], quote:[],
+                                               request_item:[] }, PRT));
+  await s.p.click("#pricebox [data-pf='open']");
+  await s.p.waitForTimeout(250);
+  await s.p.fill("#pf-label", "숫자를 안 적습니다");
+  await s.p.fill("#pf-amount", "원");
+  await s.p.fill("#pf-unit", "1회");
+  await s.p.click("#pricebox form#pf button[type='submit']");
+  await s.p.waitForTimeout(350);
+  const pv2 = s.sent.filter(function(x){ return x.name === "save_provider_price"; })[0];
+  /* ⚠️⚠️ **빈 칸을 0 으로 보내지 않습니다** — "안 적었다" 와 "0원" 은
+     다른 말입니다. 0 으로 보내면 무료로 올라갑니다. */
+  ok("⚠️ 금액 칸을 **0 으로 바꿔 보내지 않는다** (0원은 무료라는 뜻입니다)",
+     !!pv2 && JSON.parse(pv2.body).p.amount === undefined, pv2 && pv2.body);
+
+  console.log("\n── /desk 가격 고치기 · 내리기");
+  s = await open("/desk", PRO, Object.assign({ assignment:[], request:[], quote:[],
+                                               request_item:[] }, PRT));
+  await s.p.click("button[data-pedit='eeee-2']");
+  await s.p.waitForTimeout(250);
+  ok("고치기를 누르면 그 값이 **채워져** 열린다",
+     (await s.p.inputValue("#pf-label")) === "타석 1시간" &&
+     (await s.p.inputValue("#pf-amount")) === "12000",
+     await s.p.inputValue("#pf-label"));
+  await s.p.fill("#pf-amount", "13000");
+  await s.p.click("#pricebox form#pf button[type='submit']");
+  await s.p.waitForTimeout(350);
+  const pv3 = s.sent.filter(function(x){ return x.name === "save_provider_price"; })[0];
+  ok("고칠 때는 **id 를 같이** 보낸다 (새로 올리는 것이 아닙니다)",
+     !!pv3 && JSON.parse(pv3.body).p.id === "eeee-2" &&
+     JSON.parse(pv3.body).p.amount === 13000, pv3 && pv3.body);
+
+  await s.p.evaluate(function(){ window.confirm = function(){ return true; }; });
+  await s.p.click("button[data-pdown='eeee-1']");
+  await s.p.waitForTimeout(350);
+  const pv4 = s.sent.filter(function(x){ return x.name === "drop_provider_price"; })[0];
+  ok("내리면 drop_provider_price 를 부른다", !!pv4,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  ok("  꾸러미에 그 줄의 id 가 담긴다",
+     !!pv4 && JSON.parse(pv4.body).p.id === "eeee-1", pv4 && pv4.body);
+  ok("가격 자리의 누르는 것이 40px 이상이다",
+     (await tapsOk(s.p, "#pricebox")) === 0, await tapsOk(s.p, "#pricebox"));
+  await s.p.close();
+
+  console.log("\n── /desk 가격이 0건일 때");
+  s = await open("/desk", PRO, Object.assign({ assignment:[], request:[], quote:[],
+    request_item:[] }, { provider_price: [],
+                         provider: [{ id:"t-range", subs:["ls-solo"] }] }));
+  t = (await s.p.textContent("#pricebox")) || "";
+  ok("0건이면 0건이라고 말한다", /아직 올리신 가격이 없습니다/.test(t), t.slice(0, 200));
+  /* ⚠️ 안 올려도 된다고 말합니다 — 안 올리면 그 줄이 빠질 뿐입니다 */
+  ok("  ⚠️ 안 올리셔도 된다고 말한다 (그때는 줄이 빠집니다)",
+     /올리지 않으셔도/.test(t), t.slice(0, 300));
+  ok("  0건을 '읽지 못했다' 로 말하지 않는다", t.indexOf("읽지 못했") < 0);
+  await s.p.close();
+
+  console.log("\n── /desk 하는 일이 안 적힌 업체");
+  s = await open("/desk", PRO, Object.assign({ assignment:[], request:[], quote:[],
+    request_item:[] }, { provider_price: [], provider: [{ id:"t-range", subs:[] }] }));
+  t = (await s.p.textContent("#pricebox")) || "";
+  /* ⚠️⚠️ 눌러도 거절되는 단추를 미리 만들지 않습니다 (절대 규칙 5) */
+  ok("⚠️ 하는 일이 없으면 **올리기 단추를 안 낸다**",
+     (await s.p.locator("#pricebox [data-pf='open']").count()) === 0);
+  ok("  무엇을 먼저 해야 하는지 말한다 (막다른 길로 두지 않습니다)",
+     /먼저 알려/.test(t), t.slice(0, 300));
+  await s.p.close();
+
   /* ══ 폰 폭 ═══════════════════════════════════════════════════
      ⚠️⚠️⚠️ **`tools/check-screens.js` 는 이 세 화면을 영원히 못 봅니다.**
      로그인해야 그려지는 자리라, 그 도구에는 **빈 상자**로만 보입니다 —
@@ -1723,8 +1874,11 @@ function stub(p, who, tables, rpcs, up){
      답변 칸이 390px 에서 미는지는 여기서만 드러납니다. */
   const phones = [
     ["/desk 업체 작업실", "/desk", PRO,
-     { assignment:[asg(quoted, "accepted")], request:[quoted],
-       quote:[QUOTE], request_item:ITEMS, review:[RVMINE] }, {}],
+     Object.assign({ assignment:[asg(quoted, "accepted")], request:[quoted],
+       quote:[QUOTE], request_item:ITEMS, review:[RVMINE] }, PRT), {}],
+    ["/desk 가격 올리기 양식", "/desk", PRO,
+     Object.assign({ assignment:[], request:[], quote:[], request_item:[] }, PRT), {},
+     "#pricebox [data-pf='open']"],
     ["/admin 배정 · 지표 · 관리 · 심사", "/admin", { role:"admin", name:"관리자" },
      Object.assign({}, ADMT, BIZ, PROT,
        { review:RVADM, report:REPS }), { biz_metrics: MET }],

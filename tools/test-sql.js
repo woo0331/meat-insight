@@ -156,6 +156,7 @@ try{
      ⚠️ rate limit 은 **되는 쪽도** 재야 합니다 (진짜 손님이 막히면
      그것도 고장입니다). */
   require("./sql/report.js")({ ok, psql, psqlFile, denied, allowed });
+  require("./sql/price.js")({ ok, psql, psqlFile, denied, allowed });
 
 }catch(e){
   bad++; ran++;

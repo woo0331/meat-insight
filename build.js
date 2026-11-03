@@ -31,7 +31,7 @@ global.window = {};
  "js/data/site.js","js/data/catalog.js","js/data/regions.js",
  "js/data/providers.generated.js","js/data/providers.js",
  "js/data/reviews.generated.js","js/data/review.js",
- "js/data/photos.js",
+ "js/data/photos.js","js/card.js",
  "js/data/legal-terms.js","js/data/legal-privacy.js"]
   .forEach(function(f){ require("./" + f); });
 var W = global.window, esc = W.esc, icon = W.icon;

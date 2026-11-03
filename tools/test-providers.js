@@ -54,7 +54,14 @@ const SEED = [
     intro:"실내 타석 열두 개와 스크린 네 대를 둡니다.",
     regions:["gyeonggi"], subs:["rg-in","rg-sim","ls-solo"],
     since:2019, consult_hours:"평일 09:00~22:00",
-    verified:{ brn:true, tel:true }, scale:"mid", brands:["타이틀리스트","캘러웨이"] },
+    verified:{ brn:true, tel:true }, scale:"mid", brands:["타이틀리스트","캘러웨이"],
+    /* ⚠️ 가격은 **업체가 등록한 것**입니다 (0042). 싼 순서로 가져옵니다
+       (tools/pull-providers.js 가 amount 로 줄 세웁니다).
+       ⚠️⚠️ 하위 키는 그 업체의 subs 에 있는 것이어야 합니다 — DB 의
+       트리거가 그것을 봅니다 (여기도 같아야 검사가 거짓이 안 됩니다). */
+    prices:[{ sub:"rg-in", label:"타석 1시간", amount:12000, unit:"1시간" },
+            { sub:"ls-solo", label:"주 1회 · 8회권", amount:400000, unit:"8회",
+              note:"타석 이용료 별도" }] },
   { id:"xss-test", name:"<img src=x onerror=alert(1)>",
     intro:"<script>alert(2)</script> 소개글",
     regions:["seoul"], subs:["ft-mend","ft-grip"], scale:"small" }
@@ -198,6 +205,22 @@ function nowServe(){ return serve(0); }
     ok("대신 갈 곳도 같이 준다", (await p.locator("main .none a.btn").count()) >= 2);
 
     /* 업체가 적은 글이 esc 를 거치는가 */
+    /* ── 업체 화면의 가격표 (0042) ────────────────────────────────
+       ⚠️⚠️ 카드에는 **가장 싼 것 하나**만, 업체 화면에는 **올린 것
+       전부**를 냅니다. 둘이 어긋나면 손님이 카드를 누른 뒤에 다른
+       숫자를 봅니다. */
+    ok("업체 화면에 올린 가격이 **전부** 나온다",
+       (await p.locator(".doc-t table").nth(1).locator("tbody tr").count()) === 2,
+       await p.locator(".doc-t table").nth(1).locator("tbody tr").count());
+    t = (await p.textContent("main")) || "";
+    ok("  금액과 단위가 같이 나온다",
+       t.indexOf("400,000원") >= 0 && t.indexOf("8회") >= 0, t.slice(0, 300));
+    ok("  덧말도 나온다 (타석 이용료 별도)", t.indexOf("타석 이용료 별도") >= 0);
+    /* ⚠️ 가격을 냈다고 **우리가 보증하는 것처럼** 적지 않습니다 */
+    ok("  ⚠️ 거래 당사자가 아니라고 그 자리에서 말한다",
+       /거래 당사자가 아/.test(t));
+    ok("  ⚠️ 조건에 따라 달라질 수 있다고 말한다", /달라질 수 있/.test(t));
+
     await p.goto("http://127.0.0.1:" + h.port + "/pro/xss-test", { waitUntil:"networkidle" });
     const h2 = await p.innerHTML("main");
     ok("⚠️ 업체가 적은 태그가 날것으로 안 들어간다",
@@ -213,19 +236,231 @@ function nowServe(){ return serve(0); }
     ok("메인이 '아직 입점한 업체가 없습니다' 를 더 안 말한다",
        t.indexOf("아직 입점한 업체가 없습니다") < 0);
 
-    /* 업체찾기 — ⚠️ 눌러 봐야 압니다 (보내는 열쇠와 받는 열쇠) */
+    /* ══ 업체찾기 (/search) — 개선 지시서 ═══════════════════════════
+       ⚠️⚠️ **눌러 봐야 압니다.** 보내는 열쇠(q · cat · rg)와 받는 쪽이
+       어긋나면 **거르개가 아무것도 안 걸렀는데 화면은 열립니다** — 앞
+       서비스에서 ?m=apple 을 보내고 mk 를 읽어 링크 검사 · 흐름 검사가
+       전부 통과했습니다.
+       ⚠️⚠️⚠️ **빌드가 찍은 HTML 과 거르개가 다시 그린 HTML 이 같아야
+       합니다.** 다르면 손님이 거르개를 누르는 순간 카드가 조용히
+       달라지고, 크롤러가 읽는 글과도 어긋납니다 (앞 서비스에서 열세 번). */
+    console.log("\n── /search 업체찾기 — 찍힌 것부터");
+    await p.goto("http://127.0.0.1:" + h.port + "/search", { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    t = (await p.textContent("main")) || "";
+    ok("거르개 없이 들어가면 업체가 **전부** 보인다",
+       (await p.locator("#sres .pv").count()) === 2,
+       await p.locator("#sres .pv").count());
+    ok("몇 곳인지 말한다", /업체 2곳/.test(t), t.slice(0, 120));
+    ok("중개자임을 그 자리에서 말한다", /통신판매중개자/.test(t));
+    /* ⚠️⚠️ **자바스크립트 전의 HTML 에 업체가 있어야** 네이버 · 빙 ·
+       LLM 봇이 읽습니다. 그려진 화면만 보는 검사는 영원히 통과합니다 —
+       그래서 **찍힌 파일**을 직접 읽습니다. */
+    const shtml = fs.readFileSync(path.join(ROOT, "search", "index.html"), "utf8");
+    ok("⚠️ 자바스크립트 전의 HTML 에도 업체가 들어 있다 (크롤러가 읽습니다)",
+       shtml.indexOf("성남 그린골프연습장") >= 0);
+    ok("  그 HTML 에 상담 요청 단추도 들어 있다",
+       shtml.indexOf('href="/match?pv=green-pt"') >= 0);
+    /* ⚠️ 승인 · 공개된 업체만 — 자료가 **보기**에서 나오는지 봅니다.
+       화면이 또 좁히면 두 곳에서 좁히는 것이 되어 어긋납니다. */
+    const pull = fs.readFileSync(path.join(ROOT, "tools", "pull-providers.js"), "utf8");
+    ok("⚠️ 자료를 `provider` 표가 아니라 **공개 보기**에서 가져온다 " +
+       "(승인 · 공개 · 검사용 거르기가 그 보기에 있습니다)",
+       pull.indexOf('VIEW = "v_provider_card"') >= 0);
+
+    console.log("\n── /search 카드에 들어 있는 것 (지시서 7번)");
+    const c1 = await p.locator('#sres .pv[data-pv="green-pt"]');
+    ok("상호가 있다", ((await c1.textContent()) || "").indexOf("성남 그린골프연습장") >= 0);
+    ok("지역이 있다", ((await c1.textContent()) || "").indexOf("경기") >= 0);
+    ok("하는 일(분류)이 있다",
+       (await c1.locator(".pv-c li").count()) >= 1, await c1.locator(".pv-c li").count());
+    ok("⚠️ 사진 자리는 **아이콘 타일**이다 (남의 사진을 깔지 않습니다)",
+       (await c1.locator(".pv-th").count()) === 1 &&
+       (await c1.locator("img").count()) === 0);
+    ok("상담 요청 단추가 그 업체로 간다",
+       ((await c1.locator('a[href^="/match?pv="]').first().getAttribute("href")) || "")
+         === "/match?pv=green-pt");
+    ok("자세히 보기가 업체 화면으로 간다",
+       (await c1.locator('a[href="/pro/green-pt"]').count()) >= 1);
+    /* ── 등록된 가격 (0042 · 지시서 7번의 "실제 등록 가격") ──────────
+       ⚠️⚠️ **지어낸 값이 아닙니다.** 업체가 /desk 에서 올린 줄을
+       그대로 냅니다 (`tools/sql/price.js` 가 DB 쪽을 누릅니다).
+       ⚠️ 카드에는 **가장 싼 것**을 냅니다 — 센 값입니다 (저장하지
+       않습니다 · 절대 규칙 1). */
+    const t1 = (await c1.textContent()) || "";
+    ok("등록된 가격이 카드에 나온다", (await c1.locator(".pv-p").count()) === 1);
+    ok("  **가장 싼 것**이 나온다 (12,000원)", t1.indexOf("12,000원") >= 0, t1);
+    /* ⚠️⚠️ 단위가 빠지면 한 번 값인지 한 달 값인지 모릅니다 */
+    ok("  ⚠️ 단위가 **같이** 나온다", t1.indexOf("1시간") >= 0, t1);
+    ok("  그 밖에 몇 가지가 더 있는지 말한다", /그 밖 1가지/.test(t1), t1);
+    /* ⚠️⚠️ 가격을 **안 올린** 업체는 그 줄이 아예 없어야 합니다 —
+       "상담 후 견적" 같은 말을 우리가 지어 넣지 않습니다 (절대 규칙 5). */
+    const c2 = await p.locator('#sres .pv[data-pv="xss-test"]');
+    ok("⚠️ 가격을 안 올린 업체는 가격 줄이 **아예 없다**",
+       (await c2.locator(".pv-p").count()) === 0);
+    const tx = (await c2.textContent()) || "";
+    ok("  그 자리에 **지어낸 말**이 없다",
+       tx.indexOf("상담 후") < 0 && tx.indexOf("문의") < 0 && tx.indexOf("0원") < 0, tx);
+
+    console.log("\n── /search 거르개 — ⚠️ 새로고침하지 않습니다");
+    /* ⚠️ 새로고침하면 이 표시가 날아갑니다 — 그것으로 잽니다 */
+    await p.evaluate(function(){ window.__kept = "여기 있습니다"; });
+    await p.click('a[data-sf="cat"][data-v="fitting"]');
+    await p.waitForTimeout(250);
+    ok("⚠️ 분류를 누르면 **새로고침되지 않는다**",
+       (await p.evaluate(function(){ return window.__kept; })) === "여기 있습니다");
+    ok("  주소에 조건이 담긴다 (복사해 보낼 수 있고 뒤로 가기도 됩니다)",
+       (await p.evaluate(function(){ return location.search; })) === "?cat=fitting",
+       await p.evaluate(function(){ return location.search; }));
+    ok("  그 분류의 업체만 남는다", (await p.locator("#sres .pv").count()) === 1,
+       await p.locator("#sres .pv").count());
+    ok("  남은 것이 맞는 업체다",
+       (await p.locator("#sres .pv").first().getAttribute("data-pv")) === "xss-test");
+    ok("  지금 조건을 **글로** 말한다",
+       /피팅/.test((await p.textContent("#sfnow")) || ""), await p.textContent("#sfnow"));
+    ok("  눌린 칸이 화면 읽는 기계에도 눌린 것으로 보인다",
+       (await p.getAttribute('a[data-sf="cat"][data-v="fitting"]', "aria-pressed")) === "true");
+
+    /* ⚠️⚠️ 조건을 **겹쳐도** 지켜지나 — 분류를 고른 뒤 지역을 누르면
+       분류가 조용히 풀리면 안 됩니다 (링크 주소를 다시 지어야 합니다). */
+    await p.click('a[data-sf="rg"][data-v="seoul"]');
+    await p.waitForTimeout(250);
+    ok("분류 + 지역이 **같이** 걸린다",
+       (await p.evaluate(function(){ return location.search; })).indexOf("cat=fitting") >= 0 &&
+       (await p.evaluate(function(){ return location.search; })).indexOf("rg=seoul") >= 0,
+       await p.evaluate(function(){ return location.search; }));
+    ok("  둘 다 맞는 업체가 남는다", (await p.locator("#sres .pv").count()) === 1);
+    /* 맞는 것이 없는 조합 — ⚠️ "업체 0곳" 과 다른 말을 해야 합니다 */
+    await p.click('a[data-sf="rg"][data-v="busan"]');
+    await p.waitForTimeout(250);
+    t = (await p.textContent("#sres")) || "";
+    ok("조건에 맞는 업체가 없으면 **그렇게** 말한다",
+       /조건에 맞는 업체가 없습니다/.test(t), t.slice(0, 160));
+    ok("  ⚠️ '등록된 업체가 없습니다' 라고 **말하지 않는다** (다른 상황입니다)",
+       t.indexOf("아직 등록된 업체가 없습니다") < 0, t.slice(0, 200));
+    ok("  막다른 길로 두지 않는다 (매칭 요청 단추를 낸다)",
+       (await p.locator('#sres a[href="/match"]').count()) === 1);
+    ok("  조건을 지우는 길도 낸다",
+       (await p.locator('#sres a[href="/search"]').count()) === 1);
+    ok("  지킬 수 없는 약속을 하지 않는다",
+       !/시간 안에|며칠|곧 등록/.test(t), t.slice(0, 200));
+
+    /* 뒤로 가기 */
+    await p.goBack();
+    await p.waitForTimeout(250);
+    ok("⚠️ 뒤로 가기가 **전 조건으로** 돌아간다",
+       (await p.locator("#sres .pv").count()) === 1 &&
+       (await p.evaluate(function(){ return location.search; })).indexOf("rg=seoul") >= 0,
+       await p.evaluate(function(){ return location.search; }));
+
+    console.log("\n── /search 검색어 (머리말 검색창)");
     await p.goto("http://127.0.0.1:" + h.port + "/search?q=" + encodeURIComponent("연습장"),
                  { waitUntil:"networkidle" });
     await p.waitForTimeout(250);
-    t = (await p.textContent("#sres")) || "";
-    ok("검색에서 업체가 먼저 나온다", /맞는 업체 1곳/.test(t), t.slice(0, 60));
-    ok("그 링크가 업체 화면으로 간다",
-       ((await p.locator("#sres a").first().getAttribute("href")) || "") === "/pro/green-pt");
+    ok("검색어로 좁혀진다", (await p.locator("#sres .pv").count()) === 1,
+       await p.locator("#sres .pv").count());
+    ok("  맞는 업체가 남는다",
+       (await p.locator("#sres .pv").first().getAttribute("data-pv")) === "green-pt");
+    ok("  검색창에 친 글이 **남아 있다** (다시 치게 하지 않습니다)",
+       (await p.inputValue("#q")) === "연습장");
     await p.goto("http://127.0.0.1:" + h.port + "/search?q=" + encodeURIComponent("경기"),
                  { waitUntil:"networkidle" });
     await p.waitForTimeout(250);
-    ok("지역 이름으로도 업체가 찾아진다",
-       /맞는 업체/.test((await p.textContent("#sres")) || ""));
+    ok("지역 이름으로도 찾아진다", (await p.locator("#sres .pv").count()) === 1);
+    /* ⚠️ 검색창에서 보낼 때도 새로고침하지 않습니다 */
+    await p.evaluate(function(){ window.__kept2 = "있습니다"; });
+    await p.fill("#q", "피팅");
+    await p.press("#q", "Enter");
+    await p.waitForTimeout(300);
+    ok("⚠️ 검색창에서 보내도 **새로고침되지 않는다**",
+       (await p.evaluate(function(){ return window.__kept2; })) === "있습니다");
+    ok("  주소에 검색어가 담긴다",
+       (await p.evaluate(function(){ return location.search; })).indexOf("q=") >= 0,
+       await p.evaluate(function(){ return location.search; }));
+
+    console.log("\n── /search 업체 비교 (지시서 9번)");
+    await p.goto("http://127.0.0.1:" + h.port + "/search", { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    /* ⚠️⚠️ **고르기 전에는 비교표가 없습니다** — 빈 표를 미리 그려 두면
+       가짜 비교 자료가 들어오는 문이 됩니다 (절대 규칙 1). */
+    ok("⚠️ 고르기 전에는 비교표가 **안 보인다**",
+       (await p.locator("#scmp .cmp-t").count()) === 0);
+    await p.locator("#sres .cmp-x").nth(0).check();
+    await p.waitForTimeout(150);
+    ok("하나만 고르면 아직 비교가 아니다 (표를 안 그린다)",
+       (await p.locator("#scmp .cmp-t").count()) === 0);
+    await p.locator("#sres .cmp-x").nth(1).check();
+    await p.waitForTimeout(200);
+    ok("둘을 고르면 비교표가 나온다", (await p.locator("#scmp .cmp-t").count()) === 1);
+    t = (await p.textContent("#scmp")) || "";
+    ok("  고른 업체가 둘 다 들어간다",
+       t.indexOf("성남 그린골프연습장") >= 0 &&
+       (await p.locator("#scmp thead th").count()) === 3, t.slice(0, 120));
+    ok("  견주는 줄이 있다 (지역 · 하는 일 · 가격 · 후기 …)",
+       (await p.locator("#scmp tbody tr").count()) >= 5,
+       await p.locator("#scmp tbody tr").count());
+    ok("  등록된 가격이 비교표에 들어간다", t.indexOf("12,000원") >= 0, t.slice(0, 400));
+    ok("  ⚠️ 가격을 안 올린 업체의 칸은 **지어내지 않는다**",
+       t.indexOf("상담 후") < 0 && t.indexOf("문의") < 0, t.slice(0, 300));
+    ok("  비교표에서도 상담 요청을 할 수 있다",
+       (await p.locator('#scmp a[href^="/match?pv="]').count()) === 2);
+    /* ⚠️ 업체가 적은 글이 비교표 머리에도 들어갑니다 — esc() 를 지나야 합니다 */
+    ok("  ⚠️ 업체가 쓴 글이 날것으로 안 나간다",
+       (await p.locator("#scmp img").count()) === 0 &&
+       (await p.locator("#scmp script").count()) === 0);
+    await p.click('#scmp button[data-cmp="off"]');
+    await p.waitForTimeout(200);
+    ok("비교를 지우면 표가 사라진다", (await p.locator("#scmp .cmp-t").count()) === 0);
+    ok("  체크도 같이 풀린다",
+       (await p.locator("#sres .cmp-x:checked").count()) === 0);
+
+    console.log("\n── ⚠️ /search 폰 폭 (전수 점검이 못 보는 자리 — 거르개는 눌러야 돕니다)");
+    const ph = await b.newPage({ viewport:{ width:390, height:900 } });
+    await ph.goto("http://127.0.0.1:" + h.port + "/search", { waitUntil:"networkidle" });
+    await ph.waitForTimeout(300);
+    /* ⚠️⚠️ **미끄러지는 상자가 화면을 밀지 않는지** — 격자 칸의 기본
+       min-width:auto 때문에 폰에서 390px 이 688px 이 된 적이 있습니다. */
+    let m = await ph.evaluate(function(){
+      return { doc: document.documentElement.scrollWidth, win: window.innerWidth };
+    });
+    ok("거르개가 있어도 화면이 **가로로 안 밀린다**", m.doc <= m.win + 1,
+       "문서 " + m.doc + "px · 화면 " + m.win + "px");
+    ok("  거르개는 제 상자 안에서 가로로 미끄러진다 (쌓이지 않습니다)",
+       (await ph.evaluate(function(){
+         const c = document.querySelector(".sf-c");
+         return !!c && c.scrollWidth > c.clientWidth;
+       })), "거르개 상자가 미끄러지지 않습니다");
+    /* 폰에서도 거르개가 돌아야 합니다 */
+    await ph.click('a[data-sf="cat"][data-v="fitting"]');
+    await ph.waitForTimeout(250);
+    ok("  폰에서도 거르개가 돈다", (await ph.locator("#sres .pv").count()) === 1);
+    await ph.goto("http://127.0.0.1:" + h.port + "/search", { waitUntil:"networkidle" });
+    await ph.locator("#sres .cmp-x").nth(0).check();
+    await ph.locator("#sres .cmp-x").nth(1).check();
+    await ph.waitForTimeout(250);
+    m = await ph.evaluate(function(){
+      return { doc: document.documentElement.scrollWidth, win: window.innerWidth };
+    });
+    ok("비교표를 펴도 화면이 **가로로 안 밀린다**", m.doc <= m.win + 1,
+       "문서 " + m.doc + "px · 화면 " + m.win + "px");
+    const small = await ph.evaluate(function(){
+      const out = [];
+      Array.prototype.forEach.call(document.querySelectorAll("main *"), function(e){
+        if(!e.firstChild || e.firstChild.nodeType !== 3) return;
+        if(!(e.textContent || "").trim()) return;
+        const fs2 = parseFloat(getComputedStyle(e).fontSize);
+        if(fs2 < 12) out.push(e.className + " " + fs2 + "px");
+      });
+      return out.slice(0, 5);
+    });
+    ok("12px 미만 글자가 없다", small.length === 0, small.join(" · "));
+    const tap = await ph.evaluate(function(){
+      return Array.prototype.filter.call(
+        document.querySelectorAll("main a, main button, main label"),
+        function(e){ return e.getBoundingClientRect().height < 39.5; }).length;
+    });
+    ok("누르는 것이 40px 이상이다", tap === 0, tap + "개");
+    await ph.close();
 
     ok("화면 에러 · CSP 거절이 0건이다", hits.length === 0, hits.join(" | "));
 

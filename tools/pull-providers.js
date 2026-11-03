@@ -52,6 +52,15 @@ const COLS = "id,name,intro,regions,gu,subs,since,consult_hours,verified,brands,
    ③ 보기 자체가 `listed = true and is_test = false` 로 좁힙니다 (0032). */
 const NOT_TEST = "&is_test=eq.false";
 
+/* ⚠️⚠️ **가격은 다른 보기에서 옵니다** (0042 의 v_provider_price_public).
+   그 보기가 공개 · 승인 · 검사용 아님 · 내리지 않음 넷을 전부 봅니다 —
+   보기는 RLS 를 지나지 않으므로 **그 where 절이 자물쇠**입니다.
+   ⚠️ 업체와 **같은 번에** 가져옵니다. 따로 가져오면 한쪽만 새것이 되어
+   가격이 없는 업체 · 업체가 없는 가격이 생기고, 그때 가격은 **아무
+   화면에도 안 뜨면서 아무 에러도 안 납니다** (후기에서 겪은 자리). */
+const PVIEW = "v_provider_price_public";
+const PCOLS = "id,provider_id,sub,label,amount,unit,note";
+
 function write(rows, note){
   const body =
 '/* ════════════════════════════════════════════════════════════════════\n' +
@@ -68,6 +77,8 @@ function write(rows, note){
 '   ⚠️ `listed = true` 인 업체만 들어옵니다 (RLS 의 provider_public).\n' +
 '   ⚠️ 연락처 · 담당자는 **안 들어옵니다** — 저장소는 공개입니다.\n' +
 '   ⚠️⚠️ 평점 · 후기 수를 여기 넣지 마세요. 실제 후기에서 **계산**합니다.\n' +
+'   ⚠️ 가격(`prices`)은 업체가 **스스로 등록한 것**입니다 (0042).\n' +
+'      등록이 0건이면 그 칸이 아예 없고, 카드에서 가격 줄이 빠집니다.\n' +
 '\n' +
 '   가져온 때   ' + note + '\n' +
 '   업체        ' + rows.length + '곳\n' +
@@ -146,9 +157,51 @@ if(!url || !key){
       o.verified = p.verified;
     return o;
   });
+  /* ── 가격 (0042) ──────────────────────────────────────────────
+     ⚠️ 못 읽으면 **멈춥니다.** 가격 없이 찍으면 "가격을 안 올린 업체" 와
+     "가격을 못 읽은 업체" 가 화면에서 똑같이 보입니다 — 그 둘은 다릅니다. */
+  const pr = await fetch(url.replace(/\/+$/, "") +
+    "/rest/v1/" + PVIEW + "?select=" + PCOLS + "&order=amount.asc",
+    { headers: { apikey: key, authorization: "Bearer " + key } });
+  if(!pr.ok){
+    const pwhy = await pr.text().catch(function(){ return ""; });
+    console.error("❌ 가격을 못 읽었습니다 — HTTP " + pr.status +
+                  "\n   ⚠️ 지금 파일을 그대로 둡니다 (가격 없이 덮어쓰지 않습니다).");
+    if(pwhy.indexOf(PVIEW) >= 0 || pr.status === 404)
+      console.error("   ⚠️⚠️ 공개 보기(" + PVIEW + ")가 없습니다 — " +
+                    "db/migrations/0042 를 아직 올리지 않으셨습니다.");
+    else if(pwhy) console.error("   " + pwhy.slice(0, 200));
+    process.exit(1);
+  }
+  const prices = await pr.json();
+  if(!Array.isArray(prices)){
+    console.error("❌ 가격이 목록이 아닙니다 — 파일을 그대로 둡니다.");
+    process.exit(1);
+  }
+  /* ⚠️⚠️ **업체가 없는 가격은 버리지 않고 말합니다** — 그 가격은 어느
+     화면에도 안 뜨면서 아무 에러도 안 납니다. 보기 둘이 어긋났다는
+     뜻이고, 조용히 지나가면 다음 차수가 모릅니다. */
+  const byId = {};
+  clean.forEach(function(p){ byId[p.id] = p; });
+  const lost = [];
+  prices.forEach(function(x){
+    const p = byId[x.provider_id];
+    if(!p){ lost.push(x.provider_id); return; }
+    if(!p.prices) p.prices = [];
+    const o = { sub: x.sub, label: x.label, amount: Number(x.amount), unit: x.unit };
+    if(x.note !== null && x.note !== undefined && String(x.note).trim() !== "")
+      o.note = x.note;
+    p.prices.push(o);
+  });
+  if(lost.length)
+    console.warn("⚠️ 업체 목록에 없는 업체의 가격 " + lost.length + "건을 뺐습니다 — " +
+                 Array.from(new Set(lost)).join(" · ") +
+                 "\n   보기 둘이 어긋났습니다 (0032 · 0042 의 where 를 보세요).");
+
   const now = new Date().toISOString().replace("T", " ").slice(0, 16) + " UTC";
   write(clean, now);
-  console.log("업체 " + clean.length + "곳을 가져왔습니다 — " + now);
+  console.log("업체 " + clean.length + "곳 · 가격 " +
+              (prices.length - lost.length) + "건을 가져왔습니다 — " + now);
 })().catch(function(e){
   console.error("❌ " + e.message + "\n   ⚠️ 지금 파일을 그대로 둡니다.");
   process.exit(1);

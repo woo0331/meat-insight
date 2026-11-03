@@ -75,8 +75,35 @@ exports.build = function(p){
       }).join("") + '</tbody></table></div></div></section>';
   }
 
-  if(subs.length){
+  /* ── 등록된 가격 (0042) ───────────────────────────────────────────
+     ⚠️⚠️ **업체가 스스로 등록한 것만** 냅니다. 0건이면 이 구간이
+     **아예 없습니다** — "상담 후 견적" 같은 말을 우리가 지어 넣지
+     않습니다 (절대 규칙 1 · 5). 그 대신 아래 상담 단추가 늘 있습니다.
+     ⚠️ 단위를 **금액 옆에** 적습니다 — 한 번 값인지 한 달 값인지가
+     빠지면 그게 손님이 오해하는 자리입니다.
+     ⚠️ 싼 순서로 둡니다 (pull 이 amount 로 줄 세워 가져옵니다) —
+     우리가 고른 차례가 아니라 숫자 차례입니다. */
+  var prices = Array.isArray(p.prices) ? p.prices : [];
+  if(prices.length){
     body += '<section class="sec sec-alt"><div class="wrap">' +
+      '<div class="sec-hd"><h2>등록된 가격 ' + W.won(prices.length) + '가지</h2>' +
+      '<p>업체가 직접 등록한 금액입니다. 조건에 따라 달라질 수 있어 ' +
+      '상담에서 확정합니다 — 골프올인원은 거래 당사자가 아닙니다.</p></div>' +
+      '<div class="doc-t"><table><thead><tr>' +
+        '<th scope="col">무엇</th><th scope="col">서비스</th>' +
+        '<th scope="col">금액</th></tr></thead><tbody>' +
+      prices.map(function(x){
+        var f = W.amSub(x.sub);
+        return '<tr><th scope="row">' + esc(x.label) +
+          (x.note ? '<i class="fe-d">' + esc(x.note) + '</i>' : '') + '</th>' +
+          '<td>' + esc(f ? (f.cat.name + " · " + f.item.name) : x.sub) + '</td>' +
+          '<td class="pr-amt"><b>' + esc(W.won(x.amount)) + '원</b>' +
+            ' / ' + esc(x.unit) + '</td></tr>';
+      }).join("") + '</tbody></table></div></div></section>';
+  }
+
+  if(subs.length){
+    body += '<section class="sec' + (prices.length ? '' : ' sec-alt') + '"><div class="wrap">' +
       '<div class="sec-hd"><h2>이 업체가 다루는 것</h2></div>' +
       '<ul class="chips">' + subs.map(function(k){
         var f = W.amSub(k);

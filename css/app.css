@@ -682,3 +682,24 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 /* 돈 칸은 오른쪽으로, 자릿수가 흔들리지 않게 */
 #feebox .doc-t td{ text-align:right; font-variant-numeric: tabular-nums; }
 #feebox .doc-t th[scope="row"]{ text-align:left; }
+
+/* 업체 화면의 상담 길 — ⚠️ 단추가 둘이라 줄바꿈을 봅니다 */
+.none-sub{ margin-top:8px; font-size:14px; color: var(--ink3); }
+.none .btn + .btn{ margin-left:10px; }
+@media (max-width: 560px){
+  /* ⚠️ 폰에서 두 단추가 붙으면 잘못 누릅니다 — 세로로 세웁니다 */
+  .none .btn{ width:100%; }
+  .none .btn + .btn{ margin-left:0; margin-top:10px; }
+}
+
+/* 업체를 보고 오셨을 때 (0035) — ⚠️ 약속이 아니라는 말을 같이 둡니다 */
+.want{ background: var(--grn-soft); border:1.5px solid var(--grn-line);
+       border-radius: var(--r-sm); padding:14px 16px; font-size:15.5px;
+       color: var(--ink2); word-break: keep-all; overflow-wrap: anywhere; }
+.want b{ color: var(--ink); }
+.want p{ margin-top:6px; font-size:14px; color: var(--ink3); }
+
+/* ── 수수료 · 광고 · 멤버십 관리 (2차 지시서 §7) ───────────────── */
+.bz-tabs{ display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 18px; }
+.bz-body{ display:grid; gap:4px; }
+.bz-f{ margin-top:14px; padding-block: 16px 0; border-top:1.5px solid var(--line-soft); }

@@ -76,6 +76,57 @@ module.exports = function(T){
   d = denied(asAnon + "select count(*) from request" + back);
   ok("anon 은 읽지 못한다", d.no && /permission denied/i.test(d.why), d.why);
 
+  /* ══ 0035 — 손님이 보고 오신 업체 (바람이지 배정이 아닙니다) ══ */
+  console.log("\n── 0035 업체 화면에서 온 요청");
+  psql("insert into provider (id, name, listed, is_test) values " +
+       "('mq-real','보고 온 업체', true, false)," +
+       "('mq-hidden','안 보이는 업체', false, false)," +
+       "('mq-test','[검사용] 보고 온', true, true) on conflict (id) do nothing");
+
+  const mk2 = (idem, extra) =>
+    "select make_request(jsonb_build_object('name','ㅇ','tel','010-4444-" + idem +
+    "','services', jsonb_build_array('ls-solo'),'idem','wp-" + idem +
+    "','agree_at', now()" + (extra ? ", " + extra : "") + "))";
+  const noOf = sql => psql("select become(null); set role anon; " + sql);
+
+  const n1 = noOf(mk2("1101", "'wantProvider','mq-real'"));
+  ok("업체를 보고 온 요청이 들어간다", /^SW-/.test(n1), n1);
+  ok("  바라시는 업체가 적힌다",
+     psql("select want_provider from request where no='" + n1 + "'") === "mq-real");
+  /* ⚠️⚠️ **배정이 아닙니다** — 적혔다고 저절로 넘어가면 그 순간
+     제17조 위반입니다 (동의를 안 받고 연락처가 갑니다). */
+  ok("  ⚠️ 그렇다고 **배정되지는 않는다**",
+     psql("select count(*)::text from assignment a join request r on r.id=a.request_id " +
+          "where r.no='" + n1 + "'") === "0");
+  ok("  ⚠️ 제3자 제공 동의도 **그대로 비어 있다**",
+     psql("select coalesce(agree3rd_at::text,'비었음') from request where no='" +
+          n1 + "'") === "비었음");
+
+  /* ⚠️ 묵은 링크 · 빠진 업체 때문에 요청이 통째로 막히면 안 됩니다 */
+  const n2 = noOf(mk2("1102", "'wantProvider','없는업체'"));
+  ok("없는 업체 id 가 와도 **요청은 들어간다**", /^SW-/.test(n2), n2);
+  ok("  칸은 비워 둔다",
+     psql("select coalesce(want_provider,'비었음') from request where no='" +
+          n2 + "'") === "비었음");
+  /* ⚠️ 조용히 사라지면 "왜 그 업체로 안 갔나" 를 아무도 못 댑니다 */
+  ok("  **비웠다는 사실을 기록에 남긴다**",
+     psql("select count(*)::text from audit_log where obj_id='" + n2 +
+          "' and data->>'wantProviderDropped' = 'true'") === "1");
+
+  const n3 = noOf(mk2("1103", "'wantProvider','mq-test'"));
+  ok("⚠️ 검사용 업체는 바람으로도 안 받는다 (손님 화면에 나간 적이 없습니다)",
+     psql("select coalesce(want_provider,'비었음') from request where no='" +
+          n3 + "'") === "비었음");
+  const n4 = noOf(mk2("1104", "'wantProvider','mq-hidden'"));
+  ok("공개 목록에 없는 업체도 안 받는다",
+     psql("select coalesce(want_provider,'비었음') from request where no='" +
+          n4 + "'") === "비었음");
+  const n5 = noOf(mk2("1105"));
+  ok("안 적어 보내면 그냥 빈 칸이다 (전과 같습니다)",
+     /^SW-/.test(n5) &&
+     psql("select coalesce(want_provider,'비었음') from request where no='" +
+          n5 + "'") === "비었음", n5);
+
   console.log("\n── 감사 기록");
   ok("요청마다 감사 기록이 남는다",
      Number(psql("select count(*)::text from audit_log where obj='request' and to_state='new'")) > 0);

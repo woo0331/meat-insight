@@ -134,4 +134,90 @@ module.exports = function(T){
      denied("update provider_membership set ends_on = current_date - 1 where provider_id='gp-test'").no);
   ok("해지일이 시작일과 같은 날은 된다 (하루짜리)",
      allowed("update provider_membership set ends_on = current_date where provider_id='gp-test'").yes);
+
+  /* ══ 0036 — 넣는 문 둘 ══════════════════════════════════════ */
+  console.log("\n── 0036 광고를 **넣는 문** (표를 직접 안 엽니다)");
+  const asAd = u => "select become('" + u + "'); set role authenticated; ";
+  const sa = (u, body) =>
+    asAd(u) + "select save_ad(" + body + ")";
+  const adBody = (extra) =>
+    "jsonb_build_object('provider','gp-test','place','main_hero'," +
+    "'starts_on','2030-01-01','ends_on','2030-01-31','why','검사'" +
+    (extra ? ", " + extra : "") + ", 'price', 10000)";
+
+  const byUser = denied(sa(U, adBody()));
+  ok("업체 회원은 광고를 못 넣는다", byUser.no, byUser.why);
+  ok("  그 거절이 **관리자만**이라고 말한다",
+     byUser.no && byUser.why.indexOf("관리자만") >= 0, byUser.why);
+  const noWhy = denied(asAd(AD) +
+    "select save_ad(jsonb_build_object('provider','gp-test','place','main_hero'," +
+    "'starts_on','2030-01-01','ends_on','2030-01-31','price',1000))");
+  ok("까닭 없이는 못 넣는다 (감사 기록에 남습니다)", noWhy.no, noWhy.why);
+  const badPlace = denied(sa(AD,
+    "jsonb_build_object('provider','gp-test','place','어디','starts_on','2030-01-01'," +
+    "'ends_on','2030-01-31','price',1000,'why','검사')"));
+  ok("없는 자리는 **사람 말로** 거절한다", badPlace.no, badPlace.why);
+  ok("  enum 에러를 그대로 보내지 않는다",
+     badPlace.no && badPlace.why.indexOf("invalid input") < 0, badPlace.why);
+  const noPrice = denied(sa(AD,
+    "jsonb_build_object('provider','gp-test','place','main_hero'," +
+    "'starts_on','2030-01-01','ends_on','2030-01-31','why','검사')"));
+  ok("금액을 안 적으면 막힌다 (0 을 몰래 넣지 않습니다)", noPrice.no, noPrice.why);
+  const zero = allowed(sa(AD,
+    "jsonb_build_object('provider','gp-test','place','main_hero'," +
+    "'starts_on','2030-01-01','ends_on','2030-01-31','price',0,'why','무상')"));
+  ok("⚠️ 0 원은 **된다** (무상 노출 — 너무 넓게 막지 않았다)", zero.yes, zero.why);
+  const NEWAD = zero.out;
+  /* ⚠️⚠️ 넣자마자 손님 화면에 뜨면 안 됩니다 */
+  ok("⚠️ 새로 넣은 광고는 **준비(draft)** 다 (바로 안 뜹니다)",
+     psql("select state::text from ad_run where id='" + NEWAD + "'") === "draft");
+  ok("  그래서 공개 보기에도 안 나온다",
+     psql("select become(null); set role anon; " +
+          "select count(*)::text from v_ad_live where id='" + NEWAD + "'") === "0");
+  ok("  기록이 남는다",
+     psql("select count(*)::text from audit_log where obj='ad_run' " +
+          "and obj_id='" + NEWAD + "'") === "1");
+  const ghostPv = denied(sa(AD,
+    "jsonb_build_object('provider','없는곳','place','main_hero'," +
+    "'starts_on','2030-01-01','ends_on','2030-01-31','price',0,'why','검사')"));
+  ok("없는 업체로는 못 넣는다", ghostPv.no, ghostPv.why);
+  const insDirect = denied(asAd(AD) +
+    "insert into ad_run (provider_id, place, starts_on, ends_on, price) " +
+    "values ('gp-test','main_hero', current_date, current_date, 0)");
+  ok("표에 직접 넣는 길이 없다 (문으로만)", insDirect.no, insDirect.why);
+
+  console.log("\n── 0036 업체에 멤버십을 **다는 문**");
+  const sm = (u, body) => asAd(u) + "select set_membership(" + body + ")";
+  psql("insert into membership_plan (id, name, monthly) values ('mz-basic','기본', 49000) " +
+       "on conflict (id) do nothing");
+  const mByUser = denied(sm(U,
+    "jsonb_build_object('provider','gp-test','plan','mz-basic','why','검사')"));
+  ok("업체 회원은 멤버십을 못 단다", mByUser.no, mByUser.why);
+  const mNoWhy = denied(sm(AD,
+    "jsonb_build_object('provider','gp-test','plan','mz-basic')"));
+  ok("까닭 없이는 못 단다", mNoWhy.no, mNoWhy.why);
+  const mGhost = denied(sm(AD,
+    "jsonb_build_object('provider','gp-test','plan','없는요금제','why','검사')"));
+  ok("없는 요금제는 못 단다", mGhost.no, mGhost.why);
+  ok("관리자가 단다",
+     allowed(sm(AD, "jsonb_build_object('provider','gp-test','plan','mz-basic'," +
+                    "'why','제휴 계약')")).yes);
+  ok("  달린다", psql("select plan_id from provider_membership " +
+                     "where provider_id='gp-test'") === "mz-basic");
+  /* ⚠️⚠️ 청구가 생기지 않습니다 — 받은 돈이라고 말하지 않습니다 */
+  ok("⚠️ 달아도 **입금 기록이 생기지 않는다** (청구 장치가 없습니다)",
+     psql("select count(*)::text from settlement where provider_id='gp-test'") === "0");
+  const badDate = denied(sm(AD,
+    "jsonb_build_object('provider','gp-test','plan','mz-basic'," +
+    "'starts_on','2030-02-01','ends_on','2030-01-01','why','검사')"));
+  ok("끝나는 날이 더 빠르면 막힌다", badDate.no, badDate.why);
+  /* ⚠️ 떼는 것은 지우는 것이 아니라 끝나는 날을 적는 것입니다 */
+  ok("요금제를 비워 보내면 **뗀다**",
+     allowed(sm(AD, "jsonb_build_object('provider','gp-test','why','해지')")).yes);
+  ok("  줄을 지우지 않고 **끝나는 날**을 적는다",
+     psql("select (ends_on is not null)::text from provider_membership " +
+          "where provider_id='gp-test'") === "true");
+  ok("  그래도 줄은 남는다 (그때 얼마짜리였나가 사라지지 않게)",
+     psql("select count(*)::text from provider_membership " +
+          "where provider_id='gp-test'") === "1");
 };

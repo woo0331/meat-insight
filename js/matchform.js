@@ -21,6 +21,20 @@
   if(!box || !window.amAuthAsk) return;
 
   var KEEP = (window.WOW_BIZ || {}).applyKeep || "";
+
+  /* ⚠️⚠️ **업체 화면에서 오셨는가** (0035 · `/match?pv=<id>`).
+     ⚠️ 주소의 글자는 **손님이 고칠 수 있는 값**입니다 — 그대로 믿지
+     않습니다. 우리가 아는 업체일 때만 씁니다 (DB 도 다시 봅니다).
+     ⚠️⚠️ 화면이 보내는 열쇠(`pv`)와 읽는 쪽이 다르면 **아무것도 안
+     걸렀는데 통과**합니다 — 지난번 `?m=apple` 과 같은 자리라
+     `tools/test-match.js` 가 보내는 꾸러미까지 뜯어 봅니다. */
+  var WANT = (function(){
+    try{
+      var v = new URLSearchParams(location.search).get("pv");
+      if(!v) return null;
+      return (window.amProvider && window.amProvider(v)) || null;
+    }catch(e){ return null; }
+  })();
   /* ⚠️ 화면을 연 동안 하나 — 다시 열면 새로 만듭니다 */
   var IDEM = (function(){
     try{
@@ -30,18 +44,35 @@
   })();
 
   function services(){
+    /* ⚠️ 업체 화면에서 오셨으면 **그 업체가 하는 것**을 미리 골라
+       둡니다. ⚠️⚠️ 잠그지는 않습니다 — 손님이 다른 것도 같이 요청하실
+       수 있어야 합니다 (고를 수 없는 칸은 고장처럼 보입니다). */
+    var pre = WANT && window.amProviderSubs ? window.amProviderSubs(WANT) : [];
     return (window.amCatsForProvider ? window.amCatsForProvider() : []).map(function(c){
       return '<fieldset class="svc"><legend>' + esc(c.name) + '</legend>' +
         window.amCatItemsForProvider(c).map(function(it){
           return '<label class="chk"><input type="checkbox" name="svc" value="' +
-            esc(it.key) + '" data-cat="' + esc(c.key) + '"><span>' +
+            esc(it.key) + '" data-cat="' + esc(c.key) + '"' +
+            (pre.indexOf(it.key) >= 0 ? " checked" : "") + '><span>' +
             esc(it.name) + '</span></label>';
         }).join("") + '</fieldset>';
     }).join("");
   }
 
+  /* ⚠️⚠️⚠️ **"이 업체로 바로 간다" 고 말하지 않습니다.** 배정은 운영자가
+     하고, 넘기는 순간 상호를 알리고 동의를 다시 받습니다 (제17조 제2항). */
+  function wantNote(){
+    if(!WANT) return "";
+    return '<div class="jrow jrow-full"><div class="want">' +
+      '<b>' + esc(WANT.name) + '</b> 을(를) 보고 오셨습니다.' +
+      '<p>운영자가 조건을 확인한 뒤 이 업체에 전달합니다. ' +
+      '전달하기 전에 <b>다시 여쭙습니다</b> — ' +
+      '바로 이 업체로 간다는 약속은 아닙니다.</p></div></div>';
+  }
+
   function form(){
     return '<form id="mf" class="jform">' +
+      wantNote() +
       '<div class="jrow jrow-full">' +
         '<label>원하는 서비스 <b>*</b></label>' +
         '<div class="svcs">' + services() + '</div>' +
@@ -131,6 +162,9 @@
         budget_min: num(f.budget_min.value), budget_max: num(f.budget_max.value),
         services: picked.map(function(i){ return i.value; }),
         cat: cat, idem: IDEM,
+        /* ⚠️ 바라시는 업체 — **배정이 아니라 바람**입니다 (0035).
+           DB 가 읽는 이름과 글자까지 같아야 합니다 (wantProvider). */
+        wantProvider: WANT ? WANT.id : null,
         /* ⚠️ 동의 시각은 **누른 그 순간**입니다 */
         agree_at: new Date().toISOString()
       }})

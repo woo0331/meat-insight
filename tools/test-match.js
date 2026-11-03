@@ -141,6 +141,94 @@ const FAKE = "https://sb-test.supabase.co";
      done.indexOf("사진") < 0, done.slice(0, 200));
   await p.close();
 
+  console.log("\n── 업체 화면에서 온 요청 (0035 · /match?pv=)");
+  await p.close();
+  p = await b.newPage({ viewport:{ width:1280, height:900 } });
+  await p.route("**/api/session", function(r){
+    return r.fulfill({ status:200, contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:false,
+                             conf:{ url:FAKE, anonKey:"anon-test-key" } }) });
+  });
+  let pvSent = [];
+  await p.route(FAKE + "/rest/v1/rpc/make_request", function(r){
+    pvSent.push(JSON.parse(r.request().postData() || "{}"));
+    return r.fulfill({ status:200, contentType:"application/json", body:'"SW-P1P2-P3P4"' });
+  });
+  /* ⚠️ 업체가 0곳이라 `amProvider()` 가 못 찾습니다 — **빌드가 찍는
+     그 파일을 갈아 끼워서** 흉내 냅니다.
+     ⚠️⚠️ `addInitScript` 로 window 에 미리 넣으면 **안 됩니다** —
+     `providers.generated.js` 가 그 뒤에 실려 빈 배열로 **덮어씁니다**
+     (실제로 그렇게 떨어졌습니다). 자료가 오는 길 그대로 바꿉니다. */
+  await p.route("**/js/data/providers.generated.js*", function(r){
+    return r.fulfill({ status:200, contentType:"text/javascript;charset=utf-8",
+      body: 'window.AM_PROVIDERS_AT="검사";\n' +
+            'window.AM_PROVIDERS=[{"id":"pv-one","name":"남서울 실내연습장",' +
+            '"subs":["ls-solo","rg-sim"]}];\n' });
+  });
+  await p.goto(URL + "?pv=pv-one", { waitUntil:"networkidle" });
+  await p.waitForTimeout(300);
+  const pre = await p.evaluate(function(){
+    return Array.prototype.filter.call(
+      document.querySelectorAll('input[name="svc"]'), function(e){ return e.checked; })
+      .map(function(e){ return e.value; }).sort();
+  });
+  ok("그 업체가 하는 것을 **미리 골라 둔다**",
+     pre.join(",") === "ls-solo,rg-sim", pre.join(","));
+  /* ⚠️ 잠그지 않습니다 — 손님이 다른 것도 같이 요청하실 수 있어야 합니다 */
+  ok("  잠그지는 않는다 (다른 것도 고를 수 있다)",
+     (await p.locator('input[name="svc"]:disabled').count()) === 0);
+  let wt = (await p.textContent("#matchbox")) || "";
+  ok("어느 업체를 보고 왔는지 말해 준다", wt.indexOf("남서울 실내연습장") >= 0, wt.slice(0, 300));
+  /* ⚠️⚠️⚠️ 지키지 못할 약속을 하지 않습니다 (제17조 제2항) */
+  ok("⚠️ 바로 그 업체로 간다는 **약속을 안 한다**",
+     /약속은 아닙니다/.test(wt), wt.slice(0, 400));
+  ok("⚠️ 넘기기 전에 다시 여쭙는다고 적는다", /다시 여쭙습니다/.test(wt), wt.slice(0, 400));
+
+  await p.fill("#m-name", "최손님");
+  await p.fill("#m-tel", "010-2222-3333");
+  await p.check("#m-agree");
+  await p.click('#mf button[type="submit"]');
+  await p.waitForTimeout(400);
+  ok("보내는 꾸러미에 wantProvider 가 들어간다",
+     pvSent.length === 1 && pvSent[0].p.wantProvider === "pv-one",
+     JSON.stringify(pvSent[0] && pvSent[0].p && pvSent[0].p.wantProvider));
+  /* ⚠️⚠️ 열쇠 이름이 DB 가 읽는 것과 **글자까지** 같아야 합니다 —
+     다르면 아무것도 안 걸렀는데 통과합니다 (`?m=apple` 자리). */
+  ok("  열쇠 이름이 DB 가 읽는 것과 같다 (wantProvider)",
+     pvSent.length === 1 && Object.prototype.hasOwnProperty.call(pvSent[0].p, "wantProvider"));
+
+  console.log("\n── 모르는 업체 id 는 **안 씁니다**");
+  await p.goto(URL + "?pv=없는업체", { waitUntil:"networkidle" });
+  await p.waitForTimeout(300);
+  wt = (await p.textContent("#matchbox")) || "";
+  ok("모르는 id 면 그 안내를 안 그린다", wt.indexOf("보고 오셨습니다") < 0, wt.slice(0, 200));
+  ok("  미리 고른 것도 없다",
+     (await p.locator('input[name="svc"]:checked').count()) === 0);
+  pvSent = [];
+  await p.check('input[name="svc"][value="ls-solo"]');
+  await p.fill("#m-name", "최손님");
+  await p.fill("#m-tel", "010-2222-4444");
+  await p.check("#m-agree");
+  await p.click('#mf button[type="submit"]');
+  await p.waitForTimeout(400);
+  ok("  보낼 때도 null 로 보낸다 (주소의 글자를 그대로 믿지 않습니다)",
+     pvSent.length === 1 && pvSent[0].p.wantProvider === null,
+     JSON.stringify(pvSent[0] && pvSent[0].p && pvSent[0].p.wantProvider));
+  await p.close();
+  p = await b.newPage({ viewport:{ width:1280, height:900 } });
+  await p.route("**/api/session", function(r){
+    return r.fulfill({ status:200, contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:false,
+                             conf:{ url:FAKE, anonKey:"anon-test-key" } }) });
+  });
+  await p.route(FAKE + "/rest/v1/rpc/make_request", function(r){
+    sent.push(JSON.parse(r.request().postData() || "{}"));
+    if(mode === "ok")
+      return r.fulfill({ status:200, contentType:"application/json", body:'"SW-A1B2-C3D4"' });
+    return r.fulfill({ status:400, contentType:"application/json",
+      body: JSON.stringify({ message:"연락처를 다시 봐 주세요 — 숫자 아홉에서 열한 자리입니다" }) });
+  });
+
   console.log("\n── 버킷이 켜지면 **접수한 뒤에** 사진 칸이 나옵니다 (§5-4)");
   p = await b.newPage({ viewport:{ width:1280, height:900 } });
   const csp2 = watch(p);

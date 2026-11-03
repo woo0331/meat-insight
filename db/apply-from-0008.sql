@@ -1,9 +1,9 @@
 /* ==================================================================
-   0008 ~ 0033 를 한 번에 —
+   0008 ~ 0036 를 한 번에 —
    Supabase SQL 편집기에 **이 파일을 통째로** 붙여 넣고 Run 하세요.
    ==================================================================
    WARN 빌드가 만드는 파일입니다 — 손으로 고치지 마세요.
-   db/migrations 의 26개를 번호 차례로 이어 붙인 것이고
+   db/migrations 의 29개를 번호 차례로 이어 붙인 것이고
    한 글자도 바꾸지 않았습니다. (node tools/make-apply.js)
 
    이미 0007 까지 돌려 두신 DB 에 쓰는 것입니다.
@@ -4779,6 +4779,623 @@ revoke all on function biz_metrics(jsonb) from public;
 grant execute on function biz_metrics(jsonb) to authenticated;
 
 insert into schema_version (n, name) values (33, '0033_biz_metrics')
+on conflict (n) do nothing;
+
+commit;
+
+/* ---------------------------- 0034_appointment.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0034 — 상담 예약 · 일정 (2차 지시서 §7)
+-- ════════════════════════════════════════════════════════════════════
+-- ⚠️⚠️ **왜 필요한가.** 지금은 업체가 수락하고 "상담 중" 으로 넘기면
+--   그 뒤가 **전화기 안에만** 있습니다. 손님은 언제 만나기로 했는지
+--   화면에서 볼 길이 없고, 운영자는 그 건이 살아 있는지 모릅니다.
+--
+-- ⚠️⚠️ **알림을 보내지 않습니다.** 문자 · 카톡을 붙이지 않았으므로
+--   "예약하면 알려 드립니다" 라고 **말하지 않습니다** (절대 규칙 5).
+--   여기가 하는 일은 **적어 두고 서로 같은 것을 보는 것**까지입니다.
+--   ⚠️ 알림을 붙이시는 날은 정보통신망법 제50조입니다 — (광고) 표기가
+--   아니라 거래 안내라도 **보내는 사람 · 수신거부**는 적어야 하고,
+--   발송사를 쓰면 방침에 수탁자를 **같은 날** 적어야 합니다 (제26조).
+--
+-- ⚠️⚠️ **잡는 사람은 업체입니다** (손님이 아니라). 업체의 일정은
+--   업체가 압니다 — 손님이 아무 때나 잡게 두면 업체가 못 가는 시각이
+--   잡히고, 그건 플랫폼이 한 약속이 됩니다. 손님은 **보고 · 거절**
+--   합니다 (거절은 상태로 남습니다).
+--
+-- ⚠️ 한 요청에 **업체마다 하나**입니다. 여러 줄을 쌓으면 "어느 것이
+--   지금 약속인가" 가 갈립니다 — 바꾸면 그 줄을 덮어쓰고, 바꾼 기록은
+--   `audit_log` 에 남습니다 (문이 하나라서).
+--
+-- ⚠️⚠️ **시각은 timestamptz 입니다.** 날짜만 적으면 "11월 5일 몇 시" 가
+--   사라집니다. ⚠️ 보여 줄 때는 **한국 시각**으로 봅니다 — Supabase 는
+--   UTC 라 그냥 찍으면 아홉 시간 어긋납니다.
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+create table if not exists appointment (
+  id          uuid primary key default gen_random_uuid(),
+  request_id  uuid not null references request(id) on delete cascade,
+  provider_id text not null references provider(id) on delete cascade,
+  at          timestamptz not null,
+  -- 어디서 만나나 — ⚠️ 글자가 아니라 **정해진 셋**입니다
+  --   js/data/deal.js 의 AM_APPT_KIND 와 같아야 하고, 빌드가 맞춰 봅니다.
+  kind        text not null default 'visit'
+              check (kind in ('visit','call','online')),
+  place       text,                       -- 매장 주소 · 연습장 이름 등
+  note        text,
+  -- set 잡힘 · done 만났음 · cancel 취소
+  state       text not null default 'set'
+              check (state in ('set','done','cancel')),
+  why         text,                       -- 취소 · 변경 사유
+  by_user     uuid references auth.users(id) on delete set null,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  unique (request_id, provider_id),
+  constraint appt_place_len check (place is null or length(place) <= 200),
+  constraint appt_note_len  check (note  is null or length(note)  <= 1000)
+);
+create index if not exists appt_at_idx on appointment (at desc);
+
+alter table appointment enable row level security;
+
+-- ── 누가 보는가 ─────────────────────────────────────────────────────
+-- ⚠️⚠️ 정책 안에서 `request` 를 바로 읽으면 무한 재귀입니다 (0005 ·
+--   0008 · 0011 에서 겪은 자리) — `is_my_request()` 로 끊습니다.
+drop policy if exists appt_mine on appointment;
+create policy appt_mine on appointment for select
+  using (is_my_request(request_id));
+
+drop policy if exists appt_provider on appointment;
+create policy appt_provider on appointment for select
+  using (provider_id = my_provider());
+
+drop policy if exists appt_staff on appointment;
+create policy appt_staff on appointment for select
+  using (my_role() in ('staff','admin'));
+
+-- ⚠️⚠️ **쓰기 정책을 일부러 만들지 않았습니다.** RLS 는 정책이 없으면
+--   막습니다 — 쓰는 길은 아래 문 둘뿐입니다 (0008 과 같은 규칙).
+grant select on appointment to authenticated;
+
+
+-- ════════════════════════════════════════════════════════════════════
+-- ① 업체가 일정을 잡습니다 · 고칩니다
+--
+-- ⚠️⚠️ **배정을 수락한 업체만**입니다. `submit_quote`(0008)와 **같은
+--   말로** 거절하면 어느 자물쇠인지 알 수 없으니, 거절하는 글을
+--   그 자리에 맞게 적습니다.
+-- ⚠️ 상태를 여기서 바꾸지 않습니다 — 상태의 문은 `move_state()` 하나
+--   입니다 (0004). 일정은 상담의 **부속**이지 상태가 아닙니다.
+-- ════════════════════════════════════════════════════════════════════
+create or replace function set_appointment(p jsonb)
+  returns uuid language plpgsql security definer
+  set search_path = public as $$
+declare
+  v_me   uuid := auth.uid();
+  v_pv   text := my_provider();
+  v_req  uuid;
+  v_as   text;
+  v_st   deal_state;
+  v_at   timestamptz;
+  v_kind text := coalesce(nullif(btrim(p->>'kind'), ''), 'visit');
+  v_id   uuid;
+  v_was  text;
+begin
+  if v_me is null then
+    raise exception '변경자를 알 수 없습니다 — 로그인한 세션에서만 됩니다';
+  end if;
+  if my_role() <> 'provider' or v_pv is null then
+    raise exception '일정은 배정받은 업체가 잡습니다';
+  end if;
+
+  v_req := nullif(btrim(coalesce(p->>'request', '')), '')::uuid;
+  if v_req is null then raise exception '어느 요청인지 적어 주세요'; end if;
+
+  select state into v_st from request where id = v_req;
+  if v_st is null then raise exception '없는 신청입니다'; end if;
+
+  select state into v_as from assignment
+   where request_id = v_req and provider_id = v_pv;
+  if v_as is null then raise exception '이 신청에 배정되지 않았습니다'; end if;
+  if v_as <> 'accepted' then raise exception '배정을 먼저 수락해 주세요'; end if;
+
+  -- ⚠️⚠️ 끝난 건에는 안 잡습니다. 진행 안 함 · 보류에 일정이 붙으면
+  --   손님 화면에 **살아 있는 약속**처럼 보입니다.
+  if v_st in ('lost','hold') then
+    raise exception '지금 상태(%)에서는 일정을 잡을 수 없습니다', v_st;
+  end if;
+
+  begin
+    v_at := (p->>'at')::timestamptz;
+  exception when others then
+    raise exception '만나실 때를 다시 확인해 주세요';
+  end;
+  if v_at is null then raise exception '언제 만나실지 적어 주세요'; end if;
+  -- ⚠️⚠️ **경계값.** 어제로 잡는 것은 오타입니다 (2025년으로 찍히는
+  --   사고가 여기서 납니다). 하루 전까지는 봐줍니다 — 어젯밤 통화로
+  --   정한 오늘 아침 약속을 오늘 적는 일이 있습니다.
+  if v_at < now() - interval '1 day' then
+    raise exception '지난 때로는 잡을 수 없습니다 — 날짜를 다시 봐 주세요';
+  end if;
+  -- ⚠️ 너무 넓게 막는 것도 고장입니다. 두 해 뒤까지는 둡니다.
+  if v_at > now() + interval '2 years' then
+    raise exception '너무 먼 때입니다 — 날짜를 다시 봐 주세요';
+  end if;
+  if v_kind not in ('visit','call','online') then
+    raise exception '만나는 방법을 방문 · 통화 · 비대면 중에서 골라 주세요';
+  end if;
+
+  select state into v_was from appointment
+   where request_id = v_req and provider_id = v_pv;
+
+  insert into appointment (request_id, provider_id, at, kind, place, note,
+                           state, by_user, updated_at)
+  values (v_req, v_pv, v_at, v_kind,
+          nullif(btrim(coalesce(p->>'place', '')), ''),
+          nullif(btrim(coalesce(p->>'note', '')), ''),
+          'set', v_me, now())
+  on conflict (request_id, provider_id) do update
+    set at = excluded.at, kind = excluded.kind, place = excluded.place,
+        note = excluded.note, state = 'set', why = null,
+        by_user = v_me, updated_at = now()
+  returning id into v_id;
+
+  -- ⚠️ 감사 기록에 **성함 · 연락처를 넣지 않습니다** — 요청 id 로
+  --   찾아갑니다. ⚠️ `place` 도 안 넣습니다 (가게 주소입니다).
+  insert into audit_log (by_user, by_role, obj, obj_id, from_state, to_state, data)
+  values (v_me, 'provider', 'appointment', v_id::text,
+          coalesce(v_was, 'none'), 'set',
+          jsonb_build_object('kind', v_kind, 'request_id', v_req));
+  return v_id;
+end $$;
+
+
+-- ════════════════════════════════════════════════════════════════════
+-- ② 취소 · 만났음
+--
+-- ⚠️⚠️ **손님도 취소할 수 있습니다.** 못 가게 된 것을 말할 길이 없으면
+--   업체가 헛걸음합니다. 다만 "만났음" 은 **업체만** 적습니다 —
+--   만난 사실은 업체가 압니다.
+-- ⚠️ 지우지 않습니다. 잡았다가 취소한 것도 기록입니다.
+-- ════════════════════════════════════════════════════════════════════
+create or replace function move_appointment(p jsonb)
+  returns void language plpgsql security definer
+  set search_path = public as $$
+declare
+  v_me   uuid := auth.uid();
+  v_pv   text := my_provider();
+  v_role app_role := my_role();
+  v_id   uuid;
+  v_to   text := nullif(btrim(coalesce(p->>'to', '')), '');
+  v_why  text := nullif(btrim(coalesce(p->>'why', '')), '');
+  r      appointment%rowtype;
+begin
+  if v_me is null then raise exception '변경자를 알 수 없습니다'; end if;
+  v_id := nullif(btrim(coalesce(p->>'id', '')), '')::uuid;
+  if v_id is null then raise exception '어느 일정인지 적어 주세요'; end if;
+  if v_to not in ('done','cancel') then
+    raise exception '일정은 만났음 · 취소로만 옮깁니다';
+  end if;
+
+  select * into r from appointment where id = v_id;
+  if not found then raise exception '그런 일정이 없습니다'; end if;
+
+  -- ⚠️⚠️ **누가 무엇을 할 수 있나** — 자물쇠마다 **다른 말**로 거절합니다.
+  if v_to = 'done' then
+    if r.provider_id is distinct from v_pv then
+      raise exception '만났음은 그 업체만 적을 수 있습니다';
+    end if;
+  else
+    -- ⚠️⚠️⚠️ **`coalesce` 를 빼면 자물쇠가 통째로 열립니다.** SQL 은
+    --   참 · 거짓 말고 **NULL** 이 있습니다. 업체가 아닌 사람은
+    --   `my_provider()` 가 NULL 이라 `r.provider_id = v_pv` 가 **NULL**
+    --   이고, `not (NULL or false or false)` 는 NULL 입니다 —
+    --   `if NULL then` 은 **안 걸립니다.** 즉 남의 일정을 id 만 알면
+    --   누구나 취소할 수 있었습니다 (검사가 잡았습니다).
+    --   ⚠️ 비교가 NULL 을 낼 수 있는 자리는 **전부** coalesce 로 땅에
+    --   내려놓으세요.
+    if not (coalesce(r.provider_id = v_pv, false)
+            or coalesce(is_my_request(r.request_id), false)
+            or coalesce(v_role in ('staff','admin'), false)) then
+      raise exception '이 일정을 취소할 수 없습니다';
+    end if;
+    -- ⚠️ 취소에는 **까닭을 받습니다** — 헛걸음한 쪽이 알아야 합니다.
+    if v_why is null then raise exception '취소하시는 까닭을 적어 주세요'; end if;
+  end if;
+
+  if r.state = v_to then
+    raise exception '이미 %입니다', case when v_to = 'done' then '만났음' else '취소' end;
+  end if;
+
+  update appointment set state = v_to, why = v_why, by_user = v_me, updated_at = now()
+   where id = v_id;
+
+  insert into audit_log (by_user, by_role, obj, obj_id, from_state, to_state, why, data)
+  values (v_me, v_role, 'appointment', v_id::text, r.state, v_to, v_why,
+          jsonb_build_object('request_id', r.request_id));
+end $$;
+
+revoke all on function set_appointment(jsonb)  from public;
+revoke all on function move_appointment(jsonb) from public;
+grant execute on function set_appointment(jsonb)  to authenticated;
+grant execute on function move_appointment(jsonb) to authenticated;
+
+insert into schema_version (n, name) values (34, '0034_appointment')
+on conflict (n) do nothing;
+
+commit;
+
+/* ---------------------------- 0035_want_provider.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0035 — 업체 화면에서 **상담으로 가는 길** (2차 지시서 §5)
+-- ════════════════════════════════════════════════════════════════════
+-- ⚠️⚠️ **업체 상세 화면에 길이 없었습니다.** 손님이 업체를 보고
+--   "여기 맡기고 싶다" 고 생각해도 누를 것이 없어서, 화면이 "아직
+--   상담 연결을 받지 못합니다" 라고만 말하고 있었습니다 (단추를 미리
+--   두지 않은 것은 맞습니다 — 절대 규칙 5). 이제 견적 흐름이 섰으니
+--   그 길을 엽니다.
+--
+-- ⚠️⚠️⚠️ **"이 업체에 바로 간다" 고 말하면 안 됩니다.** 배정은 운영자가
+--   하고, 넘기는 순간 **상호를 알리고 제3자 제공 동의를 다시** 받습니다
+--   (개인정보보호법 제17조 제2항 · 0004 · 0029). 손님이 적어 주시는
+--   것은 **바람**이고, 그 바람을 운영자가 봅니다. 화면도 그렇게 적습니다 —
+--   "이 업체를 보고 요청하십니다. 운영자가 확인한 뒤 전달합니다."
+--
+-- ⚠️ 그래서 칸 이름이 `want_provider` 입니다 (`provider_id` 가 아니라).
+--   이름이 곧 뜻입니다 — `assigned_provider` 로 지으면 다음 사람이
+--   배정된 것으로 읽습니다.
+--
+-- ⚠️⚠️ **`make_request()` 를 다시 씁니다** (0029 → **0035**).
+--   0029 를 다시 붙여 넣으면 이 파일이 한 일이 **조용히 내려갑니다** —
+--   에러가 안 납니다. 내려갔는지는 이렇게 봅니다:
+--     select prosrc like '%want_provider%' from pg_proc where proname='make_request';
+--   false 면 0029 판입니다. 이 파일을 다시 올리세요.
+--
+-- ⚠️ 없는 업체 id 가 와도 **요청을 거절하지 않습니다.** 링크가 묵었거나
+--   업체가 빠졌을 수 있는데, 그 때문에 손님의 요청이 통째로 막히면
+--   안 됩니다 — 칸을 비우고 **비웠다는 사실을 감사 기록에** 남깁니다
+--   (조용히 사라지지 않게).
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+alter table request
+  add column if not exists want_provider text references provider(id) on delete set null;
+
+comment on column request.want_provider is
+  '손님이 업체 화면에서 보고 적어 주신 **바람**입니다. 배정이 아닙니다 — '
+  '배정은 운영자가 하고 그때 제3자 제공 동의를 다시 받습니다 (0035).';
+
+create index if not exists request_want_idx
+  on request (want_provider) where want_provider is not null;
+
+-- ⚠️ 운영자가 배정 화면에서 봅니다 (0001 의 request_staff 가 이미 읽기를
+--   허락하므로 정책은 그대로입니다).
+
+create or replace function make_request(p jsonb)
+  returns text language plpgsql security definer set search_path = public as $$
+declare
+  v_name  text := btrim(coalesce(p->>'name', ''));
+  v_tel   text := btrim(coalesce(p->>'tel', ''));
+  v_email text := nullif(btrim(coalesce(p->>'email', '')), '');
+  v_region text := nullif(btrim(coalesce(p->>'region', '')), '');
+  v_gu    text := nullif(btrim(coalesce(p->>'gu', '')), '');
+  v_want  text := nullif(btrim(coalesce(p->>'want_at', '')), '');
+  v_body  text := nullif(btrim(coalesce(p->>'body', '')), '');
+  v_idem  text := nullif(btrim(coalesce(p->>'idem', '')), '');
+  v_bmin  bigint := nullif(p->>'budget_min', '')::bigint;
+  v_bmax  bigint := nullif(p->>'budget_max', '')::bigint;
+  -- ⚠️ 0035 — 손님이 보고 오신 업체 (바람이지 배정이 아닙니다)
+  v_wpv   text := nullif(btrim(coalesce(p->>'wantProvider', '')), '');
+  v_wpv_ok text;
+  v_svc   text[] := coalesce(
+             (select array_agg(distinct btrim(x)) from jsonb_array_elements_text(
+                case when jsonb_typeof(p->'services') = 'array'
+                     then p->'services' else '[]'::jsonb end) as t(x)
+              where btrim(x) <> ''), '{}'::text[]);
+  v_digits text;
+  v_no     text;
+  v_id     uuid;
+  v_try    int := 0;
+  v_abc    text := '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+  v_raw    text;
+  k        text;
+begin
+  -- ⚠️ 자물쇠마다 **다른 말**로 거절합니다.
+  if v_name = '' then raise exception '성함을 적어 주세요'; end if;
+  if v_tel  = '' then raise exception '연락처를 적어 주세요'; end if;
+  if length(v_name) > 40 then raise exception '성함이 너무 깁니다'; end if;
+  if v_body is not null and length(v_body) > 2000 then
+    raise exception '남기신 말씀이 너무 깁니다';
+  end if;
+
+  v_digits := regexp_replace(v_tel, '[^0-9]', '', 'g');
+  -- ⚠️ 경계값: 9자리(02-xxx-xxxx)부터 11자리(010-xxxx-xxxx)까지입니다.
+  if length(v_digits) < 9 or length(v_digits) > 11 then
+    raise exception '연락처를 다시 봐 주세요 — 숫자 아홉에서 열한 자리입니다';
+  end if;
+
+  if array_length(v_svc, 1) is null then
+    raise exception '원하시는 서비스를 하나 이상 골라 주세요';
+  end if;
+  if array_length(v_svc, 1) > 10 then
+    raise exception '고르신 서비스가 너무 많습니다 — 열 개까지입니다';
+  end if;
+
+  -- ⚠️ 예산은 **0 도 값입니다** (무료 상담). 음수와 뒤집힌 것만 막습니다.
+  if v_bmin is not null and v_bmin < 0 then raise exception '예산은 0 보다 작을 수 없습니다'; end if;
+  if v_bmax is not null and v_bmax < 0 then raise exception '예산은 0 보다 작을 수 없습니다'; end if;
+  if v_bmin is not null and v_bmax is not null and v_bmin > v_bmax then
+    raise exception '예산의 아래가 위보다 큽니다';
+  end if;
+
+  if (p->>'agree_at') is null then
+    raise exception '수집 · 이용 동의가 필요합니다';
+  end if;
+  if (p->>'agree_at')::timestamptz > now() + interval '5 minutes' then
+    raise exception '동의 시각이 미래입니다';
+  end if;
+  if (p->>'agree_at')::timestamptz < now() - interval '1 day' then
+    raise exception '동의가 오래되었습니다 — 다시 한 번 눌러 주세요';
+  end if;
+
+  -- ⚠️⚠️ **같은 요청을 두 번 넣는 것을 두 겹으로 막습니다.**
+  --   ① idem — 화면이 한 번 연 동안 하나입니다 (두 번 눌러도 하나)
+  --   ② 같은 번호로 10분 안
+  if v_idem is not null then
+    select id, no into v_id, v_no from request where idem = v_idem;
+    if v_id is not null then return v_no; end if;   -- 이미 들어간 것입니다
+  end if;
+  if exists (
+    select 1 from request
+     where regexp_replace(tel, '[^0-9]', '', 'g') = v_digits
+       and created_at > now() - interval '10 minutes')
+  then
+    raise exception '방금 같은 번호로 요청이 들어왔습니다 — 잠시 뒤에 다시 해 주세요';
+  end if;
+
+  -- ⚠️⚠️ **바라시는 업체가 실제로 있는가.** 없으면 **비우고 넘어갑니다** —
+  --   묵은 링크 때문에 손님의 요청이 통째로 막히면 안 됩니다.
+  --   ⚠️ 검사용 업체는 안 받습니다 (손님 화면에 나간 적이 없는 업체입니다).
+  if v_wpv is not null then
+    select id into v_wpv_ok from provider
+     where id = v_wpv and listed = true and is_test = false;
+  end if;
+
+  -- 번호 — 겹치면 다시 뽑습니다 (스무 번까지)
+  loop
+    v_try := v_try + 1;
+    v_raw := '';
+    for i in 1..8 loop
+      v_raw := v_raw || substr(v_abc, 1 + floor(random() * length(v_abc))::int, 1);
+    end loop;
+    v_no := 'SW-' || substring(v_raw from 1 for 4) || '-' || substring(v_raw from 5 for 4);
+    exit when not exists (select 1 from request where no = v_no);
+    if v_try > 20 then raise exception '신청번호를 만들지 못했습니다'; end if;
+  end loop;
+
+  insert into request (no, user_id, side, cat, region, gu,
+                       budget_min, budget_max, want_at, body,
+                       name, tel, email, agree_at, idem, want_provider)
+  values (v_no, auth.uid(), 'golf',
+          -- ⚠️ 분류는 **첫 서비스가 속한 분류**를 화면이 적어 보냅니다.
+          nullif(btrim(coalesce(p->>'cat', '')), ''),
+          v_region, v_gu, v_bmin, v_bmax, v_want, v_body,
+          v_name, v_tel, v_email, (p->>'agree_at')::timestamptz, v_idem, v_wpv_ok)
+  returning id into v_id;
+
+  foreach k in array v_svc loop
+    insert into request_item (request_id, service_id)
+    values (v_id, k)
+    on conflict (request_id, service_id) do nothing;
+  end loop;
+
+  -- ⚠️ 감사 기록에 **성함 · 연락처를 넣지 않습니다.** 신청번호로 찾아갑니다.
+  -- ⚠️⚠️ 바라시는 업체를 **비운 경우 그 사실을 남깁니다** — 조용히
+  --   사라지면 "왜 그 업체로 안 갔나" 를 아무도 못 댑니다.
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, why, data)
+  values (auth.uid(), my_role(), 'request', v_no, 'new', '매칭 요청 접수',
+          jsonb_build_object('services', v_svc, 'region', v_region,
+                             'cat', nullif(btrim(coalesce(p->>'cat', '')), ''),
+                             'wantProvider', v_wpv_ok,
+                             'wantProviderDropped',
+                             (v_wpv is not null and v_wpv_ok is null)));
+
+  return v_no;
+end $$;
+
+revoke all on function make_request(jsonb) from public;
+grant execute on function make_request(jsonb) to anon, authenticated;
+
+insert into schema_version (n, name) values (35, '0035_want_provider')
+on conflict (n) do nothing;
+
+commit;
+
+/* ---------------------------- 0036_ad_membership_doors.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0036 — 광고 집행과 업체 멤버십을 **넣는 문** (2차 지시서 §7)
+-- ════════════════════════════════════════════════════════════════════
+-- ⚠️⚠️ **문이 없어서 관리 화면을 세울 수 없었습니다.** 0026 이 표
+--   셋(`ad_run` · `membership_plan` · `provider_membership`)을 만들고
+--   문을 **둘만** 열었습니다 —
+--     set_ad_state  이미 있는 광고의 상태를 바꿉니다
+--     save_plan     요금제를 만들고 고칩니다
+--   **광고를 처음 넣는 문**과 **업체에 요금제를 다는 문**이 없습니다.
+--   표는 `revoke all` 이라 화면에서 아무것도 못 넣습니다 (그게 맞습니다 —
+--   표를 열면 기록 없이 지나가는 길이 하나 생깁니다).
+--
+-- ⚠️ 그래서 쓰는 길을 **문으로** 엽니다 (0007 · 0026 과 같은 규칙) —
+--   관리자만 · 까닭을 받고 · 감사 기록과 **한 트랜잭션**입니다.
+--
+-- ⚠️⚠️ **돈이 오갔다고 말하지 않습니다.** `ad_run.price` 와 요금제의
+--   `monthly` 는 **적어 둔 금액**이고 청구 · 입금 기록이 아닙니다
+--   (0033 의 매각 지표가 그렇게 갈라 놓았습니다). 이 문도 입금을
+--   만들지 않습니다 — 만들면 받은 적 없는 돈이 장부에 생깁니다.
+--
+-- ⚠️ 검사용 업체(0030)에도 광고 · 멤버십을 달 수 있습니다. 눌러 봐야
+--   하기 때문입니다 — 대신 **보기(view)가 걸러서** 손님에게는 안
+--   나갑니다 (0032 의 v_ad_live) 그리고 지표도 뺍니다 (0033).
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+-- ════════════════════════════════════════════════════════════════════
+-- ① 광고 집행을 넣습니다 · 고칩니다
+--
+-- ⚠️ 자리마다 **무엇을 더 적어야 하는지**가 다릅니다 — 그 규칙은
+--   0026 의 `ad_run_where` 가 들고 있습니다. 여기서 또 적지 않습니다
+--   (두 곳에 적으면 어긋나는 날이 옵니다).
+-- ⚠️⚠️ **상태를 여기서 바꾸지 않습니다.** 상태의 문은 `set_ad_state`
+--   하나입니다 (0026) — 새로 넣는 것은 늘 `draft` 입니다.
+--   그래야 "넣자마자 손님 화면에 떴다" 가 없습니다.
+-- ════════════════════════════════════════════════════════════════════
+create or replace function save_ad(p jsonb)
+  returns uuid language plpgsql security definer
+  set search_path = public as $$
+declare
+  v_me  uuid := auth.uid();
+  v_id  uuid := nullif(btrim(coalesce(p->>'id', '')), '')::uuid;
+  v_pv  text := nullif(btrim(coalesce(p->>'provider', '')), '');
+  v_pl  text := nullif(btrim(coalesce(p->>'place', '')), '');
+  v_why text := nullif(btrim(coalesce(p->>'why', '')), '');
+  v_price bigint;
+begin
+  if v_me is null then raise exception '로그인이 필요합니다'; end if;
+  if my_role() <> 'admin' then
+    raise exception '광고 집행은 관리자만 넣습니다';
+  end if;
+  if v_why is null then
+    raise exception '까닭을 적어야 합니다 — 감사 기록에 남습니다';
+  end if;
+  if v_pv is null then raise exception '어느 업체인지 골라 주세요'; end if;
+  if not exists (select 1 from provider where id = v_pv) then
+    raise exception '없는 업체입니다 — %', v_pv;
+  end if;
+  if v_pl is null then raise exception '어느 자리인지 골라 주세요'; end if;
+
+  -- ⚠️⚠️ **사람 말로 거절합니다.** 그냥 형변환에 맡기면
+  --   `invalid input value for enum ad_place: "x"` 가 그대로 화면에
+  --   갑니다 (0008 에서 겪은 자리).
+  if v_pl not in ('main_hero','main_band','cat_top','region') then
+    raise exception '광고 자리를 메인 히어로 · 메인 띠 · 분류 상단 · 지역 중에서 골라 주세요';
+  end if;
+  begin
+    v_price := (p->>'price')::bigint;
+  exception when others then
+    raise exception '광고 금액을 숫자로 적어 주세요';
+  end;
+  -- ⚠️ 0 원도 됩니다 (무상 노출) — 안 적은 것만 막습니다.
+  if p->'price' is null or jsonb_typeof(p->'price') = 'null' then
+    raise exception '광고 금액을 적어 주세요 (무상이면 0)';
+  end if;
+
+  if v_id is null then
+    insert into ad_run (provider_id, place, cat_key, region,
+                        starts_on, ends_on, price, state, note, by_user)
+    values (v_pv, v_pl::ad_place,
+            nullif(btrim(coalesce(p->>'cat_key', '')), ''),
+            nullif(btrim(coalesce(p->>'region', '')), ''),
+            (p->>'starts_on')::date, (p->>'ends_on')::date,
+            v_price, 'draft', nullif(btrim(coalesce(p->>'note', '')), ''), v_me)
+    returning id into v_id;
+  else
+    -- ⚠️⚠️ **상태는 안 건드립니다** (set_ad_state 가 그 문입니다).
+    update ad_run set provider_id = v_pv, place = v_pl::ad_place,
+           cat_key = nullif(btrim(coalesce(p->>'cat_key', '')), ''),
+           region  = nullif(btrim(coalesce(p->>'region', '')), ''),
+           starts_on = (p->>'starts_on')::date,
+           ends_on   = (p->>'ends_on')::date,
+           price = v_price,
+           note = nullif(btrim(coalesce(p->>'note', '')), ''),
+           by_user = v_me
+     where id = v_id;
+    if not found then raise exception '그런 광고가 없습니다'; end if;
+  end if;
+
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, why, data)
+  values (v_me, 'admin', 'ad_run', v_id::text, 'draft', v_why,
+          jsonb_build_object('provider_id', v_pv, 'place', v_pl, 'price', v_price));
+  return v_id;
+end $$;
+
+
+-- ════════════════════════════════════════════════════════════════════
+-- ② 업체에 요금제를 답니다 · 뗍니다
+--
+-- ⚠️⚠️ **청구가 생기지 않습니다.** 요금제를 달아도 돈이 오가는 기록은
+--   아무 데도 안 생깁니다 — 매각 지표가 `mship` 을 "청구 기록 없음"
+--   으로 내놓는 까닭입니다 (0033). 청구를 만드는 날은 표를 하나 더
+--   만들어야 하고, 그때까지 **받은 돈이라고 말하지 않습니다.**
+-- ⚠️ 떼는 것은 지우는 것이 아니라 **끝나는 날을 적는 것**입니다 —
+--   지우면 "그때 얼마짜리였나" 가 사라집니다.
+-- ════════════════════════════════════════════════════════════════════
+create or replace function set_membership(p jsonb)
+  returns void language plpgsql security definer
+  set search_path = public as $$
+declare
+  v_me   uuid := auth.uid();
+  v_pv   text := nullif(btrim(coalesce(p->>'provider', '')), '');
+  v_plan text := nullif(btrim(coalesce(p->>'plan', '')), '');
+  v_from date;
+  v_to   date;
+  v_why  text := nullif(btrim(coalesce(p->>'why', '')), '');
+  v_had  text;
+begin
+  if v_me is null then raise exception '로그인이 필요합니다'; end if;
+  if my_role() <> 'admin' then
+    raise exception '멤버십은 관리자만 답니다';
+  end if;
+  if v_why is null then
+    raise exception '까닭을 적어야 합니다 — 감사 기록에 남습니다';
+  end if;
+  if v_pv is null then raise exception '어느 업체인지 골라 주세요'; end if;
+  if not exists (select 1 from provider where id = v_pv) then
+    raise exception '없는 업체입니다 — %', v_pv;
+  end if;
+
+  begin
+    v_from := coalesce(nullif(btrim(coalesce(p->>'starts_on', '')), '')::date,
+                       (now() at time zone 'Asia/Seoul')::date);
+    v_to   := nullif(btrim(coalesce(p->>'ends_on', '')), '')::date;
+  exception when others then
+    raise exception '날짜를 다시 확인해 주세요';
+  end;
+  if v_to is not null and v_to < v_from then
+    raise exception '끝나는 날이 시작하는 날보다 빠릅니다';
+  end if;
+
+  select plan_id into v_had from provider_membership where provider_id = v_pv;
+
+  -- ⚠️ 떼는 것 — 요금제를 비워 보내면 **끝나는 날**을 적습니다.
+  if v_plan is null then
+    if v_had is null then raise exception '달려 있는 멤버십이 없습니다'; end if;
+    update provider_membership
+       set ends_on = coalesce(v_to, (now() at time zone 'Asia/Seoul')::date),
+           by_user = v_me, at = now()
+     where provider_id = v_pv;
+  else
+    if not exists (select 1 from membership_plan where id = v_plan) then
+      raise exception '없는 요금제입니다 — %', v_plan;
+    end if;
+    insert into provider_membership (provider_id, plan_id, starts_on, ends_on, by_user)
+    values (v_pv, v_plan, v_from, v_to, v_me)
+    on conflict (provider_id) do update
+      set plan_id = excluded.plan_id, starts_on = excluded.starts_on,
+          ends_on = excluded.ends_on, by_user = v_me, at = now();
+  end if;
+
+  insert into audit_log (by_user, by_role, obj, obj_id, from_state, to_state, why, data)
+  values (v_me, 'admin', 'provider_membership', v_pv,
+          coalesce(v_had, 'none'), coalesce(v_plan, '뗌'), v_why,
+          jsonb_build_object('starts_on', v_from, 'ends_on', v_to));
+end $$;
+
+revoke all on function save_ad(jsonb)        from public;
+revoke all on function set_membership(jsonb) from public;
+grant execute on function save_ad(jsonb)        to authenticated;
+grant execute on function set_membership(jsonb) to authenticated;
+
+insert into schema_version (n, name) values (36, '0036_ad_membership_doors')
 on conflict (n) do nothing;
 
 commit;

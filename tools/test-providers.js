@@ -127,11 +127,22 @@ function nowServe(){ return serve(0); }
     ok("⚠️ 연락처를 화면에 두지 않는다", !/01[0-9]-?[0-9]{3,4}-?[0-9]{4}/.test(t));
     const html = await p.content();
     ok("⚠️ 구조화 데이터에 aggregateRating 이 없다", html.indexOf("aggregateRating") < 0);
-    /* ⚠️ 상담 길 — 지금은 **없다고 말하고** 다른 길을 냅니다.
-       상담 연결을 세우는 날 이 두 줄을 "단추가 있다" 로 바꾸세요. */
-    ok("상담이 아직 안 된다고 **말한다** (막다른 길로 두지 않는다)",
-       /아직 상담 연결을 받지 못합니다/.test(t));
-    ok("대신 갈 곳을 준다", (await p.locator("main .none a.btn").count()) >= 1);
+    /* ⚠️⚠️ 상담 길 (0035) — 이제 단추가 있습니다. 재는 것은 **단추가
+       있는가**와 **지키지 못할 약속을 하지 않는가** 둘입니다. */
+    ok("이 업체로 요청하는 단추가 있다",
+       (await p.locator('main a.btn[href^="/match?pv="]').count()) === 1);
+    ok("  그 주소에 업체 id 가 실린다",
+       (await p.getAttribute('main a.btn[href^="/match?pv="]', "href")) ===
+       "/match?pv=green-pt",
+       await p.getAttribute('main a.btn[href^="/match?pv="]', "href"));
+    /* ⚠️⚠️⚠️ **"바로 이 업체로 간다" 고 말하면 거짓말입니다** — 배정은
+       운영자가 하고, 넘기는 순간 상호를 알리고 제3자 제공 동의를 다시
+       받습니다 (제17조 제2항). 화면이 그것을 적는지 봅니다. */
+    ok("⚠️ 바로 간다는 약속을 **하지 않는다**",
+       /약속은 아닙니다/.test(t), t.slice(0, 400));
+    ok("⚠️ 넘기기 전에 다시 여쭙는다고 적는다",
+       /연락처 전달 동의를 다시/.test(t), t.slice(0, 400));
+    ok("대신 갈 곳도 같이 준다", (await p.locator("main .none a.btn").count()) >= 2);
 
     /* 업체가 적은 글이 esc 를 거치는가 */
     await p.goto("http://127.0.0.1:" + h.port + "/pro/xss-test", { waitUntil:"networkidle" });

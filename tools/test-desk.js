@@ -511,8 +511,10 @@ function stub(p, who, tables, rpcs, up){
   ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
   t = (await s.p.textContent("#feebox")) || "";
   ok("손님에게는 안 보이는 표라고 적는다", /손님에게는 보이지 않습니다/.test(t), t.slice(0, 200));
-  ok("수수료 정책이 사람 말로 나온다 (rate 가 아니라 거래액의 %)",
-     t.indexOf("거래액의 %") >= 0 && t.indexOf("rate") < 0, t.slice(0, 400));
+  ok("수수료 정책이 사람 말로 나온다 (rate 가 아니라 거래액의 8%)",
+     t.indexOf("거래액의 8%") >= 0 && t.indexOf("rate") < 0, t.slice(0, 400));
+  /* ⚠️ 요율을 **두 번 말하지 않습니다** ("거래액의 % · 8%" 가 되던 자리) */
+  ok("  요율을 두 번 적지 않는다", t.indexOf("거래액의 % ") < 0, t.slice(0, 400));
   ok("  요율 · 부가세 · 확정 시점 · 주기를 **같이** 적는다",
      t.indexOf("8%") >= 0 && t.indexOf("부가세 별도") >= 0 &&
      t.indexOf("이행이 끝난 때") >= 0 && t.indexOf("달마다") >= 0, t.slice(0, 400));
@@ -787,6 +789,91 @@ function stub(p, who, tables, rpcs, up){
      (await s.p.locator("#metricbox button[data-do='again']").count()) === 1);
   await s.p.close();
 
+  /* ══ /admin 수수료 · 광고 · 멤버십 (2차 지시서 §7) ══════════ */
+  console.log("\n── /admin 관리 자리 — ⚠️ **관리자만** (직원도 안 됩니다)");
+  const BIZ = {
+    provider:[{ id:"real-1", name:"그린레슨 아카데미", is_test:false },
+              { id:"t-range", name:"[검사용] 남서울", is_test:true }],
+    fee_policy:[{ id:"fp1", provider_id:"real-1", type:"rate", flat:null, rate:8,
+                  min_fee:null, max_fee:null, vat:"add", confirm_when:"done",
+                  cycle:"monthly", refund_rule:null, from_date:null, to_date:null,
+                  active:true }],
+    ad_run:[{ id:"ad1", provider_id:"real-1", place:"main_hero", cat_key:null,
+              region:null, starts_on:"2029-12-01", ends_on:"2029-12-31",
+              price:500000, state:"draft", note:null }],
+    membership_plan:[],
+    provider_membership:[]
+  };
+
+  s = await open("/admin", { role:"staff", name:"직원" }, BIZ, {}, false);
+  ok("⚠️ 직원에게는 관리 자리가 **안 그려진다** (문들이 관리자만 받습니다)",
+     (await s.p.locator("#bizbox .bz-tabs").count()) === 0);
+  await s.p.close();
+
+  s = await open("/admin", { role:"admin", name:"관리자" }, BIZ, {}, false);
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  ok("갈래 셋이 나온다", (await s.p.locator("#bizbox button[data-tab]").count()) === 3);
+  t = (await s.p.textContent("#bizbox")) || "";
+  ok("수수료 정책이 사람 말로 나온다 (rate 가 아니라 거래액의 8%)",
+     t.indexOf("거래액의 8%") >= 0 && t.indexOf("rate") < 0, t.slice(0, 300));
+  ok("⚠️ 지난 계약은 안 바뀐다고 적는다", /지난 계약의 수수료는 안 바뀝니다/.test(t));
+
+  await s.p.click('#bizbox button[data-tab="ad"]');
+  await s.p.waitForTimeout(250);
+  t = (await s.p.textContent("#bizbox")) || "";
+  /* ⚠️⚠️ **받은 돈이라고 말하면 안 됩니다** — 청구 · 입금 장치가
+     없습니다 (0033 의 매각 지표와 같은 말이라야 합니다). */
+  ok("⚠️ 광고 금액이 **적어 둔 값**이라고 적는다",
+     /청구 · 입금 기록이 아닙니다/.test(t), t.slice(0, 300));
+  ok("광고 자리가 사람 말이다 (main_hero 가 아니라 메인 히어로)",
+     t.indexOf("메인 히어로") >= 0 && t.indexOf("main_hero") < 0, t.slice(0, 300));
+  ok("새로 넣으면 '준비' 라고 적는다 (바로 안 뜹니다)", /준비.*상태입니다|바로 안 뜹니다/.test(t));
+  /* ⚠️ 지금 상태로 가는 단추는 안 냅니다 (눌러도 아무 일이 안 납니다) */
+  ok("⚠️ 지금 상태(준비)로 가는 단추는 **없다**",
+     (await s.p.locator('#bizbox button[data-adto="draft"]').count()) === 0);
+  ok("  다른 상태로 가는 단추는 있다",
+     (await s.p.locator('#bizbox button[data-adto="live"]').count()) === 1);
+
+  s.p.on("dialog", function(d){ d.accept("계약서 확인함"); });
+  await s.p.click('#bizbox button[data-adto="live"]');
+  await s.p.waitForTimeout(350);
+  call = s.sent.filter(function(x){ return x.name === "set_ad_state"; })[0];
+  const adb = call ? JSON.parse(call.body) : {};
+  ok("상태를 바꾸면 set_ad_state 를 부른다", !!call, JSON.stringify(s.sent));
+  ok("  까닭을 같이 보낸다 (기록에 남습니다)",
+     adb.p_why === "계약서 확인함" && adb.p_to === "live", JSON.stringify(adb));
+
+  await s.p.fill("#ba-pv >> nth=0", "").catch(function(){});
+  await s.p.selectOption("#bizbox #ba-pv", "real-1");
+  await s.p.fill("#bizbox #ba-from", "2030-01-01");
+  await s.p.fill("#bizbox #ba-to", "2030-01-31");
+  /* ⚠️⚠️ **0 원도 값입니다** (무상 노출) — 화면이 0 을 "안 적음" 으로
+     읽으면 무상 광고를 넣을 수 없습니다. */
+  await s.p.fill("#bizbox #ba-price", "0");
+  await s.p.fill("#bizbox #ba-why", "제휴 기념 무상");
+  await s.p.click('#bizbox form[data-kind="ad"] button[type="submit"]');
+  await s.p.waitForTimeout(350);
+  call = s.sent.filter(function(x){ return x.name === "save_ad"; })[0];
+  const sab = call ? JSON.parse(call.body) : {};
+  ok("광고를 넣으면 save_ad 를 부른다", !!call, JSON.stringify(s.sent));
+  ok("  ⚠️ 0 원을 **0 으로** 보낸다 (안 적음이 아니다)",
+     !!sab.p && sab.p.price === 0, sab.p && sab.p.price);
+  ok("  까닭이 같이 간다", !!sab.p && sab.p.why === "제휴 기념 무상");
+
+  await s.p.click('#bizbox button[data-tab="plan"]');
+  await s.p.waitForTimeout(250);
+  t = (await s.p.textContent("#bizbox")) || "";
+  /* ⚠️ 0건이면 지어내지 않습니다 */
+  ok("요금제가 0건이면 **지어낸 값이 아니라고** 말한다",
+     /지어낸 값이 아닙니다/.test(t), t.slice(0, 300));
+  ok("⚠️ 요금제가 없으면 **업체에 달 수 없다**고 말한다",
+     /요금제를 먼저 만드셔야/.test(t), t.slice(0, 400));
+  ok("  그래서 다는 양식을 **아예 안 낸다**",
+     (await s.p.locator('#bizbox form[data-kind="mship"]').count()) === 0);
+  ok("누르는 것이 전부 40px 이상이다", (await tapsOk(s.p, "#bizbox")) === 0,
+     await tapsOk(s.p, "#bizbox"));
+  await s.p.close();
+
   /* ══ /my — 견적 비교 ══════════════════════════════════════════ */
   console.log("\n── /my 손님이 받은 견적을 견줍니다");
   const Q2 = Object.assign({}, QUOTE, {
@@ -948,8 +1035,8 @@ function stub(p, who, tables, rpcs, up){
     ["/desk 업체 작업실", "/desk", PRO,
      { assignment:[asg(quoted, "accepted")], request:[quoted],
        quote:[QUOTE], request_item:ITEMS }, {}],
-    ["/admin 배정 · 지표", "/admin", { role:"admin", name:"관리자" },
-     ADMT, { biz_metrics: MET }],
+    ["/admin 배정 · 지표 · 관리", "/admin", { role:"admin", name:"관리자" },
+     Object.assign({}, ADMT, BIZ), { biz_metrics: MET }],
     ["/my 견적 비교", "/my", { role:"customer", name:"홍길동" }, MYT, {}]
   ];
   for(const [label, path, who, tables, rpcs] of phones){

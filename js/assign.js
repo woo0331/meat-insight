@@ -63,7 +63,7 @@
   function load(){
     return Promise.all([
       get("request?select=id,no,state,cat,region,gu,budget_min,budget_max," +
-          "want_at,body,name,tel,agree3rd_at,created_at" +
+          "want_at,body,name,tel,agree3rd_at,created_at,want_provider" +
           "&state=in.(" + WATCH.join(",") + ")&order=created_at.desc&limit=50"),
       get("provider?select=id,name,assignable,is_test,listed&order=name.asc&limit=200"),
       get("request_item?select=request_id,service_id&limit=500"),
@@ -89,6 +89,11 @@
   function pickForm(r, provs, mine){
     var can = provs.filter(function(p){ return p.assignable === true; })
                    .filter(function(p){ return mine.indexOf(p.id) < 0; });
+    /* 보고 오신 업체를 맨 위로 (0035) — ⚠️ 고르는 것은 운영자입니다 */
+    if(r.want_provider)
+      can = can.slice().sort(function(a, b){
+        return (b.id === r.want_provider ? 1 : 0) - (a.id === r.want_provider ? 1 : 0);
+      });
     if(!can.length)
       return '<p class="dk-hint">넘길 수 있는 업체가 없습니다. ' +
         '업체를 승인하고 <b>배정 가능</b>으로 켜 두셔야 고를 수 있습니다 — ' +
@@ -102,6 +107,7 @@
           can.map(function(p){
             /* ⚠️⚠️ 검사용임을 **고르는 자리에서** 말합니다 */
             return '<option value="' + esc(p.id) + '">' + esc(p.name) +
+              (p.id === r.want_provider ? " — 손님이 보고 오신 곳" : "") +
               (p.is_test ? " — 검사용" : "") + '</option>';
           }).join("") +
         '</select>' +
@@ -140,6 +146,9 @@
     var mine = asgs.filter(function(x){ return x.request_id === r.id; });
     var byId = {};
     provs.forEach(function(p){ byId[p.id] = p; });
+    /* ⚠️ 바라시는 업체를 **맨 위로** 올립니다 — 목록이 길어지면
+       운영자가 그것을 찾느라 다른 것을 고릅니다. 고르는 것은 그대로
+       운영자의 몫이고, 자리만 옮깁니다. */
 
     var h = '<div class="dk-r" data-req="' + esc(r.id) + '">';
     h += '<div class="dk-h"><b>' + esc(r.no) + '</b>' + badge(st.name, st.tone) +
@@ -154,6 +163,16 @@
        상호를 알리고 동의를 받아야 하므로 여기서는 보여야 합니다. */
     h += '<dt>성함</dt><dd>' + esc(r.name) + '</dd>';
     h += '<dt>연락처</dt><dd>' + esc(r.tel) + '</dd>';
+    /* ⚠️⚠️ **바라시는 업체는 배정이 아닙니다** (0035). 손님이 그 업체
+       화면을 보고 오셨다는 뜻이고, 넘길지는 운영자가 정합니다 —
+       여기 뜬다고 저절로 넘어가지 않습니다. */
+    if(r.want_provider){
+      var wp = byId[r.want_provider];
+      h += '<dt>보고 오신 업체</dt><dd>' +
+        esc(wp ? wp.name : r.want_provider) +
+        (wp && wp.is_test ? ' <span class="as-t">검사용</span>' : "") +
+        ' <span class="fe-when">바람입니다 — 넘길지는 확인하신 뒤에</span></dd>';
+    }
     h += '</dl>';
 
     if(window.amPhotoBlock) h += window.amPhotoBlock(pics);

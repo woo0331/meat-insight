@@ -167,9 +167,16 @@ window.amSettleStName = function(k){
    ⚠️ 0 은 값입니다 (무상) — `||` 로 지우지 않습니다. */
 window.amFeeLine = function(f){
   if(!f) return "";
-  var bits = [window.amFeeTypeName(f.type)];
+  var name = window.amFeeTypeName(f.type);
+  /* ⚠️ 이름에 이미 `%` 가 들어 있으면 **그 자리에** 요율을 넣습니다 —
+     따로 이어 붙이면 "거래액의 % · 8%" 처럼 두 번 말하게 됩니다
+     (찍어 보고 고친 자리입니다). */
+  if(f.rate !== null && f.rate !== undefined && name.indexOf("%") >= 0)
+    name = name.replace("%", Number(f.rate) + "%");
+  var bits = [name];
   if(f.flat !== null && f.flat !== undefined) bits.push(window.won(f.flat) + "원");
-  if(f.rate !== null && f.rate !== undefined) bits.push(Number(f.rate) + "%");
+  if(f.rate !== null && f.rate !== undefined && bits[0].indexOf("%") < 0)
+    bits.push(Number(f.rate) + "%");
   bits.push(window.amVatName(f.vat));
   bits.push(window.amFeeWhenName(f.confirm_when));
   bits.push(window.amFeeCycleName(f.cycle));

@@ -76,8 +76,11 @@ module.exports = function(T){
      psql(anon + "select count(*)::text from v_provider_card where is_test") === "0");
   ok("  공개 보기에 **연락 · 운영 칸이 없다** (assignable · listed 는 손님 화면에 쓸 일이 없습니다)",
      denied(anon + "select assignable from v_provider_card").no);
+  /* ⚠️ 갯수를 박지 않습니다 — 앞뒤 묶음이 검사용 업체를 더 넣습니다.
+     **우리가 넣은 둘**만 봅니다. */
   ok("운영자에게는 검사용도 보인다 (아니면 배정 화면에서 고를 수 없습니다)",
-     psql(as(ADM) + "select count(*)::text from provider where is_test") === "2");
+     psql(as(ADM) + "select count(*)::text from provider " +
+          "where is_test and id in ('q-a','q-b')") === "2");
   ok("그 업체 자신에게는 자기 줄이 보인다",
      psql(as(PRO) + "select id from provider where id='q-a'") === "q-a");
   ok("검사용 업체는 **공개 목록을 켜도** 공개 보기에 안 나간다 (listed 와 다른 칸)",

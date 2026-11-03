@@ -276,6 +276,42 @@ if(require.main === module){
   /* ⚠️⚠️ **화면의 상태 말과 DB 의 상태 키가 같은가** — 한쪽만 고치면
      에러 없이 조용히 어긋납니다 (손님 화면에 `fee_wait` 가 영문 그대로
      찍히거나, 단추는 보이고 DB 가 거절합니다). 찍기 **전에** 멈춥니다. */
+  /* ⚠️⚠️⚠️ **문 여는 날의 자물쇠 — 여기가 마지막입니다.**
+     `SITE_LIVE` 를 true 로 바꾸면 noindex 가 걷히고 robots 가 열립니다.
+     그런데 **사업자 정보 여덟 칸이 비어 있어도 빌드는 그냥 됐습니다** —
+     경고 한 줄만 찍고 넘어갔습니다. 그대로 올리면 **사업자 정보 없이
+     영업하는 꼴**이고 전자상거래법 제10조입니다.
+     ⚠️ 경고는 **사람이 안 봅니다.** 빌드 기록이 길면 그 한 줄은
+     묻힙니다 — 그래서 **멈춥니다.**
+     ⚠️ 지어낼 수 없는 값들이라, 여기서 할 수 있는 일은 멈추는 것뿐입니다
+     (빈 칸을 채워 주는 것이 아니라). */
+  if(SITE_LIVE){
+    var need = [
+      ["company",        "상호"],
+      ["ceo",            "대표자 성명"],
+      ["brn",            "사업자등록번호"],
+      ["mailOrder",      "통신판매업 신고번호"],
+      ["address",        "사업장 주소"],
+      ["phone",          "고객센터 전화"],
+      ["email",          "문의 이메일"],
+      ["privacyOfficer", "개인정보 보호책임자"],
+      /* ⚠️ 시행일이 없으면 약관 · 방침이 **언제부터인지** 말하지
+         못합니다 (화면이 그 줄을 빼 버립니다). */
+      ["effective",      "약관 · 방침 시행일"]
+    ].filter(function(r){ return !W.bizVal(r[0]); });
+    if(need.length){
+      console.error("❌ SITE_LIVE 가 true 인데 **비어 있는 칸**이 " +
+                    need.length + "개 있습니다 — 올리면 사업자 정보 없이 " +
+                    "영업하는 꼴입니다 (전자상거래법 제10조).");
+      need.forEach(function(r){
+        console.error("   · js/data/site.js 의 " + r[0] + " — " + r[1]);
+      });
+      console.error("   ⚠️ 지어낼 수 없는 값입니다. 채우시거나, " +
+                    "SITE_LIVE 를 false 로 되돌리세요.");
+      process.exit(1);
+    }
+  }
+
   var dealGuard = require("./tools/check-deal.js").run();
   if(dealGuard.bad.length){
     dealGuard.bad.forEach(function(m){ console.error("❌ " + m); });

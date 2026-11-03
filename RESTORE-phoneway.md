@@ -55,3 +55,24 @@
   (`node tools/ship.js --check-only`) 초록일 때만 올리세요.
 - `?v=` 자산 캐시값은 빌드가 다시 붙입니다 (`node build-pages.js`).
 - `tools/urls.json`(주소 보존 목록)도 그 커밋에 함께 있습니다.
+
+## 비운 뒤에 남긴 것 (2026-11-03)
+
+```
+.gitignore · .vercelignore      git · 배포 설정
+vercel.json                     ⚠️ 한 글자도 안 바꿨습니다 (도메인 · 주소 · 리다이렉트 그대로)
+api/gone.js                     앞 서비스 157개 주소를 410 으로 — ⚠️ 브랜드 이름은 걷어냈습니다
+index.html + 주소 17개          준비 중 껍데기 한 장씩 (noindex · 브랜드 이름 없음)
+CLAUDE.md                       업종과 무관한 사고 기록만 추린 새 작업 기억 (259줄)
+RESTORE-phoneway.md             이 파일
+```
+
+⚠️⚠️ **`/d/sample-*` 여섯 주소는 껍데기를 안 깔았습니다** — 상품 데이터가
+있어야 생기는 주소라 데이터와 함께 사라지는 것이 맞습니다 (앞 서비스의
+`checkKeepUrls()` 도 그 갈래는 안 지켰습니다).
+
+⚠️⚠️ **`.github/workflows/ship.yml` 이 같이 지워졌습니다** — 그래서 작업
+브랜치에 push 해도 **`main` 이 저절로 안 움직입니다** (전에는 CI 가 검사해서
+초록이면 합쳤습니다). 손님 화면은 **합치기 전까지 옛 배포 그대로**입니다.
+새 서비스를 세울 때 그 워크플로도 같이 세우세요 —
+`git show 4563539:.github/workflows/ship.yml`.

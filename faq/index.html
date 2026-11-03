@@ -2,154 +2,35 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>자주 묻는 것 · 폰웨이 · 중고폰 통합 거래 플랫폼</title>
-<meta name="description" content="돈이 드는지, 연락처가 업체에 바로 넘어가는지, 등록된 업체가 몇 곳인지 — 먼저 궁금해하시는 것들에 그대로 답했습니다.">
-<meta name="theme-color" content="#362313">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- 브라우저가 색을 뒤집는 것을 막습니다 (안드로이드 크롬 · 삼성 인터넷의
+     자동 다크 모드). 메타와 CSS 를 둘 다 둡니다. -->
 <meta name="color-scheme" content="only light">
-
-<meta property="og:type" content="website">
-<meta property="og:title" content="자주 묻는 것 · 폰웨이 · 중고폰 통합 거래 플랫폼">
-<meta property="og:description" content="돈이 드는지, 연락처가 업체에 바로 넘어가는지, 등록된 업체가 몇 곳인지 — 먼저 궁금해하시는 것들에 그대로 답했습니다.">
-<!-- ⚠️ og:image 는 **주소 전체**여야 합니다. "/og.jpg" 로 두면 크롤러가
-     우리 도메인을 모르는 채로 읽어 카카오톡·페이스북 미리보기에 안 뜹니다. -->
-<meta property="og:image" content="https://storeway.co.kr/og.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="폰웨이 · 중고폰 통합 거래 플랫폼">
-<meta property="og:site_name" content="폰웨이">
-<meta property="og:locale" content="ko_KR">
-<meta property="og:url" content="https://storeway.co.kr/faq">
-<meta name="twitter:title" content="자주 묻는 것 · 폰웨이 · 중고폰 통합 거래 플랫폼">
-<meta name="twitter:description" content="돈이 드는지, 연락처가 업체에 바로 넘어가는지, 등록된 업체가 몇 곳인지 — 먼저 궁금해하시는 것들에 그대로 답했습니다.">
-<meta name="twitter:image" content="https://storeway.co.kr/og.jpg">
-<meta name="twitter:card" content="summary_large_image">
-
-<!-- ⚠️ 이 파일은 build-pages.js 가 **다시 쓰지 않습니다**(원본이라서).
-     그래서 다른 화면과 달리 canonical 을 손으로 둡니다. 없으면 JS 를
-     안 돌리는 크롤러 눈에 메인만 canonical 이 없습니다.
-     다른 주소로 열렸을 때는 app.js 의 paintMeta() 가 고쳐 씁니다. -->
-<link rel="canonical" href="https://storeway.co.kr/faq">
-
-<link rel="manifest" href="/manifest.json">
-<!-- ⚠️ rel="icon" 을 안 적으면 브라우저가 /favicon.ico 를 찾습니다.
-     파일이 없으면 모든 화면에서 404 가 한 번씩 납니다. -->
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-
-<!-- 글꼴은 CDN 이 막혀도 사이트가 멈추지 않습니다 — 대체 사슬에
-     윈도우(맑은 고딕)·맥(애플 SD 산돌) 기본 한글 글꼴이 들어 있습니다. -->
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
-
-<link rel="stylesheet" href="/dist/css/tokens.css?v=c2bf05e1">
-<link rel="stylesheet" href="/dist/css/app.css?v=132f3ad5">
-<link rel="stylesheet" href="/dist/css/pages.css?v=5da6f0b3">
-
-<!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
-     마세요 — 다음에 돌릴 때 덮어써집니다. 내용은 js/data/faq.js 와
-     js/app.js 의 META 에서 나옵니다. -->
-<!-- ld:start -->
-<!-- ld:end -->
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"판매 신청에 비용이 드나요?","acceptedAnswer":{"@type":"Answer","text":"기기를 등록하고 견적을 받으시는 데 저희가 따로 받는 비용은 없습니다. 수거 방법과 비용은 매입 방법마다 다르고, 견적을 보실 때 그 자리에서 같이 알려 드립니다."}},{"@type":"Question","name":"가입해야 팔 수 있나요?","acceptedAnswer":{"@type":"Answer","text":"아닙니다. 가입 없이 기기를 등록하고 견적을 받으실 수 있습니다. 접수하시면 접수번호를 드리고, 그 번호와 적어 주신 연락처로 진행을 확인하실 수 있습니다."}},{"@type":"Question","name":"직접 매입과 경쟁입찰은 무엇이 다른가요?","acceptedAnswer":{"@type":"Answer","text":"직접 매입은 폰웨이가 기기를 직접 사는 것이라 거래 상대가 저희입니다. 경쟁입찰은 여러 매입업체가 각자 견적을 내고 사장님이 고르시는 것이라, 거래 상대는 고르신 업체이고 저희는 연결해 드리는 중개자입니다. 두 가지의 책임 관계가 다르기 때문에 신청하실 때 어느 쪽인지를 먼저 고르시게 되어 있습니다."}},{"@type":"Question","name":"화면에서 본 금액 그대로 받나요?","acceptedAnswer":{"@type":"Answer","text":"아닙니다. 적어 주신 상태를 전제로 한 금액이고, 기기를 받아 검수한 뒤에 달라질 수 있습니다. 달라지는 경우 무엇 때문에 얼마가 달라졌는지를 먼저 알려 드리고, 받아들일지 돌려받으실지는 사장님이 정하십니다."}},{"@type":"Question","name":"등급은 누가 정하나요?","acceptedAnswer":{"@type":"Answer","text":"등록하실 때 고르시는 외관 등급은 예상 금액을 내기 위한 것이고, 최종 등급은 기기를 받아 검수할 때 정해집니다. 어떤 기준으로 나누는지는 기기를 등록하시는 화면에 등급마다 적어 두었습니다."}},{"@type":"Question","name":"견적은 언제 오나요?","acceptedAnswer":{"@type":"Answer","text":"회신 시점을 약속드리지 않습니다. 저희가 지킬 수 없는 약속을 적어 두면 그때부터 채무가 되기 때문입니다. 대신 접수된 것과 지금 어디까지 왔는지는 알려 드립니다."}},{"@type":"Question","name":"팔기 전에 폰에서 무엇을 정리해야 하나요?","acceptedAnswer":{"@type":"Answer","text":"보내시기 전에 사장님이 직접 계정을 로그아웃하시고 기기를 초기화해 주세요. 분실 방지 잠금이 켜져 있으면 저희도 업체도 기기를 검수할 수 없어서 그대로 돌려드리게 됩니다. 중요한 사진과 기록은 미리 옮겨 두시고, 유심칩과 메모리 카드도 빼 주세요."}},{"@type":"Question","name":"제일 높은 금액을 받게 되나요?","acceptedAnswer":{"@type":"Answer","text":"최고가를 보장하지 않습니다. 참여한 업체가 낸 금액을 그대로 나란히 놀아 드릴 뿐입니다. 그리고 금액만 보고 고르시면 손해를 보실 수 있어서, 수거 방법 · 검수 기준 · 정산 소요일을 같이 냅니다."}},{"@type":"Question","name":"지금 참여하는 업체가 몇 곳인가요?","acceptedAnswer":{"@type":"Answer","text":"아직 모으는 중입니다. 없는 업체를 있는 것처럼 보여 드리지 않으려고, 참여 업체 수를 화면에 그대로 적습니다. 그동안에도 신청은 받아 두고, 참여 업체가 생기는 대로 견적을 모아 알려 드립니다."}},{"@type":"Question","name":"파는 기기는 어떤 것인가요?","acceptedAnswer":{"@type":"Answer","text":"폰웨이가 직접 매입해 검수한 기기만 올립니다. 한 대마다 사진과 외관 등급, 배터리 상태, 기능 검수 결과, 구성품, 보증과 반품 조건을 같이 밝힙니다."}},{"@type":"Question","name":"제 연락처가 업체에 바로 넘어가나요?","acceptedAnswer":{"@type":"Answer","text":"아닙니다. 신청서에서 받는 동의는 접수와 상담까지입니다. 매입업체에 성함과 연락처를 넘기는 것은 개인정보보호법 제17조의 제3자 제공이라, 어느 업체인지 상호를 먼저 알려 드리고 그때 다시 동의를 받습니다."}},{"@type":"Question","name":"기기에 남은 제 자료는 어떻게 되나요?","acceptedAnswer":{"@type":"Answer","text":"보내시기 전에 사장님이 직접 초기화해 주시는 것이 가장 확실합니다. 초기화가 안 된 채로 들어온 기기는 검수 전에 초기화하고, 그 사실을 기록으로 남깁니다. 저희는 기기 안의 사진·연락처를 열어보거나 따로 보관하지 않습니다."}},{"@type":"Question","name":"매입업체인데 참여하려면 어떻게 하나요?","acceptedAnswer":{"@type":"Answer","text":"매입업체 입점에서 상호와 취급 기기, 수거 방식을 남겨 주시면 됩니다. 남겨 주신 내용을 보고 저희가 먼저 연락드리고, 제휴가 정해진 뒤에 입찰에 참여하실 수 있습니다."}},{"@type":"Question","name":"입찰 순서는 무엇으로 정해지나요?","acceptedAnswer":{"@type":"Answer","text":"금액으로 줄을 세우지 않습니다. 포함된 조건이 업체마다 달라서 금액만으로는 견줄 수가 없기 때문입니다. 낸 차례대로 내고 그 줄을 화면에 적습니다. 앞으로 광고 상품이 생기면 그 자리는 광고라고 화면에 표시해 일반 결과와 구분되게 합니다."}}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"홈","item":"https://storeway.co.kr/"},{"@type":"ListItem","position":2,"name":"자주 묻는 것","item":"https://storeway.co.kr/faq"}]}</script>
+<!-- 준비 중인 빈 화면이 검색에 색인되지 않게 합니다. 새 서비스를 세우는 날
+     이 줄을 걷어내세요. -->
+<meta name="robots" content="noindex,nofollow">
+<title>준비 중</title>
+<style>
+  :root{ color-scheme: only light; }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    min-height:100vh; display:grid; place-items:center;
+    padding:24px 16px;
+    background:#FFFFFF; color:#231F20;
+    font:400 16px/1.6 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",
+         "Malgun Gothic","Noto Sans KR",sans-serif;
+    word-break:keep-all; overflow-wrap:anywhere;
+  }
+  .b{ width:100%; max-width:420px; text-align:center; }
+  h1{ margin:0 0 10px; font-size:22px; line-height:1.35; font-weight:700; }
+  p{ margin:0; font-size:15px; color:#444444; }
+</style>
 </head>
 <body>
-<a class="skip" href="#view">본문 바로가기</a>
-
-<!-- ⚠️⚠️ **`defer` 를 빼지 마세요.** 이 스크립트 서른넷은 `<body>` 맨
-     위, 미리 그려 둔 본문보다 **앞**에 있습니다.
-     동기 스크립트는 HTML 파싱을 막으므로, `defer` 가 없으면 **서른넷을
-     다 받을 때까지 화면이 빈 채로** 있습니다 — 느린 3G 에서 6.3초였고,
-     정작 보여 줄 글은 이미 HTML 안에 들어 있었습니다.
-
-     `defer` 는 **차례를 지킵니다** (이 저장소는 스크립트 순서가 곧 의존
-     순서입니다). 실행은 `DOMContentLoaded` 보다 먼저라 `js/app.js` 의
-     시작 코드도 그대로 돕니다. `async` 는 차례가 섞여서 안 됩니다.
-     `build-pages.js` 의 `checkDefer()` 가 빠지면 빌드를 멈춥니다. -->
-<!-- ⚠️ 자산 경로는 반드시 절대 경로(/js/… · /img/…)여야 합니다.
-     상대 경로면 /start/cost 같은 깊은 주소에서 /start/js/… 를 찾아
-     스크립트가 통째로 404 가 됩니다. -->
-<script defer src="/dist/js/data/korean.js?v=122651cb"></script>
-<script defer src="/dist/js/data/brand.js?v=df3f315d"></script>
-<script defer src="/dist/js/data/site.js?v=9f0b10d4"></script>
-<script defer src="/dist/js/data/regions.js?v=b7a0090c"></script>
-<script defer src="/dist/js/data/catalog.js?v=cd144e13"></script>
-<script defer src="/dist/js/data/providers.js?v=1ed68db4"></script>
-<script defer src="/dist/js/data/photos.js?v=77bee32f"></script>
-<script defer src="/dist/js/data/legal-terms.js?v=cdfa788d"></script>
-<script defer src="/dist/js/data/legal-privacy.js?v=eacf02f4"></script>
-<script defer src="/dist/js/data/faq.js?v=56d8df4f"></script>
-<script defer src="/dist/js/data/join.js?v=c95da232"></script>
-<!-- 서비스마다 다르게 묻는 칸 (2026-10-08 수익형 플랫폼 지시서 6절).
-     catalog 의 분류 key 를 쓰므로 그 뒤입니다. -->
-<script defer src="/dist/js/data/reqforms.js?v=82ef0130"></script>
-<!-- ⚠️⚠️ 신청 상태 열셋 (2026-10-09 §8-3 — 보류 포함).
-     전에는 일부러 안 실었습니다 ("화면이 아직 안 읽습니다") —
-     이제 `/my` 의 신청 내역이 상태 이름과 색을 **여기서** 가져옵니다.
-     ⚠️ 안 실으면 딱지가 전부 회색이 되고 상태가 영어로 나옵니다
-     (찍어 보고 알았습니다 — 에러도 안 나고 빌드도 통과했습니다).
-     ⚠️ `fee.js` 는 그대로 안 실었습니다 — 수수료는 고객 화면에 안 나갑니다. -->
-<script defer src="/dist/js/data/deal.js?v=5fbe1a98"></script>
-<!-- 수익상품 (수익형 플랫폼 지시서 §5) — ⚠️ catalog 의 분류 · 하위
-     key 를 가리키므로 **그 뒤**입니다.
-     ⚠️⚠️ 2026-10-31 — 여기 있던 주석 둘(운영 서비스관 `opsvc.js` ·
-     창업 · 폐업 패키지 `packages.js`)을 지웠습니다. 두 파일이 없어진
-     뒤에도 주석만 남아서, **바로 다음 줄인 `offers.js` 를 패키지 파일로
-     잘못 가리키고** 있었습니다 — 읽는 사람이 엉뚱한 파일을 고칩니다. -->
-<script defer src="/dist/js/data/offers.js?v=4ed5aad9"></script>
-<!-- 이용 절차 다섯 — ⚠️ 화면과 **크롤러 본문**이 같이 읽습니다
-     (`js/pages/*` 에 두면 크롤러에서 빠집니다).
-     ⚠️⚠️ 2026-10-31 — 여기 있던 "고를 수 있는 서비스"(`svcpick.js`)
-     주석을 지웠습니다. 그 파일이 없어진 뒤에도 주석만 남아서 **다음
-     줄인 `steps.js` 를 잘못 가리키고** 있었습니다. -->
-<script defer src="/dist/js/data/steps.js?v=4e0f124e"></script>
-<script defer src="/dist/js/data/devices.js?v=2bf08709"></script>
-<!-- ⚠️⚠️ 중고폰 쇼핑몰 (2026-10-29) — devices.js **뒤**라야 합니다
-     (모델 · 용량 · 등급 이름을 거기서 읽습니다). ⚠️ 이 줄이 없으면
-     `/shop` 목록이 **조용히 0건**이 되고 `/d/:id` 가 404 가 됩니다. -->
-<script defer src="/dist/js/data/shop.js?v=9ec9b945"></script>
-<!-- ⚠️⚠️ 2026-10-31 — 여기 있던 "운영 체크리스트"(`opscheck.js`) 주석을
-     지웠습니다. 그 파일도 `/operation` 화면도 없어졌는데 주석만 남아
-     **없는 화면이 깨진다고 경고**하고 있었습니다. -->
-<script defer src="/dist/js/components/base.js?v=95a6ac35"></script>
-<script defer src="/dist/js/components/ui.js?v=1b49b1ae"></script>
-<!-- 고르신 서비스 바구니 (`am.pick.v1`).
-     ⚠️ `ui.js` 의 amGet/amSet 과 `catalog.js` 의 분류 · 하위를 읽으므로
-     **그 뒤**입니다 (2026-10-31 — 전에는 `svcpick.js` 를 읽었는데 그
-     파일이 없어지고 `amPickOne()` 이 catalog 를 직접 봅니다).
-     ⚠️⚠️ 담는 것은 서비스 id 뿐입니다 — 성함 · 연락처를 담지 않습니다. -->
-<script defer src="/dist/js/pick.js?v=342d2582"></script>
-<script defer src="/dist/js/fav.js?v=d02d1109"></script>
-<!-- 로그인 (Supabase Auth) — ⚠️ 설정 전에는 /api/session 이 auth:false 라
-     화면이 그 구간째 안 그립니다. 아무것에도 의존하지 않습니다. -->
-<script defer src="/dist/js/auth.js?v=5ffecb76"></script>
-<!-- ⚠️ auth.js 다음입니다 — 로그인 상태를 보고 켜집니다.
-     꺼져 있으면 fetch 를 한 번도 안 보냅니다 (js/state.js 머리말) -->
-<script defer src="/dist/js/state.js?v=95e250a7"></script>
-<script defer src="/dist/js/photo.js?v=fb4d7968"></script>
-<script defer src="/dist/js/components/chrome.js?v=9465e9da"></script>
-
-<script defer src="/dist/js/pages/home.js?v=587608cc"></script>
-<script defer src="/dist/js/pages/quote.js?v=7b4696bb"></script>
-<script defer src="/dist/js/pages/join.js?v=6cc45097"></script>
-<script defer src="/dist/js/pages/info.js?v=9385fda8"></script>
-<script defer src="/dist/js/pages/my.js?v=5853bee0"></script>
-<script defer src="/dist/js/pages/search.js?v=06cf0b22"></script>
-<script defer src="/dist/js/pages/legal.js?v=0792185d"></script>
-<!-- ⚠️⚠️ PHONEWAY 화면 다섯 (/sell /shop /bid /track /guide).
-     market.js 보다 **뒤**라야 합니다 — 둘 다 PageSell 을 들고 있던
-     자리이고, market.js 쪽은 PageSellBiz 로 이름을 갈랐습니다. -->
-<script defer src="/dist/js/pages/phone.js?v=1aebbce9"></script>
-
-<script defer src="/dist/js/app.js?v=57eecda0"></script>
-
-<div id="chrome-t"></div>
-<!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가
-     이 사이에 **크롤러가 읽을 본문**을 써 넣습니다. 메인은 원본이라
-     shell() 이 손대지 않아서, 한동안 여기가 빈 칸으로 나갔습니다. -->
-<main id="view"><div class="pre w"><h1>자주 묻는 것</h1><p>돈이 드는지, 연락처가 업체에 바로 넘어가는지, 등록된 업체가 몇 곳인지 — 먼저 궁금해하시는 것들에 그대로 답했습니다.</p><h2>판매 신청에 비용이 드나요?</h2><p>기기를 등록하고 견적을 받으시는 데 저희가 따로 받는 비용은 없습니다. 수거 방법과 비용은 매입 방법마다 다르고, 견적을 보실 때 그 자리에서 같이 알려 드립니다.</p><h2>가입해야 팔 수 있나요?</h2><p>아닙니다. 가입 없이 기기를 등록하고 견적을 받으실 수 있습니다. 접수하시면 접수번호를 드리고, 그 번호와 적어 주신 연락처로 진행을 확인하실 수 있습니다.</p><h2>직접 매입과 경쟁입찰은 무엇이 다른가요?</h2><p>직접 매입은 폰웨이가 기기를 직접 사는 것이라 거래 상대가 저희입니다. 경쟁입찰은 여러 매입업체가 각자 견적을 내고 사장님이 고르시는 것이라, 거래 상대는 고르신 업체이고 저희는 연결해 드리는 중개자입니다. 두 가지의 책임 관계가 다르기 때문에 신청하실 때 어느 쪽인지를 먼저 고르시게 되어 있습니다.</p><h2>화면에서 본 금액 그대로 받나요?</h2><p>아닙니다. 적어 주신 상태를 전제로 한 금액이고, 기기를 받아 검수한 뒤에 달라질 수 있습니다. 달라지는 경우 무엇 때문에 얼마가 달라졌는지를 먼저 알려 드리고, 받아들일지 돌려받으실지는 사장님이 정하십니다.</p><h2>등급은 누가 정하나요?</h2><p>등록하실 때 고르시는 외관 등급은 예상 금액을 내기 위한 것이고, 최종 등급은 기기를 받아 검수할 때 정해집니다. 어떤 기준으로 나누는지는 기기를 등록하시는 화면에 등급마다 적어 두었습니다.</p><h2>견적은 언제 오나요?</h2><p>회신 시점을 약속드리지 않습니다. 저희가 지킬 수 없는 약속을 적어 두면 그때부터 채무가 되기 때문입니다. 대신 접수된 것과 지금 어디까지 왔는지는 알려 드립니다.</p><h2>팔기 전에 폰에서 무엇을 정리해야 하나요?</h2><p>보내시기 전에 사장님이 직접 계정을 로그아웃하시고 기기를 초기화해 주세요. 분실 방지 잠금이 켜져 있으면 저희도 업체도 기기를 검수할 수 없어서 그대로 돌려드리게 됩니다. 중요한 사진과 기록은 미리 옮겨 두시고, 유심칩과 메모리 카드도 빼 주세요.</p><h2>제일 높은 금액을 받게 되나요?</h2><p>최고가를 보장하지 않습니다. 참여한 업체가 낸 금액을 그대로 나란히 놀아 드릴 뿐입니다. 그리고 금액만 보고 고르시면 손해를 보실 수 있어서, 수거 방법 · 검수 기준 · 정산 소요일을 같이 냅니다.</p><h2>지금 참여하는 업체가 몇 곳인가요?</h2><p>아직 모으는 중입니다. 없는 업체를 있는 것처럼 보여 드리지 않으려고, 참여 업체 수를 화면에 그대로 적습니다. 그동안에도 신청은 받아 두고, 참여 업체가 생기는 대로 견적을 모아 알려 드립니다.</p><h2>파는 기기는 어떤 것인가요?</h2><p>폰웨이가 직접 매입해 검수한 기기만 올립니다. 한 대마다 사진과 외관 등급, 배터리 상태, 기능 검수 결과, 구성품, 보증과 반품 조건을 같이 밝힙니다.</p><h2>제 연락처가 업체에 바로 넘어가나요?</h2><p>아닙니다. 신청서에서 받는 동의는 접수와 상담까지입니다. 매입업체에 성함과 연락처를 넘기는 것은 개인정보보호법 제17조의 제3자 제공이라, 어느 업체인지 상호를 먼저 알려 드리고 그때 다시 동의를 받습니다.</p><h2>기기에 남은 제 자료는 어떻게 되나요?</h2><p>보내시기 전에 사장님이 직접 초기화해 주시는 것이 가장 확실합니다. 초기화가 안 된 채로 들어온 기기는 검수 전에 초기화하고, 그 사실을 기록으로 남깁니다. 저희는 기기 안의 사진·연락처를 열어보거나 따로 보관하지 않습니다.</p><h2>매입업체인데 참여하려면 어떻게 하나요?</h2><p>매입업체 입점에서 상호와 취급 기기, 수거 방식을 남겨 주시면 됩니다. 남겨 주신 내용을 보고 저희가 먼저 연락드리고, 제휴가 정해진 뒤에 입찰에 참여하실 수 있습니다.</p><h2>입찰 순서는 무엇으로 정해지나요?</h2><p>금액으로 줄을 세우지 않습니다. 포함된 조건이 업체마다 달라서 금액만으로는 견줄 수가 없기 때문입니다. 낸 차례대로 내고 그 줄을 화면에 적습니다. 앞으로 광고 상품이 생기면 그 자리는 광고라고 화면에 표시해 일반 결과와 구분되게 합니다.</p></div></main>
-<div id="chrome-b"></div>
+  <main class="b">
+    <h1>새 서비스를 준비하고 있습니다</h1>
+    <p>조금 뒤에 다시 찾아 주세요.</p>
+  </main>
 </body>
 </html>

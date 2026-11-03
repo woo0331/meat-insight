@@ -1234,6 +1234,118 @@ function stub(p, who, tables, rpcs, up){
      (await s.p.locator("#bizbox button[data-tab='rv']").count()) === 0);
   await s.p.close();
 
+  /* ══ 업체 심사 · 정지 (0038 · 3차 지시서 §2 · §8) ═════════════
+     ⚠️⚠️⚠️ **이 화면이 없어서 approve_provider 를 아무도 못 불렀습니다.**
+     문은 0007 · 0012 · 0018 로 세 번 고쳤는데 부르는 자리가 없었습니다 —
+     "만들어 놓고 안 쓰는 칸" 의 가장 큰 판입니다. 그래서 **단추가
+     실제로 그 문을 부르는지** 꾸러미까지 뜯어 봅니다. */
+  const PVS = [
+    { id:"real-1", name:"그린레슨 아카데미", state:"approved", state_why:null,
+      state_at:null, listed:true, assignable:true, is_test:false,
+      subs:["ls-solo"], regions:["seoul"] },
+    { id:"sus-1", name:"정지된 업체", state:"suspended",
+      state_why:"서류가 확인되지 않았습니다", state_at:"2026-11-02T01:00:00Z",
+      listed:false, assignable:false, is_test:false,
+      subs:["ft-grip"], regions:["gyeonggi"] }
+  ];
+  const APS = [
+    { id:"aaaa-ap-1", no:"AP-0001", company:"새 골프샵", brn:"111-22-33333",
+      name:"김신청", tel:"010-2222-3333", email:"a@x.test", region:"서울",
+      services:"피팅 · 수리", note:"입점 문의드립니다",
+      state:"new", created_at:"2026-11-03T01:00:00Z" }
+  ];
+  const PROT = { provider:PVS, provider_apply:APS };
+
+  console.log("\n── /admin 업체 심사 — 운영자가 아니면 한 줄도 안 보입니다");
+  s = await open("/admin", { role:"customer", name:"일반회원" },
+                 Object.assign({}, ADMT, BIZ, PROT));
+  ok("업체 심사 자리가 아예 안 그려진다",
+     (await s.p.locator("#probox button[data-ptab]").count()) === 0);
+  t = (await s.p.textContent("#probox")) || "";
+  ok("  신청자 성함 · 연락처가 한 글자도 안 나온다",
+     t.indexOf("김신청") < 0 && t.indexOf("2222-3333") < 0, t);
+  await s.p.close();
+
+  console.log("\n── /admin 업체 심사 — 운영자");
+  s = await open("/admin", { role:"admin", name:"관리자" },
+                 Object.assign({}, ADMT, BIZ, PROT), { biz_metrics: MET });
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  t = (await s.p.textContent("#probox")) || "";
+  ok("업체 둘이 그려진다", /그린레슨 아카데미/.test(t) && /정지된 업체/.test(t), t.slice(0, 300));
+  ok("상태가 **사람 말**로 나온다 (영문 키가 아니다)",
+     /승인/.test(t) && /정지/.test(t) && t.indexOf("suspended") < 0, t.slice(0, 300));
+  ok("정지된 업체의 까닭이 보인다", /서류가 확인되지 않았습니다/.test(t));
+  /* ⚠️⚠️ **눌러도 안 되는 단추를 미리 만들지 않습니다** (절대 규칙 5) —
+     정지된 업체를 공개로 켜는 것은 DB 가 거절합니다. */
+  ok("⚠️ 정지된 업체에는 **공개 단추를 안 낸다**",
+     (await s.p.locator("button[data-pvlist='sus-1']").count()) === 0);
+  ok("  대신 **정지 풀기** 단추를 낸다",
+     (await s.p.locator("button[data-pvto='approved'][data-pv='sus-1']").count()) === 1);
+  ok("정지되지 않은 업체에는 공개 · 배정 단추가 있다",
+     (await s.p.locator("button[data-pvlist='real-1']").count()) === 1 &&
+     (await s.p.locator("button[data-pvasg='real-1']").count()) === 1);
+
+  /* ⚠️⚠️ 까닭을 안 적으면 **보내지 않습니다** (DB 도 거절합니다) */
+  await s.p.evaluate(function(){ window.prompt = function(){ return ""; }; });
+  await s.p.click("button[data-pvto='suspended'][data-pv='real-1']");
+  await s.p.waitForTimeout(200);
+  ok("⚠️ 정지에 까닭을 안 적으면 **보내지 않는다**",
+     s.sent.filter(function(x){ return x.name === "set_provider_state"; }).length === 0);
+  await s.p.evaluate(function(){
+    window.prompt = function(){ return "서류 미확인"; }; });
+  await s.p.click("button[data-pvto='suspended'][data-pv='real-1']");
+  await s.p.waitForTimeout(300);
+  const susCall = s.sent.filter(function(x){ return x.name === "set_provider_state"; })[0];
+  ok("까닭을 적으면 보낸다", !!susCall, s.sent.map(function(x){ return x.name; }).join(" "));
+  let sp = null;
+  try{ sp = JSON.parse(susCall.body).p; }catch(_){}
+  ok("  꾸러미에 업체 · 상태 · 까닭이 담긴다",
+     !!sp && sp.id === "real-1" && sp.to === "suspended" && sp.why === "서류 미확인",
+     susCall && susCall.body);
+
+  /* ⚠️ 정지를 **푸는 데에는** 까닭을 안 받습니다 (DB 도 안 받습니다) */
+  await s.p.evaluate(function(){ window.prompt = function(){ return ""; }; });
+  await s.p.click("button[data-pvto='approved'][data-pv='sus-1']");
+  await s.p.waitForTimeout(300);
+  const freeCall = s.sent.filter(function(x){
+    return x.name === "set_provider_state" && JSON.parse(x.body).p.to === "approved"; })[0];
+  ok("⚠️ 정지를 푸는 데에는 까닭을 안 받는다 (DB 와 같은 규칙)",
+     !!freeCall, s.sent.map(function(x){ return x.name; }).join(" "));
+
+  /* 공개 · 배정은 approve_provider 한 문입니다 */
+  await s.p.evaluate(function(){ window.prompt = function(){ return "제휴 확인"; }; });
+  await s.p.click("button[data-pvasg='real-1']");
+  await s.p.waitForTimeout(300);
+  const apv = s.sent.filter(function(x){ return x.name === "approve_provider"; })[0];
+  ok("배정 켜기 · 끄기가 approve_provider 를 부른다", !!apv,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  let ap2 = null;
+  try{ ap2 = JSON.parse(apv.body); }catch(_){}
+  ok("  꾸러미의 칸 이름이 문과 같다 (p_id · p_assignable · p_why)",
+     !!ap2 && ap2.p_id === "real-1" && ap2.p_assignable === false &&
+     ap2.p_why === "제휴 확인", apv && apv.body);
+
+  console.log("\n── /admin 입점 신청 갈래");
+  await s.p.click("#probox button[data-ptab='ap']");
+  await s.p.waitForTimeout(250);
+  t = (await s.p.textContent("#probox")) || "";
+  ok("입점 신청이 그려진다", /새 골프샵/.test(t), t.slice(0, 300));
+  ok("  운영자가 전화할 수 있게 연락처가 보인다", /010-2222-3333/.test(t));
+  /* ⚠️⚠️ **없는 길을 되는 것처럼 두지 않습니다** — 업체로 등록하는
+     양식이 아직 없다는 사실을 그 자리에서 말해야 합니다. */
+  await s.p.evaluate(function(){ window.prompt = function(){ return "통화함"; }; });
+  await s.p.click("button[data-apto='called'][data-ap='aaaa-ap-1']");
+  await s.p.waitForTimeout(300);
+  const apSt = s.sent.filter(function(x){ return x.name === "set_apply_state"; })[0];
+  ok("상태를 옮기면 set_apply_state 를 부른다", !!apSt,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  ok("  꾸러미의 칸 이름이 문과 같다 (p_apply · p_to · p_why)",
+     !!apSt && JSON.parse(apSt.body).p_apply === "aaaa-ap-1" &&
+     JSON.parse(apSt.body).p_to === "called", apSt && apSt.body);
+  ok("업체 심사 자리의 누르는 것이 40px 이상이다",
+     (await tapsOk(s.p, "#probox")) === 0, await tapsOk(s.p, "#probox"));
+  await s.p.close();
+
   /* ══ 폰 폭 ═══════════════════════════════════════════════════
      ⚠️⚠️⚠️ **`tools/check-screens.js` 는 이 세 화면을 영원히 못 봅니다.**
      로그인해야 그려지는 자리라, 그 도구에는 **빈 상자**로만 보입니다 —
@@ -1276,8 +1388,8 @@ function stub(p, who, tables, rpcs, up){
     ["/desk 업체 작업실", "/desk", PRO,
      { assignment:[asg(quoted, "accepted")], request:[quoted],
        quote:[QUOTE], request_item:ITEMS, review:[RVMINE] }, {}],
-    ["/admin 배정 · 지표 · 관리", "/admin", { role:"admin", name:"관리자" },
-     Object.assign({}, ADMT, BIZ, { review:RVADM }), { biz_metrics: MET }],
+    ["/admin 배정 · 지표 · 관리 · 심사", "/admin", { role:"admin", name:"관리자" },
+     Object.assign({}, ADMT, BIZ, PROT, { review:RVADM }), { biz_metrics: MET }],
     ["/my 견적 비교 · 후기", "/my", { role:"customer", name:"홍길동" },
      Object.assign({}, MYT, { quote:[QCHOSEN, Q2], review:[], appointment:[] }), {}]
   ];

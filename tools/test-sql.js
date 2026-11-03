@@ -145,6 +145,9 @@ try{
      있으면 광고이고, 평점을 칸에 저장하면 누군가 4.9 를 적습니다.
      "누가 쓸 수 있나" 와 "집계 칸이 없는가" 를 같이 봅니다. */
   require("./sql/review.js")({ ok, psql, psqlFile, denied, allowed });
+  /* ⚠️⚠️ 정지는 **그 업체의 영업을 멈추는 일**입니다 — 뜻하는 것 셋을
+     따로 누르고, 일부러 안 막은 둘도 같이 눌러 봅니다. */
+  require("./sql/suspend.js")({ ok, psql, psqlFile, denied, allowed });
 
 }catch(e){
   bad++; ran++;

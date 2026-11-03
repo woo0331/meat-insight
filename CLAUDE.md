@@ -30,12 +30,13 @@ INTAKE_BUCKET 없음   사진 칸이 아예 안 나옵니다
 | 손님이 들어오는 문 둘 | `/join` 입점 신청(`make_apply`) · `/match` 견적 · 매칭 요청(`make_request`) |
 | 분류 10 · 하위 62 · **네 영역** | `js/data/catalog.js` — 주소는 `amCatUrl()` **한 함수** · 영역은 `AM_ZONES` |
 | 업체 | ⚠️ 참은 **DB 한 곳**입니다. `tools/pull-providers.js` 가 `js/data/providers.generated.js` 로 찍고 빌드가 그것을 읽습니다 — **손으로 고치지 마세요.** 주소는 `amProviderUrl()` 한 함수 (`/pro/<id>`) |
-| DB | `db/migrations/0001~0037` · 사장님이 붙여 넣는 것은 `db/apply-from-0008.sql` |
+| DB | `db/migrations/0001~0038` · 사장님이 붙여 넣는 것은 `db/apply-from-0008.sql` |
 | 상담 → 견적 흐름 | `/admin` 배정(`js/assign.js`) → `/desk` 견적 제출(`js/desk.js`) → `/my` 견적 비교(`js/myreq.js`) |
 | 상태 말 | `js/data/deal.js` **한 곳** — `tools/check-deal.js` 가 DB enum 과 빌드마다 맞춰 봅니다 |
 | 검사용 업체 | `provider.is_test`(0030) · 씨앗은 `db/seed/test-providers.sql` — ⚠️ **마이그레이션이 아닙니다** |
 | 검사 스물한 묶음 | `node tools/ship.js` (초록일 때만 올립니다) |
 | 매각 지표 | `/admin` 의 `js/metrics.js` — 식은 `biz_metrics()`(0033) **한 곳** · 말은 `js/data/metrics.js` **한 곳** |
+| 업체 심사 · 정지 | `/admin` 의 `js/adminpro.js` — 상태는 `provider.state` 여섯(0038) · 문은 `set_provider_state` · `approve_provider` · `set_apply_state` ⚠️ **정지는 셋을 동시에 막습니다**(공개 목록 · 새 배정 · 새 견적) |
 | 후기 · 평점 | ⚠️⚠️ **평균을 저장하지 않습니다** — `js/data/review.js` 의 `amRating()` 이 줄에서 셉니다 · DB 는 0037 · 자료는 `tools/pull-reviews.js` 가 찍습니다 · 쓰는 길은 `/my`, 답변은 `/desk`, 가리기는 `/admin` |
 | 히어로 · 카드 사진 다섯 자리 | `js/data/photos.js` — 규격 · 자리 · 넣는 법이 그 파일 머리말에 있습니다 · ⚠️ `tools/fit-photos.js` 는 **앞 서비스 것이라 아직 못 씁니다**(`WOW_*`) |
 | 사진 · 서류 | `js/photo.js` — ⚠️ `INTAKE_BUCKET` 이 없으면 **아무것도 안 그립니다** · DB 는 0011 |
@@ -54,7 +55,7 @@ site.js    사업자 정보 여덟 칸    전자상거래법 제10조 · 지어�
 site.js    effective (시행일)     약관 · 방침의 시행일
 site.js    naverVerify · googleVerify   검색엔진 등록 확인
 Vercel     SUPABASE_URL · SUPABASE_ANON_KEY   로그인 · 입점 신청이 그때 켜집니다
-Supabase   db/apply-from-0008.sql 를 붙여 넣기 (0008~0037)
+Supabase   db/apply-from-0008.sql 를 붙여 넣기 (0008~0038)
 ```
 
 ⚠️⚠️ **위 둘째 · 셋째 줄은 이제 빌드가 막습니다** (2026-11-03). `SITE_LIVE`
@@ -359,7 +360,16 @@ git show 4563539:CLAUDE.md          앞 서비스의 작업 기억 (6,215줄)
   붙입니다 (`js/data/korean.js`).
 - ⚠️ 규칙은 **한 함수**에 두고 모두가 그것을 부릅니다.
 
-### 만들어 놓고 안 쓰는 칸 (네 번 겪었습니다)
+### 만들어 놓고 안 쓰는 칸 (**다섯** 번 겪었습니다)
+
+- ⚠️⚠️⚠️ **가장 큰 판 — `approve_provider` 를 부르는 화면이 한 곳도
+  없었습니다** (2026-11-03, 3차 지시서 감사 중에 찾았습니다). 그 문은
+  0007 에 쓰고 0012 · 0018 로 **두 번 고쳤는데**, `js/` 와 `pages/` 를
+  훑으니 부르는 자리가 **0곳**이었습니다 — 업체를 승인하려면 사장님이
+  SQL 편집기를 열어야 했습니다. 문이 멀쩡하고 검사도 초록이라
+  **아무도 몰랐습니다.**
+  ⚠️ `grep -rln "<문 이름>" js/ pages/ api/` 로 **부르는 자리를 세세요.**
+  0이면 그 기능은 **없는 것**입니다. 지금은 `js/adminpro.js` 가 부릅니다.
 
 - ⚠️⚠️ 거르개 · 칸 · 함수를 **데이터에만** 만들어 두면 화면에 그 칸이 없어서
   아무도 못 씁니다. 반대로 **화면이 안 읽는 칸**은 저장할 때 조용히
@@ -445,6 +455,7 @@ git show 4563539:CLAUDE.md          앞 서비스의 작업 기억 (6,215줄)
   지금 그런 짝: `make_request`(0029→**0035**) ·
   `provider_guard`(0001→0021→0024→**0030**) ·
   `provider_public` 정책(0001→**0030**) · `v_ad_live` 보기(0026→**0032**) ·
+  `assignment_assignable`(0018→**0038**) · `v_provider_card` 보기(0032→**0038**) ·
   `save_provider`(0007→0023) · `save_provider_self`(0014→0023) ·
   `approve_provider`(0007→0012→0018) · `move_state`(0004→0007).
   (세어 보는 법: `grep -l "create or replace function <이름>\\b" db/migrations/*.sql`)

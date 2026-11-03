@@ -39,6 +39,11 @@ exports.build = function(){
      돈이 걸린 자리라, 세는 코드 · 배정 코드와 섞어 두면 한쪽을 고칠 때
      그 경계가 흐려집니다. ⚠️ 이 자리는 **관리자만**입니다 (직원도
      안 됩니다 — 문들이 전부 관리자만 받습니다). */
+  /* 업체 심사 · 정지 (3차 지시서 §2 · §8) — ⚠️ 이 자리가 없어서
+     approve_provider 를 부르는 화면이 한 곳도 없었습니다. */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="probox" class="none" hidden></div></div></section>';
+
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="bizbox" class="none" hidden></div></div></section>';
 
@@ -49,6 +54,7 @@ exports.build = function(){
     js: ["/js/data/korean.js", "/js/data/deal.js", "/js/data/metrics.js",
          "/js/data/review.js", "/js/auth.js", "/js/photo.js",
          "/js/account.js", "/js/review.js", "/js/assign.js",
+         "/js/adminpro.js",
          "/js/metrics.js", "/js/adminbiz.js"]
   };
 };

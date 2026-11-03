@@ -43,10 +43,13 @@ function seed(rows, at){
 }
 
 /* ⚠️ 업체가 적은 글에 태그를 넣어 둡니다 — 그대로 나가면 사고입니다 */
+/* ⚠️ 하위 키는 js/data/catalog.js 에 있는 **진짜 키**여야 합니다.
+   2차 지시서로 하위를 바꿨을 때 여기 ls-pro 가 남아 빌드 가드가
+   막았습니다 — 가드가 제 일을 한 것이고, 틀린 것은 **씨앗**입니다. */
 const SEED = [
   { id:"green-pt", name:"성남 그린골프연습장",
     intro:"실내 타석 열두 개와 스크린 네 대를 둡니다.",
-    regions:["gyeonggi"], subs:["rg-in","rg-sim","ls-pro"],
+    regions:["gyeonggi"], subs:["rg-in","rg-sim","ls-solo"],
     since:2019, consult_hours:"평일 09:00~22:00",
     verified:{ brn:true, tel:true }, scale:"mid", brands:["타이틀리스트","캘러웨이"] },
   { id:"xss-test", name:"<img src=x onerror=alert(1)>",

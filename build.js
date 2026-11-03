@@ -44,9 +44,12 @@ function ver(file){
 /* ════════════════════════════════════════════════════════════════════
    머리말 · 푸터 — **모든 화면이 이 둘을 부릅니다** (두 곳에 적지 않습니다)
    ════════════════════════════════════════════════════════════════════ */
+/* 2차 지시서 §3-A 의 차례 그대로입니다. ⚠️ 여기 늘리면 폰에서 가로로
+   밀리는지 전수 점검이 봅니다 (메뉴가 가로 스크롤로 접힙니다). */
 var NAV = [
-  { href:"/categories", name:"카테고리 전체보기", icon:"down" },
+  { href:"/categories", name:"카테고리",      icon:"down" },
   { href:"/search",     name:"업체찾기" },
+  { href:"/match",      name:"매칭 요청" },
   { href:"/guide",      name:"이용안내" },
   { href:"/help",       name:"고객센터" }
 ];
@@ -55,7 +58,7 @@ function header(){
   var B = W.AM_BRAND, cut = B.enCut;
   return '<header class="hd"><div class="wrap hd-in">' +
     '<a class="lg" href="/" aria-label="' + esc(B.name) + ' 홈">' +
-      '<span class="lg-mk" style="color:var(--lime-on-dark)">' + icon("flag", 38) + '</span>' +
+      '<span class="lg-mk" style="color:var(--pt-on-dark)">' + icon("flag", 38) + '</span>' +
       '<span class="lg-tx">' +
         '<span class="lg-en">' + esc(B.en.slice(0,cut)) + '<b>' + esc(B.en.slice(cut)) + '</b></span>' +
         '<span class="lg-ko">' + esc(B.name) + '</span>' +
@@ -229,7 +232,7 @@ if(require.main === module){
   var cat  = require("./pages/category.js");
   var home = require("./pages/home.js");
   var list = require("./pages/categories.js");
-  var flat = ["guide", "help", "join", "search", "login", "my", "admin",
+  var flat = ["guide", "help", "join", "search", "match", "login", "my", "admin",
                "terms", "privacy"].map(function(n){
     return require("./pages/" + n + ".js").build();
   });
@@ -251,6 +254,22 @@ if(require.main === module){
     subBad.forEach(function(m){ console.error("❌ " + m); });
     process.exit(1);
   }
+
+  /* ⚠️⚠️ **네 영역이 열 분류를 빠짐없이 한 번씩 덮는가** (2차 지시서 §4).
+     빠지면 그 분류는 메인에서 길이 하나 줄고, 겹치면 같은 분류가 두 번
+     나옵니다 — 둘 다 에러 없이 조용합니다. */
+  var zSeen = {}, zBad = [];
+  (W.AM_ZONES || []).forEach(function(z){
+    (z.cats || []).forEach(function(k){
+      if(!W.amCat(k)) zBad.push(z.key + " 영역이 가리키는 '" + k + "' 분류가 없습니다");
+      else if(zSeen[k]) zBad.push("'" + k + "' 분류가 영역 둘에 들어 있습니다");
+      else zSeen[k] = 1;
+    });
+  });
+  (W.AM_CATS || []).forEach(function(c){
+    if(!zSeen[c.key]) zBad.push("'" + c.key + "' 분류가 **어느 영역에도** 없습니다");
+  });
+  if(zBad.length){ zBad.forEach(function(m){ console.error("❌ " + m); }); process.exit(1); }
 
   var prov = require("./pages/provider.js");
   var built = [home.build(), list.build()]

@@ -130,6 +130,7 @@ try{
   require("./sql/roles.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/money.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/apply.js")({ ok, psql, psqlFile, denied, allowed });
+  require("./sql/match.js")({ ok, psql, psqlFile, denied, allowed });
 
 }catch(e){
   bad++; ran++;

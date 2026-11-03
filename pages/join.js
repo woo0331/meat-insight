@@ -31,8 +31,8 @@ exports.build = function(){
 
   body += '<section class="sec"><div class="wrap">' +
     '<div class="sec-hd"><h2>어떤 업체가 입점하시나요</h2>' +
-    '<p>분류 열 가지 중 업체를 중개하는 여섯 곳입니다. 나머지 넷은 회원끼리 쓰는 자리입니다.</p></div>' +
-    '<ul class="chips">' + W.amCatsOf("provider").map(function(c){
+    '<p>업체가 서비스를 등록할 수 있는 분류입니다. 나머지는 회원끼리 쓰는 자리라 입점 대상이 아닙니다.</p></div>' +
+    '<ul class="chips">' + W.amCatsForProvider().map(function(c){
       return '<li><a class="chip chip-go" href="' + esc(W.amCatUrl(c)) + '">' +
         icon(c.icon, 18) + esc(c.name) + '</a></li>';
     }).join("") + '</ul></div></section>';

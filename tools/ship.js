@@ -41,6 +41,7 @@ const STEPS = [
   ["네 폭에서 전부 잽니다",       ["tools/check-screens.js"],      false],
   ["접근성을 잽니다",            ["tools/check-a11y.js"],         false],
   ["입점 신청 양식을 눌러 봅니다", ["tools/test-join.js"],          false],
+  ["매칭 요청 양식을 눌러 봅니다",  ["tools/test-match.js"],         false],
   ["관리자 화면을 눌러 봅니다",    ["tools/test-admin.js"],         false],
   /* ⚠️⚠️ 업체가 0곳이라 "있을 때" 자리는 아무도 본 적이 없습니다 —
      씨앗을 넣고 실제로 찍어 봅니다. 끝나면 사본으로 되돌립니다. */

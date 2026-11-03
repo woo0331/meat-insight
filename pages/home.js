@@ -14,13 +14,9 @@
 var W = global.window, esc = W.esc, icon = W.icon;
 var card = require("./_card.js");
 
-/* 시안의 큰 카드 넉 장 — 분류에서 끌어옵니다 (이름을 두 곳에 안 적습니다) */
-var FEAT = [
-  { key:"used",    line:"믿고 거래하는 골프 중고거래" },
-  { key:"lesson",  line:"내게 맞는 프로를 찾아 레슨을 예약하세요" },
-  { key:"booking", line:"전국 골프장을 한 번에 비교하고 예약" },
-  { key:"travel",  line:"국내 · 해외 골프투어를 한번에 비교" }
-];
+/* ⚠️⚠️ **네 영역은 js/data/catalog.js 의 AM_ZONES 한 곳에서 옵니다**
+   (2차 지시서 §4). 이름도 분류도 여기 다시 적지 않습니다 — 두 곳에
+   적으면 한쪽만 고쳐서 조용히 달라집니다. */
 
 /* ⚠️⚠️ 시안의 "다양한 혜택 — 특가 · 프로모션 · 이벤트 지속 제공" 은
    **지금 지킬 수 없는 약속**이라 뺐습니다 (쿠폰도 이벤트도 0건입니다).
@@ -37,10 +33,23 @@ var WHY = [
     d:"업체가 없는 분류는 없다고 말합니다. 숫자를 지어내지 않습니다." }
 ];
 
+/* 2차 지시서 §5 의 고객 이용 과정을 넷으로 줄여 적었습니다 (시안의
+   "이용 방법" 과 같은 차례입니다). ⚠️ 여기 적은 것은 **실제로 그렇게
+   돌아야 합니다** — 아직 안 되는 단계는 /match 화면이 그 자리에서
+   "준비 중" 이라고 말합니다. */
 var STEPS = [
-  { n:"01", t:"원하는 서비스를 고릅니다", d:"분류 열 가지에서 하려는 일을 고르거나 검색합니다." },
-  { n:"02", t:"상담을 신청합니다",       d:"지역과 조건을 적으면 그 일을 하는 업체로 넘어갑니다." },
-  { n:"03", t:"업체와 직접 이야기합니다", d:"연결된 업체와 조건을 맞추고 거래합니다." }
+  { n:"01", t:"서비스 선택",      d:"필요한 골프 서비스를 고릅니다. 여러 개 고르셔도 됩니다." },
+  { n:"02", t:"조건 입력",        d:"지역 · 예산 · 일정 등 간단한 요청을 적습니다." },
+  { n:"03", t:"업체 제안 비교",    d:"여러 업체의 제안을 나란히 놓고 확인합니다." },
+  { n:"04", t:"상담 · 예약 · 거래", d:"마음에 드는 업체와 바로 진행합니다." }
+];
+
+/* 시안 가운데의 매칭 띠 — ⚠️ 여기 적는 셋은 **매칭이 실제로 하는 일**
+   입니다. 지키지 못할 말을 적으면 그대로 거짓말이 됩니다. */
+var MATCH_WHY = [
+  "원하는 조건만 입력하면",
+  "여러 업체가 제안하고",
+  "비교 후 선택할 수 있어요"
 ];
 
 function hero(){
@@ -49,9 +58,13 @@ function hero(){
     '<p class="hero-kick">' + esc(B.en) + '</p>' +
     '<h1>골프의 모든 것,<br><b>' + esc(B.name) + '</b></h1>' +
     '<p class="hero-sub">' + esc(B.desc) + '</p>' +
+    /* ⚠️⚠️ **두 단추는 서로 다른 일을 합니다** (2차 지시서 §3-B).
+       업체 직접 찾기 = 손님이 고르고 비교 · 매칭 요청 = 업체가 제안.
+       같은 곳으로 보내면 지시서가 못 박은 것을 어깁니다. */
     '<div class="hero-cta">' +
-      '<a class="btn btn-pri" href="/search">' + icon("search",20) + '원하는 서비스 찾기</a>' +
-      '<a class="btn btn-ghost" href="/join">' + icon("store",20) + '업체 입점신청</a>' +
+      '<a class="btn btn-pt" href="/search">' + icon("search",20) + '업체 직접 찾기</a>' +
+      '<a class="btn btn-ghost" href="/match">' + icon("match",20) +
+        '한 번에 견적 · 매칭 요청하기</a>' +
     '</div>' +
   '</div></section>';
 }
@@ -72,13 +85,15 @@ function cats(){
 
 function feats(){
   return '<section class="sec"><div class="wrap">' +
-    '<div class="sec-hd"><h2>주요 서비스</h2>' +
-    '<p>골프에 필요한 일을 분류로 나눠 두었습니다. 하려는 일을 고르면 그 일을 하는 업체로 이어집니다.</p></div>' +
-    '<div class="feat">' + FEAT.map(function(f, i){
-      var c = W.amCat(f.key);
-      if(!c) return "";   /* ⚠️ 없는 키면 카드를 안 그립니다 — 빈 칸을 남기지 않습니다 */
-      return '<a class="feat-c feat-' + (i+1) + '" href="' + esc(W.amCatUrl(c)) + '">' +
-        '<h3>' + esc(c.name) + '</h3><p>' + esc(f.line) + '</p>' +
+    '<div class="sec-hd"><h2>무엇을 하시려고 오셨나요</h2>' +
+    '<p>골프에 필요한 일을 네 가지로 묶었습니다. 하려는 일을 고르면 그 안의 분류로 이어집니다.</p></div>' +
+    '<div class="feat">' + (W.AM_ZONES || []).map(function(z, i){
+      var cs = W.amZoneCats(z);
+      if(!cs.length) return "";   /* ⚠️ 빈 영역은 안 그립니다 */
+      return '<a class="feat-c feat-' + (i+1) + '" href="' + esc(W.amCatUrl(cs[0])) + '">' +
+        '<h3>' + esc(z.name) + '</h3>' +
+        '<p>' + esc(cs.map(function(c){ return c.name; }).join(" · ")) + '</p>' +
+        '<p class="feat-l">' + esc(z.lead) + '</p>' +
         '<span class="go">' + icon("arrow",20) + '</span></a>';
     }).join("") + '</div>' +
   '</div></section>';
@@ -135,6 +150,21 @@ function steps(){
   '</div></section>';
 }
 
+/* ⚠️ 히어로의 두 번째 단추와 **같은 곳**으로 갑니다 (/match).
+   두 곳에 서로 다른 주소를 적으면 한쪽만 고쳐서 어긋납니다. */
+function matchBand(){
+  return '<section class="sec"><div class="wrap"><div class="mband">' +
+    '<div class="mband-t">' +
+      '<h2>한 번에 견적 · 매칭 요청하기</h2>' +
+      '<ul class="mband-l">' + MATCH_WHY.map(function(t){
+        return '<li>' + icon("check", 18) + esc(t) + '</li>';
+      }).join("") + '</ul>' +
+      '<a class="btn btn-pt" href="/match">지금 매칭 요청하기' + icon("arrow",18) + '</a>' +
+    '</div>' +
+    '<div class="mband-s">' + icon("match", 72) + '</div>' +
+  '</div></div></section>';
+}
+
 function joinBand(){
   return '<section class="sec"><div class="wrap"><div class="join">' +
     icon("store", 34) +
@@ -155,6 +185,6 @@ exports.build = function(){
     title: W.AM_BRAND.slogan,
     desc: W.AM_BRAND.desc + " 레슨 · 중고 골프장터 · 부킹 · 조인 · 연습장 · 용품 · 피팅 · 여행까지 " +
           "골프 업체를 한곳에서 찾고 비교합니다.",
-    body: hero() + cats() + feats() + why() + providers() + steps() + joinBand()
+    body: hero() + cats() + feats() + matchBand() + why() + providers() + steps() + joinBand()
   };
 };

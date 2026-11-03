@@ -38,8 +38,12 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
   border: 1.6px solid transparent; transition: background .15s, border-color .15s;
 }
 .btn .ic{ flex: none; }
-.btn-pri{ background: var(--grn-btn); color: #fff; }            /* 흰 글자 5.41 */
-.btn-pri:hover{ background: #156A2E; }
+.btn-pri{ background: var(--grn-btn); color: #fff; }   /* 딥그린 위 흰 글자 12.59 */
+.btn-pri:hover{ background: #0A4A34; }
+/* ⚠️⚠️ **포인트 그린 단추에는 흰 글자를 얹지 마세요** — 2.22 입니다.
+   짙은 글자(--on-pt)로만 씁니다 — 7.30. 시안은 흰 글자였습니다. */
+.btn-pt{ background: var(--pt); color: var(--on-pt); font-weight:800; }
+.btn-pt:hover{ background: #38B547; }
 .btn-ghost{ border-color: rgba(255,255,255,.75); color: #fff; }
 .btn-ghost:hover{ background: rgba(255,255,255,.14); }
 .btn-line{ border-color: var(--grn); color: var(--grn-text); background:#fff; }
@@ -57,8 +61,8 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .lg-mk{ width:38px; height:38px; flex:none; }
 .lg-tx{ display:flex; flex-direction:column; line-height:1.1; }
 .lg-en{ font-size:17px; font-weight:800; letter-spacing:.02em; }
-.lg-en b{ color: var(--lime-on-dark); font-weight:800; }         /* 헤더 위 8.84 */
-.lg-ko{ font-size:12.5px; color:#C9DED2; margin-top:2px; }
+.lg-en b{ color: var(--pt-on-dark); font-weight:800; }         /* 헤더 위 8.84 */
+.lg-ko{ font-size:12.5px; color: var(--on-dark-2); margin-top:2px; }
 
 .gnb{ display:flex; align-items:center; gap:4px; }
 .gnb a, .gnb button{
@@ -74,7 +78,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
   border:0; padding: 10px 50px 10px 20px; font-size:15px;
   background:#fff; color: var(--ink);
 }
-.sch input::placeholder{ color:#7C8A82; }
+.sch input::placeholder{ color:var(--ink3); }
 .sch button{
   position:absolute; right:4px; top:50%; transform:translateY(-50%);
   width:42px; height:42px; border-radius:50%;
@@ -100,26 +104,28 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
    ⚠️ background 에 그라디언트만 적으면 backgroundColor 가 투명이라
    색을 재는 쪽이 검정으로 읽습니다 — background-color 를 따로 둡니다. */
 .hero{
-  background-color: #0C2A1B;
+  /* ⚠️ background-color 를 따로 둡니다 — 그라디언트만 적으면 색을 재는
+     쪽이 투명으로 읽어 **검정**으로 셉니다. 지시서 2차 §2 의 두 색입니다. */
+  background-color: #08291F;
   background-image:
-    radial-gradient(120% 95% at 80% 8%, rgba(46,168,79,.34) 0%, rgba(12,42,27,0) 58%),
-    linear-gradient(118deg, #0C2A1B 0%, #12482C 46%, #1B5E3A 100%);
+    radial-gradient(120% 95% at 80% 8%, rgba(67,198,83,.26) 0%, rgba(8,41,31,0) 58%),
+    linear-gradient(118deg, #08291F 0%, #063B2B 54%, #0A4A34 100%);
   color:#fff; position:relative; overflow:hidden;
 }
 .hero::after{
   content:""; position:absolute; inset:auto -8% -42% 42%;
   height:82%; border-radius:50% 50% 0 0;
-  background: radial-gradient(60% 100% at 50% 100%, rgba(74,222,128,.20), rgba(74,222,128,0) 70%);
+  background: radial-gradient(60% 100% at 50% 100%, rgba(67,198,83,.18), rgba(67,198,83,0) 70%);
   pointer-events:none;
 }
 .hero-in{ position:relative; z-index:1; padding-block: 74px 86px; max-width:720px; }
 .hero-kick{
   font-size:13.5px; letter-spacing:.26em; font-weight:700;
-  color: var(--lime-on-mid); margin-bottom:16px;
+  color: var(--pt-on-dark); margin-bottom:16px;
 }
 .hero h1{ color:#fff; font-size: clamp(34px, 5.2vw, 56px); line-height:1.18; letter-spacing:-.01em; }
-.hero h1 b{ color: var(--lime-on-dark); font-weight:800; }
-.hero-sub{ margin-top:18px; font-size: clamp(16px, 1.6vw, 19px); color:#D6E8DD; }
+.hero h1 b{ color: var(--pt-on-dark); font-weight:800; }
+.hero-sub{ margin-top:18px; font-size: clamp(16px, 1.6vw, 19px); color: var(--on-dark-2); }
 .hero-cta{ display:flex; flex-wrap:wrap; gap:12px; margin-top:30px; }
 /* ⚠️ 사진이 들어올 자리입니다 — 지금은 그라디언트입니다.
    없는 골프장 사진을 만들어 넣지 않습니다 (저작권 · 절대 규칙 1). */
@@ -129,21 +135,25 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .cats-in{ margin-top:-42px; position:relative; z-index:3;
   background:#fff; border-radius: 20px; box-shadow: var(--shadow);
   padding: 22px; }
-.cat-grid{ display:grid; gap:10px; grid-template-columns: repeat(5, 1fr); }
+/* ⚠️ 2차 시안은 열 장을 **한 줄**에 둡니다. 넓은 화면에서만 그렇게 하고,
+   좁아지면 줄입니다 — 글자가 잘리는지는 tools/check-screens.js 가
+   화면마다 잽니다 (낱말 잘림). */
+.cat-grid{ display:grid; gap:8px; grid-template-columns: repeat(10, 1fr); }
+@media (max-width: 1340px){ .cat-grid{ grid-template-columns: repeat(5, 1fr); gap:10px; } }
 @media (max-width: 1100px){ .cat-grid{ grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 760px){ .cat-grid{ grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 460px){ .cat-grid{ grid-template-columns: repeat(2, 1fr); } }
 
 .cat{
   display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
-  gap:8px; text-align:center; min-height: 128px; padding: 18px 10px 16px;
+  gap:8px; text-align:center; min-height: 128px; padding: 18px 6px 16px;
   border-radius: var(--r); background: var(--bg-2);
   border:1.5px solid transparent; transition: border-color .15s, background .15s;
 }
 .cat:hover{ background:#fff; border-color: var(--grn-line); }
 .cat .ic{ color: var(--grn); }
-.cat-n{ font-size:15.5px; font-weight:700; color: var(--ink); }
-.cat-l{ font-size:12.5px; color: var(--ink3); line-height:1.45; }
+.cat-n{ font-size:14.5px; font-weight:700; color: var(--ink); line-height:1.35; }
+.cat-l{ font-size:12px; color: var(--ink3); line-height:1.45; }
 
 /* ── 구간 ─────────────────────────────────────────────── */
 .sec{ padding-block: 58px; }
@@ -160,21 +170,22 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
   position:relative; min-height: 186px; border-radius: var(--r);
   padding: 22px; color:#fff; display:flex; flex-direction:column;
   background-color: var(--grn-deep);
-  background-image: linear-gradient(150deg, rgba(12,42,27,.18), rgba(12,42,27,.86));
+  background-image: linear-gradient(150deg, rgba(8,41,31,.18), rgba(8,41,31,.86));
   overflow:hidden;
 }
 .feat-c h3{ color:#fff; font-size:19px; }
-.feat-c p{ margin-top:8px; font-size:14.5px; color:#D6E8DD; }
+.feat-c p{ margin-top:8px; font-size:14.5px; color: var(--on-dark-2); }
+.feat-l{ font-size:13px !important; color: var(--pt-on-dark) !important; margin-top:6px !important; }
 .feat-c .go{
   margin-top:auto; align-self:flex-end;
   width:38px; height:38px; border-radius:50%;
   background:#fff; color: var(--grn-text);
   display:flex; align-items:center; justify-content:center;
 }
-.feat-1{ background-image: linear-gradient(150deg, #1B5E3A, #0C2A1B); }
-.feat-2{ background-image: linear-gradient(150deg, #19392C, #0C2A1B); }
-.feat-3{ background-image: linear-gradient(150deg, #166046, #0C2A1B); }
-.feat-4{ background-image: linear-gradient(150deg, #15493F, #0C2A1B); }
+.feat-1{ background-image: linear-gradient(150deg, #0A4A34, #08291F); }
+.feat-2{ background-image: linear-gradient(150deg, #12402F, #08291F); }
+.feat-3{ background-image: linear-gradient(150deg, #0E5240, #08291F); }
+.feat-4{ background-image: linear-gradient(150deg, #103B33, #08291F); }
 
 /* 장점 넉 줄 */
 .why{ display:grid; gap:14px; grid-template-columns: 180px repeat(4, 1fr); align-items:start; }
@@ -205,8 +216,8 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .join-t p{ margin-top:6px; font-size:14.5px; color: var(--ink3); }
 
 /* ── 푸터 ─────────────────────────────────────────────── */
-.ft{ background: var(--grn-deep); color:#C9DED2; padding-block: 42px 34px; margin-top: 0; }
-.ft a{ color:#C9DED2; }
+.ft{ background: var(--grn-deep); color: var(--on-dark-2); padding-block: 42px 34px; margin-top: 0; }
+.ft a{ color: var(--on-dark-2); }
 .ft a:hover{ color:#fff; text-decoration: underline; }
 .ft-top{ display:flex; gap:34px; flex-wrap:wrap; justify-content:space-between; }
 .ft-nav{ display:flex; gap:26px; flex-wrap:wrap; }
@@ -219,16 +230,16 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .ft-biz{ margin-top:28px; padding-top:22px; border-top:1px solid rgba(255,255,255,.14);
          font-size:13px; line-height:1.9; }
 .ft-biz dl{ display:flex; flex-wrap:wrap; gap:4px 18px; margin:0; }
-.ft-biz dt{ color:#8FB3A1; }
+.ft-biz dt{ color: var(--on-dark-2); }
 .ft-biz dd{ margin:0 14px 0 0; }
 /* ⚠️⚠️ 전자상거래법 제20조 제1항 — 중개한다는 사실을 미리 알립니다.
    고지하지 않으면 제20조의2 로 연대책임입니다. 모든 화면에 둡니다. */
-.ft-mid{ margin-top:18px; font-size:13px; color:#A8C6B6; line-height:1.8; }
-.ft-cr{ margin-top:16px; font-size:12.5px; color:#7FA38F; }
+.ft-mid{ margin-top:18px; font-size:13px; color: var(--on-dark-2); line-height:1.8; }
+.ft-cr{ margin-top:16px; font-size:12.5px; color: var(--on-dark-2); }
 
-/* 이용 방법 — 번호. ⚠️ 중간 밝기 그린 면 위라 --lime-on-mid 입니다
-   (--lime-on-dark 를 쓰면 4.45 로 AA 에 걸립니다). */
-.step-n{ color: var(--lime-on-mid); font-weight:800; font-size:13px; letter-spacing:.2em; }
+/* 이용 방법 — 번호. ⚠️ 어두운 면 위라 포인트 그린을 글자로 씁니다
+   (딥그린 위 5.66 · 다크그린 위 7.01). */
+.step-n{ color: var(--pt-on-dark); font-weight:800; font-size:13px; letter-spacing:.2em; }
 
 /* ── 하위 화면의 머리 ──────────────────────────────────── */
 .pghd{ background: var(--grn-soft); border-bottom:1px solid var(--grn-line);
@@ -286,7 +297,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .notes{ display:grid; gap:10px; max-width:80ch; }
 .notes li{ position:relative; padding-left:18px; font-size:15.5px; color: var(--ink2); }
 .notes li::before{ content:""; position:absolute; left:0; top:11px;
-                   width:7px; height:7px; border-radius:50%; background: var(--lime); }
+                   width:7px; height:7px; border-radius:50%; background: var(--pt); }
 .notes b{ color: var(--ink); }
 .notes a{ color: var(--grn-text); font-weight:700; text-decoration: underline; }
 
@@ -309,7 +320,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .lform input{ flex:1; min-width:220px; max-width:360px; min-height:46px;
   border:1.5px solid var(--line); border-radius: var(--r-pill);
   padding:10px 18px; font-size:16px; color: var(--ink); background:#fff; }
-.lform input::placeholder{ color:#7C8A82; }
+.lform input::placeholder{ color:var(--ink3); }
 .lmsg{ margin-top:12px; font-size:15px; color: var(--ink2); }
 
 .mybox{ display:grid; gap:16px; }
@@ -418,7 +429,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .doc-ul{ margin-top:12px; display:grid; gap:7px; }
 .doc-ul li{ position:relative; padding-left:16px; font-size:15.5px; color: var(--ink2); }
 .doc-ul li::before{ content:""; position:absolute; left:0; top:10px;
-                   width:6px; height:6px; border-radius:50%; background: var(--lime); }
+                   width:6px; height:6px; border-radius:50%; background: var(--pt); }
 /* ⚠️ 표는 폰에서 가로로 넘칩니다 — 칸째 가로 스크롤을 줍니다
    (화면 전체가 가로로 밀리면 전수 점검이 잡습니다). */
 .doc-t{ margin-top:12px; overflow-x:auto; border:1.5px solid var(--line); border-radius: var(--r-sm); }
@@ -454,3 +465,17 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .chip-ok .ic{ color: var(--grn); }
 /* 업체 정보 표의 머리 칸 — 세로로 섭니다 */
 .doc-t th[scope="row"]{ white-space:nowrap; width:1%; }
+
+/* ── 매칭 띠 (2차 시안 가운데) ──────────────────────────────── */
+.mband{ display:flex; align-items:center; gap:28px; flex-wrap:wrap;
+        background: var(--grn-soft); border:1.5px solid var(--grn-line);
+        border-radius: var(--r); padding: 28px 30px; }
+.mband-t{ flex:1; min-width:260px; }
+.mband-t h2{ font-size: clamp(20px, 2.2vw, 26px); }
+.mband-l{ display:grid; gap:9px; margin:16px 0 20px; }
+.mband-l li{ display:flex; align-items:center; gap:9px;
+             font-size:15.5px; color: var(--ink2); }
+/* ⚠️ 라이트그린 바탕 위라 체크는 짙은 그린으로 (--pt 는 면 전용) */
+.mband-l .ic{ color: var(--grn-text); flex:none; }
+.mband-s{ flex:none; color: var(--grn); opacity:.5; }
+@media (max-width: 720px){ .mband-s{ display:none; } }

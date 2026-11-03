@@ -90,15 +90,22 @@ const FAKE = "https://sb-test.supabase.co";
       document.querySelectorAll('input[name="svc"]'), function(e){ return e.value; });
   });
   const real = await p.evaluate(function(){
-    return (window.amCatsOf("provider") || []).reduce(function(a, c){
-      return a.concat(window.amCatItems(c).map(function(i){ return i.key; }));
+    return (window.amCatsForProvider() || []).reduce(function(a, c){
+      return a.concat(window.amCatItemsForProvider(c).map(function(i){ return i.key; }));
     }, []);
   });
   ok("고르는 값이 catalog 의 하위 키와 **한 글자도 안 다르다**",
      vals.length > 0 && vals.join(",") === real.join(","),
      vals.length + "개 vs " + real.length + "개");
-  ok("회원끼리 쓰는 분류(중고장터 · 조인 · 커뮤니티)는 안 들어 있다",
-     vals.every(function(v){ return !/^(us|jo|cm)-/.test(v); }));
+  /* ⚠️⚠️ **분류째로 빼면 안 됩니다.** 중고 골프장터는 둘이 섞입니다 —
+     드라이버 직거래는 회원끼리, 매입 견적 · 위탁판매는 업체입니다.
+     2차 지시서 §3-2 가 그 둘을 같은 분류에 두었습니다. */
+  ok("중고 직거래 하위는 안 들어 있다",
+     vals.indexOf("us-driver") < 0 && vals.indexOf("us-iron") < 0, vals.join(","));
+  ok("업체가 하는 중고 하위(매입 견적 · 위탁판매)는 들어 있다",
+     vals.indexOf("us-buyquote") >= 0 && vals.indexOf("us-consign") >= 0);
+  ok("조인 · 커뮤니티 하위는 안 들어 있다",
+     vals.every(function(v){ return !/^(jo|cm)-/.test(v); }));
 
   /* 동의 자리에 셋이 같이 있는가 (개인정보보호법 제15조 제2항) */
   const agree = (await p.textContent(".agree")) || "";

@@ -23,11 +23,13 @@
   var KEEP = (window.WOW_BIZ || {}).applyKeep || "";
 
   function fields(){
-    /* 업체를 중개하는 분류의 하위만 — 회원끼리 쓰는 자리(중고장터 ·
-       조인 · 커뮤니티)는 입점 대상이 아닙니다. */
-    return (window.amCatsOf ? amCatsOf("provider") : []).map(function(c){
+    /* ⚠️⚠️ **업체가 고를 수 있는 하위만** 냅니다 (amCatItemsForProvider).
+       중고 골프장터처럼 **한 분류 안에 둘이 섞이는** 자리가 있습니다 —
+       드라이버 직거래는 회원끼리, 매입 견적 · 위탁판매는 업체입니다.
+       분류째로 빼면 업체가 할 수 있는 일을 못 고르게 됩니다. */
+    return (window.amCatsForProvider ? window.amCatsForProvider() : []).map(function(c){
       return '<fieldset class="svc"><legend>' + esc(c.name) + '</legend>' +
-        amCatItems(c).map(function(it){
+        window.amCatItemsForProvider(c).map(function(it){
           return '<label class="chk"><input type="checkbox" name="svc" value="' +
             esc(it.key) + '"><span>' + esc(it.name) + '</span></label>';
         }).join("") + '</fieldset>';

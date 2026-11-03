@@ -16,6 +16,7 @@
     "/help",
     "/join",
     "/search",
+    "/match",
     "/login",
     "/my",
     "/admin",

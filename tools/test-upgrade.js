@@ -133,7 +133,16 @@ try{
     upWhy = String(e.stderr||e.stdout||e.message).split("\n").filter(x=>/ERROR/.test(x)).join(" | ");
   }
   ok("db/apply-from-0008.sql 이 끝까지 돈다", upOk, upWhy);
-  ok("판 번호가 28 로 올라간다", psql("select max(n)::text from schema_version") === "28");
+  /* ⚠️⚠️ **판 번호를 숫자로 박지 않습니다.** 28 이라고 적어 뒀다가
+     0029 를 더한 날 멀쩡한 저장소를 실패로 잡았습니다 (작업 기억의
+     "검사에 그날의 개수를 박지 마세요"). 파일에서 셉니다. */
+  var want = fs.readdirSync(path.join(ROOT, "db/migrations"))
+    .filter(function(f){ return /^\d{4}_.*\.sql$/.test(f) && !/_down\.sql$/.test(f); })
+    .map(function(f){ return parseInt(f.slice(0, 4), 10); })
+    .reduce(function(a, b){ return Math.max(a, b); }, 0);
+  ok("판 번호가 마지막 파일 번호(" + want + ")까지 올라간다",
+     psql("select max(n)::text from schema_version") === String(want),
+     psql("select max(n)::text from schema_version"));
 
   console.log("\n── ④ 넣어 둔 줄이 하나도 안 사라졌는가");
   Object.keys(before).forEach(function(t){

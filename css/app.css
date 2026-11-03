@@ -1049,10 +1049,20 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .sf-r + .sf-r{ margin-top:10px; }
 .sf-l{ flex:none; font-size:14px; font-weight:700; color: var(--ink);
        width:38px; }
-.sf-c{ display:flex; gap:8px; overflow-x:auto; min-width:0;
+/* ⚠️⚠️ **넓은 화면에서는 접습니다.** 가로로 미끄러지게만 두면 PC 에서
+   열째 분류가 **잘린 채** 보이고, 미끄러진다는 것이 눈에 안 보여서
+   손님은 그 분류가 없는 줄 압니다 (찍어 보고 알았습니다).
+   폰에서만 미끄러집니다 — 거기서는 쌓으면 거르개가 화면 두 장을
+   차지합니다. ⚠️ 두 규칙의 특정도가 같으므로 **뒤에 오는 것**이
+   이깁니다 (미디어 쿼리라고 저절로 이기지 않습니다). */
+.sf-c{ display:flex; gap:8px; flex-wrap:wrap; min-width:0;
        padding-block:4px; scrollbar-width:thin;
        -webkit-overflow-scrolling:touch; }
 .sf-c .chip{ flex:none; }
+@media (max-width: 760px){
+  .sf-c{ flex-wrap:nowrap; overflow-x:auto; }
+  .sf-r{ align-items:flex-start; }
+}
 /* 눌린 칸 — ⚠️ 흰 글자를 얹는 면은 --grn-btn 입니다 (12.59).
    --pt 는 **면 전용**이라 흰 글자를 얹으면 아무 기준도 못 넘습니다. */
 .chip-on{ background: var(--grn-btn); border-color: var(--grn-btn);

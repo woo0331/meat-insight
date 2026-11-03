@@ -467,9 +467,22 @@ function nowServe(){ return serve(0); }
     /* 사람이 볼 그림 — 도구가 "보기 흉한가" 는 영원히 못 잽니다 */
     if(process.argv.indexOf("--shot") >= 0){
       const dir = process.argv[process.argv.indexOf("--shot") + 1] || ".";
-      for(const [u, f] of [["/cat/range", "pv-cat"], ["/pro/green-pt", "pv-one"]]){
-        const sp = await b.newPage({ viewport:{ width:1280, height:900 }, deviceScaleFactor:2 });
+      /* ⚠️⚠️ **"보기 흉한가" 는 도구가 영원히 못 잽니다** — 디자인을
+         바꿨으면 찍어 보세요. 업체찾기는 **폰도** 찍습니다 (거르개가
+         가로로 미끄러지는 자리라 눈으로 봐야 압니다). */
+      for(const [u, f, w] of [["/cat/range", "pv-cat", 1280],
+                              ["/pro/green-pt", "pv-one", 1280],
+                              ["/search", "pv-search", 1280],
+                              ["/search", "pv-search-phone", 390]]){
+        const sp = await b.newPage({ viewport:{ width:w, height:900 }, deviceScaleFactor:2 });
         await sp.goto("http://127.0.0.1:" + h.port + u, { waitUntil:"networkidle" });
+        await sp.waitForTimeout(400);
+        /* 비교표도 펴서 찍습니다 — 안 펴면 그 자리는 아무도 안 봅니다 */
+        if(f.indexOf("pv-search") === 0){
+          await sp.locator("#sres .cmp-x").nth(0).check().catch(function(){});
+          await sp.locator("#sres .cmp-x").nth(1).check().catch(function(){});
+          await sp.waitForTimeout(300);
+        }
         await sp.screenshot({ path: path.join(dir, f + ".png"), fullPage:true });
         await sp.close();
       }

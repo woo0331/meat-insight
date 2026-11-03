@@ -41,6 +41,9 @@ const STEPS = [
   ["키 · 헤더 · CSP",            ["tools/check-safe.js", "--prove"], false],
   ["주소가 vercel 규칙에 걸리나",  ["tools/check-routes.js", "--prove"], false],
   ["링크가 실제로 열리나",        ["tools/check-links.js"],        false],
+  /* ⚠️ 사진 규격 — **파일을 실제로 열어** 잽니다 (0장이면 0장이라고
+     말하고 통과로 치지 않습니다). */
+  ["사진이 규격에 맞나",          ["tools/check-photos.js"],       false],
   ["네 폭에서 전부 잽니다",       ["tools/check-screens.js"],      false],
   ["접근성을 잽니다",            ["tools/check-a11y.js"],         false],
   ["입점 신청 양식을 눌러 봅니다", ["tools/test-join.js"],          false],
@@ -53,6 +56,10 @@ const STEPS = [
   /* ⚠️⚠️ 업체가 0곳이라 "있을 때" 자리는 아무도 본 적이 없습니다 —
      씨앗을 넣고 실제로 찍어 봅니다. 끝나면 사본으로 되돌립니다. */
   ["업체가 있을 때를 눌러 봅니다",  ["tools/test-providers.js"],     false],
+  /* ⚠️⚠️ 사진이 0장이라 사진이 들어가는 자리는 아무도 본 적이 없습니다 —
+     **가장 밝은 사진**을 일부러 넣어 흰 글자가 읽히는지 잽니다.
+     ⚠️ 막을 옅게 하면 이 검사가 실제로 떨어지는지까지 봅니다. */
+  ["사진이 들어왔을 때를 눌러 봅니다", ["tools/test-photos.js"],     false],
   ["DB 를 눌러 봅니다",          ["tools/test-sql.js"],           true],
   /* ⚠️⚠️ 운영 DB 에 올렸을 때 기존 자료가 어떻게 되는지 — 지시서 11번이
      "기존 기능과 데이터에 대한 영향 및 테스트 결과를 확인한 뒤" 라고

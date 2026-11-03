@@ -812,7 +812,21 @@ function stub(p, who, tables, rpcs, up){
 
   s = await open("/admin", { role:"admin", name:"관리자" }, BIZ, {}, false);
   ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
-  ok("갈래 셋이 나온다", (await s.p.locator("#bizbox button[data-tab]").count()) === 3);
+  /* ⚠️⚠️ **갯수를 박지 않습니다** — 갈래를 더하는 날 멀쩡한 화면이
+     실패합니다 (후기 갈래를 더하자 셋 ≠ 넷으로 떨어졌습니다).
+     재는 것은 **갈래마다 그 자리가 실제로 열리는가**입니다. */
+  const tabKeys = await s.p.locator("#bizbox button[data-tab]").evaluateAll(
+    function(ns){ return ns.map(function(n){ return n.getAttribute("data-tab"); }); });
+  ok("갈래가 둘 이상 나온다", tabKeys.length >= 2, tabKeys.join(" "));
+  for(const k of tabKeys){
+    await s.p.click("#bizbox button[data-tab='" + k + "']");
+    await s.p.waitForTimeout(150);
+    ok("  '" + k + "' 갈래를 누르면 그 자리가 그려진다",
+       (await s.p.locator("#bizbox .bz-body").count()) === 1 &&
+       ((await s.p.textContent("#bizbox .bz-body")) || "").trim().length > 10);
+  }
+  await s.p.click("#bizbox button[data-tab='" + tabKeys[0] + "']");
+  await s.p.waitForTimeout(150);
   t = (await s.p.textContent("#bizbox")) || "";
   ok("수수료 정책이 사람 말로 나온다 (rate 가 아니라 거래액의 8%)",
      t.indexOf("거래액의 8%") >= 0 && t.indexOf("rate") < 0, t.slice(0, 300));
@@ -996,6 +1010,230 @@ function stub(p, who, tables, rpcs, up){
      JSON.parse(call.body).p_tel === "010-1234-5678", call && call.body);
   await s.p.close();
 
+  /* ══ 후기 · 평점 (0037) ══════════════════════════════════════
+     ⚠️⚠️⚠️ **이 자리도 전수 점검이 영원히 못 봅니다** — 로그인해야
+     그려집니다. 후기를 쓰는 양식 · 업체의 답변 · 운영자의 가리기가
+     전부 그렇습니다. 그래서 여기서 **직접** 눌러 봅니다.
+     ⚠️⚠️ 재는 것 가운데 가장 중요한 것은 **눌러도 안 되는 단추를 미리
+     만들지 않는가**입니다 (절대 규칙 5). 조건은 DB(0037)에 있고
+     화면은 amRvCanWrite() 로 같은 조건을 봅니다 — 둘이 어긋나면
+     손님이 다 적고 나서 거절됩니다. */
+  const RVMINE = {
+    id:"dddddddd-0000-0000-0000-000000000001",
+    request_id:REQ.id, provider_id:"t-range", rating:4,
+    body:"<b>꼼꼼히</b> 봐 주셨습니다. 고맙습니다.",
+    created_at:"2026-11-01T01:00:00Z", updated_at:"2026-11-02T05:00:00Z",
+    reply:null, reply_at:null, hidden_at:null, hidden_why:null
+  };
+
+  console.log("\n── /my 후기 — ⚠️ 겪지 않았으면 양식을 **안 냅니다**");
+  /* MYT 의 견적 둘은 **받은 견적(open)** 입니다 — 고르지도 만나지도
+     않았으니 후기 양식이 한 장도 없어야 합니다. */
+  s = await open("/my", { role:"customer", name:"홍길동" },
+                 Object.assign({}, MYT, { review:[], appointment:[] }));
+  ok("⚠️ 고르지도 만나지도 않았으면 후기 양식이 **한 장도 없다**",
+     (await s.p.locator("#reqbox form.rvform").count()) === 0,
+     await s.p.locator("#reqbox form.rvform").count());
+  t = (await s.p.textContent("#reqbox")) || "";
+  ok("  후기 이야기를 꺼내지도 않는다 (쓸 수 없는 자리입니다)",
+     t.indexOf("후기") < 0, t.slice(0, 120));
+  /* ⚠️⚠️ **주소에서 내 요청으로 좁혀 청하는가** — 정책이 느슨해지는
+     날 이 줄이 남습니다 (자물쇠를 두 자리에). */
+  const rvGet = s.sent.filter(function(g){
+    return g.name === "GET" && g.body.indexOf("/rest/v1/review") >= 0; })[0];
+  ok("⚠️ 후기를 청할 때 **내 요청으로 좁혀** 묻는다", !!rvGet &&
+     rvGet.body.indexOf("request_id=in.") >= 0, rvGet && rvGet.body);
+  ok("  by_user 를 청하지 않는다 (쓸 데가 없습니다)",
+     !!rvGet && rvGet.body.indexOf("by_user") < 0, rvGet && rvGet.body);
+  await s.p.close();
+
+  console.log("\n── /my 후기 — 견적을 고르면 열립니다");
+  const QCHOSEN = Object.assign({}, QUOTE, { state:"chosen" });
+  const MYT2 = Object.assign({}, MYT,
+    { quote:[QCHOSEN, Q2], review:[], appointment:[] });
+  s = await open("/my", { role:"customer", name:"홍길동" }, MYT2);
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  ok("고른 업체 **하나만** 후기 양식이 열린다",
+     (await s.p.locator("#reqbox form.rvform").count()) === 1,
+     await s.p.locator("#reqbox form.rvform").count());
+  t = (await s.p.textContent("#reqbox")) || "";
+  ok("  어느 업체의 후기인지 적는다", /남서울 실내연습장 후기 쓰기/.test(t), t.slice(-600));
+  ok("  고르지 않은 업체는 양식이 없다", t.indexOf("그린레슨 후기") < 0);
+  ok("별점을 고르는 칸이 다섯이다",
+     (await s.p.locator("#reqbox .rvpick input[type=radio]").count()) === 5,
+     await s.p.locator("#reqbox .rvpick input[type=radio]").count());
+  /* ⚠️⚠️ **DB 가 거절하는 말과 화면의 안내가 같은 뜻이어야** 합니다 —
+     한쪽만 고치면 "적었는데 안 된다" 가 됩니다 (0037 은 열 글자). */
+  ok("⚠️ 열 글자 이상이라고 **미리** 알린다", /열 글자 이상/.test(t), t.slice(-600));
+  ok("⚠️ 공개된다는 것과 성함이 어떻게 보이는지 미리 알린다",
+     /공개/.test(t) && /성 한 글자/.test(t), t.slice(-600));
+  /* ⚠️ 누르는 것은 40px 이상입니다 (별점 고르개 포함) */
+  ok("후기 자리의 누르는 것이 40px 이상이다",
+     (await tapsOk(s.p, "#reqbox .rv-one")) === 0,
+     await tapsOk(s.p, "#reqbox .rv-one"));
+
+  /* ⚠️⚠️ **별점을 안 고르면 보내지 않습니다** — 보내면 DB 가 거절하고,
+     손님은 적은 글을 다시 적습니다. */
+  await s.p.fill("#reqbox form.rvform textarea", "아주 꼼꼼히 봐 주셨습니다.");
+  await s.p.click("#reqbox form.rvform button[type=submit]");
+  await s.p.waitForTimeout(250);
+  ok("⚠️ 별점을 안 고르면 **보내지 않는다**",
+     s.sent.filter(function(x){ return x.name === "write_review"; }).length === 0);
+  ok("  무엇이 빠졌는지 그 자리에 적는다",
+     /별점을 골라/.test((await s.p.textContent("#reqbox .rvmsg")) || ""),
+     await s.p.textContent("#reqbox .rvmsg"));
+
+  /* ⚠️⚠️ **보내는 꾸러미를 뜯어 봅니다.** 칸 이름 하나가 어긋나도
+     열리기는 합니다 — 그러면 아무것도 안 걸립니다 (앞 서비스의
+     ?m=apple 자리와 같은 꼴). */
+  await s.p.click("#reqbox .rvpick input[value='5']");
+  await s.p.click("#reqbox form.rvform button[type=submit]");
+  await s.p.waitForTimeout(300);
+  const wrote = s.sent.filter(function(x){ return x.name === "write_review"; })[0];
+  ok("별점을 고르면 보낸다", !!wrote, s.sent.map(function(x){ return x.name; }).join(" "));
+  let wp = null;
+  try{ wp = JSON.parse(wrote.body).p; }catch(_){}
+  ok("  꾸러미에 요청 · 업체 · 별점 · 글이 제 이름으로 담긴다",
+     !!wp && wp.request === REQ.id && wp.provider === "t-range" &&
+     wp.rating === 5 && wp.body.indexOf("꼼꼼히") >= 0, wrote && wrote.body);
+  ok("  ⚠️ 별점이 **숫자**로 간다 (글자로 가면 DB 가 거절합니다)",
+     !!wp && typeof wp.rating === "number", wp && typeof wp.rating);
+  await s.p.close();
+
+  console.log("\n── /my 후기 — 이미 쓴 것 · 가려진 것");
+  s = await open("/my", { role:"customer", name:"홍길동" },
+                 Object.assign({}, MYT2, { review:[RVMINE] }));
+  t = (await s.p.textContent("#reqbox")) || "";
+  ok("내가 쓴 후기가 보인다", /내 후기/.test(t), t.slice(-600));
+  ok("  별점이 글로도 적힌다 (소리로 듣는 분께)", /5점 만점에 4점/.test(t));
+  ok("  고친 것이라고 적는다", /고침/.test(t));
+  html = await s.p.innerHTML("#reqbox");
+  ok("⚠️ 내가 적은 태그가 날것으로 안 들어간다",
+     html.indexOf("<b>꼼꼼히</b>") < 0 && html.indexOf("&lt;b&gt;") >= 0);
+  ok("고치는 양식이 **적은 그대로** 채워져 있다",
+     ((await s.p.inputValue("#reqbox form.rvform textarea")) || "")
+       .indexOf("꼼꼼히") >= 0,
+     await s.p.inputValue("#reqbox form.rvform textarea"));
+  ok("  별점도 고른 그대로다",
+     await s.p.isChecked("#reqbox .rvpick input[value='4']"));
+  await s.p.close();
+
+  s = await open("/my", { role:"customer", name:"홍길동" },
+                 Object.assign({}, MYT2, { review:[Object.assign({}, RVMINE,
+                   { hidden_at:"2026-11-02T06:00:00Z", hidden_why:"욕설" })] }));
+  t = (await s.p.textContent("#reqbox")) || "";
+  ok("⚠️ 가려진 후기에는 고치는 양식을 **안 낸다** (DB 가 거절합니다)",
+     (await s.p.locator("#reqbox form.rvform").count()) === 0,
+     await s.p.locator("#reqbox form.rvform").count());
+  ok("  가려졌다는 것과 어디로 물을지 알린다",
+     /가린 후기/.test(t) && /고객센터/.test(t), t.slice(-400));
+  await s.p.close();
+
+  console.log("\n── /desk 후기 — 업체는 **답변만** 답니다");
+  s = await open("/desk", PRO,
+                 { assignment:[asg(quoted, "accepted")], request:[quoted],
+                   quote:[QUOTE], request_item:ITEMS, appointment:[],
+                   review:[RVMINE] });
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  t = (await s.p.textContent("#deskbox")) || "";
+  ok("받은 후기가 보인다 (1건)", /받은 후기 1건/.test(t), t.slice(-500));
+  /* ⚠️⚠️ **후기 자리만** 봅니다. 배정 카드에는 성함 · 연락처가
+     일부러 나옵니다 (수락한 뒤이고, 제3자 제공 동의를 받은 건입니다) —
+     화면 전체를 훑으면 그 멀쩡한 자리가 걸려서 **엉뚱한 까닭으로**
+     실패합니다. */
+  const rvT = (await s.p.textContent("#deskbox .rv-one")) || "";
+  ok("⚠️ 후기 자리에 손님 성함이 한 글자도 안 나온다 (by_user 를 안 청합니다)",
+     rvT.length > 10 && rvT.indexOf("홍길동") < 0, rvT.slice(0, 200));
+  ok("  그 자리에는 '손님' 으로만 적는다", /손님/.test(rvT), rvT.slice(0, 200));
+  ok("⚠️ 별점을 고칠 수 없다고 적는다", /고칠 수 없습니다/.test(t), t.slice(-500));
+  /* ⚠️⚠️ **업체 작업실에서 평균을 찍지 않습니다** — 이 화면이 받은 줄에는
+     가려진 것이 섞여 있어 공개 평균과 다른 값입니다. 두 숫자가 다르면
+     어느 쪽이 참인지 묻게 됩니다. */
+  ok("⚠️ 평균을 찍지 않는다 (가린 것이 섞인 줄입니다)",
+     !/[0-9]\.[0-9]\s*점/.test(t), (t.match(/[0-9]\.[0-9]\s*점/) || [""])[0]);
+  html = await s.p.innerHTML("#deskbox");
+  ok("⚠️ 손님이 적은 태그가 날것으로 안 들어간다",
+     html.indexOf("<b>꼼꼼히</b>") < 0 && html.indexOf("&lt;b&gt;") >= 0);
+  ok("답변 양식이 있다",
+     (await s.p.locator("#deskbox form.rvform").count()) === 1);
+  ok("⚠️ 손님 성함 · 연락처를 적지 말라고 그 자리에서 알린다",
+     /연락처를 적지 마세요/.test(t), t.slice(-500));
+  await s.p.fill("#deskbox form.rvform textarea", "찾아 주셔서 고맙습니다.");
+  await s.p.click("#deskbox form.rvform button[type=submit]");
+  await s.p.waitForTimeout(300);
+  const replied = s.sent.filter(function(x){ return x.name === "reply_review"; })[0];
+  ok("답변을 보낸다", !!replied, s.sent.map(function(x){ return x.name; }).join(" "));
+  let rp = null;
+  try{ rp = JSON.parse(replied.body).p; }catch(_){}
+  ok("  꾸러미에 후기 id 와 답변만 담긴다",
+     !!rp && rp.id === RVMINE.id && rp.reply.indexOf("고맙습니다") >= 0 &&
+     rp.rating === undefined, replied && replied.body);
+  ok("후기 자리의 누르는 것이 40px 이상이다",
+     (await tapsOk(s.p, "#deskbox .rv-one")) === 0,
+     await tapsOk(s.p, "#deskbox .rv-one"));
+  await s.p.close();
+
+  s = await open("/desk", PRO,
+                 { assignment:[asg(quoted, "accepted")], request:[quoted],
+                   quote:[QUOTE], request_item:ITEMS, appointment:[],
+                   review:[Object.assign({}, RVMINE,
+                     { hidden_at:"2026-11-02T06:00:00Z", hidden_why:"욕설" })] });
+  t = (await s.p.textContent("#deskbox")) || "";
+  ok("⚠️ 가려진 후기에는 답변 양식을 **안 낸다**",
+     (await s.p.locator("#deskbox form.rvform").count()) === 0);
+  ok("  가려졌다는 것을 업체에도 알린다 (다툴 수 있어야 합니다)",
+     /가린 후기/.test(t), t.slice(-400));
+  await s.p.close();
+
+  /* ⚠️ 못 읽은 것과 0건을 갈라서 말하는가 */
+  s = await open("/desk", PRO,
+                 { assignment:[asg(quoted, "accepted")], request:[quoted],
+                   quote:[QUOTE], request_item:ITEMS, appointment:[], review:null });
+  t = (await s.p.textContent("#deskbox")) || "";
+  ok("⚠️ 후기를 못 읽으면 **0건이라고 말하지 않는다**",
+     /읽지 못했습니다/.test(t) && t.indexOf("받은 후기가 없습니다") < 0, t.slice(-300));
+  await s.p.close();
+
+  console.log("\n── /admin 후기 — 지우지 않고 **가립니다**");
+  const RVADM = [Object.assign({}, RVMINE, { provider_id:"real-1" })];
+  s = await open("/admin", { role:"admin", name:"관리자" },
+                 Object.assign({}, ADMT, BIZ, { review:RVADM }),
+                 { biz_metrics: MET });
+  await s.p.click("#bizbox button[data-tab='rv']");
+  await s.p.waitForTimeout(250);
+  t = (await s.p.textContent("#bizbox")) || "";
+  ok("후기 자리가 열린다", /지우지 않고 가립니다/.test(t), t.slice(0, 200));
+  ok("  어느 업체의 후기인지 적는다", /그린레슨 아카데미/.test(t));
+  ok("⚠️ 별점 · 글을 고치는 길이 **없다**고 적는다", /고치는 길은/.test(t));
+  ok("가리는 단추가 있다",
+     (await s.p.locator("#bizbox button[data-rvto='hide']").count()) === 1);
+  /* ⚠️⚠️ **까닭 없이는 안 보냅니다.** prompt 를 비우면 보내지 않아야
+     합니다 — 보내면 DB 가 거절하고 운영자는 무엇이 빠졌는지 모릅니다. */
+  await s.p.evaluate(function(){ window.prompt = function(){ return ""; }; });
+  await s.p.click("#bizbox button[data-rvto='hide']");
+  await s.p.waitForTimeout(200);
+  ok("⚠️ 까닭을 안 적으면 **보내지 않는다**",
+     s.sent.filter(function(x){ return x.name === "hide_review"; }).length === 0);
+  await s.p.evaluate(function(){
+    window.prompt = function(){ return "욕설이 들어 있습니다"; }; });
+  await s.p.click("#bizbox button[data-rvto='hide']");
+  await s.p.waitForTimeout(300);
+  const hid = s.sent.filter(function(x){ return x.name === "hide_review"; })[0];
+  ok("까닭을 적으면 보낸다", !!hid, s.sent.map(function(x){ return x.name; }).join(" "));
+  let hp = null;
+  try{ hp = JSON.parse(hid.body).p; }catch(_){}
+  ok("  꾸러미에 후기 id · 가리기 · 까닭이 담긴다",
+     !!hp && hp.id === RVMINE.id && hp.to === "hide" &&
+     hp.why === "욕설이 들어 있습니다", hid && hid.body);
+  await s.p.close();
+
+  /* ⚠️ 운영자가 아니면 한 줄도 안 보입니다 (/admin 의 다른 자리와 같습니다) */
+  s = await open("/admin", { role:"customer", name:"일반회원" },
+                 Object.assign({}, ADMT, BIZ, { review:RVADM }));
+  ok("⚠️ 운영자가 아니면 후기 자리가 아예 안 그려진다",
+     (await s.p.locator("#bizbox button[data-tab='rv']").count()) === 0);
+  await s.p.close();
+
   /* ══ 폰 폭 ═══════════════════════════════════════════════════
      ⚠️⚠️⚠️ **`tools/check-screens.js` 는 이 세 화면을 영원히 못 봅니다.**
      로그인해야 그려지는 자리라, 그 도구에는 **빈 상자**로만 보입니다 —
@@ -1031,13 +1269,17 @@ function stub(p, who, tables, rpcs, up){
     return r;
   }
   const sel0 = "body";
+  /* ⚠️⚠️ **후기 자리를 그린 채로 잽니다.** 안 그리면 그 자리는
+     폰에서 아무도 안 재는 곳이 됩니다 — 별 글자 · 별점 고르개 ·
+     답변 칸이 390px 에서 미는지는 여기서만 드러납니다. */
   const phones = [
     ["/desk 업체 작업실", "/desk", PRO,
      { assignment:[asg(quoted, "accepted")], request:[quoted],
-       quote:[QUOTE], request_item:ITEMS }, {}],
+       quote:[QUOTE], request_item:ITEMS, review:[RVMINE] }, {}],
     ["/admin 배정 · 지표 · 관리", "/admin", { role:"admin", name:"관리자" },
-     Object.assign({}, ADMT, BIZ), { biz_metrics: MET }],
-    ["/my 견적 비교", "/my", { role:"customer", name:"홍길동" }, MYT, {}]
+     Object.assign({}, ADMT, BIZ, { review:RVADM }), { biz_metrics: MET }],
+    ["/my 견적 비교 · 후기", "/my", { role:"customer", name:"홍길동" },
+     Object.assign({}, MYT, { quote:[QCHOSEN, Q2], review:[], appointment:[] }), {}]
   ];
   for(const [label, path, who, tables, rpcs] of phones){
     const r = await phone(path, who, tables, rpcs);

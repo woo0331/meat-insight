@@ -1,0 +1,152 @@
+/* ════════════════════════════════════════════════════════════════════
+   업체 입점 신청 양식 — /join 에서만 돕니다
+
+   ⚠️⚠️ **고르는 항목을 여기 손으로 적지 않습니다.** window.AM_CATS 에서
+   그대로 꺼냅니다. 두 곳에 적으면 한쪽만 고쳐서, 화면이 보낸 키를
+   아무도 못 읽는 꼴이 됩니다 (업체가 등록은 되는데 **어느 목록에도 안
+   뜨는** 고장 — 에러가 안 납니다).
+
+   ⚠️⚠️ **개인정보보호법 제15조 제2항** — 수집 항목 · 이용 목적 ·
+   보유 기간을 **동의받는 그 자리에서** 같이 보여 줍니다. 링크로
+   빼 두면 "같이 보여 준 것" 이 아닙니다.
+
+   ⚠️⚠️ **접수가 안 되면 양식을 열지 않습니다.** Supabase 설정이 없으면
+   다 적고 누른 뒤에 실패합니다 — 그 전에 막습니다 (절대 규칙 5).
+
+   ⚠️ 신청번호는 **DB 가 돌려준 값**을 그대로 보여 줍니다. 화면이
+   만들어 찍으면 실제로 저장된 번호와 달라집니다.
+   ════════════════════════════════════════════════════════════════════ */
+(function(){
+  var box = document.getElementById("joinbox");
+  if(!box || !window.amAuthAsk) return;
+
+  var KEEP = (window.WOW_BIZ || {}).applyKeep || "";
+
+  function fields(){
+    /* 업체를 중개하는 분류의 하위만 — 회원끼리 쓰는 자리(중고장터 ·
+       조인 · 커뮤니티)는 입점 대상이 아닙니다. */
+    return (window.amCatsOf ? amCatsOf("provider") : []).map(function(c){
+      return '<fieldset class="svc"><legend>' + esc(c.name) + '</legend>' +
+        amCatItems(c).map(function(it){
+          return '<label class="chk"><input type="checkbox" name="svc" value="' +
+            esc(it.key) + '"><span>' + esc(it.name) + '</span></label>';
+        }).join("") + '</fieldset>';
+    }).join("");
+  }
+
+  function form(){
+    return '<form id="jf" class="jform">' +
+      '<div class="jrow">' +
+        '<label for="j-company">상호 <b>*</b></label>' +
+        '<input id="j-company" name="company" required maxlength="80" autocomplete="organization">' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="j-name">담당자 성함 <b>*</b></label>' +
+        '<input id="j-name" name="name" required maxlength="40" autocomplete="name">' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="j-tel">연락처 <b>*</b></label>' +
+        '<input id="j-tel" name="tel" required inputmode="tel" autocomplete="tel" ' +
+        'placeholder="010-0000-0000">' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="j-brn">사업자등록번호</label>' +
+        '<input id="j-brn" name="brn" inputmode="numeric" placeholder="000-00-00000">' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="j-email">이메일</label>' +
+        '<input id="j-email" name="email" type="email" autocomplete="email">' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="j-region">영업 지역</label>' +
+        '<input id="j-region" name="region" maxlength="40" placeholder="예: 경기 성남시">' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
+        '<label>하시는 일 <b>*</b></label>' +
+        '<div class="svcs">' + fields() + '</div>' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
+        '<label for="j-note">더 하실 말씀</label>' +
+        '<textarea id="j-note" name="note" rows="4" maxlength="2000"></textarea>' +
+      '</div>' +
+      /* ⚠️⚠️ 동의 자리에 셋을 같이 둡니다 (제15조 제2항) */
+      '<div class="agree">' +
+        '<h3>개인정보 수집 · 이용 동의</h3>' +
+        '<dl>' +
+          '<dt>수집 항목</dt><dd>상호 · 담당자 성함 · 연락처 ' +
+            '(적으시면 사업자등록번호 · 이메일 · 영업 지역)</dd>' +
+          '<dt>이용 목적</dt><dd>입점 심사와 그 결과를 알려 드리기 위한 연락</dd>' +
+          '<dt>보유 기간</dt><dd>' + esc(KEEP) + '</dd>' +
+        '</dl>' +
+        '<p class="agree-no">동의하지 않으셔도 됩니다. 다만 동의 없이는 ' +
+        '연락을 드릴 수 없어 심사가 진행되지 않습니다.</p>' +
+        '<label class="chk"><input type="checkbox" id="j-agree" required>' +
+        '<span>위 내용에 동의합니다.</span></label>' +
+      '</div>' +
+      '<button class="btn btn-pri" type="submit">입점 신청하기</button>' +
+      '<p id="jmsg" class="lmsg" hidden></p>' +
+    '</form>';
+  }
+
+  function submit(e){
+    e.preventDefault();
+    var f = e.target, msg = document.getElementById("jmsg");
+    var a = amAuthNow();
+    var svc = [].slice.call(f.querySelectorAll('input[name="svc"]:checked'))
+                 .map(function(i){ return i.value; });
+    if(!svc.length){
+      msg.hidden = false; msg.textContent = "하시는 일을 하나 이상 골라 주세요."; return;
+    }
+    var btn = f.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    msg.hidden = false; msg.textContent = "보내는 중입니다…";
+
+    fetch(a.conf.url + "/rest/v1/rpc/make_apply", {
+      method:"POST",
+      headers: Object.assign({ "content-type":"application/json", apikey:a.conf.anonKey },
+                             window.amAuthHeaders ? amAuthHeaders() : {}),
+      /* ⚠️ 동의 시각은 **누른 그 순간**입니다. 화면을 연 시각이 아닙니다. */
+      body: JSON.stringify({ p: {
+        company: f.company.value, name: f.name.value, tel: f.tel.value,
+        brn: f.brn.value, email: f.email.value, region: f.region.value,
+        note: f.note.value, services: svc, agree_at: new Date().toISOString()
+      }})
+    }).then(function(r){
+      return r.text().then(function(t){
+        if(!r.ok){ var m = t; try{ m = JSON.parse(t).message || t; }catch(_){}
+                   throw new Error(m); }
+        try{ return JSON.parse(t); }catch(_){ return t; }
+      });
+    }).then(function(no){
+      /* ⚠️ "접수됐습니다" 는 **실제로 들어간 뒤에만** 말합니다. */
+      box.innerHTML = '<div class="none"><h3>접수됐습니다.</h3>' +
+        '<p>신청번호 <b>' + esc(String(no).replace(/^"|"$/g, "")) + '</b> 입니다. ' +
+        '확인한 뒤 적어 주신 연락처로 연락드립니다.</p>' +
+        '<a class="btn btn-line" href="/guide">이용안내 보기</a></div>';
+      box.className = "";
+      try{ box.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(_){}
+    }).catch(function(err){
+      btn.disabled = false;
+      msg.textContent = String(err && err.message || "보내지 못했습니다.");
+    });
+  }
+
+  amAuthAsk().then(function(a){
+    /* 설정이 없으면 **양식을 열지 않습니다** — 기본 안내 그대로 둡니다. */
+    if(!a.on || !a.conf || !a.conf.url || !a.conf.anonKey){
+      try{ console.warn("[join] Supabase 설정이 없어 입점 신청 양식을 열지 않았습니다 — " +
+        "Vercel 의 SUPABASE_URL · SUPABASE_ANON_KEY 를 넣고 다시 배포하세요."); }catch(e){}
+      return;
+    }
+    if(!KEEP){
+      /* ⚠️⚠️ 보유 기간을 못 적으면 제15조 제2항을 못 지킵니다 — 법이
+         요구하는 것을 안 보여 주고 동의를 받을 수는 없습니다. */
+      try{ console.warn("[join] js/data/site.js 의 applyKeep(보유 기간)이 비어 " +
+        "양식을 열지 않았습니다 — 개인정보보호법 제15조 제2항."); }catch(e){}
+      return;
+    }
+    box.className = "jbox";
+    box.innerHTML = form();
+    document.getElementById("jf").addEventListener("submit", submit);
+  });
+})();

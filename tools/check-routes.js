@@ -44,6 +44,14 @@ module.exports = { swallows: swallows, RULES: RULES };
 
 if(require.main === module){
   var routes = process.argv.slice(2).filter(function(a){ return a[0] === "/"; });
+  if(!routes.length){
+    /* 인자가 없으면 빌드가 적어 둔 주소 **전부** 를 봅니다.
+       ⚠️⚠️ 처음에는 인자가 없으면 "잴 주소를 안 주셨습니다" 하고
+       **0 으로 끝났습니다.** 문(tools/ship.js)에서는 그게 초록으로
+       보여서, 아무것도 안 재는 검사가 통과하고 있었습니다. */
+    var rf = path.join(__dirname, "routes.json");
+    if(fs.existsSync(rf)) routes = JSON.parse(fs.readFileSync(rf, "utf8")).routes || [];
+  }
   var prove  = process.argv.indexOf("--prove") >= 0;
 
   if(prove){
@@ -60,7 +68,12 @@ if(require.main === module){
     console.log("  " + starTest + " -> " + (b ? "잡힘 O (" + b.d + ")" : "❌ 못 잡습니다"));
     if(!a || !b) process.exit(1);
   }
-  if(!routes.length){ console.log("잴 주소를 안 주셨습니다."); process.exit(prove ? 0 : 0); }
+  /* ⚠️ 잰 것이 0개면 **실패**입니다 — 통과가 아닙니다 */
+  if(!routes.length){
+    console.error("❌ 잰 주소가 0개입니다 — tools/routes.json 이 없거나 비었습니다 " +
+                  "(node build.js 를 먼저 돌리세요).");
+    process.exit(1);
+  }
 
   var bad = 0;
   routes.forEach(function(r){

@@ -130,4 +130,43 @@ module.exports = function(T){
      denied(as(B) + "select drop_my_hat('biz')" + back).no);
   ok("본인이 켠 역할은 본인이 뗀다 (정상 길이 막히지 않았다)",
      psql(as(A) + "select drop_my_hat('pro')::text" + back) === "{seller}");
+
+  console.log("\n── 0028 업체 계정에 사업자 모자가 저절로 따라오는가");
+  psql("insert into provider (id, name, listed) values ('gp-hat','모자테스트 골프샵', true) " +
+       "on conflict (id) do nothing");
+  const P = psql("insert into auth.users (email) values ('pv@x.test') returning id");
+  psql("insert into account (id, role, name) values ('" + P + "','customer','업체사장') " +
+       "on conflict (id) do update set role = excluded.role");
+  ok("아직은 모자가 없다",
+     psql("select count(*)::text from account_hat where account_id='" + P + "'") === "0");
+
+  psql("update account set role='provider', provider_id='gp-hat' where id='" + P + "'");
+  ok("업체로 이으면 biz 가 **저절로** 붙는다",
+     psql("select count(*)::text from account_hat where account_id='" + P +
+          "' and hat='biz'") === "1");
+  ok("저절로 붙은 것도 감사 기록에 남는다",
+     psql("select count(*)::text from audit_log where obj='account_hat' " +
+          "and obj_id='" + P + "' and why like '%자동으로 붙음%'") === "1");
+
+  /* ⚠️ 두 번 눌러도 기록이 쌓이지 않아야 합니다 */
+  psql("update account set provider_id='gp-hat' where id='" + P + "'");
+  ok("같은 값으로 다시 저장해도 기록이 안 쌓인다",
+     psql("select count(*)::text from audit_log where obj='account_hat' " +
+          "and obj_id='" + P + "' and why like '%자동으로 붙음%'") === "1");
+
+  psql("update account set role='customer', provider_id=null where id='" + P + "'");
+  ok("업체 계정을 풀면 biz 가 **저절로** 떨어진다",
+     psql("select count(*)::text from account_hat where account_id='" + P +
+          "' and hat='biz'") === "0");
+  ok("떨어진 것도 감사 기록에 남는다",
+     psql("select count(*)::text from audit_log where obj='account_hat' " +
+          "and obj_id='" + P + "' and why like '%자동으로 떨어짐%'") === "1");
+
+  /* ⚠️ 너무 넓게 막지 않았는가 — 본인이 켠 seller 는 그대로 있어야 합니다 */
+  psql("select become('" + P + "'); set role authenticated; " +
+       "select add_my_hat('seller','중고채')" + back);
+  psql("update account set role='provider', provider_id='gp-hat' where id='" + P + "'");
+  ok("자동으로 붙고 떨어져도 본인이 켠 모자는 건드리지 않는다",
+     psql("select string_agg(hat::text, ',' order by hat) from account_hat " +
+          "where account_id='" + P + "'") === "seller,biz");
 };

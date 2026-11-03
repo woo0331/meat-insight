@@ -185,7 +185,82 @@
           (n === null ? "못 읽음" : won(n) + "건") + '</dd></div>';
       }).join("") + '</div>' +
       '<p class="myhint">수수료 · 광고 · 멤버십 요금은 모두 감사 기록에 남습니다. ' +
-      '지금은 정해진 요금제가 없어 요금제 수가 0 입니다 — 지어낸 값이 아닙니다.</p>';
+      '지금은 정해진 요금제가 없어 요금제 수가 0 입니다 — 지어낸 값이 아닙니다.</p>' +
+      '<div id="applies"></div>';
+      applies(a);
+    });
+  }
+
+  /* ── 입점 신청 목록 (지시서 7번) ───────────────────────────────
+     ⚠️⚠️ **성함 · 연락처가 나오는 화면입니다.** 운영자만 봅니다 (RLS 가
+     막고, 여기서도 역할을 다시 봅니다). 화면에 찍기 전에 esc() 를
+     반드시 거칩니다 — 신청자가 적은 글입니다 (절대 규칙 4).
+     ⚠️ 상태를 바꾸는 것은 DB 문(set_apply_state)뿐입니다. 화면이 표를
+     직접 고치지 않습니다. */
+  var APPLY_STATE = { "new":"새 신청", called:"통화함", done:"등록 완료", drop:"진행 안 함" };
+
+  function applies(a){
+    var box = el("applies"); if(!box) return;
+    fetch(a.conf.url + "/rest/v1/provider_apply?select=id,no,company,name,tel,region," +
+          "services,state,created_at&order=created_at.desc&limit=50", {
+      headers: Object.assign({ apikey: a.conf.anonKey }, amAuthHeaders())
+    }).then(function(r){ return r.ok ? r.json() : null; }).then(function(rows){
+      if(rows === null){
+        box.innerHTML = '<p class="lmsg">입점 신청을 읽지 못했습니다.</p>';
+        return;
+      }
+      if(!rows.length){
+        /* ⚠️ 0건은 고장이 아닙니다 — 0 이라고 말합니다 */
+        box.innerHTML = '<h2 class="adm-h">입점 신청</h2>' +
+          '<p class="myhint">아직 들어온 신청이 없습니다.</p>';
+        return;
+      }
+      box.innerHTML = '<h2 class="adm-h">입점 신청 ' + won(rows.length) + '건</h2>' +
+        '<div class="apl">' + rows.map(function(x){
+          var subs = (x.services || []).map(function(k){
+            var f = window.amSub ? amSub(k) : null;
+            /* ⚠️ 모르는 키는 키 그대로 보여 줍니다 — 조용히 빠지면
+               화면과 DB 가 어긋난 것을 아무도 모릅니다. */
+            return f ? f.item.name : k;
+          }).join(" · ");
+          return '<div class="apl-r" data-id="' + esc(x.id) + '">' +
+            '<div class="apl-m"><b>' + esc(x.company) + '</b>' +
+            '<span class="apl-no">' + esc(x.no) + '</span>' +
+            '<span class="apl-st apl-' + esc(x.state) + '">' +
+            esc(APPLY_STATE[x.state] || x.state) + '</span></div>' +
+            '<p class="apl-d">' + esc(x.name) + ' · ' + esc(x.tel) +
+            (x.region ? ' · ' + esc(x.region) : '') + '</p>' +
+            (subs ? '<p class="apl-s">' + esc(subs) + '</p>' : '') +
+            '<div class="apl-b">' +
+              '<button class="btn btn-sm btn-line" data-to="called">통화함</button>' +
+              '<button class="btn btn-sm btn-line" data-to="drop">진행 안 함</button>' +
+            '</div></div>';
+        }).join("") + '</div>' +
+        '<p class="myhint">등록 완료로 두려면 업체를 먼저 만들고 계정을 이어야 합니다 — ' +
+        'db/README.md 의 차례대로 SQL 로 하십니다. 화면에서 업체를 만들 수 없습니다.</p>' +
+        '<p id="aplmsg" class="lmsg" hidden></p>';
+
+      box.addEventListener("click", function(e){
+        var b = e.target.closest ? e.target.closest("button[data-to]") : null;
+        if(!b) return;
+        var row = b.closest(".apl-r"), to = b.getAttribute("data-to");
+        var why = prompt(to === "drop" ? "진행하지 않는 까닭을 적어 주세요 (감사 기록에 남습니다)"
+                                       : "통화 결과를 적어 주세요 (안 적으셔도 됩니다)");
+        /* ⚠️ 취소를 누르면 null 입니다 — 빈 글자와 다릅니다. */
+        if(to === "drop" && !(why && why.trim())) return;
+        if(why === null && to === "drop") return;
+        var m = el("aplmsg"); m.hidden = false; m.textContent = "바꾸는 중입니다…";
+        rpc("set_apply_state", { p_apply: row.getAttribute("data-id"), p_to: to,
+                                 p_why: why || null })
+          .then(function(){ m.hidden = true; applies(a); })
+          .catch(function(err){
+            var w = String(err && err.message || "");
+            try{ w = JSON.parse(w).message || w; }catch(_){}
+            m.textContent = w || "바꾸지 못했습니다.";
+          });
+      });
+    }).catch(function(){
+      box.innerHTML = '<p class="lmsg">입점 신청을 읽지 못했습니다.</p>';
     });
   }
 

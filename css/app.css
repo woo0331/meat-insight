@@ -347,3 +347,59 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
         font-size:15px; font-weight:600; }
 .hd-lk:hover{ background: rgba(255,255,255,.12); }
 @media (max-width: 1100px){ .hd-lk .lbl{ display:none; } }
+
+/* ── 입점 신청 양식 ─────────────────────────────────────────── */
+.jbox{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+       padding:24px; }
+.jform{ display:grid; gap:16px; grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 760px){ .jform{ grid-template-columns: 1fr; } }
+.jrow{ display:grid; gap:6px; }
+.jrow-full{ grid-column: 1 / -1; }
+.jrow label{ font-size:14.5px; font-weight:700; color: var(--ink); }
+.jrow label b{ color: var(--bad-text); }
+.jform input, .jform textarea{
+  min-height:46px; border:1.5px solid var(--line); border-radius: var(--r-sm);
+  padding:10px 14px; font-size:16px; color: var(--ink); background:#fff;
+  font-family: inherit; }
+.jform textarea{ min-height:96px; resize: vertical; }
+.jform input:focus, .jform textarea:focus{ outline:2px solid var(--grn); outline-offset:1px; }
+
+.svcs{ display:grid; gap:12px; grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px){ .svcs{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px){ .svcs{ grid-template-columns: 1fr; } }
+.svc{ border:1.5px solid var(--line-soft); border-radius: var(--r-sm);
+      padding:12px 14px; margin:0; }
+.svc legend{ font-size:13.5px; font-weight:700; color: var(--grn-text); padding:0 4px; }
+/* ⚠️ 누르는 칸은 40px 이상입니다 — 체크박스만 두면 손가락으로 못 누릅니다 */
+.chk{ display:flex; align-items:center; gap:9px; min-height:40px;
+      font-size:14.5px; font-weight:500; color: var(--ink2); cursor:pointer; }
+.chk input{ width:20px; height:20px; min-height:0; flex:none; accent-color: var(--grn); }
+
+.agree{ grid-column: 1 / -1; background: var(--grn-soft);
+        border:1.5px solid var(--grn-line); border-radius: var(--r); padding:18px 20px; }
+.agree h3{ font-size:16px; }
+.agree dl{ display:grid; gap:4px 14px; grid-template-columns: max-content 1fr;
+           margin:12px 0 0; font-size:14.5px; }
+.agree dt{ color: var(--grn-text); font-weight:700; }
+.agree dd{ margin:0; color: var(--ink2); }
+.agree-no{ margin-top:10px; font-size:13.5px; color: var(--ink3); }
+.jform > button[type="submit"]{ grid-column: 1 / -1; justify-self:start; }
+.jform > .lmsg{ grid-column: 1 / -1; }
+
+/* ── 관리자: 입점 신청 ─────────────────────────────────────── */
+.adm-h{ font-size:20px; margin-bottom:12px; }
+.apl{ display:grid; gap:12px; }
+.apl-r{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+        padding:16px 18px; }
+.apl-m{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.apl-m b{ font-size:17px; color: var(--ink); }
+.apl-no{ font-size:13px; color: var(--ink3); }
+.apl-st{ font-size:12.5px; font-weight:700; border-radius: var(--r-pill);
+         padding:4px 10px; background: var(--bg-2); color: var(--ink2); }
+.apl-new{ background: var(--ok-soft); color: var(--ok-text); }
+.apl-called{ background: var(--warn-soft); color: var(--warn-text); }
+.apl-drop{ background: var(--bad-soft); color: var(--bad-text); }
+.apl-done{ background: var(--grn-soft); color: var(--grn-text); }
+.apl-d{ margin-top:8px; font-size:15px; color: var(--ink2); }
+.apl-s{ margin-top:4px; font-size:13.5px; color: var(--ink3); }
+.apl-b{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }

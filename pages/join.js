@@ -21,8 +21,6 @@ var NEED = [
 ];
 
 exports.build = function(){
-  var on = W.bizVal("sosReady") === true;
-
   var body = '<section class="pghd"><div class="wrap">' +
     '<nav class="crumb" aria-label="현재 위치"><a href="/">홈</a>' + icon("arrow",14) +
     '<span aria-current="page">업체 입점하기</span></nav>' +
@@ -56,26 +54,30 @@ exports.build = function(){
       '<li>광고 자리와 유료 멤버십은 별도이며, 쓰지 않으셔도 입점에 지장이 없습니다.</li>' +
     '</ul></div></section>';
 
-  if(on){
-    body += '<section class="sec sec-alt"><div class="wrap">' +
-      '<div class="sec-hd"><h2>입점 신청</h2></div>' +
-      '<div class="none"><h3>신청 양식은 5단계에서 켭니다.</h3>' +
-      '<p>회원 · 업체 등록을 세우는 중입니다.</p></div></div></section>';
-  }else{
-    console.warn("  ⚠️ /join — 접수처가 꺼져 있어 신청 양식을 내지 않았습니다 " +
-                 "(js/data/site.js 의 sosReady · Vercel 환경변수).");
-    body += '<section class="sec sec-alt"><div class="wrap"><div class="none">' +
+  /* ⚠️⚠️ **접수처가 바뀌었습니다.** 앞 서비스는 신청을 슬랙으로 보냈고
+     그 설정값이 sosReady 였습니다. 입점 신청은 이제 **DB 에 바로**
+     들어갑니다 (0027 의 make_apply) — 그래서 여는 조건은 슬랙이 아니라
+     **Supabase 설정**입니다. 양식은 js/applyform.js 가 덧댑니다.
+
+     ⚠️ 여기 적는 기본 글은 **설정이 없을 때 그대로 보이는 글**입니다.
+     양식이 안 열려도 손님이 막다른 길에 서지 않게, 지금 되는 것을
+     같이 냅니다. */
+  body += '<section class="sec sec-alt"><div class="wrap">' +
+    '<div class="sec-hd"><h2>입점 신청</h2></div>' +
+    '<div id="joinbox" class="none">' +
       '<h3>지금은 입점 신청을 받지 못합니다.</h3>' +
       '<p>받을 자리를 준비하고 있습니다. 다 적으신 뒤에 실패하는 일이 없도록, ' +
       '준비가 끝나기 전에는 양식을 열지 않습니다.</p>' +
-      '<a class="btn btn-line" href="/guide">' + icon("arrow",18) + '이용안내 먼저 보기</a>' +
+      '<a class="btn btn-line" href="/guide">이용안내 먼저 보기</a>' +
     '</div></div></section>';
-  }
 
   return {
     route: "/join", title: "업체 입점하기",
     desc: "골프 레슨 · 골프장 부킹 · 연습장 · 용품 · 피팅 · 여행 업체의 골프올인원 입점 안내. " +
           "입점과 업체 정보 등록은 무료이며, 연결 · 거래가 성사될 때 수수료가 발생합니다.",
-    body: body
+    body: body,
+    /* ⚠️ site.js 를 같이 읽습니다 — 보유 기간(applyKeep)이 거기 있습니다.
+       화면에 다시 적으면 한쪽만 고쳐서 방침과 어긋납니다. */
+    js: ["/js/data/site.js", "/js/auth.js", "/js/applyform.js"]
   };
 };

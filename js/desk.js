@@ -93,7 +93,16 @@
           "want_at,body,name,tel,email,created_at&limit=50"),
       /* ⚠️ 일정은 RLS 가 **내 업체 것만** 내줍니다 (0034 의 appt_provider) */
       get("appointment?select=id,request_id,at,kind,place,note,state,why" +
-          "&provider_id=eq." + encodeURIComponent(PV) + "&limit=200")
+          "&provider_id=eq." + encodeURIComponent(PV) + "&limit=200"),
+      /* 받은 후기 (0037) — ⚠️ RLS 가 **우리 업체 것만** 내줍니다
+         (rv_provider). 가려진 것도 옵니다: 가려졌다는 것과 까닭을
+         업체가 알아야 다툴 수 있습니다.
+         ⚠️⚠️ **작성자 성함이 이 줄에 없습니다** — 표에 있는 by_user 는
+         청하지 않습니다 (청해도 쓸 데가 없고, 쓸 데가 생기면 제3자
+         제공입니다). 화면은 "손님" 으로 적습니다. */
+      get("review?select=id,request_id,rating,body,created_at,updated_at," +
+          "reply,reply_at,hidden_at,hidden_why&provider_id=eq." +
+          encodeURIComponent(PV) + "&order=created_at.desc&limit=200")
     ]).then(function(got){
       /* ⚠️ 사진은 **요청을 읽은 뒤**에 묻습니다 (어느 요청인지 알아야
          하니까요). ⚠️⚠️ 목록은 RLS 가 좁힙니다 — 업체는 배정된 건의
@@ -359,6 +368,43 @@
   }
 
   /* ── 전체 그리기 ────────────────────────────────────────────── */
+  /* ── 받은 후기 (0037) ────────────────────────────────────────────
+     ⚠️⚠️ **요청 카드 안에 넣지 않습니다.** 후기는 업체에 붙는 것이고
+     배정은 요청에 붙는 것이라, 섞어 두면 끝난 요청이 목록에서 빠지는
+     날 후기도 같이 사라집니다.
+     ⚠️⚠️ **별점을 업체가 고칠 길이 없습니다** (0037 에 그 문이 없습니다)
+     — 고칠 수 있으면 후기가 아닙니다. 답변만 답니다.
+     ⚠️ 못 읽었으면 **0건이라고 말하지 않습니다.** */
+  function reviewBlock(revs){
+    /* ⚠️⚠️ 못 읽은 것과 0건을 **갈라서** 말합니다. 섞으면 읽기가
+       막힌 날 업체가 "후기가 하나도 없네" 로 읽습니다. */
+    if(revs === null)
+      return '<h3 class="rv-h">받은 후기</h3>' +
+        '<p class="dk-hint">후기를 읽지 못했습니다. ' +
+        '<button class="btn btn-sm btn-line" data-do="again">다시 읽기</button></p>';
+    if(!revs.length)
+      return '<h3 class="rv-h">받은 후기</h3>' +
+        '<p class="dk-hint">아직 받은 후기가 없습니다. ' +
+        '견적을 고르신 손님이나 만나신 손님이 쓰시면 여기에 뜹니다.</p>';
+    /* ⚠️ 평균은 amRating() 이 셉니다 — 여기서 또 세지 않습니다.
+       ⚠️⚠️ 다만 amRating() 은 **공개 파일**을 봅니다. 이 화면이 받은
+       줄은 가려진 것까지 섞여 있어 같은 값이 아닙니다 — 그래서
+       **평균을 여기서 찍지 않습니다** (두 숫자가 다르면 어느 쪽이
+       참인지 묻게 됩니다). 건수만 적습니다. */
+    return '<h3 class="rv-h">받은 후기 ' + won(revs.length) + '건</h3>' +
+      '<p class="dk-hint">별점과 글은 손님이 쓴 것이라 <b>고칠 수 없습니다</b>. ' +
+      '답변을 다시면 후기 아래에 공개됩니다.</p>' +
+      '<div class="rvs">' + revs.map(function(v){
+        return '<div class="rv-one">' +
+          window.amRvRow(v, { who:"손님", pname: null, hidden:true }) +
+          (v.hidden_at
+            ? '<p class="dk-hint">운영자가 가린 후기입니다 — ' +
+              '손님 화면에는 안 보이고 답변도 받지 않습니다.</p>'
+            : window.amRvReplyForm(v)) +
+        '</div>';
+      }).join("") + '</div>';
+  }
+
   function paint(){
     box.hidden = false;
     box.className = "deskbox";
@@ -366,7 +412,7 @@
 
     load().then(function(got){
       var asg = got[0], qs = got[1], items = got[2], reqs = got[3],
-          appts = got[4], pics = got[5];
+          appts = got[4], revs = got[5], pics = got[6];
       /* ⚠️⚠️ 넷 중 하나라도 못 읽었으면 **0건이라고 말하지 않습니다.** */
       if(asg === null || qs === null || items === null || reqs === null ||
          appts === null){
@@ -396,7 +442,8 @@
         asg.map(function(a){
           return card(a, byId[a.request_id], byReq[a.request_id], items,
                       (pics || {})[a.request_id], byAppt[a.request_id]);
-        }).join("");
+        }).join("") +
+        reviewBlock(revs);
     });
   }
 
@@ -567,6 +614,20 @@
   box.addEventListener("submit", function(e){
     var fa = e.target.closest ? e.target.closest("form.ap-f") : null;
     if(fa){ e.preventDefault(); return submitAppt(fa); }
+    /* 후기 답변 (0037) — ⚠️ 꾸러미는 js/review.js 가 짓습니다 */
+    var fr = e.target.closest ? e.target.closest("form.rvform") : null;
+    if(fr){
+      e.preventDefault();
+      var rm = fr.querySelector(".rvmsg");
+      var rb = fr.querySelector('button[type="submit"]');
+      rb.disabled = true;
+      if(rm){ rm.hidden = false; rm.textContent = "올리는 중입니다…"; }
+      window.amRvSend(rpc, fr).then(paint).catch(function(err){
+        rb.disabled = false;
+        if(rm){ rm.hidden = false; rm.textContent = why(err); }
+      });
+      return;
+    }
     var f = e.target.closest ? e.target.closest("form.dk-f") : null;
     if(!f) return;
     e.preventDefault();

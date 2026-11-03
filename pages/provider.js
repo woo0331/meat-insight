@@ -4,10 +4,14 @@
    ⚠️⚠️ **업체가 적은 글은 전부 esc() 를 거칩니다** (절대 규칙 4).
    소개 · 브랜드 · 상담 시간은 업체가 직접 적는 칸입니다.
 
-   ⚠️⚠️ **평점 · 후기 수를 찍지 않습니다.** 후기가 0건이라 계산할 것이
-   없고, 숫자를 만들어 두면 누군가 그 칸에 4.9 를 적어 넣습니다
-   (절대 규칙 1). 구조화 데이터에도 aggregateRating 을 안 넣습니다 —
-   적발되면 리치 결과가 통째로 막힙니다.
+   ⚠️⚠️ **평점은 저장된 값이 아니라 센 값입니다.** 후기 줄에서
+   amRating() 한 함수로 셉니다 (js/data/review.js · 절대 규칙 1).
+   ⚠️⚠️ **0건이면 숫자를 안 찍습니다** — amRating() 이 null 을 돌려주고
+   화면이 그것을 보고 갈라집니다. "평점 0.0" 을 찍으면 나쁜 업체로
+   읽힙니다.
+   ⚠️⚠️ 구조화 데이터에 **aggregateRating 을 안 넣습니다.** 후기가
+   생겨도 넣지 않습니다 — 우리가 별점을 검증할 길이 없고, 적발되면
+   리치 결과가 통째로 막힙니다 (작업 기억의 그 줄).
 
    ⚠️ **연락처를 화면에 두지 않습니다.** 업체 연락처는 상담이 연결될 때
    건네집니다 — 여기 두면 중개를 건너뛴 거래가 되고, 그 거래에는
@@ -22,6 +26,9 @@ exports.build = function(p){
   var scale = W.amProviderScale(p);
   var brands = W.amProviderBrands(p);
   var ok    = W.amProviderVerified(p);
+  /* ⚠️ 센 값입니다 — 0건이면 **null** 입니다 */
+  var rate  = W.amRating(p.id);
+  var revs  = W.amReviewsOf(p.id);
 
   var body = '<section class="pghd"><div class="wrap">' +
     '<nav class="crumb" aria-label="현재 위치"><a href="/">홈</a>' + icon("arrow",14) +
@@ -31,6 +38,19 @@ exports.build = function(p){
     '<span aria-current="page">' + esc(p.name) + '</span></nav>' +
     '<h1>' + esc(p.name) + '</h1>' +
     (p.intro ? '<p class="pghd-l">' + esc(p.intro) + '</p>' : '') +
+    /* ⚠️⚠️ 0건이면 **이 줄째 빠집니다** (절대 규칙 2) — "평점 없음" 을
+       머리말에 찍으면 그게 나쁜 평가로 읽힙니다. 아래 후기 자리에서
+       사람 말로 말합니다.
+       ⚠️ 별 글자는 소리로 들으면 뜻이 없어 aria-hidden 을 달고, 같은
+       뜻을 .sr 로 한 번 적습니다. */
+    (rate
+      ? '<p class="pghd-rate">' +
+          '<span class="stars" aria-hidden="true">' + W.amStarGlyphs(rate.round) + '</span>' +
+          '<b>' + esc(rate.avg.toFixed(1)) + '</b>' +
+          '<span class="pghd-rn">후기 ' + esc(String(rate.n)) + '건</span>' +
+          '<span class="sr">' + esc(W.amStarLabel(rate.round)) + '</span>' +
+        '</p>'
+      : '') +
     (ok.length
       ? '<ul class="chips" style="margin-top:14px">' + ok.map(function(t){
           return '<li><span class="chip chip-ok">' + icon("check",16) + esc(t) + '</span></li>';
@@ -63,6 +83,57 @@ exports.build = function(p){
         return '<li><span class="chip">' + esc(f.item.name) + '</span></li>';
       }).join("") + '</ul></div></section>';
   }
+
+  /* ── 후기 (0037) ──────────────────────────────────────────────────
+     ⚠️⚠️ **손님이 쓴 글입니다 — 전부 esc() 를 거칩니다** (절대 규칙 4).
+     ⚠️⚠️ 0건이면 **지어내지 않고 0 이라고 말합니다**, 그리고 막다른
+     길로 두지 않습니다 — 누가 쓸 수 있는지와 지금 할 수 있는 것을
+     같이 냅니다 (절대 규칙 2).
+     ⚠️ 평점 순으로 줄 세우지 않습니다 (amReviewsOf 가 새것부터
+     돌려줍니다) — 좋은 말만 위로 올리면 그게 플랫폼의 편집입니다. */
+  body += '<section class="sec' + (subs.length ? '' : ' sec-alt') + '">' +
+    '<div class="wrap"><div class="sec-hd">' +
+    '<h2>후기' + (rate ? ' ' + esc(String(rate.n)) + '건' : '') + '</h2>' +
+    (rate
+      ? '<p>' + esc("실제로 이 업체의 견적을 고르시거나 만나신 분만 쓰실 수 있습니다. " +
+                    "평균 " + rate.avg.toFixed(1) + "점입니다.") + '</p>'
+      : '<p>아직 후기가 없습니다.</p>') +
+    '</div>';
+
+  if(revs.length){
+    body += '<ul class="rvs">' + revs.map(function(v){
+      return '<li class="rv">' +
+        '<div class="rv-h">' +
+          '<span class="stars" aria-hidden="true">' + W.amStarGlyphs(v.rating) + '</span>' +
+          '<span class="sr">' + esc(W.amStarLabel(v.rating)) + '</span>' +
+          /* ⚠️ 작성자는 **마스킹된 값**만 옵니다 (0037 의 보기) */
+          '<b class="rv-w">' + esc(v.who || "회원") + '</b>' +
+          '<span class="rv-d">' + esc(W.amDay(v.created_at)) +
+          (v.edited ? " · 고침" : "") + '</span>' +
+        '</div>' +
+        '<p class="rv-b">' + esc(v.body) + '</p>' +
+        /* 업체의 답변 — ⚠️ 업체가 적은 글이므로 이것도 esc() 입니다 */
+        (v.reply
+          ? '<div class="rv-r"><b>' + esc(p.name) + ' 답변</b>' +
+            (v.reply_at ? '<span class="rv-d">' + esc(W.amDay(v.reply_at)) + '</span>' : '') +
+            '<p>' + esc(v.reply) + '</p></div>'
+          : '') +
+      '</li>';
+    }).join("") + '</ul>';
+  }else{
+    /* ⚠️⚠️ **눌러도 아무 일이 안 나는 단추를 만들지 않습니다** — 후기를
+       쓰는 자리는 /my 의 내 요청 안입니다 (조건이 맞을 때만 열립니다).
+       그래서 여기서는 그 길을 **말로** 알리고, 지금 실제로 되는 것을
+       단추로 냅니다. */
+    body += '<div class="none none-sm">' +
+      '<p>후기는 <b>이 업체의 견적을 고르시거나 만나신 뒤</b> ' +
+      '<b>내 정보 → 내 요청</b>에서 쓰실 수 있습니다. ' +
+      '그래서 겪지 않은 분이 쓴 글은 여기에 올라오지 않습니다.</p>' +
+      '<a class="btn btn-line" href="/match?pv=' + encodeURIComponent(p.id) + '">' +
+        icon("match", 18) + '이 업체로 요청하기</a>' +
+      '</div>';
+  }
+  body += '</div></section>';
 
   /* ⚠️⚠️ 전자상거래법 제20조 — 푸터에도 있지만 **거래가 일어나는 화면**
      에서 한 번 더 분명히 합니다. */

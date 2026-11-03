@@ -16,7 +16,7 @@
      · `alt` 가 비어 있지 않은가
      · `img/` 에 **아무도 안 쓰는 파일**이 굴러다니지 않는가
 
-   ⚠️ 규격은 `js/data/photos.js` 의 `WOW_PHOTO_SLOTS` **한 곳**에만
+   ⚠️ 규격은 `js/data/photos.js` 의 `AM_PHOTO_SLOTS` **한 곳**에만
    있습니다. 자리를 늘리면 거기만 고치세요.
 
    ⚠️ 이건 **규격 검사**이지 "보기 좋은가" 를 보는 것이 아닙니다.
@@ -74,14 +74,40 @@ function size(buf){
 
 /* ── 검사 ───────────────────────────────────────────────────────── */
 const W = load();
-const SLOTS = W.WOW_PHOTO_SLOTS || [];
-const PHOTOS = W.WOW_PHOTOS || {};
+const SLOTS = W.AM_PHOTO_SLOTS || [];
+const PHOTOS = W.AM_PHOTOS || {};
 const bySlot = {};
 SLOTS.forEach(s => { bySlot[s.key] = s; });
 
 const bad = [], warn = [];
 const used = new Set();
 let ok = 0;
+
+/* ⚠️⚠️ **영역 카드 자리는 `AM_ZONES` 의 key 와 짝이라야 합니다.**
+   한 글자 틀리면 그 카드만 **조용히 사진 없이** 나옵니다 — 에러도
+   404 도 안 납니다 (이 저장소가 "같은 규칙을 두 곳에 적는" 자리로
+   여러 번 겪었습니다). 그래서 **양쪽을 맞춰** 봅니다. */
+(function(){
+  const w2 = {};
+  new Function("window", fs.readFileSync(
+    path.join(ROOT, "js/components/base.js"), "utf8"))(w2);
+  new Function("window", fs.readFileSync(
+    path.join(ROOT, "js/data/catalog.js"), "utf8"))(w2);
+  const zones = (w2.AM_ZONES || []).map(z => z.key);
+  if(!zones.length){ bad.push("AM_ZONES 를 한 줄도 못 읽었습니다 — 검사가 틀렸습니다"); return; }
+  const slotZones = SLOTS.map(s => s.key).filter(k => k.indexOf("zone-") === 0)
+    .map(k => k.slice(5));
+  zones.forEach(z => {
+    if(slotZones.indexOf(z) < 0)
+      bad.push("영역 '" + z + "' 의 사진 자리(zone-" + z + ")가 없습니다 — " +
+               "그 카드만 조용히 사진 없이 나옵니다");
+  });
+  slotZones.forEach(z => {
+    if(zones.indexOf(z) < 0)
+      bad.push("사진 자리 'zone-" + z + "' 가 가리키는 영역이 없습니다 — " +
+               "아무 데도 안 쓰이는 자리입니다");
+  });
+})();
 
 Object.keys(PHOTOS).forEach(key => {
   const p = PHOTOS[key] || {};
@@ -201,7 +227,13 @@ if(bad.length){
   console.log("");
   process.exit(1);
 }
-console.log("\n✅ " + ok + "장 전부 규격에 맞습니다" +
+/* ⚠️⚠️ **0장이면 "전부 맞습니다" 가 아닙니다.** 잰 것이 없는데 초록을
+   내면 "검사가 보고 있다" 고 착각하게 됩니다 — 이 저장소가 여러 번
+   겪은 자리입니다. 0장은 **지금 맞는 상태**이므로 실패로 치지는 않되,
+   **0장이라고 말하고** 넘어갑니다. */
+console.log("\n✅ " + (ok ? ok + "장 전부 규격에 맞습니다"
+                          : "넣은 사진이 **0장**입니다 — 잴 것이 없었습니다") +
   (warn.length ? " (⚠️ " + warn.length + "건은 봐 주세요)" : ""));
-console.log("   ⚠️ 이건 규격 검사입니다. 업종이 드러나는지 · 폐업 쪽이");
-console.log("      처연한지는 사람이 봐야 합니다 — tools/shot.js 로 찍어 보세요.\n");
+console.log("   ⚠️ 이건 **규격** 검사입니다. 골프로 읽히는지 · 보기 흉한지 ·");
+console.log("      얼굴이나 상표가 들어갔는지는 **사람이** 봐야 합니다 —");
+console.log("      tools/shot.js 로 찍어 보세요.\n");

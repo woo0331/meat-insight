@@ -47,7 +47,8 @@ exports.build = function(){
     desc: "골프올인원 관리자 화면.",
     body: body,
     js: ["/js/data/korean.js", "/js/data/deal.js", "/js/data/metrics.js",
-         "/js/auth.js", "/js/photo.js", "/js/account.js", "/js/assign.js",
+         "/js/data/review.js", "/js/auth.js", "/js/photo.js",
+         "/js/account.js", "/js/review.js", "/js/assign.js",
          "/js/metrics.js", "/js/adminbiz.js"]
   };
 };

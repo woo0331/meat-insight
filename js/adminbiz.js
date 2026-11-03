@@ -74,13 +74,20 @@
       get("ad_run?select=id,provider_id,place,cat_key,region,starts_on,ends_on," +
           "price,state,note&order=starts_on.desc&limit=100"),
       get("membership_plan?select=id,name,monthly,listed,ord&order=ord.asc&limit=50"),
-      get("provider_membership?select=provider_id,plan_id,starts_on,ends_on&limit=200")
+      get("provider_membership?select=provider_id,plan_id,starts_on,ends_on&limit=200"),
+      /* 후기 (0037) — ⚠️ 운영자는 **가려진 것까지** 봅니다 (rv_staff).
+         ⚠️⚠️ **작성자 성함 · by_user 를 청하지 않습니다.** 가릴지 말지는
+         글을 보고 정하는 일이고, 누가 썼는지는 그 판단에 필요하지
+         않습니다 — 청하면 그 화면을 보는 사람 모두가 보게 됩니다. */
+      get("review?select=id,provider_id,rating,body,created_at,updated_at," +
+          "reply,reply_at,hidden_at,hidden_why&order=created_at.desc&limit=200")
     ]);
   }
 
   function tabs(){
     return '<div class="bz-tabs" role="tablist">' +
-      [["fee","수수료 정책"],["ad","광고 집행"],["plan","멤버십"]].map(function(t){
+      [["fee","수수료 정책"],["ad","광고 집행"],["plan","멤버십"],
+       ["rv","후기"]].map(function(t){
         return '<button type="button" class="btn btn-sm ' +
           (TAB === t[0] ? "btn-pri" : "btn-line") + '" data-tab="' + t[0] + '" ' +
           'role="tab" aria-selected="' + (TAB === t[0] ? "true" : "false") + '">' +
@@ -274,15 +281,49 @@
         : '<p class="myhint">요금제를 먼저 만드셔야 업체에 달 수 있습니다.</p>');
   }
 
+  /* ── 후기 가리기 (0037) ──────────────────────────────────────────
+     ⚠️⚠️⚠️ **지우는 길이 없습니다 — 가립니다.** 지우면 업체가 "없는
+     말을 지웠다" 고 다툴 때 아무 기록이 없습니다. 가린 까닭은
+     반드시 받습니다 (DB 도 받습니다).
+     ⚠️⚠️ **업체가 불평할 때마다 가려 주는 자리가 되면 후기가
+     광고입니다.** 그래서 까닭이 기록에 남고, 다시 낼 수 있습니다.
+     ⚠️ 별점 · 글을 운영자가 고치는 문은 **만들지 않았습니다.** */
+  function rvView(provs, revs){
+    var byId = {};
+    provs.forEach(function(p){ byId[p.id] = p; });
+    return '<p class="myhint">⚠️ 후기는 <b>지우지 않고 가립니다</b>. ' +
+      '가린 까닭은 기록에 남고, 다시 낼 수 있습니다. ' +
+      '별점과 글을 고치는 길은 <b>없습니다</b> — 손님이 쓴 말입니다.</p>' +
+      (revs.length
+        ? '<div class="rvs">' + revs.map(function(v){
+            var p = byId[v.provider_id];
+            return '<div class="rv-one">' +
+              window.amRvRow(v, { who:"손님",
+                                  pname: p ? p.name : v.provider_id,
+                                  hidden:true }) +
+              '<p class="dk-hint">' + esc(p ? p.name : v.provider_id) +
+              (p && p.is_test ? " — 검사용" : "") + '</p>' +
+              '<div class="dk-b"><button class="btn btn-sm btn-line" ' +
+              'data-rvto="' + esc(v.hidden_at ? "show" : "hide") + '" ' +
+              'data-rvid="' + esc(v.id) + '">' +
+              (v.hidden_at ? "다시 내기" : "가리기") + '</button></div>' +
+            '</div>';
+          }).join("") + '</div>'
+        /* ⚠️ 0건은 고장이 아닙니다 */
+        : '<p class="myhint">아직 후기가 없습니다. ' +
+          '견적을 고르신 손님이나 만나신 손님이 쓰시면 여기에 뜹니다.</p>');
+  }
+
   function paint(){
     box.hidden = false; box.className = "deskbox";
     box.innerHTML = '<h2 class="adm-h">수수료 · 광고 · 멤버십</h2>' +
       '<p class="lmsg">읽는 중입니다…</p>';
     load().then(function(got){
-      var provs = got[0], pols = got[1], ads = got[2], plans = got[3], mships = got[4];
+      var provs = got[0], pols = got[1], ads = got[2], plans = got[3],
+          mships = got[4], revs = got[5];
       /* ⚠️⚠️ 하나라도 못 읽었으면 **0건이라고 말하지 않습니다.** */
       if(provs === null || pols === null || ads === null ||
-         plans === null || mships === null){
+         plans === null || mships === null || revs === null){
         box.innerHTML = '<h2 class="adm-h">수수료 · 광고 · 멤버십</h2>' +
           '<p class="lmsg">읽지 못했습니다. ' +
           '<button class="btn btn-sm btn-line" data-do="again">다시 읽기</button></p>';
@@ -292,6 +333,7 @@
         '<div class="bz-body">' +
         (TAB === "fee"  ? feeView(provs, pols)  :
          TAB === "ad"   ? adView(provs, ads)    :
+         TAB === "rv"   ? rvView(provs, revs)   :
                           planView(provs, plans, mships)) +
         '</div><p class="dk-m lmsg" hidden></p>';
     });
@@ -315,6 +357,23 @@
       rpc("set_fee_policy_active", { p_id: ft.getAttribute("data-feetoggle"),
                                      p_active: !on, p_why: w1.trim() })
         .then(paint).catch(function(err){ ft.disabled = false; say(why(err)); });
+      return;
+    }
+    /* 후기 가리기 · 다시 내기 (0037) */
+    var rv = e.target.closest ? e.target.closest("button[data-rvto]") : null;
+    if(rv){
+      var to = rv.getAttribute("data-rvto");
+      /* ⚠️⚠️ **가릴 때만 까닭을 받습니다** (DB 도 그렇습니다) — 다시 낼
+         때 까닭을 또 받으면 사람이 아무 글자나 적습니다. */
+      var w0 = null;
+      if(to === "hide"){
+        w0 = prompt("가리시는 까닭을 적어 주세요 (기록에 남습니다)");
+        if(!(w0 && w0.trim())) return;
+        w0 = w0.trim();
+      }
+      rv.disabled = true; say("바꾸는 중입니다…");
+      window.amRvHide(rpc, rv.getAttribute("data-rvid"), to, w0)
+        .then(paint).catch(function(err){ rv.disabled = false; say(why(err)); });
       return;
     }
     var ad = e.target.closest ? e.target.closest("button[data-adto]") : null;

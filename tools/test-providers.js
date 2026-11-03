@@ -21,7 +21,10 @@ const { serve, watch } = require("./_serve.js");
 
 const ROOT = path.join(__dirname, "..");
 const GEN  = path.join(ROOT, "js", "data", "providers.generated.js");
-const BAK  = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "pv-")), "providers.keep.js");
+const RGEN = path.join(ROOT, "js", "data", "reviews.generated.js");
+const TMP  = fs.mkdtempSync(path.join(os.tmpdir(), "pv-"));
+const BAK  = path.join(TMP, "providers.keep.js");
+const RBAK = path.join(TMP, "reviews.keep.js");
 
 let bad = 0, ran = 0;
 function ok(name, cond, got){
@@ -57,10 +60,42 @@ const SEED = [
     regions:["seoul"], subs:["ft-mend","ft-grip"], scale:"small" }
 ];
 
+/* 후기 씨앗 — ⚠️ 자료 파일을 잠깐 바꿉니다. 되돌리기는 **사본**으로
+   합니다 (git checkout 은 그 파일의 작업분 전체를 지웁니다). */
+function rseed(rows){
+  fs.writeFileSync(RGEN,
+    "/* 검사용 씨앗 — tools/test-providers.js 가 잠깐 바꿔 둔 것입니다. */\n" +
+    "window.AM_REVIEWS_AT = \"검사용 씨앗\";\n" +
+    "window.AM_REVIEWS = " + JSON.stringify(rows, null, 2) + ";\n");
+}
+
+/* ⚠️⚠️ **별점을 손으로 세어 적습니다.** 5 · 4 · 4 의 평균은 13 나누기
+   3 = 4.333… 이고 소수 한 자리로 **4.3** 입니다. 코드와 같은 식으로
+   적으면 식을 바꿔도 답이 같아서 아무것도 안 잡습니다.
+   ⚠️ 가까운 정수는 4 라 별이 넷 차야 합니다 (★★★★☆).
+   ⚠️ 다른 업체의 1점이 섞이면 평균이 3.5 가 됩니다 — 그 1점을 일부러
+   넣어 둡니다 (섞이면 이 검사가 떨어집니다). */
+const RSEED = [
+  { id:"rv-1", provider_id:"green-pt", rating:5, who:"김**",
+    body:"타석이 넓고 사장님이 꼼꼼히 봐 주셨습니다.",
+    created_at:"2026-10-30T01:00:00Z" },
+  { id:"rv-2", provider_id:"green-pt", rating:4, who:"이**",
+    body:"<script>alert(3)</script> 글을 넣어 봅니다",
+    created_at:"2026-10-29T01:00:00Z",
+    reply:"<b>고맙습니다</b> 또 오세요", reply_at:"2026-10-29T05:00:00Z" },
+  { id:"rv-3", provider_id:"green-pt", rating:4, who:"박**",
+    body:"주차가 조금 좁지만 시설은 좋았습니다.",
+    created_at:"2026-10-28T01:00:00Z", edited:true },
+  { id:"rv-4", provider_id:"xss-test", rating:1, who:"최**",
+    body:"다른 업체의 후기입니다. 섞이면 안 됩니다.",
+    created_at:"2026-10-27T01:00:00Z" }
+];
+
 function nowServe(){ return serve(0); }
 
 (async function(){
   fs.copyFileSync(GEN, BAK);
+  fs.copyFileSync(RGEN, RBAK);
   let b = null, h = null, startedWith = 0;
   try{
     /* ⚠️⚠️ **"0장" 을 박아 두지 않습니다.** 업체가 생기는 날 멀쩡한
@@ -122,19 +157,37 @@ function nowServe(){ return serve(0); }
     ok("거래 규모가 사람 말로 나온다", /중간 규모/.test(t));
     ok("취급 브랜드가 나온다", /타이틀리스트/.test(t));
     ok("확인 배지가 나온다", /사업자등록 확인/.test(t));
-    ok("⚠️ 평점 · 후기 수를 찍지 않는다",
-       t.indexOf("평점") < 0 && t.indexOf("점") < 0 || !/[0-9]\.[0-9]\s*점/.test(t));
+    /* ⚠️⚠️ **후기가 0건일 때.** 처음에 여기 적어 둔 검사는
+       `a && b || !c` 꼴이라 괄호가 없어 **거의 늘 참**이었습니다 —
+       아무것도 안 잡는 검사였습니다 (작업 기억의 그 줄). 이제
+       **0건일 때 무엇이 보이고 무엇이 안 보이는가**를 따로 봅니다. */
+    ok("⚠️ 후기가 0건이면 **숫자를 안 찍는다**",
+       !/[0-9]\.[0-9]\s*점/.test(t), (t.match(/[0-9]\.[0-9]\s*점/) || [""])[0]);
+    ok("⚠️ 0건이면 **0 이라고 말한다** (지어내지 않습니다)",
+       /아직 후기가 없습니다/.test(t));
+    ok("⚠️ 0건이어도 막다른 길로 두지 않는다 (쓸 수 있는 조건을 적습니다)",
+       /고르시거나 만나신 뒤/.test(t));
+    ok("⚠️ 0건일 때 별 글자를 안 그린다",
+       (await p.locator("main .stars").count()) === 0,
+       await p.locator("main .stars").count());
     ok("⚠️ 연락처를 화면에 두지 않는다", !/01[0-9]-?[0-9]{3,4}-?[0-9]{4}/.test(t));
     const html = await p.content();
     ok("⚠️ 구조화 데이터에 aggregateRating 이 없다", html.indexOf("aggregateRating") < 0);
     /* ⚠️⚠️ 상담 길 (0035) — 이제 단추가 있습니다. 재는 것은 **단추가
        있는가**와 **지키지 못할 약속을 하지 않는가** 둘입니다. */
-    ok("이 업체로 요청하는 단추가 있다",
-       (await p.locator('main a.btn[href^="/match?pv="]').count()) === 1);
-    ok("  그 주소에 업체 id 가 실린다",
-       (await p.getAttribute('main a.btn[href^="/match?pv="]', "href")) ===
-       "/match?pv=green-pt",
-       await p.getAttribute('main a.btn[href^="/match?pv="]', "href"));
+    /* ⚠️ 갯수를 박지 않습니다 — 후기가 0건일 때 그 자리에서도 같은
+       단추를 하나 더 냅니다 (막다른 길로 두지 않으려고). 갯수를 1 로
+       박아 두었더니 그 단추를 더한 날 **멀쩡한 화면이 실패**했습니다. */
+    const pvBtns = p.locator('main a.btn[href^="/match?pv="]');
+    ok("이 업체로 요청하는 단추가 있다", (await pvBtns.count()) >= 1,
+       await pvBtns.count());
+    /* ⚠️⚠️ **하나만 보지 않습니다** — 둘 가운데 하나에 id 가 빠지면
+       그 단추는 업체를 안 고르고 /match 로 갑니다 (조용히). */
+    const hrefs = await pvBtns.evaluateAll(
+      function(ns){ return ns.map(function(n){ return n.getAttribute("href"); }); });
+    ok("  그 주소에 업체 id 가 **빠짐없이** 실린다",
+       hrefs.length > 0 && hrefs.every(function(x){ return x === "/match?pv=green-pt"; }),
+       hrefs.join(" "));
     /* ⚠️⚠️⚠️ **"바로 이 업체로 간다" 고 말하면 거짓말입니다** — 배정은
        운영자가 하고, 넘기는 순간 상호를 알리고 제3자 제공 동의를 다시
        받습니다 (제17조 제2항). 화면이 그것을 적는지 봅니다. */
@@ -197,6 +250,89 @@ function nowServe(){ return serve(0); }
     ok("끊긴 링크 · 410 으로 가는 링크가 0건이다", lk.status === 0,
        (lk.stdout || "").toString().trim().split("\n").slice(-4).join(" | "));
 
+    console.log("\n── ②-b 후기가 **있을 때** (0037)");
+    /* ⚠️⚠️ 후기 자리도 지금까지 **아무도 본 적이 없습니다** — 0건이라
+       그리는 쪽만 돌았습니다. 씨앗을 넣고 실제로 찍어 봅니다. */
+    rseed(RSEED);
+    const r4 = build();
+    ok("후기를 넣어도 빌드가 돈다", r4.status === 0,
+       (r4.stderr || "").toString().trim().split("\n").slice(-3).join(" | "));
+
+    const p2 = await b.newPage({ viewport:{ width:1280, height:900 } });
+    const hits2 = watch(p2);
+    await p2.goto("http://127.0.0.1:" + h.port + "/pro/green-pt", { waitUntil:"networkidle" });
+    let t2 = (await p2.textContent("main")) || "";
+    ok("후기 건수가 나온다 (3건)", /후기 3건/.test(t2), t2.slice(0, 300));
+    /* ⚠️⚠️ **손으로 센 값**입니다 — 5 · 4 · 4 → 13/3 = 4.3 */
+    ok("⚠️ 평균이 **센 값**으로 나온다 (5·4·4 → 4.3)",
+       t2.indexOf("4.3") >= 0, (t2.match(/[0-9]\.[0-9]/g) || []).join(" "));
+    ok("⚠️ 다른 업체의 1점이 **안 섞인다** (섞이면 3.5 입니다)",
+       t2.indexOf("3.5") < 0);
+    ok("별 글자가 그려진다", (await p2.locator("main .stars").count()) >= 4,
+       await p2.locator("main .stars").count());
+    /* ⚠️ 별 글자는 소리로 읽을 것이 없습니다 — 같은 뜻을 글로 한 번 */
+    ok("⚠️ 소리로 듣는 분께 점수를 **글로** 적는다",
+       /5점 만점에 4점/.test(t2), t2.slice(0, 300));
+    ok("작성자가 마스킹된 채로 나온다", /김\*\*/.test(t2));
+    ok("⚠️ 본이름이 나올 자리가 없다 (성함 칸을 안 받습니다)",
+       t2.indexOf("김후기") < 0 && t2.indexOf("by_user") < 0);
+    ok("고친 후기에 **고쳤다고** 적는다", /고침/.test(t2));
+    ok("업체 답변이 나온다", /또 오세요/.test(t2));
+    ok("  답변이 누구 말인지 적는다", /성남 그린골프연습장 답변/.test(t2));
+    /* ⚠️⚠️ 손님 · 업체가 적은 글은 전부 esc() 입니다 (절대 규칙 4) */
+    const rh = await p2.innerHTML("main");
+    ok("⚠️ 후기에 넣은 태그가 날것으로 안 들어간다",
+       rh.indexOf("<script>alert(3)") < 0 && rh.indexOf("&lt;script") >= 0);
+    ok("⚠️ 업체 답변에 넣은 태그도 날것으로 안 들어간다",
+       rh.indexOf("<b>고맙습니다</b>") < 0 && rh.indexOf("&lt;b&gt;") >= 0);
+    ok("⚠️ 그 글 때문에 그림 · 스크립트가 생기지 않는다",
+       (await p2.locator("main img").count()) === 0);
+    /* ⚠️⚠️⚠️ **후기가 생겨도 aggregateRating 을 안 넣습니다** — 우리가
+       별점을 검증할 길이 없고, 적발되면 리치 결과가 통째로 막힙니다. */
+    ok("⚠️⚠️ 후기가 생겨도 구조화 데이터에 aggregateRating 이 **없다**",
+       (await p2.content()).indexOf("aggregateRating") < 0);
+    ok("0건 안내가 사라진다", t2.indexOf("아직 후기가 없습니다") < 0);
+
+    /* ⚠️⚠️ **크롤러가 보는 것과 같은가.** 자바스크립트 전의 HTML 에
+       후기가 들어 있어야 네이버 · 빙 · LLM 봇이 봅니다 (그려진 화면만
+       보는 검사는 영원히 통과합니다). */
+    const raw = fs.readFileSync(path.join(ROOT, "pro", "green-pt", "index.html"), "utf8");
+    ok("⚠️⚠️ 자바스크립트 전의 HTML 에 후기가 **이미** 들어 있다",
+       raw.indexOf("후기 3건") >= 0 && raw.indexOf("4.3") >= 0);
+    ok("  거기에도 본이름이 없다", raw.indexOf("김후기") < 0);
+
+    /* 카드 — 분류 화면에서도 센 값이 나오는가 */
+    await p2.goto("http://127.0.0.1:" + h.port + "/cat/range", { waitUntil:"networkidle" });
+    const ct = (await p2.textContent("main")) || "";
+    ok("분류 카드에도 평균 · 건수가 나온다",
+       /후기 3건/.test(ct) && ct.indexOf("4.3") >= 0, ct.slice(0, 300));
+    /* ⚠️⚠️ 후기 0건인 업체 카드에 "후기 0건" 을 찍으면 새로 입점한
+       업체가 전부 나쁜 업체로 보입니다 — 우리가 만든 평가입니다. */
+    await p2.goto("http://127.0.0.1:" + h.port + "/cat/lesson", { waitUntil:"networkidle" });
+    ok("⚠️ 후기가 0건인 카드에는 그 줄이 **아예 없다**",
+       (await p2.locator(".pv .pv-r").count()) === 1,
+       await p2.locator(".pv .pv-r").count());
+    ok("후기 화면에서도 에러 · CSP 거절이 0건이다", hits2.length === 0, hits2.join(" | "));
+    await p2.close();
+
+    console.log("\n── ②-c 되돌려 보기: 어긋난 후기를 넣으면 빌드가 멈추는가");
+    /* ⚠️⚠️ 두 자료 파일은 DB 에서 **따로** 나옵니다 — 한쪽만 다시
+       가져오면 그 후기는 아무 화면에도 안 뜨면서 아무 에러도 안 납니다. */
+    rseed([{ id:"rv-x", provider_id:"이런업체는없습니다", rating:5,
+             who:"김**", body:"없는 업체에 붙은 후기입니다.",
+             created_at:"2026-10-30T01:00:00Z" }]);
+    const r5 = build();
+    ok("없는 업체를 가리키는 후기를 넣으면 **빌드가 멈춘다**", r5.status !== 0,
+       "exit=" + r5.status);
+    ok("  무엇을 돌려야 하는지 말해 준다",
+       /pull-reviews/.test((r5.stderr || "").toString() + (r5.stdout || "").toString()));
+    rseed([{ id:"rv-y", provider_id:"green-pt", rating:9, who:"김**",
+             body:"별점이 범위를 벗어난 후기입니다.",
+             created_at:"2026-10-30T01:00:00Z" }]);
+    const r6 = build();
+    ok("별점이 1~5 밖이면 **빌드가 멈춘다**", r6.status !== 0, "exit=" + r6.status);
+    rseed([]);
+
     console.log("\n── ③ 되돌려 보기: 가짜 하위 키를 넣으면 빌드가 멈추는가");
     seed([{ id:"bad-one", name:"가짜", subs:["이런하위는없습니다"] }]);
     const r2 = build();
@@ -217,12 +353,18 @@ function nowServe(){ return serve(0); }
     /* ⚠️⚠️ **사본으로 되돌립니다.** 여기를 빠뜨리면 검사용 씨앗이
        저장소에 남아 **없는 업체를 광고하게** 됩니다 (절대 규칙 1). */
     fs.copyFileSync(BAK, GEN);
+    fs.copyFileSync(RBAK, RGEN);
     const r = build();
     const back = routes().filter(x => x.indexOf("/pro/") === 0).length;
     ran++;
-    if(r.status === 0 && back === startedWith)
-      console.log("  ✅ 씨앗을 되돌렸습니다 (업체 화면 " + back + "장 — 돌리기 전과 같습니다)");
-    else { bad++; console.log("  ❌ 되돌리지 못했습니다 — js/data/providers.generated.js 를 보세요"); }
+    /* ⚠️ 후기 씨앗도 같이 되돌렸는지 봅니다 — 남으면 **없는 사람의
+       후기**가 저장소에 남고, 그건 지어낸 신뢰입니다 (절대 규칙 1). */
+    const rleft = fs.readFileSync(RGEN, "utf8").indexOf("검사용 씨앗") >= 0;
+    if(r.status === 0 && back === startedWith && !rleft)
+      console.log("  ✅ 씨앗을 되돌렸습니다 (업체 화면 " + back + "장 · 후기 파일도 " +
+                  "돌리기 전과 같습니다)");
+    else { bad++; console.log("  ❌ 되돌리지 못했습니다 — " +
+      "js/data/providers.generated.js · js/data/reviews.generated.js 를 보세요"); }
 
     /* ⚠️⚠️⚠️ **routes.json 만 보면 안 됩니다.** 2026-11-03 에 여기까지는
        초록이었는데 **찍힌 HTML 두 장이 저장소에 그대로 남아** 커밋까지

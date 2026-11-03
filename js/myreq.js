@@ -67,6 +67,21 @@
       if(!rs || !window.amPhotoRows) return got.concat([{}]);
       return window.amPhotoRows(A.conf, rs.map(function(r){ return r.id; }))
         .then(function(by){ return got.concat([by]); });
+    }).then(function(got){
+      /* 내가 쓴 후기 (0037) — ⚠️⚠️ **주소에서 내 요청으로 좁힙니다.**
+         0037 의 정책은 표를 쓴 사람 · 그 업체 · 운영자에게만 열지만,
+         자물쇠를 **두 자리에** 둡니다 (정책이 내려가는 날 이 줄이
+         남습니다).
+         ⚠️ 가려진 것도 옵니다 (rv_mine) — 손님은 자기 글이 가려진 것을
+         알 권리가 있습니다. */
+      var rs = got[0];
+      if(!rs || !rs.length) return got.concat([[]]);
+      return get("review?select=id,request_id,provider_id,rating,body," +
+                 "created_at,updated_at,reply,reply_at,hidden_at,hidden_why" +
+                 "&request_id=in.(" +
+                 rs.map(function(r){ return encodeURIComponent(r.id); }).join(",") +
+                 ")&limit=200")
+        .then(function(rv){ return got.concat([rv || []]); });
     });
   }
 
@@ -76,10 +91,16 @@
      통째로 "읽지 못했습니다" 가 되고, 그걸 눌러 볼 자리가 없습니다.
      ⚠️ 받는 줄은 0031 이 열어 둔 것뿐입니다 — **나에게 배정된 업체**와
      공개 목록에 있는 업체입니다 (아는 상호만 옵니다). */
-  function names(qs){
+  /* ⚠️ 견적 · 일정 · 후기 **셋 다** 업체 상호가 필요합니다 (후기를
+     쓰는 자리에 "어느 업체" 를 적어야 하니까요) — 한 벌로 모읍니다. */
+  function names(){
     var ids = [], seen = {};
-    qs.forEach(function(q){
-      if(q.provider_id && !seen[q.provider_id]){ seen[q.provider_id] = 1; ids.push(q.provider_id); }
+    [].slice.call(arguments).forEach(function(L){
+      (L || []).forEach(function(q){
+        if(q.provider_id && !seen[q.provider_id]){
+          seen[q.provider_id] = 1; ids.push(q.provider_id);
+        }
+      });
     });
     if(!ids.length) return Promise.resolve({});
     return get("provider?select=id,name&id=in.(" +
@@ -139,7 +160,45 @@
     return h + '</div>';
   }
 
-  function card(r, quotes, items, pics, appts){
+  /* ── 후기 (0037) ─────────────────────────────────────────────────
+     ⚠️⚠️ **조건이 맞을 때만 양식을 냅니다.** 눌러도 DB 가 거절하는
+     단추를 미리 만들지 않습니다 (절대 규칙 5) — 조건은 amRvCanWrite()
+     한 함수가 봅니다 (js/review.js).
+     ⚠️ 가려진 후기는 **고칠 수 없습니다** (0037) — 그러니 양식을 안
+     내고, 가려졌다는 것과 까닭만 적습니다. */
+  function reviewBlock(r, qs, appts, revs, pnames){
+    var ids = [], seen = {};
+    [].concat(qs || [], appts || []).forEach(function(x){
+      if(x.provider_id && !seen[x.provider_id] &&
+         window.amRvCanWrite(x.provider_id, qs, appts)){
+        seen[x.provider_id] = 1; ids.push(x.provider_id);
+      }
+    });
+    if(!ids.length) return "";
+    return '<h3 class="rv-h">후기</h3>' +
+      '<p class="dk-hint">겪으신 그대로 적어 주세요. ' +
+      '<b>이 업체 화면에 공개</b>되고, 성함은 성 한 글자만 보입니다.</p>' +
+      ids.map(function(pid){
+        var pname = pnames[pid] || null;
+        var mine = (revs || []).filter(function(v){
+          return v.request_id === r.id && v.provider_id === pid;
+        })[0] || null;
+        var h = '<div class="rv-one">';
+        if(mine){
+          h += window.amRvRow(mine, { who:"내 후기", pname: pname, hidden:true });
+          if(mine.hidden_at)
+            h += '<p class="dk-hint">운영자가 가린 후기입니다 — ' +
+                 '고객센터로 문의해 주세요.</p>';
+          else
+            h += window.amRvForm(r.id, pid, pname, mine);
+        }else{
+          h += window.amRvForm(r.id, pid, pname, null);
+        }
+        return h + '</div>';
+      }).join("");
+  }
+
+  function card(r, quotes, items, pics, appts, revs, pnames){
     var st = window.amDealSt(r.state) || { name:r.state, tone:"ink" };
     var svcs = items.filter(function(x){ return x.request_id === r.id; })
       .map(function(x){
@@ -198,6 +257,7 @@
         : r.state === "consult"  ? "상담 중입니다. 업체가 견적을 내면 여기에 뜹니다."
         : "아직 받은 견적이 없습니다.") + '</p>';
     }
+    h += reviewBlock(r, qs, appts, revs, pnames || {});
     h += '<p class="dk-m lmsg" hidden></p></div>';
     return h;
   }
@@ -223,7 +283,8 @@
     box.hidden = false; box.className = "deskbox";
     box.innerHTML = '<h2 class="adm-h">내 요청</h2><p class="lmsg">읽는 중입니다…</p>';
     load().then(function(got){
-      var rs = got[0], qs = got[1], items = got[2], appts = got[3], pics = got[4];
+      var rs = got[0], qs = got[1], items = got[2], appts = got[3],
+          pics = got[4], revs = got[5];
       if(rs === null || qs === null || items === null || appts === null){
         box.innerHTML = '<h2 class="adm-h">내 요청</h2>' +
           '<p class="lmsg">읽지 못했습니다. ' +
@@ -232,14 +293,15 @@
       }
       /* ⚠️ 상호를 받은 **뒤에** 그립니다 — 먼저 그리고 나중에 채우면
          업체 이름이 한 번 깜빡이고 바뀝니다. */
-      return names(qs).then(function(by){
+      return names(qs, appts, revs).then(function(by){
         qs.forEach(function(q){ q.pname = by[q.provider_id] || null; });
         box.innerHTML = '<h2 class="adm-h">내 요청' +
           (rs.length ? " " + won(rs.length) + "건" : "") + '</h2>' +
           (rs.length
             ? rs.map(function(r){
                 return card(r, qs, items, (pics || {})[r.id],
-                            appts.filter(function(x){ return x.request_id === r.id; }));
+                            appts.filter(function(x){ return x.request_id === r.id; }),
+                            revs, by);
               }).join("")
             : '<p class="myhint">아직 넣으신 요청이 없습니다. ' +
               '로그인 전에 넣으신 것이 있으면 아래에서 가져오실 수 있습니다.</p>') +
@@ -304,6 +366,23 @@
   });
 
   box.addEventListener("submit", function(e){
+    /* 후기 (0037) — ⚠️ 보내는 꾸러미는 js/review.js 가 짓습니다
+       (화면마다 짜면 칸 이름 하나가 어긋나도 열리기는 합니다). */
+    var rf = e.target.closest ? e.target.closest("form.rvform") : null;
+    if(rf){
+      e.preventDefault();
+      var rm = rf.querySelector(".rvmsg");
+      var rb = rf.querySelector('button[type="submit"]');
+      rb.disabled = true;
+      if(rm){ rm.hidden = false; rm.textContent = "올리는 중입니다…"; }
+      window.amRvSend(rpc, rf)
+        .then(paint)
+        .catch(function(err){
+          rb.disabled = false;
+          if(rm){ rm.hidden = false; rm.textContent = why(err); }
+        });
+      return;
+    }
     var f = e.target.closest ? e.target.closest("#cf") : null;
     if(!f) return;
     e.preventDefault();

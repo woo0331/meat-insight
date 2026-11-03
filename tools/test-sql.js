@@ -141,6 +141,10 @@ try{
      거짓을 말한 것이 됩니다. 경계값을 다른 묶음보다 많이 넣었습니다. */
   require("./sql/appt.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/metrics.js")({ ok, psql, psqlFile, denied, allowed });
+  /* ⚠️⚠️ 후기는 **지어낸 신뢰가 들어오는 문**입니다 — 아무나 쓸 수
+     있으면 광고이고, 평점을 칸에 저장하면 누군가 4.9 를 적습니다.
+     "누가 쓸 수 있나" 와 "집계 칸이 없는가" 를 같이 봅니다. */
+  require("./sql/review.js")({ ok, psql, psqlFile, denied, allowed });
 
 }catch(e){
   bad++; ran++;

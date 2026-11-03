@@ -703,3 +703,93 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .bz-tabs{ display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 18px; }
 .bz-body{ display:grid; gap:4px; }
 .bz-f{ margin-top:14px; padding-block: 16px 0; border-top:1.5px solid var(--line-soft); }
+
+/* ── 사진이 들어간 히어로 · 영역 카드 ──────────────────────────
+   ⚠️⚠️ **사진이 없으면 이 규칙들은 아무 데도 안 걸립니다** (.hero-ph ·
+   .feat-ph 가 안 붙습니다) — 지금이 그 상태입니다.
+   ⚠️⚠️ **글자 대비는 막이 책임집니다.** 사진이 밝든 어둡든 흰 글자가
+   AA 를 넘도록 막을 거의 불투명하게 둡니다 — 사진을 넣었다고 대비가
+   흔들리면 그건 고장입니다 (tools/contrast.js 로 잽니다). */
+/* ⚠️⚠️ **음수 z-index 를 쓰지 마세요.** 처음에 사진을 `z-index:-2`,
+   막을 `-1` 로 두었더니 `.hero` 자신의 배경이 그 위에 깔려 **막이
+   아무것도 안 덮었습니다** — 대비를 재니 1.03 이었습니다 (흰 글자가
+   흰 사진 위에). 눈으로는 "사진이 보인다" 라서 멀쩡해 보입니다.
+   ⚠️ 쌓는 차례를 **0 · 1 · 2 로** 분명히 적습니다 —
+   사진(0) → 막(1) → 글(2). */
+.hero-ph{ position:relative; }
+.hero-bg{ position:absolute; inset:0; width:100%; height:100%;
+          object-fit:cover; object-position:center;
+          /* ⚠️ 주인공을 가운데 3분의 1 안에 두셔야 합니다 — 액자 비율이
+             0.74 에서 5.59 까지 움직여 어딘가에서는 잘립니다. */
+          z-index:0; }
+/* ⚠️ background 에 그라디언트만 적으면 backgroundColor 가 투명이라
+   색을 재는 쪽이 검정으로 읽습니다 — background-color 를 같이 적습니다. */
+.hero-ph::after{ content:""; position:absolute; inset:0; z-index:1;
+                 border-radius:0; height:auto;
+                 background-color: rgba(6,59,43,.93);
+                 background-image: linear-gradient(180deg,
+                   rgba(8,41,31,.90) 0%, rgba(6,59,43,.95) 100%); }
+.hero-ph .hero-in{ z-index:2; }
+
+.feat-ph{ position:relative; overflow:hidden; }
+.feat-bg{ position:absolute; inset:0; width:100%; height:100%;
+          object-fit:cover; object-position:center; z-index:0; }
+.feat-ph::after{ content:""; position:absolute; inset:0; z-index:1;
+                 background-color: rgba(8,41,31,.90);
+                 background-image: linear-gradient(180deg,
+                   rgba(8,41,31,.86) 0%, rgba(8,41,31,.95) 100%); }
+/* ⚠️ 카드 안의 글 · 화살표가 막 위로 올라와야 합니다 */
+.feat-ph > *{ position:relative; z-index:2; }
+.feat-ph > .feat-bg{ z-index:0; }
+
+/* ── 후기 · 평점 (0037) ────────────────────────────────────────
+   ⚠️⚠️ **별 글자에 밝은 금색을 쓰지 마세요.** 작은 글씨에 밝은 색을
+   쓰다가 앞 서비스에서 다섯 번 걸렸습니다 — 흔한 #FFC107 은 흰바탕에서
+   1.6 밖에 안 됩니다. 여기 쓰는 것은 토큰의 **짙은 쪽**(--warn-text,
+   재 둔 값)입니다. ⚠️ 색을 바꾸시면 tools/check-screens.js 가 네 폭에서
+   다시 잽니다 — 거기서 떨어지면 색이 틀린 것입니다.
+   ⚠️ 빈 별(흰 별)도 같은 색입니다. 옅게 두면 그 글자만 대비가 떨어집니다. */
+.stars{ color: var(--warn-text); letter-spacing:1px; white-space:nowrap;
+        font-size:15px; }
+
+/* 업체 머리말의 한 줄 — ⚠️ 0건이면 이 줄이 아예 없습니다 */
+.pghd-rate{ display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+            margin-top:12px; }
+.pghd-rate b{ font-size:17px; color: var(--ink); }
+.pghd-rn{ font-size:14px; color: var(--ink3); }
+
+/* 업체 카드의 한 줄 */
+.pv-r{ display:flex; align-items:center; gap:7px; flex-wrap:wrap;
+       margin-top:8px; font-size:13.5px; color: var(--ink3); }
+.pv-r b{ font-size:15px; color: var(--ink); }
+
+/* 후기 목록 */
+.rvs{ display:grid; gap:12px; }
+.rv{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+     padding:16px 18px; }
+.sec-alt .rv{ background:#fff; }
+.rv-h{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.rv-w{ font-size:14.5px; color: var(--ink); }
+.rv-d{ font-size:13px; color: var(--ink3); }
+.rv-b{ margin-top:8px; font-size:15px; color: var(--ink2); white-space:pre-wrap; }
+/* 업체 답변 — 한 칸 들여 둡니다 (누가 한 말인지 눈으로 갈립니다) */
+.rv-r{ margin-top:12px; padding:12px 14px; border-radius: var(--r-sm);
+       background: var(--bg-2); border-left:3px solid var(--grn-line); }
+.rv-r b{ font-size:13.5px; color: var(--grn-text); }
+.rv-r .rv-d{ margin-left:8px; }
+.rv-r p{ margin-top:6px; font-size:14.5px; color: var(--ink2);
+         white-space:pre-wrap; }
+
+/* 0건일 때 — ⚠️ 막다른 길로 두지 않습니다 (절대 규칙 2) */
+.none-sm{ padding:20px 18px; text-align:left; }
+.none-sm p{ margin-top:0; }
+
+/* 별점을 고르는 자리 (/my) — ⚠️ 누르는 것은 40px 이상입니다 */
+.rvpick{ display:grid; gap:6px; margin-top:6px; }
+.rvpick label{ display:flex; align-items:center; gap:10px;
+               min-height: var(--tap); padding:6px 10px;
+               border:1.5px solid var(--line); border-radius: var(--r-sm);
+               font-size:14.5px; color: var(--ink2); cursor:pointer; }
+.rvpick label:hover{ border-color: var(--grn-line); background: var(--grn-soft); }
+.rvpick input{ width:20px; height:20px; flex:none; }
+.rvpick .stars{ flex:none; }

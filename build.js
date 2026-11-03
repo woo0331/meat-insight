@@ -30,6 +30,8 @@ global.window = {};
 ["js/components/base.js","js/data/korean.js","js/data/brand.js",
  "js/data/site.js","js/data/catalog.js","js/data/regions.js",
  "js/data/providers.generated.js","js/data/providers.js",
+ "js/data/reviews.generated.js","js/data/review.js",
+ "js/data/photos.js",
  "js/data/legal-terms.js","js/data/legal-privacy.js"]
   .forEach(function(f){ require("./" + f); });
 var W = global.window, esc = W.esc, icon = W.icon;
@@ -261,6 +263,30 @@ if(require.main === module){
   });
   if(subBad.length){
     subBad.forEach(function(m){ console.error("❌ " + m); });
+    process.exit(1);
+  }
+
+  /* ⚠️⚠️ **후기가 가리키는 업체가 자료에 있는가.** 두 파일
+     (providers.generated.js · reviews.generated.js)은 DB 에서 **따로**
+     나옵니다 — 한쪽만 다시 가져오면 어긋나고, 그러면 그 후기는
+     **아무 화면에도 안 뜨면서 평균에는 안 들어갑니다** (에러도 안 납니다).
+     ⚠️ 조용히 거르지 않고 멈춥니다. 고치는 법은 한 줄입니다:
+        node tools/pull-providers.js && node tools/pull-reviews.js
+     ⚠️ 평점이 1~5 밖인 줄도 여기서 멈춥니다 — amRating() 이 안 세고
+     넘기지만, 세지 않은 줄이 파일에 있다는 것 자체가 고장입니다. */
+  var byId = {};
+  provs.forEach(function(p){ byId[p.id] = 1; });
+  var rvBad = [];
+  W.amReviews().forEach(function(v){
+    if(!byId[v.provider_id])
+      rvBad.push("후기 " + v.id + " 가 '" + v.provider_id +
+                 "' 를 가리키는데 업체 자료에 없습니다");
+    if(!(Number(v.rating) >= 1 && Number(v.rating) <= 5))
+      rvBad.push("후기 " + v.id + " 의 별점이 1~5 밖입니다 (" + v.rating + ")");
+  });
+  if(rvBad.length){
+    rvBad.forEach(function(m){ console.error("❌ " + m); });
+    console.error("   ⚠️ node tools/pull-providers.js && node tools/pull-reviews.js");
     process.exit(1);
   }
 

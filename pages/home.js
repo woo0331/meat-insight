@@ -54,7 +54,19 @@ var MATCH_WHY = [
 
 function hero(){
   var B = W.AM_BRAND;
-  return '<section class="hero"><div class="wrap hero-in">' +
+  /* ⚠️⚠️ **사진이 없으면 그냥 딥그린 그대로입니다** — 빈 회색 액자를
+     두지 않습니다 (절대 규칙 2). 사진이 들어오면 **뒤에 깔리고**
+     그 위에 딥그린 막이 덮습니다.
+     ⚠️⚠️ 글자 대비는 **막이 책임집니다** — 사진이 밝든 어둡든 흰 글자가
+     AA 를 넘도록, 막을 거의 불투명하게 둡니다 (tools/contrast.js 로
+     잽니다). 사진을 넣었다고 대비가 흔들리면 안 됩니다.
+     ⚠️ `aria-hidden` 입니다 — 배경 장식이라 소리로 읽을 것이 없습니다.
+     (`alt` 는 photos.js 가 들고 있고, 글이 주인공인 자리에서 씁니다.) */
+  var ph = W.amPhoto ? W.amPhoto("hero") : null;
+  return '<section class="hero' + (ph ? " hero-ph" : "") + '">' +
+    (ph ? '<img class="hero-bg" src="' + esc(ph.src) + '" alt="" aria-hidden="true" ' +
+          'width="2400" height="1200" fetchpriority="high">' : "") +
+    '<div class="wrap hero-in">' +
     '<p class="hero-kick">' + esc(B.en) + '</p>' +
     '<h1>골프의 모든 것,<br><b>' + esc(B.name) + '</b></h1>' +
     '<p class="hero-sub">' + esc(B.desc) + '</p>' +
@@ -90,7 +102,14 @@ function feats(){
     '<div class="feat">' + (W.AM_ZONES || []).map(function(z, i){
       var cs = W.amZoneCats(z);
       if(!cs.length) return "";   /* ⚠️ 빈 영역은 안 그립니다 */
-      return '<a class="feat-c feat-' + (i+1) + '" href="' + esc(W.amCatUrl(cs[0])) + '">' +
+      /* ⚠️ 영역 사진 — 키가 `AM_ZONES` 의 key 와 짝입니다
+         (check-photos 가 그 짝을 맞춰 봅니다). 없으면 **안 그립니다.**
+         ⚠️ `loading="lazy"` — 첫 화면 아래에 있습니다. */
+      var zp = W.amPhoto ? W.amPhoto("zone-" + z.key) : null;
+      return '<a class="feat-c feat-' + (i+1) + (zp ? " feat-ph" : "") +
+        '" href="' + esc(W.amCatUrl(cs[0])) + '">' +
+        (zp ? '<img class="feat-bg" src="' + esc(zp.src) + '" alt="" aria-hidden="true" ' +
+              'width="1200" height="600" loading="lazy">' : "") +
         '<h3>' + esc(z.name) + '</h3>' +
         '<p>' + esc(cs.map(function(c){ return c.name; }).join(" · ")) + '</p>' +
         '<p class="feat-l">' + esc(z.lead) + '</p>' +

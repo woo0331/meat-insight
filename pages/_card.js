@@ -16,11 +16,24 @@ exports.card = function(p){
   var meta  = [];
   if(regs.length)  meta.push(regs.join(" · "));
   if(scale)        meta.push(scale);
+  /* ⚠️⚠️ **센 값입니다** — 후기 줄에서 amRating() 이 셉니다. 0건이면
+     null 이고, 그때는 **이 줄째 빠집니다** (절대 규칙 1 · 2).
+     ⚠️ 카드에 "후기 0건" 을 찍으면 새로 입점한 업체가 전부 나쁜 업체로
+     보입니다 — 그건 우리가 만든 평가입니다. */
+  var rate = W.amRating ? W.amRating(p.id) : null;
 
   return '<a class="pv" href="' + esc(W.amProviderUrl(p)) + '">' +
     '<div class="pv-h"><h3>' + esc(p.name) + '</h3>' +
       (ok.length ? '<span class="pv-ok">' + icon("check", 15) + '확인됨</span>' : '') +
     '</div>' +
+    (rate
+      ? '<p class="pv-r">' +
+          '<span class="stars" aria-hidden="true">' + W.amStarGlyphs(rate.round) + '</span>' +
+          '<b>' + esc(rate.avg.toFixed(1)) + '</b>' +
+          '<span>후기 ' + esc(String(rate.n)) + '건</span>' +
+          '<span class="sr">' + esc(W.amStarLabel(rate.round)) + '</span>' +
+        '</p>'
+      : '') +
     (meta.length ? '<p class="pv-m">' + esc(meta.join(" · ")) + '</p>' : '') +
     (p.intro ? '<p class="pv-i">' + esc(String(p.intro).slice(0, 90)) + '</p>' : '') +
     (cats.length

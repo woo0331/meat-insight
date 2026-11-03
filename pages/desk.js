@@ -31,7 +31,8 @@ exports.build = function(){
     route: "/desk", title: "업체 작업실", noindex: true, unlinked: true,
     desc: "골프올인원 업체 작업실 — 배정받은 요청 확인 · 수락 · 견적 제출.",
     body: body,
-    js: ["/js/data/korean.js", "/js/data/deal.js", "/js/photo.js",
-         "/js/auth.js", "/js/desk.js", "/js/deskfee.js"]
+    js: ["/js/data/korean.js", "/js/data/deal.js", "/js/data/review.js",
+         "/js/photo.js", "/js/auth.js", "/js/review.js",
+         "/js/desk.js", "/js/deskfee.js"]
   };
 };

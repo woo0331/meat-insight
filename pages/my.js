@@ -28,7 +28,8 @@ exports.build = function(){
     route: "/my", title: "내 정보", noindex: true, unlinked: true,
     desc: "골프올인원 내 정보 — 개인 판매자 · 골프 프로 · 사업자 회원을 켜고 끕니다.",
     body: body,
-    js: ["/js/data/korean.js", "/js/data/deal.js", "/js/auth.js",
-         "/js/photo.js", "/js/account.js", "/js/myreq.js"]
+    js: ["/js/data/korean.js", "/js/data/deal.js", "/js/data/review.js",
+         "/js/auth.js", "/js/photo.js", "/js/account.js",
+         "/js/review.js", "/js/myreq.js"]
   };
 };

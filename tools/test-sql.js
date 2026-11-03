@@ -137,6 +137,9 @@ try{
   /* ⚠️⚠️ 사장님이 붙여 넣으실 **안내문**은 아무 검사도 안 봅니다 —
      그래서 그 파일을 실제로 붙여 넣어 봅니다. */
   require("./sql/seed.js")({ ok, psql, psqlFile, denied, allowed });
+  /* ⚠️⚠️ 매각 지표는 **사업의 값을 매기는 숫자**입니다 — 틀리면 투자자에게
+     거짓을 말한 것이 됩니다. 경계값을 다른 묶음보다 많이 넣었습니다. */
+  require("./sql/metrics.js")({ ok, psql, psqlFile, denied, allowed });
 
 }catch(e){
   bad++; ran++;

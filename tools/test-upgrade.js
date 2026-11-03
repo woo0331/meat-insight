@@ -203,6 +203,25 @@ try{
   ok("입점 신청 문이 이 DB 에서 돈다", a.yes && /^GA\d{6}-\d{4}$/.test(a.out),
      a.yes ? a.out : a.why);
 
+  /* ⚠️⚠️⚠️ **앞 사업의 자료가 골프 매각 지표에 섞이나** (0033 · §9).
+     1차 지시서가 "기존 창업 · 폐업 데이터를 새 사업에 활용하지 않는다"
+     고 적었습니다. 같은 표에 옛 자료가 그대로 남아 있으므로(지우지
+     않는 것이 맞습니다 — 손님 기록입니다), 지표가 `side` 로 갈라야
+     합니다. 안 가르면 **골프올인원이 하지 않은 거래가 골프의 실적**이
+     되고, 그건 사는 쪽에 하는 거짓말입니다. */
+  psql("update deal set signed_at = now() where request_id = '" + R + "'");
+  const ym = psql("select to_char(now() at time zone 'Asia/Seoul','YYYY-MM')");
+  const met = allowed("select become('" + V + "'); select biz_metrics(" +
+    "jsonb_build_object('from','" + ym + "','to','" + ym + "'))::text");
+  ok("매각 지표가 이 DB 에서 돈다", met.yes, met.why);
+  const m0 = met.yes ? JSON.parse(met.out).months[0] : {};
+  ok("  ⚠️ 중고폰 요청이 '들어온 요청' 에 **안 들어간다**", m0.req === 0, m0.req);
+  ok("  ⚠️ 중고폰 계약이 '계약' 에 **안 들어간다**", m0.deals === 0, m0.deals);
+  ok("  ⚠️ 중고폰 거래액 120,000 원이 **거래액에 안 들어간다**", m0.gmv === 0, m0.gmv);
+  ok("  ⚠️ 옛 기록을 남긴 사람이 **활동 회원에 안 들어간다**", m0.users === 0, m0.users);
+  ok("  그래도 비율은 **0% 가 아니라 빈 값**이다 (잴 것이 없는 달입니다)",
+     m0.rate_valid === null, String(m0.rate_valid));
+
   /* ⚠️ 옛 업체 계정을 이으면 사업자 모자가 저절로 붙는가 (0028) */
   psql("update account set role='provider', provider_id='old-shop' where id='" + U + "'");
   ok("옛 계정을 업체에 이으면 사업자 모자가 붙는다",

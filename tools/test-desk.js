@@ -80,7 +80,7 @@ const QUOTE = {
 };
 
 /* ── 가짜 Supabase ────────────────────────────────────────────────── */
-function stub(p, who, tables){
+function stub(p, who, tables, rpcs){
   const sent = [];
   return Promise.all([
     p.route("**/api/session", function(r){
@@ -91,12 +91,18 @@ function stub(p, who, tables){
     p.route(FAKE + "/rest/v1/**", function(r){
       const u = r.request().url();
       if(u.indexOf("/rpc/") >= 0){
-        sent.push({ name: u.split("/rpc/")[1].split("?")[0],
-                    body: r.request().postData() });
+        const fn = u.split("/rpc/")[1].split("?")[0];
+        sent.push({ name: fn, body: r.request().postData() });
         /* ⚠️ 문이 무엇을 돌려주는지는 흉내만 냅니다 — 화면은 돌아오면
-           다시 읽습니다 (그 길이 실제로 도는지도 여기서 드러납니다). */
+           다시 읽습니다 (그 길이 실제로 도는지도 여기서 드러납니다).
+           ⚠️ 돌려줄 것이 있는 문은 `rpcs` 로 줍니다 (지표처럼 **받은
+           것을 그리는** 화면은 그래야 잴 것이 생깁니다). */
+        const v = (rpcs || {})[fn];
+        if(v === null)
+          return r.fulfill({ status:500, contentType:"application/json",
+                             body: JSON.stringify({ message:"못 읽었습니다" }) });
         return r.fulfill({ status:200, contentType:"application/json",
-                           body: JSON.stringify(null) });
+                           body: JSON.stringify(v === undefined ? null : v) });
       }
       sent.push({ name:"GET", body:u });
       /* 어느 표를 묻는지는 주소 앞머리로 가릅니다 */
@@ -123,10 +129,10 @@ function stub(p, who, tables){
   const base = "http://127.0.0.1:" + PORT;
   const view = { width:1280, height:900 };
 
-  async function open(path, who, tables){
+  async function open(path, who, tables, rpcs){
     const p = await b.newPage({ viewport: view });
     const errs = watch(p);
-    const sent = await stub(p, who, tables);
+    const sent = await stub(p, who, tables, rpcs);
     await p.goto(base + path, { waitUntil:"networkidle" });
     await p.waitForTimeout(450);
     return { p: p, errs: errs, sent: sent };
@@ -457,6 +463,128 @@ function stub(p, who, tables){
   ok("무엇을 해야 하는지 말해 준다", /배정 가능/.test(t), t.slice(-200));
   await s.p.close();
 
+  /* ══ /admin — 매각 지표 (2차 지시서 §9) ══════════════════════ */
+  console.log("\n── /admin 매각 지표 — 운영자가 아니면 세러 가지도 않습니다");
+  /* ⚠️ DB 가 내려주는 꼴 그대로 흉내 냅니다 (0033 의 biz_metrics).
+     ⚠️⚠️ **0 과 null 을 둘 다** 넣습니다 — 화면이 그 둘을 가르는지가
+     여기서만 드러납니다 ("0%" 와 "못 냄" 은 다른 말입니다). */
+  const MET = {
+    from:"2029-11", to:"2029-12",
+    months:[
+      { month:"2029-11", req:0, req_test:0, assigned:0, accepted:0,
+        rate_valid:null, quoted:0, deals:0, gmv:0, gmv_missing:0,
+        fee_paid:0, fee_set:0, fee_due:0, ad:0, mship:0, users:0 },
+      { month:"2029-12", req:3, req_test:1, assigned:1, accepted:3,
+        rate_valid:100.0, quoted:2, deals:3, gmv:3000000, gmv_missing:1,
+        fee_paid:0, fee_set:330000, fee_due:330000, ad:500000,
+        mship:99000, users:2 }
+    ],
+    cannot:["방문자 기준 MAU — 방문을 세는 장치가 없습니다.",
+            "광고 · 멤버십의 입금 — 기록을 두는 표가 아직 없습니다."]
+  };
+  const ADMT2 = { request:[], provider:[], request_item:[], assignment:[] };
+
+  s = await open("/admin", { role:"customer", name:"일반회원" }, ADMT2,
+                 { biz_metrics: MET });
+  ok("지표가 아예 안 그려진다",
+     (await s.p.locator("#metricbox .mt-g").count()) === 0);
+  ok("지표를 **세러 가지도 않는다**",
+     s.sent.filter(function(x){ return x.name === "biz_metrics"; }).length === 0,
+     JSON.stringify(s.sent));
+  await s.p.close();
+
+  console.log("\n── 운영자는 봅니다 — ⚠️ 숫자 옆에 **뜻**이 같이 나옵니다");
+  s = await open("/admin", { role:"admin", name:"관리자" }, ADMT2,
+                 { biz_metrics: MET });
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  call = s.sent.filter(function(x){ return x.name === "biz_metrics"; })[0];
+  ok("biz_metrics 를 부른다", !!call, JSON.stringify(s.sent));
+  const mb = call ? JSON.parse(call.body) : {};
+  ok("  기간을 **YYYY-MM 꼴로** 보낸다 (DB 가 그것을 읽습니다)",
+     !!mb.p && /^\d{4}-\d{2}$/.test(mb.p.from) && /^\d{4}-\d{2}$/.test(mb.p.to),
+     JSON.stringify(mb.p));
+  ok("  기본이 열두 달이다 (from 과 to 가 11달 차이)",
+     !!mb.p && (function(){
+       const a = mb.p.from.split("-"), c = mb.p.to.split("-");
+       return (Number(c[0]) * 12 + Number(c[1])) - (Number(a[0]) * 12 + Number(a[1])) === 11;
+     })(), JSON.stringify(mb.p));
+
+  const groups = await s.p.locator("#metricbox .mt-g").count();
+  ok("묶음이 그려진다", groups >= 3, groups);
+  t = (await s.p.textContent("#metricbox")) || "";
+  ok("달 이름이 사람 말이다 (2029-12 가 아니라 2029년 12월)",
+     t.indexOf("2029년 12월") >= 0 && t.indexOf("2029-12") < 0, t.slice(0, 160));
+  ok("지표 이름이 나온다", t.indexOf("유효 상담") >= 0 && t.indexOf("거래액") >= 0);
+  ok("⚠️ **뜻이 숫자와 같은 화면에** 나온다",
+     (await s.p.locator("#metricbox .mt-what").count()) > 0 &&
+     t.indexOf("업체가 **수락한**".replace(/\*\*/g, "")) >= 0, t.slice(0, 400));
+  ok("검사용을 빼고 센다고 적는다", /검사용 업체는 빼고/.test(t), t.slice(0, 200));
+
+  /* ⚠️⚠️ **0 과 '못 냄' 을 가르는가** — 이 화면에서만 드러납니다 */
+  ok("요청 0건인 달은 비율이 **—** 다 (0% 가 아니다)",
+     t.indexOf("—") >= 0, t.slice(0, 300));
+  ok("  그 달의 요청은 **0건**으로 찍힌다 (— 가 아니다)",
+     t.indexOf("0건") >= 0);
+  ok("  전부 수락한 달은 **100%** 다", t.indexOf("100%") >= 0, t);
+  ok("돈은 천 단위로 끊어 찍는다", t.indexOf("3,000,000원") >= 0, t);
+
+  /* ⚠️⚠️ 거래액과 플랫폼 수입이 **같은 표에 있으면 더하게 됩니다** */
+  const gmvTable = await s.p.evaluate(function(){
+    const gs = Array.prototype.slice.call(document.querySelectorAll("#metricbox .mt-g"));
+    function findIn(name){
+      for(let i = 0; i < gs.length; i++)
+        if((gs[i].textContent || "").indexOf(name) >= 0) return i;
+      return -1;
+    }
+    return { gmv: findIn("거래액"), fee: findIn("받은 수수료") };
+  });
+  ok("⚠️ 거래액과 '받은 수수료' 가 **다른 표**에 있다 (§9 분리)",
+     gmvTable.gmv >= 0 && gmvTable.fee >= 0 && gmvTable.gmv !== gmvTable.fee,
+     JSON.stringify(gmvTable));
+  ok("  거래액 묶음이 '플랫폼 매출이 아니다' 라고 적는다",
+     /플랫폼 매출이 아닙니다/.test(t), t.slice(0, 500));
+  ok("  광고 · 멤버십에 **받은 기록이 없다**고 적는다",
+     /청구 기록 없음/.test(t) || /받은 기록이 없습니다/.test(t), t);
+
+  /* ⚠️⚠️ 못 재는 것을 **숫자와 같은 화면에** */
+  ok("못 재는 것을 같이 찍는다",
+     (await s.p.locator("#metricbox .mt-cant li").count()) === 2,
+     await s.p.locator("#metricbox .mt-cant li").count());
+  ok("  방문자 MAU 를 못 잰다고 적는다", /방문자 기준 MAU/.test(t));
+  ok("누르는 것이 전부 40px 이상이다", (await tapsOk(s.p, "#metricbox")) === 0,
+     await tapsOk(s.p, "#metricbox"));
+  /* ⚠️ `<select>` 안의 글자는 낱말 잘림 검사에도 가로 스크롤 검사에도
+     안 걸립니다 — 높이만이라도 여기서 잽니다. */
+  const selH = await s.p.evaluate(function(){
+    const e = document.getElementById("mt-span");
+    return e ? e.getBoundingClientRect().height : 0;
+  });
+  ok("기간 고르개도 40px 이상이다", selH >= 40, selH);
+
+  /* 기간을 바꾸면 **다시 묻는가** (눌러도 아무 일이 안 나면 안 됩니다) */
+  await s.p.selectOption("#metricbox #mt-span", "3");
+  await s.p.waitForTimeout(350);
+  const calls = s.sent.filter(function(x){ return x.name === "biz_metrics"; });
+  ok("기간을 바꾸면 **다시 묻는다**", calls.length === 2, calls.length);
+  const mb2 = calls.length > 1 ? JSON.parse(calls[1].body) : {};
+  ok("  이번에는 석 달을 묻는다",
+     !!mb2.p && (function(){
+       const a = mb2.p.from.split("-"), c = mb2.p.to.split("-");
+       return (Number(c[0]) * 12 + Number(c[1])) - (Number(a[0]) * 12 + Number(a[1])) === 2;
+     })(), JSON.stringify(mb2.p));
+  await s.p.close();
+
+  console.log("\n── 지표를 못 읽었을 때 — 0 으로 찍지 않습니다");
+  s = await open("/admin", { role:"admin", name:"관리자" }, ADMT2,
+                 { biz_metrics: null });
+  t = (await s.p.textContent("#metricbox")) || "";
+  ok("읽지 못하면 그렇다고 말한다", /못 읽었습니다|읽지 못/.test(t), t.slice(0, 120));
+  ok("⚠️ 읽지 못한 것을 **0 으로 찍지 않는다**",
+     t.indexOf("0건") < 0 && t.indexOf("0원") < 0, t.slice(0, 200));
+  ok("다시 읽을 길을 낸다",
+     (await s.p.locator("#metricbox button[data-do='again']").count()) === 1);
+  await s.p.close();
+
   /* ══ /my — 견적 비교 ══════════════════════════════════════════ */
   console.log("\n── /my 손님이 받은 견적을 견줍니다");
   const Q2 = Object.assign({}, QUOTE, {
@@ -548,6 +676,57 @@ function stub(p, who, tables){
      !!call && JSON.parse(call.body).p_no === "SW-1111-2222" &&
      JSON.parse(call.body).p_tel === "010-1234-5678", call && call.body);
   await s.p.close();
+
+  /* ══ 폰 폭 ═══════════════════════════════════════════════════
+     ⚠️⚠️⚠️ **`tools/check-screens.js` 는 이 세 화면을 영원히 못 봅니다.**
+     로그인해야 그려지는 자리라, 그 도구에는 **빈 상자**로만 보입니다 —
+     그래서 네 폭에서 재는 전수 점검이 여기서는 아무 일도 안 합니다.
+     실제로 그 틈으로 고장이 하나 지나갔습니다: 격자 칸의 기본
+     `min-width:auto` 때문에 지표 표(min-width 640px)가 칸을 벌려
+     **390px 화면이 688px 로 밀렸습니다.** 아무 검사도 안 잡았습니다.
+     ⚠️ 그래서 여기서 **직접** 잽니다.
+     ⚠️⚠️ 재는 것은 **화면 전체가 미는가**입니다 — 표가 제 상자 안에서
+     가로로 도는 것은 일부러 그렇게 둔 것입니다 (약관 표와 같은 꼴). */
+  console.log("\n── ⚠️ 폰 폭에서 화면이 가로로 밀리나 (전수 점검이 못 보는 자리)");
+  const PHONE = { width: 390, height: 900 };
+  async function phone(path, who, tables, rpcs){
+    const p = await b.newPage({ viewport: PHONE });
+    await stub(p, who, tables, rpcs);
+    await p.goto(base + path, { waitUntil:"networkidle" });
+    await p.waitForTimeout(500);
+    const r = await p.evaluate(function(sel){
+      const box = document.querySelector(sel);
+      const small = [];
+      if(box) Array.prototype.forEach.call(box.querySelectorAll("*"), function(e){
+        if(!e.firstChild || e.firstChild.nodeType !== 3) return;
+        if(!(e.textContent || "").trim()) return;
+        const fs = parseFloat(getComputedStyle(e).fontSize);
+        if(fs < 12) small.push(e.tagName + " " + fs + "px");
+      });
+      return { doc: document.documentElement.scrollWidth,
+               win: window.innerWidth,
+               drawn: !!box && box.children.length > 0,
+               small: small.slice(0, 5) };
+    }, sel0);
+    await p.close();
+    return r;
+  }
+  const sel0 = "body";
+  const phones = [
+    ["/desk 업체 작업실", "/desk", PRO,
+     { assignment:[asg(quoted, "accepted")], request:[quoted],
+       quote:[QUOTE], request_item:ITEMS }, {}],
+    ["/admin 배정 · 지표", "/admin", { role:"admin", name:"관리자" },
+     ADMT, { biz_metrics: MET }],
+    ["/my 견적 비교", "/my", { role:"customer", name:"홍길동" }, MYT, {}]
+  ];
+  for(const [label, path, who, tables, rpcs] of phones){
+    const r = await phone(path, who, tables, rpcs);
+    ok(label + " — 그려지기는 한다 (빈 화면을 재고 통과하지 않는다)", r.drawn, JSON.stringify(r));
+    ok(label + " — **가로로 안 밀린다**", r.doc <= r.win + 1,
+       "문서 " + r.doc + "px · 화면 " + r.win + "px");
+    ok(label + " — 12px 미만 글자가 없다", r.small.length === 0, r.small.join(" · "));
+  }
 
   await b.close(); srv.close();
   console.log("\n" + ran + "건 중 " + (ran - bad) + "건 통과 · " + bad + "건 실패");

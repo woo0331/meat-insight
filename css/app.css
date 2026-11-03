@@ -486,7 +486,17 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
    늘어세운 적이 있습니다 — 접두사 dk- · as- · rq- 를 붙입니다.
    ⚠️ 위아래 여백만 바꿀 때는 padding-block 입니다. padding 줄임꼴로
    적으면 좌우가 0 이 되어 글이 화면 끝에 붙습니다. */
+/* ⚠️⚠️⚠️ **격자 칸은 제 내용만큼 벌어집니다.** 격자 칸의 기본
+   `min-width:auto` 때문에, 안에 가로 스크롤 상자(.doc-t — 표의
+   min-width 가 640px)가 들어오면 **칸이 640px 로 벌어져 화면 전체가
+   가로로 밀립니다.** 폰에서 390px 화면이 688px 가 됐습니다.
+   ⚠️ `overflow-x:auto` 를 걸어 두었다고 안심하면 안 됩니다 — 그것은
+   **칸이 좁을 때** 도는 것이고, 칸이 벌어지면 돌 일이 없습니다.
+   ⚠️⚠️ 이 자리는 `tools/check-screens.js` 가 **영원히 못 잡습니다**
+   (로그인한 화면이라 보지 못합니다) — `tools/test-desk.js` 가 폰
+   폭에서 직접 잽니다. */
 .deskbox{ display:grid; gap:16px; }
+.deskbox > *{ min-width: 0; }
 .dk-c{ font-size:15px; color: var(--ink3); }
 .dk-r{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
        padding:18px 20px; }
@@ -564,3 +574,40 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .mycard-b{ margin-top:14px; }
 .cnt-t{ border-color: var(--warn); background: var(--warn-soft); }
 .cnt-t dt{ color: var(--warn-text); }
+
+/* ── 매각 지표 (2차 지시서 §9) ──────────────────────────────────
+   ⚠️⚠️ **숫자 옆에 뜻이 같이 나옵니다.** 뜻을 작게 줄이고 싶어지는
+   자리인데, 12px 미만은 금지입니다 — 읽히지 않으면 없는 것과 같고,
+   그러면 숫자만 나가는 꼴이 됩니다. */
+.mt-pick{ display:flex; align-items:center; gap:10px; margin:14px 0 18px; }
+.mt-pick label{ font-size:14.5px; font-weight:700; color: var(--ink); }
+/* ⚠️ 누르는 것은 40px 이상 — padding 만으로 만들면 다시 낮아집니다 */
+.mt-pick select{ min-height:44px; padding:0 14px; font-size:15px;
+                 border:1.5px solid var(--line); border-radius: var(--r-sm);
+                 background:#fff; color: var(--ink); appearance:none; }
+.mt-pick select:focus{ outline:2px solid var(--grn); outline-offset:1px; }
+
+.mt-g{ margin-top:26px; }
+.mt-g h3{ font-size:17.5px; }
+.mt-note{ margin-top:6px; font-size:14px; color: var(--ink3);
+          word-break: keep-all; overflow-wrap: anywhere; }
+.mt-g .doc-t{ margin-top:12px; }
+/* 달이 늘어서면 가로로 넘칩니다 — ⚠️ 칸째 스크롤입니다 */
+.mt-g .doc-t table{ min-width:640px; }
+.mt-g th[scope="row"]{ width:34%; min-width:220px; white-space:normal; }
+.mt-what{ display:block; margin-top:3px; font-size:12.5px; font-weight:400;
+          color: var(--ink3); word-break: keep-all; overflow-wrap: anywhere; }
+.mt-g td{ text-align:right; font-variant-numeric: tabular-nums;
+          font-size:15.5px; color: var(--ink); white-space:nowrap; }
+
+/* ⚠️⚠️ 못 재는 것은 **숫자와 같은 화면에** 둡니다 — 접어 두지 않습니다 */
+.mt-cant{ margin-top:26px; background: var(--warn-soft);
+          border:1.5px solid var(--warn); border-radius: var(--r);
+          padding:18px 20px; }
+.mt-cant h3{ font-size:16.5px; color: var(--warn-text); }
+.mt-cant ul{ display:grid; gap:7px; margin-top:10px; }
+.mt-cant li{ position:relative; padding-left:16px; font-size:14.5px;
+             color: var(--ink2); word-break: keep-all; overflow-wrap: anywhere; }
+.mt-cant li::before{ content:""; position:absolute; left:0; top:9px;
+                     width:6px; height:6px; border-radius:50%;
+                     background: var(--warn); }

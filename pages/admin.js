@@ -29,11 +29,17 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="assignbox" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ 매각 지표도 **따로 그립니다** (js/metrics.js). 사업의 값을
+     매기는 숫자라, 현황 세는 코드와 섞어 두면 한쪽을 고칠 때 지표가
+     같이 흔들립니다. */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="metricbox" class="none" hidden></div></div></section>';
+
   return {
     route: "/admin", title: "관리자", noindex: true, unlinked: true,
     desc: "골프올인원 관리자 화면.",
     body: body,
-    js: ["/js/data/korean.js", "/js/data/deal.js", "/js/auth.js",
-         "/js/account.js", "/js/assign.js"]
+    js: ["/js/data/korean.js", "/js/data/deal.js", "/js/data/metrics.js",
+         "/js/auth.js", "/js/account.js", "/js/assign.js", "/js/metrics.js"]
   };
 };

@@ -2,8 +2,14 @@
 /* ════════════════════════════════════════════════════════════════════
    올리기 전에 거치는 문 하나 — 여기가 초록일 때만 main 으로 갑니다
 
-     node tools/ship.js            전부 돌립니다
+     node tools/ship.js            전부 돌립니다 (합치지 않습니다)
      node tools/ship.js --quick    Postgres 가 필요한 것은 건너뜁니다
+     node tools/ship.js --merge    전부 초록이면 **main 으로 합치고 올립니다**
+
+   ⚠️⚠️ **--merge 는 곧 배포입니다.** main 이 움직이면 Vercel 이 그
+   순간 손님 화면을 바꿉니다. 그래서 기본값이 아니고, CI 도 사장님이
+   단추를 누를 때만 붙입니다. 건너뛴 묶음이 하나라도 있으면 합치지
+   않습니다 — 안 돌려 본 것이 깨진 채로 나갑니다.
 
    ⚠️⚠️ **올리는 것이 곧 배포입니다.** main 이 움직이면 손님 화면이
    바뀝니다. 그래서 여기를 지나지 않은 것은 올리지 않습니다.
@@ -35,7 +41,11 @@ const STEPS = [
   ["접근성을 잽니다",            ["tools/check-a11y.js"],         false],
   ["입점 신청 양식을 눌러 봅니다", ["tools/test-join.js"],          false],
   ["관리자 화면을 눌러 봅니다",    ["tools/test-admin.js"],         false],
-  ["DB 를 눌러 봅니다",          ["tools/test-sql.js"],           true]
+  ["DB 를 눌러 봅니다",          ["tools/test-sql.js"],           true],
+  /* ⚠️⚠️ 운영 DB 에 올렸을 때 기존 자료가 어떻게 되는지 — 지시서 11번이
+     "기존 기능과 데이터에 대한 영향 및 테스트 결과를 확인한 뒤" 라고
+     적은 자리입니다. 글로 괜찮다고 쓰지 않고 실제로 해 봅니다. */
+  ["올렸을 때 기존 자료가 어떻게 되나", ["tools/test-upgrade.js"],   true]
 ];
 
 let bad = 0, skipped = [];
@@ -76,6 +86,42 @@ if(dirty){
   dirty.split("\n").forEach(l => console.log("      " + l));
 }else{
   console.log("   ✅ 같습니다");
+}
+
+/* ── 초록이면 main 으로 (--merge 일 때만) ──────────────────────── */
+const wantMerge = process.argv.indexOf("--merge") >= 0;
+if(wantMerge && !bad && !skipped.length){
+  console.log("\n▶ main 으로 합칩니다  (--merge)");
+  const br = spawnSync("git", ["rev-parse", "--abbrev-ref", "HEAD"],
+    { cwd: ROOT, stdio:["ignore","pipe","pipe"] }).stdout.toString().trim();
+  /* ⚠️ fast-forward 가 아니면 합치지 않습니다 — 합치기 커밋을 만들면
+     되돌릴 때 길이 꼬입니다. */
+  const ff = spawnSync("git", ["merge-base", "--is-ancestor", "origin/main", br],
+    { cwd: ROOT, stdio:"ignore" });
+  if(ff.status !== 0){
+    bad++;
+    console.log("   ❌ origin/main 이 이 브랜치의 조상이 아닙니다 — 먼저 가져와 맞추세요.");
+  }else{
+    const steps = [
+      ["git", ["checkout", "main"]],
+      ["git", ["merge", "--ff-only", br]],
+      ["git", ["push", "origin", "main"]],
+      ["git", ["checkout", br]]
+    ];
+    for(const [c, a] of steps){
+      const r = spawnSync(c, a, { cwd: ROOT, stdio:["ignore","pipe","pipe"] });
+      if(r.status !== 0){
+        bad++;
+        console.log("   ❌ " + c + " " + a.join(" ") + "\n      " +
+          (r.stderr || "").toString().trim().split("\n").slice(0, 3).join("\n      "));
+        break;
+      }
+    }
+    if(!bad) console.log("   ✅ main 으로 올렸습니다 — **손님 화면이 바뀝니다.**");
+  }
+}else if(wantMerge && skipped.length){
+  bad++;
+  console.log("\n❌ 건너뛴 묶음이 있어 합치지 않습니다 — 안 돌려 본 것이 깨진 채 나갑니다.");
 }
 
 const sec = ((Date.now() - t0) / 1000).toFixed(1);

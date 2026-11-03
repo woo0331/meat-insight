@@ -14,7 +14,9 @@
 | 화면 21장 | `build.js` 가 `pages/*.js` 에서 찍습니다 |
 | 분류 10 · 하위 59 | `js/data/catalog.js` — 주소는 `amCatUrl()` **한 함수** |
 | DB | `db/migrations/0001~0028` · 사장님이 붙여 넣는 것은 `db/apply-from-0008.sql` |
-| 검사 열두 묶음 | `node tools/ship.js` (초록일 때만 올립니다) |
+| 검사 열세 묶음 | `node tools/ship.js` (초록일 때만 올립니다) |
+| 배포 절차 | **`DEPLOY.md`** — 순서 · 확인 · 되돌리기 |
+| CI | `.github/workflows/ship.yml` — ⚠️ **자동 배포는 꺼 두었습니다** |
 | 주소 · 캐시 · 보안 헤더 | `vercel.json` |
 | 앞 서비스 167개 주소 → **410** | `api/gone.js` + `vercel.json` 의 rewrite |
 
@@ -30,7 +32,10 @@ Supabase   db/apply-from-0008.sql 를 붙여 넣기 (0008~0028)
 ```
 
 ⚠️⚠️ **올리는 것이 곧 배포입니다** — `main` 이 움직이면 손님 화면이
-바뀝니다. `node tools/ship.js` 가 초록일 때만 올리세요. 잘못 올라갔으면
+바뀝니다. 올리는 길은 하나입니다: **GitHub → Actions → "검사 (배포는
+단추로)" → Run workflow → deploy 를 true 로** (손으로는
+`node tools/ship.js --merge`). 작업 브랜치에 push 해도 `main` 은
+**저절로 안 움직입니다.** 잘못 올라갔으면
 `git revert` 로 **되돌린 커밋을 새로 올립니다** (force 로 밀면 손님이
 받아 간 자산 주소가 사라집니다).
 
@@ -322,6 +327,7 @@ git show 4563539:CLAUDE.md          앞 서비스의 작업 기억 (6,215줄)
 | `test-join` | 입점 신청 양식을 **눌러 봅니다** (보내는 꾸러미까지 뜯어 봅니다) |
 | `test-admin` | 관리자 화면 — 운영자가 아니면 한 줄도 안 보이나 · esc() |
 | `test-sql` | 임시 Postgres 를 띄워 DB 를 눌러 봅니다 (105건) |
+| `test-upgrade` | **운영 DB 에 올렸을 때 기존 자료가 어떻게 되는가** (32건) — 0001~0007 상태를 만들고 옛 손님 자료를 넣은 뒤 사장님이 붙여 넣을 파일을 그대로 돌립니다 |
 | `make-apply` | 사장님이 붙여 넣는 파일이 마이그레이션과 같은가 |
 | (끝) | **빌드 결과가 커밋과 같은가** |
 

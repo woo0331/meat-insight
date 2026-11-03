@@ -12,7 +12,10 @@
 #
 #  ⚠️⚠️ 빼면 안 되는 것 — 손대지 마세요
 #     api/            Vercel 함수입니다 (빼면 접수가 통째로 죽습니다)
-#     middleware.js   Edge 미들웨어입니다 (/admin 잠금)
+#     ⚠️ middleware.js 는 **되살리지 않았습니다** (앞 서비스의 /admin
+#        Edge 잠금). 지금 /admin 은 화면이 역할을 보고 아무것도 안
+#        그리고, 자료는 RLS 가 막습니다. 한 겹 더 두시려면
+#        git show 4563539:middleware.js 입니다.
 #     package.json    Vercel 이 읽습니다
 #     js/ css/ dist/ img/   손님이 받는 자산
 #     **/index.html   손님 화면 스무 개
@@ -32,6 +35,10 @@
 tools/
 
 # 뿌리의 빌드 · 검사 스크립트
+# ⚠️ 2026-11-03 — 빌드가 build-pages.js · check.js 에서 build.js 로
+#    바뀌었습니다. 옛 이름도 그대로 둡니다 (되살리실 때를 위해).
+build.js
+pages/
 build-pages.js
 check.js
 
@@ -54,3 +61,8 @@ RESTORE-phoneway.md
 #    (꺼내 보시려면 git show 6d85a17:js/pages/home-retired.js).
 #    ⚠️ 내려온 코드를 다시 파일로 가르시면 그날 여기에도 넣으세요 —
 #    안 넣으면 손님이 그 파일을 같이 받습니다.
+
+# 2026-11-03 — 골프올인원
+#  pages/      빌드가 읽는 화면 틀입니다 (손님이 받는 것은 찍힌 index.html)
+#  DEPLOY.md   배포 절차 — 운영자용
+DEPLOY.md

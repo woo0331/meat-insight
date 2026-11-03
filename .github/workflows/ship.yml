@@ -1,0 +1,97 @@
+# ════════════════════════════════════════════════════════════════════
+#  작업 브랜치에 올리면 — 전부 검사합니다. **합치지는 않습니다.**
+#
+#  ⚠️⚠️ main 에 합치는 것이 곧 배포입니다. Vercel 이 main 을 보고
+#  곧바로 올립니다 — 그 순간 손님 화면이 바뀝니다.
+#
+#  ⚠️⚠️ **자동 배포를 일부러 꺼 두었습니다.** 앞 서비스에서는 초록이면
+#  저절로 합쳤는데, 지금은 사업자 정보 여덟 칸이 비어 있어 그대로
+#  나가면 전자상거래법 제10조 위반입니다. 올리는 것은 사장님이
+#  **단추를 눌렀을 때만** 합니다 —
+#
+#      GitHub → Actions → "검사 (배포는 단추로)" → Run workflow
+#      → deploy 를 true 로 → Run
+#
+#  ⚠️ 비밀을 하나도 안 씁니다. 여기서 쓰는 토큰은 GitHub 이 일감에
+#  주는 것뿐이고, Vercel 은 main 을 스스로 보고 배포합니다.
+#  ⚠️ 손으로 멈추시려면 — GitHub → Actions → 이 워크플로 → Disable.
+# ════════════════════════════════════════════════════════════════════
+name: 검사 (배포는 단추로)
+
+on:
+  push:
+    branches: ["claude/**"]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "초록이면 main 으로 합칠까요 (곧 배포입니다)"
+        type: boolean
+        default: false
+
+# ⚠️ 두 줄이 동시에 main 을 밀면 한쪽이 ff 에서 떨어집니다 — 줄을 세웁니다.
+concurrency:
+  group: ship-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  gate:
+    name: 전수 검사
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      # ⚠️ fetch-depth:0 — ff 가 되는지 보고 main 을 밀어야 해서
+      #    역사가 다 필요합니다.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # ⚠️ 개발 환경과 **같은 판**을 박습니다 — 판이 다르면 화면을 재는
+      #    값이 미묘하게 달라져 "여기서는 초록인데 CI 는 빨강" 이 됩니다.
+      - name: playwright + 크로미움
+        run: |
+          set -euo pipefail
+          npm i -g playwright@1.56.1
+          GROOT="$(npm root -g)"
+          playwright install --with-deps chromium
+          echo "NODE_PATH=$GROOT" >> "$GITHUB_ENV"
+          NODE_PATH="$GROOT" node -e 'require("playwright");console.log("playwright OK")'
+
+      # ⚠️⚠️ tools/test-sql.js 와 test-upgrade.js 는 initdb 로 임시
+      #    클러스터를 **스스로** 띄웁니다. 없으면 exit 2 로 끝나고,
+      #    ship.js 가 그것을 **통과로 치지 않습니다** — 그래서 깔아 둡니다.
+      - name: Postgres (initdb · psql)
+        run: |
+          set -euo pipefail
+          BIN="$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | tail -1 || true)"
+          if [ -z "$BIN" ] || [ ! -x "$BIN/initdb" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq postgresql
+            BIN="$(ls -d /usr/lib/postgresql/*/bin | tail -1)"
+          fi
+          echo "$BIN" >> "$GITHUB_PATH"
+          "$BIN/initdb" --version
+
+      - name: 누구로 커밋하나
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # 평소 — 검사만 합니다. main 은 움직이지 않습니다.
+      - name: 검사 전부
+        if: github.event_name == 'push' || !inputs.deploy
+        run: node tools/ship.js
+
+      # 사장님이 단추를 누르셨을 때만 — 초록이면 main 으로
+      - name: 검사 전부 + main 으로 (배포)
+        if: github.event_name == 'workflow_dispatch' && inputs.deploy
+        run: node tools/ship.js --merge

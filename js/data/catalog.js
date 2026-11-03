@@ -98,7 +98,7 @@ window.AM_CATS = [
       { key:"jo-game",  name:"친선 경기 · 대회" }
     ]},
 
-  { key:"range", name:"골프 연습장", icon:"tee", kind:"provider",
+  { key:"range", name:"골프 연습장", icon:"balls", kind:"provider",
     lead:"실내 · 실외 · 스크린",
     kw:"연습장 실내연습장 실외연습장 스크린골프 타석 퍼팅연습 연습장회원권 타석권",
     items:[
@@ -145,7 +145,7 @@ window.AM_CATS = [
       { key:"tr-move",  name:"이동 · 렌터카" }
     ]},
 
-  { key:"career", name:"골프 인력 · 비즈니스", icon:"hands", kind:"board",
+  { key:"career", name:"골프 인력 · 비즈니스", icon:"case", kind:"board",
     lead:"구인 · 구직 · 제휴",
     kw:"구인 구직 채용 알바 캐디 프로채용 매장양도 창업 제휴 입점 도매",
     items:[

@@ -1,19 +1,18 @@
 /* ==================================================================
-   0008 ~ 0023 를 한 번에 —
+   0008 ~ 0026 를 한 번에 —
    Supabase SQL 편집기에 **이 파일을 통째로** 붙여 넣고 Run 하세요.
    ==================================================================
    WARN 빌드가 만드는 파일입니다 — 손으로 고치지 마세요.
-   db/migrations 의 16개를 번호 차례로 이어 붙인 것이고
-   한 글자도 바꾸지 않았습니다.
+   db/migrations 의 19개를 번호 차례로 이어 붙인 것이고
+   한 글자도 바꾸지 않았습니다. (node tools/make-apply.js)
 
    이미 0007 까지 돌려 두신 DB 에 쓰는 것입니다.
-   지금 몇 번째 판인지는 /admin 1번 칸이 말해 줍니다 (남은 파일
-   이름까지). 그보다 앞선 판이면 db/README.md 의 차례대로 먼저
-   올리세요 — 이 파일은 건너뛴 번호를 메워 주지 않습니다.
+   그보다 앞선 판이면 db/README.md 의 차례대로 먼저 올리세요 —
+   이 파일은 건너뛴 번호를 메워 주지 않습니다.
 
-   돌린 뒤에는 db/verify.sql 을 붙여 넣어 **열세 줄이 전부 OK** 인지
-   보세요. 중간에서 멈추면 그 파일 하나만 따로 돌리고 그 다음부터
-   이어 가시면 됩니다 — 번호를 다시 쓰지 않습니다.
+   돌린 뒤에는 db/verify.sql 을 붙여 넣어 보세요. 중간에서 멈추면 그
+   파일 하나만 따로 돌리고 그 다음부터 이어 가시면 됩니다 — 번호를
+   다시 쓰지 않습니다.
 
    WARN 통째로 begin/commit 으로 감싸지 마세요 — 파일마다 제
    트랜잭션이 있고 0015 는 일부러 감싸지 않았습니다. */
@@ -3412,6 +3411,455 @@ grant execute on function save_provider_self(jsonb, text) to authenticated;
 
 
 insert into schema_version (n, name) values (23, '0023_provider_axes')
+on conflict (n) do nothing;
+
+commit;
+
+/* ---------------------------- 0024_golf_reset.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0024 — 중고폰 찌꺼기를 걷어냅니다 (골프올인원 전환)
+-- ════════════════════════════════════════════════════════════════════
+-- ⚠️⚠️ **운영 DB 에는 돌릴 것이 거의 없습니다.** 운영에는 0001~0007 만
+--   돌아가 있고, 여기서 지우는 것들(0012 의 수익상품 씨앗 · 0020 의 기기
+--   재고 · 0021 의 자체 매입 표시)은 **운영에서 한 번도 안 돈 파일**이
+--   만든 것입니다. 그래서 전부 if exists 로 적었습니다 — 없으면 조용히
+--   지나갑니다.
+--
+-- ⚠️⚠️ **번호를 다시 쓰지 않습니다.** 0012 · 0020 · 0021 파일은 그대로
+--   둡니다 (돌린 기록입니다). 지우는 일은 여기 새 번호로 적습니다.
+--
+-- ⚠️⚠️ **provider_guard() 를 여기서 다시 씁니다.** 0021 판이 new.inhouse
+--   를 보는데 그 칸을 지우기 때문입니다. 그래서 **0021 을 다시 붙여
+--   넣으면 이 파일이 한 일이 통째로 되돌아갑니다** (칸도 함수도 돌아
+--   옵니다). create or replace 는 에러를 안 냅니다 — 조용히 내려갑니다.
+--   되돌아갔는지는 이렇게 봅니다:
+--     select prosrc like '%inhouse%' from pg_proc where proname='provider_guard';
+--   true 면 0021 판입니다. 이 파일을 다시 올리세요.
+--
+-- 지우는 것
+--   ① 0012 가 심은 중고폰 수익상품 열일곱 줄 (offer)
+--   ② 0020 의 기기 재고 — device · device_check · device_cost · device_move
+--      와 그 문 넷, 종류 둘
+--   ③ 0021 의 provider.inhouse 와 set_provider_inhouse()
+-- 남기는 것 (업종과 무관합니다 — 지우면 안 됩니다)
+--   · account_role_guard()  역할 올리기를 막는 자물쇠 (0021)
+--   · provider_guard()      확인 배지 · 공개 여부 · 주소를 지키는 자물쇠
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+-- ① 중고폰 수익상품 ------------------------------------------------
+-- ⚠️ id 를 적어서 지웁니다. cats 로 지우면 나중에 같은 이름의 골프
+--    분류가 생겼을 때 엉뚱한 줄이 같이 사라집니다.
+delete from offer where id in (
+  'ph-buyin','tab-buyin','self-buyin','bid-match','broken-buyin','part-lot',
+  'fix-match','fix-data','shop-sale','lot-whole','auction-fee','corp-buyin',
+  'wipe-cert','export-buyer','inspect-fee','pickup-post','access-sale'
+);
+
+-- ② 기기 재고 ------------------------------------------------------
+-- ⚠️ 인자를 적지 않습니다. 손으로 적으면 **한 글자만 달라도 조용히
+--    안 지워집니다** (여기서 int 와 bigint 를 틀려 겪었습니다).
+--    이름이 하나뿐이라 Postgres 10 이상에서는 이름만으로 됩니다.
+drop function if exists make_device;
+drop function if exists add_device_cost;
+drop function if exists add_device_check;
+drop function if exists move_device;
+-- ⚠️ 보기(view)를 먼저 지웁니다 — 표를 보고 있어서 cascade 없이는
+--    안 지워집니다. cascade 를 쓰면 딸려 나가는 것이 더 있어도 조용히
+--    같이 사라져서, 무엇이 지워졌는지 알 수 없습니다.
+drop view if exists v_device_pl;
+drop table if exists device_cost;
+drop table if exists device_check;
+drop table if exists device_move;
+drop table if exists device;
+drop type if exists device_cost_kind;
+drop type if exists device_state;
+
+-- ③ 자체 매입 표시 --------------------------------------------------
+drop function if exists set_provider_inhouse;
+
+-- ⚠️ 칸을 지우기 전에 그 칸을 보는 자물쇠를 먼저 다시 씁니다.
+--    순서를 바꾸면 트리거가 없는 칸을 보고 업체 수정이 통째로 막힙니다.
+create or replace function provider_guard() returns trigger
+  language plpgsql security definer set search_path = public as $$
+begin
+  if my_role() = 'admin' then return new; end if;
+  if new.verified is distinct from old.verified then
+    raise exception '확인 배지는 플랫폼이 서류를 확인한 뒤에만 켜집니다';
+  end if;
+  if new.listed is distinct from old.listed then
+    raise exception '공개 여부는 관리자가 정합니다';
+  end if;
+  if new.id is distinct from old.id then
+    raise exception '업체 주소(id)는 바꿀 수 없습니다 — 이미 색인된 주소입니다';
+  end if;
+  return new;
+end $$;
+
+drop index if exists provider_inhouse_idx;
+alter table provider drop column if exists inhouse;
+
+insert into schema_version (n, name) values (24, '0024_golf_reset')
+on conflict (n) do nothing;
+
+commit;
+
+/* ---------------------------- 0025_account_hat.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0025 — 한 계정이 여러 역할을 갖습니다 (지시서 6번)
+-- ════════════════════════════════════════════════════════════════════
+-- 지시서 6번은 회원 유형을 다섯으로 적었습니다 — 일반 회원 · 개인
+-- 판매자 · 골프 프로 · 사업자 회원 · 관리자. 그리고 "하나의 계정이
+-- 여러 역할을 가질 수 있도록" 하라고 했습니다.
+--
+-- ⚠️⚠️ **권한과 능력을 같은 칸에 담지 않습니다.** 이 둘은 성격이
+--   완전히 다릅니다.
+--
+--     account.role (app_role)   **권한** — customer · provider · staff · admin
+--                               플랫폼이 정합니다. 손님이 못 바꿉니다.
+--                               0021 의 account_role_guard() 가 지킵니다.
+--     account_hat (member_hat)  **능력** — seller · pro · biz
+--                               무엇을 할 수 있는가. 여러 개 가집니다.
+--
+--   한 칸에 섞으면 "프로로 등록" 같은 평범한 길이 **권한을 올리는 길**과
+--   같은 문을 쓰게 됩니다. 그런 구조에서 권한 상승 사고가 납니다.
+--   ⚠️⚠️ **member_hat 에 admin 이 없습니다. 앞으로도 더하지 마세요.**
+--   역할 올리기는 SQL 로만 합니다 — 화면에서 관리자를 만들 수 없습니다.
+--
+--   seller  개인 판매자 — 중고 골프장터에 매물을 올립니다. 스스로 켭니다.
+--   pro     골프 프로 — 레슨 상품과 일정을 올립니다. 스스로 켭니다.
+--           ⚠️ 켰다고 "검증된 프로" 가 아닙니다. 확인 배지는 따로입니다
+--              (provider.verified 와 같은 선 — 서류를 본 뒤에만).
+--   biz     사업자 회원 — ⚠️⚠️ **스스로 못 켭니다.** 입점 신청
+--           (provider_apply) 이 승인될 때만 붙습니다. 스스로 켜지게 두면
+--           아무나 업체 화면을 열게 됩니다.
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+do $$ begin
+  if not exists (select 1 from pg_type where typname = 'member_hat') then
+    create type member_hat as enum ('seller', 'pro', 'biz');
+  end if;
+end $$;
+
+create table if not exists account_hat (
+  account_id uuid        not null references account(id) on delete cascade,
+  hat        member_hat  not null,
+  at         timestamptz not null default now(),
+  by_user    uuid references auth.users(id) on delete set null,
+  primary key (account_id, hat)
+);
+create index if not exists account_hat_hat_idx on account_hat (hat);
+
+alter table account_hat enable row level security;
+
+-- 자기 것만 봅니다. 관리자는 전부 봅니다.
+drop policy if exists hat_self  on account_hat;
+drop policy if exists hat_admin on account_hat;
+create policy hat_self  on account_hat for select using (account_id = auth.uid());
+create policy hat_admin on account_hat for all
+  using (my_role() in ('staff','admin')) with check (my_role() = 'admin');
+
+-- ⚠️⚠️ **쓰기 권한을 한 줄도 주지 않습니다.** 바꾸는 길은 아래 문 셋뿐
+--   입니다. insert 를 열어 두면 아무나 자기에게 biz 를 붙입니다.
+revoke all on account_hat from public, anon, authenticated;
+grant select on account_hat to authenticated;
+
+-- ── 읽는 함수 ─────────────────────────────────────────────────────
+-- ⚠️ 규칙은 **한 함수**에 두고 모두가 그것을 부릅니다. 화면마다 따로
+--    세면 한쪽만 고쳐서 조용히 어긋납니다.
+create or replace function my_hats() returns member_hat[]
+  language sql stable security definer set search_path = public as $$
+  select coalesce(array_agg(hat order by hat), '{}'::member_hat[])
+    from account_hat where account_id = auth.uid();
+$$;
+
+create or replace function has_hat(p_hat member_hat) returns boolean
+  language sql stable security definer set search_path = public as $$
+  select exists (select 1 from account_hat
+                  where account_id = auth.uid() and hat = p_hat);
+$$;
+
+-- ── 스스로 켜는 문 ────────────────────────────────────────────────
+create or replace function add_my_hat(p_hat member_hat, p_why text default null)
+  returns member_hat[] language plpgsql security definer set search_path = public as $$
+declare v_me uuid := auth.uid();
+begin
+  if v_me is null then
+    raise exception '로그인이 필요합니다';
+  end if;
+  -- ⚠️⚠️ 자물쇠마다 **다른 말**로 거절합니다. 같은 말로 거절하면
+  --    하나를 빼 봐도 다른 것이 먼저 막아서 검사가 엉뚱한 까닭으로
+  --    통과합니다 (앞 서비스에서 겪었습니다).
+  if p_hat = 'biz' then
+    raise exception '사업자 회원은 스스로 켤 수 없습니다 — 입점 신청이 승인되면 붙습니다';
+  end if;
+  if not exists (select 1 from account where id = v_me) then
+    raise exception '계정이 아직 없습니다';
+  end if;
+
+  insert into account_hat (account_id, hat, by_user)
+  values (v_me, p_hat, v_me)
+  on conflict (account_id, hat) do nothing;
+
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, why)
+  values (v_me, my_role(), 'account_hat', v_me::text, p_hat::text,
+          coalesce(p_why, '본인이 켬'));
+
+  return my_hats();
+end $$;
+
+create or replace function drop_my_hat(p_hat member_hat, p_why text default null)
+  returns member_hat[] language plpgsql security definer set search_path = public as $$
+declare v_me uuid := auth.uid();
+begin
+  if v_me is null then raise exception '로그인이 필요합니다'; end if;
+  -- ⚠️ biz 를 스스로 떼지 못합니다. 떼면 업체 자료의 주인이 사라져
+  --    상담 기록이 고아가 됩니다. 입점 해지는 관리자가 합니다.
+  if p_hat = 'biz' then
+    raise exception '사업자 회원은 스스로 뗄 수 없습니다 — 고객센터로 알려 주세요';
+  end if;
+  delete from account_hat where account_id = v_me and hat = p_hat;
+
+  insert into audit_log (by_user, by_role, obj, obj_id, from_state, why)
+  values (v_me, my_role(), 'account_hat', v_me::text, p_hat::text,
+          coalesce(p_why, '본인이 끔'));
+  return my_hats();
+end $$;
+
+-- ── 관리자가 붙이는 문 (biz 를 붙이는 유일한 길) ───────────────────
+create or replace function grant_hat(p_user uuid, p_hat member_hat, p_why text)
+  returns member_hat[] language plpgsql security definer set search_path = public as $$
+declare v_me uuid := auth.uid();
+begin
+  if v_me is null then raise exception '로그인이 필요합니다'; end if;
+  if my_role() not in ('staff','admin') then
+    raise exception '회원의 역할은 운영자만 바꿉니다';
+  end if;
+  if p_why is null or btrim(p_why) = '' then
+    raise exception '까닭을 적어야 합니다 — 감사 기록에 남습니다';
+  end if;
+  if not exists (select 1 from account where id = p_user) then
+    raise exception '그런 회원이 없습니다';
+  end if;
+
+  insert into account_hat (account_id, hat, by_user)
+  values (p_user, p_hat, v_me)
+  on conflict (account_id, hat) do nothing;
+
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, why)
+  values (v_me, my_role(), 'account_hat', p_user::text, p_hat::text, p_why);
+
+  return (select coalesce(array_agg(hat order by hat), '{}'::member_hat[])
+            from account_hat where account_id = p_user);
+end $$;
+
+revoke all on function my_hats()                           from public;
+revoke all on function has_hat(member_hat)                 from public;
+revoke all on function add_my_hat(member_hat, text)        from public;
+revoke all on function drop_my_hat(member_hat, text)       from public;
+revoke all on function grant_hat(uuid, member_hat, text)   from public;
+grant execute on function my_hats()                        to authenticated;
+grant execute on function has_hat(member_hat)              to authenticated;
+grant execute on function add_my_hat(member_hat, text)     to authenticated;
+grant execute on function drop_my_hat(member_hat, text)    to authenticated;
+grant execute on function grant_hat(uuid, member_hat, text) to authenticated;
+
+insert into schema_version (n, name) values (25, '0025_account_hat')
+on conflict (n) do nothing;
+
+commit;
+
+/* ---------------------------- 0026_ad_membership.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0026 — 업체 광고(C) · 유료 멤버십(D)  (지시서 5번)
+-- ════════════════════════════════════════════════════════════════════
+-- 지시서 5번의 네 모델 중 A(고객 연결 수수료)와 B(거래 · 예약 수수료)는
+-- 이미 있습니다 — assignment · fee_policy · deal · settlement.
+-- 여기서는 남은 둘을 올립니다.
+--
+-- ⚠️⚠️ **요금을 한 줄도 심지 않습니다.** 지시서 5번이 "수수료와 요금은
+--   관리자에서 변경 가능하도록 설계한다" 고 했습니다. 여기에 값을 심으면
+--   관리자에서 바꿔도 이 줄만 옛날 값으로 남습니다. 그래서 멤버십 요금제는
+--   **빈 표**로 시작합니다 — 관리자가 넣기 전에는 화면이 "요금제가 없습니다"
+--   라고 말합니다 (절대 규칙 1 · 2).
+--
+-- ⚠️⚠️ **광고는 화면에서 "광고" 라고 표시해야 합니다** (표시 · 광고의
+--   공정화에 관한 법률). 표시는 화면이 하는 일이지만, 표시를 빠뜨리기
+--   쉬워서 보기(v_ad_live)가 label 칸을 **반드시 들고 나오게** 했습니다.
+--   화면은 그 칸을 그대로 찍으면 됩니다.
+--
+-- ⚠️ 기간은 **시작일과 종료일을 둘 다 포함**합니다 (하루짜리 광고는
+--   starts_on = ends_on). 사는 쪽이 "3일치" 라고 말하는 셈법과 같습니다.
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+do $$ begin
+  if not exists (select 1 from pg_type where typname = 'ad_place') then
+    create type ad_place as enum (
+      'main_hero',   -- 메인 맨 위 띠
+      'main_band',   -- 메인 가운데 띠
+      'cat_top',     -- 분류 화면 맨 위 (cat_key 가 어느 분류인지 말합니다)
+      'region'       -- 지역 거르개 결과 맨 위 (region 이 어디인지 말합니다)
+    );
+  end if;
+  if not exists (select 1 from pg_type where typname = 'ad_state') then
+    create type ad_state as enum ('draft', 'live', 'done', 'stopped');
+  end if;
+end $$;
+
+-- ── 광고 집행 ────────────────────────────────────────────────────
+create table if not exists ad_run (
+  id          uuid primary key default gen_random_uuid(),
+  provider_id text        not null references provider(id) on delete cascade,
+  place       ad_place    not null,
+  cat_key     text,                          -- place='cat_top' 일 때
+  region      text,                          -- place='region' 일 때
+  starts_on   date        not null,
+  ends_on     date        not null,
+  price       bigint      not null,          -- 원 — 관리자가 넣습니다
+  state       ad_state    not null default 'draft',
+  note        text,
+  by_user     uuid references auth.users(id) on delete set null,
+  at          timestamptz not null default now(),
+  constraint ad_run_period check (ends_on >= starts_on),
+  -- ⚠️ 0 원도 됩니다 (무상 노출). 음수만 막습니다.
+  constraint ad_run_price  check (price >= 0),
+  -- ⚠️⚠️ 자리마다 **무엇을 더 적어야 하는지**가 다릅니다. 안 막으면
+  --   cat_key 없는 분류 광고가 들어와 아무 분류에도 안 걸립니다
+  --   (에러 없이 조용히 안 보입니다).
+  constraint ad_run_where check (
+    (place = 'cat_top' and cat_key is not null and btrim(cat_key) <> '')
+    or (place = 'region' and region is not null and btrim(region) <> '')
+    or place in ('main_hero','main_band')
+  )
+);
+create index if not exists ad_run_live_idx on ad_run (state, starts_on, ends_on);
+create index if not exists ad_run_prov_idx on ad_run (provider_id);
+
+-- ── 유료 멤버십 ──────────────────────────────────────────────────
+-- ⚠️⚠️ **빈 표로 시작합니다.** 요금제를 지어내지 않습니다.
+create table if not exists membership_plan (
+  id       text primary key,                 -- 'basic' · 'pro' … 관리자가 정합니다
+  name     text    not null,
+  monthly  bigint  not null,                 -- 원/월 — 0 이면 무료
+  perks    jsonb   not null default '{}'::jsonb,
+  listed   boolean not null default true,
+  ord      int     not null default 0,
+  constraint membership_plan_price check (monthly >= 0),
+  constraint membership_plan_name  check (btrim(name) <> '')
+);
+
+create table if not exists provider_membership (
+  provider_id text primary key references provider(id) on delete cascade,
+  plan_id     text not null references membership_plan(id),
+  starts_on   date not null,
+  ends_on     date,                          -- null 이면 해지 전까지
+  by_user     uuid references auth.users(id) on delete set null,
+  at          timestamptz not null default now(),
+  constraint provider_membership_period check (ends_on is null or ends_on >= starts_on)
+);
+
+-- ── RLS ──────────────────────────────────────────────────────────
+alter table ad_run              enable row level security;
+alter table membership_plan     enable row level security;
+alter table provider_membership enable row level security;
+
+drop policy if exists ad_public on ad_run;
+drop policy if exists ad_mine   on ad_run;
+drop policy if exists ad_admin  on ad_run;
+-- 지금 돌고 있는 광고는 누구나 봅니다 (화면에 나가야 하니까).
+create policy ad_public on ad_run for select
+  using (state = 'live' and current_date between starts_on and ends_on);
+create policy ad_mine on ad_run for select using (provider_id = my_provider());
+create policy ad_admin on ad_run for all
+  using (my_role() in ('staff','admin')) with check (my_role() = 'admin');
+
+drop policy if exists plan_public on membership_plan;
+drop policy if exists plan_admin  on membership_plan;
+create policy plan_public on membership_plan for select using (listed);
+create policy plan_admin  on membership_plan for all
+  using (my_role() in ('staff','admin')) with check (my_role() = 'admin');
+
+drop policy if exists pm_mine  on provider_membership;
+drop policy if exists pm_admin on provider_membership;
+create policy pm_mine  on provider_membership for select using (provider_id = my_provider());
+create policy pm_admin on provider_membership for all
+  using (my_role() in ('staff','admin')) with check (my_role() = 'admin');
+
+-- ⚠️⚠️ **쓰기 권한을 한 줄도 주지 않습니다.** 바꾸는 길은 아래 문뿐입니다.
+revoke all on ad_run, membership_plan, provider_membership
+  from public, anon, authenticated;
+grant select on ad_run, membership_plan, provider_membership to authenticated;
+grant select on ad_run, membership_plan to anon;
+
+-- ── 지금 나가는 광고 ──────────────────────────────────────────────
+-- ⚠️⚠️ label 을 **보기가 들고 나옵니다.** 화면이 이 칸을 그대로 찍으면
+--   "광고" 표시를 빠뜨릴 수 없습니다. 지우지 마세요.
+create or replace view v_ad_live as
+  select a.id, a.provider_id, p.name as provider_name,
+         a.place, a.cat_key, a.region, a.starts_on, a.ends_on,
+         '광고'::text as label
+    from ad_run a join provider p on p.id = a.provider_id
+   where a.state = 'live'
+     and current_date between a.starts_on and a.ends_on;
+grant select on v_ad_live to anon, authenticated;
+
+-- ── 문 ───────────────────────────────────────────────────────────
+create or replace function set_ad_state(p_ad uuid, p_to ad_state, p_why text)
+  returns ad_state language plpgsql security definer set search_path = public as $$
+declare v_me uuid := auth.uid(); v_from ad_state;
+begin
+  if v_me is null then raise exception '로그인이 필요합니다'; end if;
+  if my_role() not in ('staff','admin') then
+    raise exception '광고 집행은 운영자만 바꿉니다';
+  end if;
+  if p_why is null or btrim(p_why) = '' then
+    raise exception '까닭을 적어야 합니다 — 감사 기록에 남습니다';
+  end if;
+  select state into v_from from ad_run where id = p_ad;
+  if v_from is null then raise exception '그런 광고가 없습니다'; end if;
+
+  update ad_run set state = p_to where id = p_ad;
+  insert into audit_log (by_user, by_role, obj, obj_id, from_state, to_state, why)
+  values (v_me, my_role(), 'ad_run', p_ad::text, v_from::text, p_to::text, p_why);
+  return p_to;
+end $$;
+
+create or replace function save_plan(
+  p_id text, p_name text, p_monthly bigint,
+  p_perks jsonb default '{}'::jsonb, p_listed boolean default true,
+  p_ord int default 0, p_why text default null)
+  returns text language plpgsql security definer set search_path = public as $$
+declare v_me uuid := auth.uid(); v_had boolean;
+begin
+  if v_me is null then raise exception '로그인이 필요합니다'; end if;
+  if my_role() <> 'admin' then
+    raise exception '요금제는 관리자만 바꿉니다';
+  end if;
+  if p_monthly < 0 then raise exception '요금은 0 보다 작을 수 없습니다'; end if;
+
+  select true into v_had from membership_plan where id = p_id;
+  insert into membership_plan (id, name, monthly, perks, listed, ord)
+  values (p_id, p_name, p_monthly, p_perks, p_listed, p_ord)
+  on conflict (id) do update set
+    name = excluded.name, monthly = excluded.monthly, perks = excluded.perks,
+    listed = excluded.listed, ord = excluded.ord;
+
+  insert into audit_log (by_user, by_role, obj, obj_id, from_state, to_state, why, data)
+  values (v_me, my_role(), 'membership_plan', p_id,
+          case when v_had then '있음' else null end, '저장',
+          coalesce(p_why, '요금제 저장'),
+          jsonb_build_object('monthly', p_monthly, 'listed', p_listed));
+  return p_id;
+end $$;
+
+revoke all on function set_ad_state(uuid, ad_state, text) from public;
+revoke all on function save_plan(text, text, bigint, jsonb, boolean, int, text) from public;
+grant execute on function set_ad_state(uuid, ad_state, text) to authenticated;
+grant execute on function save_plan(text, text, bigint, jsonb, boolean, int, text) to authenticated;
+
+insert into schema_version (n, name) values (26, '0026_ad_membership')
 on conflict (n) do nothing;
 
 commit;

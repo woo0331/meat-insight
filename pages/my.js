@@ -19,9 +19,16 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="mybox" class="none" hidden></div></div></section>';
 
+  /* ⚠️ 내 요청 · 받은 견적은 **따로 그립니다** (js/myreq.js). 한 파일에
+     담으면 로그인 자리 하나를 고칠 때마다 견적 비교가 같이 흔들립니다. */
+  body += '<section class="sec sec-alt"><div class="wrap">' +
+    '<div id="reqbox" class="none" hidden></div></div></section>';
+
   return {
     route: "/my", title: "내 정보", noindex: true, unlinked: true,
     desc: "골프올인원 내 정보 — 개인 판매자 · 골프 프로 · 사업자 회원을 켜고 끕니다.",
-    body: body, js: ["/js/data/korean.js", "/js/auth.js", "/js/account.js"]
+    body: body,
+    js: ["/js/data/korean.js", "/js/data/deal.js", "/js/auth.js",
+         "/js/account.js", "/js/myreq.js"]
   };
 };

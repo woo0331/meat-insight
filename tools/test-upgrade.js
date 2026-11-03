@@ -165,6 +165,19 @@ try{
   ok("옛 업체의 subs 가 그대로다",
      psql("select array_to_string(subs,',') from provider where id='old-shop'") === "lcd,battery");
 
+  /* ⚠️⚠️ **0030 이 붙인 `is_test` 가 기존 업체를 건드리지 않았는가.**
+     `not null` 을 default 와 같이 적지 않으면 줄이 있는 표에서 그
+     자리에서 터집니다. 더 조용한 사고는 default 를 true 로 적는 것인데,
+     그러면 **올리는 순간 참 업체가 전부 손님 화면에서 사라집니다.** */
+  ok("올린 뒤에도 옛 업체는 **참 업체**다 (is_test 가 false)",
+     psql("select is_test::text from provider where id='old-shop'") === "false");
+  ok("옛 업체가 공개 보기에 그대로 들어온다 (0032 — 사라지지 않았다)",
+     psql("select count(*)::text from v_provider_card where id='old-shop'") === "1");
+  /* ⚠️ 옛 자료에 검사용이 하나도 없어야 합니다 — 있으면 0030 의
+     default 가 틀린 것입니다. */
+  ok("옛 자료에 검사용으로 찍힌 업체가 **하나도 없다**",
+     psql("select count(*)::text from provider where is_test") === "0");
+
   console.log("\n── ⑥ 중고폰 전용 표만 걷혔는가");
   ok("기기 재고 표가 없다 (애초에 없던 것)",
      psql("select count(*)::text from pg_tables where schemaname='public' " +

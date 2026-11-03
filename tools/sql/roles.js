@@ -48,12 +48,27 @@ module.exports = function(T){
   /* ⚠️⚠️ **앞 번호를 다시 붙여 넣으면 뒤 번호가 조용히 내려갑니다.**
      create or replace 는 에러를 안 냅니다. 실제로 그렇게 되는지 여기서
      보여 주고, 다시 올리면 돌아오는지도 봅니다. */
+  const guardHas = w =>
+    psql("select (prosrc like '%" + w + "%')::text from pg_proc " +
+         "where proname='provider_guard'");
+
+  ok("지금 판은 **마지막 번호**의 것이다 (0030 — is_test 를 봅니다)",
+     guardHas("is_test") === "true");
+
   psqlFile("db/migrations/0021_inhouse.sql");
   ok("0021 을 다시 붙여 넣으면 provider_guard() 가 0021 판으로 내려간다",
-     psql("select (prosrc like '%inhouse%')::text from pg_proc where proname='provider_guard'") === "true");
+     guardHas("inhouse") === "true");
+  /* ⚠️⚠️ **내려가면 뒤 번호가 한 일이 전부 사라집니다.** 0024 만 다시
+     올리면 inhouse 는 빠지지만 **0030 의 검사용 자물쇠는 안 돌아옵니다** —
+     거기서 멈추면 "되돌렸다" 고 착각합니다. 실제로 이 검사를 쓰면서
+     그 꼴로 뒤 묶음(quote.js)이 떨어졌습니다. */
   psqlFile("db/migrations/0024_golf_reset.sql");
-  ok("0024 를 다시 올리면 되돌아온다",
-     psql("select (prosrc like '%inhouse%')::text from pg_proc where proname='provider_guard'") === "false");
+  ok("0024 만 다시 올리면 inhouse 는 빠지지만", guardHas("inhouse") === "false");
+  ok("  ⚠️ **0030 의 검사용 자물쇠는 아직 안 돌아왔다** (여기서 멈추면 구멍입니다)",
+     guardHas("is_test") === "false");
+  psqlFile("db/migrations/0030_test_provider.sql");
+  ok("체인의 **마지막 번호까지** 다시 올려야 되돌아온다",
+     guardHas("is_test") === "true" && guardHas("inhouse") === "false");
 
   console.log("\n── 0025 한 계정이 여러 역할 (지시서 6번)");
   ok("⚠️ member_hat 에 admin 이 없다 (화면에서 관리자를 만들 수 없습니다)",

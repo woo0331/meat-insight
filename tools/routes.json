@@ -20,12 +20,14 @@
     "/login",
     "/my",
     "/admin",
+    "/desk",
     "/terms",
     "/privacy"
   ],
   "unlinked": [
     "/login",
     "/my",
-    "/admin"
+    "/admin",
+    "/desk"
   ]
 }

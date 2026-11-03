@@ -212,6 +212,23 @@ function nowServe(){ return serve(0); }
     if(r.status === 0 && back === startedWith)
       console.log("  ✅ 씨앗을 되돌렸습니다 (업체 화면 " + back + "장 — 돌리기 전과 같습니다)");
     else { bad++; console.log("  ❌ 되돌리지 못했습니다 — js/data/providers.generated.js 를 보세요"); }
+
+    /* ⚠️⚠️⚠️ **routes.json 만 보면 안 됩니다.** 2026-11-03 에 여기까지는
+       초록이었는데 **찍힌 HTML 두 장이 저장소에 그대로 남아** 커밋까지
+       들어갔습니다 (`/pro/green-pt` · `/pro/xss-test`). 사이트맵에도
+       routes.json 에도 없어서 링크 검사 · 주소 검사가 전부 지나갔지만,
+       Vercel 은 **저장소의 파일을 그대로 섬깁니다** — 올렸으면 없는
+       회사를 광고하고 있었을 것입니다. **파일이 실제로 없는지** 봅니다. */
+    ran++;
+    const left = fs.existsSync(path.join(ROOT, "pro"))
+      ? fs.readdirSync(path.join(ROOT, "pro")) : [];
+    if(!left.length)
+      console.log("  ✅ 찍힌 업체 화면이 저장소에 **한 장도 안 남았습니다**");
+    else {
+      bad++;
+      console.log("  ❌ 검사용 업체 화면이 남았습니다 — pro/" + left.join(" · ") +
+                  "  (지우고 다시 빌드하세요. 그대로 올리면 없는 회사를 광고합니다.)");
+    }
   }
   console.log("\n" + ran + "건 중 " + (ran - bad) + "건 통과 · " + bad + "건 실패");
   process.exit(bad ? 1 : 0);

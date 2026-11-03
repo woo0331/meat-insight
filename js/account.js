@@ -117,6 +117,13 @@
       '<div class="mycard"><h2>' + esc(a.name || "회원") + '님</h2>' +
       '<p class="myrole">권한 — ' + esc(ROLE_NAME[a.role] || a.role) + '</p>' +
       '<p class="myhint">권한은 플랫폼이 정합니다. 아래 <b>하는 일</b>은 직접 켜고 끄실 수 있습니다.</p>' +
+      /* ⚠️⚠️ **업체 회원에게만** 작업실 길을 냅니다. 모두에게 내면
+         누르는 사람 대부분이 "업체만 볼 수 있습니다" 를 보게 됩니다 —
+         눌러도 아무 일이 안 나는 단추와 같은 것입니다 (절대 규칙 5).
+         ⚠️ 역할이 provider 라도 업체가 안 이어져 있으면 안 냅니다. */
+      (a.role === "provider" && a.provider
+        ? '<a class="btn btn-pri mycard-b" href="/desk">업체 작업실로 가기</a>'
+        : "") +
       '</div>' +
       '<div class="hats">' + Object.keys(HAT_NAME).map(function(k){
         return hatRow(k, hats.indexOf(k) >= 0, false);
@@ -173,11 +180,32 @@
         return n === "*" || n == null ? null : Number(n);
       }).catch(function(){ return null; });
     }
-    var want = [["회원","account"],["업체","provider"],["입점 신청","provider_apply"],
+    var want = [["회원","account"],["입점 신청","provider_apply"],
                 ["상담 신청","request"],["배정","assignment"],["계약","deal"],
                 ["광고 집행","ad_run"],["멤버십 요금제","membership_plan"]];
-    Promise.all(want.map(function(w){ return count(w[1]); })).then(function(ns){
-      box.innerHTML = '<div class="cnts">' + want.map(function(w, i){
+    /* ⚠️⚠️ **업체는 PostgREST 로 세지 않습니다.** 운영자에게는 검사용
+       업체도 보이므로(0030 의 정책), 그냥 세면 **검사용이 섞인 값**을
+       "업체 수" 로 찍습니다 — 그 화면부터 이미 틀린 숫자이고, 2차
+       지시서 §8 이 갈라 놓으라고 한 자리입니다. 세는 규칙은 DB 의
+       `provider_counts()` 한 곳에 있습니다. */
+    Promise.all([rpc("provider_counts").catch(function(){ return null; })]
+      .concat(want.map(function(w){ return count(w[1]); }))).then(function(all){
+      var pc = all[0], ns = all.slice(1);
+      /* ⚠️ 검사용이 0곳이면 그 칸을 **아예 안 냅니다** — 0 을 늘 보여
+         주면 운영자가 그 줄을 안 읽게 됩니다. */
+      var pvCells =
+        '<div class="cnt"><dt>업체</dt><dd>' +
+        (pc && typeof pc.real === "number" ? won(pc.real) + "곳" : "못 읽음") +
+        '</dd></div>' +
+        (pc && pc.test
+          ? '<div class="cnt cnt-t"><dt>그중 검사용</dt><dd>' +
+            won(pc.test) + '곳</dd></div>'
+          : "");
+      /* ⚠️⚠️ **esc() 를 이 문장 안에 둡니다.** 다른 함수로 빼면
+         tools/check-safe.js 가 "innerHTML 에 esc() 없이 변수를 넣는
+         줄" 로 잡습니다 — 그 검사가 맞습니다. 손님 · 운영자 글이 지나는
+         자리는 esc() 가 **보이는 데** 있어야 합니다. */
+      box.innerHTML = '<div class="cnts">' + pvCells + want.map(function(w, i){
         var n = ns[i];
         /* ⚠️ 못 읽은 것과 0건은 **다릅니다.** 0 으로 보이면 멀쩡한 줄이
            사라진 것처럼 읽힙니다 (0 을 기다리는 자리에 || 금지). */

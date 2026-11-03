@@ -56,6 +56,12 @@ function stub(p, who, applyBody){
     p.route(FAKE + "/rest/v1/**", function(r){
       const u = r.request().url();
       if(u.indexOf("provider_apply") >= 0) return applyBody(r);
+      /* ⚠️⚠️ 업체 수는 **DB 의 함수**가 셉니다 (0030) — 운영자에게는
+         검사용 업체도 보여서, PostgREST 로 그냥 세면 검사용이 섞인
+         값을 "업체 수" 로 찍습니다 (2차 지시서 §8). */
+      if(u.indexOf("/rpc/provider_counts") >= 0)
+        return r.fulfill({ status:200, contentType:"application/json",
+                           body: JSON.stringify({ real:4, test:3 }) });
       /* 세는 요청 — content-range 로 갯수를 돌려줍니다 */
       return r.fulfill({ status:200, contentType:"application/json",
         headers:{ "content-range":"0-0/7" }, body:"[]" });
@@ -97,8 +103,16 @@ function stub(p, who, applyBody){
   await p.goto(URL, { waitUntil:"networkidle" });
   await p.waitForTimeout(500);
   ok("화면 에러 · CSP 거절이 0건이다", errs.length === 0, errs.join(" | "));
-  ok("세는 칸이 그려진다", (await p.locator(".cnt").count()) === 8,
+  /* ⚠️ 갯수를 박지 않습니다 — 세는 칸이 늘면 엉뚱하게 떨어집니다.
+     ⚠️⚠️ 대신 **0 보다 많은지**와 뜻이 맞는지를 봅니다. */
+  ok("세는 칸이 그려진다", (await p.locator(".cnt").count()) > 0,
      await p.locator(".cnt").count());
+  let cntTxt = (await p.textContent(".cnts")) || "";
+  ok("⚠️ 업체 수를 참 업체와 검사용으로 **갈라서** 보여 준다",
+     /업체/.test(cntTxt) && cntTxt.indexOf("4곳") >= 0 &&
+     /그중 검사용/.test(cntTxt) && cntTxt.indexOf("3곳") >= 0, cntTxt);
+  ok("  둘을 **합쳐서** 보여 주지 않는다 (7곳이 업체 수가 아닙니다)",
+     cntTxt.indexOf("7곳") < 0, cntTxt);
   ok("신청 두 줄이 그려진다", (await p.locator(".apl-r").count()) === 2,
      await p.locator(".apl-r").count());
 

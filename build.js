@@ -229,11 +229,20 @@ module.exports = { page: page, header: header, footer: footer, ver: ver,
 
 if(require.main === module){
   var routeGuard = require("./tools/check-routes.js");
+
+  /* ⚠️⚠️ **화면의 상태 말과 DB 의 상태 키가 같은가** — 한쪽만 고치면
+     에러 없이 조용히 어긋납니다 (손님 화면에 `fee_wait` 가 영문 그대로
+     찍히거나, 단추는 보이고 DB 가 거절합니다). 찍기 **전에** 멈춥니다. */
+  var dealGuard = require("./tools/check-deal.js").run();
+  if(dealGuard.bad.length){
+    dealGuard.bad.forEach(function(m){ console.error("❌ " + m); });
+    process.exit(1);
+  }
   var cat  = require("./pages/category.js");
   var home = require("./pages/home.js");
   var list = require("./pages/categories.js");
   var flat = ["guide", "help", "join", "search", "match", "login", "my", "admin",
-               "terms", "privacy"].map(function(n){
+               "desk", "terms", "privacy"].map(function(n){
     return require("./pages/" + n + ".js").build();
   });
 
@@ -291,11 +300,52 @@ if(require.main === module){
     process.exit(1);
   }
 
+  var wrote = {};
   built.forEach(function(b){
     var file = b.route === "/" ? "index.html"
              : b.route.replace(/^\//, "") + "/index.html";
+    wrote[file] = 1;
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, page(b));
+  });
+
+  /* ⚠️⚠️⚠️ **찍지 않은 HTML 이 저장소에 남아 있나.**
+     2026-11-03 에 `tools/test-providers.js` 가 검사용 씨앗으로 찍은
+     **없는 업체의 화면 두 장**(`/pro/green-pt` · `/pro/xss-test`)이
+     커밋에 그대로 들어가 있었습니다. 검사는 자료 파일(`providers.
+     generated.js`)만 사본으로 되돌리고 **찍힌 HTML 은 안 지웠습니다.**
+     사이트맵에도 routes.json 에도 없어서 링크 검사 · 주소 검사가
+     전부 초록이었는데, Vercel 은 **저장소의 파일을 그대로 섬깁니다** —
+     올렸으면 `/pro/green-pt` 가 **없는 회사를 광고**하고 있었을
+     것입니다 (절대 규칙 1 · 표시광고법 제3조).
+     ⚠️ 그래서 빌드가 **제가 안 찍은 index.html 을 지웁니다.** 지운 것을
+     말하고 지나갑니다 — 조용히 지우면 손으로 둔 화면이 사라진 것을
+     아무도 모릅니다. ⚠️ 이 자리는 빌드의 출력 폴더입니다. 손으로 쓴
+     화면을 두시려면 `build.js` 가 찍게 하세요. */
+  var SKIPDIR = ["node_modules", ".git", "db", "tools", "js", "css", "pages",
+                 "api", "img", ".github", ".vercel"];
+  var orphan = [];
+  (function sweep(dir){
+    fs.readdirSync(dir).forEach(function(f){
+      var full = path.join(dir, f);
+      var rel = path.relative(".", full);
+      if(dir === "." && SKIPDIR.indexOf(f) >= 0) return;
+      if(f.charAt(0) === "." && dir === ".") return;
+      var st = fs.statSync(full);
+      if(st.isDirectory()) return sweep(full);
+      if(f !== "index.html") return;
+      if(!wrote[rel]) orphan.push(rel);
+    });
+  })(".");
+  orphan.forEach(function(f){
+    fs.unlinkSync(f);
+    /* 빈 폴더까지 치웁니다 — 남겨 두면 다음 빌드가 또 돌 때 조용합니다 */
+    var d = path.dirname(f);
+    while(d !== "." && fs.existsSync(d) && fs.readdirSync(d).length === 0){
+      fs.rmdirSync(d); d = path.dirname(d);
+    }
+    console.warn("  ⚠️ 찍지 않은 화면을 지웠습니다 — /" +
+                 f.replace(/\/index\.html$/, "").replace(/^index\.html$/, ""));
   });
 
   /* 같은 제목이 둘이면 검색엔진이 둘 다 흘립니다 — 빌드에서 멈춥니다 */

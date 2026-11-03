@@ -14,8 +14,14 @@
    ⚠️ 대신 **새 업체는 다시 빌드해 올려야 보입니다.** 승인한 날
    `node tools/pull-providers.js && node tools/ship.js --merge` 입니다.
 
-   ⚠️ **공개 키(anon)로 읽습니다.** RLS 의 provider_public 정책이
-   `listed = true` 인 줄만 내줍니다 — service key 를 쓸 까닭이 없습니다.
+   ⚠️⚠️ **공개 키(anon)로 공개 보기(`v_provider_card`)를 읽습니다.**
+   `provider` **표**를 읽으려 했는데, 0001 의 GRANT 가 anon 에게
+   select 를 한 줄도 주지 않아 `permission denied for table provider`
+   였습니다 — RLS 정책만 보고 "공개 목록은 읽힌다" 고 읽은 것이고,
+   **GRANT 가 먼저** 막습니다. 업체가 0곳인 동안은 돌릴 까닭이 없어
+   몰랐고, **첫 업체를 승인하신 날** 터질 참이었습니다 (0032 가 그
+   보기를 열었습니다). ⚠️ service key 를 쓸 까닭은 없습니다 — 공개
+   화면에 실릴 자료입니다.
 
    돌리기   SUPABASE_URL=… SUPABASE_ANON_KEY=… node tools/pull-providers.js
    ⚠️ 키가 없으면 **지금 파일을 그대로 두고** 알리기만 합니다 —
@@ -28,7 +34,23 @@ const OUT  = path.join(ROOT, "js", "data", "providers.generated.js");
 
 /* 화면이 쓰는 칸만 가져옵니다 — ⚠️ 연락처 · 담당자는 **안 가져옵니다**
    (손님 화면에 갈 까닭이 없고, 저장소는 공개입니다). */
-const COLS = "id,name,intro,regions,gu,subs,since,consult_hours,verified,brands,scale";
+/* ⚠️ 보기(0032)가 이미 칸을 골라 담았습니다 — 여기서 또 적는 까닭은
+   **화면이 쓰는 칸만** 받아 적기 위해서입니다 (보기에 칸이 늘어도
+   파일이 저절로 커지지 않게). */
+const VIEW = "v_provider_card";
+const COLS = "id,name,intro,regions,gu,subs,since,consult_hours,verified,brands,scale,is_test";
+
+/* ⚠️⚠️ **검사용 업체를 두 겹으로 거릅니다** (0030 · 2차 지시서 §8).
+   ① RLS 의 provider_public 이 anon 에게 `is_test = true` 를 안 내줍니다
+   ② 그래도 여기서 다시 거릅니다 — 정책을 누가 되돌리는 날(0001 을 다시
+      붙여 넣으면 조용히 내려갑니다) 이 줄 하나가 남습니다.
+   ⚠️ 자물쇠를 **다른 자리에** 두는 까닭입니다. 같은 자리에 두 번 적으면
+      둘이 같이 내려갑니다.
+   ⚠️⚠️ 질의에도 적어서, 칸이 없으면(0030 을 안 올린 DB) HTTP 400 으로
+      **멈춥니다.** 칸 없이 통째로 가져오면 검사용 업체가 손님 화면에
+      나갑니다 — 조용히 지나가는 것보다 멈추는 것이 맞습니다.
+   ③ 보기 자체가 `listed = true and is_test = false` 로 좁힙니다 (0032). */
+const NOT_TEST = "&is_test=eq.false";
 
 function write(rows, note){
   const body =
@@ -69,11 +91,25 @@ if(!url || !key){
 
 (async function(){
   const r = await fetch(url.replace(/\/+$/, "") +
-    "/rest/v1/provider?select=" + COLS + "&listed=eq.true&order=id.asc",
+    "/rest/v1/" + VIEW + "?select=" + COLS + NOT_TEST + "&order=id.asc",
     { headers: { apikey: key, authorization: "Bearer " + key } });
   if(!r.ok){
+    const why = await r.text().catch(function(){ return ""; });
     console.error("❌ DB 에서 못 읽었습니다 — HTTP " + r.status +
                   "\n   ⚠️ 지금 파일을 그대로 둡니다 (0곳으로 덮어쓰지 않습니다).");
+    /* ⚠️ `is_test` 칸이 없으면 이 꼴로 거절합니다 — 까닭을 사람 말로
+       말해 줍니다. 안 적으면 "HTTP 400" 만 보고 키를 의심합니다. */
+    if(why.indexOf(VIEW) >= 0 || r.status === 404)
+      console.error("   ⚠️⚠️ 공개 보기(" + VIEW + ")가 없습니다 — " +
+                    "db/migrations/0032 를 아직 올리지 않으셨습니다.\n" +
+                    "      `provider` 표는 anon 에게 열려 있지 않습니다 " +
+                    "(0001 의 GRANT). 0030 · 0032 를 먼저 올리세요.");
+    else if(why.indexOf("is_test") >= 0)
+      console.error("   ⚠️⚠️ `is_test` 칸이 없습니다 — db/migrations/0030 을 " +
+                    "아직 올리지 않으셨습니다.\n" +
+                    "      그 칸 없이 가져오면 검사용 업체가 손님 화면에 나갑니다. " +
+                    "0030 을 먼저 올리세요.");
+    else if(why) console.error("   " + why.slice(0, 200));
     process.exit(1);
   }
   const rows = await r.json();
@@ -83,7 +119,22 @@ if(!url || !key){
   }
   /* ⚠️ 비어 있는 칸은 **빼고** 적습니다 — null 이 파일에 쌓이면 화면이
      "(미기재)" 를 찍고 싶어집니다 (절대 규칙 2). */
-  const clean = rows.map(function(p){
+  /* ⚠️⚠️ **두 번째 자물쇠** — 정책이 내려간 날 여기서 멈춥니다. 조용히
+     거르지 않고 **몇 줄을 걸렀는지 말합니다**: 여기 걸리는 줄이 있다는
+     것은 RLS 가 안 거르고 있다는 뜻이고, 그건 따로 고쳐야 하는 고장입니다. */
+  const test = rows.filter(function(p){ return p.is_test === true; });
+  if(test.length){
+    console.error("❌ 검사용 업체 " + test.length + "곳이 공개 질의로 넘어왔습니다 — " +
+                  test.map(function(p){ return p.id; }).join(" · "));
+    console.error("   ⚠️⚠️ 0032 의 보기가 안 거르고 있습니다 " +
+                  "(0026 이나 0032 를 다시 붙여 넣으면 where 가 옛 판으로 " +
+                  "돌아갑니다).\n" +
+                  "      db/migrations/0032_provider_card_view.sql 을 다시 " +
+                  "올리세요. 지금 파일은 그대로 둡니다.");
+    process.exit(1);
+  }
+  const live = rows.filter(function(p){ return p.is_test !== true; });
+  const clean = live.map(function(p){
     const o = { id: p.id, name: p.name };
     ["intro", "since", "consult_hours", "scale"].forEach(function(k){
       if(p[k] !== null && p[k] !== undefined && String(p[k]).trim() !== "") o[k] = p[k];

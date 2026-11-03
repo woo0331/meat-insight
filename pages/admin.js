@@ -23,9 +23,17 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="adminbox" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ 배정은 **따로 그립니다** (js/assign.js). 그 단추가 개인정보
+     보호법 제17조를 지나는 자리라, 현황 세는 코드와 섞어 두면 한쪽을
+     고칠 때 동의 받는 자리가 같이 흔들립니다. */
+  body += '<section class="sec sec-alt"><div class="wrap">' +
+    '<div id="assignbox" class="none" hidden></div></div></section>';
+
   return {
     route: "/admin", title: "관리자", noindex: true, unlinked: true,
     desc: "골프올인원 관리자 화면.",
-    body: body, js: ["/js/data/korean.js", "/js/auth.js", "/js/account.js"]
+    body: body,
+    js: ["/js/data/korean.js", "/js/data/deal.js", "/js/auth.js",
+         "/js/account.js", "/js/assign.js"]
   };
 };

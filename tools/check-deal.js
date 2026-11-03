@@ -1,0 +1,190 @@
+#!/usr/bin/env node
+/* ════════════════════════════════════════════════════════════════════
+   화면의 상태 말과 **DB 의 상태 키**가 같은가
+
+   ⚠️⚠️ **같은 규칙을 두 곳에 적은 자리입니다.** 상태 키는 DB 의
+   `deal_state` enum 과 `quote.state` 의 check 에 있고, 사람 말은
+   `js/data/deal.js` 에 있습니다. 한쪽만 고치면 **에러 없이 조용히**
+   어긋납니다 —
+     · DB 에만 있으면 화면이 그 상태를 **키 그대로** 찍습니다
+       (`fee_wait` 가 손님 화면에 나갑니다)
+     · 화면에만 있으면 DB 가 **거절**합니다. 단추는 멀쩡히 보입니다.
+
+   ⚠️ 보는 것은 **키**뿐입니다. 한글 이름은 안 봅니다 — 그건 말이고,
+   디자인 · 문구가 바뀌는 날 멀쩡한 저장소를 실패로 잡습니다 (작업
+   기억의 "그날의 색 · 이름 · 개수를 박지 마세요").
+
+   ⚠️⚠️ **잰 것이 0개면 실패입니다.** 정규식이 안 맞아 아무것도 못
+   읽었는데 "다른 것 없음" 으로 초록이 되는 자리입니다 — 주소 검사가
+   실제로 그렇게 아무것도 안 재고 통과했습니다.
+
+   돌리기   node tools/check-deal.js        (build.js 가 같이 부릅니다)
+   ⚠️ 되돌려 보기   node tools/check-deal.js --prove
+   ════════════════════════════════════════════════════════════════════ */
+const fs = require("fs"), path = require("path");
+const ROOT = path.join(__dirname, "..");
+
+/* ⚠️⚠️ 문자열 안의 정규식은 쓰지 않습니다 — 이 파일은 본문이 코드라
+   괜찮지만, 되도록 indexOf 로 자릅니다 (백슬래시 두 겹 사고를 네 번
+   겪은 자리입니다). */
+function readAll(){
+  const dir = path.join(ROOT, "db", "migrations");
+  return fs.readdirSync(dir)
+    .filter(f => /^\d{4}_.*\.sql$/.test(f) && !/_down\.sql$/.test(f))
+    .sort()
+    .map(f => fs.readFileSync(path.join(dir, f), "utf8"))
+    .join("\n");
+}
+
+/* ── DB 쪽 ──────────────────────────────────────────────────────── */
+/* `create type deal_state as enum ( 'new', 'check', … )` 안의 홑따옴표
+   낱말만 꺼냅니다. ⚠️ 주석(--)이 섞여 있어서 괄호 안을 통째로 읽고
+   따옴표만 봅니다. */
+function enumKeys(sql, name){
+  /* ⚠️⚠️ **빈칸 수를 박아 두지 않습니다.** 0001 이 `create type fee_vat
+     ␣␣as enum` 처럼 칸을 맞춰 적어 두어서, 한 칸으로 찾으면 **아무것도
+     못 읽고** "검사가 틀렸습니다" 로 떨어집니다 (실제로 그렇게
+     떨어졌습니다 — 값이 아니라 검사가 틀린 자리입니다). */
+  const at = sql.indexOf("create type " + name + " ");
+  if(at < 0) return null;
+  const en = sql.indexOf("as enum", at);
+  if(en < 0) return null;
+  const open = sql.indexOf("(", en);
+  const close = sql.indexOf(")", open);
+  if(open < 0 || close < 0) return null;
+  return quoted(sql.slice(open + 1, close));
+}
+/* `state text not null default 'open' check (state in ('open',…))` */
+function checkKeys(sql, col){
+  const at = sql.indexOf("check (" + col + " in (");
+  if(at < 0) return null;
+  const open = sql.indexOf("(", at + 7);
+  const close = sql.indexOf(")", open);
+  if(open < 0 || close < 0) return null;
+  return quoted(sql.slice(open + 1, close));
+}
+function quoted(s){
+  const out = [];
+  let i = 0;
+  while(i < s.length){
+    const a = s.indexOf("'", i);
+    if(a < 0) break;
+    const b = s.indexOf("'", a + 1);
+    if(b < 0) break;
+    const w = s.slice(a + 1, b).trim();
+    if(w) out.push(w);
+    i = b + 1;
+  }
+  return out;
+}
+
+/* ── 화면 쪽 ────────────────────────────────────────────────────── */
+/* ⚠️ 파일을 **실제로 돌려서** 읽습니다. 정규식으로 긁으면 주석에 적힌
+   키까지 집습니다 (그게 바로 "검사가 틀렸습니다" 자리입니다). */
+function screenKeys(file){
+  const W = {};
+  /* won() 을 부르는 자리가 있어서 흉내를 냅니다 — 없으면 터집니다 */
+  W.won = n => String(n);
+  /* ⚠️⚠️ **빌드의 window 를 덮어쓰지 않습니다.** build.js 가 자기
+     window 에 esc · icon 을 담아 두고 화면을 찍는데, 여기서 그 자리를
+     갈아 치우면 **빌드가 통째로 터집니다** (`icon is not a function`).
+     실제로 그렇게 터졌습니다 — 검사가 멀쩡한 빌드를 깨뜨린 자리입니다.
+     빌려 쓰고 **그대로 돌려놓습니다.** */
+  const had = Object.prototype.hasOwnProperty.call(global, "window");
+  const was = global.window;
+  global.window = W;
+  try{
+    delete require.cache[require.resolve(path.join(ROOT, file))];
+    require(path.join(ROOT, file));
+  }finally{
+    if(had) global.window = was; else delete global.window;
+  }
+  return W;
+}
+
+function run(opt){
+  const bad = [];
+  let measured = 0;
+  const sql = (opt && opt.sql) || readAll();
+  const W = screenKeys("js/data/deal.js");
+
+  const want = [
+    ["상담 상태 (deal_state)",  enumKeys(sql, "deal_state"),       W.AM_DEAL_ST],
+    ["견적 상태 (quote.state)", checkKeys(sql, "state"),           W.AM_QUOTE_ST],
+    ["부가세 (fee_vat)",        enumKeys(sql, "fee_vat"),          W.AM_VAT]
+  ];
+
+  want.forEach(function(w){
+    const label = w[0], db = w[1], scr = w[2];
+    if(!db || !db.length){
+      bad.push(label + " — **DB 쪽을 한 글자도 못 읽었습니다.** 검사가 틀렸습니다 " +
+               "(마이그레이션의 꼴이 바뀌었는지 보세요).");
+      return;
+    }
+    if(!Array.isArray(scr) || !scr.length){
+      bad.push(label + " — js/data/deal.js 쪽 목록이 비었습니다.");
+      return;
+    }
+    const s = scr.map(function(x){ return x.key; });
+    measured += db.length;
+    db.forEach(function(k){
+      if(s.indexOf(k) < 0)
+        bad.push(label + " — DB 에 '" + k + "' 가 있는데 화면에 그 말이 없습니다 " +
+                 "(손님 화면에 '" + k + "' 가 영문 그대로 찍힙니다).");
+    });
+    s.forEach(function(k){
+      if(db.indexOf(k) < 0)
+        bad.push(label + " — 화면에 '" + k + "' 가 있는데 DB 에 그 값이 없습니다 " +
+                 "(단추는 보이고 DB 가 거절합니다).");
+    });
+  });
+
+  /* ⚠️⚠️ 잰 것이 0개면 실패입니다 */
+  if(measured === 0) bad.push("아무것도 재지 못했습니다 — 검사가 그 파일을 보기는 했는지 세어 보세요.");
+  return { bad: bad, measured: measured };
+}
+
+module.exports = { run: run };
+
+if(require.main === module){
+  if(process.argv.indexOf("--prove") >= 0){
+    /* ⚠️⚠️ **일부러 되돌려서 실제로 잡히는지 봅니다.** 통과만 하고
+       아무것도 안 잡는 검사를 여러 번 만들었습니다. */
+    const clean = run();
+    console.log("\n── 지금 상태");
+    console.log(clean.bad.length ? "  ❌ " + clean.bad.join("\n  ❌ ")
+                                 : "  ✅ 같습니다 (" + clean.measured + "개를 재 봤습니다)");
+    let fail = clean.bad.length ? 1 : 0;
+
+    console.log("\n── 되돌려 보기 ① DB 에 상태 하나를 더하면");
+    const sql1 = readAll().replace("'new', 'check', 'assigned'",
+                                   "'new', 'check', 'assigned', 'ghost'");
+    const r1 = run({ sql: sql1 });
+    const got1 = r1.bad.some(function(m){ return m.indexOf("ghost") >= 0; });
+    console.log(got1 ? "  ✅ 잡았습니다 — " + r1.bad.filter(m => m.indexOf("ghost") >= 0)[0]
+                     : "  ❌ **못 잡았습니다** (검사가 아무것도 안 하고 있습니다)");
+    if(!got1) fail = 1;
+
+    console.log("\n── 되돌려 보기 ② DB 에서 상태 하나를 빼면");
+    const sql2 = readAll().replace("'nego', 'signed', 'done'", "'signed', 'done'");
+    const r2 = run({ sql: sql2 });
+    const got2 = r2.bad.some(function(m){ return m.indexOf("nego") >= 0; });
+    console.log(got2 ? "  ✅ 잡았습니다 — " + r2.bad.filter(m => m.indexOf("nego") >= 0)[0]
+                     : "  ❌ **못 잡았습니다**");
+    if(!got2) fail = 1;
+
+    console.log("\n── 되돌려 보기 ③ DB 쪽을 아예 못 읽으면 (검사가 틀린 경우)");
+    const r3 = run({ sql: "-- 아무것도 없습니다" });
+    const got3 = r3.measured === 0 && r3.bad.length > 0;
+    console.log(got3 ? "  ✅ 0개를 재고 **실패**합니다 (초록으로 지나가지 않습니다)"
+                     : "  ❌ **0개를 재고 통과했습니다** — 문에서 통과로 보입니다");
+    if(!got3) fail = 1;
+    process.exit(fail);
+  }
+  const r = run();
+  if(r.bad.length){
+    r.bad.forEach(function(m){ console.error("❌ " + m); });
+    process.exit(1);
+  }
+  console.log("상태 말이 DB 와 같습니다 — " + r.measured + "개");
+}

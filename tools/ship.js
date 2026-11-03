@@ -34,8 +34,11 @@ const STEPS = [
   ["붙여넣기 파일을 다시 만듭니다", ["tools/make-apply.js"],         false],
   ["주석이 코드를 삼키나",        ["tools/check-comments.js", "--prove"], false],
   ["window. 없이 쓴 맨이름",      ["tools/check-globals.js", "--prove"], false],
+  ["상태 말이 DB 와 같나",        ["tools/check-deal.js", "--prove"], false],
   ["분류 키가 옛 키와 겹치나",     ["tools/check-keys.js"],         false],
-  ["키 · 헤더 · CSP",            ["tools/check-safe.js"],         false],
+  /* ⚠️ `--prove` 를 붙입니다 — esc() 검사가 함수를 따라가게 고친 뒤로는
+     되돌려 보지 않으면 **느슨해진 자리**를 알 수 없습니다. */
+  ["키 · 헤더 · CSP",            ["tools/check-safe.js", "--prove"], false],
   ["주소가 vercel 규칙에 걸리나",  ["tools/check-routes.js", "--prove"], false],
   ["링크가 실제로 열리나",        ["tools/check-links.js"],        false],
   ["네 폭에서 전부 잽니다",       ["tools/check-screens.js"],      false],
@@ -43,6 +46,10 @@ const STEPS = [
   ["입점 신청 양식을 눌러 봅니다", ["tools/test-join.js"],          false],
   ["매칭 요청 양식을 눌러 봅니다",  ["tools/test-match.js"],         false],
   ["관리자 화면을 눌러 봅니다",    ["tools/test-admin.js"],         false],
+  /* ⚠️⚠️ 견적 흐름의 세 화면 — 배정 · 견적 제출 · 견적 비교.
+     ⚠️ 그 가운데 **화면 쪽 규칙** 둘은 DB 가 안 막습니다 (수락 전
+     연락처 가리기 · 동의 체크 없이 안 보내기) — 여기서만 잡힙니다. */
+  ["견적 흐름 세 화면을 눌러 봅니다", ["tools/test-desk.js"],          false],
   /* ⚠️⚠️ 업체가 0곳이라 "있을 때" 자리는 아무도 본 적이 없습니다 —
      씨앗을 넣고 실제로 찍어 봅니다. 끝나면 사본으로 되돌립니다. */
   ["업체가 있을 때를 눌러 봅니다",  ["tools/test-providers.js"],     false],

@@ -1,9 +1,9 @@
 /* ==================================================================
-   0008 ~ 0029 를 한 번에 —
+   0008 ~ 0032 를 한 번에 —
    Supabase SQL 편집기에 **이 파일을 통째로** 붙여 넣고 Run 하세요.
    ==================================================================
    WARN 빌드가 만드는 파일입니다 — 손으로 고치지 마세요.
-   db/migrations 의 22개를 번호 차례로 이어 붙인 것이고
+   db/migrations 의 25개를 번호 차례로 이어 붙인 것이고
    한 글자도 바꾸지 않았습니다. (node tools/make-apply.js)
 
    이미 0007 까지 돌려 두신 DB 에 쓰는 것입니다.
@@ -4217,6 +4217,285 @@ revoke all on function make_request(jsonb) from public;
 grant execute on function make_request(jsonb) to anon, authenticated;
 
 insert into schema_version (n, name) values (29, '0029_match_door')
+on conflict (n) do nothing;
+
+commit;
+
+/* ---------------------------- 0030_test_provider.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0030 — **검사용 업체**를 참 업체와 갈라 둡니다 (2차 지시서 §8)
+-- ════════════════════════════════════════════════════════════════════
+-- 지시서 §8 이 "실제 데이터와 테스트 데이터를 구분한다" 고 적었고,
+-- §1 과 절대 규칙 1 이 **없는 업체를 손님에게 보이는 것**을 금지합니다
+-- (표시 · 광고의 공정화에 관한 법률 제3조). 그런데 지금 `provider` 표에는
+-- 그 둘을 가를 칸이 **없습니다.**
+--
+-- ⚠️⚠️ **왜 지금 필요한가.** 상담 → 배정 → 견적 → 고르기 흐름은
+--   업체가 있어야 눌러 볼 수 있습니다. 참 업체가 0곳인 동안 그 자리를
+--   한 번도 안 눌러 보고 두면, 첫 업체가 들어온 날 **그때 처음** 깨진
+--   것을 알게 됩니다. 그래서 검사용 업체를 넣어 눌러 보는데 —
+--   **그 줄이 손님 화면으로 새면 그 순간 없는 회사를 광고하는 것**입니다.
+--   칸 하나로 그 길을 끊습니다.
+--
+-- ⚠️⚠️ **`listed` 와 다른 칸입니다.** 셋이 하는 일이 다릅니다 —
+--     listed      공개 목록에 낼 것인가           (관리자가 정합니다)
+--     assignable  신청을 넘겨도 되는가             (계약 · 계정 연결)
+--     is_test     **참 업체가 아닙니다**           (지우기 전까지 영원히)
+--   `listed = false` 로만 숨기면 누군가 공개를 켜는 날 조용히 손님에게
+--   나갑니다. `is_test` 는 **공개 정책 자체가** 걸러서, 켜도 안 나갑니다.
+--
+-- ⚠️⚠️ **앞으로 세는 자리는 전부 `is_test = false` 로 좁혀야 합니다.**
+--   매각 지표(2차 지시서 §9 — MAU · 유효 상담 비율 · 거래액)에 검사용
+--   줄이 섞이면 그건 **투자자에게 하는 거짓말**입니다. 지금 세는 곳은
+--   `js/account.js` 의 관리자 현황 하나이고, 거기서는 검사용을 **따로**
+--   셉니다 (섞지 않고 갈라 보여 줍니다).
+--
+-- ⚠️ 돌려도 참 자료가 바뀌지 않습니다 — default false 라 기존 줄은
+--   전부 참 업체로 남습니다 (not null 을 default 와 **같이** 적는
+--   까닭입니다. default 없이 not null 을 붙이면 줄이 있는 표에서
+--   그 자리에서 터집니다).
+--
+-- ⚠️⚠️ **`provider_guard()` 를 네 번째로 다시 씁니다**
+--   (0001 → 0021 → 0024 → 0030). 앞 번호를 다시 붙여 넣으면 이 파일이
+--   한 일이 **조용히 내려갑니다** — 에러가 안 납니다. 내려갔는지는
+--   이렇게 봅니다:
+--     select prosrc like '%is_test%' from pg_proc where proname='provider_guard';
+--   false 면 앞 판입니다. 이 파일을 다시 올리세요.
+--
+-- ⚠️ 씨앗은 여기 넣지 않습니다 — `db/seed/test-providers.sql` 입니다.
+--   마이그레이션에 넣으면 운영 DB 를 올리는 날 **검사용 업체가 같이**
+--   올라갑니다.
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+-- ── ① 칸 ────────────────────────────────────────────────────────────
+alter table provider
+  add column if not exists is_test boolean not null default false;
+
+comment on column provider.is_test is
+  '참 업체가 아닙니다 (검사용). 공개 정책이 걸러 손님 화면에 안 나갑니다. '
+  '세는 자리는 전부 is_test = false 로 좁혀야 합니다 — 2차 지시서 §8.';
+
+-- ⚠️ 공개 목록을 꺼낼 때마다 보는 칸이라 인덱스를 같이 둡니다.
+create index if not exists provider_live_idx
+  on provider (listed) where is_test = false;
+
+
+-- ── ② 공개 정책 — 검사용은 **anon 에게 한 줄도** 안 갑니다 ──────────
+-- ⚠️⚠️ 0001 의 정책을 **덮어씁니다.** 0001 을 다시 붙여 넣으면 이것이
+--   내려가고 검사용 업체가 공개됩니다 — 위 머리말의 확인 질의와 같은
+--   자리입니다.
+-- ⚠️ 운영자와 **그 업체 자신**은 그대로 봅니다. 안 보이면 눌러 볼
+--   수가 없고, 배정 화면에서 고를 수도 없습니다.
+drop policy if exists provider_public on provider;
+create policy provider_public on provider for select
+  using ((listed = true and is_test = false)
+         or my_role() in ('staff','admin')
+         or id = my_provider());
+
+
+-- ── ③ 업체가 스스로 끌 수 없게 ─────────────────────────────────────
+-- ⚠️⚠️ **업체가 `is_test` 를 끄면 그 자리에서 공개됩니다.** `listed` ·
+--   `verified` 와 같은 종류의 칸이라 같은 자물쇠에 넣습니다.
+-- ⚠️ 거절하는 말을 **다른 말로** 둡니다 — 자물쇠가 겹치면 어느 것이
+--   막았는지 알 수 없고, 검사가 엉뚱한 까닭으로 통과합니다.
+create or replace function provider_guard() returns trigger
+  language plpgsql security definer set search_path = public as $$
+begin
+  if my_role() = 'admin' then return new; end if;
+  if new.verified is distinct from old.verified then
+    raise exception '확인 배지는 플랫폼이 서류를 확인한 뒤에만 켜집니다';
+  end if;
+  if new.listed is distinct from old.listed then
+    raise exception '공개 여부는 관리자가 정합니다';
+  end if;
+  if new.id is distinct from old.id then
+    raise exception '업체 주소(id)는 바꿀 수 없습니다 — 이미 색인된 주소입니다';
+  end if;
+  if new.is_test is distinct from old.is_test then
+    raise exception '검사용 표시는 관리자만 바꿀 수 있습니다';
+  end if;
+  return new;
+end $$;
+
+
+-- ── ④ 검사용 줄이 섞이지 않게 세는 손잡이 ──────────────────────────
+-- ⚠️⚠️ **왜 함수인가.** 관리자 화면은 PostgREST 로 `provider` 를 세는데,
+--   운영자에게는 검사용 줄도 보입니다 (② 의 정책). 그래서 화면이 센
+--   값은 **검사용이 섞인 값**이고, 그것을 "업체 수" 라고 찍으면 그
+--   화면부터 이미 틀린 숫자입니다.
+--   PostgREST 로 `is_test=eq.false` 를 붙일 수도 있지만, 그러면 **화면이
+--   그 조건을 기억해야** 하고 새 화면을 만드는 날 빠집니다 (같은 규칙을
+--   두 곳에 적는 자리입니다). 세는 규칙을 DB 에 한 번 둡니다.
+-- ⚠️ 돌려주는 것은 **숫자 둘**입니다 — 사람 정보가 아닙니다.
+-- ⚠️⚠️ **0 을 null 로 섞지 않습니다.** 못 읽은 것과 0건은 다릅니다 —
+--   읽을 수 없으면 거절(exception)하고, 0건이면 0 을 돌려줍니다.
+create or replace function provider_counts() returns jsonb
+  language plpgsql stable security definer set search_path = public as $$
+declare v_live int; v_test int;
+begin
+  if my_role() not in ('staff','admin') then
+    raise exception '업체 수는 직원 · 관리자만 볼 수 있습니다';
+  end if;
+  select count(*) into v_live from provider where is_test = false;
+  select count(*) into v_test from provider where is_test = true;
+  return jsonb_build_object('real', v_live, 'test', v_test);
+end $$;
+
+revoke all on function provider_counts() from public;
+grant execute on function provider_counts() to authenticated;
+
+insert into schema_version (n, name) values (30, '0030_test_provider')
+on conflict (n) do nothing;
+
+commit;
+
+/* ---------------------------- 0031_quote_provider_name.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0031 — 손님이 **자기에게 배정된 업체의 상호**를 볼 수 있게
+-- ════════════════════════════════════════════════════════════════════
+-- ⚠️⚠️ **조용히 깨져 있던 자리입니다.** 견적 비교 화면을 세우면서
+--   알았습니다 —
+--
+--   손님 화면은 견적을 이렇게 꺼냅니다 (PostgREST 의 묶음 읽기):
+--     quote?select=...,provider:provider_id(id,name)
+--   그런데 묶여 나오는 `provider` 줄에도 RLS 가 걸립니다. 0001 의
+--   `provider_public` 은 `listed = true` 인 줄만 열어 주므로, **공개
+--   목록에 없는 업체가 낸 견적은 상호가 `null` 로** 나옵니다.
+--   금액만 있고 **누가 냈는지가 없는 견적**입니다.
+--
+--   에러가 안 납니다. 화면은 멀쩡히 그려지고 그 칸만 빕니다 —
+--   `listed = true` 인 업체로만 눌러 보면 **영원히 안 보이는** 고장입니다.
+--
+-- ⚠️⚠️ **이것은 가려야 할 것을 더 여는 일이 아닙니다.** 배정하는 순간
+--   그 업체의 **상호를 손님에게 알리고** 제3자 제공 동의를 받았습니다
+--   (개인정보보호법 제17조 제2항 · 0004 의 move_state). 이미 알려 드린
+--   상호를 그 손님에게 보여 주는 것입니다. 모르는 업체가 아닙니다.
+--
+-- ⚠️ 여는 범위를 **그 손님 · 그 업체**로 좁힙니다 — 배정된 적이 없는
+--   업체는 전과 똑같이 안 보입니다.
+--
+-- ⚠️⚠️ **정책 안에서 `assignment` 를 바로 읽으면 무한 재귀입니다.**
+--   `assignment` 의 정책이 `request` 를 보고, `request` 의
+--   `request_assigned` 가 다시 `assignment` 를 봅니다 — Postgres 가
+--   *"infinite recursion detected in policy"* 로 멈춥니다 (0005 · 0008
+--   에서 실제로 겪은 자리). 그래서 `security definer` 함수로 끊습니다.
+--
+-- ⚠️ 검사용 업체(0030)도 여기서는 보입니다. **그것이 맞습니다** —
+--   배정이 실제로 있었다는 뜻이고, 그 상호는 이미 알려 드린 것입니다.
+--   공개 목록 · 분류 화면 · 사이트맵은 0030 의 정책이 그대로 막습니다
+--   (그 길은 `listed = true and is_test = false` 를 지나야 합니다).
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+-- ⚠️ `stable` 입니다 — 한 질의 안에서 줄마다 다시 돌지 않게.
+create or replace function provider_told_to_me(p_id text) returns boolean
+  language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1
+      from assignment a
+      join request r on r.id = a.request_id
+     where a.provider_id = p_id
+       and r.user_id = auth.uid()
+  )
+$$;
+revoke all on function provider_told_to_me(text) from public;
+grant execute on function provider_told_to_me(text) to authenticated;
+
+-- ⚠️⚠️ **0030 의 정책을 건드리지 않고 정책을 하나 더 답니다.**
+--   RLS 의 select 정책 여럿은 **or 로** 묶입니다 — 0030 을 고쳐
+--   조건을 늘리면 "공개 목록" 규칙과 "내 업체" 규칙이 한 덩어리가 되고,
+--   한쪽을 고칠 때 다른 쪽이 같이 움직입니다. 따로 둡니다.
+drop policy if exists provider_told on provider;
+create policy provider_told on provider for select
+  using (provider_told_to_me(id));
+
+insert into schema_version (n, name) values (31, '0031_quote_provider_name')
+on conflict (n) do nothing;
+
+commit;
+
+/* ---------------------------- 0032_provider_card_view.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0032 — 업체 목록을 **가져올 길**을 엽니다 (그리고 광고 보기의 구멍 하나)
+-- ════════════════════════════════════════════════════════════════════
+-- ⚠️⚠️⚠️ **`tools/pull-providers.js` 는 지금까지 한 번도 돌 수 없었습니다.**
+--   그 도구는 공개 키(anon)로 `provider` 표를 읽습니다. 그런데 0001 의
+--   GRANT 는 **anon 에게 select 를 한 줄도 주지 않습니다** (452~456행 —
+--   "anon 에게는 아무 권한도 주지 않습니다"). RLS 의 `provider_public`
+--   정책만 보고 "공개 목록은 읽힌다" 고 읽었는데, **GRANT 가 먼저**
+--   막습니다 — `permission denied for table provider` 입니다.
+--
+--   업체가 0곳인 동안은 아무도 그 도구를 돌릴 까닭이 없어서 몰랐습니다.
+--   **첫 업체를 승인하신 날** 그때 처음 터질 참이었고, 그날은 손님에게
+--   업체를 보여 드리려는 날입니다. 0030 의 검사를 쓰면서 anon 으로
+--   눌러 보다 알았습니다 (자물쇠가 **겹쳐 있어** 정책만 보고 통과로
+--   읽은 자리 — 작업 기억의 "GRANT 와 RLS 를 따로 눌러 보세요").
+--
+-- ⚠️⚠️ **표를 anon 에게 열지 않습니다.** `grant select on provider to anon`
+--   한 줄로 끝낼 수도 있지만, 그러면 **칸 전부**가 열립니다 —
+--   `assignable`(제휴 계약이 되어 있는가) · `listed` · `is_test` 까지
+--   누구나 읽습니다. 그건 손님 화면에 쓰지 않는 운영 정보입니다.
+--   그래서 **칸을 골라 담은 보기(view)** 하나만 엽니다.
+--
+-- ⚠️⚠️ **보기는 RLS 를 지나지 않습니다** (security_invoker 를 안 켰으니
+--   임자 권한으로 돕니다). 그러니 **보기의 where 절이 자물쇠 그 자체**
+--   입니다 — 0030 의 정책과 **다른 자리에 있는 둘째 자물쇠**이고,
+--   한쪽이 내려가도 다른 쪽이 남습니다. 칸을 더하실 때 이 줄을 꼭
+--   다시 읽으세요.
+--
+-- ⚠️ `is_test` 를 **일부러 담았습니다.** 보기의 where 가 늘 false 로
+--   좁히니 쓸모없어 보이지만, `tools/pull-providers.js` 가 그 값을
+--   다시 봅니다 — where 가 느슨해지는 날 도구가 멈춥니다.
+--
+-- ⚠️⚠️ **광고 보기(v_ad_live)에 구멍이 하나 있었습니다.** 그 보기는
+--   `provider` 를 join 해서 상호를 내보내고 anon 에게 열려 있는데,
+--   보기는 RLS 를 지나지 않으므로 **검사용 업체의 상호가 광고로 나갈**
+--   수 있었습니다 (0030 의 정책이 그 길은 못 막습니다). 같이 좁힙니다.
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+-- ── ① 공개용 업체 보기 ──────────────────────────────────────────────
+-- ⚠️⚠️ **연락처 · 담당자 칸이 여기 없습니다** (그 자료는 0013 의
+--   `provider_contact` 에 따로 있고, 운영자만 봅니다). 이 보기에
+--   사람 정보를 담지 마세요 — anon 에게 열린 자리입니다.
+-- ⚠️ `assignable` 도 담지 않습니다 — 어느 업체와 계약이 되어 있는지는
+--   손님 화면에 쓸 일이 없습니다.
+create or replace view v_provider_card as
+  select p.id, p.name, p.intro, p.regions, p.gu, p.subs, p.since,
+         p.consult_hours, p.verified, p.brands, p.scale,
+         p.is_test       -- ⚠️ 늘 false 입니다 (아래 where) — 도구가 다시 봅니다
+    from provider p
+   where p.listed = true
+     and p.is_test = false;
+
+comment on view v_provider_card is
+  '손님 화면 · tools/pull-providers.js 가 읽는 공개 업체 목록. '
+  'RLS 를 지나지 않으므로 where 절이 자물쇠입니다 (0032).';
+
+grant select on v_provider_card to anon, authenticated;
+
+
+-- ── ② 광고 보기에서도 검사용을 거릅니다 ────────────────────────────
+-- ⚠️⚠️ 0026 의 보기를 **덮어씁니다.** 0026 을 다시 붙여 넣으면 이것이
+--   내려가고 검사용 업체의 상호가 광고로 나갈 수 있습니다. 내려갔는지는
+--   이렇게 봅니다:
+--     select definition like '%is_test%' from pg_views where viewname='v_ad_live';
+--   false 면 0026 판입니다. 이 파일을 다시 올리세요.
+-- ⚠️ 칸 목록과 차례는 0026 것 **그대로**입니다 — 보기의 칸이 바뀌면
+--   `create or replace view` 가 거절합니다 (그게 맞습니다).
+-- ⚠️⚠️ `label` 을 **그대로 둡니다.** 광고를 광고라고 적지 않으면
+--   표시 · 광고의 공정화에 관한 법률 제3조입니다.
+create or replace view v_ad_live as
+  select a.id, a.provider_id, p.name as provider_name,
+         a.place, a.cat_key, a.region, a.starts_on, a.ends_on,
+         '광고'::text as label
+    from ad_run a join provider p on p.id = a.provider_id
+   where a.state = 'live'
+     and current_date between a.starts_on and a.ends_on
+     and p.is_test = false;
+
+insert into schema_version (n, name) values (32, '0032_provider_card_view')
 on conflict (n) do nothing;
 
 commit;

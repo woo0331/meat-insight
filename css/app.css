@@ -479,3 +479,88 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .mband-l .ic{ color: var(--grn-text); flex:none; }
 .mband-s{ flex:none; color: var(--grn); opacity:.5; }
 @media (max-width: 720px){ .mband-s{ display:none; } }
+
+/* ── 작업실 · 배정 · 내 요청 (2차 지시서 §5 · §6 · §7) ─────────
+   ⚠️⚠️ 클래스 이름을 **두 글자로 줄이지 않았습니다.** 짧은 이름(.lg)을
+   두 곳에 쓰다가 로고의 display:flex 가 약관 조문 스무 개를 가로로
+   늘어세운 적이 있습니다 — 접두사 dk- · as- · rq- 를 붙입니다.
+   ⚠️ 위아래 여백만 바꿀 때는 padding-block 입니다. padding 줄임꼴로
+   적으면 좌우가 0 이 되어 글이 화면 끝에 붙습니다. */
+.deskbox{ display:grid; gap:16px; }
+.dk-c{ font-size:15px; color: var(--ink3); }
+.dk-r{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+       padding:18px 20px; }
+.dk-h{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.dk-h b{ font-size:17px; color: var(--ink); }
+/* ⚠️⚠️ 상태색은 **배지 바탕용**입니다 — 글자는 짙은 단계로 씁니다
+   (작업 기억의 "상태색을 글자로 쓰려면 짙은 단계로"). */
+.dk-st{ font-size:12.5px; font-weight:700; border-radius: var(--r-pill);
+        padding:4px 10px; background: var(--bg-2); color: var(--ink2); }
+.dk-ok  { background: var(--ok-soft);   color: var(--ok-text); }
+.dk-info{ background: var(--info-soft); color: var(--info-text); }
+.dk-warn{ background: var(--warn-soft); color: var(--warn-text); }
+.dk-bad { background: var(--bad-soft);  color: var(--bad-text); }
+.dk-grn { background: var(--grn-soft);  color: var(--grn-text); }
+.dk-ink { background: var(--bg-2);      color: var(--ink2); }
+
+/* 값이 있는 줄만 나옵니다 — 빈 칸을 찍지 않습니다 (절대 규칙 2) */
+.dk-d{ display:grid; gap:6px 14px; grid-template-columns: max-content 1fr;
+       margin-top:12px; font-size:15px; }
+.dk-d dt{ color: var(--grn-text); font-weight:700; }
+.dk-d dd{ margin:0; color: var(--ink2); word-break: keep-all; overflow-wrap: anywhere; }
+@media (max-width: 560px){
+  /* ⚠️ 한글 이름표가 길어 폰에서 두 칸이 서로 밀립니다 — 세로로 세웁니다 */
+  .dk-d{ grid-template-columns: 1fr; gap:2px; }
+  .dk-d dd{ margin-bottom:8px; }
+}
+.dk-hint{ margin-top:12px; font-size:14px; color: var(--ink3);
+          word-break: keep-all; overflow-wrap: anywhere; }
+.dk-no{ font-size:15px; color: var(--bad-text); }
+.dk-b{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+.dk-m{ margin-top:10px; }
+
+/* 업체가 낸 견적 — 자기 화면에서 보는 자리 */
+.dk-q{ margin-top:14px; background: var(--grn-soft);
+       border:1.5px solid var(--grn-line); border-radius: var(--r-sm);
+       padding:14px 16px; }
+.dk-qh{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.dk-qh b{ font-size:17px; color: var(--ink); }
+.dk-qs{ margin-top:8px; font-size:15px; color: var(--ink2);
+        word-break: keep-all; overflow-wrap: anywhere; }
+.dk-qx{ margin-top:6px; font-size:14px; color: var(--ink3); }
+/* 견적 양식은 카드 안이라 한 칸 띄웁니다 */
+.dk-f{ margin-top:16px; padding-block: 16px 0; border-top:1.5px solid var(--line-soft); }
+
+/* 배정 — 넘긴 업체 목록 */
+.as-l{ display:grid; gap:6px; margin-top:12px; }
+.as-l li{ font-size:15px; color: var(--ink2); display:flex;
+          align-items:center; gap:8px; flex-wrap:wrap; }
+.as-t{ font-size:12.5px; font-weight:700; border-radius: var(--r-pill);
+       padding:3px 9px; background: var(--warn-soft); color: var(--warn-text); }
+
+/* 내 요청 — 진행 막대와 견적 비교 */
+.rq-h{ font-size:17px; margin-top:18px; }
+/* ⚠️ background 에 그라디언트만 적으면 backgroundColor 가 투명이라
+   색을 재는 쪽이 검정으로 읽습니다 — background-color 를 따로 적습니다. */
+.rq-bar{ margin-top:12px; height:8px; border-radius: var(--r-pill);
+         background-color: var(--line-soft); overflow:hidden; }
+.rq-bar i{ display:block; height:100%; background-color: var(--pt); }
+.rq-qs{ display:grid; gap:12px; margin-top:12px;
+        grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 760px){ .rq-qs{ grid-template-columns: 1fr; } }
+/* ⚠️ 견적 둘의 **단추 높이를 맞춥니다.** 포함 내용이 짧은 쪽 단추가
+   가운데에 떠서 둘을 견주기 어려웠습니다 (찍어 보고 알았습니다 —
+   가로 스크롤도 대비도 안 걸리는 자리입니다). */
+.rq-q{ display:flex; flex-direction:column;
+       background: var(--bg-2); border:1.5px solid var(--line);
+       border-radius: var(--r-sm); padding:14px 16px; }
+.rq-q .dk-b{ margin-top:auto; padding-block: 14px 0; }
+.rq-q-on{ background: var(--grn-soft); border-color: var(--grn-line); }
+.rq-qh{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+.rq-qh b{ font-size:16.5px; color: var(--ink); }
+.rq-q-no{ color: var(--bad-text); font-size:15px; }
+.rq-amt{ margin-top:8px; font-size:19px; font-weight:800; color: var(--ink); }
+.rq-c{ margin-top:12px; }
+.mycard-b{ margin-top:14px; }
+.cnt-t{ border-color: var(--warn); background: var(--warn-soft); }
+.cnt-t dt{ color: var(--warn-text); }

@@ -135,9 +135,61 @@ console.log("\n── 손님이 적은 글");
    ⚠️ 이 검사는 완벽하지 않습니다 — 변수 없이 글자만 잇는 자리는
    안전하므로 빼고, 변수가 들어가는데 esc() 가 한 번도 없는 문장만
    잡습니다. 손으로도 한 번씩 보세요. */
-let risky = [];
-CLIENT.filter(function(f){ return /\.js$/.test(f); }).forEach(function(f){
-  const src = fs.readFileSync(path.join(ROOT, f), "utf8");
+/* ⚠️⚠️ **"그 함수가 책임집니다" 를 실제로 따라가 봅니다.**
+   위 주석이 "함수가 만들어 준 것을 그대로 넣는 자리는 그 함수가
+   책임집니다" 라고 적었는데, 검사는 그 함수를 **따라가지 않았습니다** —
+   그래서 카드 한 장을 만드는 함수를 따로 빼면, 안에서 esc() 를 제대로
+   거쳤는데도 "esc() 가 없다" 로 잡혔습니다 (화면이 아니라 **검사가
+   틀린** 자리입니다).
+   ⚠️ 따라가되 **느슨하게 풀지 않습니다.** 그 파일에 선언된 함수를
+   부르는데 그 함수 안에 esc() 가 **한 번도 없으면 그대로 잡습니다.**
+   ⚠️⚠️ 남는 틈(한 칸은 esc 를 거치고 다른 칸은 안 거치는 함수)은 이
+   grep 이 영원히 못 잡습니다 — 그 자리는 `tools/test-desk.js` ·
+   `test-admin.js` 가 화면마다 **태그를 실제로 넣어 보고** 잡습니다. */
+function bodiesWithEsc(src){
+  const has = {}, lacks = {};
+  /* `function name(` · `var name = function(` · `name = function(` 셋 */
+  const decl = /(?:function\s+([A-Za-z_$][\w$]*)\s*\(|(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*function\s*\()/g;
+  let m;
+  while((m = decl.exec(src)) !== null){
+    const name = m[1] || m[2];
+    /* 여는 중괄호부터 짝이 맞을 때까지 — ⚠️ 문자열 안의 괄호를
+       세면 엉뚱한 데서 끊깁니다. */
+    let k = src.indexOf("{", decl.lastIndex);
+    if(k < 0) continue;
+    let depth = 0, q = "", body = "";
+    for(; k < src.length; k++){
+      const c = src[k];
+      if(q){ if(c === "\\"){ body += c + src[++k]; continue; }
+             body += c; if(c === q) q = ""; continue; }
+      if(c === "'" || c === '"' || c === "`"){ q = c; body += c; continue; }
+      body += c;
+      if(c === "{") depth++;
+      if(c === "}"){ depth--; if(depth === 0) break; }
+    }
+    /* ⚠️ **글자만 잇는 함수는 안전합니다.** `claimForm()` 처럼 붙박이
+       양식을 돌려주는 함수에는 esc() 를 거칠 것이 아예 없습니다 —
+       그것까지 "esc() 가 없다" 로 잡으면 경고가 늘 떠서 진짜가 묻힙니다.
+       문자열 · 주석 · 예약어를 걷어 내고 **잇는 자리 옆에 이름이
+       있는지**만 봅니다. 하나라도 있으면 값이 들어오는 함수입니다. */
+    const stripped = body
+      .replace(/'(\\.|[^'])*'/g, "'S'").replace(/"(\\.|[^"])*"/g, '"S"')
+      .replace(/`(\\.|[^`])*`/g, "`S`")
+      .replace(/'S'|"S"|`S`/g, " ")
+      .replace(/\/\*[\s\S]*?\*\//g, " ").replace(/\/\/[^\n]*/g, " ")
+      .replace(/\b(return|function|var|let|const|if|else|true|false|null|undefined|typeof|new)\b/g, " ");
+    const joinsValue = /\+\s*[A-Za-z_$]|[A-Za-z_$][\w$]*\s*\+/.test(stripped);
+    if(/\besc\(|\bmark\(/.test(body) || !joinsValue) has[name] = 1;
+    else lacks[name] = 1;
+  }
+  return { has: has, lacks: lacks };
+}
+
+function scanEsc(list){
+  const risky = [];
+  list.forEach(function(pair){
+  const f = pair[0], src = pair[1];
+  const fn = bodiesWithEsc(src);
   const lines = src.split("\n");
   lines.forEach(function(l, i){
     const m = l.match(/innerHTML\s*\+?=/);
@@ -169,9 +221,29 @@ CLIENT.filter(function(f){ return /\.js$/.test(f); }).forEach(function(f){
                      .replace(/`(\\.|[^`])*`/g, "").replace(SAFEFN, "(");
     if(!/[A-Za-z_$]/.test(noStr)) return;          /* 글자만 이은 것 */
     if(/\besc\(|\bmark\(/.test(rhs)) return;      /* 거쳤습니다 */
+
+    /* 이 파일에 선언된 함수를 쓰는가 — 그렇다면 그 함수를 따라갑니다.
+       ⚠️⚠️ **부르는 꼴만 찾으면 안 됩니다.** `rows.map(card)` 처럼
+       **이름만 넘기는** 자리가 있어서, `card(` 만 찾다가 따라갈 것이
+       없다고 보고 멀쩡한 줄을 잡았습니다 (되돌려 보기에서 드러났습니다).
+       ⚠️ `x.card` 같은 속성 이름은 뺍니다 (앞 글자가 점이면 아닙니다). */
+    const used = {};
+    let c2;
+    const idRe = /(\.?)([A-Za-z_$][\w$]*)/g;
+    while((c2 = idRe.exec(rhs)) !== null) if(!c2[1]) used[c2[2]] = 1;
+    const mine = Object.keys(used).filter(function(n){
+      return fn.has[n] || fn.lacks[n];
+    });
+    /* ⚠️ 부르는 함수 가운데 **esc() 가 없는 것이 하나라도** 있으면
+       잡습니다. 하나도 안 부르면 전처럼 잡습니다 (따라갈 것이 없습니다). */
+    if(mine.length && mine.every(function(n){ return !!fn.has[n]; })) return;
     risky.push(f + ":" + (i + 1) + "  " + l.trim().slice(0, 56));
   });
-});
+  });
+  return risky;
+}
+const risky = scanEsc(CLIENT.filter(function(f){ return /\.js$/.test(f); })
+  .map(function(f){ return [f, fs.readFileSync(path.join(ROOT, f), "utf8")]; }));
 ok("innerHTML 에 esc() 없이 변수를 넣는 줄이 없다", risky.length === 0, risky.join(" / "));
 
 if(process.argv.indexOf("--prove") >= 0){
@@ -185,6 +257,39 @@ if(process.argv.indexOf("--prove") >= 0){
   console.log("  JWT 를 넣으니 " + got + "건 잡힘  " + (got ? "O" : "❌ 못 잡습니다"));
   const narrow = "connect-src 'self'";
   console.log("  connect-src 를 좁히면 잡히나: " + (/supabase\.co/.test(narrow) ? "❌" : "O"));
+
+  /* ⚠️⚠️ **함수를 따라가게 고친 뒤 꼭 되돌려 봅니다.** 느슨해진 자리로
+     진짜가 지나가면, 검사는 늘 초록인데 손님 글이 날것으로 나갑니다. */
+  console.log("\n  esc() 검사를 일부러 되돌려 봅니다");
+  const probes = [
+    ["손님 글을 그대로 잇는 자리",
+     "box.innerHTML = '<b>' + row.name + '</b>';", true],
+    ["esc() 를 거치면 안 잡힌다",
+     "box.innerHTML = '<b>' + esc(row.name) + '</b>';", false],
+    ["esc() 없는 **함수**를 따라 들어가서 잡는다",
+     "function card(r){ return '<b>' + r.name + '</b>'; }\n" +
+     "box.innerHTML = '<div>' + rows.map(card).join('') + '</div>';", true],
+    ["esc() 를 거치는 함수는 안 잡는다",
+     "function card(r){ return '<b>' + esc(r.name) + '</b>'; }\n" +
+     "box.innerHTML = '<div>' + rows.map(card).join('') + '</div>';", false],
+    ["글자만 잇는 함수는 안 잡는다 (거칠 것이 없습니다)",
+     "function form(){ return '<form>' + '<input>' + '</form>'; }\n" +
+     "box.innerHTML = '<div>' + form() + '</div>';", false],
+    ["안전한 함수와 **섞여도** 안 섞인 쪽을 잡는다",
+     "function okc(r){ return esc(r.a); }\n" +
+     "function badc(r){ return '<i>' + r.b + '</i>'; }\n" +
+     "box.innerHTML = '<div>' + okc(x) + badc(y) + '</div>';", true]
+  ];
+  let probeBad = 0;
+  probes.forEach(function(pr){
+    const got = scanEsc([["probe.js", pr[1]]]).length > 0;
+    const good = got === pr[2];
+    if(!good) probeBad++;
+    console.log("  " + (good ? "O" : "❌") + " " + pr[0] +
+                (good ? "" : "  → 기대 " + (pr[2] ? "잡힘" : "안 잡힘") +
+                             " · 실제 " + (got ? "잡힘" : "안 잡힘")));
+  });
+  if(probeBad) bad++;
   if(!got){ process.exit(1); }
 }
 

@@ -68,7 +68,10 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 /* ⚠️ 로고 표식은 **금색**입니다 (3차 시안). 금색은 어두운 면 위에서만
    씁니다 — 머리말 바탕(#08291F) 위 8.14 입니다 (tokens.css 에 잰 값). */
 .lg-mk{ width:38px; height:38px; flex:none; color: var(--gold); }
-.lg-im{ width:40px; height:40px; flex:none; object-fit:contain; }
+/* ⚠️ 로고는 방패라 **세로가 깁니다**(118x160). 네모 액자에 넣고
+   object-fit:contain 으로 두면 가로가 남습니다 — 높이를 기준으로
+   잡고 가로는 그만큼만 차지하게 둡니다. */
+.lg-im{ height:46px; width:auto; flex:none; object-fit:contain; display:block; }
 .lg-tx{ display:flex; flex-direction:column; line-height:1.1; }
 .lg-en{ font-size:17px; font-weight:800; letter-spacing:.02em; }
 .lg-en b{ color: var(--gold); font-weight:800; }               /* 헤더 위 8.14 */
@@ -123,6 +126,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
    (390px 에서 그랬습니다). 글자는 그대로 두고 크기만 줄입니다. */
 @media (max-width: 560px){
   .lg-mk{ width:30px; height:30px; }
+  .lg-im{ height:38px; }
   .lg-en{ font-size:14.5px; letter-spacing:0; }
   /* ⚠️⚠️ **12px 미만 금지입니다.** 머리말을 두 줄에 넣으려고 11.5px 로
      줄였다가 전수 점검이 **열두 자리에서** 잡았습니다 (360 · 414px 의
@@ -309,6 +313,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .ft-bd{ min-width:220px; }
 .ft-lg{ display:flex; align-items:center; gap:10px; }
 .ft-mk{ width:32px; height:32px; }
+.ft-lg .lg-im{ height:34px; }
 .ft-bd .lg-en{ color:#fff; }
 
 /* ── 푸터 ─────────────────────────────────────────────── */

@@ -115,6 +115,21 @@ let ok = 0;
   }
   pair("zone-", (w2.AM_ZONES || []).map(z => z.key), "영역");
   pair("cat-",  (w2.AM_CATS  || []).map(c => c.key), "분류");
+
+  /* ⚠️⚠️ **로고도 그림입니다** — 자리 목록에는 없지만(사진이 아니라
+     브랜드 자산입니다) 경로가 틀리면 **머리말과 푸터 두 곳이 동시에**
+     빈 네모가 됩니다. 비어 있으면 방패 표식으로 돌아가므로 괜찮지만,
+     **적혀 있는데 파일이 없는 것**은 고장입니다. */
+  new Function("window", fs.readFileSync(
+    path.join(ROOT, "js/data/brand.js"), "utf8"))(w2);
+  const logo = ((w2.AM_BRAND || {}).logo || "").split("?")[0];
+  if(logo){
+    if(logo[0] !== "/")
+      bad.push("AM_BRAND.logo 의 경로가 / 로 시작하지 않습니다 (" + logo + ")");
+    else if(!fs.existsSync(path.join(ROOT, logo.replace(/^\//, ""))))
+      bad.push("AM_BRAND.logo — 파일이 없습니다: " + logo +
+               " (머리말 · 푸터 두 곳이 같이 빈 네모가 됩니다)");
+  }
 })();
 
 Object.keys(PHOTOS).forEach(key => {

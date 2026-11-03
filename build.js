@@ -66,9 +66,12 @@ function header(){
        `AM_BRAND.logo` 에 주소만 적으시면 여기서 바뀝니다 (칸은 이미
        있습니다 — js/data/brand.js). */
     '<a class="lg" href="/" aria-label="' + esc(B.name) + ' 홈">' +
+      /* ⚠️ 가로 · 세로를 **실제 모양대로** 적습니다. 네모(40x40)로
+         적으면 브라우저가 그만큼 자리를 잡아 두었다가 그림이 오면
+         좁아지면서 **옆의 글자가 밀립니다**(레이아웃 이동). */
       (B.logo
         ? '<img class="lg-im" src="' + esc(B.logo) + '" alt="" aria-hidden="true" ' +
-          'width="40" height="40">'
+          'width="34" height="46">'
         : '<span class="lg-mk">' + icon("shield", 38) + '</span>') +
       '<span class="lg-tx">' +
         '<span class="lg-en">' + esc(B.en.slice(0,cut)) + '<b>' + esc(B.en.slice(cut)) + '</b></span>' +
@@ -150,7 +153,7 @@ function footer(){
         '<div class="ft-lg">' +
           (B.logo
             ? '<img class="lg-im" src="' + esc(B.logo) + '" alt="" aria-hidden="true" ' +
-              'width="34" height="34">'
+              'width="25" height="34">'
             : '<span class="lg-mk ft-mk">' + icon("shield", 32) + '</span>') +
           '<span class="lg-en" style="font-size:18px">' +
             esc(B.en.slice(0, B.enCut)) + '<b>' + esc(B.en.slice(B.enCut)) + '</b></span>' +
@@ -234,6 +237,15 @@ function page(o){
     '<meta property="og:title" content="' + esc(title) + '">\n' +
     '<meta property="og:description" content="' + esc(o.desc) + '">\n' +
     '<meta property="og:url" content="' + esc(canon) + '">\n' +
+    /* ⚠️⚠️ **탭 아이콘 — 로고를 그대로 쓰지 않았습니다.** 바탕이
+       투명한 방패를 32px 탭에 그대로 넣으면 금색 테두리만 남아
+       무엇인지 안 읽힙니다. 딥그린 면을 깔고 그 위에 올립니다.
+       ⚠️ 주소에 내용 값을 붙입니다 — 안 붙이면 로고를 바꾸신 날
+       손님 브라우저가 **옛 아이콘을 계속** 씁니다. */
+    '<link rel="icon" type="image/png" sizes="32x32" href="/img/brand/icon-32.png' +
+      ver("img/brand/icon-32.png") + '">\n' +
+    '<link rel="apple-touch-icon" href="/img/brand/icon-180.png' +
+      ver("img/brand/icon-180.png") + '">\n' +
     '<link rel="stylesheet" href="/css/tokens.css' + ver("css/tokens.css") + '">\n' +
     '<link rel="stylesheet" href="/css/app.css' + ver("css/app.css") + '">\n' +
     (W.bizVal("naverVerify")

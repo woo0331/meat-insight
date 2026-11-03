@@ -56,8 +56,18 @@
       get("quote?select=id,request_id,provider_id,amount,vat,scope,excludes,days," +
           "start_on,warranty,valid_to,note,state,created_at" +
           "&order=created_at.asc&limit=200"),
-      get("request_item?select=request_id,service_id&limit=500")
-    ]);
+      get("request_item?select=request_id,service_id&limit=500"),
+      /* ⚠️ 일정은 RLS 가 **내 요청 것만** 내줍니다 (0034 의 appt_mine) */
+      get("appointment?select=id,request_id,provider_id,at,kind,place,note,state,why" +
+          "&order=at.asc&limit=100")
+    ]).then(function(got){
+      /* ⚠️ 올리신 파일 (§5-4) — 손님은 **자기 요청의 것만** 봅니다
+         (0011 의 photo_mine). */
+      var rs = got[0];
+      if(!rs || !window.amPhotoRows) return got.concat([{}]);
+      return window.amPhotoRows(A.conf, rs.map(function(r){ return r.id; }))
+        .then(function(by){ return got.concat([by]); });
+    });
   }
 
   /* 업체 상호 — ⚠️⚠️ **묶음 읽기(embed)를 쓰지 않습니다.**
@@ -129,7 +139,7 @@
     return h + '</div>';
   }
 
-  function card(r, quotes, items){
+  function card(r, quotes, items, pics, appts){
     var st = window.amDealSt(r.state) || { name:r.state, tone:"ink" };
     var svcs = items.filter(function(x){ return x.request_id === r.id; })
       .map(function(x){
@@ -147,6 +157,28 @@
     if(r.region)    h += '<dt>지역</dt><dd>' + esc(r.region + (r.gu ? " " + r.gu : "")) + '</dd>';
     if(r.want_at)   h += '<dt>희망 일정</dt><dd>' + esc(r.want_at) + '</dd>';
     h += '</dl>';
+
+    /* 잡힌 일정 (2차 지시서 §7) — ⚠️ 0건이면 아무것도 안 그립니다 */
+    (appts || []).forEach(function(ap){
+      var ast = window.amApptSt(ap.state) || { name:ap.state, tone:"ink" };
+      h += '<div class="ap"><div class="ap-h">' + icon("cal", 15) +
+           '<b>' + esc(window.amWhen(ap.at)) + '</b>' +
+           badge(window.amApptKindName(ap.kind), "ink") +
+           badge(ast.name, ast.tone) + '</div>';
+      if(ap.place) h += '<p class="ap-d">' + esc(ap.place) + '</p>';
+      if(ap.note)  h += '<p class="ap-d">' + esc(ap.note) + '</p>';
+      if(ap.state === "cancel" && ap.why)
+        h += '<p class="ap-d">취소 — ' + esc(ap.why) + '</p>';
+      /* ⚠️⚠️ **손님도 취소할 수 있습니다** — 못 가게 된 것을 말할 길이
+         없으면 업체가 헛걸음합니다. ⚠️ "만났음" 은 업체만 적습니다. */
+      if(ap.state === "set")
+        h += '<div class="dk-b"><button class="btn btn-sm btn-line" ' +
+             'data-apcancel="' + esc(ap.id) + '">못 가게 되었습니다</button></div>';
+      h += '</div>';
+    });
+
+    /* ⚠️ 올리신 파일 — 0장이면 아무것도 안 그립니다 */
+    if(window.amPhotoBlock) h += window.amPhotoBlock(pics);
 
     if(qs.length){
       h += '<h3 class="rq-h">받은 견적 ' + won(qs.length) + '건</h3>' +
@@ -191,8 +223,8 @@
     box.hidden = false; box.className = "deskbox";
     box.innerHTML = '<h2 class="adm-h">내 요청</h2><p class="lmsg">읽는 중입니다…</p>';
     load().then(function(got){
-      var rs = got[0], qs = got[1], items = got[2];
-      if(rs === null || qs === null || items === null){
+      var rs = got[0], qs = got[1], items = got[2], appts = got[3], pics = got[4];
+      if(rs === null || qs === null || items === null || appts === null){
         box.innerHTML = '<h2 class="adm-h">내 요청</h2>' +
           '<p class="lmsg">읽지 못했습니다. ' +
           '<button class="btn btn-sm btn-line" data-do="again">다시 읽기</button></p>';
@@ -205,7 +237,10 @@
         box.innerHTML = '<h2 class="adm-h">내 요청' +
           (rs.length ? " " + won(rs.length) + "건" : "") + '</h2>' +
           (rs.length
-            ? rs.map(function(r){ return card(r, qs, items); }).join("")
+            ? rs.map(function(r){
+                return card(r, qs, items, (pics || {})[r.id],
+                            appts.filter(function(x){ return x.request_id === r.id; }));
+              }).join("")
             : '<p class="myhint">아직 넣으신 요청이 없습니다. ' +
               '로그인 전에 넣으신 것이 있으면 아래에서 가져오실 수 있습니다.</p>') +
           '<h3 class="rq-h">로그인 전에 넣은 요청 가져오기</h3>' +
@@ -218,6 +253,39 @@
   box.addEventListener("click", function(e){
     var again = e.target.closest ? e.target.closest("button[data-do='again']") : null;
     if(again) return paint();
+    /* ⚠️ 사진은 **누르셨을 때** 주소를 청합니다 (10분짜리) */
+    var ph = e.target.closest ? e.target.closest("button[data-photo]") : null;
+    if(ph){
+      var row0 = ph.closest(".dk-r"), pm = row0 ? row0.querySelector(".dk-m") : null;
+      ph.disabled = true;
+      if(pm){ pm.hidden = false; pm.textContent = "여는 중입니다…"; }
+      window.amPhotoOpen(ph.getAttribute("data-photo")).then(function(url){
+        ph.disabled = false;
+        if(pm) pm.hidden = true;
+        window.open(url, "_blank", "noopener");
+      }).catch(function(err){
+        ph.disabled = false;
+        if(pm) pm.textContent = why(err);
+      });
+      return;
+    }
+    var ac = e.target.closest ? e.target.closest("button[data-apcancel]") : null;
+    if(ac){
+      var r2 = ac.closest(".dk-r"), m2 = r2 ? r2.querySelector(".dk-m") : null;
+      /* ⚠️ 취소에는 까닭을 받습니다 — 업체가 알아야 합니다 (DB 도 봅니다) */
+      var w2 = prompt("못 가게 되신 까닭을 적어 주세요 (업체가 봅니다)");
+      if(!(w2 && w2.trim())) return;
+      ac.disabled = true;
+      if(m2){ m2.hidden = false; m2.textContent = "보내는 중입니다…"; }
+      rpc("move_appointment", { p: { id: ac.getAttribute("data-apcancel"),
+                                     to: "cancel", why: w2.trim() } })
+        .then(paint)
+        .catch(function(err){
+          ac.disabled = false;
+          if(m2) m2.textContent = why(err);
+        });
+      return;
+    }
     var b = e.target.closest ? e.target.closest("button[data-pick]") : null;
     if(!b) return;
     var row = b.closest(".dk-r"), m = row ? row.querySelector(".dk-m") : null;

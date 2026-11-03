@@ -21,10 +21,17 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="deskbox" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ 수수료 · 정산은 **따로 그립니다** (js/deskfee.js). 손님에게는
+     한 줄도 안 보이는 표라(0001 의 fee_mine · deal_mine), 배정 · 견적
+     코드와 섞어 두면 한쪽을 고칠 때 그 경계가 흐려집니다. */
+  body += '<section class="sec sec-alt"><div class="wrap">' +
+    '<div id="feebox" class="none" hidden></div></div></section>';
+
   return {
     route: "/desk", title: "업체 작업실", noindex: true, unlinked: true,
     desc: "골프올인원 업체 작업실 — 배정받은 요청 확인 · 수락 · 견적 제출.",
     body: body,
-    js: ["/js/data/korean.js", "/js/data/deal.js", "/js/auth.js", "/js/desk.js"]
+    js: ["/js/data/korean.js", "/js/data/deal.js", "/js/photo.js",
+         "/js/auth.js", "/js/desk.js", "/js/deskfee.js"]
   };
 };

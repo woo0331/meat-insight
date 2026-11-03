@@ -65,8 +65,10 @@ exports.build = function(){
     desc: "골프 레슨 · 부킹 · 연습장 · 용품 · 피팅 · 여행 — 조건만 적으면 " +
           "그 일을 하는 업체가 견적과 상담을 제안합니다. 요청은 무료입니다.",
     body: body,
+    /* ⚠️ `js/photo.js` 는 **접수한 뒤에만** 칸을 그립니다 (§5-4) —
+       버킷이 설정되기 전에는 아무것도 안 그립니다. */
     js: ["/js/data/site.js", "/js/data/regions.js",
          "/js/data/providers.generated.js", "/js/data/providers.js",
-         "/js/auth.js", "/js/matchform.js"]
+         "/js/auth.js", "/js/photo.js", "/js/matchform.js"]
   };
 };

@@ -29,6 +29,6 @@ exports.build = function(){
     desc: "골프올인원 내 정보 — 개인 판매자 · 골프 프로 · 사업자 회원을 켜고 끕니다.",
     body: body,
     js: ["/js/data/korean.js", "/js/data/deal.js", "/js/auth.js",
-         "/js/account.js", "/js/myreq.js"]
+         "/js/photo.js", "/js/account.js", "/js/myreq.js"]
   };
 };

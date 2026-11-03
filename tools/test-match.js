@@ -133,6 +133,83 @@ const FAKE = "https://sb-test.supabase.co";
      /제안이 바로 오지는 않습니다/.test(done), done.slice(0, 120));
   ok("CSP 거절 · 화면 에러가 0건이다", csp.length === 0, csp.join(" | "));
 
+  /* ⚠️⚠️ **버킷이 설정되기 전에는 사진 칸이 아예 안 나옵니다**
+     (2차 지시서 §5-4 · 절대 규칙 2 · 5). 지금 운영이 그 상태입니다 —
+     단추도 · 안내도 · "준비 중" 도 없어야 합니다. */
+  ok("⚠️ 버킷이 없으니 사진 칸이 **한 글자도** 안 나온다",
+     (await p.locator("#matchbox .phup").count()) === 0 &&
+     done.indexOf("사진") < 0, done.slice(0, 200));
+  await p.close();
+
+  console.log("\n── 버킷이 켜지면 **접수한 뒤에** 사진 칸이 나옵니다 (§5-4)");
+  p = await b.newPage({ viewport:{ width:1280, height:900 } });
+  const csp2 = watch(p);
+  let ups = [];
+  await p.route("**/api/upload*", function(r){
+    ups.push(r.request().method() + " " + r.request().url());
+    if(r.request().method() === "POST")
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ ok:true, url:"https://sb-test.supabase.co/put" }) });
+    return r.fulfill({ status:200, contentType:"application/json",
+                       body: JSON.stringify({ up:true }) });
+  });
+  await p.route("**/api/session", function(r){
+    return r.fulfill({ status:200, contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:false,
+                             conf:{ url:FAKE, anonKey:"anon-test-key" } }) });
+  });
+  await p.route(FAKE + "/rest/v1/rpc/make_request", function(r){
+    return r.fulfill({ status:200, contentType:"application/json", body:'"SW-A1B2-C3D4"' });
+  });
+  await p.goto(URL, { waitUntil:"networkidle" });
+  await p.waitForTimeout(250);
+  /* ⚠️ **접수 전에는** 사진 칸이 없어야 합니다 — 접수 전에 올리게 하면
+     아무나 올리는 길이 하나 생깁니다 (0011 머리말). */
+  ok("⚠️ 접수 **전에는** 사진 칸이 없다",
+     (await p.locator("#matchbox .phup").count()) === 0);
+
+  await p.check('input[name="svc"][value="ls-solo"]');
+  await p.fill("#m-name", "박손님");
+  await p.fill("#m-tel", "010-7777-8888");
+  await p.check("#m-agree");
+  await p.click('#mf button[type="submit"]');
+  await p.waitForTimeout(600);
+  ok("접수한 **뒤에** 사진 칸이 나온다",
+     (await p.locator("#matchbox .phup").count()) === 1);
+  const ph = (await p.textContent("#matchbox .phup")) || "";
+  ok("  한 장 8MB · 다섯 장까지라고 적는다", /8MB/.test(ph) && /다섯 장/.test(ph), ph.slice(0, 200));
+  ok("  누가 보는지 적는다 (배정된 업체와 담당자만)",
+     /배정된 업체와 저희 담당자만/.test(ph), ph.slice(0, 300));
+  ok("  얼굴 · 주민등록번호를 가리라고 적는다", /주민등록번호/.test(ph));
+  ok("  없으면 안 올려도 된다고 적는다", /없으시면/.test(ph), ph.slice(0, 200));
+  /* ⚠️⚠️ **누르는 것은 label 입니다** — 파일 칸의 기본 단추는 폰에서
+     20px 로 서기도 합니다. 높이를 직접 잽니다. */
+  const lab = await p.evaluate(function(){
+    const e = document.querySelector(".phup-b");
+    return e ? e.getBoundingClientRect().height : 0;
+  });
+  ok("  고르는 것이 40px 이상이다", lab >= 40, lab);
+  ok("  파일 칸 자체는 숨어 있다 (브라우저 기본 단추를 안 씁니다)",
+     (await p.evaluate(function(){
+       const e = document.getElementById("phup-f");
+       return e ? e.getBoundingClientRect().width : 999;
+     })) <= 2);
+  ok("CSP 거절 · 화면 에러가 0건이다", csp2.length === 0, csp2.join(" | "));
+  await p.close();
+  p = await b.newPage({ viewport:{ width:1280, height:900 } });
+  await p.route("**/api/session", function(r){
+    return r.fulfill({ status:200, contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:false,
+                             conf:{ url:FAKE, anonKey:"anon-test-key" } }) });
+  });
+  await p.route(FAKE + "/rest/v1/rpc/make_request", function(r){
+    sent.push(JSON.parse(r.request().postData() || "{}"));
+    if(mode === "ok")
+      return r.fulfill({ status:200, contentType:"application/json", body:'"SW-A1B2-C3D4"' });
+    return r.fulfill({ status:400, contentType:"application/json",
+      body: JSON.stringify({ message:"연락처를 다시 봐 주세요 — 숫자 아홉에서 열한 자리입니다" }) });
+  });
+
   console.log("\n── 두 번 눌러도 하나입니다");
   await p.goto(URL, { waitUntil:"networkidle" });
   await p.waitForTimeout(250);

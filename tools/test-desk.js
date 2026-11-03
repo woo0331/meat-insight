@@ -80,9 +80,24 @@ const QUOTE = {
 };
 
 /* ── 가짜 Supabase ────────────────────────────────────────────────── */
-function stub(p, who, tables, rpcs){
+function stub(p, who, tables, rpcs, up){
   const sent = [];
   return Promise.all([
+    /* ⚠️⚠️ **버킷이 설정되기 전에는 `{up:false}` 입니다** — 그때는
+       사진 칸이 **아예 안 그려져야** 합니다 (단추도 · "준비 중" 도
+       없습니다). 지금 운영이 그 상태라, 그 길을 먼저 잽니다. */
+    p.route("**/api/upload*", function(r){
+      const u = r.request().url();
+      sent.push({ name:"upload", body: r.request().method() + " " + u });
+      if(!up) return r.fulfill({ status:200, contentType:"application/json",
+                                 body: JSON.stringify({ up:false }) });
+      if(u.indexOf("p=") >= 0)
+        return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ ok:true, url:"https://sb-test.supabase.co/x.jpg",
+                                 mime:"image/jpeg", bytes:1234 }) });
+      return r.fulfill({ status:200, contentType:"application/json",
+                         body: JSON.stringify({ up:true }) });
+    }),
     p.route("**/api/session", function(r){
       return r.fulfill({ status:200, contentType:"application/json",
         body: JSON.stringify(Object.assign({ auth:true, signedIn:true, hats:[],
@@ -129,10 +144,10 @@ function stub(p, who, tables, rpcs){
   const base = "http://127.0.0.1:" + PORT;
   const view = { width:1280, height:900 };
 
-  async function open(path, who, tables, rpcs){
+  async function open(path, who, tables, rpcs, up){
     const p = await b.newPage({ viewport: view });
     const errs = watch(p);
-    const sent = await stub(p, who, tables, rpcs);
+    const sent = await stub(p, who, tables, rpcs, up);
     await p.goto(base + path, { waitUntil:"networkidle" });
     await p.waitForTimeout(450);
     return { p: p, errs: errs, sent: sent };
@@ -463,6 +478,193 @@ function stub(p, who, tables, rpcs){
   ok("무엇을 해야 하는지 말해 준다", /배정 가능/.test(t), t.slice(-200));
   await s.p.close();
 
+  /* ══ 수수료 · 정산 (2차 지시서 §7) ══════════════════════════ */
+  console.log("\n── /desk 수수료 · 정산 — ⚠️ 손님에게는 한 줄도 안 보입니다");
+  const FEE = {
+    deal:[
+      { id:"f1", request_id:REQ.id, amount:3000000, fee:300000, fee_vat:30000,
+        fee_total:330000, paid:330000, paid_at:"2029-12-20T01:00:00Z",
+        fee_at:"2029-12-10T01:00:00Z", signed_at:"2029-12-05T01:00:00Z", done_at:null },
+      /* ⚠️⚠️ **아직 확정 전**입니다 — 0원이 아닙니다 */
+      { id:"f2", request_id:REQ2.id, amount:1200000, fee:null, fee_vat:null,
+        fee_total:null, paid:null, paid_at:null, fee_at:null,
+        signed_at:"2029-12-08T01:00:00Z", done_at:null }
+    ],
+    settlement:[{ id:"s1", from_date:"2029-12-01", to_date:"2029-12-31",
+                  total:330000, state:"wait", paid_at:null, approved_at:null }],
+    fee_policy:[{ id:"p1", type:"rate", flat:null, rate:8, min_fee:50000,
+                  max_fee:null, vat:"add", confirm_when:"done", cycle:"monthly",
+                  refund_rule:"계약 취소 시 전액 환수", from_date:"2029-01-01",
+                  to_date:null }],
+    request:[REQ, REQ2]
+  };
+
+  s = await open("/desk", { role:"customer", name:"일반회원" }, FEE, {}, false);
+  ok("업체가 아니면 수수료 표를 **아예 안 그린다**",
+     (await s.p.locator("#feebox .cnt").count()) === 0);
+  ok("  읽으러 가지도 않는다",
+     s.sent.filter(function(x){ return x.name === "GET" &&
+       x.body.indexOf("/fee_policy") >= 0; }).length === 0);
+  await s.p.close();
+
+  s = await open("/desk", PRO, FEE, {}, false);
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  t = (await s.p.textContent("#feebox")) || "";
+  ok("손님에게는 안 보이는 표라고 적는다", /손님에게는 보이지 않습니다/.test(t), t.slice(0, 200));
+  ok("수수료 정책이 사람 말로 나온다 (rate 가 아니라 거래액의 %)",
+     t.indexOf("거래액의 %") >= 0 && t.indexOf("rate") < 0, t.slice(0, 400));
+  ok("  요율 · 부가세 · 확정 시점 · 주기를 **같이** 적는다",
+     t.indexOf("8%") >= 0 && t.indexOf("부가세 별도") >= 0 &&
+     t.indexOf("이행이 끝난 때") >= 0 && t.indexOf("달마다") >= 0, t.slice(0, 400));
+  ok("  환수 조건도 적는다", t.indexOf("전액 환수") >= 0);
+  /* ⚠️⚠️ **안 적힌 것과 0원은 다릅니다** — 아직 확정 전인 계약을
+     "0원" 으로 찍으면 업체가 "수수료가 없다" 로 읽습니다. */
+  ok("⚠️ 확정 전 수수료를 **'아직'** 으로 찍는다 (0원이 아니다)",
+     t.indexOf("아직") >= 0, t.slice(0, 600));
+  ok("  확정 전인 건 수를 **따로** 센다", /아직 확정 전/.test(t), t);
+  /* ⚠️ 합계는 계산입니다 — 330,000 하나만 확정됐으니 그 값이라야 합니다 */
+  ok("확정된 수수료 합계가 손으로 센 값과 같다 (330,000)",
+     t.indexOf("330,000원") >= 0, t);
+  ok("계약 · 입금을 **갈라서** 보여 준다",
+     t.indexOf("3,000,000원") >= 0 && t.indexOf("계약별 수수료") >= 0, t.slice(0, 600));
+  ok("정산 상태가 사람 말이다", t.indexOf("지급 대기") >= 0 && t.indexOf("wait") < 0);
+  ok("⚠️ 이 화면에서 못 고친다고 적는다", /이 화면에서는 고칠 수 없습니다/.test(t));
+  ok("누르는 것이 전부 40px 이상이다", (await tapsOk(s.p, "#feebox")) === 0,
+     await tapsOk(s.p, "#feebox"));
+  await s.p.close();
+
+  console.log("\n── 0건일 때와 못 읽었을 때를 가릅니다");
+  s = await open("/desk", PRO,
+    { deal:[], settlement:[], fee_policy:[], request:[] }, {}, false);
+  t = (await s.p.textContent("#feebox")) || "";
+  ok("정책이 0건이면 **지어낸 값이 아니라고** 말한다",
+     /지어낸 값이 아닙니다/.test(t), t.slice(0, 300));
+  ok("계약이 0건이면 0건이라고 말한다", /아직 계약이 없습니다/.test(t));
+  await s.p.close();
+  s = await open("/desk", PRO,
+    { deal:null, settlement:[], fee_policy:[], request:[] }, {}, false);
+  t = (await s.p.textContent("#feebox")) || "";
+  ok("못 읽으면 그렇다고 말한다", /읽지 못했습니다/.test(t), t.slice(0, 200));
+  ok("⚠️ 못 읽은 것을 0건이라고 하지 않는다",
+     t.indexOf("아직 계약이 없습니다") < 0, t.slice(0, 200));
+  await s.p.close();
+
+  /* ══ 상담 일정 (2차 지시서 §7) ══════════════════════════════ */
+  console.log("\n── /desk 일정 — 수락한 뒤에만, 끝난 건에는 안 냅니다");
+  const APPT = { id:"eeeeeeee-0000-0000-0000-000000000001", request_id:REQ.id,
+    at:"2029-12-05T05:30:00Z", kind:"visit", place:"남서울 실내연습장 3층",
+    note:"프런트에서 찾아 주세요", state:"set", why:null };
+  const APT = { assignment:[asg(quoted, "accepted")], request:[quoted],
+                quote:[QUOTE], request_item:ITEMS, appointment:[APPT] };
+
+  s = await open("/desk", PRO, APT, {}, false);
+  ok("잡힌 일정이 보인다", (await s.p.locator("#deskbox .ap").count()) === 1);
+  t = (await s.p.textContent("#deskbox")) || "";
+  /* ⚠️⚠️ **Supabase 는 UTC 입니다** — 05:30Z 는 한국 시각 오후 2시 30분.
+     그냥 찍으면 아홉 시간 어긋나고, 보는 사람은 그것을 모릅니다. */
+  ok("⚠️ 때를 **한국 시각**으로 보여 준다 (05:30Z → 오후 2시 30분)",
+     t.indexOf("2029년 12월 5일 (수) 오후 2시 30분") >= 0, t.slice(0, 400));
+  ok("만나는 방법이 사람 말이다 (visit 이 아니라 방문)",
+     t.indexOf("방문") >= 0 && t.indexOf("visit") < 0);
+  ok("일정 상태가 사람 말이다", t.indexOf("잡힘") >= 0 && t.indexOf("set") < 0);
+  ok("어디서 · 전할 말이 보인다",
+     t.indexOf("남서울 실내연습장 3층") >= 0 && t.indexOf("프런트에서") >= 0);
+  ok("바꾸기 · 만났음 · 취소 단추를 낸다",
+     (await s.p.locator('#deskbox button[data-do="appt"]').count()) === 1 &&
+     (await s.p.locator('#deskbox button[data-do="apdone"]').count()) === 1 &&
+     (await s.p.locator('#deskbox button[data-do="apcancel"]').count()) === 1);
+
+  await s.p.click('#deskbox button[data-do="appt"]');
+  await s.p.waitForTimeout(300);
+  ok("양식이 펼쳐진다", (await s.p.locator("#deskbox form.ap-f").count()) === 1);
+  /* ⚠️⚠️ 칸에 들어 있는 값도 **한국 시각**이라야 합니다 — UTC 로
+     채우면 사장님이 고칠 때마다 아홉 시간씩 당겨집니다. */
+  ok("⚠️ 칸의 값이 한국 시각이다",
+     (await s.p.inputValue('#deskbox form.ap-f [name="at"]')) === "2029-12-05T14:30",
+     await s.p.inputValue('#deskbox form.ap-f [name="at"]'));
+  const kinds = await s.p.locator('#deskbox form.ap-f [name="kind"] option').count();
+  ok("만나는 방법이 **셋**이다 (DB 의 check 와 같은 수)", kinds === 3, kinds);
+  ok("⚠️ 알림이 가지 않는다고 적는다",
+     /문자나 알림은 가지 않습니다/.test((await s.p.textContent("#deskbox")) || ""));
+
+  await s.p.fill('#deskbox form.ap-f [name="at"]', "2029-12-24T09:00");
+  await s.p.selectOption('#deskbox form.ap-f [name="kind"]', "call");
+  await s.p.click("#deskbox form.ap-f button[type='submit']");
+  await s.p.waitForTimeout(350);
+  call = s.sent.filter(function(x){ return x.name === "set_appointment"; })[0];
+  const ab2 = call ? JSON.parse(call.body) : {};
+  ok("set_appointment 를 부른다", !!call, JSON.stringify(s.sent));
+  /* ⚠️⚠️ **적은 것은 한국 시각, 보내는 것은 UTC.** 기계의 띠로 읽으면
+     해외에서 아홉 시간 어긋납니다 — 그 자리를 여기서 잽니다. */
+  ok("⚠️ 한국 시각으로 읽어 **UTC 로** 보낸다 (09:00 KST → 00:00Z)",
+     !!ab2.p && ab2.p.at === "2029-12-24T00:00:00.000Z", ab2.p && ab2.p.at);
+  ok("  고른 방법이 그대로 간다", !!ab2.p && ab2.p.kind === "call");
+  ok("  어느 요청인지 같이 보낸다", !!ab2.p && ab2.p.request === REQ.id);
+  await s.p.close();
+
+  console.log("\n── 수락 전 · 끝난 건에는 일정 단추를 안 냅니다");
+  s = await open("/desk", PRO,
+    { assignment:[asg(REQ2, "sent")], request:[REQ2], quote:[], request_item:ITEMS,
+      appointment:[] }, {}, false);
+  ok("수락 전에는 일정 단추가 없다",
+     (await s.p.locator('#deskbox button[data-do="appt"]').count()) === 0);
+  await s.p.close();
+  const lost = Object.assign({}, REQ, { state:"lost" });
+  s = await open("/desk", PRO,
+    { assignment:[asg(lost, "accepted")], request:[lost], quote:[],
+      request_item:ITEMS, appointment:[] }, {}, false);
+  ok("진행 안 함인 건에는 일정 단추가 없다 (DB 도 거절합니다)",
+     (await s.p.locator('#deskbox button[data-do="appt"]').count()) === 0);
+  await s.p.close();
+
+  /* ══ 붙이신 사진 · 서류 (2차 지시서 §5-4) ═══════════════════ */
+  const PICS = [
+    { id:"dddddddd-0000-0000-0000-000000000001", request_id:REQ.id,
+      mime:"image/jpeg", bytes:2400000 },
+    { id:"dddddddd-0000-0000-0000-000000000002", request_id:REQ.id,
+      mime:"application/pdf", bytes:51200 }
+  ];
+  const DESKP = { assignment:[asg(quoted, "accepted")], request:[quoted],
+                  quote:[QUOTE], request_item:ITEMS, request_photo:PICS };
+
+  console.log("\n── 버킷이 설정되기 전에는 사진 칸이 **아예 안 나옵니다**");
+  s = await open("/desk", PRO, DESKP, {}, false);
+  ok("사진 줄이 안 그려진다", (await s.p.locator("#deskbox .phv").count()) === 0);
+  t = (await s.p.textContent("#deskbox")) || "";
+  ok("'준비 중' 같은 말도 안 나온다", t.indexOf("준비 중") < 0, t.slice(0, 200));
+  await s.p.close();
+
+  console.log("\n── 버킷이 켜지면 업체가 붙은 파일을 봅니다 (0011 의 photo_provider)");
+  s = await open("/desk", PRO, DESKP, {}, true);
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  ok("사진 줄이 그려진다", (await s.p.locator("#deskbox .phv").count()) === 1);
+  t = (await s.p.textContent("#deskbox")) || "";
+  ok("몇 장인지 말한다", /붙이신 파일 2장/.test(t), t.slice(0, 300));
+  ok("사진과 서류를 **갈라서** 말한다",
+     t.indexOf("사진 · 2.3MB") >= 0 && t.indexOf("서류 · 50KB") >= 0, t);
+  ok("보는 주소가 곧 닫힌다고 적는다", /10분 뒤에 닫힙니다/.test(t));
+  /* ⚠️⚠️ **주소를 미리 만들어 두지 않습니다** — 안 누른 사진의
+     서명 주소를 만들어 둘 까닭이 없습니다 (service key 를 쓰는 길입니다). */
+  ok("⚠️ 누르기 전에는 보는 주소를 **안 청한다**",
+     s.sent.filter(function(x){ return x.name === "upload" &&
+       x.body.indexOf("p=") >= 0; }).length === 0,
+     JSON.stringify(s.sent.filter(function(x){ return x.name === "upload"; })));
+  ok("누르는 것이 전부 40px 이상이다", (await tapsOk(s.p, "#deskbox")) === 0);
+
+  await s.p.click('#deskbox button[data-photo]');
+  await s.p.waitForTimeout(350);
+  ok("누르면 그때 보는 주소를 청한다",
+     s.sent.filter(function(x){ return x.name === "upload" &&
+       x.body.indexOf("p=") >= 0; }).length === 1,
+     JSON.stringify(s.sent.filter(function(x){ return x.name === "upload"; })));
+  await s.p.close();
+
+  console.log("\n── 0장이면 **빈 액자를 두지 않습니다**");
+  s = await open("/desk", PRO,
+    Object.assign({}, DESKP, { request_photo: [] }), {}, true);
+  ok("사진 줄이 아예 없다", (await s.p.locator("#deskbox .phv").count()) === 0);
+  await s.p.close();
+
   /* ══ /admin — 매각 지표 (2차 지시서 §9) ══════════════════════ */
   console.log("\n── /admin 매각 지표 — 운영자가 아니면 세러 가지도 않습니다");
   /* ⚠️ DB 가 내려주는 꼴 그대로 흉내 냅니다 (0033 의 biz_metrics).
@@ -645,6 +847,36 @@ function stub(p, who, tables, rpcs){
      myGets.map(function(g){ return g.body.split("/rest/v1/")[1]; }).join(" | "));
   await s.p.close();
 
+  console.log("\n── /my 손님도 일정을 보고, **못 가게 되면 말할 수 있습니다**");
+  s = await open("/my", { role:"customer", name:"홍길동" },
+    Object.assign({}, MYT, { appointment:[APPT] }), {}, false);
+  ok("일정이 보인다", (await s.p.locator("#reqbox .ap").count()) === 1);
+  t = (await s.p.textContent("#reqbox")) || "";
+  ok("⚠️ 한국 시각으로 보인다",
+     t.indexOf("2029년 12월 5일 (수) 오후 2시 30분") >= 0, t.slice(0, 300));
+  ok("못 가게 되었다고 말할 단추가 있다",
+     (await s.p.locator("#reqbox button[data-apcancel]").count()) === 1);
+  /* ⚠️ '만났음' 은 업체만 적습니다 — 손님 화면에 그 단추가 있으면
+     DB 가 거절하고, 그건 눌러도 안 되는 단추입니다. */
+  ok("⚠️ '만났음' 단추는 **없다** (업체만 적습니다)",
+     t.indexOf("만났음") < 0, t.slice(0, 300));
+  s.p.on("dialog", function(d){ d.accept("갑자기 일이 생겼습니다"); });
+  await s.p.click("#reqbox button[data-apcancel]");
+  await s.p.waitForTimeout(350);
+  call = s.sent.filter(function(x){ return x.name === "move_appointment"; })[0];
+  const mvb = call ? JSON.parse(call.body) : {};
+  ok("취소하면 move_appointment 를 부른다", !!call, JSON.stringify(s.sent));
+  ok("  까닭을 같이 보낸다 (업체가 헛걸음하지 않게)",
+     !!mvb.p && mvb.p.to === "cancel" && String(mvb.p.why).indexOf("일이 생겼") >= 0,
+     JSON.stringify(mvb.p));
+  await s.p.close();
+
+  console.log("\n── 손님도 자기 것을 봅니다 (0011 의 photo_mine)");
+  s = await open("/my", { role:"customer", name:"홍길동" },
+    Object.assign({}, MYT, { request_photo: PICS }), {}, true);
+  ok("내 요청에 붙은 파일이 보인다", (await s.p.locator("#reqbox .phv").count()) === 1);
+  await s.p.close();
+
   console.log("\n── 이미 고른 뒤 · 견적이 0건일 때");
   s = await open("/my", { role:"customer", name:"홍길동" },
     Object.assign({}, MYT, { quote:[
@@ -691,7 +923,7 @@ function stub(p, who, tables, rpcs){
   const PHONE = { width: 390, height: 900 };
   async function phone(path, who, tables, rpcs){
     const p = await b.newPage({ viewport: PHONE });
-    await stub(p, who, tables, rpcs);
+    await stub(p, who, tables, rpcs, true);
     await p.goto(base + path, { waitUntil:"networkidle" });
     await p.waitForTimeout(500);
     const r = await p.evaluate(function(sel){

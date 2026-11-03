@@ -139,6 +139,7 @@ try{
   require("./sql/seed.js")({ ok, psql, psqlFile, denied, allowed });
   /* ⚠️⚠️ 매각 지표는 **사업의 값을 매기는 숫자**입니다 — 틀리면 투자자에게
      거짓을 말한 것이 됩니다. 경계값을 다른 묶음보다 많이 넣었습니다. */
+  require("./sql/appt.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/metrics.js")({ ok, psql, psqlFile, denied, allowed });
 
 }catch(e){

@@ -60,6 +60,35 @@ window.AM_VAT = [
   { key:"free", name:"면세" }
 ];
 
+/* 수수료 — ⚠️ DB 의 enum 셋과 같아야 합니다 (0001 · check-deal 이 봅니다).
+   ⚠️⚠️ **고객은 수수료 표를 아예 못 봅니다** (0001 의 fee_mine) —
+   우리와 업체 사이의 일인데 보여 주면 자기가 내는 돈으로 읽힙니다.
+   그래서 이 말들은 **업체 작업실과 관리자 화면에서만** 씁니다. */
+window.AM_FEE_TYPE = [
+  { key:"lead",      name:"건당 (연결 1건마다)" },
+  { key:"close",     name:"성사당 (계약될 때)" },
+  { key:"rate",      name:"거래액의 %" },
+  { key:"base_rate", name:"기본료 + %" },
+  { key:"margin",    name:"마진 배분" },
+  { key:"sub",       name:"월 정액" }
+];
+window.AM_FEE_WHEN = [
+  { key:"lead_ok", name:"연결이 확인된 때" },
+  { key:"signed",  name:"계약한 때" },
+  { key:"done",    name:"이행이 끝난 때" },
+  { key:"paid",    name:"손님이 낸 때" }
+];
+window.AM_FEE_CYCLE = [
+  { key:"now",     name:"그때 바로" },
+  { key:"monthly", name:"달마다" },
+  { key:"half",    name:"보름마다" }
+];
+window.AM_SETTLE_ST = [
+  { key:"wait", name:"지급 대기", tone:"warn" },
+  { key:"paid", name:"지급 완료", tone:"grn"  },
+  { key:"hold", name:"보류",      tone:"bad"  }
+];
+
 /* 배정 상태 셋 — ⚠️ DB `assignment.state` 의 글자와 같아야 합니다
    (enum 이 아니라 text 입니다 — 0001). */
 window.AM_ASSIGN_ST = [
@@ -76,10 +105,76 @@ function amPick(list, key){
   for(var i = 0; i < list.length; i++) if(list[i].key === key) return list[i];
   return null;
 }
+/* 만나는 방법 셋 · 일정 상태 셋 — ⚠️ DB `appointment` 의 check 와
+   같아야 합니다 (0034). `tools/check-deal.js` 가 맞춰 봅니다. */
+window.AM_APPT_KIND = [
+  { key:"visit",  name:"방문" },
+  { key:"call",   name:"통화" },
+  { key:"online", name:"비대면" }
+];
+window.AM_APPT_ST = [
+  { key:"set",    name:"잡힘",   tone:"info" },
+  { key:"done",   name:"만났음", tone:"grn"  },
+  { key:"cancel", name:"취소",   tone:"bad"  }
+];
+
 window.amDealSt   = function(k){ return amPick(window.AM_DEAL_ST, k); };
+window.amApptKind = function(k){ return amPick(window.AM_APPT_KIND, k); };
+window.amApptSt   = function(k){ return amPick(window.AM_APPT_ST, k); };
+window.amApptKindName = function(k){
+  var x = window.amApptKind(k); return x ? x.name : String(k || "");
+};
+window.amApptStName = function(k){
+  var x = window.amApptSt(k); return x ? x.name : String(k || "");
+};
+
+/* 한국 시각으로 읽기 — ⚠️⚠️ **Supabase 는 UTC 입니다.** 그냥 찍으면
+   아홉 시간 어긋나고, 보는 사람은 그것을 모릅니다. */
+window.amWhen = function(iso){
+  if(!iso) return "";
+  var d = new Date(iso);
+  if(isNaN(d.getTime())) return String(iso);
+  var k = new Date(d.getTime() + 9 * 3600 * 1000);
+  var wd = ["일","월","화","수","목","금","토"][k.getUTCDay()];
+  var h = k.getUTCHours(), ap = h < 12 ? "오전" : "오후";
+  var h12 = h % 12; if(h12 === 0) h12 = 12;
+  return k.getUTCFullYear() + "년 " + (k.getUTCMonth() + 1) + "월 " +
+         k.getUTCDate() + "일 (" + wd + ") " + ap + " " + h12 + "시" +
+         (k.getUTCMinutes() ? " " + k.getUTCMinutes() + "분" : "");
+};
 window.amQuoteSt  = function(k){ return amPick(window.AM_QUOTE_ST, k); };
 window.amAssignSt = function(k){ return amPick(window.AM_ASSIGN_ST, k); };
 window.amVat      = function(k){ return amPick(window.AM_VAT, k); };
+window.amFeeType  = function(k){ return amPick(window.AM_FEE_TYPE, k); };
+window.amFeeWhen  = function(k){ return amPick(window.AM_FEE_WHEN, k); };
+window.amFeeCycle = function(k){ return amPick(window.AM_FEE_CYCLE, k); };
+window.amSettleSt = function(k){ return amPick(window.AM_SETTLE_ST, k); };
+window.amFeeTypeName  = function(k){
+  var x = window.amFeeType(k);  return x ? x.name : String(k || "");
+};
+window.amFeeWhenName  = function(k){
+  var x = window.amFeeWhen(k);  return x ? x.name : String(k || "");
+};
+window.amFeeCycleName = function(k){
+  var x = window.amFeeCycle(k); return x ? x.name : String(k || "");
+};
+window.amSettleStName = function(k){
+  var x = window.amSettleSt(k); return x ? x.name : String(k || "");
+};
+
+/* 수수료 정책 한 줄을 사람 말로 — ⚠️⚠️ **여기 한 곳**에서만 짓습니다.
+   화면마다 따로 이어 붙이면 어떤 화면은 부가세를 빠뜨립니다.
+   ⚠️ 0 은 값입니다 (무상) — `||` 로 지우지 않습니다. */
+window.amFeeLine = function(f){
+  if(!f) return "";
+  var bits = [window.amFeeTypeName(f.type)];
+  if(f.flat !== null && f.flat !== undefined) bits.push(window.won(f.flat) + "원");
+  if(f.rate !== null && f.rate !== undefined) bits.push(Number(f.rate) + "%");
+  bits.push(window.amVatName(f.vat));
+  bits.push(window.amFeeWhenName(f.confirm_when));
+  bits.push(window.amFeeCycleName(f.cycle));
+  return bits.join(" · ");
+};
 
 window.amDealName = function(k){
   var s = window.amDealSt(k);   return s ? s.name : String(k || "");

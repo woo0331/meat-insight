@@ -611,3 +611,74 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .mt-cant li::before{ content:""; position:absolute; left:0; top:9px;
                      width:6px; height:6px; border-radius:50%;
                      background: var(--warn); }
+
+/* ── 사진 · 서류 붙이기 (2차 지시서 §5-4) ──────────────────────
+   ⚠️⚠️ **버킷이 설정되기 전에는 이 칸이 아예 안 그려집니다** —
+   그래서 여기 규칙은 평소에 아무 데도 안 걸립니다 (그게 맞습니다). */
+.phup{ margin-top:18px; padding-block: 18px 0; border-top:1.5px solid var(--line); }
+.phup-t{ display:flex; gap:9px; font-size:15px; line-height:1.65; color: var(--ink2);
+         word-break: keep-all; overflow-wrap: anywhere; }
+.phup-t .ic{ flex:none; margin-top:3px; color: var(--grn-text); }
+/* ⚠️⚠️ **누르는 것은 `<label>` 입니다** — `<input type=file>` 은 숨기고
+   라벨이 44px 를 잡습니다. 파일 칸의 기본 단추는 브라우저마다 크기와
+   글자가 달라서 폰에서 20px 로 서기도 합니다. */
+.phup-i{ position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+         overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+.phup-b{ display:inline-flex; align-items:center; justify-content:center; gap:8px;
+         min-height: var(--tap); padding:0 20px; margin-top:14px; cursor:pointer;
+         font-size:16px; font-weight:800; color:#fff; background: var(--grn-btn);
+         border-radius: var(--r-pill); }
+.phup-b:hover{ background:#0A4A34; }
+/* ⚠️ 키보드로 다니실 때 초점이 보여야 합니다 — 숨긴 input 의 초점을
+   라벨로 옮겨 그립니다 (저장소의 다른 초점과 같은 꼴). */
+.phup:has(.phup-i:focus-visible) .phup-b{ outline:2px solid var(--grn); outline-offset:3px; }
+.phup-l{ display:grid; gap:7px; margin-top:14px; }
+.phup-l:empty{ display:none; }
+.phup-l > li{ display:grid; grid-template-columns:1fr auto auto; align-items:center;
+              gap:10px; min-height:44px; padding:0 14px; background:#fff;
+              border:1.5px solid var(--line); border-radius: var(--r-sm); }
+.phup-n{ font-size:14.5px; color: var(--ink); min-width:0;
+         overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.phup-s{ font-style:normal; font-size:13px; color: var(--ink3); white-space:nowrap; }
+.phup-st{ font-size:13px; font-weight:800; color: var(--ink2); white-space:nowrap; }
+/* ⚠️ 상태색은 **짙은 단계**입니다 — 배지 바탕색을 글자로 쓰면 AA 에
+   못 미칩니다 (이 저장소가 여러 번 겪은 자리). */
+.phup-l > li.is-ok  .phup-st{ color: var(--ok-text); }
+.phup-l > li.is-bad .phup-st{ color: var(--bad-text); }
+.phup-note{ margin-top:12px; font-size:13.5px; color: var(--ink3);
+            word-break: keep-all; overflow-wrap: anywhere; }
+@media (max-width: 620px){ .phup-b{ width:100%; } }
+
+/* 붙은 파일을 보는 자리 (업체 · 운영자 · 손님) */
+.phv{ margin-top:14px; padding-block: 14px 0; border-top:1.5px solid var(--line-soft); }
+.phv-t{ display:inline-flex; align-items:center; gap:6px;
+        font-size:14.5px; color: var(--grn-text); }
+.phv-l{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.phv-n{ margin-top:8px; font-size:13px; color: var(--ink3);
+        word-break: keep-all; overflow-wrap: anywhere; }
+
+/* ── 상담 일정 (2차 지시서 §7) ─────────────────────────────────
+   ⚠️ 알림을 보내지 않습니다 — 적어 두고 서로 같은 것을 보는 자리입니다. */
+.ap{ margin-top:14px; background: var(--grn-soft);
+     border:1.5px solid var(--grn-line); border-radius: var(--r-sm);
+     padding:14px 16px; }
+.ap-h{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.ap-h .ic{ flex:none; color: var(--grn-text); }
+.ap-h b{ font-size:16.5px; color: var(--ink); }
+.ap-d{ margin-top:6px; font-size:14.5px; color: var(--ink2);
+       word-break: keep-all; overflow-wrap: anywhere; }
+
+/* ── 업체가 보는 수수료 · 정산 (2차 지시서 §7) ─────────────────
+   ⚠️ 손님에게는 한 줄도 안 보이는 표입니다 (0001 의 fee_mine). */
+.fe-p{ display:grid; gap:10px; margin-top:12px; }
+.fe-p > li{ background:#fff; border:1.5px solid var(--line);
+            border-radius: var(--r-sm); padding:14px 16px; }
+.fe-p > li > b{ font-size:15.5px; color: var(--ink);
+                word-break: keep-all; overflow-wrap: anywhere; }
+.fe-when{ display:inline-block; margin-left:8px; font-size:13px; color: var(--ink3); }
+.fe-r{ margin-top:6px; font-size:14px; color: var(--ink2);
+       word-break: keep-all; overflow-wrap: anywhere; }
+.fe-d{ display:block; font-style:normal; font-size:12.5px; color: var(--ink3); }
+/* 돈 칸은 오른쪽으로, 자릿수가 흔들리지 않게 */
+#feebox .doc-t td{ text-align:right; font-variant-numeric: tabular-nums; }
+#feebox .doc-t th[scope="row"]{ text-align:left; }

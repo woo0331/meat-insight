@@ -55,8 +55,20 @@ function enumKeys(sql, name){
   return quoted(sql.slice(open + 1, close));
 }
 /* `state text not null default 'open' check (state in ('open',…))` */
-function checkKeys(sql, col){
-  const at = sql.indexOf("check (" + col + " in (");
+/* ⚠️⚠️ **같은 칸 이름이 여러 표에 있습니다.** `state` 는 quote 에도
+   appointment 에도 있습니다 — 그냥 처음 것을 읽으면 **늘 quote 것**만
+   보고 appointment 쪽은 아무것도 안 잽니다 (검사는 초록인데 잰 것이
+   없는, 이 저장소가 여러 번 겪은 꼴입니다).
+   ⚠️ 그래서 **몇 번째**가 아니라 **어느 표**인지로 찾습니다 — 번째로
+   세면 표를 하나 끼워 넣는 날 조용히 어긋납니다. */
+function checkKeys(sql, col, table){
+  let from = 0;
+  if(table){
+    from = sql.indexOf("create table if not exists " + table + " (");
+    if(from < 0) from = sql.indexOf("create table " + table + " (");
+    if(from < 0) return null;
+  }
+  const at = sql.indexOf("check (" + col + " in (", from);
   if(at < 0) return null;
   const open = sql.indexOf("(", at + 7);
   const close = sql.indexOf(")", open);
@@ -110,8 +122,19 @@ function run(opt){
 
   const want = [
     ["상담 상태 (deal_state)",  enumKeys(sql, "deal_state"),       W.AM_DEAL_ST],
-    ["견적 상태 (quote.state)", checkKeys(sql, "state"),           W.AM_QUOTE_ST],
-    ["부가세 (fee_vat)",        enumKeys(sql, "fee_vat"),          W.AM_VAT]
+    ["견적 상태 (quote.state)", checkKeys(sql, "state", "quote"),  W.AM_QUOTE_ST],
+    ["부가세 (fee_vat)",        enumKeys(sql, "fee_vat"),          W.AM_VAT],
+    /* ⚠️ 0034 의 appointment — 만나는 방법과 일정 상태도 같은 함정입니다
+       (DB 에만 있으면 영문 키가 찍히고, 화면에만 있으면 DB 가 거절). */
+    ["만나는 방법 (appointment.kind)",
+     checkKeys(sql, "kind", "appointment"),  W.AM_APPT_KIND],
+    ["일정 상태 (appointment.state)",
+     checkKeys(sql, "state", "appointment"), W.AM_APPT_ST],
+    /* 수수료 — ⚠️ 셋 다 enum 입니다 (0001). 한쪽만 늘리면 업체 화면에
+       영문 키가 찍히거나, 화면이 내는 값을 DB 가 거절합니다. */
+    ["수수료 종류 (fee_type)",   enumKeys(sql, "fee_type"),  W.AM_FEE_TYPE],
+    ["확정 시점 (fee_when)",     enumKeys(sql, "fee_when"),  W.AM_FEE_WHEN],
+    ["지급 주기 (fee_cycle)",    enumKeys(sql, "fee_cycle"), W.AM_FEE_CYCLE]
   ];
 
   want.forEach(function(w){

@@ -68,7 +68,15 @@
       get("provider?select=id,name,assignable,is_test,listed&order=name.asc&limit=200"),
       get("request_item?select=request_id,service_id&limit=500"),
       get("assignment?select=request_id,provider_id,state&limit=500")
-    ]);
+    ]).then(function(got){
+      /* ⚠️ 손님이 붙이신 사진 · 서류 (§5-4) — 운영자는 전부 봅니다
+         (0011 의 photo_staff). 넘기기 전에 무엇이 왔는지 봐야 조건에
+         맞는 업체를 고를 수 있습니다. */
+      var rs = got[0];
+      if(!rs || !window.amPhotoRows) return got.concat([{}]);
+      return window.amPhotoRows(A.conf, rs.map(function(r){ return r.id; }))
+        .then(function(by){ return got.concat([by]); });
+    });
   }
 
   function badge(name, tone){
@@ -122,7 +130,7 @@
     '</form>';
   }
 
-  function card(r, provs, items, asgs){
+  function card(r, provs, items, asgs, pics){
     var st = window.amDealSt(r.state) || { name:r.state, tone:"ink" };
     var svcs = items.filter(function(x){ return x.request_id === r.id; })
       .map(function(x){
@@ -147,6 +155,8 @@
     h += '<dt>성함</dt><dd>' + esc(r.name) + '</dd>';
     h += '<dt>연락처</dt><dd>' + esc(r.tel) + '</dd>';
     h += '</dl>';
+
+    if(window.amPhotoBlock) h += window.amPhotoBlock(pics);
 
     if(mine.length){
       h += '<ul class="as-l">' + mine.map(function(a){
@@ -179,7 +189,7 @@
     box.hidden = false; box.className = "deskbox";
     box.innerHTML = '<h2 class="adm-h">상담 요청 · 배정</h2><p class="lmsg">읽는 중입니다…</p>';
     load().then(function(got){
-      var rs = got[0], provs = got[1], items = got[2], asgs = got[3];
+      var rs = got[0], provs = got[1], items = got[2], asgs = got[3], pics = got[4];
       if(rs === null || provs === null || items === null || asgs === null){
         box.innerHTML = '<h2 class="adm-h">상담 요청 · 배정</h2>' +
           '<p class="lmsg">읽지 못했습니다. ' +
@@ -198,7 +208,9 @@
         (tn ? '<p class="myhint">⚠️ 지금 업체 목록에 <b>검사용 ' + won(tn) +
               '곳</b>이 섞여 있습니다. 손님 화면 · 분류 화면 · 사이트맵에는 ' +
               '나가지 않습니다 — 지우실 때는 db/seed/test-providers.sql 의 ④ 를 보십니다.</p>' : "") +
-        rs.map(function(r){ return card(r, provs, items, asgs); }).join("");
+        rs.map(function(r){
+          return card(r, provs, items, asgs, (pics || {})[r.id]);
+        }).join("");
     });
   }
 
@@ -208,6 +220,22 @@
   }
 
   box.addEventListener("click", function(e){
+    /* ⚠️ 사진은 **누르셨을 때** 주소를 청합니다 (10분짜리) */
+    var ph = e.target.closest ? e.target.closest("button[data-photo]") : null;
+    if(ph){
+      var pm = msgOf(ph);
+      ph.disabled = true;
+      if(pm){ pm.hidden = false; pm.textContent = "여는 중입니다…"; }
+      window.amPhotoOpen(ph.getAttribute("data-photo")).then(function(url){
+        ph.disabled = false;
+        if(pm) pm.hidden = true;
+        window.open(url, "_blank", "noopener");
+      }).catch(function(err){
+        ph.disabled = false;
+        if(pm) pm.textContent = why(err);
+      });
+      return;
+    }
     var b = e.target.closest ? e.target.closest("button[data-do]") : null;
     if(!b) return;
     var what = b.getAttribute("data-do");

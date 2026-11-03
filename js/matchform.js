@@ -153,6 +153,12 @@
             '업체가 들어오는 대로 적어 주신 조건에 맞춰 연결해 드리겠습니다.</p>'
           : '<p>조건에 맞는 업체에 전달했습니다. 업체가 제안을 보내면 알려 드립니다.</p>') +
         '<a class="btn btn-line" href="/categories">카테고리 둘러보기</a></div>';
+      /* ⚠️⚠️ **사진은 접수한 뒤에 올립니다** (2차 지시서 §5-4 · 0011).
+         접수 전에 올리게 하면 아무나 올리는 길이 하나 생깁니다 —
+         요청번호와 연락처가 맞아야 자리를 받습니다.
+         ⚠️ 버킷이 설정되기 전에는 이 칸이 **아예 안 나옵니다**
+         (단추도 · "준비 중" 도 없습니다 — 절대 규칙 2 · 5). */
+      if(window.amPhotoAfter) window.amPhotoAfter(box.querySelector(".none"), n, f.tel.value);
       try{ box.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(_){}
     }).catch(function(err){
       btn.disabled = false;

@@ -30,6 +30,8 @@
   var A = null;          /* 지금 세션 */
   var PV = null;         /* 내 업체 id */
   var OPEN = {};         /* 어느 요청의 견적 양식을 펼쳤나 */
+  var APOPEN = {};       /* 어느 요청의 일정 양식을 펼쳤나 */
+  var APPT = {};         /* 요청별 지금 일정 (단추가 id 를 알아야 합니다) */
 
   /* ⚠️ 만들어 놓고 안 쓰는 함수를 두지 않습니다 — 네 번 겪은 자리입니다
      (부르는 자리를 세어 보세요). */
@@ -88,8 +90,21 @@
           encodeURIComponent(PV) + "&limit=200"),
       get("request_item?select=request_id,service_id,state&limit=500"),
       get("request?select=id,no,state,cat,region,gu,budget_min,budget_max," +
-          "want_at,body,name,tel,email,created_at&limit=50")
-    ]);
+          "want_at,body,name,tel,email,created_at&limit=50"),
+      /* ⚠️ 일정은 RLS 가 **내 업체 것만** 내줍니다 (0034 의 appt_provider) */
+      get("appointment?select=id,request_id,at,kind,place,note,state,why" +
+          "&provider_id=eq." + encodeURIComponent(PV) + "&limit=200")
+    ]).then(function(got){
+      /* ⚠️ 사진은 **요청을 읽은 뒤**에 묻습니다 (어느 요청인지 알아야
+         하니까요). ⚠️⚠️ 목록은 RLS 가 좁힙니다 — 업체는 배정된 건의
+         사진만 봅니다 (0011 의 photo_provider · 제17조). */
+      var reqs = got[3];
+      if(!reqs || !window.amPhotoRows) return got.concat([{}]);
+      return window.amPhotoRows(A.conf,
+        reqs.map(function(r){ return r.id; })).then(function(by){
+          return got.concat([by]);
+        });
+    });
   }
 
   /* ── 한 장 그리기 ───────────────────────────────────────────── */
@@ -186,7 +201,58 @@
     '</form>';
   }
 
-  function card(a, r, q, items){
+  /* 일정 양식 — ⚠️ 만나는 방법은 js/data/deal.js 에서 꺼냅니다
+     (DB 의 check 와 같아야 하고, check-deal 이 맞춰 봅니다). */
+  function apptForm(rid, ap){
+    var v = ap || {};
+    /* ⚠️⚠️ `datetime-local` 은 **그 기계의 시각**으로 보여 주고 그대로
+       돌려줍니다. 사장님 기계가 한국 시각이면 맞지만, 아니면 어긋납니다
+       — 그래서 보낼 때 **한국 시각으로 읽어** ISO 로 바꿉니다. */
+    function local(iso){
+      if(!iso) return "";
+      var d = new Date(iso);
+      if(isNaN(d.getTime())) return "";
+      var k = new Date(d.getTime() + 9 * 3600 * 1000);
+      function p2(n){ return String(n).padStart(2, "0"); }
+      return k.getUTCFullYear() + "-" + p2(k.getUTCMonth() + 1) + "-" +
+             p2(k.getUTCDate()) + "T" + p2(k.getUTCHours()) + ":" + p2(k.getUTCMinutes());
+    }
+    return '<form class="jform dk-f ap-f" data-req="' + esc(rid) + '">' +
+      '<div class="jrow">' +
+        '<label for="a-at-' + esc(rid) + '">만나실 때 <b>*</b> (한국 시각)</label>' +
+        '<input id="a-at-' + esc(rid) + '" name="at" type="datetime-local" required ' +
+        'value="' + esc(local(v.at)) + '">' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="a-kind-' + esc(rid) + '">어떻게</label>' +
+        '<select id="a-kind-' + esc(rid) + '" name="kind">' +
+          (window.AM_APPT_KIND || []).map(function(x){
+            return '<option value="' + esc(x.key) + '"' +
+              ((v.kind || "visit") === x.key ? " selected" : "") + '>' +
+              esc(x.name) + '</option>';
+          }).join("") +
+        '</select>' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
+        '<label for="a-place-' + esc(rid) + '">어디서</label>' +
+        '<input id="a-place-' + esc(rid) + '" name="place" maxlength="200" ' +
+        'value="' + esc(v.place || "") + '" placeholder="예: 남서울 실내연습장 3층">' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
+        '<label for="a-note-' + esc(rid) + '">같이 전할 말</label>' +
+        '<textarea id="a-note-' + esc(rid) + '" name="note" rows="2" maxlength="1000">' +
+        esc(v.note || "") + '</textarea>' +
+      '</div>' +
+      /* ⚠️⚠️ **지킬 수 없는 약속을 하지 않습니다** — 문자 · 카톡을
+         안 붙였으므로 "알려 드립니다" 라고 쓰지 않습니다. */
+      '<p class="dk-hint">적어 두시면 손님 화면(<b>내 정보</b>)에 그대로 보입니다. ' +
+      '<b>문자나 알림은 가지 않습니다</b> — 통화로 먼저 정하신 뒤 적어 주세요.</p>' +
+      '<button class="btn btn-pt" type="submit">' +
+      (ap && ap.state === "set" ? "일정 바꾸기" : "일정 잡기") + '</button>' +
+    '</form>';
+  }
+
+  function card(a, r, q, items, pics, ap){
     /* ⚠️ RLS 가 가린 줄은 짝이 안 맞아 비어 옵니다 — 조용히 빈 카드를
        그리지 않고 그 사실을 말합니다. */
     if(!r) return '<div class="dk-r"><p class="dk-no">이 배정의 요청을 읽지 못했습니다. ' +
@@ -221,6 +287,26 @@
       h += '<p class="dk-hint">성함 · 연락처는 <b>수락하신 뒤에</b> 보입니다. ' +
            '거절하시면 보시지 않은 채로 끝납니다.</p>';
 
+    /* ⚠️⚠️ 손님이 붙이신 사진 · 서류 (§5-4). 0장이면 아무것도 안
+       그립니다 — 빈 액자를 두면 "있었는데 안 보인다" 로 읽힙니다. */
+    if(window.amPhotoBlock) h += window.amPhotoBlock(pics);
+
+    /* ── 상담 일정 (2차 지시서 §7) ────────────────────────────
+       ⚠️⚠️ **알림을 보내지 않습니다.** 적어 두고 서로 같은 것을 보는
+       자리까지입니다 — "알려 드립니다" 라고 하지 않습니다. */
+    if(ap){
+      var ast2 = window.amApptSt(ap.state) || { name:ap.state, tone:"ink" };
+      h += '<div class="ap"><div class="ap-h">' + icon("cal", 15) +
+           '<b>' + esc(window.amWhen(ap.at)) + '</b>' +
+           badge(window.amApptKindName(ap.kind), "ink") +
+           badge(ast2.name, ast2.tone) + '</div>';
+      if(ap.place) h += '<p class="ap-d">' + esc(ap.place) + '</p>';
+      if(ap.note)  h += '<p class="ap-d">' + esc(ap.note) + '</p>';
+      if(ap.state === "cancel" && ap.why)
+        h += '<p class="ap-d">취소 — ' + esc(ap.why) + '</p>';
+      h += '</div>';
+    }
+
     /* ── 지금 낸 견적 ─────────────────────────────────────────── */
     if(q){
       var qst = window.amQuoteSt(q.state) || { name:q.state, tone:"ink" };
@@ -254,9 +340,20 @@
                'data-do="quote">' + (q ? "견적 고치기" : "견적 내기") + '</button>');
     if(q && q.state === "open")
       btn.push('<button class="btn btn-sm btn-line" data-do="pull">견적 거두기</button>');
+    /* ⚠️ 일정은 **수락한 뒤**에, 끝나지 않은 건에만 (DB 와 같은 조건).
+       어긋나면 단추가 보이고 DB 가 거절합니다. */
+    var canAppt = accepted && ["lost","hold"].indexOf(r.state) < 0;
+    if(canAppt)
+      btn.push('<button class="btn btn-sm btn-line" data-do="appt">' +
+               (ap && ap.state === "set" ? "일정 바꾸기" : "일정 잡기") + '</button>');
+    if(canAppt && ap && ap.state === "set"){
+      btn.push('<button class="btn btn-sm btn-line" data-do="apdone">만났음</button>');
+      btn.push('<button class="btn btn-sm btn-line" data-do="apcancel">일정 취소</button>');
+    }
     if(btn.length) h += '<div class="dk-b">' + btn.join("") + '</div>';
 
     if(OPEN[r.id] && canQuote) h += quoteForm(r.id, q);
+    if(APOPEN[r.id] && canAppt) h += apptForm(r.id, ap);
     h += '<p class="dk-m lmsg" hidden></p></div>';
     return h;
   }
@@ -268,9 +365,11 @@
     box.innerHTML = '<p class="lmsg">읽는 중입니다…</p>';
 
     load().then(function(got){
-      var asg = got[0], qs = got[1], items = got[2], reqs = got[3];
+      var asg = got[0], qs = got[1], items = got[2], reqs = got[3],
+          appts = got[4], pics = got[5];
       /* ⚠️⚠️ 넷 중 하나라도 못 읽었으면 **0건이라고 말하지 않습니다.** */
-      if(asg === null || qs === null || items === null || reqs === null){
+      if(asg === null || qs === null || items === null || reqs === null ||
+         appts === null){
         box.className = "none";
         box.innerHTML = '<h2>배정을 읽지 못했습니다.</h2>' +
           '<p>잠시 뒤에 다시 보시거나, 담당자에게 알려 주세요.</p>' +
@@ -287,13 +386,16 @@
           '<a class="btn btn-line" href="/my">내 정보</a>';
         return;
       }
-      var byReq = {}, byId = {};
+      var byReq = {}, byId = {}, byAppt = {};
       qs.forEach(function(q){ byReq[q.request_id] = q; });
       reqs.forEach(function(r){ byId[r.id] = r; });
+      appts.forEach(function(x){ byAppt[x.request_id] = x; });
+      APPT = byAppt;
       box.innerHTML =
         '<p class="dk-c">배정받은 요청 ' + won(asg.length) + '건</p>' +
         asg.map(function(a){
-          return card(a, byId[a.request_id], byReq[a.request_id], items);
+          return card(a, byId[a.request_id], byReq[a.request_id], items,
+                      (pics || {})[a.request_id], byAppt[a.request_id]);
         }).join("");
     });
   }
@@ -315,6 +417,10 @@
       OPEN[rid] = !OPEN[rid];
       return paint();
     }
+    if(what === "appt"){
+      APOPEN[rid] = !APOPEN[rid];
+      return paint();
+    }
     if(!rid) return;
 
     var call = null, args = null;
@@ -334,6 +440,20 @@
       if(!(w2 && w2.trim())) return;
       call = "withdraw_quote"; args = { p_request: rid, p_why: w2.trim() };
     }
+    if(what === "apdone" || what === "apcancel"){
+      var ap2 = APPT[rid];
+      if(!ap2) return;
+      var w3 = null;
+      if(what === "apcancel"){
+        /* ⚠️ 취소에는 까닭을 받습니다 — 헛걸음한 쪽이 알아야 합니다
+           (DB 도 그것을 봅니다). */
+        w3 = prompt("취소하시는 까닭을 적어 주세요 (손님 화면에 보입니다)");
+        if(!(w3 && w3.trim())) return;
+      }
+      call = "move_appointment";
+      args = { p: { id: ap2.id, to: what === "apdone" ? "done" : "cancel",
+                    why: w3 ? w3.trim() : null } };
+    }
     if(!call) return;
 
     b.disabled = true;
@@ -345,6 +465,24 @@
       b.disabled = false;
       if(m) m.textContent = why(err);
     });
+  }
+
+  /* ⚠️ 못 열면 **그 까닭을 그대로** 보여 줍니다 (조용히 아무 일도
+     안 나면 눌러도 안 되는 단추가 됩니다). */
+  function openPhoto(b){
+    var m = msgOf(b);
+    b.disabled = true;
+    if(m){ m.hidden = false; m.textContent = "여는 중입니다…"; }
+    window.amPhotoOpen(b.getAttribute("data-photo"))
+      .then(function(url){
+        b.disabled = false;
+        if(m) m.hidden = true;
+        window.open(url, "_blank", "noopener");
+      })
+      .catch(function(err){
+        b.disabled = false;
+        if(m) m.textContent = why(err);
+      });
   }
 
   function submitQuote(f){
@@ -389,10 +527,46 @@
      쓰므로, 카드마다 달면 다시 그릴 때마다 쌓입니다 (한 번 누르면
      여러 번 보내는 고장). */
   box.addEventListener("click", function(e){
+    /* ⚠️ 사진은 **누르셨을 때** 주소를 청합니다 (10분짜리 서명 주소) */
+    var ph = e.target.closest ? e.target.closest("button[data-photo]") : null;
+    if(ph) return openPhoto(ph);
     var b = e.target.closest ? e.target.closest("button[data-do]") : null;
     if(b) act(b);
   });
+  function submitAppt(f){
+    var rid = f.getAttribute("data-req"), m = msgOf(f);
+    var btn = f.querySelector('button[type="submit"]');
+    var v = String(f.at.value || "").trim();
+    if(!v){
+      if(m){ m.hidden = false; m.textContent = "만나실 때를 적어 주세요."; }
+      return;
+    }
+    /* ⚠️⚠️ **한국 시각으로 읽습니다.** `datetime-local` 은 띠 정보가
+       없는 글자("2026-11-05T14:00")라, 그냥 new Date() 하면 **그 기계의
+       띠**로 읽습니다 — 사장님이 해외에 계시면 아홉 시간 어긋납니다. */
+    var iso = new Date(v + ":00+09:00");
+    if(isNaN(iso.getTime())){
+      if(m){ m.hidden = false; m.textContent = "만나실 때를 다시 확인해 주세요."; }
+      return;
+    }
+    btn.disabled = true;
+    if(m){ m.hidden = false; m.textContent = "보내는 중입니다…"; }
+    rpc("set_appointment", { p: {
+      request: rid, at: iso.toISOString(), kind: f.kind.value,
+      place: String(f.place.value || "").trim() || null,
+      note: String(f.note.value || "").trim() || null
+    }}).then(function(){
+      APOPEN[rid] = false;
+      paint();
+    }).catch(function(err){
+      btn.disabled = false;
+      if(m) m.textContent = why(err);
+    });
+  }
+
   box.addEventListener("submit", function(e){
+    var fa = e.target.closest ? e.target.closest("form.ap-f") : null;
+    if(fa){ e.preventDefault(); return submitAppt(fa); }
     var f = e.target.closest ? e.target.closest("form.dk-f") : null;
     if(!f) return;
     e.preventDefault();

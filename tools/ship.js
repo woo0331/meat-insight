@@ -35,6 +35,10 @@ const STEPS = [
   ["주석이 코드를 삼키나",        ["tools/check-comments.js", "--prove"], false],
   ["window. 없이 쓴 맨이름",      ["tools/check-globals.js", "--prove"], false],
   ["상태 말이 DB 와 같나",        ["tools/check-deal.js", "--prove"], false],
+  /* ⚠️⚠️ **문을 만들고 부르는 화면을 안 만든 자리** — approve_provider 가
+     그랬습니다 (문을 세 번 고쳤는데 부르는 자리가 0곳). 사람이 손으로
+     grep 해서 겨우 찾았으니, 도구가 셉니다. */
+  ["문을 부르는 자리가 있나",      ["tools/check-doors.js", "--prove"], false],
   ["분류 키가 옛 키와 겹치나",     ["tools/check-keys.js"],         false],
   /* ⚠️ `--prove` 를 붙입니다 — esc() 검사가 함수를 따라가게 고친 뒤로는
      되돌려 보지 않으면 **느슨해진 자리**를 알 수 없습니다. */

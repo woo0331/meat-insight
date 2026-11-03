@@ -91,10 +91,10 @@ Vercel 환경변수  SUPABASE_URL · ANON_KEY 가 없습니다
 | 후보 0곳이면 솔직히 말함 | 화면이 그대로 말합니다 | `pages/home.js` · `/match` | ✅ |
 | 파일 크기 · 확장자 검증 | `api/upload.js` OK_MIME · MAX_BYTES + DB CHECK(0011) | ✅ |
 | 중복 요청 방지 | `request.idem` | ✅ |
-| **rate limit · 자동화 남용 방어** | 없습니다 | ❌ |
+| **rate limit · 자동화 남용 방어** | `make_request` 가 ① 같은 번호 10분에 한 건(0029) ② **하루 20건**(0041)을 막습니다 · ⚠️ 번호를 바꿔 가며 넣는 것은 **못 막습니다**(IP 를 안 받습니다 — 받으면 처리 항목이 늡니다) | 🟡 |
 | 익명화 요약으로 관심 표시 | 없습니다 (배정 전에는 업체가 요청을 아예 못 봅니다) | ❌ |
-| 고객이 요청 취소 · 수정 | **취소 길이 없습니다** (일정 취소만 있습니다) | ❌ |
-| 제공 이력 확인 | `/my` 에서 배정된 업체를 봅니다 · **동의 이력 화면은 없습니다** | 🟡 |
+| 고객이 요청 취소 · 수정 | `cancel_request`(0039) · `/my` 의 단추 · ⚠️ 계약 뒤에는 혼자 못 거둡니다(고객센터로) · **수정은 아직 없습니다** | 🟡 |
+| 제공 이력 확인 | `/my` 의 **연락처를 전달한 업체** 줄 — 전달한 때 · 철회한 때 · 까닭이 남습니다(0039) | ✅ |
 
 ## 6. 제안 비교 · 상담 (§6)
 
@@ -105,7 +105,7 @@ Vercel 환경변수  SUPABASE_URL · ANON_KEY 가 없습니다
 | 선택 | `choose_quote`(0008) | ✅ |
 | 거절 · 추가 질문 | **없습니다** (고른 것 말고는 `passed` 로만 바뀝니다) | ❌ |
 | 상태 전이 | `deal_state` 13개 — new·check·assigned·accepted·consult·quoted·nego·signed·done·hold·lost·fee_wait·fee_done | ✅ |
-| **disputed(분쟁)** | 없습니다 | ❌ |
+| **disputed(분쟁)** | `report`(0040) 의 `kind='dispute'` — ⚠️ **상태(enum)로 안 만들었습니다**: ① `alter type ... add value` 는 같은 트랜잭션에서 못 씁니다(임시 Postgres 에 돌려 보고 확인) ② 상태로 두면 `signed` 였는지 `done` 이었는지가 **덮여 사라집니다.** 손님은 `/my`, 업체는 `/desk` 에서 열고 운영자가 `/admin` 에서 처리합니다 | ✅ |
 | 전이마다 권한 검사 · 이벤트 로그 | `move_state`(0004→0007) + `audit_log` | ✅ |
 | 동시 요청 일관성 | `unique`(request_id, provider_id) · `on conflict` | ✅ |
 | 플랫폼 밖 계약을 매출로 안 셈 | `biz_metrics`(0033)가 **거래액과 플랫폼 수익을 가릅니다** · 광고 · 멤버십은 "적어 둔 금액" 이라 **더하지 않습니다** | ✅ |
@@ -130,7 +130,7 @@ Vercel 환경변수  SUPABASE_URL · ANON_KEY 가 없습니다
 | 확정 수익 / 미확정 / GMV 가름 | `biz_metrics` 가 `cannot` 으로 **못 내는 것까지 말합니다** | ✅ |
 | 관리자 역할 **세분화** | `staff` 와 `admin` 둘뿐 | 🟡 |
 | 민감정보 **마스킹** | 후기 작성자만 마스킹합니다 (`v_review_public`) · 관리자 화면은 날것 | 🟡 |
-| 신고 · 분쟁 | **없습니다** | ❌ |
+| 신고 · 분쟁 | `/admin` 의 `js/adminrep.js` — `open_report` · `move_report`(0040) · ⚠️ **끝낼 때 어떻게 처리했는지를 반드시** 받습니다(문 · CHECK 둘 다) · ⚠️⚠️ **업체는 제게 들어온 신고를 못 읽습니다** | ✅ |
 | 과금 · 결제 연동 | **없습니다** — 광고 · 멤버십은 "적어 둔 금액" 이라고 화면이 말합니다 | ✅ 지시서대로 꺼 둔 상태 |
 
 ## 9. 데이터 모델 (§9) — 지시서가 요구한 표와 지금
@@ -140,20 +140,20 @@ Vercel 환경변수  SUPABASE_URL · ANON_KEY 가 없습니다
 | users/profiles | `auth.users` + `account` | ✅ |
 | account_roles | `account.role` + `account_hat` | ✅ |
 | businesses | `provider` | ✅ |
-| business_members | `account.provider_id` (초대 없음) | 🟡 |
+| business_members | `account.provider_id` + `account_hat`(0025) — ⚠️ **초대 화면이 없습니다**(`grant_hat` · `has_hat` · `linked_providers` · `set_owner` 를 부르는 자리가 0곳 — `tools/check-doors.js` 가 셉니다) | 🟡 |
 | business_verifications | `provider.verified jsonb` (이력 없음) | 🟡 |
 | service_categories | `js/data/catalog.js` (코드에 있습니다 — DB 표가 아닙니다) | 🟡 |
 | business_services | `provider.subs text[]` | 🟡 배열이라 서비스별 조건을 못 답니다 |
 | service_areas | `provider.regions` · `gu` | 🟡 |
 | customer_requests | `request` · `request_item` | ✅ |
-| request_consents | `request.agree_at` · `assignment.agree3rd_at` (칸으로) | 🟡 **철회 이력이 없습니다** |
+| request_consents | `request.agree_at` · `assignment.agree3rd_at` · `revoked_at` · `revoked_why`(0039) — 칸으로 두지만 **철회 이력이 남습니다** | 🟡 |
 | request_matches | `assignment` | ✅ |
 | provider_proposals | `quote` | ✅ |
 | conversations/messages | **없습니다** | ❌ |
 | deal_events | `audit_log` + `deal_move` | ✅ |
 | audit_logs | `audit_log` | ✅ |
 | media_assets | `request_photo`(0011) | 🟡 요청에만 붙습니다 |
-| abuse_reports | **없습니다** | ❌ |
+| abuse_reports | `report`(0040) — 신고와 분쟁을 `kind` 로 가릅니다 | ✅ |
 | notification_events | **없습니다** | ❌ |
 
 ## 10. 보안 · 품질 (§10)
@@ -168,7 +168,7 @@ Vercel 환경변수  SUPABASE_URL · ANON_KEY 가 없습니다
 | CSP · 보안 헤더 | `vercel.json` · 검사 서버도 같은 헤더를 보냅니다 | ✅ |
 | 키 노출 | `check-safe` 가 저장소를 훑습니다 · service key 는 `api/` 에서만 | ✅ |
 | IDOR | 문마다 소유권을 봅니다 (`is_my_request` · `my_provider`) | ✅ |
-| **rate limit** | 없습니다 | ❌ |
+| **rate limit** | `make_request` 안(0029 10분 · 0041 하루 20건) · `tools/sql/report.js` 가 **문을 눌러** 경계값을 잽니다 · ⚠️ 표에 직접 넣어 재면 자물쇠를 지나칩니다 | 🟡 |
 | 메일 · 문자 발송 | **안 붙였습니다** — 그래서 "알려 드립니다" 라고 **말하지 않습니다** | ✅ 지시서대로 |
 | 360px · 키보드 · 대비 · 빈 상태 | `check-screens` 네 폭 · `check-a11y` · `test-desk` 가 폰 폭을 직접 잽니다 | ✅ |
 | 10개 분류 · 기존 주소 · SEO 유지 | `check-links` · `check-routes` · 410 규칙 | ✅ |
@@ -192,8 +192,35 @@ Vercel 환경변수  SUPABASE_URL · ANON_KEY 가 없습니다
    좁혔고 검사가 **따로** 누릅니다. 철회한 업체는 새 견적 · 새 일정도
    못 냅니다. 처리방침의 권리 행사 줄도 같은 날 고쳤습니다.
    SQL 검사 **517건** · 로그인 화면 **300건** 전부 통과.
-4. **신고(abuse_reports) · 분쟁(disputed)** — §6 · §8.
-5. **rate limit** — §5 · §10.
+4. ~~신고(abuse_reports) · 분쟁(disputed)~~ → **✅ 했습니다 (0040).**
+   `report` 표 하나에 신고와 분쟁을 `kind` 로 담고, `open_report()` ·
+   `move_report()` 둘만 엽니다 (표에 쓰기 정책이 없습니다).
+   ⚠️⚠️ **분쟁을 `deal_state` 에 더하지 않았습니다** — ① 같은
+   트랜잭션에서 새 enum 값을 못 씁니다(실제로 돌려 보고 확인했습니다)
+   ② 상태로 두면 원래 단계가 **덮여 사라집니다.**
+   ⚠️⚠️ 제일 위험한 자리는 **"남의 신고가 보이는 것"** 입니다 —
+   업체는 제게 들어온 신고를 **아예 못 읽습니다**(읽으면 신고한
+   손님을 찾아갑니다). 화면 세 자리를 같이 만들었습니다
+   (`/my` · `/desk` 에서 열고 `/admin` 의 `js/adminrep.js` 가 처리).
+5. ~~rate limit~~ → **✅ 했습니다 (0041).**
+   ⚠️⚠️⚠️ 처음에 적은 "10분에 다섯 건" 은 **영원히 안 걸리는
+   자물쇠**였습니다 — 0029 가 이미 같은 번호로 10분에 한 건만 받고
+   있었습니다. 표에 직접 insert 해서 재고 있었기 때문에 검사가
+   초록이었습니다 (`request` 에는 insert 정책도 GRANT 도 없어서
+   손님이 들어오는 길은 `make_request` 하나입니다 — **문으로 재야
+   합니다**). 남은 틈은 "하루" 였고(10분에 한 건이면 하루 144건),
+   0041 이 그 하나를 막습니다 (하루 20건).
+   ⚠️ 번호를 바꿔 가며 넣는 것은 **못 막습니다** — 막는 척하지 않고
+   검사에 그 사실까지 적었습니다 (IP 를 받기 시작하면 그날부터
+   개인정보 처리 항목이 하나 늘어 방침을 같이 고쳐야 합니다).
+6. **업체 등록 양식** → **✅ 했습니다** (문은 0023 의 `save_provider`).
+   ⚠️⚠️⚠️ `tools/check-doors.js` 를 새로 만들어 "문을 부르는 화면이
+   있나" 를 세어 봤더니 **스물한 개**가 0곳이었고, 그 가운데
+   `save_provider` 는 **입점 신청을 업체로 만드는 유일한 길**이었습니다
+   — 그게 없으면 신청이 "연락했음" 에서 더 못 갑니다 (사장님이 SQL
+   편집기를 열어야 했습니다). 나머지 스물은 까닭과 함께 그 도구의
+   `KNOWN` 에 적어 두었고, 검사는 **새로 생긴** 빈 문과 **그 목록이
+   썩은 것**을 잡습니다.
 
 P1 (§13): 중고채 매입 견적 · 메시지 · 알림 · 업체 통계.
 P2: 결제 · 정산 · 유료 광고 — **법적 · 계약적 준비 전에는 켜지 않습니다.**

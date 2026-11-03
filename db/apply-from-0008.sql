@@ -1,9 +1,9 @@
 /* ==================================================================
-   0008 ~ 0039 를 한 번에 —
+   0008 ~ 0041 를 한 번에 —
    Supabase SQL 편집기에 **이 파일을 통째로** 붙여 넣고 Run 하세요.
    ==================================================================
    WARN 빌드가 만드는 파일입니다 — 손으로 고치지 마세요.
-   db/migrations 의 32개를 번호 차례로 이어 붙인 것이고
+   db/migrations 의 34개를 번호 차례로 이어 붙인 것이고
    한 글자도 바꾸지 않았습니다. (node tools/make-apply.js)
 
    이미 0007 까지 돌려 두신 DB 에 쓰는 것입니다.
@@ -6218,6 +6218,416 @@ revoke all on function cancel_request(jsonb) from public;
 grant execute on function cancel_request(jsonb) to authenticated;
 
 insert into schema_version (n, name) values (39, '0039_consent_revoke')
+on conflict (n) do nothing;
+
+commit;
+
+/* ---------------------------- 0040_report.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0040 — 신고 · 분쟁  [3차 지시서 §6 · §8 · §9 abuse_reports]
+-- ════════════════════════════════════════════════════════════════════
+-- ⚠️⚠️⚠️ **`deal_state` enum 에 'disputed' 를 더하지 않았습니다 —
+--   일부러입니다.** 까닭 둘:
+--
+--   ① **터집니다.** `alter type ... add value` 로 더한 값은 **같은
+--      트랜잭션에서 쓸 수 없습니다.** 우리 마이그레이션은 전부
+--      `begin; … commit;` 으로 감싸여 있어서, 그 안에서 더하고 바로
+--      쓰면 `unsafe use of new value` 로 멈춥니다. 임시 Postgres 에
+--      실제로 돌려 보고 확인했습니다. 트랜잭션 밖으로 빼면 되지만,
+--      사장님은 `db/apply-from-0008.sql` 을 **통째로** 붙여 넣으시고
+--      그 편집기가 전체를 한 트랜잭션으로 감싸는지 저희는 모릅니다.
+--      **모르는 것에 기대지 않습니다.**
+--
+--   ② **더 중요한 까닭 — 분쟁은 단계가 아닙니다.** 상태로 만들면
+--      `signed` 였는지 `done` 이었는지가 **덮여서 사라집니다.** 분쟁은
+--      어느 단계에서든 열릴 수 있고, 풀리면 원래 단계로 돌아가야
+--      합니다. 그래서 **따로 적습니다** (3차 지시서 §6 은 상태로
+--      적었지만, 우리 deal_state 가 그보다 자세해서 그렇습니다 —
+--      AUDIT.md 에 적어 두었습니다).
+--
+-- ⚠️⚠️ **신고와 분쟁을 한 표에 둡니다.** 둘 다 "누가 · 무엇을 ·
+--   왜 · 어떻게 끝났나" 이고, 관리자는 한 자리에서 봅니다 (§8).
+--   `kind` 로 가릅니다.
+--
+-- ⚠️ **지우지 않습니다.** 신고를 지우면 "신고한 적 없다" 가 됩니다.
+--   끝난 것은 state 로 표시합니다.
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+create table if not exists report (
+  id          uuid primary key default gen_random_uuid(),
+  -- abuse  신고 (욕설 · 허위 · 광고 등)
+  -- dispute 분쟁 (거래가 틀어졌습니다)
+  kind        text not null check (kind in ('abuse','dispute')),
+  -- ⚠️ 무엇에 대한 것인가 — 셋 가운데 **적어도 하나**는 있어야 합니다.
+  --   셋 다 비면 무엇을 신고한 것인지 알 수 없습니다.
+  request_id  uuid references request(id)  on delete cascade,
+  provider_id text references provider(id) on delete cascade,
+  review_id   uuid references review(id)   on delete cascade,
+  by_user     uuid references auth.users(id) on delete set null,
+  body        text not null,
+  state       text not null default 'open'
+              check (state in ('open','reviewing','resolved','rejected')),
+  -- 어떻게 끝났나 — ⚠️ 끝낼 때는 반드시 적습니다
+  resolution  text,
+  closed_at   timestamptz,
+  closed_by   uuid references auth.users(id) on delete set null,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  constraint report_target_ck check (
+    request_id is not null or provider_id is not null or review_id is not null),
+  constraint report_body_ck check (char_length(btrim(body)) between 5 and 2000),
+  -- ⚠️⚠️ 끝난 것에는 **까닭이 반드시** 있습니다. 문에서도 받고 여기서도
+  --   봅니다 — 문이 내려가는 날 이 줄이 남습니다.
+  constraint report_resolution_ck check (
+    state not in ('resolved','rejected')
+    or btrim(coalesce(resolution,'')) <> '')
+);
+create index if not exists report_state_idx on report (state, created_at desc);
+create index if not exists report_target_idx on report (provider_id, request_id);
+
+alter table report enable row level security;
+
+-- ── 누가 보는가 ─────────────────────────────────────────────────────
+-- ⚠️⚠️ **신고한 사람은 제 신고만 봅니다.** 남의 신고가 보이면 누가
+--   누구를 신고했는지 드러납니다 — 그 자체가 분쟁의 씨앗입니다.
+drop policy if exists report_mine on report;
+create policy report_mine on report for select
+  using (by_user = auth.uid());
+
+drop policy if exists report_staff on report;
+create policy report_staff on report for select
+  using (my_role() in ('staff','admin'));
+
+-- ⚠️⚠️ **업체는 제게 들어온 신고를 못 봅니다.** 보면 신고한 손님을
+--   찾아갑니다. 운영자가 걸러서 전합니다 — 그게 중개자가 할 일입니다.
+-- ⚠️ 쓰기 정책을 일부러 안 만들었습니다 — 문 둘만 엽니다.
+grant select on report to authenticated;
+
+
+-- ════════════════════════════════════════════════════════════════════
+-- ① 문 — 신고 · 분쟁을 엽니다
+--
+-- ⚠️ 로그인한 사람만입니다. 익명 신고를 받으면 경쟁사가 하루에 백 건을
+--   넣습니다 — 받을 수는 있어도 **누가 넣었는지는 알아야** 합니다.
+-- ════════════════════════════════════════════════════════════════════
+create or replace function open_report(p jsonb)
+  returns uuid language plpgsql security definer
+  set search_path = public as $$
+declare
+  v_me   uuid := auth.uid();
+  v_kind text := coalesce(nullif(btrim(p->>'kind'), ''), 'abuse');
+  v_req  uuid := nullif(btrim(coalesce(p->>'request', '')), '')::uuid;
+  v_pv   text := nullif(btrim(coalesce(p->>'provider', '')), '');
+  v_rv   uuid := nullif(btrim(coalesce(p->>'review', '')), '')::uuid;
+  v_body text := btrim(coalesce(p->>'body', ''));
+  v_id   uuid;
+  v_dup  int;
+begin
+  if v_me is null then raise exception '신고는 로그인한 뒤에 하실 수 있습니다'; end if;
+  if v_kind not in ('abuse','dispute') then
+    raise exception '신고 · 분쟁 중 하나로 적어 주세요';
+  end if;
+  if v_req is null and v_pv is null and v_rv is null then
+    raise exception '무엇에 대한 것인지 적어 주세요 (요청 · 업체 · 후기 가운데 하나)';
+  end if;
+  if char_length(v_body) < 5 then
+    raise exception '무슨 일이 있었는지 다섯 글자 이상 적어 주세요';
+  end if;
+  if char_length(v_body) > 2000 then
+    raise exception '신고 내용은 이천 글자까지입니다';
+  end if;
+
+  -- ⚠️⚠️ **분쟁은 그 요청의 당사자만** 엽니다. 아무나 "저 거래가
+  --   이상합니다" 라고 열 수 있으면 분쟁이 아니라 신고입니다.
+  if v_kind = 'dispute' then
+    if v_req is null then raise exception '분쟁은 어느 요청인지 적어야 합니다'; end if;
+    if not (coalesce(is_my_request(v_req), false)
+            or coalesce(exists (select 1 from assignment a
+                                 where a.request_id = v_req
+                                   and a.provider_id = my_provider()), false)
+            or coalesce(my_role() in ('staff','admin'), false)) then
+      raise exception '그 거래의 당사자만 분쟁을 열 수 있습니다';
+    end if;
+  end if;
+
+  -- ⚠️⚠️ **같은 것을 두 번 열지 않습니다.** 누르는 손이 미끄러지면
+  --   같은 신고가 둘이 되고, 운영자는 그것을 두 번 읽습니다.
+  select count(*) into v_dup from report
+   where by_user = v_me and kind = v_kind and state in ('open','reviewing')
+     and request_id is not distinct from v_req
+     and provider_id is not distinct from v_pv
+     and review_id is not distinct from v_rv;
+  if v_dup > 0 then
+    raise exception '같은 건으로 이미 접수된 것이 있습니다 — 운영자가 보고 있습니다';
+  end if;
+
+  insert into report (kind, request_id, provider_id, review_id, by_user, body)
+  values (v_kind, v_req, v_pv, v_rv, v_me, v_body)
+  returning id into v_id;
+
+  -- ⚠️ 감사 기록에 **신고 본문을 넣지 않습니다** — audit_log 는 오래
+  --   남고 보는 사람도 넓습니다. 번호로 찾아갑니다.
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, data)
+  values (v_me, my_role(), 'report', v_id::text, 'open',
+          jsonb_build_object('kind', v_kind));
+  return v_id;
+end $$;
+
+revoke all on function open_report(jsonb) from public;
+grant execute on function open_report(jsonb) to authenticated;
+
+
+-- ════════════════════════════════════════════════════════════════════
+-- ② 문 — 운영자가 처리합니다
+--
+-- ⚠️⚠️ **끝낼 때는 어떻게 끝났는지 반드시 적습니다** (§8 의 "승인 ·
+--   거절 사유 필수"). 까닭 없이 닫을 수 있으면, 신고함은 쌓이기만
+--   하는 자리가 됩니다.
+-- ════════════════════════════════════════════════════════════════════
+create or replace function move_report(p jsonb)
+  returns void language plpgsql security definer
+  set search_path = public as $$
+declare
+  v_me   uuid := auth.uid();
+  v_role app_role := my_role();
+  v_id   uuid := nullif(btrim(coalesce(p->>'id', '')), '')::uuid;
+  v_to   text := nullif(btrim(coalesce(p->>'to', '')), '');
+  v_res  text := nullif(btrim(coalesce(p->>'resolution', '')), '');
+  r      report%rowtype;
+begin
+  if v_me is null then raise exception '변경자를 알 수 없습니다'; end if;
+  if not coalesce(v_role in ('staff','admin'), false) then
+    raise exception '신고 처리는 운영자만 할 수 있습니다';
+  end if;
+  if v_id is null then raise exception '어느 신고인지 적어 주세요'; end if;
+  if v_to not in ('reviewing','resolved','rejected') then
+    raise exception '신고는 확인 중 · 처리됨 · 반려로만 옮깁니다';
+  end if;
+
+  select * into r from report where id = v_id;
+  if not found then raise exception '그런 신고가 없습니다'; end if;
+  if r.state = v_to then raise exception '이미 %입니다', v_to; end if;
+  if r.state in ('resolved','rejected') then
+    raise exception '이미 끝난 신고입니다';
+  end if;
+  if v_to in ('resolved','rejected') and v_res is null then
+    raise exception '어떻게 처리하셨는지 적어 주세요';
+  end if;
+
+  update report set
+    state      = v_to,
+    resolution = case when v_to in ('resolved','rejected') then v_res else resolution end,
+    closed_at  = case when v_to in ('resolved','rejected') then now() else null end,
+    closed_by  = case when v_to in ('resolved','rejected') then v_me else null end,
+    updated_at = now()
+   where id = v_id;
+
+  insert into audit_log (by_user, by_role, obj, obj_id, from_state, to_state, why)
+  values (v_me, v_role, 'report', v_id::text, r.state, v_to, v_res);
+end $$;
+
+revoke all on function move_report(jsonb) from public;
+grant execute on function move_report(jsonb) to authenticated;
+
+insert into schema_version (n, name) values (40, '0040_report')
+on conflict (n) do nothing;
+
+commit;
+
+/* ---------------------------- 0041_rate_limit.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0041 — 쏟아붓기 막기 · **하루 한도**  [3차 지시서 §5 · §10]
+-- ════════════════════════════════════════════════════════════════════
+-- ⚠️⚠️⚠️ **처음에 적은 "10분에 다섯 건" 은 거짓이었습니다 — 지웠습니다.**
+--   0029 가 이미 **같은 번호로 10분에 한 건**만 받습니다
+--   ("방금 같은 번호로 요청이 들어왔습니다"). 그 위에 "10분에 다섯"
+--   을 얹으면 **영원히 안 걸리는 자물쇠**입니다 — 검사는 초록이고
+--   다음 차수는 그것을 자물쇠로 읽습니다 (작업 기억의 "만들어 놓고
+--   안 쓰는 칸" 그 자리입니다).
+--   ⚠️ **남은 틈은 "하루"** 였습니다: 10분에 한 건이면 **하루에
+--   144건**이고, 아무것도 그것을 안 막았습니다. 여기서 막는 것은
+--   그 하나입니다 — **하루 20건**.
+--
+-- ⚠️⚠️ **무엇으로 세는가.** 로그인 없이 들어오므로 user_id 가 비어
+--   있습니다. 그래서 **연락처의 숫자만** 으로 셉니다 (`v_digits`) —
+--   `tel` 날것으로 세면 `010-1111-2222` 와 `01011112222` 가 **다른
+--   사람**이 되어 한도가 조용히 두 배가 됩니다.
+--   ⚠️ IP 로 세지 않습니다: 우리는 IP 를 **받지도 저장하지도** 않고,
+--   받기 시작하면 그날부터 개인정보 처리 항목이 하나 늘어 방침을
+--   같이 고쳐야 합니다 (제15조 제2항). 막자고 더 받는 것은 거꾸로입니다.
+--   ⚠️⚠️ **그래서 번호를 바꿔 가며 넣는 것은 못 막습니다.** 막는 척
+--   하지 않습니다 — 그 자리는 운영자가 신고(0040)로 봅니다.
+--
+-- ⚠️⚠️ **경계값을 넉넉히 둡니다.** 레슨 · 피팅 · 부킹을 잇따라 넣는
+--   것은 **정상**입니다 (너무 좁게 막는 것도 고장입니다). 10분에 한
+--   건씩이면 하루 20건은 **세 시간 반**을 꼬박 넣은 것입니다.
+--
+-- ⚠️⚠️ **`make_request` 를 덮어씁니다** — 체인이 길어집니다:
+--     make_request  0029 → 0035 → **0041**
+--   0029 나 0035 를 다시 붙여 넣으면 이 자물쇠가 **조용히 내려갑니다.**
+--   내려갔는지 보는 법:
+--     select pg_get_functiondef('make_request(jsonb)'::regprocedure)
+--            like '%하루에 보내실%';     -- false 면 옛 판입니다
+--
+-- ⚠️ 함수 본문은 0035 것을 **그대로 떠서** 블록 하나만 끼웠습니다
+--   (손으로 옮겨 적으면 다음 함수를 통째로 삼킵니다).
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+-- ⚠️ 세는 식(`숫자만`)과 **똑같은 꼴**로 색인을 만듭니다 — 날것 tel 에
+--   걸면 이 질의도 · 0029 의 겹침 검사도 못 씁니다.
+create index if not exists request_digits_time_idx
+  on request (regexp_replace(tel, '[^0-9]', '', 'g'), created_at desc);
+
+create or replace function make_request(p jsonb)
+  returns text language plpgsql security definer set search_path = public as $$
+declare
+  v_name  text := btrim(coalesce(p->>'name', ''));
+  v_tel   text := btrim(coalesce(p->>'tel', ''));
+  v_email text := nullif(btrim(coalesce(p->>'email', '')), '');
+  v_region text := nullif(btrim(coalesce(p->>'region', '')), '');
+  v_gu    text := nullif(btrim(coalesce(p->>'gu', '')), '');
+  v_want  text := nullif(btrim(coalesce(p->>'want_at', '')), '');
+  v_body  text := nullif(btrim(coalesce(p->>'body', '')), '');
+  v_idem  text := nullif(btrim(coalesce(p->>'idem', '')), '');
+  v_bmin  bigint := nullif(p->>'budget_min', '')::bigint;
+  v_bmax  bigint := nullif(p->>'budget_max', '')::bigint;
+  -- ⚠️ 0035 — 손님이 보고 오신 업체 (바람이지 배정이 아닙니다)
+  v_wpv   text := nullif(btrim(coalesce(p->>'wantProvider', '')), '');
+  v_wpv_ok text;
+  v_svc   text[] := coalesce(
+             (select array_agg(distinct btrim(x)) from jsonb_array_elements_text(
+                case when jsonb_typeof(p->'services') = 'array'
+                     then p->'services' else '[]'::jsonb end) as t(x)
+              where btrim(x) <> ''), '{}'::text[]);
+  v_digits text;
+  v_no     text;
+  v_id     uuid;
+  v_try    int := 0;
+  v_abc    text := '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+  v_raw    text;
+  k        text;
+begin
+  -- ⚠️ 자물쇠마다 **다른 말**로 거절합니다.
+  if v_name = '' then raise exception '성함을 적어 주세요'; end if;
+  if v_tel  = '' then raise exception '연락처를 적어 주세요'; end if;
+  if length(v_name) > 40 then raise exception '성함이 너무 깁니다'; end if;
+  if v_body is not null and length(v_body) > 2000 then
+    raise exception '남기신 말씀이 너무 깁니다';
+  end if;
+
+  v_digits := regexp_replace(v_tel, '[^0-9]', '', 'g');
+  -- ⚠️ 경계값: 9자리(02-xxx-xxxx)부터 11자리(010-xxxx-xxxx)까지입니다.
+  if length(v_digits) < 9 or length(v_digits) > 11 then
+    raise exception '연락처를 다시 봐 주세요 — 숫자 아홉에서 열한 자리입니다';
+  end if;
+
+  if array_length(v_svc, 1) is null then
+    raise exception '원하시는 서비스를 하나 이상 골라 주세요';
+  end if;
+  if array_length(v_svc, 1) > 10 then
+    raise exception '고르신 서비스가 너무 많습니다 — 열 개까지입니다';
+  end if;
+
+  -- ⚠️ 예산은 **0 도 값입니다** (무료 상담). 음수와 뒤집힌 것만 막습니다.
+  if v_bmin is not null and v_bmin < 0 then raise exception '예산은 0 보다 작을 수 없습니다'; end if;
+  if v_bmax is not null and v_bmax < 0 then raise exception '예산은 0 보다 작을 수 없습니다'; end if;
+  if v_bmin is not null and v_bmax is not null and v_bmin > v_bmax then
+    raise exception '예산의 아래가 위보다 큽니다';
+  end if;
+
+  if (p->>'agree_at') is null then
+    raise exception '수집 · 이용 동의가 필요합니다';
+  end if;
+  if (p->>'agree_at')::timestamptz > now() + interval '5 minutes' then
+    raise exception '동의 시각이 미래입니다';
+  end if;
+  if (p->>'agree_at')::timestamptz < now() - interval '1 day' then
+    raise exception '동의가 오래되었습니다 — 다시 한 번 눌러 주세요';
+  end if;
+
+  -- ⚠️⚠️ **같은 요청을 두 번 넣는 것을 두 겹으로 막습니다.**
+  --   ① idem — 화면이 한 번 연 동안 하나입니다 (두 번 눌러도 하나)
+  --   ② 같은 번호로 10분 안
+  if v_idem is not null then
+    select id, no into v_id, v_no from request where idem = v_idem;
+    if v_id is not null then return v_no; end if;   -- 이미 들어간 것입니다
+  end if;
+  if exists (
+    select 1 from request
+     where regexp_replace(tel, '[^0-9]', '', 'g') = v_digits
+       and created_at > now() - interval '10 minutes')
+  then
+    raise exception '방금 같은 번호로 요청이 들어왔습니다 — 잠시 뒤에 다시 해 주세요';
+  end if;
+
+  -- ⚠️⚠️ **하루 한도 (0041).** 위가 10분을 막고, 여기가 하루를 막습니다.
+  --   ⚠️ 표에 트리거로 달아 봤다가 되돌렸습니다 — 이 함수가 SECURITY
+  --   DEFINER 라 트리거 안에서는 **씨앗을 넣는 운영자와 손님이 똑같이
+  --   보입니다.** 가를 수가 없어 멀쩡한 지표 검사가 깨졌습니다.
+  --   그리고 `request` 표에는 insert 정책도 GRANT 도 **없습니다** —
+  --   손님이 넣는 길은 이 문 하나뿐이라, 자물쇠도 여기 있어야 합니다.
+  --   ⚠️ 거절하는 말이 **어디로 가라**고 말해 줍니다 (막다른 길 금지).
+  if (select count(*) from request
+       where regexp_replace(tel, '[^0-9]', '', 'g') = v_digits
+         and created_at > now() - interval '24 hours') >= 20 then
+    raise exception '하루에 보내실 수 있는 요청 수를 넘었습니다 — 고객센터로 알려 주세요';
+  end if;
+
+  -- ⚠️⚠️ **바라시는 업체가 실제로 있는가.** 없으면 **비우고 넘어갑니다** —
+  --   묵은 링크 때문에 손님의 요청이 통째로 막히면 안 됩니다.
+  --   ⚠️ 검사용 업체는 안 받습니다 (손님 화면에 나간 적이 없는 업체입니다).
+  if v_wpv is not null then
+    select id into v_wpv_ok from provider
+     where id = v_wpv and listed = true and is_test = false;
+  end if;
+
+  -- 번호 — 겹치면 다시 뽑습니다 (스무 번까지)
+  loop
+    v_try := v_try + 1;
+    v_raw := '';
+    for i in 1..8 loop
+      v_raw := v_raw || substr(v_abc, 1 + floor(random() * length(v_abc))::int, 1);
+    end loop;
+    v_no := 'SW-' || substring(v_raw from 1 for 4) || '-' || substring(v_raw from 5 for 4);
+    exit when not exists (select 1 from request where no = v_no);
+    if v_try > 20 then raise exception '신청번호를 만들지 못했습니다'; end if;
+  end loop;
+
+  insert into request (no, user_id, side, cat, region, gu,
+                       budget_min, budget_max, want_at, body,
+                       name, tel, email, agree_at, idem, want_provider)
+  values (v_no, auth.uid(), 'golf',
+          -- ⚠️ 분류는 **첫 서비스가 속한 분류**를 화면이 적어 보냅니다.
+          nullif(btrim(coalesce(p->>'cat', '')), ''),
+          v_region, v_gu, v_bmin, v_bmax, v_want, v_body,
+          v_name, v_tel, v_email, (p->>'agree_at')::timestamptz, v_idem, v_wpv_ok)
+  returning id into v_id;
+
+  foreach k in array v_svc loop
+    insert into request_item (request_id, service_id)
+    values (v_id, k)
+    on conflict (request_id, service_id) do nothing;
+  end loop;
+
+  -- ⚠️ 감사 기록에 **성함 · 연락처를 넣지 않습니다.** 신청번호로 찾아갑니다.
+  -- ⚠️⚠️ 바라시는 업체를 **비운 경우 그 사실을 남깁니다** — 조용히
+  --   사라지면 "왜 그 업체로 안 갔나" 를 아무도 못 댑니다.
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, why, data)
+  values (auth.uid(), my_role(), 'request', v_no, 'new', '매칭 요청 접수',
+          jsonb_build_object('services', v_svc, 'region', v_region,
+                             'cat', nullif(btrim(coalesce(p->>'cat', '')), ''),
+                             'wantProvider', v_wpv_ok,
+                             'wantProviderDropped',
+                             (v_wpv is not null and v_wpv_ok is null)));
+
+  return v_no;
+end $$;
+revoke all on function make_request(jsonb) from public;
+grant execute on function make_request(jsonb) to anon, authenticated;
+
+insert into schema_version (n, name) values (41, '0041_rate_limit')
 on conflict (n) do nothing;
 
 commit;

@@ -307,6 +307,14 @@
     else if(r.state !== "lost")
       h += '<p class="dk-hint">이미 진행 중인 건이라 혼자 취소하실 수 없습니다 — ' +
            '고객센터로 알려 주세요.</p>';
+    /* ⚠️⚠️ **신고는 단계와 무관하게 냅니다** (0040 · 3차 지시서 §6).
+       취소가 막히는 자리(계약 뒤)가 바로 다툼이 나는 자리인데, 그때
+       길이 없으면 손님은 전화밖에 할 수 없습니다.
+       ⚠️ 눌러도 아무 일이 안 나는 단추가 아닙니다 — 운영자 화면
+       (/admin 의 신고 · 분쟁)이 그것을 받습니다. */
+    if(r.state !== "lost")
+      h += '<div class="dk-b"><button class="btn btn-sm btn-line" ' +
+           'data-report="' + esc(r.id) + '">이 건에 문제가 있습니다</button></div>';
     h += '<p class="dk-m lmsg" hidden></p></div>';
     return h;
   }
@@ -414,6 +422,28 @@
                                        why: w3.trim() } })
         .then(paint)
         .catch(function(err){ rvk.disabled = false; if(m3) m3.textContent = why(err); });
+      return;
+    }
+    /* 신고 · 분쟁 (0040) — ⚠️ **글자 수 규칙을 두 곳에 적지 않습니다.**
+       몇 글자부터인지는 DB 가 정하고(다섯 글자), 거절하는 말을 그대로
+       보여 줍니다. 여기서 또 재면 한쪽만 고치는 날 조용히 어긋납니다. */
+    var rpb = e.target.closest ? e.target.closest("button[data-report]") : null;
+    if(rpb){
+      var r6 = rpb.closest(".dk-r"), m6 = r6 ? r6.querySelector(".dk-m") : null;
+      var w6 = prompt("무슨 일이 있었는지 적어 주세요 (운영자가 봅니다)");
+      if(!(w6 && w6.trim())) return;
+      rpb.disabled = true;
+      if(m6){ m6.hidden = false; m6.textContent = "보내는 중입니다…"; }
+      /* ⚠️ 지킬 수 없는 말을 하지 않습니다 — "몇 시간 안에" 라고
+         적지 않고, 접수되었다는 사실까지만 말합니다 (절대 규칙 5). */
+      rpc("open_report", { p: { kind:"dispute",
+                                request: rpb.getAttribute("data-report"),
+                                body: w6.trim() } })
+        .then(function(){
+          rpb.disabled = false;
+          if(m6) m6.textContent = "접수되었습니다. 운영자가 확인합니다.";
+        })
+        .catch(function(err){ rpb.disabled = false; if(m6) m6.textContent = why(err); });
       return;
     }
     /* 요청 취소 (0039) */

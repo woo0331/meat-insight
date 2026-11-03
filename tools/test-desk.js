@@ -1434,6 +1434,251 @@ function stub(p, who, tables, rpcs, up){
      (await tapsOk(s.p, "#probox")) === 0, await tapsOk(s.p, "#probox"));
   await s.p.close();
 
+  /* ══ 신고 · 분쟁 (0040 · 3차 지시서 §6 · §8) ═══════════════════
+     ⚠️⚠️⚠️ **문만 만들고 화면을 안 만들면 그 기능은 없는 것입니다.**
+     `approve_provider` 가 그랬습니다 — 문을 세 번 고쳤는데 부르는
+     자리가 **0곳**이었습니다. 그래서 신고도 세 자리를 **눌러서**
+     꾸러미까지 뜯어 봅니다 — ① 손님이 여는 자리 ② 업체가 여는 자리
+     ③ 운영자가 처리하는 자리. */
+  const REPS = [
+    /* ⚠️ 손님이 적은 글에 태그를 넣어 둡니다 — 그대로 나가면 사고입니다 */
+    { id:"dddddddd-0000-0000-0000-000000000001", kind:"dispute",
+      request_id:REQ.id, provider_id:null, review_id:null,
+      body:"<img src=x onerror=alert(1)> 약속한 날에 오지 않으셨습니다",
+      state:"open", resolution:null, created_at:"2026-11-03T05:00:00Z",
+      closed_at:null },
+    { id:"dddddddd-0000-0000-0000-000000000002", kind:"abuse",
+      request_id:null, provider_id:"real-1", review_id:null,
+      body:"광고 글을 후기에 적었습니다", state:"resolved",
+      resolution:"업체에 확인했고 글을 가렸습니다",
+      created_at:"2026-11-02T05:00:00Z", closed_at:"2026-11-02T06:00:00Z" }
+  ];
+  const REPT = Object.assign({}, ADMT, BIZ, PROT, { report: REPS });
+
+  console.log("\n── /admin 신고함 — 운영자가 아니면 한 줄도 안 보입니다");
+  s = await open("/admin", { role:"customer", name:"일반회원" }, REPT);
+  ok("신고함이 아예 안 그려진다",
+     (await s.p.locator("#repbox button[data-rto]").count()) === 0);
+  t = (await s.p.textContent("#repbox")) || "";
+  ok("신고 본문이 한 글자도 안 나온다", t.indexOf("오지 않으셨습니다") < 0, t);
+  ok("⚠️ 신고를 **읽으러 가지도 않는다**",
+     s.sent.filter(function(x){
+       return x.name === "GET" && x.body.indexOf("/rest/v1/report") >= 0; }).length === 0,
+     JSON.stringify(s.sent.slice(0, 4)));
+  await s.p.close();
+
+  console.log("\n── /admin 신고함 — 운영자");
+  s = await open("/admin", { role:"admin", name:"관리자" }, REPT, { biz_metrics: MET });
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  t = (await s.p.textContent("#repbox")) || "";
+  ok("보고 있는 신고가 그려진다", /오지 않으셨습니다/.test(t), t.slice(0, 300));
+  ok("갈래가 **사람 말**로 나온다 (영문 키가 아니다)",
+     /분쟁/.test(t) && t.indexOf("dispute") < 0, t.slice(0, 200));
+  ok("상태도 사람 말이다", /새 신고/.test(t) && t.indexOf("open") < 0, t.slice(0, 200));
+  /* ⚠️⚠️ 손님이 쓴 글입니다 — esc() 를 지나야 합니다 (절대 규칙 4) */
+  ok("⚠️ 손님이 쓴 글이 **날것으로 안 나간다**",
+     (await s.p.locator("#repbox img").count()) === 0 &&
+     (await s.p.locator("#repbox script").count()) === 0);
+  ok("무엇에 대한 신고인지 (요청번호) 나온다", /SW-7K3M-92QP/.test(t), t.slice(0, 300));
+  /* ⚠️⚠️ **누가 신고했는지는 안 찍습니다** — 업체 쪽으로 말이 새는
+     길을 화면에서부터 막습니다. */
+  ok("⚠️ 신고한 사람의 성함이 안 나온다", t.indexOf("홍길동") < 0, t);
+  /* ⚠️ 끝난 것은 **다른 갈래**에 있습니다 (보고 있는 것만 먼저 봅니다) */
+  ok("끝난 신고는 첫 갈래에 섞이지 않는다", t.indexOf("광고 글을") < 0, t);
+  ok("끝난 것이 몇 건인지는 갈래에 적힌다",
+     (await s.p.locator("#repbox button[data-rtab='done']").count()) === 1);
+
+  /* ⚠️⚠️ **까닭 없이 닫히면 안 됩니다** (DB 도 막습니다) */
+  await s.p.evaluate(function(){ window.prompt = function(){ return ""; }; });
+  await s.p.click("#repbox button[data-rto='resolved']");
+  await s.p.waitForTimeout(200);
+  ok("⚠️ 처리 까닭을 안 적으면 **보내지 않는다**",
+     s.sent.filter(function(x){ return x.name === "move_report"; }).length === 0,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  /* ⚠️ 확인 중으로 옮기는 것은 아직 안 끝난 것이라 까닭을 안 받습니다 */
+  await s.p.click("#repbox button[data-rto='reviewing']");
+  await s.p.waitForTimeout(300);
+  const rvw = s.sent.filter(function(x){ return x.name === "move_report"; })[0];
+  ok("확인 중으로는 까닭 없이 옮긴다 (DB 와 같은 규칙)", !!rvw,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  await s.p.evaluate(function(){
+    window.prompt = function(){ return "업체에 확인했고 사실이 아니었습니다"; }; });
+  await s.p.click("#repbox button[data-rto='resolved']");
+  await s.p.waitForTimeout(300);
+  const rdone = s.sent.filter(function(x){
+    return x.name === "move_report" && (x.body || "").indexOf("resolved") >= 0; })[0];
+  ok("처리하면 move_report 를 부른다", !!rdone,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  let rp2 = null;
+  try{ rp2 = JSON.parse(rdone.body).p; }catch(_){}
+  ok("  꾸러미의 칸 이름이 문과 같다 (id · to · resolution)",
+     !!rp2 && rp2.id === REPS[0].id && rp2.to === "resolved" &&
+     rp2.resolution === "업체에 확인했고 사실이 아니었습니다", rdone && rdone.body);
+
+  console.log("\n── /admin 신고함 — 끝난 것 갈래");
+  await s.p.click("#repbox button[data-rtab='done']");
+  await s.p.waitForTimeout(250);
+  t = (await s.p.textContent("#repbox")) || "";
+  ok("끝난 신고가 그려진다", /광고 글을/.test(t), t.slice(0, 300));
+  ok("어떻게 처리했는지가 남아 보인다", /글을 가렸습니다/.test(t), t.slice(0, 300));
+  /* ⚠️ 끝난 것에는 단추를 안 냅니다 (DB 가 거절합니다 · 절대 규칙 5) */
+  ok("⚠️ 끝난 신고에는 **단추를 안 낸다**",
+     (await s.p.locator("#repbox button[data-rto]").count()) === 0);
+  ok("신고함의 누르는 것이 40px 이상이다",
+     (await tapsOk(s.p, "#repbox")) === 0, await tapsOk(s.p, "#repbox"));
+  await s.p.close();
+
+  console.log("\n── /my 손님이 신고를 엽니다 (0040)");
+  s = await open("/my", { role:"customer", name:"홍길동" },
+                 Object.assign({}, MYT, { quote:[], review:[], appointment:[],
+                                          assignment:[] }));
+  ok("신고 단추가 있다", (await s.p.locator("button[data-report]").count()) >= 1);
+  await s.p.evaluate(function(){ window.prompt = function(){ return ""; }; });
+  await s.p.click("button[data-report]");
+  await s.p.waitForTimeout(200);
+  ok("⚠️ 아무것도 안 적으면 **보내지 않는다**",
+     s.sent.filter(function(x){ return x.name === "open_report"; }).length === 0,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  await s.p.evaluate(function(){
+    window.prompt = function(){ return "약속한 날에 오지 않으셨습니다"; }; });
+  await s.p.click("button[data-report]");
+  await s.p.waitForTimeout(300);
+  const orp = s.sent.filter(function(x){ return x.name === "open_report"; })[0];
+  ok("open_report 를 부른다", !!orp, s.sent.map(function(x){ return x.name; }).join(" "));
+  let op = null;
+  try{ op = JSON.parse(orp.body).p; }catch(_){}
+  ok("  꾸러미에 갈래 · 요청 · 적은 글이 담긴다",
+     !!op && op.kind === "dispute" && op.request === REQ.id &&
+     op.body === "약속한 날에 오지 않으셨습니다", orp && orp.body);
+  t = (await s.p.textContent("#reqbox")) || "";
+  ok("  접수되었다고 말한다 (조용히 아무 일도 안 나지 않는다)",
+     /접수되었습니다/.test(t), t.slice(-300));
+  /* ⚠️ 지킬 수 없는 약속을 하지 않습니다 */
+  ok("  **몇 시간 안에 연락한다고 말하지 않는다**",
+     !/시간 안에|며칠|당일/.test(t), t.slice(-300));
+  await s.p.close();
+
+  /* ⚠️⚠️ **취소가 막히는 자리가 바로 다툼이 나는 자리입니다.**
+     계약 뒤에 신고 단추까지 없으면 손님은 전화밖에 할 길이 없습니다. */
+  s = await open("/my", { role:"customer", name:"홍길동" },
+                 Object.assign({}, MYT,
+                   { request:[Object.assign({}, REQ, { state:"signed" })],
+                     quote:[], review:[], appointment:[], assignment:[] }));
+  ok("⚠️ 계약 뒤에도 신고 단추는 **그대로 있다**",
+     (await s.p.locator("button[data-report]").count()) >= 1 &&
+     (await s.p.locator("button[data-cancel]").count()) === 0);
+  await s.p.close();
+  /* ⚠️ 거둔 요청에는 안 냅니다 (더 다툴 거래가 없습니다) */
+  s = await open("/my", { role:"customer", name:"홍길동" },
+                 Object.assign({}, MYT,
+                   { request:[Object.assign({}, REQ, { state:"lost" })],
+                     quote:[], review:[], appointment:[], assignment:[] }));
+  ok("거둔 요청에는 신고 단추를 안 낸다",
+     (await s.p.locator("button[data-report]").count()) === 0);
+  await s.p.close();
+
+  console.log("\n── /desk 업체도 신고를 엽니다 (업체도 당사자입니다)");
+  s = await open("/desk", PRO,
+                 { assignment:[asg(REQ, "accepted")], request:[REQ],
+                   quote:[], request_item:ITEMS });
+  ok("수락한 건에 신고 단추가 있다",
+     (await s.p.locator("#deskbox button[data-do='report']").count()) === 1);
+  await s.p.evaluate(function(){
+    window.prompt = function(){ return "연락이 닿지 않습니다"; }; });
+  await s.p.click("#deskbox button[data-do='report']");
+  await s.p.waitForTimeout(300);
+  const drp = s.sent.filter(function(x){ return x.name === "open_report"; })[0];
+  ok("open_report 를 부른다", !!drp, s.sent.map(function(x){ return x.name; }).join(" "));
+  let dp = null;
+  try{ dp = JSON.parse(drp.body).p; }catch(_){}
+  ok("  꾸러미에 갈래 · 요청 · 적은 글이 담긴다",
+     !!dp && dp.kind === "dispute" && dp.request === REQ.id &&
+     dp.body === "연락이 닿지 않습니다", drp && drp.body);
+  t = (await s.p.textContent("#deskbox")) || "";
+  ok("  접수되었다고 말한다", /접수되었습니다/.test(t), t.slice(-300));
+  await s.p.close();
+  /* ⚠️⚠️ **수락 전에는 안 냅니다** — 0040 이 "그 거래의 당사자만" 으로
+     막습니다. 눌러도 거절되는 단추를 미리 만들지 않습니다 (절대 규칙 5). */
+  s = await open("/desk", PRO,
+                 { assignment:[asg(REQ2, "sent")], request:[REQ2],
+                   quote:[], request_item:ITEMS });
+  ok("⚠️ 수락 전에는 신고 단추를 **안 낸다**",
+     (await s.p.locator("#deskbox button[data-do='report']").count()) === 0);
+  await s.p.close();
+
+  /* ══ 업체 등록 양식 (0023 의 save_provider) ═══════════════════
+     ⚠️⚠️⚠️ **이 양식이 없어서 입점 신청이 "연락했음" 에서 더 못
+     갔습니다** — 업체 줄을 만들 길이 화면에 없었고, `save_provider` 는
+     부르는 자리가 **0곳**이었습니다 (`tools/check-doors.js` 가 세어서
+     찾았습니다). 그러니 **꾸러미까지** 뜯어 봅니다. */
+  console.log("\n── /admin 업체 등록 양식");
+  s = await open("/admin", { role:"admin", name:"관리자" }, REPT, { biz_metrics: MET });
+  await s.p.click("#probox button[data-ptab='new']");
+  await s.p.waitForTimeout(250);
+  ok("양식이 그려진다", (await s.p.locator("#probox form#pvnew").count()) === 1);
+  ok("지역은 **고르는 칸**이다 (자유 입력이 아니다 · 키가 어긋나지 않습니다)",
+     (await s.p.locator("#probox input[name='rg']").count()) >= 10,
+     await s.p.locator("#probox input[name='rg']").count());
+  ok("하는 일도 고르는 칸이다 (catalog.js 한 곳에서 옵니다)",
+     (await s.p.locator("#probox input[name='sb']").count()) >= 20,
+     await s.p.locator("#probox input[name='sb']").count());
+  t = (await s.p.textContent("#probox")) || "";
+  /* ⚠️ 만든 뒤에 무엇을 더 해야 하는지 **그 자리에서** 말해야 합니다 */
+  ok("만든 업체가 **비공개로** 들어간다고 말한다", /비공개/.test(t), t.slice(0, 300));
+  ok("주소가 나중에 못 바뀐다고 말한다", /못 바꿉니다/.test(t), t.slice(0, 400));
+  ok("양식의 누르는 것이 40px 이상이다",
+     (await tapsOk(s.p, "#probox")) === 0, await tapsOk(s.p, "#probox"));
+  /* ⚠️⚠️ 하는 일을 비워 보내면 DB 가 거절합니다 — **화면이 그 말을
+     그대로** 보여 주는지 봅니다 (조용히 아무 일도 안 나면 안 됩니다). */
+  await s.p.evaluate(function(){
+    document.querySelector("#pn-id").value = "green-academy";
+    document.querySelector("#pn-name").value = "그린 아카데미";
+    document.querySelector("#pn-intro").value = "레슨 전문입니다";
+    document.querySelector("#pn-hours").value = "평일 10~19시";
+    document.querySelector("#pn-since").value = "2019";
+    document.querySelector("input[name='rg'][value='seoul']").checked = true;
+    const sb = document.querySelector("input[name='sb']");
+    sb.checked = true;
+    window.__sb = sb.value;
+  });
+  await s.p.click("#probox form#pvnew button[type='submit']");
+  await s.p.waitForTimeout(400);
+  const mk = s.sent.filter(function(x){ return x.name === "save_provider"; })[0];
+  ok("save_provider 를 부른다", !!mk, s.sent.map(function(x){ return x.name; }).join(" "));
+  let mp = null;
+  try{ mp = JSON.parse(mk.body); }catch(_){}
+  const sbKey = await s.p.evaluate(function(){ return window.__sb; });
+  ok("  꾸러미의 칸 이름이 문과 같다 (p_id · p_name · p_data · p_why)",
+     !!mp && mp.p_id === "green-academy" && mp.p_name === "그린 아카데미" &&
+     !!mp.p_data && typeof mp.p_why === "string", mk && mk.body);
+  ok("  고른 지역 · 하는 일이 **키로** 담긴다 (이름이 아닙니다)",
+     !!mp && mp.p_data.regions.join() === "seoul" &&
+     mp.p_data.subs.join() === sbKey, mk && mk.body);
+  ok("  소개 · 상담 시간 · 개업 연도가 담긴다",
+     !!mp && mp.p_data.intro === "레슨 전문입니다" &&
+     mp.p_data.consultHours === "평일 10~19시" && mp.p_data.since === "2019",
+     mk && mk.body);
+  await s.p.close();
+
+  console.log("\n── 입점 신청에서 양식으로 — 값을 채워서 엽니다");
+  s = await open("/admin", { role:"admin", name:"관리자" }, REPT, { biz_metrics: MET });
+  await s.p.click("#probox button[data-ptab='ap']");
+  await s.p.waitForTimeout(250);
+  ok("신청에 **업체 만들기** 단추가 있다",
+     (await s.p.locator("#probox button[data-mkpv='aaaa-ap-1']").count()) === 1);
+  await s.p.click("#probox button[data-mkpv='aaaa-ap-1']");
+  await s.p.waitForTimeout(350);
+  ok("양식이 열린다", (await s.p.locator("#probox form#pvnew").count()) === 1);
+  /* ⚠️ 상호를 다시 타이핑하게 두면 그때 오타가 들어갑니다 */
+  ok("  상호가 **채워져** 있다",
+     (await s.p.inputValue("#pn-name")) === "새 골프샵",
+     await s.p.inputValue("#pn-name"));
+  ok("  신청의 지역이 **키로 골라져** 있다 (신청은 이름으로 적혀 있습니다)",
+     await s.p.isChecked("input[name='rg'][value='seoul']"));
+  t = (await s.p.textContent("#probox")) || "";
+  ok("  어느 신청으로 만드는지 적힌다", /AP-0001/.test(t), t.slice(0, 300));
+  await s.p.close();
+
   /* ══ 폰 폭 ═══════════════════════════════════════════════════
      ⚠️⚠️⚠️ **`tools/check-screens.js` 는 이 세 화면을 영원히 못 봅니다.**
      로그인해야 그려지는 자리라, 그 도구에는 **빈 상자**로만 보입니다 —
@@ -1446,11 +1691,15 @@ function stub(p, who, tables, rpcs, up){
      가로로 도는 것은 일부러 그렇게 둔 것입니다 (약관 표와 같은 꼴). */
   console.log("\n── ⚠️ 폰 폭에서 화면이 가로로 밀리나 (전수 점검이 못 보는 자리)");
   const PHONE = { width: 390, height: 900 };
-  async function phone(path, who, tables, rpcs){
+  async function phone(path, who, tables, rpcs, pre){
     const p = await b.newPage({ viewport: PHONE });
     await stub(p, who, tables, rpcs, true);
     await p.goto(base + path, { waitUntil:"networkidle" });
     await p.waitForTimeout(500);
+    /* ⚠️⚠️ **갈래 안쪽은 눌러야 그려집니다.** 안 누르면 그 자리는
+       폰에서 아무도 안 재는 곳이 됩니다 — 체크칸 수십 개가 390px 에서
+       미는지는 여기서만 드러납니다. */
+    if(pre){ await p.click(pre); await p.waitForTimeout(400); }
     const r = await p.evaluate(function(sel){
       const box = document.querySelector(sel);
       const small = [];
@@ -1477,13 +1726,21 @@ function stub(p, who, tables, rpcs, up){
      { assignment:[asg(quoted, "accepted")], request:[quoted],
        quote:[QUOTE], request_item:ITEMS, review:[RVMINE] }, {}],
     ["/admin 배정 · 지표 · 관리 · 심사", "/admin", { role:"admin", name:"관리자" },
-     Object.assign({}, ADMT, BIZ, PROT, { review:RVADM }), { biz_metrics: MET }],
+     Object.assign({}, ADMT, BIZ, PROT,
+       { review:RVADM, report:REPS }), { biz_metrics: MET }],
     ["/my 견적 비교 · 후기 · 제공 이력", "/my", { role:"customer", name:"홍길동" },
      Object.assign({}, MYT, { quote:[QCHOSEN, Q2], review:[],
-                              appointment:[], assignment:ASGS }), {}]
+                              appointment:[], assignment:ASGS }), {}],
+    /* ⚠️ 갈래를 눌러야 나오는 자리 둘 — 체크칸 수십 개와 신고 본문 */
+    ["/admin 업체 등록 양식", "/admin", { role:"admin", name:"관리자" },
+     Object.assign({}, ADMT, BIZ, PROT, { report:REPS }), { biz_metrics: MET },
+     "#probox button[data-ptab='new']"],
+    ["/admin 신고함", "/admin", { role:"admin", name:"관리자" },
+     Object.assign({}, ADMT, BIZ, PROT, { report:REPS }), { biz_metrics: MET },
+     "#repbox button[data-rtab='done']"]
   ];
-  for(const [label, path, who, tables, rpcs] of phones){
-    const r = await phone(path, who, tables, rpcs);
+  for(const [label, path, who, tables, rpcs, pre] of phones){
+    const r = await phone(path, who, tables, rpcs, pre);
     ok(label + " — 그려지기는 한다 (빈 화면을 재고 통과하지 않는다)", r.drawn, JSON.stringify(r));
     ok(label + " — **가로로 안 밀린다**", r.doc <= r.win + 1,
        "문서 " + r.doc + "px · 화면 " + r.win + "px");

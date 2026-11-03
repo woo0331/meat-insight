@@ -848,6 +848,15 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .fe-r{ margin-top:6px; font-size:14px; color: var(--ink2);
        word-break: keep-all; overflow-wrap: anywhere; }
 .fe-d{ display:block; font-style:normal; font-size:12.5px; color: var(--ink3); }
+
+/* ── 신고 · 분쟁 본문 (0040 · /admin 의 신고함) ─────────────────
+   ⚠️ 손님 · 업체가 쓴 글입니다. 길고 줄바꿈이 없을 수 있어 **한글
+   낱말 단위로** 끊고, 한 낱말이 너무 길면 그 안에서 끊습니다.
+   ⚠️ 12px 밑으로 내려가지 않습니다 (손님이 40~60대입니다). */
+.rep-b{ margin-top:8px; padding:10px 12px; background: var(--bg-2);
+        border-radius: var(--r-sm); font-size:14.5px; color: var(--ink);
+        white-space: pre-wrap;
+        word-break: keep-all; overflow-wrap: anywhere; }
 /* 돈 칸은 오른쪽으로, 자릿수가 흔들리지 않게 */
 #feebox .doc-t td{ text-align:right; font-variant-numeric: tabular-nums; }
 #feebox .doc-t th[scope="row"]{ text-align:left; }

@@ -44,7 +44,12 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="probox" class="none" hidden></div></div></section>';
 
+  /* 신고 · 분쟁 (0040 · 3차 지시서 §6 · §8) — ⚠️ 문만 만들고 이 자리를
+     안 만들면 손님이 보낸 신고는 아무도 안 읽는 표에 쌓입니다. */
   body += '<section class="sec sec-alt"><div class="wrap">' +
+    '<div id="repbox" class="none" hidden></div></div></section>';
+
+  body += '<section class="sec"><div class="wrap">' +
     '<div id="bizbox" class="none" hidden></div></div></section>';
 
   return {
@@ -52,9 +57,10 @@ exports.build = function(){
     desc: "골프올인원 관리자 화면.",
     body: body,
     js: ["/js/data/korean.js", "/js/data/deal.js", "/js/data/metrics.js",
+         "/js/data/regions.js",
          "/js/data/review.js", "/js/auth.js", "/js/photo.js",
          "/js/account.js", "/js/review.js", "/js/assign.js",
-         "/js/adminpro.js",
+         "/js/adminpro.js", "/js/adminrep.js",
          "/js/metrics.js", "/js/adminbiz.js"]
   };
 };

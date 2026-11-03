@@ -26,7 +26,9 @@
   if(!box || !window.amAuthAsk) return;
 
   var A = null;
-  var TAB = "pv";          /* pv 업체 · ap 입점 신청 */
+  var TAB = "pv";          /* pv 업체 · ap 입점 신청 · new 업체 등록 */
+  var LIST = [];           /* 읽어 둔 업체 — 겹치는 id 를 미리 묻습니다 */
+  var APL  = [];           /* 읽어 둔 입점 신청 */
 
   function why(err){
     var w = String((err && err.message) || "");
@@ -84,7 +86,7 @@
 
   function tabs(){
     return '<div class="bz-tabs" role="tablist">' +
-      [["pv","업체"],["ap","입점 신청"]].map(function(t){
+      [["pv","업체"],["ap","입점 신청"],["new","업체 등록"]].map(function(t){
         return '<button type="button" class="btn btn-sm ' +
           (TAB === t[0] ? "btn-pri" : "btn-line") + '" data-ptab="' + t[0] + '" ' +
           'role="tab" aria-selected="' + (TAB === t[0] ? "true" : "false") + '">' +
@@ -155,23 +157,163 @@
             ? '<button class="btn btn-sm btn-line" data-apto="drop" ' +
               'data-ap="' + esc(a.id) + '">진행 안 함</button>' : '') +
         '</div>' +
-        /* ⚠️⚠️ **등록(done)을 단추 하나로 두지 않았습니다.** 등록하려면
-           업체 줄을 먼저 만들어야 하는데(주소 · 하는 일 · 지역), 그
-           양식이 아직 없습니다. 없는 것을 되는 것처럼 보이면 안 됩니다
-           (절대 규칙 5) — 지금은 그 사실을 적습니다. */
-        (a.state === "called"
-          ? '<p class="dk-hint">⚠️ 업체로 등록하는 양식은 아직 없습니다 — ' +
-            '지금은 담당자가 DB 에서 업체를 만든 뒤 이 신청을 ' +
-            '<b>등록 완료</b>로 옮깁니다.</p>' : '') +
+        /* ⚠️⚠️ **등록(done)을 단추 하나로 두지 않습니다** — 업체 줄을
+           먼저 만들어야 합니다 (주소 · 하는 일 · 지역). 그 양식으로
+           보내고, 만든 뒤에 이 신청을 <b>등록 완료</b>로 옮깁니다.
+           ⚠️ 거둔 신청(진행 안 함)에는 안 냅니다 (절대 규칙 5). */
+        (a.state !== "drop" && a.state !== "done"
+          ? '<p class="dk-hint">업체 줄을 만든 뒤에 이 신청을 ' +
+            '<b>등록 완료</b>로 옮기세요.</p>' +
+            '<div class="dk-b"><button class="btn btn-sm btn-pt" ' +
+            'data-mkpv="' + esc(a.id) + '">이 신청으로 업체 만들기</button></div>'
+          : '') +
       '</li>';
     }).join("") + '</ul>';
   }
 
+  /* ── 업체 등록 양식 (0007→0023 의 save_provider) ─────────────────
+     ⚠️⚠️⚠️ **이 양식이 없어서 `save_provider` 도 부르는 자리가 0곳
+     이었습니다.** 입점 신청을 받아 놓고 업체 줄을 만들 길이 없으면
+     신청은 "연락했음" 에서 더 못 갑니다 — 사장님이 SQL 편집기를 열어야
+     했습니다. `tools/check-doors.js` 가 그것을 세어서 찾았습니다.
+
+     ⚠️⚠️ **주소가 될 값(id)은 나중에 못 바꿉니다** (`/pro/<id>` 가
+     됩니다). 이미 있는 id 를 적으면 `save_provider` 가 **그 업체를
+     덮어씁니다** — 조용히 남의 업체를 고치는 일이 생기지 않게 화면이
+     먼저 묻습니다.
+     ⚠️ 하는 일 · 지역의 **키**는 `js/data/catalog.js` ·
+     `js/data/regions.js` 한 곳에서 옵니다 (손으로 적으면 어긋납니다). */
+  var PRE = null;        /* 입점 신청에서 넘어온 값 */
+
+  /* ⚠️ 이름표 · 체크칸은 **입점 양식과 같은 클래스**를 씁니다
+     (.svcs · .svc · .chk) — 새 클래스를 지으면 누름 40px · 12px 규칙을
+     그 자리에만 다시 적어야 하고, 한쪽만 고치는 날 어긋납니다. */
+  function cbRow(nm, key, label, on){
+    return '<label class="chk"><input type="checkbox" name="' + nm + '" value="' +
+      esc(key) + '"' + (on ? " checked" : "") + '><span>' + esc(label) + '</span></label>';
+  }
+  function newForm(){
+    /* ⚠️ 신청서의 지역은 **이름**으로 적혀 있고(0016) 업체 표는 **키**를
+       씁니다 — 이름이 맞는 것 하나를 미리 켜 둡니다. */
+    var want = (PRE && PRE.region) || "";
+    var regs = (window.AM_REGIONS || []).map(function(r){
+      return cbRow("rg", r.key, r.name, r.name === want || r.full === want);
+    }).join("");
+    var cats = (window.amCatsForProvider ? amCatsForProvider() : []).map(function(c){
+      return '<fieldset class="svc"><legend>' + esc(c.name) + '</legend>' +
+        amCatItemsForProvider(c).map(function(it){
+          return cbRow("sb", it.key, it.name, false);
+        }).join("") + '</fieldset>';
+    }).join("");
+    /* ⚠️ 고를 것이 없으면 양식을 내지 않습니다 (빈 칸만 보입니다) */
+    if(!regs || !cats)
+      return '<p class="myhint">분류 · 지역 자료를 읽지 못해 양식을 내지 못했습니다.</p>';
+    return '<p class="myhint">⚠️ 만든 업체는 <b>비공개로</b> 들어갑니다 — ' +
+      '<b>업체</b> 갈래에서 공개 · 배정을 켜셔야 손님에게 보입니다. ' +
+      '손님 화면(검색 · 업체 목록)에 찍히는 것은 자료를 다시 가져와 ' +
+      '올린 뒤입니다.</p>' +
+      '<form id="pvnew" class="jform">' +
+      (PRE && PRE.no
+        ? '<p class="dk-hint">입점 신청 <b>' + esc(PRE.no) + '</b> 로 만듭니다.</p>'
+        : '') +
+      '<div class="jrow">' +
+        '<label for="pn-id">주소가 될 값 <b>*</b></label>' +
+        '<input id="pn-id" name="id" required maxlength="40" ' +
+        'pattern="[a-z0-9][a-z0-9-]*" placeholder="green-academy" ' +
+        'autocapitalize="off" spellcheck="false">' +
+        '<p class="agree-no">영문 소문자 · 숫자 · 붙임표만 됩니다. ' +
+        '주소가 <b>/pro/green-academy</b> 가 되고 <b>나중에 못 바꿉니다.</b></p>' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="pn-name">상호 <b>*</b></label>' +
+        '<input id="pn-name" name="name" required maxlength="60" value="' +
+        esc((PRE && PRE.company) || "") + '">' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="pn-hours">상담 가능 시간</label>' +
+        '<input id="pn-hours" name="hours" maxlength="60" placeholder="평일 10~19시">' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="pn-since">개업 연도</label>' +
+        '<input id="pn-since" name="since" inputmode="numeric" maxlength="4" ' +
+        'placeholder="2019">' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
+        '<label>맡는 지역</label>' +
+        '<div class="svcs"><fieldset class="svc"><legend>지역</legend>' +
+        regs + '</fieldset></div>' +
+        '<p class="agree-no">하나도 안 고르시면 지역 거르개에 안 걸립니다.</p>' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
+        '<label>하는 일 <b>*</b></label>' +
+        '<div class="svcs">' + cats + '</div>' +
+        '<p class="agree-no">⚠️ 하나는 고르셔야 합니다 — 비면 ' +
+        '<b>아무 분류에도 안 걸립니다.</b></p>' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
+        '<label for="pn-intro">소개</label>' +
+        '<textarea id="pn-intro" name="intro" rows="3" maxlength="600"></textarea>' +
+      '</div>' +
+      '<button class="btn btn-pt" type="submit">업체 만들기</button>' +
+      '<p class="pn-m lmsg" hidden></p>' +
+      '</form>';
+  }
+
+  function picked(f, nm){
+    return Array.prototype.map.call(
+      f.querySelectorAll('input[name="' + nm + '"]:checked'),
+      function(x){ return x.value; });
+  }
+  function submitNew(f, list){
+    var m  = f.querySelector(".pn-m");
+    var bt = f.querySelector('button[type="submit"]');
+    var id = (f.id && f.querySelector("#pn-id").value || "").trim().toLowerCase();
+    var nm = (f.querySelector("#pn-name").value || "").trim();
+    /* ⚠️⚠️ 이미 있는 id 면 **덮어씁니다** — 먼저 묻습니다 */
+    var dup = (list || []).filter(function(p){ return p.id === id; })[0];
+    if(dup && !confirm("이미 있는 업체입니다 — 「" + dup.name +
+                       "」의 정보를 덮어씁니다. 계속하시겠습니까?")) return;
+    var data = {
+      intro: (f.querySelector("#pn-intro").value || "").trim() || null,
+      regions: picked(f, "rg"),
+      gu: [],
+      subs: picked(f, "sb"),
+      consultHours: (f.querySelector("#pn-hours").value || "").trim() || null,
+      since: (f.querySelector("#pn-since").value || "").trim() || null
+    };
+    bt.disabled = true;
+    if(m){ m.hidden = false; m.textContent = "만드는 중입니다…"; }
+    /* ⚠️ 감사 기록에 **어느 신청으로 만들었는지**를 남깁니다 */
+    rpc("save_provider", { p_id: id, p_name: nm, p_data: data,
+                           p_why: (PRE && PRE.no)
+                             ? ("입점 신청 " + PRE.no + " 등록")
+                             : "관리자 화면에서 등록" })
+      .then(function(){
+        /* ⚠️⚠️ **신청 상태는 여기서 안 옮깁니다.** 두 문을 한 번에
+           부르면 뒤가 떨어졌을 때 무엇이 됐는지 알 수 없습니다 —
+           무엇을 더 하셔야 하는지 적습니다. */
+        var left = (PRE && PRE.no)
+          ? " 입점 신청 " + PRE.no + " 는 **등록 완료**로 옮겨 주세요."
+          : "";
+        PRE = null; TAB = "pv";
+        paint().then(function(){
+          say("업체를 만들었습니다 — 아직 비공개입니다. 공개 · 배정을 켜 주세요." +
+              left.replace(/\*\*/g, ""));
+        });
+      })
+      .catch(function(err){
+        bt.disabled = false;
+        if(m) m.textContent = why(err);
+      });
+  }
+
   function paint(){
     box.hidden = false; box.className = "deskbox";
-    box.innerHTML = '<h2 class="adm-h">업체 심사 · 정지</h2>' +
+    box.innerHTML = '<h2 class="adm-h">업체 심사 · 정지 · 등록</h2>' +
       '<p class="lmsg">읽는 중입니다…</p>';
-    load().then(function(got){
+    /* ⚠️ 돌려줍니다 — 다시 그린 **뒤에** 할 말이 있습니다 (그러지 않으면
+       그 말이 "읽는 중입니다" 와 함께 지워집니다). */
+    return load().then(function(got){
       var pvs = got[0], aps = got[1];
       /* ⚠️⚠️ 못 읽었으면 **0건이라고 말하지 않습니다.** */
       if(pvs === null || aps === null){
@@ -180,9 +322,10 @@
           '<button class="btn btn-sm btn-line" data-do="again">다시 읽기</button></p>';
         return;
       }
-      box.innerHTML = '<h2 class="adm-h">업체 심사 · 정지</h2>' + tabs() +
+      LIST = pvs; APL = aps;
+      box.innerHTML = '<h2 class="adm-h">업체 심사 · 정지 · 등록</h2>' + tabs() +
         '<div class="bz-body">' +
-        (TAB === "pv" ? pvView(pvs) : apView(aps)) +
+        (TAB === "pv" ? pvView(pvs) : TAB === "ap" ? apView(aps) : newForm()) +
         '</div><p class="dk-m lmsg" hidden></p>';
     });
   }
@@ -237,6 +380,15 @@
         .then(paint).catch(function(err){ ab.disabled = false; say(why(err)); });
       return;
     }
+    /* 신청에서 업체 등록 양식으로 — ⚠️ 그 신청의 값을 **채워서** 엽니다
+       (운영자가 상호를 다시 타이핑하면 그때 오타가 들어갑니다). */
+    var mk = e.target.closest ? e.target.closest("button[data-mkpv]") : null;
+    if(mk){
+      var id0 = mk.getAttribute("data-mkpv");
+      PRE = (APL || []).filter(function(x){ return x.id === id0; })[0] || null;
+      TAB = "new";
+      return paint();
+    }
     /* 입점 신청 */
     var pb = e.target.closest ? e.target.closest("button[data-apto]") : null;
     if(pb){
@@ -249,6 +401,15 @@
         .then(paint).catch(function(err){ pb.disabled = false; say(why(err)); });
       return;
     }
+  });
+
+  /* 업체 등록 양식 — ⚠️ 보내는 꾸러미는 **한 곳**에서 짓습니다
+     (화면마다 짜면 칸 이름 하나가 어긋나도 열리기는 합니다). */
+  box.addEventListener("submit", function(e){
+    var f = e.target.closest ? e.target.closest("form#pvnew") : null;
+    if(!f) return;
+    e.preventDefault();
+    submitNew(f, LIST);
   });
 
   amAuthAsk().then(function(a){

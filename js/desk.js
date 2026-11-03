@@ -359,6 +359,12 @@
       btn.push('<button class="btn btn-sm btn-line" data-do="apdone">만났음</button>');
       btn.push('<button class="btn btn-sm btn-line" data-do="apcancel">일정 취소</button>');
     }
+    /* ⚠️⚠️ **업체도 분쟁을 열 수 있어야 합니다** (0040) — 손님이
+       약속에 안 나오거나 연락이 끊기는 일이 있고, 그때 길이 없으면
+       업체는 전화밖에 할 수 없습니다. ⚠️ 수락한 건에만 냅니다
+       (0040 이 "그 거래의 당사자만" 으로 막습니다 · 절대 규칙 5). */
+    if(accepted)
+      btn.push('<button class="btn btn-sm btn-line" data-do="report">문제 신고</button>');
     if(btn.length) h += '<div class="dk-b">' + btn.join("") + '</div>';
 
     if(OPEN[r.id] && canQuote) h += quoteForm(r.id, q);
@@ -501,6 +507,22 @@
       args = { p: { id: ap2.id, to: what === "apdone" ? "done" : "cancel",
                     why: w3 ? w3.trim() : null } };
     }
+    /* 신고 · 분쟁 (0040) — ⚠️ 보낸 뒤에 **다시 그리지 않습니다.**
+       다시 그리면 접수되었다는 말이 그 자리에서 사라집니다. */
+    if(what === "report"){
+      var w5 = prompt("무슨 일이 있었는지 적어 주세요 (운영자가 봅니다)");
+      if(!(w5 && w5.trim())) return;
+      b.disabled = true;
+      if(m){ m.hidden = false; m.textContent = "보내는 중입니다…"; }
+      rpc("open_report", { p: { kind:"dispute", request: rid, body: w5.trim() } })
+        .then(function(){
+          b.disabled = false;
+          if(m) m.textContent = "접수되었습니다. 운영자가 확인합니다.";
+        })
+        .catch(function(err){ b.disabled = false; if(m) m.textContent = why(err); });
+      return;
+    }
+
     if(!call) return;
 
     b.disabled = true;

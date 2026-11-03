@@ -151,6 +151,11 @@ try{
   /* ⚠️⚠️ 철회는 **끊는 길이 셋**입니다 (성함 · 요청 내용 · 사진).
      하나만 끊고 "철회됐다" 고 하면 업체는 나머지 둘로 계속 봅니다. */
   require("./sql/consent.js")({ ok, psql, psqlFile, denied, allowed });
+  /* ⚠️⚠️ 신고함에서 제일 위험한 것은 **남의 신고가 보이는 것**입니다 —
+     업체가 보면 신고한 손님을 찾아갑니다. 역할마다 눌러 봅니다.
+     ⚠️ rate limit 은 **되는 쪽도** 재야 합니다 (진짜 손님이 막히면
+     그것도 고장입니다). */
+  require("./sql/report.js")({ ok, psql, psqlFile, denied, allowed });
 
 }catch(e){
   bad++; ran++;

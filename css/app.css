@@ -1,0 +1,231 @@
+/* ════════════════════════════════════════════════════════════════════
+   골프올인원 — 뼈대 · 머리말 · 푸터 · 카드 (2026-11-03 시안 기준)
+
+   ⚠️ 특정도를 기억하세요. 파일 뒤에 붙였다고 이기는 것이 아닙니다.
+   .a .b (0,2,0) 가 .b (0,1,0) 를 이기고, #id (1,0,0) 는 클래스를
+   아무리 겹쳐도 못 이깁니다. 안 바뀌면 어느 규칙이 이기는지 재세요.
+
+   ⚠️ padding 줄임꼴로 좌우 여백을 지우지 마세요 — 위아래만 바꿀 때는
+   padding-block 입니다.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── 바탕 ───────────────────────────────────────────────── */
+a{ color: inherit; text-decoration: none; }
+img{ max-width: 100%; display: block; }
+button{ font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+h1,h2,h3,h4{ color: var(--ink); margin: 0; line-height: 1.3; font-weight: 700; }
+p{ margin: 0; }
+ul,ol{ margin: 0; padding: 0; list-style: none; }
+
+.wrap{ max-width: var(--wrap); margin: 0 auto; padding-inline: var(--pad); }
+@media (min-width: 900px){ .wrap{ padding-inline: var(--pad-wide); } }
+
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden;
+     clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; }
+
+/* 건너뛰기 — 키보드로 탭하면 나타납니다 */
+.skip{ position:absolute; left:-9999px; top:0; z-index:200;
+       background:var(--grn-deep); color:#fff; padding:10px 16px; border-radius:0 0 8px 0; }
+.skip:focus{ left:0; }
+
+/* ── 누르는 것 ──────────────────────────────────────────
+   ⚠️ padding 만으로 높이를 만들면 짧은 이름에서 다시 낮아집니다.
+   min-height 와 flex 를 **같이** 둡니다 (40px 이상). */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  min-height: var(--tap); padding: 10px 22px;
+  border-radius: var(--r-pill); font-weight: 700; font-size: 16px;
+  border: 1.6px solid transparent; transition: background .15s, border-color .15s;
+}
+.btn .ic{ flex: none; }
+.btn-pri{ background: var(--grn-btn); color: #fff; }            /* 흰 글자 5.41 */
+.btn-pri:hover{ background: #156A2E; }
+.btn-ghost{ border-color: rgba(255,255,255,.75); color: #fff; }
+.btn-ghost:hover{ background: rgba(255,255,255,.14); }
+.btn-line{ border-color: var(--grn); color: var(--grn-text); background:#fff; }
+.btn-line:hover{ background: var(--grn-soft); }
+.btn-deep{ background: var(--grn-deep); color:#fff; }
+.btn-sm{ min-height: 40px; padding: 8px 16px; font-size: 15px; }
+
+/* ── 머리말 ───────────────────────────────────────────── */
+.hd{ background: var(--grn-deep); color:#fff; position: sticky; top:0; z-index:100; }
+.hd a{ color:#fff; }
+.hd-in{ display:flex; align-items:center; gap:14px; min-height:72px; }
+
+/* ⚠️ 로고도 누르는 것입니다 — 38px 였다가 전수 점검에 걸렸습니다 */
+.lg{ display:flex; align-items:center; gap:10px; flex:none; min-height: var(--tap); }
+.lg-mk{ width:38px; height:38px; flex:none; }
+.lg-tx{ display:flex; flex-direction:column; line-height:1.1; }
+.lg-en{ font-size:17px; font-weight:800; letter-spacing:.02em; }
+.lg-en b{ color: var(--lime-on-dark); font-weight:800; }         /* 헤더 위 8.84 */
+.lg-ko{ font-size:12.5px; color:#C9DED2; margin-top:2px; }
+
+.gnb{ display:flex; align-items:center; gap:4px; }
+.gnb a, .gnb button{
+  display:inline-flex; align-items:center; gap:5px;
+  min-height: var(--tap); padding: 8px 13px; border-radius: 8px;
+  font-size:16px; font-weight:600; white-space:nowrap;
+}
+.gnb a:hover, .gnb button:hover{ background: rgba(255,255,255,.12); }
+
+.sch{ flex:1; min-width:0; max-width:430px; margin-left:auto; position:relative; }
+.sch input{
+  width:100%; min-height:46px; border-radius: var(--r-pill);
+  border:0; padding: 10px 50px 10px 20px; font-size:15px;
+  background:#fff; color: var(--ink);
+}
+.sch input::placeholder{ color:#7C8A82; }
+.sch button{
+  position:absolute; right:4px; top:50%; transform:translateY(-50%);
+  width:42px; height:42px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; color: var(--grn);
+}
+.hd-r{ display:flex; align-items:center; gap:6px; flex:none; }
+.hd-r .btn{ font-size:15px; }
+.bar{ display:none; }
+
+/* 폰 — ⚠️ 미디어 쿼리가 특정도에서 지는 일이 잦습니다.
+   .hd .gnb (0,2,0) 로 적어 둔 규칙이 없는지 확인하고 늘리세요. */
+@media (max-width: 1100px){
+  .hd-in{ flex-wrap: wrap; min-height:0; padding-block:10px; gap:10px; }
+  .gnb{ order:3; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;
+        padding-bottom:2px; scrollbar-width:none; }
+  .gnb::-webkit-scrollbar{ display:none; }
+  .sch{ order:4; width:100%; max-width:none; margin-left:0; }
+  .hd-r{ margin-left:auto; }
+  .hd-r .lbl{ display:none; }
+}
+
+/* ── 히어로 ───────────────────────────────────────────
+   ⚠️ background 에 그라디언트만 적으면 backgroundColor 가 투명이라
+   색을 재는 쪽이 검정으로 읽습니다 — background-color 를 따로 둡니다. */
+.hero{
+  background-color: #0C2A1B;
+  background-image:
+    radial-gradient(120% 95% at 80% 8%, rgba(46,168,79,.34) 0%, rgba(12,42,27,0) 58%),
+    linear-gradient(118deg, #0C2A1B 0%, #12482C 46%, #1B5E3A 100%);
+  color:#fff; position:relative; overflow:hidden;
+}
+.hero::after{
+  content:""; position:absolute; inset:auto -8% -42% 42%;
+  height:82%; border-radius:50% 50% 0 0;
+  background: radial-gradient(60% 100% at 50% 100%, rgba(74,222,128,.20), rgba(74,222,128,0) 70%);
+  pointer-events:none;
+}
+.hero-in{ position:relative; z-index:1; padding-block: 74px 86px; max-width:720px; }
+.hero-kick{
+  font-size:13.5px; letter-spacing:.26em; font-weight:700;
+  color: var(--lime-on-mid); margin-bottom:16px;
+}
+.hero h1{ color:#fff; font-size: clamp(34px, 5.2vw, 56px); line-height:1.18; letter-spacing:-.01em; }
+.hero h1 b{ color: var(--lime-on-dark); font-weight:800; }
+.hero-sub{ margin-top:18px; font-size: clamp(16px, 1.6vw, 19px); color:#D6E8DD; }
+.hero-cta{ display:flex; flex-wrap:wrap; gap:12px; margin-top:30px; }
+/* ⚠️ 사진이 들어올 자리입니다 — 지금은 그라디언트입니다.
+   없는 골프장 사진을 만들어 넣지 않습니다 (저작권 · 절대 규칙 1). */
+
+/* ── 분류 카드 열 장 ──────────────────────────────────── */
+.cats{ background: var(--bg-2); padding-block: 0 56px; }
+.cats-in{ margin-top:-42px; position:relative; z-index:3;
+  background:#fff; border-radius: 20px; box-shadow: var(--shadow);
+  padding: 22px; }
+.cat-grid{ display:grid; gap:10px; grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 1100px){ .cat-grid{ grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 760px){ .cat-grid{ grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 460px){ .cat-grid{ grid-template-columns: repeat(2, 1fr); } }
+
+.cat{
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+  gap:8px; text-align:center; min-height: 128px; padding: 18px 10px 16px;
+  border-radius: var(--r); background: var(--bg-2);
+  border:1.5px solid transparent; transition: border-color .15s, background .15s;
+}
+.cat:hover{ background:#fff; border-color: var(--grn-line); }
+.cat .ic{ color: var(--grn); }
+.cat-n{ font-size:15.5px; font-weight:700; color: var(--ink); }
+.cat-l{ font-size:12.5px; color: var(--ink3); line-height:1.45; }
+
+/* ── 구간 ─────────────────────────────────────────────── */
+.sec{ padding-block: 58px; }
+.sec-alt{ background: var(--bg-2); }
+.sec-hd{ margin-bottom: 26px; }
+.sec-hd h2{ font-size: clamp(22px, 2.6vw, 30px); }
+.sec-hd p{ margin-top:8px; color: var(--ink3); font-size:16px; }
+
+/* 큰 서비스 카드 넉 장 */
+.feat{ display:grid; gap:16px; grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 1000px){ .feat{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px){ .feat{ grid-template-columns: 1fr; } }
+.feat-c{
+  position:relative; min-height: 186px; border-radius: var(--r);
+  padding: 22px; color:#fff; display:flex; flex-direction:column;
+  background-color: var(--grn-deep);
+  background-image: linear-gradient(150deg, rgba(12,42,27,.18), rgba(12,42,27,.86));
+  overflow:hidden;
+}
+.feat-c h3{ color:#fff; font-size:19px; }
+.feat-c p{ margin-top:8px; font-size:14.5px; color:#D6E8DD; }
+.feat-c .go{
+  margin-top:auto; align-self:flex-end;
+  width:38px; height:38px; border-radius:50%;
+  background:#fff; color: var(--grn-text);
+  display:flex; align-items:center; justify-content:center;
+}
+.feat-1{ background-image: linear-gradient(150deg, #1B5E3A, #0C2A1B); }
+.feat-2{ background-image: linear-gradient(150deg, #19392C, #0C2A1B); }
+.feat-3{ background-image: linear-gradient(150deg, #166046, #0C2A1B); }
+.feat-4{ background-image: linear-gradient(150deg, #15493F, #0C2A1B); }
+
+/* 장점 넉 줄 */
+.why{ display:grid; gap:14px; grid-template-columns: 180px repeat(4, 1fr); align-items:start; }
+@media (max-width: 1000px){ .why{ grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px){ .why{ grid-template-columns: 1fr; } }
+.why-t{ font-size:21px; font-weight:800; color: var(--ink); line-height:1.35; }
+.why-i{ display:flex; gap:10px; }
+.why-i .ic{ color: var(--grn); flex:none; margin-top:2px; }
+.why-i h3{ font-size:15.5px; }
+.why-i p{ font-size:13.5px; color: var(--ink3); margin-top:4px; line-height:1.5; }
+
+/* 빈 자리 — ⚠️ 0 건일 때 막다른 길로 두지 않습니다 (절대 규칙 2) */
+.none{
+  border:1.5px dashed var(--grn-line); background: var(--grn-soft);
+  border-radius: var(--r); padding: 26px 22px; text-align:center;
+}
+.none h3{ font-size:17px; }
+.none p{ margin-top:8px; color: var(--ink3); font-size:15px; }
+.none .btn{ margin-top:16px; }
+
+/* 입점 안내 띠 */
+.join{ background: var(--grn-soft); border:1.5px solid var(--grn-line);
+       border-radius: var(--r); padding: 24px;
+       display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.join .ic{ color: var(--grn); flex:none; }
+.join-t{ flex:1; min-width:220px; }
+.join-t h3{ font-size:18px; }
+.join-t p{ margin-top:6px; font-size:14.5px; color: var(--ink3); }
+
+/* ── 푸터 ─────────────────────────────────────────────── */
+.ft{ background: var(--grn-deep); color:#C9DED2; padding-block: 42px 34px; margin-top: 0; }
+.ft a{ color:#C9DED2; }
+.ft a:hover{ color:#fff; text-decoration: underline; }
+.ft-top{ display:flex; gap:34px; flex-wrap:wrap; justify-content:space-between; }
+.ft-nav{ display:flex; gap:26px; flex-wrap:wrap; }
+.ft-nav h4{ color:#fff; font-size:14px; margin-bottom:10px; }
+/* ⚠️ 푸터 링크도 누르는 것입니다. 글줄만 두면 17px 이라
+   손가락으로 못 누릅니다 — min-height 와 flex 를 같이 둡니다.
+   padding 만으로 만들면 짧은 이름에서 다시 낮아집니다. */
+.ft-nav li{ margin:0; font-size:14px; }
+.ft-nav li a{ display:inline-flex; align-items:center; min-height:40px; }
+.ft-biz{ margin-top:28px; padding-top:22px; border-top:1px solid rgba(255,255,255,.14);
+         font-size:13px; line-height:1.9; }
+.ft-biz dl{ display:flex; flex-wrap:wrap; gap:4px 18px; margin:0; }
+.ft-biz dt{ color:#8FB3A1; }
+.ft-biz dd{ margin:0 14px 0 0; }
+/* ⚠️⚠️ 전자상거래법 제20조 제1항 — 중개한다는 사실을 미리 알립니다.
+   고지하지 않으면 제20조의2 로 연대책임입니다. 모든 화면에 둡니다. */
+.ft-mid{ margin-top:18px; font-size:13px; color:#A8C6B6; line-height:1.8; }
+.ft-cr{ margin-top:16px; font-size:12.5px; color:#7FA38F; }
+
+/* 이용 방법 — 번호. ⚠️ 중간 밝기 그린 면 위라 --lime-on-mid 입니다
+   (--lime-on-dark 를 쓰면 4.45 로 AA 에 걸립니다). */
+.step-n{ color: var(--lime-on-mid); font-weight:800; font-size:13px; letter-spacing:.2em; }

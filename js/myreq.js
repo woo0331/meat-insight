@@ -59,7 +59,12 @@
       get("request_item?select=request_id,service_id&limit=500"),
       /* ⚠️ 일정은 RLS 가 **내 요청 것만** 내줍니다 (0034 의 appt_mine) */
       get("appointment?select=id,request_id,provider_id,at,kind,place,note,state,why" +
-          "&order=at.asc&limit=100")
+          "&order=at.asc&limit=100"),
+      /* 제공 이력 (0039 · 3차 지시서 §5) — ⚠️ RLS 가 **내 요청 것만**
+         내줍니다 (0005 의 assign_requester). 철회한 것도 옵니다:
+         **넘어간 적이 있다는 사실**을 손님이 볼 수 있어야 합니다. */
+      get("assignment?select=id,request_id,provider_id,state,agree3rd_at," +
+          "revoked_at,revoked_why,created_at&order=created_at.asc&limit=200")
     ]).then(function(got){
       /* ⚠️ 올리신 파일 (§5-4) — 손님은 **자기 요청의 것만** 봅니다
          (0011 의 photo_mine). */
@@ -198,7 +203,42 @@
       }).join("");
   }
 
-  function card(r, quotes, items, pics, appts, revs, pnames){
+  /* ── 제공 이력 · 철회 (0039 · 3차 지시서 §5) ─────────────────────
+     ⚠️⚠️ **넘어간 적이 있다는 사실을 지우지 않습니다.** 철회해도 줄은
+     남고 "철회함" 이라고 적습니다 — 지우면 손님이 "준 적 없다" 로
+     읽게 되고, 그건 사실이 아닙니다 (개인정보 보호법 제35조 열람권).
+     ⚠️ 철회하면 그 업체는 성함 · 연락처 · 요청 내용 · 사진을 더는 못
+     봅니다. 화면이 그 말을 **그대로** 적습니다 — 지킬 수 있는 말입니다. */
+  function giveBlock(r, asgs, pnames){
+    if(!asgs || !asgs.length) return "";
+    return '<h3 class="rv-h">연락처를 전달한 업체 ' + won(asgs.length) + '곳</h3>' +
+      '<p class="dk-hint">전달에 동의하신 업체입니다. ' +
+      '<b>철회하시면</b> 그 업체는 성함 · 연락처 · 요청 내용 · 올리신 사진을 ' +
+      '더는 보지 못하고, 새 견적도 내지 못합니다.</p>' +
+      '<div class="gv">' + asgs.map(function(a){
+        var pn = pnames[a.provider_id] || null;
+        var off = !!a.revoked_at;
+        return '<div class="gv-r' + (off ? " gv-off" : "") + '">' +
+          '<div class="gv-h">' +
+            (pn ? '<b>' + esc(pn) + '</b>'
+                : '<b class="rq-q-no">업체 상호를 읽지 못했습니다</b>') +
+            (off ? badge("철회함", "bad") : badge("전달됨", "ok")) +
+          '</div>' +
+          '<p class="gv-d">' + esc(window.amDay(a.agree3rd_at || a.created_at)) +
+            ' 전달' + (off ? ' · ' + esc(window.amDay(a.revoked_at)) + ' 철회' : '') +
+          '</p>' +
+          (off && a.revoked_why
+            ? '<p class="gv-d">까닭 — ' + esc(a.revoked_why) + '</p>'
+            : '') +
+          /* ⚠️ 이미 철회한 것에는 단추를 안 냅니다 (절대 규칙 5) */
+          (off ? ''
+               : '<div class="dk-b"><button class="btn btn-sm btn-line" ' +
+                 'data-revoke="' + esc(a.id) + '">이 업체로의 전달 철회하기</button></div>') +
+        '</div>';
+      }).join("") + '</div>';
+  }
+
+  function card(r, quotes, items, pics, appts, revs, pnames, asgs){
     var st = window.amDealSt(r.state) || { name:r.state, tone:"ink" };
     var svcs = items.filter(function(x){ return x.request_id === r.id; })
       .map(function(x){
@@ -257,7 +297,16 @@
         : r.state === "consult"  ? "상담 중입니다. 업체가 견적을 내면 여기에 뜹니다."
         : "아직 받은 견적이 없습니다.") + '</p>';
     }
+    h += giveBlock(r, asgs, pnames || {});
     h += reviewBlock(r, qs, appts, revs, pnames || {});
+    /* ⚠️⚠️ **계약 뒤에는 취소 단추를 안 냅니다** — 눌러도 DB 가
+       거절합니다 (절대 규칙 5). 그때는 어디로 가야 하는지 적습니다. */
+    if(["signed","done","fee_wait","fee_done","lost"].indexOf(r.state) < 0)
+      h += '<div class="dk-b"><button class="btn btn-sm btn-line" ' +
+           'data-cancel="' + esc(r.id) + '">이 요청 취소하기</button></div>';
+    else if(r.state !== "lost")
+      h += '<p class="dk-hint">이미 진행 중인 건이라 혼자 취소하실 수 없습니다 — ' +
+           '고객센터로 알려 주세요.</p>';
     h += '<p class="dk-m lmsg" hidden></p></div>';
     return h;
   }
@@ -284,8 +333,9 @@
     box.innerHTML = '<h2 class="adm-h">내 요청</h2><p class="lmsg">읽는 중입니다…</p>';
     load().then(function(got){
       var rs = got[0], qs = got[1], items = got[2], appts = got[3],
-          pics = got[4], revs = got[5];
-      if(rs === null || qs === null || items === null || appts === null){
+          asgs = got[4], pics = got[5], revs = got[6];
+      if(rs === null || qs === null || items === null || appts === null ||
+         asgs === null){
         box.innerHTML = '<h2 class="adm-h">내 요청</h2>' +
           '<p class="lmsg">읽지 못했습니다. ' +
           '<button class="btn btn-sm btn-line" data-do="again">다시 읽기</button></p>';
@@ -293,7 +343,7 @@
       }
       /* ⚠️ 상호를 받은 **뒤에** 그립니다 — 먼저 그리고 나중에 채우면
          업체 이름이 한 번 깜빡이고 바뀝니다. */
-      return names(qs, appts, revs).then(function(by){
+      return names(qs, appts, revs, asgs).then(function(by){
         qs.forEach(function(q){ q.pname = by[q.provider_id] || null; });
         box.innerHTML = '<h2 class="adm-h">내 요청' +
           (rs.length ? " " + won(rs.length) + "건" : "") + '</h2>' +
@@ -301,7 +351,8 @@
             ? rs.map(function(r){
                 return card(r, qs, items, (pics || {})[r.id],
                             appts.filter(function(x){ return x.request_id === r.id; }),
-                            revs, by);
+                            revs, by,
+                            asgs.filter(function(x){ return x.request_id === r.id; }));
               }).join("")
             : '<p class="myhint">아직 넣으신 요청이 없습니다. ' +
               '로그인 전에 넣으신 것이 있으면 아래에서 가져오실 수 있습니다.</p>') +
@@ -346,6 +397,40 @@
           ac.disabled = false;
           if(m2) m2.textContent = why(err);
         });
+      return;
+    }
+    /* 제공 철회 (0039) — ⚠️ 까닭을 받습니다 (DB 도 받습니다) */
+    var rvk = e.target.closest ? e.target.closest("button[data-revoke]") : null;
+    if(rvk){
+      var r3 = rvk.closest(".dk-r"), m3 = r3 ? r3.querySelector(".dk-m") : null;
+      if(!confirm("이 업체로의 연락처 전달을 철회하시겠습니까? " +
+                  "철회하면 그 업체는 성함 · 연락처 · 요청 내용 · 사진을 더는 보지 못합니다."))
+        return;
+      var w3 = prompt("철회하시는 까닭을 적어 주세요 (업체가 왜 끊겼는지 알아야 합니다)");
+      if(!(w3 && w3.trim())) return;
+      rvk.disabled = true;
+      if(m3){ m3.hidden = false; m3.textContent = "보내는 중입니다…"; }
+      rpc("revoke_third_party", { p: { assignment: rvk.getAttribute("data-revoke"),
+                                       why: w3.trim() } })
+        .then(paint)
+        .catch(function(err){ rvk.disabled = false; if(m3) m3.textContent = why(err); });
+      return;
+    }
+    /* 요청 취소 (0039) */
+    var cxb = e.target.closest ? e.target.closest("button[data-cancel]") : null;
+    if(cxb){
+      var r4 = cxb.closest(".dk-r"), m4 = r4 ? r4.querySelector(".dk-m") : null;
+      if(!confirm("이 요청을 취소하시겠습니까? " +
+                  "취소하시면 전달된 업체들에게도 전달이 모두 철회됩니다."))
+        return;
+      var w4 = prompt("취소하시는 까닭을 적어 주세요");
+      if(!(w4 && w4.trim())) return;
+      cxb.disabled = true;
+      if(m4){ m4.hidden = false; m4.textContent = "보내는 중입니다…"; }
+      rpc("cancel_request", { p: { request: cxb.getAttribute("data-cancel"),
+                                   why: w4.trim() } })
+        .then(paint)
+        .catch(function(err){ cxb.disabled = false; if(m4) m4.textContent = why(err); });
       return;
     }
     var b = e.target.closest ? e.target.closest("button[data-pick]") : null;

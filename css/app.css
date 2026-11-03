@@ -1009,3 +1009,14 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .rvpick label:hover{ border-color: var(--grn-line); background: var(--grn-soft); }
 .rvpick input{ width:20px; height:20px; flex:none; }
 .rvpick .stars{ flex:none; }
+
+/* ── 제공 이력 · 철회 (0039 · 3차 지시서 §5) ───────────────────
+   ⚠️ 철회한 줄을 **지우지 않고 흐리게** 둡니다 — 넘어간 적이 있다는
+   사실 자체가 기록입니다 (개인정보 보호법 제35조 열람권). */
+.gv{ display:grid; gap:10px; }
+.gv-r{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+       padding:14px 16px; }
+.gv-off{ background: var(--bg-2); border-style:dashed; }
+.gv-h{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.gv-h b{ font-size:15px; color: var(--ink); }
+.gv-d{ margin-top:6px; font-size:13.5px; color: var(--ink3); }

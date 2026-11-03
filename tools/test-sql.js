@@ -148,6 +148,9 @@ try{
   /* ⚠️⚠️ 정지는 **그 업체의 영업을 멈추는 일**입니다 — 뜻하는 것 셋을
      따로 누르고, 일부러 안 막은 둘도 같이 눌러 봅니다. */
   require("./sql/suspend.js")({ ok, psql, psqlFile, denied, allowed });
+  /* ⚠️⚠️ 철회는 **끊는 길이 셋**입니다 (성함 · 요청 내용 · 사진).
+     하나만 끊고 "철회됐다" 고 하면 업체는 나머지 둘로 계속 봅니다. */
+  require("./sql/consent.js")({ ok, psql, psqlFile, denied, allowed });
 
 }catch(e){
   bad++; ran++;

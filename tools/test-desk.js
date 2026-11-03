@@ -1234,6 +1234,94 @@ function stub(p, who, tables, rpcs, up){
      (await s.p.locator("#bizbox button[data-tab='rv']").count()) === 0);
   await s.p.close();
 
+  /* ══ 제공 이력 · 철회 · 요청 취소 (0039 · §5) ════════════════
+     ⚠️⚠️ **철회는 "앞으로 못 본다" 이지 "없던 일" 이 아닙니다.** 화면이
+     철회한 줄을 지워 버리면 손님이 "준 적 없다" 로 읽습니다 — 그건
+     사실이 아니고, 열람권(제35조)이 걸리는 자리입니다. */
+  const ASGS = [
+    { id:"asg-1", request_id:REQ.id, provider_id:"t-range", state:"accepted",
+      agree3rd_at:"2026-11-03T03:00:00Z", revoked_at:null, revoked_why:null,
+      created_at:"2026-11-03T03:00:00Z" },
+    { id:"asg-2", request_id:REQ.id, provider_id:"real-1", state:"accepted",
+      agree3rd_at:"2026-11-02T03:00:00Z", revoked_at:"2026-11-03T05:00:00Z",
+      revoked_why:"다른 업체로 하기로 했습니다", created_at:"2026-11-02T03:00:00Z" }
+  ];
+  console.log("\n── /my 제공 이력 · 철회");
+  s = await open("/my", { role:"customer", name:"홍길동" },
+                 Object.assign({}, MYT, { assignment:ASGS, review:[], appointment:[] }));
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  t = (await s.p.textContent("#reqbox")) || "";
+  ok("전달한 업체가 **둘 다** 보인다 (철회한 것도)",
+     (await s.p.locator("#reqbox .gv-r").count()) === 2,
+     await s.p.locator("#reqbox .gv-r").count());
+  ok("⚠️ 철회한 줄이 **지워지지 않는다** (넘어간 적이 있다는 기록입니다)",
+     /철회함/.test(t) && /다른 업체로 하기로 했습니다/.test(t), t.slice(-700));
+  ok("철회하면 무엇이 끊기는지 **미리** 적는다",
+     /성함 · 연락처 · 요청 내용/.test(t), t.slice(-700));
+  /* ⚠️ 이미 철회한 것에는 단추를 안 냅니다 (눌러도 DB 가 거절합니다) */
+  ok("⚠️ 이미 철회한 업체에는 **단추를 안 낸다**",
+     (await s.p.locator("button[data-revoke='asg-2']").count()) === 0);
+  ok("  아직 전달 중인 업체에는 낸다",
+     (await s.p.locator("button[data-revoke='asg-1']").count()) === 1);
+  ok("제공 이력 자리의 누르는 것이 40px 이상이다",
+     (await tapsOk(s.p, "#reqbox .gv")) === 0, await tapsOk(s.p, "#reqbox .gv"));
+
+  /* ⚠️⚠️ 되묻고 · 까닭을 받습니다. 둘 중 하나라도 비면 **안 보냅니다.** */
+  await s.p.evaluate(function(){
+    window.confirm = function(){ return false; };
+    window.prompt = function(){ return "까닭"; }; });
+  await s.p.click("button[data-revoke='asg-1']");
+  await s.p.waitForTimeout(200);
+  ok("⚠️ 되물음에 '아니오' 면 보내지 않는다",
+     s.sent.filter(function(x){ return x.name === "revoke_third_party"; }).length === 0);
+  await s.p.evaluate(function(){
+    window.confirm = function(){ return true; };
+    window.prompt = function(){ return ""; }; });
+  await s.p.click("button[data-revoke='asg-1']");
+  await s.p.waitForTimeout(200);
+  ok("⚠️ 까닭을 안 적으면 보내지 않는다",
+     s.sent.filter(function(x){ return x.name === "revoke_third_party"; }).length === 0);
+  await s.p.evaluate(function(){
+    window.prompt = function(){ return "다른 곳으로 정했습니다"; }; });
+  await s.p.click("button[data-revoke='asg-1']");
+  await s.p.waitForTimeout(300);
+  const rvCall = s.sent.filter(function(x){ return x.name === "revoke_third_party"; })[0];
+  ok("되묻고 까닭을 적으면 보낸다", !!rvCall,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  let rvp = null;
+  try{ rvp = JSON.parse(rvCall.body).p; }catch(_){}
+  ok("  꾸러미에 배정 id 와 까닭이 담긴다",
+     !!rvp && rvp.assignment === "asg-1" && rvp.why === "다른 곳으로 정했습니다",
+     rvCall && rvCall.body);
+  await s.p.close();
+
+  console.log("\n── /my 요청 취소 — ⚠️ 계약 뒤에는 단추를 안 냅니다");
+  s = await open("/my", { role:"customer", name:"홍길동" },
+                 Object.assign({}, MYT, { assignment:[], review:[], appointment:[] }));
+  ok("진행 중인 요청에는 취소 단추가 있다",
+     (await s.p.locator("button[data-cancel]").count()) === 1);
+  await s.p.evaluate(function(){
+    window.confirm = function(){ return true; };
+    window.prompt = function(){ return "직접 알아보겠습니다"; }; });
+  await s.p.click("button[data-cancel]");
+  await s.p.waitForTimeout(300);
+  const cxCall = s.sent.filter(function(x){ return x.name === "cancel_request"; })[0];
+  ok("취소를 보낸다", !!cxCall, s.sent.map(function(x){ return x.name; }).join(" "));
+  ok("  꾸러미에 요청 id 와 까닭이 담긴다",
+     !!cxCall && JSON.parse(cxCall.body).p.request === REQ.id &&
+     JSON.parse(cxCall.body).p.why === "직접 알아보겠습니다", cxCall && cxCall.body);
+  await s.p.close();
+
+  s = await open("/my", { role:"customer", name:"홍길동" },
+                 Object.assign({}, MYT,
+                   { request:[Object.assign({}, REQ, { state:"signed" })],
+                     assignment:[], review:[], appointment:[] }));
+  t = (await s.p.textContent("#reqbox")) || "";
+  ok("⚠️ 계약 단계에는 취소 단추를 **안 낸다** (눌러도 DB 가 거절합니다)",
+     (await s.p.locator("button[data-cancel]").count()) === 0);
+  ok("  대신 **어디로 가라**고 적는다", /고객센터/.test(t), t.slice(-400));
+  await s.p.close();
+
   /* ══ 업체 심사 · 정지 (0038 · 3차 지시서 §2 · §8) ═════════════
      ⚠️⚠️⚠️ **이 화면이 없어서 approve_provider 를 아무도 못 불렀습니다.**
      문은 0007 · 0012 · 0018 로 세 번 고쳤는데 부르는 자리가 없었습니다 —
@@ -1390,8 +1478,9 @@ function stub(p, who, tables, rpcs, up){
        quote:[QUOTE], request_item:ITEMS, review:[RVMINE] }, {}],
     ["/admin 배정 · 지표 · 관리 · 심사", "/admin", { role:"admin", name:"관리자" },
      Object.assign({}, ADMT, BIZ, PROT, { review:RVADM }), { biz_metrics: MET }],
-    ["/my 견적 비교 · 후기", "/my", { role:"customer", name:"홍길동" },
-     Object.assign({}, MYT, { quote:[QCHOSEN, Q2], review:[], appointment:[] }), {}]
+    ["/my 견적 비교 · 후기 · 제공 이력", "/my", { role:"customer", name:"홍길동" },
+     Object.assign({}, MYT, { quote:[QCHOSEN, Q2], review:[],
+                              appointment:[], assignment:ASGS }), {}]
   ];
   for(const [label, path, who, tables, rpcs] of phones){
     const r = await phone(path, who, tables, rpcs);

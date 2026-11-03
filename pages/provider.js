@@ -66,6 +66,10 @@ exports.build = function(p){
   if(brands.length) rows.push(["취급 브랜드", brands.join(" · ")]);
   if(p.since)       rows.push(["시작한 해", String(p.since) + "년"]);
   if(p.consult_hours) rows.push(["상담 가능 시간", p.consult_hours]);
+  /* 상담 방식 (0044) — ⚠️ 업체가 고른 것만. 0건이면 **줄째 빠집니다**
+     ("미정" 을 찍지 않습니다 · 절대 규칙 2). */
+  var ways = W.amContactWays ? W.amContactWays(p) : [];
+  if(ways.length)     rows.push(["상담 방식", ways.join(" · ")]);
 
   if(rows.length){
     body += '<section class="sec"><div class="wrap">' +

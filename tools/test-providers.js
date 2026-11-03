@@ -414,53 +414,57 @@ function nowServe(){ return serve(0); }
     ok("  체크도 같이 풀린다",
        (await p.locator("#sres .cmp-x:checked").count()) === 0);
 
-    console.log("\n── ⚠️ /search 폰 폭 (전수 점검이 못 보는 자리 — 거르개는 눌러야 돕니다)");
-    const ph = await b.newPage({ viewport:{ width:390, height:900 } });
-    await ph.goto("http://127.0.0.1:" + h.port + "/search", { waitUntil:"networkidle" });
-    await ph.waitForTimeout(300);
-    /* ⚠️⚠️ **미끄러지는 상자가 화면을 밀지 않는지** — 격자 칸의 기본
-       min-width:auto 때문에 폰에서 390px 이 688px 이 된 적이 있습니다. */
-    let m = await ph.evaluate(function(){
-      return { doc: document.documentElement.scrollWidth, win: window.innerWidth };
-    });
-    ok("거르개가 있어도 화면이 **가로로 안 밀린다**", m.doc <= m.win + 1,
-       "문서 " + m.doc + "px · 화면 " + m.win + "px");
-    ok("  거르개는 제 상자 안에서 가로로 미끄러진다 (쌓이지 않습니다)",
-       (await ph.evaluate(function(){
-         const c = document.querySelector(".sf-c");
-         return !!c && c.scrollWidth > c.clientWidth;
-       })), "거르개 상자가 미끄러지지 않습니다");
-    /* 폰에서도 거르개가 돌아야 합니다 */
-    await ph.click('a[data-sf="cat"][data-v="fitting"]');
-    await ph.waitForTimeout(250);
-    ok("  폰에서도 거르개가 돈다", (await ph.locator("#sres .pv").count()) === 1);
-    await ph.goto("http://127.0.0.1:" + h.port + "/search", { waitUntil:"networkidle" });
-    await ph.locator("#sres .cmp-x").nth(0).check();
-    await ph.locator("#sres .cmp-x").nth(1).check();
-    await ph.waitForTimeout(250);
-    m = await ph.evaluate(function(){
-      return { doc: document.documentElement.scrollWidth, win: window.innerWidth };
-    });
-    ok("비교표를 펴도 화면이 **가로로 안 밀린다**", m.doc <= m.win + 1,
-       "문서 " + m.doc + "px · 화면 " + m.win + "px");
-    const small = await ph.evaluate(function(){
-      const out = [];
-      Array.prototype.forEach.call(document.querySelectorAll("main *"), function(e){
-        if(!e.firstChild || e.firstChild.nodeType !== 3) return;
-        if(!(e.textContent || "").trim()) return;
-        const fs2 = parseFloat(getComputedStyle(e).fontSize);
-        if(fs2 < 12) out.push(e.className + " " + fs2 + "px");
+    /* ⚠️⚠️ **세 폭에서 잽니다** (4차 지시서 §7) — 360 · 390 · 430.
+       한 폭만 재면 그 사이에서 깨지는 것을 못 봅니다. */
+    for(const W of [360, 390, 430]){
+      console.log("\n── ⚠️ /search 폰 폭 " + W + "px (전수 점검이 못 보는 자리)");
+      const ph = await b.newPage({ viewport:{ width:W, height:900 } });
+      await ph.goto("http://127.0.0.1:" + h.port + "/search", { waitUntil:"networkidle" });
+      await ph.waitForTimeout(300);
+      /* ⚠️⚠️ **미끄러지는 상자가 화면을 밀지 않는지** — 격자 칸의 기본
+         min-width:auto 때문에 폰에서 390px 이 688px 이 된 적이 있습니다. */
+      let m = await ph.evaluate(function(){
+        return { doc: document.documentElement.scrollWidth, win: window.innerWidth };
       });
-      return out.slice(0, 5);
-    });
-    ok("12px 미만 글자가 없다", small.length === 0, small.join(" · "));
-    const tap = await ph.evaluate(function(){
-      return Array.prototype.filter.call(
-        document.querySelectorAll("main a, main button, main label"),
-        function(e){ return e.getBoundingClientRect().height < 39.5; }).length;
-    });
-    ok("누르는 것이 40px 이상이다", tap === 0, tap + "개");
-    await ph.close();
+      ok("거르개가 있어도 화면이 **가로로 안 밀린다**", m.doc <= m.win + 1,
+         "문서 " + m.doc + "px · 화면 " + m.win + "px");
+      ok("  거르개는 제 상자 안에서 가로로 미끄러진다 (쌓이지 않습니다)",
+         (await ph.evaluate(function(){
+           const c = document.querySelector(".sf-c");
+           return !!c && c.scrollWidth > c.clientWidth;
+         })), "거르개 상자가 미끄러지지 않습니다");
+      /* 폰에서도 거르개가 돌아야 합니다 */
+      await ph.click('a[data-sf="cat"][data-v="fitting"]');
+      await ph.waitForTimeout(250);
+      ok("  폰에서도 거르개가 돈다", (await ph.locator("#sres .pv").count()) === 1);
+      await ph.goto("http://127.0.0.1:" + h.port + "/search", { waitUntil:"networkidle" });
+      await ph.locator("#sres .cmp-x").nth(0).check();
+      await ph.locator("#sres .cmp-x").nth(1).check();
+      await ph.waitForTimeout(250);
+      m = await ph.evaluate(function(){
+        return { doc: document.documentElement.scrollWidth, win: window.innerWidth };
+      });
+      ok("비교표를 펴도 화면이 **가로로 안 밀린다**", m.doc <= m.win + 1,
+         "문서 " + m.doc + "px · 화면 " + m.win + "px");
+      const small = await ph.evaluate(function(){
+        const out = [];
+        Array.prototype.forEach.call(document.querySelectorAll("main *"), function(e){
+          if(!e.firstChild || e.firstChild.nodeType !== 3) return;
+          if(!(e.textContent || "").trim()) return;
+          const fs2 = parseFloat(getComputedStyle(e).fontSize);
+          if(fs2 < 12) out.push(e.className + " " + fs2 + "px");
+        });
+        return out.slice(0, 5);
+      });
+      ok("12px 미만 글자가 없다", small.length === 0, small.join(" · "));
+      const tap = await ph.evaluate(function(){
+        return Array.prototype.filter.call(
+          document.querySelectorAll("main a, main button, main label"),
+          function(e){ return e.getBoundingClientRect().height < 39.5; }).length;
+      });
+      ok("누르는 것이 40px 이상이다", tap === 0, tap + "개");
+      await ph.close();
+    }
 
     ok("화면 에러 · CSP 거절이 0건이다", hits.length === 0, hits.join(" | "));
 

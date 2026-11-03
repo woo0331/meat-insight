@@ -29,6 +29,7 @@
   var TAB = "pv";          /* pv 업체 · ap 입점 신청 · new 업체 등록 */
   var LIST = [];           /* 읽어 둔 업체 — 겹치는 id 를 미리 묻습니다 */
   var APL  = [];           /* 읽어 둔 입점 신청 */
+  var INV  = [];           /* 살아 있는 담당자 초대 코드 */
 
   function why(err){
     var w = String((err && err.message) || "");
@@ -59,7 +60,11 @@
       get("provider?select=id,name,state,state_why,state_at,listed,assignable," +
           "is_test,subs,regions&order=name.asc&limit=300"),
       get("provider_apply?select=id,no,company,brn,name,tel,email,region," +
-          "services,note,state,created_at&order=created_at.desc&limit=200")
+          "services,note,state,created_at&order=created_at.desc&limit=200"),
+      /* 담당자 초대 (0043) — ⚠️ 표는 아무도 못 읽습니다. 운영자가 보는
+         길은 이 **보기** 하나이고, 그 where 절이 자물쇠입니다. */
+      get("v_provider_invite_admin?select=code,provider_id,made_at,expires_at," +
+          "used_at,void_at,live&order=made_at.desc&limit=100")
     ]);
   }
 
@@ -129,8 +134,35 @@
               '<button class="btn btn-sm btn-line" data-pvasg="' + esc(p.id) + '" ' +
               'data-on="' + (p.assignable ? "1" : "0") + '">' +
               (p.assignable ? "배정 끄기" : "배정 켜기") + '</button>') +
-          '</div></li>';
+          '</div>' + inviteBlock(p) + '</li>';
       }).join("") + '</ul>';
+  }
+
+  /* ── 담당자 초대 (0043) ───────────────────────────────────────────
+     ⚠️⚠️⚠️ **역할을 올리는 길입니다.** 0018 이 이 연결을 일부러 화면
+     없이 두었던 까닭이 "화면에서 역할을 올릴 수 있으면 그게 가장 큰
+     구멍" 이어서입니다 — 그래서 단추 하나로 잇지 않고, **한 번 쓰는
+     코드**를 내어 담당자가 /desk 에서 넣게 합니다. 올릴지 말지는
+     여전히 운영자가 정합니다.
+     ⚠️ 코드는 **열쇠**입니다. 화면에만 보이고 기록(audit_log)에는
+     안 들어갑니다. 전화로 불러 주실 수 있게 헷갈리는 글자를 뺐습니다. */
+  function inviteBlock(p){
+    var live = (INV || []).filter(function(x){
+      return x.provider_id === p.id && x.live;
+    })[0];
+    /* ⚠️ 정지된 업체에는 단추를 안 냅니다 — 눌러도 DB 가 거절합니다 */
+    if(p.state === "suspended")
+      return '<p class="dk-hint">정지된 업체에는 담당자를 새로 들이지 않습니다.</p>';
+    if(live)
+      return '<div class="inv"><p class="inv-t">담당자 초대 코드</p>' +
+        '<p class="inv-c">' + esc(live.code) + '</p>' +
+        '<p class="inv-d">' + esc(window.amDay ? window.amDay(live.expires_at) : "") +
+        ' 까지 · <b>한 번만</b> 쓸 수 있습니다. 담당자가 로그인한 뒤 ' +
+        '<b>업체 작업실(/desk)</b> 에서 넣으면 계정이 이어집니다.</p>' +
+        '<div class="dk-b"><button class="btn btn-sm btn-line" data-ivvoid="' +
+        esc(live.code) + '">코드 거두기</button></div></div>';
+    return '<div class="dk-b"><button class="btn btn-sm btn-line" data-ivmake="' +
+      esc(p.id) + '">담당자 초대 코드 만들기</button></div>';
   }
 
   /* ── 입점 신청 ──────────────────────────────────────────────────── */
@@ -165,7 +197,23 @@
           ? '<p class="dk-hint">업체 줄을 만든 뒤에 이 신청을 ' +
             '<b>등록 완료</b>로 옮기세요.</p>' +
             '<div class="dk-b"><button class="btn btn-sm btn-pt" ' +
-            'data-mkpv="' + esc(a.id) + '">이 신청으로 업체 만들기</button></div>'
+            'data-mkpv="' + esc(a.id) + '">이 신청으로 업체 만들기</button></div>' +
+            /* ⚠️⚠️⚠️ **등록 완료는 그 업체를 가리켜야 합니다** (0016) —
+               안 가리키면 DB 가 "등록한 업체를 골라 주세요" 로 거절합니다.
+               전에는 이 화면이 업체를 안 보내서 **등록 완료로 옮기는
+               길이 아예 막혀 있었습니다** (끝까지 눌러 보는 검사가
+               찾았습니다 — tools/sql/flow.js). */
+            '<div class="dk-b ap-done">' +
+              '<label class="sr" for="apd-' + esc(a.id) + '">등록한 업체</label>' +
+              '<select id="apd-' + esc(a.id) + '" data-apsel="' + esc(a.id) + '">' +
+                '<option value="">등록한 업체를 고르십니다</option>' +
+                (LIST || []).map(function(p){
+                  return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>';
+                }).join("") +
+              '</select>' +
+              '<button class="btn btn-sm btn-line" data-apdone="' + esc(a.id) +
+              '">등록 완료로</button>' +
+            '</div>'
           : '') +
       '</li>';
     }).join("") + '</ul>';
@@ -322,7 +370,7 @@
           '<button class="btn btn-sm btn-line" data-do="again">다시 읽기</button></p>';
         return;
       }
-      LIST = pvs; APL = aps;
+      LIST = pvs; APL = aps; INV = got[2] || [];
       box.innerHTML = '<h2 class="adm-h">업체 심사 · 정지 · 등록</h2>' + tabs() +
         '<div class="bz-body">' +
         (TAB === "pv" ? pvView(pvs) : TAB === "ap" ? apView(aps) : newForm()) +
@@ -380,6 +428,30 @@
         .then(paint).catch(function(err){ ab.disabled = false; say(why(err)); });
       return;
     }
+    /* 담당자 초대 (0043) */
+    var ivm = e.target.closest ? e.target.closest("button[data-ivmake]") : null;
+    if(ivm){
+      ivm.disabled = true; say("코드를 만드는 중입니다…");
+      rpc("make_provider_invite", { p: { provider: ivm.getAttribute("data-ivmake") } })
+        .then(function(){ return paint(); })
+        .then(function(){ say("코드를 만들었습니다 — 담당자에게 전해 주세요. " +
+          "그 업체의 **안 쓴 옛 코드는 거두었습니다**.".replace(/\*\*/g, "")); })
+        .catch(function(err){ ivm.disabled = false; say(why(err)); });
+      return;
+    }
+    var ivv = e.target.closest ? e.target.closest("button[data-ivvoid]") : null;
+    if(ivv){
+      /* ⚠️ 거두는 데에도 까닭을 받습니다 (DB 도 받습니다) */
+      var w5 = prompt("코드를 거두시는 까닭을 적어 주세요 (기록에 남습니다)");
+      if(!(w5 && w5.trim())) return;
+      ivv.disabled = true; say("거두는 중입니다…");
+      rpc("void_provider_invite", { p: { code: ivv.getAttribute("data-ivvoid"),
+                                         why: w5.trim() } })
+        .then(function(){ return paint(); })
+        .then(function(){ say("거두었습니다. 그 코드는 더 쓸 수 없습니다."); })
+        .catch(function(err){ ivv.disabled = false; say(why(err)); });
+      return;
+    }
     /* 신청에서 업체 등록 양식으로 — ⚠️ 그 신청의 값을 **채워서** 엽니다
        (운영자가 상호를 다시 타이핑하면 그때 오타가 들어갑니다). */
     var mk = e.target.closest ? e.target.closest("button[data-mkpv]") : null;
@@ -388,6 +460,24 @@
       PRE = (APL || []).filter(function(x){ return x.id === id0; })[0] || null;
       TAB = "new";
       return paint();
+    }
+    /* 등록 완료 — ⚠️ 그 업체를 **가리켜야** 합니다 (0016) */
+    var apd = e.target.closest ? e.target.closest("button[data-apdone]") : null;
+    if(apd){
+      var aid = apd.getAttribute("data-apdone");
+      var sel = box.querySelector("select[data-apsel='" + aid + "']");
+      var pvid = sel ? sel.value : "";
+      if(!pvid){
+        /* ⚠️ 조용히 아무 일도 안 나면 고장으로 읽힙니다 */
+        say("등록한 업체를 먼저 고르십니다 — 없으면 **이 신청으로 업체 만들기**로 ".replace(/\*\*/g, "") +
+            "업체를 먼저 만드세요.");
+        return;
+      }
+      apd.disabled = true; say("옮기는 중입니다…");
+      rpc("set_apply_state", { p_apply: aid, p_to: "done", p_provider: pvid,
+                               p_why: "업체로 등록했습니다" })
+        .then(paint).catch(function(err){ apd.disabled = false; say(why(err)); });
+      return;
     }
     /* 입점 신청 */
     var pb = e.target.closest ? e.target.closest("button[data-apto]") : null;

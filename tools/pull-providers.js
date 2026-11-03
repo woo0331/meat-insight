@@ -38,7 +38,7 @@ const OUT  = path.join(ROOT, "js", "data", "providers.generated.js");
    **화면이 쓰는 칸만** 받아 적기 위해서입니다 (보기에 칸이 늘어도
    파일이 저절로 커지지 않게). */
 const VIEW = "v_provider_card";
-const COLS = "id,name,intro,regions,gu,subs,since,consult_hours,verified,brands,scale,is_test";
+const COLS = "id,name,intro,regions,gu,subs,since,consult_hours,verified,brands,scale,contact_ways,is_test";
 
 /* ⚠️⚠️ **검사용 업체를 두 겹으로 거릅니다** (0030 · 2차 지시서 §8).
    ① RLS 의 provider_public 이 anon 에게 `is_test = true` 를 안 내줍니다
@@ -150,7 +150,7 @@ if(!url || !key){
     ["intro", "since", "consult_hours", "scale"].forEach(function(k){
       if(p[k] !== null && p[k] !== undefined && String(p[k]).trim() !== "") o[k] = p[k];
     });
-    ["regions", "gu", "subs", "brands"].forEach(function(k){
+    ["regions", "gu", "subs", "brands", "contact_ways"].forEach(function(k){
       if(Array.isArray(p[k]) && p[k].length) o[k] = p[k];
     });
     if(p.verified && typeof p.verified === "object" && Object.keys(p.verified).length)

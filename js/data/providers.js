@@ -83,6 +83,24 @@ window.amProviderScale = function(p){
   return (s && window.AM_SCALE[s]) ? window.AM_SCALE[s] : null;
 };
 
+/* 상담 방식 (0044) — ⚠️⚠️ **말은 여기 한 곳**입니다. 화면마다 따로
+   적으면 한쪽만 고쳐서 "전화상담" 과 "전화" 가 섞입니다.
+   ⚠️ 0건이면 **빈 배열**입니다 — 화면은 그때 그 줄을 뺍니다
+   ("미정" 을 찍지 않습니다 · 절대 규칙 2). */
+window.AM_CONTACT_WAYS = [
+  { key:"phone",  name:"전화 상담" },
+  { key:"visit",  name:"방문 상담" },
+  { key:"online", name:"온라인 상담" },
+  { key:"shop",   name:"매장 방문" }
+];
+window.amContactWays = function(p){
+  var L = (p && Array.isArray(p.contact_ways)) ? p.contact_ways : [];
+  return L.map(function(k){
+    var f = window.AM_CONTACT_WAYS.filter(function(x){ return x.key === k; })[0];
+    return f ? f.name : k;
+  });
+};
+
 /* 취급 브랜드 — 업체가 적은 글자 그대로입니다 (esc() 는 화면이 합니다) */
 window.amProviderBrands = function(p){
   return (p && Array.isArray(p.brands)) ? p.brands : [];

@@ -43,7 +43,21 @@ begin;
 --   사람 정보를 담지 마세요 — anon 에게 열린 자리입니다.
 -- ⚠️ `assignable` 도 담지 않습니다 — 어느 업체와 계약이 되어 있는지는
 --   손님 화면에 쓸 일이 없습니다.
-create or replace view v_provider_card as
+-- ⚠️⚠️⚠️ **보기는 `create or replace` 로 칸을 못 늘립니다.** 뒤 번호가
+--   이 보기에 칸을 하나 더하면(0044 가 `contact_ways` 를 더했습니다),
+--   사장님이 붙여넣기 파일을 **두 번째로** 붙여 넣는 날 이 줄에서
+--   `cannot drop columns from view` 로 멈춥니다 — 앞쪽 파일이 옛 칸
+--   목록으로 다시 만들려 하기 때문입니다.
+--   ⚠️ 그래서 **지우고 다시 만듭니다.** 지우면 GRANT 도 같이 날아가므로
+--   바로 아래에서 다시 줍니다 (안 주면 anon 이 못 읽어 그날부터
+--   `tools/pull-providers.js` 가 permission denied 입니다).
+--   ⚠️⚠️ 이 줄을 고친 까닭 — 운영 DB 는 아직 0007 까지만 올라가 있어
+--   **이 파일이 운영에서 한 번도 돈 적이 없습니다.** 이미 돌린 파일이면
+--   고치지 않고 새 번호로 갔을 것입니다 (작업 기억의 그 규칙).
+--   `tools/test-upgrade.js` 의 ⑧ 이 "두 번 붙여 넣어도 끝까지 도는가" 를
+--   실제로 돌려 봅니다.
+drop view if exists v_provider_card;
+create view v_provider_card as
   select p.id, p.name, p.intro, p.regions, p.gu, p.subs, p.since,
          p.consult_hours, p.verified, p.brands, p.scale,
          p.is_test       -- ⚠️ 늘 false 입니다 (아래 where) — 도구가 다시 봅니다

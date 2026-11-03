@@ -178,6 +178,10 @@
           var r = window.amRating ? window.amRating(p.id) : null;
           return r ? esc(r.avg.toFixed(1) + " (" + r.n + "건)") : "";
         })) +
+        /* 상담 방식 (0044) — ⚠️ 업체가 고른 것만, 없으면 빈 칸입니다 */
+        cmpRow("상담 방식", L.map(function(p){
+          return esc((window.amContactWays ? window.amContactWays(p) : []).join(" · "));
+        })) +
         cmpRow("상담 시간", L.map(function(p){ return esc(p.consult_hours || ""); })) +
         cmpRow("개업", L.map(function(p){
           return p.since ? esc(String(p.since) + "년") : "";

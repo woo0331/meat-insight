@@ -656,6 +656,34 @@
     submitQuote(f);
   });
 
+  /* ── 담당자 초대 코드 (0043) ─────────────────────────────────
+     ⚠️⚠️ 코드는 **가진 사람이 쓰는 열쇠**입니다 — 화면이 그것을
+     저장하거나 주소에 싣지 않습니다 (주소에 실으면 기록에 남습니다).
+     ⚠️ 이어진 뒤에는 **다시 읽습니다** — 역할이 바뀌었으니 화면을
+     처음부터 다시 그려야 합니다. */
+  box.addEventListener("submit", function(e){
+    var f = e.target.closest ? e.target.closest("form#ivf") : null;
+    if(!f) return;
+    e.preventDefault();
+    var m = document.getElementById("ivmsg");
+    var bt = f.querySelector('button[type="submit"]');
+    var code = (f.querySelector("#iv-code").value || "").trim().toUpperCase();
+    if(!code) return;
+    bt.disabled = true;
+    if(m){ m.hidden = false; m.textContent = "잇는 중입니다…"; }
+    rpc("redeem_provider_invite", { p: { code: code } })
+      .then(function(name){
+        if(m) m.textContent = (name ? (String(name) + " 로 ") : "") +
+          "이었습니다. 화면을 다시 엽니다…";
+        /* ⚠️ 역할이 바뀌었습니다 — 세션을 다시 물어야 합니다 */
+        location.reload();
+      })
+      .catch(function(err){
+        bt.disabled = false;
+        if(m) m.textContent = why(err);
+      });
+  });
+
   /* ── 문 ─────────────────────────────────────────────────────── */
   amAuthAsk().then(function(a){
     A = a;
@@ -674,10 +702,24 @@
         '<a class="btn btn-pri" href="/login">로그인하기</a>');
     if(a.role !== "provider" || !a.provider)
       /* ⚠️ 왜 안 되는지 자세히 적지 않습니다 — 권한 구조를 알려 주는
-         글이 됩니다. 대신 **다음에 할 일**을 냅니다. */
+         글이 됩니다. 대신 **다음에 할 일**을 냅니다.
+         ⚠️⚠️ **초대 코드 칸이 여기 있습니다** (0043). 승인된 업체의
+         담당자는 운영자에게 코드를 받아 여기서 스스로 이어집니다 —
+         전에는 사장님이 Supabase SQL 편집기를 여셔야 했습니다.
+         ⚠️ 역할을 올리는 길이라, 단추 하나가 아니라 **운영자가 낸
+         코드**를 넣어야 합니다 (0043 머리말). */
       return say("<h2>이 화면은 입점 업체만 볼 수 있습니다.</h2>" +
         "<p>입점 신청이 승인되고 계정이 이어지면 여기에서 요청을 받으십니다.</p>" +
-        '<a class="btn btn-line" href="/join">입점 신청하기</a>');
+        '<a class="btn btn-line" href="/join">입점 신청하기</a>' +
+        '<form id="ivf" class="ivf">' +
+          '<label for="iv-code">운영자에게 받으신 <b>담당자 초대 코드</b>가 있으시면</label>' +
+          '<div class="ivf-r">' +
+            '<input id="iv-code" name="code" maxlength="10" required ' +
+            'autocapitalize="characters" spellcheck="false" placeholder="ABCD234567">' +
+            '<button class="btn btn-pt" type="submit">계정 잇기</button>' +
+          '</div>' +
+          '<p id="ivmsg" class="lmsg" hidden></p>' +
+        '</form>');
     PV = a.provider;
     paint();
   });

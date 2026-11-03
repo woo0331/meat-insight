@@ -24,6 +24,12 @@ exports.build = function(){
   /* ⚠️⚠️ 수수료 · 정산은 **따로 그립니다** (js/deskfee.js). 손님에게는
      한 줄도 안 보이는 표라(0001 의 fee_mine · deal_mine), 배정 · 견적
      코드와 섞어 두면 한쪽을 고칠 때 그 경계가 흐려집니다. */
+  /* 업체 정보 (0044) — ⚠️⚠️ 이 자리가 없어서 업체는 소개 한 줄을
+     고치려고 운영자에게 전화해야 했습니다 (save_provider_self 를
+     부르는 자리가 0곳이었습니다). */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="mebox" class="none" hidden></div></div></section>';
+
   /* 가격 등록 (0042) — ⚠️⚠️ 이 자리가 없으면 업체는 가격을 올릴 길이
      없고, 업체찾기의 가격 줄은 **영원히 비어 있습니다.** */
   body += '<section class="sec sec-alt"><div class="wrap">' +
@@ -37,7 +43,9 @@ exports.build = function(){
     desc: "골프올인원 업체 작업실 — 배정받은 요청 확인 · 수락 · 견적 제출.",
     body: body,
     js: ["/js/data/korean.js", "/js/data/deal.js", "/js/data/review.js",
+         "/js/data/regions.js", "/js/data/providers.js",
          "/js/photo.js", "/js/auth.js", "/js/review.js",
-         "/js/desk.js", "/js/deskprice.js", "/js/deskfee.js"]
+         "/js/desk.js", "/js/deskme.js", "/js/deskprice.js",
+         "/js/deskfee.js"]
   };
 };

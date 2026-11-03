@@ -1830,6 +1830,369 @@ function stub(p, who, tables, rpcs, up){
      /먼저 알려/.test(t), t.slice(0, 300));
   await s.p.close();
 
+  /* ══ 입점 신청을 **등록 완료**로 (0016 · 4차 §2-3 · §5) ═══════
+     ⚠️⚠️⚠️ **이 길이 막혀 있었습니다.** 0016 은 "등록 완료로 두려면
+     등록한 업체를 가리켜라" 고 막는데, 화면이 그 업체를 **안 보내고
+     있었습니다** — 누르면 늘 거절당했습니다. 토막 검사는 전부
+     초록이었고, 처음부터 끝까지 눌러 보는 검사(tools/sql/flow.js)가
+     찾았습니다. */
+  console.log("\n── /admin 입점 신청 → 등록 완료");
+  s = await open("/admin", { role:"admin", name:"관리자" },
+                 Object.assign({}, ADMT, BIZ, PROT), { biz_metrics: MET });
+  await s.p.click("#probox button[data-ptab='ap']");
+  await s.p.waitForTimeout(250);
+  ok("등록한 업체를 고르는 칸이 있다",
+     (await s.p.locator("select[data-apsel='aaaa-ap-1']").count()) === 1);
+  ok("  고를 수 있는 업체가 목록에 있다",
+     (await s.p.locator("select[data-apsel='aaaa-ap-1'] option").count()) >= 2,
+     await s.p.locator("select[data-apsel='aaaa-ap-1'] option").count());
+  /* ⚠️ 안 고르고 누르면 **보내지 않고** 무엇을 하라고 말합니다 */
+  await s.p.click("button[data-apdone='aaaa-ap-1']");
+  await s.p.waitForTimeout(250);
+  ok("⚠️ 업체를 안 고르면 **보내지 않는다** (DB 도 거절합니다)",
+     s.sent.filter(function(x){
+       return x.name === "set_apply_state" &&
+              (x.body || "").indexOf('"done"') >= 0; }).length === 0,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  ok("  무엇을 먼저 하라고 말한다",
+     /등록한 업체를 먼저/.test((await s.p.textContent("#probox")) || ""),
+     (await s.p.textContent("#probox") || "").slice(-200));
+  await s.p.selectOption("select[data-apsel='aaaa-ap-1']", "real-1");
+  await s.p.click("button[data-apdone='aaaa-ap-1']");
+  await s.p.waitForTimeout(350);
+  const apd = s.sent.filter(function(x){
+    return x.name === "set_apply_state" && (x.body || "").indexOf('"done"') >= 0; })[0];
+  ok("업체를 고르면 보낸다", !!apd, s.sent.map(function(x){ return x.name; }).join(" "));
+  ok("  ⚠️ 꾸러미에 **등록한 업체**가 담긴다 (0016 이 그것을 봅니다)",
+     !!apd && JSON.parse(apd.body).p_provider === "real-1" &&
+     JSON.parse(apd.body).p_to === "done", apd && apd.body);
+  await s.p.close();
+
+
+  /* ══ 담당자 초대 (0043 · 4차 지시서 §2-1) ══════════════════════
+     ⚠️⚠️⚠️ **역할을 올리는 길입니다.** 0018 이 이 연결을 일부러 화면
+     없이 두었습니다 — "화면에서 역할을 올릴 수 있으면 그게 가장 큰
+     구멍". 그래서 단추 하나가 아니라 **운영자가 낸 코드**를 넣게 했고,
+     여기서는 그 꾸러미까지 뜯어 봅니다. */
+  const INVS = [
+    { code:"ABCD234567", provider_id:"real-1", made_at:"2026-11-03T01:00:00Z",
+      expires_at:"2026-11-17T01:00:00Z", used_at:null, void_at:null, live:true }
+  ];
+  const IVT = Object.assign({}, ADMT, BIZ, PROT, { v_provider_invite_admin: INVS });
+
+  console.log("\n── /admin 담당자 초대 — 운영자");
+  s = await open("/admin", { role:"admin", name:"관리자" }, IVT, { biz_metrics: MET });
+  t = (await s.p.textContent("#probox")) || "";
+  ok("살아 있는 초대 코드가 보인다", t.indexOf("ABCD234567") >= 0, t.slice(0, 400));
+  ok("  언제까지 · 한 번만 쓸 수 있다고 말한다",
+     /한 번만/.test(t), t.slice(0, 400));
+  ok("  어디에 넣는지(업체 작업실) 말한다", /업체 작업실/.test(t), t.slice(0, 400));
+  /* ⚠️ 코드가 이미 있는 업체에는 **만들기 단추를 안 냅니다** */
+  ok("코드가 있는 업체에는 거두기 단추가 있다",
+     (await s.p.locator("button[data-ivvoid='ABCD234567']").count()) === 1 &&
+     (await s.p.locator("button[data-ivmake='real-1']").count()) === 0);
+  /* ⚠️⚠️ 정지된 업체에는 담당자를 새로 안 들입니다 (DB 도 거절합니다) */
+  ok("⚠️ 정지된 업체에는 **만들기 단추를 안 낸다**",
+     (await s.p.locator("button[data-ivmake='sus-1']").count()) === 0);
+  await s.p.close();
+
+  s = await open("/admin", { role:"admin", name:"관리자" },
+                 Object.assign({}, ADMT, BIZ, PROT, { v_provider_invite_admin: [] }),
+                 { biz_metrics: MET });
+  ok("코드가 없는 업체에는 만들기 단추가 있다",
+     (await s.p.locator("button[data-ivmake='real-1']").count()) === 1);
+  await s.p.click("button[data-ivmake='real-1']");
+  await s.p.waitForTimeout(350);
+  const iv1 = s.sent.filter(function(x){ return x.name === "make_provider_invite"; })[0];
+  ok("make_provider_invite 를 부른다", !!iv1,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  ok("  꾸러미에 업체가 담긴다",
+     !!iv1 && JSON.parse(iv1.body).p.provider === "real-1", iv1 && iv1.body);
+  await s.p.close();
+
+  console.log("\n── /admin 코드 거두기 — ⚠️ 까닭을 받습니다");
+  s = await open("/admin", { role:"admin", name:"관리자" }, IVT, { biz_metrics: MET });
+  await s.p.evaluate(function(){ window.prompt = function(){ return ""; }; });
+  await s.p.click("button[data-ivvoid='ABCD234567']");
+  await s.p.waitForTimeout(200);
+  ok("⚠️ 까닭을 안 적으면 **보내지 않는다**",
+     s.sent.filter(function(x){ return x.name === "void_provider_invite"; }).length === 0,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  await s.p.evaluate(function(){ window.prompt = function(){ return "잘못 냈습니다"; }; });
+  await s.p.click("button[data-ivvoid='ABCD234567']");
+  await s.p.waitForTimeout(350);
+  const iv2 = s.sent.filter(function(x){ return x.name === "void_provider_invite"; })[0];
+  ok("까닭을 적으면 거둔다", !!iv2, s.sent.map(function(x){ return x.name; }).join(" "));
+  ok("  꾸러미에 코드와 까닭이 담긴다",
+     !!iv2 && JSON.parse(iv2.body).p.code === "ABCD234567" &&
+     JSON.parse(iv2.body).p.why === "잘못 냈습니다", iv2 && iv2.body);
+  /* ⚠️ 운영자가 아니면 초대 자리가 아예 없습니다 (/admin 의 다른 자리와 같습니다) */
+  await s.p.close();
+  s = await open("/admin", { role:"customer", name:"일반회원" }, IVT);
+  ok("⚠️ 운영자가 아니면 코드가 **한 글자도** 안 보인다",
+     ((await s.p.textContent("#probox")) || "").indexOf("ABCD234567") < 0);
+  await s.p.close();
+
+  console.log("\n── /desk 초대 코드로 계정 잇기 (업체가 아닌 사람)");
+  s = await open("/desk", { role:"customer", name:"업체 담당자" },
+                 { assignment:[], request:[], quote:[], request_item:[] });
+  ok("초대 코드 칸이 있다", (await s.p.locator("#ivf #iv-code").count()) === 1);
+  t = (await s.p.textContent("#deskbox")) || "";
+  /* ⚠️ 왜 안 되는지(권한 구조)는 안 적고 **다음에 할 일**을 냅니다 */
+  ok("  입점 신청하는 길도 같이 낸다",
+     (await s.p.locator('#deskbox a[href="/join"]').count()) === 1);
+  ok("  운영자에게 받는 코드라고 말한다", /운영자에게 받으신/.test(t), t.slice(0, 300));
+  await s.p.fill("#iv-code", "abcd234567");
+  await s.p.click("#ivf button[type='submit']");
+  await s.p.waitForTimeout(350);
+  const iv3 = s.sent.filter(function(x){ return x.name === "redeem_provider_invite"; })[0];
+  ok("redeem_provider_invite 를 부른다", !!iv3,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  /* ⚠️ 소문자로 치셔도 됩니다 — 대문자로 바꿔 보냅니다 */
+  ok("  ⚠️ 소문자로 쳐도 **대문자로** 보낸다",
+     !!iv3 && JSON.parse(iv3.body).p.code === "ABCD234567", iv3 && iv3.body);
+  await s.p.close();
+
+  /* ⚠️⚠️ 거절당하면 **그 까닭을 그대로** 보여 줍니다 (조용히 아무 일도
+     안 나면 손님은 고장으로 읽습니다). */
+  s = await open("/desk", { role:"customer", name:"업체 담당자" },
+                 { assignment:[], request:[], quote:[], request_item:[] },
+                 { redeem_provider_invite: null });
+  await s.p.fill("#iv-code", "ZZZZZZZZZZ");
+  await s.p.click("#ivf button[type='submit']");
+  await s.p.waitForTimeout(350);
+  ok("못 이으면 **그 까닭을 그대로** 보여 준다",
+     ((await s.p.textContent("#ivmsg")) || "").indexOf("못 읽었습니다") >= 0,
+     await s.p.textContent("#ivmsg"));
+  ok("  칸이 다시 눌리게 열린다 (한 번 막히면 끝이 아닙니다)",
+     (await s.p.isEnabled("#ivf button[type='submit']")));
+  await s.p.close();
+
+  /* ⚠️ 이미 업체인 사람에게는 그 칸이 **없습니다** (쓸 일이 없습니다) */
+  s = await open("/desk", PRO, { assignment:[], request:[], quote:[], request_item:[] });
+  ok("⚠️ 이미 이어진 업체에는 초대 칸이 **안 나온다**",
+     (await s.p.locator("#ivf").count()) === 0);
+  await s.p.close();
+
+  /* ══ 운영 감사 기록 (4차 지시서 §5) ════════════════════════════
+     ⚠️⚠️ 기록은 0004 부터 쌓고 있었는데 **보는 자리가 0곳**이었습니다. */
+  const LOGS = [
+    { id:3, at:"2026-11-03T05:00:00Z", by_role:"admin", obj:"provider",
+      obj_id:"real-1", from_state:"approved", to_state:"suspended",
+      why:"서류가 확인되지 않았습니다" },
+    { id:2, at:"2026-11-03T04:00:00Z", by_role:"customer", obj:"assignment",
+      obj_id:"bbbb-1", from_state:"accepted", to_state:"revoked",
+      why:"다른 업체로 하기로 했습니다" },
+    { id:1, at:"2026-11-03T03:00:00Z", by_role:"provider", obj:"quote",
+      obj_id:"cccc-1", from_state:null, to_state:"open", why:null }
+  ];
+  const LGT = Object.assign({}, ADMT, BIZ, PROT, { audit_log: LOGS });
+
+  console.log("\n── /admin 감사 기록 — 관리자가 아니면 한 줄도 안 보입니다");
+  s = await open("/admin", { role:"staff", name:"직원" }, LGT, { biz_metrics: MET });
+  /* ⚠️ 직원에게는 정책이 **제가 한 것만** 내줍니다 — 그러면 "전체
+     기록" 이라고 적을 수 없어서 자리 자체를 안 냅니다. */
+  ok("직원에게는 자리가 아예 안 그려진다",
+     (await s.p.locator("#logbox button[data-ltab]").count()) === 0);
+  ok("⚠️ 기록을 **읽으러 가지도 않는다**",
+     s.sent.filter(function(x){
+       return x.name === "GET" && x.body.indexOf("audit_log") >= 0; }).length === 0,
+     JSON.stringify(s.sent.slice(0, 4)));
+  await s.p.close();
+
+  console.log("\n── /admin 감사 기록 — 관리자");
+  s = await open("/admin", { role:"admin", name:"관리자" }, LGT, { biz_metrics: MET });
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  t = (await s.p.textContent("#logbox")) || "";
+  ok("기록이 그려진다", (await s.p.locator("#logbox tbody tr").count()) === 3,
+     await s.p.locator("#logbox tbody tr").count());
+  ok("무엇에 대한 기록인지 **사람 말**로 나온다 (영문 키가 아니다)",
+     /업체/.test(t) && /제공 · 철회/.test(t) && t.indexOf("assignment") < 0,
+     t.slice(0, 400));
+  ok("누가 했는지 **역할까지만** 나온다",
+     /관리자/.test(t) && /손님/.test(t), t.slice(0, 400));
+  ok("무슨 일이었는지 나온다", /approved → suspended/.test(t), t.slice(0, 400));
+  ok("까닭이 나온다", /서류가 확인되지 않았습니다/.test(t));
+  /* ⚠️⚠️ 기록에 성함 · 연락처가 없다는 것을 그 자리에서 말합니다 */
+  ok("⚠️ 성함 · 연락처를 담지 않는다고 말한다",
+     /성함 · 연락처는 기록에 담지 않습니다/.test(t), t.slice(0, 400));
+  ok("⚠️ 아무도 못 고친다고 말한다", /고치거나 지울 수 없습니다/.test(t));
+  /* 갈래로 좁히기 — ⚠️ 보내는 주소까지 봅니다 (열쇠가 어긋나면
+     거르개가 아무것도 안 걸러도 화면은 열립니다) */
+  await s.p.click("#logbox button[data-ltab='provider']");
+  await s.p.waitForTimeout(300);
+  const lg = s.sent.filter(function(x){
+    return x.name === "GET" && x.body.indexOf("audit_log") >= 0 &&
+           x.body.indexOf("obj=eq.provider") >= 0; })[0];
+  ok("갈래를 누르면 **그 갈래로 좁혀 읽는다**", !!lg,
+     s.sent.filter(function(x){ return x.name === "GET"; })
+           .map(function(x){ return x.body.split("/rest/v1/")[1]; }).slice(-3).join(" | "));
+  ok("감사 기록 자리의 누르는 것이 40px 이상이다",
+     (await tapsOk(s.p, "#logbox")) === 0, await tapsOk(s.p, "#logbox"));
+  await s.p.close();
+
+  console.log("\n── /admin 감사 기록을 **못 읽었을 때**");
+  s = await open("/admin", { role:"admin", name:"관리자" },
+                 Object.assign({}, ADMT, BIZ, PROT, { audit_log: null }),
+                 { biz_metrics: MET });
+  t = (await s.p.textContent("#logbox")) || "";
+  ok("⚠️ 못 읽으면 **0건이라고 말하지 않는다**",
+     /읽지 못했습니다/.test(t) && t.indexOf("그런 기록이 없습니다") < 0, t.slice(0, 200));
+  await s.p.close();
+
+
+  /* ══ 배정 후보 좁히기 (4차 지시서 §4) ═══════════════════════════
+     ⚠️⚠️⚠️ **잘못 고르면 되돌릴 수 없습니다.** 운영자가 조건이 다른
+     업체를 실수로 고르면 그 업체에 손님 **성함 · 연락처**가 넘어갑니다
+     (개인정보 보호법 제17조). 전에는 `assignable` 이 켜진 업체를
+     **전부** 한 목록에 늘어놓았습니다 — 서울 레슨 요청에 부산 피팅
+     업체가 같이 앉아 있었습니다. */
+  const FITP = [
+    { id:"fit-1", name:"서울 레슨 업체", assignable:true, is_test:false,
+      listed:true, state:"approved", subs:["ls-solo"], regions:["seoul"] },
+    { id:"no-1",  name:"부산 피팅 업체", assignable:true, is_test:false,
+      listed:true, state:"approved", subs:["ft-grip"], regions:["busan"] },
+    { id:"sus-2", name:"정지된 레슨 업체", assignable:true, is_test:false,
+      listed:true, state:"suspended", subs:["ls-solo"], regions:["seoul"] }
+  ];
+  /* REQ 는 cat=lesson · region=서울 입니다 */
+  console.log("\n── /admin 배정 — ⚠️ 조건에 맞는 업체를 먼저 놓습니다");
+  s = await open("/admin", { role:"admin", name:"관리자" },
+                 Object.assign({}, ADMT, { provider: FITP }));
+  /* ⚠️ 고르는 자리는 **넘기기를 눌러야** 열립니다 (안 누르면 빈 목록을
+     재고 초록이 됩니다 — 아무것도 안 잰 검사입니다). */
+  await s.p.click('#assignbox button[data-do="pick"]');
+  await s.p.waitForTimeout(300);
+  const fopts = await s.p.locator("#assignbox select[name='pv'] option").allTextContents();
+  ok("조건에 맞는 업체가 **맨 위**에 온다",
+     (fopts[1] || "").indexOf("서울 레슨 업체") >= 0, JSON.stringify(fopts));
+  ok("⚠️ 조건에 안 맞는 곳은 **그렇다고 적힌다**",
+     fopts.some(function(x){ return x.indexOf("부산 피팅 업체") >= 0 &&
+                                   x.indexOf("조건에 안 맞습니다") >= 0; }),
+     JSON.stringify(fopts));
+  ok("  맞는 곳에는 그 말이 안 붙는다",
+     fopts.some(function(x){ return x.indexOf("서울 레슨 업체") >= 0 &&
+                                   x.indexOf("조건에 안 맞습니다") < 0; }),
+     JSON.stringify(fopts));
+  /* ⚠️ 정지된 업체는 DB 가 거절합니다 — 고르게 두면 눌러도 안 되는 칸입니다 */
+  ok("⚠️ **정지된** 업체는 목록에 아예 없다",
+     !fopts.some(function(x){ return x.indexOf("정지된 레슨 업체") >= 0; }),
+     JSON.stringify(fopts));
+  ok("⚠️ 잰 것이 0개가 아니다 (안 열린 목록을 재고 지나가지 않습니다)",
+     fopts.length >= 3, JSON.stringify(fopts));
+  t = (await s.p.textContent("#assignbox")) || "";
+  ok("몇 곳이 조건에 맞는지 말한다", /맞는 업체/.test(t) && /1곳/.test(t), t.slice(-500));
+
+  console.log("\n── /admin 배정 — ⚠️ 조건에 맞는 곳이 **하나도 없을 때**");
+  await s.p.close();
+  s = await open("/admin", { role:"admin", name:"관리자" },
+                 Object.assign({}, ADMT, { provider: [FITP[1]] }));
+  await s.p.click('#assignbox button[data-do="pick"]');
+  await s.p.waitForTimeout(300);
+  t = (await s.p.textContent("#assignbox")) || "";
+  /* ⚠️⚠️ 그래도 고를 수는 있어야 합니다 — 업체가 적은 동안 아무도 못
+     받으면 그게 더 나쁩니다. 다만 **모르고 고르면 안 됩니다.** */
+  ok("맞는 곳이 없으면 **그렇게 말한다**",
+     /조건에 맞는 업체가 없습니다/.test(t), t.slice(0, 600));
+  ok("  그래도 고를 수는 있다 (전화로 확인하고 넘기는 길)",
+     (await s.p.locator("#assignbox select[name='pv'] option").count()) === 2);
+  ok("  전화로 확인한 뒤에만 넘기라고 말한다", /전화로 확인/.test(t), t.slice(0, 600));
+  await s.p.close();
+
+  /* ══ 업체 정보 고치기 (0044 · 4차 §2-4 · §2-6 · §2-7) ═════════
+     ⚠️⚠️⚠️ **문이 보낸 것으로 통째로 덮어씁니다.** 화면이 칸 하나를
+     안 담아 보내면 그 칸이 빈 값으로 지워지고 아무 에러도 안 납니다 —
+     그래서 **보내는 꾸러미를 통째로** 뜯어 봅니다. */
+  const MEPV = [{ id:"t-range", name:"[검사용] 남서울 실내연습장",
+    intro:"실내 타석 열두 개", regions:["seoul"], gu:["관악구"],
+    subs:["ls-solo","rg-in"], since:2019, consult_hours:"평일 10~19시",
+    brands:["타이틀리스트"], scale:"mid", contact_ways:["phone"],
+    verified:{}, listed:true, assignable:true, state:"approved", state_why:null }];
+
+  console.log("\n── /desk 업체 정보 — 업체가 아니면 한 줄도 안 보입니다");
+  s = await open("/desk", { role:"customer", name:"일반회원" },
+                 { assignment:[], request:[], quote:[], request_item:[], provider: MEPV });
+  ok("업체 정보 자리가 아예 안 그려진다",
+     (await s.p.locator("#mebox form#mef").count()) === 0);
+  await s.p.close();
+
+  console.log("\n── /desk 업체 정보 — 업체");
+  s = await open("/desk", PRO, { assignment:[], request:[], quote:[],
+                                 request_item:[], provider: MEPV });
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  ok("양식이 **읽은 값으로** 채워져 있다",
+     (await s.p.inputValue("#me-intro")) === "실내 타석 열두 개" &&
+     (await s.p.inputValue("#me-hours")) === "평일 10~19시" &&
+     (await s.p.inputValue("#me-brands")) === "타이틀리스트",
+     await s.p.inputValue("#me-intro"));
+  ok("  맡는 지역이 켜져 있다",
+     await s.p.isChecked("input[name='rg'][value='seoul']"));
+  ok("  상담 방식이 켜져 있다 (0044)",
+     await s.p.isChecked("input[name='cw'][value='phone']"));
+  t = (await s.p.textContent("#mebox")) || "";
+  /* ⚠️⚠️ 못 고치는 것은 **칸을 내지 않고** 왜인지 적습니다 */
+  ok("⚠️ 상호 칸이 **없다** (운영자가 정합니다)",
+     (await s.p.locator("#mebox input[name='name']").count()) === 0 &&
+     /상호/.test(t), t.slice(0, 300));
+  ok("⚠️ 하는 일을 **고치는 칸이 없다** (스스로 넓히면 안 하는 일의 요청을 받습니다)",
+     (await s.p.locator("#mebox input[name='sb']").count()) === 0 &&
+     /늘리거나 줄이시려면/.test(t), t.slice(0, 600));
+  ok("⚠️ 확인 배지를 켜는 칸이 **없다** (지어낸 신뢰입니다)",
+     (await s.p.locator("#mebox input[name='verified']").count()) === 0 &&
+     /서류를 확인한 뒤에만/.test(t));
+  ok("  지금 공개 중인지 말해 준다", /공개 중/.test(t), t.slice(0, 400));
+
+  /* ⚠️⚠️⚠️ **읽은 값을 전부 다시 담아 보내는지** — 여기가 핵심입니다 */
+  await s.p.fill("#me-intro", "실내 타석 열두 개와 스크린 네 대");
+  await s.p.check("input[name='cw'][value='visit']");
+  await s.p.click("#mebox form#mef button[type='submit']");
+  await s.p.waitForTimeout(400);
+  const me1 = s.sent.filter(function(x){ return x.name === "save_provider_self"; })[0];
+  ok("save_provider_self 를 부른다", !!me1,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  let md = null;
+  try{ md = JSON.parse(me1.body).p_data; }catch(_){}
+  ok("  고친 소개가 담긴다",
+     !!md && md.intro === "실내 타석 열두 개와 스크린 네 대", me1 && me1.body);
+  ok("  상담 방식 둘이 **키로** 담긴다",
+     !!md && md.contactWays.join() === "phone,visit", me1 && me1.body);
+  /* ⚠️⚠️ 안 건드린 칸도 **그대로 다시** 담겨야 합니다 — 안 담으면 지워집니다 */
+  ok("⚠️ 건드리지 않은 지역이 **그대로 담긴다** (빠지면 지워집니다)",
+     !!md && md.regions.join() === "seoul", me1 && me1.body);
+  ok("⚠️ 화면에 칸이 없는 것도 **읽은 값 그대로** 담긴다 (gu · scale)",
+     !!md && (md.gu || []).join() === "관악구" && md.scale === "mid", me1 && me1.body);
+  ok("  상담 시간 · 개업 · 브랜드도 담긴다",
+     !!md && md.consultHours === "평일 10~19시" && md.since === "2019" &&
+     md.brands.join() === "타이틀리스트", me1 && me1.body);
+  ok("업체 정보 자리의 누르는 것이 40px 이상이다",
+     (await tapsOk(s.p, "#mebox")) === 0, await tapsOk(s.p, "#mebox"));
+  await s.p.close();
+
+  /* ⚠️⚠️⚠️ **못 읽었을 때 빈 양식을 그리면 안 됩니다** — 저장을 누르는
+     순간 소개 · 지역이 통째로 지워집니다. */
+  console.log("\n── /desk 업체 정보를 **못 읽었을 때**");
+  s = await open("/desk", PRO, { assignment:[], request:[], quote:[],
+                                 request_item:[], provider: null });
+  ok("⚠️ 못 읽으면 **빈 양식을 안 그린다** (저장하면 지워집니다)",
+     (await s.p.locator("#mebox form#mef").count()) === 0);
+  t = (await s.p.textContent("#mebox")) || "";
+  ok("  왜 안 그렸는지 말한다", /지워질 수 있어/.test(t), t.slice(0, 300));
+  ok("  다시 읽는 길을 낸다",
+     (await s.p.locator("#mebox [data-me='again']").count()) === 1);
+  await s.p.close();
+
+  console.log("\n── /desk 정지된 업체도 고칠 수는 있습니다");
+  s = await open("/desk", PRO, { assignment:[], request:[], quote:[], request_item:[],
+    provider: [Object.assign({}, MEPV[0], { state:"suspended", listed:false,
+      state_why:"서류가 확인되지 않았습니다" })] });
+  t = (await s.p.textContent("#mebox")) || "";
+  ok("정지 중이라고 말한다", /정지/.test(t) && /서류가 확인되지 않았습니다/.test(t),
+     t.slice(0, 300));
+  ok("  그래도 양식은 낸다 (고쳐 두고 풀리기를 기다릴 수 있습니다)",
+     (await s.p.locator("#mebox form#mef").count()) === 1);
+  ok("  손님 화면에는 안 나온다고 말한다", /손님 화면에는 나오지 않습니다/.test(t));
+  await s.p.close();
+
   /* ══ 폰 폭 ═══════════════════════════════════════════════════
      ⚠️⚠️⚠️ **`tools/check-screens.js` 는 이 세 화면을 영원히 못 봅니다.**
      로그인해야 그려지는 자리라, 그 도구에는 **빈 상자**로만 보입니다 —
@@ -1841,9 +2204,13 @@ function stub(p, who, tables, rpcs, up){
      ⚠️⚠️ 재는 것은 **화면 전체가 미는가**입니다 — 표가 제 상자 안에서
      가로로 도는 것은 일부러 그렇게 둔 것입니다 (약관 표와 같은 꼴). */
   console.log("\n── ⚠️ 폰 폭에서 화면이 가로로 밀리나 (전수 점검이 못 보는 자리)");
-  const PHONE = { width: 390, height: 900 };
-  async function phone(path, who, tables, rpcs, pre){
-    const p = await b.newPage({ viewport: PHONE });
+  /* ⚠️⚠️ **세 폭에서 잽니다** (4차 지시서 §7) — 360 · 390 · 430.
+     360 은 갤럭시 작은 쪽 · 390 은 아이폰 · 430 은 큰 쪽입니다.
+     한 폭만 재면 그 사이에서 깨지는 것을 못 봅니다 (실제로 390 에서는
+     멀쩡한데 360 에서 단추가 넘친 적이 있습니다). */
+  const PHONES = [360, 390, 430];
+  async function phone(path, who, tables, rpcs, pre, w){
+    const p = await b.newPage({ viewport: { width: w || 390, height: 900 } });
     await stub(p, who, tables, rpcs, true);
     await p.goto(base + path, { waitUntil:"networkidle" });
     await p.waitForTimeout(500);
@@ -1894,11 +2261,17 @@ function stub(p, who, tables, rpcs, up){
      "#repbox button[data-rtab='done']"]
   ];
   for(const [label, path, who, tables, rpcs, pre] of phones){
-    const r = await phone(path, who, tables, rpcs, pre);
-    ok(label + " — 그려지기는 한다 (빈 화면을 재고 통과하지 않는다)", r.drawn, JSON.stringify(r));
-    ok(label + " — **가로로 안 밀린다**", r.doc <= r.win + 1,
-       "문서 " + r.doc + "px · 화면 " + r.win + "px");
-    ok(label + " — 12px 미만 글자가 없다", r.small.length === 0, r.small.join(" · "));
+    for(const w of PHONES){
+      const r = await phone(path, who, tables, rpcs, pre, w);
+      /* ⚠️ 그려졌는지는 한 번만 말합니다 (세 번 같은 말을 찍으면 묻힙니다) */
+      if(w === PHONES[0])
+        ok(label + " — 그려지기는 한다 (빈 화면을 재고 통과하지 않는다)",
+           r.drawn, JSON.stringify(r));
+      ok(label + " " + w + "px — **가로로 안 밀린다**", r.doc <= r.win + 1,
+         "문서 " + r.doc + "px · 화면 " + r.win + "px");
+      ok(label + " " + w + "px — 12px 미만 글자가 없다",
+         r.small.length === 0, r.small.join(" · "));
+    }
   }
 
   await b.close(); srv.close();

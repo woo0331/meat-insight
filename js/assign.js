@@ -65,7 +65,10 @@
       get("request?select=id,no,state,cat,region,gu,budget_min,budget_max," +
           "want_at,body,name,tel,agree3rd_at,created_at,want_provider" +
           "&state=in.(" + WATCH.join(",") + ")&order=created_at.desc&limit=50"),
-      get("provider?select=id,name,assignable,is_test,listed&order=name.asc&limit=200"),
+      /* ⚠️ 하는 일 · 지역 · 상태까지 읽습니다 — 조건에 맞는 업체만
+         고르게 하려면 그 셋이 필요합니다 (4차 지시서 §4). */
+      get("provider?select=id,name,assignable,is_test,listed,state,subs,regions" +
+          "&order=name.asc&limit=200"),
       get("request_item?select=request_id,service_id&limit=500"),
       get("assignment?select=request_id,provider_id,state&limit=500")
     ]).then(function(got){
@@ -86,14 +89,48 @@
   /* 넘길 수 있는 업체 — ⚠️ `assignable` 이 꺼진 곳은 **고를 수 없게**
      합니다. 골라도 DB 가 거절하므로, 고르게 두면 눌러도 안 되는 단추가
      됩니다 (절대 규칙 5). */
+  /* ⚠️⚠️⚠️ **조건에 맞는 업체만 고르게 합니다** (4차 지시서 §4).
+     전에는 `assignable` 이 켜진 업체를 **전부** 늘어놓았습니다 — 서울
+     레슨 요청에 부산 피팅 업체가 같은 목록에 앉아 있었고, 운영자가
+     실수로 고르면 그 업체에 **손님 성함 · 연락처가 넘어갑니다**
+     (개인정보 보호법 제17조 — 되돌릴 수 없는 사고입니다).
+     ⚠️ 맞는 것이 0곳이면 **맞지 않는 곳을 고를 수 있게** 두되,
+     "조건에 안 맞습니다" 를 그 자리에 적습니다 — 운영자가 전화로
+     확인하고 넘기는 길까지 막으면 업체가 적은 동안 아무도 못 받습니다. */
+  function fits(p, r){
+    var okCat = true, okRg = true;
+    if(r.cat && window.amSub){
+      okCat = (p.subs || []).some(function(k){
+        var f = window.amSub(k);
+        return f && f.cat.key === r.cat;
+      });
+    }
+    /* ⚠️ 지역은 **이름**으로 들어옵니다 (손님이 고른 글자 — 0016) 이고
+       업체는 **키**로 들고 있습니다. 둘을 regions.js 한 곳에서 맞춥니다. */
+    if(r.region){
+      var want = (window.AM_REGIONS || []).filter(function(x){
+        return x.name === r.region || x.full === r.region;
+      })[0];
+      okRg = !want || (p.regions || []).indexOf(want.key) >= 0;
+    }
+    return okCat && okRg;
+  }
+
   function pickForm(r, provs, mine){
     var can = provs.filter(function(p){ return p.assignable === true; })
-                   .filter(function(p){ return mine.indexOf(p.id) < 0; });
+                   .filter(function(p){ return mine.indexOf(p.id) < 0; })
+                   /* ⚠️ 승인되지 않은 업체는 DB 가 거절합니다 (0038) —
+                      고르게 두면 눌러도 안 되는 단추가 됩니다. */
+                   .filter(function(p){ return p.state !== "suspended"; });
+    var good = can.filter(function(p){ return fits(p, r); });
     /* 보고 오신 업체를 맨 위로 (0035) — ⚠️ 고르는 것은 운영자입니다 */
-    if(r.want_provider)
-      can = can.slice().sort(function(a, b){
-        return (b.id === r.want_provider ? 1 : 0) - (a.id === r.want_provider ? 1 : 0);
-      });
+    /* ⚠️ 차례: 보고 오신 곳 → 조건에 맞는 곳 → 나머지.
+       거르지 않고 **차례**로 두는 까닭은 위 머리말에 적었습니다. */
+    can = can.slice().sort(function(a, b){
+      var wa = (a.id === r.want_provider ? 2 : 0) + (fits(a, r) ? 1 : 0);
+      var wb = (b.id === r.want_provider ? 2 : 0) + (fits(b, r) ? 1 : 0);
+      return wb - wa;
+    });
     if(!can.length)
       return '<p class="dk-hint">넘길 수 있는 업체가 없습니다. ' +
         '업체를 승인하고 <b>배정 가능</b>으로 켜 두셔야 고를 수 있습니다 — ' +
@@ -105,12 +142,25 @@
         '<select id="as-p-' + esc(r.id) + '" name="pv" required>' +
           '<option value="">고르십니다</option>' +
           can.map(function(p){
-            /* ⚠️⚠️ 검사용임을 **고르는 자리에서** 말합니다 */
+            /* ⚠️⚠️ 검사용임을 **고르는 자리에서** 말합니다
+               ⚠️⚠️ 조건에 **안 맞는** 곳도 그 자리에서 말합니다 —
+               고를 수는 있지만 모르고 고르면 안 됩니다. */
             return '<option value="' + esc(p.id) + '">' + esc(p.name) +
               (p.id === r.want_provider ? " — 손님이 보고 오신 곳" : "") +
+              (fits(p, r) ? "" : " — ⚠️ 조건에 안 맞습니다") +
               (p.is_test ? " — 검사용" : "") + '</option>';
           }).join("") +
         '</select>' +
+        '<p class="agree-no">' +
+          (good.length
+            ? '조건(' +
+              [r.cat && window.amCat && window.amCat(r.cat)
+                 ? window.amCat(r.cat).name : "", r.region || ""]
+                .filter(Boolean).map(esc).join(" · ") +
+              ')에 맞는 업체 <b>' + good.length + '곳</b>을 먼저 놓았습니다.'
+            : '⚠️ <b>조건에 맞는 업체가 없습니다.</b> 아래는 조건이 다른 곳입니다 — ' +
+              '전화로 확인하신 뒤에만 넘기십니다.') +
+        '</p>' +
       '</div>' +
       '<div class="agree">' +
         '<h3>제3자 제공 재동의 (개인정보보호법 제17조 제2항)</h3>' +

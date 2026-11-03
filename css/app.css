@@ -22,6 +22,16 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 
 .sr{ position:absolute; width:1px; height:1px; overflow:hidden;
      clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; }
+/* ⚠️⚠️⚠️ **`position:absolute` 는 "가장 가까운 자리 잡은 조상" 을
+   기준으로 놓입니다.** 가로로 도는 상자(overflow-x:auto) 안에 .sr 을
+   넣었는데 그 상자가 `position:static` 이면, .sr 이 **상자를 뛰어넘어
+   문서 기준**으로 놓입니다 — 상자 안 520px 자리에 앉은 .sr 이
+   **360px 화면을 437px 로 밀었습니다** (2026-11-03, 폰 360px 에서만
+   드러났습니다. 390px 에서는 멀쩡했습니다).
+   ⚠️ 그래서 **가로로 도는 상자는 전부 `position:relative`** 로 둡니다 —
+   그러면 .sr 이 그 상자 안에 갇히고 overflow 가 잘라 냅니다.
+   ⚠️⚠️ 새로 가로 스크롤 상자를 만드는 날 이 줄에 **그 클래스를 더하세요.** */
+.doc-t, .cmp-s, .sf-c{ position:relative; }
 
 /* 건너뛰기 — 키보드로 탭하면 나타납니다 */
 .skip{ position:absolute; left:-9999px; top:0; z-index:200;
@@ -1134,3 +1144,52 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 /* 업체가 보는 가격 목록 — 내린 줄은 **지운 것이 아니라** 내린 것입니다 */
 .pr-off{ background: var(--bg-2); border-style:dashed; }
 .pr-f{ margin-top:16px; }
+
+/* ── 담당자 초대 코드 (0043) ───────────────────────────────────
+   ⚠️⚠️ 코드는 **전화로 불러 주는** 자리입니다 — 크고, 글자 사이를
+   띄우고, 숫자 폭을 고정합니다 (1 과 I 를 아예 안 쓰지만 그래도). */
+.inv{ margin-top:12px; background: var(--grn-soft);
+      border:1.5px solid var(--grn-line); border-radius: var(--r-sm);
+      padding:12px 14px; }
+.inv-t{ font-size:13px; font-weight:700; color: var(--grn-text); }
+.inv-c{ margin-top:4px; font-size:22px; font-weight:800; letter-spacing:.14em;
+        color: var(--ink); font-variant-numeric: tabular-nums;
+        word-break: break-all; }
+.inv-d{ margin-top:6px; font-size:13.5px; color: var(--ink2);
+        word-break: keep-all; overflow-wrap:anywhere; }
+
+/* 업체 작업실의 초대 코드 칸 — ⚠️ 로그인했는데 아직 안 이어진 사람이
+   보는 자리입니다 (그 사람은 손님 계정입니다). */
+.ivf{ margin-top:18px; padding-top:16px; border-top:1px solid var(--grn-line);
+      text-align:left; }
+.ivf label{ display:block; font-size:14.5px; color: var(--ink2);
+            word-break: keep-all; }
+.ivf-r{ display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+.ivf-r input{ flex:1; min-width:180px; min-height:44px; padding:10px 14px;
+              border:1.5px solid var(--line); border-radius: var(--r-sm);
+              font-size:16px; letter-spacing:.08em; text-transform:uppercase; }
+.ivf-r input:focus{ outline:2px solid var(--grn); outline-offset:1px; }
+
+/* ── 업체가 못 고치는 것 (0044 · /desk) ─────────────────────────
+   ⚠️ 칸을 내지 않고 **왜 없는지**를 적는 자리입니다 (눌러도 안 되는
+   칸을 만들지 않습니다). */
+.me-fix{ margin-top:20px; padding-top:16px; border-top:1px solid var(--line); }
+.me-fix h3{ font-size:15.5px; color: var(--ink2); }
+.me-d{ display:grid; gap:6px 14px; grid-template-columns: max-content 1fr;
+       margin-top:10px; font-size:14.5px; }
+.me-d dt{ color: var(--grn-text); font-weight:700; white-space:nowrap; }
+.me-d dd{ margin:0; color: var(--ink2); min-width:0;
+          word-break: keep-all; overflow-wrap:anywhere; }
+.me-s{ margin-top:6px; font-size:13.5px; color: var(--ink3); }
+@media (max-width: 560px){
+  .me-d{ grid-template-columns: 1fr; }
+  .me-d dt{ margin-top:8px; }
+}
+
+/* ── 운영 감사 기록 (/admin) ────────────────────────────────────
+   ⚠️ 줄이 많은 표입니다 — 때 칸이 줄바꿈되면 읽기 어려워 고정합니다.
+   ⚠️⚠️ 가로로 도는 상자는 제 상자 안에서만 돕니다 (min-width:0). */
+.lg-t{ min-width:0; }
+.lg-t table{ font-size:14px; }
+.lg-at{ white-space:nowrap; color: var(--ink3); font-variant-numeric: tabular-nums; }
+.lg-t th[scope="row"]{ white-space:nowrap; }

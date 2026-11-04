@@ -162,7 +162,9 @@ module.exports = function(T){
   ok("답을 같이 적으면 답변함으로 옮긴다", mv2.yes, mv2.why);
   const stamp = psql("select state || '|' || (answered_at is not null)::text || '|' || " +
                      "(answered_by is not null)::text from inquiry where id = '" + IQ + "'");
-  ok("  답한 시각과 답한 사람이 남는다", stamp === "answered|t|t", stamp);
+  /* ⚠️ `::text` 는 참 · 거짓을 **true · false** 로 찍습니다 (t · f 가
+     아닙니다). 처음에 "t" 를 기다렸다가 멀쩡한 코드를 실패로 잡았습니다. */
+  ok("  답한 시각과 답한 사람이 남는다", stamp === "answered|true|true", stamp);
   const mv3 = allowed(as(ADM) + "select move_inquiry('" + J({ id:IQ, to:"closed" }) + "'::jsonb)");
   ok("닫을 수 있다", mv3.yes, mv3.why);
   const reopen = denied(as(ADM) + "select move_inquiry('" + J({ id:IQ, to:"reviewing" }) + "'::jsonb)");
@@ -181,7 +183,12 @@ module.exports = function(T){
     company:"[검사용] 주소 업체", name:"담당자", tel:"010-7000-0001",
     region:"서울", addr:"서울특별시 강남구 테헤란로 1",
     services:["개인 레슨"], agree_at: nowIso }) + "'::jsonb)");
-  ok("주소를 적어 신청할 수 있다", ap.yes && /^AP-/.test(ap.out), ap.out || ap.why);
+  /* ⚠️⚠️ 신청번호 꼴을 **여기 박지 않습니다** — 0027 이 정한 것이고
+     tools/sql/apply.js 가 이미 그 꼴을 봅니다. 여기서 재려는 뜻은
+     "주소를 적어도 신청이 된다" 입니다. 번호 꼴을 두 곳에 적어 두면
+     한쪽만 고쳐서 어긋납니다 (제가 0045 에서 실제로 그랬습니다). */
+  ok("주소를 적어 신청할 수 있다",
+     ap.yes && /^GA\d{6}-\d{4}$/.test(ap.out), ap.out || ap.why);
   ok("⚠️ 적은 주소가 **그대로 저장된다** (받고 버리지 않습니다)",
      psql("select addr from provider_apply where no = '" + ap.out + "'") ===
        "서울특별시 강남구 테헤란로 1");

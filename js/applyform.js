@@ -158,6 +158,13 @@
         "양식을 열지 않았습니다 — 개인정보보호법 제15조 제2항."); }catch(e){}
       return;
     }
+    /* ⚠️ 양식을 여는 **그 자리에서** 머리말도 같이 바꿉니다 (지시서 §8).
+       화면 위아래가 서로 다른 말을 하지 않게 합니다. */
+    var lead = document.getElementById("joinlead");
+    if(lead){
+      lead.innerHTML = '골프 관련 사업자라면 입점하실 수 있습니다. 입점은 ' +
+        '무료입니다. 등록하신 분야와 지역에 맞는 손님 문의가 넘어갑니다.';
+    }
     box.className = "jbox";
     box.innerHTML = form();
     document.getElementById("jf").addEventListener("submit", submit);

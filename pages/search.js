@@ -82,11 +82,12 @@ exports.build = function(){
     }, "전국") +
     /* ⚠️ 지금 무엇으로 좁혔는지 **글로** 말합니다. 칸 색만으로는
        폰에서 안 보입니다 (가로로 미끄러져 화면 밖에 있습니다). */
-    '<p class="sf-now" id="sfnow">' +
-      (list.length
-        ? '승인된 업체 ' + W.won(list.length) + '곳을 전부 보고 있습니다.'
-        : '아직 등록된 업체가 없습니다.') +
-    '</p>' +
+    /* ⚠️ 0곳일 때는 **아무 말도 안 합니다** — 바로 아래 빈 자리 상자가
+       같은 말을 합니다. 전에는 한 화면에 두 번 찍혔습니다 (지시서 §2). */
+    (list.length
+      ? '<p class="sf-now" id="sfnow">승인된 업체 ' + W.won(list.length) +
+        '곳을 전부 보고 있습니다.</p>'
+      : '<p class="sf-now" id="sfnow" hidden></p>') +
   '</div></section>';
 
   /* ── 결과 ───────────────────────────────────────────────────────
@@ -109,16 +110,12 @@ exports.build = function(){
       : '') +
   '</div></section>';
 
-  /* ⚠️ 분류 화면으로 가는 길은 그대로 둡니다 — 위 거르개는 **이 화면
-     안에서** 좁히는 것이고, 분류 화면은 그 분야를 설명하는 자리입니다
-     (크롤러도 그 길로 들어옵니다). */
-  body += '<section class="sec"><div class="wrap">' +
-    '<div class="sec-hd"><h2>분류 화면에서 보기</h2>' +
-    '<p>분야마다 무엇을 다루는지와 입점 안내가 있습니다.</p></div>' +
-    '<ul class="chips">' + cats.map(function(c){
-      return '<li><a class="chip chip-go" href="' + esc(W.amCatUrl(c)) + '">' +
-        icon(c.icon, 18) + esc(c.name) + '</a></li>';
-    }).join("") + '</ul></div></section>';
+  /* ⚠️⚠️ **아래에 분류 목록을 또 늘어놓지 않습니다** (지시서 §7 —
+     "상단과 하단에 동일한 카테고리 목록을 반복하지 않는다"). 위 거르개가
+     이미 같은 열 분류를 칩으로 내고 있었습니다.
+     ⚠️ 분류 화면으로 가는 길은 **머리말 메뉴 · 메인의 분류 카드 ·
+     /categories** 셋에 그대로 있습니다 — 길을 없앤 것이 아닙니다
+     (check-links 의 외톨이 검사가 그것을 봅니다). */
 
   return {
     route: "/search", title: "업체찾기", crumbs: [["업체찾기", "/search"]],
@@ -146,8 +143,10 @@ function zero(){
     '없는 업체를 지어내 보여 드리지 않습니다. ' +
     '원하시는 조건을 남겨 두시면 업체가 등록되는 대로 운영자가 맞춰 봅니다.</p>' +
     '<div class="none-b">' +
+      /* ⚠️ 입점 권유를 여기서 뺐습니다 (지시서 §2) — 이 구간을 읽는
+         사람은 **업체를 찾는 손님**입니다. 입점으로 가는 길은 머리말
+         금색 단추와 푸터에 그대로 있습니다. */
       '<a class="btn btn-pt" href="/match">' + icon("match", 20) + '매칭 요청 남기기</a>' +
-      '<a class="btn btn-line" href="/join">' + icon("store", 20) + '업체로 입점하기</a>' +
     '</div>' +
   '</div>';
 }

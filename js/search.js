@@ -210,8 +210,11 @@
       if(s.cat) bits.push(catName(s.cat));
       if(s.rg)  bits.push(rgName(s.rg));
       if(s.q)   bits.push('"' + s.q + '"');
+      /* ⚠️ 업체가 한 곳도 없으면 이 줄을 **감춥니다** — 바로 아래 빈 자리
+         상자가 같은 말을 합니다 (빌드 쪽 pages/search.js 와 같은 규칙). */
+      nowline.hidden = !all.length;
       nowline.textContent = !all.length
-        ? "아직 등록된 업체가 없습니다."
+        ? ""
         : bits.length
           ? (bits.join(" · ") + " — 업체 " + window.won(L.length) + "곳")
           : ("승인된 업체 " + window.won(all.length) + "곳을 전부 보고 있습니다.");

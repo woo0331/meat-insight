@@ -157,14 +157,14 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
      쪽이 투명으로 읽어 **검정**으로 셉니다. 지시서 2차 §2 의 두 색입니다. */
   background-color: #08291F;
   background-image:
-    radial-gradient(120% 95% at 80% 8%, rgba(67,198,83,.26) 0%, rgba(8,41,31,0) 58%),
-    linear-gradient(118deg, #08291F 0%, #063B2B 54%, #0A4A34 100%);
+    radial-gradient(120% 95% at 80% 8%, rgba(37,166,90,.26) 0%, rgba(8,43,32,0) 58%),
+    linear-gradient(118deg, #061E16 0%, #082B20 54%, #0B3C2C 100%);
   color:#fff; position:relative; overflow:hidden;
 }
 .hero::after{
   content:""; position:absolute; inset:auto -8% -42% 42%;
   height:82%; border-radius:50% 50% 0 0;
-  background: radial-gradient(60% 100% at 50% 100%, rgba(67,198,83,.18), rgba(67,198,83,0) 70%);
+  background: radial-gradient(60% 100% at 50% 100%, rgba(37,166,90,.20), rgba(37,166,90,0) 70%);
   pointer-events:none;
 }
 /* ⚠️⚠️⚠️ **아래 여백이 카드와 겹치는 자리입니다.** `.cats-in` 이
@@ -227,7 +227,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .cat-ph{
   width:100%; aspect-ratio: 16 / 9; display:block; overflow:hidden;
   background-color: var(--grn-deep);
-  background-image: linear-gradient(150deg, #0E5240 0%, #08291F 100%);
+  background-image: linear-gradient(150deg, #0C4030 0%, #082B20 100%);
 }
 .cat-ph img{
   width:100%; height:100%; object-fit:cover; object-position:center;
@@ -249,8 +249,22 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .cat-grid > *{ min-width:0; }
 
 /* ── 구간 ─────────────────────────────────────────────── */
-.sec{ padding-block: 58px; }
+/* ⚠️ 구간 여백. 전에는 **어느 폭에서나 위아래 58px**(합 116px)이라,
+   알맹이가 111px 인 구간에 여백이 116px 이었습니다 (/help). 폭에 따라
+   줄입니다 — 지시서 §2 "불필요하게 큰 공백". */
+.sec{ padding-block: 52px; }
+@media (max-width: 760px){ .sec{ padding-block: 34px; } }
 .sec-alt{ background: var(--bg-2); }
+/* ⚠️⚠️ **바탕이 같은 구간이 이어지면 여백이 두 겹**이 됩니다 (52+52).
+   색이 바뀌는 자리에서는 그 숨이 필요하지만, 같은 흰 바탕끼리는 그냥
+   빈 자리로 보입니다 — 메인에서 묶음 카드와 매칭 띠 사이가 그랬습니다.
+   이어지는 쪽의 위 여백만 반으로 줄입니다 (특정도 0,4,0 이라 위 .sec 를 이깁니다). */
+.sec:not(.sec-alt) + .sec:not(.sec-alt){ padding-top: 26px; }
+.sec-alt + .sec-alt{ padding-top: 26px; }
+@media (max-width: 760px){
+  .sec:not(.sec-alt) + .sec:not(.sec-alt){ padding-top: 18px; }
+  .sec-alt + .sec-alt{ padding-top: 18px; }
+}
 .sec-hd{ margin-bottom: 26px; }
 .sec-hd h2{ font-size: clamp(22px, 2.6vw, 30px); }
 .sec-hd p{ margin-top:8px; color: var(--ink3); font-size:16px; }
@@ -263,7 +277,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
   position:relative; min-height: 186px; border-radius: var(--r);
   padding: 22px; color:#fff; display:flex; flex-direction:column;
   background-color: var(--grn-deep);
-  background-image: linear-gradient(150deg, rgba(8,41,31,.18), rgba(8,41,31,.86));
+  background-image: linear-gradient(150deg, rgba(8,43,32,.18), rgba(8,43,32,.86));
   overflow:hidden;
 }
 .feat-c h3{ color:#fff; font-size:19px; }
@@ -292,7 +306,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 
 /* 빈 자리 — ⚠️ 0 건일 때 막다른 길로 두지 않습니다 (절대 규칙 2) */
 .none{
-  border:1.5px dashed var(--grn-line); background: var(--grn-soft);
+  border:1.5px dashed var(--line); background: var(--bg-2);
   border-radius: var(--r); padding: 26px 22px; text-align:center;
 }
 .none h2{ font-size:17px; }
@@ -300,14 +314,14 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .none .btn{ margin-top:16px; }
 
 /* 입점 안내 띠 */
-.join{ background: var(--grn-soft); border:1.5px solid var(--grn-line);
+.join{ background: var(--bg-2); border:1.5px solid var(--line);
        border-radius: var(--r); padding: 24px;
        display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
 .join .ic{ color: var(--grn); flex:none; }
 /* 아이콘을 둥근 면에 담습니다 (3차 시안) */
 .join-ic{
   width:52px; height:52px; border-radius: var(--r-sm); flex:none;
-  background:#fff; border:1.5px solid var(--grn-line);
+  background:#fff; border:1.5px solid var(--line);
   display:flex; align-items:center; justify-content:center;
 }
 .join-t{ flex:1; min-width:220px; }
@@ -345,7 +359,8 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 
 /* 이용 방법 — 번호. ⚠️ 어두운 면 위라 포인트 그린을 글자로 씁니다
    (딥그린 위 5.66 · 다크그린 위 7.01). */
-.step-n{ color: var(--pt-on-dark); font-weight:800; font-size:13px; letter-spacing:.2em; }
+/* 흰 카드 위라 **짙은** 그린입니다 (흰바탕 8.03) — 밝은 쪽을 쓰면 1.x 로 떨어집니다 */
+.step-n{ color: var(--grn-text); font-weight:800; font-size:13px; letter-spacing:.2em; }
 
 /* ── 이용 방법 — 화살표로 잇습니다 (3차 시안) ──────────────────
    ⚠️ 번호(01~04)가 이미 차례를 말하므로 화살표는 **장식**입니다
@@ -353,14 +368,16 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
    ⚠️ 폰에서는 화살표가 **아래를 가리켜야** 맞습니다 — 글을 바꾸지
    않고 CSS 로 돌립니다. */
 .steps{ display:flex; align-items:stretch; gap:10px; flex-wrap:nowrap; }
+/* ⚠️ 전에는 넉 장이 전부 딥그린이라 구간째 초록이었습니다 (§3).
+   흰 카드 + 테두리로 바꾸고, 차례 번호만 그린 글자로 둡니다. */
 .step{
   flex:1 1 0; min-width:0; border-radius: var(--r); padding: 20px 20px 22px;
-  color:#fff; background-color: var(--grn-deep);
-  background-image: linear-gradient(150deg, #1B5E3A 0%, #0C2A1B 100%);
+  color: var(--ink2); background: var(--surface);
+  border:1.5px solid var(--line);
   display:flex; flex-direction:column;
 }
-.step h3{ color:#fff; font-size:17px; margin-top:8px; }
-.step p{ margin-top:7px; font-size:13.5px; color: var(--on-dark-2); line-height:1.55; }
+.step h3{ color: var(--ink); font-size:17px; margin-top:8px; }
+.step p{ margin-top:7px; font-size:13.5px; color: var(--ink3); line-height:1.55; }
 .steps-a{
   flex:none; align-self:center; display:flex; color: var(--ink3);
 }
@@ -376,8 +393,12 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 }
 
 /* ── 하위 화면의 머리 ──────────────────────────────────── */
-.pghd{ background: var(--grn-soft); border-bottom:1px solid var(--grn-line);
-       padding-block: 26px 32px; }
+/* ⚠️ 전에는 연초록(--grn-soft) 이라 화면 하나를 열 때마다 큰 초록 면이
+   먼저 나왔습니다 (§3). 아이보리로 바꿉니다 — --grn-soft 는 칩 · 배지
+   같은 **작은** 강조 면에만 남겼습니다. */
+.pghd{ background: var(--bg-2); border-bottom:1px solid var(--line);
+       padding-block: 24px 28px; }
+@media (max-width: 760px){ .pghd{ padding-block: 18px 22px; } }
 .pghd h1{ font-size: clamp(26px, 3.4vw, 38px); margin-top:10px; }
 .pghd-l{ margin-top:12px; color: var(--ink2); font-size:16px; max-width:70ch; }
 

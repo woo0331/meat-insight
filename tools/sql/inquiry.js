@@ -160,9 +160,9 @@ module.exports = function(T){
   const mv2 = allowed(as(ADM) + "select move_inquiry('" +
     J({ id:IQ, to:"answered", answer:"이렇게 하시면 됩니다" }) + "'::jsonb)");
   ok("답을 같이 적으면 답변함으로 옮긴다", mv2.yes, mv2.why);
-  ok("  답한 시각과 답한 사람이 남는다",
-     psql("select (answered_at is not null and answered_by is not null)::text " +
-          "from inquiry where id = '" + IQ + "'") === "t");
+  const stamp = psql("select state || '|' || (answered_at is not null)::text || '|' || " +
+                     "(answered_by is not null)::text from inquiry where id = '" + IQ + "'");
+  ok("  답한 시각과 답한 사람이 남는다", stamp === "answered|t|t", stamp);
   const mv3 = allowed(as(ADM) + "select move_inquiry('" + J({ id:IQ, to:"closed" }) + "'::jsonb)");
   ok("닫을 수 있다", mv3.yes, mv3.why);
   const reopen = denied(as(ADM) + "select move_inquiry('" + J({ id:IQ, to:"reviewing" }) + "'::jsonb)");

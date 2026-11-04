@@ -7337,6 +7337,8 @@ declare
   v_digits   text;
   v_no       text;
 begin
+  -- ⚠️ 자물쇠마다 **다른 말**로 거절합니다. 같은 말이면 하나를 빼 봐도
+  --    다른 것이 먼저 막아 엉뚱한 까닭으로 통과합니다.
   if v_company = '' then raise exception '상호를 적어 주세요'; end if;
   if v_name    = '' then raise exception '담당자 성함을 적어 주세요'; end if;
   if v_tel     = '' then raise exception '연락처를 적어 주세요'; end if;
@@ -7352,6 +7354,7 @@ begin
   end if;
 
   v_digits := regexp_replace(v_tel, '[^0-9]', '', 'g');
+  -- ⚠️ 경계값: 9자리(02-xxx-xxxx)부터 11자리(010-xxxx-xxxx)까지입니다.
   if length(v_digits) < 9 or length(v_digits) > 11 then
     raise exception '연락처를 다시 봐 주세요 — 숫자 아홉에서 열한 자리입니다';
   end if;
@@ -7363,6 +7366,9 @@ begin
     raise exception '고르신 항목이 너무 많습니다';
   end if;
 
+  -- ⚠️⚠️ 동의 시각은 **화면이 보낸 값**입니다. 미래이거나 너무 오래된
+  --    것은 믿지 않습니다 (개인정보보호법 제15조 — 그 자리에서 받은
+  --    동의여야 합니다).
   if (p->>'agree_at') is null then
     raise exception '수집 · 이용 동의가 필요합니다';
   end if;
@@ -7373,16 +7379,18 @@ begin
     raise exception '동의가 오래되었습니다 — 다시 한 번 눌러 주세요';
   end if;
 
+  -- 중복 · 허위 신청 막기 (지시서 5번 A)
   if exists (
     select 1 from provider_apply
      where regexp_replace(tel, '[^0-9]', '', 'g') = v_digits
-       and created_at > now() - interval '10 minutes'
-  ) then
-    raise exception '방금 같은 번호로 신청이 들어왔습니다 — 잠시 뒤에 해 주세요';
+       and state = 'new'
+       and created_at > now() - interval '10 minutes')
+  then
+    raise exception '방금 같은 번호로 신청이 들어왔습니다 — 잠시 뒤에 다시 해 주세요';
   end if;
 
-  v_no := 'AP-' || to_char(now() at time zone 'Asia/Seoul', 'YYMMDD') || '-' ||
-          upper(substring(replace(gen_random_uuid()::text, '-', '') from 1 for 4));
+  v_no := 'GA' || to_char(now() at time zone 'Asia/Seoul', 'YYMMDD')
+               || '-' || lpad(nextval('apply_no_seq')::text, 4, '0');
 
   insert into provider_apply
     (no, company, brn, name, tel, email, region, addr, services, note, agree_at)
@@ -7390,7 +7398,8 @@ begin
     (v_no, v_company, v_brn, v_name, v_tel, v_email, v_region, v_addr, v_svc, v_note,
      (p->>'agree_at')::timestamptz);
 
-  -- ⚠️ 감사 기록에 **성함 · 연락처 · 주소를 넣지 않습니다.**
+  -- ⚠️ 감사 기록에 **성함 · 연락처를 넣지 않습니다.** audit_log 는 오래
+  --    남고 보는 사람도 넓습니다. 신청번호로 찾아가면 됩니다.
   insert into audit_log (by_user, by_role, obj, obj_id, to_state, why, data)
   values (auth.uid(), my_role(), 'provider_apply', v_no, 'new', '입점 신청 접수',
           jsonb_build_object('services', v_svc, 'region', v_region));
@@ -7621,3 +7630,6 @@ end $$;
 
 revoke all on function move_inquiry(jsonb) from public;
 grant execute on function move_inquiry(jsonb) to authenticated;
+
+insert into schema_version (n, name) values (45, '0045_inquiry')
+  on conflict (n) do nothing;

@@ -170,6 +170,114 @@ window.AM_PHOTOS = {
 
 /* 한 자리의 사진 — ⚠️ 없으면 **null** 입니다 (빈 객체가 아닙니다).
    화면이 `if(!p)` 로 갈라서 글 짜임새로 갑니다. */
+/* ════════════════════════════════════════════════════════════════════
+   화면 크기마다 **맞는 크기**로 내보내기 (srcset)
+
+   ⚠️⚠️⚠️ **없는 또렷함을 만들어 낼 수는 없습니다.** 여기서 하는 일은
+   둘입니다 —
+     ① 작게 쓰는 자리에 **미리 줄여 둔 파일**을 줍니다. 브라우저가
+        800px 그림을 108px 로 욱여넣는 것보다 또렷합니다.
+     ② 폰이 PC 용 큰 파일을 안 받게 합니다 (히어로 307KB → 60KB).
+   ⚠️ **원본보다 크게 만들지 않습니다** — 늘리면 용량만 커집니다.
+   더 또렷해지려면 **원본 사진**이 와야 합니다 (img/README.md).
+
+   ⚠️⚠️ **이 표가 한 곳**입니다. `tools/make-sizes.js` 가 이것을 읽어
+   파일을 만들고, `tools/check-photos.js` 가 그 파일이 실제로 있는지
+   봅니다 — 폭을 두 곳에 적으면 한쪽만 고치는 날 **srcset 이 없는
+   파일을 가리킵니다** (404 가 나고 브라우저는 조용히 원본을 씁니다).
+
+   칸
+     w · h   원본의 가로 · 세로 (화면이 자리를 미리 잡는 데 씁니다 —
+             안 적으면 그림이 올 때 글이 밀립니다)
+     make    만들 폭들 — ⚠️ 원본보다 큰 값은 저절로 빠집니다
+     sizes   브라우저에게 **얼마나 크게 그릴지** 알려 줍니다
+             ⚠️ 이것이 틀리면 폰이 PC 용 파일을 받습니다 (실제로 재서
+             적었습니다 · tools 로 그려지는 폭을 재 보세요)
+     키 끝의 `*` 는 접두사입니다 (zone-learn · cat-lesson …)
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_PHOTO_SIZES = {
+  /* ⚠️⚠️ `sizes` 는 **재서 적은 값**입니다 (360 · 390 · 430 · 768 ·
+     1000 · 1280 · 1440px 에서 실제로 그려지는 폭을 쟀습니다).
+     넉넉하게 적으면 폰이 PC 용 파일을 받고, 짜게 적으면 뿌옇습니다. */
+  "hero":           { w:2400, h:1200, make:[900, 1200, 1400, 1900], sizes:"100vw" },
+  "match-banner":   { w:2000, h:800,  make:[700, 1100, 1300, 1600],
+                      sizes:"(min-width: 1340px) 1216px, 95vw" },
+  "partner-banner": { w:2000, h:480,  make:[700, 1100, 1300, 1600],
+                      sizes:"(min-width: 1340px) 1216px, 95vw" },
+  /* 묶음 카드 — 1280 이상 넷 · 620~1280 둘 · 그 아래 하나 */
+  "zone-*":         { w:1200, h:667,  make:[400, 700],
+                      sizes:"(min-width: 1200px) 300px, (min-width: 620px) 48vw, 92vw" },
+  /* 분류 카드 — 1340 이상 열 칸(108px) · 그 아래 다섯 칸 · 폰 둘 칸 */
+  /* ⚠️ 560 은 **3배 화면 폰**을 위한 것입니다 — 그 자리가 146px 라
+     3배면 438px 가 필요한데, 560 이 없으면 800px 원본을 받습니다
+     (한 장에 75KB · 열 장이면 750KB). 재 보고 넣었습니다. */
+  "cat-*":          { w:800,  h:571,  make:[250, 450, 560],
+                      sizes:"(min-width: 1340px) 112px, (min-width: 620px) 22vw, 40vw" }
+};
+
+/* 그 자리의 규격 — ⚠️ 접두사(`zone-*`)도 여기서 풉니다 */
+window.amPhotoSpec = function(key){
+  var S = window.AM_PHOTO_SIZES || {};
+  if(S[key]) return S[key];
+  var ks = Object.keys(S);
+  for(var i = 0; i < ks.length; i++){
+    var k = ks[i];
+    if(k.slice(-1) === "*" && key.indexOf(k.slice(0, -1)) === 0) return S[k];
+  }
+  return null;
+};
+
+/* 변형 파일 이름 — ⚠️⚠️ **자리 이름이 아니라 원본 파일 이름**에서
+   뽑습니다. 자리 이름으로 뽑으면, 그 자리에 **다른 사진을 끼운**
+   순간(검사가 씨앗을 넣을 때처럼) srcset 만 옛 사진을 가리켜서
+   화면에는 옛 사진이 나오고 src 는 새 사진인 꼴이 됩니다 — 아무
+   에러도 없이 **엉뚱한 사진**이 보입니다. */
+window.amPhotoSizeSrc = function(src, w){
+  var base = String(src).split("?")[0].split("/").pop().replace(/\.[a-z]+$/i, "");
+  return "/img/sizes/" + base + "-" + w + ".jpg";
+};
+
+/* srcset 한 줄 — ⚠️ 마지막은 **원본**입니다 (제일 큰 화면이 쓸 것)
+   ⚠️⚠️ 빌드는 `amPhotoHasSize` 를 끼워 **파일이 실제로 있는지** 봅니다
+   (없는 파일을 적으면 404 가 나고 브라우저는 조용히 원본을 씁니다 —
+   그러면 폰이 PC 용 파일을 받는데 아무도 모릅니다). */
+window.amPhotoSrcset = function(key){
+  var sp = window.amPhotoSpec(key);
+  var p  = (window.AM_PHOTOS || {})[key];
+  if(!sp || !p || !p.src) return "";
+  var has = window.amPhotoHasSize;
+  var out = (sp.make || []).filter(function(w){ return w < sp.w; })
+    .map(function(w){ return window.amPhotoSizeSrc(p.src, w); })
+    .filter(function(u){ return has ? has(u) : true; })
+    .map(function(u, i, L){
+      return u + " " + u.replace(/^.*-(\d+)\.jpg$/, "$1") + "w";
+    });
+  if(!out.length) return "";          /* 변형이 하나도 없으면 안 답니다 */
+  out.push(p.src + " " + sp.w + "w");
+  return out.join(", ");
+};
+
+/* ⚠️⚠️ **그림 하나를 그리는 자리도 한 곳**입니다. 화면마다 따로
+   적으면 한 곳에만 srcset 이 붙고 나머지는 조용히 큰 파일을 받습니다
+   (그리고 width · height 를 빠뜨린 자리는 그림이 올 때 글이 밀립니다).
+   ⚠️ 배경 장식이라 `alt=""` · `aria-hidden` 입니다 — 글이 주인공인
+   자리에서는 이 함수를 쓰지 말고 alt 를 적어 주세요. */
+window.amPhotoImg = function(key, o){
+  var p = window.amPhoto(key);
+  if(!p) return "";
+  o = o || {};
+  var sp = window.amPhotoSpec(key) || {};
+  var ss = window.amPhotoSrcset(key);
+  return '<img' + (o.cls ? ' class="' + window.esc(o.cls) + '"' : '') +
+    ' src="' + window.esc(p.src) + '"' +
+    (ss ? ' srcset="' + window.esc(ss) + '"' : '') +
+    (ss && sp.sizes ? ' sizes="' + window.esc(sp.sizes) + '"' : '') +
+    ' alt="" aria-hidden="true"' +
+    (sp.w ? ' width="' + sp.w + '" height="' + sp.h + '"' : '') +
+    (o.eager ? ' fetchpriority="high"' : ' loading="lazy"') +
+  '>';
+};
+
 window.amPhoto = function(key){
   var p = (window.AM_PHOTOS || {})[key];
   if(!p || !p.src) return null;
@@ -180,3 +288,13 @@ window.amPhoto = function(key){
   return p;
 };
 window.amHasPhoto = function(key){ return !!window.amPhoto(key); };
+
+/* ⚠️⚠️ **적어 두고 안 만든 파일**을 잡으려고, 여기서 `jpg` 칸을
+   채워 둡니다 — `tools/check-photos.js` 가 그 칸에 적힌 파일이 실제로
+   있는지 봅니다 (없으면 빌드에서 멈춥니다). 손으로 적지 않습니다. */
+(function(){
+  Object.keys(window.AM_PHOTOS || {}).forEach(function(k){
+    var ss = window.amPhotoSrcset(k);
+    if(ss) window.AM_PHOTOS[k].jpg = ss;
+  });
+})();

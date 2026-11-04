@@ -72,8 +72,10 @@ function hero(){
      (`alt` 는 photos.js 가 들고 있고, 글이 주인공인 자리에서 씁니다.) */
   var ph = W.amPhoto ? W.amPhoto("hero") : null;
   return '<section class="hero' + (ph ? " hero-ph" : "") + '">' +
-    (ph ? '<img class="hero-bg" src="' + esc(ph.src) + '" alt="" aria-hidden="true" ' +
-          'width="2400" height="1200" fetchpriority="high">' : "") +
+    /* ⚠️⚠️ 그림 한 장을 그리는 자리는 **photos.js 한 곳**입니다 —
+       srcset · sizes · width · height 를 화면마다 따로 적으면 한 곳에만
+       붙고 나머지는 조용히 큰 파일을 받습니다. */
+    (ph ? W.amPhotoImg("hero", { cls:"hero-bg", eager:true }) : "") +
     '<div class="wrap hero-in">' +
     '<p class="hero-kick">' + esc(B.en) + '</p>' +
     '<h1>골프의 모든 것,<br><b>' + esc(B.name) + '</b></h1>' +
@@ -111,8 +113,7 @@ function cats(){
       var cp = W.amPhoto ? W.amPhoto("cat-" + c.key) : null;
       return '<a class="cat" href="' + esc(W.amCatUrl(c)) + '">' +
         '<span class="cat-ph' + (cp ? " cat-ph-on" : "") + '">' +
-          (cp ? '<img src="' + esc(cp.src) + '" alt="" aria-hidden="true" ' +
-                'width="800" height="450" loading="lazy">' : "") +
+          (cp ? W.amPhotoImg("cat-" + c.key) : "") +
         '</span>' +
         '<span class="cat-ic">' + icon(c.icon, 26) + '</span>' +
         '<span class="cat-n">' + esc(c.name) + '</span>' +
@@ -139,8 +140,7 @@ function feats(){
          갑니다. 그 화면이 네 묶음으로 나뉘어 있습니다. */
       return '<a class="feat-c feat-' + (i+1) + (zp ? " feat-ph" : "") +
         '" href="/categories#' + esc(z.key) + '">' +
-        (zp ? '<img class="feat-bg" src="' + esc(zp.src) + '" alt="" aria-hidden="true" ' +
-              'width="1200" height="600" loading="lazy">' : "") +
+        (zp ? W.amPhotoImg("zone-" + z.key, { cls:"feat-bg" }) : "") +
         /* ⚠️⚠️ **글을 한 덩이로 묶습니다.** 막을 카드 전체에 깔고
            "아래쪽은 짙게" 로 두었더니, 글이 길어 두 줄이 되는 카드에서
            글머리가 **옅은 쪽까지 올라가** 대비가 2.7 까지 떨어졌습니다.
@@ -239,8 +239,7 @@ function matchBand(){
   var mp = W.amPhoto ? W.amPhoto("match-banner") : null;
   return '<section class="sec"><div class="wrap">' +
     '<div class="mband' + (mp ? " mband-ph" : "") + '">' +
-    (mp ? '<img class="mband-bg" src="' + esc(mp.src) + '" alt="" aria-hidden="true" ' +
-          'width="2000" height="800" loading="lazy">' : "") +
+    (mp ? W.amPhotoImg("match-banner", { cls:"mband-bg" }) : "") +
     '<div class="mband-t">' +
       '<h2>한 번에 견적 · 매칭 요청하기</h2>' +
       '<ul class="mband-l">' + MATCH_WHY.map(function(t){
@@ -258,8 +257,7 @@ function joinBand(){
   var pp = W.amPhoto ? W.amPhoto("partner-banner") : null;
   return '<section class="sec"><div class="wrap">' +
     '<div class="join' + (pp ? " join-ph" : "") + '">' +
-    (pp ? '<img class="join-bg" src="' + esc(pp.src) + '" alt="" aria-hidden="true" ' +
-          'width="2000" height="480" loading="lazy">' : "") +
+    (pp ? W.amPhotoImg("partner-banner", { cls:"join-bg" }) : "") +
     '<span class="join-ic">' + icon("store", 30) + '</span>' +
     '<div class="join-t"><h3>골프 관련 사업자라면 지금 바로 입점하세요</h3>' +
     '<p>입점은 무료입니다. 사업자 정보와 하시는 일을 등록하시면 그 일을 찾는 손님에게 이어집니다.</p></div>' +

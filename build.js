@@ -34,6 +34,14 @@ global.window = {};
  "js/data/photos.js","js/card.js",
  "js/data/legal-terms.js","js/data/legal-privacy.js"]
   .forEach(function(f){ require("./" + f); });
+/* ⚠️⚠️ **srcset 에 없는 파일을 적지 않게** — 빌드가 파일을 보고
+   말해 줍니다 (브라우저는 못 봅니다). 없는 변형을 적으면 404 가
+   나고 브라우저는 조용히 원본을 써서, 폰이 PC 용 파일을 받습니다. */
+global.window.amPhotoHasSize = function(u){
+  try{ return fs.existsSync(path.join(__dirname, String(u).replace(/^\//, ""))); }
+  catch(e){ return false; }
+};
+
 var W = global.window, esc = W.esc, icon = W.icon;
 
 function ver(file){

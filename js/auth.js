@@ -173,6 +173,58 @@ function amAuthRefresh(){
 /* ── 지금 누구인가 ───────────────────────────────────────────────
    `/api/session` 한 번. ⚠️ 역할은 **서버가 토큰으로 DB 에서** 읽은
    값입니다 — 화면이 고르는 것이 아닙니다 (`api/_auth.js` 머리말). */
+/* ════════════════════════════════════════════════════════════════════
+   로그인한 뒤 **원래 보시던 자리로** 돌아갑니다
+
+   ⚠️⚠️⚠️ 전에는 돌아올 자리를 아무 데도 안 적었습니다. `/my` 에서
+   "로그인하기" 를 누르면 `/login` 으로 갔다가, 메일 링크를 눌러도
+   **`/login` 에 그대로** 남았습니다 — 손님이 내 정보를 다시 찾아
+   들어가야 했습니다. 화면도 · 문도 · 검사도 전부 멀쩡했습니다.
+
+   ⚠️⚠️⚠️ **`next` 를 그대로 믿으면 안 됩니다** (열린 전달 · open
+   redirect). 남이 `?next=https://가짜.example` 을 적은 링크를 뿌리면
+   우리 주소로 들어와서 남의 사이트로 튕겨 나갑니다 — 피싱의 고전적인
+   길입니다. 그래서 **우리 사이트 안의 길만** 받습니다:
+     · `/` 로 시작할 것
+     · 둘째 글자가 `/` 나 역슬래시가 **아닐 것** (`//남의집` 은 프로토콜
+       상대 주소라 브라우저가 **남의 사이트로 읽습니다**)
+     · 허락한 글자만 있을 것 (`:` 이 못 들어오므로 scheme 을 못 만듭니다)
+   맞지 않으면 **조용히 버리고** 홈으로 둡니다.
+   ⚠️ `tools/test-desk.js` 가 실제로 나쁜 값을 넣어 봅니다.
+   ════════════════════════════════════════════════════════════════════ */
+window.amSafeNext = function(v){
+  var t = String(v == null ? "" : v);
+  if(!t || t.charAt(0) !== "/") return "";
+  if(t.charAt(1) === "/" || t.charAt(1) === "\\") return "";
+  /* 허락한 글자만 — `:` 도 `@` 도 없으므로 다른 사이트를 못 가리킵니다 */
+  if(!/^\/[A-Za-z0-9\-._~\/]*(\?[A-Za-z0-9\-._~\/=&%+]*)?(#[A-Za-z0-9\-._~]*)?$/.test(t))
+    return "";
+  return t;
+};
+
+/* 주소의 `?next=` 를 꺼냅니다 — 못 믿을 값이면 빈 문자열입니다 */
+window.amNextPath = function(){
+  try{
+    return window.amSafeNext(
+      new URLSearchParams(window.location.search).get("next") || "");
+  }catch(e){ return ""; }
+};
+
+/* 메일 링크가 **돌아올 자리** — next 가 있으면 거기, 없으면 지금 화면 */
+window.amAfterLogin = function(){
+  return window.amNextPath() || window.location.pathname;
+};
+
+/* "로그인하기" 가 가리킬 주소 — ⚠️ 한 함수에서만 짓습니다.
+   다섯 곳에 손으로 적으면 한 곳만 고쳐서 조용히 어긋납니다. */
+window.amLoginUrl = function(here){
+  var p = window.amSafeNext(
+    here || (window.location.pathname + window.location.search));
+  /* ⚠️ /login 에서 /login 으로 돌아오게 두지 않습니다 (제자리걸음) */
+  if(!p || p === "/login" || p.indexOf("/login?") === 0) return "/login";
+  return "/login?next=" + encodeURIComponent(p);
+};
+
 window.amAuthAsk = function(force){
   if(AM_AUTH.asked && !force) return Promise.resolve(AM_AUTH);
   /* ⚠️ 이미 묻고 있으면 **그 물음을 그대로** 돌려줍니다 (요청 하나) */
@@ -234,7 +286,7 @@ window.amAuthSend = function(email){
       email: to,
       /* ⚠️ 돌아올 자리입니다. Supabase 쪽 **Redirect URLs** 에 이 주소가
          들어 있어야 합니다 — 안 넣으면 링크가 기본 주소로 갑니다. */
-      options: { email_redirect_to: window.location.origin + window.location.pathname }
+      options: { email_redirect_to: window.location.origin + window.amAfterLogin() }
     })
   }).then(function(r){
     if(r.ok) return { ok:true, say:"메일로 로그인 링크를 보냈습니다. 받은 편지함을 확인해 주세요." };

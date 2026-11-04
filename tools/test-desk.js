@@ -160,6 +160,72 @@ function stub(p, who, tables, rpcs, up){
     }, sel);
   }
 
+  /* ══════════════════════════════════════════════════════════════
+     로그인한 뒤 **원래 보시던 자리로** 돌아가는가 (지시서 §3-3)
+
+     ⚠️⚠️⚠️ 전에는 돌아올 자리를 아무 데도 안 적었습니다 — /my 에서
+     "로그인하기" 를 누르면 /login 으로 갔다가 메일 링크를 눌러도
+     로그인 화면에 **그대로** 남았습니다. 화면도 · 문도 · 검사도
+     멀쩡했습니다.
+     ⚠️⚠️ **열린 전달(open redirect)을 같이 잽니다.** `?next=` 를 그대로
+     믿으면 남이 뿌린 링크로 들어온 손님이 **남의 사이트로 튕겨** 나갑니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 로그인한 뒤 보시던 자리로 돌아갑니다 (§3-3)");
+  for(const [path, box] of [["/my","mybox"], ["/desk","deskbox"], ["/admin","adminbox"]]){
+    const g = await open(path, { role:"customer", name:"", signedIn:false },
+                         { assignment:[], request:[], quote:[], request_item:[] });
+    const href = await g.p.evaluate(function(b){
+      var a = document.querySelector("#" + b + ' a[href^="/login"]');
+      return a ? a.getAttribute("href") : "";
+    }, box);
+    ok(path + " 의 로그인 링크가 **돌아올 자리**를 달고 간다",
+       href.indexOf("next=") > 0 && decodeURIComponent(href).indexOf(path) > 0, href);
+    await g.p.close();
+  }
+
+  /* 머리말의 로그인 칸도 같은 함수를 씁니다 (다섯 곳에 손으로 안 적습니다) */
+  {
+    const g = await open("/search", { role:"customer", name:"", signedIn:false }, {});
+    const href = await g.p.evaluate(function(){
+      var a = document.querySelector('.hd a[href^="/login"]');
+      return a ? a.getAttribute("href") : "";
+    });
+    ok("머리말의 로그인 칸도 돌아올 자리를 단다",
+       href.indexOf("next=") > 0 && decodeURIComponent(href).indexOf("/search") > 0, href);
+    await g.p.close();
+  }
+
+  /* ⚠️ /login 에서 /login 으로 제자리걸음하지 않습니다 */
+  {
+    const g = await open("/login", { role:"customer", name:"", signedIn:false }, {});
+    const href = await g.p.evaluate(function(){
+      var a = document.querySelector('.hd a[href^="/login"]');
+      return a ? a.getAttribute("href") : "";
+    });
+    ok("  /login 에서는 제자리걸음을 안 단다", href === "/login", href);
+    await g.p.close();
+  }
+
+  /* 이미 들어와 계시면 **바로** 그리로 보냅니다 */
+  {
+    const g = await open("/login?next=/my", { role:"customer", name:"김손님" }, {});
+    await g.p.waitForTimeout(400);
+    ok("이미 로그인했으면 보시던 자리로 바로 보낸다",
+       new URL(g.p.url()).pathname === "/my", g.p.url());
+    await g.p.close();
+  }
+
+  /* ⚠️⚠️⚠️ **남이 적어 준 바깥 주소로는 안 나갑니다** */
+  for(const bad2 of ["//evil.example/x", "https://evil.example", "/\\evil.example"]){
+    const g = await open("/login?next=" + encodeURIComponent(bad2),
+                         { role:"customer", name:"김손님" }, {});
+    await g.p.waitForTimeout(400);
+    const u = new URL(g.p.url());
+    ok("  바깥 주소(" + bad2 + ")로는 안 나간다",
+       u.host === new URL(base).host && u.pathname === "/login", g.p.url());
+    await g.p.close();
+  }
+
   /* ══ /desk — 문 ═══════════════════════════════════════════════ */
   console.log("\n── /desk 업체가 아니면 한 줄도 안 보입니다");
   let s = await open("/desk", { role:"customer", name:"일반회원" },

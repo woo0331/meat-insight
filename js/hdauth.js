@@ -43,7 +43,10 @@
     wrap.innerHTML = go
       ? '<a class="hd-lk" href="' + go.href + '">' + window.icon("user", 20) +
         '<span class="lbl">' + window.esc(a.name || go.name) + '</span></a>'
-      : '<a class="hd-lk" href="/login">' + window.icon("user", 20) +
+      /* ⚠️ 보시던 자리를 달고 갑니다 — 로그인한 뒤 거기로 돌아옵니다.
+         주소는 window.amLoginUrl() 한 함수에서만 짓습니다. */
+      : '<a class="hd-lk" href="' + window.esc(window.amLoginUrl()) + '">' +
+        window.icon("user", 20) +
         '<span class="lbl">로그인</span></a>';
     slot.insertBefore(wrap, slot.firstChild);
   });

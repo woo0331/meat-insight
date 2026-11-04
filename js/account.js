@@ -57,7 +57,16 @@
   function paintLogin(a){
     var box = el("loginbox"); if(!box) return;
     if(!a.on) return say(box, offNote("로그인"));
+    /* ⚠️ 보시던 자리를 달고 오셨으면 그리로 돌려 보냅니다.
+       ⚠️⚠️ 값은 window.amNextPath() 가 **걸러서** 줍니다 — 남이 적어 준
+       바깥 주소로 튕겨 나가지 않습니다 (열린 전달). */
+    var next = window.amNextPath();
     if(a.signedIn){
+      /* 이미 들어와 계시면 **바로** 보시던 자리로 — 한 번 더 누르게
+         하지 않습니다 (지시서 §3-3 "로그인 후 원래 페이지로 복귀"). */
+      if(next){
+        try{ window.location.replace(next); return; }catch(e){}
+      }
       return say(box,
         "<h2>이미 로그인하셨습니다.</h2>" +
         "<p>" + esc(a.name || "회원") + "님 — " + esc(ROLE_NAME[a.role] || a.role) + "</p>" +
@@ -65,7 +74,11 @@
     }
     say(box,
       "<h2>메일로 받은 링크로 들어옵니다.</h2>" +
-      "<p>비밀번호를 받지 않습니다. 적으신 주소로 한 번 쓰는 링크를 보내 드립니다.</p>" +
+      "<p>비밀번호를 받지 않습니다. 적으신 주소로 한 번 쓰는 링크를 보내 드립니다." +
+      /* ⚠️ 어디로 돌아오는지 **미리 말합니다** — 메일을 열고 한참 뒤에
+         눌러도 어디로 가는지 알고 계시게 합니다. */
+      (next ? " 링크를 누르시면 <b>보시던 화면(" + esc(next) + ")</b>으로 돌아옵니다." : "") +
+      "</p>" +
       '<form id="lf" class="lform"><label class="sr" for="le">이메일</label>' +
       '<input id="le" type="email" name="email" required autocomplete="email" ' +
       'placeholder="메일 주소"><button class="btn btn-pri" type="submit">링크 받기</button>' +
@@ -107,8 +120,8 @@
     if(!a.on)       return say(box, offNote("내 정보"));
     if(!a.signedIn) return say(box,
       "<h2>로그인하시면 내 정보가 보입니다.</h2>" +
-      "<p>메일로 받은 링크 한 번이면 됩니다.</p>" +
-      '<a class="btn btn-pri" href="/login">로그인하기</a>');
+      "<p>메일로 받은 링크 한 번이면 됩니다. 로그인하시면 <b>이 화면으로 바로</b> 돌아옵니다.</p>" +
+      '<a class="btn btn-pri" href="' + esc(window.amLoginUrl()) + '">로그인하기</a>');
 
     var hats = a.hats || [];
     box.hidden = false;
@@ -157,7 +170,7 @@
     if(!a.on)       return say(box, offNote("관리자"));
     if(!a.signedIn) return say(box,
       "<h2>로그인이 필요합니다.</h2>" +
-      '<a class="btn btn-pri" href="/login">로그인하기</a>');
+      '<a class="btn btn-pri" href="' + esc(window.amLoginUrl()) + '">로그인하기</a>');
     if(a.role !== "admin" && a.role !== "staff")
       /* ⚠️ 왜 안 되는지 자세히 적지 않습니다 — 권한 구조를 알려 주는
          글이 됩니다. 손님에게는 여기까지. */

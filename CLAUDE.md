@@ -58,19 +58,23 @@ INTAKE_BUCKET 없음   사진 칸이 아예 안 나옵니다
 | 상담 일정 | `js/desk.js`(업체가 잡음) · `js/myreq.js`(손님이 봄) — 0034 · ⚠️ **알림을 보내지 않습니다** |
 | 수수료 · 광고 · 멤버십 | 업체는 `/desk` 의 `js/deskfee.js` · 관리자는 `/admin` 의 `js/adminbiz.js` (0007 · 0026 · 0036) |
 | 배포 절차 | **`DEPLOY.md`** — 순서 · 확인 · 되돌리기 |
+| 문 여는 날 **준비 상태** | `node tools/check-open.js` — 지금 무엇이 비었고 **그것이 비면 무엇이 조용히 안 되는지**를 갈라서 적어 줍니다 ⚠️ **합격 · 불합격 검사가 아니라 보고**라 `ship.js` 에 **안 넣었습니다** (문 열기 전에는 늘 빨갈 테고, 빨간 것에 익숙해지면 진짜 빨간 것을 놓칩니다) · ⚠️ 빌드가 막는 아홉 칸 목록이 `build.js` 와 어긋나면 그 자리에서 말합니다 |
 | CI | `.github/workflows/ship.yml` — ⚠️ **자동 배포는 꺼 두었습니다** |
 | 주소 · 캐시 · 보안 헤더 | `vercel.json` |
 | 앞 서비스 167개 주소 → **410** | `api/gone.js` + `vercel.json` 의 rewrite |
 
 ### ⚠️ 문 여는 날 같이 해야 하는 것 — 안 하면 **조용히** 안 됩니다
 
+⚠️ **지금 무엇이 비었는지는 `node tools/check-open.js` 가 세어 줍니다.**
+
 ```
 build.js   SITE_LIVE = true      noindex 가 걷히고 robots 가 열립니다
 site.js    사업자 정보 여덟 칸    전자상거래법 제10조 · 지어낼 수 없습니다
 site.js    effective (시행일)     약관 · 방침의 시행일
+site.js    hours · privacyEmail · privacyPhone   ⚠️ 빌드가 **안 막습니다** — 비면 그 줄만 조용히 빠집니다
 site.js    naverVerify · googleVerify   검색엔진 등록 확인
-Vercel     SUPABASE_URL · SUPABASE_ANON_KEY   로그인 · 입점 신청이 그때 켜집니다
-Supabase   db/apply-from-0008.sql 를 붙여 넣기 (0008~0038)
+Vercel     SUPABASE_URL · SUPABASE_ANON_KEY   로그인 · 입점 신청 · 매칭 요청 · **고객센터 문의**가 그때 켜집니다
+Supabase   db/apply-from-0008.sql 를 붙여 넣기 (0008~**0045**)
 ```
 
 ⚠️⚠️ **위 둘째 · 셋째 줄은 이제 빌드가 막습니다** (2026-11-03). `SITE_LIVE`

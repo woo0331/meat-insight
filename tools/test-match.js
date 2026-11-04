@@ -197,6 +197,71 @@ const FAKE = "https://sb-test.supabase.co";
   ok("  열쇠 이름이 DB 가 읽는 것과 같다 (wantProvider)",
      pvSent.length === 1 && Object.prototype.hasOwnProperty.call(pvSent[0].p, "wantProvider"));
 
+  /* ══════════════════════════════════════════════════════════════
+     분류 화면에서 넘어온 길 (4차 지시서 §6 · /match?cat=)
+
+     ⚠️⚠️⚠️ **여기가 "적어 놓고 안 여쭙는" 것을 잡는 자리입니다.**
+     /cat/<key> 화면이 "이 분류 요청에는 이것을 적습니다" 라고 적어
+     놓고, 양식에 그 칸이 없거나 길잡이가 안 바뀌면 그건 **지키지 못할
+     말**입니다 (절대 규칙 5). 목록(AM_ASK)과 양식을 **맞춰 봅니다.**
+     ⚠️ 갯수를 박지 않습니다 — 분류가 늘면 늘어난 대로 돕니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 분류 화면에서 넘어온 길 (/match?cat=)");
+  await p.goto(URL + "?cat=lesson", { waitUntil:"networkidle" });
+  await p.waitForTimeout(300);
+
+  const first = (await p.locator("fieldset.svc legend").first().textContent()) || "";
+  ok("그 분류 묶음이 **맨 앞**에 온다", first.indexOf("골프 레슨") >= 0, first);
+  ok("  다른 분류도 그대로 있다 (빼지 않습니다)",
+     (await p.locator("fieldset.svc").count()) > 1);
+  /* ⚠️ 미리 골라 두지 **않습니다** — 안 원하시는 것까지 업체에 넘어갑니다 */
+  ok("  하위를 미리 고르지는 않는다",
+     (await p.locator('input[name="svc"]:checked').count()) === 0);
+
+  /* 목록과 양식을 맞춰 봅니다 — AM_ASK 를 **그 화면에서 읽어** 씁니다 */
+  const askChk = await p.evaluate(function(){
+    var a = (window.AM_ASK || {}).lesson || [];
+    var ph = (document.getElementById("m-body") || {}).placeholder || "";
+    var out = { n:a.length, miss:[], ph:ph };
+    var FIELD = { region:"#m-region", want:"#m-want",
+                  budget:"#m-bmin", svc:'input[name="svc"]' };
+    a.forEach(function(x){
+      if(x[1] === "body"){
+        if(ph.indexOf(x[0]) < 0) out.miss.push(x[0] + " (길잡이에 없음)");
+      }else if(!document.querySelector(FIELD[x[1]])){
+        out.miss.push(x[0] + " (" + x[1] + " 칸이 없음)");
+      }
+    });
+    return out;
+  });
+  ok("⚠️ 잴 것이 0개면 실패입니다 (목록을 읽기는 했는가)", askChk.n > 0, askChk.n);
+  ok("⚠️⚠️ **적어 놓은 것을 전부 실제로 여쭙는다**",
+     askChk.miss.length === 0, askChk.miss.join(" / "));
+
+  /* ⚠️ 분류마다 **다른** 길잡이여야 합니다 — 같으면 안 바뀐 것입니다 */
+  const phLesson = askChk.ph;
+  await p.goto(URL + "?cat=travel", { waitUntil:"networkidle" });
+  await p.waitForTimeout(300);
+  const phTravel = await p.evaluate(function(){
+    return (document.getElementById("m-body") || {}).placeholder || ""; });
+  ok("길잡이가 분류마다 다르다", phLesson && phTravel && phLesson !== phTravel,
+     phLesson + "  ||  " + phTravel);
+
+  /* ⚠️ 요청할 수 없는 분류(회원끼리 쓰는 자리)로는 보내지 않습니다 */
+  await p.goto(URL + "?cat=matchup", { waitUntil:"networkidle" });
+  await p.waitForTimeout(300);
+  const phNone = await p.evaluate(function(){
+    return { ph:(document.getElementById("m-body") || {}).placeholder || "",
+             ask: !!(window.amAskOf && window.amAskOf("matchup")) }; });
+  ok("받을 자리가 없는 분류는 목록이 비어 있다", phNone.ask === false);
+  ok("  그런 분류로 와도 기본 길잡이로 돈다 (빈 칸이 아닙니다)",
+     phNone.ph.length > 0 && phNone.ph !== phLesson, phNone.ph);
+
+  await p.goto(URL + "?cat=없는분류", { waitUntil:"networkidle" });
+  await p.waitForTimeout(300);
+  ok("모르는 분류면 아무 묶음도 앞으로 안 온다",
+     (await p.locator("fieldset.svc-on").count()) === 0);
+
   console.log("\n── 모르는 업체 id 는 **안 씁니다**");
   await p.goto(URL + "?pv=없는업체", { waitUntil:"networkidle" });
   await p.waitForTimeout(300);

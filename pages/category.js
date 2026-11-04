@@ -22,6 +22,7 @@ var card = require("./_card.js");
 var KIND = {
   provider: {
     what: "이 분류의 일을 하는 업체를 찾고 비교하는 자리입니다.",
+    subs: "업체가 등록되면 아래 항목으로 걸러 볼 수 있게 됩니다. 요청하실 때도 여기서 고르십니다.",
     zeroT:"아직 등록된 업체가 없습니다.",
     zeroD:"문을 열기 전이라 보여 드릴 업체가 없습니다. 없는 업체를 지어내 보여 드리지 않습니다.",
     /* ⚠️ 전에는 "이 분야 업체로 입점하기" 였습니다. 이 구간을 읽는 사람은
@@ -32,18 +33,21 @@ var KIND = {
   },
   trade: {
     what: "회원끼리 직접 사고파는 자리입니다. 골프올인원은 거래 당사자가 아닙니다.",
+    subs: "회원끼리 사고파는 것과, 업체가 해 드리는 것(매입 견적 · 위탁판매)이 같이 있습니다.",
     zeroT:"아직 올라온 매물이 없습니다.",
     zeroD:"첫 매물이 올라오면 여기에 바로 보입니다.",
     cta:  null
   },
   match: {
     what: "함께 라운딩할 사람을 찾는 자리입니다.",
+    subs: "회원이 직접 여는 자리입니다. 여는 기능은 아직 없습니다 — 열리면 아래 항목으로 찾습니다.",
     zeroT:"아직 열린 조인이 없습니다.",
     zeroD:"첫 조인이 열리면 여기에 바로 보입니다.",
     cta:  null
   },
   board: {
     what: "글을 올리고 읽는 자리입니다.",
+    subs: "회원이 직접 올리는 자리입니다. 올리는 기능은 아직 없습니다 — 열리면 아래로 나뉩니다.",
     zeroT:"아직 올라온 글이 없습니다.",
     zeroD:"첫 글이 올라오면 여기에 바로 보입니다.",
     cta:  null
@@ -65,15 +69,51 @@ function crumbs(c){
     '<span aria-current="page">' + esc(c.name) + '</span></nav>';
 }
 
+/* ⚠️ 지시서 §6 — "카테고리 상세 화면의 반복적인 '다른 분류 보기'
+   영역은 간소화한다". 전에는 **다른 아홉 중 다섯**을 아무 기준 없이
+   잘라 늘어놓았습니다 (분류마다 거의 같은 목록이 나왔습니다).
+   지금은 **같은 묶음 안의 형제**만 냅니다 — 레슨 옆에는 연습장 · 피팅이
+   오고, 여행 옆에는 부킹 · 조인이 옵니다. 묶음 전체로 가는 길도 같이
+   둡니다 (열 분류를 다 보시려면 그 길입니다). */
 function related(c){
-  var others = (W.AM_CATS || []).filter(function(x){ return x.key !== c.key; }).slice(0, 5);
-  if(!others.length) return "";
+  var zone = (W.AM_ZONES || []).filter(function(z){
+    return (z.cats || []).indexOf(c.key) >= 0;
+  })[0];
+  if(!zone) return "";
+  var sibs = (W.amZoneCats ? W.amZoneCats(zone) : [])
+    .filter(function(x){ return x.key !== c.key; });
+  if(!sibs.length) return "";
   return '<section class="sec"><div class="wrap">' +
-    '<div class="sec-hd"><h2>다른 분류도 보기</h2></div>' +
-    '<ul class="chips">' + others.map(function(x){
+    '<div class="sec-hd"><h2>' + esc(zone.name) + ' 안의 다른 분류</h2></div>' +
+    '<ul class="chips">' + sibs.map(function(x){
       return '<li><a class="chip chip-go" href="' + esc(W.amCatUrl(x)) + '">' +
         icon(x.icon, 18) + esc(x.name) + '</a></li>';
-    }).join("") + '</ul></div></section>';
+    }).join("") +
+    '<li><a class="chip chip-go" href="/categories#' + esc(zone.key) + '">' +
+      icon("arrow", 18) + '열 분류 전체보기</a></li>' +
+    '</ul></div></section>';
+}
+
+/* ── 이 분류로 요청하면 **무엇을 여쭙는가** (지시서 §6) ──────────────
+   ⚠️⚠️ 분류마다 다릅니다. 목록은 js/data/catalog.js 의 AM_ASK **한 곳**
+   에 있고, 매칭 요청 양식도 같은 줄을 읽습니다 — 두 곳에 적으면 화면은
+   "여쭙는다" 고 하는데 양식에는 그 칸이 없는 꼴이 됩니다.
+   ⚠️ 받을 자리가 없는 분류(조인 · 인력 · 커뮤니티)는 AM_ASK 가 비어
+   있고, 그러면 이 구간이 **줄째 빠집니다** (절대 규칙 2). */
+function asks(c){
+  var a = W.amAskOf ? W.amAskOf(c) : null;
+  if(!a) return "";
+  return '<section class="sec sec-alt"><div class="wrap">' +
+    '<div class="sec-hd"><h2>' + esc(c.name) + ' 요청에 적는 것</h2>' +
+    '<p>이 분류로 매칭 요청을 남기시면 아래를 여쭙습니다. ' +
+    '전부 한 양식에서 한 번에 적으십니다.</p></div>' +
+    '<ul class="asks">' + a.map(function(x){
+      return '<li><span class="asks-n">' + icon("check", 16) + '</span>' +
+        esc(x[0]) + '</li>';
+    }).join("") + '</ul>' +
+    '<p class="asks-go"><a class="btn btn-pt" href="/match?cat=' + esc(c.key) + '">' +
+      icon("match", 20) + esc(c.name) + ' 매칭 요청하기</a></p>' +
+  '</div></section>';
 }
 
 exports.build = function(c){
@@ -91,7 +131,7 @@ exports.build = function(c){
   var subs = items.length
     ? '<section class="sec"><div class="wrap">' +
       '<div class="sec-hd"><h2>' + esc(c.name) + '에서 다루는 것</h2>' +
-      '<p>업체가 등록되면 아래 항목으로 걸러 볼 수 있게 됩니다.</p></div>' +
+      '<p>' + esc(k.subs) + '</p></div>' +
       '<ul class="chips">' + items.map(function(it){
         return '<li><span class="chip">' + esc(it.name) + '</span></li>';
       }).join("") + '</ul></div></section>'
@@ -112,14 +152,19 @@ exports.build = function(c){
           '<div class="sec-hd"><h2>' + esc(c.name) + ' 업체 ' + W.won(list.length) + '곳</h2>' +
           '<p>골프올인원은 통신판매중개자이며 거래 당사자가 아닙니다.</p></div>' +
           card.grid(list) +
-        '</div></section>' + related(c)
+        '</div></section>' + asks(c) + related(c)
     };
   }
 
   var zero = '<section class="sec sec-alt"><div class="wrap"><div class="none">' +
     '<h2>' + esc(k.zeroT) + '</h2>' +
     '<p>' + esc(k.zeroD) + '</p>' +
-    (k.cta
+    /* ⚠️⚠️ **바로 아래 "요청에 적는 것" 구간에 같은 단추가 있으면**
+       한 화면에 매칭 요청 단추가 둘이 됩니다 (지시서 §2 — 중복). 그쪽이
+       무엇을 여쭙는지까지 말해 주므로 그쪽을 남기고 여기는 뺍니다.
+       ⚠️ 그 구간이 없는 분류(조인 · 인력 · 커뮤니티)에서는 여기도 비어
+       있습니다 — 그 분류는 지금 할 수 있는 것이 정말로 없습니다. */
+    (k.cta && !(W.amAskOf && W.amAskOf(c))
       ? '<a class="btn btn-pri" href="' + esc(k.cta[0]) + '">' +
         icon(k.cta[2], 20) + esc(k.cta[1]) + '</a>'
       : '') +
@@ -131,6 +176,6 @@ exports.build = function(c){
     crumbs: [["카테고리 전체보기", "/categories"], [c.name, W.amCatUrl(c)]],
     desc: c.name + " — " + c.lead + ". " + k.what + " " +
           (items.length ? "다루는 것: " + items.map(function(i){ return i.name; }).join(" · ") + "." : ""),
-    body: head + subs + zero + related(c)
+    body: head + subs + zero + asks(c) + related(c)
   };
 };

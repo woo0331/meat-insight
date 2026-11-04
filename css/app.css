@@ -128,6 +128,24 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
   .gnb{ order:3; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;
         padding-bottom:2px; scrollbar-width:none; margin-inline:0; }
   .gnb::-webkit-scrollbar{ display:none; }
+
+/* ⚠️⚠️⚠️ **메뉴 넷 가운데 넷째가 화면 밖에 있었습니다** (2026-11-04).
+   `.gnb` 가 `overflow-x:auto` 라 가로로 밀어서 볼 수는 있는데, 밀 수
+   있다는 표가 하나도 없어서 **고객센터가 폰에서 그냥 없는 메뉴**였습니다 —
+   360 · 390 · 430 **세 폭 모두** 그랬습니다 (네 개가 399px 인데 자리는
+   320~390px). 전수 점검은 **화면 전체**의 가로 밀림만 보므로 영원히
+   초록이었습니다 (상자 **안쪽** 스크롤은 정상이니까요).
+   ⚠️ 고치는 법: 좁은 폭에서는 **두 줄 두 칸**으로 둡니다. 글자를 줄여
+   한 줄에 밀어 넣는 쪽은 폭이 더 좁아지거나 메뉴가 하나 늘면 **또
+   같은 일**이 납니다 — 칸으로 나누면 몇 개가 되든 다 보입니다.
+   ⚠️ `tools/check-screens.js` 가 이제 "머리말 메뉴가 전부 보이는가" 를
+   폭마다 잽니다. */
+@media (max-width: 620px){
+  .gnb{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr));
+        gap:2px 4px; overflow-x:visible; }
+  .gnb > *{ min-width:0; }
+  .gnb a, .gnb button{ justify-content:center; padding-inline:8px; }
+}
   .hd-r{ margin-left:auto; }
   .hd-r .lbl{ display:none; }
 }
@@ -1217,3 +1235,43 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
          color: var(--gold); letter-spacing:.02em; }
 /* 이용 방법 끝의 이용안내 단추 — ⚠️ 가운데로 둡니다 (네 걸음 아래) */
 .steps-go{ margin-top:18px; text-align:center; }
+
+/* ── 분류마다 다르게 여쭙는 것 (4차 지시서 §6) ──────────────────────
+   ⚠️ 체크 아이콘은 장식입니다 — 글이 본문이고 icon() 이 aria-hidden 을
+   답니다. 목록 표시를 지우고 아이콘을 쓰므로 list-style 을 끕니다. */
+.asks{ list-style:none; margin:0; padding:0;
+       display:grid; gap:10px 20px; grid-template-columns: repeat(2, minmax(0,1fr)); }
+@media (max-width: 620px){ .asks{ grid-template-columns: 1fr; } }
+.asks > *{ min-width:0; }
+.asks li{ display:flex; align-items:flex-start; gap:9px;
+          font-size:15px; color: var(--ink); line-height:1.5; }
+.asks-n{ color: var(--grn-text); flex:none; margin-top:3px; display:flex; }
+.asks-go{ margin-top:20px; }
+/* 분류 화면에서 넘어오신 길 — 그 분류 묶음을 맨 앞에 두고 표시합니다 */
+.svc-on{ border-color: var(--grn-line); background: var(--grn-soft); }
+.svc-tag{ font-size:12px; font-weight:700; color: var(--grn-text);
+          background:#fff; border:1px solid var(--grn-line);
+          border-radius: var(--r-pill); padding:2px 9px; margin-left:8px; }
+
+/* ── 고객센터의 네 갈래 (4차 지시서 §9) ───────────────────────── */
+.hnow{ border:1.5px dashed var(--line); background: var(--bg-2);
+       border-radius: var(--r); padding:16px 18px; margin-bottom:18px; }
+.hnow p{ margin:0; font-size:15px; color: var(--ink); }
+.hnow-s{ margin-top:6px !important; font-size:14px !important; color: var(--ink3) !important; }
+.hnow-b{ margin-top:12px !important; }
+.hnow-on{ border-style:solid; border-color: var(--grn-line); background: var(--grn-soft); }
+
+.lanes{ list-style:none; margin:0; padding:0;
+        display:grid; gap:14px; grid-template-columns: repeat(2, minmax(0,1fr)); }
+@media (max-width: 760px){ .lanes{ grid-template-columns: 1fr; } }
+.lanes > *{ min-width:0; }
+.lane{ display:flex; gap:14px; background: var(--surface);
+       border:1.5px solid var(--line); border-radius: var(--r); padding:18px; }
+.lane-ic{ flex:none; width:46px; height:46px; border-radius: var(--r-sm);
+          background: var(--grn-soft); border:1px solid var(--grn-line);
+          display:flex; align-items:center; justify-content:center; color: var(--grn); }
+.lane-t{ flex:1; min-width:0; }
+.lane-t h3{ font-size:16px; }
+.lane-t p{ margin-top:6px; font-size:14px; color: var(--ink3); line-height:1.55; }
+.lane-t .btn{ margin-top:12px; }
+.lanes-n{ margin-top:16px; font-size:14.5px; color: var(--ink3); line-height:1.6; }

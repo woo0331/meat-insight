@@ -115,7 +115,27 @@ var PROBE = function(cfg){
                   t: own.slice(0,24) });
     }
   });
-  return { small: small, taps: taps, cut: cut, text: text, nobg: nobg,
+  /* ⚠️⚠️⚠️ **상자 안쪽으로 밀려난 메뉴** (2026-11-04).
+     머리말 메뉴가 `overflow-x:auto` 라, 넷째(고객센터)가 상자 밖에
+     앉아도 **화면 전체는 가로로 안 밀립니다** — 위의 wide 검사는
+     영원히 초록입니다. 그런데 손님에게는 **없는 메뉴**입니다
+     (360 · 390 · 430 세 폭 모두 그랬습니다).
+     ⚠️ 그래서 담은 상자의 오른쪽 끝을 넘는 메뉴를 따로 셉니다.
+     ⚠️ 갯수를 박지 않습니다 — 메뉴가 늘면 늘어난 대로 봅니다. */
+  var hid = [];
+  (function(){
+    var nav = document.querySelector(".gnb");
+    if(!nav) return;
+    var nb = nav.getBoundingClientRect();
+    [].slice.call(nav.querySelectorAll("a, button")).forEach(function(a){
+      var b = a.getBoundingClientRect();
+      if(b.right > nb.right + 1 || b.left < nb.left - 1 ||
+         b.bottom > nb.bottom + 1 || b.top < nb.top - 1)
+        hid.push((a.textContent || "").trim().slice(0, 12));
+    });
+  })();
+
+  return { small: small, taps: taps, cut: cut, text: text, nobg: nobg, hid: hid,
            wide: document.documentElement.scrollWidth > window.innerWidth + 1,
            sw: document.documentElement.scrollWidth, vw: window.innerWidth };
 };
@@ -155,6 +175,10 @@ function hex(a){ return "#" + a.map(function(n){ return ("0"+Math.round(n).toStr
       var head = routes[i] + "  " + w + "px";
       var probs = [];
       if(r.wide) probs.push("가로 스크롤 " + r.sw + ">" + r.vw);
+      /* ⚠️ "밀면 보인다" 는 보이는 것이 아닙니다 — 밀 수 있다는 표가
+         없으면 손님에게는 없는 메뉴입니다. */
+      if(r.hid && r.hid.length)
+        probs.push("머리말 메뉴가 상자 밖에 있음 " + r.hid.length + "건: " + r.hid.join(" · "));
       if(r.small.length) probs.push(MIN_FONT + "px 미만 " + r.small.length + "건: " + r.small[0]);
       if(r.taps.length)  probs.push("누름 " + MIN_TAP + "px 미만 " + r.taps.length + "건:\n       " +
                                     r.taps.slice(0,6).join("\n       "));

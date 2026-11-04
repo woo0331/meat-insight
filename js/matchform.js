@@ -35,6 +35,22 @@
       return (window.amProvider && window.amProvider(v)) || null;
     }catch(e){ return null; }
   })();
+  /* ⚠️⚠️ **분류 화면에서 넘어오신 길** (지시서 §6). /cat/<key> 의
+     "이 분류 매칭 요청하기" 가 `?cat=<key>` 로 보냅니다. 그 분류의
+     하위를 미리 펼쳐 두고, **더 하실 말씀** 칸의 길잡이도 그 분류의
+     것으로 바꿉니다.
+     ⚠️ 보내는 열쇠와 읽는 열쇠가 다르면 아무 일도 안 일어나는데
+     **에러도 안 납니다** (지난번 ?m=apple 자리입니다) — 그래서
+     tools/test-match.js 가 눌러서 봅니다.
+     ⚠️ 잠그지 않습니다 — 손님이 다른 분류도 같이 고르실 수 있어야 합니다. */
+  var FROMCAT = (function(){
+    try{
+      var v = new URLSearchParams(location.search).get("cat");
+      if(!v) return null;
+      return (window.amCat && window.amCat(v)) || null;
+    }catch(e){ return null; }
+  })();
+
   /* ⚠️ 화면을 연 동안 하나 — 다시 열면 새로 만듭니다 */
   var IDEM = (function(){
     try{
@@ -48,8 +64,23 @@
        둡니다. ⚠️⚠️ 잠그지는 않습니다 — 손님이 다른 것도 같이 요청하실
        수 있어야 합니다 (고를 수 없는 칸은 고장처럼 보입니다). */
     var pre = WANT && window.amProviderSubs ? window.amProviderSubs(WANT) : [];
-    return (window.amCatsForProvider ? window.amCatsForProvider() : []).map(function(c){
-      return '<fieldset class="svc"><legend>' + esc(c.name) + '</legend>' +
+    var cats = (window.amCatsForProvider ? window.amCatsForProvider() : []).slice();
+    /* ⚠️⚠️ 분류 화면에서 오셨으면 **그 분류를 맨 앞으로** 올립니다
+       (지시서 §1 — 세 번 안에 닿게). 하위를 미리 골라 두지는
+       **않습니다** — 무엇을 원하시는지는 손님이 고르십니다. 미리 다
+       골라 두면 안 원하시는 것까지 업체에 넘어갑니다.
+       ⚠️ 빼지 않고 **차례만** 바꿉니다 — 다른 분류도 같이 고르실 수
+       있어야 합니다. */
+    if(FROMCAT){
+      cats.sort(function(a, b){
+        return (b.key === FROMCAT.key ? 1 : 0) - (a.key === FROMCAT.key ? 1 : 0);
+      });
+    }
+    return cats.map(function(c){
+      var first = FROMCAT && c.key === FROMCAT.key;
+      return '<fieldset class="svc' + (first ? " svc-on" : "") + '"><legend>' +
+        esc(c.name) + (first ? ' <span class="svc-tag">여기서 오셨습니다</span>' : "") +
+        '</legend>' +
         window.amCatItemsForProvider(c).map(function(it){
           return '<label class="chk"><input type="checkbox" name="svc" value="' +
             esc(it.key) + '" data-cat="' + esc(c.key) + '"' +
@@ -100,8 +131,15 @@
       '</div>' +
       '<div class="jrow jrow-full">' +
         '<label for="m-body">더 하실 말씀</label>' +
+        /* ⚠️⚠️ **길잡이가 분류마다 바뀝니다** (지시서 §6). 분류 화면이
+           "이것을 여쭙습니다" 라고 적어 놓고 이 칸이 같은 말을 안 하면
+           적어 놓고 **안 여쭙는** 꼴입니다. 말은 AM_ASK 한 곳에서
+           옵니다 (js/data/catalog.js). */
         '<textarea id="m-body" name="body" rows="4" maxlength="2000" ' +
-        'placeholder="구력 · 원하시는 조건 · 궁금한 점을 적어 주세요."></textarea>' +
+        'placeholder="' + esc(
+          (FROMCAT && window.amAskBody && window.amAskBody(FROMCAT)) ||
+          "구력 · 원하시는 조건 · 궁금한 점을 적어 주세요."
+        ) + '"></textarea>' +
       '</div>' +
       '<div class="jrow">' +
         '<label for="m-name">성함 <b>*</b></label>' +

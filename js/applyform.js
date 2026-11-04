@@ -74,6 +74,14 @@
           }).join("") +
         '</select>' +
       '</div>' +
+      /* ⚠️ 사업장 주소 (4차 지시서 §9 의 "업체 가입 정보") — 0045 가
+         provider_apply.addr 을 더했습니다. ⚠️ **필수로 만들지 않습니다**:
+         주소가 없어도 입점 심사는 됩니다 (연락이 먼저입니다). */
+      '<div class="jrow jrow-full">' +
+        '<label for="j-addr">사업장 주소</label>' +
+        '<input id="j-addr" name="addr" maxlength="200" autocomplete="street-address" ' +
+        'placeholder="예: 서울특별시 강남구 테헤란로 1">' +
+      '</div>' +
       '<div class="jrow jrow-full">' +
         '<label>하시는 일 <b>*</b></label>' +
         '<div class="svcs">' + fields() + '</div>' +
@@ -86,8 +94,11 @@
       '<div class="agree">' +
         '<h3>개인정보 수집 · 이용 동의</h3>' +
         '<dl>' +
+          /* ⚠️⚠️ **묻는 칸이 늘면 이 줄도 같이 늘려야 합니다** (제15조
+             제2항). 받으면서 안 적으면 위반이고, 안 받으면서 적으면
+             거짓입니다 — js/data/legal-privacy.js 의 같은 줄도 함께. */
           '<dt>수집 항목</dt><dd>상호 · 담당자 성함 · 연락처 ' +
-            '(적으시면 사업자등록번호 · 이메일 · 영업 지역)</dd>' +
+            '(적으시면 사업자등록번호 · 이메일 · 영업 지역 · 사업장 주소)</dd>' +
           '<dt>이용 목적</dt><dd>입점 심사와 그 결과를 알려 드리기 위한 연락</dd>' +
           '<dt>보유 기간</dt><dd>' + esc(KEEP) + '</dd>' +
         '</dl>' +
@@ -122,6 +133,10 @@
       body: JSON.stringify({ p: {
         company: f.company.value, name: f.name.value, tel: f.tel.value,
         brn: f.brn.value, email: f.email.value, region: f.region.value,
+        /* ⚠️ 칸을 만들어 놓고 **안 보내면** 조용히 비워집니다 — 화면에
+           칸이 있는데 저장은 안 되는 꼴입니다 (작업 기억: 만들어 놓고
+           안 쓰는 칸, 다섯 번 겪었습니다). */
+        addr: f.addr.value,
         note: f.note.value, services: svc, agree_at: new Date().toISOString()
       }})
     }).then(function(r){

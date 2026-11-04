@@ -49,12 +49,19 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="repbox" class="none" hidden></div></div></section>';
 
+  /* 고객센터 문의 (0045 · 4차 지시서 §11) — ⚠️⚠️ 지시서가 "관리자가
+     확인할 수 없는 문의 접수 기능은 완료로 처리하지 않는다" 고 적은
+     바로 그 자리입니다. 문(open_inquiry)만 열고 이 자리를 안 만들면
+     손님이 보낸 문의는 아무도 안 읽는 표에 쌓입니다. */
   body += '<section class="sec"><div class="wrap">' +
+    '<div id="inqadm" class="none" hidden></div></div></section>';
+
+  body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="bizbox" class="none" hidden></div></div></section>';
 
   /* 운영 감사 기록 (4차 지시서 §5) — ⚠️⚠️ 기록은 0004 부터 쌓고
      있었는데 **보는 자리가 0곳**이었습니다. */
-  body += '<section class="sec sec-alt"><div class="wrap">' +
+  body += '<section class="sec"><div class="wrap">' +
     '<div id="logbox" class="none" hidden></div></div></section>';
 
   return {
@@ -65,7 +72,7 @@ exports.build = function(){
          "/js/data/regions.js",
          "/js/data/review.js", "/js/auth.js", "/js/photo.js",
          "/js/account.js", "/js/review.js", "/js/assign.js",
-         "/js/adminpro.js", "/js/adminrep.js", "/js/adminlog.js",
-         "/js/metrics.js", "/js/adminbiz.js"]
+         "/js/adminpro.js", "/js/adminrep.js", "/js/admininq.js",
+         "/js/adminlog.js", "/js/metrics.js", "/js/adminbiz.js"]
   };
 };

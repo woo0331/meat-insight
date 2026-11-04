@@ -120,6 +120,7 @@ const FAKE = "https://sb-test.supabase.co";
   await p.fill("#j-tel", "010-1234-5678");
   /* ⚠️ 이제 고르는 칸입니다 — fill 이 아니라 selectOption 입니다 */
   await p.selectOption("#j-region", "경기");
+  await p.fill("#j-addr", "경기도 성남시 분당구 판교로 1");
   await p.check('input[name="svc"][value="rg-in"]');
   await p.check('input[name="svc"][value="rg-sim"]');
   await p.check("#j-agree");
@@ -130,12 +131,18 @@ const FAKE = "https://sb-test.supabase.co";
   ok("보냈다", !!sent, sent);
   const pl = (sent || {}).p || {};
   ok("문의 칸 이름과 **같은 열쇠**로 보낸다",
-     ["company","name","tel","brn","email","region","note","services","agree_at"]
+     /* ⚠️ 칸을 더하는 날 **이 줄도 같이** 늘립니다 — 안 늘리면 화면에
+        칸은 있는데 안 보내는 것을 아무도 못 잡습니다 (0045 의 addr). */
+     ["company","name","tel","brn","email","region","addr","note","services","agree_at"]
        .every(function(k){ return k in pl; }), Object.keys(pl).join(","));
   ok("고른 것만 보낸다", (pl.services || []).join(",") === "rg-in,rg-sim", pl.services);
   /* ⚠️ 보내는 값이 목록의 **키와 같은 글자**인지 — 자유 입력이던 시절에
      경기 · gyeonggi · 경기도 가 섞여 거르개가 조용히 어긋났습니다. */
   ok("지역을 목록에 있는 글자 그대로 보낸다", pl.region === "경기", pl.region);
+  /* ⚠️⚠️ 칸을 만들어 놓고 **안 보내면** 조용히 비워집니다 — 화면에
+     칸은 있는데 저장은 안 되는 꼴입니다 (4차 지시서 §9 의 사업장 주소). */
+  ok("사업장 주소를 적은 그대로 보낸다",
+     pl.addr === "경기도 성남시 분당구 판교로 1", pl.addr);
   ok("동의 시각이 **누른 순간**이다 (화면을 연 시각이 아니다)",
      new Date(pl.agree_at).getTime() - opened > 900,
      (new Date(pl.agree_at).getTime() - opened) + "ms");

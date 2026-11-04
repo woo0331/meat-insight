@@ -1912,8 +1912,12 @@ function stub(p, who, tables, rpcs, up){
 
   console.log("\n── 로그인 설정 뒤 — 역할마다 갈 곳이 다릅니다");
   s = await open("/", { signedIn:false, role:"", name:"" }, PUB);
+  /* ⚠️⚠️ 전에는 `a[href="/login"]` 으로 **주소를 글자까지 박아** 두었습니다.
+     로그인 링크가 돌아올 자리(`?next=`)를 달기 시작하자 **멀쩡한 화면을
+     실패로** 잡았습니다 — 작업 기억의 "검사에 그날의 이름을 박지 마세요"
+     자리입니다. 재려는 뜻은 "로그인으로 가는 길이 하나 있는가" 입니다. */
   ok("안 하셨으면 **로그인**이 나온다",
-     (await s.p.locator('.hd-auth a[href="/login"]').count()) === 1);
+     (await s.p.locator('.hd-auth a[href^="/login"]').count()) === 1);
   t = (await s.p.textContent(".hd-auth")) || "";
   ok("  글자도 '로그인' 이다", /로그인/.test(t), t);
   await s.p.close();

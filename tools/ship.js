@@ -52,6 +52,7 @@ const STEPS = [
   ["접근성을 잽니다",            ["tools/check-a11y.js"],         false],
   ["입점 신청 양식을 눌러 봅니다", ["tools/test-join.js"],          false],
   ["매칭 요청 양식을 눌러 봅니다",  ["tools/test-match.js"],         false],
+  ["고객센터 문의를 눌러 봅니다",   ["tools/test-help.js"],          false],
   ["관리자 화면을 눌러 봅니다",    ["tools/test-admin.js"],         false],
   /* ⚠️⚠️ 견적 흐름의 세 화면 — 배정 · 견적 제출 · 견적 비교.
      ⚠️ 그 가운데 **화면 쪽 규칙** 둘은 DB 가 안 막습니다 (수락 전

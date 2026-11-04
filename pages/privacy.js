@@ -26,6 +26,11 @@ function list(title, lines, n){
 exports.build = function(){
   var P = W.AM_PRIVACY, eff = W.bizVal("effective");
   var keep = W.bizVal("applyKeep") || "";
+  /* ⚠️ 문의 기록의 보유 기간 (0045) — 양식이 보여 주는 값과 같아야
+     합니다 (js/inquiry.js 도 같은 칸을 읽습니다). */
+  var ikeep = W.bizVal("inquiryKeep") || "";
+  if(!ikeep) console.warn("  ⚠️ /privacy — inquiryKeep(문의 보유 기간)이 비어 " +
+    "있습니다 (js/data/site.js).");
   if(!keep) console.warn("  ⚠️ /privacy — applyKeep(보유 기간)이 비어 있습니다 " +
                          "(개인정보보호법 제15조 제2항 · js/data/site.js).");
 
@@ -42,7 +47,8 @@ exports.build = function(){
   secs += '<section class="doc-a"><h2>' + (++n) + '. 받는 개인정보와 그 까닭</h2>' +
     table(["누구에게서", "받는 것", "쓰는 까닭", "두는 기간"],
       P.collect.map(function(c){
-        return [c.who, c.items, c.why, c.keep.replace("{applyKeep}", keep)];
+        return [c.who, c.items, c.why,
+                c.keep.replace("{applyKeep}", keep).replace("{inquiryKeep}", ikeep)];
       })) + '</section>';
 
   secs += '<section class="doc-a"><h2>' + (++n) + '. 제3자 제공</h2>' +

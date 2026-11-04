@@ -199,7 +199,19 @@ window.AM_PHOTO_SIZES = {
   /* ⚠️⚠️ `sizes` 는 **재서 적은 값**입니다 (360 · 390 · 430 · 768 ·
      1000 · 1280 · 1440px 에서 실제로 그려지는 폭을 쟀습니다).
      넉넉하게 적으면 폰이 PC 용 파일을 받고, 짜게 적으면 뿌옇습니다. */
-  "hero":           { w:2400, h:1200, make:[900, 1200, 1400, 1900], sizes:"100vw" },
+  /* ⚠️⚠️⚠️ **히어로만 webp 를 끄고 있습니다 — 재 보고 끈 것입니다.**
+     webp 가 같은 눈높이에서 jpg 보다 **무거웠습니다** (2026-11-04) —
+       1900px   jpg 294KB  ·  webp 320KB
+       2400px   jpg 307KB  ·  webp 346KB
+     까닭은 **이 원본이 품질 45 로 저장된 jpg** 라는 것입니다. 압축
+     자국(블록)이 이미 그림의 일부가 되어 있어서, webp 가 그 자국까지
+     충실히 담느라 용량을 더 씁니다. 분류 · 띠 사진은 반대로 webp 가
+     **3분의 1**입니다 (띠 1600px: jpg 104KB → webp 29KB).
+     ⚠️ **원본이 좋아지는 날 이 줄을 지우고 다시 재세요.**
+     지우고 `node tools/make-sizes.js` 를 돌리면 넘는지 말해 줍니다
+     (`img/README.md` — 진짜 원본이 들어와야 올라갑니다). */
+  "hero":           { w:2400, h:1200, make:[900, 1200, 1400, 1900], sizes:"100vw",
+                      noWebp:true },
   "match-banner":   { w:2000, h:800,  make:[700, 1100, 1300, 1600],
                       sizes:"(min-width: 1340px) 1216px, 95vw" },
   "partner-banner": { w:2000, h:480,  make:[700, 1100, 1300, 1600],
@@ -235,28 +247,47 @@ window.amPhotoSpec = function(key){
    순간(검사가 씨앗을 넣을 때처럼) srcset 만 옛 사진을 가리켜서
    화면에는 옛 사진이 나오고 src 는 새 사진인 꼴이 됩니다 — 아무
    에러도 없이 **엉뚱한 사진**이 보입니다. */
-window.amPhotoSizeSrc = function(src, w){
+/* 주소에 **내용 값**을 붙입니다 — `vercel.json` 이 사진에 `immutable`
+   1년 캐시를 걸므로, 이것이 없으면 사진을 바꿔도 이미 다녀간 손님은
+   **1년 동안 옛 사진**을 봅니다 (브라우저가 다시 물어보지도 않습니다).
+   ⚠️ 빌드가 `amPhotoVer` 를 끼웁니다. 브라우저에는 없으므로 그대로
+   돌려줍니다 (브라우저가 다시 그리는 자리에는 사진이 없습니다). */
+window.amPhotoUrl = function(u){
+  var v = window.amPhotoVer;
+  return v ? (u + v(u)) : u;
+};
+
+window.amPhotoSizeSrc = function(src, w, ext){
   var base = String(src).split("?")[0].split("/").pop().replace(/\.[a-z]+$/i, "");
-  return "/img/sizes/" + base + "-" + w + ".jpg";
+  return "/img/sizes/" + base + "-" + w + "." + (ext || "jpg");
 };
 
 /* srcset 한 줄 — ⚠️ 마지막은 **원본**입니다 (제일 큰 화면이 쓸 것)
    ⚠️⚠️ 빌드는 `amPhotoHasSize` 를 끼워 **파일이 실제로 있는지** 봅니다
    (없는 파일을 적으면 404 가 나고 브라우저는 조용히 원본을 씁니다 —
    그러면 폰이 PC 용 파일을 받는데 아무도 모릅니다). */
-window.amPhotoSrcset = function(key){
+window.amPhotoSrcset = function(key, ext){
   var sp = window.amPhotoSpec(key);
   var p  = (window.AM_PHOTOS || {})[key];
   if(!sp || !p || !p.src) return "";
-  var has = window.amPhotoHasSize;
-  var out = (sp.make || []).filter(function(w){ return w < sp.w; })
-    .map(function(w){ return window.amPhotoSizeSrc(p.src, w); })
-    .filter(function(u){ return has ? has(u) : true; })
-    .map(function(u, i, L){
-      return u + " " + u.replace(/^.*-(\d+)\.jpg$/, "$1") + "w";
-    });
+  var has  = window.amPhotoHasSize;
+  var webp = (ext === "webp");
+  /* ⚠️ 재 보고 **끈** 자리입니다 (히어로 — 그 칸의 주석에 잰 값이
+     있습니다). `tools/make-sizes.js` 도 같은 칸을 보고 안 찍습니다. */
+  if(webp && sp.noWebp) return "";
+  var ws   = (sp.make || []).filter(function(w){ return w < sp.w; });
+  /* ⚠️⚠️ webp 는 **원본 폭까지** 우리가 찍습니다. `img/mock/` 에는
+     jpg 만 있으므로, 원본 폭을 빼면 큰 화면이 제일 큰 변형(분류는
+     560px)을 늘려 쓰게 되어 **jpg 쪽보다 뿌옇습니다** — 고르는 쪽은
+     브라우저이고 아무 에러도 안 납니다. */
+  if(webp) ws = ws.concat([sp.w]);
+  var out = ws
+    .map(function(w){ return [window.amPhotoSizeSrc(p.src, w, ext), w]; })
+    .filter(function(a){ return has ? has(a[0]) : true; })
+    .map(function(a){ return window.amPhotoUrl(a[0]) + " " + a[1] + "w"; });
   if(!out.length) return "";          /* 변형이 하나도 없으면 안 답니다 */
-  out.push(p.src + " " + sp.w + "w");
+  /* jpg 쪽의 제일 큰 것은 **원본 그 자신**입니다 */
+  if(!webp) out.push(window.amPhotoUrl(p.src) + " " + sp.w + "w");
   return out.join(", ");
 };
 
@@ -271,14 +302,34 @@ window.amPhotoImg = function(key, o){
   o = o || {};
   var sp = window.amPhotoSpec(key) || {};
   var ss = window.amPhotoSrcset(key);
-  return '<img' + (o.cls ? ' class="' + window.esc(o.cls) + '"' : '') +
-    ' src="' + window.esc(p.src) + '"' +
+  var wp = window.amPhotoSrcset(key, "webp");
+  var img = '<img' + (o.cls ? ' class="' + window.esc(o.cls) + '"' : '') +
+    ' src="' + window.esc(window.amPhotoUrl(p.src)) + '"' +
     (ss ? ' srcset="' + window.esc(ss) + '"' : '') +
     (ss && sp.sizes ? ' sizes="' + window.esc(sp.sizes) + '"' : '') +
     ' alt="" aria-hidden="true"' +
     (sp.w ? ' width="' + sp.w + '" height="' + sp.h + '"' : '') +
+    /* ⚠️ 그리는 일을 주 흐름에서 떼어 놓습니다 — 큰 사진이 올 때
+       글이 멈추지 않게 합니다 (지시서 §6). */
+    ' decoding="async"' +
     (o.eager ? ' fetchpriority="high"' : ' loading="lazy"') +
   '>';
+  if(!wp) return img;
+  /* ⚠️⚠️ **`<picture>` 로 감싸면 바깥 상자가 하나 늘어납니다.**
+     `.cat-ph img{height:100%}` 처럼 **부모 높이에 기대는** 자리가
+     있어서, 늘어난 상자가 그 사이에 끼면 사진이 **제 크기로 주저앉습니다**
+     (에러는 없습니다). 그래서 CSS 에 `picture{display:contents}` 를
+     같이 두어 그 상자를 **배치에서 지웁니다** — `<img>` 가 그대로
+     직접 자식으로 남습니다.
+     ⚠️⚠️ 그리고 `.feat-ph > *:not(.feat-bg)` 처럼 **직접 자식**을
+     집는 규칙이 늘어난 `<picture>` 를 집으면 사진이 글 위로 올라옵니다
+     — 그 규칙에서 `picture` 를 같이 빼 두었습니다. 새로 그런 규칙을
+     적으시는 날 이 줄을 다시 읽으세요. */
+  return '<picture>' +
+    '<source type="image/webp" srcset="' + window.esc(wp) + '"' +
+      (sp.sizes ? ' sizes="' + window.esc(sp.sizes) + '"' : '') + '>' +
+    img +
+  '</picture>';
 };
 
 window.amPhoto = function(key){
@@ -299,5 +350,11 @@ window.amHasPhoto = function(key){ return !!window.amPhoto(key); };
   Object.keys(window.AM_PHOTOS || {}).forEach(function(k){
     var ss = window.amPhotoSrcset(k);
     if(ss) window.AM_PHOTOS[k].jpg = ss;
+    /* ⚠️⚠️ webp 도 같이 적습니다 — 적어 두고 안 만들면
+       `tools/check-photos.js` 가 빌드에서 멈춥니다. 이 줄이 없으면
+       webp 가 없는 채로도 조용히 빌드되고, 손님은 jpg 만 받습니다
+       (아무 에러도 없습니다). */
+    var wp = window.amPhotoSrcset(k, "webp");
+    if(wp) window.AM_PHOTOS[k].webp = wp;
   });
 })();

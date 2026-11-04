@@ -246,6 +246,49 @@ const risky = scanEsc(CLIENT.filter(function(f){ return /\.js$/.test(f); })
   .map(function(f){ return [f, fs.readFileSync(path.join(ROOT, f), "utf8")]; }));
 ok("innerHTML 에 esc() 없이 변수를 넣는 줄이 없다", risky.length === 0, risky.join(" / "));
 
+/* ── ⑦ **1년 캐시를 거는 자산에 내용 값이 붙어 있는가** ───────────
+   ⚠️⚠️⚠️ 2026-11-04 에 찾았습니다 — `vercel.json` 이 `/img/**` 에
+   `max-age=31536000, immutable` 을 거는데, **사진 주소에만 내용 값이
+   없었습니다.** `immutable` 은 "바뀌지 않으니 다시 물어보지도 마라"
+   는 뜻이라, 사진을 바꿔 배포해도 **이미 다녀간 손님은 1년 동안 옛
+   사진**을 봅니다. 코드도 배포도 멀쩡하고 화면만 옛날입니다.
+   css · js · 아이콘에는 붙어 있었는데 `amPhotoImg()` 가 주소를 따로
+   짓는 바람에 그 열일곱 자리만 빠졌습니다.
+   ⚠️ 규칙을 `/img/` 로 박지 않습니다 — **vercel.json 에서 immutable 을
+   건 자리**를 읽어 그 자리 전부를 봅니다 (다음에 다른 폴더에 걸어도
+   같이 잡힙니다). */
+console.log("\n── 1년 캐시 + 내용 값");
+const IMMU = (V.headers || []).filter(function(h){
+  return (h.headers || []).some(function(x){
+    return x.key === "Cache-Control" && String(x.value).indexOf("immutable") >= 0;
+  });
+}).map(function(h){
+  try{ return new RegExp("^" + h.source + "$"); }catch(e){ return null; }
+}).filter(Boolean);
+
+const PAGES = FILES.filter(function(f){ return /(^|\/)index\.html$/.test(f); });
+let assetSeen = 0;
+const noVer = [];
+PAGES.forEach(function(f){
+  const html = fs.readFileSync(path.join(ROOT, f), "utf8");
+  /* src · href · srcset 전부 — srcset 은 쉼표로 갈라 봅니다 */
+  (html.match(/(?:src|href|srcset)="[^"]*"/g) || []).forEach(function(at){
+    at.slice(at.indexOf('"') + 1, -1).split(",").forEach(function(part){
+      const u = part.trim().split(/\s+/)[0];
+      if(!u || u.charAt(0) !== "/") return;
+      const bare = u.split("?")[0];
+      if(!IMMU.some(function(re){ return re.test(bare); })) return;
+      assetSeen++;
+      if(u.indexOf("?v=") < 0 && noVer.indexOf(u) < 0) noVer.push(u);
+    });
+  });
+});
+/* ⚠️ "잴 것이 없으면 0 으로 끝나는 검사" 를 만들지 않습니다 */
+ok("1년 캐시가 걸린 자산 주소를 실제로 쟀다", assetSeen > 0, "잰 주소 " + assetSeen + "개");
+ok("1년 캐시가 걸린 자산에 내용 값(?v=)이 전부 붙어 있다",
+   noVer.length === 0,
+   noVer.length ? noVer.length + "곳: " + noVer.slice(0, 4).join(" · ") : "");
+
 if(process.argv.indexOf("--prove") >= 0){
   console.log("\n되돌려 보기 — 일부러 넣어 봅니다");
   const probe = path.join(ROOT, "js", "__probe.js");

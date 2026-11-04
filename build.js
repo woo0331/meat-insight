@@ -41,6 +41,17 @@ global.window.amPhotoHasSize = function(u){
   try{ return fs.existsSync(path.join(__dirname, String(u).replace(/^\//, ""))); }
   catch(e){ return false; }
 };
+/* ⚠️⚠️⚠️ **사진 주소에도 내용 값을 붙입니다** (2026-11-04 에 빠져 있는
+   것을 찾았습니다). `vercel.json` 이 `/img/**` 에 **`immutable` 1년**
+   캐시를 걸어 두는데, 주소가 안 바뀌면 브라우저는 **다시 물어보지도
+   않습니다** — 그래서 사진을 바꿔 배포해도 이미 다녀간 손님은 1년
+   동안 옛 사진을 봅니다. 코드도 배포도 멀쩡하고 화면만 옛날입니다.
+   ⚠️ css · js · 아이콘에는 이미 붙어 있었는데 **사진만** 빠져 있었습니다
+   (`amPhotoImg()` 가 주소를 따로 짓기 때문입니다).
+   ⚠️ `ver()` 는 아래에 적혀 있지만 함수 선언이라 끌어올려집니다. */
+global.window.amPhotoVer = function(u){
+  return ver(String(u).split("?")[0].replace(/^\//, ""));
+};
 
 var W = global.window, esc = W.esc, icon = W.icon;
 
@@ -88,7 +99,8 @@ function header(){
          적으면 브라우저가 그만큼 자리를 잡아 두었다가 그림이 오면
          좁아지면서 **옆의 글자가 밀립니다**(레이아웃 이동). */
       (B.logo
-        ? '<img class="lg-im" src="' + esc(B.logo) + '" alt="" aria-hidden="true" ' +
+        ? '<img class="lg-im" src="' + esc(B.logo + ver(B.logo.replace(/^\//, ""))) +
+                '" alt="" aria-hidden="true" ' +
           'width="34" height="46">'
         : '<span class="lg-mk">' + icon("shield", 38) + '</span>') +
       '<span class="lg-tx">' +
@@ -170,7 +182,8 @@ function footer(){
       '<div class="ft-bd">' +
         '<div class="ft-lg">' +
           (B.logo
-            ? '<img class="lg-im" src="' + esc(B.logo) + '" alt="" aria-hidden="true" ' +
+            ? '<img class="lg-im" src="' + esc(B.logo + ver(B.logo.replace(/^\//, ""))) +
+                '" alt="" aria-hidden="true" ' +
               'width="25" height="34">'
             : '<span class="lg-mk ft-mk">' + icon("shield", 32) + '</span>') +
           '<span class="lg-en" style="font-size:18px">' +

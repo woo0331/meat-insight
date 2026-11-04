@@ -109,9 +109,24 @@ async function makeBright(b, file, w, h){
        (html.match(/__t-zone\.jpg/g) || []).length + " / " + zones.length);
     /* ⚠️⚠️ 배경 장식은 소리로 읽을 것이 없습니다 — alt 를 비우고
        aria-hidden 을 답니다. 비운 alt 를 안 달면 접근성 검사가 멈춥니다. */
+    /* ⚠️⚠️⚠️ **글자를 통째로 박아 두면 안 됩니다 — 또 밟았습니다.**
+       처음에는 `class="hero-bg" src="/img/__t-hero.jpg" alt="" aria-hidden="true"`
+       를 그대로 찾았는데, 2026-11-04 에 사진 주소에 **내용 값**(`?v=`)을
+       붙이자 **멀쩡한 화면이 실패**했습니다 (주소가 길어졌을 뿐입니다).
+       재려는 뜻은 "배경 장식에 alt 가 비어 있고 aria-hidden 이 달렸는가"
+       이지 속성이 어떤 차례로 적혔는가가 아닙니다.
+       ⚠️ 그래서 그 `<img>` 하나를 **잘라내서** 그 안을 봅니다 —
+       차례가 바뀌어도 · 속성이 늘어도 돕니다. */
+    function tagOf(src, cls){
+      const at = src.indexOf('<img class="' + cls + '"');
+      if(at < 0) return "";
+      const end = src.indexOf(">", at);
+      return end < 0 ? "" : src.slice(at, end + 1);
+    }
+    const heroTag = tagOf(html, "hero-bg");
     ok("배경 사진은 aria-hidden 이고 alt 가 비어 있다",
-       html.indexOf('class="hero-bg" src="/img/__t-hero.jpg" alt="" aria-hidden="true"') >= 0,
-       html.slice(html.indexOf("hero-bg") - 20, html.indexOf("hero-bg") + 160));
+       heroTag.indexOf('alt=""') >= 0 && heroTag.indexOf('aria-hidden="true"') >= 0,
+       heroTag || "(hero-bg 를 못 찾았습니다)");
     /* ⚠️ 첫 화면 그림은 미리, 아래 그림은 늦게 */
     ok("히어로는 fetchpriority, 영역 카드는 lazy 다",
        html.indexOf('fetchpriority="high"') >= 0 && html.indexOf('loading="lazy"') >= 0);

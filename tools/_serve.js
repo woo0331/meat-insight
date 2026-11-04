@@ -22,7 +22,19 @@ const TYPE = {
   ".html":"text/html;charset=utf-8", ".css":"text/css;charset=utf-8",
   ".js":"text/javascript;charset=utf-8", ".json":"application/json;charset=utf-8",
   ".svg":"image/svg+xml", ".png":"image/png", ".ico":"image/x-icon",
-  ".xml":"application/xml;charset=utf-8", ".txt":"text/plain;charset=utf-8"
+  ".xml":"application/xml;charset=utf-8", ".txt":"text/plain;charset=utf-8",
+  /* ⚠️⚠️⚠️ **사진 종류가 빠져 있었습니다** (2026-11-04 에 찾았습니다).
+     여기 없는 확장자는 `application/octet-stream` 으로 나갑니다 —
+     브라우저가 내용을 보고 알아서 그려 주므로 **눈으로는 멀쩡**하고,
+     그래서 지금까지 아무 검사도 안 잡았습니다. 그런데 운영(Vercel)은
+     `image/jpeg` · `image/webp` 를 제대로 보냅니다.
+     ⚠️ `<picture>` 의 `<source type="image/webp">` 는 **그 헤더로**
+     갈리는 자리입니다 — 검사 서버가 다른 말을 하면, 여기서는
+     "webp 를 받았다" 가 나와도 운영에서는 다를 수 있습니다 (그 반대도).
+     작업 기억의 "검사 서버가 운영과 같은 헤더를 보내야 합니다" 가
+     바로 이 자리입니다. */
+  ".jpg":"image/jpeg", ".jpeg":"image/jpeg",
+  ".webp":"image/webp", ".avif":"image/avif"
 };
 
 /* vercel.json 의 headers 를 그대로 읽습니다 — 두 곳에 적지 않습니다 */

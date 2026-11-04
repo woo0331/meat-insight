@@ -292,23 +292,12 @@
     });
   }
 
-  /* ── 머리말의 로그인 자리 ─────────────────────────────────────── */
-  function paintHeader(a){
-    var slot = document.querySelector(".hd-r");
-    if(!slot || !a.on) return;          /* ⚠️ 꺼져 있으면 아무것도 안 그립니다 */
-    var first = slot.firstChild;
-    var wrap = document.createElement("span");
-    wrap.className = "hd-auth";
-    wrap.innerHTML = a.signedIn
-      ? '<a class="hd-lk" href="/my">' + icon("user", 20) +
-        '<span class="lbl">' + esc(a.name || "내 정보") + '</span></a>'
-      : '<a class="hd-lk" href="/login">' + icon("user", 20) +
-        '<span class="lbl">로그인</span></a>';
-    slot.insertBefore(wrap, first);
-  }
+  /* ⚠️⚠️ **머리말 자리는 여기서 안 그립니다.** 모든 화면에 실리는
+     `js/hdauth.js` 한 곳에서 그립니다 — 두 곳에 적으면 한쪽만 고쳐서
+     조용히 달라지고, 이 파일이 실린 화면에서는 칸이 **둘**이 됩니다. */
 
   if(!window.amAuthAsk) return;
   amAuthAsk().then(function(a){
-    paintHeader(a); paintLogin(a); paintMy(a); paintAdmin(a);
+    paintLogin(a); paintMy(a); paintAdmin(a);
   });
 })();

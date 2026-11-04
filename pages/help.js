@@ -41,6 +41,16 @@ exports.build = function(){
     '</div></div></section>';
   }
 
+  /* ⚠️⚠️ **머리말 메뉴에서 이용안내를 뺐습니다** (UX 검수 §3) — 읽는
+     글이라 매번 누를 자리가 아닙니다. 대신 **묻는 자리인 여기**와
+     푸터 · 메인의 '이용 방법' 끝에 길을 둡니다. 메뉴에서 빼기만 하고
+     길을 안 남기면 그건 지운 것과 같습니다. */
+  body += '<section class="sec"><div class="wrap"><div class="join">' +
+    '<div class="join-t"><h2>처음이신가요?</h2>' +
+    '<p>손님이 하시는 일 · 업체가 하시는 일 · 알아 두실 것을 한 장에 적어 두었습니다.</p></div>' +
+    '<a class="btn btn-pri" href="/guide">' + icon("info", 20) + '이용안내 보기</a>' +
+  '</div></div></section>';
+
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div class="sec-hd"><h2>자주 묻는 것</h2></div>' +
     '<ul class="notes">' +

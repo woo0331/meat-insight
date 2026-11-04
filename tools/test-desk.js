@@ -1830,6 +1830,65 @@ function stub(p, who, tables, rpcs, up){
      /먼저 알려/.test(t), t.slice(0, 300));
   await s.p.close();
 
+  /* ══ 머리말의 로그인 자리 (UX 검수 §8) ═════════════════════════
+     ⚠️⚠️⚠️ **전에는 `/login` 과 `/my` 가 아무 데서도 안 이어져
+     있었습니다.** 매칭 요청을 넣은 손님이 받은 견적을 보러 갈 길이
+     주소를 직접 치는 것뿐이었습니다 — 화면도 문도 멀쩡한데 거기까지
+     갈 수가 없었습니다. 그래서 **손님이 보는 화면**에서 잽니다. */
+  const PUB = { request:[], quote:[], assignment:[], request_item:[] };
+
+  console.log("\n── 손님 화면의 머리말 — 로그인 설정 전에는 한 글자도 안 그립니다");
+  s = await open("/", { auth:false, signedIn:false }, PUB);
+  ok("⚠️ 로그인이 꺼져 있으면 머리말에 **아무것도 안 나온다**",
+     (await s.p.locator(".hd-auth").count()) === 0);
+  ok("  그래도 화면 에러는 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  await s.p.close();
+
+  console.log("\n── 로그인 설정 뒤 — 역할마다 갈 곳이 다릅니다");
+  s = await open("/", { signedIn:false, role:"", name:"" }, PUB);
+  ok("안 하셨으면 **로그인**이 나온다",
+     (await s.p.locator('.hd-auth a[href="/login"]').count()) === 1);
+  t = (await s.p.textContent(".hd-auth")) || "";
+  ok("  글자도 '로그인' 이다", /로그인/.test(t), t);
+  await s.p.close();
+
+  s = await open("/", { role:"customer", name:"홍길동" }, PUB);
+  ok("손님은 **내 정보**로 간다",
+     (await s.p.locator('.hd-auth a[href="/my"]').count()) === 1);
+  ok("  이름을 적어 준다 (누구로 들어와 있는지 보입니다)",
+     /홍길동/.test((await s.p.textContent(".hd-auth")) || ""));
+  await s.p.close();
+
+  s = await open("/", PRO, PUB);
+  ok("⚠️ 업체는 **업체 작업실**로 간다 (손님 마이페이지가 아닙니다)",
+     (await s.p.locator('.hd-auth a[href="/desk"]').count()) === 1);
+  await s.p.close();
+
+  s = await open("/", { role:"admin", name:"관리자" }, PUB);
+  ok("⚠️ 운영자는 **관리자**로 간다",
+     (await s.p.locator('.hd-auth a[href="/admin"]').count()) === 1);
+  await s.p.close();
+
+  /* ⚠️ 손님이 보는 다른 화면에서도 같아야 합니다 (한 화면에만 달면
+     거기서만 보이고 나머지는 그대로 막다른 길입니다) */
+  for(const route of ["/search", "/match", "/categories", "/help"]){
+    s = await open(route, { role:"customer", name:"홍길동" }, PUB);
+    ok(route + " 에서도 머리말에 내 정보가 있다",
+       (await s.p.locator('.hd-auth a[href="/my"]').count()) === 1);
+    await s.p.close();
+  }
+
+  /* ⚠️⚠️ **두 번 그리지 않습니다** — /login · /my 는 account.js 도
+     싣습니다. 둘이 그리면 머리말 칸이 둘이 됩니다. */
+  for(const route of ["/login", "/my"]){
+    s = await open(route, { role:"customer", name:"홍길동" }, PUB);
+    ok(route + " 에서 머리말 칸이 **하나**다 (두 번 그리지 않습니다)",
+       (await s.p.locator(".hd-auth").count()) === 1,
+       await s.p.locator(".hd-auth").count());
+    await s.p.close();
+  }
+
+
   /* ══ 입점 신청을 **등록 완료**로 (0016 · 4차 §2-3 · §5) ═══════
      ⚠️⚠️⚠️ **이 길이 막혀 있었습니다.** 0016 은 "등록 완료로 두려면
      등록한 업체를 가리켜라" 고 막는데, 화면이 그 업체를 **안 보내고

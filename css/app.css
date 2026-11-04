@@ -167,7 +167,12 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
   background: radial-gradient(60% 100% at 50% 100%, rgba(67,198,83,.18), rgba(67,198,83,0) 70%);
   pointer-events:none;
 }
-.hero-in{ position:relative; z-index:1; padding-block: 74px 30px; max-width:720px; }
+/* ⚠️⚠️⚠️ **아래 여백이 카드와 겹치는 자리입니다.** `.cats-in` 이
+   -42px 로 올라와 히어로를 덮습니다 — 아래 여백이 그보다 작으면
+   **단추가 카드에 가립니다.** 믿음 줄을 뺀 날 30px 만 남아서 실제로
+   단추 위가 잘렸습니다 (찍어 보고 알았습니다 · 도구는 못 잡습니다).
+   ⚠️ 42(겹침) + 단추 아래 숨 쉴 자리 만큼 둡니다. */
+.hero-in{ position:relative; z-index:1; padding-block: 74px 78px; max-width:720px; }
 .hero-kick{
   font-size:13.5px; letter-spacing:.26em; font-weight:700;
   color: var(--pt-on-dark); margin-bottom:16px;
@@ -181,24 +186,14 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 /* 믿음 줄 넷 — ⚠️ 아이콘은 장식, 글이 본문입니다 */
 /* ⚠️ 본문 액자 바깥이라 제 위치를 따로 잡습니다 (히어로의 쌓는 차례
    0 사진 · 1 막 · 2 글 가운데 **글** 쪽입니다). */
-.hero-tr{ position:relative; z-index:2; display:flex; flex-wrap:wrap;
-          gap:14px 34px; padding-bottom:76px; }
-.hero-tr li{
-  display:flex; align-items:center; gap:9px;
-  font-size:14.5px; font-weight:700; color: var(--on-dark-2);
-}
-.hero-tr .ic{ color: var(--pt-on-dark); flex:none; }
 @media (max-width: 760px){
   /* ⚠️ 폰에서는 둘씩 — 넷을 한 줄에 두면 글자가 잘립니다 */
   /* ⚠️⚠️ **아래 여백을 넉넉히 둡니다.** 분류 상자(.cats-in)가 42px
      올라와 히어로를 덮는데, 폰에서는 믿음 줄이 **두 줄**이라 여백이
      모자라면 아랫줄이 그 흰 상자에 가려집니다 (실제로 가려졌습니다 —
      화면을 찍어 보고 알았습니다. 도구는 "가려짐" 을 못 잡습니다). */
-  .hero-tr{ display:grid; grid-template-columns: 1fr 1fr; gap:12px 14px;
-            padding-bottom:78px; }
-  .hero-tr li{ font-size:13.5px; }
-  .hero-tr > *{ min-width:0; }
-}
+              padding-bottom:78px; }
+    }
 /* ⚠️ 사진이 들어올 자리입니다 — 지금은 그라디언트입니다.
    없는 골프장 사진을 만들어 넣지 않습니다 (저작권 · 절대 규칙 1). */
 
@@ -1193,3 +1188,11 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .lg-t table{ font-size:14px; }
 .lg-at{ white-space:nowrap; color: var(--ink3); font-variant-numeric: tabular-nums; }
 .lg-t th[scope="row"]{ white-space:nowrap; }
+
+/* ── 메인 네 카드의 "분류 N가지" (UX 검수 §6) ───────────────────
+   ⚠️ 분류 이름을 여기서 또 적지 않습니다 — 바로 위 격자가 그 말을
+   합니다. 몇 가지가 들어 있는지만 적고, 무엇인지는 눌러서 봅니다. */
+.feat-n{ margin-top:4px; font-size:13px; font-weight:700;
+         color: var(--gold); letter-spacing:.02em; }
+/* 이용 방법 끝의 이용안내 단추 — ⚠️ 가운데로 둡니다 (네 걸음 아래) */
+.steps-go{ margin-top:18px; text-align:center; }

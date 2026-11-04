@@ -26,7 +26,12 @@ var { ratio } = require("./contrast.js");
 var http = require("http"), fs = require("fs"), path = require("path");
 
 var ROOT = path.join(__dirname, "..");
-var WIDTHS = [360, 414, 768, 1440];
+/* ⚠️⚠️ **폰 폭 셋을 다 잽니다** (4차 지시서 §7 · UX 검수 §10) —
+   360(갤럭시 작은 쪽) · 390(아이폰) · 430(큰 쪽). 414 하나로 뭉뚱그리면
+   그 사이에서 깨지는 것을 못 봅니다 — 실제로 **360 에서만** 화면이
+   가로로 밀린 자리가 있었습니다 (가로로 도는 상자 안의 .sr).
+   ⚠️ 768 은 태블릿, 1440 은 PC 입니다. */
+var WIDTHS = [360, 390, 430, 768, 1440];
 var MIN_FONT = 12, MIN_TAP = 40;
 
 /* 서버는 tools/_serve.js 한 곳에 있습니다 — 운영과 같은 헤더를 보냅니다 */

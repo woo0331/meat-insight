@@ -18,8 +18,30 @@ exports.build = function(){
     '하려는 일을 고르시면 그 일을 하는 자리로 이어집니다.</p>' +
   '</div></section>';
 
-  body += '<section class="sec"><div class="wrap"><div class="calist">' +
-    W.AM_CATS.map(function(c){
+  /* ⚠️⚠️ **네 묶음으로 나눕니다** (UX 검수 §2 · §6). 메인의 "무엇을
+     하시려고 오셨나요?" 카드가 `/categories#<묶음>` 으로 옵니다 —
+     묶음을 눌렀는데 분류 하나로 보내면 나머지는 어디 갔는지 알 수
+     없습니다. 그래서 **묶음 설명은 여기 한 곳**에 두고, 메인은
+     이름과 한 줄까지만 둡니다.
+     ⚠️ 묶음에 안 들어간 분류가 생기면 **빠뜨리지 않고** 맨 아래에
+     냅니다 (AM_ZONES 에 적는 것을 잊은 날, 그 분류가 조용히 사라지면
+     아무도 모릅니다). */
+  var seen = {};
+  (W.AM_ZONES || []).forEach(function(z){
+    W.amZoneCats(z).forEach(function(c){ seen[c.key] = 1; });
+  });
+  var rest = W.AM_CATS.filter(function(c){ return !seen[c.key]; });
+
+  function block(id, name, lead, list){
+    return '<section class="sec' + (id === "rest" ? " sec-alt" : "") + '" id="' +
+      esc(id) + '"><div class="wrap">' +
+      '<div class="sec-hd"><h2>' + esc(name) + '</h2>' +
+      (lead ? '<p>' + esc(lead) + '</p>' : '') + '</div>' +
+      '<div class="calist">' + list.map(card).join("") + '</div>' +
+      '</div></section>';
+  }
+
+  function card(c){
       return '<section class="ca">' +
         '<a class="ca-h" href="' + esc(W.amCatUrl(c)) + '">' +
           icon(c.icon, 26) +
@@ -31,7 +53,15 @@ exports.build = function(){
           return '<li>' + esc(it.name) + '</li>';
         }).join("") + '</ul>' +
       '</section>';
-    }).join("") + '</div></div></section>';
+  }
+
+  body += (W.AM_ZONES || []).map(function(z){
+    var cs = W.amZoneCats(z);
+    if(!cs.length) return "";          /* ⚠️ 빈 묶음은 안 그립니다 */
+    return block(z.key, z.name, z.lead, cs);
+  }).join("");
+  if(rest.length)
+    body += block("rest", "그 밖의 분류", null, rest);
 
   var subs = W.AM_CATS.reduce(function(n,c){ return n + W.amCatItems(c).length; }, 0);
   return {

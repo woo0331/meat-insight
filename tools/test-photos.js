@@ -198,10 +198,12 @@ async function makeBright(b, file, w, h){
         return out;
       }
       const hero = document.querySelector(".hero");
-      /* ⚠️⚠️ **믿음 줄을 빠뜨리면 안 됩니다.** 그 넷은 히어로 글
-         상자(.hero-in) **바깥**에서 아래쪽을 가로지릅니다 — 막이
-         왼쪽에서 짙고 오른쪽에서 옅으므로, 오른쪽 끝이 재는 자리에
-         안 들어가면 거기만 아무도 안 재는 곳이 됩니다. */
+      /* ⚠️⚠️ **히어로 **전체**에서 찾습니다** (`.hero-in` 안이 아니라).
+         글 덩이가 상자 바깥에 놓이는 날에도 빠뜨리지 않으려고 그렇게
+         둡니다 — 막이 왼쪽에서 짙고 오른쪽에서 옅으므로, 오른쪽 끝이
+         재는 자리에 안 들어가면 거기만 아무도 안 재는 곳이 됩니다.
+         (2026-11-03 까지는 '믿음 줄' 넷이 그 자리에 있었습니다. UX
+         검수로 뺐지만, 재는 방식은 그대로 두는 것이 맞습니다.) */
       const out = {
         hero: lightText(hero), feat: [] };
       document.querySelectorAll(".feat-ph").forEach(function(c){
@@ -213,8 +215,13 @@ async function makeBright(b, file, w, h){
       window.__amPhShown = false;
       return { hero: strip(out.hero), feat: out.feat.map(strip) };
     });
+    /* ⚠️⚠️⚠️ **갯수를 박지 않습니다.** 여기 `>= 5` 를 박아 두었다가,
+       UX 검수로 히어로의 믿음 줄 넷을 빼자 **멀쩡한 화면이 실패**로
+       잡혔습니다 (작업 기억의 그 줄을 이 파일이 다시 밟았습니다).
+       재려는 뜻은 "잴 자리를 **찾기는 했는가**" 이지 "몇 개인가" 가
+       아닙니다 — 0개면 아무것도 안 재고 초록이 되는 자리입니다. */
     ok("히어로의 글 덩이를 찾았다 (잴 자리가 0개가 아니다)",
-       boxes.hero.length >= 5, boxes.hero.length + "덩이");
+       boxes.hero.length >= 1, boxes.hero.length + "덩이");
 
     /* 한 자리의 **가장 밝은 바탕**을 돌려줍니다 — ⚠️ 평균이 아닙니다.
        평균은 어두운 쪽에 끌려가서 "괜찮다" 고 말합니다. */

@@ -64,8 +64,8 @@
         ? '<p class="mq-w">가린 까닭 — ' + esc(o.hidden_why) + '</p>' : '') +
       (live
         ? '<div class="mq-act">' +
-            '<button type="button" class="btn mq-edit">고치기</button>' +
-            '<button type="button" class="btn mq-drop">내리기</button>' +
+            '<button type="button" class="btn btn-line mq-edit">고치기</button>' +
+            '<button type="button" class="btn btn-line mq-drop">내리기</button>' +
           '</div>'
         : '') +
     '</li>';

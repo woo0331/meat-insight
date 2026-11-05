@@ -120,7 +120,7 @@
                   (ap.state === "applied"
                     ? '<button type="button" class="btn btn-pt mb-ok" data-id="' +
                         esc(ap.id) + '">수락</button>' +
-                      '<button type="button" class="btn mb-no" data-id="' +
+                      '<button type="button" class="btn btn-line mb-no" data-id="' +
                         esc(ap.id) + '">거절</button>'
                     : '') +
                   (ap.state === "accepted"
@@ -132,13 +132,13 @@
             : '<p class="mj-z">아직 들어온 것이 없습니다.</p>') +
           (live
             ? '<div class="mq-act">' +
-                '<button type="button" class="btn mb-edit">고치기</button>' +
-                '<button type="button" class="btn mb-close">마감하기</button>' +
-                '<button type="button" class="btn mb-drop">내리기</button>' +
+                '<button type="button" class="btn btn-line mb-edit">고치기</button>' +
+                '<button type="button" class="btn btn-line mb-close">마감하기</button>' +
+                '<button type="button" class="btn btn-line mb-drop">내리기</button>' +
               '</div>'
             : (j.state === "closed"
                 ? '<div class="mq-act">' +
-                    '<button type="button" class="btn mb-drop">내리기</button>' +
+                    '<button type="button" class="btn btn-line mb-drop">내리기</button>' +
                   '</div>'
                 : '')) +
         '</li>';
@@ -156,7 +156,7 @@
           '<p class="mj-t"><b>' + esc(AST[ap.state] || ap.state) + '</b>' +
             (ap.msg ? ' · ' + esc(ap.msg) : '') + '</p>' +
           (ap.state === "applied"
-            ? '<button type="button" class="btn mb-cancel" data-id="' + esc(ap.id) +
+            ? '<button type="button" class="btn btn-line mb-cancel" data-id="' + esc(ap.id) +
               '">거두기</button>' : '') +
           (ap.state === "accepted"
             ? contactLine("올리신 분 연락처", c && c.post_contact) +

@@ -168,7 +168,7 @@
       consentBox() +
       '<div class="jrow jrow-full">' +
         '<button type="submit" class="btn btn-pt">신청 보내기</button>' +
-        '<button type="button" class="btn jaf-x">그만두기</button>' +
+        '<button type="button" class="btn btn-line jaf-x">그만두기</button>' +
         '<p id="jmsg2" class="jmsg" hidden></p>' +
       '</div>' +
     '</form>';

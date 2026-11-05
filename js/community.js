@@ -61,7 +61,7 @@
         esc(q.who) + ' · ' + esc(when(q.created_at)) + '</p>' +
       '<p class="cqc-b">' + esc(q.body) + '</p>' +
       '<div class="cqc-act">' +
-        '<button type="button" class="btn cqc-open">답변 보기</button>' +
+        '<button type="button" class="btn btn-line cqc-open">답변 보기</button>' +
       '</div>' +
       '<div class="cqc-a" hidden></div>' +
     '</li>';

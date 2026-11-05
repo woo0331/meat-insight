@@ -53,7 +53,9 @@
     /* ⚠️⚠️ `s.who` 는 **DB 가 이미 가린 글자**입니다 (제 줄만 본이름).
        그래도 `esc()` 를 지납니다 — 사람이 적은 이름입니다 (절대 규칙 4). */
     return '<li class="pvst-r' + (s.is_me ? " pvst-me" : "") + '">' +
-      '<span class="pvst-ic">' + icon(s.is_me ? "user" : "people", 17) + '</span>' +
+      /* ⚠️ 한 줄이 **한 사람**입니다 — 동료 줄에 `people`(사람 둘)을
+         쓰면 그 줄이 여러 명처럼 읽힙니다 (찍어 보고 알았습니다). */
+      '<span class="pvst-ic">' + icon("user", 17) + '</span>' +
       '<span class="pvst-n">' + esc(s.who || "회원") + '</span>' +
       (s.is_me ? '<span class="pvst-b">나</span>' : "") +
       /* ⚠️ 없으면 **줄째** 빠집니다 (지어내지 않습니다) */

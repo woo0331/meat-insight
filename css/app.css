@@ -730,7 +730,14 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .jform > .lmsg{ grid-column: 1 / -1; }
 
 /* ── 관리자: 입점 신청 ─────────────────────────────────────── */
-.adm-h{ font-size:20px; margin-bottom:12px; }
+/* ⚠️⚠️ 아이콘을 넣는 자리가 있어 **flex + gap** 입니다 — 전에는 그냥
+   블록이라 `icon()` 이 글자에 **딱 붙어** 나왔습니다 (찍어 보고
+   알았습니다 · 가로로 밀리지도 글자가 작지도 않아 도구는 못 잡습니다).
+   ⚠️ 아이콘이 없는 머리말에는 아무 영향이 없습니다 (칸이 하나입니다). */
+.adm-h{ font-size:20px; margin-bottom:12px;
+        display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+        min-width:0; word-break:keep-all; overflow-wrap:anywhere; }
+.adm-h svg{ flex:none; }
 .apl{ display:grid; gap:12px; }
 .apl-r{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
         padding:16px 18px; }
@@ -1602,7 +1609,12 @@ picture{ display: contents; }
 .pvst-b{ font-size:12.5px; font-weight:700; color: var(--grn-text);
          background: var(--surface); border:1px solid var(--grn-line);
          border-radius: var(--r-pill); padding:1px 8px; flex:none; }
-.pvst-d{ font-size:13.5px; color: var(--ink3); margin-left:auto; }
+/* ⚠️ 전에는 `margin-left:auto` 였습니다 — 단추가 있는 줄(알림)에서는
+   자연스러운데, 담당자 줄에는 단추가 없어 **날짜만 1280px 건너편에**
+   떨어져 읽기 힘들었습니다 (찍어 보고 알았습니다). 이름 옆에 둡니다.
+   ⚠️ 운영자 화면은 줄 끝에 단추가 있으므로 거기서만 밀어 둡니다. */
+.pvst-d{ font-size:13.5px; color: var(--ink3); }
+.pvst-r:has(.pvst-x) .pvst-d{ margin-left:auto; }
 .pvst-bad{ font-size:13.5px; font-weight:600; color: var(--bad-text);
            margin-left:auto; }
 /* ⚠️ 되돌리기 어려운 단추라 글자만 짙은 경고색으로 — **면에 쓰지

@@ -1,0 +1,95 @@
+/* ════════════════════════════════════════════════════════════════════
+   로그인한 뒤에 그려지는 화면을 **흉내로 열어 주는 장치** — 한 곳
+
+   ⚠️⚠️⚠️ **이 파일이 왜 따로 있나.** `/desk` · `/admin` · `/my` 의
+   알맹이는 **로그인한 뒤에** 그려집니다. 그래서 —
+     · `check-screens` · `check-a11y` 는 **빈 상자**만 봅니다 (늘 초록)
+     · `tools/shot.js` 도 **빈 상자**만 찍습니다
+   둘을 쓰려면 `/api/session` 과 Supabase 를 흉내 내야 하고, 그 장치가
+   `tools/test-desk.js` **안에만** 있었습니다.
+
+   ⚠️⚠️ **베껴 쓰면 찍는 화면과 재는 화면이 조용히 달라집니다.** 이
+   저장소가 그 자리를 세 번 겪었습니다 (업체 카드 · 0곳 상자 · 분류
+   화면이 "여쭙는다" 고 적은 것). 그래서 **한 곳**에 두고 재는 쪽
+   (`test-desk.js`)과 찍는 쪽(`shot-desk.js`)이 **같은 함수**를
+   부릅니다 — 한쪽만 고치는 날이 오지 않게.
+
+   ⚠️ 가짜 자료(fixtures)는 **옮기지 않았습니다.** 그것은 규칙이 아니라
+   **값**이고, 재는 쪽은 경계값을, 찍는 쪽은 "사람이 볼 만한 값" 을
+   넣어야 합니다 — 섞으면 둘 다 어색해집니다.
+   ⚠️⚠️ 대신 **그 둘이 같은 길을 지나는지**는 이 파일 하나가 보장합니다
+   (보내는 주소 · 헤더 · 돌려주는 꼴).
+
+   ⚠️ `FAKE` 는 운영 CSP(`connect-src`)가 허락하는 꼴이어야 합니다 —
+   좁히면 검사가 같이 떨어집니다. 그게 맞습니다.
+   ════════════════════════════════════════════════════════════════════ */
+const FAKE = "https://sb-test.supabase.co";
+
+/* ── 가짜 Supabase ────────────────────────────────────────────────── */
+function stub(p, who, tables, rpcs, up){
+  const sent = [];
+  return Promise.all([
+    /* ⚠️⚠️ **버킷이 설정되기 전에는 `{up:false}` 입니다** — 그때는
+       사진 칸이 **아예 안 그려져야** 합니다 (단추도 · "준비 중" 도
+       없습니다). 지금 운영이 그 상태라, 그 길을 먼저 잽니다. */
+    p.route("**/api/upload*", function(r){
+      const u = r.request().url();
+      sent.push({ name:"upload", body: r.request().method() + " " + u });
+      if(!up) return r.fulfill({ status:200, contentType:"application/json",
+                                 body: JSON.stringify({ up:false }) });
+      if(u.indexOf("p=") >= 0)
+        return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ ok:true, url:"https://sb-test.supabase.co/x.jpg",
+                                 mime:"image/jpeg", bytes:1234 }) });
+      /* ⚠️⚠️⚠️ **`pvPhoto` · `pvDoc` 이 빠져 있었습니다** — `up` 만
+         돌려주고 있어서 `js/deskphoto.js`(0051 의 /desk 사진 화면)가
+         **한 번도 안 그려졌습니다.** 그래서 그 화면은 검사 0건인데
+         작업 기억에는 "test-desk 가 누른다" 고 적혀 있었습니다
+         (**없는 안전을 있다고** 읽은 자리입니다). 찍어 보다가
+         그 상자가 안 나와서 알았습니다.
+         ⚠️ 돌려주는 꼴은 `api/upload.js` 의 GET 과 **같아야** 합니다 —
+         거기는 셋을 따로 냅니다 (공개 버킷이 없으면 시설 사진만
+         안 되고 서류는 됩니다). */
+      return r.fulfill({ status:200, contentType:"application/json",
+                         body: JSON.stringify({ up:true,
+                                                pvPhoto:true, pvDoc:true }) });
+    }),
+    p.route("**/api/session", function(r){
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify(Object.assign({ auth:true, signedIn:true, hats:[],
+          conf:{ url:FAKE, anonKey:"k" } }, who)) });
+    }),
+    p.route(FAKE + "/rest/v1/**", function(r){
+      const u = r.request().url();
+      if(u.indexOf("/rpc/") >= 0){
+        const fn = u.split("/rpc/")[1].split("?")[0];
+        sent.push({ name: fn, body: r.request().postData() });
+        /* ⚠️ 문이 무엇을 돌려주는지는 흉내만 냅니다 — 화면은 돌아오면
+           다시 읽습니다 (그 길이 실제로 도는지도 여기서 드러납니다).
+           ⚠️ 돌려줄 것이 있는 문은 `rpcs` 로 줍니다 (지표처럼 **받은
+           것을 그리는** 화면은 그래야 잴 것이 생깁니다). */
+        const v = (rpcs || {})[fn];
+        if(v === null)
+          return r.fulfill({ status:500, contentType:"application/json",
+                             body: JSON.stringify({ message:"못 읽었습니다" }) });
+        return r.fulfill({ status:200, contentType:"application/json",
+                           body: JSON.stringify(v === undefined ? null : v) });
+      }
+      sent.push({ name:"GET", body:u });
+      /* 어느 표를 묻는지는 주소 앞머리로 가릅니다 */
+      const key = Object.keys(tables).filter(function(k){
+        return u.indexOf("/rest/v1/" + k) >= 0;
+      }).sort(function(a, c){ return c.length - a.length; })[0];
+      if(key === undefined)
+        return r.fulfill({ status:200, contentType:"application/json",
+                           headers:{ "content-range":"0-0/0" }, body:"[]" });
+      const v = tables[key];
+      if(v === null)
+        return r.fulfill({ status:500, contentType:"application/json", body:"{}" });
+      return r.fulfill({ status:200, contentType:"application/json",
+        headers:{ "content-range":"0-0/" + (Array.isArray(v) ? v.length : 0) },
+        body: JSON.stringify(v) });
+    })
+  ]).then(function(){ return sent; });
+}
+module.exports = { FAKE: FAKE, stub: stub };

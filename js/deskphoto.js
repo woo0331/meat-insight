@@ -106,8 +106,12 @@
       (mine.length >= MAXN[kind]
         ? '<p class="pvph-z">' + esc(String(MAXN[kind])) +
           '장까지입니다. 먼저 빼 주세요.</p>'
+        /* ⚠️ 머리말은 갈라 두었는데(사진 camera · 서류 shield) **단추만
+           안 갈라서** 증빙서류(PDF) 고르는 자리에도 카메라가 붙어
+           있었습니다 (찍어 보고 알았습니다). */
         : '<label class="pvph-b" for="pvph-f-' + esc(kind) + '">' +
-            icon("camera", 18) + '<span>' + esc(W.name) + ' 고르기</span></label>' +
+            icon(kind === "photo" ? "camera" : "shield", 18) +
+            '<span>' + esc(W.name) + ' 고르기</span></label>' +
           '<input type="file" class="pvph-i" id="pvph-f-' + esc(kind) + '" ' +
             'multiple accept="' + esc(W.accept) + '">') +
       '<ul class="pvph-up" id="pvph-up-' + esc(kind) + '"></ul>' +

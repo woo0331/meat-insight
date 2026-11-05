@@ -58,7 +58,9 @@
   function day(iso){
     var d = new Date(iso);
     if(isNaN(d.getTime())) return "";
-    return d.getFullYear() + "." + (d.getMonth() + 1) + "." + d.getDate();
+    /* ⚠️ 전에는 `2026.11.1` 로 나왔습니다 — 두 자리로 맞춥니다 */
+    function two(n){ return (n < 10 ? "0" : "") + n; }
+    return d.getFullYear() + "." + two(d.getMonth() + 1) + "." + two(d.getDate());
   }
 
   /* 업체마다 담당자를 모읍니다 — ⚠️ **세는 자리는 한 곳**입니다 */
@@ -78,7 +80,10 @@
       /* ⚠️ 없으면 줄째 빠집니다 — 초대로 들어온 분만 있습니다 */
       (s.joined_at
         ? '<span class="pvst-d">' + esc(day(s.joined_at)) + '</span>'
-        : '<span class="pvst-d">SQL 로 이어짐</span>') +
+        /* ⚠️ 전에는 "SQL 로 이어짐" 이라고 적었는데, 그건 **우리가
+           모르는 것을 단정**하는 것입니다 (초대 기록이 없을 뿐입니다).
+           있는 것만 적습니다. */
+        : '<span class="pvst-d">이어진 날 기록 없음</span>') +
       /* ⚠️ `.btn-bad` 는 **없는 이름**입니다 — 처음에 그렇게 적었다가
          `css/app.css` 를 세어 보고 고쳤습니다 (있는 것은 btn-pri ·
          btn-pt · btn-gold · btn-line · btn-deep · btn-ghost · btn-sm).
@@ -97,7 +102,11 @@
     box.hidden = false;
 
     var m = byProvider();
-    var keys = Object.keys(m).sort();
+    /* ⚠️ 전에는 `Object.keys(m).sort()` 라 **업체 id 순**이었습니다
+       (t-fit 이 t-range 앞) — 사람이 읽는 차례는 **상호**입니다. */
+    var keys = Object.keys(m).sort(function(a, b){
+      return String(m[a].name || a).localeCompare(String(m[b].name || b), "ko");
+    });
     /* ⚠️⚠️ **담당자가 0명인 업체** — 0018 이 막으려던 자리입니다.
        ⚠️ 정지 · 거절된 업체는 빼고 봅니다 (고칠 일이 아닙니다). */
     var none = PVS.filter(function(p){

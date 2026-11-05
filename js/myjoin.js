@@ -109,7 +109,7 @@
                   (ap.state === "applied"
                     ? '<button type="button" class="btn btn-pt mj-ok" data-id="' +
                         esc(ap.id) + '">수락</button>' +
-                      '<button type="button" class="btn mj-no-b" data-id="' +
+                      '<button type="button" class="btn btn-line mj-no-b" data-id="' +
                         esc(ap.id) + '">거절</button>'
                     : '') +
                   (ap.state === "accepted"
@@ -120,9 +120,9 @@
               }).join("") + '</ul>'
             : '<p class="mj-z">아직 신청이 없습니다.</p>') +
           (r.state === "open"
-            ? '<button type="button" class="btn mj-edit" data-id="' + esc(r.id) +
+            ? '<button type="button" class="btn btn-line mj-edit" data-id="' + esc(r.id) +
               '">고치기</button>' +
-              '<button type="button" class="btn mj-close" data-id="' + esc(r.id) +
+              '<button type="button" class="btn btn-line mj-close" data-id="' + esc(r.id) +
               '">이 자리 닫기</button>' : '') +
         '</li>';
       }).join("") + '</ul>';
@@ -140,7 +140,7 @@
           '<p class="mj-t"><b>' + esc(ST[ap.state] || ap.state) + '</b>' +
             (ap.msg ? ' · ' + esc(ap.msg) : '') + '</p>' +
           (ap.state === "applied"
-            ? '<button type="button" class="btn mj-cancel" data-id="' + esc(ap.id) +
+            ? '<button type="button" class="btn btn-line mj-cancel" data-id="' + esc(ap.id) +
               '">신청 거두기</button>' : '') +
           (ap.state === "accepted"
             ? contactLine("여신 분 연락처", c && c.room_contact) +

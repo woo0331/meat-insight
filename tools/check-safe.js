@@ -499,5 +499,68 @@ if(process.argv.indexOf("--prove") >= 0){
   if(!got){ process.exit(1); }
 }
 
+/* ── ⑩ **모양이 없는 단추** ───────────────────────────────────────
+   ⚠️⚠️⚠️ `.btn` 만 붙은 단추는 **테두리도 배경도 없습니다**
+   (`border:1.6px solid transparent` · 배경 없음 — 모양은 전부
+   `btn-pri` · `btn-pt` · `btn-gold` · `btn-line` · `btn-deep` ·
+   `btn-ghost` 가 입힙니다). 그래서 손님에게는 **그냥 글자**로 보이고,
+   가로로 밀리지도 · 글자가 작지도 · 누름 높이가 낮지도 않아
+   (`.btn` 이 `min-height` 를 주니까요) **어떤 검사도 안 잡습니다.**
+   ⚠️ 2026-11-05 에 로그인 화면을 **찍어 보다가** 알았습니다 — 조인 ·
+   커뮤니티 · 인력 화면의 단추 **열다섯 개**가 그 꼴이었습니다
+   ("고치기" · "이 자리 닫기" · "거절" · "내리기" …).
+   ⚠️ 그래서 눈으로 본 것을 **도구가 세게** 둡니다 — 다음에 또 납니다. */
+console.log("\n── 모양이 없는 단추 (.btn 만 붙은 자리)");
+const BTNVAR = ["pri", "pt", "gold", "line", "deep", "ghost"];
+function scanBtn(files){
+  const out = [];
+  files.forEach(function(pair){
+    const re = /class="(btn(?: [a-z][a-z0-9-]*)+)"/g;
+    let m;
+    while((m = re.exec(pair[1]))){
+      const parts = m[1].split(" ").filter(Boolean);
+      const has = parts.some(function(x){
+        return x.indexOf("btn-") === 0 && BTNVAR.indexOf(x.slice(4)) >= 0;
+      });
+      if(!has) out.push(pair[0] + " — " + m[1]);
+    }
+  });
+  return out;
+}
+{
+  /* ⚠️ `FILES` 는 이미 저장소 전체를 **상대 경로**로 들고 있습니다 —
+     처음에 `walk()` 를 다시 불렀다가 담을 배열을 안 줘서 그 자리에서
+     터졌습니다 (그 함수는 `out` 을 받아야 합니다). 있는 것을 씁니다. */
+  const srcs = FILES.filter(function(f){
+    return /\.js$/.test(f) &&
+           (f.indexOf("js" + path.sep) === 0 || f.indexOf("pages" + path.sep) === 0);
+  }).map(function(f){
+    return [f, fs.readFileSync(path.join(ROOT, f), "utf8")];
+  });
+  /* ⚠️⚠️ **잰 것이 0개면 실패입니다** — 정규식이 안 맞으면 조용히 초록입니다 */
+  const all = srcs.reduce(function(n, x){
+    return n + (x[1].match(/class="btn[ "]/g) || []).length; }, 0);
+  ok("단추를 실제로 셌다 (0개면 이 검사가 고장입니다)", all >= 10, all + "개");
+  const bare = scanBtn(srcs);
+  ok("⚠️⚠️ **모양이 없는 단추가 없다** (`.btn` 만 붙으면 글자로 보입니다)",
+     bare.length === 0, bare.slice(0, 6).join(" · "));
+}
+
+if(process.argv.indexOf("--prove") >= 0){
+  console.log("\n── 되돌려 보기 ⑩ — 모양 없는 단추를 넣어 봅니다");
+  /* ⚠️ 통과만 하고 아무것도 안 잡는 검사를 또 만들 참이었습니다 —
+     미끼를 **둘** 넣습니다 (변형이 아예 없는 것 · 변형처럼 생겼지만
+     없는 이름인 것). */
+  [["변형이 아예 없는 단추", 'x.innerHTML = \'<button class="btn mj-edit">고치기</button>\';', true],
+   ["없는 변형 이름(`btn-bad`)도 잡는다", 'x.innerHTML = \'<button class="btn btn-bad zz">빼기</button>\';', true],
+   ["제대로 된 단추는 안 잡는다", 'x.innerHTML = \'<button class="btn btn-line zz">고치기</button>\';', false]
+  ].forEach(function(pr){
+    const got = scanBtn([["probe.js", pr[1]]]).length > 0;
+    const good = got === pr[2];
+    if(!good) bad++;
+    console.log("  " + (good ? "O" : "❌ 못 잡습니다") + " " + pr[0]);
+  });
+}
+
 console.log("\n" + ran + "건 중 " + (ran - bad) + "건 통과 · " + bad + "건 실패");
 process.exit(bad ? 1 : 0);

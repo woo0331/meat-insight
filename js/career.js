@@ -167,7 +167,7 @@
                      : '지원을 전하고 올리신 분과 잇기') +
       '<div class="jrow jrow-full">' +
         '<button type="submit" class="btn btn-pt">보내기</button>' +
-        '<button type="button" class="btn jbaf-x">그만두기</button>' +
+        '<button type="button" class="btn btn-line jbaf-x">그만두기</button>' +
         '<p class="jmsg jbafm" hidden></p>' +
       '</div>' +
     '</form>';

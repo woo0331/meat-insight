@@ -37,8 +37,10 @@ function ok(name, cond, got){
 }
 
 /* ⚠️ 운영 CSP(connect-src)가 허락하는 꼴이어야 합니다 — 좁히면 이
-   검사가 같이 떨어집니다. 그게 맞습니다. */
-const FAKE = "https://sb-test.supabase.co";
+   검사가 같이 떨어집니다. 그게 맞습니다.
+   ⚠️⚠️ 주소도 흉내 장치와 **한 곳**에서 옵니다 (두 곳에 적으면 한쪽만
+   고치는 날 흉내가 조용히 안 걸립니다). */
+const { FAKE, stub } = require("./_stub.js");
 
 /* ── 가짜 자료 ──────────────────────────────────────────────────────
    ⚠️⚠️ 손님이 적은 글에 태그를 넣어 둡니다 — 그대로 나가면 사고입니다
@@ -102,63 +104,9 @@ function keepOf(name){
   finally{ if(had) global.window = old; else delete global.window; }
 }
 
-/* ── 가짜 Supabase ────────────────────────────────────────────────── */
-function stub(p, who, tables, rpcs, up){
-  const sent = [];
-  return Promise.all([
-    /* ⚠️⚠️ **버킷이 설정되기 전에는 `{up:false}` 입니다** — 그때는
-       사진 칸이 **아예 안 그려져야** 합니다 (단추도 · "준비 중" 도
-       없습니다). 지금 운영이 그 상태라, 그 길을 먼저 잽니다. */
-    p.route("**/api/upload*", function(r){
-      const u = r.request().url();
-      sent.push({ name:"upload", body: r.request().method() + " " + u });
-      if(!up) return r.fulfill({ status:200, contentType:"application/json",
-                                 body: JSON.stringify({ up:false }) });
-      if(u.indexOf("p=") >= 0)
-        return r.fulfill({ status:200, contentType:"application/json",
-          body: JSON.stringify({ ok:true, url:"https://sb-test.supabase.co/x.jpg",
-                                 mime:"image/jpeg", bytes:1234 }) });
-      return r.fulfill({ status:200, contentType:"application/json",
-                         body: JSON.stringify({ up:true }) });
-    }),
-    p.route("**/api/session", function(r){
-      return r.fulfill({ status:200, contentType:"application/json",
-        body: JSON.stringify(Object.assign({ auth:true, signedIn:true, hats:[],
-          conf:{ url:FAKE, anonKey:"k" } }, who)) });
-    }),
-    p.route(FAKE + "/rest/v1/**", function(r){
-      const u = r.request().url();
-      if(u.indexOf("/rpc/") >= 0){
-        const fn = u.split("/rpc/")[1].split("?")[0];
-        sent.push({ name: fn, body: r.request().postData() });
-        /* ⚠️ 문이 무엇을 돌려주는지는 흉내만 냅니다 — 화면은 돌아오면
-           다시 읽습니다 (그 길이 실제로 도는지도 여기서 드러납니다).
-           ⚠️ 돌려줄 것이 있는 문은 `rpcs` 로 줍니다 (지표처럼 **받은
-           것을 그리는** 화면은 그래야 잴 것이 생깁니다). */
-        const v = (rpcs || {})[fn];
-        if(v === null)
-          return r.fulfill({ status:500, contentType:"application/json",
-                             body: JSON.stringify({ message:"못 읽었습니다" }) });
-        return r.fulfill({ status:200, contentType:"application/json",
-                           body: JSON.stringify(v === undefined ? null : v) });
-      }
-      sent.push({ name:"GET", body:u });
-      /* 어느 표를 묻는지는 주소 앞머리로 가릅니다 */
-      const key = Object.keys(tables).filter(function(k){
-        return u.indexOf("/rest/v1/" + k) >= 0;
-      }).sort(function(a, c){ return c.length - a.length; })[0];
-      if(key === undefined)
-        return r.fulfill({ status:200, contentType:"application/json",
-                           headers:{ "content-range":"0-0/0" }, body:"[]" });
-      const v = tables[key];
-      if(v === null)
-        return r.fulfill({ status:500, contentType:"application/json", body:"{}" });
-      return r.fulfill({ status:200, contentType:"application/json",
-        headers:{ "content-range":"0-0/" + (Array.isArray(v) ? v.length : 0) },
-        body: JSON.stringify(v) });
-    })
-  ]).then(function(){ return sent; });
-}
+/* ── 가짜 Supabase — ⚠️⚠️ **`tools/_stub.js` 한 곳**으로 옮겼습니다.
+   찍는 쪽(`tools/shot-desk.js`)이 같은 장치를 써야 하기 때문입니다 —
+   베껴 두면 **찍는 화면과 재는 화면이 조용히 달라집니다**. */
 
 (async function(){
   const PORT = 8840 + (process.pid % 40);
@@ -3662,6 +3610,106 @@ function stub(p, who, tables, rpcs, up){
       await p2.close();
     }
   }
+
+  /* ══════════════════════════════════════════════════════════════
+     업체가 올리는 시설 사진 · 증빙서류 (0051) — /desk
+
+     ⚠️⚠️⚠️ **이 화면은 검사가 0건이었습니다.** 작업 기억의 검사 표에는
+     "test-desk 가 시설 사진 · 증빙서류를 누른다" 고 적혀 있었는데,
+     흉내 장치가 `/api/upload` 에 `up` 만 돌려주고 `pvPhoto` · `pvDoc`
+     을 안 줘서 **그 상자가 한 번도 안 그려졌습니다** — 즉 **없는
+     안전을 있다고** 읽고 있었습니다. 로그인 화면을 **찍어 보다가**
+     그 상자만 안 나와서 알았습니다 (2026-11-05).
+     ⚠️ 흉내 장치를 `api/upload.js` 의 GET 과 같은 꼴로 고치고, 여기에
+     눌러 보는 자리를 만들었습니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── /desk 시설 사진 · 증빙서류 (0051)");
+  const PH = [
+    { id:"ph-1", provider_id:"t-range", kind:"photo",
+      path:"pv/t-range/photo/a.jpg", mime:"image/jpeg", bytes:420000,
+      caption:"실내 타석" },
+    { id:"ph-2", provider_id:"t-range", kind:"doc",
+      path:"pv/t-range/doc/b.pdf", mime:"application/pdf", bytes:180000,
+      caption:"사업자등록증" }
+  ];
+  const PHT = Object.assign({ assignment:[], request:[], quote:[],
+                              request_item:[] }, { provider_photo: PH });
+
+  /* ⚠️ 업체가 아니면 **한 줄도** 안 그립니다 */
+  s = await open("/desk", { role:"customer", name:"일반회원" }, PHT);
+  ok("⚠️ 업체가 아니면 사진 자리가 **아예 안 그려진다**",
+     (await s.p.locator("#pvphbox .pvph-g").count()) === 0);
+  ok("  ⚠️⚠️ 그 자료를 **읽으러 가지도 않는다**",
+     s.sent.filter(function(x){
+       return (x.body || "").indexOf("provider_photo") >= 0; }).length === 0,
+     JSON.stringify(s.sent.map(function(x){ return x.name; })));
+
+  /* ⚠️⚠️ **버킷이 없으면 칸이 아예 안 나옵니다** (단추도 · "준비 중" 도) */
+  s = await open("/desk", PRO, PHT, {}, false);
+  ok("⚠️⚠️ 버킷이 설정되기 전에는 **아무것도 안 그린다**",
+     await s.p.locator("#pvphbox").evaluate(function(e){
+       return e.hidden && e.innerHTML === ""; }));
+
+  /* ⚠️ `open()` 의 **다섯째 인자**가 "버킷이 켜졌나" 입니다 — 안 넘기면
+     `undefined` 라 꺼진 것으로 읽혀 상자가 안 그려집니다 (처음에 그래서
+     여섯 건이 떨어졌습니다). */
+  s = await open("/desk", PRO, PHT, {}, true);
+  ok("버킷이 켜지면 **갈래 둘**이 나온다 (사진 · 서류)",
+     (await s.p.locator("#pvphbox .pvph-g").count()) === 2,
+     await s.p.locator("#pvphbox .pvph-g").count());
+  t = (await s.p.textContent("#pvphbox")) || "";
+  /* ⚠️⚠️⚠️ **누가 보는지를 그 자리에서 말해야** 합니다 — 섞어 두면
+     사업자등록증을 사진 칸에 올리는 날이 오고, 그러면 공개됩니다. */
+  ok("⚠️⚠️⚠️ 시설 사진은 **손님 누구나 본다**고 그 자리에서 말한다",
+     t.indexOf("손님 누구나 봅니다") >= 0, t.slice(0, 200));
+  ok("⚠️⚠️⚠️ 증빙서류는 **운영자와 이 업체만** 본다고 말한다",
+     t.indexOf("운영자와 이 업체만 봅니다") >= 0, t.slice(0, 300));
+  ok("  ⚠️ 서류를 사진 칸에 올리지 말라고 **맨 위에서** 한 번 더 말한다",
+     /서류를 사진 칸에 올리지 마세요/.test(t), t.slice(0, 260));
+  /* ⚠️ 받는 형식이 갈라져 있는가 — DB 의 check 와 같은 선입니다 */
+  const acc = await s.p.evaluate(function(){
+    return Array.prototype.map.call(document.querySelectorAll("#pvphbox .pvph-i"),
+      function(i){ return i.getAttribute("accept"); });
+  });
+  ok("⚠️ 받는 형식이 **갈래마다 다르다** (사진은 이미지 · 서류는 PDF)",
+     acc.length === 2 && acc[0].indexOf("image/") >= 0 &&
+     acc[0].indexOf("pdf") < 0 && acc[1] === "application/pdf",
+     JSON.stringify(acc));
+  /* ⚠️ 올린 것이 갈래 **제자리에** 들어가는가 */
+  const g = await s.p.evaluate(function(){
+    return Array.prototype.map.call(document.querySelectorAll("#pvphbox .pvph-g"),
+      function(e){ return { kind: e.getAttribute("data-kind"),
+                            txt: e.textContent || "" }; });
+  });
+  ok("올린 사진이 **사진 쪽에** 들어간다",
+     g[0].kind === "photo" && g[0].txt.indexOf("실내 타석") >= 0,
+     JSON.stringify(g.map(function(x){ return x.kind; })));
+  ok("올린 서류가 **서류 쪽에** 들어간다",
+     g[1].kind === "doc" && g[1].txt.indexOf("사업자등록증") >= 0);
+  ok("  ⚠️ 서류가 사진 쪽에 **안 섞인다**",
+     g[0].txt.indexOf("사업자등록증") < 0);
+  /* ⚠️⚠️ 아이콘이 갈래마다 달라야 합니다 — 서류(PDF) 단추에 카메라가
+     붙어 있었습니다 (찍어 보고 알았습니다). */
+  ok("⚠️ 고르는 단추의 아이콘이 **갈래마다 다르다** (서류에 카메라를 안 씁니다)",
+     await s.p.evaluate(function(){
+       const b = document.querySelectorAll("#pvphbox .pvph-b svg");
+       if(b.length !== 2) return false;
+       return b[0].innerHTML !== b[1].innerHTML;
+     }));
+  /* ⚠️ 지어낸 약속을 하지 않습니다 — 올린다고 바로 보이지 않습니다 */
+  ok("⚠️ 올려도 **바로 안 보인다**고 말한다 (자료를 다시 올려야 합니다)",
+     /자료를 다시 올린/.test(t), t.slice(-240));
+  ok("화면 에러가 0건이다", s.errs.length === 0, s.errs.join(" | "));
+
+  /* ⚠️ 0장이면 **0장이라고** 말합니다 (빈 액자를 두지 않습니다) */
+  s = await open("/desk", PRO,
+    Object.assign({ assignment:[], request:[], quote:[], request_item:[] },
+                  { provider_photo: [] }), {}, true);
+  ok("0장이면 **0장이라고 말한다** (빈 액자를 두지 않습니다)",
+     ((await s.p.textContent("#pvphbox")) || "")
+       .indexOf("아직 올리신 것이 없습니다") >= 0);
+  ok("  그래도 올리는 단추는 **있다** (막다른 길로 두지 않습니다)",
+     (await s.p.locator("#pvphbox .pvph-b").count()) === 2);
 
   /* ══════════════════════════════════════════════════════════════
      업체 담당자 명단 · 내보내기 (0052)

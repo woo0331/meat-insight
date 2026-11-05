@@ -160,6 +160,7 @@ try{
   require("./sql/join.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/community.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/career.js")({ ok, psql, psqlFile, denied, allowed });
+  require("./sql/notice.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/price.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/invite.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/profile.js")({ ok, psql, psqlFile, denied, allowed });

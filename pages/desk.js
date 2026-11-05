@@ -18,6 +18,12 @@ exports.build = function(){
     '<p class="pghd-l">배정받은 요청을 보시고, 수락하신 뒤 견적을 내시는 자리입니다.</p>' +
   '</div></section>';
 
+  /* ⚠️⚠️ **알림을 맨 위에 둡니다** (0050) — 업체도 지원 · 신고가
+     들어온 것을 여기서 압니다. 0건이면 줄째 빠집니다.
+     ⚠️ 밖으로는 **안 보냅니다** (문자 · 카톡 · 메일 없음). */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="noticebox" class="none" hidden></div></div></section>';
+
   body += '<section class="sec"><div class="wrap">' +
     '<div id="deskbox" class="none" hidden></div></div></section>';
 
@@ -46,6 +52,6 @@ exports.build = function(){
          "/js/data/regions.js", "/js/data/providers.js",
          "/js/photo.js", "/js/auth.js", "/js/review.js",
          "/js/desk.js", "/js/deskme.js", "/js/deskprice.js",
-         "/js/deskfee.js"]
+         "/js/deskfee.js", "/js/notice.js"]
   };
 };

@@ -1033,6 +1033,42 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .phv-n{ margin-top:8px; font-size:13px; color: var(--ink3);
         word-break: keep-all; overflow-wrap: anywhere; }
 
+/* ── 내부 알림 (0050) ────────────────────────────────────────────
+   ⚠️ `.nt*` — `.jn*`(조인) · `.jb*`(인력) · `.mq*`(내 글)과 갈라 둡니다.
+   ⚠️⚠️ 안 읽은 줄은 **색만으로 가르지 않습니다** — 왼쪽에 굵은 선을
+   같이 둡니다 (색으로만 가르면 색을 못 가리는 분에게는 같은 줄입니다). */
+.nt{ display:grid; gap:10px; }
+.nt-h{ margin:0; font-size:19px; color: var(--ink); }
+.nt-c{ display:inline-block; min-width:22px; padding:1px 7px; border-radius:999px;
+       background: var(--grn-btn); color:#fff; font-size:13.5px;
+       font-weight:700; text-align:center; vertical-align:2px; }
+.nt-n{ margin:0; font-size:13.5px; color: var(--ink3);
+       word-break:keep-all; overflow-wrap:anywhere; }
+.nt-l{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.nt-i{ display:flex; align-items:center; gap:10px; min-width:0;
+       border:1px solid var(--line); border-left:3px solid var(--line);
+       border-radius: var(--r-sm); padding:10px 12px; }
+/* ⚠️ 격자 · flex 칸은 제 내용만큼 벌어집니다 — 긴 제목이 화면을
+   가로로 밀지 않게 min-width 를 0 으로 내려놓습니다. */
+.nt-i > *{ min-width:0; }
+.nt-new{ border-left-color: var(--grn-btn); background: var(--bg-2); }
+.nt-ic{ flex:none; color: var(--grn-text); display:flex; }
+/* ⚠️ 누르는 것은 40px 이상 — 제목도 링크라 높이를 같이 줍니다
+   (문장 한가운데 링크가 아니라 **줄 전체**가 가는 자리입니다). */
+.nt-t{ flex:1 1 auto; min-width:0; display:flex; align-items:center;
+       min-height:40px; font-size:15px; color: var(--ink);
+       word-break:keep-all; overflow-wrap:anywhere; }
+.nt-d{ flex:none; font-size:13px; color: var(--ink3); }
+.nt-r{ flex:none; }
+.nt .btn{ justify-self:start; min-height:40px; }
+
+@media (max-width: 620px){
+  /* ⚠️ 폰에서는 날짜 · 단추를 아래로 내립니다 — 한 줄에 넷을 두면
+     제목이 두 글자가 됩니다 (가로로 미끄러지게 두지 않습니다). */
+  .nt-i{ flex-wrap:wrap; }
+  .nt-t{ flex:1 1 100%; }
+}
+
 /* ── 상담 일정 (2차 지시서 §7) ─────────────────────────────────
    ⚠️ 알림을 보내지 않습니다 — 적어 두고 서로 같은 것을 보는 자리입니다. */
 .ap{ margin-top:14px; background: var(--grn-soft);

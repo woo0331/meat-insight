@@ -19,6 +19,14 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="mybox" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ **알림을 맨 위에 둡니다** (0050) — 들어와서 처음 보는 것이
+     "무엇이 생겼나" 여야 합니다. 0건이면 그 상자가 **줄째 빠집니다**
+     (js/notice.js 가 안 그립니다).
+     ⚠️ 밖으로는 **안 보냅니다** — 그래서 "문자로 알려 드립니다" 같은
+     말을 어디에도 적지 않습니다 (절대 규칙 5). */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="noticebox" class="none" hidden></div></div></section>';
+
   /* ⚠️ 내 요청 · 받은 견적은 **따로 그립니다** (js/myreq.js). 한 파일에
      담으면 로그인 자리 하나를 고칠 때마다 견적 비교가 같이 흔들립니다. */
   body += '<section class="sec sec-alt"><div class="wrap">' +
@@ -48,6 +56,6 @@ exports.build = function(){
          "/js/auth.js", "/js/photo.js", "/js/account.js",
          "/js/review.js", "/js/myreq.js",
          "/js/data/regions.js", "/js/myjoin.js", "/js/mycq.js",
-         "/js/myjob.js"]
+         "/js/myjob.js", "/js/notice.js"]
   };
 };

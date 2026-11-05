@@ -16,6 +16,7 @@
      ⑥ 손님이 적은 글을 화면에 낼 때 esc() 를 거치는가
      ⑦ 1년 캐시를 거는 자산에 내용 값(?v=)이 붙어 있는가
      ⑧ **없는 CSS 변수**를 쓴 자리 (조용히 기본값으로 떨어집니다)
+     ⑨ **없는 아이콘 이름** (그 자리가 조용히 빈 칸이 됩니다)
 
    돌리기   node tools/check-safe.js
             node tools/check-safe.js --prove
@@ -352,6 +353,53 @@ ok("CSS 변수를 실제로 쟀다 (정의 " + DEFINED.size + "개)", usedN > 0,
 ok("없는 CSS 변수를 쓴 자리가 없다", ghost.length === 0,
    ghost.slice(0, 5).join(" · "));
 
+/* ── ⑨ **없는 아이콘 이름** ───────────────────────────────────────
+   ⚠️⚠️⚠️ `window.icon("없는이름")` 은 **빈 글자**를 돌려주고
+   `console.warn` 만 냅니다 — 화면에는 **빈 칸**이 되고, 가로로 밀리지도
+   않고 대비가 낮지도 않아 **어떤 검사도 안 잡습니다** (앞 서비스의
+   "빈 아이콘 자리" 가 그렇게 지나갔습니다).
+   ⚠️ 2026-11-05 에 알림 화면을 쓰면서 `doc` · `warn` 을 적었는데 둘 다
+   `js/components/base.js` 에 **없는 이름**이었습니다.
+   ⚠️ 글자로 적은 것만 봅니다 — 변수로 고르는 자리(`IC[n.kind]`)는
+   따라갈 수 없으므로, 그런 곳은 **기본값까지** 글자로 적어 두세요
+   (`IC[k] || "info"` — 그 기본값은 여기서 잡힙니다). */
+console.log("\n── 없는 아이콘 이름");
+const ICSRC = fs.readFileSync(path.join(ROOT, "js/components/base.js"), "utf8");
+const ICHAVE = new Set();
+{
+  const i = ICSRC.indexOf("AM_ICONS");
+  const blk = i < 0 ? "" : ICSRC.slice(i);
+  (blk.match(/^\s{2,}([A-Za-z0-9_]+)\s*:/gm) || []).forEach(function(m){
+    ICHAVE.add(m.trim().replace(/\s*:$/, ""));
+  });
+}
+let icSeen = 0;
+const icBad = [];
+FILES.filter(function(f){
+  return /\.js$/.test(f) && !/^tools\//.test(f) && f !== "js/components/base.js";
+}).forEach(function(f){
+  const t = fs.readFileSync(path.join(ROOT, f), "utf8");
+  /* ⚠️⚠️ **잡은 덩이에서 이름을 다시 떼어내지 마세요.** 처음에
+     `m.replace(/^.*"/, "")` 로 떼었는데 `.*` 가 **마지막 따옴표까지**
+     먹어서 이름이 전부 **빈 글자**가 됐습니다 — 그러니 다섯 파일이
+     "없는 아이콘" 으로 찍혔습니다. 멀쩡한 코드를 고장이라고 한 것이고,
+     되돌려 보기가 아니라 **실제 실행**이 그것을 보여 주었습니다.
+     ⚠️ 받은 묶음(capture)을 **그대로** 씁니다 (exec 로 돌립니다). */
+  const RE = /\bicon\(\s*"([^"]*)"/g;
+  let mm;
+  while((mm = RE.exec(t)) !== null){
+    const name = mm[1];
+    icSeen++;
+    if(!ICHAVE.has(name) && icBad.indexOf(f + " " + name) < 0)
+      icBad.push(f + " " + name);
+  }
+});
+/* ⚠️ "잴 것이 없으면 0 으로 끝나는 검사" 를 만들지 않습니다 */
+ok("아이콘 이름을 실제로 쟀다 (있는 이름 " + ICHAVE.size + "개)", icSeen > 0,
+   "글자로 적은 자리 " + icSeen + "곳");
+ok("없는 아이콘 이름을 쓴 자리가 없다", icBad.length === 0,
+   icBad.slice(0, 5).join(" · "));
+
 if(process.argv.indexOf("--prove") >= 0){
   console.log("\n되돌려 보기 — 일부러 넣어 봅니다");
   const probe = path.join(ROOT, "js", "__probe.js");
@@ -399,6 +447,24 @@ if(process.argv.indexOf("--prove") >= 0){
      전에 줄머리만 보아서 멀쩡한 변수를 "없다" 고 했습니다. */
   console.log("  한 줄에 여럿 적은 변수를 정의로 읽나: " +
     (defined2.has("--bad-text") && defined2.has("--bad-soft") ? "O" : "❌"));
+
+  /* ⑨ — 없는 아이콘 이름을 지어 써 봅니다 */
+  const icProbe = path.join(ROOT, "js", "__icprobe.js");
+  fs.writeFileSync(icProbe, 'var x = window.icon("이런아이콘은없습니다", 16);\n');
+  let icCaught = false;
+  {
+    const RE2 = /\bicon\(\s*"([^"]*)"/g;
+    const src2 = fs.readFileSync(icProbe, "utf8");
+    let m2;
+    while((m2 = RE2.exec(src2)) !== null){
+      if(!ICHAVE.has(m2[1])) icCaught = true;
+    }
+  }
+  fs.unlinkSync(icProbe);
+  console.log("  없는 아이콘 이름을 지어 쓰니 잡히나: " +
+    (icCaught ? "O" : "❌ 못 잡습니다"));
+  console.log("  있는 이름(check · user)을 정의로 읽나: " +
+    (ICHAVE.has("check") && ICHAVE.has("user") ? "O" : "❌"));
 
   console.log("\n  esc() 검사를 일부러 되돌려 봅니다");
   const probes = [

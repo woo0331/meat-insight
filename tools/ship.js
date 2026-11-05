@@ -39,6 +39,10 @@ const STEPS = [
      그랬습니다 (문을 세 번 고쳤는데 부르는 자리가 0곳). 사람이 손으로
      grep 해서 겨우 찾았으니, 도구가 셉니다. */
   ["문을 부르는 자리가 있나",      ["tools/check-doors.js", "--prove"], false],
+  /* ⚠️ 뒤 번호가 앞 번호를 덮는 짝이 작업 기억에 적힌 대로인가 —
+     목록이 썩으면 **없는 안전을 있다고** 읽습니다 (앞 번호를 다시
+     붙여 넣는 날 조용히 내려갑니다). */
+  ["덮는 짝이 적힌 대로인가",      ["tools/check-chains.js", "--prove"], false],
   ["분류 키가 옛 키와 겹치나",     ["tools/check-keys.js"],         false],
   /* ⚠️ `--prove` 를 붙입니다 — esc() 검사가 함수를 따라가게 고친 뒤로는
      되돌려 보지 않으면 **느슨해진 자리**를 알 수 없습니다. */
@@ -48,7 +52,10 @@ const STEPS = [
   /* ⚠️ 사진 규격 — **파일을 실제로 열어** 잽니다 (0장이면 0장이라고
      말하고 통과로 치지 않습니다). */
   ["사진이 규격에 맞나",          ["tools/check-photos.js"],       false],
-  ["네 폭에서 전부 잽니다",       ["tools/check-screens.js"],      false],
+  /* ⚠️ 이름표에 폭 **갯수를 적지 않습니다.** "네 폭" 이라고 박아
+     두었는데 그 사이 360 · 430 이 늘어 **다섯 폭**이 되어 있었습니다
+     (2026-11-05). 재는 폭은 check-screens.js 의 WIDTHS 한 곳입니다. */
+  ["폭마다 전부 잽니다",          ["tools/check-screens.js"],      false],
   ["접근성을 잽니다",            ["tools/check-a11y.js"],         false],
   ["입점 신청 양식을 눌러 봅니다", ["tools/test-join.js"],          false],
   ["매칭 요청 양식을 눌러 봅니다",  ["tools/test-match.js"],         false],

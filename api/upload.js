@@ -33,7 +33,7 @@
    ════════════════════════════════════════════════════════════════════ */
 
 const { authReady, bearer, session } = require("./_auth.js");
-const { dbReady, dbCallService, dbSelectAs, dbWhy, DB_TIMEOUT } = require("./_db.js");
+const { dbReady, dbCallService, dbSelectAs, dbRpc, dbWhy, DB_TIMEOUT } = require("./_db.js");
 
 /* ⚠️ DB 의 `photo_mime_ok` 와 **같은 목록**이어야 합니다. 한쪽만
    고치면 화면이 받아 놓고 DB 가 거절합니다 (빌드가 맞춰 봅니다). */
@@ -41,13 +41,33 @@ const OK_MIME = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 /* ⚠️ DB 의 `photo_bytes_ok` 와 같은 값 */
 const MAX_BYTES = 8388608;      /* 8MB */
 
-function bucket(){
+function clean(v){
   /* ⚠️ 공백만 있는 값은 **없는 것**으로 봅니다 (Vercel 에 빈 칸을
      저장하면 "넣었다" 고 착각하게 됩니다 — `dbReady()` 와 같은 규칙).
      ⚠️⚠️ 버킷 이름이 **주소에 들어갑니다** — 손님이 보낸 값이 아니고
      환경변수지만, 그래도 쓸 수 있는 글자만 남깁니다. */
-  return String(process.env.INTAKE_BUCKET || "").trim()
-    .replace(/[^A-Za-z0-9_.-]/g, "").slice(0, 60);
+  return String(v || "").trim().replace(/[^A-Za-z0-9_.-]/g, "").slice(0, 60);
+}
+function bucket(){ return clean(process.env.INTAKE_BUCKET); }
+
+/* ⚠️⚠️⚠️ **업체 시설 사진은 다른 버킷입니다 — 공개 버킷입니다.**
+   그 사진은 **정적 HTML 에 `<img>` 로 찍힙니다** (빌드가
+   `pull-providers.js` 의 자료를 읽습니다) — 10분짜리 서명 주소를 거기
+   넣을 수가 없습니다. 그래서 공개라야 합니다.
+   ⚠️⚠️ **증빙서류는 절대 여기 두지 않습니다.** 서류는 비공개
+   버킷(INTAKE_BUCKET)입니다 — 공개 버킷에 들어가면 그건 사업자등록증이
+   인터넷에 올라간 것입니다. */
+function pvBucket(){ return clean(process.env.PROVIDER_BUCKET); }
+
+/* ⚠️⚠️⚠️ **버킷을 고르는 자리는 여기 하나이고, 고르는 기준은 DB 가
+   돌려준 경로입니다.** 화면이 보낸 값으로 고르면 거기가 바로 구멍입니다
+   — "서류인데 photo 라고 적어 보내기" 한 줄이면 사업자등록증이 공개
+   버킷으로 갑니다. 0051 이 경로를 만들고(`pv/<id>/photo/…` ·
+   `pv/<id>/doc/…`) 표의 check 가 그 꼴을 봅니다. */
+function bucketForPath(p){
+  const s2 = String(p || "");
+  if(s2.indexOf("/photo/") > 0) return pvBucket();
+  return bucket();
 }
 function origin(){
   return String(process.env.SUPABASE_URL || "").trim().replace(/\/+$/, "");
@@ -56,13 +76,16 @@ function upReady(){ return !!(dbReady() && bucket()); }
 
 /* 서명된 주소를 Supabase Storage 에 청합니다.
    ⚠️ service key 로 부르고 **그 결과만** 내려보냅니다. */
-async function signed(kind, p){
+async function signed(kind, p, bk){
   const ctl = new AbortController();
   const timer = setTimeout(function(){ ctl.abort(); }, DB_TIMEOUT);
   try{
     /* upload → 올리기 · sign → 보기 */
+    /* ⚠️ 버킷을 **받아서** 씁니다 — 부르는 자리가 경로로 고릅니다 */
+    const bb = bk || bucket();
+    if(!bb) return { ok:false, why:"버킷이 설정되지 않았습니다" };
     const url = origin() + "/storage/v1/object/" +
-      (kind === "upload" ? "upload/sign/" : "sign/") + bucket() + "/" + p;
+      (kind === "upload" ? "upload/sign/" : "sign/") + bb + "/" + p;
     const r = await fetch(url, {
       method:"POST",
       signal: ctl.signal,
@@ -91,10 +114,51 @@ module.exports = async function handler(req, res){
   /* ── 올릴 수 있는 상태인가 · 보기 주소 ──────────────────────────── */
   if(req.method === "GET"){
     const pid = String((req.query && req.query.p) || "").trim();
-    if(!pid)
+    const ppid = String((req.query && req.query.pp) || "").trim();
+    if(!pid && !ppid)
       /* ⚠️ 설정 여부만입니다 — 버킷 이름도 · 주소도 안 돌려줍니다
-         (`api/admin-health.js` 가 "있는지" 만 알려 주는 방식). */
-      return res.status(200).json({ up: upReady() });
+         (`api/admin-health.js` 가 "있는지" 만 알려 주는 방식).
+         ⚠️⚠️ 업체 쪽은 **따로** 말합니다 — 공개 버킷이 없으면 시설
+         사진만 안 되고 서류는 됩니다 (둘을 한 칸으로 묶으면 화면이
+         둘 다 안 그리거나 둘 다 그립니다). */
+      return res.status(200).json({ up: upReady(),
+        pvPhoto: !!(dbReady() && pvBucket()), pvDoc: upReady() });
+
+    /* ── 업체가 올린 파일 하나 보기 ───────────────────────────────
+       ⚠️⚠️ **볼 수 있는지는 RLS 가 정합니다** — 그 사람의 토큰으로
+       읽고 안 보이면 거기서 끝입니다 (0051 은 그 업체와 운영자에게만
+       줄을 보여 줍니다). 여기서 역할을 또 판단하면 두 곳이 어긋나고,
+       어긋나면 화면이 안 내는 길로 서버가 통과시킵니다. */
+    if(ppid){
+      if(!dbReady() || !authReady()) return res.status(200).json({ up:false });
+      if(!/^[0-9a-fA-F-]{36}$/.test(ppid))
+        return res.status(400).json({ error:"파일을 찾을 수 없습니다" });
+      if(!bearer(req)) return res.status(401).json({ error:"로그인이 필요합니다" });
+      const s2 = await session(req);
+      if(!s2.ok){
+        if(s2.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+        return res.status(401).json({ error:"로그인이 필요합니다" });
+      }
+      const q2 = await dbSelectAs(s2.token, "provider_photo",
+        "?select=" + encodeURIComponent("id,path,mime,bytes,kind") +
+        "&id=eq." + encodeURIComponent(ppid) + "&limit=1");
+      if(!q2.ok){
+        if(q2.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+        console.warn("[upload] " + dbWhy(q2.why));
+        return res.status(502).json({ error:"지금 불러오지 못했습니다" });
+      }
+      const row2 = q2.rows[0];
+      /* ⚠️ 안 보이는 것과 없는 것을 **갈라서 말하지 않습니다** */
+      if(!row2) return res.status(404).json({ error:"파일을 찾을 수 없습니다" });
+      /* ⚠️⚠️ 버킷은 **경로로** 고릅니다 (화면이 보낸 값이 아닙니다) */
+      const sg2 = await signed("sign", row2.path, bucketForPath(row2.path));
+      if(!sg2.ok){
+        console.warn("[upload] " + sg2.why);
+        return res.status(502).json({ error:"지금 불러오지 못했습니다" });
+      }
+      return res.status(200).json({ ok:true, url:sg2.url,
+        mime:row2.mime, bytes:row2.bytes });
+    }
 
     if(!upReady())      return res.status(200).json({ up:false });
     if(!authReady())    return res.status(200).json({ up:false });
@@ -124,7 +188,7 @@ module.exports = async function handler(req, res){
        주면 id 를 넣어 가며 있는지 확인할 수 있습니다. */
     if(!row) return res.status(404).json({ error:"사진을 찾을 수 없습니다" });
 
-    const sg = await signed("sign", row.path);
+    const sg = await signed("sign", row.path, bucket());
     if(!sg.ok){
       console.warn("[upload] " + sg.why);
       return res.status(502).json({ error:"지금 불러오지 못했습니다" });
@@ -137,6 +201,69 @@ module.exports = async function handler(req, res){
     return res.status(405).json({ error:"GET 또는 POST 로 보내 주세요" });
   }
 
+  let b0 = req.body;
+  if(typeof b0 === "string"){ try{ b0 = JSON.parse(b0); }catch(e){ b0 = null; } }
+
+  /* ══════════════════════════════════════════════════════════════
+     업체가 올리는 시설 사진 · 증빙서류 (0051)
+
+     ⚠️⚠️ **로그인한 업체 담당자가 직접 부릅니다** — 0011 과 다릅니다.
+     거기는 올리시는 분이 로그인하지 않은 상태라 service key 로 번호 ·
+     연락처를 확인했지만, 여기는 **토큰으로 누구인지 압니다.** 그래서
+     그 사람의 토큰으로 문을 부르고, 업체가 아니면 DB 가 거절합니다
+     (역할을 여기서 또 판단하면 두 곳이 어긋납니다).
+     ⚠️⚠️⚠️ **버킷은 DB 가 돌려준 경로로 고릅니다** — 화면이 보낸
+     `kind` 로 고르면 "서류인데 photo 라고 적어 보내기" 한 줄에
+     사업자등록증이 공개 버킷으로 갑니다.
+     ══════════════════════════════════════════════════════════════ */
+  if(b0 && b0.pv === true){
+    if(!dbReady() || !authReady()){
+      console.warn("[upload] SUPABASE_* 가 없습니다");
+      return res.status(503).json({ error:"지금은 올릴 수 없습니다" });
+    }
+    const kind = String(b0.kind || "").trim();
+    if(kind !== "photo" && kind !== "doc")
+      return res.status(400).json({ error:"사진인지 서류인지 골라 주세요" });
+    /* ⚠️ 갈래마다 **버킷이 다르고**, 없으면 그 갈래만 막습니다 */
+    const want = kind === "photo" ? pvBucket() : bucket();
+    if(!want){
+      console.warn("[upload] " + (kind === "photo" ? "PROVIDER_BUCKET" : "INTAKE_BUCKET") +
+                   " 이 없습니다");
+      return res.status(503).json({ error:"지금은 올릴 수 없습니다" });
+    }
+    if(!bearer(req)) return res.status(401).json({ error:"로그인이 필요합니다" });
+    const sp = await session(req);
+    if(!sp.ok){
+      if(sp.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      return res.status(401).json({ error:"로그인이 필요합니다" });
+    }
+    const rp = await dbRpc(sp.token, "claim_provider_photo", { p: {
+      kind: kind, mime: String(b0.mime || "").trim().toLowerCase(),
+      bytes: String(Number(b0.bytes) || 0), caption: String(b0.caption || "") } });
+    if(!rp.ok){
+      if(rp.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      console.warn("[upload] pv claim — " + dbWhy(rp.why));
+      /* ⚠️ DB 가 거절한 **그 말**을 그대로 보여 줍니다 */
+      const m2 = String(rp.why || "").match(/"message"\s*:\s*"([^"]{1,200})"/);
+      return res.status(400).json({ error: m2 ? m2[1] : "지금 올리지 못했습니다" });
+    }
+    const gp = rp.data && (Array.isArray(rp.data) ? rp.data[0] : rp.data);
+    const pp = gp && gp.path;
+    if(!pp){
+      console.warn("[upload] pv claim 이 경로를 안 돌려줬습니다");
+      return res.status(502).json({ error:"지금 올리지 못했습니다" });
+    }
+    /* ⚠️⚠️ **경로로** 버킷을 고릅니다 (보낸 kind 가 아닙니다) */
+    const sgp = await signed("upload", pp, bucketForPath(pp));
+    if(!sgp.ok){
+      if(sgp.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      console.warn("[upload] " + sgp.why);
+      /* ⚠️ 자리는 이미 적혔습니다 — 업체가 제 화면에서 뺄 수 있습니다 */
+      return res.status(502).json({ error:"지금 올리지 못했습니다. 잠시 뒤 다시 눌러 주세요" });
+    }
+    return res.status(200).json({ ok:true, url:sgp.url, id:gp.id });
+  }
+
   /* ── 올릴 자리 하나 ─────────────────────────────────────────────── */
   if(!upReady()){
     /* 운영자에게만 까닭을 적습니다 (절대 규칙 3) */
@@ -144,8 +271,7 @@ module.exports = async function handler(req, res){
     return res.status(503).json({ error:"지금은 사진을 올릴 수 없습니다" });
   }
 
-  let b = req.body;
-  if(typeof b === "string"){ try{ b = JSON.parse(b); }catch(e){ b = null; } }
+  const b = b0;
   if(!b || typeof b !== "object")
     return res.status(400).json({ error:"내용을 읽을 수 없습니다" });
 
@@ -185,7 +311,7 @@ module.exports = async function handler(req, res){
     return res.status(502).json({ error:"지금 올리지 못했습니다" });
   }
 
-  const sg = await signed("upload", p);
+  const sg = await signed("upload", p, bucket());
   if(!sg.ok){
     if(sg.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
     console.warn("[upload] " + sg.why);
@@ -206,3 +332,9 @@ module.exports = async function handler(req, res){
 module.exports.OK_MIME   = OK_MIME;
 module.exports.MAX_BYTES = MAX_BYTES;
 module.exports.bucket    = bucket;
+/* ⚠️ 업체 시설 사진 버킷은 **공개**입니다 — `check-open.js` 가 그것이
+   설정됐는지 세고, 그 칸이 비면 시설 사진만 안 열립니다 (서류는 됩니다). */
+module.exports.pvBucket  = pvBucket;
+/* ⚠️⚠️ **버킷을 고르는 규칙을 검사가 직접 눌러 봅니다** — 화면이 보낸
+   값이 아니라 경로로 고르는지가 여기서 갈립니다. */
+module.exports.bucketForPath = bucketForPath;

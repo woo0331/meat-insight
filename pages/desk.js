@@ -41,6 +41,14 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="mebox" class="none" hidden></div></div></section>';
 
+  /* 사진 · 증빙서류 (0051) — ⚠️⚠️ **시설 사진은 손님 누구나 보고,
+     증빙서류는 운영자와 이 업체만** 봅니다. 둘을 한 자리에 두되 화면이
+     갈라서 말합니다 — 섞어 두면 사업자등록증을 사진 칸에 올리는 날이
+     오고, 그러면 그게 공개됩니다.
+     ⚠️ 버킷이 없으면 그 칸이 **아예 안 나옵니다** (갈래마다 따로). */
+  body += '<section class="sec sec-alt"><div class="wrap">' +
+    '<div id="pvphbox" class="none" hidden></div></div></section>';
+
   /* 가격 등록 (0042) — ⚠️⚠️ 이 자리가 없으면 업체는 가격을 올릴 길이
      없고, 업체찾기의 가격 줄은 **영원히 비어 있습니다.** */
   body += '<section class="sec sec-alt"><div class="wrap">' +
@@ -57,6 +65,6 @@ exports.build = function(){
          "/js/data/regions.js", "/js/data/providers.js",
          "/js/photo.js", "/js/auth.js", "/js/review.js",
          "/js/desk.js", "/js/deskme.js", "/js/deskprice.js",
-         "/js/deskfee.js", "/js/notice.js"]
+         "/js/deskfee.js", "/js/deskphoto.js", "/js/notice.js"]
   };
 };

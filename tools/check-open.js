@@ -145,8 +145,18 @@ console.log("   □ Supabase → Authentication 에서 사장님 UID 로 관리�
 console.log("   □ Vercel → SUPABASE_URL · SUPABASE_ANON_KEY 넣고 **다시 배포**");
 console.log("     · 넣는 순간 로그인 · 입점 신청 · 매칭 요청 · **고객센터 문의**가 켜집니다");
 console.log("     · ⚠️ Vercel 은 떠 있는 함수에 값을 밀어 넣지 않습니다 — 다시 배포해야 켜집니다");
-console.log("   □ (사진 · 서류를 받으시려면) Supabase Storage 에 **비공개** 버킷 + INTAKE_BUCKET");
+console.log("   □ (손님 사진 · 업체 증빙서류) Supabase Storage 에 **비공개** 버킷 + INTAKE_BUCKET");
 console.log("     · ⚠️ 안 넣으시면 사진 칸이 **아예 안 나옵니다** (그게 맞습니다)");
+/* ⚠️⚠️⚠️ **업체 시설 사진은 공개 버킷입니다.** 그 사진은 손님 화면에
+   정적 HTML 의 `<img>` 로 찍히므로(빌드가 pull-providers 의 자료를
+   읽습니다) 10분짜리 서명 주소를 쓸 수가 없습니다 — 공개라야 합니다.
+   ⚠️ **증빙서류는 여기 안 들어갑니다** — 서버가 DB 가 돌려준 경로로
+   버킷을 고릅니다 (api/upload.js 의 bucketForPath). */
+console.log("   □ (업체 **시설 사진**) Storage 에 **공개** 버킷 + PROVIDER_BUCKET");
+console.log("     · ⚠️⚠️ 이 버킷은 **공개입니다** — 주소를 아는 사람은 누구나 봅니다.");
+console.log("       손님 화면(업체 카드 · 업체 화면)에 그대로 찍히므로 공개라야 합니다.");
+console.log("       ⚠️ **증빙서류는 여기 안 들어갑니다** (서버가 갈래로 버킷을 고릅니다).");
+console.log("     · ⚠️ 안 넣으시면 **시설 사진 칸만** 빠지고 서류 칸은 그대로 돕니다");
 
 /* ── 맺음 ────────────────────────────────────────────────────── */
 console.log("\n════════════════════════════════════════");

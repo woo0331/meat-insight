@@ -1038,6 +1038,46 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .phv-n{ margin-top:8px; font-size:13px; color: var(--ink3);
         word-break: keep-all; overflow-wrap: anywhere; }
 
+/* ── 업체 사진 · 증빙서류 (0051) ─────────────────────────────────
+   ⚠️ `.pvph*` — 손님 쪽 사진은 `.phup*`(올리기) · `.phv*`(보기)입니다.
+   짧은 이름을 두 곳에 쓰면 한쪽 규칙이 다른 쪽에 걸립니다. */
+.pvph-g{ border:1px solid var(--line); border-radius: var(--r-sm);
+         padding:14px 16px; margin-top:12px; display:grid; gap:8px; }
+.pvph-g > *{ min-width:0; }
+.pvph-h{ margin:0; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+         font-size:16px; color: var(--ink); }
+.pvph-h .ic{ color: var(--grn-text); flex:none; }
+/* ⚠️⚠️ **누가 보는지**를 제목 옆에 늘 답니다 — 이 한 줄이 서류를 사진
+   칸에 올리는 것을 막습니다. 색만으로 가르지 않고 글로 적습니다. */
+.pvph-w{ font-size:13px; font-weight:600; color: var(--warn-text);
+         background: var(--warn-soft); border-radius:999px; padding:3px 9px; }
+.pvph-help{ margin:0; font-size:14px; color: var(--ink3);
+            word-break:keep-all; overflow-wrap:anywhere; }
+.pvph-z{ margin:0; font-size:14px; color: var(--ink3); }
+.pvph-l{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.pvph-l > li{ display:flex; gap:6px; flex-wrap:wrap; min-width:0; }
+.pvph-l .btn{ min-height:40px; }
+/* ⚠️ 되돌릴 수 없는 단추라 빨간 **글자**입니다 (면이 아닙니다) */
+.pvph-x{ color: var(--bad-text); border-color: var(--bad-soft); }
+/* 파일 고르기 — ⚠️ `<input type=file>` 은 숨기고 label 이 단추입니다
+   (브라우저마다 생김새가 달라 맞출 수가 없습니다). ⚠️ label 도
+   누르는 것이라 40px 을 줍니다. */
+.pvph-b{ display:inline-flex; align-items:center; gap:8px; justify-self:start;
+         min-height:40px; padding:9px 16px; border-radius: var(--r-pill);
+         border:1.5px solid var(--grn-line); color: var(--grn-text);
+         font-size:14.5px; font-weight:600; cursor:pointer; background:#fff; }
+.pvph-b .ic{ color: var(--grn); }
+.pvph-i{ position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+         overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+.pvph-up{ list-style:none; margin:0; padding:0; display:grid; gap:6px; }
+.pvph-up > li{ display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+               min-width:0; font-size:14px; color: var(--ink2); }
+.pvph-n{ min-width:0; word-break:keep-all; overflow-wrap:anywhere; }
+.pvph-s{ font-style:normal; color: var(--ink3); font-size:13px; }
+.pvph-st{ color: var(--ink3); font-weight:600; }
+.pvph-up > li.is-ok .pvph-st{ color: var(--ok-text); }
+.pvph-up > li.is-bad .pvph-st{ color: var(--bad-text); }
+
 /* ── 내부 알림 (0050) ────────────────────────────────────────────
    ⚠️ `.nt*` — `.jn*`(조인) · `.jb*`(인력) · `.mq*`(내 글)과 갈라 둡니다.
    ⚠️⚠️ 안 읽은 줄은 **색만으로 가르지 않습니다** — 왼쪽에 굵은 선을

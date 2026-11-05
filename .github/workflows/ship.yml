@@ -39,7 +39,15 @@ permissions:
 jobs:
   gate:
     name: 전수 검사
-    runs-on: ubuntu-latest
+    # ⚠️⚠️⚠️ **`ubuntu-latest` 를 쓰지 않습니다.** 2026-11-04 17:50 에
+    #   GitHub 이 그것을 **26.04** 로 올렸고, 박아 둔 Playwright 가 그
+    #   판을 몰라 **스물두 번 연속으로** 거기서 죽었습니다 —
+    #     "Playwright does not support chromium on ubuntu26.04-x64"
+    #   검사에 닿기도 전에 14초 만에 끝나서, 그 동안 이 브랜치는
+    #   **CI 가 한 번도 안 본 채** 쌓였습니다.
+    # ⚠️ 그래서 판을 **박습니다** — 개발 환경이 24.04 입니다.
+    #   `latest` 는 계속 움직이므로 같은 일이 또 납니다.
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
 
     steps:
@@ -57,10 +65,18 @@ jobs:
 
       # ⚠️ 개발 환경과 **같은 판**을 박습니다 — 판이 다르면 화면을 재는
       #    값이 미묘하게 달라져 "여기서는 초록인데 CI 는 빨강" 이 됩니다.
+      # ⚠️⚠️ **그런데 그 판이 어긋나 있었습니다** (2026-11-05 에 세어
+      #    봤습니다) — 여기는 1.56.1 인데 개발 환경은 **1.63.0** 입니다.
+      #    "같은 판을 박습니다" 라고 적어 놓고 **안 박고 있었습니다**
+      #    (주석이 적은 것과 코드가 하는 일이 다른 자리 — 작업 기억의
+      #    `js/deskme.js` 와 같은 꼴입니다).
+      # ⚠️ 올리실 때는 **개발 환경의 판을 먼저 세고**(`node -e
+      #    'console.log(require("playwright/package.json").version)'`)
+      #    그 값을 여기 적으세요.
       - name: playwright + 크로미움
         run: |
           set -euo pipefail
-          npm i -g playwright@1.56.1
+          npm i -g playwright@1.63.0
           GROOT="$(npm root -g)"
           playwright install --with-deps chromium
           echo "NODE_PATH=$GROOT" >> "$GITHUB_ENV"

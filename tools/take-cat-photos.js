@@ -60,6 +60,32 @@ new Function("window", fs.readFileSync(path.join(ROOT, "js/data/photos.js"), "ut
 const SLOT = {};
 (W.AM_PHOTO_SLOTS || []).forEach(function(s){ SLOT[s.key] = s; });
 
+/* ── 카드 액자 비율 — ⚠️⚠️ **CSS 한 곳**에서 읽습니다 ───────────────
+   사진이 액자와 같은 비율이 아니면 `object-fit:cover` 가 넘치는 쪽을
+   잘라냅니다. 그 "얼마나 잘리는가" 를 말해 주려면 액자 비율이
+   필요한데, 그 값은 `css/app.css` 의 `.cat-ph` 에 있습니다.
+   ⚠️ 여기 숫자를 베껴 적으면 디자인을 바꾸는 날 **조용히 어긋납니다** —
+   이 도구만 옛 비율로 재면서 "안 잘립니다" 라고 합니다. 그래서 읽고,
+   못 읽으면 **멈춥니다** (어림짐작으로 재지 않습니다). */
+const FRAME = (function(){
+  const css = fs.readFileSync(path.join(ROOT, "css/app.css"), "utf8");
+  const at  = css.indexOf(".cat-ph{");
+  if(at < 0) return null;
+  const blk = css.slice(at, css.indexOf("}", at));
+  const k   = blk.indexOf("aspect-ratio:");
+  if(k < 0) return null;
+  const nums = blk.slice(k, blk.indexOf(";", k)).match(/[0-9]+(?:\.[0-9]+)?/g);
+  if(!nums || !nums.length) return null;
+  return nums.length >= 2 ? (parseFloat(nums[0]) / parseFloat(nums[1]))
+                          : parseFloat(nums[0]);
+})();
+if(!FRAME || !isFinite(FRAME)){
+  console.log("❌ css/app.css 의 .cat-ph 에서 액자 비율(aspect-ratio)을 못 읽었습니다.");
+  console.log("   그 값이 있어야 '카드에서 몇 %가 잘리는지' 를 말할 수 있습니다 —");
+  console.log("   어림짐작으로 재지 않고 여기서 멈춥니다.");
+  process.exit(2);
+}
+
 /* 그림 머리글에서 가로 · 세로 — jpg · png · webp 셋 (라이브러리 없이) */
 function size(buf){
   if(buf[0] === 0xFF && buf[1] === 0xD8){            /* jpg */
@@ -148,18 +174,29 @@ Object.keys(PAIR).forEach(function(give){
      (`AM_PHOTO_SIZES` 의 주석에 잰 값이 있습니다). */
   const sh   = sharp(src, 450);
 
-  /* ⚠️ 지시서가 요구한 것: 가로 1600px 이상 · 3:2. 자리 규격(최소
-     800x450 · 비율 1.4~2.0)은 그보다 **느슨**하므로 둘 다 적습니다 —
-     자리 규격만 보면 "통과" 인데 지시서는 못 지킨 꼴이 됩니다. */
+  /* ⚠️⚠️ 잘려 나가는 몫 — **액자 비율은 CSS 한 곳**에서 읽습니다
+     (FRAME). 여기 숫자를 다시 적으면 디자인을 바꾸는 날 조용히
+     어긋나서, 멀쩡한 사진을 "잘립니다" 라고 하거나 그 반대가 됩니다. */
+  const shown = (r > FRAME) ? (FRAME / r) : (r / FRAME);
+  const cut   = Math.round((1 - shown) * 100);
+
+  /* ⚠️ 두 가지를 **갈라서** 적습니다 —
+       ① 자리 규격(최소 800x450 · 비율 1.4~2.0) — 넘으면 빌드가 멈춥니다
+       ② 의뢰서가 요구한 것(가로 1600px 이상 · 액자와 같은 비율)
+     ②만 못 지키면 빌드는 돌지만 **또렷하지 않거나 잘려 나갑니다.**
+     자리 규격만 보면 "통과" 인데 의뢰한 것은 못 받은 꼴이 됩니다. */
   const notes = [];
-  if(d.w < 1600) notes.push("가로 " + d.w + "px — 지시서는 1600px 이상입니다");
-  if(Math.abs(r - 1.5) > 0.04) notes.push("비율 " + r.toFixed(2) + " — 지시서는 3:2(1.50)입니다");
-  if(r < r1 || r > r2) notes.push("⚠️ 비율이 자리 범위(" + r1 + "~" + r2 + ") 밖입니다 — 잘라야 합니다");
+  if(d.w < 1600) notes.push("가로 " + d.w + "px — 의뢰서는 1600px 이상입니다 (2400 권장)");
+  if(cut >= 3) notes.push("비율 " + r.toFixed(2) + " — 카드에서 " + cut +
+    "% 가 잘립니다 (액자가 " + FRAME.toFixed(2) + " 입니다 · 16:9 면 0%)");
+  if(r < r1 || r > r2) notes.push("⚠️ 비율이 자리 규격(" + r1 + "~" + r2 +
+    ") 밖입니다 — fit-photos 가 먼저 한 번 더 잘라냅니다");
 
   console.log("  " + (notes.length ? "⚠️ " : "✅ ") + give.padEnd(20) +
     "→ " + key.padEnd(14) + d.w + "x" + d.h +
     "  비율 " + r.toFixed(2) + "  " + kb + "KB" +
-    (sh === null ? "" : "  또렷함 " + sh + " (450px 에서)"));
+    (sh === null ? "" : "  또렷함 " + sh) +
+    "  카드에 보이는 몫 " + Math.round(shown * 100) + "%");
   notes.forEach(function(n){ console.log("        " + n); });
 
   if(go){

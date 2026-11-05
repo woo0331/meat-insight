@@ -61,6 +61,23 @@ const NOT_TEST = "&is_test=eq.false";
 const PVIEW = "v_provider_price_public";
 const PCOLS = "id,provider_id,sub,label,amount,unit,note";
 
+/* ⚠️⚠️⚠️ **시설 사진도 같은 번에 가져옵니다** (0051 의
+   `v_provider_photo_public`). 그 보기가 사진만 · 승인 · 공개 · 검사용
+   아님 넷을 전부 봅니다 — **증빙서류는 그 보기에 줄이 아예 없습니다.**
+   ⚠️ 따로 가져오면 한쪽만 새것이 되어 사진이 없는 업체 · 업체가 없는
+   사진이 생기고, 그때 사진은 **아무 화면에도 안 뜨면서 아무 에러도
+   안 납니다** (후기 · 가격에서 겪은 자리).
+   ⚠️⚠️ **주소는 공개 버킷 주소입니다.** 그 사진은 정적 HTML 에
+   `<img>` 로 찍히므로 10분짜리 서명 주소를 쓸 수가 없습니다. 버킷
+   이름은 `PROVIDER_BUCKET` 에서 읽습니다 — 없으면 사진 없이 갑니다
+   (지어낸 주소를 찍지 않습니다). */
+const FVIEW = "v_provider_photo_public";
+const FCOLS = "id,provider_id,path,mime,caption";
+function pvBucket(){
+  return String(process.env.PROVIDER_BUCKET || "").trim()
+    .replace(/[^A-Za-z0-9_.-]/g, "").slice(0, 60);
+}
+
 function write(rows, note){
   const body =
 '/* ════════════════════════════════════════════════════════════════════\n' +
@@ -79,6 +96,9 @@ function write(rows, note){
 '   ⚠️⚠️ 평점 · 후기 수를 여기 넣지 마세요. 실제 후기에서 **계산**합니다.\n' +
 '   ⚠️ 가격(`prices`)은 업체가 **스스로 등록한 것**입니다 (0042).\n' +
 '      등록이 0건이면 그 칸이 아예 없고, 카드에서 가격 줄이 빠집니다.\n' +
+'   ⚠️⚠️ 사진(`photos`)은 업체가 **스스로 올린 시설 사진**입니다 (0051).\n' +
+'      증빙서류는 **한 장도 안 들어옵니다** — 공개 보기에 줄이 없습니다.\n' +
+'      0건이면 칸이 아예 없고, 카드가 분류 아이콘 타일로 돌아갑니다.\n' +
 '\n' +
 '   가져온 때   ' + note + '\n' +
 '   업체        ' + rows.length + '곳\n' +
@@ -198,10 +218,57 @@ if(!url || !key){
                  Array.from(new Set(lost)).join(" · ") +
                  "\n   보기 둘이 어긋났습니다 (0032 · 0042 의 where 를 보세요).");
 
+  /* ── 시설 사진 (0051) ────────────────────────────────────────
+     ⚠️ 버킷 이름이 없으면 **사진 없이** 갑니다 — 주소를 지어내면
+     깨진 그림이 손님 화면에 걸립니다 (절대 규칙 1 · 2). */
+  const bk = pvBucket();
+  let shots = [], lostPh = [];
+  if(!bk){
+    console.warn("⚠️ PROVIDER_BUCKET 이 없어 **시설 사진 없이** 가져왔습니다 — " +
+                 "주소를 지어내지 않습니다 (업체가 올린 사진은 그대로 있습니다).");
+  }else{
+    const fr = await fetch(url.replace(/\/+$/, "") +
+      "/rest/v1/" + FVIEW + "?select=" + FCOLS + "&order=created_at.asc",
+      { headers: { apikey: key, authorization: "Bearer " + key } });
+    if(!fr.ok){
+      const fwhy = await fr.text().catch(function(){ return ""; });
+      /* ⚠️ 못 읽으면 **멈춥니다** — 사진 없이 덮어쓰면 "사진을 안 올린
+         업체" 와 "사진을 못 읽은 업체" 가 화면에서 똑같이 보입니다. */
+      console.error("❌ 시설 사진을 못 읽었습니다 — HTTP " + fr.status +
+                    "\n   ⚠️ 지금 파일을 그대로 둡니다.");
+      if(fwhy.indexOf(FVIEW) >= 0 || fr.status === 404)
+        console.error("   ⚠️⚠️ 공개 보기(" + FVIEW + ")가 없습니다 — " +
+                      "db/migrations/0051 을 아직 올리지 않으셨습니다.");
+      else if(fwhy) console.error("   " + fwhy.slice(0, 200));
+      process.exit(1);
+    }
+    shots = await fr.json();
+    if(!Array.isArray(shots)){
+      console.error("❌ 시설 사진이 목록이 아닙니다 — 파일을 그대로 둡니다.");
+      process.exit(1);
+    }
+    const pub = url.replace(/\/+$/, "") + "/storage/v1/object/public/" + bk + "/";
+    shots.forEach(function(x){
+      const p = byId[x.provider_id];
+      /* ⚠️ 업체가 없는 사진은 **버리지 않고 말합니다** (가격과 같은 까닭) */
+      if(!p){ lostPh.push(x.provider_id); return; }
+      if(!p.photos) p.photos = [];
+      const o2 = { url: pub + String(x.path).split("/").map(encodeURIComponent).join("/") };
+      if(x.caption !== null && x.caption !== undefined &&
+         String(x.caption).trim() !== "") o2.caption = x.caption;
+      p.photos.push(o2);
+    });
+    if(lostPh.length)
+      console.warn("⚠️ 업체 목록에 없는 업체의 사진 " + lostPh.length + "건을 뺐습니다 — " +
+                   Array.from(new Set(lostPh)).join(" · ") +
+                   "\n   보기 둘이 어긋났습니다 (0032 · 0051 의 where 를 보세요).");
+  }
+
   const now = new Date().toISOString().replace("T", " ").slice(0, 16) + " UTC";
   write(clean, now);
   console.log("업체 " + clean.length + "곳 · 가격 " +
-              (prices.length - lost.length) + "건을 가져왔습니다 — " + now);
+              (prices.length - lost.length) + "건 · 시설 사진 " +
+              (shots.length - lostPh.length) + "장을 가져왔습니다 — " + now);
 })().catch(function(e){
   console.error("❌ " + e.message + "\n   ⚠️ 지금 파일을 그대로 둡니다.");
   process.exit(1);

@@ -1397,6 +1397,29 @@ picture{ display: contents; }
         width:56px; height:56px; border-radius: var(--r-sm);
         background: var(--pt-soft); }
 .pv-th .ic{ color: var(--grn); }
+/* ⚠️⚠️ **그 업체가 올린 사진이 들어가는 자리**입니다 (0051). 아이콘
+   타일과 **같은 크기 · 같은 자리**라, 사진이 생기거나 빠져도 카드
+   높이가 안 움직입니다 (한 덩이를 빼면 옆이 무너지던 자리). */
+.pv-th-ph{ background: var(--line-soft); overflow:hidden; }
+/* ⚠️ `object-fit:cover` — 비율이 다른 사진이 와도 **늘어나지 않습니다**
+   (늘어난 사진은 그 자리에서 미완성으로 읽힙니다). */
+.pv-th-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+/* 업체가 올린 시설 사진 (0051) — ⚠️ 0장이면 구간이 아예 없습니다 */
+.pvsh{ list-style:none; margin:0; padding:0; display:grid; gap:12px;
+       grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px){ .pvsh{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px){ .pvsh{ grid-template-columns: 1fr; } }
+/* ⚠️ 격자 칸은 제 내용만큼 벌어집니다 — 긴 설명 하나가 화면을 가로로
+   밀지 않게 min-width 를 0 으로 내려놓습니다. */
+.pvsh > li{ min-width:0; display:grid; gap:6px; }
+/* ⚠️⚠️ **높이를 미리 잡습니다** (aspect-ratio) — 안 잡으면 사진이
+   내려올 때 아래 글이 밀립니다 (CLS). ⚠️ `cover` 라 비율이 다른
+   사진이 와도 늘어나지 않습니다. */
+.pvsh img{ width:100%; aspect-ratio: 4 / 3; object-fit:cover; display:block;
+           border-radius: var(--r-sm); background: var(--line-soft); }
+.pvsh p{ margin:0; font-size:14px; color: var(--ink3);
+         word-break:keep-all; overflow-wrap:anywhere; }
+
 /* 등록된 가격 — ⚠️ 업체가 등록한 것만 나옵니다 (없으면 줄째 없습니다) */
 .pv-p{ display:flex; align-items:baseline; flex-wrap:wrap; gap:6px; margin-top:8px; }
 .pv-p b{ font-size:16px; color: var(--ink); font-variant-numeric: tabular-nums; }

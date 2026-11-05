@@ -32,6 +32,21 @@ function ok(name, cond, got){
   if(cond) console.log("  ✅ " + name);
   else { bad++; console.log("  ❌ " + name + (got !== undefined ? "  →  " + String(got).slice(0, 220) : "")); }
 }
+/* ⚠️⚠️ **사진 자리 밖의 그림만 셉니다.** 손님 · 업체가 적은 글이
+   `esc()` 를 거치는지 보려면 "그 글 때문에 그림이 생겼는가" 를 세야
+   하는데, 0051 뒤로는 업체가 올린 시설 사진(`.pvsh`)과 카드의 사진
+   자리(`.pv-th`)가 **참 그림**을 냅니다. 그것까지 세면 사진을 한 장
+   올리시는 날 멀쩡한 화면을 실패로 잡습니다 (갯수를 박아 두어 멀쩡한
+   화면을 떨어뜨린 자리가 이미 여럿입니다).
+   ⚠️ 그 둘을 덮어 주는 것이 아니라 **그 밖에 그림이 있는가**를 셉니다 —
+   날것 태그로 생긴 그림은 어느 쪽에도 안 담기므로 그대로 잡힙니다. */
+async function strayImg(pg){
+  return await pg.evaluate(function(){
+    return Array.prototype.filter.call(
+      document.querySelectorAll("main img"),
+      function(i){ return !i.closest(".pvsh") && !i.closest(".pv-th"); }).length;
+  });
+}
 function build(){
   return spawnSync(process.execPath, ["build.js"], { cwd: ROOT, stdio:["ignore","pipe","pipe"] });
 }
@@ -61,7 +76,14 @@ const SEED = [
        트리거가 그것을 봅니다 (여기도 같아야 검사가 거짓이 안 됩니다). */
     prices:[{ sub:"rg-in", label:"타석 1시간", amount:12000, unit:"1시간" },
             { sub:"ls-solo", label:"주 1회 · 8회권", amount:400000, unit:"8회",
-              note:"타석 이용료 별도" }] },
+              note:"타석 이용료 별도" }],
+    /* ⚠️⚠️ **업체가 스스로 올린 시설 사진**입니다 (0051). 공개 보기가
+       사진만 내므로 **증빙서류는 여기 한 장도 안 옵니다** — 자료
+       파일에 서류가 섞이면 그 순간 사업자등록증이 정적 HTML 에
+       찍힙니다. 검사가 그것을 아래에서 눌러 봅니다. */
+    photos:[{ url:"https://sb-test.supabase.co/storage/v1/object/public/pv/a.jpg",
+              caption:"실내 타석" },
+            { url:"https://sb-test.supabase.co/storage/v1/object/public/pv/b.jpg" }] },
   { id:"xss-test", name:"<img src=x onerror=alert(1)>",
     intro:"<script>alert(2)</script> 소개글",
     regions:["seoul"], subs:["ft-mend","ft-grip"], scale:"small" }
@@ -316,8 +338,13 @@ function nowServe(){ return serve(0); }
     ok("⚠️ 업체가 적은 태그가 날것으로 안 들어간다",
        h2.indexOf("<img src=x") < 0 && h2.indexOf("<script>alert(2)") < 0 &&
        h2.indexOf("&lt;img") >= 0);
+    /* ⚠️⚠️ 재는 것은 "업체가 적은 글 때문에" 그림이 생기는가 입니다.
+       0051 뒤로는 업체가 올린 시설 사진(`.pvsh`) · 카드의 사진 자리
+       (`.pv-th`) 가 제자리에 그림을 냅니다 — 그것까지 세다가 사진을
+       한 장 올리시는 날 멀쩡한 화면을 실패로 잡습니다. 그 둘을 덮어
+       주지 않고 **그 밖에 그림이 없는가**만 잽니다. */
     ok("⚠️ 그 글 때문에 그림 · 스크립트가 생기지 않는다",
-       (await p.locator("main img").count()) === 0);
+       (await strayImg(p)) === 0, await strayImg(p));
 
     /* 메인 */
     await p.goto("http://127.0.0.1:" + h.port + "/", { waitUntil:"networkidle" });
@@ -364,9 +391,17 @@ function nowServe(){ return serve(0); }
     ok("지역이 있다", ((await c1.textContent()) || "").indexOf("경기") >= 0);
     ok("하는 일(분류)이 있다",
        (await c1.locator(".pv-c li").count()) >= 1, await c1.locator(".pv-c li").count());
-    ok("⚠️ 사진 자리는 **아이콘 타일**이다 (남의 사진을 깔지 않습니다)",
+    /* ⚠️⚠️ 사진 자리는 **한 장**이고, 업체가 올린 사진이 있으면 그
+       사진 · 없으면 분류 아이콘 타일입니다 (0051 구간이 둘 다 눌러
+       봅니다). ⚠️ 여기서 재는 것은 **그 자리 밖에는 그림이 없는가** —
+       남의 사진 · 지어낸 그림을 카드 어디에도 깔지 않습니다. */
+    ok("⚠️ 사진 자리는 **한 장**이고 그 밖에는 그림이 없다 " +
+       "(남의 사진을 깔지 않습니다)",
        (await c1.locator(".pv-th").count()) === 1 &&
-       (await c1.locator("img").count()) === 0);
+       (await c1.locator("img").count()) ===
+         (await c1.locator(".pv-th img").count()),
+       (await c1.locator("img").count()) + " / " +
+         (await c1.locator(".pv-th img").count()));
     ok("상담 요청 단추가 그 업체로 간다",
        ((await c1.locator('a[href^="/match?pv="]').first().getAttribute("href")) || "")
          === "/match?pv=green-pt");
@@ -453,6 +488,77 @@ function nowServe(){ return serve(0); }
        압니다 (`?m=apple` 을 보내고 `mk` 를 읽어 거르개가 아무것도
        안 걸렀는데 링크 검사도 흐름 검사도 통과한 적이 있습니다).
        ══════════════════════════════════════════════════════════════ */
+    /* ══════════════════════════════════════════════════════════════
+       업체가 올린 시설 사진 (0051)
+
+       ⚠️⚠️⚠️ **가장 조심할 것은 증빙서류입니다.** 자료 파일에 서류가
+       한 줄이라도 섞이면 그 순간 사업자등록증이 **정적 HTML 에**
+       찍힙니다 — 공개 보기가 `kind='photo'` 만 내므로 그럴 일이
+       없지만, 그 사실을 **화면에서** 한 번 더 봅니다.
+       ⚠️ 사진이 0장인 업체는 **분류 아이콘 타일**로 돌아가야 합니다
+       (빈 액자를 두면 미완성으로 읽힙니다).
+       ══════════════════════════════════════════════════════════════ */
+    console.log("\n── 업체가 올린 시설 사진 (0051)");
+    await p.goto("http://127.0.0.1:" + h.port + "/pro/green-pt",
+                 { waitUntil:"networkidle" });
+    await p.waitForTimeout(200);
+    const shot = await p.evaluate(function(){
+      const imgs = Array.prototype.map.call(
+        document.querySelectorAll(".pvsh img"),
+        function(i){ return { src:i.getAttribute("src"), alt:i.getAttribute("alt"),
+                              lazy:i.getAttribute("loading") }; });
+      return { n: imgs.length, imgs: imgs,
+               cap: (document.querySelector(".pvsh p") || {}).textContent || "",
+               head: (document.querySelector(".pvsh") &&
+                      document.querySelector(".pvsh").closest("section")
+                        .querySelector("h2").textContent) || "",
+               body: document.body.innerText };
+    });
+    ok("업체 화면에 그 업체가 올린 사진이 나온다", shot.n === 2,
+       JSON.stringify(shot).slice(0, 200));
+    ok("  ⚠️ **우리가 고른 사진이 아니라고** 말한다",
+       shot.body.indexOf("업체가 직접 올린 시설 사진") >= 0, shot.body.slice(0, 300));
+    ok("  ⚠️ alt 에 **상호**가 들어간다 (소리로 듣는 분께)",
+       shot.imgs.every(function(i){ return (i.alt || "").indexOf("성남") >= 0; }),
+       JSON.stringify(shot.imgs));
+    ok("  첫 화면 아래라 lazy 를 단다",
+       shot.imgs.every(function(i){ return i.lazy === "lazy"; }),
+       JSON.stringify(shot.imgs));
+    ok("  설명이 있으면 적고, 없으면 그 줄이 **줄째 빠진다**",
+       shot.cap === "실내 타석" &&
+       (shot.body.match(/실내 타석/g) || []).length >= 1, shot.cap);
+    /* ⚠️⚠️⚠️ **증빙서류가 한 장도 안 새는가** */
+    ok("⚠️⚠️⚠️ 서류 경로(`/doc/`)가 화면 어디에도 **없다**",
+       (await p.content()).indexOf("/doc/") < 0, "");
+
+    /* 카드 — ⚠️ 사진이 있으면 그 사진, 없으면 아이콘 타일 */
+    await p.goto("http://127.0.0.1:" + h.port + "/search", { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    const th = await p.evaluate(function(){
+      const out = [];
+      Array.prototype.forEach.call(document.querySelectorAll("#sres .pv"), function(c){
+        const t = c.querySelector(".pv-th");
+        out.push({ pv: c.getAttribute("data-pv"),
+                   photo: !!(t && t.querySelector("img")),
+                   icon: !!(t && t.querySelector("svg")),
+                   hidden: t ? t.getAttribute("aria-hidden") : null });
+      });
+      return out;
+    });
+    ok("⚠️ 잴 것이 0개면 실패입니다 (카드를 찾기는 했는가)", th.length > 0,
+       JSON.stringify(th));
+    const withPh = th.filter(function(x){ return x.photo; });
+    const withIc = th.filter(function(x){ return x.icon; });
+    ok("⚠️⚠️ 사진이 있는 업체 카드에는 **그 사진**이 들어간다",
+       withPh.length === 1 && withPh[0].pv === "green-pt", JSON.stringify(th));
+    ok("⚠️ 사진이 0장인 업체는 **아이콘 타일로 돌아간다** (빈 액자를 안 둡니다)",
+       withIc.length === 1 && withIc[0].pv === "xss-test", JSON.stringify(th));
+    /* ⚠️ 아이콘 타일은 **장식**이라 소리로 듣는 분께 안 읽힙니다 —
+       사진은 읽혀야 하므로 그 표시가 달라야 합니다. */
+    ok("  아이콘 타일만 `aria-hidden` 이다 (사진은 읽혀야 합니다)",
+       withIc[0].hidden === "true" && withPh[0].hidden === null,
+       JSON.stringify(th));
+
     console.log("\n── /search 하위분류로 좁히기 (?sub=)");
     /* green-pt 는 rg-in · rg-sim · ls-solo 를 합니다 · xss-test 는 ft-* */
     await p.goto("http://127.0.0.1:" + h.port + "/search?cat=range&sub=rg-sim",
@@ -749,7 +855,7 @@ function nowServe(){ return serve(0); }
     ok("⚠️ 업체 답변에 넣은 태그도 날것으로 안 들어간다",
        rh.indexOf("<b>고맙습니다</b>") < 0 && rh.indexOf("&lt;b&gt;") >= 0);
     ok("⚠️ 그 글 때문에 그림 · 스크립트가 생기지 않는다",
-       (await p2.locator("main img").count()) === 0);
+       (await strayImg(p2)) === 0, await strayImg(p2));
     /* ⚠️⚠️⚠️ **후기가 생겨도 aggregateRating 을 안 넣습니다** — 우리가
        별점을 검증할 길이 없고, 적발되면 리치 결과가 통째로 막힙니다. */
     ok("⚠️⚠️ 후기가 생겨도 구조화 데이터에 aggregateRating 이 **없다**",

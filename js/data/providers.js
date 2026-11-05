@@ -36,6 +36,20 @@ window.amProvider = function(id){
 /* 이 업체가 **실제로 하는** 하위 — 목록에 없는 키는 걸러 냅니다.
    ⚠️ 조용히 거르지 않고 빌드 가드가 먼저 잡습니다. 여기서 거르는 것은
    자료가 앞서 나갔을 때 화면이 안 깨지게 하는 안전장치입니다. */
+/* ⚠️⚠️⚠️ **업체가 스스로 올린 시설 사진**입니다 (0051). 0건이면 빈
+   배열이고, 화면은 그때 **분류 아이콘 타일**로 돌아갑니다.
+   ⚠️ 증빙서류는 **한 장도 안 들어옵니다** — 공개 보기
+   (`v_provider_photo_public`)에 그 줄이 아예 없습니다.
+   ⚠️ 세는 자리는 **여기 하나**입니다 (카드와 업체 화면이 따로 세면
+   한쪽만 고쳐서 어긋납니다).
+   ⚠️ 주소가 없는 줄은 버립니다 — 깨진 그림을 손님 화면에 걸지
+   않습니다 (`providers.generated.js` 가 주소 없이 찍힐 일은 없지만,
+   그 파일이 옛것일 수 있습니다). */
+window.amProviderPhotos = function(p){
+  var L = (p && Array.isArray(p.photos)) ? p.photos : [];
+  return L.filter(function(x){ return x && x.url; });
+};
+
 window.amProviderSubs = function(p){
   var subs = (p && Array.isArray(p.subs)) ? p.subs : [];
   return subs.filter(function(k){ return !!window.amSub(k); });

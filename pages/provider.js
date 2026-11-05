@@ -79,6 +79,29 @@ exports.build = function(p){
       }).join("") + '</tbody></table></div></div></section>';
   }
 
+  /* ── 업체가 올린 시설 사진 (0051) ────────────────────────────────
+     ⚠️⚠️⚠️ **그 업체가 스스로 올린 것만** 냅니다. 아무 골프장 사진을
+     깔면 그 업체의 시설인 것처럼 보이고, 그건 표시광고법 제3조입니다.
+     ⚠️ 0장이면 이 구간이 **아예 없습니다** (빈 액자를 두지 않습니다).
+     ⚠️⚠️ **증빙서류는 여기 한 장도 안 옵니다** — 공개 보기
+     (`v_provider_photo_public`)에 그 줄이 없습니다 (0051).
+     ⚠️ `alt` 에 상호를 적습니다 — "사진" 이라고만 적으면 소리로 듣는
+     분께는 어느 업체인지 알 수 없습니다. */
+  var shots = W.amProviderPhotos ? W.amProviderPhotos(p) : [];
+  if(shots.length){
+    body += '<section class="sec"><div class="wrap">' +
+      '<div class="sec-hd"><h2>업체가 올린 사진 ' + W.won(shots.length) + '장</h2>' +
+      '<p>업체가 직접 올린 시설 사진입니다. 골프올인원이 찍거나 고른 ' +
+      '사진이 아닙니다.</p></div>' +
+      '<ul class="pvsh">' + shots.map(function(x){
+        return '<li>' +
+          '<img src="' + esc(x.url) + '" alt="' + esc(p.name + ' 시설 사진') +
+            '" loading="lazy" decoding="async">' +
+          (x.caption ? '<p>' + esc(x.caption) + '</p>' : '') +
+        '</li>';
+      }).join("") + '</ul></div></section>';
+  }
+
   /* ── 등록된 가격 (0042) ───────────────────────────────────────────
      ⚠️⚠️ **업체가 스스로 등록한 것만** 냅니다. 0건이면 이 구간이
      **아예 없습니다** — "상담 후 견적" 같은 말을 우리가 지어 넣지

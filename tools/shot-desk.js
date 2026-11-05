@@ -100,6 +100,10 @@ const PRICES = [
   { id:"pr-2", provider_id:"t-range", sub:"ls-solo", label:"주 1회 · 8회권",
     amount:400000, unit:"8회", note:"타석 이용료 별도" }
 ];
+/* 배정받을 때 연락처 (0013 → 0014) — ⚠️ 손님에게는 한 글자도 안 갑니다 */
+const CONTACT = [{ provider_id:"t-range", name:"김직통",
+  tel:"010-5555-6666", email:"kim@greenpt.test",
+  memo:"평일 오전에는 현장에 있습니다" }];
 const PHOTOS = [
   { id:"ph-1", provider_id:"t-range", kind:"photo", path:"pv/t-range/photo/a.jpg",
     mime:"image/jpeg", bytes:420000, caption:"실내 타석" },
@@ -198,12 +202,14 @@ const T_DESK = {
   assignment:[ASG], request:[REQ], request_item:ITEMS, quote:[QUOTE],
   review:RV, provider:PVS, provider_price:PRICES,
   provider_photo:PHOTOS, v_provider_staff:STAFF_PV, notice:NOTICE,
+  provider_contact:CONTACT,
   appointment:[], report:[]
 };
 const T_ADMIN = {
   request:[Object.assign({}, REQ, { state:"check" })], provider:PVS,
   provider_apply:APS, request_item:ITEMS, assignment:[],
-  v_provider_staff:STAFF_ADM, inquiry:INQ, report:REPS, audit_log:LOG,
+  v_provider_staff:STAFF_ADM, provider_contact:CONTACT,
+  inquiry:INQ, report:REPS, audit_log:LOG,
   review:RV, notice:[], cq:CQM, ca:CAM, jobpost:JOBMINE, joinroom:ROOMS
 };
 const T_MY = {
@@ -244,7 +250,7 @@ const WIDTHS = [[1280, "pc"], [360, "mo"]];
    규칙입니다). */
 const BOXES = {
   "/desk": [["notice", "#noticebox"], ["assign", "#deskbox"],
-            ["me", "#mebox"], ["staff", "#pvstbox"],
+            ["me", "#mebox"], ["contact", "#pvctbox"], ["staff", "#pvstbox"],
             ["photo", "#pvphbox"], ["price", "#pricebox"],
             ["fee", "#feebox"]],
   "/admin": [["apply", "#adminbox"], ["assign", "#assignbox"],

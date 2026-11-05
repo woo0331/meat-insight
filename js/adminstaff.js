@@ -29,6 +29,12 @@
 
   var esc = window.esc, icon = window.icon;
   var A = null, ROWS = [], PVS = [], MSG = "";
+  /* ⚠️⚠️ **배정받을 때 연락처**(0013 → 0014) — 운영자가 배정하고
+     전화할 곳입니다. 업체가 `/desk` 에서 적지만, **안 적은 업체도
+     있습니다** — 그때 운영자가 전화로 받아 적을 수 있어야 그 기능이
+     업체의 협조 없이도 돕니다 (문은 직원 · 관리자에게도 열려
+     있습니다). ⚠️ 손님에게는 한 글자도 안 나갑니다. */
+  var CT = {}, EDIT = null;
 
   function why(err){
     var w = String((err && err.message) || "");
@@ -97,6 +103,55 @@
     '</li>';
   }
 
+  /* ⚠️ 값이 없으면 **그 줄을 빼고** 없다고 말합니다 — 빈 칸을 찍으면
+     "적었는데 안 보인다" 로 읽힙니다 (절대 규칙 2). */
+  function ctLine(k){
+    var c = CT[k];
+    var bits = [];
+    if(c){
+      if(c.name) bits.push(c.name);
+      if(c.tel)  bits.push(c.tel);
+      if(c.email) bits.push(c.email);
+    }
+    return '<div class="pvst-ct">' +
+      '<span class="pvst-ic">' + icon("phone", 16) + '</span>' +
+      (bits.length
+        ? '<span class="pvst-n">' + esc(bits.join(" · ")) + '</span>' +
+          (c.memo ? '<span class="pvst-d">' + esc(c.memo) + '</span>' : "")
+        /* ⚠️ 막다른 길로 두지 않습니다 — 적는 단추를 같이 냅니다 */
+        : '<span class="pvst-d">배정받을 때 연락처를 아직 안 적었습니다 — ' +
+          '대표번호로만 연락할 수 있습니다.</span>') +
+      '<button type="button" class="btn btn-sm btn-line pvst-ce" ' +
+        'data-pv="' + esc(k) + '">' + (bits.length ? "고치기" : "적기") +
+      '</button>' +
+    '</div>' +
+    (EDIT === k ? ctForm(k) : "");
+  }
+
+  /* ⚠️⚠️ **한 번에 한 업체만** 엽니다 — 여러 양식을 같이 열면 같은
+     id 가 둘이 되어 화면 읽는 기계가 어느 칸인지 못 가립니다
+     (0046 에서 `#j-agree` 로 겪은 자리입니다). */
+  function ctForm(k){
+    var c = CT[k] || {};
+    return '<form class="jform pvst-cf" data-pv="' + esc(k) + '">' +
+      '<div class="jrow"><label for="ct-n">담당자 이름</label>' +
+        '<input id="ct-n" type="text" maxlength="40" autocomplete="off" ' +
+          'value="' + esc(c.name || "") + '"></div>' +
+      '<div class="jrow"><label for="ct-t">직통 · 휴대폰</label>' +
+        '<input id="ct-t" type="tel" maxlength="40" inputmode="tel" ' +
+          'autocomplete="off" value="' + esc(c.tel || "") + '"></div>' +
+      '<div class="jrow"><label for="ct-e">이메일</label>' +
+        '<input id="ct-e" type="email" maxlength="80" autocomplete="off" ' +
+          'value="' + esc(c.email || "") + '"></div>' +
+      '<div class="jrow"><label for="ct-m">언제 연락이 되는지</label>' +
+        '<input id="ct-m" type="text" maxlength="100" autocomplete="off" ' +
+          'value="' + esc(c.memo || "") + '"></div>' +
+      '<div class="jrow jrow-full">' +
+        '<button type="submit" class="btn btn-pt">저장</button>' +
+        '<button type="button" class="btn btn-line pvst-cx">그만두기</button>' +
+      '</div></form>';
+  }
+
   function paint(){
     box.className = "adminbox";
     box.hidden = false;
@@ -147,6 +202,7 @@
             return '<section class="pvst-g" data-pv="' + esc(k) + '">' +
               '<h3 class="pvst-h">' + icon("store", 17) + esc(g.name) +
                 '<span class="pvst-c">' + esc(String(n)) + '명</span></h3>' +
+              ctLine(k) +
               '<ul class="pvst-l">' +
                 g.who.map(function(s){ return staffRow(s, n); }).join("") +
               '</ul>' +
@@ -165,13 +221,50 @@
          ⚠️⚠️ 검사용 업체는 빼고 봅니다 — 세는 자리에 섞이면 안 됩니다
          (`is_test` · 0030 · 작업 기억의 그 줄). */
       get("provider?select=id,name,state,assignable&is_test=eq.false&" +
-          "order=name.asc")
+          "order=name.asc"),
+      /* ⚠️ 0013 의 RLS 가 운영자에게만 줄을 냅니다 — 화면이 또 좁히면
+         두 곳에서 좁히는 것이 되어 한쪽을 고치는 날 어긋납니다. */
+      get("provider_contact?select=provider_id,name,tel,email,memo")
     ]).then(function(r){
       ROWS = r[0] || [];
       PVS  = r[1] || [];
+      CT = {};
+      (r[2] || []).forEach(function(c){ CT[c.provider_id] = c; });
       paint();
     });
   }
+
+  /* ── 배정받을 때 연락처 — 열고 · 그만두고 ────────────────────── */
+  box.addEventListener("click", function(e){
+    if(!e.target.closest) return;
+    var ce = e.target.closest("button.pvst-ce");
+    if(ce){ EDIT = ce.getAttribute("data-pv"); MSG = ""; paint(); return; }
+    var cx = e.target.closest("button.pvst-cx");
+    if(cx){ EDIT = null; paint(); return; }
+  });
+  /* ⚠️⚠️ **자리 인자**입니다 (`p_provider` · `p_data` · `p_why`) —
+     0014 가 0013 의 서명을 그대로 두었습니다. 이 저장소의 다른 문처럼
+     `{ p: {...} }` 로 보내면 인자 이름이 안 맞아 거절됩니다. */
+  box.addEventListener("submit", function(e){
+    var f = e.target.closest ? e.target.closest("form.pvst-cf") : null;
+    if(!f) return;
+    e.preventDefault();
+    var pv = f.getAttribute("data-pv");
+    function v(id){
+      var x = f.querySelector("#" + id);
+      return x ? String(x.value || "").trim() : "";
+    }
+    MSG = "저장하는 중입니다…";
+    paint();
+    rpc("save_provider_contact", {
+      p_provider: pv,
+      p_data: { name:v("ct-n"), tel:v("ct-t"), email:v("ct-e"), memo:v("ct-m") },
+      p_why: "운영자가 적음"
+    }).then(function(){
+      EDIT = null;
+      return load().then(function(){ MSG = "연락처를 저장했습니다."; paint(); });
+    }).catch(function(err){ MSG = why(err); paint(); });
+  });
 
   box.addEventListener("click", function(e){
     var b = e.target.closest ? e.target.closest("button.pvst-x") : null;

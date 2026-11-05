@@ -71,7 +71,6 @@ const KNOWN = {
   clear_user_state:       "앞 서비스 화면이 쓰던 임시 저장 — 0010",
 
   /* 할 일 — 화면이 생기는 날 이 줄을 지웁니다 */
-  save_provider_contact:  "할 일 — 업체 연락처 · 알림 설정 화면이 아직 없습니다 (/desk)",
   move_item_state:        "할 일 — 요청을 **항목별로** 옮기는 화면이 없습니다 (지금은 요청 단위)",
   build_settlement:       "장치 없음 — 청구 · 입금을 담을 표가 없습니다 (작업 기억의 '아직 안 한 것')",
   hold_settlement:        "장치 없음 — 같은 자리 (정산 보류)",

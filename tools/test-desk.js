@@ -3612,6 +3612,174 @@ function keepOf(name){
   }
 
   /* ══════════════════════════════════════════════════════════════
+     배정받을 때 연락처 (0013 → 0014) — /desk · /admin
+
+     ⚠️⚠️⚠️ **문은 2026-10-22 에 섰는데 적는 자리가 없었습니다.**
+     0013 머리말이 그 까닭까지 적어 두었습니다 — "배정해도 걸 곳이
+     업체 대표번호뿐입니다." `check-doors` 의 `KNOWN` 에 "화면이 아직
+     없습니다" 로 적혀 있던 자리이고, 2026-11-05 에 화면을 냈습니다.
+     ⚠️⚠️ **인자가 자리로 갑니다** (`p_provider` · `p_data` · `p_why`) —
+     이 저장소의 다른 문들처럼 `{ p: {...} }` 로 보내면 인자 이름이
+     안 맞아 거절됩니다. **보내는 꾸러미를 뜯어** 봅니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── /desk 배정받을 때 연락처 (0013 → 0014)");
+  const CT1 = [{ provider_id:"t-range", name:"김직통", tel:"010-5555-6666",
+                 email:"kim@x.test", memo:"평일 오전에는 현장에 있습니다" }];
+  const CTT = Object.assign({ assignment:[], request:[], quote:[],
+                              request_item:[] }, { provider_contact: CT1 });
+
+  s = await open("/desk", { role:"customer", name:"일반회원" }, CTT);
+  ok("⚠️ 업체가 아니면 연락처 자리가 **아예 안 그려진다**",
+     (await s.p.locator("#pvctbox #pvct-f").count()) === 0);
+  ok("  ⚠️⚠️ 그 자료를 **읽으러 가지도 않는다**",
+     s.sent.filter(function(x){
+       return (x.body || "").indexOf("provider_contact") >= 0; }).length === 0,
+     JSON.stringify(s.sent.map(function(x){ return x.name; })));
+
+  s = await open("/desk", PRO, CTT);
+  ok("업체 담당자에게는 양식이 나온다",
+     (await s.p.locator("#pvctbox #pvct-f").count()) === 1);
+  /* ⚠️ 적어 둔 것이 **다시 채워져야** 합니다 — 안 채우면 저장할 때
+     지워진 것으로 보입니다 (덮어쓰는 문이 아니라 통째 저장입니다). */
+  const pre = await s.p.evaluate(function(){
+    function v(id){ const e = document.getElementById(id); return e ? e.value : null; }
+    return { n:v("pvct-n"), t:v("pvct-t"), e:v("pvct-e"), m:v("pvct-m") };
+  });
+  ok("⚠️ 적어 두신 것이 **네 칸 모두 다시 채워진다**",
+     pre.n === "김직통" && pre.t === "010-5555-6666" &&
+     pre.e === "kim@x.test" && pre.m === "평일 오전에는 현장에 있습니다",
+     JSON.stringify(pre));
+  t = (await s.p.textContent("#pvctbox")) || "";
+  /* ⚠️⚠️⚠️ **누가 보는지 · 왜 받는지 · 얼마나 두는지**를 그 자리에서
+     같이 말해야 합니다 (개인정보보호법 제15조 제2항). */
+  ok("⚠️⚠️ **손님에게는 안 나간다**고 그 자리에서 말한다",
+     /손님 화면에는 한 글자도 나오지 않습니다/.test(t), t.slice(0, 400));
+  ok("  ⚠️ 누가 보는지 말한다 (운영자와 이 업체)",
+     t.indexOf("운영자와 이 업체만") >= 0, t.slice(0, 400));
+  ok("  ⚠️ 얼마나 두는지 말한다 (입점 계약이 끝날 때까지)",
+     /입점 계약이 끝날 때까지/.test(t), t.slice(0, 400));
+  ok("  ⚠️ 왜 받는지 말한다 (배정하고 연락할 곳)",
+     /배정해 드릴 때/.test(t), t.slice(0, 300));
+  ok("화면 에러가 0건이다", s.errs.length === 0, s.errs.join(" | "));
+
+  /* ── 저장을 **눌러 봅니다** — 보내는 꾸러미까지 ───────────────── */
+  s = await open("/desk", PRO, CTT, { save_provider_contact: "t-range" });
+  await s.p.fill("#pvct-t", "010-7777-8888");
+  await s.p.click("#pvct-save");
+  await s.p.waitForTimeout(450);
+  const sc = s.sent.filter(function(x){ return x.name === "save_provider_contact"; });
+  ok("저장하면 문을 **실제로** 부른다", sc.length === 1,
+     JSON.stringify(s.sent.map(function(x){ return x.name; })));
+  const sb = JSON.parse(sc[0].body || "{}");
+  /* ⚠️⚠️ **자리 인자**가 맞는지 — 이름이 하나만 달라도 거절됩니다 */
+  ok("⚠️⚠️ 보내는 꾸러미가 **자리 인자**다 (p_provider · p_data · p_why)",
+     sb.p_provider === "t-range" && !!sb.p_data && ("p_why" in sb) &&
+     sb.p === undefined, sc[0].body);
+  ok("  고친 번호가 담겨 간다", sb.p_data.tel === "010-7777-8888", sc[0].body);
+  ok("  ⚠️ 나머지 칸도 **같이** 간다 (통째로 저장하는 문입니다)",
+     sb.p_data.name === "김직통" && sb.p_data.email === "kim@x.test" &&
+     sb.p_data.memo === "평일 오전에는 현장에 있습니다", sc[0].body);
+  /* ⚠️ 업체는 **제 업체 id 만** 보냅니다 — 문도 그것을 다시 봅니다 */
+  ok("  ⚠️ 남의 업체 id 를 보내지 않는다", sb.p_provider === PRO.provider);
+
+  /* ⚠️ 지우는 길 — **넷을 비워 보내면** 문이 줄을 지웁니다 */
+  s = await open("/desk", PRO, CTT, { save_provider_contact: "t-range" });
+  s.p.on("dialog", function(d){ d.accept(); });
+  await s.p.click("#pvct-x");
+  await s.p.waitForTimeout(450);
+  const dc = s.sent.filter(function(x){ return x.name === "save_provider_contact"; });
+  ok("⚠️ 지우기는 **넷을 비워서** 보낸다 (문이 그때 줄을 지웁니다)",
+     dc.length === 1 && JSON.parse(dc[0].body).p_data.tel === "" &&
+     JSON.parse(dc[0].body).p_data.name === "", dc[0] && dc[0].body);
+
+  /* ⚠️ 0건이면 양식은 나오되 **지우기 단추는 안 냅니다**
+     (눌러도 아무 일이 안 나는 단추를 두지 않습니다 — 절대 규칙 5) */
+  s = await open("/desk", PRO,
+    Object.assign({ assignment:[], request:[], quote:[], request_item:[] },
+                  { provider_contact: [] }));
+  ok("아직 안 적었으면 양식은 **나온다**",
+     (await s.p.locator("#pvctbox #pvct-f").count()) === 1);
+  ok("  ⚠️ 그런데 **지우기 단추는 없다** (지울 것이 없습니다)",
+     (await s.p.locator("#pvctbox #pvct-x").count()) === 0);
+
+  console.log("\n── /admin 배정받을 때 연락처 — 운영자만");
+  const CTA = [
+    { provider_id:"t-range", name:"김직통", tel:"010-5555-6666",
+      email:"", memo:"평일 오전" }
+  ];
+  const SAT2 = Object.assign({}, {
+    v_provider_staff: [
+      { provider_id:"t-range", provider_name:"티레인지",
+        account_id:"11111111-1111-1111-1111-111111111111",
+        who:"김일담", joined_at:null },
+      { provider_id:"t-fit", provider_name:"피팅랩",
+        account_id:"22222222-2222-2222-2222-222222222222",
+        who:"이이담", joined_at:null }
+    ],
+    provider: [
+      { id:"t-range", name:"티레인지", state:"approved", assignable:true },
+      { id:"t-fit", name:"피팅랩", state:"approved", assignable:true }
+    ],
+    provider_contact: CTA
+  });
+
+  s = await open("/admin", { role:"customer", name:"일반회원" },
+                 Object.assign({}, ADMT, BIZ, PROT, SAT2), { biz_metrics: MET });
+  ok("⚠️ 운영자가 아니면 연락처를 **읽으러 가지도 않는다**",
+     s.sent.filter(function(x){
+       return (x.body || "").indexOf("provider_contact") >= 0; }).length === 0);
+
+  s = await open("/admin", { role:"admin", name:"관리자" },
+                 Object.assign({}, ADMT, BIZ, PROT, SAT2), { biz_metrics: MET });
+  t = (await s.p.textContent("#pvstadm")) || "";
+  ok("운영자는 **적힌 업체의 연락처를** 본다",
+     t.indexOf("김직통") >= 0 && t.indexOf("010-5555-6666") >= 0, t.slice(0, 400));
+  ok("  ⚠️ 빈 칸(이메일)은 **줄째 빠진다** (빈 자리를 안 찍습니다)",
+     t.indexOf(" ·  · ") < 0 && t.indexOf("· ·") < 0, t.slice(0, 400));
+  /* ⚠️⚠️ **안 적은 업체는 그 사실을 말합니다** — 빈 줄로 두면 운영자가
+     "적혀 있는데 안 보인다" 로 읽습니다. */
+  ok("⚠️⚠️ 안 적은 업체는 **안 적었다고 말한다** (대표번호뿐이라는 것까지)",
+     /아직 안 적었습니다/.test(t) && /대표번호/.test(t), t.slice(0, 500));
+  ok("  ⚠️ 거기에 **적는 단추**를 같이 낸다 (막다른 길로 두지 않습니다)",
+     (await s.p.locator('#pvstadm .pvst-ce').count()) === 2,
+     await s.p.locator('#pvstadm .pvst-ce').count());
+  /* ⚠️⚠️ **한 번에 한 양식만** — 여럿 열면 같은 id 가 둘이 됩니다 */
+  await s.p.locator('#pvstadm .pvst-ce').first().click();
+  await s.p.waitForTimeout(300);
+  ok("⚠️⚠️ 고치기를 누르면 양식이 **하나만** 열린다 (같은 id 가 둘이 되지 않게)",
+     (await s.p.locator("#pvstadm form.pvst-cf").count()) === 1 &&
+     (await s.p.locator("#pvstadm #ct-t").count()) === 1,
+     await s.p.locator("#pvstadm form.pvst-cf").count());
+  await s.p.locator('#pvstadm .pvst-ce').nth(1).click();
+  await s.p.waitForTimeout(300);
+  ok("  다른 업체를 누르면 **앞 양식이 닫힌다**",
+     (await s.p.locator("#pvstadm form.pvst-cf").count()) === 1);
+  ok("화면 에러가 0건이다", s.errs.length === 0, s.errs.join(" | "));
+
+  /* ⚠️ 운영자가 적어 보냅니다 — 전화로 받아 적는 자리입니다 */
+  s = await open("/admin", { role:"admin", name:"관리자" },
+                 Object.assign({}, ADMT, BIZ, PROT, SAT2),
+                 { biz_metrics: MET, save_provider_contact: "t-fit" });
+  await s.p.locator('#pvstadm .pvst-ce').nth(1).click();
+  await s.p.waitForTimeout(300);
+  await s.p.fill("#ct-n", "박담당");
+  await s.p.fill("#ct-t", "010-1111-2222");
+  await s.p.locator("#pvstadm form.pvst-cf button[type='submit']").click();
+  await s.p.waitForTimeout(450);
+  const ac = s.sent.filter(function(x){ return x.name === "save_provider_contact"; });
+  ok("⚠️ 운영자도 적을 수 있다 (전화로 받아 적는 자리 — 문이 열어 둡니다)",
+     ac.length === 1, JSON.stringify(s.sent.map(function(x){ return x.name; })));
+  /* ⚠️ `ab` 는 이 파일 앞쪽(497줄)이 이미 쓰고 있습니다 — 같은 범위라
+     그대로 쓰면 `node --check` 에서 터집니다. 이름을 가릅니다. */
+  const ctb = JSON.parse(ac[0].body || "{}");
+  ok("  그 업체로 간다", ctb.p_provider === "t-fit", ac[0].body);
+  ok("  적은 것이 담겨 간다",
+     ctb.p_data.name === "박담당" && ctb.p_data.tel === "010-1111-2222",
+     ac[0].body);
+  ok("  ⚠️ 감사 기록에 남을 **까닭**을 같이 보낸다",
+     !!ctb.p_why, ac[0].body);
+
+  /* ══════════════════════════════════════════════════════════════
      업체가 올리는 시설 사진 · 증빙서류 (0051) — /desk
 
      ⚠️⚠️⚠️ **이 화면은 검사가 0건이었습니다.** 작업 기억의 검사 표에는

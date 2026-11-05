@@ -41,6 +41,14 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="mebox" class="none" hidden></div></div></section>';
 
+  /* 배정받을 때 연락처 (0013 → 0014) — ⚠️⚠️⚠️ **문은 2026-10-22 에
+     섰는데 적는 자리가 없었습니다.** 0013 머리말이 그 까닭까지 적어
+     두었습니다 — "배정해도 걸 곳이 업체 대표번호뿐입니다." ⚠️ 이
+     연락처는 **손님에게 한 글자도 안 나갑니다**(표를 갈라 두었습니다 —
+     `provider` 에 넣으면 로그인한 누구나 담당자 휴대폰을 봅니다). */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="pvctbox" class="none" hidden></div></div></section>';
+
   /* 우리 업체 담당자 (0052) — ⚠️⚠️ 한 업체에 담당자 여럿은 전부터
      됐는데 **그 명단을 보는 자리가 없었습니다.** 그래서 업체는 우리
      쪽에 누가 이어져 있는지(그만둔 사람이 아직 보고 있는지) 알 길이
@@ -75,6 +83,7 @@ exports.build = function(){
          "/js/photo.js", "/js/auth.js", "/js/review.js",
          "/js/desk.js", "/js/deskme.js", "/js/deskprice.js",
          "/js/deskfee.js", "/js/deskphoto.js", "/js/deskstaff.js",
+         "/js/deskcontact.js",
          "/js/notice.js"]
   };
 };

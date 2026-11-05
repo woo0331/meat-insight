@@ -1626,3 +1626,17 @@ picture{ display: contents; }
 .pvst-msg{ margin-top:10px; font-size:14.5px; font-weight:600;
            color: var(--ink2); line-height:1.6;
            word-break:keep-all; overflow-wrap:anywhere; }
+
+/* 배정받을 때 연락처 줄 (0013 → 0014) — ⚠️ 변수는 tokens.css 에 있는
+   것만 씁니다 · ⚠️ 담은 상자가 격자라 `min-width:0` 을 같이 겁니다 */
+.pvst-ct{ display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+          min-height: var(--tap); min-width:0; margin-top:10px;
+          border:1px dashed var(--line); border-radius: var(--r-sm);
+          padding:6px 10px; background: var(--bg-2); }
+.pvst-ct > *{ min-width:0; }
+.pvst-ct .pvst-d{ margin-left:0; }
+.pvst-ct .btn{ margin-left:auto; flex:none; }
+.pvst-cf{ margin-top:10px; }
+/* ⚠️ 되돌리기 어려운 단추는 **제 너비만** 차지합니다 — 제출 단추와
+   같은 크기로 두면 둘이 같은 무게로 보입니다 (찍어 보고 알았습니다). */
+.pvct-del > .btn{ justify-self:start; }

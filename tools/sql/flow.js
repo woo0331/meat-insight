@@ -16,6 +16,12 @@
    B 손님   요청 → 동의 → 배정(재동의) → 수락 → 견적 → 고르기
    C 운영자 승인 → 요청 확인 → 매칭 상태 → 거래 상태 → 감사 기록
    D 보안   비로그인 · 남의 업체 · 승인 전 공개 · 중복 · 개인정보
+
+   ⚠️⚠️ **업체가 0곳이어도 되는 셋**도 여기서 한 줄로 눌러 봅니다
+   (2026-11-05 — 그때까지 이 파일에 그 셋의 문이 **하나도** 없었습니다):
+   E 조인   열기 → 신청 → 알림 → 수락 → 연락처 각자 → 가리면 셋이 막힘
+   F 커뮤니티 질문 → 답변 → 알림 → 가리면 **답변도 같이** 빠짐
+   G 인력   업체 이름으로 올리기 → 지원 → 연락처 → **정지되면 상호가 빠짐**
    ════════════════════════════════════════════════════════════════════ */
 module.exports = function(T){
   const { ok, psql, denied, allowed } = T;
@@ -250,10 +256,357 @@ module.exports = function(T){
   /* 업체 담당자의 연락처(입점 신청에 적은 것)도 공개로 안 나갑니다 */
   const d5 = denied(anon + "select count(*) from provider_apply");
   ok("  입점 신청 표도 공개로 못 읽는다", d5.no, d5.why);
+  /* ══════════════════════════════════════════════════════════════════
+     E · F · G — **업체가 0곳이어도 되는 셋**을 한 줄로 눌러 봅니다
+
+     ⚠️⚠️⚠️ 조인(0046) · 커뮤니티(0047) · 인력(0048) 은 문마다 따로
+     재는 검사가 이미 수백 건인데, **한 줄로는 아무도 눌러 본 적이
+     없었습니다** (이 파일에 그 셋의 문이 한 개도 없었습니다 — 작업
+     기억에 "새 흐름을 만드는 날 이어 붙이세요" 라고 적어 놓고 안
+     붙였습니다). 이 셋은 **업체가 0곳이어도 되는 것**이라, 문 여는 날
+     손님이 실제로 쓸 길이 바로 이 셋입니다.
+
+     ⚠️ 그래서 여기서 재는 것은 **문 하나하나가 아니라 이어지는 자리**
+     입니다 — 토막 검사가 영원히 못 보는 곳만 고릅니다:
+       · 0050 의 **알림 트리거**가 실제로 꽂히는가 (다른 마이그레이션입니다)
+       · 0049 로 가리면 **신청 · 고치기 · 닫기가 저절로** 막히는가
+       · 질문을 가리면 **답변도 같이** 빠지는가
+       · 업체를 정지시키면 **그 순간** 상호가 빠지는가
+     ══════════════════════════════════════════════════════════════════ */
+  console.log("\n══ 시나리오 E — 조인: 열기 → 신청 → 알림 → 수락 → 연락처 → 가리기");
+
+  const EH = psql("insert into auth.users (email) values ('fl-ehost@x.test') returning id");
+  const EG = psql("insert into auth.users (email) values ('fl-eg@x.test') returning id");
+  const EN = psql("insert into auth.users (email) values ('fl-enosy@x.test') returning id");
+  psql("insert into account (id, role, name) values " +
+       "('" + EH + "','customer','조인 여는 사람')," +
+       "('" + EG + "','customer','조인 신청자')," +
+       "('" + EN + "','customer','조인 남') " +
+       "on conflict (id) do update set role = excluded.role, name = excluded.name");
+
+  const NOW  = () => psql("select now()");
+  const PLAY = psql("select (current_date + 10)::text");
+
+  /* E-1 자리를 엽니다 — ⚠️ 업체가 한 곳도 없어도 됩니다 */
+  const e1 = allowed(as(EH) + "select open_joinroom('" + j({
+    region:"seoul", play_at:PLAY, need:2, title:"주말 아침 두 자리",
+    body:"초보도 환영합니다", course:"흐름CC", tee:"07:30",
+    /* ⚠️ `budget` 은 **int** 입니다 (원 단위 · 0~1,000만) — "18만원 선"
+       처럼 글자로 넣으면 문이 아니라 **표의 칸**이 거절합니다.
+       가짜 자료도 DB 가 받는 값이어야 합니다. */
+    budget:180000, contact:"010-7100-0001", agree_at:NOW() }) + "'::jsonb)");
+  ok("E-1 회원이 자리를 연다 (업체가 0곳이어도 됩니다)",
+     e1.yes && /^[0-9a-f-]{36}$/.test(e1.out), e1.out || e1.why);
+  const ERID = e1.out;
+
+  /* ⚠️ 공개 목록은 **보기** 하나입니다 — 자리 수를 칸에 저장하지 않고 셉니다 */
+  const eOpen = c => psql(as(EN) + "select coalesce(" + c +
+    ", '(없음)') from v_join_open where id = '" + ERID + "'");
+  /* ⚠️⚠️⚠️ **줄이 사라진 것을 coalesce 로 재면 안 됩니다** — 0줄이면 칸이
+     아예 없어서 psql 이 **빈 글자**를 돌려줍니다. '(없음)' 과 견주면
+     떨어지고, 반대로 빈 글자와 견주면 **엉뚱한 까닭으로 통과**합니다
+     (칸이 null 인 것과 줄이 없는 것이 섞입니다). 줄이 있나 없나는
+     **세어서** 봅니다. */
+  const eGone = () => psql(as(EN) + "select count(*)::text from v_join_open " +
+    "where id = '" + ERID + "'") === "0";
+  ok("  남이 공개 목록에서 그 자리를 본다", eOpen("id::text") === ERID);
+  ok("  남은 자리를 **세어서** 내려준다 (저장하지 않습니다 — 절대 규칙 1)",
+     eOpen("left_n::text") === "2" && eOpen("taken_n::text") === "0",
+     eOpen("left_n::text") + " / " + eOpen("taken_n::text"));
+  /* ⚠️⚠️ 공개 목록에 **연락처가 한 글자도 없어야 합니다** */
+  const eLeak = psql(as(EN) + "select v_join_open::text from v_join_open where id='" + ERID + "'");
+  ok("  ⚠️⚠️ 공개 목록에 **연락처가 한 글자도 없다**",
+     eLeak.indexOf("010-7100") < 0, eLeak.slice(0, 160));
+
+  /* E-2 신청 → ⚠️⚠️ 0050 의 트리거가 **연 사람에게** 알림을 꽂아야 합니다 */
+  /* ⚠️⚠️⚠️ **`to_user` 를 where 절에 쓰면 안 됩니다** — 0050 은 칸 단위로
+     GRANT 를 주었고 그 칸은 **안 줬습니다.** 안 준 칸을 조건에 쓰면
+     0줄이 아니라 **질의가 통째로 거절**됩니다 (`permission denied for
+     table notice`). 처음에 그렇게 적어서 검사가 터졌는데, **맞는 동작이고
+     틀린 것은 검사**였습니다 (0052 에서도 같은 자리를 밟았습니다).
+     ⚠️ 줄은 RLS 가 이미 **제 것만** 내주므로 조건이 필요 없습니다. */
+  const nCount = (u, k) => psql("select become('" + u + "'); set role authenticated; " +
+    "select count(*)::text from notice where kind='" + k + "'");
+  const e2 = allowed(as(EG) + "select apply_joinroom('" + j({
+    room_id:ERID, contact:"010-7200-0002", msg:"같이 치고 싶습니다",
+    agree_at:NOW() }) + "'::jsonb)");
+  ok("E-2 다른 회원이 신청한다", e2.yes && /^[0-9a-f-]{36}$/.test(e2.out), e2.out || e2.why);
+  const EAID = e2.out;
+  /* ⚠️⚠️⚠️ **다른 마이그레이션(0050)의 트리거**입니다 — 0046 을 재는
+     검사는 이 자리를 안 봅니다. 트리거가 떨어져 나가도 조인은 멀쩡히
+     돌고, 연 사람만 **아무 소식을 못 받습니다.** */
+  ok("  ⚠️⚠️ 0050 의 트리거가 **연 사람에게 알림을 꽂는다**",
+     nCount(EH, "joinapply") === "1", nCount(EH, "joinapply"));
+  /* ⚠️ 여기도 `to_user` 를 조건에 쓰면 거절됩니다 (위 nCount 의 까닭) */
+  const eLink = psql(as(EH) + "select link from notice " +
+    "where kind='joinapply' limit 1");
+  ok("  ⚠️ 가는 주소가 **우리 주소**다 (`/` 로 시작 · `//` 아님 — 열린 넘겨주기)",
+     eLink.indexOf("/") === 0 && eLink.indexOf("//") !== 0, eLink);
+  /* ⚠️⚠️ 알림에 **본문 칸이 아예 없어야** 합니다 — 담으면 손님 글이 한 벌
+     더 복사되고, 그 안에 연락처가 있으면 알림이 그것을 나릅니다. */
+  ok("  ⚠️⚠️ 알림 표에 **본문 칸이 아예 없다** (제목 · 가는 자리까지)",
+     psql("select count(*)::text from information_schema.columns where " +
+          "table_name='notice' and column_name in ('body','text','msg','content')") === "0");
+  /* ⚠️ 제가 한 일은 제게 안 알립니다 */
+  ok("  ⚠️ 신청한 사람 제게는 안 알린다 (제가 한 일입니다)",
+     nCount(EG, "joinapply") === "0");
+
+  /* E-3 수락 → 신청자에게 알림 · 남은 자리가 **줄어야** 합니다 */
+  const e3 = allowed(as(EH) + "select move_joinapply('" +
+    j({ id:EAID, state:"accepted" }) + "'::jsonb)");
+  ok("E-3 연 사람이 수락한다", e3.yes, e3.out || e3.why);
+  ok("  신청자에게 알림이 간다 (0050)", nCount(EG, "joinmoved") === "1");
+  ok("  남은 자리가 하나 줄어든다 (세어서 내려줍니다)",
+     eOpen("left_n::text") === "1" && eOpen("taken_n::text") === "1",
+     eOpen("left_n::text") + " / " + eOpen("taken_n::text"));
+
+  /* E-4 ⚠️⚠️⚠️ **수락만으로는 연락처가 안 열립니다** (제17조 제2항) */
+  const eCt = (u, c) => psql(as(u) + "select coalesce(" + c +
+    ", '(없음)') from v_join_contact where apply_id = '" + EAID + "'");
+  ok("E-4 ⚠️⚠️⚠️ **수락만으로는 양쪽 다 번호를 못 본다** (제17조 제2항)",
+     eCt(EH, "apply_contact") === "(없음)" && eCt(EG, "room_contact") === "(없음)",
+     eCt(EH, "apply_contact") + " / " + eCt(EG, "room_contact"));
+
+  /* E-5 각자 **제 것만** 엽니다 — 맞바꾸기를 강요하지 않습니다 */
+  ok("E-5 신청자가 제 번호만 연다",
+     allowed(as(EG) + "select share_joincontact('" +
+       j({ id:EAID, on:true, agree_at:NOW() }) + "'::jsonb)").yes);
+  ok("  연 사람이 그 번호를 본다", eCt(EH, "apply_contact") === "010-7200-0002",
+     eCt(EH, "apply_contact"));
+  ok("  ⚠️ 한쪽만 열었으므로 **연 사람 번호는 아직 안 간다** (맞바꾸기 강요 없음)",
+     eCt(EG, "room_contact") === "(없음)", eCt(EG, "room_contact"));
+  ok("  연 사람도 제 것을 연다",
+     allowed(as(EH) + "select share_joincontact('" +
+       j({ id:EAID, on:true, agree_at:NOW() }) + "'::jsonb)").yes);
+  ok("  그제야 신청자가 연 사람 번호를 본다",
+     eCt(EG, "room_contact") === "010-7100-0001", eCt(EG, "room_contact"));
+  /* ⚠️ 철회권 — 다시 닫을 수 있어야 합니다 */
+  ok("E-6 ⚠️ 다시 닫으면 그 순간 안 보인다 (철회권)",
+     allowed(as(EG) + "select share_joincontact('" +
+       j({ id:EAID, on:false, agree_at:NOW() }) + "'::jsonb)").yes &&
+     eCt(EH, "apply_contact") === "(없음)", eCt(EH, "apply_contact"));
+  /* ⚠️ 남은 못 봅니다 — 보기의 where 가 짝만 냅니다 */
+  ok("  ⚠️ 남은 그 줄을 **아예 못 본다** (보기의 where 가 짝만 냅니다)",
+     psql(as(EN) + "select count(*)::text from v_join_contact " +
+          "where apply_id='" + EAID + "'") === "0");
+
+  /* E-7 ⚠️⚠️ 운영자가 가립니다(0049) → **셋이 저절로 막혀야** 합니다
+     ⚠️ 작업 기억이 "상태 하나를 더하는 것만으로 신청 · 고치기 · 닫기가
+        저절로 막힙니다 (셋 다 state='open' 을 요구합니다 — 문을 안 갈아
+        끼웠습니다)" 라고 적어 두었습니다. 그 말이 참인지는 **여기서만**
+        드러납니다 (0049 를 재는 검사는 0046 의 문 셋을 안 누릅니다). */
+  ok("E-7 운영자가 그 자리를 가린다 (0049)",
+     allowed(as(ADM) + "select move_joinroom('" +
+       j({ id:ERID, state:"hidden", why:"신고가 들어와 확인 중입니다" }) +
+       "'::jsonb)").yes);
+  ok("  ⚠️ 공개 목록에서 **줄째** 빠진다 (세어서 봅니다)", eGone());
+  const e7a = denied(as(EN) + "select apply_joinroom('" + j({
+    room_id:ERID, contact:"010-7300-0003", msg:"저도요", agree_at:NOW() }) + "'::jsonb)");
+  ok("  ⚠️⚠️ **신청이 저절로 막힌다** (문을 안 갈아 끼웠습니다)", e7a.no, e7a.why);
+  const e7b = denied(as(EH) + "select edit_joinroom('" + j({
+    id:ERID, region:"seoul", play_at:PLAY, need:2, title:"고쳐 봅니다",
+    body:"가려진 자리를 고쳐 봅니다", contact:"010-7100-0001" }) + "'::jsonb)");
+  ok("  ⚠️⚠️ **고치기도 저절로 막힌다**", e7b.no, e7b.why);
+  const e7c = denied(as(EH) + "select close_joinroom('" + j({ id:ERID }) + "'::jsonb)");
+  ok("  ⚠️⚠️ **닫기도 저절로 막힌다**", e7c.no, e7c.why);
+  /* ⚠️ 자물쇠마다 **다른 말**로 거절해야 합니다 (같은 말이면 어느 것이
+     막았는지 알 수 없고, 하나가 빠져도 티가 안 납니다) */
+  ok("  ⚠️ 셋이 **다른 말**로 거절한다",
+     new Set([e7a.why, e7b.why, e7c.why].map(w => String(w).slice(0, 40))).size >= 2,
+     [e7a.why, e7b.why, e7c.why].join(" | ").slice(0, 200));
+
+  console.log("\n══ 시나리오 F — 커뮤니티: 질문 → 답변 → 알림 → 가리면 답변도 빠짐");
+
+  /* ⚠️ `ask_cq` 는 **10분에 한 건**입니다 — 시계를 되돌리지 않고
+     **사람을 바꿉니다** (문을 지나가지 않게). */
+  const FA = psql("insert into auth.users (email) values ('fl-fask@x.test') returning id");
+  const FB = psql("insert into auth.users (email) values ('fl-fans@x.test') returning id");
+  psql("insert into account (id, role, name) values " +
+       "('" + FA + "','customer','김묻는이')," +
+       "('" + FB + "','customer','이답하는이') " +
+       "on conflict (id) do update set role = excluded.role, name = excluded.name");
+
+  const f1 = allowed(as(FA) + "select ask_cq('" + j({
+    cat:"lesson", title:"드라이버가 오른쪽으로 휩니다",
+    body:"그립을 바꿔 봐도 계속 휩니다. 무엇부터 보면 될까요?" }) + "'::jsonb)");
+  ok("F-1 회원이 질문을 올린다", f1.yes && /^[0-9a-f-]{36}$/.test(f1.out), f1.out || f1.why);
+  const FQID = f1.out;
+  const fq = c => psql(anon + "select coalesce(" + c +
+    ", '(없음)') from v_cq_public where id = '" + FQID + "'");
+  /* ⚠️ 줄이 있나 없나는 **세어서** 봅니다 (위 eGone 의 까닭) */
+  const fGone = () => psql(anon + "select count(*)::text from v_cq_public " +
+    "where id = '" + FQID + "'") === "0";
+  ok("  ⚠️ 글은 **로그인 없이도** 읽힌다 (공개입니다)", fq("id::text") === FQID);
+  /* ⚠️⚠️ 글은 공개지만 **글쓴이는 공개가 아닙니다** — 가리는 것은 보기가
+     하고(`김**`), `by_user` 칸은 보기에 **아예 없습니다.** */
+  /* ⚠️⚠️ **별 개수를 글자로 박지 마세요** — 보기는 `left(이름,1) ||
+     repeat('*', 이름길이-1)` 이라 **이름이 길면 별도 늘어납니다.**
+     처음에 `김**` 로 박아 두어서 네 글자 이름(`김묻는이`)에
+     **멀쩡한 보기를 실패로** 잡았습니다 (또 "검사에 그날의 값을 박은"
+     자리입니다). 재려는 뜻은 ① 첫 글자만 남고 ② 나머지가 전부 별이고
+     ③ **본이름이 한 글자도 안 나온다** 셋입니다. */
+  const masked = (got, real) => got.slice(0, 1) === real.slice(0, 1) &&
+    /^.\*+$/.test(got) && got.indexOf(real.slice(1)) < 0;
+  ok("  ⚠️⚠️ 이름을 **보기가** 가려서 낸다 (화면이 가리면 늦습니다)",
+     masked(fq("who"), "김묻는이"), fq("who"));
+  ok("  ⚠️⚠️ 공개 보기에 `by_user` 칸이 **아예 없다**",
+     psql("select count(*)::text from information_schema.columns where " +
+          "table_name='v_cq_public' and column_name in ('by_user','request_id')") === "0");
+  ok("  답변 수를 **세어서** 낸다 (저장하지 않습니다)", fq("answer_n::text") === "0");
+
+  /* F-2 답변 → ⚠️ 0050 의 트리거가 **질문한 사람에게** 알립니다 */
+  const f2 = allowed(as(FB) + "select answer_cq('" + j({
+    q_id:FQID, body:"그립보다 몸통 회전을 먼저 보시는 것이 좋습니다" }) + "'::jsonb)");
+  ok("F-2 다른 회원이 답변을 단다", f2.yes && /^[0-9a-f-]{36}$/.test(f2.out), f2.out || f2.why);
+  const FAID = f2.out;
+  ok("  ⚠️⚠️ 0050 의 트리거가 **질문한 사람에게 알린다**",
+     nCount(FA, "answer") === "1", nCount(FA, "answer"));
+  ok("  답변 수가 하나로 세어진다", fq("answer_n::text") === "1");
+  const faWho = psql(anon + "select who from v_ca_public where id='" + FAID + "'");
+  ok("  답변 쪽 이름도 보기가 가린다", masked(faWho, "이답하는이"), faWho);
+
+  /* F-3 ⚠️⚠️⚠️ 질문을 가리면 **답변도 같이 빠져야** 합니다 — 안 빠지면
+     가린 글의 답글만 둥둥 떠서 무슨 말인지 알 수 없고, 가린 뜻이
+     사라집니다 (`v_ca_public` 이 **질문 상태까지** 봅니다).
+     ⚠️ 답변을 재는 검사는 질문의 상태를 안 바꿉니다 — 이어진 자리입니다. */
+  const fNoWhy = denied(as(ADM) + "select move_cq('" +
+    j({ id:FQID, state:"hidden" }) + "'::jsonb)");
+  ok("F-3 ⚠️ 까닭 없이는 못 가린다 (까닭 없이 가릴 수 있으면 후기가 광고입니다)",
+     fNoWhy.no, fNoWhy.why);
+  ok("  운영자가 까닭을 적고 가린다",
+     allowed(as(ADM) + "select move_cq('" +
+       j({ id:FQID, state:"hidden", why:"특정 업체 비방이 섞여 있습니다" }) +
+       "'::jsonb)").yes);
+  ok("  ⚠️ 질문이 공개 목록에서 빠진다 (세어서 봅니다)", fGone());
+  ok("  ⚠️⚠️⚠️ **답변도 같이 빠진다** (보기가 질문 상태까지 봅니다)",
+     psql(anon + "select count(*)::text from v_ca_public where id='" + FAID + "'") === "0");
+  /* ⚠️ 가린 **까닭은 글쓴이에게 보여 줍니다** — 까닭 없이 못 가리게 해
+     두고 그 까닭을 숨기면 글쓴이는 무엇이 문제였는지 알 수 없습니다. */
+  ok("  ⚠️ 가린 **까닭이 글쓴이에게 남는다**",
+     psql(as(FA) + "select hidden_why from cq where id='" + FQID +
+          "'").indexOf("비방") >= 0);
+  ok("  ⚠️ 글쓴이에게 알림이 간다 (0050)", nCount(FA, "hidden") === "1");
+  /* ⚠️ 지우지 않고 가립니다 — 지우면 다툴 때 아무 기록이 없습니다 */
+  ok("  ⚠️ **지우지 않고 가린다** (줄은 그대로 있습니다)",
+     psql("select state from cq where id='" + FQID + "'") === "hidden");
+
+  console.log("\n══ 시나리오 G — 인력: 업체 이름으로 올리기 → 지원 → 연락처 → 정지");
+
+  /* ⚠️⚠️ **업체 이름(상호)으로 올리는 것**은 고르는 것입니다(`as_pro`) —
+     승인된 · 검사용이 아닌 업체만 되고, 보기가 **읽을 때 다시** 상태를
+     봅니다. 그래서 "정지시키면 그 순간 빠지는가" 는 문을 따로 재는
+     검사로는 영원히 안 드러납니다 (두 마이그레이션이 걸칩니다). */
+  const GP = psql("insert into auth.users (email) values ('fl-gpro@x.test') returning id");
+  const GS = psql("insert into auth.users (email) values ('fl-gseek@x.test') returning id");
+  psql("insert into account (id, role, name) values " +
+       "('" + GP + "','customer','업체 담당자2')," +
+       "('" + GS + "','customer','구직자') " +
+       "on conflict (id) do update set role = excluded.role, name = excluded.name");
+
+  /* ⚠️⚠️ **이미 쓰이고 있으면 큰 소리로 멈춥니다** — `save_provider` 는
+     있는 줄을 덮으므로, 다른 검사가 `flow-d` 를 먼저 만들어 두면 그
+     줄을 **조용히 물려받습니다** (`subs` 가 비어 엉뚱한 자리에서
+     떨어집니다 — 0051 에서 `pp-a` 로 그렇게 밟았습니다). */
+  if(psql("select count(*)::text from provider where id='flow-d'") !== "0"){
+    throw new Error("flow-d 가 이미 있습니다 — 다른 검사와 업체 id 가 부딪힙니다");
+  }
+  /* 업체를 **문으로** 세웁니다 (표를 직접 고치면 0038 의 트리거가 막습니다) */
+  const GPV = psql(as(ADM) + "select save_provider('flow-d','흐름 골프아카데미2','" +
+    j({ intro:"캐디 · 프런트를 뽑습니다", regions:["seoul"], subs:["cr-caddy"],
+        consultHours:"평일 10~19시" }) + "'::jsonb,'인력 흐름 검사용')");
+  ok("G-0 업체를 문으로 세운다", GPV === "flow-d", GPV);
+  const GCODE = psql(as(ADM) + "select make_provider_invite('" +
+    j({ provider:"flow-d" }) + "'::jsonb)");
+  ok("  담당자가 초대 코드로 이어진다",
+     allowed(as(GP) + "select redeem_provider_invite('" +
+       j({ code: GCODE }) + "'::jsonb)").yes, GCODE);
+  ok("  관리자가 승인 · 공개로 켠다",
+     allowed(as(ADM) + "select approve_provider('flow-d', true, null, " +
+             "'인력 흐름 검사용입니다', true)").yes);
+  psql("select become('" + ADM + "'); update provider set is_test = false where id='flow-d'");
+
+  /* G-1 업체 이름으로 글을 올립니다 — ⚠️ 급여 · 조건은 **비워** 둡니다 */
+  const g1 = allowed(as(GP) + "select open_jobpost('" + j({
+    kind:"hire", sub:"cr-caddy", region:"seoul", as_pro:true,
+    title:"주말 캐디를 모십니다",
+    body:"주말 오전 라운딩 캐디를 모십니다. 경험 있으신 분 환영합니다.",
+    contact:"010-7400-0004", agree_at:NOW() }) + "'::jsonb)");
+  ok("G-1 업체 담당자가 **업체 이름으로** 글을 올린다",
+     g1.yes && /^[0-9a-f-]{36}$/.test(g1.out), g1.out || g1.why);
+  const GPID = g1.out;
+  const gp = c => psql(anon + "select coalesce(" + c +
+    ", '(없음)') from v_job_open where id = '" + GPID + "'");
+  ok("  ⚠️ 공개 목록에 **상호가 실린다**", gp("pro_name") === "흐름 골프아카데미2",
+     gp("pro_name"));
+  /* ⚠️ 급여 · 조건은 비면 **null 로 내려옵니다** — 화면이 줄째 뺍니다.
+     "협의" 를 우리가 지어 적지 않습니다 (절대 규칙 2 · 5). */
+  ok("  ⚠️ 급여 · 조건을 비우면 **null 로 내려온다** (\"협의\" 를 지어 적지 않습니다)",
+     gp("pay") === "(없음)" && gp("terms") === "(없음)",
+     gp("pay") + " / " + gp("terms"));
+  const gLeak = psql(anon + "select v_job_open::text from v_job_open where id='" + GPID + "'");
+  ok("  ⚠️⚠️ 공개 목록에 **연락처가 한 글자도 없다**",
+     gLeak.indexOf("010-7400") < 0, gLeak.slice(0, 160));
+
+  /* G-2 지원 → ⚠️ 글쓴이에게 알림 · 수락 → 지원자에게 알림 */
+  const g2 = allowed(as(GS) + "select apply_jobpost('" + j({
+    post_id:GPID, msg:"캐디 경력 3년입니다. 주말 모두 가능합니다.",
+    contact:"010-7500-0005", agree_at:NOW() }) + "'::jsonb)");
+  ok("G-2 구직자가 지원한다", g2.yes && /^[0-9a-f-]{36}$/.test(g2.out), g2.out || g2.why);
+  const GAID = g2.out;
+  ok("  ⚠️⚠️ 0050 의 트리거가 **글쓴이에게 알린다**",
+     nCount(GP, "jobapply") === "1", nCount(GP, "jobapply"));
+  ok("  지원 수를 **세어서** 낸다", gp("apply_n::text") === "1");
+  ok("G-3 글쓴이가 수락한다",
+     allowed(as(GP) + "select move_jobapply('" +
+       j({ id:GAID, state:"accepted" }) + "'::jsonb)").yes);
+  ok("  지원자에게 알림이 간다 (0050)", nCount(GS, "jobmoved") === "1");
+
+  /* G-4 ⚠️⚠️⚠️ 인력도 조인과 **똑같이** 수락만으로는 안 열립니다 */
+  const gCt = (u, c) => psql(as(u) + "select coalesce(" + c +
+    ", '(없음)') from v_job_contact where apply_id = '" + GAID + "'");
+  ok("G-4 ⚠️⚠️⚠️ **수락만으로는 양쪽 다 번호를 못 본다** (제17조 제2항)",
+     gCt(GP, "apply_contact") === "(없음)" && gCt(GS, "post_contact") === "(없음)",
+     gCt(GP, "apply_contact") + " / " + gCt(GS, "post_contact"));
+  ok("  지원자가 제 것만 연다",
+     allowed(as(GS) + "select share_jobcontact('" +
+       j({ id:GAID, on:true, agree_at:NOW() }) + "'::jsonb)").yes &&
+     gCt(GP, "apply_contact") === "010-7500-0005", gCt(GP, "apply_contact"));
+  ok("  ⚠️ 글쓴이 번호는 아직 안 간다 (맞바꾸기 강요 없음)",
+     gCt(GS, "post_contact") === "(없음)");
+
+  /* G-5 ⚠️⚠️⚠️ **업체를 정지시키면 그 순간 상호가 빠져야** 합니다 —
+     보기가 **읽을 때 다시** 상태를 봅니다. 글은 그대로 남고 상호만
+     빠집니다 (업체가 정지됐다고 구직자의 지원까지 지우지 않습니다). */
+  ok("G-5 관리자가 그 업체를 정지시킨다",
+     allowed(as(ADM) + "select set_provider_state('" +
+       j({ id:"flow-d", to:"suspended", why:"흐름 검사 — 정지 반영을 봅니다" }) +
+       "'::jsonb)").yes);
+  ok("  ⚠️⚠️⚠️ **그 순간 상호가 빠진다** (보기가 읽을 때 다시 봅니다)",
+     gp("pro_name") === "(없음)", gp("pro_name"));
+  ok("  ⚠️ 글 자체는 남는다 (상호만 빠집니다 — 지원을 지우지 않습니다)",
+     gp("id::text") === GPID && gp("title") === "주말 캐디를 모십니다");
+  ok("  ⚠️ 정지되면 업체 카드에서도 빠진다 (0038 이 listed 를 내립니다)",
+     psql(anon + "select count(*)::text from v_provider_card where id='flow-d'") === "0");
+
+  /* ⚠️ 끝으로 — 이 셋이 만든 알림에 **손님이 적은 글이 한 글자도** 없어야
+     합니다 (알림은 **우리가 쓴 말**이고, 담으면 한 벌 더 복사됩니다). */
+  /* ⚠️⚠️ **운영자로 읽으면 안 됩니다** — 0050 은 운영자 정책을 일부러
+     안 두었습니다(남의 알림을 읽을 까닭이 없습니다). 그래서 운영자는
+     0줄이고, 그걸로 재면 **빈 글자를 보고 "안 샌다" 로 통과**합니다 —
+     아무것도 안 잡는 검사입니다. **받은 사람 눈으로** 읽습니다. */
+  const nLeak = [EH, EG, FA, GP, GS].map(u => psql(as(u) +
+    "select coalesce(string_agg(title || ' ' || link, ' '), '') from notice")).join(" ");
+  ok("⚠️ 알림을 **받은 사람 눈으로** 읽었다 (0줄을 보고 통과하지 않습니다)",
+     nLeak.replace(/\s/g, "").length > 0, nLeak.slice(0, 120));
+  ok("⚠️⚠️ 알림에 **손님이 적은 글 · 연락처가 한 글자도 없다**",
+     nLeak.indexOf("010-7") < 0 && nLeak.indexOf("같이 치고 싶습니다") < 0 &&
+     nLeak.indexOf("캐디 경력") < 0, nLeak.slice(0, 200));
+
   /* ⚠️ 끝내며 — 이 검사가 만든 업체는 **검사용으로** 되돌립니다 */
   psql("select become('" + ADM + "'); update provider set is_test = true " +
-       "where id in ('flow-a','flow-c')");
+       "where id in ('flow-a','flow-c','flow-d')");
+  /* ⚠️ 세는 자리에 갯수를 박지 않습니다 — **제 씨앗만** 훑습니다 */
   ok("⚠️ 검사가 만든 업체를 **검사용으로 되돌렸다** (운영 자료와 섞이지 않습니다)",
-     psql("select count(*)::text from provider where id in ('flow-a','flow-b','flow-c') " +
-          "and is_test = false") === "0");
+     psql("select count(*)::text from provider where id in " +
+          "('flow-a','flow-b','flow-c','flow-d') and is_test = false") === "0");
 };

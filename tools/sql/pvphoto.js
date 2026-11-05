@@ -23,13 +23,22 @@ module.exports = function(T){
   const CUS  = psql("insert into auth.users (email) values ('pp-cus@x.test') returning id");
   const ADM  = psql("insert into auth.users (email) values ('pp-adm@x.test') returning id");
 
+  /* ⚠️⚠️ **`listed` 는 나중에 못 바꿉니다.** 자물쇠가 **둘**입니다 —
+     ① `provider_guard()` 가 "공개 여부는 관리자가 정합니다" 로 막고
+     ② 칸 GRANT 가 `authenticated` 에게 쓰기를 한 줄도 안 줍니다.
+     처음에 검사에서 `update provider set listed = …` 로 눌렀다가 둘에
+     차례로 막혔습니다 — **둘 다 맞는 동작이고 틀린 것은 검사였습니다.**
+     그래서 공개를 끈 업체를 **처음부터 따로** 심습니다 (상태를 바꾸는
+     대신 그 상태인 업체를 하나 더 두는 쪽이 자물쇠를 안 건드립니다). */
   psql("insert into provider (id, name, listed, state, is_test) values " +
        "('pp-a','사진올리는골프장', true, 'approved', false)," +
        "('pp-b','다른골프장', true, 'approved', false)," +
+       "('pp-h','공개를끈골프장', false, 'approved', false)," +
        "('pp-t','검사용골프장', false, 'approved', true) " +
-       "on conflict (id) do update set name = excluded.name, " +
-       "listed = excluded.listed, state = excluded.state, is_test = excluded.is_test");
+       "on conflict (id) do nothing");
+  const HID = psql("insert into auth.users (email) values ('pp-hid@x.test') returning id");
   psql("insert into account (id, role, name, provider_id) values " +
+       "('" + HID  + "','provider','공개끈담당','pp-h')," +
        "('" + PRO  + "','provider','박담당','pp-a')," +
        "('" + PRO2 + "','provider','다른담당','pp-b')," +
        "('" + TPR  + "','provider','검사담당','pp-t')," +
@@ -116,19 +125,27 @@ module.exports = function(T){
   ok("⚠️⚠️ **검사용 업체 사진은 공개로 안 나간다** (없는 회사를 광고하지 않습니다)",
      seeTest === "0", seeTest);
 
-  /* ⚠️ 공개를 끄거나 정지되면 그 순간부터 빠집니다 */
-  psql("update provider set listed = false where id = 'pp-a'");
+  /* ⚠️ 공개를 끈 업체의 사진은 공개 보기에 안 나옵니다 */
+  const ch = allowed(claim(HID, { caption:"공개를 끈 업체 사진" }));
+  ok("  (씨앗) 공개를 끈 업체도 자리를 받습니다", ch.yes, ch.why);
   const offListed = psql(anon + "select count(*) from v_provider_photo_public " +
-    "where provider_id = 'pp-a'");
-  ok("⚠️ 공개를 끄면 사진도 **그 순간** 빠진다", offListed === "0", offListed);
-  psql("update provider set listed = true where id = 'pp-a'");
-  psql(as(ADM) + "select set_provider_state(jsonb_build_object(" +
-       "'id','pp-a','to','suspended','why','검사로 정지합니다'))");
+    "where provider_id = 'pp-h'");
+  ok("⚠️ **공개를 끈 업체**의 사진은 공개 보기에 안 나온다", offListed === "0",
+     offListed);
+
+  /* ⚠️⚠️ 정지는 **문으로** 눌러 봅니다 (표를 직접 고치면 자물쇠 둘이
+     막습니다 — 그리고 그게 맞습니다). ⚠️ 정지는 `listed` 도 같이
+     끄므로(0038) 되돌릴 때 사진이 다시 나오는지는 안 봅니다. */
+  const sus = allowed(as(ADM) + "select set_provider_state(jsonb_build_object(" +
+    "'id','pp-b','to','suspended','why','검사로 정지합니다'))");
+  ok("  (씨앗) 다른 업체를 정지시킵니다", sus.yes, sus.why);
+  const cb = allowed(claim(PRO2, { caption:"정지된 업체 사진" }));
+  ok("  (씨앗) 정지된 업체도 자리는 받습니다 (올리는 것과 보이는 것은 다릅니다)",
+     cb.yes, cb.why);
   const offState = psql(anon + "select count(*) from v_provider_photo_public " +
-    "where provider_id = 'pp-a'");
-  ok("⚠️ 정지되면 사진도 **그 순간** 빠진다", offState === "0", offState);
-  psql(as(ADM) + "select set_provider_state(jsonb_build_object('id','pp-a','to','approved'))");
-  psql("update provider set listed = true where id = 'pp-a'");
+    "where provider_id = 'pp-b'");
+  ok("⚠️⚠️ **정지된 업체**의 사진은 공개 보기에 안 나온다", offState === "0",
+     offState);
 
   // ── ③ 표 — ⚠️ 그 업체와 운영자만 ──────────────────────────────
   console.log("\n── ⚠️⚠️ 자물쇠 ② 표는 그 업체와 운영자만");
@@ -138,7 +155,11 @@ module.exports = function(T){
   ok("그 업체 담당자는 제 것을 전부 본다 (서류 포함)",
      mineTbl.yes && mineTbl.out === "2", mineTbl.out || mineTbl.why);
   /* ⚠️⚠️ **다른 업체의 서류가 보이면 안 됩니다** */
-  const othTbl = allowed(as(PRO2) + "select count(*) from provider_photo");
+  /* ⚠️ pp-b 도 제 사진이 하나 있으므로, **남의 것(pp-a)** 이 안 보이는지를
+     봅니다 — "0건" 을 통째로 세면 제 것이 생기는 날 멀쩡한 코드가
+     실패합니다 (전을 재고 늘어난 값만 보세요). */
+  const othTbl = allowed(as(PRO2) +
+    "select count(*) from provider_photo where provider_id = 'pp-a'");
   ok("⚠️⚠️ **다른 업체의 것은 줄이 안 보인다** (서류도 사진도)",
      othTbl.yes && othTbl.out === "0", othTbl.out || othTbl.why);
   const cusTbl = allowed(as(CUS) + "select count(*) from provider_photo");

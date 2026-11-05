@@ -17,11 +17,24 @@ module.exports = function(T){
   const { ok, psql, denied, allowed } = T;
 
   console.log("\n── 0051 업체 사진 · 증빙서류 — 씨앗");
-  const PRO  = psql("insert into auth.users (email) values ('pp-pro@x.test') returning id");
-  const PRO2 = psql("insert into auth.users (email) values ('pp-pro2@x.test') returning id");
-  const TPR  = psql("insert into auth.users (email) values ('pp-tpro@x.test') returning id");
-  const CUS  = psql("insert into auth.users (email) values ('pp-cus@x.test') returning id");
-  const ADM  = psql("insert into auth.users (email) values ('pp-adm@x.test') returning id");
+  /* ⚠️⚠️⚠️ **검사끼리 부딪히는 자리입니다.** 처음에 업체 id 를
+     `pp-a` 로 썼는데 `tools/sql/price.js` 가 **같은 id** 를 씁니다.
+     제 검사가 먼저 돌면서 `subs` 없이 그 줄을 만들어 버렸고, 뒤
+     검사의 씨앗은 `on conflict do nothing` 이라 **조용히 무시**되어
+     가격 트리거가 "그 업체가 하지 않는 일입니다" 로 거절했습니다 —
+     앞 검사가 만든 상태를 뒤 검사가 물려받은 것입니다 (조인에서 두 번
+     밟았습니다).
+     ⚠️ 그래서 ① id 앞머리를 `pvp-` 로 갈라 두고 ② **이미 있으면 그
+     자리에서 말합니다** — 조용히 물려받지 않게. */
+  const taken = psql("select coalesce(string_agg(id, ','), '') from provider " +
+    "where id in ('pvp-a','pvp-b','pvp-h','pvp-t')");
+  ok("⚠️⚠️ 쓸 업체 id 가 **비어 있다** (다른 검사와 안 부딪힙니다)",
+     taken === "", "이미 있습니다 — " + taken);
+  const PRO  = psql("insert into auth.users (email) values ('pvp-pro@x.test') returning id");
+  const PRO2 = psql("insert into auth.users (email) values ('pvp-pro2@x.test') returning id");
+  const TPR  = psql("insert into auth.users (email) values ('pvp-tpro@x.test') returning id");
+  const CUS  = psql("insert into auth.users (email) values ('pvp-cus@x.test') returning id");
+  const ADM  = psql("insert into auth.users (email) values ('pvp-adm@x.test') returning id");
 
   /* ⚠️⚠️ **`listed` 는 나중에 못 바꿉니다.** 자물쇠가 **둘**입니다 —
      ① `provider_guard()` 가 "공개 여부는 관리자가 정합니다" 로 막고
@@ -31,17 +44,17 @@ module.exports = function(T){
      그래서 공개를 끈 업체를 **처음부터 따로** 심습니다 (상태를 바꾸는
      대신 그 상태인 업체를 하나 더 두는 쪽이 자물쇠를 안 건드립니다). */
   psql("insert into provider (id, name, listed, state, is_test) values " +
-       "('pp-a','사진올리는골프장', true, 'approved', false)," +
-       "('pp-b','다른골프장', true, 'approved', false)," +
-       "('pp-h','공개를끈골프장', false, 'approved', false)," +
-       "('pp-t','검사용골프장', false, 'approved', true) " +
+       "('pvp-a','사진올리는골프장', true, 'approved', false)," +
+       "('pvp-b','다른골프장', true, 'approved', false)," +
+       "('pvp-h','공개를끈골프장', false, 'approved', false)," +
+       "('pvp-t','검사용골프장', false, 'approved', true) " +
        "on conflict (id) do nothing");
-  const HID = psql("insert into auth.users (email) values ('pp-hid@x.test') returning id");
+  const HID = psql("insert into auth.users (email) values ('pvp-hid@x.test') returning id");
   psql("insert into account (id, role, name, provider_id) values " +
-       "('" + HID  + "','provider','공개끈담당','pp-h')," +
-       "('" + PRO  + "','provider','박담당','pp-a')," +
-       "('" + PRO2 + "','provider','다른담당','pp-b')," +
-       "('" + TPR  + "','provider','검사담당','pp-t')," +
+       "('" + HID  + "','provider','공개끈담당','pvp-h')," +
+       "('" + PRO  + "','provider','박담당','pvp-a')," +
+       "('" + PRO2 + "','provider','다른담당','pvp-b')," +
+       "('" + TPR  + "','provider','검사담당','pvp-t')," +
        "('" + CUS  + "','customer','손님', null)," +
        "('" + ADM  + "','admin','사진 관리자', null) " +
        "on conflict (id) do update set role = excluded.role, " +
@@ -57,15 +70,15 @@ module.exports = function(T){
   // ── ① 올릴 자리를 받습니다 ────────────────────────────────────
   console.log("\n── 올릴 자리를 받습니다");
   const c1 = allowed(claim(PRO, { caption:"실내 타석" }));
-  ok("업체 담당자는 사진 자리를 받는다", c1.yes && c1.out.indexOf("pv/pp-a/photo/") > 0,
+  ok("업체 담당자는 사진 자리를 받는다", c1.yes && c1.out.indexOf("pv/pvp-a/photo/") > 0,
      c1.out || c1.why);
-  const PATH1 = (c1.out.match(/pv\/pp-a\/photo\/[0-9a-f-]+\.jpg/) || [""])[0];
+  const PATH1 = (c1.out.match(/pv\/pvp-a\/photo\/[0-9a-f-]+\.jpg/) || [""])[0];
   ok("  경로를 **DB 가** 짓는다 (화면이 보낸 이름을 안 씁니다)",
-     /pv\/pp-a\/photo\/[0-9a-f-]{36}\.jpg$/.test(PATH1), PATH1);
+     /pv\/pvp-a\/photo\/[0-9a-f-]{36}\.jpg$/.test(PATH1), PATH1);
 
   const d1 = allowed(as(PRO) + "select claim_provider_photo('" +
     J({ kind:"doc", mime:"application/pdf", bytes:"50000" }) + "'::jsonb)");
-  ok("서류 자리도 받는다", d1.yes && d1.out.indexOf("pv/pp-a/doc/") > 0,
+  ok("서류 자리도 받는다", d1.yes && d1.out.indexOf("pv/pvp-a/doc/") > 0,
      d1.out || d1.why);
   /* ⚠️⚠️⚠️ **경로가 갈래를 글자로 들고 있습니다** — 서버가 이것으로
      버킷을 고릅니다 (api/upload.js 의 bucketForPath). */
@@ -111,7 +124,7 @@ module.exports = function(T){
      vcols.indexOf("caption") >= 0, vcols);
 
   const seePhoto = psql(anon + "select count(*) from v_provider_photo_public " +
-    "where provider_id = 'pp-a'");
+    "where provider_id = 'pvp-a'");
   ok("비로그인도 시설 사진은 본다 (크롤러도 봅니다)", seePhoto === "1", seePhoto);
   const seeDoc = psql(anon + "select count(*) from v_provider_photo_public " +
     "where path like '%/doc/%'");
@@ -121,7 +134,7 @@ module.exports = function(T){
   const ct = allowed(claim(TPR, { caption:"검사용 사진" }));
   ok("  (씨앗) 검사용 업체도 자리를 받습니다", ct.yes, ct.why);
   const seeTest = psql(anon + "select count(*) from v_provider_photo_public " +
-    "where provider_id = 'pp-t'");
+    "where provider_id = 'pvp-t'");
   ok("⚠️⚠️ **검사용 업체 사진은 공개로 안 나간다** (없는 회사를 광고하지 않습니다)",
      seeTest === "0", seeTest);
 
@@ -129,7 +142,7 @@ module.exports = function(T){
   const ch = allowed(claim(HID, { caption:"공개를 끈 업체 사진" }));
   ok("  (씨앗) 공개를 끈 업체도 자리를 받습니다", ch.yes, ch.why);
   const offListed = psql(anon + "select count(*) from v_provider_photo_public " +
-    "where provider_id = 'pp-h'");
+    "where provider_id = 'pvp-h'");
   ok("⚠️ **공개를 끈 업체**의 사진은 공개 보기에 안 나온다", offListed === "0",
      offListed);
 
@@ -137,13 +150,13 @@ module.exports = function(T){
      막습니다 — 그리고 그게 맞습니다). ⚠️ 정지는 `listed` 도 같이
      끄므로(0038) 되돌릴 때 사진이 다시 나오는지는 안 봅니다. */
   const sus = allowed(as(ADM) + "select set_provider_state(jsonb_build_object(" +
-    "'id','pp-b','to','suspended','why','검사로 정지합니다'))");
+    "'id','pvp-b','to','suspended','why','검사로 정지합니다'))");
   ok("  (씨앗) 다른 업체를 정지시킵니다", sus.yes, sus.why);
   const cb = allowed(claim(PRO2, { caption:"정지된 업체 사진" }));
   ok("  (씨앗) 정지된 업체도 자리는 받습니다 (올리는 것과 보이는 것은 다릅니다)",
      cb.yes, cb.why);
   const offState = psql(anon + "select count(*) from v_provider_photo_public " +
-    "where provider_id = 'pp-b'");
+    "where provider_id = 'pvp-b'");
   ok("⚠️⚠️ **정지된 업체**의 사진은 공개 보기에 안 나온다", offState === "0",
      offState);
 
@@ -159,7 +172,7 @@ module.exports = function(T){
      봅니다 — "0건" 을 통째로 세면 제 것이 생기는 날 멀쩡한 코드가
      실패합니다 (전을 재고 늘어난 값만 보세요). */
   const othTbl = allowed(as(PRO2) +
-    "select count(*) from provider_photo where provider_id = 'pp-a'");
+    "select count(*) from provider_photo where provider_id = 'pvp-a'");
   ok("⚠️⚠️ **다른 업체의 것은 줄이 안 보인다** (서류도 사진도)",
      othTbl.yes && othTbl.out === "0", othTbl.out || othTbl.why);
   const cusTbl = allowed(as(CUS) + "select count(*) from provider_photo");
@@ -197,7 +210,7 @@ module.exports = function(T){
 
   // ── ⑤ 빼기 ────────────────────────────────────────────────────
   console.log("\n── 뺍니다");
-  const PID = psql("select id from provider_photo where provider_id = 'pp-a' " +
+  const PID = psql("select id from provider_photo where provider_id = 'pvp-a' " +
                    "and kind = 'photo' limit 1");
   const othDrop = denied(as(PRO2) + "select drop_provider_photo('" +
     J({ id:PID }) + "'::jsonb)");
@@ -207,41 +220,41 @@ module.exports = function(T){
   ok("손님도 못 뺀다", cusDrop.no, cusDrop.why);
   const myDrop = allowed(as(PRO) + "select drop_provider_photo('" +
     J({ id:PID }) + "'::jsonb)");
-  ok("그 업체는 뺄 수 있다", myDrop.yes && myDrop.out.indexOf("pv/pp-a/") === 0,
+  ok("그 업체는 뺄 수 있다", myDrop.yes && myDrop.out.indexOf("pv/pvp-a/") === 0,
      myDrop.out || myDrop.why);
   ok("  ⚠️ **경로를 돌려준다** (서버가 이어서 Storage 에서 지웁니다)",
-     /pv\/pp-a\/photo\//.test(myDrop.out), myDrop.out);
+     /pv\/pvp-a\/photo\//.test(myDrop.out), myDrop.out);
   const gone = psql("select count(*) from provider_photo where id = '" + PID + "'");
   ok("  줄이 지워진다", gone === "0", gone);
   const admDrop = allowed(as(ADM) + "select drop_provider_photo('" +
-    J({ id: psql("select id from provider_photo where provider_id = 'pp-t' limit 1") }) +
+    J({ id: psql("select id from provider_photo where provider_id = 'pvp-t' limit 1") }) +
     "'::jsonb)");
   ok("운영자도 뺄 수 있다", admDrop.yes, admDrop.why);
 
   /* ⚠️ 감사 기록에 **경로를 안 넣습니다** — 번호로 찾아갑니다 */
   const audit = psql("select coalesce(string_agg(data::text,'|'),'') from audit_log " +
     "where obj = 'provider_photo'");
-  ok("⚠️ 감사 기록에 **경로가 안 들어간다**", audit.indexOf("pv/pp-a/") < 0, audit);
+  ok("⚠️ 감사 기록에 **경로가 안 들어간다**", audit.indexOf("pv/pvp-a/") < 0, audit);
 
   // ── ⑥ 들어오는 길은 문뿐 ──────────────────────────────────────
   console.log("\n── ⚠️ 들어오는 길은 문뿐입니다");
   const ins = denied(as(PRO) + "insert into provider_photo (provider_id, kind, " +
-    "path, mime, bytes) values ('pp-a','photo','pv/pp-a/photo/x.jpg','image/jpeg',100)");
+    "path, mime, bytes) values ('pvp-a','photo','pv/pvp-a/photo/x.jpg','image/jpeg',100)");
   ok("표에 직접 넣지 못한다", ins.no, ins.why);
   const upd = denied(as(PRO) + "update provider_photo set kind = 'photo' " +
-    "where provider_id = 'pp-a'");
+    "where provider_id = 'pvp-a'");
   ok("표를 직접 고치지 못한다 (서류를 사진으로 바꿀 수 없습니다)", upd.no, upd.why);
-  const del = denied(as(PRO) + "delete from provider_photo where provider_id = 'pp-a'");
+  const del = denied(as(PRO) + "delete from provider_photo where provider_id = 'pvp-a'");
   ok("표에서 직접 지우지 못한다", del.no, del.why);
 
   /* ⚠️⚠️⚠️ **경로가 갈래와 어긋나면 표가 거절합니다** — 문이 내려가는
      날 이 줄이 남습니다 (서버가 그 경로로 버킷을 고릅니다). */
   const badPath = denied("insert into provider_photo (provider_id, kind, path, " +
-    "mime, bytes) values ('pp-a','doc','pv/pp-a/photo/sneaky.pdf','application/pdf',100)");
+    "mime, bytes) values ('pvp-a','doc','pv/pvp-a/photo/sneaky.pdf','application/pdf',100)");
   ok("⚠️⚠️⚠️ 서류를 **사진 경로에** 넣으려 하면 표가 거절한다 (문이 " +
      "내려가도 이 줄이 남습니다)", badPath.no, badPath.why);
   const badPath2 = denied("insert into provider_photo (provider_id, kind, path, " +
-    "mime, bytes) values ('pp-a','photo','pv/pp-b/photo/x.jpg','image/jpeg',100)");
+    "mime, bytes) values ('pvp-a','photo','pv/pvp-b/photo/x.jpg','image/jpeg',100)");
   ok("⚠️ 남의 업체 경로로도 못 넣는다 (경로에 업체 id 가 들어갑니다)",
      badPath2.no, badPath2.why);
   const ck = psql("select count(*) from pg_constraint " +

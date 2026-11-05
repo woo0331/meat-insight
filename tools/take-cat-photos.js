@@ -38,19 +38,24 @@ const fs = require("fs"), path = require("path");
 const { execFileSync } = require("child_process");
 const ROOT = path.join(__dirname, "..");
 
-/* ⚠️⚠️ **짝은 여기 한 곳**입니다. `AM_CATS` 의 key 에서 자리 이름을
-   지으므로(`cat-<key>`), 받는 쪽 이름만 적습니다. */
+/* ⚠️⚠️ **짝은 여기 한 곳**입니다 — 받는 쪽 이름 → 우리 자리 이름.
+   ⚠️⚠️⚠️ 띠 둘은 이름이 **앞뒤가 뒤집혀** 있습니다
+   (`banner-match` → `match-banner`). 손으로 옮기면 바꿔 놓기 딱
+   좋은 자리이고, 바꿔 놓아도 **아무 에러가 안 납니다** — 골프 사진이
+   골프 자리에 있으니까요. 그래서 도구가 옮깁니다. */
 const PAIR = {
-  "golf-lesson":         "lesson",
-  "used-golf-market":    "used",
-  "golf-booking":        "booking",
-  "golf-join":           "matchup",
-  "golf-practice":       "range",
-  "golf-equipment":      "market",
-  "golf-fitting-repair": "fitting",
-  "golf-travel":         "travel",
-  "golf-business":       "career",
-  "golf-community":      "community"
+  "golf-lesson":         "cat-lesson",
+  "used-golf-market":    "cat-used",
+  "golf-booking":        "cat-booking",
+  "golf-join":           "cat-matchup",
+  "golf-practice":       "cat-range",
+  "golf-equipment":      "cat-market",
+  "golf-fitting-repair": "cat-fitting",
+  "golf-travel":         "cat-travel",
+  "golf-business":       "cat-career",
+  "golf-community":      "cat-community",
+  "banner-match":        "match-banner",
+  "banner-partner":      "partner-banner"
 };
 
 /* ── 자리 규격은 `js/data/photos.js` 한 곳에서 읽습니다 ──────────────
@@ -183,8 +188,11 @@ console.log("받은 폴더: " + dir + (go ? "   (실제로 넣습니다)" : "   
 console.log("");
 
 Object.keys(PAIR).forEach(function(give){
-  const key  = "cat-" + PAIR[give];
+  const key  = PAIR[give];
   const slot = SLOT[key];
+  /* 띠는 액자가 글 길이에 따라 변해서 "몇 %가 잘리는가" 를 한 값으로
+     못 냅니다 — 분류 카드와 **다르게** 봅니다 (아래 참고). */
+  const isCat = key.indexOf("cat-") === 0;
   if(!slot){
     /* ⚠️ 자리가 없어진 분류를 짝에 남겨 두면, 사진을 넣었는데 아무
        화면에도 안 나오면서 아무 에러도 안 납니다. */
@@ -207,16 +215,25 @@ Object.keys(PAIR).forEach(function(give){
   const r    = d.w / d.h;
   const [r1, r2] = slot.ratio || [0, 99];
   const kb   = Math.round(buf.length / 1024);
-  /* 분류 카드가 **실제로 그려지는 폭** — 3배 화면 폰이 가장 큽니다
-     (`AM_PHOTO_SIZES` 의 주석에 잰 값이 있습니다). */
-  const sh   = sharp(src, 450);
+  /* ⚠️⚠️⚠️ **그 자리가 실제로 그려지는 폭에서** 잽니다. 또렷함은
+     폭에 따라 크게 달라져서, 넓게 깔리는 사진을 좁은 폭에서 재면
+     **후하게 나옵니다** — 띠를 450px 에서 재니 10.01 이 나왔는데
+     실제로 깔리는 1300px 에서는 1.69 입니다 (2026-11-05 에 밟았습니다).
+       분류 카드  108~166px 로 그려지고 폰이 450 변형을 고릅니다
+       띠         1440 화면에서 1216px (2배면 2432) — 1300 으로 잽니다
+     ⚠️ 서로 다른 폭에서 잰 값은 **견주면 안 됩니다.** */
+  const atW  = isCat ? 450 : 1300;
+  const sh   = sharp(src, atW);
   const tn   = tone(src);
 
   /* ⚠️⚠️ 잘려 나가는 몫 — **액자 비율은 CSS 한 곳**에서 읽습니다
      (FRAME). 여기 숫자를 다시 적으면 디자인을 바꾸는 날 조용히
      어긋나서, 멀쩡한 사진을 "잘립니다" 라고 하거나 그 반대가 됩니다. */
-  const shown = (r > FRAME) ? (FRAME / r) : (r / FRAME);
-  const cut   = Math.round((1 - shown) * 100);
+  /* ⚠️ 카드만 액자가 고정(16:9)입니다. 띠는 글 길이에 따라 높이가
+     정해져서 액자 비율이 폭마다 0.70~8.48 로 움직입니다 — "몇 %가
+     잘리는가" 를 한 값으로 적으면 **그럴듯한 거짓말**이 됩니다. */
+  const shown = isCat ? ((r > FRAME) ? (FRAME / r) : (r / FRAME)) : null;
+  const cut   = isCat ? Math.round((1 - shown) * 100) : 0;
 
   /* ⚠️ 두 가지를 **갈라서** 적습니다 —
        ① 자리 규격(최소 800x450 · 비율 1.4~2.0) — 넘으면 빌드가 멈춥니다
@@ -224,24 +241,38 @@ Object.keys(PAIR).forEach(function(give){
      ②만 못 지키면 빌드는 돌지만 **또렷하지 않거나 잘려 나갑니다.**
      자리 규격만 보면 "통과" 인데 의뢰한 것은 못 받은 꼴이 됩니다. */
   const notes = [];
-  if(d.w < 1600) notes.push("가로 " + d.w + "px — 의뢰서는 1600px 이상입니다 (2400 권장)");
-  if(cut >= 3) notes.push("비율 " + r.toFixed(2) + " — 카드에서 " + cut +
+  /* 자리마다 바라는 가로 — ⚠️ 띠는 더 큽니다 (가로로 길게 깔립니다) */
+  const wantW = isCat ? 1600 : 2000;
+  if(d.w < wantW) notes.push("가로 " + d.w + "px — 의뢰서는 " + wantW +
+    "px 이상입니다 (" + (isCat ? "2400" : "3000") + " 권장)");
+  if(isCat && cut >= 3) notes.push("비율 " + r.toFixed(2) + " — 카드에서 " + cut +
     "% 가 잘립니다 (액자가 " + FRAME.toFixed(2) + " 입니다 · 16:9 면 0%)");
   if(r < r1 || r > r2) notes.push("⚠️ 비율이 자리 규격(" + r1 + "~" + r2 +
     ") 밖입니다 — fit-photos 가 먼저 한 번 더 잘라냅니다");
   if(tn && tn.mean < DARK) notes.push("⚠️ 너무 어둡습니다 (밝기 " +
     Math.round(tn.mean) + " · " + DARK + " 아래) — 작은 카드에서 검은 덩이로 보입니다");
-  if(tn && tn.cast > CAST) notes.push("⚠️ 초록이 과합니다 (치우침 +" +
-    Math.round(tn.cast) + " · " + CAST + " 위) — 잔디가 아니라 필터로 보입니다");
-  if(tn) tones.push({ key: key, give: give, mean: tn.mean, cast: tn.cast });
+  /* ⚠️⚠️ **이 숫자는 "잔디가 많다" 와 "필터를 걸었다" 를 가르지
+     못합니다.** 잔디 접사는 원래 높습니다 (지금 매칭 띠가 +37 인데
+     멀쩡한 잔디 사진입니다). 그래서 **단정하지 않고 보라고** 합니다 —
+     단정하면 멀쩡한 사진을 고장이라고 하는 자리가 됩니다. */
+  if(tn && tn.cast > CAST) notes.push("초록이 높습니다 (치우침 +" +
+    Math.round(tn.cast) + ") — 잔디가 많으면 정상입니다. " +
+    "보정 필터를 덧씌운 것은 아닌지 **눈으로** 보세요");
+  /* ⚠️ 밝기 통일은 **분류 카드 열 장끼리**만 봅니다. 띠는 나란히
+     놓이지 않고 화면 위아래로 멀리 떨어져 있어서, 같이 묶으면
+     멀쩡한 묶음을 "제각각" 이라고 잡습니다. */
+  if(tn && isCat) tones.push({ key: key, give: give, mean: tn.mean, cast: tn.cast });
 
   console.log("  " + (notes.length ? "⚠️ " : "✅ ") + give.padEnd(20) +
-    "→ " + key.padEnd(14) + d.w + "x" + d.h +
+    "→ " + key.padEnd(16) + d.w + "x" + d.h +
     "  비율 " + r.toFixed(2) + "  " + kb + "KB" +
-    (sh === null ? "" : "  또렷함 " + sh) +
+    (sh === null ? "" : "  또렷함 " + sh + "@" + atW) +
     (tn === null ? "" : "  밝기 " + Math.round(tn.mean) +
                         "  초록 " + (tn.cast >= 0 ? "+" : "") + Math.round(tn.cast)) +
-    "  보이는 몫 " + Math.round(shown * 100) + "%");
+    (isCat ? "  보이는 몫 " + Math.round(shown * 100) + "%" : "  (띠)"));
+  if(!isCat) notes.push("⚠️ 띠입니다 — 주인공이 **오른쪽 끝**에 있는지 보세요 " +
+    "(왼쪽은 흰 판이 덮고 폰에서는 거의 안 보입니다 · " +
+    (key === "match-banner" ? "오른쪽 40%" : "오른쪽 20%") + " 안)");
   notes.forEach(function(n){ console.log("        " + n); });
 
   if(go){

@@ -14,6 +14,8 @@
         (좁으면 배포 뒤에야 전부 죽습니다 — 로컬은 영원히 초록)
      ⑤ .env 같은 파일이 따라 들어왔는가
      ⑥ 손님이 적은 글을 화면에 낼 때 esc() 를 거치는가
+     ⑦ 1년 캐시를 거는 자산에 내용 값(?v=)이 붙어 있는가
+     ⑧ **없는 CSS 변수**를 쓴 자리 (조용히 기본값으로 떨어집니다)
 
    돌리기   node tools/check-safe.js
             node tools/check-safe.js --prove
@@ -311,6 +313,45 @@ ok("1년 캐시가 걸린 자산에 내용 값(?v=)이 전부 붙어 있다",
    noVer.length === 0,
    noVer.length ? noVer.length + "곳: " + noVer.slice(0, 4).join(" · ") : "");
 
+/* ── ⑧ **없는 CSS 변수를 쓴 자리** ───────────────────────────────
+   ⚠️⚠️⚠️ 없는 변수를 쓰면 `var(--없는것)` 이 **조용히 기본값으로**
+   떨어집니다 — 에러도 없고, 색이 "왜 안 바뀌지" 로만 보입니다.
+   2026-11-05 에 `--bad-line` 을 지어 썼고, 그 전(조인)에는
+   `--pt-text` · `--r-s` · `--ivory` 셋을 지어 썼습니다.
+   ⚠️⚠️ **그때 제가 쓴 찾는 코드가 틀렸습니다** — 줄머리만 보아서
+   `tokens.css` 가 한 줄에 셋씩 적어 둔 변수를 "없다" 고 했고, 그
+   말을 믿고 **멀쩡한 `--bad-text` 를 바꿨습니다**. 그래서 여기서는
+   줄 어디에 있든 `--이름:` 을 **다 모읍니다.**
+   ⚠️ 쓰는 쪽은 `var(--이름` 만 셉니다 (대체값이 있어도 없는 변수는
+   없는 것입니다 — 두 벌로 적어 두는 셈이고 한쪽만 고치게 됩니다). */
+console.log("\n── 없는 CSS 변수");
+const CSSF = FILES.filter(function(f){ return /\.css$/.test(f); });
+const DEFINED = new Set();
+CSSF.forEach(function(f){
+  const t = fs.readFileSync(path.join(ROOT, f), "utf8");
+  /* ⚠️ 이름 꼴을 **좁게 잡지 않습니다** — CSS 변수 이름에는 한글도
+     들어갈 수 있고, 좁게 잡으면 그런 이름의 오타를 **아무것도 안
+     잡는 검사**가 됩니다 (되돌려 보기가 그것을 잡았습니다). */
+  (t.match(/--[^\s:;,(){}]+\s*:/g) || []).forEach(function(m){
+    DEFINED.add(m.replace(/\s*:$/, ""));
+  });
+});
+let usedN = 0;
+const ghost = [];
+CSSF.forEach(function(f){
+  const t = fs.readFileSync(path.join(ROOT, f), "utf8");
+  (t.match(/var\(\s*--[^\s:;,(){}]+/g) || []).forEach(function(m){
+    const v = m.replace(/^var\(\s*/, "");
+    usedN++;
+    if(!DEFINED.has(v) && ghost.indexOf(f + " " + v) < 0) ghost.push(f + " " + v);
+  });
+});
+/* ⚠️ "잴 것이 없으면 0 으로 끝나는 검사" 를 만들지 않습니다 */
+ok("CSS 변수를 실제로 쟀다 (정의 " + DEFINED.size + "개)", usedN > 0,
+   "쓴 자리 " + usedN + "곳");
+ok("없는 CSS 변수를 쓴 자리가 없다", ghost.length === 0,
+   ghost.slice(0, 5).join(" · "));
+
 if(process.argv.indexOf("--prove") >= 0){
   console.log("\n되돌려 보기 — 일부러 넣어 봅니다");
   const probe = path.join(ROOT, "js", "__probe.js");
@@ -325,6 +366,40 @@ if(process.argv.indexOf("--prove") >= 0){
 
   /* ⚠️⚠️ **함수를 따라가게 고친 뒤 꼭 되돌려 봅니다.** 느슨해진 자리로
      진짜가 지나가면, 검사는 늘 초록인데 손님 글이 날것으로 나갑니다. */
+  /* ⑧ — 없는 변수를 하나 지어 써 봅니다 */
+  const cssProbe = path.join(ROOT, "css", "__probe.css");
+  /* ⚠️ **실제로 날 만한 오타**를 넣습니다 (`--bad-line` 처럼 있는
+     이름에서 한 조각이 다른 것). 그리고 한글 이름도 같이 — 처음에
+     한글만 넣었더니 이름 꼴을 좁게 잡은 탓에 **아무것도 안 잡혔고**,
+     되돌려 보기가 그것을 잡았습니다. */
+  fs.writeFileSync(cssProbe,
+    ".x{ color: var(--bad-line); }\n.y{ color: var(--이런변수는없습니다); }\n");
+  const pf = fs.readdirSync(path.join(ROOT, "css"))
+    .filter(function(f){ return /\.css$/.test(f); });
+  let caught = false;
+  const defined2 = new Set();
+  pf.forEach(function(f){
+    const t = fs.readFileSync(path.join(ROOT, "css", f), "utf8");
+    (t.match(/--[^\s:;,(){}]+\s*:/g) || []).forEach(function(m){
+      defined2.add(m.replace(/\s*:$/, "")); });
+  });
+  const got2 = [];
+  pf.forEach(function(f){
+    const t = fs.readFileSync(path.join(ROOT, "css", f), "utf8");
+    (t.match(/var\(\s*--[^\s:;,(){}]+/g) || []).forEach(function(m){
+      const v = m.replace(/^var\(\s*/, "");
+      if(!defined2.has(v)){ caught = true; got2.push(v); } });
+  });
+  fs.unlinkSync(cssProbe);
+  console.log("  없는 CSS 변수를 지어 쓰니 잡히나: " +
+    (caught ? "O" : "❌ 못 잡습니다") + "  (" + got2.join(" · ") + ")");
+  console.log("  ⚠️ **한글 이름**의 오타도 잡나: " +
+    (got2.indexOf("--이런변수는없습니다") >= 0 ? "O" : "❌ 못 잡습니다"));
+  /* ⚠️ 한 줄에 셋씩 적어 둔 변수를 **정의로 읽는지**까지 봅니다 —
+     전에 줄머리만 보아서 멀쩡한 변수를 "없다" 고 했습니다. */
+  console.log("  한 줄에 여럿 적은 변수를 정의로 읽나: " +
+    (defined2.has("--bad-text") && defined2.has("--bad-soft") ? "O" : "❌"));
+
   console.log("\n  esc() 검사를 일부러 되돌려 봅니다");
   const probes = [
     ["손님 글을 그대로 잇는 자리",

@@ -48,7 +48,13 @@
   function load(){
     /* ⚠️ RLS 가 제 줄을 내줍니다 (0001 의 provider_public — id = my_provider()).
        ⚠️⚠️ **고칠 칸을 전부** 읽습니다. 안 읽은 칸을 안 보내면 지워집니다. */
-    return get("provider?select=id,name,intro,regions,gu,subs,since,consult_hours," +
+    /* ⚠️⚠️⚠️ **문이 덮어쓰는 칸을 하나라도 안 읽으면 그 칸이 지워집니다**
+       (`save_provider_self` 는 보낸 것으로 통째로 덮습니다). 그래서
+       화면에 칸이 없는 것까지 **다 읽습니다** — `industries` 가 그래서
+       여기 있습니다 (앞 서비스가 쓰던 칸이고 골프에서는 아무 화면도
+       안 읽지만, 안 읽어 오면 저장할 때마다 비워집니다). */
+    return get("provider?select=id,name,intro,regions,gu,industries,subs,since," +
+               "consult_hours," +
                "brands,scale,contact_ways,verified,listed,assignable,state,state_why" +
                "&id=eq." + encodeURIComponent(PV) + "&limit=1");
   }
@@ -182,9 +188,17 @@
       since: (f.querySelector("#me-since").value || "").trim(),
       brands: (f.querySelector("#me-brands").value || "").split(",")
         .map(function(x){ return x.trim(); }).filter(Boolean),
-      /* ⚠️ 화면에 칸이 없는 것도 **읽은 값 그대로** 돌려보냅니다 —
-         안 보내면 지워집니다 (gu · industries · scale). */
+      /* ⚠️⚠️⚠️ 화면에 칸이 없는 것도 **읽은 값 그대로** 돌려보냅니다 —
+         안 보내면 지워집니다 (gu · industries · scale).
+         ⚠️ 이 주석은 셋을 적어 놓고 **`industries` 를 안 보내고**
+         있었습니다 (2026-11-05 에 찾았습니다) — 업체가 작업실에서
+         저장할 때마다 그 칸이 조용히 비워졌습니다. 골프에서는 아무
+         화면도 그 칸을 안 읽어서 **아무 데서도 안 보이는 고장**이었고,
+         누가 그 칸을 쓰기 시작하는 날 터질 참이었습니다.
+         ⚠️⚠️ **주석이 적은 것과 코드가 보내는 것을 맞춰 보세요** —
+         주석이 맞는다고 믿을 수 없습니다. */
       gu: ME.gu || [],
+      industries: ME.industries || [],
       scale: ME.scale || ""
     };
     bt.disabled = true;

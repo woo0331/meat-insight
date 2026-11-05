@@ -25,6 +25,9 @@
    ════════════════════════════════════════════════════════════════════ */
 const { chromium } = require("playwright");
 const { serve, watch } = require("./_serve.js");
+/* ⚠️ 마이그레이션을 **읽어서** 칸을 세는 자리가 있습니다 — 칸 이름을
+   검사에 손으로 적어 두면 문에 칸이 붙는 날 그 칸만 조용히 지워집니다. */
+const fs = require("fs"), path = require("path");
 
 let bad = 0, ran = 0;
 function ok(name, cond, got){
@@ -1062,6 +1065,57 @@ function stub(p, who, tables, rpcs, up){
   s = await open("/my", { role:"customer", name:"홍길동" },
     Object.assign({}, MYT, { request_photo: PICS }), {}, true);
   ok("내 요청에 붙은 파일이 보인다", (await s.p.locator("#reqbox .phv").count()) === 1);
+
+  /* ══════════════════════════════════════════════════════════════
+     ⚠️⚠️⚠️ **올린 파일을 빼는 단추** (0011 의 `drop_photo`)
+
+     그 문은 0011 에 서 있었는데 **부르는 화면이 0곳**이었습니다 —
+     손님은 잘못 올린 사진을 뺄 길이 없었습니다 (`approve_provider` 와
+     똑같은 꼴입니다: 문은 멀쩡하고 검사도 초록인데 기능이 없습니다).
+     ⚠️ `check-doors` 의 `KNOWN` 에 "단추가 없습니다" 로 적혀 있던
+     자리이고, 2026-11-05 에 단추를 냈습니다.
+     ══════════════════════════════════════════════════════════════ */
+  ok("⚠️⚠️ **빼는 단추가 손님 화면에 있다** (문만 있고 화면이 없던 자리)",
+     (await s.p.locator("#reqbox button[data-dropphoto]").count()) === 2,
+     await s.p.locator("#reqbox button[data-dropphoto]").count());
+  t = (await s.p.textContent("#reqbox")) || "";
+  ok("  ⚠️ 밑줄 글이 **보는 사람에 맞게** 적힌다 (제 파일입니다)",
+     t.indexOf("올리신 파일입니다") >= 0 &&
+     t.indexOf("손님이 올리신 것입니다") < 0, t.slice(0, 300));
+  /* ⚠️⚠️ **되돌릴 수 없는 일이라 한 번 여쭙습니다** — 안 여쭈면
+     손이 미끄러진 순간 파일이 사라집니다 (0011 은 줄을 지웁니다). */
+  await s.p.evaluate(function(){ window.confirm = function(){ return false; }; });
+  await s.p.click("#reqbox button[data-dropphoto]");
+  await s.p.waitForTimeout(250);
+  ok("⚠️⚠️ 여쭙고 **아니라고 하면 안 보낸다**",
+     s.sent.filter(function(x){ return x.name === "drop_photo"; }).length === 0,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  await s.p.evaluate(function(){ window.confirm = function(){ return true; }; });
+  await s.p.click("#reqbox button[data-dropphoto]");
+  await s.p.waitForTimeout(350);
+  const dpc = s.sent.filter(function(x){ return x.name === "drop_photo"; })[0];
+  ok("⚠️ 빼기가 **drop_photo 를 실제로 부른다**", !!dpc,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  if(dpc){
+    /* ⚠️⚠️ 이 문은 **jsonb 가 아니라 자리 인자**를 받습니다 (0011) —
+       `{ p: … }` 로 보내면 "함수를 찾을 수 없습니다" 가 됩니다. */
+    let dpp = null;
+    try{ dpp = JSON.parse(dpc.body); }catch(_){}
+    ok("  꾸러미의 칸 이름이 문과 같다 (p_photo · jsonb 가 아닙니다)",
+       !!dpp && dpp.p_photo === PICS[0].id && dpp.p === undefined, dpc.body);
+  }
+  await s.p.close();
+
+  /* ⚠️⚠️⚠️ **업체 화면에는 빼는 단추가 없어야** 합니다 — 남이 올린
+     자료를 지우는 일이고, 문도 업체를 거절합니다. 그려 두면 눌러도
+     아무 일이 안 나는 단추가 됩니다 (절대 규칙 5). */
+  s = await open("/desk", { role:"provider", name:"업체", provider:"t-range" },
+                 DESKP, {}, true);
+  ok("⚠️⚠️ **업체 화면에는 빼는 단추가 없다** (문도 업체를 거절합니다)",
+     (await s.p.locator("#deskbox button[data-dropphoto]").count()) === 0);
+  t = (await s.p.textContent("#deskbox")) || "";
+  ok("  업체에게는 **손님이 올린 것**이라고 적는다",
+     t.indexOf("손님이 올리신 것입니다") >= 0, t.slice(0, 300));
   await s.p.close();
 
   console.log("\n── 이미 고른 뒤 · 견적이 0건일 때");
@@ -2355,6 +2409,10 @@ function stub(p, who, tables, rpcs, up){
     intro:"실내 타석 열두 개", regions:["seoul"], gu:["관악구"],
     subs:["ls-solo","rg-in"], since:2019, consult_hours:"평일 10~19시",
     brands:["타이틀리스트"], scale:"mid", contact_ways:["phone"],
+    /* ⚠️ 앞 서비스가 쓰던 칸입니다 — 골프에서는 아무 화면도 안 읽지만
+       문이 **덮어쓰므로** 화면이 돌려보내지 않으면 지워집니다.
+       2026-11-05 에 실제로 지워지고 있었습니다. */
+    industries:["golf"],
     verified:{}, listed:true, assignable:true, state:"approved", state_why:null }];
 
   console.log("\n── /desk 업체 정보 — 업체가 아니면 한 줄도 안 보입니다");
@@ -2412,6 +2470,40 @@ function stub(p, who, tables, rpcs, up){
   ok("  상담 시간 · 개업 · 브랜드도 담긴다",
      !!md && md.consultHours === "평일 10~19시" && md.since === "2019" &&
      md.brands.join() === "타이틀리스트", me1 && me1.body);
+  /* ══════════════════════════════════════════════════════════════
+     ⚠️⚠️⚠️ **문이 덮어쓰는 칸을 마이그레이션에서 직접 읽어 맞춰 봅니다.**
+
+     칸 이름을 검사에 **손으로 적어 두면** 문에 칸이 하나 더 붙는 날
+     그 칸만 조용히 지워집니다 — 그리고 검사는 초록입니다. 그래서
+     0044 의 `update provider set ...` 를 **읽어서** 셉니다.
+     ⚠️ 실제로 그렇게 하나가 빠져 있었습니다: 화면이 `industries` 를
+     안 담아 보내서, 업체가 저장할 때마다 그 칸이 비워졌습니다
+     (골프에서는 아무 화면도 안 읽는 칸이라 **아무 데서도 안 보이는
+     고장**이었습니다). 주석은 "gu · industries · scale 을 돌려보냅니다"
+     라고 적혀 있었는데 코드는 둘만 보냈습니다.
+     ⚠️ 갯수를 박지 않습니다 — 문에 칸이 늘면 늘어난 대로 셉니다.
+     ══════════════════════════════════════════════════════════════ */
+  {
+    const sql = fs.readFileSync(
+      path.join(__dirname, "..", "db/migrations/0044_contact_ways.sql"), "utf8");
+    const i = sql.indexOf("update provider set");
+    const blk = i < 0 ? "" : sql.slice(i, sql.indexOf("where id = v_pv", i));
+    /* 줄머리의 `칸 =` 만 모읍니다 (주석 줄과 식 안쪽은 안 셉니다) */
+    const cols = blk.split("\n").map(function(ln){
+      const m = /^\s{4}([a-z_]+)\s*=/.exec(ln);
+      return m ? m[1] : null;
+    }).filter(Boolean);
+    const camel = function(c){
+      return c.replace(/_([a-z])/g, function(_, ch){ return ch.toUpperCase(); }); };
+    ok("⚠️ 잴 것이 0개면 실패입니다 (문이 덮어쓰는 칸을 읽기는 했는가)",
+       cols.length > 0, cols.join(","));
+    const missing = md ? cols.map(camel).filter(function(k){
+      return !(k in md); }) : ["꾸러미를 못 읽었습니다"];
+    ok("⚠️⚠️⚠️ 문이 덮어쓰는 칸을 화면이 **하나도 빠뜨리지 않고** 담는다",
+       missing.length === 0,
+       "빠진 칸 — " + missing.join(" · ") + "  (문의 칸: " + cols.join(",") + ")");
+  }
+
   ok("업체 정보 자리의 누르는 것이 40px 이상이다",
      (await tapsOk(s.p, "#mebox")) === 0, await tapsOk(s.p, "#mebox"));
   await s.p.close();

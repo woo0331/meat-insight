@@ -1020,6 +1020,16 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .phv-t{ display:inline-flex; align-items:center; gap:6px;
         font-size:14.5px; color: var(--grn-text); }
 .phv-l{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+/* ⚠️ 한 줄 안에 "보기" 와 "빼기" 가 **같이** 옵니다 — 폰에서 붙어
+   보이지 않게 칸을 둡니다. `li` 가 격자 칸이 아니라 flex 칸이므로
+   줄바꿈이 되어도 두 단추가 갈라지지 않습니다. */
+.phv-l > li{ display:flex; gap:6px; min-width:0; }
+/* ⚠️ 되돌릴 수 없는 단추라 **빨간 글자**로 둡니다 — 면이 아니라
+   글자색입니다 (--bad 는 면 전용이라 흰 글자를 얹으면 기준을 못 넘습니다). */
+/* ⚠️⚠️ `--bad-line` 은 **없는 변수**였습니다 (지어 쓴 것입니다 —
+   없는 변수를 쓰면 조용히 기본값으로 떨어집니다. tokens.css 에
+   있는 것은 `--bad` · `--bad-text` · `--bad-soft` 셋뿐입니다). */
+.phv-x{ color: var(--bad-text); border-color: var(--bad-soft); }
 .phv-n{ margin-top:8px; font-size:13px; color: var(--ink3);
         word-break: keep-all; overflow-wrap: anywhere; }
 

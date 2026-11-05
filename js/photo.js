@@ -193,18 +193,37 @@
   };
 
   /* 사진 줄을 그립니다 — ⚠️ 0장이면 **아무것도 안 그립니다**
-     (빈 액자를 두면 "사진이 있었는데 안 보인다" 로 읽힙니다). */
-  window.amPhotoBlock = function(rows){
+     (빈 액자를 두면 "사진이 있었는데 안 보인다" 로 읽힙니다).
+
+     ⚠️⚠️⚠️ **`mine` 을 켜면 빼는 단추가 같이 나옵니다** (0011 의
+     `drop_photo`). 그 문은 2026-11-05 까지 **부르는 화면이 0곳**
+     이었습니다 — 문을 만들고 화면을 안 만든 자리이고, 손님은 잘못
+     올린 사진을 뺄 길이 없었습니다 (`approve_provider` 와 같은 꼴).
+     ⚠️⚠️ **업체 화면에서는 켜지 않습니다** — 문도 업체를 거절합니다
+     (남이 올린 자료를 지우는 일입니다). 안 켜면 단추가 아예 안
+     나오므로, 눌러도 아무 일이 안 나는 단추가 생기지 않습니다.
+     ⚠️ 밑줄 글은 **보는 사람에 따라 다릅니다** — 제 사진을 보면서
+     "손님이 올리신 것입니다" 라고 읽으면 남의 것으로 읽힙니다. */
+  window.amPhotoBlock = function(rows, mine){
     if(!rows || !rows.length) return "";
     return '<div class="phv"><b class="phv-t">' + icon("camera", 15) +
       ' 붙이신 파일 ' + won(rows.length) + '장</b>' +
       '<ul class="phv-l">' + rows.map(function(p){
         var pdf = p.mime === "application/pdf";
+        var what = (pdf ? "서류" : "사진") + " · " + size(p.bytes);
         return '<li><button type="button" class="btn btn-sm btn-line" ' +
-          'data-photo="' + esc(p.id) + '">' +
-          esc((pdf ? "서류" : "사진") + " · " + size(p.bytes)) + '</button></li>';
+          'data-photo="' + esc(p.id) + '">' + esc(what) + '</button>' +
+          (mine
+            ? '<button type="button" class="btn btn-sm btn-line phv-x" ' +
+              'data-dropphoto="' + esc(p.id) + '" data-what="' + esc(what) + '">' +
+              '빼기</button>'
+            : '') +
+        '</li>';
       }).join("") + '</ul>' +
-      '<p class="phv-n">⚠️ 손님이 올리신 것입니다. 보는 주소는 10분 뒤에 닫힙니다.</p>' +
+      '<p class="phv-n">⚠️ ' +
+        (mine ? '올리신 파일입니다. 빼시면 업체와 운영자도 더는 보지 못합니다.'
+              : '손님이 올리신 것입니다.') +
+        ' 보는 주소는 10분 뒤에 닫힙니다.</p>' +
       '</div>';
   };
 })();

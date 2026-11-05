@@ -277,7 +277,10 @@
     });
 
     /* ⚠️ 올리신 파일 — 0장이면 아무것도 안 그립니다 */
-    if(window.amPhotoBlock) h += window.amPhotoBlock(pics);
+    /* ⚠️ `true` — **제가 올린 파일**이라 빼는 단추가 같이 나옵니다
+       (0011 의 `drop_photo`). 업체 화면(`js/desk.js`)에서는 켜지
+       않습니다 — 문도 업체를 거절합니다. */
+    if(window.amPhotoBlock) h += window.amPhotoBlock(pics, true);
 
     if(qs.length){
       h += '<h3 class="rq-h">받은 견적 ' + won(qs.length) + '건</h3>' +
@@ -388,6 +391,28 @@
         ph.disabled = false;
         if(pm) pm.textContent = why(err);
       });
+      return;
+    }
+    /* ⚠️⚠️⚠️ **되돌릴 수 없는 일이라 한 번 여쭙습니다.** 파일을
+       빼면 업체도 운영자도 더는 못 봅니다 (0011 은 줄을 지웁니다 —
+       가리는 것이 아닙니다). 무엇을 빼는지 **이름까지** 말합니다. */
+    var dp = e.target.closest ? e.target.closest("button[data-dropphoto]") : null;
+    if(dp){
+      if(!window.confirm("이 파일을 뺄까요? — " + dp.getAttribute("data-what") +
+                         "\n빼시면 되돌릴 수 없고, 업체와 운영자도 더는 " +
+                         "보지 못합니다.")) return;
+      var row1 = dp.closest(".dk-r"), dm = row1 ? row1.querySelector(".dk-m") : null;
+      dp.disabled = true;
+      if(dm){ dm.hidden = false; dm.textContent = "빼는 중입니다…"; }
+      /* ⚠️ 이 문은 **jsonb 가 아니라 자리 인자**를 받습니다 (0011) —
+         `{ p: … }` 로 보내면 "함수를 찾을 수 없습니다" 가 됩니다. */
+      rpc("drop_photo", { p_photo: dp.getAttribute("data-dropphoto") })
+        .then(paint)
+        .catch(function(err){
+          dp.disabled = false;
+          /* ⚠️ DB 가 거절한 말을 **그대로** 보여 줍니다 */
+          if(dm) dm.textContent = why(err);
+        });
       return;
     }
     var ac = e.target.closest ? e.target.closest("button[data-apcancel]") : null;

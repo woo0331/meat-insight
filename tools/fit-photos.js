@@ -41,7 +41,14 @@ function arg(name, dflt){
   const i = process.argv.indexOf(name);
   return (i >= 0 && process.argv[i+1]) ? process.argv[i+1] : dflt;
 }
-const OUT   = path.join(ROOT, arg("--out", "img"));
+/* ⚠️⚠️ **절대경로를 주면 그대로 씁니다.** 예전에는 무조건
+   `path.join(ROOT, …)` 라, 저장소 **밖**에 내려고 절대경로를 주면
+   `meat-insight/tmp/...` 처럼 **저장소 안에** 조용히 만들었습니다 —
+   성공이라고 말하면서요. 정적 사이트라 그렇게 생긴 파일은 **그대로
+   배포됩니다** (작업 기억의 "검사가 찍은 없는 업체 화면이 커밋에
+   들어가 있었습니다" 와 같은 자리입니다). */
+const outArg = arg("--out", "img");
+const OUT    = path.isAbsolute(outArg) ? outArg : path.join(ROOT, outArg);
 const INSET = Number(arg("--inset", "0")) || 0;
 const ONLY  = arg("--only", "");
 

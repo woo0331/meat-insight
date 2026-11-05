@@ -127,6 +127,42 @@ function sharp(file, atW){
   }catch(e){ return null; }
 }
 
+/* 밝기와 색 치우침 — 의뢰 기준 §4 의 "지나치게 어두운 사진 금지" ·
+   "과도한 녹색 필터 금지" · "사진마다 밝기와 색온도를 통일" 을 **재는**
+   자리입니다. 눈으로만 보면 열 장을 나란히 놓고 봐야 알 수 있고,
+   한 장씩 받으면 영영 안 드러납니다.
+   ⚠️ 작게 줄여서 잽니다 — 카드에서 보이는 것은 뭉친 색이지 점 하나가
+   아닙니다. */
+function tone(file){
+  try{
+    const v = execFileSync("convert", [file,
+      "-colorspace", "sRGB", "-resize", "200x",
+      "-format", "%[fx:mean*255] %[fx:mean.r*255] %[fx:mean.g*255] %[fx:mean.b*255]",
+      "info:"], { encoding: "utf8" }).trim().split(/\s+/).map(Number);
+    if(v.length < 4 || v.some(isNaN)) return null;
+    return {
+      mean: v[0], r: v[1], g: v[2], b: v[3],
+      /* 녹색 치우침 — 초록이 빨강 · 파랑의 가운데보다 얼마나 높은가.
+         ⚠️ 골프는 잔디라 **양수가 정상**입니다. 문제는 "필터를 건 것처럼"
+         높은 경우뿐입니다. */
+      cast: v[2] - (v[1] + v[3]) / 2
+    };
+  }catch(e){ return null; }
+}
+
+/* ⚠️⚠️ **오늘 받은 사진에 맞춰 숫자를 정하지 않습니다.** 그러면 다음에
+   오는 사진을 재는 것이 아니라 오늘 것을 설명하는 숫자가 됩니다.
+   아래 둘은 **뜻에서 나온 값**입니다 —
+     DARK  255 의 4분의 1. 그보다 어두우면 108px 카드에서 형체가 아니라
+           **검은 덩이**로 보입니다.
+     CAST  잔디가 많은 사진도 +25 안쪽입니다 (지금 열 장: +2.5 ~ +23.2).
+           그보다 높으면 피사체가 아니라 **필터**가 만든 초록입니다.
+   ⚠️ 통일은 **절대값으로 잴 수 없습니다** (낮 사진과 실내 사진은 원래
+   다릅니다). 그래서 한 장씩 잡지 않고 **열 장의 폭**을 봅니다. */
+const DARK   = 64;
+const CAST   = 35;
+const SPREAD = 60;
+
 const dir = process.argv[2];
 const go  = process.argv.indexOf("--go") >= 0;
 if(!dir){
@@ -141,6 +177,7 @@ if(!fs.existsSync(dir)){
 const have = fs.readdirSync(dir);
 let ok = 0, miss = 0, bad = 0;
 const took = [];
+const tones = [];
 
 console.log("받은 폴더: " + dir + (go ? "   (실제로 넣습니다)" : "   (재기만 합니다)"));
 console.log("");
@@ -173,6 +210,7 @@ Object.keys(PAIR).forEach(function(give){
   /* 분류 카드가 **실제로 그려지는 폭** — 3배 화면 폰이 가장 큽니다
      (`AM_PHOTO_SIZES` 의 주석에 잰 값이 있습니다). */
   const sh   = sharp(src, 450);
+  const tn   = tone(src);
 
   /* ⚠️⚠️ 잘려 나가는 몫 — **액자 비율은 CSS 한 곳**에서 읽습니다
      (FRAME). 여기 숫자를 다시 적으면 디자인을 바꾸는 날 조용히
@@ -191,12 +229,19 @@ Object.keys(PAIR).forEach(function(give){
     "% 가 잘립니다 (액자가 " + FRAME.toFixed(2) + " 입니다 · 16:9 면 0%)");
   if(r < r1 || r > r2) notes.push("⚠️ 비율이 자리 규격(" + r1 + "~" + r2 +
     ") 밖입니다 — fit-photos 가 먼저 한 번 더 잘라냅니다");
+  if(tn && tn.mean < DARK) notes.push("⚠️ 너무 어둡습니다 (밝기 " +
+    Math.round(tn.mean) + " · " + DARK + " 아래) — 작은 카드에서 검은 덩이로 보입니다");
+  if(tn && tn.cast > CAST) notes.push("⚠️ 초록이 과합니다 (치우침 +" +
+    Math.round(tn.cast) + " · " + CAST + " 위) — 잔디가 아니라 필터로 보입니다");
+  if(tn) tones.push({ key: key, give: give, mean: tn.mean, cast: tn.cast });
 
   console.log("  " + (notes.length ? "⚠️ " : "✅ ") + give.padEnd(20) +
     "→ " + key.padEnd(14) + d.w + "x" + d.h +
     "  비율 " + r.toFixed(2) + "  " + kb + "KB" +
     (sh === null ? "" : "  또렷함 " + sh) +
-    "  카드에 보이는 몫 " + Math.round(shown * 100) + "%");
+    (tn === null ? "" : "  밝기 " + Math.round(tn.mean) +
+                        "  초록 " + (tn.cast >= 0 ? "+" : "") + Math.round(tn.cast)) +
+    "  보이는 몫 " + Math.round(shown * 100) + "%");
   notes.forEach(function(n){ console.log("        " + n); });
 
   if(go){
@@ -210,6 +255,34 @@ Object.keys(PAIR).forEach(function(give){
   ok++;
 });
 
+/* ── 열 장을 **나란히 놓고** 봐야 드러나는 것 ────────────────────
+   ⚠️⚠️ 의뢰 기준 §4 의 "사진마다 밝기와 색온도를 통일" 은 **한 장씩
+   보면 영영 안 드러납니다.** 어느 한 장도 틀리지 않았는데 열 장을
+   카드로 늘어놓으면 들쭉날쭉한 꼴이 됩니다.
+   ⚠️ 그래서 절대값으로 한 장을 잡지 않고 **폭**을 봅니다 (낮 사진과
+   실내 사진은 원래 다릅니다 — 다른 것이 잘못은 아닙니다). */
+let spreadBad = 0;
+if(tones.length >= 2){
+  const ms = tones.map(function(t){ return t.mean; });
+  const lo = Math.min.apply(null, ms), hi = Math.max.apply(null, ms);
+  const spread = hi - lo;
+  const dark = tones.slice().sort(function(a, b){ return a.mean - b.mean; })[0];
+  const lite = tones.slice().sort(function(a, b){ return b.mean - a.mean; })[0];
+  console.log("");
+  console.log("── 열 장을 나란히 놓고 (의뢰 기준 §4 — 밝기 · 색온도 통일)");
+  console.log("   밝기 폭 " + Math.round(spread) +
+    "   가장 어두운 " + dark.give + " " + Math.round(dark.mean) +
+    " · 가장 밝은 " + lite.give + " " + Math.round(lite.mean));
+  if(spread > SPREAD){
+    spreadBad = 1;
+    console.log("   ⚠️⚠️ 폭이 " + SPREAD + " 을 넘습니다 — 카드 열 장이 제각각으로 보입니다.");
+    console.log("      ⚠️ 한 장씩은 다 멀쩡합니다. **늘어놓아야** 보이는 자리입니다 —");
+    console.log("         어두운 쪽을 다시 만들거나 밝기를 맞춰 달라고 하세요.");
+  }else{
+    console.log("   ✅ 고르게 들어왔습니다");
+  }
+}
+
 console.log("");
 console.log("── 짝이 맞은 것 " + ok + "장 · 아직 안 온 것 " + miss + " · 못 읽은 것 " + bad);
 
@@ -222,14 +295,27 @@ if(!ok && !miss && !bad){
 if(go && took.length){
   console.log("\n   넣었습니다: img/raw/ " + took.length + "장");
   console.log("\n⚠️⚠️⚠️ **여기서 멈추십니다. 사람이 볼 차례입니다.**");
-  console.log("   ① 상표 · 글자를 원본 100% 로 보세요 (카드 크기에서는 안 읽힙니다):");
-  took.forEach(function(f){ console.log("        display " + f + "   또는  open " + f); });
-  console.log("   ② 골프로 읽히는가 · 얼굴이 알아볼 만한가");
-  console.log("   보고 나서 규격을 맞추고 내려보낼 크기를 찍습니다:");
+  console.log("   도구가 재는 것은 크기 · 비율 · 또렷함 · 밝기까지입니다.");
+  console.log("   아래 셋은 **사람만** 볼 수 있습니다 (의뢰 기준 §5).");
+  console.log("");
+  console.log("   ① 상표 · 글자 — 원본 100% 로 보세요. 카드 크기에서는 안 읽힙니다:");
+  took.forEach(function(f){ console.log("        display " + f); });
+  console.log("      ⚠️ 특히 모자 앞판 · 상의 가슴 · 골프백 · 클럽 헤드 ·");
+  console.log("         진열대 · 노트북 · 실내 스크린 (지난번에 모자와 백에서 나왔습니다)");
+  console.log("   ② 골프로 읽히는가 · 얼굴 · 손 · 장비 모양이 자연스러운가");
+  console.log("   ③ 상업적 이용 권리 — 생성 도구명 · 날짜 · 약관 근거를");
+  console.log("      **img/CREDITS.md 에 적어 두세요** (생성형이라고 권리가");
+  console.log("      자동으로 보장되지 않습니다).");
+  console.log("");
+  console.log("   보고 나서:");
   console.log("        node tools/fit-photos.js --out img/mock --only cat-");
   console.log("        node tools/make-sizes.js");
   console.log("        node tools/ship.js");
+  console.log("   ⚠️⚠️ 2400x1350 이 들어오면 규격을 맞춘 결과가 **1760x990** 입니다.");
+  console.log("      js/data/photos.js 의 AM_PHOTO_SIZES[cat-*] 를 w:1760 h:990 으로");
+  console.log("      고치고 make 에 중간 폭을 하나 더 넣으셔야 합니다 — 안 고치면");
+  console.log("      큰 화면이 560px 다음으로 **원본을 통째로** 받습니다.");
 }else if(!go && ok){
   console.log("\n   넣으시려면: node tools/take-cat-photos.js " + dir + " --go");
 }
-process.exit(bad ? 1 : 0);
+process.exit((bad || spreadBad) ? 1 : 0);

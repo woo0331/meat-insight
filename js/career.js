@@ -68,6 +68,16 @@
     var k = m ? m[1] : "";
     return KNAME[k] ? k : "";
   }
+  /* ⚠️⚠️ 하위분류로 좁혀 오신 길 (`?s=` · 지시서 §4) — 분류 화면의
+     하위 목록이 `amSubUrl()` 로 보냅니다. 전에는 하위 여섯이 **글로만**
+     있어서 거기까지 가는 길이 없었습니다.
+     ⚠️ 모르는 하위 키는 **버립니다** — 주소를 손으로 고쳐 오시면
+     아무것도 안 걸리는 화면이 되는데, 그러면 "글이 없다" 로 읽힙니다. */
+  function nowSub(){
+    var m = /[?&]s=([a-z0-9-]+)/.exec(window.location.search || "");
+    var k = m ? m[1] : "";
+    return SUBNAME[k] ? k : "";
+  }
 
   function get(a, path){
     return fetch(a.conf.url + "/rest/v1/" + path, {
@@ -245,30 +255,45 @@
     '</form>';
   }
 
+  /* 지금 조건 — ⚠️ 하위로 좁혀 오셨으면 **무엇으로 좁혔는지** 말하고
+     풀 길을 같이 냅니다 (칸이 없는 조건이라 말해 주지 않으면 손님은
+     "글이 없다" 로 읽습니다). */
+  function subLine(sub){
+    if(!sub) return "";
+    return '<p class="sf-now">' + esc(SUBNAME[sub]) + ' 글만 보고 있습니다. ' +
+      '<a href="/cat/career">조건 지우기</a></p>';
+  }
+
   /* 거르개 — ⚠️⚠️ **단추가 아니라 링크**입니다. 주소를 복사해 보내도
      같은 화면이고 뒤로 가기도 됩니다 (`/search` 에서 배운 자리).
      ⚠️ 모양은 `.chip` 한 곳에서 옵니다 — 거르개 모양을 두 벌로
      적으면 한쪽만 고치는 날 둘이 달라집니다.
      ⚠️ 눌림 표시는 `.chip-on` 과 `aria-current` 둘 다 답니다 (색만
      바꾸면 화면 읽는 기계에는 아무 말도 안 한 것입니다). */
-  function filters(k){
+  function filters(k, sub){
+    /* ⚠️⚠️ 갈래를 눌러도 **하위 조건을 지킵니다** — 풀리면 손님이
+       좁혀 온 길이 조용히 사라집니다 (업체찾기에서 겪은 자리). */
+    var keep = sub ? "&s=" + encodeURIComponent(sub) : "";
     var one = function(key, name){
       var on = (k === key);
+      var qs = key ? ("?k=" + encodeURIComponent(key) + keep)
+                   : (sub ? "?s=" + encodeURIComponent(sub) : "");
       return '<a class="chip' + (on ? ' chip-on' : '') + '"' +
         (on ? ' aria-current="true"' : '') +
-        ' href="/cat/career' + (key ? '?k=' + esc(key) : '') +
+        ' href="/cat/career' + esc(qs) +
         '" data-k="' + esc(key) + '">' + esc(name) + '</a>';
     };
     return '<div class="sf-c jbf-c">' + one("", "전체") +
       KINDS.map(function(x){ return one(x.key, x.name); }).join("") + '</div>';
   }
 
-  function paint(a, rows, k){
-    var html = filters(k);
+  function paint(a, rows, k, sub){
+    var html = filters(k, sub) + subLine(sub);
     if(!rows.length){
       /* ⚠️ 0건이어도 **막다른 길로 두지 않습니다** (절대 규칙 2) */
       html += '<div class="none">' +
-        '<h3>' + (k ? esc(KNAME[k]) + ' 글이 아직 없습니다.'
+        '<h3>' + (sub ? esc(SUBNAME[sub]) + ' 글이 아직 없습니다.'
+                : k ? esc(KNAME[k]) + ' 글이 아직 없습니다.'
                     : '아직 올라온 글이 없습니다.') + '</h3>' +
         '<p>첫 글을 올려 보세요. 분류와 지역만 정하시면 됩니다.</p></div>';
     }else{
@@ -282,7 +307,7 @@
         e.preventDefault();
         var want = ln.getAttribute("data-k");
         try{ window.history.pushState({}, "", ln.getAttribute("href")); }catch(_){}
-        load(a, want);
+        load(a, want, sub);
       });
     });
 
@@ -329,12 +354,16 @@
     });
   }
 
-  function load(a, k){
+  function load(a, k, sub){
     var q = "v_job_open?select=id,kind,sub,region,title,body,pay,terms," +
             "close_at,created_at,who,pro_name,apply_n" +
             "&order=created_at.desc&limit=50";
-    if(k) q += "&kind=eq." + encodeURIComponent(k);
-    return get(a, q).then(function(rows){ paint(a, rows || [], k || ""); });
+    if(k)   q += "&kind=eq." + encodeURIComponent(k);
+    /* ⚠️ 열쇠 이름이 DB 의 칸과 **글자까지** 같아야 합니다 — 다르면
+       아무것도 안 걸렀는데 화면은 멀쩡해 보입니다. */
+    if(sub) q += "&sub=eq." + encodeURIComponent(sub);
+    return get(a, q).then(function(rows){
+      paint(a, rows || [], k || "", sub || ""); });
   }
 
   window.amAuthAsk().then(function(a){
@@ -351,9 +380,10 @@
       return;
     }
 
-    load(a, nowKind());
+    load(a, nowKind(), nowSub());
     /* 뒤로 가기 — 주소가 바뀌면 다시 그립니다 */
-    window.addEventListener("popstate", function(){ load(a, nowKind()); });
+    window.addEventListener("popstate", function(){
+      load(a, nowKind(), nowSub()); });
 
     var box = document.getElementById("jobbox");
     if(!box) return;
@@ -392,7 +422,7 @@
           '<p>목록에 바로 보입니다. 지원이 들어오면 내 정보에서 ' +
           '수락하실 수 있습니다.</p>' +
           '<a class="btn btn-pt" href="/my">내 정보에서 보기</a>';
-        load(a, nowKind());
+        load(a, nowKind(), nowSub());
       }).catch(function(err){
         btn.disabled = false;
         msg.textContent = String((err && err.message) || "올리지 못했습니다.");

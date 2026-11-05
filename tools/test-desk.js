@@ -3078,6 +3078,48 @@ function stub(p, who, tables, rpcs, up){
     await g.p.close();
   }
 
+  /* ②-2 하위분류로 좁혀 오는 길 (`?s=` · 지시서 §4)
+     ⚠️⚠️⚠️ **인력의 하위 여섯은 업체 목록이 아닙니다.** "골프 프로
+     구인 · 구직" 을 업체찾기로 보내면 영원히 0건이고, 그건 눌러도
+     아무 일이 안 나는 칸과 같습니다 — 그래서 **제 글 목록**으로
+     옵니다 (`amSubUrl` 이 그 갈래를 한 곳에서 가릅니다). */
+  {
+    const g = await open("/cat/career?s=cr-caddy",
+                         { role:"customer", name:"", signedIn:false },
+                         { v_job_open: [JOBS[0]] }, {}, true);
+    const q = g.sent.filter(function(x){
+      return x.name === "GET" && x.body.indexOf("v_job_open") >= 0; })[0];
+    ok("⚠️⚠️ 하위로 좁혀 오면 **sub 로 좁혀 읽는다** (열쇠 이름이 DB 와 같은가)",
+       !!q && q.body.indexOf("sub=eq.cr-caddy") >= 0, q ? q.body : "안 읽었습니다");
+    const r = await g.p.evaluate(function(){
+      return { body: document.getElementById("joblist").innerText,
+               clear: !!document.querySelector('#joblist a[href="/cat/career"]') };
+    });
+    ok("  무엇으로 좁혔는지 **글로** 말한다 (칸이 없는 조건입니다)",
+       r.body.indexOf("캐디 구인") >= 0 && r.body.indexOf("글만 보고 있습니다") >= 0,
+       r.body.slice(0, 200));
+    ok("  조건을 지우는 길도 낸다 (막다른 길로 두지 않습니다)", r.clear, "");
+
+    /* ⚠️ 갈래를 눌러도 **하위 조건을 지켜야** 합니다 — 풀리면 손님이
+       좁혀 온 길이 조용히 사라집니다. */
+    const href = await g.p.getAttribute('.jbf-c .chip[data-k="hire"]', "href");
+    ok("⚠️⚠️ 갈래 칸의 주소가 **하위를 지킨다**",
+       (href || "").indexOf("k=hire") >= 0 && (href || "").indexOf("s=cr-caddy") >= 0,
+       String(href));
+    await g.p.close();
+
+    /* ⚠️ 모르는 하위 키는 **버립니다** — 좁혀 놓고 "글이 없다" 로 보이면
+       손님은 글이 없는 줄 압니다. */
+    const g2 = await open("/cat/career?s=이런하위는없습니다",
+                          { role:"customer", name:"", signedIn:false },
+                          { v_job_open: JOBS }, {}, true);
+    const q2 = g2.sent.filter(function(x){
+      return x.name === "GET" && x.body.indexOf("v_job_open") >= 0; })[0];
+    ok("모르는 하위 키는 버리고 전체를 보여 준다 (지어내지 않습니다)",
+       !!q2 && q2.body.indexOf("sub=eq.") < 0, q2 ? q2.body : "안 읽었습니다");
+    await g2.p.close();
+  }
+
   /* ③ 로그인 뒤 — 올리는 양식 */
   {
     const g = await open("/cat/career", { role:"customer", name:"손님", signedIn:true },

@@ -106,10 +106,15 @@ function asks(c){
   return '<section class="sec sec-alt"><div class="wrap">' +
     '<div class="sec-hd"><h2>' + esc(c.name) + ' 요청에 적는 것</h2>' +
     '<p>이 분류로 매칭 요청을 남기시면 아래를 여쭙습니다. ' +
-    '전부 한 양식에서 한 번에 적으십니다.</p></div>' +
+    '전부 한 양식에서 한 번에 적으십니다. ' +
+    '<b>*</b> 는 꼭 적어 주셔야 하는 것입니다.</p></div>' +
+    /* ⚠️⚠️ **별표는 AM_ASK 의 셋째 칸에서 옵니다** — 양식이 required
+       를 거는 자리와 **같은 줄**을 읽습니다. 여기 손으로 적으면
+       "필수라고 적어 놓고 안 받는" 꼴이 됩니다 (`test-match` 가
+       맞춰 봅니다). */
     '<ul class="asks">' + a.map(function(x){
       return '<li><span class="asks-n">' + icon("check", 16) + '</span>' +
-        esc(x[0]) + '</li>';
+        esc(x[0]) + (x[2] ? ' <b>*</b>' : '') + '</li>';
     }).join("") + '</ul>' +
     '<p class="asks-go"><a class="btn btn-pt" href="/match?cat=' + esc(c.key) + '">' +
       icon("match", 20) + esc(c.name) + ' 매칭 요청하기</a></p>' +
@@ -126,14 +131,32 @@ exports.build = function(c){
     '<p class="pghd-l">' + esc(c.lead) + ' — ' + esc(k.what) + '</p>' +
   '</div></section>';
 
-  /* 하위 — ⚠️ 지금은 **거르개가 아니라 글**입니다. 누르는 것처럼
-     보이게 만들면 눌러도 아무 일이 안 나는 칸이 됩니다. */
+  /* ⚠️⚠️⚠️ **하위 예순둘까지 가는 길** (지시서 §4). 전에는 여기가
+     **글**이었습니다 — "누르는 것처럼 보이게 만들면 눌러도 아무 일이
+     안 나는 칸이 된다" 는 까닭이었고, 그때는 하위로 좁히는 자리가
+     실제로 없었습니다. 지금은 업체찾기가 `sub` 로 좁힙니다
+     (`js/search.js`), 그래서 **누르면 실제로 좁혀집니다.**
+     ⚠️ 주소는 `amSubUrl()` **한 함수**에서만 짓습니다.
+     ⚠️⚠️ **업체가 입점하는 하위만** 링크로 냅니다 — 조인 · 커뮤니티의
+     하위를 업체찾기로 보내면 그 화면은 영원히 0건이고, 그건 눌러도
+     아무 일이 안 나는 칸과 같습니다. 그 둘은 글로 둡니다.
+     ⚠️ 업체가 0곳이어도 막다른 길이 아닙니다 — 업체찾기의 0건 자리가
+     "조건에 맞는 업체가 없습니다" 와 **매칭 요청 단추**를 같이 냅니다. */
+  var canPv = W.amCatItemsForProvider(c).map(function(it){ return it.key; });
   var subs = items.length
     ? '<section class="sec"><div class="wrap">' +
       '<div class="sec-hd"><h2>' + esc(c.name) + '에서 다루는 것</h2>' +
-      '<p>' + esc(k.subs) + '</p></div>' +
-      '<ul class="chips">' + items.map(function(it){
-        return '<li><span class="chip">' + esc(it.name) + '</span></li>';
+      '<p>' + esc(k.subs) +
+      (canPv.length ? ' 눌러 보시면 그 일을 하는 업체만 모아 보여 드립니다.' : '') +
+      '</p></div>' +
+      /* ⚠️ `chips-sub` 는 **잴 자리를 가리키는 이름**입니다 — 관련
+         분류 줄도 `.chips` 를 쓰므로, 이름이 없으면 검사가 그 링크까지
+         하위로 세어 멀쩡한 화면을 실패로 잡습니다 (실제로 그랬습니다). */
+      '<ul class="chips chips-sub">' + items.map(function(it){
+        return canPv.indexOf(it.key) >= 0
+          ? '<li><a class="chip chip-go" href="' +
+            esc(W.amSubUrl(c.key, it.key)) + '">' + esc(it.name) + '</a></li>'
+          : '<li><span class="chip">' + esc(it.name) + '</span></li>';
       }).join("") + '</ul></div></section>'
     : "";
 

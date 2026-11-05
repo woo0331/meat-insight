@@ -28,9 +28,16 @@ var card = require("./_card.js");
 
 /* 거르개 한 줄 — ⚠️ 주소를 **한 함수**에서 짓습니다. 두 곳에 지으면
    한쪽만 고쳐서 링크가 조용히 엉뚱한 데로 갑니다 (amCatUrl 로 겪었습니다). */
-function furl(cat, rg){
+/* ⚠️⚠️ **꼴이 브라우저 쪽 `url()` 과 같아야 합니다** (js/search.js) —
+   어긋나면 눌렀을 때와 주소를 새로 열었을 때가 달라집니다.
+   ⚠️ 빌드는 `sub` 를 **안 냅니다**: 하위 칸은 예순둘이라 거르개 줄에
+   놓으면 폰에서 가로로 미끄러져 **밀면 보이는 것**이 되고(머리말 메뉴로
+   겪은 자리), 거기까지 가는 길은 **분류 화면의 하위 목록**이 냅니다
+   (`amSubUrl`). 그래도 자리를 받아 두어 차례가 어긋나지 않게 합니다. */
+function furl(cat, rg, sub){
   var qs = [];
   if(cat) qs.push("cat=" + encodeURIComponent(cat));
+  if(sub) qs.push("sub=" + encodeURIComponent(sub));
   if(rg)  qs.push("rg=" + encodeURIComponent(rg));
   return "/search" + (qs.length ? "?" + qs.join("&") : "");
 }

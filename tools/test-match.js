@@ -238,6 +238,94 @@ const FAKE = "https://sb-test.supabase.co";
   ok("⚠️⚠️ **적어 놓은 것을 전부 실제로 여쭙는다**",
      askChk.miss.length === 0, askChk.miss.join(" / "));
 
+  /* ══════════════════════════════════════════════════════════════
+     ⚠️⚠️⚠️ **"필수라고 적어 놓고 안 받는" 것을 잡는 자리** (지시서 §3)
+
+     전에는 분류 화면이 "지역 · 날짜를 여쭙습니다" 라고 적어 놓고 양식
+     에서는 **전부 선택**이었습니다 — 부킹 요청에 날짜가 없어도 들어왔고,
+     지역이 빈 요청은 `js/assign.js` 가 후보를 고를 수가 없었습니다.
+     지금은 셋째 칸(`true`)이 **한 곳**에서 둘을 모두 정합니다.
+     ⚠️ 갯수를 박지 않습니다 — 분류가 늘면 늘어난 대로 돕니다.
+     ══════════════════════════════════════════════════════════════ */
+  for(const cat of ["lesson","booking","range","market","fitting","travel","used"]){
+    await p.goto(URL + "?cat=" + cat, { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    const r = await p.evaluate(function(k){
+      var req = window.amAskReq ? window.amAskReq(k) : null;
+      if(!req) return { none:true };
+      var FIELD = { region:"#m-region", want:"#m-want", body:"#m-body" };
+      var bad = [], n = 0;
+      Object.keys(FIELD).forEach(function(kind){
+        var e = document.querySelector(FIELD[kind]);
+        if(!e){ bad.push(kind + " 칸이 없음"); return; }
+        n++;
+        var has = e.hasAttribute("required");
+        if(req[kind] && !has) bad.push(kind + " — 필수라고 적어 놓고 안 받음");
+        if(!req[kind] && has) bad.push(kind + " — 선택인데 required 가 걸림");
+      });
+      /* ⚠️ 필수 칸에는 **왜 필요한지**를 그 자리에서 말해 줍니다 */
+      var starN = document.querySelectorAll("#mf .jrow label b").length;
+      return { bad: bad, n: n, reqN: Object.keys(req).length, stars: starN,
+               bodyMin: (document.getElementById("m-body") || {})
+                          .getAttribute ? (document.getElementById("m-body")
+                            .getAttribute("minlength") || "") : "" };
+    }, cat);
+    ok(cat + " — 잴 칸을 찾기는 했다 (0개면 실패입니다)",
+       !r.none && r.n === 3, JSON.stringify(r));
+    ok(cat + " — ⚠️⚠️ **적어 놓은 필수를 양식이 그대로 받는다**",
+       !r.none && r.bad.length === 0, (r.bad || []).join(" / "));
+    ok(cat + " — 필수가 하나라도 있다 (목록이 썩지 않았는가)",
+       !r.none && r.reqN > 0, String(r.reqN));
+    ok(cat + " — 별표가 찍힌다 (화면에 보이는 표시입니다)",
+       !r.none && r.stars > 0, String(r.stars));
+  }
+
+  /* ⚠️⚠️ 내용이 필수인 분류는 **다섯 글자 이상**을 받습니다 — required
+     만 걸면 빈칸 하나로도 지나갑니다. */
+  await p.goto(URL + "?cat=booking", { waitUntil:"networkidle" });
+  await p.waitForTimeout(250);
+  const bmin = await p.evaluate(function(){
+    return (document.getElementById("m-body") || {}).getAttribute("minlength") || ""; });
+  ok("⚠️ 내용이 필수면 minlength 도 같이 걸린다 (빈칸 하나를 막습니다)",
+     bmin === "5", bmin);
+
+  /* ⚠️⚠️⚠️ **분류를 모르면 아무것도 더 안 걸립니다.** 모르는데 필수를
+     걸면 손님이 양식을 통째로 못 보냅니다. */
+  await p.goto(URL, { waitUntil:"networkidle" });
+  await p.waitForTimeout(250);
+  const bare = await p.evaluate(function(){
+    return ["#m-region","#m-want","#m-body"].filter(function(sel){
+      var e = document.querySelector(sel);
+      return e && e.hasAttribute("required");
+    });
+  });
+  ok("⚠️⚠️ `?cat=` 없이 오면 **지역 · 일정 · 내용에 required 가 안 걸린다**",
+     bare.length === 0, bare.join(","));
+  /* ⚠️ 그래도 성함 · 연락처 · 동의는 언제나 필수입니다 */
+  const always = await p.evaluate(function(){
+    return ["#m-name","#m-tel","#m-agree"].filter(function(sel){
+      var e = document.querySelector(sel);
+      return !(e && e.hasAttribute("required"));
+    });
+  });
+  ok("  그래도 성함 · 연락처 · 동의는 **언제나** 필수다", always.length === 0,
+     always.join(","));
+
+  /* ⚠️ 받을 자리가 없는 분류로 와도 아무것도 안 걸립니다 */
+  await p.goto(URL + "?cat=matchup", { waitUntil:"networkidle" });
+  await p.waitForTimeout(250);
+  const noneReq = await p.evaluate(function(){
+    return ["#m-region","#m-want","#m-body"].filter(function(sel){
+      var e = document.querySelector(sel);
+      return e && e.hasAttribute("required");
+    });
+  });
+  ok("받을 자리가 없는 분류로 와도 required 가 안 걸린다",
+     noneReq.length === 0, noneReq.join(","));
+
+  await p.goto(URL + "?cat=lesson", { waitUntil:"networkidle" });
+  await p.waitForTimeout(250);
+
   /* ⚠️ 분류마다 **다른** 길잡이여야 합니다 — 같으면 안 바뀐 것입니다 */
   const phLesson = askChk.ph;
   await p.goto(URL + "?cat=travel", { waitUntil:"networkidle" });

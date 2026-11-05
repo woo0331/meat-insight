@@ -36,7 +36,13 @@
     var u = new URLSearchParams(location.search);
     return { q:   (u.get("q")   || "").trim(),
              cat: (u.get("cat") || "").trim(),
-             rg:  (u.get("rg")  || "").trim() };
+             rg:  (u.get("rg")  || "").trim(),
+             /* ⚠️ 하위분류 — 분류 화면의 하위 목록이 여기로 보냅니다
+                (`amSubUrl`). 열쇠 이름이 보내는 쪽과 **글자까지** 같아야
+                합니다 — `?m=apple` 을 보내고 `mk` 를 읽어 거르개가
+                아무것도 안 걸렀는데 링크 검사도 흐름 검사도 통과한
+                적이 있습니다. 눌러 봐야 압니다. */
+             sub: (u.get("sub") || "").trim() };
   }
   /* ⚠️ 주소를 **한 함수**에서 짓습니다 (pages/search.js 의 furl 과 같은
      꼴입니다 — 꼴이 어긋나면 눌렀을 때와 새로 열었을 때가 달라집니다). */
@@ -44,6 +50,7 @@
     var qs = [];
     if(s.q)   qs.push("q=" + encodeURIComponent(s.q));
     if(s.cat) qs.push("cat=" + encodeURIComponent(s.cat));
+    if(s.sub) qs.push("sub=" + encodeURIComponent(s.sub));
     if(s.rg)  qs.push("rg=" + encodeURIComponent(s.rg));
     return "/search" + (qs.length ? "?" + qs.join("&") : "");
   }
@@ -65,6 +72,12 @@
       if(s.cat){
         var cs = window.amProviderCats(p).map(function(c){ return c.key; });
         if(cs.indexOf(s.cat) < 0) return false;
+      }
+      /* ⚠️⚠️ 하위분류도 **키**로 견줍니다 (`provider.subs` 가 키를
+         글자로 들고 있습니다). 이름으로 견주면 하위 이름을 다듬는 날
+         조용히 아무것도 안 걸립니다. */
+      if(s.sub){
+        if(window.amProviderSubs(p).indexOf(s.sub) < 0) return false;
       }
       /* ⚠️ 지역은 **키**로 견줍니다. 이름("서울")으로 견주면 regions.js
          를 고치는 날 조용히 아무것도 안 걸립니다. */
@@ -99,6 +112,7 @@
     var what = [];
     if(s.q)   what.push('"' + esc(s.q) + '"');
     if(s.cat) what.push(esc(catName(s.cat)));
+    if(s.sub) what.push(esc(subName(s.sub)));
     if(s.rg)  what.push(esc(rgName(s.rg)));
     return '<div class="none">' +
       '<h3>' + (what.length ? what.join(" · ") + " — " : "") +
@@ -121,6 +135,12 @@
   function rgName(k){
     var r = window.amRegion ? window.amRegion(k) : null;
     return (r && r.name) ? r.name : k;
+  }
+  /* ⚠️ 모르는 하위 키면 **키를 그대로** 냅니다 — 이름을 지어내지
+     않습니다 (손님이 주소를 손으로 고쳐 올 수 있습니다). */
+  function subName(k){
+    var f = window.amSub ? window.amSub(k) : null;
+    return (f && f.item && f.item.name) ? f.item.name : k;
   }
 
   /* ── 비교 — ⚠️⚠️ **고른 업체만** 들어갑니다 (가짜 비교 금지) ────── */
@@ -208,6 +228,9 @@
     if(nowline){
       var bits = [];
       if(s.cat) bits.push(catName(s.cat));
+      /* ⚠️ 하위분류로 좁혀 오신 분에게 **무엇으로 좁혔는지** 말합니다 —
+         칸 색만으로는 폰에서 안 보입니다 (하위는 칸이 아예 없습니다). */
+      if(s.sub) bits.push(subName(s.sub));
       if(s.rg)  bits.push(rgName(s.rg));
       if(s.q)   bits.push('"' + s.q + '"');
       /* ⚠️ 업체가 한 곳도 없으면 이 줄을 **감춥니다** — 바로 아래 빈 자리
@@ -230,8 +253,13 @@
       a.setAttribute("aria-pressed", on ? "true" : "false");
       /* ⚠️⚠️ 링크의 주소도 **지금 조건을 지킵니다** — 분류를 고른 뒤
          지역을 누르면 분류가 조용히 풀리면 안 됩니다. */
-      var next = { q:s.q, cat:s.cat, rg:s.rg };
+      var next = { q:s.q, cat:s.cat, rg:s.rg, sub:s.sub };
       next[k] = (on ? "" : v);
+      /* ⚠️⚠️⚠️ **분류를 바꾸면 하위를 같이 풉니다.** 안 풀면 "골프 레슨
+         의 하위" 를 들고 "골프 여행" 으로 옮겨 가서 **영원히 0건**이
+         됩니다 — 에러도 없고, 손님은 그 분류에 업체가 없는 줄 압니다.
+         ⚠️ 같은 분류를 다시 누른 것(끄는 것)도 하위를 풉니다. */
+      if(k === "cat" && next.cat !== s.cat) next.sub = "";
       a.setAttribute("href", url(next));
     });
     /* 비교 체크는 다시 그린 뒤에 되살립니다 */
@@ -299,7 +327,14 @@
      않습니다 — 똑같은 것을 다시 그리면 그 순간 화면이 한 번 깜빡이고,
      자료가 어긋났을 때 그 사실이 숨습니다. */
   var s0 = now();
-  if(s0.q || s0.cat || s0.rg) paint();
+  /* ⚠️⚠️⚠️ **열쇠를 하나 더하면 여기도 같이 고쳐야 합니다.** `sub` 를
+     더하면서 이 줄을 빼먹어, `?sub=` 만 들고 들어오면 **다시 그리지
+     않아 아무것도 안 걸렸습니다** — 빌드가 찍어 둔 전체 목록이 그대로
+     보였고, 에러는 한 줄도 없었습니다. 검사가 눌러 보고 잡았습니다.
+     ⚠️ 그래서 조건을 **세어** 봅니다 (열쇠를 손으로 나열하지 않습니다) —
+     `now()` 가 내놓는 값 가운데 비지 않은 것이 하나라도 있으면 그립니다.
+     열쇠가 또 늘어도 이 줄은 그대로 돕니다. */
+  if(Object.keys(s0).some(function(k){ return !!s0[k]; })) paint();
   else {
     /* 거르개 눌림 표시만 맞춰 둡니다 */
     Array.prototype.forEach.call(document.querySelectorAll("a[data-sf]"), function(a){

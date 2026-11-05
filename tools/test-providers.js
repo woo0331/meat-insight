@@ -353,6 +353,127 @@ function nowServe(){ return serve(0); }
        (await p.evaluate(function(){ return location.search; })).indexOf("rg=seoul") >= 0,
        await p.evaluate(function(){ return location.search; }));
 
+    /* ══════════════════════════════════════════════════════════════
+       하위분류로 좁혀 가는 길 (지시서 §4 · `?sub=`)
+
+       ⚠️⚠️⚠️ **전에는 하위 예순둘이 분류 화면에 글로만 있었습니다.**
+       "화면이 있다" 와 "거기까지 가는 길이 있다" 는 다릅니다 —
+       `/login` · `/my` 가 아무 데서도 안 이어져 있던 자리와 같습니다.
+       ⚠️ 열쇠 이름이 보내는 쪽과 **글자까지** 같은지는 **눌러 봐야**
+       압니다 (`?m=apple` 을 보내고 `mk` 를 읽어 거르개가 아무것도
+       안 걸렀는데 링크 검사도 흐름 검사도 통과한 적이 있습니다).
+       ══════════════════════════════════════════════════════════════ */
+    console.log("\n── /search 하위분류로 좁히기 (?sub=)");
+    /* green-pt 는 rg-in · rg-sim · ls-solo 를 합니다 · xss-test 는 ft-* */
+    await p.goto("http://127.0.0.1:" + h.port + "/search?cat=range&sub=rg-sim",
+                 { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    ok("⚠️⚠️ 하위분류로 좁혀진다 (열쇠 이름이 실제로 맞습니다)",
+       (await p.locator("#sres .pv").count()) === 1,
+       await p.locator("#sres .pv").count());
+    ok("  남은 것이 그 일을 하는 업체다",
+       (await p.locator("#sres .pv").first().getAttribute("data-pv")) === "green-pt");
+    ok("  지금 조건에 **하위 이름**이 글로 나온다 (칸이 없는 조건입니다)",
+       /스크린/.test((await p.textContent("#sfnow")) || ""),
+       await p.textContent("#sfnow"));
+
+    /* ⚠️ 그 업체가 **안 하는** 하위로 좁히면 0건이어야 합니다 */
+    await p.goto("http://127.0.0.1:" + h.port + "/search?cat=fitting&sub=ft-grip",
+                 { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    ok("다른 하위로 좁히면 **다른 업체**가 남는다",
+       (await p.locator("#sres .pv").count()) === 1 &&
+       (await p.locator("#sres .pv").first().getAttribute("data-pv")) === "xss-test",
+       await p.locator("#sres .pv").count());
+
+    await p.goto("http://127.0.0.1:" + h.port + "/search?cat=range&sub=rg-out",
+                 { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    t = (await p.textContent("#sres")) || "";
+    ok("⚠️ 아무도 안 하는 하위면 **조건에 맞는 업체가 없다**고 말한다",
+       /조건에 맞는 업체가 없습니다/.test(t), t.slice(0, 160));
+    ok("  ⚠️ '등록된 업체가 없습니다' 라고 **말하지 않는다** (다른 상황입니다)",
+       t.indexOf("아직 등록된 업체가 없습니다") < 0, t.slice(0, 200));
+    ok("  막다른 길로 두지 않는다 (매칭 요청 · 조건 지우기)",
+       (await p.locator('#sres a[href="/match"]').count()) === 1 &&
+       (await p.locator('#sres a[href="/search"]').count()) === 1);
+
+    /* ⚠️⚠️⚠️ **분류를 바꾸면 하위를 같이 풀어야** 합니다. 안 풀면
+       "연습장의 하위" 를 들고 "피팅" 으로 옮겨 가서 **영원히 0건**이
+       되고, 손님은 그 분류에 업체가 없는 줄 압니다. */
+    await p.goto("http://127.0.0.1:" + h.port + "/search?cat=range&sub=rg-sim",
+                 { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    await p.click('a[data-sf="cat"][data-v="fitting"]');
+    await p.waitForTimeout(250);
+    const moved = await p.evaluate(function(){ return location.search; });
+    ok("⚠️⚠️ 분류를 바꾸면 **하위가 같이 풀린다**",
+       moved.indexOf("cat=fitting") >= 0 && moved.indexOf("sub=") < 0, moved);
+    ok("  그래서 0건이 되지 않는다", (await p.locator("#sres .pv").count()) === 1,
+       await p.locator("#sres .pv").count());
+    /* ⚠️ 지역을 눌러도 하위는 지켜져야 합니다 (같은 분류 안입니다) */
+    await p.goto("http://127.0.0.1:" + h.port + "/search?cat=range&sub=rg-sim",
+                 { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    await p.click('a[data-sf="rg"][data-v="gyeonggi"]');
+    await p.waitForTimeout(250);
+    const kept = await p.evaluate(function(){ return location.search; });
+    ok("⚠️ 지역을 눌러도 하위는 **지켜진다** (같은 분류 안입니다)",
+       kept.indexOf("sub=rg-sim") >= 0 && kept.indexOf("rg=gyeonggi") >= 0, kept);
+
+    /* ⚠️ 모르는 하위 키로 와도 **이름을 지어내지 않습니다** */
+    await p.goto("http://127.0.0.1:" + h.port + "/search?sub=이런하위는없습니다",
+                 { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    ok("모르는 하위 키면 0건이고 키를 그대로 적는다 (이름을 지어내지 않습니다)",
+       (await p.locator("#sres .pv").count()) === 0 &&
+       /이런하위는없습니다/.test((await p.textContent("#sres")) || ""),
+       (await p.textContent("#sres")) || "");
+
+    /* ══ 분류 화면의 하위 목록이 **그 주소를 가리키는가** ══════════
+       ⚠️ 갯수를 박지 않습니다 — 하위가 늘면 늘어난 대로 돕니다.
+       ⚠️⚠️ 업체가 입점하지 않는 하위는 **글로 두어야** 합니다 (링크로
+       내면 영원히 0건인 자리로 보내는 것이고, 그건 눌러도 아무 일이
+       안 나는 칸과 같습니다). */
+    console.log("\n── 분류 화면의 하위 목록이 그 거르개를 가리키나");
+    await p.goto("http://127.0.0.1:" + h.port + "/cat/range", { waitUntil:"networkidle" });
+    await p.waitForTimeout(200);
+    const subLinks = await p.evaluate(function(){
+      var out = { link:[], text:0 };
+      Array.prototype.forEach.call(document.querySelectorAll(".chips-sub li"), function(li){
+        var a = li.querySelector("a");
+        if(a) out.link.push(a.getAttribute("href")); else out.text++;
+      });
+      return out;
+    });
+    ok("⚠️ 잴 것이 0개면 실패입니다 (하위 목록을 찾기는 했는가)",
+       subLinks.link.length > 0, JSON.stringify(subLinks));
+    ok("⚠️⚠️ 하위가 **그 거르개 주소**를 가리킨다 (amSubUrl 한 함수)",
+       subLinks.link.every(function(h2){
+         return /^\/search\?cat=range&sub=rg-/.test(h2); }),
+       subLinks.link.join(" "));
+    /* 실제로 눌러 봅니다 — 주소만 맞고 안 걸리면 아무 뜻이 없습니다 */
+    await p.click('.chips-sub a[href="/search?cat=range&sub=rg-sim"]');
+    await p.waitForTimeout(400);
+    ok("⚠️⚠️⚠️ 눌러 보니 **실제로 좁혀진다** (주소만 맞는 것이 아닙니다)",
+       (await p.locator("#sres .pv").count()) === 1 &&
+       (await p.evaluate(function(){ return location.search; }))
+         .indexOf("sub=rg-sim") >= 0,
+       await p.evaluate(function(){ return location.search; }));
+
+    /* 중고장터 — 물건 종류 하위는 업체가 하는 일이 아니라 **글**입니다 */
+    await p.goto("http://127.0.0.1:" + h.port + "/cat/used", { waitUntil:"networkidle" });
+    await p.waitForTimeout(200);
+    const usedSub = await p.evaluate(function(){
+      var link = 0, text = 0;
+      Array.prototype.forEach.call(document.querySelectorAll(".chips-sub li"), function(li){
+        if(li.querySelector("a")) link++; else text++;
+      });
+      return { link: link, text: text };
+    });
+    ok("⚠️ 업체가 입점하지 않는 하위는 **글로** 둔다 (0건 자리로 안 보냅니다)",
+       usedSub.text > 0 && usedSub.link > 0, JSON.stringify(usedSub));
+
     console.log("\n── /search 검색어 (머리말 검색창)");
     await p.goto("http://127.0.0.1:" + h.port + "/search?q=" + encodeURIComponent("연습장"),
                  { waitUntil:"networkidle" });

@@ -101,7 +101,24 @@
       '바로 이 업체로 간다는 약속은 아닙니다.</p></div></div>';
   }
 
+  /* ⚠️⚠️⚠️ **분류마다 필수가 다릅니다** (지시서 §3). 판단은
+     `amAskReq()` **한 곳**이고, 분류 화면이 별표를 찍는 자리와 **같은
+     줄**을 읽습니다 — 두 곳에 적으면 "필수라고 적어 놓고 안 받는" 꼴이
+     됩니다.
+     ⚠️ `?cat=` 없이 들어오셨으면 **아무것도 더 안 걸립니다** (어느
+     분류인지 모르는데 필수를 걸면 손님이 양식을 못 보냅니다).
+     ⚠️⚠️ 이것은 **화면의 규칙이고 DB 가 막는 것이 아닙니다** —
+     `make_request` 는 분류마다 다른 규칙을 모릅니다 (알게 하려면 키
+     예순둘을 SQL 에 박아야 합니다). 못 막는 것을 막는다고 적지
+     않습니다. */
+  function reqOf(){
+    return (FROMCAT && window.amAskReq) ? window.amAskReq(FROMCAT) : {};
+  }
+  /* 별표 — ⚠️ 필수일 때만 찍습니다 (아무 데나 찍으면 뜻이 없습니다) */
+  function star(on){ return on ? ' <b>*</b>' : ''; }
+
   function form(){
+    var R = reqOf();
     return '<form id="mf" class="jform">' +
       wantNote() +
       '<div class="jrow jrow-full">' +
@@ -109,17 +126,24 @@
         '<div class="svcs">' + services() + '</div>' +
       '</div>' +
       '<div class="jrow">' +
-        '<label for="m-region">지역</label>' +
-        '<select id="m-region" name="region">' +
-          '<option value="">고르지 않음</option>' +
+        '<label for="m-region">지역' + star(R.region) + '</label>' +
+        '<select id="m-region" name="region"' + (R.region ? ' required' : '') + '>' +
+          '<option value="">' + (R.region ? '고르세요' : '고르지 않음') + '</option>' +
           (window.AM_REGIONS || []).map(function(r){
             return '<option value="' + esc(r.name) + '">' + esc(r.full) + '</option>';
           }).join("") +
         '</select>' +
+        /* ⚠️ 왜 필요한지 **그 자리에서** 말합니다 — 까닭 없이 별표만
+           찍으면 손님은 귀찮은 칸으로만 읽습니다. */
+        (R.region ? '<span class="jhint">맞는 지역의 업체를 찾아야 하므로 ' +
+                    '꼭 골라 주셔야 합니다.</span>' : '') +
       '</div>' +
       '<div class="jrow">' +
-        '<label for="m-want">희망 일정</label>' +
-        '<input id="m-want" name="want_at" maxlength="40" placeholder="예: 이번 달 안에">' +
+        '<label for="m-want">희망 일정' + star(R.want) + '</label>' +
+        '<input id="m-want" name="want_at" maxlength="40" ' +
+        (R.want ? 'required ' : '') + 'placeholder="예: 이번 달 안에">' +
+        (R.want ? '<span class="jhint">날짜가 없으면 업체가 견적을 낼 수 ' +
+                  '없습니다. 대략이라도 적어 주세요.</span>' : '') +
       '</div>' +
       '<div class="jrow">' +
         '<label for="m-bmin">예산 (아래)</label>' +
@@ -130,12 +154,16 @@
         '<input id="m-bmax" name="budget_max" inputmode="numeric" placeholder="원">' +
       '</div>' +
       '<div class="jrow jrow-full">' +
-        '<label for="m-body">더 하실 말씀</label>' +
+        '<label for="m-body">' + (R.body ? '요청 내용' : '더 하실 말씀') +
+          star(R.body) + '</label>' +
         /* ⚠️⚠️ **길잡이가 분류마다 바뀝니다** (지시서 §6). 분류 화면이
            "이것을 여쭙습니다" 라고 적어 놓고 이 칸이 같은 말을 안 하면
            적어 놓고 **안 여쭙는** 꼴입니다. 말은 AM_ASK 한 곳에서
            옵니다 (js/data/catalog.js). */
+        /* ⚠️ 필수일 때는 **다섯 글자 이상**을 받습니다 — required 만
+           걸면 빈칸 하나로도 지나갑니다. */
         '<textarea id="m-body" name="body" rows="4" maxlength="2000" ' +
+        (R.body ? 'required minlength="5" ' : '') +
         'placeholder="' + esc(
           (FROMCAT && window.amAskBody && window.amAskBody(FROMCAT)) ||
           "구력 · 원하시는 조건 · 궁금한 점을 적어 주세요."

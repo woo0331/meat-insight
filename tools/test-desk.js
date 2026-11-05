@@ -3220,6 +3220,11 @@ function stub(p, who, tables, rpcs, up){
     const MYA = [
       { id:"a1", post_id:"j1", by_user:"u2", msg:"캐디 경력 3년입니다",
         state:"accepted", host_share_at:null, guest_share_at:null },
+      /* ⚠️ **수락 단추를 누르려면 아직 안 처리된 것이 있어야** 합니다.
+         수락된 것만 넣어 두고 단추를 찾으면 30초를 기다리다 터집니다
+         (검사가 쓰는 상태를 검사가 만들어야 합니다). */
+      { id:"a3", post_id:"j1", by_user:"u3", msg:"기다리는 지원",
+        state:"applied", host_share_at:null, guest_share_at:null },
       { id:"a2", post_id:"j7", by_user:"me", msg:"제가 보낸 지원",
         state:"applied", host_share_at:null, guest_share_at:null }
     ];
@@ -3269,7 +3274,11 @@ function stub(p, who, tables, rpcs, up){
     ok("⚠️ 가려진 글에는 고치기 · 내리기 단추가 **없다** (문도 거절합니다)",
        !!hid && !hid.edit && !hid.drop, JSON.stringify(hid));
 
-    /* 수락 단추가 실제로 문을 부르는가 */
+    /* 수락 단추가 실제로 문을 부르는가 — ⚠️ **있는지 먼저 봅니다.**
+       없는데 누르면 30초를 기다리다 검사가 통째로 터지고, 무엇이
+       틀렸는지는 안 적힙니다. */
+    ok("아직 안 처리된 지원에는 수락 · 거절 단추가 있다", r.okBtn,
+       JSON.stringify(r).slice(0, 160));
     await g.p.click(".mb-ok");
     await g.p.waitForTimeout(350);
     const mv = g.sent.filter(function(x){ return x.name === "move_jobapply"; })[0];

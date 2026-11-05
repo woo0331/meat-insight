@@ -29,6 +29,15 @@ exports.build = function(){
     '<div id="noticebox" class="none" data-role="provider" hidden></div>' +
     '</div></section>';
 
+  /* ⚠️⚠️ **먼저 하실 것** (2026-11-05) — 처음 이어진 사장님이 할 일을
+     알 길이 없었습니다. 손님에게 보이느냐를 가르는 것들(지역 · 가격 ·
+     사진 · 연락처)이 하필 **화면 맨 아래**에 있었는데, 그 사실을
+     아무 데서도 안 알려 주었습니다. ⚠️ **다 하셨으면 한 줄도 안
+     그립니다** — 치우지 못하는 잔소리를 만들지 않습니다.
+     ⚠️ 배정 상자보다 **위**에 둡니다 (채우기 전에는 배정이 안 옵니다). */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="dstbox" class="none" hidden></div></div></section>';
+
   body += '<section class="sec"><div class="wrap">' +
     '<div id="deskbox" class="none" hidden></div></div></section>';
 
@@ -83,7 +92,7 @@ exports.build = function(){
          "/js/photo.js", "/js/auth.js", "/js/review.js",
          "/js/desk.js", "/js/deskme.js", "/js/deskprice.js",
          "/js/deskfee.js", "/js/deskphoto.js", "/js/deskstaff.js",
-         "/js/deskcontact.js",
+         "/js/deskcontact.js", "/js/deskstart.js",
          "/js/notice.js"]
   };
 };

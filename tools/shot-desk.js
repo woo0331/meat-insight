@@ -249,7 +249,7 @@ const WIDTHS = [[1280, "pc"], [360, "mo"]];
    상자만 영원히 아무도 안 보는 자리가 됩니다 (재는 범위와 같은
    규칙입니다). */
 const BOXES = {
-  "/desk": [["notice", "#noticebox"], ["assign", "#deskbox"],
+  "/desk": [["notice", "#noticebox"], ["start", "#dstbox"], ["assign", "#deskbox"],
             ["me", "#mebox"], ["contact", "#pvctbox"], ["staff", "#pvstbox"],
             ["photo", "#pvphbox"], ["price", "#pricebox"],
             ["fee", "#feebox"]],

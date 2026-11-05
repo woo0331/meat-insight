@@ -1640,3 +1640,46 @@ picture{ display: contents; }
 /* ⚠️ 되돌리기 어려운 단추는 **제 너비만** 차지합니다 — 제출 단추와
    같은 크기로 두면 둘이 같은 무게로 보입니다 (찍어 보고 알았습니다). */
 .pvct-del > .btn{ justify-self:start; }
+
+/* ⚠️⚠️⚠️ **안의 상자가 가려졌으면 그 구간도 통째로 가립니다.**
+   `/desk` · `/admin` · `/my` 는 알맹이를 로그인한 뒤에 그리므로, 그 전에는
+   상자가 `hidden` 입니다 — 그런데 **감싼 `<section class="sec">` 은 제
+   여백을 그대로 차지해서** 빈 띠가 줄줄이 남았습니다. `sec-alt` 가 섞여
+   있어 **엉뚱한 색 띠**까지 보였습니다 (2026-11-05 에 찍어 보고 알았습니다).
+   재 보니 `/desk` 를 업체가 아닌 분이 열면 1,716px 가운데 **624px**,
+   `/admin` 은 1,733px 가운데 **780px** 가 빈 띠였습니다 — 화면의 절반에
+   가깝습니다.
+   ⚠️ 가로로 밀리지도 · 글자가 작지도 · 대비가 낮지도 않아 **어떤 검사도
+   안 잡았습니다.**
+   ⚠️⚠️ `:has()` 를 못 읽는 브라우저에서는 **전과 똑같이** 보일 뿐
+   깨지지 않습니다 (덧대는 규칙이라 빼도 손해가 없습니다).
+   ⚠️ `:only-child` 를 꼭 두세요 — 상자 말고 다른 것이 같이 든 구간까지
+   가리면 **멀쩡한 글이 사라집니다** (눌러 보니 지금은 그런 구간이
+   없지만, 나중에 생기는 날 조용히 지워집니다). */
+.sec:has(> .wrap > [hidden]:only-child){ display:none; }
+
+/* ── 업체가 먼저 하실 것 (js/deskstart.js) ─────────────────────
+   ⚠️ 할 일이 없으면 상자가 `hidden` 이고, 위의 `:has()` 규칙이 구간째
+   걷어 갑니다 — 여기서 빈 상태를 따로 그리지 않습니다. */
+.dst-n{ margin-left:8px; min-width:22px; height:22px; padding:0 7px;
+        display:inline-flex; align-items:center; justify-content:center;
+        border-radius:999px; background: var(--bad); color:#fff;
+        font-size:13px; font-weight:800; }
+.dst-l{ display:grid; gap:10px; margin-top:14px; }
+/* ⚠️ 폰에서는 세로로 쌓입니다 — 단추를 글 옆에 붙이면 360px 에서
+   글자가 두 자씩 끊깁니다 (찍어 보고 정했습니다). */
+.dst-r{ display:grid; grid-template-columns:auto 1fr; gap:4px 10px;
+        align-items:start; padding:14px 16px; border-radius: var(--r);
+        background: var(--surface); border:1.5px solid var(--line); }
+.dst-ic{ grid-row:1 / span 2; display:flex; align-items:center;
+         justify-content:center; width:28px; height:28px; flex:none;
+         border-radius:50%; background: var(--bad-soft); color: var(--bad-text); }
+.dst-t{ display:block; min-width:0; }
+.dst-t b{ display:block; color: var(--ink); font-size:15.5px; }
+.dst-d{ display:block; margin-top:4px; color: var(--ink3); font-size:14px; }
+.dst-go{ grid-column:2; justify-self:start; margin-top:10px; }
+@media (min-width: 620px){
+  .dst-r{ grid-template-columns:auto 1fr auto; align-items:center; }
+  .dst-ic{ grid-row:1; }
+  .dst-go{ grid-column:3; grid-row:1; margin-top:0; }
+}

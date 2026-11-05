@@ -3878,6 +3878,79 @@ function keepOf(name){
      ⚠️ 흉내 장치를 `api/upload.js` 의 GET 과 같은 꼴로 고치고, 여기에
      눌러 보는 자리를 만들었습니다.
      ══════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════════
+     업체가 **먼저 하실 것** — /desk 맨 위 (js/deskstart.js · 2026-11-05)
+
+     ⚠️⚠️⚠️ 처음 이어진 사장님이 할 일을 알 길이 없었습니다 — 구간
+     아홉이 평평하게 줄지어 있고, 손님에게 보이느냐를 가르는 것들
+     (지역 · 가격 · 사진 · 연락처)이 하필 **화면 맨 아래**였습니다.
+     ⚠️⚠️ 여기서 가장 중요하게 보는 둘 —
+       ① **다 하셨으면 한 줄도 안 그리는가** (치우지 못하는 잔소리를
+          만들지 않습니다 · 절대 규칙 2)
+       ② **보내는 자리가 그 화면에 실제로 있는가** (없는 곳으로 보내면
+          눌러도 아무 일이 안 나는 단추입니다 · 절대 규칙 5)
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── /desk 먼저 하실 것 (시작 안내)");
+  const DS_PV = { role:"provider", name:"김일담", signedIn:true, provider:"t-range" };
+  const DS_NONE = { provider:[{ id:"t-range", subs:[], regions:[] }],
+                    provider_contact:[], provider_price:[], provider_photo:[] };
+  const DS_ALL  = { provider:[{ id:"t-range", subs:["rg-indoor"], regions:["gyeonggi"] }],
+                    provider_contact:[{ tel:"010-5555-6666" }],
+                    provider_price:[{ id:"pp-1" }], provider_photo:[{ id:"ph-9" }] };
+
+  async function dstOf(who, tables, up){
+    const g = await open("/desk", who, tables, {}, up);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("dstbox");
+      const drawn = !!b && !b.hidden && b.children.length > 0;
+      const rows = b ? Array.prototype.map.call(b.querySelectorAll(".dst-r"),
+        function(x){ const a = x.querySelector("a");
+          return { t:(x.querySelector("b")||{}).textContent || "",
+                   go: a ? a.getAttribute("href") : "" }; }) : [];
+      return { drawn: drawn, rows: rows, html: b ? b.innerHTML : "" };
+    });
+    return { g: g, r: r };
+  }
+
+  { const { g, r } = await dstOf(DS_PV, DS_NONE, true);
+    ok("아무것도 안 하신 업체에 **먼저 하실 것**이 나온다",
+       r.drawn && r.rows.length === 5, JSON.stringify(r.rows.map(function(x){ return x.t; })));
+    /* ⚠️⚠️ **보내는 자리가 이 화면에 실제로 있는가** — 없으면 눌러도
+       아무 일이 안 납니다. `/help` 처럼 밖으로 가는 것은 빼고 봅니다. */
+    const bad = await g.p.evaluate(function(gos){
+      return gos.filter(function(h){
+        return h.charAt(0) === "#" && !document.querySelector(h); });
+    }, r.rows.map(function(x){ return x.go; }));
+    ok("  ⚠️⚠️ 보내는 자리가 **전부 이 화면에 있다** (빈 곳으로 안 보냅니다)",
+       bad.length === 0, bad.join(" · "));
+    ok("  ⚠️ 못 고치시는 것(하시는 일)만 고객센터로 보낸다",
+       r.rows.some(function(x){ return x.go === "/help"; }),
+       r.rows.map(function(x){ return x.go; }).join(" · "));
+    await g.p.close(); }
+
+  /* ⚠️⚠️⚠️ **다 하셨으면 한 줄도 안 그립니다** — 이 줄이 없으면 잔소리가
+     영영 남습니다. 되돌려 보니(`todo.length` 검사를 빼 보니) 잡힙니다. */
+  { const { g, r } = await dstOf(DS_PV, DS_ALL, true);
+    ok("⚠️⚠️ **다 하셨으면 한 줄도 안 그린다** (잔소리를 남기지 않습니다)",
+       !r.drawn, r.rows.length + "줄: " + r.rows.map(function(x){ return x.t; }).join(" · "));
+    await g.p.close(); }
+
+  /* ⚠️ 버킷이 꺼져 있으면 사진 상자가 아예 안 그려집니다 — 그 자리로
+     보내면 빈 곳으로 보내는 것입니다 (0051 · 지금 운영이 그 상태입니다). */
+  { const { g, r } = await dstOf(DS_PV, DS_NONE, false);
+    ok("⚠️ 사진 버킷이 꺼져 있으면 **사진 줄을 안 낸다**",
+       r.drawn && !r.rows.some(function(x){ return x.go === "#pvphbox"; }),
+       r.rows.map(function(x){ return x.go; }).join(" · "));
+    await g.p.close(); }
+
+  /* ⚠️ 업체 담당자가 아니면 한 줄도 안 그립니다 (알림 상자가 빠뜨렸던 자리) */
+  for(const who of [{ role:"customer", name:"홍길동", signedIn:true },
+                    { role:"admin", name:"관리자", signedIn:true }]){
+    const { g, r } = await dstOf(who, DS_NONE, true);
+    ok("⚠️ " + who.role + " 에게는 **한 줄도** 안 보인다", !r.drawn, r.html.slice(0, 60));
+    await g.p.close();
+  }
+
   console.log("\n── /desk 시설 사진 · 증빙서류 (0051)");
   const PH = [
     { id:"ph-1", provider_id:"t-range", kind:"photo",

@@ -2562,6 +2562,93 @@ function keepOf(name){
     }
   }
 
+  /* ══ 글자 대비 ═══════════════════════════════════════════════
+     ⚠️⚠️⚠️ **로그인 화면의 대비를 재는 검사가 한 곳도 없었습니다**
+     (2026-11-05 검수에서 찾았습니다). `check-screens` 는 빌드가 찍은
+     HTML 을 여는데 /desk · /admin · /my 의 알맹이는 **로그인한 뒤에**
+     그려져서 그 도구에는 빈 상자로만 보입니다. 그리고 이 파일은
+     가로 밀림 · 12px · 누름 40px 만 재고 **색은 안 봤습니다** — 즉
+     밝은 브랜드색을 작은 글씨에 쓰는 날(앞 서비스에서 다섯 번 걸린
+     자리입니다) 아무도 못 잡는 자리였습니다.
+
+     ⚠️⚠️ **사진 위 글자는 계산으로 못 잽니다** — 조상에 background-image
+     가 있으면 건너뜁니다. 그건 `test-photos` 가 **점을 찍어서** 재는
+     자리이고, 여기서 억지로 재면 "검사가 멀쩡한 것을 고장이라고"
+     하게 됩니다 (막을 옅게 했다고 떨어뜨린 그 자리입니다).
+
+     ⚠️ **잰 것이 0개면 실패**입니다 — 자리를 못 찾고 초록이 되는 검사를
+     만들지 않습니다.
+     ⚠️ 큰 글자 기준은 24px 이상 또는 18.66px 이상이면서 굵은 것(3.0),
+     나머지는 4.5 입니다. **17px 굵은 글씨는 큰 글자가 아닙니다.**
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️ 글자 대비 (로그인 화면은 여기서만 재집니다)");
+  async function dim(path, who, tables, rpcs, pre, w){
+    const p = await b.newPage({ viewport: { width: w, height: 900 } });
+    await stub(p, who, tables, rpcs, true);
+    await p.goto(base + path, { waitUntil:"networkidle" });
+    await p.waitForTimeout(500);
+    if(pre){ try{ await p.click(pre, { timeout:3000 });
+                  await p.waitForTimeout(400); }catch(e){} }
+    const r = await p.evaluate(function(){
+      function rgb(v){ var m = v.match(/[\d.]+/g);
+        return m ? m.slice(0, 3).map(Number) : null; }
+      function lum(c){ return c.map(function(x){ x /= 255;
+          return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); })
+        .reduce(function(a, x, i){ return a + x * [0.2126,0.7152,0.0722][i]; }, 0); }
+      var seen = 0, bad = [];
+      var all = document.querySelectorAll("main *, header *, footer *");
+      for(var i = 0; i < all.length; i++){
+        var e = all[i], own = "";
+        for(var j = 0; j < e.childNodes.length; j++)
+          if(e.childNodes[j].nodeType === 3) own += e.childNodes[j].textContent;
+        own = own.trim();
+        if(own.length < 2) continue;
+        var box = e.getBoundingClientRect();
+        if(box.width < 2 || box.height < 2) continue;
+        var cs = getComputedStyle(e);
+        if(cs.visibility === "hidden" || cs.display === "none" ||
+           +cs.opacity === 0) continue;
+        var fg = rgb(cs.color);
+        if(!fg) continue;
+        /* 바탕은 **불투명한 조상**까지 올라가서 찾습니다 */
+        var bg = null, onPhoto = false, n = e;
+        while(n && n !== document.documentElement){
+          var c = getComputedStyle(n);
+          if(c.backgroundImage && c.backgroundImage !== "none"){ onPhoto = true; break; }
+          var v = rgb(c.backgroundColor);
+          var al = (c.backgroundColor.match(/[\d.]+/g) || [])[3];
+          if(v && (al === undefined || +al > 0.95)){ bg = v; break; }
+          n = n.parentElement;
+        }
+        if(onPhoto || !bg) continue;
+        var px = parseFloat(cs.fontSize), wt = parseInt(cs.fontWeight) || 400;
+        var big = px >= 24 || (px >= 18.66 && wt >= 700);
+        var need = big ? 3.0 : 4.5;
+        var L1 = lum(fg), L2 = lum(bg);
+        var got = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+        seen++;
+        if(got < need - 0.005)
+          bad.push(got.toFixed(2) + "<" + need + " " + px + "px/" + wt +
+                   " ." + String(e.className || "").slice(0, 24) +
+                   " \"" + own.slice(0, 20) + "\"");
+      }
+      return { seen: seen, bad: bad };
+    });
+    await p.close();
+    return r;
+  }
+  let dimSeen = 0;
+  for(const [label, path, who, tables, rpcs, pre] of phones){
+    /* ⚠️ 색은 폭에 따라 안 바뀝니다 — **한 폭만** 재서 시간을 아낍니다.
+       (가로 밀림 · 12px 는 위에서 세 폭을 다 재고 있습니다.) */
+    const r = await dim(path, who, tables, rpcs, pre, 390);
+    dimSeen += r.seen;
+    ok(label + " — 글자 대비가 AA 를 넘는다 (잰 칸 " + r.seen + "개)",
+       r.bad.length === 0, r.bad.slice(0, 4).join("  |  "));
+  }
+  ok("⚠️ 대비를 **실제로 쟀다** (0칸이면 자리를 못 찾은 것입니다)",
+     dimSeen > 200, "잰 글자 칸 " + dimSeen + "개");
+
   /* ══════════════════════════════════════════════════════════════
      골프 조인 (0046) — ⚠️ **빌드가 찍은 HTML 만 보는 검사는 영원히
      못 봅니다.** 목록도 양식도 Supabase 설정이 있어야 그려집니다.

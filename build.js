@@ -371,8 +371,11 @@ if(require.main === module){
   var cat  = require("./pages/category.js");
   var home = require("./pages/home.js");
   var list = require("./pages/categories.js");
+  /* ⚠️ `notfound` 는 루트의 **404.html** 로 나갑니다 (그 파일 머리말) —
+     목록에는 다른 화면과 같이 두어 제목 겹침 · 주소 검사 · 접근성 ·
+     전수 점검이 **똑같이** 보게 합니다. */
   var flat = ["guide", "help", "join", "search", "match", "login", "my", "admin",
-               "desk", "terms", "privacy"].map(function(n){
+               "desk", "terms", "privacy", "notfound"].map(function(n){
     return require("./pages/" + n + ".js").build();
   });
 
@@ -456,7 +459,13 @@ if(require.main === module){
 
   var wrote = {};
   built.forEach(function(b){
-    var file = b.route === "/" ? "index.html"
+    /* ⚠️⚠️ `b.file` 은 **404 전용**입니다 — Vercel 은 없는 주소에
+       **출력 루트의 `404.html`** 을 냅니다. `404/index.html` 에 두면
+       `/404` 로 직접 들어갈 때만 보이고 정작 없는 주소에서는 안 나옵니다.
+       ⚠️ 아래 "찍지 않은 화면 지우기" 는 `index.html` 만 훑으므로
+       이 파일은 쓸려 나가지 않습니다. */
+    var file = b.file ? b.file
+             : b.route === "/" ? "index.html"
              : b.route.replace(/^\//, "") + "/index.html";
     wrote[file] = 1;
     fs.mkdirSync(path.dirname(file), { recursive: true });

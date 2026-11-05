@@ -402,6 +402,17 @@ window.amSubUrl = function(catKey, subKey){
   return "/search" + (qs.length ? "?" + qs.join("&") : "");
 };
 
+/* 하위를 누르면 **무엇이** 걸러지나 — "업체" 인가 "올라온 글" 인가.
+   ⚠️⚠️ 위 `amSubUrl` 과 **같은 갈래**입니다. 안내문을 화면에서 따로
+   판단하면 둘이 어긋납니다 — 실제로 `/cat/career` 가 "그 일을 하는
+   **업체**만 모아 보여 드립니다" 라고 적고 있었는데, 그 하위는
+   업체가 아니라 **구인 · 구직 글**을 좁힙니다 (2026-11-05 검수).
+   ⚠️ 갈래를 늘리는 날 `amSubUrl` 과 **이 함수를 같이** 고치세요. */
+window.amSubFinds = function(catKey){
+  var c = (typeof catKey === "string") ? catKey : (catKey && catKey.key);
+  return c === "career" ? "글" : "업체";
+};
+
 /* ⚠️⚠️⚠️ **업체가 0곳이어도 지금 되는 것** — 절대 규칙 2 의 "0 인
    자리에는 지금 실제로 되는 것을 같이 냅니다" 를 **한 곳**에서 냅니다.
    업체가 0곳인 동안에도 **회원끼리 되는 것**이 셋 있습니다 (0046 ·

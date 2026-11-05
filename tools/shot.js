@@ -24,6 +24,10 @@ const PORT=8231, ROOT="http://localhost:"+PORT;
 const srv = http.createServer((req,res)=>{
   let p = decodeURIComponent(req.url.split("?")[0]);
   let f = path.join(process.cwd(), p);
+  /* ⚠️ `cleanUrls:true` 와 **같게** 풉니다 — `tools/_serve.js` 가 이미
+     그렇게 하고 있었는데 여기만 빠져 있어서, `/404` 를 찍으려 하면
+     빈 화면이 나왔습니다 (찍는 도구만 못 보는 자리 · 2026-11-05). */
+  if(!fs.existsSync(f) && fs.existsSync(f + ".html")) f = f + ".html";
   if(!fs.existsSync(f) || fs.statSync(f).isDirectory()) f = path.join(f, "index.html");
   /* ⚠️⚠️ **없는 파일에 터지지 않습니다.** 전에는 `404.html` 을 읽으려
      들었는데 이 저장소에는 그 파일이 없어서, 브라우저가 찾는 자잘한

@@ -20,8 +20,19 @@ var fs = require("fs"), path = require("path");
 var ROOT = path.join(__dirname, "..");
 var routeGuard = require("./check-routes.js");
 
+/* ⚠️⚠️ **주소를 파일로 푸는 규칙은 `tools/_serve.js` 와 같아야 합니다**
+   (`cleanUrls:true` 와도). 대부분은 `<주소>/index.html` 인데 **404 만
+   루트의 `404.html`** 입니다 — Vercel 이 없는 주소에 그 파일을 내기
+   때문입니다(`pages/notfound.js` 머리말). 여기만 폴더를 가정하고 있어서
+   404 를 더한 날 이 검사가 **통째로 터졌습니다** (2026-11-05). */
 function pageFile(route){
-  return path.join(ROOT, route === "/" ? "index.html" : route.replace(/^\//, "") + "/index.html");
+  if(route === "/") return path.join(ROOT, "index.html");
+  var bare = route.replace(/^\//, "");
+  var folder = path.join(ROOT, bare + "/index.html");
+  if(fs.existsSync(folder)) return folder;
+  var flat = path.join(ROOT, bare + ".html");
+  if(fs.existsSync(flat)) return flat;
+  return folder;                       /* 없으면 전처럼 말하게 둡니다 */
 }
 function exists(route){
   var r = route.split("?")[0].split("#")[0];

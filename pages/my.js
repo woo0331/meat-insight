@@ -29,6 +29,17 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="joinmine" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ 내가 쓴 글도 **여기에서만** 고치고 내립니다 (0047) —
+     공개 목록에는 `by_user` 칸이 아예 없어서 임자를 알 길이 없습니다. */
+  body += '<section class="sec sec-alt"><div class="wrap">' +
+    '<div id="mycq" class="none" hidden></div></div></section>';
+
+  /* ⚠️ 내 구인 · 구직 · 제휴도 **따로 그립니다** (js/myjob.js · 0048).
+     ⚠️⚠️ 여기도 연락처를 주고받는 유일한 자리입니다 (제17조 제2항) —
+     목록 화면에는 연락처 칸이 아예 없습니다. */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="jobmine" class="none" hidden></div></div></section>';
+
   return {
     route: "/my", title: "내 정보", noindex: true, unlinked: true,
     desc: "골프올인원 내 정보 — 개인 판매자 · 골프 프로 · 사업자 회원을 켜고 끕니다.",
@@ -36,6 +47,7 @@ exports.build = function(){
     js: ["/js/data/korean.js", "/js/data/deal.js", "/js/data/review.js",
          "/js/auth.js", "/js/photo.js", "/js/account.js",
          "/js/review.js", "/js/myreq.js",
-         "/js/data/regions.js", "/js/myjoin.js"]
+         "/js/data/regions.js", "/js/myjoin.js", "/js/mycq.js",
+         "/js/myjob.js"]
   };
 };

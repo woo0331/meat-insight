@@ -158,6 +158,8 @@ try{
   require("./sql/report.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/inquiry.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/join.js")({ ok, psql, psqlFile, denied, allowed });
+  require("./sql/community.js")({ ok, psql, psqlFile, denied, allowed });
+  require("./sql/career.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/price.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/invite.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/profile.js")({ ok, psql, psqlFile, denied, allowed });

@@ -132,7 +132,12 @@
      "같이 보여 준 것" 이 아닙니다. */
   function consentBox(){
     return '<div class="jrow jrow-full jconsent">' +
-      '<label class="jchk"><input type="checkbox" id="j-agree" required> ' +
+      /* ⚠️⚠️ **id 를 달지 않습니다.** 이 상자는 여는 양식과 신청
+         양식에 **둘 다** 들어가므로, id 를 달면 두 양식이 같이 열려
+         있을 때 **같은 id 가 둘**이 됩니다 (화면 읽는 기계가 어느
+         칸인지 못 가립니다). 이름표는 `<label>` 이 **감싸서** 붙습니다 —
+         id 가 없어도 됩니다. */
+      '<label class="jchk"><input type="checkbox" required> ' +
       '<span>아래 내용으로 개인정보 수집 · 이용에 동의합니다 <b>*</b></span></label>' +
       '<ul class="jterms">' +
         '<li><b>수집 항목</b> 연락처, 적어 주신 글</li>' +
@@ -231,10 +236,12 @@
           }).then(function(){
             li.innerHTML = '<div class="none">' +
               '<h3>신청을 보냈습니다.</h3>' +
-              '<p>여신 분이 보고 수락하시면 <a href="/my">내 정보</a>에서 ' +
-              '연락처를 주고받으실 수 있습니다. ' +
+              /* ⚠️⚠️ 문장 한가운데 링크를 박지 않습니다 (높이 16px) —
+                 문단 끝에 **단추**로 냅니다. */
+              '<p>여신 분이 보고 수락하시면 연락처를 주고받으실 수 있습니다. ' +
               /* ⚠️ 지킬 수 없는 약속을 하지 않습니다 */
-              '언제까지라고 약속드리지는 않습니다.</p></div>';
+              '언제까지라고 약속드리지는 않습니다.</p>' +
+              '<a class="btn btn-pt" href="/my">내 정보에서 보기</a></div>';
           }).catch(function(err){
             btn.disabled = false;
             msg.textContent = String((err && err.message) || "보내지 못했습니다.");
@@ -290,8 +297,9 @@
       }).then(function(){
         box.className = "none";
         box.innerHTML = '<h3>조인을 열었습니다.</h3>' +
-          '<p>목록에 바로 보입니다. 신청이 들어오면 ' +
-          '<a href="/my">내 정보</a>에서 수락하실 수 있습니다.</p>';
+          '<p>목록에 바로 보입니다. 신청이 들어오면 내 정보에서 ' +
+          '수락하실 수 있습니다.</p>' +
+          '<a class="btn btn-pt" href="/my">내 정보에서 보기</a>';
         load(a).then(function(rows){ paint(a, rows); });
       }).catch(function(err){
         btn.disabled = false;

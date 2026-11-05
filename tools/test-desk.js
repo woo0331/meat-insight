@@ -79,6 +79,26 @@ const QUOTE = {
   note:null, state:"open", created_at:"2026-11-03T04:00:00Z", updated_at:null
 };
 
+/* ── 보유 기간을 **site.js 에서 읽습니다** ──────────────────────────
+   ⚠️⚠️ **검사에 그날의 값을 박지 마세요.** "6개월" 을 박아 두면 사장님이
+   보유 기간을 고치시는 날 **멀쩡한 화면을 실패로** 잡습니다 (작업 기억 —
+   여러 번 밟은 자리). 재려는 뜻은 "양식이 **실제 설정값**을 보여 주는가"
+   이지 그 글자가 무엇인가가 아닙니다.
+   ⚠️ `window` 를 빌려 쓰고 **그대로 돌려놓습니다** — check-deal 이
+   `global.window` 를 덮어써 빌드를 통째로 깨뜨린 자리입니다.
+   ⚠️ 읽은 값이 비면 **실패**로 둡니다 (잴 것이 0개면 실패입니다). */
+function keepOf(name){
+  const had = Object.prototype.hasOwnProperty.call(global, "window");
+  const old = global.window;
+  global.window = {};
+  try{
+    delete require.cache[require.resolve("../js/data/site.js")];
+    require("../js/data/site.js");
+    return String((global.window.WOW_BIZ || {})[name] || "");
+  }catch(e){ return ""; }
+  finally{ if(had) global.window = old; else delete global.window; }
+}
+
 /* ── 가짜 Supabase ────────────────────────────────────────────────── */
 function stub(p, who, tables, rpcs, up){
   const sent = [];
@@ -1594,6 +1614,105 @@ function stub(p, who, tables, rpcs, up){
      (await tapsOk(s.p, "#repbox")) === 0, await tapsOk(s.p, "#repbox"));
   await s.p.close();
 
+  /* ══ 운영자가 **신고된 글을 가리는** 자리 (0047 · 0048) ══════════
+     ⚠️⚠️⚠️ **`check-doors` 는 이 자리를 못 잡습니다.** `move_cq` ·
+     `move_ca` · `move_jobpost` 는 글쓴이가 **내리는** 길에서 이미
+     불리고 있어서 "부르는 자리가 있다" 로 세어집니다 — 갈래마다
+     세지 않습니다. 그래서 운영자가 **가리는** 길은 문만 있고 화면이
+     없었습니다 (`approve_provider` 와 똑같은 꼴이었습니다).
+     ⚠️ 그러니 여기서 **눌러서** 봅니다. */
+  console.log("\n── /admin 신고된 글을 가립니다 (0047 · 0048)");
+  {
+    const RQ = [
+      { id:"dddddddd-0000-0000-0000-000000000011", kind:"abuse",
+        request_id:null, provider_id:null, review_id:null, joinroom_id:null,
+        cq_id:"q1", ca_id:null, jobpost_id:null,
+        body:"광고 글로 보입니다", state:"open", resolution:null,
+        created_at:"2026-11-04T05:00:00Z", closed_at:null },
+      { id:"dddddddd-0000-0000-0000-000000000012", kind:"abuse",
+        request_id:null, provider_id:null, review_id:null, joinroom_id:null,
+        cq_id:null, ca_id:null, jobpost_id:"j1",
+        body:"허위 구인으로 보입니다", state:"open", resolution:null,
+        created_at:"2026-11-04T06:00:00Z", closed_at:null },
+      /* ⚠️ 이미 가려진 글 — 단추를 **안 내야** 합니다 */
+      { id:"dddddddd-0000-0000-0000-000000000013", kind:"abuse",
+        request_id:null, provider_id:null, review_id:null, joinroom_id:null,
+        cq_id:"q9", ca_id:null, jobpost_id:null,
+        body:"이미 가려진 질문입니다", state:"open", resolution:null,
+        created_at:"2026-11-04T07:00:00Z", closed_at:null },
+      /* ⚠️ 0049 — 조인 자리. 전에는 신고를 받아 놓고 운영자가 할 수
+         있는 일이 "처리했음" 뿐이었습니다. */
+      { id:"dddddddd-0000-0000-0000-000000000014", kind:"abuse",
+        request_id:null, provider_id:null, review_id:null,
+        joinroom_id:"r1", cq_id:null, ca_id:null, jobpost_id:null,
+        body:"본문에 전화번호를 적었습니다", state:"open", resolution:null,
+        created_at:"2026-11-04T08:00:00Z", closed_at:null }
+    ];
+    const RT = Object.assign({}, ADMT, BIZ, PROT, { report: RQ,
+      cq: [{ id:"q1", title:"가릴 질문", state:"live" },
+           { id:"q9", title:"이미 가린 질문", state:"hidden" }],
+      ca: [],
+      jobpost: [{ id:"j1", title:"가릴 구인 글", state:"open" }],
+      joinroom: [{ id:"r1", title:"가릴 조인 자리", state:"open" }] });
+    s = await open("/admin", { role:"admin", name:"관리자" }, RT,
+                   { biz_metrics: MET });
+    t = (await s.p.textContent("#repbox")) || "";
+    ok("⚠️ 무엇에 대한 신고인지 **새 갈래도** 적는다 (칸을 안 읽으면 " +
+       "아무것도 안 적힙니다)",
+       t.indexOf("커뮤니티 질문") >= 0 && t.indexOf("구인 · 구직 글") >= 0,
+       t.slice(0, 400));
+    ok("  신고된 글의 **제목**까지 붙여 준다 (따로 읽어서)",
+       t.indexOf("가릴 질문") >= 0 && t.indexOf("가릴 구인 글") >= 0,
+       t.slice(0, 400));
+    ok("⚠️ 이미 가려진 글에는 **단추를 안 낸다** (눌러도 아무 일이 안 " +
+       "나는 단추를 만들지 않습니다)",
+       t.indexOf("이미 가려져 있습니다") >= 0 &&
+       (await s.p.locator("button[data-hid='q9']").count()) === 0,
+       t.slice(0, 400));
+
+    /* ⚠️⚠️ **까닭 없이는 안 보냅니다** (문도 · 표의 check 도 막습니다) */
+    await s.p.evaluate(function(){ window.prompt = function(){ return "짧"; }; });
+    await s.p.click("button[data-hid='q1']");
+    await s.p.waitForTimeout(250);
+    ok("⚠️⚠️ 가리는 까닭이 다섯 글자 미만이면 **보내지 않는다**",
+       s.sent.filter(function(x){ return x.name === "move_cq"; }).length === 0,
+       s.sent.map(function(x){ return x.name; }).join(" "));
+
+    await s.p.evaluate(function(){
+      window.prompt = function(){ return "광고 글입니다"; }; });
+    await s.p.click("button[data-hid='q1']");
+    await s.p.waitForTimeout(350);
+    const hq = s.sent.filter(function(x){ return x.name === "move_cq"; })[0];
+    ok("⚠️⚠️⚠️ 가리기 단추가 **move_cq 를 실제로 부른다** (운영자가 SQL " +
+       "편집기를 열지 않아도 됩니다)", !!hq,
+       s.sent.map(function(x){ return x.name; }).join(" "));
+    if(hq){
+      let hp = null;
+      try{ hp = JSON.parse(hq.body).p; }catch(_){}
+      ok("  꾸러미의 칸 이름이 문과 같다 (id · state · why)",
+         !!hp && hp.id === "q1" && hp.state === "hidden" &&
+         hp.why === "광고 글입니다", hq.body);
+    }
+
+    await s.p.click("button[data-hid='j1']");
+    await s.p.waitForTimeout(350);
+    const hj = s.sent.filter(function(x){ return x.name === "move_jobpost"; })[0];
+    ok("⚠️ 구인 · 구직 글도 **move_jobpost 로** 가린다", !!hj,
+       s.sent.map(function(x){ return x.name; }).join(" "));
+
+    await s.p.click("button[data-hid='r1']");
+    await s.p.waitForTimeout(350);
+    const hr = s.sent.filter(function(x){ return x.name === "move_joinroom"; })[0];
+    ok("⚠️⚠️ 조인 자리도 **move_joinroom 으로** 가린다 (0049 — 전에는 " +
+       "신고를 받아 놓고 내릴 길이 없었습니다)", !!hr,
+       s.sent.map(function(x){ return x.name; }).join(" "));
+    ok("  그 자리의 **제목**까지 적어 준다 (무엇을 가리는지 보고 누릅니다)",
+       t.indexOf("가릴 조인 자리") >= 0, t.slice(0, 500));
+    ok("신고함의 누르는 것이 40px 이상이다",
+       (await tapsOk(s.p, "#repbox")) === 0, await tapsOk(s.p, "#repbox"));
+    await s.p.close();
+  }
+
   console.log("\n── /my 손님이 신고를 엽니다 (0040)");
   s = await open("/my", { role:"customer", name:"홍길동" },
                  Object.assign({}, MYT, { quote:[], review:[], appointment:[],
@@ -2481,8 +2600,11 @@ function stub(p, who, tables, rpcs, up){
          .every(function(n){ return r.req.indexOf(n) >= 0; }), (r.req || []).join(","));
     ok("  ⚠️ 동의 상자에 수집 항목 · 목적 · 보유 기간 · 제공이 같이 있다 (제15조 제2항)",
        r.terms >= 4, String(r.terms));
+    /* ⚠️ 글자를 박지 않고 **설정값**과 맞춰 봅니다 (바뀌는 날 멀쩡한
+       화면을 실패로 잡지 않게) */
+    const JKEEP = keepOf("joinKeep");
     ok("  ⚠️ 보유 기간이 **실제 값**으로 찍힌다 (site.js 의 joinKeep)",
-       (r.body || "").indexOf("6개월") >= 0, "");
+       !!JKEEP && (r.body || "").indexOf(JKEEP) >= 0, JKEEP);
     ok("  ⚠️ 연락처 칸이 **언제 누구에게 가는지**를 그 자리에서 말한다 (제17조)",
        (r.body || "").indexOf("수락하신 뒤") >= 0, "");
     ok("  지난 날짜를 못 고르게 min 을 건다", /^\d{4}-\d{2}-\d{2}$/.test(r.minDate),
@@ -2494,7 +2616,10 @@ function stub(p, who, tables, rpcs, up){
     await g.p.fill("#j-date", "2099-05-05");
     await g.p.selectOption("#j-rg", "seoul");
     await g.p.fill("#j-contact", "010-0000-0000");
-    await g.p.check("#j-agree");
+    /* ⚠️ 동의 칸에는 **id 가 없습니다** — 이 상자는 여는 양식과 신청
+       양식에 둘 다 들어가므로, id 를 달면 같은 id 가 둘이 됩니다
+       (이름표는 label 이 감싸서 붙습니다). 그래서 양식으로 좁혀 집습니다. */
+    await g.p.check("#jnf .jconsent input[type=\"checkbox\"]");
     await g.p.click("#jnf button[type=submit]");
     await g.p.waitForTimeout(400);
     const call = g.sent.filter(function(x){ return x.name === "open_joinroom"; })[0];
@@ -2547,6 +2672,53 @@ function stub(p, who, tables, rpcs, up){
     ok("  대신 **내 연락처를 보여 줄지 고르는 단추**가 있다", r.share, "");
     ok("  여신 자리를 고치는 길이 있다 (§2.A — 작성자 본인 수정)", r.edit, "");
 
+    /* ⚠️⚠️⚠️ **닫힌 자리에 영문 상태가 찍히지 않는가.** 전에는 한 줄에
+       `ST[r.state] || r.state === "open" ? … : r.state` 로 적었는데,
+       자바스크립트가 `||` 를 `?:` 보다 **먼저** 묶어서 닫힌 자리에
+       `closed` 가 손님 화면에 그대로 나왔습니다. 에러도 없고, 열린
+       자리만 넣어 보면 **영원히 멀쩡합니다** — 그래서 닫힌 자리를
+       따로 넣어 봅니다 (작업 기억 — 상태 말은 한 곳에). */
+    {
+      const g3 = await open("/my", { role:"customer", name:"손님", signedIn:true },
+        { joinroom: [{ id:"r5", title:"닫은 자리", body:"설명", course:null,
+                       tee:null, budget:null, play_at:"2099-05-05",
+                       region:"seoul", state:"closed", need:2 }],
+          joinapply: [], v_join_contact: [], request: [], quote: [], review: [] },
+        {}, true);
+      const r3 = await g3.p.evaluate(function(){
+        const box = document.getElementById("joinmine");
+        return { body: box ? box.innerText : "" };
+      });
+      ok("⚠️ 닫힌 자리에 **영문 상태가 안 찍힌다** (closed · done)",
+         r3.body.indexOf("닫혔습니다") >= 0 && r3.body.indexOf("closed") < 0,
+         r3.body.slice(0, 200));
+      await g3.p.close();
+
+      /* ⚠️ 0049 — 운영자가 가린 자리. **까닭을 연 사람에게 보여 줍니다** */
+      const g4 = await open("/my", { role:"customer", name:"손님", signedIn:true },
+        { joinroom: [{ id:"r6", title:"가려진 자리", body:"설명", course:null,
+                       tee:null, budget:null, play_at:"2099-05-05",
+                       region:"seoul", state:"hidden", need:2,
+                       hidden_why:"본문에 전화번호를 적었습니다" }],
+          joinapply: [], v_join_contact: [], request: [], quote: [], review: [] },
+        {}, true);
+      const r4 = await g4.p.evaluate(function(){
+        const box = document.getElementById("joinmine");
+        return { body: box ? box.innerText : "",
+                 edit: !!document.querySelector(".mj-edit"),
+                 close: !!document.querySelector(".mj-close") };
+      });
+      ok("⚠️ 가려진 자리에 **영문 hidden 이 안 찍힌다**",
+         r4.body.indexOf("운영자가 가렸습니다") >= 0 &&
+         r4.body.indexOf("hidden") < 0, r4.body.slice(0, 220));
+      ok("⚠️⚠️ 가린 **까닭**을 연 사람에게 보여 준다 (0049)",
+         r4.body.indexOf("본문에 전화번호를 적었습니다") >= 0,
+         r4.body.slice(0, 220));
+      ok("⚠️ 가려진 자리에는 고치기 · 닫기 단추가 **없다** (문도 거절합니다)",
+         !r4.edit && !r4.close, JSON.stringify(r4).slice(0, 120));
+      await g4.p.close();
+    }
+
     /* 수락 단추가 실제로 문을 부르는가 — ⚠️ 그려만 두고 안 부르면 가짜입니다 */
     const g2 = await open("/my", { role:"customer", name:"손님", signedIn:true },
       { joinroom: MYROOM,
@@ -2584,7 +2756,8 @@ function stub(p, who, tables, rpcs, up){
     await p2.waitForTimeout(500);
     const r = await p2.evaluate(function(){
       const small = [], low = [];
-      Array.prototype.forEach.call(document.querySelectorAll(".jnc, .jbox, .jnl"),
+      Array.prototype.forEach.call(
+        document.querySelectorAll(".jnc, .jbox, .jnl, .none"),
         function(box){
           Array.prototype.forEach.call(box.querySelectorAll("*"), function(e){
             if(e.firstChild && e.firstChild.nodeType === 3 && (e.textContent||"").trim()){
@@ -2608,6 +2781,581 @@ function stub(p, who, tables, rpcs, up){
     ok("조인 " + w + "px — 12px 미만 글자가 없다", r.small.length === 0,
        r.small.join(" · "));
     ok("조인 " + w + "px — 누르는 것이 40px 이상이다", r.low.length === 0,
+       r.low.join(" · "));
+    await p2.close();
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     골프 커뮤니티 (0047 · §2.C) — ⚠️ 같은 눈먼 자리입니다
+     (Supabase 설정이 있어야 그려집니다).
+     ⚠️⚠️ 가장 중요한 것: **글쓴이 이름이 가려져 나오는가.**
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 골프 커뮤니티 (0047)");
+  const CQ = [{ id:"q1", cat:"lesson", title:"드라이버 슬라이스 고치는 법",
+    body:"오른쪽으로 많이 휩니다", who:"김**", created_at:"2026-11-05T01:00:00Z",
+    answer_n:1 }];
+  const CA = [{ id:"a1", q_id:"q1", who:"이**", body:"그립을 먼저 보세요",
+    created_at:"2026-11-05T02:00:00Z", by_asker:false }];
+
+  /* ① 설정 전에는 아무것도 안 엽니다 */
+  {
+    const p0 = await b.newPage({ viewport: view });
+    await p0.route("**/api/session", function(r){
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ auth:false, signedIn:false, conf:null }) });
+    });
+    await p0.goto(base + "/cat/community", { waitUntil:"networkidle" });
+    await p0.waitForTimeout(400);
+    const off = await p0.evaluate(function(){
+      const b2 = document.getElementById("cqbox");
+      return { form: !!document.getElementById("cqf"),
+               boxHtml: (b2 ? b2.innerHTML : "").trim().length };
+    });
+    ok("⚠️ 설정 전에는 커뮤니티 양식을 **안 엽니다**",
+       !off.form && off.boxHtml === 0, JSON.stringify(off));
+    await p0.close();
+  }
+
+  /* ② 로그인 전 — 글은 보이고 쓰는 것은 로그인으로 */
+  {
+    const g = await open("/cat/community", { role:"customer", name:"", signedIn:false },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const li = document.querySelector(".cqc");
+      const box = document.getElementById("cqbox");
+      return { card: !!li, body: document.body.innerText,
+               login: !!(box && box.querySelector('a[href^="/login"]')),
+               form: !!document.getElementById("cqf") };
+    });
+    ok("로그인 전에도 질문이 보인다 (크롤러도 봅니다)", r.card, JSON.stringify(r).slice(0,140));
+    ok("  ⚠️⚠️ 글쓴이 이름이 **가려져** 나온다 (김** — 공개 보기에 by_user 가 없습니다)",
+       r.body.indexOf("김**") >= 0 && r.body.indexOf("김질문") < 0, "");
+    ok("  로그인 전에는 쓰는 양식 대신 로그인 길을 낸다", r.login && !r.form,
+       JSON.stringify({ login:r.login, form:r.form }));
+    ok("  ⚠️ 우리가 답해 준다고 말하지 않는다 (절대 규칙 5)",
+       r.body.indexOf("골프올인원이 답변을 드리지는 않으며") >= 0, "");
+    ok("  ⚠️ 연락처를 적지 말라고 **그 자리에서** 말한다 (§2.C)",
+       r.body.indexOf("연락처는 적지 마세요") >= 0, "");
+    await g.p.close();
+  }
+
+  /* ③ 로그인 뒤 — 질문 올리기 · 답변 달기 */
+  {
+    const g = await open("/cat/community", { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const f = document.getElementById("cqf");
+      if(!f) return { form:false };
+      return { form:true, req: Array.prototype.map.call(
+        f.querySelectorAll("[required]"), function(e){ return e.name; }) };
+    });
+    ok("로그인하면 질문 양식이 열린다", r.form, JSON.stringify(r));
+    ok("  분류 · 제목 · 내용이 **필수**다 (§2.C)",
+       ["cat","title","body"].every(function(n){ return (r.req||[]).indexOf(n) >= 0; }),
+       (r.req || []).join(","));
+
+    await g.p.selectOption("#c-cat", "lesson");
+    await g.p.fill("#c-title", "검사용 질문");
+    await g.p.fill("#c-body", "검사로 올리는 글입니다");
+    await g.p.click("#cqf button[type=submit]");
+    await g.p.waitForTimeout(400);
+    const askCall = g.sent.filter(function(x){ return x.name === "ask_cq"; })[0];
+    ok("⚠️ 올리기 단추가 **ask_cq 를 실제로 부른다**", !!askCall,
+       g.sent.map(function(x){ return x.name; }).join(","));
+    if(askCall){
+      const sp = JSON.parse(askCall.body).p;
+      ok("  분류 · 제목 · 내용을 그대로 보낸다",
+         sp.cat === "lesson" && sp.title === "검사용 질문", JSON.stringify(sp));
+    }
+    await g.p.close();
+  }
+
+  /* ④ 답변 펼치기 — ⚠️ 누르면 실제로 불러오는가 */
+  {
+    const g = await open("/cat/community", { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    await g.p.click(".cqc-open");
+    await g.p.waitForTimeout(400);
+    const r = await g.p.evaluate(function(){
+      const box = document.querySelector(".cqc-a");
+      return { open: !!box && !box.hidden, body: box ? box.innerText : "",
+               form: !!document.querySelector(".caf") };
+    });
+    ok("답변 보기를 누르면 펼쳐진다", r.open, JSON.stringify(r).slice(0,120));
+    ok("  답변이 그려지고 이름이 가려져 있다",
+       r.body.indexOf("그립을 먼저 보세요") >= 0 && r.body.indexOf("이**") >= 0, r.body.slice(0,120));
+    ok("  로그인했으면 답변 양식이 같이 나온다", r.form, "");
+
+    await g.p.fill(".caf textarea", "검사로 다는 답변입니다");
+    await g.p.click(".caf button[type=submit]");
+    await g.p.waitForTimeout(400);
+    const ansCall = g.sent.filter(function(x){ return x.name === "answer_cq"; })[0];
+    ok("⚠️ 답변 단추가 **answer_cq 를 실제로 부른다**", !!ansCall,
+       g.sent.map(function(x){ return x.name; }).join(","));
+    await g.p.close();
+  }
+
+  /* ⑤ /my — 내 글 고치기 · 내리기 */
+  {
+    const MYQ = [{ id:"q1", cat:"lesson", title:"내 질문", body:"내용입니다",
+                   state:"live", hidden_why:null, created_at:"2026-11-05T01:00:00Z" },
+                 { id:"q2", cat:"lesson", title:"가려진 질문", body:"내용",
+                   state:"hidden", hidden_why:"광고 글입니다",
+                   created_at:"2026-11-04T01:00:00Z" }];
+    const MYA = [{ id:"a1", q_id:"q9", body:"내 답변입니다", state:"live",
+                   hidden_why:null, created_at:"2026-11-05T02:00:00Z" }];
+    const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+      { cq: MYQ, ca: MYA, joinroom: [], joinapply: [], v_join_contact: [],
+        request: [], quote: [], review: [] }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const box = document.getElementById("mycq");
+      return { drawn: !!box && !box.hidden && box.children.length > 0,
+               body: box ? box.innerText : "",
+               edits: box ? box.querySelectorAll(".mq-edit").length : 0,
+               drops: box ? box.querySelectorAll(".mq-drop").length : 0 };
+    });
+    ok("/my 에 내가 쓴 글이 그려진다", r.drawn, JSON.stringify(r).slice(0,140));
+    ok("  내 질문과 내 답변을 **갈라서** 보여 준다",
+       r.body.indexOf("내 질문") >= 0 && r.body.indexOf("내 답변") >= 0, "");
+    ok("  ⚠️ 가린 **까닭을 보여 준다** (무엇이 문제였는지 알아야 합니다)",
+       r.body.indexOf("광고 글입니다") >= 0, "");
+    /* ⚠️⚠️ 가려진 글에는 고치기 · 내리기가 **없어야** 합니다 */
+    ok("⚠️⚠️ 가려진 글에는 고치기 · 내리기가 **안 나온다** (살아 있는 둘만)",
+       r.edits === 2 && r.drops === 2,
+       "고치기 " + r.edits + " · 내리기 " + r.drops);
+
+    await g.p.evaluate(function(){ window.confirm = function(){ return true; }; });
+    await g.p.click(".mq-drop");
+    await g.p.waitForTimeout(400);
+    const mvc = g.sent.filter(function(x){ return x.name === "move_cq"; })[0];
+    ok("⚠️ 내리기가 **move_cq 를 실제로 부른다**", !!mvc,
+       g.sent.map(function(x){ return x.name; }).join(","));
+    if(mvc) ok("  dropped 로 보낸다 (지우지 않습니다)",
+       JSON.parse(mvc.body).p.state === "dropped", mvc.body);
+    await g.p.close();
+  }
+
+  /* ⑥ 폰 폭 셋 */
+  for(const w of PHONES){
+    const p2 = await b.newPage({ viewport: { width: w, height: 900 } });
+    await stub(p2, { role:"customer", name:"손님", signedIn:true },
+               { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    await p2.goto(base + "/cat/community", { waitUntil:"networkidle" });
+    await p2.waitForTimeout(500);
+    await p2.click(".cqc-open").catch(function(){});
+    await p2.waitForTimeout(350);
+    const r = await p2.evaluate(function(){
+      const small = [], low = [];
+      Array.prototype.forEach.call(
+        document.querySelectorAll(".cqc, .jbox, .none"),
+        function(box){
+          Array.prototype.forEach.call(box.querySelectorAll("*"), function(e){
+            if(e.firstChild && e.firstChild.nodeType === 3 && (e.textContent||"").trim()){
+              const fs = parseFloat(getComputedStyle(e).fontSize);
+              if(fs < 12) small.push(e.tagName + " " + fs);
+            }
+          });
+          Array.prototype.forEach.call(box.querySelectorAll("button, a"), function(e){
+            if(e.getBoundingClientRect().height < 39.5) low.push(e.tagName);
+          });
+        });
+      return { doc: document.documentElement.scrollWidth, win: window.innerWidth,
+               drawn: !!document.querySelector(".cqc"),
+               small: small.slice(0,4), low: low.slice(0,4) };
+    });
+    if(w === PHONES[0])
+      ok("커뮤니티 — 폰에서 그려지기는 한다", r.drawn, JSON.stringify(r));
+    ok("커뮤니티 " + w + "px — **가로로 안 밀린다**", r.doc <= r.win + 1,
+       "문서 " + r.doc + "px · 화면 " + r.win + "px");
+    ok("커뮤니티 " + w + "px — 12px 미만 글자가 없다", r.small.length === 0,
+       r.small.join(" · "));
+    ok("커뮤니티 " + w + "px — 누르는 것이 40px 이상이다", r.low.length === 0,
+       r.low.join(" · "));
+    await p2.close();
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     골프 인력 · 비즈니스 (0048) — ⚠️ **빌드가 찍은 HTML 만 보는 검사는
+     영원히 못 봅니다.** 목록도 양식도 Supabase 설정이 있어야 그려집니다.
+     ⚠️⚠️ 가장 중요한 것 둘: **연락처가 화면 어디에도 안 나오는가**,
+     그리고 **검사용 · 정지된 업체의 상호가 안 나오는가**.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 골프 인력 · 비즈니스 (0048)");
+  const JOBS = [
+    { id:"j1", kind:"hire", sub:"cr-caddy", region:"seoul",
+      title:"주말 캐디 구합니다", body:"주말 오전 라운딩 캐디를 구합니다.",
+      pay:"일 12만원", terms:"주 2일 · 오전", close_at:"2099-06-30",
+      created_at:"2026-11-01T00:00:00Z", who:"김**", pro_name:null, apply_n:2 },
+    { id:"j2", kind:"seek", sub:"cr-coach", region:"gyeonggi",
+      title:"레슨 자리를 찾습니다", body:"주 3일 레슨 가능한 자리를 찾습니다.",
+      pay:null, terms:null, close_at:null,
+      created_at:"2026-11-02T00:00:00Z", who:"이**",
+      pro_name:"참골프아카데미", apply_n:0 }
+  ];
+
+  /* ① 설정 전에는 **아무것도 안 엽니다** (절대 규칙 5) */
+  {
+    const p0 = await b.newPage({ viewport: view });
+    await p0.route("**/api/session", function(r){
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ auth:false, signedIn:false, conf:null }) });
+    });
+    await p0.goto(base + "/cat/career", { waitUntil:"networkidle" });
+    await p0.waitForTimeout(400);
+    const off = await p0.evaluate(function(){
+      const b2 = document.getElementById("jobbox");
+      return { form: !!document.getElementById("jbf"),
+               boxHtml: (b2 ? b2.innerHTML : "").trim().length };
+    });
+    ok("⚠️ 설정 전에는 구인 · 구직 양식을 **안 엽니다**",
+       !off.form && off.boxHtml === 0, JSON.stringify(off));
+    await p0.close();
+  }
+
+  /* ② 로그인 전 — 목록은 보이고, 지원은 로그인으로 보냅니다 */
+  {
+    const g = await open("/cat/career", { role:"customer", name:"", signedIn:false },
+                         { v_job_open: JOBS }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const li = document.querySelectorAll(".jbc");
+      const box = document.getElementById("jobbox");
+      return { n: li.length,
+               body: document.body.innerText,
+               login: !!(box && box.querySelector('a[href^="/login"]')),
+               form: !!document.getElementById("jbf"),
+               chips: document.querySelectorAll(".jbf-c .chip").length,
+               pay1: !!document.querySelector('.jbc[data-id="j1"] .jbc-p'),
+               pay2: !!document.querySelector('.jbc[data-id="j2"] .jbc-p') };
+    });
+    ok("로그인 전에도 올라온 글이 보인다", r.n === 2, "카드 " + r.n + "장");
+    ok("  갈래를 한글로 적는다 (영문 키를 안 찍습니다)",
+       r.body.indexOf("구인") >= 0 && r.body.indexOf("구직") >= 0 &&
+       r.body.indexOf("hire") < 0 && r.body.indexOf("seek") < 0, "");
+    ok("  하위분류도 한글로 적는다 (catalog.js 한 곳에서 읽습니다)",
+       r.body.indexOf("캐디 구인") >= 0 && r.body.indexOf("cr-caddy") < 0, "");
+    ok("⚠️⚠️ 목록 어디에도 연락처가 없다 (v_job_open 에 칸이 없습니다)",
+       r.body.indexOf("010-") < 0, "");
+    ok("  ⚠️ 그리고 그 사실을 손님에게 말해 준다",
+       r.body.indexOf("연락처는 목록에 나오지 않습니다") >= 0, "");
+    ok("  ⚠️ 채용을 대신 한다고 말하지 않는다 (절대 규칙 5)",
+       r.body.indexOf("채용을 대신 진행하지 않으며") >= 0, "");
+    /* ⚠️ 급여가 비면 **줄째 빠집니다** (절대 규칙 2 — "협의" 를 지어
+       적지 않습니다) */
+    ok("⚠️ 급여가 있으면 그 줄이 나온다", r.pay1, "");
+    ok("⚠️⚠️ 급여가 비면 그 줄이 **아예 없다** (자리표시자를 안 찍습니다)",
+       !r.pay2, "");
+    /* ⚠️ 업체 이름은 **고르셨을 때만** 옵니다 */
+    ok("⚠️ 업체 이름을 고른 글에는 **상호**가 나온다",
+       r.body.indexOf("참골프아카데미") >= 0, "");
+    ok("  안 고른 글에는 가린 이름이 나온다", r.body.indexOf("김**") >= 0, "");
+    ok("  로그인 전에는 올리는 양식 대신 로그인 길을 낸다", r.login && !r.form,
+       JSON.stringify({ login:r.login, form:r.form }));
+    /* ⚠️⚠️ 거르개는 **단추가 아니라 링크**입니다 (주소를 복사해 보낼 수
+       있게 · 자바스크립트가 꺼진 분에게 죽은 칸이 되지 않게) */
+    ok("⚠️ 거르개가 **링크**로 나온다 (전체 + 갈래 셋)", r.chips === 4,
+       "칸 " + r.chips + "개");
+    const tag = await g.p.evaluate(function(){
+      const a = document.querySelector(".jbf-c .chip");
+      return { tag: a ? a.tagName : "", href: a ? a.getAttribute("href") : "",
+               cur: a ? a.getAttribute("aria-current") : "" };
+    });
+    ok("  그 칸이 <a> 이고 주소를 들고 있다",
+       tag.tag === "A" && tag.href === "/cat/career", JSON.stringify(tag));
+    ok("  눌린 칸을 **색만이 아니라 aria-current 로도** 말한다",
+       tag.cur === "true", JSON.stringify(tag));
+
+    /* 거르개를 눌러 봅니다 — ⚠️ 보내는 열쇠가 DB 와 같은지까지 */
+    g.sent.length = 0;
+    await g.p.click('.jbf-c .chip[data-k="hire"]');
+    await g.p.waitForTimeout(400);
+    const q = g.sent.filter(function(x){
+      return x.name === "GET" && x.body.indexOf("v_job_open") >= 0; })[0];
+    ok("⚠️⚠️ 거르개를 누르면 **kind 로 좁혀 다시 읽는다** (눌러 봐야 압니다)",
+       !!q && q.body.indexOf("kind=eq.hire") >= 0, q ? q.body : "안 읽었습니다");
+    const url = await g.p.evaluate(function(){ return window.location.search; });
+    ok("  주소도 같이 바뀐다 (복사해 보내도 같은 화면입니다)",
+       url.indexOf("k=hire") >= 0, url);
+    await g.p.close();
+  }
+
+  /* ③ 로그인 뒤 — 올리는 양식 */
+  {
+    const g = await open("/cat/career", { role:"customer", name:"손님", signedIn:true },
+                         { v_job_open: JOBS }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const f = document.getElementById("jbf");
+      if(!f) return { form:false };
+      const req = Array.prototype.map.call(
+        f.querySelectorAll("[required]"), function(e){ return e.name || "(동의)"; });
+      const box = f.querySelector(".jconsent");
+      return { form:true, req: req,
+               consent: box ? box.innerText : "",
+               aspro: !!document.getElementById("b-aspro"),
+               closeMin: (document.getElementById("b-close") || {}).min || "",
+               hint: f.innerText,
+               subs: f.querySelectorAll('select[name="sub"] option').length,
+               kinds: f.querySelectorAll('select[name="kind"] option').length };
+    });
+    ok("로그인하면 올리는 양식이 열린다", r.form, JSON.stringify(r).slice(0, 120));
+    ok("  갈래 · 분류 · 지역 · 제목 · 내용 · 연락처가 **필수**다",
+       ["kind","sub","region","title","body","contact"].every(function(k){
+         return r.req.indexOf(k) >= 0; }), r.req.join(","));
+    ok("  하위분류 여섯을 catalog.js 에서 읽어 채운다 (고르세요 + 6)",
+       r.subs === 7, "칸 " + r.subs + "개");
+    ok("  갈래 셋을 채운다 (고르세요 + 3)", r.kinds === 4, "칸 " + r.kinds + "개");
+    /* ⚠️⚠️ 제15조 제2항 — 수집 항목 · 목적 · 보유 기간을 **그 자리에서** */
+    ok("  ⚠️ 동의 상자에 수집 항목 · 목적 · 보유 기간 · 제공이 같이 있다",
+       r.consent.indexOf("수집 항목") >= 0 && r.consent.indexOf("이용 목적") >= 0 &&
+       r.consent.indexOf("보유 기간") >= 0 && r.consent.indexOf("제공") >= 0,
+       r.consent.slice(0, 160));
+    const CKEEP = keepOf("careerKeep");
+    ok("  ⚠️ 보유 기간이 **실제 값**으로 찍힌다 (site.js 의 careerKeep)",
+       !!CKEEP && r.consent.indexOf(CKEEP) >= 0, CKEEP);
+    ok("  ⚠️ 연락처 칸이 **언제 누구에게 가는지**를 그 자리에서 말한다",
+       r.hint.indexOf("목록에는") >= 0 && r.hint.indexOf("다시 한 번 고르셔야") >= 0, "");
+    /* ⚠️ 업체 담당자가 아니면 그 칸이 **아예 없습니다** (눌러도 아무
+       일이 안 나는 칸을 만들지 않습니다) */
+    ok("⚠️ 업체 담당자가 아니면 '업체 이름으로 올리기' 칸이 **없다**",
+       !r.aspro, "");
+    ok("  지난 날짜를 못 고르게 마감일에 min 을 건다",
+       /^\d{4}-\d{2}-\d{2}$/.test(r.closeMin), r.closeMin);
+
+    /* 올리는 단추가 문을 실제로 부르는가 — ⚠️ 꾸러미까지 뜯어 봅니다 */
+    await g.p.selectOption("#b-kind", "hire");
+    await g.p.selectOption("#b-sub", "cr-caddy");
+    await g.p.selectOption("#b-rg", "seoul");
+    await g.p.fill("#b-title", "검사용 구인");
+    await g.p.fill("#b-body", "검사로 올려 봅니다.");
+    await g.p.fill("#b-contact", "010-1234-5678");
+    await g.p.check("#jbf .jconsent input[type=\"checkbox\"]");
+    await g.p.click('#jbf button[type="submit"]');
+    await g.p.waitForTimeout(400);
+    const call = g.sent.filter(function(x){ return x.name === "open_jobpost"; })[0];
+    ok("⚠️ 올리기 단추가 **open_jobpost 를 실제로 부른다**", !!call,
+       g.sent.map(function(x){ return x.name; }).join(","));
+    if(call){
+      const sp = JSON.parse(call.body).p;
+      ok("  적은 것이 그대로 간다 (열쇠 이름이 DB 와 같습니다)",
+         sp.kind === "hire" && sp.sub === "cr-caddy" && sp.region === "seoul" &&
+         sp.title === "검사용 구인" && sp.contact === "010-1234-5678",
+         JSON.stringify(sp).slice(0, 200));
+      ok("  ⚠️ **동의 시각**을 같이 보낸다 (제15조 제2항)",
+         !!sp.agree_at &&
+         Math.abs(Date.now() - new Date(sp.agree_at).getTime()) < 60000,
+         String(sp.agree_at));
+      ok("  ⚠️ 업체 칸이 없으면 as_pro 를 **false 로** 보낸다 (보낸 값을 " +
+         "문이 안 믿지만, 화면도 지어내지 않습니다)", sp.as_pro === false,
+         String(sp.as_pro));
+    }
+    await g.p.close();
+  }
+
+  /* ④ 업체 담당자 — ⚠️ 그때만 '업체 이름으로 올리기' 칸이 생깁니다 */
+  {
+    const g = await open("/cat/career",
+      { role:"provider", name:"박담당", signedIn:true, provider:"jb-real" },
+      { v_job_open: JOBS }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const e = document.getElementById("b-aspro");
+      return { aspro: !!e, hint: document.getElementById("jbf").innerText };
+    });
+    ok("⚠️ 업체 담당자에게는 '업체 이름으로 올리기' 칸이 있다", r.aspro, "");
+    ok("  ⚠️ 승인된 업체만 된다고 그 자리에서 말한다",
+       r.hint.indexOf("승인된 업체만 됩니다") >= 0, "");
+    await g.p.close();
+  }
+
+  /* ⑤ 지원 — ⚠️ 연락처가 바로 가지 않는다고 그 자리에서 말합니다 */
+  {
+    const g = await open("/cat/career", { role:"customer", name:"손님", signedIn:true },
+                         { v_job_open: JOBS }, {}, true);
+    await g.p.click('.jbc[data-id="j1"] .jbc-go');
+    await g.p.waitForTimeout(250);
+    const r = await g.p.evaluate(function(){
+      const f = document.querySelector('.jbc[data-id="j1"] .jbaf');
+      return { form: !!f, text: f ? f.innerText : "" };
+    });
+    ok("지원 단추를 누르면 그 자리에 양식이 열린다", r.form, "");
+    ok("  ⚠️ 연락처가 **바로 가지 않는다**고 그 자리에서 말한다",
+       r.text.indexOf("바로 가지 않습니다") >= 0, r.text.slice(0, 160));
+    ok("  ⚠️ 동의 상자도 같이 있다 (제15조 제2항)",
+       r.text.indexOf("보유 기간") >= 0, "");
+    await g.p.fill('.jbc[data-id="j1"] .jbaf textarea[name="msg"]',
+                   "캐디 경력 3년입니다.");
+    await g.p.fill('.jbc[data-id="j1"] .jbaf input[name="contact"]', "010-3333-4444");
+    await g.p.check('.jbc[data-id="j1"] .jbaf .jconsent input[type="checkbox"]');
+    await g.p.click('.jbc[data-id="j1"] .jbaf button[type="submit"]');
+    await g.p.waitForTimeout(400);
+    const ap = g.sent.filter(function(x){ return x.name === "apply_jobpost"; })[0];
+    ok("⚠️ 보내기가 **apply_jobpost 를 실제로 부른다**", !!ap,
+       g.sent.map(function(x){ return x.name; }).join(","));
+    if(ap){
+      const sp = JSON.parse(ap.body).p;
+      ok("  그 글을 가리키고 동의 시각을 같이 보낸다",
+         sp.post_id === "j1" && !!sp.agree_at, JSON.stringify(sp).slice(0, 160));
+    }
+    const after = await g.p.evaluate(function(){
+      return document.querySelector('.jbc[data-id="j1"]').innerText; });
+    ok("  ⚠️ 보낸 뒤 **지킬 수 없는 약속을 하지 않는다**",
+       after.indexOf("언제까지라고 약속드리지는 않습니다") >= 0, after.slice(0, 160));
+    await g.p.close();
+  }
+
+  /* ⑥ /my — ⚠️⚠️ **수락만으로 연락처가 보이면 안 됩니다** */
+  {
+    const MYP = [
+      { id:"j1", kind:"hire", sub:"cr-caddy", region:"seoul",
+        title:"내가 올린 구인", body:"설명입니다.", pay:"일 12만원",
+        terms:null, close_at:null, state:"open", hidden_why:null,
+        created_at:"2026-11-01T00:00:00Z" },
+      { id:"j9", kind:"seek", sub:"cr-coach", region:"seoul",
+        title:"가려진 글", body:"설명입니다.", pay:null, terms:null,
+        close_at:null, state:"hidden", hidden_why:"허위 구인으로 보입니다",
+        created_at:"2026-11-01T00:00:00Z" },
+      { id:"j8", kind:"biz", sub:"cr-b2b", region:"seoul",
+        title:"마감한 글", body:"설명입니다.", pay:null, terms:null,
+        close_at:null, state:"closed", hidden_why:null,
+        created_at:"2026-11-01T00:00:00Z" }
+    ];
+    const MYA = [
+      { id:"a1", post_id:"j1", by_user:"u2", msg:"캐디 경력 3년입니다",
+        state:"accepted", host_share_at:null, guest_share_at:null },
+      { id:"a2", post_id:"j7", by_user:"me", msg:"제가 보낸 지원",
+        state:"applied", host_share_at:null, guest_share_at:null }
+    ];
+    /* ⚠️ 수락됐지만 **아무도 연락처를 안 열었습니다** → 빈 값이 옵니다 */
+    const MYC = [{ apply_id:"a1", post_contact:null, apply_contact:null,
+                   host_share_at:null, guest_share_at:null }];
+    const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+      { jobpost: MYP, jobapply: MYA, v_job_contact: MYC,
+        joinroom: [], joinapply: [], v_join_contact: [],
+        cq: [], ca: [], request: [], quote: [], review: [] }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const box = document.getElementById("jobmine");
+      return { drawn: !!box && !box.hidden && box.children.length > 0,
+               body: box ? box.innerText : "",
+               share: !!document.querySelector(".mb-share"),
+               edit:  !!document.querySelector(".mb-edit"),
+               close: !!document.querySelector(".mb-close"),
+               drop:  !!document.querySelector(".mb-drop"),
+               okBtn: !!document.querySelector(".mb-ok") };
+    });
+    ok("/my 에 내 구인 · 구직이 그려진다", r.drawn, JSON.stringify(r).slice(0, 140));
+    ok("  내가 올린 글과 내가 보낸 것을 **갈라서** 보여 준다",
+       r.body.indexOf("내가 올린 글") >= 0 &&
+       r.body.indexOf("내가 보낸 지원 · 제안") >= 0, "");
+    ok("⚠️⚠️⚠️ **수락만으로는 연락처가 화면에 안 나온다** (제17조 제2항)",
+       r.body.indexOf("010-") < 0 && r.body.indexOf("아직 안 여셨습니다") >= 0,
+       r.body.slice(0, 200));
+    ok("  대신 **내 연락처를 보여 줄지 고르는 단추**가 있다", r.share, "");
+    ok("  올린 글을 고치고 · 마감하고 · 내리는 길이 있다",
+       r.edit && r.close && r.drop, JSON.stringify(r));
+    /* ⚠️⚠️ 상태 말을 **한글로** — 영문 키가 그대로 찍히면 안 됩니다
+       (조인에서 실제로 그랬습니다 — `||` 가 `?:` 보다 먼저 묶였습니다) */
+    ok("⚠️⚠️ 상태를 한글로 적는다 (closed · hidden 이 영문으로 안 찍힙니다)",
+       r.body.indexOf("마감했습니다") >= 0 &&
+       r.body.indexOf("운영자가 가렸습니다") >= 0 &&
+       r.body.indexOf("closed") < 0 && r.body.indexOf("hidden") < 0,
+       r.body.slice(0, 300));
+    /* ⚠️ 가린 까닭을 글쓴이에게 보여 줍니다 */
+    ok("⚠️ 가린 **까닭**을 글쓴이에게 보여 준다",
+       r.body.indexOf("허위 구인으로 보입니다") >= 0, "");
+    /* ⚠️ 가려진 글에는 고치기 · 마감 단추가 없어야 합니다 */
+    const hid = await g.p.evaluate(function(){
+      const li = document.querySelector('.mj-i[data-id="j9"]');
+      return li ? { edit: !!li.querySelector(".mb-edit"),
+                    drop: !!li.querySelector(".mb-drop") } : null;
+    });
+    ok("⚠️ 가려진 글에는 고치기 · 내리기 단추가 **없다** (문도 거절합니다)",
+       !!hid && !hid.edit && !hid.drop, JSON.stringify(hid));
+
+    /* 수락 단추가 실제로 문을 부르는가 */
+    await g.p.click(".mb-ok");
+    await g.p.waitForTimeout(350);
+    const mv = g.sent.filter(function(x){ return x.name === "move_jobapply"; })[0];
+    ok("⚠️ 수락 단추가 **move_jobapply 를 실제로 부른다**", !!mv,
+       g.sent.map(function(x){ return x.name; }).join(","));
+    if(mv) ok("  accepted 로 보낸다", JSON.parse(mv.body).p.state === "accepted",
+              mv.body);
+    await g.p.close();
+
+    /* 연락처 열기 — ⚠️ 동의 시각을 같이 보내야 합니다 */
+    const g2 = await open("/my", { role:"customer", name:"손님", signedIn:true },
+      { jobpost: MYP, jobapply: MYA, v_job_contact: MYC,
+        joinroom: [], joinapply: [], v_join_contact: [],
+        cq: [], ca: [], request: [], quote: [], review: [] }, {}, true);
+    await g2.p.click(".mb-share");
+    await g2.p.waitForTimeout(350);
+    const sh = g2.sent.filter(function(x){ return x.name === "share_jobcontact"; })[0];
+    ok("⚠️⚠️ 연락처 단추가 **share_jobcontact 를 부른다**", !!sh,
+       g2.sent.map(function(x){ return x.name; }).join(","));
+    if(sh){
+      const sp = JSON.parse(sh.body).p;
+      ok("  on:true 와 **동의 시각**을 같이 보낸다 (따로 받는 동의입니다)",
+         sp.on === true && !!sp.agree_at, JSON.stringify(sp));
+    }
+    await g2.p.close();
+
+    /* 고치기 — ⚠️ 양식이 읽을 칸이 채워져 열리는가 (빠뜨리면 지워집니다) */
+    const g3 = await open("/my", { role:"customer", name:"손님", signedIn:true },
+      { jobpost: MYP, jobapply: MYA, v_job_contact: MYC,
+        joinroom: [], joinapply: [], v_join_contact: [],
+        cq: [], ca: [], request: [], quote: [], review: [] }, {}, true);
+    await g3.p.click('.mj-i[data-id="j1"] .mb-edit');
+    await g3.p.waitForTimeout(250);
+    const ef = await g3.p.evaluate(function(){
+      const f = document.querySelector('.mj-i[data-id="j1"] .mb-ef');
+      if(!f) return null;
+      return { title: f.title.value, body: f.body.value, pay: f.pay.value,
+               text: f.innerText };
+    });
+    ok("고치는 양식이 **지금 값으로 채워져** 열린다",
+       !!ef && ef.title === "내가 올린 구인" && ef.pay === "일 12만원",
+       JSON.stringify(ef).slice(0, 160));
+    ok("  ⚠️ 갈래 · 분류 · 지역은 못 바꾼다고 그 자리에서 말한다",
+       !!ef && ef.text.indexOf("갈래 · 분류 · 지역은 여기서 못 바꿉니다") >= 0, "");
+    /* ⚠️⚠️ 연락처는 칸 단위 GRANT 로 못 읽어서 **채울 수가 없습니다** —
+       그 사실을 손님에게 말해 줍니다 (빈 칸을 말없이 두면 저장하는
+       순간 지워진 것처럼 보입니다). */
+    ok("⚠️⚠️ 연락처는 **다시 적어 달라고** 말한다 (칸 GRANT 로 못 읽습니다)",
+       !!ef && ef.text.indexOf("다시 적어 주셔야") >= 0, "");
+    await g3.p.close();
+  }
+
+  /* ⑦ 폰 폭 셋 — ⚠️ 설정이 있어야 열리는 화면은 여기서만 재집니다 */
+  for(const w of PHONES){
+    const p2 = await b.newPage({ viewport: { width: w, height: 900 } });
+    await stub(p2, { role:"customer", name:"손님", signedIn:true },
+               { v_job_open: JOBS }, {}, true);
+    await p2.goto(base + "/cat/career", { waitUntil:"networkidle" });
+    await p2.waitForTimeout(500);
+    const r = await p2.evaluate(function(){
+      const small = [], low = [];
+      Array.prototype.forEach.call(
+        document.querySelectorAll(".jbc, .jbox, .jbl, .jbf-c, .none"),
+        function(box){
+          Array.prototype.forEach.call(box.querySelectorAll("*"), function(e){
+            if(e.firstChild && e.firstChild.nodeType === 3 && (e.textContent||"").trim()){
+              const fs = parseFloat(getComputedStyle(e).fontSize);
+              if(fs < 12) small.push(e.tagName + " " + fs);
+            }
+          });
+          Array.prototype.forEach.call(box.querySelectorAll("button, a"), function(e){
+            if(e.getBoundingClientRect().height < 39.5) low.push(e.tagName);
+          });
+        });
+      return { doc: document.documentElement.scrollWidth, win: window.innerWidth,
+               drawn: !!document.querySelector(".jbc"),
+               small: small.slice(0,4), low: low.slice(0,4) };
+    });
+    if(w === PHONES[0])
+      ok("인력 — 폰에서 그려지기는 한다 (빈 화면을 재고 통과하지 않습니다)",
+         r.drawn, JSON.stringify(r));
+    ok("인력 " + w + "px — **가로로 안 밀린다**", r.doc <= r.win + 1,
+       "문서 " + r.doc + "px · 화면 " + r.win + "px");
+    ok("인력 " + w + "px — 12px 미만 글자가 없다", r.small.length === 0,
+       r.small.join(" · "));
+    ok("인력 " + w + "px — 누르는 것이 40px 이상이다", r.low.length === 0,
        r.low.join(" · "));
     await p2.close();
   }

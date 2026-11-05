@@ -25,14 +25,26 @@ function list(title, lines, n){
 
 exports.build = function(){
   var P = W.AM_PRIVACY, eff = W.bizVal("effective");
-  var keep = W.bizVal("applyKeep") || "";
-  /* ⚠️ 문의 기록의 보유 기간 (0045) — 양식이 보여 주는 값과 같아야
-     합니다 (js/inquiry.js 도 같은 칸을 읽습니다). */
-  var ikeep = W.bizVal("inquiryKeep") || "";
-  if(!ikeep) console.warn("  ⚠️ /privacy — inquiryKeep(문의 보유 기간)이 비어 " +
-    "있습니다 (js/data/site.js).");
-  if(!keep) console.warn("  ⚠️ /privacy — applyKeep(보유 기간)이 비어 있습니다 " +
-                         "(개인정보보호법 제15조 제2항 · js/data/site.js).");
+
+  /* ⚠️⚠️⚠️ **보유 기간은 글로 적지 않고 `{...Keep}` 꼴로 적어 둡니다** —
+     값은 js/data/site.js 한 곳에서 옵니다. 전에는 여기서 `applyKeep` ·
+     `inquiryKeep` **둘을 손으로 적어** 바꿨는데, 그러면 새 기능이
+     보유 기간을 하나 더 쓰는 날 그 자리만 **바뀌지 않은 채**
+     손님 화면에 중괄호째 찍힙니다 (조인 · 커뮤니티 · 인력을 더하면서
+     실제로 그럴 참이었습니다).
+     ⚠️ 그래서 **꼴을 따라가며** 바꿉니다 — 키를 여기 다시 적지
+     않습니다. 비어 있으면 그 자리에서 어느 키인지 말합니다. */
+  function fill(txt, where){
+    return String(txt).replace(/\{([A-Za-z]+Keep)\}/g, function(_, k){
+      var v = W.bizVal(k);
+      if(!v){
+        console.warn("  ⚠️ /privacy — " + k + "(보유 기간)이 비어 있습니다 " +
+          "(개인정보보호법 제15조 제2항 · js/data/site.js) — \"" + where + "\" 줄.");
+        return "";
+      }
+      return v;
+    });
+  }
 
   var body = '<section class="pghd"><div class="wrap">' +
     '<nav class="crumb" aria-label="현재 위치"><a href="/">홈</a>' +
@@ -47,14 +59,13 @@ exports.build = function(){
   secs += '<section class="doc-a"><h2>' + (++n) + '. 받는 개인정보와 그 까닭</h2>' +
     table(["누구에게서", "받는 것", "쓰는 까닭", "두는 기간"],
       P.collect.map(function(c){
-        return [c.who, c.items, c.why,
-                c.keep.replace("{applyKeep}", keep).replace("{inquiryKeep}", ikeep)];
+        return [c.who, c.items, c.why, fill(c.keep, c.who)];
       })) + '</section>';
 
   secs += '<section class="doc-a"><h2>' + (++n) + '. 제3자 제공</h2>' +
     '<p>' + esc(P.third.lead) + '</p>' +
     table(["누구에게", "주는 것", "주는 까닭", "두는 기간"],
-      P.third.rows.map(function(r){ return [r.to, r.items, r.why, r.keep]; })) +
+      P.third.rows.map(function(r){ return [r.to, r.items, r.why, fill(r.keep, r.to)]; })) +
     '<p>' + esc(P.third.note) + '</p></section>';
 
   /* ⚠️ 수탁자가 없으면 그 절을 아예 빼지 않고 "없습니다" 라고 적습니다 —

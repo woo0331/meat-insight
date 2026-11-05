@@ -51,6 +51,15 @@
 
   var ST = { applied:"기다리는 중", accepted:"수락됨",
              rejected:"거절됨", canceled:"거둠" };
+  /* ⚠️⚠️⚠️ **자리 상태와 신청 상태는 다른 말입니다 — 갈라 둡니다.**
+     전에는 한 줄에 `ST[r.state] || r.state === "open" ? … : r.state` 로
+     적었는데, 자바스크립트는 `||` 를 `?:` 보다 **먼저** 묶습니다. 그래서
+     닫힌 자리에서는 조건이 거짓이 되어 영문 `closed` 가 손님 화면에
+     그대로 찍혔습니다 — 에러도 없고 열린 자리만 보면 영원히 멀쩡합니다.
+     ⚠️ 상태 말은 **한 곳**에 적습니다 (작업 기억 — 같은 규칙을 두 곳에
+     적으면 조용히 어긋납니다). */
+  var RST = { open:"받는 중", closed:"닫혔습니다", done:"지난 자리",
+              hidden:"운영자가 가렸습니다" };
 
   /* 연락처 칸 — ⚠️ **없으면 "아직 안 여셨습니다" 라고 말합니다.**
      빈 자리를 두면 "연락처가 없는 사람" 으로 읽힙니다. */
@@ -76,15 +85,21 @@
     /* ── 내가 연 자리 ───────────────────────────────────────────── */
     html += '<h3 class="mj-sh">내가 연 자리</h3>';
     if(!rooms.length){
-      html += '<p class="mj-z">아직 여신 자리가 없습니다. ' +
-        '<a href="/cat/matchup">골프 조인</a>에서 여실 수 있습니다.</p>';
+      /* ⚠️ 0건을 막다른 길로 두지 않습니다 — 단추로 길을 냅니다 */
+      html += '<p class="mj-z">아직 여신 자리가 없습니다.</p>' +
+        '<a class="btn btn-pt mj-go" href="/cat/matchup">골프 조인에서 열기</a>';
     }else{
       html += '<ul class="mj-l">' + rooms.map(function(r){
         var mine = (applies[r.id] || []);
         return '<li class="mj-i">' +
           '<p class="mj-t"><b>' + esc(r.title) + '</b> · ' +
             esc(dayText(r.play_at)) + ' · ' + esc(REG[r.region] || r.region) +
-            ' · ' + esc(ST[r.state] || r.state === "open" ? "받는 중" : r.state) + '</p>' +
+            ' · ' + esc(RST[r.state] || r.state) + '</p>' +
+          /* ⚠️ 가린 까닭을 연 사람에게 보여 줍니다 (0049) — 까닭 없이
+             가릴 수 없게 해 두고 그 까닭을 숨기면, 무엇이 문제였는지
+             모르니 다시 열 때도 같은 일을 합니다. */
+          (r.state === "hidden" && r.hidden_why
+            ? '<p class="mq-w">가린 까닭 — ' + esc(r.hidden_why) + '</p>' : '') +
           (mine.length
             ? '<ul class="mj-a">' + mine.map(function(ap){
                 var c = cm[ap.id];
@@ -234,7 +249,7 @@
          양식이 빈 칸으로 열리고, 저장하는 순간 그 값이 **지워집니다**
          (`save_provider_self` 에서 겪은 "보낸 것으로 통째로 덮어쓰기"). */
       get(a, "joinroom?select=id,title,body,course,tee,budget,play_at," +
-             "region,state,need&order=play_at.asc&limit=50"),
+             "region,state,need,hidden_why&order=play_at.asc&limit=50"),
       get(a, "joinapply?select=id,room_id,msg,state,created_at,by_user," +
              "host_share_at,guest_share_at&order=created_at.desc&limit=200"),
       get(a, "v_join_contact?select=apply_id,room_contact,apply_contact," +

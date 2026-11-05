@@ -181,6 +181,53 @@ exports.build = function(c){
       '</div></section>'
     : '';
 
+  /* ⚠️⚠️ **커뮤니티도 막다른 길이 아닙니다** (0047 · §2.C).
+     ⚠️ 설명은 빌드가 찍고(크롤러 몫) 글 목록은 브라우저가 그립니다. */
+  var cqSec = (c.key === "community")
+    ? '<section class="sec sec-alt"><div class="wrap">' +
+      '<div class="sec-hd"><h2>질문과 답변</h2>' +
+      '<p>골프에 대해 궁금한 것을 묻고 회원끼리 답하는 자리입니다. ' +
+      /* ⚠️ 지어낸 약속을 하지 않습니다 — 우리가 답해 드리는 곳이 아닙니다 */
+      '골프올인원이 답변을 드리지는 않으며, 답변의 내용은 ' +
+      '적으신 회원의 것입니다.</p></div>' +
+      '<div id="cqlist">' +
+        '<div class="none"><h3>질문을 보시려면 잠시만 기다려 주세요.</h3>' +
+        '<p>올라온 질문을 불러옵니다. 보이지 않으면 아직 올라온 질문이 ' +
+        '없는 것입니다.</p></div>' +
+      '</div>' +
+      '<div id="cqbox"></div>' +
+      '<p class="jnote">⚠️ 올리신 글은 <b>누구나 봅니다.</b> 전화번호 · ' +
+      '아이디 같은 연락처는 적지 마세요. 문제가 있는 글은 신고하실 수 ' +
+      '있고, 올리신 글은 내 정보 화면에서 고치거나 내리실 수 있습니다.</p>' +
+      '</div></section>'
+    : '';
+
+  /* ⚠️⚠️ **인력 · 비즈니스도 막다른 길이 아닙니다** (0048).
+     하위분류 여섯 이름만 보이고 올릴 자리도 지원할 자리도 없었습니다 —
+     막다른 분류 셋 가운데 마지막입니다.
+     ⚠️ 설명은 빌드가 찍고(크롤러 몫) 글 목록은 브라우저가 그립니다.
+     ⚠️ 거르개도 **목록 안에** 브라우저가 그립니다 — 빌드가 찍어 두면
+     자바스크립트가 꺼진 분에게 눌러도 아무 일이 안 나는 칸이 됩니다. */
+  var jobSec = (c.key === "career")
+    ? '<section class="sec sec-alt"><div class="wrap">' +
+      '<div class="sec-hd"><h2>구인 · 구직 · 제휴</h2>' +
+      '<p>골프장 · 연습장 · 아카데미가 사람을 구하고, 프로 · 캐디가 ' +
+      '일자리를 찾고, 업체끼리 제휴 · 거래를 제안하는 자리입니다. ' +
+      /* ⚠️ 지어낸 약속을 하지 않습니다 — 우리가 채용을 대신 하지 않습니다 */
+      '골프올인원은 채용을 대신 진행하지 않으며 거래 당사자가 아닙니다. ' +
+      '적어 주신 조건이 사실인지는 서로 확인하셔야 합니다.</p></div>' +
+      '<div id="joblist">' +
+        '<div class="none"><h3>글을 보시려면 잠시만 기다려 주세요.</h3>' +
+        '<p>올라온 글을 불러옵니다. 보이지 않으면 아직 올라온 글이 ' +
+        '없는 것입니다.</p></div>' +
+      '</div>' +
+      '<div id="jobbox"></div>' +
+      '<p class="jnote">⚠️ 연락처는 목록에 나오지 않습니다. 지원이 ' +
+      '수락된 뒤 서로 따로 고르셨을 때만 그 상대 한 분에게 보입니다. ' +
+      '올리신 글은 내 정보 화면에서 고치거나 마감하실 수 있습니다.</p>' +
+      '</div></section>'
+    : '';
+
   var zero = '<section class="sec sec-alt"><div class="wrap"><div class="none">' +
     '<h2>' + esc(k.zeroT) + '</h2>' +
     '<p>' + esc(k.zeroD) + '</p>' +
@@ -207,9 +254,16 @@ exports.build = function(c){
        똑같이 보였습니다. 여기서 같은 실수를 하지 않습니다.
        ⚠️ regions.js 는 지역 고르는 칸이 읽습니다. */
     js: (c.kind === "match")
-      ? ["/js/data/site.js", "/js/data/regions.js", "/js/join.js"] : null,
+      ? ["/js/data/site.js", "/js/data/regions.js", "/js/join.js"]
+      : (c.key === "community" ? ["/js/community.js"]
+      /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — site.js 가
+         careerKeep(보유 기간)을, regions.js 가 지역 칸을, catalog.js 가
+         하위분류 칸을 줍니다 (catalog 는 빌드가 저절로 싣습니다). */
+      : (c.key === "career"
+          ? ["/js/data/site.js", "/js/data/regions.js", "/js/career.js"]
+          : null)),
     /* ⚠️ 조인은 제 구간이 "0건" 을 스스로 말하므로 zero 를 **안 겹칩니다**
        (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다). */
-    body: head + subs + (joinSec || zero) + asks(c) + related(c)
+    body: head + subs + (joinSec || cqSec || jobSec || zero) + asks(c) + related(c)
   };
 };

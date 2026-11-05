@@ -621,6 +621,87 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 /* ⚠️ 누르는 것은 40px 이상 — 짧은 이름에서 다시 낮아지지 않게 min-height */
 .mj-i .btn, .mj-a .btn{ justify-self:start; min-height:40px; }
 
+/* ── 커뮤니티 (0047) ──────────────────────────────────────────────
+   ⚠️ `.cq*` · `.ca*` · `.mq*` — `.cat*` 은 이미 분류 카드가 씁니다. */
+.cql{ list-style:none; margin:0; padding:0; display:grid; gap:14px; }
+.cqc{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+      padding:18px 20px; display:grid; gap:8px; }
+.cqc > *{ min-width:0; }
+.cqc-h{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.cqc-h h3{ margin:0; font-size:17px; color: var(--ink);
+           word-break:keep-all; overflow-wrap:anywhere; }
+.cqc-n{ flex:none; font-size:13.5px; font-weight:700; color: var(--grn-text);
+        background: var(--grn-soft); border-radius:999px; padding:4px 10px; }
+.cqc-m{ margin:0; font-size:14px; color: var(--ink3); }
+.cqc-b{ margin:0; font-size:15px; color: var(--ink); line-height:1.6;
+        word-break:keep-all; overflow-wrap:anywhere; }
+.cqc-act .btn{ min-height:40px; }
+.cqc-a{ border-top:1px solid var(--line); padding-top:12px; display:grid; gap:12px; }
+.cqc-a[hidden]{ display:none; }
+.cqc-z{ margin:0; font-size:14.5px; color: var(--ink3); }
+.cal{ list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+.cal > li{ background: var(--bg-2); border-radius: var(--r-sm); padding:12px 14px;
+           display:grid; gap:6px; }
+.cal-m{ margin:0; font-size:13.5px; color: var(--ink3); }
+.cal-w{ font-weight:700; color: var(--grn-text); }
+.cal-b{ margin:0; font-size:15px; color: var(--ink); line-height:1.6;
+        word-break:keep-all; overflow-wrap:anywhere; }
+
+/* 내가 쓴 글 (/my) */
+.mq-l{ list-style:none; margin:0; padding:0; display:grid; gap:12px; }
+.mq-i{ border:1px solid var(--line); border-radius: var(--r-sm);
+       padding:14px 16px; display:grid; gap:8px; }
+.mq-i > *{ min-width:0; }
+.mq-t{ margin:0; font-size:15px; color: var(--ink);
+       word-break:keep-all; overflow-wrap:anywhere; }
+.mq-s{ color: var(--ink3); }
+.mq-b{ margin:0; font-size:14.5px; color: var(--ink3); line-height:1.6;
+       word-break:keep-all; overflow-wrap:anywhere; }
+.mq-w{ margin:0; font-size:14px; color: var(--bad-text);
+       background: var(--bad-soft); border-radius: var(--r-sm); padding:8px 10px; }
+.mq-act{ display:flex; gap:8px; flex-wrap:wrap; }
+.mq-act .btn{ min-height:40px; }
+/* ⚠️ 0건 자리에서 길을 내는 단추 — 문장 안에 링크를 박지 않습니다 */
+.mj-go{ justify-self:start; min-height:40px; margin-top:8px; }
+
+@media (max-width: 620px){
+  .cqc-h{ flex-direction:column; align-items:flex-start; gap:4px; }
+}
+
+/* ── 인력 · 비즈니스 (0048) ──────────────────────────────────────
+   ⚠️⚠️ `.jb*`(목록) · `.mb*`(내 글) 로 갈라 둡니다 — `.jn*` 은 조인,
+   `.cq*` 은 커뮤니티가 씁니다. **짧은 이름을 두 곳에 쓰면** 한쪽
+   규칙이 다른 쪽에 걸립니다 (`.lg` 가 로고이면서 약관이라 조문
+   스무 개가 가로로 늘어섰던 자리).
+   ⚠️ 거르개 모양은 여기 다시 적지 않습니다 — `.chip` · `.chip-on`
+   한 곳에서 옵니다. */
+.jbf-c{ margin-bottom:14px; }
+.jbl{ list-style:none; margin:0; padding:0; display:grid; gap:14px; }
+.jbc{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+      padding:18px 20px; display:grid; gap:8px; }
+/* ⚠️ 격자 칸은 제 내용만큼 벌어집니다 — 긴 글 하나가 화면을 가로로
+   밀지 않게 min-width 를 0 으로 내려놓습니다. */
+.jbc > *{ min-width:0; }
+.jbc-h{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.jbc-h h3{ margin:0; font-size:17px; color: var(--ink);
+           word-break:keep-all; overflow-wrap:anywhere; }
+.jbc-k{ flex:none; font-size:13.5px; font-weight:700; color: var(--grn-text);
+        background: var(--grn-soft); border-radius:999px; padding:4px 10px; }
+.jbc-m{ margin:0; font-size:14px; color: var(--ink3); }
+.jbc-p{ margin:0; font-size:15px; color: var(--ink); font-weight:600; }
+.jbc-w{ margin:0; font-size:14.5px; color: var(--ink2); }
+.jbc-d{ margin:0; font-size:14px; color: var(--ink3); }
+.jbc-b{ margin:0; font-size:15px; color: var(--ink); line-height:1.6;
+        word-break:keep-all; overflow-wrap:anywhere; }
+.jbc-act{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+/* ⚠️ 누르는 것은 40px 이상 — 짧은 이름에서 다시 낮아지지 않게 */
+.jbc-act .btn{ min-height:40px; }
+.jbc-n{ font-size:13.5px; color: var(--ink3); }
+
+@media (max-width: 620px){
+  .jbc-h{ flex-direction:column; align-items:flex-start; gap:4px; }
+}
+
 .svcs{ display:grid; gap:12px; grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 900px){ .svcs{ grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px){ .svcs{ grid-template-columns: 1fr; } }

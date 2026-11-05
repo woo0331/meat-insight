@@ -384,4 +384,76 @@ module.exports = function(T){
   const still = psql("select state from joinapply where id = '" + AID1 + "'");
   ok("⚠️ 그리고 실제로 **안 바뀌었다** (에러만 보지 않고 값을 봅니다)",
      still === "accepted", still);
+
+  // ── ⑭ 0049 운영자가 자리를 가립니다 ──────────────────────────
+  /* ⚠️⚠️⚠️ **신고를 받아 놓고 할 수 있는 일이 없었습니다.** 0046 은
+     조인 자리를 신고할 수 있게 해 두었는데, 운영자가 그 자리를 내릴
+     길이 없었습니다 — 닫는 문은 **연 사람만** 씁니다. 0049 가 그
+     길을 냈습니다 (커뮤니티 · 인력에는 있었습니다). */
+  console.log("\n── 0049 운영자가 조인 자리를 가립니다");
+  const r4 = allowed(room(G2, { title:"가릴 자리", need:1 }));
+  ok("  (씨앗) 가릴 자리를 엽니다", r4.yes, r4.why);
+  const HID = r4.out;
+
+  const jrUserHide = denied(as(G2) + "select move_joinroom('" +
+    J({ id:HID, state:"hidden", why:"제가 가려 봅니다" }) + "'::jsonb)");
+  ok("⚠️ 연 사람도 **못 가린다** (닫는 것과 가리는 것은 다른 일입니다)",
+     jrUserHide.no, jrUserHide.why);
+  const jrNoWhy = denied(as(ADM) + "select move_joinroom('" +
+    J({ id:HID, state:"hidden" }) + "'::jsonb)");
+  ok("⚠️⚠️ 운영자도 **까닭 없이는 못 가린다**", jrNoWhy.no, jrNoWhy.why);
+  ok("  그 거절이 **까닭**을 말한다",
+     jrNoWhy.no && jrNoWhy.why.indexOf("까닭") >= 0, jrNoWhy.why);
+  const jrBadTo = denied(as(ADM) + "select move_joinroom('" +
+    J({ id:HID, state:"closed", why:"닫아 봅니다" }) + "'::jsonb)");
+  ok("⚠️ 가리기 말고는 못 옮긴다 (닫는 길은 close_joinroom 하나입니다)",
+     jrBadTo.no, jrBadTo.why);
+
+  const jrHid = allowed(as(ADM) + "select move_joinroom('" +
+    J({ id:HID, state:"hidden", why:"본문에 전화번호를 적었습니다" }) + "'::jsonb)");
+  ok("운영자는 까닭을 적고 가릴 수 있다", jrHid.yes && jrHid.out === "hidden",
+     jrHid.out || jrHid.why);
+  const jrGone = psql(anon + "select count(*) from v_join_open where id = '" + HID + "'");
+  ok("  공개 목록에서 빠진다 (보기를 안 건드렸는데 빠집니다)", jrGone === "0", jrGone);
+  const jrWhy = psql(as(G2) + "select hidden_why from joinroom where id = '" + HID + "'");
+  ok("⚠️ 연 사람이 **가린 까닭을 읽는다** (무엇이 문제였는지 알아야 합니다)",
+     jrWhy === "본문에 전화번호를 적었습니다", jrWhy);
+  /* ⚠️⚠️ 연락처 칸은 **여전히** 안 읽힙니다 — 칸을 하나 더 주면서
+     다른 칸이 같이 열리지 않았는지 봅니다. */
+  const stillLocked = denied(as(G2) + "select contact from joinroom where id = '" + HID + "'");
+  ok("⚠️⚠️ 칸을 하나 더 주었어도 **연락처는 여전히 막혀 있다**",
+     stillLocked.no, stillLocked.why);
+
+  /* ⚠️ 가린 자리에는 **새 신청 · 고치기 · 닫기가 저절로 막힙니다**
+     (셋 다 state = 'open' 을 요구합니다 — 문을 안 갈아 끼웠습니다). */
+  const hidApply = denied(ap(G3, HID, {}));
+  ok("⚠️ 가려진 자리에는 **못 신청한다** (문을 안 고쳤는데 막힙니다)",
+     hidApply.no, hidApply.why);
+  const hidEdit = denied(as(G2) + "select edit_joinroom('" +
+    J({ id:HID, title:"가려졌는데 고칩니다", body:"고쳐 봅니다" }) + "'::jsonb)");
+  ok("⚠️ 가려진 자리는 연 사람도 **못 고친다** (가린 뜻을 지울 수 없습니다)",
+     hidEdit.no, hidEdit.why);
+  const hidClose = denied(as(G2) + "select close_joinroom('" + J({ id:HID }) + "'::jsonb)");
+  ok("⚠️ 가려진 자리는 **못 닫는다** (이미 내려간 자리입니다)",
+     hidClose.no, hidClose.why);
+
+  const jrAgain = denied(as(ADM) + "select move_joinroom('" +
+    J({ id:HID, state:"hidden", why:"또 가려 봅니다" }) + "'::jsonb)");
+  ok("⚠️ 이미 가려진 자리는 다시 못 가린다", jrAgain.no, jrAgain.why);
+
+  const auditJr = psql("select coalesce(string_agg(data::text,'|'),'') from audit_log " +
+    "where obj = 'joinroom' and obj_id = '" + HID + "'");
+  ok("⚠️ 감사 기록에 **본문이 안 들어간다** (why_len 만 남습니다)",
+     auditJr.indexOf("전화번호를 적었습니다") < 0 &&
+     auditJr.indexOf("why_len") >= 0, auditJr);
+
+  /* ⚠️ 까닭 없이 가릴 수 없게 **표에서도** 막아 두었는지 (문이
+     내려가는 날 그 줄이 남습니다) */
+  const jrCk = psql("select count(*) from pg_constraint where conname = 'joinroom_hidden_ck'");
+  ok("⚠️ 까닭 없는 hidden 을 **표의 check 도** 막는다 (문이 내려가도)",
+     jrCk === "1", jrCk);
+  const jrUpd = denied(as(G2) + "update joinroom set state = 'open' where id = '" + HID + "'");
+  ok("표를 직접 고쳐 되살리지 못한다", jrUpd.no, jrUpd.why);
+  const jrStillHid = psql("select state from joinroom where id = '" + HID + "'");
+  ok("⚠️ 그리고 실제로 **안 바뀌었다**", jrStillHid === "hidden", jrStillHid);
 };

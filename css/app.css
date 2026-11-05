@@ -1570,3 +1570,47 @@ picture{ display: contents; }
 .lane-t p{ margin-top:6px; font-size:14px; color: var(--ink3); line-height:1.55; }
 .lane-t .btn{ margin-top:12px; }
 .lanes-n{ margin-top:16px; font-size:14.5px; color: var(--ink3); line-height:1.6; }
+
+/* ── 업체 담당자 명단 (0052) ─────────────────────────────────────
+   ⚠️ 변수는 `css/tokens.css` 에 **있는 것만** 씁니다 — 없는 변수는
+   조용히 기본값으로 떨어지고 에러가 없습니다 (`check-safe` ⑧ 가
+   셉니다 · `--bad-line` · `--ivory` · `--r-s` 를 지어 쓴 적이 있습니다).
+   ⚠️⚠️ 담은 상자가 격자 · flex 칸일 수 있어 **`min-width:0`** 을 같이
+   겁니다 — 격자 칸은 제 내용만큼 벌어져서 폰 화면을 가로로 밉니다. */
+.pvst-g{ border:1px solid var(--line); border-radius: var(--r-sm);
+         padding:14px; margin-top:12px; background: var(--surface); }
+.pvst-g > *{ min-width:0; }
+.pvst-warn{ border-color: var(--warn); background: var(--warn-soft); }
+.pvst-h{ display:flex; align-items:center; gap:7px; flex-wrap:wrap;
+         font-size:16px; margin:0 0 4px; min-width:0;
+         word-break:keep-all; overflow-wrap:anywhere; }
+.pvst-h svg{ flex:none; }
+.pvst-c{ font-size:13.5px; font-weight:600; color: var(--grn-text);
+         background: var(--grn-soft); border-radius: var(--r-pill);
+         padding:2px 9px; }
+.pvst-l{ list-style:none; margin:10px 0 0; padding:0; display:grid; gap:8px; }
+/* ⚠️ 누르는 것이 있는 줄이라 **40px 이상**입니다 (padding 만으로 높이를
+   만들면 짧은 이름에서 다시 낮아집니다 — min-height + flex). */
+.pvst-r{ display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+         min-height: var(--tap); min-width:0;
+         border:1px solid var(--line-soft); border-radius: var(--r-sm);
+         padding:6px 10px; background: var(--bg); }
+.pvst-me{ border-color: var(--grn-line); background: var(--grn-soft); }
+.pvst-ic{ display:inline-flex; flex:none; color: var(--ink3); }
+.pvst-n{ font-size:15px; font-weight:600; min-width:0;
+         word-break:keep-all; overflow-wrap:anywhere; }
+.pvst-b{ font-size:12.5px; font-weight:700; color: var(--grn-text);
+         background: var(--surface); border:1px solid var(--grn-line);
+         border-radius: var(--r-pill); padding:1px 8px; flex:none; }
+.pvst-d{ font-size:13.5px; color: var(--ink3); margin-left:auto; }
+.pvst-bad{ font-size:13.5px; font-weight:600; color: var(--bad-text);
+           margin-left:auto; }
+/* ⚠️ 되돌리기 어려운 단추라 글자만 짙은 경고색으로 — **면에 쓰지
+   않습니다** (상태색은 배지 바탕용이고 글자로 쓰려면 짙은 단계입니다). */
+.pvst-x{ color: var(--bad-text); border-color: var(--bad); flex:none; }
+.pvst-z{ margin-top:10px; font-size:14.5px; color: var(--ink3);
+         line-height:1.6; word-break:keep-all; overflow-wrap:anywhere; }
+.pvst-a{ margin-top:12px; }
+.pvst-msg{ margin-top:10px; font-size:14.5px; font-weight:600;
+           color: var(--ink2); line-height:1.6;
+           word-break:keep-all; overflow-wrap:anywhere; }

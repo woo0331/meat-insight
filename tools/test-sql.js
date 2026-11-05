@@ -165,6 +165,7 @@ try{
   require("./sql/price.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/invite.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/profile.js")({ ok, psql, psqlFile, denied, allowed });
+  require("./sql/pvstaff.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/flow.js")({ ok, psql, psqlFile, denied, allowed });
 
 }catch(e){

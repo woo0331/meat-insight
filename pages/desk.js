@@ -41,6 +41,15 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="mebox" class="none" hidden></div></div></section>';
 
+  /* 우리 업체 담당자 (0052) — ⚠️⚠️ 한 업체에 담당자 여럿은 전부터
+     됐는데 **그 명단을 보는 자리가 없었습니다.** 그래서 업체는 우리
+     쪽에 누가 이어져 있는지(그만둔 사람이 아직 보고 있는지) 알 길이
+     없었습니다. ⚠️ 동료 성함은 **DB 의 보기가** 가려서 냅니다
+     (`v_provider_staff`) — 화면이 가리면 본이름이 이미 브라우저까지
+     온 것입니다. ⚠️ 내보내는 단추는 **여기 없습니다** (운영자만). */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="pvstbox" class="none" hidden></div></div></section>';
+
   /* 사진 · 증빙서류 (0051) — ⚠️⚠️ **시설 사진은 손님 누구나 보고,
      증빙서류는 운영자와 이 업체만** 봅니다. 둘을 한 자리에 두되 화면이
      갈라서 말합니다 — 섞어 두면 사업자등록증을 사진 칸에 올리는 날이
@@ -65,6 +74,7 @@ exports.build = function(){
          "/js/data/regions.js", "/js/data/providers.js",
          "/js/photo.js", "/js/auth.js", "/js/review.js",
          "/js/desk.js", "/js/deskme.js", "/js/deskprice.js",
-         "/js/deskfee.js", "/js/deskphoto.js", "/js/notice.js"]
+         "/js/deskfee.js", "/js/deskphoto.js", "/js/deskstaff.js",
+         "/js/notice.js"]
   };
 };

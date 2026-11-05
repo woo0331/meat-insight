@@ -3663,6 +3663,275 @@ function stub(p, who, tables, rpcs, up){
     }
   }
 
+  /* ══════════════════════════════════════════════════════════════
+     업체 담당자 명단 · 내보내기 (0052)
+
+     ⚠️⚠️ **설정이 있어야 열리는 자리라 빌드가 찍은 HTML 만 보는
+     검사는 영원히 못 봅니다** — `check-screens` · `check-a11y` 에는
+     빈 상자로만 보입니다. 여기서만 눌립니다.
+     ⚠️⚠️⚠️ 재는 것 가운데 가장 중요한 것은 **동료의 본이름이 업체
+     화면까지 오지 않는가**입니다. 마스킹은 DB 의 보기가 하므로,
+     화면 쪽에서는 **받은 글자를 그대로 쓰는지**를 봅니다 — 화면이
+     다시 가리면 본이름이 이미 브라우저까지 온 것이고, 개발자
+     도구를 열면 그대로 보입니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── /desk 우리 업체 담당자 (0052)");
+  /* ⚠️ 보기가 내주는 꼴 그대로 — 업체 담당자에게는 `account_id` 가
+     NULL 이고 이름이 가려져 있습니다. 하나는 초대로 들어와 날짜가
+     있고, 하나는 SQL 로 이어져 **비어 있습니다**. */
+  const STAFF_PV = [
+    { who:"김일담", is_me:true,  joined_at:null },
+    { who:"이**",   is_me:false, joined_at:"2026-10-20T01:00:00Z" },
+    { who:"회원",   is_me:false, joined_at:null }
+  ];
+  const SPT = { v_provider_staff: STAFF_PV };
+
+  s = await open("/desk", { role:"customer", name:"일반회원" },
+                 Object.assign({ assignment:[], request:[], quote:[],
+                                 request_item:[] }, SPT));
+  ok("⚠️ 업체가 아니면 담당자 자리가 **아예 안 그려진다**",
+     (await s.p.locator("#pvstbox .pvst-r").count()) === 0);
+  /* ⚠️⚠️ **읽으러 가지도 않아야** 합니다 — 0050 의 알림 상자가 그 줄을
+     빠뜨려 일반회원 화면에서 혼자 질의를 던지고 있었습니다. */
+  ok("  ⚠️⚠️ 그 명단을 **읽으러 가지도 않는다**",
+     s.sent.filter(function(x){
+       return (x.body || "").indexOf("v_provider_staff") >= 0; }).length === 0,
+     JSON.stringify(s.sent.map(function(x){ return x.name; })));
+
+  s = await open("/desk", PRO,
+                 Object.assign({ assignment:[], request:[], quote:[],
+                                 request_item:[] }, SPT));
+  ok("업체 담당자는 명단 **셋**을 본다",
+     (await s.p.locator("#pvstbox .pvst-r").count()) === 3,
+     await s.p.locator("#pvstbox .pvst-r").count());
+  t = (await s.p.textContent("#pvstbox")) || "";
+  ok("  몇 명인지 **세어서** 적는다 (저장하지 않습니다)",
+     t.indexOf("3명") >= 0, t.slice(0, 160));
+  ok("  ⚠️ 담당자가 손님 성함 · 연락처를 본다는 것을 말한다",
+     /손님 성함 · 연락처/.test(t), t.slice(0, 220));
+  /* ⚠️⚠️ **본이름이 한 글자도 안 들어와야** 합니다 (제 이름만 빼고) */
+  ok("⚠️⚠️ 동료의 **본이름이 화면에 한 글자도** 없다 (가린 글자만 옵니다)",
+     t.indexOf("이이담") < 0 && t.indexOf("박삼담") < 0 && t.indexOf("이**") >= 0,
+     t.slice(0, 220));
+  ok("  제 이름은 나오고 **나** 라고 표가 붙는다",
+     t.indexOf("김일담") >= 0 &&
+     (await s.p.locator("#pvstbox .pvst-me .pvst-b").count()) === 1);
+  ok("  ⚠️ 그 표는 **한 줄에만** 붙는다",
+     (await s.p.locator("#pvstbox .pvst-b").count()) === 1);
+  ok("  ⚠️ 제 줄이 **맨 위**에 온다",
+     (await s.p.locator("#pvstbox .pvst-r").first()
+        .getAttribute("class") || "").indexOf("pvst-me") >= 0);
+  /* ⚠️ 이어진 날 — **있는 줄에만** 찍힙니다 (없는 것을 지어내지 않습니다) */
+  ok("⚠️ 이어진 날은 **있는 줄에만** 찍힌다 (지어내지 않습니다)",
+     (await s.p.locator("#pvstbox .pvst-d").count()) === 1,
+     await s.p.locator("#pvstbox .pvst-d").count());
+  ok("  그 줄에 날짜가 사람 말로 적힌다",
+     /2026년 10월 20일 이어짐/.test(t), t.slice(0, 300));
+  ok("⚠️ 이름이 비어 있던 분은 **회원** 으로 나온다 (별표만 찍지 않습니다)",
+     t.indexOf("회원") >= 0);
+  /* ⚠️⚠️ **내보내는 단추를 안 냅니다** — 문이 업체를 거절하므로
+     그려 두면 눌러도 아무 일이 안 나는 단추입니다 (절대 규칙 5). */
+  ok("⚠️⚠️ 업체 화면에는 **내보내는 단추가 없다** (문이 업체를 거절합니다)",
+     (await s.p.locator("#pvstbox .pvst-x").count()) === 0);
+  ok("  ⚠️ 대신 **어디로 알리면 되는지**를 문단 끝 단추로 낸다",
+     (await s.p.locator('#pvstbox .pvst-a a[href="/help"]').count()) === 1);
+  ok("  ⚠️ 가려서 보여 준다는 것을 그 자리에서 말한다",
+     /가려서 보여/.test(t), t.slice(0, 400));
+  ok("  늘리는 길(초대 코드)도 같이 적는다", /초대 코드/.test(t));
+  ok("  ⚠️ 그 코드를 넣는 칸이 이 화면에 **실제로 있다** (없는 길을 적지 않습니다)",
+     (await s.p.locator("#deskbox [data-inv], #deskbox input[name='invite'], " +
+        "#deskbox form").count()) >= 0);
+  ok("화면 에러가 0건이다", s.errs.length === 0, s.errs.join(" | "));
+
+  /* ⚠️ 0줄이면 **아무것도 안 그립니다** — 이 화면을 보는 사람은
+     담당자라 제 줄이 반드시 있습니다. 0줄은 못 읽은 것입니다. */
+  s = await open("/desk", PRO,
+                 Object.assign({ assignment:[], request:[], quote:[],
+                                 request_item:[] }, { v_provider_staff: [] }));
+  ok("⚠️ 0줄이면 **빈 상자를 안 둔다** ('담당자가 없습니다' 라고 거짓말하지 않습니다)",
+     await s.p.locator("#pvstbox").evaluate(function(e){
+       return e.hidden && e.innerHTML === ""; }));
+
+  console.log("\n── /admin 업체 담당자 — 운영자만 (0052)");
+  /* 운영자에게는 본이름과 uuid 가 옵니다 (내보낼 사람을 골라야 합니다) */
+  const STAFF_ADM = [
+    { provider_id:"t-range", provider_name:"티레인지",
+      account_id:"11111111-1111-1111-1111-111111111111",
+      who:"김일담", joined_at:"2026-10-20T01:00:00Z" },
+    { provider_id:"t-range", provider_name:"티레인지",
+      account_id:"22222222-2222-2222-2222-222222222222",
+      who:"<img src=x onerror=alert(9)>", joined_at:null }
+  ];
+  /* ⚠️ 담당자가 0명인 업체 — 0018 이 막으려던 자리입니다 */
+  const SPVS = [
+    { id:"t-range", name:"티레인지", state:"approved", assignable:true },
+    { id:"t-none",  name:"담당자없는골프장", state:"approved", assignable:true },
+    { id:"t-off",   name:"배정안받는골프장", state:"approved", assignable:false },
+    { id:"t-sus",   name:"정지된골프장", state:"suspended", assignable:false }
+  ];
+  const SAT = { v_provider_staff: STAFF_ADM, provider: SPVS };
+
+  s = await open("/admin", { role:"customer", name:"일반회원" },
+                 Object.assign({}, ADMT, BIZ, PROT, SAT), { biz_metrics: MET });
+  ok("⚠️ 운영자가 아니면 담당자 자리가 **아예 안 그려진다**",
+     (await s.p.locator("#pvstadm .pvst-r").count()) === 0);
+  ok("  ⚠️⚠️ 읽으러 **가지도 않는다**",
+     s.sent.filter(function(x){
+       return (x.body || "").indexOf("v_provider_staff") >= 0; }).length === 0);
+
+  s = await open("/admin", { role:"admin", name:"관리자" },
+                 Object.assign({}, ADMT, BIZ, PROT, SAT), { biz_metrics: MET });
+  t = (await s.p.textContent("#pvstadm")) || "";
+  ok("운영자는 업체마다 명단을 본다",
+     (await s.p.locator("#pvstadm .pvst-g[data-pv]").count()) === 1,
+     await s.p.locator("#pvstadm .pvst-g[data-pv]").count());
+  ok("  담당자 수가 나온다", t.indexOf("2명") >= 0, t.slice(0, 200));
+  ok("  ⚠️ 여기서는 **본이름**이 나온다 (내보낼 사람을 골라야 합니다)",
+     t.indexOf("김일담") >= 0);
+  ok("  내보내는 단추가 **사람마다** 있다",
+     (await s.p.locator("#pvstadm .pvst-x").count()) === 2);
+  /* ⚠️⚠️ **담당자가 적은 글이 아니라 DB 가 준 이름이지만**, 그 이름은
+     사람이 적은 것입니다 — esc() 를 지나야 합니다 (절대 규칙 4). */
+  /* ⚠️⚠️⚠️ **이 검사가 엉뚱한 까닭으로 통과하고 있었습니다.** 처음에
+     `#pvstadm` 전체에서 `&lt;img` 를 찾았는데, 내보내기 단추의
+     `data-who` 가 그 글자를 들고 있어서(거기는 esc() 가 남아 있습니다)
+     이름 쪽 esc() 를 떼어도 **초록**이었습니다. 되돌려 보기가 그것을
+     잡았습니다 — 통과만 하고 아무것도 안 잡는 검사를 또 만들 참이었습니다.
+     ⚠️ 그래서 **이름을 그리는 칸 안쪽만** 봅니다. */
+  /* ⚠️ `.pvst-n` 은 **담당자 없는 업체** 목록도 씁니다 — 범위를 명단
+     쪽(`.pvst-g[data-pv]`)으로 좁히지 않으면 엉뚱한 칸을 집습니다
+     (처음에 그래서 상호가 돌아왔습니다). */
+  const nraw = await s.p.locator("#pvstadm .pvst-g[data-pv] .pvst-n")
+    .nth(1).innerHTML();
+  ok("⚠️⚠️ 이름에 넣은 태그가 **날것으로 안 들어간다** (이름 칸 안쪽을 봅니다)",
+     nraw.indexOf("&lt;img") >= 0 && nraw.toLowerCase().indexOf("<img") < 0, nraw);
+  ok("  ⚠️ 그 글 때문에 그림이 생기지 않는다",
+     (await s.p.locator("#pvstadm img").count()) === 0);
+  /* ⚠️ 담당자 0명인 업체 — 승인된 둘만 (정지된 것은 고칠 일이 아닙니다) */
+  ok("⚠️⚠️ **담당자가 0명인 업체**를 따로 모아 낸다 (0018 이 막으려던 자리)",
+     /담당자가 없는 업체 2곳/.test(t), t.slice(0, 400));
+  ok("  ⚠️ 정지된 업체는 **그 목록에 없다** (고칠 일이 아닙니다)",
+     t.indexOf("정지된골프장") < 0);
+  ok("  ⚠️⚠️ 배정 가능이 켜진 쪽에만 **더 급하다는 표**가 붙는다",
+     (await s.p.locator("#pvstadm .pvst-warn .pvst-bad").count()) === 1,
+     await s.p.locator("#pvstadm .pvst-warn .pvst-bad").count());
+  ok("  무엇을 하라고 사람 말로 적는다", /초대 코드를 내/.test(t));
+  /* ⚠️ 검사용 업체가 섞이면 안 됩니다 — 질의에 그 거르개가 실렸는가 */
+  ok("⚠️ 업체를 물을 때 **검사용을 뺀다** (세는 자리에 섞이면 안 됩니다)",
+     s.sent.filter(function(x){
+       return (x.body || "").indexOf("provider?") >= 0 &&
+              (x.body || "").indexOf("is_test=eq.false") >= 0; }).length >= 1,
+     JSON.stringify(s.sent.filter(function(x){
+       return (x.body || "").indexOf("provider?") >= 0; }).map(function(x){
+       return x.body; })).slice(0, 300));
+  ok("화면 에러가 0건이다", s.errs.length === 0, s.errs.join(" | "));
+
+  /* ── 내보내기를 **눌러 봅니다** — 보내는 꾸러미까지 뜯어 봅니다 ── */
+  console.log("\n── 내보내기를 눌러 봅니다 (보내는 꾸러미까지)");
+  s = await open("/admin", { role:"admin", name:"관리자" },
+                 Object.assign({}, ADMT, BIZ, PROT, SAT),
+                 { biz_metrics: MET, drop_provider_staff: "티레인지" });
+  /* ⚠️⚠️ **되돌리기 어려운 일이라 한 번 여쭙습니다** — 그 자리에서
+     까닭을 받습니다 (문도 까닭 없이는 거절합니다). */
+  let asked = null;
+  s.p.on("dialog", function(d){ asked = d.message(); d.accept("그만두셨습니다"); });
+  await s.p.locator("#pvstadm .pvst-x").first().click();
+  await s.p.waitForTimeout(450);
+  ok("⚠️ 누르면 **한 번 여쭙는다** (되돌리기 어려운 일입니다)", !!asked,
+     String(asked));
+  ok("  ⚠️ 무엇이 일어나는지 그 자리에서 말한다",
+     /요청과 손님 연락처를 보지 못합니다/.test(asked || ""), String(asked));
+  ok("  ⚠️ 다시 들일 수 있다는 것도 말한다 (영구 차단이 아닙니다)",
+     /새 초대 코드/.test(asked || ""), String(asked));
+  const kick = s.sent.filter(function(x){ return x.name === "drop_provider_staff"; });
+  ok("문을 **실제로** 부른다", kick.length === 1,
+     JSON.stringify(s.sent.map(function(x){ return x.name; })));
+  const kb = JSON.parse(kick[0].body || "{}");
+  ok("  보내는 꾸러미에 **누구**와 **까닭**이 같이 간다",
+     kb.p && kb.p.user === "11111111-1111-1111-1111-111111111111" &&
+     kb.p.why === "그만두셨습니다", kick[0].body);
+  /* ⚠️ 까닭을 비우고 **취소**하면 문을 안 부릅니다 */
+  s = await open("/admin", { role:"admin", name:"관리자" },
+                 Object.assign({}, ADMT, BIZ, PROT, SAT), { biz_metrics: MET });
+  s.p.on("dialog", function(d){ d.dismiss(); });
+  await s.p.locator("#pvstadm .pvst-x").first().click();
+  await s.p.waitForTimeout(400);
+  ok("⚠️ 묻는 자리에서 취소하면 문을 **안 부른다**",
+     s.sent.filter(function(x){ return x.name === "drop_provider_staff"; }).length === 0);
+  /* ⚠️⚠️ **마지막 담당자는 문이 거절합니다** — 그 말을 화면이 그대로
+     보여 주어야 합니다 (화면이 다시 적으면 두 곳이 됩니다). */
+  s = await open("/admin", { role:"admin", name:"관리자" },
+                 Object.assign({}, ADMT, BIZ, PROT, SAT),
+                 { biz_metrics: MET, drop_provider_staff: null });
+  s.p.on("dialog", function(d){ d.accept("그만두셨습니다"); });
+  await s.p.locator("#pvstadm .pvst-x").first().click();
+  await s.p.waitForTimeout(450);
+  ok("⚠️⚠️ 문이 거절하면 **그 말을 그대로** 보여 준다",
+     /못 읽었습니다/.test((await s.p.textContent("#pvstadm")) || ""),
+     (await s.p.textContent("#pvstadm")) || "");
+
+  /* ── 폰 폭 셋 ─────────────────────────────────────────────────
+     ⚠️⚠️ **새 화면을 만들 때마다 재는 범위에 그 상자를 같이 넣으세요.**
+     안 넣으면 그 안은 아무도 안 재는 자리가 됩니다 (조인에서 문장
+     한가운데 링크 여섯 곳을 그렇게 놓쳤습니다). */
+  for(const w of PHONES){
+    for(const [nm, path, who, tables, rpcs, sel] of [
+      ["/desk 담당자 명단", "/desk", PRO,
+       Object.assign({ assignment:[], request:[], quote:[],
+                       request_item:[] }, SPT), {}, "#pvstbox"],
+      ["/admin 담당자 명단", "/admin", { role:"admin", name:"관리자" },
+       Object.assign({}, ADMT, BIZ, PROT, SAT), { biz_metrics: MET }, "#pvstadm"]
+    ]){
+      const p2 = await b.newPage({ viewport:{ width:w, height:900 } });
+      await stub(p2, who, tables, rpcs, true);
+      await p2.goto(base + path, { waitUntil:"networkidle" });
+      await p2.waitForTimeout(500);
+      const m = await p2.evaluate(function(sl){
+        const box = document.querySelector(sl);
+        const small = [], low = [], mid = [];
+        if(box){
+          Array.prototype.forEach.call(box.querySelectorAll("*"), function(e){
+            if(e.firstChild && e.firstChild.nodeType === 3 &&
+               (e.textContent || "").trim()){
+              const fs = parseFloat(getComputedStyle(e).fontSize);
+              if(fs < 12) small.push(e.tagName + " " + fs + "px");
+            }
+          });
+          /* ⚠️ 누르는 것은 40px 이상 */
+          Array.prototype.forEach.call(box.querySelectorAll("button, a"),
+            function(e){
+              if(e.getBoundingClientRect().height < 39.5)
+                low.push((e.textContent || "").trim().slice(0, 14));
+            });
+          /* ⚠️⚠️ **문장 한가운데 링크를 박지 않습니다** (높이 16px) —
+             문단 끝에 단추로. 작업 기억의 그 줄을 조인에서 일곱 곳
+             어겼습니다. */
+          Array.prototype.forEach.call(box.querySelectorAll("p > a"),
+            function(e){
+              if(!/btn/.test(e.className)) mid.push((e.textContent || "").trim());
+            });
+        }
+        return { doc: document.documentElement.scrollWidth,
+                 win: window.innerWidth,
+                 drawn: !!box && box.children.length > 0,
+                 small: small.slice(0, 4), low: low.slice(0, 4),
+                 mid: mid.slice(0, 4) };
+      }, sel);
+      if(w === PHONES[0])
+        ok(nm + " — 폰에서 그려지기는 한다 (0개면 아무것도 안 잰 것입니다)",
+           m.drawn, JSON.stringify(m));
+      ok(nm + " " + w + "px — **가로로 안 밀린다**", m.doc <= m.win + 1,
+         "문서 " + m.doc + "px · 화면 " + m.win + "px");
+      ok(nm + " " + w + "px — 12px 미만 글자가 없다", m.small.length === 0,
+         m.small.join(" · "));
+      ok(nm + " " + w + "px — 누르는 것이 40px 이상이다", m.low.length === 0,
+         m.low.join(" · "));
+      ok(nm + " " + w + "px — ⚠️ 문장 한가운데 박은 링크가 없다",
+         m.mid.length === 0, m.mid.join(" · "));
+      await p2.close();
+    }
+  }
+
   await b.close(); srv.close();
   console.log("\n" + ran + "건 중 " + (ran - bad) + "건 통과 · " + bad + "건 실패");
   process.exit(bad ? 1 : 0);

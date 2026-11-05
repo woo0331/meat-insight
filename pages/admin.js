@@ -44,6 +44,14 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="probox" class="none" hidden></div></div></section>';
 
+  /* 업체 담당자 (0052) — ⚠️⚠️⚠️ **담당자를 끊는 문이 저장소에 한 줄도
+     없었습니다.** 0043 이 잇는 길(초대 코드)만 냈고, 그만둔 담당자는
+     사장님이 SQL 을 직접 치셔야 끊겼습니다 — 그때까지 그 사람은 그
+     업체의 요청과 손님 연락처를 계속 봅니다. ⚠️ 담당자가 0명인 업체도
+     여기서 모아 냅니다 (0018 이 막으려던 자리입니다). */
+  body += '<section class="sec sec-alt"><div class="wrap">' +
+    '<div id="pvstadm" class="none" hidden></div></div></section>';
+
   /* 신고 · 분쟁 (0040 · 3차 지시서 §6 · §8) — ⚠️ 문만 만들고 이 자리를
      안 만들면 손님이 보낸 신고는 아무도 안 읽는 표에 쌓입니다. */
   body += '<section class="sec sec-alt"><div class="wrap">' +
@@ -73,6 +81,7 @@ exports.build = function(){
          "/js/data/review.js", "/js/auth.js", "/js/photo.js",
          "/js/account.js", "/js/review.js", "/js/assign.js",
          "/js/adminpro.js", "/js/adminrep.js", "/js/admininq.js",
-         "/js/adminlog.js", "/js/metrics.js", "/js/adminbiz.js"]
+         "/js/adminlog.js", "/js/metrics.js", "/js/adminbiz.js",
+         "/js/adminstaff.js"]
   };
 };

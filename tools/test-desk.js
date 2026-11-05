@@ -2403,6 +2403,215 @@ function stub(p, who, tables, rpcs, up){
     }
   }
 
+  /* ══════════════════════════════════════════════════════════════
+     골프 조인 (0046) — ⚠️ **빌드가 찍은 HTML 만 보는 검사는 영원히
+     못 봅니다.** 목록도 양식도 Supabase 설정이 있어야 그려집니다.
+     `/cat/matchup` 은 로그인 화면이 아니지만 **같은 눈먼 자리**라
+     여기서 직접 눌러 봅니다.
+     ⚠️⚠️ 가장 중요한 것: **연락처가 화면 어디에도 안 나오는가.**
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 골프 조인 (0046)");
+  const JROOM = [{ id:"r1", title:"주말 아침 같이 치실 분",
+    body:"초보도 환영합니다", region:"seoul", play_at:"2099-05-05",
+    course:"OO CC", booked:false, tee:"아침", need:2, budget:150000, left_n:1 }];
+
+  /* ① 설정 전에는 **아무것도 안 엽니다** (절대 규칙 5) */
+  {
+    const p0 = await b.newPage({ viewport: view });
+    await p0.route("**/api/session", function(r){
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ auth:false, signedIn:false, conf:null }) });
+    });
+    await p0.goto(base + "/cat/matchup", { waitUntil:"networkidle" });
+    await p0.waitForTimeout(400);
+    const off = await p0.evaluate(function(){
+      const b2 = document.getElementById("joinbox");
+      return { form: !!document.getElementById("jnf"),
+               boxHtml: (b2 ? b2.innerHTML : "").trim().length };
+    });
+    ok("⚠️ 설정 전에는 조인 양식을 **안 엽니다** (다 적고 누른 뒤 실패하지 않게)",
+       !off.form && off.boxHtml === 0, JSON.stringify(off));
+    await p0.close();
+  }
+
+  /* ② 로그인 전 — 목록은 보이고, 여는 것은 로그인으로 보냅니다 */
+  {
+    const g = await open("/cat/matchup", { role:"customer", name:"", signedIn:false },
+                         { v_join_open: JROOM }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const li = document.querySelector(".jnc");
+      const box = document.getElementById("joinbox");
+      return { card: !!li,
+               title: li ? (li.querySelector("h3") || {}).textContent : "",
+               body:  document.body.innerText,
+               login: !!(box && box.querySelector('a[href^="/login"]')),
+               form:  !!document.getElementById("jnf") };
+    });
+    ok("로그인 전에도 열린 조인이 보인다", r.card && r.title.indexOf("주말 아침") >= 0,
+       JSON.stringify(r).slice(0, 160));
+    ok("  ⚠️ 부킹이 잡힌 것처럼 말하지 않는다 (§2.A — 부킹 보장 금지)",
+       r.body.indexOf("부킹은 아직입니다") >= 0, "");
+    ok("  로그인 전에는 여는 양식 대신 로그인 길을 낸다", r.login && !r.form,
+       JSON.stringify({ login:r.login, form:r.form }));
+    /* ⚠️⚠️⚠️ 연락처는 목록 어디에도 없어야 합니다 */
+    ok("⚠️⚠️ 목록 어디에도 연락처가 없다 (v_join_open 에 칸이 없습니다)",
+       r.body.indexOf("010-") < 0, "");
+    ok("  ⚠️ 그리고 그 사실을 손님에게 말해 준다",
+       r.body.indexOf("연락처는 목록에 나오지 않습니다") >= 0, "");
+    await g.p.close();
+  }
+
+  /* ③ 로그인 뒤 — 여는 양식과 **동의 상자** */
+  {
+    const g = await open("/cat/matchup", { role:"customer", name:"손님", signedIn:true },
+                         { v_join_open: JROOM }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const f = document.getElementById("jnf");
+      if(!f) return { form:false };
+      const req = Array.prototype.map.call(
+        f.querySelectorAll("[required]"), function(e){ return e.name || e.id; });
+      return { form:true, req: req,
+               terms: document.querySelectorAll(".jterms li").length,
+               body: document.body.innerText,
+               minDate: (f.play_at || {}).min || "" };
+    });
+    ok("로그인하면 여는 양식이 열린다", r.form, JSON.stringify(r).slice(0, 120));
+    ok("  제목 · 설명 · 날짜 · 지역 · 인원 · 연락처가 **필수**다 (§2.A)",
+       ["title","body","play_at","region","need","contact"]
+         .every(function(n){ return r.req.indexOf(n) >= 0; }), (r.req || []).join(","));
+    ok("  ⚠️ 동의 상자에 수집 항목 · 목적 · 보유 기간 · 제공이 같이 있다 (제15조 제2항)",
+       r.terms >= 4, String(r.terms));
+    ok("  ⚠️ 보유 기간이 **실제 값**으로 찍힌다 (site.js 의 joinKeep)",
+       (r.body || "").indexOf("6개월") >= 0, "");
+    ok("  ⚠️ 연락처 칸이 **언제 누구에게 가는지**를 그 자리에서 말한다 (제17조)",
+       (r.body || "").indexOf("수락하신 뒤") >= 0, "");
+    ok("  지난 날짜를 못 고르게 min 을 건다", /^\d{4}-\d{2}-\d{2}$/.test(r.minDate),
+       r.minDate);
+
+    /* 실제로 눌러 봅니다 — ⚠️ 보내는 꾸러미까지 뜯어 봅니다 */
+    await g.p.fill("#j-title", "검사용 조인");
+    await g.p.fill("#j-body", "검사로 여는 자리입니다");
+    await g.p.fill("#j-date", "2099-05-05");
+    await g.p.selectOption("#j-rg", "seoul");
+    await g.p.fill("#j-contact", "010-0000-0000");
+    await g.p.check("#j-agree");
+    await g.p.click("#jnf button[type=submit]");
+    await g.p.waitForTimeout(400);
+    const call = g.sent.filter(function(x){ return x.name === "open_joinroom"; })[0];
+    ok("⚠️ 열기 단추가 **open_joinroom 을 실제로 부른다**", !!call,
+       g.sent.map(function(x){ return x.name; }).join(","));
+    if(call){
+      const sentP = JSON.parse(call.body).p;
+      ok("  제목 · 설명 · 지역 · 연락처를 그대로 보낸다",
+         sentP.title === "검사용 조인" && sentP.region === "seoul" &&
+         sentP.contact === "010-0000-0000", JSON.stringify(sentP));
+      /* ⚠️ 동의 시각은 **누른 그 순간**입니다 (화면을 연 시각이 아닙니다) */
+      ok("  ⚠️ 동의 시각을 같이 보낸다", !!sentP.agree_at &&
+         Math.abs(Date.now() - new Date(sentP.agree_at).getTime()) < 60000,
+         String(sentP.agree_at));
+    }
+    await g.p.close();
+  }
+
+  /* ④ /my — ⚠️⚠️ **수락만으로 연락처가 보이면 안 됩니다** */
+  {
+    const MYROOM = [{ id:"r1", title:"내가 연 자리", body:"설명", course:null,
+      tee:null, budget:null, play_at:"2099-05-05", region:"seoul",
+      state:"open", need:2 }];
+    const MYAPP = [
+      { id:"a1", room_id:"r1", msg:"같이 치고 싶습니다", state:"accepted",
+        by_user:"u2", host_share_at:null, guest_share_at:null },
+      { id:"a2", room_id:"r9", msg:"제가 넣은 신청", state:"applied",
+        by_user:"me", host_share_at:null, guest_share_at:null }
+    ];
+    /* ⚠️ 수락됐지만 **아무도 연락처를 안 열었습니다** → 빈 값이 옵니다 */
+    const MYC = [{ apply_id:"a1", room_contact:null, apply_contact:null,
+                   host_share_at:null, guest_share_at:null }];
+    const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+      { joinroom: MYROOM, joinapply: MYAPP, v_join_contact: MYC,
+        request: [], quote: [], review: [] }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const box = document.getElementById("joinmine");
+      return { drawn: !!box && !box.hidden && box.children.length > 0,
+               body: box ? box.innerText : "",
+               share: !!document.querySelector(".mj-share"),
+               edit:  !!document.querySelector(".mj-edit"),
+               okBtn: !!document.querySelector(".mj-ok") };
+    });
+    ok("/my 에 내 조인이 그려진다", r.drawn, JSON.stringify(r).slice(0, 140));
+    ok("  내가 연 자리와 내가 신청한 자리를 **갈라서** 보여 준다",
+       r.body.indexOf("내가 연 자리") >= 0 && r.body.indexOf("내가 신청한 자리") >= 0, "");
+    ok("⚠️⚠️⚠️ **수락만으로는 연락처가 화면에 안 나온다** (제17조 제2항)",
+       r.body.indexOf("010-") < 0 && r.body.indexOf("아직 안 여셨습니다") >= 0,
+       r.body.slice(0, 200));
+    ok("  대신 **내 연락처를 보여 줄지 고르는 단추**가 있다", r.share, "");
+    ok("  여신 자리를 고치는 길이 있다 (§2.A — 작성자 본인 수정)", r.edit, "");
+
+    /* 수락 단추가 실제로 문을 부르는가 — ⚠️ 그려만 두고 안 부르면 가짜입니다 */
+    const g2 = await open("/my", { role:"customer", name:"손님", signedIn:true },
+      { joinroom: MYROOM,
+        joinapply: [{ id:"a3", room_id:"r1", msg:"기다리는 신청", state:"applied",
+                      by_user:"u3", host_share_at:null, guest_share_at:null }],
+        v_join_contact: [], request: [], quote: [], review: [] }, {}, true);
+    await g2.p.click(".mj-ok");
+    await g2.p.waitForTimeout(350);
+    const mv = g2.sent.filter(function(x){ return x.name === "move_joinapply"; })[0];
+    ok("⚠️ 수락 단추가 **move_joinapply 를 실제로 부른다**", !!mv,
+       g2.sent.map(function(x){ return x.name; }).join(","));
+    if(mv) ok("  accepted 로 보낸다", JSON.parse(mv.body).p.state === "accepted", mv.body);
+    await g2.p.close();
+
+    /* 연락처 열기 단추 — ⚠️ 동의 시각을 같이 보내야 합니다 */
+    await g.p.click(".mj-share");
+    await g.p.waitForTimeout(350);
+    const sh = g.sent.filter(function(x){ return x.name === "share_joincontact"; })[0];
+    ok("⚠️⚠️ 연락처 단추가 **share_joincontact 를 부른다**", !!sh,
+       g.sent.map(function(x){ return x.name; }).join(","));
+    if(sh){
+      const sp = JSON.parse(sh.body).p;
+      ok("  on:true 와 **동의 시각**을 같이 보낸다 (따로 받는 동의입니다)",
+         sp.on === true && !!sp.agree_at, JSON.stringify(sp));
+    }
+    await g.p.close();
+  }
+
+  /* ⑤ 폰 폭 셋 — ⚠️ 로그인 화면은 여기서만 재집니다 */
+  for(const w of PHONES){
+    const p2 = await b.newPage({ viewport: { width: w, height: 900 } });
+    await stub(p2, { role:"customer", name:"손님", signedIn:true },
+               { v_join_open: JROOM }, {}, true);
+    await p2.goto(base + "/cat/matchup", { waitUntil:"networkidle" });
+    await p2.waitForTimeout(500);
+    const r = await p2.evaluate(function(){
+      const small = [], low = [];
+      Array.prototype.forEach.call(document.querySelectorAll(".jnc, .jbox, .jnl"),
+        function(box){
+          Array.prototype.forEach.call(box.querySelectorAll("*"), function(e){
+            if(e.firstChild && e.firstChild.nodeType === 3 && (e.textContent||"").trim()){
+              const fs = parseFloat(getComputedStyle(e).fontSize);
+              if(fs < 12) small.push(e.tagName + " " + fs);
+            }
+          });
+          Array.prototype.forEach.call(box.querySelectorAll("button, a"), function(e){
+            if(e.getBoundingClientRect().height < 39.5) low.push(e.tagName);
+          });
+        });
+      return { doc: document.documentElement.scrollWidth, win: window.innerWidth,
+               drawn: !!document.querySelector(".jnc"),
+               small: small.slice(0, 4), low: low.slice(0, 4) };
+    });
+    if(w === PHONES[0])
+      ok("조인 — 폰에서 그려지기는 한다 (빈 화면을 재고 통과하지 않는다)",
+         r.drawn, JSON.stringify(r));
+    ok("조인 " + w + "px — **가로로 안 밀린다**", r.doc <= r.win + 1,
+       "문서 " + r.doc + "px · 화면 " + r.win + "px");
+    ok("조인 " + w + "px — 12px 미만 글자가 없다", r.small.length === 0,
+       r.small.join(" · "));
+    ok("조인 " + w + "px — 누르는 것이 40px 이상이다", r.low.length === 0,
+       r.low.join(" · "));
+    await p2.close();
+  }
+
   await b.close(); srv.close();
   console.log("\n" + ran + "건 중 " + (ran - bad) + "건 통과 · " + bad + "건 실패");
   process.exit(bad ? 1 : 0);

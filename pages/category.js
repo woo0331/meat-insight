@@ -156,6 +156,31 @@ exports.build = function(c){
     };
   }
 
+  /* ⚠️⚠️⚠️ **조인은 막다른 길이 아닙니다** (0046 · 지시서 §2.A).
+     여기는 업체를 찾는 자리가 아니라 **회원끼리 여는** 자리라,
+     "업체 0곳" 안내 대신 **열린 조인 목록과 여는 양식**이 옵니다.
+     ⚠️ 설명은 **빌드가** 찍습니다 (크롤러 · 자바스크립트 꺼진 분이
+     읽을 몫). 목록은 아무 때나 바뀌므로 **브라우저가** 그립니다 —
+     빌드 때 찍으면 배포할 때만 바뀝니다.
+     ⚠️ 아래 글을 지우면 봇에게는 **빈 화면**이 됩니다. */
+  var joinSec = (c.kind === "match")
+    ? '<section class="sec sec-alt"><div class="wrap">' +
+      '<div class="sec-hd"><h2>열려 있는 조인</h2>' +
+      '<p>회원이 직접 여는 자리입니다. 날짜 · 지역 · 인원을 적어 올리시면 ' +
+      '다른 회원이 참가를 신청합니다. ' +
+      /* ⚠️ 지어낸 약속을 하지 않습니다 — 우리가 부킹을 잡아 주지 않습니다 */
+      '골프올인원은 부킹을 대신 잡아 드리지 않으며 거래 당사자가 아닙니다.</p></div>' +
+      '<div id="joinlist">' +
+        '<div class="none"><h3>조인을 보시려면 잠시만 기다려 주세요.</h3>' +
+        '<p>열려 있는 조인을 불러옵니다. 보이지 않으면 아직 열린 조인이 ' +
+        '없는 것입니다.</p></div>' +
+      '</div>' +
+      '<div id="joinbox"></div>' +
+      '<p class="jnote">⚠️ 연락처는 목록에 나오지 않습니다. 참가가 ' +
+      '수락된 뒤 서로 따로 고르셨을 때만 그 상대 한 분에게 보입니다.</p>' +
+      '</div></section>'
+    : '';
+
   var zero = '<section class="sec sec-alt"><div class="wrap"><div class="none">' +
     '<h2>' + esc(k.zeroT) + '</h2>' +
     '<p>' + esc(k.zeroD) + '</p>' +
@@ -176,6 +201,15 @@ exports.build = function(c){
     crumbs: [["카테고리 전체보기", "/categories"], [c.name, W.amCatUrl(c)]],
     desc: c.name + " — " + c.lead + ". " + k.what + " " +
           (items.length ? "다루는 것: " + items.map(function(i){ return i.name; }).join(" · ") + "." : ""),
-    body: head + subs + zero + asks(c) + related(c)
+    /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다.** `/help` 에서
+       `site.js` 를 안 실어 문의 양식이 **에러 한 줄 없이** 안 열린 적이
+       있습니다 — joinKeep 이 빈 문자열이 되어 "설정이 안 된 것" 과
+       똑같이 보였습니다. 여기서 같은 실수를 하지 않습니다.
+       ⚠️ regions.js 는 지역 고르는 칸이 읽습니다. */
+    js: (c.kind === "match")
+      ? ["/js/data/site.js", "/js/data/regions.js", "/js/join.js"] : null,
+    /* ⚠️ 조인은 제 구간이 "0건" 을 스스로 말하므로 zero 를 **안 겹칩니다**
+       (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다). */
+    body: head + subs + (joinSec || zero) + asks(c) + related(c)
   };
 };

@@ -157,6 +157,7 @@ try{
      그것도 고장입니다). */
   require("./sql/report.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/inquiry.js")({ ok, psql, psqlFile, denied, allowed });
+  require("./sql/join.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/price.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/invite.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/profile.js")({ ok, psql, psqlFile, denied, allowed });

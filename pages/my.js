@@ -24,12 +24,18 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="reqbox" class="none" hidden></div></div></section>';
 
+  /* ⚠️ 내 조인도 **따로 그립니다** (js/myjoin.js) — 같은 까닭입니다.
+     ⚠️⚠️ 여기가 연락처를 주고받는 유일한 자리입니다 (0046 · 제17조). */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="joinmine" class="none" hidden></div></div></section>';
+
   return {
     route: "/my", title: "내 정보", noindex: true, unlinked: true,
     desc: "골프올인원 내 정보 — 개인 판매자 · 골프 프로 · 사업자 회원을 켜고 끕니다.",
     body: body,
     js: ["/js/data/korean.js", "/js/data/deal.js", "/js/data/review.js",
          "/js/auth.js", "/js/photo.js", "/js/account.js",
-         "/js/review.js", "/js/myreq.js"]
+         "/js/review.js", "/js/myreq.js",
+         "/js/data/regions.js", "/js/myjoin.js"]
   };
 };

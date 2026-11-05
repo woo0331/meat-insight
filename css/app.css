@@ -549,6 +549,78 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .jform select{ appearance:none; background-image:none; }
 .jform input:focus, .jform textarea:focus, .jform select:focus{ outline:2px solid var(--grn); outline-offset:1px; }
 
+/* ── 양식의 길잡이 글 · 동의 상자 ──────────────────────────────────
+   ⚠️⚠️ **`js/inquiry.js` 가 2026-11-04부터 이 이름들을 쓰고 있었는데
+   CSS 가 한 줄도 없었습니다** (2026-11-05 에 찾았습니다). 그 양식은
+   Supabase 설정이 있어야 열려서, 빌드가 찍은 HTML 만 보는 검사는
+   **영원히 못 봅니다** — 사장님이 환경변수를 넣으신 날에야 알았을
+   자리입니다. 조인 양식이 같은 이름을 쓰면서 드러났습니다. */
+.jhint{ font-size:13.5px; color: var(--ink3); line-height:1.5; }
+.jhint b{ color: var(--ink); }
+.jmsg{ grid-column: 1 / -1; margin:0; font-size:14.5px; color: var(--bad-text); }
+.jconsent{ background: var(--bg-2); border:1px solid var(--line);
+           border-radius: var(--r-sm); padding:14px 16px; display:grid; gap:8px; }
+/* ⚠️ 누르는 것은 40px 이상 — 체크상자만 두면 손가락이 못 맞춥니다 */
+.jchk{ display:flex; align-items:center; gap:10px; min-height:40px;
+       font-size:15px; font-weight:700; color: var(--ink); cursor:pointer; }
+.jchk input{ width:20px; height:20px; flex:none; accent-color: var(--pt); }
+.jterms{ margin:0; padding-left:18px; display:grid; gap:4px;
+         font-size:13.5px; color: var(--ink3); line-height:1.55; }
+.jterms b{ color: var(--ink); }
+
+/* ── 조인 목록 (0046) ──────────────────────────────────────────────
+   ⚠️ 이름을 `.join-*` 으로 짓지 않습니다 — 그건 이미 **업체 입점 띠**
+   입니다 (`.join` · `.join-ic` · `.join-t`). 짧은 이름을 두 곳에 쓰면
+   한쪽 규칙이 다른 쪽에 걸립니다 (약관 조문이 가로로 늘어섰던 자리). */
+.jnl{ list-style:none; margin:0; padding:0; display:grid; gap:14px; }
+.jnc{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+      padding:18px 20px; display:grid; gap:8px; }
+/* ⚠️ 격자 칸은 제 내용만큼 벌어집니다 — 긴 제목이 화면을 밀지 않게 */
+.jnc > *{ min-width:0; }
+.jnc-h{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.jnc-h h3{ margin:0; font-size:17px; color: var(--ink);
+           word-break:keep-all; overflow-wrap:anywhere; }
+.jnc-n{ flex:none; font-size:13.5px; font-weight:700; color: var(--grn-text);
+        background: var(--grn-soft); border-radius:999px; padding:4px 10px; }
+.jnc-m{ margin:0; font-size:14.5px; color: var(--ink3); }
+.jnc-c{ margin:0; font-size:14.5px; color: var(--ink); }
+.jnc-w{ font-size:13px; color: var(--ink3); }
+.jnc-b{ margin:0; font-size:15px; color: var(--ink); line-height:1.6;
+        word-break:keep-all; overflow-wrap:anywhere; }
+.jnc-go{ justify-self:start; }
+.jnc-go[disabled]{ opacity:.55; cursor:default; }
+.jafh{ margin:12px 0 0; font-size:15px; color: var(--ink); }
+.jbox-h{ margin:0 0 14px; font-size:18px; color: var(--ink); }
+.jnote{ margin:14px 0 0; font-size:13.5px; color: var(--ink3); line-height:1.55; }
+
+@media (max-width: 620px){
+  /* ⚠️ 폰에서는 한 칸으로 — 두 칸이면 글자가 두 글자씩 끊겨 내려갑니다 */
+  .jnc-h{ flex-direction:column; align-items:flex-start; gap:4px; }
+}
+
+/* ── 내 조인 (/my · 0046) ─────────────────────────────────────────
+   ⚠️ 이름을 `.mj*` 로 둡니다 — `.my*` 는 이미 내 정보 쪽이 씁니다. */
+.mj{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+     padding:22px 24px; }
+.mj-h{ margin:0 0 6px; font-size:19px; color: var(--ink); }
+.mj-sh{ margin:20px 0 10px; font-size:16px; color: var(--ink); }
+.mj-z{ margin:0; font-size:14.5px; color: var(--ink3); }
+.mj-l{ list-style:none; margin:0; padding:0; display:grid; gap:12px; }
+.mj-i{ border:1px solid var(--line); border-radius: var(--r-sm);
+       padding:14px 16px; display:grid; gap:8px; }
+.mj-i > *{ min-width:0; }
+.mj-t{ margin:0; font-size:15px; color: var(--ink);
+       word-break:keep-all; overflow-wrap:anywhere; }
+.mj-a{ list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+.mj-a > li{ background: var(--bg-2); border-radius: var(--r-sm);
+            padding:12px 14px; display:grid; gap:8px; }
+.mj-m{ margin:0; font-size:14.5px; color: var(--ink);
+       word-break:keep-all; overflow-wrap:anywhere; }
+.mj-c{ margin:0; font-size:15px; color: var(--ink); }
+.mj-no{ color: var(--ink3); font-size:14px; }
+/* ⚠️ 누르는 것은 40px 이상 — 짧은 이름에서 다시 낮아지지 않게 min-height */
+.mj-i .btn, .mj-a .btn{ justify-self:start; min-height:40px; }
+
 .svcs{ display:grid; gap:12px; grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 900px){ .svcs{ grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px){ .svcs{ grid-template-columns: 1fr; } }
@@ -583,7 +655,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
          padding:4px 10px; background: var(--bg-2); color: var(--ink2); }
 .apl-new{ background: var(--ok-soft); color: var(--ok-text); }
 .apl-called{ background: var(--warn-soft); color: var(--warn-text); }
-.apl-drop{ background: var(--bad-soft); color: var(--bad-text); }
+.apl-drop{ background: var(--bad-soft); color: var(--bad); }
 .apl-done{ background: var(--grn-soft); color: var(--grn-text); }
 .apl-d{ margin-top:8px; font-size:15px; color: var(--ink2); }
 .apl-s{ margin-top:4px; font-size:13.5px; color: var(--ink3); }
@@ -722,7 +794,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .dk-ok  { background: var(--ok-soft);   color: var(--ok-text); }
 .dk-info{ background: var(--info-soft); color: var(--info-text); }
 .dk-warn{ background: var(--warn-soft); color: var(--warn-text); }
-.dk-bad { background: var(--bad-soft);  color: var(--bad-text); }
+.dk-bad { background: var(--bad-soft);  color: var(--bad); }
 .dk-grn { background: var(--grn-soft);  color: var(--grn-text); }
 .dk-ink { background: var(--bg-2);      color: var(--ink2); }
 
@@ -738,7 +810,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 }
 .dk-hint{ margin-top:12px; font-size:14px; color: var(--ink3);
           word-break: keep-all; overflow-wrap: anywhere; }
-.dk-no{ font-size:15px; color: var(--bad-text); }
+.dk-no{ font-size:15px; color: var(--bad); }
 .dk-b{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
 .dk-m{ margin-top:10px; }
 
@@ -781,7 +853,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .rq-q-on{ background: var(--grn-soft); border-color: var(--grn-line); }
 .rq-qh{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
 .rq-qh b{ font-size:16.5px; color: var(--ink); }
-.rq-q-no{ color: var(--bad-text); font-size:15px; }
+.rq-q-no{ color: var(--bad); font-size:15px; }
 .rq-amt{ margin-top:8px; font-size:19px; font-weight:800; color: var(--ink); }
 .rq-c{ margin-top:12px; }
 .mycard-b{ margin-top:14px; }
@@ -857,7 +929,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 /* ⚠️ 상태색은 **짙은 단계**입니다 — 배지 바탕색을 글자로 쓰면 AA 에
    못 미칩니다 (이 저장소가 여러 번 겪은 자리). */
 .phup-l > li.is-ok  .phup-st{ color: var(--ok-text); }
-.phup-l > li.is-bad .phup-st{ color: var(--bad-text); }
+.phup-l > li.is-bad .phup-st{ color: var(--bad); }
 .phup-note{ margin-top:12px; font-size:13.5px; color: var(--ink3);
             word-break: keep-all; overflow-wrap: anywhere; }
 @media (max-width: 620px){ .phup-b{ width:100%; } }

@@ -220,11 +220,16 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .cats-in{ margin-top:-42px; position:relative; z-index:3;
   background:#fff; border-radius: 20px; box-shadow: var(--shadow);
   padding: 22px; }
-/* ⚠️ 2차 시안은 열 장을 **한 줄**에 둡니다. 넓은 화면에서만 그렇게 하고,
-   좁아지면 줄입니다 — 글자가 잘리는지는 tools/check-screens.js 가
-   화면마다 잽니다 (낱말 잘림). */
-.cat-grid{ display:grid; gap:8px; grid-template-columns: repeat(10, 1fr); }
-@media (max-width: 1340px){ .cat-grid{ grid-template-columns: repeat(5, 1fr); gap:10px; } }
+/* ⚠️⚠️ **PC 는 다섯 칸 두 줄입니다** (지시서 §7 · 2026-11-05).
+   전에는 1340px 위에서 **열 장을 한 줄**에 두었는데, 1440px 화면에서
+   한 칸이 112px 밖에 안 되어 사진 · 아이콘 · 이름 · 한 줄 설명 넷이
+   다 들어가기에 너무 좁았습니다 (글자가 잘리진 않지만 **읽히지
+   않습니다** — 도구는 못 잡고 찍어 보면 보입니다).
+   ⚠️ 좁아지면 더 줄입니다. 열 장이므로 다섯 칸이면 **딱 두 줄**이고,
+   넷 · 셋 · 둘에서는 빈 칸이 생기지 않습니다 (10 은 5 · 2 로 나뉩니다).
+   ⚠️ 분류가 열이 아니게 되는 날 이 줄을 다시 보세요 — 칸 수를 쓰는
+   자리는 여기뿐입니다. */
+.cat-grid{ display:grid; gap:10px; grid-template-columns: repeat(5, 1fr); }
 @media (max-width: 1100px){ .cat-grid{ grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 760px){ .cat-grid{ grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 460px){ .cat-grid{ grid-template-columns: repeat(2, 1fr); } }
@@ -1037,6 +1042,12 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
    ⚠️ `.nt*` — `.jn*`(조인) · `.jb*`(인력) · `.mq*`(내 글)과 갈라 둡니다.
    ⚠️⚠️ 안 읽은 줄은 **색만으로 가르지 않습니다** — 왼쪽에 굵은 선을
    같이 둡니다 (색으로만 가르면 색을 못 가리는 분에게는 같은 줄입니다). */
+/* ⚠️ 0곳 상자에서 **갈래를 가르는 줄** — 매칭 요청(업체를 기다리는
+   길)과 회원끼리 되는 것(기다리지 않는 길)을 섞어 두면 넷 가운데
+   무엇이 무엇인지 알 수 없습니다. */
+.none-or{ margin:16px 0 8px; font-size:14px; color: var(--ink3);
+          word-break:keep-all; overflow-wrap:anywhere; }
+
 .nt{ display:grid; gap:10px; }
 .nt-h{ margin:0; font-size:19px; color: var(--ink); }
 .nt-c{ display:inline-block; min-width:22px; padding:1px 7px; border-radius:999px;

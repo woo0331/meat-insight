@@ -177,10 +177,13 @@ module.exports = function(T){
   const others = allowed(as(OTH) + "select count(*) from notice where kind = 'jobapply'");
   ok("⚠️⚠️ 남의 알림은 **줄이 안 보인다** (빈 결과입니다)",
      others.yes && others.out === "0", others.out || others.why);
-  /* ⚠️⚠️ **운영자도** 남의 알림을 못 읽습니다 — 읽을 까닭이 없습니다 */
-  const admSee = allowed(as(ADM) + "select count(*) from notice where to_user = '" +
-                         HOST + "'");
-  ok("⚠️⚠️ **운영자도** 남의 알림을 못 읽는다 (정책을 안 두었습니다)",
+  /* ⚠️⚠️ **운영자도** 남의 알림을 못 읽습니다 — 읽을 까닭이 없습니다.
+     ⚠️ 처음에 `where to_user = …` 로 눌러 보았는데 `permission denied`
+     가 났습니다 — **그 칸은 GRANT 에서 뺐으니 맞는 동작**이고, 틀린
+     것은 검사였습니다 (아래 따로 봅니다). 여기서는 **줄이 보이는가**
+     만 봅니다. */
+  const admSee = allowed(as(ADM) + "select count(*) from notice");
+  ok("⚠️⚠️ **운영자도** 남의 알림이 **한 줄도 안 보인다** (정책을 안 두었습니다)",
      admSee.yes && admSee.out === "0", admSee.out || admSee.why);
   const anonSee = denied(anon + "select count(*) from notice");
   ok("비로그인은 표를 못 읽는다", anonSee.no, anonSee.why);
@@ -256,7 +259,30 @@ module.exports = function(T){
   ok("제 알림도 **지우지는** 못한다 (읽음으로 둡니다)", del.no, del.why);
 
   /* ⚠️ 안쪽 도움함수는 **문이 아닙니다** — 아무에게도 안 줍니다 */
+  /* ⚠️⚠️⚠️ **함수는 표와 다릅니다 — 기본이 "누구나 실행" 입니다.**
+     이 줄이 처음에 **통과하지 못했습니다**: `notify_one` 을 만들고
+     GRANT 를 안 줬으니 막혔다고 생각했는데, 함수는 만드는 순간
+     `public` 에게 EXECUTE 가 붙습니다. `security definer` 까지 달려
+     있어서, 로그인한 누구나 **아무 사람에게 아무 제목으로** 알림을
+     꽂을 수 있었습니다 (주소는 표의 check 가 막지만 제목은 자유
+     글자입니다). 0050 에 `revoke all … from public` 을 넣어 막았습니다.
+     ⚠️ 문법도 빌드도 다른 검사도 전부 통과했습니다 — **눌러 봐야**
+     압니다. */
   const inner = denied(as(OTH) + "select notify_one('" + HOST +
     "','quote','직접 불러 봅니다','/my',null,null)");
-  ok("⚠️⚠️ 안쪽 도움함수(notify_one)를 **직접 못 부른다**", inner.no, inner.why);
+  ok("⚠️⚠️⚠️ 안쪽 도움함수(notify_one)를 **직접 못 부른다** (함수는 " +
+     "기본이 '누구나 실행' 입니다 — revoke 가 자물쇠입니다)",
+     inner.no, inner.why);
+  const faked = psql("select count(*) from notice where title = '직접 불러 봅니다'");
+  ok("  그리고 실제로 **안 들어갔다** (에러만 보지 않고 값을 봅니다)",
+     faked === "0", faked);
+  /* ⚠️ 트리거 함수들도 같이 거두었는지 */
+  const innerT = denied(as(OTH) + "select notice_quote()");
+  ok("⚠️ 트리거 함수도 직접 못 부른다", innerT.no, innerT.why);
+  /* ⚠️⚠️ **칸 단위 GRANT 가 진짜로 막는지** — 안 준 칸을 where 에
+     써 보면 그 질의가 통째로 거절당합니다 (0 줄이 아니라 거절입니다). */
+  const whereTo = denied(as(ADM) + "select count(*) from notice where to_user = '" +
+                         HOST + "'");
+  ok("⚠️⚠️ 안 준 칸(`to_user`)을 조건에 쓰면 **질의가 거절된다**",
+     whereTo.no, whereTo.why);
 };

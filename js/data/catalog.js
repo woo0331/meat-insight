@@ -402,6 +402,30 @@ window.amSubUrl = function(catKey, subKey){
   return "/search" + (qs.length ? "?" + qs.join("&") : "");
 };
 
+/* ⚠️⚠️⚠️ **업체가 0곳이어도 지금 되는 것** — 절대 규칙 2 의 "0 인
+   자리에는 지금 실제로 되는 것을 같이 냅니다" 를 **한 곳**에서 냅니다.
+   업체가 0곳인 동안에도 **회원끼리 되는 것**이 셋 있습니다 (0046 ·
+   0047 · 0048) — 조인 · 커뮤니티 · 구인 · 구직. 전에는 0곳 화면이
+   "매칭 요청" 과 "입점하기" 둘만 내서, 업체를 기다리는 동안 손님이
+   할 수 있는 것이 **없는 것처럼** 보였습니다.
+   ⚠️⚠️ **두 곳(빌드 · 브라우저)이 같은 0곳 상자를 그립니다** —
+   `pages/search.js` 와 `js/search.js`. 글을 두 벌로 적으면 손님이
+   거르개를 누르는 순간 안내가 조용히 달라집니다 (업체 카드에서 겪은
+   자리). 그래서 **줄은 여기 하나**입니다.
+   ⚠️ 이름 · 주소를 여기 글자로 박지 않습니다 — `AM_CATS` 에서 끌어
+   옵니다 (분류 이름을 다듬는 날 두 곳이 어긋나지 않게).
+   ⚠️ 그 분류가 없어지면 그 줄도 **저절로 빠집니다** (지어내지 않습니다). */
+window.amOpenNow = function(){
+  var out = [];
+  [["matchup", "조인 열기"],
+   ["community", "질문 올리기"],
+   ["career", "구인 · 구직 올리기"]].forEach(function(x){
+    var c = window.amCat(x[0]);
+    if(c) out.push({ href: window.amCatUrl(c), label: x[1], icon: c.icon });
+  });
+  return out;
+};
+
 /* 화면 짜임새로 고르기 — ⚠️ kind 를 화면마다 다시 적지 마세요. */
 window.amCatsOf = function(kind){
   return (window.AM_CATS || []).filter(function(c){ return c.kind === kind; });

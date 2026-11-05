@@ -3503,6 +3503,145 @@ function stub(p, who, tables, rpcs, up){
     await p2.close();
   }
 
+  /* ══════════════════════════════════════════════════════════════
+     내부 알림 (0050 · 지시서 §6) — ⚠️ **설정이 있어야 열리는 자리**라
+     빌드가 찍은 HTML 만 보는 검사는 영원히 못 봅니다.
+     ⚠️⚠️ 가장 중요한 것: **밖으로 보낸다고 말하지 않는가** (절대 규칙 5).
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 내부 알림 (0050)");
+  {
+    const NTS = [
+      { id:"n1", kind:"quote", title:"받으신 견적이 하나 늘었습니다",
+        link:"/my", read_at:null, created_at:"2026-11-05T01:00:00Z" },
+      { id:"n2", kind:"answer", title:"올리신 질문에 답변이 달렸습니다",
+        link:"/cat/community", read_at:"2026-11-04T01:00:00Z",
+        created_at:"2026-11-04T00:00:00Z" }
+    ];
+    /* ① 로그인 전에는 **한 글자도** 안 그립니다 */
+    {
+      const p0 = await b.newPage({ viewport: view });
+      await p0.route("**/api/session", function(r){
+        return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ auth:true, signedIn:false, conf:null }) });
+      });
+      await p0.goto(base + "/my", { waitUntil:"networkidle" });
+      await p0.waitForTimeout(400);
+      const off = await p0.evaluate(function(){
+        const e = document.getElementById("noticebox");
+        return { hidden: !e || e.hidden, html: (e ? e.innerHTML : "").trim().length };
+      });
+      ok("⚠️ 로그인 전에는 알림 자리를 **안 그린다**",
+         off.hidden && off.html === 0, JSON.stringify(off));
+      await p0.close();
+    }
+
+    /* ② 0건이면 **아무것도 안 그립니다** (빈 상자를 두지 않습니다) */
+    {
+      const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+        Object.assign({}, MYT, { notice: [], quote:[], review:[] }), {}, true);
+      const e = await g.p.evaluate(function(){
+        const x = document.getElementById("noticebox");
+        return { hidden: !x || x.hidden, html: (x ? x.innerHTML : "").trim().length };
+      });
+      ok("⚠️ 알림이 0건이면 **빈 상자를 안 둔다**", e.hidden && e.html === 0,
+         JSON.stringify(e));
+      await g.p.close();
+    }
+
+    /* ③ 있으면 그립니다 */
+    const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+      Object.assign({}, MYT, { notice: NTS, quote:[], review:[] }), {}, true);
+    const r = await g.p.evaluate(function(){
+      const x = document.getElementById("noticebox");
+      return { drawn: !!x && !x.hidden,
+               body: x ? x.innerText : "",
+               n: document.querySelectorAll("#noticebox .nt-i").length,
+               unread: document.querySelectorAll("#noticebox .nt-new").length,
+               readBtn: document.querySelectorAll("#noticebox button[data-nt]").length,
+               links: Array.prototype.map.call(
+                 document.querySelectorAll("#noticebox .nt-t"),
+                 function(a){ return a.getAttribute("href"); }),
+               icons: document.querySelectorAll("#noticebox .nt-ic svg").length };
+    });
+    ok("알림이 그려진다", r.drawn && r.n === 2, JSON.stringify(r).slice(0, 160));
+    ok("⚠️⚠️ **밖으로 보낸다고 말하지 않는다** (문자 · 카톡 · 메일)",
+       r.body.indexOf("문자 · 카톡 · 메일로는 보내 드리지 않습니다") >= 0 &&
+       !/문자로 알려|카톡으로 알려|메일로 알려/.test(r.body), r.body.slice(0, 220));
+    ok("안 읽은 것을 **색만이 아니라** 따로 센다 (수를 적습니다)",
+       r.unread === 1 && r.body.indexOf("알림") >= 0, JSON.stringify(r).slice(0, 160));
+    ok("  읽은 것에는 읽음 단추를 안 낸다 (눌러도 아무 일이 안 나는 단추)",
+       r.readBtn === 1, String(r.readBtn));
+    ok("⚠️ 가는 자리가 **우리 주소**다", r.links.every(function(h2){
+       return h2 && h2.charAt(0) === "/" && h2.indexOf("//") !== 0; }),
+       r.links.join(" "));
+    /* ⚠️⚠️ **빈 아이콘 자리**가 없는가 — 없는 이름은 빈 글자가 됩니다 */
+    ok("⚠️⚠️ 아이콘이 **빈 칸이 아니다** (없는 이름은 조용히 빈 글자입니다)",
+       r.icons === 2, "그려진 아이콘 " + r.icons + "개");
+
+    /* 읽음 단추가 문을 실제로 부르는가 */
+    await g.p.click("#noticebox button[data-nt]");
+    await g.p.waitForTimeout(350);
+    const rn = g.sent.filter(function(x){ return x.name === "read_notice"; })[0];
+    ok("⚠️ 읽음 단추가 **read_notice 를 실제로 부른다**", !!rn,
+       g.sent.map(function(x){ return x.name; }).join(","));
+    if(rn) ok("  그 알림을 가리킨다", JSON.parse(rn.body).p.id === "n1", rn.body);
+    await g.p.click("#noticebox .nt-all");
+    await g.p.waitForTimeout(350);
+    const ra = g.sent.filter(function(x){
+      return x.name === "read_notice" && (x.body || "").indexOf("\"all\"") >= 0; })[0];
+    ok("모두 읽음도 같은 문을 부른다 (all:true)", !!ra, ra && ra.body);
+    await g.p.close();
+
+    /* ④ 업체 작업실에도 같은 자리가 있는가 */
+    {
+      const g2 = await open("/desk",
+        { role:"provider", name:"업체", provider:"t-range", signedIn:true },
+        { notice: NTS, assignment:[], request:[], quote:[], request_item:[],
+          provider: [] }, {}, true);
+      ok("업체 작업실에도 알림 자리가 있다",
+         (await g2.p.locator("#noticebox .nt-i").count()) === 2,
+         await g2.p.locator("#noticebox .nt-i").count());
+      await g2.p.close();
+    }
+
+    /* ⑤ 폰 폭 셋 */
+    for(const w of PHONES){
+      const p2 = await b.newPage({ viewport: { width: w, height: 900 } });
+      await stub(p2, { role:"customer", name:"손님", signedIn:true },
+                 Object.assign({}, MYT, { notice: NTS, quote:[], review:[] }),
+                 {}, true);
+      await p2.goto(base + "/my", { waitUntil:"networkidle" });
+      await p2.waitForTimeout(500);
+      const m = await p2.evaluate(function(){
+        const small = [], low = [];
+        const box = document.getElementById("noticebox");
+        if(box){
+          Array.prototype.forEach.call(box.querySelectorAll("*"), function(e){
+            if(e.firstChild && e.firstChild.nodeType === 3 && (e.textContent||"").trim()){
+              const fs2 = parseFloat(getComputedStyle(e).fontSize);
+              if(fs2 < 12) small.push(e.tagName + " " + fs2);
+            }
+          });
+          Array.prototype.forEach.call(box.querySelectorAll("button, a"), function(e){
+            if(e.getBoundingClientRect().height < 39.5) low.push(e.tagName);
+          });
+        }
+        return { doc: document.documentElement.scrollWidth, win: window.innerWidth,
+                 drawn: !!document.querySelector("#noticebox .nt-i"),
+                 small: small.slice(0,4), low: low.slice(0,4) };
+      });
+      if(w === PHONES[0])
+        ok("알림 — 폰에서 그려지기는 한다", m.drawn, JSON.stringify(m));
+      ok("알림 " + w + "px — **가로로 안 밀린다**", m.doc <= m.win + 1,
+         "문서 " + m.doc + "px · 화면 " + m.win + "px");
+      ok("알림 " + w + "px — 12px 미만 글자가 없다", m.small.length === 0,
+         m.small.join(" · "));
+      ok("알림 " + w + "px — 누르는 것이 40px 이상이다", m.low.length === 0,
+         m.low.join(" · "));
+      await p2.close();
+    }
+  }
+
   await b.close(); srv.close();
   console.log("\n" + ran + "건 중 " + (ran - bad) + "건 통과 · " + bad + "건 실패");
   process.exit(bad ? 1 : 0);

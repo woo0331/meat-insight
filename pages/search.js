@@ -155,5 +155,27 @@ function zero(){
          금색 단추와 푸터에 그대로 있습니다. */
       '<a class="btn btn-pt" href="/match">' + icon("match", 20) + '매칭 요청 남기기</a>' +
     '</div>' +
+    nowOpen() +
   '</div>';
+}
+
+/* ⚠️⚠️⚠️ **업체를 기다리는 동안 할 수 있는 것** (지시서 §7).
+   업체가 0곳이어도 **회원끼리 되는 것**이 셋 있습니다 — 조인 ·
+   커뮤니티 · 구인 · 구직 (0046 · 0047 · 0048). 전에는 0곳 화면이
+   "매칭 요청" 하나만 내서, 업체를 기다리는 동안 손님이 할 수 있는
+   것이 **없는 것처럼** 보였습니다.
+   ⚠️⚠️ **줄은 `amOpenNow()` 한 곳에서 옵니다** — 이 상자를 빌드와
+   브라우저가 **둘 다** 그리므로(여기와 `js/search.js`), 글을 두 벌로
+   적으면 거르개를 누르는 순간 안내가 조용히 달라집니다.
+   ⚠️ 매칭 요청과 **갈라서** 적습니다 — 하나는 업체를 기다리는 길이고
+   이쪽은 기다리지 않는 길입니다. 섞어 두면 넷 가운데 무엇이 무엇인지
+   알 수 없습니다. */
+function nowOpen(){
+  var L = (W.amOpenNow ? W.amOpenNow() : []);
+  if(!L.length) return "";          /* ⚠️ 0건이면 줄째 빠집니다 */
+  return '<p class="none-or">업체를 기다리지 않고 지금 하실 수 있는 것</p>' +
+    '<div class="none-b">' + L.map(function(x){
+      return '<a class="btn btn-line" href="' + esc(x.href) + '">' +
+        icon(x.icon, 18) + esc(x.label) + '</a>';
+    }).join("") + '</div>';
 }

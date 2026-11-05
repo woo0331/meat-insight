@@ -116,6 +116,96 @@ function nowServe(){ return serve(0); }
     startedWith = was;
     console.log("   지금 업체 화면 " + was + "장 · 전체 " + before.length + "장");
 
+    /* ══════════════════════════════════════════════════════════════
+       ⚠️⚠️⚠️ **업체가 0곳일 때 막다른 길이 아닌가** (지시서 §7)
+
+       0곳은 지금 **운영의 실제 상태**입니다. 전에는 0곳 상자가
+       "업체가 등록되면 보입니다" 로 끝나서, 손님이 할 수 있는 일이
+       **기다리는 것뿐**인 것처럼 보였습니다 — 그런데 업체가 0곳이어도
+       **회원끼리 되는 것**이 셋 있습니다 (조인 · 커뮤니티 · 구인구직).
+       ⚠️ 갯수를 박지 않습니다 — `amOpenNow()` 가 내는 만큼 셉니다.
+       ⚠️⚠️ **빌드와 브라우저가 같은 말을 하는지**까지 봅니다. 이 상자를
+       둘이 그리므로(`pages/search.js` · `js/search.js`), 글을 두 벌로
+       적으면 손님이 거르개를 누르는 순간 안내가 조용히 달라지고
+       **그려진 화면만 보는 검사는 영원히 통과**합니다.
+       ══════════════════════════════════════════════════════════════ */
+    console.log("\n── ①-2 업체가 0곳일 때 (지금 운영의 실제 상태)");
+    {
+      const h0 = await nowServe();
+      const b0 = await chromium.launch();
+      const p0 = await b0.newPage({ viewport:{ width:1280, height:900 } });
+      /* `amOpenNow()` 가 내는 줄을 **그 화면에서 읽어** 씁니다 */
+      await p0.goto("http://127.0.0.1:" + h0.port + "/search",
+                    { waitUntil:"networkidle" });
+      const want = await p0.evaluate(function(){
+        return (window.amOpenNow ? window.amOpenNow() : []).map(function(x){
+          return { href:x.href, label:x.label }; });
+      });
+      ok("⚠️ 잴 것이 0개면 실패입니다 (지금 되는 것을 읽기는 했는가)",
+         want.length > 0, JSON.stringify(want));
+
+      const zeroTxt = (await p0.textContent("#sres")) || "";
+      ok("업체찾기가 0곳이라고 말한다",
+         /아직 등록된 업체가 없습니다/.test(zeroTxt), zeroTxt.slice(0, 120));
+      ok("⚠️⚠️ **빌드가 찍은 0곳 상자**에 지금 되는 것이 전부 있다",
+         want.every(function(x){ return zeroTxt.indexOf(x.label) >= 0; }),
+         zeroTxt.slice(0, 300));
+      ok("  그 길이 **링크**로 있다 (글이 아닙니다)",
+         (await p0.evaluate(function(L){
+           return L.every(function(x){
+             return !!document.querySelector('#sres a[href="' + x.href + '"]'); });
+         }, want)) === true, JSON.stringify(want));
+      /* ⚠️ 매칭 요청과 **갈라서** 적었는지 */
+      ok("  업체를 기다리는 길과 **갈라서** 적는다",
+         zeroTxt.indexOf("업체를 기다리지 않고") >= 0, zeroTxt.slice(0, 300));
+
+      /* ⚠️⚠️⚠️ **브라우저가 다시 그려도 같은 말인가** */
+      await p0.click('a[data-sf="cat"][data-v="fitting"]');
+      await p0.waitForTimeout(300);
+      const redrawn = (await p0.textContent("#sres")) || "";
+      ok("⚠️⚠️⚠️ 거르개를 눌러 **다시 그려도 같은 말**을 한다 (빌드와 " +
+         "브라우저가 두 벌로 적히지 않았는가)",
+         want.every(function(x){ return redrawn.indexOf(x.label) >= 0; }) &&
+         redrawn.indexOf("업체를 기다리지 않고") >= 0,
+         redrawn.slice(0, 300));
+
+      /* 메인의 0곳 상자도 같은 줄을 읽는가 */
+      await p0.goto("http://127.0.0.1:" + h0.port + "/", { waitUntil:"networkidle" });
+      const homeTxt = (await p0.textContent("main")) || "";
+      ok("메인의 0곳 상자에도 지금 되는 것이 전부 있다",
+         want.every(function(x){ return homeTxt.indexOf(x.label) >= 0; }),
+         homeTxt.slice(0, 200));
+      /* ⚠️ 이 구간을 읽는 사람은 **업체를 찾는 손님**입니다 — 입점
+         권유를 여기 두면 자리가 어긋납니다 (같은 단추가 두 번). */
+      const zeroBox = await p0.evaluate(function(){
+        const b2 = document.querySelectorAll(".none");
+        for(const x of b2)
+          if((x.textContent || "").indexOf("아직 입점한 업체가 없습니다") >= 0)
+            return x.innerHTML;
+        return "";
+      });
+      ok("⚠️ 메인 0곳 상자 **안에는 입점 단추를 안 둔다** (바로 아래 띠가 " +
+         "같은 말을 합니다)", zeroBox.indexOf('href="/join"') < 0,
+         zeroBox.slice(0, 200));
+
+      /* ⚠️ 메인 분류 격자가 **PC 에서 다섯 칸**인가 (지시서 §7) */
+      const colN = await p0.evaluate(function(){
+        const g = document.querySelector(".cat-grid");
+        if(!g) return 0;
+        return getComputedStyle(g).gridTemplateColumns.split(/\s+/).filter(Boolean).length;
+      });
+      ok("⚠️ PC 에서 분류 격자가 **다섯 칸**이다 (열 장이면 두 줄)",
+         colN === 5, "칸 " + colN + "개");
+      /* ⚠️ 칸 수를 박는 것이 아니라 **열 장이 고르게 나뉘는지**를 봅니다 */
+      const catsN = await p0.evaluate(function(){
+        return document.querySelectorAll(".cat-grid > .cat").length; });
+      ok("  분류 수가 칸 수로 **나누어떨어진다** (빈 칸이 안 생깁니다)",
+         colN > 0 && catsN > 0 && catsN % colN === 0,
+         "분류 " + catsN + "개 · 칸 " + colN + "개");
+
+      await p0.close(); await b0.close(); h0.srv.close();
+    }
+
     console.log("\n── ② 씨앗을 넣고 다시 찍습니다");
     seed(SEED);
     const r1 = build();

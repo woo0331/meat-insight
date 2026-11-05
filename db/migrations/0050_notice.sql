@@ -81,6 +81,14 @@ grant select (id, kind, title, link, obj, obj_id, read_at, created_at)
 -- ③ 안쪽 도움함수 — ⚠️ **문이 아닙니다** (아무에게도 GRANT 하지
 --   않습니다). 트리거만 부릅니다.
 -- ════════════════════════════════════════════════════════════════════
+-- ⚠️⚠️⚠️ **함수는 표와 다릅니다 — 기본이 "누구나 실행" 입니다.**
+--   표는 GRANT 를 안 주면 아무도 못 읽지만, 함수는 만들면 그 순간
+--   `public` 에게 EXECUTE 가 붙습니다. `security definer` 까지 달린
+--   이 함수를 그대로 두면 **로그인한 누구나** 아무 사람에게 아무
+--   제목으로 알림을 꽂을 수 있습니다 (제목은 자유 글자입니다 — 주소는
+--   표의 check 가 막지만 제목은 안 막습니다).
+--   ⚠️ 검사가 "직접 못 부른다" 를 눌러 보고서야 드러났습니다 — 문법도
+--   빌드도 다른 검사도 전부 통과했습니다. 아래 `revoke` 가 자물쇠입니다.
 create or replace function notify_one(
   p_to uuid, p_kind text, p_title text, p_link text,
   p_obj text, p_obj_id text
@@ -106,6 +114,9 @@ begin
   insert into notice (to_user, kind, title, link, obj, obj_id)
   values (p_to, p_kind, p_title, p_link, p_obj, p_obj_id);
 end $$;
+-- ⚠️⚠️ **아무에게도 주지 않습니다.** 트리거는 제 함수의 임자 권한으로
+--   돌기 때문에 EXECUTE 를 거두어도 그대로 돕니다.
+revoke all on function notify_one(uuid, text, text, text, text, text) from public;
 
 -- ════════════════════════════════════════════════════════════════════
 -- ④ 트리거 — 견적이 왔습니다
@@ -119,6 +130,7 @@ begin
                      '/my', 'request', new.request_id::text);
   return null;
 end $$;
+revoke all on function notice_quote() from public;
 drop trigger if exists notice_quote_t on quote;
 create trigger notice_quote_t after insert on quote
   for each row execute function notice_quote();
@@ -135,6 +147,7 @@ begin
                      '/my', 'jobpost', new.post_id::text);
   return null;
 end $$;
+revoke all on function notice_jobapply() from public;
 drop trigger if exists notice_jobapply_t on jobapply;
 create trigger notice_jobapply_t after insert on jobapply
   for each row execute function notice_jobapply();
@@ -152,6 +165,7 @@ begin
     '/my', 'jobapply', new.id::text);
   return null;
 end $$;
+revoke all on function notice_jobmoved() from public;
 drop trigger if exists notice_jobmoved_t on jobapply;
 create trigger notice_jobmoved_t after update of state on jobapply
   for each row execute function notice_jobmoved();
@@ -168,6 +182,7 @@ begin
                      '/my', 'joinroom', new.room_id::text);
   return null;
 end $$;
+revoke all on function notice_joinapply() from public;
 drop trigger if exists notice_joinapply_t on joinapply;
 create trigger notice_joinapply_t after insert on joinapply
   for each row execute function notice_joinapply();
@@ -184,6 +199,7 @@ begin
     '/my', 'joinapply', new.id::text);
   return null;
 end $$;
+revoke all on function notice_joinmoved() from public;
 drop trigger if exists notice_joinmoved_t on joinapply;
 create trigger notice_joinmoved_t after update of state on joinapply
   for each row execute function notice_joinmoved();
@@ -200,6 +216,7 @@ begin
                      '/cat/community', 'cq', new.q_id::text);
   return null;
 end $$;
+revoke all on function notice_answer() from public;
 drop trigger if exists notice_answer_t on ca;
 create trigger notice_answer_t after insert on ca
   for each row execute function notice_answer();
@@ -219,6 +236,7 @@ begin
     tg_table_name, new.id::text);
   return null;
 end $$;
+revoke all on function notice_hidden() from public;
 drop trigger if exists notice_hidden_cq_t on cq;
 create trigger notice_hidden_cq_t after update of state on cq
   for each row execute function notice_hidden();

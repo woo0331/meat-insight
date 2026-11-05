@@ -107,8 +107,7 @@
         '없는 업체를 지어내 보여 드리지 않습니다.</p>' +
         '<div class="none-b">' +
           '<a class="btn btn-pt" href="/match">매칭 요청 남기기</a>' +
-          '<a class="btn btn-line" href="/join">업체로 입점하기</a>' +
-        '</div></div>';
+        '</div>' + nowOpen() + '</div>';
     var what = [];
     if(s.q)   what.push('"' + esc(s.q) + '"');
     if(s.cat) what.push(esc(catName(s.cat)));
@@ -126,7 +125,22 @@
            지우는 링크가 조용히 `?rg=...` 로 바뀝니다 (실제로 겪었습니다).
            가로채기만 받는 **다른 이름**을 씁니다. */
         '<a class="btn btn-line" href="/search" data-sf="all">조건 지우기</a>' +
-      '</div></div>';
+      '</div>' + nowOpen() + '</div>';
+  }
+
+  /* ⚠️⚠️⚠️ **업체를 기다리는 동안 할 수 있는 것** (지시서 §7).
+     ⚠️ **줄은 `amOpenNow()` 한 곳에서 옵니다** — 이 상자를 빌드
+     (`pages/search.js` 의 `nowOpen`)와 브라우저가 **둘 다** 그립니다.
+     글을 두 벌로 적으면 거르개를 누르는 순간 안내가 조용히 달라지고,
+     그려진 화면만 보는 검사는 **영원히 통과**합니다. */
+  function nowOpen(){
+    var L = (window.amOpenNow ? window.amOpenNow() : []);
+    if(!L.length) return "";        /* ⚠️ 0건이면 줄째 빠집니다 */
+    return '<p class="none-or">업체를 기다리지 않고 지금 하실 수 있는 것</p>' +
+      '<div class="none-b">' + L.map(function(x){
+        return '<a class="btn btn-line" href="' + esc(x.href) + '">' +
+          window.icon(x.icon, 18) + esc(x.label) + '</a>';
+      }).join("") + '</div>';
   }
   function catName(k){
     var c = window.amCat ? window.amCat(k) : null;

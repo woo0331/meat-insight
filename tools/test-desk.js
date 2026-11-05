@@ -3602,6 +3602,27 @@ function stub(p, who, tables, rpcs, up){
          (await g2.p.locator("#noticebox .nt-i").count()) === 2,
          await g2.p.locator("#noticebox .nt-i").count());
       await g2.p.close();
+
+      /* ⚠️⚠️⚠️ **그 자리가 누구의 것인지** — `/desk` 는 업체 작업실이라
+         일반회원에게는 한 줄도 안 보이고 **읽으러 가지도 않습니다.**
+         처음에 알림을 그냥 달았더니 일반회원이 /desk 에 들어와도 제
+         알림을 읽으러 갔고, 바로 위 "배정을 아예 읽으러 가지도
+         않는다" 가 떨어졌습니다 — **코드가 틀렸고 검사가 맞았습니다.**
+         ⚠️ 상자가 `data-role` 로 제 자리를 말하고, `js/notice.js` 가
+         그 값만 봅니다 (판단을 화면마다 적지 않습니다). */
+      const g3 = await open("/desk",
+        { role:"customer", name:"일반회원", signedIn:true },
+        { notice: NTS, assignment:[], request:[], quote:[], request_item:[],
+          provider: [] }, {}, true);
+      ok("⚠️⚠️ 업체가 아니면 /desk 의 알림 자리가 **안 그려진다**",
+         (await g3.p.locator("#noticebox .nt-i").count()) === 0,
+         await g3.p.locator("#noticebox .nt-i").count());
+      ok("⚠️⚠️⚠️ 그리고 알림을 **읽으러 가지도 않는다** (그 화면의 다른 " +
+         "자리와 같은 규칙입니다)",
+         g3.sent.filter(function(x){
+           return x.name === "GET" && x.body.indexOf("/notice") >= 0; }).length === 0,
+         g3.sent.map(function(x){ return x.body || x.name; }).join(" | ").slice(0, 200));
+      await g3.p.close();
     }
 
     /* ⑤ 폰 폭 셋 */

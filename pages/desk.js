@@ -21,8 +21,13 @@ exports.build = function(){
   /* ⚠️⚠️ **알림을 맨 위에 둡니다** (0050) — 업체도 지원 · 신고가
      들어온 것을 여기서 압니다. 0건이면 줄째 빠집니다.
      ⚠️ 밖으로는 **안 보냅니다** (문자 · 카톡 · 메일 없음). */
+  /* ⚠️⚠️ `data-role` — **이 자리는 업체 담당자의 것입니다.** 안 적으면
+     일반회원이 이 주소로 들어와도 제 알림을 읽으러 갑니다 (그 화면의
+     다른 자리는 "한 줄도 안 보이고 읽으러 가지도 않는다" 인데 알림만
+     혼자 움직이는 꼴입니다). */
   body += '<section class="sec"><div class="wrap">' +
-    '<div id="noticebox" class="none" hidden></div></div></section>';
+    '<div id="noticebox" class="none" data-role="provider" hidden></div>' +
+    '</div></section>';
 
   body += '<section class="sec"><div class="wrap">' +
     '<div id="deskbox" class="none" hidden></div></div></section>';

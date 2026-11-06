@@ -273,11 +273,32 @@ module.exports = function(T){
   const c2 = psql(anon + "select coalesce(sum(n),0)::text from v_teetime_count where kind = 'join' " +
     "and region = 'gyeonggi' and play_at = kst_today() + 10;" + back);
   ok("  자리를 닫으면 **둘 다** 줄어든다", l2 === c2 && l2 === "0", l2 + " vs " + c2);
-  /* ⚠️ 조인(회원) 현황도 같은 꼴인가 */
-  ok("회원 조인 현황표도 목록 위에 서 있다",
-     psql(anon + "select count(*)::text from v_join_count;" + back) ===
-     psql(anon + "select count(distinct (region, play_at))::text from v_join_open;" + back),
-     "안 맞습니다");
+  /* ⚠️⚠️⚠️ **조인 현황표는 표에서 직접 셉니다** — `v_join_open` 은
+     0046 의 것이고, 그 위에 보기를 얹으면 붙여넣기 파일을 두 번째로
+     붙여 넣을 때 0046 이 제 보기를 못 지웁니다 (`test-upgrade` ⑧ 이
+     잡은 자리). 그 대가로 **조건이 두 곳**에 있으므로, 여기서
+     **줄마다** 맞춰 봅니다.
+     ⚠️⚠️ 총합만 보면 안 됩니다 — 한쪽이 더 세고 한쪽이 덜 세면
+     **상쇄되어 엉뚱한 까닭으로 통과**합니다. 지역 · 날짜마다 봅니다. */
+  const jmis = psql(anon +
+    "select coalesce(string_agg(t, ' | '), '')::text from (" +
+    "  select coalesce(a.region, b.region) || ' ' || " +
+    "         coalesce(a.play_at, b.play_at)::text || ' 목록=' || " +
+    "         coalesce(a.n::text, '없음') || ' 표=' || coalesce(b.n::text, '없음') as t" +
+    "    from (select region, play_at, count(*)::int as n from v_join_open" +
+    "           group by region, play_at) a" +
+    "    full outer join v_join_count b" +
+    "      on b.region = a.region and b.play_at = a.play_at" +
+    "   where coalesce(a.n, -1) is distinct from coalesce(b.n, -1)" +
+    ") x;" + back);
+  ok("⚠️⚠️ 조인 현황표가 **줄마다 목록과 같다** (조건이 두 곳이라 꼭 봅니다)",
+     jmis === "", jmis.slice(0, 200));
+  /* ⚠️ 잰 것이 0줄이면 "잴 것이 없다" 로 초록입니다 — 실제로 센 줄이
+     있는지 따로 봅니다 (인자가 없으면 0 으로 끝나는 검사를 만들지
+     않습니다). */
+  ok("  ⚠️ 맞춰 본 줄이 **0줄이 아니다** (잴 것이 0개면 실패입니다)",
+     Number(psql(anon + "select count(*)::int from v_join_count;" + back)) > 0,
+     "조인 현황표가 0줄입니다");
 
   /* ── ⑧ 공개 번호 ───────────────────────────────────────────────── */
   console.log("\n── ⑧ 공개 번호 — 배정 담당자 직통은 안 나갑니다");

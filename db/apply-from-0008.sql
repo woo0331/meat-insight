@@ -13067,6 +13067,8 @@ grant execute on function move_teebook(jsonb) to authenticated;
 -- ════════════════════════════════════════════════════════════════════
 -- ⚠️⚠️ 업체 상태를 **읽을 때 다시** 봅니다 — 정지되면 그 순간 빠집니다.
 --   조건은 v_provider_card 와 **같은 셋**입니다 (listed · is_test · state).
+-- ⚠️⚠️ 같은 자리입니다 — `v_teetime_count` 가 이 보기 위에 섭니다.
+drop view if exists v_teetime_count;
 drop view if exists v_teetime_open;
 create view v_teetime_open as
   select t.id, t.provider_id, p.name as provider_name,
@@ -13108,13 +13110,28 @@ create view v_teetime_count as
 
 grant select on v_teetime_count to anon, authenticated;
 
--- 조인 현황도 같은 꼴로 — ⚠️ `v_join_open` 위에 세웁니다 (같은 까닭)
+-- 조인 현황 — ⚠️⚠️⚠️ **여기만 표에서 직접 셉니다.** 위의 티타임 짝처럼
+--   `v_join_open` 위에 세우고 싶지만, 그 보기는 **0046 의 것**입니다.
+--   그 위에 보기를 얹으면 사장님이 붙여넣기 파일을 **두 번째로** 붙여
+--   넣는 순간 0046 이 제 보기를 지우려다
+--   `cannot drop view v_join_open because other objects depend on it` 으로
+--   **거기서 멈춥니다** (`test-upgrade` ⑧ 이 잡았습니다 — 0044 가 같은
+--   자리에서 멈춘 적이 있습니다).
+--   ⚠️⚠️ 그래서 **조건을 한 번 더 적습니다.** 두 곳에 적은 조건이므로
+--   어긋날 수 있고, `sql/teetime.js` 가 **줄마다** 두 보기를 맞춰 봅니다
+--   (총합이 아니라 지역 · 날짜마다 — 총합만 보면 한쪽이 더 세고 한쪽이
+--   덜 세는 것이 상쇄되어 **엉뚱한 까닭으로 통과**합니다).
+--   ⚠️ 0046 을 고쳐서 풀지 않습니다 — **돌린 마이그레이션은 안 고칩니다.**
 drop view if exists v_join_count;
 create view v_join_count as
-  select region, play_at, count(*)::int as n,
-         sum(greatest(left_n, 0))::int as left_n
-    from v_join_open
-   group by region, play_at;
+  select r.region, r.play_at, count(*)::int as n,
+         sum(greatest(r.need - (select count(*) from joinapply a
+                                 where a.room_id = r.id
+                                   and a.state = 'accepted'), 0))::int as left_n
+    from joinroom r
+   where r.state = 'open'
+     and r.play_at >= kst_today()
+   group by r.region, r.play_at;
 
 grant select on v_join_count to anon, authenticated;
 

@@ -76,18 +76,81 @@
         return (b.key === FROMCAT.key ? 1 : 0) - (a.key === FROMCAT.key ? 1 : 0);
       });
     }
-    return cats.map(function(c){
+    /* ⚠️⚠️⚠️ **아무 묶음도 안 열리는 화면을 내지 않습니다.** 머리말
+       메뉴에서 그냥 `/match` 로 오시면 FROMCAT 도 WANT 도 없어서 여덟
+       묶음이 **다 접힌 화면**이 됩니다 — 그러면 "원하는 서비스 *" 라고
+       적어 놓고 고를 칸을 한 개도 안 보여 주는 꼴입니다. 그때는 **첫
+       묶음을 엽니다** (어떻게 고르는 것인지 보이게).
+       ⚠️ 그래서 두 번 셉니다 — 먼저 열릴 묶음을 세고, 0이면 첫 줄을
+       엽니다 (검사가 `/match` 에서 개인 레슨을 바로 누릅니다). */
+    var opens = cats.map(function(c){
+      if(FROMCAT && c.key === FROMCAT.key) return true;
+      return window.amCatItemsForProvider(c).filter(function(it){
+        return pre.indexOf(it.key) >= 0;
+      }).length > 0;
+    });
+    if(opens.filter(Boolean).length === 0 && opens.length) opens[0] = true;
+
+    return cats.map(function(c, ci){
       var first = FROMCAT && c.key === FROMCAT.key;
+      var subs  = window.amCatItemsForProvider(c);
+      /* ⚠️⚠️⚠️ **고른 묶음만 펼칩니다.** 전에는 여덟 묶음 마흔셋이 **다
+         펼쳐져** 있어서, 분류 화면에서 "골프 레슨" 을 누르고 들어온 분이
+         폰 360px 에서 양식 3,538px · 문서 5,880px 를 밀어야 제출 단추에
+         닿았습니다 (손님이 40~60대입니다). 접으면 여덟 줄로 한 화면입니다.
+         ⚠️⚠️ **`<details>` 로 접지 않습니다** — 접힌 글은 check-screens 의
+         12px · 대비 검사에서 빠져 아무도 안 재는 자리가 됩니다 (/guide 를
+         쓸 때 적어 둔 그 줄입니다). 단추로 여닫습니다.
+         ⚠️⚠️⚠️ **미리 골라 둔 것이 접힌 묶음에 있으면 안 됩니다** —
+         업체 화면에서 오시면 그 업체가 하는 하위가 미리 켜지는데, 그것이
+         접혀 있으면 **손님이 못 본 것이 업체에 넘어갑니다.** 그래서 켜진
+         것이 하나라도 있는 묶음은 같이 펼칩니다.
+         ⚠️ 접힌 칸도 **보내집니다** (hidden 인 입력도 제출됩니다) — 그러니
+         위 줄이 안전장치이지 꾸밈이 아닙니다. */
+      var open = !!opens[ci];
       return '<fieldset class="svc' + (first ? " svc-on" : "") + '"><legend>' +
         esc(c.name) + (first ? ' <span class="svc-tag">여기서 오셨습니다</span>' : "") +
         '</legend>' +
-        window.amCatItemsForProvider(c).map(function(it){
+        /* ⚠️ 갯수를 글자로 박지 않고 셉니다 — 하위가 느는 날 같이 바뀝니다 */
+        '<button type="button" class="btn btn-sm btn-line svc-x" ' +
+          'aria-expanded="' + (open ? "true" : "false") + '">' +
+          (open ? "접기" : String(subs.length) + "가지 보기") + '</button>' +
+        /* ⚠️ 처음 그릴 때 접힌 묶음에는 켜진 칸이 없습니다 (위 hasPre) —
+           그래서 여기 갯수와 shutText() 의 갯수가 같습니다. */
+        '<div class="svc-b"' + (open ? "" : " hidden") + '>' +
+        subs.map(function(it){
           return '<label class="chk"><input type="checkbox" name="svc" value="' +
             esc(it.key) + '" data-cat="' + esc(c.key) + '"' +
             (pre.indexOf(it.key) >= 0 ? " checked" : "") + '><span>' +
             esc(it.name) + '</span></label>';
-        }).join("") + '</fieldset>';
+        }).join("") + '</div></fieldset>';
     }).join("");
+  }
+
+  /* 묶음 여닫기 — ⚠️ 색만 바꾸지 않고 aria-expanded 도 같이 바꿉니다
+     (화면 읽는 기계에는 모양이 안 보입니다).
+     ⚠️⚠️ **켜진 칸이 있는 묶음은 접지 않습니다** — 접는 순간 손님이
+     고른 것이 안 보이는데 그대로 업체에 넘어갑니다. */
+  function toggleSvc(btn){
+    var fs = btn.closest ? btn.closest("fieldset.svc") : null;
+    if(!fs) return;
+    var bd = fs.querySelector(".svc-b");
+    if(!bd) return;
+    var on = bd.hidden;                  /* 지금 닫혀 있으면 엽니다 */
+    bd.hidden = !on;
+    btn.setAttribute("aria-expanded", on ? "true" : "false");
+    btn.textContent = on ? "접기" : shutText(fs);
+  }
+
+  /* 접힌 묶음의 단추 글자 — ⚠️⚠️ **고른 것이 있으면 그 수를 말합니다.**
+     처음에는 켜진 칸이 있는 묶음을 **못 접게** 막았는데, 그러면 그 단추가
+     **눌러도 아무 일이 안 나는 칸**이 됩니다 (절대 규칙 5). 접는 것은
+     되게 두고, 대신 **몇 개 고르셨는지**를 단추에 적습니다 — 접혀 있어도
+     고른 것이 있다는 사실이 화면에 남습니다. */
+  function shutText(fs){
+    var n  = fs.querySelectorAll('input[name="svc"]').length;
+    var on = fs.querySelectorAll('input[name="svc"]:checked').length;
+    return on ? (String(on) + "개 고름 · 펼치기") : (String(n) + "가지 보기");
   }
 
   /* ⚠️⚠️⚠️ **"이 업체로 바로 간다" 고 말하지 않습니다.** 배정은 운영자가
@@ -309,5 +372,9 @@
     box.className = "jbox";
     box.innerHTML = form();
     document.getElementById("mf").addEventListener("submit", submit);
+    box.addEventListener("click", function(e){
+      var b = e.target && e.target.closest ? e.target.closest("button.svc-x") : null;
+      if(b) toggleSvc(b);
+    });
   });
 })();

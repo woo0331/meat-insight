@@ -27,13 +27,39 @@ const ROOT = path.join(__dirname, "..");
 /* ⚠️⚠️ 문자열 안의 정규식은 쓰지 않습니다 — 이 파일은 본문이 코드라
    괜찮지만, 되도록 indexOf 로 자릅니다 (백슬래시 두 겹 사고를 네 번
    겪은 자리입니다). */
-function readAll(){
+function readAll(keepComments){
   const dir = path.join(ROOT, "db", "migrations");
-  return fs.readdirSync(dir)
+  const L = fs.readdirSync(dir)
     .filter(f => /^\d{4}_.*\.sql$/.test(f) && !/_down\.sql$/.test(f))
     .sort()
-    .map(f => fs.readFileSync(path.join(dir, f), "utf8"))
-    .join("\n");
+    .map(f => fs.readFileSync(path.join(dir, f), "utf8"));
+  /* ⚠️ `keepComments` 는 **되돌려 보기만** 씁니다 — 주석을 안 떼면
+     무엇이 깨지는지 보여 주려고 둔 갈래입니다. */
+  return (keepComments ? L : L.map(stripSqlComments)).join("\n");
+}
+
+/* ⚠️⚠️⚠️ **`--` 줄 주석을 떼고 셉니다** (2026-11-06). 안 떼면 주석 속
+   닫는 괄호를 enum 의 끝으로 읽습니다 — 0026 의
+     'cat_top',     -- 분류 화면 맨 위 (cat_key 가 어느 분류인지 말합니다)
+   에서 그 `)` 가 먼저 잡혀 **그 뒤의 `region` 을 못 봤습니다.** 그래서
+   "화면에 region 이 있는데 DB 에 없습니다" 로 **멀쩡한 코드를 실패로**
+   잡았습니다 (`check-doors` 가 거절 문구 안의 이름을 부르는 자리로 세던
+   것과 같은 꼴입니다 — 작업 기억의 "검사가 멀쩡한 것을 고장이라고 한
+   자리").
+   ⚠️ 홑따옴표 안은 **안 건드립니다** — enum 값과 check 값이 거기 있습니다
+   (따옴표 안의 `--` 는 이 저장소에 없습니다). */
+function stripSqlComments(sql){
+  const out = [];
+  sql.split("\n").forEach(function(line){
+    let q = false, cut = -1;
+    for(let i = 0; i < line.length; i++){
+      const ch = line[i];
+      if(ch === "'"){ q = !q; continue; }
+      if(!q && ch === "-" && line[i + 1] === "-"){ cut = i; break; }
+    }
+    out.push(cut < 0 ? line : line.slice(0, cut));
+  });
+  return out.join("\n");
 }
 
 /* ── DB 쪽 ──────────────────────────────────────────────────────── */
@@ -172,7 +198,18 @@ function run(opt){
     ["문의 갈래 (inquiry.kind)",
      checkKeys(sql, "kind", "inquiry"),  W.AM_INQ_KIND],
     ["문의 상태 (inquiry.state)",
-     checkKeys(sql, "state", "inquiry"), W.AM_INQ_ST]
+     checkKeys(sql, "state", "inquiry"), W.AM_INQ_ST],
+    /* ⚠️⚠️⚠️ 0026 의 광고 — **이 둘을 아무도 안 보고 있었습니다**
+       (2026-11-06). `js/adminbiz.js` 가 상태 다섯(`draft` · `live` ·
+       `paused` · `done` · `void`)을 들고 있었는데 enum 은 넷(`draft` ·
+       `live` · `done` · `stopped`)입니다 — 그래서 `paused` · `void`
+       단추는 **누르면 DB 가 거절**했고, 정작 **멈추는 값(`stopped`)은
+       단추가 없어서** 집행 중인 광고를 멈출 길이 없었습니다.
+       ⚠️ 자리(`ad_place`)는 더 조용합니다 — 어긋나면 운영자가 고른
+       자리와 손님 화면이 찾는 자리가 달라져 **광고가 에러 없이 그냥
+       안 보입니다**(돈을 받고 안 띄우는 꼴입니다). */
+    ["광고 자리 (ad_place)",   enumKeys(sql, "ad_place"), W.AM_AD_PLACE],
+    ["광고 상태 (ad_state)",   enumKeys(sql, "ad_state"), W.AM_AD_STATE]
   ];
 
   want.forEach(function(w){
@@ -247,6 +284,28 @@ if(require.main === module){
     console.log(got4 ? "  ✅ 잡았습니다 — " + r4.bad.filter(m => m.indexOf("mrr_rate") >= 0)[0]
                      : "  ❌ **못 잡았습니다** (alter type 을 안 세고 있습니다)");
     if(!got4) fail = 1;
+
+    /* ⚠️⚠️⚠️ **주석을 떼지 않으면 멀쩡한 코드를 실패로 잡습니다.**
+       0026 의 `'cat_top',  -- … (cat_key 가 어느 분류인지 말합니다)` 에서
+       그 닫는 괄호가 enum 의 끝으로 읽혀 **그 뒤의 `region` 을 못
+       봅니다.** 실제로 그렇게 떨어졌고, 코드가 아니라 검사가 틀린
+       자리였습니다. 그 함정이 아직 살아 있는지 여기서 봅니다. */
+    console.log("\n── 되돌려 보기 ⑤ 주석을 떼지 않으면 (주석 속 괄호 함정)");
+    const r5 = run({ sql: readAll(true) });
+    const got5 = r5.bad.some(function(m){ return m.indexOf("region") >= 0; });
+    console.log(got5
+      ? "  ✅ 함정이 그대로 있습니다 — 주석을 떼는 줄이 일을 하고 있습니다"
+      : "  ❌ **주석을 떼는 줄이 필요 없어졌습니다** (0026 이 바뀌었는지 보세요)");
+    if(!got5) fail = 1;
+
+    console.log("\n── 되돌려 보기 ⑥ 광고 상태 하나를 DB 에서 빼면");
+    const sql6 = readAll().replace("'draft', 'live', 'done', 'stopped'",
+                                   "'draft', 'live', 'done'");
+    const r6 = run({ sql: sql6 });
+    const got6 = r6.bad.some(function(m){ return m.indexOf("stopped") >= 0; });
+    console.log(got6 ? "  ✅ 잡았습니다 — " + r6.bad.filter(m => m.indexOf("stopped") >= 0)[0]
+                     : "  ❌ **못 잡았습니다** (광고 상태를 안 세고 있습니다)");
+    if(!got6) fail = 1;
 
     console.log("\n── 되돌려 보기 ③ DB 쪽을 아예 못 읽으면 (검사가 틀린 경우)");
     const r3 = run({ sql: "-- 아무것도 없습니다" });

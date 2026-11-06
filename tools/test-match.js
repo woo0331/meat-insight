@@ -92,8 +92,36 @@ const FAKE = "https://sb-test.supabase.co";
   ok("⚠️ 업체 전달 동의는 **여기서 안 받는다**고 말한다",
      /여기서 받지 않습니다/.test(agree), agree.slice(0, 90));
 
+  /* ⚠️⚠️⚠️ **묶음은 접혀 있습니다** (2026-11-06). 전에는 여덟 묶음
+     마흔셋이 다 펼쳐져 폰 360px 에서 양식이 3,538px 였습니다. 지금은
+     고른 묶음만 펼치므로, **다른 분류를 같이 고르려면 펼쳐야** 합니다 —
+     손님이 실제로 하는 일과 같은 길로 눌러 봅니다.
+     ⚠️ 접혔다는 것을 **세어서** 봅니다 (갯수를 박지 않습니다 — 접힌 것이
+     하나라도 있고, 펼치면 늘어나면 됩니다). */
+  const seen0 = await p.locator('input[name="svc"]:visible').count();
+  const all0  = await p.locator('input[name="svc"]').count();
+  ok("고르는 칸이 **다 펼쳐져 있지 않다**", seen0 < all0, seen0 + "/" + all0);
+  ok("  그래도 고를 칸이 한 개는 보인다", seen0 > 0, seen0);
+
   await p.check('input[name="svc"][value="ls-solo"]');
+  /* 연습장 묶음을 펼칩니다 — 그 묶음의 단추를 누릅니다 */
+  await p.locator('fieldset.svc:has(input[name="svc"][value="rg-in"]) button.svc-x')
+         .click();
+  const seen1 = await p.locator('input[name="svc"]:visible').count();
+  ok("  펼치면 그 묶음의 칸이 보인다", seen1 > seen0, seen0 + " → " + seen1);
   await p.check('input[name="svc"][value="rg-in"]');
+
+  /* ⚠️⚠️ **고른 것이 있는 묶음을 접어도 그 사실이 화면에 남아야 합니다** —
+     처음에는 못 접게 막았는데 그러면 눌러도 아무 일이 안 나는 단추가
+     됩니다 (절대 규칙 5). 접히고, 단추가 몇 개 고른지 말합니다. */
+  const rgBtn = p.locator('fieldset.svc:has(input[name="svc"][value="rg-in"]) button.svc-x');
+  await rgBtn.click();
+  ok("  고른 묶음도 접히고, 단추가 **몇 개 고른지** 말한다",
+     (await p.locator('input[name="svc"][value="rg-in"]').isVisible()) === false &&
+     /1개 고름/.test((await rgBtn.textContent()) || ""),
+     (await rgBtn.textContent()) || "");
+  /* ⚠️ 접힌 칸도 **보내집니다** — 아래 꾸러미에서 rg-in 이 그대로 갑니다 */
+
   await p.selectOption("#m-region", "경기");
   await p.fill("#m-want", "이번 달 안에");
   await p.fill("#m-bmin", "100,000");
@@ -217,6 +245,18 @@ const FAKE = "https://sb-test.supabase.co";
   /* ⚠️ 미리 골라 두지 **않습니다** — 안 원하시는 것까지 업체에 넘어갑니다 */
   ok("  하위를 미리 고르지는 않는다",
      (await p.locator('input[name="svc"]:checked').count()) === 0);
+
+  /* ⚠️⚠️ **온 분류만 펼칩니다** — 분류 화면에서 누르고 들어온 분이
+     마흔셋을 밀어 내려가지 않게. 그 묶음의 칸은 보이고, 나머지는
+     접혀 있어야 합니다. */
+  ok("  온 분류의 칸은 보인다",
+     await p.locator('input[name="svc"][value="ls-solo"]').isVisible());
+  ok("  다른 분류의 칸은 접혀 있다",
+     (await p.locator('input[name="svc"][value="tr-home"]').isVisible()) === false);
+  ok("  접힌 묶음의 단추가 **몇 가지인지** 말한다",
+     /가지 보기/.test((await p.locator(
+       'fieldset.svc:has(input[name="svc"][value="tr-home"]) button.svc-x')
+       .textContent()) || ""));
 
   /* 목록과 양식을 맞춰 봅니다 — AM_ASK 를 **그 화면에서 읽어** 씁니다 */
   const askChk = await p.evaluate(function(){

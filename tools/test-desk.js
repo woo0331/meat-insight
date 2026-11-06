@@ -2764,6 +2764,111 @@ function keepOf(name){
     await g.p.close();
   }
 
+  /* ②-2 거르개 — 지역 · 날짜 · **부킹이 잡힌 자리만** (2026-11-06)
+
+     ⚠️⚠️⚠️ **보내는 질의를 뜯어 봅니다.** 흉내 장치는 조건을 보고
+     걸러 주지 않으므로(표를 그대로 돌려줍니다), **결과 줄 수로 재면
+     거르개를 떼어도 영원히 초록**입니다. 재려는 뜻은 "조건이 서버로
+     가는가" 이고, 그것은 주소에 있습니다.
+     ⚠️ 화면에서 걸러 내면 쉰 줄 밖에 있는 서울 조인이 **0건으로**
+     보입니다 (에러 없이) — 그래서 서버로 보내는 것이 맞습니다. */
+  {
+    const JR2 = [
+      { id:"r1", title:"주말 아침 같이 치실 분", body:"초보도 환영합니다",
+        region:"seoul", play_at:"2099-05-05", course:"OO CC", booked:false,
+        tee:"아침", need:2, budget:150000, left_n:1 },
+      /* ⚠️ 골프장을 안 적고 부킹만 잡힌 자리 — 그 줄이 조용히 안
+         빠지는지 봅니다 (한 줄에 묶어 두면 안 보입니다) */
+      { id:"r2", title:"티타임 있습니다 한 자리", body:"한 분만 모십니다",
+        region:"gyeonggi", play_at:"2099-05-06", course:null, booked:true,
+        tee:"오전", need:1, budget:null, left_n:1 }
+    ];
+    const g = await open("/cat/matchup", { role:"customer", name:"손님", signedIn:true },
+                         { v_join_open: JR2 }, {}, true);
+    const bar = await g.p.evaluate(function(){
+      return { rg: !!document.getElementById("jf-rg"),
+               wh: !!document.getElementById("jf-wh"),
+               bk: !!document.getElementById("jf-bk"),
+               now: (document.getElementById("jfnow") || {}).textContent || "",
+               body: document.body.innerText };
+    });
+    ok("조인 목록에 거르개가 있다 (지역 · 날짜 · 부킹)",
+       bar.rg && bar.wh && bar.bk, JSON.stringify(bar).slice(0, 120));
+    /* ⚠️ 갯수를 박지 않습니다 — 센 수가 찍히기만 하면 됩니다 */
+    ok("  센 수를 적는다", /열린 자리 \d+곳/.test(bar.now), bar.now);
+    ok("  ⚠️⚠️ **티타임이 잡힌 자리**라고 적는다 (거르개의 뜻이 보이게)",
+       bar.body.indexOf("티타임이 잡혀 있습니다") >= 0, "");
+    ok("  ⚠️ 골프장이 비어 있어도 '부킹은 아직' 줄이 안 빠진다",
+       bar.body.indexOf("부킹은 아직입니다") >= 0, "");
+    ok("  ⚠️ 우리가 예약을 잡아 준다고 **적지 않는다** (절대 규칙 5)",
+       bar.body.indexOf("예약을 잡아 드리는 것은 아닙니다") >= 0, "");
+
+    /* 지역을 고릅니다 → 질의에 region=eq. 가 실려야 합니다 */
+    const n0 = g.sent.length;
+    await g.p.selectOption("#jf-rg", "seoul");
+    await g.p.waitForTimeout(350);
+    const q1 = g.sent.slice(n0).filter(function(x){
+      return x.name === "GET" && String(x.body).indexOf("v_join_open") >= 0;
+    }).map(function(x){ return String(x.body); }).join(" | ");
+    ok("  지역을 고르면 **서버에** 조건을 보낸다",
+       q1.indexOf("region=eq.seoul") >= 0, q1.slice(0, 200));
+
+    /* 부킹 잡힌 자리만 */
+    const n1 = g.sent.length;
+    await g.p.check("#jf-bk");
+    await g.p.waitForTimeout(350);
+    const q2 = g.sent.slice(n1).map(function(x){ return String(x.body); }).join(" | ");
+    ok("  부킹 잡힌 자리만 → booked=is.true 를 보낸다",
+       q2.indexOf("booked=is.true") >= 0, q2.slice(0, 200));
+
+    /* 날짜 — ⚠️⚠️ **그 자리의 날짜**로 보내야 합니다. toISOString() 은
+       UTC 라 한국에서 아침 9시 전에 하루 밀립니다. */
+    const n2 = g.sent.length;
+    await g.p.selectOption("#jf-wh", "d1");
+    await g.p.waitForTimeout(350);
+    const got = g.sent.slice(n2).map(function(x){ return String(x.body); }).join(" | ");
+    const want = await g.p.evaluate(function(){
+      var d = new Date(); d.setDate(d.getDate() + 1);
+      var m = d.getMonth() + 1, x = d.getDate();
+      return d.getFullYear() + "-" + (m < 10 ? "0" : "") + m +
+             "-" + (x < 10 ? "0" : "") + x;
+    });
+    ok("  오늘 · 내일 → play_at=lte.<그 자리의 내일> 을 보낸다 (UTC 아님)",
+       got.indexOf("play_at=lte." + want) >= 0, want + " / " + got.slice(0, 200));
+
+    /* ⚠️ 주소를 복사해 보내도 같은 화면이어야 합니다 */
+    const u = await g.p.evaluate(function(){ return location.search; });
+    ok("  조건이 주소에 남는다 (복사해 보낼 수 있게)",
+       u.indexOf("rg=seoul") >= 0 && u.indexOf("bk=1") >= 0 &&
+       u.indexOf("when=d1") >= 0, u);
+    await g.p.close();
+  }
+
+  /* ②-3 0건을 **두 가지로** 갈라서 말하는가
+     ⚠️⚠️ "아직 아무도 안 열었다" 와 "조건에 맞는 것이 없다" 는 다른
+     말입니다 — 같은 말로 적으면 손님이 조건을 지워 볼 생각을 못 합니다. */
+  {
+    const g = await open("/cat/matchup?rg=seoul",
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_join_open: [] }, {}, true);
+    const t = await g.p.evaluate(function(){
+      return { body: document.body.innerText,
+               clear: !!document.getElementById("jf-all") };
+    });
+    ok("조건이 걸린 0건은 **조건 때문**이라고 말한다",
+       t.body.indexOf("조건에 맞는 조인이 없습니다") >= 0, "");
+    ok("  조건을 지우는 길을 같이 낸다 (막다른 길로 두지 않습니다)", t.clear, "");
+    await g.p.close();
+  }
+  {
+    const g = await open("/cat/matchup", { role:"customer", name:"손님", signedIn:true },
+                         { v_join_open: [] }, {}, true);
+    const t = await g.p.evaluate(function(){ return document.body.innerText; });
+    ok("조건이 없는 0건은 **아직 아무도 안 열었다**고 말한다",
+       t.indexOf("아직 열린 조인이 없습니다") >= 0, "");
+    await g.p.close();
+  }
+
   /* ③ 로그인 뒤 — 여는 양식과 **동의 상자** */
   {
     const g = await open("/cat/matchup", { role:"customer", name:"손님", signedIn:true },
@@ -2974,6 +3079,147 @@ function keepOf(name){
      (Supabase 설정이 있어야 그려집니다).
      ⚠️⚠️ 가장 중요한 것: **글쓴이 이름이 가려져 나오는가.**
      ══════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════════
+     광고 자리 (0026 · 0032 · 0055) — ⚠️⚠️⚠️ **표 · 보기 · 관리 화면은
+     2026-10-21 에 섰는데 손님 화면에 그리는 코드가 2026-11-06 까지 한
+     곳도 없었습니다.** `ad_run` 에 줄을 넣고 `live` 로 바꿔도 아무 데도
+     안 나왔습니다 — 돈을 받고 안 띄우는 꼴입니다.
+     ⚠️ 빌드가 찍은 HTML 만 보는 검사는 이 자리를 **영원히 못 봅니다**
+     (설정이 있어야 그려집니다) — 그래서 여기서 눌러 봅니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 광고 자리 (0026 · 0032 · 0055)");
+  {
+    /* ⚠️ 가짜 자료도 **DB 가 받는 값**이어야 합니다 — 자리 열쇠는
+       `ad_place` enum 의 값이고, 분류 · 지역은 **키**입니다(이름이 아닙니다).
+       조인 · 문의에서 아닌 값을 넣어 멀쩡한 화면을 고치려 든 자리입니다. */
+    const ADS = [
+      { id:"ad1", provider_id:"t-range", provider_name:"남서울 실내연습장",
+        place:"main_hero", cat_key:null, region:null, label:"광고" },
+      { id:"ad2", provider_id:"t-range", provider_name:"남서울 실내연습장",
+        place:"cat_top", cat_key:"lesson", region:null, label:"광고" },
+      { id:"ad3", provider_id:"t-range", provider_name:"남서울 실내연습장",
+        place:"cat_top", cat_key:"travel", region:null, label:"광고" }
+    ];
+
+    /* ① 메인 — 히어로 광고가 그려지고 "광고" 표시가 붙는가 */
+    {
+      const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+                           { v_ad_live: ADS }, {}, true);
+      /* ⚠️⚠️⚠️ **빌드에 업체가 0곳이면 링크를 안 걸어야 맞습니다** —
+         처음에 이 자리를 그냥 재다가 "링크가 없다" 로 떨어뜨렸는데,
+         코드가 아니라 **제 검사 자료가 틀린** 것이었습니다 (`t-range` 는
+         DB 씨앗에만 있고 `providers.generated.js` 에는 없습니다).
+         ⚠️ 그래서 **업체가 빌드에 있는 상태**를 여기서 만들어 줍니다 —
+         자료를 넣고 그 자리를 다시 채웁니다 (`amAdFill()` 한 함수가
+         그리므로 다시 부르면 됩니다).
+         ⚠️ 빌드에 **없을** 때는 ④ 가 따로 잽니다 — 두 갈래를 갈라서
+         재지 않으면 한쪽이 엉뚱한 까닭으로 통과합니다. */
+      await g.p.evaluate(function(){
+        window.AM_PROVIDERS = [{ id:"t-range", name:"남서울 실내연습장",
+          regions:["seoul"], subs:["rg-in"] }];
+      });
+      await g.p.evaluate(function(){
+        return window.amAdFill(document.querySelector('[data-adslot="main_hero"]'));
+      });
+      const r = await g.p.evaluate(function(){
+        const el = document.querySelector('[data-adslot="main_hero"]');
+        const band = document.querySelector('[data-adslot="main_band"]');
+        return { drawn: !!(el && !el.hidden && el.querySelector(".adsl-i")),
+                 n: el ? el.querySelectorAll(".adsl-i").length : -1,
+                 label: el ? (el.textContent || "") : "",
+                 rel: el && el.querySelector("a")
+                        ? el.querySelector("a").getAttribute("rel") : "",
+                 href: el && el.querySelector("a")
+                        ? el.querySelector("a").getAttribute("href") : "",
+                 bandHidden: !!(band && band.hidden) };
+      });
+      ok("메인 히어로 광고가 **실제로 그려진다**", r.drawn,
+         JSON.stringify(r).slice(0, 180));
+      ok("  ⚠️⚠️ **'광고' 라고 표시한다** (표시 · 광고의 공정화에 관한 법률)",
+         r.label.indexOf("광고") >= 0, r.label.slice(0, 60));
+      /* ⚠️ 돈 받은 링크를 자연 링크로 두면 검색엔진이 손해를 매깁니다 */
+      ok("  ⚠️ 돈 받은 링크라 rel 에 sponsored 를 붙인다",
+         String(r.rel).indexOf("sponsored") >= 0, String(r.rel));
+      /* ⚠️ 주소는 amProviderUrl() 한 함수가 짓습니다 */
+      ok("  업체 화면으로 가는 주소를 짓는다", /^\/pro\//.test(String(r.href)),
+         String(r.href));
+      /* ⚠️⚠️ **다른 자리 광고가 섞이면 안 됩니다** — 자리 열쇠가 자물쇠입니다 */
+      ok("  ⚠️ 그 자리 광고만 들어간다 (히어로에 분류 광고가 안 섞인다)",
+         r.n === 1, String(r.n));
+      ok("  ⚠️ 걸리는 광고가 없는 자리는 **감춰진 채** 남는다 (빈 액자 금지)",
+         r.bandHidden, "");
+      await g.p.close();
+    }
+
+    /* ② 분류 상단 — ⚠️⚠️ **분류 키가 같은 광고만** 걸려야 합니다.
+       (운영자가 '골프 레슨' 처럼 이름을 적으면 영원히 안 걸립니다 —
+        그래서 /admin 의 그 칸을 고르개로 바꿨습니다.) */
+    {
+      const g = await open("/cat/lesson", { role:"customer", name:"손님", signedIn:true },
+                           { v_ad_live: ADS }, {}, true);
+      const r = await g.p.evaluate(function(){
+        const el = document.querySelector('[data-adslot="cat_top"]');
+        return { key: el ? el.getAttribute("data-adslot-key") : "",
+                 n: el ? el.querySelectorAll(".adsl-i").length : -1,
+                 hidden: !!(el && el.hidden) };
+      });
+      ok("분류 상단 광고는 **그 분류 키**로 걸린다", r.key === "lesson" && r.n === 1,
+         JSON.stringify(r));
+      await g.p.close();
+    }
+    {
+      const g = await open("/cat/fitting", { role:"customer", name:"손님", signedIn:true },
+                           { v_ad_live: ADS }, {}, true);
+      const r = await g.p.evaluate(function(){
+        const el = document.querySelector('[data-adslot="cat_top"]');
+        return { hidden: !!(el && el.hidden),
+                 n: el ? el.querySelectorAll(".adsl-i").length : -1 };
+      });
+      ok("  ⚠️ 다른 분류에는 **안 걸린다** (키가 다르면 안 보입니다)",
+         r.hidden && r.n === 0, JSON.stringify(r));
+      await g.p.close();
+    }
+
+    /* ③ 설정이 없으면 **한 줄도 안 그립니다** (손님에게 아무 말도 안 합니다) */
+    {
+      const p0 = await b.newPage({ viewport: view });
+      await p0.route("**/api/session", function(r){
+        return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ auth:false, signedIn:false, conf:null }) });
+      });
+      await p0.goto(base + "/", { waitUntil:"networkidle" });
+      await p0.waitForTimeout(400);
+      const r = await p0.evaluate(function(){
+        const el = document.querySelector('[data-adslot="main_hero"]');
+        return { hidden: !!(el && el.hidden), html: el ? el.innerHTML.length : -1 };
+      });
+      ok("⚠️ 설정 전에는 광고 자리가 **감춰진 채** 남는다", r.hidden && r.html === 0,
+         JSON.stringify(r));
+      await p0.close();
+    }
+
+    /* ④ ⚠️⚠️⚠️ **빌드에 없는 업체는 링크를 안 겁니다** — `/pro/<id>` 는
+       빌드가 찍는 화면이라, 승인 직후 pull-providers 를 안 돌리면 그
+       주소가 없습니다. 링크로 내면 광고를 눌러서 404 로 갑니다. */
+    {
+      const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+        { v_ad_live: [{ id:"adx", provider_id:"없는업체", provider_name:"없는 업체",
+                        place:"main_hero", cat_key:null, region:null, label:"광고" }] },
+        {}, true);
+      const r = await g.p.evaluate(function(){
+        const el = document.querySelector('[data-adslot="main_hero"]');
+        return { n: el ? el.querySelectorAll(".adsl-i").length : -1,
+                 links: el ? el.querySelectorAll("a").length : -1,
+                 body: document.body.innerText };
+      });
+      ok("⚠️⚠️ 빌드에 없는 업체 광고는 **링크를 안 건다** (404 로 보내지 않습니다)",
+         r.n === 1 && r.links === 0, JSON.stringify({ n:r.n, links:r.links }));
+      ok("  그래도 '광고' 표시와 상호는 낸다 (집행한 광고를 안 띄우지 않습니다)",
+         r.body.indexOf("없는 업체") >= 0, "");
+      await g.p.close();
+    }
+  }
+
   console.log("\n── 골프 커뮤니티 (0047)");
   const CQ = [{ id:"q1", cat:"lesson", title:"드라이버 슬라이스 고치는 법",
     body:"오른쪽으로 많이 휩니다", who:"김**", created_at:"2026-11-05T01:00:00Z",

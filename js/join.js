@@ -52,15 +52,53 @@
       '</p>' +
       /* ⚠️⚠️ 골프장이 적혀 있어도 **부킹이 잡혔다는 뜻이 아닙니다**
          (지시서 §2.A — 부킹 보장 금지). 그 사실을 같이 적습니다. */
+      /* ⚠️⚠️ 전에는 **부킹이 아직일 때만** 적었습니다 — 거르개가 생긴
+         뒤로는 "부킹이 잡힌 자리만" 을 눌러도 무엇이 걸러졌는지 화면에
+         아무 표가 없어서, 눌러도 아무 일이 안 난 것처럼 보입니다.
+         ⚠️ 골프장 이름이 비어 있어도 `booked` 는 켜질 수 있으므로 그
+         줄을 **따로** 냅니다 (한 줄에 묶으면 조용히 안 보입니다). */
       (r.course
         ? '<p class="jnc-c">' + esc(r.course) +
           (r.booked ? '' : ' <span class="jnc-w">부킹은 아직입니다</span>') + '</p>'
+        : (r.booked ? '' : '<p class="jnc-c"><span class="jnc-w">' +
+             '부킹은 아직입니다</span></p>')) +
+      (r.booked
+        ? '<p class="jnc-c"><span class="jnc-ok">티타임이 잡혀 있습니다</span></p>'
         : '') +
       '<p class="jnc-b">' + esc(r.body) + '</p>' +
       '<button type="button" class="btn btn-pt jnc-go" data-id="' + esc(r.id) + '"' +
         (left > 0 ? '' : ' disabled') + '>' +
         (left > 0 ? '참가 신청하기' : '자리가 찼습니다') + '</button>' +
     '</li>';
+  }
+
+  /* 거르개를 그리고 · 바뀌면 다시 읽습니다 — ⚠️ 그리는 자리는 한 곳
+     입니다 (조건을 지우는 단추도 이것을 다시 부릅니다). */
+  function mountBar(){
+    var old = document.getElementById("jnfilbox");
+    if(!old){
+      old = document.createElement("div");
+      old.id = "jnfilbox";
+      list.parentNode.insertBefore(old, list);
+    }
+    old.innerHTML = filterBar();
+  }
+  function bindBar(a){
+    var box = document.getElementById("jnfilbox");
+    if(!box) return;
+    box.addEventListener("change", function(e){
+      var t = e.target;
+      if(!t || !t.id) return;
+      if(t.id === "jf-rg")      F.rg = t.value;
+      else if(t.id === "jf-wh") F.wh = whenOf(t.value).key;
+      else if(t.id === "jf-bk") F.bk = !!t.checked;
+      else return;
+      writeUrl();
+      reload(a);
+    });
+  }
+  function reload(a){
+    return load(a).then(function(rows){ paint(a, rows); });
   }
 
   function openForm(){
@@ -190,23 +228,157 @@
     });
   }
 
+  /* ════════════════════════════════════════════════════════════════
+     거르개 — 지역 · 날짜 · **부킹이 잡힌 자리만** (2026-11-06)
+
+     ⚠️⚠️⚠️ **전에는 거르개가 한 개도 없었습니다.** `v_join_open` 이
+     `region` · `play_at` · `booked` 를 처음부터 내주고 있었는데, 목록은
+     그것을 **보여 주기만** 했습니다 — 서울 사는 분이 제주 조인까지
+     쉰 줄을 밀어 내려가야 했습니다.
+
+     ⚠️⚠️ **`booked` 가 켜진 자리가 "티타임이 이미 잡힌 자리"** 입니다
+     (여신 분이 부킹을 잡아 두고 사람만 구하는 꼴). 그 거르개 하나가
+     경쟁 서비스의 "티타임 양도" 에 해당합니다 — **새 표도 새 칸도
+     필요 없습니다.** 단, 우리가 돈을 받거나 자리를 보장하지는 않으므로
+     "양도" 라고 적지 않고 **있는 사실만** 적습니다 (절대 규칙 5).
+
+     ⚠️⚠️ **거르는 것은 서버입니다** — 쉰 줄만 받아 와서 화면에서 걸러
+     내면, 서울 조인이 쉰 줄 밖에 있을 때 **0건으로 보입니다**(에러 없이).
+     그래서 조건을 질의로 보냅니다.
+
+     ⚠️⚠️⚠️ **날짜는 `toISOString()` 으로 짓지 않습니다.** 그 함수는
+     UTC 를 내놓아서, 한국에서 아침 9시 전에는 **어제 날짜**가 됩니다 —
+     "오늘 · 내일" 이 하루씩 밀립니다. `play_at` 은 여신 분이 **제 달력
+     에서** 고른 날이므로 **그 자리의 날짜**로 셉니다.
+     ════════════════════════════════════════════════════════════════ */
+  var F = { rg:"", wh:"", bk:false };
+
+  /* 그 자리의 날짜를 YYYY-MM-DD 로 — ⚠️ 위 머리말 (UTC 로 짓지 않습니다) */
+  function ymd(d){
+    var m = d.getMonth() + 1, x = d.getDate();
+    return d.getFullYear() + "-" + (m < 10 ? "0" : "") + m +
+           "-" + (x < 10 ? "0" : "") + x;
+  }
+  function plusDays(n){
+    var d = new Date();
+    d.setDate(d.getDate() + n);
+    return ymd(d);
+  }
+
+  /* 날짜 갈래 — ⚠️ 말과 날짜 수를 **한 곳**에 둡니다 (두 곳에 적으면
+     고르개 글과 걸러지는 범위가 조용히 달라집니다) */
+  var WHEN = [
+    { key:"",    name:"모든 날짜",   days:null },
+    { key:"d1",  name:"오늘 · 내일", days:1  },
+    { key:"d7",  name:"이번 주 안",  days:7  },
+    { key:"d14", name:"2주 안",      days:14 }
+  ];
+  function whenOf(k){
+    for(var i = 0; i < WHEN.length; i++) if(WHEN[i].key === k) return WHEN[i];
+    return WHEN[0];
+  }
+
+  /* 주소에서 읽습니다 — ⚠️ 주소를 복사해 보내도 같은 화면이어야 합니다 */
+  function readUrl(){
+    try{
+      var u = new URLSearchParams(location.search);
+      F.rg = (u.get("rg") || "").trim();
+      F.wh = whenOf((u.get("when") || "").trim()).key;
+      F.bk = u.get("bk") === "1";
+    }catch(e){}
+  }
+  function writeUrl(){
+    try{
+      var qs = [];
+      if(F.rg) qs.push("rg=" + encodeURIComponent(F.rg));
+      if(F.wh) qs.push("when=" + encodeURIComponent(F.wh));
+      if(F.bk) qs.push("bk=1");
+      history.replaceState(null, "",
+        location.pathname + (qs.length ? "?" + qs.join("&") : ""));
+    }catch(e){}
+  }
+
+  /* ⚠️ 고르개 · 체크박스로 냅니다 — 목록 자체가 자바스크립트로만
+     그려지는 자리라 링크로 만들어도 봇에게는 보일 것이 없습니다
+     (`/search` 의 거르개를 링크로 둔 까닭과 다른 자리입니다). */
+  function filterBar(){
+    var rg = (window.AM_REGIONS || []).map(function(r){
+      return '<option value="' + esc(r.key) + '"' +
+        (F.rg === r.key ? " selected" : "") + '>' + esc(r.name) + '</option>';
+    }).join("");
+    return '<form class="jform jnf-f" id="jnfil">' +
+      '<div class="jrow"><label for="jf-rg">지역</label>' +
+        '<select id="jf-rg"><option value="">전국</option>' + rg + '</select></div>' +
+      '<div class="jrow"><label for="jf-wh">날짜</label>' +
+        '<select id="jf-wh">' + WHEN.map(function(w){
+          return '<option value="' + esc(w.key) + '"' +
+            (F.wh === w.key ? " selected" : "") + '>' + esc(w.name) + '</option>';
+        }).join("") + '</select></div>' +
+      '<div class="jrow jrow-full">' +
+        '<label class="chk"><input type="checkbox" id="jf-bk"' +
+          (F.bk ? " checked" : "") + '><span>부킹이 잡힌 자리만</span></label>' +
+        /* ⚠️ 하지 않는 일을 적지 않습니다 — 우리가 티타임을 파는 것도,
+           자리를 보장하는 것도 아닙니다. 여신 분이 적은 사실뿐입니다. */
+        '<p class="jhint">여신 분이 티타임을 이미 잡아 두고 사람만 ' +
+        '구하는 자리입니다. 골프올인원이 예약을 잡아 드리는 것은 아닙니다.</p>' +
+      '</div>' +
+    '</form>' +
+    '<p class="jnf-n" id="jfnow" hidden></p>';
+  }
+
   function load(a){
-    return fetch(a.conf.url + "/rest/v1/v_join_open" +
-      "?select=id,title,body,region,play_at,course,booked,tee,need,budget,left_n" +
-      "&order=play_at.asc&limit=50", {
+    var qs = ["select=id,title,body,region,play_at,course,booked,tee,need,budget,left_n",
+              "order=play_at.asc", "limit=50"];
+    if(F.rg) qs.push("region=eq." + encodeURIComponent(F.rg));
+    if(F.bk) qs.push("booked=is.true");
+    var w = whenOf(F.wh);
+    /* ⚠️ 보기가 이미 지난 날짜를 빼므로 아래쪽만 겁니다 (`play_at >= 오늘`) */
+    if(w.days !== null) qs.push("play_at=lte." + plusDays(w.days));
+    return fetch(a.conf.url + "/rest/v1/v_join_open?" + qs.join("&"), {
       headers: Object.assign({ apikey:a.conf.anonKey },
                              window.amAuthHeaders ? window.amAuthHeaders() : {})
     }).then(function(r){ return r.ok ? r.json() : []; });
   }
 
+  /* 지금 걸린 조건을 말로 — ⚠️ 켜진 것이 없으면 빈 글자입니다 */
+  function nowBits(){
+    var b = [];
+    if(F.rg) b.push(rgName(F.rg));
+    if(F.wh) b.push(whenOf(F.wh).name);
+    if(F.bk) b.push("부킹이 잡힌 자리");
+    return b;
+  }
+
   function paint(a, rows){
+    /* 센 수를 적습니다 — ⚠️ 갯수를 글자로 박지 않고 **세어서** 냅니다 */
+    var nl = document.getElementById("jfnow");
+    if(nl){
+      var b = nowBits();
+      nl.hidden = false;
+      nl.textContent = (b.length ? b.join(" · ") + " — " : "") +
+        "열린 자리 " + rows.length + "곳";
+    }
     if(!rows.length){
-      /* ⚠️ 0건이어도 **막다른 길로 두지 않습니다** (절대 규칙 2) —
-         지금 실제로 할 수 있는 것을 같이 냅니다. */
-      list.innerHTML = '<div class="none">' +
-        '<h3>아직 열린 조인이 없습니다.</h3>' +
-        '<p>첫 조인을 열어 보세요. 날짜와 지역만 정하시면 됩니다.</p>' +
-      '</div>';
+      /* ⚠️⚠️ **"아직 아무도 안 열었다" 와 "조건에 맞는 것이 없다" 는
+         다른 말입니다.** 같은 말로 적으면 손님이 조건을 지워 볼 생각을
+         못 합니다 (`/search` 의 0건 자리에서 적어 둔 그 줄입니다).
+         ⚠️ 0건이어도 **막다른 길로 두지 않습니다** (절대 규칙 2). */
+      list.innerHTML = nowBits().length
+        ? '<div class="none">' +
+          '<h3>조건에 맞는 조인이 없습니다.</h3>' +
+          '<p>조건을 넓혀 보시거나, 원하시는 날짜로 직접 열어 보세요.</p>' +
+          '<div class="none-b">' +
+            '<button type="button" class="btn btn-line" id="jf-all">조건 지우기</button>' +
+          '</div></div>'
+        : '<div class="none">' +
+          '<h3>아직 열린 조인이 없습니다.</h3>' +
+          '<p>첫 조인을 열어 보세요. 날짜와 지역만 정하시면 됩니다.</p>' +
+        '</div>';
+      var allb = document.getElementById("jf-all");
+      if(allb) allb.addEventListener("click", function(){
+        F.rg = ""; F.wh = ""; F.bk = false;
+        writeUrl(); mountBar(); reload(a);
+      });
       return;
     }
     list.innerHTML = '<ul class="jnl">' + rows.map(card).join("") + '</ul>';
@@ -265,7 +437,12 @@
       return;
     }
 
-    load(a).then(function(rows){ paint(a, rows); });
+    /* 거르개를 목록 **앞에** 끼웁니다 — ⚠️ 목록도 브라우저가 그리므로
+       빌드가 찍을 자리가 아닙니다 (위 머리말). */
+    readUrl();
+    mountBar();
+    bindBar(a);
+    reload(a);
 
     var box = document.getElementById("joinbox");
     if(!box) return;

@@ -1570,6 +1570,51 @@ picture{ display: contents; }
 .svc-tag{ font-size:12px; font-weight:700; color: var(--grn-text);
           background:#fff; border:1px solid var(--grn-line);
           border-radius: var(--r-pill); padding:2px 9px; margin-left:8px; }
+/* 묶음 여닫기 (js/matchform.js 의 svc-x · svc-b)
+   ⚠️⚠️ **`[hidden]` 을 따로 적어 둡니다** — 작성자 CSS 의 display 가
+   브라우저 기본을 이기므로, display 를 준 칸에 hidden 을 걸면 속성은
+   붙는데 **안 가려집니다** (작업 기억에 적어 둔 자리입니다).
+   ⚠️ 가려졌는지 재실 때는 offsetParent 로 보세요. */
+.svc-b{ display:flex; flex-direction:column; }
+.svc-b[hidden]{ display:none; }
+.svc-x{ margin-top:4px; }
+
+/* ── 조인 목록 거르개 (js/join.js · 2026-11-06) ─────────────────── */
+.jnf-f{ margin-bottom:10px; }
+.jnf-n{ font-size:14px; font-weight:600; color: var(--grn-text); margin:0 0 12px; }
+.jnf-n[hidden]{ display:none; }
+/* 티타임이 잡혀 있는 자리 — ⚠️ 글자색은 **짙은 쪽**입니다 (액션그린은
+   면 전용이라 작은 글씨에 쓰면 대비 3.14 입니다) */
+.jnc-ok{ font-size:12.5px; font-weight:700; color: var(--grn-text);
+         background: var(--grn-soft); border:1px solid var(--grn-line);
+         border-radius: var(--r-pill); padding:2px 9px; }
+
+/* ── 광고 자리 (js/adslot.js · 0026 · 0032 · 0055) ───────────────
+   ⚠️⚠️ **0건이면 자리가 `hidden` 으로 남습니다.** 감싼 `.sec` 은
+   `:has(> .wrap > [hidden]:only-child)` 규칙이 줄째 가립니다 (빈 광고
+   액자를 두면 미완성 사이트로 읽힙니다 · 절대 규칙 2).
+   ⚠️ `[hidden]` 을 따로 적어 둡니다 — display 를 준 칸에 hidden 만
+   걸면 속성은 붙는데 안 가려집니다. */
+.sec-ad{ padding-block:18px; }
+.adsl-w[hidden]{ display:none; }
+.adsl{ list-style:none; margin:0; padding:0; display:grid; gap:10px;
+       grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 640px){ .adsl{ grid-template-columns: 1fr; } }
+.adsl-i{ min-width:0; }
+.adsl-a, .adsl-i > .adsl-l{ display:flex; align-items:center; gap:10px;
+       min-height:48px; padding:10px 14px; border:1.5px solid var(--line-soft);
+       border-radius: var(--r-sm); background: var(--bg-2);
+       color: var(--ink2); text-decoration:none; font-weight:600; }
+.adsl-a:hover{ border-color: var(--grn-line); }
+/* "광고" 표시 — ⚠️ 글자색은 **짙은 쪽**입니다 (밝은 브랜드색을 작은
+   글씨에 쓰면 대비가 떨어집니다 — 다섯 번 걸린 자리입니다) */
+.adsl-l{ flex:none; font-size:12px; font-weight:700; color: var(--ink3);
+         background:#fff; border:1px solid var(--line);
+         border-radius: var(--r-pill); padding:2px 8px; }
+.adsl-n{ font-size:15px; font-weight:700; color: var(--ink);
+         word-break:keep-all; overflow-wrap:anywhere; min-width:0; }
+.adsl-g{ flex:none; margin-left:auto; font-size:13.5px; font-weight:600;
+         color: var(--grn-text); display:flex; align-items:center; gap:3px; }
 
 /* ── 고객센터의 네 갈래 (4차 지시서 §9) ───────────────────────── */
 .hnow{ border:1.5px dashed var(--line); background: var(--bg-2);

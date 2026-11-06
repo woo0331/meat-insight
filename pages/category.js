@@ -32,10 +32,30 @@ var KIND = {
     cta:  ["/match", "이 분야로 매칭 요청하기", "match"]
   },
   trade: {
-    what: "회원끼리 직접 사고파는 자리입니다. 골프올인원은 거래 당사자가 아닙니다.",
-    subs: "회원끼리 사고파는 것과, 업체가 해 드리는 것(매입 견적 · 위탁판매)이 같이 있습니다.",
-    zeroT:"아직 올라온 매물이 없습니다.",
-    zeroD:"첫 매물이 올라오면 여기에 바로 보입니다.",
+    /* ⚠️⚠️⚠️ **여기가 없는 기능을 있다고 말하고 있었습니다** (2026-11-06).
+       전에 적힌 글은 "회원끼리 직접 사고파는 자리입니다" 와 "아직 올라온
+       매물이 없습니다 · **첫 매물이 올라오면 여기에 바로 보입니다**" 였
+       습니다. 그런데 매물을 올리는 **표도 · 문도 · 화면도 저장소에 한 줄도
+       없습니다** — 세어 봤습니다(표 이름 전체를 훑었고, `offer` 는 앞
+       사업의 잔재, `device*` 는 중고폰 잔재입니다). 바로 아래 `cta` 가
+       `null` 인 것이 그 증거입니다: **올리는 단추가 없습니다.**
+       즉 **영원히 안 오는 것을 기다리라고** 적어 둔 것입니다.
+       ⚠️⚠️ 2026-11-05 에 조인 · 커뮤니티 · 인력이 "여는 기능은 아직
+       없습니다" 라고 적고 있던 자리를 고쳤는데, **이것은 그 거울상**이고
+       더 나쁩니다 — 안 하는 일을 한다고 적는 것이기 때문입니다 (절대
+       규칙 5 · 표시 · 광고의 공정화에 관한 법률 제3조).
+       ⚠️ 지금 이 분류에서 **실제로 되는 것**은 업체를 통한 둘입니다 —
+       중고채 매입 견적 · 위탁판매 연결. 그 둘만 적습니다.
+       ⚠️ 그렇다고 막다른 길로 두지 않습니다 — 아래 `asks(c)` 가 이 분류의
+       매칭 요청 단추를 냅니다 (절대 규칙 2). */
+    what: "중고 골프채와 용품을 업체를 통해 팔거나 사는 자리입니다. " +
+          "골프올인원은 거래 당사자가 아닙니다.",
+    /* ⚠️⚠️ **아홉 가운데 둘만 눌립니다** (`pv:true` 인 매입 견적 ·
+       위탁판매). 그래서 아래 "눌러 보시면 …" 한 줄을 **덧붙이지
+       않습니다** — 그 줄은 하위가 **전부** 눌릴 때만 붙습니다. */
+    subs: "업체가 해 드리는 것(매입 견적 · 위탁판매)은 눌러서 그 일을 하는 " +
+          "업체를 보실 수 있습니다. 아래 물건 종류는 요청하실 때 고르는 " +
+          "항목입니다 — 회원끼리 직접 거래하는 장터는 아직 열지 않았습니다.",
     cta:  null
   },
   match: {
@@ -63,6 +83,12 @@ var KIND = {
     cta:  null
   }
 };
+
+/* ⚠️⚠️ **중고장터의 0곳 안내는 업체를 찾는 자리와 같은 말입니다** —
+   거기도 결국 "그 일을 하는 업체" 를 기다리는 자리이기 때문입니다. 글을
+   두 벌로 적으면 한쪽만 고치는 날 두 화면이 다른 말을 합니다. */
+KIND.trade.zeroT = KIND.provider.zeroT;
+KIND.trade.zeroD = KIND.provider.zeroD;
 
 /* ⚠️⚠️ **빈 자리를 막다른 길로 두지 않습니다** (절대 규칙 2). 0건일 때
    손님이 **지금 실제로 할 수 있는 것**으로 보냅니다 — 업체 분류는 매칭
@@ -157,6 +183,16 @@ exports.build = function(c){
      아무 일이 안 나는 칸과 같습니다. 그 둘은 글로 둡니다.
      ⚠️ 업체가 0곳이어도 막다른 길이 아닙니다 — 업체찾기의 0건 자리가
      "조건에 맞는 업체가 없습니다" 와 **매칭 요청 단추**를 같이 냅니다. */
+  /* 광고 자리 — ⚠️ 알맹이는 `js/adslot.js` 가 그립니다 (광고는 날짜로
+     켜지고 꺼져 빌드가 못 찍습니다). 0건이면 hidden 으로 남고 감싼 구간은
+     CSS 의 `:has()` 가 줄째 가립니다.
+     ⚠️⚠️ **자리 열쇠(`cat_top`)와 분류 키를 같이 적습니다** — 0026 의
+     check 가 분류 광고에 `cat_key` 를 요구하고, 손님 화면은 **그 키가
+     같은** 광고만 냅니다 (이름을 적으면 영원히 안 걸립니다). */
+  var adTop = '<section class="sec sec-ad"><div class="wrap">' +
+    '<div class="adsl-w" data-adslot="cat_top" data-adslot-key="' +
+      esc(c.key) + '" hidden></div></div></section>';
+
   var canPv = W.amCatItemsForProvider(c).map(function(it){ return it.key; });
   var subs = items.length
     ? '<section class="sec"><div class="wrap">' +
@@ -165,7 +201,13 @@ exports.build = function(c){
       /* ⚠️⚠️ **무엇이 걸러지는지는 `amSubFinds()` 한 곳**이 정합니다 —
          `/cat/career` 의 하위는 업체가 아니라 **구인 · 구직 글**을
          좁히는데 여기가 "업체만 모아" 라고 적고 있었습니다 (2026-11-05). */
-      (canPv.length
+      /* ⚠️⚠️⚠️ **하위가 전부 눌릴 때만 붙입니다** (2026-11-06). 중고
+         장터는 아홉 가운데 **둘만** 눌리는데(나머지는 회원끼리 쓰는
+         물건 종류라 좁힐 자료가 없습니다) 이 줄이 아홉 전부에 해당하는
+         것처럼 읽혔습니다 — "눌러 보시면" 이라고 적어 놓고 일곱은
+         안 눌리는 꼴입니다. 그 분류는 제 `subs` 글에서 **무엇이 눌리는지**
+         직접 말합니다. */
+      (canPv.length && canPv.length === items.length
         ? (W.amSubFinds(c) === "글"
             ? ' 눌러 보시면 그 갈래의 글만 모아 보여 드립니다.'
             : ' 눌러 보시면 그 일을 하는 업체만 모아 보여 드립니다.')
@@ -192,7 +234,7 @@ exports.build = function(c){
       route: W.amCatUrl(c), title: c.name,
       crumbs: [["카테고리 전체보기", "/categories"], [c.name, W.amCatUrl(c)]],
       desc: c.name + " — " + c.lead + ". " + k.what + " 지금 " + list.length + "곳이 있습니다.",
-      body: head + subs +
+      body: head + adTop + subs +
         '<section class="sec sec-alt"><div class="wrap">' +
           '<div class="sec-hd"><h2>' + esc(c.name) + ' 업체 ' + W.won(list.length) + '곳</h2>' +
           '<p>골프올인원은 통신판매중개자이며 거래 당사자가 아닙니다.</p></div>' +
@@ -298,7 +340,13 @@ exports.build = function(c){
        있습니다 — joinKeep 이 빈 문자열이 되어 "설정이 안 된 것" 과
        똑같이 보였습니다. 여기서 같은 실수를 하지 않습니다.
        ⚠️ regions.js 는 지역 고르는 칸이 읽습니다. */
-    js: (c.kind === "match")
+    /* ⚠️⚠️⚠️ **광고 파일 셋은 갈래와 상관없이 늘 싣습니다** — 갈래마다
+       적어 두면 새 갈래가 생기는 날 그 분류만 광고가 **조용히 안
+       나옵니다**(에러도 없습니다). 그래서 뒤에 `concat` 으로 붙입니다.
+       ⚠️ providers 둘은 adslot 이 `/pro/<id>` 를 짓고(amProviderUrl)
+       그 업체가 **빌드에 있는지** 보는 데(amProvider) 씁니다 — 없으면
+       링크를 안 걸어 404 로 보내지 않습니다. */
+    js: ((c.kind === "match")
       ? ["/js/data/site.js", "/js/data/regions.js", "/js/join.js"]
       : (c.key === "community" ? ["/js/community.js"]
       /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — site.js 가
@@ -306,9 +354,11 @@ exports.build = function(c){
          하위분류 칸을 줍니다 (catalog 는 빌드가 저절로 싣습니다). */
       : (c.key === "career"
           ? ["/js/data/site.js", "/js/data/regions.js", "/js/career.js"]
-          : null)),
+          : []))).concat(["/js/data/providers.generated.js",
+                          "/js/data/providers.js", "/js/adslot.js"]),
     /* ⚠️ 조인은 제 구간이 "0건" 을 스스로 말하므로 zero 를 **안 겹칩니다**
        (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다). */
-    body: head + subs + (joinSec || cqSec || jobSec || zero) + asks(c) + related(c)
+    body: head + adTop + subs + (joinSec || cqSec || jobSec || zero) +
+          asks(c) + related(c)
   };
 };

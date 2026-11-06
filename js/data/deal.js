@@ -322,3 +322,67 @@ window.amQuoteAmount = function(q){
   if(!q || q.amount === null || q.amount === undefined) return null;
   return window.won(q.amount) + "원 · " + window.amVatName(q.vat);
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   광고 자리 넷 — `ad_place` enum (0026)
+
+   ⚠️⚠️⚠️ **전에는 이 목록이 `js/adminbiz.js` 안에만 있었습니다.** 그런데
+   2026-11-06 에 손님 화면에 광고를 그리는 파일(`js/adslot.js`)이 생기면서
+   **같은 키를 두 곳이** 들게 됐습니다 — 한쪽만 고치는 날 운영자가 고른
+   자리와 손님 화면이 찾는 자리가 어긋나고, 그러면 **광고가 조용히 안
+   보입니다**(에러도 없습니다). 그래서 줄은 여기 하나입니다.
+   ⚠️ `check-deal` 이 0026 의 enum 과 **키를 맞춰 봅니다** (한글은 말입니다).
+
+   칸
+     key    DB 의 `ad_place` 값 — **바꾸지 마세요**
+     name   운영자 화면에 나가는 이름
+     needs  그 자리가 **더 받아야 하는 것** (0026 의 `ad_run_where` check)
+              cat   분류 키가 있어야 합니다
+              rg    지역 키가 있어야 합니다
+              null  더 받을 것이 없습니다
+   ⚠️⚠️ **`needs` 를 안 채우면 DB 가 거절합니다** — 분류 광고에 분류 키가
+   없으면 어느 분류에도 안 걸려 **에러 없이 조용히 안 보입니다**. 그래서
+   0026 이 check 로 막고, 운영자 화면이 그 칸을 **고르개**로 냅니다.
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_AD_PLACE = [
+  { key:"main_hero", name:"메인 히어로", needs:null },
+  { key:"main_band", name:"메인 띠",     needs:null },
+  { key:"cat_top",   name:"분류 상단",   needs:"cat" },
+  { key:"region",    name:"지역",        needs:"rg"  }
+];
+window.amAdPlace = function(k){
+  var L = window.AM_AD_PLACE || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === k) return L[i];
+  return null;
+};
+/* ⚠️ 모르는 값은 **키 그대로** 냅니다 (빈 칸을 두지 않습니다) */
+window.amAdPlaceName = function(k){
+  var x = window.amAdPlace(k);
+  return x ? x.name : String(k || "");
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   광고 상태 넷 — `ad_state` enum (0026)
+
+   ⚠️⚠️⚠️ **2026-11-06 까지 화면의 상태 말이 DB 와 달랐습니다.**
+   `js/adminbiz.js` 가 `draft · live · paused · done · void` 다섯을 들고
+   있었는데 0026 의 enum 은 `draft · live · done · stopped` 넷입니다 —
+     · `paused` · `void` 단추는 **누르면 DB 가 거절**했습니다
+       (단추는 보이고 DB 가 거절하는 그 자리입니다)
+     · 정작 **`stopped` 는 단추가 없어서** 집행 중인 광고를 멈출 길이
+       화면에 한 곳도 없었습니다
+   `check-deal` 이 이 묶음을 enum 과 맞춰 보지 않고 있었습니다 — 이제 봅니다.
+   ⚠️ `tone` 은 배지 **바탕색**입니다 (글자로 쓰지 않습니다 — 상태색은
+   배지 바탕용입니다).
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_AD_STATE = [
+  { key:"draft",   name:"준비",    tone:"ink"  },
+  { key:"live",    name:"집행 중", tone:"grn"  },
+  { key:"stopped", name:"멈춤",    tone:"warn" },
+  { key:"done",    name:"끝남",    tone:"ink"  }
+];
+window.amAdStateName = function(k){
+  var L = window.AM_AD_STATE || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === k) return L[i].name;
+  return String(k || "");
+};

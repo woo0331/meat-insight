@@ -300,10 +300,23 @@ function joinBand(){
   '</div></div></section>';
 }
 
-/* ⚠️ 광고 · 스폰서 구간은 **집행 중인 광고가 0건이라 그리지 않습니다.**
-   빈 광고 액자를 두면 미완성 사이트로 읽힙니다 (절대 규칙 2).
-   광고가 들어오면 여기서 그리고, 그때 **"광고" 라고 반드시 표시**합니다
-   (표시 · 광고의 공정화에 관한 법률). */
+/* 광고 자리 — ⚠️⚠️⚠️ **전에는 이 자리에 "집행 중인 광고가 0건이라
+   그리지 않습니다" 라는 주석만 있었습니다.** 그런데 0건이라서 안 그린
+   것이 아니라 **그리는 코드가 아예 없었습니다** — `ad_run` 에 줄을 넣고
+   `live` 로 바꿔도 손님 화면에 아무 것도 안 나왔습니다 (주석이 코드와
+   다른 자리의 또 한 판 · 2026-11-06).
+   ⚠️⚠️ **알맹이는 브라우저가 그립니다** (`js/adslot.js`) — 광고는 날짜로
+   켜지고 꺼지므로 빌드가 찍으면 배포할 때만 바뀝니다. 여기서는 **자리만**
+   냅니다. 0건이면 `hidden` 으로 남고, 감싼 구간은 CSS 의 `:has()` 가
+   줄째 가립니다 (빈 광고 액자를 두지 않습니다 · 절대 규칙 2).
+   ⚠️ "광고" 표시는 `js/adslot.js` 가 **보기가 내려준 말**로 붙입니다
+   (표시 · 광고의 공정화에 관한 법률 제3조). */
+function adSlot(place){
+  return '<section class="sec sec-ad"><div class="wrap">' +
+    '<div class="adsl-w" data-adslot="' + place + '" hidden></div>' +
+  '</div></section>';
+}
+
 
 exports.build = function(){
   return {
@@ -318,6 +331,18 @@ exports.build = function(){
        고를 수 있는지 보기도 전에** 요청부터 권하는 자리였습니다.
        ⚠️ "일하는 방식" 은 §5 의 일곱에 없지만 중복이 아니라 **왜 믿을 수
        있는지**를 말하는 자리라 남겼습니다 — 입점 안내 바로 앞입니다. */
-    body: hero() + cats() + feats() + providers() + steps() + why() + joinBand()
+    /* ⚠️ 광고 자리 둘은 **히어로 바로 아래**와 **입점 안내 바로 앞**
+       입니다 — 분류 열을 보기도 전에 광고를 먼저 보이지 않게 ②보다
+       뒤에 둡니다. */
+    body: hero() + cats() + adSlot("main_hero") + feats() + providers() +
+          steps() + why() + adSlot("main_band") + joinBand(),
+    /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — adslot 이
+       `/pro/<id>` 주소를 `amProviderUrl()` 로 짓고, 그 업체가 **빌드에
+       있는지**를 `amProvider()` 로 봅니다 (없으면 링크를 안 걸어 404 로
+       보내지 않습니다). 그래서 그 둘을 같이 싣습니다.
+       ⚠️ 메인은 전에 스크립트가 한 장도 없었습니다 — 광고 자리 때문에
+       늘어난 것이고, 자료 파일이 커지면 그때 다시 봅니다. */
+    js: ["/js/data/providers.generated.js", "/js/data/providers.js",
+         "/js/adslot.js"]
   };
 };

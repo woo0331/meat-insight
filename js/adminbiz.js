@@ -46,24 +46,34 @@
       .catch(function(){ return null; });
   }
 
-  var AD_PLACE = [
-    { key:"main_hero", name:"메인 히어로" },
-    { key:"main_band", name:"메인 띠" },
-    { key:"cat_top",   name:"분류 상단" },
-    { key:"region",    name:"지역" }
-  ];
-  var AD_ST = [
-    { key:"draft",  name:"준비",      tone:"ink"  },
-    { key:"live",   name:"집행 중",   tone:"grn"  },
-    { key:"paused", name:"멈춤",      tone:"warn" },
-    { key:"done",   name:"끝남",      tone:"ink"  },
-    { key:"void",   name:"취소",      tone:"bad"  }
-  ];
+  /* ⚠️⚠️⚠️ **자리 넷은 `js/data/deal.js` 한 곳입니다** (2026-11-06) —
+     전에는 여기만 들고 있었는데, 손님 화면에 광고를 그리는
+     `js/adslot.js` 가 생기면서 **같은 키를 두 곳이** 들게 됐습니다.
+     한쪽만 고치는 날 운영자가 고른 자리와 손님 화면이 찾는 자리가
+     어긋나고, 그러면 광고가 **에러 없이 조용히 안 보입니다**. */
+  var AD_PLACE = window.AM_AD_PLACE || [];
+  /* ⚠️⚠️⚠️ **상태 다섯 가운데 둘이 DB 에 없는 값이었습니다** (2026-11-06) —
+     여기 `paused` · `void` 가 적혀 있었는데 0026 의 `ad_state` enum 은
+     `draft · live · done · stopped` 넷입니다. 그래서 그 두 단추는
+     **누르면 DB 가 거절**했고(단추는 보이고 DB 가 거절하는 그 자리),
+     정작 **멈추는 값(`stopped`)은 단추가 없었습니다** — 집행 중인 광고를
+     멈출 길이 화면에 없었습니다. 지금은 `check-deal` 이 enum 과 맞춰
+     봅니다. */
+  var AD_ST = window.AM_AD_STATE || [];
   function pick(list, k){
     for(var i = 0; i < list.length; i++) if(list[i].key === k) return list[i];
     return null;
   }
   function placeName(k){ var x = pick(AD_PLACE, k); return x ? x.name : String(k || ""); }
+  /* ⚠️ 모르는 키는 키 그대로 — 잘못 들어간 값이 눈에 보이게 */
+  function catName(k){
+    var c = window.amCat ? window.amCat(k) : null;
+    return (c && c.name) ? c.name : String(k || "");
+  }
+  function rgName(k){
+    var r = window.amRegion ? window.amRegion(k) : null;
+    return (r && r.name) ? r.name : String(k || "");
+  }
   function adSt(k){ return pick(AD_ST, k) || { name:String(k || ""), tone:"ink" }; }
 
   function load(){
@@ -179,12 +189,22 @@
             return '<li><b>' + esc(p ? p.name : a.provider_id) + '</b> ' +
               '<span class="dk-st dk-' + esc(st.tone) + '">' + esc(st.name) + '</span>' +
               '<p class="fe-r">' + esc(placeName(a.place)) +
-              (a.cat_key ? " · " + esc(a.cat_key) : "") +
-              (a.region ? " · " + esc(a.region) : "") +
+              /* ⚠️ 키가 아니라 **이름**으로 보여 줍니다 — 운영자가
+                 `lesson` · `seoul` 을 보고 맞는지 가릴 수는 없습니다.
+                 ⚠️ 모르는 키면 **키 그대로** 냅니다 (지어내지 않습니다 —
+                 그래야 잘못 들어간 값이 눈에 보입니다). */
+              (a.cat_key ? " · " + esc(catName(a.cat_key)) : "") +
+              (a.region ? " · " + esc(rgName(a.region)) : "") +
               ' · ' + esc(a.starts_on + " ~ " + a.ends_on) +
               ' · ' + esc(won(a.price)) + '원</p>' +
               '<div class="dk-b">' +
-                ["live","paused","done","void"].map(function(k){
+                /* ⚠️ 갈 수 있는 상태를 **목록에서** 끌어옵니다 — 여기
+                   글자로 박아 두었다가 DB 에 없는 값을 두 개나 내고
+                   있었습니다 (위 머리말). `draft` 는 되돌릴 자리가
+                   아니므로 뺍니다(새로 넣으면 그 상태입니다). */
+                AD_ST.map(function(x){ return x.key; })
+                     .filter(function(k){ return k !== "draft"; })
+                     .map(function(k){
                   /* ⚠️ 지금 상태로 가는 단추는 안 냅니다 (눌러도 아무
                      일이 안 나는 단추가 됩니다 — 절대 규칙 5). */
                   if(k === a.state) return "";
@@ -204,10 +224,25 @@
           AD_PLACE.map(function(x){
             return '<option value="' + esc(x.key) + '">' + esc(x.name) + '</option>';
           }).join("") + '</select></div>' +
-        '<div class="jrow"><label for="ba-cat">분류 키 (분류 상단일 때)</label>' +
-        '<input id="ba-cat" name="cat_key" maxlength="40"></div>' +
+        /* ⚠️⚠️⚠️ **전에는 둘 다 빈 칸에 손으로 적게 두었습니다.**
+           그런데 손님 화면은 **키**로 찾습니다 (`lesson` · `seoul`) —
+           운영자가 보이는 이름('골프 레슨' · '서울')을 적으면 그 광고는
+           **어느 화면에도 영원히 안 걸립니다.** 에러도 없고 /admin 에는
+           '집행 중' 으로 보입니다. 돈을 받고 안 띄우는 꼴이라, 적게 두지
+           않고 **고르게** 합니다 (화면이 보내는 열쇠와 받는 쪽이 달라
+           거르개가 아무것도 안 걸렀던 그 자리입니다).
+           ⚠️ 목록은 `AM_CATS` · `AM_REGIONS` 에서 끌어옵니다 — 여기 글자로
+           박으면 분류 · 지역이 느는 날 두 곳이 어긋납니다. */
+        '<div class="jrow"><label for="ba-cat">분류 (분류 상단일 때)</label>' +
+        '<select id="ba-cat" name="cat_key"><option value="">고르지 않음</option>' +
+          (window.AM_CATS || []).map(function(c){
+            return '<option value="' + esc(c.key) + '">' + esc(c.name) + '</option>';
+          }).join("") + '</select></div>' +
         '<div class="jrow"><label for="ba-region">지역 (지역 광고일 때)</label>' +
-        '<input id="ba-region" name="region" maxlength="40"></div>' +
+        '<select id="ba-region" name="region"><option value="">고르지 않음</option>' +
+          (window.AM_REGIONS || []).map(function(r){
+            return '<option value="' + esc(r.key) + '">' + esc(r.name) + '</option>';
+          }).join("") + '</select></div>' +
         '<div class="jrow"><label for="ba-from">시작 <b>*</b></label>' +
         '<input id="ba-from" name="starts_on" type="date" required></div>' +
         '<div class="jrow"><label for="ba-to">끝 <b>*</b></label>' +

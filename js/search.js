@@ -276,6 +276,15 @@
       if(k === "cat" && next.cat !== s.cat) next.sub = "";
       a.setAttribute("href", url(next));
     });
+    /* 지역 광고 — ⚠️⚠️ **지금 고른 지역으로** 다시 채웁니다. 그리는
+       코드는 `js/adslot.js` 한 곳이고 여기서는 열쇠만 넘깁니다 (업체
+       카드를 빌드와 브라우저 둘이 그리다 겪은 자리 — 두 벌로 적으면
+       거르개를 누르는 순간 조용히 달라집니다).
+       ⚠️ 지역을 안 고르셨으면 빈 열쇠가 가고, 그러면 걸리는 광고가
+       없어 자리가 **감춰진 채** 남습니다 (빈 액자를 두지 않습니다). */
+    if(window.amAdFill)
+      window.amAdFill(document.querySelector('[data-adslot="region"]'), s.rg);
+
     /* 비교 체크는 다시 그린 뒤에 되살립니다 */
     Array.prototype.forEach.call(box.querySelectorAll(".cmp-x"), function(x){
       x.checked = !!CMP[x.value];

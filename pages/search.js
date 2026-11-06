@@ -95,6 +95,16 @@ exports.build = function(){
       ? '<p class="sf-now" id="sfnow">승인된 업체 ' + W.won(list.length) +
         '곳을 전부 보고 있습니다.</p>'
       : '<p class="sf-now" id="sfnow" hidden></p>') +
+  '</div></section>' +
+  /* 지역 광고 자리 — ⚠️⚠️ **열쇠를 빌드가 못 정합니다.** 지역은 손님이
+     거르개에서 고르는 것이라, 빌드가 찍는 HTML 에는 아직 지역이 없습니다
+     (빈 열쇠는 어느 광고에도 안 걸립니다 — 0026 의 check 가 지역 광고에
+     지역을 요구하므로 빈 값인 광고는 없습니다). 그래서 `js/search.js` 가
+     다시 그릴 때마다 **그때 고른 지역**으로 이 자리를 채웁니다.
+     ⚠️ 그리는 코드를 거기 한 벌 더 적지 않습니다 — `amAdFill()` 한
+     함수를 부릅니다 (업체 카드를 두 곳에서 그리다 겪은 자리입니다). */
+  '<section class="sec sec-ad"><div class="wrap">' +
+    '<div class="adsl-w" data-adslot="region" data-adslot-key="" hidden></div>' +
   '</div></section>';
 
   /* ── 결과 ───────────────────────────────────────────────────────
@@ -133,7 +143,7 @@ exports.build = function(){
     js: ["/js/data/korean.js", "/js/data/regions.js",
          "/js/data/providers.generated.js", "/js/data/providers.js",
          "/js/data/reviews.generated.js", "/js/data/review.js",
-         "/js/card.js", "/js/search.js"]
+         "/js/card.js", "/js/search.js", "/js/adslot.js"]
   };
 };
 

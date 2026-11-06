@@ -79,9 +79,15 @@ const FULL = {
 const EMPTY = Object.keys(FULL).reduce(function(o, k){ o[k] = []; return o; }, {});
 
 /* 손님이 실제로 지나는 길 — ⚠️ 새 화면을 만드는 날 여기 한 줄 더하세요 */
-const PAGES = ["/", "/categories", "/cat/lesson", "/cat/matchup",
-  "/cat/community", "/cat/career", "/search", "/match", "/match?cat=lesson",
-  "/my", "/help", "/guide", "/terms", "/privacy", "/login", "/404"];
+/* ⚠️⚠️ **분류 열 장을 다 돕니다** (2026-11-06). 전에는 넷만 돌아서
+   `/cat/used` 가 **없는 기능을 있다고 말하는 것**을 아무도 안 봤습니다
+   ("첫 매물이 올라오면 여기에 바로 보입니다" — 매물을 올리는 표도 문도
+   화면도 없습니다). 열 장이라 느려지는 것보다 그 쪽이 큽니다. */
+const PAGES = ["/", "/categories", "/cat/lesson", "/cat/used", "/cat/booking",
+  "/cat/matchup", "/cat/range", "/cat/market", "/cat/fitting", "/cat/travel",
+  "/cat/career", "/cat/community", "/categories", "/search", "/match",
+  "/match?cat=lesson", "/my", "/help", "/guide", "/terms", "/privacy",
+  "/login", "/404"].filter(function(x, i, L){ return L.indexOf(x) === i; });
 
 /* 주소 → 파일. `cleanUrls` 처럼 `<주소>.html` 도 풉니다 (404 가 그 자리). */
 function resolves(href){
@@ -136,6 +142,9 @@ const MY_BOXES = ["mybox", "reqbox", "joinmine", "mycq", "jobmine"];
       out.noHref = Array.prototype.filter.call(document.querySelectorAll("a"),
         function(a){ return !a.getAttribute("href"); }).length;
       out.text = (document.body.innerText || "").trim().length;
+      /* ⚠️ 글자 수(`text`)와 **글 자체**(`body`)는 다릅니다 — 섞어 쓰면
+         숫자에 indexOf 를 걸어 조용히 터집니다. */
+      out.body = (document.body.innerText || "");
       ids.forEach(function(id){
         const e = document.getElementById(id);
         if(!e || e.hidden || !e.children.length) return;   /* 안 그려졌으면 셀 것이 없습니다 */
@@ -186,6 +195,49 @@ const MY_BOXES = ["mybox", "reqbox", "joinmine", "mycq", "jobmine"];
     ok("⚠️⚠️ 요청이 0건일 때 **그 상자 안에서** 새로 넣는 길을 낸다 " +
        "(가져오기만 두지 않는다)",
        inBox.indexOf("/match") >= 0, inBox.join(" · ").slice(0, 200));
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     ⚠️⚠️⚠️ **없는 기능을 있다고 말하는 자리** (2026-11-06)
+
+     `/cat/used` 가 "회원끼리 직접 사고파는 자리입니다" · "첫 매물이
+     올라오면 여기에 바로 보입니다" 라고 적고 있었습니다 — 그런데 매물을
+     올리는 표도 · 문도 · 화면도 저장소에 한 줄도 없습니다. 2026-11-05 에
+     조인 · 커뮤니티가 "여는 기능은 아직 없습니다" 라고 적고 있던 자리를
+     고쳤는데, **이것은 그 거울상**이고 더 나쁩니다 (안 하는 일을 한다고
+     적는 것 · 절대 규칙 5).
+
+     ⚠️⚠️ **글자를 박지 않고 저장소에서 세어** 가릅니다 — 매물을 올리는
+     문이 생기는 날 이 검사가 **스스로 뒤집힙니다**(그때는 안내문을 지우
+     라고 말합니다). 글자로 박아 두면 기능을 만든 날 멀쩡한 화면을
+     실패로 잡습니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️ 중고장터 — 없는 기능을 있다고 말하지 않는가");
+  {
+    /* 회원이 **직접 매물을 올리는 문**이 있나 — 저장소에서 셉니다.
+       (조인은 `open_joinroom`, 커뮤니티는 `ask_cq`, 인력은
+        `open_jobpost` 입니다. 중고에 해당하는 것이 있으면 그 이름입니다.) */
+    const mig = fs.readdirSync(path.join(ROOT, "db", "migrations"))
+      .filter(function(f){ return /^\d{4}_.*\.sql$/.test(f); })
+      .map(function(f){ return fs.readFileSync(
+        path.join(ROOT, "db", "migrations", f), "utf8"); }).join("\n");
+    const hasDoor = ["open_listing", "open_goods", "open_sale", "open_useditem",
+                     "post_listing"].some(function(n){
+      return mig.indexOf("function " + n + "(") >= 0;
+    });
+    const { r } = await look("/cat/used", FULL);
+    const t = r.body || "";
+    if(hasDoor){
+      ok("매물을 올리는 문이 생겼으니 그 길을 화면에 낸다",
+         t.indexOf("아직 열지 않았습니다") < 0,
+         "문이 생겼는데 화면이 아직 '열지 않았습니다' 라고 적습니다");
+    }else{
+      ok("매물을 올리는 문이 **없으니** 매물을 기다리라고 적지 않는다",
+         t.indexOf("첫 매물") < 0 && t.indexOf("올라온 매물") < 0,
+         t.slice(0, 200));
+      ok("  그 대신 **아직 열지 않았다**고 말한다 (안 하는 일을 한다고 적지 않습니다)",
+         t.indexOf("아직 열지 않았습니다") >= 0, t.slice(0, 200));
+    }
   }
 
   if(prove){

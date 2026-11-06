@@ -107,6 +107,25 @@ function keepOf(name){
 /* 게시판 열둘 — ⚠️ `js/data/catalog.js` 한 곳에서 읽습니다 (이름을 검사에
    박으면 게시판을 더하는 날 멀쩡한 화면을 실패로 잡습니다).
    ⚠️ `window` 를 빌려 쓰고 **그대로 돌려놓습니다**. */
+/* 숫자 정책값 — ⚠️ `js/data/site.js` 한 곳에서 읽습니다 (검사에 14 를
+   박으면 사장님이 그 값을 고치시는 날 멀쩡한 화면이 빨개집니다). */
+function keepNum(name){
+  const v = Number(keepOf(name));
+  return isFinite(v) ? v : 0;
+}
+/* 지역 묶음 — ⚠️ `js/data/regions.js` 한 곳에서 읽습니다 (갯수를 안 박습니다) */
+function zonesOf(){
+  const had = Object.prototype.hasOwnProperty.call(global, "window");
+  const old = global.window;
+  global.window = {};
+  try{
+    delete require.cache[require.resolve("../js/data/regions.js")];
+    require("../js/data/regions.js");
+    return global.window.AM_REGION_ZONES || [];
+  }catch(e){ return []; }
+  finally{ if(had) global.window = old; else delete global.window; }
+}
+
 function boardsOf(){
   const had = Object.prototype.hasOwnProperty.call(global, "window");
   const old = global.window;
@@ -3595,6 +3614,356 @@ function boardsOf(){
          r.body.indexOf("없는 업체") >= 0, "");
       await g.p.close();
     }
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     티타임 (0060) — ⚠️ **설정이 있어야 열리는 자리라 빌드가 찍은 HTML 만
+     보는 검사는 영원히 못 봅니다.** 여기서 누릅니다.
+     ⚠️⚠️⚠️ 가장 중요한 것 셋: **'예약 완료' 라고 안 적는가** ·
+     **동의 없이는 안 보내는가** · **배정 담당자 직통이 안 나오는가**.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 티타임 (0060)");
+  const TKST = function(p){
+    return new Date(Date.now() + 9*3600*1000 + (p||0)*86400000)
+             .toISOString().slice(0, 10);
+  };
+  /* ⚠️ 가짜 자료도 DB 가 받는 값이어야 합니다 (kind · state 는 0060 의 check) */
+  const TEE = [
+    { id:"11111111-1111-1111-1111-111111111111", provider_id:"t-range",
+      provider_name:"성남 그린골프연습장", kind:"booking", region:"gyeonggi",
+      course:"그린밸리CC 신코스", play_at:TKST(1), tee_at:"07:10:00", holes:18,
+      slots:4, green_fee:150000, tel:"031-555-7777", note:"카트비 별도", left_n:2 },
+    /* ⚠️⚠️ **그린피 0 은 "무료"** 입니다 — 빈 값(안 적음)과 뜻이 다릅니다 */
+    { id:"22222222-2222-2222-2222-222222222222", provider_id:"t-range",
+      provider_name:"성남 그린골프연습장", kind:"booking", region:"jeju",
+      course:"무료 나눔 코스", play_at:TKST(2), tee_at:null, holes:null,
+      slots:2, green_fee:0, tel:null, note:null, left_n:2 }
+  ];
+  const TCNT = [
+    { region:"seoul", play_at:TKST(1), n:3 },
+    { region:"gyeonggi", play_at:TKST(1), n:5 },
+    { region:"jeju", play_at:TKST(2), n:4 }
+  ];
+  const MYTEE = [{ id:"aaaa1111-1111-1111-1111-111111111111", kind:"booking",
+    region:"gyeonggi", course:"그린밸리CC 신코스", play_at:TKST(1),
+    tee_at:"07:10:00", holes:18, slots:4, green_fee:150000, tel:"031-555-7777",
+    note:"카트비 별도", state:"open", created_at:"2026-11-06T01:00:00Z" }];
+  const TBOOK = [{ id:"bbbb1111-1111-1111-1111-111111111111", tee_id:MYTEE[0].id,
+    name:"김손님", tel:"010-1234-5678", people:2, memo:"초보입니다",
+    state:"applied", why:null, created_at:"2026-11-06T02:00:00Z" }];
+  const TMINE = [{ id:"cccc1111-1111-1111-1111-111111111111", tee_id:TEE[0].id,
+    people:2, memo:"초보입니다", state:"applied", why:null,
+    created_at:"2026-11-06T02:00:00Z", kind:"booking", region:"gyeonggi",
+    course:"그린밸리CC 신코스", play_at:TKST(1), tee_at:"07:10:00", holes:18,
+    green_fee:150000, provider_id:"t-range",
+    provider_name:"성남 그린골프연습장", tel:"031-555-7777" }];
+  const PVROW = [{ id:"t-range", name:"성남 그린골프연습장", state:"approved",
+                   regions:["gyeonggi"] }];
+
+  /* ① 손님이 보는 목록 */
+  {
+    const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
+                         { v_teetime_open: TEE }, {}, true);
+    const r = await g.p.evaluate(function(){
+      return { n: document.querySelectorAll(".tf-i").length,
+               body: document.body.innerText,
+               book: document.querySelectorAll(".tf-book").length };
+    });
+    ok("티타임 목록이 그려진다", r.n === 2, "줄 " + r.n);
+    ok("  상호와 **공개 전화번호**가 나온다 (제20조 제2항 · 0057)",
+       r.body.indexOf("성남 그린골프연습장") >= 0 &&
+       r.body.indexOf("031-555-7777") >= 0, "");
+    /* ⚠️⚠️ **0 은 "무료"** · 빈 값은 **줄째 빠집니다** */
+    ok("⚠️⚠️ 그린피 **0 이 '무료' 로 나온다** (안 적음과 다릅니다)",
+       r.body.indexOf("무료") >= 0, r.body.slice(0, 200));
+    ok("  ⚠️ 안 적은 칸은 **줄째 빠진다** (\"미정\" 을 지어 적지 않습니다)",
+       r.body.indexOf("미정") < 0 && r.body.indexOf("협의") < 0, "");
+    /* ⚠️⚠️⚠️ **'예약 완료' 라고 적지 않습니다** (지시서 §6) */
+    ok("⚠️⚠️⚠️ 화면에 **'예약 완료' 가 한 글자도 없다**",
+       r.body.indexOf("예약 완료") < 0 && r.body.indexOf("예약완료") < 0,
+       r.body.slice(0, 200));
+    ok("  대신 **'예약 신청'** 이라고 적는다", r.body.indexOf("예약 신청") >= 0, "");
+    ok("  ⚠️ 결제를 받는다고 적지 않는다",
+       r.body.indexOf("안전거래") < 0 && r.body.indexOf("에스크로") < 0, "");
+    await g.p.close();
+  }
+
+  /* ② 거르개 — ⚠️⚠️ **보내는 질의를 뜯어** 봅니다 (흉내 장치는 안 걸러 줍니다) */
+  {
+    const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
+                         { v_teetime_open: TEE }, {}, true);
+    const before = g.sent.length;
+    await g.p.selectOption("#tf-rg", "capital");
+    await g.p.fill("#tf-d", TKST(1));
+    await g.p.click("#ttf-find button[type=submit]");
+    await g.p.waitForTimeout(450);
+    const qs = g.sent.slice(before).filter(function(x){ return x.name === "GET"; })
+      .map(function(x){ return x.body; });
+    /* ⚠️⚠️⚠️ **묶음을 지역 여럿으로 풀어** 보내야 메인 현황표의 숫자와
+       목록의 줄 수가 같습니다 (지시서 §5). */
+    ok("⚠️⚠️ 지역 묶음을 **지역 여럿으로 풀어** 묻는다 (현황표와 같은 셈)",
+       qs.some(function(u){ return u.indexOf("region=in.") >= 0 &&
+         u.indexOf("seoul") >= 0 && u.indexOf("gyeonggi") >= 0 &&
+         u.indexOf("incheon") >= 0; }),
+       qs.slice(0, 2).join(" | ").slice(0, 200));
+    ok("  날짜도 **서버에서** 거른다 (화면에서 거르면 0건으로 보입니다)",
+       qs.some(function(u){ return u.indexOf("play_at=eq.") >= 0; }),
+       qs.slice(0, 2).join(" | ").slice(0, 160));
+    await g.p.close();
+  }
+
+  /* ③ 예약 신청 — ⚠️⚠️⚠️ 동의 없이는 안 보냅니다 */
+  {
+    const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
+                         { v_teetime_open: TEE }, {}, true);
+    await g.p.click(".tf-book");
+    await g.p.waitForTimeout(400);
+    const r = await g.p.evaluate(function(){
+      const f = document.querySelector(".tf-f");
+      return { form: !!f, body: f ? f.innerText : "",
+        req: f ? Array.prototype.map.call(f.querySelectorAll("[required]"),
+               function(e){ return e.name; }) : [] };
+    });
+    ok("예약 신청 양식이 열린다", r.form, JSON.stringify(r).slice(0, 120));
+    ok("  성함 · 연락처 · 인원 · **동의**가 전부 필수다",
+       ["name","tel","people","agree3rd"].every(function(n){
+         return (r.req || []).indexOf(n) >= 0; }), (r.req || []).join(","));
+    /* ⚠️⚠️⚠️ **상호를 보여 주면서** 동의를 받아야 제17조 제2항입니다 */
+    ok("⚠️⚠️⚠️ 동의 문구에 **상호가 적혀 있다** (제17조 제2항)",
+       r.body.indexOf("성남 그린골프연습장") >= 0, r.body.slice(0, 200));
+    ok("  ⚠️ 보유 기간도 **그 자리에서** 보여 준다 (제15조 제2항)",
+       r.body.indexOf(keepOf("bookKeep")) >= 0 && keepOf("bookKeep") !== "",
+       keepOf("bookKeep"));
+
+    await g.p.fill('.tf-f [name="name"]', "검사손님");
+    await g.p.fill('.tf-f [name="tel"]', "010-1111-2222");
+    await g.p.check('.tf-f [name="agree3rd"]');
+    await g.p.click(".tf-f button[type=submit]");
+    await g.p.waitForTimeout(450);
+    const bc = g.sent.filter(function(x){ return x.name === "book_teetime"; })[0];
+    ok("⚠️ 신청 단추가 **book_teetime 을 실제로 부른다**", !!bc,
+       g.sent.map(function(x){ return x.name; }).join(","));
+    if(bc){
+      const sp = JSON.parse(bc.body).p;
+      ok("  어느 자리 · 성함 · 연락처 · 동의를 실어 보낸다",
+         sp.tee === TEE[0].id && sp.name === "검사손님" && sp.agree3rd === true,
+         JSON.stringify(sp));
+    }
+    const done = await g.p.evaluate(function(){ return document.body.innerText; });
+    ok("⚠️⚠️⚠️ 보낸 뒤에도 **'완료' 라고 안 적는다** (업체가 확정해야 합니다)",
+       done.indexOf("예약 완료") < 0 && done.indexOf("신청했습니다") >= 0,
+       done.slice(0, 200));
+    await g.p.close();
+  }
+
+  /* ④ 비회원 — 목록은 보이고 신청은 로그인 */
+  {
+    const g = await open("/cat/booking", { role:"customer", name:"", signedIn:false },
+                         { v_teetime_open: TEE }, {}, true);
+    const n = await g.p.evaluate(function(){
+      return document.querySelectorAll(".tf-i").length; });
+    ok("⚠️ 가입 안 하셔도 **자리는 보인다**", n === 2, "줄 " + n);
+    await g.p.click(".tf-book");
+    await g.p.waitForTimeout(400);
+    const r = await g.p.evaluate(function(){
+      const bx = document.querySelector(".tf-bx");
+      return { form: !!document.querySelector(".tf-f"),
+               login: !!(bx && bx.querySelector('a[href^="/login"]')) };
+    });
+    ok("  비회원이 누르면 **로그인 길**을 낸다 (양식이 아닙니다)",
+       r.login && !r.form, JSON.stringify(r));
+    await g.p.close();
+  }
+
+  /* ⑤ 업체 작업실 */
+  {
+    const g = await open("/desk", { role:"provider", name:"담당자", signedIn:true,
+                                    provider:"t-range" },
+      { teetime: MYTEE, v_teebook_pv: TBOOK, provider: PVROW }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("teebox");
+      return { drawn: !!b && !b.hidden, body: b ? b.innerText : "",
+               form: !!document.getElementById("ttf"),
+               ok: b ? b.querySelectorAll(".tb-ok").length : 0 };
+    });
+    ok("업체 작업실에 티타임 상자가 그려진다", r.drawn && r.form,
+       JSON.stringify(r).slice(0, 140));
+    /* ⚠️⚠️ 신청자 성함 · 연락처는 **그 업체만** 봅니다 (보기 하나) */
+    ok("  들어온 신청의 **성함 · 연락처가 보인다** (그 업체 자리입니다)",
+       r.body.indexOf("김손님") >= 0 && r.body.indexOf("010-1234-5678") >= 0, "");
+    ok("  확정 · 거절 단추가 있다", r.ok === 1, "확정 " + r.ok);
+    /* ⚠️⚠️⚠️ 공개되는 번호라는 것을 **적는 그 자리에서** 말합니다 */
+    ok("⚠️⚠️ 예약 문의 번호가 **공개된다고 그 자리에서** 말한다",
+       r.body.indexOf("손님에게 공개됩니다") >= 0, "");
+    ok("  ⚠️ 담당자 직통은 **다른 자리이고 안 보인다**고 적는다",
+       r.body.indexOf("담당자 직통") >= 0, "");
+
+    await g.p.selectOption("#t-rg", "gyeonggi");
+    await g.p.fill("#t-cs", "검사 골프장");
+    await g.p.fill("#t-day", TKST(3));
+    await g.p.click("#ttf button[type=submit]");
+    await g.p.waitForTimeout(450);
+    const oc = g.sent.filter(function(x){ return x.name === "open_teetime"; })[0];
+    ok("⚠️ 올리기가 **open_teetime 을 실제로 부른다**", !!oc,
+       g.sent.map(function(x){ return x.name; }).join(","));
+    if(oc){
+      const sp = JSON.parse(oc.body).p;
+      ok("  갈래 · 지역 · 골프장 · 날짜를 실어 보낸다",
+         sp.kind === "booking" && sp.region === "gyeonggi" &&
+         sp.course === "검사 골프장" && sp.playAt === TKST(3), JSON.stringify(sp));
+    }
+    await g.p.click(".tb-ok");
+    await g.p.waitForTimeout(400);
+    const mc = g.sent.filter(function(x){ return x.name === "move_teebook"; })[0];
+    ok("⚠️ 확정하기가 **move_teebook 을 부른다**", !!mc, "");
+    if(mc) ok("  confirmed 로 보낸다 (손님이 스스로는 못 합니다)",
+       JSON.parse(mc.body).p.state === "confirmed", mc.body);
+    await g.p.close();
+  }
+
+  /* ⑥ 승인 전 업체에는 양식을 안 냅니다 */
+  {
+    const g = await open("/desk", { role:"provider", name:"담당자", signedIn:true,
+                                    provider:"t-range" },
+      { teetime: [], v_teebook_pv: [],
+        provider: [{ id:"t-range", name:"심사중", state:"draft", regions:[] }] },
+      {}, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("teebox");
+      return { form: !!document.getElementById("ttf"),
+               body: b ? b.innerText : "" };
+    });
+    ok("⚠️ 승인 전 업체에는 **양식을 안 낸다** (문이 거절하는 칸입니다)",
+       !r.form, "양식이 열렸습니다");
+    ok("  대신 **왜 안 되는지** 적는다", r.body.indexOf("업체 승인") >= 0,
+       r.body.slice(0, 140));
+    await g.p.close();
+  }
+
+  /* ⑦ /my — 내가 신청한 예약 */
+  {
+    const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+      { v_teebook_mine: TMINE, cq: [], ca: [], joinroom: [], request: [],
+        quote: [], review: [] }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("bkbox");
+      return { drawn: !!b && !b.hidden, body: b ? b.innerText : "" };
+    });
+    ok("/my 에 내가 신청한 예약이 그려진다", r.drawn, JSON.stringify(r).slice(0,140));
+    /* ⚠️⚠️ **손님 말**로 적어야 합니다 (업체 말을 찍으면 절대 규칙 3) */
+    ok("⚠️⚠️ 상태를 **손님 말**로 적는다 (업체의 '새 신청' 이 아닙니다)",
+       r.body.indexOf("업체 확인을 기다립니다") >= 0 &&
+       r.body.indexOf("새 신청") < 0, r.body.slice(0, 200));
+    ok("  ⚠️⚠️⚠️ **'예약 완료' 라고 안 적는다**",
+       r.body.indexOf("예약 완료") < 0, r.body.slice(0, 200));
+    ok("  업체 상호와 공개 번호가 나온다",
+       r.body.indexOf("성남 그린골프연습장") >= 0 &&
+       r.body.indexOf("031-555-7777") >= 0, "");
+    await g.p.close();
+  }
+  {
+    /* ⚠️ 0건이면 **한 줄도 안 그립니다** */
+    const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+      { v_teebook_mine: [], cq: [], ca: [], joinroom: [], request: [],
+        quote: [], review: [] }, {}, true);
+    const hid = await g.p.evaluate(function(){
+      const b = document.getElementById("bkbox");
+      return !b || b.hidden || !b.innerHTML.trim();
+    });
+    ok("⚠️ 신청이 0건이면 그 상자를 **안 그린다**", hid, "그렸습니다");
+    await g.p.close();
+  }
+
+  /* ⑧ 메인 현황표 — ⚠️⚠️ 묶음으로 세고 그 칸이 같은 조건으로 보냅니다 */
+  {
+    const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+      { v_teetime_count: TCNT, v_join_count: [] }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("teeboard");
+      const rows = b ? b.querySelectorAll(".tbd-t tbody tr") : [];
+      const first = rows.length ? rows[0].querySelectorAll("td") : [];
+      return { drawn: !!b && !b.hidden, rows: rows.length,
+               cells: first.length,
+               body: b ? b.innerText : "",
+               links: b ? Array.prototype.map.call(b.querySelectorAll(".tbd-n"),
+                 function(a){ return a.getAttribute("href") + "|" + a.textContent; }) : [] };
+    });
+    ok("메인에 현황표가 그려진다", r.drawn, JSON.stringify(r).slice(0, 140));
+    /* ⚠️ 갯수를 박지 않습니다 — **묶음 수**와 **펼친 날 수**에 맞춥니다 */
+    ok("  줄이 **지역 묶음 수**와 같다 (" + zonesOf().length + ")",
+       r.rows === zonesOf().length, "줄 " + r.rows);
+    ok("  칸이 **펼친 날 수**와 같다 (" + keepNum("teeBoard") + ")",
+       r.cells === keepNum("teeBoard"), "칸 " + r.cells);
+    /* ⚠️⚠️⚠️ **서울 3 + 경기 5 = 8** — 묶음으로 더해야 합니다 */
+    ok("⚠️⚠️ 같은 묶음의 지역을 **더해서** 센다 (서울 3 + 경기 5 = 8)",
+       r.links.some(function(x){ return x.indexOf("|8") > 0; }),
+       r.links.slice(0, 4).join(" / "));
+    /* ⚠️⚠️ 칸을 누르면 **같은 조건**으로 가야 숫자와 줄 수가 맞습니다 */
+    ok("⚠️⚠️ 칸이 **그 묶음 · 그 날짜**로 보낸다 (§5 — 집계와 목록 일치)",
+       r.links.some(function(x){ return x.indexOf("rg=capital") >= 0 &&
+         x.indexOf("d=" + TKST(1)) >= 0; }),
+       r.links.slice(0, 4).join(" / "));
+    ok("  0 인 칸은 **0 이라고 적는다** (빈칸은 '모름' 과 섞입니다)",
+       (r.body.match(/\b0\b/g) || []).length > 0, "");
+    await g.p.close();
+  }
+  {
+    /* ⚠️⚠️⚠️ **0 을 포장하지 않습니다** — 왜 0 인지와 지금 되는 길 */
+    const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+      { v_teetime_count: [], v_join_count: [] }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("teeboard");
+      return { body: b ? b.innerText : "",
+               go: b ? b.querySelectorAll('a[href^="/match"]').length : 0 };
+    });
+    ok("⚠️⚠️ 0건이면 **0건이라고 말한다** (지어낸 숫자를 안 채웁니다)",
+       r.body.indexOf("0건") >= 0, r.body.slice(0, 200));
+    ok("  ⚠️ 막다른 길로 두지 않는다 (상담 요청으로 가는 길)", r.go >= 1,
+       "길 " + r.go);
+    ok("  ⚠️ '곧 생깁니다' 같은 지어낸 약속을 안 한다",
+       r.body.indexOf("곧") < 0 && r.body.indexOf("준비 중") < 0,
+       r.body.slice(0, 200));
+    await g.p.close();
+  }
+
+  /* ⑨ 폰 폭 셋 */
+  for(const w of PHONES){
+    const p2 = await b.newPage({ viewport: { width: w, height: 900 } });
+    await stub(p2, { role:"customer", name:"손님", signedIn:true },
+               { v_teetime_open: TEE, v_teetime_count: TCNT, v_join_count: [] },
+               {}, true);
+    await p2.goto(base + "/cat/booking", { waitUntil:"networkidle" });
+    await p2.waitForTimeout(600);
+    await p2.click(".tf-book").catch(function(){});
+    await p2.waitForTimeout(350);
+    const r = await p2.evaluate(function(){
+      const small = [], low = [];
+      Array.prototype.forEach.call(
+        document.querySelectorAll(".tf-i, .tf-bar, .none, .tf-f"),
+        function(box){
+          Array.prototype.forEach.call(box.querySelectorAll("*"), function(e){
+            if(e.firstChild && e.firstChild.nodeType === 3 && (e.textContent||"").trim()){
+              const fs = parseFloat(getComputedStyle(e).fontSize);
+              if(fs < 12) small.push(e.tagName + " " + fs);
+            }
+          });
+          Array.prototype.forEach.call(box.querySelectorAll("button, a"), function(e){
+            if(e.getBoundingClientRect().height < 39.5) low.push(e.tagName);
+          });
+        });
+      return { doc: document.documentElement.scrollWidth, win: window.innerWidth,
+               drawn: document.querySelectorAll(".tf-i").length,
+               small: small.slice(0,4), low: low.slice(0,4) };
+    });
+    if(w === PHONES[0])
+      ok("티타임 — 폰에서 그려지기는 한다", r.drawn > 0, JSON.stringify(r));
+    ok("티타임 " + w + "px — **가로로 안 밀린다**", r.doc <= r.win + 1,
+       "문서 " + r.doc + "px · 화면 " + r.win + "px");
+    ok("티타임 " + w + "px — 12px 미만 글자가 없다", r.small.length === 0,
+       r.small.join(" · "));
+    ok("티타임 " + w + "px — 누르는 것이 40px 이상이다", r.low.length === 0,
+       r.low.join(" · "));
+    await p2.close();
   }
 
   /* ══════════════════════════════════════════════════════════════

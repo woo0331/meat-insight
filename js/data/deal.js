@@ -451,6 +451,66 @@ window.amLstCondName = function(k){
 /* 값 — ⚠️⚠️ **0 은 "무료" 입니다** (빈 값이 아닙니다). `||` 를 쓰면
    `0 || …` 이 거짓이 되어 0원이 사라집니다 (작업 기억 — 0 을 기다리는
    자리에 `||` 를 쓰지 마세요). */
+/* ════════════════════════════════════════════════════════════════════
+   티타임 (0060) — 업체가 올리는 자리와 손님의 예약 신청
+
+   ⚠️⚠️⚠️ **'예약 완료' 라는 말을 쓰지 않습니다.** 업체가 확인하기
+   전까지는 **'예약 신청'** 입니다 (지시서 §6). 확정 전에 "완료" 라고
+   적으면 하지 않은 일을 했다고 말하는 것입니다 (절대 규칙 5).
+   ⚠️⚠️ **말이 두 벌입니다** — 업체의 `name` 과 손님의 `mine`.
+   "받았습니다" 를 손님 화면에 찍으면 운영자에게 할 말을 손님에게
+   찍는 것입니다 (절대 규칙 3).
+   ⚠️ 키는 0060 의 check 와 **한 글자도 같아야** 합니다 —
+   `check-deal` 이 빌드마다 맞춰 봅니다.
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_TEE_KIND = [
+  { key:"booking", name:"골프장 부킹", lead:"한 팀을 통째로" },
+  { key:"join",    name:"골프 조인",   lead:"자리 단위로" }
+];
+window.AM_TEE_ST = [
+  { key:"open",   name:"받는 중", tone:"ok" },
+  { key:"closed", name:"닫음",    tone:"ink" },
+  { key:"hidden", name:"가려짐",  tone:"bad" }
+];
+window.AM_TEEBOOK_ST = [
+  /* 업체 눈 · 손님 눈 */
+  { key:"applied",   name:"새 신청",   mine:"신청했습니다 — 업체 확인을 기다립니다", tone:"info" },
+  { key:"confirmed", name:"확정함",    mine:"업체가 확정했습니다",                 tone:"ok"   },
+  { key:"rejected",  name:"거절함",    mine:"업체가 받지 못했습니다",               tone:"bad"  },
+  { key:"canceled",  name:"손님이 취소", mine:"취소하셨습니다",                      tone:"ink"  }
+];
+function amTeePick(L, k){
+  for(var i = 0; i < (L || []).length; i++) if(L[i].key === k) return L[i];
+  return null;
+}
+window.amTeeKind = function(k){
+  var x = amTeePick(window.AM_TEE_KIND, k);
+  /* ⚠️ 모르는 키는 **키 그대로** 냅니다 (지어내지 않습니다) */
+  return x || { name:String(k || ""), lead:"" };
+};
+window.amTeeSt = function(k){
+  var x = amTeePick(window.AM_TEE_ST, k);
+  return x || { name:String(k || ""), tone:"ink" };
+};
+/* 업체 눈 */
+window.amTeeBookSt = function(k){
+  var x = amTeePick(window.AM_TEEBOOK_ST, k);
+  return x || { name:String(k || ""), mine:String(k || ""), tone:"ink" };
+};
+/* 손님 눈 — ⚠️ `name` 과 섞어 쓰지 마세요 (절대 규칙 3) */
+window.amTeeBookMine = function(k){
+  var x = amTeePick(window.AM_TEEBOOK_ST, k);
+  return x ? x.mine : String(k || "");
+};
+/* 그린피 — ⚠️⚠️ **0 은 "무료" 이고 빈 값은 "안 적음"** 입니다.
+   `||` 를 쓰면 0 이 사라져 둘이 같아 보입니다 (amLstPrice 와 같은 자리). */
+window.amTeeFee = function(n){
+  if(n === null || n === undefined || n === "") return "";
+  var v = Number(n);
+  if(!isFinite(v)) return "";
+  return v === 0 ? "무료" : (window.won(v) + "원");
+};
+
 window.amLstPrice = function(n){
   if(n === null || n === undefined || n === "") return "";
   var v = Number(n);

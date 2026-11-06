@@ -58,7 +58,7 @@
          여기서 안 읽으면 운영자 화면에는 아무것도 안 적힙니다 —
          에러는 한 줄도 없습니다. */
       get("report?select=id,kind,request_id,provider_id,review_id," +
-          "joinroom_id,cq_id,ca_id,jobpost_id,listing_id,body,state," +
+          "joinroom_id,cq_id,ca_id,jobpost_id,listing_id,teetime_id,body,state," +
           "resolution,created_at,closed_at&order=created_at.desc&limit=200"),
       get("request?select=id,no&order=created_at.desc&limit=500"),
       get("provider?select=id,name&order=name.asc&limit=300"),
@@ -75,7 +75,11 @@
          `agree_at` 은 **안 읽습니다** — 0056 이 그 칸을 안 줬으므로
          부르면 질의가 통째로 거절되고, 신고를 처리하는 데 필요하지도
          않습니다. */
-      get("listing?select=id,title,state&order=created_at.desc&limit=300")
+      get("listing?select=id,title,state&order=created_at.desc&limit=300"),
+      /* ⚠️ 0060 — 티타임 자리도 신고가 들어옵니다. ⚠️⚠️ 신청자 성함 ·
+         연락처는 **안 읽습니다** — 그 길은 업체 보기 하나뿐이고,
+         신고를 처리하는 데 필요하지도 않습니다. */
+      get("teetime?select=id,course,play_at,state&order=play_at.asc&limit=300")
     ]);
   }
 
@@ -126,6 +130,10 @@
     if(r.listing_id)
       bits.push("중고 매물" + (posts.ls[r.listing_id]
         ? " — " + posts.ls[r.listing_id].title : ""));
+    /* ⚠️ 0060 — 티타임 자리 */
+    if(r.teetime_id)
+      bits.push("티타임 자리" + (posts.tt[r.teetime_id]
+        ? " — " + posts.tt[r.teetime_id].course : ""));
     return bits.join(" · ");
   }
 
@@ -155,6 +163,11 @@
               뿐입니다 (내리는 문은 **올린 사람만** 씁니다). */
            : r.listing_id ? { fn:"move_listing", id:r.listing_id,
                               row:posts.ls[r.listing_id], name:"중고 매물" }
+           /* ⚠️ 0060 — 티타임 자리도 가립니다 (`move_teetime`). 닫는
+              문은 **올린 업체만** 쓰므로, 이 길이 없으면 신고를 받아
+              놓고 할 수 있는 일이 "처리했음" 뿐입니다. */
+           : r.teetime_id ? { fn:"move_teetime", id:r.teetime_id,
+                              row:posts.tt[r.teetime_id], name:"티타임 자리" }
            : null;
     if(!it) return "";
     if(it.row && it.row.state === "hidden")
@@ -207,12 +220,13 @@
       var reps = got[0], reqs = got[1], pvs = got[2];
       /* ⚠️ 못 읽은 것은 **빈 표**로 둡니다 — 그러면 제목 없이 종류만
          적히고, 지어낸 제목이 찍히지 않습니다 (절대 규칙 1 · 2). */
-      var posts = { cq:{}, ca:{}, jb:{}, jr:{}, ls:{} };
+      var posts = { cq:{}, ca:{}, jb:{}, jr:{}, ls:{}, tt:{} };
       (got[3] || []).forEach(function(x){ posts.cq[x.id] = x; });
       (got[4] || []).forEach(function(x){ posts.ca[x.id] = x; });
       (got[5] || []).forEach(function(x){ posts.jb[x.id] = x; });
       (got[6] || []).forEach(function(x){ posts.jr[x.id] = x; });
       (got[7] || []).forEach(function(x){ posts.ls[x.id] = x; });
+      (got[8] || []).forEach(function(x){ posts.tt[x.id] = x; });
       /* ⚠️⚠️ 못 읽었으면 **0건이라고 말하지 않습니다** */
       if(reps === null){
         box.innerHTML = '<h2 class="adm-h">신고 · 분쟁</h2>' +

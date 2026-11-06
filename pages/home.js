@@ -136,6 +136,29 @@ function cats(){
     '</div></div></div></section>';
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   날짜 · 지역별 현황 (0060 · 지시서 §5)
+
+   ⚠️⚠️ **알맹이는 브라우저가 그립니다** (`js/teeboard.js`) — 자리는 날마다
+   바뀌므로 빌드 때 찍으면 **배포할 때만** 바뀝니다. 그래서 여기서는
+   **무엇을 보는 자리인지**만 찍습니다 (크롤러 · 자바스크립트 꺼진 분 몫).
+   ⚠️ 그 설명을 지우면 봇에게는 빈 상자입니다.
+   ⚠️⚠️⚠️ **0 을 포장하지 않습니다** — 부킹은 제휴 골프장이 확인한
+   티타임만 올라오고 지금 0건입니다. 그 사실과 **지금 되는 길**을
+   브라우저가 표 아래에 적습니다 (절대 규칙 1 · 2).
+   ════════════════════════════════════════════════════════════════════ */
+function teeBoard(){
+  return '<section class="sec sec-alt" aria-labelledby="tbd-h"><div class="wrap">' +
+    '<div class="sec-hd"><h2 id="tbd-h">원하는 날짜와 지역의 자리 찾기</h2>' +
+    '<p>제휴 골프장이 올린 <b>티타임</b>과 회원이 연 <b>조인</b>을 ' +
+    '날짜 · 지역으로 나눠 보여 드립니다. ' +
+    /* ⚠️⚠️ 지어낸 약속을 하지 않습니다 — 예약을 대신 잡아 드리지 않습니다 */
+    '골프올인원은 거래 당사자가 아니며 <b>결제를 받지 않습니다.</b> ' +
+    '예약 신청을 보내시면 업체가 확인하고 확정합니다.</p></div>' +
+    '<div id="teeboard" hidden></div>' +
+    '</div></section>';
+}
+
 function feats(){
   return '<section class="sec"><div class="wrap">' +
     '<div class="sec-hd"><h2>무엇을 하시려고 오셨나요?</h2>' +
@@ -334,15 +357,21 @@ exports.build = function(){
     /* ⚠️ 광고 자리 둘은 **히어로 바로 아래**와 **입점 안내 바로 앞**
        입니다 — 분류 열을 보기도 전에 광고를 먼저 보이지 않게 ②보다
        뒤에 둡니다. */
-    body: hero() + cats() + adSlot("main_hero") + feats() + providers() +
-          steps() + why() + adSlot("main_band") + joinBand(),
+    /* ⚠️ 현황표는 **분류 열 바로 아래**입니다 (지시서의 목업 자리) —
+       손님이 무엇을 고를 수 있는지 본 **다음**에 날짜를 고릅니다. */
+    body: hero() + cats() + teeBoard() + adSlot("main_hero") + feats() +
+          providers() + steps() + why() + adSlot("main_band") + joinBand(),
     /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — adslot 이
        `/pro/<id>` 주소를 `amProviderUrl()` 로 짓고, 그 업체가 **빌드에
        있는지**를 `amProvider()` 로 봅니다 (없으면 링크를 안 걸어 404 로
        보내지 않습니다). 그래서 그 둘을 같이 싣습니다.
        ⚠️ 메인은 전에 스크립트가 한 장도 없었습니다 — 광고 자리 때문에
        늘어난 것이고, 자료 파일이 커지면 그때 다시 봅니다. */
+    /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — 0060 의
+       현황표는 `site.js`(며칠을 펼치나)와 `regions.js`(지역 묶음)를
+       읽습니다. 하나라도 빠지면 표가 **조용히** 안 그려집니다. */
     js: ["/js/data/providers.generated.js", "/js/data/providers.js",
-         "/js/adslot.js"]
+         "/js/data/site.js", "/js/data/regions.js",
+         "/js/adslot.js", "/js/teeboard.js"]
   };
 };

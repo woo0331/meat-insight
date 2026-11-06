@@ -32,6 +32,13 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="reqbox" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ 내가 신청한 예약 (0060 · js/mybook.js) — ⚠️⚠️⚠️ 이 화면이
+     없으면 신청은 들어가는데 **업체가 확정했는지 어디서도 못 봅니다**
+     (0045 가 답을 받는 자리까지 세우고 읽는 화면을 안 만든 그 자리).
+     ⚠️ 0건이면 그 상자가 **줄째 빠집니다**. */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="bkbox" class="none" hidden></div></div></section>';
+
   /* ⚠️ 내 조인도 **따로 그립니다** (js/myjoin.js) — 같은 까닭입니다.
      ⚠️⚠️ 여기가 연락처를 주고받는 유일한 자리입니다 (0046 · 제17조). */
   body += '<section class="sec"><div class="wrap">' +
@@ -93,6 +100,7 @@ exports.build = function(){
          "/js/review.js", "/js/myreq.js",
          "/js/data/regions.js", "/js/myjoin.js", "/js/mycq.js",
          "/js/myjob.js", "/js/mylisting.js", "/js/myinq.js", "/js/mynick.js",
+         "/js/mybook.js",
          "/js/mywatch.js", "/js/notice.js"]
   };
 };

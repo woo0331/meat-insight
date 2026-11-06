@@ -767,6 +767,114 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .cq-ph-f{ min-height:40px; max-width:100%; }
 
 
+
+/* 날짜 · 지역별 현황 (0060) — 메인
+   ⚠️ 0건인 칸도 **0 이라고 적습니다** (빈칸은 "모름" 과 섞입니다). */
+.tbd-h{ display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+        margin-bottom:12px; }
+.tbd-t2{ margin:0; font-size:18px; color: var(--ink); }
+.tbd-sw{ margin-left:auto; display:flex; gap:6px; }
+.tbd-b{ min-height:40px; padding:0 14px; border-radius:999px; cursor:pointer;
+        border:1.5px solid var(--line); background:#fff; color: var(--ink3);
+        font-size:14px; font-weight:700; }
+.tbd-b.tbd-on{ background: var(--grn-deep); border-color: var(--grn-deep);
+               color:#fff; }
+/* ⚠️ 가로로 도는 상자에는 position:relative (화면 읽는 기계용 글이
+   문서 기준으로 튀어 폰 화면을 민 자리가 있었습니다) */
+.tbd-s{ overflow-x:auto; position:relative;
+        background: var(--surface); border:1.5px solid var(--line);
+        border-radius: var(--r); }
+.tbd-t{ border-collapse:collapse; width:100%; min-width:680px; font-size:14px; }
+.tbd-t th, .tbd-t td{ border:1px solid var(--line); padding:6px;
+                      text-align:center; }
+.tbd-t thead th{ background: var(--bg-2); color: var(--ink3);
+                 font-size:12.5px; font-weight:700; white-space:nowrap; }
+.tbd-t tbody th{ background: var(--bg-2); color: var(--ink); text-align:left;
+                 white-space:nowrap; font-size:13.5px; }
+.tbd-sat{ color: var(--info-text) !important; }
+.tbd-sun{ color: var(--bad-text) !important; }
+.tbd-n{ display:flex; align-items:center; justify-content:center;
+        min-height:40px; font-weight:700; color: var(--grn-text);
+        text-decoration:none; }
+.tbd-n:hover{ text-decoration:underline; }
+.tbd-0{ display:inline-flex; align-items:center; justify-content:center;
+        min-height:40px; color: var(--ink3); }
+.tbd-note{ margin:12px 0 0; font-size:14px; color: var(--ink3);
+           line-height:1.7; word-break:keep-all; overflow-wrap:anywhere; }
+.tbd-note .btn{ min-height:40px; margin-left:6px; }
+
+/* ── 티타임 (0060) ───────────────────────────────────────────────
+   ⚠️ 쓰는 변수는 전부 tokens.css 에 있는 것입니다 · 단추는 전부 변형을
+   답니다 (`check-safe` ⑧ ⑩). */
+/* 업체 작업실 */
+.tt-l{ list-style:none; margin:0 0 18px; padding:0; display:grid; gap:12px; }
+.tt-l > li{ border:1.5px solid var(--line); border-radius: var(--r);
+            padding:14px 16px; display:grid; gap:8px; }
+.tt-l > li > *{ min-width:0; }
+.tt-h{ margin:0; font-size:15.5px; color: var(--ink); display:flex;
+       flex-wrap:wrap; align-items:center; gap:6px;
+       word-break:keep-all; overflow-wrap:anywhere; }
+.tt-m{ margin:0; display:flex; flex-wrap:wrap; gap:4px 10px;
+       font-size:13.5px; color: var(--ink3); }
+.tt-w{ font-weight:700; color: var(--grn-text); }
+.tt-st{ margin-left:auto; flex:none; font-size:12.5px; font-weight:700;
+        border-radius:999px; padding:2px 10px; }
+.tt-st.tone-ok{   background: var(--ok-soft);   color: var(--ok-text); }
+.tt-st.tone-info{ background: var(--info-soft); color: var(--info-text); }
+.tt-st.tone-bad{  background: var(--bad-soft);  color: var(--bad-text); }
+.tt-st.tone-ink{  background: var(--bg-2);      color: var(--ink3); }
+.tt-ef[hidden], .tb-nf[hidden]{ display:none; }
+/* 들어온 신청 */
+.tb-l{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.tb-l > li{ background: var(--bg-2); border-radius: var(--r-sm);
+            padding:10px 12px; display:grid; gap:6px; }
+.tb-l > li > *{ min-width:0; }
+.tb-w{ margin:0; font-size:14.5px; color: var(--ink); display:flex;
+       flex-wrap:wrap; align-items:center; gap:6px; }
+.tb-m{ margin:0; font-size:13.5px; color: var(--ink3); line-height:1.6;
+       word-break:keep-all; overflow-wrap:anywhere; }
+
+/* 손님이 보는 티타임 목록 */
+.tf-bar{ margin-bottom:14px; }
+.tf-go{ align-self:end; display:flex; gap:8px; flex-wrap:wrap; }
+.tf-go .btn{ min-height:44px; }
+.tf-l{ list-style:none; margin:0; padding:0; display:grid; gap:12px; }
+.tf-i{ background: var(--surface); border:1.5px solid var(--line);
+       border-radius: var(--r); padding:14px 16px; display:grid; gap:6px; }
+.tf-i > *{ min-width:0; }
+.tf-d{ margin:0; font-size:16px; color: var(--ink); }
+.tf-c{ margin:0; font-size:17px; font-weight:700; color: var(--ink);
+       display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+       word-break:keep-all; overflow-wrap:anywhere; }
+.tf-rg{ flex:none; font-size:12.5px; font-weight:700; color: var(--grn-text);
+        background: var(--grn-soft); border-radius:999px; padding:2px 10px; }
+.tf-m{ margin:0; display:flex; flex-wrap:wrap; gap:4px 10px;
+       font-size:13.5px; color: var(--ink3); align-items:center; }
+.tf-pv{ font-weight:700; color: var(--ink2); }
+/* ⚠️ 전화는 누르면 걸리므로 누름 높이를 줍니다 */
+.tf-tel{ display:inline-flex; align-items:center; min-height:40px;
+         font-weight:700; color: var(--grn-text); }
+.tf-n{ margin:0; font-size:14px; color: var(--ink3); line-height:1.6;
+       word-break:keep-all; overflow-wrap:anywhere; }
+.tf-i .btn{ justify-self:start; min-height:40px; }
+.tf-bx:empty{ display:none; }
+
+/* /my — 내가 신청한 예약 */
+.mb-l{ list-style:none; margin:0; padding:0; display:grid; gap:12px; }
+.mb-l > li{ border:1.5px solid var(--line); border-radius: var(--r);
+            padding:14px 16px; display:grid; gap:6px; }
+.mb-l > li > *{ min-width:0; }
+.mb-h{ margin:0; font-size:15.5px; color: var(--ink); display:flex;
+       flex-wrap:wrap; align-items:center; gap:6px;
+       word-break:keep-all; overflow-wrap:anywhere; }
+.mb-m{ margin:0; display:flex; flex-wrap:wrap; gap:4px 10px;
+       font-size:13.5px; color: var(--ink3); align-items:center; }
+.mb-m a{ min-height:40px; display:inline-flex; align-items:center;
+         font-weight:700; color: var(--grn-text); }
+.mb-w{ margin:0; font-size:14px; color: var(--bad-text);
+       background: var(--bad-soft); border-radius: var(--r-sm);
+       padding:8px 10px; word-break:keep-all; overflow-wrap:anywhere; }
+
 /* 게시판 모아보기 (커뮤니티 첫 화면) — 게시판마다 최신 셋
    ⚠️ PC 두 칸 · 폰 한 칸. **칸 수를 글자로 박지 않고** auto-fit 으로
    둡니다 (게시판이 늘어도 빈 칸이 생기지 않습니다).
@@ -895,6 +1003,13 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .chk{ display:flex; align-items:center; gap:9px; min-height:40px;
       font-size:14.5px; font-weight:500; color: var(--ink2); cursor:pointer; }
 .chk input{ width:20px; height:20px; min-height:0; flex:none; accent-color: var(--grn); }
+/* ⚠️⚠️ **`.jrow label b` 는 필수 표시(*)를 빨갛게 하려고 쓴 규칙인데,
+   동의 상자의 굵은 글씨까지 빨갛게 만듭니다.** 0060 의 예약 신청 동의
+   문구에서 상호 · 보유 기간이 전부 빨갛게 나왔습니다 — 틀린 것이
+   아닌데 **고장난 것처럼** 보입니다. **찍어 보고** 알았습니다
+   (가로로 밀리지도 · 글자가 작지도 · 대비가 낮지도 않습니다).
+   ⚠️ 특정도로 이깁니다(`.jrow .chk b` 0,3,1 > `.jrow label b` 0,2,1). */
+.jrow .chk b{ color: var(--ink); }
 
 .agree{ grid-column: 1 / -1; background: var(--grn-soft);
         border:1.5px solid var(--grn-line); border-radius: var(--r); padding:18px 20px; }

@@ -80,7 +80,15 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="pricebox" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ 티타임 자리 (0060 · js/deskteetime.js) — **공급이 들어오는
+     유일한 자리**입니다. 여기가 비면 메인의 부킹 현황표가 영원히 0 이고,
+     손님은 '예약 신청' 을 보낼 데가 없습니다.
+     ⚠️ 가격 · 사진보다 **위**에 둡니다 — 손님에게 바로 보이는 것이고,
+     사장님이 가장 자주 여실 자리입니다. */
   body += '<section class="sec"><div class="wrap">' +
+    '<div id="teebox" class="none" hidden></div></div></section>';
+
+  body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="feebox" class="none" hidden></div></div></section>';
 
   return {
@@ -89,10 +97,14 @@ exports.build = function(){
     body: body,
     js: ["/js/data/korean.js", "/js/data/deal.js", "/js/data/review.js",
          "/js/data/regions.js", "/js/data/providers.js",
+         /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** —
+            0060 의 `teeAhead`(며칠 뒤까지 올리실 수 있나)가 site.js 에
+            있습니다. 안 실으면 날짜 칸의 최대값이 조용히 안 걸립니다. */
+         "/js/data/site.js",
          "/js/photo.js", "/js/auth.js", "/js/review.js",
          "/js/desk.js", "/js/deskme.js", "/js/deskprice.js",
          "/js/deskfee.js", "/js/deskphoto.js", "/js/deskstaff.js",
-         "/js/deskcontact.js", "/js/deskstart.js",
+         "/js/deskcontact.js", "/js/deskstart.js", "/js/deskteetime.js",
          "/js/notice.js"]
   };
 };

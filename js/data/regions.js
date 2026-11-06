@@ -66,3 +66,62 @@ window.amRegionName = function(key, gu){
   var r = window.amRegion(key); if(!r) return "";
   return gu ? (r.name + " " + gu) : r.name;
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   지역 묶음 여섯 (0060 · 지시서 §5 의 "날짜 · 지역별 현황")
+
+   ⚠️⚠️⚠️ **열일곱을 그대로 표로 내면 못 봅니다.** 14일 × 17줄이면
+   폰에서 밀어도 끝이 안 보이고, 경쟁 서비스가 여섯 줄로 묶는 까닭이
+   그것입니다.
+
+   ⚠️⚠️ **여기가 한 곳입니다.** 현황표가 묶는 규칙과 그 칸을 눌렀을 때
+   목록이 거르는 규칙이 **같은 표**를 읽어야 합니다 — 두 곳에 적으면
+   한쪽만 고치는 날 **표의 숫자와 목록의 줄 수가 달라집니다** (지시서
+   §5 의 "집계 조건과 결과 목록 필터 일치").
+
+   ⚠️ 어느 지역도 **빠지거나 두 번 들어가면 안 됩니다** — 빠지면 그
+   지역 자리가 현황표에서 영원히 안 보입니다. `amZoneCheck()` 가 셉니다.
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_REGION_ZONES = [
+  { key:"capital", name:"서울 · 경기 · 인천", regions:["seoul","gyeonggi","incheon"] },
+  { key:"gangwon", name:"강원",               regions:["gangwon"] },
+  { key:"chungch", name:"충청 · 대전 · 세종",  regions:["daejeon","sejong","chungbuk","chungnam"] },
+  { key:"jeolla",  name:"전라 · 광주",         regions:["gwangju","jeonbuk","jeonnam"] },
+  { key:"gyeongs", name:"경상 · 부산 · 대구 · 울산",
+    regions:["busan","daegu","ulsan","gyeongbuk","gyeongnam"] },
+  { key:"jeju",    name:"제주",               regions:["jeju"] }
+];
+
+window.amZone = function(key){
+  var z = window.AM_REGION_ZONES.filter(function(x){ return x.key === key; });
+  return z.length ? z[0] : null;
+};
+/* 어느 지역이 어느 묶음에 드는가 — ⚠️ 모르는 지역은 null 입니다
+   (지어내서 아무 묶음에 넣지 않습니다). */
+window.amZoneOf = function(region){
+  var out = null;
+  window.AM_REGION_ZONES.forEach(function(z){
+    if(z.regions.indexOf(region) >= 0) out = z;
+  });
+  return out;
+};
+/* 묶음 하나가 가리키는 지역 키들 — 목록을 거를 때 씁니다 */
+window.amZoneRegions = function(key){
+  var z = window.amZone(key);
+  return z ? z.regions.slice() : [];
+};
+/* ⚠️ 빠지거나 겹치는 지역이 있나 — 빌드와 검사가 부릅니다.
+   ⚠️ 갯수를 박지 않습니다: **AM_REGIONS 와 맞춰** 봅니다. */
+window.amZoneCheck = function(){
+  var seen = {}, dup = [], miss = [];
+  window.AM_REGION_ZONES.forEach(function(z){
+    z.regions.forEach(function(r){
+      if(seen[r]) dup.push(r);
+      seen[r] = true;
+    });
+  });
+  (window.AM_REGIONS || []).forEach(function(r){
+    if(!seen[r.key]) miss.push(r.key);
+  });
+  return { dup: dup, miss: miss };
+};

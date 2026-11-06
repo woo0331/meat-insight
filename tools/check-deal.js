@@ -226,7 +226,17 @@ function run(opt){
        저장하려 해서 문이 거절하거나 ② DB 에 있는 갈래를 화면이 몰라
        `/my` 목록에 **영문 키가 그대로** 찍힙니다. */
     ["저장한 조건 갈래 (watch.kind)",
-     checkKeys(sql, "kind", "watch"),       W.AM_WATCH]
+     checkKeys(sql, "kind", "watch"),       W.AM_WATCH],
+    /* ⚠️⚠️ 0060 의 티타임 — 어긋나면 ① 업체가 **없는 갈래**로 올리려다
+       거절당하거나 ② 손님 화면에 **영문 키**가 그대로 찍힙니다.
+       ⚠️ 상태 말은 **두 벌**(업체 · 손님)이지만 줄은 하나라 키 묶음도
+       한 벌입니다 (0053 에서 문의 갈래에 쓴 그 꼴). */
+    ["티타임 갈래 (teetime.kind)",
+     checkKeys(sql, "kind", "teetime"),     W.AM_TEE_KIND],
+    ["티타임 상태 (teetime.state)",
+     checkKeys(sql, "state", "teetime"),    W.AM_TEE_ST],
+    ["예약 신청 상태 (teebook.state)",
+     checkKeys(sql, "state", "teebook"),    W.AM_TEEBOOK_ST]
   ];
 
   want.forEach(function(w){

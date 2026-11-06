@@ -351,7 +351,37 @@ exports.build = function(c){
      ⚠️ "0곳 안내만 만들고 **있을 때 그리는 자리를 안 만든**" 자리의
      거울상입니다 (앞 서비스에서 겪은 그 줄). 그래서 **한 곳**에 묶어
      두고 두 갈래가 같이 씁니다. */
-  var memberSec = lsSec || joinSec || cqSec || jobSec;
+  /* ⚠️⚠️⚠️ **티타임 자리** (0060) — 업체가 올린 **남는 자리**입니다.
+     ⚠️⚠️ 회원 조인(0046)과 **갈라서** 냅니다 — 전자상거래법 제20조의4 ③
+     이 "개인 판매자와 사업자가 섞여 있으면 **구분해 표시**" 하라고
+     합니다. `/cat/matchup` 에서는 이 구간이 회원 조인 **위**에 서고,
+     각자 제목이 누가 내놓은 자리인지 말합니다.
+     ⚠️ 설명은 **빌드가** 찍고(크롤러 몫) 목록은 **브라우저가** 그립니다.
+     ⚠️ `data-teekind` 로 부킹인지 조인인지 알려 줍니다 — 화면이 주소로
+     다시 판단하면 규칙이 두 곳이 됩니다. */
+  var teeSec = (c.key === "booking" || c.kind === "match")
+    ? '<section class="sec"><div class="wrap">' +
+      '<div class="sec-hd"><h2>' +
+        (c.key === "booking" ? '제휴 골프장이 올린 티타임' : '업체가 내놓은 조인 자리') +
+      '</h2>' +
+      '<p>입점한 골프장 · 업체가 직접 올린 <b>남는 자리</b>입니다. ' +
+      /* ⚠️⚠️⚠️ '예약 완료' 를 약속하지 않습니다 (지시서 §6) */
+      '예약 신청을 보내시면 <b>업체가 확인하고 확정</b>합니다 — 신청만으로 ' +
+      '자리가 잡히지 않습니다. 골프올인원은 거래 당사자가 아니며 ' +
+      '<b>결제를 받지 않습니다.</b></p></div>' +
+      '<div id="ttlist" data-teekind="' +
+        (c.key === "booking" ? "booking" : "join") + '">' +
+        '<div class="none"><h3>자리를 보시려면 잠시만 기다려 주세요.</h3>' +
+        '<p>올라온 자리를 불러옵니다. 보이지 않으면 아직 올라온 자리가 ' +
+        '없는 것입니다.</p></div>' +
+      '</div>' +
+      '<p class="jnote">⚠️ 상호와 전화번호는 <b>업체가 공개한 값</b>입니다 ' +
+      '(사업자 정보 또는 업체가 적은 예약 문의 번호). 예약을 신청하시면 ' +
+      '성함과 연락처가 <b>그 업체에만</b> 넘어갑니다.</p>' +
+      '</div></section>'
+    : '';
+
+  var memberSec = teeSec + (lsSec || joinSec || cqSec || jobSec);
 
   var list = W.amProvidersOf(c.key);
   if(list.length){
@@ -410,8 +440,16 @@ exports.build = function(c){
       /* ⚠️⚠️ deal.js — 0058 의 `amWatchLink()`(조건 저장으로 가는 길)와
          `AM_WATCH` 가 거기 있습니다. 안 실으면 그 단추가 **조용히 안
          그려집니다** (제 가드가 `window.amWatchLink ?` 로 넘어갑니다). */
+      /* ⚠️ 0060 — 업체가 내놓은 조인 자리도 같은 화면에 섭니다 */
       ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
-         "/js/join.js"]
+         "/js/join.js", "/js/booking.js"]
+      /* ⚠️⚠️ 0060 — `/cat/booking` 은 **값을 읽는 파일 셋**이 있어야
+         합니다: site.js(보유 기간 · 찾을 수 있는 날 수 — 비면 신청
+         양식을 **안 엽니다**) · regions.js(지역 칸) · deal.js(상태 말).
+         하나라도 빠지면 양식이 **조용히** 안 열립니다. */
+      : (c.key === "booking"
+          ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
+             "/js/booking.js"]
       : (c.key === "community" ? ["/js/community.js"]
       /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — site.js 가
          careerKeep(보유 기간)을, regions.js 가 지역 칸을, catalog.js 가
@@ -427,7 +465,7 @@ exports.build = function(c){
       : (c.key === "used"
           ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
              "/js/listing.js"]
-          : [])))).concat(["/js/data/providers.generated.js",
+          : []))))).concat(["/js/data/providers.generated.js",
                           "/js/data/providers.js", "/js/adslot.js"]),
     /* ⚠️ 조인은 제 구간이 "0건" 을 스스로 말하므로 zero 를 **안 겹칩니다**
        (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다). */

@@ -1683,3 +1683,14 @@ picture{ display: contents; }
   .dst-ic{ grid-row:1; }
   .dst-go{ grid-column:3; grid-row:1; margin-top:0; }
 }
+
+/* ── 이용안내의 자주 묻는 것 (pages/guide.js) ──────────────────
+   ⚠️ 질문은 h3 입니다 (구간 제목이 h2 — 제목 단계를 지킵니다).
+   `.doc-a h2` 와 같은 모양을 h3 에도 줍니다. */
+.doc-a h3{ font-size:18px; padding-bottom:8px;
+           border-bottom:1.5px solid var(--line); }
+/* ⚠️ 문단 **끝에 단추로** — 답 가운데 링크는 누름 높이가 16px 입니다 */
+.gd-go{ margin-top:22px; display:flex; flex-wrap:wrap; gap:10px; }
+/* ⚠️ 걸음이 홀수인 차례는 **한 줄에 하나씩** (pages/guide.js) — 2칸
+   격자에 다섯을 넣으면 마지막 칸이 빈 자리로 남습니다. */
+.flow-1{ grid-template-columns: 1fr; }

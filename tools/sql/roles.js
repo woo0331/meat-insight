@@ -146,6 +146,53 @@ module.exports = function(T){
   ok("본인이 켠 역할은 본인이 뗀다 (정상 길이 막히지 않았다)",
      psql(as(A) + "select drop_my_hat('pro')::text" + back) === "{seller}");
 
+  /* ══════════════════════════════════════════════════════════════
+     0054 — **떼는 문** (0025 의 반쪽이었습니다)
+
+     ⚠️⚠️⚠️ 0025 는 운영자에게 `grant_hat`(붙이기)만 주고, 떼는 길은
+     `drop_my_hat`(**본인만**)뿐이었습니다 — 잘못 붙인 딱지를 뗄 길이
+     저장소에 한 줄도 없어서 사장님이 SQL 편집기를 직접 치셔야 했습니다
+     (0043 이 잇는 길만 내고 끊는 길을 안 낸 자리와 같은 꼴).
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 0054 운영자가 역할을 뗍니다");
+  /* 먼저 붙여 둡니다 (뗄 것이 실제로 있는 자리에 걸어야 합니다) */
+  ok("(씨앗) 운영자가 판매자를 붙인다",
+     allowed(as(M) + "select grant_hat('" + B + "','seller','검사 씨앗')" + back).yes);
+
+  d = denied(as(B) + "select revoke_hat('" + B + "','seller','내가 떼겠다')" + back);
+  ok("일반 회원은 못 뗀다", d.no && /운영자만/.test(d.why), d.why);
+  d = denied(as(M) + "select revoke_hat('" + B + "','seller','')" + back);
+  ok("까닭 없이 떼면 막힌다 (다른 말)", d.no && /까닭을 적어야/.test(d.why), d.why);
+  /* ⚠️⚠️ **biz 의 주인은 0028 의 트리거입니다** — 여기서 떼면 그 계정이
+     다음에 한 번 바뀌는 순간 되돌아오고, 그 전까지는 업체 담당자인데
+     딱지가 없는 어긋난 상태가 됩니다. */
+  d = denied(as(M) + "select revoke_hat('" + B + "','biz','사업자도 떼 보겠다')" + back);
+  ok("⚠️⚠️ 사업자는 **여기서 못 뗀다** (또 다른 말 — 트리거가 주인입니다)",
+     d.no && /업체 연결을 끊으면/.test(d.why), d.why);
+  /* ⚠️⚠️ **없는 것을 떼면 거절합니다** — 조용히 0줄로 끝내면 감사 기록에
+     "뗐다" 가 남는데 실제로는 아무 일도 안 일어난 것입니다. */
+  d = denied(as(M) + "select revoke_hat('" + B + "','pro','없는 것을 떼 보겠다')" + back);
+  ok("⚠️⚠️ **없는 역할을 떼면 막힌다** (기록이 거짓이 되지 않게)",
+     d.no && /없는 역할입니다/.test(d.why), d.why);
+  d = denied(as(M) + "select revoke_hat('00000000-0000-0000-0000-000000000000','seller','없는 사람')" + back);
+  ok("없는 회원에게서는 못 뗀다 (또 다른 말)",
+     d.no && /그런 회원이 없습니다/.test(d.why), d.why);
+
+  /* ⚠️ **너무 넓게 막는 것도 고장입니다** — 정상 길이 도는지 봅니다 */
+  const rv = allowed(as(M) +
+    "select revoke_hat('" + B + "','seller','잘못 붙였습니다')::text" + back);
+  ok("운영자는 뗀다 (정상 길이 막히지 않았다)",
+     rv.yes && rv.out === "{biz}", rv.yes ? rv.out : rv.why);
+  ok("  실제로 줄이 사라진다 (에러만 보지 않고 **세어** 봅니다)",
+     psql("select count(*)::text from account_hat where account_id='" + B +
+          "' and hat='seller'") === "0");
+  ok("  감사 기록에 까닭이 그대로 적힌다",
+     psql("select why from audit_log where obj='account_hat' and obj_id='" + B +
+          "' order by id desc limit 1") === "잘못 붙였습니다");
+  /* ⚠️ 표에 직접 지우는 길은 없습니다 (GRANT 를 한 줄도 안 줬습니다) */
+  d = denied(as(M) + "delete from account_hat where account_id='" + B + "'" + back);
+  ok("⚠️ 운영자도 표에서 **직접 못 지운다** (문 하나뿐입니다)", d.no, d.why);
+
   console.log("\n── 0028 업체 계정에 사업자 모자가 저절로 따라오는가");
   psql("insert into provider (id, name, listed) values ('gp-hat','모자테스트 골프샵', true) " +
        "on conflict (id) do nothing");

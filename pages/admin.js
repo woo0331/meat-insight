@@ -74,6 +74,12 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="feeadm" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ **회원 역할(능력 딱지)** (0025 · 0028 · 0054 · js/adminhat.js).
+     운영자가 붙이는 문(`grant_hat`)은 0025 에 섰는데 부르는 칸이
+     없었고, **떼는 문은 아예 없었습니다**(0054 가 냈습니다). */
+  body += '<section class="sec sec-alt"><div class="wrap">' +
+    '<div id="hatadm" class="none" hidden></div></div></section>';
+
   /* 운영 감사 기록 (4차 지시서 §5) — ⚠️⚠️ 기록은 0004 부터 쌓고
      있었는데 **보는 자리가 0곳**이었습니다. */
   body += '<section class="sec"><div class="wrap">' +
@@ -89,6 +95,7 @@ exports.build = function(){
          "/js/account.js", "/js/review.js", "/js/assign.js",
          "/js/adminpro.js", "/js/adminrep.js", "/js/admininq.js",
          "/js/adminlog.js", "/js/metrics.js", "/js/adminbiz.js",
-         "/js/adminstaff.js", "/js/adminfee.js"]
+         "/js/adminstaff.js", "/js/adminfee.js",
+         "/js/adminhat.js"]
   };
 };

@@ -4391,6 +4391,168 @@ function keepOf(name){
     }
     await g.p.close(); }
 
+  /* ══════════════════════════════════════════════════════════════
+     회원 역할(능력 딱지) · 요청의 담당 직원 — /admin (0025 · 0054 · 0012)
+
+     ⚠️⚠️ `grant_hat`(0025)은 부르는 칸이 없었고 **떼는 문은 아예
+     없었습니다**(0054 가 냈습니다). `set_owner`(0012)도 2026-10-22 에
+     서고 부르는 칸이 없었습니다 — 직원이 여럿이면 같은 건에 두 사람이
+     전화합니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── /admin 회원 역할 (0025 · 0028 · 0054)");
+  const HT_ACCS = [
+    { id:"u-1", name:"김회원", role:"customer" },
+    { id:"u-2", name:"이프로", role:"customer" },
+    { id:"u-3", name:"박사장", role:"provider" }
+  ];
+  const HT_HATS = [{ account_id:"u-2", hat:"pro" },
+                   { account_id:"u-3", hat:"biz" }];
+  const HT_T = { account:HT_ACCS, account_hat:HT_HATS,
+                 assignment:[], request:[], quote:[], request_item:[],
+                 provider:[], review:[], report:[], inquiry:[], audit_log:[] };
+
+  /* ⚠️ 관리자가 아니면 한 줄도 안 그리고 읽으러 가지도 않습니다 */
+  for(const who of [{ role:"customer", name:"홍길동", signedIn:true },
+                    { role:"staff", name:"직원", signedIn:true }]){
+    const g = await open("/admin", who, HT_T, { biz_metrics: MET }, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("hatadm");
+      return { drawn: !!b && !b.hidden && b.children.length > 0 };
+    });
+    ok("⚠️ " + who.role + " 에게는 역할 자리가 **한 줄도** 안 보인다", !r.drawn, "");
+    ok("  ⚠️⚠️ 그 자료를 **읽으러 가지도 않는다**",
+       g.sent.filter(function(x){ return (x.body || "").indexOf("/account_hat") >= 0; })
+         .length === 0, JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    await g.p.close();
+  }
+
+  const HT_ADM = { role:"admin", name:"관리자", signedIn:true };
+  { const g = await open("/admin", HT_ADM, HT_T, { biz_metrics: MET }, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("hatadm");
+      const rows = Array.prototype.map.call(b.querySelectorAll(".fe-p > li"),
+        function(li){
+          return { id: li.getAttribute("data-acc"), text: li.innerText,
+                   hats: Array.prototype.map.call(
+                     li.querySelectorAll("button[data-hat]"),
+                     function(x){ return x.getAttribute("data-hat"); }) };
+        });
+      return { drawn: !!b && !b.hidden, rows: rows, text: b.innerText };
+    });
+    ok("운영자에게 회원 역할 자리가 그려진다", r.drawn && r.rows.length === 3,
+       "줄 " + r.rows.length);
+    const u2 = r.rows.filter(function(x){ return x.id === "u-2"; })[0] || {};
+    ok("켜진 역할을 **사람 말로** 적는다 (영문 키가 아닙니다)",
+       u2.text.indexOf("골프 프로") >= 0 && u2.text.indexOf("pro\n") < 0,
+       u2.text.replace(/\n/g, " | "));
+    const u1 = r.rows.filter(function(x){ return x.id === "u-1"; })[0] || {};
+    ok("⚠️ 0건이면 **0 이라고 말한다**",
+       u1.text.indexOf("켜진 역할이 없습니다") >= 0, u1.text.replace(/\n/g, " | "));
+    /* ⚠️⚠️⚠️ **`biz` 는 단추를 안 냅니다** — 그 딱지의 주인은 0028 의
+       트리거입니다. 단추를 그리면 눌러도 되돌아가는 칸이 됩니다. */
+    ok("⚠️⚠️ **사업자 단추를 안 낸다** (0028 의 트리거가 주인입니다)",
+       r.rows.every(function(x){ return x.hats.indexOf("biz") < 0; }),
+       JSON.stringify(r.rows.map(function(x){ return x.hats; })));
+    ok("  그리고 **왜 없는지 적는다** (빈 자리로 두지 않습니다)",
+       r.text.indexOf("저절로 붙고") >= 0, r.text.slice(0, 300).replace(/\n/g, " | "));
+    const u3 = r.rows.filter(function(x){ return x.id === "u-3"; })[0] || {};
+    ok("  사업자인 회원은 **지금 상태를 보여 준다**",
+       u3.text.indexOf("사업자") >= 0, u3.text.replace(/\n/g, " | "));
+
+    /* ⚠️⚠️ 까닭 없이는 안 보냅니다 (문도 거절합니다) */
+    await g.p.click('li[data-acc="u-1"] button[data-hat="seller"]');
+    await g.p.waitForTimeout(200);
+    await g.p.click('li[data-acc="u-1"] .hat-f button[type="submit"]');
+    await g.p.waitForTimeout(300);
+    ok("⚠️⚠️ 까닭 없이는 **안 보낸다**",
+       g.sent.filter(function(x){ return x.name === "grant_hat"; }).length === 0,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    await g.p.fill('li[data-acc="u-1"] input[name="hwhy"]', "중고채를 파시겠다고 하셔서");
+    await g.p.click('li[data-acc="u-1"] .hat-f button[type="submit"]');
+    await g.p.waitForTimeout(400);
+    const gh = g.sent.filter(function(x){ return x.name === "grant_hat"; })[0];
+    ok("붙이기가 **grant_hat 을 실제로 부른다**", !!gh,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    if(gh){
+      const p = JSON.parse(gh.body);
+      ok("⚠️ **자리 인자로** 보낸다", p.p === undefined && p.p_user === "u-1" &&
+         p.p_hat === "seller" && String(p.p_why).indexOf("중고채") >= 0,
+         gh.body.slice(0, 140));
+    }
+
+    /* ⚠️ 이미 켜진 역할은 **떼는** 문으로 갑니다 (0054) */
+    await g.p.click('li[data-acc="u-2"] button[data-hat="pro"]');
+    await g.p.waitForTimeout(200);
+    await g.p.fill('li[data-acc="u-2"] input[name="hwhy"]', "본인이 요청하셨습니다");
+    await g.p.click('li[data-acc="u-2"] .hat-f button[type="submit"]');
+    await g.p.waitForTimeout(400);
+    const rh = g.sent.filter(function(x){ return x.name === "revoke_hat"; })[0];
+    ok("⚠️⚠️ 켜진 역할은 **revoke_hat 으로** 간다 (0054 — 전에는 뗄 길이 " +
+       "저장소에 한 줄도 없었습니다)", !!rh,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    if(rh){
+      const p = JSON.parse(rh.body);
+      ok("  자리 인자로 보낸다", p.p === undefined && p.p_user === "u-2" &&
+         p.p_hat === "pro", rh.body.slice(0, 140));
+    }
+    await g.p.close(); }
+
+  console.log("\n── /admin 요청의 담당 직원 (0012)");
+  const OW_STAFF = [{ id:"s-1", name:"최직원", role:"staff" },
+                    { id:"s-2", name:"정관리", role:"admin" }];
+  const OW_REQ = Object.assign({}, REQ, { state:"check", owner_id:null });
+  const OW_T = Object.assign({}, ADMT, {
+    request:[OW_REQ], account:OW_STAFF, assignment:[] });
+
+  { const g = await open("/admin", HT_ADM, OW_T, { biz_metrics: MET }, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("assignbox");
+      const sel = b.querySelector(".ow-s");
+      return { has: !!sel,
+               opts: sel ? Array.prototype.map.call(sel.options, function(o){
+                 return o.textContent; }) : [],
+               picked: sel ? sel.value : null };
+    });
+    ok("배정 줄에 담당 고르개가 나온다", r.has, JSON.stringify(r).slice(0, 120));
+    /* ⚠️⚠️ **고객 계정을 담당자로 꽂으면 문이 거절합니다** — 고르개에
+       담으면 눌러도 안 되는 칸이 됩니다 (0012 가 account_staff 정책으로
+       직원 · 관리자 줄만 열어 둔 까닭입니다). */
+    ok("⚠️⚠️ 고르개에 **직원 · 관리자만** 담긴다", r.opts.length === 3 &&
+       r.opts.indexOf("최직원") >= 0 && r.opts.indexOf("정관리") >= 0,
+       r.opts.join(" · "));
+    /* ⚠️ 비울 수 있습니다 — 0012 가 "반드시 정해야 다음으로 갈 수 있게
+       만들지 않았다" 고 적어 두었습니다 */
+    ok("⚠️ **아직 아무도**를 고를 수 있다 (담당 없이도 일이 굴러갑니다)",
+       r.opts.indexOf("아직 아무도") >= 0 && r.picked === "", r.opts.join(" · "));
+
+    await g.p.selectOption("#assignbox .ow-s", "s-1");
+    await g.p.click("#assignbox button[data-owner]");
+    await g.p.waitForTimeout(400);
+    const so = g.sent.filter(function(x){ return x.name === "set_owner"; })[0];
+    ok("담당 저장이 **set_owner 를 실제로 부른다**", !!so,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    if(so){
+      const p = JSON.parse(so.body);
+      ok("⚠️ **자리 인자로** 보낸다", p.p === undefined && p.p_owner === "s-1",
+         so.body.slice(0, 140));
+    }
+    await g.p.close(); }
+
+  /* ⚠️ 비우는 것도 **값**입니다 — 빈 글자가 아니라 null 로 갑니다
+     (빈 글자를 보내면 DB 가 uuid 로 못 읽고 거절합니다) */
+  { const g = await open("/admin", HT_ADM,
+      Object.assign({}, OW_T, {
+        request:[Object.assign({}, OW_REQ, { owner_id:"s-1" })] }),
+      { biz_metrics: MET }, true);
+    await g.p.selectOption("#assignbox .ow-s", "");
+    await g.p.click("#assignbox button[data-owner]");
+    await g.p.waitForTimeout(400);
+    const so = g.sent.filter(function(x){ return x.name === "set_owner"; })[0];
+    ok("⚠️ 담당을 **비우면 null 로** 보낸다 (빈 글자가 아닙니다)",
+       !!so && JSON.parse(so.body).p_owner === null,
+       so ? so.body.slice(0, 140) : "안 불렀습니다");
+    await g.p.close(); }
+
   console.log("\n── /desk 시설 사진 · 증빙서류 (0051)");
   const PH = [
     { id:"ph-1", provider_id:"t-range", kind:"photo",

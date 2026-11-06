@@ -63,14 +63,23 @@
   function load(){
     return Promise.all([
       get("request?select=id,no,state,cat,region,gu,budget_min,budget_max," +
-          "want_at,body,name,tel,agree3rd_at,created_at,want_provider" +
+          /* ⚠️ 담당 직원 (0012 의 owner_id) — "누가 바꿨나"(audit_log)와
+             다른 것입니다. 이것은 **지금 누가 맡고 있나** 입니다. */
+          "want_at,body,name,tel,agree3rd_at,created_at,want_provider,owner_id" +
           "&state=in.(" + WATCH.join(",") + ")&order=created_at.desc&limit=50"),
       /* ⚠️ 하는 일 · 지역 · 상태까지 읽습니다 — 조건에 맞는 업체만
          고르게 하려면 그 셋이 필요합니다 (4차 지시서 §4). */
       get("provider?select=id,name,assignable,is_test,listed,state,subs,regions" +
           "&order=name.asc&limit=200"),
       get("request_item?select=request_id,service_id&limit=500"),
-      get("assignment?select=request_id,provider_id,state&limit=500")
+      get("assignment?select=request_id,provider_id,state&limit=500"),
+      /* ⚠️⚠️ **0012 가 이 길을 일부러 열어 두었습니다** — `account` 의
+         정책이 "내 줄" 과 "관리자 전부" 둘뿐이라 직원은 담당자 고르개에
+         **아무것도 못 채웠습니다**(uuid 만 보입니다). 0012 의
+         `account_staff` 정책이 **직원 · 관리자 줄만** 엽니다 — 고객
+         계정의 성함은 그대로 안 보입니다. */
+      get("account?select=id,name,role&role=in.(staff,admin)" +
+          "&order=name.asc&limit=100")
     ]).then(function(got){
       /* ⚠️ 손님이 붙이신 사진 · 서류 (§5-4) — 운영자는 전부 봅니다
          (0011 의 photo_staff). 넘기기 전에 무엇이 왔는지 봐야 조건에
@@ -186,7 +195,7 @@
     '</form>';
   }
 
-  function card(r, provs, items, asgs, pics){
+  function card(r, provs, items, asgs, pics, staff){
     var st = window.amDealSt(r.state) || { name:r.state, tone:"ink" };
     var svcs = items.filter(function(x){ return x.request_id === r.id; })
       .map(function(x){
@@ -225,6 +234,34 @@
     }
     h += '</dl>';
 
+    /* ⚠️⚠️⚠️ **담당 직원** (0012 의 `set_owner`) — 문이 2026-10-22 에
+       서고 **부르는 칸이 2026-11-06 까지 없었습니다.** 직원이 여럿이면
+       같은 건에 두 사람이 전화합니다.
+       ⚠️ 비울 수 있습니다 (**아직 아무도**) — 0012 가 "담당자를 반드시
+       정해야 다음 걸음으로 갈 수 있게 만들지 않았다" 고 적어 두었습니다.
+       급한 건을 먼저 받고 담당을 나중에 정하는 것이 실제 차례입니다.
+       ⚠️⚠️ 고르개에 **직원 · 관리자만** 담습니다 — 고객 계정을 꽂으면
+       문이 거절하고(눌러도 안 되는 칸), 더 나쁘게는 "연락처를 열어도
+       되는 사람" 으로 읽힙니다. */
+    var own = (staff || []).filter(function(x){ return x.id === r.owner_id; })[0];
+    h += '<div class="ow-w">' +
+      '<label class="ow-l" for="ow-' + esc(r.id) + '">담당</label>' +
+      '<select class="ow-s" id="ow-' + esc(r.id) + '">' +
+        '<option value=""' + (r.owner_id ? "" : " selected") + '>아직 아무도</option>' +
+        (staff || []).map(function(x){
+          return '<option value="' + esc(x.id) + '"' +
+            (x.id === r.owner_id ? " selected" : "") + '>' +
+            esc(x.name || "(성함 없음)") + '</option>';
+        }).join("") +
+      '</select>' +
+      '<button type="button" class="btn btn-sm btn-line ow-b" data-owner="' +
+      esc(r.id) + '">담당 저장</button>' +
+      /* ⚠️ 담당자가 **없으면 없다고** 말합니다 (빈 칸을 찍지 않습니다) */
+      (r.owner_id && !own
+        ? '<span class="fe-when">지금 담당이 직원 목록에 없습니다</span>'
+        : "") +
+    '</div>';
+
     if(window.amPhotoBlock) h += window.amPhotoBlock(pics);
 
     if(mine.length){
@@ -258,7 +295,15 @@
     box.hidden = false; box.className = "deskbox";
     box.innerHTML = '<h2 class="adm-h">상담 요청 · 배정</h2><p class="lmsg">읽는 중입니다…</p>';
     load().then(function(got){
-      var rs = got[0], provs = got[1], items = got[2], asgs = got[3], pics = got[4];
+      /* ⚠️⚠️⚠️ **사진 묶음은 늘 맨 뒤에 붙습니다** — `load()` 가
+         `got.concat([by])` 로 답니다. 그래서 읽는 것을 하나 더하면
+         **자리가 한 칸씩 밀립니다.** 담당 직원 목록을 더하면서 이 줄을
+         안 고쳐 `pics` 자리에 계정 배열이 앉았고, 화면이
+         `(staff || []).filter is not a function` 으로 터졌습니다
+         (검사가 잡았습니다 — "인덱스로 자르면 어긋난다" 의 작은 판).
+         ⚠️ 자리를 세지 말고 **맨 뒤**로 집습니다. */
+      var rs = got[0], provs = got[1], items = got[2], asgs = got[3];
+      var staff = got[4] || [], pics = got[got.length - 1];
       if(rs === null || provs === null || items === null || asgs === null){
         box.innerHTML = '<h2 class="adm-h">상담 요청 · 배정</h2>' +
           '<p class="lmsg">읽지 못했습니다. ' +
@@ -278,7 +323,7 @@
               '곳</b>이 섞여 있습니다. 손님 화면 · 분류 화면 · 사이트맵에는 ' +
               '나가지 않습니다 — 지우실 때는 db/seed/test-providers.sql 의 ④ 를 보십니다.</p>' : "") +
         rs.map(function(r){
-          return card(r, provs, items, asgs, (pics || {})[r.id]);
+          return card(r, provs, items, asgs, (pics || {})[r.id], staff);
         }).join("");
     });
   }
@@ -303,6 +348,29 @@
         ph.disabled = false;
         if(pm) pm.textContent = why(err);
       });
+      return;
+    }
+    /* ⚠️⚠️ **담당 직원** (0012 의 `set_owner`) — 인자가 **자리로** 갑니다
+       (`p_request` · `p_owner` · `p_why`). 저장소의 다른 문처럼
+       `{ p: {...} }` 로 보내면 인자 이름이 안 맞아 거절됩니다. */
+    var ow = e.target.closest ? e.target.closest("button[data-owner]") : null;
+    if(ow){
+      var orow = ow.closest(".dk-r");
+      var sel  = orow ? orow.querySelector(".ow-s") : null;
+      if(!sel) return;
+      var om = msgOf(ow);
+      ow.disabled = true;
+      if(om){ om.hidden = false; om.textContent = "보내는 중입니다…"; }
+      /* ⚠️ 비우는 것도 **값**입니다 (아직 아무도) — 빈 글자를 null 로
+         보냅니다. `||` 로 쓰면 빈 글자가 그대로 갑니다. */
+      rpc("set_owner", { p_request: ow.getAttribute("data-owner"),
+                         p_owner: sel.value === "" ? null : sel.value,
+                         p_why: null })
+        .then(paint)
+        .catch(function(err){
+          ow.disabled = false;
+          if(om) om.textContent = why(err);
+        });
       return;
     }
     var b = e.target.closest ? e.target.closest("button[data-do]") : null;

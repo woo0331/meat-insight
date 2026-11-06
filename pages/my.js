@@ -48,6 +48,14 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="jobmine" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️⚠️ **내가 보낸 문의와 그 답변** (0045 · 화면은 js/myinq.js).
+     0045 가 답을 받는 문까지 세워 두고도 그 답을 읽는 화면이 한 곳도
+     없었습니다 — 운영자는 답을 적고 손님은 어디서도 못 봤습니다.
+     ⚠️ 0건이면 그 상자가 **줄째 빠집니다** (문의를 넣은 적 없는 분께
+     빈 상자를 두지 않습니다). */
+  body += '<section class="sec sec-alt"><div class="wrap">' +
+    '<div id="myinqbox" class="none" hidden></div></div></section>';
+
   return {
     route: "/my", title: "내 정보", noindex: true, unlinked: true,
     desc: "골프올인원 내 정보 — 개인 판매자 · 골프 프로 · 사업자 회원을 켜고 끕니다.",
@@ -56,6 +64,6 @@ exports.build = function(){
          "/js/auth.js", "/js/photo.js", "/js/account.js",
          "/js/review.js", "/js/myreq.js",
          "/js/data/regions.js", "/js/myjoin.js", "/js/mycq.js",
-         "/js/myjob.js", "/js/notice.js"]
+         "/js/myjob.js", "/js/myinq.js", "/js/notice.js"]
   };
 };

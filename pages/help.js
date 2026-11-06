@@ -149,7 +149,11 @@ exports.build = function(){
        기간(inquiryKeep)이 거기 있습니다. 안 실으면 KEEP 이 빈 문자열이
        되어 양식이 **조용히 안 열립니다** (에러도 안 납니다). 실제로
        그렇게 떨어졌습니다 — tools/test-help.js 가 잡았습니다. */
-    js: ["/js/data/site.js", "/js/helpnow.js", "/js/inquiry.js"],
+    /* ⚠️⚠️ `site.js`(보유 기간) · `data/deal.js`(문의 갈래) 둘 다
+       **실어야** 합니다 — 하나라도 빠지면 `js/inquiry.js` 가 양식을
+       조용히 안 엽니다 (설정이 안 된 것과 똑같이 보입니다). */
+    js: ["/js/data/site.js", "/js/data/deal.js",
+         "/js/helpnow.js", "/js/inquiry.js"],
     desc: "골프올인원 고객센터 — 이용 중 막히는 곳, 업체와의 문제, 입점 문의를 받습니다.",
     body: body
   };

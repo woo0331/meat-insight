@@ -285,4 +285,113 @@ module.exports = function(T){
                          HOST + "'");
   ok("⚠️⚠️ 안 준 칸(`to_user`)을 조건에 쓰면 **질의가 거절된다**",
      whereTo.no, whereTo.why);
+
+  // ── ⑧ 0053 — 문의에 답이 올라오면 알림이 갑니다 ────────────────
+  /* ⚠️⚠️⚠️ **마이그레이션을 걸치는 자리입니다.** 표와 문은 0045 에,
+     트리거는 0053 에 있습니다 — 둘을 따로 재는 검사는 "트리거가 실제로
+     꽂히는가" 를 아무도 안 봅니다 (0050 의 조인 신청 트리거를 줄째
+     빼도 이 파일이 초록이었던 그 자리입니다). 그래서 **문으로** 옮기고
+     **받는 사람 눈으로** 셉니다.
+     ⚠️ 상태를 표에서 직접 고치면 트리거는 돌지만 문이 하던 일(답 없이
+     답변함으로 못 옮김)을 건너뜁니다 — 늘 문으로 누릅니다. */
+  console.log("\n── 0053 문의에 답이 올라오면 알림이 갑니다");
+  const iqOpen = allowed(as(HOST) + "select open_inquiry('" +
+    J({ kind:"use", body:"알림이 붙는지 보려고 여쭙습니다",
+        agree_at:NOW() }) + "'::jsonb)");
+  ok("  (씨앗) 로그인하고 문의를 넣었습니다", iqOpen.yes, iqOpen.out || iqOpen.why);
+  const IQNO = iqOpen.out;
+  const iqId = psql(as(ADM) + "select id::text from inquiry where no = '" + IQNO + "'");
+
+  /* ⚠️ 접수만으로는 **안 옵니다** — 제가 한 일입니다 */
+  const iqNone = psql("select count(*) from notice where to_user = '" + HOST +
+                      "' and kind = 'inquiry'");
+  ok("⚠️ 접수한 것만으로는 알림이 **안 붙는다** (제가 한 일입니다)",
+     iqNone === "0", iqNone);
+
+  /* ⚠️ 확인 중으로 옮기는 것도 아직 답이 아닙니다 */
+  const iqRev = allowed(as(ADM) + "select move_inquiry('" +
+    J({ id:iqId, to:"reviewing" }) + "'::jsonb)");
+  ok("  (씨앗) 운영자가 확인 중으로 옮겼습니다", iqRev.yes, iqRev.why);
+  const iqStill0 = psql("select count(*) from notice where to_user = '" + HOST +
+                        "' and kind = 'inquiry'");
+  ok("⚠️ **확인 중**으로 옮긴 것으로는 안 붙는다 (아직 답이 아닙니다)",
+     iqStill0 === "0", iqStill0);
+
+  const iqAns = allowed(as(ADM) + "select move_inquiry('" +
+    J({ id:iqId, to:"answered",
+        answer:"이렇게 하시면 됩니다. 010-9999-8888 로도 걸어 주세요." }) + "'::jsonb)");
+  ok("  (씨앗) 운영자가 답을 적고 답변함으로 옮겼습니다", iqAns.yes, iqAns.why);
+  const iqGot = psql("select count(*) from notice where to_user = '" + HOST +
+                     "' and kind = 'inquiry'");
+  ok("⚠️⚠️ 답이 올라오면 **보낸 사람에게** 알림이 붙는다", iqGot === "1", iqGot);
+  const iqTitle = psql("select title from notice where to_user = '" + HOST +
+                       "' and kind = 'inquiry'");
+  /* ⚠️⚠️ **답 글자가 알림에 섞이면 안 됩니다** — 알림은 오래 남고,
+     답에는 연락처가 섞이기 쉽습니다 (일부러 넣어 보았습니다). */
+  ok("⚠️⚠️ 제목에 **답 글자와 연락처가 안 섞인다**",
+     iqTitle.indexOf("이렇게 하시면") < 0 && iqTitle.indexOf("010-") < 0, iqTitle);
+  const iqLink = psql("select link from notice where to_user = '" + HOST +
+                      "' and kind = 'inquiry'");
+  ok("  가는 자리가 우리 주소다 (/my 에서 그 사람 권한으로 봅니다)",
+     iqLink === "/my", iqLink);
+  const iqObj = psql("select obj_id from notice where to_user = '" + HOST +
+                     "' and kind = 'inquiry'");
+  ok("  접수번호로 찾아갈 수 있다 (내용은 안 담습니다)", iqObj === IQNO, iqObj);
+
+  /* ⚠️ 닫으면 또 붙지 않습니다 — 답변함으로 **들어올 때 한 번**입니다 */
+  const iqClose = allowed(as(ADM) + "select move_inquiry('" +
+    J({ id:iqId, to:"closed" }) + "'::jsonb)");
+  ok("  (씨앗) 운영자가 닫았습니다", iqClose.yes, iqClose.why);
+  const iqOne = psql("select count(*) from notice where to_user = '" + HOST +
+                     "' and kind = 'inquiry'");
+  ok("⚠️ 닫아도 같은 알림이 **또 안 붙는다** (한 번입니다)", iqOne === "1", iqOne);
+
+  /* ⚠️⚠️⚠️ **받는 사람 눈으로** 읽습니다 — 운영자로 훑으면 0050 은
+     운영자 정책을 일부러 안 두었으므로 0줄이고, 그 빈 글자를 보고
+     "안 샌다" 로 통과하는 아무것도 안 잡는 검사가 됩니다. */
+  const seen = psql(as(HOST) + "select count(*)::text from notice " +
+                    "where kind = 'inquiry'");
+  ok("⚠️ 받은 사람 눈에 그 줄이 **실제로 보인다** (잰 것이 0이 아닙니다)",
+     seen === "1", seen);
+
+  /* ⚠️⚠️ 비로그인 문의에는 보낼 곳이 없습니다 — 조용히 안 붙는 것이
+     맞습니다 (`by_user` 가 비어 있습니다). 그리고 **아무에게도** 안
+     붙어야 합니다 (엉뚱한 사람에게 가면 그게 유출입니다). */
+  const nAll0 = psql("select count(*) from notice where kind = 'inquiry'");
+  const iqAnon = allowed(anon + "select open_inquiry('" +
+    J({ kind:"use", body:"비로그인으로 여쭙습니다", tel:"010-7777-1234",
+        agree_at:NOW() }) + "'::jsonb)");
+  ok("  (씨앗) 비로그인으로 문의를 넣었습니다", iqAnon.yes, iqAnon.out || iqAnon.why);
+  const anonId = psql(as(ADM) + "select id::text from inquiry where no = '" +
+                      iqAnon.out + "'");
+  const iqAnonAns = allowed(as(ADM) + "select move_inquiry('" +
+    J({ id:anonId, to:"answered", answer:"전화로 답해 드렸습니다" }) + "'::jsonb)");
+  ok("  (씨앗) 그 문의에도 답을 적었습니다", iqAnonAns.yes, iqAnonAns.why);
+  const nAll1 = psql("select count(*) from notice where kind = 'inquiry'");
+  ok("⚠️⚠️ 비로그인 문의는 **아무에게도** 알림이 안 붙는다 (보낼 곳이 없습니다)",
+     nAll1 === nAll0, nAll0 + " → " + nAll1);
+
+  // ── ⑨ 0053 — 운영자 메모를 손님이 못 읽는가 ────────────────────
+  /* ⚠️⚠️⚠️ **RLS 는 줄은 막아도 칸은 못 막습니다.** 0045 는
+     `grant select on inquiry to authenticated` 로 표 전체를 주었고,
+     그 표에는 운영자 메모(`memo`)와 누가 답했는지(`answered_by`)가
+     있습니다 — 제 문의 줄은 `inquiry_mine` 으로 보이므로 그 두 칸이
+     그대로 읽혔습니다 (0013 에서 연락처를 다른 표로 가른 그 까닭).
+     ⚠️ 칸 단위 GRANT 는 **0줄이 아니라 질의를 거절**합니다. */
+  console.log("\n── 0053 운영자 메모 · 답한 사람은 손님이 못 읽습니다");
+  const memoRead = denied(as(HOST) + "select memo from inquiry");
+  ok("⚠️⚠️ 손님은 `memo` 를 **아예 못 읽는다** (운영자 메모입니다)",
+     memoRead.no, memoRead.why);
+  const byRead = denied(as(HOST) + "select answered_by from inquiry");
+  ok("⚠️ `answered_by` 도 못 읽는다 (누가 답했는지는 알 까닭이 없습니다)",
+     byRead.no, byRead.why);
+  /* ⚠️ 너무 넓게 막는 것도 고장입니다 — 화면이 부르는 칸은 그대로 */
+  const okRead = allowed(as(HOST) + "select no, kind, body, state, answer, " +
+                         "answered_at, created_at from inquiry limit 1");
+  ok("⚠️ 화면이 부르는 칸(답 · 답한 시각까지)은 **그대로 읽힌다**",
+     okRead.yes, okRead.why);
+  const ansSeen = psql(as(HOST) + "select count(*)::text from inquiry " +
+                       "where answer is not null");
+  ok("  그리고 적힌 답이 **실제로 보인다** (잰 것이 0이 아닙니다)",
+     ansSeen === "1", ansSeen);
 };

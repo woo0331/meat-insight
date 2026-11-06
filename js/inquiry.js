@@ -27,15 +27,21 @@
   var esc  = window.esc;
   var KEEP = (window.WOW_BIZ || {}).inquiryKeep || "";
 
-  /* 문의 갈래 — ⚠️ 값은 0045 의 check 제약과 **한 글자도 같아야** 합니다.
-     다르면 DB 가 "문의 종류를 골라 주세요" 로 거절하고, 손님은 골랐는데
-     왜 안 되는지 모릅니다. */
-  var KINDS = [
-    ["use",     "이용 중 막히는 곳"],
-    ["biz",     "업체 · 제휴 문의"],
-    ["privacy", "개인정보 (열람 · 정정 · 삭제 · 동의 철회)"],
-    ["etc",     "그 밖의 문의"]
-  ];
+  /* 문의 갈래 — ⚠️⚠️⚠️ **`js/data/deal.js` 한 곳에서 옵니다.** 전에는
+     이 파일이 넷을 따로 적고 있었고, 운영자의 문의함(`js/admininq.js`)이
+     또 한 벌을 적고 있었습니다 — 같은 키를 **세 곳**에 적어 둔 자리이고,
+     값은 0045 의 check 와 한 글자도 같아야 합니다 (다르면 DB 가 "문의
+     종류를 골라 주세요" 로 거절하고 손님은 골랐는데 왜 안 되는지
+     모릅니다). 이제 `tools/check-deal.js` 가 그 한 곳을 0045 와
+     맞춰 봅니다.
+     ⚠️⚠️ 그래서 `/help` 가 **`js/data/deal.js` 를 실어야** 합니다 —
+     안 실으면 아래에서 양식을 **안 엽니다** (`site.js` 를 안 실어서
+     양식이 조용히 안 열렸던 그 자리입니다. 조용히 빈 고르는 칸을
+     내는 것보다 안 여는 쪽이 낫습니다 — 고를 것이 없는 칸은 눌러도
+     아무 일이 안 나는 칸입니다 · 절대 규칙 5).
+     ⚠️ `tools/test-help.js` 가 양식을 눌러 보므로, 그 줄을 빠뜨리면
+     검사가 멈춥니다. */
+  var KINDS = window.AM_INQ_KIND || [];
 
   function form(signedIn){
     return '<form id="iqf" class="jform">' +
@@ -43,7 +49,7 @@
         '<label for="i-kind">문의 종류 <b>*</b></label>' +
         '<select id="i-kind" name="kind" required>' +
           KINDS.map(function(k){
-            return '<option value="' + esc(k[0]) + '">' + esc(k[1]) + '</option>';
+            return '<option value="' + esc(k.key) + '">' + esc(k.name) + '</option>';
           }).join("") +
         '</select>' +
       '</div>' +
@@ -102,6 +108,12 @@
       try{ console.warn("[help] 로그인 · 접수가 설정되지 않아 문의 양식을 " +
         "열지 않았습니다 (Vercel 의 SUPABASE_URL · SUPABASE_ANON_KEY)."); }catch(e){}
       return;                       /* 빌드가 찍어 둔 닫힌 글 그대로 */
+    }
+    /* ⚠️ 고를 것이 없으면 양식을 열지 않습니다 (위 머리말) */
+    if(!KINDS.length){
+      try{ console.warn("[help] js/data/deal.js 를 싣지 않아 문의 갈래가 " +
+        "비어 양식을 열지 않았습니다 (pages/help.js 의 js 목록)."); }catch(e){}
+      return;
     }
     if(!KEEP){
       /* ⚠️⚠️ 보유 기간을 못 보여 주면 동의를 받을 수 없습니다 (제15조

@@ -29,7 +29,10 @@
 --
 -- 되돌아갔는지 보는 법
 --   select 1 from pg_proc where proname = 'read_notice';   -- 있어야 합니다
---   select count(*) from pg_trigger where tgname like 'notice_%_t';  -- 7 이어야
+--   select count(*) from pg_trigger where tgname like 'notice_%_t';
+--     -- 이 번호가 일곱을 답니다. ⚠️ 뒤 번호가 더하면 늘어납니다 —
+--     -- 0053 이 문의 답변 알림을 더해 지금은 **8** 입니다 (갯수를
+--     -- 박아 두면 늘어난 날 멀쩡한 DB 를 고장으로 읽습니다).
 -- ════════════════════════════════════════════════════════════════════
 begin;
 

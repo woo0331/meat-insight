@@ -32,7 +32,11 @@
      ⚠️ 모르는 갈래면 `info` 로 떨어집니다 (빈 칸을 두지 않습니다). */
   var IC = { quote:"coin", jobapply:"case", jobmoved:"case",
              joinapply:"people", joinmoved:"people",
-             answer:"chat", hidden:"info" };
+             answer:"chat", hidden:"info",
+             /* ⚠️ 0053 — 고객센터 문의에 답이 올라왔습니다. `mail` 은
+                `js/components/base.js` 에 **있는** 이름입니다 (없는 이름을
+                넘기면 console.warn 만 나고 **빈 칸**이 됩니다). */
+             inquiry:"mail" };
 
   function when(iso){
     var d = new Date(iso);

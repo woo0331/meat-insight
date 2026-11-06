@@ -117,16 +117,35 @@ const NOTICE = [
   { id:"nt-2", kind:"joinapply", title:"조인 신청이 들어왔습니다", link:"/my",
     read_at:null, created_at:"2026-11-04T05:00:00Z" },
   { id:"nt-3", kind:"answer", title:"질문에 답변이 달렸습니다", link:"/my",
-    read_at:NOW, created_at:"2026-11-03T05:00:00Z" }
+    read_at:NOW, created_at:"2026-11-03T05:00:00Z" },
+  /* ⚠️ 0053 — 갈래가 늘면 아이콘이 **빈 칸**일 수 있습니다 (없는 이름은
+     console.warn 만 내고 빈 글자를 돌려줍니다). 눈으로 보려고 한 줄 둡니다. */
+  { id:"nt-4", kind:"inquiry", title:"보내신 문의에 답변이 올라왔습니다",
+    link:"/my", read_at:null, created_at:NOW }
 ];
+/* ⚠️⚠️⚠️ **가짜 자료도 DB 가 받는 값이어야 합니다.** 여기 넷이 전부
+   0045 에 **없는 값**이었습니다 (`kind:"service"` · `"report"` ·
+   `state:"new"` · 접수번호 `Q-...`). 화면은 모르는 값을 키 그대로
+   보여 주는 것이 맞으므로, 찍힌 그림에 영문 키가 나오고 그것을 보고
+   **멀쩡한 화면을 고치려** 들게 됩니다 (조인에서 `ok` 를 적어 두고
+   똑같이 밟은 자리입니다). 0045 의 값은 —
+     kind   use · biz · privacy · etc
+     state  open · reviewing · answered · closed
+     no     IQ-YYMMDD-XXXX (0045 가 짓습니다) */
 const INQ = [
-  { id:"iq-1", no:"Q-261105-0002", kind:"service", state:"new",
+  { id:"iq-1", no:"IQ-261105-0002", kind:"biz", state:"open",
     body:"업체 입점은 어떻게 신청하나요?", name:"김문의",
     tel:"010-7777-8888", email:"", created_at:NOW },
-  { id:"iq-2", no:"Q-261104-0001", kind:"report", state:"answered",
-    body:"<script>alert(1)</script> 신고합니다", name:"이문의",
-    tel:"010-9999-0000", email:"a@b.test", answer:"확인해 드렸습니다.",
-    created_at:"2026-11-04T05:00:00Z" }
+  { id:"iq-2", no:"IQ-261104-0001", kind:"use", state:"answered",
+    body:"<script>alert(1)</script> 요청이 안 들어갑니다", name:"이문의",
+    tel:"010-9999-0000", email:"a@b.test",
+    answer:"확인해 드렸습니다. 지역을 넓혀 주시면 배정이 갑니다.",
+    answered_at:NOW, created_at:"2026-11-04T05:00:00Z" },
+  /* ⚠️ 아직 답이 없는 줄도 한 장 — 손님 화면이 "기다리는 중" 을
+     어떻게 적는지 눈으로 봐야 합니다 */
+  { id:"iq-3", no:"IQ-261106-0003", kind:"privacy", state:"reviewing",
+    body:"제 기록을 지워 주세요", name:"박문의", tel:"010-2222-3333",
+    email:"", created_at:NOW }
 ];
 const REPS = [
   { id:"rp-1", no:"R-261105-0001", kind:"review", state:"new",
@@ -216,7 +235,9 @@ const T_MY = {
   request:[REQ], request_item:ITEMS, assignment:[ASG], quote:[QUOTE],
   provider:PVS, review:[], appointment:[], notice:NOTICE,
   joinroom:ROOMS, joinapply:ROOMAPP, cq:CQM, ca:CAM,
-  jobpost:JOBMINE, jobapply:JOBAPP, v_join_contact:[], v_job_contact:[]
+  jobpost:JOBMINE, jobapply:JOBAPP, v_join_contact:[], v_job_contact:[],
+  /* ⚠️ 0045 → 0053 — 내가 보낸 문의와 그 답변 (`js/myinq.js`) */
+  inquiry:INQ
 };
 
 /* ── 장면 ────────────────────────────────────────────────────────
@@ -261,7 +282,8 @@ const BOXES = {
      두어서 `/my` 상자가 한 장도 안 찍혔습니다 — 찍히는 갯수를 보고
      알았습니다. `pages/my.js` 에서 세어 고쳤습니다. */
   "/my": [["me", "#mybox"], ["notice", "#noticebox"], ["req", "#reqbox"],
-          ["join", "#joinmine"], ["cq", "#mycq"], ["job", "#jobmine"]]
+          ["join", "#joinmine"], ["cq", "#mycq"], ["job", "#jobmine"],
+          ["inq", "#myinqbox"]]
 };
 
 (async function(){

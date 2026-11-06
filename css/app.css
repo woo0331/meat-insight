@@ -664,6 +664,14 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
        word-break:keep-all; overflow-wrap:anywhere; }
 .mq-w{ margin:0; font-size:14px; color: var(--bad-text);
        background: var(--bad-soft); border-radius: var(--r-sm); padding:8px 10px; }
+/* 내가 보낸 문의의 **답변** (/my · 0045) — ⚠️ 쓰는 변수는 전부
+   tokens.css 에 있는 것입니다 (지어 쓰면 조용히 기본값으로 떨어집니다). */
+.mq-a{ background: var(--grn-soft); border-radius: var(--r-sm);
+       padding:12px 14px; display:grid; gap:6px; }
+.mq-ah{ margin:0; font-size:13.5px; font-weight:700; color: var(--grn-text); }
+.mq-ab{ margin:0; font-size:15px; color: var(--ink); line-height:1.6;
+        word-break:keep-all; overflow-wrap:anywhere; }
+.mq-z{ margin:0; font-size:14px; color: var(--ink3); }
 .mq-act{ display:flex; gap:8px; flex-wrap:wrap; }
 .mq-act .btn{ min-height:40px; }
 /* ⚠️ 0건 자리에서 길을 내는 단추 — 문장 안에 링크를 박지 않습니다 */

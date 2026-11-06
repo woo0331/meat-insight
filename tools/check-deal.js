@@ -134,7 +134,15 @@ function run(opt){
        영문 키가 찍히거나, 화면이 내는 값을 DB 가 거절합니다. */
     ["수수료 종류 (fee_type)",   enumKeys(sql, "fee_type"),  W.AM_FEE_TYPE],
     ["확정 시점 (fee_when)",     enumKeys(sql, "fee_when"),  W.AM_FEE_WHEN],
-    ["지급 주기 (fee_cycle)",    enumKeys(sql, "fee_cycle"), W.AM_FEE_CYCLE]
+    ["지급 주기 (fee_cycle)",    enumKeys(sql, "fee_cycle"), W.AM_FEE_CYCLE],
+    /* ⚠️ 0045 의 고객센터 문의 — 갈래와 상태가 **둘 다** check 입니다.
+       ⚠️⚠️ 이 말은 **두 화면**이 씁니다 (운영자의 문의함 · 손님의
+       "내가 보낸 문의"). 그래서 어긋나면 한쪽에만 영문 키가 찍혀
+       **다른 쪽만 보는 눈에는 멀쩡해 보입니다.** */
+    ["문의 갈래 (inquiry.kind)",
+     checkKeys(sql, "kind", "inquiry"),  W.AM_INQ_KIND],
+    ["문의 상태 (inquiry.state)",
+     checkKeys(sql, "state", "inquiry"), W.AM_INQ_ST]
   ];
 
   want.forEach(function(w){

@@ -52,21 +52,20 @@
   function badge(name, tone){
     return '<span class="dk-st dk-' + esc(tone) + '">' + esc(name) + '</span>';
   }
-  /* 말은 **한 곳**입니다 — 화면마다 따로 적으면 어긋납니다.
-     ⚠️ 값은 0045 의 check 제약과 한 글자도 같아야 합니다. */
-  var ST = {
-    open:      { name:"새 문의",  tone:"ok"   },
-    reviewing: { name:"확인 중",  tone:"info" },
-    answered:  { name:"답변함",   tone:"grn"  },
-    closed:    { name:"닫음",     tone:"ink"  }
-  };
-  var KIND = {
-    use:     "이용 문의",
-    biz:     "업체 · 제휴",
-    privacy: "개인정보",
-    etc:     "그 밖"
-  };
-  function stOf(k){ return ST[k] || { name:String(k || ""), tone:"ink" }; }
+  /* ⚠️⚠️⚠️ **말은 `js/data/deal.js` 한 곳입니다** — 전에는 그 표가
+     이 파일 안에 있었습니다. 그런데 같은 상태를 **손님 화면**
+     (`js/myinq.js` 의 "내가 보낸 문의")도 적게 되면서, 키 묶음이
+     둘이 되면 한쪽만 고치는 날 **그 화면만** 영문 키를 찍습니다
+     (그 화면을 안 보는 눈에는 멀쩡해 보입니다).
+     ⚠️ 그래서 `tools/check-deal.js` 가 0045 의 check 와 맞춰 보는
+     그 표를 여기서도 부릅니다 — 모르는 키는 **키 그대로** 돌려줍니다. */
+  function stOf(k){
+    var x = window.amInqSt ? window.amInqSt(k) : null;
+    return x || { name:String(k || ""), tone:"ink" };
+  }
+  function kindOf(k){
+    return window.amInqKindShort ? window.amInqKindShort(k) : String(k || "");
+  }
 
   function tabs(n1, n2){
     return '<div class="bz-tabs" role="tablist">' +
@@ -97,7 +96,7 @@
       var s = stOf(r.state);
       var live = r.state === "open" || r.state === "reviewing";
       return '<li data-inq="' + esc(r.id) + '">' +
-        '<b>' + esc(KIND[r.kind] || r.kind) + '</b> ' + badge(s.name, s.tone) +
+        '<b>' + esc(kindOf(r.kind)) + '</b> ' + badge(s.name, s.tone) +
         '<p class="fe-r">' + esc(r.no || "") +
           ' · ' + esc(window.amDay ? window.amDay(r.created_at) : "") +
           (reach(r) ? ' · ' + esc(reach(r)) : '') + '</p>' +
@@ -141,9 +140,20 @@
         var done = rows.filter(function(r){
           return r.state === "answered" || r.state === "closed"; });
         box.innerHTML = '<h2 class="adm-h">고객센터 문의</h2>' +
+          /* ⚠️⚠️⚠️ **이 글이 코드와 달랐습니다** (0053 에서 고쳤습니다).
+             "답은 적어 주신 연락처로 운영자가 직접 보냅니다" 라고만
+             적혀 있었는데, 그때는 적은 답을 **읽는 화면이 한 곳도
+             없어서** 그 말이 맞았습니다. 지금은 로그인하신 분은
+             `/my` 에서 그 답을 보고 알림도 받습니다 (0053) — 안 고치면
+             운영자가 "따로 전화해야 하는구나" 로 읽습니다.
+             ⚠️ 비로그인 문의는 여전히 직접 보내셔야 합니다 (누구
+             것인지 알 길이 없어 그 줄은 /my 에 안 나옵니다). */
           '<p class="myhint">⚠️ <b>답변함</b>으로 옮기려면 무엇이라고 ' +
           '답하셨는지 적어야 합니다 — 적은 글이 기록에 남습니다. ' +
-          '답은 적어 주신 연락처로 운영자가 직접 보냅니다 ' +
+          '로그인하고 보내신 문의는 그 글이 손님의 <b>내 정보</b> 화면에 ' +
+          '그대로 보이고 알림도 갑니다. 로그인 없이 들어온 문의는 ' +
+          '누구 것인지 알 수 없어 그 자리에 안 나오니, 적어 주신 ' +
+          '연락처로 직접 보내 주세요 ' +
           '(우리가 메일 · 문자를 보내는 장치는 아직 없습니다).</p>' +
           tabs(live.length, done.length) +
           '<div class="bz-body">' + view(TAB === "live" ? live : done) +

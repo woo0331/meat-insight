@@ -118,6 +118,49 @@ window.AM_APPT_ST = [
   { key:"cancel", name:"취소",   tone:"bad"  }
 ];
 
+/* 고객센터 문의 — 갈래 넷 · 상태 넷 (DB 는 0045)
+
+   ⚠️⚠️⚠️ **말을 두 벌 담습니다 — 키는 한 벌입니다.** 운영자가 보는
+   말과 손님이 보는 말이 다릅니다 ("새 문의" 는 운영자의 말이고, 손님
+   화면에 찍으면 운영자에게 할 말을 손님에게 찍는 것입니다 · 절대
+   규칙 3). 그렇다고 표를 둘로 가르면 **키 묶음이 둘**이 되어 한쪽만
+   고치는 날 조용히 어긋납니다 — 그래서 줄은 하나이고 칸이 둘입니다.
+   ⚠️ `tools/check-deal.js` 가 0045 의 check 와 **키**를 맞춰 봅니다
+   (한글은 안 봅니다 — 그건 말입니다).
+
+   ⚠️⚠️ **손님 쪽 말에 "문자로 알려 드립니다" 를 적지 않습니다** —
+   우리는 밖으로 안 보냅니다 (0050 · 절대 규칙 5). 답이 왔다는 것은
+   `/my` 에서 보십니다.
+
+   ⚠️ `short` 는 **운영자 목록**의 말입니다 — 한 줄에 여러 건이 쌓이는
+   자리라 긴 말을 쓰면 줄이 넘칩니다. 손님에게 여쭙는 자리(`/help` 의
+   고르는 칸)는 `name` 을 씁니다. */
+window.AM_INQ_KIND = [
+  { key:"use",     name:"이용 중 막히는 곳",  short:"이용 문의" },
+  { key:"biz",     name:"업체 · 제휴 문의",   short:"업체 · 제휴" },
+  { key:"privacy", name:"개인정보 (열람 · 정정 · 삭제 · 동의 철회)",
+                                              short:"개인정보" },
+  { key:"etc",     name:"그 밖의 문의",       short:"그 밖" }
+];
+window.AM_INQ_ST = [
+  { key:"open",      name:"새 문의", mine:"접수됐습니다",       tone:"ok"   },
+  { key:"reviewing", name:"확인 중", mine:"확인하고 있습니다",   tone:"info" },
+  /* ⚠️ "답변이 **왔습니다**" 가 아니라 "올라왔습니다" 입니다 — 우리는
+     아무 데로도 안 보냅니다 (알림 제목과 같은 말로 둡니다). */
+  { key:"answered",  name:"답변함",  mine:"답변이 올라왔습니다", tone:"grn"  },
+  /* ⚠️ 손님에게 "닫음" 이라고 적지 않습니다 — 내 문의가 닫혔다는 말은
+     거절당한 것처럼 읽힙니다. 끝난 것은 맞고, 까닭은 답변에 있습니다. */
+  { key:"closed",    name:"닫음",    mine:"끝난 문의입니다",     tone:"ink"  }
+];
+window.amInqKindName = function(k){
+  var x = amPick(window.AM_INQ_KIND, k); return x ? x.name : String(k || "");
+};
+window.amInqKindShort = function(k){
+  var x = amPick(window.AM_INQ_KIND, k);
+  return x ? (x.short || x.name) : String(k || "");
+};
+window.amInqSt = function(k){ return amPick(window.AM_INQ_ST, k); };
+
 window.amDealSt   = function(k){ return amPick(window.AM_DEAL_ST, k); };
 window.amApptKind = function(k){ return amPick(window.AM_APPT_KIND, k); };
 window.amApptSt   = function(k){ return amPick(window.AM_APPT_ST, k); };

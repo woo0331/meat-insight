@@ -2534,12 +2534,37 @@ function keepOf(name){
     ["/desk 가격 올리기 양식", "/desk", PRO,
      Object.assign({ assignment:[], request:[], quote:[], request_item:[] }, PRT), {},
      "#pricebox [data-pf='open']"],
-    ["/admin 배정 · 지표 · 관리 · 심사", "/admin", { role:"admin", name:"관리자" },
+    /* ⚠️ 운영자 문의함도 같이 — 그 상자도 폰 폭과 대비를 안 재고 있었습니다.
+       ⚠️⚠️ 가짜 값은 **0045 가 받는 것**이어야 합니다 (kind: use · biz ·
+       privacy · etc / state: open · reviewing · answered · closed) —
+       아니면 찍힌 화면에 영문 키가 나오고 멀쩡한 화면을 고치려 듭니다. */
+    ["/admin 배정 · 지표 · 관리 · 심사 · 문의함", "/admin",
+     { role:"admin", name:"관리자" },
      Object.assign({}, ADMT, BIZ, PROT,
-       { review:RVADM, report:REPS }), { biz_metrics: MET }],
-    ["/my 견적 비교 · 후기 · 제공 이력", "/my", { role:"customer", name:"홍길동" },
+       { review:RVADM, report:REPS,
+         inquiry:[{ id:"iq-a1", no:"IQ-261106-0001", kind:"use",
+                    body:"요청이 안 들어갑니다", name:"김문의",
+                    tel:"010-1111-2222", email:"", by_user:null,
+                    state:"open", answer:null,
+                    created_at:"2026-11-06T01:00:00Z", answered_at:null }] }),
+     { biz_metrics: MET }],
+    /* ⚠️⚠️ **새 상자를 만드는 날 이 줄에 같이 넣으세요** — 안 넣으면
+       그 안은 폰 폭에서도 · 글자 대비에서도 **아무도 안 재는 자리**가
+       됩니다 (아래 대비 재는 쪽이 이 묶음을 그대로 다시 씁니다).
+       0045 → 0053 의 "내가 보낸 문의" 를 그래서 여기 같이 답니다 —
+       답변 칸은 연초록 바탕에 글자를 올리는 자리라 대비를 재야 합니다. */
+    ["/my 견적 비교 · 후기 · 제공 이력 · 보낸 문의", "/my",
+     { role:"customer", name:"홍길동" },
      Object.assign({}, MYT, { quote:[QCHOSEN, Q2], review:[],
-                              appointment:[], assignment:ASGS }), {}],
+                              appointment:[], assignment:ASGS,
+       inquiry:[{ id:"iq-p1", no:"IQ-261106-0001", kind:"use",
+                  body:"요청을 넣었는데 업체가 안 붙습니다", state:"answered",
+                  answer:"지역을 넓혀 주시면 배정이 갑니다.",
+                  answered_at:"2026-11-06T02:00:00Z",
+                  created_at:"2026-11-05T01:00:00Z" },
+                 { id:"iq-p2", no:"IQ-261106-0002", kind:"privacy",
+                   body:"제 기록을 지워 주세요", state:"open", answer:null,
+                   answered_at:null, created_at:"2026-11-06T01:00:00Z" }] }), {}],
     /* ⚠️ 갈래를 눌러야 나오는 자리 둘 — 체크칸 수십 개와 신고 본문 */
     ["/admin 업체 등록 양식", "/admin", { role:"admin", name:"관리자" },
      Object.assign({}, ADMT, BIZ, PROT, { report:REPS }), { biz_metrics: MET },
@@ -3950,6 +3975,125 @@ function keepOf(name){
     ok("⚠️ " + who.role + " 에게는 **한 줄도** 안 보인다", !r.drawn, r.html.slice(0, 60));
     await g.p.close();
   }
+
+  /* ══════════════════════════════════════════════════════════════
+     내가 보낸 문의와 **그 답변** — /my (js/myinq.js · 0045 → 0053)
+
+     ⚠️⚠️⚠️ **0045 가 답을 받는 자리까지 세워 두고 그 답을 읽는 화면을
+     안 만들었습니다.** 운영자는 답을 적고 "답변함" 으로 옮기는데, 손님은
+     그 답을 어디서도 못 봤습니다 — 즉 DB 에 적힌 답은 **아무도 안 읽는
+     글**이었습니다. 설정이 있어야 열리는 자리라 빌드가 찍은 HTML 만
+     보는 검사는 영원히 못 봅니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── /my 내가 보낸 문의 (0045 → 0053)");
+  const MYCUS = { role:"customer", name:"홍길동", signedIn:true };
+  const IQ_ONE = [
+    { id:"iq-1", no:"IQ-261106-0001", kind:"use",
+      body:"요청을 넣었는데 업체가 안 붙습니다",
+      state:"answered",
+      /* ⚠️ 운영자가 적은 글입니다 — 태그를 넣어 보고 esc() 를 봅니다 */
+      answer:"지역을 넓혀 주세요 <img src=x onerror=alert(8)>",
+      answered_at:"2026-11-06T02:00:00Z", created_at:"2026-11-05T01:00:00Z" },
+    { id:"iq-2", no:"IQ-261106-0002", kind:"privacy",
+      body:"제 기록을 지워 주세요", state:"open",
+      answer:null, answered_at:null, created_at:"2026-11-06T01:00:00Z" }
+  ];
+  async function iqOf(who, tables){
+    const g = await open("/my", who, Object.assign(
+      { request:[], quote:[], review:[], cq:[], ca:[],
+        joinroom:[], joinapply:[], v_join_contact:[],
+        jobpost:[], jobapply:[], v_job_contact:[], notice:[] }, tables), {}, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("myinqbox");
+      return { drawn: !!b && !b.hidden && b.children.length > 0,
+               text: b ? b.innerText : "",
+               html: b ? b.innerHTML : "",
+               answers: b ? b.querySelectorAll(".mq-a").length : 0,
+               waiting: b ? b.querySelectorAll(".mq-z").length : 0,
+               imgs: b ? b.querySelectorAll("img").length : 0 };
+    });
+    return { g: g, r: r };
+  }
+
+  { const { g, r } = await iqOf(MYCUS, { inquiry: IQ_ONE });
+    ok("보낸 문의가 /my 에 그려진다", r.drawn, r.html.slice(0, 80));
+    ok("⚠️⚠️ 운영자가 적은 **답변이 실제로 보인다** (아무도 안 읽는 글이 아니다)",
+       r.answers === 1 && r.text.indexOf("지역을 넓혀 주세요") >= 0,
+       "답 칸 " + r.answers);
+    ok("⚠️ 아직 답이 없는 줄은 **기다리는 중이라고만** 말한다 " +
+       "(언제까지 답한다고 약속하지 않습니다)",
+       r.waiting === 1 && r.text.indexOf("아직 답변이 올라오지 않았습니다") >= 0,
+       "기다리는 줄 " + r.waiting);
+    /* ⚠️⚠️ 운영자에게 할 말을 손님 화면에 찍지 않습니다 (절대 규칙 3) —
+       "새 문의" · "닫음" 은 운영자의 말입니다 */
+    ok("⚠️⚠️ 상태를 **손님 말**로 적는다 (운영자의 '새 문의' 가 안 나온다)",
+       r.text.indexOf("접수됐습니다") >= 0 && r.text.indexOf("새 문의") < 0,
+       r.text.slice(0, 160).replace(/\n/g, " | "));
+    /* ⚠️ 밖으로 보내지 않으므로 "알려 드립니다" 라고 적지 않습니다 */
+    ok("⚠️ 문자 · 메일로 보낸다고 **적지 않는다** (0050 의 그 까닭)",
+       r.text.indexOf("보내 드리지 않습니다") >= 0, "");
+    ok("⚠️ 로그인 없이 보낸 문의는 여기 안 나온다는 것을 **말한다** " +
+       "(안 적으면 '넣었는데 안 보인다' 가 됩니다)",
+       r.text.indexOf("로그인하지 않고") >= 0, "");
+    /* ⚠️⚠️ 손님 · 운영자가 쓴 글 때문에 그림이 생기면 안 됩니다 */
+    ok("⚠️⚠️ 답변 글의 태그가 **날것으로 안 들어간다** (esc)",
+       r.imgs === 0 && r.html.indexOf("&lt;img") >= 0, "img " + r.imgs);
+    /* ⚠️⚠️⚠️ 0053 이 `memo` · `answered_by` 의 칸 GRANT 를 거두었습니다 —
+       부르면 0줄이 아니라 **질의가 통째로 거절**됩니다 (0050 · 0052 에서
+       두 번 밟은 자리입니다). 그래서 **보내는 주소를 뜯어** 봅니다. */
+    const askd = g.sent.filter(function(x){
+      return (x.body || "").indexOf("/inquiry?") >= 0; }).map(function(x){ return x.body; });
+    ok("⚠️ 문의를 **실제로 읽으러 간다** (잰 것이 0이 아닙니다)",
+       askd.length >= 1, JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    ok("⚠️⚠️⚠️ `memo` · `answered_by` 를 **부르지 않는다** " +
+       "(0053 이 그 칸을 거두었습니다 — 부르면 질의가 거절됩니다)",
+       askd.every(function(u){
+         return u.indexOf("memo") < 0 && u.indexOf("answered_by") < 0; }),
+       askd.join(" "));
+    await g.p.close(); }
+
+  /* ⚠️⚠️ 0건이면 **한 줄도** 안 그립니다 (문의를 넣은 적 없는 분께
+     빈 상자를 두면 그때부터 치울 수 없는 자리가 됩니다 · 절대 규칙 2) */
+  { const { g, r } = await iqOf(MYCUS, { inquiry: [] });
+    ok("⚠️⚠️ 보낸 문의가 0건이면 **한 줄도 안 그린다**",
+       !r.drawn && r.html === "", r.html.slice(0, 60));
+    await g.p.close(); }
+
+  /* ⚠️ 로그인 전에는 안 그리고 **읽으러 가지도 않습니다** */
+  { const g = await open("/my", { role:"customer", signedIn:false },
+      { inquiry: IQ_ONE }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("myinqbox");
+      return { drawn: !!b && !b.hidden && b.children.length > 0 };
+    });
+    ok("⚠️ 로그인 전에는 **한 줄도** 안 보인다", !r.drawn, "");
+    ok("  ⚠️⚠️ 그 자료를 **읽으러 가지도 않는다**",
+       g.sent.filter(function(x){
+         return (x.body || "").indexOf("/inquiry?") >= 0; }).length === 0,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    await g.p.close(); }
+
+  /* ⚠️⚠️ 알림 갈래가 늘었습니다 (0053 의 'inquiry') — `window.icon()` 은
+     없는 이름을 주면 `console.warn` 만 내고 **빈 글자**를 돌려주므로
+     가로로 밀리지도 · 글자가 작지도 않아 **어떤 검사도 안 잡습니다.**
+     그래서 그 줄에 아이콘이 **실제로 그려지는지**를 봅니다. */
+  { const g = await open("/my", MYCUS,
+      { inquiry: [], notice: [{ id:"n-1", kind:"inquiry",
+          title:"보내신 문의에 답변이 올라왔습니다", link:"/my",
+          obj:"inquiry", obj_id:"IQ-261106-0001",
+          read_at:null, created_at:"2026-11-06T02:00:00Z" }] }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("noticebox");
+      const ic = b ? b.querySelector(".nt-ic svg") : null;
+      return { drawn: !!b && !b.hidden,
+               icon: !!ic,
+               text: b ? b.innerText : "" };
+    });
+    ok("문의 답변 알림이 그려진다", r.drawn && r.text.indexOf("답변이 올라왔습니다") >= 0,
+       r.text.slice(0, 80));
+    ok("⚠️⚠️ 그 줄의 아이콘이 **빈 칸이 아니다** (없는 이름은 빈 글자를 " +
+       "돌려주고 아무 검사도 안 잡습니다)", r.icon, "");
+    await g.p.close(); }
 
   console.log("\n── /desk 시설 사진 · 증빙서류 (0051)");
   const PH = [

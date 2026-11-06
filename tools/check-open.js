@@ -85,7 +85,9 @@ const LOOK = [
   ["joinKeep",    "조인 보유 기간",
    "비면 /cat/matchup 의 조인 여는 양식이 열리지 않습니다 (제15조 제2항)"],
   ["careerKeep",  "구인 · 구직 보유 기간",
-   "비면 /cat/career 의 글 올리는 양식이 열리지 않습니다 (제15조 제2항)"]
+   "비면 /cat/career 의 글 올리는 양식이 열리지 않습니다 (제15조 제2항)"],
+  ["listingKeep", "중고 직거래 보유 기간",
+   "비면 /cat/used 의 매물 올리는 양식이 열리지 않습니다 (제15조 제2항)"]
 ];
 
 let measured = 0, left = 0;

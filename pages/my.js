@@ -42,6 +42,12 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="mycq" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ 내 중고 매물도 **따로 그립니다** (js/mylisting.js · 0056).
+     ⚠️⚠️⚠️ 여기도 연락처를 주고받는 유일한 자리입니다 (제17조 제2항) —
+     목록 화면(`/cat/used`)에는 연락처 칸이 **아예 없습니다**. */
+  body += '<section class="sec sec-alt"><div class="wrap">' +
+    '<div id="lsmine" class="none" hidden></div></div></section>';
+
   /* ⚠️ 내 구인 · 구직 · 제휴도 **따로 그립니다** (js/myjob.js · 0048).
      ⚠️⚠️ 여기도 연락처를 주고받는 유일한 자리입니다 (제17조 제2항) —
      목록 화면에는 연락처 칸이 아예 없습니다. */
@@ -64,6 +70,6 @@ exports.build = function(){
          "/js/auth.js", "/js/photo.js", "/js/account.js",
          "/js/review.js", "/js/myreq.js",
          "/js/data/regions.js", "/js/myjoin.js", "/js/mycq.js",
-         "/js/myjob.js", "/js/myinq.js", "/js/notice.js"]
+         "/js/myjob.js", "/js/mylisting.js", "/js/myinq.js", "/js/notice.js"]
   };
 };

@@ -105,7 +105,9 @@ function resolves(href){
 /* ⚠️ 막다른 길이 아니라는 뜻 — 그 상자 안에서 **할 수 있는 것이 하나는
    있는가** (어디로 가는 링크 · 누르는 단추 · 적는 양식 가운데 하나).
    갯수를 세지 않습니다. */
-const MY_BOXES = ["mybox", "reqbox", "joinmine", "mycq", "jobmine"];
+/* ⚠️ 새 /my 상자를 만드는 날 **이 줄을 같이 늘리세요** — 안 늘리면
+   그 상자만 조용히 아무도 안 재는 자리가 됩니다 (0056 의 lsmine). */
+const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine"];
 
 (async function(){
   const prove = process.argv.indexOf("--prove") >= 0;

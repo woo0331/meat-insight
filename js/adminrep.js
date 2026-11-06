@@ -58,7 +58,7 @@
          여기서 안 읽으면 운영자 화면에는 아무것도 안 적힙니다 —
          에러는 한 줄도 없습니다. */
       get("report?select=id,kind,request_id,provider_id,review_id," +
-          "joinroom_id,cq_id,ca_id,jobpost_id,body,state," +
+          "joinroom_id,cq_id,ca_id,jobpost_id,listing_id,body,state," +
           "resolution,created_at,closed_at&order=created_at.desc&limit=200"),
       get("request?select=id,no&order=created_at.desc&limit=500"),
       get("provider?select=id,name&order=name.asc&limit=300"),
@@ -70,7 +70,12 @@
       get("cq?select=id,title,state&order=created_at.desc&limit=300"),
       get("ca?select=id,q_id,state&order=created_at.desc&limit=300"),
       get("jobpost?select=id,title,state&order=created_at.desc&limit=300"),
-      get("joinroom?select=id,title,state&order=created_at.desc&limit=300")
+      get("joinroom?select=id,title,state&order=created_at.desc&limit=300"),
+      /* ⚠️ 0056 — 중고 매물도 신고가 들어옵니다. ⚠️⚠️ `contact` ·
+         `agree_at` 은 **안 읽습니다** — 0056 이 그 칸을 안 줬으므로
+         부르면 질의가 통째로 거절되고, 신고를 처리하는 데 필요하지도
+         않습니다. */
+      get("listing?select=id,title,state&order=created_at.desc&limit=300")
     ]);
   }
 
@@ -117,6 +122,10 @@
     if(r.jobpost_id)
       bits.push("구인 · 구직 글" + (posts.jb[r.jobpost_id]
         ? " — " + posts.jb[r.jobpost_id].title : ""));
+    /* ⚠️ 0056 — 중고 매물 */
+    if(r.listing_id)
+      bits.push("중고 매물" + (posts.ls[r.listing_id]
+        ? " — " + posts.ls[r.listing_id].title : ""));
     return bits.join(" · ");
   }
 
@@ -141,6 +150,11 @@
               문은 **연 사람만** 씁니다). */
            : r.joinroom_id ? { fn:"move_joinroom", id:r.joinroom_id,
                                row:posts.jr[r.joinroom_id], name:"조인 자리" }
+           /* ⚠️ 0056 — 중고 매물도 가립니다 (`move_listing`). 가리는
+              길을 안 내면 신고를 받아 놓고 할 수 있는 일이 "처리했음"
+              뿐입니다 (내리는 문은 **올린 사람만** 씁니다). */
+           : r.listing_id ? { fn:"move_listing", id:r.listing_id,
+                              row:posts.ls[r.listing_id], name:"중고 매물" }
            : null;
     if(!it) return "";
     if(it.row && it.row.state === "hidden")
@@ -193,11 +207,12 @@
       var reps = got[0], reqs = got[1], pvs = got[2];
       /* ⚠️ 못 읽은 것은 **빈 표**로 둡니다 — 그러면 제목 없이 종류만
          적히고, 지어낸 제목이 찍히지 않습니다 (절대 규칙 1 · 2). */
-      var posts = { cq:{}, ca:{}, jb:{}, jr:{} };
+      var posts = { cq:{}, ca:{}, jb:{}, jr:{}, ls:{} };
       (got[3] || []).forEach(function(x){ posts.cq[x.id] = x; });
       (got[4] || []).forEach(function(x){ posts.ca[x.id] = x; });
       (got[5] || []).forEach(function(x){ posts.jb[x.id] = x; });
       (got[6] || []).forEach(function(x){ posts.jr[x.id] = x; });
+      (got[7] || []).forEach(function(x){ posts.ls[x.id] = x; });
       /* ⚠️⚠️ 못 읽었으면 **0건이라고 말하지 않습니다** */
       if(reps === null){
         box.innerHTML = '<h2 class="adm-h">신고 · 분쟁</h2>' +

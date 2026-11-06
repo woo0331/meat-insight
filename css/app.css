@@ -594,6 +594,27 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
         word-break:keep-all; overflow-wrap:anywhere; }
 .jnc-go{ justify-self:start; }
 .jnc-go[disabled]{ opacity:.55; cursor:default; }
+
+/* ── 중고 직거래 매물 카드 (js/listing.js · 0056) ────────────────
+   ⚠️⚠️ **조인 카드(`.jnc`)를 그대로 쓰지 않습니다.** 짧은 이름을 두
+   자리에 쓰면 한쪽 모양을 고치는 날 다른 쪽이 조용히 바뀌고, 집는
+   검사가 엉뚱한 칸을 집습니다 (`.lg` 가 로고이면서 약관이었던 자리 ·
+   `.pvst-n` 이 담당자이면서 상호였던 자리). 모양은 닮았지만 이름을
+   가릅니다. */
+.lsl{ list-style:none; margin:0; padding:0; display:grid; gap:14px; }
+.lsc{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+      padding:18px 20px; display:grid; gap:8px; }
+/* ⚠️ 격자 칸은 제 내용만큼 벌어집니다 — 긴 제목이 화면을 밀지 않게 */
+.lsc > *{ min-width:0; }
+.lsc-h{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.lsc-h h3{ margin:0; font-size:17px; color: var(--ink);
+           word-break:keep-all; overflow-wrap:anywhere; }
+/* 값 — ⚠️ 글자색은 **짙은 쪽**입니다 (액션그린은 면 전용 · 흰 바탕 3.14) */
+.lsc-p{ flex:none; font-size:16px; font-weight:800; color: var(--grn-text); }
+.lsc-m{ margin:0; font-size:14.5px; color: var(--ink3); }
+.lsc-b{ margin:0; font-size:15px; color: var(--ink); line-height:1.6;
+        word-break:keep-all; overflow-wrap:anywhere; }
+.lsc-go{ justify-self:start; }
 .jafh{ margin:12px 0 0; font-size:15px; color: var(--ink); }
 .jbox-h{ margin:0 0 14px; font-size:18px; color: var(--ink); }
 .jnote{ margin:14px 0 0; font-size:13.5px; color: var(--ink3); line-height:1.55; }

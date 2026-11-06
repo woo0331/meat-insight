@@ -209,7 +209,19 @@ function run(opt){
        자리와 손님 화면이 찾는 자리가 달라져 **광고가 에러 없이 그냥
        안 보입니다**(돈을 받고 안 띄우는 꼴입니다). */
     ["광고 자리 (ad_place)",   enumKeys(sql, "ad_place"), W.AM_AD_PLACE],
-    ["광고 상태 (ad_state)",   enumKeys(sql, "ad_state"), W.AM_AD_STATE]
+    ["광고 상태 (ad_state)",   enumKeys(sql, "ad_state"), W.AM_AD_STATE],
+    /* ⚠️⚠️ 0056 의 중고 직거래 — **조인이 이 말을 `js/myjoin.js` 안에
+       들고 있어서 아무도 DB 와 맞춰 보지 않았고, 거기서 실제로 영문
+       `closed` 가 손님 화면에 찍혔습니다.** 중고는 `js/data/deal.js`
+       한 곳이고 여기서 셉니다.
+       ⚠️ 매물 상태 · 문의 상태 · **물건 상태** 셋 다 봅니다 — 물건
+       상태가 어긋나면 중고 목록에 `fair` 가 그대로 찍힙니다. */
+    ["매물 상태 (listing.state)",
+     checkKeys(sql, "state", "listing"),    W.AM_LST_ST],
+    ["매물 문의 상태 (listingask.state)",
+     checkKeys(sql, "state", "listingask"), W.AM_LSTASK_ST],
+    ["물건 상태 (listing.cond)",
+     checkKeys(sql, "cond", "listing"),     W.AM_LST_COND]
   ];
 
   want.forEach(function(w){

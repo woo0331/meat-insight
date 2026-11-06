@@ -2578,7 +2578,7 @@ function keepOf(name){
        됩니다 (아래 대비 재는 쪽이 이 묶음을 그대로 다시 씁니다).
        0045 → 0053 의 "내가 보낸 문의" 를 그래서 여기 같이 답니다 —
        답변 칸은 연초록 바탕에 글자를 올리는 자리라 대비를 재야 합니다. */
-    ["/my 견적 비교 · 후기 · 제공 이력 · 보낸 문의", "/my",
+    ["/my 견적 비교 · 후기 · 제공 이력 · 보낸 문의 · 중고 매물", "/my",
      { role:"customer", name:"홍길동" },
      Object.assign({}, MYT, { quote:[QCHOSEN, Q2], review:[],
                               appointment:[], assignment:ASGS,
@@ -2589,7 +2589,23 @@ function keepOf(name){
                   created_at:"2026-11-05T01:00:00Z" },
                  { id:"iq-p2", no:"IQ-261106-0002", kind:"privacy",
                    body:"제 기록을 지워 주세요", state:"open", answer:null,
-                   answered_at:null, created_at:"2026-11-06T01:00:00Z" }] }), {}],
+                   answered_at:null, created_at:"2026-11-06T01:00:00Z" }],
+       /* ⚠️⚠️ **0056 의 중고 매물 상자도 여기서 재야 합니다** — 자료를
+          안 넣으면 그 상자가 한 줄도 안 그려지고, 폰 폭 · 글자 대비 ·
+          누름 높이를 **아무도 안 재는 자리**가 됩니다 (0051 의 사진
+          상자가 흉내 자료가 없어 그랬습니다).
+          ⚠️ 가짜 자료도 DB 가 받는 값이어야 합니다 (`us-*` · cond 넷). */
+       listing:[{ id:"lp-1", title:"타이틀리스트 드라이버 10.5도",
+                  body:"2년 썼고 흠집 조금 있습니다", sub:"us-driver",
+                  region:"seoul", ship:true, price:350000, cond:"good",
+                  state:"open", hidden_why:null,
+                  created_at:"2026-11-06T01:00:00Z" }],
+       listingask:[{ id:"lp-a1", listing_id:"lp-1", msg:"오늘 볼 수 있을까요?",
+                     state:"accepted", by_user:"u-b1", seller_share_at:null,
+                     buyer_share_at:null, created_at:"2026-11-06T02:00:00Z" }],
+       v_listing_contact:[{ ask_id:"lp-a1", seller_contact:null,
+                            buyer_contact:null, seller_share_at:null,
+                            buyer_share_at:null }] }), {}],
     /* ⚠️ 갈래를 눌러야 나오는 자리 둘 — 체크칸 수십 개와 신고 본문 */
     ["/admin 업체 등록 양식", "/admin", { role:"admin", name:"관리자" },
      Object.assign({}, ADMT, BIZ, PROT, { report:REPS }), { biz_metrics: MET },
@@ -3410,6 +3426,250 @@ function keepOf(name){
      ⚠️⚠️ 가장 중요한 것 둘: **연락처가 화면 어디에도 안 나오는가**,
      그리고 **검사용 · 정지된 업체의 상호가 안 나오는가**.
      ══════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════════
+     중고 직거래 매물 (0056) — ⚠️ **설정이 있어야 열리는 자리라
+     빌드가 찍은 HTML 만 보는 검사는 영원히 못 봅니다.** 여기서 누릅니다.
+     ⚠️⚠️ 흉내 장치는 조건을 보고 걸러 주지 않으므로, 거르개는 **보내는
+     질의를 뜯어** 봅니다 (줄 수로 재면 거르개를 떼어도 영원히 초록).
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 중고 직거래 매물 (0056)");
+  {
+    /* ⚠️ 가짜 자료도 **DB 가 받는 값**이어야 합니다 — 물건 종류는
+       `us-*` 하위 키, 물건 상태는 0056 의 cond 넷입니다. 아닌 값을
+       넣으면 화면이 키를 그대로 보여 주고(그게 맞습니다), 그 그림을
+       보고 멀쩡한 화면을 고치려 들게 됩니다. */
+    const LST = [{ id:"l1", sub:"us-driver", region:"seoul", ship:false,
+      title:"드라이버 팝니다", body:"2년 쓴 드라이버입니다",
+      price:350000, cond:"good", ask_n:0 },
+      { id:"l2", sub:"us-iron", region:"gyeonggi", ship:true,
+        title:"무료로 나눔", body:"연습용 아이언입니다",
+        price:0, cond:"fair", ask_n:2 }];
+
+    /* ① 설정 전에는 **아무것도 안 엽니다** (절대 규칙 5) */
+    {
+      const p0 = await b.newPage({ viewport: view });
+      await p0.route("**/api/session", function(r){
+        return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ auth:false, signedIn:false, conf:null }) });
+      });
+      await p0.goto(base + "/cat/used", { waitUntil:"networkidle" });
+      await p0.waitForTimeout(400);
+      const off = await p0.evaluate(function(){
+        return { form: !!document.getElementById("lsf"),
+                 bar:  !!document.getElementById("lsfil"),
+                 boxHtml: (document.getElementById("lsbox") || {}).innerHTML || "" };
+      });
+      ok("⚠️ 설정 전에는 매물 양식을 **안 엽니다** (다 적고 누른 뒤 실패하지 않게)",
+         !off.form && !off.bar && off.boxHtml === "", JSON.stringify(off));
+      await p0.close();
+    }
+
+    /* ② 로그인 전 — 목록은 보이고, 올리는 것은 로그인으로 보냅니다 */
+    {
+      const g = await open("/cat/used", { role:"customer", name:"", signedIn:false },
+                           { v_listing_open: LST }, {}, true);
+      const r = await g.p.evaluate(function(){
+        const li = document.querySelector(".lsc");
+        const bx = document.getElementById("lsbox");
+        return { card: !!li, body: document.body.innerText,
+                 n: document.querySelectorAll(".lsc").length,
+                 login: !!(bx && bx.querySelector('a[href^="/login"]')),
+                 form: !!document.getElementById("lsf") };
+      });
+      ok("로그인 전에도 올라온 매물이 보인다 (크롤러도 봅니다)",
+         r.card && r.body.indexOf("드라이버 팝니다") >= 0, JSON.stringify(r).slice(0, 160));
+      /* ⚠️⚠️ **0 은 "무료" 입니다** — `||` 를 쓰면 0원이 사라집니다
+         (작업 기억 — 0 을 기다리는 자리에 `||` 를 쓰지 마세요) */
+      ok("  ⚠️⚠️ 값 **0 이 '무료로 나눔' 으로** 나온다 (0원이 사라지지 않습니다)",
+         r.body.indexOf("무료로 나눔") >= 0, "");
+      ok("  값 · 물건 상태 · 택배가 사람 말로 나온다",
+         r.body.indexOf("350,000원") >= 0 && r.body.indexOf("사용감") >= 0 &&
+         r.body.indexOf("택배 가능") >= 0, "");
+      /* ⚠️ 영문 키가 그대로 찍히면 상태 말이 어긋난 것입니다 */
+      ok("  ⚠️ 영문 키가 안 찍힌다 (us-driver · good · fair)",
+         r.body.indexOf("us-driver") < 0 && r.body.indexOf("fair") < 0, "");
+      ok("  로그인 전에는 올리는 양식 대신 로그인 길을 낸다", r.login && !r.form,
+         JSON.stringify({ login:r.login, form:r.form }));
+      /* ⚠️⚠️⚠️ 연락처는 목록 어디에도 없어야 합니다 */
+      ok("⚠️⚠️ 목록 어디에도 연락처가 없다 (v_listing_open 에 칸이 없습니다)",
+         r.body.indexOf("010-") < 0, "");
+      ok("  ⚠️ 그리고 그 사실을 손님에게 말해 준다",
+         r.body.indexOf("연락처는 목록에 나오지 않습니다") >= 0, "");
+      /* ⚠️⚠️ 하지 않는 일을 했다고 적지 않습니다 (전자상거래법 제20조) */
+      ok("⚠️⚠️ **거래 당사자가 아니라고** 말한다 (에스크로 · 안전거래를 " +
+         "약속하지 않습니다)",
+         r.body.indexOf("거래 당사자가 아니") >= 0 &&
+         r.body.indexOf("안전거래를") >= 0, "");
+      await g.p.close();
+    }
+
+    /* ③ 거르개 — ⚠️ 보내는 질의를 뜯어 봅니다 */
+    {
+      const g = await open("/cat/used", { role:"customer", name:"손님", signedIn:true },
+                           { v_listing_open: LST }, {}, true);
+      const bar = await g.p.evaluate(function(){
+        return { s: !!document.getElementById("lf-s"),
+                 rg: !!document.getElementById("lf-rg"),
+                 sh: !!document.getElementById("lf-sh"),
+                 now: (document.getElementById("lsnow") || {}).textContent || "",
+                 opts: Array.prototype.map.call(
+                   document.querySelectorAll("#lf-s option"),
+                   function(o){ return o.value; }).filter(Boolean) };
+      });
+      ok("매물 목록에 거르개가 있다 (물건 종류 · 지역 · 택배)",
+         bar.s && bar.rg && bar.sh, JSON.stringify(bar).slice(0, 140));
+      ok("  센 수를 적는다", /매물 \d+건/.test(bar.now), bar.now);
+      /* ⚠️⚠️ **업체가 하는 하위(매입 견적 · 위탁판매)는 안 들어갑니다** —
+         그 둘은 업체를 찾는 자리이고 매물이 아닙니다. 그리고 고르는 값은
+         `catalog.js` 에서 끌어옵니다 (일곱을 글자로 박지 않습니다). */
+      ok("  ⚠️ 고르는 것이 **회원끼리 쓰는 하위 일곱**뿐이다 " +
+         "(업체가 하는 매입 견적 · 위탁판매는 안 들어갑니다)",
+         bar.opts.length === 7 &&
+         bar.opts.every(function(v){ return /^us-/.test(v); }) &&
+         bar.opts.indexOf("us-buyquote") < 0 && bar.opts.indexOf("us-consign") < 0,
+         bar.opts.join(","));
+
+      const n0 = g.sent.length;
+      await g.p.selectOption("#lf-s", "us-iron");
+      await g.p.waitForTimeout(350);
+      const q1 = g.sent.slice(n0).map(function(x){ return String(x.body); }).join(" | ");
+      ok("  물건 종류를 고르면 **서버에** 조건을 보낸다",
+         q1.indexOf("sub=eq.us-iron") >= 0, q1.slice(0, 200));
+      const n1 = g.sent.length;
+      await g.p.check("#lf-sh");
+      await g.p.waitForTimeout(350);
+      const q2 = g.sent.slice(n1).map(function(x){ return String(x.body); }).join(" | ");
+      ok("  택배만 → ship=is.true 를 보낸다", q2.indexOf("ship=is.true") >= 0,
+         q2.slice(0, 200));
+      const u = await g.p.evaluate(function(){ return location.search; });
+      ok("  조건이 주소에 남는다 (복사해 보낼 수 있게)",
+         u.indexOf("s=us-iron") >= 0 && u.indexOf("sh=1") >= 0, u);
+      await g.p.close();
+    }
+
+    /* ④ 올리는 양식 — ⚠️ 보내는 꾸러미까지 뜯어 봅니다 */
+    {
+      const g = await open("/cat/used", { role:"customer", name:"손님", signedIn:true },
+                           { v_listing_open: LST }, {}, true);
+      const r = await g.p.evaluate(function(){
+        const f = document.getElementById("lsf");
+        if(!f) return { form:false };
+        return { form:true,
+                 req: Array.prototype.map.call(f.querySelectorAll("[required]"),
+                        function(e){ return e.name || e.id; }),
+                 terms: document.querySelectorAll(".jterms li").length,
+                 body: document.body.innerText };
+      });
+      ok("로그인하면 올리는 양식이 열린다", r.form, JSON.stringify(r).slice(0, 120));
+      ok("  제목 · 종류 · 상태 · 지역 · 값 · 설명 · 연락처가 **필수**다",
+         ["title","sub","cond","region","price","body","contact"]
+           .every(function(n){ return r.req.indexOf(n) >= 0; }), (r.req || []).join(","));
+      ok("  ⚠️ 동의 상자에 수집 항목 · 목적 · 보유 기간 · 제공이 같이 있다 (제15조 제2항)",
+         r.terms >= 4, String(r.terms));
+      /* ⚠️ 글자를 박지 않고 **설정값**과 맞춰 봅니다 */
+      const LKEEP = keepOf("listingKeep");
+      ok("  ⚠️ 보유 기간이 **실제 값**으로 찍힌다 (site.js 의 listingKeep)",
+         !!LKEEP && (r.body || "").indexOf(LKEEP) >= 0, LKEEP);
+      ok("  ⚠️ 연락처 칸이 **언제 누구에게 가는지**를 그 자리에서 말한다 (제17조)",
+         (r.body || "").indexOf("받아들이신 뒤") >= 0, "");
+      /* ⚠️ "협의" 를 지어 적지 않습니다 — 0 이 무료라고 그 자리에서 말합니다 */
+      ok("  ⚠️ 무료로 나누시면 0 이라고 그 자리에서 말한다",
+         (r.body || "").indexOf("무료로 나누시면") >= 0, "");
+
+      await g.p.fill("#l-title", "검사용 드라이버");
+      await g.p.selectOption("#l-sub", "us-driver");
+      await g.p.selectOption("#l-cond", "like");
+      await g.p.selectOption("#l-rg", "seoul");
+      await g.p.fill("#l-price", "250000");
+      await g.p.check("#l-ship");
+      await g.p.fill("#l-body", "검사로 올리는 매물입니다");
+      await g.p.fill("#l-contact", "010-5555-5555");
+      await g.p.check(".jconsent input[type=checkbox]");
+      await g.p.click("#lsf button[type=submit]");
+      await g.p.waitForTimeout(500);
+      const sent = g.sent.filter(function(x){ return x.name === "open_listing"; });
+      ok("⚠️ 올리기 단추가 **open_listing 을 실제로 부른다**", sent.length === 1,
+         JSON.stringify(g.sent.map(function(x){ return x.name; })));
+      const pl = sent.length ? (JSON.parse(sent[0].body).p || {}) : {};
+      ok("  제목 · 종류 · 상태 · 값 · 연락처를 그대로 보낸다",
+         pl.title === "검사용 드라이버" && pl.sub === "us-driver" &&
+         pl.cond === "like" && String(pl.price) === "250000" &&
+         pl.contact === "010-5555-5555", JSON.stringify(pl));
+      /* ⚠️ 체크박스는 **참 · 거짓**으로 보냅니다 ("on" 이 아닙니다 —
+         문이 `(p->>'ship')::boolean` 으로 읽습니다) */
+      ok("  ⚠️ 택배 여부를 **참 · 거짓**으로 보낸다 ('on' 이 아닙니다)",
+         pl.ship === true, JSON.stringify(pl.ship));
+      ok("  ⚠️ 동의 시각을 같이 보낸다", !!pl.agree_at, String(pl.agree_at));
+      await g.p.close();
+    }
+
+    /* ⑤ /my — 내 매물 · 받은 문의 · 연락처 */
+    {
+      const MINE = [{ id:"l1", title:"내 드라이버", body:"설명입니다",
+        sub:"us-driver", region:"seoul", ship:false, price:350000,
+        cond:"good", state:"open", hidden_why:null, created_at:"2026-11-06T01:00:00Z" },
+        { id:"l9", title:"가려진 매물", body:"설명입니다", sub:"us-bag",
+          region:"seoul", ship:false, price:10000, cond:"fair", state:"hidden",
+          hidden_why:"금지된 물건입니다", created_at:"2026-11-06T01:00:00Z" }];
+      const ASKS = [
+        { id:"q1", listing_id:"l1", msg:"사고 싶습니다", state:"accepted",
+          by_user:"u-buy", seller_share_at:null, buyer_share_at:null,
+          created_at:"2026-11-06T02:00:00Z" },
+        { id:"q2", listing_id:"other", msg:"제가 넣은 문의", state:"accepted",
+          by_user:"me", seller_share_at:null, buyer_share_at:null,
+          created_at:"2026-11-06T02:00:00Z" }];
+      const CON = [{ ask_id:"q1", seller_contact:null, buyer_contact:null,
+                     seller_share_at:null, buyer_share_at:null },
+                   { ask_id:"q2", seller_contact:null, buyer_contact:null,
+                     seller_share_at:null, buyer_share_at:null }];
+      const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+        { listing: MINE, listingask: ASKS, v_listing_contact: CON }, {}, true);
+      const r = await g.p.evaluate(function(){
+        const e = document.getElementById("lsmine");
+        return { drawn: !!(e && !e.hidden && e.children.length),
+                 body: e ? e.innerText : "",
+                 share: e ? e.querySelectorAll(".ls-share").length : -1,
+                 sold: e ? e.querySelectorAll(".ls-sold").length : -1 };
+      });
+      ok("/my 에 내 중고 매물이 그려진다", r.drawn, JSON.stringify(r).slice(0, 140));
+      ok("  내가 올린 것과 내가 문의한 것을 **갈라서** 보여 준다",
+         r.body.indexOf("내가 올린 매물") >= 0 &&
+         r.body.indexOf("내가 문의한 매물") >= 0, "");
+      /* ⚠️⚠️⚠️ 수락만으로 연락처가 안 나옵니다 (제17조 제2항) */
+      ok("⚠️⚠️⚠️ **받아들여도 연락처가 화면에 안 나온다**",
+         r.body.indexOf("010-") < 0 && r.body.indexOf("아직 안 여셨습니다") >= 0, "");
+      ok("  대신 **내 연락처를 보여 줄지 고르는 단추**가 있다 (양쪽 모두)",
+         r.share === 2, String(r.share));
+      /* ⚠️ 파는 분 말과 사는 분 말이 다릅니다 (절대 규칙 3) */
+      ok("  ⚠️ 파는 분에게는 '받았습니다', 사는 분에게는 '받아들여졌습니다'",
+         r.body.indexOf("받았습니다") >= 0 &&
+         r.body.indexOf("받아들여졌습니다") >= 0, "");
+      ok("  팔렸다고 내리는 길과 그냥 내리는 길이 **갈라져** 있다", r.sold === 1,
+         String(r.sold));
+      /* ⚠️ 가려진 매물에는 고치기 · 내리기 단추가 없고 까닭이 보입니다 */
+      ok("⚠️⚠️ 가린 **까닭을 글쓴이에게** 보여 준다 (0056)",
+         r.body.indexOf("금지된 물건입니다") >= 0, "");
+      ok("  ⚠️ 영문 상태가 안 찍힌다 (open · hidden · accepted)",
+         r.body.indexOf("hidden") < 0 && r.body.indexOf("accepted") < 0, "");
+      await g.p.close();
+    }
+
+    /* ⑥ ⚠️⚠️ 보내는 주소에 **안 준 칸**이 없는가 — 부르면 질의가
+       통째로 거절됩니다 (0053 의 memo · answered_by 에서 겪은 자리) */
+    {
+      const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+        { listing: [], listingask: [], v_listing_contact: [] }, {}, true);
+      const asked = g.sent.filter(function(x){
+        return x.name === "GET" && String(x.body).indexOf("/listing?") >= 0;
+      }).map(function(x){ return String(x.body); }).join(" | ");
+      ok("⚠️⚠️ 매물을 읽을 때 **contact · agree_at 을 안 부른다** " +
+         "(0056 이 그 칸을 안 줬습니다 — 부르면 질의가 거절됩니다)",
+         asked.length > 0 && asked.indexOf("contact") < 0 &&
+         asked.indexOf("agree_at") < 0, asked.slice(0, 200));
+      await g.p.close();
+    }
+  }
+
   console.log("\n── 골프 인력 · 비즈니스 (0048)");
   const JOBS = [
     { id:"j1", kind:"hire", sub:"cr-caddy", region:"seoul",

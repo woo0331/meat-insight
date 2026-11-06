@@ -428,7 +428,11 @@ window.amSubFinds = function(catKey){
    ⚠️ 그 분류가 없어지면 그 줄도 **저절로 빠집니다** (지어내지 않습니다). */
 window.amOpenNow = function(){
   var out = [];
+  /* ⚠️ 2026-11-06 — **중고 직거래가 넷째입니다** (0056). 전에는 셋이었고,
+     그때 중고장터는 "업체를 기다리는 자리" 였습니다 (매물을 올릴 길이
+     없었습니다). 이제 업체가 0곳이어도 회원끼리 사고파실 수 있습니다. */
   [["matchup", "조인 열기"],
+   ["used", "중고 매물 올리기"],
    ["community", "질문 올리기"],
    ["career", "구인 · 구직 올리기"]].forEach(function(x){
     var c = window.amCat(x[0]);

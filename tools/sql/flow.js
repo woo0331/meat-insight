@@ -22,6 +22,7 @@
    E 조인   열기 → 신청 → 알림 → 수락 → 연락처 각자 → 가리면 셋이 막힘
    F 커뮤니티 질문 → 답변 → 알림 → 가리면 **답변도 같이** 빠짐
    G 인력   업체 이름으로 올리기 → 지원 → 연락처 → **정지되면 상호가 빠짐**
+   H 중고   매물 올리기 → 문의 → 받아들이기 → **연락처는 따로 동의** → 가리기
    ════════════════════════════════════════════════════════════════════ */
 module.exports = function(T){
   const { ok, psql, denied, allowed } = T;
@@ -588,19 +589,88 @@ module.exports = function(T){
   ok("  ⚠️ 정지되면 업체 카드에서도 빠진다 (0038 이 listed 를 내립니다)",
      psql(anon + "select count(*)::text from v_provider_card where id='flow-d'") === "0");
 
+  /* ════════════════════════════════════════════════════════════════
+     ══ 시나리오 H — 중고 직거래: 올리기 → 문의 → 받아들이기 → 연락처
+     ⚠️⚠️⚠️ **작업 기억이 "새 흐름을 만드는 날 이 줄을 이어 붙이세요"
+     라고 적어 두고, 0046~0048 을 만들며 안 붙여서 조인 · 커뮤니티 ·
+     인력이 한동안 이 파일에 하나도 없었습니다.** 0056 은 그날 바로
+     붙입니다 — 업체가 0곳이어도 되는 **넷째** 길입니다.
+     ⚠️ 토막으로 재면 안 드러나는 자리: 앞 단계의 결과가 다음 단계의
+     입력입니다 (매물 id → 문의 id → 연락처 보기).
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n══ 시나리오 H — 중고: 올리기 → 문의 → 받아들이기 → 연락처");
+  const HS = psql("insert into auth.users (email) values ('fl-hsel@x.test') returning id");
+  const HB = psql("insert into auth.users (email) values ('fl-hbuy@x.test') returning id");
+  psql("insert into account (id, role, name) values " +
+       "('" + HS + "','customer','파는 분')," +
+       "('" + HB + "','customer','사는 분') " +
+       "on conflict (id) do update set role = excluded.role, name = excluded.name");
+
+  const HL = psql(as(HS) + "select open_listing('" +
+    j({ sub:"us-driver", region:"seoul", title:"흐름 검사용 드라이버",
+        body:"흐름 검사로 올리는 매물입니다", price:"300000", cond:"good",
+        contact:"010-7777-7777", agree_at:psql("select now()") }) + "'::jsonb)");
+  ok("H-1 매물을 문으로 올린다", /^[0-9a-f-]{36}$/.test(HL), HL);
+  /* ⚠️ 공개 목록은 **비로그인도** 봅니다 (크롤러 몫) — 그런데 연락처는
+     칸이 아예 없습니다 (보기의 where 절이 아니라 **칸 목록**이 자물쇠) */
+  ok("  비로그인도 공개 목록에서 본다",
+     psql(anon + "select count(*)::text from v_listing_open where id='" + HL + "'") === "1");
+  ok("  ⚠️ 공개 목록에 연락처 칸이 **아예 없다**",
+     psql("select count(*)::text from information_schema.columns " +
+          "where table_name='v_listing_open' and column_name='contact'") === "0");
+
+  const HA = psql(as(HB) + "select ask_listing('" +
+    j({ listing_id:HL, msg:"사고 싶습니다", contact:"010-8888-8888",
+        agree_at:psql("select now()") }) + "'::jsonb)");
+  ok("H-2 사겠다고 문의한다", /^[0-9a-f-]{36}$/.test(HA), HA);
+  /* ⚠️ 알림이 **파는 분에게** 붙습니다 (받는 사람 눈으로 읽습니다) */
+  ok("  파는 분에게 알림이 붙는다",
+     psql(as(HS) + "select count(*)::text from notice " +
+          "where kind='listingask' and obj_id='" + HL + "'") === "1");
+
+  ok("H-3 받아들이면 상태가 바뀐다",
+     psql(as(HS) + "select move_listingask('" +
+       j({ id:HA, state:"accepted" }) + "'::jsonb)") === "accepted");
+  /* ⚠️⚠️⚠️ **여기가 이 흐름의 알맹이입니다** — 받아들여도 연락처는
+     둘 다 비어 있어야 합니다 (제17조 제2항 · 별도 동의). */
+  ok("⚠️⚠️⚠️ H-4 **받아들이기만으로는 연락처가 둘 다 비어 있다**",
+     psql(as(HB) + "select coalesce(seller_contact,'(없음)') || '/' || " +
+          "coalesce(buyer_contact,'(없음)') from v_listing_contact " +
+          "where ask_id='" + HA + "'") === "(없음)/(없음)");
+  psql(as(HS) + "select share_listingcontact('" +
+    j({ id:HA, on:true, agree_at:psql("select now()") }) + "'::jsonb)");
+  ok("  H-5 파는 분이 열면 **그쪽 것만** 간다",
+     psql(as(HB) + "select coalesce(seller_contact,'(없음)') || '/' || " +
+          "coalesce(buyer_contact,'(없음)') from v_listing_contact " +
+          "where ask_id='" + HA + "'") === "010-7777-7777/(없음)");
+  psql(as(HS) + "select share_listingcontact('" + j({ id:HA, on:false }) + "'::jsonb)");
+  ok("  H-6 다시 닫으면 **그 즉시** 빠진다 (철회권)",
+     psql(as(HB) + "select coalesce(seller_contact,'(없음)') from v_listing_contact " +
+          "where ask_id='" + HA + "'") === "(없음)");
+
+  /* ⚠️ 운영자가 가리면 공개 목록에서 빠지고, 글쓴이가 못 되돌립니다 */
+  ok("H-7 운영자가 까닭을 적고 가린다",
+     psql(as(ADM) + "select move_listing('" +
+       j({ id:HL, state:"hidden", why:"흐름 검사로 가립니다" }) + "'::jsonb)") === "hidden");
+  ok("  가려지면 공개 목록에서 빠진다",
+     psql(anon + "select count(*)::text from v_listing_open where id='" + HL + "'") === "0");
+
   /* ⚠️ 끝으로 — 이 셋이 만든 알림에 **손님이 적은 글이 한 글자도** 없어야
      합니다 (알림은 **우리가 쓴 말**이고, 담으면 한 벌 더 복사됩니다). */
   /* ⚠️⚠️ **운영자로 읽으면 안 됩니다** — 0050 은 운영자 정책을 일부러
      안 두었습니다(남의 알림을 읽을 까닭이 없습니다). 그래서 운영자는
      0줄이고, 그걸로 재면 **빈 글자를 보고 "안 샌다" 로 통과**합니다 —
      아무것도 안 잡는 검사입니다. **받은 사람 눈으로** 읽습니다. */
-  const nLeak = [EH, EG, FA, GP, GS].map(u => psql(as(u) +
+  const nLeak = [EH, EG, FA, GP, GS, HS, HB].map(u => psql(as(u) +
     "select coalesce(string_agg(title || ' ' || link, ' '), '') from notice")).join(" ");
   ok("⚠️ 알림을 **받은 사람 눈으로** 읽었다 (0줄을 보고 통과하지 않습니다)",
      nLeak.replace(/\s/g, "").length > 0, nLeak.slice(0, 120));
   ok("⚠️⚠️ 알림에 **손님이 적은 글 · 연락처가 한 글자도 없다**",
      nLeak.indexOf("010-7") < 0 && nLeak.indexOf("같이 치고 싶습니다") < 0 &&
-     nLeak.indexOf("캐디 경력") < 0, nLeak.slice(0, 200));
+     nLeak.indexOf("캐디 경력") < 0 &&
+     /* ⚠️ 0056 — 중고 쪽 글자도 같이 봅니다 */
+     nLeak.indexOf("사고 싶습니다") < 0 && nLeak.indexOf("010-8888") < 0,
+     nLeak.slice(0, 200));
 
   /* ⚠️ 끝내며 — 이 검사가 만든 업체는 **검사용으로** 되돌립니다 */
   psql("select become('" + ADM + "'); update provider set is_test = true " +

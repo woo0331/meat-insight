@@ -53,9 +53,16 @@ var KIND = {
     /* ⚠️⚠️ **아홉 가운데 둘만 눌립니다** (`pv:true` 인 매입 견적 ·
        위탁판매). 그래서 아래 "눌러 보시면 …" 한 줄을 **덧붙이지
        않습니다** — 그 줄은 하위가 **전부** 눌릴 때만 붙습니다. */
+    /* ⚠️⚠️⚠️ **기능을 세운 날 그 기능을 설명하는 글을 같이 고칩니다.**
+       0056 이 매물 올리기를 세웠으니 "아직 열지 않았습니다" 는 이제
+       거짓입니다 — 2026-11-05 에 조인 · 커뮤니티 · 인력이 선 뒤에도
+       "아직 없습니다" 가 남아 있던 그 자리를 되풀이하지 않습니다.
+       ⚠️ 아홉 가운데 **둘만** 링크입니다(업체가 하는 매입 견적 ·
+       위탁판매). 나머지 일곱은 **매물의 종류**이고, 아래 매물 목록의
+       거르개에서 고르십니다. */
     subs: "업체가 해 드리는 것(매입 견적 · 위탁판매)은 눌러서 그 일을 하는 " +
-          "업체를 보실 수 있습니다. 아래 물건 종류는 요청하실 때 고르는 " +
-          "항목입니다 — 회원끼리 직접 거래하는 장터는 아직 열지 않았습니다.",
+          "업체를 보실 수 있습니다. 아래 물건 종류는 회원끼리 사고파는 " +
+          "매물의 종류입니다 — 매물 목록에서 그 종류로 좁혀 보실 수 있습니다.",
     cta:  null
   },
   match: {
@@ -228,28 +235,37 @@ exports.build = function(c){
      "0곳" 안내만 만들어 두고 **있을 때 그리는 자리를 안 만든** 적이
      있습니다 — 승인해도 손님에게 보일 곳이 없었습니다.
      tools/test-providers.js 가 **둘 다** 눌러 봅니다. */
-  var list = W.amProvidersOf(c.key);
-  if(list.length){
-    return {
-      route: W.amCatUrl(c), title: c.name,
-      crumbs: [["카테고리 전체보기", "/categories"], [c.name, W.amCatUrl(c)]],
-      desc: c.name + " — " + c.lead + ". " + k.what + " 지금 " + list.length + "곳이 있습니다.",
-      body: head + adTop + subs +
-        '<section class="sec sec-alt"><div class="wrap">' +
-          '<div class="sec-hd"><h2>' + esc(c.name) + ' 업체 ' + W.won(list.length) + '곳</h2>' +
-          '<p>골프올인원은 통신판매중개자이며 거래 당사자가 아닙니다.</p></div>' +
-          card.grid(list) +
-        '</div></section>' + asks(c) + related(c)
-    };
-  }
+  /* ⚠️⚠️⚠️ **중고 직거래도 막다른 길이 아닙니다** (0056). 2026-11-06
+     까지 이 화면은 "회원끼리 직접 사고파는 자리입니다 · 첫 매물이
+     올라오면 여기에 바로 보입니다" 라고 적어 놓고 **매물을 올리는 표도 ·
+     문도 · 화면도** 없었습니다 — 영원히 안 오는 것을 기다리라고 적은
+     것입니다. 그날 글을 사실대로 고쳤고, 이제 기능이 섰습니다.
+     ⚠️ 설명은 빌드가 찍고(크롤러 · 자바스크립트 꺼진 분 몫) 목록은
+     브라우저가 그립니다 — 매물은 아무 때나 올라오고 내려갑니다.
+     ⚠️⚠️ 거르개도 **목록 앞에 브라우저가** 그립니다 (빌드가 찍어 두면
+     자바스크립트가 꺼진 분에게 눌러도 아무 일이 안 나는 칸이 됩니다). */
+  var lsSec = (c.key === "used")
+    ? '<section class="sec sec-alt"><div class="wrap">' +
+      '<div class="sec-hd"><h2>올라온 매물</h2>' +
+      '<p>회원이 직접 올리는 자리입니다. 물건 종류 · 지역 · 값 · 상태를 ' +
+      '적어 올리시면 다른 회원이 사겠다고 문의합니다. ' +
+      /* ⚠️⚠️ 지어낸 약속을 하지 않습니다 — 돈이 우리를 지나가지 않고
+         물건을 우리가 보지 않습니다 (전자상거래법 제20조) */
+      '골프올인원은 거래 당사자가 아니며, 결제 · 배송 · 안전거래를 ' +
+      '대신해 드리지 않습니다.</p></div>' +
+      '<div id="lslist">' +
+        '<div class="none"><h3>매물을 보시려면 잠시만 기다려 주세요.</h3>' +
+        '<p>올라온 매물을 불러옵니다. 보이지 않으면 아직 올라온 매물이 ' +
+        '없는 것입니다.</p></div>' +
+      '</div>' +
+      '<div id="lsbox"></div>' +
+      '<p class="jnote">⚠️ 연락처는 목록에 나오지 않습니다. 문의가 ' +
+      '받아들여진 뒤 서로 따로 고르셨을 때만 그 상대 한 분에게 보입니다. ' +
+      '⚠️ 만나서 물건을 보고 거래하시고, 미리 보내 달라는 요구는 ' +
+      '받아들이지 마세요.</p>' +
+      '</div></section>'
+    : '';
 
-  /* ⚠️⚠️⚠️ **조인은 막다른 길이 아닙니다** (0046 · 지시서 §2.A).
-     여기는 업체를 찾는 자리가 아니라 **회원끼리 여는** 자리라,
-     "업체 0곳" 안내 대신 **열린 조인 목록과 여는 양식**이 옵니다.
-     ⚠️ 설명은 **빌드가** 찍습니다 (크롤러 · 자바스크립트 꺼진 분이
-     읽을 몫). 목록은 아무 때나 바뀌므로 **브라우저가** 그립니다 —
-     빌드 때 찍으면 배포할 때만 바뀝니다.
-     ⚠️ 아래 글을 지우면 봇에게는 **빈 화면**이 됩니다. */
   var joinSec = (c.kind === "match")
     ? '<section class="sec sec-alt"><div class="wrap">' +
       '<div class="sec-hd"><h2>열려 있는 조인</h2>' +
@@ -315,6 +331,40 @@ exports.build = function(c){
       '</div></section>'
     : '';
 
+  /* ⚠️⚠️⚠️ **회원끼리 쓰는 구간은 업체가 있을 때도 그립니다.**
+     전에는 이 넷이 `var list = …` **뒤에** 적혀 있어서, 업체가 한 곳이라도
+     있는 분류에서는 이른 `return` 이 먼저 나가 **그 구간이 통째로
+     사라졌습니다** (`var` 는 끌어올려지지만 값은 그때 undefined 입니다).
+     중고(업체가 하는 매입 견적 · 위탁판매)와 인력(업체가 입점하는 분류)이
+     바로 그런 자리입니다 — 첫 업체를 승인하신 날 매물 목록과 구인 글이
+     조용히 없어질 참이었습니다.
+     ⚠️ "0곳 안내만 만들고 **있을 때 그리는 자리를 안 만든**" 자리의
+     거울상입니다 (앞 서비스에서 겪은 그 줄). 그래서 **한 곳**에 묶어
+     두고 두 갈래가 같이 씁니다. */
+  var memberSec = lsSec || joinSec || cqSec || jobSec;
+
+  var list = W.amProvidersOf(c.key);
+  if(list.length){
+    return {
+      route: W.amCatUrl(c), title: c.name,
+      crumbs: [["카테고리 전체보기", "/categories"], [c.name, W.amCatUrl(c)]],
+      desc: c.name + " — " + c.lead + ". " + k.what + " 지금 " + list.length + "곳이 있습니다.",
+      body: head + adTop + subs +
+        '<section class="sec sec-alt"><div class="wrap">' +
+          '<div class="sec-hd"><h2>' + esc(c.name) + ' 업체 ' + W.won(list.length) + '곳</h2>' +
+          '<p>골프올인원은 통신판매중개자이며 거래 당사자가 아닙니다.</p></div>' +
+          card.grid(list) +
+        '</div></section>' + memberSec + asks(c) + related(c)
+    };
+  }
+
+  /* ⚠️⚠️⚠️ **조인은 막다른 길이 아닙니다** (0046 · 지시서 §2.A).
+     여기는 업체를 찾는 자리가 아니라 **회원끼리 여는** 자리라,
+     "업체 0곳" 안내 대신 **열린 조인 목록과 여는 양식**이 옵니다.
+     ⚠️ 설명은 **빌드가** 찍습니다 (크롤러 · 자바스크립트 꺼진 분이
+     읽을 몫). 목록은 아무 때나 바뀌므로 **브라우저가** 그립니다 —
+     빌드 때 찍으면 배포할 때만 바뀝니다.
+     ⚠️ 아래 글을 지우면 봇에게는 **빈 화면**이 됩니다. */
   var zero = '<section class="sec sec-alt"><div class="wrap"><div class="none">' +
     '<h2>' + esc(k.zeroT) + '</h2>' +
     '<p>' + esc(k.zeroD) + '</p>' +
@@ -354,11 +404,21 @@ exports.build = function(c){
          하위분류 칸을 줍니다 (catalog 는 빌드가 저절로 싣습니다). */
       : (c.key === "career"
           ? ["/js/data/site.js", "/js/data/regions.js", "/js/career.js"]
-          : []))).concat(["/js/data/providers.generated.js",
+      /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — site.js 가
+         listingKeep(보유 기간 · 비면 양식을 안 엽니다) · regions.js 가
+         지역 칸 · **deal.js 가 물건 상태 말**을 줍니다. 하나라도 빠지면
+         양식이 조용히 안 열립니다 (`/help` 가 site.js 를 안 실어 문의
+         양식이 안 열렸던 그 자리입니다). */
+      : (c.key === "used"
+          ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
+             "/js/listing.js"]
+          : [])))).concat(["/js/data/providers.generated.js",
                           "/js/data/providers.js", "/js/adslot.js"]),
     /* ⚠️ 조인은 제 구간이 "0건" 을 스스로 말하므로 zero 를 **안 겹칩니다**
        (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다). */
-    body: head + adTop + subs + (joinSec || cqSec || jobSec || zero) +
+    /* ⚠️ 중고는 제 구간이 "0건" 을 스스로 말하므로 zero 를 **안 겹칩니다**
+       (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다) */
+    body: head + adTop + subs + (memberSec || zero) +
           asks(c) + related(c)
   };
 };

@@ -386,3 +386,74 @@ window.amAdStateName = function(k){
   for(var i = 0; i < L.length; i++) if(L[i].key === k) return L[i].name;
   return String(k || "");
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   중고 직거래 (0056) — 매물 상태 넷 · 문의 상태 넷 · 물건 상태 넷
+
+   ⚠️⚠️⚠️ **조인은 이 말을 `js/myjoin.js` 안에 들고 있습니다** — 그래서
+   아무도 DB 의 check 와 맞춰 보지 않고, 거기서 실제로 사고가 났습니다
+   (`||` 가 `?:` 보다 먼저 묶여 닫힌 조인에 영문 `closed` 가 손님
+   화면에 찍혔습니다). 중고는 **여기 한 곳**이고 `check-deal` 이 0056 의
+   check 와 빌드마다 맞춰 봅니다.
+
+   ⚠️⚠️ **문의 상태는 말이 두 벌입니다** (0053 의 문의 갈래와 같은 꼴) —
+     name  **파는 분** 눈으로 ("받았습니다" · "거절했습니다")
+     mine  **문의하신 분** 눈으로 ("받아들여졌습니다" · "거절되었습니다")
+   한 벌로 두면 파는 분에게 할 말을 문의하신 분 화면에 찍게 됩니다
+   (절대 규칙 3). ⚠️ 줄은 하나이고 칸이 둘입니다 — 표를 둘로 가르면 키
+   묶음이 둘이 되어 한쪽만 고치는 날 어긋납니다.
+
+   ⚠️ 모르는 값은 **키 그대로** 냅니다 (빈 칸을 두지 않습니다 — 그래야
+   잘못 들어간 값이 눈에 보입니다).
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_LST_ST = [
+  { key:"open",   name:"팔고 있습니다",   tone:"grn"  },
+  { key:"done",   name:"팔렸습니다",      tone:"ink"  },
+  { key:"closed", name:"내렸습니다",      tone:"ink"  },
+  { key:"hidden", name:"가려졌습니다",    tone:"bad"  }
+];
+window.AM_LSTASK_ST = [
+  { key:"asked",    name:"기다리는 중",   mine:"기다리는 중",        tone:"warn" },
+  { key:"accepted", name:"받았습니다",    mine:"받아들여졌습니다",   tone:"grn"  },
+  { key:"rejected", name:"거절했습니다",  mine:"거절되었습니다",     tone:"ink"  },
+  { key:"canceled", name:"거뒀습니다",    mine:"거두셨습니다",       tone:"ink"  }
+];
+/* 물건 상태 — ⚠️ 값은 0056 의 `cond` check 와 한 글자도 같아야 합니다 */
+window.AM_LST_COND = [
+  { key:"new",  name:"미사용 (새것)" },
+  { key:"like", name:"거의 새것" },
+  { key:"good", name:"사용감 적음" },
+  { key:"fair", name:"사용감 많음" }
+];
+
+function amLstPick(L, k){
+  for(var i = 0; i < (L || []).length; i++) if(L[i].key === k) return L[i];
+  return null;
+}
+window.amLstSt = function(k){
+  var x = amLstPick(window.AM_LST_ST, k);
+  return x || { name:String(k || ""), tone:"ink" };
+};
+/* 파는 분 눈 — ⚠️ `mine` 과 섞어 쓰지 마세요 (절대 규칙 3) */
+window.amLstAskSt = function(k){
+  var x = amLstPick(window.AM_LSTASK_ST, k);
+  return x || { name:String(k || ""), mine:String(k || ""), tone:"ink" };
+};
+/* 문의하신 분 눈 */
+window.amLstAskMine = function(k){
+  var x = amLstPick(window.AM_LSTASK_ST, k);
+  return x ? x.mine : String(k || "");
+};
+window.amLstCondName = function(k){
+  var x = amLstPick(window.AM_LST_COND, k);
+  return x ? x.name : String(k || "");
+};
+/* 값 — ⚠️⚠️ **0 은 "무료" 입니다** (빈 값이 아닙니다). `||` 를 쓰면
+   `0 || …` 이 거짓이 되어 0원이 사라집니다 (작업 기억 — 0 을 기다리는
+   자리에 `||` 를 쓰지 마세요). */
+window.amLstPrice = function(n){
+  if(n === null || n === undefined || n === "") return "";
+  var v = Number(n);
+  if(!isFinite(v)) return "";
+  return v === 0 ? "무료로 나눔" : (window.won(v) + "원");
+};

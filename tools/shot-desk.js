@@ -271,13 +271,56 @@ T_ADMIN.account_hat = [{ account_id:"ac-2", hat:"pro" }];
 T_ADMIN.fee_policy = FEE_POLS;
 T_ADMIN.settlement = FEE_SETT;
 
+/* ⚠️⚠️ 0056 — 내 중고 매물 (`js/mylisting.js`).
+   ⚠️ **가짜 자료도 DB 가 받는 값이어야 합니다** — 물건 종류는 `us-*`
+   하위 키, 물건 상태는 0056 의 `cond` 넷(new · like · good · fair),
+   상태는 open · done · closed · hidden 입니다. 아닌 값을 넣으면 찍힌
+   그림에 영문 키가 나오고, 그것을 보고 **멀쩡한 화면을 고치려** 들게
+   됩니다 (조인의 `ok` · 문의의 `service` 에서 두 번 밟았습니다).
+   ⚠️ `contact` · `agree_at` 은 **안 넣습니다** — 0056 이 그 칸을 안 줘서
+   화면이 부르지도 않습니다 (넣으면 진짜 서버와 다른 꼴이 됩니다). */
+const LSMINE = [
+  { id:"ls-1", title:"타이틀리스트 드라이버 10.5도", body:"2년 썼고 흠집 조금 있습니다. 헤드커버 같이 드립니다.",
+    sub:"us-driver", region:"seoul", ship:false, price:350000, cond:"good",
+    state:"open", hidden_why:null, created_at:"2026-11-06T01:00:00Z" },
+  { id:"ls-2", title:"연습용 아이언 무료로 나눔", body:"입문용입니다. 직접 가져가실 분만.",
+    sub:"us-iron", region:"gyeonggi", ship:false, price:0, cond:"fair",
+    state:"open", hidden_why:null, created_at:"2026-11-05T01:00:00Z" },
+  { id:"ls-3", title:"가려진 매물", body:"운영자가 가린 자리입니다.",
+    sub:"us-bag", region:"seoul", ship:true, price:120000, cond:"like",
+    state:"hidden", hidden_why:"금지된 물건으로 보입니다",
+    created_at:"2026-11-04T01:00:00Z" }
+];
+const LSASK = [
+  { id:"la-1", listing_id:"ls-1", msg:"오늘 저녁에 볼 수 있을까요?",
+    state:"asked", by_user:"u-b1", seller_share_at:null, buyer_share_at:null,
+    created_at:"2026-11-06T02:00:00Z" },
+  { id:"la-2", listing_id:"ls-1", msg:"값 조금 조정되나요?",
+    state:"accepted", by_user:"u-b2", seller_share_at:null, buyer_share_at:null,
+    created_at:"2026-11-06T03:00:00Z" },
+  /* 내가 넣은 문의 — ⚠️ listing_id 가 내 매물이 아니라 갈라집니다 */
+  { id:"la-9", listing_id:"남의-매물", msg:"저도 사고 싶습니다",
+    state:"accepted", by_user:"me", seller_share_at:null, buyer_share_at:null,
+    created_at:"2026-11-06T04:00:00Z" }
+];
+/* ⚠️⚠️ **수락만으로는 둘 다 비어 있습니다** (제17조 제2항) — 찍힌
+   그림에서 "아직 안 여셨습니다" 가 보이는 것이 맞습니다. */
+const LSCON = [
+  { ask_id:"la-2", seller_contact:null, buyer_contact:null,
+    seller_share_at:null, buyer_share_at:null },
+  { ask_id:"la-9", seller_contact:null, buyer_contact:null,
+    seller_share_at:null, buyer_share_at:null }
+];
+
 const T_MY = {
   request:[REQ], request_item:ITEMS, assignment:[ASG], quote:[QUOTE],
   provider:PVS, review:[], appointment:[], notice:NOTICE,
   joinroom:ROOMS, joinapply:ROOMAPP, cq:CQM, ca:CAM,
   jobpost:JOBMINE, jobapply:JOBAPP, v_join_contact:[], v_job_contact:[],
   /* ⚠️ 0045 → 0053 — 내가 보낸 문의와 그 답변 (`js/myinq.js`) */
-  inquiry:INQ
+  inquiry:INQ,
+  /* ⚠️ 0056 — 내 중고 매물 (`js/mylisting.js`) */
+  listing:LSMINE, listingask:LSASK, v_listing_contact:LSCON
 };
 
 /* ── 장면 ────────────────────────────────────────────────────────
@@ -327,6 +370,8 @@ const BOXES = {
      알았습니다. `pages/my.js` 에서 세어 고쳤습니다. */
   "/my": [["me", "#mybox"], ["notice", "#noticebox"], ["req", "#reqbox"],
           ["join", "#joinmine"], ["cq", "#mycq"], ["job", "#jobmine"],
+          /* ⚠️ 0056 의 내 중고 매물 (js/mylisting.js) */
+          ["listing", "#lsmine"],
           ["inq", "#myinqbox"]]
 };
 

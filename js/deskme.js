@@ -55,6 +55,11 @@
        안 읽지만, 안 읽어 오면 저장할 때마다 비워집니다). */
     return get("provider?select=id,name,intro,regions,gu,industries,subs,since," +
                "consult_hours," +
+               /* ⚠️⚠️ 0057 — 사업자 신원정보. `brn` 은 **읽기만** 합니다
+                  (업체는 못 고칩니다 — 문과 트리거가 둘 다 막습니다).
+                  ⚠️ 그래도 읽는 까닭: "여기서 못 고치는 것" 에 지금
+                  적힌 번호를 보여 주어야 **무엇이 비었는지** 아십니다. */
+               "ceo,addr,tel,email,brn," +
                "brands,scale,contact_ways,verified,listed,assignable,state,state_why" +
                "&id=eq." + encodeURIComponent(PV) + "&limit=1");
   }
@@ -107,6 +112,35 @@
         '<p class="agree-no">⚠️ 하나도 안 고르시면 지역 거르개에 안 걸립니다.</p>' +
       '</div>' +
       '<div class="jrow jrow-full">' +
+        '<label>사업자 정보</label>' +
+        '<p class="agree-no">⚠️ 여기 적으시는 것은 <b>손님 화면(업체 화면)에 ' +
+        '그대로 나옵니다.</b> 전자상거래법 제20조 제2항이 중개 사이트에 ' +
+        '요구하는 것이라, 비어 있으면 그 줄이 손님에게 안 보입니다.</p>' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="me-ceo">대표자 성명</label>' +
+        '<input id="me-ceo" name="ceo" maxlength="40" ' +
+        'value="' + esc(p.ceo || "") + '">' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="me-tel">전화 (공개)</label>' +
+        '<input id="me-tel" name="tel" maxlength="40" placeholder="02-000-0000" ' +
+        'value="' + esc(p.tel || "") + '">' +
+        '<p class="agree-no">⚠️ 손님이 보는 번호입니다. 배정받을 때 쓰는 ' +
+        '담당자 직통은 아래 <b>배정 연락처</b> 상자에 따로 적습니다 ' +
+        '(그쪽은 운영자와 이 업체만 봅니다).</p>' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
+        '<label for="me-addr">사업장 주소</label>' +
+        '<input id="me-addr" name="addr" maxlength="200" ' +
+        'value="' + esc(p.addr || "") + '">' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
+        '<label for="me-email">이메일 (공개)</label>' +
+        '<input id="me-email" name="email" type="email" maxlength="120" ' +
+        'value="' + esc(p.email || "") + '">' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
         '<label for="me-brands">취급 브랜드</label>' +
         '<input id="me-brands" name="brands" maxlength="200" ' +
         'placeholder="타이틀리스트, 캘러웨이" value="' +
@@ -125,6 +159,11 @@
               '<p class="me-s">늘리거나 줄이시려면 운영자에게 알려 주세요 — ' +
               '스스로 넓히면 안 하시는 일의 요청까지 받게 됩니다.</p>'
             : '<b class="rq-q-no">아직 등록되지 않았습니다 — 운영자에게 알려 주세요.</b>') +
+          '</dd>' +
+          '<dt>사업자등록번호</dt><dd>' + (p.brn
+            ? esc(p.brn) + ' — 서류를 보고 운영자가 적습니다.'
+            : '<b class="rq-q-no">아직 안 적혔습니다</b> — 손님 화면의 ' +
+              '사업자 정보에 그 줄이 빠집니다. 운영자에게 알려 주세요.') +
           '</dd>' +
           '<dt>공개 여부</dt><dd>' + (p.listed ? "공개 중" : "비공개") +
             ' · 배정 ' + (p.assignable ? "받는 중" : "안 받는 중") +
@@ -188,6 +227,12 @@
       since: (f.querySelector("#me-since").value || "").trim(),
       brands: (f.querySelector("#me-brands").value || "").split(",")
         .map(function(x){ return x.trim(); }).filter(Boolean),
+      /* ⚠️⚠️ 0057 — 사업자 신원정보 넷. **brn 은 안 보냅니다** (문이
+         그 칸을 안 건드리고, 보내도 트리거가 막습니다). */
+      ceo: (f.querySelector("#me-ceo").value || "").trim(),
+      addr: (f.querySelector("#me-addr").value || "").trim(),
+      tel: (f.querySelector("#me-tel").value || "").trim(),
+      email: (f.querySelector("#me-email").value || "").trim(),
       /* ⚠️⚠️⚠️ 화면에 칸이 없는 것도 **읽은 값 그대로** 돌려보냅니다 —
          안 보내면 지워집니다 (gu · industries · scale).
          ⚠️ 이 주석은 셋을 적어 놓고 **`industries` 를 안 보내고**

@@ -58,6 +58,10 @@
      내면, 서울 매물이 쉰 줄 밖에 있을 때 **0건으로 보입니다**(에러 없이).
      조인 목록에서 적어 둔 그 줄입니다. */
   var F = { sub:"", rg:"", ship:false };
+  /* ⚠️ 0058 — 로그인한 분에게만 "조건 저장" 길을 냅니다. 로그인 전에
+     그리면 눌러서 로그인 화면으로 갔다가 돌아와도 **저장된 것이 없는**
+     꼴이 됩니다 (절대 규칙 5). */
+  var SIGNED = false;
 
   function readUrl(){
     try{
@@ -99,6 +103,9 @@
         '된다고 적어 주신 경우입니다 — 골프올인원이 보내 드리지는 않습니다.</p>' +
       '</div>' +
     '</form>' +
+    /* ⚠️⚠️ 0058 — 글과 주소는 `js/data/deal.js` 의 amWatchLink() 한
+       곳입니다 (분류 화면 셋이 같은 말을 해야 합니다). */
+    (SIGNED && window.amWatchLink ? window.amWatchLink("listing") : "") +
     '<p class="jnf-n" id="lsnow" hidden></p>';
   }
 
@@ -379,6 +386,7 @@
       return;
     }
 
+    SIGNED = !!a.signedIn;
     readUrl();
     mountBar();
     bindBar(a);

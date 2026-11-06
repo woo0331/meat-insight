@@ -107,7 +107,11 @@ function resolves(href){
    갯수를 세지 않습니다. */
 /* ⚠️ 새 /my 상자를 만드는 날 **이 줄을 같이 늘리세요** — 안 늘리면
    그 상자만 조용히 아무도 안 재는 자리가 됩니다 (0056 의 lsmine). */
-const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine"];
+/* ⚠️⚠️ **새 /my 상자를 만드는 날 여기 한 줄을 같이 더하세요** — 안
+   더하면 그 상자만 조용히 아무도 안 재는 자리가 됩니다 (0051 의 사진
+   상자가 흉내 자료가 없어 한 번도 안 그려진 그 자리). */
+const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
+                  "wchbox"];
 
 (async function(){
   const prove = process.argv.indexOf("--prove") >= 0;

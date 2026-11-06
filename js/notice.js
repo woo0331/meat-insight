@@ -36,7 +36,14 @@
              /* ⚠️ 0053 — 고객센터 문의에 답이 올라왔습니다. `mail` 은
                 `js/components/base.js` 에 **있는** 이름입니다 (없는 이름을
                 넘기면 console.warn 만 나고 **빈 칸**이 됩니다). */
-             inquiry:"mail" };
+             inquiry:"mail",
+             /* ⚠️ 0056 — 중고 직거래. 그날 갈래만 늘리고 **아이콘을 안
+                적어서** `info` 로 떨어지고 있었습니다 (고장은 아니지만
+                문의도 · 처리도 · 가리기도 같은 그림이었습니다). */
+             listingask:"cart", listingmoved:"cart",
+             /* ⚠️ 0058 — 저장한 조건에 맞는 글이 올라왔습니다.
+                `search` 는 js/components/base.js 에 **있는** 이름입니다. */
+             watch:"search" };
 
   function when(iso){
     var d = new Date(iso);

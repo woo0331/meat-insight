@@ -66,7 +66,13 @@ exports.build = function(){
     '<p>' + esc(P.third.lead) + '</p>' +
     table(["누구에게", "주는 것", "주는 까닭", "두는 기간"],
       P.third.rows.map(function(r){ return [r.to, r.items, r.why, fill(r.keep, r.to)]; })) +
-    '<p>' + esc(P.third.note) + '</p></section>';
+    '<p>' + esc(P.third.note) + '</p>' +
+    /* ⚠️⚠️ 법령에 따른 제공(제20조의4 제2항) — 동의를 받지 않는 자리라
+       위의 표가 아니라 따로 적습니다. ⚠️ 칸을 만들어 놓고 **그리는 자리를
+       안 만들면** 그 글은 아무도 안 읽는 글이 됩니다 (0053 에서 겪은
+       자리). 비면 줄째 빠집니다. */
+    (P.third.law ? '<p>' + esc(P.third.law) + '</p>' : '') +
+    '</section>';
 
   /* ⚠️ 수탁자가 없으면 그 절을 아예 빼지 않고 "없습니다" 라고 적습니다 —
      방침에서 빠진 절은 "안 알렸다" 로 읽힙니다. */

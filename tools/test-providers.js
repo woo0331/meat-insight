@@ -83,7 +83,18 @@ const SEED = [
        찍힙니다. 검사가 그것을 아래에서 눌러 봅니다. */
     photos:[{ url:"https://sb-test.supabase.co/storage/v1/object/public/pv/a.jpg",
               caption:"실내 타석" },
-            { url:"https://sb-test.supabase.co/storage/v1/object/public/pv/b.jpg" }] },
+            { url:"https://sb-test.supabase.co/storage/v1/object/public/pv/b.jpg" }],
+    /* ⚠️⚠️ 0057 — 사업자 신원정보(전자상거래법 제20조 제2항 · 시행령
+       제25조). 중개자는 입점업체가 사업자일 때 그 대표자 · 주소 · 전화 ·
+       이메일 · 사업자등록번호를 손님이 볼 수 있게 해야 합니다.
+       ⚠️ **주소에 일부러 태그를 넣어 둡니다** — 업체가 적은 글이고
+       `esc()` 를 지나야 합니다 (절대 규칙 4). 다른 칸은 값이 그대로
+       보이는지 재는 자리라 멀쩡한 글자로 둡니다. */
+    ceo:"박대표", addr:"<b>경기</b> 성남시 분당구 1", tel:"031-111-2222",
+    email:"pt@green.test", brn:"123-45-67890" },
+  /* ⚠️⚠️ 이 업체는 신원정보를 **비워 둡니다** — "아직 등록되지 않았습니다"
+     갈래가 손님에게 보이는 글이라 그것도 눌러 봐야 합니다. 다 채우면
+     그 갈래를 아무도 안 보게 됩니다. */
   { id:"xss-test", name:"<img src=x onerror=alert(1)>",
     intro:"<script>alert(2)</script> 소개글",
     regions:["seoul"], subs:["ft-mend","ft-grip"], scale:"small" }
@@ -333,11 +344,52 @@ function nowServe(){ return serve(0); }
        /거래 당사자가 아/.test(t));
     ok("  ⚠️ 조건에 따라 달라질 수 있다고 말한다", /달라질 수 있/.test(t));
 
+    /* ── 사업자 정보 (0057 · 제20조 제2항) ────────────────────────
+       ⚠️⚠️⚠️ 2026-11-06 까지 이 화면은 `사업자등록 확인` **배지만**
+       냈습니다 — 번호도 · 대표자도 · 주소도 없었습니다. 공정위가
+       당근마켓에 시정명령 · 과태료를 부과한 조항이 이것입니다.
+       ⚠️ 배지와 **번호는 다른 것**입니다 — 배지는 "서류를 봤다" 이고
+       번호는 법이 보이라고 한 값입니다. 배지만 보고 "있다" 로 읽은 것이
+       이 고장의 까닭입니다. */
+    ok("⚠️⚠️ 사업자 정보가 **실제로 그려진다** (제20조 제2항)",
+       (await p.locator("dl.pvid").count()) === 1,
+       await p.locator("dl.pvid").count());
+    const idt = (await p.textContent("dl.pvid")) || "";
+    ok("  대표자 · 사업자등록번호 · 전화 · 이메일이 나온다",
+       /박대표/.test(idt) && /123-45-67890/.test(idt) &&
+       /031-111-2222/.test(idt) && /pt@green\.test/.test(idt), idt);
+    ok("  칸 이름이 사람 말이다 (영문 키가 아니다)",
+       /대표자/.test(idt) && /사업자등록번호/.test(idt) &&
+       idt.indexOf("brn") < 0 && idt.indexOf("ceo") < 0, idt);
+    /* ⚠️ 업체가 적은 글입니다 — 태그가 날것으로 들어가면 안 됩니다 */
+    const idh = await p.innerHTML("dl.pvid");
+    ok("  ⚠️ 업체가 적은 태그가 날것으로 안 들어간다",
+       idh.indexOf("<b>경기</b>") < 0 && idh.indexOf("&lt;b&gt;경기") >= 0, idh);
+    /* ⚠️⚠️ **상호를 줄로 또 내지 않습니다** — 제목이 이미 그것이고,
+       같은 글자를 두 자리에 찍으면 한쪽만 고치는 날 둘이 달라집니다. */
+    ok("  ⚠️ 상호는 줄로 또 내지 않는다 (제목이 이미 그것입니다)",
+       idt.indexOf("상호") < 0, idt);
+
+
     await p.goto("http://127.0.0.1:" + h.port + "/pro/xss-test", { waitUntil:"networkidle" });
     const h2 = await p.innerHTML("main");
     ok("⚠️ 업체가 적은 태그가 날것으로 안 들어간다",
        h2.indexOf("<img src=x") < 0 && h2.indexOf("<script>alert(2)") < 0 &&
        h2.indexOf("&lt;img") >= 0);
+    /* ⚠️⚠️ 0057 — **비어 있을 때.** 값을 지어내지 않고(절대 규칙 1),
+       빈 자리를 막다른 길로 두지도 않습니다(절대 규칙 2) — 고객센터로
+       가는 길을 같이 냅니다. 그리고 무엇이 비었는지는 손님에게 적지
+       않고 console 로 운영자에게만 말합니다(절대 규칙 3). */
+    const t0 = (await p.textContent("main")) || "";
+    ok("⚠️ 신원정보가 비면 **표를 안 그린다** (빈 칸을 안 찍습니다)",
+       (await p.locator("dl.pvid").count()) === 0);
+    ok("  ⚠️ 아직 등록되지 않았다고 **그 자리에서** 말한다",
+       /아직 등록되지/.test(t0), t0.slice(0, 400));
+    ok("  ⚠️⚠️ 막다른 길로 두지 않는다 (고객센터로 가는 길을 낸다)",
+       (await p.locator('main a[href="/help"]').count()) >= 1,
+       await p.locator('main a[href="/help"]').count());
+    ok("  ⚠️ 운영자에게 할 말을 손님 화면에 안 찍는다",
+       t0.indexOf("/admin") < 0 && t0.indexOf("운영자가 적") < 0, t0.slice(0, 400));
     /* ⚠️⚠️ 재는 것은 "업체가 적은 글 때문에" 그림이 생기는가 입니다.
        0051 뒤로는 업체가 올린 시설 사진(`.pvsh`) · 카드의 사진 자리
        (`.pv-th`) 가 제자리에 그림을 냅니다 — 그것까지 세다가 사진을

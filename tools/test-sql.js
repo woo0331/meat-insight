@@ -162,6 +162,12 @@ try{
   require("./sql/career.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/listing.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/notice.js")({ ok, psql, psqlFile, denied, allowed });
+  /* 0057 — 업체 사업자 신원정보 (제20조 제2항). ⚠️ 공개 보기의 칸 ·
+     칸 GRANT · 트리거 · 운영자 문을 **따로** 눌러 봅니다. */
+  require("./sql/ident.js")({ ok, psql, psqlFile, denied, allowed });
+  /* 0058 — 조건 저장 → 알림. ⚠️ 표 · 문은 0058, 받는 쪽은 0050,
+     글은 0046 · 0048 · 0056 — **걸치는 자리라 걸쳐서** 잽니다. */
+  require("./sql/watch.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/pvphoto.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/price.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/invite.js")({ ok, psql, psqlFile, denied, allowed });

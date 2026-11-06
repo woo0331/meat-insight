@@ -91,6 +91,10 @@ exports.build = function(){
     body: body,
     js: ["/js/data/korean.js", "/js/data/deal.js", "/js/data/metrics.js",
          "/js/data/regions.js",
+         /* ⚠️⚠️ 0057 — `amProviderIdent()` 가 여기 있습니다. 안 실으면
+            사업자 정보 자리가 **조용히 안 그려집니다** (/help 가
+            site.js 를 안 실어 문의 양식이 안 열렸던 그 자리). */
+         "/js/data/providers.js",
          "/js/data/review.js", "/js/auth.js", "/js/photo.js",
          "/js/account.js", "/js/review.js", "/js/assign.js",
          "/js/adminpro.js", "/js/adminrep.js", "/js/admininq.js",

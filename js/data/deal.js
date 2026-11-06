@@ -457,3 +457,56 @@ window.amLstPrice = function(n){
   if(!isFinite(v)) return "";
   return v === 0 ? "무료로 나눔" : (window.won(v) + "원");
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   저장해 두는 조건 (0058) — ⚠️ 말은 **여기 한 곳**입니다
+   ────────────────────────────────────────────────────────────────────
+   ⚠️⚠️ `check-deal` 이 0058 의 `watch.kind` check 와 빌드마다 맞춰
+   봅니다. 조인은 이 말을 `js/myjoin.js` 안에 들고 있어서 아무도 DB 와
+   안 맞춰 봤고, 거기서 영문 `closed` 가 손님 화면에 찍혔습니다.
+   ⚠️ `where` 는 그 조건을 **어디서 저장하는지**이고, 화면이 "이 조건
+   저장" 단추를 그릴 때 씁니다 — 주소를 두 곳에 적지 않게.
+   ⚠️⚠️ `sub` · `price` · `ship` · `booked` 는 그 갈래에서 **고를 수
+   있는지**입니다. 0058 의 문이 못 걸릴 조건을 거절하므로(조인에
+   하위분류 · 중고 아닌데 택배), 화면이 그 칸을 내면 **눌러도 거절되는
+   칸**이 됩니다 (절대 규칙 5). 그래서 문의 규칙을 여기 한 벌 적고
+   화면이 그것을 읽습니다.
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_WATCH = [
+  { key:"join",    name:"골프 조인",        where:"/cat/matchup",
+    sub:false, price:true,  ship:false, booked:true },
+  { key:"listing", name:"중고 직거래",      where:"/cat/used",
+    sub:true,  price:true,  ship:true,  booked:false },
+  { key:"job",     name:"인력 · 비즈니스",  where:"/cat/career",
+    /* ⚠️ 급여(`pay`)가 **글자**라 숫자로 견줄 수 없습니다 (0048 이
+       "협의" 를 지어 적지 않으려고 비울 수 있게 두었습니다) — 그래서
+       금액 칸을 **안 냅니다**. 받아 두면 영원히 안 걸립니다. */
+    sub:true,  price:false, ship:false, booked:false }
+];
+window.amWatch = function(k){
+  return window.AM_WATCH.filter(function(x){ return x.key === k; })[0] || null;
+};
+window.amWatchName = function(k){
+  var f = window.amWatch(k);
+  return f ? f.name : String(k || "");
+};
+
+/* "이 조건을 저장하고 알림 받기" 로 가는 링크 (0058)
+   ⚠️⚠️ **글과 주소를 한 곳에** 둡니다 — 분류 화면 셋(조인 · 중고 ·
+   인력)이 같은 말을 해야 하고, 세 곳에 적으면 한쪽만 고치는 날 둘이
+   다른 말을 합니다 (메인의 믿음 줄과 "일하는 방식" 이 그랬습니다).
+   ⚠️ 가는 자리는 `/my` 이고 `?w=` 로 **그 갈래를 열어 둡니다** —
+   그러지 않으면 손님이 거기서 갈래를 다시 고릅니다.
+   ⚠️⚠️ **거르개의 값을 주소에 싣지 않습니다.** 싣는 순간 같은 규칙이
+   두 곳(화면의 거르개 · /my 의 양식)이 되고, 거르개가 늘어나는 날
+   한쪽만 고치게 됩니다. `/my` 에서 한 번 더 고르시는 것이 맞습니다.
+   ⚠️ 로그인 전에는 **부르지 않습니다** — 화면이 가립니다 (로그인
+   화면으로 보내 놓고 "저장했습니다" 가 되면 안 됩니다). */
+window.amWatchLink = function(kind){
+  var f = window.amWatch ? window.amWatch(kind) : null;
+  if(!f) return "";
+  return '<p class="wch-cta"><a class="btn btn-sm btn-line" href="/my?w=' +
+    encodeURIComponent(f.key) + '">' +
+    (window.icon ? window.icon("search", 18) : "") +
+    '조건을 저장하고 알림 받기</a></p>';
+};

@@ -289,6 +289,12 @@
 
   function paint(a, rows, k, sub){
     var html = filters(k, sub) + subLine(sub);
+    /* ⚠️⚠️ 0058 — "조건을 저장하고 알림 받기". 글과 주소는
+       js/data/deal.js 의 amWatchLink() 한 곳입니다 (분류 화면 셋이
+       같은 말을 해야 합니다).
+       ⚠️ 로그인한 분에게만 냅니다 — 로그인 전에 그리면 눌러서 로그인
+       화면으로 갔다가 돌아와도 저장된 것이 없는 꼴입니다 (절대 규칙 5). */
+    if(a && a.signedIn && window.amWatchLink) html += window.amWatchLink("job");
     if(!rows.length){
       /* ⚠️ 0건이어도 **막다른 길로 두지 않습니다** (절대 규칙 2) */
       html += '<div class="none">' +

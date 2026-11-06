@@ -115,9 +115,14 @@ function keepOf(name){
   const base = "http://127.0.0.1:" + PORT;
   const view = { width:1280, height:900 };
 
-  async function open(path, who, tables, rpcs, up){
+  /* ⚠️ `init` — 화면 스크립트가 돌기 **전에** 끼우는 조각입니다.
+     "보유 기간이 비면 양식을 안 엽니다" 처럼 **설정이 없을 때**를 재려면
+     그 값이 담기는 순간을 가로채야 합니다 (js/data/site.js 가 나중에
+     덮으므로 그냥 넣어 두면 지워집니다). 안 주면 아무 일도 안 합니다. */
+  async function open(path, who, tables, rpcs, up, init){
     const p = await b.newPage({ viewport: view });
     const errs = watch(p);
+    if(init) await p.addInitScript(init);
     const sent = await stub(p, who, tables, rpcs, up);
     await p.goto(base + path, { waitUntil:"networkidle" });
     await p.waitForTimeout(450);
@@ -1217,6 +1222,169 @@ function keepOf(name){
      /가린 후기/.test(t) && /고객센터/.test(t), t.slice(-400));
   await s.p.close();
 
+  /* ══ 저장한 조건 (0058 · /my) ═══════════════════════════════════
+     ⚠️⚠️ **설정이 있어야 열리는 자리라 여기서만 눌립니다** —
+     `check-screens` 는 빌드가 찍은 HTML 을 여는데 이 상자는 로그인한
+     뒤에 그려져 **빈 상자**로만 보입니다.
+     ⚠️ 여기서 재는 것 다섯 — ① 저장된 조건이 **사람 말**로 보이는가
+     ② 갈래마다 **고를 수 있는 칸이 다른가**(못 걸릴 조건을 0058 의 문이
+     거절하므로, 그 칸을 그리면 눌러도 거절되는 칸입니다 · 절대 규칙 5)
+     ③ 보내는 꾸러미가 문과 같은가 ④ **보유 기간이 비면 양식을 안 여는가**
+     ⑤ 금액 **0 과 안 적음을 가르는가**(0 은 무료로 나눔입니다). */
+  console.log("\n── /my 저장한 조건 (0058)");
+  const WCH = [
+    { id:"w-1", kind:"listing", sub:"us-iron", region:"seoul",
+      max_price:500000, ship:true, booked:false,
+      created_at:"2026-11-05T01:00:00Z" },
+    /* ⚠️ 금액 0 — "무료로 나눔" 으로 읽혀야 합니다 (`||` 를 쓰면 사라집니다) */
+    { id:"w-2", kind:"listing", sub:null, region:null,
+      max_price:0, ship:false, booked:false,
+      created_at:"2026-11-04T01:00:00Z" },
+    { id:"w-3", kind:"join", sub:null, region:"gyeonggi",
+      max_price:null, ship:false, booked:true,
+      created_at:"2026-11-03T01:00:00Z" }
+  ];
+  s = await open("/my", { role:"customer", name:"홍길동" },
+                 Object.assign({}, MYT, { watch: WCH }));
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  t = (await s.p.textContent("#wchbox")) || "";
+  ok("저장한 조건 셋이 그려진다",
+     (await s.p.locator("#wchbox .wch-l > li").count()) === 3,
+     await s.p.locator("#wchbox .wch-l > li").count());
+  ok("⚠️ 갈래가 **사람 말**이다 (영문 키가 아니다)",
+     /중고 직거래/.test(t) && /골프 조인/.test(t) &&
+     t.indexOf("listing") < 0 && t.indexOf("join") < 0, t.slice(0, 500));
+  ok("  조건도 사람 말이다 (지역 · 종류 · 금액)",
+     /서울/.test(t) && /아이언/.test(t) && /500,000원 이하/.test(t), t.slice(0, 500));
+  /* ⚠️⚠️ **그 줄 안쪽만** 봅니다. 처음에 상자 전체에서 "0원 이하" 가
+     없는지 보았는데, 다른 줄의 `500,000원 이하` 가 그 글자를 **품고
+     있어서** 멀쩡한 화면을 실패로 잡았습니다 — 0052 의 `#pvstadm` 에서
+     밟은 "범위를 안 좁혀 엉뚱한 칸을 집은" 자리입니다. */
+  const w2 = (await s.p.textContent("#wchbox .wch-l > li:nth-child(2)")) || "";
+  ok("⚠️⚠️ 금액 **0 이 '무료로 나눔' 으로** 나온다",
+     /무료로 나눔만/.test(w2) && w2.indexOf("0원 이하") < 0, w2);
+  ok("  부킹 조건도 적는다", /부킹이 잡힌 자리만/.test(t), t.slice(0, 500));
+  ok("  보러 가는 길을 낸다 (막다른 길로 두지 않습니다)",
+     (await s.p.locator('#wchbox a[href="/cat/used"]').count()) >= 1 &&
+     (await s.p.locator('#wchbox a[href="/cat/matchup"]').count()) >= 1);
+
+  /* ⚠️⚠️ 양식은 `AM_WATCH` 의 **첫 갈래**(골프 조인)로 열립니다 —
+     처음에 중고로 열린다고 보고 "중고에는 종류 칸이 있다" 를 재다가
+     **멀쩡한 화면을 실패로** 잡았습니다. 갈래를 **골라서** 봅니다. */
+  ok("양식이 열린다", (await s.p.locator("#wchbox form#wchf").count()) === 1);
+  await s.p.selectOption("#wchbox #w-kind", "listing");
+  await s.p.waitForTimeout(200);
+  ok("⚠️ 중고에는 종류 · 금액 · 택배 칸이 있다",
+     (await s.p.locator("#wchbox #w-sub").count()) === 1 &&
+     (await s.p.locator("#wchbox #w-mp").count()) === 1 &&
+     (await s.p.locator('#wchbox [name="ship"]').count()) === 1);
+  ok("  ⚠️ 중고에는 **부킹 칸이 없다** (중고에 보내면 문이 거절합니다)",
+     (await s.p.locator('#wchbox [name="booked"]').count()) === 0);
+  await s.p.selectOption("#wchbox #w-kind", "join");
+  await s.p.waitForTimeout(200);
+  ok("⚠️⚠️ 조인으로 바꾸면 **하위분류 칸이 사라진다** (조인 글에 그 칸이 없습니다)",
+     (await s.p.locator("#wchbox #w-sub").count()) === 0);
+  ok("  부킹 칸이 생기고 택배 칸은 없다",
+     (await s.p.locator('#wchbox [name="booked"]').count()) === 1 &&
+     (await s.p.locator('#wchbox [name="ship"]').count()) === 0);
+  await s.p.selectOption("#wchbox #w-kind", "job");
+  await s.p.waitForTimeout(200);
+  ok("⚠️⚠️ 인력에는 **금액 칸이 없다** (급여가 글자라 숫자로 못 견줍니다)",
+     (await s.p.locator("#wchbox #w-mp").count()) === 0);
+  ok("  하위분류 칸은 있다", (await s.p.locator("#wchbox #w-sub").count()) === 1);
+
+  /* ⚠️ 무엇을 · 왜 · 얼마나 두는지를 그 자리에서 말합니다 (제15조 제2항) */
+  ok("⚠️ 보유 기간 · 받는 항목 · 밖으로 안 보낸다는 것을 그 자리에서 말한다",
+     /보유 기간/.test(t) && /연락처는 받지 않습니다/.test(t) &&
+     /문자 · 카카오톡 · 메일을 보내지 않습니다/.test(t), t.slice(0, 1400));
+
+  /* 보내는 꾸러미 */
+  await s.p.selectOption("#wchbox #w-kind", "listing");
+  await s.p.waitForTimeout(200);
+  await s.p.selectOption("#wchbox #w-rg", "seoul");
+  await s.p.fill("#wchbox #w-mp", "0");
+  await s.p.check('#wchbox [name="ship"]');
+  await s.p.click("#wchbox form#wchf button[type='submit']");
+  await s.p.waitForTimeout(400);
+  const wsv = s.sent.filter(function(x){ return x.name === "save_watch"; })[0];
+  ok("저장하면 save_watch 를 부른다", !!wsv,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  let wb = null;
+  try{ wb = JSON.parse(wsv.body).p; }catch(_){}
+  ok("⚠️ 꾸러미가 `p` 하나다", !!wb, wsv && wsv.body);
+  ok("  고른 것이 그대로 간다", !!wb && wb.kind === "listing" &&
+     wb.region === "seoul" && wb.ship === true, wsv && wsv.body);
+  /* ⚠️⚠️ **0 을 0 으로 보냅니다** — 안 적음이 아닙니다 */
+  ok("⚠️⚠️ 금액 **0 을 0 으로** 보낸다 (안 적음이 아닙니다)",
+     !!wb && String(wb.maxPrice) === "0", wsv && wsv.body);
+  ok("  ⚠️ 중고에 **booked 를 안 보낸다** (보내면 문이 거절합니다)",
+     !!wb && !("booked" in wb), wsv && wsv.body);
+
+  /* 지우기 */
+  await s.p.click("#wchbox button[data-wdrop='w-1']");
+  await s.p.waitForTimeout(400);
+  const wdr = s.sent.filter(function(x){ return x.name === "drop_watch"; })[0];
+  ok("지우면 drop_watch 를 부른다", !!wdr,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  ok("  어느 조건인지 같이 간다",
+     !!wdr && JSON.parse(wdr.body).p.id === "w-1", wdr && wdr.body);
+  ok("저장한 조건 자리의 누르는 것이 40px 이상이다",
+     (await tapsOk(s.p, "#wchbox")) === 0, await tapsOk(s.p, "#wchbox"));
+  await s.p.close();
+
+  /* ⚠️⚠️⚠️ **0건일 때 막다른 길로 두지 않습니다** (절대 규칙 2) */
+  console.log("\n── /my 저장한 조건 — 0건");
+  s = await open("/my", { role:"customer", name:"홍길동" }, MYT);
+  t = (await s.p.textContent("#wchbox")) || "";
+  ok("0건이라고 말한다", /저장해 두신 조건이 없습니다/.test(t), t.slice(0, 300));
+  ok("⚠️ 0건이어도 **양식을 낸다** (막다른 길로 두지 않습니다)",
+     (await s.p.locator("#wchbox form#wchf").count()) === 1);
+  await s.p.close();
+
+  /* ⚠️⚠️⚠️ **보유 기간이 비면 양식을 안 엽니다** (제15조 제2항 — 법이
+     요구하는 것을 안 보여 주고 동의를 받을 수는 없습니다).
+     ⚠️ `js/data/site.js` 가 값을 담은 **뒤에** 그 칸만 비워야 하므로,
+     담기는 순간을 가로챕니다 (그냥 넣어 두면 site.js 가 덮습니다).
+     ⚠️ `/help` 가 site.js 를 안 실어 문의 양식이 조용히 안 열렸던 그
+     자리의 되풀이입니다 — 그래서 **눌러서** 봅니다. */
+  console.log("\n── /my 저장한 조건 — 보유 기간이 비면 양식을 안 엽니다");
+  s = await open("/my", { role:"customer", name:"홍길동" },
+                 Object.assign({}, MYT, { watch: WCH }), {}, false,
+                 function(){
+                   var v;
+                   Object.defineProperty(window, "WOW_BIZ", {
+                     configurable: true,
+                     get: function(){ return v; },
+                     set: function(x){
+                       v = Object.assign({}, x, { watchKeep: "" });
+                     }
+                   });
+                 });
+  t = (await s.p.textContent("#wchbox")) || "";
+  ok("⚠️⚠️ 보유 기간이 비면 **양식을 안 그린다**",
+     (await s.p.locator("#wchbox form#wchf").count()) === 0,
+     await s.p.locator("#wchbox form#wchf").count());
+  ok("  ⚠️ 저장해 둔 것은 **그대로 보여 준다** (지울 길을 막지 않습니다)",
+     (await s.p.locator("#wchbox .wch-l > li").count()) === 3,
+     await s.p.locator("#wchbox .wch-l > li").count());
+  /* ⚠️ 운영자에게 할 말을 손님 화면에 적지 않습니다 (절대 규칙 3) */
+  ok("  ⚠️ 무엇을 설정해야 하는지는 손님에게 안 적는다",
+     t.indexOf("site.js") < 0 && t.indexOf("watchKeep") < 0, t.slice(0, 400));
+  ok("  그래도 지금은 안 된다고는 말한다", /열려 있지 않습니다/.test(t), t.slice(0, 400));
+  await s.p.close();
+
+  /* ⚠️ 보유 기간이 **실제 값**으로 찍히는지 — 검사에 그날의 글자를
+     박으면 사장님이 그 값을 고치시는 날 멀쩡한 화면이 떨어집니다. */
+  {
+    const WKEEP = keepOf("watchKeep");
+    s = await open("/my", { role:"customer", name:"홍길동" },
+                   Object.assign({}, MYT, { watch: WCH }));
+    const wt = (await s.p.textContent("#wchbox")) || "";
+    ok("⚠️ 보유 기간이 **site.js 의 실제 값**으로 찍힌다",
+       WKEEP.length > 0 && wt.indexOf(WKEEP) >= 0, WKEEP + " / " + wt.slice(0, 500));
+    await s.p.close();
+  }
+
   console.log("\n── /desk 후기 — 업체는 **답변만** 답니다");
   s = await open("/desk", PRO,
                  { assignment:[asg(quoted, "accepted")], request:[quoted],
@@ -1416,19 +1584,24 @@ function keepOf(name){
      "만들어 놓고 안 쓰는 칸" 의 가장 큰 판입니다. 그래서 **단추가
      실제로 그 문을 부르는지** 꾸러미까지 뜯어 봅니다. */
   const PVS = [
+    /* ⚠️ 0057 — 한 곳은 채우고 한 곳은 **비웁니다.** 다 채우면
+       "한 칸도 없습니다" 갈래를 아무도 안 눌러 보게 됩니다. */
     { id:"real-1", name:"그린레슨 아카데미", state:"approved", state_why:null,
       state_at:null, listed:true, assignable:true, is_test:false,
-      subs:["ls-solo"], regions:["seoul"] },
+      subs:["ls-solo"], regions:["seoul"],
+      ceo:"박대표", addr:"서울 강남구", tel:"02-111-2222",
+      email:"a@green.test", brn:"123-45-67890" },
     { id:"sus-1", name:"정지된 업체", state:"suspended",
       state_why:"서류가 확인되지 않았습니다", state_at:"2026-11-02T01:00:00Z",
       listed:false, assignable:false, is_test:false,
-      subs:["ft-grip"], regions:["gyeonggi"] }
+      subs:["ft-grip"], regions:["gyeonggi"],
+      ceo:null, addr:null, tel:null, email:null, brn:null }
   ];
   const APS = [
     { id:"aaaa-ap-1", no:"AP-0001", company:"새 골프샵", brn:"111-22-33333",
       name:"김신청", tel:"010-2222-3333", email:"a@x.test", region:"서울",
       services:"피팅 · 수리", note:"입점 문의드립니다",
-      state:"new", created_at:"2026-11-03T01:00:00Z" }
+      state:"new", provider_id:"sus-1", created_at:"2026-11-03T01:00:00Z" }
   ];
   const PROT = { provider:PVS, provider_apply:APS };
 
@@ -1521,6 +1694,98 @@ function keepOf(name){
   ok("업체 심사 자리의 누르는 것이 40px 이상이다",
      (await tapsOk(s.p, "#probox")) === 0, await tapsOk(s.p, "#probox"));
   await s.p.close();
+
+  /* ══ 사업자 신원정보 (0057 · 제20조 제2항) ══════════════════════
+     ⚠️⚠️⚠️ **2026-11-06 까지 `provider` 표에 상호 하나뿐이었습니다.**
+     중개자는 입점업체가 사업자일 때 그 대표자 · 주소 · 전화 · 이메일 ·
+     사업자등록번호를 손님이 볼 수 있게 해야 합니다 (시행령 제25조).
+     공정위가 당근마켓에 시정명령 · 과태료를 부과한 조항입니다.
+     ⚠️ 여기서 재는 것은 넷입니다 — ① 운영자가 적는 칸이 있는가
+     ② 관리자가 아니면 **사업자등록번호 칸을 안 내는가**(눌러도 거절되는
+     칸을 안 그립니다) ③ 보내는 꾸러미가 문과 같은가 ④ 까닭 없이는
+     안 보내는가. */
+  console.log("\n── /admin 사업자 신원정보 (0057)");
+  /* ⚠️ 앞 묶음이 화면을 닫았으므로 **제 화면을 새로 엽니다** — 앞
+     검사가 만든 상태를 물려받으면 엉뚱한 까닭으로 통과합니다. */
+  s = await open("/admin", { role:"admin", name:"관리자" },
+                 Object.assign({}, ADMT, BIZ, PROT), { biz_metrics: MET });
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  t = (await s.p.textContent("#probox")) || "";
+  ok("⚠️ 이미 적힌 업체는 그 값이 보인다",
+     /123-45-67890/.test(t) && /박대표/.test(t), t.slice(0, 600));
+  ok("⚠️⚠️ 비어 있는 업체는 **한 칸도 없다고** 말한다",
+     /한 칸도 없습니다/.test(t), t.slice(0, 900));
+  ok("  적는 단추를 낸다 (적기 · 고치기)",
+     (await s.p.locator("#probox button[data-pvid='sus-1']").count()) === 1);
+  await s.p.click("#probox button[data-pvid='sus-1']");
+  await s.p.waitForTimeout(250);
+  ok("양식이 열린다", (await s.p.locator("form[data-pvidf='sus-1']").count()) === 1);
+  ok("  관리자에게는 사업자등록번호 칸이 있다",
+     (await s.p.locator("form[data-pvidf='sus-1'] [name='brn']").count()) === 1);
+  /* ⚠️ 입점 신청에 적혀 온 값을 미리 채웁니다 — 운영자가 같은 것을
+     두 번 받아 적지 않게. 지어낸 값이 아니라 그 업체가 적은 값입니다. */
+  ok("⚠️ 비어 있는 칸은 **입점 신청에 적혀 온 값**으로 미리 채운다",
+     (await s.p.inputValue("form[data-pvidf='sus-1'] [name='tel']")) === "010-2222-3333",
+     await s.p.inputValue("form[data-pvidf='sus-1'] [name='tel']"));
+
+  /* ⚠️⚠️ **까닭 없이는 안 보냅니다** — 손님에게 보이는 값이고 기록에
+     남아야 합니다. 보내 보고 **안 불렸는지**를 셉니다. */
+  const idn0 = s.sent.filter(function(x){ return x.name === "set_provider_ident"; }).length;
+  await s.p.click("form[data-pvidf='sus-1'] button[type='submit']");
+  await s.p.waitForTimeout(250);
+  ok("⚠️⚠️ 까닭이 비면 **문을 아예 안 부른다**",
+     s.sent.filter(function(x){ return x.name === "set_provider_ident"; }).length === idn0,
+     "전 " + idn0);
+
+  await s.p.fill("form[data-pvidf='sus-1'] [name='ceo']", "최대표");
+  await s.p.fill("form[data-pvidf='sus-1'] [name='addr']", "경기 성남시");
+  await s.p.fill("form[data-pvidf='sus-1'] [name='brn']", "222-33-44444");
+  await s.p.fill("form[data-pvidf='sus-1'] [name='why']", "사업자등록증 사본 확인");
+  await s.p.click("form[data-pvidf='sus-1'] button[type='submit']");
+  await s.p.waitForTimeout(400);
+  const idn = s.sent.filter(function(x){ return x.name === "set_provider_ident"; })[0];
+  ok("저장하면 set_provider_ident 를 부른다", !!idn,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  let idb = null;
+  try{ idb = JSON.parse(idn.body).p; }catch(_){}
+  ok("⚠️ 꾸러미가 **`p` 하나**다 (0013 · 0003 만 자리 인자입니다)",
+     !!idb, idn && idn.body);
+  ok("  어느 업체인지 · 까닭 · 적은 값이 같이 간다",
+     !!idb && idb.provider === "sus-1" && idb.why === "사업자등록증 사본 확인" &&
+     idb.ceo === "최대표" && idb.addr === "경기 성남시", idn && idn.body);
+  ok("  관리자는 사업자등록번호도 보낸다", !!idb && idb.brn === "222-33-44444",
+     idn && idn.body);
+  await s.p.close();
+
+  /* ⚠️⚠️⚠️ **직원에게는 사업자등록번호 칸을 안 냅니다** — 문이 거절하므로
+     그려 두면 눌러도 아무 일이 안 나는 칸입니다 (절대 규칙 5). */
+  console.log("\n── /admin 사업자 신원정보 — **직원**에게는 번호 칸이 없습니다");
+  s = await open("/admin", { role:"staff", name:"직원" },
+                 Object.assign({}, ADMT, BIZ, PROT));
+  ok("화면 에러 · CSP 거절이 0건이다", s.errs.length === 0, s.errs.join(" | "));
+  await s.p.click("#probox button[data-pvid='sus-1']");
+  await s.p.waitForTimeout(250);
+  ok("⚠️⚠️ 직원에게는 **사업자등록번호 칸이 없다**",
+     (await s.p.locator("form[data-pvidf='sus-1'] [name='brn']").count()) === 0);
+  ok("  왜 없는지 그 자리에서 말한다",
+     /관리자만/.test((await s.p.textContent("form[data-pvidf='sus-1']")) || ""),
+     await s.p.textContent("form[data-pvidf='sus-1']"));
+  ok("  나머지 넷은 적을 수 있다",
+     (await s.p.locator("form[data-pvidf='sus-1'] [name='ceo']").count()) === 1 &&
+     (await s.p.locator("form[data-pvidf='sus-1'] [name='tel']").count()) === 1);
+  await s.p.fill("form[data-pvidf='sus-1'] [name='ceo']", "최대표");
+  await s.p.fill("form[data-pvidf='sus-1'] [name='why']", "통화로 확인");
+  await s.p.click("form[data-pvidf='sus-1'] button[type='submit']");
+  await s.p.waitForTimeout(400);
+  const idn2 = s.sent.filter(function(x){ return x.name === "set_provider_ident"; })[0];
+  let idb2 = null;
+  try{ idb2 = JSON.parse(idn2.body).p; }catch(_){}
+  ok("⚠️⚠️ 직원의 꾸러미에는 **brn 이 아예 없다** (있으면 문이 거절합니다)",
+     !!idb2 && !("brn" in idb2), idn2 && idn2.body);
+  ok("업체 심사 자리의 누르는 것이 40px 이상이다 (직원)",
+     (await tapsOk(s.p, "#probox")) === 0, await tapsOk(s.p, "#probox"));
+  await s.p.close();
+
 
   /* ══ 신고 · 분쟁 (0040 · 3차 지시서 §6 · §8) ═══════════════════
      ⚠️⚠️⚠️ **문만 만들고 화면을 안 만들면 그 기능은 없는 것입니다.**
@@ -2361,6 +2626,10 @@ function keepOf(name){
        문이 **덮어쓰므로** 화면이 돌려보내지 않으면 지워집니다.
        2026-11-05 에 실제로 지워지고 있었습니다. */
     industries:["golf"],
+    /* ⚠️ 0057 — 사업자 신원정보. `brn` 은 **읽기만** 합니다 (업체는 못
+       고칩니다). 나머지 넷은 화면에 칸이 있고, 안 보내면 지워집니다. */
+    ceo:"남대표", addr:"서울 관악구 1", tel:"02-333-4444",
+    email:"r@range.test", brn:"555-66-77777",
     verified:{}, listed:true, assignable:true, state:"approved", state_why:null }];
 
   console.log("\n── /desk 업체 정보 — 업체가 아니면 한 줄도 안 보입니다");
@@ -2394,6 +2663,23 @@ function keepOf(name){
   ok("⚠️ 확인 배지를 켜는 칸이 **없다** (지어낸 신뢰입니다)",
      (await s.p.locator("#mebox input[name='verified']").count()) === 0 &&
      /서류를 확인한 뒤에만/.test(t));
+  /* ⚠️⚠️ 0057 — 업체가 적는 칸 넷은 **있고**, 사업자등록번호는 **없습니다**
+     (운영자가 서류를 보고 적습니다 · 문과 트리거가 둘 다 막습니다). */
+  ok("⚠️ 사업자 정보 칸 넷이 있다 (대표자 · 주소 · 전화 · 이메일)",
+     (await s.p.locator("#mebox input[name='ceo']").count()) === 1 &&
+     (await s.p.locator("#mebox input[name='addr']").count()) === 1 &&
+     (await s.p.locator("#mebox input[name='tel']").count()) === 1 &&
+     (await s.p.locator("#mebox input[name='email']").count()) === 1);
+  ok("  ⚠️ 그 값이 **손님 화면에 나온다**고 그 자리에서 말한다",
+     /손님 화면/.test(t) && /제20조 제2항/.test(t), t.slice(0, 900));
+  ok("⚠️⚠️ 사업자등록번호 **칸이 없다** (운영자가 서류를 보고 적습니다)",
+     (await s.p.locator("#mebox input[name='brn']").count()) === 0 &&
+     /555-66-77777/.test(t), t.slice(0, 900));
+  /* ⚠️ 공개 번호와 배정 담당자 직통(0013)은 **다른 것**입니다 — 섞어
+     읽으면 업체가 담당자 휴대폰을 공개 칸에 적습니다. */
+  ok("  ⚠️ 공개 번호와 **배정 연락처가 다른 것**이라고 적는다",
+     /배정 연락처/.test(t), t.slice(0, 1200));
+
   ok("  지금 공개 중인지 말해 준다", /공개 중/.test(t), t.slice(0, 400));
 
   /* ⚠️⚠️⚠️ **읽은 값을 전부 다시 담아 보내는지** — 여기가 핵심입니다 */
@@ -2418,6 +2704,15 @@ function keepOf(name){
   ok("  상담 시간 · 개업 · 브랜드도 담긴다",
      !!md && md.consultHours === "평일 10~19시" && md.since === "2019" &&
      md.brands.join() === "타이틀리스트", me1 && me1.body);
+  /* ⚠️⚠️ 0057 — 사업자 신원정보 넷. **손님 화면에 그대로 나가는 값**이라
+     업체가 고칠 수 있어야 하고, `save_provider_self` 가 통째로 덮으므로
+     화면이 **읽고 또 보내야** 합니다 (안 보내면 저장할 때마다 비워집니다). */
+  ok("  ⚠️ 사업자 신원정보 넷이 **읽은 값으로 미리 채워진다**",
+     !!md && md.ceo === "남대표" && md.addr === "서울 관악구 1" &&
+     md.tel === "02-333-4444" && md.email === "r@range.test", me1 && me1.body);
+  ok("  ⚠️⚠️ **사업자등록번호는 안 보낸다** (업체가 못 고치는 칸입니다)",
+     !!md && !("brn" in md), me1 && me1.body);
+
   /* ══════════════════════════════════════════════════════════════
      ⚠️⚠️⚠️ **문이 덮어쓰는 칸을 마이그레이션에서 직접 읽어 맞춰 봅니다.**
 
@@ -2432,8 +2727,43 @@ function keepOf(name){
      ⚠️ 갯수를 박지 않습니다 — 문에 칸이 늘면 늘어난 대로 셉니다.
      ══════════════════════════════════════════════════════════════ */
   {
-    const sql = fs.readFileSync(
-      path.join(__dirname, "..", "db/migrations/0044_contact_ways.sql"), "utf8");
+    /* ⚠️⚠️⚠️ **번호를 박지 않습니다.** 처음에는 `0044_contact_ways.sql` 을
+       글자로 적어 두었는데, 0057 이 같은 문을 덮으면서 그 파일에는 **옛
+       칸 목록**이 남습니다 — 검사가 옛 목록을 세고 새 칸은 아무도 안
+       보는 자리가 됩니다 (`save_provider_self` 는 보낸 것으로 통째로
+       덮으므로, 안 세어지는 칸은 저장할 때마다 조용히 비워집니다).
+       그래서 마이그레이션을 훑어 **이 문을 마지막으로 덮은 파일**을
+       찾습니다. */
+    const MDIR = path.join(__dirname, "..", "db/migrations");
+    const owner = fs.readdirSync(MDIR)
+      .filter(f => /^\d{4}_.*\.sql$/.test(f)).sort()
+      .filter(f => fs.readFileSync(path.join(MDIR, f), "utf8")
+                     .indexOf("function save_provider_self") >= 0)
+      .pop();
+    ok("⚠️ `save_provider_self` 를 덮은 마지막 마이그레이션을 찾았다",
+       !!owner, String(owner));
+    /* ⚠️⚠️⚠️ **주석을 떼고 찾습니다.** 처음에는 그냥 `indexOf` 로 찾았는데,
+       0057 의 머리말이 "검사가 이 `update provider set` 를 읽습니다" 라고
+       **그 글자를 그대로 적고 있어서** 검사가 주석을 본문으로 읽고 칸을
+       0개로 셌습니다 (`check-deal` 이 0026 의 주석 속 닫는 괄호를 enum 의
+       끝으로 읽은 자리 · `check-doors` 가 거절 문구 안의 함수 이름을
+       부르는 자리로 센 자리와 **같은 꼴**이고 이번이 셋째입니다).
+       ⚠️ 홑따옴표 안의 `--` 는 주석이 아니므로 **따라가며** 봅니다. */
+    const stripSql = function(t){
+      let out = "", q = false;
+      for(const ln of String(t).split("\n")){
+        let keep = "";
+        for(let k = 0; k < ln.length; k++){
+          if(ln[k] === "'") q = !q;
+          if(!q && ln[k] === "-" && ln[k+1] === "-") break;
+          keep += ln[k];
+        }
+        out += keep + "\n";
+      }
+      return out;
+    };
+    const sql = owner
+      ? stripSql(fs.readFileSync(path.join(MDIR, owner), "utf8")) : "";
     const i = sql.indexOf("update provider set");
     const blk = i < 0 ? "" : sql.slice(i, sql.indexOf("where id = v_pv", i));
     /* 줄머리의 `칸 =` 만 모읍니다 (주석 줄과 식 안쪽은 안 셉니다) */
@@ -2768,6 +3098,12 @@ function keepOf(name){
     });
     ok("로그인 전에도 열린 조인이 보인다", r.card && r.title.indexOf("주말 아침") >= 0,
        JSON.stringify(r).slice(0, 160));
+    /* ⚠️⚠️ 0058 — 로그인 전에는 "조건 저장" 길을 **안 냅니다.** 그리면
+       눌러서 로그인 화면으로 갔다가 돌아와도 **저장된 것이 없는** 꼴이고,
+       그건 눌러도 아무 일이 안 나는 단추입니다 (절대 규칙 5). */
+    ok("⚠️ 로그인 전에는 **조건 저장 단추를 안 낸다**",
+       (await g.p.locator('a[href^="/my?w="]').count()) === 0,
+       await g.p.locator('a[href^="/my?w="]').count());
     ok("  ⚠️ 부킹이 잡힌 것처럼 말하지 않는다 (§2.A — 부킹 보장 금지)",
        r.body.indexOf("부킹은 아직입니다") >= 0, "");
     ok("  로그인 전에는 여는 양식 대신 로그인 길을 낸다", r.login && !r.form,
@@ -2808,6 +3144,12 @@ function keepOf(name){
                now: (document.getElementById("jfnow") || {}).textContent || "",
                body: document.body.innerText };
     });
+    /* ⚠️⚠️ 0058 — 로그인하신 뒤에는 "조건 저장" 길을 냅니다. 글과 주소는
+       js/data/deal.js 의 amWatchLink() 한 곳입니다 (분류 화면 셋이 같은
+       말을 해야 합니다 — 세 곳에 적으면 한쪽만 고치는 날 달라집니다). */
+    ok("⚠️⚠️ 로그인하면 **조건 저장 길**이 생긴다 (0058)",
+       (await g.p.locator('a[href="/my?w=join"]').count()) === 1,
+       await g.p.locator('a[href="/my?w=join"]').count());
     ok("조인 목록에 거르개가 있다 (지역 · 날짜 · 부킹)",
        bar.rg && bar.wh && bar.bk, JSON.stringify(bar).slice(0, 120));
     /* ⚠️ 갯수를 박지 않습니다 — 센 수가 찍히기만 하면 됩니다 */
@@ -3519,6 +3861,11 @@ function keepOf(name){
       ok("매물 목록에 거르개가 있다 (물건 종류 · 지역 · 택배)",
          bar.s && bar.rg && bar.sh, JSON.stringify(bar).slice(0, 140));
       ok("  센 수를 적는다", /매물 \d+건/.test(bar.now), bar.now);
+      /* ⚠️⚠️ 0058 — 로그인하신 뒤에는 "조건 저장" 길을 냅니다. 글과
+         주소는 js/data/deal.js 의 amWatchLink() 한 곳입니다. */
+      ok("⚠️⚠️ 로그인하면 **조건 저장 길**이 생긴다 (0058)",
+         (await g.p.locator('a[href="/my?w=listing"]').count()) === 1,
+         await g.p.locator('a[href="/my?w=listing"]').count());
       /* ⚠️⚠️ **업체가 하는 하위(매입 견적 · 위탁판매)는 안 들어갑니다** —
          그 둘은 업체를 찾는 자리이고 매물이 아닙니다. 그리고 고르는 값은
          `catalog.js` 에서 끌어옵니다 (일곱을 글자로 박지 않습니다). */
@@ -3829,6 +4176,12 @@ function keepOf(name){
                kinds: f.querySelectorAll('select[name="kind"] option').length };
     });
     ok("로그인하면 올리는 양식이 열린다", r.form, JSON.stringify(r).slice(0, 120));
+    /* ⚠️⚠️ 0058 — 로그인하신 뒤에는 "조건 저장" 길을 냅니다. 글과 주소는
+       js/data/deal.js 의 amWatchLink() 한 곳입니다 (분류 화면 셋이 같은
+       말을 해야 합니다). */
+    ok("⚠️⚠️ 로그인하면 **조건 저장 길**이 생긴다 (0058)",
+       (await g.p.locator('a[href="/my?w=job"]').count()) === 1,
+       await g.p.locator('a[href="/my?w=job"]').count());
     ok("  갈래 · 분류 · 지역 · 제목 · 내용 · 연락처가 **필수**다",
        ["kind","sub","region","title","body","contact"].every(function(k){
          return r.req.indexOf(k) >= 0; }), r.req.join(","));

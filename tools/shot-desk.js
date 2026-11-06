@@ -312,6 +312,21 @@ const LSCON = [
     seller_share_at:null, buyer_share_at:null }
 ];
 
+/* 저장한 조건 (0058) — ⚠️⚠️ **가짜 자료도 DB 가 받는 값이어야 합니다.**
+   조인에서 신청 상태를 `ok` 로 적어 두고, 문의 갈래를 `service` 로 적어
+   두어 **찍힌 그림에 영문 키가 나오고** 그것을 보고 멀쩡한 화면을
+   고치려 들었던 자리입니다 (화면은 모르는 값을 그대로 보여 주는 것이
+   맞습니다). 0058 의 갈래는 `join` · `listing` · `job` 셋입니다. */
+const WATCH = [
+  { id:"wa-1", kind:"listing", sub:"us-iron", region:"seoul",
+    max_price:500000, ship:true, booked:false, created_at:NOW },
+  /* ⚠️ 금액 0 — "무료로 나눔" 으로 보여야 합니다 */
+  { id:"wa-2", kind:"listing", sub:null, region:null,
+    max_price:0, ship:false, booked:false, created_at:NOW },
+  { id:"wa-3", kind:"join", sub:null, region:"gyeonggi",
+    max_price:150000, ship:false, booked:true, created_at:NOW }
+];
+
 const T_MY = {
   request:[REQ], request_item:ITEMS, assignment:[ASG], quote:[QUOTE],
   provider:PVS, review:[], appointment:[], notice:NOTICE,
@@ -320,7 +335,11 @@ const T_MY = {
   /* ⚠️ 0045 → 0053 — 내가 보낸 문의와 그 답변 (`js/myinq.js`) */
   inquiry:INQ,
   /* ⚠️ 0056 — 내 중고 매물 (`js/mylisting.js`) */
-  listing:LSMINE, listingask:LSASK, v_listing_contact:LSCON
+  listing:LSMINE, listingask:LSASK, v_listing_contact:LSCON,
+  /* ⚠️ 0058 — 저장한 조건 (`js/mywatch.js`). 흉내 자료를 안 주면 그
+     상자가 **0건으로만** 그려져 목록 모양을 아무도 못 봅니다 (0051 의
+     사진 상자가 `pvPhoto` 를 안 돌려줘 한 번도 안 그려진 그 자리). */
+  watch:WATCH
 };
 
 /* ── 장면 ────────────────────────────────────────────────────────
@@ -372,6 +391,8 @@ const BOXES = {
           ["join", "#joinmine"], ["cq", "#mycq"], ["job", "#jobmine"],
           /* ⚠️ 0056 의 내 중고 매물 (js/mylisting.js) */
           ["listing", "#lsmine"],
+          /* ⚠️ 0058 의 저장한 조건 (js/mywatch.js) */
+          ["watch", "#wchbox"],
           ["inq", "#myinqbox"]]
 };
 

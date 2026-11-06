@@ -221,7 +221,12 @@ function run(opt){
     ["매물 문의 상태 (listingask.state)",
      checkKeys(sql, "state", "listingask"), W.AM_LSTASK_ST],
     ["물건 상태 (listing.cond)",
-     checkKeys(sql, "cond", "listing"),     W.AM_LST_COND]
+     checkKeys(sql, "cond", "listing"),     W.AM_LST_COND],
+    /* ⚠️⚠️ 0058 의 조건 저장 — 갈래가 어긋나면 ① 화면이 **없는 갈래**로
+       저장하려 해서 문이 거절하거나 ② DB 에 있는 갈래를 화면이 몰라
+       `/my` 목록에 **영문 키가 그대로** 찍힙니다. */
+    ["저장한 조건 갈래 (watch.kind)",
+     checkKeys(sql, "kind", "watch"),       W.AM_WATCH]
   ];
 
   want.forEach(function(w){

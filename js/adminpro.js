@@ -30,6 +30,7 @@
   var LIST = [];           /* 읽어 둔 업체 — 겹치는 id 를 미리 묻습니다 */
   var APL  = [];           /* 읽어 둔 입점 신청 */
   var INV  = [];           /* 살아 있는 담당자 초대 코드 */
+  var EDIT = "";           /* 사업자 정보를 지금 적고 있는 업체 id (0057) */
 
   function why(err){
     var w = String((err && err.message) || "");
@@ -58,9 +59,15 @@
     return Promise.all([
       /* ⚠️ RLS 가 운영자에게만 전부 내줍니다 — 화면이 또 좁히지 않습니다 */
       get("provider?select=id,name,state,state_why,state_at,listed,assignable," +
+          /* ⚠️ 0057 — 사업자 신원정보 다섯 (제20조 제2항). 운영자가 적는
+             자리라 여기서 읽습니다. */
+          "ceo,addr,tel,email,brn," +
           "is_test,subs,regions&order=name.asc&limit=300"),
+      /* ⚠️ `provider_id` 를 같이 읽습니다 — 등록까지 끝난 신청과 업체를
+         이어서, 신청서에 적혀 온 번호 · 전화를 **미리 채워** 둡니다
+         (운영자가 같은 것을 두 번 받아 적지 않게). */
       get("provider_apply?select=id,no,company,brn,name,tel,email,region," +
-          "services,note,state,created_at&order=created_at.desc&limit=200"),
+          "services,note,state,provider_id,created_at&order=created_at.desc&limit=200"),
       /* 담당자 초대 (0043) — ⚠️ 표는 아무도 못 읽습니다. 운영자가 보는
          길은 이 **보기** 하나이고, 그 where 절이 자물쇠입니다. */
       get("v_provider_invite_admin?select=code,provider_id,made_at,expires_at," +
@@ -134,8 +141,105 @@
               '<button class="btn btn-sm btn-line" data-pvasg="' + esc(p.id) + '" ' +
               'data-on="' + (p.assignable ? "1" : "0") + '">' +
               (p.assignable ? "배정 끄기" : "배정 켜기") + '</button>') +
-          '</div>' + inviteBlock(p) + '</li>';
+          '</div>' + identBlock(p) + inviteBlock(p) + '</li>';
       }).join("") + '</ul>';
+  }
+
+  /* ── 사업자 신원정보 (0057) ───────────────────────────────────────
+     ⚠️⚠️⚠️ **전자상거래법 제20조 제2항 · 시행령 제25조** — 중개자는
+     입점업체가 사업자일 때 그 상호 · 대표자 성명 · 주소 · 전화번호 ·
+     전자우편주소 · 사업자등록번호를 **손님이 볼 수 있게** 해야 합니다.
+     공정위가 당근마켓에 시정명령과 과태료를 부과한 조항입니다.
+     ⚠️ 업체도 /desk 에서 넷을 적을 수 있지만, 안 적는 업체가 있어서
+     여기서도 적습니다 (0013 의 배정 연락처와 같은 꼴입니다).
+     ⚠️⚠️ **사업자등록번호는 관리자만** 적습니다 — 직원에게는 칸을
+     **안 냅니다**. 그려 두면 눌러도 문이 거절하는 칸이 됩니다
+     (절대 규칙 5). 번호를 적는 일과 확인 배지를 켜는 일은 같은 서류를
+     보는 한 사람이어야 합니다.
+     ⚠️ 입점 신청에 적혀 온 값이 있으면 **미리 채워** 둡니다 — 운영자가
+     같은 것을 두 번 받아 적지 않게. 지어낸 값이 아니라 그 업체가
+     신청서에 직접 적은 값입니다. */
+  function applyOf(id){
+    var L = (APL || []).filter(function(a){ return a.provider_id === id; });
+    return L.length ? L[0] : null;      /* created_at desc 로 읽었습니다 */
+  }
+  function identRows(p){
+    var F = window.amProviderIdent(p);
+    if(!F.length) return '<p class="fe-r">⚠️ 사업자 정보가 <b>한 칸도 ' +
+      '없습니다</b> — 손님 화면(업체 화면)에서 그 구간이 빠집니다.</p>';
+    return '<p class="fe-r">' + F.map(function(x){
+      return esc(x.name) + ' ' + esc(x.value); }).join(' · ') + '</p>';
+  }
+  function identForm(p){
+    var ap = applyOf(p.id) || {};
+    var v = function(k){ return p[k] || ""; };
+    /* ⚠️ 미리 채우는 것은 **비어 있을 때만** 입니다 — 이미 적힌 값을
+       신청서의 옛 값으로 덮으면 고친 것이 되돌아갑니다. */
+    var pre = function(k){ return v(k) || ap[k] || ""; };
+    return '<form class="jform pvidf" data-pvidf="' + esc(p.id) + '">' +
+      '<div class="jrow">' +
+        '<label for="pi-ceo-' + esc(p.id) + '">대표자 성명</label>' +
+        '<input id="pi-ceo-' + esc(p.id) + '" name="ceo" maxlength="40" value="' +
+        esc(v("ceo")) + '">' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="pi-tel-' + esc(p.id) + '">전화 (공개)</label>' +
+        '<input id="pi-tel-' + esc(p.id) + '" name="tel" maxlength="40" value="' +
+        esc(pre("tel")) + '">' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
+        '<label for="pi-addr-' + esc(p.id) + '">사업장 주소</label>' +
+        '<input id="pi-addr-' + esc(p.id) + '" name="addr" maxlength="200" value="' +
+        esc(v("addr")) + '">' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
+        '<label for="pi-email-' + esc(p.id) + '">이메일 (공개)</label>' +
+        '<input id="pi-email-' + esc(p.id) + '" name="email" type="email" ' +
+        'maxlength="120" value="' + esc(pre("email")) + '">' +
+      '</div>' +
+      (A && A.role === "admin"
+        ? '<div class="jrow jrow-full">' +
+            '<label for="pi-brn-' + esc(p.id) + '">사업자등록번호</label>' +
+            '<input id="pi-brn-' + esc(p.id) + '" name="brn" maxlength="14" ' +
+            'placeholder="000-00-00000" value="' + esc(pre("brn")) + '">' +
+            '<p class="agree-no">⚠️ <b>사업자등록증을 보고</b> 적으세요. ' +
+            '확인 배지(사업자등록 확인)가 가리키는 번호가 이것입니다.</p>' +
+          '</div>'
+        : '<div class="jrow jrow-full"><p class="agree-no">⚠️ ' +
+          '<b>사업자등록번호는 관리자만</b> 적을 수 있습니다' +
+          (p.brn ? ' — 지금 ' + esc(p.brn) + ' 입니다.' : ' — 아직 비어 있습니다.') +
+          '</p></div>') +
+      '<div class="jrow jrow-full">' +
+        '<label for="pi-why-' + esc(p.id) + '">무엇을 보고 적으셨나요</label>' +
+        '<input id="pi-why-' + esc(p.id) + '" name="why" maxlength="200" ' +
+        'placeholder="사업자등록증 사본 확인" required>' +
+        '<p class="agree-no">기록에 남습니다. ⚠️ 적으신 <b>값은 기록에 ' +
+        '담지 않습니다</b> (대표자 성함이 들어갑니다) — 어느 칸을 고쳤는지만 ' +
+        '남습니다.</p>' +
+      '</div>' +
+      '<button class="btn btn-pt btn-sm" type="submit">사업자 정보 저장</button>' +
+      '<button class="btn btn-line btn-sm" type="button" data-pvidx="1">그만</button>' +
+      '</form>';
+  }
+  function identBlock(p){
+    /* ⚠️ 값을 읽는 파일이 안 실렸으면 **지어내지 않고 안 그립니다** —
+       그리고 운영자에게 말합니다 (절대 규칙 3). */
+    if(!window.amProviderIdent){
+      console.warn("  ⚠️ /admin 에 /js/data/providers.js 가 안 실려 " +
+                   "사업자 정보 자리를 그리지 못했습니다 (0057).");
+      return "";
+    }
+    /* ⚠️ 제목 태그를 쓰지 않습니다 — 이 상자의 제목은 h2(.adm-h) 이고
+       그 아래 바로 h4 를 쓰면 **제목 단계가 건너뛰어집니다**(check-a11y). */
+    return '<div class="pvidb"><p class="pvidb-t">사업자 정보 ' +
+      '<span class="fe-r">(손님 화면에 그대로 나옵니다 · 제20조 제2항)</span></p>' +
+      identRows(p) +
+      (EDIT === p.id
+        ? identForm(p)
+        : '<button class="btn btn-sm btn-line" data-pvid="' + esc(p.id) + '">' +
+          (window.amProviderHasIdent(p)
+            ? "사업자 정보 고치기" : "사업자 정보 적기") + '</button>') +
+      '</div>';
   }
 
   /* ── 담당자 초대 (0043) ───────────────────────────────────────────
@@ -388,6 +492,12 @@
     var ag = e.target.closest ? e.target.closest("button[data-do='again']") : null;
     if(ag) return paint();
 
+    /* 사업자 정보 (0057) — 적는 양식을 엽니다 · 닫습니다 */
+    var ib = e.target.closest ? e.target.closest("button[data-pvid]") : null;
+    if(ib){ EDIT = ib.getAttribute("data-pvid"); return paint(); }
+    var ix = e.target.closest ? e.target.closest("button[data-pvidx]") : null;
+    if(ix){ EDIT = ""; return paint(); }
+
     /* 상태 — ⚠️ 정지 · 거절에만 까닭을 받습니다 (DB 도 그렇습니다).
        푸는 데에도 까닭을 받으면 사람이 아무 글자나 적습니다. */
     var sb = e.target.closest ? e.target.closest("button[data-pvto]") : null;
@@ -496,6 +606,42 @@
   /* 업체 등록 양식 — ⚠️ 보내는 꾸러미는 **한 곳**에서 짓습니다
      (화면마다 짜면 칸 이름 하나가 어긋나도 열리기는 합니다). */
   box.addEventListener("submit", function(e){
+    /* ── 사업자 정보 (0057) ─────────────────────────────────────────
+       ⚠️⚠️ **보낸 칸만 고치는 문입니다** — 그래서 `brn` 은 관리자가
+       아니면 꾸러미에 **넣지 않습니다**(넣으면 문이 거절합니다). 직원이
+       나머지 넷을 적는 것은 됩니다.
+       ⚠️ 인자는 꾸러미 하나(`{ p: {...} }`)입니다 — 0013 · 0003 만
+       자리 인자이고 그것이 예외입니다. */
+    var pf = e.target.closest ? e.target.closest("form[data-pvidf]") : null;
+    if(pf){
+      e.preventDefault();
+      var pid = pf.getAttribute("data-pvidf");
+      var gv = function(n){
+        var el = pf.querySelector('[name="' + n + '"]');
+        return el ? (el.value || "").trim() : null;
+      };
+      var w = gv("why");
+      if(!w){ say("무엇을 보고 적으셨는지 까닭을 적어 주세요."); return; }
+      var pk = { provider: pid, why: w,
+                 ceo: gv("ceo"), addr: gv("addr"),
+                 tel: gv("tel"), email: gv("email") };
+      if(A && A.role === "admin" && pf.querySelector('[name="brn"]')){
+        pk.brn = gv("brn");
+      }
+      var bt = pf.querySelector('button[type="submit"]');
+      if(bt) bt.disabled = true;
+      rpc("set_provider_ident", { p: pk })
+        .then(function(){ EDIT = ""; return paint().then(function(){
+          say("사업자 정보를 저장했습니다. ⚠️ 손님 화면에 찍히는 것은 " +
+              "자료를 다시 올린 뒤입니다 (pull-providers → 배포).");
+        }); })
+        .catch(function(err){
+          if(bt) bt.disabled = false;
+          say(why(err));
+        });
+      return;
+    }
+
     var f = e.target.closest ? e.target.closest("form#pvnew") : null;
     if(!f) return;
     e.preventDefault();

@@ -48,6 +48,15 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="lsmine" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ 저장한 조건 (0058 · js/mywatch.js) — 조건을 저장해 두면 맞는
+     글이 올라올 때 **내부 알림**이 꽂힙니다.
+     ⚠️⚠️⚠️ 밖으로 안 보냅니다 (문자 · 카톡 · 메일을 붙이면 정보통신망법
+     제50조 · 수탁자 · 환경변수 셋이 같이 움직입니다).
+     ⚠️ 보유 기간(`site.js` 의 `watchKeep`)이 비면 양식을 **안 엽니다** —
+     그래서 아래 js 목록에 **`/js/data/site.js` 가 있어야** 합니다. */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="wchbox" class="none" hidden></div></div></section>';
+
   /* ⚠️ 내 구인 · 구직 · 제휴도 **따로 그립니다** (js/myjob.js · 0048).
      ⚠️⚠️ 여기도 연락처를 주고받는 유일한 자리입니다 (제17조 제2항) —
      목록 화면에는 연락처 칸이 아예 없습니다. */
@@ -67,9 +76,15 @@ exports.build = function(){
     desc: "골프올인원 내 정보 — 개인 판매자 · 골프 프로 · 사업자 회원을 켜고 끕니다.",
     body: body,
     js: ["/js/data/korean.js", "/js/data/deal.js", "/js/data/review.js",
+         /* ⚠️⚠️ 0058 — `watchKeep` 이 여기 있습니다. 안 실으면 값이 빈
+            글자가 되어 **설정이 안 된 것과 똑같이** 보이고 조건 저장
+            양식이 조용히 안 열립니다 (`/help` 가 이 파일을 안 실어서
+            문의 양식이 안 열렸던 그 자리입니다). */
+         "/js/data/site.js",
          "/js/auth.js", "/js/photo.js", "/js/account.js",
          "/js/review.js", "/js/myreq.js",
          "/js/data/regions.js", "/js/myjoin.js", "/js/mycq.js",
-         "/js/myjob.js", "/js/mylisting.js", "/js/myinq.js", "/js/notice.js"]
+         "/js/myjob.js", "/js/mylisting.js", "/js/myinq.js",
+         "/js/mywatch.js", "/js/notice.js"]
   };
 };

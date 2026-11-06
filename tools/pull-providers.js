@@ -38,7 +38,14 @@ const OUT  = path.join(ROOT, "js", "data", "providers.generated.js");
    **화면이 쓰는 칸만** 받아 적기 위해서입니다 (보기에 칸이 늘어도
    파일이 저절로 커지지 않게). */
 const VIEW = "v_provider_card";
-const COLS = "id,name,intro,regions,gu,subs,since,consult_hours,verified,brands,scale,contact_ways,is_test";
+const COLS = "id,name,intro,regions,gu,subs,since,consult_hours,verified,brands,scale,contact_ways," +
+             /* ⚠️⚠️ 0057 — 사업자 신원정보 다섯. 전자상거래법 제20조 제2항이
+                손님에게 보이게 하라고 정한 것이라 **공개 자료**입니다.
+                ⚠️ 비어 있으면 화면에서 그 줄이 빠집니다 — 지어내지 않습니다.
+                ⚠️⚠️ 배정받을 때 쓰는 담당자 직통(provider_contact · 0013)은
+                **여기 없습니다** — 그쪽은 운영자와 그 업체만 봅니다. */
+             "ceo,addr,tel,email,brn," +
+             "is_test";
 
 /* ⚠️⚠️ **검사용 업체를 두 겹으로 거릅니다** (0030 · 2차 지시서 §8).
    ① RLS 의 provider_public 이 anon 에게 `is_test = true` 를 안 내줍니다

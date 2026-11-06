@@ -841,6 +841,25 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 /* 업체 정보 표의 머리 칸 — 세로로 섭니다 */
 .doc-t th[scope="row"]{ white-space:nowrap; width:1%; }
 
+/* ── 사업자 정보 (0057 · 제20조 제2항) ──────────────────────────
+   ⚠️ 이름을 새로 지었습니다 — /desk 의 `.me-d` 를 그대로 쓰지 않습니다.
+   같은 짧은 이름을 두 화면에 쓰면 집는 검사가 엉뚱한 칸을 집습니다
+   (`.lg` 가 로고이면서 약관이었던 그 자리 · `.pvst-n` 에서 또 밟았습니다).
+   ⚠️⚠️ 격자 칸에 `min-width:0` 을 줍니다 — 안 주면 칸이 제 내용만큼
+   벌어져 폰에서 화면 전체가 가로로 밀립니다 (주소가 깁니다). */
+.pvid{ display:grid; gap:8px 16px; grid-template-columns: max-content 1fr;
+       margin:0; font-size:15px; }
+.pvid > *{ min-width:0; }
+.pvid dt{ color: var(--grn-text); font-weight:700; white-space:nowrap; }
+.pvid dd{ margin:0; color: var(--ink2); min-width:0;
+          word-break:keep-all; overflow-wrap:anywhere; }
+.pvid-s{ margin-top:12px; font-size:14.5px; color: var(--ink3); }
+@media (max-width: 520px){
+  /* ⚠️ 좁은 폭에서는 두 칸이 아니라 위아래로 — 주소가 한 칸에 안 들어갑니다 */
+  .pvid{ grid-template-columns: 1fr; gap:2px; }
+  .pvid dd{ margin-bottom:8px; }
+}
+
 /* ── 매칭 띠 (2차 시안 가운데) ──────────────────────────────── */
 .mband{ display:flex; align-items:center; gap:28px; flex-wrap:wrap;
         background: var(--grn-soft); border:1.5px solid var(--grn-line);
@@ -1521,6 +1540,14 @@ picture{ display: contents; }
 /* ── 담당자 초대 코드 (0043) ───────────────────────────────────
    ⚠️⚠️ 코드는 **전화로 불러 주는** 자리입니다 — 크고, 글자 사이를
    띄우고, 숫자 폭을 고정합니다 (1 과 I 를 아예 안 쓰지만 그래도). */
+/* 운영자가 적는 사업자 정보 (0057) — ⚠️ 바탕에 연초록을 안 씁니다
+   (작업 기억: --grn-soft 를 구간 바탕으로 쓰면 초록이 넘칩니다) */
+.pvidb{ margin-top:12px; background: var(--bg-2); border-radius: var(--r-sm);
+        padding:12px 14px; }
+.pvidb-t{ font-size:13.5px; font-weight:700; color: var(--grn-text); }
+.pvidb-t .fe-r{ display:inline; font-weight:400; }
+.pvidb .jform{ margin-top:10px; }
+
 .inv{ margin-top:12px; background: var(--grn-soft);
       border:1.5px solid var(--grn-line); border-radius: var(--r-sm);
       padding:12px 14px; }
@@ -1776,3 +1803,15 @@ picture{ display: contents; }
 /* ⚠️ 걸음이 홀수인 차례는 **한 줄에 하나씩** (pages/guide.js) — 2칸
    격자에 다섯을 넣으면 마지막 칸이 빈 자리로 남습니다. */
 .flow-1{ grid-template-columns: 1fr; }
+
+/* ── 저장한 조건 (0058) ─────────────────────────────────────────
+   ⚠️ 이름을 새로 지었습니다 — 짧은 이름을 두 화면에 쓰면 집는 검사가
+   엉뚱한 칸을 집습니다 (`.lg` 가 로고이면서 약관이었던 그 자리). */
+.wch-l{ display:grid; gap:10px; margin-top:14px; }
+.wch-l > li{ background: var(--bg-2); border-radius: var(--r-sm);
+             padding:12px 14px; min-width:0; }
+.wch-w{ margin-top:4px; font-size:14.5px; color: var(--ink2);
+        word-break:keep-all; overflow-wrap:anywhere; }
+/* ⚠️ 거르개 줄 바로 아래에 섭니다 — 문장 한가운데 링크가 아니라
+   **단추**입니다 (문장 속 링크는 높이가 16px 입니다). */
+.wch-cta{ margin-top:10px; }

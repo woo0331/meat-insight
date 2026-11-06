@@ -133,3 +133,38 @@ window.amProviderVerified = function(p){
     .filter(function(k){ return v[k]; })
     .map(function(k){ return window.AM_VERIFIED[k]; });
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   사업자 신원정보 (0057) — ⚠️⚠️ **한 곳**입니다
+   ────────────────────────────────────────────────────────────────────
+   ⚠️⚠️⚠️ **전자상거래법 제20조 제2항 · 시행령 제25조.** 중개자는
+   입점업체가 사업자일 때 그 **상호 · 대표자 성명 · 주소 · 전화번호 ·
+   전자우편주소 · 사업자등록번호**를 손님이 볼 수 있게 해야 합니다.
+   공정위가 당근마켓에 시정명령과 과태료를 부과한 조항이 이것입니다.
+
+   ⚠️⚠️ **비어 있으면 줄을 안 냅니다** (절대 규칙 1 · 2). 지어낼 수
+   없는 값이고, `(미기재)` 를 찍으면 미완성 사이트로 읽힙니다.
+   ⚠️ 상호(`name`)는 **여기 안 담습니다** — 화면의 제목이 이미 그것이고,
+   같은 글자를 두 자리에 찍으면 한쪽만 고치는 날 둘이 달라집니다.
+   ⚠️⚠️ 전화는 **공개 대표번호**입니다. 배정받을 때 쓰는 담당자 직통은
+   `provider_contact`(0013) 이고 손님에게 정책이 아예 없습니다 —
+   이 함수는 그 칸을 모릅니다 (알 수도 없습니다).
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_IDENT = [
+  { key:"ceo",   name:"대표자" },
+  { key:"brn",   name:"사업자등록번호" },
+  { key:"addr",  name:"사업장 주소" },
+  { key:"tel",   name:"전화" },
+  { key:"email", name:"이메일" }
+];
+window.amProviderIdent = function(p){
+  return window.AM_IDENT.map(function(f){
+    var v = p ? p[f.key] : null;
+    v = (v === null || v === undefined) ? "" : String(v).trim();
+    return v ? { key:f.key, name:f.name, value:v } : null;
+  }).filter(Boolean);
+};
+/* ⚠️ 한 칸이라도 있는가 — 0건이면 화면이 구간을 **줄째** 뺍니다 */
+window.amProviderHasIdent = function(p){
+  return window.amProviderIdent(p).length > 0;
+};

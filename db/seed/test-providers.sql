@@ -52,8 +52,14 @@
 --   true 로 넣으면 0018 의 트리거가 거절합니다 (그게 맞습니다).
 -- ⚠️⚠️ `verified` 를 **비워 둡니다.** 확인 배지는 서류를 본 뒤에만
 --   켜는 것이고, 검사용 업체의 서류는 본 적이 없습니다 (절대 규칙 1).
+-- ⚠️⚠️ 0057 — 사업자 신원정보(제20조 제2항)를 **두 곳만** 채웁니다.
+--   세 곳 다 채우면 "아직 등록되지 않았습니다" 갈래를 아무도 안 눌러
+--   보게 됩니다 — 그 갈래가 손님에게 보이는 글이라 같이 재야 합니다.
+--   ⚠️ 번호는 **000-00-00000** 입니다 — 실재하지 않는 꼴이고, 이 업체는
+--   `is_test = true` 라 손님 화면에 한 줄도 안 나갑니다 (0030 · 0032).
 insert into provider (id, name, intro, regions, gu, subs, since,
                       consult_hours, scale, brands,
+                      ceo, addr, tel, email, brn,
                       listed, assignable, is_test)
 values
   ('t-range', '[검사용] 남서울 실내연습장',
@@ -61,6 +67,8 @@ values
    array['seoul'], array['관악구'],
    array['rg-in','rg-sim','ls-solo'], 2020,
    '평일 09:00~22:00', 'mid', array['타이틀리스트'],
+   '검사용대표', '서울 관악구 (검사용 주소)', '02-0000-0000',
+   'range@example.com', '000-00-00000',
    true, false, true),
 
   ('t-fit', '[검사용] 그린피팅 스튜디오',
@@ -68,6 +76,8 @@ values
    array['gyeonggi'], array['성남시 분당구'],
    array['ft-driver','ft-shaft','ft-grip'], 2018,
    '화~일 11:00~20:00', 'small', array['캘러웨이','타이틀리스트'],
+   '검사용대표', '경기 성남시 분당구 (검사용 주소)', '031-000-0000',
+   'fit@example.com', '000-00-00001',
    true, false, true),
 
   ('t-tour', '[검사용] 올인원골프투어',
@@ -75,6 +85,9 @@ values
    array['seoul'], array['강남구'],
    array['tr-home','tr-away','tr-pack'], 2015,
    '평일 10:00~19:00', 'large', '{}'::text[],
+   -- ⚠️ 이 한 곳은 **비워 둡니다** — 업체 화면의 "사업자 정보가 아직
+   --   등록되지 않았습니다" 갈래를 검사가 눌러 볼 수 있게.
+   null, null, null, null, null,
    true, false, true)
 on conflict (id) do update set
   name       = excluded.name,
@@ -86,6 +99,14 @@ on conflict (id) do update set
   consult_hours = excluded.consult_hours,
   scale      = excluded.scale,
   brands     = excluded.brands,
+  -- ⚠️ 0057 — 같은 값으로 덮습니다. 값이 그대로면 `is distinct from` 이
+  --    거짓이라 `provider_ident_guard` 가 안 걸립니다 (두 번 붙여 넣어도
+  --    멈추지 않습니다 — `listed` 와 같은 자리입니다).
+  ceo        = excluded.ceo,
+  addr       = excluded.addr,
+  tel        = excluded.tel,
+  email      = excluded.email,
+  brn        = excluded.brn,
   listed     = excluded.listed,
   -- ⚠️ `assignable` 을 되돌리지 않습니다 — 이미 켜 두셨으면 그대로
   --    둡니다 (두 번 붙여 넣어도 ③ 을 다시 하지 않게).

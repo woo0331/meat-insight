@@ -397,13 +397,18 @@ exports.build = function(c){
        그 업체가 **빌드에 있는지** 보는 데(amProvider) 씁니다 — 없으면
        링크를 안 걸어 404 로 보내지 않습니다. */
     js: ((c.kind === "match")
-      ? ["/js/data/site.js", "/js/data/regions.js", "/js/join.js"]
+      /* ⚠️⚠️ deal.js — 0058 의 `amWatchLink()`(조건 저장으로 가는 길)와
+         `AM_WATCH` 가 거기 있습니다. 안 실으면 그 단추가 **조용히 안
+         그려집니다** (제 가드가 `window.amWatchLink ?` 로 넘어갑니다). */
+      ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
+         "/js/join.js"]
       : (c.key === "community" ? ["/js/community.js"]
       /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — site.js 가
          careerKeep(보유 기간)을, regions.js 가 지역 칸을, catalog.js 가
          하위분류 칸을 줍니다 (catalog 는 빌드가 저절로 싣습니다). */
       : (c.key === "career"
-          ? ["/js/data/site.js", "/js/data/regions.js", "/js/career.js"]
+          ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
+             "/js/career.js"]
       /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — site.js 가
          listingKeep(보유 기간 · 비면 양식을 안 엽니다) · regions.js 가
          지역 칸 · **deal.js 가 물건 상태 말**을 줍니다. 하나라도 빠지면

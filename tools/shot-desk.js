@@ -231,6 +231,39 @@ const T_ADMIN = {
   inquiry:INQ, report:REPS, audit_log:LOG,
   review:RV, notice:[], cq:CQM, ca:CAM, jobpost:JOBMINE, joinroom:ROOMS
 };
+/* ⚠️ 0003 · 0013 의 수수료 · 정산 (js/adminfee.js) — ⚠️⚠️ 가짜 값도
+   DB 가 받는 값이어야 합니다 (request.state 는 deal_state enum 이고
+   fee_policy.type 은 fee_type enum 입니다). */
+const FEE_REQS = [
+  { id:"fq-1", no:"SW-7K3M-92QP", state:"done" },
+  { id:"fq-2", no:"SW-2P8L-41RT", state:"fee_wait" }
+];
+const FEE_DEALS = [
+  { id:"fd-1", request_id:"fq-1", provider_id:"t-range", amount:10000000,
+    fee:null, fee_vat:null, fee_total:null, paid:null, paid_at:null,
+    fee_at:null, signed_at:"2026-11-01T01:00:00Z", done_at:"2026-11-04T01:00:00Z" },
+  { id:"fd-2", request_id:"fq-2", provider_id:"t-range", amount:5000000,
+    fee:400000, fee_vat:40000, fee_total:440000, paid:null, paid_at:null,
+    fee_at:NOW, signed_at:"2026-10-20T01:00:00Z", done_at:"2026-11-01T01:00:00Z" }
+];
+const FEE_POLS = [
+  { id:"fp-1", provider_id:"t-range", type:"rate", flat:null, rate:8,
+    min_fee:null, max_fee:null, vat:"add", confirm_when:"done", cycle:"now",
+    from_date:null, to_date:null }
+];
+const FEE_SETT = [
+  { id:"fs-1", provider_id:"t-range", from_date:"2026-10-01",
+    to_date:"2026-10-31", total:880000, state:"wait",
+    approved_at:null, paid_at:null }
+];
+
+/* ⚠️ 수수료 · 정산 상자를 그리려면 요청 줄이 `done` · `fee_wait` 여야
+   합니다 — 앞의 배정 자리가 쓰는 줄을 **갈아 치우지 않고 더합니다**. */
+T_ADMIN.request = T_ADMIN.request.concat(FEE_REQS);
+T_ADMIN.deal       = FEE_DEALS;
+T_ADMIN.fee_policy = FEE_POLS;
+T_ADMIN.settlement = FEE_SETT;
+
 const T_MY = {
   request:[REQ], request_item:ITEMS, assignment:[ASG], quote:[QUOTE],
   provider:PVS, review:[], appointment:[], notice:NOTICE,
@@ -277,7 +310,9 @@ const BOXES = {
   "/admin": [["apply", "#adminbox"], ["assign", "#assignbox"],
              ["metric", "#metricbox"], ["pro", "#probox"],
              ["staff", "#pvstadm"], ["report", "#repbox"],
-             ["inq", "#inqadm"], ["biz", "#bizbox"], ["log", "#logbox"]],
+             ["inq", "#inqadm"], ["biz", "#bizbox"],
+             /* ⚠️ 0003 · 0013 의 수수료 · 정산 (js/adminfee.js) */
+             ["fee", "#feeadm"], ["log", "#logbox"]],
   /* ⚠️ 처음에 `#myreqbox` · `#myjoinbox` 처럼 **지어낸 id** 를 적어
      두어서 `/my` 상자가 한 장도 안 찍혔습니다 — 찍히는 갯수를 보고
      알았습니다. `pages/my.js` 에서 세어 고쳤습니다. */

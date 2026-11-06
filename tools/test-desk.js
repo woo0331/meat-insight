@@ -2527,6 +2527,28 @@ function keepOf(name){
   /* ⚠️⚠️ **후기 자리를 그린 채로 잽니다.** 안 그리면 그 자리는
      폰에서 아무도 안 재는 곳이 됩니다 — 별 글자 · 별점 고르개 ·
      답변 칸이 390px 에서 미는지는 여기서만 드러납니다. */
+  /* ⚠️ 세 줄이 **같은 묶음**을 씁니다 — 베껴 쓰면 한쪽만 고치는 날
+     조용히 달라집니다 */
+  const FEE_SWEEP = Object.assign({}, ADMT, BIZ, PROT, {
+    request: ADMT.request.concat(
+      [{ id:"sw-fee", no:"SW-FEE0-0001", state:"done" },
+       { id:"sw-pay", no:"SW-PAY0-0002", state:"fee_wait" }]),
+    deal:[{ id:"d-sw", request_id:"sw-fee", provider_id:"t-range",
+            amount:10000000, fee:null, fee_vat:null, fee_total:null,
+            paid:null, paid_at:null, fee_at:null,
+            signed_at:"2026-11-01T01:00:00Z", done_at:"2026-11-04T01:00:00Z" },
+          { id:"d-sp", request_id:"sw-pay", provider_id:"t-range",
+            amount:5000000, fee:400000, fee_vat:40000, fee_total:440000,
+            paid:null, paid_at:null, fee_at:"2026-11-05T01:00:00Z",
+            signed_at:"2026-10-20T01:00:00Z", done_at:"2026-11-01T01:00:00Z" }],
+    fee_policy:[{ id:"p-sw", provider_id:"t-range", type:"rate", flat:null,
+                  rate:8, min_fee:null, max_fee:null, vat:"add",
+                  confirm_when:"done", cycle:"now",
+                  from_date:null, to_date:null }],
+    settlement:[{ id:"s-sw", provider_id:"t-range", from_date:"2026-10-01",
+                  to_date:"2026-10-31", total:880000, state:"wait",
+                  approved_at:null, paid_at:null }]
+  });
   const phones = [
     ["/desk 업체 작업실", "/desk", PRO,
      Object.assign({ assignment:[asg(quoted, "accepted")], request:[quoted],
@@ -2546,7 +2568,10 @@ function keepOf(name){
                     body:"요청이 안 들어갑니다", name:"김문의",
                     tel:"010-1111-2222", email:"", by_user:null,
                     state:"open", answer:null,
-                    created_at:"2026-11-06T01:00:00Z", answered_at:null }] }),
+                    created_at:"2026-11-06T01:00:00Z", answered_at:null }],
+         /* ⚠️ 수수료 · 정산 상자도 같이 (아래 FEE_SWEEP 와 같은 묶음) */
+         request: FEE_SWEEP.request, deal: FEE_SWEEP.deal,
+         fee_policy: FEE_SWEEP.fee_policy, settlement: FEE_SWEEP.settlement }),
      { biz_metrics: MET }],
     /* ⚠️⚠️ **새 상자를 만드는 날 이 줄에 같이 넣으세요** — 안 넣으면
        그 안은 폰 폭에서도 · 글자 대비에서도 **아무도 안 재는 자리**가
@@ -2571,7 +2596,14 @@ function keepOf(name){
      "#probox button[data-ptab='new']"],
     ["/admin 신고함", "/admin", { role:"admin", name:"관리자" },
      Object.assign({}, ADMT, BIZ, PROT, { report:REPS }), { biz_metrics: MET },
-     "#repbox button[data-rtab='done']"]
+     "#repbox button[data-rtab='done']"],
+    /* ⚠️⚠️ **갈래 안쪽은 눌러야 그려집니다** — 안 누르면 그 자리는
+       폰에서 아무도 안 재는 곳이 됩니다 (작업 기억의 그 줄). 수수료
+       화면은 갈래가 셋이고, 뒤 둘에만 **날짜 칸과 금액 칸**이 있습니다. */
+    ["/admin 입금 · 환수", "/admin", { role:"admin", name:"관리자" },
+     FEE_SWEEP, { biz_metrics: MET }, "#feeadm button[data-ftab='paid']"],
+    ["/admin 월 정산서", "/admin", { role:"admin", name:"관리자" },
+     FEE_SWEEP, { biz_metrics: MET }, "#feeadm button[data-ftab='settle']"]
   ];
   for(const [label, path, who, tables, rpcs, pre] of phones){
     for(const w of PHONES){
@@ -4093,6 +4125,270 @@ function keepOf(name){
        r.text.slice(0, 80));
     ok("⚠️⚠️ 그 줄의 아이콘이 **빈 칸이 아니다** (없는 이름은 빈 글자를 " +
        "돌려주고 아무 검사도 안 잡습니다)", r.icon, "");
+    await g.p.close(); }
+
+  /* ══════════════════════════════════════════════════════════════
+     수수료 확정 · 입금 · 월 정산서 — /admin (0003 · 0013 · js/adminfee.js)
+
+     ⚠️⚠️⚠️ **문 다섯이 2026-10-21/22 에 서고 부르는 화면이 한 곳도
+     없었습니다.** `js/deskfee.js` 는 그 결과를 이미 그리고 있어서,
+     업체 작업실의 수수료 칸은 **영원히 0건**이었습니다.
+     ⚠️ `check-doors` 는 그 가운데 둘(`confirm_fee` · `mark_paid`)을
+     **못 잡았습니다** — 이름이 다른 SQL 의 **거절 문구 안**에 있어서
+     "부르는 자리가 있다" 로 세어졌습니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── /admin 수수료 확정 · 입금 · 월 정산서 (0003 · 0013)");
+  const FA_PVS = [
+    { id:"fa-1", name:"가나골프아카데미", is_test:false },
+    { id:"fa-2", name:"나다실내연습장",   is_test:false },
+    { id:"fa-9", name:"[검사용] 다라골프", is_test:true  }
+  ];
+  const FA_REQS = [
+    { id:"r-done", no:"SW-DONE-0001", state:"done" },
+    { id:"r-wait", no:"SW-WAIT-0002", state:"fee_wait" },
+    { id:"r-fin",  no:"SW-FINE-0003", state:"fee_done" },
+    /* ⚠️ 아직 이행 전인 건은 **어느 탭에도 안 나와야** 합니다 */
+    { id:"r-mid",  no:"SW-MIDD-0004", state:"signed" }
+  ];
+  const FA_DEALS = [
+    { id:"d-done", request_id:"r-done", provider_id:"fa-1", amount:10000000,
+      fee:null, fee_vat:null, fee_total:null, paid:null, paid_at:null,
+      fee_at:null, signed_at:"2026-11-01T01:00:00Z", done_at:"2026-11-04T01:00:00Z" },
+    /* ⚠️ 정책이 **월 정액**이라 건별로 셀 수 없는 줄 */
+    { id:"d-sub",  request_id:"r-done", provider_id:"fa-2", amount:4000000,
+      fee:null, fee_vat:null, fee_total:null, paid:null, paid_at:null,
+      fee_at:null, signed_at:"2026-11-02T01:00:00Z", done_at:"2026-11-05T01:00:00Z" },
+    /* ⚠️ 정책이 **아예 없는** 업체 (검사용 딱지도 같이 봅니다) */
+    { id:"d-nop",  request_id:"r-done", provider_id:"fa-9", amount:1000000,
+      fee:null, fee_vat:null, fee_total:null, paid:null, paid_at:null,
+      fee_at:null, signed_at:"2026-11-02T02:00:00Z", done_at:"2026-11-05T02:00:00Z" },
+    { id:"d-wait", request_id:"r-wait", provider_id:"fa-1", amount:5000000,
+      fee:400000, fee_vat:40000, fee_total:440000, paid:null, paid_at:null,
+      fee_at:"2026-11-05T01:00:00Z", signed_at:"2026-10-20T01:00:00Z",
+      done_at:"2026-11-01T01:00:00Z" },
+    { id:"d-fin",  request_id:"r-fin", provider_id:"fa-2", amount:3000000,
+      fee:240000, fee_vat:24000, fee_total:264000, paid:264000,
+      paid_at:"2026-11-05T06:00:00Z", fee_at:"2026-11-04T01:00:00Z",
+      signed_at:"2026-10-10T01:00:00Z", done_at:"2026-10-28T01:00:00Z" },
+    { id:"d-mid",  request_id:"r-mid", provider_id:"fa-1", amount:2000000,
+      fee:null, fee_vat:null, fee_total:null, paid:null, paid_at:null,
+      fee_at:null, signed_at:"2026-11-06T01:00:00Z", done_at:null }
+  ];
+  const FA_POLS = [
+    /* ⚠️ 거래액의 8% · 부가세 별도 — 1,000만원이면 수수료 80만 · 부가세
+       8만 · 합계 88만입니다 (**손으로 적은 값**입니다 — 코드와 같은
+       식으로 적으면 아무것도 안 잡습니다). */
+    { id:"p-1", provider_id:"fa-1", type:"rate", flat:null, rate:8,
+      min_fee:null, max_fee:null, vat:"add", confirm_when:"done",
+      cycle:"now", from_date:null, to_date:null },
+    { id:"p-2", provider_id:"fa-2", type:"sub", flat:300000, rate:null,
+      min_fee:null, max_fee:null, vat:"add", confirm_when:"signed",
+      cycle:"monthly", from_date:null, to_date:null }
+  ];
+  const FA_SETT = [
+    { id:"s-1", provider_id:"fa-1", from_date:"2026-10-01", to_date:"2026-10-31",
+      total:880000, state:"wait", approved_at:null, paid_at:null },
+    { id:"s-2", provider_id:"fa-2", from_date:"2026-09-01", to_date:"2026-09-30",
+      total:264000, state:"paid", approved_at:"2026-10-02T01:00:00Z",
+      paid_at:"2026-10-05T01:00:00Z" }
+  ];
+  const FA_T = { deal:FA_DEALS, request:FA_REQS, provider:FA_PVS,
+                 fee_policy:FA_POLS, settlement:FA_SETT,
+                 assignment:[], request_item:[], quote:[], review:[],
+                 report:[], inquiry:[], audit_log:[] };
+
+  /* ⚠️⚠️ **관리자만**입니다 — 문도 직원을 거절합니다 (계약을 따는
+     사람과 청구서를 만드는 사람이 같으면 아무도 교차 확인을 안
+     합니다 · 0013). 그려 두면 눌러도 거절당하는 단추가 됩니다. */
+  for(const who of [{ role:"customer", name:"홍길동", signedIn:true },
+                    { role:"provider", name:"업체", signedIn:true, provider:"fa-1" },
+                    { role:"staff", name:"직원", signedIn:true }]){
+    const g = await open("/admin", who, FA_T, { biz_metrics: MET }, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("feeadm");
+      return { drawn: !!b && !b.hidden && b.children.length > 0 };
+    });
+    ok("⚠️ " + who.role + " 에게는 수수료 자리가 **한 줄도** 안 보인다", !r.drawn, "");
+    ok("  ⚠️⚠️ 그 자료를 **읽으러 가지도 않는다**",
+       g.sent.filter(function(x){ return (x.body || "").indexOf("/settlement") >= 0; })
+         .length === 0, JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    await g.p.close();
+  }
+
+  const FA_ADM = { role:"admin", name:"관리자", signedIn:true };
+  { const g = await open("/admin", FA_ADM, FA_T, { biz_metrics: MET }, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("feeadm");
+      const rows = Array.prototype.map.call(
+        b.querySelectorAll(".fe-p > li"), function(li){
+          return { id: li.getAttribute("data-deal"), text: li.innerText,
+                   fee: (li.querySelector('input[name="fee"]') || {}).value,
+                   vat: (li.querySelector('input[name="vat"]') || {}).value,
+                   total: (li.querySelector('input[name="total"]') || {}).value };
+        });
+      return { drawn: !!b && !b.hidden, rows: rows, text: b.innerText };
+    });
+    ok("운영자에게 수수료 자리가 그려진다", r.drawn, r.text.slice(0, 80));
+    /* ⚠️⚠️ **문이 보는 것과 같은 값으로 가릅니다** — 0003 은
+       `request.state` 를 봅니다. `fee_at` 으로 가르면 단추는 보이고
+       DB 가 거절합니다. */
+    ok("⚠️⚠️ **서비스 완료된 건만** 확정 대기에 오른다 (계약만 한 건은 빠진다)",
+       r.rows.length === 3 && !r.rows.some(function(x){ return x.id === "d-mid"; }),
+       r.rows.map(function(x){ return x.id; }).join(" · "));
+    const one = r.rows.filter(function(x){ return x.id === "d-done"; })[0] || {};
+    /* ⚠️ 1,000만원 · 8% · 부가세 별도 → 80만 · 8만 · 88만 (손으로 적었습니다) */
+    ok("⚠️ 정책으로 **센 금액이 미리 채워진다** (80만 · 8만 · 88만)",
+       one.fee === "800000" && one.vat === "80000" && one.total === "880000",
+       JSON.stringify(one));
+    const sub = r.rows.filter(function(x){ return x.id === "d-sub"; })[0] || {};
+    /* ⚠️⚠️ **0 을 채워 두면 0원짜리 수수료를 확정하게 됩니다** */
+    ok("⚠️⚠️ 건별로 셀 수 없는 정책이면 칸이 **비어서** 열린다 (0 을 안 채웁니다)",
+       sub.fee === "" && sub.text.indexOf("건별로 셀 수 없습니다") >= 0,
+       JSON.stringify(sub).slice(0, 160));
+    const nop = r.rows.filter(function(x){ return x.id === "d-nop"; })[0] || {};
+    ok("⚠️ 정책이 없으면 **없다고 말한다** (지어내지 않습니다)",
+       nop.fee === "" && nop.text.indexOf("적용할 수수료 정책이 없습니다") >= 0,
+       JSON.stringify(nop).slice(0, 160));
+    ok("⚠️ 검사용 업체에 **딱지가 붙는다** (매각 지표에 섞이면 거짓말입니다)",
+       nop.text.indexOf("검사용") >= 0, nop.text.slice(0, 80));
+
+    /* ⚠️⚠️ **증빙 없이는 못 보냅니다** — 0003 이 거절하지만 화면에서도
+       막습니다 (보내 보고 거절당하는 것보다 낫습니다). */
+    await g.p.click('li[data-deal="d-done"] button[data-fix]');
+    await g.p.waitForTimeout(200);
+    await g.p.click('li[data-deal="d-done"] .fee-f button[type="submit"]');
+    await g.p.waitForTimeout(300);
+    ok("⚠️⚠️ 증빙 메모를 안 적으면 **안 보낸다**",
+       g.sent.filter(function(x){ return x.name === "confirm_fee"; }).length === 0,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+
+    await g.p.fill('li[data-deal="d-done"] input[name="proofnote"]', "11월 3일 계약서 사본 확인");
+    await g.p.click('li[data-deal="d-done"] .fee-f button[type="submit"]');
+    await g.p.waitForTimeout(400);
+    const cf = g.sent.filter(function(x){ return x.name === "confirm_fee"; })[0];
+    ok("⚠️ 확정 단추가 **confirm_fee 를 실제로 부른다**", !!cf,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    if(cf){
+      const p = JSON.parse(cf.body);
+      /* ⚠️⚠️⚠️ **자리 인자입니다** — `{ p: {...} }` 로 보내면 인자 이름이
+         안 맞아 거절됩니다 (0013 에서 겪은 그 자리). */
+      ok("⚠️⚠️⚠️ **자리 인자로** 보낸다 (`p` 하나로 안 보냅니다)",
+         p.p === undefined && p.p_deal === "d-done", cf.body.slice(0, 120));
+      ok("  센 금액을 그대로 보낸다", p.p_fee === 800000 && p.p_total === 880000,
+         cf.body.slice(0, 160));
+      /* ⚠️ §9 — 나중에 요율이 바뀌어도 확정한 건은 따라 바뀌면 안 됩니다 */
+      ok("⚠️ **그때의 정책을 사본으로** 같이 보낸다",
+         !!(p.p_snap && p.p_snap.policy && p.p_snap.policy.id === "p-1"),
+         JSON.stringify(p.p_snap || null).slice(0, 160));
+      ok("⚠️ 증빙을 같이 보낸다 (무엇으로 확인했는지)",
+         !!(p.p_proof && p.p_proof.note.indexOf("계약서") >= 0),
+         JSON.stringify(p.p_proof || null).slice(0, 160));
+    }
+    await g.p.close(); }
+
+  /* ── 입금 · 환수 ────────────────────────────────────────────── */
+  { const g = await open("/admin", FA_ADM, FA_T, { biz_metrics: MET }, true);
+    await g.p.click("#feeadm button[data-ftab='paid']");
+    await g.p.waitForTimeout(250);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("feeadm");
+      return { text: b.innerText,
+               paid: (b.querySelector('li[data-deal="d-wait"] input[name="paid"]')
+                      || {}).value,
+               payBtns: b.querySelectorAll("button[data-pay]").length };
+    });
+    ok("입금 탭에 **확정된 건만** 올라온다 (대기 하나)",
+       r.payBtns === 1, "입금 단추 " + r.payBtns);
+    ok("⚠️ 입금액 기본값이 **확정 합계**다 (44만)", r.paid === "440000", r.paid);
+    ok("  입금이 끝난 건은 들어온 금액을 적는다",
+       r.text.indexOf("264,000원 들어옴") >= 0, r.text.slice(0, 400).replace(/\n/g, " | "));
+
+    await g.p.click('li[data-deal="d-wait"] button[data-pay]');
+    await g.p.waitForTimeout(200);
+    await g.p.click('li[data-deal="d-wait"] .pay-f button[type="submit"]');
+    await g.p.waitForTimeout(400);
+    const mp = g.sent.filter(function(x){ return x.name === "mark_paid"; })[0];
+    ok("⚠️ 입금 단추가 **mark_paid 를 실제로 부른다**", !!mp,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    if(mp){
+      const p = JSON.parse(mp.body);
+      ok("  자리 인자로 보낸다", p.p === undefined && p.p_deal === "d-wait" &&
+         p.p_paid === 440000, mp.body.slice(0, 120));
+    }
+
+    /* ⚠️⚠️ **사유 없는 환수는 안 보냅니다** (문도 거절합니다 — 확정했던
+       액을 갈아 치우지 않고 차액을 기록으로 남기는 자리입니다). */
+    await g.p.click('li[data-deal="d-wait"] button[data-claw]');
+    await g.p.waitForTimeout(200);
+    await g.p.fill('li[data-deal="d-wait"] input[name="newfee"]', "200000");
+    await g.p.click('li[data-deal="d-wait"] .claw-f button[type="submit"]');
+    await g.p.waitForTimeout(300);
+    ok("⚠️⚠️ 사유 없는 **환수는 안 보낸다**",
+       g.sent.filter(function(x){ return x.name === "clawback_fee"; }).length === 0,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    await g.p.fill('li[data-deal="d-wait"] input[name="cwhy"]', "손님이 절반만 이용했습니다");
+    await g.p.click('li[data-deal="d-wait"] .claw-f button[type="submit"]');
+    await g.p.waitForTimeout(400);
+    const cb = g.sent.filter(function(x){ return x.name === "clawback_fee"; })[0];
+    ok("  사유를 적으면 **clawback_fee 를 부른다**", !!cb,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    if(cb){
+      const p = JSON.parse(cb.body);
+      ok("  자리 인자로 보낸다", p.p === undefined && p.p_new_fee === 200000 &&
+         String(p.p_why).indexOf("절반") >= 0, cb.body.slice(0, 140));
+    }
+    await g.p.close(); }
+
+  /* ── 월 정산서 ─────────────────────────────────────────────── */
+  { const g = await open("/admin", FA_ADM, FA_T, { biz_metrics: MET }, true);
+    await g.p.click("#feeadm button[data-ftab='settle']");
+    await g.p.waitForTimeout(250);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("feeadm");
+      return { text: b.innerText,
+               opts: b.querySelectorAll("#sf-pv option").length,
+               holds: b.querySelectorAll("button[data-hold]").length };
+    });
+    ok("정산서 만드는 양식이 나온다 (업체 셋)", r.opts === 3, "업체 " + r.opts);
+    ok("만들어 둔 정산서를 보여 준다", r.text.indexOf("880,000원") >= 0,
+       r.text.slice(0, 400).replace(/\n/g, " | "));
+    /* ⚠️⚠️ **들어온 돈을 보류로 덮지 않습니다** — 문도 거절합니다 */
+    ok("⚠️⚠️ 입금으로 집계된 정산서에는 **보류 단추를 안 낸다**",
+       r.holds === 1, "보류 단추 " + r.holds);
+
+    await g.p.selectOption("#sf-pv", "fa-2");
+    await g.p.fill("#sf-a", "2026-11-01");
+    await g.p.fill("#sf-b", "2026-11-30");
+    await g.p.click("#setf button[type=submit]");
+    await g.p.waitForTimeout(400);
+    const bs = g.sent.filter(function(x){ return x.name === "build_settlement"; })[0];
+    ok("⚠️ **build_settlement 를 실제로 부른다**", !!bs,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    if(bs){
+      const p = JSON.parse(bs.body);
+      ok("  자리 인자로 보낸다 (업체 · 기간)",
+         p.p === undefined && p.p_provider === "fa-2" &&
+         p.p_from === "2026-11-01" && p.p_to === "2026-11-30", bs.body.slice(0, 140));
+    }
+
+    await g.p.click("#feeadm button[data-hold]");
+    await g.p.waitForTimeout(200);
+    await g.p.click("#feeadm .hold-f button[type=submit]");
+    await g.p.waitForTimeout(300);
+    ok("⚠️ 사유 없는 **보류는 안 보낸다**",
+       g.sent.filter(function(x){ return x.name === "hold_settlement"; }).length === 0,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    await g.p.fill("#feeadm input[name='hwhy']", "세금계산서가 아직 안 왔습니다");
+    await g.p.click("#feeadm .hold-f button[type=submit]");
+    await g.p.waitForTimeout(400);
+    const hs = g.sent.filter(function(x){ return x.name === "hold_settlement"; })[0];
+    ok("  사유를 적으면 **hold_settlement 를 부른다**", !!hs,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    if(hs){
+      const p = JSON.parse(hs.body);
+      ok("  자리 인자로 보낸다", p.p === undefined && p.p_id === "s-1" &&
+         p.p_hold === true, hs.body.slice(0, 140));
+    }
     await g.p.close(); }
 
   console.log("\n── /desk 시설 사진 · 증빙서류 (0051)");

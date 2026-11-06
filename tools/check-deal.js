@@ -52,7 +52,37 @@ function enumKeys(sql, name){
   const open = sql.indexOf("(", en);
   const close = sql.indexOf(")", open);
   if(open < 0 || close < 0) return null;
-  return quoted(sql.slice(open + 1, close));
+  const out = quoted(sql.slice(open + 1, close));
+  /* ⚠️⚠️⚠️ **`alter type … add value` 로 늘어난 값도 같이 셉니다**
+     (2026-11-06). 이 줄이 없어서 0015 가 더한 `mrr_rate` · `retain` ·
+     `kept` 셋을 **아무도 못 보고 있었습니다** — DB 에는 있는데 화면에
+     말이 없으니 그 갈래를 쓰는 날 영문 키가 그대로 찍히는데, 검사는
+     영원히 초록이었습니다. 0015 의 머리말은 "앞의 create type 과 뒤의
+     alter type 을 **합쳐서** 맞춰 본다" 고 적어 두었는데, 도구를 다시
+     쓰면서 그 합치는 줄이 빠졌습니다 (주석이 코드와 다른 자리의 또
+     한 판입니다).
+     ⚠️ `if not exists` 가 붙어 있어도 값은 그대로 늘어납니다. */
+  let i = 0;
+  const head = "alter type " + name + " ";
+  for(;;){
+    const at2 = sql.indexOf(head, i);
+    if(at2 < 0) break;
+    const nl = sql.indexOf("\n", at2);
+    const line = sql.slice(at2, nl < 0 ? sql.length : nl);
+    const av = line.indexOf("add value");
+    if(av >= 0){
+      /* ⚠️⚠️ `after 'sub'` 의 따옴표도 그 줄에 있습니다 — 그건 **자리**
+         이지 새 값이 아닙니다. 지금은 `after` 가 가리키는 값이 늘 앞에
+         있어서 섞어도 답이 같지만, **답이 같은 것과 맞는 것은 다릅니다**
+         (식을 바꿔도 답이 같아 아무것도 안 잡는 자리입니다). 그래서
+         `add value` 뒤 · `after` 앞만 봅니다. */
+      const afr = line.indexOf(" after ", av);
+      const seg = line.slice(av, afr < 0 ? line.length : afr);
+      quoted(seg).forEach(function(v){ if(out.indexOf(v) < 0) out.push(v); });
+    }
+    i = at2 + head.length;
+  }
+  return out;
 }
 /* `state text not null default 'open' check (state in ('open',…))` */
 /* ⚠️⚠️ **같은 칸 이름이 여러 표에 있습니다.** `state` 는 quote 에도
@@ -203,6 +233,20 @@ if(require.main === module){
     console.log(got2 ? "  ✅ 잡았습니다 — " + r2.bad.filter(m => m.indexOf("nego") >= 0)[0]
                      : "  ❌ **못 잡았습니다**");
     if(!got2) fail = 1;
+
+    /* ⚠️⚠️⚠️ **이 줄이 없어서 셋을 못 보고 있었습니다** (0015 의
+       mrr_rate · retain · kept). `create type` 만 읽으면 뒤에서
+       `alter type … add value` 로 늘어난 값은 영원히 안 보입니다 —
+       DB 에는 있는데 화면에 말이 없으니 그 갈래를 쓰는 날 영문 키가
+       찍히고, 검사는 초록입니다. */
+    console.log("\n── 되돌려 보기 ④ alter type 으로 늘어난 값을 빼면");
+    const sql4 = readAll().replace(
+      "alter type fee_type add value if not exists 'mrr_rate' after 'sub';", "");
+    const r4 = run({ sql: sql4 });
+    const got4 = r4.bad.some(function(m){ return m.indexOf("mrr_rate") >= 0; });
+    console.log(got4 ? "  ✅ 잡았습니다 — " + r4.bad.filter(m => m.indexOf("mrr_rate") >= 0)[0]
+                     : "  ❌ **못 잡았습니다** (alter type 을 안 세고 있습니다)");
+    if(!got4) fail = 1;
 
     console.log("\n── 되돌려 보기 ③ DB 쪽을 아예 못 읽으면 (검사가 틀린 경우)");
     const r3 = run({ sql: "-- 아무것도 없습니다" });

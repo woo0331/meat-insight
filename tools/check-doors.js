@@ -72,9 +72,19 @@ const KNOWN = {
 
   /* 할 일 — 화면이 생기는 날 이 줄을 지웁니다 */
   move_item_state:        "할 일 — 요청을 **항목별로** 옮기는 화면이 없습니다 (지금은 요청 단위)",
-  build_settlement:       "장치 없음 — 청구 · 입금을 담을 표가 없습니다 (작업 기억의 '아직 안 한 것')",
-  hold_settlement:        "장치 없음 — 같은 자리 (정산 보류)",
-  clawback_fee:           "장치 없음 — 같은 자리 (수수료 환수)",
+  /* ⚠️⚠️⚠️ 2026-11-06 — 셋을 여기서 뺐습니다. 설명도 **틀려** 있었습니다:
+     "청구 · 입금을 담을 표가 없습니다" 라고 적혀 있었지만 `settlement`
+     표는 **0001 부터 있고** 0013 이 unique 인덱스까지 걸어 두었습니다.
+     없던 것은 표가 아니라 **화면**이었습니다 (`js/adminfee.js`).
+     ⚠️ 작업 기억의 "아직 안 한 것" 줄도 같은 오해를 담고 있었습니다 —
+     그 줄이 말하는 것은 광고 · 멤버십(`ad` · `mship`)의 입금입니다.
+     ⚠️ 0009 의 항목 단위 배정 — 지금 배정은 **요청 단위**입니다
+     (`js/assign.js` 가 `move_state` 를 부릅니다). `move_item_state` 와
+     같은 자리이고, 항목 단위 화면을 만드는 날 둘을 같이 씁니다.
+     ⚠️⚠️ 이 줄이 2026-11-06 까지 **이 목록에 아예 없었습니다** — 이름이
+     0009 의 거절 문구("배정은 assign_item() 으로 하세요") 안에 들어
+     있어서 검사가 "다른 SQL 이 부른다" 로 세고 넘겼습니다. */
+  assign_item:            "할 일 — 요청을 **항목별로** 업체에 배정하는 화면이 없습니다 (지금은 요청 단위 · move_item_state 와 같은 자리)",
   /* ⚠️⚠️ **아래 셋은 서로 다른 일입니다 — 한 기능이 아닙니다.**
      2026-11-05 에 세어 보니 이 줄의 설명 둘이 틀려 있었고, 작업 기억도
      그것을 "한 업체에 담당자 여럿 (0025 의 모자) · 문 넷" 으로 뭉쳐
@@ -140,13 +150,36 @@ ok("화면 · 서버 파일을 찾았다 (0개면 이 검사가 고장입니다)
 
 /* ── 셉니다 ────────────────────────────────────────────────────── */
 /* SQL 안에서 부르는 자리 — 정의 · 권한 줄은 뺍니다 */
+/* 홑따옴표로 감싼 글(거절 문구 · 설명)을 지웁니다 — 거기 적힌 이름은
+   **부르는 것이 아니라 말하는 것**입니다.
+   ⚠️ `--` 주석도 같이 지웁니다 (0013 머리말이 함수 이름을 설명으로
+   적어 둔 자리가 있습니다). */
+function stripText(line){
+  const cut = line.indexOf("--");
+  let l = cut >= 0 ? line.slice(0, cut) : line;
+  let out = "", inq = false;
+  for(let i = 0; i < l.length; i++){
+    const c = l[i];
+    if(c === "'"){ inq = !inq; continue; }
+    if(!inq) out += c;
+  }
+  return out;
+}
 function sqlCalls(name){
   let n = 0;
   SQL.forEach(function(x){
     x.s.split("\n").forEach(function(l){
       const low = l.toLowerCase().trim();
       if(/^(create or replace function|create function|grant |revoke |drop function|alter function|comment on function)/.test(low)) return;
-      if(low.indexOf(name + "(") >= 0 || low.indexOf(name + " (") >= 0) n++;
+      /* ⚠️⚠️⚠️ **거절 문구 안의 이름은 부르는 자리가 아닙니다** (2026-11-06).
+         0004 · 0007 · 0009 가 "수수료는 confirm_fee() · mark_paid() 로만
+         갑니다" 라고 **에러 메시지**에 적어 두었는데, 이 검사가 그 줄을
+         "다른 SQL 이 부른다" 로 세어 **둘을 안쪽 도움함수로** 넘겼습니다.
+         그래서 화면이 한 곳도 없는 문 둘이 이 목록에 **영원히 안 떴습니다**
+         — 돈을 확정하고 입금을 적는 길이 막혀 있는 줄 아무도 몰랐습니다.
+         ⚠️ 홑따옴표 안(문자열 · 주석의 설명)을 지우고 봅니다. */
+      const code = stripText(low);
+      if(code.indexOf(name + "(") >= 0 || code.indexOf(name + " (") >= 0) n++;
     });
   });
   return n;
@@ -227,6 +260,26 @@ if(process.argv.indexOf("--prove") >= 0){
   const inner = doors.filter(function(d){ return sqlCalls(d) > 0; });
   ok("SQL 안쪽 함수도 안 잡는다",
      inner.length > 0 && audit(inner).length === 0, JSON.stringify(audit(inner)));
+
+  /* ⚠️⚠️⚠️ **거절 문구 안의 이름을 "부른다" 로 세면 안 됩니다** —
+     그 한 줄 때문에 `confirm_fee` · `mark_paid` · `assign_item` 셋이
+     2026-11-06 까지 이 목록에 **한 번도 안 떴습니다**(돈을 확정하고
+     입금을 적는 길이 막혀 있는 줄 아무도 몰랐습니다). 미끼를 둘
+     넣습니다 — 문자열 안 · `--` 주석 안. */
+  const saved = SQL.slice();
+  SQL.push({ f:"__prove.sql",
+    s:"raise exception '이것은 " + fake + "() 로만 갑니다';\n" +
+      "-- 그리고 " + fake + "() 를 주석에서도 말합니다\n" });
+  ok("⚠️⚠️ **거절 문구 · 주석 안의 이름**은 부르는 자리로 안 센다",
+     sqlCalls(fake) === 0 && audit([fake]).length === 1,
+     "sqlCalls=" + sqlCalls(fake));
+  /* ⚠️ 그런데 **진짜 부르는 줄**은 그대로 세어야 합니다 (너무 넓게
+     막는 것도 고장입니다) */
+  SQL.push({ f:"__prove2.sql", s:"  perform " + fake + "(1);\n" });
+  ok("  진짜 부르는 줄은 **그대로 센다**", sqlCalls(fake) === 1,
+     "sqlCalls=" + sqlCalls(fake));
+  SQL.length = 0;
+  saved.forEach(function(x){ SQL.push(x); });
 }
 
 console.log("\n" + (bad ? bad + "건 실패" : "전부 통과"));

@@ -70,13 +70,26 @@ window.AM_FEE_TYPE = [
   { key:"rate",      name:"거래액의 %" },
   { key:"base_rate", name:"기본료 + %" },
   { key:"margin",    name:"마진 배분" },
-  { key:"sub",       name:"월 정액" }
+  { key:"sub",       name:"월 정액" },
+  /* ⚠️⚠️⚠️ **0015 가 더한 둘이 2026-11-06 까지 여기 없었습니다.**
+     `alter type fee_type add value` 로 들어온 값이라 `check-deal` 의
+     `enumKeys()` 가 **`create type` 만 읽어** 못 봤습니다 — DB 에는
+     있는데 화면에 말이 없으니, 그 갈래로 정책을 하나 만드는 날
+     업체 화면과 관리자 화면에 **영문 키가 그대로** 찍힐 참이었습니다
+     (0006 이 더한 `hold` 는 우연히 적혀 있어 안 걸렸습니다).
+     ⚠️ 이름은 0015 가 적어 둔 말 그대로입니다 — 셈법을 **지어내지
+     않습니다**(`retain` 의 식은 그 파일에 없습니다). */
+  { key:"mrr_rate",  name:"유지 — 월 요금의 %" },
+  { key:"retain",    name:"유지 — 유지되는 동안" }
 ];
 window.AM_FEE_WHEN = [
   { key:"lead_ok", name:"연결이 확인된 때" },
   { key:"signed",  name:"계약한 때" },
   { key:"done",    name:"이행이 끝난 때" },
-  { key:"paid",    name:"손님이 낸 때" }
+  { key:"paid",    name:"손님이 낸 때" },
+  /* ⚠️ 0015 — 같은 자리입니다 (설치한 날 전부를 확정하지 않으려고
+     "약정 유지 확인 후" 를 따로 둡니다) */
+  { key:"kept",    name:"약정 유지 확인 후" }
 ];
 window.AM_FEE_CYCLE = [
   { key:"now",     name:"그때 바로" },
@@ -208,6 +221,58 @@ window.amSettleStName = function(k){
 /* 수수료 정책 한 줄을 사람 말로 — ⚠️⚠️ **여기 한 곳**에서만 짓습니다.
    화면마다 따로 이어 붙이면 어떤 화면은 부가세를 빠뜨립니다.
    ⚠️ 0 은 값입니다 (무상) — `||` 로 지우지 않습니다. */
+/* 수수료를 **세는 한 곳** — 정책 + 계약금액 → 수수료 · 부가세 · 합계
+
+   ⚠️⚠️⚠️ **이 규칙을 화면에 적지 마세요.** `confirm_fee`(0003)는 금액을
+   **받기만** 합니다 — 무엇이 맞는 값인지 DB 가 모릅니다. 그러니 세는
+   자리가 화면에 흩어지면 그날부터 같은 계약이 화면마다 다른 수수료를
+   말합니다. 세는 곳은 여기 하나입니다.
+
+   ⚠️⚠️ **셀 수 없는 것은 null 을 돌려줍니다 — 0 이 아닙니다.**
+   `margin`(마진 배분)은 마진을 모르고 `sub`(월 정액)는 건별이 아닙니다.
+   그 자리에 0 을 돌려주면 **0원짜리 수수료를 확정**하게 됩니다. null
+   이면 화면이 칸을 비워 열고 "직접 적어 주세요" 라고 말합니다
+   (지어내지 않습니다 · 절대 규칙 1).
+   ⚠️ 모르는 갈래 · 모르는 부가세 처리도 **null** 입니다 — 새 값이 DB 에
+   생기는 날 조용히 틀린 금액을 내지 않게.
+
+   ⚠️ 부가세는 `별도`면 더하고(`fee` + 10%), `포함`이면 **합계가 곧
+   수수료**이며 그 안에서 세액을 거꾸로 셉니다. 둘을 헷갈리면 금액이
+   10% 틀립니다 (작업 기억의 그 줄). */
+window.amFeeCalc = function(pol, amount){
+  if(!pol) return null;
+  var t = pol.type;
+  if(t === "margin" || t === "sub") return null;
+  var amt  = Number(amount);
+  var flat = (pol.flat === null || pol.flat === undefined) ? null : Number(pol.flat);
+  var rate = (pol.rate === null || pol.rate === undefined) ? null : Number(pol.rate);
+  var fee;
+  if(t === "lead" || t === "close"){
+    if(flat === null) return null;
+    fee = flat;
+  }else if(t === "rate"){
+    if(rate === null || !isFinite(amt)) return null;
+    fee = Math.round(amt * rate / 100);
+  }else if(t === "base_rate"){
+    if(flat === null || rate === null || !isFinite(amt)) return null;
+    fee = flat + Math.round(amt * rate / 100);
+  }else{
+    return null;
+  }
+  /* ⚠️ 하한 · 상한은 **있을 때만** 겁니다 (0 도 값입니다 — `||` 로
+     보면 0원 하한이 사라집니다 · 작업 기억의 그 줄). */
+  if(pol.min_fee !== null && pol.min_fee !== undefined && fee < Number(pol.min_fee))
+    fee = Number(pol.min_fee);
+  if(pol.max_fee !== null && pol.max_fee !== undefined && fee > Number(pol.max_fee))
+    fee = Number(pol.max_fee);
+  var vat, total;
+  if(pol.vat === "add"){        vat = Math.round(fee * 0.1); total = fee + vat; }
+  else if(pol.vat === "incl"){  vat = fee - Math.round(fee / 1.1); total = fee; }
+  else if(pol.vat === "free"){  vat = 0; total = fee; }
+  else return null;
+  return { fee: fee, vat: vat, total: total };
+};
+
 window.amFeeLine = function(f){
   if(!f) return "";
   var name = window.amFeeTypeName(f.type);

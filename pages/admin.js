@@ -67,6 +67,13 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="bizbox" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️⚠️ **수수료 확정 · 입금 · 월 정산서** (0003 · 0013 · js/adminfee.js).
+     문 다섯이 2026-10-21/22 에 섰는데 **부르는 화면이 한 곳도 없어서**,
+     업체 작업실의 수수료 칸이 영원히 0건이었고 사장님이 SQL 편집기를
+     직접 치셔야 숫자가 생겼습니다. 매각 지표의 수수료도 여기서 옵니다. */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="feeadm" class="none" hidden></div></div></section>';
+
   /* 운영 감사 기록 (4차 지시서 §5) — ⚠️⚠️ 기록은 0004 부터 쌓고
      있었는데 **보는 자리가 0곳**이었습니다. */
   body += '<section class="sec"><div class="wrap">' +
@@ -82,6 +89,6 @@ exports.build = function(){
          "/js/account.js", "/js/review.js", "/js/assign.js",
          "/js/adminpro.js", "/js/adminrep.js", "/js/admininq.js",
          "/js/adminlog.js", "/js/metrics.js", "/js/adminbiz.js",
-         "/js/adminstaff.js"]
+         "/js/adminstaff.js", "/js/adminfee.js"]
   };
 };

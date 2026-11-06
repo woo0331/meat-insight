@@ -546,6 +546,87 @@ const FAKE = "https://sb-test.supabase.co";
      await p.textContent("#mmsg"));
   ok("다시 누를 수 있다", !(await p.getAttribute('#mf button[type="submit"]', "disabled")));
 
+  /* ══════════════════════════════════════════════════════════════
+     접수한 뒤 **다음 걸음을 말하는가** (2026-11-06)
+
+     ⚠️⚠️⚠️ 전에는 "이 번호와 연락처로 진행 상황을 확인하실 수
+     있습니다" 한 줄과 `/categories` 단추뿐이라, **어디서** 확인하는지를
+     아무 데서도 안 알려 주었습니다. 그 길은 `/my` 안의 `claim_request`
+     (요청번호 + 그때 적은 연락처)입니다.
+     ⚠️⚠️ 그리고 `make_request` 는 anon 에게도 열려 있어 로그인 없이
+     넣으면 `request.user_id` 가 비고, 그러면 `/my` 에서 영영 안 보이고
+     알림도 안 붙습니다 — 그 자리에 "알려 드립니다" 는 **참이 아닙니다**.
+     ══════════════════════════════════════════════════════════════ */
+  /* ⚠️ 이름을 길게 둡니다 — 이 파일 앞쪽이 이미 `done` 을 쓰고 있어
+     `node --check` 에서 터졌습니다 (작업 기억의 그 줄입니다). */
+  async function doneScreen(signedIn){
+    const q = await b.newPage({ viewport:{ width:1280, height:900 } });
+    await q.route("**/api/session", function(r){
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ auth:true, signedIn: signedIn,
+          role: signedIn ? "customer" : "", name: signedIn ? "홍길동" : "",
+          conf:{ url:FAKE, anonKey:"anon-test-key" } }) });
+    });
+    await q.route(FAKE + "/rest/v1/rpc/make_request", function(r){
+      return r.fulfill({ status:200, contentType:"application/json",
+                         body:'"SW-9Z8Y-7X6W"' });
+    });
+    await q.goto(URL, { waitUntil:"networkidle" });
+    await q.waitForTimeout(250);
+    await q.check('input[name="svc"][value="ls-solo"]');
+    await q.fill("#m-name", "박손님");
+    await q.fill("#m-tel", "010-7777-8888");
+    await q.check("#m-agree");
+    await q.click('#mf button[type="submit"]');
+    await q.waitForTimeout(600);
+    const r = await q.evaluate(function(){
+      const box = document.getElementById("matchbox");
+      return { text: box ? box.innerText : "",
+               hrefs: Array.prototype.map.call(
+                 box ? box.querySelectorAll("a.btn") : [],
+                 function(e){ return e.getAttribute("href"); }) };
+    });
+    await q.close();
+    return r;
+  }
+
+  console.log("\n── 접수한 뒤 **어디서 견적을 보는지** 말합니다");
+  {
+    const r = await doneScreen(true);
+    ok("요청번호를 그대로 보여 준다", r.text.indexOf("SW-9Z8Y-7X6W") >= 0,
+       r.text.slice(0, 120).replace(/\n/g, " | "));
+    ok("로그인하셨으면 **내 정보로 가는 단추**를 낸다",
+       r.hrefs.indexOf("/my") >= 0, r.hrefs.join(" · "));
+    ok("  거기서 견적을 나란히 보고 고른다고 적는다",
+       r.text.indexOf("나란히") >= 0, r.text.slice(0, 400).replace(/\n/g, " | "));
+    /* ⚠️⚠️ 밖으로 안 보냅니다 (0050) — 그 사실을 적습니다 */
+    ok("⚠️ 문자 · 카톡 · 메일로 보낸다고 **적지 않는다**",
+       r.text.indexOf("보내 드리지 않습니다") >= 0 &&
+       r.text.indexOf("문자로 알려") < 0, r.text.slice(0, 400));
+  }
+  {
+    const r = await doneScreen(false);
+    /* ⚠️⚠️⚠️ **여기가 막다른 길이었습니다** — 비로그인 요청은 /my 에서
+       영영 안 보이는데 가져오는 길을 한 글자도 안 적었습니다. */
+    ok("⚠️⚠️ 로그인 안 하셨으면 **가져오는 길**을 말한다",
+       r.text.indexOf("요청번호와 방금 적으신 연락처") >= 0,
+       r.text.slice(0, 500).replace(/\n/g, " | "));
+    ok("  어느 계정에도 매여 있지 않다는 것을 말한다",
+       r.text.indexOf("어느 계정에도") >= 0, "");
+    ok("  로그인으로 가는 단추를 낸다 (돌아올 자리까지)",
+       r.hrefs.some(function(h){ return h && h.indexOf("/login") === 0 &&
+                                        h.indexOf("next=/my") >= 0; }),
+       r.hrefs.join(" · "));
+    /* ⚠️⚠️ 비로그인에게 "알려 드립니다" 는 참이 아닙니다 — 알림이
+       붙을 곳(`request.user_id`)이 비어 있습니다 (notify_one 이
+       조용히 끝냅니다). */
+    ok("⚠️⚠️ 비로그인에게 **알려 드린다고 적지 않는다** " +
+       "(알림이 붙을 곳이 없습니다)",
+       r.text.indexOf("알림이 붙습니다") < 0, r.text.slice(0, 500));
+    ok("  막다른 길로 두지 않는다 (둘러볼 길도 같이 낸다)",
+       r.hrefs.indexOf("/categories") >= 0, r.hrefs.join(" · "));
+  }
+
   if(process.argv.indexOf("--shot") >= 0){
     const dir = process.argv[process.argv.indexOf("--shot") + 1] || ".";
     mode = "ok";

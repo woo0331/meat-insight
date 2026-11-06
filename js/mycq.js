@@ -17,8 +17,21 @@
   if(!box || !window.amAuthAsk) return;
 
   var esc  = window.esc;
+  /* ⚠️⚠️⚠️ **`cq.cat` 은 게시판 키입니다 — 분류 키가 아닙니다.**
+     2026-11-06 까지 이 줄이 `AM_CATS`(분류 열)에서 이름을 찾고 있어서,
+     `cm-open`(자유게시판) 같은 게시판 키는 하나도 못 찾고 **키 그대로**
+     찍혔습니다(`esc(CATS[o.cat] || o.cat)` 의 뒷가지). 글쓰기 양식이
+     분류 키를 넣고 있던 그 고장의 거울상이고, 양식을 고친 날 이 줄을
+     같이 고치지 않으면 여기만 조용히 영문 키를 냅니다.
+     ⚠️ 끌어오는 자리는 `js/community.js` 의 `boards()` 와 같습니다 —
+     게시판 목록을 글자로 박지 않습니다. */
   var CATS = {};
-  (window.AM_CATS || []).forEach(function(c){ CATS[c.key] = c.name; });
+  (function(){
+    var c = window.amCat ? window.amCat("community") : null;
+    (window.amCatItems ? window.amCatItems(c) : []).forEach(function(b){
+      CATS[b.key] = b.name;
+    });
+  })();
 
   var ST = { live:"보이는 중", dropped:"내렸습니다", hidden:"운영자가 가렸습니다" };
 

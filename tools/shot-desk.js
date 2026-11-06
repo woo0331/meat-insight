@@ -339,11 +339,44 @@ const T_MY = {
   /* ⚠️ 0058 — 저장한 조건 (`js/mywatch.js`). 흉내 자료를 안 주면 그
      상자가 **0건으로만** 그려져 목록 모양을 아무도 못 봅니다 (0051 의
      사진 상자가 `pvPhoto` 를 안 돌려줘 한 번도 안 그려진 그 자리). */
-  watch:WATCH
+  watch:WATCH,
+  /* ⚠️ 0059 — 공개 닉네임 (`js/mynick.js`). 안 주면 그 상자가 "읽지
+     못했습니다" 로만 그려져 모양을 아무도 못 봅니다. */
+  account:[{ nick:"버디사냥꾼" }]
 };
 
 /* ── 장면 ────────────────────────────────────────────────────────
    이름 · 주소 · 역할 · 표 · rpc · 누를 것(없으면 그대로)          */
+/* 게시판 (0059) — ⚠️ `cq.cat` 은 **게시판 키**(cm-*)입니다. 분류 키를
+   적어 두면 화면이 키를 그대로 찍고, 그 그림을 보고 멀쩡한 화면을
+   고치게 됩니다 (조인에서 `ok` 를 적어 두고 밟은 그 자리). */
+const CQ_ID = "11111111-1111-1111-1111-111111111111";
+const T_CQ = {
+  v_cq_public: [
+    { id:CQ_ID, cat:"cm-open", title:"주말에 라운딩 다녀왔습니다",
+      body:"날씨가 좋아서 스코어도 잘 나왔습니다.\n다음에 또 가려고 합니다.",
+      who:"버디사냥꾼", named:true, created_at:"2026-11-06T01:00:00Z",
+      updated_at:"2026-11-06T01:00:00Z",
+      answer_n:2, view_n:42, photo_n:0, mine:true },
+    { id:"22222222-2222-2222-2222-222222222222", cat:"cm-ask",
+      title:"드라이버 슬라이스 어떻게 고치셨나요", body:"오른쪽으로 많이 휩니다.",
+      /* ⚠️ 손님이 적은 글에 태그를 하나 넣어 둡니다 — 날것으로 나가면
+         찍은 그림에 보입니다 (esc 사고는 이 저장소가 서른두 번 겪었습니다). */
+      who:"김**", named:false, created_at:"2026-11-05T01:00:00Z",
+      updated_at:"2026-11-05T01:00:00Z",
+      answer_n:0, view_n:7, photo_n:0, mine:false }
+  ],
+  v_ca_public: [
+    { id:"a1", q_id:CQ_ID, who:"그린필드", named:true,
+      body:"좋네요. <img src=x onerror=alert(9)> 어느 골프장이셨나요?",
+      created_at:"2026-11-06T02:00:00Z", by_asker:false, mine:false },
+    { id:"a2", q_id:CQ_ID, who:"버디사냥꾼", named:true,
+      body:"남서울CC 다녀왔습니다.", created_at:"2026-11-06T02:30:00Z",
+      by_asker:true, mine:true }
+  ],
+  account: [{ nick:"버디사냥꾼" }]
+};
+
 const SCENES = [
   ["desk",            "/desk",  PRO, T_DESK,  {}],
   ["desk-price-open", "/desk",  PRO, T_DESK,  {}, "#pricebox [data-pf='open']"],
@@ -353,6 +386,11 @@ const SCENES = [
   ["admin-apply",     "/admin", ADM, T_ADMIN, { biz_metrics: MET },
                       "#probox button[data-ptab='ap']"],
   ["my",              "/my",    CUS, T_MY,    {}],
+  /* ⚠️ 자유게시판 (0059) — 모아보기 · 게시판 하나 · 글 하나 */
+  ["board",           "/cat/community",         CUS, T_CQ, {}],
+  ["board-one",       "/cat/community?s=cm-open", CUS, T_CQ, {}],
+  ["board-post",      "/cat/community?q=11111111-1111-1111-1111-111111111111",
+                      CUS, T_CQ, {}],
   /* ⚠️ 로그인 안 한 자리도 한 장 — "한 줄도 안 보이는가" 는 눈으로도
      봐야 합니다 (글이 남아 있으면 그림에 보입니다). */
   ["desk-notmine",    "/desk",  CUS, T_DESK,  {}],
@@ -387,12 +425,17 @@ const BOXES = {
   /* ⚠️ 처음에 `#myreqbox` · `#myjoinbox` 처럼 **지어낸 id** 를 적어
      두어서 `/my` 상자가 한 장도 안 찍혔습니다 — 찍히는 갯수를 보고
      알았습니다. `pages/my.js` 에서 세어 고쳤습니다. */
+  /* ⚠️⚠️ 게시판(0059)도 **설정이 있어야 열립니다** — `check-screens` 는
+     빈 상자만 봅니다. 모아보기 · 글 하나를 여기서 찍습니다. */
+  "/cat/community": [["board", "#cqlist"]],
   "/my": [["me", "#mybox"], ["notice", "#noticebox"], ["req", "#reqbox"],
           ["join", "#joinmine"], ["cq", "#mycq"], ["job", "#jobmine"],
           /* ⚠️ 0056 의 내 중고 매물 (js/mylisting.js) */
           ["listing", "#lsmine"],
           /* ⚠️ 0058 의 저장한 조건 (js/mywatch.js) */
           ["watch", "#wchbox"],
+          /* ⚠️ 0059 의 공개 닉네임 (js/mynick.js) */
+          ["nick", "#nickbox"],
           ["inq", "#myinqbox"]]
 };
 

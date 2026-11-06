@@ -42,6 +42,14 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="mycq" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ 공개 닉네임 (0059 · js/mynick.js) — 게시판에 글쓴이로 나가는
+     이름입니다. 안 정하시면 공개 보기가 **성함을 가려서** 냅니다.
+     ⚠️ 글 상자 바로 아래에 둡니다 — 글을 올리기 전에 정하는 것이
+     순서이고, 맨 위에 두면 게시판을 안 쓰는 분께 쓸 일 없는 칸이
+     먼저 보입니다. */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="nickbox" class="none" hidden></div></div></section>';
+
   /* ⚠️⚠️ 내 중고 매물도 **따로 그립니다** (js/mylisting.js · 0056).
      ⚠️⚠️⚠️ 여기도 연락처를 주고받는 유일한 자리입니다 (제17조 제2항) —
      목록 화면(`/cat/used`)에는 연락처 칸이 **아예 없습니다**. */
@@ -84,7 +92,7 @@ exports.build = function(){
          "/js/auth.js", "/js/photo.js", "/js/account.js",
          "/js/review.js", "/js/myreq.js",
          "/js/data/regions.js", "/js/myjoin.js", "/js/mycq.js",
-         "/js/myjob.js", "/js/mylisting.js", "/js/myinq.js",
+         "/js/myjob.js", "/js/mylisting.js", "/js/myinq.js", "/js/mynick.js",
          "/js/mywatch.js", "/js/notice.js"]
   };
 };

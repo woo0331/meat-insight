@@ -92,7 +92,9 @@
         : '<span class="pvst-d">이어진 날 기록 없음</span>') +
       /* ⚠️ `.btn-bad` 는 **없는 이름**입니다 — 처음에 그렇게 적었다가
          `css/app.css` 를 세어 보고 고쳤습니다 (있는 것은 btn-pri ·
-         btn-pt · btn-gold · btn-line · btn-deep · btn-ghost · btn-sm).
+         btn-pt · btn-gold · btn-line · btn-deep · btn-ghost · **btn-bad** ·
+         btn-sm — ⚠️ 목록을 여기 또 적는 자리입니다. 참은 `css/app.css`
+         이고 `check-safe` ⑩ 이 **거기서 읽어** 셉니다).
          없는 클래스는 조용히 아무 모양도 안 입습니다. 위험한 단추라는
          표시는 **제 클래스**(`.pvst-x`)에서 색으로 냅니다. */
       '<button type="button" class="btn btn-sm btn-line pvst-x" ' +

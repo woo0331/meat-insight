@@ -61,8 +61,21 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
    짙은 글자(--on-pt)로만 씁니다 — 7.30. 시안은 흰 글자였습니다. */
 .btn-pt{ background: var(--pt); color: var(--on-pt); font-weight:800; }
 .btn-pt:hover{ background: #38B547; }
+/* ⚠️⚠️⚠️ **`.btn-ghost` 는 어두운 면 전용입니다** — 흰 글자 · 흰 테두리라
+   밝은 바탕에 쓰면 **안 보이는 단추**가 됩니다 (2026-11-06 에 다섯 곳에서
+   그 꼴이었습니다: 게시판의 내리기 · 신고 · 사진 빼기 · `/my` 의 조건
+   지우기 · `/admin` 의 담당자 줄).
+   ⚠️ `check-safe` ⑩ 은 **변형이 붙었는지**만 셉니다 — 붙어 있으니 초록
+   이었습니다. 가로로 밀리지도 · 글자가 작지도 · 누름 높이가 낮지도
+   않습니다. **찍어 보고** 알았습니다.
+   ⚠️ 밝은 바탕에서 조용히 둘 것(내리기 · 지우기 · 빼기 · 신고)은
+   아래 `.btn-bad` 입니다. */
 .btn-ghost{ border-color: rgba(255,255,255,.75); color: #fff; }
 .btn-ghost:hover{ background: rgba(255,255,255,.14); }
+/* 되돌리기 어려운 · 조용한 단추 (밝은 바탕) — 글자색은 짙은 쪽입니다
+   (`--bad` 는 면 전용이고 `--bad-text` 가 글자용입니다). */
+.btn-bad{ border-color: var(--bad); color: var(--bad-text); background:#fff; }
+.btn-bad:hover{ background: var(--bad-soft); }
 .btn-line{ border-color: var(--grn); color: var(--grn-text); background:#fff; }
 .btn-line:hover{ background: var(--grn-soft); }
 .btn-deep{ background: var(--grn-deep); color:#fff; }
@@ -672,6 +685,134 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .cal-w{ font-weight:700; color: var(--grn-text); }
 .cal-b{ margin:0; font-size:15px; color: var(--ink); line-height:1.6;
         word-break:keep-all; overflow-wrap:anywhere; }
+
+/* ── 자유게시판 (0059) ───────────────────────────────────────────
+   ⚠️⚠️ 쓰는 변수는 전부 tokens.css 에 있는 것입니다 (지어 쓰면 조용히
+   기본값으로 떨어지고 에러가 없습니다 — check-safe ⑧ 이 셉니다).
+   ⚠️⚠️ 단추는 전부 **변형**을 답니다 (`.btn` 만 붙으면 테두리도 배경도
+   없어 손님에게는 그냥 글자입니다 — check-safe ⑩). */
+
+/* 게시판 줄 — ⚠️⚠️⚠️ **밀면 보이는 것은 보이는 것이 아닙니다.**
+   `.sf-c` 는 760px 아래에서 nowrap + overflow-x:auto 가 되는데, 이 줄은
+   게시판 일곱으로 **들어가는 유일한 길**이라 밀어서 찾게 두면 머리말
+   메뉴에서 겪은 그 자리가 됩니다. 그래서 여기만 접습니다.
+   ⚠️ 특정도로 이깁니다(`.sf-c.cqb-c` 0,2,0) — 파일 뒤에 적는 것으로는
+   `@media{.sf-c}`(0,1,0)를 못 이기는 자리가 아니라 **순서와 무관하게**
+   이겨야 하기 때문입니다. */
+.sf-c.cqb-c{ flex-wrap:wrap; overflow-x:visible; }
+
+/* 머리 — 제목 왼쪽 · 글쓰기 오른쪽 (지시서 §2) · 폰에서는 줄이 바뀝니다 */
+.cqh{ display:flex; align-items:center; justify-content:space-between;
+      gap:12px; flex-wrap:wrap; margin:18px 0 14px; }
+.cqh > *{ min-width:0; }
+.cqh-t{ margin:0; font-size:20px; color: var(--ink);
+        word-break:keep-all; overflow-wrap:anywhere; }
+.cqh .btn{ flex:none; min-height:40px; }
+
+/* 목록 */
+.cqr{ background: var(--surface); border:1.5px solid var(--line);
+      border-radius: var(--r); padding:14px 16px; display:grid; gap:6px; }
+.cqr > *{ min-width:0; }
+.cqr-t{ display:flex; align-items:center; min-height:40px;
+        font-size:17px; font-weight:700; color: var(--ink);
+        text-decoration:none; word-break:keep-all; overflow-wrap:anywhere; }
+.cqr-t:hover{ color: var(--grn-text); text-decoration:underline; }
+.cqr-m{ margin:0; display:flex; flex-wrap:wrap; gap:4px 10px;
+        font-size:13.5px; color: var(--ink3); }
+.cqr-bd{ font-weight:700; color: var(--grn-text);
+         background: var(--grn-soft); border-radius:999px; padding:2px 10px; }
+
+/* 쪽 넘기기 */
+.cqp{ display:flex; align-items:center; justify-content:center;
+      gap:12px; flex-wrap:wrap; margin-top:18px; }
+.cqp .btn{ min-height:40px; }
+.cqp-n{ font-size:14px; font-weight:700; color: var(--ink3); }
+
+/* 조용한 안내 (0건 · 불러오는 중 · 로그인 권유) */
+.cqz{ margin:0; font-size:14.5px; color: var(--ink3); line-height:1.6;
+      word-break:keep-all; overflow-wrap:anywhere; }
+.cqz .btn{ min-height:40px; margin-left:6px; }
+
+/* 상세 */
+.cqd{ background: var(--surface); border:1.5px solid var(--line);
+      border-radius: var(--r); padding:20px 22px; margin:18px 0 0;
+      display:grid; gap:12px; }
+.cqd > *{ min-width:0; }
+.cqd-t{ margin:0; font-size:22px; color: var(--ink);
+        word-break:keep-all; overflow-wrap:anywhere; }
+.cqd-m{ margin:0; display:flex; flex-wrap:wrap; gap:4px 10px;
+        font-size:13.5px; color: var(--ink3); }
+/* ⚠️ 손님이 넣은 줄바꿈을 살립니다 — `esc()` 를 지난 글이라 태그는
+   없고, `pre-wrap` 이 없으면 여러 줄이 한 줄로 붙습니다. */
+.cqd-b{ margin:0; font-size:16px; color: var(--ink); line-height:1.75;
+        white-space:pre-wrap; word-break:keep-all; overflow-wrap:anywhere; }
+.cqd-h{ margin:0; font-size:16px; font-weight:700; color: var(--ink); }
+.cqd-act{ display:flex; flex-wrap:wrap; gap:10px;
+          border-top:1px solid var(--line); padding-top:14px; }
+.cqd-act .btn{ min-height:40px; }
+
+/* 글에 붙은 사진 — ⚠️ 0장이면 이 구간이 줄째 빠집니다 (화면이 안 그립니다) */
+.cqd-ph{ list-style:none; margin:0; padding:0; display:grid; gap:12px;
+         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+.cqd-ph > li{ min-width:0; display:grid; gap:6px; }
+.cqd-ph img{ width:100%; height:auto; display:block;
+             border-radius: var(--r-sm); border:1px solid var(--line); }
+.cqd-ph .btn{ justify-self:start; min-height:40px; }
+.cqd-cap{ margin:0; font-size:13.5px; color: var(--ink3);
+          word-break:keep-all; overflow-wrap:anywhere; }
+.cqd-up{ background: var(--bg-2); border-radius: var(--r-sm);
+         padding:14px 16px; display:grid; gap:8px; justify-items:start; }
+.cqd-up > *{ min-width:0; }
+.cqd-up .btn{ min-height:40px; }
+.cq-ph-f{ min-height:40px; max-width:100%; }
+
+
+/* 게시판 모아보기 (커뮤니티 첫 화면) — 게시판마다 최신 셋
+   ⚠️ PC 두 칸 · 폰 한 칸. **칸 수를 글자로 박지 않고** auto-fit 으로
+   둡니다 (게시판이 늘어도 빈 칸이 생기지 않습니다).
+   ⚠️⚠️ 격자 칸은 제 내용만큼 벌어집니다 — `min-width:0` 을 꼭 둡니다
+   (긴 제목 하나가 폰 화면을 가로로 미는 자리입니다). */
+.cqg{ display:grid; gap:14px; margin-top:16px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.cqg > *{ min-width:0; }
+.cqg-b{ background: var(--surface); border:1.5px solid var(--line);
+        border-radius: var(--r); padding:14px 16px 10px; }
+.cqg-b > *{ min-width:0; }
+.cqg-h{ display:flex; align-items:center; gap:8px; margin:0 0 8px;
+        font-size:16px; color: var(--ink);
+        border-bottom:1px solid var(--line); padding-bottom:10px; }
+.cqg-h > a:first-child{ color: var(--ink); text-decoration:none;
+                        font-weight:700; min-height:40px;
+                        display:flex; align-items:center; }
+.cqg-h > a:first-child:hover{ color: var(--grn-text); }
+.cqg-n{ flex:none; font-size:12.5px; font-weight:700; color: var(--grn-text);
+        background: var(--grn-soft); border-radius:999px; padding:2px 9px; }
+.cqg-more{ margin-left:auto; flex:none; font-size:13.5px; font-weight:700;
+           color: var(--grn-text); text-decoration:none;
+           min-height:40px; display:flex; align-items:center; }
+.cqg-more:hover{ text-decoration:underline; }
+.cqg-l{ list-style:none; margin:0; padding:0; display:grid; gap:2px; }
+.cqg-l > li{ display:flex; align-items:center; gap:10px; min-width:0;
+             min-height:40px; }
+/* ⚠️⚠️ **누르는 것은 40px 이상** — 줄(li)만 40px 로 두면 안 됩니다.
+   손가락이 닿는 것은 `<a>` 이고, 그 상자는 글자 높이(20px)뿐이었습니다
+   (`test-desk` 가 폰 폭 셋에서 잡았습니다).
+   ⚠️ `display:flex` 로 키우면 `text-overflow:ellipsis` 가 안 먹으므로
+   **블록 + line-height** 로 높입니다 (제목이 길면 … 으로 잘려야 합니다). */
+.cqg-t{ flex:1 1 auto; min-width:0; font-size:14.5px; color: var(--ink);
+        text-decoration:none; overflow:hidden; text-overflow:ellipsis;
+        white-space:nowrap; display:block; min-height:40px; line-height:40px; }
+.cqg-t:hover{ color: var(--grn-text); text-decoration:underline; }
+.cqg-w{ flex:none; font-size:13px; color: var(--ink3);
+        max-width:92px; overflow:hidden; text-overflow:ellipsis;
+        white-space:nowrap; }
+.cqg-d{ flex:none; font-size:13px; color: var(--ink3); }
+.cqg-b .cqz{ padding:6px 0 10px; }
+
+/* 댓글 */
+.cal-act{ display:flex; flex-wrap:wrap; gap:8px; }
+.cal-act .btn{ min-height:40px; }
+.caf{ margin-top:4px; }
 
 /* 내가 쓴 글 (/my) */
 .mq-l{ list-style:none; margin:0; padding:0; display:grid; gap:12px; }

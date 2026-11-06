@@ -50,9 +50,17 @@ function stub(p, who, tables, rpcs, up){
          ⚠️ 돌려주는 꼴은 `api/upload.js` 의 GET 과 **같아야** 합니다 —
          거기는 셋을 따로 냅니다 (공개 버킷이 없으면 시설 사진만
          안 되고 서류는 됩니다). */
+      /* ⚠️⚠️ 0059 — 게시판 글 사진(`cqq=`)은 **주소를 서버가 짓습니다**.
+         브라우저는 버킷 이름을 모르므로 그 목록을 여기서 흉내 냅니다.
+         ⚠️ 그 사진 목록은 `photos` 로 줍니다 (`api/upload.js` 의 GET 과
+         **같은 꼴**이어야 합니다 — 다르면 그 차이만큼이 영원히 안 재는
+         자리가 됩니다). */
+      if(u.indexOf("cqq=") >= 0)
+        return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ photos: (up && up.photos) ? up.photos : [] }) });
       return r.fulfill({ status:200, contentType:"application/json",
-                         body: JSON.stringify({ up:true,
-                                                pvPhoto:true, pvDoc:true }) });
+                         body: JSON.stringify({ up:true, pvPhoto:true, pvDoc:true,
+                                                cqPhoto:true }) });
     }),
     p.route("**/api/session", function(r){
       return r.fulfill({ status:200, contentType:"application/json",
@@ -86,8 +94,16 @@ function stub(p, who, tables, rpcs, up){
       const v = tables[key];
       if(v === null)
         return r.fulfill({ status:500, contentType:"application/json", body:"{}" });
+      /* ⚠️⚠️⚠️ **`content-range` 를 노출 헤더에 적어야 브라우저가 읽습니다.**
+         이 흉내 서버는 다른 출처(FAKE)라, `access-control-expose-headers`
+         가 없으면 화면의 `r.headers.get("content-range")` 가 **null** 입니다 —
+         진짜 Supabase(PostgREST)는 그 헤더를 노출하므로, 안 적으면
+         **흉내와 진짜가 다른 말**을 하고 쪽 수 같은 것이 여기서만 안
+         나옵니다 (`_serve.js` 가 Content-Type 을 잘못 보내 사진 검사가
+         영원히 초록이던 그 자리입니다). */
       return r.fulfill({ status:200, contentType:"application/json",
-        headers:{ "content-range":"0-0/" + (Array.isArray(v) ? v.length : 0) },
+        headers:{ "content-range":"0-0/" + (Array.isArray(v) ? v.length : 0),
+                  "access-control-expose-headers":"content-range" },
         body: JSON.stringify(v) });
     })
   ]).then(function(){ return sent; });

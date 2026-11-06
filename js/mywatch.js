@@ -110,7 +110,7 @@
         '<div class="dk-b">' +
           '<a class="btn btn-sm btn-line" href="' +
             esc((window.amWatch(r.kind) || {}).where || "/") + '">보러 가기</a>' +
-          '<button class="btn btn-sm btn-ghost" data-wdrop="' + esc(r.id) + '">' +
+          '<button class="btn btn-sm btn-bad" data-wdrop="' + esc(r.id) + '">' +
             '이 조건 지우기</button>' +
         '</div></li>';
     }).join("") + '</ul>';

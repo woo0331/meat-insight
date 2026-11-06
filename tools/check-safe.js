@@ -511,7 +511,20 @@ if(process.argv.indexOf("--prove") >= 0){
    ("고치기" · "이 자리 닫기" · "거절" · "내리기" …).
    ⚠️ 그래서 눈으로 본 것을 **도구가 세게** 둡니다 — 다음에 또 납니다. */
 console.log("\n── 모양이 없는 단추 (.btn 만 붙은 자리)");
-const BTNVAR = ["pri", "pt", "gold", "line", "deep", "ghost"];
+/* ⚠️⚠️⚠️ **변형 이름을 여기 박아 두고 있었습니다** (2026-11-06 까지).
+   그래서 `css/app.css` 에 `.btn-bad` 를 더한 날 **멀쩡한 단추 다섯 개를
+   실패로** 잡았습니다 — 작업 기억의 "검사에 그날의 색 · 이름 · 개수를
+   박지 마세요. 뜻을 적으세요" 가 그대로 걸린 자리입니다.
+   ⚠️ 지금은 **CSS 에서 읽어서** 셉니다 (`.btn-<이름>{`). 변형을 더하는
+   날 이 줄을 안 고쳐도 됩니다. */
+const BTNVAR = (function(){
+  const css = fs.readFileSync(path.join(ROOT, "css/app.css"), "utf8");
+  const out = [];
+  const re = /\.btn-([a-z][a-z0-9-]*)\s*(?=[{,:])/g;
+  let m;
+  while((m = re.exec(css))) if(out.indexOf(m[1]) < 0) out.push(m[1]);
+  return out;
+})();
 function scanBtn(files){
   const out = [];
   files.forEach(function(pair){
@@ -541,6 +554,10 @@ function scanBtn(files){
   const all = srcs.reduce(function(n, x){
     return n + (x[1].match(/class="btn[ "]/g) || []).length; }, 0);
   ok("단추를 실제로 셌다 (0개면 이 검사가 고장입니다)", all >= 10, all + "개");
+  /* ⚠️ 변형 목록을 **CSS 에서 실제로 읽었는지**도 셉니다 — 못 읽으면
+     전부 "모양이 없다" 로 떨어져 멀쩡한 화면이 빨개집니다. */
+  ok("  변형 이름을 css/app.css 에서 실제로 읽었다 (" + BTNVAR.length + "개)",
+     BTNVAR.length >= 5 && BTNVAR.indexOf("line") >= 0, BTNVAR.join(" · "));
   const bare = scanBtn(srcs);
   ok("⚠️⚠️ **모양이 없는 단추가 없다** (`.btn` 만 붙으면 글자로 보입니다)",
      bare.length === 0, bare.slice(0, 6).join(" · "));
@@ -552,7 +569,9 @@ if(process.argv.indexOf("--prove") >= 0){
      미끼를 **둘** 넣습니다 (변형이 아예 없는 것 · 변형처럼 생겼지만
      없는 이름인 것). */
   [["변형이 아예 없는 단추", 'x.innerHTML = \'<button class="btn mj-edit">고치기</button>\';', true],
-   ["없는 변형 이름(`btn-bad`)도 잡는다", 'x.innerHTML = \'<button class="btn btn-bad zz">빼기</button>\';', true],
+   /* ⚠️ 미끼는 **CSS 에 없는 이름**이어야 합니다 — `btn-bad` 는 2026-11-06
+      에 실제로 생겼습니다 (그날 이 미끼가 거짓말이 될 참이었습니다). */
+   ["없는 변형 이름(`btn-nosuch`)도 잡는다", 'x.innerHTML = \'<button class="btn btn-nosuch zz">빼기</button>\';', true],
    ["제대로 된 단추는 안 잡는다", 'x.innerHTML = \'<button class="btn btn-line zz">고치기</button>\';', false]
   ].forEach(function(pr){
     const got = scanBtn([["probe.js", pr[1]]]).length > 0;

@@ -81,6 +81,15 @@
           ? mine.map(hatName).map(esc).join(" · ")
           /* ⚠️ 0건은 고장이 아닙니다 — 0 이라고 말합니다 */
           : '켜진 역할이 없습니다') + '</p>' +
+      /* ⚠️⚠️ **공개 닉네임** (0059) — 게시판에 글쓴이로 나가는 이름입니다.
+         ⚠️ 정하지 않은 분께는 지우는 단추를 **안 냅니다** — `clear_nick` 은
+         지울 것이 없으면 거절하므로, 그려 두면 눌러도 아무 일이 안 나는
+         칸입니다 (절대 규칙 5). 대신 지금 상태를 말합니다. */
+      '<p class="fe-r">' +
+        (String(m.nick || "").trim()
+          ? '공개 닉네임 ' + esc(m.nick)
+          : '닉네임을 정하지 않으셨습니다 — 게시판에는 성함을 가려서 냅니다') +
+      '</p>' +
       '<div class="dk-b">' +
         HATS.filter(function(h){ return h.self; }).map(function(h){
           var on = mine.indexOf(h.key) >= 0;
@@ -89,6 +98,10 @@
             'data-on="' + (on ? "1" : "0") + '">' +
             esc(on ? (h.name + " 떼기") : (h.name + " 붙이기")) + '</button>';
         }).join("") +
+        (String(m.nick || "").trim()
+          ? '<button type="button" class="btn btn-sm btn-bad" data-nick="1">' +
+            '닉네임 지우기</button>'
+          : "") +
       '</div>' +
       '<form class="jform hat-f" hidden>' +
         '<div class="jrow jrow-full"><label>까닭 <b>*</b> (기록에 남고 지울 수 없습니다)</label>' +
@@ -140,7 +153,7 @@
       /* ⚠️ 관리자는 모든 계정을 봅니다 (0001 의 account_admin). 직원은
          직원 · 관리자 줄만 보이므로(0012 의 account_staff) 이 상자는
          **관리자에게만** 그립니다 — 반쯤 빈 목록을 내지 않습니다. */
-      get("account?select=id,name,role&order=name.asc&limit=300"),
+      get("account?select=id,name,role,nick&order=name.asc&limit=300"),
       get("account_hat?select=account_id,hat&limit=1000")
     ]).then(function(r){
       /* ⚠️ 못 읽은 것(null)과 0건은 다릅니다 */
@@ -165,11 +178,22 @@
     e.preventDefault();
     if(f.id === "hatq") return;           /* 찾기는 보내지 않습니다 */
     var li = f.closest("li");
-    var btn = li ? li.querySelector("button[data-hat][data-open='1']") : null;
+    var btn = li ? li.querySelector("button[data-open='1']") : null;
     if(!li || !btn) return;
     var sb = f.querySelector('button[type="submit"]');
     if(sb) sb.disabled = true;
     say("보내는 중입니다…");
+    /* ⚠️⚠️⚠️ **문마다 인자 꼴이 다릅니다.** 0025 · 0054 의 딱지 문은
+       자리 인자(`p_user` · `p_hat` · `p_why`)를 받고, 0059 의
+       `clear_nick` 은 저장소의 다른 문처럼 `jsonb` 하나(`p`)를 받습니다 —
+       섞어 보내면 인자 이름이 안 맞아 거절됩니다 (0013 에서 겪은 자리). */
+    if(btn.getAttribute("data-nick")){
+      rpc("clear_nick", { p: { user: li.getAttribute("data-acc"),
+                               why:  f.hwhy.value } })
+        .then(load)
+        .catch(function(err){ if(sb) sb.disabled = false; say(why(err)); });
+      return;
+    }
     /* ⚠️⚠️ **자리 인자입니다** — `{ p: {...} }` 로 보내면 거절됩니다 */
     rpc(btn.getAttribute("data-on") === "1" ? "revoke_hat" : "grant_hat",
         { p_user: li.getAttribute("data-acc"),
@@ -182,12 +206,13 @@
     var t = e.target;
     if(!t || !t.closest) return;
     if(t.closest("button[data-do='again']")) return void load();
-    var b = t.closest("button[data-hat]");
+    var b = t.closest("button[data-hat],button[data-nick]");
     if(!b) return;
     var li = b.closest("li");
     /* ⚠️ 어느 단추로 열었는지 적어 둡니다 — 한 줄에 단추가 둘이라
        양식만 보고는 붙이는 것인지 떼는 것인지 알 수 없습니다. */
-    Array.prototype.forEach.call(li.querySelectorAll("button[data-hat]"),
+    Array.prototype.forEach.call(
+      li.querySelectorAll("button[data-hat],button[data-nick]"),
       function(x){ x.removeAttribute("data-open"); });
     b.setAttribute("data-open", "1");
     var f = li.querySelector(".hat-f");

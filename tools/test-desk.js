@@ -104,6 +104,25 @@ function keepOf(name){
   finally{ if(had) global.window = old; else delete global.window; }
 }
 
+/* 게시판 열둘 — ⚠️ `js/data/catalog.js` 한 곳에서 읽습니다 (이름을 검사에
+   박으면 게시판을 더하는 날 멀쩡한 화면을 실패로 잡습니다).
+   ⚠️ `window` 를 빌려 쓰고 **그대로 돌려놓습니다**. */
+function boardsOf(){
+  const had = Object.prototype.hasOwnProperty.call(global, "window");
+  const old = global.window;
+  global.window = {};
+  try{
+    ["../js/components/base.js", "../js/data/korean.js", "../js/data/brand.js",
+     "../js/data/catalog.js"].forEach(function(f){
+      delete require.cache[require.resolve(f)];
+      require(f);
+    });
+    const c = global.window.amCat("community");
+    return global.window.amCatItems(c) || [];
+  }catch(e){ return []; }
+  finally{ if(had) global.window = old; else delete global.window; }
+}
+
 /* ── 가짜 Supabase — ⚠️⚠️ **`tools/_stub.js` 한 곳**으로 옮겼습니다.
    찍는 쪽(`tools/shot-desk.js`)이 같은 장치를 써야 하기 때문입니다 —
    베껴 두면 **찍는 화면과 재는 화면이 조용히 달라집니다**. */
@@ -3578,12 +3597,41 @@ function keepOf(name){
     }
   }
 
-  console.log("\n── 골프 커뮤니티 (0047)");
-  const CQ = [{ id:"q1", cat:"lesson", title:"드라이버 슬라이스 고치는 법",
-    body:"오른쪽으로 많이 휩니다", who:"김**", created_at:"2026-11-05T01:00:00Z",
-    answer_n:1 }];
-  const CA = [{ id:"a1", q_id:"q1", who:"이**", body:"그립을 먼저 보세요",
-    created_at:"2026-11-05T02:00:00Z", by_asker:false }];
+  /* ══════════════════════════════════════════════════════════════
+     자유게시판 (0047 · 0059) — ⚠️ **설정이 있어야 열리는 자리라
+     빌드가 찍은 HTML 만 보는 검사는 영원히 못 봅니다.** 여기서 누릅니다.
+     ⚠️⚠️⚠️ **읽기는 누구나 · 쓰기는 로그인한 분만** — 두 가지는 다른
+     자물쇠이므로 **갈라서** 잽니다 (비회원에게 글이 보이는가 · 비회원이
+     글쓰기를 누르면 로그인 길이 나오는가).
+     ⚠️⚠️ 흉내 장치는 조건을 보고 걸러 주지 않으므로, 게시판 거르개와
+     쪽 넘기기는 **보내는 질의를 뜯어** 봅니다 (줄 수로 재면 거르개를
+     떼어도 영원히 초록입니다).
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 자유게시판 (0047 · 0059)");
+  /* ⚠️⚠️ **가짜 자료도 DB 가 받는 값이어야 합니다** — `cq.cat` 은
+     **게시판 키**(cm-*)입니다. 전에 여기 `lesson`(분류 키)을 적어 두어서
+     화면이 키를 그대로 찍었고, 그것을 보고 멀쩡한 화면을 고칠 뻔했습니다. */
+  const CQ = [
+    { id:"q1", cat:"cm-open", title:"주말에 라운딩 다녀왔습니다",
+      body:"날씨가 좋았습니다.\n다음에 또 가려고 합니다.", who:"버디사냥꾼",
+      named:true, created_at:"2026-11-06T01:00:00Z",
+      updated_at:"2026-11-06T01:00:00Z",
+      answer_n:1, view_n:42, photo_n:1, mine:true },
+    { id:"q2", cat:"cm-ask", title:"드라이버 슬라이스 고치는 법",
+      body:"오른쪽으로 많이 휩니다", who:"김**", named:false,
+      created_at:"2026-11-05T01:00:00Z", updated_at:"2026-11-05T01:00:00Z",
+      answer_n:1, view_n:7, photo_n:0, mine:false }
+  ];
+  const CA = [{ id:"a1", q_id:"q1", who:"이**", named:false,
+    body:"그립을 먼저 보세요", created_at:"2026-11-05T02:00:00Z",
+    by_asker:false, mine:true }];
+  /* ⚠️⚠️ 게시판 목록은 **`catalog.js` 에서 읽습니다** — 검사에 이름을
+     적어 두면 게시판을 더하는 날 멀쩡한 화면이 빨개집니다.
+     ⚠️ `window` 를 빌려 쓰고 **그대로 돌려놓습니다** (check-deal 이
+     `global.window` 를 덮어써 빌드를 통째로 깨뜨린 자리입니다). */
+  const BDS = boardsOf();
+  ok("게시판 목록을 catalog.js 에서 실제로 읽었다 (" + BDS.length + "곳)",
+     BDS.length >= 5, BDS.map(function(x){ return x.key; }).join(","));
 
   /* ① 설정 전에는 아무것도 안 엽니다 */
   {
@@ -3599,51 +3647,154 @@ function keepOf(name){
       return { form: !!document.getElementById("cqf"),
                boxHtml: (b2 ? b2.innerHTML : "").trim().length };
     });
-    ok("⚠️ 설정 전에는 커뮤니티 양식을 **안 엽니다**",
+    ok("⚠️ 설정 전에는 게시판 양식을 **안 엽니다**",
        !off.form && off.boxHtml === 0, JSON.stringify(off));
     await p0.close();
   }
 
-  /* ② 로그인 전 — 글은 보이고 쓰는 것은 로그인으로 */
-  {
-    const g = await open("/cat/community", { role:"customer", name:"", signedIn:false },
-                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
-    const r = await g.p.evaluate(function(){
-      const li = document.querySelector(".cqc");
-      const box = document.getElementById("cqbox");
-      return { card: !!li, body: document.body.innerText,
-               login: !!(box && box.querySelector('a[href^="/login"]')),
-               form: !!document.getElementById("cqf") };
-    });
-    ok("로그인 전에도 질문이 보인다 (크롤러도 봅니다)", r.card, JSON.stringify(r).slice(0,140));
-    ok("  ⚠️⚠️ 글쓴이 이름이 **가려져** 나온다 (김** — 공개 보기에 by_user 가 없습니다)",
-       r.body.indexOf("김**") >= 0 && r.body.indexOf("김질문") < 0, "");
-    ok("  로그인 전에는 쓰는 양식 대신 로그인 길을 낸다", r.login && !r.form,
-       JSON.stringify({ login:r.login, form:r.form }));
-    ok("  ⚠️ 우리가 답해 준다고 말하지 않는다 (절대 규칙 5)",
-       r.body.indexOf("골프올인원이 답변을 드리지는 않으며") >= 0, "");
-    ok("  ⚠️ 연락처를 적지 말라고 **그 자리에서** 말한다 (§2.C)",
-       r.body.indexOf("연락처는 적지 마세요") >= 0, "");
-    await g.p.close();
-  }
-
-  /* ③ 로그인 뒤 — 질문 올리기 · 답변 달기 */
+  /* ② 모아보기 — 게시판마다 상자가 서고 0건도 빠지지 않습니다 */
   {
     const g = await open("/cat/community", { role:"customer", name:"손님", signedIn:true },
                          { v_cq_public: CQ, v_ca_public: CA }, {}, true);
     const r = await g.p.evaluate(function(){
+      const bx = document.querySelectorAll(".cqg-b");
+      return { n: bx.length, body: document.body.innerText,
+               more: document.querySelectorAll(".cqg-more").length,
+               chips: document.querySelectorAll(".cqb-c .chip").length };
+    });
+    /* ⚠️ 갯수를 박지 않습니다 — **게시판 수와 같은가**를 봅니다
+       (게시판을 더하는 날 이 줄을 안 고쳐도 됩니다). */
+    ok("모아보기에 게시판 상자가 **게시판 수만큼** 선다 (" + BDS.length + "곳)",
+       r.n === BDS.length, "상자 " + r.n + " · 게시판 " + BDS.length);
+    ok("  ⚠️⚠️ 0건인 게시판도 **안 숨깁니다** (첫 글을 남길 길이 사라집니다)",
+       r.more === BDS.length, "더 보기 " + r.more);
+    ok("  게시판 이름을 글자로 박지 않고 끌어옵니다",
+       BDS.every(function(x){ return r.body.indexOf(x.name) >= 0; }), "");
+    /* ⚠️ 거르개는 모아보기 · 전체 글 + 게시판들입니다 */
+    ok("  거르개에 모아보기 · 전체 글이 같이 있다",
+       r.chips === BDS.length + 2, "칩 " + r.chips);
+    await g.p.close();
+  }
+
+  /* ③ 거르개 — ⚠️⚠️ **보내는 질의를 뜯어** 봅니다 (줄 수로 재면 안 잡힙니다) */
+  {
+    const g = await open("/cat/community", { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    const before = g.sent.length;
+    await g.p.click('.cqb-c .chip[data-bd="cm-ask"]');
+    await g.p.waitForTimeout(450);
+    const qs = g.sent.slice(before).filter(function(x){ return x.name === "GET"; })
+      .map(function(x){ return x.body; });
+    ok("⚠️⚠️ 게시판을 누르면 **그 게시판으로 좁혀 묻는다**",
+       qs.some(function(u){ return u.indexOf("cat=eq.cm-ask") >= 0; }),
+       qs.slice(0, 2).join(" | ").slice(0, 160));
+    const url1 = await g.p.evaluate(function(){ return location.search; });
+    ok("  ⚠️ 주소가 같이 바뀐다 (복사해 보내도 같은 화면입니다)",
+       url1.indexOf("s=cm-ask") >= 0, url1);
+    /* ⚠️ "전체 글" 은 **안 좁혀야** 합니다 */
+    const b2 = g.sent.length;
+    await g.p.click('.cqb-c .chip[data-bd="all"]');
+    await g.p.waitForTimeout(450);
+    const qs2 = g.sent.slice(b2).filter(function(x){ return x.name === "GET"; })
+      .map(function(x){ return x.body; });
+    ok("  전체 글은 **게시판으로 안 좁힌다**",
+       qs2.length > 0 && qs2.every(function(u){ return u.indexOf("cat=eq.") < 0; }),
+       qs2.slice(0, 2).join(" | ").slice(0, 160));
+    await g.p.close();
+  }
+
+  /* ④ 목록 한 장 — 제목 · 글쓴이 · 날짜 · 댓글 수 · **회원 조회** */
+  {
+    const g = await open("/cat/community?s=cm-open",
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const li = document.querySelector(".cqr");
+      return { row: !!li, body: li ? li.innerText : "",
+               link: !!(li && li.querySelector(".cqr-t")) };
+    });
+    ok("게시판 하나를 열면 글 줄이 그려진다", r.row && r.link, JSON.stringify(r).slice(0,140));
+    ok("  제목 · 글쓴이 · 날짜 · 댓글 수가 한 줄에 있다",
+       ["주말에 라운딩", "버디사냥꾼", "2026.11.6", "댓글"].every(function(t){
+         return r.body.indexOf(t) >= 0; }), r.body.replace(/\n/g, " ").slice(0, 160));
+    /* ⚠️⚠️⚠️ **"조회" 가 아니라 "회원 조회"** 입니다 — 비로그인 조회는
+       셀 수가 없어서(IP 를 안 받습니다) 그냥 "조회" 라고 적으면 실제보다
+       작은 수를 전체인 것처럼 내는 것이고, 그건 지어낸 숫자입니다. */
+    ok("⚠️⚠️ **회원 조회**라고 적는다 (그냥 '조회' 가 아닙니다)",
+       r.body.indexOf("회원 조회") >= 0 &&
+       r.body.replace("회원 조회", "").indexOf("조회") < 0,
+       r.body.replace(/\n/g, " ").slice(0, 160));
+    await g.p.close();
+  }
+
+  /* ⑤ 비회원 — **글은 보이고** 쓰는 것은 로그인입니다 */
+  {
+    const g = await open("/cat/community?s=cm-open",
+                         { role:"customer", name:"", signedIn:false },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    const r = await g.p.evaluate(function(){
+      return { row: !!document.querySelector(".cqr"),
+               body: document.body.innerText,
+               form: !!document.getElementById("cqf") };
+    });
+    ok("⚠️⚠️⚠️ 가입 안 하셔도 **글이 보인다**", r.row, JSON.stringify(r).slice(0,140));
+    ok("  ⚠️⚠️ 글쓴이 이름이 **가려져** 나온다 (공개 보기에 by_user 가 없습니다)",
+       r.body.indexOf("김**") >= 0, "");
+    await g.p.click(".cq-new");
+    await g.p.waitForTimeout(400);
+    const r2 = await g.p.evaluate(function(){
+      const box = document.getElementById("cqbox");
+      return { form: !!document.getElementById("cqf"),
+               login: !!(box && box.querySelector('a[href^="/login"]')),
+               body: box ? box.innerText : "" };
+    });
+    ok("⚠️ 비회원이 글쓰기를 누르면 **로그인 길**을 낸다 (양식이 아닙니다)",
+       r2.login && !r2.form, JSON.stringify(r2).slice(0, 140));
+    ok("  ⚠️ 돌아올 자리를 주소에 싣는다 (로그인 뒤 보시던 자리로)",
+       (await g.p.evaluate(function(){
+         const a = document.querySelector('#cqbox a[href^="/login"]');
+         return a ? a.getAttribute("href") : ""; })).indexOf("cat%2Fcommunity") >= 0 ||
+       (await g.p.evaluate(function(){
+         const a = document.querySelector('#cqbox a[href^="/login"]');
+         return a ? a.getAttribute("href") : ""; })).indexOf("/cat/community") >= 0, "");
+    ok("  ⚠️ 그래도 **읽을 수 있다고** 말한다 (막다른 길로 두지 않습니다)",
+       r2.body.indexOf("그대로 보실 수 있습니다") >= 0, r2.body.slice(0, 120));
+    await g.p.close();
+  }
+
+  /* ⑥ 글쓰기 — ⚠️⚠️⚠️ 고르개가 **게시판**이어야 합니다 (분류가 아닙니다) */
+  {
+    const g = await open("/cat/community?s=cm-ask",
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    await g.p.click(".cq-new");
+    await g.p.waitForTimeout(400);
+    const r = await g.p.evaluate(function(){
       const f = document.getElementById("cqf");
       if(!f) return { form:false };
-      return { form:true, req: Array.prototype.map.call(
-        f.querySelectorAll("[required]"), function(e){ return e.name; }) };
+      return { form:true,
+        req: Array.prototype.map.call(f.querySelectorAll("[required]"),
+               function(e){ return e.name; }),
+        opts: Array.prototype.map.call(f.querySelectorAll("#c-cat option"),
+               function(o){ return o.value; }).filter(Boolean),
+        picked: f.cat.value };
     });
-    ok("로그인하면 질문 양식이 열린다", r.form, JSON.stringify(r));
-    ok("  분류 · 제목 · 내용이 **필수**다 (§2.C)",
+    ok("로그인하면 글쓰기 양식이 열린다", r.form, JSON.stringify(r).slice(0,120));
+    ok("  게시판 · 제목 · 내용이 **필수**다",
        ["cat","title","body"].every(function(n){ return (r.req||[]).indexOf(n) >= 0; }),
        (r.req || []).join(","));
+    /* ⚠️⚠️⚠️ **2026-11-06 까지 여기가 분류 열(lesson · booking …)이었습니다** —
+       그래서 `자유게시판`(cm-open)을 **고를 수가 없었고**, `cq.cat` 에 분류
+       키가 들어가고 있었습니다. 표의 check 는 빈 글자만 막고 `check-deal` 은
+       enum 만 보므로 아무도 못 잡았습니다. */
+    ok("⚠️⚠️⚠️ 고르개가 **게시판 목록**이다 (분류 열이 아닙니다)",
+       r.opts.length === BDS.length &&
+       r.opts.every(function(k){ return k.indexOf("cm-") === 0; }),
+       r.opts.join(","));
+    ok("  ⚠️ 보고 있는 게시판이 **미리 골라져** 있다 (다시 고르게 하지 않습니다)",
+       r.picked === "cm-ask", r.picked);
 
-    await g.p.selectOption("#c-cat", "lesson");
-    await g.p.fill("#c-title", "검사용 질문");
+    await g.p.fill("#c-title", "검사용 글");
     await g.p.fill("#c-body", "검사로 올리는 글입니다");
     await g.p.click("#cqf button[type=submit]");
     await g.p.waitForTimeout(400);
@@ -3652,45 +3803,157 @@ function keepOf(name){
        g.sent.map(function(x){ return x.name; }).join(","));
     if(askCall){
       const sp = JSON.parse(askCall.body).p;
-      ok("  분류 · 제목 · 내용을 그대로 보낸다",
-         sp.cat === "lesson" && sp.title === "검사용 질문", JSON.stringify(sp));
+      ok("  게시판 키를 그대로 보낸다 (분류 키가 아닙니다)",
+         sp.cat === "cm-ask" && sp.title === "검사용 글", JSON.stringify(sp));
     }
     await g.p.close();
   }
 
-  /* ④ 답변 펼치기 — ⚠️ 누르면 실제로 불러오는가 */
+  /* ⑦ 0건 — ⚠️ 지시서 문구 그대로 · 그리고 막다른 길이 아닙니다 */
   {
-    const g = await open("/cat/community", { role:"customer", name:"손님", signedIn:true },
-                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
-    await g.p.click(".cqc-open");
-    await g.p.waitForTimeout(400);
+    const g = await open("/cat/community?s=cm-open",
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: [], v_ca_public: [] }, {}, true);
     const r = await g.p.evaluate(function(){
-      const box = document.querySelector(".cqc-a");
-      return { open: !!box && !box.hidden, body: box ? box.innerText : "",
-               form: !!document.querySelector(".caf") };
+      return { body: document.body.innerText,
+               go: document.querySelectorAll("#cqlist .cq-new").length };
     });
-    ok("답변 보기를 누르면 펼쳐진다", r.open, JSON.stringify(r).slice(0,120));
-    ok("  답변이 그려지고 이름이 가려져 있다",
-       r.body.indexOf("그립을 먼저 보세요") >= 0 && r.body.indexOf("이**") >= 0, r.body.slice(0,120));
-    ok("  로그인했으면 답변 양식이 같이 나온다", r.form, "");
+    ok("0건이면 **0건이라고 말한다**",
+       r.body.indexOf("아직 작성된 글이 없습니다. 첫 번째 이야기를 남겨보세요.") >= 0,
+       r.body.slice(0, 160));
+    ok("  ⚠️ 막다른 길로 두지 않는다 (첫 글 작성하기)", r.go >= 1, "단추 " + r.go);
+    ok("  ⚠️⚠️ **지어낸 글을 안 채운다** (가짜 제목 · 가짜 조회 수가 없습니다)",
+       r.body.indexOf("회원 조회") < 0, r.body.slice(0, 160));
+    await g.p.close();
+  }
 
-    await g.p.fill(".caf textarea", "검사로 다는 답변입니다");
+  /* ⑧ 상세 — 본문 · 댓글 · 신고 · 본인만 고치기 · **회원 조회를 한 번** */
+  {
+    const g = await open("/cat/community?q=q1",
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const a = document.querySelector(".cqd");
+      return { drawn: !!a, body: document.body.innerText,
+               mine: document.querySelectorAll('.cqd-act a[href="/my"]').length,
+               rep: document.querySelectorAll(".cq-rep").length,
+               back: document.querySelectorAll('[data-back="1"]').length,
+               cal: document.querySelectorAll(".cal > li").length,
+               caf: !!document.querySelector(".caf") };
+    });
+    ok("글을 누르면 상세가 그려진다", r.drawn, JSON.stringify(r).slice(0,140));
+    ok("  본문이 그대로 나온다", r.body.indexOf("날씨가 좋았습니다") >= 0, "");
+    ok("  댓글이 그려지고 양식이 같이 나온다", r.cal === 1 && r.caf,
+       "댓글 " + r.cal);
+    ok("  ⚠️ 목록으로 돌아갈 길이 있다 (막다른 길이 아닙니다)", r.back >= 1, "");
+    ok("  ⚠️ 본인 글이라 고치는 길을 낸다", r.mine === 1, "고치기 " + r.mine);
+    ok("  ⚠️ 로그인했으면 신고하는 길이 있다", r.rep === 1, "신고 " + r.rep);
+    /* ⚠️⚠️ **회원 조회를 한 번 셉니다** — 화면이 그 문을 부르는지 봅니다 */
+    const vc = g.sent.filter(function(x){ return x.name === "view_cq"; });
+    ok("⚠️⚠️ 글을 열면 **view_cq 를 한 번** 부른다 (회원 조회)",
+       vc.length === 1, "부른 횟수 " + vc.length);
+    if(vc.length) ok("  어느 글인지 실어 보낸다",
+       JSON.parse(vc[0].body).p.question === "q1", vc[0].body);
+
+    await g.p.fill(".caf textarea", "검사로 다는 댓글입니다");
     await g.p.click(".caf button[type=submit]");
     await g.p.waitForTimeout(400);
-    const ansCall = g.sent.filter(function(x){ return x.name === "answer_cq"; })[0];
-    ok("⚠️ 답변 단추가 **answer_cq 를 실제로 부른다**", !!ansCall,
+    ok("⚠️ 댓글 단추가 **answer_cq 를 실제로 부른다**",
+       g.sent.some(function(x){ return x.name === "answer_cq"; }),
        g.sent.map(function(x){ return x.name; }).join(","));
     await g.p.close();
   }
 
-  /* ⑤ /my — 내 글 고치기 · 내리기 */
+  /* ⑨ 비회원 상세 — ⚠️⚠️ **회원 조회를 안 세고** 댓글 양식 대신 로그인 */
   {
-    const MYQ = [{ id:"q1", cat:"lesson", title:"내 질문", body:"내용입니다",
+    const g = await open("/cat/community?q=q1",
+                         { role:"customer", name:"", signedIn:false },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    const r = await g.p.evaluate(function(){
+      return { drawn: !!document.querySelector(".cqd"),
+               caf: !!document.querySelector(".caf"),
+               rep: document.querySelectorAll(".cq-rep").length,
+               login: document.querySelectorAll('#cqlist a[href^="/login"]').length };
+    });
+    ok("비회원도 **글과 댓글을 본다**", r.drawn, JSON.stringify(r));
+    ok("  ⚠️ 댓글 양식 대신 로그인 길을 낸다", !r.caf && r.login >= 1, JSON.stringify(r));
+    ok("  ⚠️ 신고 단추를 **안 낸다** (눌러도 거절되는 칸입니다)", r.rep === 0, "");
+    /* ⚠️⚠️⚠️ `view_cq` 의 EXECUTE 는 `authenticated` 에게만 있습니다 —
+       비회원이 부르면 `permission denied` 입니다. 화면이 안 불러야 합니다. */
+    ok("⚠️⚠️ 비회원에게는 **view_cq 를 아예 안 부른다**",
+       g.sent.filter(function(x){ return x.name === "view_cq"; }).length === 0,
+       g.sent.map(function(x){ return x.name; }).join(","));
+    await g.p.close();
+  }
+
+  /* ⑩ 사진 칸 — ⚠️ 버킷이 꺼져 있으면 **아예 안 그립니다** */
+  {
+    const g = await open("/cat/community?q=q1",
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, false);
+    const n = await g.p.evaluate(function(){
+      return document.querySelectorAll(".cqd-up").length; });
+    ok("⚠️ 사진 버킷이 꺼져 있으면 사진 칸을 **안 냅니다**", n === 0, "칸 " + n);
+    await g.p.close();
+  }
+  {
+    const g = await open("/cat/community?q=q1",
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    const r = await g.p.evaluate(function(){
+      return { up: document.querySelectorAll(".cqd-up").length,
+               f: !!document.querySelector(".cq-ph-f") };
+    });
+    ok("버킷이 켜져 있고 **내 글**이면 사진 칸을 낸다", r.up === 1 && r.f,
+       JSON.stringify(r));
+    await g.p.close();
+  }
+
+  /* ⑪ 폰 폭 셋 — ⚠️ 가로 밀림 · 12px · 누름 40px */
+  for(const w of PHONES){
+    const p2 = await b.newPage({ viewport: { width: w, height: 900 } });
+    await stub(p2, { role:"customer", name:"손님", signedIn:true },
+               { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    await p2.goto(base + "/cat/community", { waitUntil:"networkidle" });
+    await p2.waitForTimeout(600);
+    const r = await p2.evaluate(function(){
+      const small = [], low = [];
+      Array.prototype.forEach.call(
+        document.querySelectorAll(".cqg-b, .cqr, .cqd, .jbox, .none, .cqh"),
+        function(box){
+          Array.prototype.forEach.call(box.querySelectorAll("*"), function(e){
+            if(e.firstChild && e.firstChild.nodeType === 3 && (e.textContent||"").trim()){
+              const fs = parseFloat(getComputedStyle(e).fontSize);
+              if(fs < 12) small.push(e.tagName + " " + fs);
+            }
+          });
+          Array.prototype.forEach.call(box.querySelectorAll("button, a"), function(e){
+            if(e.getBoundingClientRect().height < 39.5) low.push(e.tagName);
+          });
+        });
+      return { doc: document.documentElement.scrollWidth, win: window.innerWidth,
+               drawn: document.querySelectorAll(".cqg-b").length,
+               small: small.slice(0,4), low: low.slice(0,4) };
+    });
+    if(w === PHONES[0])
+      ok("게시판 — 폰에서 그려지기는 한다", r.drawn > 0, JSON.stringify(r));
+    ok("게시판 " + w + "px — **가로로 안 밀린다**", r.doc <= r.win + 1,
+       "문서 " + r.doc + "px · 화면 " + r.win + "px");
+    ok("게시판 " + w + "px — 12px 미만 글자가 없다", r.small.length === 0,
+       r.small.join(" · "));
+    ok("게시판 " + w + "px — 누르는 것이 40px 이상이다", r.low.length === 0,
+       r.low.join(" · "));
+    await p2.close();
+  }
+
+  /* ⑫ /my — 내 글 고치기 · 내리기 */
+  {
+    const MYQ = [{ id:"q1", cat:"cm-open", title:"내 글", body:"내용입니다",
                    state:"live", hidden_why:null, created_at:"2026-11-05T01:00:00Z" },
-                 { id:"q2", cat:"lesson", title:"가려진 질문", body:"내용",
+                 { id:"q2", cat:"cm-ask", title:"가려진 글", body:"내용",
                    state:"hidden", hidden_why:"광고 글입니다",
                    created_at:"2026-11-04T01:00:00Z" }];
-    const MYA = [{ id:"a1", q_id:"q9", body:"내 답변입니다", state:"live",
+    const MYA = [{ id:"a1", q_id:"q9", body:"내 댓글입니다", state:"live",
                    hidden_why:null, created_at:"2026-11-05T02:00:00Z" }];
     const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
       { cq: MYQ, ca: MYA, joinroom: [], joinapply: [], v_join_contact: [],
@@ -3703,11 +3966,16 @@ function keepOf(name){
                drops: box ? box.querySelectorAll(".mq-drop").length : 0 };
     });
     ok("/my 에 내가 쓴 글이 그려진다", r.drawn, JSON.stringify(r).slice(0,140));
-    ok("  내 질문과 내 답변을 **갈라서** 보여 준다",
-       r.body.indexOf("내 질문") >= 0 && r.body.indexOf("내 답변") >= 0, "");
+    ok("  내 글과 내 댓글을 **갈라서** 보여 준다",
+       r.body.indexOf("내 글") >= 0 && r.body.indexOf("내 댓글") >= 0, "");
+    /* ⚠️⚠️⚠️ **`cq.cat` 은 게시판 키입니다** — 2026-11-06 까지 이 화면이
+       `AM_CATS`(분류 열)에서 이름을 찾아 `cm-open` 을 못 찾고 **키 그대로**
+       찍고 있었습니다 (글쓰기 양식의 거울상 고장). */
+    ok("⚠️⚠️ 게시판 이름을 **사람 말로** 적는다 (영문 키가 아닙니다)",
+       r.body.indexOf("자유게시판") >= 0 && r.body.indexOf("cm-open") < 0,
+       r.body.replace(/\n/g, " ").slice(0, 160));
     ok("  ⚠️ 가린 **까닭을 보여 준다** (무엇이 문제였는지 알아야 합니다)",
        r.body.indexOf("광고 글입니다") >= 0, "");
-    /* ⚠️⚠️ 가려진 글에는 고치기 · 내리기가 **없어야** 합니다 */
     ok("⚠️⚠️ 가려진 글에는 고치기 · 내리기가 **안 나온다** (살아 있는 둘만)",
        r.edits === 2 && r.drops === 2,
        "고치기 " + r.edits + " · 내리기 " + r.drops);
@@ -3723,43 +3991,48 @@ function keepOf(name){
     await g.p.close();
   }
 
-  /* ⑥ 폰 폭 셋 */
-  for(const w of PHONES){
-    const p2 = await b.newPage({ viewport: { width: w, height: 900 } });
-    await stub(p2, { role:"customer", name:"손님", signedIn:true },
-               { v_cq_public: CQ, v_ca_public: CA }, {}, true);
-    await p2.goto(base + "/cat/community", { waitUntil:"networkidle" });
-    await p2.waitForTimeout(500);
-    await p2.click(".cqc-open").catch(function(){});
-    await p2.waitForTimeout(350);
-    const r = await p2.evaluate(function(){
-      const small = [], low = [];
-      Array.prototype.forEach.call(
-        document.querySelectorAll(".cqc, .jbox, .none"),
-        function(box){
-          Array.prototype.forEach.call(box.querySelectorAll("*"), function(e){
-            if(e.firstChild && e.firstChild.nodeType === 3 && (e.textContent||"").trim()){
-              const fs = parseFloat(getComputedStyle(e).fontSize);
-              if(fs < 12) small.push(e.tagName + " " + fs);
-            }
-          });
-          Array.prototype.forEach.call(box.querySelectorAll("button, a"), function(e){
-            if(e.getBoundingClientRect().height < 39.5) low.push(e.tagName);
-          });
-        });
-      return { doc: document.documentElement.scrollWidth, win: window.innerWidth,
-               drawn: !!document.querySelector(".cqc"),
-               small: small.slice(0,4), low: low.slice(0,4) };
+  /* ⑬ 공개 닉네임 (/my · 0059) */
+  {
+    const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+      { account: [{ nick:"버디사냥꾼" }], cq: [], ca: [], joinroom: [],
+        request: [], quote: [], review: [] }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const box = document.getElementById("nickbox");
+      return { drawn: !!box && !box.hidden, body: box ? box.innerText : "",
+               val: (document.getElementById("nk") || {}).value,
+               clear: box ? box.querySelectorAll("[data-nkclear]").length : 0 };
     });
-    if(w === PHONES[0])
-      ok("커뮤니티 — 폰에서 그려지기는 한다", r.drawn, JSON.stringify(r));
-    ok("커뮤니티 " + w + "px — **가로로 안 밀린다**", r.doc <= r.win + 1,
-       "문서 " + r.doc + "px · 화면 " + r.win + "px");
-    ok("커뮤니티 " + w + "px — 12px 미만 글자가 없다", r.small.length === 0,
-       r.small.join(" · "));
-    ok("커뮤니티 " + w + "px — 누르는 것이 40px 이상이다", r.low.length === 0,
-       r.low.join(" · "));
-    await p2.close();
+    ok("/my 에 공개 닉네임 상자가 그려진다", r.drawn, JSON.stringify(r).slice(0,140));
+    ok("  지금 닉네임을 칸에 채워 둔다", r.val === "버디사냥꾼", String(r.val));
+    ok("  ⚠️ 정하셨으면 **지우는 단추**를 낸다 (비우면 가린 성함으로 돌아갑니다)",
+       r.clear === 1, "단추 " + r.clear);
+    /* ⚠️⚠️ **공개된다는 사실을 적는 그 자리에서** 말합니다 (제15조 제2항) */
+    ok("⚠️⚠️ 누구나 본다고 **그 자리에서** 말한다",
+       r.body.indexOf("누구나 봅니다") >= 0, r.body.slice(0, 140));
+    await g.p.fill("#nk", "그린필드");
+    await g.p.click("#nkf button[type=submit]");
+    await g.p.waitForTimeout(400);
+    const sn = g.sent.filter(function(x){ return x.name === "set_my_nick"; })[0];
+    ok("⚠️ 저장이 **set_my_nick 을 실제로 부른다**", !!sn,
+       g.sent.map(function(x){ return x.name; }).join(","));
+    if(sn) ok("  적으신 글자를 그대로 보낸다",
+       JSON.parse(sn.body).p.nick === "그린필드", sn.body);
+    await g.p.close();
+  }
+  {
+    /* ⚠️ 정한 적이 없으면 지우는 단추를 **안 냅니다** (0줄이면 문이 거절) */
+    const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+      { account: [{ nick:null }], cq: [], ca: [], joinroom: [],
+        request: [], quote: [], review: [] }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const box = document.getElementById("nickbox");
+      return { clear: box ? box.querySelectorAll("[data-nkclear]").length : 0,
+               body: box ? box.innerText : "" };
+    });
+    ok("⚠️ 안 정하셨으면 지우는 단추를 **안 낸다**", r.clear === 0, "단추 " + r.clear);
+    ok("  대신 성함을 가려서 낸다고 말한다",
+       r.body.indexOf("성함을 가려서") >= 0, r.body.slice(0, 140));
+    await g.p.close();
   }
 
   /* ══════════════════════════════════════════════════════════════

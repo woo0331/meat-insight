@@ -33,7 +33,8 @@
    ════════════════════════════════════════════════════════════════════ */
 
 const { authReady, bearer, session } = require("./_auth.js");
-const { dbReady, dbCallService, dbSelectAs, dbRpc, dbWhy, DB_TIMEOUT } = require("./_db.js");
+const { dbReady, dbCallService, dbSelect, dbSelectAs, dbRpc, dbWhy,
+        DB_TIMEOUT } = require("./_db.js");
 
 /* ⚠️ DB 의 `photo_mime_ok` 와 **같은 목록**이어야 합니다. 한쪽만
    고치면 화면이 받아 놓고 DB 가 거절합니다 (빌드가 맞춰 봅니다). */
@@ -115,14 +116,52 @@ module.exports = async function handler(req, res){
   if(req.method === "GET"){
     const pid = String((req.query && req.query.p) || "").trim();
     const ppid = String((req.query && req.query.pp) || "").trim();
-    if(!pid && !ppid)
+    /* 0059 — 게시판 글 하나의 사진 전부 (한 번에 묻습니다) */
+    const cqq = String((req.query && req.query.cqq) || "").trim();
+    if(!pid && !ppid && !cqq)
       /* ⚠️ 설정 여부만입니다 — 버킷 이름도 · 주소도 안 돌려줍니다
          (`api/admin-health.js` 가 "있는지" 만 알려 주는 방식).
          ⚠️⚠️ 업체 쪽은 **따로** 말합니다 — 공개 버킷이 없으면 시설
          사진만 안 되고 서류는 됩니다 (둘을 한 칸으로 묶으면 화면이
          둘 다 안 그리거나 둘 다 그립니다). */
       return res.status(200).json({ up: upReady(),
-        pvPhoto: !!(dbReady() && pvBucket()), pvDoc: upReady() });
+        pvPhoto: !!(dbReady() && pvBucket()), pvDoc: upReady(),
+        /* ⚠️ 0059 — 게시판 글 사진. 값은 `pvPhoto` 와 같지만 **이름을
+           따로** 둡니다 — 화면이 남의 기능 이름으로 제 칸을 가리면,
+           버킷을 갈라 쓰는 날 엉뚱한 자리가 같이 꺼집니다. */
+        cqPhoto: !!(dbReady() && pvBucket()) });
+
+    /* ── 게시판 글의 사진 주소 (0059) ────────────────────────────────
+       ⚠️⚠️ **공개 보기로 읽습니다**(`v_cq_photo_public`) — 그 보기가
+       `anon` 에게도 열려 있어 가입 안 하신 분도 글의 사진을 봅니다.
+       `cqphoto` 표를 그 사람 토큰으로 읽으면 **제 글 사진만** 보입니다
+       (0059 의 정책이 그렇습니다) — 남의 글을 열면 사진이 사라집니다.
+       ⚠️⚠️ **공개 버킷이라 서명이 필요 없습니다** — 주소를 그대로 짓습니다
+       (서명을 걸면 사진 다섯 장에 호출 다섯 번이 늘고, 10분 뒤에 깨집니다).
+       ⚠️ 내려간 글의 사진은 보기가 걸러 냅니다. */
+    if(cqq){
+      if(!dbReady()) return res.status(200).json({ up:false });
+      if(!/^[0-9a-fA-F-]{36}$/.test(cqq))
+        return res.status(400).json({ error:"글을 찾을 수 없습니다" });
+      const bkt = pvBucket();
+      if(!bkt){
+        console.warn("[upload] PROVIDER_BUCKET 이 없어 글 사진을 못 냅니다");
+        return res.status(200).json({ ok:true, photos:[] });
+      }
+      const qp = await dbSelect("v_cq_photo_public",
+        "?select=" + encodeURIComponent("id,path,caption") +
+        "&q_id=eq." + encodeURIComponent(cqq) +
+        "&order=created_at.asc&limit=5");
+      if(!qp.ok){
+        if(qp.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+        console.warn("[upload] cq photos — " + dbWhy(qp.why));
+        return res.status(502).json({ error:"지금 불러오지 못했습니다" });
+      }
+      return res.status(200).json({ ok:true, photos: qp.rows.map(function(f){
+        return { id:f.id, caption:f.caption || "",
+                 url: origin() + "/storage/v1/object/public/" + bkt + "/" + f.path };
+      }) });
+    }
 
     /* ── 업체가 올린 파일 하나 보기 ───────────────────────────────
        ⚠️⚠️ **볼 수 있는지는 RLS 가 정합니다** — 그 사람의 토큰으로
@@ -203,6 +242,60 @@ module.exports = async function handler(req, res){
 
   let b0 = req.body;
   if(typeof b0 === "string"){ try{ b0 = JSON.parse(b0); }catch(e){ b0 = null; } }
+
+  /* ══════════════════════════════════════════════════════════════
+     게시판 글에 붙이는 사진 (0059)
+
+     ⚠️⚠️ **글쓴이가 직접 부릅니다** — 토큰으로 누구인지 알고, 제 글이
+     아니면 DB 가 거절합니다(역할을 여기서 또 판단하면 두 곳이 어긋납니다).
+     ⚠️⚠️ **버킷은 DB 가 돌려준 경로로 고릅니다** — 문이 경로를
+     `cq/<글>/photo/…` 로 짓고, `bucketForPath()` 가 `/photo/` 를 보고
+     공개 버킷을 고릅니다. 화면이 보낸 값으로 고르면 "글 사진인데 서류
+     버킷" 같은 자리가 생깁니다.
+     ⚠️ 게시판 사진은 **공개 글에 그려지므로 공개가 맞습니다** — 업체
+     시설 사진과 같은 버킷을 씁니다(환경변수를 늘리지 않습니다).
+     ══════════════════════════════════════════════════════════════ */
+  if(b0 && b0.cq === true){
+    if(!dbReady() || !authReady()){
+      console.warn("[upload] SUPABASE_* 가 없습니다");
+      return res.status(503).json({ error:"지금은 올릴 수 없습니다" });
+    }
+    if(!pvBucket()){
+      console.warn("[upload] PROVIDER_BUCKET 이 없습니다 (글 사진)");
+      return res.status(503).json({ error:"지금은 사진을 올릴 수 없습니다" });
+    }
+    if(!bearer(req)) return res.status(401).json({ error:"로그인이 필요합니다" });
+    const sq = await session(req);
+    if(!sq.ok){
+      if(sq.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      return res.status(401).json({ error:"로그인이 필요합니다" });
+    }
+    const rq = await dbRpc(sq.token, "claim_cq_photo", { p: {
+      question: String(b0.question || "").trim(),
+      mime: String(b0.mime || "").trim().toLowerCase(),
+      bytes: String(Number(b0.bytes) || 0), caption: String(b0.caption || "") } });
+    if(!rq.ok){
+      if(rq.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      console.warn("[upload] cq claim — " + dbWhy(rq.why));
+      /* ⚠️ DB 가 거절한 **그 말**을 그대로 보여 줍니다 */
+      const mq = String(rq.why || "").match(/"message"\s*:\s*"([^"]{1,200})"/);
+      return res.status(400).json({ error: mq ? mq[1] : "지금 올리지 못했습니다" });
+    }
+    const gq = rq.data && (Array.isArray(rq.data) ? rq.data[0] : rq.data);
+    const pq = gq && gq.path;
+    if(!pq){
+      console.warn("[upload] cq claim 이 경로를 안 돌려줬습니다");
+      return res.status(502).json({ error:"지금 올리지 못했습니다" });
+    }
+    const sgq = await signed("upload", pq, bucketForPath(pq));
+    if(!sgq.ok){
+      if(sgq.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      console.warn("[upload] " + sgq.why);
+      /* ⚠️ 자리는 이미 적혔습니다 — 글쓴이가 제 화면에서 뺄 수 있습니다 */
+      return res.status(502).json({ error:"지금 올리지 못했습니다. 잠시 뒤 다시 눌러 주세요" });
+    }
+    return res.status(200).json({ ok:true, url:sgq.url, id:gq.id });
+  }
 
   /* ══════════════════════════════════════════════════════════════
      업체가 올리는 시설 사진 · 증빙서류 (0051)

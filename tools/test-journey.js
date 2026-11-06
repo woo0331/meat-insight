@@ -85,7 +85,10 @@ const EMPTY = Object.keys(FULL).reduce(function(o, k){ o[k] = []; return o; }, {
    화면도 없습니다). 열 장이라 느려지는 것보다 그 쪽이 큽니다. */
 const PAGES = ["/", "/categories", "/cat/lesson", "/cat/used", "/cat/booking",
   "/cat/matchup", "/cat/range", "/cat/market", "/cat/fitting", "/cat/travel",
-  "/cat/career", "/cat/community", "/categories", "/search", "/match",
+  "/cat/career", "/cat/community",
+  /* ⚠️ 0059 — 게시판 하나로 좁힌 주소도 돕니다 (거르개가 주소를 바꾸므로
+     그 주소로 바로 들어와도 열려야 합니다). */
+  "/cat/community?s=cm-open", "/categories", "/search", "/match",
   "/match?cat=lesson", "/my", "/help", "/guide", "/terms", "/privacy",
   "/login", "/404"].filter(function(x, i, L){ return L.indexOf(x) === i; });
 
@@ -111,7 +114,8 @@ function resolves(href){
    더하면 그 상자만 조용히 아무도 안 재는 자리가 됩니다 (0051 의 사진
    상자가 흉내 자료가 없어 한 번도 안 그려진 그 자리). */
 const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
-                  "wchbox"];
+                  /* ⚠️ 0059 — 공개 닉네임 상자 (js/mynick.js) */
+                  "wchbox", "nickbox"];
 
 (async function(){
   const prove = process.argv.indexOf("--prove") >= 0;

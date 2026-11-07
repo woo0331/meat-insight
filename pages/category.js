@@ -421,7 +421,20 @@ exports.build = function(c){
       '</div></section>'
     : '';
 
-  var memberSec = teeSec + wtSec + (lsSec || joinSec || cqSec || jobSec);
+  /* ⚠️⚠️⚠️ **"0곳 안내를 대신하는 구간" 과 "곁들이는 구간" 은 다릅니다.**
+     조인 · 중고 · 게시판 · 인력은 그 분류 **자체가** 회원끼리 쓰는
+     자리라, 업체가 0곳이어도 "아직 등록된 업체가 없습니다" 를 낼 까닭이
+     없습니다 — 그 구간이 0건을 스스로 말합니다. 그런데 **구합니다(0061)
+     와 티타임(0060)은 다릅니다** — 그 분류에는 업체 쪽이 따로 있고,
+     이 둘은 거기에 **곁들이는** 자리입니다.
+     ⚠️ 처음에 셋을 한 덩이로 묶었더니, 구합니다를 더한 순간 레슨 ·
+     연습장 · 마켓 · 피팅 · 여행에서 **"아직 등록된 업체가 없습니다" 가
+     통째로 사라졌습니다**(그리고 거기 붙어 있던 매칭 요청 단추까지).
+     `test-providers` 가 여행 분류에서 잡았습니다 — 가로로 밀리지도 ·
+     글자가 작지도 않아 다른 검사는 전부 초록이었습니다. */
+  var ownSec   = (lsSec || joinSec || cqSec || jobSec);   /* 0곳 안내를 **대신**합니다 */
+  var sideSec  = teeSec + wtSec;                          /* 0곳 안내에 **곁들입니다** */
+  var memberSec = sideSec + ownSec;
 
   var list = W.amProvidersOf(c.key);
   if(list.length){
@@ -519,7 +532,7 @@ exports.build = function(c){
        (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다). */
     /* ⚠️ 중고는 제 구간이 "0건" 을 스스로 말하므로 zero 를 **안 겹칩니다**
        (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다) */
-    body: head + adTop + subs + (memberSec || zero) +
+    body: head + adTop + subs + (ownSec || (sideSec + zero)) +
           asks(c) + related(c)
   };
 };

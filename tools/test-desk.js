@@ -4869,7 +4869,10 @@ function boardsOf(){
       const sent = g.sent.filter(function(x){ return x.name === "open_wanted"; });
       ok("⚠️ 올리기 단추가 **open_wanted 를 실제로 부른다**", sent.length === 1,
          "부른 횟수 " + sent.length);
-      const a = (sent[0] && sent[0].body && sent[0].body.p) || {};
+      /* ⚠️ `sent[*].body` 는 **글자**입니다 — 풀어서 봐야 합니다
+         (`JSON.parse`). 그냥 `.p` 를 읽으면 늘 `{}` 가 나와서
+         "안 보낸다" 로 읽힙니다. */
+      const a = sent.length ? (JSON.parse(sent[0].body).p || {}) : {};
       ok("  ⚠️⚠️ **동의 시각을 같이 보낸다** (제15조 제2항 — 없으면 문이 거절합니다)",
          !!a.agree_at, JSON.stringify(a).slice(0, 200));
       ok("  ⚠️⚠️ 예산 **0 을 0 으로** 보낸다 (`||` 면 안 적음과 섞입니다)",
@@ -4956,7 +4959,7 @@ function boardsOf(){
       const eds = g.sent.filter(function(x){ return x.name === "edit_wanted"; });
       ok("  ⚠️ 저장 단추가 **edit_wanted 를 실제로 부른다**", eds.length === 1,
          "부른 횟수 " + eds.length);
-      const ea = (eds[0] && eds[0].body && eds[0].body.p) || {};
+      const ea = eds.length ? (JSON.parse(eds[0].body).p || {}) : {};
       ok("  ⚠️⚠️ 네 칸을 **다 같이** 보낸다 (보낸 칸만 고치는 문입니다)",
          ea.title !== undefined && ea.body !== undefined &&
          ea.when_txt !== undefined && ea.budget !== undefined,

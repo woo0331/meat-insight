@@ -376,6 +376,9 @@
     if(!a || !a.on){
       try{ console.warn("[listing] 로그인 · 접수가 설정되지 않아 중고 직거래를 " +
         "열지 않았습니다 (Vercel 의 SUPABASE_URL · SUPABASE_ANON_KEY)."); }catch(e){}
+      /* ⚠️ 빌드가 찍어 둔 "아직 없는 것입니다" 를 그대로 두면
+         0건이라고 말하는 것입니다 — 열지 않았다고 적습니다. */
+      window.amShut("lslist");
       return;                       /* 빌드가 찍어 둔 글 그대로 */
     }
     if(!KEEP){

@@ -181,6 +181,70 @@ const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
     ok("  href 없는 a 태그가 없다", r.noHref === 0, "a " + r.noHref + "개");
   }
 
+  /* ══════════════════════════════════════════════════════════════
+     ⚠️⚠️⚠️ **설정이 꺼져 있을 때 "0건" 이라고 말하던 자리** (2026-11-07)
+
+     빌드가 찍어 둔 글이 "보이지 않으면 아직 올라온 글이 없는 것입니다"
+     였습니다. 그런데 로그인 · 접수가 설정되기 전에는 목록을 **불러오지도
+     못하므로**, 그 글이 손님 화면에 그대로 남아 **0건이라고 말하고**
+     있었습니다 — 실제로는 열지 않은 것입니다 (절대 규칙 5 · 작업 기억의
+     "못 읽었으면 0건이라고 말하지 않습니다"). 다섯 화면이 그랬고, 사장님이
+     "커뮤니티에 글쓰기 기능이 없다" 고 하신 것이 바로 이 꼴입니다 —
+     글쓰기 단추도 목록도 **로그인 뒤에** 그려지므로 설정 전에는 한 줄도
+     안 나오는데, 화면은 "글이 없다" 고만 적고 있었습니다.
+
+     ⚠️⚠️ **흉내 장치를 안 씌우고** 엽니다 — 그것이 지금 운영의 상태와
+     같습니다 (`_serve.js` 는 서버리스 함수를 안 돌리므로 `/api/session`
+     이 404 이고, 화면은 "설정 안 됨" 으로 읽습니다). 흉내를 씌우면
+     Supabase 가 켜진 길만 재게 되어 **이 자리는 영원히 안 보입니다.**
+     ⚠️ 갯수를 박지 않습니다 — 새 목록 화면을 만드는 날 `SHUT` 에 한 줄만
+     더하세요 (상자 id 와 함께). 안 더하면 그 화면만 조용히 같은 꼴이
+     됩니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️⚠️ 설정이 꺼져 있을 때 — **0건이라고 말하지 않는가**");
+  {
+    const SHUT = [["/cat/community","cqlist"], ["/cat/booking","ttlist"],
+                  ["/cat/matchup","joinlist"], ["/cat/used","lslist"],
+                  ["/cat/career","joblist"]];
+    let seen = 0;
+    for(const pair of SHUT){
+      const route = pair[0], id = pair[1];
+      const p0 = await b.newPage({ viewport:{ width:1280, height:900 } });
+      const errs = watch(p0);
+      /* ⚠️ 흉내를 **안** 씌웁니다 */
+      await p0.goto(base + route, { waitUntil:"networkidle" });
+      await p0.waitForTimeout(600);
+      const r0 = await p0.evaluate(function(i){
+        const e = document.getElementById(i);
+        if(!e) return null;
+        const a = e.querySelector('a[href="/help"]');
+        return { txt:(e.innerText || "").replace(/\s+/g, " ").trim(),
+                 /* ⚠️ `hidden` 을 걸어도 안 가려지는 자리가 있어
+                    `offsetParent` 로 **실제로 보이는지** 봅니다 */
+                 help: !!(a && a.offsetParent) };
+      }, id);
+      await p0.close();
+      ok(route + " — #" + id + " 상자가 있다 (잴 자리를 찾았다)", !!r0, "없습니다");
+      if(!r0) continue;
+      seen++;
+      ok("  설정이 꺼졌을 때 **0건이라고 말하지 않는다**",
+         r0.txt.indexOf("없는 것입니다") < 0, r0.txt.slice(0, 140));
+      ok("  그 대신 **준비가 끝나지 않았다**고 적는다",
+         r0.txt.indexOf("아직 준비가 끝나지 않았습니다") >= 0, r0.txt.slice(0, 140));
+      /* ⚠️ 막다른 길로 두지 않습니다 (절대 규칙 2) */
+      ok("  막다른 길이 아니다 — 고객센터로 가는 길이 **보인다**", r0.help,
+         "단추가 없거나 가려져 있습니다");
+      /* ⚠️ 운영자에게 할 말은 console 로만 (절대 규칙 3) */
+      ok("  무엇을 설정해야 하는지는 화면에 적지 않는다",
+         r0.txt.indexOf("SUPABASE") < 0 && r0.txt.indexOf("Vercel") < 0,
+         r0.txt.slice(0, 140));
+      ok("  그 자리에서 화면 에러가 나지 않는다", errs.length === 0, errs.join(" | "));
+    }
+    /* ⚠️ 잰 것이 0개면 실패입니다 */
+    ok("⚠️ 잰 화면이 0개가 아니다 (" + seen + "장)", seen === SHUT.length,
+       seen + "/" + SHUT.length);
+  }
+
   console.log("\n── ⚠️⚠️ 오늘 막 가입하신 분의 /my — **막다른 길이 아닌가**");
   {
     const { errs, r } = await look("/my", EMPTY);

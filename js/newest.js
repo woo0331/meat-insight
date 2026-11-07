@@ -24,8 +24,17 @@
   var esc = window.esc;
   var N = 6;                      /* 메인에 내는 줄 수 */
 
+  /* ⚠️⚠️⚠️ **감싼 `.sec` 을 통째로 가리면 안 됩니다** (2026-11-07) —
+     시안대로 **신규 입점업체와 가로 2단**으로 묶으면서 그 둘이 **같은
+     `.sec`** 안에 들어갔습니다. 전처럼 `.sec` 을 가리면 매물이 0건인 날
+     **입점업체 구간까지 같이 사라집니다.**
+     ⚠️ 그래서 **제 칸(`.pair-c`)만** 가립니다 — 그런 칸이 없으면(혼자
+     쓰는 화면) 전처럼 `.sec` 을 가립니다.
+     ⚠️ `:has()` 가 한쪽만 남은 줄을 **한 단**으로 돌려놓습니다. */
   function shut(){
     try{
+      var cell = box.closest ? box.closest(".pair-c") : null;
+      if(cell){ cell.hidden = true; return; }
       var sec = box.closest ? box.closest(".sec") : null;
       if(sec) sec.hidden = true;
     }catch(e){}

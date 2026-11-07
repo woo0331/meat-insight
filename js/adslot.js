@@ -16,7 +16,8 @@
    (`current_date between starts_on and ends_on`), 빌드가 찍으면 배포할
    때마다만 바뀌고 `vercel.json` 이 HTML 에 캐시를 걸어 더 늦습니다.
    그래서 **자리는 빌드가 · 알맹이는 브라우저가** 그립니다. 자리는 0건이면
-   `hidden` 으로 남고, 감싼 구간은 CSS 의 `:has()` 가 줄째 �/* ⚠️⚠️⚠️ **2026-11-07 (0064) — 소재 그림이 들어왔습니다.** 그 전까지
+   `hidden` 으로 남고, 감싼 구간은 CSS 의 `:has()` 가 줄째 가립니다. */
+/* ⚠️⚠️⚠️ **2026-11-07 (0064) — 소재 그림이 들어왔습니다.** 그 전까지
    이 파일은 **상호 글자만** 띄웠습니다. 담는 칸이 `ad_run` 에 없었기
    때문입니다 (0064 머리말). 지금 그리는 차례는 —
      ① PC · 모바일 소재가 있으면 `<picture>` 로 그립니다 (원본 비율 보존)
@@ -181,13 +182,67 @@
     }catch(e){}
   }
 
+  /* ════════════════════════════════════════════════════════════════
+     점선 안내 액자 (사장님 시안 · 2026-11-07)
+
+     ⚠️⚠️ 광고가 0건인 자리에 **점선 액자**를 냅니다 — 자리 이름 ·
+     무엇을 받는 자리인지 · 권장 사이즈. 시안이 그렇게 그려져 있고
+     사장님이 그대로 만들라고 하셨습니다.
+     ⚠️ 지시서 B 는 "공개 화면에서는 숨김" 이라고 적었습니다 — 다른
+     말이라 **끄는 길을 한 줄**로 두었습니다 (`site.js` 의
+     `adPlaceholder`). `false` 면 전처럼 줄째 사라집니다.
+     ⚠️⚠️ **적는 말은 `AM_AD_PH` 한 곳**입니다 — 여기 글자로 박으면
+     /admin 의 안내와 조용히 어긋납니다. 모르는 자리는 `amAdPh()` 가
+     **null** 을 돌려주고, 그러면 액자를 **안 냅니다** (분류 · 지역
+     광고는 시안에 액자가 없습니다).
+     ⚠️ 권장 사이즈도 `AM_AD_SIZE` 에서 옵니다 — 시안은 프리미엄 ·
+     하단에만 적어 두었으므로 `size` 가 참인 자리만 적습니다.
+     ⚠️⚠️ 이 액자는 **설정(Supabase)과 무관하게** 섭니다 — 로그인이
+     열리기 전에도 사장님이 자리를 보셔야 합니다. 그래서 자리를 켜는
+     일은 아래에서 **가장 먼저** 합니다.
+     ════════════════════════════════════════════════════════════════ */
+  function phOn(){
+    var B = window.WOW_BIZ || {};
+    return B.adPlaceholder === true;
+  }
+  function ph(el){
+    if(!phOn()) return 0;
+    var place = el.getAttribute("data-adslot") || "";
+    var f = window.amAdPh ? window.amAdPh(place) : null;
+    if(!f) return 0;
+    var sz = (f.size && window.amAdSize) ? window.amAdSize(place) : null;
+    el.innerHTML = '<div class="adph">' +
+      '<span class="adph-l">광고</span>' +
+      '<b class="adph-n">' + esc(f.name) + '</b>' +
+      '<span class="adph-d">' + esc(f.lead) + '</span>' +
+      (sz ? '<span class="adph-s">권장 크기 — PC ' + esc(sz.pc) +
+            ' · 모바일 ' + esc(sz.mo) + '</span>' : '') +
+    '</div>';
+    el.hidden = false;
+    return 1;
+  }
+  /* 설정이 없어도 · 광고가 0건이어도 자리를 세웁니다
+     ⚠️⚠️⚠️ **이름을 `window.` 에 걸지 않습니다** — 처음에
+     `window.amAdPlace` 로 지었다가 `js/data/deal.js` 의 **같은 이름**
+     (광고 자리 이름을 찾는 함수)에 덮여서 액자가 조용히 안 그려졌습니다.
+     에러도 없고 `typeof` 는 function 이라 멀쩡해 보였습니다 (작업 기억의
+     "같은 이름을 두 번 선언하면 나중 것이 이깁니다" 그 자리). */
+  function placeAll(){
+    var L = document.querySelectorAll("[data-adslot]");
+    Array.prototype.forEach.call(L, function(el){
+      if(!el.innerHTML) ph(el);
+    });
+  }
+
   /* 자리 하나를 채웁니다 — ⚠️ 0건이면 **그대로 감춰 둡니다**
      (빈 광고 액자를 두면 미완성 사이트로 읽힙니다 · 절대 규칙 2). */
   function fill(el, all){
     var place = el.getAttribute("data-adslot") || "";
     var key   = el.getAttribute("data-adslot-key") || "";
     var L     = pick(all, place, key);
-    if(!L.length){ el.hidden = true; el.innerHTML = ""; return 0; }
+    /* ⚠️⚠️ 0건이면 **점선 액자**를 냅니다 (사장님 시안) — `site.js` 의
+       `adPlaceholder` 가 `false` 면 전처럼 줄째 감춥니다 (지시서 B). */
+    if(!L.length){ el.innerHTML = ""; if(!ph(el)) el.hidden = true; return 0; }
     el.innerHTML = '<ul class="adsl">' + L.map(one).join("") + '</ul>';
     el.hidden = false;
     L.forEach(function(r){ bump(r.id, "view"); });
@@ -208,23 +263,41 @@
     }).catch(function(){ return 0; });
   };
 
-  var slots = document.querySelectorAll("[data-adslot]");
-  if(!slots.length || !window.amAuthAsk) return;
+  /* ⚠️⚠️⚠️ **스크립트 차례에 기대지 않습니다.** 이 파일은 `data/deal.js`
+     (액자에 적는 말)와 `data/site.js`(켜고 끄는 한 줄)를 읽는데, 그
+     둘이 **이 파일보다 뒤에 실리는 화면**이 있습니다. 바로 돌면 그날
+     액자가 **조용히 안 그려집니다**(에러도 없습니다 — 실제로 그랬습니다).
+     그래서 문서를 다 읽은 뒤에 돕니다. */
+  function go(){
+    var slots = document.querySelectorAll("[data-adslot]");
+    if(!slots.length) return;
 
-  /* ⚠️ 클릭은 **눌릴 때** 셉니다 — 넘겨주기를 막지 않습니다
-     (`keepalive` 로 보내므로 화면이 바뀌어도 갑니다). */
-  document.addEventListener("click", function(e){
-    var a = e.target.closest ? e.target.closest("a[data-adclick]") : null;
-    if(a) bump(a.getAttribute("data-adclick"), "click");
-  });
+    /* ⚠️⚠️ 점선 액자를 **가장 먼저** 세웁니다 — 설정(Supabase)이 없어도 ·
+       로그인이 열리기 전에도 사장님이 자리를 보셔야 합니다. 광고가
+       들어오면 `fill()` 이 그 자리를 배너로 **바꿔 끼웁니다**. */
+    placeAll();
 
-  window.amAuthAsk().then(function(a){
-    /* ⚠️ 설정이 없으면 **한 줄도 안 그립니다** (손님에게는 아무 말도
-       하지 않습니다 — 광고가 없는 것과 같아 보이는 것이 맞습니다). */
-    if(!a || !a.on || !a.conf) return;
-    CONF = a.conf;
-    return rows(a).then(function(all){
-      Array.prototype.forEach.call(slots, function(el){ fill(el, all); });
+    if(!window.amAuthAsk) return;
+
+    /* ⚠️ 클릭은 **눌릴 때** 셉니다 — 넘겨주기를 막지 않습니다
+       (`keepalive` 로 보내므로 화면이 바뀌어도 갑니다). */
+    document.addEventListener("click", function(e){
+      var a = e.target.closest ? e.target.closest("a[data-adclick]") : null;
+      if(a) bump(a.getAttribute("data-adclick"), "click");
     });
-  }).catch(function(){});
+
+    window.amAuthAsk().then(function(a){
+      /* ⚠️ 설정이 없으면 광고를 **한 줄도 안 그립니다** (손님에게는 아무
+         말도 하지 않습니다 — 광고가 없는 것과 같아 보이는 것이 맞습니다).
+         ⚠️ 점선 액자는 위에서 이미 섰습니다. */
+      if(!a || !a.on || !a.conf) return;
+      CONF = a.conf;
+      return rows(a).then(function(all){
+        Array.prototype.forEach.call(slots, function(el){ fill(el, all); });
+      });
+    }).catch(function(){});
+  }
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", go);
+  }else{ go(); }
 })();

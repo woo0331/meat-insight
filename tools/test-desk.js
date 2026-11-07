@@ -3574,16 +3574,23 @@ function boardsOf(){
            빠졌습니다 — 그러면 `querySelector` 가 **null** 이고
            `!!(band && band.hidden)` 은 **거짓**이라, 멀쩡한 화면이
            "빈 액자를 냈다" 로 떨어집니다. 재려는 뜻은 "**걸리는 광고가
-           없는 자리**는 감춰진 채 남는가" 이므로, 이 화면에 **실제로 있는**
-           자리 가운데 이 가짜 자료에 안 걸리는 것을 찾아서 잽니다. */
+           없는 자리**에 광고 소재가 안 들어가는가" 이므로, 이 화면에
+           **실제로 있는** 자리 가운데 이 가짜 자료에 안 걸리는 것을
+           찾아서 잽니다.
+           ⚠️⚠️ **2026-11-07 — 재는 뜻이 바뀌었습니다.** 사장님 시안대로
+           광고가 0건인 자리에 **점선 안내 액자**를 세웁니다 (`site.js` 의
+           `adPlaceholder`). 그러니 "감춰진 채 남는가" 가 아니라 **광고
+           소재(`.adsl-i`)가 안 들어가는가**를 셉니다 — 그 액자에 남의
+           광고가 섞이면 그게 사고입니다. */
         empty: (function(){
           var all = document.querySelectorAll("[data-adslot]");
-          var n = 0, shut = 0;
+          var n = 0, clean = 0;
           Array.prototype.forEach.call(all, function(x){
             if(x.getAttribute("data-adslot") === "main_hero") return;
-            n++; if(x.hidden && !x.querySelector(".adsl-i")) shut++;
+            n++;
+            if(!x.querySelector(".adsl-i") && x.querySelector(".adph")) clean++;
           });
-          return n + "/" + shut;
+          return n + "/" + clean;
         })() };
       });
       ok("메인 히어로 광고가 **실제로 그려진다**", r.drawn,
@@ -3599,7 +3606,7 @@ function boardsOf(){
       /* ⚠️⚠️ **다른 자리 광고가 섞이면 안 됩니다** — 자리 열쇠가 자물쇠입니다 */
       ok("  ⚠️ 그 자리 광고만 들어간다 (히어로에 분류 광고가 안 섞인다)",
          r.n === 1, String(r.n));
-      ok("  ⚠️ 걸리는 광고가 없는 자리는 **감춰진 채** 남는다 (빈 액자 금지)",
+      ok("  ⚠️ 걸리는 광고가 없는 자리에는 **남의 광고가 안 섞이고** 점선 액자만 선다",
          r.empty.split("/")[0] === r.empty.split("/")[1] &&
          Number(r.empty.split("/")[0]) > 0, r.empty);
       await g.p.close();
@@ -3645,10 +3652,56 @@ function boardsOf(){
       await p0.waitForTimeout(400);
       const r = await p0.evaluate(function(){
         const el = document.querySelector('[data-adslot="main_hero"]');
-        return { hidden: !!(el && el.hidden), html: el ? el.innerHTML.length : -1 };
+        const ph = el ? el.querySelector(".adph") : null;
+        const f  = window.amAdPh ? window.amAdPh("main_hero") : null;
+        return { ads: el ? el.querySelectorAll(".adsl-i").length : -1,
+                 links: el ? el.querySelectorAll("a").length : -1,
+                 ph: !!ph, shown: !!(el && !el.hidden),
+                 /* ⚠️ 액자에 적는 말은 `AM_AD_PH` 한 곳입니다 — 글자를
+                    여기 박으면 그 말을 고치는 날 멀쩡한 화면이 떨어집니다 */
+                 named: !!(ph && f && ph.textContent.indexOf(f.name) >= 0) };
       });
-      ok("⚠️ 설정 전에는 광고 자리가 **감춰진 채** 남는다", r.hidden && r.html === 0,
-         JSON.stringify(r));
+      /* ⚠️⚠️ 설정(Supabase)이 없으면 **광고는 한 줄도 안 그립니다** —
+         손님에게 아무 말도 하지 않습니다 (절대 규칙 3). */
+      ok("⚠️ 설정 전에는 광고를 **한 줄도 안 그린다**",
+         r.ads === 0 && r.links === 0, JSON.stringify(r));
+      /* ⚠️⚠️ 그래도 **점선 안내 액자**는 섭니다 (사장님 시안) — 설정과
+         무관하게 서야 사장님이 자리를 보십니다. 끄는 길은 `site.js` 의
+         `adPlaceholder` 한 줄입니다. */
+      ok("  ⚠️ 설정이 없어도 **점선 안내 액자**는 선다 (시안)",
+         r.ph && r.shown, JSON.stringify(r));
+      ok("  ⚠️ 액자에 적는 말은 `AM_AD_PH` 에서 온다 (글자를 안 박습니다)",
+         r.named, JSON.stringify(r));
+      await p0.close();
+    }
+
+    /* ③-2 ⚠️⚠️ **끄는 길이 실제로 끄는가** — `site.js` 의 `adPlaceholder`
+       를 `false` 로 바꾼 파일을 내려보내고, 그때는 전처럼 **줄째 감춰지는지**
+       봅니다 (지시서 B 의 "광고가 없으면 공개 화면에서 슬롯 숨김").
+       ⚠️ 스위치를 만들어 놓고 눌러 보지 않으면 그건 눌러도 아무 일이
+       안 나는 칸입니다 (절대 규칙 5). */
+    {
+      const p0 = await b.newPage({ viewport: view });
+      await p0.route("**/js/data/site.js*", async function(route){
+        const res  = await route.fetch();
+        const body = await res.text();
+        return route.fulfill({ status:200, contentType:"application/javascript",
+          body: body.replace("adPlaceholder: true", "adPlaceholder: false") });
+      });
+      await p0.route("**/api/session", function(r){
+        return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ auth:false, signedIn:false, conf:null }) });
+      });
+      await p0.goto(base + "/", { waitUntil:"networkidle" });
+      await p0.waitForTimeout(400);
+      const r2 = await p0.evaluate(function(){
+        const el = document.querySelector('[data-adslot="main_hero"]');
+        return { off: window.WOW_BIZ ? window.WOW_BIZ.adPlaceholder : "?",
+                 hidden: !!(el && el.hidden),
+                 html: el ? el.innerHTML.length : -1 };
+      });
+      ok("  ⚠️⚠️ `adPlaceholder` 를 끄면 전처럼 **줄째 감춰진다** (지시서 B)",
+         r2.off === false && r2.hidden && r2.html === 0, JSON.stringify(r2));
       await p0.close();
     }
 

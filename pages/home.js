@@ -181,7 +181,7 @@ function teeBoard(){
    나오는** 자리가 됩니다(`test-photos` 가 그것을 잡았습니다). */
 
 function why(){
-  return '<section class="sec sec-alt"><div class="wrap">' +
+  return '<div class="pair-c">' +
     '<div class="why">' +
       /* ⚠️ 조사를 글자로 박지 않습니다 — 이름이 바뀌면 "골프파크이" 가
          됩니다. 받침에 따라 갈리는 일은 koWith() 한 곳에서 합니다. */
@@ -191,7 +191,7 @@ function why(){
           '<div><h3>' + esc(w.t) + '</h3><p>' + esc(w.d) + '</p></div></div>';
       }).join("") +
     '</div>' +
-  '</div></section>';
+  '</div>';
 }
 
 /* ⚠️⚠️ 입점업체 0곳 — 카드를 지어내지 않습니다. 대신 지금 실제로
@@ -202,13 +202,14 @@ function providers(){
     /* ⚠️ 최근 여섯 곳만 — 메인이 목록 화면이 되면 분류 화면이 할 일이
        없어집니다. 전부 보는 길은 분류 · 업체찾기입니다.
        ⚠️ 평점 · 후기 수는 값으로 들고 있지 않습니다 (절대 규칙 1). */
-    return '<section class="sec"><div class="wrap">' +
-      '<div class="sec-hd"><h2>입점업체</h2>' +
-      '<p>지금 ' + W.won(list.length) + '곳이 등록되어 있습니다.</p></div>' +
+    /* ⚠️ 제목 줄에 "더 보기" 를 둡니다 (시안) — 아래에 같은 단추를 또
+       두지 않습니다 (같은 단추가 두 번 이어 붙어 있던 자리입니다). */
+    return '<div class="pair-c">' +
+      '<div class="sec-hd sec-hd-r"><h2>신규 입점업체</h2>' +
+      '<a class="btn btn-sm btn-line" href="/search">더 보기</a></div>' +
+      '<p class="nw-lead">지금 ' + W.won(list.length) + '곳이 등록되어 있습니다.</p>' +
       card.grid(list.slice(0, 6)) +
-      '<p style="margin-top:18px"><a class="btn btn-line" href="/categories">' +
-      icon("arrow",18) + '분류에서 더 보기</a></p>' +
-    '</div></section>';
+    '</div>';
   }
   /* ⚠️⚠️ **입점 단추를 여기 두지 않습니다** (UX 검수 §7). 바로 아래
      띠가 "골프 관련 사업자라면 지금 바로 입점하세요" 로 같은 말을
@@ -229,8 +230,11 @@ function providers(){
      ⚠️ 줄은 `amOpenNow()` 한 곳에서 옵니다 (업체찾기의 0곳 상자와
      **같은 줄**을 읽습니다 — 두 곳에 적으면 조용히 어긋납니다). */
   var now = (W.amOpenNow ? W.amOpenNow() : []);
-  return '<section class="sec"><div class="wrap">' +
-    '<div class="sec-hd"><h2>신규 입점업체</h2></div>' +
+  return '<div class="pair-c">' +
+    /* ⚠️ 0곳이어도 "더 보기" 는 **업체찾기**로 갑니다 — 거기도 0곳이라고
+       말하는 자리이고, 막다른 길이 아닙니다 (절대 규칙 2). */
+    '<div class="sec-hd sec-hd-r"><h2>신규 입점업체</h2>' +
+    '<a class="btn btn-sm btn-line" href="/search">더 보기</a></div>' +
     '<div class="none">' +
       '<h2>아직 입점한 업체가 없습니다.</h2>' +
       '<p>문을 열기 전이라 보여 드릴 업체가 없습니다. 없는 업체를 지어내 보여 드리지 않습니다. ' +
@@ -243,7 +247,7 @@ function providers(){
           }).join("") + '</div>'
         : '') +
     '</div>' +
-  '</div></section>';
+  '</div>';
 }
 
 function steps(){
@@ -296,14 +300,14 @@ function joinBand(){
   /* ⚠️ 매칭 띠와 **같은 규칙**입니다 — 사진은 뒤에, 글은 왼쪽 밝은 판
      위에. 사진이 없으면 연초록 면 그대로입니다. */
   var pp = W.amPhoto ? W.amPhoto("partner-banner") : null;
-  return '<section class="sec"><div class="wrap">' +
+  return '<div class="pair-c">' +
     '<div class="join' + (pp ? " join-ph" : "") + '">' +
     (pp ? W.amPhotoImg("partner-banner", { cls:"join-bg" }) : "") +
     '<span class="join-ic">' + icon("store", 30) + '</span>' +
     '<div class="join-t"><h3>골프 관련 사업자라면 지금 바로 입점하세요</h3>' +
     '<p>입점은 무료입니다. 사업자 정보와 하시는 일을 등록하시면 그 일을 찾는 손님에게 이어집니다.</p></div>' +
     '<a class="btn btn-pri" href="/join">업체 입점하기' + icon("arrow",18) + '</a>' +
-  '</div></div></section>';
+  '</div>';
 }
 
 /* 광고 자리 — ⚠️⚠️⚠️ **전에는 이 자리에 "집행 중인 광고가 0건이라
@@ -332,6 +336,36 @@ function joinBand(){
    번 보여 주던 자리입니다 (지시서 A: "중복 축소"). 열 분류로 가는 길은
    바로 위 아이콘 띠와 머리말 카테고리에 그대로 있습니다.
    ════════════════════════════════════════════════════════════════════ */
+/* 서비스 카드 위 분류 탭 (사장님 시안 · 2026-11-07)
+
+   ⚠️⚠️⚠️ **단추가 아니라 링크입니다.** 시안은 탭처럼 그려져 있지만,
+   누르면 걸러지는 자료가 메인에 없습니다 — 카드 넷은 **분류로 가는
+   길**이고 탭도 같은 분류로 갑니다. 단추로 만들어 아무 일도 안 나게
+   두면 그건 눌러도 아무 일이 안 나는 칸입니다 (절대 규칙 5).
+   ⚠️⚠️ **이름을 글자로 박지 않습니다** — `amCat()` 에서 끌어옵니다.
+   분류 이름을 고치는 날 두 곳이 어긋나지 않게.
+   ⚠️ 그래서 짧은 이름만 여기 둡니다 (시안이 "레슨 · 부킹 · 조인 ·
+   용품 · 여행" 으로 줄여 적었습니다) — 없는 분류는 줄째 빠집니다.
+   ⚠️ "전체" 는 `/categories` 입니다 (열 분류가 다 있는 자리) —
+   묶음을 눌렀는데 분류 하나로 보내면 나머지는 어디 갔는지 모릅니다. */
+var TABS = [
+  { key:"lesson",  short:"레슨" },
+  { key:"booking", short:"부킹" },
+  { key:"matchup", short:"조인" },
+  { key:"market",  short:"용품" },
+  { key:"travel",  short:"여행" }
+];
+function svcTabs(){
+  var out = '<a class="svc-tab svc-tab-on" href="/categories">전체</a>';
+  TABS.forEach(function(t){
+    var c = W.amCat ? W.amCat(t.key) : null;
+    if(!c) return;
+    out += '<a class="svc-tab" href="' + esc(W.amCatUrl(c)) + '">' +
+      esc(t.short) + '</a>';
+  });
+  return '<div class="svc-tabs">' + out + '</div>';
+}
+
 function svcCards(){
   var KEYS = ["lesson", "used", "booking", "travel"];
   var cards = KEYS.map(function(k){
@@ -354,6 +388,7 @@ function svcCards(){
     '<p>가장 많이 찾으시는 네 가지입니다. ' +
     /* ⚠️ 지어낸 약속을 하지 않습니다 — 고르면 그 분류로 갈 뿐입니다 */
     '누르시면 그 분류의 업체와 글을 보실 수 있습니다.</p></div>' +
+    svcTabs() +
     '<div class="svc-grid">' + cards + '</div>' +
   '</div></section>';
 }
@@ -386,8 +421,8 @@ function sponsors(){
    구간을 통째로 치웁니다 (절대 규칙 2).
    ════════════════════════════════════════════════════════════════════ */
 function newest(){
-  return '<section class="sec" aria-labelledby="nw-h"><div class="wrap">' +
-    '<div class="sec-hd nw-hd">' +
+  return '<div class="pair-c" aria-labelledby="nw-h">' +
+    '<div class="sec-hd sec-hd-r">' +
       '<h2 id="nw-h">중고 골프장터 최신 등록</h2>' +
       '<a class="btn btn-sm btn-line" href="' + esc(W.amCatUrl(W.amCat("used"))) +
         '">더 보기</a>' +
@@ -397,6 +432,25 @@ function newest(){
     '<p class="nw-lead">회원끼리 직접 사고파는 자리입니다. ' +
     '골프올인원은 거래 당사자가 아니며 <b>결제를 받지 않습니다.</b></p>' +
     '<div id="nwlist" hidden></div>' +
+  '</div>';
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   가로 2단으로 묶는 자리 (사장님 시안 · 2026-11-07)
+
+   ⚠️⚠️ 시안은 **신규 입점업체 | 중고장터 최신**, **장점 | 입점 CTA** 를
+   각각 나란히 놓습니다. 세로로 쌓으면 같은 내용이 화면 두 배를 먹고,
+   사장님이 "시안과 다르다" 고 하신 자리입니다.
+   ⚠️⚠️⚠️ **한쪽이 없어지는 날 남은 쪽이 반 폭으로 남으면 안 됩니다** —
+   중고장터는 매물이 0건이면 `js/newest.js` 가 그 구간을 통째로 치웁니다.
+   그래서 `:has()` 로 **한쪽만 남으면 한 단**으로 돌아갑니다. `:has()` 를
+   못 읽는 브라우저에서는 그냥 두 단으로 보일 뿐 깨지지 않습니다.
+   ⚠️ 폰에서는 **늘 한 단**입니다 (격자 칸이 제 내용만큼 벌어져 가로로
+   미는 그 자리라 `min-width:0` 도 같이 줍니다).
+   ════════════════════════════════════════════════════════════════════ */
+function pair(a, b){
+  return '<section class="sec pair-s"><div class="wrap">' +
+    '<div class="pair">' + a + b + '</div>' +
   '</div></section>';
 }
 
@@ -434,9 +488,12 @@ exports.build = function(){
        전체 재개발 금지"). 자리는 서비스 넷 바로 뒤입니다.
        ⚠️ "이용 방법" 도 남겼습니다 — `/guide` 로 가는 길 셋 가운데
        하나라서, 빼면 이용안내가 **아무 데서도 안 이어집니다**. */
+    /* ⚠️⚠️ 사장님 시안대로 **둘씩 가로로** 묶습니다 —
+       신규 입점업체 | 중고장터 최신 · 장점 | 입점 CTA.
+       ⚠️ 한쪽이 0건으로 사라지면 `:has()` 가 **한 단**으로 돌려놀습니다. */
     body: hero() + quickNav() + adSlot("main_hero") + svcCards() + sponsors() +
-          teeBoard() + providers() + newest() + adSlot("home_bottom") +
-          steps() + why() + joinBand(),
+          teeBoard() + pair(providers(), newest()) + adSlot("home_bottom") +
+          steps() + pair(why(), joinBand()),
     /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — adslot 이
        `/pro/<id>` 주소를 `amProviderUrl()` 로 짓고, 그 업체가 **빌드에
        있는지**를 `amProvider()` 로 봅니다 (없으면 링크를 안 걸어 404 로

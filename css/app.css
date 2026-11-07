@@ -2281,6 +2281,24 @@ picture{ display: contents; }
   border:1.5px solid var(--line); color: var(--gold-text); background:#fff; }
 
 /* 스폰서 광고 둘 — PC 2열 · 폰 1열 (지시서 A-6) */
+/* ── 가로 2단 (사장님 시안 · 2026-11-07) ──────────────────────────
+   신규 입점업체 | 중고장터 최신 · 장점 | 입점 CTA
+   ⚠️⚠️⚠️ **한쪽이 없어지는 날 남은 쪽이 반 폭으로 남으면 안 됩니다** —
+   중고장터는 매물이 0건이면 `js/newest.js` 가 제 칸만 가립니다.
+   `:has()` 로 **한쪽만 남으면 한 단**으로 돌려놓습니다.
+   ⚠️ `:has()` 를 못 읽는 브라우저에서는 두 단으로 보일 뿐 깨지지 않습니다.
+   ⚠️⚠️ **격자 칸은 제 내용만큼 벌어집니다** — `min-width:0` 을 안 주면
+   안쪽의 긴 글 · 가로 스크롤 상자가 칸을 벌려 화면이 가로로 밀립니다
+   (작업 기억의 그 자리). */
+.pair{ display:grid; gap:22px; grid-template-columns: repeat(2, minmax(0, 1fr));
+       align-items:start; }
+.pair > *{ min-width:0; }
+@media (max-width: 900px){ .pair{ grid-template-columns: 1fr; } }
+/* 한쪽만 남으면 한 단 — ⚠️ `[hidden]` 을 쓴 칸은 display 가 붙어 있어도
+   가려져야 하므로 함께 적습니다 */
+.pair:has(> .pair-c[hidden]){ grid-template-columns: 1fr; }
+.pair-c[hidden]{ display:none; }
+
 .spon-grid{ display:grid; gap:12px; grid-template-columns: repeat(2, 1fr); }
 @media (max-width: 760px){ .spon-grid{ grid-template-columns: 1fr; } }
 .spon-grid > *{ min-width:0; }
@@ -2311,10 +2329,8 @@ picture{ display: contents; }
 .cqs-r{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
 .cqs-r input{ flex:1 1 220px; min-width:0; }
 
-/* 중고장터 최신 등록 (지시서 A-7) — ⚠️ 0건이면 구간째 사라집니다 */
-.nw-hd{ display:flex; align-items:center; gap:12px; }
-.nw-hd h2{ margin:0; }
-.nw-hd .btn{ margin-left:auto; }
+/* 중고장터 최신 등록 (지시서 A-7) — ⚠️ 0건이면 구간째 사라집니다
+   ⚠️ 제목 줄의 꼴은 `.sec-hd-r` 한 곳입니다 (신규 입점업체와 같은 줄) */
 .nw-lead{ margin:0 0 14px; font-size:13.5px; color: var(--ink3); }
 .nw-grid{ display:grid; gap:10px; grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 900px){ .nw-grid{ grid-template-columns: repeat(2, 1fr); } }
@@ -2328,3 +2344,59 @@ picture{ display: contents; }
   word-break:keep-all; overflow-wrap:anywhere; }
 .nw-p{ font-size:15px; font-weight:800; color: var(--gold-text); }
 .nw-m{ display:flex; flex-wrap:wrap; gap:8px; font-size:12.5px; color: var(--ink3); }
+
+/* ════════════════════════════════════════════════════════════════════
+   시안 그대로 맞춘 것 넷 (사장님 시안 · 2026-11-07)
+     ① 광고 자리의 점선 안내 액자
+     ② 구간 제목 앞 초록 세로 막대
+     ③ 서비스 카드 위 분류 탭
+     ④ 2단 칸 안의 「일하는 방식」
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ① 점선 안내 액자 — ⚠️ 적는 말은 `AM_AD_PH` · 크기는 `AM_AD_SIZE`
+   한 곳에서 옵니다 (`js/adslot.js` 가 그립니다).
+   ⚠️⚠️ **높이를 박지 않습니다** — 소재가 들어오면 원본 비율로 그려지고,
+   액자는 그 자리만큼만 차지합니다 (지시서 B — 원본 비율 보존).
+   ⚠️ 12px 미만을 쓰지 않습니다 (손님이 40~60대입니다). */
+.adph{ display:flex; flex-direction:column; align-items:center; gap:7px;
+  padding:26px 16px; text-align:center;
+  border:2px dashed var(--line); border-radius:16px; background: var(--bg-2); }
+.adph-l{ padding:2px 9px; border-radius:999px; background: var(--surface);
+  border:1px solid var(--line); color: var(--ink3);
+  font-size:12.5px; font-weight:700; }
+.adph-n{ font-size:15.5px; font-weight:800; color: var(--ink); }
+.adph-d{ font-size:13.5px; color: var(--ink3); }
+.adph-s{ font-size:12.5px; color: var(--ink3); }
+
+/* ② 구간 제목 앞 초록 막대 — ⚠️ `--pt` 는 **면 전용**입니다. 여기는
+   글자가 아니라 막대이므로 맞는 자리입니다 (글자는 그대로 `--ink`).
+   ⚠️ `top`·`bottom` 을 em 으로 잡아 글자 크기가 바뀌어도 따라옵니다. */
+.sec-hd h2{ position:relative; padding-left:15px; }
+.sec-hd h2::before{ content:""; position:absolute; left:0; top:.18em;
+  bottom:.18em; width:5px; border-radius:3px; background: var(--pt); }
+
+/* ③ 서비스 카드 위 분류 탭 — ⚠️⚠️ **단추가 아니라 링크**입니다
+   (자바스크립트가 꺼진 분 · 봇에게도 길이 됩니다 · 절대 규칙 5).
+   ⚠️ 760px 아래에서 접습니다 — `.sf-c` 처럼 밀어서 보게 두면
+   "밀면 보이는 것은 보이는 것이 아닙니다" 가 됩니다. */
+.svc-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 18px; }
+.svc-tab{ display:inline-flex; align-items:center; min-height:40px;
+  padding:0 14px; border:1.5px solid var(--line); border-radius:999px;
+  background: var(--surface); color: var(--ink2);
+  font-size:14px; font-weight:700; text-decoration:none; }
+.svc-tab:hover{ border-color: var(--grn-line); color: var(--ink); }
+.svc-tab-on{ background: var(--grn-btn); border-color: var(--grn-btn); color:#fff; }
+.svc-tab-on:hover{ color:#fff; }
+
+/* ④ 2단 칸 안의 「일하는 방식」 — ⚠️ 바깥에서는 `180px repeat(4,1fr)`
+   이라 반 폭 칸에서는 한 낱말씩 끊겼습니다 (찍어 보고 알았습니다).
+   칸 안에서는 제목이 한 줄을 다 쓰고 아래가 2×2 입니다. */
+.pair-c .why{ grid-template-columns: repeat(2, minmax(0, 1fr)); gap:16px 14px; }
+.pair-c .why-t{ grid-column: 1 / -1; }
+@media (max-width: 1100px){ .pair-c .why{ grid-template-columns: 1fr; } }
+
+/* 구간 제목 줄에 "더 보기" 를 오른쪽으로 — ⚠️ 신규 입점업체 · 중고장터
+   최신이 **같은 줄 꼴**을 씁니다 (두 곳에 적으면 조용히 어긋납니다) */
+.sec-hd-r{ display:flex; align-items:center; gap:12px; }
+.sec-hd-r h2{ margin:0; }
+.sec-hd-r .btn{ margin-left:auto; flex:none; }

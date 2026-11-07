@@ -42,9 +42,12 @@ module.exports = function(T){
   ok("  게시판 · 닉네임 길이 · 사칭 · 제목 · 내용 · 비밀번호가 전부 막힌다",
      !!(says.nocat && says.short && says.fake && says.title && says.body && says.pw), "");
   /* ⚠️ **다른 자물쇠는 다른 말로** 거절해야 어디가 막혔는지 압니다 */
-  const uniq = new Set(Object.values(says).map(String));
+  /* ⚠️ `denied()` 는 **객체**를 돌려줍니다 — `String()` 으로 묶으면
+     전부 `[object Object]` 가 되어 **한 가지**로 세어집니다. 제 검사가
+     틀렸던 자리입니다 — 거절하는 **말(`why`)**을 봅니다. */
+  const uniq = new Set(Object.values(says).map(function(x){ return String(x && x.why); }));
   ok("  ⚠️ 자물쇠 일곱이 **일곱 가지 말**로 거절한다", uniq.size === 7,
-     uniq.size + "가지: " + [...uniq].join(" / ").slice(0, 220));
+     uniq.size + "가지: " + [...uniq].join(" / ").slice(0, 300));
 
   /* ── 올리기 ───────────────────────────────────────────────────── */
   const before = Number(psql("select count(*) from cq where by_user is null"));

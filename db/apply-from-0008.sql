@@ -14279,6 +14279,11 @@ alter type ad_place add value if not exists 'home_bottom';
 
 commit;
 
+begin;
+insert into schema_version (n, name) values (62, '0062_ad_home_slots')
+  on conflict (n) do nothing;
+commit;
+
 /* ---------------------------- 0063_guest_board.sql ---------------------------- */
 -- ════════════════════════════════════════════════════════════════════
 -- 0063 — 자유게시판: 로그인 없이 글쓰기 · 수정 · 삭제 (지시서 C)
@@ -14565,9 +14570,19 @@ grant execute on function drop_cq_guest(jsonb) to anon, authenticated;
 --   길을 열어 두었는데, 거기 새 칸이 붙었으므로 **칸 단위로** 다시
 --   좁힙니다 — RLS 는 줄은 막아도 **칸은 못 막습니다**(0053 에서
 --   운영자 메모가 손님에게 읽히던 그 자리).
-revoke select on cq from anon, authenticated;
+-- ⚠️⚠️⚠️ **`anon` 에게는 표를 열지 않습니다.** 0047 은 `cq` 표를
+--   `authenticated` 에게만 주었고, 비로그인은 **공개 보기**로만 읽습니다.
+--   처음에 여기서 `anon` 에게도 칸을 주었다가 **`sql/board.js` 의
+--   "비로그인은 표를 못 읽는다" 가 바로 떨어졌습니다** — 검사가
+--   제가 넷 선을 그 자리에서 잡았습니다.
+revoke select on cq from authenticated;
 grant select (id, by_user, cat, title, body, state, hidden_why,
               created_at, updated_at, guest_nick, guest_at)
-  on cq to anon, authenticated;
+  on cq to authenticated;
 
+commit;
+
+begin;
+insert into schema_version (n, name) values (63, '0063_guest_board')
+  on conflict (n) do nothing;
 commit;

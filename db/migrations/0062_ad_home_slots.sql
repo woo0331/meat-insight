@@ -28,3 +28,8 @@ alter type ad_place add value if not exists 'home_sponsor_b';
 alter type ad_place add value if not exists 'home_bottom';
 
 commit;
+
+begin;
+insert into schema_version (n, name) values (62, '0062_ad_home_slots')
+  on conflict (n) do nothing;
+commit;

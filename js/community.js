@@ -360,7 +360,7 @@
   function paintOne(){
     list.innerHTML = bar() + '<p class="cqz">불러오는 중입니다…</p>';
     var one = "v_cq_public?select=id,cat,title,body,who,named,created_at,updated_at," +
-              "answer_n,view_n,photo_n,mine&id=eq." + encodeURIComponent(S.q) + "&limit=1";
+              "answer_n,view_n,photo_n,mine,guest&id=eq." + encodeURIComponent(S.q) + "&limit=1";
     return Promise.all([
       get(one),
       get("v_ca_public?select=id,who,named,body,created_at,by_asker,mine" +
@@ -402,6 +402,10 @@
               ? '<button type="button" class="btn btn-bad cq-rep">이 글 신고</button>'
               : "") +
           '</div>' +
+          /* ⚠️⚠️ **비회원 글이면** 비밀번호로 고치고 내리는 자리를 냅니다
+             (0063). 회원 글에는 안 냅니다 — 그려 두면 눌러도 DB 가
+             거절하는 칸입니다 (절대 규칙 5). */
+          (q.guest ? guestBox(q) : "") +
         '</article>' +
         '<section class="cqc-a">' +
           '<h3 class="cqd-h">댓글 ' + esc(num(q.answer_n)) + '</h3>' +
@@ -411,10 +415,106 @@
             esc(loginUrl()) + '">로그인하기</a></p>') +
         '</section>';
       bind();
+      if(q.guest) bindGuest(q);
       /* ⚠️ 회원 조회를 **한 번** 셉니다 — 비로그인은 문이 조용히 0 을
          돌려줍니다(글은 보이는 것이 맞습니다). 제 글도 안 셉니다. */
       if(A && A.signedIn) call("view_cq", { question:S.q }).catch(function(){});
     });
+  }
+
+
+  /* ════════════════════════════════════════════════════════════════
+     비회원 글 — 비밀번호로 고치기 · 내리기 (0063 · 지시서 C)
+
+     ⚠️⚠️⚠️ **비밀번호는 여기서 맞춰 보지 않습니다.** 보내기만 하고,
+     맞는지는 **문 안에서만** 압니다 (지시서: "프론트에서만 비밀번호
+     확인하는 방식 금지"). 화면은 해시를 받을 길이 아예 없습니다.
+     ⚠️ 거절하는 **그 말**을 그대로 보여 줍니다 — 우리가 지어서 적으면
+     DB 가 왜 막았는지 알 수 없습니다.
+     ⚠️⚠️ **내리는 것은 되돌릴 수 없습니다** — 한 번 여쭙습니다.
+     ════════════════════════════════════════════════════════════════ */
+  function guestBox(q){
+    return '<div class="cqg" id="cqg">' +
+      '<p class="jhint">이 글은 <b>로그인 없이</b> 올라온 글입니다. ' +
+      '올리실 때 적어 두신 <b>글 비밀번호</b>로 고치거나 내리실 수 있습니다.</p>' +
+      '<div class="cqg-go">' +
+        '<button type="button" class="btn btn-line btn-sm cqg-e">고치기</button> ' +
+        '<button type="button" class="btn btn-bad btn-sm cqg-d">내리기</button>' +
+      '</div>' +
+      '<div class="cqg-bx"></div>' +
+    '</div>';
+  }
+
+  function guestForm(q, mode){
+    var isEdit = (mode === "edit");
+    return '<form class="jform cqg-f">' +
+      (isEdit
+        ? '<div class="jrow">' +
+            '<label for="g-title">제목 <b>*</b></label>' +
+            '<input id="g-title" name="title" required minlength="2" maxlength="80" ' +
+            'value="' + esc(q.title) + '">' +
+          '</div>' +
+          '<div class="jrow jrow-full">' +
+            '<label for="g-body">내용 <b>*</b></label>' +
+            '<textarea id="g-body" name="body" rows="6" required minlength="5" ' +
+            'maxlength="4000">' + esc(q.body) + '</textarea>' +
+            /* ⚠️ 게시판 · 닉네임은 **못 고칩니다** — 그 사실을 그 자리에서
+               말합니다. 칸을 내 두고 안 바뀌면 눌러도 소용없는 칸입니다. */
+            '<span class="jhint">⚠️ 게시판과 닉네임은 바꿀 수 없습니다 — ' +
+            '바꾸면 읽으시던 분이 다른 글을 보게 됩니다.</span>' +
+          '</div>'
+        : '<div class="jrow jrow-full">' +
+            '<p class="jhint">⚠️ <b>내린 글은 되돌릴 수 없습니다.</b> ' +
+            '목록과 검색에서 바로 빠집니다.</p>' +
+          '</div>') +
+      '<div class="jrow">' +
+        '<label for="g-pw">글 비밀번호 <b>*</b></label>' +
+        '<input id="g-pw" name="pw" type="password" required minlength="4" ' +
+        'maxlength="64" autocomplete="current-password">' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
+        '<button type="submit" class="btn ' + (isEdit ? "btn-pt" : "btn-bad") + '">' +
+          (isEdit ? "고친 내용 저장" : "이 글 내리기") + '</button> ' +
+        '<button type="button" class="btn btn-line cqg-x">그만두기</button>' +
+        '<p class="jmsg cqg-m" hidden></p>' +
+      '</div>' +
+    '</form>';
+  }
+
+  function bindGuest(q){
+    var wrap = document.getElementById("cqg");
+    if(!wrap) return;
+    var bx = wrap.querySelector(".cqg-bx");
+    function open(mode){
+      bx.innerHTML = guestForm(q, mode);
+      var f = bx.querySelector(".cqg-f");
+      var x = bx.querySelector(".cqg-x");
+      if(x) x.addEventListener("click", function(){ bx.innerHTML = ""; });
+      if(!f) return;
+      f.addEventListener("submit", function(e){
+        e.preventDefault();
+        var msg = f.querySelector(".cqg-m");
+        var btn = f.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        msg.hidden = false; msg.textContent = "보내는 중입니다…";
+        var door = (mode === "edit") ? "edit_cq_guest" : "drop_cq_guest";
+        var pack = { id:q.id, pw:f.pw.value };
+        if(mode === "edit"){ pack.title = f.title.value; pack.body = f.body.value; }
+        call(door, pack).then(function(){
+          if(mode === "edit"){ go({ q:q.id }); return; }
+          /* ⚠️ 내린 뒤에는 그 글이 **없습니다** — 목록으로 돌려보냅니다 */
+          go({ q:"", p:S.p });
+        }).catch(function(err){
+          btn.disabled = false;
+          /* ⚠️⚠️ DB 가 거절한 **그 말** 그대로 (비밀번호가 맞지 않습니다 …) */
+          msg.textContent = String((err && err.message) || "보내지 못했습니다.");
+        });
+      });
+    }
+    var be = wrap.querySelector(".cqg-e");
+    var bd = wrap.querySelector(".cqg-d");
+    if(be) be.addEventListener("click", function(){ open("edit"); });
+    if(bd) bd.addEventListener("click", function(){ open("drop"); });
   }
 
   function aForm(){
@@ -436,6 +536,7 @@
 
   /* ── 글쓰기 양식 ────────────────────────────────────────────────── */
   function askForm(pick){
+    var GUEST = !(A && A.signedIn);
     /* ⚠️⚠️ 고르개는 **게시판 일곱**입니다 (위 머리말 — 전에는 분류 열을
        내서 자유게시판을 고를 수가 없었습니다).
        ⚠️ 지시서는 분류를 **선택**으로 적었지만 `ask_cq`(0047)가 필수로
@@ -448,7 +549,39 @@
       return '<option value="' + esc(b.key) + '"' +
         (on === b.key ? " selected" : "") + '>' + esc(b.name) + '</option>';
     }).join("");
-    return '<form id="cqf" class="jform">' +
+    /* ⚠️⚠️⚠️ **비회원도 씁니다** (0063 · 지시서 C). 로그인한 분은 닉네임이
+       계정에 있고 주인이 계정이지만, 비회원 글은 **주인을 가리는 것이
+       글 비밀번호 하나뿐**입니다. 그래서 그 자리에서 —
+         · 비밀번호를 **왜** 받는지 적고
+         · **잊으면 직접 고치거나 내릴 수 없다**는 것을 미리 말하고
+         · 그때 어디로 가면 되는지(고객센터)까지 냅니다
+       ⚠️ 말없이 비밀번호만 받으면, 잊으신 분은 막다른 길에 섭니다
+       (절대 규칙 2). */
+    var gf = GUEST
+      ? '<div class="jrow">' +
+          '<label for="c-nick">닉네임 <b>*</b></label>' +
+          '<input id="c-nick" name="nick" required minlength="2" maxlength="16" ' +
+          'placeholder="보기: 주말골퍼">' +
+          '<span class="jhint">글에 <b>이 이름이 공개</b>됩니다. ' +
+          '본명 · 연락처를 넣지 마세요.</span>' +
+        '</div>' +
+        '<div class="jrow">' +
+          '<label for="c-pw">글 비밀번호 <b>*</b></label>' +
+          '<input id="c-pw" name="pw" type="password" required minlength="4" ' +
+          'maxlength="64" autocomplete="new-password" placeholder="4자 이상">' +
+          '<span class="jhint">나중에 <b>고치거나 내릴 때</b> 쓰십니다. ' +
+          '⚠️ 잊으시면 <b>직접 고치거나 내릴 수 없습니다</b> — ' +
+          '그때는 고객센터로 알려 주세요.</span>' +
+        '</div>' +
+        /* ⚠️⚠️ **허니팟** — 사람에게는 안 보이고 자동 프로그램만 채웁니다.
+           채워져 있으면 문이 거절합니다. `hidden` 이 아니라 화면 밖으로
+           보냅니다(`hidden` 이면 채우는 쪽도 건너뜁니다). */
+        '<div class="sr-only" aria-hidden="true">' +
+          '<label for="c-site">website</label>' +
+          '<input id="c-site" name="website" tabindex="-1" autocomplete="off">' +
+        '</div>'
+      : '';
+    return '<form id="cqf" class="jform">' + gf +
       '<div class="jrow">' +
         '<label for="c-cat">게시판 <b>*</b></label>' +
         '<select id="c-cat" name="cat" required>' +
@@ -464,9 +597,17 @@
         '<label for="c-body">내용 <b>*</b></label>' +
         '<textarea id="c-body" name="body" rows="6" required minlength="5" ' +
         'maxlength="4000" placeholder="하시고 싶은 이야기를 적어 주세요."></textarea>' +
+        /* ⚠️⚠️⚠️ **고치는 길이 둘로 갈립니다** — 회원 글은 `/my` 에
+           있지만 **비회원 글은 거기 없습니다**(계정에 안 묶입니다).
+           한 가지로 적어 두었다가 비회원에게 "내 정보에서 고치세요" 라고
+           말할 뻔했습니다 — 가 보면 그 글이 없는 **막다른 길**이고,
+           하지 않는 일을 한다고 적는 것입니다(절대 규칙 5 · 2). */
         '<span class="jhint">⚠️ 전화번호 · 아이디 같은 연락처는 적지 마세요. ' +
-        '이 글은 <b>누구나 봅니다.</b> 올리신 글은 내 정보 화면에서 고치거나 ' +
-        '내리실 수 있습니다.</span>' +
+        '이 글은 <b>누구나 봅니다.</b> ' + (GUEST
+          ? '올리신 글은 <b>그 글을 열고 비밀번호</b>를 넣어 고치거나 ' +
+            '내리실 수 있습니다.'
+          : '올리신 글은 내 정보 화면에서 고치거나 내리실 수 있습니다.') +
+        '</span>' +
       '</div>' +
       '<div class="jrow jrow-full">' +
         '<button type="submit" class="btn btn-pt">글 올리기</button>' +
@@ -481,11 +622,19 @@
     box.className = "jbox";
     /* ⚠️⚠️ 비회원이 누르면 **로그인 안내**를 내고, 로그인한 뒤 원래 보시던
        자리(게시판 · 쪽)로 돌아옵니다 (지시서 §2). */
-    box.innerHTML = (A && A.signedIn)
-      ? '<h3 class="jbox-h">글쓰기</h3>' + askForm(pick)
-      : needLogin("글을 쓰시");
+    /* ⚠️⚠️⚠️ **로그인 안내를 더 내지 않습니다** (0063 · 지시서 C) —
+       비회원도 닉네임 · 비밀번호로 올립니다. 전에는 여기서 로그인으로
+       돌려보냈는데, 그러면 "로그인 없이 글쓰기" 가 **눌러도 아무 일이
+       안 나는 단추**가 됩니다 (절대 규칙 5). */
+    var GUEST = !(A && A.signedIn);
+    box.innerHTML = '<h3 class="jbox-h">글쓰기</h3>' +
+      (GUEST
+        ? '<p class="jhint cq-gh">로그인 없이 올리실 수 있습니다. ' +
+          '회원으로 올리시면 <b>내 정보</b>에서 비밀번호 없이 고치고 내리실 ' +
+          '수 있습니다. <a class="cq-lg" href="' + esc(loginUrl()) + '">로그인하기</a></p>'
+        : '') +
+      askForm(pick);
     try{ box.scrollIntoView({ block:"start" }); }catch(e){ }
-    if(!(A && A.signedIn)) return;
     var f = document.getElementById("cqf");
     if(!f) return;
     f.addEventListener("submit", function(e){
@@ -494,12 +643,34 @@
       var btn = f.querySelector('button[type="submit"]');
       btn.disabled = true;
       msg.hidden = false; msg.textContent = "올리는 중입니다…";
-      call("ask_cq", { cat:f.cat.value, title:f.title.value, body:f.body.value })
+      /* ⚠️⚠️ **문이 둘입니다** — 회원은 `ask_cq`, 비회원은 `ask_cq_guest`.
+         비회원 쪽은 닉네임 · 비밀번호 · 허니팟을 같이 보냅니다.
+         ⚠️ 비밀번호는 **보내기만** 합니다 — 맞춰 보는 일은 문 안에서만
+         일어나고, 화면은 해시를 받을 길이 없습니다. */
+      var door = GUEST ? "ask_cq_guest" : "ask_cq";
+      var pack = { cat:f.cat.value, title:f.title.value, body:f.body.value };
+      if(GUEST){
+        pack.nick = f.nick.value;
+        pack.pw = f.pw.value;
+        pack.website = f.website ? f.website.value : "";
+      }
+      call(door, pack)
         .then(function(id){
           box.className = "none";
-          box.innerHTML = '<h3>글을 올렸습니다.</h3>' +
-            '<p>목록에 바로 보입니다.</p>' +
-            '<a class="btn btn-pt" href="/my">내 정보에서 고치기</a>';
+          /* ⚠️⚠️ **비회원을 `/my` 로 보내지 않습니다** — 거기에는 그 글이
+             없습니다(계정에 안 묶입니다). 막다른 길로 두지 않고, 고치는
+             길이 **글 안에 있다**고 그 자리에서 말합니다(절대 규칙 2). */
+          /* ⚠️ 글자를 **먼저 짓고** 그다음 찍습니다 — `innerHTML` 줄에
+             잇는 자리(+)가 있으면 `check-safe` 가 따라갈 함수를 찾는데,
+             여기는 전부 저장소가 적은 글자라 따라갈 것이 없습니다. */
+          var done = '<h3>글을 올렸습니다.</h3>' + (GUEST
+            ? '<p>목록에 바로 보입니다. 고치거나 내리시려면 그 글을 열고 ' +
+              '<b>적어 두신 비밀번호</b>를 넣으시면 됩니다.</p>'
+            : '<p>목록에 바로 보입니다.</p>' +
+              '<a class="btn btn-pt" href="/my">내 정보에서 고치기</a>');
+          /* ⚠️ 잇는 자리(+)를 이 줄에 두지 않습니다 — 저장소가 적은
+             글자뿐이라 `check-safe` 가 따라갈 함수가 없습니다. */
+          box.innerHTML = done;
           /* ⚠️ 올린 글이 있는 게시판으로 옮겨 **그 글을 바로** 엽니다 */
           var nid = (typeof id === "string") ? id.replace(/"/g, "") : "";
           go({ s:f.cat.value, q:nid, p:0 });

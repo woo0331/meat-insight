@@ -2209,3 +2209,16 @@ picture{ display: contents; }
    보일 뿐 깨지지 않습니다. */
 .sec-spon:has(.spon-grid > [hidden]:only-child){ display:none; }
 .sec-spon:has(.spon-grid > [hidden] + [hidden]){ display:none; }
+
+/* 비회원 글 — 비밀번호로 고치기 · 내리기 (0063 · 지시서 C)
+   ⚠️ `.sr-only` 는 허니팟을 화면 밖으로 보냅니다 — `hidden` 이면
+   채우는 쪽도 건너뛰어 덫이 안 됩니다. */
+.sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+.cqg{ margin-top:18px; padding:14px; border:1.5px dashed var(--line);
+  border-radius:14px; background: var(--bg-2); }
+.cqg .jhint{ margin:0 0 10px; }
+.cqg-go{ display:flex; flex-wrap:wrap; gap:8px; }
+.cqg-bx:not(:empty){ margin-top:14px; padding-top:14px;
+  border-top:1.5px solid var(--line); }
+.cq-gh{ margin:0 0 14px; }

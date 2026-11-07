@@ -674,7 +674,18 @@ declare
   v_st   text;
 begin
   if v_uid is null then raise exception '로그인이 필요합니다'; end if;
-  if coalesce(my_role(), '') not in ('staff','admin') then
+  -- ⚠️⚠️⚠️ **`my_role()` 은 text 가 아니라 enum(`app_role`) 을 돌려줍니다.**
+  --   처음에 `coalesce(my_role(), '')` 로 적었는데, 그 빈 글자가
+  --   `''::app_role` 로 맞춰지면서 **누가 부르든 거기서 터졌습니다**
+  --   (`invalid input value for enum app_role: ""`). 즉 구합니다 글을
+  --   가리는 길이 **아무에게도 없었습니다.**
+  --   ⚠️⚠️ 그런데 검사는 속았습니다 — 거절되는 것은 맞으니 `denied()`
+  --   가 통과하고, 정작 **어느 자물쇠가 막는지는 안 봤습니다.** 작업
+  --   기억의 "에러 글자까지 맞춰 보고, 자물쇠마다 다른 말로 거절하게
+  --   두세요" 가 그대로 걸린 자리입니다.
+  --   ⚠️ 고친 꼴은 이 저장소의 다른 자리와 **같습니다** —
+  --   `coalesce(my_role() in (...), false)` (0040 · 0048 · 0051 · 0052).
+  if not coalesce(my_role() in ('staff','admin'), false) then
     raise exception '가리는 것은 운영자만 할 수 있습니다';
   end if;
   if v_id is null then raise exception '어느 글인지 알 수 없습니다'; end if;
@@ -719,6 +730,32 @@ alter table report add column if not exists wanted_id uuid
   references wanted(id) on delete cascade;
 create index if not exists report_wanted_idx on report (wanted_id)
   where wanted_id is not null;
+
+
+-- ⚠️⚠️⚠️ **`report_target_ck` 를 같이 늘립니다 — 0060 이 빠뜨렸습니다.**
+--   0040 이 "가리키는 칸 가운데 **하나는 있어야 한다**" 를 check 로
+--   두었고, 0046 · 0047 · 0048 · 0056 은 칸을 더할 때마다 그 check 를
+--   다시 세웠습니다. 그런데 **0060 은 `teetime_id` 를 더하고 check 를
+--   안 고쳤습니다** — 그래서 2026-11-06 부터 **티타임 자리를 신고하면
+--   표가 거절**했고(`report_target_ck`), `js/adminrep.js` 의
+--   "티타임 자리 가리기" 가지는 한 번도 돌 수 없는 죽은 코드였습니다.
+--   `sql/teetime.js` 가 `open_report` 를 **안 눌러 봤기** 때문에
+--   아무도 몰랐습니다 (0061 의 검사가 같은 자리를 눌러서 드러났습니다).
+--   ⚠️⚠️ **칸을 더하는 날 이 check 도 같이** 고치세요 —
+--   `check-chains` 는 함수 · 보기 · 정책만 셉니다(제약은 안 셉니다).
+--   ⚠️ 그래서 앞 번호(0056)를 **따로 다시 붙여 넣으면** 이 늘림이
+--   조용히 풀립니다 (0053 의 칸 GRANT 와 같은 자리입니다). 붙여넣기
+--   파일을 통째로 쓰면 0061 이 뒤에 와서 다시 늘립니다.
+--   되돌아갔는지 보는 법:
+--     select pg_get_constraintdef(oid) from pg_constraint
+--      where conname = 'report_target_ck';
+alter table report drop constraint if exists report_target_ck;
+alter table report add  constraint report_target_ck check (
+  request_id is not null or provider_id is not null
+  or review_id is not null or joinroom_id is not null
+  or cq_id is not null or ca_id is not null or jobpost_id is not null
+  or listing_id is not null or teetime_id is not null
+  or wanted_id is not null);
 
 create or replace function open_report(p jsonb)
   returns uuid language plpgsql security definer

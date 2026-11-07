@@ -365,4 +365,37 @@ module.exports = function(T){
     "select move_teetime(jsonb_build_object('id','" + TEE + "','why','또 가려 봅니다'));" + back);
   ok("⚠️ 이미 가려진 것을 또 가리면 **거절한다** (기록이 거짓이 되지 않게)",
      h2.no, "조용히 0줄로 끝냈습니다");
+
+  /* ── ⑪ 신고 ───────────────────────────────────────────────────
+     ⚠️⚠️⚠️ **이 줄이 2026-11-07 까지 없었습니다.** 0060 은 `teetime_id`
+     칸을 더하고 `open_report` 도 고쳤는데, 0040 의 `report_target_ck`
+     ("가리키는 칸 가운데 하나는 있어야 한다")를 **안 늘렸습니다** —
+     그래서 티타임 자리를 신고하면 **표가 거절**했고, `js/adminrep.js`
+     의 "티타임 자리 가리기" 가지는 한 번도 돌 수 없는 죽은 코드였습니다.
+     ⚠️ 이 검사가 `open_report` 를 **안 눌러 봤기** 때문에 아무도
+     몰랐습니다 (0061 의 검사가 같은 자리를 눌러서 드러났습니다).
+     ⚠️ **칸을 더하는 날 그 칸으로 신고를 눌러 보세요** — check-doors 는
+     `open_report` 를 부르는 화면이 있다고 세므로 못 잡습니다. */
+  console.log("\n── ⑪ 신고 — 칸을 더했으면 report 의 check 도 늘어야 합니다");
+  /* ⚠️ 가짜 자료도 **DB 가 받는 값**이어야 합니다 — 처음에 `kind:'field'`
+     와 `play_at` · `seats` · `price` 로 적었다가 문에 거절당했습니다
+     (이 저장소가 다섯 번째로 밟은 자리). 위의 ① 과 **같은 꼴**로 적습니다. */
+  const TEE2 = psql(as(OWN) +
+    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi'," +
+    "'course','신고될 골프장','playAt'," + DAY + ",'teeAt','07:00'," +
+    "'slots','4','greenFee','120000'));" + back);
+  const rp = allowed(as(CUS) + "select open_report(jsonb_build_object(" +
+    "'kind','abuse','teetime','" + TEE2 + "','body','없는 자리로 보입니다'))::text;" + back);
+  ok("⚠️⚠️ 티타임 자리를 **실제로 신고할 수 있다** (표의 check 가 거절하지 않습니다)",
+     rp.yes && /^[0-9a-f-]{36}$/.test(rp.out), rp.out || rp.why);
+  /* ⚠️ 앞 줄이 떨어졌으면 **여기서 터지지 않게** 합니다 — uuid 자리에
+     undefined 가 들어가 psql 이 던지면 **남은 묶음이 통째로 안 돌고**,
+     그 조용한 건너뜀을 통과로 읽게 됩니다 (작업 기억 — 건너뛴 묶음이
+     있으면 "전부 초록" 이라고 말하지 않습니다). */
+  const got = rp.yes
+    ? psql(as(ADM) + "select coalesce(teetime_id::text,'(null)') from report " +
+           "where id = '" + rp.out + "';" + back)
+    : "(앞 줄이 떨어져서 못 쟀습니다)";
+  ok("  그 칸에 **값이 실제로 들어간다** (운영자 화면이 그 칸을 읽습니다)",
+     got === TEE2, got);
 };

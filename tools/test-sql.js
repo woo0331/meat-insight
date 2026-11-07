@@ -163,6 +163,10 @@ try{
   require("./sql/teetime.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/career.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/listing.js")({ ok, psql, psqlFile, denied, allowed });
+  /* 0061 — 구합니다. ⚠️⚠️⚠️ **받아들이기만으로는 연락처가 둘 다 비어
+     있는지**가 여기서 가장 중요합니다 (제17조 제2항) — 0046 · 0056 의
+     세 겹을 그대로 베꼈으니 그 셋을 **따로** 눌러 봅니다. */
+  require("./sql/wanted.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/notice.js")({ ok, psql, psqlFile, denied, allowed });
   /* 0057 — 업체 사업자 신원정보 (제20조 제2항). ⚠️ 공개 보기의 칸 ·
      칸 GRANT · 트리거 · 운영자 문을 **따로** 눌러 봅니다. */

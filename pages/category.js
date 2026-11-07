@@ -381,7 +381,47 @@ exports.build = function(c){
       '</div></section>'
     : '';
 
-  var memberSec = teeSec + (lsSec || joinSec || cqSec || jobSec);
+  /* ── 구합니다 (0061) — 업체가 입점하는 분류 다섯 ────────────────
+     ⚠️⚠️⚠️ **서는 분류는 `amWantCats()` 한 곳이 정합니다** (레슨 ·
+     연습장 · 마켓 · 피팅 · 여행 — 부킹은 뺍니다). 여기서 키를 다시
+     적으면 두 곳이 어긋나고, 그때 화면은 그려지는데 목록이 영원히
+     0건입니다.
+     ⚠️⚠️⚠️ **`/match`(매칭 요청)와 다르다는 것을 그 자리에서
+     말합니다** — 둘이 비슷해 보이지만 하나는 운영자만 보고 하나는
+     누구나 봅니다. 안 적으면 손님이 어느 쪽을 써야 할지 모릅니다.
+     ⚠️ 알맹이는 브라우저가 그립니다 (`js/wanted.js`) — 글은 아무 때나
+     올라오고 내려갑니다. 설명은 빌드가 찍습니다 (크롤러 몫).
+     ⚠️ 어느 분류인지는 **상자에 적어 줍니다**(`data-wcat`) — 화면이
+     주소에서 짐작하면 주소가 바뀌는 날 조용히 어긋납니다. */
+  var wtSec = (W.amWantOn && W.amWantOn(c))
+    ? '<section class="sec sec-alt"><div class="wrap">' +
+      '<div class="sec-hd"><h2>이런 걸 찾고 있어요</h2>' +
+      '<p>회원이 직접 올리는 자리입니다. 찾으시는 것을 적어 두시면 ' +
+      '업체나 다른 회원이 답을 답니다. <b>연락처는 글에 적지 마세요</b> — ' +
+      '답을 받아들이신 뒤 서로 따로 고르셨을 때만 열립니다. ' +
+      '골프올인원은 거래 당사자가 아닙니다.</p></div>' +
+      '<div id="wtlist" data-wcat="' + esc(c.key) + '">' +
+        '<div class="none"><h3>글을 보시려면 잠시만 기다려 주세요.</h3>' +
+        '<p>올라온 글을 불러옵니다.</p></div>' +
+      '</div>' +
+      '<div id="wtbox"></div>' +
+      '<p class="jafh">' +
+        '<button type="button" class="btn btn-pri" id="wtnew">' +
+        '구합니다 글 올리기</button></p>' +
+      /* ⚠️⚠️ **두 길이 어떻게 다른지 적습니다.** 안 적으면 손님이
+         "매칭 요청" 과 "구합니다" 가 같은 것인 줄 압니다. */
+      '<p class="jnote">⚠️ 이 글은 <b>누구나 봅니다.</b> ' +
+      '조용히 업체 견적만 받아 보고 싶으시면 ' +
+      '<b>매칭 요청</b>을 쓰세요 — 그쪽은 운영자만 보고, 업체에 넘길 ' +
+      '때 상호를 알려 드리고 다시 여쭙습니다. ' +
+      '⚠️ 연락처는 목록에 나오지 않습니다.</p>' +
+      '<p class="lsc-go"><a class="btn btn-line" href="' +
+        esc(W.amCatUrl(c)).replace(/^\/cat\//, "/match?cat=") +
+        '">매칭 요청으로 견적 받기</a></p>' +
+      '</div></section>'
+    : '';
+
+  var memberSec = teeSec + wtSec + (lsSec || joinSec || cqSec || jobSec);
 
   var list = W.amProvidersOf(c.key);
   if(list.length){
@@ -465,7 +505,15 @@ exports.build = function(c){
       : (c.key === "used"
           ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
              "/js/listing.js"]
-          : []))))).concat(["/js/data/providers.generated.js",
+      /* ⚠️⚠️ 0061 — **값을 읽는 파일을 싣는 것까지가 기능입니다**:
+         site.js 가 wantedKeep(비면 양식을 **안 엽니다**) · regions.js 가
+         지역 칸 · deal.js 가 예산 셈(`amWantBudget`)을 줍니다. 하나라도
+         빠지면 양식이 **조용히** 안 열립니다 (`/help` 가 site.js 를 안
+         실어 문의 양식이 안 열렸던 그 자리입니다). */
+      : ((W.amWantOn && W.amWantOn(c))
+          ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
+             "/js/wanted.js"]
+          : [])))))).concat(["/js/data/providers.generated.js",
                           "/js/data/providers.js", "/js/adslot.js"]),
     /* ⚠️ 조인은 제 구간이 "0건" 을 스스로 말하므로 zero 를 **안 겹칩니다**
        (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다). */

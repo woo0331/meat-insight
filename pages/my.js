@@ -63,6 +63,14 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="lsmine" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ 내 구합니다 글과 받은 답 (0061 · js/mywanted.js).
+     ⚠️⚠️⚠️ 여기도 **연락처를 주고받는 유일한 자리**입니다 (제17조
+     제2항) — 목록 화면(분류 다섯)에는 연락처 칸이 **아예 없습니다**.
+     ⚠️ 받아들이기만으로는 안 열립니다. 각자 **제 것만** 열고 언제든
+     닫습니다. */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="wtmine" class="none" hidden></div></div></section>';
+
   /* ⚠️⚠️ 저장한 조건 (0058 · js/mywatch.js) — 조건을 저장해 두면 맞는
      글이 올라올 때 **내부 알림**이 꽂힙니다.
      ⚠️⚠️⚠️ 밖으로 안 보냅니다 (문자 · 카톡 · 메일을 붙이면 정보통신망법
@@ -100,6 +108,10 @@ exports.build = function(){
          "/js/review.js", "/js/myreq.js",
          "/js/data/regions.js", "/js/myjoin.js", "/js/mycq.js",
          "/js/myjob.js", "/js/mylisting.js", "/js/myinq.js", "/js/mynick.js",
+         /* ⚠️ 0061 — catalog.js 가 분류 · 하위 이름을, deal.js 가 상태
+            말과 예산 셈을, regions.js 가 지역 이름을 줍니다 (빌드가
+            catalog 를 저절로 싣습니다). */
+         "/js/mywanted.js",
          "/js/mybook.js",
          "/js/mywatch.js", "/js/notice.js"]
   };

@@ -79,7 +79,17 @@ function ver(file){
    ⚠️ 업체 입점하기는 **메뉴가 아니라 오른쪽 금색 단추**입니다 — 손님
    메뉴와 섞이면 손님이 제 자리를 못 찾습니다 (§4). */
 var NAV = [
-  { href:"/categories", name:"카테고리",      icon:"down" },
+  /* ⚠️⚠️ `panel:true` — 누르면 **열 분류 띠**가 열립니다 (4차 지시서 §2).
+     ⚠️⚠️⚠️ 2026-11-07 까지 이 칸에 **아래쪽 꺾쇠(`down`)만** 달려
+     있었습니다. 꺾쇠는 "눌러도 열릴 것이 있다" 는 약속인데 열릴 것이
+     없었고, 머리말에서 분류로 가는 길은 `/categories` 한 번을 더
+     거쳐야 했습니다 (지시서는 열 분류를 **머리말에서** 닿게 하라고
+     합니다).
+     ⚠️ **단추가 아니라 링크로 둡니다** — 자바스크립트가 꺼진 분 · 봇은
+     그대로 `/categories` 로 갑니다 (거기 열 분류가 다 있습니다).
+     단추로만 만들면 그분들에게는 눌러도 아무 일이 안 나는 칸입니다
+     (절대 규칙 5 · 업체찾기 거르개에서 적어 둔 그 자리). */
+  { href:"/categories", name:"카테고리",      icon:"down", panel:true },
   { href:"/search",     name:"업체찾기" },
   { href:"/match",      name:"매칭 요청" },
   { href:"/help",       name:"고객센터" }
@@ -110,7 +120,9 @@ function header(){
     '</a>' +
     '<nav class="gnb" aria-label="주요 메뉴">' +
       NAV.map(function(n){
-        return '<a href="' + esc(n.href) + '">' + esc(n.name) +
+        return '<a href="' + esc(n.href) + '"' +
+               (n.panel ? ' data-catnav aria-controls="catnav" aria-expanded="false"' : '') +
+               '>' + esc(n.name) +
                (n.icon ? icon(n.icon, 18) : "") + '</a>';
       }).join("") +
     '</nav>' +
@@ -123,6 +135,35 @@ function header(){
       '<a class="btn btn-gold btn-sm" href="/join">' + icon("store", 18) + '업체 입점하기</a>' +
     '</div>' +
   '</div>' +
+
+  /* ── 열 분류 띠 — 머리말의 '카테고리' 를 누르면 열립니다 (§2) ───
+     ⚠️⚠️⚠️ **머리말 안에 끼우지 않고 제 줄로 둡니다.** 로고 줄에 열
+     개를 더 넣으면 좁은 화면에서 메뉴 · 검색 · 단추가 서로를 밀어
+     글자가 잘립니다 (검색을 제 줄로 내린 그 까닭).
+     ⚠️⚠️⚠️ **열 개를 늘 펼쳐 두지 않습니다.** 폰에서는 여러 줄이
+     되어 히어로가 화면 밖으로 밀립니다 — 손님이 처음 보는 것이
+     분류 목록이 되어서는 안 됩니다. 그래서 **누를 때** 엽니다.
+     ⚠️⚠️ **`<details>` 를 쓰지 않습니다** (접힌 글은 check-screens 의
+     12px · 대비 검사에서 빠집니다). 대신 `hidden` 한 속성이고,
+     `check-screens` 가 **재기 전에 그 속성을 떼어** 폭마다 같이
+     잽니다 — 열린 모습이 아무도 안 재는 자리가 되지 않게.
+     ⚠️ 이름 · 주소를 글자로 박지 않습니다 — `AM_CATS` 와
+     `amCatUrl()` 한 함수에서 옵니다 (주소를 두 곳에 지었다가 링크
+     예순다섯 곳이 410 으로 갈 뻔한 그 자리).
+     ⚠️ 칸(grid)이 아니라 **흘려 담습니다**(flex-wrap) — 칸으로
+     나누면 분류 수가 칸 수로 나누어떨어지지 않는 폭에서 빈 칸이
+     남습니다. 흘려 담으면 몇 개가 되든 다 보입니다. */
+  '<div class="catband" id="catnav" hidden><div class="wrap">' +
+    '<nav class="catnav" aria-label="골프 분류 열 가지">' +
+      (W.AM_CATS || []).map(function(c){
+        return '<a href="' + esc(W.amCatUrl(c)) + '">' + esc(c.name) + '</a>';
+      }).join("") +
+      /* ⚠️ 막다른 길로 두지 않습니다 — 묶음별로 보는 자리도 냅니다 */
+      '<a class="catnav-all" href="/categories">열 분류 전체보기' +
+        icon("arrow", 16) + '</a>' +
+    '</nav>' +
+  '</div></div>' +
+
   /* ⚠️⚠️ **검색을 제 줄로 내렸습니다** (3차 시안). 머리말 안에 끼워
      두면 좁은 화면에서 메뉴 · 검색 · 단추가 서로를 밀어 글자가
      잘립니다. ⚠️ 보내는 곳(`/search`)과 받는 열쇠(`q`)는 그대로입니다 —
@@ -317,7 +358,9 @@ function page(o){
        한 장도 없었습니다 — 까닭 없이 무겁게 하지 않습니다).
        ⚠️⚠️ 차례가 뜻이 있습니다 (base → auth → hdauth) · **같은 파일을
        두 번 싣지 않습니다** (두 번 실으면 즉시실행이 두 번 돕니다). */
-    ['/js/components/base.js','/js/auth.js','/js/hdauth.js']
+    /* ⚠️ hdnav — 머리말의 열 분류 띠를 여는 것이라 **모든 화면**에
+       실립니다 (로그인과 상관없습니다). */
+    ['/js/components/base.js','/js/auth.js','/js/hdauth.js','/js/hdnav.js']
       .concat(o.js ? ['/js/data/brand.js','/js/data/catalog.js'] : [])
       .concat(o.js ? (Array.isArray(o.js) ? o.js : [o.js]) : [])
       .filter(function(f, i, L){ return L.indexOf(f) === i; })

@@ -98,7 +98,16 @@
       '<div class="jrow"><label for="tf-d">라운드 날짜</label>' +
       '<input id="tf-d" name="d" type="date" value="' + esc(S.d) + '" ' +
         'min="' + esc(kstISO(0)) + '"' +
-        (SEARCH ? ' max="' + esc(kstISO(SEARCH)) + '"' : '') + '></div>' +
+        /* ⚠️⚠️⚠️ **달력 끝은 `teeSearch`(60일)가 아니라 `teeAhead`(90일)
+           입니다** (§5 · 2026-11-07). 60일에서 막아 두면, 70일 뒤를
+           치시려는 분은 그 날짜를 **말할 자리조차 없습니다** — 아무
+           안내도 없이 막힌 달력이고 그건 막다른 길입니다(절대 규칙 2).
+           61~90일은 목록으로 보여 드리지 않고 **사전 상담으로** 받는
+           것이 정책이므로, 날짜는 받고 `load()` 가 그 자리에서
+           상담으로 보냅니다. ⚠️ `teeAhead` 가 비면 `teeSearch` 로
+           떨어집니다 (둘 다 비면 달력 끝을 안 겁니다). */
+        ((AHEAD || SEARCH)
+          ? ' max="' + esc(kstISO(AHEAD || SEARCH)) + '"' : '') + '></div>' +
       '<div class="jrow"><label for="tf-rg">지역</label>' +
       '<select id="tf-rg" name="rg"><option value="">전체 지역</option>' +
         regs + '</select></div>' +
@@ -219,6 +228,26 @@
     box.innerHTML = bar() + '<p class="myhint">불러오는 중입니다…</p>';
     /* ⚠️⚠️ **거르는 것은 서버입니다** (화면에서 거르면 조건에 맞는 자리가
        받아 온 줄 밖에 있을 때 0건으로 보입니다). */
+    /* ⚠️⚠️⚠️ **61~90일은 묻지 않고 사전 상담으로 보냅니다** (§5).
+       ⚠️ 여기서 그냥 질의하면 **0건**이 나오고, 손님은 "그날 자리가
+       없다" 로 읽습니다 — 실제로는 **목록으로 보여 드리지 않는 구간**
+       입니다. 없는 것과 안 보여 주는 것은 다릅니다(절대 규칙 5 ·
+       "못 읽었으면 0건이라고 말하지 않습니다" 와 같은 결).
+       ⚠️ 막다른 길로 두지 않습니다 — 그 자리에서 상담 요청으로
+       보냅니다(절대 규칙 2).
+       ⚠️ `teeSearch` 가 비면 이 가지를 **안 탑니다** (운영 정책이
+       없는데 우리가 선을 지어내지 않습니다). */
+    if(S.d && SEARCH && S.d > kstISO(SEARCH)){
+      box.innerHTML = bar() +
+        '<div class="none"><h3>이 날짜는 미리 상담으로 잡아 드립니다.</h3>' +
+        '<p>고르신 날짜는 <b>' + esc(day(S.d)) + '</b> 입니다. ' +
+        '자리 목록은 오늘부터 ' + esc(String(SEARCH)) + '일까지 보여 드리고, ' +
+        '그 뒤 날짜는 담당자가 골프장에 확인해 드립니다.</p>' +
+        '<a class="btn btn-pt" href="/match?cat=booking">부킹 상담 요청하기</a>' +
+        '</div>';
+      return Promise.resolve();
+    }
+
     var qs = ["select=id,provider_id,provider_name,kind,region,course,play_at," +
               "tee_at,holes,slots,green_fee,tel,note,left_n",
               "kind=eq." + encodeURIComponent(KIND),

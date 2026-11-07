@@ -109,6 +109,35 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 }
 .gnb a:hover, .gnb button:hover{ background: rgba(255,255,255,.12); }
 
+/* ── 열 분류 띠 — '카테고리' 를 누르면 열립니다 (§2 · 2026-11-07) ──
+   ⚠️⚠️ **`[hidden]` 에 `display:none` 을 같이 적습니다.** 작성자 CSS
+   가 브라우저 기본을 이기므로, 이 상자에 `display:` 를 주면 `hidden`
+   속성만 붙고 **안 가려집니다** (작업 기억의 그 자리). 가려졌는지는
+   `offsetParent` 로 봅니다.
+   ⚠️ 칸(grid)이 아니라 **흘려 담습니다** — 분류가 몇 개가 되든 빈
+   칸이 남지 않습니다. 폰에서는 저절로 여러 줄이 됩니다.
+   ⚠️ `--grn-soft`(연초록)를 바탕으로 쓰지 않습니다 — 머리말과 같은
+   딥그린 위에 올립니다 (초록 비율을 늘리지 않습니다). */
+.catband{ background: var(--grn-deep); padding-block: 0 12px; }
+.catband[hidden]{ display:none; }
+.catnav{ display:flex; flex-wrap:wrap; gap:4px; }
+.catnav a{
+  display:inline-flex; align-items:center; gap:5px;
+  min-height: var(--tap); padding: 8px 13px; border-radius: 8px;
+  font-size:15px; font-weight:600;
+  /* ⚠️⚠️ 글자색을 **따로 적지 않습니다** — `.hd a{ color:#fff }` 가
+     이미 줍니다 (딥그린 위 흰 글자 13.2). 여기서 또 적으면 머리말
+     색을 고치는 날 이 띠만 안 바뀝니다.
+     ⚠️ `--on-dark` 라는 변수를 지어 쓸 참이었습니다 — `tokens.css`
+     에 있는 것은 `--on-dark-2` 하나입니다. 없는 변수는 **조용히
+     기본값으로** 떨어집니다 (check-safe ⑧ 이 세는 자리). */
+  background: rgba(255,255,255,.07);
+}
+.catnav a:hover{ background: rgba(255,255,255,.16); }
+/* ⚠️ '전체보기' 는 분류가 아니라 **더 보는 길**이라 테두리로 가릅니다 */
+.catnav-all{ background:transparent !important;
+             border:1.4px solid rgba(255,255,255,.4); }
+
 /* ── 검색 띠 — 머리말 **아래 제 줄** (3차 시안) ───────────────
    ⚠️ 머리말 안에 끼워 두면 좁은 화면에서 메뉴 · 검색 · 단추가 서로를
    밀어 글자가 잘립니다. 제 줄로 내리면 그 다툼이 없습니다. */

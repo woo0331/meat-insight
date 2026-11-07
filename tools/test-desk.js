@@ -3712,6 +3712,62 @@ function boardsOf(){
     await g.p.close();
   }
 
+  /* ②-2 **61~90일은 사전 상담만** (지시서 §5 · 2026-11-07)
+     ⚠️⚠️⚠️ 2026-11-07 까지 달력이 `teeSearch`(60일)에서 **막혀** 있었고
+     그 뒤 날짜를 치시려는 분은 그 날짜를 **말할 자리조차** 없었습니다 —
+     안내도 없이 막힌 달력이고 막다른 길입니다(절대 규칙 2). 바로 그
+     자리의 주석이 "61~90일은 사전 상담만" 이라고 적어 두었는데 **상담
+     쪽 코드가 한 줄도 없었습니다**(주석이 코드와 다른 자리의 또 한 판).
+     ⚠️ 그냥 질의하게 두어도 안 됩니다 — **0건**이 나오고 손님은 "그날
+     자리가 없다" 로 읽습니다. 없는 것과 **안 보여 주는 것**은 다릅니다.
+     ⚠️ 날짜 수를 박지 않습니다 — `site.js` 에서 읽습니다. */
+  {
+    const SEARCH = keepNum("teeSearch"), AHEAD = keepNum("teeAhead");
+    ok("⚠️ 잴 정책값이 있다 (teeSearch · teeAhead)",
+       SEARCH > 0 && AHEAD > SEARCH, "teeSearch=" + SEARCH + " teeAhead=" + AHEAD);
+    const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
+                         { v_teetime_open: TEE }, {}, true);
+    const mx = await g.p.getAttribute("#tf-d", "max");
+    /* ⚠️ 달력 끝이 60일이면 그 뒤를 **고를 수가 없습니다** */
+    ok("  달력 끝이 teeAhead(" + AHEAD + "일)까지 열려 있다 (말할 자리를 준다)",
+       mx === TKST(AHEAD), "max=" + mx + " 기대=" + TKST(AHEAD));
+
+    const before = g.sent.length;
+    /* 60일 밖 · 90일 안 — 사전 상담으로 가야 하는 날짜 */
+    await g.p.fill("#tf-d", TKST(SEARCH + 5));
+    await g.p.click("#ttf-find button[type=submit]");
+    await g.p.waitForTimeout(450);
+    const after = g.sent.slice(before).filter(function(x){ return x.name === "GET"; });
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("ttlist");
+      const a = b.querySelector('a[href^="/match"]');
+      return { txt:(b.innerText || "").replace(/\s+/g, " ").trim(),
+               go: a ? a.getAttribute("href") : null,
+               /* 가려진 단추는 없는 단추입니다 */
+               seen: !!(a && a.offsetParent) };
+    });
+    /* ⚠️⚠️ **묻지 않아야** 합니다 — 물으면 0건이 돌아오고 화면이
+       "자리가 없습니다" 로 갈라집니다. */
+    ok("  60일 밖 날짜는 **묻지 않는다** (0건을 받아 '없다' 고 하지 않게)",
+       after.length === 0, after.length + "번 물었습니다");
+    ok("  **사전 상담**으로 잡아 드린다고 적는다",
+       r.txt.indexOf("미리 상담으로") >= 0, r.txt.slice(0, 160));
+    ok("  '자리가 없습니다' 라고 **말하지 않는다**",
+       r.txt.indexOf("없습니다") < 0, r.txt.slice(0, 160));
+    ok("  막다른 길이 아니다 — 상담 요청으로 가는 길이 **보인다**",
+       r.seen && String(r.go).indexOf("cat=booking") >= 0, String(r.go));
+
+    /* ⚠️ 너무 넓게 막는 것도 고장입니다 — 60일 **안**은 그대로 물어야 합니다 */
+    const b2 = g.sent.length;
+    await g.p.fill("#tf-d", TKST(1));
+    await g.p.click("#ttf-find button[type=submit]");
+    await g.p.waitForTimeout(450);
+    const a2 = g.sent.slice(b2).filter(function(x){ return x.name === "GET"; });
+    ok("  60일 **안** 날짜는 그대로 묻는다 (너무 넓게 막지 않는다)",
+       a2.length > 0, "0번 물었습니다");
+    await g.p.close();
+  }
+
   /* ③ 예약 신청 — ⚠️⚠️⚠️ 동의 없이는 안 보냅니다 */
   {
     const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },

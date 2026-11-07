@@ -182,6 +182,93 @@ const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
   }
 
   /* ══════════════════════════════════════════════════════════════
+     ⚠️⚠️ **머리말의 열 분류 띠** (§2 · 2026-11-07)
+
+     2026-11-07 까지 머리말의 '카테고리' 칸에 아래쪽 꺾쇠만 달려
+     있었습니다 — 꺾쇠는 "눌러도 열릴 것이 있다" 는 약속인데 열릴
+     것이 없었고, 지시서가 요구한 "열 분류를 머리말에서" 는 한 번
+     더 거쳐 가야 했습니다.
+
+     ⚠️⚠️ **단추가 아니라 링크**여야 합니다 — 자바스크립트가 꺼진
+     분 · 봇에게는 그대로 `/categories` 로 가야 합니다. 그래서
+     `href` 가 실제로 그 주소인지도 봅니다 (단추로 바꾸는 날
+     그분들에게는 눌러도 아무 일이 안 나는 칸이 됩니다).
+     ⚠️ 분류 수를 박지 않습니다 — `catalog.js` 에서 세어 견줍니다.
+     ⚠️ **열린 모습의 글자 · 누름 · 가로 밀림**은 여기서 재지
+     않습니다 — `check-screens` 가 띠를 열고 폭 다섯에서 잽니다
+     (되돌려 보니 11px 로 바꾼 칸 열한 개를 다섯 폭에서 잡습니다).
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️ 머리말의 열 분류 띠 — 눌러서 열리는가");
+  {
+    /* ⚠️ 분류 수는 **코드에서** 가져옵니다 (갯수를 박지 않습니다) */
+    const keepW = global.window;
+    global.window = {};
+    require(path.join(ROOT, "js/data/catalog.js"));
+    const nCat = (global.window.AM_CATS || []).length;
+    global.window = keepW;          /* ⚠️ 빌려 쓰고 **그대로 돌려놓습니다** */
+
+    const p1 = await b.newPage({ viewport:{ width:390, height:900 } });
+    const errs = watch(p1);
+    await p1.goto(base + "/help", { waitUntil:"networkidle" });
+    await p1.waitForTimeout(400);
+
+    const before = await p1.evaluate(function(){
+      const band = document.getElementById("catnav");
+      const hit  = document.querySelector("[data-catnav]");
+      return { band: !!band, hit: !!hit,
+               href: hit ? hit.getAttribute("href") : null,
+               /* ⚠️ `hidden` 을 걸어도 안 가려지는 자리가 있어
+                  `offsetParent` 로 **실제로 보이는지** 봅니다 */
+               shown: !!(band && band.offsetParent),
+               exp: hit ? hit.getAttribute("aria-expanded") : null,
+               links: band ? band.querySelectorAll('a[href^="/cat/"]').length : 0 };
+    });
+    ok("머리말에 분류 띠와 누를 칸이 있다", before.band && before.hit,
+       JSON.stringify(before));
+    ok("  **링크**다 — 자바스크립트가 꺼져도 /categories 로 간다",
+       before.href === "/categories", String(before.href));
+    ok("  처음에는 닫혀 있다 (손님이 처음 보는 것이 분류 목록이 아니다)",
+       !before.shown && before.exp === "false",
+       "보임=" + before.shown + " aria-expanded=" + before.exp);
+    ok("  분류 " + nCat + "가지가 **전부** 들어 있다 (갯수를 박지 않습니다)",
+       nCat > 0 && before.links === nCat, before.links + "/" + nCat);
+
+    await p1.click("[data-catnav]");
+    await p1.waitForTimeout(200);
+    const after = await p1.evaluate(function(){
+      const band = document.getElementById("catnav");
+      const hit  = document.querySelector("[data-catnav]");
+      const as = [].slice.call(band.querySelectorAll('a[href^="/cat/"]'));
+      return { shown: !!band.offsetParent,
+               exp: hit.getAttribute("aria-expanded"),
+               /* 열렸는데 **보이지 않는** 칸이 있으면 없는 메뉴입니다 */
+               unseen: as.filter(function(a){ return !a.offsetParent; }).length,
+               here: document.location.pathname };
+    });
+    ok("  누르면 열린다", after.shown, "안 열렸습니다");
+    ok("  열렸다고 화면 읽는 기계에도 말한다", after.exp === "true", String(after.exp));
+    ok("  열린 칸이 전부 보인다", after.unseen === 0, "안 보이는 칸 " + after.unseen + "개");
+    /* ⚠️ 가로채지 않으면 그 자리에서 /categories 로 떠납니다 — 그러면
+       띠는 영원히 안 열립니다. 주소가 그대로인지까지 봅니다. */
+    ok("  누를 때 화면을 떠나지 않는다 (가로챘다)", after.here === "/help",
+       String(after.here));
+
+    await p1.click("[data-catnav]");
+    await p1.waitForTimeout(200);
+    const shut = await p1.evaluate(function(){
+      const band = document.getElementById("catnav");
+      return { shown: !!band.offsetParent,
+               exp: document.querySelector("[data-catnav]").getAttribute("aria-expanded") };
+    });
+    /* ⚠️ 여는 길만 내고 닫는 길을 안 내면 폰에서 띠가 화면을 덮은
+       채 남습니다 (0043 이 잇는 길만 낸 그 꼴의 작은 판). */
+    ok("  다시 누르면 닫힌다", !shut.shown && shut.exp === "false",
+       "보임=" + shut.shown + " aria-expanded=" + shut.exp);
+    ok("  그 자리에서 화면 에러가 나지 않는다", errs.length === 0, errs.join(" | "));
+    await p1.close();
+  }
+
+  /* ══════════════════════════════════════════════════════════════
      ⚠️⚠️⚠️ **설정이 꺼져 있을 때 "0건" 이라고 말하던 자리** (2026-11-07)
 
      빌드가 찍어 둔 글이 "보이지 않으면 아직 올라온 글이 없는 것입니다"

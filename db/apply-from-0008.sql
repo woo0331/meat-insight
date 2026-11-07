@@ -14787,6 +14787,30 @@ begin
   end if;
 end $$;
 
+-- ── ①-2 ad_run_where — **자리 이름을 글자로 박지 않습니다** ─────
+-- ⚠️⚠️⚠️ **0062 가 자리 셋을 더하고 이 check 를 안 고쳤습니다.**
+--   0026 은 이렇게 적어 두었습니다 —
+--       or place in ('main_hero','main_band')
+--   그래서 `home_sponsor_a` · `home_sponsor_b` · `home_bottom` 은 enum 에는
+--   있는데 **표가 거절**했습니다. 자물쇠가 둘이었고(문의 글자 목록 ·
+--   표의 check) **둘 다** 그 자리에서 가로막았습니다.
+-- ⚠️ 지금은 **뒤집어 적습니다** — "분류 상단이면 분류를, 지역
+--   광고면 지역을, **그 밖은 아무 것도** 요구하지 않는다". 자리를
+--   더하는 날 이 줄을 안 고쳐도 됩니다.
+do $$
+begin
+  if exists (select 1 from pg_constraint where conname = 'ad_run_where') then
+    alter table ad_run drop constraint ad_run_where;
+  end if;
+  alter table ad_run add constraint ad_run_where check (
+    case place
+      when 'cat_top' then cat_key is not null and btrim(cat_key) <> ''
+      when 'region'  then region  is not null and btrim(region)  <> ''
+      else true
+    end
+  );
+end $$;
+
 -- ⚠️ 칸을 더했으니 관리자가 읽을 수 있어야 합니다. 0026 은 `ad_run` 에
 --   표 단위 select 를 주었으므로(칸 단위가 아닙니다) 따로 줄 것이
 --   없습니다 — 아래로 확인만 해 둡니다.

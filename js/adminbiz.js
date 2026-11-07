@@ -230,8 +230,22 @@
   }
 
   /* 돈 한 줄 — ⚠️⚠️ **계약액과 실매출을 갈라서** 적습니다 (지시서 B).
-     셈은 보기(`v_ad_board`)가 합니다 — 여기서 다시 세지 않습니다. */
+     셈은 보기(`v_ad_board`)가 합니다 — 여기서 다시 세지 않습니다.
+     ⚠️⚠️ **아직 아무 돈도 안 오갔으면 0원 줄 넷을 안 찍습니다** —
+     찍어 보니 준비 상태인 광고에 "청구 0원 · 수납 0원 · 환불 0원 ·
+     실매출 0원" 과 설명까지 붙어 **읽을 것이 없는데 자리만** 찼습니다
+     (절대 규칙 2 — 값이 없는 항목은 줄째 뺍니다). 가로로 밀리지도 ·
+     글자가 작지도 않아 어떤 검사도 안 잡습니다 — 찍어 보고 알았습니다.
+     ⚠️ **계약액은 0원이어도 찍습니다** — 무상 광고라는 뜻이고, 안 적은
+     것과 다릅니다. */
   function adMoney(a){
+    var moved = (Number(a.billed) || 0) + (Number(a.paid) || 0) +
+                (Number(a.refunded) || 0);
+    if(!moved)
+      return '<div class="adm-m"><dl class="adm-dl">' +
+        '<dt>계약액</dt><dd>' + esc(won(a.price)) + '원</dd></dl>' +
+        '<p class="myhint">아직 오간 돈이 없습니다 — 아래에서 ' +
+        '<b>청구 · 수납 · 환불</b>을 한 줄씩 적으십니다.</p></div>';
     return '<div class="adm-m"><dl class="adm-dl">' +
       '<dt>계약액</dt><dd>' + esc(won(a.price)) + '원</dd>' +
       '<dt>청구</dt><dd>' + esc(won(a.billed)) + '원</dd>' +
@@ -247,9 +261,13 @@
   /* 노출 · 클릭 — ⚠️⚠️⚠️ **브라우저가 보낸 것을 센 값**입니다.
      비로그인 손님도 세므로 봇 · 중복이 섞입니다 — 그 사실을 **그 자리에서**
      말하고 청구 근거로 쓰지 말라고 적습니다. 숨기고 "노출 수" 라고만
-     적으면 그건 지어낸 숫자입니다 (절대 규칙 1). */
+     적으면 그건 지어낸 숫자입니다 (절대 규칙 1).
+     ⚠️⚠️ **0건이면 그 경고를 안 찍습니다** — 셀 것이 없는데 "봇이 섞입니다"
+     를 적으면 그건 치우지 못하는 잔소리입니다 (절대 규칙 2). */
   function adStat(a){
     var v = Number(a.views) || 0, c = Number(a.clicks) || 0;
+    if(!v && !c)
+      return '<p class="adm-st adm-st0">아직 노출 · 클릭이 0건입니다.</p>';
     /* ⚠️ **분모가 0 이면 비율을 내지 않습니다** ("0%" 는 비율이 아닙니다) */
     var rate = v > 0 ? (Math.round(c / v * 1000) / 10) + "%" : "";
     return '<p class="adm-st">노출 <b>' + esc(won(v)) + '</b> · 클릭 <b>' +
@@ -296,6 +314,26 @@
                 ? '<p class="fe-r adm-u">클릭 → <code>' + esc(a.click_url) + '</code></p>'
                 : '<p class="fe-r adm-u">클릭 → 업체 화면(<code>/pro/' +
                   esc(a.provider_id) + '</code>)</p>') +
+              /* ⚠️⚠️ **상태 단추를 상태 딸지 바로 아래에** 둡니다 —
+                 찍어 보니 돈 양식 뒤에 있어서, 광고 한 줄이 6,000px 일 때
+                 집행을 멈추려면 **한 화면을 다 밀어 내려가야** 했습니다.
+                 가로로 밀리지도 · 글자가 작지도 · 대비가 낮지도 않아 **어떤
+                 검사도 안 잡습니다** — 찍어 보고 알았습니다. */
+              '<div class="dk-b">' +
+                /* ⚠️ 갈 수 있는 상태를 **목록에서** 끌어옵니다 — 여기
+                   글자로 박아 두었다가 DB 에 없는 값을 두 개나 내고
+                   있었습니다 (위 머리말). `draft` 는 되돌릴 자리가
+                   아니므로 뺍니다(새로 넣으면 그 상태입니다). */
+                AD_ST.map(function(x){ return x.key; })
+                     .filter(function(k){ return k !== "draft"; })
+                     .map(function(k){
+                  /* ⚠️ 지금 상태로 가는 단추는 안 냅니다 (눌러도 아무
+                     일이 안 나는 단추가 됩니다 — 절대 규칙 5). */
+                  if(k === a.state) return "";
+                  return '<button class="btn btn-sm btn-line" data-adto="' + esc(k) +
+                    '" data-ad="' + esc(a.id) + '">' + esc(adSt(k).name) + '</button>';
+                }).join("") +
+              '</div>' +
               '<div class="adm-shots">' + adShot(a, "pc") + adShot(a, "mo") + '</div>' +
               adMoney(a) + adStat(a) +
               (L.length
@@ -307,8 +345,21 @@
                       ' <button class="btn btn-sm btn-bad" data-adbilldrop="' +
                       esc(b.id) + '">빼기</button></li>';
                   }).join("") + '</ul>'
-                : '<p class="myhint">아직 적은 돈 기록이 없습니다.</p>') +
-              '<form class="jform bz-f adm-bf" data-kind="adbill">' +
+                /* ⚠️ **같은 말을 두 번 안 적습니다** — 아무 돈도 안 오갔으면
+                   위의 돈 칸이 이미 "아직 오간 돈이 없습니다" 라고 말했습니다.
+                   찍어 보니 "아직 …" 으로 시작하는 줄이 셋이 연달아 있었습니다. */
+                : '') +
+              /* ⚠️⚠️ **돈 양식은 눌러야 열립니다.** 광고마다 양식을 펼쳐
+                 두었더니 광고 둘에 화면이 **5,970px** 이었습니다 — 스무 건이면
+                 운영자가 목록을 훑을 수가 없습니다(폰 360px 에서 겪은
+                 "밀면 보이는 것은 보이는 것이 아닙니다" 의 세로판입니다).
+                 ⚠️ `<details>` 는 안 씁니다 — 접힌 글은 `check-screens` 의
+                 12px · 대비 검사에서 빠져 아무도 안 재는 자리가 됩니다.
+                 `hidden` 을 켜고 끄면 재는 쪽이 그대로 봅니다. */
+              '<div class="dk-b"><button class="btn btn-sm btn-line" ' +
+                'data-adbillopen="' + esc(a.id) + '">돈 기록 적기</button></div>' +
+              '<form class="jform bz-f adm-bf" data-kind="adbill" ' +
+                'data-adbillform="' + esc(a.id) + '" hidden>' +
                 '<input type="hidden" name="adId" value="' + esc(a.id) + '">' +
                 '<div class="jrow"><label for="bb-k-' + esc(a.id) + '">갈래 <b>*</b></label>' +
                 '<select id="bb-k-' + esc(a.id) + '" name="billKind">' +
@@ -325,21 +376,7 @@
                 '<input id="bb-w-' + esc(a.id) + '" name="whyText" required maxlength="200"></div>' +
                 '<button class="btn btn-pt btn-sm" type="submit">돈 기록 더하기</button>' +
               '</form>' +
-              '<div class="dk-b">' +
-                /* ⚠️ 갈 수 있는 상태를 **목록에서** 끌어옵니다 — 여기
-                   글자로 박아 두었다가 DB 에 없는 값을 두 개나 내고
-                   있었습니다 (위 머리말). `draft` 는 되돌릴 자리가
-                   아니므로 뺍니다(새로 넣으면 그 상태입니다). */
-                AD_ST.map(function(x){ return x.key; })
-                     .filter(function(k){ return k !== "draft"; })
-                     .map(function(k){
-                  /* ⚠️ 지금 상태로 가는 단추는 안 냅니다 (눌러도 아무
-                     일이 안 나는 단추가 됩니다 — 절대 규칙 5). */
-                  if(k === a.state) return "";
-                  return '<button class="btn btn-sm btn-line" data-adto="' + esc(k) +
-                    '" data-ad="' + esc(a.id) + '">' + esc(adSt(k).name) + '</button>';
-                }).join("") +
-              '</div></li>';
+              '</li>';
           }).join("") + '</ul>'
         : '<p class="myhint">아직 집행한 광고가 없습니다.</p>') +
       '<h3 class="rq-h">광고 더하기</h3>' +
@@ -566,6 +603,17 @@
       rpc("drop_ad_image", { p: { ad: di.getAttribute("data-ad"),
                                   kind: di.getAttribute("data-addropimg") } })
         .then(paint).catch(function(err){ di.disabled = false; say(why(err)); });
+      return;
+    }
+    /* 돈 양식 펼치기 (0064) — ⚠️ 한 번 열면 닫지 않습니다 (적다 말고
+       닫히면 적은 것이 사라집니다). 다시 그리면 닫힙니다. */
+    var bo = e.target.closest ? e.target.closest("button[data-adbillopen]") : null;
+    if(bo){
+      var f0 = box.querySelector('form[data-adbillform="' +
+                 bo.getAttribute("data-adbillopen") + '"]');
+      if(f0){ f0.hidden = false; bo.hidden = true;
+              var i0 = f0.querySelector("select,input");
+              if(i0 && i0.focus) i0.focus(); }
       return;
     }
     /* 돈 기록 한 줄 빼기 (0064) — ⚠️⚠️ **까닭이 반드시**입니다

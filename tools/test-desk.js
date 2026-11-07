@@ -4569,12 +4569,24 @@ function boardsOf(){
     ok("  닉네임 · 글 비밀번호 칸이 있다",
        (await g.p.locator("#cqf #c-nick").count()) === 1 &&
        (await g.p.locator("#cqf #c-pw").count()) === 1, "");
-    /* ⚠️⚠️ **허니팟**은 사람에게 안 보여야 합니다 — 보이면 손님이 채웁니다 */
+    /* ⚠️⚠️ **허니팟**은 사람에게 안 보여야 합니다 — 보이면 손님이 채웁니다.
+       ⚠️⚠️⚠️ **`offsetParent` 로 재면 멀쩡한 코드를 고장이라고 합니다.**
+       처음에 그렇게 썼는데, `.sr-only` 는 `position:absolute` 라 그 칸의
+       `offsetParent` 가 **null 이 아닙니다** (가장 가까운 자리 잡은
+       조상입니다 — 작업 기억의 `.sr` 자리와 같은 결입니다). `hidden` 을
+       쓰면 자동 프로그램도 건너뛰어 덫이 안 되므로, 가리는 방법은
+       **1px 로 줄여 잘라내는 것**입니다. 그러니 재는 것도 **그 상자의
+       크기**입니다 (칸 자체는 1px 상자 안에서 제 크기를 그대로 들고
+       있습니다 — `clip` 이 상자를 줄이지 않습니다). */
     ok("  ⚠️ 봇 잡는 칸은 **사람 눈에 안 보인다**",
        (await g.p.locator("#cqf #c-site").count()) === 1 &&
        (await g.p.evaluate(function(){
           const e = document.getElementById("c-site");
-          return !e || !e.offsetParent; })), "");
+          const w = e && e.closest(".sr-only");
+          if(!w) return false;
+          const b = w.getBoundingClientRect();
+          return b.width <= 1.5 && b.height <= 1.5;
+        })), "");
     ok("  ⚠️⚠️ **비밀번호를 잊으면 직접 못 고친다**고 그 자리에서 말한다",
        r2.body.indexOf("직접 고치거나 내릴 수 없습니다") >= 0 &&
        r2.body.indexOf("고객센터") >= 0, r2.body.slice(0, 200));

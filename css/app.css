@@ -2082,6 +2082,7 @@ picture{ display: contents; }
 .adm-dl dd{ margin:0; color: var(--ink); font-weight:600; }
 .adm-dl .adm-net{ color: var(--grn-text); font-weight:800; }
 .adm-st{ margin:8px 0 2px; font-size:14px; color: var(--ink2); }
+.adm-st0{ color: var(--ink3); }
 .adm-u{ word-break:break-all; overflow-wrap:anywhere; }
 .adm-u code{ font-size:12.5px; }
 .adm-bl{ list-style:none; margin:8px 0; padding:0; display:grid; gap:6px; }

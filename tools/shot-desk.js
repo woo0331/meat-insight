@@ -469,6 +469,11 @@ const SCENES = [
                       "#probox button[data-ptab='new']"],
   ["admin-apply",     "/admin", ADM, T_ADMIN, { biz_metrics: MET },
                       "#probox button[data-ptab='ap']"],
+  /* ⚠️ 0064 의 광고 관리 — **갈래를 눌러야 보입니다.**
+     안 누르면 첫 갈래(수수료 정책)만 찍힐다 — 그 상자 안에 갈래가
+     여럿이면 **나머지는 영원히 아무도 안 보는 자리**가 됩니다. */
+  ["admin-ad",        "/admin", ADM, T_ADMIN, { biz_metrics: MET },
+                      "#bizbox button[data-tab='ad']"],
   ["my",              "/my",    CUS, T_MY,    {}],
   /* ⚠️ 자유게시판 (0059) — 모아보기 · 게시판 하나 · 글 하나 */
   ["board",           "/cat/community",         CUS, T_CQ, {}],

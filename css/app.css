@@ -2400,3 +2400,53 @@ picture{ display: contents; }
 .sec-hd-r{ display:flex; align-items:center; gap:12px; }
 .sec-hd-r h2{ margin:0; }
 .sec-hd-r .btn{ margin-left:auto; flex:none; }
+
+/* ════════════════════════════════════════════════════════════════════
+   골프장 · 연습장 화면 — /course/<slug>  (DB 는 0066)
+   ⚠️ 12px 미만을 쓰지 않습니다 · 누르는 것은 40px 이상입니다
+   ⚠️ 격자 칸에 min-width:0 을 줍니다 (긴 주소가 칸을 벌려 가로로 밀립니다)
+   ════════════════════════════════════════════════════════════════════ */
+.cs-closed{ display:flex; gap:8px; align-items:flex-start; margin-top:14px;
+  padding:12px 14px; border:1.5px solid var(--warn); border-radius:12px;
+  background: var(--warn-soft); color: var(--warn-text); font-size:14px; }
+.cs-closed .ic{ flex:none; margin-top:2px; }
+.cs-facts{ display:grid; gap:10px; grid-template-columns: repeat(2, minmax(0,1fr)); }
+@media (max-width: 680px){ .cs-facts{ grid-template-columns: 1fr; } }
+.cs-facts > *{ min-width:0; }
+.cs-facts > div{ padding:12px 14px; border:1.5px solid var(--line);
+  border-radius:12px; background: var(--surface); }
+.cs-facts dt{ font-size:12.5px; color: var(--ink3); }
+.cs-facts dd{ margin:4px 0 0; font-size:15px; font-weight:700; color: var(--ink);
+  word-break:keep-all; overflow-wrap:anywhere; }
+.cs-src{ display:flex; gap:7px; align-items:flex-start; margin-top:14px;
+  font-size:13px; color: var(--ink3); }
+.cs-src .ic{ flex:none; margin-top:2px; }
+.cs-map{ margin-top:14px; }
+.cs-none{ margin:0 0 14px; font-size:14.5px; color: var(--ink3); }
+.cst-list{ display:grid; gap:10px; grid-template-columns: repeat(2, minmax(0,1fr));
+  list-style:none; margin:0 0 14px; padding:0; }
+@media (max-width: 680px){ .cst-list{ grid-template-columns: 1fr; } }
+.cst-list > *{ min-width:0; }
+.cst a{ display:flex; flex-direction:column; gap:4px; min-height:84px;
+  padding:12px 14px; border:1.5px solid var(--line); border-radius:14px;
+  background: var(--surface); text-decoration:none; color:inherit; }
+.cst a:hover{ border-color: var(--grn-line); box-shadow: var(--shadow-soft); }
+.cst-d{ font-size:14.5px; font-weight:800; color: var(--ink); }
+.cst-n{ font-size:13.5px; color: var(--ink2); }
+.cst-m{ display:flex; flex-wrap:wrap; gap:8px; font-size:12.5px; color: var(--ink3); }
+
+/* 골프장 · 연습장 목록 (/search 의 아래 구간 · 0066)
+   ⚠️ 카드는 `amCourseGrid()` 한 함수가 그립니다 (빌드 · 브라우저 공용) */
+.csg{ display:grid; gap:10px; grid-template-columns: repeat(3, minmax(0,1fr));
+  list-style:none; margin:0; padding:0; }
+@media (max-width: 900px){ .csg{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 560px){ .csg{ grid-template-columns: 1fr; } }
+.csg > *{ min-width:0; }
+.csg-i a{ display:flex; flex-direction:column; gap:4px; min-height:84px;
+  padding:12px 14px; border:1.5px solid var(--line); border-radius:14px;
+  background: var(--surface); text-decoration:none; color:inherit; }
+.csg-i a:hover{ border-color: var(--grn-line); box-shadow: var(--shadow-soft); }
+.csg-n{ font-size:14.5px; font-weight:700; color: var(--ink);
+  word-break:keep-all; overflow-wrap:anywhere; }
+.csg-w{ font-size:13px; color: var(--ink2); }
+.csg-m{ display:flex; flex-wrap:wrap; gap:8px; font-size:12.5px; color: var(--ink3); }

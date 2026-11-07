@@ -1,0 +1,101 @@
+/* ════════════════════════════════════════════════════════════════════
+   DB → js/data/courses.generated.js  (전국 골프장 · 연습장 · 0066)
+
+   ⚠️⚠️ **공개 키(anon)로 공개 보기(`v_course_public`)를 읽습니다.**
+   `course` **표**에는 GRANT 가 한 줄도 없습니다 — 표를 읽으려 하면
+   `permission denied` 입니다. 그게 맞는 동작이고, 공개로 읽는 길은
+   보기 하나입니다 (`pull-providers` 가 0032 에서 밟은 자리).
+   ⚠️ service key 를 쓸 까닭이 없습니다 — 공개 화면에 실릴 자료입니다.
+
+   ⚠️⚠️⚠️ **키가 없으면 지금 파일을 그대로 둡니다.** 0곳으로 덮어쓰면
+   골프장이 화면에서 통째로 사라지고, 그건 받은 적 없는 자료를 "없다"
+   고 말하는 것과 다릅니다.
+
+   돌리기  SUPABASE_URL=… SUPABASE_ANON_KEY=… node tools/pull-courses.js
+   ════════════════════════════════════════════════════════════════════ */
+const fs = require("fs"), path = require("path");
+const ROOT = path.join(__dirname, "..");
+const OUT  = path.join(ROOT, "js", "data", "courses.generated.js");
+
+/* 화면이 쓰는 칸만 — ⚠️ 보기에 칸이 늘어도 이 파일이 저절로 커지지 않게 */
+const VIEW = "v_course_public";
+const COLS = "id,slug,kind,name,region,gu,addr,addr_road,tel,holes,biz_kind," +
+             "site_url,lat,lng,state,source_id,as_of";
+
+function write(rows, at){
+  var head =
+    "/* ⚠️⚠️ **도구가 만드는 파일입니다 — 손으로 고치지 마세요.**\n" +
+    "   `node tools/pull-courses.js` 가 DB(보기 " + VIEW + ")에서 찍습니다.\n" +
+    "   ⚠️ 손으로 적은 줄은 **출처가 없는 시설**이고, 출처 없는 시설은\n" +
+    "   지어낸 것과 구별되지 않습니다 (절대 규칙 1 · 표시광고법 제3조).\n" +
+    "   가져온 때: " + at + " */\n";
+  fs.writeFileSync(OUT,
+    head + "window.AM_COURSES = " + JSON.stringify(rows, null, 1) + ";\n" +
+    "window.AM_COURSES_AT = " + JSON.stringify(at) + ";\n", "utf8");
+}
+
+(async function(){
+  const url = process.env.SUPABASE_URL || "";
+  const key = process.env.SUPABASE_ANON_KEY || "";
+  if(!url || !key){
+    console.log("⚠️ SUPABASE_URL · SUPABASE_ANON_KEY 가 없습니다 — " +
+                "지금 파일을 그대로 둡니다.");
+    console.log("   (골프장을 0곳으로 덮어쓰지 않습니다)");
+    process.exit(0);
+  }
+  const r = await fetch(url.replace(/\/+$/, "") +
+    "/rest/v1/" + VIEW + "?select=" + COLS + "&order=name.asc",
+    { headers: { apikey: key, authorization: "Bearer " + key } });
+  if(!r.ok){
+    const why = await r.text().catch(function(){ return ""; });
+    console.error("❌ 골프장을 못 읽었습니다 — HTTP " + r.status +
+                  "\n   ⚠️ 지금 파일을 그대로 둡니다.");
+    if(why.indexOf(VIEW) >= 0 || r.status === 404)
+      console.error("   ⚠️⚠️ 공개 보기(" + VIEW + ")가 없습니다 — " +
+                    "db/migrations/0066 을 아직 올리지 않으셨습니다.");
+    else if(why) console.error("   " + why.slice(0, 200));
+    process.exit(1);
+  }
+  const rows = await r.json();
+  if(!Array.isArray(rows)){
+    console.error("❌ 목록이 아닙니다 — 파일을 그대로 둡니다.");
+    process.exit(1);
+  }
+
+  /* ⚠️⚠️ **slug 가 없거나 겹치면 멈춥니다** — 주소가 겹치면 빌드가 한
+     화면을 다른 화면으로 덮어씁니다 (에러 없이 조용히). */
+  const seen = {}, bad = [];
+  rows.forEach(function(c){
+    if(!c.slug) bad.push(c.name + " 에 slug 가 없습니다");
+    else if(seen[c.slug]) bad.push("slug 가 겹칩니다 — " + c.slug);
+    else seen[c.slug] = 1;
+    if(!c.region) bad.push(c.name + " 에 지역이 없습니다");
+  });
+  if(bad.length){
+    bad.slice(0, 20).forEach(function(m){ console.error("❌ " + m); });
+    console.error("   ⚠️ 지금 파일을 그대로 둡니다.");
+    process.exit(1);
+  }
+
+  /* 빈 칸은 **빼고** 적습니다 — null 을 들고 다니면 화면이 그것을 찍습니다 */
+  const clean = rows.map(function(c){
+    const o = {};
+    Object.keys(c).forEach(function(k){
+      const v = c[k];
+      if(v === null || v === undefined) return;
+      if(typeof v === "string" && v.trim() === "") return;
+      o[k] = v;
+    });
+    return o;
+  });
+
+  const now = new Date().toISOString().replace("T", " ").slice(0, 16) + " UTC";
+  write(clean, now);
+  const n = { golf:0, range:0 };
+  clean.forEach(function(c){ n[c.kind] = (n[c.kind] || 0) + 1; });
+  console.log("골프장 " + (n.golf || 0) + "곳 · 연습장 " + (n.range || 0) +
+              "곳을 가져왔습니다 — " + now);
+})().catch(function(e){
+  console.error("❌ " + e.message + "\n   ⚠️ 지금 파일을 그대로 둡니다.");
+  process.exit(1);
+});

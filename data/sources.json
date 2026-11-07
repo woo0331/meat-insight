@@ -1,0 +1,98 @@
+{
+  "note": "공식 출처 표 — tools/fetch-courses.js 가 이 파일만 읽습니다. 여기 없는 주소는 받지 않습니다.",
+  "sources": [
+    {
+      "id": "mcst-golf-nationwide",
+      "name": "문화체육관광부 전국 골프장 현황",
+      "kind": "golf",
+      "scope": "전국",
+      "page": "https://www.data.go.kr/data/15118920/fileData.do",
+      "meta": "https://www.data.go.kr/catalog/15118920/fileData.json",
+      "license": "확인 필요 — 포털 상세의 이용허락범위를 받은 뒤 적습니다",
+      "use": true
+    },
+    {
+      "id": "seoul-range-permit",
+      "name": "서울특별시 골프연습장업 인허가",
+      "kind": "range",
+      "scope": "서울",
+      "page": "https://www.data.go.kr/data/15071392/fileData.do",
+      "meta": "https://www.data.go.kr/catalog/15071392/fileData.json",
+      "license": "확인 필요",
+      "use": true
+    },
+    {
+      "id": "chungbuk-golf",
+      "name": "충청북도 골프장 현황",
+      "kind": "golf",
+      "scope": "충북",
+      "page": "https://www.data.go.kr/data/15071058/fileData.do",
+      "meta": "https://www.data.go.kr/catalog/15071058/fileData.json",
+      "license": "확인 필요",
+      "use": true
+    },
+    {
+      "id": "songpa-range",
+      "name": "서울 송파구 골프연습장업",
+      "kind": "range",
+      "scope": "서울 송파구",
+      "page": "https://www.data.go.kr/data/15115231/fileData.do",
+      "meta": "https://www.data.go.kr/catalog/15115231/fileData.json",
+      "license": "확인 필요",
+      "use": true
+    },
+    {
+      "id": "dongjak-range",
+      "name": "서울 동작구 골프연습장업",
+      "kind": "range",
+      "scope": "서울 동작구",
+      "page": "https://www.data.go.kr/data/15149068/fileData.do",
+      "meta": "https://www.data.go.kr/catalog/15149068/fileData.json",
+      "license": "확인 필요",
+      "use": true
+    },
+    {
+      "id": "gangnam-range",
+      "name": "서울 강남구 골프연습장업",
+      "kind": "range",
+      "scope": "서울 강남구",
+      "page": "https://www.data.go.kr/data/15115387/fileData.do",
+      "meta": "https://www.data.go.kr/catalog/15115387/fileData.json",
+      "license": "확인 필요",
+      "use": true
+    },
+    {
+      "id": "kgba",
+      "name": "한국골프장경영협회",
+      "kind": "golf",
+      "scope": "전국 (회원사)",
+      "page": "https://www.kgba.or.kr/",
+      "meta": null,
+      "license": "재배포 권한 없음 — 받지 않습니다 (지시서 작업 1)",
+      "use": false,
+      "why_off": "협회 회원사 명단은 재배포 권한이 별도입니다. 허락을 받기 전에는 수집 대상이 아닙니다."
+    },
+    {
+      "id": "unverified-15154978",
+      "name": "(미검증) 전국 인허가 API 15154978",
+      "kind": "golf",
+      "scope": "전국",
+      "page": "https://www.data.go.kr/data/15154978/openapi.do",
+      "meta": null,
+      "license": "미검증",
+      "use": false,
+      "why_off": "지시서가 '원문·응답을 확인하지 못했다. 확정된 API 로 취급하지 말 것' 이라고 못박았습니다."
+    },
+    {
+      "id": "unverified-15154975",
+      "name": "(미검증) 전국 인허가 API 15154975",
+      "kind": "range",
+      "scope": "전국",
+      "page": "https://www.data.go.kr/data/15154975/openapi.do",
+      "meta": null,
+      "license": "미검증",
+      "use": false,
+      "why_off": "위와 같습니다."
+    }
+  ]
+}

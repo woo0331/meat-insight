@@ -31,6 +31,9 @@ global.window = {};
  "js/data/site.js","js/data/catalog.js","js/data/regions.js",
  "js/data/providers.generated.js","js/data/providers.js",
  "js/data/reviews.generated.js","js/data/review.js",
+ /* 전국 골프장 · 연습장 (0066) — ⚠️ 참은 DB 한 곳입니다
+    (node tools/pull-courses.js 가 찍습니다) */
+ "js/data/courses.generated.js","js/data/courses.js",
  "js/data/photos.js","js/card.js",
  "js/data/legal-terms.js","js/data/legal-privacy.js"]
   .forEach(function(f){ require("./" + f); });
@@ -333,7 +336,18 @@ function page(o){
     (W.bizVal("googleVerify")
       ? '<meta name="google-site-verification" content="' + esc(W.bizVal("googleVerify")) + '">\n' : '') +
     ld.map(function(x){
-      return '<script type="application/ld+json">' + JSON.stringify(x) + '</script>\n';
+      /* ⚠️⚠️⚠️ **JSON.stringify 는 `<` 를 안 바꿉니다.** 구조화 데이터에
+         들어가는 이름 · 설명은 DB 에서 오고(업체 상호 · 골프장 이름),
+         거기에 `</script>` 가 섞이면 **스크립트 자리를 빠져나갑니다** —
+         `esc()` 를 지난 본문은 멀쩡한데 이 자리만 날것이었습니다
+         (2026-11-07 · `test-course` 가 잡았습니다).
+         ⚠️ JSON 안에서는 `\u003c` 가 **같은 글자**라 뜻이 안 바뀝니다. */
+      return '<script type="application/ld+json">' +
+        JSON.stringify(x)
+          .replace(/</g, "\\u003c")
+          .replace(/>/g, "\\u003e")
+          .replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029") +
+        '</script>\n';
     }).join("") +
     '</head>\n<body>\n' +
     '<a class="skip" href="#main">본문 바로가기</a>\n' +
@@ -489,10 +503,27 @@ if(require.main === module){
   if(zBad.length){ zBad.forEach(function(m){ console.error("❌ " + m); }); process.exit(1); }
 
   var prov = require("./pages/provider.js");
+  /* ⚠️⚠️ **골프장 화면은 자료가 있을 때만 찍힙니다** (0066). 0곳이면
+     한 장도 안 찍고, 그게 맞습니다 — 없는 골프장 주소를 만들어 두면
+     손님이 눌러서 빈 화면을 봅니다 (절대 규칙 2 · 5).
+     ⚠️ 참은 DB 한 곳입니다: node tools/pull-courses.js */
+  var crs   = require("./pages/course.js");
+  var cours = W.amCourses();
+  /* ⚠️ slug 가 겹치면 **한 화면이 다른 화면을 덮어씁니다** (에러 없이
+     조용히). pull-courses 도 보지만 손으로 넣는 날을 위해 여기서도 봅니다. */
+  var csSeen = {}, csBad = [];
+  cours.forEach(function(c){
+    if(!c.slug) csBad.push((c.name || "이름 없음") + " 에 slug 가 없습니다");
+    else if(csSeen[c.slug]) csBad.push("골프장 slug 가 겹칩니다 — " + c.slug);
+    else csSeen[c.slug] = 1;
+  });
+  if(csBad.length){ csBad.forEach(function(m){ console.error("❌ " + m); }); process.exit(1); }
+
   var built = [home.build(), list.build()]
     .concat(W.AM_CATS.map(function(c){ return cat.build(c); }))
     .concat(flat)
-    .concat(provs.map(function(p){ return prov.build(p); }));
+    .concat(provs.map(function(p){ return prov.build(p); }))
+    .concat(cours.map(function(c){ return crs.build(c); }));
 
   /* ⚠️⚠️ 찍기 전에 **주소가 vercel.json 에 잡아먹히는지** 먼저 봅니다.
      걸리면 저장소에는 파일이 멀쩡한데 손님에게는 410 이 나갑니다 —

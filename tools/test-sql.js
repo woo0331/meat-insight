@@ -75,7 +75,9 @@ function psql(sql, db){
 function psqlFile(f, db){
   return execFileSync(path.join(BIN,"psql"),
     ["-h",DIR,"-p",String(PORT),"-U","postgres","-d",db||"golftest",
-     "-q","-v","ON_ERROR_STOP=1","-f",path.join(ROOT,f)],
+     /* ⚠️ 절대경로도 받습니다 — 검사가 임시 폴더에 만든 SQL 을 돌립니다
+        (path.join(ROOT, "/tmp/x") 는 ROOT + "/tmp/x" 가 되어 못 찾습니다) */
+     "-q","-v","ON_ERROR_STOP=1","-f",(path.isAbsolute(f) ? f : path.join(ROOT,f))],
     { stdio:["ignore","pipe","pipe"] }).toString();
 }
 function denied(sql, db){
@@ -169,6 +171,7 @@ try{
      있는지**가 여기서 가장 중요합니다 (제17조 제2항) — 0046 · 0056 의
      세 겹을 그대로 베꼈으니 그 셋을 **따로** 눌러 봅니다. */
   require("./sql/wanted.js")({ ok, psql, psqlFile, denied, allowed });
+  require("./sql/course.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/notice.js")({ ok, psql, psqlFile, denied, allowed });
   /* 0057 — 업체 사업자 신원정보 (제20조 제2항). ⚠️ 공개 보기의 칸 ·
      칸 GRANT · 트리거 · 운영자 문을 **따로** 눌러 봅니다. */

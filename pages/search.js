@@ -127,6 +127,33 @@ exports.build = function(){
       : '') +
   '</div></section>';
 
+  /* ── 골프장 · 연습장 (0066) ─────────────────────────────────────
+     ⚠️⚠️⚠️ **업체와 갈라서 냅니다.** 골프장은 **저희 입점업체가 아닙니다** —
+     공공 자료에서 가져온 시설 정보이고, 저희와 아무 계약이 없습니다.
+     섞어 내면 손님이 "골프올인원에 입점한 골프장" 으로 읽습니다.
+     ⚠️⚠️ 카드는 `amCourseGrid()` **한 함수**에서 그립니다 — 빌드와
+     브라우저가 같은 함수를 부릅니다 (업체 카드에서 배운 자리).
+     ⚠️ 0곳이면 **0곳이라고 말합니다** — 지어내지 않습니다. */
+  var cs = W.amCoursePick ? W.amCoursePick({}) : [];
+  body += '<section class="sec" id="courses"><div class="wrap">' +
+    '<div class="sec-hd"><h2 id="csresh">' +
+      (cs.length ? '골프장 · 연습장 ' + W.won(cs.length) + '곳' : '골프장 · 연습장') +
+      '</h2>' +
+      '<p>공공 자료에서 가져온 <b>시설 정보</b>입니다. ' +
+      '저희 입점업체가 아니며, <b>예약을 보장하지 않습니다.</b></p></div>' +
+    '<div id="csres">' + (cs.length
+      ? W.amCourseGrid(cs)
+      : '<div class="none"><h2>아직 불러온 골프장이 없습니다.</h2>' +
+        '<p>공식 공공데이터에서 받아 넣기 전이라 보여 드릴 시설이 없습니다. ' +
+        '없는 골프장을 지어내 보여 드리지 않습니다.</p>' +
+        '<p class="none-or">지금 하실 수 있는 것</p><div class="none-b">' +
+        '<a class="btn btn-line" href="/match?cat=booking">' + icon("arrow",18) +
+        '부킹 요청 남기기</a>' +
+        '<a class="btn btn-line" href="' + esc(W.amCatUrl(W.amCat("booking"))) + '">' +
+        icon("flag",18) + '올라온 티타임 보기</a>' +
+        '</div></div>') + '</div>' +
+  '</div></section>';
+
   /* ⚠️⚠️ **아래에 분류 목록을 또 늘어놓지 않습니다** (지시서 §7 —
      "상단과 하단에 동일한 카테고리 목록을 반복하지 않는다"). 위 거르개가
      이미 같은 열 분류를 칩으로 내고 있었습니다.
@@ -143,6 +170,10 @@ exports.build = function(){
     js: ["/js/data/korean.js", "/js/data/regions.js",
          "/js/data/providers.generated.js", "/js/data/providers.js",
          "/js/data/reviews.generated.js", "/js/data/review.js",
+         /* ⚠️ 골프장 자료와 카드 함수를 **같이** 실어야 합니다 — 안 실으면
+            거르개를 눌러도 골프장 구간만 처음 것 그대로 남습니다
+            (값을 읽는 파일을 싣는 것까지가 기능입니다). */
+         "/js/data/courses.generated.js", "/js/data/courses.js",
          "/js/card.js", "/js/search.js", "/js/adslot.js"]
   };
 };

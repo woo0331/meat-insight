@@ -235,6 +235,23 @@
       ? window.amCardGrid(L, { thumb:true, actions:true, compare:true })
       : noneBox(s);
 
+    /* ⚠️⚠️ **골프장 구간도 같이 다시 그립니다** — 안 그리면 거르개를
+       눌러도 골프장 목록만 처음 것 그대로 남아 "서울" 을 골랐는데
+       제주 골프장이 보입니다 (에러는 안 납니다).
+       ⚠️ 카드는 `amCourseGrid()` **한 함수**이고 빌드가 부르는 것과
+       같습니다 — 두 벌로 적으면 거르개를 누르는 순간 조용히 달라집니다. */
+    var cbox = document.getElementById("csres");
+    if(cbox && window.amCoursePick){
+      var CL = window.amCoursePick(s);
+      /* ⚠️ 0건일 때는 **빌드가 찍어 둔 안내를 그대로 둡니다** — 여기서
+         다시 적으면 같은 말을 두 곳에 적는 것이 됩니다. */
+      if(CL.length) cbox.innerHTML = window.amCourseGrid(CL);
+      var ch = document.getElementById("csresh");
+      if(ch) ch.textContent = CL.length
+        ? ("골프장 · 연습장 " + window.won(CL.length) + "곳")
+        : "골프장 · 연습장";
+    }
+
     /* 머리 숫자 · 지금 조건 */
     var h = document.getElementById("sresh");
     if(h) h.textContent = L.length ? ("업체 " + window.won(L.length) + "곳") : "업체";

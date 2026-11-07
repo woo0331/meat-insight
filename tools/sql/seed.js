@@ -132,4 +132,79 @@ module.exports = function(T){
      psql("select become(null); set role anon; " +
           "select count(*)::text from v_provider_card " +
           "where id in ('t-range','t-fit','t-tour')") === "0");
+
+  /* ══════════════════════════════════════════════════════════════
+     db/seed/test-board.sql — 게시판 글 열둘 (0059)
+
+     ⚠️⚠️⚠️ **업체 씨앗과 다릅니다.** 업체는 `is_test` 칸이 있어 공개
+     보기가 걸러 주지만, `cq` 에는 그런 칸이 없습니다 — 넣은 글은
+     **손님에게 그대로 보입니다.** 그래서 이 파일은 "눌러 보고 지우는"
+     파일이고, 검사가 재는 것도 **지우는 길이 실제로 도는가** 입니다.
+     ⚠️ 안 바꾼 UUID 로 돌리면 **멈춰야** 합니다 — 조용히 들어가면
+     없는 사람 이름으로 글이 섭니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── db/seed/test-board.sql 을 **그대로** 붙여 넣어 봅니다");
+  const BSEED = fs2.readFileSync(
+    path2.join(__dirname, "..", "..", "db", "seed", "test-board.sql"), "utf8");
+  const PLACE = "00000000-0000-0000-0000-000000000000";
+
+  /* ① 안 바꾸고 돌리면 **멈추는가** (파일이 약속한 것) */
+  const asIs = denied(BSEED);
+  ok("UUID 를 안 바꾸면 **그 자리에서 거절한다** (조용히 안 들어간다)",
+     asIs.no, "들어갔습니다 — 없는 사람 이름으로 글이 섭니다");
+  ok("  그 까닭이 **사람이 알아볼 말**이다 (auth.users 를 가리킨다)",
+     /users|foreign key|violates/i.test(String(asIs.why || "")), String(asIs.why));
+
+  /* ② 바꿔서 돌리면 들어가는가 */
+  const SU = psql("insert into auth.users (email) values ('seed-board@x.test') returning id");
+  const r1 = allowed(BSEED.split(PLACE).join(SU));
+  ok("UUID 를 바꾸면 파일이 끝까지 돈다", r1.yes, String(r1.why));
+
+  /* ⚠️ 갯수를 박지 않습니다 — 게시판 수를 `catalog.js` 에서 셉니다 */
+  const keepW2 = global.window;
+  global.window = {};
+  delete require.cache[require.resolve("../../js/data/catalog.js")];
+  require("../../js/data/catalog.js");
+  const nBoard = (global.window.amCatItems
+    ? global.window.amCatItems(global.window.amCat("community")) : []).length;
+  global.window = keepW2;            /* ⚠️ 빌려 쓰고 **그대로 돌려놓습니다** */
+
+  ok("게시판 " + nBoard + "곳에 한 장씩 선다 (갯수를 박지 않습니다)",
+     nBoard > 0 &&
+     psql("select count(distinct cat)::text from cq where title like '[검사용]%'")
+       === String(nBoard),
+     psql("select count(distinct cat)::text from cq where title like '[검사용]%'"));
+  ok("  게시판 키가 전부 cm- 로 시작한다 (분류 키가 섞이지 않았다)",
+     psql("select count(*)::text from cq where title like '[검사용]%' " +
+          "and cat not like 'cm-%'") === "0");
+  ok("  댓글도 들어간다", Number(psql(
+     "select count(*)::text from ca a join cq q on q.id = a.q_id " +
+     "where q.title like '[검사용]%'")) > 0);
+
+  /* ③ ⚠️⚠️ **손님 눈에 실제로 보이는가** — 안 보이면 넣는 뜻이 없습니다
+     (그리고 이것이 업체 씨앗과 정반대인 자리라 그 사실을 못 박습니다) */
+  ok("⚠️⚠️ 비로그인 손님에게 **그대로 보인다** (업체 씨앗과 반대입니다)",
+     psql("set role anon; select count(*)::text from v_cq_public " +
+          "where title like '[검사용]%'") === String(nBoard));
+
+  /* ④ 지우는 길 — ⚠️ 글자를 **파일에서 꺼내** 돌립니다 (글과 검사가
+     어긋나지 않게 · ③ 에서 적어 둔 그 까닭) */
+  const DEL = "delete from cq where title like '[검사용]%';";
+  ok("지우는 SQL 이 파일에 적힌 그대로다",
+     flat(BSEED).indexOf(flat(DEL)) >= 0, flat(DEL));
+
+  /* ⚠️ 참 손님 글을 **안 건드리는지**까지 봅니다 — 안 보면 "지워진다"
+     만 재고 **너무 넓게 지우는 것**을 놓칩니다. */
+  psql("insert into cq (by_user, cat, title, body) values ('" + SU +
+       "', 'cm-open', '참 손님이 쓴 글입니다', '이 글은 지워지면 안 됩니다.')");
+  const r2 = allowed(DEL);
+  ok("지우는 SQL 이 돈다", r2.yes, String(r2.why));
+  ok("  검사용 글이 **한 장도 안 남는다**",
+     psql("select count(*)::text from cq where title like '[검사용]%'") === "0");
+  ok("  ⚠️ 참 손님 글은 **그대로 남는다** (너무 넓게 지우지 않는다)",
+     psql("select count(*)::text from cq " +
+          "where title = '참 손님이 쓴 글입니다'") === "1");
+  ok("  댓글도 같이 사라진다 (cascade)",
+     psql("select count(*)::text from ca a join cq q on q.id = a.q_id " +
+          "where q.title like '[검사용]%'") === "0");
 };

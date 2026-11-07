@@ -43,7 +43,9 @@
   var esc = window.esc;
   var PER = 20;                     /* 한 쪽에 스무 줄 */
   var A = null;
-  var S = { s:"", q:"", p:0 };      /* 게시판 · 보고 있는 글 · 쪽(0부터) */
+  /* ⚠️ `q` 는 보고 있는 글, `q2` 는 **찾는 글자**입니다 — 짧은 이름을
+     두 뜻으로 쓰면 한쪽을 고치는 날 다른 쪽이 조용히 바뀝니다. */
+  var S = { s:"", q:"", q2:"", p:0 };
   /* ⚠️ 사진 버킷이 켜졌는지 — 서버만 압니다(`/api/upload`). 꺼져 있으면
      사진 칸을 **아예 안 냅니다**. */
   var CQPH = false;
@@ -81,6 +83,10 @@
     var qs = [];
     if(s) qs.push("s=" + encodeURIComponent(s));
     if(q) qs.push("q=" + encodeURIComponent(q));
+    /* ⚠️ 찾는 글자도 **주소에 담습니다** — 복사해 보내도 같은 화면이고
+       뒤로 가기도 됩니다 */
+    var q2 = (o && "q2" in o) ? o.q2 : S.q2;
+    if(q2) qs.push("f=" + encodeURIComponent(q2));
     if(p > 0) qs.push("p=" + String(p + 1));
     return "/cat/community" + (qs.length ? "?" + qs.join("&") : "");
   }
@@ -90,12 +96,14 @@
     /* ⚠️ 모르는 값은 버립니다 — 없는 게시판으로 들어오면 모아보기입니다 */
     S.s = (s === "all" || boards().some(function(b){ return b.key === s; })) ? s : "";
     S.q = (u.get("q") || "").trim();
+    S.q2 = (u.get("f") || "").trim().slice(0, 40);
     var p = parseInt(u.get("p") || "1", 10);
     S.p = (isFinite(p) && p > 1) ? (p - 1) : 0;
   }
   function go(o, push){
     if(o && "s" in o) S.s = o.s;
     if(o && "q" in o) S.q = o.q;
+    if(o && "q2" in o) S.q2 = o.q2;
     S.p = (o && "p" in o) ? o.p : 0;
     if(push !== false){
       try{ window.history.pushState({}, "", url({})); }catch(e){}
@@ -230,16 +238,52 @@
     '</div>';
   }
 
+  /* ⚠️⚠️ **검색은 서버가 합니다** (지시서 C). 한 쪽(20건)만 받아 화면에서
+     거르면, 찾으시는 글이 그 20건 밖에 있을 때 **0건으로 보입니다**
+     (조인 · 중고 거르개에서 적어 둔 그 자리).
+     ⚠️ 제목으로만 찾습니다 — 본문까지 긁으면 느리고, 무엇으로 찾았는지도
+     흐려집니다. 그 사실을 **칸 옆에서** 말합니다.
+     ⚠️⚠️ 글자를 그대로 질의에 넣지 않습니다 — `*` · `,` · `)` 는
+     PostgREST 가 뜻으로 읽습니다. 빼고 보냅니다. */
+  function qSafe(t){
+    return String(t || "").replace(/[*,()%]/g, " ").trim().slice(0, 40);
+  }
+  function searchBox(){
+    return '<form class="jform cqs" id="cqs">' +
+      '<div class="jrow cqs-r">' +
+        '<label for="cq-q" class="sr-only">글 제목으로 찾기</label>' +
+        '<input id="cq-q" name="q" type="search" maxlength="40" ' +
+        'placeholder="글 제목으로 찾기" value="' + esc(S.q2 || "") + '">' +
+        '<button type="submit" class="btn btn-line btn-sm">찾기</button>' +
+        (S.q2
+          ? '<button type="button" class="btn btn-bad btn-sm cqs-x">조건 지우기</button>'
+          : '') +
+      '</div>' +
+    '</form>';
+  }
+
   function paintList(){
-    list.innerHTML = bar() + head() + '<p class="cqz">불러오는 중입니다…</p>';
+    list.innerHTML = bar() + head() + searchBox() +
+      '<p class="cqz">불러오는 중입니다…</p>';
     var qs = ["select=id,cat,title,who,named,created_at,answer_n,view_n,photo_n",
               "order=created_at.desc",
               "limit=" + String(PER), "offset=" + String(S.p * PER)];
     if(S.s && S.s !== "all") qs.push("cat=eq." + encodeURIComponent(S.s));
+    /* ⚠️ 찾는 글자가 있으면 **서버에서** 좁힙니다 (ilike) */
+    var qw = qSafe(S.q2);
+    if(qw) qs.push("title=ilike.*" + encodeURIComponent(qw) + "*");
     return get("v_cq_public?" + qs.join("&"), true).then(function(r){
       var rows = r.rows;
-      list.innerHTML = bar() + head() +
-        (rows.length ? '<ul class="cql">' + rows.map(row).join("") + '</ul>' : zero()) +
+      /* ⚠️⚠️ 0건을 **두 가지로 갈라** 말합니다 — 아직 아무도 안 썼다와
+         찾으시는 글자에 맞는 것이 없다는 다른 말입니다 (조인에서 적어
+         둔 그 자리). 섞으면 "글이 없다" 고 잘못 읽힙니다. */
+      var none = qw
+        ? '<div class="none"><h3>찾으시는 글이 없습니다.</h3>' +
+          '<p><b>' + esc(qw) + '</b> 가 제목에 든 글이 0건입니다. ' +
+          '다른 낱말로 찾아보시거나 조건을 지워 보세요.</p></div>'
+        : zero();
+      list.innerHTML = bar() + head() + searchBox() +
+        (rows.length ? '<ul class="cql">' + rows.map(row).join("") + '</ul>' : none) +
         (rows.length ? pager(r.total, rows.length) : "");
       bind();
     });
@@ -705,6 +749,13 @@
         e.preventDefault(); go({ q:"", p:S.p });
       });
     });
+    /* 찾기 — ⚠️ 보고 있던 게시판은 그대로 두고 **쪽만 처음으로** */
+    var sf = list.querySelector("#cqs");
+    if(sf) sf.addEventListener("submit", function(e){
+      e.preventDefault(); go({ q:"", q2:sf.q.value, p:0 });
+    });
+    var sx = list.querySelector(".cqs-x");
+    if(sx) sx.addEventListener("click", function(){ go({ q:"", q2:"", p:0 }); });
     Array.prototype.forEach.call(list.querySelectorAll(".cq-new"), function(b){
       /* ⚠️ 모아보기의 0건 단추는 **그 게시판**으로 열어 둡니다 — 안 그러면
          "첫 글 작성하기" 를 눌렀는데 고르개가 비어서 다시 고르게 됩니다. */

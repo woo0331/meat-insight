@@ -2222,3 +2222,8 @@ picture{ display: contents; }
 .cqg-bx:not(:empty){ margin-top:14px; padding-top:14px;
   border-top:1.5px solid var(--line); }
 .cq-gh{ margin:0 0 14px; }
+
+/* 게시판 찾기 (지시서 C) — ⚠️ 서버가 거릅니다 */
+.cqs{ margin: 0 0 14px; }
+.cqs-r{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.cqs-r input{ flex:1 1 220px; min-width:0; }

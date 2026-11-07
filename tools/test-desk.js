@@ -949,8 +949,21 @@ function boardsOf(){
      String(await s.p.locator("#bizbox .adm-shot").count()));
   ok("  돈 기록 한 줄이 사람 말로 나온다 (pay 가 아니라 수납)",
      t.indexOf("수납") >= 0 && t.indexOf("pay") < 0, t.slice(0, 400));
-  ok("광고 자리가 사람 말이다 (main_hero 가 아니라 메인 히어로)",
-     t.indexOf("메인 히어로") >= 0 && t.indexOf("main_hero") < 0, t.slice(0, 300));
+  /* ⚠️⚠️⚠️ **이름을 글자로 박지 않습니다.** 전에 "메인 히어로" 를 박아
+     두었다가, 지시서 B 의 슬롯 이름에 맞춰 "메인 프리미엄" 으로 바꾸는
+     순간 **멀쩡한 화면이 실패**했습니다 (작업 기억 — 검사에 그날의 색 ·
+     이름 · 개수를 박지 마세요). 재려는 뜻은 "**키가 아니라 사람 말**로
+     나오는가" 이므로 `AM_AD_PLACE` 에서 읽어 맞춰 봅니다. */
+  const plName = await s.p.evaluate(function(){
+    const L = window.AM_AD_PLACE || [];
+    for(let i = 0; i < L.length; i++) if(L[i].key === "main_hero") return L[i].name;
+    return "";
+  });
+  ok("⚠️ 잴 이름을 실제로 읽었다 (빈 글자면 이 검사가 고장입니다)",
+     plName.length > 0, plName);
+  ok("광고 자리가 **사람 말**로 나온다 (main_hero 라는 키가 안 보입니다)",
+     t.indexOf(plName) >= 0 && t.indexOf("main_hero") < 0,
+     plName + " | " + t.slice(0, 200));
   ok("새로 넣으면 '준비' 라고 적는다 (바로 안 뜹니다)", /준비.*상태입니다|바로 안 뜹니다/.test(t));
   /* ⚠️ 지금 상태로 가는 단추는 안 냅니다 (눌러도 아무 일이 안 납니다) */
   ok("⚠️ 지금 상태(준비)로 가는 단추는 **없다**",
@@ -3549,7 +3562,6 @@ function boardsOf(){
       });
       const r = await g.p.evaluate(function(){
         const el = document.querySelector('[data-adslot="main_hero"]');
-        const band = document.querySelector('[data-adslot="main_band"]');
         return { drawn: !!(el && !el.hidden && el.querySelector(".adsl-i")),
                  n: el ? el.querySelectorAll(".adsl-i").length : -1,
                  label: el ? (el.textContent || "") : "",
@@ -3557,7 +3569,22 @@ function boardsOf(){
                         ? el.querySelector("a").getAttribute("rel") : "",
                  href: el && el.querySelector("a")
                         ? el.querySelector("a").getAttribute("href") : "",
-                 bandHidden: !!(band && band.hidden) };
+        /* ⚠️⚠️⚠️ **자리 이름을 박지 않습니다.** 전에 `main_band` 를 박아
+           두었는데, 메인을 지시서 A 차례로 다시 짜면서 그 자리가 메인에서
+           빠졌습니다 — 그러면 `querySelector` 가 **null** 이고
+           `!!(band && band.hidden)` 은 **거짓**이라, 멀쩡한 화면이
+           "빈 액자를 냈다" 로 떨어집니다. 재려는 뜻은 "**걸리는 광고가
+           없는 자리**는 감춰진 채 남는가" 이므로, 이 화면에 **실제로 있는**
+           자리 가운데 이 가짜 자료에 안 걸리는 것을 찾아서 잽니다. */
+        empty: (function(){
+          var all = document.querySelectorAll("[data-adslot]");
+          var n = 0, shut = 0;
+          Array.prototype.forEach.call(all, function(x){
+            if(x.getAttribute("data-adslot") === "main_hero") return;
+            n++; if(x.hidden && !x.querySelector(".adsl-i")) shut++;
+          });
+          return n + "/" + shut;
+        })() };
       });
       ok("메인 히어로 광고가 **실제로 그려진다**", r.drawn,
          JSON.stringify(r).slice(0, 180));
@@ -3573,7 +3600,8 @@ function boardsOf(){
       ok("  ⚠️ 그 자리 광고만 들어간다 (히어로에 분류 광고가 안 섞인다)",
          r.n === 1, String(r.n));
       ok("  ⚠️ 걸리는 광고가 없는 자리는 **감춰진 채** 남는다 (빈 액자 금지)",
-         r.bandHidden, "");
+         r.empty.split("/")[0] === r.empty.split("/")[1] &&
+         Number(r.empty.split("/")[0]) > 0, r.empty);
       await g.p.close();
     }
 
@@ -4516,8 +4544,20 @@ function boardsOf(){
                login: !!(box && box.querySelector('a[href^="/login"]')),
                body: box ? box.innerText : "" };
     });
-    ok("⚠️ 비회원이 글쓰기를 누르면 **로그인 길**을 낸다 (양식이 아닙니다)",
-       r2.login && !r2.form, JSON.stringify(r2).slice(0, 140));
+    /* ⚠️⚠️⚠️ **0063 으로 뒤집힌 자리입니다.** 전에는 "비회원이 글쓰기를
+       누르면 로그인 길을 낸다 (양식이 아닙니다)" 를 재고 있었는데,
+       최종 작업지시서 C 가 **"누구나 로그인 없이 새 글 작성"** 을 필수로
+       요구합니다 — 그 검사를 그대로 두면 **지시서가 요구한 기능을
+       고장으로** 잡습니다. 지금 재는 것은 셋입니다:
+         ① 양식이 **열리는가** (비회원도 씁니다)
+         ② 그래도 **로그인 길을 같이** 내는가 (회원으로 올리시면 비밀번호
+            없이 고치고 내릴 수 있습니다 — 더 나은 길을 숨기지 않습니다)
+         ③ **비밀번호를 잊으면 직접 못 고친다**고 그 자리에서 말하는가
+            (말없이 받으면 잊으신 분이 막다른 길에 섭니다 · 절대 규칙 2) */
+    ok("⚠️⚠️⚠️ 비회원이 글쓰기를 누르면 **양식이 열린다** (지시서 C 의 필수)",
+       r2.form, JSON.stringify(r2).slice(0, 140));
+    ok("  ⚠️ 그래도 **로그인 길을 같이** 낸다 (더 나은 길을 숨기지 않습니다)",
+       r2.login, JSON.stringify(r2).slice(0, 140));
     ok("  ⚠️ 돌아올 자리를 주소에 싣는다 (로그인 뒤 보시던 자리로)",
        (await g.p.evaluate(function(){
          const a = document.querySelector('#cqbox a[href^="/login"]');
@@ -4525,8 +4565,19 @@ function boardsOf(){
        (await g.p.evaluate(function(){
          const a = document.querySelector('#cqbox a[href^="/login"]');
          return a ? a.getAttribute("href") : ""; })).indexOf("/cat/community") >= 0, "");
-    ok("  ⚠️ 그래도 **읽을 수 있다고** 말한다 (막다른 길로 두지 않습니다)",
-       r2.body.indexOf("그대로 보실 수 있습니다") >= 0, r2.body.slice(0, 120));
+    /* ⚠️⚠️ 닉네임 · 글 비밀번호 칸이 **실제로** 있는가 (지시서 C 의 필수 칸) */
+    ok("  닉네임 · 글 비밀번호 칸이 있다",
+       (await g.p.locator("#cqf #c-nick").count()) === 1 &&
+       (await g.p.locator("#cqf #c-pw").count()) === 1, "");
+    /* ⚠️⚠️ **허니팟**은 사람에게 안 보여야 합니다 — 보이면 손님이 채웁니다 */
+    ok("  ⚠️ 봇 잡는 칸은 **사람 눈에 안 보인다**",
+       (await g.p.locator("#cqf #c-site").count()) === 1 &&
+       (await g.p.evaluate(function(){
+          const e = document.getElementById("c-site");
+          return !e || !e.offsetParent; })), "");
+    ok("  ⚠️⚠️ **비밀번호를 잊으면 직접 못 고친다**고 그 자리에서 말한다",
+       r2.body.indexOf("직접 고치거나 내릴 수 없습니다") >= 0 &&
+       r2.body.indexOf("고객센터") >= 0, r2.body.slice(0, 200));
     await g.p.close();
   }
 

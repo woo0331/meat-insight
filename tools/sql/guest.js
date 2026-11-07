@@ -131,6 +131,41 @@ module.exports = function(T){
   ok("  이미 내려간 글은 **다시 못 내린다**",
      !!denied(anon + "select drop_cq_guest('{\"id\":\"" + ID + "\",\"pw\":\"" + PW + "\"}'::jsonb)"), "");
 
+
+  /* ── 운영자가 **비회원 글을 가릴 수 있는가** ─────────────────────
+     ⚠️⚠️⚠️ 0047 의 `move_cq` 는 `by_user` 가 비면 "그런 질문이 없습니다"
+     로 튕겼습니다 — 비회원 글은 그 칸이 **비어 있는 것이 정상**이라,
+     지시서가 요구한 관리자 숨김이 **처음부터 돌 수 없는 코드**였습니다.
+     ⚠️ "줄이 없다" 와 "칸이 비었다" 는 **다른 자물쇠**입니다. */
+  const AD = psql("insert into auth.users (email) values ('gq-ad@x.test') returning id");
+  psql("insert into account (id, role, name) values ('" + AD + "','admin','운영')" +
+       " on conflict (id) do update set role = excluded.role, name = excluded.name");
+  const asAd = "select become('" + AD + "'); set role authenticated; ";
+  const G2 = call("ask_cq_guest",
+    '{"nick":"길손둘","cat":"cm-open","title":"가려질 글입니다","body":"운영자가 가릴 글입니다","pw":"' + PW + '"}');
+  const hid = psql(asAd + "select move_cq('{\"id\":\"" + G2 +
+    "\",\"state\":\"hidden\",\"why\":\"검사용으로 가립니다\"}'::jsonb)");
+  ok("⚠️⚠️⚠️ 운영자가 **비회원 글을 가릴 수 있다** (0047 은 못 했습니다)",
+     String(hid).trim() === "hidden", String(hid));
+  ok("  까닭이 **반드시** 있어야 한다",
+     !!denied(asAd + "select move_cq('{\"id\":\"" + G2 + "\",\"state\":\"hidden\",\"why\":\"짧\"}'::jsonb)"), "");
+  ok("  공개 보기에서 빠진다",
+     Number(psql(anon + "select count(*) from v_cq_public where id = '" + G2 + "'")) === 0, "");
+  /* ⚠️ 감사 기록에 **글 내용이 없어야** 합니다 — 번호로 찾아갑니다 */
+  const log = psql("select data::text from audit_log where obj = 'cq' and obj_id = '" + G2 + "'");
+  ok("  ⚠️ 감사 기록에 **글 내용이 안 담긴다** (길이와 비회원 여부만)",
+     log.indexOf("운영자가 가릴 글") < 0 && log.indexOf("guest") >= 0, log.slice(0, 120));
+  /* ⚠️ 없는 글은 **여전히** "그런 질문이 없습니다" 여야 합니다
+     (너무 넓게 여는 것도 고장입니다) */
+  const gone = denied(asAd + "select move_cq('{\"id\":\"00000000-0000-0000-0000-000000000000\"," +
+    "\"state\":\"hidden\",\"why\":\"없는 글입니다\"}'::jsonb)");
+  ok("  ⚠️ 없는 글은 **그대로 거절**한다 (너무 넓게 열지 않았습니다)",
+     !!gone && String(gone.why).indexOf("그런 질문이 없습니다") >= 0, String(gone && gone.why));
+  /* ⚠️ 비회원 글을 회원용 '내리기' 로는 못 내립니다 — 다른 말로 */
+  const dq = denied(asAd + "select move_cq('{\"id\":\"" + G2 + "\",\"state\":\"dropped\"}'::jsonb)");
+  ok("  ⚠️ 비회원 글은 회원용 내리기로 **못 내리고 다른 말로** 거절한다",
+     !!dq && String(dq.why).indexOf("비밀번호") >= 0, String(dq && dq.why));
+
   /* ── 쏟아붓기 세는 표를 아무도 못 읽는가 ──────────────────────── */
   ok("⚠️⚠️ 주소를 세는 표(`cqguest_hit`)를 **anon 이 못 읽는다**",
      !!denied(anon + "select count(*) from cqguest_hit"), "");

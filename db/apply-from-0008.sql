@@ -14586,3 +14586,82 @@ begin;
 insert into schema_version (n, name) values (63, '0063_guest_board')
   on conflict (n) do nothing;
 commit;
+
+-- ════════════════════════════════════════════════════════════════════
+-- ⑤ 체인: move_cq (0047 → **0063**)
+--
+-- ⚠️⚠️⚠️ **운영자가 비회원 글을 가릴 수가 없었습니다.** 0047 의
+--   `move_cq` 는 글을 찾은 뒤 이렇게 막습니다 —
+--     if v_by is null then raise exception '그런 질문이 없습니다';
+--   `v_by` 는 `cq.by_user` 입니다. 비회원 글은 그 칸이 **비어 있는 것이
+--   정상**이므로, 줄이 멀쩡히 있는데도 "그런 질문이 없습니다" 로
+--   튕겼습니다. 즉 지시서 C 가 요구한 **관리자 숨김**이 비회원 글에
+--   대해서는 **처음부터 돌 수 없는 코드**였습니다.
+--   ⚠️ "줄이 없다" 와 "칸이 비었다" 를 한 가지로 읽은 자리입니다 —
+--   작업 기억에 **다른 자물쇠이므로 갈라서 재라**고 적어 둔 그것입니다.
+--
+-- ⚠️ 고치면서 선은 그대로 둡니다 —
+--   · 내리는 것(`dropped`)은 **글쓴이만**. 비회원은 계정이 없으므로
+--     이 문이 아니라 **`drop_cq_guest`**(비밀번호)로 내립니다.
+--   · 가리는 것(`hidden`)은 **운영자만**, **까닭이 반드시**, 그리고
+--     감사 기록에 남습니다 (글 내용은 안 담고 번호로 찾아갑니다).
+--
+-- 되돌아갔는지 보는 법 (비회원 글 하나를 만들어 두고):
+--   select move_cq(jsonb_build_object('id', '<글>', 'state','hidden',
+--                                     'why','검사용으로 가립니다'));
+--   → '그런 질문이 없습니다' 가 나오면 0047 로 되돌아간 것입니다.
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+create or replace function move_cq(p jsonb)
+returns text
+language plpgsql security definer set search_path = public as $$
+declare
+  v_uid uuid := auth.uid();
+  v_id  uuid := (p->>'id')::uuid;
+  v_to  text := nullif(btrim(coalesce(p->>'state','')), '');
+  v_why text := nullif(btrim(coalesce(p->>'why','')), '');
+  v_by  uuid;
+  v_st  text;
+  v_n   int;
+begin
+  if v_uid is null then raise exception '로그인이 필요합니다'; end if;
+  -- ⚠️⚠️ **줄이 있나**와 **칸이 비었나**를 갈라서 봅니다. 전에는 칸이
+  --   빈 것을 줄이 없는 것으로 읽어 비회원 글이 통째로 막혔습니다.
+  select count(*) into v_n from cq where id = v_id;
+  if v_n = 0 then raise exception '그런 질문이 없습니다'; end if;
+  select by_user, state into v_by, v_st from cq where id = v_id for update;
+
+  if v_to = 'dropped' then
+    -- 내리는 것은 **글쓴이만** — 비회원 글은 `drop_cq_guest` 로 갑니다
+    if v_by is null then
+      raise exception '로그인 없이 올린 글은 글 비밀번호로 내리셔야 합니다';
+    end if;
+    if not coalesce(v_by = v_uid, false) then
+      raise exception '올리신 분만 내리실 수 있습니다';
+    end if;
+    if v_st <> 'live' then raise exception '이미 내려간 글입니다'; end if;
+    update cq set state = 'dropped', updated_at = now() where id = v_id;
+    return 'dropped';
+  elsif v_to = 'hidden' then
+    -- 가리는 것은 **운영자만** — 비회원 글도 같습니다
+    if not coalesce(my_role() in ('staff','admin'), false) then
+      raise exception '가리는 것은 운영자만 할 수 있습니다';
+    end if;
+    if v_why is null or char_length(v_why) < 5 then
+      raise exception '가리는 까닭을 다섯 글자 이상 적어 주세요';
+    end if;
+    update cq set state = 'hidden', hidden_why = v_why, hidden_by = v_uid,
+                  hidden_at = now(), updated_at = now() where id = v_id;
+    -- ⚠️ 감사 기록에 **글 내용을 넣지 않습니다** — 번호로 찾아갑니다
+    insert into audit_log (by_user, by_role, obj, obj_id, to_state, data)
+    values (v_uid, my_role(), 'cq', v_id::text, 'hidden',
+            jsonb_build_object('why_len', char_length(v_why),
+                               'guest', (v_by is null)));
+    return 'hidden';
+  end if;
+  raise exception '옮길 수 없는 상태입니다';
+end $$;
+grant execute on function move_cq(jsonb) to authenticated;
+
+commit;

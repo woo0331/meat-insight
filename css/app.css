@@ -2022,6 +2022,73 @@ picture{ display: contents; }
 .adsl-g{ flex:none; margin-left:auto; font-size:13.5px; font-weight:600;
          color: var(--grn-text); display:flex; align-items:center; gap:3px; }
 
+/* ── 광고 소재 그림 (0064) ────────────────────────────────────────
+   ⚠️⚠️⚠️ **원본 비율을 보존합니다** (지시서 B) — `height:auto` 이고
+   잘라내지 않습니다. 권장 원본은 자리마다 다릅니다
+   (`js/data/deal.js` 의 `AM_AD_SIZE` 한 곳 · HOME_PREMIUM 1200x200 …)
+   — 여기 숫자를 박으면 두 곳이 어긋납니다.
+   ⚠️⚠️ **격자 칸은 제 내용만큼 벌어집니다** — 그림이 든 칸에
+   `min-width:0` 을 안 주면 1200px 짜리가 칸을 벌려 **화면 전체가
+   가로로 밀립니다** (작업 기억의 그 자리). `.adsl-i` 가 이미 줍니다.
+   ⚠️ 소재가 들어오면 **한 줄에 하나**입니다 (1200px 배너를 반 폭에
+   두면 글자가 안 읽힙니다). 스폰서 둘을 나란히 두는 것은 메인의
+   `.spon-grid` 가 합니다 — 자리마다 `<ul>` 이 따로입니다. */
+.adsl{ grid-template-columns: 1fr; }
+/* 소재가 있는 줄 — 액자도 · 여백도 없습니다 (그림이 배너입니다) */
+.adsl-i.adsl-has > .adsl-a{ display:block; padding:0; border:0;
+       background:none; min-height:0; position:relative;
+       border-radius: var(--r-sm); overflow:hidden; }
+.adsl-i.adsl-has > .adsl-a:hover{ border:0; outline:2px solid var(--grn-line);
+       outline-offset:-2px; }
+.adsl-im{ display:block; width:100%; height:auto; }
+/* ⚠️⚠️⚠️ **"광고" 표시는 그림 위에서도 보여야 합니다** (표시 · 광고의
+   공정화에 관한 법률 제3조). 그림이 밝을지 어두울지 모르므로 **흰 면에
+   짙은 글자**로 두고 테두리를 답니다 — 사진 위 흰 글자는 계산으로
+   대비를 잴 수가 없습니다 (작업 기억). */
+.adsl-i.adsl-has > .adsl-a > .adsl-l{ position:absolute; top:8px; left:8px;
+       background:#fff; color: var(--ink2); border:1px solid var(--line);
+       box-shadow: 0 1px 4px rgba(8,43,32,.18); }
+
+/* ── 운영자 광고 관리 (js/adminbiz.js · 0064) ─────────────────────
+   ⚠️⚠️⚠️ **손님 화면과 반대로 0건이면 점선 자리를 냅니다** (지시서 B —
+   "관리자 미리보기에서는 점선 자리 표시"). 손님 화면은 줄째 가립니다 —
+   두 화면이 달라야 맞는 자리입니다 (빈 액자를 손님에게 보이면 미완성
+   사이트로 읽히고, 운영자에게 안 보이면 올릴 자리를 못 찾습니다).
+   ⚠️⚠️ **격자 칸은 제 내용만큼 벌어집니다** — `min-width:0` 을 안 주면
+   1200px 짜리 소재가 칸을 벌려 폰에서 화면 전체가 가로로 밀립니다. */
+.adm-shots{ display:grid; gap:10px; margin:10px 0;
+       grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 760px){ .adm-shots{ grid-template-columns: 1fr; } }
+.adm-shot{ min-width:0; border:1.5px dashed var(--line); border-radius: var(--r-sm);
+       background: var(--bg-2); padding:10px; }
+.adm-shot.adm-on{ border-style:solid; }
+.adm-k{ display:block; font-size:13px; font-weight:700; color: var(--ink2);
+       margin-bottom:6px; }
+.adm-sz{ font-style:normal; font-size:12px; font-weight:600; color: var(--ink3); }
+.adm-im{ display:block; width:100%; height:auto; border-radius: 6px;
+       background:#fff; }
+.adm-none{ margin:0 0 8px; font-size:13px; color: var(--ink3); }
+/* ⚠️ 파일 고르개를 숨기고 **단추 모양의 `<label>`** 로 누르게 합니다 —
+   `<input type=file>` 은 브라우저마다 모양이 달라 맞출 수가 없습니다. */
+.adm-up{ display:inline-block; margin-top:6px; cursor:pointer; }
+.adm-f{ position:absolute; width:1px; height:1px; opacity:0;
+       overflow:hidden; clip:rect(0 0 0 0); }
+/* 돈 — ⚠️ **실매출만 굵게** 냅니다 (계약액과 같은 무게로 두면 둘이
+   같은 뜻으로 읽힙니다) */
+.adm-m{ margin:10px 0; }
+.adm-dl{ display:grid; grid-template-columns: auto 1fr; gap:2px 10px;
+       margin:0 0 6px; font-size:14px; }
+.adm-dl dt{ color: var(--ink3); font-weight:600; }
+.adm-dl dd{ margin:0; color: var(--ink); font-weight:600; }
+.adm-dl .adm-net{ color: var(--grn-text); font-weight:800; }
+.adm-st{ margin:8px 0 2px; font-size:14px; color: var(--ink2); }
+.adm-u{ word-break:break-all; overflow-wrap:anywhere; }
+.adm-u code{ font-size:12.5px; }
+.adm-bl{ list-style:none; margin:8px 0; padding:0; display:grid; gap:6px; }
+.adm-bl li{ display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+       font-size:14px; color: var(--ink2); }
+.adm-bf{ margin:10px 0 0; }
+
 /* ── 고객센터의 네 갈래 (4차 지시서 §9) ───────────────────────── */
 .hnow{ border:1.5px dashed var(--line); background: var(--bg-2);
        border-radius: var(--r); padding:16px 18px; margin-bottom:18px; }

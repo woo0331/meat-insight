@@ -429,6 +429,12 @@
             '<span class="cqr-bd">' + esc(bname(q.cat)) + '</span>' +
             '<span>' + esc(q.who) + '</span>' +
             '<span>' + esc(when(q.created_at)) + '</span>' +
+            /* ⚠️⚠️ **고친 날은 고쳤을 때만 냅니다** (지시서 C 의 "수정일") —
+               `updated_at` 은 만들 때도 `now()` 라 안 고친 글도 값이
+               있습니다. 그대로 찍으면 모든 글에 "고친 날" 이 붙어 **안
+               고친 글을 고쳤다고** 말하게 됩니다 (절대 규칙 5 · 2). */
+            (q.updated_at && q.updated_at !== q.created_at
+              ? '<span>고친 날 ' + esc(when(q.updated_at)) + '</span>' : "") +
             '<span>댓글 ' + esc(num(q.answer_n)) + '</span>' +
             '<span>회원 조회 ' + esc(num(q.view_n)) + '</span>' +
           '</p>' +

@@ -60,12 +60,23 @@ function stub(p, who, tables, rpcs, up){
           body: JSON.stringify({ photos: (up && up.photos) ? up.photos : [] }) });
       return r.fulfill({ status:200, contentType:"application/json",
                          body: JSON.stringify({ up:true, pvPhoto:true, pvDoc:true,
-                                                cqPhoto:true }) });
+                                                cqPhoto:true,
+                                                /* ⚠️ 0064 — 광고 소재. 없으면
+                                                   /admin 이 그 칸을 안 냅니다 */
+                                                adImg:true }) });
     }),
     p.route("**/api/session", function(r){
+      /* ⚠️⚠️ 0064 — `pubBucket` 은 **공개 버킷 이름**입니다 (`publicConf()`).
+         브라우저가 광고 소재의 주소를 그것으로 짓습니다 — 없으면 소재가
+         한 장도 안 그려집니다.
+         ⚠️ 진짜는 `PROVIDER_BUCKET` 이 없으면 **칸째 안 내려보냅니다**.
+         여기서는 버킷 설정 여부를 `up` 하나로 흉내 내고 있으므로 같은
+         값을 따릅니다 — 그래야 "버킷이 꺼진 화면" 을 잴 수 있습니다. */
+      const cf = { url:FAKE, anonKey:"k" };
+      if(up) cf.pubBucket = "pv-test";
       return r.fulfill({ status:200, contentType:"application/json",
         body: JSON.stringify(Object.assign({ auth:true, signedIn:true, hats:[],
-          conf:{ url:FAKE, anonKey:"k" } }, who)) });
+          conf:cf }, who)) });
     }),
     p.route(FAKE + "/rest/v1/**", function(r){
       const u = r.request().url();

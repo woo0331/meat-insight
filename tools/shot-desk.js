@@ -224,12 +224,42 @@ const T_DESK = {
   provider_contact:CONTACT,
   appointment:[], report:[]
 };
+/* ⚠️ 0064 의 광고 관리 (js/adminbiz.js) — ⚠️⚠️ **가짜 자료도 DB 가 받는
+   값이어야 합니다**: 자리는 `ad_place` enum 의 키이고, 돈 갈래는
+   `ad_bill_kind` 입니다. 아닌 값을 넣으면 찍힌 그림에 영문 키가 보이고
+   그것을 보고 **멀쩡한 화면을 고치려** 들게 됩니다 (조인의 `ok` ·
+   문의의 `kind:"service"` · 게시판의 `cm-review` 에 이은 네 번째). */
+const AD_BOARD = [
+  { id:"ad-1", provider_id:"t-range", provider_name:"남서울 실내연습장",
+    advertiser:"남서울 골프", place:"main_hero", cat_key:null, region:null,
+    starts_on:"2026-11-01", ends_on:"2026-11-30", price:1000000,
+    state:"live", note:null, click_url:"https://example.com/event",
+    img_pc:null, img_mo:null, img_alt:"가을 라운드 할인",
+    billed:1000000, paid:600000, refunded:100000, net:500000,
+    views:1840, clicks:37 },
+  { id:"ad-2", provider_id:"t-range", provider_name:"남서울 실내연습장",
+    advertiser:null, place:"home_sponsor_a", cat_key:null, region:null,
+    starts_on:"2026-12-01", ends_on:"2026-12-31", price:0,
+    state:"draft", note:null, click_url:null,
+    img_pc:null, img_mo:null, img_alt:null,
+    billed:0, paid:0, refunded:0, net:0, views:0, clicks:0 }
+];
+const AD_BILLS = [
+  { id:"ab-1", ad_id:"ad-1", kind:"bill",   amount:1000000,
+    on_day:"2026-11-01", memo:"11월 집행" },
+  { id:"ab-2", ad_id:"ad-1", kind:"pay",    amount:600000,
+    on_day:"2026-11-05", memo:"1차 입금" },
+  { id:"ab-3", ad_id:"ad-1", kind:"refund", amount:100000,
+    on_day:"2026-11-06", memo:"노출 지연분" }
+];
 const T_ADMIN = {
   request:[Object.assign({}, REQ, { state:"check" })], provider:PVS,
   provider_apply:APS, request_item:ITEMS, assignment:[],
   v_provider_staff:STAFF_ADM, provider_contact:CONTACT,
   inquiry:INQ, report:REPS, audit_log:LOG,
-  review:RV, notice:[], cq:CQM, ca:CAM, jobpost:JOBMINE, joinroom:ROOMS
+  review:RV, notice:[], cq:CQM, ca:CAM, jobpost:JOBMINE, joinroom:ROOMS,
+  v_ad_board:AD_BOARD, ad_bill:AD_BILLS, fee_policy:[], membership_plan:[],
+  provider_membership:[]
 };
 /* ⚠️ 0003 · 0013 의 수수료 · 정산 (js/adminfee.js) — ⚠️⚠️ 가짜 값도
    DB 가 받는 값이어야 합니다 (request.state 는 deal_state enum 이고

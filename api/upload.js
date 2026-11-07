@@ -65,9 +65,17 @@ function pvBucket(){ return clean(process.env.PROVIDER_BUCKET); }
    — "서류인데 photo 라고 적어 보내기" 한 줄이면 사업자등록증이 공개
    버킷으로 갑니다. 0051 이 경로를 만들고(`pv/<id>/photo/…` ·
    `pv/<id>/doc/…`) 표의 check 가 그 꼴을 봅니다. */
+/* ⚠️⚠️⚠️ **버킷을 고르는 것은 여기입니다 — 화면이 아닙니다.** 화면이
+   고르게 두면 업체가 꾸러미를 고쳐 **증빙서류를 공개 버킷에** 올릴 수
+   있습니다 (0051 머리말). 그래서 **문이 돌려준 경로**만 보고 고릅니다.
+   ⚠️ 0064 — 광고 소재(`ad/<광고>/pc|mo/…`)도 **공개 버킷**입니다.
+   배너는 손님 전부에게 그려지므로 서명 주소로는 캐시가 안 되고
+   손님마다 서버를 한 번 더 두드립니다. */
 function bucketForPath(p){
   const s2 = String(p || "");
   if(s2.indexOf("/photo/") > 0) return pvBucket();
+  if(s2.indexOf("ad/") === 0 &&
+     (s2.indexOf("/pc/") > 0 || s2.indexOf("/mo/") > 0)) return pvBucket();
   return bucket();
 }
 function origin(){
@@ -129,7 +137,11 @@ module.exports = async function handler(req, res){
         /* ⚠️ 0059 — 게시판 글 사진. 값은 `pvPhoto` 와 같지만 **이름을
            따로** 둡니다 — 화면이 남의 기능 이름으로 제 칸을 가리면,
            버킷을 갈라 쓰는 날 엉뚱한 자리가 같이 꺼집니다. */
-        cqPhoto: !!(dbReady() && pvBucket()) });
+        cqPhoto: !!(dbReady() && pvBucket()),
+        /* ⚠️ 0064 — 광고 소재. 값은 `pvPhoto` 와 같지만 **이름을
+           따로** 둡니다 — 화면이 남의 기능 이름으로 제 칸을 가리면,
+           버킷을 갈라 쓰는 날 엉뚱한 자리가 같이 꺼집니다. */
+        adImg: !!(dbReady() && pvBucket()) });
 
     /* ── 게시판 글의 사진 주소 (0059) ────────────────────────────────
        ⚠️⚠️ **공개 보기로 읽습니다**(`v_cq_photo_public`) — 그 보기가
@@ -295,6 +307,65 @@ module.exports = async function handler(req, res){
       return res.status(502).json({ error:"지금 올리지 못했습니다. 잠시 뒤 다시 눌러 주세요" });
     }
     return res.status(200).json({ ok:true, url:sgq.url, id:gq.id });
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     관리자가 올리는 광고 소재 — PC · 모바일 (0064)
+
+     ⚠️⚠️ **0051 과 같은 짜임새**입니다 — 로그인한 분의 토큰으로 문을
+     부르고, 관리자가 아니면 **DB 가 거절**합니다. 역할을 여기서 또
+     판단하면 두 곳이 어긋나고, 어긋나면 화면이 안 내는 길로 서버가
+     통과시킵니다.
+     ⚠️⚠️⚠️ **경로는 문이 짓습니다** (`ad/<광고>/pc|mo/…`) — 보낸 값으로
+     짓게 두면 남의 광고 칸에 쓸 수 있습니다. 버킷도 **그 경로를 보고**
+     고릅니다 (`bucketForPath()`).
+     ⚠️ 광고 소재는 **공개 버킷**이라 `PROVIDER_BUCKET` 이 필요합니다.
+     없으면 그 칸만 막습니다 (서류 · 손님 사진은 그대로 됩니다).
+     ══════════════════════════════════════════════════════════════ */
+  if(b0 && b0.ad === true){
+    if(!dbReady() || !authReady()){
+      console.warn("[upload] SUPABASE_* 가 없습니다");
+      return res.status(503).json({ error:"지금은 올릴 수 없습니다" });
+    }
+    if(!pvBucket()){
+      console.warn("[upload] PROVIDER_BUCKET 이 없어 광고 소재를 못 올립니다");
+      return res.status(503).json({ error:"지금은 올릴 수 없습니다" });
+    }
+    if(!bearer(req)) return res.status(401).json({ error:"로그인이 필요합니다" });
+    const sa = await session(req);
+    if(!sa.ok){
+      if(sa.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      return res.status(401).json({ error:"로그인이 필요합니다" });
+    }
+    const ra = await dbRpc(sa.token, "claim_ad_image", { p: {
+      ad: String(b0.adId || "").trim(),
+      kind: String(b0.kind || "").trim().toLowerCase(),
+      mime: String(b0.mime || "").trim().toLowerCase(),
+      bytes: String(Number(b0.bytes) || 0) } });
+    if(!ra.ok){
+      if(ra.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      console.warn("[upload] ad claim — " + dbWhy(ra.why));
+      /* ⚠️ DB 가 거절한 **그 말**을 그대로 보여 줍니다 */
+      const ma = String(ra.why || "").match(/"message"\s*:\s*"([^"]{1,200})"/);
+      return res.status(400).json({ error: ma ? ma[1] : "지금 올리지 못했습니다" });
+    }
+    const ga = ra.data && (Array.isArray(ra.data) ? ra.data[0] : ra.data);
+    const pa = ga && ga.path;
+    if(!pa){
+      console.warn("[upload] ad claim 이 경로를 안 돌려줬습니다");
+      return res.status(502).json({ error:"지금 올리지 못했습니다" });
+    }
+    const sga = await signed("upload", pa, bucketForPath(pa));
+    if(!sga.ok){
+      if(sga.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      console.warn("[upload] " + sga.why);
+      /* ⚠️ 경로는 이미 적혔습니다 — 운영자가 제 화면에서 뺄 수 있습니다 */
+      return res.status(502).json({ error:"지금 올리지 못했습니다. 잠시 뒤 다시 눌러 주세요" });
+    }
+    /* ⚠️⚠️ 돌려주는 것은 **그 경로 하나에만 쓰는 서명된 올리기 주소**와
+       **공개 주소**입니다 — service key 는 한 글자도 안 나갑니다. */
+    return res.status(200).json({ ok:true, url:sga.url, path:pa,
+      publicUrl: origin() + "/storage/v1/object/public/" + pvBucket() + "/" + pa });
   }
 
   /* ══════════════════════════════════════════════════════════════

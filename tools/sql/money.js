@@ -41,29 +41,29 @@ module.exports = function(T){
 
   console.log("\n── 광고 자리마다 무엇이 더 필요한가");
   ok("분류 광고인데 분류를 안 적으면 막힌다",
-     denied(mk("cat_top", null, "current_date", "current_date", 0)).no);
+     denied(mk("cat_top", null, "kst_today()", "kst_today()", 0)).no);
   ok("지역 광고인데 지역을 안 적으면 막힌다",
-     denied(mk("region", null, "current_date", "current_date", 0)).no);
+     denied(mk("region", null, "kst_today()", "kst_today()", 0)).no);
   ok("분류를 적으면 들어간다 (정상 길이 막히지 않았다)",
-     allowed(mk("cat_top", ["cat_key","lesson"], "current_date", "current_date", 0)).yes);
+     allowed(mk("cat_top", ["cat_key","lesson"], "kst_today()", "kst_today()", 0)).yes);
   ok("메인 띠는 더 적을 것이 없다",
-     allowed(mk("main_hero", null, "current_date", "current_date", 0)).yes);
+     allowed(mk("main_hero", null, "kst_today()", "kst_today()", 0)).yes);
 
   console.log("\n── 경계값");
   ok("하루짜리(시작=종료)는 된다",
-     allowed(mk("main_band", null, "current_date", "current_date", 1000)).yes);
+     allowed(mk("main_band", null, "kst_today()", "kst_today()", 1000)).yes);
   ok("종료가 시작보다 **하루 이른** 것은 막힌다",
-     denied(mk("main_band", null, "current_date", "current_date - 1", 1000)).no);
+     denied(mk("main_band", null, "kst_today()", "kst_today() - 1", 1000)).no);
   ok("요금 0원은 된다 (무상 노출)",
-     allowed(mk("main_band", null, "current_date", "current_date + 1", 0)).yes);
+     allowed(mk("main_band", null, "kst_today()", "kst_today() + 1", 0)).yes);
   ok("요금 -1원은 막힌다",
-     denied(mk("main_band", null, "current_date", "current_date + 1", -1)).no);
+     denied(mk("main_band", null, "kst_today()", "kst_today() + 1", -1)).no);
 
   console.log("\n── 지금 나가는 광고만 보이는가");
   psql("update ad_run set state='live'");
   /* ⚠️ 어제 끝난 광고 · 내일 시작하는 광고를 같이 넣어 **경계 바로 옆**을 봅니다 */
-  psql(mk("main_band", null, "current_date - 7", "current_date - 1", 100));
-  psql(mk("main_band", null, "current_date + 1", "current_date + 7", 100));
+  psql(mk("main_band", null, "kst_today() - 7", "kst_today() - 1", 100));
+  psql(mk("main_band", null, "kst_today() + 1", "kst_today() + 7", 100));
   psql("update ad_run set state='live' where state='draft'");
   const liveAll = Number(psql("select count(*)::text from ad_run where state='live'"));
   const liveNow = Number(psql("select count(*)::text from v_ad_live"));
@@ -183,7 +183,7 @@ module.exports = function(T){
   ok("없는 업체로는 못 넣는다", ghostPv.no, ghostPv.why);
   const insDirect = denied(asAd(AD) +
     "insert into ad_run (provider_id, place, starts_on, ends_on, price) " +
-    "values ('gp-test','main_hero', current_date, current_date, 0)");
+    "values ('gp-test','main_hero', kst_today(), kst_today(), 0)");
   ok("표에 직접 넣는 길이 없다 (문으로만)", insDirect.no, insDirect.why);
 
   console.log("\n── 0036 업체에 멤버십을 **다는 문**");

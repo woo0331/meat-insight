@@ -878,9 +878,22 @@ function boardsOf(){
                   min_fee:null, max_fee:null, vat:"add", confirm_when:"done",
                   cycle:"monthly", refund_rule:null, from_date:null, to_date:null,
                   active:true }],
-    ad_run:[{ id:"ad1", provider_id:"real-1", place:"main_hero", cat_key:null,
+    /* ⚠️⚠️⚠️ **0064 부터 `/admin` 은 보기(`v_ad_board`)를 읽습니다** —
+       전에는 `ad_run` 표를 바로 읽었습니다. 그 보기가 계약액 · 청구 ·
+       수납 · 환불 · 실매출 · 노출 · 클릭을 한 줄로 내주므로 화면이
+       다시 셈하지 않습니다. ⚠️ 흉내 자료도 **그 보기의 칸**이어야
+       합니다 — 표 이름을 그대로 두면 목록이 0건으로 보이고, 그러면
+       "아직 집행한 광고가 없습니다" 가 나와 멀쩡한 화면이 실패합니다. */
+    v_ad_board:[{ id:"ad1", provider_id:"real-1",
+              provider_name:"그린레슨 아카데미", advertiser:null,
+              place:"main_hero", cat_key:null,
               region:null, starts_on:"2029-12-01", ends_on:"2029-12-31",
-              price:500000, state:"draft", note:null }],
+              price:500000, state:"draft", note:null, click_url:null,
+              img_pc:null, img_mo:null, img_alt:null,
+              billed:500000, paid:300000, refunded:0, net:300000,
+              views:120, clicks:4 }],
+    ad_bill:[{ id:"b1", ad_id:"ad1", kind:"pay", amount:300000,
+               on_day:"2029-12-05", memo:"1차" }],
     membership_plan:[],
     provider_membership:[]
   };
@@ -915,10 +928,27 @@ function boardsOf(){
   await s.p.click('#bizbox button[data-tab="ad"]');
   await s.p.waitForTimeout(250);
   t = (await s.p.textContent("#bizbox")) || "";
-  /* ⚠️⚠️ **받은 돈이라고 말하면 안 됩니다** — 청구 · 입금 장치가
-     없습니다 (0033 의 매각 지표와 같은 말이라야 합니다). */
-  ok("⚠️ 광고 금액이 **적어 둔 값**이라고 적는다",
-     /청구 · 입금 기록이 아닙니다/.test(t), t.slice(0, 300));
+  /* ⚠️⚠️⚠️ **0064 — 말이 바뀌었습니다.** 전에는 "청구 · 입금 기록이
+     아닙니다" 였는데, 그때는 **청구 · 입금을 담을 자리가 없었습니다.**
+     지금은 `ad_bill` 줄로 담으므로 그 말이 거짓이 됩니다 — 그래서 재는
+     것은 **계약액과 실매출을 갈라서 말하는가**입니다 (지시서 B). */
+  ok("⚠️ 계약액이 **적어 둔 값**이라고 적는다",
+     t.indexOf("계약액") >= 0 && /적어 둔 값/.test(t), t.slice(0, 300));
+  ok("⚠️⚠️ **실매출을 수납 − 환불로** 갈라서 적는다",
+     t.indexOf("실매출") >= 0 && /수납 − 환불/.test(t), t.slice(0, 400));
+  ok("⚠️⚠️ 노출 · 클릭이 **브라우저가 보낸 것을 센 값**이라고 적는다",
+     /브라우저가 보낸 것을 센 값/.test(t) && /청구 근거로 쓰지 마세요/.test(t),
+     t.slice(0, 400));
+  /* ⚠️ 버킷이 꺼진 채로 연 화면입니다 (`up=false`) — 소재를 올리는 칸을
+     **아예 안 내고** 그 까닭을 운영자에게 적습니다 (절대 규칙 5 · 3). */
+  ok("⚠️⚠️ 버킷이 없으면 소재 올리는 칸을 **안 낸다**",
+     (await s.p.locator("#bizbox input[data-adup]").count()) === 0 &&
+     t.indexOf("PROVIDER_BUCKET") >= 0, t.slice(0, 300));
+  ok("  ⚠️ 그래도 **점선 자리**는 낸다 (운영자는 올릴 자리를 봐야 합니다)",
+     (await s.p.locator("#bizbox .adm-shot").count()) === 2,
+     String(await s.p.locator("#bizbox .adm-shot").count()));
+  ok("  돈 기록 한 줄이 사람 말로 나온다 (pay 가 아니라 수납)",
+     t.indexOf("수납") >= 0 && t.indexOf("pay") < 0, t.slice(0, 400));
   ok("광고 자리가 사람 말이다 (main_hero 가 아니라 메인 히어로)",
      t.indexOf("메인 히어로") >= 0 && t.indexOf("main_hero") < 0, t.slice(0, 300));
   ok("새로 넣으면 '준비' 라고 적는다 (바로 안 뜹니다)", /준비.*상태입니다|바로 안 뜹니다/.test(t));
@@ -3612,6 +3642,161 @@ function boardsOf(){
          r.n === 1 && r.links === 0, JSON.stringify({ n:r.n, links:r.links }));
       ok("  그래도 '광고' 표시와 상호는 낸다 (집행한 광고를 안 띄우지 않습니다)",
          r.body.indexOf("없는 업체") >= 0, "");
+      await g.p.close();
+    }
+
+    /* ⑤ ⚠️⚠️⚠️ **소재 그림 (0064)** — 2026-11-07 까지 `ad_run` 에 그림을
+       담는 칸이 한 줄도 없어서, 이 파일은 **상호 글자만** 재고 있었습니다.
+       지시서 B 가 요구하는 것은 PC · 모바일 소재이고, 그것이 실제로
+       그려지는지 · 비율이 보존되는지 · `rel` 넷이 다 붙는지 · 새 창으로
+       열리는지를 여기서 봅니다. */
+    {
+      const CRE = [{ id:"adp", provider_id:"t-range", provider_name:"남서울 실내연습장",
+        advertiser:"바깥 광고주", place:"main_hero", cat_key:null, region:null,
+        label:"광고", click_url:"https://golf.example.com/event",
+        img_pc:"ad/11111111-1111-1111-1111-111111111111/pc/20261107120000-abcdef12.webp",
+        img_mo:"ad/11111111-1111-1111-1111-111111111111/mo/20261107120000-abcdef34.webp",
+        img_alt:"가을 라운드 할인" }];
+      const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+                           { v_ad_live: CRE }, {}, true);
+      const r = await g.p.evaluate(function(){
+        const el = document.querySelector('[data-adslot="main_hero"]');
+        const a  = el ? el.querySelector("a") : null;
+        const im = el ? el.querySelector("img.adsl-im") : null;
+        const so = el ? el.querySelector("picture source") : null;
+        const cs = im ? getComputedStyle(im) : null;
+        return { drawn: !!im,
+                 src: im ? im.getAttribute("src") : "",
+                 alt: im ? im.getAttribute("alt") : "",
+                 media: so ? so.getAttribute("media") : "",
+                 mo: so ? so.getAttribute("srcset") : "",
+                 rel: a ? a.getAttribute("rel") : "",
+                 tgt: a ? a.getAttribute("target") : "",
+                 href: a ? a.getAttribute("href") : "",
+                 h: cs ? cs.height : "",
+                 label: el ? (el.textContent || "") : "",
+                 wide: document.documentElement.scrollWidth >
+                       document.documentElement.clientWidth };
+      });
+      ok("⚠️⚠️⚠️ **소재 그림이 실제로 그려진다** (0064 전에는 칸이 없었습니다)",
+         r.drawn, JSON.stringify(r).slice(0, 200));
+      /* ⚠️ 주소는 **공개 버킷**으로 짓습니다 — 버킷 이름이 빠지면 404 입니다 */
+      ok("  주소를 공개 버킷으로 짓는다",
+         r.src.indexOf("/storage/v1/object/public/") > 0 &&
+         r.src.indexOf("/ad/") > 0, r.src);
+      /* ⚠️⚠️ **원본 비율을 보존합니다** (지시서 B) — 높이를 박으면 찌그러집니다 */
+      ok("  ⚠️⚠️ **원본 비율을 보존한다** (height 를 안 박습니다)",
+         r.h !== "" && r.h !== "0px", r.h);
+      ok("  ⚠️ 폰 폭에서도 가로로 밀지 않는다 (1200px 소재가 칸을 벌리지 않습니다)",
+         !r.wide, String(r.wide));
+      /* ⚠️⚠️ 모바일 소재가 있으면 좁은 폭에서 그것을 씁니다 */
+      ok("  모바일 소재를 좁은 폭에 쓴다 (`<source media>`)",
+         String(r.media).indexOf("max-width") >= 0 &&
+         String(r.mo).indexOf("/mo/") > 0, r.media + " · " + r.mo);
+      /* ⚠️⚠️⚠️ **rel 넷을 전부** (지시서 B — 새 창은 noopener noreferrer) */
+      ["sponsored", "nofollow", "noopener", "noreferrer"].forEach(function(k){
+        ok("  ⚠️⚠️ rel 에 `" + k + "` 가 붙는다", String(r.rel).indexOf(k) >= 0,
+           String(r.rel));
+      });
+      ok("  ⚠️ 바깥 주소는 **새 창**으로 연다", r.tgt === "_blank", String(r.tgt));
+      ok("  적어 둔 클릭 주소로 간다 (업체 화면이 아닙니다)",
+         r.href === "https://golf.example.com/event", r.href);
+      ok("  ⚠️ 소재 설명(alt)을 적어 둔 것으로 쓴다", r.alt === "가을 라운드 할인", r.alt);
+      ok("  ⚠️⚠️ 그림 위에도 **'광고' 표시가 남는다**",
+         r.label.indexOf("광고") >= 0, r.label.slice(0, 40));
+      await g.p.close();
+    }
+
+    /* ⑥ ⚠️⚠️ **우리 주소는 새 창으로 열지 않습니다** (뒤로 가기가 됩니다) ·
+       그리고 **못 쓸 주소는 화면도 거릅니다** (DB 가 이미 막지만 자물쇠 둘). */
+    {
+      const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+        { v_ad_live: [
+          { id:"a-in", provider_id:"t-range", provider_name:"안쪽",
+            place:"main_hero", label:"광고", click_url:"/cat/lesson" },
+          { id:"a-js", provider_id:"t-range", provider_name:"나쁜주소",
+            place:"main_band", label:"광고", click_url:"javascript:alert(1)" }
+        ] }, {}, true);
+      await g.p.evaluate(function(){
+        window.AM_PROVIDERS = [{ id:"t-range", name:"남서울 실내연습장",
+          regions:["seoul"], subs:["rg-in"] }];
+        return Promise.all([
+          window.amAdFill(document.querySelector('[data-adslot="main_hero"]')),
+          window.amAdFill(document.querySelector('[data-adslot="main_band"]'))
+        ]);
+      });
+      const r = await g.p.evaluate(function(){
+        const a1 = document.querySelector('[data-adslot="main_hero"] a');
+        const a2 = document.querySelector('[data-adslot="main_band"] a');
+        return { h1: a1 ? a1.getAttribute("href") : "",
+                 t1: a1 ? a1.getAttribute("target") : null,
+                 h2: a2 ? a2.getAttribute("href") : "" };
+      });
+      ok("우리 주소는 그대로 쓰고 **새 창으로 안 연다**",
+         r.h1 === "/cat/lesson" && !r.t1, JSON.stringify(r));
+      /* ⚠️⚠️ `javascript:` 가 들어오면 **적어 둔 주소를 버리고** 업체
+         화면으로 갑니다 (주소를 지어내지도 · 날것으로 쓰지도 않습니다). */
+      ok("⚠️⚠️ `javascript:` 주소는 **화면도 안 씁니다**",
+         String(r.h2).indexOf("javascript:") < 0, r.h2);
+      await g.p.close();
+    }
+
+    /* ⑦ ⚠️⚠️ **노출 · 클릭을 센다** (`bump_ad` · 0064) — 보내는 꾸러미를
+       **뜯어** 봅니다. 흉내 장치는 세어 주지 않으므로 줄 수로 재면
+       세는 코드를 통째로 떼어도 영원히 초록입니다. */
+    {
+      const CRE = [{ id:"adz", provider_id:"t-range", provider_name:"남서울 실내연습장",
+        place:"main_hero", label:"광고", click_url:"/cat/lesson" }];
+      const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+                           { v_ad_live: CRE }, {}, true);
+      await g.p.waitForTimeout(300);
+      await g.p.evaluate(function(){
+        const a = document.querySelector('[data-adslot="main_hero"] a[data-adclick]');
+        if(a){ a.addEventListener("click", function(e){ e.preventDefault(); });
+               a.click(); }
+      });
+      await g.p.waitForTimeout(300);
+      const calls = g.sent.filter(function(x){ return x.name === "bump_ad"; })
+        .map(function(x){ try{ return JSON.parse(x.body).p; }catch(e){ return {}; } });
+      ok("⚠️⚠️ 노출을 **실제로 센다** (`bump_ad` 를 부른다)",
+         calls.some(function(c){ return c.kind === "view" && c.ad === "adz"; }),
+         JSON.stringify(calls));
+      ok("  클릭도 센다", calls.some(function(c){ return c.kind === "click"; }),
+         JSON.stringify(calls));
+      /* ⚠️⚠️⚠️ **사람 정보를 한 글자도 안 보냅니다** — 광고 id 와 갈래뿐입니다 */
+      ok("⚠️⚠️⚠️ 보내는 꾸러미에 **광고 id 와 갈래뿐**이다 (사람 정보 0건)",
+         calls.length > 0 && calls.every(function(c){
+           return Object.keys(c).sort().join(",") === "ad,kind"; }),
+         JSON.stringify(calls));
+      /* ⚠️ 같은 광고의 노출을 한 화면에서 두 번 안 셉니다 */
+      ok("  ⚠️ 한 화면에서 같은 광고의 노출을 **두 번 안 센다**",
+         calls.filter(function(c){ return c.kind === "view"; }).length === 1,
+         JSON.stringify(calls));
+      await g.p.close();
+    }
+
+    /* ⑧ ⚠️⚠️ **새 자리 셋(0062)이 실제로 그려지는가** — 메인 스폰서 둘과
+       하단 와이드. `save_ad` 가 자리 이름을 글자로 박아 거절하던 자리라
+       화면 쪽도 같이 눌러 봅니다. */
+    {
+      const PL = ["home_sponsor_a", "home_sponsor_b", "home_bottom"];
+      const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+        { v_ad_live: PL.map(function(k, i){
+            return { id:"s" + i, provider_id:"t-range", provider_name:"스폰서 " + i,
+                     place:k, label:"광고", click_url:"/cat/lesson" };
+          }) }, {}, true);
+      await g.p.waitForTimeout(300);
+      const r = await g.p.evaluate(function(keys){
+        return keys.map(function(k){
+          const el = document.querySelector('[data-adslot="' + k + '"]');
+          return { k:k, there: !!el, drawn: !!(el && !el.hidden &&
+                   el.querySelector(".adsl-i")) };
+        });
+      }, PL);
+      r.forEach(function(x){
+        ok("자리 `" + x.k + "` 가 메인에 **있고 그려진다**", x.there && x.drawn,
+           JSON.stringify(x));
+      });
       await g.p.close();
     }
   }

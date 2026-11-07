@@ -16,26 +16,31 @@
    (`current_date between starts_on and ends_on`), 빌드가 찍으면 배포할
    때마다만 바뀌고 `vercel.json` 이 HTML 에 캐시를 걸어 더 늦습니다.
    그래서 **자리는 빌드가 · 알맹이는 브라우저가** 그립니다. 자리는 0건이면
-   `hidden` 으로 남고, 감싼 구간은 CSS 의 `:has()` 가 줄째 가립니다.
+   `hidden` 으로 남고, 감싼 구간은 CSS 의 `:has()` 가 줄째 �/* ⚠️⚠️⚠️ **2026-11-07 (0064) — 소재 그림이 들어왔습니다.** 그 전까지
+   이 파일은 **상호 글자만** 띄웠습니다. 담는 칸이 `ad_run` 에 없었기
+   때문입니다 (0064 머리말). 지금 그리는 차례는 —
+     ① PC · 모바일 소재가 있으면 `<picture>` 로 그립니다 (원본 비율 보존)
+     ② 하나만 있으면 그 하나를 두 폭에 씁니다
+     ③ 둘 다 없으면 **전과 똑같이** 글자만 그립니다 (칸을 비워 두지
+        않습니다 — 빈 액자가 미완성 사이트로 읽힙니다)
+   ⚠️ 지시서 B 의 권장 원본은 `js/data/deal.js` 의 `AM_AD_SIZE` **한
+   곳**이고 /admin 이 그 줄을 읽어 안내합니다 — 여기 글자로 적지 않습니다.
 
-   ⚠️⚠️⚠️ **"광고" 라고 반드시 표시합니다** (표시 · 광고의 공정화에 관한
-   법률 제3조 · `/guide` 에 그렇게 적어 두었습니다). 그 말은 우리가 짓지
-   않고 **보기가 내려주는 `label`** 을 씁니다 — 두 곳에 적으면 한쪽만
-   고치는 날 표시가 조용히 빠집니다.
+   ⚠️⚠️⚠️ **클릭 주소 — `rel` 넷을 전부 답니다.**
+     sponsored nofollow  돈 받은 링크입니다 (안 달면 검색엔진이 자연
+                         링크로 읽고, 적발되면 사이트 전체가 손해를 봅니다)
+     noopener noreferrer 새 창으로 여는 바깥 주소는 `window.opener` 로
+                         우리 화면을 조작할 수 있습니다 (지시서 B)
+   ⚠️ 주소가 **안전한지는 DB 가 가립니다** (0064 의 `ad_run_click_ck`) —
+   화면에서만 가리면 꾸러미를 고쳐 지나갑니다. 여기서는 그래도 **한 번
+   더** 봅니다 (자물쇠 둘 · 보기가 뚫리는 날의 보험).
+   ⚠️⚠️ **우리 주소는 새 창으로 열지 않습니다** — 같은 창에서 갑니다
+   (새 창이 쌓이면 뒤로 가기가 안 됩니다).
 
-   ⚠️⚠️ **빌드에 없는 업체는 링크를 안 겁니다.** `/pro/<id>` 는 빌드가
-   찍는 화면이라, 승인 직후 `tools/pull-providers.js` 를 안 돌리면 그
-   주소가 **없습니다** — 링크로 내면 광고를 눌러서 404 로 갑니다
-   (눌러도 아무 일이 안 나는 칸 · 절대 규칙 5). 그때는 이름만 내고
-   운영자에게 console 로 말합니다 (절대 규칙 3).
-
-   ⚠️ **돈 받은 링크는 `rel="sponsored nofollow"`** 입니다 — 안 달면
-   검색엔진이 자연 링크로 읽고, 적발되면 사이트 전체가 손해를 봅니다.
-   ════════════════════════════════════════════════════════════════════ */
-/* ⚠️⚠️ **자리를 가리키는 이름은 `data-adslot` 입니다 — `data-ad` 가
-   아닙니다.** `/admin` 의 광고 줄이 단추에 `data-ad="<광고 id>"` 를 이미
-   쓰고 있어서, 같은 이름으로 집으면 이 파일이 **운영자 화면의 단추를
-   덮어씁니다** (`.lg` 가 로고이면서 약관이었던 그 자리의 작은 판입니다). */
+   ⚠️⚠️ **노출 · 클릭을 셉니다** (`bump_ad` · 0064) — 비로그인 손님도
+   셉니다. 사람 정보를 한 글자도 안 보냅니다 (광고 id 와 갈래뿐입니다).
+   ⚠️ 실패하면 **조용히 지나갑니다** — 세는 일 때문에 광고가 안 그려지면
+   안 됩니다. */
 (function(){
   var esc = window.esc;
 
@@ -44,13 +49,16 @@
   var MAX = 4;
 
   var P = null;                       /* 한 번만 읽습니다 */
+  var CONF = null;                    /* 공개 버킷 주소를 지으려고 */
+  var SEEN = {};                      /* 한 화면에서 같은 광고를 두 번 안 셉니다 */
 
   /* ⚠️ 차례는 **먼저 사신 분이 먼저**입니다 (보기에 우선순위 칸이
      없습니다 — 없는 칸을 지어내지 않습니다). */
   function rows(a){
     if(P) return P;
     P = fetch(a.conf.url + "/rest/v1/v_ad_live" +
-      "?select=id,provider_id,provider_name,place,cat_key,region,label" +
+      "?select=id,provider_id,provider_name,place,cat_key,region,label," +
+      "advertiser,click_url,img_pc,img_mo,img_alt" +
       "&order=starts_on.asc&limit=40", {
       headers: Object.assign({ apikey:a.conf.anonKey },
                              window.amAuthHeaders ? window.amAuthHeaders() : {})
@@ -73,22 +81,104 @@
     }).slice(0, MAX);
   }
 
+  /* 공개 버킷의 주소 — ⚠️ 버킷이 설정되기 전에는 **빈 글자**를 돌려주고
+     화면은 소재 없이 글자만 그립니다 (주소를 지어내지 않습니다). */
+  function imgUrl(path){
+    if(!path || !CONF || !CONF.pubBucket || !CONF.url) return "";
+    return CONF.url + "/storage/v1/object/public/" + CONF.pubBucket + "/" + path;
+  }
+
+  /* 광고주 이름 — ⚠️ 적어 두신 것이 있으면 그것, 없으면 업체 상호입니다
+     (바깥 광고주를 상호로 적을 수는 없습니다). */
+  function who(r){
+    return String(r.advertiser || r.provider_name || "");
+  }
+
+  /* ⚠️⚠️ **우리 주소인지 바깥 주소인지로 갈립니다** — 바깥만 새 창입니다.
+     ⚠️ `//` 로 시작하는 것은 **바깥 주소**입니다 (열린 넘겨주기) — DB 가
+     이미 막지만 여기서도 거릅니다. */
+  function okUrl(u){
+    var v = String(u || "");
+    if(!v) return "";
+    if(v.indexOf("//") === 0) return "";
+    if(v.indexOf("/") === 0) return v;
+    if(v.indexOf("https://") !== 0) return "";
+    if(v.indexOf("@") >= 0) return "";
+    return v;
+  }
+
+  /* 그림 — ⚠️ 모바일 소재가 있으면 좁은 폭에서 그것을 씁니다.
+     ⚠️⚠️ **원본 비율을 보존합니다** — `width`/`height` 를 모르므로
+     CSS 가 `height:auto` 로 두고, 잘라내지 않습니다 (지시서 B).
+     ⚠️ `alt` 는 적어 두신 것을 쓰고, 없으면 **광고주 이름 + 광고**
+     입니다 (빈 `alt` 는 화면 읽는 기계에 아무 말도 안 합니다). */
+  function pic(r){
+    var pc = imgUrl(r.img_pc), mo = imgUrl(r.img_mo);
+    var one = pc || mo;
+    if(!one) return "";
+    var alt = String(r.img_alt || "") || (who(r) + " 광고");
+    var im = '<img class="adsl-im" src="' + esc(one) + '" alt="' + esc(alt) +
+      '" loading="lazy" decoding="async">';
+    if(pc && mo)
+      return '<picture><source media="(max-width:760px)" srcset="' + esc(mo) +
+        '">' + im + '</picture>';
+    return im;
+  }
+
   function one(r){
     var have = window.amProvider ? window.amProvider(r.provider_id) : null;
     /* ⚠️ 보기가 내려준 말을 씁니다 — 없으면 그래도 '광고' 는 붙입니다
        (표시를 빠뜨리는 쪽이 더 큰 잘못입니다). */
     var lab = '<span class="adsl-l">' + esc(r.label || "광고") + '</span>';
-    var nm  = '<b class="adsl-n">' + esc(r.provider_name || "") + '</b>';
+    var nm  = '<b class="adsl-n">' + esc(who(r)) + '</b>';
+    var art = pic(r);
+    var body = art ? art + lab : lab + nm;
+    var cls  = art ? "adsl-i adsl-has" : "adsl-i";
+
+    /* ⚠️⚠️ 적어 두신 클릭 주소가 먼저입니다 — 없으면 업체 화면입니다. */
+    var out = okUrl(r.click_url);
+    if(out){
+      var away = out.indexOf("/") !== 0;
+      return '<li class="' + cls + '"><a class="adsl-a" ' +
+        'rel="sponsored nofollow noopener noreferrer"' +
+        (away ? ' target="_blank"' : "") +
+        ' data-adclick="' + esc(r.id) + '" href="' + esc(out) + '">' + body +
+        (art ? "" : '<span class="adsl-g">' +
+          (away ? "자세히 보기" : "보러 가기") +
+          (window.icon ? window.icon("arrow", 16) : "") + '</span>') +
+        '</a></li>';
+    }
+    /* ⚠️⚠️ **빌드에 없는 업체는 링크를 안 겁니다** — `/pro/<id>` 는
+       빌드가 찍는 화면이라, 승인 직후 `pull-providers` 를 안 돌리면 그
+       주소가 없습니다 (눌러서 404 로 가는 칸 · 절대 규칙 5). */
     if(!have){
       try{ console.warn("[ad] 집행 중인 광고의 업체가 빌드에 없습니다 — " +
-        "node tools/pull-providers.js 로 가져오고 다시 올리세요: " +
-        r.provider_id); }catch(e){}
-      return '<li class="adsl-i">' + lab + nm + '</li>';
+        "node tools/pull-providers.js 로 가져오고 다시 올리시거나, " +
+        "/admin 에서 클릭 주소를 적어 주세요: " + r.provider_id); }catch(e){}
+      return '<li class="' + cls + '">' + body + '</li>';
     }
-    return '<li class="adsl-i"><a class="adsl-a" rel="sponsored nofollow" href="' +
-      esc(window.amProviderUrl(have)) + '">' + lab + nm +
-      '<span class="adsl-g">업체 보기' +
-      (window.icon ? window.icon("arrow", 16) : "") + '</span></a></li>';
+    return '<li class="' + cls + '"><a class="adsl-a" ' +
+      'rel="sponsored nofollow noopener noreferrer" data-adclick="' + esc(r.id) +
+      '" href="' + esc(window.amProviderUrl(have)) + '">' + body +
+      (art ? "" : '<span class="adsl-g">업체 보기' +
+        (window.icon ? window.icon("arrow", 16) : "") + '</span>') + '</a></li>';
+  }
+
+  /* ⚠️⚠️ 세는 문을 부릅니다 — **실패하면 조용히 지나갑니다.**
+     ⚠️ 사람 정보를 한 글자도 안 보냅니다 (광고 id 와 갈래뿐입니다). */
+  function bump(id, kind){
+    if(!CONF || !CONF.url || !id) return;
+    var k = kind + ":" + id;
+    if(kind === "view"){ if(SEEN[k]) return; SEEN[k] = 1; }
+    try{
+      fetch(CONF.url + "/rest/v1/rpc/bump_ad", {
+        method:"POST", keepalive:true,
+        headers: Object.assign({ "content-type":"application/json",
+                                 apikey:CONF.anonKey },
+                               window.amAuthHeaders ? window.amAuthHeaders() : {}),
+        body: JSON.stringify({ p: { ad:id, kind:kind } })
+      }).catch(function(){});
+    }catch(e){}
   }
 
   /* 자리 하나를 채웁니다 — ⚠️ 0건이면 **그대로 감춰 둡니다**
@@ -100,6 +190,7 @@
     if(!L.length){ el.hidden = true; el.innerHTML = ""; return 0; }
     el.innerHTML = '<ul class="adsl">' + L.map(one).join("") + '</ul>';
     el.hidden = false;
+    L.forEach(function(r){ bump(r.id, "view"); });
     return L.length;
   }
 
@@ -112,16 +203,26 @@
     if(!window.amAuthAsk) return Promise.resolve(0);
     return window.amAuthAsk().then(function(a){
       if(!a || !a.on || !a.conf) return 0;
+      CONF = a.conf;
       return rows(a).then(function(all){ return fill(el, all); });
     }).catch(function(){ return 0; });
   };
 
   var slots = document.querySelectorAll("[data-adslot]");
   if(!slots.length || !window.amAuthAsk) return;
+
+  /* ⚠️ 클릭은 **눌릴 때** 셉니다 — 넘겨주기를 막지 않습니다
+     (`keepalive` 로 보내므로 화면이 바뀌어도 갑니다). */
+  document.addEventListener("click", function(e){
+    var a = e.target.closest ? e.target.closest("a[data-adclick]") : null;
+    if(a) bump(a.getAttribute("data-adclick"), "click");
+  });
+
   window.amAuthAsk().then(function(a){
     /* ⚠️ 설정이 없으면 **한 줄도 안 그립니다** (손님에게는 아무 말도
        하지 않습니다 — 광고가 없는 것과 같아 보이는 것이 맞습니다). */
     if(!a || !a.on || !a.conf) return;
+    CONF = a.conf;
     return rows(a).then(function(all){
       Array.prototype.forEach.call(slots, function(el){ fill(el, all); });
     });

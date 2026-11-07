@@ -129,6 +129,7 @@ try{
   module.exports = {};
   require("./sql/roles.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/money.js")({ ok, psql, psqlFile, denied, allowed });
+  require("./sql/adcreative.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/apply.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/match.js")({ ok, psql, psqlFile, denied, allowed });
   /* ⚠️⚠️ 견적 문 셋(0008)은 2026-10 에 써 둔 뒤로 **한 번도 돌아간 적이

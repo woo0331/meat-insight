@@ -845,14 +845,16 @@ git show 4563539:CLAUDE.md          앞 서비스의 작업 기억 (6,215줄)
   `move_state`(0004→**0007**) ·
   `open_report`(0040→0046→0047→0048→0056→0060→**0061**) ·
   `provider_guard`(0001→0021→0024→**0030**) ·
+  `save_ad`(0036→**0064**) ·
   `save_provider`(0007→**0023**) ·
   `save_provider_contact`(0013→**0014**) ·
   `save_provider_self`(0014→0023→0044→**0057**) ·
-  `v_ad_live` 보기(0026→0032→**0055**) ·
+  `v_ad_live` 보기(0026→0032→0055→**0064**) ·
   `v_provider_card` 보기(0032→0038→0044→**0057**) ·
   `v_cq_public` 보기(0047→0059→**0063**) ·
   `v_ca_public` 보기(0047→**0059**) ·
   `v_join_open` 보기(0046→**0060**) ·
+  `ad_public` 정책(0026→**0064**) ·
   `photo_provider` 정책(0011→**0039**) ·
   `provider_public` 정책(0001→**0030**) ·
   `request_assigned` 정책(0001→**0039**).

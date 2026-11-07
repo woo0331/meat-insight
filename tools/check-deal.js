@@ -210,6 +210,11 @@ function run(opt){
        안 보입니다**(돈을 받고 안 띄우는 꼴입니다). */
     ["광고 자리 (ad_place)",   enumKeys(sql, "ad_place"), W.AM_AD_PLACE],
     ["광고 상태 (ad_state)",   enumKeys(sql, "ad_state"), W.AM_AD_STATE],
+    /* ⚠️⚠️ 0064 — 광고 돈 기록 세 갈래. 이 묶음을 쓰는 화면은
+       **운영자 화면 하나**뿐입니다 — 그렇다고 안 재면, 갈래를 더하는
+       날 그 화면에 **영문 키가 그대로** 찍히고 그 화면을 안 보는
+       눈에는 멀쩡해 보입니다 (0059 에서 겪은 그 자리입니다). */
+    ["광고 돈 기록 (ad_bill_kind)", enumKeys(sql, "ad_bill_kind"), W.AM_AD_BILL],
     /* ⚠️⚠️ 0056 의 중고 직거래 — **조인이 이 말을 `js/myjoin.js` 안에
        들고 있어서 아무도 DB 와 맞춰 보지 않았고, 거기서 실제로 영문
        `closed` 가 손님 화면에 찍혔습니다.** 중고는 `js/data/deal.js`

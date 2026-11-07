@@ -167,9 +167,26 @@ function authWhy(reason){
    `select=*` 를 쓰지 않는 것과 같은 까닭).
    ⚠️ `tools/test-auth.js` 가 **답 어디에도 service key 가 없는지**
    봅니다. */
+/* ⚠️⚠️ **2026-11-07 — 칸 하나를 더했습니다 (`pubBucket`).** 0064 의
+   광고 소재는 **공개 버킷**에 들어가고, 브라우저가 그 주소를 지어야
+   그립니다 (`js/adslot.js`). 비밀이 아닙니다 — 업체 시설 사진이 이미
+   그 버킷 주소로 **정적 HTML 에 박혀** 나가므로, 사이트를 열어 보면
+   누구나 알 수 있는 이름입니다.
+   ⚠️ 버킷이 없으면 **아예 안 내려갑니다**(`null` 이 아니라 칸이
+   없습니다) — 화면은 그러면 소재 없이 글자만 그립니다.
+   ⚠️⚠️⚠️ 이름을 적어 보내므로 **주소에 쓸 수 있는 글자만** 남깁니다
+   (`api/upload.js` 의 `clean()` 과 같은 규칙 — 두 곳이 어긋나면
+   한쪽이 짓는 주소가 다른 쪽에서 404 입니다). */
+function pubBucket(){
+  return String(process.env.PROVIDER_BUCKET || "").trim()
+    .replace(/[^A-Za-z0-9_.-]/g, "").slice(0, 60);
+}
 function publicConf(){
   if(!authReady()) return null;
-  return { url: base(), anonKey: env("SUPABASE_ANON_KEY") };
+  var c = { url: base(), anonKey: env("SUPABASE_ANON_KEY") };
+  var bk = pubBucket();
+  if(bk) c.pubBucket = bk;
+  return c;
 }
 
 module.exports = { authReady, bearer, whoami, roleOf, hatsOf, session, authWhy,

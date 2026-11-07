@@ -258,8 +258,40 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
    없는 골프장 사진을 만들어 넣지 않습니다 (저작권 · 절대 규칙 1). */
 
 /* ── 분류 카드 열 장 ──────────────────────────────────── */
+/* 분류로 바로 가는 띠 — 히어로 바로 아래 (2026-11-07 · 시안)
+   ⚠️⚠️ 히어로를 42px 덮고 올라오는 것이 **이제 이 띠**입니다 —
+   전에는 `.cats-in` 이었고, 그 겹침 때문에 히어로에서 한 덩이를 뺀
+   날 단추가 가려졌습니다. 겹침값을 건드리면 **찍어서** 보세요.
+   ⚠️⚠️ **접힙니다**(`flex-wrap:wrap`) — 가로로 밀게 두면 머리말 메뉴에서
+   겪은 "밀면 보이는 것은 보이는 것이 아닙니다" 가 그대로 납니다
+   (열 개입니다 · 손님이 40~60대입니다). */
+.qnav{ background: var(--bg-2); padding-block: 0 0; }
+.qnav-in{ margin-top:-42px; position:relative; z-index:3;
+  background:#fff; border-radius: 20px; box-shadow: var(--shadow);
+  padding: 14px; display:grid; gap:8px;
+  /* ⚠️⚠️ **칸 수는 분류 수로 나누어떨어져야 합니다** — 안 그러면 마지막
+     줄에 빈 칸이 남아 한 장만 덩그러니 놓입니다(열 개라 10 · 5 · 2 는
+     되고 3 · 4 는 안 됩니다). 분류가 열이 아니게 되는 날 이 줄을
+     다시 보세요 — 칸 수를 쓰는 자리는 여기뿐입니다. */
+  grid-template-columns: repeat(10, 1fr); }
+@media (max-width: 1200px){ .qnav-in{ grid-template-columns: repeat(5, 1fr); } }
+@media (max-width: 560px){ .qnav-in{ grid-template-columns: repeat(2, 1fr); } }
+.qnav-in > *{ min-width:0; }
+.qn{ min-height:76px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:6px; padding:10px 6px;
+  border:1.5px solid var(--line); border-radius:14px; background: var(--bg-2);
+  color: var(--ink); text-decoration:none; text-align:center; }
+.qn:hover{ border-color: var(--grn-line); box-shadow: var(--shadow-soft); }
+.qn-ic{ color: var(--gold-text); display:flex; }
+.qn-n{ font-size:14px; font-weight:700; word-break:keep-all;
+  overflow-wrap:anywhere; line-height:1.3; }
+@media (max-width: 760px){ .qn-n{ font-size:13px; } }
+
+/* ⚠️ `.cats-in` 은 **더 이상 히어로 바로 아래가 아닙니다** — 부킹 띠
+   아래로 내려갔으므로 올라오는 여백(-42px)을 뺐습니다. 두면 부킹
+   띠를 덮습니다. */
 .cats{ background: var(--bg-2); padding-block: 0 56px; }
-.cats-in{ margin-top:-42px; position:relative; z-index:3;
+.cats-in{ position:relative; z-index:3;
   background:#fff; border-radius: 20px; box-shadow: var(--shadow);
   padding: 22px; }
 /* ⚠️⚠️ **PC 는 다섯 칸 두 줄입니다** (지시서 §7 · 2026-11-05).

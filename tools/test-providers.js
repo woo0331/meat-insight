@@ -236,6 +236,32 @@ function nowServe(){ return serve(0); }
          colN > 0 && catsN > 0 && catsN % colN === 0,
          "분류 " + catsN + "개 · 칸 " + colN + "개");
 
+      /* ⚠️⚠️ **분류로 바로 가는 띠** (2026-11-07 · 시안의 히어로 바로 아래)
+         — 칸 수를 박지 않고 **분류 수가 고르게 나뉘는지**를 봅니다.
+         ⚠️ 안 나뉘면 마지막 줄에 한 장만 덩그러니 남습니다. */
+      const qn = await p0.evaluate(function(){
+        const g = document.querySelector(".qnav-in");
+        if(!g) return { on:false };
+        return { on:true,
+          col: getComputedStyle(g).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          n: g.querySelectorAll("a.qn").length,
+          /* ⚠️ 전부 분류 주소로 가야 합니다 — 하나라도 빠지면 그 분류는
+             첫 화면에서 가는 길이 없습니다 */
+          hrefs: Array.prototype.map.call(g.querySelectorAll("a.qn"),
+            function(a){ return a.getAttribute("href"); }) };
+      });
+      ok("⚠️ 히어로 아래 **분류로 바로 가는 띠**가 있다", qn.on,
+         JSON.stringify(qn).slice(0, 140));
+      ok("  띠의 칸이 **분류 수와 같다**",
+         qn.on && qn.n === catsN && catsN > 0, "띠 " + qn.n + " · 분류 " + catsN);
+      ok("  분류 수가 띠의 칸 수로 **나누어떨어진다** (빈 칸이 안 생깁니다)",
+         qn.on && qn.col > 0 && qn.n % qn.col === 0,
+         "띠 " + qn.n + "개 · 칸 " + qn.col + "개");
+      ok("  ⚠️ 전부 **분류 주소**로 간다 (빠진 분류가 없습니다)",
+         qn.on && qn.hrefs.length > 0 &&
+         qn.hrefs.every(function(h){ return /^\/cat\//.test(String(h)); }),
+         (qn.hrefs || []).join(" "));
+
       await p0.close(); await b0.close(); h0.srv.close();
     }
 

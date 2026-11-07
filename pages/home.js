@@ -113,6 +113,32 @@ function hero(){
   '</section>';
 }
 
+/* ═════════════════════════════════════════════════════════════════════
+   분류로 바로 가는 띄 — 시안의 히어로 바로 아래 줄 (2026-11-07)
+
+   ⚠️⚠️ 아래 `cats()` 와 **하는 일이 다릅니다** — 여기는 첫 화면에서
+   바로 누르는 **길**이고(아이콘 + 이름뿐), 그쪽은 사진과 한 줄 설명으로
+   **무엇인지 보여 주는** 자리입니다. 그래서 둘 사이에 부킹 띄가 들어갑니다.
+   ⚠️⚠️⚠️ **이름을 글자로 적지 않습니다** — `AM_CATS` 한 곳에서 끌어옵니다.
+   두 벌로 적으면 분류를 고치는 날 한쪽만 바뀝니다(주소도 `amCatUrl()` 한 함수).
+   ⚠️⚠️ **가로로 밀게 두지 않습니다**(`flex-wrap:wrap`) — 머리말 메뉴에서 겪은
+   "**밀면 보이는 것은 보이는 것이 아닙니다**" 가 그대로 나는 자리입니다.
+   ⚠️ 히어를 덮고 올라오는 것이 이제 **이 띄**입니다(전에는 `.cats-in`) —
+   겹침값을 건드리는 날 히어의 단추가 가려지는지 찍어서 보세요.
+   ═════════════════════════════════════════════════════════════════════ */
+function quickNav(){
+  return '<section class="qnav" aria-labelledby="qn-h"><div class="wrap">' +
+    '<h2 id="qn-h" class="sr">분류로 바로 가기</h2>' +
+    '<div class="qnav-in">' +
+    W.AM_CATS.map(function(c){
+      return '<a class="qn" href="' + esc(W.amCatUrl(c)) + '">' +
+        '<span class="qn-ic">' + icon(c.icon, 24) + '</span>' +
+        '<span class="qn-n">' + esc(c.name) + '</span>' +
+      '</a>';
+    }).join("") +
+    '</div></div></section>';
+}
+
 function cats(){
   return '<section class="cats" aria-labelledby="cats-h"><div class="wrap">' +
     '<h2 id="cats-h" class="sr">서비스 분류</h2>' +
@@ -359,7 +385,7 @@ exports.build = function(){
        뒤에 둡니다. */
     /* ⚠️ 현황표는 **분류 열 바로 아래**입니다 (지시서의 목업 자리) —
        손님이 무엇을 고를 수 있는지 본 **다음**에 날짜를 고릅니다. */
-    body: hero() + cats() + teeBoard() + adSlot("main_hero") + feats() +
+    body: hero() + quickNav() + teeBoard() + cats() + adSlot("main_hero") + feats() +
           providers() + steps() + why() + adSlot("main_band") + joinBand(),
     /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — adslot 이
        `/pro/<id>` 주소를 `amProviderUrl()` 로 짓고, 그 업체가 **빌드에

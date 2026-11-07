@@ -2227,3 +2227,21 @@ picture{ display: contents; }
 .cqs{ margin: 0 0 14px; }
 .cqs-r{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
 .cqs-r input{ flex:1 1 220px; min-width:0; }
+
+/* 중고장터 최신 등록 (지시서 A-7) — ⚠️ 0건이면 구간째 사라집니다 */
+.nw-hd{ display:flex; align-items:center; gap:12px; }
+.nw-hd h2{ margin:0; }
+.nw-hd .btn{ margin-left:auto; }
+.nw-lead{ margin:0 0 14px; font-size:13.5px; color: var(--ink3); }
+.nw-grid{ display:grid; gap:10px; grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px){ .nw-grid{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px){ .nw-grid{ grid-template-columns: 1fr; } }
+.nw-grid > *{ min-width:0; }
+.nw{ display:flex; flex-direction:column; gap:4px; min-height:84px;
+  padding:12px 14px; border:1.5px solid var(--line); border-radius:14px;
+  background: var(--surface); text-decoration:none; color:inherit; }
+.nw:hover{ border-color: var(--grn-line); box-shadow: var(--shadow-soft); }
+.nw-t{ font-size:14.5px; font-weight:700; color: var(--ink);
+  word-break:keep-all; overflow-wrap:anywhere; }
+.nw-p{ font-size:15px; font-weight:800; color: var(--gold-text); }
+.nw-m{ display:flex; flex-wrap:wrap; gap:8px; font-size:12.5px; color: var(--ink3); }

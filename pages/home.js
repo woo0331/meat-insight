@@ -414,6 +414,35 @@ function sponsors(){
   '</div></section>';
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   중고장터 최신 등록 (지시서 A-7 · 2026-11-07)
+
+   ⚠️⚠️⚠️ **실제 매물만 냅니다.** 시안에는 드라이버 380,000원 · 아이언
+   650,000원 같은 카드가 있지만 그건 **그림**입니다 — 지시서 최우선
+   원칙이 "참고 이미지 속 가상 업체 · 후기 · 평점 · 상품 가격 등은
+   실제 데이터로 사용 금지" 라고 못박았습니다. 올라온 매물이 0건이면
+   이 구간은 **줄째 사라집니다**.
+   ⚠️⚠️ **알맹이는 브라우저가 그립니다** — 매물은 아무 때나 바뀌므로
+   빌드 때 찍으면 **배포할 때만** 바뀝니다.
+   ⚠️⚠️⚠️ **빈 띠를 남기지 않습니다** — 오늘 현황표에서 "제목만 덩그러니"
+   를 한 번 냈습니다. 설정이 없거나 0건이면 `js/newest.js` 가 감싼
+   구간을 통째로 치웁니다 (절대 규칙 2).
+   ════════════════════════════════════════════════════════════════════ */
+function newest(){
+  return '<section class="sec" aria-labelledby="nw-h"><div class="wrap">' +
+    '<div class="sec-hd nw-hd">' +
+      '<h2 id="nw-h">중고 골프장터 최신 등록</h2>' +
+      '<a class="btn btn-sm btn-line" href="' + esc(W.amCatUrl(W.amCat("used"))) +
+        '">더 보기</a>' +
+    '</div>' +
+    /* ⚠️ 크롤러 · 자바스크립트가 꺼진 분 몫으로 **무엇을 보는 자리인지**만
+       찍습니다. 지우면 봇에게는 빈 상자입니다. */
+    '<p class="nw-lead">회원끼리 직접 사고파는 자리입니다. ' +
+    '골프올인원은 거래 당사자가 아니며 <b>결제를 받지 않습니다.</b></p>' +
+    '<div id="nwlist" hidden></div>' +
+  '</div></section>';
+}
+
 function adSlot(place){
   return '<section class="sec sec-ad"><div class="wrap">' +
     '<div class="adsl-w" data-adslot="' + place + '" hidden></div>' +
@@ -449,8 +478,8 @@ exports.build = function(){
        ⚠️ "이용 방법" 도 남겼습니다 — `/guide` 로 가는 길 셋 가운데
        하나라서, 빼면 이용안내가 **아무 데서도 안 이어집니다**. */
     body: hero() + quickNav() + adSlot("main_hero") + svcCards() + sponsors() +
-          teeBoard() + providers() + adSlot("home_bottom") + steps() + why() +
-          joinBand(),
+          teeBoard() + providers() + newest() + adSlot("home_bottom") +
+          steps() + why() + joinBand(),
     /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — adslot 이
        `/pro/<id>` 주소를 `amProviderUrl()` 로 짓고, 그 업체가 **빌드에
        있는지**를 `amProvider()` 로 봅니다 (없으면 링크를 안 걸어 404 로
@@ -462,6 +491,12 @@ exports.build = function(){
        읽습니다. 하나라도 빠지면 표가 **조용히** 안 그려집니다. */
     js: ["/js/data/providers.generated.js", "/js/data/providers.js",
          "/js/data/site.js", "/js/data/regions.js",
-         "/js/adslot.js", "/js/teeboard.js"]
+         /* ⚠️⚠️ newest.js — 중고 최신 등록입니다. 안 실으면 그 상자가
+            `hidden` 인 채로 남고 **에러도 안 납니다**.
+            ⚠️ `data/deal.js` 가 `amLstPrice()`(0 은 "무료로 나눔")를,
+            `data/regions.js` 가 지역 이름을 줍니다 — 하나라도 빠지면
+            값과 지역이 조용히 영문 키로 찍힙니다. */
+         "/js/adslot.js", "/js/teeboard.js", "/js/data/deal.js",
+         "/js/newest.js"]
   };
 };

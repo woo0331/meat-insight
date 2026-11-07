@@ -360,6 +360,60 @@ function joinBand(){
    줄째 가립니다 (빈 광고 액자를 두지 않습니다 · 절대 규칙 2).
    ⚠️ "광고" 표시는 `js/adslot.js` 가 **보기가 내려준 말**로 붙입니다
    (표시 · 광고의 공정화에 관한 법률 제3조). */
+/* ════════════════════════════════════════════════════════════════════
+   주요 골프 서비스 넷 (지시서 A-5 · 2026-11-07)
+
+   ⚠️⚠️⚠️ **"인기" 라고 적지 않습니다.** 시안에는 "지금 인기 있는 골프
+   서비스" 라고 쓰여 있지만 우리에게는 **인기도를 셀 자료가 없습니다** —
+   조회 수도 · 클릭도 · 거래 건수도 세는 장치가 없습니다. 없는 것을
+   "인기" 라고 적으면 그건 우리가 지어낸 평가입니다 (절대 규칙 1 ·
+   지시서도 "실제 인기도 데이터가 없으면 '인기' 표기 금지" 라고
+   못박았습니다).
+   ⚠️⚠️ 넷은 `AM_CATS` 에서 **키로 끌어옵니다** — 이름 · 한 줄 · 주소 ·
+   사진을 글자로 박으면 분류를 고치는 날 한쪽만 바뀝니다.
+   ⚠️ 그래서 **10개 사진 격자(`cats()`)를 뺐습니다** — 같은 열 장을 두
+   번 보여 주던 자리입니다 (지시서 A: "중복 축소"). 열 분류로 가는 길은
+   바로 위 아이콘 띠와 머리말 카테고리에 그대로 있습니다.
+   ════════════════════════════════════════════════════════════════════ */
+function svcCards(){
+  var KEYS = ["lesson", "used", "booking", "travel"];
+  var cards = KEYS.map(function(k){
+    var c = W.amCat ? W.amCat(k) : null;
+    if(!c) return "";
+    var cp = W.amPhoto ? W.amPhoto("cat-" + k) : null;
+    return '<a class="svc" href="' + esc(W.amCatUrl(c)) + '">' +
+      '<span class="svc-ph' + (cp ? " svc-ph-on" : "") + '">' +
+        (cp ? W.amPhotoImg("cat-" + k) : "") + '</span>' +
+      '<span class="svc-t">' +
+        '<b class="svc-n">' + esc(c.name) + '</b>' +
+        '<span class="svc-l">' + esc(c.lead) + '</span>' +
+      '</span>' +
+      '<span class="svc-go" aria-hidden="true">' + icon("arrow", 18) + '</span>' +
+    '</a>';
+  }).join("");
+  if(!cards) return "";
+  return '<section class="sec"><div class="wrap">' +
+    '<div class="sec-hd"><h2>주요 골프 서비스</h2>' +
+    '<p>가장 많이 찾으시는 네 가지입니다. ' +
+    /* ⚠️ 지어낸 약속을 하지 않습니다 — 고르면 그 분류로 갈 뿐입니다 */
+    '누르시면 그 분류의 업체와 글을 보실 수 있습니다.</p></div>' +
+    '<div class="svc-grid">' + cards + '</div>' +
+  '</div></section>';
+}
+
+/* 스폰서 광고 둘 — ⚠️ PC 2열 · 폰 1열 (지시서 A-6).
+   ⚠️⚠️ 0건이면 `js/adslot.js` 가 자리를 `hidden` 으로 두고, 감싼 구간은
+   `:has()` 가 줄째 가립니다 — **빈 띠를 남기지 않습니다**(절대 규칙 2 ·
+   오늘 현황표에서 그 꼴을 한 번 냈습니다). */
+function sponsors(){
+  return '<section class="sec sec-ad sec-spon"><div class="wrap">' +
+    '<div class="spon-grid">' +
+      '<div class="adsl-w" data-adslot="home_sponsor_a" hidden></div>' +
+      '<div class="adsl-w" data-adslot="home_sponsor_b" hidden></div>' +
+    '</div>' +
+  '</div></section>';
+}
+
 function adSlot(place){
   return '<section class="sec sec-ad"><div class="wrap">' +
     '<div class="adsl-w" data-adslot="' + place + '" hidden></div>' +
@@ -385,8 +439,18 @@ exports.build = function(){
        뒤에 둡니다. */
     /* ⚠️ 현황표는 **분류 열 바로 아래**입니다 (지시서의 목업 자리) —
        손님이 무엇을 고를 수 있는지 본 **다음**에 날짜를 고릅니다. */
-    body: hero() + quickNav() + teeBoard() + cats() + adSlot("main_hero") + feats() +
-          providers() + steps() + why() + adSlot("main_band") + joinBand(),
+    /* ⚠️⚠️ **차례는 최종 지시서 A 가 준 그대로입니다** (2026-11-07) —
+         ① 머리말 · 검색 → ② 히어로 → ③ 분류 아이콘 열 →
+         ④ HOME_PREMIUM → ⑤ 주요 골프 서비스 넷 → ⑥ 스폰서 A · B →
+         ⑦ 신규 입점업체 → ⑧ HOME_BOTTOM → ⑨ 장점 · 입점 안내 → 푸터
+       ⚠️ 날짜 · 지역별 현황(부킹 · 조인)은 지시서 A 목록에는 없지만
+       **쓰고 있는 기능**이라 남겼습니다 (지시서: "기존 기능 유지 ·
+       전체 재개발 금지"). 자리는 서비스 넷 바로 뒤입니다.
+       ⚠️ "이용 방법" 도 남겼습니다 — `/guide` 로 가는 길 셋 가운데
+       하나라서, 빼면 이용안내가 **아무 데서도 안 이어집니다**. */
+    body: hero() + quickNav() + adSlot("main_hero") + svcCards() + sponsors() +
+          teeBoard() + providers() + adSlot("home_bottom") + steps() + why() +
+          joinBand(),
     /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — adslot 이
        `/pro/<id>` 주소를 `amProviderUrl()` 로 짓고, 그 업체가 **빌드에
        있는지**를 `amProvider()` 로 봅니다 (없으면 링크를 안 걸어 404 로

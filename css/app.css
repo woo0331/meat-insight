@@ -2173,3 +2173,39 @@ picture{ display: contents; }
 /* ⚠️ 거르개 줄 바로 아래에 섭니다 — 문장 한가운데 링크가 아니라
    **단추**입니다 (문장 속 링크는 높이가 16px 입니다). */
 .wch-cta{ margin-top:10px; }
+
+/* 주요 골프 서비스 넷 (지시서 A-5 · 2026-11-07)
+   ⚠️ 칸 수는 **넷으로 나누어떨어지는 값**만 씁니다 (4 · 2 · 1) —
+   안 그러면 마지막 줄에 한 장만 덩그러니 남습니다. */
+.svc-grid{ display:grid; gap:12px; grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 1000px){ .svc-grid{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px){ .svc-grid{ grid-template-columns: 1fr; } }
+.svc-grid > *{ min-width:0; }
+.svc{ display:grid; grid-template-rows:auto 1fr; position:relative;
+  background: var(--surface); border:1.5px solid var(--line);
+  border-radius:16px; overflow:hidden; text-decoration:none; color:inherit; }
+.svc:hover{ border-color: var(--grn-line); box-shadow: var(--shadow-soft); }
+.svc:hover .svc-ph img{ transform: scale(1.04); }
+/* ⚠️ 사진이 없으면 **빈 회색 액자를 두지 않고** 딥그린 면으로 둡니다
+   (절대 규칙 2 — 빈 액자가 보이면 그 순간 미완성 사이트입니다). */
+.svc-ph{ display:block; aspect-ratio: 16 / 10; overflow:hidden;
+  background: var(--grn-deep); }
+.svc-ph img{ width:100%; height:100%; object-fit:cover; display:block;
+  transition: transform .25s ease; }
+.svc-t{ display:flex; flex-direction:column; gap:4px; padding:14px 44px 14px 14px; }
+.svc-n{ font-size:16px; color: var(--ink); }
+.svc-l{ font-size:13px; color: var(--ink3); line-height:1.5;
+  word-break:keep-all; overflow-wrap:anywhere; }
+.svc-go{ position:absolute; right:12px; bottom:14px; width:30px; height:30px;
+  display:flex; align-items:center; justify-content:center; border-radius:999px;
+  border:1.5px solid var(--line); color: var(--gold-text); background:#fff; }
+
+/* 스폰서 광고 둘 — PC 2열 · 폰 1열 (지시서 A-6) */
+.spon-grid{ display:grid; gap:12px; grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 760px){ .spon-grid{ grid-template-columns: 1fr; } }
+.spon-grid > *{ min-width:0; }
+/* ⚠️⚠️ **둘 다 0건이면 구간째 사라집니다** — 빈 띠를 남기지 않습니다
+   (절대 규칙 2). `:has()` 를 못 읽는 브라우저에서는 전과 똑같이
+   보일 뿐 깨지지 않습니다. */
+.sec-spon:has(.spon-grid > [hidden]:only-child){ display:none; }
+.sec-spon:has(.spon-grid > [hidden] + [hidden]){ display:none; }

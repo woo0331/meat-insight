@@ -344,11 +344,21 @@ window.amQuoteAmount = function(q){
    없으면 어느 분류에도 안 걸려 **에러 없이 조용히 안 보입니다**. 그래서
    0026 이 check 로 막고, 운영자 화면이 그 칸을 **고르개**로 냅니다.
    ════════════════════════════════════════════════════════════════════ */
+/* ⚠️⚠️ 광고 자리 — **DB 의 `ad_place` enum 과 같은 묶음**입니다 (0026 → 0062).
+   `check-deal` 이 `create type` 과 `alter type … add value` 를 합쳐서
+   맞춰 보므로, 한쪽만 고치면 빌드가 멈춥니다.
+   ⚠️ `needs` 는 그 자리에 **무엇을 더 골라야 하는지**입니다 — 안 받으면
+   어느 분류 · 어느 지역 광고인지 몰라 **영원히 안 걸리는 광고**가 됩니다.
+   ⚠️⚠️ 지시서의 슬롯 이름과 짝: HOME_PREMIUM → main_hero ·
+   HOME_SPONSOR_A/B → home_sponsor_a/b · HOME_BOTTOM → home_bottom. */
 window.AM_AD_PLACE = [
-  { key:"main_hero", name:"메인 히어로", needs:null },
-  { key:"main_band", name:"메인 띠",     needs:null },
-  { key:"cat_top",   name:"분류 상단",   needs:"cat" },
-  { key:"region",    name:"지역",        needs:"rg"  }
+  { key:"main_hero",      name:"메인 프리미엄",   needs:null },
+  { key:"home_sponsor_a", name:"메인 스폰서 A",   needs:null },
+  { key:"home_sponsor_b", name:"메인 스폰서 B",   needs:null },
+  { key:"home_bottom",    name:"메인 하단 와이드", needs:null },
+  { key:"main_band",      name:"메인 띠",         needs:null },
+  { key:"cat_top",        name:"분류 상단",       needs:"cat" },
+  { key:"region",         name:"지역",            needs:"rg"  }
 ];
 window.amAdPlace = function(k){
   var L = window.AM_AD_PLACE || [];

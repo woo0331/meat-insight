@@ -799,6 +799,37 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 
 /* 날짜 · 지역별 현황 (0060) — 메인
    ⚠️ 0건인 칸도 **0 이라고 적습니다** (빈칸은 "모름" 과 섞입니다). */
+/* ── 메인의 자리 찾기 — 왼쪽 찾는 칸 · 오른쪽 현황표 (시안) ──────
+   ⚠️⚠️ 찾는 칸이 2026-11-07 까지 **아예 없었습니다** — 제목만 있고
+   칸이 없었습니다. 시안의 왼쪽 절반입니다.
+   ⚠️ 격자 칸 안에 가로 스크롤 상자(.tbd-s)가 있으므로 `min-width:0`
+   을 꼭 둡니다 — 안 두면 칸이 표 너비만큼 벌어져 **화면 전체가
+   가로로 밀립니다**(폰에서 390px 가 688px 가 된 그 자리). */
+.tbw{ display:grid; gap:20px; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); align-items:start; }
+.tbw > *{ min-width:0; }
+@media (max-width: 900px){ .tbw{ grid-template-columns: minmax(0, 1fr); } }
+
+.tbf{ background: var(--surface); border:1.5px solid var(--line);
+      border-radius: var(--r); overflow:hidden; }
+.tbf-sw{ display:grid; grid-template-columns:1fr 1fr; }
+.tbf-b{ display:flex; align-items:center; justify-content:center; gap:7px;
+        min-height:52px; padding:0 10px; cursor:pointer; font-size:16px;
+        font-weight:700; color: var(--ink2); background: var(--bg-2);
+        border:0; border-bottom:1.5px solid var(--line); }
+.tbf-b.tbf-on{ background: var(--grn-deep); color:#fff; border-bottom-color: var(--grn-deep); }
+.tbf-in{ padding:18px 16px 16px; }
+.tbf-lead{ margin:0 0 14px; font-size:15px; color: var(--ink2); line-height:1.55; }
+.tbf-lead b{ color: var(--ink); }
+.tbf-g{ display:grid; gap:12px; margin-bottom:14px; }
+.tbf-r{ display:grid; gap:6px; min-width:0; }
+.tbf-r label{ font-size:14px; font-weight:700; color: var(--ink); }
+.tbf-r input, .tbf-r select{ width:100%; min-height:46px; padding:0 12px;
+        font-size:16px; color: var(--ink); background: var(--surface);
+        border:1.5px solid var(--line); border-radius: var(--r-sm); }
+.tbf-r input:focus, .tbf-r select:focus{ outline:2px solid var(--grn); outline-offset:1px; }
+.tbf-go{ width:100%; min-height:50px; }
+.tbd-stat{ min-width:0; }
+
 .tbd-h{ display:flex; align-items:center; gap:10px; flex-wrap:wrap;
         margin-bottom:12px; }
 .tbd-t2{ margin:0; font-size:18px; color: var(--ink); }
@@ -864,6 +895,16 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
        word-break:keep-all; overflow-wrap:anywhere; }
 
 /* 손님이 보는 티타임 목록 */
+/* 날짜 띠 — ⚠️⚠️ **접힙니다**(`flex-wrap:wrap`). 가로로 밀어 보게 두면
+   머리말 메뉴에서 겪은 "**밀면 보이는 것은 보이는 것이 아닙니다**" 가
+   그대로 납니다 (손님이 40~60대입니다). */
+.tfd{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+.tfd-b{ min-height:40px; display:inline-flex; align-items:center; padding:0 12px;
+        border-radius:999px; border:1.5px solid var(--line); background:#fff;
+        color: var(--ink3); font-size:14px; font-weight:700;
+        text-decoration:none; white-space:nowrap; }
+.tfd-b.tfd-on{ background: var(--grn-deep); border-color: var(--grn-deep);
+               color:#fff; }
 .tf-bar{ margin-bottom:14px; }
 .tf-go{ align-self:end; display:flex; gap:8px; flex-wrap:wrap; }
 .tf-go .btn{ min-height:44px; }

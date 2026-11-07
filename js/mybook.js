@@ -49,10 +49,17 @@
     });
   }
   function day(iso){
-    var d = new Date(String(iso) + "T00:00:00+09:00");
+    /* ⚠⚠⚠ **글자를 그대로 읽습니다** — 전에는 `"+09:00"` 으로 지어 놓고
+       `getMonth()` · `getDate()` 로 꺼냈는데, 그 둘은 **보는 분 기계의
+       시간대**로 돌려줍니다. 한국 밖(또는 시간대가 UTC 인 기계)에서
+       보시면 **하루 앞으로** 찍혔습니다 — 11-08 자리가 "11월 7일" 로
+       보였고, 그러면 손님이 **다른 날짜를 예약**하십니다.
+       지금은 `Z` 로 읽고 `getUTC*` 로 꺼냅니다 — 보는 분의 시간대가
+       어디든 **적힌 그 날짜 그대로** 나옵니다. */
+    var d = new Date(String(iso) + "T00:00:00Z");
     if(isNaN(d.getTime())) return String(iso || "");
     var W = ["일","월","화","수","목","금","토"];
-    return (d.getMonth() + 1) + "월 " + d.getDate() + "일(" + W[d.getDay()] + ")";
+    return (d.getUTCMonth() + 1) + "월 " + d.getUTCDate() + "일(" + W[d.getUTCDay()] + ")";
   }
   function hhmm(t){
     var m = /^(\d{2}):(\d{2})/.exec(String(t || ""));

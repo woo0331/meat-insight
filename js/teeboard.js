@@ -28,6 +28,13 @@
 
   var esc = window.esc;
   var A = null, KIND = "booking";
+  /* 찾는 칸이 들고 있는 값 — ⚠️ 표의 `KIND` 와 **같은 변수**를 읽습니다.
+     두 곳에 따로 두면 탭을 바꿨을 때 표와 단추가 다른 말을 합니다. */
+  var FIND = { d:"", rg:"", course:"" };
+  /* ⚠️⚠️ 골프장 고르개는 **올라온 티타임의 골프장만** 담습니다 —
+     목록을 지어내면 영원히 0건인 자리로 보내는 것입니다(절대 규칙 1 · 5).
+     0곳이면 그 칸을 **아예 안 냅니다**(절대 규칙 2). */
+  var COURSES = [];
   var DAYS = Number((window.WOW_BIZ || {}).teeBoard) || 14;
   var ZONES = window.AM_REGION_ZONES || [];
 
@@ -117,20 +124,92 @@
         '<a class="btn btn-sm btn-pt" href="/match?cat=booking">부킹 상담 요청하기</a></p>';
   }
 
-  function tabs(){
-    return '<div class="tbd-sw">' +
-      '<button type="button" class="tbd-b' + (KIND === "booking" ? " tbd-on" : "") +
-        '" data-teetab="booking">부킹 현황</button>' +
-      '<button type="button" class="tbd-b' + (KIND === "join" ? " tbd-on" : "") +
-        '" data-teetab="join">조인 현황</button>' +
+  /* ── 찾는 칸 ───────────────────────────────────────────────────
+     ⚠️⚠️⚠️ **2026-11-07 까지 이 칸이 없었습니다.** 메인에 "원하는
+     날짜와 지역의 자리 찾기" 라는 **제목만 달아 놓고 찾는 칸을 안
+     만들었습니다** — 손님에게는 제목이 거짓말이고, "눌러도 아무 일이
+     안 나는 단추" 의 사촌입니다(절대 규칙 5). 사장님이 주신 시안의
+     왼쪽 절반이 통째로 비어 있었습니다.
+     ⚠️ 거르개 열쇠는 `cellUrl()` 과 **같은 이름**(`rg` · `d`)을 씁니다 —
+     표의 칸을 눌렀을 때와 **같은 목록**이 열려야 합니다. */
+  function findBox(){
+    var rg = ZONES.map(function(z){
+      return '<option value="' + esc(z.key) + '"' +
+        (FIND.rg === z.key ? " selected" : "") + ">" + esc(z.name) + "</option>";
+    }).join("");
+    /* ⚠️ 골프장은 **있을 때만** 냅니다 (0곳이면 고를 것이 없는 칸입니다) */
+    var course = COURSES.length
+      ? '<div class="tbf-r"><label for="tbf-c">골프장</label>' +
+        '<select id="tbf-c" data-tbf="course"><option value="">전체 골프장</option>' +
+        COURSES.map(function(c){
+          return '<option value="' + esc(c) + '"' +
+            (FIND.course === c ? " selected" : "") + ">" + esc(c) + "</option>";
+        }).join("") + "</select></div>"
+      : "";
+    var isJoin = (KIND === "join");
+    return '<div class="tbf">' +
+      '<div class="tbf-sw" role="group" aria-label="무엇을 찾으시나요">' +
+        '<button type="button" class="tbf-b' + (isJoin ? "" : " tbf-on") +
+          '" data-teetab="booking">' + window.icon("cal", 20) + '골프장 부킹</button>' +
+        '<button type="button" class="tbf-b' + (isJoin ? " tbf-on" : "") +
+          '" data-teetab="join">' + window.icon("people", 20) + '골프 조인</button>' +
+      '</div>' +
+      '<div class="tbf-in">' +
+        '<p class="tbf-lead">' + (isJoin
+          ? '원하는 날짜와 지역의 <b>조인 자리</b>를 찾아보세요.'
+          : '원하는 날짜와 지역의 <b>골프장 티타임</b>을 찾아보세요.') + '</p>' +
+        '<div class="tbf-g">' +
+          '<div class="tbf-r"><label for="tbf-d">라운드 날짜</label>' +
+          '<input id="tbf-d" type="date" data-tbf="d" value="' + esc(FIND.d) + '"></div>' +
+          '<div class="tbf-r"><label for="tbf-rg">지역</label>' +
+          '<select id="tbf-rg" data-tbf="rg"><option value="">전체 지역</option>' +
+          rg + '</select></div>' +
+          (isJoin ? "" : course) +
+        '</div>' +
+        '<button type="button" class="btn btn-deep tbf-go">' +
+          window.icon("search", 20) +
+          (isJoin ? "조인 찾아보기" : "부킹 검색하기") + '</button>' +
+      '</div>' +
     '</div>';
+  }
+
+  /* 찾는 칸이 보내는 자리 — ⚠️ `cellUrl()` 과 **같은 열쇠**입니다 */
+  function findUrl(){
+    var base = (KIND === "join") ? "/cat/matchup" : "/cat/booking";
+    var q = [];
+    if(FIND.rg) q.push("rg=" + encodeURIComponent(FIND.rg));
+    if(FIND.d)  q.push("d="  + encodeURIComponent(FIND.d));
+    /* ⚠️ 조인에는 골프장 칸이 없습니다 — 보내면 받는 쪽이 모릅니다 */
+    if(KIND !== "join" && FIND.course)
+      q.push("course=" + encodeURIComponent(FIND.course));
+    return base + (q.length ? "?" + q.join("&") : "");
+  }
+
+  /* ⚠️ 탭 둘은 **표 한 곳**에서 나옵니다 — 열쇠를 속성에 넣는
+     자리라 esc() 를 거칩니다. */
+  var TABS = [["booking", "부킹 현황"], ["join", "조인 현황"]];
+  function tabs(){
+    return '<div class="tbd-sw">' + TABS.map(function(t){
+      return '<button type="button" class="tbd-b' + (KIND === t[0] ? " tbd-on" : "") +
+        '" data-teetab="' + esc(t[0]) + '">' + esc(t[1]) + '</button>';
+    }).join("") + '</div>';
+  }
+
+  /* ⚠️ 찾는 칸과 표를 **한 덩이**로 감쌉니다 — PC 에서 왼쪽 · 오른쪽,
+     폰에서 위 · 아래입니다 (시안 그대로).
+     ⚠⚠ **그리는 자리를 한 함수로** 두었습니다 — 감싸는 것과 찍는 것을
+     나눔면 `innerHTML` 줄이 esc() 없는 껍데기 함수를 부르게 되어
+     check-safe 가 따라갈 자리를 잃습니다. */
+  function paintBox(inner){
+    box.innerHTML = '<div class="tbw">' + findBox() +
+      '<div class="tbd-stat"><div class="tbd-h">' +
+        '<h2 class="tbd-t2">날짜 · 지역별 현황</h2>' + tabs() +
+      '</div>' + inner + '</div></div>';
   }
 
   function draw(){
     box.hidden = false;
-    box.innerHTML = '<div class="tbd-h">' +
-      '<h2 class="tbd-t2">날짜 · 지역별 현황</h2>' + tabs() + '</div>' +
-      '<p class="myhint">불러오는 중입니다…</p>';
+    paintBox('<p class="myhint">불러오는 중입니다…</p>');
     var to = iso(kst(DAYS - 1));
     var q = (KIND === "join")
       ? "v_join_count?select=region,play_at,n&play_at=lte." + encodeURIComponent(to)
@@ -139,25 +218,32 @@
     return get(q + "&limit=2000").then(function(rows){
       if(!rows){
         /* ⚠️ 못 읽었으면 **0건이라고 말하지 않습니다** */
-        box.innerHTML = '<div class="tbd-h">' +
-          '<h2 class="tbd-t2">날짜 · 지역별 현황</h2>' + tabs() + '</div>' +
-          '<p class="myhint">지금 불러오지 못했습니다. 잠시 뒤에 다시 열어 주세요.</p>';
+        paintBox('<p class="myhint">지금 불러오지 못했습니다. 잠시 뒤에 다시 열어 주세요.</p>');
         return;
       }
       var total = rows.reduce(function(a, r){ return a + (Number(r.n) || 0); }, 0);
-      box.innerHTML = '<div class="tbd-h">' +
-        '<h2 class="tbd-t2">날짜 · 지역별 현황</h2>' + tabs() + '</div>' +
-        table(rows) + note(total);
+      paintBox(table(rows) + note(total));
     });
   }
 
   box.addEventListener("click", function(e){
     var t = e.target;
     if(!t || !t.closest) return;
+    /* 찾아보기 — ⚠️ 거르개를 **주소에 담아** 보냅니다. 그래야 주소를
+       복사해 보내도 같은 화면이고 뒤로 가기도 됩니다. */
+    if(t.closest(".tbf-go")){ window.location.href = findUrl(); return; }
     var b = t.closest("[data-teetab]");
     if(!b) return;
     KIND = b.getAttribute("data-teetab");
     draw();
+  });
+  /* ⚠️ 고르개는 `change` 로 받습니다 — 누름(click)으로만 받으면
+     키보드로 고르는 분에게는 아무 일이 안 납니다. */
+  box.addEventListener("change", function(e){
+    var t = e.target;
+    if(!t || !t.getAttribute) return;
+    var k = t.getAttribute("data-tbf");
+    if(k) FIND[k] = t.value;
   });
 
   window.amAuthAsk().then(function(a){
@@ -167,6 +253,18 @@
       return;
     }
     A = a;
-    return draw();
+    /* ⚠️⚠️ 골프장 고르개는 **올라온 티타임에서 모읍니다** — 목록을
+       지어내면 고르는 순간 영원히 0건인 자리로 갑니다. 못 읽으면
+       그냥 그 칸을 안 냅니다(지어내지 않습니다). */
+    return get("v_teetime_open?select=course&kind=eq.booking&limit=500")
+      .then(function(rows){
+        var seen = {};
+        (rows || []).forEach(function(r){
+          var c = String(r.course || "").trim();
+          if(c && !seen[c]){ seen[c] = 1; COURSES.push(c); }
+        });
+        COURSES.sort(function(a, b){ return a.localeCompare(b, "ko"); });
+      })
+      .then(draw);
   }).catch(function(){});
 })();

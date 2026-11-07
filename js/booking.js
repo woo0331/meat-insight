@@ -32,11 +32,14 @@
   /* ⚠️ 이 화면이 부킹인지 조인인지 — 빌드가 상자에 적어 줍니다 */
   var KIND = box.getAttribute("data-teekind") || "booking";
   var A = null, PICK = null;
-  var S = { rg:"", d:"" };
+  /* ⚠️ `course` 는 메인의 찾는 칸이 보내는 열쇠입니다 — 여기 없으면
+     `val("course")` 가 읽을 칸이 없어 조용히 안 걸립니다. */
+  var S = { rg:"", d:"", course:"" };
   var B = window.WOW_BIZ || {};
   var KEEP   = String(B.bookKeep || "");
   var SEARCH = Number(B.teeSearch) || 0;   /* 달력으로 찾을 수 있는 날 수 */
   var AHEAD  = Number(B.teeAhead)  || 0;   /* 표가 담는 끝 */
+  var BOARD  = Number(B.teeBoard)  || 0;   /* 메인 현황표가 내는 날 수 */
 
   var REG = {};
   (window.AM_REGIONS || []).forEach(function(r){ REG[r.key] = r.name; });
@@ -48,10 +51,17 @@
     return new Date(t).toISOString().slice(0, 10);
   }
   function day(iso){
-    var d = new Date(String(iso) + "T00:00:00+09:00");
+    /* ⚠️⚠️⚠️ **글자를 그대로 읽습니다** — 전에는 `"+09:00"` 으로 지어 놓고
+       `getMonth()` · `getDate()` 로 꺼냈는데, 그 둘은 **보는 분 기계의
+       시간대**로 돌려줍니다. 한국 밖(또는 시간대가 UTC 인 기계)에서
+       보시면 **하루 앞으로** 찍혔습니다 — 11-08 자리가 "11월 7일" 로
+       보였고, 그러면 손님이 **다른 날짜를 예약**하십니다.
+       지금은 `Z` 로 읽고 `getUTC*` 로 꺼냅니다 — 보는 분의 시간대가
+       어디든 **적힌 그 날짜 그대로** 나옵니다. */
+    var d = new Date(String(iso) + "T00:00:00Z");
     if(isNaN(d.getTime())) return String(iso || "");
     var W = ["일","월","화","수","목","금","토"];
-    return (d.getMonth() + 1) + "월 " + d.getDate() + "일(" + W[d.getDay()] + ")";
+    return (d.getUTCMonth() + 1) + "월 " + d.getUTCDate() + "일(" + W[d.getUTCDay()] + ")";
   }
   function hhmm(t){
     var m = /^(\d{2}):(\d{2})/.exec(String(t || ""));
@@ -84,6 +94,40 @@
     return window.amLoginUrl ? window.amLoginUrl(here) : "/login";
   }
 
+  /* ── 날짜 띠 ───────────────────────────────────
+     ⚠️⚠️ 메인 현황표의 **가로 줄과 같은 날짜**를 여기서도 냅니다 — 칸을
+     눌러 들어오신 분이 다른 날을 보시려고 **달력을 여는 것**이 아니라
+     한 번 누르면 가게 합니다 (시안 그대로).
+     ⚠️⚠️⚠️ **단추로만 만들지 않습니다** — 자바스크립트가 꺼진 손님 · 봇에게는
+     눌러도 아무 일이 안 나는 칸이 됩니다(절대 규칙 5). 링크로 두고 눌림을
+     가로채서 주소만 바꿉니다 — 그래야 주소를 복사해 보내도 같은 화면입니다.
+     ⚠️ `teeBoard` 가 비면 띠를 **안 냅니다**(우리가 날 수를 지어내지 않습니다). */
+  function myUrl(d){
+    var q = [];
+    if(S.rg) q.push("rg=" + encodeURIComponent(S.rg));
+    if(d)    q.push("d="  + encodeURIComponent(d));
+    if(S.course) q.push("course=" + encodeURIComponent(S.course));
+    return window.location.pathname + (q.length ? "?" + q.join("&") : "");
+  }
+  function shortDay(iso){
+    var dt = new Date(String(iso) + "T00:00:00Z");   /* ⚠️ 위와 같은 까닭 */
+    if(isNaN(dt.getTime())) return String(iso || "");
+    var W = ["일","월","화","수","목","금","토"];
+    return (dt.getUTCMonth() + 1) + "/" + dt.getUTCDate() + "(" + W[dt.getUTCDay()] + ")";
+  }
+  function dayStrip(){
+    if(!BOARD) return "";
+    var out = '<a class="tfd-b' + (S.d ? "" : " tfd-on") + '" href="' +
+      esc(myUrl("")) + '" data-tfd="">전체</a>';
+    for(var i = 0; i < BOARD; i++){
+      var iso = kstISO(i);
+      out += '<a class="tfd-b' + (S.d === iso ? " tfd-on" : "") + '" href="' +
+        esc(myUrl(iso)) + '" data-tfd="' + esc(iso) + '">' +
+        esc(shortDay(iso)) + '</a>';
+    }
+    return '<nav class="tfd" aria-label="라운드 날짜로 추리기">' + out + '</nav>';
+  }
+
   /* ── 거르개 ─────────────────────────────────────────────────────── */
   function bar(){
     /* ⚠️⚠️⚠️ **지역 묶음으로 거릅니다** — 메인의 현황표가 묶음 단위로
@@ -94,7 +138,8 @@
       return '<option value="' + esc(z.key) + '"' +
         (S.rg === z.key ? " selected" : "") + '>' + esc(z.name) + '</option>';
     }).join("");
-    return '<form class="jform tf-bar" id="ttf-find">' +
+    return dayStrip() +
+      '<form class="jform tf-bar" id="ttf-find">' +
       '<div class="jrow"><label for="tf-d">라운드 날짜</label>' +
       '<input id="tf-d" name="d" type="date" value="' + esc(S.d) + '" ' +
         'min="' + esc(kstISO(0)) + '"' +
@@ -259,6 +304,12 @@
       if(rs.length) qs.push("region=in.(" + rs.map(encodeURIComponent).join(",") + ")");
     }
     if(S.d)  qs.push("play_at=eq." + encodeURIComponent(S.d));
+    /* ⚠️⚠️ 메인의 찾는 칸이 보내는 열쇠입니다 — **받는 쪽이 없으면
+       고르는 순간 아무 일이 안 납니다**(화면이 보내는 열쇠와 받는
+       쪽이 달라 거르개가 아무것도 안 걸렀던 그 자리). 거르는 것은
+       서버입니다 — 쉰 줄만 받아 화면에서 거르면 조건에 맞는 것이
+       그 쉰 줄 밖에 있을 때 0건으로 보입니다. */
+    if(S.course) qs.push("course=eq." + encodeURIComponent(S.course));
     /* ⚠️ 달력으로 찾을 수 있는 끝 — 지시서 §5 (61~90일은 사전 상담만) */
     else if(SEARCH) qs.push("play_at=lte." + encodeURIComponent(kstISO(SEARCH)));
     return get("v_teetime_open?" + qs.join("&")).then(function(rows){
@@ -281,7 +332,7 @@
       return el ? (el.value || "").trim() : "";
     };
     if(f.id === "ttf-find"){
-      S.d = val("d"); S.rg = val("rg");
+      S.d = val("d"); S.rg = val("rg"); S.course = val("course");
       load();
       return;
     }
@@ -314,7 +365,15 @@
   box.addEventListener("click", function(e){
     var t = e.target;
     if(!t || !t.closest) return;
-    if(t.closest(".tf-all")){ S.rg = ""; S.d = ""; return void load(); }
+    if(t.closest(".tf-all")){ S.rg = ""; S.d = ""; S.course = ""; return void load(); }
+    /* 날짜 띠 — ⚠️ 주소를 **같이 바꿉니다**(뒤로 가기도 됩니다) */
+    var dd = t.closest("[data-tfd]");
+    if(dd){
+      e.preventDefault();
+      S.d = dd.getAttribute("data-tfd") || "";
+      try{ window.history.pushState(null, "", myUrl(S.d)); }catch(_){}
+      return void load();
+    }
     var b = t.closest(".tf-book");
     if(!b) return;
     var li = b.closest("li[data-tee]");
@@ -349,6 +408,10 @@
       var d  = (u.get("d")  || "").trim();
       if(rg && window.amZone && window.amZone(rg)) S.rg = rg;
       if(/^\d{4}-\d{2}-\d{2}$/.test(d)) S.d = d;
+      /* ⚠️ 골프장은 **글자 그대로** 받습니다 (목록이 DB 에서 오므로
+         여기서 맞는 값인지 가릴 길이 없습니다 — 틀리면 0건입니다). */
+      var cs = u.get("course");
+      if(cs) S.course = String(cs).slice(0, 80);
     }catch(e){ }
     return load();
   }).catch(function(){});

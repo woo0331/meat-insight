@@ -154,7 +154,7 @@ window.WOW_BIZ = {
        teeAhead   표가 담는 끝 — 이 뒤는 **예약 확정이 아니라 사전 상담**
      ⚠️⚠️ `teeSearch` 와 `teeAhead` 사이(61~90일)는 **'예약 신청' 을
      안 냅니다** — 그 구간은 상담으로만 받습니다 (지시서 §5). */
-  teeBoard:       14,
+  teeBoard:        7,
   teeSearch:      60,
   teeAhead:       90,
 

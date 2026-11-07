@@ -3768,6 +3768,59 @@ function boardsOf(){
     await g.p.close();
   }
 
+  /* ②-3 **날짜 띠** — 메인 현황표의 가로 줄과 같은 날짜를 목록 위에도
+     냅니다 (2026-11-07 · 시안). 칸을 눌러 들어오신 분이 다른 날을 보시려고
+     달력을 여는 것이 아니라 한 번 누르면 가게 합니다.
+     ⚠️⚠️⚠️ **줄 수로 재지 않습니다** — 튀내 장치는 걸러 주지 않으므로 줄 수로
+     재면 띠를 **통째로 떼어도 영원히 초록**입니다. **보내는 질의를 뜽어** 봅니다
+     (조인 거르개에서 적어 둔 그 자리). */
+  {
+    const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
+                         { v_teetime_open: TEE }, {}, true);
+    const BOARD = keepNum("teeBoard");
+    const r = await g.p.evaluate(function(){
+      const n = document.querySelector("#ttlist .tfd");
+      const bs = n ? n.querySelectorAll("[data-tfd]") : [];
+      return { on: !!n, n: bs.length,
+        tags: Array.prototype.map.call(bs, function(a){ return a.tagName; }),
+        low: Array.prototype.filter.call(bs, function(a){
+          return a.getBoundingClientRect().height < 39.5; }).length };
+    });
+    ok("목록 위에 **날짜 띠**가 있다", r.on, JSON.stringify(r).slice(0, 140));
+    /* ⚠️ 갯수를 박지 않습니다 — `teeBoard` 에 **전체** 한 칸 */
+    ok("  칸이 **펼친 날 수 + 전체**와 같다 (" + (BOARD + 1) + ")",
+       r.n === BOARD + 1, "칸 " + r.n);
+    ok("  ⚠️⚠️ **단추가 아니라 링크**다 (자바스크립트가 꺼져도 열립니다)",
+       r.tags.length > 0 && r.tags.every(function(t){ return t === "A"; }),
+       r.tags.join(","));
+    ok("  ⚠️ 누름이 40px 미만인 칸이 없다", r.low === 0, "낮은 칸 " + r.low);
+
+    const b0 = g.sent.length;
+    await g.p.click('#ttlist .tfd [data-tfd="' + TKST(2) + '"]');
+    await g.p.waitForTimeout(500);
+    const q1 = g.sent.slice(b0).filter(function(x){ return x.name === "GET"; })
+                 .map(function(x){ return x.body || ""; }).join(" ");
+    ok("⚠️⚠️ 날짜 칸을 누르면 **play_at=eq.<그 날>** 을 보낸다",
+       q1.indexOf("play_at=eq." + TKST(2)) >= 0, q1.slice(0, 220));
+    const u1 = g.p.url();
+    ok("  ⚠️ **주소도 같이** 바뀜다 (복사해 보내도 같은 화면 · 뒤로 가기)",
+       u1.indexOf("d=" + TKST(2)) >= 0, u1);
+    const on = await g.p.evaluate(function(){
+      const a = document.querySelector("#ttlist .tfd .tfd-on");
+      return a ? a.getAttribute("data-tfd") : null; });
+    ok("  고른 칸이 **켜져 보인다**", on === TKST(2), String(on));
+
+    /* ⚠️ 너무 넓게 막는 것도 고장입니다 — 전체를 누르면 풀려야 합니다 */
+    const b1 = g.sent.length;
+    await g.p.click('#ttlist .tfd [data-tfd=""]');
+    await g.p.waitForTimeout(500);
+    const q2 = g.sent.slice(b1).filter(function(x){ return x.name === "GET"; })
+                 .map(function(x){ return x.body || ""; }).join(" ");
+    ok("  **전체**를 누르면 play_at=eq. 가 **빠진다**",
+       q2.length > 0 && q2.indexOf("play_at=eq.") < 0, q2.slice(0, 220));
+    await g.p.close();
+  }
+
   /* ③ 예약 신청 — ⚠️⚠️⚠️ 동의 없이는 안 보냅니다 */
   {
     const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
@@ -3979,6 +4032,81 @@ function boardsOf(){
     ok("  ⚠️ '곧 생깁니다' 같은 지어낸 약속을 안 한다",
        r.body.indexOf("곧") < 0 && r.body.indexOf("준비 중") < 0,
        r.body.slice(0, 200));
+    await g.p.close();
+  }
+
+  /* ⑧-2 **메인의 찾는 칸** — 시안의 왼쪽 반쪽입니다 (2026-11-07).
+     ⚠⚠⚠ 2026-11-07 까지 **현황표만** 있었습니다 — "원하는 날짜와
+     지역의 자리 찾기" 라는 **제목만 달아 놓고 찾는 칸을 안 만들었습니다**
+     (제목이 코드와 다른 자리 · 절대 규칙 5).
+     ⚠⚠ **가는 주소를 재야 합니다** — 고르개가 보내는 열쇠와 받는 쪽이
+     다르면 고르는 순간 아무 일이 안 나고 **에러도 안 납니다**. */
+  {
+    const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+      { v_teetime_count: TCNT, v_join_count: [], v_teetime_open: TEE }, {}, true);
+    await g.p.waitForTimeout(400);
+    const r = await g.p.evaluate(function(){
+      const n = document.querySelector("#teeboard .tbf");
+      const cs = n ? n.querySelector('[data-tbf="course"]') : null;
+      return { on: !!n,
+        d:  !!(n && n.querySelector('[data-tbf="d"]')),
+        rg: !!(n && n.querySelector('[data-tbf="rg"]')),
+        course: !!cs,
+        courses: cs ? Array.prototype.map.call(cs.options,
+                   function(o){ return o.value; }).filter(Boolean) : [],
+        go: !!(n && n.querySelector(".tbf-go")) };
+    });
+    ok("메인에 **찾는 칸**이 그려진다 (시안의 왼쪽)", r.on,
+       JSON.stringify(r).slice(0, 160));
+    ok("  라운드 날짜 · 지역 · **골프장** 칸과 찾는 단추가 있다",
+       r.d && r.rg && r.course && r.go, JSON.stringify(r).slice(0, 160));
+    /* ⚠⚠ 골프장 목록은 **DB 에서** 옵니다 — 글자로 박지 않습니다 */
+    ok("  골프장 목록을 **올라온 자리에서** 끌어온다 (지어내지 않습니다)",
+       r.courses.length > 0 && r.courses.every(function(c){
+         return TEE.some(function(t){ return t.course === c; }); }),
+       r.courses.join(" / "));
+
+    await g.p.fill("#tbf-d", TKST(3));
+    await g.p.selectOption('#teeboard [data-tbf="rg"]', "capital");
+    await g.p.selectOption('#teeboard [data-tbf="course"]', TEE[0].course);
+    await g.p.click("#teeboard .tbf-go");
+    await g.p.waitForTimeout(700);
+    const u = g.p.url();
+    ok("⚠⚠ 찾는 단추가 **그 날짜 · 그 지역 · 그 골프장**으로 보낸다",
+       u.indexOf("/cat/booking") >= 0 && u.indexOf("rg=capital") >= 0 &&
+       u.indexOf("d=" + TKST(3)) >= 0 &&
+       u.indexOf("course=" + encodeURIComponent(TEE[0].course)) >= 0, u);
+    /* ⚠⚠ 받는 쪽이 없으면 고르는 순간 아무 일이 안 납니다 */
+    await g.p.waitForTimeout(500);
+    const got = await g.p.evaluate(function(){
+      const el = document.querySelector("#ttlist #tf-rg");
+      const d  = document.querySelector("#ttlist #tf-d");
+      return { rg: el ? el.value : null, d: d ? d.value : null }; });
+    ok("  ⚠⚠ **받는 쪽이 그 조건으로 열린다** (보내는 열쇠와 받는 쪽이 같다)",
+       got.rg === "capital" && got.d === TKST(3), JSON.stringify(got));
+    await g.p.close();
+  }
+  {
+    /* 조인 탭 — ⚠ 조인에는 **골프장 칸을 안 냅니다**(회원이 여는
+       자리라 골프장으로 좁힐 자료가 없습니다 · 절대 규칙 5). */
+    const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+      { v_teetime_count: TCNT, v_join_count: TCNT, v_teetime_open: TEE }, {}, true);
+    await g.p.waitForTimeout(400);
+    await g.p.click('#teeboard [data-teetab="join"]');
+    await g.p.waitForTimeout(600);
+    const r = await g.p.evaluate(function(){
+      const n = document.querySelector("#teeboard .tbf");
+      return { course: !!(n && n.querySelector('[data-tbf="course"]')),
+               go: n ? (n.querySelector(".tbf-go") || {}).textContent : "" };
+    });
+    ok("조인 탭에서는 **골프장 칸을 안 낸다** (좁힐 자료가 없습니다)",
+       r.course === false, String(r.go));
+    await g.p.selectOption('#teeboard [data-tbf="rg"]', "jeju");
+    await g.p.click("#teeboard .tbf-go");
+    await g.p.waitForTimeout(700);
+    const u = g.p.url();
+    ok("  조인은 **/cat/matchup** 으로 보낸다 (부킹과 갈라서 냅니다)",
+       u.indexOf("/cat/matchup") >= 0 && u.indexOf("rg=jeju") >= 0, u);
     await g.p.close();
   }
 

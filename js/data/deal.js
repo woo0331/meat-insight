@@ -418,6 +418,47 @@ window.AM_LSTASK_ST = [
   { key:"rejected", name:"거절했습니다",  mine:"거절되었습니다",     tone:"ink"  },
   { key:"canceled", name:"거뒀습니다",    mine:"거두셨습니다",       tone:"ink"  }
 ];
+/* ── 구합니다 (0061) ─────────────────────────────────────────────
+   ⚠️⚠️ **말이 두 벌입니다** — 글을 올린 분의 `name` 과 답한 분의
+   `mine`. "받았습니다" 를 답한 분 화면에 찍으면 올린 분에게 할 말을
+   답한 분에게 찍는 것입니다 (절대 규칙 3).
+   ⚠️ 값은 0061 의 check 와 한 글자도 같아야 합니다 — `check-deal` 이
+   빌드마다 맞춰 봅니다 (어긋나면 손님 화면에 영문 키가 찍힙니다). */
+window.AM_WANT_ST = [
+  { key:"open",   name:"찾는 중",       tone:"grn"  },
+  { key:"done",   name:"구했습니다",     tone:"ink"  },
+  { key:"closed", name:"내렸습니다",     tone:"ink"  },
+  { key:"hidden", name:"가려졌습니다",   tone:"bad"  }
+];
+window.AM_WREPLY_ST = [
+  { key:"replied",  name:"답을 받았습니다", mine:"기다리는 중",      tone:"warn" },
+  { key:"accepted", name:"받아들였습니다",  mine:"받아들여졌습니다", tone:"grn"  },
+  { key:"rejected", name:"거절했습니다",    mine:"거절되었습니다",   tone:"ink"  },
+  { key:"canceled", name:"거뒀습니다",      mine:"거두셨습니다",     tone:"ink"  }
+];
+/* ⚠️⚠️ **예산 0 은 "무료로 해 주실 분"** 이고 **안 적음(null)과 다릅니다.**
+   `||` 를 쓰면 0 이 사라지고 둘이 섞입니다 (작업 기억의 그 자리) —
+   그래서 세는 자리를 **한 함수**에 둡니다. */
+window.amWantBudget = function(n){
+  if(n === null || n === undefined || n === "") return "";
+  var v = Number(n);
+  if(!isFinite(v)) return "";
+  if(v === 0) return "무료로 해 주실 분";
+  return v.toLocaleString("ko-KR") + "원";
+};
+window.amWantSt = function(k){
+  var L = window.AM_WANT_ST || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === k) return L[i];
+  return null;
+};
+/* ⚠️ `mine` 을 안 쓰는 쪽(올린 분)과 쓰는 쪽(답한 분)을 **갈라서** 냅니다 */
+window.amWReplySt = function(k, mine){
+  var L = window.AM_WREPLY_ST || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === k)
+    return { key:k, name: mine ? L[i].mine : L[i].name, tone:L[i].tone };
+  return null;
+};
+
 /* 물건 상태 — ⚠️ 값은 0056 의 `cond` check 와 한 글자도 같아야 합니다 */
 window.AM_LST_COND = [
   { key:"new",  name:"미사용 (새것)" },

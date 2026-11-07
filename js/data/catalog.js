@@ -456,11 +456,41 @@ window.amOpenNow = function(){
       하는 일을 좁혀 적는 것이 됩니다 (2026-11-05 에 분류 화면이 "여는
       기능은 아직 없습니다" 라고 적고 있던 그 자리의 작은 판입니다). */
    ["community", "게시판에 글 올리기"],
-   ["career", "구인 · 구직 올리기"]].forEach(function(x){
+   ["career", "구인 · 구직 올리기"],
+   /* ⚠️ 0061 — **다섯째입니다.** 업체가 0곳이어도 "이런 걸 찾고 있어요"
+      를 올려 두실 수 있고, 업체가 들어오는 날 그 글이 그대로 보입니다.
+      ⚠️ 보내는 곳은 레슨입니다 — 다섯 분류 가운데 손님이 가장 먼저
+      찾는 자리이고, 거기서 다른 분류로 가는 길이 화면에 있습니다
+      (묶음을 눌렀는데 분류 하나로 보내면 나머지는 어디 갔는지 알 수
+      없다는 그 줄과 같은 결입니다). */
+   ["lesson", "구합니다 글 올리기"]].forEach(function(x){
     var c = window.amCat(x[0]);
     if(c) out.push({ href: window.amCatUrl(c), label: x[1], icon: c.icon });
   });
   return out;
+};
+
+/* ── 구합니다 (0061) 가 서는 분류 ──────────────────────────────────
+   ⚠️⚠️ **한 곳입니다.** 분류 화면(빌드) · 목록(브라우저) · `/my` · 검사가
+   전부 이 함수를 읽습니다. 글자로 박으면 분류가 바뀌는 날 두 곳이
+   어긋나고, 그때 화면은 보내는데 DB 가 거절합니다.
+
+   ⚠️⚠️⚠️ **부킹은 뺍니다.** 거기는 업체가 티타임을 올리는 자리(0060)가
+   이미 있어서, 같은 화면에 "자리 올림" 과 "자리 구함" 이 둘 다 서면
+   손님이 어느 쪽을 눌러야 할지 모릅니다. 부킹에서 자리를 찾으시는
+   길은 ① 티타임 목록 ② 60일 밖이면 사전 상담 둘입니다.
+   ⚠️ 빼는 분류를 여기 **한 줄**로 두는 까닭은, 다음에 누가 "왜 부킹만
+   없지" 하고 되살릴 때 **까닭이 바로 옆에** 있게 하려는 것입니다. */
+window.AM_WANT_OFF = ["booking"];
+window.amWantCats = function(){
+  var off = window.AM_WANT_OFF || [];
+  return (window.amCatsOf ? window.amCatsOf("provider") : []).filter(
+    function(c){ return off.indexOf(c.key) < 0; });
+};
+window.amWantOn = function(c){
+  if(typeof c === "string") c = window.amCat(c);
+  if(!c) return false;
+  return (window.amWantCats() || []).some(function(x){ return x.key === c.key; });
 };
 
 /* 화면 짜임새로 고르기 — ⚠️ kind 를 화면마다 다시 적지 마세요. */

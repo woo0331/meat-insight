@@ -222,6 +222,14 @@ function run(opt){
      checkKeys(sql, "state", "listingask"), W.AM_LSTASK_ST],
     ["물건 상태 (listing.cond)",
      checkKeys(sql, "cond", "listing"),     W.AM_LST_COND],
+    /* ⚠️⚠️ 0061 의 구합니다 — 어긋나면 ① 화면이 **없는 상태**로 옮기려다
+       거절당하거나 ② 손님 화면에 **영문 키**가 그대로 찍힙니다.
+       ⚠️ 답 상태의 말은 **두 벌**(올린 분 · 답한 분)이지만 줄은 하나라
+       키 묶음도 한 벌입니다 (0053 에서 문의 갈래에 쓴 그 꼴). */
+    ["구합니다 상태 (wanted.state)",
+     checkKeys(sql, "state", "wanted"),      W.AM_WANT_ST],
+    ["구합니다 답 상태 (wantedreply.state)",
+     checkKeys(sql, "state", "wantedreply"), W.AM_WREPLY_ST],
     /* ⚠️⚠️ 0058 의 조건 저장 — 갈래가 어긋나면 ① 화면이 **없는 갈래**로
        저장하려 해서 문이 거절하거나 ② DB 에 있는 갈래를 화면이 몰라
        `/my` 목록에 **영문 키가 그대로** 찍힙니다. */

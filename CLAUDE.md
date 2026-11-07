@@ -839,6 +839,7 @@ git show 4563539:CLAUDE.md          앞 서비스의 작업 기억 (6,215줄)
   지금 그런 짝:
   `approve_provider`(0007→0012→**0018**) ·
   `assignment_assignable`(0012→0018→**0038**) ·
+  `ask_cq_guest`(0063→**0065**) ·
   `is_my_item`(0009→**0039**) ·
   `make_apply`(0027→**0045**) ·
   `make_request`(0029→0035→**0041**) ·

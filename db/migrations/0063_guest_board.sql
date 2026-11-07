@@ -216,7 +216,19 @@ grant execute on function ask_cq_guest(jsonb) to anon, authenticated;
 --   그 칸이 지워집니다 (`save_provider_self` 에서 겪은 자리).
 -- ⚠️⚠️ **게시판 · 닉네임은 못 고칩니다** — 바꾸면 읽던 분이 다른 글을
 --   보게 됩니다 (0056 · 0061 에서 지역 · 분류를 막은 그 까닭).
-create or replace function edit_cq_guest(p jsonb)
+-- ⚠️⚠️⚠️ **`create or replace` 가 아니라 지우고 다시 만듭니다.**
+--   0065 가 이 문의 **돌려주는 것**을 `void` 에서 `text` 로 바꿉니다
+--   (비밀번호 갈래만 예외를 안 쓰고 글자로 돌려줍니다 — 예외는 틀린
+--   시도를 적은 줄까지 되돌리기 때문입니다). 그런데 여기가
+--   `create or replace` 이면, 사장님이 붙여넣기 파일을 **두 번째로**
+--   붙여 넣는 날 이 줄에서
+--   `cannot change return type of existing function` 으로 **멈춥니다**
+--   (0064 가 `v_ad_live` 에 칸을 더해 0026 · 0032 · 0055 가 멈춘 그 자리).
+--   ⚠️ 지우면 GRANT 도 같이 날아가므로 바로 아래에서 다시 줍니다.
+--   ⚠️⚠️ 이 줄을 고쳐도 되는 까닭 — 운영 DB 는 아직 **0007 까지만**
+--   올라가 있어 이 파일이 운영에서 한 번도 돌 적이 없습니다.
+drop function if exists edit_cq_guest(jsonb);
+create function edit_cq_guest(p jsonb)
 returns void language plpgsql
 security definer set search_path = public, extensions as $$
 declare
@@ -258,7 +270,19 @@ grant execute on function edit_cq_guest(jsonb) to anon, authenticated;
 -- ⚠️⚠️ **지우지 않고 내립니다**(`dropped`) — 지우면 분쟁이 났을 때 낼
 --   것이 없습니다. 공개 보기는 `state = 'live'` 만 내므로 손님에게는
 --   그 자리에서 사라집니다.
-create or replace function drop_cq_guest(p jsonb)
+-- ⚠️⚠️⚠️ **`create or replace` 가 아니라 지우고 다시 만듭니다.**
+--   0065 가 이 문의 **돌려주는 것**을 `void` 에서 `text` 로 바꿉니다
+--   (비밀번호 갈래만 예외를 안 쓰고 글자로 돌려줍니다 — 예외는 틀린
+--   시도를 적은 줄까지 되돌리기 때문입니다). 그런데 여기가
+--   `create or replace` 이면, 사장님이 붙여넣기 파일을 **두 번째로**
+--   붙여 넣는 날 이 줄에서
+--   `cannot change return type of existing function` 으로 **멈춥니다**
+--   (0064 가 `v_ad_live` 에 칸을 더해 0026 · 0032 · 0055 가 멈춘 그 자리).
+--   ⚠️ 지우면 GRANT 도 같이 날아가므로 바로 아래에서 다시 줍니다.
+--   ⚠️⚠️ 이 줄을 고쳐도 되는 까닭 — 운영 DB 는 아직 **0007 까지만**
+--   올라가 있어 이 파일이 운영에서 한 번도 돌 적이 없습니다.
+drop function if exists drop_cq_guest(jsonb);
+create function drop_cq_guest(p jsonb)
 returns void language plpgsql
 security definer set search_path = public, extensions as $$
 declare

@@ -2299,6 +2299,9 @@ picture{ display: contents; }
   border-radius:14px; background: var(--bg-2); }
 .cqg .jhint{ margin:0 0 10px; }
 .cqg-go{ display:flex; flex-wrap:wrap; gap:8px; }
+/* ⚠️ 비밀번호를 잊으신 분의 길 (지시서 C) — 문장 속이 아니라 단추입니다 */
+.cqg-lost{ margin:12px 0 8px; }
+.cqg-help{ display:inline-flex; }
 .cqg-bx:not(:empty){ margin-top:14px; padding-top:14px;
   border-top:1.5px solid var(--line); }
 .cq-gh{ margin:0 0 14px; }

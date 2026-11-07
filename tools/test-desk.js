@@ -4695,6 +4695,51 @@ function boardsOf(){
     await g.p.close();
   }
 
+  /* ⑩ ⚠️⚠️⚠️ **0065 — 비밀번호 갈래는 예외가 아니라 글자로 옵니다.**
+     `raise exception` 은 그 함수가 한 일(틀린 시도 한 줄)을 통째로
+     되돌리므로, 비밀번호 갈래만 `ok` · `bad_pw` · `blocked` 를
+     **돌려주고** 화면이 말을 고릅니다. 그래서 **화면 쪽을 눌러
+     봅니다** — DB 가 `blocked` 를 내도 화면이 그 말을 안 하면
+     손님에게는 **아무 일도 안 일어난 단추**입니다 (절대 규칙 5). */
+  {
+    const GQ = [{ id:"gq1", cat:"cm-open", title:"비회원이 올린 글",
+      body:"비밀번호로 고치고 내립니다", who:"길손", named:true,
+      created_at:"2026-11-07T01:00:00Z", updated_at:"2026-11-07T01:00:00Z",
+      answer_n:0, view_n:3, photo_n:0, mine:false, guest:true }];
+    for(const [code, want] of [["bad_pw", "비밀번호가 맞지 않습니다"],
+                               ["blocked", "여러 번 틀리셨습니다"]]){
+      const g = await open("/cat/community?q=gq1",
+                           { role:"customer", name:"", signedIn:false },
+                           { v_cq_public: GQ, v_ca_public: [] },
+                           { edit_cq_guest: code }, true);
+      /* 비회원 글이면 비밀번호 상자가 나옵니다 */
+      const has = await g.p.locator("#cqlist .cqg").count();
+      ok("비회원 글에 **비밀번호 상자**가 나온다 (" + code + ")", has >= 1,
+         String(has));
+      await g.p.click("#cqlist .cqg-e").catch(function(){});
+      await g.p.waitForTimeout(200);
+      await g.p.fill("#cqlist #g-pw", "aaaa").catch(function(){});
+      await g.p.fill("#cqlist #g-title", "바꾼 제목입니다").catch(function(){});
+      await g.p.fill("#cqlist #g-body", "바꾼 내용입니다 여기").catch(function(){});
+      await g.p.click("#cqlist .cqg-f button[type='submit']").catch(function(){});
+      await g.p.waitForTimeout(350);
+      const r = await g.p.evaluate(function(){
+        const m = document.querySelector("#cqlist .cqg-m");
+        const b = document.querySelector("#cqlist .cqg-f button[type='submit']");
+        return { msg: m ? (m.textContent || "") : "(없음)",
+                 hidden: !!(m && m.hidden),
+                 again: !!(b && !b.disabled) };
+      });
+      ok("  ⚠️⚠️ `" + code + "` 면 **그 말을 화면에 적는다**",
+         !r.hidden && r.msg.indexOf(want) >= 0, r.msg.slice(0, 80));
+      /* ⚠️ 다시 눌러 볼 수 있어야 합니다 — 단추가 잠긴 채로 남으면
+         손님은 다시 해 볼 길이 없습니다 (막다른 길 · 절대 규칙 2). */
+      ok("  ⚠️ 단추가 **다시 눌립니다** (막다른 길로 두지 않습니다)",
+         r.again, JSON.stringify(r).slice(0, 120));
+      await g.p.close();
+    }
+  }
+
   /* ⑨ 비회원 상세 — ⚠️⚠️ **회원 조회를 안 세고** 댓글 양식 대신 로그인 */
   {
     const g = await open("/cat/community?q=q1",

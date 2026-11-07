@@ -491,6 +491,16 @@
         '<button type="button" class="btn btn-line btn-sm cqg-e">고치기</button> ' +
         '<button type="button" class="btn btn-bad btn-sm cqg-d">내리기</button>' +
       '</div>' +
+      /* ⚠️⚠️ **비밀번호를 잊으신 분이 설 자리**입니다 (지시서 C 의
+         "관리자 문의 절차 마련"). 여기가 실제로 막히는 자리이므로
+         글쓰기 화면뿐 아니라 **여기에도** 길을 냅니다 — 안 내면
+         비밀번호를 잊은 분은 그 자리에서 막다른 길입니다 (절대 규칙 2).
+         ⚠️ 운영자가 대신 고쳐 드리지는 않습니다 — **가릴 수만** 있습니다
+         (`move_cq`). 할 수 없는 일을 할 수 있다고 적지 않습니다
+         (절대 규칙 5). */
+      '<p class="jhint cqg-lost">비밀번호를 잊으셨나요? 운영자가 ' +
+      '<b>글을 가려 드릴 수는</b> 있습니다 (고쳐 드리지는 못합니다).</p>' +
+      '<a class="btn btn-sm btn-line cqg-help" href="/help">고객센터에 알리기</a>' +
       '<div class="cqg-bx"></div>' +
     '</div>';
   }
@@ -550,13 +560,32 @@
         var door = (mode === "edit") ? "edit_cq_guest" : "drop_cq_guest";
         var pack = { id:q.id, pw:f.pw.value };
         if(mode === "edit"){ pack.title = f.title.value; pack.body = f.body.value; }
-        call(door, pack).then(function(){
+        /* ⚠️⚠️⚠️ **0065 — 이 문 둘만 예외를 안 씁니다.** 비밀번호가
+           틀리면 그 시도를 **한 줄 적어야** 하는데, `raise exception`
+           은 그 함수가 한 일을 **통째로 되돌립니다** — 적은 줄까지
+           같이 사라져서 반복 시도를 셀 수가 없습니다. 그래서 비밀번호
+           갈래만 **글자로 돌려주고** 여기서 말을 고릅니다.
+           ⚠️ 나머지 거절(없는 글 · 이미 내려간 글 · 길이)은 **그대로
+           예외**라 아래 `catch` 가 받습니다. */
+        call(door, pack).then(function(r){
+          var code = String(r === null || r === undefined ? "" : r);
+          if(code === "bad_pw"){
+            btn.disabled = false;
+            msg.textContent = "비밀번호가 맞지 않습니다.";
+            return;
+          }
+          if(code === "blocked"){
+            btn.disabled = false;
+            msg.textContent = "비밀번호를 여러 번 틀리셨습니다. " +
+              "잠시 뒤에 다시 해 주세요.";
+            return;
+          }
           if(mode === "edit"){ go({ q:q.id }); return; }
           /* ⚠️ 내린 뒤에는 그 글이 **없습니다** — 목록으로 돌려보냅니다 */
           go({ q:"", p:S.p });
         }).catch(function(err){
           btn.disabled = false;
-          /* ⚠️⚠️ DB 가 거절한 **그 말** 그대로 (비밀번호가 맞지 않습니다 …) */
+          /* ⚠️⚠️ DB 가 거절한 **그 말** 그대로 (이미 내려간 글입니다 …) */
           msg.textContent = String((err && err.message) || "보내지 못했습니다.");
         });
       });
@@ -622,6 +651,12 @@
           '<span class="jhint">나중에 <b>고치거나 내릴 때</b> 쓰십니다. ' +
           '⚠️ 잊으시면 <b>직접 고치거나 내릴 수 없습니다</b> — ' +
           '그때는 고객센터로 알려 주세요.</span>' +
+          /* ⚠️⚠️ **가는 길을 같이 냅니다** (지시서 C 의 "관리자 문의
+             절차 마련"). 글로만 "고객센터로" 라고 적어 두면 어디로
+             가야 하는지 알 길이 없어 막다른 길입니다 (절대 규칙 2).
+             ⚠️ 문장 한가운데가 아니라 **문단 끝에 단추로** 둡니다
+             (문장 속 링크는 높이가 16px 라 손가락으로 못 누릅니다). */
+          '<a class="btn btn-sm btn-line cqg-help" href="/help">고객센터</a>' +
         '</div>' +
         /* ⚠️⚠️ **허니팟** — 사람에게는 안 보이고 자동 프로그램만 채웁니다.
            채워져 있으면 문이 거절합니다. `hidden` 이 아니라 화면 밖으로
@@ -655,7 +690,14 @@
         '<span class="jhint">⚠️ 전화번호 · 아이디 같은 연락처는 적지 마세요. ' +
         '이 글은 <b>누구나 봅니다.</b> ' + (GUEST
           ? '올리신 글은 <b>그 글을 열고 비밀번호</b>를 넣어 고치거나 ' +
-            '내리실 수 있습니다.'
+            '내리실 수 있습니다. ' +
+            /* ⚠️⚠️ **DB 가 막는 것을 그 자리에서 미리 말합니다** (0065).
+               안 적으면 손님은 다 적고 나서야 거절당합니다 — 그때
+               적으신 글이 날아갑니다.
+               ⚠️ "스팸을 막습니다" 라고 적지 않습니다 — 링크 하나짜리
+               광고는 이 줄이 못 막습니다 (절대 규칙 5). 막는 것만
+               그대로 적습니다. */
+            '⚠️ 링크는 <b>둘까지</b> 넣으실 수 있습니다.'
           : '올리신 글은 내 정보 화면에서 고치거나 내리실 수 있습니다.') +
         '</span>' +
       '</div>' +

@@ -27,7 +27,13 @@
   if(!box || !window.amAuthAsk) return;
 
   var esc = window.esc;
-  var A = null, KIND = "booking";
+  /* ⚠️⚠️ **어느 탭이 먼저 열릴지는 빌드가 상자에 적어 줍니다**
+     (`data-teekind`) — 메인과 `/cat/booking` 은 부킹 · `/cat/matchup` 은
+     조인입니다. 화면이 주소를 보고 다시 판단하면 규칙이 두 곳이 되고,
+     주소를 하나 더하는 날 한쪽만 고치게 됩니다(`#ttlist` 와 같은 꼴).
+     ⚠️ 모르는 값이면 부킹입니다 — 빈 표를 내지 않습니다. */
+  var A = null;
+  var KIND = (box.getAttribute("data-teekind") === "join") ? "join" : "booking";
   /* 찾는 칸이 들고 있는 값 — ⚠️ 표의 `KIND` 와 **같은 변수**를 읽습니다.
      두 곳에 따로 두면 탭을 바꿨을 때 표와 단추가 다른 말을 합니다. */
   var FIND = { d:"", rg:"", course:"" };

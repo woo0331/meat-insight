@@ -4110,6 +4110,36 @@ function boardsOf(){
     await g.p.close();
   }
 
+  /* ⑧-3 **부킹 · 조인 화면에도 같은 띄가 섬니다** (2026-11-07 · 시안).
+     ⚠️⚠️⚠️ 전에는 **메인에만** 있어서, 머리말에서 골프장 부킹을 누르고
+     들어오신 분은 **목록부터** 보셨습니다 — 어느 날짜 · 어느 지역에 자리가
+     있는지를 보는 자리가 그 화면에 없었습니다.
+     ⚠️⚠️⚠️ 그리고 **`/cat/matchup` 에 `#ttlist` 가 한 줄도 안 찍혔습니다** —
+     0곳 가지가 `ownSec || (sideSec + zero)` 라 조인 화면에서는 sideSec 이
+     통째로 사라졌고, 그래서 0060 의 "업체가 내놓은 조인 자리" 가
+     **처음부터 죽은 코드**였습니다(`js/booking.js` 는 그 상자가 없으면
+     그자리에서 나갑니다 · 에러 0줄). */
+  for(const pg of [["/cat/booking", "booking"], ["/cat/matchup", "join"]]){
+    const g = await open(pg[0], { role:"customer", name:"손님", signedIn:true },
+      { v_teetime_count: TCNT, v_join_count: TCNT, v_teetime_open: TEE }, {}, true);
+    await g.p.waitForTimeout(700);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("teeboard");
+      const on = b ? b.querySelector(".tbd-b.tbd-on") : null;
+      return { board: !!b && !b.hidden,
+               find: !!(b && b.querySelector(".tbf-go")),
+               tab: on ? on.getAttribute("data-teetab") : null,
+               /* ⚠️ 자리 목록 상자도 **실제로** 있어야 합니다 */
+               list: !!document.getElementById("ttlist") };
+    });
+    ok(pg[0] + " 에 **찾는 칸 + 현황표**가 그려진다", r.board && r.find,
+       JSON.stringify(r));
+    /* ⚠️ 주소로 다시 판단하지 않고 **빌드가 적어 준 값**을 씨니다 */
+    ok("  먼저 열리는 탭이 **" + pg[1] + "** 이다", r.tab === pg[1], String(r.tab));
+    ok("  ⚠️⚠️ 자리 목록 상자(#ttlist)도 **실제로** 있다", r.list, "없습니다");
+    await g.p.close();
+  }
+
   /* ⑨ 폰 폭 셋 */
   for(const w of PHONES){
     const p2 = await b.newPage({ viewport: { width: w, height: 900 } });

@@ -359,6 +359,28 @@ exports.build = function(c){
      ⚠️ 설명은 **빌드가** 찍고(크롤러 몫) 목록은 **브라우저가** 그립니다.
      ⚠️ `data-teekind` 로 부킹인지 조인인지 알려 줍니다 — 화면이 주소로
      다시 판단하면 규칙이 두 곳이 됩니다. */
+  /* ⚠️⚠️⚠️ **찾는 칸 + 날짜 · 지역별 현황** (2026-11-07 · 시안) —
+     메인에만 있어서, 머리말에서 「골프장 부킹」을 누르고 들어오신 분은
+     **목록부터** 보셨습니다 — 어느 날짜 · 어느 지역에 자리가 있는지를
+     보는 자리가 그 화면에 없었습니다. 지금은 목록 **위**에 같은 띄가 섭니다.
+     ⚠⚠ **그리는 코드는 `js/teeboard.js` 한 곳**입니다 — 메인과 두 벌로
+     적으면 한쪽만 고치는 날 둘이 다른 말을 합니다(업체 카드를 빌드와
+     브라우저 둘이 그리던 그 자리).
+     ⚠⚠ `data-teekind` 가 **어느 탭이 먼저 열릴지**를 정합니다 — 부킹
+     화면은 부킹 · 조인 화면은 조인. 화면이 주소로 다시 판단하면 규칙이
+     두 곳이 됩니다(`#ttlist` 와 같은 꼴). */
+  var teeFind = (c.key === "booking" || c.kind === "match")
+    ? '<section class="sec sec-alt" aria-labelledby="tbd-h"><div class="wrap">' +
+      '<div class="sec-hd"><h2 id="tbd-h">원하는 날짜와 지역의 자리 찾기</h2>' +
+      '<p>제휴 골프장이 올린 <b>티타임</b>과 회원이 연 <b>조인</b>을 ' +
+      '날짜 · 지역으로 나눠 보여 드립니다. ' +
+      '골프올인원은 거래 당사자가 아니며 <b>결제를 받지 않습니다.</b></p></div>' +
+      /* ⚠️ 알맹이는 브라우저가 그립니다 — 자리는 날마다 바뀝니다 */
+      '<div id="teeboard" data-teekind="' +
+        (c.key === "booking" ? "booking" : "join") + '" hidden></div>' +
+      '</div></section>'
+    : '';
+
   var teeSec = (c.key === "booking" || c.kind === "match")
     ? '<section class="sec"><div class="wrap">' +
       '<div class="sec-hd"><h2>' +
@@ -435,6 +457,14 @@ exports.build = function(c){
   var ownSec   = (lsSec || joinSec || cqSec || jobSec);   /* 0곳 안내를 **대신**합니다 */
   var sideSec  = teeSec + wtSec;                          /* 0곳 안내에 **곁들입니다** */
   var memberSec = sideSec + ownSec;
+  /* ⚠️⚠️⚠️ **2026-11-07 — `/cat/matchup` 에 `#ttlist` 가 한 줄도 안 찍혔습니다.**
+     아래 0곳 가지가 `ownSec || (sideSec + zero)` 라, 조인 화면처럼 **ownSec 이
+     있는 분류에서는 sideSec 이 통째로 사라졌습니다** — 그래서 0060 이
+     세운 "업체가 내놓은 조인 자리" 가 **처음부터 죽은 코드**였습니다
+     (`js/booking.js` 는 `#ttlist` 가 없으면 그자리에서 나갑니다 · 에러 0줄).
+     ⚠️ 여행 분류에서 **구합니다를 더했다가 0곳 안내가 사라졌던** 그 자리의
+     **거울상**입니다. 지금은 sideSec 은 **늘** 서고, `zero`(업체 0곳 안내)만
+     ownSec 이 있을 때 빠집니다. */
 
   var list = W.amProvidersOf(c.key);
   if(list.length){
@@ -442,7 +472,7 @@ exports.build = function(c){
       route: W.amCatUrl(c), title: c.name,
       crumbs: [["카테고리 전체보기", "/categories"], [c.name, W.amCatUrl(c)]],
       desc: c.name + " — " + c.lead + ". " + k.what + " 지금 " + list.length + "곳이 있습니다.",
-      body: head + adTop + subs +
+      body: head + adTop + subs + teeFind +
         '<section class="sec sec-alt"><div class="wrap">' +
           '<div class="sec-hd"><h2>' + esc(c.name) + ' 업체 ' + W.won(list.length) + '곳</h2>' +
           '<p>골프올인원은 통신판매중개자이며 거래 당사자가 아닙니다.</p></div>' +
@@ -494,15 +524,17 @@ exports.build = function(c){
          `AM_WATCH` 가 거기 있습니다. 안 실으면 그 단추가 **조용히 안
          그려집니다** (제 가드가 `window.amWatchLink ?` 로 넘어갑니다). */
       /* ⚠️ 0060 — 업체가 내놓은 조인 자리도 같은 화면에 섭니다 */
+      /* ⚠️⚠️ teeboard.js — 찾는 칸 + 날짜 · 지역별 현황입니다(2026-11-07).
+         안 실으면 그 상자가 `hidden` 인 채로 남고 **에러도 안 납니다.** */
       ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
-         "/js/join.js", "/js/booking.js"]
+         "/js/teeboard.js", "/js/join.js", "/js/booking.js"]
       /* ⚠️⚠️ 0060 — `/cat/booking` 은 **값을 읽는 파일 셋**이 있어야
          합니다: site.js(보유 기간 · 찾을 수 있는 날 수 — 비면 신청
          양식을 **안 엽니다**) · regions.js(지역 칸) · deal.js(상태 말).
          하나라도 빠지면 양식이 **조용히** 안 열립니다. */
       : (c.key === "booking"
           ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
-             "/js/booking.js"]
+             "/js/teeboard.js", "/js/booking.js"]
       : (c.key === "community" ? ["/js/community.js"]
       /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — site.js 가
          careerKeep(보유 기간)을, regions.js 가 지역 칸을, catalog.js 가
@@ -532,7 +564,7 @@ exports.build = function(c){
        (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다). */
     /* ⚠️ 중고는 제 구간이 "0건" 을 스스로 말하므로 zero 를 **안 겹칩니다**
        (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다) */
-    body: head + adTop + subs + (ownSec || (sideSec + zero)) +
+    body: head + adTop + subs + teeFind + sideSec + (ownSec || zero) +
           asks(c) + related(c)
   };
 };

@@ -4715,6 +4715,276 @@ function boardsOf(){
     }
   }
 
+
+  /* ══════════════════════════════════════════════════════════════
+     구합니다 (0061) — ⚠️ **설정이 있어야 열리는 자리라 빌드가 찍은
+     HTML 만 보는 검사는 영원히 못 봅니다.** 여기서 누릅니다.
+     ⚠️⚠️ 흉내 장치는 조건을 보고 걸러 주지 않으므로, 거르개는 **보내는
+     질의를 뜯어** 봅니다 (줄 수로 재면 거르개를 떼어도 영원히 초록).
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 구합니다 (0061)");
+  {
+    /* ⚠️ 가짜 자료도 **DB 가 받는 값**이어야 합니다 — 분류는 `AM_WANT_OFF`
+       를 뺀 다섯, 하위는 그 분류의 `ls-*` 키입니다. 아닌 값을 넣으면
+       화면이 키를 그대로 보여 주고(그게 맞습니다), 그 그림을 보고
+       멀쩡한 화면을 고치려 들게 됩니다 (이 저장소가 다섯 번 겪은 자리). */
+    const WNT = [
+      { id:"w1", cat:"lesson", sub:"ls-solo", region:"seoul",
+        title:"주말 오전 레슨 구합니다", body:"드라이버를 배우고 싶습니다",
+        budget:200000, when_txt:"주말 오전", reply_n:3,
+        created_at:"2026-11-07T01:00:00Z" },
+      { id:"w2", cat:"lesson", sub:null, region:"gyeonggi",
+        title:"무료로 봐 주실 분", body:"완전 초보입니다",
+        budget:0, when_txt:null, reply_n:0,
+        created_at:"2026-11-06T01:00:00Z" }];
+
+    /* ① 설정 전에는 **아무것도 안 엽니다** (절대 규칙 5) */
+    {
+      const p0 = await b.newPage({ viewport: view });
+      await p0.route("**/api/session", function(r){
+        return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ auth:false, signedIn:false, conf:null }) });
+      });
+      await p0.goto(base + "/cat/lesson", { waitUntil:"networkidle" });
+      await p0.waitForTimeout(400);
+      const off = await p0.evaluate(function(){
+        return { form: !!document.getElementById("wtf"),
+                 bar:  !!document.getElementById("wtfil"),
+                 boxHtml: (document.getElementById("wtbox") || {}).innerHTML || "" };
+      });
+      ok("⚠️ 설정 전에는 구합니다 양식을 **안 엽니다** (다 적고 누른 뒤 실패하지 않게)",
+         !off.form && !off.bar && off.boxHtml === "", JSON.stringify(off));
+      await p0.close();
+    }
+
+    /* ② 로그인 전 — 목록은 보이고, 올리는 것은 로그인으로 보냅니다 */
+    {
+      const g = await open("/cat/lesson", { role:"customer", name:"", signedIn:false },
+                           { v_wanted_open: WNT }, {}, true);
+      const r = await g.p.evaluate(function(){
+        /* ⚠️ 로그인 길은 **#wtbox** 에 그립니다 (#wtlist 는 목록입니다) —
+           처음에 목록에서 찾아 "없다" 고 떨어졌고, 그것은 제 검사가
+           엉뚱한 칸을 집은 것이었습니다. */
+        const bx = document.getElementById("wtbox");
+        return { n: document.querySelectorAll("#wtlist .lsc").length,
+                 body: document.body.innerText,
+                 login: !!(bx && bx.querySelector('a[href^="/login"]')),
+                 form: !!document.getElementById("wtf") };
+      });
+      ok("로그인 전에도 올라온 구합니다 글이 보인다 (업체가 찾아 들어오는 길입니다)",
+         r.n === 2 && r.body.indexOf("주말 오전 레슨 구합니다") >= 0,
+         "n=" + r.n);
+      /* ⚠️⚠️ **0 은 "무료로 해 주실 분" 입니다** — `||` 를 쓰면 0 이 사라집니다 */
+      ok("  ⚠️⚠️ 예산 **0 이 '무료로 해 주실 분' 으로** 나온다 (0 이 사라지지 않습니다)",
+         r.body.indexOf("무료로 해 주실 분") >= 0, "");
+      ok("  예산이 사람 말로 나온다", r.body.indexOf("200,000원") >= 0, "");
+      /* ⚠️ 영문 키가 그대로 찍히면 말이 어긋난 것입니다 */
+      ok("  ⚠️ 영문 키가 안 찍힌다 (lesson · ls-solo · seoul)",
+         r.body.indexOf("ls-solo") < 0 && r.body.indexOf("gyeonggi") < 0, "");
+      /* ⚠️⚠️ **답 수는 0 이면 안 찍습니다** — "답 0건" 을 찍으면 방금
+         올린 글이 전부 아무도 안 보는 글로 보입니다 (후기 0건과 같은
+         자리 · 그건 우리가 만든 평가입니다). */
+      ok("⚠️⚠️ 답이 0건이면 **그 줄을 안 찍는다** (우리가 만든 평가가 되지 않게)",
+         r.body.indexOf("답 3건") >= 0 && r.body.indexOf("답 0건") < 0, "");
+      /* ⚠️ **누르기 전에도** 로그인 길이 보여야 합니다 — 누른 뒤에야
+         말하면 손님은 그 단추가 무엇인지 모르고 누르고 거절을 받습니다.
+         ⚠️⚠️ 그리고 그 주소는 **돌아올 자리를 들고** 있어야 합니다
+         (맨 `/login` 이면 로그인한 뒤 /my 로 떨어져서 글을 올리려던
+         분이 이 화면을 다시 찾아와야 합니다). */
+      ok("  로그인 전에는 올리는 양식 대신 로그인 길을 낸다", r.login && !r.form,
+         JSON.stringify({ login:r.login, form:r.form }));
+      /* ⚠️ `amLoginUrl()` 은 돌아올 자리를 **encodeURIComponent 로** 담습니다
+         (`/login?next=%2Fcat%2Flesson`) — 글자 그대로 찾으면 못 찾고,
+         그건 코드가 아니라 제 검사가 틀린 것입니다. 풀어서 봅니다. */
+      const back = await g.p.evaluate(function(){
+        const a = document.querySelector('#wtbox a[href^="/login"]');
+        return a ? a.getAttribute("href") : "";
+      });
+      ok("  ⚠️⚠️ 그 로그인 주소가 **돌아올 자리를 들고** 있다",
+         decodeURIComponent(back).indexOf("/cat/lesson") >= 0, back);
+      /* ⚠️⚠️⚠️ 연락처는 목록 어디에도 없어야 합니다 (보기에 칸이 없습니다) */
+      ok("⚠️⚠️ 목록 어디에도 연락처가 없다 (v_wanted_open 에 칸이 없습니다)",
+         r.body.indexOf("010-") < 0, "");
+      ok("  에러 0건", g.errs.length === 0, g.errs.join(" | "));
+      await g.p.close();
+    }
+
+    /* ③ 거르개 — ⚠️⚠️ **보내는 질의를 뜯어** 봅니다 (흉내는 안 걸러 줍니다) */
+    {
+      const g = await open("/cat/lesson", { role:"customer", name:"손님", signedIn:true },
+                           { v_wanted_open: WNT }, {}, true);
+      const n0 = g.sent.length;
+      /* ⚠️ 처음에 `#wtrg` 라고 **지어낸 id** 를 적어 두어 30초를 기다리다
+         터졌습니다 — 화면이 쓰는 이름은 `#wf-rg` 입니다 (shot-desk 가
+         `#myreqbox` 를 지어내 /my 가 한 장도 안 찍힌 그 자리). */
+      await g.p.selectOption("#wf-rg", "seoul");
+      await g.p.waitForTimeout(400);
+      const q = g.sent.slice(n0).filter(function(x){
+        return String(x.body).indexOf("v_wanted_open") >= 0;
+      }).map(function(x){ return String(x.body); }).join(" | ");
+      ok("⚠️⚠️ 지역 거르개가 **보내는 질의를 좁힌다** (줄 수로 재면 " +
+         "거르개를 떼어도 영원히 초록입니다)",
+         q.indexOf("region=eq.seoul") >= 0, q.slice(0, 220));
+      /* ⚠️ 분류는 늘 그 화면의 분류로 좁혀져야 합니다 — 안 좁히면
+         레슨 화면에 중고 구합니다 글이 섞여 나옵니다 */
+      ok("  ⚠️ 분류도 **그 화면의 분류로** 좁힌다", q.indexOf("cat=eq.lesson") >= 0,
+         q.slice(0, 220));
+      await g.p.close();
+    }
+
+    /* ④ 올리는 양식 — 보유 기간 · 동의 · 보내는 꾸러미 */
+    {
+      const g = await open("/cat/lesson", { role:"customer", name:"손님", signedIn:true },
+                           { v_wanted_open: [] }, {}, true);
+      await g.p.click("#wtnew");
+      await g.p.waitForTimeout(300);
+      const r = await g.p.evaluate(function(){
+        const f = document.getElementById("wtf");
+        return { form: !!f, body: document.body.innerText,
+                 names: f ? Array.prototype.map.call(f.elements, function(x){
+                   return x.name; }).filter(Boolean) : [] };
+      });
+      ok("올리는 양식이 열린다", r.form, "");
+      /* ⚠️ 보유 기간은 **site.js 의 값**이어야 합니다 (검사에 그날의 글자를
+         박으면 사장님이 고치시는 날 멀쩡한 화면이 떨어집니다) */
+      const WKEEP = keepOf("wantedKeep");
+      ok("  ⚠️ 보유 기간이 **실제 값**으로 찍힌다 (site.js 의 wantedKeep)",
+         !!WKEEP && r.body.indexOf(WKEEP) >= 0, WKEEP);
+      ok("  ⚠️ 무엇을 · 왜 · 얼마나 받는지 그 자리에서 말한다 (제15조 제2항)",
+         r.body.indexOf("수집") >= 0 && r.body.indexOf("연락처") >= 0, "");
+      ok("  연락처 · 지역 칸이 있다",
+         r.names.indexOf("contact") >= 0 && r.names.indexOf("region") >= 0,
+         r.names.join(","));
+      /* 제출 — ⚠️ 보내는 꾸러미를 **뜯어** 봅니다 */
+      await g.p.fill("#wtf [name=title]", "주말 오전 레슨 구합니다");
+      await g.p.fill("#wtf [name=body]", "드라이버를 집중해서 배우고 싶습니다");
+      await g.p.selectOption("#wtf [name=region]", "seoul");
+      await g.p.fill("#wtf [name=contact]", "010-7000-0000");
+      await g.p.fill("#wtf [name=budget]", "0");
+      /* ⚠️ 동의 상자의 클래스는 `.jchk` 입니다 (`.chk` 가 아닙니다) —
+         지어낸 이름을 적으면 30초를 기다리다 터집니다. */
+      await g.p.check("#wtf .jchk input[type=checkbox]");
+      await g.p.click('#wtf button[type="submit"]');
+      await g.p.waitForTimeout(500);
+      const sent = g.sent.filter(function(x){ return x.name === "open_wanted"; });
+      ok("⚠️ 올리기 단추가 **open_wanted 를 실제로 부른다**", sent.length === 1,
+         "부른 횟수 " + sent.length);
+      const a = (sent[0] && sent[0].body && sent[0].body.p) || {};
+      ok("  ⚠️⚠️ **동의 시각을 같이 보낸다** (제15조 제2항 — 없으면 문이 거절합니다)",
+         !!a.agree_at, JSON.stringify(a).slice(0, 200));
+      ok("  ⚠️⚠️ 예산 **0 을 0 으로** 보낸다 (`||` 면 안 적음과 섞입니다)",
+         a.budget === "0" || a.budget === 0, JSON.stringify(a.budget));
+      ok("  그 화면의 분류로 보낸다", a.cat === "lesson", String(a.cat));
+      await g.p.close();
+    }
+
+    /* ⑤ 받을 자리가 없는 분류에는 **한 줄도 안 그립니다** (0곳이 아니라
+       아예 그 기능이 없는 자리입니다 — 부킹은 `AM_WANT_OFF`) */
+    {
+      const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
+                           { v_wanted_open: WNT }, {}, true);
+      const has = await g.p.evaluate(function(){
+        return { box: !!document.getElementById("wtlist"),
+                 nw:  !!document.getElementById("wtnew") };
+      });
+      ok("⚠️⚠️ 부킹에는 구합니다 자리를 **아예 안 낸다** (티타임이 그 자리입니다)",
+         !has.box && !has.nw, JSON.stringify(has));
+      await g.p.close();
+    }
+
+    /* ⑥ /my — 내가 올린 것과 내가 보낸 답 */
+    {
+      const MINE = [{ id:"w1", cat:"lesson", sub:"ls-solo", region:"seoul",
+        title:"주말 오전 레슨 구합니다", body:"드라이버를 배우고 싶습니다",
+        budget:200000, when_txt:"주말 오전", state:"open", hidden_why:null,
+        created_at:"2026-11-07T01:00:00Z" }];
+      const REPS = [{ id:"r1", w_id:"w1", by_user:"u2",
+        body:"주말 오전 자리가 있습니다", state:"accepted",
+        created_at:"2026-11-07T02:00:00Z",
+        owner_share_at:null, helper_share_at:"2026-11-07T03:00:00Z",
+        pro_name:"분당 그린골프아카데미", who:null, owner:"u1" }];
+      const CT = [{ reply_id:"r1", owner_contact:null,
+        helper_contact:"031-000-0000",
+        owner_share_at:null, helper_share_at:"2026-11-07T03:00:00Z" }];
+      const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+        { wanted: MINE, v_wanted_reply: REPS, v_wanted_contact: CT }, {}, true);
+      const r = await g.p.evaluate(function(){
+        const bx = document.getElementById("wtmine");
+        return { drawn: !!bx && !bx.hidden, body: bx ? bx.innerText : "",
+                 edit: !!(bx && bx.querySelector(".wt-edit")),
+                 share: !!(bx && bx.querySelector(".wt-share")) };
+      });
+      ok("/my 에 내가 올린 구합니다 상자가 그려진다", r.drawn, "");
+      ok("  분류 · 하위 · 지역이 **사람 말로** 나온다",
+         r.body.indexOf("ls-solo") < 0 && r.body.indexOf("seoul") < 0 &&
+         r.body.indexOf("서울") >= 0, r.body.slice(0, 160));
+      ok("  받은 답과 **상태 말**이 나온다 (영문 키가 아닙니다)",
+         r.body.indexOf("accepted") < 0 && r.body.indexOf("받은 답") >= 0,
+         r.body.slice(0, 160));
+      ok("  업체가 답한 것은 **상호와 업체 표시**가 붙는다",
+         r.body.indexOf("분당 그린골프아카데미") >= 0 &&
+         r.body.indexOf("업체") >= 0, "");
+      /* ⚠️⚠️⚠️ **받아들였어도 내가 안 열었으면 내 번호가 안 갑니다** —
+         화면도 그 사실을 말해야 합니다 (제17조 제2항) */
+      ok("⚠️⚠️⚠️ 상대가 연 번호는 보이고, **내 것은 내가 눌러야** 연다",
+         r.body.indexOf("031-000-0000") >= 0 && r.share &&
+         r.body.indexOf("각자 제 것만") >= 0, r.body.slice(0, 200));
+      ok("  고치기 단추가 있다 (`edit_wanted` 를 부르는 자리)", r.edit, "");
+      /* ⚠️ 눌러서 양식을 열고 **보내는 꾸러미**를 뜯어 봅니다 */
+      await g.p.click("#wtmine .wt-edit");
+      await g.p.waitForTimeout(250);
+      const ef = await g.p.evaluate(function(){
+        const f = document.querySelector("#wtmine .wt-ef");
+        return { form: !!f, text: f ? f.innerText : "",
+                 names: f ? Array.prototype.map.call(f.elements, function(x){
+                   return x.name; }).filter(Boolean) : [],
+                 title: f ? f.elements.title.value : "" };
+      });
+      ok("  고치기 양식이 **적어 둔 것으로 채워져** 열린다",
+         ef.form && ef.title === "주말 오전 레슨 구합니다", JSON.stringify(ef.title));
+      /* ⚠️⚠️ **분류 · 하위 · 지역 칸을 안 냅니다** — 바꾸면 답하신 분이
+         전혀 다른 것에 묶입니다 (문도 그 셋은 조용히 무시합니다). 그려
+         두면 눌러도 아무 일이 안 나는 칸입니다 (절대 규칙 5). */
+      ok("  ⚠️⚠️ 고치기에 **분류 · 하위 · 지역 칸이 없다**",
+         ef.names.indexOf("cat") < 0 && ef.names.indexOf("sub") < 0 &&
+         ef.names.indexOf("region") < 0, ef.names.join(","));
+      ok("  ⚠️ 못 바꾼다는 것을 **그 자리에서** 말한다 (막다른 길로 두지 않습니다)",
+         ef.text.indexOf("못 바꿉니다") >= 0, ef.text.slice(0, 160));
+      await g.p.fill("#wtmine .wt-ef [name=budget]", "");
+      await g.p.click('#wtmine .wt-ef button[type="submit"]');
+      await g.p.waitForTimeout(400);
+      const eds = g.sent.filter(function(x){ return x.name === "edit_wanted"; });
+      ok("  ⚠️ 저장 단추가 **edit_wanted 를 실제로 부른다**", eds.length === 1,
+         "부른 횟수 " + eds.length);
+      const ea = (eds[0] && eds[0].body && eds[0].body.p) || {};
+      ok("  ⚠️⚠️ 네 칸을 **다 같이** 보낸다 (보낸 칸만 고치는 문입니다)",
+         ea.title !== undefined && ea.body !== undefined &&
+         ea.when_txt !== undefined && ea.budget !== undefined,
+         Object.keys(ea).join(","));
+      ok("  ⚠️⚠️ 분류 · 하위 · 지역은 **안 보낸다**",
+         !("cat" in ea) && !("sub" in ea) && !("region" in ea),
+         Object.keys(ea).join(","));
+      ok("  ⚠️ 예산을 비우면 **빈 글자로** 보낸다 (문이 null 로 읽습니다)",
+         ea.budget === "", JSON.stringify(ea.budget));
+      await g.p.close();
+    }
+
+    /* ⑦ 읽을 때 **contact · agree_at 을 안 부릅니다** (0061 이 그 칸을
+       안 줬으므로 부르면 질의가 통째로 거절됩니다 — 0053 의 memo 자리) */
+    {
+      const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+        { wanted: [], v_wanted_reply: [], v_wanted_contact: [] }, {}, true);
+      const asked = g.sent.filter(function(x){
+        return x.name === "GET" && String(x.body).indexOf("/wanted?") >= 0;
+      }).map(function(x){ return String(x.body); }).join(" | ");
+      ok("⚠️⚠️ 구합니다를 읽을 때 **contact · agree_at 을 안 부른다** " +
+         "(0061 이 그 칸을 안 줬습니다 — 부르면 질의가 거절됩니다)",
+         asked.length > 0 && asked.indexOf("contact") < 0 &&
+         asked.indexOf("agree_at") < 0, asked.slice(0, 200));
+      await g.p.close();
+    }
+  }
+
   console.log("\n── 골프 인력 · 비즈니스 (0048)");
   const JOBS = [
     { id:"j1", kind:"hire", sub:"cr-caddy", region:"seoul",

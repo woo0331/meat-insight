@@ -327,6 +327,48 @@ const WATCH = [
     max_price:150000, ship:false, booked:true, created_at:NOW }
 ];
 
+/* 구합니다 (0061) — ⚠️ 가짜 자료도 **DB 가 받는 값**이어야 합니다.
+   `cat` 은 분류 키(`AM_WANT_OFF` 를 뺀 다섯) · `sub` 은 그 분류의 하위 ·
+   매물 상태는 `open · done · closed · hidden` · 답 상태는
+   `replied · accepted · rejected · canceled` 입니다. 아닌 값을 넣으면
+   화면이 **키를 그대로 보여 주고**(그게 맞습니다) 그 그림을 보고 멀쩡한
+   화면을 고치려 들게 됩니다 (이 저장소가 다섯 번 겪은 자리). */
+const WTMINE = [
+  { id:"aa111111-1111-1111-1111-111111111111", cat:"lesson", sub:"ls-solo",
+    region:"gyeonggi", title:"주말 오전에 레슨 받을 곳 찾습니다",
+    body:"성남 분당 쪽이면 좋겠습니다. 구력 2년이고 드라이버를 집중해서 " +
+         "배우고 싶습니다.",
+    budget:200000, when_txt:"주말 오전", state:"open", hidden_why:null,
+    created_at:"2026-11-07T01:00:00Z" },
+  { id:"aa222222-2222-2222-2222-222222222222", cat:"market", sub:null,
+    region:"seoul", title:"입문용 아이언 세트 구합니다",
+    body:"무료로 나눠 주실 분을 찾습니다.",
+    budget:0, when_txt:null, state:"open", hidden_why:null,
+    created_at:"2026-11-06T01:00:00Z" }
+];
+const WTREP = [
+  { id:"bb111111-1111-1111-1111-111111111111",
+    w_id:"aa111111-1111-1111-1111-111111111111", by_user:"u2",
+    body:"주말 오전 7시 · 9시 자리가 있습니다. 드라이버 위주로 8회 " +
+         "과정으로 잡아 드릴 수 있습니다.",
+    state:"accepted", created_at:"2026-11-07T02:00:00Z",
+    owner_share_at:null, helper_share_at:"2026-11-07T03:00:00Z",
+    pro_name:"분당 그린골프아카데미", who:null, owner:"u1" },
+  { id:"bb222222-2222-2222-2222-222222222222",
+    w_id:"aa111111-1111-1111-1111-111111111111", by_user:"u3",
+    /* ⚠️ 손님이 적은 글에 태그를 하나 넣어 둡니다 — 날것으로 나가면
+       찍은 그림에 보입니다 (esc 사고는 이 저장소가 서른두 번 겪었습니다). */
+    body:"같은 동네입니다. <img src=x onerror=alert(9)> 알려 드릴게요.",
+    state:"replied", created_at:"2026-11-07T04:00:00Z",
+    owner_share_at:null, helper_share_at:null,
+    pro_name:null, who:"김**", owner:"u1" }
+];
+const WTCON = [
+  { reply_id:"bb111111-1111-1111-1111-111111111111",
+    owner_contact:null, helper_contact:"031-000-0000",
+    owner_share_at:null, helper_share_at:"2026-11-07T03:00:00Z" }
+];
+
 const T_MY = {
   request:[REQ], request_item:ITEMS, assignment:[ASG], quote:[QUOTE],
   provider:PVS, review:[], appointment:[], notice:NOTICE,
@@ -342,7 +384,9 @@ const T_MY = {
   watch:WATCH,
   /* ⚠️ 0059 — 공개 닉네임 (`js/mynick.js`). 안 주면 그 상자가 "읽지
      못했습니다" 로만 그려져 모양을 아무도 못 봅니다. */
-  account:[{ nick:"버디사냥꾼" }]
+  account:[{ nick:"버디사냥꾼" }],
+  /* ⚠️ 0061 — 내가 올린 구합니다 (`js/mywanted.js`) */
+  wanted:WTMINE, v_wanted_reply:WTREP, v_wanted_contact:WTCON
 };
 
 /* ── 장면 ────────────────────────────────────────────────────────
@@ -351,6 +395,16 @@ const T_MY = {
    적어 두면 화면이 키를 그대로 찍고, 그 그림을 보고 멀쩡한 화면을
    고치게 됩니다 (조인에서 `ok` 를 적어 두고 밟은 그 자리). */
 const CQ_ID = "11111111-1111-1111-1111-111111111111";
+/* 구합니다 목록 (0061) — ⚠️ 공개 보기라 `contact` 칸이 **없습니다** */
+const T_WT = {
+  v_wanted_open: WTMINE.map(function(w){
+    return { id:w.id, cat:w.cat, sub:w.sub, region:w.region, title:w.title,
+             body:w.body, budget:w.budget, when_txt:w.when_txt,
+             created_at:w.created_at,
+             reply_n: w.id.indexOf("aa1") === 0 ? 3 : 0 };
+  })
+};
+
 const T_CQ = {
   v_cq_public: [
     { id:CQ_ID, cat:"cm-open", title:"주말에 라운딩 다녀왔습니다",
@@ -393,6 +447,8 @@ const SCENES = [
                       CUS, T_CQ, {}],
   /* ⚠️ 로그인 안 한 자리도 한 장 — "한 줄도 안 보이는가" 는 눈으로도
      봐야 합니다 (글이 남아 있으면 그림에 보입니다). */
+  /* ⚠️ 구합니다 (0061) — 분류 화면의 목록 (업체가 0곳이어도 도는 자리) */
+  ["wanted",          "/cat/lesson", CUS, T_WT, {}],
   ["desk-notmine",    "/desk",  CUS, T_DESK,  {}],
   ["admin-notmine",   "/admin", CUS, T_ADMIN, { biz_metrics: MET }]
 ];
@@ -436,7 +492,12 @@ const BOXES = {
           ["watch", "#wchbox"],
           /* ⚠️ 0059 의 공개 닉네임 (js/mynick.js) */
           ["nick", "#nickbox"],
-          ["inq", "#myinqbox"]]
+          /* ⚠️ 0061 의 내가 올린 구합니다 (js/mywanted.js) */
+          ["wanted", "#wtmine"],
+          ["inq", "#myinqbox"]],
+  /* ⚠️⚠️ 구합니다(0061)도 **설정이 있어야 열립니다** — `check-screens` 는
+     빈 상자만 봅니다. 분류 화면의 목록을 여기서 찍습니다. */
+  "/cat/lesson": [["wanted", "#wtlist"]]
 };
 
 (async function(){

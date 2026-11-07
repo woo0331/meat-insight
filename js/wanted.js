@@ -376,7 +376,8 @@
         if(box) box.innerHTML =
           '<p class="jafh">답하시려면 로그인이 필요합니다. ' +
           '누가 답했는지 알아야 올리신 분이 받아들일 수 있습니다.</p>' +
-          '<p class="lsc-go"><a class="btn btn-pri" href="/login">로그인</a></p>';
+          '<p class="lsc-go"><a class="btn btn-pri" href="' + loginUrl() +
+          '">로그인</a></p>';
         return;
       }
       if(box){ box.innerHTML = replyForm(go.getAttribute("data-id")); bindReply(); }
@@ -388,7 +389,8 @@
       if(!SIGNED){
         if(box) box.innerHTML =
           '<p class="jafh">신고는 로그인한 뒤에 하실 수 있습니다.</p>' +
-          '<p class="lsc-go"><a class="btn btn-pri" href="/login">로그인</a></p>';
+          '<p class="lsc-go"><a class="btn btn-pri" href="' + loginUrl() +
+          '">로그인</a></p>';
         return;
       }
       var why = window.prompt("무슨 일이 있었는지 적어 주세요 (다섯 글자 이상)");
@@ -403,13 +405,27 @@
     }
   });
 
+  /* ⚠️⚠️ **로그인 뒤 돌아올 자리를 잃지 않습니다.** 맨 `/login` 으로
+     보내면 로그인한 뒤 `/my` 로 떨어져서, 글을 올리려던 분이 이 화면을
+     다시 찾아와야 합니다 (`js/listing.js` 가 쓰는 `amLoginUrl()` 과
+     **같은 함수**를 씁니다 — 규칙이 두 곳이 되지 않게). */
+  function loginUrl(){
+    var here = window.location.pathname + window.location.search;
+    return esc(window.amLoginUrl ? window.amLoginUrl(here) : "/login");
+  }
+  /* 로그인 전 안내 — ⚠️ 누르기 **전에도** 보여 줍니다. 누른 뒤에야
+     말하면 손님은 그 단추가 무엇인지 모르고 누르고, 거절을 받습니다. */
+  function needLogin(){
+    return '<p class="jafh">글을 올리시려면 로그인이 필요합니다. ' +
+      '올리신 글을 나중에 고치거나 내리시려면 누가 올렸는지 알아야 합니다.</p>' +
+      '<p class="lsc-go"><a class="btn btn-pri" href="' + loginUrl() +
+      '">로그인</a></p>';
+  }
+
   var newBtn = document.getElementById("wtnew");
   if(newBtn) newBtn.addEventListener("click", function(){
     if(!SIGNED){
-      if(box) box.innerHTML =
-        '<p class="jafh">글을 올리시려면 로그인이 필요합니다. ' +
-        '올리신 글을 나중에 고치거나 내리시려면 누가 올렸는지 알아야 합니다.</p>' +
-        '<p class="lsc-go"><a class="btn btn-pri" href="/login">로그인</a></p>';
+      if(box) box.innerHTML = needLogin();
       return;
     }
     /* ⚠️⚠️ **보유 기간이 비면 양식을 안 엽니다** — 법이 보여 주라는
@@ -438,6 +454,8 @@
     }
     A = a;
     SIGNED = !!a.signedIn;
+    /* ⚠️ 로그인 안 하신 분께는 **누르기 전에** 로그인 길을 냅니다 */
+    if(!SIGNED && box) box.innerHTML = needLogin();
     /* ⚠️ 업체 역할일 때만 상호로 답할 수 있습니다 */
     PRO = (a.role === "provider" && a.provider) ? a.provider : null;
     return reload();

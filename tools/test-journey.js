@@ -115,7 +115,9 @@ function resolves(href){
    상자가 흉내 자료가 없어 한 번도 안 그려진 그 자리). */
 const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
                   /* ⚠️ 0059 — 공개 닉네임 상자 (js/mynick.js) */
-                  "wchbox", "nickbox"];
+                  "wchbox", "nickbox",
+                  /* ⚠️ 0061 — 내가 올린 구합니다 (js/mywanted.js) */
+                  "wtmine"];
 
 (async function(){
   const prove = process.argv.indexOf("--prove") >= 0;

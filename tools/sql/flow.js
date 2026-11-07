@@ -655,13 +655,133 @@ module.exports = function(T){
   ok("  가려지면 공개 목록에서 빠진다",
      psql(anon + "select count(*)::text from v_listing_open where id='" + HL + "'") === "0");
 
+
+  /* ════════════════════════════════════════════════════════════════
+     ══ 시나리오 I — 구합니다 (0061): 올리기 → 답 → 받아들이기 → 연락처
+     ⚠️⚠️⚠️ **업체가 0곳이어도 되는 다섯째**입니다. 토막으로 재면
+     앞 단계의 결과가 다음 단계의 입력인 자리가 영원히 안 드러납니다.
+     ⚠️ 여기서는 **업체가 상호로 답하는** 갈래까지 한 줄로 밟습니다 —
+     그 갈래만 `provider` 의 상태를 읽을 때 다시 봅니다.
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n══ 시나리오 I — 구합니다: 올리기 → 답 → 받아들이기 → 연락처");
+  const IA = psql("insert into auth.users (email) values ('fl-iask@x.test') returning id");
+  const IH = psql("insert into auth.users (email) values ('fl-ihlp@x.test') returning id");
+  psql("insert into account (id, role, name) values " +
+       "('" + IA + "','customer','구하는 분')," +
+       "('" + IH + "','customer','답하는 분') " +
+       "on conflict (id) do update set role = excluded.role, name = excluded.name");
+
+  const IW = psql(as(IA) + "select open_wanted('" +
+    j({ cat:"lesson", sub:"ls-solo", region:"seoul",
+        title:"흐름 검사용 레슨 구합니다",
+        body:"흐름 검사로 올리는 구합니다 글입니다", budget:"200000",
+        when_txt:"주말 오전", contact:"010-5555-5555",
+        agree_at:psql("select now()") }) + "'::jsonb)");
+  ok("I-1 구합니다 글을 문으로 올린다", /^[0-9a-f-]{36}$/.test(IW), IW);
+  /* ⚠️ 공개 목록은 **비로그인도** 봅니다 (업체가 찾아 들어오는 길) —
+     그런데 연락처는 칸이 **아예 없습니다** (칸 목록이 자물쇠입니다) */
+  ok("  비로그인도 공개 목록에서 본다",
+     psql(anon + "select count(*)::text from v_wanted_open where id='" + IW + "'") === "1");
+  ok("  ⚠️ 공개 목록에 연락처 칸이 **아예 없다**",
+     psql("select count(*)::text from information_schema.columns " +
+          "where table_name='v_wanted_open' and column_name='contact'") === "0");
+
+  const IR = psql(as(IH) + "select reply_wanted('" +
+    j({ w_id:IW, body:"주말 오전 자리가 있습니다", contact:"010-6666-6666",
+        agree_at:psql("select now()") }) + "'::jsonb)");
+  ok("I-2 회원이 답을 단다", /^[0-9a-f-]{36}$/.test(IR), IR);
+  /* ⚠️ 알림이 **올리신 분에게** 붙습니다 (받는 사람 눈으로 읽습니다) */
+  ok("  올리신 분에게 알림이 붙는다",
+     psql(as(IA) + "select count(*)::text from notice " +
+          "where kind='wantedreply' and obj_id='" + IW + "'") === "1");
+  /* ⚠️⚠️ **답 수는 공개지만 답 내용은 아닙니다** — 공개 보기가 세어서
+     냅니다 (칸에 저장하면 누군가 그 칸에 고쳐 적습니다 · 절대 규칙 1) */
+  ok("  ⚠️ 답 수가 공개 목록에서 **세어져** 나온다",
+     psql(anon + "select reply_n::text from v_wanted_open where id='" + IW + "'") === "1");
+
+  psql(as(IA) + "select move_wantedreply('" + j({ id:IR, to:"accepted" }) + "'::jsonb)");
+  ok("I-3 올리신 분이 받아들인다",
+     psql(as(IA) + "select state from wantedreply where id='" + IR + "'") === "accepted");
+  /* ⚠️⚠️⚠️ **여기가 이 흐름의 알맹이입니다** — 받아들여도 연락처는
+     둘 다 비어 있어야 합니다 (제17조 제2항 · 별도 동의).
+     ⚠️ 0046 · 0056 과 **같은 꼴**이고, 0060(예약)과는 **다릅니다** —
+     거기는 업체가 전화를 해야 성립하므로 신청하는 자리에서 받습니다. */
+  ok("⚠️⚠️⚠️ I-4 **받아들이기만으로는 연락처가 둘 다 비어 있다**",
+     psql(as(IH) + "select coalesce(owner_contact,'(없음)') || '/' || " +
+          "coalesce(helper_contact,'(없음)') from v_wanted_contact " +
+          "where reply_id='" + IR + "'") === "(없음)/(없음)");
+  psql(as(IA) + "select share_wantedcontact('" +
+    j({ id:IR, on:true, agree_at:psql("select now()") }) + "'::jsonb)");
+  ok("  I-5 올리신 분이 열면 **그쪽 것만** 간다 (맞바꾸기를 강요하지 않습니다)",
+     psql(as(IH) + "select coalesce(owner_contact,'(없음)') || '/' || " +
+          "coalesce(helper_contact,'(없음)') from v_wanted_contact " +
+          "where reply_id='" + IR + "'") === "010-5555-5555/(없음)");
+  psql(as(IA) + "select share_wantedcontact('" + j({ id:IR, on:false }) + "'::jsonb)");
+  ok("  I-6 다시 닫으면 **그 즉시** 빠진다 (철회권 · 닫을 때는 동의를 안 받습니다)",
+     psql(as(IH) + "select coalesce(owner_contact,'(없음)') from v_wanted_contact " +
+          "where reply_id='" + IR + "'") === "(없음)");
+
+  /* ⚠️⚠️ **업체가 상호로 답하는 갈래** — 그 갈래만 보기가 읽을 때 다시
+     상태를 봅니다 (정지되면 그 순간 상호가 빠집니다 · 0048 · 0055 와
+     같은 셋). 흐름으로 밟지 않으면 그 자리가 영원히 안 드러납니다. */
+  const IW2 = psql(as(IA) + "select open_wanted('" +
+    j({ cat:"lesson", region:"seoul", title:"업체 답을 받아 볼 글",
+        body:"업체가 상호로 답해 보는 자리입니다", contact:"010-5555-5555",
+        agree_at:psql("select now()") }) + "'::jsonb)");
+  /* ⚠️⚠️ **시나리오 G 가 `flow-d` 를 정지된 채로 두고 끝납니다**(G-5 가
+     "정지시키면 그 순간 상호가 빠지는가" 를 재는 자리입니다). 그대로
+     쓰면 `reply_wanted` 가 "지금은 업체 이름으로 답할 수 없습니다" 로
+     거절합니다 — **앞 검사가 만든 상태를 뒤 검사가 물려받는** 그
+     자리이고, 코드가 아니라 제 검사가 틀린 것이었습니다. 되살려 놓고
+     시작합니다 (0038 은 정지할 때 `listed` 도 같이 끕니다). */
+  psql(as(ADM) + "select set_provider_state('" +
+    j({ id:"flow-d", to:"approved" }) + "'::jsonb)");
+  psql(as(ADM) + "select approve_provider('flow-d', true)");
+  ok("  ⚠️ G 가 정지시킨 업체를 **되살려 놓고** 시작한다",
+     psql("select state || '/' || listed::text from provider where id='flow-d'")
+       === "approved/true",
+     psql("select state || '/' || listed::text from provider where id='flow-d'"));
+  const IPR = psql(as(GP) + "select reply_wanted('" +
+    j({ w_id:IW2, as_pro:"flow-d", body:"저희 센터에서 잡아 드릴 수 있습니다",
+        contact:"010-9999-9999", agree_at:psql("select now()") }) + "'::jsonb)");
+  ok("I-7 업체 담당자가 **상호로** 답한다", /^[0-9a-f-]{36}$/.test(IPR), IPR);
+  ok("  올리신 분에게 **상호가 보인다** (누가 답했는지 알아야 고릅니다)",
+     psql(as(IA) + "select coalesce(pro_name,'(없음)') from v_wanted_reply " +
+          "where id='" + IPR + "'") === "흐름 골프아카데미2",
+     psql(as(IA) + "select coalesce(pro_name,'(없음)') from v_wanted_reply " +
+          "where id='" + IPR + "'"));
+  psql(as(ADM) + "select set_provider_state('" +
+    j({ id:"flow-d", to:"suspended", why:"흐름 검사로 정지시켜 봅니다" }) + "'::jsonb)");
+  ok("⚠️⚠️ I-8 업체가 **정지되면 그 순간 상호가 빠진다** (읽을 때 다시 봅니다)",
+     psql(as(IA) + "select coalesce(pro_name,'(없음)') from v_wanted_reply " +
+          "where id='" + IPR + "'") === "(없음)");
+  ok("  ⚠️ 그 자리에 **가린 성함**이 대신 나온다 (빈 자리로 두지 않습니다)",
+     psql(as(IA) + "select coalesce(who,'(없음)') from v_wanted_reply " +
+          "where id='" + IPR + "'").indexOf("*") > 0);
+  /* ⚠️ 바꾼 값을 **그 자리에서 되돌려** 놓습니다 — 앞 검사가 만든 상태를
+     뒤 검사가 물려받는 자리입니다 (0057 에서 겪었습니다) */
+  psql(as(ADM) + "select set_provider_state('" +
+    j({ id:"flow-d", to:"approved" }) + "'::jsonb)");
+  psql(as(ADM) + "select approve_provider('flow-d', true)");
+  ok("  ⚠️ 바꾼 값을 **되돌려 놓았다**",
+     psql("select state || '/' || listed::text from provider where id='flow-d'")
+       === "approved/true",
+     psql("select state || '/' || listed::text from provider where id='flow-d'"));
+
+  /* ⚠️ 운영자가 가리면 공개 목록에서 빠지고, 글쓴이가 못 되돌립니다 */
+  ok("I-9 운영자가 까닭을 적고 가린다",
+     psql(as(ADM) + "select move_wanted('" +
+       j({ id:IW, why:"흐름 검사로 가립니다" }) + "'::jsonb)") === "hidden");
+  ok("  가려지면 공개 목록에서 빠진다",
+     psql(anon + "select count(*)::text from v_wanted_open where id='" + IW + "'") === "0");
+
   /* ⚠️ 끝으로 — 이 셋이 만든 알림에 **손님이 적은 글이 한 글자도** 없어야
      합니다 (알림은 **우리가 쓴 말**이고, 담으면 한 벌 더 복사됩니다). */
   /* ⚠️⚠️ **운영자로 읽으면 안 됩니다** — 0050 은 운영자 정책을 일부러
      안 두었습니다(남의 알림을 읽을 까닭이 없습니다). 그래서 운영자는
      0줄이고, 그걸로 재면 **빈 글자를 보고 "안 샌다" 로 통과**합니다 —
      아무것도 안 잡는 검사입니다. **받은 사람 눈으로** 읽습니다. */
-  const nLeak = [EH, EG, FA, GP, GS, HS, HB].map(u => psql(as(u) +
+  const nLeak = [EH, EG, FA, GP, GS, HS, HB, IA, IH].map(u => psql(as(u) +
     "select coalesce(string_agg(title || ' ' || link, ' '), '') from notice")).join(" ");
   ok("⚠️ 알림을 **받은 사람 눈으로** 읽었다 (0줄을 보고 통과하지 않습니다)",
      nLeak.replace(/\s/g, "").length > 0, nLeak.slice(0, 120));
@@ -669,7 +789,10 @@ module.exports = function(T){
      nLeak.indexOf("010-7") < 0 && nLeak.indexOf("같이 치고 싶습니다") < 0 &&
      nLeak.indexOf("캐디 경력") < 0 &&
      /* ⚠️ 0056 — 중고 쪽 글자도 같이 봅니다 */
-     nLeak.indexOf("사고 싶습니다") < 0 && nLeak.indexOf("010-8888") < 0,
+     nLeak.indexOf("사고 싶습니다") < 0 && nLeak.indexOf("010-8888") < 0 &&
+     /* ⚠️ 0061 — 구합니다 쪽 글자도 같이 봅니다 */
+     nLeak.indexOf("010-5555") < 0 && nLeak.indexOf("010-6666") < 0 &&
+     nLeak.indexOf("주말 오전 자리가 있습니다") < 0,
      nLeak.slice(0, 200));
 
   /* ⚠️ 끝내며 — 이 검사가 만든 업체는 **검사용으로** 되돌립니다 */

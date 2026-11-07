@@ -207,4 +207,58 @@ module.exports = function(T){
   ok("  댓글도 같이 사라진다 (cascade)",
      psql("select count(*)::text from ca a join cq q on q.id = a.q_id " +
           "where q.title like '[검사용]%'") === "0");
+
+  /* ── 예시 글 다섯 (지시서 C) ───────────────────────────────────
+     ⚠️⚠️ **사장님이 붙여 넣으실 파일은 "글" 이라 아무 검사도 안 봅니다 —
+     그 파일을 실제로 붙여 넣어 봅니다** (test-providers.sql 첫 판이
+     없는 함수를 적어 두어 거기서 멈췄던 그 자리). */
+  console.log("\n── db/seed/example-board.sql 을 **그대로** 붙여 넣어 봅니다");
+  const ESEED = fs2.readFileSync(
+    path2.join(__dirname, "..", "..", "db", "seed", "example-board.sql"), "utf8");
+
+  /* ⚠️ 안 바꾸면 **FK 가 거절**해야 합니다 — 조용히 넘어가면 사장님은
+     들어간 줄 알고 영업을 시작하십니다. */
+  const raw = allowed(ESEED);
+  ok("⚠️ uuid 를 **안 바꾸면 멈춘다** (조용히 넘어가지 않습니다)",
+     !raw.yes, String(raw.why).slice(0, 110));
+
+  /* 이제 사장님이 하시듯 찾아 바꾸기로 넣습니다 */
+  const EX = ESEED.split("00000000-0000-0000-0000-000000000000").join(SU);
+  const r3 = allowed(EX);
+  ok("찾아 바꾸기로 넣으면 **그대로 돈다**", r3.yes, String(r3.why).slice(0, 140));
+  ok("  예시 글이 **다섯 장** 섰다",
+     psql("select count(*)::text from cq where title like '[예시]%'") === "5");
+  /* ⚠️⚠️ **두 번 돌려도 두 벌이 안 생겨야** 합니다 (지시서: idempotent) */
+  allowed(EX);
+  ok("⚠️⚠️ **두 번 돌려도 다섯 장 그대로다** (두 벌이 안 생깁니다)",
+     psql("select count(*)::text from cq where title like '[예시]%'") === "5");
+  /* ⚠️ 제목에 `[예시]` 가 **전부** 박혀 있는가 — 손님이 보셔도 스스로
+     말하게 합니다 (지시서: 표기 유지) */
+  ok("  제목마다 **[예시]** 가 박혀 있다",
+     psql("select count(*)::text from cq where title like '[예시]%' " +
+          "and title not like '[예시] %'") === "0");
+  /* ⚠️ 조회 수 · 댓글 수를 **손으로 안 넣었는지** — 지어낸 숫자 금지 */
+  ok("⚠️⚠️ 조회 수 · 댓글 수를 **손으로 안 넣었다** (세어서 냅니다)",
+     psql("select count(*)::text from cqview v join cq q on q.id = v.q_id " +
+          "where q.title like '[예시]%'") === "0" &&
+     psql("select count(*)::text from ca a join cq q on q.id = a.q_id " +
+          "where q.title like '[예시]%'") === "0");
+  /* ⚠️ 손님 눈에 보이는가 — 0059 가 읽기를 anon 에게 열었습니다 */
+  ok("  비로그인 손님에게 **보인다** (그래서 지우는 것이 중요합니다)",
+     Number(psql("select become(null); set role anon; " +
+       "select count(*) from v_cq_public where title like '[예시]%'")) === 5);
+
+  /* 지우는 SQL — 파일에 적힌 **그 글자 그대로** 돌립니다 */
+  const EDEL = "delete from cq where title like '[예시]%';";
+  ok("지우는 SQL 이 파일에 적힌 그대로다",
+     flat(ESEED).indexOf(flat(EDEL)) >= 0, flat(EDEL));
+  psql("insert into cq (by_user, cat, title, body) values ('" + SU +
+       "', 'cm-open', '예시가 아닌 참 글입니다', '이 글은 지워지면 안 됩니다.')");
+  const r4 = allowed(EDEL);
+  ok("지우는 SQL 이 돈다", r4.yes, String(r4.why));
+  ok("  예시 글이 **한 장도 안 남는다**",
+     psql("select count(*)::text from cq where title like '[예시]%'") === "0");
+  ok("  ⚠️ 참 글은 **그대로 남는다** (너무 넓게 지우지 않는다)",
+     psql("select count(*)::text from cq " +
+          "where title = '예시가 아닌 참 글입니다'") === "1");
 };

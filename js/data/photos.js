@@ -41,16 +41,24 @@ window.AM_PHOTO_SLOTS = [
   { key:"hero",      where:"메인 첫 화면 배경",
     min:[2000, 1000], ratio:[1.6, 2.6], maxKB:320,
     note:"딥그린 막이 위에 깔립니다 — 글자 대비는 막이 책임집니다" },
+  /* ⚠️⚠️⚠️ **2026-11-07 — 그리는 자리가 메인에서 `/categories` 로
+     옥겼습니다.** 최종 작업지시서 A 가 메인의 네 묶음 카드를
+     서비스 카드로 바꾸라고 해서 그리는 자리가 **0곳**이 됐는데, 이
+     줄의 설명은 여전히 "메인 … 카드" 라고 적혀 있었습니다 — 사진은
+     저장소에 그대로 있는데 **아무 데도 안 나오는** 자리였고, 그
+     설명을 믿고 읽으면 멀줦해 보입니다(주석이 코드와 다른 자리).
+     `test-photos` 가 "영역 카드마다 사진이 실린다 — 0/4" 로 잡았습니다.
+     ⚠️ 사진을 옮기는 날 **이 `where` 글도 같이** 고치세요. */
   /* ⚠️⚠️ 키가 **AM_ZONES 의 key 와 같아야** 합니다 (`js/data/catalog.js`).
      한 글자 틀리면 그 카드만 조용히 사진 없이 나옵니다 —
      `tools/check-photos.js` 가 그 짝을 맞춰 봅니다. */
-  { key:"zone-learn", where:"메인 '골프 배우기' 카드",
+  { key:"zone-learn", where:"/categories 의 '골프 배우기' 묶음 머리",
     min:[1000, 560], ratio:[1.5, 2.2], maxKB:180 },
-  { key:"zone-trade", where:"메인 '골프 사고팔기' 카드",
+  { key:"zone-trade", where:"/categories 의 '골프 사고팔기' 묶음 머리",
     min:[1000, 560], ratio:[1.5, 2.2], maxKB:180 },
-  { key:"zone-play", where:"메인 '골프 즐기기' 카드",
+  { key:"zone-play", where:"/categories 의 '골프 즐기기' 묶음 머리",
     min:[1000, 560], ratio:[1.5, 2.2], maxKB:180 },
-  { key:"zone-biz", where:"메인 '골프 비즈니스 · 소통' 카드",
+  { key:"zone-biz", where:"/categories 의 '골프 비즈니스 · 소통' 묶음 머리",
     min:[1000, 560], ratio:[1.5, 2.2], maxKB:180 },
 
   /* ── 분류 카드 열 장 (3차 시안) ────────────────────────────────

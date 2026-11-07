@@ -139,28 +139,12 @@ function quickNav(){
     '</div></div></section>';
 }
 
-function cats(){
-  return '<section class="cats" aria-labelledby="cats-h"><div class="wrap">' +
-    '<h2 id="cats-h" class="sr">서비스 분류</h2>' +
-    '<div class="cats-in"><div class="cat-grid">' +
-    W.AM_CATS.map(function(c){
-      /* ⚠️⚠️ 분류 사진 — 키가 `AM_CATS` 의 key 와 짝입니다
-         (check-photos 가 맞춰 봅니다). **없으면 액자를 비워 두지 않고**
-         딥그린 면으로 둡니다 — 빈 회색 칸이 보이면 그 순간 미완성
-         사이트로 읽힙니다 (절대 규칙 2).
-         ⚠️ 첫 화면 바로 아래라 lazy 를 답니다 (히어로만 미리 받습니다). */
-      var cp = W.amPhoto ? W.amPhoto("cat-" + c.key) : null;
-      return '<a class="cat" href="' + esc(W.amCatUrl(c)) + '">' +
-        '<span class="cat-ph' + (cp ? " cat-ph-on" : "") + '">' +
-          (cp ? W.amPhotoImg("cat-" + c.key) : "") +
-        '</span>' +
-        '<span class="cat-ic">' + icon(c.icon, 26) + '</span>' +
-        '<span class="cat-n">' + esc(c.name) + '</span>' +
-        '<span class="cat-l">' + esc(c.lead) + '</span>' +
-      '</a>';
-    }).join("") +
-    '</div></div></div></section>';
-}
+/* ⚠️⚠️⚠️ **분류 열 장 격자도 2026-11-07 에 메인에서 빠졌습니다.**
+   지시서 A-3 은 "10개 카테고리 아이콘(기존 유지)" 이고, 그 자리를
+   `quickNav()` 가 받았습니다(아이콘 열 칸). 같은 분류를 사진 카드로
+   한 번 더 깔면 A 가 말한 **중복**입니다.
+   ⚠️ 분류 사진(`cat-*`)은 죽지 않았습니다 — `svcCards()` 의 넷 ·
+   `/categories` · `/cat/<key>` 가 그대로 씩니다. */
 
 /* ════════════════════════════════════════════════════════════════════
    날짜 · 지역별 현황 (0060 · 지시서 §5)
@@ -185,43 +169,16 @@ function teeBoard(){
     '</div></section>';
 }
 
-function feats(){
-  return '<section class="sec"><div class="wrap">' +
-    '<div class="sec-hd"><h2>무엇을 하시려고 오셨나요?</h2>' +
-    '<p>골프에 필요한 일을 네 가지로 묶었습니다. 하려는 일을 고르면 그 안의 분류로 이어집니다.</p></div>' +
-    '<div class="feat">' + (W.AM_ZONES || []).map(function(z, i){
-      var cs = W.amZoneCats(z);
-      if(!cs.length) return "";   /* ⚠️ 빈 영역은 안 그립니다 */
-      /* ⚠️ 영역 사진 — 키가 `AM_ZONES` 의 key 와 짝입니다
-         (check-photos 가 그 짝을 맞춰 봅니다). 없으면 **안 그립니다.**
-         ⚠️ `loading="lazy"` — 첫 화면 아래에 있습니다. */
-      var zp = W.amPhoto ? W.amPhoto("zone-" + z.key) : null;
-      /* ⚠️⚠️ **첫 분류로 보내지 않습니다.** "골프 배우기" 를 눌렀는데
-         레슨 화면이 열리면 나머지 둘은 어디 갔는지 알 수 없습니다 —
-         묶음을 눌렀으면 **묶음이 있는 자리**(카테고리 전체보기)로
-         갑니다. 그 화면이 네 묶음으로 나뉘어 있습니다. */
-      return '<a class="feat-c feat-' + (i+1) + (zp ? " feat-ph" : "") +
-        '" href="/categories#' + esc(z.key) + '">' +
-        (zp ? W.amPhotoImg("zone-" + z.key, { cls:"feat-bg" }) : "") +
-        /* ⚠️⚠️ **글을 한 덩이로 묶습니다.** 막을 카드 전체에 깔고
-           "아래쪽은 짙게" 로 두었더니, 글이 길어 두 줄이 되는 카드에서
-           글머리가 **옅은 쪽까지 올라가** 대비가 2.7 까지 떨어졌습니다.
-           막이 카드 높이를 따라가면 안 되고 **글을 따라가야** 합니다 —
-           그래서 이 덩이가 제 막을 깔고 앉습니다. */
-        /* ⚠️⚠️ **분류 이름을 여기서 또 적지 않습니다** (UX 검수 §6).
-           바로 위 격자가 열 분류를 이름 · 한 줄까지 보여 줍니다 —
-           같은 말을 두 번 적으면 화면만 길어지고, 손님은 둘이 다른
-           것인 줄 압니다. 여기서는 **묶음 이름과 그 묶음의 한 줄**
-           까지입니다. 무엇이 들어 있는지는 눌러서 보십니다. */
-        '<span class="feat-tx">' +
-          '<h3>' + esc(z.name) + '</h3>' +
-          '<p class="feat-l">' + esc(z.lead) + '</p>' +
-          '<p class="feat-n">분류 ' + esc(W.won(cs.length)) + '가지</p>' +
-          '<span class="go">' + icon("arrow",20) + '</span>' +
-        '</span></a>';
-    }).join("") + '</div>' +
-  '</div></section>';
-}
+/* ⚠️⚠️⚠️ **네 묶음 카드는 2026-11-07 에 메인에서 빠졌습니다.**
+   최종 작업지시서 A 가 "기존 10개 이미지 카테고리 반복 영역은 위
+   서비스 카드 / 실제 콘텐츠로 대체하여 중복 축소" 라고 적었고,
+   그 자리를 `svcCards()` 가 받았습니다.
+   ⚠️⚠️ **함수를 남겨 두지 않고 지웠습니다** — 부르는 자리가 0곳인
+   함수를 남겨 두면 다음에 읽는 사람이 "메인에 이 카드가 있다" 고
+   읽습니다(주석이 코드와 다른 자리를 여섯 번 겪은 저장소입니다).
+   ⚠️ 그 카드가 쓰던 사진 넷(`zone-*`)은 **`/categories` 의 묶음 머리**로
+   옮겨 놓았습니다 — 그냥 두면 저장소에 파일만 남고 **아무 데도 안
+   나오는** 자리가 됩니다(`test-photos` 가 그것을 잡았습니다). */
 
 function why(){
   return '<section class="sec sec-alt"><div class="wrap">' +

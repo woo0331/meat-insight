@@ -78,11 +78,25 @@ grant select on v_provider_card to anon, authenticated;
 --   이렇게 봅니다:
 --     select definition like '%is_test%' from pg_views where viewname='v_ad_live';
 --   false 면 0026 판입니다. 이 파일을 다시 올리세요.
--- ⚠️ 칸 목록과 차례는 0026 것 **그대로**입니다 — 보기의 칸이 바뀌면
---   `create or replace view` 가 거절합니다 (그게 맞습니다).
+-- ⚠️ 칸 목록과 차례는 0026 것 **그대로**입니다 — 이 파일은 `is_test`
+--   한 줄만 더합니다. 칸을 늘리는 것은 0064 이고, 그 때문에 아래가
+--   `drop view` + `create view` 로 바뀌었습니다 (바로 아래 머리말).
 -- ⚠️⚠️ `label` 을 **그대로 둡니다.** 광고를 광고라고 적지 않으면
 --   표시 · 광고의 공정화에 관한 법률 제3조입니다.
-create or replace view v_ad_live as
+-- ⚠️⚠️⚠️ **`create or replace view` 가 아니라 지우고 다시 만듭니다.**
+--   0064 가 이 보기에 칸 다섯(소재 · 클릭 주소 · 광고주)을 더했는데,
+--   여기가 `create or replace` 이면 사장님이 붙여넣기 파일을 **두 번째로**
+--   붙여 넣는 날 이 줄에서 `cannot drop columns from view` 로 **멈춥니다**
+--   — 앞쪽 파일이 **옛 칸 목록**으로 다시 만들려 하기 때문입니다.
+--   0044 가 `v_provider_card` 에서 겪은 그 자리이고, `test-upgrade` 의
+--   ⑧("두 번 붙여 넣어도 끝까지 도는가")이 잡았습니다.
+--   ⚠️ 지우면 **GRANT 도 같이 날아가므로** 바로 아래에서 다시 줍니다
+--   (안 주면 그날부터 손님 화면에 광고가 한 줄도 안 나옵니다).
+--   ⚠️⚠️ 이 줄을 고친 까닭 — 운영 DB 는 아직 **0007 까지만** 올라가 있어
+--   이 파일이 운영에서 한 번도 돈 적이 없습니다. 이미 돌린 파일이면
+--   고치지 않고 새 번호로 갔을 것입니다 (작업 기억의 그 규칙).
+drop view if exists v_ad_live;
+create view v_ad_live as
   select a.id, a.provider_id, p.name as provider_name,
          a.place, a.cat_key, a.region, a.starts_on, a.ends_on,
          '광고'::text as label
@@ -90,6 +104,10 @@ create or replace view v_ad_live as
    where a.state = 'live'
      and current_date between a.starts_on and a.ends_on
      and p.is_test = false;
+
+-- ⚠️ 지우면 권한도 같이 날아갑니다 — 바로 다시 줍니다
+--   (안 주면 그날부터 손님 화면에 광고가 한 줄도 안 나옵니다).
+grant select on v_ad_live to anon, authenticated;
 
 insert into schema_version (n, name) values (32, '0032_provider_card_view')
 on conflict (n) do nothing;

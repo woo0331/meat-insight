@@ -32,9 +32,25 @@ exports.build = function(){
   });
   var rest = W.AM_CATS.filter(function(c){ return !seen[c.key]; });
 
+  /* ⚠️⚠️⚠️ **묶음 사진이 2026-11-07 에 여기로 왔습니다.**
+     `zone-learn` · `zone-trade` · `zone-play` · `zone-biz` 넷은 원래
+     **메인의 네 카드**가 그렸는데, 최종 작업지시서 A 가 메인에서 그
+     구간을 서비스 카드로 바꾸라고 해서 그리는 자리가 **0곳**이 됐습니다
+     — 사진 파일은 저장소에 그대로 있는데 **아무 데도 안 나오는** 자리가
+     될 참이었고, `js/data/photos.js` 의 설명은 여전히 "메인 … 카드" 라고
+     적혀 있었습니다(주석이 코드와 다른 자리). `test-photos` 가 잡았습니다.
+     ⚠️ 뜻이 정확히 맞는 자리가 여기입니다 — 이 화면이 바로 **그 네
+     묶음**입니다(`/categories#<묶음>`).
+     ⚠️ 사진이 없으면 **액자를 비워 두지 않고** 줄째 안 그립니다
+     (빈 회색 칸이 보이면 그 순간 미완성 사이트로 읽힙니다 · 절대 규칙 2).
+     ⚠️ 배경 장식이라 `alt` 를 비우고 `aria-hidden` 을 답니다 — 소리로
+     읽을 것이 없습니다(비운 alt 를 안 달면 접근성 검사가 멈춥니다). */
   function block(id, name, lead, list){
+    var zp = (id !== "rest" && W.amPhoto) ? W.amPhoto("zone-" + id) : null;
     return '<section class="sec' + (id === "rest" ? " sec-alt" : "") + '" id="' +
       esc(id) + '"><div class="wrap">' +
+      (zp ? '<div class="zph">' +
+              W.amPhotoImg("zone-" + id, { cls:"zph-i" }) + '</div>' : '') +
       '<div class="sec-hd"><h2>' + esc(name) + '</h2>' +
       (lead ? '<p>' + esc(lead) + '</p>' : '') + '</div>' +
       '<div class="calist">' + list.map(card).join("") + '</div>' +

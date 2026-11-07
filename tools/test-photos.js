@@ -104,9 +104,18 @@ async function makeBright(b, file, w, h){
 
     const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
     ok("히어로에 사진이 실린다", html.indexOf("/img/__t-hero.jpg") >= 0);
-    ok("영역 카드마다 사진이 실린다",
-       (html.match(/__t-zone\.jpg/g) || []).length === zones.length,
-       (html.match(/__t-zone\.jpg/g) || []).length + " / " + zones.length);
+    /* ⚠️⚠️⚠️ **2026-11-07 — 묶음 사진이 `/categories` 로 옮겨졌습니다.**
+       최종 작업지시서 A 가 메인의 네 묶음 카드를 서비스 카드로 바꾸라고
+       해서, `zone-*` 사진을 그리는 자리가 메인에서 **0곳**이 됐습니다.
+       그대로 두면 사진 파일만 저장소에 남고 **아무 데도 안 나오는**
+       자리가 되므로, 뜻이 맞는 자리(`/categories` 의 묶음 머리)로
+       옮겼습니다. 그래서 **여기서 읽는 화면도 같이** 바뀝니다 —
+       ⚠️ 안 고치면 "0 / 4" 로 **멀쩡한 화면을 고장이라고** 합니다. */
+    const catsHtml = fs.readFileSync(
+      path.join(ROOT, "categories/index.html"), "utf8");
+    ok("묶음마다 사진이 실린다 (/categories)",
+       (catsHtml.match(/__t-zone\.jpg/g) || []).length === zones.length,
+       (catsHtml.match(/__t-zone\.jpg/g) || []).length + " / " + zones.length);
     /* ⚠️⚠️ 배경 장식은 소리로 읽을 것이 없습니다 — alt 를 비우고
        aria-hidden 을 답니다. 비운 alt 를 안 달면 접근성 검사가 멈춥니다. */
     /* ⚠️⚠️⚠️ **글자를 통째로 박아 두면 안 됩니다 — 또 밟았습니다.**
@@ -128,8 +137,10 @@ async function makeBright(b, file, w, h){
        heroTag.indexOf('alt=""') >= 0 && heroTag.indexOf('aria-hidden="true"') >= 0,
        heroTag || "(hero-bg 를 못 찾았습니다)");
     /* ⚠️ 첫 화면 그림은 미리, 아래 그림은 늦게 */
-    ok("히어로는 fetchpriority, 영역 카드는 lazy 다",
-       html.indexOf('fetchpriority="high"') >= 0 && html.indexOf('loading="lazy"') >= 0);
+    ok("히어로는 fetchpriority 다 (첫 화면은 미리 받습니다)",
+       html.indexOf('fetchpriority="high"') >= 0);
+    ok("  아래 사진은 lazy 다 (지금은 /categories 의 묶음 사진입니다)",
+       catsHtml.indexOf('loading="lazy"') >= 0);
 
     console.log("\n── ② ⚠️ 가장 밝은 사진 위에서도 흰 글자가 읽히는가");
     h = await serve(0);
@@ -279,23 +290,40 @@ async function makeBright(b, file, w, h){
        **4.5** 를 봅니다 — 낮은 쪽에 맞춥니다. */
     ok("⚠️ 가장 밝은 사진 위에서도 흰 글자 대비가 4.5 이상이다",
        ratioOf(H) >= 4.5, "대비 " + ratioOf(H).toFixed(2));
-
-    /* ⚠️⚠️ 영역 카드도 흰 글자입니다 — 히어로만 재고 끝내면 카드 넉 장이
-       아무도 안 재는 자리가 됩니다. */
-    ok("영역 카드를 찾았다 (잰 것이 0장이 아니다)",
-       boxes.feat.length === zones.length, boxes.feat.length + " / " + zones.length);
-    ok("  영역 카드마다 글 덩이를 찾았다",
-       boxes.feat.every(function(L){ return L.length >= 2; }),
-       boxes.feat.map(function(L){ return L.length; }).join(" "));
-    let fWorst = 99, fAt = -1, fPts = 0;
-    for(let i = 0; i < boxes.feat.length; i++){
-      const F = await worstBg(p.locator(".feat-ph").nth(i), boxes.feat[i]);
-      fPts += F.n;
-      if(ratioOf(F) < fWorst){ fWorst = ratioOf(F); fAt = i; }
-    }
-    ok("영역 카드에서 잰 점이 0개가 아니다", fPts > 10000, fPts + "점");
-    ok("⚠️ 영역 카드 " + boxes.feat.length + "장도 흰 글자 대비가 4.5 이상이다",
-       fWorst >= 4.5, "제일 나쁜 칸 " + (fAt + 1) + "번 · 대비 " + fWorst.toFixed(2));
+    /* ⚠️⚠️⚠️ **2026-11-07 — 여기가 재던 것이 없어졌습니다.**
+       전에는 메인의 네 묶음 카드가 **사진 위에 흰 글자**를 얹었고, 그
+       대비를 점을 찍어 쟀습니다. 지금 묶음 사진은 `/categories` 의
+       **띠**이고 제목은 그 **아래**에 있습니다 — 사진 위에 글자가
+       없으므로 잴 대비도 없습니다.
+       ⚠️ 그렇다고 이 자리를 **그냥 지우면** 다음에 누가 그 띠에 흰
+       글자를 얹는 날 아무도 안 재는 자리가 됩니다. 그래서 재는 것을
+       **뜻으로 바꿉니다** — "띠가 넷 다 있는가" 와 "띠 **안에** 글자가
+       들어오지 않았는가". 글자가 들어오면 이 검사가 그 자리에서
+       멈추고, 그때 대비를 재는 코드를 다시 넣어야 합니다. */
+    const pz = await b.newPage({ viewport:{ width:1440, height:900 } });
+    const ez = watch(pz);
+    await pz.goto("http://127.0.0.1:" + h.port + "/categories",
+                  { waitUntil:"networkidle" });
+    await pz.waitForTimeout(250);
+    ok("/categories 에 화면 에러 · CSP 거절이 0건이다", ez.length === 0,
+       ez.join(" | "));
+    const zb = await pz.evaluate(function(){
+      const L = document.querySelectorAll(".zph");
+      let text = 0, shown = 0;
+      Array.prototype.forEach.call(L, function(x){
+        const r = x.getBoundingClientRect();
+        if(r.width > 10 && r.height > 10) shown++;
+        /* 띠 안에 **보이는 글자**가 있는가 (그림 말고) */
+        if((x.innerText || "").trim().length > 0) text++;
+      });
+      return { n:L.length, shown:shown, text:text };
+    });
+    ok("묶음 띠가 **실제로 그려진다** (잰 것이 0장이 아닙니다)",
+       zb.n === zones.length && zb.shown === zones.length,
+       JSON.stringify(zb));
+    ok("⚠️⚠️ 띠 **안에 글자가 없다** (있으면 대비를 재야 합니다)",
+       zb.text === 0, JSON.stringify(zb));
+    await pz.close();
 
     /* ⚠️⚠️ **되돌려 봅니다** — 막을 옅게 하면 이 검사가 실제로
        떨어지는지. 안 떨어지면 재는 자리가 틀린 것이고, 그때는

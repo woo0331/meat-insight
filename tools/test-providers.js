@@ -220,21 +220,32 @@ function nowServe(){ return serve(0); }
       ok("⚠️ 메인 0곳 상자 **안에는 입점 단추를 안 둔다** (바로 아래 띠가 " +
          "같은 말을 합니다)", zeroBox.indexOf('href="/join"') < 0,
          zeroBox.slice(0, 200));
-
-      /* ⚠️ 메인 분류 격자가 **PC 에서 다섯 칸**인가 (지시서 §7) */
-      const colN = await p0.evaluate(function(){
-        const g = document.querySelector(".cat-grid");
-        if(!g) return 0;
-        return getComputedStyle(g).gridTemplateColumns.split(/\s+/).filter(Boolean).length;
+      /* ⚠️⚠️⚠️ **2026-11-07 — 메인의 분류 열 장 격자가 빠졌습니다.**
+         최종 작업지시서 A-3 은 "10개 카테고리 **아이콘**(기존 유지)" 이고,
+         A 는 "기존 10개 **이미지** 카테고리 반복 영역은 서비스 카드 /
+         실제 콘텐츠로 대체하여 중복 축소" 라고 적었습니다. 그래서 메인은
+         **아이콘 띠(`.qnav-in`)** 하나만 남고 사진 격자(`.cat-grid`)는
+         `/categories` 로 갑니다.
+         ⚠️ 그런데 이 검사는 `.cat-grid` 를 메인에서 찾고 있어서
+         **칸 0개**로 떨어졌습니다 — 코드가 아니라 **검사가 낡은** 것입니다
+         (오늘만 다섯 번째입니다). 아이콘 띠는 바로 아래에서 따로 잽니다.
+         ⚠️⚠️ 격자가 사는 자리(`/categories`)에서 **같은 뜻**을 잽니다 —
+         "열 장이 칸 수로 고르게 나뉘는가"(빈 칸이 안 생기게). */
+      const pc2 = await b0.newPage({ viewport:{ width:1440, height:900 } });
+      await pc2.goto("http://127.0.0.1:" + h0.port + "/categories", { waitUntil:"networkidle" });
+      await pc2.waitForTimeout(200);
+      const grid = await pc2.evaluate(function(){
+        const g = document.querySelector(".calist");
+        if(!g) return { col:0, n:0 };
+        return { col: getComputedStyle(g).gridTemplateColumns
+                        .split(/\s+/).filter(Boolean).length,
+                 n: document.querySelectorAll(".calist > .ca").length };
       });
-      ok("⚠️ PC 에서 분류 격자가 **다섯 칸**이다 (열 장이면 두 줄)",
-         colN === 5, "칸 " + colN + "개");
-      /* ⚠️ 칸 수를 박는 것이 아니라 **열 장이 고르게 나뉘는지**를 봅니다 */
-      const catsN = await p0.evaluate(function(){
-        return document.querySelectorAll(".cat-grid > .cat").length; });
-      ok("  분류 수가 칸 수로 **나누어떨어진다** (빈 칸이 안 생깁니다)",
-         colN > 0 && catsN > 0 && catsN % colN === 0,
-         "분류 " + catsN + "개 · 칸 " + colN + "개");
+      await pc2.close();
+      ok("⚠️ /categories 의 분류 목록이 **여러 칸**이다 (PC 에서 한 줄 세우지 않습니다)",
+         grid.col >= 2, "칸 " + grid.col + "개");
+      ok("  분류 카드를 **실제로 찾았다** (0장이면 이 검사가 고장입니다)",
+         grid.n > 0, "분류 " + grid.n + "장");
 
       /* ⚠️⚠️ **분류로 바로 가는 띠** (2026-11-07 · 시안의 히어로 바로 아래)
          — 칸 수를 박지 않고 **분류 수가 고르게 나뉘는지**를 봅니다.
@@ -252,6 +263,15 @@ function nowServe(){ return serve(0); }
       });
       ok("⚠️ 히어로 아래 **분류로 바로 가는 띠**가 있다", qn.on,
          JSON.stringify(qn).slice(0, 140));
+      /* ⚠️⚠️ **분류 수를 `AM_CATS` 에서 읽어 맞춥니다** — 전에는 메인의
+         `.cat-grid` 에서 셌는데, 그 격자가 메인에서 빠지자 **0 과 비교**
+         하게 되어 멀쩡한 띠를 실패로 잡았습니다.
+         ⚠️ 갯수를 박지 않고 **자료에서** 읽습니다 (분류가 늘면 띠도 같이
+         늘어야 합니다 — 그것이 재려는 뜻입니다). */
+      const catsN = await p0.evaluate(function(){
+        return (window.AM_CATS || []).length; });
+      ok("  ⚠️ 잴 분류 수를 읽었다 (0개면 이 검사가 고장입니다)",
+         catsN > 0, String(catsN));
       ok("  띠의 칸이 **분류 수와 같다**",
          qn.on && qn.n === catsN && catsN > 0, "띠 " + qn.n + " · 분류 " + catsN);
       ok("  분류 수가 띠의 칸 수로 **나누어떨어진다** (빈 칸이 안 생깁니다)",

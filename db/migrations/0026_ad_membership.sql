@@ -123,7 +123,20 @@ grant select on ad_run, membership_plan to anon;
 -- ── 지금 나가는 광고 ──────────────────────────────────────────────
 -- ⚠️⚠️ label 을 **보기가 들고 나옵니다.** 화면이 이 칸을 그대로 찍으면
 --   "광고" 표시를 빠뜨릴 수 없습니다. 지우지 마세요.
-create or replace view v_ad_live as
+-- ⚠️⚠️⚠️ **`create or replace view` 가 아니라 지우고 다시 만듭니다.**
+--   0064 가 이 보기에 칸 다섯(소재 · 클릭 주소 · 광고주)을 더했는데,
+--   여기가 `create or replace` 이면 사장님이 붙여넣기 파일을 **두 번째로**
+--   붙여 넣는 날 이 줄에서 `cannot drop columns from view` 로 **멈춥니다**
+--   — 앞쪽 파일이 **옛 칸 목록**으로 다시 만들려 하기 때문입니다.
+--   0044 가 `v_provider_card` 에서 겪은 그 자리이고, `test-upgrade` 의
+--   ⑧("두 번 붙여 넣어도 끝까지 도는가")이 잡았습니다.
+--   ⚠️ 지우면 **GRANT 도 같이 날아가므로** 바로 아래에서 다시 줍니다
+--   (안 주면 그날부터 손님 화면에 광고가 한 줄도 안 나옵니다).
+--   ⚠️⚠️ 이 줄을 고친 까닭 — 운영 DB 는 아직 **0007 까지만** 올라가 있어
+--   이 파일이 운영에서 한 번도 돈 적이 없습니다. 이미 돌린 파일이면
+--   고치지 않고 새 번호로 갔을 것입니다 (작업 기억의 그 규칙).
+drop view if exists v_ad_live;
+create view v_ad_live as
   select a.id, a.provider_id, p.name as provider_name,
          a.place, a.cat_key, a.region, a.starts_on, a.ends_on,
          '광고'::text as label

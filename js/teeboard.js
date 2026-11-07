@@ -252,10 +252,29 @@
     if(k) FIND[k] = t.value;
   });
 
+  /* ⚠️⚠️⚠️ **설정이 없으면 그 구간을 통째로 치웁니다** (2026-11-07).
+     전에는 그냥 돌아갔는데, 감싼 `<section>` 에는 제목과 설명이
+     **빌드가 찍어 둔 채로** 남아 있어서 손님에게는
+     "원하는 날짜와 지역의 자리 찾기" 라는 **제목만 덩그러니** 보였습니다 —
+     그 아래가 통째로 빈 띠였습니다 (절대 규칙 2: 값이 없으면 줄째 뺀다).
+     ⚠️ `.sec:has(> .wrap > [hidden]:only-child)` 는 이 자리를 **못 잡습니다** —
+     그 구간에는 제목 상자(`.sec-hd`)가 같이 들어 있어 `:only-child` 가
+     아닙니다. 그래서 여기서 직접 치웁니다.
+     ⚠️ CSS 로 가리지 않고 **자바스크립트로** 치웁니다 — 크롤러와 자바스크립트가
+     꺼진 분에게는 그 설명이 그대로 남아야 합니다(본문이 사라지면 봇에게는
+     빈 화면입니다). */
+  function shutSection(){
+    try{
+      var sec = box.closest ? box.closest(".sec") : null;
+      if(sec) sec.hidden = true;
+    }catch(e){}
+  }
+
   window.amAuthAsk().then(function(a){
     if(!a || !a.on){
       try{ console.warn("[teeboard] 로그인 · 접수가 설정되지 않아 현황표를 " +
         "열지 않았습니다 (Vercel 의 SUPABASE_URL · SUPABASE_ANON_KEY)."); }catch(e){}
+      shutSection();
       return;
     }
     A = a;

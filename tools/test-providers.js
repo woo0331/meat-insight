@@ -262,6 +262,37 @@ function nowServe(){ return serve(0); }
          qn.hrefs.every(function(h){ return /^\/cat\//.test(String(h)); }),
          (qn.hrefs || []).join(" "));
 
+      /* ⚠️⚠️⚠️ **제목만 있고 알맹이가 없는 띠를 손님에게 보이지 않습니다**
+         (2026-11-07 · 절대 규칙 2). 설정이 꺼진 상태(이 자리가 그 상태입니다)
+         에서는 현황표가 안 그려지는데, 감싼 구간에는 빌드가 찍어 둔 제목과
+         설명이 남아 "원하는 날짜와 지역의 자리 찾기" 라는 **제목만 덩그러니**
+         보였습니다. 사장님이 화면을 보내 주셔서 알았습니다.
+         ⚠️ `.sec:has(> .wrap > [hidden]:only-child)` 는 못 잡습니다 — 그
+         구간에는 제목 상자가 같이 들어 있어 `:only-child` 가 아닙니다.
+         ⚠️ 구간 이름을 박지 않고 **빈 띠를 세어서** 봅니다 — 다음에 다른
+         구간이 같은 꼴이 되어도 같이 잡힙니다. */
+      const empty = await p0.evaluate(function(){
+        const out = [];
+        Array.prototype.forEach.call(document.querySelectorAll("section"),
+          function(s){
+            if(s.hidden || !s.offsetParent) return;
+            const h2 = s.querySelector("h2");
+            if(!h2) return;
+            const hd = s.querySelector(".sec-hd");
+            let rest = "";
+            Array.prototype.forEach.call(s.querySelectorAll("*"), function(e){
+              if(hd && hd.contains(e)) return;
+              if(!e.offsetParent || e.children.length) return;
+              rest += (e.textContent || "").trim();
+            });
+            if(rest.replace(/\s+/g, "").length < 3)
+              out.push((h2.textContent || "").trim().slice(0, 40));
+          });
+        return out;
+      });
+      ok("⚠️⚠️ 설정이 꺼져도 **제목만 있는 빈 띠가 없다** (절대 규칙 2)",
+         empty.length === 0, empty.join(" | "));
+
       await p0.close(); await b0.close(); h0.srv.close();
     }
 

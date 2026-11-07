@@ -52,6 +52,14 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="pvstadm" class="none" hidden></div></div></section>';
 
+  /* 골프장 · 연습장 (0066) — ⚠️⚠️⚠️ **이 자리가 없으면 0066 의 문 셋이
+     "만들어 놓고 안 쓰는 문"** 입니다 (이 저장소가 다섯 번 겪은 자리).
+     ⚠️ 들여온 slug 는 **관리번호**라 읽기 어렵습니다 — 주소에 쓰는 값이라
+     운영자가 고칩니다. 안쪽 id 는 안 바뀌어 이어진 티타임이 안 끊깁니다.
+     ⚠️ 가리는 길은 있고 **지우는 길은 없습니다.** */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="csadm" class="none" hidden></div></div></section>';
+
   /* 신고 · 분쟁 (0040 · 3차 지시서 §6 · §8) — ⚠️ 문만 만들고 이 자리를
      안 만들면 손님이 보낸 신고는 아무도 안 읽는 표에 쌓입니다. */
   body += '<section class="sec sec-alt"><div class="wrap">' +
@@ -100,6 +108,10 @@ exports.build = function(){
          "/js/adminpro.js", "/js/adminrep.js", "/js/admininq.js",
          "/js/adminlog.js", "/js/metrics.js", "/js/adminbiz.js",
          "/js/adminstaff.js", "/js/adminfee.js",
+         /* ⚠️ 골프장 자료 · 갈래 말을 읽습니다 — 안 실으면 그 상자가
+            조용히 안 그려집니다 (값을 읽는 파일을 싣는 것까지가 기능) */
+         "/js/data/courses.generated.js", "/js/data/courses.js",
+         "/js/admincourse.js",
          "/js/adminhat.js"]
   };
 };

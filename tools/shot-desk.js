@@ -512,7 +512,7 @@ const BOXES = {
              /* ⚠️ 0003 · 0013 의 수수료 · 정산 (js/adminfee.js) */
              ["fee", "#feeadm"],
              /* ⚠️ 0025 · 0054 의 회원 역할 (js/adminhat.js) */
-             ["hat", "#hatadm"], ["log", "#logbox"]],
+             ["hat", "#hatadm"], ["course", "#csadm"], ["log", "#logbox"]],
   /* ⚠️ 처음에 `#myreqbox` · `#myjoinbox` 처럼 **지어낸 id** 를 적어
      두어서 `/my` 상자가 한 장도 안 찍혔습니다 — 찍히는 갯수를 보고
      알았습니다. `pages/my.js` 에서 세어 고쳤습니다. */

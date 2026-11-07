@@ -126,7 +126,11 @@ try{
      })());
 
   /* 들어가는 길 — ⚠️ 화면만 있고 길이 없으면 없는 것과 같습니다 */
-  ok("  골프장 찾기로 돌아가는 길이 있다", a.indexOf("/search?t=course") > 0);
+  /* ⚠️ 주소를 `?t=course` 에서 `#courses` 로 바꿨습니다 — 질의문자를
+     더하면 **그 열쇠를 읽는 쪽도 같이** 고쳐야 하는데(`/search` 의 첫
+     그림 조건), 읽는 곳이 없으면 아무 일도 안 하는 열쇠가 됩니다.
+     앵커는 빌드가 찍은 구간에 바로 닿습니다. */
+  ok("  골프장 찾기로 돌아가는 길이 있다", a.indexOf("/search#courses") > 0);
 }catch(e){
   okAll = false;
   console.log("  ❌ 검사가 터졌습니다: " + String(e.message || e).slice(0, 300));

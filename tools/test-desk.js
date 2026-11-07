@@ -6733,6 +6733,126 @@ function boardsOf(){
      서고 부르는 칸이 없었습니다 — 직원이 여럿이면 같은 건에 두 사람이
      전화합니다.
      ══════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════════
+     골프장 · 연습장 관리 — /admin (0066)
+
+     ⚠️⚠️⚠️ 이 자리가 없으면 0066 의 문 셋(`save_course` · `move_course` ·
+     `link_course_alias`)이 **만들어 놓고 안 쓰는 문**입니다 —
+     `check-doors` 가 실제로 그렇게 잡았습니다.
+     ⚠️⚠️ 여기서 재는 알맹이는 **보내는 꾸러미**입니다. 0066 의 문은
+     `jsonb` 하나(`p`)를 받는데, 저장소의 0013 · 0003 은 **자리 인자**라
+     습관대로 보내면 거절당합니다 — 줄 수로 재면 영원히 초록입니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── /admin 골프장 · 연습장 (0066)");
+  const CS_ROWS = [
+    { id:"c-1", slug:"mcst-golf-1", kind:"golf", name:"검사용 남서울CC",
+      region:"gyeonggi", gu:"성남시", state:"open", source_id:"mcst" },
+    { id:"c-2", slug:"c-abc123", kind:"range", name:"검사용 강남 연습장",
+      region:"seoul", gu:"강남구", state:"open", source_id:"seoul-range" }
+  ];
+  const CS_T = { account:[], account_hat:[], assignment:[], request:[], quote:[],
+                 request_item:[], provider:[], review:[], report:[], inquiry:[],
+                 audit_log:[], v_course_public: CS_ROWS };
+
+  /* ⚠️ 관리자가 아니면 한 줄도 안 그리고 **읽으러 가지도 않습니다** */
+  for(const who of [{ role:"customer", name:"홍길동", signedIn:true },
+                    { role:"staff", name:"직원", signedIn:true }]){
+    const g = await open("/admin", who, CS_T, { biz_metrics: MET }, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("csadm");
+      return { drawn: !!b && !b.hidden && b.children.length > 0 };
+    });
+    ok("⚠️ " + who.role + " 에게는 골프장 자리가 **한 줄도** 안 보인다", !r.drawn, "");
+    ok("  ⚠️⚠️ 그 자료를 **읽으러 가지도 않는다**",
+       g.sent.filter(function(x){ return (x.body || "").indexOf("v_course_public") >= 0; })
+         .length === 0, JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    await g.p.close();
+  }
+
+  { const g = await open("/admin", { role:"admin", name:"관리자", signedIn:true },
+                         CS_T, { biz_metrics: MET }, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("csadm");
+      const rows = Array.prototype.map.call(b.querySelectorAll("li[data-cs]"),
+        function(li){
+          return { id: li.getAttribute("data-cs"), text: li.innerText,
+                   btns: Array.prototype.map.call(li.querySelectorAll("button[data-do]"),
+                     function(x){ return x.getAttribute("data-do"); }) };
+        });
+      return { drawn: !!b && !b.hidden, rows: rows, text: b.innerText };
+    });
+    ok("운영자에게 골프장 자리가 그려진다", r.drawn && r.rows.length === 2,
+       "줄 " + r.rows.length);
+    /* ⚠️ 화면 **전체**에서 "range" 를 찾으면 안 됩니다 — 출처 이름이
+       `seoul-range` 라 늘 걸립니다. 코드가 아니라 **제 검사가 틀린**
+       자리였습니다. 갈래를 적는 **그 줄**만 봅니다. */
+    const c2 = r.rows.filter(function(x){ return x.id === "c-2"; })[0] || { text:"" };
+    ok("  갈래 · 지역을 **사람 말로** 적는다 (영문 키가 아닙니다)",
+       c2.text.indexOf("연습장 · 서울 강남구") >= 0,
+       c2.text.slice(0, 160).replace(/\n/g, " | "));
+    ok("  ⚠️ **출처를 같이 적는다** (손으로 넣은 줄과 가릅니다)",
+       r.text.indexOf("출처 mcst") >= 0, r.text.slice(0, 200).replace(/\n/g, " | "));
+    /* ⚠️⚠️ **지우는 단추를 안 냅니다** — 0066 에 지우는 문이 없습니다 */
+    ok("⚠️⚠️ **지우는 단추를 안 낸다** (가리기만 있습니다)",
+       r.rows.every(function(x){ return x.btns.indexOf("delete") < 0; }) &&
+       r.text.indexOf("지우기") < 0, JSON.stringify(r.rows.map(function(x){ return x.btns; })));
+
+    /* slug 고치기 — ⚠️ 보내는 꾸러미를 **뜯어** 봅니다 */
+    await g.p.evaluate(function(){
+      const li = document.querySelector("li[data-cs='c-1']");
+      li.querySelector("button[data-do='slug']").click();
+      const f = li.querySelector(".cs-f");
+      f.slug.value = "namseoul-cc";
+      f.querySelector("button[type='submit']").click();
+    });
+    await g.p.waitForTimeout(250);
+    const sv = g.sent.filter(function(x){ return x.name === "save_course"; })[0];
+    ok("주소(slug) 고치기가 **문을 부른다**", !!sv,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    if(sv){
+      const b2 = JSON.parse(sv.body);
+      /* ⚠️⚠️ **jsonb 하나입니다** — 자리 인자로 보내면 거절됩니다 */
+      ok("  ⚠️⚠️ `p` 하나로 보낸다 (자리 인자가 아닙니다)",
+         !!b2.p && b2.p_id === undefined, sv.body.slice(0, 140));
+      ok("  고친 slug 와 id 를 같이 보낸다",
+         b2.p.slug === "namseoul-cc" && b2.p.id === "c-1", sv.body.slice(0, 140));
+    }
+
+    /* 가리기 — ⚠️ 까닭 없이는 못 보냅니다 (DB 도 막지만 화면이 먼저) */
+    await g.p.evaluate(function(){
+      const li = document.querySelector("li[data-cs='c-2']");
+      li.querySelector("button[data-do='hide']").click();
+      const f = li.querySelector(".cs-f");
+      f.cwhy.value = "검사";
+      f.querySelector("button[type='submit']").click();
+    });
+    await g.p.waitForTimeout(250);
+    const mv = g.sent.filter(function(x){ return x.name === "move_course"; })[0];
+    ok("가리기가 **문을 부른다**", !!mv,
+       JSON.stringify(g.sent.map(function(x){ return x.name; })));
+    if(mv){
+      const b3 = JSON.parse(mv.body);
+      ok("  가리는 값과 **까닭을 같이** 보낸다",
+         b3.p && b3.p.to === "hidden" && String(b3.p.why || "").trim() !== "",
+         mv.body.slice(0, 140));
+    }
+    await g.p.close(); }
+
+  /* 0곳일 때 — ⚠️⚠️ **막다른 길로 두지 않습니다** (절대 규칙 2) */
+  { const g = await open("/admin", { role:"admin", name:"관리자", signedIn:true },
+      Object.assign({}, CS_T, { v_course_public: [] }), { biz_metrics: MET }, true);
+    const r = await g.p.evaluate(function(){
+      const b = document.getElementById("csadm");
+      return { text: b.innerText, hidden: b.hidden };
+    });
+    ok("⚠️ 0곳이면 **0곳이라고 말한다**",
+       !r.hidden && r.text.indexOf("아직 들여온 골프장이 없습니다") >= 0,
+       r.text.slice(0, 160).replace(/\n/g, " | "));
+    ok("  ⚠️⚠️ 그리고 **넣는 길**을 알려 준다 (막다른 길 금지)",
+       r.text.indexOf("import_courses.sql") >= 0,
+       r.text.slice(0, 200).replace(/\n/g, " | "));
+    await g.p.close(); }
+
   console.log("\n── /admin 회원 역할 (0025 · 0028 · 0054)");
   const HT_ACCS = [
     { id:"u-1", name:"김회원", role:"customer" },
